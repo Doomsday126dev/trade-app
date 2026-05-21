@@ -656,7 +656,7 @@ input,select,textarea{font-family:var(--font);outline:none}
 <script type="module">
 import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import{getDatabase,ref,set,get,onValue,update}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
-import{getAuth,signInWithEmailAndPassword,createUserWithEmailAndPassword,signOut as firebaseSignOut,updatePassword}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import{getAuth,signInWithEmailAndPassword,createUserWithEmailAndPassword,signOut as firebaseSignOut,updatePassword,deleteUser}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 
 const DB=window.POGO_TRADE_DB;
 if(!DB)throw new Error('Trade data failed to load');
@@ -691,7 +691,7 @@ const SECURE_RULES=`{
     ".read": true,
     "users": {
       "$username": {
-        ".write": "auth != null && (root.child('admins').child(auth.uid).val() === true || data.child('authUid').val() === auth.uid || (!data.child('authUid').exists() && data.child('authEmail').val() === auth.token.email && newData.child('authUid').val() === auth.uid))"
+        ".write": "auth != null && (root.child('admins').child(auth.uid).val() === true || data.child('authUid').val() === auth.uid || (!data.child('authUid').exists() && newData.child('authUid').val() === auth.uid && newData.child('authEmail').val() === auth.token.email && (!data.child('authEmail').exists() || data.child('authEmail').val() === auth.token.email)))"
       }
     },
     "wishlist": {
@@ -948,6 +948,11 @@ async function writeUser(u,data){
 }
 async function writeUserNow(u,data){
   const s=getLocal();s.users[u]={authEmail:authEmail(u),...s.users[u],...data};saveLocal(s);
+  if(auth?.currentUser?.email===authEmail(u)){
+    s.users[u].authEmail=authEmail(u);
+    s.users[u].authUid=auth.currentUser.uid;
+    saveLocal(s);
+  }
   if(fbOn&&db){
     try{
       await set(ref(db,`users/${u}`),s.users[u]);
@@ -958,6 +963,19 @@ async function writeUserNow(u,data){
     }
   }
   syncFromLocal();
+}
+async function bindAuthUserNow(username,authUpdate){
+  const s=getLocal();
+  const next={authEmail:authEmail(username),...(s.users[username]||{}),...authUpdate};
+  if(fbOn&&db){
+    await set(ref(db,`users/${username}`),next);
+    delete syncQueue[`users/${username}`];
+    if(!Object.keys(syncQueue).length)showSyncDot(false);
+  }
+  s.users[username]=next;
+  saveLocal(s);
+  allData=normalizeData(s);
+  return next;
 }
 async function writeList(type,u,list){
   const s=getLocal();
@@ -996,12 +1014,14 @@ async function ensureFirebaseIdentity(username,pin,ud){
   if(!auth)return null;
   const email=authEmail(username);
   let cred=null;
+  let createdAuthUser=false;
   try{
     cred=await signInWithEmailAndPassword(auth,email,pin);
   }catch(e){
     if(!ud.authUid&&(e.code==='auth/user-not-found'||e.code==='auth/invalid-credential')){
       try{
         cred=await createUserWithEmailAndPassword(auth,email,pin);
+        createdAuthUser=true;
       }catch(createErr){
         if(createErr.code==='auth/email-already-in-use'){
           const outOfSync=new Error('This trainer PIN is out of sync with Firebase Auth. Ask an admin to repair the Firebase Auth user.');
@@ -1015,10 +1035,23 @@ async function ensureFirebaseIdentity(username,pin,ud){
     }
   }
   currentAuthUid=cred.user.uid;
+  if(ud.authUid&&ud.authUid!==currentAuthUid){
+    const outOfSync=new Error('Realtime Database points this trainer at a different Firebase Auth user.');
+    outOfSync.code='auth/pin-out-of-sync';
+    throw outOfSync;
+  }
   const authUpdate={authEmail:email,authUid:currentAuthUid};
-  if(ud.authEmail!==email||ud.authUid!==currentAuthUid)await writeUserNow(username,authUpdate);
+  try{
+    if(ud.authEmail!==email||ud.authUid!==currentAuthUid)await bindAuthUserNow(username,authUpdate);
+  }catch(bindErr){
+    if(createdAuthUser&&auth.currentUser?.uid===currentAuthUid){
+      await deleteUser(auth.currentUser).catch(()=>{});
+    }
+    bindErr.code=bindErr.code||'auth/bind-failed';
+    throw bindErr;
+  }
   if(db)await set(ref(db,`authIndex/${currentAuthUid}`),{username,isAdmin:!!ud.isAdmin,isOwner:!!ud.isOwner,lastSeen:Date.now()}).catch(()=>{});
-  return currentAuthUid;
+  return{uid:currentAuthUid,email};
 }
 
 async function connectFirebase(){
@@ -1089,9 +1122,10 @@ async function doLogin(){
   const ok=await verifyPin(p,ud.pin);
   if(ok){
     try{
-      if(auth)await ensureFirebaseIdentity(u,p,ud);
+      const ident=auth?await ensureFirebaseIdentity(u,p,ud):null;
       cur=u;stampSession(u);
       const loginUpdate={lastSeen:Date.now()};
+      if(ident){loginUpdate.authEmail=ident.email;loginUpdate.authUid=ident.uid;}
       // Upgrade plaintext PIN to hashed
       if(!ud.pinHashed){const h=await hashPin(p);loginUpdate.pin=h;loginUpdate.pinHashed=true;}
       await writeUserNow(u,loginUpdate);
@@ -1100,6 +1134,8 @@ async function doLogin(){
       const code=e.code||'';
       err.textContent=code==='auth/pin-out-of-sync'
         ?'Firebase Auth is out of sync for this trainer. Ask an admin to reset the Auth user.'
+        :code==='PERMISSION_DENIED'||code==='auth/bind-failed'
+          ?'Firebase rules blocked linking this trainer. Update the users rule, then try again.'
         :'Firebase Auth failed: '+(code||e.message||'check API key and auth settings');
       btn.textContent='Sign in →';btn.disabled=false;
     }
