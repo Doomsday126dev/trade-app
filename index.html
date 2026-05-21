@@ -741,38 +741,125 @@ let syncQueue={},syncFlushTimer=null;
 let undoStack=null,undoTimer=null;
 let acItems=[],acFiltered=[],acFocusIdx=-1;
 let dragSrc=null;
+let authRepairStarted=false;
 
 // ── SPRITES ───────────────────────────────────────────────────
-// Map dex number → sprite URL. For forms we use base dex.
 // Sprite cache to avoid repeated failed requests
 const spriteCache={};
+const SEREBII_GO_SPRITE_BASE='https://www.serebii.net/pokemongo/pokemon/';
+const IMAGE_PROXY_BASE='https://images.weserv.nl/?url=';
 const REGIONAL_FORM_IDS={"A-Rattata": 10091, "A-Raichu": 10100, "A-Sandshrew": 10101, "A-Vulpix": 10103, "A-Diglett": 10105, "A-Meowth": 10107, "A-Geodude": 10109, "A-Grimer": 10112, "A-Exeggutor": 10114, "A-Marowak": 10115, "G-Meowth": 10161, "G-Ponyta": 10162, "G-Slowpoke": 10164, "G-Farfetch'd": 10166, "G-Weezing": 10167, "G-Mr_ Mime": 10168, "G-Corsola": 10173, "G-Zigzagoon": 10174, "G-Darumaka": 10176, "G-Yamask": 10179, "G-Stunfisk": 10180, "H-Growlithe": 10229, "H-Voltorb": 10231, "H-Typhlosion": 10233, "H-Qwilfish": 10234, "H-Sneasel": 10235, "H-Samurott": 10236, "H-Lilligant": 10237, "H-Zorua": 10238, "H-Braviary": 10240, "H-Sliggoo": 10241, "H-Avalugg": 10243, "H-Decidueye": 10244, "P-Tauros": 10250, "P-Tauros (Combat)": 10250, "P-Tauros (Blaze)": 10251, "P-Tauros (Fire)": 10251, "P-Tauros (Aqua)": 10252, "P-Tauros (Water)": 10252, "P-Wooper": 10253, "Castform (Sunny)": 10013, "Castform (Rainy)": 10014, "Castform (Snowy)": 10015};
-// Form-specific sprite IDs/filenames for costume/form variants (Unown letters, Furfrou trims, Vivillon patterns, etc.)
+// Form-specific sprite IDs/filenames from PokeAPI sprites. These are CORS-safe for canvas export.
 const COSTUME_FORM_SPRITE_IDS={
-  "Unown (A)":10063,"Unown (B)":10064,"Unown (C)":10065,"Unown (D)":10066,
-  "Unown (E)":10067,"Unown (F)":10068,"Unown (G)":10069,"Unown (H)":10070,
-  "Unown (I)":10071,"Unown (J)":10072,"Unown (K)":10073,"Unown (L)":10074,
-  "Unown (M)":10075,"Unown (N)":10076,"Unown (O)":10077,"Unown (P)":10078,
-  "Unown (Q)":10079,"Unown (R)":10080,"Unown (S)":10081,"Unown (T)":10082,
-  "Unown (U)":10083,"Unown (V)":10084,"Unown (W)":10085,"Unown (X)":10086,
-  "Unown (Y)":10087,"Unown (Z)":10088,"Unown (!)":10089,"Unown (?)":10090,
+  "Unown (A)":201,"Unown (B)":"201-b","Unown (C)":"201-c","Unown (D)":"201-d",
+  "Unown (E)":"201-e","Unown (F)":"201-f","Unown (G)":"201-g","Unown (H)":"201-h",
+  "Unown (I)":"201-i","Unown (J)":"201-j","Unown (K)":"201-k","Unown (L)":"201-l",
+  "Unown (M)":"201-m","Unown (N)":"201-n","Unown (O)":"201-o","Unown (P)":"201-p",
+  "Unown (Q)":"201-q","Unown (R)":"201-r","Unown (S)":"201-s","Unown (T)":"201-t",
+  "Unown (U)":"201-u","Unown (V)":"201-v","Unown (W)":"201-w","Unown (X)":"201-x",
+  "Unown (Y)":"201-y","Unown (Z)":"201-z","Unown (!)":"201-exclamation","Unown (?)":"201-question",
+  "Castform (Normal)":351,"Castform (Sunny)":10013,"Castform (Rainy)":10014,"Castform (Snowy)":10015,
+  "Burmy (Plant)":412,"Burmy (Sandy)":"412-sandy","Burmy (Trash)":"412-trash",
+  "Wormadam (Plant)":413,"Wormadam (Sandy)":10004,"Wormadam (Trash)":10005,
+  "Cherrim (Overcast)":421,"Cherrim (Sunny)":"421-sunshine",
+  "Shellos (Pink)":422,"Shellos (Blue)":"422-east",
+  "Rotom":479,"Rotom (Heat)":10008,"Rotom (Wash)":10009,"Rotom (Frost)":10010,"Rotom (Fan)":10011,"Rotom (Mow)":10012,
+  "Basculin (Red Stripe)":550,"Basculin (Blue Stripe)":10016,"Basculin (White Stripe)":10247,
+  "Deerling (Spring)":585,"Deerling (Summer)":"585-summer","Deerling (Autumn)":"585-autumn","Deerling (Winter)":"585-winter",
+  "Sawsbuck (Spring)":586,"Sawsbuck (Summer)":"586-summer","Sawsbuck (Autumn)":"586-autumn","Sawsbuck (Winter)":"586-winter",
+  "Flabébé (Red Flower)":669,"Flabébé (Yellow Flower)":"669-yellow","Flabébé (Orange Flower)":"669-orange","Flabébé (Blue Flower)":"669-blue","Flabébé (White Flower)":"669-white",
   "Furfrou (Heart)":"676-heart","Furfrou (Star)":"676-star","Furfrou (Diamond)":"676-diamond",
   "Furfrou (Debutante)":"676-debutante","Furfrou (Matron)":"676-matron","Furfrou (Dandy)":"676-dandy",
   "Furfrou (La Reine)":"676-la-reine","Furfrou (Kabuki)":"676-kabuki","Furfrou (Pharaoh)":"676-pharaoh",
-  "Deerling (Summer)":"585-summer","Deerling (Autumn)":"585-autumn","Deerling (Winter)":"585-winter",
-  "Sawsbuck (Summer)":"586-summer","Sawsbuck (Autumn)":"586-autumn","Sawsbuck (Winter)":"586-winter",
-  "Burmy (Sandy)":"412-sandy","Burmy (Trash)":"412-trash",
-  "Wormadam (Sandy)":10004,"Wormadam (Trash)":10005,
+  "Pumpkaboo - Average":710,"Pumpkaboo - Small":10027,"Pumpkaboo - Large":10028,"Pumpkaboo - Super":10029,
+  "Oricorio (Baile)":741,"Oricorio (Pom-Pom)":10123,"Oricorio (Pa'u)":10124,"Oricorio (Sensu)":10125,
+  "Wishiwashi (Solo)":746,"Wishiwashi (School)":10127,
+  "Toxtricity (Amped)":849,"Toxtricity (Low Key)":10184,
+  "Squawkabilly (Green)":931,"Squawkabilly (Blue)":10260,"Squawkabilly (Yellow)":10261,"Squawkabilly (White)":10262,
+  "Tatsugiri (Curly)":978,"Tatsugiri ":978,"Tatsugiri (Droopy)":10258,"Tatsugiri (Stretchy)":10259,
+  "Pikachu (Libre)":10084,"Pikachu (Rock Star)":10080,"Pikachu (Pop Star)":10082,"Pikachu (Ph_D)":10083,
   "Archipelago":"666-archipelago","Continental":"666-continental","Elegant":"666-elegant",
-  "Fancy":"666-fancy","Garden":"666-garden","High Plains":"666-high-plains",
+  "Fancy":"666-fancy","Garden":"666-garden","High Plains":"666-high-plains","Meadow":"666-meadow",
   "Icy Snow":"666-icy-snow","Jungle":"666-jungle","Marine":"666-marine",
   "Modern":"666-modern","Monsoon":"666-monsoon","Ocean":"666-ocean",
   "Polar":"666-polar","Poké Ball":"666-poke-ball","River":"666-river",
   "Sandstorm":"666-sandstorm","Savanna":"666-savanna","Sun":"666-sun","Tundra":"666-tundra"
 };
+// Pokémon GO costume sprites that PokeAPI does not carry. Serebii has the GO-specific art.
+const GO_COSTUME_SPRITE_SLUGS={
+  "Pikachu (Santa)":"santa","Pikachu (Purple Party)":"party","Pikachu (Ash)":"ash","Pikachu (Witch)":"halloween",
+  "Pikachu (Summer)":"summer","Pikachu (Fragment)":"fragment","Pikachu (Flower Crown)":"flowers","Pikachu (Detective)":"detective",
+  "Pikachu (Straw)":"strawhat","Pikachu (Mimikyu)":"halloween2019","Pikachu (Winter 2019)":"beanie","Pikachu (Red Party)":"partyhat2020",
+  "Pikachu (Clone)":"clone","Pikachu (Safari)":"safari","Pikachu (Spring)":"flowerhat","Pikachu (Charizard)":"charizard","Pikachu (Umbreon)":"umbreon",
+  "Pikachu (Rayquaza)":"rayquaza","Pikachu (Lucario)":"lucario","Pikachu (Flying)":"flying","Pikachu (World)":"worldcap",
+  "Pikachu (Explorer)":"explorer","Pikachu (Holiday 2020)":"holiday2020","Pikachu (New Year)":"newyear","Pikachu (5th Anniversary)":"gofest2021",
+  "Pikachu (Meloetta Hat)":"gofest2021","Pikachu (Halloween 2021)":"halloween2021","Pikachu (Kariyushi Shirt)":"kariyushi",
+  "Pikachu (Fly Okinawa)":"okinawaballoons","Pikachu (Shaymin Flower)":"gracidea","Pikachu (TCG)":"tcg","Pikachu (Cake Hat)":"cake",
+  "Pikachu (Worlds 2022)":"worlds2022","Pikachu (Shaymin Scarf)":"shayminscarf","Pikachu (Top Hat)":"newyear2023",
+  "Pikachu (Green Shirt)":"greenshirt","Pikachu (Purple Shirt)":"purpleshirt","Pikachu (Jeju)":"jeju","Pikachu (Batik Shirt)":"indshirt",
+  "Pikachu (Brendan)":"brendan","Pikachu (May)":"may","Pikachu (Cherry Blossom)":"cherryblossoms","Pikachu (Detective 2023)":"detective",
+  "Pikachu (Halloween 2023)":"halloween2023","Pikachu (Holiday 2023)":"holidays2023","Pikachu (Captain)":"captain",
+  "Pikachu (Amethyst)":"amethyst","Pikachu (Worlds 2023)":"worlds23","Pikachu (Quartz)":"quartz","Pikachu (Malachite)":"malachite",
+  "Pikachu (Aquamarine)":"aquamarine","Pikachu (Pyrite)":"pyrite","Pikachu (Dawn)":"dawn","Pikachu (Lucas)":"lucas",
+  "Pikachu (Akari)":"akari","Pikachu (Rei)":"rei","Pikachu (Sun)":"sun","Pikachu (Moon)":"moon",
+  "Pikachu (Saree)":"saree","Pikachu (Hilbert)":"hilbert","Pikachu (Hilda)":"hilda","Pikachu (Nate)":"nate","Pikachu (Rosa)":"rosa",
+  "Pikachu (Kurta)":"kurta","Pikachu (Sari)":"indshirt","Pikachu (Worlds 2024)":"worlds24","Pikachu (Spring 2023)":"cherryblossoms",
+  "Pikachu (GO Fest 2022)":"shayminscarf","Pikachu (GO Fest 2023)":"jeju","Pikachu (Calem)":"calem","Pikachu (Serena)":"serena",
+  "Pikachu (Scuba)":"worlds24","Pikachu (Halloween 2022)":"halloween2021","Pikachu (Halloween 2024)":"halloween","Pikachu (GO Fest 2024)":"sun",
+  "Pikachu (Worlds 2025)":"worlds25","Pikachu (Timnas Indonesia)":"timnasindonesia","Pikachu (Red)":"red","Pikachu (Leaf)":"leaf",
+  "Pikachu (Ethan)":"ethan","Pikachu (Lyra)":"lyra","Pikachu (Baseball)":"baseball","Pikachu (Instinct)":"instinct",
+  "Pikachu (Mystic)":"mystic","Pikachu (Valor)":"valor","Pikachu (Marathon)":"marathon","Pikachu (Fossil)":"fossil",
+  "Pikachu (Flying 5th Anniversary)":"flying5th","Pikachu (Flying Green)":"flyinggreen","Pikachu (Flying Purple)":"flyingpurple",
+  "Pikachu (Indonesia Balloon)":"indballoon","Pikachu (Dapper) Monocle - Red":"monoclered","Pikachu (Dapper) Monocle - Blue":"monocleblue",
+  "Pikachu (Dapper) Monocle - Yellow":"monocleyellow","Pikachu (Dapper) Goggles - Red":"gogglesred",
+  "Pikachu (Dapper) Goggles - Blue":"gogglesblue","Pikachu (Dapper) Goggles - Yellow":"gogglesyellow",
+  "Pichu (Santa)":"santa","Pichu (Ash)":"ash","Pichu (Witch)":"halloween","Pichu (Summer)":"summer","Pichu (Flower Crown)":"flowers",
+  "Pichu (Winter)":"beanie","Pichu (Party)":"party","Pichu (New Year)":"newyear","Pichu (Cherry Blossom)":"cherryblossoms",
+  "Eevee (Flower Crown)":"flowers","Eevee (Holiday)":"holiday","Eevee (Red Party)":"partyhat","Eevee (Cherry Blossom)":"cherryblossoms",
+  "Eevee (Explorer)":"safari","Eevee (Sun)":"sun","Eevee (Moon)":"moon",
+  "Bulbasaur (Shedinja)":"halloween2019","Bulbasaur (Red Party)":"partyhat","Bulbasaur (Visor)":"pikachuvisor",
+  "Venusaur (Clone)":"clone","Squirtle (Sunglasses)":"sunglasses","Squirtle (Yamask)":"halloween2019","Squirtle (Red Party)":"partyhat",
+  "Squirtle (Visor)":"pikachuvisor","Blastoise (Clone)":"clone","Charmander (Cubone)":"halloween2019","Charmander (Red Party)":"partyhat",
+  "Charmander (Visor)":"pikachuvisor","Charizard (Clone)":"clone","Kirlia (Top Hat)":"tophat","Croagunk (Cap)":"backwardscap",
+  "Shinx (Top Hat)":"tophat","Smoochum (Bow)":"bow","Gengar (Mega Banette)":"halloween","Cubchoo (Bow)":"holiday2020",
+  "Delibird (Bow)":"holiday2020","Slowpoke (New Year)":"2020","Happiny (Flower Crown)":"flowercrown","Chansey (Flower Crown)":"flowercrown",
+  "Gardevoir (Meloetta Hat)":"gofest2021","Flygon (Meloetta Hat)":"gofest2021","G_ Ponyta (Meloetta Hat)":"gofest2021",
+  "G_ Zigzagoon (Meloetta Hat)":"gofest2021","Butterfree (Bow)":"fashionable","Sneasel (Hipster)":"fashionable","Blitzle (Collar)":"fashionable",
+  "Piplup (Halloween)":"halloween2021","Drifblim (Halloween)":"halloween2021","Turtwig (Lucas)":"lucas","Chimchar (Lucas)":"lucas",
+  "Piplup (Lucas)":"lucas","Turtwig (Dawn)":"dawn","Chimchar (Dawn)":"dawn","Piplup (Dawn)":"dawn",
+  "Spheal (Holiday)":"holiday","Glaceon (Holiday)":"holiday","Hoothoot (New Year)":"newyears","Lapras (Scarf)":"scarf",
+  "Snorlax (Cowboy Hat)":"cowboy","Vulpix (Halloween)":"spooky","Gengar (Spooky Hat)":"spooky","Pumpkaboo (Spooky)":"spooky",
+  "Duskull (Cempasuchil)":"crown","Cubone (Cempasuchil)":"crown","Lapras (Blanche)":"blanche","Elekid (Spark)":"spark",
+  "Ponyta (Candela)":"candela","Snorlax (Nightcap)":"nightcap","Aerodactyl (Satchel)":"satchel","Slowpoke (Detective)":"cowboy",
+  "Gengar (Halloween 2023)":"halloween2023","Dragonite (Bow)":"fashion","Wooper (Cap)":"fashion","Psyduck (Holiday 2023)":"holidays",
+  "Jigglypuff (Ribbon)":"ribbon","Cottonee (Flower Crown)":"flowercrown","Espeon (Scarf)":"scarf","Umbreon (Scarf)":"scarf",
+  "Grimer (Party Hat)":"partyhat","Slakoth (Night Cap)":"visor","Froakie (Halloween)":"halloween","Rowlet (Halloween)":"halloween",
+  "Snorlax (Studded Jacket)":"jacket","Dedenne (Holiday)":"holiday","Wooloo (Holiday)":"holiday","Minccino (Fashionable)":"fashionable",
+  "Gengar (Halloween 2022)":"halloween","Gengar (Halloween 2024)":"halloween2023"
+};
+function padDex(no){
+  const n=parseInt(no);
+  return Number.isFinite(n)?String(n).padStart(3,'0'):'';
+}
+function goCostumeSpriteUrl(no,name){
+  const slug=GO_COSTUME_SPRITE_SLUGS[name];
+  const dex=padDex(no);
+  if(!slug||!dex)return'';
+  return`${SEREBII_GO_SPRITE_BASE}${dex}-${slug}.png`;
+}
+function canvasSafeSpriteUrl(url){
+  if(url&&url.startsWith(SEREBII_GO_SPRITE_BASE))return IMAGE_PROXY_BASE+encodeURIComponent(url.replace(/^https?:\/\//,''));
+  return url||'';
+}
+function entrySpriteUrl(entry,nameOverride=''){
+  if(entry?.spriteUrl||entry?.sprite)return entry.spriteUrl||entry.sprite;
+  return spriteUrl(entry?.no,nameOverride||entry?.name||entry?.displayName);
+}
 function spriteUrl(no,name){
   if(name&&REGIONAL_FORM_IDS[name])return`${SPRITE_BASE}${REGIONAL_FORM_IDS[name]}.png`;
   if(name&&COSTUME_FORM_SPRITE_IDS[name])return`${SPRITE_BASE}${COSTUME_FORM_SPRITE_IDS[name]}.png`;
+  const goUrl=goCostumeSpriteUrl(no,name);
+  if(goUrl)return goUrl;
   if(!no)return null;
   const n=parseInt(no);
   if(isNaN(n))return null;
@@ -781,7 +868,7 @@ function spriteUrl(no,name){
 function spriteImg(no,size=40,cls='',name=''){
   const url=spriteUrl(no,name);
   if(!url)return`<div class="pc-sprite-placeholder" style="width:${size}px;height:${size}px">🎮</div>`;
-  return`<img src="${url}" class="${cls||'pc-sprite'}" width="${size}" height="${size}"
+  return`<img src="${url}" class="${cls||'pc-sprite'}" width="${size}" height="${size}" alt="" title="${escAttr(name||'Pokémon')}"
     style="image-rendering:pixelated;object-fit:contain"
     onerror="this.style.display='none'" loading="lazy">`;
 }
@@ -915,7 +1002,7 @@ function normalizeData(s){
   if(!s||typeof s!=='object')s={};
   s.users=s.users||{};s.wishlist=s.wishlist||{};s.dynamax=s.dynamax||{};s.costumes=s.costumes||{};s.requests=s.requests||{};s.authIndex=s.authIndex||{};
   Object.keys(s.users).forEach(u=>{
-    s.users[u]={friendCode:'',joined:Date.now(),lastSeen:null,lastUpdated:null,pinHashed:false,...s.users[u],authEmail:authEmail(u)};
+    s.users[u]=normalizedUserRecord(u,s.users[u]);
     if(!s.wishlist[u])s.wishlist[u]={};
     if(!s.dynamax[u])s.dynamax[u]={};
     if(!s.costumes[u])s.costumes[u]={};
@@ -928,7 +1015,7 @@ function initLocal(){
   if(!s){
     s={users:{},wishlist:{},dynamax:{},costumes:{},requests:{},authIndex:{}};
     DB.users.filter(u=>u&&u.trim()&&u.trim()!=='EVERYONE').map(u=>u.trim()).forEach(u=>{
-      s.users[u]={pin:'123456',isAdmin:u===OWNER,isOwner:u===OWNER,friendCode:'',joined:Date.now(),lastSeen:null,lastUpdated:null,pinHashed:false,authEmail:authEmail(u)};
+      s.users[u]=normalizedUserRecord(u,{}, {pin:'123456',isAdmin:u===OWNER,isOwner:u===OWNER,authVersion:1,authEmail:authEmail(u,1)});
       s.wishlist[u]={};s.dynamax[u]={};s.costumes[u]={};
       DB.wishlist.forEach(e=>{const v=e.users[u];if(v)s.wishlist[u][e.name]=v;});
       DB.dynamax.forEach(e=>{const v=e.users[u];if(v)s.dynamax[u][e.name]=v;});
@@ -942,14 +1029,14 @@ function getLocal(){return normalizeData(lsGet('pogo3',null)||initLocal())}
 function saveLocal(s){lsSet('pogo3',normalizeData(s))}
 
 async function writeUser(u,data){
-  const s=getLocal();s.users[u]={authEmail:authEmail(u),...s.users[u],...data};saveLocal(s);
+  const s=getLocal();s.users[u]=normalizedUserRecord(u,s.users[u],data);saveLocal(s);
   if(fbOn&&db)queueSync(`users/${u}`,s.users[u]);
   syncFromLocal();
 }
 async function writeUserNow(u,data){
-  const s=getLocal();s.users[u]={authEmail:authEmail(u),...s.users[u],...data};saveLocal(s);
-  if(auth?.currentUser?.email===authEmail(u)){
-    s.users[u].authEmail=authEmail(u);
+  const s=getLocal();s.users[u]=normalizedUserRecord(u,s.users[u],data);saveLocal(s);
+  if(auth?.currentUser?.email===authEmailForUser(u,s.users[u])){
+    s.users[u].authEmail=authEmailForUser(u,s.users[u]);
     s.users[u].authUid=auth.currentUser.uid;
     saveLocal(s);
   }
@@ -964,9 +1051,16 @@ async function writeUserNow(u,data){
   }
   syncFromLocal();
 }
+async function writeUserStrict(u,data){
+  const s=getLocal();
+  s.users[u]=normalizedUserRecord(u,s.users[u],data);
+  if(fbOn&&db)await set(ref(db,`users/${u}`),s.users[u]);
+  saveLocal(s);allData=normalizeData(s);refreshAll();
+  return s.users[u];
+}
 async function bindAuthUserNow(username,authUpdate){
   const s=getLocal();
-  const next={authEmail:authEmail(username),...(s.users[username]||{}),...authUpdate};
+  const next=normalizedUserRecord(username,s.users[username],authUpdate);
   if(fbOn&&db){
     await set(ref(db,`users/${username}`),next);
     delete syncQueue[`users/${username}`];
@@ -976,6 +1070,49 @@ async function bindAuthUserNow(username,authUpdate){
   saveLocal(s);
   allData=normalizeData(s);
   return next;
+}
+async function createMemberNow(username,pin,isAdmin=false,reqId=''){
+  const s=getLocal();
+  const user=normalizedUserRecord(username,{},{
+    pin,isAdmin,isOwner:false,friendCode:'',joined:Date.now(),lastSeen:null,lastUpdated:null,
+    pinHashed:false,authVersion:1,authEmail:authEmail(username,1)
+  });
+  if(fbOn&&db){
+    const updates={};
+    updates[`users/${username}`]=user;
+    if(reqId)updates[`requests/${reqId}/status`]='approved';
+    await update(ref(db),updates);
+  }
+  s.users[username]=user;
+  s.wishlist[username]=s.wishlist[username]||{};
+  s.dynamax[username]=s.dynamax[username]||{};
+  s.costumes[username]=s.costumes[username]||{};
+  if(reqId&&s.requests?.[reqId])s.requests[reqId].status='approved';
+  saveLocal(s);allData=normalizeData(s);refreshAll();
+  return user;
+}
+async function repairMissingAuthMetadata(){
+  if(authRepairStarted||!fbOn||!db||!auth?.currentUser||!allData.users?.[cur]?.isAdmin)return;
+  authRepairStarted=true;
+  const updates={};let count=0;
+  Object.entries(allData.users||{}).forEach(([u,d])=>{
+    const next=normalizedUserRecord(u,d);
+    if(!d.authEmail){
+      updates[`users/${u}/authEmail`]=next.authEmail;
+      count++;
+    }
+    if(!d.authVersion)updates[`users/${u}/authVersion`]=next.authVersion;
+  });
+  if(!Object.keys(updates).length)return;
+  try{
+    await update(ref(db),updates);
+    Object.entries(allData.users||{}).forEach(([u,d])=>{allData.users[u]=normalizedUserRecord(u,d);});
+    saveLocal(allData);
+    toast(`✅ Repaired login metadata for ${count} member${count===1?'':'s'}`,4000);
+  }catch(e){
+    console.warn('Auth metadata repair failed',e);
+    authRepairStarted=false;
+  }
 }
 async function writeList(type,u,list){
   const s=getLocal();
@@ -989,7 +1126,28 @@ async function writeList(type,u,list){
 function syncFromLocal(){allData=getLocal();refreshAll();}
 
 // ── FIREBASE AUTH / DATABASE ──────────────────────────────────
-function authEmail(username){return`${username.toLowerCase().replace(/[^a-z0-9]/g,'_')}@pogotrades.nyc`;}
+function authEmail(username,version=1){
+  const base=username.toLowerCase().replace(/[^a-z0-9]/g,'_');
+  const v=parseInt(version)||1;
+  return`${base}${v>1?`_v${v}`:''}@pogotrades.nyc`;
+}
+function authVersionFromEmail(email){
+  const m=String(email||'').match(/_v(\d+)@pogotrades\.nyc$/i);
+  return m?parseInt(m[1]):1;
+}
+function authVersionForUser(ud={}){
+  const v=parseInt(ud?.authVersion);
+  return Number.isFinite(v)&&v>0?v:authVersionFromEmail(ud?.authEmail);
+}
+function authEmailForUser(username,ud={}){
+  return ud?.authEmail||authEmail(username,authVersionForUser(ud));
+}
+function normalizedUserRecord(username,prev={},data={}){
+  const merged={friendCode:'',joined:Date.now(),lastSeen:null,lastUpdated:null,pinHashed:false,...prev,...data};
+  merged.authVersion=authVersionForUser(merged);
+  if(!merged.authEmail)merged.authEmail=authEmail(username,merged.authVersion);
+  return merged;
+}
 function firebaseAuthConfigured(){return!!FIREBASE_API_KEY&&FIREBASE_API_KEY.startsWith('AIza');}
 function firebaseConfig(url=FIREBASE_URL){
   const cfg={databaseURL:url,projectId:FIREBASE_PROJECT_ID};
@@ -1012,7 +1170,7 @@ function setupFirebase(url=FIREBASE_URL){
 }
 async function ensureFirebaseIdentity(username,pin,ud){
   if(!auth)return null;
-  const email=authEmail(username);
+  const email=authEmailForUser(username,ud);
   let cred=null;
   let createdAuthUser=false;
   try{
@@ -1075,21 +1233,39 @@ async function seedFirebase(){
   if(!snap.exists()){const s=getLocal();await set(ref(db,'/'),s);toast('📦 Data seeded!');}
 }
 
+function applyDataPath(root,path,data){
+  const parts=String(path||'').split('/').filter(Boolean);
+  if(!parts.length)return;
+  let node=root;
+  for(let i=0;i<parts.length-1;i++){
+    const p=parts[i];
+    if(!node[p]||typeof node[p]!=='object')node[p]={};
+    node=node[p];
+  }
+  const last=parts[parts.length-1];
+  if(data==null)delete node[last];
+  else node[last]=data;
+}
+function mergeRemoteData(d){
+  const merged=normalizeData({
+    users:d?.users||{},
+    wishlist:d?.wishlist||{},
+    dynamax:d?.dynamax||{},
+    costumes:d?.costumes||{},
+    requests:d?.requests||{},
+    authIndex:d?.authIndex||{}
+  });
+  Object.values(syncQueue||{}).forEach(({path,data})=>applyDataPath(merged,path,data));
+  return normalizeData(merged);
+}
 function startListener(){
   onValue(ref(db,'/'),(snap)=>{
     if(snap.exists()){
-      const d=snap.val();const s=getLocal();
-      const merged={
-        users:{...s.users,...(d.users||{})},
-        wishlist:{...s.wishlist,...(d.wishlist||{})},
-        dynamax:{...s.dynamax,...(d.dynamax||{})},
-        costumes:{...s.costumes,...(d.costumes||{})},
-        requests:{...s.requests,...(d.requests||{})},
-        authIndex:{...s.authIndex,...(d.authIndex||{})}
-      };
+      const merged=mergeRemoteData(snap.val());
       saveLocal(merged);allData=normalizeData(merged);setSyncStatus('online');
-      showSyncDot(false);syncQueue={};
-      refreshAll();
+      showSyncDot(!!Object.keys(syncQueue).length);
+      if(cur)refreshAll();
+      else populateLoginUsers();
     }
   },()=>setSyncStatus('offline'));
 }
@@ -1168,11 +1344,17 @@ function showLogin(){
   document.getElementById('login-pg').querySelector('.lcard').style.display='block';
   const btn=document.getElementById('login-btn');
   btn.textContent='Sign in →';btn.disabled=false;
+  populateLoginUsers();
+}
+function populateLoginUsers(){
   const sel=document.getElementById('login-user');
+  if(!sel)return;
+  const prev=sel.value;
   sel.innerHTML='<option value="">Select username…</option>';
   Object.keys(allData.users||{}).sort().forEach(u=>{
     const o=document.createElement('option');o.value=u;o.textContent=u;sel.appendChild(o);
   });
+  if(prev&&allData.users?.[prev])sel.value=prev;
 }
 function showApp(){
   document.getElementById('login-pg').style.display='none';
@@ -1191,7 +1373,7 @@ function showApp(){
   updateFcDisplay();
   buildAcItems();
   renderBrowse();renderMyList();renderStrings();
-  if(isAdmin){renderAdmin();renderPendingRequests();}
+  if(isAdmin){renderAdmin();renderPendingRequests();repairMissingAuthMetadata();}
 }
 function switchTab(t){
   if(t==='admin'&&!allData.users?.[cur]?.isAdmin)t='browse';
@@ -1243,7 +1425,7 @@ function buildAcItems(){
   const seen=new Set();acItems=[];
   arr.forEach(e=>{
     if(seen.has(e.name))return;seen.add(e.name);
-    acItems.push({name:e.name,dn:e.displayName||e.name,no:e.no||null});
+    acItems.push({name:e.name,dn:e.displayName||e.name,no:e.no||null,spriteUrl:entrySpriteUrl(e,e.name)});
   });
 }
 function acSearch(q){
@@ -1258,7 +1440,7 @@ function acSearch(q){
   }else{
     dd.innerHTML=acFiltered.map((e,i)=>`
       <div class="ac-item" data-idx="${i}" onmousedown="acSelect(${i})">
-        ${e.no?spriteImg(e.no,28,'ac-item-sprite',e.name):''}
+        ${e.no||e.spriteUrl?spriteImg(e.no,28,'ac-item-sprite',e.name):''}
         ${e.no?`<span class="ac-item-no">#${e.no}</span>`:''}
         <span class="ac-item-name">${e.dn}</span>
       </div>`).join('');
@@ -1379,7 +1561,7 @@ function renderBrowse(){
     el.innerHTML=`<div class="pgrid">${results.map(e=>{
       let ents=map[e.name]||[];if(browseFilter!=='ALL')ents=ents.filter(x=>x.p===browseFilter);
       ents=sortEntries(ents);
-      return`<div class="pc"><div class="pc-hdr"><div class="pc-info"><div class="pc-name">${e.displayName||e.name}</div></div></div>
+      return`<div class="pc"><div class="pc-hdr">${spriteImg(e.no,28,'pc-sprite',e.name)}<div class="pc-info"><div class="pc-name">${e.displayName||e.name}</div><div class="pc-no">#${e.no}</div></div></div>
         <div class="pc-users">${ents.map(x=>userBadge(x)).join('')}</div></div>`;
     }).join('')}</div>`;
     return;
@@ -1508,7 +1690,7 @@ function currentListEntries(type=myListType,filterVal=''){
       mod,
       no:spriteEntry.no||entry.no||null,
       spriteName:(COSTUME_FORM_SPRITE_IDS[name]||REGIONAL_FORM_IDS[name])?name:(spriteEntry.name||entry.name||name),
-      spriteUrl:spriteEntry.spriteUrl||spriteEntry.sprite||entry.spriteUrl||entry.sprite||''
+      spriteUrl:entrySpriteUrl(spriteEntry.no?spriteEntry:entry,name)
     };
   }).filter(e=>!q||e.dn.toLowerCase().includes(q))
     .sort((a,b)=>(PRI_ORDER[a.p]??9)-(PRI_ORDER[b.p]??9)||a.dn.localeCompare(b.dn,undefined,{sensitivity:'base'}));
@@ -1541,7 +1723,7 @@ function renderMyList(filterVal){
     const dn=dispMap[name]||name;
     const no=noMap[name]||null;
     const sn=name.replace(/'/g,"\\'").replace(/"/g,'&quot;');
-    const hasSprite=no||COSTUME_FORM_SPRITE_IDS[name];
+    const hasSprite=no||COSTUME_FORM_SPRITE_IDS[name]||GO_COSTUME_SPRITE_SLUGS[name];
     return`<div class="myrow" draggable="true" data-name="${sn}" data-idx="${idx}" data-full="${escAttr(dn)}" aria-label="${escAttr(dn)}"
       ondragstart="dragStart(event)" ondragover="dragOver(event)" ondrop="dragDrop(event)" ondragend="dragEnd(event)">
       <span class="drag-handle" title="Drag to reorder">⠿</span>
@@ -1559,7 +1741,7 @@ function renderMyList(filterVal){
 
 const canvasImageCache=new Map();
 function exportSpriteUrl(e){
-  return e.spriteUrl||(e.no?spriteUrl(e.no,e.spriteName):'');
+  return canvasSafeSpriteUrl(e.spriteUrl||(e.no?spriteUrl(e.no,e.spriteName):''));
 }
 function loadCanvasImage(url){
   if(!url)return Promise.resolve(null);
@@ -1616,6 +1798,10 @@ function drawSpriteFallback(ctx,e,x,y,size){
   ctx.textAlign='center';
   ctx.fillText(String(e.dn||'?').slice(0,2).toUpperCase(),x+size/2,y+size/2+6);
   ctx.textAlign='left';
+}
+function maxMarkForEntry(e,type){
+  if(type!=='dynamax')return'';
+  return/\b(gmax|gigantamax)\b/i.test(`${e.name||''} ${e.dn||''} ${e.mod||''}`)?'G':'D';
 }
 function canvasBlob(canvas){
   return new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(new Error('Could not render image')),'image/png'));
@@ -1683,6 +1869,17 @@ async function renderListImage(entries,type,username){
       const img=images.get(exportSpriteUrl(e));
       if(img)drawImageContain(ctx,img,sx,sy,sprSize,sprSize);
       else drawSpriteFallback(ctx,e,sx,sy,sprSize);
+      const mark=maxMarkForEntry(e,type);
+      if(mark){
+        const bx=x+cardW-25,by=cy+9;
+        roundedRect(ctx,bx,by,17,17,5);
+        ctx.fillStyle=mark==='G'?'#c084fc':'#38bdf8';ctx.fill();
+        ctx.fillStyle='#0f0f1a';
+        ctx.font='800 11px Space Grotesk, sans-serif';
+        ctx.textAlign='center';
+        ctx.fillText(mark,bx+8.5,by+12.5);
+        ctx.textAlign='left';
+      }
     });
     y+=Math.ceil(group.entries.length/cols)*(cardH+gap)-gap+sectionGap;
   });
@@ -1771,9 +1968,9 @@ function buildStrings(type,username){
     Object.entries(list).forEach(([name,val])=>{
       const{p}=parsePri(val);if(!p||!byP[p])return;
       let no=costumeNoMap[name];
-      if(!no&&COSTUME_FORM_SPRITE_IDS[name])no=201;
       if(!no){const sp=spriteEntryForListItem('costumes',name,DB.costumes.find(e=>e.name===name)||{});no=sp?.no||null;}
-      if(no)byP[p].push(parseInt(no));
+      const dex=parseInt(no);
+      if(Number.isFinite(dex))byP[p].push(dex);
     });
     const out={};
     ['H','M','L'].forEach(p=>{
@@ -2004,17 +2201,20 @@ function toggleAdmin(u,makeAdmin){
   writeUser(u,{isAdmin:makeAdmin});
   toast(`✅ ${u} is now ${makeAdmin?'an admin':'a member'}`);renderAdmin();
 }
-function addUser(){
+async function addUser(){
   const name=document.getElementById('nu-name').value.trim();
   const pin=document.getElementById('nu-pin').value.trim();
   const isAdmin=document.getElementById('nu-admin').checked;
   if(!name){toast('⚠️ Enter username');return;}
   if(!isSixDigitPin(pin)){toast('⚠️ PIN must be exactly 6 digits');return;}
   if(allData.users?.[name]){toast('⚠️ Username exists');return;}
-  writeUser(name,{pin,isAdmin,isOwner:false,friendCode:'',joined:Date.now(),lastSeen:null,lastUpdated:null,pinHashed:false,authEmail:authEmail(name)});
-  writeList('wishlist',name,{});writeList('dynamax',name,{});writeList('costumes',name,{});
-  document.getElementById('nu-name').value='';document.getElementById('nu-pin').value='';document.getElementById('nu-admin').checked=false;
-  toast(`✅ ${name} added!`);renderAdmin();
+  try{
+    await createMemberNow(name,pin,isAdmin);
+    document.getElementById('nu-name').value='';document.getElementById('nu-pin').value='';document.getElementById('nu-admin').checked=false;
+    toast(`✅ ${name} added!`);renderAdmin();populateLoginUsers();
+  }catch(e){
+    toast('⚠️ Could not add member in Firebase: '+(e.code||e.message||'permission denied'),5000);
+  }
 }
 function openReset(u){
   // Check permission
@@ -2029,8 +2229,14 @@ function openReset(u){
 async function confirmReset(){
   const pin=document.getElementById('rpin-val').value.trim();
   if(!isSixDigitPin(pin)){toast('⚠️ PIN must be exactly 6 digits');return;}
-  await writeUser(rpinTarget,{pin,pinHashed:false});
-  closeModal('rpin-modal');toast(`✅ PIN reset for ${rpinTarget}`);rpinTarget=null;
+  const prev=allData.users?.[rpinTarget]||{};
+  const nextVersion=authVersionForUser(prev)+1;
+  try{
+    await writeUserStrict(rpinTarget,{pin,pinHashed:false,authVersion:nextVersion,authEmail:authEmail(rpinTarget,nextVersion),authUid:null,lastSeen:null});
+    closeModal('rpin-modal');toast(`✅ PIN reset for ${rpinTarget}`);rpinTarget=null;
+  }catch(e){
+    toast('⚠️ Could not reset PIN in Firebase: '+(e.code||e.message||'permission denied'),5000);
+  }
 }
 
 // ── REQUEST ACCESS ────────────────────────────────────────────
@@ -2066,7 +2272,7 @@ async function submitRequest(){
 }
 function renderPendingRequests(){
   const requests=allData.requests||{};
-  const pending=Object.entries(requests).filter(([,r])=>r.status==='pending');
+  const pending=Object.entries(requests).filter(([,r])=>r.status==='pending'||(r.status==='approved'&&r.username&&!allData.users?.[r.username]));
   const section=document.getElementById('pending-requests-section');
   const listEl=document.getElementById('pending-requests-list');
   const badge=document.getElementById('req-count-badge');
@@ -2076,27 +2282,30 @@ function renderPendingRequests(){
   section.style.display='block';
   if(badge)badge.textContent=pending.length;
   if(adminNotif){adminNotif.style.display='inline-flex';adminNotif.textContent=pending.length;}
-  listEl.innerHTML=pending.map(([id,r])=>`
+  listEl.innerHTML=pending.map(([id,r])=>{
+    const needsRepair=r.status==='approved'&&!allData.users?.[r.username];
+    return`
     <div class="req-card" id="reqcard-${id}">
       <div class="req-card-hdr">
-        <div class="req-card-name">🎮 ${r.username}</div>
-        <div class="req-card-time">${freshnessLabel(r.requestedAt)}</div>
+        <div class="req-card-name">🎮 ${r.username}${needsRepair?' <span class="notif-badge">repair</span>':''}</div>
+        <div class="req-card-time">${needsRepair?'approved but no login':freshnessLabel(r.requestedAt)}</div>
       </div>
       ${r.note?`<div class="req-card-note">"${r.note}"</div>`:'<div class="req-card-note" style="color:var(--border2)">No note</div>'}
       <div class="req-actions">
-        <button class="btn-approve" onclick="approveRequest('${id}','${r.username.replace(/'/g,"\\'")}')">✅ Approve</button>
+        <button class="btn-approve" onclick="approveRequest('${id}','${r.username.replace(/'/g,"\\'")}')">${needsRepair?'🔧 Create login':'✅ Approve'}</button>
         <button class="btn-deny" onclick="denyRequest('${id}')">✗ Deny</button>
       </div>
-    </div>`).join('');
+    </div>`}).join('');
 }
 async function approveRequest(reqId,username){
   if(allData.users?.[username]){toast('⚠️ Username already exists');return;}
   const pin=String(Math.floor(100000+Math.random()*900000));
-  await writeUser(username,{pin,isAdmin:false,isOwner:false,friendCode:'',joined:Date.now(),lastSeen:null,lastUpdated:null,pinHashed:false,authEmail:authEmail(username)});
-  await writeList('wishlist',username,{});await writeList('dynamax',username,{});await writeList('costumes',username,{});
-  const s=getLocal();if(s.requests?.[reqId])s.requests[reqId].status='approved';
-  saveLocal(s);if(fbOn&&db)await update(ref(db,`requests/${reqId}`),{status:'approved'}).catch(console.error);
-  allData=s;
+  try{
+    await createMemberNow(username,pin,false,reqId);
+  }catch(e){
+    toast('⚠️ Could not create login in Firebase: '+(e.code||e.message||'permission denied'),5000);
+    return;
+  }
   const card=document.getElementById(`reqcard-${reqId}`);
   if(card)card.innerHTML=`
     <div style="font-size:14px;font-weight:700;color:var(--ok);margin-bottom:8px">✅ ${username} approved</div>
@@ -2104,7 +2313,7 @@ async function approveRequest(reqId,username){
     <div style="font-size:13px">Trainer: <strong>${username}</strong></div>
     <div style="font-size:13px;margin-top:4px">PIN: <span class="pin-reveal">${pin}</span></div>
     <div style="font-size:11px;color:var(--muted);margin-top:8px">Tell them to change PIN on first login.</div>`;
-  renderAdmin();toast(`✅ ${username} approved! PIN: ${pin}`,5000);
+  renderAdmin();populateLoginUsers();toast(`✅ ${username} approved! PIN: ${pin}`,5000);
   setTimeout(()=>renderPendingRequests(),4000);
 }
 async function denyRequest(reqId){
@@ -2248,7 +2457,8 @@ function parseImportString(){
   const rows=matched.map(function(e,i){
     const alreadyHas=!!existing[e.name];
     const modLabel=e.mod?' ('+e.mod+')':'';
-    const sprite=e.no?("<img src=\""+SPRITE_BASE+parseInt(e.no)+".png\" class=\"import-sprite\" width=\"28\" height=\"28\" loading=\"lazy\">"):"<div class=\"import-sprite-ph\"></div>";
+    const spriteSrc=e.no?spriteUrl(e.no,e.name):'';
+    const sprite=spriteSrc?('<img src="'+escAttr(spriteSrc)+'" class="import-sprite" width="28" height="28" alt="" title="'+escAttr(e.dn)+'" loading="lazy">'):"<div class=\"import-sprite-ph\"></div>";
     const already=alreadyHas?'<span style="font-size:10px;color:var(--muted)">already listed</span>':'';
     return '<div class="import-preview-row '+(alreadyHas?'skip':'')+'" id="import-row-'+i+'">'+
       '<input type="checkbox" class="import-check" id="import-chk-'+i+'" '+(e.checked&&!alreadyHas?'checked':'')+' onchange="toggleImportRow('+i+')">'+
