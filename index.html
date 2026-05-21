@@ -883,7 +883,16 @@ async function ensureFirebaseIdentity(username,pin,ud){
     cred=await signInWithEmailAndPassword(auth,email,pin);
   }catch(e){
     if(!ud.authUid&&(e.code==='auth/user-not-found'||e.code==='auth/invalid-credential')){
-      cred=await createUserWithEmailAndPassword(auth,email,pin);
+      try{
+        cred=await createUserWithEmailAndPassword(auth,email,pin);
+      }catch(createErr){
+        if(createErr.code==='auth/email-already-in-use'){
+          const outOfSync=new Error('This trainer PIN is out of sync with Firebase Auth. Ask an admin to repair the Firebase Auth user.');
+          outOfSync.code='auth/pin-out-of-sync';
+          throw outOfSync;
+        }
+        throw createErr;
+      }
     }else{
       throw e;
     }
@@ -965,7 +974,10 @@ async function doLogin(){
       writeUser(u,{lastSeen:Date.now()});
       showApp();
     }catch(e){
-      err.textContent='Firebase Auth failed: '+(e.code||e.message||'check API key and auth settings');
+      const code=e.code||'';
+      err.textContent=code==='auth/pin-out-of-sync'
+        ?'Firebase Auth is out of sync for this trainer. Ask an admin to reset the Auth user.'
+        :'Firebase Auth failed: '+(code||e.message||'check API key and auth settings');
       btn.textContent='Sign in →';btn.disabled=false;
     }
   } else {
@@ -1735,7 +1747,17 @@ async function saveProfile(){
   }
   const upd={friendCode:fc};
   if(p1){
-    if(auth?.currentUser)await updatePassword(auth.currentUser,p1).catch(()=>toast('⚠️ Firebase Auth password was not updated'));
+    if(auth){
+      if(!auth.currentUser){err.textContent='Sign out and back in before changing your PIN';return;}
+      try{
+        await updatePassword(auth.currentUser,p1);
+      }catch(e){
+        err.textContent=e.code==='auth/requires-recent-login'
+          ?'Sign out and back in, then change your PIN again'
+          :'Could not update Firebase Auth. Your PIN was not changed.';
+        return;
+      }
+    }
     upd.pin=await hashPin(p1);upd.pinHashed=true;
   }
   await writeUser(cur,upd);closeModal('prof-modal');updateFcDisplay();toast('✅ Profile saved!');
