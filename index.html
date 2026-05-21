@@ -13,10 +13,10 @@
   --bg:#0f0f1a;--bg2:#1a1a2e;--card:#1e1e35;
   --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.15);
   --text:#e8e8f0;--muted:#8888aa;--accent:#6c63ff;--ac2:#a78bfa;
-  --H:#f59e0b;--M:#3b82f6;--L:#10b981;
-  --Hbg:rgba(245,158,11,.12);--Mbg:rgba(59,130,246,.12);--Lbg:rgba(16,185,129,.12);
+  --H:#ef4444;--M:#f59e0b;--L:#10b981;
+  --Hbg:rgba(239,68,68,.16);--Mbg:rgba(245,158,11,.16);--Lbg:rgba(16,185,129,.16);
   --danger:#ef4444;--warn:#f59e0b;--ok:#10b981;
-  --r:10px;--r2:6px;--font:'Space Grotesk',sans-serif;--mono:'JetBrains Mono',monospace;
+  --r:10px;--r2:6px;--topbar-h:56px;--font:'Space Grotesk',sans-serif;--mono:'JetBrains Mono',monospace;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
@@ -33,17 +33,18 @@ input,select,textarea{font-family:var(--font);outline:none}
 .topbar-sync-wrap{position:relative;display:flex;align-items:center}
 
 /* TOPBAR */
-.topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 16px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 16px;height:var(--topbar-h);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
 .logo{font-weight:700;font-size:17px;letter-spacing:-.3px;display:flex;align-items:center;gap:8px}
 .logo span{background:linear-gradient(135deg,var(--accent),var(--ac2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.topbar-r{display:flex;align-items:center;gap:10px}
+.topbar-r{display:flex;align-items:center;gap:10px;min-width:0}
 .sync-row{display:flex;align-items:center;gap:5px}
-.user-chip{display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--border2);border-radius:20px;padding:4px 12px 4px 4px;font-size:13px;font-weight:500;cursor:pointer}
+.user-chip{display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--border2);border-radius:20px;padding:4px 12px 4px 4px;font-size:13px;font-weight:500;cursor:pointer;min-width:0}
+.user-chip span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .av{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--ac2));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
 .av.lg{width:48px;height:48px;font-size:18px}
 
 /* TABS */
-.tabs{display:flex;background:var(--bg2);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none}
+.tabs{display:flex;background:var(--bg2);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;position:sticky;top:var(--topbar-h);z-index:90}
 .tabs::-webkit-scrollbar{display:none}
 .tab{padding:12px 15px;font-size:13px;font-weight:500;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap;cursor:pointer;transition:.2s;background:none;border-top:none;border-left:none;border-right:none}
 .tab.active{color:var(--ac2);border-bottom-color:var(--ac2)}
@@ -67,9 +68,9 @@ input,select,textarea{font-family:var(--font);outline:none}
 .fbtn{background:var(--card);border:1px solid var(--border);color:var(--muted);padding:5px 13px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;transition:.15s}
 .fbtn.on{color:#fff;border-color:transparent}
 .fbtn.fALL.on{background:var(--accent)}
-.fbtn.fH.on{background:var(--H);color:#000}
-.fbtn.fM.on{background:var(--M)}
-.fbtn.fL.on{background:var(--L);color:#000}
+.fbtn.fH.on{background:var(--H);color:#fff}
+.fbtn.fM.on{background:var(--M);color:#111}
+.fbtn.fL.on{background:var(--L);color:#03140e}
 .stale-filter{display:flex;gap:6px;margin-bottom:12px;align-items:center;flex-wrap:wrap}
 .stale-filter label{font-size:12px;color:var(--muted)}
 .sfbtn{background:var(--card);border:1px solid var(--border);color:var(--muted);padding:4px 11px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;transition:.15s}
@@ -99,9 +100,10 @@ input,select,textarea{font-family:var(--font);outline:none}
 
 /* BADGES */
 .badge{display:inline-flex;align-items:center;gap:2px;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:600}
-.badge.H{background:var(--Hbg);color:var(--H);border:1px solid rgba(245,158,11,.25)}
-.badge.M{background:var(--Mbg);color:var(--M);border:1px solid rgba(59,130,246,.25)}
+.badge.H{background:var(--Hbg);color:var(--H);border:1px solid rgba(239,68,68,.35)}
+.badge.M{background:var(--Mbg);color:var(--M);border:1px solid rgba(245,158,11,.35)}
 .badge.L{background:var(--Lbg);color:var(--L);border:1px solid rgba(16,185,129,.25)}
+.prio-mark{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:rgba(255,255,255,.08);border:1px solid currentColor;color:inherit;font-family:var(--mono);font-size:9px;font-weight:700;margin-right:4px}
 .badge .mod{font-size:9px;opacity:.7;font-family:var(--mono)}
 
 /* SECTION TITLE */
@@ -153,8 +155,8 @@ input,select,textarea{font-family:var(--font);outline:none}
 .myrow-name{font-size:13px;font-weight:500;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mctrl{display:flex;gap:3px;align-items:center;flex-shrink:0}
 .pb{width:26px;height:24px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;transition:.15s}
-.pb.on.H{background:var(--Hbg);color:var(--H);border-color:rgba(245,158,11,.4)}
-.pb.on.M{background:var(--Mbg);color:var(--M);border-color:rgba(59,130,246,.4)}
+.pb.on.H{background:var(--Hbg);color:var(--H);border-color:rgba(239,68,68,.55)}
+.pb.on.M{background:var(--Mbg);color:var(--M);border-color:rgba(245,158,11,.55)}
 .pb.on.L{background:var(--Lbg);color:var(--L);border-color:rgba(16,185,129,.4)}
 .ni{background:var(--bg);border:1px solid var(--border);color:var(--text);padding:2px 5px;border-radius:4px;font-size:10px;width:50px;font-family:var(--mono)}
 .rm{width:20px;height:20px;border-radius:4px;background:rgba(239,68,68,.1);color:var(--danger);border:1px solid rgba(239,68,68,.2);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center}
@@ -164,6 +166,7 @@ input,select,textarea{font-family:var(--font);outline:none}
 .cpbtn{background:var(--accent);color:#fff;padding:8px 16px;border-radius:var(--r2);font-size:13px;font-weight:600;cursor:pointer;border:none;transition:.15s}
 .cpbtn:hover{background:var(--ac2);color:#000}
 .cpbtn:active{transform:scale(.97)}
+.cpbtn.copied{background:var(--ok);color:#06140f}
 .str-levels{display:flex;flex-direction:column;gap:10px}
 .str-level{background:var(--card);border:1px solid var(--border);border-radius:var(--r2);padding:11px 13px}
 .str-level-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
@@ -198,6 +201,9 @@ input,select,textarea{font-family:var(--font);outline:none}
 .new-user-form h3{font-size:13px;font-weight:600;color:var(--ac2);margin-bottom:10px}
 .btn-export{background:transparent;border:1px solid var(--border2);color:var(--muted);padding:7px 14px;border-radius:var(--r2);font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px}
 .btn-export:hover{border-color:var(--ac2);color:var(--ac2)}
+.admin-actions{display:flex;justify-content:flex-end;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.security-box{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:13px;margin-bottom:14px}
+.security-box textarea{width:100%;min-height:170px;margin-top:9px;background:var(--bg);border:1px solid var(--border2);border-radius:var(--r2);color:var(--text);font-family:var(--mono);font-size:11px;line-height:1.5;padding:10px;resize:vertical}
 
 /* REQUEST ACCESS */
 .req-link{display:block;text-align:center;margin-top:14px;font-size:13px;color:var(--ac2);cursor:pointer;font-weight:500}
@@ -273,12 +279,24 @@ input,select,textarea{font-family:var(--font);outline:none}
 
 .bsave{background:var(--accent);color:#fff;padding:9px 18px;border-radius:var(--r2);font-size:13px;font-weight:600;border:none;cursor:pointer}
 .bsave:active{transform:scale(.98)}
-.empty{text-align:center;padding:44px 20px;color:var(--muted)}
+.empty{text-align:center;padding:44px 20px;color:var(--muted);border:1px dashed var(--border2);border-radius:var(--r);background:rgba(255,255,255,.02)}
 .empty-i{font-size:36px;margin-bottom:10px}
 .empty-t{font-size:14px;font-weight:500}
 .empty-s{font-size:12px;margin-top:3px}
 
-@media(max-width:600px){.page{padding:11px}.pgrid,.mygrid{grid-template-columns:1fr}.lcard{padding:22px 16px}}
+@media(max-width:600px){
+  :root{--topbar-h:54px}
+  .topbar{padding:0 12px;gap:8px}
+  .logo{font-size:15px}
+  .sync-lbl{display:none}
+  .topbar-r{gap:6px}
+  .user-chip{max-width:142px;padding:3px 8px 3px 3px;font-size:12px}
+  .tabs{justify-content:space-around}
+  .tab{flex:1;padding:12px 9px;font-size:12px;text-align:center}
+  .page{padding:11px}
+  .pgrid,.mygrid{grid-template-columns:1fr}
+  .lcard{padding:22px 16px}
+}
 
 /* IMPORT MODAL */
 .import-preview{max-height:260px;overflow-y:auto;margin:10px 0;border:1px solid var(--border);border-radius:var(--r2)}
@@ -300,8 +318,8 @@ input,select,textarea{font-family:var(--font);outline:none}
 .import-step.active{display:block}
 .import-pri-row{display:flex;gap:8px;margin:10px 0;flex-wrap:wrap}
 .import-pri-btn{flex:1;padding:8px;border-radius:var(--r2);border:1px solid var(--border2);background:var(--bg);color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;transition:.15s;font-family:var(--font)}
-.import-pri-btn.sel.H{background:var(--Hbg);color:var(--H);border-color:rgba(245,158,11,.4)}
-.import-pri-btn.sel.M{background:var(--Mbg);color:var(--M);border-color:rgba(59,130,246,.4)}
+.import-pri-btn.sel.H{background:var(--Hbg);color:var(--H);border-color:rgba(239,68,68,.55)}
+.import-pri-btn.sel.M{background:var(--Mbg);color:var(--M);border-color:rgba(245,158,11,.55)}
 .import-pri-btn.sel.L{background:var(--Lbg);color:var(--L);border-color:rgba(16,185,129,.4)}
 .import-modal{max-width:480px}
 .import-btn{background:transparent;border:1px solid var(--border2);color:var(--muted);padding:6px 13px;border-radius:var(--r2);font-size:12px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:5px;margin-top:8px;font-family:var(--font)}
@@ -374,18 +392,18 @@ input,select,textarea{font-family:var(--font);outline:none}
         <div class="sync-row"><div class="sync-dot" id="sdot"></div><span class="sync-lbl" id="slbl">—</span></div>
         <div class="sync-queue-dot" id="sqd" title="Unsynced changes pending"></div>
       </div>
-      <div class="user-chip" onclick="openModal('prof-modal')">
+      <div class="user-chip" onclick="openModal('prof-modal')" role="button" tabindex="0" aria-label="Open profile">
         <div class="av" id="top-av">?</div>
         <span id="top-un">—</span>
       </div>
     </div>
   </div>
 
-  <div class="tabs">
-    <button class="tab active" data-tab="browse" onclick="switchTab('browse')">🔍 Browse</button>
-    <button class="tab" data-tab="mylist" onclick="switchTab('mylist')">📋 My List</button>
-    <button class="tab" data-tab="strings" onclick="switchTab('strings')">📤 Strings</button>
-    <button class="tab" data-tab="admin" onclick="switchTab('admin')" id="admin-tab" style="display:none">⚙️ Admin<span class="notif-badge" id="admin-notif" style="display:none">!</span></button>
+  <div class="tabs" role="tablist" aria-label="Main sections">
+    <button class="tab active" data-tab="browse" onclick="switchTab('browse')" role="tab" aria-selected="true">🔍 Browse</button>
+    <button class="tab" data-tab="mylist" onclick="switchTab('mylist')" role="tab" aria-selected="false">📋 My List</button>
+    <button class="tab" data-tab="strings" onclick="switchTab('strings')" role="tab" aria-selected="false">📤 Strings</button>
+    <button class="tab" data-tab="admin" onclick="switchTab('admin')" id="admin-tab" style="display:none" role="tab" aria-selected="false">⚙️ Admin<span class="notif-badge" id="admin-notif" style="display:none">!</span></button>
   </div>
 
   <!-- BROWSE -->
@@ -393,9 +411,9 @@ input,select,textarea{font-family:var(--font);outline:none}
     <div class="srch"><span class="srch-icon">🔍</span><input type="text" id="bq" placeholder="Search Pokémon name, #number, or trainer…" oninput="renderBrowse()"></div>
     <div class="filter-row">
       <button class="fbtn fALL on" onclick="setFilter('ALL')">All</button>
-      <button class="fbtn fH" onclick="setFilter('H')">🔥 Hunting</button>
-      <button class="fbtn fM" onclick="setFilter('M')">💙 Want</button>
-      <button class="fbtn fL" onclick="setFilter('L')">💚 Low</button>
+      <button class="fbtn fH" onclick="setFilter('H')">🔴 High</button>
+      <button class="fbtn fM" onclick="setFilter('M')">🟡 Medium</button>
+      <button class="fbtn fL" onclick="setFilter('L')">🟢 Low</button>
     </div>
     <div class="stale-filter">
       <label>Activity:</label>
@@ -409,8 +427,8 @@ input,select,textarea{font-family:var(--font);outline:none}
       <button class="ltab" onclick="setBrowseList('costumes')">Costumes</button>
     </div>
     <div class="legend">
-      <div class="leg"><div class="leg-dot" style="background:var(--H)"></div>Hunting hundo</div>
-      <div class="leg"><div class="leg-dot" style="background:var(--M)"></div>Want eventually</div>
+      <div class="leg"><div class="leg-dot" style="background:var(--H)"></div>High priority</div>
+      <div class="leg"><div class="leg-dot" style="background:var(--M)"></div>Medium priority</div>
       <div class="leg"><div class="leg-dot" style="background:var(--L)"></div>Low priority</div>
     </div>
     <div id="browse-out"></div>
@@ -440,8 +458,8 @@ input,select,textarea{font-family:var(--font);outline:none}
           <div class="ac-dropdown" id="ac-dropdown"></div>
         </div>
         <select id="add-pmon-pri">
-          <option value="H">H – Hunting</option>
-          <option value="M" selected>M – Want</option>
+          <option value="H">H – High</option>
+          <option value="M" selected>M – Medium</option>
           <option value="L">L – Low</option>
         </select>
         <input type="text" id="add-pmon-notes" placeholder="Notes: f, m, xs…" style="max-width:120px">
@@ -475,9 +493,12 @@ input,select,textarea{font-family:var(--font);outline:none}
 
   <!-- ADMIN -->
   <div class="page" id="tab-admin">
-    <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
-      <button class="btn-export" onclick="exportData()">⬇️ Export backup</button>
+    <div class="admin-actions">
+      <button class="btn-export" onclick="exportData()" aria-label="Export backup">⬇️ Export backup</button>
+      <button class="btn-export" onclick="triggerRestore()" aria-label="Restore backup">⬆️ Restore backup</button>
+      <input type="file" id="restore-file" accept="application/json,.json" style="display:none" onchange="restoreData(this.files?.[0])">
     </div>
+    <div class="security-box" id="security-panel"></div>
     <div id="pending-requests-section" style="display:none;margin-bottom:16px">
       <div class="sec" style="margin-top:0;display:flex;align-items:center;gap:6px">Pending requests <span class="notif-badge" id="req-count-badge">0</span></div>
       <div id="pending-requests-list"></div>
@@ -500,13 +521,13 @@ input,select,textarea{font-family:var(--font);outline:none}
 </div>
 
 <!-- TOASTS -->
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 <div class="undo-toast" id="undo-toast"><span id="undo-msg"></span><button class="undo-btn" onclick="doUndo()">Undo</button></div>
 
 <!-- PROFILE MODAL -->
-<div class="ov" id="prof-modal">
+<div class="ov" id="prof-modal" role="dialog" aria-modal="true" aria-labelledby="prof-title">
   <div class="modal">
-    <h3>👤 Profile</h3>
+    <h3 id="prof-title">👤 Profile</h3>
     <div class="pfc"><div class="pfc-lbl">Friend Code</div><div class="pfc-val" id="pfc-disp">—</div></div>
     <div class="field">
       <label>Update Friend Code</label>
@@ -524,9 +545,9 @@ input,select,textarea{font-family:var(--font);outline:none}
 </div>
 
 <!-- RESET PIN MODAL -->
-<div class="ov" id="rpin-modal">
+<div class="ov" id="rpin-modal" role="dialog" aria-modal="true" aria-labelledby="rpin-title">
   <div class="modal">
-    <h3>🔑 Reset PIN</h3>
+    <h3 id="rpin-title">🔑 Reset PIN</h3>
     <p style="font-size:13px;color:var(--muted);margin-bottom:14px">For: <strong id="rpin-target">—</strong></p>
     <div class="field"><label>New PIN</label><input type="text" id="rpin-val" placeholder="New PIN" maxlength="6" inputmode="numeric"></div>
     <div class="mact"><button class="bghost" onclick="closeModal('rpin-modal')">Cancel</button><button class="bpri" onclick="confirmReset()">Reset</button></div>
@@ -534,9 +555,9 @@ input,select,textarea{font-family:var(--font);outline:none}
 </div>
 
 <!-- IMPORT MODAL -->
-<div class="ov" id="import-modal">
+<div class="ov" id="import-modal" role="dialog" aria-modal="true" aria-labelledby="import-title">
   <div class="modal import-modal">
-    <h3>📥 Import from search string</h3>
+    <h3 id="import-title">📥 Import from search string</h3>
 
     <!-- STEP 1: Paste -->
     <div class="import-step active" id="import-step1">
@@ -548,8 +569,8 @@ input,select,textarea{font-family:var(--font);outline:none}
       <div class="err" id="import-err"></div>
       <div style="font-size:12px;font-weight:600;color:var(--muted);margin-top:12px;margin-bottom:4px">Add as priority:</div>
       <div class="import-pri-row">
-        <button class="import-pri-btn sel M" data-pri="H" onclick="setImportPri('H')">H – Hunting</button>
-        <button class="import-pri-btn sel M sel" data-pri="M" onclick="setImportPri('M')">M – Want</button>
+        <button class="import-pri-btn" data-pri="H" onclick="setImportPri('H')">H – High</button>
+        <button class="import-pri-btn sel M" data-pri="M" onclick="setImportPri('M')">M – Medium</button>
         <button class="import-pri-btn" data-pri="L" onclick="setImportPri('L')">L – Low</button>
       </div>
       <div class="mact">
@@ -581,14 +602,69 @@ const DB={"users":["Ghyslaine","AuraZ42","teechowy","HolyhighTiff","IceBirdz87",
 <script type="module">
 import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import{getDatabase,ref,set,get,onValue,update}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+import{getAuth,signInWithEmailAndPassword,createUserWithEmailAndPassword,signOut as firebaseSignOut,updatePassword}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 
 const PREFILTER="!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&";
 const OWNER="Doomsday126";
 const STALE_WARN=7,STALE_OLD=30;
 const SESSION_TTL=7*24*60*60*1000; // 7 days
 const SPRITE_BASE="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/";
+const FIREBASE_URL="https://trade-list-a4297-default-rtdb.firebaseio.com";
+const FIREBASE_PROJECT_ID="trade-list-a4297";
+const FIREBASE_API_KEY=""; // Paste the Web API key from Firebase project settings to enforce Auth-backed writes.
+const FIREBASE_AUTH_DOMAIN=`${FIREBASE_PROJECT_ID}.firebaseapp.com`;
+const PRI={
+  H:{label:'High',emoji:'🔴'},
+  M:{label:'Medium',emoji:'🟡'},
+  L:{label:'Low',emoji:'🟢'}
+};
+const SECURE_RULES=`{
+  "rules": {
+    ".read": true,
+    "users": {
+      "$username": {
+        ".write": "auth != null && (root.child('admins').child(auth.uid).val() === true || data.child('authUid').val() === auth.uid || (!data.child('authUid').exists() && data.child('authEmail').val() === auth.token.email && newData.child('authUid').val() === auth.uid))"
+      }
+    },
+    "wishlist": {
+      "$username": {
+        ".write": "auth != null && (root.child('admins').child(auth.uid).val() === true || root.child('users').child($username).child('authUid').val() === auth.uid)"
+      }
+    },
+    "dynamax": {
+      "$username": {
+        ".write": "auth != null && (root.child('admins').child(auth.uid).val() === true || root.child('users').child($username).child('authUid').val() === auth.uid)"
+      }
+    },
+    "costumes": {
+      "$username": {
+        ".write": "auth != null && (root.child('admins').child(auth.uid).val() === true || root.child('users').child($username).child('authUid').val() === auth.uid)"
+      }
+    },
+    "requests": {
+      "$id": {
+        ".write": "!data.exists() || (auth != null && root.child('admins').child(auth.uid).val() === true)"
+      }
+    },
+    "authIndex": {
+      "$uid": {
+        ".read": "auth != null && (auth.uid === $uid || root.child('admins').child(auth.uid).val() === true)",
+        ".write": "auth != null && auth.uid === $uid"
+      }
+    },
+    "admins": {
+      "$uid": {
+        ".read": "auth != null",
+        ".write": "auth != null && root.child('admins').child(auth.uid).val() === true"
+      }
+    },
+    "_ping": {
+      ".write": "auth != null"
+    }
+  }
+}`;
 
-let db=null,fbOn=false,cur=null;
+let db=null,fbOn=false,cur=null,fbApp=null,auth=null,currentAuthUid=null;
 let allData={};
 let browseFilter='ALL',browseList='wishlist',staleFilter=0;
 let myListType='wishlist',strListType='wishlist';
@@ -666,17 +742,31 @@ async function verifyPin(pin,stored){
   if(stored===pin)return true; // legacy plaintext
   return(await hashPin(pin))===stored;
 }
+function priLabel(p){return PRI[p]?.label||p;}
+function priName(p){return `${p} - ${priLabel(p)}`;}
+function priBadge(p){return `${PRI[p]?.emoji||''} ${priLabel(p)}`.trim();}
 
 // ── LOCAL STORAGE ─────────────────────────────────────────────
 function lsGet(k,d){try{return JSON.parse(localStorage.getItem(k)??'null')??d}catch{return d}}
 function lsSet(k,v){localStorage.setItem(k,JSON.stringify(v))}
+function normalizeData(s){
+  if(!s||typeof s!=='object')s={};
+  s.users=s.users||{};s.wishlist=s.wishlist||{};s.dynamax=s.dynamax||{};s.costumes=s.costumes||{};s.requests=s.requests||{};
+  Object.keys(s.users).forEach(u=>{
+    s.users[u]={friendCode:'',joined:Date.now(),lastSeen:null,lastUpdated:null,pinHashed:false,...s.users[u],authEmail:authEmail(u)};
+    if(!s.wishlist[u])s.wishlist[u]={};
+    if(!s.dynamax[u])s.dynamax[u]={};
+    if(!s.costumes[u])s.costumes[u]={};
+  });
+  return s;
+}
 
 function initLocal(){
   let s=lsGet('pogo3',null);
   if(!s){
     s={users:{},wishlist:{},dynamax:{},costumes:{},requests:{}};
     DB.users.filter(u=>u&&u.trim()&&u.trim()!=='EVERYONE').map(u=>u.trim()).forEach(u=>{
-      s.users[u]={pin:'1234',isAdmin:u===OWNER,isOwner:u===OWNER,friendCode:'',joined:Date.now(),lastSeen:null,lastUpdated:null,pinHashed:false};
+      s.users[u]={pin:'1234',isAdmin:u===OWNER,isOwner:u===OWNER,friendCode:'',joined:Date.now(),lastSeen:null,lastUpdated:null,pinHashed:false,authEmail:authEmail(u)};
       s.wishlist[u]={};s.dynamax[u]={};s.costumes[u]={};
       DB.wishlist.forEach(e=>{const v=e.users[u];if(v)s.wishlist[u][e.name]=v;});
       DB.dynamax.forEach(e=>{const v=e.users[u];if(v)s.dynamax[u][e.name]=v;});
@@ -684,13 +774,13 @@ function initLocal(){
     });
     lsSet('pogo3',s);
   }
-  return s;
+  return normalizeData(s);
 }
-function getLocal(){return lsGet('pogo3',null)||initLocal()}
-function saveLocal(s){lsSet('pogo3',s)}
+function getLocal(){return normalizeData(lsGet('pogo3',null)||initLocal())}
+function saveLocal(s){lsSet('pogo3',normalizeData(s))}
 
 async function writeUser(u,data){
-  const s=getLocal();s.users[u]={...s.users[u],...data};saveLocal(s);
+  const s=getLocal();s.users[u]={authEmail:authEmail(u),...s.users[u],...data};saveLocal(s);
   if(fbOn&&db)queueSync(`users/${u}`,s.users[u]);
   syncFromLocal();
 }
@@ -705,11 +795,40 @@ async function writeList(type,u,list){
 }
 function syncFromLocal(){allData=getLocal();refreshAll();}
 
-// ── FIREBASE AUTH (fix: database URL security) ────────────────
-// We use Firebase Auth with synthetic emails: username@pogotrades.nyc
-// This means Firebase security rules can verify identity server-side
-// The database URL in source code is harmless — rules enforce auth
+// ── FIREBASE AUTH / DATABASE ──────────────────────────────────
 function authEmail(username){return`${username.toLowerCase().replace(/[^a-z0-9]/g,'_')}@pogotrades.nyc`;}
+function firebaseAuthConfigured(){return!!FIREBASE_API_KEY&&FIREBASE_API_KEY.startsWith('AIza');}
+function firebaseConfig(url=FIREBASE_URL){
+  const cfg={databaseURL:url};
+  if(firebaseAuthConfigured()){cfg.apiKey=FIREBASE_API_KEY;cfg.authDomain=FIREBASE_AUTH_DOMAIN;}
+  return cfg;
+}
+function setupFirebase(url=FIREBASE_URL){
+  if(fbApp)return fbApp;
+  fbApp=initializeApp(firebaseConfig(url),'pogo');
+  db=getDatabase(fbApp);fbOn=true;
+  if(firebaseAuthConfigured())auth=getAuth(fbApp);
+  return fbApp;
+}
+async function ensureFirebaseIdentity(username,pin,ud){
+  if(!auth)return null;
+  const email=authEmail(username);
+  let cred=null;
+  try{
+    cred=await signInWithEmailAndPassword(auth,email,pin);
+  }catch(e){
+    if(!ud.authUid&&(e.code==='auth/user-not-found'||e.code==='auth/invalid-credential')){
+      cred=await createUserWithEmailAndPassword(auth,email,pin);
+    }else{
+      throw e;
+    }
+  }
+  currentAuthUid=cred.user.uid;
+  const authUpdate={authEmail:email,authUid:currentAuthUid};
+  if(ud.authEmail!==email||ud.authUid!==currentAuthUid)await writeUser(username,authUpdate);
+  if(db)await set(ref(db,`authIndex/${currentAuthUid}`),{username,isAdmin:!!ud.isAdmin,isOwner:!!ud.isOwner,lastSeen:Date.now()}).catch(()=>{});
+  return currentAuthUid;
+}
 
 async function connectFirebase(){
   const url=document.getElementById('fb-url').value.trim();
@@ -717,15 +836,8 @@ async function connectFirebase(){
   if(!url||!url.includes('firebaseio.com')){err.textContent='Enter a valid Firebase Realtime Database URL';return;}
   try{
     setSyncStatus('syncing');
-    const app=initializeApp({
-      databaseURL:url,
-      apiKey:"AIzaSyDummy-replaced-by-real-key-in-config", // will be overridden
-    },'pogo');
-    // Try without auth first (test mode)
-    db=getDatabase(app);
-    await set(ref(db,'_ping'),Date.now());
-    fbOn=true;
-
+    setupFirebase(url);
+    await set(ref(db,'_ping'),Date.now()).catch(()=>{});
     lsSet('fbUrl',url);err.textContent='';
     await seedFirebase();
     startListener();
@@ -750,7 +862,7 @@ function startListener(){
         costumes:{...s.costumes,...(d.costumes||{})},
         requests:{...s.requests,...(d.requests||{})}
       };
-      saveLocal(merged);allData=merged;setSyncStatus('online');
+      saveLocal(merged);allData=normalizeData(merged);setSyncStatus('online');
       showSyncDot(false);syncQueue={};
       refreshAll();
     }
@@ -772,11 +884,17 @@ async function doLogin(){
   btn.textContent='Signing in…';btn.disabled=true;
   const ok=await verifyPin(p,ud.pin);
   if(ok){
-    cur=u;stampSession(u);
-    // Upgrade plaintext PIN to hashed
-    if(!ud.pinHashed){const h=await hashPin(p);writeUser(u,{pin:h,pinHashed:true});}
-    writeUser(u,{lastSeen:Date.now()});
-    showApp();
+    try{
+      if(auth)await ensureFirebaseIdentity(u,p,ud);
+      cur=u;stampSession(u);
+      // Upgrade plaintext PIN to hashed
+      if(!ud.pinHashed){const h=await hashPin(p);writeUser(u,{pin:h,pinHashed:true});}
+      writeUser(u,{lastSeen:Date.now()});
+      showApp();
+    }catch(e){
+      err.textContent='Firebase Auth failed: '+(e.code||e.message||'check API key and auth settings');
+      btn.textContent='Sign in →';btn.disabled=false;
+    }
   } else {
     err.textContent='❌ Wrong PIN (default: 1234)';
     btn.textContent='Sign in →';btn.disabled=false;
@@ -786,6 +904,7 @@ async function doLogin(){
 function logout(){
   cur=null;
   sessionStorage.removeItem('pgu');sessionStorage.removeItem('pguts');
+  if(auth)firebaseSignOut(auth).catch(()=>{});
   closeModal('prof-modal');
   document.getElementById('app').style.display='none';
   showLogin();
@@ -821,16 +940,23 @@ function showApp(){
   document.getElementById('my-un').textContent=cur;
   const isAdmin=allData.users?.[cur]?.isAdmin;
   document.getElementById('admin-tab').style.display=isAdmin?'':'none';
+  const activeTab=document.querySelector('.tab.active')?.dataset.tab;
+  const nextTab=activeTab&&(activeTab!=='admin'||isAdmin)?activeTab:'browse';
+  switchTab(nextTab);
+  window.scrollTo(0,0);
   updateFcDisplay();
   buildAcItems();
   renderBrowse();renderMyList();renderStrings();
   if(isAdmin){renderAdmin();renderPendingRequests();}
 }
 function switchTab(t){
-  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  if(t==='admin'&&!allData.users?.[cur]?.isAdmin)t='browse';
+  document.querySelectorAll('.tab').forEach(b=>{b.classList.remove('active');b.setAttribute('aria-selected','false');});
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelector(`[data-tab="${t}"]`).classList.add('active');
+  const tabBtn=document.querySelector(`[data-tab="${t}"]`);
+  tabBtn.classList.add('active');tabBtn.setAttribute('aria-selected','true');
   document.getElementById(`tab-${t}`).classList.add('active');
+  window.scrollTo(0,0);
 }
 function refreshAll(){
   if(!cur)return;
@@ -856,8 +982,8 @@ function freshnessColor(cls){return{fresh:'var(--ok)',warn:'var(--warn)',stale:'
 function userBadge(x){
   const lu=allData.users?.[x.user]?.lastUpdated;
   const color=freshnessColor(freshnessClass(lu));
-  return`<span class="badge ${x.p}" title="${x.user} · Updated ${freshnessLabel(lu)}" style="border-color:${color}40">
-    ${x.user}${x.mod?`<span class="mod"> ${x.mod}</span>`:''}
+  return`<span class="badge ${x.p}" title="${x.user} · ${priLabel(x.p)} priority · Updated ${freshnessLabel(lu)}" style="border-color:${color}40">
+    <span class="prio-mark">${x.p}</span>${x.user}${x.mod?`<span class="mod"> ${x.mod}</span>`:''}
     <span style="width:5px;height:5px;border-radius:50%;background:${color};display:inline-block;margin-left:3px;flex-shrink:0"></span>
   </span>`;
 }
@@ -1000,7 +1126,7 @@ function renderBrowse(){
       if(!q)return true;
       return(e.displayName||e.name).toLowerCase().includes(q)||ents.some(x=>x.user.toLowerCase().includes(q));
     });
-    if(!results.length){el.innerHTML=emptyHtml('No results');return;}
+    if(!results.length){el.innerHTML=emptyHtml('No matching costumes','Try a different search, activity filter, or priority.');return;}
     el.innerHTML=`<div class="pgrid">${results.map(e=>{
       let ents=map[e.name]||[];if(browseFilter!=='ALL')ents=ents.filter(x=>x.p===browseFilter);
       return`<div class="pc"><div class="pc-hdr"><div class="pc-info"><div class="pc-name">${e.displayName||e.name}</div></div></div>
@@ -1028,7 +1154,7 @@ function renderBrowse(){
     if(!q)return true;
     return(e.displayName||e.name).toLowerCase().includes(q)||String(e.no||'').includes(q)||ents.some(x=>x.user.toLowerCase().includes(q));
   });
-  if(!results.length){el.innerHTML=emptyHtml('No results');return;}
+  if(!results.length){el.innerHTML=emptyHtml('No matching Pokémon','Try a different search, activity filter, or priority.');return;}
   el.innerHTML=`<div class="pgrid">${results.map(e=>{
     const info=map[e.name];
     let ents=info.entries;if(browseFilter!=='ALL')ents=ents.filter(x=>x.p===browseFilter);
@@ -1091,7 +1217,7 @@ function renderMyList(filterVal){
   if(countEl)countEl.textContent=q?`(${entries.length} of ${count})`:`(${count})`;
 
   if(!entries.length){
-    el.innerHTML=q?emptyHtml('No matches','Clear the filter to see all'):emptyHtml('Nothing here yet','Use the search above to add entries');
+    el.innerHTML=q?emptyHtml('No matches','Clear the filter to see all.'):emptyHtml('Nothing here yet','Use the search box above, pick High, Medium, or Low, then add entries.','📋');
     renderMyStrings();return;
   }
 
@@ -1106,9 +1232,9 @@ function renderMyList(filterVal){
       ${no?spriteImg(no,28,'myrow-sprite'):''}
       <div class="myrow-name" title="${dn}">${dn}</div>
       <div class="mctrl">
-        ${['H','M','L'].map(b=>`<button class="pb ${p===b?'on '+b:''}" onclick="setPri('${sn}','${b}')">${b}</button>`).join('')}
+        ${['H','M','L'].map(b=>`<button class="pb ${p===b?'on '+b:''}" onclick="setPri('${sn}','${b}')" title="${priName(b)}" aria-label="Set ${escAttr(dn)} to ${priLabel(b)} priority">${b}</button>`).join('')}
         <input class="ni" type="text" value="${mod}" placeholder="notes" onchange="setNotes('${sn}',this.value)">
-        <button class="rm" onclick="removeEntry('${sn}')" title="Remove">×</button>
+        <button class="rm" onclick="removeEntry('${sn}')" title="Remove" aria-label="Remove ${escAttr(dn)}">×</button>
       </div>
     </div>`;
   }).join('')}</div>`;
@@ -1210,23 +1336,54 @@ function buildStrings(type,username){
 }
 
 function strLevelsHtml(strs){
-  const labels={H:'🔥 Hunting',M:'💙 Want',L:'💚 Low'};
   return`<div class="str-levels">${['H','M','L'].filter(p=>strs[p]).map(p=>`
     <div class="str-level">
       <div class="str-level-hdr">
-        <span class="badge ${p}">${labels[p]}</span>
-        <button class="cpbtn" onclick="copyStr(${JSON.stringify(strs[p])})">📋 Copy</button>
+        <span class="badge ${p}"><span class="prio-mark">${p}</span>${priBadge(p)}</span>
+        <button class="cpbtn" type="button" data-copy="${escAttr(strs[p])}" onclick="copyStr(this.dataset.copy,this)" aria-label="Copy ${priLabel(p)} priority search string">📋 Copy</button>
       </div>
-      <div class="strbox">${strs[p]}</div>
+      <div class="strbox">${escHtml(strs[p])}</div>
     </div>`).join('')}</div>`;
 }
 function renderMyStrings(){
   const el=document.getElementById('my-strings-out');if(!el)return;
   const strs=buildStrings(myListType,cur);
-  if(!strs){el.innerHTML=`<div style="color:var(--muted);font-size:13px">Add Pokémon to generate strings.</div>`;return;}
+  if(!strs){el.innerHTML=emptyHtml('No search strings yet','Add entries to generate High, Medium, and Low strings.','📋');return;}
   el.innerHTML=strLevelsHtml(strs);
 }
-function copyStr(str){navigator.clipboard.writeText(str).then(()=>toast('📋 Copied!'));}
+function escHtml(s){
+  return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function escAttr(s){return escHtml(s);}
+async function copyText(str){
+  if(navigator.clipboard&&window.isSecureContext){
+    try{
+      await navigator.clipboard.writeText(str);
+      return;
+    }catch{}
+  }
+  const ta=document.createElement('textarea');
+  ta.value=str;ta.setAttribute('readonly','');ta.style.position='fixed';ta.style.top='-1000px';ta.style.opacity='0';
+  document.body.appendChild(ta);ta.focus();ta.select();ta.setSelectionRange(0,ta.value.length);
+  const ok=document.execCommand('copy');
+  document.body.removeChild(ta);
+  if(!ok)throw new Error('Copy command failed');
+}
+async function copyStr(str,btn){
+  try{
+    await copyText(str);
+    if(btn){
+      const old=btn.textContent;
+      btn.textContent='Copied';
+      btn.classList.add('copied');
+      btn.disabled=true;
+      setTimeout(()=>{btn.textContent=old;btn.classList.remove('copied');btn.disabled=false;},1200);
+    }
+    toast('📋 Copied!');
+  }catch{
+    toast('⚠️ Copy failed. Select the text manually.');
+  }
+}
 
 // ── STRINGS PAGE — collapsible ────────────────────────────────
 function setStrList(t){
@@ -1250,7 +1407,7 @@ function renderStrings(){
     const list=allData[strListType]?.[u]||{};
     return Object.keys(list).length>0&&(!q||u.toLowerCase().includes(q));
   }).sort((a,b)=>(allData.users?.[b]?.lastUpdated||0)-(allData.users?.[a]?.lastUpdated||0));
-  if(!users.length){el.innerHTML=emptyHtml('No data yet');return;}
+  if(!users.length){el.innerHTML=emptyHtml(q?'No trainers match':'No search strings yet',q?'Try a different trainer name.':'Once members add entries, their strings will appear here.','📋');return;}
   el.innerHTML=users.map(u=>{
     const strs=buildStrings(strListType,u);
     const ud=allData.users?.[u]||{};
@@ -1289,10 +1446,42 @@ function exportData(){
   document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
   toast('✅ Backup downloaded!');
 }
+function triggerRestore(){document.getElementById('restore-file')?.click();}
+async function restoreData(file){
+  if(!file)return;
+  try{
+    const text=await file.text();
+    const data=normalizeData(JSON.parse(text));
+    if(!data.users||!data.wishlist||!data.dynamax||!data.costumes)throw new Error('Missing required backup sections');
+    const userCount=Object.keys(data.users).length;
+    if(!confirm(`Restore backup with ${userCount} members? This replaces the current local data${fbOn?' and syncs it to Firebase':''}.`))return;
+    saveLocal(data);allData=data;
+    let synced=true;
+    if(fbOn&&db)await set(ref(db,'/'),data).catch(()=>{synced=false;});
+    refreshAll();renderAdmin();toast(synced?'✅ Backup restored!':'✅ Restored locally. Firebase sync was blocked by rules.');
+  }catch(e){
+    toast('⚠️ Restore failed: '+(e.message||'invalid backup'));
+  }finally{
+    const inp=document.getElementById('restore-file');if(inp)inp.value='';
+  }
+}
+function renderSecurityPanel(){
+  const el=document.getElementById('security-panel');if(!el)return;
+  const uid=currentAuthUid||auth?.currentUser?.uid||'Sign in with Firebase Auth to see UID';
+  el.innerHTML=`
+    <div class="sec" style="margin-top:0">Firebase security</div>
+    <div style="font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:8px">
+      Current rules you pasted allow public writes. To lock down writes, enable Email/Password Auth, paste this app's Web API key into <span style="font-family:var(--mono)">FIREBASE_API_KEY</span>, sign in once, then add your UID to <span style="font-family:var(--mono)">admins/${escHtml(uid)}</span> in Firebase before replacing rules.
+    </div>
+    <div style="font-size:11px;color:var(--muted);font-family:var(--mono);word-break:break-all">Your Auth UID: ${escHtml(uid)}</div>
+    <textarea readonly id="secure-rules-text">${escHtml(SECURE_RULES)}</textarea>
+    <button class="btn-export" style="margin-top:8px" data-copy="${escAttr(SECURE_RULES)}" onclick="copyStr(this.dataset.copy,this)" aria-label="Copy secure Firebase rules">📋 Copy secure rules</button>`;
+}
 
 // ── ADMIN ─────────────────────────────────────────────────────
 function renderAdmin(){
   const el=document.getElementById('admin-tbody');if(!el)return;
+  renderSecurityPanel();
   const iAmOwner=allData.users?.[cur]?.isOwner||cur===OWNER;
   const users=Object.entries(allData.users||{}).sort((a,b)=>a[0].localeCompare(b[0]));
   el.innerHTML=users.map(([u,d])=>{
@@ -1343,7 +1532,7 @@ function addUser(){
   if(!name){toast('⚠️ Enter username');return;}
   if(!pin||pin.length<4||pin.length>6){toast('⚠️ PIN must be 4–6 digits');return;}
   if(allData.users?.[name]){toast('⚠️ Username exists');return;}
-  writeUser(name,{pin,isAdmin,isOwner:false,friendCode:'',joined:Date.now(),lastSeen:null,lastUpdated:null,pinHashed:false});
+  writeUser(name,{pin,isAdmin,isOwner:false,friendCode:'',joined:Date.now(),lastSeen:null,lastUpdated:null,pinHashed:false,authEmail:authEmail(name)});
   writeList('wishlist',name,{});writeList('dynamax',name,{});writeList('costumes',name,{});
   document.getElementById('nu-name').value='';document.getElementById('nu-pin').value='';document.getElementById('nu-admin').checked=false;
   toast(`✅ ${name} added!`);renderAdmin();
@@ -1424,7 +1613,7 @@ function renderPendingRequests(){
 async function approveRequest(reqId,username){
   if(allData.users?.[username]){toast('⚠️ Username already exists');return;}
   const pin=String(Math.floor(1000+Math.random()*9000));
-  await writeUser(username,{pin,isAdmin:false,isOwner:false,friendCode:'',joined:Date.now(),lastSeen:null,lastUpdated:null,pinHashed:false});
+  await writeUser(username,{pin,isAdmin:false,isOwner:false,friendCode:'',joined:Date.now(),lastSeen:null,lastUpdated:null,pinHashed:false,authEmail:authEmail(username)});
   await writeList('wishlist',username,{});await writeList('dynamax',username,{});await writeList('costumes',username,{});
   const s=getLocal();if(s.requests?.[reqId])s.requests[reqId].status='approved';
   saveLocal(s);if(fbOn&&db)await update(ref(db,`requests/${reqId}`),{status:'approved'}).catch(console.error);
@@ -1465,7 +1654,10 @@ async function saveProfile(){
     if(p1!==p2){err.textContent="PINs don't match";return;}
   }
   const upd={friendCode:fc};
-  if(p1){upd.pin=await hashPin(p1);upd.pinHashed=true;}
+  if(p1){
+    if(auth?.currentUser)await updatePassword(auth.currentUser,p1).catch(()=>toast('⚠️ Firebase Auth password was not updated'));
+    upd.pin=await hashPin(p1);upd.pinHashed=true;
+  }
   await writeUser(cur,upd);closeModal('prof-modal');updateFcDisplay();toast('✅ Profile saved!');
 }
 
@@ -1474,7 +1666,7 @@ function setSyncStatus(s){
   const dot=document.getElementById('sdot');const lbl=document.getElementById('slbl');if(!dot)return;
   dot.className='sync-dot '+s;lbl.textContent={online:'Live',syncing:'Syncing…',offline:'Offline'}[s]||'';
 }
-function emptyHtml(t,s=''){return`<div class="empty"><div class="empty-i">🔍</div><div class="empty-t">${t}</div>${s?`<div class="empty-s">${s}</div>`:''}</div>`;}
+function emptyHtml(t,s='',icon='🔍'){return`<div class="empty"><div class="empty-i">${icon}</div><div class="empty-t">${t}</div>${s?`<div class="empty-s">${s}</div>`:''}</div>`;}
 function openModal(id){document.getElementById(id)?.classList.add('open');}
 function closeModal(id){document.getElementById(id)?.classList.remove('open');}
 function toast(msg,dur=2500){
@@ -1577,7 +1769,7 @@ function parseImportString(){
     '<div class="select-all-row" onclick="toggleSelectAll()"><input type="checkbox" id="select-all-chk" checked class="import-check"> Select all ('+matched.length+')</div>'+rows;
   importMatches.forEach(function(e,i){if(!!existing[e.name])importMatches[i].checked=false;});
   const checkedCount=importMatches.filter(function(m){return m.checked;}).length;
-  document.getElementById('import-summary').textContent='Found '+matched.length+' Pokemon — '+checkedCount+' will be added as '+importPri+'.';
+  document.getElementById('import-summary').textContent='Found '+matched.length+' Pokemon — '+checkedCount+' will be added as '+priName(importPri)+'.';
   document.getElementById('import-confirm-btn').textContent='Import '+checkedCount;
   document.getElementById('import-step1').classList.remove('active');
   document.getElementById('import-step2').classList.add('active');
@@ -1599,7 +1791,7 @@ function toggleSelectAll(){
 }
 function updateImportCount(){
   const count=importMatches.filter(function(m){return m.checked;}).length;
-  document.getElementById('import-summary').textContent=count+' Pokemon will be added as '+importPri+'.';
+  document.getElementById('import-summary').textContent=count+' Pokemon will be added as '+priName(importPri)+'.';
   document.getElementById('import-confirm-btn').textContent='Import '+count;
 }
 function backToStep1(){
@@ -1613,7 +1805,7 @@ function confirmImport(){
   toAdd.forEach(function(e){list[e.name]=importPri+(e.mod?'('+e.mod+')':'');});
   writeList(myListType,cur,list);
   closeModal('import-modal');
-  toast('Imported '+toAdd.length+' Pokemon as '+importPri+'!');
+  toast('Imported '+toAdd.length+' Pokemon as '+priName(importPri)+'!');
 }
 
 // ── EXPOSE ────────────────────────────────────────────────────
@@ -1623,7 +1815,7 @@ Object.assign(window,{
   doLogin,logout,connectFirebase,skipFirebase,
   addEntry,setPri,setNotes,removeEntry,doUndo,copyStr,
   dragStart,dragOver,dragDrop,dragEnd,
-  addUser,openReset,confirmReset,toggleAdmin,exportData,
+  addUser,openReset,confirmReset,toggleAdmin,exportData,triggerRestore,restoreData,
   saveProfile,openModal,closeModal,renderStrings,renderBrowse,setStrList,
   showRequestForm,hideRequestForm,submitRequest,approveRequest,denyRequest,
   acSearch,acSelect,acKeydown,formatFc,toggleStrUser,renderMyList
@@ -1642,20 +1834,26 @@ document.addEventListener('DOMContentLoaded',()=>{
   document.querySelectorAll('.ov').forEach(el=>el.addEventListener('click',e=>{
     if(e.target===el)el.classList.remove('open');
   }));
+  document.querySelector('.user-chip')?.addEventListener('keydown',e=>{
+    if(e.key==='Enter'||e.key===' '){e.preventDefault();openModal('prof-modal');}
+  });
   buildAcItems();
 
   // Hardcoded Firebase URL — config screen never shown
-  const FIREBASE_URL="https://trade-list-a4297-default-rtdb.firebaseio.com";
   lsSet('fbUrl',FIREBASE_URL);
   syncFromLocal();
   try{
-    const fapp=initializeApp({databaseURL:FIREBASE_URL},'pogo');
-    db=getDatabase(fapp);fbOn=true;setSyncStatus('syncing');
+    setupFirebase(FIREBASE_URL);setSyncStatus('syncing');
     startListener();
-    const s=checkSession();if(s)cur=s;
-    showLogin();
+    const s=checkSession();
+    if(s&&allData.users?.[s]){cur=s;showApp();}
+    else showLogin();
   }catch{
-    syncFromLocal();showLogin();setSyncStatus('offline');
+    syncFromLocal();
+    const s=checkSession();
+    if(s&&allData.users?.[s]){cur=s;showApp();}
+    else showLogin();
+    setSyncStatus('offline');
   }
 });
 
