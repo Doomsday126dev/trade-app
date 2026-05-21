@@ -206,6 +206,31 @@ input,select,textarea{font-family:var(--font);outline:none}
 .sfbtn.on{background:var(--accent);color:#fff;border-color:transparent}
 /* ADMIN freshness colors */
 .fresh-indicator{display:inline-flex;align-items:center;gap:4px;font-size:11px}
+
+/* REQUEST ACCESS */
+.req-link{display:block;text-align:center;margin-top:14px;font-size:13px;color:var(--ac2);cursor:pointer;font-weight:500}
+.req-link:hover{color:var(--text)}
+.req-form{display:none}
+.req-form.open{display:block}
+.req-back{background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;padding:0;margin-bottom:16px;display:flex;align-items:center;gap:4px}
+.req-back:hover{color:var(--text)}
+.req-status{text-align:center;padding:20px 0}
+.req-status-icon{font-size:36px;margin-bottom:10px}
+.req-status-text{font-size:15px;font-weight:600;margin-bottom:6px}
+.req-status-sub{font-size:13px;color:var(--muted);line-height:1.5}
+/* ADMIN REQUESTS */
+.notif-badge{display:inline-flex;align-items:center;justify-content:center;background:var(--danger);color:#fff;border-radius:50%;width:16px;height:16px;font-size:10px;font-weight:700;margin-left:4px;vertical-align:middle}
+.req-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:10px}
+.req-card-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:8px}
+.req-card-name{font-size:15px;font-weight:700}
+.req-card-time{font-size:11px;color:var(--muted)}
+.req-card-note{font-size:13px;color:var(--muted);margin-bottom:10px;font-style:italic}
+.req-actions{display:flex;gap:8px}
+.btn-approve{background:rgba(16,185,129,.15);color:var(--ok);border:1px solid rgba(16,185,129,.3);padding:6px 16px;border-radius:var(--r2);font-size:13px;font-weight:600;cursor:pointer;transition:.15s}
+.btn-approve:hover{background:rgba(16,185,129,.25)}
+.btn-deny{background:rgba(239,68,68,.1);color:var(--danger);border:1px solid rgba(239,68,68,.2);padding:6px 16px;border-radius:var(--r2);font-size:13px;font-weight:600;cursor:pointer;transition:.15s}
+.btn-deny:hover{background:rgba(239,68,68,.2)}
+.pin-reveal{font-family:var(--mono);font-size:13px;background:var(--bg2);border:1px solid var(--border2);border-radius:4px;padding:4px 10px;color:var(--ac2);display:inline-block;margin-top:4px}
 </style>
 </head>
 <body>
@@ -236,7 +261,26 @@ input,select,textarea{font-family:var(--font);outline:none}
     <div class="field"><label>PIN</label><input type="password" id="login-pin" placeholder="4-digit PIN" maxlength="6" inputmode="numeric"></div>
     <button class="lbtn" onclick="doLogin()">Sign in →</button>
     <div class="err" id="login-err"></div>
-    <div class="lnote">Default PIN is <strong>1234</strong> — change it after first login.<br>New member? Ask an admin.</div>
+    <div class="lnote">Default PIN is <strong>1234</strong> — change it after first login.</div>
+    <div class="req-link" onclick="showRequestForm()">🙋 Request access to join</div>
+  </div>
+
+  <!-- REQUEST FORM (same card, swapped in) -->
+  <div class="lcard req-form" id="req-form-card">
+    <button class="req-back" onclick="hideRequestForm()">← Back to login</button>
+    <div id="req-form-inner">
+      <div class="llogo">🙋 <span>Request Access</span></div>
+      <div class="lsub">An admin will review and approve you</div>
+      <div class="field"><label>Your Pokémon GO trainer name</label><input type="text" id="req-username" placeholder="Exact trainer name" autocomplete="off"></div>
+      <div class="field"><label>Note for admin <span style="color:var(--muted);font-weight:400">(optional)</span></label><input type="text" id="req-note" placeholder="e.g. I raid in Queens with the Tuesday group"></div>
+      <button class="lbtn" onclick="submitRequest()">Send request →</button>
+      <div class="err" id="req-err"></div>
+    </div>
+    <div id="req-sent-status" style="display:none" class="req-status">
+      <div class="req-status-icon">✅</div>
+      <div class="req-status-text">Request sent!</div>
+      <div class="req-status-sub">An admin will review your request and reach out with your login details.</div>
+    </div>
   </div>
 </div>
 
@@ -258,7 +302,7 @@ input,select,textarea{font-family:var(--font);outline:none}
     <button class="tab" data-tab="mylist" onclick="switchTab('mylist')">📋 My List</button>
     <button class="tab" data-tab="match" onclick="switchTab('match')">🤝 Match</button>
     <button class="tab" data-tab="strings" onclick="switchTab('strings')">📤 Strings</button>
-    <button class="tab" data-tab="admin" onclick="switchTab('admin')" id="admin-tab" style="display:none">⚙️ Admin</button>
+    <button class="tab" data-tab="admin" onclick="switchTab('admin')" id="admin-tab" style="display:none">⚙️ Admin<span class="notif-badge" id="admin-notif" style="display:none">!</span></button>
   </div>
 
   <!-- BROWSE -->
@@ -347,6 +391,15 @@ input,select,textarea{font-family:var(--font);outline:none}
 
   <!-- ADMIN -->
   <div class="page" id="tab-admin">
+    <!-- PENDING REQUESTS -->
+    <div id="pending-requests-section" style="display:none;margin-bottom:16px">
+      <div class="sec" style="margin-top:0;display:flex;align-items:center;gap:6px">
+        Pending requests
+        <span class="notif-badge" id="req-count-badge">0</span>
+      </div>
+      <div id="pending-requests-list"></div>
+    </div>
+
     <div class="new-user-form">
       <h3>➕ Add member</h3>
       <div class="frow">
@@ -492,7 +545,8 @@ function startListener(){
         users:{...s.users,...(d.users||{})},
         wishlist:{...s.wishlist,...(d.wishlist||{})},
         dynamax:{...s.dynamax,...(d.dynamax||{})},
-        costumes:{...s.costumes,...(d.costumes||{})}
+        costumes:{...s.costumes,...(d.costumes||{})},
+        requests:{...s.requests,...(d.requests||{})}
       };
       saveLocal(merged);allData=merged;setSyncStatus('online');refreshAll();
     }
@@ -553,7 +607,7 @@ function showApp(){
   updateFcDisplay();
   populateAddSelect();
   renderBrowse();renderMyList();renderMatch();renderStrings();
-  if(isAdmin)renderAdmin();
+  if(isAdmin){renderAdmin();renderPendingRequests();}
 }
 
 function switchTab(t){
@@ -566,7 +620,7 @@ function switchTab(t){
 function refreshAll(){
   if(!cur)return;
   renderBrowse();renderMyList();renderMatch();renderStrings();
-  if(allData.users?.[cur]?.isAdmin)renderAdmin();
+  if(allData.users?.[cur]?.isAdmin){renderAdmin();renderPendingRequests();}
 }
 
 // ── FRESHNESS HELPERS ─────────────────────────────────────────
@@ -1058,8 +1112,149 @@ function toast(msg,dur=2500){
   setTimeout(()=>t.classList.remove('show'),dur);
 }
 
+
+// ── REQUEST ACCESS ────────────────────────────────────────────
+function showRequestForm(){
+  document.getElementById('login-pg').querySelector('.lcard').style.display='none';
+  document.getElementById('req-form-card').classList.add('open');
+  document.getElementById('req-form-card').style.display='block';
+}
+
+function hideRequestForm(){
+  document.getElementById('req-form-card').style.display='none';
+  document.getElementById('req-form-card').classList.remove('open');
+  document.getElementById('login-pg').querySelector('.lcard').style.display='block';
+  // reset form
+  document.getElementById('req-form-inner').style.display='block';
+  document.getElementById('req-sent-status').style.display='none';
+  document.getElementById('req-username').value='';
+  document.getElementById('req-note').value='';
+  document.getElementById('req-err').textContent='';
+}
+
+async function submitRequest(){
+  const username=document.getElementById('req-username').value.trim();
+  const note=document.getElementById('req-note').value.trim();
+  const err=document.getElementById('req-err');
+  err.textContent='';
+  if(!username){err.textContent='Enter your trainer name';return;}
+  if(username.length<2){err.textContent='Trainer name too short';return;}
+  // Check if already a member
+  if(allData.users?.[username]){err.textContent='That trainer name is already registered';return;}
+  
+  const reqId='req_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
+  const reqData={
+    username,
+    note:note||'',
+    requestedAt:Date.now(),
+    status:'pending'
+  };
+  
+  // Save locally + Firebase
+  const s=getLocal();
+  if(!s.requests)s.requests={};
+  s.requests[reqId]=reqData;
+  saveLocal(s);
+  allData=s;
+  
+  if(fbOn&&db){
+    await set(ref(db,`requests/${reqId}`),reqData).catch(e=>{
+      err.textContent='Could not send request: '+e.message;return;
+    });
+  }
+  
+  // Show success state
+  document.getElementById('req-form-inner').style.display='none';
+  document.getElementById('req-sent-status').style.display='block';
+}
+
+function renderPendingRequests(){
+  const requests=allData.requests||{};
+  const pending=Object.entries(requests).filter(([,r])=>r.status==='pending');
+  const section=document.getElementById('pending-requests-section');
+  const listEl=document.getElementById('pending-requests-list');
+  const badge=document.getElementById('req-count-badge');
+  const adminNotif=document.getElementById('admin-notif');
+  if(!section||!listEl)return;
+  
+  if(pending.length===0){
+    section.style.display='none';
+    if(adminNotif)adminNotif.style.display='none';
+    return;
+  }
+  
+  section.style.display='block';
+  if(badge)badge.textContent=pending.length;
+  if(adminNotif){adminNotif.style.display='inline-flex';adminNotif.textContent=pending.length;}
+  
+  listEl.innerHTML=pending.map(([id,r])=>`
+    <div class="req-card" id="reqcard-${id}">
+      <div class="req-card-hdr">
+        <div class="req-card-name">🎮 ${r.username}</div>
+        <div class="req-card-time">${freshnessLabel(r.requestedAt)}</div>
+      </div>
+      ${r.note?`<div class="req-card-note">"${r.note}"</div>`:'<div class="req-card-note" style="color:var(--border2)">No note provided</div>'}
+      <div class="req-actions">
+        <button class="btn-approve" onclick="approveRequest('${id}','${r.username.replace(/'/g,"\'")}')">✅ Approve</button>
+        <button class="btn-deny" onclick="denyRequest('${id}')">✗ Deny</button>
+      </div>
+    </div>`).join('');
+}
+
+async function approveRequest(reqId, username){
+  if(allData.users?.[username]){
+    toast('⚠️ Username already exists — deny this request');return;
+  }
+  // Generate a random 4-digit PIN
+  const pin=String(Math.floor(1000+Math.random()*9000));
+  
+  // Create the user
+  await writeUser(username,{pin,isAdmin:false,isOwner:false,friendCode:'',joined:Date.now(),lastSeen:null,lastUpdated:null});
+  await writeList('wishlist',username,{});
+  await writeList('dynamax',username,{});
+  await writeList('costumes',username,{});
+  
+  // Mark request as approved
+  const s=getLocal();
+  if(s.requests?.[reqId])s.requests[reqId].status='approved';
+  saveLocal(s);
+  if(fbOn&&db)await update(ref(db,`requests/${reqId}`),{status:'approved'}).catch(console.error);
+  allData=s;
+  
+  // Show the PIN to the admin prominently
+  const card=document.getElementById(`reqcard-${reqId}`);
+  if(card){
+    card.innerHTML=`
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span style="font-size:15px;font-weight:700;color:var(--ok)">✅ ${username} approved</span>
+      </div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:6px">Share their login details:</div>
+      <div style="font-size:13px">Trainer: <strong>${username}</strong></div>
+      <div style="font-size:13px;margin-top:4px">PIN: <span class="pin-reveal">${pin}</span></div>
+      <div style="font-size:11px;color:var(--muted);margin-top:8px">Tell them to change their PIN after first login.</div>
+    `;
+  }
+  
+  renderAdmin();
+  toast(`✅ ${username} approved! PIN: ${pin}`);
+  
+  // Re-render requests after short delay
+  setTimeout(()=>{renderPendingRequests();},3000);
+}
+
+async function denyRequest(reqId){
+  const s=getLocal();
+  if(s.requests?.[reqId])s.requests[reqId].status='denied';
+  saveLocal(s);
+  if(fbOn&&db)await update(ref(db,`requests/${reqId}`),{status:'denied'}).catch(console.error);
+  allData=s;
+  renderPendingRequests();
+  toast('Request denied');
+}
+
 // ── EXPOSE GLOBALS ────────────────────────────────────────────
 Object.assign(window,{
+  showRequestForm,hideRequestForm,submitRequest,approveRequest,denyRequest,
   setFilter,setBrowseList,setMyList,setStaleFilter,switchTab,
   doLogin,logout,connectFirebase,skipFirebase,
   addEntry,setPri,setNotes,removeEntry,copyStr,
