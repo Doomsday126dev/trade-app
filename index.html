@@ -64,17 +64,17 @@ input,select,textarea{font-family:var(--font);outline:none}
 .srch-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;pointer-events:none}
 
 /* FILTERS */
-.filter-row{display:flex;gap:7px;margin-bottom:12px;flex-wrap:wrap}
+
 .fbtn{background:var(--card);border:1px solid var(--border);color:var(--muted);padding:5px 13px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;transition:.15s}
 .fbtn.on{color:#fff;border-color:transparent}
 .fbtn.fALL.on{background:var(--accent)}
 .fbtn.fH.on{background:var(--H);color:#fff}
 .fbtn.fM.on{background:var(--M);color:#111}
 .fbtn.fL.on{background:var(--L);color:#03140e}
-.stale-filter{display:flex;gap:6px;margin-bottom:12px;align-items:center;flex-wrap:wrap}
-.stale-filter label{font-size:12px;color:var(--muted)}
-.sfbtn{background:var(--card);border:1px solid var(--border);color:var(--muted);padding:4px 11px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;transition:.15s}
-.sfbtn.on{background:var(--accent);color:#fff;border-color:transparent}
+
+
+.
+.
 
 /* LIST TYPE TABS */
 .list-tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
@@ -87,7 +87,15 @@ input,select,textarea{font-family:var(--font);outline:none}
 .leg-dot{width:8px;height:8px;border-radius:50%}
 
 /* POKEMON GRID */
-.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:9px}
+.pgrid{display:flex;flex-direction:column;gap:0;border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.pgrid .pc{border-radius:0;border:none;border-bottom:1px solid var(--border);padding:9px 14px;display:flex;align-items:center;gap:10px}
+.pgrid .pc:last-child{border-bottom:none}
+.pgrid .pc:hover{background:var(--bg2)}
+.pgrid .pc-hdr{margin-bottom:0;flex-shrink:0;display:flex;align-items:center;gap:8px;width:190px;min-width:190px}
+.pgrid .pc-sprite{width:28px;height:28px}
+.pgrid .pc-name{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pgrid .pc-no{font-size:10px}
+.pgrid .pc-users{flex:1;display:flex;flex-wrap:wrap;gap:4px;align-items:center}
 .pc{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:11px 13px;transition:.15s}
 .pc:hover{border-color:var(--border2)}
 .pc-hdr{display:flex;align-items:center;gap:9px;margin-bottom:8px}
@@ -294,7 +302,7 @@ input,select,textarea{font-family:var(--font);outline:none}
   .tabs{justify-content:space-around}
   .tab{flex:1;padding:12px 9px;font-size:12px;text-align:center}
   .page{padding:11px}
-  .pgrid,.mygrid{grid-template-columns:1fr}
+  .mygrid{grid-template-columns:1fr}
   .lcard{padding:22px 16px}
 }
 
@@ -326,6 +334,24 @@ input,select,textarea{font-family:var(--font);outline:none}
 .import-btn:hover{border-color:var(--ac2);color:var(--ac2)}
 .select-all-row{display:flex;align-items:center;gap:6px;padding:6px 11px;font-size:12px;color:var(--muted);border-bottom:1px solid var(--border);cursor:pointer}
 .select-all-row:hover{color:var(--text)}
+
+/* FILTER BAR — horizontal on desktop, stacked on mobile */
+.filter-bar{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.filter-group{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.filter-label{font-size:11px;color:var(--muted);font-weight:500;white-space:nowrap}
+.filter-divider{width:1px;height:20px;background:var(--border2);flex-shrink:0}
+/* Smaller buttons on desktop */
+@media(min-width:601px){
+  .filter-bar .fbtn,.filter-bar .sfbtn,.filter-bar .ltab{
+    padding:4px 10px;font-size:12px;border-radius:6px
+  }
+  .filter-divider{display:flex}
+}
+/* On mobile: dividers hidden, everything wraps naturally */
+@media(max-width:600px){
+  .filter-divider{display:none}
+  .filter-bar{gap:6px}
+}
 </style>
 </head>
 <body>
@@ -409,23 +435,28 @@ input,select,textarea{font-family:var(--font);outline:none}
   <!-- BROWSE -->
   <div class="page active" id="tab-browse">
     <div class="srch"><span class="srch-icon">🔍</span><input type="text" id="bq" placeholder="Search Pokémon name, #number, or trainer…" oninput="renderBrowse()"></div>
-    <div class="filter-row">
-      <button class="fbtn fALL on" onclick="setFilter('ALL')">All</button>
-      <button class="fbtn fH" onclick="setFilter('H')">High</button>
-      <button class="fbtn fM" onclick="setFilter('M')">Medium</button>
-      <button class="fbtn fL" onclick="setFilter('L')">Low</button>
+    <div class="filter-bar">
+      <div class="filter-group">
+        <button class="fbtn fALL on" onclick="setFilter('ALL')">All</button>
+        <button class="fbtn fH" onclick="setFilter('H')">High</button>
+        <button class="fbtn fM" onclick="setFilter('M')">Medium</button>
+        <button class="fbtn fL" onclick="setFilter('L')">Low</button>
+      </div>
+      <div class="filter-divider"></div>
+      <div class="filter-group">
+        <span class="filter-label">Activity:</span>
+        <button class="sfbtn on" data-days="0" onclick="setStaleFilter(0)">All</button>
+        <button class="sfbtn" data-days="7" onclick="setStaleFilter(7)">Active 7d</button>
+        <button class="sfbtn" data-days="30" onclick="setStaleFilter(30)">Active 30d</button>
+      </div>
+      <div class="filter-divider"></div>
+      <div class="filter-group" id="browse-list-tabs-inline">
+        <button class="ltab active" onclick="setBrowseList('wishlist')">Trades</button>
+        <button class="ltab" onclick="setBrowseList('dynamax')">Dynamax</button>
+        <button class="ltab" onclick="setBrowseList('costumes')">Others</button>
+      </div>
     </div>
-    <div class="stale-filter">
-      <label>Activity:</label>
-      <button class="sfbtn on" data-days="0" onclick="setStaleFilter(0)">All</button>
-      <button class="sfbtn" data-days="7" onclick="setStaleFilter(7)">Active 7d</button>
-      <button class="sfbtn" data-days="30" onclick="setStaleFilter(30)">Active 30d</button>
-    </div>
-    <div class="list-tabs" id="browse-list-tabs">
-      <button class="ltab active" onclick="setBrowseList('wishlist')">Trades</button>
-      <button class="ltab" onclick="setBrowseList('dynamax')">Dynamax</button>
-      <button class="ltab" onclick="setBrowseList('costumes')">Costumes</button>
-    </div>
+
     
     <div id="browse-out"></div>
   </div>
@@ -442,7 +473,7 @@ input,select,textarea{font-family:var(--font);outline:none}
     <div class="list-tabs">
       <button class="ltab active" onclick="setMyList('wishlist')">Trades</button>
       <button class="ltab" onclick="setMyList('dynamax')">Dynamax</button>
-      <button class="ltab" onclick="setMyList('costumes')">Costumes</button>
+      <button class="ltab" onclick="setMyList('costumes')">Others</button>
     </div>
     <div class="add-form">
       <div class="add-ttl" id="add-ttl">+ Add Pokémon</div>
@@ -481,7 +512,7 @@ input,select,textarea{font-family:var(--font);outline:none}
     <div class="list-tabs" id="str-list-tabs">
       <button class="ltab active" onclick="setStrList('wishlist')">Trades</button>
       <button class="ltab" onclick="setStrList('dynamax')">Dynamax</button>
-      <button class="ltab" onclick="setStrList('costumes')">Costumes</button>
+      <button class="ltab" onclick="setStrList('costumes')">Others</button>
     </div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Tap a trainer to expand their strings</div>
     <div id="strings-out"></div>
@@ -679,15 +710,16 @@ let dragSrc=null;
 // Map dex number → sprite URL. For forms we use base dex.
 // Sprite cache to avoid repeated failed requests
 const spriteCache={};
-function spriteUrl(no){
+const REGIONAL_FORM_IDS={"A-Rattata": 10091, "A-Raichu": 10100, "A-Sandshrew": 10101, "A-Vulpix": 10103, "A-Diglett": 10105, "A-Meowth": 10107, "A-Geodude": 10109, "A-Grimer": 10112, "A-Exeggutor": 10114, "A-Marowak": 10115, "G-Meowth": 10161, "G-Ponyta": 10162, "G-Slowpoke": 10164, "G-Farfetch'd": 10166, "G-Weezing": 10167, "G-Mr_ Mime": 10168, "G-Corsola": 10173, "G-Zigzagoon": 10174, "G-Darumaka": 10176, "G-Yamask": 10179, "G-Stunfisk": 10180, "H-Growlithe": 10229, "H-Voltorb": 10231, "H-Typhlosion": 10233, "H-Qwilfish": 10234, "H-Sneasel": 10235, "H-Samurott": 10236, "H-Lilligant": 10237, "H-Zorua": 10238, "H-Braviary": 10240, "H-Sliggoo": 10241, "H-Avalugg": 10243, "H-Decidueye": 10244, "P-Tauros (Combat)": 10250, "P-Tauros (Blaze)": 10251, "P-Tauros (Aqua)": 10252, "P-Wooper": 10253};
+function spriteUrl(no,name){
   if(!no)return null;
-  // Use numeric dex only
+  if(name&&REGIONAL_FORM_IDS[name])return`${SPRITE_BASE}${REGIONAL_FORM_IDS[name]}.png`;
   const n=parseInt(no);
   if(isNaN(n))return null;
   return`${SPRITE_BASE}${n}.png`;
 }
-function spriteImg(no,size=40,cls=''){
-  const url=spriteUrl(no);
+function spriteImg(no,size=40,cls='',name=''){
+  const url=spriteUrl(no,name);
   if(!url)return`<div class="pc-sprite-placeholder" style="width:${size}px;height:${size}px">🎮</div>`;
   return`<img src="${url}" class="${cls||'pc-sprite'}" width="${size}" height="${size}"
     style="image-rendering:pixelated;object-fit:contain"
@@ -1024,7 +1056,7 @@ function acSearch(q){
   }else{
     dd.innerHTML=acFiltered.map((e,i)=>`
       <div class="ac-item" data-idx="${i}" onmousedown="acSelect(${i})">
-        ${e.no?spriteImg(e.no,28,'ac-item-sprite'):''}
+        ${e.no?spriteImg(e.no,28,'ac-item-sprite',e.name):''}
         ${e.no?`<span class="ac-item-no">#${e.no}</span>`:''}
         <span class="ac-item-name">${e.dn}</span>
       </div>`).join('');
@@ -1103,7 +1135,7 @@ function setFilter(f){
 }
 function setBrowseList(t){
   browseList=t;
-  document.querySelectorAll('#browse-list-tabs .ltab').forEach((b,i)=>{
+  document.querySelectorAll('#browse-list-tabs-inline .ltab').forEach((b,i)=>{
     b.classList.toggle('active',['wishlist','dynamax','costumes'][i]===t);
   });
   renderBrowse();
@@ -1177,7 +1209,7 @@ function renderBrowse(){
     ents=sortEntries(ents);
     return`<div class="pc">
       <div class="pc-hdr">
-        ${spriteImg(e.no,40,'pc-sprite')}
+        ${spriteImg(e.no,28,'pc-sprite',e.name)}
         <div class="pc-info"><div class="pc-name">${info.dn}</div><div class="pc-no">#${e.no}</div></div>
       </div>
       <div class="pc-users">${ents.map(x=>userBadge(x)).join('')}</div>
@@ -1192,7 +1224,7 @@ function setMyList(t){
     b.classList.toggle('active',['wishlist','dynamax','costumes'][i]===t);
   });
   document.getElementById('add-ttl').textContent=
-    t==='costumes'?'+ Add Costume':t==='dynamax'?'+ Add Dynamax Pokémon':'+ Add Pokémon';
+    t==='costumes'?'+ Add Other':t==='dynamax'?'+ Add Dynamax Pokémon':'+ Add Pokémon';
   if(document.getElementById('ac-input'))document.getElementById('ac-input').value='';
   document.getElementById('add-pmon-sel').value='';
   document.getElementById('ac-dropdown').classList.remove('open');
