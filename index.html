@@ -844,7 +844,9 @@ const GO_COSTUME_SPRITE_SLUGS={
   "Jigglypuff (Ribbon)":"ribbon","Cottonee (Flower Crown)":"flowercrown","Espeon (Scarf)":"scarf","Umbreon (Scarf)":"scarf",
   "Grimer (Party Hat)":"partyhat","Slakoth (Night Cap)":"visor","Froakie (Halloween)":"halloween","Rowlet (Halloween)":"halloween",
   "Snorlax (Studded Jacket)":"jacket","Dedenne (Holiday)":"holiday","Wooloo (Holiday)":"holiday","Minccino (Fashionable)":"fashionable",
-  "Gengar (Halloween 2022)":"halloween","Gengar (Halloween 2024)":"halloween2023"
+  "Gengar (Halloween 2022)":"halloween","Gengar (Halloween 2024)":"halloween2023",
+  "Togepi (Flower Crown)":"flowers","Togetic (Flower Crown)":"flowers","Togekiss (Flower Crown)":"flowers",
+  "Blissey (Flower Crown)":"flowercrown","Absol (Fashion)":"fashion"
 };
 function padDex(no){
   const n=parseInt(no);
@@ -877,8 +879,10 @@ function spriteUrl(no,name){
 function spriteImg(no,size=40,cls='',name=''){
   const url=spriteUrl(no,name);
   if(!url)return`<div class="pc-sprite-placeholder" style="width:${size}px;height:${size}px">🎮</div>`;
+  const isGo=url.includes('serebii.net')||url.includes('weserv.nl');
+  const rendering=isGo?'auto':'pixelated';
   return`<img src="${url}" class="${cls||'pc-sprite'}" width="${size}" height="${size}" alt="" title="${escAttr(name||'Pokémon')}"
-    style="image-rendering:pixelated;object-fit:contain"
+    style="image-rendering:${rendering};object-fit:contain"
     onerror="this.style.display='none'" loading="lazy">`;
 }
 
