@@ -330,6 +330,10 @@ input,select,textarea{font-family:var(--font);outline:none}
 .import-modal{max-width:480px}
 .import-btn{background:transparent;border:1px solid var(--border2);color:var(--muted);padding:6px 13px;border-radius:var(--r2);font-size:12px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:5px;margin-top:8px;font-family:var(--font)}
 .import-btn:hover{border-color:var(--ac2);color:var(--ac2)}
+.add-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}
+.add-actions .bsave,.add-actions .import-btn,.add-actions .image-btn{margin-top:0}
+.image-btn{background:var(--bg);border:1px solid var(--border2);color:var(--text);padding:6px 13px;border-radius:var(--r2);font-size:12px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:5px;font-family:var(--font)}
+.image-btn:hover{border-color:var(--ok);color:var(--ok)}
 .select-all-row{display:flex;align-items:center;gap:6px;padding:6px 11px;font-size:12px;color:var(--muted);border-bottom:1px solid var(--border);cursor:pointer}
 .select-all-row:hover{color:var(--text)}
 
@@ -513,8 +517,11 @@ input,select,textarea{font-family:var(--font);outline:none}
         </select>
         <input type="text" id="add-pmon-notes" placeholder="Notes: f, m, xs…" style="max-width:120px">
       </div>
-      <button class="bsave" onclick="addEntry()" style="margin-top:10px">Add</button>
-      <button class="import-btn" onclick="openImport()">📥 Import from search string</button>
+      <div class="add-actions">
+        <button class="bsave" onclick="addEntry()">Add</button>
+        <button class="import-btn" onclick="openImport()">📥 Import string</button>
+        <button class="image-btn" onclick="exportMyListImage()">🖼️ Export image</button>
+      </div>
     </div>
     <div class="mylist-search">
       <span class="mylist-srch-icon">🔍</span>
@@ -674,6 +681,7 @@ const PRI={
 };
 const PRI_ORDER={H:0,M:1,L:2};
 const LIST_LABELS={wishlist:'Trades',dynamax:'Dynamax',costumes:'Others'};
+const VIVILLON_PATTERNS=new Set(['Archipelago','Continental','Elegant','Fancy','Garden','High Plains','Icy Snow','Jungle','Marine','Meadow','Modern','Monsoon','Ocean','Poke Ball','Poké Ball','Polar','River','Sandstorm','Savanna','Sun','Tundra']);
 const REGION_CODE_TERMS={K:'kanto',J:'johto',H:'hoenn',S:'sinnoh',U:'unova',L:'kalos',A:'alola',G:'galar',P:'paldea'};
 const REGIONAL_FORM_TERMS={A:'alola',G:'galar',H:'hisui',P:'paldea'};
 const REGION_SEARCH_TERMS=new Set([...Object.values(REGION_CODE_TERMS),'hisui']);
@@ -1382,6 +1390,70 @@ function addEntry(){
   toast(`✅ ${dn} added!`);
 }
 
+function listSource(type){
+  return type==='costumes'?DB.costumes:type==='dynamax'?DB.dynamax:DB.wishlist;
+}
+function normalizeSpriteKey(s){
+  return String(s||'').toLowerCase().replace(/[._-]+/g,' ').replace(/[^a-z0-9 ]/g,'').replace(/\s+/g,' ').trim();
+}
+let spriteIndex=null;
+function spriteSourceIndex(){
+  if(spriteIndex)return spriteIndex;
+  spriteIndex=new Map();
+  const add=(key,e)=>{
+    const k=normalizeSpriteKey(key);
+    if(k&&!spriteIndex.has(k))spriteIndex.set(k,e);
+  };
+  [...DB.wishlist,...DB.dynamax].forEach(e=>{
+    if(!e.no)return;
+    add(e.name,e);add(e.displayName,e);
+  });
+  add('Vivillon',{no:666,name:'Vivillon',displayName:'Vivillon'});
+  add('Unown',{no:201,name:'Unown',displayName:'Unown'});
+  return spriteIndex;
+}
+function costumeBaseName(name,dn){
+  const raw=String(name||dn||'').replace(/^([AGHP])[._ ]+/,'$1-').replace(/\s+/g,' ').trim();
+  const label=String(dn||name||'').replace(/^([AGHP])[._ ]+/,'$1-').replace(/\s+/g,' ').trim();
+  if(VIVILLON_PATTERNS.has(raw)||VIVILLON_PATTERNS.has(label))return'Vivillon';
+  if(/^Unown(\s|$|\()/i.test(raw)||/^Unown(\s|$|\()/i.test(label))return'Unown';
+  return raw.split('(')[0].trim()||label.split('(')[0].trim()||raw||label;
+}
+function spriteEntryForListItem(type,name,entry){
+  if(entry?.no||entry?.sprite||entry?.spriteUrl)return entry;
+  const idx=spriteSourceIndex();
+  const dn=entry?.displayName||name;
+  const candidates=[name,dn,costumeBaseName(name,dn),costumeBaseName(dn,name)];
+  for(const c of candidates){
+    const found=idx.get(normalizeSpriteKey(c));
+    if(found)return found;
+  }
+  return null;
+}
+function currentListEntries(type=myListType,filterVal=''){
+  const list=allData[type]?.[cur]||{};
+  const src=listSource(type);
+  const srcMap={};
+  src.forEach(e=>{if(!srcMap[e.name])srcMap[e.name]=e;});
+  const q=String(filterVal||'').toLowerCase();
+  return Object.entries(list).map(([name,val])=>{
+    const entry=srcMap[name]||{};
+    const spriteEntry=spriteEntryForListItem(type,name,entry)||{};
+    const{p,mod}=parsePri(val);
+    const dn=entry.displayName||name;
+    return{
+      name,
+      dn,
+      p,
+      mod,
+      no:spriteEntry.no||entry.no||null,
+      spriteName:spriteEntry.name||entry.name||name,
+      spriteUrl:spriteEntry.spriteUrl||spriteEntry.sprite||entry.spriteUrl||entry.sprite||''
+    };
+  }).filter(e=>!q||e.dn.toLowerCase().includes(q))
+    .sort((a,b)=>(PRI_ORDER[a.p]??9)-(PRI_ORDER[b.p]??9)||a.dn.localeCompare(b.dn,undefined,{sensitivity:'base'}));
+}
+
 function renderMyList(filterVal){
   const q=(filterVal??document.getElementById('mylist-filter')?.value??'').toLowerCase();
   const list=allData[myListType]?.[cur]||{};
@@ -1422,6 +1494,168 @@ function renderMyList(filterVal){
     </div>`;
   }).join('')}</div>`;
   renderMyStrings();
+}
+
+const canvasImageCache=new Map();
+function exportSpriteUrl(e){
+  return e.spriteUrl||(e.no?spriteUrl(e.no,e.spriteName):'');
+}
+function loadCanvasImage(url){
+  if(!url)return Promise.resolve(null);
+  if(canvasImageCache.has(url))return canvasImageCache.get(url);
+  const p=new Promise(resolve=>{
+    const img=new Image();
+    img.crossOrigin='anonymous';
+    img.onload=()=>resolve(img);
+    img.onerror=()=>resolve(null);
+    img.src=url;
+  });
+  canvasImageCache.set(url,p);
+  return p;
+}
+function roundedRect(ctx,x,y,w,h,r){
+  const rr=Math.min(r,w/2,h/2);
+  ctx.beginPath();
+  ctx.moveTo(x+rr,y);
+  ctx.arcTo(x+w,y,x+w,y+h,rr);
+  ctx.arcTo(x+w,y+h,x,y+h,rr);
+  ctx.arcTo(x,y+h,x,y,rr);
+  ctx.arcTo(x,y,x+w,y,rr);
+  ctx.closePath();
+}
+function drawWrappedText(ctx,text,x,y,maxW,lineH,maxLines){
+  const words=String(text||'').split(/\s+/).filter(Boolean);
+  const lines=[];let line='';
+  words.forEach(w=>{
+    const test=line?line+' '+w:w;
+    if(ctx.measureText(test).width<=maxW||!line)line=test;
+    else{lines.push(line);line=w;}
+  });
+  if(line)lines.push(line);
+  const shown=lines.slice(0,maxLines);
+  if(lines.length>maxLines){
+    let last=shown[shown.length-1];
+    while(last&&ctx.measureText(last+'…').width>maxW)last=last.slice(0,-1);
+    shown[shown.length-1]=(last||'').trim()+'…';
+  }
+  shown.forEach((l,i)=>ctx.fillText(l,x,y+i*lineH));
+  return shown.length*lineH;
+}
+function drawImageContain(ctx,img,x,y,w,h){
+  const r=Math.min(w/img.naturalWidth,h/img.naturalHeight);
+  const dw=img.naturalWidth*r,dh=img.naturalHeight*r;
+  ctx.drawImage(img,x+(w-dw)/2,y+(h-dh)/2,dw,dh);
+}
+function drawSpriteFallback(ctx,e,x,y,size){
+  roundedRect(ctx,x,y,size,size,12);
+  ctx.fillStyle='#252540';ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,.14)';ctx.stroke();
+  ctx.fillStyle='#a78bfa';
+  ctx.font='700 18px Space Grotesk, sans-serif';
+  ctx.textAlign='center';
+  ctx.fillText(String(e.dn||'?').slice(0,2).toUpperCase(),x+size/2,y+size/2+6);
+  ctx.textAlign='left';
+}
+function canvasBlob(canvas){
+  return new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(new Error('Could not render image')),'image/png'));
+}
+function downloadBlob(blob,filename){
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=filename;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+function safeFilePart(s){
+  return String(s||'list').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'list';
+}
+async function renderListImage(entries,type,username){
+  const W=1080,pad=56,gap=16,cols=5,cardW=(W-pad*2-gap*(cols-1))/cols,cardH=152;
+  const groupDefs=['H','M','L'].map(p=>({p,label:priLabel(p),entries:entries.filter(e=>e.p===p)}));
+  const other=entries.filter(e=>!PRI[e.p]);
+  if(other.length)groupDefs.push({p:'',label:'Other',entries:other});
+  const groups=groupDefs.filter(g=>g.entries.length);
+  const headerH=154,groupTitleH=46,sectionGap=22,bottomPad=48;
+  let H=headerH+bottomPad;
+  groups.forEach(g=>{H+=groupTitleH+Math.ceil(g.entries.length/cols)*(cardH+gap)-gap+sectionGap;});
+  const canvas=document.createElement('canvas');
+  canvas.width=W;canvas.height=Math.max(H,420);
+  const ctx=canvas.getContext('2d');
+  ctx.fillStyle='#0f0f1a';ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle='#e8e8f0';
+  ctx.font='700 44px Space Grotesk, sans-serif';
+  ctx.fillText(`${username}'s ${listLabel(type)} List`,pad,74);
+  ctx.font='500 22px Space Grotesk, sans-serif';
+  ctx.fillStyle='#8888aa';
+  const date=new Date().toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
+  ctx.fillText(`${entries.length} entries · Generated ${date}`,pad,111);
+  ctx.font='700 18px Space Grotesk, sans-serif';
+  ctx.fillStyle='#a78bfa';
+  ctx.fillText('PoGo Trades',W-pad-118,74);
+
+  const urls=[...new Set(entries.map(exportSpriteUrl).filter(Boolean))];
+  const imagePairs=await Promise.all(urls.map(async url=>[url,await loadCanvasImage(url)]));
+  const images=new Map(imagePairs);
+  const priColors={H:'#ef4444',M:'#f59e0b',L:'#10b981','':'#8888aa'};
+  let y=headerH;
+  groups.forEach(group=>{
+    ctx.fillStyle=priColors[group.p]||'#8888aa';
+    roundedRect(ctx,pad,y,11,24,5);ctx.fill();
+    ctx.fillStyle='#e8e8f0';
+    ctx.font='700 25px Space Grotesk, sans-serif';
+    ctx.fillText(group.label,pad+20,y+22);
+    ctx.fillStyle='#8888aa';
+    ctx.font='500 18px Space Grotesk, sans-serif';
+    ctx.fillText(`${group.entries.length}`,pad+20+ctx.measureText(group.label).width+12,y+22);
+    y+=groupTitleH;
+    group.entries.forEach((e,i)=>{
+      const col=i%cols,row=Math.floor(i/cols);
+      const x=pad+col*(cardW+gap),cy=y+row*(cardH+gap);
+      roundedRect(ctx,x,cy,cardW,cardH,12);
+      ctx.fillStyle='#1e1e35';ctx.fill();
+      ctx.strokeStyle='rgba(255,255,255,.12)';ctx.lineWidth=1;ctx.stroke();
+      ctx.fillStyle=priColors[e.p]||'#8888aa';
+      roundedRect(ctx,x,cy,cardW,5,3);ctx.fill();
+      const img=images.get(exportSpriteUrl(e));
+      if(img)drawImageContain(ctx,img,x+16,cy+18,58,58);
+      else drawSpriteFallback(ctx,e,x+17,cy+20,54);
+      if(e.mod){
+        ctx.font='700 13px JetBrains Mono, monospace';
+        const mw=Math.min(ctx.measureText(e.mod).width+16,cardW-86);
+        roundedRect(ctx,x+cardW-mw-12,cy+18,mw,24,8);
+        ctx.fillStyle='rgba(15,15,26,.9)';ctx.fill();
+        ctx.strokeStyle='rgba(255,255,255,.12)';ctx.stroke();
+        ctx.fillStyle='#a78bfa';ctx.fillText(e.mod,x+cardW-mw-4,cy+35);
+      }
+      ctx.font='700 17px Space Grotesk, sans-serif';
+      ctx.fillStyle='#e8e8f0';
+      drawWrappedText(ctx,e.dn,x+14,cy+99,cardW-28,20,2);
+      if(e.no){
+        ctx.font='500 13px JetBrains Mono, monospace';
+        ctx.fillStyle='#8888aa';
+        ctx.fillText(`#${e.no}`,x+14,cy+134);
+      }
+    });
+    y+=Math.ceil(group.entries.length/cols)*(cardH+gap)-gap+sectionGap;
+  });
+  return canvasBlob(canvas);
+}
+async function exportMyListImage(){
+  const btn=document.querySelector('.image-btn');
+  const old=btn?.textContent;
+  const entries=currentListEntries(myListType);
+  if(!entries.length){toast('Add entries before exporting an image.');return;}
+  try{
+    if(btn){btn.disabled=true;btn.textContent='Building image…';}
+    const blob=await renderListImage(entries,myListType,cur);
+    downloadBlob(blob,`pogo-${safeFilePart(cur)}-${safeFilePart(listLabel(myListType))}-${new Date().toISOString().slice(0,10)}.png`);
+    toast('🖼️ Image exported!');
+  }catch(e){
+    console.error(e);
+    toast('⚠️ Image export failed. Try again.');
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent=old;}
+  }
 }
 
 // ── DRAG TO REORDER ───────────────────────────────────────────
@@ -2012,6 +2246,7 @@ Object.assign(window,{
   setFilter,setBrowseList,setMyList,setStaleFilter,switchTab,
   doLogin,logout,connectFirebase,skipFirebase,
   addEntry,setPri,setNotes,removeEntry,doUndo,copyStr,
+  exportMyListImage,
   dragStart,dragOver,dragDrop,dragEnd,
   addUser,openReset,confirmReset,toggleAdmin,exportData,triggerRestore,restoreData,
   saveProfile,openModal,closeModal,renderStrings,renderBrowse,setStrList,
