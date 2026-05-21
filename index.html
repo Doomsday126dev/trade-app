@@ -1482,6 +1482,140 @@ function toast(msg,dur=2500){
   setTimeout(()=>t.classList.remove('show'),dur);
 }
 
+
+// ── IMPORT FROM SEARCH STRING ─────────────────────────────────
+let importPri='M';
+let importMatches=[];
+
+function openImport(){
+  importPri='M';importMatches=[];
+  document.getElementById('import-str-input').value='';
+  document.getElementById('import-err').textContent='';
+  document.getElementById('import-warn-box').innerHTML='';
+  document.getElementById('import-preview-list').innerHTML='<div class="select-all-row" onclick="toggleSelectAll()"><input type="checkbox" id="select-all-chk" checked class="import-check"> Select all</div>';
+  document.getElementById('import-step1').classList.add('active');
+  document.getElementById('import-step2').classList.remove('active');
+  document.querySelectorAll('.import-pri-btn').forEach(b=>{
+    b.classList.remove('sel','H','M','L');
+    if(b.dataset.pri==='M')b.classList.add('sel','M');
+  });
+  openModal('import-modal');
+}
+
+function setImportPri(p){
+  importPri=p;
+  document.querySelectorAll('.import-pri-btn').forEach(b=>{
+    b.classList.remove('sel','H','M','L');
+    if(b.dataset.pri===p)b.classList.add('sel',p);
+  });
+}
+
+function parseImportString(){
+  const raw=document.getElementById('import-str-input').value.trim();
+  const err=document.getElementById('import-err');
+  err.textContent='';
+  if(!raw){err.textContent='Paste a search string first';return;}
+  const srcArr=myListType==='costumes'?DB.costumes:myListType==='dynamax'?DB.dynamax:DB.wishlist;
+  const dexToEntries={};
+  srcArr.forEach(e=>{
+    if(!e.no)return;
+    const n=parseInt(e.no);if(isNaN(n))return;
+    if(!dexToEntries[n])dexToEntries[n]=[];
+    if(!dexToEntries[n].find(x=>x.name===e.name))
+      dexToEntries[n].push({name:e.name,dn:e.displayName||e.name,no:e.no});
+  });
+  let working=raw;
+  const preIdx=working.indexOf('!4*&');
+  if(preIdx!==-1){
+    const afterPre=working.slice(preIdx);
+    const numStart=afterPre.search(/[0-9]/);
+    if(numStart!==-1)working=afterPre.slice(numStart);
+  }
+  const tokens=working.split(',').map(t=>t.trim()).filter(Boolean);
+  const matched=[];const skipped=[];
+  tokens.forEach(token=>{
+    let mod='',numStr=token;
+    if(token.includes('&')){
+      const parts=token.split('&');
+      numStr=parts[parts.length-1];
+      const prefix=parts.slice(0,-1).join('&').toLowerCase();
+      if(prefix.includes('female'))mod='f';
+      else if(prefix.includes('male'))mod='m';
+      else if(prefix.includes('kanto'))mod='xs';
+    }
+    numStr=numStr.replace(/[^0-9]/g,'');
+    const dex=parseInt(numStr);
+    if(isNaN(dex)||dex<=0)return;
+    const entries=dexToEntries[dex];
+    if(!entries||!entries.length){skipped.push(dex);return;}
+    entries.forEach(e=>{
+      if(matched.find(m=>m.name===e.name&&m.mod===mod))return;
+      matched.push({...e,mod,dex,checked:true});
+    });
+  });
+  if(!matched.length){err.textContent='No matching Pokemon found. Make sure the string contains dex numbers.';return;}
+  importMatches=matched;
+  const warnBox=document.getElementById('import-warn-box');
+  if(skipped.length)
+    warnBox.innerHTML='<div class="import-warn">Warning: '+skipped.length+' dex number(s) not in database: '+[...new Set(skipped)].join(', ')+'</div>';
+  else warnBox.innerHTML='';
+  const existing=allData[myListType]?.[cur]||{};
+  const rows=matched.map(function(e,i){
+    const alreadyHas=!!existing[e.name];
+    const modLabel=e.mod?' ('+e.mod+')':'';
+    const sprite=e.no?("<img src=\""+SPRITE_BASE+parseInt(e.no)+".png\" class=\"import-sprite\" width=\"28\" height=\"28\" loading=\"lazy\">"):"<div class=\"import-sprite-ph\"></div>";
+    const already=alreadyHas?'<span style="font-size:10px;color:var(--muted)">already listed</span>':'';
+    return '<div class="import-preview-row '+(alreadyHas?'skip':'')+'" id="import-row-'+i+'">'+
+      '<input type="checkbox" class="import-check" id="import-chk-'+i+'" '+(e.checked&&!alreadyHas?'checked':'')+' onchange="toggleImportRow('+i+')">'+
+      sprite+
+      '<span class="import-dex">#'+e.dex+'</span>'+
+      '<span class="import-name">'+e.dn+modLabel+'</span>'+
+      already+
+      '</div>';
+  }).join('');
+  document.getElementById('import-preview-list').innerHTML=
+    '<div class="select-all-row" onclick="toggleSelectAll()"><input type="checkbox" id="select-all-chk" checked class="import-check"> Select all ('+matched.length+')</div>'+rows;
+  importMatches.forEach(function(e,i){if(!!existing[e.name])importMatches[i].checked=false;});
+  const checkedCount=importMatches.filter(function(m){return m.checked;}).length;
+  document.getElementById('import-summary').textContent='Found '+matched.length+' Pokemon — '+checkedCount+' will be added as '+importPri+'.';
+  document.getElementById('import-confirm-btn').textContent='Import '+checkedCount;
+  document.getElementById('import-step1').classList.remove('active');
+  document.getElementById('import-step2').classList.add('active');
+}
+
+function toggleImportRow(i){
+  importMatches[i].checked=document.getElementById('import-chk-'+i).checked;
+  updateImportCount();
+}
+function toggleSelectAll(){
+  const chk=document.getElementById('select-all-chk');
+  const newVal=chk.checked;
+  importMatches.forEach(function(m,i){
+    importMatches[i].checked=newVal;
+    const el=document.getElementById('import-chk-'+i);
+    if(el)el.checked=newVal;
+  });
+  updateImportCount();
+}
+function updateImportCount(){
+  const count=importMatches.filter(function(m){return m.checked;}).length;
+  document.getElementById('import-summary').textContent=count+' Pokemon will be added as '+importPri+'.';
+  document.getElementById('import-confirm-btn').textContent='Import '+count;
+}
+function backToStep1(){
+  document.getElementById('import-step2').classList.remove('active');
+  document.getElementById('import-step1').classList.add('active');
+}
+function confirmImport(){
+  const toAdd=importMatches.filter(function(m){return m.checked;});
+  if(!toAdd.length){toast('Nothing selected');return;}
+  const list=Object.assign({},allData[myListType]&&allData[myListType][cur]||{});
+  toAdd.forEach(function(e){list[e.name]=importPri+(e.mod?'('+e.mod+')':'');});
+  writeList(myListType,cur,list);
+  closeModal('import-modal');
+  toast('Imported '+toAdd.length+' Pokemon as '+importPri+'!');
+}
+
 // ── EXPOSE ────────────────────────────────────────────────────
 Object.assign(window,{
   openImport,setImportPri,parseImportString,toggleImportRow,toggleSelectAll,backToStep1,confirmImport,
