@@ -149,13 +149,16 @@ input,select,textarea{font-family:var(--font);outline:none}
 
 /* MY LIST ROWS */
 .mygrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:7px;margin-bottom:12px}
-.myrow{background:var(--card);border:1px solid var(--border);border-radius:var(--r2);padding:8px 11px;display:flex;align-items:center;gap:6px;cursor:grab}
+.myrow{background:var(--card);border:1px solid var(--border);border-radius:var(--r2);padding:8px 11px;display:flex;align-items:center;gap:6px;cursor:grab;position:relative}
 .myrow:active{cursor:grabbing}
+.myrow:hover{z-index:8}
 .myrow.dragging{opacity:.4;border-style:dashed}
 .myrow.drag-over{border-color:var(--accent);background:rgba(108,99,255,.08)}
 .drag-handle{color:var(--border2);font-size:14px;cursor:grab;flex-shrink:0;user-select:none;padding:2px 4px}
 .myrow-sprite{width:28px;height:28px;object-fit:contain;flex-shrink:0;image-rendering:pixelated}
 .myrow-name{font-size:13px;font-weight:500;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.myrow[data-full]:has(.myrow-name:hover)::after{content:attr(data-full);position:absolute;left:44px;bottom:calc(100% + 6px);max-width:min(360px,calc(100vw - 70px));background:rgba(18,17,34,.97);border:1px solid var(--border2);color:var(--text);border-radius:7px;padding:6px 9px;font-size:12px;line-height:1.25;white-space:normal;box-shadow:0 8px 24px rgba(0,0,0,.28);pointer-events:none;z-index:30}
+.myrow[data-full]:has(.myrow-name:hover)::before{content:'';position:absolute;left:55px;bottom:100%;border:5px solid transparent;border-top-color:var(--border2);pointer-events:none;z-index:31}
 .mctrl{display:flex;gap:3px;align-items:center;flex-shrink:0}
 .pb{width:26px;height:24px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;transition:.15s}
 .pb.on.H{background:var(--Hbg);color:var(--H);border-color:rgba(239,68,68,.55)}
@@ -735,7 +738,7 @@ let dragSrc=null;
 // Map dex number → sprite URL. For forms we use base dex.
 // Sprite cache to avoid repeated failed requests
 const spriteCache={};
-const REGIONAL_FORM_IDS={"A-Rattata": 10091, "A-Raichu": 10100, "A-Sandshrew": 10101, "A-Vulpix": 10103, "A-Diglett": 10105, "A-Meowth": 10107, "A-Geodude": 10109, "A-Grimer": 10112, "A-Exeggutor": 10114, "A-Marowak": 10115, "G-Meowth": 10161, "G-Ponyta": 10162, "G-Slowpoke": 10164, "G-Farfetch'd": 10166, "G-Weezing": 10167, "G-Mr_ Mime": 10168, "G-Corsola": 10173, "G-Zigzagoon": 10174, "G-Darumaka": 10176, "G-Yamask": 10179, "G-Stunfisk": 10180, "H-Growlithe": 10229, "H-Voltorb": 10231, "H-Typhlosion": 10233, "H-Qwilfish": 10234, "H-Sneasel": 10235, "H-Samurott": 10236, "H-Lilligant": 10237, "H-Zorua": 10238, "H-Braviary": 10240, "H-Sliggoo": 10241, "H-Avalugg": 10243, "H-Decidueye": 10244, "P-Tauros (Combat)": 10250, "P-Tauros (Blaze)": 10251, "P-Tauros (Aqua)": 10252, "P-Wooper": 10253};
+const REGIONAL_FORM_IDS={"A-Rattata": 10091, "A-Raichu": 10100, "A-Sandshrew": 10101, "A-Vulpix": 10103, "A-Diglett": 10105, "A-Meowth": 10107, "A-Geodude": 10109, "A-Grimer": 10112, "A-Exeggutor": 10114, "A-Marowak": 10115, "G-Meowth": 10161, "G-Ponyta": 10162, "G-Slowpoke": 10164, "G-Farfetch'd": 10166, "G-Weezing": 10167, "G-Mr_ Mime": 10168, "G-Corsola": 10173, "G-Zigzagoon": 10174, "G-Darumaka": 10176, "G-Yamask": 10179, "G-Stunfisk": 10180, "H-Growlithe": 10229, "H-Voltorb": 10231, "H-Typhlosion": 10233, "H-Qwilfish": 10234, "H-Sneasel": 10235, "H-Samurott": 10236, "H-Lilligant": 10237, "H-Zorua": 10238, "H-Braviary": 10240, "H-Sliggoo": 10241, "H-Avalugg": 10243, "H-Decidueye": 10244, "P-Tauros (Combat)": 10250, "P-Tauros (Blaze)": 10251, "P-Tauros (Aqua)": 10252, "P-Wooper": 10253, "Castform (Sunny)": 10013, "Castform (Rainy)": 10014, "Castform (Snowy)": 10015};
 function spriteUrl(no,name){
   if(!no)return null;
   if(name&&REGIONAL_FORM_IDS[name])return`${SPRITE_BASE}${REGIONAL_FORM_IDS[name]}.png`;
@@ -1406,11 +1409,11 @@ function renderMyList(filterVal){
     const dn=dispMap[name]||name;
     const no=noMap[name];
     const sn=name.replace(/'/g,"\\'").replace(/"/g,'&quot;');
-    return`<div class="myrow" draggable="true" data-name="${sn}" data-idx="${idx}"
+    return`<div class="myrow" draggable="true" data-name="${sn}" data-idx="${idx}" data-full="${escAttr(dn)}" aria-label="${escAttr(dn)}"
       ondragstart="dragStart(event)" ondragover="dragOver(event)" ondrop="dragDrop(event)" ondragend="dragEnd(event)">
       <span class="drag-handle" title="Drag to reorder">⠿</span>
       ${no?spriteImg(no,28,'myrow-sprite',name):''}
-      <div class="myrow-name" title="${dn}">${dn}</div>
+      <div class="myrow-name">${dn}</div>
       <div class="mctrl">
         ${['H','M','L'].map(b=>`<button class="pb ${p===b?'on '+b:''}" onclick="setPri('${sn}','${b}')" title="${priName(b)}" aria-label="Set ${escAttr(dn)} to ${priLabel(b)} priority">${b}</button>`).join('')}
         <input class="ni" type="text" value="${mod}" placeholder="notes" onchange="setNotes('${sn}',this.value)">
