@@ -156,6 +156,10 @@ input,select,textarea{font-family:var(--font);outline:none}
 .myrow.drag-over{border-color:var(--accent);background:rgba(108,99,255,.08)}
 .drag-handle{color:var(--border2);font-size:14px;cursor:grab;flex-shrink:0;user-select:none;padding:2px 4px}
 .myrow-sprite{width:28px;height:28px;object-fit:contain;flex-shrink:0;image-rendering:pixelated}
+.myrow-sprite-wrap,.pc-sprite-wrap{position:relative;display:inline-flex;flex-shrink:0}
+.max-badge{position:absolute;bottom:-3px;right:-3px;width:13px;height:13px;border-radius:3px;font-size:8px;font-weight:800;display:flex;align-items:center;justify-content:center;line-height:1;pointer-events:none;border:1px solid rgba(255,255,255,.6)}
+.max-badge.gmax{background:#c084fc;color:#1a003a}
+.max-badge.dmax{background:#38bdf8;color:#001a2e}
 .myrow-name{font-size:13px;font-weight:500;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .myrow[data-full]:has(.myrow-name:hover)::after{content:attr(data-full);position:absolute;left:44px;bottom:calc(100% + 6px);max-width:min(360px,calc(100vw - 70px));background:rgba(18,17,34,.97);border:1px solid var(--border2);color:var(--text);border-radius:7px;padding:6px 9px;font-size:12px;line-height:1.25;white-space:normal;box-shadow:0 8px 24px rgba(0,0,0,.28);pointer-events:none;z-index:30}
 .myrow[data-full]:has(.myrow-name:hover)::before{content:'';position:absolute;left:55px;bottom:100%;border:5px solid transparent;border-top-color:var(--border2);pointer-events:none;z-index:31}
@@ -694,6 +698,9 @@ const REGION_CODE_TERMS={K:'kanto',J:'johto',H:'hoenn',S:'sinnoh',U:'unova',L:'k
 const REGIONAL_FORM_TERMS={A:'alola',G:'galar',H:'hisui',P:'paldea'};
 const REGION_SEARCH_TERMS=new Set([...Object.values(REGION_CODE_TERMS),'hisui']);
 const CASTFORM_TYPE_TERMS=new Set(['fire','water','ice','normal']);
+// Form-variant qualifiers: terms users can append (&dusk, etc.) to target evolution-gated forms.
+// Extend this set when new evolution-gated forms become tradeable in GO.
+const FORM_QUALIFIER_TERMS=new Set(['dusk']);
 const SECURE_RULES=`{
   "rules": {
     ".read": true,
@@ -848,6 +855,11 @@ const GO_COSTUME_SPRITE_SLUGS={
   "Togepi (Flower Crown)":"flowers","Togetic (Flower Crown)":"flowers","Togekiss (Flower Crown)":"flowers",
   "Blissey (Flower Crown)":"flowercrown","Absol (Fashion)":"fashion"
 };
+// Pokémon that can Gigantamax (by Pokédex number). Used to show G vs D badge on Dynamax list.
+const GMAX_NOS=new Set([
+  3,6,9,12,25,52,68,94,99,131,133,143,569,809, // cross-gen Gigantamax
+  812,815,818,823,826,834,839,841,842,844,849,851,858,861,869,884,892 // Galar Gigantamax
+]);
 function padDex(no){
   const n=parseInt(no);
   return Number.isFinite(n)?String(n).padStart(3,'0'):'';
@@ -992,6 +1004,8 @@ function entrySearchFilters(entry,mod){
   const filters=modSearchFilters(mod);
   const castform=castformTypeFilter(entry,mod);
   if(castform&&!filters.includes(castform))filters.unshift(castform);
+  const variant=formVariantFilter(entry,mod);
+  if(variant&&!filters.includes(variant))filters.push(variant);
   return filters;
 }
 function modFromSearchFilters(filters){
@@ -1006,6 +1020,19 @@ function modFromSearchFilters(filters){
 }
 function castformTypeFromSearchFilters(filters){
   return filters.find(f=>CASTFORM_TYPE_TERMS.has(f))||'';
+}
+// Form-variant qualifier — detects evolution-gated forms by entry name/mod.
+// Currently: Rockruff (Dusk) = Own Tempo Rockruff → only form that evolves to Lycanroc Dusk.
+// Future: White-Stripe Basculin (when GO enables Basculegion evolution, add 'white' to FORM_QUALIFIER_TERMS).
+function formVariantFilter(entry,mod=''){
+  const no=parseInt(entry?.no);
+  if(!no)return'';
+  const text=`${entry?.name||''} ${entry?.displayName||''} ${mod}`.toLowerCase();
+  if(no===744){if(/\b(dusk|own.?tempo)\b/.test(text))return'dusk';}
+  return'';
+}
+function formVariantFromSearchFilters(filters){
+  return filters.find(f=>FORM_QUALIFIER_TERMS.has(f))||'';
 }
 
 // ── LOCAL STORAGE ─────────────────────────────────────────────
@@ -1616,9 +1643,11 @@ function renderBrowse(){
     const info=map[e.name];
     let ents=info.entries;if(browseFilter!=='ALL')ents=ents.filter(x=>x.p===browseFilter);
     ents=sortEntries(ents);
+    const maxMark=browseList==='dynamax'?(GMAX_NOS.has(parseInt(e.no))?'G':'D'):'';
+    const maxBadge=maxMark?`<span class="max-badge ${maxMark==='G'?'gmax':'dmax'}" title="${maxMark==='G'?'Gigantamax':'Dynamax'}">${maxMark}</span>`:'';
     return`<div class="pc">
       <div class="pc-hdr">
-        ${spriteImg(e.no,28,'pc-sprite',e.name)}
+        <span class="pc-sprite-wrap">${spriteImg(e.no,28,'pc-sprite',e.name)}${maxBadge}</span>
         <div class="pc-info"><div class="pc-name">${info.dn}</div><div class="pc-no">#${e.no}</div></div>
       </div>
       <div class="pc-users">${ents.map(x=>userBadge(x)).join('')}</div>
@@ -1759,10 +1788,12 @@ function renderMyList(filterVal){
     const no=noMap[name]||null;
     const sn=name.replace(/'/g,"\\'").replace(/"/g,'&quot;');
     const hasSprite=no||COSTUME_FORM_SPRITE_IDS[name]||GO_COSTUME_SPRITE_SLUGS[name];
+    const maxMark=myListType==='dynamax'?(GMAX_NOS.has(parseInt(no))?'G':'D'):'';
+    const maxBadge=maxMark?`<span class="max-badge ${maxMark==='G'?'gmax':'dmax'}" title="${maxMark==='G'?'Gigantamax':'Dynamax'}">${maxMark}</span>`:'';
     return`<div class="myrow" draggable="true" data-name="${sn}" data-idx="${idx}" data-full="${escAttr(dn)}" aria-label="${escAttr(dn)}"
       ondragstart="dragStart(event)" ondragover="dragOver(event)" ondrop="dragDrop(event)" ondragend="dragEnd(event)">
       <span class="drag-handle" title="Drag to reorder">⠿</span>
-      ${hasSprite?spriteImg(no,28,'myrow-sprite',name):''}
+      ${hasSprite?`<span class="myrow-sprite-wrap">${spriteImg(no,28,'myrow-sprite',name)}${maxBadge}</span>`:`${maxBadge}`}
       <div class="myrow-name">${dn}</div>
       <div class="mctrl">
         ${['H','M','L'].map(b=>`<button class="pb ${p===b?'on '+b:''}" onclick="setPri('${sn}','${b}')" title="${priName(b)}" aria-label="Set ${escAttr(dn)} to ${priLabel(b)} priority">${b}</button>`).join('')}
@@ -1863,7 +1894,7 @@ function drawSpriteFallback(ctx,e,x,y,size){
 }
 function maxMarkForEntry(e,type){
   if(type!=='dynamax')return'';
-  return/\b(gmax|gigantamax)\b/i.test(`${e.name||''} ${e.dn||''} ${e.mod||''}`)?'G':'D';
+  return GMAX_NOS.has(parseInt(e.no))?'G':'D';
 }
 function canvasBlob(canvas){
   return new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(new Error('Could not render image')),'image/png'));
@@ -1915,9 +1946,10 @@ async function renderListImage(entries,type,username){
     ctx.fillStyle='#101828';
     ctx.font='700 18px Space Grotesk, sans-serif';
     ctx.fillText(group.label,pad+14,y+20);
+    const labelW=ctx.measureText(group.label).width;
     ctx.fillStyle='#667085';
     ctx.font='600 12px Space Grotesk, sans-serif';
-    ctx.fillText(`${group.entries.length}`,pad+14+ctx.measureText(group.label).width+8,y+20);
+    ctx.fillText(`${group.entries.length}`,pad+14+labelW+8,y+20);
     y+=groupTitleH;
     group.entries.forEach((e,i)=>{
       const col=i%cols,row=Math.floor(i/cols);
@@ -2531,7 +2563,7 @@ function parseImportString(){
   const matched=[];const skipped=[];
   tokens.forEach(token=>{
     let mod='',numStr=token;
-    let regionTerm='',castformType='';
+    let regionTerm='',castformType='',formVariant='';
     if(token.includes('&')){
       const parts=token.split('&').map(p=>p.trim()).filter(Boolean);
       numStr=parts[parts.length-1];
@@ -2539,6 +2571,7 @@ function parseImportString(){
       mod=modFromSearchFilters(filters);
       regionTerm=filters.find(p=>REGION_SEARCH_TERMS.has(p))||'';
       castformType=castformTypeFromSearchFilters(filters);
+      formVariant=formVariantFromSearchFilters(filters);
     }
     numStr=numStr.replace(/[^0-9]/g,'');
     const dex=parseInt(numStr);
@@ -2546,6 +2579,7 @@ function parseImportString(){
     let entries=dexToEntries[dex];
     if(regionTerm)entries=(entries||[]).filter(e=>e.regionTerm===regionTerm);
     if(castformType)entries=(entries||[]).filter(e=>castformTypeFilter(e)===castformType);
+    if(formVariant)entries=(entries||[]).filter(e=>formVariantFilter(e)===formVariant);
     if(!entries||!entries.length){skipped.push(dex);return;}
     entries.forEach(e=>{
       if(matched.find(m=>m.name===e.name&&m.mod===mod))return;
