@@ -231,6 +231,33 @@ input,select,textarea{font-family:var(--font);outline:none}
 .btn-deny{background:rgba(239,68,68,.1);color:var(--danger);border:1px solid rgba(239,68,68,.2);padding:6px 16px;border-radius:var(--r2);font-size:13px;font-weight:600;cursor:pointer;transition:.15s}
 .btn-deny:hover{background:rgba(239,68,68,.2)}
 .pin-reveal{font-family:var(--mono);font-size:13px;background:var(--bg2);border:1px solid var(--border2);border-radius:4px;padding:4px 10px;color:var(--ac2);display:inline-block;margin-top:4px}
+
+/* AUTOCOMPLETE */
+.ac-wrap{position:relative;flex:1;min-width:130px}
+.ac-input{width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--text);padding:8px 11px;border-radius:var(--r2);font-size:14px}
+.ac-input:focus{border-color:var(--accent);outline:none}
+.ac-input::placeholder{color:var(--muted)}
+.ac-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--card);border:1px solid var(--border2);border-radius:var(--r2);z-index:200;max-height:220px;overflow-y:auto;display:none;box-shadow:0 4px 20px rgba(0,0,0,.4)}
+.ac-dropdown.open{display:block}
+.ac-item{padding:8px 12px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:.1s}
+.ac-item:hover,.ac-item.focused{background:var(--bg2)}
+.ac-item-no{font-family:var(--mono);font-size:10px;color:var(--muted);min-width:32px}
+.ac-item-name{flex:1}
+.ac-empty{padding:10px 12px;font-size:13px;color:var(--muted)}
+
+/* UNDO TOAST */
+.undo-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--card);border:1px solid var(--border2);border-radius:var(--r2);padding:10px 16px;font-size:13px;font-weight:500;z-index:9999;transition:transform .3s;display:flex;align-items:center;gap:12px;white-space:nowrap}
+.undo-toast.show{transform:translateX(-50%) translateY(0)}
+.undo-btn{background:var(--accent);color:#fff;border:none;padding:4px 12px;border-radius:4px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font)}
+
+/* SYNC QUEUE */
+.sync-queue-dot{position:absolute;top:-2px;right:-2px;width:8px;height:8px;background:var(--warn);border-radius:50%;display:none}
+.sync-queue-dot.show{display:block}
+.topbar-sync-wrap{position:relative;display:flex;align-items:center}
+
+/* EXPORT */
+.btn-export{background:transparent;border:1px solid var(--border2);color:var(--muted);padding:7px 14px;border-radius:var(--r2);font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px}
+.btn-export:hover{border-color:var(--ac2);color:var(--ac2)}
 </style>
 </head>
 <body>
@@ -289,7 +316,7 @@ input,select,textarea{font-family:var(--font);outline:none}
   <div class="topbar">
     <div class="logo">🎮 <span>PoGo Trades</span></div>
     <div class="topbar-r">
-      <div class="sync-row"><div class="sync-dot" id="sdot"></div><span class="sync-lbl" id="slbl">—</span></div>
+      <div class="topbar-sync-wrap"><div class="sync-row"><div class="sync-dot" id="sdot"></div><span class="sync-lbl" id="slbl">—</span></div><div class="sync-queue-dot" id="sqd" title="Unsynced changes pending"></div></div>
       <div class="user-chip" onclick="openModal('prof-modal')">
         <div class="av" id="top-av">?</div>
         <span id="top-un">—</span>
@@ -352,7 +379,12 @@ input,select,textarea{font-family:var(--font);outline:none}
     <div class="add-form">
       <div class="add-ttl" id="add-ttl">+ Add Pokémon</div>
       <div class="frow">
-        <select id="add-pmon-sel"><option value="">Select…</option></select>
+        <div class="ac-wrap">
+          <input type="text" class="ac-input" id="ac-input" placeholder="Search Pokémon…" autocomplete="off"
+            oninput="acSearch(this.value)" onkeydown="acKeydown(event)" onfocus="acSearch(this.value)">
+          <input type="hidden" id="add-pmon-sel">
+          <div class="ac-dropdown" id="ac-dropdown"></div>
+        </div>
         <select id="add-pmon-pri">
           <option value="H">H – High</option>
           <option value="M" selected>M – Medium</option>
@@ -391,6 +423,9 @@ input,select,textarea{font-family:var(--font);outline:none}
 
   <!-- ADMIN -->
   <div class="page" id="tab-admin">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
+      <button class="btn-export" onclick="exportData()">⬇️ Export backup</button>
+    </div>
     <!-- PENDING REQUESTS -->
     <div id="pending-requests-section" style="display:none;margin-bottom:16px">
       <div class="sec" style="margin-top:0;display:flex;align-items:center;gap:6px">
@@ -418,6 +453,7 @@ input,select,textarea{font-family:var(--font);outline:none}
 </div>
 
 <div class="toast" id="toast"></div>
+<div class="undo-toast" id="undo-toast"><span id="undo-msg"></span><button class="undo-btn" onclick="doUndo()">Undo</button></div>
 
 <!-- PROFILE MODAL -->
 <div class="ov" id="prof-modal">
@@ -455,14 +491,66 @@ import{getDatabase,ref,set,get,onValue,update}from'https://www.gstatic.com/fireb
 
 const PREFILTER="!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&";
 const OWNER="Doomsday126";
-const STALE_WARN=7;   // days → yellow
-const STALE_OLD=30;   // days → red
+const STALE_WARN=7,STALE_OLD=30;
 
 let db=null,fbOn=false,cur=null,unsub=null;
 let allData={};
 let browseFilter='ALL',browseList='wishlist',staleFilter=0;
 let myListType='wishlist',strListType='wishlist';
 let rpinTarget=null;
+
+// ── SYNC QUEUE (fix #11) ──────────────────────────────────────
+// Tracks writes that haven't confirmed to Firebase yet
+let syncQueue={};  // {key: {path, data, ts}}
+let syncFlushTimer=null;
+
+function queueSync(path, data){
+  syncQueue[path]={path,data,ts:Date.now()};
+  showSyncDot(true);
+  clearTimeout(syncFlushTimer);
+  syncFlushTimer=setTimeout(flushSyncQueue, 2000);
+}
+
+async function flushSyncQueue(){
+  if(!fbOn||!db||!Object.keys(syncQueue).length)return;
+  const entries=Object.entries(syncQueue);
+  syncQueue={};
+  let allOk=true;
+  for(const[path,{data}] of entries){
+    try{
+      if(data===null)await set(ref(db,path),null);
+      else await set(ref(db,path),data);
+    }catch(e){
+      console.warn('Sync failed for',path,e);
+      syncQueue[path]={path,data,ts:Date.now()};
+      allOk=false;
+    }
+  }
+  if(Object.keys(syncQueue).length===0)showSyncDot(false);
+  else{
+    setSyncStatus('offline');
+    syncFlushTimer=setTimeout(flushSyncQueue,5000); // retry in 5s
+  }
+}
+
+function showSyncDot(show){
+  document.getElementById('sqd')?.classList.toggle('show',show);
+}
+
+window.addEventListener('online',()=>{if(fbOn)flushSyncQueue();});
+
+// ── PIN HASHING (fix #1) ──────────────────────────────────────
+async function hashPin(pin){
+  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(pin+'pogo_salt_nyc'));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+async function verifyPin(pin, stored){
+  // Support legacy plaintext PINs during migration
+  if(stored===pin)return true;
+  const hashed=await hashPin(pin);
+  return hashed===stored;
+}
 
 // ── LOCAL STORAGE ─────────────────────────────────────────────
 function lsGet(k,d){try{return JSON.parse(localStorage.getItem(k)??'null')??d}catch{return d}}
@@ -471,10 +559,10 @@ function lsSet(k,v){localStorage.setItem(k,JSON.stringify(v))}
 function initLocal(){
   let s=lsGet('pogo3',null);
   if(!s){
-    s={users:{},wishlist:{},dynamax:{},costumes:{}};
+    s={users:{},wishlist:{},dynamax:{},costumes:{},requests:{}};
     const ulist=DB.users.filter(u=>u&&u.trim()&&u.trim()!=='EVERYONE').map(u=>u.trim());
     ulist.forEach(u=>{
-      s.users[u]={pin:'1234',isAdmin:u===OWNER,isOwner:u===OWNER,friendCode:'',joined:Date.now(),lastSeen:null,lastUpdated:null};
+      s.users[u]={pin:'1234',isAdmin:u===OWNER,isOwner:u===OWNER,friendCode:'',joined:Date.now(),lastSeen:null,lastUpdated:null,pinHashed:false};
       s.wishlist[u]={};s.dynamax[u]={};s.costumes[u]={};
       DB.wishlist.forEach(e=>{const v=e.users[u];if(v)s.wishlist[u][e.name]=v;});
       DB.dynamax.forEach(e=>{const v=e.users[u];if(v)s.dynamax[u][e.name]=v;});
@@ -492,7 +580,9 @@ async function writeUser(u,data){
   const s=getLocal();
   s.users[u]={...s.users[u],...data};
   saveLocal(s);
-  if(fbOn&&db)await update(ref(db,`users/${u}`),data).catch(console.error);
+  if(fbOn&&db){
+    queueSync(`users/${u}`,s.users[u]);
+  }
   syncFromLocal();
 }
 
@@ -500,12 +590,11 @@ async function writeList(type,u,list){
   const s=getLocal();
   if(!s[type])s[type]={};
   s[type][u]=list;
-  // Stamp lastUpdated on the user whenever they change a list
   s.users[u]={...s.users[u],lastUpdated:Date.now()};
   saveLocal(s);
   if(fbOn&&db){
-    await set(ref(db,`${type}/${u}`),list).catch(console.error);
-    await update(ref(db,`users/${u}`),{lastUpdated:Date.now()}).catch(console.error);
+    queueSync(`${type}/${u}`,list);
+    queueSync(`users/${u}/lastUpdated`,Date.now());
   }
   syncFromLocal();
 }
@@ -548,15 +637,17 @@ function startListener(){
         costumes:{...s.costumes,...(d.costumes||{})},
         requests:{...s.requests,...(d.requests||{})}
       };
-      saveLocal(merged);allData=merged;setSyncStatus('online');refreshAll();
+      saveLocal(merged);allData=merged;setSyncStatus('online');
+      showSyncDot(false);syncQueue={};
+      refreshAll();
     }
-  },()=>setSyncStatus('offline'));
+  },()=>{setSyncStatus('offline');});
 }
 
 function skipFirebase(){lsSet('fbUrl','local');syncFromLocal();showLogin();}
 
 // ── AUTH ──────────────────────────────────────────────────────
-function doLogin(){
+async function doLogin(){
   const u=document.getElementById('login-user').value;
   const p=document.getElementById('login-pin').value;
   const err=document.getElementById('login-err');
@@ -564,16 +655,29 @@ function doLogin(){
   if(!p){err.textContent='Enter PIN';return}
   const ud=allData.users?.[u];
   if(!ud){err.textContent='User not found';return}
-  if(ud.pin===p){
+
+  const ok=await verifyPin(p, ud.pin);
+  if(ok){
     cur=u;
     sessionStorage.setItem('pgu',u);
-    // Stamp lastSeen
+    // If PIN was plaintext, upgrade to hashed now
+    if(!ud.pinHashed){
+      const hashed=await hashPin(p);
+      await writeUser(u,{pin:hashed,pinHashed:true});
+    }
     writeUser(u,{lastSeen:Date.now()});
     showApp();
-  } else err.textContent='❌ Wrong PIN (default: 1234)';
+  } else {
+    err.textContent='❌ Wrong PIN (default: 1234)';
+  }
 }
 
-function logout(){cur=null;sessionStorage.removeItem('pgu');closeModal('prof-modal');document.getElementById('app').style.display='none';showLogin();}
+function logout(){
+  cur=null;sessionStorage.removeItem('pgu');
+  closeModal('prof-modal');
+  document.getElementById('app').style.display='none';
+  showLogin();
+}
 
 // ── NAV ───────────────────────────────────────────────────────
 function showConfig(){
@@ -605,7 +709,6 @@ function showApp(){
   const isAdmin=allData.users?.[cur]?.isAdmin;
   document.getElementById('admin-tab').style.display=isAdmin?'':'none';
   updateFcDisplay();
-  populateAddSelect();
   renderBrowse();renderMyList();renderMatch();renderStrings();
   if(isAdmin){renderAdmin();renderPendingRequests();}
 }
@@ -623,37 +726,140 @@ function refreshAll(){
   if(allData.users?.[cur]?.isAdmin){renderAdmin();renderPendingRequests();}
 }
 
-// ── FRESHNESS HELPERS ─────────────────────────────────────────
+// ── FRESHNESS ─────────────────────────────────────────────────
 function freshnessClass(ts){
   if(!ts)return'stale';
-  const days=(Date.now()-ts)/(1000*60*60*24);
-  if(days<STALE_WARN)return'fresh';
-  if(days<STALE_OLD)return'warn';
-  return'stale';
+  const d=(Date.now()-ts)/(86400000);
+  return d<STALE_WARN?'fresh':d<STALE_OLD?'warn':'stale';
 }
-
 function freshnessLabel(ts){
-  if(!ts)return'Never updated';
-  const mins=Math.floor((Date.now()-ts)/60000);
-  if(mins<2)return'Just now';
-  if(mins<60)return`${mins}m ago`;
-  const hrs=Math.floor(mins/60);
-  if(hrs<24)return`${hrs}h ago`;
-  const days=Math.floor(hrs/24);
-  if(days<7)return`${days}d ago`;
-  if(days<30)return`${Math.floor(days/7)}w ago`;
-  return`${Math.floor(days/30)}mo ago`;
+  if(!ts)return'Never';
+  const m=Math.floor((Date.now()-ts)/60000);
+  if(m<2)return'Just now';
+  if(m<60)return`${m}m ago`;
+  const h=Math.floor(m/60);
+  if(h<24)return`${h}h ago`;
+  const d=Math.floor(h/24);
+  if(d<7)return`${d}d ago`;
+  if(d<30)return`${Math.floor(d/7)}w ago`;
+  return`${Math.floor(d/30)}mo ago`;
 }
-
 function freshnessColor(cls){
   return{fresh:'var(--ok)',warn:'var(--warn)',stale:'var(--danger)'}[cls]||'var(--muted)';
 }
 
-function freshnessDot(ts){
-  const cls=freshnessClass(ts);
-  const color=freshnessColor(cls);
-  const label=freshnessLabel(ts);
-  return`<span class="fdot" style="background:${color}" title="${label}"></span><span class="fage" style="color:${color}">${label}</span>`;
+function userBadge(x){
+  const lu=allData.users?.[x.user]?.lastUpdated;
+  const color=freshnessColor(freshnessClass(lu));
+  const age=freshnessLabel(lu);
+  return`<span class="badge ${x.p}" title="${x.user} · Updated ${age}" style="border-color:${color}40">
+    ${x.user}${x.mod?`<span class="mod"> ${x.mod}</span>`:''}
+    <span style="width:5px;height:5px;border-radius:50%;background:${color};display:inline-block;margin-left:3px;flex-shrink:0"></span>
+  </span>`;
+}
+
+// ── AUTOCOMPLETE (fix #9) ─────────────────────────────────────
+let acItems=[];    // full list for current myListType
+let acFiltered=[]; // filtered results
+let acFocusIdx=-1;
+let acSelected=null; // {name, displayName, no}
+
+function buildAcItems(){
+  const arr=myListType==='costumes'?DB.costumes:myListType==='dynamax'?DB.dynamax:DB.wishlist;
+  const seen=new Set();
+  acItems=[];
+  arr.forEach(e=>{
+    if(seen.has(e.name))return;
+    seen.add(e.name);
+    acItems.push({name:e.name,dn:e.displayName||e.name,no:e.no||null});
+  });
+}
+
+function acSearch(q){
+  acSelected=null;
+  document.getElementById('add-pmon-sel').value='';
+  const dd=document.getElementById('ac-dropdown');
+  if(!q||q.length<1){dd.classList.remove('open');return;}
+  const lq=q.toLowerCase();
+  acFiltered=acItems.filter(e=>
+    e.dn.toLowerCase().includes(lq)||
+    String(e.no||'').includes(lq)
+  ).slice(0,30);
+  acFocusIdx=-1;
+  if(!acFiltered.length){
+    dd.innerHTML=`<div class="ac-empty">No results</div>`;
+  } else {
+    dd.innerHTML=acFiltered.map((e,i)=>
+      `<div class="ac-item" data-idx="${i}" onmousedown="acSelect(${i})">
+        ${e.no?`<span class="ac-item-no">#${e.no}</span>`:''}
+        <span class="ac-item-name">${e.dn}</span>
+      </div>`
+    ).join('');
+  }
+  dd.classList.add('open');
+}
+
+function acSelect(idx){
+  const e=acFiltered[idx];if(!e)return;
+  acSelected=e;
+  document.getElementById('ac-input').value=e.dn;
+  document.getElementById('add-pmon-sel').value=e.name;
+  document.getElementById('ac-dropdown').classList.remove('open');
+}
+
+function acKeydown(ev){
+  const dd=document.getElementById('ac-dropdown');
+  if(!dd.classList.contains('open'))return;
+  if(ev.key==='ArrowDown'){
+    ev.preventDefault();
+    acFocusIdx=Math.min(acFocusIdx+1,acFiltered.length-1);
+    acUpdateFocus();
+  } else if(ev.key==='ArrowUp'){
+    ev.preventDefault();
+    acFocusIdx=Math.max(acFocusIdx-1,0);
+    acUpdateFocus();
+  } else if(ev.key==='Enter'){
+    ev.preventDefault();
+    if(acFocusIdx>=0)acSelect(acFocusIdx);
+    else if(acFiltered.length===1)acSelect(0);
+  } else if(ev.key==='Escape'){
+    dd.classList.remove('open');
+  }
+}
+
+function acUpdateFocus(){
+  document.querySelectorAll('.ac-item').forEach((el,i)=>
+    el.classList.toggle('focused',i===acFocusIdx));
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.ac-wrap')){
+    document.getElementById('ac-dropdown')?.classList.remove('open');
+  }
+});
+
+// ── UNDO (fix #2) ─────────────────────────────────────────────
+let undoStack=null; // {type, username, list, name}
+let undoTimer=null;
+
+function showUndo(name){
+  clearTimeout(undoTimer);
+  document.getElementById('undo-msg').textContent=`Removed "${name}"`;
+  document.getElementById('undo-toast').classList.add('show');
+  undoTimer=setTimeout(()=>{
+    document.getElementById('undo-toast').classList.remove('show');
+    undoStack=null;
+  },4000);
+}
+
+function doUndo(){
+  if(!undoStack)return;
+  clearTimeout(undoTimer);
+  document.getElementById('undo-toast').classList.remove('show');
+  writeList(undoStack.type,undoStack.username,undoStack.list);
+  toast(`↩️ ${undoStack.name} restored`);
+  undoStack=null;
 }
 
 // ── BROWSE ────────────────────────────────────────────────────
@@ -663,7 +869,6 @@ function setFilter(f){
   document.querySelectorAll('.fbtn.f'+f).forEach(b=>b.classList.add('on'));
   renderBrowse();
 }
-
 function setBrowseList(t){
   browseList=t;
   document.querySelectorAll('#browse-list-tabs .ltab').forEach((b,i)=>{
@@ -671,27 +876,22 @@ function setBrowseList(t){
   });
   renderBrowse();
 }
-
 function setStaleFilter(days){
   staleFilter=days;
   document.querySelectorAll('.sfbtn').forEach(b=>b.classList.remove('on'));
   document.querySelector(`.sfbtn[data-days="${days}"]`)?.classList.add('on');
   renderBrowse();
 }
-
 function parsePri(v){
   if(!v)return{p:'',mod:''};
   const m=String(v).match(/^([HML])(.*)/);
   return m?{p:m[1],mod:m[2].replace(/[()]/g,'')}:{p:'',mod:''};
 }
-
-// Filter users by stale setting
 function activeUsers(){
-  if(!staleFilter)return null; // null = all
-  const cutoff=Date.now()-staleFilter*24*60*60*1000;
+  if(!staleFilter)return null;
+  const cutoff=Date.now()-staleFilter*86400000;
   return new Set(Object.entries(allData.users||{})
-    .filter(([,d])=>d.lastUpdated&&d.lastUpdated>cutoff)
-    .map(([u])=>u));
+    .filter(([,d])=>d.lastUpdated&&d.lastUpdated>cutoff).map(([u])=>u));
 }
 
 function renderBrowse(){
@@ -711,10 +911,10 @@ function renderBrowse(){
       });
     });
     const results=DB.costumes.filter(e=>{
-      const ents=browseFilter==='ALL'?map[e.name]:map[e.name]?.filter(x=>x.p===browseFilter)||[];
-      if(!ents?.length)return false;
+      const ents=browseFilter==='ALL'?map[e.name]:(map[e.name]||[]).filter(x=>x.p===browseFilter);
+      if(!ents.length)return false;
       if(!q)return true;
-      return e.name.toLowerCase().includes(q)||ents.some(x=>x.user.toLowerCase().includes(q));
+      return(e.displayName||e.name).toLowerCase().includes(q)||ents.some(x=>x.user.toLowerCase().includes(q));
     });
     if(!results.length){el.innerHTML=emptyHtml('No results');return;}
     el.innerHTML=`<div class="pgrid">${results.map(e=>{
@@ -737,18 +937,15 @@ function renderBrowse(){
       if(p)map[name].entries.push({user,p,mod});
     });
   });
-
   const seen=new Set();
   const results=dataArr.filter(e=>{
-    if(seen.has(e.name))return false;
-    seen.add(e.name);
+    if(seen.has(e.name))return false;seen.add(e.name);
     const info=map[e.name];if(!info)return false;
     const ents=browseFilter==='ALL'?info.entries:info.entries.filter(x=>x.p===browseFilter);
     if(!ents.length)return false;
     if(!q)return true;
-    return e.name.toLowerCase().includes(q)||(e.displayName||'').toLowerCase().includes(q)||String(e.no).includes(q)||ents.some(x=>x.user.toLowerCase().includes(q));
+    return(e.displayName||e.name).toLowerCase().includes(q)||String(e.no||'').includes(q)||ents.some(x=>x.user.toLowerCase().includes(q));
   });
-
   if(!results.length){el.innerHTML=emptyHtml('No results');return;}
   el.innerHTML=`<div class="pgrid">${results.map(e=>{
     const info=map[e.name];
@@ -761,16 +958,6 @@ function renderBrowse(){
   }).join('')}</div>`;
 }
 
-function userBadge(x){
-  const lu=allData.users?.[x.user]?.lastUpdated;
-  const color=freshnessColor(freshnessClass(lu));
-  const age=freshnessLabel(lu);
-  return`<span class="badge ${x.p}" title="${x.user} · Updated ${age}" style="border-color:${color}40">
-    ${x.user}${x.mod?`<span class="mod"> ${x.mod}</span>`:''}
-    <span style="width:5px;height:5px;border-radius:50%;background:${color};display:inline-block;margin-left:3px;flex-shrink:0"></span>
-  </span>`;
-}
-
 // ── MY LIST ───────────────────────────────────────────────────
 function setMyList(t){
   myListType=t;
@@ -779,35 +966,30 @@ function setMyList(t){
   });
   document.getElementById('add-ttl').textContent=
     t==='costumes'?'+ Add Costume':t==='dynamax'?'+ Add Dynamax Pokémon':'+ Add Pokémon';
-  populateAddSelect();
+  // Reset autocomplete
+  if(document.getElementById('ac-input'))document.getElementById('ac-input').value='';
+  document.getElementById('add-pmon-sel').value='';
+  acSelected=null;
+  buildAcItems();
   renderMyList();
-}
-
-function populateAddSelect(){
-  const sel=document.getElementById('add-pmon-sel');if(!sel)return;
-  sel.innerHTML='<option value="">Select…</option>';
-  const arr=myListType==='costumes'?DB.costumes:myListType==='dynamax'?DB.dynamax:DB.wishlist;
-  const seen=new Set();
-  arr.forEach(e=>{
-    if(seen.has(e.name))return;seen.add(e.name);
-    const o=document.createElement('option');
-    o.value=e.name;
-    o.textContent=e.no?`#${e.no} ${e.displayName||e.name}`:(e.displayName||e.name);
-    sel.appendChild(o);
-  });
 }
 
 function addEntry(){
   const name=document.getElementById('add-pmon-sel').value;
   const pri=document.getElementById('add-pmon-pri').value;
   const notes=document.getElementById('add-pmon-notes').value.trim();
-  if(!name){toast('⚠️ Select an entry');return;}
+  if(!name){toast('⚠️ Select a Pokémon from the list');return;}
   const list={...(allData[myListType]?.[cur]||{})};
   list[name]=pri+(notes?`(${notes})`:'');
   writeList(myListType,cur,list);
+  // Reset autocomplete
+  document.getElementById('ac-input').value='';
   document.getElementById('add-pmon-sel').value='';
   document.getElementById('add-pmon-notes').value='';
-  toast(`✅ ${name} added!`);
+  document.getElementById('ac-dropdown').classList.remove('open');
+  acSelected=null;
+  const dn=acItems.find(x=>x.name===name)?.dn||name;
+  toast(`✅ ${dn} added!`);
 }
 
 function renderMyList(){
@@ -818,7 +1000,7 @@ function renderMyList(){
   const entries=Object.entries(list).sort((a,b)=>{
     const o={H:0,M:1,L:2};return(o[a[1]?.[0]]??3)-(o[b[1]?.[0]]??3);
   });
-  el.innerHTML=entries.length===0?emptyHtml('Nothing here yet','Add entries above'):
+  el.innerHTML=entries.length===0?emptyHtml('Nothing here yet','Use the search above to add entries'):
     `<div class="mygrid">${entries.map(([name,val])=>{
       const{p,mod}=parsePri(val);
       const dn=dispMap[name]||name;
@@ -828,7 +1010,7 @@ function renderMyList(){
         <div class="mctrl">
           ${['H','M','L'].map(b=>`<button class="pb ${p===b?'on '+b:''}" onclick="setPri('${sn}','${b}')">${b}</button>`).join('')}
           <input class="ni" type="text" value="${mod}" placeholder="notes" onchange="setNotes('${sn}',this.value)">
-          <button class="rm" onclick="removeEntry('${sn}')">×</button>
+          <button class="rm" onclick="removeEntry('${sn}')" title="Remove">×</button>
         </div>
       </div>`;
     }).join('')}</div>`;
@@ -848,9 +1030,15 @@ function setNotes(name,notes){
   writeList(myListType,cur,list);
 }
 function removeEntry(name){
-  const list={...(allData[myListType]?.[cur]||{})};
+  const prevList={...(allData[myListType]?.[cur]||{})};
+  // Save undo state BEFORE removing
+  const srcArr=myListType==='costumes'?DB.costumes:myListType==='dynamax'?DB.dynamax:DB.wishlist;
+  const dn=srcArr.find(x=>x.name===name)?.displayName||name;
+  undoStack={type:myListType,username:cur,list:{...prevList},name:dn};
+  const list={...prevList};
   delete list[name];
   writeList(myListType,cur,list);
+  showUndo(dn);
 }
 
 // ── SEARCH STRINGS ────────────────────────────────────────────
@@ -893,13 +1081,6 @@ function buildStrings(type,username){
   return Object.keys(out).length?out:null;
 }
 
-function renderMyStrings(){
-  const el=document.getElementById('my-strings-out');if(!el)return;
-  const strs=buildStrings(myListType,cur);
-  if(!strs){el.innerHTML=`<div style="color:var(--muted);font-size:13px">Add Pokémon to generate strings.</div>`;return;}
-  el.innerHTML=strLevelsHtml(strs);
-}
-
 function strLevelsHtml(strs){
   return`<div class="str-levels">${['H','M','L'].filter(p=>strs[p]).map(p=>`
     <div class="str-level">
@@ -909,6 +1090,13 @@ function strLevelsHtml(strs){
       </div>
       <div class="strbox">${strs[p]}</div>
     </div>`).join('')}</div>`;
+}
+
+function renderMyStrings(){
+  const el=document.getElementById('my-strings-out');if(!el)return;
+  const strs=buildStrings(myListType,cur);
+  if(!strs){el.innerHTML=`<div style="color:var(--muted);font-size:13px">Add Pokémon to generate strings.</div>`;return;}
+  el.innerHTML=strLevelsHtml(strs);
 }
 
 function copyStr(str){navigator.clipboard.writeText(str).then(()=>toast('📋 Copied!'));}
@@ -921,29 +1109,25 @@ function renderMatch(){
   const sharedEl=document.getElementById('match-shared');
   const seekEl=document.getElementById('match-seek');
   if(!sharedEl||!seekEl)return;
-
   const shared=[];
   const dbNames=new Set(DB.wishlist.map(e=>e.name));
   [...dbNames].forEach(name=>{
     const myVal=myWish[name];if(!myVal)return;
     const{p:myP}=parsePri(myVal);if(!myP)return;
     const others=Object.entries(allWish)
-      .filter(([u])=>u!==cur)
-      .filter(([,l])=>l?.[name])
+      .filter(([u])=>u!==cur).filter(([,l])=>l?.[name])
       .map(([u,l])=>({user:u,p:parsePri(l[name]).p,lu:allData.users?.[u]?.lastUpdated}));
     if(others.length){
       const dn=DB.wishlist.find(x=>x.name===name)?.displayName||name;
       shared.push({name,dn,myP,others});
     }
   });
-
   const seeking=[];
   Object.entries(allWish).forEach(([user,list])=>{
     if(user===cur||!list)return;
     const hits=Object.entries(list).filter(([n,v])=>parsePri(v).p==='H'&&myWish[n]).map(([n])=>n);
     if(hits.length)seeking.push({user,hits,lu:allData.users?.[user]?.lastUpdated});
   });
-
   sharedEl.innerHTML=shared.length
     ?`<div class="tlist">${shared.map(r=>`<div class="trow">
         <div class="tpmon">${r.dn}</div>
@@ -951,7 +1135,6 @@ function renderMatch(){
         <span class="badge ${r.myP}">you: ${r.myP}</span>
       </div>`).join('')}</div>`
     :emptyHtml('Add Pokémon to your list first');
-
   seekEl.innerHTML=seeking.length
     ?`<div class="tlist">${seeking.map(r=>`<div class="trow">
         <div class="tpmon" style="display:flex;align-items:center;gap:6px">
@@ -979,7 +1162,6 @@ function renderStrings(){
     const list=allData[strListType]?.[u]||{};
     return Object.keys(list).length>0&&(!q||u.toLowerCase().includes(q));
   }).sort((a,b)=>{
-    // Sort: most recently updated first
     const ta=allData.users?.[a]?.lastUpdated||0;
     const tb=allData.users?.[b]?.lastUpdated||0;
     return tb-ta;
@@ -989,10 +1171,7 @@ function renderStrings(){
     const strs=buildStrings(strListType,u);
     const ud=allData.users?.[u]||{};
     const count=Object.keys(allData[strListType]?.[u]||{}).length;
-    const luClass=freshnessClass(ud.lastUpdated);
-    const luColor=freshnessColor(luClass);
-    const luLabel=freshnessLabel(ud.lastUpdated);
-    const lsLabel=ud.lastSeen?freshnessLabel(ud.lastSeen):'Never';
+    const luColor=freshnessColor(freshnessClass(ud.lastUpdated));
     return`<div class="user-str-block">
       <div class="user-str-hdr">
         <div class="user-str-info">
@@ -1001,8 +1180,8 @@ function renderStrings(){
             <span style="font-weight:600;font-size:14px">${u}</span>
             ${ud.friendCode?`<span style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:6px">${ud.friendCode}</span>`:''}
             <div style="display:flex;align-items:center;gap:8px;margin-top:2px">
-              <span style="font-size:11px;color:${luColor}">● Updated ${luLabel}</span>
-              <span style="font-size:11px;color:var(--muted)">Seen ${lsLabel}</span>
+              <span style="font-size:11px;color:${luColor}">● Updated ${freshnessLabel(ud.lastUpdated)}</span>
+              <span style="font-size:11px;color:var(--muted)">Seen ${freshnessLabel(ud.lastSeen)}</span>
             </div>
           </div>
         </div>
@@ -1013,6 +1192,19 @@ function renderStrings(){
   }).join('');
 }
 
+// ── EXPORT BACKUP (fix #4) ────────────────────────────────────
+function exportData(){
+  const s=getLocal();
+  const blob=new Blob([JSON.stringify(s,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const date=new Date().toISOString().slice(0,10);
+  a.href=url;a.download=`pogo-trade-backup-${date}.json`;
+  document.body.appendChild(a);a.click();
+  document.body.removeChild(a);URL.revokeObjectURL(url);
+  toast('✅ Backup downloaded!');
+}
+
 // ── ADMIN ─────────────────────────────────────────────────────
 function renderAdmin(){
   const el=document.getElementById('admin-tbody');if(!el)return;
@@ -1020,7 +1212,7 @@ function renderAdmin(){
   const users=Object.entries(allData.users||{}).sort((a,b)=>a[0].localeCompare(b[0]));
   el.innerHTML=users.map(([u,d])=>{
     const wc=Object.keys(allData.wishlist?.[u]||{}).length;
-    const lu=d.lastUpdated;const ls=d.lastSeen;
+    const lu=d.lastUpdated,ls=d.lastSeen;
     const luColor=freshnessColor(freshnessClass(lu));
     const canPromote=iAmOwner&&u!==cur&&u!==OWNER;
     const isOwnerRow=u===OWNER||d.isOwner;
@@ -1028,22 +1220,23 @@ function renderAdmin(){
       <td>
         <div style="display:flex;align-items:center;gap:7px">
           <div class="av" style="width:24px;height:24px;font-size:9px;border:2px solid ${luColor}">${u.slice(0,2).toUpperCase()}</div>
-          <span style="font-weight:500">${u}</span>
-          ${d.friendCode?`<span style="font-family:var(--mono);font-size:10px;color:var(--muted)">${d.friendCode}</span>`:''}
+          <div>
+            <div style="font-weight:500">${u}</div>
+            ${d.friendCode?`<div style="font-family:var(--mono);font-size:10px;color:var(--muted)">${d.friendCode}</div>`:''}
+          </div>
         </div>
       </td>
       <td>
-        <div style="font-size:11px;color:${luColor}">${freshnessLabel(lu)}</div>
-        <div style="font-size:10px;color:var(--muted)">seen ${freshnessLabel(ls)}</div>
+        <div style="font-size:11px;color:${luColor}">✏️ ${freshnessLabel(lu)}</div>
+        <div style="font-size:10px;color:var(--muted)">👁 ${freshnessLabel(ls)}</div>
       </td>
       <td><span class="cb">${wc}</span></td>
       <td>
         ${isOwnerRow?'<span class="ab" style="background:rgba(168,139,250,.15);color:var(--ac2);border-color:rgba(168,139,250,.3)">Owner</span>'
-          :d.isAdmin?`<span class="ab">Admin</span>${canPromote?`<button class="rpin" style="margin-left:6px" onclick="toggleAdmin('${u}',false)">Demote</button>`:''}` 
-          :`<span style="color:var(--muted);font-size:12px">Member</span>${canPromote?`<button class="rpin" style="margin-left:6px" onclick="toggleAdmin('${u}',true)">→ Admin</button>`:''}` 
-        }
+          :d.isAdmin?`<span class="ab">Admin</span>${canPromote?`<button class="rpin" style="margin-left:6px" onclick="toggleAdmin('${u}',false)">Demote</button>`:''}`
+          :`<span style="color:var(--muted);font-size:12px">Member</span>${canPromote?`<button class="rpin" style="margin-left:6px" onclick="toggleAdmin('${u}',true)">→ Admin</button>`:''}`}
       </td>
-      <td><button class="rpin" onclick="openReset('${u}')">Reset PIN</button></td>
+      <td><button class="rpin" onclick="openReset('${u}')">Reset</button></td>
     </tr>`;
   }).join('');
 }
@@ -1051,8 +1244,7 @@ function renderAdmin(){
 function toggleAdmin(u,makeAdmin){
   if(u===OWNER){toast('⚠️ Cannot change owner');return;}
   writeUser(u,{isAdmin:makeAdmin});
-  toast(`✅ ${u} is now ${makeAdmin?'an admin':'a member'}`);
-  renderAdmin();
+  toast(`✅ ${u} is now ${makeAdmin?'an admin':'a member'}`);renderAdmin();
 }
 
 function addUser(){
@@ -1062,20 +1254,119 @@ function addUser(){
   if(!name){toast('⚠️ Enter username');return;}
   if(!pin||pin.length<4){toast('⚠️ PIN must be 4+ digits');return;}
   if(allData.users?.[name]){toast('⚠️ Username exists');return;}
-  writeUser(name,{pin,isAdmin,isOwner:false,friendCode:'',joined:Date.now(),lastSeen:null,lastUpdated:null});
+  writeUser(name,{pin,isAdmin,isOwner:false,friendCode:'',joined:Date.now(),lastSeen:null,lastUpdated:null,pinHashed:false});
   writeList('wishlist',name,{});writeList('dynamax',name,{});writeList('costumes',name,{});
-  document.getElementById('nu-name').value='';
-  document.getElementById('nu-pin').value='';
-  document.getElementById('nu-admin').checked=false;
+  document.getElementById('nu-name').value='';document.getElementById('nu-pin').value='';document.getElementById('nu-admin').checked=false;
   toast(`✅ ${name} added!`);renderAdmin();
 }
 
 function openReset(u){rpinTarget=u;document.getElementById('rpin-target').textContent=u;document.getElementById('rpin-val').value='';openModal('rpin-modal');}
-function confirmReset(){
+async function confirmReset(){
   const pin=document.getElementById('rpin-val').value.trim();
   if(!pin||pin.length<4){toast('⚠️ PIN must be 4+ digits');return;}
-  writeUser(rpinTarget,{pin});closeModal('rpin-modal');
-  toast(`✅ PIN reset for ${rpinTarget}`);rpinTarget=null;
+  // Store as plaintext — will be hashed on next login
+  await writeUser(rpinTarget,{pin,pinHashed:false});
+  closeModal('rpin-modal');toast(`✅ PIN reset for ${rpinTarget}`);rpinTarget=null;
+}
+
+// ── REQUEST ACCESS ────────────────────────────────────────────
+function showRequestForm(){
+  document.getElementById('login-pg').querySelector('.lcard').style.display='none';
+  document.getElementById('req-form-card').style.display='block';
+}
+function hideRequestForm(){
+  document.getElementById('req-form-card').style.display='none';
+  document.getElementById('login-pg').querySelector('.lcard').style.display='block';
+  document.getElementById('req-form-inner').style.display='block';
+  document.getElementById('req-sent-status').style.display='none';
+  document.getElementById('req-username').value='';
+  document.getElementById('req-note').value='';
+  document.getElementById('req-err').textContent='';
+}
+async function submitRequest(){
+  const username=document.getElementById('req-username').value.trim();
+  const note=document.getElementById('req-note').value.trim();
+  const err=document.getElementById('req-err');
+  err.textContent='';
+  if(!username){err.textContent='Enter your trainer name';return;}
+  if(username.length<2){err.textContent='Trainer name too short';return;}
+  if(allData.users?.[username]){err.textContent='That trainer name is already registered';return;}
+  // Check for duplicate pending request
+  const existing=Object.values(allData.requests||{}).find(r=>r.username===username&&r.status==='pending');
+  if(existing){err.textContent='A request for this name is already pending';return;}
+  const reqId='req_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
+  const reqData={username,note:note||'',requestedAt:Date.now(),status:'pending'};
+  const s=getLocal();
+  if(!s.requests)s.requests={};
+  s.requests[reqId]=reqData;
+  saveLocal(s);allData=s;
+  if(fbOn&&db)await set(ref(db,`requests/${reqId}`),reqData).catch(e=>{err.textContent='Could not send: '+e.message;});
+  document.getElementById('req-form-inner').style.display='none';
+  document.getElementById('req-sent-status').style.display='block';
+}
+
+function renderPendingRequests(){
+  const requests=allData.requests||{};
+  const pending=Object.entries(requests).filter(([,r])=>r.status==='pending');
+  const section=document.getElementById('pending-requests-section');
+  const listEl=document.getElementById('pending-requests-list');
+  const badge=document.getElementById('req-count-badge');
+  const adminNotif=document.getElementById('admin-notif');
+  if(!section||!listEl)return;
+  if(!pending.length){
+    section.style.display='none';
+    if(adminNotif)adminNotif.style.display='none';
+    return;
+  }
+  section.style.display='block';
+  if(badge)badge.textContent=pending.length;
+  if(adminNotif){adminNotif.style.display='inline-flex';adminNotif.textContent=pending.length;}
+  listEl.innerHTML=pending.map(([id,r])=>`
+    <div class="req-card" id="reqcard-${id}">
+      <div class="req-card-hdr">
+        <div class="req-card-name">🎮 ${r.username}</div>
+        <div class="req-card-time">${freshnessLabel(r.requestedAt)}</div>
+      </div>
+      ${r.note?`<div class="req-card-note">"${r.note}"</div>`:'<div class="req-card-note" style="color:var(--border2)">No note</div>'}
+      <div class="req-actions">
+        <button class="btn-approve" onclick="approveRequest('${id}','${r.username.replace(/'/g,"\\'")}')">✅ Approve</button>
+        <button class="btn-deny" onclick="denyRequest('${id}')">✗ Deny</button>
+      </div>
+    </div>`).join('');
+}
+
+async function approveRequest(reqId,username){
+  if(allData.users?.[username]){toast('⚠️ Username already exists');return;}
+  const pin=String(Math.floor(1000+Math.random()*9000));
+  await writeUser(username,{pin,isAdmin:false,isOwner:false,friendCode:'',joined:Date.now(),lastSeen:null,lastUpdated:null,pinHashed:false});
+  await writeList('wishlist',username,{});
+  await writeList('dynamax',username,{});
+  await writeList('costumes',username,{});
+  const s=getLocal();
+  if(s.requests?.[reqId])s.requests[reqId].status='approved';
+  saveLocal(s);
+  if(fbOn&&db)await update(ref(db,`requests/${reqId}`),{status:'approved'}).catch(console.error);
+  allData=s;
+  const card=document.getElementById(`reqcard-${reqId}`);
+  if(card){
+    card.innerHTML=`
+      <div style="font-size:14px;font-weight:700;color:var(--ok);margin-bottom:8px">✅ ${username} approved</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:6px">Share their login details:</div>
+      <div style="font-size:13px">Trainer: <strong>${username}</strong></div>
+      <div style="font-size:13px;margin-top:4px">PIN: <span class="pin-reveal">${pin}</span></div>
+      <div style="font-size:11px;color:var(--muted);margin-top:8px">They should change PIN on first login.</div>`;
+  }
+  renderAdmin();
+  toast(`✅ ${username} approved! PIN: ${pin}`,5000);
+  setTimeout(()=>renderPendingRequests(),4000);
+}
+
+async function denyRequest(reqId){
+  const s=getLocal();
+  if(s.requests?.[reqId])s.requests[reqId].status='denied';
+  saveLocal(s);
+  if(fbOn&&db)await update(ref(db,`requests/${reqId}`),{status:'denied'}).catch(console.error);
+  allData=s;renderPendingRequests();toast('Request denied');
 }
 
 // ── PROFILE ───────────────────────────────────────────────────
@@ -1088,14 +1379,22 @@ function updateFcDisplay(){
   document.getElementById('fc-inp').value=fc;
 }
 
-function saveProfile(){
+async function saveProfile(){
   const fc=document.getElementById('fc-inp').value.trim();
   const p1=document.getElementById('np1').value;
   const p2=document.getElementById('np2').value;
   const err=document.getElementById('pin-err');err.textContent='';
-  if(p1){if(p1.length<4){err.textContent='PIN must be 4+ digits';return;}if(p1!==p2){err.textContent="PINs don't match";return;}}
-  const upd={friendCode:fc};if(p1)upd.pin=p1;
-  writeUser(cur,upd);closeModal('prof-modal');updateFcDisplay();toast('✅ Profile saved!');
+  if(p1){
+    if(p1.length<4){err.textContent='PIN must be 4+ digits';return;}
+    if(p1!==p2){err.textContent="PINs don't match";return;}
+  }
+  const upd={friendCode:fc};
+  if(p1){
+    upd.pin=await hashPin(p1);
+    upd.pinHashed=true;
+  }
+  await writeUser(cur,upd);
+  closeModal('prof-modal');updateFcDisplay();toast('✅ Profile saved!');
 }
 
 // ── UI HELPERS ────────────────────────────────────────────────
@@ -1112,161 +1411,22 @@ function toast(msg,dur=2500){
   setTimeout(()=>t.classList.remove('show'),dur);
 }
 
-
-// ── REQUEST ACCESS ────────────────────────────────────────────
-function showRequestForm(){
-  document.getElementById('login-pg').querySelector('.lcard').style.display='none';
-  document.getElementById('req-form-card').classList.add('open');
-  document.getElementById('req-form-card').style.display='block';
-}
-
-function hideRequestForm(){
-  document.getElementById('req-form-card').style.display='none';
-  document.getElementById('req-form-card').classList.remove('open');
-  document.getElementById('login-pg').querySelector('.lcard').style.display='block';
-  // reset form
-  document.getElementById('req-form-inner').style.display='block';
-  document.getElementById('req-sent-status').style.display='none';
-  document.getElementById('req-username').value='';
-  document.getElementById('req-note').value='';
-  document.getElementById('req-err').textContent='';
-}
-
-async function submitRequest(){
-  const username=document.getElementById('req-username').value.trim();
-  const note=document.getElementById('req-note').value.trim();
-  const err=document.getElementById('req-err');
-  err.textContent='';
-  if(!username){err.textContent='Enter your trainer name';return;}
-  if(username.length<2){err.textContent='Trainer name too short';return;}
-  // Check if already a member
-  if(allData.users?.[username]){err.textContent='That trainer name is already registered';return;}
-  
-  const reqId='req_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
-  const reqData={
-    username,
-    note:note||'',
-    requestedAt:Date.now(),
-    status:'pending'
-  };
-  
-  // Save locally + Firebase
-  const s=getLocal();
-  if(!s.requests)s.requests={};
-  s.requests[reqId]=reqData;
-  saveLocal(s);
-  allData=s;
-  
-  if(fbOn&&db){
-    await set(ref(db,`requests/${reqId}`),reqData).catch(e=>{
-      err.textContent='Could not send request: '+e.message;return;
-    });
-  }
-  
-  // Show success state
-  document.getElementById('req-form-inner').style.display='none';
-  document.getElementById('req-sent-status').style.display='block';
-}
-
-function renderPendingRequests(){
-  const requests=allData.requests||{};
-  const pending=Object.entries(requests).filter(([,r])=>r.status==='pending');
-  const section=document.getElementById('pending-requests-section');
-  const listEl=document.getElementById('pending-requests-list');
-  const badge=document.getElementById('req-count-badge');
-  const adminNotif=document.getElementById('admin-notif');
-  if(!section||!listEl)return;
-  
-  if(pending.length===0){
-    section.style.display='none';
-    if(adminNotif)adminNotif.style.display='none';
-    return;
-  }
-  
-  section.style.display='block';
-  if(badge)badge.textContent=pending.length;
-  if(adminNotif){adminNotif.style.display='inline-flex';adminNotif.textContent=pending.length;}
-  
-  listEl.innerHTML=pending.map(([id,r])=>`
-    <div class="req-card" id="reqcard-${id}">
-      <div class="req-card-hdr">
-        <div class="req-card-name">🎮 ${r.username}</div>
-        <div class="req-card-time">${freshnessLabel(r.requestedAt)}</div>
-      </div>
-      ${r.note?`<div class="req-card-note">"${r.note}"</div>`:'<div class="req-card-note" style="color:var(--border2)">No note provided</div>'}
-      <div class="req-actions">
-        <button class="btn-approve" onclick="approveRequest('${id}','${r.username.replace(/'/g,"\'")}')">✅ Approve</button>
-        <button class="btn-deny" onclick="denyRequest('${id}')">✗ Deny</button>
-      </div>
-    </div>`).join('');
-}
-
-async function approveRequest(reqId, username){
-  if(allData.users?.[username]){
-    toast('⚠️ Username already exists — deny this request');return;
-  }
-  // Generate a random 4-digit PIN
-  const pin=String(Math.floor(1000+Math.random()*9000));
-  
-  // Create the user
-  await writeUser(username,{pin,isAdmin:false,isOwner:false,friendCode:'',joined:Date.now(),lastSeen:null,lastUpdated:null});
-  await writeList('wishlist',username,{});
-  await writeList('dynamax',username,{});
-  await writeList('costumes',username,{});
-  
-  // Mark request as approved
-  const s=getLocal();
-  if(s.requests?.[reqId])s.requests[reqId].status='approved';
-  saveLocal(s);
-  if(fbOn&&db)await update(ref(db,`requests/${reqId}`),{status:'approved'}).catch(console.error);
-  allData=s;
-  
-  // Show the PIN to the admin prominently
-  const card=document.getElementById(`reqcard-${reqId}`);
-  if(card){
-    card.innerHTML=`
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-        <span style="font-size:15px;font-weight:700;color:var(--ok)">✅ ${username} approved</span>
-      </div>
-      <div style="font-size:13px;color:var(--muted);margin-bottom:6px">Share their login details:</div>
-      <div style="font-size:13px">Trainer: <strong>${username}</strong></div>
-      <div style="font-size:13px;margin-top:4px">PIN: <span class="pin-reveal">${pin}</span></div>
-      <div style="font-size:11px;color:var(--muted);margin-top:8px">Tell them to change their PIN after first login.</div>
-    `;
-  }
-  
-  renderAdmin();
-  toast(`✅ ${username} approved! PIN: ${pin}`);
-  
-  // Re-render requests after short delay
-  setTimeout(()=>{renderPendingRequests();},3000);
-}
-
-async function denyRequest(reqId){
-  const s=getLocal();
-  if(s.requests?.[reqId])s.requests[reqId].status='denied';
-  saveLocal(s);
-  if(fbOn&&db)await update(ref(db,`requests/${reqId}`),{status:'denied'}).catch(console.error);
-  allData=s;
-  renderPendingRequests();
-  toast('Request denied');
-}
-
-// ── EXPOSE GLOBALS ────────────────────────────────────────────
+// ── EXPOSE ────────────────────────────────────────────────────
 Object.assign(window,{
-  showRequestForm,hideRequestForm,submitRequest,approveRequest,denyRequest,
   setFilter,setBrowseList,setMyList,setStaleFilter,switchTab,
   doLogin,logout,connectFirebase,skipFirebase,
-  addEntry,setPri,setNotes,removeEntry,copyStr,
-  addUser,openReset,confirmReset,toggleAdmin,
-  saveProfile,openModal,closeModal,renderStrings,renderBrowse,setStrList
+  addEntry,setPri,setNotes,removeEntry,doUndo,copyStr,
+  addUser,openReset,confirmReset,toggleAdmin,exportData,
+  saveProfile,openModal,closeModal,renderStrings,renderBrowse,setStrList,
+  showRequestForm,hideRequestForm,submitRequest,approveRequest,denyRequest,
+  acSearch,acSelect,acKeydown
 });
 
 // ── BOOT ──────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('login-pin').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
   document.querySelectorAll('.ov').forEach(el=>el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');}));
-
+  buildAcItems();
   const fbUrl=lsGet('fbUrl',null);
   if(!fbUrl){syncFromLocal();showConfig();}
   else if(fbUrl==='local'){
@@ -1279,8 +1439,8 @@ document.addEventListener('DOMContentLoaded',()=>{
       const fapp=initializeApp({databaseURL:fbUrl},'pogo');
       db=getDatabase(fapp);fbOn=true;setSyncStatus('syncing');
       startListener();syncFromLocal();
-      const s=sessionStorage.getItem('pgu');
-      if(s){cur=s;}showLogin();
+      const s=sessionStorage.getItem('pgu');if(s)cur=s;
+      showLogin();
     }catch{syncFromLocal();showLogin();setSyncStatus('offline');}
   }
 });
