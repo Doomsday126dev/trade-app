@@ -1042,7 +1042,7 @@ async function writeUserNow(u,data){
   }
   if(fbOn&&db){
     try{
-      await set(ref(db,`users/${u}`),s.users[u]);
+      await withTimeout(set(ref(db,`users/${u}`),s.users[u]),8000,'Saving login timed out','db/write-timeout');
       delete syncQueue[`users/${u}`];
       if(!Object.keys(syncQueue).length)showSyncDot(false);
     }catch{
@@ -1054,7 +1054,7 @@ async function writeUserNow(u,data){
 async function writeUserStrict(u,data){
   const s=getLocal();
   s.users[u]=normalizedUserRecord(u,s.users[u],data);
-  if(fbOn&&db)await set(ref(db,`users/${u}`),s.users[u]);
+  if(fbOn&&db)await withTimeout(set(ref(db,`users/${u}`),s.users[u]),8000,'Saving user timed out','db/write-timeout');
   saveLocal(s);allData=normalizeData(s);refreshAll();
   return s.users[u];
 }
@@ -1062,7 +1062,7 @@ async function bindAuthUserNow(username,authUpdate){
   const s=getLocal();
   const next=normalizedUserRecord(username,s.users[username],authUpdate);
   if(fbOn&&db){
-    await set(ref(db,`users/${username}`),next);
+    await withTimeout(set(ref(db,`users/${username}`),next),8000,'Linking login timed out','auth/bind-timeout');
     delete syncQueue[`users/${username}`];
     if(!Object.keys(syncQueue).length)showSyncDot(false);
   }
@@ -1081,7 +1081,7 @@ async function createMemberNow(username,pin,isAdmin=false,reqId=''){
     const updates={};
     updates[`users/${username}`]=user;
     if(reqId)updates[`requests/${reqId}/status`]='approved';
-    await update(ref(db),updates);
+    await withTimeout(update(ref(db),updates),8000,'Creating member timed out','db/write-timeout');
   }
   s.users[username]=user;
   s.wishlist[username]=s.wishlist[username]||{};
@@ -1105,7 +1105,7 @@ async function repairMissingAuthMetadata(){
   });
   if(!Object.keys(updates).length)return;
   try{
-    await update(ref(db),updates);
+    await withTimeout(update(ref(db),updates),8000,'Repairing login metadata timed out','db/write-timeout');
     Object.entries(allData.users||{}).forEach(([u,d])=>{allData.users[u]=normalizedUserRecord(u,d);});
     saveLocal(allData);
     toast(`✅ Repaired login metadata for ${count} member${count===1?'':'s'}`,4000);
@@ -1148,6 +1148,17 @@ function normalizedUserRecord(username,prev={},data={}){
   if(!merged.authEmail)merged.authEmail=authEmail(username,merged.authVersion);
   return merged;
 }
+function withTimeout(promise,ms,message,code='timeout'){
+  let timer=null;
+  const timeout=new Promise((_,reject)=>{
+    timer=setTimeout(()=>{
+      const err=new Error(message);
+      err.code=code;
+      reject(err);
+    },ms);
+  });
+  return Promise.race([promise,timeout]).finally(()=>clearTimeout(timer));
+}
 function firebaseAuthConfigured(){return!!FIREBASE_API_KEY&&FIREBASE_API_KEY.startsWith('AIza');}
 function firebaseConfig(url=FIREBASE_URL){
   const cfg={databaseURL:url,projectId:FIREBASE_PROJECT_ID};
@@ -1174,11 +1185,11 @@ async function ensureFirebaseIdentity(username,pin,ud){
   let cred=null;
   let createdAuthUser=false;
   try{
-    cred=await signInWithEmailAndPassword(auth,email,pin);
+    cred=await withTimeout(signInWithEmailAndPassword(auth,email,pin),10000,'Firebase Auth sign-in timed out','auth/timeout');
   }catch(e){
     if(!ud.authUid&&(e.code==='auth/user-not-found'||e.code==='auth/invalid-credential')){
       try{
-        cred=await createUserWithEmailAndPassword(auth,email,pin);
+        cred=await withTimeout(createUserWithEmailAndPassword(auth,email,pin),10000,'Firebase Auth account creation timed out','auth/timeout');
         createdAuthUser=true;
       }catch(createErr){
         if(createErr.code==='auth/email-already-in-use'){
@@ -1203,12 +1214,12 @@ async function ensureFirebaseIdentity(username,pin,ud){
     if(ud.authEmail!==email||ud.authUid!==currentAuthUid)await bindAuthUserNow(username,authUpdate);
   }catch(bindErr){
     if(createdAuthUser&&auth.currentUser?.uid===currentAuthUid){
-      await deleteUser(auth.currentUser).catch(()=>{});
+      await withTimeout(deleteUser(auth.currentUser),5000,'Cleanup timed out','auth/cleanup-timeout').catch(()=>{});
     }
     bindErr.code=bindErr.code||'auth/bind-failed';
     throw bindErr;
   }
-  if(db)await set(ref(db,`authIndex/${currentAuthUid}`),{username,isAdmin:!!ud.isAdmin,isOwner:!!ud.isOwner,lastSeen:Date.now()}).catch(()=>{});
+  if(db)await withTimeout(set(ref(db,`authIndex/${currentAuthUid}`),{username,isAdmin:!!ud.isAdmin,isOwner:!!ud.isOwner,lastSeen:Date.now()}),5000,'Updating login index timed out','db/index-timeout').catch(()=>{});
   return{uid:currentAuthUid,email};
 }
 
@@ -1287,10 +1298,7 @@ async function doLogin(){
   let ud=allData.users?.[u];
   if(fbOn&&db){
     try{
-      const snap=await Promise.race([
-        get(ref(db,`users/${u}`)),
-        new Promise((_,reject)=>setTimeout(()=>reject(new Error('Firebase lookup timed out')),5000))
-      ]);
+      const snap=await withTimeout(get(ref(db,`users/${u}`)),5000,'Firebase lookup timed out','db/read-timeout');
       if(snap.exists())ud={...ud,...snap.val()};
     }catch{}
   }
@@ -1310,6 +1318,10 @@ async function doLogin(){
       const code=e.code||'';
       err.textContent=code==='auth/pin-out-of-sync'
         ?'Firebase Auth is out of sync for this trainer. Ask an admin to reset the Auth user.'
+        :code==='auth/timeout'
+          ?'Firebase Auth timed out. Check connection, refresh, and try again.'
+        :code==='db/write-timeout'||code==='auth/bind-timeout'||code==='db/index-timeout'
+          ?'Firebase Database timed out while saving login. Refresh and try again.'
         :code==='PERMISSION_DENIED'||code==='auth/bind-failed'
           ?'Firebase rules blocked linking this trainer. Update the users rule, then try again.'
         :'Firebase Auth failed: '+(code||e.message||'check API key and auth settings');
