@@ -356,11 +356,11 @@ input,select,textarea{font-family:var(--font);outline:none}
     <div class="field"><label>Username</label><select id="login-user"><option value="">Select username…</option></select></div>
     <div class="field">
       <label>PIN</label>
-      <input type="password" id="login-pin" placeholder="PIN (4–6 digits)" maxlength="6" inputmode="numeric" autocomplete="current-password">
+      <input type="password" id="login-pin" placeholder="6-digit PIN" maxlength="6" inputmode="numeric" autocomplete="current-password">
     </div>
     <button class="lbtn" id="login-btn" onclick="doLogin()">Sign in →</button>
     <div class="err" id="login-err"></div>
-    <div class="lnote">Default PIN is <strong>1234</strong> — change it after first login.</div>
+    <div class="lnote">PINs are 6 digits. Ask an admin to reset yours if needed.</div>
     <div class="req-link" onclick="showRequestForm()">🙋 Request access to join</div>
   </div>
 
@@ -507,7 +507,7 @@ input,select,textarea{font-family:var(--font);outline:none}
       <h3>➕ Add member</h3>
       <div class="frow">
         <input type="text" id="nu-name" placeholder="Username" style="max-width:180px">
-        <input type="text" id="nu-pin" placeholder="PIN" maxlength="6" inputmode="numeric" style="max-width:100px">
+        <input type="text" id="nu-pin" placeholder="6-digit PIN" maxlength="6" inputmode="numeric" style="max-width:120px">
         <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;white-space:nowrap;color:var(--muted)"><input type="checkbox" id="nu-admin"> Admin</label>
       </div>
       <button class="bsave" onclick="addUser()" style="margin-top:10px">Add member</button>
@@ -535,7 +535,7 @@ input,select,textarea{font-family:var(--font);outline:none}
       <div class="fc-hint" id="fc-hint"></div>
     </div>
     <hr class="divider">
-    <div class="field"><label>New PIN</label><input type="password" id="np1" placeholder="New PIN (4–6 digits)" maxlength="6" inputmode="numeric"></div>
+    <div class="field"><label>New PIN</label><input type="password" id="np1" placeholder="New 6-digit PIN" maxlength="6" inputmode="numeric"></div>
     <div class="field"><label>Confirm PIN</label><input type="password" id="np2" placeholder="Confirm" maxlength="6" inputmode="numeric"></div>
     <div class="err" id="pin-err"></div>
     <div class="mact"><button class="bghost" onclick="closeModal('prof-modal')">Cancel</button><button class="bpri" onclick="saveProfile()">Save</button></div>
@@ -549,7 +549,7 @@ input,select,textarea{font-family:var(--font);outline:none}
   <div class="modal">
     <h3 id="rpin-title">🔑 Reset PIN</h3>
     <p style="font-size:13px;color:var(--muted);margin-bottom:14px">For: <strong id="rpin-target">—</strong></p>
-    <div class="field"><label>New PIN</label><input type="text" id="rpin-val" placeholder="New PIN" maxlength="6" inputmode="numeric"></div>
+    <div class="field"><label>New PIN</label><input type="text" id="rpin-val" placeholder="New 6-digit PIN" maxlength="6" inputmode="numeric"></div>
     <div class="mact"><button class="bghost" onclick="closeModal('rpin-modal')">Cancel</button><button class="bpri" onclick="confirmReset()">Reset</button></div>
   </div>
 </div>
@@ -622,6 +622,7 @@ const PRI={
   M:{label:'Medium',emoji:'🟡'},
   L:{label:'Low',emoji:'🟢'}
 };
+const PRI_ORDER={H:0,M:1,L:2};
 const SECURE_RULES=`{
   "rules": {
     ".read": true,
@@ -746,6 +747,7 @@ async function verifyPin(pin,stored){
   if(stored===pin)return true; // legacy plaintext
   return(await hashPin(pin))===stored;
 }
+function isSixDigitPin(pin){return/^\d{6}$/.test(pin);}
 function priLabel(p){return PRI[p]?.label||p;}
 function priName(p){return `${p} - ${priLabel(p)}`;}
 function priBadge(p){return `${PRI[p]?.emoji||''} ${priLabel(p)}`.trim();}
@@ -770,7 +772,7 @@ function initLocal(){
   if(!s){
     s={users:{},wishlist:{},dynamax:{},costumes:{},requests:{}};
     DB.users.filter(u=>u&&u.trim()&&u.trim()!=='EVERYONE').map(u=>u.trim()).forEach(u=>{
-      s.users[u]={pin:'1234',isAdmin:u===OWNER,isOwner:u===OWNER,friendCode:'',joined:Date.now(),lastSeen:null,lastUpdated:null,pinHashed:false,authEmail:authEmail(u)};
+      s.users[u]={pin:'123456',isAdmin:u===OWNER,isOwner:u===OWNER,friendCode:'',joined:Date.now(),lastSeen:null,lastUpdated:null,pinHashed:false,authEmail:authEmail(u)};
       s.wishlist[u]={};s.dynamax[u]={};s.costumes[u]={};
       DB.wishlist.forEach(e=>{const v=e.users[u];if(v)s.wishlist[u][e.name]=v;});
       DB.dynamax.forEach(e=>{const v=e.users[u];if(v)s.dynamax[u][e.name]=v;});
@@ -890,6 +892,7 @@ async function doLogin(){
   const btn=document.getElementById('login-btn');
   if(!u){err.textContent='Select username';return;}
   if(!p){err.textContent='Enter PIN';return;}
+  if(!isSixDigitPin(p)){err.textContent='PIN must be exactly 6 digits';return;}
   const ud=allData.users?.[u];
   if(!ud){err.textContent='User not found';return;}
   btn.textContent='Signing in…';btn.disabled=true;
@@ -907,7 +910,7 @@ async function doLogin(){
       btn.textContent='Sign in →';btn.disabled=false;
     }
   } else {
-    err.textContent='❌ Wrong PIN (default: 1234)';
+    err.textContent='❌ Wrong PIN';
     btn.textContent='Sign in →';btn.disabled=false;
   }
 }
@@ -990,12 +993,17 @@ function freshnessLabel(ts){
   if(d<30)return`${Math.floor(d/7)}w ago`;return`${Math.floor(d/30)}mo ago`;
 }
 function freshnessColor(cls){return{fresh:'var(--ok)',warn:'var(--warn)',stale:'var(--danger)'}[cls]||'var(--muted)';}
+function sortEntries(entries){
+  return[...entries].sort((a,b)=>
+    (PRI_ORDER[a.p]??9)-(PRI_ORDER[b.p]??9)||
+    a.user.localeCompare(b.user,undefined,{sensitivity:'base'})||
+    String(a.mod||'').localeCompare(String(b.mod||''),undefined,{sensitivity:'base'})
+  );
+}
 function userBadge(x){
   const lu=allData.users?.[x.user]?.lastUpdated;
-  const color=freshnessColor(freshnessClass(lu));
-  return`<span class="badge ${x.p}" title="${x.user} · ${priLabel(x.p)} priority · Updated ${freshnessLabel(lu)}" style="border-color:${color}40">
+  return`<span class="badge ${x.p}" title="${x.user} · ${priLabel(x.p)} priority · Updated ${freshnessLabel(lu)}">
     <span class="prio-mark">${x.p}</span>${x.user}${x.mod?`<span class="mod"> ${x.mod}</span>`:''}
-    <span style="width:5px;height:5px;border-radius:50%;background:${color};display:inline-block;margin-left:3px;flex-shrink:0"></span>
   </span>`;
 }
 
@@ -1140,6 +1148,7 @@ function renderBrowse(){
     if(!results.length){el.innerHTML=emptyHtml('No matching costumes','Try a different search, activity filter, or priority.');return;}
     el.innerHTML=`<div class="pgrid">${results.map(e=>{
       let ents=map[e.name]||[];if(browseFilter!=='ALL')ents=ents.filter(x=>x.p===browseFilter);
+      ents=sortEntries(ents);
       return`<div class="pc"><div class="pc-hdr"><div class="pc-info"><div class="pc-name">${e.displayName||e.name}</div></div></div>
         <div class="pc-users">${ents.map(x=>userBadge(x)).join('')}</div></div>`;
     }).join('')}</div>`;
@@ -1169,6 +1178,7 @@ function renderBrowse(){
   el.innerHTML=`<div class="pgrid">${results.map(e=>{
     const info=map[e.name];
     let ents=info.entries;if(browseFilter!=='ALL')ents=ents.filter(x=>x.p===browseFilter);
+    ents=sortEntries(ents);
     return`<div class="pc">
       <div class="pc-hdr">
         ${spriteImg(e.no,40,'pc-sprite')}
@@ -1425,7 +1435,7 @@ function renderStrings(){
     const count=Object.keys(allData[strListType]?.[u]||{}).length;
     const luColor=freshnessColor(freshnessClass(ud.lastUpdated));
     const isMe=u===cur;
-    return`<div class="user-str-block${isMe?' expanded':''}">
+    return`<div class="user-str-block">
       <div class="user-str-hdr" onclick="toggleStrUser(this)">
         <div class="user-str-info">
           <div class="av" style="width:26px;height:26px;font-size:10px;border:2px solid ${luColor}">${u.slice(0,2).toUpperCase()}</div>
@@ -1440,7 +1450,7 @@ function renderStrings(){
         </div>
         <span class="collapse-icon">▼</span>
       </div>
-      <div class="user-str-body${isMe?' open':''}">
+      <div class="user-str-body">
         ${strs?strLevelsHtml(strs):'<div style="color:var(--muted);font-size:12px;padding:4px 0">Empty list</div>'}
       </div>
     </div>`;
@@ -1541,7 +1551,7 @@ function addUser(){
   const pin=document.getElementById('nu-pin').value.trim();
   const isAdmin=document.getElementById('nu-admin').checked;
   if(!name){toast('⚠️ Enter username');return;}
-  if(!pin||pin.length<4||pin.length>6){toast('⚠️ PIN must be 4–6 digits');return;}
+  if(!isSixDigitPin(pin)){toast('⚠️ PIN must be exactly 6 digits');return;}
   if(allData.users?.[name]){toast('⚠️ Username exists');return;}
   writeUser(name,{pin,isAdmin,isOwner:false,friendCode:'',joined:Date.now(),lastSeen:null,lastUpdated:null,pinHashed:false,authEmail:authEmail(name)});
   writeList('wishlist',name,{});writeList('dynamax',name,{});writeList('costumes',name,{});
@@ -1560,7 +1570,7 @@ function openReset(u){
 }
 async function confirmReset(){
   const pin=document.getElementById('rpin-val').value.trim();
-  if(!pin||pin.length<4||pin.length>6){toast('⚠️ PIN must be 4–6 digits');return;}
+  if(!isSixDigitPin(pin)){toast('⚠️ PIN must be exactly 6 digits');return;}
   await writeUser(rpinTarget,{pin,pinHashed:false});
   closeModal('rpin-modal');toast(`✅ PIN reset for ${rpinTarget}`);rpinTarget=null;
 }
@@ -1623,7 +1633,7 @@ function renderPendingRequests(){
 }
 async function approveRequest(reqId,username){
   if(allData.users?.[username]){toast('⚠️ Username already exists');return;}
-  const pin=String(Math.floor(1000+Math.random()*9000));
+  const pin=String(Math.floor(100000+Math.random()*900000));
   await writeUser(username,{pin,isAdmin:false,isOwner:false,friendCode:'',joined:Date.now(),lastSeen:null,lastUpdated:null,pinHashed:false,authEmail:authEmail(username)});
   await writeList('wishlist',username,{});await writeList('dynamax',username,{});await writeList('costumes',username,{});
   const s=getLocal();if(s.requests?.[reqId])s.requests[reqId].status='approved';
@@ -1661,7 +1671,7 @@ async function saveProfile(){
   const err=document.getElementById('pin-err');err.textContent='';
   if(!validateFc(fc)){err.textContent='Friend code must be 12 digits';return;}
   if(p1){
-    if(p1.length<4||p1.length>6){err.textContent='PIN must be 4–6 digits';return;}
+    if(!isSixDigitPin(p1)){err.textContent='PIN must be exactly 6 digits';return;}
     if(p1!==p2){err.textContent="PINs don't match";return;}
   }
   const upd={friendCode:fc};
