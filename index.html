@@ -157,9 +157,9 @@ input,select,textarea{font-family:var(--font);outline:none}
 .drag-handle{color:var(--border2);font-size:14px;cursor:grab;flex-shrink:0;user-select:none;padding:2px 4px}
 .myrow-sprite{width:28px;height:28px;object-fit:contain;flex-shrink:0;image-rendering:pixelated}
 .myrow-sprite-wrap,.pc-sprite-wrap{position:relative;display:inline-flex;flex-shrink:0}
-.max-badge{position:absolute;bottom:-3px;right:-3px;width:13px;height:13px;border-radius:3px;font-size:8px;font-weight:800;display:flex;align-items:center;justify-content:center;line-height:1;pointer-events:none;border:1px solid rgba(255,255,255,.6)}
-.max-badge.gmax{background:#c084fc;color:#1a003a}
-.max-badge.dmax{background:#38bdf8;color:#001a2e}
+.max-badge{position:absolute;bottom:-4px;right:-4px;height:11px;padding:0 3px;border-radius:2px;font-size:6.5px;font-weight:900;letter-spacing:.3px;display:flex;align-items:center;white-space:nowrap;line-height:1;pointer-events:none;border:1px solid rgba(255,255,255,.55);box-shadow:0 1px 3px rgba(0,0,0,.35)}
+.max-badge.gmax{background:linear-gradient(135deg,#7c3aed,#9333ea);color:#fff}
+.max-badge.dmax{background:linear-gradient(135deg,#dc2626,#ef4444);color:#fff}
 .myrow-name{font-size:13px;font-weight:500;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .myrow[data-full]:has(.myrow-name:hover)::after{content:attr(data-full);position:absolute;left:44px;bottom:calc(100% + 6px);max-width:min(360px,calc(100vw - 70px));background:rgba(18,17,34,.97);border:1px solid var(--border2);color:var(--text);border-radius:7px;padding:6px 9px;font-size:12px;line-height:1.25;white-space:normal;box-shadow:0 8px 24px rgba(0,0,0,.28);pointer-events:none;z-index:30}
 .myrow[data-full]:has(.myrow-name:hover)::before{content:'';position:absolute;left:55px;bottom:100%;border:5px solid transparent;border-top-color:var(--border2);pointer-events:none;z-index:31}
@@ -698,9 +698,9 @@ const REGION_CODE_TERMS={K:'kanto',J:'johto',H:'hoenn',S:'sinnoh',U:'unova',L:'k
 const REGIONAL_FORM_TERMS={A:'alola',G:'galar',H:'hisui',P:'paldea'};
 const REGION_SEARCH_TERMS=new Set([...Object.values(REGION_CODE_TERMS),'hisui']);
 const CASTFORM_TYPE_TERMS=new Set(['fire','water','ice','normal']);
-// Form-variant qualifiers: terms users can append (&dusk, etc.) to target evolution-gated forms.
-// Extend this set when new evolution-gated forms become tradeable in GO.
-const FORM_QUALIFIER_TERMS=new Set(['dusk']);
+// Form-variant qualifiers: terms users can append to target evolution-gated forms.
+// e.g. once GO enables White Basculin → Basculegion, add 'white' here.
+const FORM_QUALIFIER_TERMS=new Set([]);
 const SECURE_RULES=`{
   "rules": {
     ".read": true,
@@ -1022,13 +1022,12 @@ function castformTypeFromSearchFilters(filters){
   return filters.find(f=>CASTFORM_TYPE_TERMS.has(f))||'';
 }
 // Form-variant qualifier — detects evolution-gated forms by entry name/mod.
-// Currently: Rockruff (Dusk) = Own Tempo Rockruff → only form that evolves to Lycanroc Dusk.
-// Future: White-Stripe Basculin (when GO enables Basculegion evolution, add 'white' to FORM_QUALIFIER_TERMS).
+// TODO: When GO enables White Basculin → Basculegion, add 'white' to FORM_QUALIFIER_TERMS
+// and handle no===550 here so "550&white" targets only White-Stripe Basculin.
 function formVariantFilter(entry,mod=''){
   const no=parseInt(entry?.no);
   if(!no)return'';
-  const text=`${entry?.name||''} ${entry?.displayName||''} ${mod}`.toLowerCase();
-  if(no===744){if(/\b(dusk|own.?tempo)\b/.test(text))return'dusk';}
+  // Add form cases here as GO enables form-specific evolutions.
   return'';
 }
 function formVariantFromSearchFilters(filters){
@@ -1644,7 +1643,7 @@ function renderBrowse(){
     let ents=info.entries;if(browseFilter!=='ALL')ents=ents.filter(x=>x.p===browseFilter);
     ents=sortEntries(ents);
     const maxMark=browseList==='dynamax'?(GMAX_NOS.has(parseInt(e.no))?'G':'D'):'';
-    const maxBadge=maxMark?`<span class="max-badge ${maxMark==='G'?'gmax':'dmax'}" title="${maxMark==='G'?'Gigantamax':'Dynamax'}">${maxMark}</span>`:'';
+    const maxBadge=maxMark?`<span class="max-badge ${maxMark==='G'?'gmax':'dmax'}" title="${maxMark==='G'?'Gigantamax':'Dynamax'}">${maxMark==='G'?'GMAX':'MAX'}</span>`:'';
     return`<div class="pc">
       <div class="pc-hdr">
         <span class="pc-sprite-wrap">${spriteImg(e.no,28,'pc-sprite',e.name)}${maxBadge}</span>
@@ -1789,7 +1788,7 @@ function renderMyList(filterVal){
     const sn=name.replace(/'/g,"\\'").replace(/"/g,'&quot;');
     const hasSprite=no||COSTUME_FORM_SPRITE_IDS[name]||GO_COSTUME_SPRITE_SLUGS[name];
     const maxMark=myListType==='dynamax'?(GMAX_NOS.has(parseInt(no))?'G':'D'):'';
-    const maxBadge=maxMark?`<span class="max-badge ${maxMark==='G'?'gmax':'dmax'}" title="${maxMark==='G'?'Gigantamax':'Dynamax'}">${maxMark}</span>`:'';
+    const maxBadge=maxMark?`<span class="max-badge ${maxMark==='G'?'gmax':'dmax'}" title="${maxMark==='G'?'Gigantamax':'Dynamax'}">${maxMark==='G'?'GMAX':'MAX'}</span>`:'';
     return`<div class="myrow" draggable="true" data-name="${sn}" data-idx="${idx}" data-full="${escAttr(dn)}" aria-label="${escAttr(dn)}"
       ondragstart="dragStart(event)" ondragover="dragOver(event)" ondrop="dragDrop(event)" ondragend="dragEnd(event)">
       <span class="drag-handle" title="Drag to reorder">⠿</span>
@@ -1965,13 +1964,16 @@ async function renderListImage(entries,type,username){
       else drawSpriteFallback(ctx,e,sx,sy,sprSize);
       const mark=maxMarkForEntry(e,type);
       if(mark){
-        const bx=x+cardW-20,by=cy+6;
-        roundedRect(ctx,bx,by,14,14,4);
-        ctx.fillStyle=mark==='G'?'#c084fc':'#38bdf8';ctx.fill();
-        ctx.fillStyle='#101828';
-        ctx.font='800 9px Space Grotesk, sans-serif';
+        const label=mark==='G'?'GMAX':'MAX';
+        ctx.font='800 7px Space Grotesk, sans-serif';
+        const lw=ctx.measureText(label).width;
+        const bw=lw+6,bh=11;
+        const bx=x+cardW-bw-2,by=cy+cardH-bh-2;
+        roundedRect(ctx,bx,by,bw,bh,2);
+        ctx.fillStyle=mark==='G'?'#7c3aed':'#dc2626';ctx.fill();
+        ctx.fillStyle='#fff';
         ctx.textAlign='center';
-        ctx.fillText(mark,bx+7,by+10.5);
+        ctx.fillText(label,bx+bw/2,by+bh-3);
         ctx.textAlign='left';
       }
     });
