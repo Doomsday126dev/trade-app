@@ -360,7 +360,7 @@ input,select,textarea{font-family:var(--font);outline:none}
     </div>
     <button class="lbtn" id="login-btn" onclick="doLogin()">Sign in →</button>
     <div class="err" id="login-err"></div>
-    <div class="lnote">PINs are 6 digits. Ask an admin to reset yours if needed.</div>
+    <div class="lnote">First time logging in? Your default PIN is <strong>123456</strong>.<br>PINs are 6 digits. Ask an admin to reset yours if needed.</div>
     <div class="req-link" onclick="showRequestForm()">🙋 Request access to join</div>
   </div>
 
@@ -411,9 +411,9 @@ input,select,textarea{font-family:var(--font);outline:none}
     <div class="srch"><span class="srch-icon">🔍</span><input type="text" id="bq" placeholder="Search Pokémon name, #number, or trainer…" oninput="renderBrowse()"></div>
     <div class="filter-row">
       <button class="fbtn fALL on" onclick="setFilter('ALL')">All</button>
-      <button class="fbtn fH" onclick="setFilter('H')">🔴 High</button>
-      <button class="fbtn fM" onclick="setFilter('M')">🟡 Medium</button>
-      <button class="fbtn fL" onclick="setFilter('L')">🟢 Low</button>
+      <button class="fbtn fH" onclick="setFilter('H')">High</button>
+      <button class="fbtn fM" onclick="setFilter('M')">Medium</button>
+      <button class="fbtn fL" onclick="setFilter('L')">Low</button>
     </div>
     <div class="stale-filter">
       <label>Activity:</label>
@@ -425,9 +425,7 @@ input,select,textarea{font-family:var(--font);outline:none}
       <button class="ltab active" onclick="setBrowseList('wishlist')">Trades</button>
       <button class="ltab" onclick="setBrowseList('dynamax')">Dynamax</button>
       <button class="ltab" onclick="setBrowseList('costumes')">Costumes</button>
-    </div>
-    <div class="legend">
-      <div class="leg"><div class="leg-dot" style="background:var(--H)"></div>High priority</div>
+    </div>High priority</div>
       <div class="leg"><div class="leg-dot" style="background:var(--M)"></div>Medium priority</div>
       <div class="leg"><div class="leg-dot" style="background:var(--L)"></div>Low priority</div>
     </div>
