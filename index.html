@@ -674,6 +674,7 @@ const LIST_LABELS={wishlist:'Trades',dynamax:'Dynamax',costumes:'Others'};
 const REGION_CODE_TERMS={K:'kanto',J:'johto',H:'hoenn',S:'sinnoh',U:'unova',L:'kalos',A:'alola',G:'galar',P:'paldea'};
 const REGIONAL_FORM_TERMS={A:'alola',G:'galar',H:'hisui',P:'paldea'};
 const REGION_SEARCH_TERMS=new Set([...Object.values(REGION_CODE_TERMS),'hisui']);
+const CASTFORM_TYPE_TERMS=new Set(['fire','water','ice','normal']);
 const SECURE_RULES=`{
   "rules": {
     ".read": true,
@@ -832,6 +833,15 @@ function dexSearchTerm(entry,dexHasRegional){
   const region=dexRegionTerm(entry,dexHasRegional);
   return region?`${region}&${dex}`:String(dex);
 }
+function castformTypeFilter(entry,mod=''){
+  if(parseInt(entry?.no)!==351&&!String(entry?.name||'').toLowerCase().includes('castform'))return'';
+  const text=`${entry?.name||''} ${entry?.displayName||''} ${mod}`.toLowerCase();
+  if(/\b(ice|snow|snowy|frost|frosty)\b/.test(text))return'ice';
+  if(/\b(fire|sun|sunny)\b/.test(text))return'fire';
+  if(/\b(water|rain|rainy)\b/.test(text))return'water';
+  if(/\b(normal|base|plain|default)\b/.test(text))return'normal';
+  return'';
+}
 function modSearchFilters(mod){
   const m=String(mod||'').toLowerCase();
   const out=[];
@@ -843,6 +853,12 @@ function modSearchFilters(mod){
   else if(m.includes('xl'))out.push('xl');
   return out;
 }
+function entrySearchFilters(entry,mod){
+  const filters=modSearchFilters(mod);
+  const castform=castformTypeFilter(entry,mod);
+  if(castform&&!filters.includes(castform))filters.unshift(castform);
+  return filters;
+}
 function modFromSearchFilters(filters){
   const f=filters.map(x=>x.toLowerCase());
   if(f.includes('female'))return'f';
@@ -852,6 +868,9 @@ function modFromSearchFilters(filters){
   if(f.includes('xxl'))return'xxl';
   if(f.includes('xl'))return'xl';
   return'';
+}
+function castformTypeFromSearchFilters(filters){
+  return filters.find(f=>CASTFORM_TYPE_TERMS.has(f))||'';
 }
 
 // ── LOCAL STORAGE ─────────────────────────────────────────────
@@ -1390,7 +1409,7 @@ function renderMyList(filterVal){
     return`<div class="myrow" draggable="true" data-name="${sn}" data-idx="${idx}"
       ondragstart="dragStart(event)" ondragover="dragOver(event)" ondrop="dragDrop(event)" ondragend="dragEnd(event)">
       <span class="drag-handle" title="Drag to reorder">⠿</span>
-      ${no?spriteImg(no,28,'myrow-sprite'):''}
+      ${no?spriteImg(no,28,'myrow-sprite',name):''}
       <div class="myrow-name" title="${dn}">${dn}</div>
       <div class="mctrl">
         ${['H','M','L'].map(b=>`<button class="pb ${p===b?'on '+b:''}" onclick="setPri('${sn}','${b}')" title="${priName(b)}" aria-label="Set ${escAttr(dn)} to ${priLabel(b)} priority">${b}</button>`).join('')}
@@ -1479,18 +1498,17 @@ function buildStrings(type,username){
     if(!p||!byP[p])return;
     const entry=nameToEntry[name];if(!entry?.no)return;
     const term=dexSearchTerm(entry,dexHasRegional);if(!term)return;
-    byP[p].push({term,mod:mod.toLowerCase()});
+    byP[p].push({term,filters:entrySearchFilters(entry,mod)});
   });
   const out={};
   ['H','M','L'].forEach(p=>{
     if(!byP[p].length)return;
     const seen=new Map();
-    byP[p].forEach(({term,mod})=>{if(!seen.has(term))seen.set(term,new Set());seen.get(term).add(mod);});
+    byP[p].forEach(({term,filters})=>{if(!seen.has(term))seen.set(term,new Set());seen.get(term).add(filters.join('&'));});
     const parts=[];
     [...seen.entries()].sort((a,b)=>parseInt(a[0].match(/\d+/)?.[0]||'0')-parseInt(b[0].match(/\d+/)?.[0]||'0')||a[0].localeCompare(b[0])).forEach(([term,mods])=>{
-      mods.forEach(mod=>{
-        const filters=modSearchFilters(mod);
-        parts.push(filters.length?`${filters.join('&')}&${term}`:term);
+      mods.forEach(filterKey=>{
+        parts.push(filterKey?`${filterKey}&${term}`:term);
       });
     });
     out[p]=PREFILTER+parts.join(',');
@@ -1901,19 +1919,21 @@ function parseImportString(){
   const matched=[];const skipped=[];
   tokens.forEach(token=>{
     let mod='',numStr=token;
-    let regionTerm='';
+    let regionTerm='',castformType='';
     if(token.includes('&')){
       const parts=token.split('&').map(p=>p.trim()).filter(Boolean);
       numStr=parts[parts.length-1];
       const filters=parts.slice(0,-1).map(p=>p.toLowerCase());
       mod=modFromSearchFilters(filters);
       regionTerm=filters.find(p=>REGION_SEARCH_TERMS.has(p))||'';
+      castformType=castformTypeFromSearchFilters(filters);
     }
     numStr=numStr.replace(/[^0-9]/g,'');
     const dex=parseInt(numStr);
     if(isNaN(dex)||dex<=0)return;
     let entries=dexToEntries[dex];
     if(regionTerm)entries=(entries||[]).filter(e=>e.regionTerm===regionTerm);
+    if(castformType)entries=(entries||[]).filter(e=>castformTypeFilter(e)===castformType);
     if(!entries||!entries.length){skipped.push(dex);return;}
     entries.forEach(e=>{
       if(matched.find(m=>m.name===e.name&&m.mod===mod))return;
