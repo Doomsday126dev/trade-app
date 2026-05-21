@@ -279,6 +279,35 @@ input,select,textarea{font-family:var(--font);outline:none}
 .empty-s{font-size:12px;margin-top:3px}
 
 @media(max-width:600px){.page{padding:11px}.pgrid,.mygrid{grid-template-columns:1fr}.lcard{padding:22px 16px}}
+
+/* IMPORT MODAL */
+.import-preview{max-height:260px;overflow-y:auto;margin:10px 0;border:1px solid var(--border);border-radius:var(--r2)}
+.import-preview-row{display:flex;align-items:center;gap:8px;padding:7px 11px;border-bottom:1px solid var(--border);font-size:13px}
+.import-preview-row:last-child{border-bottom:none}
+.import-preview-row.skip{opacity:.4}
+.import-check{width:16px;height:16px;accent-color:var(--accent);flex-shrink:0;cursor:pointer}
+.import-sprite{width:28px;height:28px;object-fit:contain;image-rendering:pixelated;flex-shrink:0}
+.import-sprite-ph{width:28px;height:28px;flex-shrink:0}
+.import-name{flex:1;font-weight:500}
+.import-dex{font-family:var(--mono);font-size:10px;color:var(--muted);min-width:28px}
+.import-mod{font-size:11px;color:var(--muted);font-family:var(--mono)}
+.import-warn{font-size:12px;color:var(--warn);margin:8px 0;padding:8px 10px;background:rgba(245,158,11,.08);border-radius:var(--r2);border:1px solid rgba(245,158,11,.2)}
+.import-summary{font-size:13px;color:var(--muted);margin-bottom:10px}
+.import-textarea{width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--text);padding:10px 12px;border-radius:var(--r2);font-family:var(--mono);font-size:12px;resize:vertical;min-height:80px;line-height:1.5}
+.import-textarea:focus{border-color:var(--accent);outline:none}
+.import-textarea::placeholder{color:var(--muted)}
+.import-step{display:none}
+.import-step.active{display:block}
+.import-pri-row{display:flex;gap:8px;margin:10px 0;flex-wrap:wrap}
+.import-pri-btn{flex:1;padding:8px;border-radius:var(--r2);border:1px solid var(--border2);background:var(--bg);color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;transition:.15s;font-family:var(--font)}
+.import-pri-btn.sel.H{background:var(--Hbg);color:var(--H);border-color:rgba(245,158,11,.4)}
+.import-pri-btn.sel.M{background:var(--Mbg);color:var(--M);border-color:rgba(59,130,246,.4)}
+.import-pri-btn.sel.L{background:var(--Lbg);color:var(--L);border-color:rgba(16,185,129,.4)}
+.import-modal{max-width:480px}
+.import-btn{background:transparent;border:1px solid var(--border2);color:var(--muted);padding:6px 13px;border-radius:var(--r2);font-size:12px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:5px;margin-top:8px;font-family:var(--font)}
+.import-btn:hover{border-color:var(--ac2);color:var(--ac2)}
+.select-all-row{display:flex;align-items:center;gap:6px;padding:6px 11px;font-size:12px;color:var(--muted);border-bottom:1px solid var(--border);cursor:pointer}
+.select-all-row:hover{color:var(--text)}
 </style>
 </head>
 <body>
@@ -309,7 +338,7 @@ input,select,textarea{font-family:var(--font);outline:none}
     <div class="field"><label>Username</label><select id="login-user"><option value="">Select username…</option></select></div>
     <div class="field">
       <label>PIN</label>
-      <input type="password" id="login-pin" placeholder="4-digit PIN" maxlength="6" inputmode="numeric" autocomplete="current-password">
+      <input type="password" id="login-pin" placeholder="PIN (4–6 digits)" maxlength="6" inputmode="numeric" autocomplete="current-password">
     </div>
     <button class="lbtn" id="login-btn" onclick="doLogin()">Sign in →</button>
     <div class="err" id="login-err"></div>
@@ -355,7 +384,6 @@ input,select,textarea{font-family:var(--font);outline:none}
   <div class="tabs">
     <button class="tab active" data-tab="browse" onclick="switchTab('browse')">🔍 Browse</button>
     <button class="tab" data-tab="mylist" onclick="switchTab('mylist')">📋 My List</button>
-    <button class="tab" data-tab="match" onclick="switchTab('match')">🤝 Match</button>
     <button class="tab" data-tab="strings" onclick="switchTab('strings')">📤 Strings</button>
     <button class="tab" data-tab="admin" onclick="switchTab('admin')" id="admin-tab" style="display:none">⚙️ Admin<span class="notif-badge" id="admin-notif" style="display:none">!</span></button>
   </div>
@@ -419,6 +447,7 @@ input,select,textarea{font-family:var(--font);outline:none}
         <input type="text" id="add-pmon-notes" placeholder="Notes: f, m, xs…" style="max-width:120px">
       </div>
       <button class="bsave" onclick="addEntry()" style="margin-top:10px">Add</button>
+      <button class="import-btn" onclick="openImport()">📥 Import from search string</button>
     </div>
     <div class="mylist-search">
       <span class="mylist-srch-icon">🔍</span>
@@ -430,13 +459,7 @@ input,select,textarea{font-family:var(--font);outline:none}
     <div id="my-strings-out"></div>
   </div>
 
-  <!-- MATCH -->
-  <div class="page" id="tab-match">
-    <div class="sec" style="margin-top:0">Others who share your Pokémon</div>
-    <div id="match-shared"></div>
-    <div class="sec">Seeking — who wants your high-priority Pokémon</div>
-    <div id="match-seek"></div>
-  </div>
+
 
   <!-- STRINGS -->
   <div class="page" id="tab-strings">
@@ -507,6 +530,48 @@ input,select,textarea{font-family:var(--font);outline:none}
     <p style="font-size:13px;color:var(--muted);margin-bottom:14px">For: <strong id="rpin-target">—</strong></p>
     <div class="field"><label>New PIN</label><input type="text" id="rpin-val" placeholder="New PIN" maxlength="6" inputmode="numeric"></div>
     <div class="mact"><button class="bghost" onclick="closeModal('rpin-modal')">Cancel</button><button class="bpri" onclick="confirmReset()">Reset</button></div>
+  </div>
+</div>
+
+<!-- IMPORT MODAL -->
+<div class="ov" id="import-modal">
+  <div class="modal import-modal">
+    <h3>📥 Import from search string</h3>
+
+    <!-- STEP 1: Paste -->
+    <div class="import-step active" id="import-step1">
+      <div style="font-size:13px;color:var(--muted);margin-bottom:10px;line-height:1.5">
+        Paste a PoGo search string. Dex numbers will be matched to Pokémon automatically.
+      </div>
+      <textarea class="import-textarea" id="import-str-input"
+        placeholder="!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&26,83,115,122,128&#10;&#10;Or just the numbers: 26,83,115,122,128&#10;&#10;Modifiers like female&757 and kanto&19 are supported too"></textarea>
+      <div class="err" id="import-err"></div>
+      <div style="font-size:12px;font-weight:600;color:var(--muted);margin-top:12px;margin-bottom:4px">Add as priority:</div>
+      <div class="import-pri-row">
+        <button class="import-pri-btn sel M" data-pri="H" onclick="setImportPri('H')">H – Hunting</button>
+        <button class="import-pri-btn sel M sel" data-pri="M" onclick="setImportPri('M')">M – Want</button>
+        <button class="import-pri-btn" data-pri="L" onclick="setImportPri('L')">L – Low</button>
+      </div>
+      <div class="mact">
+        <button class="bghost" onclick="closeModal('import-modal')">Cancel</button>
+        <button class="bpri" onclick="parseImportString()">Preview →</button>
+      </div>
+    </div>
+
+    <!-- STEP 2: Preview -->
+    <div class="import-step" id="import-step2">
+      <div class="import-summary" id="import-summary"></div>
+      <div id="import-warn-box"></div>
+      <div class="import-preview" id="import-preview-list">
+        <div class="select-all-row" onclick="toggleSelectAll()">
+          <input type="checkbox" id="select-all-chk" checked class="import-check"> Select all
+        </div>
+      </div>
+      <div class="mact">
+        <button class="bghost" onclick="backToStep1()">← Back</button>
+        <button class="bpri" id="import-confirm-btn" onclick="confirmImport()">Import</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -761,7 +826,7 @@ function showApp(){
   document.getElementById('admin-tab').style.display=isAdmin?'':'none';
   updateFcDisplay();
   buildAcItems();
-  renderBrowse();renderMyList();renderMatch();renderStrings();
+  renderBrowse();renderMyList();renderStrings();
   if(isAdmin){renderAdmin();renderPendingRequests();}
 }
 function switchTab(t){
@@ -772,7 +837,7 @@ function switchTab(t){
 }
 function refreshAll(){
   if(!cur)return;
-  renderBrowse();renderMyList();renderMatch();renderStrings();
+  renderBrowse();renderMyList();renderStrings();
   if(allData.users?.[cur]?.isAdmin){renderAdmin();renderPendingRequests();}
 }
 
@@ -1166,52 +1231,6 @@ function renderMyStrings(){
 }
 function copyStr(str){navigator.clipboard.writeText(str).then(()=>toast('📋 Copied!'));}
 
-// ── MATCH ─────────────────────────────────────────────────────
-function renderMatch(){
-  if(!cur)return;
-  const myWish=allData.wishlist?.[cur]||{};
-  const allWish=allData.wishlist||{};
-  const sharedEl=document.getElementById('match-shared');
-  const seekEl=document.getElementById('match-seek');
-  if(!sharedEl||!seekEl)return;
-  const shared=[];
-  const dbNames=new Set(DB.wishlist.map(e=>e.name));
-  [...dbNames].forEach(name=>{
-    const myVal=myWish[name];if(!myVal)return;
-    const{p:myP}=parsePri(myVal);if(!myP)return;
-    const others=Object.entries(allWish).filter(([u])=>u!==cur).filter(([,l])=>l?.[name])
-      .map(([u,l])=>({user:u,p:parsePri(l[name]).p,lu:allData.users?.[u]?.lastUpdated}));
-    if(others.length){
-      const dn=DB.wishlist.find(x=>x.name===name)?.displayName||name;
-      const no=DB.wishlist.find(x=>x.name===name)?.no;
-      shared.push({name,dn,no,myP,others});
-    }
-  });
-  const seeking=[];
-  Object.entries(allWish).forEach(([user,list])=>{
-    if(user===cur||!list)return;
-    const hits=Object.entries(list).filter(([n,v])=>parsePri(v).p==='H'&&myWish[n]).map(([n])=>n);
-    if(hits.length)seeking.push({user,hits,lu:allData.users?.[user]?.lastUpdated});
-  });
-  sharedEl.innerHTML=shared.length
-    ?`<div class="tlist">${shared.map(r=>`<div class="trow">
-        ${r.no?spriteImg(r.no,28,'myrow-sprite'):''}
-        <div class="tpmon">${r.dn}</div>
-        <div style="display:flex;gap:4px;flex-wrap:wrap">${r.others.map(o=>`<span class="badge ${o.p}" style="border-color:${freshnessColor(freshnessClass(o.lu))}40">${o.user}</span>`).join('')}</div>
-        <span class="badge ${r.myP}">you: ${r.myP}</span>
-      </div>`).join('')}</div>`
-    :emptyHtml('Add Pokémon to your list first');
-  seekEl.innerHTML=seeking.length
-    ?`<div class="tlist">${seeking.map(r=>`<div class="trow">
-        <div class="tpmon" style="display:flex;align-items:center;gap:6px">
-          ${r.user}
-          <span style="font-size:10px;color:${freshnessColor(freshnessClass(r.lu))}">${freshnessLabel(r.lu)}</span>
-        </div>
-        <div style="display:flex;gap:4px;flex-wrap:wrap">${r.hits.map(h=>`<span class="badge H">${h}</span>`).join('')}</div>
-      </div>`).join('')}</div>`
-    :emptyHtml('No one seeking your high-priority Pokémon yet');
-}
-
 // ── STRINGS PAGE — collapsible ────────────────────────────────
 function setStrList(t){
   strListType=t;
@@ -1325,7 +1344,7 @@ function addUser(){
   const pin=document.getElementById('nu-pin').value.trim();
   const isAdmin=document.getElementById('nu-admin').checked;
   if(!name){toast('⚠️ Enter username');return;}
-  if(!pin||pin.length<4){toast('⚠️ PIN must be 4+ digits');return;}
+  if(!pin||pin.length<4||pin.length>6){toast('⚠️ PIN must be 4–6 digits');return;}
   if(allData.users?.[name]){toast('⚠️ Username exists');return;}
   writeUser(name,{pin,isAdmin,isOwner:false,friendCode:'',joined:Date.now(),lastSeen:null,lastUpdated:null,pinHashed:false});
   writeList('wishlist',name,{});writeList('dynamax',name,{});writeList('costumes',name,{});
@@ -1344,7 +1363,7 @@ function openReset(u){
 }
 async function confirmReset(){
   const pin=document.getElementById('rpin-val').value.trim();
-  if(!pin||pin.length<4){toast('⚠️ PIN must be 4+ digits');return;}
+  if(!pin||pin.length<4||pin.length>6){toast('⚠️ PIN must be 4–6 digits');return;}
   await writeUser(rpinTarget,{pin,pinHashed:false});
   closeModal('rpin-modal');toast(`✅ PIN reset for ${rpinTarget}`);rpinTarget=null;
 }
@@ -1445,7 +1464,7 @@ async function saveProfile(){
   const err=document.getElementById('pin-err');err.textContent='';
   if(!validateFc(fc)){err.textContent='Friend code must be 12 digits';return;}
   if(p1){
-    if(p1.length<4){err.textContent='PIN must be 4+ digits';return;}
+    if(p1.length<4||p1.length>6){err.textContent='PIN must be 4–6 digits';return;}
     if(p1!==p2){err.textContent="PINs don't match";return;}
   }
   const upd={friendCode:fc};
@@ -1468,6 +1487,7 @@ function toast(msg,dur=2500){
 
 // ── EXPOSE ────────────────────────────────────────────────────
 Object.assign(window,{
+  openImport,setImportPri,parseImportString,toggleImportRow,toggleSelectAll,backToStep1,confirmImport,
   setFilter,setBrowseList,setMyList,setStaleFilter,switchTab,
   doLogin,logout,connectFirebase,skipFirebase,
   addEntry,setPri,setNotes,removeEntry,doUndo,copyStr,
