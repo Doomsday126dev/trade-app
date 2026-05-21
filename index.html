@@ -746,10 +746,34 @@ let dragSrc=null;
 // Map dex number → sprite URL. For forms we use base dex.
 // Sprite cache to avoid repeated failed requests
 const spriteCache={};
-const REGIONAL_FORM_IDS={"A-Rattata": 10091, "A-Raichu": 10100, "A-Sandshrew": 10101, "A-Vulpix": 10103, "A-Diglett": 10105, "A-Meowth": 10107, "A-Geodude": 10109, "A-Grimer": 10112, "A-Exeggutor": 10114, "A-Marowak": 10115, "G-Meowth": 10161, "G-Ponyta": 10162, "G-Slowpoke": 10164, "G-Farfetch'd": 10166, "G-Weezing": 10167, "G-Mr_ Mime": 10168, "G-Corsola": 10173, "G-Zigzagoon": 10174, "G-Darumaka": 10176, "G-Yamask": 10179, "G-Stunfisk": 10180, "H-Growlithe": 10229, "H-Voltorb": 10231, "H-Typhlosion": 10233, "H-Qwilfish": 10234, "H-Sneasel": 10235, "H-Samurott": 10236, "H-Lilligant": 10237, "H-Zorua": 10238, "H-Braviary": 10240, "H-Sliggoo": 10241, "H-Avalugg": 10243, "H-Decidueye": 10244, "P-Tauros (Combat)": 10250, "P-Tauros (Blaze)": 10251, "P-Tauros (Aqua)": 10252, "P-Wooper": 10253, "Castform (Sunny)": 10013, "Castform (Rainy)": 10014, "Castform (Snowy)": 10015};
+const REGIONAL_FORM_IDS={"A-Rattata": 10091, "A-Raichu": 10100, "A-Sandshrew": 10101, "A-Vulpix": 10103, "A-Diglett": 10105, "A-Meowth": 10107, "A-Geodude": 10109, "A-Grimer": 10112, "A-Exeggutor": 10114, "A-Marowak": 10115, "G-Meowth": 10161, "G-Ponyta": 10162, "G-Slowpoke": 10164, "G-Farfetch'd": 10166, "G-Weezing": 10167, "G-Mr_ Mime": 10168, "G-Corsola": 10173, "G-Zigzagoon": 10174, "G-Darumaka": 10176, "G-Yamask": 10179, "G-Stunfisk": 10180, "H-Growlithe": 10229, "H-Voltorb": 10231, "H-Typhlosion": 10233, "H-Qwilfish": 10234, "H-Sneasel": 10235, "H-Samurott": 10236, "H-Lilligant": 10237, "H-Zorua": 10238, "H-Braviary": 10240, "H-Sliggoo": 10241, "H-Avalugg": 10243, "H-Decidueye": 10244, "P-Tauros": 10250, "P-Tauros (Combat)": 10250, "P-Tauros (Blaze)": 10251, "P-Tauros (Fire)": 10251, "P-Tauros (Aqua)": 10252, "P-Tauros (Water)": 10252, "P-Wooper": 10253, "Castform (Sunny)": 10013, "Castform (Rainy)": 10014, "Castform (Snowy)": 10015};
+// Form-specific sprite IDs/filenames for costume/form variants (Unown letters, Furfrou trims, Vivillon patterns, etc.)
+const COSTUME_FORM_SPRITE_IDS={
+  "Unown (A)":10063,"Unown (B)":10064,"Unown (C)":10065,"Unown (D)":10066,
+  "Unown (E)":10067,"Unown (F)":10068,"Unown (G)":10069,"Unown (H)":10070,
+  "Unown (I)":10071,"Unown (J)":10072,"Unown (K)":10073,"Unown (L)":10074,
+  "Unown (M)":10075,"Unown (N)":10076,"Unown (O)":10077,"Unown (P)":10078,
+  "Unown (Q)":10079,"Unown (R)":10080,"Unown (S)":10081,"Unown (T)":10082,
+  "Unown (U)":10083,"Unown (V)":10084,"Unown (W)":10085,"Unown (X)":10086,
+  "Unown (Y)":10087,"Unown (Z)":10088,"Unown (!)":10089,"Unown (?)":10090,
+  "Furfrou (Heart)":"676-heart","Furfrou (Star)":"676-star","Furfrou (Diamond)":"676-diamond",
+  "Furfrou (Debutante)":"676-debutante","Furfrou (Matron)":"676-matron","Furfrou (Dandy)":"676-dandy",
+  "Furfrou (La Reine)":"676-la-reine","Furfrou (Kabuki)":"676-kabuki","Furfrou (Pharaoh)":"676-pharaoh",
+  "Deerling (Summer)":"585-summer","Deerling (Autumn)":"585-autumn","Deerling (Winter)":"585-winter",
+  "Sawsbuck (Summer)":"586-summer","Sawsbuck (Autumn)":"586-autumn","Sawsbuck (Winter)":"586-winter",
+  "Burmy (Sandy)":"412-sandy","Burmy (Trash)":"412-trash",
+  "Wormadam (Sandy)":10004,"Wormadam (Trash)":10005,
+  "Archipelago":"666-archipelago","Continental":"666-continental","Elegant":"666-elegant",
+  "Fancy":"666-fancy","Garden":"666-garden","High Plains":"666-high-plains",
+  "Icy Snow":"666-icy-snow","Jungle":"666-jungle","Marine":"666-marine",
+  "Modern":"666-modern","Monsoon":"666-monsoon","Ocean":"666-ocean",
+  "Polar":"666-polar","Poké Ball":"666-poke-ball","River":"666-river",
+  "Sandstorm":"666-sandstorm","Savanna":"666-savanna","Sun":"666-sun","Tundra":"666-tundra"
+};
 function spriteUrl(no,name){
-  if(!no)return null;
   if(name&&REGIONAL_FORM_IDS[name])return`${SPRITE_BASE}${REGIONAL_FORM_IDS[name]}.png`;
+  if(name&&COSTUME_FORM_SPRITE_IDS[name])return`${SPRITE_BASE}${COSTUME_FORM_SPRITE_IDS[name]}.png`;
+  if(!no)return null;
   const n=parseInt(no);
   if(isNaN(n))return null;
   return`${SPRITE_BASE}${n}.png`;
@@ -1447,7 +1471,7 @@ function currentListEntries(type=myListType,filterVal=''){
       p,
       mod,
       no:spriteEntry.no||entry.no||null,
-      spriteName:spriteEntry.name||entry.name||name,
+      spriteName:(COSTUME_FORM_SPRITE_IDS[name]||REGIONAL_FORM_IDS[name])?name:(spriteEntry.name||entry.name||name),
       spriteUrl:spriteEntry.spriteUrl||spriteEntry.sprite||entry.spriteUrl||entry.sprite||''
     };
   }).filter(e=>!q||e.dn.toLowerCase().includes(q))
@@ -1479,12 +1503,13 @@ function renderMyList(filterVal){
   el.innerHTML=`<div class="mygrid" id="mylist-grid">${entries.map(([name,val],idx)=>{
     const{p,mod}=parsePri(val);
     const dn=dispMap[name]||name;
-    const no=noMap[name];
+    const no=noMap[name]||null;
     const sn=name.replace(/'/g,"\\'").replace(/"/g,'&quot;');
+    const hasSprite=no||COSTUME_FORM_SPRITE_IDS[name];
     return`<div class="myrow" draggable="true" data-name="${sn}" data-idx="${idx}" data-full="${escAttr(dn)}" aria-label="${escAttr(dn)}"
       ondragstart="dragStart(event)" ondragover="dragOver(event)" ondrop="dragDrop(event)" ondragend="dragEnd(event)">
       <span class="drag-handle" title="Drag to reorder">⠿</span>
-      ${no?spriteImg(no,28,'myrow-sprite',name):''}
+      ${hasSprite?spriteImg(no,28,'myrow-sprite',name):''}
       <div class="myrow-name">${dn}</div>
       <div class="mctrl">
         ${['H','M','L'].map(b=>`<button class="pb ${p===b?'on '+b:''}" onclick="setPri('${sn}','${b}')" title="${priName(b)}" aria-label="Set ${escAttr(dn)} to ${priLabel(b)} priority">${b}</button>`).join('')}
@@ -1570,71 +1595,58 @@ function safeFilePart(s){
   return String(s||'list').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'list';
 }
 async function renderListImage(entries,type,username){
-  const W=1080,pad=56,gap=16,cols=5,cardW=(W-pad*2-gap*(cols-1))/cols,cardH=152;
+  const W=1080,pad=40,gap=6,cols=8,cardW=(W-pad*2-gap*(cols-1))/cols,cardH=80;
+  const sprSize=52,sprPad=4;
   const groupDefs=['H','M','L'].map(p=>({p,label:priLabel(p),entries:entries.filter(e=>e.p===p)}));
   const other=entries.filter(e=>!PRI[e.p]);
   if(other.length)groupDefs.push({p:'',label:'Other',entries:other});
   const groups=groupDefs.filter(g=>g.entries.length);
-  const headerH=154,groupTitleH=46,sectionGap=22,bottomPad=48;
+  const headerH=120,groupTitleH=40,sectionGap=16,bottomPad=36;
   let H=headerH+bottomPad;
   groups.forEach(g=>{H+=groupTitleH+Math.ceil(g.entries.length/cols)*(cardH+gap)-gap+sectionGap;});
   const canvas=document.createElement('canvas');
-  canvas.width=W;canvas.height=Math.max(H,420);
+  canvas.width=W;canvas.height=Math.max(H,300);
   const ctx=canvas.getContext('2d');
   ctx.fillStyle='#0f0f1a';ctx.fillRect(0,0,canvas.width,canvas.height);
   ctx.fillStyle='#e8e8f0';
-  ctx.font='700 44px Space Grotesk, sans-serif';
-  ctx.fillText(`${username}'s ${listLabel(type)} List`,pad,74);
-  ctx.font='500 22px Space Grotesk, sans-serif';
+  ctx.font='700 38px Space Grotesk, sans-serif';
+  ctx.fillText(`${username}'s ${listLabel(type)} List`,pad,58);
+  ctx.font='500 18px Space Grotesk, sans-serif';
   ctx.fillStyle='#8888aa';
   const date=new Date().toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
-  ctx.fillText(`${entries.length} entries · Generated ${date}`,pad,111);
-  ctx.font='700 18px Space Grotesk, sans-serif';
+  ctx.fillText(`${entries.length} entries · Generated ${date}`,pad,88);
+  ctx.font='700 16px Space Grotesk, sans-serif';
   ctx.fillStyle='#a78bfa';
-  ctx.fillText('PoGo Trades',W-pad-118,74);
+  ctx.fillText('PoGo Trades',W-pad-96,58);
 
   const urls=[...new Set(entries.map(exportSpriteUrl).filter(Boolean))];
   const imagePairs=await Promise.all(urls.map(async url=>[url,await loadCanvasImage(url)]));
   const images=new Map(imagePairs);
   const priColors={H:'#ef4444',M:'#f59e0b',L:'#10b981','':'#8888aa'};
+  const priCardBg={H:'rgba(239,68,68,.07)',M:'rgba(245,158,11,.07)',L:'rgba(16,185,129,.07)','':'rgba(136,136,170,.06)'};
   let y=headerH;
   groups.forEach(group=>{
     ctx.fillStyle=priColors[group.p]||'#8888aa';
-    roundedRect(ctx,pad,y,11,24,5);ctx.fill();
+    roundedRect(ctx,pad,y,9,20,4);ctx.fill();
     ctx.fillStyle='#e8e8f0';
-    ctx.font='700 25px Space Grotesk, sans-serif';
-    ctx.fillText(group.label,pad+20,y+22);
+    ctx.font='700 21px Space Grotesk, sans-serif';
+    ctx.fillText(group.label,pad+16,y+18);
     ctx.fillStyle='#8888aa';
-    ctx.font='500 18px Space Grotesk, sans-serif';
-    ctx.fillText(`${group.entries.length}`,pad+20+ctx.measureText(group.label).width+12,y+22);
+    ctx.font='500 15px Space Grotesk, sans-serif';
+    ctx.fillText(`${group.entries.length}`,pad+16+ctx.measureText(group.label).width+10,y+18);
     y+=groupTitleH;
     group.entries.forEach((e,i)=>{
       const col=i%cols,row=Math.floor(i/cols);
       const x=pad+col*(cardW+gap),cy=y+row*(cardH+gap);
-      roundedRect(ctx,x,cy,cardW,cardH,12);
-      ctx.fillStyle='#1e1e35';ctx.fill();
-      ctx.strokeStyle='rgba(255,255,255,.12)';ctx.lineWidth=1;ctx.stroke();
+      roundedRect(ctx,x,cy,cardW,cardH,10);
+      ctx.fillStyle=priCardBg[e.p]||priCardBg[''];ctx.fill();
+      ctx.strokeStyle='rgba(255,255,255,.10)';ctx.lineWidth=1;ctx.stroke();
       ctx.fillStyle=priColors[e.p]||'#8888aa';
-      roundedRect(ctx,x,cy,cardW,5,3);ctx.fill();
+      roundedRect(ctx,x,cy,cardW,4,3);ctx.fill();
+      const sx=x+(cardW-sprSize)/2,sy=cy+4+sprPad+(cardH-4-sprSize-sprPad*2)/2;
       const img=images.get(exportSpriteUrl(e));
-      if(img)drawImageContain(ctx,img,x+16,cy+18,58,58);
-      else drawSpriteFallback(ctx,e,x+17,cy+20,54);
-      if(e.mod){
-        ctx.font='700 13px JetBrains Mono, monospace';
-        const mw=Math.min(ctx.measureText(e.mod).width+16,cardW-86);
-        roundedRect(ctx,x+cardW-mw-12,cy+18,mw,24,8);
-        ctx.fillStyle='rgba(15,15,26,.9)';ctx.fill();
-        ctx.strokeStyle='rgba(255,255,255,.12)';ctx.stroke();
-        ctx.fillStyle='#a78bfa';ctx.fillText(e.mod,x+cardW-mw-4,cy+35);
-      }
-      ctx.font='700 17px Space Grotesk, sans-serif';
-      ctx.fillStyle='#e8e8f0';
-      drawWrappedText(ctx,e.dn,x+14,cy+99,cardW-28,20,2);
-      if(e.no){
-        ctx.font='500 13px JetBrains Mono, monospace';
-        ctx.fillStyle='#8888aa';
-        ctx.fillText(`#${e.no}`,x+14,cy+134);
-      }
+      if(img)drawImageContain(ctx,img,sx,sy,sprSize,sprSize);
+      else drawSpriteFallback(ctx,e,sx,sy,sprSize);
     });
     y+=Math.ceil(group.entries.length/cols)*(cardH+gap)-gap+sectionGap;
   });
@@ -1717,9 +1729,22 @@ function buildStrings(type,username){
   const list=allData[type]?.[username]||{};
   if(!Object.keys(list).length)return null;
   if(type==='costumes'){
+    const costumeNoMap={};
+    DB.costumes.forEach(e=>{if(e.no)costumeNoMap[e.name]=e.no;});
     const byP={H:[],M:[],L:[]};
-    Object.entries(list).forEach(([name,val])=>{const{p}=parsePri(val);if(p&&byP[p])byP[p].push(name);});
-    const out={};['H','M','L'].forEach(p=>{if(byP[p].length)out[p]=byP[p].join(',');});
+    Object.entries(list).forEach(([name,val])=>{
+      const{p}=parsePri(val);if(!p||!byP[p])return;
+      let no=costumeNoMap[name];
+      if(!no&&COSTUME_FORM_SPRITE_IDS[name])no=201;
+      if(!no){const sp=spriteEntryForListItem('costumes',name,DB.costumes.find(e=>e.name===name)||{});no=sp?.no||null;}
+      if(no)byP[p].push(parseInt(no));
+    });
+    const out={};
+    ['H','M','L'].forEach(p=>{
+      if(!byP[p].length)return;
+      const dexes=[...new Set(byP[p])].sort((a,b)=>a-b);
+      out[p]=PREFILTER+dexes.join(',');
+    });
     return Object.keys(out).length?out:null;
   }
   const srcArr=type==='dynamax'?DB.dynamax:DB.wishlist;
