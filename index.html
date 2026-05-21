@@ -335,22 +335,37 @@ input,select,textarea{font-family:var(--font);outline:none}
 .select-all-row{display:flex;align-items:center;gap:6px;padding:6px 11px;font-size:12px;color:var(--muted);border-bottom:1px solid var(--border);cursor:pointer}
 .select-all-row:hover{color:var(--text)}
 
-/* FILTER BAR — horizontal on desktop, stacked on mobile */
-.filter-bar{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap}
-.filter-group{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
-.filter-label{font-size:11px;color:var(--muted);font-weight:500;white-space:nowrap}
-.filter-divider{width:1px;height:20px;background:var(--border2);flex-shrink:0}
-/* Smaller buttons on desktop */
-@media(min-width:601px){
-  .filter-bar .fbtn,.filter-bar .sfbtn,.filter-bar .ltab{
-    padding:4px 10px;font-size:12px;border-radius:6px
-  }
-  .filter-divider{display:flex}
+/* FILTER BAR */
+/* Base: all buttons small and consistent */
+.filter-bar{display:flex;align-items:center;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.filter-group{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.filter-label{font-size:11px;color:var(--muted);font-weight:500;white-space:nowrap;margin-right:2px}
+.filter-divider{width:1px;height:18px;background:var(--border2);flex-shrink:0;margin:0 2px}
+/* Unified small button style for all filter buttons */
+.filter-bar .fbtn,
+.filter-bar .sfbtn,
+.filter-bar .ltab{
+  padding:4px 10px;font-size:12px;border-radius:6px;
+  background:var(--card);border:1px solid var(--border);
+  color:var(--muted);font-weight:500;cursor:pointer;transition:.15s;white-space:nowrap
 }
-/* On mobile: dividers hidden, everything wraps naturally */
+.filter-bar .fbtn:hover,
+.filter-bar .sfbtn:hover,
+.filter-bar .ltab:hover{color:var(--text)}
+/* Active states — priority keeps H/M/L colors, others use accent */
+.filter-bar .fbtn.fALL.on{background:var(--accent);color:#fff;border-color:transparent}
+.filter-bar .fbtn.fH.on{background:var(--H);color:#fff;border-color:transparent}
+.filter-bar .fbtn.fM.on{background:var(--M);color:#111;border-color:transparent}
+.filter-bar .fbtn.fL.on{background:var(--L);color:#03140e;border-color:transparent}
+.filter-bar .sfbtn.on,
+.filter-bar .ltab.active{background:var(--accent);color:#fff;border-color:transparent}
+/* Mobile: dividers hidden, wrap naturally into rows */
 @media(max-width:600px){
   .filter-divider{display:none}
-  .filter-bar{gap:6px}
+  .filter-bar{gap:5px}
+  .filter-bar .fbtn,
+  .filter-bar .sfbtn,
+  .filter-bar .ltab{padding:5px 11px;font-size:12px;border-radius:20px}
 }
 </style>
 </head>
