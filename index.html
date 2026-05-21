@@ -611,12 +611,17 @@ const SESSION_TTL=7*24*60*60*1000; // 7 days
 const SPRITE_BASE="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/";
 const FIREBASE_URL="https://trade-list-a4297-default-rtdb.firebaseio.com";
 const FIREBASE_PROJECT_ID="trade-list-a4297";
+<<<<<<< HEAD
 const FIREBASE_API_KEY="AIzaSyCazZNLj9_lEb1vUNUlrMe9hodqY_l34VU";
 const FIREBASE_AUTH_DOMAIN=`${FIREBASE_PROJECT_ID}.firebaseapp.com`;
 const FIREBASE_STORAGE_BUCKET="trade-list-a4297.firebasestorage.app";
 const FIREBASE_MESSAGING_SENDER_ID="1053781218847";
 const FIREBASE_APP_ID="1:1053781218847:web:378b312470943152d9a72a";
 const FIREBASE_MEASUREMENT_ID="G-0ZFL5NDQFP";
+=======
+const FIREBASE_API_KEY=""; // Paste the Web API key from Firebase project settings to enforce Auth-backed writes.
+const FIREBASE_AUTH_DOMAIN=`${FIREBASE_PROJECT_ID}.firebaseapp.com`;
+>>>>>>> 4b14c4431afd903a948f7932ae9ccf4799210ff8
 const PRI={
   H:{label:'High',emoji:'🔴'},
   M:{label:'Medium',emoji:'🟡'},
@@ -803,6 +808,7 @@ function syncFromLocal(){allData=getLocal();refreshAll();}
 function authEmail(username){return`${username.toLowerCase().replace(/[^a-z0-9]/g,'_')}@pogotrades.nyc`;}
 function firebaseAuthConfigured(){return!!FIREBASE_API_KEY&&FIREBASE_API_KEY.startsWith('AIza');}
 function firebaseConfig(url=FIREBASE_URL){
+<<<<<<< HEAD
   const cfg={databaseURL:url,projectId:FIREBASE_PROJECT_ID};
   if(firebaseAuthConfigured()){
     cfg.apiKey=FIREBASE_API_KEY;
@@ -812,6 +818,10 @@ function firebaseConfig(url=FIREBASE_URL){
     cfg.appId=FIREBASE_APP_ID;
     cfg.measurementId=FIREBASE_MEASUREMENT_ID;
   }
+=======
+  const cfg={databaseURL:url};
+  if(firebaseAuthConfigured()){cfg.apiKey=FIREBASE_API_KEY;cfg.authDomain=FIREBASE_AUTH_DOMAIN;}
+>>>>>>> 4b14c4431afd903a948f7932ae9ccf4799210ff8
   return cfg;
 }
 function setupFirebase(url=FIREBASE_URL){
