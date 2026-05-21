@@ -1493,22 +1493,18 @@ document.addEventListener('DOMContentLoaded',()=>{
   }));
   buildAcItems();
 
-  // Session check
-  const fbUrl=lsGet('fbUrl',null);
-  if(!fbUrl){syncFromLocal();showConfig();}
-  else if(fbUrl==='local'){
-    syncFromLocal();
-    const s=checkSession();
-    if(s&&allData.users?.[s]){cur=s;showApp();}else showLogin();
-    setSyncStatus('offline');
-  } else {
-    try{
-      const fapp=initializeApp({databaseURL:fbUrl},'pogo');
-      db=getDatabase(fapp);fbOn=true;setSyncStatus('syncing');
-      startListener();syncFromLocal();
-      const s=checkSession();if(s)cur=s;
-      showLogin();
-    }catch{syncFromLocal();showLogin();setSyncStatus('offline');}
+  // Hardcoded Firebase URL — config screen never shown
+  const FIREBASE_URL="https://trade-list-a4297-default-rtdb.firebaseio.com";
+  lsSet('fbUrl',FIREBASE_URL);
+  syncFromLocal();
+  try{
+    const fapp=initializeApp({databaseURL:FIREBASE_URL},'pogo');
+    db=getDatabase(fapp);fbOn=true;setSyncStatus('syncing');
+    startListener();
+    const s=checkSession();if(s)cur=s;
+    showLogin();
+  }catch{
+    syncFromLocal();showLogin();setSyncStatus('offline');
   }
 });
 
