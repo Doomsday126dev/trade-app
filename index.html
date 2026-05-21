@@ -788,8 +788,10 @@ async function hashPin(pin){
   return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
 }
 async function verifyPin(pin,stored){
-  if(stored===pin)return true; // legacy plaintext
-  return(await hashPin(pin))===stored;
+  // Normalize stored to string — Firebase may save numbers as numeric type
+  const storedStr=String(stored??'');
+  if(storedStr===pin)return true; // plaintext match
+  return(await hashPin(pin))===storedStr;
 }
 function isSixDigitPin(pin){return/^\d{6}$/.test(pin);}
 function priLabel(p){return PRI[p]?.label||p;}
@@ -937,7 +939,14 @@ async function doLogin(){
   if(!u){err.textContent='Select username';return;}
   if(!p){err.textContent='Enter PIN';return;}
   if(!isSixDigitPin(p)){err.textContent='PIN must be exactly 6 digits';return;}
-  const ud=allData.users?.[u];
+  // Always prefer live Firebase data for PIN check, fall back to local
+  let ud=allData.users?.[u];
+  if(fbOn&&db){
+    try{
+      const snap=await get(ref(db,`users/${u}`));
+      if(snap.exists())ud={...ud,...snap.val()};
+    }catch{}
+  }
   if(!ud){err.textContent='User not found';return;}
   btn.textContent='Signing in…';btn.disabled=true;
   const ok=await verifyPin(p,ud.pin);
