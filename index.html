@@ -809,7 +809,7 @@ function lsGet(k,d){try{return JSON.parse(localStorage.getItem(k)??'null')??d}ca
 function lsSet(k,v){localStorage.setItem(k,JSON.stringify(v))}
 function normalizeData(s){
   if(!s||typeof s!=='object')s={};
-  s.users=s.users||{};s.wishlist=s.wishlist||{};s.dynamax=s.dynamax||{};s.costumes=s.costumes||{};s.requests=s.requests||{};
+  s.users=s.users||{};s.wishlist=s.wishlist||{};s.dynamax=s.dynamax||{};s.costumes=s.costumes||{};s.requests=s.requests||{};s.authIndex=s.authIndex||{};
   Object.keys(s.users).forEach(u=>{
     s.users[u]={friendCode:'',joined:Date.now(),lastSeen:null,lastUpdated:null,pinHashed:false,...s.users[u],authEmail:authEmail(u)};
     if(!s.wishlist[u])s.wishlist[u]={};
@@ -822,7 +822,7 @@ function normalizeData(s){
 function initLocal(){
   let s=lsGet('pogo3',null);
   if(!s){
-    s={users:{},wishlist:{},dynamax:{},costumes:{},requests:{}};
+    s={users:{},wishlist:{},dynamax:{},costumes:{},requests:{},authIndex:{}};
     DB.users.filter(u=>u&&u.trim()&&u.trim()!=='EVERYONE').map(u=>u.trim()).forEach(u=>{
       s.users[u]={pin:'123456',isAdmin:u===OWNER,isOwner:u===OWNER,friendCode:'',joined:Date.now(),lastSeen:null,lastUpdated:null,pinHashed:false,authEmail:authEmail(u)};
       s.wishlist[u]={};s.dynamax[u]={};s.costumes[u]={};
@@ -840,6 +840,19 @@ function saveLocal(s){lsSet('pogo3',normalizeData(s))}
 async function writeUser(u,data){
   const s=getLocal();s.users[u]={authEmail:authEmail(u),...s.users[u],...data};saveLocal(s);
   if(fbOn&&db)queueSync(`users/${u}`,s.users[u]);
+  syncFromLocal();
+}
+async function writeUserNow(u,data){
+  const s=getLocal();s.users[u]={authEmail:authEmail(u),...s.users[u],...data};saveLocal(s);
+  if(fbOn&&db){
+    try{
+      await set(ref(db,`users/${u}`),s.users[u]);
+      delete syncQueue[`users/${u}`];
+      if(!Object.keys(syncQueue).length)showSyncDot(false);
+    }catch{
+      queueSync(`users/${u}`,s.users[u]);
+    }
+  }
   syncFromLocal();
 }
 async function writeList(type,u,list){
@@ -899,7 +912,7 @@ async function ensureFirebaseIdentity(username,pin,ud){
   }
   currentAuthUid=cred.user.uid;
   const authUpdate={authEmail:email,authUid:currentAuthUid};
-  if(ud.authEmail!==email||ud.authUid!==currentAuthUid)await writeUser(username,authUpdate);
+  if(ud.authEmail!==email||ud.authUid!==currentAuthUid)await writeUserNow(username,authUpdate);
   if(db)await set(ref(db,`authIndex/${currentAuthUid}`),{username,isAdmin:!!ud.isAdmin,isOwner:!!ud.isOwner,lastSeen:Date.now()}).catch(()=>{});
   return currentAuthUid;
 }
@@ -934,7 +947,8 @@ function startListener(){
         wishlist:{...s.wishlist,...(d.wishlist||{})},
         dynamax:{...s.dynamax,...(d.dynamax||{})},
         costumes:{...s.costumes,...(d.costumes||{})},
-        requests:{...s.requests,...(d.requests||{})}
+        requests:{...s.requests,...(d.requests||{})},
+        authIndex:{...s.authIndex,...(d.authIndex||{})}
       };
       saveLocal(merged);allData=normalizeData(merged);setSyncStatus('online');
       showSyncDot(false);syncQueue={};
@@ -954,24 +968,29 @@ async function doLogin(){
   if(!u){err.textContent='Select username';return;}
   if(!p){err.textContent='Enter PIN';return;}
   if(!isSixDigitPin(p)){err.textContent='PIN must be exactly 6 digits';return;}
+  err.textContent='';
+  btn.textContent='Signing in…';btn.disabled=true;
   // Always prefer live Firebase data for PIN check, fall back to local
   let ud=allData.users?.[u];
   if(fbOn&&db){
     try{
-      const snap=await get(ref(db,`users/${u}`));
+      const snap=await Promise.race([
+        get(ref(db,`users/${u}`)),
+        new Promise((_,reject)=>setTimeout(()=>reject(new Error('Firebase lookup timed out')),5000))
+      ]);
       if(snap.exists())ud={...ud,...snap.val()};
     }catch{}
   }
-  if(!ud){err.textContent='User not found';return;}
-  btn.textContent='Signing in…';btn.disabled=true;
+  if(!ud){err.textContent='User not found';btn.textContent='Sign in →';btn.disabled=false;return;}
   const ok=await verifyPin(p,ud.pin);
   if(ok){
     try{
       if(auth)await ensureFirebaseIdentity(u,p,ud);
       cur=u;stampSession(u);
+      const loginUpdate={lastSeen:Date.now()};
       // Upgrade plaintext PIN to hashed
-      if(!ud.pinHashed){const h=await hashPin(p);writeUser(u,{pin:h,pinHashed:true});}
-      writeUser(u,{lastSeen:Date.now()});
+      if(!ud.pinHashed){const h=await hashPin(p);loginUpdate.pin=h;loginUpdate.pinHashed=true;}
+      await writeUserNow(u,loginUpdate);
       showApp();
     }catch(e){
       const code=e.code||'';
@@ -1578,7 +1597,7 @@ function renderAdmin(){
   const users=Object.entries(allData.users||{}).sort((a,b)=>a[0].localeCompare(b[0]));
   el.innerHTML=users.map(([u,d])=>{
     const wc=Object.keys(allData.wishlist?.[u]||{}).length;
-    const lu=d.lastUpdated,ls=d.lastSeen;
+    const lu=d.lastUpdated,ls=d.lastSeen||(d.authUid&&allData.authIndex?.[d.authUid]?.lastSeen);
     const luColor=freshnessColor(freshnessClass(lu));
     const canPromote=iAmOwner&&u!==cur&&u!==OWNER;
     const isOwnerRow=u===OWNER||d.isOwner;
