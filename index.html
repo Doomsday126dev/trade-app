@@ -795,6 +795,7 @@ const COSTUME_FORM_SPRITE_IDS={
 };
 // Pokémon GO costume sprites that PokeAPI does not carry. Serebii has the GO-specific art.
 const GO_COSTUME_SPRITE_SLUGS={
+  "Pikachu (Libre)":"libre","Pikachu (Rock Star)":"rockstar","Pikachu (Pop Star)":"popstar","Pikachu (Ph_D)":"phd",
   "Pikachu (Santa)":"santa","Pikachu (Purple Party)":"party","Pikachu (Ash)":"ash","Pikachu (Witch)":"halloween",
   "Pikachu (Summer)":"summer","Pikachu (Fragment)":"fragment","Pikachu (Flower Crown)":"flowers","Pikachu (Detective)":"detective",
   "Pikachu (Straw)":"strawhat","Pikachu (Mimikyu)":"halloween2019","Pikachu (Winter 2019)":"beanie","Pikachu (Red Party)":"partyhat2020",
@@ -865,9 +866,9 @@ function entrySpriteUrl(entry,nameOverride=''){
 }
 function spriteUrl(no,name){
   if(name&&REGIONAL_FORM_IDS[name])return`${SPRITE_BASE}${REGIONAL_FORM_IDS[name]}.png`;
-  if(name&&COSTUME_FORM_SPRITE_IDS[name])return`${SPRITE_BASE}${COSTUME_FORM_SPRITE_IDS[name]}.png`;
   const goUrl=goCostumeSpriteUrl(no,name);
   if(goUrl)return goUrl;
+  if(name&&COSTUME_FORM_SPRITE_IDS[name])return`${SPRITE_BASE}${COSTUME_FORM_SPRITE_IDS[name]}.png`;
   if(!no)return null;
   const n=parseInt(no);
   if(isNaN(n))return null;
@@ -1815,9 +1816,36 @@ function drawWrappedText(ctx,text,x,y,maxW,lineH,maxLines){
   return shown.length*lineH;
 }
 function drawImageContain(ctx,img,x,y,w,h){
-  const r=Math.min(w/img.naturalWidth,h/img.naturalHeight);
-  const dw=img.naturalWidth*r,dh=img.naturalHeight*r;
-  ctx.drawImage(img,x+(w-dw)/2,y+(h-dh)/2,dw,dh);
+  const box=imageTrimBox(img);
+  const r=Math.min(w/box.sw,h/box.sh);
+  const dw=box.sw*r,dh=box.sh*r;
+  ctx.drawImage(img,box.sx,box.sy,box.sw,box.sh,x+(w-dw)/2,y+(h-dh)/2,dw,dh);
+}
+const imageTrimCache=new WeakMap();
+function imageTrimBox(img){
+  const fallback={sx:0,sy:0,sw:img.naturalWidth||1,sh:img.naturalHeight||1};
+  if(imageTrimCache.has(img))return imageTrimCache.get(img);
+  if(!img.naturalWidth||!img.naturalHeight)return fallback;
+  let box=fallback;
+  try{
+    const c=document.createElement('canvas');
+    c.width=img.naturalWidth;c.height=img.naturalHeight;
+    const g=c.getContext('2d',{willReadFrequently:true});
+    g.drawImage(img,0,0);
+    const {data,width,height}=g.getImageData(0,0,c.width,c.height);
+    let minX=width,minY=height,maxX=-1,maxY=-1;
+    for(let py=0;py<height;py++){
+      for(let px=0;px<width;px++){
+        if(data[(py*width+px)*4+3]>10){
+          if(px<minX)minX=px;if(px>maxX)maxX=px;
+          if(py<minY)minY=py;if(py>maxY)maxY=py;
+        }
+      }
+    }
+    if(maxX>=minX&&maxY>=minY)box={sx:minX,sy:minY,sw:maxX-minX+1,sh:maxY-minY+1};
+  }catch{}
+  imageTrimCache.set(img,box);
+  return box;
 }
 function drawSpriteFallback(ctx,e,x,y,size){
   roundedRect(ctx,x,y,size,size,8);
