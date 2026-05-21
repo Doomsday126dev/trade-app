@@ -608,10 +608,10 @@ input,select,textarea{font-family:var(--font);outline:none}
     <!-- STEP 1: Paste -->
     <div class="import-step active" id="import-step1">
       <div style="font-size:13px;color:var(--muted);margin-bottom:10px;line-height:1.5">
-        Paste a PoGo search string. Dex numbers will be matched to Pokémon automatically.
+        Paste a PoGo search string. Dex numbers and regional forms will be matched to Pokémon automatically.
       </div>
       <textarea class="import-textarea" id="import-str-input"
-        placeholder="!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&26,83,115,122,128&#10;&#10;Or just the numbers: 26,83,115,122,128&#10;&#10;Modifiers like female&757 and kanto&19 are supported too"></textarea>
+        placeholder="!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&alola&26,galar&52,115,paldea&128&#10;&#10;Or just the numbers: 26,83,115,122,128&#10;&#10;Modifiers like female&757 and xs&19 are supported too"></textarea>
       <div class="err" id="import-err"></div>
       <div style="font-size:12px;font-weight:600;color:var(--muted);margin-top:12px;margin-bottom:4px">Add as priority:</div>
       <div class="import-pri-row">
@@ -671,6 +671,9 @@ const PRI={
 };
 const PRI_ORDER={H:0,M:1,L:2};
 const LIST_LABELS={wishlist:'Trades',dynamax:'Dynamax',costumes:'Others'};
+const REGION_CODE_TERMS={K:'kanto',J:'johto',H:'hoenn',S:'sinnoh',U:'unova',L:'kalos',A:'alola',G:'galar',P:'paldea'};
+const REGIONAL_FORM_TERMS={A:'alola',G:'galar',H:'hisui',P:'paldea'};
+const REGION_SEARCH_TERMS=new Set([...Object.values(REGION_CODE_TERMS),'hisui']);
 const SECURE_RULES=`{
   "rules": {
     ".read": true,
@@ -803,6 +806,53 @@ function priLabel(p){return PRI[p]?.label||p;}
 function priName(p){return `${p} - ${priLabel(p)}`;}
 function priBadge(p){return `${PRI[p]?.emoji||''} ${priLabel(p)}`.trim();}
 function listLabel(type){return LIST_LABELS[type]||type;}
+function regionalFormPrefix(name){return String(name||'').match(/^([AGHP])[-_]/)?.[1]||'';}
+function regionalFormTerm(name){return REGIONAL_FORM_TERMS[regionalFormPrefix(name)]||'';}
+function regionTermFromDex(dex){
+  const n=parseInt(dex);
+  if(!n)return'';
+  if(n<=151)return'kanto';
+  if(n<=251)return'johto';
+  if(n<=386)return'hoenn';
+  if(n<=493)return'sinnoh';
+  if(n<=649)return'unova';
+  if(n<=721)return'kalos';
+  if(n<=809)return'alola';
+  if(n<=898)return'galar';
+  if(n<=905)return'hisui';
+  return'paldea';
+}
+function dexRegionTerm(entry,dexHasRegional){
+  const regional=regionalFormTerm(entry?.name);
+  if(regional)return regional;
+  return dexHasRegional?.[entry?.no]?REGION_CODE_TERMS[entry?.region]||regionTermFromDex(entry?.no):'';
+}
+function dexSearchTerm(entry,dexHasRegional){
+  const dex=entry?.no;if(!dex)return'';
+  const region=dexRegionTerm(entry,dexHasRegional);
+  return region?`${region}&${dex}`:String(dex);
+}
+function modSearchFilters(mod){
+  const m=String(mod||'').toLowerCase();
+  const out=[];
+  if(/\bfemale\b|\bf\b/.test(m))out.push('female');
+  else if(/\bmale\b|\bm\b/.test(m))out.push('male');
+  if(m.includes('xxs'))out.push('xxs');
+  else if(m.includes('xs'))out.push('xs');
+  if(m.includes('xxl'))out.push('xxl');
+  else if(m.includes('xl'))out.push('xl');
+  return out;
+}
+function modFromSearchFilters(filters){
+  const f=filters.map(x=>x.toLowerCase());
+  if(f.includes('female'))return'f';
+  if(f.includes('male'))return'm';
+  if(f.includes('xxs'))return'xxs';
+  if(f.includes('xs'))return'xs';
+  if(f.includes('xxl'))return'xxl';
+  if(f.includes('xl'))return'xl';
+  return'';
+}
 
 // ── LOCAL STORAGE ─────────────────────────────────────────────
 function lsGet(k,d){try{return JSON.parse(localStorage.getItem(k)??'null')??d}catch{return d}}
@@ -1417,28 +1467,30 @@ function buildStrings(type,username){
     return Object.keys(out).length?out:null;
   }
   const srcArr=type==='dynamax'?DB.dynamax:DB.wishlist;
-  const nameToDex={};
-  srcArr.forEach(e=>{if(e.no&&!nameToDex[e.name])nameToDex[e.name]=e.no;});
+  const nameToEntry={},dexHasRegional={};
+  srcArr.forEach(e=>{
+    if(!e.no)return;
+    if(!nameToEntry[e.name])nameToEntry[e.name]=e;
+    if(regionalFormTerm(e.name))dexHasRegional[e.no]=true;
+  });
   const byP={H:[],M:[],L:[]};
   Object.entries(list).forEach(([name,val])=>{
     const{p,mod}=parsePri(val);
     if(!p||!byP[p])return;
-    const dex=nameToDex[name];if(!dex)return;
-    byP[p].push({dex,mod:mod.toLowerCase()});
+    const entry=nameToEntry[name];if(!entry?.no)return;
+    const term=dexSearchTerm(entry,dexHasRegional);if(!term)return;
+    byP[p].push({term,mod:mod.toLowerCase()});
   });
   const out={};
   ['H','M','L'].forEach(p=>{
     if(!byP[p].length)return;
     const seen=new Map();
-    byP[p].forEach(({dex,mod})=>{if(!seen.has(dex))seen.set(dex,new Set());seen.get(dex).add(mod);});
+    byP[p].forEach(({term,mod})=>{if(!seen.has(term))seen.set(term,new Set());seen.get(term).add(mod);});
     const parts=[];
-    [...seen.entries()].sort((a,b)=>a[0]-b[0]).forEach(([dex,mods])=>{
+    [...seen.entries()].sort((a,b)=>parseInt(a[0].match(/\d+/)?.[0]||'0')-parseInt(b[0].match(/\d+/)?.[0]||'0')||a[0].localeCompare(b[0])).forEach(([term,mods])=>{
       mods.forEach(mod=>{
-        let pre='';
-        if(mod.includes('f'))pre='female&';
-        else if(mod.includes('m'))pre='male&';
-        else if(mod.includes('xs'))pre='kanto&';
-        parts.push(pre+dex);
+        const filters=modSearchFilters(mod);
+        parts.push(filters.length?`${filters.join('&')}&${term}`:term);
       });
     });
     out[p]=PREFILTER+parts.join(',');
@@ -1829,13 +1881,14 @@ function parseImportString(){
   err.textContent='';
   if(!raw){err.textContent='Paste a search string first';return;}
   const srcArr=myListType==='costumes'?DB.costumes:myListType==='dynamax'?DB.dynamax:DB.wishlist;
-  const dexToEntries={};
+  const dexToEntries={},dexHasRegional={};
+  srcArr.forEach(e=>{if(e.no&&regionalFormTerm(e.name))dexHasRegional[e.no]=true;});
   srcArr.forEach(e=>{
     if(!e.no)return;
     const n=parseInt(e.no);if(isNaN(n))return;
     if(!dexToEntries[n])dexToEntries[n]=[];
     if(!dexToEntries[n].find(x=>x.name===e.name))
-      dexToEntries[n].push({name:e.name,dn:e.displayName||e.name,no:e.no});
+      dexToEntries[n].push({name:e.name,dn:e.displayName||e.name,no:e.no,region:e.region,regionTerm:dexRegionTerm(e,dexHasRegional)});
   });
   let working=raw;
   const preIdx=working.indexOf('!4*&');
@@ -1848,18 +1901,19 @@ function parseImportString(){
   const matched=[];const skipped=[];
   tokens.forEach(token=>{
     let mod='',numStr=token;
+    let regionTerm='';
     if(token.includes('&')){
-      const parts=token.split('&');
+      const parts=token.split('&').map(p=>p.trim()).filter(Boolean);
       numStr=parts[parts.length-1];
-      const prefix=parts.slice(0,-1).join('&').toLowerCase();
-      if(prefix.includes('female'))mod='f';
-      else if(prefix.includes('male'))mod='m';
-      else if(prefix.includes('kanto'))mod='xs';
+      const filters=parts.slice(0,-1).map(p=>p.toLowerCase());
+      mod=modFromSearchFilters(filters);
+      regionTerm=filters.find(p=>REGION_SEARCH_TERMS.has(p))||'';
     }
     numStr=numStr.replace(/[^0-9]/g,'');
     const dex=parseInt(numStr);
     if(isNaN(dex)||dex<=0)return;
-    const entries=dexToEntries[dex];
+    let entries=dexToEntries[dex];
+    if(regionTerm)entries=(entries||[]).filter(e=>e.regionTerm===regionTerm);
     if(!entries||!entries.length){skipped.push(dex);return;}
     entries.forEach(e=>{
       if(matched.find(m=>m.name===e.name&&m.mod===mod))return;
