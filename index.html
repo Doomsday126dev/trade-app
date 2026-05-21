@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1a1a2e">
+<title>PoGo Trade List</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0f0f1a;
+  --bg2: #1a1a2e;
+  --bg3: #16213e;
+  --card: #1e1e35;
+  --border: rgba(255,255,255,0.08);
+  --border2: rgba(255,255,255,0.15);
+  --text: #e8e8f0;
+  --muted: #8888aa;
+  --accent: #6c63ff;
+  --accent2: #a78bfa;
+  --H: #f59e0b;
+  --M: #3b82f6;
+  --L: #10b981;
+  --Hbg: rgba(245,158,11,0.12);
+  --Mbg: rgba(59,130,246,0.12);
+  --Lbg: rgba(16,185,129,0.12);
+  --danger: #ef4444;
+  --r: 10px;
+  --r2: 6px;
+  --font: 'Space Grotesk', sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+a{color:var(--accent2);text-decoration:none}
+button{font-family:var(--font);cursor:pointer;border:none;outline:none}
+input,select,textarea{font-family:var(--font);outline:none}
+
+/* === LAYOUT === */
+#app{display:flex;flex-direction:column;min-height:100vh}
+.topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 16px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.topbar-logo{font-weight:700;font-size:17px;letter-spacing:-0.3px;display:flex;align-items:center;gap:8px}
+.topbar-logo span{background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.topbar-right{display:flex;align-items:center;gap:8px}
+.user-chip{display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--border2);border-radius:20px;padding:4px 12px 4px 4px;font-size:13px;font-weight:500;cursor:pointer}
+.avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
+
+/* === TABS === */
+.tabs{display:flex;background:var(--bg2);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{padding:12px 18px;font-size:13px;font-weight:500;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap;cursor:pointer;transition:all .2s;background:none;border-top:none;border-left:none;border-right:none}
+.tab.active{color:var(--accent2);border-bottom-color:var(--accent2)}
+.tab:hover{color:var(--text)}
+
+/* === PAGES === */
+.page{display:none;flex:1;padding:16px;max-width:900px;margin:0 auto;width:100%}
+.page.active{display:block}
+
+/* === SEARCH BAR === */
+.search-wrap{position:relative;margin-bottom:16px}
+.search-wrap input{width:100%;background:var(--card);border:1px solid var(--border);color:var(--text);padding:10px 16px 10px 40px;border-radius:var(--r);font-size:15px;transition:.2s}
+.search-wrap input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(108,99,255,0.15)}
+.search-wrap::before{content:'🔍';position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:14px;pointer-events:none}
+.search-wrap input::placeholder{color:var(--muted)}
+
+/* === FILTERS === */
+.filter-row{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.filter-btn{background:var(--card);border:1px solid var(--border);color:var(--muted);padding:6px 14px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;transition:.15s}
+.filter-btn.active{color:#fff;border-color:transparent}
+.filter-btn.fH.active{background:var(--H);color:#000}
+.filter-btn.fM.active{background:var(--M)}
+.filter-btn.fL.active{background:var(--L);color:#000}
+.filter-btn.fAll.active{background:var(--accent)}
+
+/* === POKEMON GRID === */
+.pokemon-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px}
+.pmon-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;transition:.15s}
+.pmon-card:hover{border-color:var(--border2)}
+.pmon-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.pmon-name{font-weight:600;font-size:15px}
+.pmon-no{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.pmon-users{display:flex;flex-wrap:wrap;gap:5px}
+.pmon-badge{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:4px;font-size:12px;font-weight:600;cursor:default}
+.pmon-badge.H{background:var(--Hbg);color:var(--H);border:1px solid rgba(245,158,11,0.25)}
+.pmon-badge.M{background:var(--Mbg);color:var(--M);border:1px solid rgba(59,130,246,0.25)}
+.pmon-badge.L{background:var(--Lbg);color:var(--L);border:1px solid rgba(16,185,129,0.25)}
+.pmon-badge .mod{font-size:10px;opacity:0.7;font-family:var(--mono)}
+
+/* === TRADE MATRIX === */
+.trade-pair-section{margin-bottom:24px}
+.trade-pair-title{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px}
+.trade-list{display:flex;flex-direction:column;gap:6px}
+.trade-row{background:var(--card);border:1px solid var(--border);border-radius:var(--r2);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.trade-pokemon{font-weight:600;font-size:14px}
+.trade-arrows{color:var(--muted);font-size:12px;flex:1;text-align:center}
+.trade-meta{font-size:12px;color:var(--muted);font-family:var(--mono)}
+
+/* === USER PAGE === */
+.my-header{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.my-avatar{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700}
+.my-name{font-size:20px;font-weight:700}
+.my-since{font-size:13px;color:var(--muted)}
+.section-title{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;margin-top:20px}
+.my-list-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px;margin-bottom:16px}
+.my-pmon-row{background:var(--card);border:1px solid var(--border);border-radius:var(--r2);padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.my-pmon-name{font-size:14px;font-weight:500}
+.my-pmon-controls{display:flex;gap:4px;align-items:center}
+.priority-btn{width:30px;height:28px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;transition:.15s}
+.priority-btn.active.H{background:var(--Hbg);color:var(--H);border-color:rgba(245,158,11,0.4)}
+.priority-btn.active.M{background:var(--Mbg);color:var(--M);border-color:rgba(59,130,246,0.4)}
+.priority-btn.active.L{background:var(--Lbg);color:var(--L);border-color:rgba(16,185,129,0.4)}
+.notes-input{background:var(--bg);border:1px solid var(--border);color:var(--text);padding:3px 7px;border-radius:4px;font-size:11px;width:60px;font-family:var(--mono)}
+.remove-btn{width:24px;height:24px;border-radius:4px;background:rgba(239,68,68,0.1);color:var(--danger);border:1px solid rgba(239,68,68,0.2);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+/* === ADD POKEMON === */
+.add-pmon-form{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:20px}
+.add-pmon-form h3{font-size:14px;font-weight:600;margin-bottom:12px;color:var(--accent2)}
+.form-row{display:flex;gap:8px;flex-wrap:wrap}
+.form-row select,.form-row input{flex:1;min-width:140px;background:var(--bg);border:1px solid var(--border2);color:var(--text);padding:8px 12px;border-radius:var(--r2);font-size:14px}
+.form-row select option{background:var(--bg)}
+
+/* === TRADE STRING === */
+.string-box{background:var(--bg);border:1px solid var(--border2);border-radius:var(--r);padding:14px;font-family:var(--mono);font-size:13px;line-height:1.8;color:var(--text);white-space:pre-wrap;word-break:break-word;margin-bottom:10px;min-height:60px}
+.copy-btn{background:var(--accent);color:#fff;padding:9px 18px;border-radius:var(--r2);font-size:13px;font-weight:600;cursor:pointer;transition:.15s}
+.copy-btn:hover{background:var(--accent2);color:#000}
+.copy-btn:active{transform:scale(0.97)}
+
+/* === LOGIN === */
+#login-page{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;background:var(--bg)}
+.login-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:32px 28px;width:100%;max-width:380px}
+.login-logo{font-size:24px;font-weight:700;margin-bottom:4px}
+.login-logo span{background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.login-sub{color:var(--muted);font-size:14px;margin-bottom:28px}
+.form-field{margin-bottom:14px}
+.form-field label{display:block;font-size:13px;font-weight:500;color:var(--muted);margin-bottom:6px}
+.form-field input,.form-field select{width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--text);padding:10px 14px;border-radius:var(--r2);font-size:15px;transition:.2s}
+.form-field input:focus,.form-field select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(108,99,255,0.15)}
+.form-field select option{background:var(--bg2)}
+.login-btn{width:100%;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;padding:12px;border-radius:var(--r2);font-size:15px;font-weight:600;cursor:pointer;margin-top:8px;transition:.2s;border:none}
+.login-btn:hover{opacity:0.9}
+.login-btn:active{transform:scale(0.99)}
+.login-err{color:var(--danger);font-size:13px;text-align:center;margin-top:8px}
+.new-user-note{font-size:12px;color:var(--muted);text-align:center;margin-top:16px;line-height:1.5}
+
+/* === EVERYONE VIEW === */
+.everyone-table-wrap{overflow-x:auto;border-radius:var(--r);border:1px solid var(--border)}
+.everyone-table{width:100%;border-collapse:collapse;font-size:13px}
+.everyone-table th{background:var(--bg2);padding:8px 10px;text-align:left;font-weight:600;color:var(--muted);border-bottom:1px solid var(--border);white-space:nowrap;font-size:12px;position:sticky;top:0}
+.everyone-table td{padding:7px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
+.everyone-table tr:last-child td{border-bottom:none}
+.everyone-table tr:hover td{background:rgba(255,255,255,0.02)}
+.td-pmon{font-weight:500;white-space:nowrap}
+.td-no{font-family:var(--mono);font-size:11px;color:var(--muted)}
+
+/* === EMPTY STATE === */
+.empty{text-align:center;padding:48px 24px;color:var(--muted)}
+.empty-icon{font-size:40px;margin-bottom:12px}
+.empty-text{font-size:15px;font-weight:500}
+.empty-sub{font-size:13px;margin-top:4px}
+
+/* === TOAST === */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--card);border:1px solid var(--border2);border-radius:var(--r2);padding:10px 20px;font-size:14px;font-weight:500;z-index:9999;transition:transform .3s;white-space:nowrap;pointer-events:none}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+/* === MODAL === */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:500;align-items:center;justify-content:center;padding:16px}
+.modal-overlay.open{display:flex}
+.modal{background:var(--card);border:1px solid var(--border2);border-radius:16px;padding:24px;width:100%;max-width:360px}
+.modal h3{font-size:17px;font-weight:700;margin-bottom:16px}
+.modal-actions{display:flex;gap:8px;margin-top:20px;justify-content:flex-end}
+.btn-ghost{background:transparent;border:1px solid var(--border2);color:var(--text);padding:8px 16px;border-radius:var(--r2);font-size:14px;font-weight:500;cursor:pointer}
+.btn-primary{background:var(--accent);color:#fff;padding:8px 16px;border-radius:var(--r2);font-size:14px;font-weight:600;cursor:pointer;border:none}
+
+/* === MISC === */
+.badge-everyone{display:inline-block;background:rgba(108,99,255,0.15);color:var(--accent2);border:1px solid rgba(108,99,255,0.25);border-radius:4px;font-size:11px;padding:1px 6px;font-weight:600;margin-left:6px}
+.btn-save{background:var(--accent);color:#fff;padding:10px 20px;border-radius:var(--r2);font-size:14px;font-weight:600;border:none;cursor:pointer;margin-top:8px}
+.btn-save:active{transform:scale(0.98)}
+.tag-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.tag{background:var(--bg2);border:1px solid var(--border);color:var(--muted);padding:4px 10px;border-radius:20px;font-size:12px}
+.priority-legend{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.leg-item{display:flex;align-items:center;gap:5px;font-size:13px}
+.leg-dot{width:10px;height:10px;border-radius:50%}
+
+@media(max-width:600px){
+  .page{padding:12px}
+  .pokemon-grid{grid-template-columns:1fr}
+  .my-list-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN PAGE -->
+<div id="login-page">
+  <div class="login-card">
+    <div class="login-logo">🎮 <span>PoGo Trades</span></div>
+    <div class="login-sub">NYC Community Trade List</div>
+    <div class="form-field">
+      <label>Your username</label>
+      <select id="login-user">
+        <option value="">Select your username…</option>
+      </select>
+    </div>
+    <div class="form-field">
+      <label>PIN</label>
+      <input type="password" id="login-pin" placeholder="Enter your 4-digit PIN" maxlength="6" inputmode="numeric">
+    </div>
+    <button class="login-btn" onclick="doLogin()">Sign in →</button>
+    <div class="login-err" id="login-err"></div>
+    <div class="new-user-note">New to the list? Ask a group admin to add you.<br>Default PIN is <strong>1234</strong> — change it after first login.</div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app" style="display:none">
+  <div class="topbar">
+    <div class="topbar-logo">🎮 <span>PoGo Trades</span></div>
+    <div class="topbar-right">
+      <div class="user-chip" onclick="openProfile()">
+        <div class="avatar" id="top-avatar">?</div>
+        <span id="top-username">—</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="browse" onclick="switchTab('browse')">🔍 Browse</button>
+    <button class="tab" data-tab="my-list" onclick="switchTab('my-list')">📋 My List</button>
+    <button class="tab" data-tab="trade-match" onclick="switchTab('trade-match')">🤝 Match</button>
+    <button class="tab" data-tab="string-gen" onclick="switchTab('string-gen')">📤 Trade String</button>
+  </div>
+
+  <!-- BROWSE TAB -->
+  <div class="page active" id="tab-browse">
+    <div class="search-wrap">
+      <input type="text" id="browse-search" placeholder="Search Pokémon or user…" oninput="renderBrowse()">
+    </div>
+    <div class="filter-row">
+      <button class="filter-btn fAll active" onclick="setFilter('ALL')">All</button>
+      <button class="filter-btn fH" onclick="setFilter('H')">🔥 High</button>
+      <button class="filter-btn fM" onclick="setFilter('M')">💙 Medium</button>
+      <button class="filter-btn fL" onclick="setFilter('L')">💚 Low</button>
+    </div>
+    <div class="priority-legend">
+      <div class="leg-item"><div class="leg-dot" style="background:var(--H)"></div> High priority</div>
+      <div class="leg-item"><div class="leg-dot" style="background:var(--M)"></div> Medium</div>
+      <div class="leg-item"><div class="leg-dot" style="background:var(--L)"></div> Low / have to offer</div>
+    </div>
+    <div id="browse-results"></div>
+  </div>
+
+  <!-- MY LIST TAB -->
+  <div class="page" id="tab-my-list">
+    <div class="my-header">
+      <div class="my-avatar" id="my-avatar">?</div>
+      <div>
+        <div class="my-name" id="my-name-display">—</div>
+        <div class="my-since">Trade List</div>
+      </div>
+    </div>
+
+    <div class="add-pmon-form">
+      <h3>+ Add Pokémon to my list</h3>
+      <div class="form-row">
+        <select id="add-pmon-select">
+          <option value="">Select Pokémon…</option>
+        </select>
+        <select id="add-pmon-priority">
+          <option value="H">H – High priority</option>
+          <option value="M" selected>M – Medium</option>
+          <option value="L">L – Low / Have</option>
+        </select>
+        <input type="text" id="add-pmon-notes" placeholder="Notes (xs, f, shiny…)" style="max-width:140px">
+      </div>
+      <button class="btn-save" onclick="addToMyList()" style="margin-top:12px">Add to list</button>
+    </div>
+
+    <div class="section-title">My Pokémon list</div>
+    <div id="my-list-items"></div>
+
+    <div class="section-title" style="margin-top:24px">Trade string</div>
+    <div id="my-trade-string" class="string-box"></div>
+    <button class="copy-btn" onclick="copyMyString()">📋 Copy trade string</button>
+  </div>
+
+  <!-- MATCH TAB -->
+  <div class="page" id="tab-trade-match">
+    <div class="section-title" style="margin-top:0">Who has what you want</div>
+    <div id="match-want"></div>
+    <div class="section-title">Who wants what you have</div>
+    <div id="match-have"></div>
+  </div>
+
+  <!-- STRING GEN TAB -->
+  <div class="page" id="tab-string-gen">
+    <div class="section-title" style="margin-top:0">Generate trade string</div>
+    <div class="form-field" style="margin-bottom:14px">
+      <label>Select user</label>
+      <select id="string-user-select" onchange="renderStringGen()">
+        <option value="">Pick a user…</option>
+      </select>
+    </div>
+    <div id="string-gen-output"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- PROFILE MODAL -->
+<div class="modal-overlay" id="profile-modal">
+  <div class="modal">
+    <h3>⚙️ Account</h3>
+    <div class="form-field">
+      <label>Change PIN</label>
+      <input type="password" id="new-pin" placeholder="New PIN (4–6 digits)" maxlength="6" inputmode="numeric">
+    </div>
+    <div class="form-field">
+      <label>Confirm PIN</label>
+      <input type="password" id="confirm-pin" placeholder="Confirm PIN" maxlength="6" inputmode="numeric">
+    </div>
+    <div class="login-err" id="pin-err"></div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal('profile-modal')">Cancel</button>
+      <button class="btn-primary" onclick="changePin()">Save PIN</button>
+    </div>
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+      <button class="btn-ghost" style="width:100%;color:var(--danger);border-color:rgba(239,68,68,0.3)" onclick="logout()">Sign out</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+const POKEMON_LIST = [
+  {no:"1",name:"Bulbasaur"},{no:"4",name:"Charmander"},{no:"7",name:"Squirtle"},{no:"10",name:"Caterpie"},{no:"13",name:"Weedle"},
+  {no:"16",name:"Pidgey"},{no:"19",name:"Rattata"},{no:"19A",name:"A-Rattata"},{no:"21",name:"Spearow"},{no:"23",name:"Ekans"},
+  {no:"25",name:"Pikachu"},{no:"26A",name:"A-Raichu"},{no:"27",name:"Sandshrew"},{no:"27A",name:"A-Sandshrew"},{no:"29",name:"Nidoran-F"},
+  {no:"32",name:"Nidoran-M"},{no:"35",name:"Clefairy"},{no:"37",name:"Vulpix"},{no:"37A",name:"A-Vulpix"},{no:"39",name:"Jigglypuff"},
+  {no:"41",name:"Zubat"},{no:"43",name:"Oddish"},{no:"46",name:"Paras"},{no:"48",name:"Venonat"},{no:"50",name:"Diglett"},
+  {no:"50A",name:"A-Diglett"},{no:"52",name:"Meowth"},{no:"52G",name:"G-Meowth"},{no:"52A",name:"A-Meowth"},{no:"54",name:"Psyduck"},
+  {no:"56",name:"Mankey"},{no:"58H",name:"H-Growlithe"},{no:"58",name:"Growlithe"},{no:"60",name:"Poliwag"},{no:"63",name:"Abra"},
+  {no:"66",name:"Machop"},{no:"69",name:"Bellsprout"},{no:"72",name:"Tentacool"},{no:"74",name:"Geodude"},{no:"74A",name:"A-Geodude"},
+  {no:"77",name:"Ponyta"},{no:"77G",name:"G-Ponyta"},{no:"79",name:"Slowpoke"},{no:"79G",name:"G-Slowpoke"},{no:"81",name:"Magnemite"},
+  {no:"83G",name:"G-Farfetch'd"},{no:"83",name:"Farfetch'd"},{no:"84",name:"Doduo"},{no:"86",name:"Seel"},{no:"88",name:"Grimer"},
+  {no:"88A",name:"A-Grimer"},{no:"90",name:"Shellder"},{no:"92",name:"Gastly"},{no:"95",name:"Onix"},{no:"96",name:"Drowzee"},
+  {no:"98",name:"Krabby"},{no:"100",name:"Voltorb"},{no:"100H",name:"H-Voltorb"},{no:"102",name:"Exeggcute"},{no:"103A",name:"A-Exeggutor"},
+  {no:"104",name:"Cubone"},{no:"105A",name:"A-Marowak"},{no:"106",name:"Hitmonlee"},{no:"107",name:"Hitmonchan"},{no:"108",name:"Lickitung"},
+  {no:"109",name:"Koffing"},{no:"110G",name:"G-Weezing"},{no:"111",name:"Rhyhorn"},{no:"113",name:"Chansey"},{no:"114",name:"Tangela"},
+  {no:"115",name:"Kangaskhan"},{no:"116",name:"Horsea"},{no:"118",name:"Goldeen"},{no:"120",name:"Staryu"},{no:"122",name:"Mr. Mime"},
+  {no:"122G",name:"G-Mr. Mime"},{no:"123",name:"Scyther"},{no:"124",name:"Jynx"},{no:"125",name:"Electabuzz"},{no:"126",name:"Magmar"},
+  {no:"127",name:"Pinsir"},{no:"128",name:"Tauros"},{no:"128PC",name:"P-Tauros (Combat)"},{no:"128PA",name:"P-Tauros (Aqua)"},
+  {no:"128PB",name:"P-Tauros (Blaze)"},{no:"129",name:"Magikarp"},{no:"131",name:"Lapras"},{no:"132",name:"Ditto"},{no:"133",name:"Eevee"},
+  {no:"134",name:"Vaporeon"},{no:"135",name:"Jolteon"},{no:"136",name:"Flareon"},{no:"137",name:"Porygon"},{no:"138",name:"Omanyte"},
+  {no:"140",name:"Kabuto"},{no:"142",name:"Aerodactyl"},{no:"143",name:"Snorlax"},{no:"147",name:"Dratini"},{no:"152",name:"Chikorita"}
+];
+
+const ALL_USERS = [
+  "Ghyslaine","AuraZ42","teechowy","HolyhighTiff","IceBirdz87","AC53","NYCScribbler",
+  "ty9797","Nugget","djentaprize","SkyDragon","jo","Roninshima","TaeshiLH","SquareII",
+  "Lapau","JubileeNYC","foom","Mazer","ChasingTheDay","Druu","dabsareking","Trisun",
+  "Irreneilable","Trdf53","Mina","Doomsday126","jamesz24","IronKxng","BeatProjekt","tnazario"
+];
+
+// Initial seed data from Google Sheet
+const SEED_DATA = {
+  "Ghyslaine": {"A-Raichu":"H","Mr. Mime":"H","G-Mr. Mime":"H","P-Tauros (Combat)":"H","P-Tauros (Aqua)":"H","P-Tauros (Blaze)":"H"},
+  "AuraZ42": {"Squirtle":"H(f)","Vulpix":"L","G-Meowth":"L","G-Ponyta":"L","G-Slowpoke":"L","H-Growlithe":"H","G-Weezing":"H","Lickitung":"L","Kangaskhan":"H","G-Mr. Mime":"H","Farfetch'd":"M"},
+  "teechowy": {"Farfetch'd":"M","Mr. Mime":"M","G-Mr. Mime":"H","Ditto":"M","P-Tauros (Combat)":"H","P-Tauros (Aqua)":"H","P-Tauros (Blaze)":"H"},
+  "HolyhighTiff": {"Bulbasaur":"M","Mr. Mime":"H","G-Mr. Mime":"H","Ditto":"M","P-Tauros (Combat)":"H","P-Tauros (Aqua)":"H","P-Tauros (Blaze)":"H"},
+  "IceBirdz87": {"A-Raichu":"H","Farfetch'd":"M","G-Mr. Mime":"H","P-Tauros (Combat)":"H","P-Tauros (Aqua)":"H","P-Tauros (Blaze)":"H"},
+  "AC53": {"Bulbasaur":"M","Charmander":"M","Squirtle":"M","Pidgey":"M","A-Raichu":"M","Clefairy":"M","Slowpoke":"M","Abra":"M","Onix":"M","Aerodactyl":"M","Pinsir":"M","Dratini":"M","Farfetch'd":"M","P-Tauros (Combat)":"H","P-Tauros (Aqua)":"H","P-Tauros (Blaze)":"H"},
+  "NYCScribbler": {"Weedle":"M(f)","Meowth":"L(f)","Psyduck":"L(m)","Exeggcute":"L","Farfetch'd":"L","Rhyhorn":"L","G-Mr. Mime":"L"},
+  "ty9797": {"Weedle":"M","Nidoran-M":"M","Clefairy":"M","Rhyhorn":"M","Tangela":"M","G-Weezing":"H","Magmar":"H","P-Tauros (Combat)":"H","P-Tauros (Aqua)":"H","P-Tauros (Blaze)":"H","Farfetch'd":"H"},
+  "Nugget": {"P-Tauros (Combat)":"H","P-Tauros (Aqua)":"H","P-Tauros (Blaze)":"H"},
+  "djentaprize": {"Squirtle":"L","Caterpie":"L(f)","Nidoran-F":"L","Rattata":"L(xs)","A-Rattata":"L","A-Diglett":"L","A-Meowth":"L","Psyduck":"L","Diglett":"L","Geodude":"L","Ponyta":"L","Seel":"L","Drowzee":"L(m)","Voltorb":"L","Cubone":"L","Koffing":"L","Rhyhorn":"L","Tangela":"L","Kangaskhan":"H","Horsea":"L","Goldeen":"L","Staryu":"L","Mr. Mime":"M","G-Mr. Mime":"H","Eevee":"L","P-Tauros (Combat)":"H","P-Tauros (Aqua)":"H","P-Tauros (Blaze)":"H"},
+  "SkyDragon": {"Charmander":"L","Aerodactyl":"L","Snorlax":"L","Dratini":"L"},
+  "jo": {"A-Raichu":"H","Kangaskhan":"H","G-Mr. Mime":"H","Mr. Mime":"H","P-Tauros (Combat)":"H","P-Tauros (Aqua)":"H","P-Tauros (Blaze)":"H"},
+  "Roninshima": {"Rattata":"L(xs)","A-Rattata":"L(xs)","Psyduck":"L","Doduo":"L","Ponyta":"L","Goldeen":"L","Staryu":"L","Koffing":"L","P-Tauros (Combat)":"H","P-Tauros (Aqua)":"H","P-Tauros (Blaze)":"H"},
+  "TaeshiLH": {"Rattata":"M","A-Rattata":"M","Mankey":"L","Poliwag":"L(m)","A-Diglett":"M","A-Meowth":"M","Bellsprout":"L","Cubone":"H","A-Marowak":"H","Krabby":"H","G-Mr. Mime":"M","P-Tauros (Combat)":"H","P-Tauros (Aqua)":"H","P-Tauros (Blaze)":"H"},
+  "SquareII": {"Squirtle":"H","G-Ponyta":"M","G-Slowpoke":"M","A-Meowth":"M","A-Diglett":"M","H-Growlithe":"H","A-Marowak":"H","G-Weezing":"M","Kangaskhan":"H","G-Mr. Mime":"H","Mr. Mime":"H","P-Tauros (Combat)":"H","P-Tauros (Aqua)":"H","P-Tauros (Blaze)":"H"},
+  "Lapau": {"A-Vulpix":"M","G-Slowpoke":"M","A-Meowth":"M","Pikachu":"L","A-Raichu":"H","Chansey":"L","Kangaskhan":"H","G-Mr. Mime":"H","Mr. Mime":"H","G-Weezing":"H","P-Tauros (Combat)":"H","P-Tauros (Aqua)":"H","P-Tauros (Blaze)":"H"},
+  "JubileeNYC": {"Rattata":"L(xs)","A-Rattata":"L(xs)","Voltorb":"L","Chikorita":"M","G-Mr. Mime":"H","P-Tauros (Combat)":"H","P-Tauros (Aqua)":"H","P-Tauros (Blaze)":"H"},
+  "foom": {"Pikachu":"H","G-Mr. Mime":"H","P-Tauros (Combat)":"L","P-Tauros (Aqua)":"L","P-Tauros (Blaze)":"L"},
+  "Mazer": {"G-Mr. Mime":"H","P-Tauros (Combat)":"H","P-Tauros (Aqua)":"H","P-Tauros (Blaze)":"H"},
+  "ChasingTheDay": {"Rattata":"L(xs)","A-Rattata":"L(xs)","A-Raichu":"H","Mr. Mime":"H","G-Mr. Mime":"H","Kangaskhan":"H","P-Tauros (Combat)":"H","P-Tauros (Aqua)":"H","P-Tauros (Blaze)":"H"},
+  "Druu": {"A-Rattata":"M","A-Raichu":"H","A-Meowth":"M","A-Marowak":"H","Vaporeon":"M","Snorlax":"L","Dratini":"L","G-Mr. Mime":"H","Mr. Mime":"H","Kangaskhan":"H","P-Tauros (Combat)":"H","P-Tauros (Aqua)":"H","P-Tauros (Blaze)":"H"},
+  "dabsareking": {"Grimer":"H","A-Grimer":"H","Pikachu":"M","Dratini":"M","Chansey":"H","P-Tauros (Combat)":"H","P-Tauros (Aqua)":"H","P-Tauros (Blaze)":"H"},
+  "Trisun": {},
+  "Irreneilable": {"Farfetch'd":"H","G-Mr. Mime":"M","Dratini":"L","A-Exeggutor":"L","P-Tauros (Combat)":"H","P-Tauros (Aqua)":"H","P-Tauros (Blaze)":"H"},
+  "Trdf53": {"A-Exeggutor":"L","Dratini":"L"},
+  "Mina": {"Rattata":"L(xs)","Horsea":"H","Mr. Mime":"H","G-Mr. Mime":"H","P-Tauros (Combat)":"H","P-Tauros (Aqua)":"H","P-Tauros (Blaze)":"H"},
+  "Doomsday126": {"A-Rattata":"M(xs)","A-Raichu":"H","Pikachu":"L","G-Mr. Mime":"H","Kangaskhan":"H","P-Tauros (Combat)":"H","P-Tauros (Aqua)":"H","P-Tauros (Blaze)":"H"},
+  "jamesz24": {"Farfetch'd":"H","Mr. Mime":"H","G-Mr. Mime":"M","P-Tauros (Combat)":"M","P-Tauros (Aqua)":"H","P-Tauros (Blaze)":"H"},
+  "IronKxng": {"Caterpie":"L","Ekans":"L","Nidoran-M":"L","Bellsprout":"L","Tentacool":"L","Geodude":"L","Poliwag":"L","Doduo":"L","Seel":"L","Koffing":"L","Eevee":"L","Scyther":"L","Electabuzz":"L","Pinsir":"L","Tauros":"M","Jynx":"M","Hitmonlee":"M","Rhyhorn":"L","Tangela":"L","Horsea":"L","Goldeen":"L","Staryu":"L","Mr. Mime":"M","A-Grimer":"L","A-Marowak":"L","Dratini":"L","Voltorb":"L","Drowzee":"L","Magmar":"M","Onix":"L","Clefairy":"L","Oddish":"L","Mankey":"L","G-Mr. Mime":"M","P-Tauros (Combat)":"M","P-Tauros (Blaze)":"M"},
+  "BeatProjekt": {"Squirtle":"L","Charmander":"L","Weedle":"L","Bellsprout":"L","Tentacool":"L","Geodude":"L","Onix":"L","Aerodactyl":"L","Scyther":"L","Pikachu":"L","Dratini":"M","A-Marowak":"H","G-Mr. Mime":"H","Mr. Mime":"H","P-Tauros (Combat)":"H","P-Tauros (Aqua)":"H","P-Tauros (Blaze)":"H"},
+  "tnazario": {"Bulbasaur":"H","Squirtle":"H","A-Raichu":"H","Farfetch'd":"H","G-Farfetch'd":"H","Slowpoke":"L","Snorlax":"H","Lapras":"H","Kangaskhan":"H","G-Mr. Mime":"H","Mr. Mime":"H","P-Tauros (Combat)":"H","P-Tauros (Aqua)":"H","P-Tauros (Blaze)":"H"}
+};
+
+// ============================================================
+// STATE & STORAGE
+// ============================================================
+let currentUser = null;
+let browseFilter = 'ALL';
+
+function getState() {
+  try { return JSON.parse(localStorage.getItem('pogoState') || 'null') || initState(); }
+  catch(e) { return initState(); }
+}
+
+function initState() {
+  const state = {
+    users: {},
+    pins: {},
+    tradeData: {}
+  };
+  ALL_USERS.forEach(u => {
+    state.users[u] = { username: u, joined: Date.now() };
+    state.pins[u] = '1234';
+    state.tradeData[u] = { ...(SEED_DATA[u] || {}) };
+  });
+  saveState(state);
+  return state;
+}
+
+function saveState(s) {
+  localStorage.setItem('pogoState', JSON.stringify(s));
+}
+
+function getTradeData() {
+  return getState().tradeData;
+}
+
+function getUserList(username) {
+  return getState().tradeData[username] || {};
+}
+
+function setUserList(username, list) {
+  const s = getState();
+  s.tradeData[username] = list;
+  saveState(s);
+}
+
+// ============================================================
+// AUTH
+// ============================================================
+function doLogin() {
+  const user = document.getElementById('login-user').value;
+  const pin = document.getElementById('login-pin').value;
+  const err = document.getElementById('login-err');
+  if (!user) { err.textContent = 'Please select your username'; return; }
+  if (!pin) { err.textContent = 'Please enter your PIN'; return; }
+  const s = getState();
+  if (s.pins[user] === pin) {
+    currentUser = user;
+    sessionStorage.setItem('pogoUser', user);
+    showApp();
+    err.textContent = '';
+  } else {
+    err.textContent = '❌ Incorrect PIN. Default PIN is 1234';
+  }
+}
+
+function logout() {
+  currentUser = null;
+  sessionStorage.removeItem('pogoUser');
+  closeModal('profile-modal');
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-page').style.display = 'flex';
+}
+
+function changePin() {
+  const np = document.getElementById('new-pin').value;
+  const cp = document.getElementById('confirm-pin').value;
+  const err = document.getElementById('pin-err');
+  if (np.length < 4) { err.textContent = 'PIN must be at least 4 digits'; return; }
+  if (np !== cp) { err.textContent = 'PINs do not match'; return; }
+  const s = getState();
+  s.pins[currentUser] = np;
+  saveState(s);
+  closeModal('profile-modal');
+  toast('✅ PIN updated!');
+}
+
+// ============================================================
+// APP INIT
+// ============================================================
+function showApp() {
+  document.getElementById('login-page').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  document.getElementById('app').style.flexDirection = 'column';
+  const initials = currentUser.slice(0,2).toUpperCase();
+  document.getElementById('top-avatar').textContent = initials;
+  document.getElementById('top-username').textContent = currentUser;
+  document.getElementById('my-avatar').textContent = initials;
+  document.getElementById('my-name-display').textContent = currentUser;
+  renderBrowse();
+  renderMyList();
+  renderMatch();
+  renderStringGen();
+  populateStringUserSelect();
+}
+
+function populateLoginUsers() {
+  const sel = document.getElementById('login-user');
+  ALL_USERS.sort().forEach(u => {
+    const opt = document.createElement('option');
+    opt.value = u; opt.textContent = u;
+    sel.appendChild(opt);
+  });
+}
+
+function populateAddPokemonSelect() {
+  const sel = document.getElementById('add-pmon-select');
+  POKEMON_LIST.forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p.name; opt.textContent = `#${p.no} ${p.name}`;
+    sel.appendChild(opt);
+  });
+}
+
+function populateStringUserSelect() {
+  const sel = document.getElementById('string-user-select');
+  sel.innerHTML = '<option value="">Pick a user…</option>';
+  ALL_USERS.forEach(u => {
+    const opt = document.createElement('option');
+    opt.value = u; opt.textContent = u;
+    if (u === currentUser) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  renderStringGen();
+}
+
+// ============================================================
+// BROWSE TAB
+// ============================================================
+function setFilter(f) {
+  browseFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  const map = {ALL:'fAll',H:'fH',M:'fM',L:'fL'};
+  document.querySelectorAll('.filter-btn.'+map[f]).forEach(b => b.classList.add('active'));
+  renderBrowse();
+}
+
+function parsePriority(val) {
+  if (!val) return {p:'',mod:''};
+  const m = val.match(/^([HML])(.*)/);
+  if (!m) return {p:'',mod:''};
+  return {p: m[1], mod: m[2] ? m[2].replace(/[()]/g,'') : ''};
+}
+
+function renderBrowse() {
+  const q = (document.getElementById('browse-search').value||'').toLowerCase();
+  const td = getTradeData();
+  const container = document.getElementById('browse-results');
+
+  // Build map: pokemon -> [{user, priority, mod}]
+  const pmonMap = {};
+  POKEMON_LIST.forEach(p => { pmonMap[p.name] = []; });
+
+  Object.entries(td).forEach(([user, list]) => {
+    Object.entries(list).forEach(([pmon, val]) => {
+      if (!pmonMap[pmon]) pmonMap[pmon] = [];
+      const {p, mod} = parsePriority(val);
+      if (p) pmonMap[pmon].push({user, p, mod});
+    });
+  });
+
+  let results = POKEMON_LIST.filter(p => {
+    if (q) {
+      const nameMatch = p.name.toLowerCase().includes(q);
+      const userMatch = (pmonMap[p.name]||[]).some(e => e.user.toLowerCase().includes(q));
+      if (!nameMatch && !userMatch) return false;
+    }
+    const entries = pmonMap[p.name] || [];
+    if (browseFilter !== 'ALL') {
+      return entries.some(e => e.p === browseFilter);
+    }
+    return entries.length > 0;
+  });
+
+  if (results.length === 0) {
+    container.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div><div class="empty-text">No results found</div><div class="empty-sub">Try a different search or filter</div></div>`;
+    return;
+  }
+
+  container.innerHTML = `<div class="pokemon-grid">${results.map(p => {
+    let entries = pmonMap[p.name] || [];
+    if (browseFilter !== 'ALL') entries = entries.filter(e => e.p === browseFilter);
+    const badges = entries.map(e =>
+      `<span class="pmon-badge ${e.p}" title="${e.user}">${e.user}<span class="mod">${e.mod ? ' '+e.mod : ''}</span></span>`
+    ).join('');
+    return `<div class="pmon-card">
+      <div class="pmon-header">
+        <div class="pmon-name">${p.name}</div>
+        <div class="pmon-no">#${p.no}</div>
+      </div>
+      <div class="pmon-users">${badges || '<span style="color:var(--muted);font-size:12px">No entries</span>'}</div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+// ============================================================
+// MY LIST TAB
+// ============================================================
+function addToMyList() {
+  const pmon = document.getElementById('add-pmon-select').value;
+  const pri = document.getElementById('add-pmon-priority').value;
+  const notes = document.getElementById('add-pmon-notes').value.trim();
+  if (!pmon) { toast('⚠️ Select a Pokémon first'); return; }
+  const list = getUserList(currentUser);
+  const val = pri + (notes ? `(${notes})` : '');
+  list[pmon] = val;
+  setUserList(currentUser, list);
+  document.getElementById('add-pmon-select').value = '';
+  document.getElementById('add-pmon-notes').value = '';
+  renderMyList();
+  renderBrowse();
+  renderMatch();
+  toast(`✅ ${pmon} added!`);
+}
+
+function renderMyList() {
+  const list = getUserList(currentUser);
+  const container = document.getElementById('my-list-items');
+  const entries = Object.entries(list).sort((a,b) => {
+    const order = {H:0,M:1,L:2};
+    return (order[a[1][0]]||3) - (order[b[1][0]]||3);
+  });
+
+  if (entries.length === 0) {
+    container.innerHTML = `<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">Your list is empty</div><div class="empty-sub">Add Pokémon above to get started</div></div>`;
+  } else {
+    container.innerHTML = `<div class="my-list-grid">${entries.map(([pmon, val]) => {
+      const {p, mod} = parsePriority(val);
+      return `<div class="my-pmon-row" id="row-${CSS.escape(pmon)}">
+        <div class="my-pmon-name">${pmon}</div>
+        <div class="my-pmon-controls">
+          ${['H','M','L'].map(btn =>
+            `<button class="priority-btn ${p===btn?'active '+btn:''}" onclick="setPriority('${pmon}','${btn}')">${btn}</button>`
+          ).join('')}
+          <input class="notes-input" type="text" value="${mod}" placeholder="notes" onchange="setNotes('${pmon}',this.value)" title="modifier (xs, f, m, shiny…)">
+          <button class="remove-btn" onclick="removeFromList('${pmon}')" title="Remove">×</button>
+        </div>
+      </div>`;
+    }).join('')}</div>`;
+  }
+
+  // Trade string
+  updateMyTradeString();
+}
+
+function setPriority(pmon, p) {
+  const list = getUserList(currentUser);
+  const {mod} = parsePriority(list[pmon]||'');
+  list[pmon] = p + (mod ? `(${mod})` : '');
+  setUserList(currentUser, list);
+  renderMyList();
+  renderBrowse();
+}
+
+function setNotes(pmon, notes) {
+  const list = getUserList(currentUser);
+  const {p} = parsePriority(list[pmon]||'M');
+  list[pmon] = p + (notes ? `(${notes})` : '');
+  setUserList(currentUser, list);
+  renderMatch();
+}
+
+function removeFromList(pmon) {
+  const list = getUserList(currentUser);
+  delete list[pmon];
+  setUserList(currentUser, list);
+  renderMyList();
+  renderBrowse();
+  renderMatch();
+}
+
+function updateMyTradeString() {
+  document.getElementById('my-trade-string').textContent = buildTradeString(currentUser);
+}
+
+function copyMyString() {
+  const str = buildTradeString(currentUser);
+  navigator.clipboard.writeText(str).then(() => toast('📋 Copied to clipboard!'));
+}
+
+// ============================================================
+// TRADE STRING BUILDER
+// ============================================================
+function buildTradeString(username) {
+  const list = getUserList(username);
+  const byPriority = {H:[],M:[],L:[]};
+  Object.entries(list).forEach(([pmon, val]) => {
+    const {p, mod} = parsePriority(val);
+    if (p) byPriority[p].push(pmon + (mod ? ` (${mod})` : ''));
+  });
+  const parts = [];
+  if (byPriority.H.length) parts.push(`H: ${byPriority.H.join(', ')}`);
+  if (byPriority.M.length) parts.push(`M: ${byPriority.M.join(', ')}`);
+  if (byPriority.L.length) parts.push(`L: ${byPriority.L.join(', ')}`);
+  return parts.length ? `${username} — ${parts.join(' | ')}` : `${username} — (empty list)`;
+}
+
+// ============================================================
+// MATCH TAB
+// ============================================================
+function renderMatch() {
+  if (!currentUser) return;
+  const myList = getUserList(currentUser);
+  const td = getTradeData();
+
+  // What I want (my H/M entries) + who has it
+  const wantSection = document.getElementById('match-want');
+  const haveSection = document.getElementById('match-have');
+
+  // Who has things I want (based on what I have listed — could be cross-matching)
+  // Simple approach: for each pokemon in my list, show who also has it
+  const wantRows = [];
+  const haveRows = [];
+
+  POKEMON_LIST.forEach(p => {
+    const myVal = myList[p.name];
+    if (!myVal) return;
+    const {p: myP, mod: myMod} = parsePriority(myVal);
+    if (!myP) return;
+
+    // Others who also have this pokemon
+    const others = [];
+    Object.entries(td).forEach(([user, list]) => {
+      if (user === currentUser) return;
+      if (list[p.name]) {
+        const {p: theirP} = parsePriority(list[p.name]);
+        if (theirP) others.push({user, p: theirP});
+      }
+    });
+
+    if (others.length) {
+      haveRows.push({pmon: p.name, myP, myMod, others});
+    }
+  });
+
+  // Who wants something I might be offering (look at others' high-priority lists)
+  const seekingMe = [];
+  Object.entries(td).forEach(([user, list]) => {
+    if (user === currentUser) return;
+    const matches = [];
+    Object.entries(list).forEach(([pmon, val]) => {
+      const {p} = parsePriority(val);
+      if (p === 'H' && myList[pmon]) {
+        matches.push({pmon, theirP: p});
+      }
+    });
+    if (matches.length) seekingMe.push({user, matches});
+  });
+
+  if (haveRows.length === 0) {
+    wantSection.innerHTML = `<div class="empty"><div class="empty-icon">🤝</div><div class="empty-text">Add Pokémon to your list first</div></div>`;
+  } else {
+    wantSection.innerHTML = `<div class="trade-list">${haveRows.map(r =>
+      `<div class="trade-row">
+        <div class="trade-pokemon">${r.pmon}</div>
+        <div class="pmon-users" style="flex:1;justify-content:center">${r.others.map(o =>
+          `<span class="pmon-badge ${o.p}">${o.user}</span>`
+        ).join('')}</div>
+        <span class="pmon-badge ${r.myP}">${r.myP}${r.myMod?' '+r.myMod:''}</span>
+      </div>`
+    ).join('')}</div>`;
+  }
+
+  if (seekingMe.length === 0) {
+    haveSection.innerHTML = `<div class="empty"><div class="empty-icon">📭</div><div class="empty-text">No one is actively seeking your high-priority Pokémon yet</div></div>`;
+  } else {
+    haveSection.innerHTML = `<div class="trade-list">${seekingMe.map(r =>
+      `<div class="trade-row">
+        <div style="font-weight:600;font-size:14px">${r.user}</div>
+        <div class="pmon-users" style="flex:1;justify-content:center">${r.matches.map(m =>
+          `<span class="pmon-badge H">${m.pmon}</span>`
+        ).join('')}</div>
+      </div>`
+    ).join('')}</div>`;
+  }
+}
+
+// ============================================================
+// STRING GEN TAB
+// ============================================================
+function renderStringGen() {
+  const sel = document.getElementById('string-user-select');
+  const user = sel ? sel.value : '';
+  const container = document.getElementById('string-gen-output');
+  if (!user) {
+    container.innerHTML = '<div style="color:var(--muted);font-size:14px">Select a user to see their trade string.</div>';
+    return;
+  }
+  const str = buildTradeString(user);
+  const list = getUserList(user);
+  const count = Object.keys(list).length;
+  container.innerHTML = `
+    <div class="string-box">${str}</div>
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px">
+      <button class="copy-btn" onclick="copyStringFor('${user}')">📋 Copy</button>
+      <span style="font-size:13px;color:var(--muted)">${count} Pokémon listed</span>
+    </div>
+    <div class="section-title">Full breakdown</div>
+    <div class="trade-list">${Object.entries(list).sort((a,b)=>{
+      const o={H:0,M:1,L:2};
+      return (o[a[1][0]]||3)-(o[b[1][0]]||3);
+    }).map(([pmon,val])=>{
+      const {p,mod} = parsePriority(val);
+      return `<div class="trade-row"><div class="trade-pokemon">${pmon}</div><span class="pmon-badge ${p}">${p}${mod?' '+mod:''}</span></div>`;
+    }).join('')}</div>
+  `;
+}
+
+function copyStringFor(user) {
+  navigator.clipboard.writeText(buildTradeString(user)).then(() => toast('📋 Copied!'));
+}
+
+// ============================================================
+// UI HELPERS
+// ============================================================
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+  document.getElementById(`tab-${tab}`).classList.add('active');
+  if (tab === 'my-list') renderMyList();
+  if (tab === 'trade-match') renderMatch();
+  if (tab === 'string-gen') renderStringGen();
+}
+
+function openProfile() { document.getElementById('profile-modal').classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function toast(msg, dur=2500) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), dur);
+}
+
+// ============================================================
+// BOOT
+// ============================================================
+document.addEventListener('DOMContentLoaded', () => {
+  // Check if PIN press Enter
+  document.getElementById('login-pin').addEventListener('keydown', e => {
+    if (e.key === 'Enter') doLogin();
+  });
+
+  populateLoginUsers();
+  populateAddPokemonSelect();
+
+  // Auto-login from session
+  const saved = sessionStorage.getItem('pogoUser');
+  if (saved && ALL_USERS.includes(saved)) {
+    currentUser = saved;
+    showApp();
+  }
+
+  // Close modals on overlay click
+  document.querySelectorAll('.modal-overlay').forEach(el => {
+    el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
+  });
+});
+</script>
+</body>
+</html>
