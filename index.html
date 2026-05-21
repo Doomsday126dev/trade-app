@@ -176,6 +176,14 @@ input,select,textarea{font-family:var(--font);outline:none}
 .str-levels{display:flex;flex-direction:column;gap:10px}
 .str-level{background:var(--card);border:1px solid var(--border);border-radius:var(--r2);padding:11px 13px}
 .str-level-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
+.combo-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 7px;border-radius:4px;background:rgba(168,139,250,.13);border:1px solid rgba(168,139,250,.28);color:var(--ac2);font-size:11px;font-weight:700}
+.combo-wrap{border:1px solid var(--border);border-radius:var(--r2);background:var(--card);overflow:hidden}
+.combo-toggle{width:100%;background:transparent;border:none;color:var(--text);padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;font-family:var(--font);font-size:13px;font-weight:700}
+.combo-toggle:hover{background:var(--bg2)}
+.combo-meta{font-size:11px;font-weight:600;color:var(--muted);margin-left:7px}
+.combo-body{display:none;padding:10px 12px;border-top:1px solid var(--border);background:var(--bg)}
+.combo-wrap.open .combo-body{display:flex;flex-direction:column;gap:10px}
+.combo-wrap.open .collapse-icon{transform:rotate(180deg)}
 
 /* STRINGS PAGE — collapsible */
 .user-str-block{margin-bottom:8px;border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
@@ -1433,7 +1441,7 @@ function userBadge(x){
 
 // ── AUTOCOMPLETE ──────────────────────────────────────────────
 function buildAcItems(){
-  const arr=myListType==='costumes'?DB.costumes:myListType==='dynamax'?DB.dynamax:DB.wishlist;
+  const arr=listSource(myListType);
   const seen=new Set();acItems=[];
   arr.forEach(e=>{
     if(seen.has(e.name))return;seen.add(e.name);
@@ -1579,7 +1587,7 @@ function renderBrowse(){
     return;
   }
 
-  const dataArr=browseList==='dynamax'?DB.dynamax:DB.wishlist;
+  const dataArr=listSource(browseList);
   const map={};
   dataArr.forEach(e=>{if(!map[e.name])map[e.name]={no:e.no,dn:e.displayName||e.name,entries:[]};});
   Object.entries(allData[browseList]||{}).forEach(([user,list])=>{
@@ -1644,8 +1652,18 @@ function addEntry(){
   toast(`✅ ${dn} added!`);
 }
 
+function uniqueEntries(...groups){
+  const seen=new Set(),out=[];
+  groups.flat().forEach(e=>{
+    if(!e?.name||seen.has(e.name))return;
+    seen.add(e.name);out.push(e);
+  });
+  return out;
+}
 function listSource(type){
-  return type==='costumes'?DB.costumes:type==='dynamax'?DB.dynamax:DB.wishlist;
+  if(type==='costumes')return DB.costumes;
+  if(type==='dynamax')return DB.dynamax;
+  return uniqueEntries(DB.wishlist,DB.costumes);
 }
 function normalizeSpriteKey(s){
   return String(s||'').toLowerCase().replace(/[._-]+/g,' ').replace(/[^a-z0-9 ]/g,'').replace(/\s+/g,' ').trim();
@@ -1658,7 +1676,7 @@ function spriteSourceIndex(){
     const k=normalizeSpriteKey(key);
     if(k&&!spriteIndex.has(k))spriteIndex.set(k,e);
   };
-  [...DB.wishlist,...DB.dynamax].forEach(e=>{
+  [...DB.wishlist,...DB.dynamax,...DB.costumes].forEach(e=>{
     if(!e.no)return;
     add(e.name,e);add(e.displayName,e);
   });
@@ -1712,7 +1730,7 @@ function renderMyList(filterVal){
   const q=(filterVal??document.getElementById('mylist-filter')?.value??'').toLowerCase();
   const list=allData[myListType]?.[cur]||{};
   const el=document.getElementById('mylist-out');if(!el)return;
-  const srcArr=myListType==='costumes'?DB.costumes:myListType==='dynamax'?DB.dynamax:DB.wishlist;
+  const srcArr=listSource(myListType);
   const dispMap={};const noMap={};
   srcArr.forEach(e=>{dispMap[e.name]=e.displayName||e.name;if(e.no)noMap[e.name]=e.no;});
 
@@ -1802,11 +1820,11 @@ function drawImageContain(ctx,img,x,y,w,h){
   ctx.drawImage(img,x+(w-dw)/2,y+(h-dh)/2,dw,dh);
 }
 function drawSpriteFallback(ctx,e,x,y,size){
-  roundedRect(ctx,x,y,size,size,12);
-  ctx.fillStyle='#252540';ctx.fill();
-  ctx.strokeStyle='rgba(255,255,255,.14)';ctx.stroke();
-  ctx.fillStyle='#a78bfa';
-  ctx.font='700 18px Space Grotesk, sans-serif';
+  roundedRect(ctx,x,y,size,size,8);
+  ctx.fillStyle='#eef2ff';ctx.fill();
+  ctx.strokeStyle='rgba(99,102,241,.22)';ctx.stroke();
+  ctx.fillStyle='#5b5ce2';
+  ctx.font='700 15px Space Grotesk, sans-serif';
   ctx.textAlign='center';
   ctx.fillText(String(e.dn||'?').slice(0,2).toUpperCase(),x+size/2,y+size/2+6);
   ctx.textAlign='left';
@@ -1829,67 +1847,67 @@ function safeFilePart(s){
   return String(s||'list').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'list';
 }
 async function renderListImage(entries,type,username){
-  const W=1080,pad=40,gap=6,cols=8,cardW=(W-pad*2-gap*(cols-1))/cols,cardH=80;
-  const sprSize=52,sprPad=4;
+  const W=980,pad=28,gap=4,cols=10,cardW=(W-pad*2-gap*(cols-1))/cols,cardH=56;
+  const sprSize=44;
   const groupDefs=['H','M','L'].map(p=>({p,label:priLabel(p),entries:entries.filter(e=>e.p===p)}));
   const other=entries.filter(e=>!PRI[e.p]);
   if(other.length)groupDefs.push({p:'',label:'Other',entries:other});
   const groups=groupDefs.filter(g=>g.entries.length);
-  const headerH=120,groupTitleH=40,sectionGap=16,bottomPad=36;
+  const headerH=86,groupTitleH=28,sectionGap=12,bottomPad=24;
   let H=headerH+bottomPad;
   groups.forEach(g=>{H+=groupTitleH+Math.ceil(g.entries.length/cols)*(cardH+gap)-gap+sectionGap;});
   const canvas=document.createElement('canvas');
   canvas.width=W;canvas.height=Math.max(H,300);
   const ctx=canvas.getContext('2d');
-  ctx.fillStyle='#0f0f1a';ctx.fillRect(0,0,canvas.width,canvas.height);
-  ctx.fillStyle='#e8e8f0';
-  ctx.font='700 38px Space Grotesk, sans-serif';
-  ctx.fillText(`${username}'s ${listLabel(type)} List`,pad,58);
-  ctx.font='500 18px Space Grotesk, sans-serif';
-  ctx.fillStyle='#8888aa';
+  ctx.fillStyle='#f8fafc';ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle='#101828';
+  ctx.font='700 30px Space Grotesk, sans-serif';
+  ctx.fillText(`${username}'s ${listLabel(type)} List`,pad,42);
+  ctx.font='600 14px Space Grotesk, sans-serif';
+  ctx.fillStyle='#667085';
   const date=new Date().toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
-  ctx.fillText(`${entries.length} entries · Generated ${date}`,pad,88);
-  ctx.font='700 16px Space Grotesk, sans-serif';
-  ctx.fillStyle='#a78bfa';
-  ctx.fillText('PoGo Trades',W-pad-96,58);
+  ctx.fillText(`${entries.length} entries · Generated ${date}`,pad,64);
+  ctx.font='700 14px Space Grotesk, sans-serif';
+  ctx.fillStyle='#6d5dfc';
+  ctx.fillText('PoGo Trades',W-pad-84,42);
 
   const urls=[...new Set(entries.map(exportSpriteUrl).filter(Boolean))];
   const imagePairs=await Promise.all(urls.map(async url=>[url,await loadCanvasImage(url)]));
   const images=new Map(imagePairs);
   const priColors={H:'#ef4444',M:'#f59e0b',L:'#10b981','':'#8888aa'};
-  const priCardBg={H:'rgba(239,68,68,.07)',M:'rgba(245,158,11,.07)',L:'rgba(16,185,129,.07)','':'rgba(136,136,170,.06)'};
+  const priCardBg={H:'#fff7f7',M:'#fffbeb',L:'#f0fdf4','':'#f8fafc'};
   let y=headerH;
   groups.forEach(group=>{
     ctx.fillStyle=priColors[group.p]||'#8888aa';
-    roundedRect(ctx,pad,y,9,20,4);ctx.fill();
-    ctx.fillStyle='#e8e8f0';
-    ctx.font='700 21px Space Grotesk, sans-serif';
-    ctx.fillText(group.label,pad+16,y+18);
-    ctx.fillStyle='#8888aa';
-    ctx.font='500 15px Space Grotesk, sans-serif';
-    ctx.fillText(`${group.entries.length}`,pad+16+ctx.measureText(group.label).width+10,y+18);
+    roundedRect(ctx,pad,y+5,7,17,4);ctx.fill();
+    ctx.fillStyle='#101828';
+    ctx.font='700 18px Space Grotesk, sans-serif';
+    ctx.fillText(group.label,pad+14,y+20);
+    ctx.fillStyle='#667085';
+    ctx.font='600 12px Space Grotesk, sans-serif';
+    ctx.fillText(`${group.entries.length}`,pad+14+ctx.measureText(group.label).width+8,y+20);
     y+=groupTitleH;
     group.entries.forEach((e,i)=>{
       const col=i%cols,row=Math.floor(i/cols);
       const x=pad+col*(cardW+gap),cy=y+row*(cardH+gap);
-      roundedRect(ctx,x,cy,cardW,cardH,10);
+      roundedRect(ctx,x,cy,cardW,cardH,6);
       ctx.fillStyle=priCardBg[e.p]||priCardBg[''];ctx.fill();
-      ctx.strokeStyle='rgba(255,255,255,.10)';ctx.lineWidth=1;ctx.stroke();
+      ctx.strokeStyle='rgba(15,23,42,.12)';ctx.lineWidth=1;ctx.stroke();
       ctx.fillStyle=priColors[e.p]||'#8888aa';
-      roundedRect(ctx,x,cy,cardW,4,3);ctx.fill();
-      const sx=x+(cardW-sprSize)/2,sy=cy+4+sprPad+(cardH-4-sprSize-sprPad*2)/2;
+      roundedRect(ctx,x,cy,cardW,3,2);ctx.fill();
+      const sx=x+(cardW-sprSize)/2,sy=cy+5+(cardH-5-sprSize)/2;
       const img=images.get(exportSpriteUrl(e));
       if(img)drawImageContain(ctx,img,sx,sy,sprSize,sprSize);
       else drawSpriteFallback(ctx,e,sx,sy,sprSize);
       const mark=maxMarkForEntry(e,type);
       if(mark){
-        const bx=x+cardW-25,by=cy+9;
-        roundedRect(ctx,bx,by,17,17,5);
+        const bx=x+cardW-20,by=cy+6;
+        roundedRect(ctx,bx,by,14,14,4);
         ctx.fillStyle=mark==='G'?'#c084fc':'#38bdf8';ctx.fill();
-        ctx.fillStyle='#0f0f1a';
-        ctx.font='800 11px Space Grotesk, sans-serif';
+        ctx.fillStyle='#101828';
+        ctx.font='800 9px Space Grotesk, sans-serif';
         ctx.textAlign='center';
-        ctx.fillText(mark,bx+8.5,by+12.5);
+        ctx.fillText(mark,bx+7,by+10.5);
         ctx.textAlign='left';
       }
     });
@@ -1961,7 +1979,7 @@ function setNotes(name,notes){
 }
 function removeEntry(name){
   const prevList={...(allData[myListType]?.[cur]||{})};
-  const srcArr=myListType==='costumes'?DB.costumes:myListType==='dynamax'?DB.dynamax:DB.wishlist;
+  const srcArr=listSource(myListType);
   const dn=srcArr.find(x=>x.name===name)?.displayName||name;
   undoStack={type:myListType,username:cur,list:{...prevList},name:dn};
   const list={...prevList};delete list[name];
@@ -1992,7 +2010,7 @@ function buildStrings(type,username){
     });
     return Object.keys(out).length?out:null;
   }
-  const srcArr=type==='dynamax'?DB.dynamax:DB.wishlist;
+  const srcArr=listSource(type);
   const nameToEntry={},dexHasRegional={};
   srcArr.forEach(e=>{
     if(!e.no)return;
@@ -2023,7 +2041,32 @@ function buildStrings(type,username){
   return Object.keys(out).length?out:null;
 }
 
+function stringParts(str){
+  const body=String(str||'').startsWith(PREFILTER)?String(str).slice(PREFILTER.length):String(str||'');
+  return body.split(',').map(x=>x.trim()).filter(Boolean);
+}
+function searchPartSort(a,b){
+  const da=parseInt(String(a).match(/\d+/)?.[0]||'0');
+  const db=parseInt(String(b).match(/\d+/)?.[0]||'0');
+  return da-db||String(a).localeCompare(String(b),undefined,{numeric:true,sensitivity:'base'});
+}
+function combineStrings(strs,levels){
+  const parts=[];
+  levels.forEach(p=>{if(strs[p])parts.push(...stringParts(strs[p]));});
+  const unique=[...new Set(parts)].sort(searchPartSort);
+  return unique.length?PREFILTER+unique.join(','):'';
+}
+function combinedStringOptions(strs){
+  return[
+    {levels:['H','M'],label:'High + Medium'},
+    {levels:['H','L'],label:'High + Low'},
+    {levels:['M','L'],label:'Medium + Low'},
+    {levels:['H','M','L'],label:'All priorities'}
+  ].map(o=>({...o,value:combineStrings(strs,o.levels)}))
+    .filter(o=>o.value&&o.levels.filter(p=>strs[p]).length>1);
+}
 function strLevelsHtml(strs){
+  const combos=combinedStringOptions(strs);
   return`<div class="str-levels">${['H','M','L'].filter(p=>strs[p]).map(p=>`
     <div class="str-level">
       <div class="str-level-hdr">
@@ -2031,7 +2074,20 @@ function strLevelsHtml(strs){
         <button class="cpbtn" type="button" data-copy="${escAttr(strs[p])}" onclick="copyStr(this.dataset.copy,this)" aria-label="Copy ${priLabel(p)} priority search string">📋 Copy</button>
       </div>
       <div class="strbox">${escHtml(strs[p])}</div>
-    </div>`).join('')}</div>`;
+    </div>`).join('')}${combos.length?`<div class="combo-wrap">
+      <button class="combo-toggle" type="button" onclick="toggleComboStrings(this)" aria-expanded="false">
+        <span>Combined options <span class="combo-meta">${combos.length} available</span></span>
+        <span class="collapse-icon">▼</span>
+      </button>
+      <div class="combo-body">${combos.map(o=>`
+        <div class="str-level">
+          <div class="str-level-hdr">
+            <span class="combo-badge">${escHtml(o.label)}</span>
+            <button class="cpbtn" type="button" data-copy="${escAttr(o.value)}" onclick="copyStr(this.dataset.copy,this)" aria-label="Copy ${escAttr(o.label)} search string">📋 Copy</button>
+          </div>
+          <div class="strbox">${escHtml(o.value)}</div>
+        </div>`).join('')}</div>
+    </div>`:''}</div>`;
 }
 function renderMyStrings(){
   const el=document.getElementById('my-strings-out');if(!el)return;
@@ -2087,6 +2143,11 @@ function toggleStrUser(el){
   const isOpen=body.classList.contains('open');
   body.classList.toggle('open',!isOpen);
   block.classList.toggle('expanded',!isOpen);
+}
+function toggleComboStrings(btn){
+  const wrap=btn.closest('.combo-wrap');
+  const isOpen=wrap.classList.toggle('open');
+  btn.setAttribute('aria-expanded',isOpen?'true':'false');
 }
 function renderStrings(){
   const q=(document.getElementById('stq')?.value||'').toLowerCase();
@@ -2534,7 +2595,7 @@ Object.assign(window,{
   addUser,openReset,confirmReset,toggleAdmin,exportData,triggerRestore,restoreData,
   saveProfile,openModal,closeModal,renderStrings,renderBrowse,setStrList,
   showRequestForm,hideRequestForm,submitRequest,approveRequest,denyRequest,
-  acSearch,acSelect,acKeydown,formatFc,toggleStrUser,renderMyList
+  acSearch,acSelect,acKeydown,formatFc,toggleStrUser,toggleComboStrings,renderMyList
 });
 
 // ── BOOT ──────────────────────────────────────────────────────
