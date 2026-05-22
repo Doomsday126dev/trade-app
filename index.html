@@ -3402,18 +3402,8 @@ function dexStringFromNumbers(nums){
 }
 function stringFromSearchItems(items){
   if(!items.length)return'';
-  const seen=new Map();
-  items.forEach(({term,filters})=>{
-    if(!seen.has(term))seen.set(term,new Set());
-    seen.get(term).add(filters.join('&'));
-  });
-  const parts=[];
-  [...seen.entries()].sort((a,b)=>parseInt(a[0].match(/\d+/)?.[0]||'0')-parseInt(b[0].match(/\d+/)?.[0]||'0')||a[0].localeCompare(b[0])).forEach(([term,mods])=>{
-    mods.forEach(filterKey=>{
-      parts.push(filterKey?`${filterKey}&${term}`:term);
-    });
-  });
-  return parts.length?PREFILTER+parts.join(','):'';
+  const dexes=[...new Set(items.map(({term})=>parseInt(String(term||'').match(/\d+/)?.[0]||'',10)).filter(Number.isFinite))].sort((a,b)=>a-b);
+  return dexes.length?PREFILTER+dexes.join(','):'';
 }
 function buildStrings(type,username){
   const list=allData[type]?.[username]||{};
