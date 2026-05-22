@@ -157,10 +157,10 @@ input,select,textarea{font-family:var(--font);outline:none}
 .drag-handle{color:var(--border2);font-size:14px;cursor:grab;flex-shrink:0;user-select:none;padding:2px 4px}
 .myrow-sprite{width:28px;height:28px;object-fit:contain;flex-shrink:0;image-rendering:pixelated}
 .myrow-sprite-wrap,.pc-sprite-wrap{position:relative;display:inline-flex;flex-shrink:0;overflow:visible}
-/* Max cloud crown — positioned above sprite, mimics Dynamax wreath visual */
-.max-crown{position:absolute;top:-8px;left:50%;transform:translateX(-50%);width:22px;height:10px;pointer-events:none;overflow:visible}
-.max-crown.dmax-crown{fill:#dc2626}
-.max-crown.gmax-crown{fill:#7c3aed}
+.max-crown{position:absolute;top:-9px;left:50%;transform:translateX(-50%);width:22px;height:13px;pointer-events:none;object-fit:contain;image-rendering:auto;filter:drop-shadow(0 1px 1px rgba(0,0,0,.45))}
+.max-chip{position:absolute;right:-5px;bottom:-3px;width:14px;height:14px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.55);font-family:var(--mono);font-size:8px;font-weight:800;color:#fff;box-shadow:0 1px 4px rgba(0,0,0,.35)}
+.max-chip.dmax-chip{background:#dc2626}
+.max-chip.gmax-chip{background:#7c3aed}
 .myrow-name{font-size:13px;font-weight:500;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .myrow[data-full]:has(.myrow-name:hover)::after{content:attr(data-full);position:absolute;left:44px;bottom:calc(100% + 6px);max-width:min(360px,calc(100vw - 70px));background:rgba(18,17,34,.97);border:1px solid var(--border2);color:var(--text);border-radius:7px;padding:6px 9px;font-size:12px;line-height:1.25;white-space:normal;box-shadow:0 8px 24px rgba(0,0,0,.28);pointer-events:none;z-index:30}
 .myrow[data-full]:has(.myrow-name:hover)::before{content:'';position:absolute;left:55px;bottom:100%;border:5px solid transparent;border-top-color:var(--border2);pointer-events:none;z-index:31}
@@ -772,6 +772,9 @@ let authRepairStarted=false;
 const spriteCache={};
 const SEREBII_GO_SPRITE_BASE='https://www.serebii.net/pokemongo/pokemon/';
 const IMAGE_PROXY_BASE='https://images.weserv.nl/?url=';
+const MAX_CLOUD_URL='https://cdn08.net/pokemongo/wiki/cloud.png';
+const MAX_TYPE_LABELS={dynamax:'Dynamax',gmax:'Gigantamax'};
+const MAX_TYPE_SEARCH={dynamax:'dynamax',gmax:'gigantamax'};
 const REGIONAL_FORM_IDS={"A-Rattata": 10091, "A-Raichu": 10100, "A-Sandshrew": 10101, "A-Vulpix": 10103, "A-Diglett": 10105, "A-Meowth": 10107, "A-Geodude": 10109, "A-Grimer": 10112, "A-Exeggutor": 10114, "A-Marowak": 10115, "G-Meowth": 10161, "G-Ponyta": 10162, "G-Slowpoke": 10164, "G-Farfetch'd": 10166, "G-Weezing": 10167, "G-Mr_ Mime": 10168, "G-Corsola": 10173, "G-Zigzagoon": 10174, "G-Darumaka": 10176, "G-Yamask": 10179, "G-Stunfisk": 10180, "H-Growlithe": 10229, "H-Voltorb": 10231, "H-Typhlosion": 10233, "H-Qwilfish": 10234, "H-Sneasel": 10235, "H-Samurott": 10236, "H-Lilligant": 10237, "H-Zorua": 10238, "H-Braviary": 10240, "H-Sliggoo": 10241, "H-Avalugg": 10243, "H-Decidueye": 10244, "P-Tauros": 10250, "P-Tauros (Combat)": 10250, "P-Tauros (Blaze)": 10251, "P-Tauros (Fire)": 10251, "P-Tauros (Aqua)": 10252, "P-Tauros (Water)": 10252, "P-Wooper": 10253, "Castform (Sunny)": 10013, "Castform (Rainy)": 10014, "Castform (Snowy)": 10015};
 // Form-specific sprite IDs/filenames from PokeAPI sprites. These are CORS-safe for canvas export.
 const COSTUME_FORM_SPRITE_IDS={
@@ -876,11 +879,6 @@ const GO_COSTUME_SPRITE_SLUGS={
   "Grimmsnarl (Gigantamax)":"gi","Alcremie (Gigantamax)":"gi","Duraludon (Gigantamax)":"gi",
   "Urshifu (Gigantamax)":"gi"
 };
-// Pokémon that can Gigantamax (by Pokédex number). Used to show G vs D badge on Dynamax list.
-const GMAX_NOS=new Set([
-  3,6,9,12,25,52,68,94,99,131,133,143,569,809, // cross-gen Gigantamax
-  812,815,818,823,826,834,839,841,842,844,849,851,858,861,869,884,892 // Galar Gigantamax
-]);
 function padDex(no){
   const n=parseInt(no);
   return Number.isFinite(n)?String(n).padStart(3,'0'):'';
@@ -893,6 +891,7 @@ function goCostumeSpriteUrl(no,name){
 }
 function canvasSafeSpriteUrl(url){
   if(url&&url.startsWith(SEREBII_GO_SPRITE_BASE))return IMAGE_PROXY_BASE+encodeURIComponent(url.replace(/^https?:\/\//,''));
+  if(url&&url.startsWith('https://cdn08.net/'))return IMAGE_PROXY_BASE+encodeURIComponent(url.replace(/^https?:\/\//,''));
   return url||'';
 }
 function entrySpriteUrl(entry,nameOverride=''){
@@ -1023,6 +1022,8 @@ function modSearchFilters(mod){
 }
 function entrySearchFilters(entry,mod){
   const filters=modSearchFilters(mod);
+  const maxFilter=MAX_TYPE_SEARCH[maxTypeForEntry(entry)]||'';
+  if(maxFilter)filters.unshift(maxFilter);
   const castform=castformTypeFilter(entry,mod);
   if(castform&&!filters.includes(castform))filters.unshift(castform);
   const variant=formVariantFilter(entry,mod);
@@ -1644,7 +1645,7 @@ function renderBrowse(){
 
   const dataArr=listSource(browseList);
   const map={};
-  dataArr.forEach(e=>{if(!map[e.name])map[e.name]={no:e.no,dn:e.displayName||e.name,entries:[]};});
+  dataArr.forEach(e=>{if(!map[e.name])map[e.name]={no:e.no,dn:e.displayName||e.name,maxType:maxTypeForEntry(e,browseList),entries:[]};});
   Object.entries(allData[browseList]||{}).forEach(([user,list])=>{
     if(!list||allowed&&!allowed.has(user))return;
     Object.entries(list).forEach(([name,val])=>{
@@ -1666,7 +1667,7 @@ function renderBrowse(){
     const info=map[e.name];
     let ents=info.entries;if(browseFilter!=='ALL')ents=ents.filter(x=>x.p===browseFilter);
     ents=sortEntries(ents);
-    const crownHtml=browseList==='gmax'?maxCrownSvg(true):browseList==='dynamax'?maxCrownSvg(GMAX_NOS.has(parseInt(e.no))):'';
+    const crownHtml=maxCrownSvg(maxTypeForEntry(info,browseList));
     return`<div class="pc">
       <div class="pc-hdr">
         <span class="pc-sprite-wrap">${spriteImg(e.no,28,'pc-sprite',e.name)}${crownHtml}</span>
@@ -1716,11 +1717,20 @@ function uniqueEntries(...groups){
   });
   return out;
 }
+function maxTradeEntries(type){
+  const src=type==='gmax'?DB.gmax:DB.dynamax;
+  const label=MAX_TYPE_LABELS[type];
+  return src.map(e=>{
+    const base=e.displayName||e.name;
+    const name=type==='gmax'?e.name:`${base} (${label})`;
+    return{...e,name,displayName:type==='gmax'?base:name,spriteName:e.name,maxType:type};
+  });
+}
 function listSource(type){
   if(type==='costumes')return DB.costumes;
   if(type==='dynamax')return DB.dynamax;
   if(type==='gmax')return DB.gmax;
-  return uniqueEntries(DB.wishlist,DB.costumes);
+  return uniqueEntries(DB.wishlist,maxTradeEntries('dynamax'),maxTradeEntries('gmax'),DB.costumes);
 }
 function normalizeSpriteKey(s){
   return String(s||'').toLowerCase().replace(/[._-]+/g,' ').replace(/[^a-z0-9 ]/g,'').replace(/\s+/g,' ').trim();
@@ -1759,6 +1769,15 @@ function spriteEntryForListItem(type,name,entry){
   }
   return null;
 }
+function maxTypeForEntry(entry,type=''){
+  if(type==='gmax')return'gmax';
+  if(type==='dynamax')return'dynamax';
+  if(entry?.maxType)return entry.maxType;
+  const label=`${entry?.name||''} ${entry?.displayName||''} ${entry?.dn||''}`;
+  if(/\bgigantamax\b/i.test(label))return'gmax';
+  if(/\bdynamax\b/i.test(label))return'dynamax';
+  return'';
+}
 function currentListEntries(type=myListType,filterVal=''){
   const list=allData[type]?.[cur]||{};
   const src=listSource(type);
@@ -1776,6 +1795,7 @@ function currentListEntries(type=myListType,filterVal=''){
       p,
       mod,
       no:spriteEntry.no||entry.no||null,
+      maxType:maxTypeForEntry(entry,type),
       spriteName:(COSTUME_FORM_SPRITE_IDS[name]||REGIONAL_FORM_IDS[name])?name:(spriteEntry.name||entry.name||name),
       spriteUrl:entrySpriteUrl(spriteEntry.no?spriteEntry:entry,name)
     };
@@ -1788,8 +1808,8 @@ function renderMyList(filterVal){
   const list=allData[myListType]?.[cur]||{};
   const el=document.getElementById('mylist-out');if(!el)return;
   const srcArr=listSource(myListType);
-  const dispMap={};const noMap={};
-  srcArr.forEach(e=>{dispMap[e.name]=e.displayName||e.name;if(e.no)noMap[e.name]=e.no;});
+  const dispMap={};const noMap={};const entryMap={};
+  srcArr.forEach(e=>{dispMap[e.name]=e.displayName||e.name;if(e.no)noMap[e.name]=e.no;if(!entryMap[e.name])entryMap[e.name]=e;});
 
   // Respect custom order stored in list values as order prefix, or fall back to H/M/L sort
   let entries=Object.entries(list);
@@ -1809,9 +1829,10 @@ function renderMyList(filterVal){
     const{p,mod}=parsePri(val);
     const dn=dispMap[name]||name;
     const no=noMap[name]||null;
+    const entry=entryMap[name]||{name,dn,no};
     const sn=name.replace(/'/g,"\\'").replace(/"/g,'&quot;');
     const hasSprite=no||COSTUME_FORM_SPRITE_IDS[name]||GO_COSTUME_SPRITE_SLUGS[name];
-    const crownHtml=myListType==='gmax'?maxCrownSvg(true):myListType==='dynamax'?maxCrownSvg(GMAX_NOS.has(parseInt(no))):'';
+    const crownHtml=maxCrownSvg(maxTypeForEntry(entry,myListType));
     return`<div class="myrow" draggable="true" data-name="${sn}" data-idx="${idx}" data-full="${escAttr(dn)}" aria-label="${escAttr(dn)}"
       ondragstart="dragStart(event)" ondragover="dragOver(event)" ondrop="dragDrop(event)" ondragend="dragEnd(event)">
       <span class="drag-handle" title="Drag to reorder">⠿</span>
@@ -1914,14 +1935,15 @@ function drawSpriteFallback(ctx,e,x,y,size){
   ctx.fillText(String(e.dn||'?').slice(0,2).toUpperCase(),x+size/2,y+size/2+6);
   ctx.textAlign='left';
 }
-function maxCrownSvg(isGmax){
-  const c=isGmax?'#7c3aed':'#dc2626';
-  return`<svg class="max-crown ${isGmax?'gmax-crown':'dmax-crown'}" viewBox="0 0 22 10" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="2.5" cy="8" r="2.5" fill="${c}"/><circle cx="6.5" cy="5.5" r="2.8" fill="${c}"/><circle cx="11" cy="4" r="3.2" fill="${c}"/><circle cx="15.5" cy="5.5" r="2.8" fill="${c}"/><circle cx="19.5" cy="8" r="2.5" fill="${c}"/><rect x="0" y="7.5" width="22" height="2.5" fill="${c}"/></svg>`;
+function maxCrownSvg(maxType){
+  if(!maxType)return'';
+  const isGmax=maxType==='gmax'||maxType===true;
+  const chip=isGmax?'G':'D';
+  return`<img class="max-crown" src="${MAX_CLOUD_URL}" alt="" aria-hidden="true" loading="lazy"><span class="max-chip ${isGmax?'gmax-chip':'dmax-chip'}">${chip}</span>`;
 }
 function maxMarkForEntry(e,type){
-  if(type==='gmax')return'G';
-  if(type==='dynamax')return GMAX_NOS.has(parseInt(e.no))?'G':'D';
-  return'';
+  const mt=maxTypeForEntry(e,type);
+  return mt==='gmax'?'G':mt==='dynamax'?'D':'';
 }
 function canvasBlob(canvas){
   return new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(new Error('Could not render image')),'image/png'));
@@ -1961,7 +1983,10 @@ async function renderListImage(entries,type,username){
   ctx.fillStyle='#6d5dfc';
   ctx.fillText('PoGo Trades',W-pad-84,42);
 
-  const urls=[...new Set(entries.map(exportSpriteUrl).filter(Boolean))];
+  const urls=[...new Set([
+    ...entries.map(exportSpriteUrl).filter(Boolean),
+    ...(entries.some(e=>maxMarkForEntry(e,type))?[canvasSafeSpriteUrl(MAX_CLOUD_URL)]:[])
+  ])];
   const imagePairs=await Promise.all(urls.map(async url=>[url,await loadCanvasImage(url)]));
   const images=new Map(imagePairs);
   const priColors={H:'#ef4444',M:'#f59e0b',L:'#10b981','':'#8888aa'};
@@ -1993,13 +2018,24 @@ async function renderListImage(entries,type,username){
       const mark=maxMarkForEntry(e,type);
       if(mark){
         const isG=mark==='G';
-        const cc=isG?'#7c3aed':'#dc2626';
-        ctx.fillStyle=cc;
-        // Draw 5-bump cloud crown above sprite, centred on sprite
-        const cloudCx=sx+sprSize/2;const cloudY=sy-1;
-        const bumps=[{dx:-9,dy:0,r:3},{dx:-4.5,dy:-2.5,r:3.5},{dx:0,dy:-4,r:4},{dx:4.5,dy:-2.5,r:3.5},{dx:9,dy:0,r:3}];
-        bumps.forEach(b=>{ctx.beginPath();ctx.arc(cloudCx+b.dx,cloudY+b.dy,b.r,0,Math.PI*2);ctx.fill();});
-        ctx.fillRect(cloudCx-12,cloudY-1,24,4);
+        const cloud=images.get(canvasSafeSpriteUrl(MAX_CLOUD_URL));
+        const cw=26,ch=14,cx=sx+(sprSize-cw)/2,cloudY=sy-7;
+        if(cloud)drawImageContain(ctx,cloud,cx,cloudY,cw,ch);
+        else{
+          ctx.fillStyle='#dc2626';
+          const cloudCx=sx+sprSize/2;const bumps=[{dx:-9,dy:0,r:3},{dx:-4.5,dy:-2.5,r:3.5},{dx:0,dy:-4,r:4},{dx:4.5,dy:-2.5,r:3.5},{dx:9,dy:0,r:3}];
+          bumps.forEach(b=>{ctx.beginPath();ctx.arc(cloudCx+b.dx,cloudY+7+b.dy,b.r,0,Math.PI*2);ctx.fill();});
+          ctx.fillRect(cloudCx-12,cloudY+6,24,4);
+        }
+        const bx=x+cardW-18,by=cy+5;
+        roundedRect(ctx,bx,by,13,13,7);
+        ctx.fillStyle=isG?'#7c3aed':'#dc2626';ctx.fill();
+        ctx.strokeStyle='rgba(255,255,255,.7)';ctx.lineWidth=1;ctx.stroke();
+        ctx.fillStyle='#fff';
+        ctx.font='800 8px Space Grotesk, sans-serif';
+        ctx.textAlign='center';
+        ctx.fillText(mark,bx+6.5,by+9.5);
+        ctx.textAlign='left';
       }
     });
     y+=Math.ceil(group.entries.length/cols)*(cardH+gap)-gap+sectionGap;
@@ -2113,8 +2149,9 @@ function buildStrings(type,username){
     const{p,mod}=parsePri(val);
     if(!p||!byP[p])return;
     const entry=nameToEntry[name];if(!entry?.no)return;
-    const term=dexSearchTerm(entry,dexHasRegional);if(!term)return;
-    byP[p].push({term,filters:entrySearchFilters(entry,mod)});
+    const effectiveEntry={...entry,maxType:maxTypeForEntry(entry,type)};
+    const term=dexSearchTerm(effectiveEntry,dexHasRegional);if(!term)return;
+    byP[p].push({term,filters:entrySearchFilters(effectiveEntry,mod)});
   });
   const out={};
   ['H','M','L'].forEach(p=>{
@@ -2577,7 +2614,7 @@ function parseImportString(){
     const n=parseInt(e.no);if(isNaN(n))return;
     if(!dexToEntries[n])dexToEntries[n]=[];
     if(!dexToEntries[n].find(x=>x.name===e.name))
-      dexToEntries[n].push({name:e.name,dn:e.displayName||e.name,no:e.no,region:e.region,regionTerm:dexRegionTerm(e,dexHasRegional)});
+      dexToEntries[n].push({name:e.name,dn:e.displayName||e.name,no:e.no,region:e.region,maxType:maxTypeForEntry(e,myListType),regionTerm:dexRegionTerm(e,dexHasRegional)});
   });
   let working=raw;
   const preIdx=working.indexOf('!4*&');
@@ -2590,13 +2627,14 @@ function parseImportString(){
   const matched=[];const skipped=[];
   tokens.forEach(token=>{
     let mod='',numStr=token;
-    let regionTerm='',castformType='',formVariant='';
+    let regionTerm='',castformType='',formVariant='',maxType='';
     if(token.includes('&')){
       const parts=token.split('&').map(p=>p.trim()).filter(Boolean);
       numStr=parts[parts.length-1];
       const filters=parts.slice(0,-1).map(p=>p.toLowerCase());
       mod=modFromSearchFilters(filters);
       regionTerm=filters.find(p=>REGION_SEARCH_TERMS.has(p))||'';
+      maxType=filters.find(p=>p==='dynamax'||p==='gigantamax')||'';
       castformType=castformTypeFromSearchFilters(filters);
       formVariant=formVariantFromSearchFilters(filters);
     }
@@ -2605,6 +2643,7 @@ function parseImportString(){
     if(isNaN(dex)||dex<=0)return;
     let entries=dexToEntries[dex];
     if(regionTerm)entries=(entries||[]).filter(e=>e.regionTerm===regionTerm);
+    if(maxType)entries=(entries||[]).filter(e=>MAX_TYPE_SEARCH[e.maxType]===maxType);
     if(castformType)entries=(entries||[]).filter(e=>castformTypeFilter(e)===castformType);
     if(formVariant)entries=(entries||[]).filter(e=>formVariantFilter(e)===formVariant);
     if(!entries||!entries.length){skipped.push(dex);return;}
