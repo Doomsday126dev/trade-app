@@ -148,7 +148,7 @@ input,select,textarea{font-family:var(--font);outline:none}
 .ac-empty{padding:10px 12px;font-size:13px;color:var(--muted)}
 
 /* MY LIST ROWS */
-.mygrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:7px;margin-bottom:12px}
+.mygrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(390px,1fr));gap:7px;margin-bottom:12px}
 .myrow{background:var(--card);border:1px solid var(--border);border-radius:var(--r2);padding:8px 11px;display:flex;align-items:center;gap:6px;cursor:grab;position:relative}
 .myrow:active{cursor:grabbing}
 .myrow:hover{z-index:8}
@@ -164,9 +164,9 @@ input,select,textarea{font-family:var(--font);outline:none}
 .myrow-name{font-size:13px;font-weight:500;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .myrow[data-full]:has(.myrow-name:hover)::after{content:attr(data-full);position:absolute;left:44px;bottom:calc(100% + 6px);max-width:min(360px,calc(100vw - 70px));background:rgba(18,17,34,.97);border:1px solid var(--border2);color:var(--text);border-radius:7px;padding:6px 9px;font-size:12px;line-height:1.25;white-space:normal;box-shadow:0 8px 24px rgba(0,0,0,.28);pointer-events:none;z-index:30}
 .myrow[data-full]:has(.myrow-name:hover)::before{content:'';position:absolute;left:55px;bottom:100%;border:5px solid transparent;border-top-color:var(--border2);pointer-events:none;z-index:31}
-.mctrl{display:flex;gap:5px;align-items:center;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end}
+.mctrl{display:flex;gap:3px;align-items:center;flex-shrink:0;flex-wrap:nowrap;justify-content:flex-end;overflow:hidden}
 .mctrl-sep{width:1px;height:18px;background:var(--border2);margin:0 2px;flex-shrink:0}
-.pb{width:26px;height:24px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;transition:.15s}
+.pb{width:22px;height:24px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;transition:.15s;flex-shrink:0;padding:0}
 .pb.on.H{background:var(--Hbg);color:var(--H);border-color:rgba(239,68,68,.55)}
 .pb.on.M{background:var(--Mbg);color:var(--M);border-color:rgba(245,158,11,.55)}
 .pb.on.L{background:var(--Lbg);color:var(--L);border-color:rgba(16,185,129,.4)}
@@ -1960,7 +1960,7 @@ function renderMyList(filterVal){
         <button class="flag-btn lucky-flag ${lucky?'on':''}" onclick="setLucky('${sn}')" title="⚡ Lucky">⚡</button>
         <button class="flag-btn xxl-flag ${xxl?'on':''}" onclick="setXxl('${sn}')" title="XXL">XXL</button>
         <button class="flag-btn xxs-flag ${xxs?'on':''}" onclick="setXxs('${sn}')" title="XXS">XXS</button>
-        <input class="ni" type="text" value="${mod}" placeholder="notes" onchange="setNotes('${sn}',this.value)" style="width:40px">
+        <input class="ni" type="text" value="${mod}" placeholder="…" title="Notes" onchange="setNotes('${sn}',this.value)">
         <button class="rm" onclick="removeEntry('${sn}')" title="Remove" aria-label="Remove ${escAttr(dn)}">×</button>
       </div>
     </div>`;
@@ -2014,11 +2014,12 @@ function drawWrappedText(ctx,text,x,y,maxW,lineH,maxLines){
   return shown.length*lineH;
 }
 function drawImageContain(ctx,img,x,y,w,h){
-  const iw=img.naturalWidth||img.width||1;
-  const ih=img.naturalHeight||img.height||1;
-  const r=Math.min(w/iw,h/ih);
-  const dw=iw*r,dh=ih*r;
-  ctx.drawImage(img,x+(w-dw)/2,y+(h-dh)/2,dw,dh);
+  const box=imageTrimBox(img);
+  // Scale to fit within 92% of the cell, ensuring all Pokemon appear at consistent visual size
+  const targetW=w*0.92,targetH=h*0.92;
+  const r=Math.min(targetW/box.sw,targetH/box.sh);
+  const dw=box.sw*r,dh=box.sh*r;
+  ctx.drawImage(img,box.sx,box.sy,box.sw,box.sh,x+(w-dw)/2,y+(h-dh)/2,dw,dh);
 }
 const imageTrimCache=new WeakMap();
 function imageTrimBox(img){
@@ -2104,34 +2105,38 @@ function drawCenteredFittedText(ctx,text,x,y,maxW,{weight=800,max=24,min=14,colo
   return size;
 }
 async function renderListImage(entries,type,username){
-  const W=560,frame=6,pad=12,gap=2,cols=5;
-  const cellW=(W-frame*2-pad*2-gap*(cols-1))/cols,cellH=84,sprSize=82;
+  const W=560,frame=0,pad=6,gap=0,cols=6;
+  const cellW=(W-frame*2-pad*2-gap*(cols-1))/cols,cellH=72,sprSize=68;
   const groupDefs=['H','M','L'].map(p=>({p,label:priLabel(p),entries:entries.filter(e=>e.p===p)}));
   const groups=groupDefs.filter(g=>g.entries.length);
-  const headerH=52,groupTitleH=24,sectionPad=8,sectionGap=6,bottomPad=8;
+  const headerH=64,groupTitleH=28,sectionPad=4,sectionGap=0,bottomPad=12;
   let H=frame+headerH+bottomPad;
   groups.forEach(g=>{H+=groupTitleH+sectionPad*2+Math.ceil(g.entries.length/cols)*cellH+sectionGap;});
   const canvas=document.createElement('canvas');
   const scale=2;
-  canvas.width=W*scale;canvas.height=Math.max(H,Math.round(W*1.65),360)*scale;
+  canvas.width=W*scale;canvas.height=Math.max(H,360)*scale;
   const ctx=canvas.getContext('2d');
   ctx.scale(scale,scale);
   const fullH=canvas.height/scale;
-  ctx.fillStyle='#2c3e50';ctx.fillRect(0,0,W,fullH);
-  ctx.fillStyle='#1a252f';ctx.fillRect(0,0,W,3);
+  // Dark professional background
+  ctx.fillStyle='#0f1419';ctx.fillRect(0,0,W,fullH);
+
+  // Header with gradient
+  const headerGrad=ctx.createLinearGradient(0,0,W,0);
+  headerGrad.addColorStop(0,'#1e293b');
+  headerGrad.addColorStop(1,'#334155');
+  ctx.fillStyle=headerGrad;ctx.fillRect(0,0,W,headerH);
+  // Accent line below header
+  ctx.fillStyle='#6366f1';ctx.fillRect(0,headerH-2,W,2);
 
   const title=`${username}'s ${listLabel(type)} List`;
-  ctx.shadowColor='rgba(0,0,0,.35)';
-  ctx.shadowBlur=3;ctx.shadowOffsetY=1;
-  drawCenteredFittedText(ctx,title,W/2,30,W-92,{max:21,min:14,color:'#fff'});
-  ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetY=0;
-  ctx.font='800 11px Space Grotesk, sans-serif';
-  ctx.fillStyle='rgba(255,255,255,.88)';
+  drawCenteredFittedText(ctx,title,W/2,28,W-32,{max:20,min:14,color:'#ffffff'});
+  ctx.font='600 11px Space Grotesk, sans-serif';
+  ctx.fillStyle='rgba(255,255,255,.6)';
   const date=new Date().toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
-  ctx.fillText(`${entries.length} entries · ${date}`,frame+8,45);
-  ctx.fillStyle='rgba(255,255,255,.95)';
-  ctx.font='800 10px Space Grotesk, sans-serif';
-  ctx.fillText('PoGo',W-frame-36,45);
+  ctx.textAlign='center';
+  ctx.fillText(`${entries.length} Pokémon · ${date}`,W/2,48);
+  ctx.textAlign='left';
 
   const urls=[...new Set([
     ...entries.map(exportSpriteUrl).filter(Boolean),
@@ -2140,20 +2145,26 @@ async function renderListImage(entries,type,username){
   const imagePairs=await Promise.all(urls.map(async url=>[url,await loadCanvasImage(url)]));
   const images=new Map(imagePairs);
   const priColors={H:'#ef4444',M:'#f59e0b',L:'#10b981','':'#8888aa'};
+  const priBgColors={H:'rgba(239,68,68,.08)',M:'rgba(245,158,11,.08)',L:'rgba(16,185,129,.08)'};
   let y=frame+headerH;
   groups.forEach(group=>{
-    ctx.fillStyle='#34495e';ctx.fillRect(frame,y,W-frame*2,groupTitleH);
+    // Group title bar — colored to match priority
+    const titleColor=priColors[group.p]||'#64748b';
+    ctx.fillStyle='#1a2332';ctx.fillRect(frame,y,W-frame*2,groupTitleH);
+    // Left accent bar in priority color
+    ctx.fillStyle=titleColor;ctx.fillRect(frame,y,4,groupTitleH);
     ctx.fillStyle='#fff';
-    ctx.font='800 13px Space Grotesk, sans-serif';
-    ctx.beginPath();ctx.arc(frame+13,y+groupTitleH/2,5,0,Math.PI*2);ctx.fill();
-    ctx.strokeStyle=priColors[group.p]||'#8888aa';ctx.lineWidth=3;ctx.stroke();
-    ctx.fillStyle='#fff';
-    ctx.fillText(`${group.label} (${group.entries.length})`,frame+24,y+16);
+    ctx.font='700 13px Space Grotesk, sans-serif';
+    ctx.fillText(`${group.label}`,frame+14,y+18);
+    ctx.fillStyle='rgba(255,255,255,.5)';
+    ctx.font='600 12px Space Grotesk, sans-serif';
+    ctx.fillText(`${group.entries.length}`,frame+14+ctx.measureText(group.label).width+8,y+18);
     y+=groupTitleH;
     const rows=Math.ceil(group.entries.length/cols);
     const areaH=sectionPad*2+rows*cellH;
-    ctx.fillStyle='#f8f9fa';ctx.fillRect(frame,y,W-frame*2,areaH);
-    ctx.strokeStyle='rgba(52,73,94,.3)';ctx.lineWidth=1;ctx.strokeRect(frame+.5,y+.5,W-frame*2-1,areaH-1);
+    // White background with subtle priority tint
+    ctx.fillStyle='#ffffff';ctx.fillRect(frame,y,W-frame*2,areaH);
+    ctx.fillStyle=priBgColors[group.p]||'rgba(0,0,0,0)';ctx.fillRect(frame,y,W-frame*2,areaH);
     y+=sectionPad;
     group.entries.forEach((e,i)=>{
       const col=i%cols,row=Math.floor(i/cols);
@@ -2163,33 +2174,24 @@ async function renderListImage(entries,type,username){
       if(img)drawImageContain(ctx,img,sx,sy,sprSize,sprSize);
       else drawSpriteFallback(ctx,e,sx,sy,sprSize);
       if(e.lucky||e.xxl||e.xxs){
-        let bx=x+cellW-4;
+        let bx=x+cellW-3;
         ctx.textAlign='center';
-        if(e.xxs){bx-=16;roundedRect(ctx,bx,cy+4,15,11,3);ctx.fillStyle='#2dd4bf';ctx.fill();ctx.fillStyle='#fff';ctx.font='700 6px Space Grotesk,sans-serif';ctx.fillText('XS',bx+7.5,cy+11.5);}
-        if(e.xxl){bx-=16;roundedRect(ctx,bx,cy+4,15,11,3);ctx.fillStyle='#818cf8';ctx.fill();ctx.fillStyle='#fff';ctx.font='700 6px Space Grotesk,sans-serif';ctx.fillText('XL',bx+7.5,cy+11.5);}
-        if(e.lucky){bx-=15;roundedRect(ctx,bx,cy+4,13,11,3);ctx.fillStyle='#facc15';ctx.fill();ctx.fillStyle='#7c2d12';ctx.font='800 8px Space Grotesk,sans-serif';ctx.fillText('L',bx+6.5,cy+11.5);}
+        if(e.xxs){bx-=14;roundedRect(ctx,bx,cy+3,13,9,2);ctx.fillStyle='#2dd4bf';ctx.fill();ctx.fillStyle='#fff';ctx.font='800 6px Space Grotesk,sans-serif';ctx.fillText('XS',bx+6.5,cy+9.5);}
+        if(e.xxl){bx-=14;roundedRect(ctx,bx,cy+3,13,9,2);ctx.fillStyle='#818cf8';ctx.fill();ctx.fillStyle='#fff';ctx.font='800 6px Space Grotesk,sans-serif';ctx.fillText('XL',bx+6.5,cy+9.5);}
+        if(e.lucky){bx-=12;roundedRect(ctx,bx,cy+3,11,9,2);ctx.fillStyle='#facc15';ctx.fill();ctx.fillStyle='#7c2d12';ctx.font='800 7px Space Grotesk,sans-serif';ctx.fillText('L',bx+5.5,cy+9.5);}
         ctx.textAlign='left';
       }
       const mark=maxMarkForEntry(e,type);
       if(mark){
         const isG=mark==='G';
-        const cloud=images.get(canvasSafeSpriteUrl(MAX_CLOUD_URL));
-        const cw=26,ch=14,cx=sx+(sprSize-cw)/2,cloudY=sy-7;
-        if(cloud)drawImageContain(ctx,cloud,cx,cloudY,cw,ch);
-        else{
-          ctx.fillStyle='#dc2626';
-          const cloudCx=sx+sprSize/2;const bumps=[{dx:-9,dy:0,r:3},{dx:-4.5,dy:-2.5,r:3.5},{dx:0,dy:-4,r:4},{dx:4.5,dy:-2.5,r:3.5},{dx:9,dy:0,r:3}];
-          bumps.forEach(b=>{ctx.beginPath();ctx.arc(cloudCx+b.dx,cloudY+7+b.dy,b.r,0,Math.PI*2);ctx.fill();});
-          ctx.fillRect(cloudCx-12,cloudY+6,24,4);
-        }
-        const bx=x+cellW-20,by=cy+5;
-        roundedRect(ctx,bx,by,13,13,7);
+        const bx=x+3,by=cy+3;
+        roundedRect(ctx,bx,by,12,12,6);
         ctx.fillStyle=isG?'#7c3aed':'#dc2626';ctx.fill();
-        ctx.strokeStyle='rgba(255,255,255,.7)';ctx.lineWidth=1;ctx.stroke();
+        ctx.strokeStyle='rgba(255,255,255,.85)';ctx.lineWidth=1;ctx.stroke();
         ctx.fillStyle='#fff';
         ctx.font='800 8px Space Grotesk, sans-serif';
         ctx.textAlign='center';
-        ctx.fillText(mark,bx+6.5,by+9.5);
+        ctx.fillText(mark,bx+6,by+9);
         ctx.textAlign='left';
       }
     });
