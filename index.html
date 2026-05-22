@@ -164,16 +164,23 @@ input,select,textarea{font-family:var(--font);outline:none}
 .myrow-name{font-size:13px;font-weight:500;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .myrow[data-full]:has(.myrow-name:hover)::after{content:attr(data-full);position:absolute;left:44px;bottom:calc(100% + 6px);max-width:min(360px,calc(100vw - 70px));background:rgba(18,17,34,.97);border:1px solid var(--border2);color:var(--text);border-radius:7px;padding:6px 9px;font-size:12px;line-height:1.25;white-space:normal;box-shadow:0 8px 24px rgba(0,0,0,.28);pointer-events:none;z-index:30}
 .myrow[data-full]:has(.myrow-name:hover)::before{content:'';position:absolute;left:55px;bottom:100%;border:5px solid transparent;border-top-color:var(--border2);pointer-events:none;z-index:31}
-.mctrl{display:flex;gap:3px;align-items:center;flex-shrink:0}
+.mctrl{display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0}
+.mctrl-row{display:flex;gap:3px;align-items:center}
+.mctrl-sep{width:1px;height:18px;background:var(--border2);margin:0 2px;flex-shrink:0}
 .pb{width:26px;height:24px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;transition:.15s}
 .pb.on.H{background:var(--Hbg);color:var(--H);border-color:rgba(239,68,68,.55)}
 .pb.on.M{background:var(--Mbg);color:var(--M);border-color:rgba(245,158,11,.55)}
 .pb.on.L{background:var(--Lbg);color:var(--L);border-color:rgba(16,185,129,.4)}
-.lucky-add{display:inline-flex;align-items:center;justify-content:center;gap:6px;flex:0 0 auto;background:var(--bg);border:1px solid var(--border2);color:var(--muted);padding:8px 11px;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer;user-select:none}
+.flag-btn{height:24px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:11px;font-weight:800;cursor:pointer;transition:.15s;padding:0 5px}
+.flag-btn.lucky-flag.on{background:rgba(250,204,21,.15);color:#facc15;border-color:rgba(250,204,21,.5)}
+.flag-btn.xxl-flag.on{background:rgba(99,102,241,.15);color:#818cf8;border-color:rgba(99,102,241,.5)}
+.flag-btn.xxs-flag.on{background:rgba(20,184,166,.15);color:#2dd4bf;border-color:rgba(20,184,166,.5)}
+.lucky-add{display:inline-flex;align-items:center;justify-content:center;gap:6px;flex:0 0 auto;background:var(--bg);border:1px solid var(--border2);color:var(--muted);padding:6px 9px;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer;user-select:none}
 .lucky-add input{appearance:auto;flex:0 0 auto;width:14px;height:14px;min-width:0;margin:0;padding:0;background:initial;border:initial;border-radius:0;accent-color:var(--M)}
-.lucky-btn{height:24px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:10px;font-weight:800;cursor:pointer;transition:.15s;padding:0 7px}
-.lucky-btn.on{background:rgba(250,204,21,.15);color:#facc15;border-color:rgba(250,204,21,.5)}
-.lucky-mark{display:inline-flex;align-items:center;margin-left:4px;padding:1px 4px;border-radius:4px;background:rgba(250,204,21,.16);border:1px solid rgba(250,204,21,.36);color:#facc15;font-size:9px;font-weight:800;line-height:1.1}
+.lucky-mark,.flag-mark{display:inline-flex;align-items:center;margin-left:3px;padding:1px 4px;border-radius:4px;font-size:9px;font-weight:800;line-height:1.1}
+.lucky-mark{background:rgba(250,204,21,.16);border:1px solid rgba(250,204,21,.36);color:#facc15}
+.flag-mark.xxl-mark{background:rgba(99,102,241,.16);border:1px solid rgba(99,102,241,.36);color:#818cf8}
+.flag-mark.xxs-mark{background:rgba(20,184,166,.16);border:1px solid rgba(20,184,166,.36);color:#2dd4bf}
 .ni{background:var(--bg);border:1px solid var(--border);color:var(--text);padding:2px 5px;border-radius:4px;font-size:10px;width:50px;font-family:var(--mono)}
 .rm{width:20px;height:20px;border-radius:4px;background:rgba(239,68,68,.1);color:var(--danger);border:1px solid rgba(239,68,68,.2);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center}
 
@@ -187,8 +194,12 @@ input,select,textarea{font-family:var(--font);outline:none}
 .str-level{background:var(--card);border:1px solid var(--border);border-radius:var(--r2);padding:11px 13px}
 .str-level-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
 .lucky-str{border-color:rgba(250,204,21,.32);background:linear-gradient(180deg,rgba(250,204,21,.08),var(--card))}
+.xxl-str{border-color:rgba(99,102,241,.32);background:linear-gradient(180deg,rgba(99,102,241,.08),var(--card))}
+.xxs-str{border-color:rgba(20,184,166,.32);background:linear-gradient(180deg,rgba(20,184,166,.08),var(--card))}
 .combo-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 7px;border-radius:4px;background:rgba(168,139,250,.13);border:1px solid rgba(168,139,250,.28);color:var(--ac2);font-size:11px;font-weight:700}
 .lucky-str .combo-badge{background:rgba(250,204,21,.16);border-color:rgba(250,204,21,.36);color:#facc15}
+.xxl-str .combo-badge{background:rgba(99,102,241,.16);border-color:rgba(99,102,241,.36);color:#818cf8}
+.xxs-str .combo-badge{background:rgba(20,184,166,.16);border-color:rgba(20,184,166,.36);color:#2dd4bf}
 .combo-wrap{border:1px solid var(--border);border-radius:var(--r2);background:var(--card);overflow:hidden}
 .combo-toggle{width:100%;background:transparent;border:none;color:var(--text);padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;font-family:var(--font);font-size:13px;font-weight:700}
 .combo-toggle:hover{background:var(--bg2)}
@@ -533,14 +544,21 @@ input,select,textarea{font-family:var(--font);outline:none}
           <div class="ac-dropdown" id="ac-dropdown"></div>
         </div>
         <select id="add-pmon-pri">
+          <option value="">– None –</option>
           <option value="H">H – High</option>
           <option value="M" selected>M – Medium</option>
           <option value="L">L – Low</option>
         </select>
-        <label class="lucky-add" title="Also include this in the Lucky Dex string">
-          <input type="checkbox" id="add-pmon-lucky"> Lucky
+        <label class="lucky-add" title="⚡ Lucky — generates a separate Lucky Dex search string">
+          <input type="checkbox" id="add-pmon-lucky"> ⚡
         </label>
-        <input type="text" id="add-pmon-notes" placeholder="Notes: f, m, xs…" style="max-width:120px">
+        <label class="lucky-add" title="XXL — mark as extra-large; generates a separate XXL search string">
+          <input type="checkbox" id="add-pmon-xxl" onchange="if(this.checked)document.getElementById('add-pmon-xxs').checked=false"> XXL
+        </label>
+        <label class="lucky-add" title="XXS — mark as extra-small; generates a separate XXS search string">
+          <input type="checkbox" id="add-pmon-xxs" onchange="if(this.checked)document.getElementById('add-pmon-xxl').checked=false"> XXS
+        </label>
+        <input type="text" id="add-pmon-notes" placeholder="Notes: f, m…" style="max-width:100px">
       </div>
       <div class="add-actions">
         <button class="bsave" onclick="addEntry()">Add</button>
@@ -551,6 +569,13 @@ input,select,textarea{font-family:var(--font);outline:none}
     <div class="mylist-search">
       <span class="mylist-srch-icon">🔍</span>
       <input type="text" placeholder="Filter my list…" oninput="renderMyList(this.value)" id="mylist-filter">
+      <span style="margin-left:8px;font-size:10px;color:var(--muted);display:inline-flex;gap:6px;align-items:center;flex-shrink:0">
+        <span title="Lucky — separate Lucky Dex search string">⚡ Lucky</span>
+        <span style="color:var(--border2)">·</span>
+        <span style="color:#818cf8" title="XXL — separate XXL search string">XXL</span>
+        <span style="color:var(--border2)">·</span>
+        <span style="color:#2dd4bf" title="XXS — separate XXS search string">XXS</span>
+      </span>
     </div>
     <div class="sec">My list <span id="mylist-count" style="font-weight:400;text-transform:none;font-size:11px;margin-left:4px"></span></div>
     <div id="mylist-out"></div>
@@ -1508,7 +1533,7 @@ function sortEntries(entries){
 function userBadge(x){
   const lu=allData.users?.[x.user]?.lastUpdated;
   return`<span class="badge ${x.p}" title="${x.user} · ${priLabel(x.p)} priority · Updated ${freshnessLabel(lu)}">
-    <span class="prio-mark">${x.p}</span>${x.user}${x.lucky?'<span class="lucky-mark">Lucky</span>':''}${x.mod?`<span class="mod"> ${x.mod}</span>`:''}
+    <span class="prio-mark">${x.p}</span>${x.user}${x.lucky?'<span class="lucky-mark">⚡</span>':''}${x.xxl?'<span class="flag-mark xxl-mark">XXL</span>':''}${x.xxs?'<span class="flag-mark xxs-mark">XXS</span>':''}${x.mod?`<span class="mod"> ${x.mod}</span>`:''}
   </span>`;
 }
 
@@ -1632,16 +1657,19 @@ function validateFc(fc){
 
 // ── PARSEPRI ─────────────────────────────────────────────────
 function parsePri(v){
-  if(!v)return{p:'',mod:'',lucky:false};
-  const m=String(v).match(/^([HML])(.*)/);
-  if(!m)return{p:'',mod:'',lucky:false};
-  let rest=m[2]||'';
+  if(!v)return{p:'',mod:'',lucky:false,xxl:false,xxs:false};
+  const s=String(v);
+  const priM=s.match(/^([HML])(.*)/);
+  const p=priM?priM[1]:'';
+  let rest=priM?(priM[2]||''):s;
   const lucky=/\[lucky\]/i.test(rest);
-  rest=rest.replace(/\[lucky\]/gi,'');
-  return{p:m[1],mod:rest.replace(/[()]/g,'').trim(),lucky};
+  const xxl=/\[xxl\]/i.test(rest);
+  const xxs=/\[xxs\]/i.test(rest);
+  rest=rest.replace(/\[lucky\]/gi,'').replace(/\[xxl\]/gi,'').replace(/\[xxs\]/gi,'');
+  return{p,mod:rest.replace(/[()]/g,'').trim(),lucky,xxl,xxs};
 }
-function priValue(p,mod='',lucky=false){
-  return`${p||'M'}${lucky?'[lucky]':''}${mod?`(${mod})`:''}`;
+function priValue(p,mod='',lucky=false,xxl=false,xxs=false){
+  return`${p||''}${lucky?'[lucky]':''}${xxl?'[xxl]':''}${xxs?'[xxs]':''}${mod?`(${mod})`:''}`;
 }
 
 // ── BROWSE ────────────────────────────────────────────────────
@@ -1682,7 +1710,7 @@ function renderBrowse(){
       if(!list||allowed&&!allowed.has(user))return;
       Object.entries(list).forEach(([name,val])=>{
         if(!map[name])map[name]=[];
-        const{p,mod,lucky}=parsePri(val);if(p)map[name].push({user,p,mod,lucky});
+        const{p,mod,lucky,xxl,xxs}=parsePri(val);if(p||lucky||xxl||xxs)map[name].push({user,p,mod,lucky,xxl,xxs});
       });
     });
     const results=allCostumeEntries().filter(e=>{
@@ -1708,7 +1736,7 @@ function renderBrowse(){
     if(!list||allowed&&!allowed.has(user))return;
     Object.entries(list).forEach(([name,val])=>{
       if(!map[name])map[name]={no:'?',dn:name,entries:[]};
-      const{p,mod,lucky}=parsePri(val);if(p)map[name].entries.push({user,p,mod,lucky});
+      const{p,mod,lucky,xxl,xxs}=parsePri(val);if(p||lucky||xxl||xxs)map[name].entries.push({user,p,mod,lucky,xxl,xxs});
     });
   });
   const seen=new Set();
@@ -1746,7 +1774,8 @@ function setMyList(t){
     t==='costumes'?'+ Add Other':t==='gmax'?'+ Add Gigantamax Pokémon':t==='dynamax'?'+ Add Dynamax Pokémon':'+ Add Pokémon';
   if(document.getElementById('ac-input'))document.getElementById('ac-input').value='';
   document.getElementById('add-pmon-sel').value='';
-  const luckyInput=document.getElementById('add-pmon-lucky');if(luckyInput)luckyInput.checked=false;
+  ['add-pmon-lucky','add-pmon-xxl','add-pmon-xxs'].forEach(id=>{const el=document.getElementById(id);if(el)el.checked=false;});
+  document.getElementById('add-pmon-pri').value='M';
   document.getElementById('ac-dropdown').classList.remove('open');
   document.getElementById('mylist-filter').value='';
   buildAcItems();renderMyList();
@@ -1757,14 +1786,17 @@ function addEntry(){
   const pri=document.getElementById('add-pmon-pri').value;
   const notes=document.getElementById('add-pmon-notes').value.trim();
   const lucky=!!document.getElementById('add-pmon-lucky')?.checked;
+  const xxl=!!document.getElementById('add-pmon-xxl')?.checked;
+  const xxs=!!document.getElementById('add-pmon-xxs')?.checked;
   if(!name){toast('⚠️ Select a Pokémon from the list');return;}
+  if(!pri&&!lucky&&!xxl&&!xxs){toast('⚠️ Set a priority or at least one flag (⚡/XXL/XXS)');return;}
   const list={...(allData[myListType]?.[cur]||{})};
-  list[name]=priValue(pri,notes,lucky);
+  list[name]=priValue(pri,notes,lucky,xxl,xxs);
   writeList(myListType,cur,list);
   document.getElementById('ac-input').value='';
   document.getElementById('add-pmon-sel').value='';
   document.getElementById('add-pmon-notes').value='';
-  const luckyInput=document.getElementById('add-pmon-lucky');if(luckyInput)luckyInput.checked=false;
+  ['add-pmon-lucky','add-pmon-xxl','add-pmon-xxs'].forEach(id=>{const el=document.getElementById(id);if(el)el.checked=false;});
   document.getElementById('ac-dropdown').classList.remove('open');
   const dn=acItems.find(x=>x.name===name)?.dn||name;
   toast(`✅ ${dn} added!`);
@@ -1869,7 +1901,7 @@ function currentListEntries(type=myListType,filterVal=''){
   return Object.entries(list).map(([name,val])=>{
     const entry=srcMap[name]||{};
     const spriteEntry=spriteEntryForListItem(type,name,entry)||{};
-    const{p,mod,lucky}=parsePri(val);
+    const{p,mod,lucky,xxl,xxs}=parsePri(val);
     const dn=entry.displayName||name;
     return{
       name,
@@ -1877,6 +1909,8 @@ function currentListEntries(type=myListType,filterVal=''){
       p,
       mod,
       lucky,
+      xxl,
+      xxs,
       no:spriteEntry.no||entry.no||null,
       maxType:maxTypeForEntry(entry,type),
       spriteName:(COSTUME_FORM_SPRITE_IDS[name]||REGIONAL_FORM_IDS[name])?name:(spriteEntry.name||entry.name||name),
@@ -1904,12 +1938,12 @@ function renderMyList(filterVal){
   if(countEl)countEl.textContent=q?`(${entries.length} of ${count})`:`(${count})`;
 
   if(!entries.length){
-    el.innerHTML=q?emptyHtml('No matches','Clear the filter to see all.'):emptyHtml('Nothing here yet','Use the search box above, pick High, Medium, or Low, then add entries.','📋');
+    el.innerHTML=q?emptyHtml('No matches','Clear the filter to see all.'):emptyHtml('Nothing here yet','Search for a Pokémon, set a priority (H/M/L) or flag (⚡ XXL XXS), then hit Add.','📋');
     renderMyStrings();return;
   }
 
   el.innerHTML=`<div class="mygrid" id="mylist-grid">${entries.map(([name,val],idx)=>{
-    const{p,mod,lucky}=parsePri(val);
+    const{p,mod,lucky,xxl,xxs}=parsePri(val);
     const dn=dispMap[name]||name;
     const no=noMap[name]||null;
     const entry=entryMap[name]||{name,dn,no};
@@ -1922,10 +1956,17 @@ function renderMyList(filterVal){
       ${hasSprite?`<span class="myrow-sprite-wrap">${spriteImg(no,28,'myrow-sprite',name)}${crownHtml}</span>`:crownHtml}
       <div class="myrow-name">${dn}</div>
       <div class="mctrl">
-        ${['H','M','L'].map(b=>`<button class="pb ${p===b?'on '+b:''}" onclick="setPri('${sn}','${b}')" title="${priName(b)}" aria-label="Set ${escAttr(dn)} to ${priLabel(b)} priority">${b}</button>`).join('')}
-        <button class="lucky-btn ${lucky?'on':''}" onclick="setLucky('${sn}')" title="Include in Lucky Dex string" aria-label="${lucky?'Remove':'Add'} ${escAttr(dn)} ${lucky?'from':'to'} Lucky Dex string">Lucky</button>
-        <input class="ni" type="text" value="${mod}" placeholder="notes" onchange="setNotes('${sn}',this.value)">
-        <button class="rm" onclick="removeEntry('${sn}')" title="Remove" aria-label="Remove ${escAttr(dn)}">×</button>
+        <div class="mctrl-row">
+          ${['H','M','L'].map(b=>`<button class="pb ${p===b?'on '+b:''}" onclick="setPri('${sn}','${b}')" title="${priName(b)}" aria-label="Set ${escAttr(dn)} to ${priLabel(b)} priority">${b}</button>`).join('')}
+          <span class="mctrl-sep"></span>
+          <button class="flag-btn lucky-flag ${lucky?'on':''}" onclick="setLucky('${sn}')" title="⚡ Lucky — appear in Lucky Dex search string">⚡</button>
+          <button class="flag-btn xxl-flag ${xxl?'on':''}" onclick="setXxl('${sn}')" title="XXL — appear in XXL search string">XXL</button>
+          <button class="flag-btn xxs-flag ${xxs?'on':''}" onclick="setXxs('${sn}')" title="XXS — appear in XXS search string">XXS</button>
+        </div>
+        <div class="mctrl-row">
+          <input class="ni" type="text" value="${mod}" placeholder="notes" onchange="setNotes('${sn}',this.value)" style="flex:1;width:auto;min-width:40px;max-width:90px">
+          <button class="rm" onclick="removeEntry('${sn}')" title="Remove" aria-label="Remove ${escAttr(dn)}">×</button>
+        </div>
       </div>
     </div>`;
   }).join('')}</div>`;
@@ -2130,15 +2171,11 @@ async function renderListImage(entries,type,username){
       const img=images.get(exportSpriteUrl(e));
       if(img)drawImageContain(ctx,img,sx,sy,sprSize,sprSize);
       else drawSpriteFallback(ctx,e,sx,sy,sprSize);
-      if(e.lucky){
-        roundedRect(ctx,x+4,cy+5,18,13,7);
-        ctx.fillStyle='#facc15';ctx.fill();
-        ctx.strokeStyle='rgba(124,45,18,.22)';ctx.lineWidth=1;ctx.stroke();
-        ctx.fillStyle='#7c2d12';
-        ctx.font='800 8px Space Grotesk, sans-serif';
-        ctx.textAlign='center';
-        ctx.fillText('L',x+13,cy+14.5);
-        ctx.textAlign='left';
+      if(e.lucky||e.xxl||e.xxs){
+        let bx=x+cardW-4;
+        if(e.xxs){bx-=16;roundedRect(ctx,bx,cy+4,15,11,3);ctx.fillStyle='#2dd4bf';ctx.fill();ctx.fillStyle='#fff';ctx.font='700 6px Space Grotesk,sans-serif';ctx.textAlign='center';ctx.fillText('XXS',bx+7.5,cy+11.5);ctx.textAlign='left';}
+        if(e.xxl){bx-=17;roundedRect(ctx,bx,cy+4,15,11,3);ctx.fillStyle='#818cf8';ctx.fill();ctx.fillStyle='#fff';ctx.font='700 6px Space Grotesk,sans-serif';ctx.textAlign='center';ctx.fillText('XXL',bx+7.5,cy+11.5);ctx.textAlign='left';}
+        if(e.lucky){bx-=16;roundedRect(ctx,bx,cy+4,14,11,3);ctx.fillStyle='#facc15';ctx.fill();ctx.fillStyle='#7c2d12';ctx.font='800 9px serif';ctx.textAlign='center';ctx.fillText('⚡',bx+7,cy+11.5);ctx.textAlign='left';}
       }
       const mark=maxMarkForEntry(e,type);
       if(mark){
@@ -2219,20 +2256,36 @@ function dragEnd(e){
 
 function setPri(name,p){
   const list={...(allData[myListType]?.[cur]||{})};
-  const{mod,lucky}=parsePri(list[name]||'');
-  list[name]=priValue(p,mod,lucky);
+  const{mod,lucky,xxl,xxs}=parsePri(list[name]||'');
+  list[name]=priValue(p,mod,lucky,xxl,xxs);
   writeList(myListType,cur,list);
 }
 function setNotes(name,notes){
   const list={...(allData[myListType]?.[cur]||{})};
-  const{p,lucky}=parsePri(list[name]||'M');
-  list[name]=priValue(p,notes,lucky);
+  const{p,lucky,xxl,xxs}=parsePri(list[name]||'');
+  list[name]=priValue(p,notes,lucky,xxl,xxs);
   writeList(myListType,cur,list);
 }
 function setLucky(name){
   const list={...(allData[myListType]?.[cur]||{})};
-  const{p,mod,lucky}=parsePri(list[name]||'M');
-  list[name]=priValue(p,mod,!lucky);
+  const{p,mod,lucky,xxl,xxs}=parsePri(list[name]||'');
+  list[name]=priValue(p,mod,!lucky,xxl,xxs);
+  writeList(myListType,cur,list);
+}
+function setXxl(name){
+  const list={...(allData[myListType]?.[cur]||{})};
+  const{p,mod,lucky,xxl,xxs}=parsePri(list[name]||'');
+  const newXxl=!xxl;
+  // XXL and XXS are mutually exclusive — turning one on clears the other
+  list[name]=priValue(p,mod,lucky,newXxl,newXxl?false:xxs);
+  writeList(myListType,cur,list);
+}
+function setXxs(name){
+  const list={...(allData[myListType]?.[cur]||{})};
+  const{p,mod,lucky,xxl,xxs}=parsePri(list[name]||'');
+  const newXxs=!xxs;
+  // XXL and XXS are mutually exclusive — turning one on clears the other
+  list[name]=priValue(p,mod,lucky,newXxs?false:xxl,newXxs);
   writeList(myListType,cur,list);
 }
 function removeEntry(name){
@@ -2271,23 +2324,26 @@ function buildStrings(type,username){
   if(type==='costumes'){
     const costumeNoMap={};
     allCostumeEntries().forEach(e=>{if(e.no)costumeNoMap[e.name]=e.no;});
-    const byP={H:[],M:[],L:[]},luckyDex=[];
+    const byP={H:[],M:[],L:[]},luckyDex=[],xxlDex=[],xxsDex=[];
     Object.entries(list).forEach(([name,val])=>{
-      const{p,lucky}=parsePri(val);
+      const{p,lucky,xxl,xxs}=parsePri(val);
       let no=costumeNoMap[name];
       if(!no){const sp=spriteEntryForListItem('costumes',name,allCostumeEntries().find(e=>e.name===name)||{});no=sp?.no||null;}
       const dex=parseInt(no);
       if(!Number.isFinite(dex))return;
       if(p&&byP[p])byP[p].push(dex);
       if(lucky)luckyDex.push(dex);
+      if(xxl)xxlDex.push(dex);
+      if(xxs)xxsDex.push(dex);
     });
     const out={};
     ['H','M','L'].forEach(p=>{
       if(!byP[p].length)return;
       out[p]=dexStringFromNumbers(byP[p]);
     });
-    const luckyStr=dexStringFromNumbers(luckyDex);
-    if(luckyStr)out.LUCKY=luckyStr;
+    const luckyStr=dexStringFromNumbers(luckyDex);if(luckyStr)out.LUCKY=luckyStr;
+    const xxlStr=dexStringFromNumbers(xxlDex);if(xxlStr)out.XXL=xxlStr;
+    const xxsStr=dexStringFromNumbers(xxsDex);if(xxsStr)out.XXS=xxsStr;
     return Object.keys(out).length?out:null;
   }
   const srcArr=listSource(type);
@@ -2297,23 +2353,26 @@ function buildStrings(type,username){
     if(!nameToEntry[e.name])nameToEntry[e.name]=e;
     if(regionalFormTerm(e.name))dexHasRegional[e.no]=true;
   });
-  const byP={H:[],M:[],L:[]},luckyItems=[];
+  const byP={H:[],M:[],L:[]},luckyItems=[],xxlItems=[],xxsItems=[];
   Object.entries(list).forEach(([name,val])=>{
-    const{p,mod,lucky}=parsePri(val);
+    const{p,mod,lucky,xxl,xxs}=parsePri(val);
     const entry=nameToEntry[name];if(!entry?.no)return;
     const effectiveEntry={...entry,maxType:maxTypeForEntry(entry,type)};
     const term=dexSearchTerm(effectiveEntry,dexHasRegional);if(!term)return;
     const item={term,filters:entrySearchFilters(effectiveEntry,mod)};
     if(p&&byP[p])byP[p].push(item);
     if(lucky)luckyItems.push(item);
+    if(xxl)xxlItems.push(item);
+    if(xxs)xxsItems.push(item);
   });
   const out={};
   ['H','M','L'].forEach(p=>{
     if(!byP[p].length)return;
     out[p]=stringFromSearchItems(byP[p]);
   });
-  const luckyStr=stringFromSearchItems(luckyItems);
-  if(luckyStr)out.LUCKY=luckyStr;
+  const luckyStr=stringFromSearchItems(luckyItems);if(luckyStr)out.LUCKY=luckyStr;
+  const xxlStr=stringFromSearchItems(xxlItems);if(xxlStr)out.XXL=xxlStr;
+  const xxsStr=stringFromSearchItems(xxsItems);if(xxsStr)out.XXS=xxsStr;
   return Object.keys(out).length?out:null;
 }
 
@@ -2352,10 +2411,22 @@ function strLevelsHtml(strs){
       <div class="strbox">${escHtml(strs[p])}</div>
     </div>`).join('')}${strs.LUCKY?`<div class="str-level lucky-str">
       <div class="str-level-hdr">
-        <span class="combo-badge">Lucky Dex</span>
+        <span class="combo-badge">⚡ Lucky Dex</span>
         <button class="cpbtn" type="button" data-copy="${escAttr(strs.LUCKY)}" onclick="copyStr(this.dataset.copy,this)" aria-label="Copy Lucky Dex search string">📋 Copy</button>
       </div>
       <div class="strbox">${escHtml(strs.LUCKY)}</div>
+    </div>`:''}${strs.XXL?`<div class="str-level xxl-str">
+      <div class="str-level-hdr">
+        <span class="combo-badge">XXL</span>
+        <button class="cpbtn" type="button" data-copy="${escAttr(strs.XXL)}" onclick="copyStr(this.dataset.copy,this)" aria-label="Copy XXL search string">📋 Copy</button>
+      </div>
+      <div class="strbox">${escHtml(strs.XXL)}</div>
+    </div>`:''}${strs.XXS?`<div class="str-level xxs-str">
+      <div class="str-level-hdr">
+        <span class="combo-badge">XXS</span>
+        <button class="cpbtn" type="button" data-copy="${escAttr(strs.XXS)}" onclick="copyStr(this.dataset.copy,this)" aria-label="Copy XXS search string">📋 Copy</button>
+      </div>
+      <div class="strbox">${escHtml(strs.XXS)}</div>
     </div>`:''}${combos.length?`<div class="combo-wrap">
       <button class="combo-toggle" type="button" onclick="toggleComboStrings(this)" aria-expanded="false">
         <span>Combined options <span class="combo-meta">${combos.length} available</span></span>
@@ -2877,7 +2948,7 @@ Object.assign(window,{
   openImport,setImportPri,parseImportString,toggleImportRow,toggleSelectAll,backToStep1,confirmImport,
   setFilter,setBrowseList,setMyList,setStaleFilter,switchTab,
   doLogin,logout,connectFirebase,skipFirebase,
-  addEntry,setPri,setNotes,setLucky,removeEntry,doUndo,copyStr,
+  addEntry,setPri,setNotes,setLucky,setXxl,setXxs,removeEntry,doUndo,copyStr,
   exportMyListImage,
   dragStart,dragOver,dragDrop,dragEnd,
   addUser,openReset,confirmReset,toggleAdmin,exportData,triggerRestore,restoreData,
