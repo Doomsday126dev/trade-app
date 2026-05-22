@@ -251,6 +251,10 @@ input,select,textarea{font-family:var(--font);outline:none}
 .rpin:disabled{opacity:.3;cursor:not-allowed}
 .new-user-form{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:14px}
 .new-user-form h3{font-size:13px;font-weight:600;color:var(--ac2);margin-bottom:10px}
+.new-user-form .frow{align-items:center}
+.admin-role-toggle{display:inline-flex;align-items:center;justify-content:center;gap:7px;flex:0 0 auto;min-width:0;background:var(--bg);border:1px solid var(--border2);border-radius:var(--r2);padding:8px 12px;color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;min-height:38px}
+.admin-role-toggle:hover{border-color:var(--accent);color:var(--ac2)}
+.admin-role-toggle input{flex:0 0 auto;min-width:0;width:16px;height:16px;margin:0;padding:0;accent-color:var(--accent)}
 .btn-export{background:transparent;border:1px solid var(--border2);color:var(--muted);padding:7px 14px;border-radius:var(--r2);font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px}
 .btn-export:hover{border-color:var(--ac2);color:var(--ac2)}
 .admin-actions{display:flex;justify-content:flex-end;gap:8px;margin-bottom:14px;flex-wrap:wrap}
@@ -610,12 +614,21 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
 .have-add-row{align-items:center;gap:7px}
 .have-qty-input{width:70px;background:var(--bg);border:1px solid var(--border2);color:var(--text);padding:8px 11px;border-radius:var(--r2);font-size:14px;text-align:center;flex-shrink:0;font-family:var(--mono)}
 .have-qty-input::-webkit-inner-spin-button,.have-qty-input::-webkit-outer-spin-button{opacity:1}
+.have-mirror-add{display:flex;align-items:center;gap:6px;background:var(--bg);border:1px solid var(--border2);color:var(--muted);padding:8px 11px;border-radius:var(--r2);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;min-height:38px}
+.have-mirror-add:hover{border-color:var(--accent);color:var(--ac2)}
+.have-mirror-add input{accent-color:var(--accent);width:15px;height:15px}
 .have-row{background:var(--card);border:1px solid var(--border);border-radius:var(--r2);padding:9px 12px;display:flex;align-items:center;gap:8px;margin-bottom:6px;transition:.15s}
 .have-row:hover{border-color:var(--border2)}
 .have-row-sprite{width:32px;height:32px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
 .have-row-info{flex:1;min-width:0}
 .have-row-name{font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .have-row-dex{font-size:10px;color:var(--muted);font-family:var(--mono)}
+.have-row-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:2px}
+.have-mirror-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(14,165,233,.12);border:1px solid rgba(14,165,233,.35);color:#38bdf8;border-radius:999px;padding:2px 7px;font-size:10px;font-weight:800;line-height:1.1;white-space:nowrap}
+.have-mirror-badge.mini{font-size:9px;padding:1px 5px;margin-left:2px}
+.have-mirror-btn{background:var(--bg);border:1px solid var(--border2);color:var(--muted);padding:5px 9px;border-radius:var(--r2);font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:var(--font)}
+.have-mirror-btn.on{background:rgba(14,165,233,.14);border-color:rgba(14,165,233,.45);color:#38bdf8}
+.have-mirror-btn:hover{border-color:var(--accent);color:var(--ac2)}
 .have-row-qty-wrap{display:inline-flex;align-items:center;gap:4px;flex-shrink:0}
 .have-row-qty-btn{width:26px;height:26px;border-radius:50%;background:var(--bg);border:1px solid var(--border2);color:var(--text);font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s}
 .have-row-qty-btn:hover{background:var(--accent);color:#fff;border-color:transparent}
@@ -632,9 +645,11 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
 .have-trainer-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px}
 .have-pmon-card{display:flex;align-items:center;gap:7px;padding:6px 9px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r2);font-size:12px;position:relative}
 .have-pmon-card.match{border-color:rgba(245,158,11,.5);background:rgba(245,158,11,.06)}
+.have-pmon-card.mirror-only{border-color:rgba(14,165,233,.42);background:rgba(14,165,233,.06)}
 .have-pmon-card .have-pmon-info{flex:1;min-width:0}
 .have-pmon-card .have-pmon-name{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
 .have-pmon-card .have-pmon-meta{font-size:10px;color:var(--muted)}
+.have-pmon-card .have-pmon-meta.mirror{color:#38bdf8;font-weight:700}
 .have-pmon-card .have-pmon-qty{font-family:var(--mono);font-weight:700;color:var(--ac2);font-size:13px;flex-shrink:0}
 .have-pmon-card .match-badge{position:absolute;top:-5px;right:-5px;background:var(--warn);color:#1a1a2e;font-size:9px;font-weight:800;padding:1px 5px;border-radius:8px;border:1.5px solid var(--card)}
 .have-offer-btn{background:var(--accent);color:#fff;border:none;padding:7px 14px;border-radius:var(--r2);font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:5px;margin-top:8px}
@@ -652,11 +667,13 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
 .have-trainer-chip.match:hover{background:rgba(245,158,11,.22);color:#fbbf24}
 html[data-theme="light"] .have-trainer-chip{background:var(--bg2);border-color:var(--border2);color:var(--text)}
 html[data-theme="light"] .have-trainer-chip.match{color:#b45309}
+html[data-theme="light"] .have-mirror-badge,html[data-theme="light"] .have-mirror-btn.on,html[data-theme="light"] .have-pmon-card .have-pmon-meta.mirror{color:#0369a1}
 
 @media(max-width:600px){
   .have-add-row{display:grid;grid-template-columns:1fr;gap:8px}
   .have-add-row .ac-wrap{grid-column:1}
   .have-add-row .have-qty-input{width:100%;grid-column:1}
+  .have-add-row .have-mirror-add{grid-column:1;justify-content:center}
   .have-add-row .bsave{width:100%;grid-column:1}
   .have-trainer-grid{grid-template-columns:1fr}
   .have-by-pokemon-card{padding:10px 12px}
@@ -718,12 +735,9 @@ html[data-theme="light"] .have-trainer-chip.match{color:#b45309}
 .sched-event-content{flex:1;min-width:0}
 .sched-event-title{font-weight:600;color:var(--text);line-height:1.3}
 .sched-event-bonus{display:inline-block;background:rgba(16,185,129,.16);color:var(--ok);border:1px solid rgba(16,185,129,.32);padding:1px 6px;border-radius:8px;font-size:10px;font-weight:700;margin-left:6px}
+.sched-event-bonus.unknown{background:var(--bg2);color:var(--muted);border-color:var(--border2)}
 .sched-event-link{font-size:11px;color:var(--ac2);text-decoration:none}
 .sched-event-link:hover{text-decoration:underline}
-.sched-event-ticket-btn{background:transparent;border:1px dashed var(--warn);color:var(--warn);padding:3px 9px;border-radius:10px;font-size:11px;font-weight:600;cursor:pointer;font-family:var(--font);transition:.15s}
-.sched-event-ticket-btn:hover{background:rgba(245,158,11,.1)}
-.sched-event-ticket-btn.owned{background:rgba(16,185,129,.12);border:1px solid var(--ok);color:var(--ok)}
-.sched-event-ticket-btn.owned:hover{background:rgba(16,185,129,.2)}
 .sched-manual-bonus{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--bg);border:1px dashed var(--border2);border-radius:var(--r2);margin-bottom:10px;font-size:12px;flex-wrap:wrap}
 .sched-manual-bonus-text{flex:1;min-width:160px}
 .sched-manual-bonus-text strong{color:var(--text);font-size:12px;display:block;margin-bottom:1px}
@@ -753,6 +767,8 @@ html[data-theme="light"] .have-trainer-chip.match{color:#b45309}
 .sched-trade-actions{display:flex;gap:4px;flex-shrink:0;flex-wrap:wrap;align-items:center}
 .sched-trade-btn{background:transparent;border:1px solid var(--border2);color:var(--muted);padding:4px 9px;border-radius:var(--r2);font-size:10px;font-weight:600;cursor:pointer;font-family:var(--font)}
 .sched-trade-btn:hover{color:var(--ac2);border-color:var(--ac2)}
+.sched-trade-btn.edit{color:var(--ac2);border-color:rgba(168,139,250,.4)}
+.sched-trade-btn.edit:hover{background:rgba(168,139,250,.12)}
 .sched-trade-btn.complete{color:var(--ok);border-color:rgba(16,185,129,.4)}
 .sched-trade-btn.complete:hover{background:rgba(16,185,129,.12)}
 .sched-trade-btn.cancel{color:var(--danger);border-color:rgba(239,68,68,.3)}
@@ -1304,6 +1320,7 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
             <div class="ac-dropdown" id="have-ac-dropdown"></div>
           </div>
           <input type="number" id="have-qty" min="1" max="999" value="1" placeholder="Qty" aria-label="Quantity" class="have-qty-input">
+          <label class="have-mirror-add" title="Only accept the same Pokémon/form in return"><input type="checkbox" id="have-mirror-only"> Mirror only</label>
           <button class="bsave" onclick="addInventoryEntry()">Add</button>
         </div>
       </div>
@@ -1334,7 +1351,7 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
   <div class="page" id="tab-schedule">
     <div class="sched-hdr">
       <div class="sched-title">📅 Trade Schedule</div>
-      <div class="sched-subtitle">Plan trades with the community. Daily quota & live event bonuses tracked automatically.</div>
+      <div class="sched-subtitle">Plan trades with the community. Daily quota, live events, and confirmed special-trade bonuses stay visible.</div>
     </div>
     <div class="sched-week-nav">
       <button class="sched-nav-btn" onclick="navigateSchedWeek(-1)" aria-label="Previous week">‹</button>
@@ -1365,7 +1382,7 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
       <div class="frow">
         <input type="text" id="nu-name" placeholder="Username" style="max-width:180px">
         <input type="text" id="nu-pin" placeholder="6-digit PIN" maxlength="6" inputmode="numeric" style="max-width:120px">
-        <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;white-space:nowrap;color:var(--muted)"><input type="checkbox" id="nu-admin"> Admin</label>
+        <label id="nu-admin-wrap" class="admin-role-toggle"><input type="checkbox" id="nu-admin"><span>Admin</span></label>
       </div>
       <button class="bsave" onclick="addUser()" style="margin-top:10px">Add member</button>
     </div>
@@ -2334,8 +2351,10 @@ async function bindAuthUserNow(username,authUpdate){
 }
 async function createMemberNow(username,pin,isAdmin=false,reqId=''){
   const s=getLocal();
+  const iAmOwner=allData.users?.[cur]?.isOwner||cur===OWNER;
+  const canCreateAdmin=!!isAdmin&&iAmOwner;
   const user=normalizedUserRecord(username,{},{
-    pin,isAdmin,isOwner:false,friendCode:'',joined:Date.now(),lastSeen:null,lastUpdated:null,
+    pin,isAdmin:canCreateAdmin,isOwner:false,friendCode:'',joined:Date.now(),lastSeen:null,lastUpdated:null,
     pinHashed:false,authVersion:1,authEmail:authEmail(username,1)
   });
   if(fbOn&&db){
@@ -4064,6 +4083,10 @@ function renderAdmin(){
   const el=document.getElementById('admin-tbody');if(!el)return;
   renderSecurityPanel();
   const iAmOwner=allData.users?.[cur]?.isOwner||cur===OWNER;
+  const adminWrap=document.getElementById('nu-admin-wrap');
+  const adminInput=document.getElementById('nu-admin');
+  if(adminWrap)adminWrap.style.display=iAmOwner?'inline-flex':'none';
+  if(adminInput&&!iAmOwner)adminInput.checked=false;
   const users=Object.entries(allData.users||{}).sort((a,b)=>
     lastLoginTime(b[0],b[1])-lastLoginTime(a[0],a[1])||alphaCompare(a[0],b[0])
   );
@@ -4104,6 +4127,8 @@ function renderAdmin(){
 }
 
 function toggleAdmin(u,makeAdmin){
+  const iAmOwner=allData.users?.[cur]?.isOwner||cur===OWNER;
+  if(!iAmOwner){toast('⚠️ Only the owner can change admin roles');return;}
   if(u===OWNER){toast('⚠️ Cannot change owner');return;}
   writeUser(u,{isAdmin:makeAdmin});
   toast(`✅ ${u} is now ${makeAdmin?'an admin':'a member'}`);renderAdmin();
@@ -4111,7 +4136,10 @@ function toggleAdmin(u,makeAdmin){
 async function addUser(){
   const name=document.getElementById('nu-name').value.trim();
   const pin=document.getElementById('nu-pin').value.trim();
-  const isAdmin=document.getElementById('nu-admin').checked;
+  const iAmOwner=allData.users?.[cur]?.isOwner||cur===OWNER;
+  const adminRequested=document.getElementById('nu-admin')?.checked;
+  if(adminRequested&&!iAmOwner){toast('⚠️ Only the owner can create admins');return;}
+  const isAdmin=iAmOwner&&adminRequested;
   if(!name){toast('⚠️ Enter username');return;}
   if(!isSixDigitPin(pin)){toast('⚠️ PIN must be exactly 6 digits');return;}
   if(allData.users?.[name]){toast('⚠️ Username exists');return;}
@@ -4797,7 +4825,9 @@ async function triggerInstall(){
 
 // ── WHAT'S NEW (#28) ─────────────────────────────────────────
 const WHATS_NEW=[
-  {version:'3.0',title:'📅 Trade Schedule',desc:'New Schedule tab with week-view calendar. Plan trades with specific trainers, track your daily quota (1 special + 100 regular base), and see real-time event bonuses (Community Day +1, GO Fest +2 ticketed, Pokémon Tour +3 ticketed). Mark "🎟 Ticket holder" on ticketed events to unlock the bonus. Events auto-update from LeekDuck.'},
+  {version:'3.2',title:'🎒 Mirror-Only Inventory',desc:'Mark Have-tab inventory as Mirror only when you only want the exact same Pokémon/form back. Browse cards and offer modals now show the restriction clearly and public offers require the matching mirror.'},
+  {version:'3.1',title:'📅 Schedule Edits',desc:'Edit scheduled trades after creating them, including switching Regular/Special/Remote. Event rows no longer guess bonus trades; add a custom bonus when event details confirm extra specials.'},
+  {version:'3.0',title:'📅 Trade Schedule',desc:'New Schedule tab with week-view calendar. Plan trades with specific trainers, track your daily quota (1 special + 100 regular base), and see live Pokémon GO events from LeekDuck.'},
   {version:'2.9',title:'🔔 Public Offers & FCFS',desc:'Offers on inventory items are now public — see who already offered what & when (sorted oldest first). Compare offers before bidding. The 1st offer gets a green badge so everyone respects first-come-first-served. Withdraw your own offers anytime. Recipients see a 📬 inbox badge.'},
   {version:'2.8',title:'🎒 Inventory ("Have" tab)',desc:'Track what Pokémon you have to trade with simple quantity counts. Others can browse your inventory and click "Offer trade" to start a Discord conversation. ⭐ Auto-highlights items that match your wishlist.'},
   {version:'2.7.1',title:'Costume Sprite Fix',desc:'Fixed Flower Crown variants (Happiny, Chansey, etc.) and Worlds-event Pikachus showing generic sprites in My List and exports. Costume URLs are now resolved before generic fallback.'},
@@ -5318,37 +5348,57 @@ function fmtWeekRange(start){
 }
 const WKDS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
-// Classify an event for display. We deliberately DO NOT auto-assign trade bonuses —
-// ScrapedDuck/LeekDuck doesn't expose that data, and event-by-event bonuses vary year to year.
-// All events are displayed honestly with "bonus unknown — check details" + a link to LeekDuck.
-// User must use the manual override to add any bonus specials they confirm from the article.
-// The `mayHaveTicket` flag is purely a visual hint for known ticketed events so users remember
-// to check ticket benefits — it does NOT auto-grant any bonus.
+function collectEventBonusTexts(ev){
+  const texts=[];
+  const visit=(value,depth=0)=>{
+    if(!value||depth>5)return;
+    if(typeof value==='string'){texts.push(value);return;}
+    if(Array.isArray(value)){value.forEach(v=>visit(v,depth+1));return;}
+    if(typeof value==='object'){
+      if(typeof value.text==='string')texts.push(value.text);
+      if(typeof value.description==='string')texts.push(value.description);
+      Object.values(value).forEach(v=>visit(v,depth+1));
+    }
+  };
+  visit(ev?.extraData);
+  return [...new Set(texts)];
+}
+function eventNumberTokenToInt(token){
+  const n=parseInt(token,10);
+  if(Number.isFinite(n))return n;
+  return{one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10}[String(token||'').toLowerCase()]||0;
+}
+function parseSpecialTradeBonus(texts){
+  const n='(\\d+|one|two|three|four|five|six|seven|eight|nine|ten)';
+  for(const raw of texts){
+    const t=String(raw||'').toLowerCase();
+    if(!t.includes('special')||!t.includes('trade'))continue;
+    if(/\ban\s+(?:additional|extra|bonus)\s+special\s+trade\b/i.test(t))return{bonus:1,text:raw,kind:'additional'};
+    let m=t.match(new RegExp(`${n}\\s+(?:additional|extra|bonus)\\s+special\\s+trades?`,'i'));
+    if(m)return{bonus:eventNumberTokenToInt(m[1]),text:raw,kind:'additional'};
+    m=t.match(new RegExp(`(?:additional|extra|bonus)\\s+${n}\\s+special\\s+trades?`,'i'));
+    if(m)return{bonus:eventNumberTokenToInt(m[1]),text:raw,kind:'additional'};
+    m=t.match(/\+\s*(\d+)\s*special\s+trades?/i);
+    if(m)return{bonus:eventNumberTokenToInt(m[1]),text:raw,kind:'additional'};
+    m=t.match(new RegExp(`up to\\s+${n}\\s+special\\s+trades?`,'i'));
+    if(m)return{bonus:Math.max(0,eventNumberTokenToInt(m[1])-1),text:raw,kind:'total'};
+  }
+  return null;
+}
+// Classify an event only from explicit scraped bonus text. No name-based guessing.
+// Returns {bonus, bonusType, ambiguous, bonusText}
 function classifyEvent(ev){
-  const name=String(ev.name||'').toLowerCase();
-  const type=String(ev.eventType||'').toLowerCase();
-  const isTicketed=name.includes('go fest')||name.includes('go tour')||name.includes('pokémon go tour')||type.includes('go-fest')||type.includes('tour');
-  return{bonus:0,bonusType:'',mayHaveTicket:isTicketed};
+  const parsed=parseSpecialTradeBonus(collectEventBonusTexts(ev));
+  if(parsed&&parsed.bonus>0)return{bonus:parsed.bonus,bonusType:'special',ambiguous:false,bonusText:parsed.text,bonusKind:parsed.kind};
+  return{bonus:0,bonusType:'special',ambiguous:true,bonusText:''};
 }
-// Stable ID for an event (used to track ticket ownership)
+// Stable ID for an event.
 function getEventId(ev){return ev.eventID||ev.eventID||`${ev.name}_${ev.start}`;}
-// Check if current user has marked owning a ticket for an event
-function hasEventTicket(eventId){
-  return !!(allData.users?.[cur]?.tickets?.[eventId]);
-}
-async function toggleEventTicket(eventId,eventName){
-  const ud=allData.users?.[cur]||{};
-  const tickets={...(ud.tickets||{})};
-  if(tickets[eventId]){delete tickets[eventId];toast(`🎟 Removed ticket for ${eventName}`);}
-  else{tickets[eventId]=true;toast(`🎟 Marked as ticket holder for ${eventName}`);}
-  await writeUser(cur,{tickets});
-  renderSchedule();
-}
 
-// Compute special trade bonus from event names for a given date.
-// Returns {specialBonus, regularBonus, events: [{name, link, image, bonus, requiresTicket, ticketed}]}
+// Compute special trade bonus from explicit event detail text for a given date.
+// Returns {specialBonus, regularBonus, events: [{name, link, image, bonus, bonusText}]}
 function dailyEventBonuses(isoD){
-  const out={specialBonus:0,manualBonus:0,events:[]};
+  const out={specialBonus:0,regularBonus:0,manualBonus:0,events:[]};
   if(!_eventData||!_eventData.events)return out;
   const dayStart=new Date(parseIsoDate(isoD));dayStart.setHours(0,0,0,0);
   const dayEnd=new Date(dayStart);dayEnd.setHours(23,59,59,999);
@@ -5359,14 +5409,15 @@ function dailyEventBonuses(isoD){
     if(e<dayStart.getTime()||s>dayEnd.getTime())return;
     const cls=classifyEvent(ev);
     const eventId=getEventId(ev);
-    const ticketMarked=hasEventTicket(eventId);
+    if(cls.bonus)out.specialBonus+=cls.bonus;
     out.events.push({
       name:ev.name,heading:ev.heading,link:ev.link,image:ev.image,
-      mayHaveTicket:cls.mayHaveTicket,ticketMarked,eventId,
+      bonus:cls.bonus,bonusType:cls.bonusType,bonusText:cls.bonusText,bonusKind:cls.bonusKind,
+      ambiguous:cls.ambiguous,eventId,
       start:ev.start,end:ev.end
     });
   });
-  // The only source of special-trade bonus is the user's manual override (set via +/-)
+  // Apply user's manual special-trade bonus override for this date
   const customBonus=parseInt(allData.users?.[cur]?.customBonuses?.[isoD])||0;
   if(customBonus>0){out.specialBonus+=customBonus;out.manualBonus=customBonus;}
   return out;
@@ -5389,14 +5440,24 @@ function tradesOnDate(isoD){
     .map(([id,t])=>({id,...t}));
 }
 function tradeCountsForDay(isoD){
-  const trades=tradesOnDate(isoD).filter(t=>t.status!=='completed');
-  let special=0,regular=0,remote=0;
+  const trades=tradesOnDate(isoD);
+  let special=0,regular=0,remote=0,scheduled=0,completed=0;
+  const byStatus={
+    special:{scheduled:0,completed:0},
+    regular:{scheduled:0,completed:0},
+    remote:{scheduled:0,completed:0}
+  };
   trades.forEach(t=>{
-    if(t.type==='special')special++;
-    else if(t.type==='remote')remote++;
+    const bucket=t.type==='special'?'special':t.type==='remote'?'remote':'regular';
+    const status=t.status==='completed'?'completed':'scheduled';
+    if(bucket==='special')special++;
+    else if(bucket==='remote')remote++;
     else regular++;
+    byStatus[bucket][status]++;
+    if(status==='completed')completed++;
+    else scheduled++;
   });
-  return{special,regular,remote,total:special+regular+remote,trades};
+  return{special,regular,remote,total:special+regular+remote,scheduled,completed,byStatus,trades};
 }
 
 async function writeTrade(id,trade){
@@ -5441,14 +5502,15 @@ function renderSchedule(){
       const evt=dailyEventBonuses(iso);
       const counts=tradeCountsForDay(iso);
       const trade_total=counts.total;
+      const tradeTitle=trade_total?`${counts.scheduled} open · ${counts.completed} done`:'';
       return`<div class="sched-day-card ${isToday?'today':''} ${isSel?'selected':''} ${isPast?'past':''}" onclick="selectSchedDay('${iso}')" role="button" tabindex="0">
         <span class="sched-day-wkd">${WKDS[d.getDay()]}</span>
         <span class="sched-day-num">${d.getDate()}</span>
         <div class="sched-day-meta">
           ${evt.events.length?'<span class="sched-day-event-dot" title="Event"></span>':''}
-          ${trade_total?`<span class="sched-day-trade-count">${trade_total}</span>`:''}
+          ${trade_total?`<span class="sched-day-trade-count" title="${escAttr(tradeTitle)}">${trade_total}</span>`:''}
         </div>
-        ${evt.specialBonus?`<span class="sched-day-special-bonus" title="+${evt.specialBonus} bonus special trades (manual)">+${evt.specialBonus}⭐</span>`:''}
+        ${evt.specialBonus?`<span class="sched-day-special-bonus" title="+${evt.specialBonus} confirmed bonus special trades">+${evt.specialBonus}⭐</span>`:''}
       </div>`;
     }).join('');
   }
@@ -5469,18 +5531,33 @@ function renderSchedDayDetail(){
   //     Tracked as a separate counter, doesn't count toward the regular 100 cap.
   const SPECIAL_BASE=1, REGULAR_CAP=100;
   const specialCap=SPECIAL_BASE+evt.specialBonus;
+  const specialLeft=Math.max(0,specialCap-counts.special);
+  const regularLeft=Math.max(0,REGULAR_CAP-counts.regular);
+  const quotaMeta=(kind,total,emptyText)=>{
+    if(!total)return emptyText;
+    const st=counts.byStatus?.[kind]||{scheduled:0,completed:0};
+    const bits=[`${total} used/reserved`];
+    if(st.scheduled)bits.push(`${st.scheduled} open`);
+    if(st.completed)bits.push(`${st.completed} done`);
+    return bits.join(' · ');
+  };
   const dayLabel=d.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric'});
   const eventsHtml=evt.events.length?`<div class="sched-event-list">
     ${evt.events.map(ev=>{
-      const unknownBadge=`<span class="sched-event-bonus" style="background:var(--bg2);color:var(--muted);border-color:var(--border2)" title="Bonus info isn't in our data source. Check the LeekDuck article for trade-related bonuses and use the custom bonus control below if applicable.">? bonus — check details</span>`;
-      const ticketBtn=ev.mayHaveTicket?`<button class="sched-event-ticket-btn ${ev.ticketMarked?'owned':''}" onclick="toggleEventTicket('${escAttr(ev.eventId)}','${escAttr(ev.name||'')}')" title="${ev.ticketMarked?'You marked having a ticket. Click to remove.':'Mark if you bought a ticket for this event (reminder only — bonus is manual).'}">${ev.ticketMarked?'🎟 Ticket ✓':'🎟 Mark ticket holder'}</button>`:'';
+      let bonusBadge='';
+      if(ev.bonus){
+        bonusBadge=`<span class="sched-event-bonus" title="${escAttr(ev.bonusText||'Confirmed in event details')}">+${ev.bonus} ${ev.bonusType}</span>`;
+      }else{
+        bonusBadge=`<span class="sched-event-bonus unknown" title="No explicit special-trade bonus was found in the scraped event details">Special bonus unknown</span>`;
+      }
+      const checkHint=`<span class="sched-event-link" style="color:var(--muted);font-style:italic">Use custom bonus if details confirm extra specials</span>`;
       return`<div class="sched-event-row">
       <div class="sched-event-icon">🎉</div>
       <div class="sched-event-content">
-        <div class="sched-event-title">${escHtml(ev.name||ev.heading||'Event')} ${unknownBadge}</div>
+        <div class="sched-event-title">${escHtml(ev.name||ev.heading||'Event')}${bonusBadge}</div>
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:3px">
           ${ev.link?`<a class="sched-event-link" href="${ev.link}" target="_blank" rel="noopener">details ↗</a>`:''}
-          ${ticketBtn}
+          ${checkHint}
         </div>
       </div>
     </div>`;
@@ -5491,7 +5568,7 @@ function renderSchedDayDetail(){
   const manualBonusHtml=`<div class="sched-manual-bonus">
     <div class="sched-manual-bonus-text">
       <strong>Custom bonus:</strong>
-      <span style="color:var(--muted);font-size:11px">If you know this day has bonus specials, add them here.</span>
+      <span style="color:var(--muted);font-size:11px">If event details confirm extra special trades, add them here.</span>
     </div>
     <div class="sched-manual-bonus-ctrl">
       <button onclick="setManualBonus('${iso}',-1)" class="sched-manual-bonus-btn" aria-label="Decrease custom bonus" ${manualBonus<=0?'disabled':''}>−</button>
@@ -5508,19 +5585,19 @@ function renderSchedDayDetail(){
     </div>
     <div class="sched-quota-row">
       <div class="sched-quota">
-        <div class="sched-quota-label">⭐ Special</div>
-        <div class="sched-quota-val ${counts.special>=specialCap?'danger':counts.special>=specialCap-1?'warn':''}">${counts.special}/${specialCap}</div>
-        ${evt.specialBonus?`<div class="sched-quota-bonus">+${evt.specialBonus} custom bonus</div>`:'<div class="sched-quota-meta">1 base · separate counter</div>'}
+        <div class="sched-quota-label">⭐ Special left</div>
+        <div class="sched-quota-val ${specialLeft<=0?'danger':specialLeft<=1?'warn':''}">${specialLeft}/${specialCap}</div>
+        <div class="${evt.specialBonus?'sched-quota-bonus':'sched-quota-meta'}">${quotaMeta('special',counts.special,evt.specialBonus?`+${evt.specialBonus} bonus${evt.manualBonus?` (incl. ${evt.manualBonus} manual)`:''}`:'1 base · separate counter')}</div>
       </div>
       <div class="sched-quota">
-        <div class="sched-quota-label">🤝 Regular</div>
-        <div class="sched-quota-val ${counts.regular>=REGULAR_CAP?'danger':counts.regular>=80?'warn':''}">${counts.regular}/${REGULAR_CAP}</div>
-        <div class="sched-quota-meta">in-person · specials excluded</div>
+        <div class="sched-quota-label">🤝 Regular left</div>
+        <div class="sched-quota-val ${regularLeft<=0?'danger':regularLeft<=20?'warn':''}">${regularLeft}/${REGULAR_CAP}</div>
+        <div class="sched-quota-meta">${quotaMeta('regular',counts.regular,'in-person · specials excluded')}</div>
       </div>
       <div class="sched-quota">
-        <div class="sched-quota-label">📡 Remote</div>
-        <div class="sched-quota-val">${counts.remote}</div>
-        <div class="sched-quota-meta">Forever Friend only</div>
+        <div class="sched-quota-label">📡 Remote open</div>
+        <div class="sched-quota-val">${counts.byStatus?.remote?.scheduled||0}</div>
+        <div class="sched-quota-meta">${quotaMeta('remote',counts.remote,'Forever Friend only')}</div>
       </div>
     </div>
     ${eventsHtml}
@@ -5553,8 +5630,8 @@ function renderTradeCard(t){
       ${noteHtml}
     </div>
     <div class="sched-trade-actions">
-      ${canEdit&&!completed&&t.status!=='cancelled'?`<button class="sched-trade-btn" onclick="openScheduleModal('${t.date}','${t.id}')" title="Edit this trade">✎ Edit</button>`:''}
       ${!completed&&t.status!=='cancelled'?`<button class="sched-trade-btn complete" onclick="markTradeComplete('${t.id}')" title="Mark as completed">✓ Done</button>`:''}
+      ${canEdit&&!completed&&t.status!=='cancelled'?`<button class="sched-trade-btn edit" onclick="openScheduleModal('${escAttr(t.date||schedSelectedDate||todayIso())}','${escAttr(t.id)}')" title="Edit scheduled trade">Edit</button>`:''}
       ${canEdit&&!completed&&t.status!=='cancelled'?`<button class="sched-trade-btn cancel" onclick="cancelScheduledTrade('${t.id}')" title="Cancel">✗</button>`:''}
     </div>
   </div>`;
@@ -5572,25 +5649,24 @@ async function cancelScheduledTrade(id){
   toast('Trade cancelled');
 }
 
-function openScheduleModal(dateIso,editTradeId){
-  // Edit mode: pre-fill from existing trade record
-  const editing=editTradeId?allData.trades?.[editTradeId]:null;
-  const d=editing?editing.date:(dateIso||schedSelectedDate||todayIso());
-  const editTime=editing?editing.time||'':'';
-  const editType=editing?editing.type||'regular':'regular';
-  const editPartners=editing?Object.keys(editing.participants||{}).filter(u=>u!==editing.organizer):[];
-  const editPokemon=editing?(editing.pokemon||[]).join(', '):'';
-  const editNote=editing?editing.note||'':'';
+function openScheduleModal(dateIso,editTradeId=''){
+  const editTrade=editTradeId?allData.trades?.[editTradeId]:null;
+  if(editTradeId&&!editTrade){toast('⚠️ Could not find that scheduled trade');renderSchedule();return;}
+  const d=editTrade?.date||dateIso||schedSelectedDate||todayIso();
+  const selectedType=editTrade?.type||'regular';
+  const selectedPartners=new Set(editTrade?Object.keys(editTrade.participants||{}).filter(u=>u!==cur):[]);
+  const pokemonValue=(editTrade?.pokemon||[]).join(', ');
+  const noteValue=editTrade?.note||'';
+  const modalTitle=editTrade?'Edit Scheduled Trade':'Schedule a Trade';
+  const submitText=editTrade?'Save Changes':'Schedule';
   // Pull trainer list (exclude self, only active users from the community)
+  const myInv=allData.have?.[cur]||{};
   const otherUsers=Object.keys(allData.users||{}).filter(u=>u!==cur).sort();
-  const typeBtnHtml=(type,emoji,label,hint)=>{
-    const isSel=editType===type;
-    return`<button type="button" class="sched-type-btn ${type} ${isSel?'selected':''}" data-type="${type}" onclick="selectSchedType('${type}')"${hint?` title="${hint}"`:''}>${emoji} ${label}</button>`;
-  };
+  // Find Pokemon I have that match others' wants (and vice versa) for suggestions
   const html=`<div class="ov open" id="sched-modal" role="dialog" aria-modal="true" onclick="if(event.target===this)closeScheduleModal()">
     <div class="modal schedule-modal" onclick="event.stopPropagation()">
-      <h3>${editing?'✎ Edit Trade':'📅 Schedule a Trade'}</h3>
-      <input type="hidden" id="sched-edit-id" value="${editTradeId||''}">
+      <h3>📅 ${modalTitle}</h3>
+      <input type="hidden" id="sched-edit-id" value="${escAttr(editTradeId||'')}">
       <div class="sched-form-time-row">
         <div class="sched-form-row">
           <label>Date</label>
@@ -5598,26 +5674,25 @@ function openScheduleModal(dateIso,editTradeId){
         </div>
         <div class="sched-form-row">
           <label>Time (optional)</label>
-          <input type="time" id="sched-time" placeholder="--:--" value="${escAttr(editTime)}">
+          <input type="time" id="sched-time" value="${escAttr(editTrade?.time||'')}" placeholder="--:--">
         </div>
       </div>
       <div class="sched-form-row">
         <label>Trade Type</label>
         <div class="sched-type-picker" id="sched-type-picker">
-          ${typeBtnHtml('regular','🤝','Regular','')}
-          ${typeBtnHtml('special','⭐','Special','')}
-          ${typeBtnHtml('remote','📡','Remote','Remote trade — requires Forever Friend')}
+          <button type="button" class="sched-type-btn regular ${selectedType==='regular'?'selected':''}" data-type="regular" onclick="selectSchedType('regular')">🤝 Regular</button>
+          <button type="button" class="sched-type-btn special ${selectedType==='special'?'selected':''}" data-type="special" onclick="selectSchedType('special')">⭐ Special</button>
+          <button type="button" class="sched-type-btn remote ${selectedType==='remote'?'selected':''}" data-type="remote" onclick="selectSchedType('remote')" title="Remote trade — requires Forever Friend">📡 Remote</button>
         </div>
       </div>
-      <input type="hidden" id="sched-type" value="${editType}">
+      <input type="hidden" id="sched-type" value="${escAttr(selectedType)}">
       <div class="sched-form-row">
         <label>Trade With</label>
         <div class="sched-trainer-picker" id="sched-trainer-picker">
           ${otherUsers.length?otherUsers.map(u=>{
             const ud=allData.users?.[u]||{};
             const fresh=Date.now()-(ud.lastSeen||ud.lastUpdated||0)<7*86400000;
-            const isSel=editPartners.includes(u);
-            return`<span class="sched-trainer-chip ${isSel?'selected':''}" data-user="${escAttr(u)}" onclick="this.classList.toggle('selected')" title="${escAttr(u)}${ud.friendCode?' · '+escAttr(ud.friendCode):''}">
+            return`<span class="sched-trainer-chip ${selectedPartners.has(u)?'selected':''}" data-user="${escAttr(u)}" onclick="this.classList.toggle('selected')" title="${escAttr(u)}${ud.friendCode?' · '+escAttr(ud.friendCode):''}">
               ${userAvatarHtml(u,20)} <span>${escHtml(u)}</span>${fresh?'<span style="font-size:10px;color:var(--ok)">●</span>':''}
             </span>`;
           }).join(''):'<div style="font-size:12px;color:var(--muted);font-style:italic">No other trainers yet</div>'}
@@ -5625,15 +5700,15 @@ function openScheduleModal(dateIso,editTradeId){
       </div>
       <div class="sched-form-row">
         <label>Pokémon (optional, comma-separated names)</label>
-        <input type="text" id="sched-pokemon" placeholder="A-Raichu, Vivillon (Garden)" value="${escAttr(editPokemon)}">
+        <input type="text" id="sched-pokemon" value="${escAttr(pokemonValue)}" placeholder="A-Raichu, Vivillon (Garden)">
       </div>
       <div class="sched-form-row">
         <label>Note (optional)</label>
-        <textarea id="sched-note" placeholder="Meet at Bryant Park · hundo hunt · etc.">${escHtml(editNote)}</textarea>
+        <textarea id="sched-note" placeholder="Meet at Bryant Park · hundo hunt · etc.">${escHtml(noteValue)}</textarea>
       </div>
       <div class="mact">
         <button class="bghost" onclick="closeScheduleModal()">Cancel</button>
-        <button class="bpri" onclick="submitScheduledTrade()">${editing?'Save Changes':'Schedule'}</button>
+        <button class="bpri" onclick="submitScheduledTrade()">${submitText}</button>
       </div>
     </div>
   </div>`;
@@ -5647,38 +5722,38 @@ function selectSchedType(t){
   document.querySelectorAll('#sched-type-picker .sched-type-btn').forEach(b=>b.classList.toggle('selected',b.dataset.type===t));
 }
 async function submitScheduledTrade(){
+  const editId=document.getElementById('sched-edit-id')?.value||'';
+  const existing=editId?allData.trades?.[editId]:null;
+  if(editId&&!existing){toast('⚠️ Could not find that scheduled trade');closeScheduleModal();renderSchedule();return;}
   const date=document.getElementById('sched-date')?.value;
   const time=document.getElementById('sched-time')?.value||'';
   const type=document.getElementById('sched-type')?.value||'regular';
   const partners=[...document.querySelectorAll('#sched-trainer-picker .sched-trainer-chip.selected')].map(c=>c.dataset.user);
   const pokemonRaw=document.getElementById('sched-pokemon')?.value||'';
   const note=document.getElementById('sched-note')?.value||'';
-  const editId=document.getElementById('sched-edit-id')?.value||'';
   if(!date){toast('⚠️ Pick a date');return;}
   if(!partners.length){toast('⚠️ Pick at least one trainer');return;}
   const pokemon=pokemonRaw.split(',').map(s=>s.trim()).filter(Boolean);
-  // Edit mode preserves organizer + original createdAt; new mode generates new id
-  const existing=editId?allData.trades?.[editId]:null;
   const id=editId||`${Date.now()}_${cur}_${Math.random().toString(36).slice(2,7)}`;
-  const organizer=existing?existing.organizer:cur;
-  // Only allow edit if current user is the organizer
-  if(existing&&organizer!==cur){toast('Only the organizer can edit this trade');return;}
+  const organizer=existing?.organizer||cur;
   const participants={[organizer]:'organizer'};
-  partners.forEach(p=>{participants[p]='pending';});
+  partners.forEach(p=>{participants[p]=existing?.participants?.[p]||'pending';});
   const trade={
+    ...(existing||{}),
     date,time,type,
     organizer,
     participants,
     pokemon,
     note:String(note).slice(0,500),
-    createdAt:existing?existing.createdAt:Date.now(),
-    updatedAt:existing?Date.now():undefined,
-    status:existing?(existing.status||'scheduled'):'scheduled'
+    createdAt:existing?.createdAt||Date.now(),
+    updatedAt:Date.now(),
+    status:existing?.status||'scheduled'
   };
   await writeTrade(id,trade);
   closeScheduleModal();
-  toast(existing?`✓ Trade updated`:`📅 Trade scheduled for ${date}${time?' at '+time:''}`);
+  toast(editId?`✅ Trade updated for ${date}${time?' at '+time:''}`:`📅 Trade scheduled for ${date}${time?' at '+time:''}`);
   schedSelectedDate=date;
+  // Jump to the right week if needed
   const d=parseIsoDate(date);
   schedAnchor=startOfWeek(d);
   renderSchedule();
@@ -5702,6 +5777,29 @@ function updateScheduleNotif(){
 }
 
 // ── HAVE / INVENTORY ─────────────────────────────────────────
+function haveEntryInfo(entry){
+  if(entry&&typeof entry==='object'&&!Array.isArray(entry)){
+    return{
+      qty:Math.max(0,Math.min(999,parseInt(entry.qty)||0)),
+      mirrorOnly:!!entry.mirrorOnly
+    };
+  }
+  return{qty:Math.max(0,Math.min(999,parseInt(entry)||0)),mirrorOnly:false};
+}
+function haveEntryValue(qty,prev,opts={}){
+  const old=haveEntryInfo(prev);
+  const q=Math.max(0,Math.min(999,parseInt(qty)||0));
+  const mirrorOnly=opts.mirrorOnly!==undefined?!!opts.mirrorOnly:old.mirrorOnly;
+  return mirrorOnly?{qty:q,mirrorOnly:true}:q;
+}
+function setHaveEntry(inv,name,qty,opts={}){
+  const q=Math.max(0,Math.min(999,parseInt(qty)||0));
+  if(q<=0)delete inv[name];
+  else inv[name]=haveEntryValue(q,inv[name],opts);
+}
+function isMirrorOnlyHave(username,name){
+  return haveEntryInfo(allData.have?.[username]?.[name]).mirrorOnly;
+}
 async function writeHave(username,inv){
   const s=getLocal();
   if(!s.have)s.have={};
@@ -5798,33 +5896,41 @@ function updateHaveAcFocus(){
 function addInventoryEntry(){
   const name=document.getElementById('have-pmon-sel').value;
   const qty=Math.max(1,Math.min(999,parseInt(document.getElementById('have-qty').value)||1));
+  const mirrorOnly=!!document.getElementById('have-mirror-only')?.checked;
   if(!name){toast('⚠️ Select a Pokémon');return;}
   const inv={...(allData.have?.[cur]||{})};
-  inv[name]=(inv[name]||0)+qty;
+  const curInfo=haveEntryInfo(inv[name]);
+  setHaveEntry(inv,name,curInfo.qty+qty,{mirrorOnly:curInfo.mirrorOnly||mirrorOnly});
   writeHave(cur,inv);
   document.getElementById('have-ac-input').value='';
   document.getElementById('have-pmon-sel').value='';
   document.getElementById('have-qty').value='1';
+  const mirrorInput=document.getElementById('have-mirror-only');
+  if(mirrorInput)mirrorInput.checked=false;
   document.getElementById('have-ac-dropdown').classList.remove('open');
   const dn=haveAcItems.find(x=>x.name===name)?.dn||name;
-  toast(`✅ Added ${qty}× ${dn}`);
+  toast(`✅ Added ${qty}× ${dn}${mirrorOnly?' (mirror only)':''}`);
 }
 function updateInventoryQty(name,delta){
   const inv={...(allData.have?.[cur]||{})};
-  const cur_qty=inv[name]||0;
-  const new_qty=cur_qty+delta;
-  if(new_qty<=0){delete inv[name];}
-  else if(new_qty>999){return;}
-  else inv[name]=new_qty;
+  const curInfo=haveEntryInfo(inv[name]);
+  const new_qty=curInfo.qty+delta;
+  if(new_qty>999)return;
+  setHaveEntry(inv,name,new_qty);
   writeHave(cur,inv);
 }
 function setInventoryQty(name,val){
   const v=parseInt(val);
   if(!Number.isFinite(v))return;
   const inv={...(allData.have?.[cur]||{})};
-  if(v<=0){delete inv[name];}
-  else if(v>999){inv[name]=999;}
-  else inv[name]=v;
+  setHaveEntry(inv,name,Math.min(999,v));
+  writeHave(cur,inv);
+}
+function toggleInventoryMirror(name){
+  const inv={...(allData.have?.[cur]||{})};
+  const info=haveEntryInfo(inv[name]);
+  if(!info.qty)return;
+  setHaveEntry(inv,name,info.qty,{mirrorOnly:!info.mirrorOnly});
   writeHave(cur,inv);
 }
 function removeInventoryEntry(name){
@@ -5845,13 +5951,14 @@ function renderMyHave(filterVal){
   const q=String(filterVal??document.getElementById('have-filter')?.value??'').toLowerCase();
   const el=document.getElementById('have-mine-out');if(!el)return;
   const inv=allData.have?.[cur]||{};
-  let entries=Object.entries(inv).map(([name,qty])=>{
+  let entries=Object.entries(inv).map(([name,val])=>{
+    const info=haveEntryInfo(val);
     const e=_nameToSpriteEntry(name);
-    return{name,qty,dn:e.displayName||name,no:e.no};
-  });
+    return{name,qty:info.qty,mirrorOnly:info.mirrorOnly,dn:e.displayName||name,no:e.no};
+  }).filter(e=>e.qty>0);
   if(q)entries=entries.filter(e=>(e.dn||'').toLowerCase().includes(q));
   entries.sort((a,b)=>(parseInt(a.no)||9999)-(parseInt(b.no)||9999)||a.dn.localeCompare(b.dn));
-  const totalCount=Object.values(inv).reduce((s,n)=>s+(parseInt(n)||0),0);
+  const totalCount=Object.values(inv).reduce((s,n)=>s+haveEntryInfo(n).qty,0);
   const entryCount=Object.keys(inv).length;
   const countEl=document.getElementById('have-count');
   if(countEl)countEl.textContent=q?`(${entries.length} of ${entryCount})`:`(${entryCount})`;
@@ -5879,8 +5986,12 @@ function renderMyHave(filterVal){
       <div class="have-row-sprite">${e.no?spriteImg(e.no,32,'',e.name,'',e.dn):'🎮'}</div>
       <div class="have-row-info">
         <div class="have-row-name">${escHtml(e.dn)} ${offerCount?`<span class="offer-count-badge unseen" onclick="event.stopPropagation();openIncomingOffersModal('${sn}')" style="margin-left:4px">🔔 ${offerCount}</span>`:''}</div>
-        ${e.no?`<div class="have-row-dex">#${e.no}</div>`:''}
+        <div class="have-row-meta">
+          ${e.no?`<span class="have-row-dex">#${e.no}</span>`:''}
+          ${e.mirrorOnly?'<span class="have-mirror-badge" title="Only accepting the same Pokémon/form in return">Mirror only</span>':''}
+        </div>
       </div>
+      <button class="have-mirror-btn ${e.mirrorOnly?'on':''}" onclick="toggleInventoryMirror('${sn}')" title="Toggle mirror-only status">${e.mirrorOnly?'Mirror':'Any'}</button>
       <div class="have-row-qty-wrap">
         <button class="have-row-qty-btn" onclick="updateInventoryQty('${sn}',-1)" aria-label="Decrease quantity">−</button>
         <span class="have-row-qty">${e.qty}</span>
@@ -5970,11 +6081,12 @@ function renderHaveBrowse(){
     el.innerHTML=trainers.map(u=>{
       const inv=haveData[u]||{};
       const ud=allData.users?.[u]||{};
-      let items=Object.entries(inv).map(([n,qty])=>{
+      let items=Object.entries(inv).map(([n,val])=>{
+        const info=haveEntryInfo(val);
         const e=_nameToSpriteEntry(n);
         const want=entryWantedByCur(n);
-        return{name:n,qty,dn:e.displayName||n,no:e.no,match:want};
-      });
+        return{name:n,qty:info.qty,mirrorOnly:info.mirrorOnly,dn:e.displayName||n,no:e.no,match:want};
+      }).filter(it=>it.qty>0);
       if(haveMatchOnly)items=items.filter(it=>it.match);
       if(q){items=items.filter(it=>it.dn.toLowerCase().includes(q)||u.toLowerCase().includes(q));}
       items.sort((a,b)=>(b.match?1:0)-(a.match?1:0)||(parseInt(a.no)||9999)-(parseInt(b.no)||9999));
@@ -5990,11 +6102,12 @@ function renderHaveBrowse(){
           <div class="have-trainer-grid">${items.map(it=>{
             const sn=it.name.replace(/'/g,"\\'").replace(/"/g,'&quot;');
             const offerCount=countOffersForItem(u,it.name);
-            return`<div class="have-pmon-card ${it.match?'match':''}" title="${escAttr(it.dn)} — click to offer" onclick="openOfferModal('${escAttr(u)}','${sn}')" style="cursor:pointer">
+            return`<div class="have-pmon-card ${it.match?'match':''} ${it.mirrorOnly?'mirror-only':''}" title="${escAttr(it.mirrorOnly?`${it.dn} — mirror only, same Pokémon/form only`:it.dn+' — click to offer')}" onclick="openOfferModal('${escAttr(u)}','${sn}')" style="cursor:pointer">
               <div class="have-row-sprite" style="width:24px;height:24px">${it.no?spriteImg(it.no,24,'',it.name,'',it.dn):'🎮'}</div>
               <div class="have-pmon-info">
                 <div class="have-pmon-name">${escHtml(it.dn)}</div>
                 ${it.match?`<div class="have-pmon-meta">You want · ${it.match.p||(it.match.lucky?'⚡':'')||(it.match.xxl?'XXL':'')||(it.match.xxs?'XXS':'')}</div>`:''}
+                ${it.mirrorOnly?'<div class="have-pmon-meta mirror">Mirror only</div>':''}
               </div>
               <div class="have-pmon-qty">×${it.qty}</div>
               ${offerCount?`<span class="offer-count-badge" title="${offerCount} pending offer${offerCount===1?'':'s'}">🔔 ${offerCount}</span>`:''}
@@ -6011,9 +6124,11 @@ function renderHaveBrowse(){
     Object.entries(haveData).forEach(([user,inv])=>{
       if(user===cur)return;
       if(allowed&&!allowed.has(user))return;
-      Object.entries(inv||{}).forEach(([name,qty])=>{
+      Object.entries(inv||{}).forEach(([name,val])=>{
+        const info=haveEntryInfo(val);
+        if(info.qty<=0)return;
         if(!byPokemon[name])byPokemon[name]=[];
-        byPokemon[name].push({user,qty});
+        byPokemon[name].push({user,qty:info.qty,mirrorOnly:info.mirrorOnly});
       });
     });
     let pokemonList=Object.entries(byPokemon).map(([name,owners])=>{
@@ -6045,8 +6160,8 @@ function renderHaveBrowse(){
             const ud=allData.users?.[o.user]||{};
             const canDm=!!ud.discord;
             const offerCount=countOffersForItem(o.user,p.name);
-            return`<button class="have-trainer-chip ${p.want?'match':''}" onclick="openOfferModal('${escAttr(o.user)}','${escAttr(p.name)}')" title="${canDm?'Click to offer trade':'No Discord linked, click to copy message'}">
-              ${escHtml(o.user)} <span class="qty">×${o.qty}</span>${offerCount?`<span class="offer-count-badge" style="margin-left:2px;padding:1px 5px;font-size:9px">🔔 ${offerCount}</span>`:''}
+            return`<button class="have-trainer-chip ${p.want?'match':''}" onclick="openOfferModal('${escAttr(o.user)}','${escAttr(p.name)}')" title="${o.mirrorOnly?'Mirror only: same Pokémon/form only':canDm?'Click to offer trade':'No Discord linked, click to copy message'}">
+              ${escHtml(o.user)} <span class="qty">×${o.qty}</span>${o.mirrorOnly?'<span class="have-mirror-badge mini">Mirror</span>':''}${offerCount?`<span class="offer-count-badge" style="margin-left:2px;padding:1px 5px;font-size:9px">🔔 ${offerCount}</span>`:''}
             </button>`;
           }).join('')}
         </div>
@@ -6176,33 +6291,42 @@ function openOfferModal(otherUser,specificPokemon=''){
   const otherInv=allData.have?.[otherUser]||{};
   const myInv=allData.have?.[cur]||{};
   // Pokemon they have that I want
-  const matches=Object.entries(otherInv).filter(([n])=>entryWantedByCur(n)).map(([n,qty])=>{
-    const e=_nameToSpriteEntry(n);return{name:n,dn:e.displayName||n,no:e.no,qty,want:entryWantedByCur(n)};
+  const matches=Object.entries(otherInv).filter(([n,val])=>entryWantedByCur(n)&&haveEntryInfo(val).qty>0).map(([n,val])=>{
+    const info=haveEntryInfo(val);
+    const e=_nameToSpriteEntry(n);return{name:n,dn:e.displayName||n,no:e.no,qty:info.qty,mirrorOnly:info.mirrorOnly,want:entryWantedByCur(n)};
   });
   const focusedPokemon=specificPokemon?(()=>{
+    const info=haveEntryInfo(otherInv[specificPokemon]);
     const e=_nameToSpriteEntry(specificPokemon);
-    return{name:specificPokemon,dn:e.displayName||specificPokemon,no:e.no,qty:otherInv[specificPokemon]||0,want:entryWantedByCur(specificPokemon)};
+    return{name:specificPokemon,dn:e.displayName||specificPokemon,no:e.no,qty:info.qty,mirrorOnly:info.mirrorOnly,want:entryWantedByCur(specificPokemon)};
   })():null;
   // Pokemon I have that they want — check their wishlist/dynamax/gmax/costumes
   const theyWant=[];
   Object.keys(myInv).forEach(n=>{
+    const info=haveEntryInfo(myInv[n]);
+    if(info.qty<=0)return;
     for(const t of['wishlist','dynamax','gmax','costumes']){
       const val=allData[t]?.[otherUser]?.[n];
-      if(val){const{p}=parsePri(val);if(p){theyWant.push({name:n,qty:myInv[n],p,type:t});break;}}
+      if(val){const{p}=parsePri(val);if(p){theyWant.push({name:n,qty:info.qty,p,type:t});break;}}
     }
   });
   // Default selection: items they want
-  const preSelected=new Set(theyWant.slice(0,5).map(t=>t.name));
+  const mirrorMatchQty=focusedPokemon?haveEntryInfo(myInv[focusedPokemon.name]).qty:0;
+  const preSelected=new Set(focusedPokemon?.mirrorOnly&&mirrorMatchQty>0?[focusedPokemon.name]:theyWant.slice(0,5).map(t=>t.name));
   const defaultMessage=`Hey ${otherUser}! 👋\n\n`+
     (focusedPokemon?`I'd love to trade for your ${focusedPokemon.dn}.\n\n`:matches.length?`I saw you have ${matches.slice(0,3).map(m=>m.dn).join(', ')} on your inventory — interested in trading?\n\n`:'')+
+    (focusedPokemon?.mirrorOnly?`I saw this is marked mirror only, so I'm offering the same ${focusedPokemon.dn} in return.\n\n`:'')+
     (theyWant.length?`I have ${theyWant.slice(0,3).map(t=>`${t.qty}× ${_nameToSpriteEntry(t.name).displayName||t.name}`).join(', ')} that match your wishlist.\n\n`:'')+
     `Let me know! 🎮`;
   // Show existing offers on the focused item for context
   const existingOffers=focusedPokemon?offersForItem(otherUser,focusedPokemon.name):[];
-  const myInvEntries=Object.entries(myInv).map(([n,qty])=>{
+  let myInvEntries=Object.entries(myInv).map(([n,val])=>{
+    const info=haveEntryInfo(val);
     const e=_nameToSpriteEntry(n);
-    return{name:n,dn:e.displayName||n,no:e.no,qty,theyWant:theyWant.some(t=>t.name===n)};
-  }).sort((a,b)=>(b.theyWant?1:0)-(a.theyWant?1:0)||a.dn.localeCompare(b.dn));
+    return{name:n,dn:e.displayName||n,no:e.no,qty:info.qty,theyWant:theyWant.some(t=>t.name===n)};
+  }).filter(it=>it.qty>0);
+  if(focusedPokemon?.mirrorOnly)myInvEntries=myInvEntries.filter(it=>it.name===focusedPokemon.name);
+  myInvEntries.sort((a,b)=>(b.theyWant?1:0)-(a.theyWant?1:0)||a.dn.localeCompare(b.dn));
   const html=`<div class="ov open" id="offer-modal" role="dialog" aria-modal="true" onclick="if(event.target===this)closeOfferModal()">
     <div class="modal offer-modal" onclick="event.stopPropagation()">
       <h3>💬 Offer trade with ${escHtml(otherUser)}</h3>
@@ -6210,9 +6334,10 @@ function openOfferModal(otherUser,specificPokemon=''){
         <div class="sprite-wrap">${focusedPokemon.no?spriteImg(focusedPokemon.no,42,'',focusedPokemon.name,'',focusedPokemon.dn):'🎮'}</div>
         <div style="flex:1">
           <div class="offer-name">${escHtml(focusedPokemon.dn)} <span style="color:var(--ac2);font-family:var(--mono);font-size:13px">×${focusedPokemon.qty}</span></div>
-          <div class="offer-meta">${focusedPokemon.want?`You want this at ${focusedPokemon.want.p||'flag'}`:''}${existingOffers.length?` · <strong style="color:var(--warn)">🔔 ${existingOffers.length} existing offer${existingOffers.length===1?'':'s'}</strong>`:''}</div>
+          <div class="offer-meta">${focusedPokemon.mirrorOnly?'<span class="have-mirror-badge">Mirror only</span> ':''}${focusedPokemon.want?`You want this at ${focusedPokemon.want.p||'flag'}`:''}${existingOffers.length?` · <strong style="color:var(--warn)">🔔 ${existingOffers.length} existing offer${existingOffers.length===1?'':'s'}</strong>`:''}</div>
         </div>
       </div>
+      ${focusedPokemon.mirrorOnly?`<div class="offer-no-discord" style="border-color:rgba(14,165,233,.35);color:#38bdf8;background:rgba(14,165,233,.08)">Mirror only: ${escHtml(otherUser)} is only accepting the same exact Pokémon/form for this.</div>`:''}
       ${existingOffers.length?`<div class="offer-section-label">Existing offers (FCFS):</div>
         <div class="offer-list">${renderOfferList(otherUser,focusedPokemon.name)}</div>`:''}
       `:''}
@@ -6220,7 +6345,7 @@ function openOfferModal(otherUser,specificPokemon=''){
         <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px">
           ${matches.slice(0,8).map(m=>`<span class="have-trainer-chip match" title="${escAttr(m.dn)}">${escHtml(m.dn)} <span class="qty">×${m.qty}</span></span>`).join('')}
         </div>`:''}
-      <div class="offer-section-label">What are you offering?${myInvEntries.length?'':' <span style="color:var(--muted);font-weight:400;font-style:italic">— add some to your 🎒 inventory first</span>'}</div>
+      <div class="offer-section-label">What are you offering?${focusedPokemon?.mirrorOnly?' <span style="color:#38bdf8;font-weight:700;text-transform:none;letter-spacing:0">Mirror only</span>':''}${myInvEntries.length?'':` <span style="color:var(--muted);font-weight:400;font-style:italic">— ${focusedPokemon?.mirrorOnly?'add the same Pokémon':'add some'} to your 🎒 inventory first</span>`}</div>
       ${myInvEntries.length?`<div class="offer-pick-row" id="offer-pick-row">
         ${myInvEntries.map(it=>{
           const sn=it.name.replace(/'/g,"\\'").replace(/"/g,'&quot;');
@@ -6261,6 +6386,12 @@ async function submitOfferAction(otherUser,itemName){
   const makePublic=!!document.getElementById('offer-public')?.checked;
   // Collect selected offering items
   const offering=[...document.querySelectorAll('#offer-pick-row .offer-pick-chip.selected')].map(el=>el.dataset.name);
+  if(makePublic&&itemName&&isMirrorOnlyHave(otherUser,itemName)){
+    if(!offering.includes(itemName)||offering.some(n=>n!==itemName)){
+      toast('⚠️ Mirror only: select the same Pokémon/form before posting an offer');
+      return;
+    }
+  }
   // Always copy message + open Discord
   await copyText(msg);
   const ud=allData.users?.[otherUser]||{};
@@ -6744,7 +6875,7 @@ Object.assign(window,{
   selectWallpaper,applyWallpaper,
   // Inventory / Have
   setHaveView,setHaveSubTab,toggleHaveMatchOnly,haveAcSearch,haveAcSelect,haveAcKeydown,
-  addInventoryEntry,updateInventoryQty,setInventoryQty,removeInventoryEntry,
+  addInventoryEntry,updateInventoryQty,setInventoryQty,toggleInventoryMirror,removeInventoryEntry,
   renderMyHave,renderHaveBrowse,openOfferModal,closeOfferModal,copyOfferMessage,
   // Offer history
   submitOffer,submitOfferAction,withdrawOffer,markOfferTraded,
@@ -6753,7 +6884,7 @@ Object.assign(window,{
   reloadForUpdate,checkForUpdate,
   // Schedule
   navigateSchedWeek,navigateSchedToday,selectSchedDay,openScheduleModal,closeScheduleModal,
-  selectSchedType,submitScheduledTrade,markTradeComplete,cancelScheduledTrade,toggleEventTicket,setManualBonus
+  selectSchedType,submitScheduledTrade,markTradeComplete,cancelScheduledTrade,setManualBonus
 });
 
 // ── BOOT ──────────────────────────────────────────────────────
