@@ -309,9 +309,9 @@ input,select,textarea{font-family:var(--font);outline:none}
 .skip:hover{color:var(--text)}
 
 /* MODAL */
-.ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;align-items:center;justify-content:center;padding:16px}
+.ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;align-items:center;justify-content:center;padding:16px;overflow-y:auto}
 .ov.open{display:flex}
-.modal{background:var(--card);border:1px solid var(--border2);border-radius:16px;padding:22px;width:100%;max-width:350px}
+.modal{background:var(--card);border:1px solid var(--border2);border-radius:16px;padding:22px;width:100%;max-width:350px;max-height:calc(100vh - 32px);overflow-y:auto;margin:auto}
 .modal h3{font-size:16px;font-weight:700;margin-bottom:14px}
 .mact{display:flex;gap:7px;margin-top:18px;justify-content:flex-end}
 .bghost{background:transparent;border:1px solid var(--border2);color:var(--text);padding:7px 14px;border-radius:var(--r2);font-size:13px;font-weight:500;cursor:pointer}
@@ -672,6 +672,112 @@ html[data-theme="light"] .have-trainer-chip.match{color:#b45309}
   .offer-row .offer-info{flex:1 1 calc(100% - 50px);min-width:0}
 }
 
+/* SCHEDULE / TRADE CALENDAR */
+.sched-hdr{margin-bottom:14px}
+.sched-title{font-size:20px;font-weight:700;margin-bottom:4px}
+.sched-subtitle{font-size:13px;color:var(--muted);line-height:1.4}
+.sched-week-nav{display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.sched-nav-btn{background:var(--card);border:1px solid var(--border2);color:var(--text);width:34px;height:34px;border-radius:var(--r2);font-size:18px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:var(--font)}
+.sched-nav-btn:hover{border-color:var(--accent);color:var(--ac2)}
+.sched-nav-today{background:var(--bg2);border:1px solid var(--border2);color:var(--text);padding:7px 14px;border-radius:var(--r2);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font)}
+.sched-nav-today:hover{border-color:var(--accent);color:var(--ac2)}
+.sched-week-label{flex:1;font-size:14px;font-weight:600;color:var(--text);min-width:140px;text-align:center}
+.sched-add-btn{flex-shrink:0;padding:8px 14px;font-size:13px}
+.sched-week-strip{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:14px}
+.sched-day-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r2);padding:8px 6px;cursor:pointer;transition:.15s;display:flex;flex-direction:column;align-items:center;gap:3px;min-height:72px;position:relative}
+.sched-day-card:hover{border-color:var(--border2);background:var(--bg2)}
+.sched-day-card.today{border-color:var(--accent);background:rgba(108,99,255,.06)}
+.sched-day-card.selected{border-color:var(--ac2);background:rgba(168,139,250,.12);box-shadow:0 0 0 2px rgba(168,139,250,.2)}
+.sched-day-card.past{opacity:.5}
+.sched-day-wkd{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.sched-day-num{font-size:18px;font-weight:700;color:var(--text);line-height:1}
+.sched-day-card.today .sched-day-num{color:var(--ac2)}
+.sched-day-meta{display:flex;gap:3px;align-items:center;font-size:10px}
+.sched-day-event-dot{width:6px;height:6px;border-radius:50%;background:var(--warn)}
+.sched-day-trade-count{background:var(--accent);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:8px;line-height:1.3}
+.sched-day-special-bonus{position:absolute;top:3px;right:4px;font-size:9px;background:rgba(245,158,11,.2);color:var(--warn);border:1px solid rgba(245,158,11,.4);padding:1px 4px;border-radius:6px;font-weight:700}
+
+.sched-day-detail{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-bottom:12px}
+.sched-day-detail-hdr{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.sched-day-detail-date{font-size:16px;font-weight:700;flex:1;min-width:0}
+.sched-day-detail-quick-add{background:var(--accent);color:#fff;border:none;padding:6px 12px;border-radius:var(--r2);font-size:12px;font-weight:600;cursor:pointer}
+.sched-day-detail-quick-add:hover{opacity:.9}
+
+.sched-quota-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.sched-quota{padding:10px 12px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r2)}
+.sched-quota-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:700;margin-bottom:4px}
+.sched-quota-val{font-size:18px;font-weight:700;font-family:var(--mono);color:var(--text)}
+.sched-quota-val.warn{color:var(--warn)}
+.sched-quota-val.danger{color:var(--danger)}
+.sched-quota-meta{font-size:10px;color:var(--muted);margin-top:1px}
+.sched-quota-bonus{font-size:10px;color:var(--ok);font-weight:600;margin-top:2px}
+
+.sched-event-list{margin-bottom:12px}
+.sched-event-row{display:flex;align-items:flex-start;gap:9px;padding:8px 10px;background:linear-gradient(90deg,rgba(168,139,250,.08),transparent);border:1px solid rgba(168,139,250,.18);border-radius:var(--r2);margin-bottom:5px;font-size:12px}
+.sched-event-icon{font-size:18px;flex-shrink:0;line-height:1}
+.sched-event-content{flex:1;min-width:0}
+.sched-event-title{font-weight:600;color:var(--text);line-height:1.3}
+.sched-event-bonus{display:inline-block;background:rgba(16,185,129,.16);color:var(--ok);border:1px solid rgba(16,185,129,.32);padding:1px 6px;border-radius:8px;font-size:10px;font-weight:700;margin-left:6px}
+.sched-event-link{font-size:11px;color:var(--ac2);text-decoration:none}
+.sched-event-link:hover{text-decoration:underline}
+
+.sched-trades-list{display:flex;flex-direction:column;gap:6px}
+.sched-trade-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--r2);padding:10px 12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.sched-trade-card.is-mine{border-color:rgba(108,99,255,.4);background:linear-gradient(90deg,rgba(108,99,255,.05),var(--bg))}
+.sched-trade-card.completed{opacity:.6;text-decoration:line-through}
+.sched-trade-card.cancelled{opacity:.4}
+.sched-trade-info{flex:1;min-width:0}
+.sched-trade-when{font-size:13px;font-weight:700;color:var(--text)}
+.sched-trade-with{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:5px;margin-top:2px;flex-wrap:wrap}
+.sched-trade-type-pill{display:inline-flex;align-items:center;font-size:9px;font-weight:700;padding:2px 6px;border-radius:8px;text-transform:uppercase;letter-spacing:.04em;flex-shrink:0}
+.sched-trade-type-pill.special{background:rgba(245,158,11,.16);color:var(--warn);border:1px solid rgba(245,158,11,.32)}
+.sched-trade-type-pill.regular{background:rgba(108,99,255,.16);color:var(--ac2);border:1px solid rgba(108,99,255,.32)}
+.sched-trade-type-pill.remote{background:rgba(20,184,166,.16);color:#2dd4bf;border:1px solid rgba(20,184,166,.32)}
+.sched-trade-pokemon{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
+.sched-trade-pkmn-chip{display:inline-flex;align-items:center;gap:3px;background:var(--card);padding:2px 6px;border-radius:4px;font-size:10px;border:1px solid var(--border)}
+.sched-trade-pkmn-chip img{width:16px;height:16px;object-fit:contain}
+.sched-trade-note{font-size:11px;color:var(--muted);font-style:italic;margin-top:4px;width:100%}
+.sched-trade-actions{display:flex;gap:4px;flex-shrink:0;flex-wrap:wrap;align-items:center}
+.sched-trade-btn{background:transparent;border:1px solid var(--border2);color:var(--muted);padding:4px 9px;border-radius:var(--r2);font-size:10px;font-weight:600;cursor:pointer;font-family:var(--font)}
+.sched-trade-btn:hover{color:var(--ac2);border-color:var(--ac2)}
+.sched-trade-btn.complete{color:var(--ok);border-color:rgba(16,185,129,.4)}
+.sched-trade-btn.complete:hover{background:rgba(16,185,129,.12)}
+.sched-trade-btn.cancel{color:var(--danger);border-color:rgba(239,68,68,.3)}
+.sched-trade-btn.cancel:hover{background:rgba(239,68,68,.12)}
+
+.sched-empty-trades{padding:14px;text-align:center;color:var(--muted);font-size:13px;border:1px dashed var(--border2);border-radius:var(--r2)}
+
+/* Schedule trade modal */
+.schedule-modal{max-width:520px}
+.sched-form-row{margin-bottom:11px}
+.sched-form-row label{display:block;font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px}
+.sched-form-row input[type="date"],.sched-form-row input[type="time"],.sched-form-row input[type="text"],.sched-form-row textarea,.sched-form-row select{width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--text);padding:9px 12px;border-radius:var(--r2);font-size:14px;font-family:var(--font)}
+.sched-form-row textarea{resize:vertical;min-height:60px;line-height:1.4;font-size:13px}
+.sched-form-time-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sched-trainer-picker{display:flex;flex-wrap:wrap;gap:5px;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r2);max-height:140px;overflow-y:auto}
+.sched-trainer-chip{display:inline-flex;align-items:center;gap:5px;background:var(--card);border:1px solid var(--border2);color:var(--text);padding:6px 10px;border-radius:14px;font-size:12px;cursor:pointer;transition:.15s;font-family:var(--font);min-height:30px}
+.sched-trainer-chip:hover{border-color:var(--ac2)}
+.sched-trainer-chip.selected{background:rgba(108,99,255,.18);border-color:var(--accent);color:var(--ac2);font-weight:600}
+.sched-type-picker{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.sched-type-btn{padding:9px 8px;border:1px solid var(--border2);border-radius:var(--r2);background:var(--bg);color:var(--text);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font);text-align:center}
+.sched-type-btn.selected.special{background:rgba(245,158,11,.16);color:var(--warn);border-color:var(--warn)}
+.sched-type-btn.selected.regular{background:rgba(108,99,255,.16);color:var(--ac2);border-color:var(--accent)}
+.sched-type-btn.selected.remote{background:rgba(20,184,166,.16);color:#2dd4bf;border-color:#2dd4bf}
+
+@media(max-width:600px){
+  .sched-week-nav{gap:4px}
+  .sched-week-label{flex:1 1 100%;order:-1;margin-bottom:4px}
+  .sched-add-btn{flex:1;padding:8px}
+  .sched-day-card{min-height:62px;padding:6px 3px}
+  .sched-day-num{font-size:16px}
+  .sched-day-wkd{font-size:8px}
+  .sched-day-special-bonus{font-size:8px;padding:1px 3px}
+  .sched-quota-row{grid-template-columns:1fr}
+  .sched-trade-card{padding:8px 10px}
+  .sched-type-picker{grid-template-columns:1fr}
+  .schedule-modal{max-width:none}
+}
+
 /* UPDATE BANNER */
 .update-banner{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--accent),var(--ac2));color:#fff;padding:11px 16px;border-radius:var(--r);box-shadow:0 10px 30px rgba(0,0,0,.35),0 0 0 1px rgba(255,255,255,.08);display:flex;align-items:center;gap:11px;z-index:9999;font-size:13px;font-weight:600;animation:slideUpBanner .3s cubic-bezier(.16,1,.3,1);max-width:calc(100vw - 24px)}
 @keyframes slideUpBanner{from{transform:translateX(-50%) translateY(80px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
@@ -1008,6 +1114,7 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
     <button class="tab" data-tab="mylist" onclick="switchTab('mylist')" role="tab" aria-selected="false">📋 My List</button>
     <button class="tab" data-tab="strings" onclick="switchTab('strings')" role="tab" aria-selected="false">📤 Strings</button>
     <button class="tab" data-tab="have" onclick="switchTab('have')" role="tab" aria-selected="false">🎒 Have<span class="notif-badge" id="have-notif" style="display:none">!</span></button>
+    <button class="tab" data-tab="schedule" onclick="switchTab('schedule')" role="tab" aria-selected="false">📅 Schedule<span class="notif-badge" id="schedule-notif" style="display:none">!</span></button>
     <button class="tab" data-tab="admin" onclick="switchTab('admin')" id="admin-tab" style="display:none" role="tab" aria-selected="false">⚙️ Admin<span class="notif-badge" id="admin-notif" style="display:none">!</span></button>
   </div>
 
@@ -1206,6 +1313,23 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
       </div>
       <div id="have-browse-out"></div>
     </div>
+  </div>
+
+  <!-- SCHEDULE -->
+  <div class="page" id="tab-schedule">
+    <div class="sched-hdr">
+      <div class="sched-title">📅 Trade Schedule</div>
+      <div class="sched-subtitle">Plan trades with the community. Daily quota & live event bonuses tracked automatically.</div>
+    </div>
+    <div class="sched-week-nav">
+      <button class="sched-nav-btn" onclick="navigateSchedWeek(-1)" aria-label="Previous week">‹</button>
+      <button class="sched-nav-today" onclick="navigateSchedToday()">Today</button>
+      <button class="sched-nav-btn" onclick="navigateSchedWeek(1)" aria-label="Next week">›</button>
+      <div class="sched-week-label" id="sched-week-label"></div>
+      <button class="bsave sched-add-btn" onclick="openScheduleModal()">+ Schedule Trade</button>
+    </div>
+    <div class="sched-week-strip" id="sched-week-strip"></div>
+    <div id="sched-day-detail"></div>
   </div>
 
   <!-- ADMIN -->
@@ -1510,6 +1634,8 @@ let authRepairStarted=false;
 let bulkMode=false,bulkSelected=new Set();
 let haveView='mine',haveSubTab='pokemon',haveMatchOnly=false;
 let haveAcItems=[],haveAcFiltered=[],haveAcFocusIdx=-1;
+let schedAnchor=null; // anchor date for week view (Sunday of week shown)
+let schedSelectedDate=null; // currently selected day (ISO YYYY-MM-DD)
 let voiceRecognition=null;
 let pokemonTypes={};
 let entryTimestamps={}; // for conflict detection
@@ -2117,7 +2243,7 @@ syncQueue=lsGet(SYNC_QUEUE_KEY,{})||{};
 function saveSyncQueue(){lsSet(SYNC_QUEUE_KEY,syncQueue||{});}
 function normalizeData(s){
   if(!s||typeof s!=='object')s={};
-  s.users=s.users||{};s.wishlist=s.wishlist||{};s.dynamax=s.dynamax||{};s.gmax=s.gmax||{};s.costumes=s.costumes||{};s.have=s.have||{};s.offers=s.offers||{};s.requests=s.requests||{};s.authIndex=s.authIndex||{};
+  s.users=s.users||{};s.wishlist=s.wishlist||{};s.dynamax=s.dynamax||{};s.gmax=s.gmax||{};s.costumes=s.costumes||{};s.have=s.have||{};s.offers=s.offers||{};s.trades=s.trades||{};s.requests=s.requests||{};s.authIndex=s.authIndex||{};
   Object.keys(s.users).forEach(u=>{
     s.users[u]=normalizedUserRecord(u,s.users[u]);
     if(!s.wishlist[u])s.wishlist[u]={};
@@ -2132,7 +2258,7 @@ function normalizeData(s){
 function initLocal(){
   let s=lsGet('pogo3',null);
   if(!s){
-    s={users:{},wishlist:{},dynamax:{},gmax:{},costumes:{},have:{},offers:{},requests:{},authIndex:{}};
+    s={users:{},wishlist:{},dynamax:{},gmax:{},costumes:{},have:{},offers:{},trades:{},requests:{},authIndex:{}};
     DB.users.filter(u=>u&&u.trim()&&u.trim()!=='EVERYONE').map(u=>u.trim()).forEach(u=>{
       s.users[u]=normalizedUserRecord(u,{}, {pin:'123456',isAdmin:u===OWNER,isOwner:u===OWNER,authVersion:1,authEmail:authEmail(u,1)});
       s.wishlist[u]={};s.dynamax[u]={};s.gmax[u]={};s.costumes[u]={};s.have[u]={};
@@ -2421,6 +2547,7 @@ function mergeRemoteData(d){
     costumes:d?.costumes||{},
     have:d?.have||{},
     offers:d?.offers||{},
+    trades:d?.trades||{},
     requests:d?.requests||{},
     authIndex:d?.authIndex||{}
   });
@@ -2469,6 +2596,7 @@ function _onSubSnapshot(path,snap){
   else if(seg==='costumes')s.costumes=val||{};
   else if(seg==='have')s.have=val||{};
   else if(seg==='offers')s.offers=val||{};
+  else if(seg==='trades')s.trades=val||{};
   saveLocal(s);
   allData=normalizeData(s);
   // Apply pending writes from sync queue
@@ -2504,6 +2632,7 @@ function startListener(){
   subscribePath('wishlist');
   subscribePath('have');
   subscribePath('offers');
+  subscribePath('trades');
   // Other list types loaded lazily when tabs are visited
 }
 
@@ -2657,8 +2786,8 @@ function showApp(){
   if(action){history.replaceState({},'',location.pathname);}
   // Apply user's chosen wallpaper
   applyWallpaper(allData.users?.[cur]?.wallpaper||'');
-  // Fetch live Pokémon GO events in the background, then re-render Browse
-  fetchPogoEvents().then(()=>{renderEventBanner();renderBrowse();});
+  // Fetch live Pokémon GO events in the background, then re-render Browse + Schedule
+  fetchPogoEvents().then(()=>{renderEventBanner();renderBrowse();renderSchedule();});
   // Bump last-seen so admins know the user opened the app (not just edited)
   bumpLastSeen();
 }
@@ -2675,6 +2804,8 @@ function refreshAll(){
   if(!cur)return;
   renderBrowse();renderMyList();renderStrings();
   if(haveView==='mine')renderMyHave();else renderHaveBrowse();
+  renderSchedule();
+  updateScheduleNotif();
   // Update Have tab notification badge for incoming offers
   const inCount=totalOffersForRecipient(cur);
   const badge=document.getElementById('have-notif');
@@ -4649,6 +4780,7 @@ async function triggerInstall(){
 
 // ── WHAT'S NEW (#28) ─────────────────────────────────────────
 const WHATS_NEW=[
+  {version:'3.0',title:'📅 Trade Schedule',desc:'New Schedule tab with week-view calendar. Plan trades with specific trainers, track your daily quota (1 special + 100 regular base), and see real-time event bonuses (Community Day +1, GO Fest +2, Pokémon Tour +3). Events auto-update from LeekDuck — no manual maintenance. Mark trades complete or cancel anytime.'},
   {version:'2.9',title:'🔔 Public Offers & FCFS',desc:'Offers on inventory items are now public — see who already offered what & when (sorted oldest first). Compare offers before bidding. The 1st offer gets a green badge so everyone respects first-come-first-served. Withdraw your own offers anytime. Recipients see a 📬 inbox badge.'},
   {version:'2.8',title:'🎒 Inventory ("Have" tab)',desc:'Track what Pokémon you have to trade with simple quantity counts. Others can browse your inventory and click "Offer trade" to start a Discord conversation. ⭐ Auto-highlights items that match your wishlist.'},
   {version:'2.7.1',title:'Costume Sprite Fix',desc:'Fixed Flower Crown variants (Happiny, Chansey, etc.) and Worlds-event Pikachus showing generic sprites in My List and exports. Costume URLs are now resolved before generic fallback.'},
@@ -5150,6 +5282,325 @@ function strWarnHtml(str){
   if(!cls)return'';
   if(cls==='danger')return `<div class="str-warn-banner danger">⚠️ This string exceeds PoGo's ~${POGO_STR_LIMIT} char limit (${len}). It will be truncated in-game. Consider splitting into multiple priority lists.</div>`;
   return `<div class="str-warn-banner">⚠️ Approaching PoGo's ~${POGO_STR_LIMIT} char limit (${len}). Consider splitting soon.</div>`;
+}
+
+// ── TRADE SCHEDULE ──────────────────────────────────────────
+// Date utilities (local time)
+function isoDate(d){const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),da=String(d.getDate()).padStart(2,'0');return`${y}-${m}-${da}`;}
+function parseIsoDate(s){const[y,m,d]=String(s||'').split('-').map(Number);return new Date(y,(m||1)-1,d||1);}
+function todayIso(){return isoDate(new Date());}
+function startOfWeek(d){const dt=new Date(d);dt.setDate(dt.getDate()-dt.getDay());dt.setHours(0,0,0,0);return dt;}
+function addDays(d,n){const dt=new Date(d);dt.setDate(dt.getDate()+n);return dt;}
+function fmtWeekRange(start){
+  const end=addDays(start,6);
+  const sameMonth=start.getMonth()===end.getMonth();
+  const opts={month:'short',day:'numeric'};
+  return sameMonth
+    ?`${start.toLocaleDateString(undefined,{month:'long'})} ${start.getDate()}–${end.getDate()}, ${end.getFullYear()}`
+    :`${start.toLocaleDateString(undefined,opts)} – ${end.toLocaleDateString(undefined,opts)}, ${end.getFullYear()}`;
+}
+const WKDS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+// Compute special trade bonus from event names for a given date.
+// Returns {specialBonus, regularBonus, events: [{name, link, image, bonus}]}
+function dailyEventBonuses(isoD){
+  const out={specialBonus:0,regularBonus:0,events:[]};
+  if(!_eventData||!_eventData.events)return out;
+  const target=parseIsoDate(isoD).getTime();
+  const dayStart=new Date(parseIsoDate(isoD));dayStart.setHours(0,0,0,0);
+  const dayEnd=new Date(dayStart);dayEnd.setHours(23,59,59,999);
+  _eventData.events.forEach(ev=>{
+    const s=new Date(ev.start||0).getTime();
+    const e=new Date(ev.end||0).getTime();
+    if(!s||!e)return;
+    if(e<dayStart.getTime()||s>dayEnd.getTime())return;
+    const name=String(ev.name||'').toLowerCase();
+    const type=String(ev.eventType||'').toLowerCase();
+    let bonus=0,bonusType='';
+    // Community Day / Classic CDay → +1 special
+    if(name.includes('community day')||type.includes('community-day')){bonus=1;bonusType='special';}
+    // Pokemon Tour → +3 special (typically)
+    else if(name.includes('go tour')||name.includes('pokémon go tour')||type.includes('tour')){bonus=3;bonusType='special';}
+    // GO Fest → +1-2 special
+    else if(name.includes('go fest')||type.includes('go-fest')){bonus=2;bonusType='special';}
+    // Hatch Day → +1 special
+    else if(name.includes('hatch day')){bonus=1;bonusType='special';}
+    // Raid Day → +1 special
+    else if(type.includes('raid-day')||name.includes('raid day')){bonus=1;bonusType='special';}
+    if(bonus)out.specialBonus+=bonus;
+    out.events.push({name:ev.name,heading:ev.heading,link:ev.link,image:ev.image,bonus,bonusType,start:ev.start,end:ev.end});
+  });
+  return out;
+}
+function tradesOnDate(isoD){
+  const trades=allData.trades||{};
+  return Object.entries(trades)
+    .filter(([id,t])=>t&&t.date===isoD&&t.status!=='cancelled')
+    .filter(([id,t])=>!t.participants||t.participants[cur]||t.organizer===cur)
+    .map(([id,t])=>({id,...t}));
+}
+function tradeCountsForDay(isoD){
+  const trades=tradesOnDate(isoD).filter(t=>t.status!=='completed');
+  let special=0,regular=0,remote=0;
+  trades.forEach(t=>{
+    if(t.type==='special')special++;
+    else if(t.type==='remote')remote++;
+    else regular++;
+  });
+  return{special,regular,remote,total:special+regular+remote,trades};
+}
+
+async function writeTrade(id,trade){
+  const s=getLocal();
+  if(!s.trades)s.trades={};
+  if(trade===null){delete s.trades[id];}
+  else s.trades[id]=trade;
+  saveLocal(s);
+  if(fbOn&&db)queueSync(`trades/${id}`,trade);
+  syncFromLocal();
+}
+
+function navigateSchedWeek(dir){
+  if(!schedAnchor)schedAnchor=startOfWeek(new Date());
+  schedAnchor=addDays(schedAnchor,dir*7);
+  renderSchedule();
+}
+function navigateSchedToday(){
+  schedAnchor=startOfWeek(new Date());
+  schedSelectedDate=todayIso();
+  renderSchedule();
+}
+function selectSchedDay(isoD){
+  schedSelectedDate=isoD;
+  renderSchedule();
+}
+
+function renderSchedule(){
+  if(!schedAnchor)schedAnchor=startOfWeek(new Date());
+  if(!schedSelectedDate)schedSelectedDate=todayIso();
+  const labelEl=document.getElementById('sched-week-label');
+  if(labelEl)labelEl.textContent=fmtWeekRange(schedAnchor);
+  const strip=document.getElementById('sched-week-strip');
+  if(strip){
+    const today=todayIso();
+    strip.innerHTML=Array.from({length:7}).map((_,i)=>{
+      const d=addDays(schedAnchor,i);
+      const iso=isoDate(d);
+      const isToday=iso===today;
+      const isSel=iso===schedSelectedDate;
+      const isPast=d<new Date()&&!isToday;
+      const evt=dailyEventBonuses(iso);
+      const counts=tradeCountsForDay(iso);
+      const trade_total=counts.total;
+      return`<div class="sched-day-card ${isToday?'today':''} ${isSel?'selected':''} ${isPast?'past':''}" onclick="selectSchedDay('${iso}')" role="button" tabindex="0">
+        <span class="sched-day-wkd">${WKDS[d.getDay()]}</span>
+        <span class="sched-day-num">${d.getDate()}</span>
+        <div class="sched-day-meta">
+          ${evt.events.length?'<span class="sched-day-event-dot" title="Event"></span>':''}
+          ${trade_total?`<span class="sched-day-trade-count">${trade_total}</span>`:''}
+        </div>
+        ${evt.specialBonus?`<span class="sched-day-special-bonus" title="+${evt.specialBonus} bonus special trades">+${evt.specialBonus}⭐</span>`:''}
+      </div>`;
+    }).join('');
+  }
+  renderSchedDayDetail();
+}
+
+function renderSchedDayDetail(){
+  const el=document.getElementById('sched-day-detail');
+  if(!el)return;
+  const iso=schedSelectedDate||todayIso();
+  const d=parseIsoDate(iso);
+  const evt=dailyEventBonuses(iso);
+  const counts=tradeCountsForDay(iso);
+  const SPECIAL_BASE=1, REGULAR_CAP=100;
+  const specialCap=SPECIAL_BASE+evt.specialBonus;
+  const dayLabel=d.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+  const eventsHtml=evt.events.length?`<div class="sched-event-list">
+    ${evt.events.map(ev=>`<div class="sched-event-row">
+      <div class="sched-event-icon">🎉</div>
+      <div class="sched-event-content">
+        <div class="sched-event-title">${escHtml(ev.name||ev.heading||'Event')}${ev.bonus?`<span class="sched-event-bonus">+${ev.bonus} ${ev.bonusType}</span>`:''}</div>
+        ${ev.link?`<a class="sched-event-link" href="${ev.link}" target="_blank" rel="noopener">details ↗</a>`:''}
+      </div>
+    </div>`).join('')}
+  </div>`:'';
+  const tradesHtml=counts.trades.length?`<div class="sched-trades-list">${counts.trades.map(t=>renderTradeCard(t)).join('')}</div>`
+    :'<div class="sched-empty-trades">No trades scheduled for this day yet.</div>';
+  el.innerHTML=`<div class="sched-day-detail">
+    <div class="sched-day-detail-hdr">
+      <div class="sched-day-detail-date">${dayLabel}</div>
+      <button class="sched-day-detail-quick-add" onclick="openScheduleModal('${iso}')">+ Schedule</button>
+    </div>
+    <div class="sched-quota-row">
+      <div class="sched-quota">
+        <div class="sched-quota-label">⭐ Special Trades</div>
+        <div class="sched-quota-val ${counts.special+counts.remote>=specialCap?'danger':counts.special+counts.remote>=specialCap-1?'warn':''}">${counts.special+counts.remote}/${specialCap}</div>
+        ${evt.specialBonus?`<div class="sched-quota-bonus">+${evt.specialBonus} event bonus</div>`:'<div class="sched-quota-meta">1 base/day</div>'}
+      </div>
+      <div class="sched-quota">
+        <div class="sched-quota-label">🤝 Regular Trades</div>
+        <div class="sched-quota-val ${counts.regular>=REGULAR_CAP?'danger':counts.regular>=80?'warn':''}">${counts.regular}/${REGULAR_CAP}</div>
+        <div class="sched-quota-meta">includes Remote (Great Friend+)</div>
+      </div>
+    </div>
+    ${eventsHtml}
+    ${tradesHtml}
+  </div>`;
+}
+function renderTradeCard(t){
+  const others=Object.keys(t.participants||{}).filter(u=>u!==cur);
+  const isMine=t.organizer===cur||others.length>0;
+  const completed=t.status==='completed';
+  const time=t.time?`${t.time}`:'flexible';
+  const typeClass=t.type||'regular';
+  const typeLabel=t.type==='special'?'Special':t.type==='remote'?'Remote':'Regular';
+  const pokemonHtml=(t.pokemon||[]).length?`<div class="sched-trade-pokemon">${t.pokemon.slice(0,8).map(n=>{
+    const e=_nameToSpriteEntry(n);
+    const url=spriteUrl(e.no,e.name,'',e.displayName||e.name);
+    return`<span class="sched-trade-pkmn-chip" title="${escAttr(e.displayName||n)}">${url?`<img src="${url}" alt="">`:''}${escHtml(e.displayName||n)}</span>`;
+  }).join('')}</div>`:'';
+  const noteHtml=t.note?`<div class="sched-trade-note">"${escHtml(t.note)}"</div>`:'';
+  const canEdit=t.organizer===cur;
+  return`<div class="sched-trade-card ${isMine?'is-mine':''} ${completed?'completed':''} ${t.status==='cancelled'?'cancelled':''}">
+    <div class="sched-trade-info">
+      <div class="sched-trade-when">${escHtml(time)} <span class="sched-trade-type-pill ${typeClass}">${typeLabel}</span></div>
+      <div class="sched-trade-with">
+        with ${others.length?others.map(u=>escHtml(u)).join(', '):'<em>no one yet</em>'}
+        ${t.organizer&&t.organizer!==cur?` · organized by ${escHtml(t.organizer)}`:''}
+      </div>
+      ${pokemonHtml}
+      ${noteHtml}
+    </div>
+    <div class="sched-trade-actions">
+      ${!completed&&t.status!=='cancelled'?`<button class="sched-trade-btn complete" onclick="markTradeComplete('${t.id}')" title="Mark as completed">✓ Done</button>`:''}
+      ${canEdit&&!completed&&t.status!=='cancelled'?`<button class="sched-trade-btn cancel" onclick="cancelScheduledTrade('${t.id}')" title="Cancel">✗</button>`:''}
+    </div>
+  </div>`;
+}
+
+async function markTradeComplete(id){
+  const t=allData.trades?.[id];if(!t)return;
+  await writeTrade(id,{...t,status:'completed',completedAt:Date.now()});
+  toast('✓ Trade marked as completed');
+}
+async function cancelScheduledTrade(id){
+  const t=allData.trades?.[id];if(!t)return;
+  if(!confirm('Cancel this scheduled trade?'))return;
+  await writeTrade(id,null);
+  toast('Trade cancelled');
+}
+
+function openScheduleModal(dateIso){
+  const d=dateIso||schedSelectedDate||todayIso();
+  // Pull trainer list (exclude self, only active users from the community)
+  const myInv=allData.have?.[cur]||{};
+  const otherUsers=Object.keys(allData.users||{}).filter(u=>u!==cur).sort();
+  // Find Pokemon I have that match others' wants (and vice versa) for suggestions
+  const html=`<div class="ov open" id="sched-modal" role="dialog" aria-modal="true" onclick="if(event.target===this)closeScheduleModal()">
+    <div class="modal schedule-modal" onclick="event.stopPropagation()">
+      <h3>📅 Schedule a Trade</h3>
+      <div class="sched-form-time-row">
+        <div class="sched-form-row">
+          <label>Date</label>
+          <input type="date" id="sched-date" value="${d}">
+        </div>
+        <div class="sched-form-row">
+          <label>Time (optional)</label>
+          <input type="time" id="sched-time" placeholder="--:--">
+        </div>
+      </div>
+      <div class="sched-form-row">
+        <label>Trade Type</label>
+        <div class="sched-type-picker" id="sched-type-picker">
+          <button type="button" class="sched-type-btn regular selected" data-type="regular" onclick="selectSchedType('regular')">🤝 Regular</button>
+          <button type="button" class="sched-type-btn special" data-type="special" onclick="selectSchedType('special')">⭐ Special</button>
+          <button type="button" class="sched-type-btn remote" data-type="remote" onclick="selectSchedType('remote')">📡 Remote</button>
+        </div>
+      </div>
+      <input type="hidden" id="sched-type" value="regular">
+      <div class="sched-form-row">
+        <label>Trade With</label>
+        <div class="sched-trainer-picker" id="sched-trainer-picker">
+          ${otherUsers.length?otherUsers.map(u=>{
+            const ud=allData.users?.[u]||{};
+            const fresh=Date.now()-(ud.lastSeen||ud.lastUpdated||0)<7*86400000;
+            return`<span class="sched-trainer-chip" data-user="${escAttr(u)}" onclick="this.classList.toggle('selected')" title="${escAttr(u)}${ud.friendCode?' · '+escAttr(ud.friendCode):''}">
+              ${userAvatarHtml(u,20)} <span>${escHtml(u)}</span>${fresh?'<span style="font-size:10px;color:var(--ok)">●</span>':''}
+            </span>`;
+          }).join(''):'<div style="font-size:12px;color:var(--muted);font-style:italic">No other trainers yet</div>'}
+        </div>
+      </div>
+      <div class="sched-form-row">
+        <label>Pokémon (optional, comma-separated names)</label>
+        <input type="text" id="sched-pokemon" placeholder="A-Raichu, Vivillon (Garden)">
+      </div>
+      <div class="sched-form-row">
+        <label>Note (optional)</label>
+        <textarea id="sched-note" placeholder="Meet at Bryant Park · hundo hunt · etc."></textarea>
+      </div>
+      <div class="mact">
+        <button class="bghost" onclick="closeScheduleModal()">Cancel</button>
+        <button class="bpri" onclick="submitScheduledTrade()">Schedule</button>
+      </div>
+    </div>
+  </div>`;
+  closeScheduleModal();
+  const wrap=document.createElement('div');wrap.innerHTML=html;
+  document.body.appendChild(wrap.firstElementChild);
+}
+function closeScheduleModal(){document.getElementById('sched-modal')?.remove();}
+function selectSchedType(t){
+  document.getElementById('sched-type').value=t;
+  document.querySelectorAll('#sched-type-picker .sched-type-btn').forEach(b=>b.classList.toggle('selected',b.dataset.type===t));
+}
+async function submitScheduledTrade(){
+  const date=document.getElementById('sched-date')?.value;
+  const time=document.getElementById('sched-time')?.value||'';
+  const type=document.getElementById('sched-type')?.value||'regular';
+  const partners=[...document.querySelectorAll('#sched-trainer-picker .sched-trainer-chip.selected')].map(c=>c.dataset.user);
+  const pokemonRaw=document.getElementById('sched-pokemon')?.value||'';
+  const note=document.getElementById('sched-note')?.value||'';
+  if(!date){toast('⚠️ Pick a date');return;}
+  if(!partners.length){toast('⚠️ Pick at least one trainer');return;}
+  const pokemon=pokemonRaw.split(',').map(s=>s.trim()).filter(Boolean);
+  const id=`${Date.now()}_${cur}_${Math.random().toString(36).slice(2,7)}`;
+  const participants={[cur]:'organizer'};
+  partners.forEach(p=>{participants[p]='pending';});
+  const trade={
+    date,time,type,
+    organizer:cur,
+    participants,
+    pokemon,
+    note:String(note).slice(0,500),
+    createdAt:Date.now(),
+    status:'scheduled'
+  };
+  await writeTrade(id,trade);
+  closeScheduleModal();
+  toast(`📅 Trade scheduled for ${date}${time?' at '+time:''}`);
+  schedSelectedDate=date;
+  // Jump to the right week if needed
+  const d=parseIsoDate(date);
+  schedAnchor=startOfWeek(d);
+  renderSchedule();
+}
+
+function updateScheduleNotif(){
+  // Show badge on Schedule tab if user has upcoming trades within 24 hours
+  const badge=document.getElementById('schedule-notif');
+  if(!badge||!cur)return;
+  const now=Date.now();
+  const inDay=now+24*60*60*1000;
+  let count=0;
+  Object.values(allData.trades||{}).forEach(t=>{
+    if(!t||t.status!=='scheduled')return;
+    if(!t.participants||!t.participants[cur])return;
+    const tDate=parseIsoDate(t.date).getTime();
+    if(tDate>=now-86400000&&tDate<=inDay)count++;
+  });
+  badge.textContent=count>0?count:'';
+  badge.style.display=count>0?'':'none';
 }
 
 // ── HAVE / INVENTORY ─────────────────────────────────────────
@@ -6201,7 +6652,10 @@ Object.assign(window,{
   submitOffer,submitOfferAction,withdrawOffer,markOfferTraded,
   openIncomingOffersModal,closeIncomingOffersModal,
   // Update checker
-  reloadForUpdate,checkForUpdate
+  reloadForUpdate,checkForUpdate,
+  // Schedule
+  navigateSchedWeek,navigateSchedToday,selectSchedDay,openScheduleModal,closeScheduleModal,
+  selectSchedType,submitScheduledTrade,markTradeComplete,cancelScheduledTrade
 });
 
 // ── BOOT ──────────────────────────────────────────────────────
