@@ -644,10 +644,14 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
 .have-by-pokemon-hdr{display:flex;align-items:center;gap:10px;margin-bottom:8px}
 .have-by-pokemon-name{font-weight:600;font-size:14px;flex:1;min-width:0}
 .have-by-pokemon-name .pmname-text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;max-width:100%}
-.have-trainer-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:14px;background:var(--bg);border:1px solid var(--border);font-size:12px;font-weight:500;cursor:pointer;transition:.15s}
-.have-trainer-chip:hover{border-color:var(--accent);background:var(--bg2)}
-.have-trainer-chip .qty{color:var(--ac2);font-family:var(--mono);font-weight:700;margin-left:2px}
-.have-trainer-chip.match{background:rgba(245,158,11,.1);border-color:rgba(245,158,11,.4)}
+.have-trainer-chip{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:14px;background:var(--bg2);border:1px solid var(--border2);font-size:13px;font-weight:600;cursor:pointer;transition:.15s;color:var(--text);font-family:var(--font);min-height:32px;line-height:1.2}
+.have-trainer-chip:hover{border-color:var(--accent);background:var(--card);color:var(--ac2)}
+.have-trainer-chip .qty{color:var(--ac2);font-family:var(--mono);font-weight:700;margin-left:2px;font-size:12px}
+.have-trainer-chip.match{background:rgba(245,158,11,.14);border-color:rgba(245,158,11,.45);color:#f59e0b}
+.have-trainer-chip.match .qty{color:#fbbf24}
+.have-trainer-chip.match:hover{background:rgba(245,158,11,.22);color:#fbbf24}
+html[data-theme="light"] .have-trainer-chip{background:var(--bg2);border-color:var(--border2);color:var(--text)}
+html[data-theme="light"] .have-trainer-chip.match{color:#b45309}
 
 @media(max-width:600px){
   .have-add-row{display:grid;grid-template-columns:1fr;gap:8px}
@@ -656,6 +660,16 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
   .have-add-row .bsave{width:100%;grid-column:1}
   .have-trainer-grid{grid-template-columns:1fr}
   .have-by-pokemon-card{padding:10px 12px}
+  .have-by-pokemon-hdr{flex-wrap:wrap;gap:6px}
+  .have-by-pokemon-name{flex:1 1 100%;order:-1}
+  .have-trainer-chip{padding:8px 12px;font-size:13px;min-height:36px}
+  .have-trainer-chip .qty{font-size:13px}
+  .have-toggle-row{flex-direction:row}
+  .have-toggle-btn{padding:9px 8px;font-size:12px}
+  .have-filter,.mylist-search input{font-size:14px}
+  .offer-row{flex-wrap:wrap;gap:6px}
+  .offer-row .offer-actions{margin-left:auto}
+  .offer-row .offer-info{flex:1 1 calc(100% - 50px);min-width:0}
 }
 
 /* OFFER HISTORY (FCFS visibility) */
