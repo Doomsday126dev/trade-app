@@ -43,6 +43,20 @@
       "description": "See what other trainers want",
       "url": "./?action=browse",
       "icons": [{"src": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/132.png", "sizes": "96x96"}]
+    },
+    {
+      "name": "My Inventory",
+      "short_name": "Inventory",
+      "description": "Track Pokémon you have to trade",
+      "url": "./?action=have",
+      "icons": [{"src": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/143.png", "sizes": "96x96"}]
+    },
+    {
+      "name": "Trade Schedule",
+      "short_name": "Schedule",
+      "description": "Plan trades and see live event bonuses",
+      "url": "./?action=schedule",
+      "icons": [{"src": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/483.png", "sizes": "96x96"}]
     }
   ]
 }
