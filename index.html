@@ -180,7 +180,7 @@ input,select,textarea{font-family:var(--font);outline:none}
 .lucky-mark{background:rgba(250,204,21,.16);border:1px solid rgba(250,204,21,.36);color:#facc15}
 .flag-mark.xxl-mark{background:rgba(99,102,241,.16);border:1px solid rgba(99,102,241,.36);color:#818cf8}
 .flag-mark.xxs-mark{background:rgba(20,184,166,.16);border:1px solid rgba(20,184,166,.36);color:#2dd4bf}
-.ni{background:var(--bg);border:1px solid var(--border);color:var(--text);padding:2px 5px;border-radius:4px;font-size:10px;width:50px;font-family:var(--mono)}
+.ni{background:var(--bg);border:1px solid var(--border);color:var(--text);padding:2px 5px;border-radius:4px;font-size:10px;width:45px;max-width:45px;flex-shrink:0;font-family:var(--mono)}
 .rm{width:20px;height:20px;border-radius:4px;background:rgba(239,68,68,.1);color:var(--danger);border:1px solid rgba(239,68,68,.2);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center}
 
 /* STRINGS */
@@ -2014,10 +2014,11 @@ function drawWrappedText(ctx,text,x,y,maxW,lineH,maxLines){
   return shown.length*lineH;
 }
 function drawImageContain(ctx,img,x,y,w,h){
-  const box=imageTrimBox(img);
-  const r=Math.min(w/box.sw,h/box.sh);
-  const dw=box.sw*r,dh=box.sh*r;
-  ctx.drawImage(img,box.sx,box.sy,box.sw,box.sh,x+(w-dw)/2,y+(h-dh)/2,dw,dh);
+  const iw=img.naturalWidth||img.width||1;
+  const ih=img.naturalHeight||img.height||1;
+  const r=Math.min(w/iw,h/ih);
+  const dw=iw*r,dh=ih*r;
+  ctx.drawImage(img,x+(w-dw)/2,y+(h-dh)/2,dw,dh);
 }
 const imageTrimCache=new WeakMap();
 function imageTrimBox(img){
@@ -2165,7 +2166,7 @@ async function renderListImage(entries,type,username){
       if(img)drawImageContain(ctx,img,sx,sy,sprSize,sprSize);
       else drawSpriteFallback(ctx,e,sx,sy,sprSize);
       if(e.lucky||e.xxl||e.xxs){
-        let bx=x+cardW-4;
+        let bx=x+cellW-4;
         ctx.textAlign='center';
         if(e.xxs){bx-=16;roundedRect(ctx,bx,cy+4,15,11,3);ctx.fillStyle='#2dd4bf';ctx.fill();ctx.fillStyle='#fff';ctx.font='700 6px Space Grotesk,sans-serif';ctx.fillText('XS',bx+7.5,cy+11.5);}
         if(e.xxl){bx-=16;roundedRect(ctx,bx,cy+4,15,11,3);ctx.fillStyle='#818cf8';ctx.fill();ctx.fillStyle='#fff';ctx.font='700 6px Space Grotesk,sans-serif';ctx.fillText('XL',bx+7.5,cy+11.5);}
