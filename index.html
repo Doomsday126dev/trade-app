@@ -1364,7 +1364,7 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
       <div class="frow">
         <input type="text" id="nu-name" placeholder="Username" style="max-width:180px">
         <input type="text" id="nu-pin" placeholder="6-digit PIN" maxlength="6" inputmode="numeric" style="max-width:120px">
-        <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;white-space:nowrap;color:var(--muted)"><input type="checkbox" id="nu-admin"> Admin</label>
+        <label id="nu-admin-wrap" style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;white-space:nowrap;color:var(--muted)"><input type="checkbox" id="nu-admin"> Admin</label>
       </div>
       <button class="bsave" onclick="addUser()" style="margin-top:10px">Add member</button>
     </div>
@@ -2333,8 +2333,10 @@ async function bindAuthUserNow(username,authUpdate){
 }
 async function createMemberNow(username,pin,isAdmin=false,reqId=''){
   const s=getLocal();
+  const iAmOwner=allData.users?.[cur]?.isOwner||cur===OWNER;
+  const canCreateAdmin=!!isAdmin&&iAmOwner;
   const user=normalizedUserRecord(username,{},{
-    pin,isAdmin,isOwner:false,friendCode:'',joined:Date.now(),lastSeen:null,lastUpdated:null,
+    pin,isAdmin:canCreateAdmin,isOwner:false,friendCode:'',joined:Date.now(),lastSeen:null,lastUpdated:null,
     pinHashed:false,authVersion:1,authEmail:authEmail(username,1)
   });
   if(fbOn&&db){
@@ -4063,6 +4065,10 @@ function renderAdmin(){
   const el=document.getElementById('admin-tbody');if(!el)return;
   renderSecurityPanel();
   const iAmOwner=allData.users?.[cur]?.isOwner||cur===OWNER;
+  const adminWrap=document.getElementById('nu-admin-wrap');
+  const adminInput=document.getElementById('nu-admin');
+  if(adminWrap)adminWrap.style.display=iAmOwner?'flex':'none';
+  if(adminInput&&!iAmOwner)adminInput.checked=false;
   const users=Object.entries(allData.users||{}).sort((a,b)=>
     lastLoginTime(b[0],b[1])-lastLoginTime(a[0],a[1])||alphaCompare(a[0],b[0])
   );
@@ -4103,6 +4109,8 @@ function renderAdmin(){
 }
 
 function toggleAdmin(u,makeAdmin){
+  const iAmOwner=allData.users?.[cur]?.isOwner||cur===OWNER;
+  if(!iAmOwner){toast('⚠️ Only the owner can change admin roles');return;}
   if(u===OWNER){toast('⚠️ Cannot change owner');return;}
   writeUser(u,{isAdmin:makeAdmin});
   toast(`✅ ${u} is now ${makeAdmin?'an admin':'a member'}`);renderAdmin();
@@ -4110,7 +4118,10 @@ function toggleAdmin(u,makeAdmin){
 async function addUser(){
   const name=document.getElementById('nu-name').value.trim();
   const pin=document.getElementById('nu-pin').value.trim();
-  const isAdmin=document.getElementById('nu-admin').checked;
+  const iAmOwner=allData.users?.[cur]?.isOwner||cur===OWNER;
+  const adminRequested=document.getElementById('nu-admin')?.checked;
+  if(adminRequested&&!iAmOwner){toast('⚠️ Only the owner can create admins');return;}
+  const isAdmin=iAmOwner&&adminRequested;
   if(!name){toast('⚠️ Enter username');return;}
   if(!isSixDigitPin(pin)){toast('⚠️ PIN must be exactly 6 digits');return;}
   if(allData.users?.[name]){toast('⚠️ Username exists');return;}
