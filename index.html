@@ -882,8 +882,8 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
       <div class="filter-divider"></div>
       <div class="filter-group" id="browse-list-tabs-inline">
         <button class="ltab active" onclick="setBrowseList('wishlist')" aria-pressed="true">Trades</button>
-        <button class="ltab" onclick="setBrowseList('dynamax')" aria-pressed="false">DMAX</button>
-        <button class="ltab" onclick="setBrowseList('gmax')" aria-pressed="false">GMAX</button>
+        <button class="ltab" onclick="setBrowseList('dynamax')" aria-pressed="false">Dynamax</button>
+        <button class="ltab" onclick="setBrowseList('gmax')" aria-pressed="false">Gigantamax</button>
         <button class="ltab" onclick="setBrowseList('costumes')" aria-pressed="false">Others</button>
       </div>
     </div>
@@ -904,8 +904,8 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
     </div>
     <div class="list-tabs">
       <button class="ltab active" onclick="setMyList('wishlist')">Trades</button>
-      <button class="ltab" onclick="setMyList('dynamax')">DMAX</button>
-      <button class="ltab" onclick="setMyList('gmax')">GMAX</button>
+      <button class="ltab" onclick="setMyList('dynamax')">Dynamax</button>
+      <button class="ltab" onclick="setMyList('gmax')">Gigantamax</button>
       <button class="ltab" onclick="setMyList('costumes')">Others</button>
     </div>
     <div class="add-form">
@@ -997,8 +997,8 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
     <div class="srch" style="margin-bottom:10px"><span class="srch-icon">🔍</span><input type="text" id="stq" placeholder="Filter by trainer…" oninput="renderStrings()"></div>
     <div class="list-tabs" id="str-list-tabs">
       <button class="ltab active" onclick="setStrList('wishlist')">Trades</button>
-      <button class="ltab" onclick="setStrList('dynamax')">DMAX</button>
-      <button class="ltab" onclick="setStrList('gmax')">GMAX</button>
+      <button class="ltab" onclick="setStrList('dynamax')">Dynamax</button>
+      <button class="ltab" onclick="setStrList('gmax')">Gigantamax</button>
       <button class="ltab" onclick="setStrList('costumes')">Others</button>
     </div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Tap a trainer to expand their strings</div>
@@ -1232,7 +1232,7 @@ const PRI={
   L:{label:'Low',emoji:'🟢'}
 };
 const PRI_ORDER={H:0,M:1,L:2};
-const LIST_LABELS={wishlist:'Trades',dynamax:'DMAX',gmax:'GMAX',costumes:'Others'};
+const LIST_LABELS={wishlist:'Trades',dynamax:'Dynamax',gmax:'Gigantamax',costumes:'Others'};
 const VIVILLON_PATTERNS=new Set(['Archipelago','Continental','Elegant','Fancy','Garden','High Plains','Icy Snow','Jungle','Marine','Meadow','Modern','Monsoon','Ocean','Poke Ball','Poké Ball','Polar','River','Sandstorm','Savanna','Sun','Tundra']);
 const REGION_CODE_TERMS={K:'kanto',J:'johto',H:'hoenn',S:'sinnoh',U:'unova',L:'kalos',A:'alola',G:'galar',P:'paldea'};
 const REGIONAL_FORM_TERMS={A:'alola',G:'galar',H:'hisui',P:'paldea'};
@@ -4380,6 +4380,7 @@ async function triggerInstall(){
 
 // ── WHAT'S NEW (#28) ─────────────────────────────────────────
 const WHATS_NEW=[
+  {version:'2.7',title:'Updated Max Lists',desc:'Dynamax now matches the current released Pokemon GO roster, including Drilbur and Excadrill, and Max tabs use full readable names.'},
   {version:'2.6',title:'Trainer Compare Strings',desc:'Use the scale button in Strings to compare two trainers, then tap Both Want, Only Mine, or Only Theirs to copy that exact search string.'},
   {version:'2.5',title:'Visual & UX Polish',desc:'Type colors, theme toggle, loading skeletons, subtle animations, empty state illustrations, "what\'s new" notifications.'},
   {version:'2.4',title:'Export & Share',desc:'Export to Markdown (Discord/Reddit) and CSV. Read-only share links via ?view=username. PWA install prompt.'},
