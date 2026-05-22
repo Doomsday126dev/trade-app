@@ -516,6 +516,12 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
 .share-pcard-flag.lucky{background:rgba(250,204,21,.18);color:#facc15}
 .share-pcard-flag.xxl{background:rgba(99,102,241,.18);color:#818cf8}
 .share-pcard-flag.xxs{background:rgba(20,184,166,.18);color:#2dd4bf}
+.share-pcard-flag.gender-f{background:rgba(236,72,153,.2);color:#ec4899}
+.share-pcard-flag.gender-m{background:rgba(59,130,246,.2);color:#3b82f6}
+.share-pcard-sprite-wrap{position:relative;flex-shrink:0;width:26px;height:26px}
+.share-pcard-gender{position:absolute;bottom:-2px;right:-2px;background:var(--card);border-radius:50%;width:13px;height:13px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;border:1px solid var(--border2);line-height:1}
+.share-pcard-gender.f{color:#ec4899}
+.share-pcard-gender.m{color:#3b82f6}
 
 @media(max-width:600px){
   #share-view{padding:14px 10px 32px}
@@ -1157,6 +1163,44 @@ const IMAGE_PROXY_BASE='https://images.weserv.nl/?url=';
 const MAX_CLOUD_URL='https://cdn08.net/pokemongo/wiki/cloud.png';
 const MAX_TYPE_LABELS={dynamax:'Dynamax',gmax:'Gigantamax'};
 const MAX_TYPE_SEARCH={dynamax:'dynamax',gmax:'gigantamax'};
+// ── GENDER DIFFERENCES ──────────────────────────────────────
+// Dex numbers where PokeAPI has a distinct /female/{id}.png sprite.
+// Comprehensive list from PokeAPI sprites repo (sprites/pokemon/female/).
+// Sourced from Bulbapedia "List of Pokémon with gender differences".
+const GENDER_DIFF_DEX_FEMALE=new Set([
+  // Gen 1 (subtle but distinct sprites in PokeAPI)
+  3,12,19,20,25,26,41,42,44,45,64,65,84,85,97,111,112,118,119,123,129,130,
+  // Gen 2
+  154,165,166,178,185,186,190,194,195,198,202,203,207,208,212,214,215,217,221,224,229,232,
+  // Gen 3
+  255,256,257,267,269,272,274,275,307,308,315,316,317,322,323,332,350,369,
+  // Gen 4 — most extensive gender differences added here
+  396,397,398,399,400,401,402,403,404,405,407,415,417,418,419,424,443,444,445,449,450,453,454,456,457,459,460,461,464,465,473,
+  // Gen 5+
+  521,592,593,
+  // Gen 6
+  668,678,
+  // Gen 8+
+  876
+]);
+// Pokémon with VERY noticeable gender differences (different colors, body shape, etc.)
+// — always swap sprite even on small thumbnails
+const GENDER_DIFF_MAJOR=new Set([449,450,521,592,593,668,678,757,876]);
+// Pokémon where one gender is the only form that evolves into the next stage
+// (useful context for trade lists — e.g., only female Combee → Vespiquen)
+const GENDER_EVOLUTION_LOCKED={415:'f',678:'both',876:'both',758:'f'}; // 758=Salazzle is female-only species
+function entryGender(mod){
+  const m=String(mod||'').toLowerCase();
+  if(/\bfemale\b|♀|\bf\b/.test(m))return'f';
+  if(/\bmale\b|♂|\bm\b/.test(m))return'm';
+  return'';
+}
+function femaleSpriteUrl(no){
+  const n=parseInt(no);
+  if(!Number.isFinite(n)||!GENDER_DIFF_DEX_FEMALE.has(n))return null;
+  return`${SPRITE_BASE}female/${n}.png`;
+}
+
 const REGIONAL_FORM_IDS={"A-Rattata": 10091, "A-Raichu": 10100, "A-Sandshrew": 10101, "A-Vulpix": 10103, "A-Diglett": 10105, "A-Meowth": 10107, "A-Geodude": 10109, "A-Grimer": 10112, "A-Exeggutor": 10114, "A-Marowak": 10115, "G-Meowth": 10161, "G-Ponyta": 10162, "G-Slowpoke": 10164, "G-Farfetch'd": 10166, "G-Weezing": 10167, "G-Mr_ Mime": 10168, "G-Corsola": 10173, "G-Zigzagoon": 10174, "G-Darumaka": 10176, "G-Yamask": 10179, "G-Stunfisk": 10180, "H-Growlithe": 10229, "H-Voltorb": 10231, "H-Typhlosion": 10233, "H-Qwilfish": 10234, "H-Sneasel": 10235, "H-Samurott": 10236, "H-Lilligant": 10237, "H-Zorua": 10238, "H-Braviary": 10240, "H-Sliggoo": 10241, "H-Avalugg": 10243, "H-Decidueye": 10244, "P-Tauros": 10250, "P-Tauros (Combat)": 10250, "P-Tauros (Blaze)": 10251, "P-Tauros (Fire)": 10251, "P-Tauros (Aqua)": 10252, "P-Tauros (Water)": 10252, "P-Wooper": 10253, "Castform (Sunny)": 10013, "Castform (Rainy)": 10014, "Castform (Snowy)": 10015};
 // Form-specific sprite IDs/filenames from PokeAPI sprites. These are CORS-safe for canvas export.
 const COSTUME_FORM_SPRITE_IDS={
@@ -1297,33 +1341,164 @@ function goCostumeSpriteUrl(no,name){
   return`${SEREBII_GO_SPRITE_BASE}${dex}-${slug}.png`;
 }
 function canvasSafeSpriteUrl(url){
-  if(url&&url.startsWith(SEREBII_GO_SPRITE_BASE))return IMAGE_PROXY_BASE+encodeURIComponent(url.replace(/^https?:\/\//,''));
-  if(url&&url.startsWith('https://cdn08.net/'))return IMAGE_PROXY_BASE+encodeURIComponent(url.replace(/^https?:\/\//,''));
-  return url||'';
+  if(!url)return'';
+  // Proxy CORS-restricted hosts through images.weserv.nl for canvas export
+  const NEEDS_PROXY=[SEREBII_GO_SPRITE_BASE,'https://cdn08.net/',POKEMONDB_BASE,POKEMINERS_BASE];
+  if(NEEDS_PROXY.some(prefix=>url.startsWith(prefix))){
+    return IMAGE_PROXY_BASE+encodeURIComponent(url.replace(/^https?:\/\//,''));
+  }
+  return url;
 }
-function entrySpriteUrl(entry,nameOverride=''){
+function entrySpriteUrl(entry,nameOverride='',gender=''){
   if(entry?.spriteUrl||entry?.sprite)return entry.spriteUrl||entry.sprite;
-  return spriteUrl(entry?.no,nameOverride||entry?.name||entry?.displayName);
+  return spriteUrl(entry?.no,nameOverride||entry?.name||entry?.displayName,gender,entry?.displayName||nameOverride||entry?.name);
 }
-function spriteUrl(no,name){
+// Resolves the BEST QUALITY sprite URL.
+// Priority: hand-curated costume URLs (cdn08 wiki) → PokemonDB HOME 3D renders →
+// PokeAPI form/regional/gender variants → PokeAPI base sprite.
+// The actual <img> uses spriteFallbackChain() for graceful 404 cascade.
+function spriteUrl(no,name,gender='',dn=''){
+  // 1. Hand-curated costume sprite URLs (e.g., Pikachu Santa, Spinda forms via Serebii)
   if(name&&EXTRA_COSTUME_SPRITES[name])return EXTRA_COSTUME_SPRITES[name];
+  // 2. PokemonDB HOME 3D — highest-quality renders with broad form/gender coverage
+  const pdb=pokemondbSpriteUrl(name,dn||name,gender);
+  if(pdb)return pdb;
+  // 3. PokeAPI regional form (Alolan, Galarian, Hisuian, Paldean)
   if(name&&REGIONAL_FORM_IDS[name])return`${SPRITE_BASE}${REGIONAL_FORM_IDS[name]}.png`;
+  // 4. Serebii Pokémon GO costume sprites (e.g. Pikachu themed costumes)
   const goUrl=goCostumeSpriteUrl(no,name);
   if(goUrl)return goUrl;
+  // 5. PokeAPI costume form variants (Unown, Vivillon, Furfrou, etc.)
   if(name&&COSTUME_FORM_SPRITE_IDS[name])return`${SPRITE_BASE}${COSTUME_FORM_SPRITE_IDS[name]}.png`;
+  // 6. PokeAPI female sprite (Pyroar ♀, Pikachu ♀ tail, etc.)
+  if(gender==='f'){
+    const fUrl=femaleSpriteUrl(no);
+    if(fUrl)return fUrl;
+  }
   if(!no)return null;
   const n=parseInt(no);
   if(isNaN(n))return null;
   return`${SPRITE_BASE}${n}.png`;
 }
-function spriteImg(no,size=40,cls='',name=''){
-  const url=spriteUrl(no,name);
-  if(!url)return`<div class="pc-sprite-placeholder" style="width:${size}px;height:${size}px">🎮</div>`;
+// ── EXTERNAL SPRITE SOURCES ───────────────────────────────────
+// PokemonDB hosts high-quality Pokémon HOME 3D renders with broad form/gender
+// coverage. URL pattern: img.pokemondb.net/sprites/home/normal/{slug}.png
+// PokeMiners hosts the actual Pokémon GO 256×256 game assets.
+// URL pattern: .../Images/Pokemon - 256x256/pokemon_icon_{dex3}_{form}.png
+const POKEMONDB_BASE='https://img.pokemondb.net/sprites/home/normal/';
+const POKEMINERS_BASE='https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/Pokemon%20-%20256x256/';
+const REGIONAL_SLUG_MAP={A:'alolan',G:'galarian',H:'hisuian',P:'paldean'};
+function pokemondbSlug(name,dn,gender=''){
+  let s=String(dn||name||'').trim();
+  if(!s)return'';
+  // "A-Raichu" → "Raichu (Alolan)" intermediate, then normalize
+  const regional=s.match(/^([AGHP])-(.+)/);
+  if(regional){
+    const region=REGIONAL_SLUG_MAP[regional[1]];
+    const rest=regional[2];
+    // "P-Tauros (Aqua)" → "Tauros (Paldean) (Aqua)" → "tauros-paldean-aqua"
+    const m=rest.match(/^(.+?)\s*\(([^)]+)\)\s*$/);
+    if(m){s=`${m[1]} ${region} ${m[2]}`;}
+    else{s=`${rest} ${region}`;}
+  }else{
+    // "Vivillon (Garden)" → "vivillon garden"
+    s=s.replace(/\s*\(([^)]+)\)\s*/,' $1 ');
+  }
+  // Normalize: lowercase, strip accents, replace special chars
+  let slug=s.toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g,'')  // strip accents é→e
+    .replace(/♀|♂/g,'')
+    .replace(/['.]/g,'')                              // Mr. Mime, Farfetch'd
+    .replace(/[^a-z0-9\s-]/g,' ')
+    .replace(/\s+/g,'-')
+    .replace(/-+/g,'-')
+    .replace(/^-|-$/g,'');
+  // PokemonDB HOME naming quirks (verified against actual URLs)
+  slug=slug
+    .replace(/^basculin-(red|blue|white)$/,'basculin-$1-striped')           // Basculin needs "-striped"
+    .replace(/^flabebe-(red|yellow|orange|blue|white)-flower$/,'flabebe-$1')// Flabébé drops " Flower"
+    .replace(/^oricorio-pa-u$/,'oricorio-pau')                              // Pa'u → pau
+    .replace(/^shellos-pink$/,'shellos-west')                               // PokemonDB uses sea names
+    .replace(/^shellos-blue$/,'shellos-east');
+  // Female gender: append if not already there
+  if(gender==='f'&&!/female/.test(slug))slug+='-female';
+  return slug;
+}
+function pokemondbSpriteUrl(name,dn,gender=''){
+  const slug=pokemondbSlug(name,dn,gender);
+  return slug?`${POKEMONDB_BASE}${slug}.png`:'';
+}
+function pokeminersSpriteUrl(no,formCode='00'){
+  const n=parseInt(no);if(!Number.isFinite(n))return'';
+  const padded=String(n).padStart(3,'0');
+  return`${POKEMINERS_BASE}pokemon_icon_${padded}_${formCode}.png`;
+}
+
+// Build a cascading fallback chain of sprite URLs.
+// Strategy:
+//   1. Custom mapped URL (PokeAPI form variants, Serebii GO costumes) - existing logic
+//   2. PokeAPI base dex (most common fallback for plain Pokémon)
+//   3. PokemonDB HOME 3D (best for form variants + gender, e.g. vivillon-garden, indeedee-female)
+//   4. PokeMiners (actual PoGo game art — exact Pokémon GO accuracy)
+//   5. Serebii GO sprite (final visual fallback, always exists for in-game Pokémon)
+function spriteFallbackChain(no,name,gender='',dn=''){
+  const urls=[];
+  // Primary URL (now PokemonDB HOME for most cases — see spriteUrl priority)
+  const primary=spriteUrl(no,name,gender,dn);
+  if(primary)urls.push(primary);
+  // For gendered variants where PokemonDB doesn't have a -female variant, try base
+  if(gender==='f'){
+    const pdbBase=pokemondbSpriteUrl(name,dn||name,'');
+    if(pdbBase&&!urls.includes(pdbBase))urls.push(pdbBase);
+  }
+  // PokeAPI form variants as fallback (regional, costume forms)
+  if(name&&REGIONAL_FORM_IDS[name]){
+    const u=`${SPRITE_BASE}${REGIONAL_FORM_IDS[name]}.png`;
+    if(!urls.includes(u))urls.push(u);
+  }
+  if(name&&COSTUME_FORM_SPRITE_IDS[name]){
+    const u=`${SPRITE_BASE}${COSTUME_FORM_SPRITE_IDS[name]}.png`;
+    if(!urls.includes(u))urls.push(u);
+  }
+  // For female sprite requests that 404, fall back to default base
+  if(gender==='f'&&primary&&primary.includes('/female/')&&no){
+    const u=`${SPRITE_BASE}${parseInt(no)}.png`;
+    if(!urls.includes(u))urls.push(u);
+  }
+  const dex=padDex(no);
+  if(dex){
+    // PokeAPI canonical base dex (always exists for valid Pokemon)
+    const peU=`${SPRITE_BASE}${parseInt(no)}.png`;
+    if(!urls.includes(peU))urls.push(peU);
+    // PokeMiners (Pokémon GO actual game art, 256x256)
+    const pmUrl=pokeminersSpriteUrl(no,'00');
+    if(pmUrl&&!urls.includes(pmUrl))urls.push(pmUrl);
+    // Serebii GO sprite as final visual fallback
+    const serebiiUrl=`${SEREBII_GO_SPRITE_BASE}${dex}.png`;
+    if(!urls.includes(serebiiUrl))urls.push(serebiiUrl);
+  }
+  return urls;
+}
+function spriteImg(no,size=40,cls='',name='',gender='',dn=''){
+  const urls=spriteFallbackChain(no,name,gender,dn);
+  if(!urls.length)return`<div class="pc-sprite-placeholder" style="width:${size}px;height:${size}px">🎮</div>`;
+  const url=urls[0];
   const isGo=url.includes('serebii.net')||url.includes('weserv.nl');
   const rendering=isGo?'auto':'pixelated';
+  // Build chain as JSON-encoded data attribute; on error, cycle to next
+  const fallbacks=urls.slice(1).map(u=>u.replace(/"/g,'&quot;')).join('|');
   return`<img src="${url}" class="${cls||'pc-sprite'}" width="${size}" height="${size}" alt="" title="${escAttr(name||'Pokémon')}"
     style="image-rendering:${rendering};object-fit:contain"
-    onerror="this.style.display='none'" loading="lazy">`;
+    data-fallbacks="${fallbacks}" onerror="trySpriteFallback(this)" loading="lazy">`;
+}
+function trySpriteFallback(img){
+  const fbs=(img.dataset.fallbacks||'').split('|').filter(Boolean);
+  if(!fbs.length){img.style.display='none';return;}
+  const next=fbs.shift();
+  img.dataset.fallbacks=fbs.join('|');
+  // Serebii URLs sometimes need rendering:auto for clean output
+  if(next.includes('serebii.net'))img.style.imageRendering='auto';
+  img.src=next;
 }
 
 // ── SESSION EXPIRY (fix: 7-day auto-logout) ───────────────────
@@ -2407,6 +2582,7 @@ function currentListEntries(type=myListType,filterVal=''){
     const spriteEntry=spriteEntryForListItem(type,name,entry)||{};
     const{p,mod,lucky,xxl,xxs}=parsePri(val);
     const dn=entry.displayName||name;
+    const gender=entryGender(mod);
     return{
       name,
       dn,
@@ -2415,10 +2591,11 @@ function currentListEntries(type=myListType,filterVal=''){
       lucky,
       xxl,
       xxs,
+      gender,
       no:spriteEntry.no||entry.no||null,
       maxType:maxTypeForEntry(entry,type),
       spriteName:(COSTUME_FORM_SPRITE_IDS[name]||REGIONAL_FORM_IDS[name])?name:(spriteEntry.name||entry.name||name),
-      spriteUrl:entrySpriteUrl(spriteEntry.no?spriteEntry:entry,name)
+      spriteUrl:entrySpriteUrl(spriteEntry.no?spriteEntry:entry,name,gender)
     };
   }).filter(e=>!q||e.dn.toLowerCase().includes(q))
     .sort((a,b)=>(PRI_ORDER[a.p]??9)-(PRI_ORDER[b.p]??9)||a.dn.localeCompare(b.dn,undefined,{sensitivity:'base'}));
@@ -2486,7 +2663,15 @@ function confirmRemove(name,dn){
 
 const canvasImageCache=new Map();
 function exportSpriteUrl(e){
-  return canvasSafeSpriteUrl(e.spriteUrl||(e.no?spriteUrl(e.no,e.spriteName):''));
+  return canvasSafeSpriteUrl(e.spriteUrl||(e.no?spriteUrl(e.no,e.spriteName,e.gender,e.dn):''));
+}
+// Build canvas-safe fallback chain for the export image
+// Uses the same multi-source cascade as inline images
+function exportSpriteFallbackUrls(e){
+  const chain=spriteFallbackChain(e.no,e.spriteName||e.name,e.gender,e.dn);
+  // Insert custom spriteUrl override at the head if entry provides one (e.g., EXTRA_FORM_ENTRIES with Serebii URL)
+  if(e.spriteUrl)chain.unshift(e.spriteUrl);
+  return [...new Set(chain.filter(Boolean).map(canvasSafeSpriteUrl))];
 }
 function loadCanvasImage(url){
   if(!url)return Promise.resolve(null);
@@ -2500,6 +2685,14 @@ function loadCanvasImage(url){
   });
   canvasImageCache.set(url,p);
   return p;
+}
+// Load with cascading fallback — try each URL in order until one succeeds
+async function loadCanvasImageWithFallback(urls){
+  for(const url of urls){
+    const img=await loadCanvasImage(url);
+    if(img)return img;
+  }
+  return null;
 }
 function roundedRect(ctx,x,y,w,h,r){
   const rr=Math.min(r,w/2,h/2);
@@ -2674,12 +2867,17 @@ async function renderListImage(entries,type,username){
   ctx.fillText(`${entries.length} Pokémon · ${date}`,W/2,48);
   ctx.textAlign='left';
 
-  const urls=[...new Set([
-    ...entries.map(exportSpriteUrl).filter(Boolean),
-    ...(entries.some(e=>maxMarkForEntry(e,type))?[canvasSafeSpriteUrl(MAX_CLOUD_URL)]:[])
-  ])];
-  const imagePairs=await Promise.all(urls.map(async url=>[url,await loadCanvasImage(url)]));
-  const images=new Map(imagePairs);
+  // Load with cascading fallback — try PokeAPI → Serebii for each entry
+  const entryImagePromises=entries.map(async e=>{
+    const primaryUrl=exportSpriteUrl(e);
+    const img=await loadCanvasImageWithFallback(exportSpriteFallbackUrls(e));
+    return[primaryUrl,img];
+  });
+  const cloudPromise=entries.some(e=>maxMarkForEntry(e,type))
+    ?loadCanvasImage(canvasSafeSpriteUrl(MAX_CLOUD_URL)).then(img=>[canvasSafeSpriteUrl(MAX_CLOUD_URL),img])
+    :Promise.resolve(null);
+  const results=await Promise.all([...entryImagePromises,cloudPromise]);
+  const images=new Map(results.filter(Boolean));
   const priColors={H:'#ef4444',M:'#f59e0b',L:'#10b981','':'#8888aa'};
   const priBgColors={H:'rgba(239,68,68,.08)',M:'rgba(245,158,11,.08)',L:'rgba(16,185,129,.08)'};
   let y=frame+headerH;
@@ -2721,6 +2919,21 @@ async function renderListImage(entries,type,username){
         ctx.font='800 8px Space Grotesk, sans-serif';
         ctx.textAlign='center';
         ctx.fillText(mark,bx+6,by+9);
+        ctx.textAlign='left';
+      }
+      // Gender badge (top-right corner). Use blue ♂ / pink ♀ pill.
+      if(e.gender==='f'||e.gender==='m'){
+        const isF=e.gender==='f';
+        const bx=x+cellW-15,by=cy+3;
+        roundedRect(ctx,bx,by,12,12,6);
+        ctx.fillStyle=isF?'#ec4899':'#3b82f6';ctx.fill();
+        ctx.strokeStyle='rgba(255,255,255,.9)';ctx.lineWidth=1;ctx.stroke();
+        ctx.fillStyle='#fff';
+        ctx.font='800 10px Space Grotesk, sans-serif';
+        ctx.textAlign='center';
+        ctx.textBaseline='middle';
+        ctx.fillText(isF?'♀':'♂',bx+6,by+7);
+        ctx.textBaseline='alphabetic';
         ctx.textAlign='left';
       }
     });
@@ -3679,7 +3892,8 @@ function renderShareView(username,type){
   Object.entries(list).forEach(([name,val])=>{
     const{p,mod,lucky,xxl,xxs}=parsePri(val);
     const tag=(p&&grouped[p])?p:'Other';
-    grouped[tag].push({name,dn:dispMap[name]||name,no:noMap[name]||'',p,mod,lucky,xxl,xxs});
+    const gender=entryGender(mod);
+    grouped[tag].push({name,dn:dispMap[name]||name,no:noMap[name]||'',p,mod,lucky,xxl,xxs,gender});
   });
   let html='';
   ['H','M','L'].forEach(p=>{
@@ -3693,13 +3907,21 @@ function renderShareView(username,type){
       </div>
       <div class="share-pgrid">${sorted.map(e=>{
         const flagsHtml=[
+          e.gender==='f'?'<span class="share-pcard-flag gender-f" title="Female">♀</span>':'',
+          e.gender==='m'?'<span class="share-pcard-flag gender-m" title="Male">♂</span>':'',
           e.lucky?'<span class="share-pcard-flag lucky" title="Lucky">⚡</span>':'',
           e.xxl?'<span class="share-pcard-flag xxl" title="Extra Large">XXL</span>':'',
           e.xxs?'<span class="share-pcard-flag xxs" title="Extra Small">XXS</span>':''
         ].filter(Boolean).join('');
-        const metaHtml=(e.mod||flagsHtml)?`<div class="share-pcard-meta">${e.mod?`<span class="share-pcard-mod">${escHtml(e.mod)}</span>`:''}${flagsHtml}</div>`:'';
+        // Strip gender markers from mod display since we show ♂/♀ explicitly
+        const modDisplay=String(e.mod||'').replace(/\b(female|male|f|m)\b/gi,'').replace(/\s+/g,' ').trim();
+        const metaHtml=(modDisplay||flagsHtml)?`<div class="share-pcard-meta">${modDisplay?`<span class="share-pcard-mod">${escHtml(modDisplay)}</span>`:''}${flagsHtml}</div>`:'';
+        // Use female sprite when applicable; cascade through PokemonDB HOME / PokeMiners / Serebii
+        const spriteHtml=e.no
+          ?`<div class="share-pcard-sprite-wrap">${spriteImg(e.no,26,'share-pcard-sprite',e.name,e.gender,e.dn)}${e.gender?`<span class="share-pcard-gender ${e.gender}">${e.gender==='f'?'♀':'♂'}</span>`:''}</div>`
+          :'<div class="share-pcard-sprite" style="display:flex;align-items:center;justify-content:center;background:var(--bg2);border-radius:4px">🎮</div>';
         return `<div class="share-pcard" title="${escAttr(e.dn)}">
-          ${e.no?spriteImg(e.no,26,'share-pcard-sprite',e.name):'<div class="share-pcard-sprite" style="display:flex;align-items:center;justify-content:center;background:var(--bg2);border-radius:4px">🎮</div>'}
+          ${spriteHtml}
           <div class="share-pcard-info">
             <span class="share-pcard-name">${escHtml(e.dn)}</span>
             ${metaHtml}
@@ -4361,7 +4583,7 @@ Object.assign(window,{
   // Latest batch
   triggerInstall,openWhatsNew,closeWhatsNew,updateAvatarPreview,
   toggleExportMenu,closeExportMenu,exportMyListMarkdown,exportMyListCSV,copyShareLink,
-  exitShareView,renderShareView,setAddPri,toggleAddAdvanced
+  exitShareView,renderShareView,setAddPri,toggleAddAdvanced,trySpriteFallback
 });
 
 // ── BOOT ──────────────────────────────────────────────────────
