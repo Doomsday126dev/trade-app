@@ -597,6 +597,128 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
 .tab,.fbtn,.ltab,.sfbtn,.pb,.flag-btn{transition:background .15s,color .15s,border-color .15s,transform .1s}
 .tab:active,.fbtn:active,.ltab:active,.sfbtn:active,.pb:active,.flag-btn:active{transform:scale(.96)}
 
+/* HAVE / INVENTORY TAB */
+.have-hdr{margin-bottom:16px}
+.have-title{font-size:20px;font-weight:700;margin-bottom:4px}
+.have-subtitle{font-size:13px;color:var(--muted);line-height:1.4}
+.have-toggle-row{display:flex;gap:6px;margin-bottom:14px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:4px}
+.have-toggle-btn{flex:1;background:transparent;border:none;color:var(--muted);padding:8px 12px;border-radius:var(--r2);font-size:13px;font-weight:600;cursor:pointer;transition:.15s;font-family:var(--font)}
+.have-toggle-btn.active{background:var(--accent);color:#fff}
+.have-toggle-btn:hover:not(.active){color:var(--text);background:var(--bg2)}
+.have-view{display:none}
+.have-view.active{display:block}
+.have-add-row{align-items:center;gap:7px}
+.have-qty-input{width:70px;background:var(--bg);border:1px solid var(--border2);color:var(--text);padding:8px 11px;border-radius:var(--r2);font-size:14px;text-align:center;flex-shrink:0;font-family:var(--mono)}
+.have-qty-input::-webkit-inner-spin-button,.have-qty-input::-webkit-outer-spin-button{opacity:1}
+.have-row{background:var(--card);border:1px solid var(--border);border-radius:var(--r2);padding:9px 12px;display:flex;align-items:center;gap:8px;margin-bottom:6px;transition:.15s}
+.have-row:hover{border-color:var(--border2)}
+.have-row-sprite{width:32px;height:32px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.have-row-info{flex:1;min-width:0}
+.have-row-name{font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.have-row-dex{font-size:10px;color:var(--muted);font-family:var(--mono)}
+.have-row-qty-wrap{display:inline-flex;align-items:center;gap:4px;flex-shrink:0}
+.have-row-qty-btn{width:26px;height:26px;border-radius:50%;background:var(--bg);border:1px solid var(--border2);color:var(--text);font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s}
+.have-row-qty-btn:hover{background:var(--accent);color:#fff;border-color:transparent}
+.have-row-qty{min-width:32px;text-align:center;font-family:var(--mono);font-weight:700;font-size:15px;color:var(--ac2)}
+.have-row-rm{width:24px;height:24px;border-radius:4px;background:rgba(239,68,68,.1);color:var(--danger);border:1px solid rgba(239,68,68,.2);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-left:4px}
+.have-row-rm:hover{background:rgba(239,68,68,.2)}
+.have-match-tgl.on{background:var(--warn);color:#1a1a2e;border-color:transparent}
+.have-trainer-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;margin-bottom:8px}
+.have-trainer-hdr{display:flex;align-items:center;gap:10px;margin-bottom:8px;cursor:pointer}
+.have-trainer-name{font-weight:600;font-size:14px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.have-trainer-count{font-size:11px;color:var(--muted)}
+.have-trainer-body{display:none;padding-top:8px;border-top:1px solid var(--border);margin-top:6px}
+.have-trainer-card.expanded .have-trainer-body{display:block}
+.have-trainer-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px}
+.have-pmon-card{display:flex;align-items:center;gap:7px;padding:6px 9px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r2);font-size:12px;position:relative}
+.have-pmon-card.match{border-color:rgba(245,158,11,.5);background:rgba(245,158,11,.06)}
+.have-pmon-card .have-pmon-info{flex:1;min-width:0}
+.have-pmon-card .have-pmon-name{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
+.have-pmon-card .have-pmon-meta{font-size:10px;color:var(--muted)}
+.have-pmon-card .have-pmon-qty{font-family:var(--mono);font-weight:700;color:var(--ac2);font-size:13px;flex-shrink:0}
+.have-pmon-card .match-badge{position:absolute;top:-5px;right:-5px;background:var(--warn);color:#1a1a2e;font-size:9px;font-weight:800;padding:1px 5px;border-radius:8px;border:1.5px solid var(--card)}
+.have-offer-btn{background:var(--accent);color:#fff;border:none;padding:7px 14px;border-radius:var(--r2);font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:5px;margin-top:8px}
+.have-offer-btn:hover{opacity:.9}
+.have-empty-pmon{padding:14px;text-align:center;color:var(--muted);font-size:13px;background:var(--card);border:1px dashed var(--border2);border-radius:var(--r)}
+.have-by-pokemon-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;margin-bottom:8px}
+.have-by-pokemon-hdr{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.have-by-pokemon-name{font-weight:600;font-size:14px;flex:1;min-width:0}
+.have-by-pokemon-name .pmname-text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;max-width:100%}
+.have-trainer-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:14px;background:var(--bg);border:1px solid var(--border);font-size:12px;font-weight:500;cursor:pointer;transition:.15s}
+.have-trainer-chip:hover{border-color:var(--accent);background:var(--bg2)}
+.have-trainer-chip .qty{color:var(--ac2);font-family:var(--mono);font-weight:700;margin-left:2px}
+.have-trainer-chip.match{background:rgba(245,158,11,.1);border-color:rgba(245,158,11,.4)}
+
+@media(max-width:600px){
+  .have-add-row{display:grid;grid-template-columns:1fr;gap:8px}
+  .have-add-row .ac-wrap{grid-column:1}
+  .have-add-row .have-qty-input{width:100%;grid-column:1}
+  .have-add-row .bsave{width:100%;grid-column:1}
+  .have-trainer-grid{grid-template-columns:1fr}
+  .have-by-pokemon-card{padding:10px 12px}
+}
+
+/* OFFER HISTORY (FCFS visibility) */
+.offer-count-badge{display:inline-flex;align-items:center;gap:3px;background:rgba(245,158,11,.18);color:var(--warn);border:1px solid rgba(245,158,11,.4);font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;cursor:pointer;flex-shrink:0;white-space:nowrap}
+.offer-count-badge:hover{background:rgba(245,158,11,.25)}
+.offer-count-badge.unseen{animation:pulse-warn 1.4s infinite}
+@keyframes pulse-warn{0%,100%{box-shadow:0 0 0 0 rgba(245,158,11,.5)}50%{box-shadow:0 0 0 5px rgba(245,158,11,0)}}
+.offer-list{display:flex;flex-direction:column;gap:6px;padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r2);margin-top:8px}
+.offer-list-empty{color:var(--muted);font-size:12px;font-style:italic;padding:8px;text-align:center}
+.offer-row{display:flex;align-items:center;gap:8px;padding:7px 9px;background:var(--card);border:1px solid var(--border);border-radius:var(--r2);font-size:12px}
+.offer-row.fcfs-first{border-color:rgba(16,185,129,.45);background:linear-gradient(90deg,rgba(16,185,129,.06),var(--card))}
+.offer-row.my-offer{border-color:rgba(108,99,255,.4);background:linear-gradient(90deg,rgba(108,99,255,.06),var(--card))}
+.offer-row .offer-av{flex-shrink:0}
+.offer-row .offer-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.offer-row .offer-from{font-weight:600;font-size:12px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.offer-row .offer-from .fcfs-tag{font-size:9px;font-weight:800;background:var(--ok);color:#fff;padding:1px 5px;border-radius:6px;text-transform:uppercase;letter-spacing:.04em}
+.offer-row .offer-from .time-tag{font-size:10px;color:var(--muted);font-weight:500;font-family:var(--mono)}
+.offer-row .offer-items{display:flex;flex-wrap:wrap;gap:3px;font-size:11px}
+.offer-row .offer-item-chip{display:inline-flex;align-items:center;gap:3px;background:var(--bg);padding:2px 6px;border-radius:4px;border:1px solid var(--border);font-size:10px}
+.offer-row .offer-item-chip img{width:16px;height:16px;object-fit:contain;image-rendering:pixelated;flex-shrink:0}
+.offer-row .offer-actions{display:flex;gap:4px;flex-shrink:0;align-items:center}
+.offer-row .offer-msg-toggle{background:transparent;border:1px solid var(--border2);color:var(--muted);padding:3px 7px;border-radius:4px;font-size:10px;cursor:pointer}
+.offer-row .offer-msg-toggle:hover{color:var(--ac2);border-color:var(--ac2)}
+.offer-row .offer-withdraw-btn{background:rgba(239,68,68,.1);color:var(--danger);border:1px solid rgba(239,68,68,.3);padding:3px 8px;border-radius:4px;font-size:10px;cursor:pointer;font-weight:600}
+.offer-row .offer-withdraw-btn:hover{background:rgba(239,68,68,.2)}
+.offer-row .offer-mark-traded-btn{background:rgba(16,185,129,.1);color:var(--ok);border:1px solid rgba(16,185,129,.3);padding:3px 8px;border-radius:4px;font-size:10px;cursor:pointer;font-weight:600}
+.offer-row .offer-mark-traded-btn:hover{background:rgba(16,185,129,.2)}
+.offer-msg-collapsed{display:none}
+.offer-msg-collapsed.shown{display:block;width:100%;margin-top:5px;padding:6px 8px;background:var(--bg);border:1px solid var(--border);border-radius:4px;font-size:11px;color:var(--muted);line-height:1.4;white-space:pre-wrap}
+
+/* INCOMING OFFERS NOTIFICATION (My Have tab) */
+.inbox-banner{display:flex;align-items:center;gap:10px;padding:10px 13px;background:linear-gradient(90deg,rgba(245,158,11,.12),rgba(245,158,11,.05));border:1px solid rgba(245,158,11,.35);border-radius:var(--r);margin-bottom:12px;cursor:pointer;transition:.15s}
+.inbox-banner:hover{background:linear-gradient(90deg,rgba(245,158,11,.18),rgba(245,158,11,.08))}
+.inbox-banner-icon{font-size:22px}
+.inbox-banner-text{flex:1}
+.inbox-banner-title{font-weight:700;font-size:13px;color:var(--warn)}
+.inbox-banner-sub{font-size:11px;color:var(--muted);margin-top:1px}
+.inbox-banner-arrow{font-size:18px;color:var(--warn);flex-shrink:0}
+
+/* OFFERING SELECTOR in offer modal */
+.offer-pick-row{display:flex;flex-wrap:wrap;gap:5px;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r2);max-height:140px;overflow-y:auto;margin-bottom:8px}
+.offer-pick-chip{display:inline-flex;align-items:center;gap:5px;background:var(--card);border:1px solid var(--border);padding:5px 9px;border-radius:6px;font-size:12px;cursor:pointer;transition:.15s;user-select:none}
+.offer-pick-chip:hover{border-color:var(--ac2)}
+.offer-pick-chip.selected{background:rgba(108,99,255,.15);border-color:var(--accent);color:var(--ac2);font-weight:600}
+.offer-pick-chip img{width:18px;height:18px;object-fit:contain;flex-shrink:0}
+.offer-pick-empty{font-size:12px;color:var(--muted);font-style:italic;padding:12px;text-align:center;width:100%}
+.offer-public-toggle{display:flex;align-items:center;gap:8px;padding:9px 11px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r2);margin-top:10px;font-size:12px}
+.offer-public-toggle input{accent-color:var(--accent);width:16px;height:16px}
+.offer-public-toggle label{color:var(--text);cursor:pointer;flex:1}
+.offer-public-toggle-hint{color:var(--muted);font-size:11px;line-height:1.3}
+
+/* OFFER TRADE MODAL */
+.offer-modal{max-width:480px}
+.offer-pkmn-display{display:flex;align-items:center;gap:10px;background:var(--bg);padding:10px 14px;border-radius:var(--r2);border:1px solid var(--border);margin-bottom:10px}
+.offer-pkmn-display .sprite-wrap{width:42px;height:42px;display:flex;align-items:center;justify-content:center}
+.offer-pkmn-display .offer-name{font-weight:600;font-size:14px}
+.offer-pkmn-display .offer-meta{font-size:11px;color:var(--muted)}
+.offer-section-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:14px 0 6px}
+.offer-textarea{width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--text);padding:10px 12px;border-radius:var(--r2);font-size:13px;font-family:var(--font);min-height:80px;resize:vertical;line-height:1.5}
+.offer-discord-link{display:inline-flex;align-items:center;gap:5px;background:#5865F2;color:#fff;padding:7px 14px;border-radius:var(--r2);font-size:12px;font-weight:600;text-decoration:none;margin-left:6px}
+.offer-discord-link:hover{opacity:.9;color:#fff}
+.offer-no-discord{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);color:var(--warn);padding:9px 12px;border-radius:var(--r2);font-size:12px;margin-top:10px}
+
 /* ADD-ALL-VARIANTS BANNER (#2) */
 .ac-family-banner{display:flex;align-items:center;gap:8px;padding:9px 12px;background:linear-gradient(90deg,rgba(108,99,255,.13),rgba(168,139,250,.13));border-bottom:1px solid var(--border);cursor:pointer;font-size:13px;color:var(--text);transition:.15s}
 .ac-family-banner:hover{background:linear-gradient(90deg,rgba(108,99,255,.2),rgba(168,139,250,.2))}
@@ -852,6 +974,7 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
     <button class="tab active" data-tab="browse" onclick="switchTab('browse')" role="tab" aria-selected="true">🔍 Browse</button>
     <button class="tab" data-tab="mylist" onclick="switchTab('mylist')" role="tab" aria-selected="false">📋 My List</button>
     <button class="tab" data-tab="strings" onclick="switchTab('strings')" role="tab" aria-selected="false">📤 Strings</button>
+    <button class="tab" data-tab="have" onclick="switchTab('have')" role="tab" aria-selected="false">🎒 Have<span class="notif-badge" id="have-notif" style="display:none">!</span></button>
     <button class="tab" data-tab="admin" onclick="switchTab('admin')" id="admin-tab" style="display:none" role="tab" aria-selected="false">⚙️ Admin<span class="notif-badge" id="admin-notif" style="display:none">!</span></button>
   </div>
 
@@ -1003,6 +1126,53 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
     </div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Tap a trainer to expand their strings</div>
     <div id="strings-out"></div>
+  </div>
+
+  <!-- HAVE (Inventory) -->
+  <div class="page" id="tab-have">
+    <div class="have-hdr">
+      <div class="have-title">🎒 Inventory</div>
+      <div class="have-subtitle">Track what you have to trade. Others can browse and offer to trade.</div>
+    </div>
+    <div class="have-toggle-row">
+      <button class="have-toggle-btn active" data-view="mine" onclick="setHaveView('mine')">📦 My inventory</button>
+      <button class="have-toggle-btn" data-view="browse" onclick="setHaveView('browse')">👀 Browse community</button>
+    </div>
+    <div id="have-mine-view" class="have-view active">
+      <div class="add-form">
+        <div class="add-ttl">+ Add to inventory</div>
+        <div class="frow have-add-row">
+          <div class="ac-wrap">
+            <input type="text" class="ac-input" id="have-ac-input" placeholder="Search Pokémon…" autocomplete="off"
+              oninput="haveAcSearch(this.value)" onkeydown="haveAcKeydown(event)" onfocus="haveAcSearch(this.value)">
+            <input type="hidden" id="have-pmon-sel">
+            <div class="ac-dropdown" id="have-ac-dropdown"></div>
+          </div>
+          <input type="number" id="have-qty" min="1" max="999" value="1" placeholder="Qty" aria-label="Quantity" class="have-qty-input">
+          <button class="bsave" onclick="addInventoryEntry()">Add</button>
+        </div>
+      </div>
+      <div class="mylist-search">
+        <span class="mylist-srch-icon" aria-hidden="true">🔍</span>
+        <input type="text" placeholder="Filter my inventory…" oninput="renderMyHave(this.value)" id="have-filter" aria-label="Filter inventory">
+      </div>
+      <div class="sec" style="display:flex;align-items:center;justify-content:space-between">
+        <span>My inventory <span id="have-count" style="font-weight:400;text-transform:none;font-size:11px;margin-left:4px"></span></span>
+        <span id="have-total" style="font-size:11px;color:var(--muted);text-transform:none;font-weight:500"></span>
+      </div>
+      <div id="have-mine-out"></div>
+    </div>
+    <div id="have-browse-view" class="have-view">
+      <div class="srch"><span class="srch-icon">🔍</span><input type="text" id="have-browse-q" placeholder="Find a Pokémon or trainer…" oninput="renderHaveBrowse()" aria-label="Search community inventory"></div>
+      <div class="filter-bar" style="margin-bottom:10px">
+        <button class="fbtn have-sub-tab active" data-sub="pokemon" onclick="setHaveSubTab('pokemon')">By Pokémon</button>
+        <button class="fbtn have-sub-tab" data-sub="trainer" onclick="setHaveSubTab('trainer')">By Trainer</button>
+        <span class="filter-divider"></span>
+        <span class="filter-label">Match my wants:</span>
+        <button class="fbtn have-match-tgl" onclick="toggleHaveMatchOnly()" aria-pressed="false" id="have-match-btn">⭐ Only matches</button>
+      </div>
+      <div id="have-browse-out"></div>
+    </div>
   </div>
 
   <!-- ADMIN -->
@@ -1305,6 +1475,8 @@ let acItems=[],acFiltered=[],acFocusIdx=-1;
 let dragSrc=null;
 let authRepairStarted=false;
 let bulkMode=false,bulkSelected=new Set();
+let haveView='mine',haveSubTab='pokemon',haveMatchOnly=false;
+let haveAcItems=[],haveAcFiltered=[],haveAcFocusIdx=-1;
 let voiceRecognition=null;
 let pokemonTypes={};
 let entryTimestamps={}; // for conflict detection
@@ -1529,16 +1701,18 @@ function entrySpriteUrl(entry,nameOverride='',gender=''){
 function spriteUrl(no,name,gender='',dn=''){
   // 1. Hand-curated costume sprite URLs (e.g., Pikachu Santa, Spinda forms via Serebii)
   if(name&&EXTRA_COSTUME_SPRITES[name])return EXTRA_COSTUME_SPRITES[name];
-  // 2. PokemonDB HOME 3D — highest-quality renders with broad form/gender coverage
-  const pdb=pokemondbSpriteUrl(name,dn||name,gender);
-  if(pdb)return pdb;
-  // 3. PokeAPI regional form (Alolan, Galarian, Hisuian, Paldean)
-  if(name&&REGIONAL_FORM_IDS[name])return`${SPRITE_BASE}${REGIONAL_FORM_IDS[name]}.png`;
-  // 4. Serebii Pokémon GO costume sprites (e.g. Pikachu themed costumes)
+  // 2. Serebii GO costume sprites (curated slug map → known-existing Serebii URL).
+  //    Must come BEFORE PokemonDB because PokemonDB doesn't have costume variants
+  //    (their HOME 3D sprites only cover base Pokémon and game forms, not GO costumes).
   const goUrl=goCostumeSpriteUrl(no,name);
   if(goUrl)return goUrl;
-  // 5. PokeAPI costume form variants (Unown, Vivillon, Furfrou, etc.)
+  // 3. PokeAPI costume form variants (Unown, Vivillon, Furfrou — non-Pokemon-GO forms)
   if(name&&COSTUME_FORM_SPRITE_IDS[name])return`${SPRITE_BASE}${COSTUME_FORM_SPRITE_IDS[name]}.png`;
+  // 4. PokeAPI regional form (Alolan, Galarian, Hisuian, Paldean)
+  if(name&&REGIONAL_FORM_IDS[name])return`${SPRITE_BASE}${REGIONAL_FORM_IDS[name]}.png`;
+  // 5. PokemonDB HOME 3D — high-quality renders for base Pokémon and game forms
+  const pdb=pokemondbSpriteUrl(name,dn||name,gender);
+  if(pdb)return pdb;
   // 6. PokeAPI female sprite (Pyroar ♀, Pikachu ♀ tail, etc.)
   if(gender==='f'){
     const fUrl=femaleSpriteUrl(no);
@@ -1612,39 +1786,32 @@ function pokeminersSpriteUrl(no,formCode='00'){
 //   5. Serebii GO sprite (final visual fallback, always exists for in-game Pokémon)
 function spriteFallbackChain(no,name,gender='',dn=''){
   const urls=[];
-  // Primary URL (now PokemonDB HOME for most cases — see spriteUrl priority)
+  const push=u=>{if(u&&!urls.includes(u))urls.push(u);};
+  // Primary URL (from spriteUrl — uses GO costume slugs first now)
   const primary=spriteUrl(no,name,gender,dn);
-  if(primary)urls.push(primary);
-  // For gendered variants where PokemonDB doesn't have a -female variant, try base
+  push(primary);
+  // If this is a known GO costume, the Serebii URL is canonical — make sure it's tried explicitly
+  const goUrl=goCostumeSpriteUrl(no,name);
+  push(goUrl);
+  // PokeAPI specific form variants
+  if(name&&REGIONAL_FORM_IDS[name])push(`${SPRITE_BASE}${REGIONAL_FORM_IDS[name]}.png`);
+  if(name&&COSTUME_FORM_SPRITE_IDS[name])push(`${SPRITE_BASE}${COSTUME_FORM_SPRITE_IDS[name]}.png`);
+  // PokemonDB HOME for any non-costume Pokémon (form/regional/gender variants)
+  push(pokemondbSpriteUrl(name,dn||name,gender));
   if(gender==='f'){
-    const pdbBase=pokemondbSpriteUrl(name,dn||name,'');
-    if(pdbBase&&!urls.includes(pdbBase))urls.push(pdbBase);
-  }
-  // PokeAPI form variants as fallback (regional, costume forms)
-  if(name&&REGIONAL_FORM_IDS[name]){
-    const u=`${SPRITE_BASE}${REGIONAL_FORM_IDS[name]}.png`;
-    if(!urls.includes(u))urls.push(u);
-  }
-  if(name&&COSTUME_FORM_SPRITE_IDS[name]){
-    const u=`${SPRITE_BASE}${COSTUME_FORM_SPRITE_IDS[name]}.png`;
-    if(!urls.includes(u))urls.push(u);
-  }
-  // For female sprite requests that 404, fall back to default base
-  if(gender==='f'&&primary&&primary.includes('/female/')&&no){
-    const u=`${SPRITE_BASE}${parseInt(no)}.png`;
-    if(!urls.includes(u))urls.push(u);
+    push(pokemondbSpriteUrl(name,dn||name,''));   // PokemonDB without -female suffix
+    if(primary&&primary.includes('/female/')&&no){
+      push(`${SPRITE_BASE}${parseInt(no)}.png`); // PokeAPI base when /female/ 404s
+    }
   }
   const dex=padDex(no);
   if(dex){
-    // PokeAPI canonical base dex (always exists for valid Pokemon)
-    const peU=`${SPRITE_BASE}${parseInt(no)}.png`;
-    if(!urls.includes(peU))urls.push(peU);
+    // PokeAPI canonical base dex (always exists)
+    push(`${SPRITE_BASE}${parseInt(no)}.png`);
     // PokeMiners (Pokémon GO actual game art, 256x256)
-    const pmUrl=pokeminersSpriteUrl(no,'00');
-    if(pmUrl&&!urls.includes(pmUrl))urls.push(pmUrl);
-    // Serebii GO sprite as final visual fallback
-    const serebiiUrl=`${SEREBII_GO_SPRITE_BASE}${dex}.png`;
-    if(!urls.includes(serebiiUrl))urls.push(serebiiUrl);
+    push(pokeminersSpriteUrl(no,'00'));
+    // Serebii GO base sprite as final visual fallback
+    push(`${SEREBII_GO_SPRITE_BASE}${dex}.png`);
   }
   return urls;
 }
@@ -1917,13 +2084,14 @@ syncQueue=lsGet(SYNC_QUEUE_KEY,{})||{};
 function saveSyncQueue(){lsSet(SYNC_QUEUE_KEY,syncQueue||{});}
 function normalizeData(s){
   if(!s||typeof s!=='object')s={};
-  s.users=s.users||{};s.wishlist=s.wishlist||{};s.dynamax=s.dynamax||{};s.gmax=s.gmax||{};s.costumes=s.costumes||{};s.requests=s.requests||{};s.authIndex=s.authIndex||{};
+  s.users=s.users||{};s.wishlist=s.wishlist||{};s.dynamax=s.dynamax||{};s.gmax=s.gmax||{};s.costumes=s.costumes||{};s.have=s.have||{};s.offers=s.offers||{};s.requests=s.requests||{};s.authIndex=s.authIndex||{};
   Object.keys(s.users).forEach(u=>{
     s.users[u]=normalizedUserRecord(u,s.users[u]);
     if(!s.wishlist[u])s.wishlist[u]={};
     if(!s.dynamax[u])s.dynamax[u]={};
     if(!s.gmax[u])s.gmax[u]={};
     if(!s.costumes[u])s.costumes[u]={};
+    if(!s.have[u])s.have[u]={};
   });
   return s;
 }
@@ -1931,10 +2099,10 @@ function normalizeData(s){
 function initLocal(){
   let s=lsGet('pogo3',null);
   if(!s){
-    s={users:{},wishlist:{},dynamax:{},gmax:{},costumes:{},requests:{},authIndex:{}};
+    s={users:{},wishlist:{},dynamax:{},gmax:{},costumes:{},have:{},offers:{},requests:{},authIndex:{}};
     DB.users.filter(u=>u&&u.trim()&&u.trim()!=='EVERYONE').map(u=>u.trim()).forEach(u=>{
       s.users[u]=normalizedUserRecord(u,{}, {pin:'123456',isAdmin:u===OWNER,isOwner:u===OWNER,authVersion:1,authEmail:authEmail(u,1)});
-      s.wishlist[u]={};s.dynamax[u]={};s.gmax[u]={};s.costumes[u]={};
+      s.wishlist[u]={};s.dynamax[u]={};s.gmax[u]={};s.costumes[u]={};s.have[u]={};
       DB.wishlist.forEach(e=>{const v=e.users[u];if(v)s.wishlist[u][e.name]=v;});
       DB.dynamax.forEach(e=>{const v=e.users[u];if(v)s.dynamax[u][e.name]=v;});
       DB.gmax.forEach(e=>{const v=e.users[u];if(v)s.gmax[u][e.name]=v;});
@@ -2218,6 +2386,8 @@ function mergeRemoteData(d){
     dynamax:d?.dynamax||{},
     gmax:d?.gmax||{},
     costumes:d?.costumes||{},
+    have:d?.have||{},
+    offers:d?.offers||{},
     requests:d?.requests||{},
     authIndex:d?.authIndex||{}
   });
@@ -2264,6 +2434,8 @@ function _onSubSnapshot(path,snap){
   else if(seg==='dynamax')s.dynamax=val||{};
   else if(seg==='gmax')s.gmax=val||{};
   else if(seg==='costumes')s.costumes=val||{};
+  else if(seg==='have')s.have=val||{};
+  else if(seg==='offers')s.offers=val||{};
   saveLocal(s);
   allData=normalizeData(s);
   // Apply pending writes from sync queue
@@ -2297,6 +2469,8 @@ function startListener(){
   subscribePath('authIndex');
   subscribePath('requests');
   subscribePath('wishlist');
+  subscribePath('have');
+  subscribePath('offers');
   // Other list types loaded lazily when tabs are visited
 }
 
@@ -2467,6 +2641,11 @@ function switchTab(t){
 function refreshAll(){
   if(!cur)return;
   renderBrowse();renderMyList();renderStrings();
+  if(haveView==='mine')renderMyHave();else renderHaveBrowse();
+  // Update Have tab notification badge for incoming offers
+  const inCount=totalOffersForRecipient(cur);
+  const badge=document.getElementById('have-notif');
+  if(badge){badge.textContent=inCount>0?inCount:'';badge.style.display=inCount>0?'':'none';}
   if(allData.users?.[cur]?.isAdmin){renderAdmin();renderPendingRequests();renderBackupReminder();}
 }
 
@@ -4380,6 +4559,9 @@ async function triggerInstall(){
 
 // ── WHAT'S NEW (#28) ─────────────────────────────────────────
 const WHATS_NEW=[
+  {version:'2.9',title:'🔔 Public Offers & FCFS',desc:'Offers on inventory items are now public — see who already offered what & when (sorted oldest first). Compare offers before bidding. The 1st offer gets a green badge so everyone respects first-come-first-served. Withdraw your own offers anytime. Recipients see a 📬 inbox badge.'},
+  {version:'2.8',title:'🎒 Inventory ("Have" tab)',desc:'Track what Pokémon you have to trade with simple quantity counts. Others can browse your inventory and click "Offer trade" to start a Discord conversation. ⭐ Auto-highlights items that match your wishlist.'},
+  {version:'2.7.1',title:'Costume Sprite Fix',desc:'Fixed Flower Crown variants (Happiny, Chansey, etc.) and Worlds-event Pikachus showing generic sprites in My List and exports. Costume URLs are now resolved before generic fallback.'},
   {version:'2.7',title:'Updated Max Lists',desc:'Dynamax now matches the current released Pokemon GO roster, including Drilbur and Excadrill, and Max tabs use full readable names.'},
   {version:'2.6',title:'Trainer Compare Strings',desc:'Use the scale button in Strings to compare two trainers, then tap Both Want, Only Mine, or Only Theirs to copy that exact search string.'},
   {version:'2.5',title:'Visual & UX Polish',desc:'Type colors, theme toggle, loading skeletons, subtle animations, empty state illustrations, "what\'s new" notifications.'},
@@ -4880,6 +5062,583 @@ function strWarnHtml(str){
   return `<div class="str-warn-banner">⚠️ Approaching PoGo's ~${POGO_STR_LIMIT} char limit (${len}). Consider splitting soon.</div>`;
 }
 
+// ── HAVE / INVENTORY ─────────────────────────────────────────
+async function writeHave(username,inv){
+  const s=getLocal();
+  if(!s.have)s.have={};
+  // Track inventory entry changes for activity sparkline
+  const prevCount=Object.keys(s.have[username]||{}).length;
+  const newCount=Object.keys(inv||{}).length;
+  if(prevCount!==newCount)recordActivityEvent(username,newCount-prevCount);
+  s.have[username]=inv;
+  const now=Date.now();
+  s.users[username]={...s.users[username],lastUpdated:now,lastSeen:now};
+  saveLocal(s);
+  if(fbOn&&db){
+    queueSync(`have/${username}`,inv);
+    queueSync(`users/${username}/lastUpdated`,now);
+    queueSync(`users/${username}/lastSeen`,now);
+  }
+  syncFromLocal();
+}
+function setHaveView(v){
+  haveView=v;
+  document.querySelectorAll('.have-toggle-btn').forEach(b=>b.classList.toggle('active',b.dataset.view===v));
+  document.getElementById('have-mine-view').classList.toggle('active',v==='mine');
+  document.getElementById('have-browse-view').classList.toggle('active',v==='browse');
+  if(v==='mine')renderMyHave();
+  else renderHaveBrowse();
+}
+function setHaveSubTab(t){
+  haveSubTab=t;
+  document.querySelectorAll('.have-sub-tab').forEach(b=>b.classList.toggle('on',b.dataset.sub===t));
+  renderHaveBrowse();
+}
+function toggleHaveMatchOnly(){
+  haveMatchOnly=!haveMatchOnly;
+  const btn=document.getElementById('have-match-btn');
+  btn?.classList.toggle('on',haveMatchOnly);
+  btn?.setAttribute('aria-pressed',haveMatchOnly?'true':'false');
+  renderHaveBrowse();
+}
+function buildHaveAcItems(){
+  // Build autocomplete items from ALL Pokemon (every list type), unique by name
+  haveAcItems=[];
+  const seen=new Set();
+  ['wishlist','dynamax','gmax','costumes'].forEach(type=>{
+    listSource(type).forEach(e=>{
+      if(seen.has(e.name)||!e.name)return;
+      seen.add(e.name);
+      const item={name:e.name,dn:e.displayName||e.name,no:e.no||null};
+      item.search=acItemSearchText(item);
+      haveAcItems.push(item);
+    });
+  });
+}
+function haveAcSearch(q){
+  document.getElementById('have-pmon-sel').value='';
+  const dd=document.getElementById('have-ac-dropdown');
+  if(!q||q.length<1){dd.classList.remove('open');return;}
+  if(!haveAcItems.length)buildHaveAcItems();
+  haveAcFiltered=haveAcItems.map(e=>({e,score:acMatchScore(e,q)}))
+    .filter(x=>x.score>=0)
+    .sort((a,b)=>a.score-b.score||(parseInt(a.e.no)||9999)-(parseInt(b.e.no)||9999)||alphaCompare(a.e.dn,b.e.dn))
+    .slice(0,AC_RESULT_LIMIT)
+    .map(x=>x.e);
+  haveAcFocusIdx=-1;
+  if(!haveAcFiltered.length){
+    dd.innerHTML=`<div class="ac-empty">No results</div>`;
+  }else{
+    dd.innerHTML=haveAcFiltered.map((e,i)=>`
+      <div class="ac-item" data-idx="${i}" onmousedown="haveAcSelect(${i})">
+        ${e.no||e.spriteUrl?spriteImg(e.no,28,'ac-item-sprite',e.name,'',e.dn):''}
+        ${e.no?`<span class="ac-item-no">#${e.no}</span>`:''}
+        <span class="ac-item-name">${e.dn}</span>
+      </div>`).join('');
+  }
+  dd.classList.add('open');
+}
+function haveAcSelect(idx){
+  const e=haveAcFiltered[idx];if(!e)return;
+  document.getElementById('have-ac-input').value=e.dn;
+  document.getElementById('have-pmon-sel').value=e.name;
+  document.getElementById('have-ac-dropdown').classList.remove('open');
+  document.getElementById('have-qty')?.focus();
+}
+function haveAcKeydown(ev){
+  const dd=document.getElementById('have-ac-dropdown');
+  if(!dd.classList.contains('open'))return;
+  if(ev.key==='ArrowDown'){ev.preventDefault();haveAcFocusIdx=Math.min(haveAcFocusIdx+1,haveAcFiltered.length-1);updateHaveAcFocus();}
+  else if(ev.key==='ArrowUp'){ev.preventDefault();haveAcFocusIdx=Math.max(haveAcFocusIdx-1,0);updateHaveAcFocus();}
+  else if(ev.key==='Enter'){ev.preventDefault();if(haveAcFocusIdx>=0)haveAcSelect(haveAcFocusIdx);else if(haveAcFiltered.length)haveAcSelect(0);}
+  else if(ev.key==='Escape'){dd.classList.remove('open');}
+}
+function updateHaveAcFocus(){
+  document.querySelectorAll('#have-ac-dropdown .ac-item').forEach((el,i)=>el.classList.toggle('focused',i===haveAcFocusIdx));
+}
+function addInventoryEntry(){
+  const name=document.getElementById('have-pmon-sel').value;
+  const qty=Math.max(1,Math.min(999,parseInt(document.getElementById('have-qty').value)||1));
+  if(!name){toast('⚠️ Select a Pokémon');return;}
+  const inv={...(allData.have?.[cur]||{})};
+  inv[name]=(inv[name]||0)+qty;
+  writeHave(cur,inv);
+  document.getElementById('have-ac-input').value='';
+  document.getElementById('have-pmon-sel').value='';
+  document.getElementById('have-qty').value='1';
+  document.getElementById('have-ac-dropdown').classList.remove('open');
+  const dn=haveAcItems.find(x=>x.name===name)?.dn||name;
+  toast(`✅ Added ${qty}× ${dn}`);
+}
+function updateInventoryQty(name,delta){
+  const inv={...(allData.have?.[cur]||{})};
+  const cur_qty=inv[name]||0;
+  const new_qty=cur_qty+delta;
+  if(new_qty<=0){delete inv[name];}
+  else if(new_qty>999){return;}
+  else inv[name]=new_qty;
+  writeHave(cur,inv);
+}
+function setInventoryQty(name,val){
+  const v=parseInt(val);
+  if(!Number.isFinite(v))return;
+  const inv={...(allData.have?.[cur]||{})};
+  if(v<=0){delete inv[name];}
+  else if(v>999){inv[name]=999;}
+  else inv[name]=v;
+  writeHave(cur,inv);
+}
+function removeInventoryEntry(name){
+  const inv={...(allData.have?.[cur]||{})};
+  delete inv[name];
+  writeHave(cur,inv);
+}
+function _nameToSpriteEntry(name){
+  // Lookup sprite metadata for a Pokemon name across all sources
+  const srcs=['wishlist','dynamax','gmax','costumes'];
+  for(const t of srcs){
+    const e=listSource(t).find(x=>x.name===name);
+    if(e)return e;
+  }
+  return{name,displayName:name,no:null};
+}
+function renderMyHave(filterVal){
+  const q=String(filterVal??document.getElementById('have-filter')?.value??'').toLowerCase();
+  const el=document.getElementById('have-mine-out');if(!el)return;
+  const inv=allData.have?.[cur]||{};
+  let entries=Object.entries(inv).map(([name,qty])=>{
+    const e=_nameToSpriteEntry(name);
+    return{name,qty,dn:e.displayName||name,no:e.no};
+  });
+  if(q)entries=entries.filter(e=>(e.dn||'').toLowerCase().includes(q));
+  entries.sort((a,b)=>(parseInt(a.no)||9999)-(parseInt(b.no)||9999)||a.dn.localeCompare(b.dn));
+  const totalCount=Object.values(inv).reduce((s,n)=>s+(parseInt(n)||0),0);
+  const entryCount=Object.keys(inv).length;
+  const countEl=document.getElementById('have-count');
+  if(countEl)countEl.textContent=q?`(${entries.length} of ${entryCount})`:`(${entryCount})`;
+  const totalEl=document.getElementById('have-total');
+  if(totalEl)totalEl.textContent=totalCount?`${totalCount} total Pokémon`:'';
+  if(!entries.length){
+    el.innerHTML=q?emptyHtml('No matches','Clear the filter.'):emptyHtml('Inventory empty','Add Pokémon you have so others can offer trades.','📋');
+    return;
+  }
+  // Incoming offers count
+  const myOffers=allData.offers?.[cur]||{};
+  const incomingCount=Object.keys(myOffers).length;
+  const inboxBanner=incomingCount>0?`<div class="inbox-banner" onclick="openIncomingOffersModal()">
+    <div class="inbox-banner-icon">📬</div>
+    <div class="inbox-banner-text">
+      <div class="inbox-banner-title">${incomingCount} incoming offer${incomingCount===1?'':'s'}</div>
+      <div class="inbox-banner-sub">Tap to review who's offering what (first-come-first-served)</div>
+    </div>
+    <div class="inbox-banner-arrow">→</div>
+  </div>`:'';
+  el.innerHTML=inboxBanner+entries.map(e=>{
+    const sn=e.name.replace(/'/g,"\\'").replace(/"/g,'&quot;');
+    const offerCount=countOffersForItem(cur,e.name);
+    return`<div class="have-row" data-name="${escAttr(e.name)}">
+      <div class="have-row-sprite">${e.no?spriteImg(e.no,32,'',e.name,'',e.dn):'🎮'}</div>
+      <div class="have-row-info">
+        <div class="have-row-name">${escHtml(e.dn)} ${offerCount?`<span class="offer-count-badge unseen" onclick="event.stopPropagation();openIncomingOffersModal('${sn}')" style="margin-left:4px">🔔 ${offerCount}</span>`:''}</div>
+        ${e.no?`<div class="have-row-dex">#${e.no}</div>`:''}
+      </div>
+      <div class="have-row-qty-wrap">
+        <button class="have-row-qty-btn" onclick="updateInventoryQty('${sn}',-1)" aria-label="Decrease quantity">−</button>
+        <span class="have-row-qty">${e.qty}</span>
+        <button class="have-row-qty-btn" onclick="updateInventoryQty('${sn}',1)" aria-label="Increase quantity">+</button>
+      </div>
+      <button class="have-row-rm" onclick="removeInventoryEntry('${sn}')" aria-label="Remove">×</button>
+    </div>`;
+  }).join('');
+}
+function openIncomingOffersModal(scrollToItem=''){
+  const myOffers=allData.offers?.[cur]||{};
+  // Group by itemName
+  const grouped={};
+  Object.entries(myOffers).forEach(([id,o])=>{
+    if(!grouped[o.itemName])grouped[o.itemName]=[];
+    grouped[o.itemName].push({id,...o});
+  });
+  Object.values(grouped).forEach(arr=>arr.sort((a,b)=>(a.t||0)-(b.t||0)));
+  const itemNames=Object.keys(grouped).sort();
+  const html=`<div class="ov open" id="incoming-modal" role="dialog" aria-modal="true" onclick="if(event.target===this)closeIncomingOffersModal()">
+    <div class="modal offer-modal" onclick="event.stopPropagation()">
+      <h3>📬 Incoming offers (${Object.keys(myOffers).length})</h3>
+      ${itemNames.length?itemNames.map(name=>{
+        const e=_nameToSpriteEntry(name);
+        const offers=grouped[name];
+        return`<div class="have-pmon-card" id="inbox-${escAttr(offerKey(name))}" style="margin-bottom:8px;cursor:default">
+          <div class="have-row-sprite" style="width:32px;height:32px">${e.no?spriteImg(e.no,32,'',name,'',e.displayName||name):'🎮'}</div>
+          <div class="have-pmon-info">
+            <div class="have-pmon-name" style="font-size:14px">${escHtml(e.displayName||name)}</div>
+            <div class="have-pmon-meta">${offers.length} offer${offers.length===1?'':'s'}</div>
+          </div>
+        </div>
+        <div class="offer-list" style="margin-bottom:14px">${renderOfferList(cur,name,{myView:true})}</div>`;
+      }).join(''):'<div class="offer-list-empty" style="padding:20px">No incoming offers yet. When trainers want to trade for your inventory items, they\'ll appear here.</div>'}
+      <div class="mact"><button class="bpri" onclick="closeIncomingOffersModal()">Done</button></div>
+    </div>
+  </div>`;
+  closeIncomingOffersModal();
+  const wrap=document.createElement('div');wrap.innerHTML=html;
+  document.body.appendChild(wrap.firstElementChild);
+  if(scrollToItem){
+    setTimeout(()=>document.getElementById('inbox-'+offerKey(scrollToItem))?.scrollIntoView({behavior:'smooth',block:'center'}),100);
+  }
+}
+function closeIncomingOffersModal(){document.getElementById('incoming-modal')?.remove();}
+function entryWantedByCur(name){
+  // Check if current user wants this Pokemon (any list, any priority/flag)
+  for(const t of['wishlist','dynamax','gmax','costumes']){
+    const val=allData[t]?.[cur]?.[name];
+    if(val){
+      const{p,lucky,xxl,xxs}=parsePri(val);
+      if(p||lucky||xxl||xxs)return{type:t,p,lucky,xxl,xxs};
+    }
+  }
+  return null;
+}
+function renderHaveBrowse(){
+  const q=String(document.getElementById('have-browse-q')?.value||'').toLowerCase();
+  const el=document.getElementById('have-browse-out');if(!el)return;
+  const haveData=allData.have||{};
+  // Filter trainers (exclude self, only active users)
+  const allowed=activeUsers();
+  if(haveSubTab==='trainer'){
+    let trainers=Object.keys(haveData).filter(u=>{
+      if(u===cur)return false;
+      if(allowed&&!allowed.has(u))return false;
+      const inv=haveData[u]||{};
+      if(!Object.keys(inv).length)return false;
+      if(haveMatchOnly){
+        const hasMatch=Object.keys(inv).some(n=>entryWantedByCur(n));
+        if(!hasMatch)return false;
+      }
+      if(q&&!u.toLowerCase().includes(q)){
+        // Allow match if trainer has a Pokemon matching query
+        const matchByPokemon=Object.keys(inv).some(n=>{
+          const e=_nameToSpriteEntry(n);
+          return(e.displayName||n).toLowerCase().includes(q);
+        });
+        if(!matchByPokemon)return false;
+      }
+      return true;
+    }).sort((a,b)=>(allData.users?.[b]?.lastUpdated||0)-(allData.users?.[a]?.lastUpdated||0));
+    if(!trainers.length){
+      el.innerHTML=emptyHtml(haveMatchOnly?'No matching trainers':'No inventories yet',haveMatchOnly?'Turn off "Only matches" to see all inventories.':'When trainers add to their inventory, they\'ll appear here.','🎒');
+      return;
+    }
+    el.innerHTML=trainers.map(u=>{
+      const inv=haveData[u]||{};
+      const ud=allData.users?.[u]||{};
+      let items=Object.entries(inv).map(([n,qty])=>{
+        const e=_nameToSpriteEntry(n);
+        const want=entryWantedByCur(n);
+        return{name:n,qty,dn:e.displayName||n,no:e.no,match:want};
+      });
+      if(haveMatchOnly)items=items.filter(it=>it.match);
+      if(q){items=items.filter(it=>it.dn.toLowerCase().includes(q)||u.toLowerCase().includes(q));}
+      items.sort((a,b)=>(b.match?1:0)-(a.match?1:0)||(parseInt(a.no)||9999)-(parseInt(b.no)||9999));
+      const matchCount=items.filter(it=>it.match).length;
+      return`<div class="have-trainer-card" data-user="${escAttr(u)}">
+        <div class="have-trainer-hdr" onclick="this.parentElement.classList.toggle('expanded')">
+          ${userAvatarHtml(u,32)}
+          <div class="have-trainer-name">${escHtml(u)}</div>
+          <div class="have-trainer-count">${items.length} item${items.length===1?'':'s'}${matchCount>0?` · <span style="color:var(--warn);font-weight:700">⭐ ${matchCount} match${matchCount===1?'':'es'}</span>`:''}</div>
+          <span class="collapse-icon">▼</span>
+        </div>
+        <div class="have-trainer-body">
+          <div class="have-trainer-grid">${items.map(it=>{
+            const sn=it.name.replace(/'/g,"\\'").replace(/"/g,'&quot;');
+            const offerCount=countOffersForItem(u,it.name);
+            return`<div class="have-pmon-card ${it.match?'match':''}" title="${escAttr(it.dn)} — click to offer" onclick="openOfferModal('${escAttr(u)}','${sn}')" style="cursor:pointer">
+              <div class="have-row-sprite" style="width:24px;height:24px">${it.no?spriteImg(it.no,24,'',it.name,'',it.dn):'🎮'}</div>
+              <div class="have-pmon-info">
+                <div class="have-pmon-name">${escHtml(it.dn)}</div>
+                ${it.match?`<div class="have-pmon-meta">You want · ${it.match.p||(it.match.lucky?'⚡':'')||(it.match.xxl?'XXL':'')||(it.match.xxs?'XXS':'')}</div>`:''}
+              </div>
+              <div class="have-pmon-qty">×${it.qty}</div>
+              ${offerCount?`<span class="offer-count-badge" title="${offerCount} pending offer${offerCount===1?'':'s'}">🔔 ${offerCount}</span>`:''}
+              ${it.match?'<span class="match-badge">⭐</span>':''}
+            </div>`;
+          }).join('')}</div>
+          <button class="have-offer-btn" onclick="openOfferModal('${escAttr(u)}')">💬 General offer message to ${escHtml(u)}</button>
+        </div>
+      </div>`;
+    }).join('');
+  }else{
+    // By Pokemon view: group inventory by Pokemon name, list trainers under each
+    const byPokemon={};
+    Object.entries(haveData).forEach(([user,inv])=>{
+      if(user===cur)return;
+      if(allowed&&!allowed.has(user))return;
+      Object.entries(inv||{}).forEach(([name,qty])=>{
+        if(!byPokemon[name])byPokemon[name]=[];
+        byPokemon[name].push({user,qty});
+      });
+    });
+    let pokemonList=Object.entries(byPokemon).map(([name,owners])=>{
+      const e=_nameToSpriteEntry(name);
+      const want=entryWantedByCur(name);
+      return{name,dn:e.displayName||name,no:e.no,owners,want};
+    });
+    if(haveMatchOnly)pokemonList=pokemonList.filter(p=>p.want);
+    if(q)pokemonList=pokemonList.filter(p=>p.dn.toLowerCase().includes(q)||p.owners.some(o=>o.user.toLowerCase().includes(q)));
+    pokemonList.sort((a,b)=>(b.want?1:0)-(a.want?1:0)||(parseInt(a.no)||9999)-(parseInt(b.no)||9999)||a.dn.localeCompare(b.dn));
+    if(!pokemonList.length){
+      el.innerHTML=emptyHtml(haveMatchOnly?'No matching Pokémon':'No inventories yet',haveMatchOnly?'Turn off "Only matches" to see all inventories.':'When trainers add to their inventory, they\'ll appear here.','🎒');
+      return;
+    }
+    el.innerHTML=pokemonList.map(p=>{
+      const totalQty=p.owners.reduce((s,o)=>s+o.qty,0);
+      const wantBadge=p.want?`<span class="event-pill" style="background:rgba(245,158,11,.15);color:var(--warn);border-color:rgba(245,158,11,.3)">⭐ You want (${p.want.p||''})</span>`:'';
+      return`<div class="have-by-pokemon-card">
+        <div class="have-by-pokemon-hdr">
+          <div class="have-row-sprite" style="width:34px;height:34px">${p.no?spriteImg(p.no,34,'',p.name,'',p.dn):'🎮'}</div>
+          <div class="have-by-pokemon-name">
+            <span class="pmname-text">${escHtml(p.dn)}</span>
+            ${wantBadge}
+          </div>
+          <div style="font-size:11px;color:var(--muted)">${p.owners.length} trainer${p.owners.length===1?'':'s'} · ${totalQty} total</div>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px">
+          ${p.owners.sort((a,b)=>b.qty-a.qty).map(o=>{
+            const ud=allData.users?.[o.user]||{};
+            const canDm=!!ud.discord;
+            const offerCount=countOffersForItem(o.user,p.name);
+            return`<button class="have-trainer-chip ${p.want?'match':''}" onclick="openOfferModal('${escAttr(o.user)}','${escAttr(p.name)}')" title="${canDm?'Click to offer trade':'No Discord linked, click to copy message'}">
+              ${escHtml(o.user)} <span class="qty">×${o.qty}</span>${offerCount?`<span class="offer-count-badge" style="margin-left:2px;padding:1px 5px;font-size:9px">🔔 ${offerCount}</span>`:''}
+            </button>`;
+          }).join('')}
+        </div>
+        ${(()=>{
+          // Show consolidated offers list under this Pokémon across all owners
+          const allOwnerOffers=p.owners.flatMap(o=>offersForItem(o.user,p.name).map(of=>({...of,recipient:o.user})));
+          if(!allOwnerOffers.length)return'';
+          allOwnerOffers.sort((a,b)=>(a.t||0)-(b.t||0));
+          return`<div style="margin-top:8px"><div class="offer-section-label" style="margin:6px 0 4px">Pending offers (FCFS):</div>
+            <div class="offer-list">${allOwnerOffers.map((o,i)=>{
+              const isFirst=i===0,isMine=o.from===cur;
+              const offeringHtml=(o.offering||[]).slice(0,4).map(n=>{
+                const e=_nameToSpriteEntry(n);
+                const url=spriteUrl(e.no,e.name,'',e.displayName||e.name);
+                return`<span class="offer-item-chip">${url?`<img src="${url}" alt="" loading="lazy">`:'🎮'}${escHtml(e.displayName||n)}</span>`;
+              }).join('');
+              return`<div class="offer-row ${isFirst?'fcfs-first':''} ${isMine?'my-offer':''}">
+                <div class="offer-av">${userAvatarHtml(o.from,24)}</div>
+                <div class="offer-info">
+                  <div class="offer-from">${escHtml(o.from)}${isMine?' (you)':''} → ${escHtml(o.recipient)} ${isFirst?'<span class="fcfs-tag">1st</span>':''}<span class="time-tag">${relativeTime(o.t)}</span></div>
+                  ${o.offering&&o.offering.length?`<div class="offer-items">${offeringHtml}</div>`:'<div style="font-size:11px;color:var(--muted);font-style:italic">No specific items listed</div>'}
+                </div>
+                ${isMine?`<button class="offer-withdraw-btn" onclick="withdrawOffer('${escAttr(o.recipient)}','${o.id}').then(t=>{if(t)toast('Offer withdrawn');});">Withdraw</button>`:''}
+              </div>`;
+            }).join('')}</div>
+          </div>`;
+        })()}
+      </div>`;
+    }).join('');
+  }
+}
+// ── OFFER HISTORY (FCFS visibility) ──────────────────────────
+// Sanitize a Pokemon name for use as a Firebase key (no ., /, $, #, [, ])
+function offerKey(name){return String(name).replace(/[^A-Za-z0-9_-]/g,'_');}
+function offersForItem(recipient,itemName){
+  const all=allData.offers?.[recipient]||{};
+  const key=offerKey(itemName);
+  return Object.entries(all)
+    .filter(([id,o])=>o&&o.itemKey===key)
+    .map(([id,o])=>({id,...o}))
+    .sort((a,b)=>(a.t||0)-(b.t||0)); // oldest first for FCFS visibility
+}
+function countOffersForItem(recipient,itemName){return offersForItem(recipient,itemName).length;}
+function totalOffersForRecipient(recipient){return Object.keys(allData.offers?.[recipient]||{}).length;}
+function relativeTime(ts){
+  if(!ts)return'';
+  const d=(Date.now()-ts)/1000;
+  if(d<60)return'just now';
+  if(d<3600)return`${Math.floor(d/60)}m ago`;
+  if(d<86400)return`${Math.floor(d/3600)}h ago`;
+  return`${Math.floor(d/86400)}d ago`;
+}
+async function submitOffer(recipient,itemName,offering,message){
+  if(!cur||!recipient||!itemName)return false;
+  const id=`${Date.now()}_${cur}_${Math.random().toString(36).slice(2,7)}`;
+  const offer={
+    from:cur,
+    itemKey:offerKey(itemName),
+    itemName:itemName,
+    offering:Array.isArray(offering)?offering:[],
+    message:String(message||'').slice(0,500),
+    t:Date.now()
+  };
+  // Update local cache
+  const s=getLocal();
+  if(!s.offers)s.offers={};
+  if(!s.offers[recipient])s.offers[recipient]={};
+  s.offers[recipient][id]=offer;
+  saveLocal(s);
+  // Queue Firebase write
+  if(fbOn&&db)queueSync(`offers/${recipient}/${id}`,offer);
+  syncFromLocal();
+  return true;
+}
+async function withdrawOffer(recipient,offerId){
+  const offer=allData.offers?.[recipient]?.[offerId];
+  if(!offer)return false;
+  if(offer.from!==cur&&recipient!==cur){toast('Not allowed');return false;}
+  const s=getLocal();
+  if(s.offers?.[recipient]){delete s.offers[recipient][offerId];}
+  saveLocal(s);
+  if(fbOn&&db)queueSync(`offers/${recipient}/${offerId}`,null);
+  syncFromLocal();
+  return true;
+}
+async function markOfferTraded(recipient,offerId){
+  // Just removes the offer; in a future version this could write to a "traded log"
+  return withdrawOffer(recipient,offerId);
+}
+// Render a list of offer rows for a specific item.
+// myView=true: viewer is the recipient (shows mark-traded button)
+function renderOfferList(recipient,itemName,opts={}){
+  const offers=offersForItem(recipient,itemName);
+  if(!offers.length)return'<div class="offer-list-empty">No offers yet — be the first!</div>';
+  return offers.map((o,i)=>{
+    const isFirst=i===0;
+    const isMine=o.from===cur;
+    const amRecipient=recipient===cur;
+    const offeringHtml=(o.offering||[]).slice(0,6).map(n=>{
+      const e=_nameToSpriteEntry(n);
+      const url=spriteUrl(e.no,e.name,'',e.displayName||e.name);
+      return`<span class="offer-item-chip" title="${escAttr(e.displayName||n)}">${url?`<img src="${url}" alt="" loading="lazy">`:'🎮'}${escHtml(e.displayName||n)}</span>`;
+    }).join('');
+    const noneOffered=!o.offering||!o.offering.length;
+    const msgHtml=o.message?`<button class="offer-msg-toggle" onclick="this.nextElementSibling.classList.toggle('shown')" aria-expanded="false">💬 Message</button><div class="offer-msg-collapsed">${escHtml(o.message)}</div>`:'';
+    return`<div class="offer-row ${isFirst?'fcfs-first':''} ${isMine?'my-offer':''}">
+      <div class="offer-av">${userAvatarHtml(o.from,28)}</div>
+      <div class="offer-info">
+        <div class="offer-from">
+          ${escHtml(o.from)}${isMine?' (you)':''}
+          ${isFirst?'<span class="fcfs-tag">1st</span>':''}
+          <span class="time-tag" title="${new Date(o.t).toLocaleString()}">${relativeTime(o.t)}</span>
+        </div>
+        ${noneOffered?'<div style="font-size:11px;color:var(--muted);font-style:italic">No specific offering listed</div>':`<div class="offer-items">${offeringHtml}</div>`}
+        ${msgHtml}
+      </div>
+      <div class="offer-actions">
+        ${isMine?`<button class="offer-withdraw-btn" onclick="withdrawOffer('${escAttr(recipient)}','${o.id}').then(t=>{if(t)toast('Offer withdrawn');});">Withdraw</button>`:''}
+        ${amRecipient&&!isMine?`<button class="offer-mark-traded-btn" onclick="markOfferTraded('${escAttr(recipient)}','${o.id}').then(t=>{if(t)toast('✅ Trade completed');});" title="Mark as traded and remove this offer">✓ Traded</button>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openOfferModal(otherUser,specificPokemon=''){
+  const otherUd=allData.users?.[otherUser]||{};
+  const otherInv=allData.have?.[otherUser]||{};
+  const myInv=allData.have?.[cur]||{};
+  // Pokemon they have that I want
+  const matches=Object.entries(otherInv).filter(([n])=>entryWantedByCur(n)).map(([n,qty])=>{
+    const e=_nameToSpriteEntry(n);return{name:n,dn:e.displayName||n,no:e.no,qty,want:entryWantedByCur(n)};
+  });
+  const focusedPokemon=specificPokemon?(()=>{
+    const e=_nameToSpriteEntry(specificPokemon);
+    return{name:specificPokemon,dn:e.displayName||specificPokemon,no:e.no,qty:otherInv[specificPokemon]||0,want:entryWantedByCur(specificPokemon)};
+  })():null;
+  // Pokemon I have that they want — check their wishlist/dynamax/gmax/costumes
+  const theyWant=[];
+  Object.keys(myInv).forEach(n=>{
+    for(const t of['wishlist','dynamax','gmax','costumes']){
+      const val=allData[t]?.[otherUser]?.[n];
+      if(val){const{p}=parsePri(val);if(p){theyWant.push({name:n,qty:myInv[n],p,type:t});break;}}
+    }
+  });
+  // Default selection: items they want
+  const preSelected=new Set(theyWant.slice(0,5).map(t=>t.name));
+  const defaultMessage=`Hey ${otherUser}! 👋\n\n`+
+    (focusedPokemon?`I'd love to trade for your ${focusedPokemon.dn}.\n\n`:matches.length?`I saw you have ${matches.slice(0,3).map(m=>m.dn).join(', ')} on your inventory — interested in trading?\n\n`:'')+
+    (theyWant.length?`I have ${theyWant.slice(0,3).map(t=>`${t.qty}× ${_nameToSpriteEntry(t.name).displayName||t.name}`).join(', ')} that match your wishlist.\n\n`:'')+
+    `Let me know! 🎮`;
+  // Show existing offers on the focused item for context
+  const existingOffers=focusedPokemon?offersForItem(otherUser,focusedPokemon.name):[];
+  const myInvEntries=Object.entries(myInv).map(([n,qty])=>{
+    const e=_nameToSpriteEntry(n);
+    return{name:n,dn:e.displayName||n,no:e.no,qty,theyWant:theyWant.some(t=>t.name===n)};
+  }).sort((a,b)=>(b.theyWant?1:0)-(a.theyWant?1:0)||a.dn.localeCompare(b.dn));
+  const html=`<div class="ov open" id="offer-modal" role="dialog" aria-modal="true" onclick="if(event.target===this)closeOfferModal()">
+    <div class="modal offer-modal" onclick="event.stopPropagation()">
+      <h3>💬 Offer trade with ${escHtml(otherUser)}</h3>
+      ${focusedPokemon?`<div class="offer-pkmn-display">
+        <div class="sprite-wrap">${focusedPokemon.no?spriteImg(focusedPokemon.no,42,'',focusedPokemon.name,'',focusedPokemon.dn):'🎮'}</div>
+        <div style="flex:1">
+          <div class="offer-name">${escHtml(focusedPokemon.dn)} <span style="color:var(--ac2);font-family:var(--mono);font-size:13px">×${focusedPokemon.qty}</span></div>
+          <div class="offer-meta">${focusedPokemon.want?`You want this at ${focusedPokemon.want.p||'flag'}`:''}${existingOffers.length?` · <strong style="color:var(--warn)">🔔 ${existingOffers.length} existing offer${existingOffers.length===1?'':'s'}</strong>`:''}</div>
+        </div>
+      </div>
+      ${existingOffers.length?`<div class="offer-section-label">Existing offers (FCFS):</div>
+        <div class="offer-list">${renderOfferList(otherUser,focusedPokemon.name)}</div>`:''}
+      `:''}
+      ${!focusedPokemon&&matches.length?`<div class="offer-section-label">They have (you want):</div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px">
+          ${matches.slice(0,8).map(m=>`<span class="have-trainer-chip match" title="${escAttr(m.dn)}">${escHtml(m.dn)} <span class="qty">×${m.qty}</span></span>`).join('')}
+        </div>`:''}
+      <div class="offer-section-label">What are you offering?${myInvEntries.length?'':' <span style="color:var(--muted);font-weight:400;font-style:italic">— add some to your 🎒 inventory first</span>'}</div>
+      ${myInvEntries.length?`<div class="offer-pick-row" id="offer-pick-row">
+        ${myInvEntries.map(it=>{
+          const sn=it.name.replace(/'/g,"\\'").replace(/"/g,'&quot;');
+          const url=spriteUrl(it.no,it.name,'',it.dn);
+          return`<span class="offer-pick-chip ${preSelected.has(it.name)?'selected':''}" data-name="${escAttr(it.name)}" onclick="this.classList.toggle('selected')" title="${escAttr(it.dn)}">
+            ${url?`<img src="${url}" alt="" loading="lazy">`:''}<span>${escHtml(it.dn)}</span><span style="color:var(--ac2);font-family:var(--mono);font-size:11px">×${it.qty}</span>${it.theyWant?'<span style="font-size:9px;color:var(--warn);font-weight:700">⭐</span>':''}
+          </span>`;
+        }).join('')}
+      </div>`:'<div class="offer-pick-empty">Your inventory is empty. You can still send a message offer without specific items.</div>'}
+      <div class="offer-section-label">Message:</div>
+      <textarea class="offer-textarea" id="offer-msg" placeholder="Optional message...">${escHtml(defaultMessage)}</textarea>
+      ${otherUd.discord?`<div style="margin-top:10px;font-size:12px;color:var(--muted)">
+        Discord: <code style="color:var(--ac2);font-family:var(--mono)">${escHtml(otherUd.discord)}</code>
+        <a class="offer-discord-link" href="https://discord.com/channels/@me" target="_blank" rel="noopener">Open Discord ↗</a>
+      </div>`:`<div class="offer-no-discord">
+        ⚠️ ${escHtml(otherUser)} hasn't added a Discord handle. Use the public offer or reach out via your community channel.
+      </div>`}
+      <div class="offer-public-toggle">
+        <input type="checkbox" id="offer-public" checked>
+        <label for="offer-public">
+          <strong>Make this offer public</strong>
+          <div class="offer-public-toggle-hint">Everyone in the community sees who offered what & when. Enforces fairness (first-come-first-served).</div>
+        </label>
+      </div>
+      <div class="mact">
+        <button class="bghost" onclick="closeOfferModal()">Cancel</button>
+        <button class="bpri" onclick="submitOfferAction('${escAttr(otherUser)}','${escAttr(focusedPokemon?focusedPokemon.name:'')}')">${focusedPokemon?'Send Offer':'Copy Message'}</button>
+      </div>
+    </div>
+  </div>`;
+  closeOfferModal();
+  const wrap=document.createElement('div');wrap.innerHTML=html;
+  document.body.appendChild(wrap.firstElementChild);
+}
+function closeOfferModal(){document.getElementById('offer-modal')?.remove();}
+async function submitOfferAction(otherUser,itemName){
+  const msg=document.getElementById('offer-msg')?.value||'';
+  const makePublic=!!document.getElementById('offer-public')?.checked;
+  // Collect selected offering items
+  const offering=[...document.querySelectorAll('#offer-pick-row .offer-pick-chip.selected')].map(el=>el.dataset.name);
+  // Always copy message + open Discord
+  await copyText(msg);
+  const ud=allData.users?.[otherUser]||{};
+  // Submit public offer if applicable
+  if(makePublic&&itemName){
+    await submitOffer(otherUser,itemName,offering,msg);
+    toast(`📋 Copied & offer posted — ${ud.discord?`now message ${ud.discord} on Discord`:'send to '+otherUser}`);
+  }else if(makePublic&&!itemName){
+    toast('📋 Copied — pick a specific Pokémon to post a public offer');
+  }else{
+    toast(`📋 Copied — ${ud.discord?`paste in Discord (${ud.discord})`:'send to '+otherUser}`);
+  }
+  closeOfferModal();
+}
+// Legacy alias for old call sites
+function copyOfferMessage(otherUser){return submitOfferAction(otherUser,'');}
+
 // ── BULK OPERATIONS (#2) ──────────────────────────────────────
 function toggleBulkMode(){
   bulkMode=!bulkMode;
@@ -5343,7 +6102,14 @@ Object.assign(window,{
   // Latest batch
   openDiffModal,closeDiffModal,setDiffListType,copyDiffSearch,
   openAddAllVariantsModal,closeAddAllVariants,confirmAddAllVariants,
-  selectWallpaper,applyWallpaper
+  selectWallpaper,applyWallpaper,
+  // Inventory / Have
+  setHaveView,setHaveSubTab,toggleHaveMatchOnly,haveAcSearch,haveAcSelect,haveAcKeydown,
+  addInventoryEntry,updateInventoryQty,setInventoryQty,removeInventoryEntry,
+  renderMyHave,renderHaveBrowse,openOfferModal,closeOfferModal,copyOfferMessage,
+  // Offer history
+  submitOffer,submitOfferAction,withdrawOffer,markOfferTraded,
+  openIncomingOffersModal,closeIncomingOffersModal
 });
 
 // ── BOOT ──────────────────────────────────────────────────────
