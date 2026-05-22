@@ -687,9 +687,12 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
       <button class="bulk-btn bulk-cancel" onclick="toggleBulkMode()">Done</button>
     </div>
     <div class="mylist-search">
-      <span class="mylist-srch-icon">🔍</span>
-      <input type="text" placeholder="Filter my list…" oninput="renderMyList(this.value)" id="mylist-filter">
-      <span style="margin-left:8px;font-size:10px;color:var(--muted);display:inline-flex;gap:6px;align-items:center;flex-shrink:0">
+      <span class="mylist-srch-icon" aria-hidden="true">🔍</span>
+      <input type="text" placeholder="Filter my list…" oninput="renderMyList(this.value)" id="mylist-filter" aria-label="Filter my list">
+    </div>
+    <div class="sec" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+      <span>My list <span id="mylist-count" style="font-weight:400;text-transform:none;font-size:11px;margin-left:4px"></span></span>
+      <span style="font-size:10px;color:var(--muted);display:inline-flex;gap:6px;align-items:center;text-transform:none;letter-spacing:0;font-weight:500">
         <span title="Lucky — separate Lucky Dex search string">⚡ Lucky</span>
         <span style="color:var(--border2)">·</span>
         <span style="color:#818cf8" title="XXL — separate XXL search string">XXL</span>
@@ -697,7 +700,6 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
         <span style="color:#2dd4bf" title="XXS — separate XXS search string">XXS</span>
       </span>
     </div>
-    <div class="sec">My list <span id="mylist-count" style="font-weight:400;text-transform:none;font-size:11px;margin-left:4px"></span></div>
     <div id="mylist-out"></div>
     <div class="sec" style="margin-top:22px">Search strings</div>
     <div id="my-strings-out"></div>
