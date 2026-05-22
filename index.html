@@ -1677,16 +1677,58 @@ function mergeRemoteData(d){
   Object.values(syncQueue||{}).forEach(({path,data})=>applyDataPath(merged,path,data));
   return normalizeData(merged);
 }
+// ── LAZY-LOAD LISTENERS ───────────────────────────────────────
+// Instead of downloading the entire DB on connect, subscribe to each
+// path independently. Only subscribe to a list type when needed.
+const _activeSubs={};        // path → unsubscribe fn
+let _firstSyncDone=false;
+let _pathLoadState={};       // path → 'loading'|'loaded'
+
+function _onSubSnapshot(path,snap){
+  const val=snap.exists()?snap.val():null;
+  // Update local cache for this path
+  const s=getLocal();
+  const seg=path.split('/')[0];
+  if(seg==='users')s.users=val||{};
+  else if(seg==='authIndex')s.authIndex=val||{};
+  else if(seg==='requests')s.requests=val||{};
+  else if(seg==='wishlist')s.wishlist=val||{};
+  else if(seg==='dynamax')s.dynamax=val||{};
+  else if(seg==='gmax')s.gmax=val||{};
+  else if(seg==='costumes')s.costumes=val||{};
+  saveLocal(s);
+  allData=normalizeData(s);
+  // Apply pending writes from sync queue
+  Object.values(syncQueue||{}).forEach(({path:p,data})=>applyDataPath(allData,p,data));
+  _pathLoadState[path]='loaded';
+  setSyncStatus('online');
+  showSyncDot(!!Object.keys(syncQueue).length);
+  if(cur)refreshAll();else populateLoginUsers();
+  // If share view is active, re-render with new data
+  if(document.getElementById('share-view')?.classList.contains('active')&&_activeShareView){
+    renderShareView(_activeShareView.username,_activeShareView.type);
+  }
+  _firstSyncDone=true;
+}
+let _activeShareView=null;
+function subscribePath(path){
+  if(!db||_activeSubs[path])return;
+  _pathLoadState[path]='loading';
+  const r=ref(db,path);
+  const unsub=onValue(r,snap=>_onSubSnapshot(path,snap),()=>setSyncStatus('offline'));
+  _activeSubs[path]=unsub;
+}
+function ensureListSubscribed(type){
+  if(!db)return;
+  if(['wishlist','dynamax','gmax','costumes'].includes(type))subscribePath(type);
+}
 function startListener(){
-  onValue(ref(db,'/'),(snap)=>{
-    if(snap.exists()){
-      const merged=mergeRemoteData(snap.val());
-      saveLocal(merged);allData=normalizeData(merged);setSyncStatus('online');
-      showSyncDot(!!Object.keys(syncQueue).length);
-      if(cur)refreshAll();
-      else populateLoginUsers();
-    }
-  },()=>setSyncStatus('offline'));
+  // Always load: users (metadata), authIndex (auth), requests (admin), wishlist (default tab)
+  subscribePath('users');
+  subscribePath('authIndex');
+  subscribePath('requests');
+  subscribePath('wishlist');
+  // Other list types loaded lazily when tabs are visited
 }
 
 function skipFirebase(){lsSet('fbUrl','local');syncFromLocal();showLogin();}
@@ -2003,6 +2045,7 @@ function setBrowseList(t){
     b.classList.toggle('active',active);
     b.setAttribute('aria-pressed',active?'true':'false');
   });
+  ensureListSubscribed(t);
   renderBrowse();
 }
 function setStaleFilter(days){
@@ -2104,6 +2147,7 @@ function setMyList(t){
   document.getElementById('add-pmon-pri').value='';
   document.getElementById('ac-dropdown').classList.remove('open');
   document.getElementById('mylist-filter').value='';
+  ensureListSubscribed(t);
   buildAcItems();renderMyList();
 }
 
@@ -2834,6 +2878,7 @@ function setStrList(t){
   document.querySelectorAll('#str-list-tabs .ltab').forEach((b,i)=>{
     b.classList.toggle('active',['wishlist','dynamax','gmax','costumes'][i]===t);
   });
+  ensureListSubscribed(t);
   renderStrings();
 }
 function toggleStrUser(el){
@@ -3429,9 +3474,12 @@ function enterShareView(username,type){
   document.getElementById('login-pg').style.display='none';
   document.getElementById('config-pg').style.display='none';
   document.getElementById('share-view').classList.add('active');
+  // Share view needs all list types to allow tab switching
+  ['wishlist','dynamax','gmax','costumes'].forEach(t=>ensureListSubscribed(t));
   renderShareView(username,type);
 }
 function exitShareView(){
+  _activeShareView=null;
   document.getElementById('share-view').classList.remove('active');
   history.replaceState({},'',location.pathname);
   // Re-init normal flow
@@ -3440,6 +3488,7 @@ function exitShareView(){
   else showLogin();
 }
 function renderShareView(username,type){
+  _activeShareView={username,type};
   const ud=allData.users?.[username]||{};
   const list=allData[type]?.[username]||{};
   const hdr=document.getElementById('share-hdr');
@@ -3760,10 +3809,67 @@ function bulkDelete(){
 }
 
 // ── VOICE INPUT (#3) ──────────────────────────────────────────
+// ── PHONETIC POKEMON NAME MATCHING ───────────────────────────
+// Pokemon names are foreign to most speech recognition engines.
+// Use phonetic encoding + Levenshtein distance to find the best match.
+function _phoneticCode(s){
+  // Simple phonetic normalization: strip vowels except leading, collapse similar consonants
+  return String(s||'').toLowerCase()
+    .replace(/[^a-z]/g,'')
+    .replace(/ph/g,'f').replace(/ck/g,'k').replace(/qu/g,'kw').replace(/x/g,'ks')
+    .replace(/(.)\1+/g,'$1') // collapse doubles
+    .replace(/([^aeiouy])[aeiouy]+/g,'$1') // strip vowels after consonants
+    .replace(/y/g,'i');
+}
+function _levenshtein(a,b){
+  if(a===b)return 0;
+  const m=a.length,n=b.length;
+  if(!m)return n;if(!n)return m;
+  const prev=Array(n+1).fill(0).map((_,i)=>i);
+  for(let i=1;i<=m;i++){
+    let curr=[i];
+    for(let j=1;j<=n;j++){
+      const cost=a[i-1]===b[j-1]?0:1;
+      curr[j]=Math.min(curr[j-1]+1,prev[j]+1,prev[j-1]+cost);
+    }
+    for(let j=0;j<=n;j++)prev[j]=curr[j];
+  }
+  return prev[n];
+}
+function fuzzyMatchPokemon(spoken){
+  if(!spoken)return null;
+  const cleaned=String(spoken).toLowerCase().trim();
+  // Try direct hit on autocomplete items first
+  const items=acItems||[];
+  // 1. Exact substring match in display name
+  let direct=items.find(e=>(e.dn||'').toLowerCase()===cleaned);
+  if(direct)return{match:direct,confidence:'exact',spoken};
+  // 2. Strip filler words ("the", "a", "uh", "um", "add")
+  const filler=cleaned.replace(/\b(the|a|an|uh|um|add|put|find|search|for|please)\b/g,'').trim();
+  direct=items.find(e=>(e.dn||'').toLowerCase()===filler||(e.dn||'').toLowerCase().includes(filler));
+  if(direct&&filler.length>2)return{match:direct,confidence:'substring',spoken};
+  // 3. Phonetic + Levenshtein
+  const targetPh=_phoneticCode(filler||cleaned);
+  if(!targetPh)return null;
+  let best=null,bestScore=Infinity;
+  items.forEach(e=>{
+    const namePh=_phoneticCode(e.dn||e.name);
+    if(!namePh)return;
+    // Distance normalized by length
+    const dist=_levenshtein(targetPh,namePh);
+    const score=dist/Math.max(targetPh.length,namePh.length,1);
+    if(score<bestScore&&score<0.45){bestScore=score;best=e;}
+  });
+  if(best)return{match:best,confidence:bestScore<0.2?'high':bestScore<0.35?'medium':'low',spoken};
+  return null;
+}
+
 function startVoiceInput(){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   const btn=document.getElementById('voice-btn');
-  if(!SR){toast('🎤 Voice input not supported in this browser');return;}
+  const input=document.getElementById('ac-input');
+  if(!SR){toast('🎤 Voice input not supported here. Try Chrome on desktop or Android.');return;}
+  if(!window.isSecureContext){toast('🎤 Voice input requires HTTPS');return;}
   if(voiceRecognition){
     try{voiceRecognition.stop();}catch{}
     voiceRecognition=null;
@@ -3771,24 +3877,88 @@ function startVoiceInput(){
     return;
   }
   voiceRecognition=new SR();
-  voiceRecognition.lang='en-US';
+  voiceRecognition.lang=navigator.language||'en-US';
   voiceRecognition.continuous=false;
-  voiceRecognition.interimResults=false;
+  voiceRecognition.interimResults=true; // show live feedback
+  voiceRecognition.maxAlternatives=5;   // get multiple guesses
   btn?.classList.add('listening');
-  toast('🎤 Listening… say a Pokémon name');
+  if(input)input.placeholder='🎤 Listening… say a Pokémon name';
+  toast('🎤 Listening…');
+  let finalTranscript='';
   voiceRecognition.onresult=ev=>{
-    const text=ev.results[0]?.[0]?.transcript||'';
-    if(text){
-      const input=document.getElementById('ac-input');
-      if(input){input.value=text;input.focus();acSearch(text);}
+    let interim='';
+    let alternatives=[];
+    for(let i=ev.resultIndex;i<ev.results.length;i++){
+      const r=ev.results[i];
+      if(r.isFinal){
+        finalTranscript=r[0].transcript;
+        // Collect all alternatives for fuzzy matching
+        for(let j=0;j<r.length;j++)alternatives.push(r[j].transcript);
+      }else{
+        interim+=r[0].transcript;
+      }
+    }
+    // Live update input with interim text
+    if(input&&interim){input.value=interim;}
+    if(finalTranscript&&alternatives.length){
+      // Try each alternative against Pokemon database, pick best match
+      let bestMatch=null;
+      for(const alt of alternatives){
+        const m=fuzzyMatchPokemon(alt);
+        if(m&&(!bestMatch||['exact','high'].includes(m.confidence))){
+          bestMatch=m;
+          if(m.confidence==='exact')break;
+        }
+      }
+      if(bestMatch){
+        if(input){
+          input.value=bestMatch.match.dn;
+          input.focus();
+          acSearch(bestMatch.match.dn);
+          // Auto-select if confidence is high
+          if(['exact','high'].includes(bestMatch.confidence)){
+            setTimeout(()=>{
+              const sel=document.getElementById('add-pmon-sel');
+              if(sel&&!sel.value){
+                sel.value=bestMatch.match.name;
+                document.getElementById('ac-dropdown')?.classList.remove('open');
+              }
+            },100);
+          }
+        }
+        const confEmoji={exact:'✅',high:'✅',medium:'🤔',low:'❓',substring:'✅'}[bestMatch.confidence]||'';
+        toast(`${confEmoji} Heard "${finalTranscript}" → ${bestMatch.match.dn}`);
+      }else if(input){
+        input.value=finalTranscript;
+        acSearch(finalTranscript);
+        toast(`🎤 Heard "${finalTranscript}" — no Pokémon match, try typing`);
+      }
     }
   };
-  voiceRecognition.onend=()=>{btn?.classList.remove('listening');voiceRecognition=null;};
-  voiceRecognition.onerror=ev=>{
-    btn?.classList.remove('listening');voiceRecognition=null;
-    toast(`🎤 ${ev.error==='not-allowed'?'Mic permission denied':'Voice input error'}`);
+  voiceRecognition.onend=()=>{
+    btn?.classList.remove('listening');
+    voiceRecognition=null;
+    if(input)input.placeholder='Search Pokémon…';
   };
-  try{voiceRecognition.start();}catch(e){btn?.classList.remove('listening');voiceRecognition=null;}
+  voiceRecognition.onerror=ev=>{
+    btn?.classList.remove('listening');
+    voiceRecognition=null;
+    if(input)input.placeholder='Search Pokémon…';
+    const msg={
+      'not-allowed':'Mic permission denied — enable in browser settings',
+      'no-speech':'Didn\'t hear anything — try again',
+      'audio-capture':'No microphone found',
+      'network':'Network error — check connection',
+      'aborted':null,
+      'service-not-allowed':'Speech service blocked'
+    }[ev.error]||`Voice error: ${ev.error}`;
+    if(msg)toast(`🎤 ${msg}`);
+  };
+  try{voiceRecognition.start();}catch(e){
+    btn?.classList.remove('listening');voiceRecognition=null;
+    if(input)input.placeholder='Search Pokémon…';
+    toast('🎤 Could not start voice input');
+  }
 }
 
 // ── MULTI-SELECT FLAG FILTERS (#9) ────────────────────────────
