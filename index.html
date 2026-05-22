@@ -156,10 +156,11 @@ input,select,textarea{font-family:var(--font);outline:none}
 .myrow.drag-over{border-color:var(--accent);background:rgba(108,99,255,.08)}
 .drag-handle{color:var(--border2);font-size:14px;cursor:grab;flex-shrink:0;user-select:none;padding:2px 4px}
 .myrow-sprite{width:28px;height:28px;object-fit:contain;flex-shrink:0;image-rendering:pixelated}
-.myrow-sprite-wrap,.pc-sprite-wrap{position:relative;display:inline-flex;flex-shrink:0}
-.max-badge{position:absolute;bottom:-4px;right:-4px;height:11px;padding:0 3px;border-radius:2px;font-size:6.5px;font-weight:900;letter-spacing:.3px;display:flex;align-items:center;white-space:nowrap;line-height:1;pointer-events:none;border:1px solid rgba(255,255,255,.55);box-shadow:0 1px 3px rgba(0,0,0,.35)}
-.max-badge.gmax{background:linear-gradient(135deg,#7c3aed,#9333ea);color:#fff}
-.max-badge.dmax{background:linear-gradient(135deg,#dc2626,#ef4444);color:#fff}
+.myrow-sprite-wrap,.pc-sprite-wrap{position:relative;display:inline-flex;flex-shrink:0;overflow:visible}
+/* Max cloud crown — positioned above sprite, mimics Dynamax wreath visual */
+.max-crown{position:absolute;top:-8px;left:50%;transform:translateX(-50%);width:22px;height:10px;pointer-events:none;overflow:visible}
+.max-crown.dmax-crown{fill:#dc2626}
+.max-crown.gmax-crown{fill:#7c3aed}
 .myrow-name{font-size:13px;font-weight:500;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .myrow[data-full]:has(.myrow-name:hover)::after{content:attr(data-full);position:absolute;left:44px;bottom:calc(100% + 6px);max-width:min(360px,calc(100vw - 70px));background:rgba(18,17,34,.97);border:1px solid var(--border2);color:var(--text);border-radius:7px;padding:6px 9px;font-size:12px;line-height:1.25;white-space:normal;box-shadow:0 8px 24px rgba(0,0,0,.28);pointer-events:none;z-index:30}
 .myrow[data-full]:has(.myrow-name:hover)::before{content:'';position:absolute;left:55px;bottom:100%;border:5px solid transparent;border-top-color:var(--border2);pointer-events:none;z-index:31}
@@ -490,7 +491,8 @@ input,select,textarea{font-family:var(--font);outline:none}
       <div class="filter-divider"></div>
       <div class="filter-group" id="browse-list-tabs-inline">
         <button class="ltab active" onclick="setBrowseList('wishlist')">Trades</button>
-        <button class="ltab" onclick="setBrowseList('dynamax')">Dynamax</button>
+        <button class="ltab" onclick="setBrowseList('dynamax')">DMAX</button>
+        <button class="ltab" onclick="setBrowseList('gmax')">GMAX</button>
         <button class="ltab" onclick="setBrowseList('costumes')">Others</button>
       </div>
     </div>
@@ -510,7 +512,8 @@ input,select,textarea{font-family:var(--font);outline:none}
     </div>
     <div class="list-tabs">
       <button class="ltab active" onclick="setMyList('wishlist')">Trades</button>
-      <button class="ltab" onclick="setMyList('dynamax')">Dynamax</button>
+      <button class="ltab" onclick="setMyList('dynamax')">DMAX</button>
+      <button class="ltab" onclick="setMyList('gmax')">GMAX</button>
       <button class="ltab" onclick="setMyList('costumes')">Others</button>
     </div>
     <div class="add-form">
@@ -552,7 +555,8 @@ input,select,textarea{font-family:var(--font);outline:none}
     <div class="srch" style="margin-bottom:10px"><span class="srch-icon">🔍</span><input type="text" id="stq" placeholder="Filter by trainer…" oninput="renderStrings()"></div>
     <div class="list-tabs" id="str-list-tabs">
       <button class="ltab active" onclick="setStrList('wishlist')">Trades</button>
-      <button class="ltab" onclick="setStrList('dynamax')">Dynamax</button>
+      <button class="ltab" onclick="setStrList('dynamax')">DMAX</button>
+      <button class="ltab" onclick="setStrList('gmax')">GMAX</button>
       <button class="ltab" onclick="setStrList('costumes')">Others</button>
     </div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Tap a trainer to expand their strings</div>
@@ -692,7 +696,7 @@ const PRI={
   L:{label:'Low',emoji:'🟢'}
 };
 const PRI_ORDER={H:0,M:1,L:2};
-const LIST_LABELS={wishlist:'Trades',dynamax:'Dynamax',costumes:'Others'};
+const LIST_LABELS={wishlist:'Trades',dynamax:'DMAX',gmax:'GMAX',costumes:'Others'};
 const VIVILLON_PATTERNS=new Set(['Archipelago','Continental','Elegant','Fancy','Garden','High Plains','Icy Snow','Jungle','Marine','Meadow','Modern','Monsoon','Ocean','Poke Ball','Poké Ball','Polar','River','Sandstorm','Savanna','Sun','Tundra']);
 const REGION_CODE_TERMS={K:'kanto',J:'johto',H:'hoenn',S:'sinnoh',U:'unova',L:'kalos',A:'alola',G:'galar',P:'paldea'};
 const REGIONAL_FORM_TERMS={A:'alola',G:'galar',H:'hisui',P:'paldea'};
@@ -715,6 +719,11 @@ const SECURE_RULES=`{
       }
     },
     "dynamax": {
+      "$username": {
+        ".write": "auth != null && (root.child('admins').child(auth.uid).val() === true || root.child('users').child($username).child('authUid').val() === auth.uid)"
+      }
+    },
+    "gmax": {
       "$username": {
         ".write": "auth != null && (root.child('admins').child(auth.uid).val() === true || root.child('users').child($username).child('authUid').val() === auth.uid)"
       }
@@ -853,7 +862,19 @@ const GO_COSTUME_SPRITE_SLUGS={
   "Snorlax (Studded Jacket)":"jacket","Dedenne (Holiday)":"holiday","Wooloo (Holiday)":"holiday","Minccino (Fashionable)":"fashionable",
   "Gengar (Halloween 2022)":"halloween","Gengar (Halloween 2024)":"halloween2023",
   "Togepi (Flower Crown)":"flowers","Togetic (Flower Crown)":"flowers","Togekiss (Flower Crown)":"flowers",
-  "Blissey (Flower Crown)":"flowercrown","Absol (Fashion)":"fashion"
+  "Blissey (Flower Crown)":"flowercrown","Absol (Fashion)":"fashion",
+  // Gigantamax sprites — Serebii uses {dex}-gi.png for all Gmax forms
+  "Venusaur (Gigantamax)":"gi","Charizard (Gigantamax)":"gi","Blastoise (Gigantamax)":"gi",
+  "Butterfree (Gigantamax)":"gi","Pikachu (Gigantamax)":"gi","Meowth (Gigantamax)":"gi",
+  "Machamp (Gigantamax)":"gi","Gengar (Gigantamax)":"gi","Kingler (Gigantamax)":"gi",
+  "Lapras (Gigantamax)":"gi","Eevee (Gigantamax)":"gi","Snorlax (Gigantamax)":"gi",
+  "Garbodor (Gigantamax)":"gi","Melmetal (Gigantamax)":"gi","Rillaboom (Gigantamax)":"gi",
+  "Cinderace (Gigantamax)":"gi","Inteleon (Gigantamax)":"gi","Corviknight (Gigantamax)":"gi",
+  "Orbeetle (Gigantamax)":"gi","Drednaw (Gigantamax)":"gi","Coalossal (Gigantamax)":"gi",
+  "Flapple (Gigantamax)":"gi","Appletun (Gigantamax)":"gi","Sandaconda (Gigantamax)":"gi",
+  "Toxtricity (Gigantamax)":"gi","Centiskorch (Gigantamax)":"gi","Hatterene (Gigantamax)":"gi",
+  "Grimmsnarl (Gigantamax)":"gi","Alcremie (Gigantamax)":"gi","Duraludon (Gigantamax)":"gi",
+  "Urshifu (Gigantamax)":"gi"
 };
 // Pokémon that can Gigantamax (by Pokédex number). Used to show G vs D badge on Dynamax list.
 const GMAX_NOS=new Set([
@@ -1039,11 +1060,12 @@ function lsGet(k,d){try{return JSON.parse(localStorage.getItem(k)??'null')??d}ca
 function lsSet(k,v){localStorage.setItem(k,JSON.stringify(v))}
 function normalizeData(s){
   if(!s||typeof s!=='object')s={};
-  s.users=s.users||{};s.wishlist=s.wishlist||{};s.dynamax=s.dynamax||{};s.costumes=s.costumes||{};s.requests=s.requests||{};s.authIndex=s.authIndex||{};
+  s.users=s.users||{};s.wishlist=s.wishlist||{};s.dynamax=s.dynamax||{};s.gmax=s.gmax||{};s.costumes=s.costumes||{};s.requests=s.requests||{};s.authIndex=s.authIndex||{};
   Object.keys(s.users).forEach(u=>{
     s.users[u]=normalizedUserRecord(u,s.users[u]);
     if(!s.wishlist[u])s.wishlist[u]={};
     if(!s.dynamax[u])s.dynamax[u]={};
+    if(!s.gmax[u])s.gmax[u]={};
     if(!s.costumes[u])s.costumes[u]={};
   });
   return s;
@@ -1052,12 +1074,13 @@ function normalizeData(s){
 function initLocal(){
   let s=lsGet('pogo3',null);
   if(!s){
-    s={users:{},wishlist:{},dynamax:{},costumes:{},requests:{},authIndex:{}};
+    s={users:{},wishlist:{},dynamax:{},gmax:{},costumes:{},requests:{},authIndex:{}};
     DB.users.filter(u=>u&&u.trim()&&u.trim()!=='EVERYONE').map(u=>u.trim()).forEach(u=>{
       s.users[u]=normalizedUserRecord(u,{}, {pin:'123456',isAdmin:u===OWNER,isOwner:u===OWNER,authVersion:1,authEmail:authEmail(u,1)});
-      s.wishlist[u]={};s.dynamax[u]={};s.costumes[u]={};
+      s.wishlist[u]={};s.dynamax[u]={};s.gmax[u]={};s.costumes[u]={};
       DB.wishlist.forEach(e=>{const v=e.users[u];if(v)s.wishlist[u][e.name]=v;});
       DB.dynamax.forEach(e=>{const v=e.users[u];if(v)s.dynamax[u][e.name]=v;});
+      DB.gmax.forEach(e=>{const v=e.users[u];if(v)s.gmax[u][e.name]=v;});
       DB.costumes.forEach(e=>{const v=e.users[u];if(v)s.costumes[u][e.name]=v;});
     });
     lsSet('pogo3',s);
@@ -1301,6 +1324,7 @@ function mergeRemoteData(d){
     users:d?.users||{},
     wishlist:d?.wishlist||{},
     dynamax:d?.dynamax||{},
+    gmax:d?.gmax||{},
     costumes:d?.costumes||{},
     requests:d?.requests||{},
     authIndex:d?.authIndex||{}
@@ -1571,7 +1595,7 @@ function setFilter(f){
 function setBrowseList(t){
   browseList=t;
   document.querySelectorAll('#browse-list-tabs-inline .ltab').forEach((b,i)=>{
-    b.classList.toggle('active',['wishlist','dynamax','costumes'][i]===t);
+    b.classList.toggle('active',['wishlist','dynamax','gmax','costumes'][i]===t);
   });
   renderBrowse();
 }
@@ -1642,11 +1666,10 @@ function renderBrowse(){
     const info=map[e.name];
     let ents=info.entries;if(browseFilter!=='ALL')ents=ents.filter(x=>x.p===browseFilter);
     ents=sortEntries(ents);
-    const maxMark=browseList==='dynamax'?(GMAX_NOS.has(parseInt(e.no))?'G':'D'):'';
-    const maxBadge=maxMark?`<span class="max-badge ${maxMark==='G'?'gmax':'dmax'}" title="${maxMark==='G'?'Gigantamax':'Dynamax'}">${maxMark==='G'?'GMAX':'MAX'}</span>`:'';
+    const crownHtml=browseList==='gmax'?maxCrownSvg(true):browseList==='dynamax'?maxCrownSvg(GMAX_NOS.has(parseInt(e.no))):'';
     return`<div class="pc">
       <div class="pc-hdr">
-        <span class="pc-sprite-wrap">${spriteImg(e.no,28,'pc-sprite',e.name)}${maxBadge}</span>
+        <span class="pc-sprite-wrap">${spriteImg(e.no,28,'pc-sprite',e.name)}${crownHtml}</span>
         <div class="pc-info"><div class="pc-name">${info.dn}</div><div class="pc-no">#${e.no}</div></div>
       </div>
       <div class="pc-users">${ents.map(x=>userBadge(x)).join('')}</div>
@@ -1658,10 +1681,10 @@ function renderBrowse(){
 function setMyList(t){
   myListType=t;
   document.querySelectorAll('#tab-mylist .list-tabs .ltab').forEach((b,i)=>{
-    b.classList.toggle('active',['wishlist','dynamax','costumes'][i]===t);
+    b.classList.toggle('active',['wishlist','dynamax','gmax','costumes'][i]===t);
   });
   document.getElementById('add-ttl').textContent=
-    t==='costumes'?'+ Add Other':t==='dynamax'?'+ Add Dynamax Pokémon':'+ Add Pokémon';
+    t==='costumes'?'+ Add Other':t==='gmax'?'+ Add Gigantamax Pokémon':t==='dynamax'?'+ Add Dynamax Pokémon':'+ Add Pokémon';
   if(document.getElementById('ac-input'))document.getElementById('ac-input').value='';
   document.getElementById('add-pmon-sel').value='';
   document.getElementById('ac-dropdown').classList.remove('open');
@@ -1696,6 +1719,7 @@ function uniqueEntries(...groups){
 function listSource(type){
   if(type==='costumes')return DB.costumes;
   if(type==='dynamax')return DB.dynamax;
+  if(type==='gmax')return DB.gmax;
   return uniqueEntries(DB.wishlist,DB.costumes);
 }
 function normalizeSpriteKey(s){
@@ -1709,7 +1733,7 @@ function spriteSourceIndex(){
     const k=normalizeSpriteKey(key);
     if(k&&!spriteIndex.has(k))spriteIndex.set(k,e);
   };
-  [...DB.wishlist,...DB.dynamax,...DB.costumes].forEach(e=>{
+  [...DB.wishlist,...DB.dynamax,...DB.gmax,...DB.costumes].forEach(e=>{
     if(!e.no)return;
     add(e.name,e);add(e.displayName,e);
   });
@@ -1787,12 +1811,11 @@ function renderMyList(filterVal){
     const no=noMap[name]||null;
     const sn=name.replace(/'/g,"\\'").replace(/"/g,'&quot;');
     const hasSprite=no||COSTUME_FORM_SPRITE_IDS[name]||GO_COSTUME_SPRITE_SLUGS[name];
-    const maxMark=myListType==='dynamax'?(GMAX_NOS.has(parseInt(no))?'G':'D'):'';
-    const maxBadge=maxMark?`<span class="max-badge ${maxMark==='G'?'gmax':'dmax'}" title="${maxMark==='G'?'Gigantamax':'Dynamax'}">${maxMark==='G'?'GMAX':'MAX'}</span>`:'';
+    const crownHtml=myListType==='gmax'?maxCrownSvg(true):myListType==='dynamax'?maxCrownSvg(GMAX_NOS.has(parseInt(no))):'';
     return`<div class="myrow" draggable="true" data-name="${sn}" data-idx="${idx}" data-full="${escAttr(dn)}" aria-label="${escAttr(dn)}"
       ondragstart="dragStart(event)" ondragover="dragOver(event)" ondrop="dragDrop(event)" ondragend="dragEnd(event)">
       <span class="drag-handle" title="Drag to reorder">⠿</span>
-      ${hasSprite?`<span class="myrow-sprite-wrap">${spriteImg(no,28,'myrow-sprite',name)}${maxBadge}</span>`:`${maxBadge}`}
+      ${hasSprite?`<span class="myrow-sprite-wrap">${spriteImg(no,28,'myrow-sprite',name)}${crownHtml}</span>`:crownHtml}
       <div class="myrow-name">${dn}</div>
       <div class="mctrl">
         ${['H','M','L'].map(b=>`<button class="pb ${p===b?'on '+b:''}" onclick="setPri('${sn}','${b}')" title="${priName(b)}" aria-label="Set ${escAttr(dn)} to ${priLabel(b)} priority">${b}</button>`).join('')}
@@ -1891,9 +1914,14 @@ function drawSpriteFallback(ctx,e,x,y,size){
   ctx.fillText(String(e.dn||'?').slice(0,2).toUpperCase(),x+size/2,y+size/2+6);
   ctx.textAlign='left';
 }
+function maxCrownSvg(isGmax){
+  const c=isGmax?'#7c3aed':'#dc2626';
+  return`<svg class="max-crown ${isGmax?'gmax-crown':'dmax-crown'}" viewBox="0 0 22 10" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="2.5" cy="8" r="2.5" fill="${c}"/><circle cx="6.5" cy="5.5" r="2.8" fill="${c}"/><circle cx="11" cy="4" r="3.2" fill="${c}"/><circle cx="15.5" cy="5.5" r="2.8" fill="${c}"/><circle cx="19.5" cy="8" r="2.5" fill="${c}"/><rect x="0" y="7.5" width="22" height="2.5" fill="${c}"/></svg>`;
+}
 function maxMarkForEntry(e,type){
-  if(type!=='dynamax')return'';
-  return GMAX_NOS.has(parseInt(e.no))?'G':'D';
+  if(type==='gmax')return'G';
+  if(type==='dynamax')return GMAX_NOS.has(parseInt(e.no))?'G':'D';
+  return'';
 }
 function canvasBlob(canvas){
   return new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(new Error('Could not render image')),'image/png'));
@@ -1964,17 +1992,14 @@ async function renderListImage(entries,type,username){
       else drawSpriteFallback(ctx,e,sx,sy,sprSize);
       const mark=maxMarkForEntry(e,type);
       if(mark){
-        const label=mark==='G'?'GMAX':'MAX';
-        ctx.font='800 7px Space Grotesk, sans-serif';
-        const lw=ctx.measureText(label).width;
-        const bw=lw+6,bh=11;
-        const bx=x+cardW-bw-2,by=cy+cardH-bh-2;
-        roundedRect(ctx,bx,by,bw,bh,2);
-        ctx.fillStyle=mark==='G'?'#7c3aed':'#dc2626';ctx.fill();
-        ctx.fillStyle='#fff';
-        ctx.textAlign='center';
-        ctx.fillText(label,bx+bw/2,by+bh-3);
-        ctx.textAlign='left';
+        const isG=mark==='G';
+        const cc=isG?'#7c3aed':'#dc2626';
+        ctx.fillStyle=cc;
+        // Draw 5-bump cloud crown above sprite, centred on sprite
+        const cloudCx=sx+sprSize/2;const cloudY=sy-1;
+        const bumps=[{dx:-9,dy:0,r:3},{dx:-4.5,dy:-2.5,r:3.5},{dx:0,dy:-4,r:4},{dx:4.5,dy:-2.5,r:3.5},{dx:9,dy:0,r:3}];
+        bumps.forEach(b=>{ctx.beginPath();ctx.arc(cloudCx+b.dx,cloudY+b.dy,b.r,0,Math.PI*2);ctx.fill();});
+        ctx.fillRect(cloudCx-12,cloudY-1,24,4);
       }
     });
     y+=Math.ceil(group.entries.length/cols)*(cardH+gap)-gap+sectionGap;
@@ -2199,7 +2224,7 @@ async function copyStr(str,btn){
 function setStrList(t){
   strListType=t;
   document.querySelectorAll('#str-list-tabs .ltab').forEach((b,i)=>{
-    b.classList.toggle('active',['wishlist','dynamax','costumes'][i]===t);
+    b.classList.toggle('active',['wishlist','dynamax','gmax','costumes'][i]===t);
   });
   renderStrings();
 }
@@ -2267,7 +2292,7 @@ async function restoreData(file){
   try{
     const text=await file.text();
     const data=normalizeData(JSON.parse(text));
-    if(!data.users||!data.wishlist||!data.dynamax||!data.costumes)throw new Error('Missing required backup sections');
+    if(!data.users||!data.wishlist||!data.dynamax||!data.costumes)throw new Error('Missing required backup sections (wishlist/dynamax/costumes)');
     const userCount=Object.keys(data.users).length;
     if(!confirm(`Restore backup with ${userCount} members? This replaces the current local data${fbOn?' and syncs it to Firebase':''}.`))return;
     saveLocal(data);allData=data;
@@ -2544,7 +2569,7 @@ function parseImportString(){
   const err=document.getElementById('import-err');
   err.textContent='';
   if(!raw){err.textContent='Paste a search string first';return;}
-  const srcArr=myListType==='costumes'?DB.costumes:myListType==='dynamax'?DB.dynamax:DB.wishlist;
+  const srcArr=myListType==='costumes'?DB.costumes:myListType==='dynamax'?DB.dynamax:myListType==='gmax'?DB.gmax:DB.wishlist;
   const dexToEntries={},dexHasRegional={};
   srcArr.forEach(e=>{if(e.no&&regionalFormTerm(e.name))dexHasRegional[e.no]=true;});
   srcArr.forEach(e=>{
