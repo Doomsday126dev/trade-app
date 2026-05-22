@@ -5410,14 +5410,24 @@ function tradesOnDate(isoD){
     .map(([id,t])=>({id,...t}));
 }
 function tradeCountsForDay(isoD){
-  const trades=tradesOnDate(isoD).filter(t=>t.status!=='completed');
-  let special=0,regular=0,remote=0;
+  const trades=tradesOnDate(isoD);
+  let special=0,regular=0,remote=0,scheduled=0,completed=0;
+  const byStatus={
+    special:{scheduled:0,completed:0},
+    regular:{scheduled:0,completed:0},
+    remote:{scheduled:0,completed:0}
+  };
   trades.forEach(t=>{
-    if(t.type==='special')special++;
-    else if(t.type==='remote')remote++;
+    const bucket=t.type==='special'?'special':t.type==='remote'?'remote':'regular';
+    const status=t.status==='completed'?'completed':'scheduled';
+    if(bucket==='special')special++;
+    else if(bucket==='remote')remote++;
     else regular++;
+    byStatus[bucket][status]++;
+    if(status==='completed')completed++;
+    else scheduled++;
   });
-  return{special,regular,remote,total:special+regular+remote,trades};
+  return{special,regular,remote,total:special+regular+remote,scheduled,completed,byStatus,trades};
 }
 
 async function writeTrade(id,trade){
@@ -5462,12 +5472,13 @@ function renderSchedule(){
       const evt=dailyEventBonuses(iso);
       const counts=tradeCountsForDay(iso);
       const trade_total=counts.total;
+      const tradeTitle=trade_total?`${counts.scheduled} open · ${counts.completed} done`:'';
       return`<div class="sched-day-card ${isToday?'today':''} ${isSel?'selected':''} ${isPast?'past':''}" onclick="selectSchedDay('${iso}')" role="button" tabindex="0">
         <span class="sched-day-wkd">${WKDS[d.getDay()]}</span>
         <span class="sched-day-num">${d.getDate()}</span>
         <div class="sched-day-meta">
           ${evt.events.length?'<span class="sched-day-event-dot" title="Event"></span>':''}
-          ${trade_total?`<span class="sched-day-trade-count">${trade_total}</span>`:''}
+          ${trade_total?`<span class="sched-day-trade-count" title="${escAttr(tradeTitle)}">${trade_total}</span>`:''}
         </div>
         ${evt.specialBonus?`<span class="sched-day-special-bonus" title="+${evt.specialBonus} confirmed bonus special trades">+${evt.specialBonus}⭐</span>`:''}
       </div>`;
@@ -5490,6 +5501,16 @@ function renderSchedDayDetail(){
   //     Tracked as a separate counter, doesn't count toward the regular 100 cap.
   const SPECIAL_BASE=1, REGULAR_CAP=100;
   const specialCap=SPECIAL_BASE+evt.specialBonus;
+  const specialLeft=Math.max(0,specialCap-counts.special);
+  const regularLeft=Math.max(0,REGULAR_CAP-counts.regular);
+  const quotaMeta=(kind,total,emptyText)=>{
+    if(!total)return emptyText;
+    const st=counts.byStatus?.[kind]||{scheduled:0,completed:0};
+    const bits=[`${total} used/reserved`];
+    if(st.scheduled)bits.push(`${st.scheduled} open`);
+    if(st.completed)bits.push(`${st.completed} done`);
+    return bits.join(' · ');
+  };
   const dayLabel=d.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric'});
   const eventsHtml=evt.events.length?`<div class="sched-event-list">
     ${evt.events.map(ev=>{
@@ -5534,19 +5555,19 @@ function renderSchedDayDetail(){
     </div>
     <div class="sched-quota-row">
       <div class="sched-quota">
-        <div class="sched-quota-label">⭐ Special</div>
-        <div class="sched-quota-val ${counts.special>=specialCap?'danger':counts.special>=specialCap-1?'warn':''}">${counts.special}/${specialCap}</div>
-        ${evt.specialBonus?`<div class="sched-quota-bonus">+${evt.specialBonus} bonus${evt.manualBonus?` (incl. ${evt.manualBonus} manual)`:''}</div>`:'<div class="sched-quota-meta">1 base · separate counter</div>'}
+        <div class="sched-quota-label">⭐ Special left</div>
+        <div class="sched-quota-val ${specialLeft<=0?'danger':specialLeft<=1?'warn':''}">${specialLeft}/${specialCap}</div>
+        <div class="${evt.specialBonus?'sched-quota-bonus':'sched-quota-meta'}">${quotaMeta('special',counts.special,evt.specialBonus?`+${evt.specialBonus} bonus${evt.manualBonus?` (incl. ${evt.manualBonus} manual)`:''}`:'1 base · separate counter')}</div>
       </div>
       <div class="sched-quota">
-        <div class="sched-quota-label">🤝 Regular</div>
-        <div class="sched-quota-val ${counts.regular>=REGULAR_CAP?'danger':counts.regular>=80?'warn':''}">${counts.regular}/${REGULAR_CAP}</div>
-        <div class="sched-quota-meta">in-person · specials excluded</div>
+        <div class="sched-quota-label">🤝 Regular left</div>
+        <div class="sched-quota-val ${regularLeft<=0?'danger':regularLeft<=20?'warn':''}">${regularLeft}/${REGULAR_CAP}</div>
+        <div class="sched-quota-meta">${quotaMeta('regular',counts.regular,'in-person · specials excluded')}</div>
       </div>
       <div class="sched-quota">
-        <div class="sched-quota-label">📡 Remote</div>
-        <div class="sched-quota-val">${counts.remote}</div>
-        <div class="sched-quota-meta">Forever Friend only</div>
+        <div class="sched-quota-label">📡 Remote open</div>
+        <div class="sched-quota-val">${counts.byStatus?.remote?.scheduled||0}</div>
+        <div class="sched-quota-meta">${quotaMeta('remote',counts.remote,'Forever Friend only')}</div>
       </div>
     </div>
     ${eventsHtml}
