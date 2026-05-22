@@ -1170,10 +1170,40 @@ window.__pogoBootWatch=setTimeout(function(){
 },4000);
 </script>
 <script src="data.js"></script>
-<script type="module">
-import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-import{getDatabase,ref,set,get,onValue,update}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
-import{getAuth,signInWithEmailAndPassword,createUserWithEmailAndPassword,signOut as firebaseSignOut,updatePassword,deleteUser}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+<script>
+let initializeApp,getDatabase,ref,set,get,onValue,update,getAuth,signInWithEmailAndPassword,createUserWithEmailAndPassword,firebaseSignOut,updatePassword,deleteUser;
+let firebaseSdkPromise=null;
+function firebaseSdkReady(){return typeof initializeApp==='function'&&typeof getDatabase==='function'&&typeof getAuth==='function';}
+async function loadFirebaseSdk(){
+  if(firebaseSdkReady())return true;
+  if(!firebaseSdkPromise){
+    const base='https://www.gstatic.com/firebasejs/10.12.2';
+    firebaseSdkPromise=Promise.all([
+      import(`${base}/firebase-app.js`),
+      import(`${base}/firebase-database.js`),
+      import(`${base}/firebase-auth.js`)
+    ]).then(([appMod,dbMod,authMod])=>{
+      initializeApp=appMod.initializeApp;
+      getDatabase=dbMod.getDatabase;
+      ref=dbMod.ref;
+      set=dbMod.set;
+      get=dbMod.get;
+      onValue=dbMod.onValue;
+      update=dbMod.update;
+      getAuth=authMod.getAuth;
+      signInWithEmailAndPassword=authMod.signInWithEmailAndPassword;
+      createUserWithEmailAndPassword=authMod.createUserWithEmailAndPassword;
+      firebaseSignOut=authMod.signOut;
+      updatePassword=authMod.updatePassword;
+      deleteUser=authMod.deleteUser;
+      return true;
+    }).catch(err=>{
+      firebaseSdkPromise=null;
+      throw err;
+    });
+  }
+  return firebaseSdkPromise;
+}
 
 const DB=window.POGO_TRADE_DB;
 if(!DB)throw new Error('Trade data failed to load');
@@ -2080,6 +2110,7 @@ function firebaseConfig(url=FIREBASE_URL){
 }
 function setupFirebase(url=FIREBASE_URL){
   if(fbApp)return fbApp;
+  if(!firebaseSdkReady())throw new Error('Firebase SDK is still loading');
   fbApp=initializeApp(firebaseConfig(url),'pogo');
   db=getDatabase(fbApp);fbOn=true;
   if(firebaseAuthConfigured())auth=getAuth(fbApp);
@@ -2135,6 +2166,7 @@ async function connectFirebase(){
   if(!url||!url.includes('firebaseio.com')){err.textContent='Enter a valid Firebase Realtime Database URL';return;}
   try{
     setSyncStatus('syncing');
+    await loadFirebaseSdk();
     setupFirebase(url);
     await set(ref(db,'_ping'),Date.now()).catch(()=>{});
     lsSet('fbUrl',url);err.textContent='';
@@ -5302,27 +5334,26 @@ document.addEventListener('DOMContentLoaded',()=>{
   syncFromLocal();
   // Check for read-only share view
   const shareReq=checkShareViewParam();
-  try{
-    setupFirebase(FIREBASE_URL);setSyncStatus('syncing');
+  const s=checkSession();
+  if(shareReq)showLogin();
+  else if(s&&allData.users?.[s]){cur=s;showApp();}
+  else showLogin();
+  setSyncStatus('syncing');
+  loadFirebaseSdk().then(()=>{
+    setupFirebase(FIREBASE_URL);
     startListener();
+    flushSyncQueue();
     if(shareReq){
-      // Wait briefly for Firebase data, then render share view
       setTimeout(()=>{
         if(allData.users?.[shareReq.username])enterShareView(shareReq.username,shareReq.type);
         else{toast(`Trainer "${shareReq.username}" not found`);showLogin();}
       },1500);
-      return;
     }
-    const s=checkSession();
-    if(s&&allData.users?.[s]){cur=s;showApp();}
-    else showLogin();
-  }catch{
-    syncFromLocal();
-    const s=checkSession();
-    if(s&&allData.users?.[s]){cur=s;showApp();}
-    else showLogin();
+  }).catch(e=>{
+    console.warn('Firebase SDK failed to load',e);
     setSyncStatus('offline');
-  }
+    if(shareReq)toast('Could not load shared list while Firebase is offline.');
+  });
   setTimeout(()=>{if(!hasVisibleScreen())showBootError('No visible screen after startup');},2500);
   }catch(e){
     showBootError(e);
