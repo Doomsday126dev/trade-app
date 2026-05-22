@@ -1150,6 +1150,25 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(180deg,#f9f9fc 
 <!-- PTR Indicator -->
 <div class="ptr-indicator" id="ptr-indicator" aria-hidden="true">↓</div>
 
+<script>
+window.__pogoBootWatch=setTimeout(function(){
+  var visible=['config-pg','login-pg','app'].some(function(id){
+    var el=document.getElementById(id);
+    return el&&getComputedStyle(el).display!=='none';
+  })||document.getElementById('share-view')?.classList.contains('active');
+  if(visible)return;
+  var login=document.getElementById('login-pg');
+  var app=document.getElementById('app');
+  var cfg=document.getElementById('config-pg');
+  if(cfg)cfg.style.display='none';
+  if(app)app.style.display='none';
+  if(login)login.style.display='flex';
+  var card=login&&login.querySelector('.lcard');
+  if(card)card.style.display='block';
+  var err=document.getElementById('login-err');
+  if(err)err.textContent='App scripts did not finish loading. Refresh once; if this stays, send this screenshot.';
+},4000);
+</script>
 <script src="data.js"></script>
 <script type="module">
 import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
@@ -1244,6 +1263,7 @@ let browseFilter='ALL',browseList='wishlist',staleFilter=0;
 let browseFlagFilters={lucky:false,xxl:false,xxs:false};
 let myListType='wishlist',strListType='wishlist';
 let rpinTarget=null;
+const SYNC_QUEUE_KEY='pogoSyncQueue_v1';
 let syncQueue={},syncFlushTimer=null;
 let undoStack=null,undoTimer=null;
 let acItems=[],acFiltered=[],acFocusIdx=-1;
@@ -1718,19 +1738,22 @@ function stampSession(u){
 // ── SYNC QUEUE (offline support) ─────────────────────────────
 function queueSync(path,data){
   syncQueue[path]={path,data,ts:Date.now()};
+  saveSyncQueue();
   showSyncDot(true);
   clearTimeout(syncFlushTimer);
-  syncFlushTimer=setTimeout(flushSyncQueue,2000);
+  syncFlushTimer=setTimeout(flushSyncQueue,250);
 }
 async function flushSyncQueue(){
   if(!fbOn||!db||!Object.keys(syncQueue).length)return;
   const entries=Object.entries(syncQueue);
-  syncQueue={};
-  for(const[path,{data}] of entries){
+  for(const[path,item] of entries){
     try{
-      await set(ref(db,path),data??null);
+      await set(ref(db,path),item.data??null);
+      if(syncQueue[path]?.ts===item.ts)delete syncQueue[path];
+      saveSyncQueue();
     }catch{
-      syncQueue[path]={path,data,ts:Date.now()};
+      syncQueue[path]=item;
+      saveSyncQueue();
     }
   }
   if(!Object.keys(syncQueue).length)showSyncDot(false);
@@ -1844,6 +1867,8 @@ function formVariantFromSearchFilters(filters){
 // ── LOCAL STORAGE ─────────────────────────────────────────────
 function lsGet(k,d){try{return JSON.parse(localStorage.getItem(k)??'null')??d}catch{return d}}
 function lsSet(k,v){localStorage.setItem(k,JSON.stringify(v))}
+syncQueue=lsGet(SYNC_QUEUE_KEY,{})||{};
+function saveSyncQueue(){lsSet(SYNC_QUEUE_KEY,syncQueue||{});}
 function normalizeData(s){
   if(!s||typeof s!=='object')s={};
   s.users=s.users||{};s.wishlist=s.wishlist||{};s.dynamax=s.dynamax||{};s.gmax=s.gmax||{};s.costumes=s.costumes||{};s.requests=s.requests||{};s.authIndex=s.authIndex||{};
@@ -1934,6 +1959,7 @@ async function createMemberNow(username,pin,isAdmin=false,reqId=''){
   s.users[username]=user;
   s.wishlist[username]=s.wishlist[username]||{};
   s.dynamax[username]=s.dynamax[username]||{};
+  s.gmax[username]=s.gmax[username]||{};
   s.costumes[username]=s.costumes[username]||{};
   if(reqId&&s.requests?.[reqId])s.requests[reqId].status='approved';
   saveLocal(s);allData=normalizeData(s);refreshAll();
@@ -2194,6 +2220,7 @@ function _onSubSnapshot(path,snap){
   allData=normalizeData(s);
   // Apply pending writes from sync queue
   Object.values(syncQueue||{}).forEach(({path:p,data})=>applyDataPath(allData,p,data));
+  if(Object.keys(syncQueue||{}).length)saveLocal(allData);
   _pathLoadState[path]='loaded';
   setSyncStatus('online');
   showSyncDot(!!Object.keys(syncQueue).length);
@@ -2287,6 +2314,27 @@ function logout(){
 }
 
 // ── NAV ───────────────────────────────────────────────────────
+function hasVisibleScreen(){
+  return['config-pg','login-pg','app'].some(id=>{
+    const el=document.getElementById(id);
+    return el&&getComputedStyle(el).display!=='none';
+  })||document.getElementById('share-view')?.classList.contains('active');
+}
+function showBootError(err){
+  console.error('Startup error',err);
+  document.getElementById('config-pg').style.display='none';
+  document.getElementById('app').style.display='none';
+  document.getElementById('share-view')?.classList.remove('active');
+  const login=document.getElementById('login-pg');
+  if(login)login.style.display='flex';
+  const card=login?.querySelector('.lcard');
+  if(card)card.style.display='block';
+  const req=document.getElementById('req-form-card');
+  if(req)req.style.display='none';
+  const errEl=document.getElementById('login-err');
+  if(errEl)errEl.textContent='App had trouble starting. Please refresh once; if this stays, send a screenshot of this message.';
+  setSyncStatus('offline');
+}
 function showConfig(){
   document.getElementById('config-pg').style.display='flex';
   document.getElementById('login-pg').style.display='none';
@@ -5220,6 +5268,7 @@ Object.assign(window,{
 
 // ── BOOT ──────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded',()=>{
+  try{
   // Initialize theme + type cache
   initTheme();
   loadTypeCache();
@@ -5273,6 +5322,10 @@ document.addEventListener('DOMContentLoaded',()=>{
     if(s&&allData.users?.[s]){cur=s;showApp();}
     else showLogin();
     setSyncStatus('offline');
+  }
+  setTimeout(()=>{if(!hasVisibleScreen())showBootError('No visible screen after startup');},2500);
+  }catch(e){
+    showBootError(e);
   }
 });
 
