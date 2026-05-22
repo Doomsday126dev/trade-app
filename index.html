@@ -616,10 +616,14 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
 .diff-tabs{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;gap:5px;flex-wrap:wrap}
 .diff-tabs .ltab{padding:5px 12px;font-size:12px}
 .diff-summary-row{padding:10px 18px;background:var(--bg);border-bottom:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap;font-size:12px}
-.diff-summary-chip{padding:5px 10px;border-radius:14px;font-weight:600;display:inline-flex;align-items:center;gap:5px}
+.diff-summary-chip{padding:5px 10px;border-radius:14px;font-weight:600;display:inline-flex;align-items:center;gap:5px;font-family:var(--font);font-size:12px}
 .diff-summary-chip.both{background:rgba(16,185,129,.15);color:var(--ok);border:1px solid rgba(16,185,129,.3)}
 .diff-summary-chip.mine{background:rgba(108,99,255,.15);color:var(--ac2);border:1px solid rgba(108,99,255,.3)}
 .diff-summary-chip.theirs{background:rgba(245,158,11,.15);color:var(--warn);border:1px solid rgba(245,158,11,.3)}
+.diff-copy-chip{cursor:pointer;transition:.15s}
+.diff-copy-chip:hover{transform:translateY(-1px);filter:brightness(1.08)}
+.diff-copy-chip:active{transform:scale(.98)}
+.diff-copy-chip.copied{background:var(--ok);color:#06140f;border-color:rgba(16,185,129,.55)}
 .diff-body{flex:1;overflow-y:auto;padding:14px 18px}
 .diff-section{margin-bottom:18px}
 .diff-section-hdr{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
@@ -4014,6 +4018,22 @@ function computeTrainerDiff(typ,me,them){
     onlyTheirs:onlyTheirs.map(k=>entryFor(k,theirList[k])).sort(_familySort)
   };
 }
+function diffSectionEntries(diff,section){
+  if(section==='both')return diff.both.map(d=>d.mine);
+  if(section==='mine')return diff.onlyMine;
+  if(section==='theirs')return diff.onlyTheirs;
+  return[];
+}
+function diffSectionSearchString(section){
+  if(!_activeDiff||!cur)return'';
+  const diff=computeTrainerDiff(_activeDiff.type,cur,_activeDiff.them);
+  return dexStringFromNumbers(diffSectionEntries(diff,section).map(e=>e.no));
+}
+async function copyDiffSearch(section,btn){
+  const str=diffSectionSearchString(section);
+  if(!str){toast('No Pokémon in that section');return;}
+  await copyStr(str,btn);
+}
 function renderDiffModal(){
   if(!_activeDiff)return;
   const{them,type}=_activeDiff;
@@ -4047,9 +4067,9 @@ function renderDiffModal(){
         }).join('')}
       </div>
       <div class="diff-summary-row">
-        <span class="diff-summary-chip both">🤝 ${totalBoth} both want${strongMatch>0?` · ${strongMatch} priority match`:''}</span>
-        <span class="diff-summary-chip mine">⬅ ${diff.onlyMine.length} only mine</span>
-        <span class="diff-summary-chip theirs">${diff.onlyTheirs.length} only theirs ➡</span>
+        <button class="diff-summary-chip diff-copy-chip both" type="button" onclick="copyDiffSearch('both',this)" aria-label="Copy both want search string" title="Copy both want search string">🤝 ${totalBoth} both want${strongMatch>0?` · ${strongMatch} priority match`:''}</button>
+        <button class="diff-summary-chip diff-copy-chip mine" type="button" onclick="copyDiffSearch('mine',this)" aria-label="Copy only mine search string" title="Copy only mine search string">⬅ ${diff.onlyMine.length} only mine</button>
+        <button class="diff-summary-chip diff-copy-chip theirs" type="button" onclick="copyDiffSearch('theirs',this)" aria-label="Copy only theirs search string" title="Copy only theirs search string">${diff.onlyTheirs.length} only theirs ➡</button>
       </div>
       <div class="diff-body">
         ${diff.both.length?`<div class="diff-section">
@@ -5319,7 +5339,7 @@ Object.assign(window,{
   toggleExportMenu,closeExportMenu,exportMyListMarkdown,exportMyListCSV,copyShareLink,
   exitShareView,renderShareView,setAddPri,toggleAddAdvanced,trySpriteFallback,
   // Latest batch
-  openDiffModal,closeDiffModal,setDiffListType,
+  openDiffModal,closeDiffModal,setDiffListType,copyDiffSearch,
   openAddAllVariantsModal,closeAddAllVariants,confirmAddAllVariants,
   selectWallpaper,applyWallpaper
 });
