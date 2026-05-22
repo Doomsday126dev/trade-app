@@ -1502,22 +1502,23 @@ function mergeRemoteData(d){
     requests:d?.requests||{},
     authIndex:d?.authIndex||{}
   });
-  // Conflict detection (#13) — compare local pending edits against incoming remote
-  if(cur&&Object.keys(syncQueue||{}).length){
+  // Conflict detection (#13) — only flag when sync queue is EMPTY (no pending writes)
+  // but local & remote differ. Pending writes during sync are not conflicts.
+  if(cur&&!Object.keys(syncQueue||{}).length&&allData&&Object.keys(allData).length){
     ['wishlist','dynamax','gmax','costumes'].forEach(type=>{
       const localList=allData[type]?.[cur];
       const remoteList=merged[type]?.[cur];
       if(!localList||!remoteList)return;
       const conflicts=checkConflict(type,cur,localList,remoteList);
-      if(conflicts.length>0&&conflicts.length<=20){
-        // Auto-apply remote (last-write-wins) but notify user with option to override
+      // Only show if 1-10 conflicts — large diffs likely indicate fresh remote data
+      if(conflicts.length>0&&conflicts.length<=10){
         showConflictModal(conflicts,
-          ()=>{ // Keep local — re-queue local writes
+          ()=>{
             queueSync(`${type}/${cur}`,localList);
             allData[type][cur]=localList;
             refreshAll();
           },
-          ()=>{} // Use remote (already applied)
+          ()=>{}
         );
       }
     });
@@ -2343,14 +2344,7 @@ async function renderListImage(entries,type,username){
       const img=images.get(exportSpriteUrl(e));
       if(img)drawImageContain(ctx,img,sx,sy,sprSize,sprSize);
       else drawSpriteFallback(ctx,e,sx,sy,sprSize);
-      if(e.lucky||e.xxl||e.xxs){
-        let bx=x+cellW-3;
-        ctx.textAlign='center';
-        if(e.xxs){bx-=14;roundedRect(ctx,bx,cy+3,13,9,2);ctx.fillStyle='#2dd4bf';ctx.fill();ctx.fillStyle='#fff';ctx.font='800 6px Space Grotesk,sans-serif';ctx.fillText('XS',bx+6.5,cy+9.5);}
-        if(e.xxl){bx-=14;roundedRect(ctx,bx,cy+3,13,9,2);ctx.fillStyle='#818cf8';ctx.fill();ctx.fillStyle='#fff';ctx.font='800 6px Space Grotesk,sans-serif';ctx.fillText('XL',bx+6.5,cy+9.5);}
-        if(e.lucky){bx-=12;roundedRect(ctx,bx,cy+3,11,9,2);ctx.fillStyle='#facc15';ctx.fill();ctx.fillStyle='#7c2d12';ctx.font='800 7px Space Grotesk,sans-serif';ctx.fillText('L',bx+5.5,cy+9.5);}
-        ctx.textAlign='left';
-      }
+      // Export is a clean H/M/L view — flag indicators (Lucky/XXL/XXS) are intentionally omitted
       const mark=maxMarkForEntry(e,type);
       if(mark){
         const isG=mark==='G';
@@ -2421,8 +2415,17 @@ function dragEnd(e){
 
 function setPri(name,p){
   const list={...(allData[myListType]?.[cur]||{})};
-  const{mod,lucky,xxl,xxs}=parsePri(list[name]||'');
-  list[name]=priValue(p,mod,lucky,xxl,xxs);
+  const{p:curP,mod,lucky,xxl,xxs}=parsePri(list[name]||'');
+  // Toggle: clicking the same priority clears it
+  const newP=curP===p?'':p;
+  // If clearing leaves entry empty (no priority + no flags), confirm delete
+  if(!newP&&!lucky&&!xxl&&!xxs){
+    if(!confirm(`"${name}" will have no priority or flags. Remove it from your list?`))return;
+    delete list[name];
+    writeList(myListType,cur,list);
+    return;
+  }
+  list[name]=priValue(newP,mod,lucky,xxl,xxs);
   writeList(myListType,cur,list);
 }
 function setNotes(name,notes){
@@ -2431,28 +2434,23 @@ function setNotes(name,notes){
   list[name]=priValue(p,notes,lucky,xxl,xxs);
   writeList(myListType,cur,list);
 }
-function setLucky(name){
+function _setFlags(name,update){
   const list={...(allData[myListType]?.[cur]||{})};
   const{p,mod,lucky,xxl,xxs}=parsePri(list[name]||'');
-  list[name]=priValue(p,mod,!lucky,xxl,xxs);
+  const next=update({p,mod,lucky,xxl,xxs});
+  // If toggling off leaves entry empty, confirm delete
+  if(!next.p&&!next.lucky&&!next.xxl&&!next.xxs){
+    if(!confirm(`"${name}" will have no priority or flags. Remove it from your list?`))return;
+    delete list[name];
+    writeList(myListType,cur,list);
+    return;
+  }
+  list[name]=priValue(next.p,next.mod,next.lucky,next.xxl,next.xxs);
   writeList(myListType,cur,list);
 }
-function setXxl(name){
-  const list={...(allData[myListType]?.[cur]||{})};
-  const{p,mod,lucky,xxl,xxs}=parsePri(list[name]||'');
-  const newXxl=!xxl;
-  // XXL and XXS are mutually exclusive — turning one on clears the other
-  list[name]=priValue(p,mod,lucky,newXxl,newXxl?false:xxs);
-  writeList(myListType,cur,list);
-}
-function setXxs(name){
-  const list={...(allData[myListType]?.[cur]||{})};
-  const{p,mod,lucky,xxl,xxs}=parsePri(list[name]||'');
-  const newXxs=!xxs;
-  // XXL and XXS are mutually exclusive — turning one on clears the other
-  list[name]=priValue(p,mod,lucky,newXxs?false:xxl,newXxs);
-  writeList(myListType,cur,list);
-}
+function setLucky(name){_setFlags(name,s=>({...s,lucky:!s.lucky}));}
+function setXxl(name){_setFlags(name,s=>{const nx=!s.xxl;return{...s,xxl:nx,xxs:nx?false:s.xxs};});}
+function setXxs(name){_setFlags(name,s=>{const ns=!s.xxs;return{...s,xxs:ns,xxl:ns?false:s.xxl};});}
 function removeEntry(name){
   const prevList={...(allData[myListType]?.[cur]||{})};
   const srcArr=listSource(myListType);
@@ -3426,7 +3424,10 @@ Object.assign(window,{
   addUser,openReset,confirmReset,toggleAdmin,exportData,triggerRestore,restoreData,
   saveProfile,openModal,closeModal,renderStrings,renderBrowse,setStrList,
   showRequestForm,hideRequestForm,submitRequest,approveRequest,denyRequest,
-  acSearch,acSelect,acKeydown,formatFc,toggleStrUser,toggleComboStrings,renderMyList
+  acSearch,acSelect,acKeydown,formatFc,toggleStrUser,toggleComboStrings,renderMyList,
+  // New enhancements
+  toggleTheme,toggleBulkMode,toggleBulkSelection,bulkSetPri,bulkToggleFlag,bulkDelete,
+  startVoiceInput,toggleFlagFilter,recordBackup,renderBackupReminder,confirmRemove,lsSet
 });
 
 // ── BOOT ──────────────────────────────────────────────────────
