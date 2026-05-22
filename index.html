@@ -9,14 +9,35 @@
 <link rel="manifest" href="manifest.json">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
-:root{
+:root,html[data-theme="dark"]{
   --bg:#0f0f1a;--bg2:#1a1a2e;--card:#1e1e35;
-  --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.15);
-  --text:#e8e8f0;--muted:#8888aa;--accent:#6c63ff;--ac2:#a78bfa;
+  --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.18);
+  --text:#e8e8f0;--muted:#a8a8c8;--accent:#6c63ff;--ac2:#a78bfa;
   --H:#ef4444;--M:#f59e0b;--L:#10b981;
   --Hbg:rgba(239,68,68,.16);--Mbg:rgba(245,158,11,.16);--Lbg:rgba(16,185,129,.16);
   --danger:#ef4444;--warn:#f59e0b;--ok:#10b981;
+  --shadow:0 4px 12px rgba(0,0,0,.3);
   --r:10px;--r2:6px;--topbar-h:56px;--font:'Space Grotesk',sans-serif;--mono:'JetBrains Mono',monospace;
+}
+html[data-theme="light"]{
+  --bg:#f5f7fa;--bg2:#ffffff;--card:#ffffff;
+  --border:rgba(15,23,42,0.08);--border2:rgba(15,23,42,0.18);
+  --text:#1e293b;--muted:#64748b;--accent:#6366f1;--ac2:#7c3aed;
+  --H:#dc2626;--M:#d97706;--L:#059669;
+  --Hbg:rgba(220,38,38,.1);--Mbg:rgba(217,119,6,.1);--Lbg:rgba(5,150,105,.1);
+  --danger:#dc2626;--warn:#d97706;--ok:#059669;
+  --shadow:0 2px 8px rgba(15,23,42,.06);
+}
+@media(prefers-color-scheme:light){
+  :root:not([data-theme]){
+    --bg:#f5f7fa;--bg2:#ffffff;--card:#ffffff;
+    --border:rgba(15,23,42,0.08);--border2:rgba(15,23,42,0.18);
+    --text:#1e293b;--muted:#64748b;--accent:#6366f1;--ac2:#7c3aed;
+    --H:#dc2626;--M:#d97706;--L:#059669;
+    --Hbg:rgba(220,38,38,.1);--Mbg:rgba(217,119,6,.1);--Lbg:rgba(5,150,105,.1);
+    --danger:#dc2626;--warn:#d97706;--ok:#059669;
+    --shadow:0 2px 8px rgba(15,23,42,.06);
+  }
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
@@ -217,11 +238,6 @@ input,select,textarea{font-family:var(--font);outline:none}
 .collapse-icon{color:var(--muted);font-size:12px;transition:transform .2s;flex-shrink:0}
 .user-str-block.expanded .collapse-icon{transform:rotate(180deg)}
 
-/* MATCH */
-.tlist{display:flex;flex-direction:column;gap:6px}
-.trow{background:var(--card);border:1px solid var(--border);border-radius:var(--r2);padding:9px 13px;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
-.tpmon{font-weight:600;font-size:13px;flex:1;min-width:80px}
-
 /* ADMIN */
 .utbl{width:100%;border-collapse:collapse;font-size:13px}
 .utbl th{background:var(--bg2);padding:8px 11px;text-align:left;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border)}
@@ -332,6 +348,86 @@ input,select,textarea{font-family:var(--font);outline:none}
   .page{padding:11px}
   .mygrid{grid-template-columns:1fr}
   .lcard{padding:22px 16px}
+}
+
+/* TYPE COLORS (Pokemon primary type accent) */
+.myrow,.pgrid .pc{position:relative}
+.myrow::before,.pgrid .pc::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--type-color,transparent);border-radius:var(--r2) 0 0 var(--r2);opacity:.85;pointer-events:none}
+.pgrid .pc::before{border-radius:0}
+
+/* THEME TOGGLE */
+.theme-toggle{background:transparent;border:1px solid var(--border2);color:var(--muted);width:30px;height:30px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;transition:.2s;flex-shrink:0}
+.theme-toggle:hover{color:var(--text);border-color:var(--accent)}
+
+/* STRING META (char count + warning) */
+.str-meta{display:flex;align-items:center;gap:8px;font-size:10px;color:var(--muted);font-family:var(--mono);margin-left:6px}
+.str-meta.warn{color:var(--warn)}
+.str-meta.danger{color:var(--danger);font-weight:700}
+.str-warn-banner{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);color:var(--warn);padding:8px 12px;border-radius:var(--r2);font-size:12px;margin-top:6px;display:flex;align-items:center;gap:8px}
+.str-warn-banner.danger{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.3);color:var(--danger)}
+
+/* BULK MODE */
+.bulk-bar{display:none;position:sticky;top:calc(var(--topbar-h) + 44px);z-index:50;background:var(--card);border:1px solid var(--border2);border-radius:var(--r);padding:8px 12px;margin-bottom:10px;align-items:center;gap:8px;flex-wrap:wrap;box-shadow:var(--shadow)}
+.bulk-bar.active{display:flex}
+.bulk-count{font-size:13px;font-weight:600;color:var(--ac2)}
+.bulk-btn{background:transparent;border:1px solid var(--border2);color:var(--text);padding:5px 10px;border-radius:var(--r2);font-size:12px;font-weight:600;cursor:pointer}
+.bulk-btn:hover{border-color:var(--accent);color:var(--ac2)}
+.bulk-btn.bulk-del{color:var(--danger);border-color:rgba(239,68,68,.3)}
+.bulk-btn.bulk-del:hover{background:rgba(239,68,68,.1)}
+.bulk-btn.bulk-cancel{margin-left:auto}
+.bulk-chk{width:18px;height:18px;accent-color:var(--accent);cursor:pointer;flex-shrink:0;display:none}
+body.bulk-mode .bulk-chk{display:inline-block}
+body.bulk-mode .drag-handle{display:none}
+body.bulk-mode .myrow{cursor:pointer}
+body.bulk-mode .myrow.bulk-selected{border-color:var(--accent);background:rgba(108,99,255,.08)}
+body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
+.bulk-toggle{background:transparent;border:1px solid var(--border2);color:var(--muted);padding:5px 10px;border-radius:var(--r2);font-size:12px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+.bulk-toggle:hover{color:var(--ac2);border-color:var(--ac2)}
+
+/* VOICE INPUT */
+.voice-btn{background:transparent;border:1px solid var(--border2);color:var(--muted);width:32px;height:32px;border-radius:var(--r2);font-size:14px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;transition:.15s}
+.voice-btn:hover{color:var(--accent);border-color:var(--accent)}
+.voice-btn.listening{background:rgba(239,68,68,.15);color:var(--danger);border-color:var(--danger);animation:pulse 1.2s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.4)}50%{box-shadow:0 0 0 6px rgba(239,68,68,0)}}
+
+/* ACTIVITY HEATMAP */
+.heatmap{display:grid;grid-template-columns:repeat(12,1fr);gap:2px;margin-top:8px}
+.heatmap-cell{aspect-ratio:1;background:var(--bg2);border-radius:2px;min-height:10px}
+.heatmap-cell.l1{background:rgba(108,99,255,.25)}
+.heatmap-cell.l2{background:rgba(108,99,255,.5)}
+.heatmap-cell.l3{background:rgba(108,99,255,.75)}
+.heatmap-cell.l4{background:var(--accent)}
+.heatmap-legend{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted);margin-top:6px;justify-content:flex-end}
+.heatmap-legend .heatmap-cell{width:10px;height:10px;display:inline-block}
+
+/* MULTI-SELECT FILTER */
+.fbtn.flag-filter{background:transparent}
+.fbtn.flag-filter.fLucky.on{background:rgba(250,204,21,.2);color:#facc15;border-color:rgba(250,204,21,.5)}
+.fbtn.flag-filter.fXxl.on{background:rgba(99,102,241,.2);color:#818cf8;border-color:rgba(99,102,241,.5)}
+.fbtn.flag-filter.fXxs.on{background:rgba(20,184,166,.2);color:#2dd4bf;border-color:rgba(20,184,166,.5)}
+
+/* CONFLICT MODAL */
+.conflict-preview{background:var(--bg);border:1px solid var(--border);border-radius:var(--r2);padding:10px;font-family:var(--mono);font-size:11px;margin:8px 0;max-height:120px;overflow-y:auto}
+
+/* BACKUP REMINDER */
+.backup-reminder{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);color:var(--warn);padding:10px 14px;border-radius:var(--r);font-size:13px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.backup-reminder-btn{background:var(--warn);color:#1a1a2e;border:none;padding:5px 12px;border-radius:var(--r2);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
+.backup-reminder-dismiss{background:none;border:none;color:var(--warn);cursor:pointer;font-size:16px;opacity:.7;padding:0 4px}
+
+/* BETTER MOBILE ADD FORM */
+@media(max-width:600px){
+  .add-form .frow{flex-direction:column;gap:6px;align-items:stretch}
+  .add-form .frow > *{width:100%;min-width:0;max-width:none}
+  .add-form .ac-wrap{order:1}
+  .add-form .voice-btn{order:2;align-self:flex-end;width:auto;min-width:48px}
+  .add-form select#add-pmon-pri{order:3}
+  .add-form .lucky-add{order:4;flex:1;justify-content:center;min-height:36px}
+  .add-form input#add-pmon-notes{order:5;max-width:none !important}
+  .add-actions{flex-wrap:wrap;align-items:stretch}
+  .add-actions button{flex:1 1 calc(50% - 4px);justify-content:center}
+  .mctrl{gap:4px}
+  .pb{width:24px}
+  .flag-btn{font-size:9px;padding:0 3px}
 }
 
 /* IMPORT MODAL */
@@ -474,6 +570,7 @@ input,select,textarea{font-family:var(--font);outline:none}
         <div class="sync-row"><div class="sync-dot" id="sdot"></div><span class="sync-lbl" id="slbl">—</span></div>
         <div class="sync-queue-dot" id="sqd" title="Unsynced changes pending"></div>
       </div>
+      <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme" title="Toggle light/dark theme">🌙</button>
       <div class="user-chip" onclick="openModal('prof-modal')" role="button" tabindex="0" aria-label="Open profile">
         <div class="av" id="top-av">?</div>
         <span id="top-un">—</span>
@@ -493,24 +590,31 @@ input,select,textarea{font-family:var(--font);outline:none}
     <div class="srch"><span class="srch-icon">🔍</span><input type="text" id="bq" placeholder="Search Pokémon name, #number, or trainer…" oninput="renderBrowse()"></div>
     <div class="filter-bar">
       <div class="filter-group">
-        <button class="fbtn fALL on" onclick="setFilter('ALL')">All</button>
-        <button class="fbtn fH" onclick="setFilter('H')">High</button>
-        <button class="fbtn fM" onclick="setFilter('M')">Medium</button>
-        <button class="fbtn fL" onclick="setFilter('L')">Low</button>
+        <button class="fbtn fALL on" onclick="setFilter('ALL')" aria-pressed="true">All</button>
+        <button class="fbtn fH" onclick="setFilter('H')" aria-pressed="false">High</button>
+        <button class="fbtn fM" onclick="setFilter('M')" aria-pressed="false">Medium</button>
+        <button class="fbtn fL" onclick="setFilter('L')" aria-pressed="false">Low</button>
+      </div>
+      <div class="filter-divider"></div>
+      <div class="filter-group">
+        <span class="filter-label">Flags:</span>
+        <button class="fbtn flag-filter fLucky" onclick="toggleFlagFilter('lucky')" aria-pressed="false" title="Show entries with Lucky flag">⚡</button>
+        <button class="fbtn flag-filter fXxl" onclick="toggleFlagFilter('xxl')" aria-pressed="false" title="Show entries with XXL flag">XXL</button>
+        <button class="fbtn flag-filter fXxs" onclick="toggleFlagFilter('xxs')" aria-pressed="false" title="Show entries with XXS flag">XXS</button>
       </div>
       <div class="filter-divider"></div>
       <div class="filter-group">
         <span class="filter-label">Activity:</span>
-        <button class="sfbtn on" data-days="0" onclick="setStaleFilter(0)">All</button>
-        <button class="sfbtn" data-days="7" onclick="setStaleFilter(7)">Active 7d</button>
-        <button class="sfbtn" data-days="30" onclick="setStaleFilter(30)">Active 30d</button>
+        <button class="sfbtn on" data-days="0" onclick="setStaleFilter(0)" aria-pressed="true">All</button>
+        <button class="sfbtn" data-days="7" onclick="setStaleFilter(7)" aria-pressed="false">Active 7d</button>
+        <button class="sfbtn" data-days="30" onclick="setStaleFilter(30)" aria-pressed="false">Active 30d</button>
       </div>
       <div class="filter-divider"></div>
       <div class="filter-group" id="browse-list-tabs-inline">
-        <button class="ltab active" onclick="setBrowseList('wishlist')">Trades</button>
-        <button class="ltab" onclick="setBrowseList('dynamax')">DMAX</button>
-        <button class="ltab" onclick="setBrowseList('gmax')">GMAX</button>
-        <button class="ltab" onclick="setBrowseList('costumes')">Others</button>
+        <button class="ltab active" onclick="setBrowseList('wishlist')" aria-pressed="true">Trades</button>
+        <button class="ltab" onclick="setBrowseList('dynamax')" aria-pressed="false">DMAX</button>
+        <button class="ltab" onclick="setBrowseList('gmax')" aria-pressed="false">GMAX</button>
+        <button class="ltab" onclick="setBrowseList('costumes')" aria-pressed="false">Others</button>
       </div>
     </div>
 
@@ -542,7 +646,8 @@ input,select,textarea{font-family:var(--font);outline:none}
           <input type="hidden" id="add-pmon-sel">
           <div class="ac-dropdown" id="ac-dropdown"></div>
         </div>
-        <select id="add-pmon-pri">
+        <button type="button" class="voice-btn" id="voice-btn" onclick="startVoiceInput()" aria-label="Voice input" title="Speak to search">🎤</button>
+        <select id="add-pmon-pri" aria-label="Priority">
           <option value="" selected>– None –</option>
           <option value="H">H – High</option>
           <option value="M">M – Medium</option>
@@ -557,13 +662,29 @@ input,select,textarea{font-family:var(--font);outline:none}
         <label class="lucky-add" title="XXS — mark as extra-small; generates a separate XXS search string">
           <input type="checkbox" id="add-pmon-xxs" onchange="if(this.checked)document.getElementById('add-pmon-xxl').checked=false"> XXS
         </label>
-        <input type="text" id="add-pmon-notes" placeholder="Notes: f, m…" style="max-width:100px">
+        <input type="text" id="add-pmon-notes" placeholder="Notes: f, m…" style="max-width:100px" aria-label="Notes">
       </div>
       <div class="add-actions">
         <button class="bsave" onclick="addEntry()">Add</button>
         <button class="import-btn" onclick="openImport()">📥 Import string</button>
         <button class="image-btn" onclick="exportMyListImage()">🖼️ Export image</button>
+        <button class="bulk-toggle" onclick="toggleBulkMode()" aria-pressed="false" id="bulk-toggle-btn">☑ Bulk edit</button>
       </div>
+    </div>
+    <div class="bulk-bar" id="bulk-bar" role="toolbar" aria-label="Bulk actions">
+      <span class="bulk-count" id="bulk-count">0 selected</span>
+      <select id="bulk-pri-sel" class="bulk-btn" aria-label="Set priority for selected">
+        <option value="">Set priority…</option>
+        <option value="H">H – High</option>
+        <option value="M">M – Medium</option>
+        <option value="L">L – Low</option>
+        <option value="_clear">Clear priority</option>
+      </select>
+      <button class="bulk-btn" onclick="bulkToggleFlag('lucky')">Toggle ⚡</button>
+      <button class="bulk-btn" onclick="bulkToggleFlag('xxl')">Toggle XXL</button>
+      <button class="bulk-btn" onclick="bulkToggleFlag('xxs')">Toggle XXS</button>
+      <button class="bulk-btn bulk-del" onclick="bulkDelete()">🗑 Delete</button>
+      <button class="bulk-btn bulk-cancel" onclick="toggleBulkMode()">Done</button>
     </div>
     <div class="mylist-search">
       <span class="mylist-srch-icon">🔍</span>
@@ -599,6 +720,7 @@ input,select,textarea{font-family:var(--font);outline:none}
 
   <!-- ADMIN -->
   <div class="page" id="tab-admin">
+    <div id="backup-reminder-slot"></div>
     <div class="admin-actions">
       <button class="btn-export" onclick="exportData()" aria-label="Export backup">⬇️ Export backup</button>
       <button class="btn-export" onclick="triggerRestore()" aria-label="Restore backup">⬆️ Restore backup</button>
@@ -793,6 +915,7 @@ const SECURE_RULES=`{
 let db=null,fbOn=false,cur=null,fbApp=null,auth=null,currentAuthUid=null;
 let allData={};
 let browseFilter='ALL',browseList='wishlist',staleFilter=0;
+let browseFlagFilters={lucky:false,xxl:false,xxs:false};
 let myListType='wishlist',strListType='wishlist';
 let rpinTarget=null;
 let syncQueue={},syncFlushTimer=null;
@@ -800,6 +923,14 @@ let undoStack=null,undoTimer=null;
 let acItems=[],acFiltered=[],acFocusIdx=-1;
 let dragSrc=null;
 let authRepairStarted=false;
+let bulkMode=false,bulkSelected=new Set();
+let voiceRecognition=null;
+let pokemonTypes={};
+let entryTimestamps={}; // for conflict detection
+const POGO_STR_LIMIT=1500;
+const BACKUP_REMINDER_INTERVAL=7*24*60*60*1000; // 7 days
+// Pokemon primary type colors (from PokeAPI)
+const TYPE_COLORS={normal:'#A8A878',fire:'#F08030',water:'#6890F0',electric:'#F8D030',grass:'#78C850',ice:'#98D8D8',fighting:'#C03028',poison:'#A040A0',ground:'#E0C068',flying:'#A890F0',psychic:'#F85888',bug:'#A8B820',rock:'#B8A038',ghost:'#705898',dragon:'#7038F8',dark:'#705848',steel:'#B8B8D0',fairy:'#EE99AC'};
 
 // ── SPRITES ───────────────────────────────────────────────────
 // Sprite cache to avoid repeated failed requests
@@ -1371,6 +1502,26 @@ function mergeRemoteData(d){
     requests:d?.requests||{},
     authIndex:d?.authIndex||{}
   });
+  // Conflict detection (#13) — compare local pending edits against incoming remote
+  if(cur&&Object.keys(syncQueue||{}).length){
+    ['wishlist','dynamax','gmax','costumes'].forEach(type=>{
+      const localList=allData[type]?.[cur];
+      const remoteList=merged[type]?.[cur];
+      if(!localList||!remoteList)return;
+      const conflicts=checkConflict(type,cur,localList,remoteList);
+      if(conflicts.length>0&&conflicts.length<=20){
+        // Auto-apply remote (last-write-wins) but notify user with option to override
+        showConflictModal(conflicts,
+          ()=>{ // Keep local — re-queue local writes
+            queueSync(`${type}/${cur}`,localList);
+            allData[type][cur]=localList;
+            refreshAll();
+          },
+          ()=>{} // Use remote (already applied)
+        );
+      }
+    });
+  }
   Object.values(syncQueue||{}).forEach(({path,data})=>applyDataPath(merged,path,data));
   return normalizeData(merged);
 }
@@ -1504,7 +1655,7 @@ function switchTab(t){
 function refreshAll(){
   if(!cur)return;
   renderBrowse();renderMyList();renderStrings();
-  if(allData.users?.[cur]?.isAdmin){renderAdmin();renderPendingRequests();}
+  if(allData.users?.[cur]?.isAdmin){renderAdmin();renderPendingRequests();renderBackupReminder();}
 }
 
 // ── FRESHNESS ─────────────────────────────────────────────────
@@ -1674,21 +1825,24 @@ function priValue(p,mod='',lucky=false,xxl=false,xxs=false){
 // ── BROWSE ────────────────────────────────────────────────────
 function setFilter(f){
   browseFilter=f;
-  document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('on'));
-  document.querySelectorAll('.fbtn.f'+f).forEach(b=>b.classList.add('on'));
+  document.querySelectorAll('.fbtn:not(.flag-filter)').forEach(b=>{b.classList.remove('on');b.setAttribute('aria-pressed','false');});
+  document.querySelectorAll('.fbtn.f'+f).forEach(b=>{b.classList.add('on');b.setAttribute('aria-pressed','true');});
   renderBrowse();
 }
 function setBrowseList(t){
   browseList=t;
   document.querySelectorAll('#browse-list-tabs-inline .ltab').forEach((b,i)=>{
-    b.classList.toggle('active',['wishlist','dynamax','gmax','costumes'][i]===t);
+    const active=['wishlist','dynamax','gmax','costumes'][i]===t;
+    b.classList.toggle('active',active);
+    b.setAttribute('aria-pressed',active?'true':'false');
   });
   renderBrowse();
 }
 function setStaleFilter(days){
   staleFilter=days;
-  document.querySelectorAll('.sfbtn').forEach(b=>b.classList.remove('on'));
-  document.querySelector(`.sfbtn[data-days="${days}"]`)?.classList.add('on');
+  document.querySelectorAll('.sfbtn').forEach(b=>{b.classList.remove('on');b.setAttribute('aria-pressed','false');});
+  const tgt=document.querySelector(`.sfbtn[data-days="${days}"]`);
+  if(tgt){tgt.classList.add('on');tgt.setAttribute('aria-pressed','true');}
   renderBrowse();
 }
 function activeUsers(){
@@ -1713,7 +1867,8 @@ function renderBrowse(){
       });
     });
     const results=allCostumeEntries().filter(e=>{
-      const ents=browseFilter==='ALL'?map[e.name]:(map[e.name]||[]).filter(x=>x.p===browseFilter);
+      let ents=browseFilter==='ALL'?map[e.name]:(map[e.name]||[]).filter(x=>x.p===browseFilter);
+      ents=(ents||[]).filter(entryMatchesFlagFilters);
       if(!ents.length)return false;
       if(!q)return true;
       return(e.displayName||e.name).toLowerCase().includes(q)||ents.some(x=>x.user.toLowerCase().includes(q));
@@ -1721,10 +1876,12 @@ function renderBrowse(){
     if(!results.length){el.innerHTML=emptyHtml('No matching other entries','Try a different search, activity filter, or priority.');return;}
     el.innerHTML=`<div class="pgrid">${results.map(e=>{
       let ents=map[e.name]||[];if(browseFilter!=='ALL')ents=ents.filter(x=>x.p===browseFilter);
+      ents=ents.filter(entryMatchesFlagFilters);
       ents=sortEntries(ents);
-      return`<div class="pc"><div class="pc-hdr">${spriteImg(e.no,28,'pc-sprite',e.name)}<div class="pc-info"><div class="pc-name">${e.displayName||e.name}</div><div class="pc-no">#${e.no}</div></div></div>
+      return`<div class="pc" data-dex="${e.no||''}"><div class="pc-hdr">${spriteImg(e.no,28,'pc-sprite',e.name)}<div class="pc-info"><div class="pc-name">${e.displayName||e.name}</div><div class="pc-no">#${e.no}</div></div></div>
         <div class="pc-users">${ents.map(x=>userBadge(x)).join('')}</div></div>`;
     }).join('')}</div>`;
+    applyTypeColors();
     return;
   }
 
@@ -1742,7 +1899,8 @@ function renderBrowse(){
   const results=dataArr.filter(e=>{
     if(seen.has(e.name))return false;seen.add(e.name);
     const info=map[e.name];if(!info)return false;
-    const ents=browseFilter==='ALL'?info.entries:info.entries.filter(x=>x.p===browseFilter);
+    let ents=browseFilter==='ALL'?info.entries:info.entries.filter(x=>x.p===browseFilter);
+    ents=ents.filter(entryMatchesFlagFilters);
     if(!ents.length)return false;
     if(!q)return true;
     return(e.displayName||e.name).toLowerCase().includes(q)||String(e.no||'').includes(q)||ents.some(x=>x.user.toLowerCase().includes(q));
@@ -1751,9 +1909,10 @@ function renderBrowse(){
   el.innerHTML=`<div class="pgrid">${results.map(e=>{
     const info=map[e.name];
     let ents=info.entries;if(browseFilter!=='ALL')ents=ents.filter(x=>x.p===browseFilter);
+    ents=ents.filter(entryMatchesFlagFilters);
     ents=sortEntries(ents);
     const crownHtml=maxCrownSvg(maxTypeForEntry(info,browseList));
-    return`<div class="pc">
+    return`<div class="pc" data-dex="${e.no||''}">
       <div class="pc-hdr">
         <span class="pc-sprite-wrap">${spriteImg(e.no,28,'pc-sprite',e.name)}${crownHtml}</span>
         <div class="pc-info"><div class="pc-name">${info.dn}</div><div class="pc-no">#${e.no}</div></div>
@@ -1761,6 +1920,7 @@ function renderBrowse(){
       <div class="pc-users">${ents.map(x=>userBadge(x)).join('')}</div>
     </div>`;
   }).join('')}</div>`;
+  applyTypeColors();
 }
 
 // ── MY LIST ───────────────────────────────────────────────────
@@ -1949,23 +2109,33 @@ function renderMyList(filterVal){
     const sn=name.replace(/'/g,"\\'").replace(/"/g,'&quot;');
     const hasSprite=no||COSTUME_FORM_SPRITE_IDS[name]||GO_COSTUME_SPRITE_SLUGS[name];
     const crownHtml=maxCrownSvg(maxTypeForEntry(entry,myListType));
-    return`<div class="myrow" draggable="true" data-name="${sn}" data-idx="${idx}" data-full="${escAttr(dn)}" aria-label="${escAttr(dn)}"
+    const isSel=bulkSelected.has(name);
+    const clickHandler=bulkMode?`onclick="event.stopPropagation();toggleBulkSelection('${sn}')"`:'';
+    return`<div class="myrow${isSel?' bulk-selected':''}" ${bulkMode?'':'draggable="true"'} data-name="${sn}" data-dex="${no||''}" data-idx="${idx}" data-full="${escAttr(dn)}" aria-label="${escAttr(dn)}" ${clickHandler}
       ondragstart="dragStart(event)" ondragover="dragOver(event)" ondrop="dragDrop(event)" ondragend="dragEnd(event)">
-      <span class="drag-handle" title="Drag to reorder">⠿</span>
+      <input type="checkbox" class="bulk-chk" data-name="${sn}" ${isSel?'checked':''} onclick="event.stopPropagation();toggleBulkSelection('${sn}')" aria-label="Select ${escAttr(dn)}">
+      <span class="drag-handle" title="Drag to reorder" aria-hidden="true">⠿</span>
       ${hasSprite?`<span class="myrow-sprite-wrap">${spriteImg(no,28,'myrow-sprite',name)}${crownHtml}</span>`:crownHtml}
       <div class="myrow-name">${dn}</div>
       <div class="mctrl">
-        ${['H','M','L'].map(b=>`<button class="pb ${p===b?'on '+b:''}" onclick="setPri('${sn}','${b}')" title="${priName(b)}" aria-label="Set ${escAttr(dn)} to ${priLabel(b)} priority">${b}</button>`).join('')}
-        <span class="mctrl-sep"></span>
-        <button class="flag-btn lucky-flag ${lucky?'on':''}" onclick="setLucky('${sn}')" title="⚡ Lucky">⚡</button>
-        <button class="flag-btn xxl-flag ${xxl?'on':''}" onclick="setXxl('${sn}')" title="XXL">XXL</button>
-        <button class="flag-btn xxs-flag ${xxs?'on':''}" onclick="setXxs('${sn}')" title="XXS">XXS</button>
-        <input class="ni" type="text" value="${mod}" placeholder="…" title="Notes" onchange="setNotes('${sn}',this.value)">
-        <button class="rm" onclick="removeEntry('${sn}')" title="Remove" aria-label="Remove ${escAttr(dn)}">×</button>
+        ${['H','M','L'].map(b=>`<button class="pb ${p===b?'on '+b:''}" onclick="setPri('${sn}','${b}')" title="${priName(b)}" aria-pressed="${p===b}" aria-label="Set ${escAttr(dn)} to ${priLabel(b)} priority">${b}</button>`).join('')}
+        <span class="mctrl-sep" aria-hidden="true"></span>
+        <button class="flag-btn lucky-flag ${lucky?'on':''}" onclick="setLucky('${sn}')" title="⚡ Lucky" aria-pressed="${lucky}" aria-label="Toggle Lucky for ${escAttr(dn)}">⚡</button>
+        <button class="flag-btn xxl-flag ${xxl?'on':''}" onclick="setXxl('${sn}')" title="XXL" aria-pressed="${xxl}" aria-label="Toggle XXL for ${escAttr(dn)}">XXL</button>
+        <button class="flag-btn xxs-flag ${xxs?'on':''}" onclick="setXxs('${sn}')" title="XXS" aria-pressed="${xxs}" aria-label="Toggle XXS for ${escAttr(dn)}">XXS</button>
+        <input class="ni" type="text" value="${mod}" placeholder="…" title="Notes" onchange="setNotes('${sn}',this.value)" aria-label="Notes for ${escAttr(dn)}">
+        <button class="rm" onclick="confirmRemove('${sn}','${escAttr(dn)}')" title="Remove" aria-label="Remove ${escAttr(dn)}">×</button>
       </div>
     </div>`;
   }).join('')}</div>`;
   renderMyStrings();
+  applyTypeColors();
+}
+function confirmRemove(name,dn){
+  const list=allData[myListType]?.[cur]||{};
+  const{mod}=parsePri(list[name]||'');
+  if(mod&&!confirm(`Delete "${dn}"? It has notes: "${mod}"`))return;
+  removeEntry(name);
 }
 
 const canvasImageCache=new Map();
@@ -2400,28 +2570,32 @@ function strLevelsHtml(strs){
   return`<div class="str-levels">${['H','M','L'].filter(p=>strs[p]).map(p=>`
     <div class="str-level">
       <div class="str-level-hdr">
-        <span class="badge ${p}"><span class="prio-mark">${p}</span>${priBadge(p)}</span>
-        <button class="cpbtn" type="button" data-copy="${escAttr(strs[p])}" onclick="copyStr(this.dataset.copy,this)" aria-label="Copy ${priLabel(p)} priority search string">📋 Copy</button>
+        <span class="badge ${p}"><span class="prio-mark">${p}</span>${priBadge(p)}</span>${strLenHtml(strs[p])}
+        <button class="cpbtn" type="button" data-copy="${escAttr(strs[p])}" onclick="copyStr(this.dataset.copy,this)" aria-label="Copy ${priLabel(p)} priority search string" style="margin-left:auto">📋 Copy</button>
       </div>
       <div class="strbox">${escHtml(strs[p])}</div>
+      ${strWarnHtml(strs[p])}
     </div>`).join('')}${strs.LUCKY?`<div class="str-level lucky-str">
       <div class="str-level-hdr">
-        <span class="combo-badge">⚡ Lucky Dex</span>
-        <button class="cpbtn" type="button" data-copy="${escAttr(strs.LUCKY)}" onclick="copyStr(this.dataset.copy,this)" aria-label="Copy Lucky Dex search string">📋 Copy</button>
+        <span class="combo-badge">⚡ Lucky Dex</span>${strLenHtml(strs.LUCKY)}
+        <button class="cpbtn" type="button" data-copy="${escAttr(strs.LUCKY)}" onclick="copyStr(this.dataset.copy,this)" aria-label="Copy Lucky Dex search string" style="margin-left:auto">📋 Copy</button>
       </div>
       <div class="strbox">${escHtml(strs.LUCKY)}</div>
+      ${strWarnHtml(strs.LUCKY)}
     </div>`:''}${strs.XXL?`<div class="str-level xxl-str">
       <div class="str-level-hdr">
-        <span class="combo-badge">XXL</span>
-        <button class="cpbtn" type="button" data-copy="${escAttr(strs.XXL)}" onclick="copyStr(this.dataset.copy,this)" aria-label="Copy XXL search string">📋 Copy</button>
+        <span class="combo-badge">XXL</span>${strLenHtml(strs.XXL)}
+        <button class="cpbtn" type="button" data-copy="${escAttr(strs.XXL)}" onclick="copyStr(this.dataset.copy,this)" aria-label="Copy XXL search string" style="margin-left:auto">📋 Copy</button>
       </div>
       <div class="strbox">${escHtml(strs.XXL)}</div>
+      ${strWarnHtml(strs.XXL)}
     </div>`:''}${strs.XXS?`<div class="str-level xxs-str">
       <div class="str-level-hdr">
-        <span class="combo-badge">XXS</span>
-        <button class="cpbtn" type="button" data-copy="${escAttr(strs.XXS)}" onclick="copyStr(this.dataset.copy,this)" aria-label="Copy XXS search string">📋 Copy</button>
+        <span class="combo-badge">XXS</span>${strLenHtml(strs.XXS)}
+        <button class="cpbtn" type="button" data-copy="${escAttr(strs.XXS)}" onclick="copyStr(this.dataset.copy,this)" aria-label="Copy XXS search string" style="margin-left:auto">📋 Copy</button>
       </div>
       <div class="strbox">${escHtml(strs.XXS)}</div>
+      ${strWarnHtml(strs.XXS)}
     </div>`:''}${combos.length?`<div class="combo-wrap">
       <button class="combo-toggle" type="button" onclick="toggleComboStrings(this)" aria-expanded="false">
         <span>Combined options <span class="combo-meta">${combos.length} available</span></span>
@@ -2430,10 +2604,11 @@ function strLevelsHtml(strs){
       <div class="combo-body">${combos.map(o=>`
         <div class="str-level">
           <div class="str-level-hdr">
-            <span class="combo-badge">${escHtml(o.label)}</span>
-            <button class="cpbtn" type="button" data-copy="${escAttr(o.value)}" onclick="copyStr(this.dataset.copy,this)" aria-label="Copy ${escAttr(o.label)} search string">📋 Copy</button>
+            <span class="combo-badge">${escHtml(o.label)}</span>${strLenHtml(o.value)}
+            <button class="cpbtn" type="button" data-copy="${escAttr(o.value)}" onclick="copyStr(this.dataset.copy,this)" aria-label="Copy ${escAttr(o.label)} search string" style="margin-left:auto">📋 Copy</button>
           </div>
           <div class="strbox">${escHtml(o.value)}</div>
+          ${strWarnHtml(o.value)}
         </div>`).join('')}</div>
     </div>`:''}</div>`;
 }
@@ -2527,6 +2702,7 @@ function renderStrings(){
         <span class="collapse-icon">▼</span>
       </div>
       <div class="user-str-body">
+        ${heatmapHtml(u)}
         ${strs?strLevelsHtml(strs):'<div style="color:var(--muted);font-size:12px;padding:4px 0">Empty list</div>'}
       </div>
     </div>`;
@@ -2541,6 +2717,8 @@ function exportData(){
   const a=document.createElement('a');
   a.href=url;a.download=`pogo-backup-${new Date().toISOString().slice(0,10)}.json`;
   document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+  lsSet('pogoLastBackup',Date.now());
+  renderBackupReminder();
   toast('✅ Backup downloaded!');
 }
 function triggerRestore(){document.getElementById('restore-file')?.click();}
@@ -2788,13 +2966,312 @@ function setSyncStatus(s){
   dot.className='sync-dot '+s;lbl.textContent={online:'Live',syncing:'Syncing…',offline:'Offline'}[s]||'';
 }
 function emptyHtml(t,s='',icon='🔍'){return`<div class="empty"><div class="empty-i">${icon}</div><div class="empty-t">${t}</div>${s?`<div class="empty-s">${s}</div>`:''}</div>`;}
-function openModal(id){document.getElementById(id)?.classList.add('open');}
-function closeModal(id){document.getElementById(id)?.classList.remove('open');}
+let _modalPrevFocus=null;
+let _modalKeyHandler=null;
+function openModal(id){
+  const m=document.getElementById(id);if(!m)return;
+  _modalPrevFocus=document.activeElement;
+  m.classList.add('open');
+  // Focus first focusable element
+  setTimeout(()=>{
+    const focusables=m.querySelectorAll('input:not([type=hidden]),select,textarea,button,[tabindex]:not([tabindex="-1"])');
+    focusables[0]?.focus();
+  },50);
+  _modalKeyHandler=ev=>{
+    if(ev.key==='Escape'){closeModal(id);return;}
+    if(ev.key!=='Tab')return;
+    const focusables=[...m.querySelectorAll('input:not([type=hidden]),select,textarea,button,[tabindex]:not([tabindex="-1"])')].filter(el=>!el.disabled&&el.offsetParent!==null);
+    if(!focusables.length)return;
+    const first=focusables[0],last=focusables[focusables.length-1];
+    if(ev.shiftKey&&document.activeElement===first){last.focus();ev.preventDefault();}
+    else if(!ev.shiftKey&&document.activeElement===last){first.focus();ev.preventDefault();}
+  };
+  document.addEventListener('keydown',_modalKeyHandler);
+}
+function closeModal(id){
+  document.getElementById(id)?.classList.remove('open');
+  if(_modalKeyHandler){document.removeEventListener('keydown',_modalKeyHandler);_modalKeyHandler=null;}
+  _modalPrevFocus?.focus?.();
+}
 function toast(msg,dur=2500){
   const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),dur);
 }
 
+
+// ── THEME TOGGLE (#18) ────────────────────────────────────────
+function applyTheme(theme){
+  if(theme==='auto'){document.documentElement.removeAttribute('data-theme');}
+  else document.documentElement.setAttribute('data-theme',theme);
+  const btn=document.getElementById('theme-toggle');
+  if(btn){
+    const effective=theme==='auto'?(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'):theme;
+    btn.textContent=effective==='dark'?'🌙':'☀️';
+    btn.title=`Theme: ${theme} (click to cycle)`;
+  }
+  lsSet('pogoTheme',theme);
+}
+function toggleTheme(){
+  const cur=lsGet('pogoTheme','auto');
+  const next=cur==='auto'?'light':cur==='light'?'dark':'auto';
+  applyTheme(next);
+}
+function initTheme(){applyTheme(lsGet('pogoTheme','auto'));}
+
+// ── POKEMON TYPE COLORS (#16) ─────────────────────────────────
+const TYPE_CACHE_KEY='pogoTypeCache_v1';
+function loadTypeCache(){try{pokemonTypes=JSON.parse(localStorage.getItem(TYPE_CACHE_KEY)||'{}')||{};}catch{pokemonTypes={};}}
+function saveTypeCache(){try{localStorage.setItem(TYPE_CACHE_KEY,JSON.stringify(pokemonTypes));}catch{}}
+async function fetchPokemonType(dexNum){
+  if(!dexNum)return null;
+  if(pokemonTypes[dexNum]!==undefined)return pokemonTypes[dexNum];
+  try{
+    const res=await fetch(`https://pokeapi.co/api/v2/pokemon/${dexNum}`);
+    if(!res.ok)throw new Error('not ok');
+    const data=await res.json();
+    const primary=data.types?.[0]?.type?.name||null;
+    pokemonTypes[dexNum]=primary;
+    saveTypeCache();
+    return primary;
+  }catch{
+    pokemonTypes[dexNum]=null;
+    return null;
+  }
+}
+function applyTypeColors(){
+  // Look at visible rows and apply type colors based on dex number
+  document.querySelectorAll('.myrow[data-dex],.pgrid .pc[data-dex]').forEach(el=>{
+    const dex=parseInt(el.dataset.dex);if(!dex)return;
+    if(pokemonTypes[dex]===undefined){
+      fetchPokemonType(dex).then(t=>{
+        if(t&&TYPE_COLORS[t])el.style.setProperty('--type-color',TYPE_COLORS[t]);
+      });
+    }else{
+      const t=pokemonTypes[dex];
+      if(t&&TYPE_COLORS[t])el.style.setProperty('--type-color',TYPE_COLORS[t]);
+    }
+  });
+}
+
+// ── SEARCH STRING VALIDATION (#12) ────────────────────────────
+function strLenInfo(str){
+  const len=(str||'').length;
+  const cls=len>POGO_STR_LIMIT?'danger':len>POGO_STR_LIMIT*0.85?'warn':'';
+  return{len,cls};
+}
+function strLenHtml(str){
+  const{len,cls}=strLenInfo(str);
+  const limit=POGO_STR_LIMIT;
+  return `<span class="str-meta ${cls}" title="PoGo search limit is ~${limit} chars">${len}/${limit}</span>`;
+}
+function strWarnHtml(str){
+  const{len,cls}=strLenInfo(str);
+  if(!cls)return'';
+  if(cls==='danger')return `<div class="str-warn-banner danger">⚠️ This string exceeds PoGo's ~${POGO_STR_LIMIT} char limit (${len}). It will be truncated in-game. Consider splitting into multiple priority lists.</div>`;
+  return `<div class="str-warn-banner">⚠️ Approaching PoGo's ~${POGO_STR_LIMIT} char limit (${len}). Consider splitting soon.</div>`;
+}
+
+// ── BULK OPERATIONS (#2) ──────────────────────────────────────
+function toggleBulkMode(){
+  bulkMode=!bulkMode;
+  bulkSelected.clear();
+  document.body.classList.toggle('bulk-mode',bulkMode);
+  document.getElementById('bulk-bar')?.classList.toggle('active',bulkMode);
+  const btn=document.getElementById('bulk-toggle-btn');
+  if(btn)btn.setAttribute('aria-pressed',bulkMode?'true':'false');
+  if(bulkMode){
+    const sel=document.getElementById('bulk-pri-sel');
+    if(sel){sel.value='';sel.onchange=bulkSetPri;}
+  }
+  renderMyList();
+  updateBulkCount();
+}
+function toggleBulkSelection(name){
+  if(bulkSelected.has(name))bulkSelected.delete(name);else bulkSelected.add(name);
+  document.querySelector(`.myrow[data-name="${name.replace(/"/g,'\\"')}"]`)?.classList.toggle('bulk-selected',bulkSelected.has(name));
+  const chk=document.querySelector(`.bulk-chk[data-name="${name.replace(/"/g,'\\"')}"]`);
+  if(chk)chk.checked=bulkSelected.has(name);
+  updateBulkCount();
+}
+function updateBulkCount(){
+  const el=document.getElementById('bulk-count');
+  if(el)el.textContent=`${bulkSelected.size} selected`;
+}
+function bulkSetPri(){
+  const sel=document.getElementById('bulk-pri-sel');
+  const v=sel.value;
+  if(!v||!bulkSelected.size){sel.value='';return;}
+  const list={...(allData[myListType]?.[cur]||{})};
+  bulkSelected.forEach(name=>{
+    if(!list[name])return;
+    const{mod,lucky,xxl,xxs}=parsePri(list[name]);
+    list[name]=priValue(v==='_clear'?'':v,mod,lucky,xxl,xxs);
+  });
+  writeList(myListType,cur,list);
+  sel.value='';
+  toast(`✅ Updated ${bulkSelected.size} entries`);
+}
+function bulkToggleFlag(flag){
+  if(!bulkSelected.size){toast('Select entries first');return;}
+  const list={...(allData[myListType]?.[cur]||{})};
+  // Determine if MOST are already set — toggle to opposite
+  let setCount=0;
+  bulkSelected.forEach(name=>{
+    if(!list[name])return;
+    const parsed=parsePri(list[name]);
+    if(parsed[flag])setCount++;
+  });
+  const turnOn=setCount<bulkSelected.size/2;
+  bulkSelected.forEach(name=>{
+    if(!list[name])return;
+    const{p,mod,lucky,xxl,xxs}=parsePri(list[name]);
+    let nl=lucky,nx=xxl,ns=xxs;
+    if(flag==='lucky')nl=turnOn;
+    if(flag==='xxl'){nx=turnOn;if(turnOn)ns=false;}
+    if(flag==='xxs'){ns=turnOn;if(turnOn)nx=false;}
+    list[name]=priValue(p,mod,nl,nx,ns);
+  });
+  writeList(myListType,cur,list);
+  toast(`✅ ${turnOn?'Added':'Removed'} ${flag.toUpperCase()} on ${bulkSelected.size} entries`);
+}
+function bulkDelete(){
+  if(!bulkSelected.size){toast('Select entries first');return;}
+  if(!confirm(`Delete ${bulkSelected.size} entries? Can't be undone for the full batch.`))return;
+  const prevList={...(allData[myListType]?.[cur]||{})};
+  const list={...prevList};
+  bulkSelected.forEach(name=>{delete list[name];});
+  const count=bulkSelected.size;
+  // Single undo for the batch
+  undoStack={type:myListType,username:cur,list:prevList,name:`${count} entries`};
+  writeList(myListType,cur,list);
+  showUndo(`${count} entries`);
+  bulkSelected.clear();
+  updateBulkCount();
+}
+
+// ── VOICE INPUT (#3) ──────────────────────────────────────────
+function startVoiceInput(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  const btn=document.getElementById('voice-btn');
+  if(!SR){toast('🎤 Voice input not supported in this browser');return;}
+  if(voiceRecognition){
+    try{voiceRecognition.stop();}catch{}
+    voiceRecognition=null;
+    btn?.classList.remove('listening');
+    return;
+  }
+  voiceRecognition=new SR();
+  voiceRecognition.lang='en-US';
+  voiceRecognition.continuous=false;
+  voiceRecognition.interimResults=false;
+  btn?.classList.add('listening');
+  toast('🎤 Listening… say a Pokémon name');
+  voiceRecognition.onresult=ev=>{
+    const text=ev.results[0]?.[0]?.transcript||'';
+    if(text){
+      const input=document.getElementById('ac-input');
+      if(input){input.value=text;input.focus();acSearch(text);}
+    }
+  };
+  voiceRecognition.onend=()=>{btn?.classList.remove('listening');voiceRecognition=null;};
+  voiceRecognition.onerror=ev=>{
+    btn?.classList.remove('listening');voiceRecognition=null;
+    toast(`🎤 ${ev.error==='not-allowed'?'Mic permission denied':'Voice input error'}`);
+  };
+  try{voiceRecognition.start();}catch(e){btn?.classList.remove('listening');voiceRecognition=null;}
+}
+
+// ── MULTI-SELECT FLAG FILTERS (#9) ────────────────────────────
+function toggleFlagFilter(flag){
+  browseFlagFilters[flag]=!browseFlagFilters[flag];
+  const map={lucky:'fLucky',xxl:'fXxl',xxs:'fXxs'};
+  const btn=document.querySelector(`.fbtn.${map[flag]}`);
+  if(btn){
+    btn.classList.toggle('on',browseFlagFilters[flag]);
+    btn.setAttribute('aria-pressed',browseFlagFilters[flag]?'true':'false');
+  }
+  renderBrowse();
+}
+function entryMatchesFlagFilters(x){
+  const f=browseFlagFilters;
+  if(!f.lucky&&!f.xxl&&!f.xxs)return true;
+  return(f.lucky&&x.lucky)||(f.xxl&&x.xxl)||(f.xxs&&x.xxs);
+}
+
+// ── BACKUP REMINDER (#14) ─────────────────────────────────────
+function recordBackup(){lsSet('pogoLastBackup',Date.now());renderBackupReminder();}
+function renderBackupReminder(){
+  const slot=document.getElementById('backup-reminder-slot');if(!slot)return;
+  const ud=allData.users?.[cur]||{};
+  if(!ud.admin){slot.innerHTML='';return;}
+  const last=lsGet('pogoLastBackup',0);
+  const dismissed=lsGet('pogoBackupDismissed',0);
+  const since=Date.now()-last;
+  if(since<BACKUP_REMINDER_INTERVAL||Date.now()-dismissed<BACKUP_REMINDER_INTERVAL){slot.innerHTML='';return;}
+  const days=last?Math.floor(since/(24*60*60*1000)):'never';
+  slot.innerHTML=`<div class="backup-reminder">
+    <span>📦 Last backup: ${last?days+' days ago':'never'}. Recommended weekly to protect community data.</span>
+    <div style="display:flex;gap:6px">
+      <button class="backup-reminder-btn" onclick="exportData();recordBackup()">Backup now</button>
+      <button class="backup-reminder-dismiss" onclick="lsSet('pogoBackupDismissed',Date.now());renderBackupReminder()" aria-label="Dismiss reminder">×</button>
+    </div>
+  </div>`;
+}
+
+// ── ACTIVITY HEATMAP (#17) ────────────────────────────────────
+function buildHeatmap(username,weeks=12){
+  // We only have lastUpdated per user. Use a simplified heatmap of weekly activity.
+  // Since we don't track per-day, we'll show a single bar for current week and dim past weeks.
+  const ud=allData.users?.[username]||{};
+  const last=ud.lastUpdated||0;
+  const now=Date.now();
+  const cells=[];
+  for(let i=weeks-1;i>=0;i--){
+    const weekEnd=now-i*7*24*60*60*1000;
+    const weekStart=weekEnd-7*24*60*60*1000;
+    let level=0;
+    if(last>=weekStart&&last<=weekEnd)level=4;
+    else if(last>=weekStart-7*24*60*60*1000&&last<weekStart)level=2;
+    cells.push(level);
+  }
+  return cells;
+}
+function heatmapHtml(username){
+  const cells=buildHeatmap(username,12);
+  return `<div class="heatmap">${cells.map(l=>`<div class="heatmap-cell ${l?'l'+l:''}" title="${l?'Active':'Inactive'}"></div>`).join('')}</div>
+  <div class="heatmap-legend">Less <span class="heatmap-cell"></span><span class="heatmap-cell l1"></span><span class="heatmap-cell l2"></span><span class="heatmap-cell l3"></span><span class="heatmap-cell l4"></span> More · 12 weeks</div>`;
+}
+
+// ── CONFLICT DETECTION (#13) ──────────────────────────────────
+function checkConflict(type,username,localList,remoteList){
+  // Compare keys. If both have same key with different values, that's a conflict.
+  const conflicts=[];
+  Object.keys(localList||{}).forEach(k=>{
+    if(remoteList&&remoteList[k]!==undefined&&remoteList[k]!==localList[k]){
+      conflicts.push({key:k,local:localList[k],remote:remoteList[k]});
+    }
+  });
+  return conflicts;
+}
+function showConflictModal(conflicts,onLocal,onRemote){
+  // Reuse undo toast pattern: show a non-blocking notice and let user decide
+  const html=conflicts.slice(0,5).map(c=>`<div><strong>${escHtml(c.key)}</strong>: local <code>${escHtml(c.local)}</code> vs remote <code>${escHtml(c.remote)}</code></div>`).join('');
+  const more=conflicts.length>5?`<div style="margin-top:4px;color:var(--muted)">+${conflicts.length-5} more</div>`:'';
+  const id='conflict-toast-'+Date.now();
+  const el=document.createElement('div');
+  el.className='undo-toast show';
+  el.style.flexDirection='column';el.style.alignItems='stretch';el.style.maxWidth='420px';el.style.whiteSpace='normal';
+  el.innerHTML=`<div style="font-weight:700;margin-bottom:6px">⚠️ Sync conflict (${conflicts.length})</div>
+    <div class="conflict-preview">${html}${more}</div>
+    <div style="display:flex;gap:6px;margin-top:8px;justify-content:flex-end">
+      <button class="undo-btn" style="background:var(--bg2);color:var(--text)" id="${id}-remote">Use remote</button>
+      <button class="undo-btn" id="${id}-local">Keep mine</button>
+    </div>`;
+  document.body.appendChild(el);
+  document.getElementById(`${id}-local`).onclick=()=>{onLocal();el.remove();};
+  document.getElementById(`${id}-remote`).onclick=()=>{onRemote();el.remove();};
+  setTimeout(()=>{if(el.parentNode){onRemote();el.remove();}},30000); // default to remote after 30s
+}
 
 // ── IMPORT FROM SEARCH STRING ─────────────────────────────────
 let importPri='M';
@@ -2954,6 +3431,13 @@ Object.assign(window,{
 
 // ── BOOT ──────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded',()=>{
+  // Initialize theme + type cache
+  initTheme();
+  loadTypeCache();
+  // React to system theme changes when in auto mode
+  matchMedia('(prefers-color-scheme:dark)').addEventListener('change',()=>{
+    if(lsGet('pogoTheme','auto')==='auto')applyTheme('auto');
+  });
   // Mobile keyboard: Enter on PIN = submit login
   document.getElementById('login-pin').addEventListener('keydown',e=>{
     if(e.key==='Enter'){e.preventDefault();doLogin();}
@@ -2963,7 +3447,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     setTimeout(()=>document.getElementById('login-pin').focus(),50);
   });
   document.querySelectorAll('.ov').forEach(el=>el.addEventListener('click',e=>{
-    if(e.target===el)el.classList.remove('open');
+    if(e.target===el)closeModal(el.id);
   }));
   document.querySelector('.user-chip')?.addEventListener('keydown',e=>{
     if(e.key==='Enter'||e.key===' '){e.preventDefault();openModal('prof-modal');}
