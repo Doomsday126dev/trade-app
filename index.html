@@ -724,6 +724,15 @@ html[data-theme="light"] .have-trainer-chip.match{color:#b45309}
 .sched-event-ticket-btn:hover{background:rgba(245,158,11,.1)}
 .sched-event-ticket-btn.owned{background:rgba(16,185,129,.12);border:1px solid var(--ok);color:var(--ok)}
 .sched-event-ticket-btn.owned:hover{background:rgba(16,185,129,.2)}
+.sched-manual-bonus{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--bg);border:1px dashed var(--border2);border-radius:var(--r2);margin-bottom:10px;font-size:12px;flex-wrap:wrap}
+.sched-manual-bonus-text{flex:1;min-width:160px}
+.sched-manual-bonus-text strong{color:var(--text);font-size:12px;display:block;margin-bottom:1px}
+.sched-manual-bonus-ctrl{display:inline-flex;align-items:center;gap:6px;flex-shrink:0}
+.sched-manual-bonus-btn{width:26px;height:26px;border-radius:50%;background:var(--card);border:1px solid var(--border2);color:var(--text);font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:var(--font)}
+.sched-manual-bonus-btn:hover:not(:disabled){background:var(--accent);color:#fff;border-color:transparent}
+.sched-manual-bonus-btn:disabled{opacity:.3;cursor:not-allowed}
+.sched-manual-bonus-val{font-family:var(--mono);font-weight:700;font-size:14px;color:var(--ok);min-width:32px;text-align:center}
+.sched-manual-bonus-val[data-zero]{color:var(--muted)}
 
 .sched-trades-list{display:flex;flex-direction:column;gap:6px}
 .sched-trade-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--r2);padding:10px 12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
@@ -5310,31 +5319,32 @@ function fmtWeekRange(start){
 const WKDS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
 // Classify an event by its name to determine trade bonus + whether it requires a paid ticket.
-// Returns {bonus, bonusType, requiresTicket, eventId}
+// NOTE: ScrapedDuck/LeekDuck JSON does NOT include trade bonus data — we can only infer
+// from event names. Most events do NOT grant bonus trades. We only auto-bonus events that
+// reliably/historically grant them (Community Day) or are ticketed (GO Fest, GO Tour).
+// Other events (Raid Day, Hatch Day, etc.) vary case-by-case — user should check LeekDuck
+// details and use the manual override input if a bonus applies.
+// Returns {bonus, bonusType, requiresTicket, ambiguous}
 function classifyEvent(ev){
   const name=String(ev.name||'').toLowerCase();
   const type=String(ev.eventType||'').toLowerCase();
-  // Pokémon GO Tour — ticketed (free version exists but bonus specials are ticket-only)
+  // Pokémon GO Tour — ticketed, varies by year but typically grants extra specials
   if(name.includes('go tour')||name.includes('pokémon go tour')||type.includes('tour')){
-    return{bonus:3,bonusType:'special',requiresTicket:true};
+    return{bonus:1,bonusType:'special',requiresTicket:true,ambiguous:false};
   }
-  // GO Fest — most special trade bonuses require ticket
+  // GO Fest — ticketed, typically +1 special during paid event days
   if(name.includes('go fest')||type.includes('go-fest')){
-    return{bonus:2,bonusType:'special',requiresTicket:true};
+    return{bonus:1,bonusType:'special',requiresTicket:true,ambiguous:false};
   }
-  // Community Day — FREE bonus +1 special (no ticket needed)
+  // Community Day — reliably grants +1 special trade window during the event
   if(name.includes('community day')||type.includes('community-day')){
-    return{bonus:1,bonusType:'special',requiresTicket:false};
+    return{bonus:1,bonusType:'special',requiresTicket:false,ambiguous:false};
   }
-  // Hatch Day — FREE bonus +1 special
-  if(name.includes('hatch day')){
-    return{bonus:1,bonusType:'special',requiresTicket:false};
+  // Raid Day, Hatch Day, Spotlight Hour, etc. — bonus varies, treat as ambiguous
+  if(type.includes('raid-day')||name.includes('raid day')||name.includes('hatch day')){
+    return{bonus:0,bonusType:'',requiresTicket:false,ambiguous:true};
   }
-  // Raid Day — FREE bonus +1 special
-  if(type.includes('raid-day')||name.includes('raid day')){
-    return{bonus:1,bonusType:'special',requiresTicket:false};
-  }
-  return{bonus:0,bonusType:'',requiresTicket:false};
+  return{bonus:0,bonusType:'',requiresTicket:false,ambiguous:false};
 }
 // Stable ID for an event (used to track ticket ownership)
 function getEventId(ev){return ev.eventID||ev.eventID||`${ev.name}_${ev.start}`;}
@@ -5354,7 +5364,7 @@ async function toggleEventTicket(eventId,eventName){
 // Compute special trade bonus from event names for a given date.
 // Returns {specialBonus, regularBonus, events: [{name, link, image, bonus, requiresTicket, ticketed}]}
 function dailyEventBonuses(isoD){
-  const out={specialBonus:0,regularBonus:0,events:[]};
+  const out={specialBonus:0,regularBonus:0,manualBonus:0,events:[]};
   if(!_eventData||!_eventData.events)return out;
   const dayStart=new Date(parseIsoDate(isoD));dayStart.setHours(0,0,0,0);
   const dayEnd=new Date(dayStart);dayEnd.setHours(23,59,59,999);
@@ -5366,17 +5376,29 @@ function dailyEventBonuses(isoD){
     const cls=classifyEvent(ev);
     const eventId=getEventId(ev);
     const ticketed=cls.requiresTicket&&hasEventTicket(eventId);
-    // Only apply bonus if either (a) event doesn't need ticket, or (b) user has marked ticket owned
     const effectiveBonus=cls.requiresTicket?(ticketed?cls.bonus:0):cls.bonus;
     if(effectiveBonus)out.specialBonus+=effectiveBonus;
     out.events.push({
       name:ev.name,heading:ev.heading,link:ev.link,image:ev.image,
       bonus:cls.bonus,bonusType:cls.bonusType,
-      requiresTicket:cls.requiresTicket,ticketed,eventId,
+      requiresTicket:cls.requiresTicket,ticketed,ambiguous:cls.ambiguous,eventId,
       start:ev.start,end:ev.end
     });
   });
+  // Apply user's manual special-trade bonus override for this date
+  const customBonus=parseInt(allData.users?.[cur]?.customBonuses?.[isoD])||0;
+  if(customBonus>0){out.specialBonus+=customBonus;out.manualBonus=customBonus;}
   return out;
+}
+async function setManualBonus(isoD,delta){
+  const ud=allData.users?.[cur]||{};
+  const customBonuses={...(ud.customBonuses||{})};
+  const cur_val=parseInt(customBonuses[isoD])||0;
+  const new_val=Math.max(0,Math.min(10,cur_val+delta));
+  if(new_val===0)delete customBonuses[isoD];
+  else customBonuses[isoD]=new_val;
+  await writeUser(cur,{customBonuses});
+  renderSchedule();
 }
 function tradesOnDate(isoD){
   const trades=allData.trades||{};
@@ -5475,24 +5497,45 @@ function renderSchedDayDetail(){
   const dayLabel=d.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric'});
   const eventsHtml=evt.events.length?`<div class="sched-event-list">
     ${evt.events.map(ev=>{
-      const bonusBadge=ev.bonus?(ev.requiresTicket
-        ? (ev.ticketed
-          ? `<span class="sched-event-bonus">🎟 +${ev.bonus} ${ev.bonusType}</span>`
-          : `<span class="sched-event-bonus" style="background:rgba(245,158,11,.16);color:var(--warn);border-color:rgba(245,158,11,.32)">🎟 +${ev.bonus} if ticket</span>`)
-        : `<span class="sched-event-bonus">+${ev.bonus} ${ev.bonusType}</span>`):'';
+      let bonusBadge='';
+      if(ev.bonus){
+        if(ev.requiresTicket){
+          bonusBadge=ev.ticketed
+            ?`<span class="sched-event-bonus">🎟 +${ev.bonus} ${ev.bonusType}</span>`
+            :`<span class="sched-event-bonus" style="background:rgba(245,158,11,.16);color:var(--warn);border-color:rgba(245,158,11,.32)">🎟 +${ev.bonus} if ticket</span>`;
+        }else{
+          bonusBadge=`<span class="sched-event-bonus">+${ev.bonus} ${ev.bonusType}</span>`;
+        }
+      }else if(ev.ambiguous){
+        bonusBadge=`<span class="sched-event-bonus" style="background:var(--bg2);color:var(--muted);border-color:var(--border2)" title="Bonus varies by event — check LeekDuck details">? bonus</span>`;
+      }
       const ticketBtn=ev.requiresTicket?`<button class="sched-event-ticket-btn ${ev.ticketed?'owned':''}" onclick="toggleEventTicket('${escAttr(ev.eventId)}','${escAttr(ev.name||'')}')" title="${ev.ticketed?'You marked having a ticket. Click to remove.':'Mark as ticket holder to unlock the bonus.'}">${ev.ticketed?'🎟 Ticket ✓':'🎟 Mark as ticket holder'}</button>`:'';
+      const checkHint=ev.ambiguous?`<span class="sched-event-link" style="color:var(--muted);font-style:italic">Check details for bonus →</span>`:'';
       return`<div class="sched-event-row">
       <div class="sched-event-icon">🎉</div>
       <div class="sched-event-content">
         <div class="sched-event-title">${escHtml(ev.name||ev.heading||'Event')}${bonusBadge}</div>
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:3px">
           ${ev.link?`<a class="sched-event-link" href="${ev.link}" target="_blank" rel="noopener">details ↗</a>`:''}
-          ${ticketBtn}
+          ${ticketBtn}${checkHint}
         </div>
       </div>
     </div>`;
     }).join('')}
   </div>`:'';
+  // Manual override row — let user add a custom special-trade bonus for this date
+  const manualBonus=parseInt(allData.users?.[cur]?.customBonuses?.[iso])||0;
+  const manualBonusHtml=`<div class="sched-manual-bonus">
+    <div class="sched-manual-bonus-text">
+      <strong>Custom bonus:</strong>
+      <span style="color:var(--muted);font-size:11px">If you know this day has bonus specials, add them here.</span>
+    </div>
+    <div class="sched-manual-bonus-ctrl">
+      <button onclick="setManualBonus('${iso}',-1)" class="sched-manual-bonus-btn" aria-label="Decrease custom bonus" ${manualBonus<=0?'disabled':''}>−</button>
+      <span class="sched-manual-bonus-val">+${manualBonus}</span>
+      <button onclick="setManualBonus('${iso}',1)" class="sched-manual-bonus-btn" aria-label="Increase custom bonus">+</button>
+    </div>
+  </div>`;
   const tradesHtml=counts.trades.length?`<div class="sched-trades-list">${counts.trades.map(t=>renderTradeCard(t)).join('')}</div>`
     :'<div class="sched-empty-trades">No trades scheduled for this day yet.</div>';
   el.innerHTML=`<div class="sched-day-detail">
@@ -5504,7 +5547,7 @@ function renderSchedDayDetail(){
       <div class="sched-quota">
         <div class="sched-quota-label">⭐ Special</div>
         <div class="sched-quota-val ${counts.special>=specialCap?'danger':counts.special>=specialCap-1?'warn':''}">${counts.special}/${specialCap}</div>
-        ${evt.specialBonus?`<div class="sched-quota-bonus">+${evt.specialBonus} event bonus</div>`:'<div class="sched-quota-meta">1 base · separate counter</div>'}
+        ${evt.specialBonus?`<div class="sched-quota-bonus">+${evt.specialBonus} bonus${evt.manualBonus?` (incl. ${evt.manualBonus} manual)`:''}</div>`:'<div class="sched-quota-meta">1 base · separate counter</div>'}
       </div>
       <div class="sched-quota">
         <div class="sched-quota-label">🤝 Regular</div>
@@ -5518,6 +5561,7 @@ function renderSchedDayDetail(){
       </div>
     </div>
     ${eventsHtml}
+    ${manualBonusHtml}
     ${tradesHtml}
   </div>`;
 }
@@ -6728,7 +6772,7 @@ Object.assign(window,{
   reloadForUpdate,checkForUpdate,
   // Schedule
   navigateSchedWeek,navigateSchedToday,selectSchedDay,openScheduleModal,closeScheduleModal,
-  selectSchedType,submitScheduledTrade,markTradeComplete,cancelScheduledTrade,toggleEventTicket
+  selectSchedType,submitScheduledTrade,markTradeComplete,cancelScheduledTrade,toggleEventTicket,setManualBonus
 });
 
 // ── BOOT ──────────────────────────────────────────────────────
