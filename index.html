@@ -338,16 +338,23 @@ input,select,textarea{font-family:var(--font);outline:none}
 
 @media(max-width:600px){
   :root{--topbar-h:54px}
-  .topbar{padding:0 12px;gap:8px}
+  html,body{overflow-x:hidden;max-width:100vw}
+  .topbar{padding:0 10px;gap:6px}
   .logo{font-size:15px}
+  .logo span{font-size:14px}
   .sync-lbl{display:none}
-  .topbar-r{gap:6px}
-  .user-chip{max-width:142px;padding:3px 8px 3px 3px;font-size:12px}
+  .topbar-r{gap:4px;min-width:0;flex:1;justify-content:flex-end}
+  .user-chip{max-width:120px;padding:3px 8px 3px 3px;font-size:12px}
+  .user-chip span{font-size:11px}
+  .install-btn{display:none !important}
+  .bell-btn,.theme-toggle{width:28px;height:28px;font-size:12px}
   .tabs{justify-content:space-around}
   .tab{flex:1;padding:12px 9px;font-size:12px;text-align:center}
-  .page{padding:11px}
-  .mygrid{grid-template-columns:1fr}
+  .page{padding:11px;max-width:100vw;overflow-x:hidden}
+  .mygrid{grid-template-columns:1fr;max-width:100%}
   .lcard{padding:22px 16px}
+  .pgrid .pc{max-width:100%;overflow:hidden}
+  .filter-bar{max-width:100%}
 }
 
 /* TYPE COLORS (Pokemon primary type accent) */
@@ -419,9 +426,22 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
   .add-actions .bsave{flex:1 1 100%;justify-content:center;padding:10px;font-size:14px}
   .add-actions .import-btn,.add-actions .export-menu-wrap,.add-actions .bulk-toggle{flex:1 1 calc(33% - 4px);text-align:center}
   .add-actions .image-btn{width:100%;justify-content:center}
-  .mctrl{gap:4px}
-  .pb{width:24px}
-  .flag-btn{font-size:9px;padding:0 3px}
+
+  /* MY LIST ROWS: restructure as 2-row stacked layout to prevent horizontal overflow */
+  .myrow{display:grid;grid-template-columns:auto auto 1fr;grid-template-rows:auto auto;gap:6px 8px;padding:8px 10px;overflow:hidden;min-width:0;max-width:100%}
+  .myrow .bulk-chk{grid-row:1/2;grid-column:1/2;align-self:center}
+  .myrow .drag-handle{grid-row:1/2;grid-column:1/2;align-self:center}
+  body.bulk-mode .myrow .drag-handle{display:none}
+  .myrow .myrow-sprite-wrap,.myrow > .myrow-sprite{grid-row:1/2;grid-column:2/3;align-self:center}
+  .myrow .myrow-name{grid-row:1/2;grid-column:3/4;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .myrow .mctrl{grid-row:2/3;grid-column:1/4;justify-content:space-between;flex-wrap:nowrap;width:100%;gap:4px;overflow:visible}
+  .mctrl-sep{display:none}
+  .pb{width:28px;height:28px;font-size:11px;flex:0 0 auto}
+  .flag-btn{font-size:10px;padding:0 5px;height:28px;flex:0 0 auto}
+  .ni{width:auto !important;max-width:none !important;flex:1 1 0;min-width:30px;height:28px;font-size:11px}
+  .rm{width:28px;height:28px;font-size:14px;flex:0 0 auto}
+  .myrow::before{display:none}
+  .mygrid{grid-template-columns:1fr;gap:6px}
 }
 
 /* ADD FORM PRIORITY BUTTONS */
