@@ -1970,10 +1970,29 @@ async function writeList(type,u,list){
   const newCount=Object.keys(list||{}).length;
   if(prevCount!==newCount)recordActivityEvent(u,newCount-prevCount);
   s[type][u]=list;
-  s.users[u]={...s.users[u],lastUpdated:Date.now()};
+  const now=Date.now();
+  s.users[u]={...s.users[u],lastUpdated:now,lastSeen:now};
   saveLocal(s);
-  if(fbOn&&db){queueSync(`${type}/${u}`,list);queueSync(`users/${u}/lastUpdated`,Date.now());}
+  if(fbOn&&db){
+    queueSync(`${type}/${u}`,list);
+    queueSync(`users/${u}/lastUpdated`,now);
+    queueSync(`users/${u}/lastSeen`,now);
+  }
   syncFromLocal();
+}
+// Bump last-seen timestamp for activity tracking (throttled to once per 5 minutes
+// to avoid spamming Firebase on every action). Called on app open + tab focus.
+let _lastSeenBumpAt=0;
+async function bumpLastSeen(){
+  if(!cur)return;
+  const now=Date.now();
+  if(now-_lastSeenBumpAt<5*60*1000)return; // throttle: max once per 5min
+  _lastSeenBumpAt=now;
+  const s=getLocal();
+  if(!s.users[cur])return;
+  s.users[cur]={...s.users[cur],lastSeen:now};
+  saveLocal(s);
+  if(fbOn&&db)queueSync(`users/${cur}/lastSeen`,now);
 }
 function syncFromLocal(){allData=getLocal();refreshAll();}
 function showSkeletonsIfEmpty(){
@@ -2338,6 +2357,8 @@ function showApp(){
   applyWallpaper(allData.users?.[cur]?.wallpaper||'');
   // Fetch live Pokémon GO events in the background, then re-render Browse
   fetchPogoEvents().then(()=>{renderEventBanner();renderBrowse();});
+  // Bump last-seen so admins know the user opened the app (not just edited)
+  bumpLastSeen();
 }
 function switchTab(t){
   if(t==='admin'&&!allData.users?.[cur]?.isAdmin)t='browse';
@@ -5206,6 +5227,11 @@ document.addEventListener('DOMContentLoaded',()=>{
   matchMedia('(prefers-color-scheme:dark)').addEventListener('change',()=>{
     if(lsGet('pogoTheme','auto')==='auto')applyTheme('auto');
   });
+  // Bump last-seen when user returns to the tab (active use signal)
+  document.addEventListener('visibilitychange',()=>{
+    if(document.visibilityState==='visible')bumpLastSeen();
+  });
+  window.addEventListener('focus',()=>bumpLastSeen());
   // Mobile keyboard: Enter on PIN = submit login
   document.getElementById('login-pin').addEventListener('keydown',e=>{
     if(e.key==='Enter'){e.preventDefault();doLogin();}
