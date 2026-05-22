@@ -406,19 +406,35 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
 
 /* BETTER MOBILE ADD FORM */
 @media(max-width:600px){
-  .add-form .frow{flex-direction:column;gap:6px;align-items:stretch}
-  .add-form .frow > *{width:100%;min-width:0;max-width:none}
-  .add-form .ac-wrap{order:1}
-  .add-form .voice-btn{order:2;align-self:flex-end;width:auto;min-width:48px}
-  .add-form select#add-pmon-pri{order:3}
-  .add-form .lucky-add{order:4;flex:1;justify-content:center;min-height:36px}
-  .add-form input#add-pmon-notes{order:5;max-width:none !important}
-  .add-actions{flex-wrap:wrap;align-items:stretch}
-  .add-actions button{flex:1 1 calc(50% - 4px);justify-content:center}
+  .add-form .frow{display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center}
+  .add-form .ac-wrap{grid-column:1/2;min-width:0}
+  .add-form .voice-btn{grid-column:2/3;width:44px;height:38px;align-self:stretch}
+  .add-form .add-pri-group{grid-column:1/3;width:100%;justify-content:center;padding:6px 12px}
+  .add-form .add-advanced-toggle{grid-column:1/3;width:100%;justify-content:center;padding:8px}
+  .add-advanced{flex-direction:column;align-items:stretch}
+  .add-advanced .add-adv-label{display:none}
+  .add-advanced .lucky-add{justify-content:center;min-height:38px;width:100%}
+  .add-advanced input#add-pmon-notes{width:100%;flex:none !important;min-width:0 !important}
+  .add-actions{flex-wrap:wrap;align-items:stretch;gap:6px}
+  .add-actions .bsave{flex:1 1 100%;justify-content:center;padding:10px;font-size:14px}
+  .add-actions .import-btn,.add-actions .export-menu-wrap,.add-actions .bulk-toggle{flex:1 1 calc(33% - 4px);text-align:center}
+  .add-actions .image-btn{width:100%;justify-content:center}
   .mctrl{gap:4px}
   .pb{width:24px}
   .flag-btn{font-size:9px;padding:0 3px}
 }
+
+/* ADD FORM PRIORITY BUTTONS */
+.add-pri-group{display:inline-flex;align-items:center;gap:4px;background:var(--bg);border:1px solid var(--border2);border-radius:var(--r2);padding:4px 8px 4px 10px;flex-shrink:0}
+.add-pri-label{font-size:11px;color:var(--muted);font-weight:500;margin-right:2px;user-select:none}
+.add-pri-btn{width:26px;height:24px}
+.add-advanced-toggle{background:transparent;border:1px solid var(--border2);color:var(--muted);padding:6px 11px;border-radius:var(--r2);font-size:12px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:5px;flex-shrink:0;font-family:var(--font)}
+.add-advanced-toggle:hover{color:var(--ac2);border-color:var(--ac2)}
+.add-advanced-toggle .caret{transition:transform .2s;font-size:10px}
+.add-advanced-toggle[aria-expanded="true"] .caret{transform:rotate(180deg)}
+.add-advanced{display:none;align-items:center;gap:7px;flex-wrap:wrap;margin-top:8px;padding-top:10px;border-top:1px dashed var(--border)}
+.add-advanced.open{display:flex}
+.add-adv-label{font-size:11px;color:var(--muted);font-weight:500;user-select:none;margin-right:2px}
 
 /* PWA INSTALL BUTTON (#1) */
 .install-btn{display:none;background:linear-gradient(135deg,var(--accent),var(--ac2));color:#fff;border:none;padding:5px 12px;border-radius:var(--r2);font-size:12px;font-weight:600;cursor:pointer;align-items:center;gap:5px;flex-shrink:0}
@@ -740,14 +756,19 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
           <div class="ac-dropdown" id="ac-dropdown"></div>
         </div>
         <button type="button" class="voice-btn" id="voice-btn" onclick="startVoiceInput()" aria-label="Voice input" title="Speak to search">🎤</button>
-        <select id="add-pmon-pri" aria-label="Priority">
-          <option value="" selected>– None –</option>
-          <option value="H">H – High</option>
-          <option value="M">M – Medium</option>
-          <option value="L">L – Low</option>
-        </select>
+        <div class="add-pri-group" role="group" aria-label="Priority">
+          <span class="add-pri-label">Priority:</span>
+          <button type="button" class="pb add-pri-btn" data-pri="H" onclick="setAddPri('H')" aria-pressed="false" title="High priority">H</button>
+          <button type="button" class="pb add-pri-btn" data-pri="M" onclick="setAddPri('M')" aria-pressed="false" title="Medium priority">M</button>
+          <button type="button" class="pb add-pri-btn" data-pri="L" onclick="setAddPri('L')" aria-pressed="false" title="Low priority">L</button>
+        </div>
+        <input type="hidden" id="add-pmon-pri" value="">
+        <button type="button" class="add-advanced-toggle" id="add-adv-toggle" onclick="toggleAddAdvanced()" aria-expanded="false" aria-controls="add-advanced">⚙ Advanced <span class="caret">▾</span></button>
+      </div>
+      <div class="add-advanced" id="add-advanced">
+        <span class="add-adv-label">Flags:</span>
         <label class="lucky-add" title="⚡ Lucky — generates a separate Lucky Dex search string">
-          <input type="checkbox" id="add-pmon-lucky"> ⚡
+          <input type="checkbox" id="add-pmon-lucky"> ⚡ Lucky
         </label>
         <label class="lucky-add" title="XXL — mark as extra-large; generates a separate XXL search string">
           <input type="checkbox" id="add-pmon-xxl" onchange="if(this.checked)document.getElementById('add-pmon-xxs').checked=false"> XXL
@@ -755,7 +776,7 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
         <label class="lucky-add" title="XXS — mark as extra-small; generates a separate XXS search string">
           <input type="checkbox" id="add-pmon-xxs" onchange="if(this.checked)document.getElementById('add-pmon-xxl').checked=false"> XXS
         </label>
-        <input type="text" id="add-pmon-notes" placeholder="Notes: f, m…" style="max-width:100px" aria-label="Notes">
+        <input type="text" id="add-pmon-notes" placeholder="Notes: f, m, shadow…" aria-label="Notes" style="flex:1;min-width:120px">
       </div>
       <div class="add-actions">
         <button class="bsave" onclick="addEntry()">Add</button>
@@ -1851,6 +1872,7 @@ function showApp(){
   if(isAdmin){renderAdmin();renderPendingRequests();repairMissingAuthMetadata();}
   checkWhatsNew();
   attachPullToRefresh();
+  initAddAdvanced();
 }
 function switchTab(t){
   if(t==='admin'&&!allData.users?.[cur]?.isAdmin)t='browse';
@@ -2145,12 +2167,45 @@ function setMyList(t){
   document.getElementById('add-pmon-sel').value='';
   ['add-pmon-lucky','add-pmon-xxl','add-pmon-xxs'].forEach(id=>{const el=document.getElementById(id);if(el)el.checked=false;});
   document.getElementById('add-pmon-pri').value='';
+  document.querySelectorAll('.add-pri-btn').forEach(b=>{b.classList.remove('on','H','M','L');b.setAttribute('aria-pressed','false');});
   document.getElementById('ac-dropdown').classList.remove('open');
   document.getElementById('mylist-filter').value='';
   ensureListSubscribed(t);
   buildAcItems();renderMyList();
 }
 
+function toggleAddAdvanced(){
+  const adv=document.getElementById('add-advanced');
+  const btn=document.getElementById('add-adv-toggle');
+  if(!adv||!btn)return;
+  const open=!adv.classList.contains('open');
+  adv.classList.toggle('open',open);
+  btn.setAttribute('aria-expanded',open?'true':'false');
+  lsSet('pogoAdvancedOpen',open);
+}
+function initAddAdvanced(){
+  // On desktop default to open, on mobile default to closed; respect saved pref
+  const saved=lsGet('pogoAdvancedOpen',null);
+  const isMobile=matchMedia('(max-width:600px)').matches;
+  const open=saved===null?!isMobile:!!saved;
+  const adv=document.getElementById('add-advanced');
+  const btn=document.getElementById('add-adv-toggle');
+  if(!adv||!btn)return;
+  adv.classList.toggle('open',open);
+  btn.setAttribute('aria-expanded',open?'true':'false');
+}
+function setAddPri(p){
+  const hidden=document.getElementById('add-pmon-pri');
+  const cur=hidden?.value||'';
+  const next=cur===p?'':p; // toggle off if same
+  if(hidden)hidden.value=next;
+  document.querySelectorAll('.add-pri-btn').forEach(b=>{
+    const on=b.dataset.pri===next;
+    b.classList.toggle('on',on);
+    if(on)b.classList.add(next);else b.classList.remove('H','M','L');
+    b.setAttribute('aria-pressed',on?'true':'false');
+  });
+}
 function addEntry(){
   const name=document.getElementById('add-pmon-sel').value;
   const pri=document.getElementById('add-pmon-pri').value;
@@ -2166,6 +2221,8 @@ function addEntry(){
   document.getElementById('ac-input').value='';
   document.getElementById('add-pmon-sel').value='';
   document.getElementById('add-pmon-notes').value='';
+  document.getElementById('add-pmon-pri').value='';
+  document.querySelectorAll('.add-pri-btn').forEach(b=>{b.classList.remove('on','H','M','L');b.setAttribute('aria-pressed','false');});
   ['add-pmon-lucky','add-pmon-xxl','add-pmon-xxs'].forEach(id=>{const el=document.getElementById(id);if(el)el.checked=false;});
   document.getElementById('ac-dropdown').classList.remove('open');
   const dn=acItems.find(x=>x.name===name)?.dn||name;
@@ -4189,7 +4246,7 @@ Object.assign(window,{
   // Latest batch
   triggerInstall,openWhatsNew,closeWhatsNew,updateAvatarPreview,
   toggleExportMenu,closeExportMenu,exportMyListMarkdown,exportMyListCSV,copyShareLink,
-  exitShareView,renderShareView
+  exitShareView,renderShareView,setAddPri,toggleAddAdvanced
 });
 
 // ── BOOT ──────────────────────────────────────────────────────
