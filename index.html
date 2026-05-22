@@ -670,29 +670,29 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
 .skel::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.04),transparent);animation:shimmer 1.5s infinite}
 html[data-theme="light"] .skel::before{background:linear-gradient(90deg,transparent,rgba(0,0,0,.03),transparent)}
 
-/* WALLPAPER (#32) - tasteful subtle gradients applied to app background */
-body.wp-aurora{background:linear-gradient(135deg,#0f0f1a 0%,#1a1230 50%,#0f0f1a 100%)}
-body.wp-ocean{background:linear-gradient(180deg,#0a1929 0%,#0f0f1a 100%)}
-body.wp-forest{background:linear-gradient(180deg,#0a1d18 0%,#0f0f1a 100%)}
-body.wp-sunset{background:linear-gradient(180deg,#1a0f1f 0%,#0f0f1a 100%)}
+/* WALLPAPER (#32) - restrained ambient gradients applied to app background */
+body.wp-aurora{background:linear-gradient(145deg,#0f0f1a 0%,#171a2d 46%,#102622 100%)}
+body.wp-ocean{background:linear-gradient(145deg,#0f0f1a 0%,#132333 52%,#17172a 100%)}
+body.wp-forest{background:linear-gradient(145deg,#0f0f1a 0%,#17251c 50%,#17162a 100%)}
+body.wp-sunset{background:linear-gradient(145deg,#0f0f1a 0%,#262034 46%,#24171f 100%)}
 body.wp-mono{background:#0f0f1a}
-body.wp-mist{background:linear-gradient(180deg,#15151f 0%,#0f0f1a 100%)}
-html[data-theme="light"] body.wp-aurora{background:linear-gradient(135deg,#f5f7fa 0%,#ece9f7 50%,#f5f7fa 100%)}
-html[data-theme="light"] body.wp-ocean{background:linear-gradient(180deg,#eef5fa 0%,#f5f7fa 100%)}
-html[data-theme="light"] body.wp-forest{background:linear-gradient(180deg,#eef5ee 0%,#f5f7fa 100%)}
-html[data-theme="light"] body.wp-sunset{background:linear-gradient(180deg,#faeef0 0%,#f5f7fa 100%)}
+body.wp-mist{background:linear-gradient(145deg,#0f0f1a 0%,#1b1d29 48%,#111827 100%)}
+html[data-theme="light"] body.wp-aurora{background:linear-gradient(145deg,#f5f7fa 0%,#eef4f1 46%,#eeeef8 100%)}
+html[data-theme="light"] body.wp-ocean{background:linear-gradient(145deg,#f5f7fa 0%,#edf5f8 52%,#f1f0f8 100%)}
+html[data-theme="light"] body.wp-forest{background:linear-gradient(145deg,#f5f7fa 0%,#edf4ee 50%,#f1f0f8 100%)}
+html[data-theme="light"] body.wp-sunset{background:linear-gradient(145deg,#f5f7fa 0%,#f5eef5 46%,#f6f1ee 100%)}
 html[data-theme="light"] body.wp-mono{background:#f5f7fa}
-html[data-theme="light"] body.wp-mist{background:linear-gradient(180deg,#f9f9fc 0%,#f5f7fa 100%)}
+html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 0%,#f2f4f8 48%,#eef2f7 100%)}
 .wp-picker{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px}
 .wp-swatch{height:46px;border-radius:var(--r2);border:2px solid var(--border);cursor:pointer;position:relative;transition:.15s;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--text);font-weight:600;text-shadow:0 1px 2px rgba(0,0,0,.4)}
 .wp-swatch:hover{border-color:var(--accent)}
 .wp-swatch.selected{border-color:var(--accent);box-shadow:0 0 0 2px rgba(108,99,255,.3)}
-.wp-swatch.aurora{background:linear-gradient(135deg,#0f0f1a,#1a1230,#0f0f1a)}
-.wp-swatch.ocean{background:linear-gradient(180deg,#0a1929,#0f0f1a)}
-.wp-swatch.forest{background:linear-gradient(180deg,#0a1d18,#0f0f1a)}
-.wp-swatch.sunset{background:linear-gradient(180deg,#1a0f1f,#0f0f1a)}
+.wp-swatch.aurora{background:linear-gradient(145deg,#0f0f1a,#171a2d,#102622)}
+.wp-swatch.ocean{background:linear-gradient(145deg,#0f0f1a,#132333,#17172a)}
+.wp-swatch.forest{background:linear-gradient(145deg,#0f0f1a,#17251c,#17162a)}
+.wp-swatch.sunset{background:linear-gradient(145deg,#0f0f1a,#262034,#24171f)}
 .wp-swatch.mono{background:#0f0f1a}
-.wp-swatch.mist{background:linear-gradient(180deg,#15151f,#0f0f1a)}
+.wp-swatch.mist{background:linear-gradient(145deg,#0f0f1a,#1b1d29,#111827)}
 
 /* IMPORT MODAL */
 .import-preview{max-height:260px;overflow-y:auto;margin:10px 0;border:1px solid var(--border);border-radius:var(--r2)}
@@ -3618,7 +3618,7 @@ function renderStrings(){
     const count=Object.keys(allData[strListType]?.[u]||{}).length;
     const luColor=freshnessColor(freshnessClass(ud.lastUpdated));
     const isMe=u===cur;
-    const diff=isMe?{firstVisit:true,added:[],removed:[],changed:[]}:computeDiff(strListType,u);
+    const diff=isMe?{firstVisit:true,added:[],removed:[],changed:[]}:computeSnapshotDiff(strListType,u);
     const diffBadge=diffBadgeHtml(diff);
     const diffDetails=isMe?'':diffDetailsHtml(diff,strListType,u);
     const bioHtml=ud.bio?`<div class="profile-bio-display">"${escHtml(ud.bio)}"</div>`:'';
@@ -3640,7 +3640,7 @@ function renderStrings(){
             ${bioHtml}
           </div>
         </div>
-        ${isMe?'':`<button class="diff-fab" onclick="event.stopPropagation();openDiffModal('${escAttr(u)}')" aria-label="Compare lists with ${escAttr(u)}" title="Compare your list vs ${escAttr(u)}'s">⚖</button>`}
+        ${isMe?'':`<button class="diff-fab" onclick="event.stopPropagation();openDiffModal(this.closest('.user-str-block').dataset.username)" aria-label="Compare lists with ${escAttr(u)}" title="Compare your list vs ${escAttr(u)}'s">⚖</button>`}
         <span class="collapse-icon">▼</span>
       </div>
       <div class="user-str-body">
@@ -3986,7 +3986,7 @@ function setDiffListType(t){
   _activeDiff.type=t;
   renderDiffModal();
 }
-function computeDiff(typ,me,them){
+function computeTrainerDiff(typ,me,them){
   const myList=allData[typ]?.[me]||{};
   const theirList=allData[typ]?.[them]||{};
   const srcArr=listSource(typ);
@@ -4017,7 +4017,7 @@ function computeDiff(typ,me,them){
 function renderDiffModal(){
   if(!_activeDiff)return;
   const{them,type}=_activeDiff;
-  const diff=computeDiff(type,cur,them);
+  const diff=computeTrainerDiff(type,cur,them);
   const strongMatch=diff.both.filter(d=>d.mine.p===d.theirs.p&&d.mine.p).length;
   const totalBoth=diff.both.length;
   const renderCard=(e,otherP)=>{
@@ -4456,7 +4456,7 @@ function saveSnapshot(type,username,list){
   snaps[type][username]={keys:Object.keys(list||{}),values:Object.assign({},list||{}),savedAt:Date.now()};
   try{localStorage.setItem(DIFF_SNAPSHOT_KEY,JSON.stringify(snaps));}catch{}
 }
-function computeDiff(type,username){
+function computeSnapshotDiff(type,username){
   const snaps=loadSnapshots();
   const prev=snaps[type]?.[username];
   const cur=allData[type]?.[username]||{};
