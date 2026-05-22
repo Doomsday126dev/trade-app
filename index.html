@@ -390,16 +390,6 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
 .voice-btn.listening{background:rgba(239,68,68,.15);color:var(--danger);border-color:var(--danger);animation:pulse 1.2s infinite}
 @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.4)}50%{box-shadow:0 0 0 6px rgba(239,68,68,0)}}
 
-/* ACTIVITY HEATMAP */
-.heatmap{display:grid;grid-template-columns:repeat(12,1fr);gap:2px;margin-top:8px}
-.heatmap-cell{aspect-ratio:1;background:var(--bg2);border-radius:2px;min-height:10px}
-.heatmap-cell.l1{background:rgba(108,99,255,.25)}
-.heatmap-cell.l2{background:rgba(108,99,255,.5)}
-.heatmap-cell.l3{background:rgba(108,99,255,.75)}
-.heatmap-cell.l4{background:var(--accent)}
-.heatmap-legend{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted);margin-top:6px;justify-content:flex-end}
-.heatmap-legend .heatmap-cell{width:10px;height:10px;display:inline-block}
-
 /* MULTI-SELECT FILTER */
 .fbtn.flag-filter{background:transparent}
 .fbtn.flag-filter.fLucky.on{background:rgba(250,204,21,.2);color:#facc15;border-color:rgba(250,204,21,.5)}
@@ -429,6 +419,107 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
   .pb{width:24px}
   .flag-btn{font-size:9px;padding:0 3px}
 }
+
+/* PWA INSTALL BUTTON (#1) */
+.install-btn{display:none;background:linear-gradient(135deg,var(--accent),var(--ac2));color:#fff;border:none;padding:5px 12px;border-radius:var(--r2);font-size:12px;font-weight:600;cursor:pointer;align-items:center;gap:5px;flex-shrink:0}
+.install-btn.show{display:inline-flex}
+.install-btn:hover{opacity:.9}
+
+/* BELL / WHAT'S NEW (#28) */
+.bell-btn{position:relative;background:transparent;border:1px solid var(--border2);color:var(--muted);width:30px;height:30px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:13px;cursor:pointer;transition:.2s;flex-shrink:0}
+.bell-btn:hover{color:var(--text);border-color:var(--accent)}
+.bell-badge{position:absolute;top:-3px;right:-3px;background:var(--danger);color:#fff;border-radius:50%;width:14px;height:14px;font-size:9px;font-weight:700;display:none;align-items:center;justify-content:center;border:2px solid var(--bg2)}
+.bell-badge.show{display:inline-flex}
+.whats-new-item{padding:10px 12px;border-bottom:1px solid var(--border);font-size:13px}
+.whats-new-item:last-child{border-bottom:none}
+.whats-new-version{font-family:var(--mono);font-size:10px;color:var(--ac2);font-weight:700;margin-bottom:4px}
+.whats-new-title{font-weight:600;margin-bottom:2px}
+.whats-new-desc{color:var(--muted);font-size:12px;line-height:1.4}
+.whats-new-list{max-height:400px;overflow-y:auto;background:var(--bg);border:1px solid var(--border);border-radius:var(--r2);margin-top:8px}
+
+/* PROFILE CUSTOMIZATION (#8) */
+.profile-avatar-picker{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.profile-avatar-preview{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--ac2));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;overflow:hidden;flex-shrink:0;border:2px solid var(--border2)}
+.profile-avatar-preview img{width:100%;height:100%;object-fit:contain;image-rendering:pixelated}
+.profile-bio-field textarea{width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--text);padding:8px 12px;border-radius:var(--r2);font-size:13px;font-family:var(--font);resize:vertical;min-height:50px}
+.profile-bio-display{font-size:12px;color:var(--muted);font-style:italic;margin-top:2px;line-height:1.4}
+.profile-discord{font-size:11px;color:var(--ac2);font-family:var(--mono);margin-top:2px}
+.profile-discord::before{content:'@';opacity:.6}
+
+/* READ-ONLY SHARE VIEW (#9) */
+#share-view{display:none;min-height:100vh;background:var(--bg);color:var(--text);padding:24px 16px}
+#share-view.active{display:block}
+.share-hdr{max-width:760px;margin:0 auto 20px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px 22px;display:flex;gap:16px;align-items:center}
+.share-hdr .av{width:64px;height:64px;font-size:22px}
+.share-hdr-info{flex:1;min-width:0}
+.share-hdr-name{font-size:22px;font-weight:700;margin-bottom:4px}
+.share-hdr-meta{font-size:13px;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+.share-hdr-meta .meta-item{display:inline-flex;gap:5px;align-items:center}
+.share-hdr-bio{font-size:13px;font-style:italic;color:var(--muted);margin-top:6px;line-height:1.5}
+.share-body{max-width:760px;margin:0 auto}
+.share-back-link{display:inline-block;margin-bottom:14px;color:var(--ac2);font-size:13px;text-decoration:none;cursor:pointer}
+.share-back-link:hover{text-decoration:underline}
+.share-meta-banner{max-width:760px;margin:0 auto 14px;font-size:11px;color:var(--muted);text-align:center;padding:6px}
+.share-list-tabs{max-width:760px;margin:0 auto 14px;display:flex;gap:6px;flex-wrap:wrap}
+
+/* EXPORT DROPDOWN (#10) */
+.export-menu-wrap{position:relative;display:inline-flex}
+.export-menu{display:none;position:absolute;top:100%;right:0;margin-top:4px;background:var(--card);border:1px solid var(--border2);border-radius:var(--r2);box-shadow:var(--shadow);z-index:50;min-width:180px;padding:4px;overflow:hidden}
+.export-menu.open{display:block}
+.export-menu-item{display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:13px;cursor:pointer;border-radius:4px;color:var(--text);background:none;border:none;width:100%;text-align:left;font-family:var(--font)}
+.export-menu-item:hover{background:var(--bg2)}
+.export-menu-item .icon{width:18px;text-align:center}
+.export-menu-sep{height:1px;background:var(--border);margin:4px 0}
+
+/* DIFF VIEW (#17) */
+.user-str-diff-badge{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;padding:2px 6px;border-radius:8px;margin-left:6px;background:rgba(108,99,255,.15);color:var(--ac2);border:1px solid rgba(108,99,255,.3)}
+.user-str-diff-badge.added{background:rgba(16,185,129,.12);color:var(--ok);border-color:rgba(16,185,129,.3)}
+.user-str-diff-badge.removed{background:rgba(239,68,68,.12);color:var(--danger);border-color:rgba(239,68,68,.3)}
+.diff-summary{font-size:12px;color:var(--muted);padding:8px 12px;background:var(--bg);border-radius:var(--r2);margin-bottom:10px}
+.diff-line{padding:2px 0;font-family:var(--mono);font-size:11px}
+.diff-line.added{color:var(--ok)}
+.diff-line.added::before{content:'+ ';font-weight:700}
+.diff-line.removed{color:var(--danger);text-decoration:line-through;opacity:.7}
+.diff-line.removed::before{content:'− ';font-weight:700;text-decoration:none;display:inline-block}
+.diff-line.changed{color:var(--warn)}
+.diff-line.changed::before{content:'~ ';font-weight:700}
+
+/* SWIPE GESTURES (#12) */
+.myrow{transition:transform .2s,opacity .2s,border-color .15s,background .15s}
+.myrow.swiping{transition:none}
+.myrow.swipe-action{background:rgba(239,68,68,.2)}
+.myrow.swipe-action-select{background:rgba(108,99,255,.2)}
+
+/* PULL TO REFRESH (#13) */
+.ptr-indicator{position:fixed;top:calc(var(--topbar-h) + 44px);left:50%;transform:translateX(-50%) translateY(-40px);background:var(--card);border:1px solid var(--border2);color:var(--ac2);border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:var(--shadow);z-index:60;transition:transform .2s;pointer-events:none;opacity:0}
+.ptr-indicator.visible{opacity:1}
+.ptr-indicator.pulling{transform:translateX(-50%) translateY(0)}
+.ptr-indicator.refreshing{transform:translateX(-50%) translateY(0)}
+.ptr-indicator.refreshing svg{animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* EMPTY STATE SVGS (#25) */
+.empty-svg{width:64px;height:64px;margin-bottom:10px;color:var(--accent);opacity:.6}
+
+/* LOADING SKELETONS (#26) */
+.skel{background:linear-gradient(90deg,var(--card) 0%,var(--bg2) 50%,var(--card) 100%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:var(--r2)}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.skel-row{height:46px;margin-bottom:7px}
+.skel-card{height:60px;margin-bottom:6px}
+.skel-line{height:14px;margin-bottom:8px;border-radius:4px}
+.skel-line.sm{height:10px;width:60%}
+.skel-line.lg{height:18px;width:80%}
+
+/* SUBTLE ANIMATIONS (#27) */
+@keyframes fadeInUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideOut{from{opacity:1;transform:translateX(0);max-height:60px;margin-bottom:7px}to{opacity:0;transform:translateX(20px);max-height:0;margin-bottom:0;padding-top:0;padding-bottom:0}}
+.myrow{animation:fadeInUp .25s ease-out}
+.myrow.removing{animation:slideOut .25s ease-out forwards;overflow:hidden}
+.pgrid .pc{animation:fadeInUp .25s ease-out;animation-fill-mode:both}
+.pgrid .pc:nth-child(odd){animation-delay:.02s}
+.toast,.undo-toast{transition:transform .25s cubic-bezier(.16,1,.3,1)}
+.tab,.fbtn,.ltab,.sfbtn,.pb,.flag-btn{transition:background .15s,color .15s,border-color .15s,transform .1s}
+.tab:active,.fbtn:active,.ltab:active,.sfbtn:active,.pb:active,.flag-btn:active{transform:scale(.96)}
 
 /* IMPORT MODAL */
 .import-preview{max-height:260px;overflow-y:auto;margin:10px 0;border:1px solid var(--border);border-radius:var(--r2)}
@@ -570,6 +661,8 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
         <div class="sync-row"><div class="sync-dot" id="sdot"></div><span class="sync-lbl" id="slbl">—</span></div>
         <div class="sync-queue-dot" id="sqd" title="Unsynced changes pending"></div>
       </div>
+      <button class="install-btn" id="install-btn" onclick="triggerInstall()" aria-label="Install app">⬇️ Install</button>
+      <button class="bell-btn" id="bell-btn" onclick="openWhatsNew()" aria-label="What's new" title="What's new">🔔<span class="bell-badge" id="bell-badge">!</span></button>
       <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme" title="Toggle light/dark theme">🌙</button>
       <div class="user-chip" onclick="openModal('prof-modal')" role="button" tabindex="0" aria-label="Open profile">
         <div class="av" id="top-av">?</div>
@@ -667,7 +760,16 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
       <div class="add-actions">
         <button class="bsave" onclick="addEntry()">Add</button>
         <button class="import-btn" onclick="openImport()">📥 Import string</button>
-        <button class="image-btn" onclick="exportMyListImage()">🖼️ Export image</button>
+        <div class="export-menu-wrap">
+          <button class="image-btn" onclick="toggleExportMenu(event)" aria-haspopup="true" aria-expanded="false" id="export-menu-btn">📤 Export ▾</button>
+          <div class="export-menu" id="export-menu" role="menu">
+            <button class="export-menu-item" role="menuitem" onclick="exportMyListImage();closeExportMenu()"><span class="icon">🖼️</span> Image (PNG)</button>
+            <button class="export-menu-item" role="menuitem" onclick="exportMyListMarkdown();closeExportMenu()"><span class="icon">📝</span> Markdown (Discord/Reddit)</button>
+            <button class="export-menu-item" role="menuitem" onclick="exportMyListCSV();closeExportMenu()"><span class="icon">📊</span> CSV (Spreadsheet)</button>
+            <div class="export-menu-sep"></div>
+            <button class="export-menu-item" role="menuitem" onclick="copyShareLink();closeExportMenu()"><span class="icon">🔗</span> Copy share link</button>
+          </div>
+        </div>
         <button class="bulk-toggle" onclick="toggleBulkMode()" aria-pressed="false" id="bulk-toggle-btn">☑ Bulk edit</button>
       </div>
     </div>
@@ -756,13 +858,28 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
 
 <!-- PROFILE MODAL -->
 <div class="ov" id="prof-modal" role="dialog" aria-modal="true" aria-labelledby="prof-title">
-  <div class="modal">
+  <div class="modal" style="max-width:420px">
     <h3 id="prof-title">👤 Profile</h3>
+    <div class="profile-avatar-picker">
+      <div class="profile-avatar-preview" id="prof-av-preview">?</div>
+      <div style="flex:1;min-width:0">
+        <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px">Avatar Pokémon (optional)</label>
+        <input type="text" id="prof-av-input" placeholder="e.g. Pikachu, Lucario…" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--text);padding:7px 10px;border-radius:var(--r2);font-size:13px" oninput="updateAvatarPreview(this.value)">
+      </div>
+    </div>
     <div class="pfc"><div class="pfc-lbl">Friend Code</div><div class="pfc-val" id="pfc-disp">—</div></div>
     <div class="field">
       <label>Update Friend Code</label>
       <input type="text" id="fc-inp" placeholder="0000 0000 0000" maxlength="14" inputmode="numeric" oninput="formatFc(this)">
       <div class="fc-hint" id="fc-hint"></div>
+    </div>
+    <div class="field profile-bio-field">
+      <label>Bio <span style="color:var(--muted);font-weight:400;font-size:11px">(optional, shown to other trainers)</span></label>
+      <textarea id="prof-bio" placeholder="e.g. Queens raids • prefer hundo trades" maxlength="120" rows="2"></textarea>
+    </div>
+    <div class="field">
+      <label>Discord handle <span style="color:var(--muted);font-weight:400;font-size:11px">(optional)</span></label>
+      <input type="text" id="prof-discord" placeholder="username#1234 or username" maxlength="40">
     </div>
     <hr class="divider">
     <div class="field"><label>New PIN</label><input type="password" id="np1" placeholder="New 6-digit PIN" maxlength="6" inputmode="numeric"></div>
@@ -771,6 +888,15 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
     <div class="mact"><button class="bghost" onclick="closeModal('prof-modal')">Cancel</button><button class="bpri" onclick="saveProfile()">Save</button></div>
     <hr class="divider" style="margin-top:14px">
     <button class="bghost" style="width:100%;color:var(--danger);border-color:rgba(239,68,68,.3)" onclick="logout()">Sign out</button>
+  </div>
+</div>
+
+<!-- WHAT'S NEW MODAL -->
+<div class="ov" id="whatsnew-modal" role="dialog" aria-modal="true" aria-labelledby="whatsnew-title">
+  <div class="modal" style="max-width:480px">
+    <h3 id="whatsnew-title">🔔 What's New</h3>
+    <div class="whats-new-list" id="whatsnew-list"></div>
+    <div class="mact"><button class="bpri" onclick="closeWhatsNew()">Got it</button></div>
   </div>
 </div>
 
@@ -825,6 +951,20 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
     </div>
   </div>
 </div>
+
+<!-- READ-ONLY SHARE VIEW (#9) -->
+<div id="share-view">
+  <div class="share-meta-banner">📋 Read-only shared trade list · Anyone with this link can view</div>
+  <div class="share-hdr" id="share-hdr"></div>
+  <div class="share-body">
+    <a class="share-back-link" onclick="exitShareView()">← Back to app</a>
+    <div class="share-list-tabs" id="share-list-tabs"></div>
+    <div id="share-list-out"></div>
+  </div>
+</div>
+
+<!-- PTR Indicator -->
+<div class="ptr-indicator" id="ptr-indicator" aria-hidden="true">↓</div>
 
 <script src="data.js"></script>
 <script type="module">
@@ -1361,6 +1501,15 @@ async function writeList(type,u,list){
   syncFromLocal();
 }
 function syncFromLocal(){allData=getLocal();refreshAll();}
+function showSkeletonsIfEmpty(){
+  // Show loading skeletons on first paint if no data yet
+  if(!allData||!Object.keys(allData.users||{}).length){
+    const ml=document.getElementById('mylist-out');
+    if(ml&&!ml.children.length)ml.innerHTML=`<div class="mygrid">${Array.from({length:6}).map(()=>'<div class="skel skel-row"></div>').join('')}</div>`;
+    const bo=document.getElementById('browse-out');
+    if(bo&&!bo.children.length)bo.innerHTML=`<div class="pgrid">${Array.from({length:5}).map(()=>'<div class="skel skel-card"></div>').join('')}</div>`;
+  }
+}
 
 // ── FIREBASE AUTH / DATABASE ──────────────────────────────────
 function authEmail(username,version=1){
@@ -1631,8 +1780,21 @@ function showApp(){
   document.getElementById('login-pg').style.display='none';
   document.getElementById('config-pg').style.display='none';
   const app=document.getElementById('app');app.style.display='flex';app.style.flexDirection='column';
+  // Set avatars with optional custom Pokemon
+  const ud=allData.users?.[cur]||{};
   const ini=cur.slice(0,2).toUpperCase();
-  ['top-av','my-av'].forEach(id=>document.getElementById(id).textContent=ini);
+  ['top-av','my-av'].forEach(id=>{
+    const el=document.getElementById(id);if(!el)return;
+    if(ud.avatarPokemon){
+      const norm=normalizeSpriteKey(ud.avatarPokemon);
+      const found=spriteSourceIndex().get(norm);
+      if(found?.no){
+        const url=spriteUrl(found.no,found.name);
+        if(url){el.innerHTML=`<img src="${url}" alt="" style="width:100%;height:100%;object-fit:contain;image-rendering:pixelated">`;el.style.overflow='hidden';return;}
+      }
+    }
+    el.textContent=ini;el.style.overflow='';
+  });
   document.getElementById('top-un').textContent=cur;
   document.getElementById('my-un').textContent=cur;
   const isAdmin=allData.users?.[cur]?.isAdmin;
@@ -1645,6 +1807,8 @@ function showApp(){
   buildAcItems();
   renderBrowse();renderMyList();renderStrings();
   if(isAdmin){renderAdmin();renderPendingRequests();repairMissingAuthMetadata();}
+  checkWhatsNew();
+  attachPullToRefresh();
 }
 function switchTab(t){
   if(t==='admin'&&!allData.users?.[cur]?.isAdmin)t='browse';
@@ -2133,6 +2297,7 @@ function renderMyList(filterVal){
   }).join('')}</div>`;
   renderMyStrings();
   applyTypeColors();
+  attachSwipeHandlers();
 }
 function confirmRemove(name,dn){
   const list=allData[myListType]?.[cur]||{};
@@ -2458,9 +2623,20 @@ function removeEntry(name){
   const srcArr=listSource(myListType);
   const dn=srcArr.find(x=>x.name===name)?.displayName||name;
   undoStack={type:myListType,username:cur,list:{...prevList},name:dn};
-  const list={...prevList};delete list[name];
-  writeList(myListType,cur,list);
-  showUndo(dn);
+  // Animate the row out
+  const row=document.querySelector(`.myrow[data-name="${name.replace(/"/g,'\\"')}"]`);
+  if(row){
+    row.classList.add('removing');
+    setTimeout(()=>{
+      const list={...prevList};delete list[name];
+      writeList(myListType,cur,list);
+      showUndo(dn);
+    },220);
+  }else{
+    const list={...prevList};delete list[name];
+    writeList(myListType,cur,list);
+    showUndo(dn);
+  }
 }
 
 // ── SEARCH STRINGS ────────────────────────────────────────────
@@ -2666,6 +2842,15 @@ function toggleStrUser(el){
   const isOpen=body.classList.contains('open');
   body.classList.toggle('open',!isOpen);
   block.classList.toggle('expanded',!isOpen);
+  // Snapshot for diff view when opening
+  if(!isOpen){
+    const username=block.dataset.username;
+    if(username&&username!==cur){
+      markSnapshotSeen(strListType,username);
+      // Hide diff badges after viewing
+      setTimeout(()=>{block.querySelectorAll('.user-str-diff-badge').forEach(b=>b.style.opacity='.5');},300);
+    }
+  }
 }
 function toggleComboStrings(btn){
   const wrap=btn.closest('.combo-wrap');
@@ -2686,23 +2871,31 @@ function renderStrings(){
     const count=Object.keys(allData[strListType]?.[u]||{}).length;
     const luColor=freshnessColor(freshnessClass(ud.lastUpdated));
     const isMe=u===cur;
-    return`<div class="user-str-block">
+    const diff=isMe?{firstVisit:true,added:[],removed:[],changed:[]}:computeDiff(strListType,u);
+    const diffBadge=diffBadgeHtml(diff);
+    const diffDetails=isMe?'':diffDetailsHtml(diff,strListType,u);
+    const bioHtml=ud.bio?`<div class="profile-bio-display">"${escHtml(ud.bio)}"</div>`:'';
+    const discordHtml=ud.discord?`<div class="profile-discord">${escHtml(ud.discord)}</div>`:'';
+    const avInner=userAvatarHtml(u,26).replace('<div class="av"',`<div class="av" style="border:2px solid ${luColor}"`);
+    return`<div class="user-str-block" data-username="${escAttr(u)}">
       <div class="user-str-hdr" onclick="toggleStrUser(this)">
         <div class="user-str-info">
-          <div class="av" style="width:26px;height:26px;font-size:10px;border:2px solid ${luColor}">${u.slice(0,2).toUpperCase()}</div>
+          ${avInner}
           <div>
-            <span style="font-weight:600;font-size:14px">${u}${isMe?' (you)':''}</span>
-            ${ud.friendCode?`<span style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:6px">${ud.friendCode}</span>`:''}
-            <div style="display:flex;align-items:center;gap:8px;margin-top:2px">
+            <span style="font-weight:600;font-size:14px">${escHtml(u)}${isMe?' (you)':''}</span>${diffBadge}
+            ${ud.friendCode?`<span style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:6px">${escHtml(ud.friendCode)}</span>`:''}
+            <div style="display:flex;align-items:center;gap:8px;margin-top:2px;flex-wrap:wrap">
               <span style="font-size:11px;color:${luColor}">● ${freshnessLabel(ud.lastUpdated)}</span>
               <span style="font-size:11px;color:var(--muted)">${count} listed</span>
+              ${discordHtml}
             </div>
+            ${bioHtml}
           </div>
         </div>
         <span class="collapse-icon">▼</span>
       </div>
       <div class="user-str-body">
-        ${heatmapHtml(u)}
+        ${diffDetails}
         ${strs?strLevelsHtml(strs):'<div style="color:var(--muted);font-size:12px;padding:4px 0">Empty list</div>'}
       </div>
     </div>`;
@@ -2925,24 +3118,33 @@ async function denyRequest(reqId){
 
 // ── PROFILE ───────────────────────────────────────────────────
 function updateFcDisplay(){
-  const fc=allData.users?.[cur]?.friendCode||'';
+  const ud=allData.users?.[cur]||{};
+  const fc=ud.friendCode||'';
   document.getElementById('my-fc-wrap').innerHTML=fc
     ?`<div class="fc-chip" onclick="openModal('prof-modal')">🎮 ${fc}</div>`
     :`<div class="fc-chip" onclick="openModal('prof-modal')">+ Add Friend Code</div>`;
   document.getElementById('pfc-disp').textContent=fc||'Not set';
   document.getElementById('fc-inp').value=fc;
+  // Populate profile fields
+  const bio=document.getElementById('prof-bio');if(bio)bio.value=ud.bio||'';
+  const dis=document.getElementById('prof-discord');if(dis)dis.value=ud.discord||'';
+  const avi=document.getElementById('prof-av-input');if(avi)avi.value=ud.avatarPokemon||'';
+  updateAvatarPreview(ud.avatarPokemon||'');
 }
 async function saveProfile(){
   const fc=document.getElementById('fc-inp').value.trim();
   const p1=document.getElementById('np1').value;
   const p2=document.getElementById('np2').value;
+  const bio=document.getElementById('prof-bio')?.value.trim()||'';
+  const discord=document.getElementById('prof-discord')?.value.trim()||'';
+  const avatarPokemon=document.getElementById('prof-av-input')?.value.trim()||'';
   const err=document.getElementById('pin-err');err.textContent='';
-  if(!validateFc(fc)){err.textContent='Friend code must be 12 digits';return;}
+  if(fc&&!validateFc(fc)){err.textContent='Friend code must be 12 digits';return;}
   if(p1){
     if(!isSixDigitPin(p1)){err.textContent='PIN must be exactly 6 digits';return;}
     if(p1!==p2){err.textContent="PINs don't match";return;}
   }
-  const upd={friendCode:fc};
+  const upd={friendCode:fc,bio,discord,avatarPokemon};
   if(p1){
     if(auth){
       if(!auth.currentUser){err.textContent='Sign out and back in before changing your PIN';return;}
@@ -2957,7 +3159,19 @@ async function saveProfile(){
     }
     upd.pin=await hashPin(p1);upd.pinHashed=true;
   }
-  await writeUser(cur,upd);closeModal('prof-modal');updateFcDisplay();toast('✅ Profile saved!');
+  await writeUser(cur,upd);closeModal('prof-modal');updateFcDisplay();
+  // Update topbar avatar
+  const topAv=document.getElementById('top-av');
+  if(topAv&&avatarPokemon){
+    const norm=normalizeSpriteKey(avatarPokemon);
+    const found=spriteSourceIndex().get(norm);
+    if(found?.no){
+      const url=spriteUrl(found.no,found.name);
+      if(url){topAv.innerHTML=`<img src="${url}" alt="" style="width:100%;height:100%;object-fit:contain">`;topAv.style.overflow='hidden';}
+    }
+  }
+  refreshAll();
+  toast('✅ Profile saved!');
 }
 
 // ── UI HELPERS ────────────────────────────────────────────────
@@ -2965,7 +3179,10 @@ function setSyncStatus(s){
   const dot=document.getElementById('sdot');const lbl=document.getElementById('slbl');if(!dot)return;
   dot.className='sync-dot '+s;lbl.textContent={online:'Live',syncing:'Syncing…',offline:'Offline'}[s]||'';
 }
-function emptyHtml(t,s='',icon='🔍'){return`<div class="empty"><div class="empty-i">${icon}</div><div class="empty-t">${t}</div>${s?`<div class="empty-s">${s}</div>`:''}</div>`;}
+function emptyHtml(t,s='',icon='🔍'){
+  const svg=(typeof EMPTY_SVGS!=='undefined'&&EMPTY_SVGS[icon])||null;
+  return`<div class="empty">${svg||`<div class="empty-i">${icon}</div>`}<div class="empty-t">${t}</div>${s?`<div class="empty-s">${s}</div>`:''}</div>`;
+}
 let _modalPrevFocus=null;
 let _modalKeyHandler=null;
 function openModal(id){
@@ -2998,6 +3215,399 @@ function toast(msg,dur=2500){
   setTimeout(()=>t.classList.remove('show'),dur);
 }
 
+
+// ── PWA INSTALL PROMPT (#1) ──────────────────────────────────
+let _deferredInstallPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();
+  _deferredInstallPrompt=e;
+  document.getElementById('install-btn')?.classList.add('show');
+});
+window.addEventListener('appinstalled',()=>{
+  _deferredInstallPrompt=null;
+  document.getElementById('install-btn')?.classList.remove('show');
+  toast('✅ App installed!');
+});
+async function triggerInstall(){
+  if(!_deferredInstallPrompt){toast('Install not available on this browser');return;}
+  _deferredInstallPrompt.prompt();
+  const{outcome}=await _deferredInstallPrompt.userChoice;
+  if(outcome==='accepted'){toast('✅ Installing…');}
+  _deferredInstallPrompt=null;
+  document.getElementById('install-btn')?.classList.remove('show');
+}
+
+// ── WHAT'S NEW (#28) ─────────────────────────────────────────
+const WHATS_NEW=[
+  {version:'2.5',title:'Visual & UX Polish',desc:'Type colors, theme toggle, loading skeletons, subtle animations, empty state illustrations, "what\'s new" notifications.'},
+  {version:'2.4',title:'Export & Share',desc:'Export to Markdown (Discord/Reddit) and CSV. Read-only share links via ?view=username. PWA install prompt.'},
+  {version:'2.3',title:'Mobile First',desc:'Swipe-to-delete on My List. Pull-to-refresh. Improved mobile add form.'},
+  {version:'2.2',title:'Trainer Profiles',desc:'Custom Pokémon avatars, bio, Discord handle. Diff view shows what changed in trainers\' lists since you last looked.'},
+  {version:'2.1',title:'Bulk Operations',desc:'Toggle bulk edit mode to select multiple entries and apply priority, flags, or delete in one go.'},
+  {version:'2.0',title:'Flags & Filters',desc:'Independent ⚡ Lucky / XXL / XXS flags with their own search strings. Filter Browse by flags. Char count warnings.'}
+];
+function whatsNewLatestVersion(){return WHATS_NEW[0]?.version||'1.0';}
+function checkWhatsNew(){
+  const seen=lsGet('pogoWhatsNewSeen','');
+  const latest=whatsNewLatestVersion();
+  const badge=document.getElementById('bell-badge');
+  if(seen!==latest)badge?.classList.add('show');
+  else badge?.classList.remove('show');
+}
+function openWhatsNew(){
+  const list=document.getElementById('whatsnew-list');
+  if(list){
+    list.innerHTML=WHATS_NEW.map(w=>`<div class="whats-new-item">
+      <div class="whats-new-version">v${w.version}</div>
+      <div class="whats-new-title">${w.title}</div>
+      <div class="whats-new-desc">${w.desc}</div>
+    </div>`).join('');
+  }
+  openModal('whatsnew-modal');
+  // Mark as seen
+  lsSet('pogoWhatsNewSeen',whatsNewLatestVersion());
+  document.getElementById('bell-badge')?.classList.remove('show');
+}
+function closeWhatsNew(){closeModal('whatsnew-modal');}
+
+// ── PROFILE CUSTOMIZATION (#8) ───────────────────────────────
+function updateAvatarPreview(name){
+  const prev=document.getElementById('prof-av-preview');
+  if(!prev)return;
+  if(!name||!name.trim()){
+    prev.innerHTML=(cur||'?').slice(0,2).toUpperCase();
+    return;
+  }
+  // Look up Pokemon by name (case-insensitive)
+  const norm=normalizeSpriteKey(name);
+  const found=spriteSourceIndex().get(norm);
+  if(found?.no){
+    const url=spriteUrl(found.no,found.name);
+    if(url){prev.innerHTML=`<img src="${url}" alt="">`;return;}
+  }
+  prev.innerHTML=(cur||'?').slice(0,2).toUpperCase();
+}
+function userAvatarHtml(username,size=28){
+  const ud=allData.users?.[username]||{};
+  const avPok=ud.avatarPokemon;
+  if(avPok){
+    const norm=normalizeSpriteKey(avPok);
+    const found=spriteSourceIndex().get(norm);
+    if(found?.no){
+      const url=spriteUrl(found.no,found.name);
+      if(url)return `<div class="av" style="width:${size}px;height:${size}px;overflow:hidden;font-size:0"><img src="${url}" alt="" style="width:100%;height:100%;object-fit:contain;image-rendering:pixelated"></div>`;
+    }
+  }
+  return `<div class="av" style="width:${size}px;height:${size}px;font-size:${Math.round(size*.35)}px">${username.slice(0,2).toUpperCase()}</div>`;
+}
+
+// ── DIFF VIEW (#17) ──────────────────────────────────────────
+const DIFF_SNAPSHOT_KEY='pogoListSnapshots_v1';
+function loadSnapshots(){try{return JSON.parse(localStorage.getItem(DIFF_SNAPSHOT_KEY)||'{}');}catch{return{};}}
+function saveSnapshot(type,username,list){
+  const snaps=loadSnapshots();
+  if(!snaps[type])snaps[type]={};
+  snaps[type][username]={keys:Object.keys(list||{}),values:Object.assign({},list||{}),savedAt:Date.now()};
+  try{localStorage.setItem(DIFF_SNAPSHOT_KEY,JSON.stringify(snaps));}catch{}
+}
+function computeDiff(type,username){
+  const snaps=loadSnapshots();
+  const prev=snaps[type]?.[username];
+  const cur=allData[type]?.[username]||{};
+  if(!prev)return{firstVisit:true,added:[],removed:[],changed:[]};
+  const prevSet=new Set(prev.keys||[]);
+  const curSet=new Set(Object.keys(cur));
+  const added=[...curSet].filter(k=>!prevSet.has(k));
+  const removed=[...prevSet].filter(k=>!curSet.has(k));
+  const changed=[...curSet].filter(k=>prevSet.has(k)&&prev.values?.[k]!==cur[k]);
+  return{firstVisit:false,added,removed,changed,savedAt:prev.savedAt};
+}
+function diffBadgeHtml(diff){
+  if(diff.firstVisit)return'';
+  const total=diff.added.length+diff.removed.length+diff.changed.length;
+  if(!total)return'';
+  const parts=[];
+  if(diff.added.length)parts.push(`<span class="user-str-diff-badge added">+${diff.added.length}</span>`);
+  if(diff.removed.length)parts.push(`<span class="user-str-diff-badge removed">−${diff.removed.length}</span>`);
+  if(diff.changed.length)parts.push(`<span class="user-str-diff-badge">~${diff.changed.length}</span>`);
+  return parts.join('');
+}
+function diffDetailsHtml(diff,type,username){
+  if(diff.firstVisit)return'';
+  const total=diff.added.length+diff.removed.length+diff.changed.length;
+  if(!total)return'';
+  const srcArr=listSource(type);
+  const dn={};srcArr.forEach(e=>{dn[e.name]=e.displayName||e.name;});
+  const dt=diff.savedAt?new Date(diff.savedAt).toLocaleDateString(undefined,{month:'short',day:'numeric'}):'last visit';
+  const lines=[];
+  diff.added.slice(0,8).forEach(k=>lines.push(`<div class="diff-line added">${escHtml(dn[k]||k)}</div>`));
+  diff.removed.slice(0,4).forEach(k=>lines.push(`<div class="diff-line removed">${escHtml(dn[k]||k)}</div>`));
+  diff.changed.slice(0,4).forEach(k=>lines.push(`<div class="diff-line changed">${escHtml(dn[k]||k)}</div>`));
+  const omitted=total-(Math.min(8,diff.added.length)+Math.min(4,diff.removed.length)+Math.min(4,diff.changed.length));
+  return `<div class="diff-summary">📊 Changes since ${dt}: <strong>+${diff.added.length} added · −${diff.removed.length} removed · ~${diff.changed.length} changed</strong>
+    <div style="margin-top:6px">${lines.join('')}${omitted>0?`<div class="diff-line" style="color:var(--muted)">…and ${omitted} more</div>`:''}</div>
+  </div>`;
+}
+function markSnapshotSeen(type,username){saveSnapshot(type,username,allData[type]?.[username]||{});}
+
+// ── EXPORT TO FORMATS (#10) ──────────────────────────────────
+function toggleExportMenu(ev){
+  ev?.stopPropagation();
+  const menu=document.getElementById('export-menu');
+  const btn=document.getElementById('export-menu-btn');
+  const open=!menu.classList.contains('open');
+  menu.classList.toggle('open',open);
+  btn.setAttribute('aria-expanded',open?'true':'false');
+  if(open){
+    setTimeout(()=>document.addEventListener('click',_closeExportOnOutside),0);
+  }
+}
+function _closeExportOnOutside(e){
+  const wrap=document.querySelector('.export-menu-wrap');
+  if(wrap&&!wrap.contains(e.target))closeExportMenu();
+}
+function closeExportMenu(){
+  document.getElementById('export-menu')?.classList.remove('open');
+  document.getElementById('export-menu-btn')?.setAttribute('aria-expanded','false');
+  document.removeEventListener('click',_closeExportOnOutside);
+}
+function exportMyListMarkdown(){
+  const entries=currentListEntries(myListType).filter(e=>e.p&&PRI[e.p]);
+  if(!entries.length){toast('Add H/M/L entries first');return;}
+  const groups={H:[],M:[],L:[]};
+  entries.forEach(e=>{if(groups[e.p])groups[e.p].push(e);});
+  const ud=allData.users?.[cur]||{};
+  let md=`## ${cur}'s ${listLabel(myListType)} List\n\n`;
+  if(ud.friendCode)md+=`**Friend Code:** \`${ud.friendCode}\`\n`;
+  if(ud.bio)md+=`*${ud.bio}*\n`;
+  if(ud.discord)md+=`**Discord:** ${ud.discord}\n`;
+  md+=`\n_${entries.length} entries · Updated ${new Date().toLocaleDateString()}_\n\n`;
+  ['H','M','L'].forEach(p=>{
+    if(!groups[p].length)return;
+    md+=`### ${priLabel(p)} Priority (${groups[p].length})\n`;
+    groups[p].forEach(e=>{
+      const flags=[e.lucky?'⚡':'',e.xxl?'XXL':'',e.xxs?'XXS':''].filter(Boolean).join(' ');
+      md+=`- ${e.dn}${e.mod?` *(${e.mod})*`:''}${flags?` — ${flags}`:''}\n`;
+    });
+    md+='\n';
+  });
+  copyText(md).then(()=>toast('📝 Markdown copied to clipboard!'));
+}
+function exportMyListCSV(){
+  const entries=currentListEntries(myListType);
+  if(!entries.length){toast('Add entries first');return;}
+  const rows=[['Name','Dex','Priority','Lucky','XXL','XXS','Notes']];
+  entries.forEach(e=>{
+    rows.push([e.dn,e.no||'',e.p||'',e.lucky?'Y':'',e.xxl?'Y':'',e.xxs?'Y':'',e.mod||'']);
+  });
+  const csv=rows.map(r=>r.map(c=>{
+    const s=String(c||'');
+    return /[",\n]/.test(s)?`"${s.replace(/"/g,'""')}"`:s;
+  }).join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=`pogo-${safeFilePart(cur)}-${safeFilePart(listLabel(myListType))}-${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+  toast('📊 CSV downloaded!');
+}
+function copyShareLink(){
+  const url=`${location.origin}${location.pathname}?view=${encodeURIComponent(cur)}&list=${myListType}`;
+  copyText(url).then(()=>toast('🔗 Share link copied!'));
+}
+
+// ── READ-ONLY SHARE VIEW (#9) ────────────────────────────────
+function checkShareViewParam(){
+  const params=new URLSearchParams(location.search);
+  const view=params.get('view');
+  const list=params.get('list')||'wishlist';
+  if(view)return{username:view,type:list};
+  return null;
+}
+function enterShareView(username,type){
+  document.getElementById('app').style.display='none';
+  document.getElementById('login-pg').style.display='none';
+  document.getElementById('config-pg').style.display='none';
+  document.getElementById('share-view').classList.add('active');
+  renderShareView(username,type);
+}
+function exitShareView(){
+  document.getElementById('share-view').classList.remove('active');
+  history.replaceState({},'',location.pathname);
+  // Re-init normal flow
+  const s=checkSession();
+  if(s&&allData.users?.[s]){cur=s;showApp();}
+  else showLogin();
+}
+function renderShareView(username,type){
+  const ud=allData.users?.[username]||{};
+  const list=allData[type]?.[username]||{};
+  const hdr=document.getElementById('share-hdr');
+  const bioHtml=ud.bio?`<div class="share-hdr-bio">"${escHtml(ud.bio)}"</div>`:'';
+  hdr.innerHTML=`${userAvatarHtml(username,64)}
+    <div class="share-hdr-info">
+      <div class="share-hdr-name">${escHtml(username)}'s Trade List</div>
+      <div class="share-hdr-meta">
+        ${ud.friendCode?`<span class="meta-item">🎮 <code style="font-family:var(--mono);font-size:12px">${escHtml(ud.friendCode)}</code></span>`:''}
+        ${ud.discord?`<span class="meta-item profile-discord">${escHtml(ud.discord)}</span>`:''}
+        <span class="meta-item">📅 Updated ${freshnessLabel(ud.lastUpdated)}</span>
+      </div>
+      ${bioHtml}
+    </div>`;
+  // Tabs
+  const tabs=document.getElementById('share-list-tabs');
+  tabs.innerHTML=['wishlist','dynamax','gmax','costumes'].map(t=>{
+    const count=Object.keys(allData[t]?.[username]||{}).length;
+    if(!count)return'';
+    return `<button class="ltab ${t===type?'active':''}" onclick="renderShareView('${username}','${t}')">${LIST_LABELS[t]} (${count})</button>`;
+  }).join('');
+  // Body — render in same style as user-str-block
+  const out=document.getElementById('share-list-out');
+  if(!Object.keys(list).length){
+    out.innerHTML=emptyHtml('No entries in this list','Try a different list tab above.','📋');
+    return;
+  }
+  const strs=buildStrings(type,username);
+  // Build grouped visual + strings
+  const srcArr=listSource(type);
+  const dispMap={},noMap={};
+  srcArr.forEach(e=>{dispMap[e.name]=e.displayName||e.name;if(e.no)noMap[e.name]=e.no;});
+  const grouped={H:[],M:[],L:[],Other:[]};
+  Object.entries(list).forEach(([name,val])=>{
+    const{p,mod,lucky,xxl,xxs}=parsePri(val);
+    const tag=(p&&grouped[p])?p:'Other';
+    grouped[tag].push({name,dn:dispMap[name]||name,no:noMap[name]||'',p,mod,lucky,xxl,xxs});
+  });
+  let html='';
+  ['H','M','L'].forEach(p=>{
+    if(!grouped[p].length)return;
+    html+=`<div class="str-level"><div class="str-level-hdr"><span class="badge ${p}"><span class="prio-mark">${p}</span>${priBadge(p)}</span><span style="margin-left:auto;color:var(--muted);font-size:11px">${grouped[p].length} entries</span></div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;padding:8px 0">${grouped[p].map(e=>{
+        const flags=[e.lucky?'⚡':'',e.xxl?'XXL':'',e.xxs?'XXS':''].filter(Boolean).join('');
+        return `<div style="display:inline-flex;align-items:center;gap:4px;background:var(--bg2);padding:4px 8px;border-radius:6px;font-size:12px;border:1px solid var(--border)">${e.no?spriteImg(e.no,20,'pc-sprite',e.name):'🎮'}<span>${escHtml(e.dn)}</span>${e.mod?`<span style="color:var(--muted);font-size:10px">${escHtml(e.mod)}</span>`:''}${flags?`<span style="font-size:10px;color:var(--ac2)">${flags}</span>`:''}</div>`;
+      }).join('')}</div></div>`;
+  });
+  if(strs)html+=strLevelsHtml(strs);
+  out.innerHTML=html;
+}
+
+// ── SWIPE GESTURES (#12) ─────────────────────────────────────
+let _swipeState=null;
+function attachSwipeHandlers(){
+  if(!('ontouchstart'in window))return;
+  const grid=document.getElementById('mylist-grid');
+  if(!grid||grid._swipeAttached)return;
+  grid._swipeAttached=true;
+  grid.addEventListener('touchstart',swipeStart,{passive:true});
+  grid.addEventListener('touchmove',swipeMove,{passive:false});
+  grid.addEventListener('touchend',swipeEnd,{passive:true});
+}
+function swipeStart(ev){
+  const row=ev.target.closest('.myrow');
+  if(!row||ev.target.closest('button,input,select,.drag-handle'))return;
+  const t=ev.touches[0];
+  _swipeState={row,startX:t.clientX,startY:t.clientY,dx:0,dy:0,vert:false};
+}
+function swipeMove(ev){
+  if(!_swipeState)return;
+  const t=ev.touches[0];
+  _swipeState.dx=t.clientX-_swipeState.startX;
+  _swipeState.dy=t.clientY-_swipeState.startY;
+  if(!_swipeState.vert&&Math.abs(_swipeState.dy)>Math.abs(_swipeState.dx)+10){
+    _swipeState.vert=true;_swipeState.row.style.transform='';
+    return;
+  }
+  if(_swipeState.vert)return;
+  if(Math.abs(_swipeState.dx)>10)ev.preventDefault();
+  _swipeState.row.classList.add('swiping');
+  _swipeState.row.style.transform=`translateX(${_swipeState.dx}px)`;
+  _swipeState.row.classList.toggle('swipe-action',_swipeState.dx<-60);
+  _swipeState.row.classList.toggle('swipe-action-select',_swipeState.dx>60);
+}
+function swipeEnd(ev){
+  if(!_swipeState)return;
+  const{row,dx,vert}=_swipeState;
+  row.classList.remove('swiping','swipe-action','swipe-action-select');
+  if(!vert&&dx<-80){
+    // Swipe left = delete
+    row.style.transform='translateX(-100%)';
+    setTimeout(()=>{const n=row.dataset.name;if(n)confirmRemove(n,row.dataset.full||n);},150);
+  }else if(!vert&&dx>80){
+    // Swipe right = toggle bulk select
+    row.style.transform='';
+    const n=row.dataset.name;
+    if(n){
+      if(!bulkMode)toggleBulkMode();
+      toggleBulkSelection(n);
+    }
+  }else{
+    row.style.transform='';
+  }
+  _swipeState=null;
+}
+
+// ── PULL TO REFRESH (#13) ────────────────────────────────────
+let _ptrState=null;
+function attachPullToRefresh(){
+  if(!('ontouchstart'in window))return;
+  document.addEventListener('touchstart',ptrStart,{passive:true});
+  document.addEventListener('touchmove',ptrMove,{passive:false});
+  document.addEventListener('touchend',ptrEnd,{passive:true});
+}
+function ptrStart(ev){
+  if(window.scrollY>0)return;
+  const t=ev.touches[0];
+  _ptrState={startY:t.clientY,dy:0,active:false};
+}
+function ptrMove(ev){
+  if(!_ptrState)return;
+  const t=ev.touches[0];
+  _ptrState.dy=t.clientY-_ptrState.startY;
+  if(_ptrState.dy<10){return;}
+  if(window.scrollY>0){_ptrState=null;return;}
+  ev.preventDefault();
+  _ptrState.active=true;
+  const ind=document.getElementById('ptr-indicator');
+  if(ind){
+    ind.classList.add('visible');
+    if(_ptrState.dy>70){ind.classList.add('pulling');ind.textContent='↑';}
+    else{ind.classList.remove('pulling');ind.textContent='↓';}
+  }
+}
+function ptrEnd(){
+  if(!_ptrState||!_ptrState.active){_ptrState=null;return;}
+  const ind=document.getElementById('ptr-indicator');
+  if(_ptrState.dy>70){
+    // Trigger refresh
+    if(ind){ind.classList.add('refreshing');ind.innerHTML='<svg width="14" height="14" viewBox="0 0 14 14"><path d="M12 2v3h-3M2 12v-3h3M12 5a5 5 0 0 0-9-1m-1 5a5 5 0 0 0 9 1" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';}
+    syncFromLocal();
+    if(fbOn&&db)flushSyncQueue();
+    setTimeout(()=>{
+      ind?.classList.remove('visible','pulling','refreshing');
+      if(ind)ind.textContent='↓';
+      toast('🔄 Refreshed');
+    },800);
+  }else{
+    ind?.classList.remove('visible','pulling','refreshing');
+  }
+  _ptrState=null;
+}
+
+// ── EMPTY STATE SVGS (#25) ───────────────────────────────────
+const EMPTY_SVGS={
+  '📋':`<svg class="empty-svg" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="14" y="8" width="36" height="48" rx="3"/><line x1="20" y1="20" x2="44" y2="20"/><line x1="20" y1="28" x2="44" y2="28"/><line x1="20" y1="36" x2="36" y2="36"/><circle cx="44" cy="44" r="7" stroke-dasharray="2 3"/></svg>`,
+  '🔍':`<svg class="empty-svg" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="28" cy="28" r="14"/><line x1="38" y1="38" x2="50" y2="50"/></svg>`,
+  '⚙️':`<svg class="empty-svg" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="32" cy="32" r="6"/><path d="M32 12v6M32 46v6M52 32h-6M18 32h-6M46 18l-4 4M22 42l-4 4M46 46l-4-4M22 22l-4-4"/></svg>`
+};
+// Override emptyHtml to use SVGs when available
+const _origEmptyHtml=window.emptyHtml||function(t,s,i){return`<div class="empty">${EMPTY_SVGS[i]||`<div class="empty-i">${i||'🔍'}</div>`}<div class="empty-t">${t}</div>${s?`<div class="empty-s">${s}</div>`:''}</div>`;};
+
+// ── LOADING SKELETONS (#26) ──────────────────────────────────
+function skeletonRows(count=5,cls='skel-row'){return Array.from({length:count}).map(()=>`<div class="skel ${cls}"></div>`).join('');}
+function showSkeletonMyList(){
+  const el=document.getElementById('mylist-out');
+  if(el&&!el.children.length)el.innerHTML=`<div class="mygrid">${skeletonRows(6)}</div>`;
+}
 
 // ── THEME TOGGLE (#18) ────────────────────────────────────────
 function applyTheme(theme){
@@ -3218,30 +3828,6 @@ function renderBackupReminder(){
   </div>`;
 }
 
-// ── ACTIVITY HEATMAP (#17) ────────────────────────────────────
-function buildHeatmap(username,weeks=12){
-  // We only have lastUpdated per user. Use a simplified heatmap of weekly activity.
-  // Since we don't track per-day, we'll show a single bar for current week and dim past weeks.
-  const ud=allData.users?.[username]||{};
-  const last=ud.lastUpdated||0;
-  const now=Date.now();
-  const cells=[];
-  for(let i=weeks-1;i>=0;i--){
-    const weekEnd=now-i*7*24*60*60*1000;
-    const weekStart=weekEnd-7*24*60*60*1000;
-    let level=0;
-    if(last>=weekStart&&last<=weekEnd)level=4;
-    else if(last>=weekStart-7*24*60*60*1000&&last<weekStart)level=2;
-    cells.push(level);
-  }
-  return cells;
-}
-function heatmapHtml(username){
-  const cells=buildHeatmap(username,12);
-  return `<div class="heatmap">${cells.map(l=>`<div class="heatmap-cell ${l?'l'+l:''}" title="${l?'Active':'Inactive'}"></div>`).join('')}</div>
-  <div class="heatmap-legend">Less <span class="heatmap-cell"></span><span class="heatmap-cell l1"></span><span class="heatmap-cell l2"></span><span class="heatmap-cell l3"></span><span class="heatmap-cell l4"></span> More · 12 weeks</div>`;
-}
-
 // ── CONFLICT DETECTION (#13) ──────────────────────────────────
 function checkConflict(type,username,localList,remoteList){
   // Compare keys. If both have same key with different values, that's a conflict.
@@ -3429,7 +4015,11 @@ Object.assign(window,{
   acSearch,acSelect,acKeydown,formatFc,toggleStrUser,toggleComboStrings,renderMyList,
   // New enhancements
   toggleTheme,toggleBulkMode,toggleBulkSelection,bulkSetPri,bulkToggleFlag,bulkDelete,
-  startVoiceInput,toggleFlagFilter,recordBackup,renderBackupReminder,confirmRemove,lsSet
+  startVoiceInput,toggleFlagFilter,recordBackup,renderBackupReminder,confirmRemove,lsSet,
+  // Latest batch
+  triggerInstall,openWhatsNew,closeWhatsNew,updateAvatarPreview,
+  toggleExportMenu,closeExportMenu,exportMyListMarkdown,exportMyListCSV,copyShareLink,
+  exitShareView,renderShareView
 });
 
 // ── BOOT ──────────────────────────────────────────────────────
@@ -3460,9 +4050,19 @@ document.addEventListener('DOMContentLoaded',()=>{
   // Hardcoded Firebase URL — config screen never shown
   lsSet('fbUrl',FIREBASE_URL);
   syncFromLocal();
+  // Check for read-only share view
+  const shareReq=checkShareViewParam();
   try{
     setupFirebase(FIREBASE_URL);setSyncStatus('syncing');
     startListener();
+    if(shareReq){
+      // Wait briefly for Firebase data, then render share view
+      setTimeout(()=>{
+        if(allData.users?.[shareReq.username])enterShareView(shareReq.username,shareReq.type);
+        else{toast(`Trainer "${shareReq.username}" not found`);showLogin();}
+      },1500);
+      return;
+    }
     const s=checkSession();
     if(s&&allData.users?.[s]){cur=s;showApp();}
     else showLogin();
