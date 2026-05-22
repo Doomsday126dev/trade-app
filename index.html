@@ -1043,7 +1043,8 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(180deg,#f9f9fc 
       <div class="profile-avatar-preview" id="prof-av-preview">?</div>
       <div style="flex:1;min-width:0">
         <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px">Avatar Pokémon (optional)</label>
-        <input type="text" id="prof-av-input" placeholder="e.g. Pikachu, Lucario…" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--text);padding:7px 10px;border-radius:var(--r2);font-size:13px" oninput="updateAvatarPreview(this.value)">
+        <input type="text" id="prof-av-input" list="prof-av-list" placeholder="Search or pick a Pokémon…" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--text);padding:7px 10px;border-radius:var(--r2);font-size:13px" oninput="updateAvatarPreview(this.value)">
+        <datalist id="prof-av-list"></datalist>
       </div>
     </div>
     <div class="pfc"><div class="pfc-lbl">Friend Code</div><div class="pfc-val" id="pfc-disp">—</div></div>
@@ -1354,7 +1355,7 @@ function femaleSpriteUrl(no){
   return`${SPRITE_BASE}female/${n}.png`;
 }
 
-const REGIONAL_FORM_IDS={"A-Rattata": 10091, "A-Raichu": 10100, "A-Sandshrew": 10101, "A-Vulpix": 10103, "A-Diglett": 10105, "A-Meowth": 10107, "A-Geodude": 10109, "A-Grimer": 10112, "A-Exeggutor": 10114, "A-Marowak": 10115, "G-Meowth": 10161, "G-Ponyta": 10162, "G-Slowpoke": 10164, "G-Farfetch'd": 10166, "G-Weezing": 10167, "G-Mr_ Mime": 10168, "G-Corsola": 10173, "G-Zigzagoon": 10174, "G-Darumaka": 10176, "G-Yamask": 10179, "G-Stunfisk": 10180, "H-Growlithe": 10229, "H-Voltorb": 10231, "H-Typhlosion": 10233, "H-Qwilfish": 10234, "H-Sneasel": 10235, "H-Samurott": 10236, "H-Lilligant": 10237, "H-Zorua": 10238, "H-Braviary": 10240, "H-Sliggoo": 10241, "H-Avalugg": 10243, "H-Decidueye": 10244, "P-Tauros": 10250, "P-Tauros (Combat)": 10250, "P-Tauros (Blaze)": 10251, "P-Tauros (Fire)": 10251, "P-Tauros (Aqua)": 10252, "P-Tauros (Water)": 10252, "P-Wooper": 10253, "Castform (Sunny)": 10013, "Castform (Rainy)": 10014, "Castform (Snowy)": 10015};
+const REGIONAL_FORM_IDS={"A-Rattata": 10091, "A-Raichu": 10100, "A-Sandshrew": 10101, "A-Vulpix": 10103, "A-Diglett": 10105, "A-Meowth": 10107, "A-Geodude": 10109, "A-Grimer": 10112, "A-Exeggutor": 10114, "A-Marowak": 10115, "G-Meowth": 10161, "G-Ponyta": 10162, "G-Slowpoke": 10164, "G-Farfetch'd": 10166, "G-Weezing": 10167, "G-Mr_ Mime": 10168, "G-Articuno":10169, "Galarian Articuno":10169, "G-Zapdos":10170, "Galarian Zapdos":10170, "G-Moltres":10171, "Galarian Moltres":10171, "G-Corsola": 10173, "G-Zigzagoon": 10174, "G-Darumaka": 10176, "G-Yamask": 10179, "G-Stunfisk": 10180, "H-Growlithe": 10229, "H-Voltorb": 10231, "H-Typhlosion": 10233, "H-Qwilfish": 10234, "H-Sneasel": 10235, "H-Samurott": 10236, "H-Lilligant": 10237, "H-Zorua": 10238, "H-Braviary": 10240, "H-Sliggoo": 10241, "H-Avalugg": 10243, "H-Decidueye": 10244, "P-Tauros": 10250, "P-Tauros (Combat)": 10250, "P-Tauros (Blaze)": 10251, "P-Tauros (Fire)": 10251, "P-Tauros (Aqua)": 10252, "P-Tauros (Water)": 10252, "P-Wooper": 10253, "Castform (Sunny)": 10013, "Castform (Rainy)": 10014, "Castform (Snowy)": 10015};
 // Form-specific sprite IDs/filenames from PokeAPI sprites. These are CORS-safe for canvas export.
 const COSTUME_FORM_SPRITE_IDS={
   "Unown (A)":201,"Unown (B)":"201-b","Unown (C)":"201-c","Unown (D)":"201-d",
@@ -1482,6 +1483,17 @@ const EXTRA_FORM_ENTRIES=[
   {no:327,name:"Spinda (Form 8)",displayName:"Spinda (Form 8)",spriteUrl:"https://www.serebii.net/pokemongo/pokemon/327-8.png",users:{}},
   {no:327,name:"Spinda (Heart)",displayName:"Spinda (Heart)",spriteUrl:"https://www.serebii.net/pokemongo/pokemon/327-9.png",users:{}}
 ];
+const LEGENDARY_AVATAR_ENTRIES=[
+  [144,'Articuno'],[144,'G-Articuno','Galarian Articuno'],[145,'Zapdos'],[145,'G-Zapdos','Galarian Zapdos'],[146,'Moltres'],[146,'G-Moltres','Galarian Moltres'],[150,'Mewtwo'],[151,'Mew'],
+  [243,'Raikou'],[244,'Entei'],[245,'Suicune'],[249,'Lugia'],[250,'Ho-Oh'],[251,'Celebi'],
+  [377,'Regirock'],[378,'Regice'],[379,'Registeel'],[380,'Latias'],[381,'Latios'],[382,'Kyogre'],[383,'Groudon'],[384,'Rayquaza'],[385,'Jirachi'],[386,'Deoxys'],
+  [480,'Uxie'],[481,'Mesprit'],[482,'Azelf'],[483,'Dialga'],[484,'Palkia'],[485,'Heatran'],[486,'Regigigas'],[487,'Giratina'],[488,'Cresselia'],[489,'Phione'],[490,'Manaphy'],[491,'Darkrai'],[492,'Shaymin'],[493,'Arceus'],
+  [638,'Cobalion'],[639,'Terrakion'],[640,'Virizion'],[641,'Tornadus'],[642,'Thundurus'],[643,'Reshiram'],[644,'Zekrom'],[645,'Landorus'],[646,'Kyurem'],[647,'Keldeo'],[648,'Meloetta'],[649,'Genesect'],
+  [716,'Xerneas'],[717,'Yveltal'],[718,'Zygarde'],[719,'Diancie'],[720,'Hoopa'],[721,'Volcanion'],
+  [772,'Type: Null'],[773,'Silvally'],[785,'Tapu Koko'],[786,'Tapu Lele'],[787,'Tapu Bulu'],[788,'Tapu Fini'],[789,'Cosmog'],[790,'Cosmoem'],[791,'Solgaleo'],[792,'Lunala'],[793,'Nihilego'],[794,'Buzzwole'],[795,'Pheromosa'],[796,'Xurkitree'],[797,'Celesteela'],[798,'Kartana'],[799,'Guzzlord'],[800,'Necrozma'],[801,'Magearna'],[802,'Marshadow'],[807,'Zeraora'],[808,'Meltan'],[809,'Melmetal'],
+  [888,'Zacian'],[889,'Zamazenta'],[890,'Eternatus'],[891,'Kubfu'],[892,'Urshifu'],[893,'Zarude'],[894,'Regieleki'],[895,'Regidrago'],[896,'Glastrier'],[897,'Spectrier'],[898,'Calyrex'],[905,'Enamorus'],
+  [1001,'Wo-Chien'],[1002,'Chien-Pao'],[1003,'Ting-Lu'],[1004,'Chi-Yu'],[1007,'Koraidon'],[1008,'Miraidon'],[1009,'Walking Wake'],[1010,'Iron Leaves'],[1014,'Okidogi'],[1015,'Munkidori'],[1016,'Fezandipiti'],[1017,'Ogerpon'],[1020,'Gouging Fire'],[1021,'Raging Bolt'],[1022,'Iron Boulder'],[1023,'Iron Crown'],[1024,'Terapagos'],[1025,'Pecharunt']
+].map(([no,name,displayName])=>({no,name,displayName:displayName||name,users:{}}));
 const EXTRA_COSTUME_SPRITES=Object.fromEntries([...EXTRA_COSTUME_ENTRIES,...EXTRA_FORM_ENTRIES].map(e=>[e.name,e.spriteUrl]));
 function padDex(no){
   const n=parseInt(no);
@@ -2402,8 +2414,7 @@ function showApp(){
   ['top-av','my-av'].forEach(id=>{
     const el=document.getElementById(id);if(!el)return;
     if(ud.avatarPokemon){
-      const norm=normalizeSpriteKey(ud.avatarPokemon);
-      const found=spriteSourceIndex().get(norm);
+      const found=avatarEntryForName(ud.avatarPokemon);
       if(found?.no){
         const url=spriteUrl(found.no,found.name);
         if(url){el.innerHTML=`<img src="${url}" alt="" style="width:100%;height:100%;object-fit:contain;image-rendering:pixelated">`;el.style.overflow='hidden';return;}
@@ -2870,7 +2881,7 @@ function spriteSourceIndex(){
     const k=normalizeSpriteKey(key);
     if(k&&!spriteIndex.has(k))spriteIndex.set(k,e);
   };
-  [...DB.wishlist,...DB.dynamax,...DB.gmax,...allCostumeEntries()].forEach(e=>{
+  [...DB.wishlist,...DB.dynamax,...DB.gmax,...allCostumeEntries(),...LEGENDARY_AVATAR_ENTRIES].forEach(e=>{
     if(!e.no)return;
     add(e.name,e);add(e.displayName,e);
   });
@@ -3877,6 +3888,7 @@ function updateFcDisplay(){
   const bio=document.getElementById('prof-bio');if(bio)bio.value=ud.bio||'';
   const dis=document.getElementById('prof-discord');if(dis)dis.value=ud.discord||'';
   const avi=document.getElementById('prof-av-input');if(avi)avi.value=ud.avatarPokemon||'';
+  renderAvatarOptions();
   const wp=document.getElementById('prof-wallpaper');if(wp)wp.value=ud.wallpaper||'mono';
   const picker=document.getElementById('wp-picker');
   if(picker)picker.innerHTML=wallpaperPickerHtml(ud.wallpaper||'mono');
@@ -3916,8 +3928,7 @@ async function saveProfile(){
   // Update topbar avatar
   const topAv=document.getElementById('top-av');
   if(topAv&&avatarPokemon){
-    const norm=normalizeSpriteKey(avatarPokemon);
-    const found=spriteSourceIndex().get(norm);
+    const found=avatarEntryForName(avatarPokemon);
     if(found?.no){
       const url=spriteUrl(found.no,found.name);
       if(url){topAv.innerHTML=`<img src="${url}" alt="" style="width:100%;height:100%;object-fit:contain">`;topAv.style.overflow='hidden';}
@@ -4391,6 +4402,33 @@ function openWhatsNew(){
 function closeWhatsNew(){closeModal('whatsnew-modal');}
 
 // ── PROFILE CUSTOMIZATION (#8) ───────────────────────────────
+function avatarOptionEntries(){
+  const seen=new Set(),out=[];
+  const add=e=>{
+    if(!e?.no)return;
+    const label=e.displayName||e.name;
+    const key=normalizeSpriteKey(label);
+    if(!key||seen.has(key))return;
+    seen.add(key);
+    out.push({...e,displayName:label});
+  };
+  LEGENDARY_AVATAR_ENTRIES.forEach(add);
+  [...DB.wishlist,...DB.dynamax,...DB.gmax].forEach(add);
+  return out.sort((a,b)=>(parseInt(a.no)||9999)-(parseInt(b.no)||9999)||alphaCompare(a.displayName,b.displayName));
+}
+function renderAvatarOptions(){
+  const list=document.getElementById('prof-av-list');
+  if(!list||list.dataset.ready==='1')return;
+  list.innerHTML=avatarOptionEntries().map(e=>`<option value="${escAttr(e.displayName||e.name)}" label="#${e.no}"></option>`).join('');
+  list.dataset.ready='1';
+}
+function avatarEntryForName(name){
+  const norm=normalizeSpriteKey(name);
+  if(!norm)return null;
+  const direct=avatarOptionEntries().find(e=>normalizeSpriteKey(e.displayName)===norm||normalizeSpriteKey(e.name)===norm);
+  if(direct)return direct;
+  return spriteSourceIndex().get(norm)||null;
+}
 function updateAvatarPreview(name){
   const prev=document.getElementById('prof-av-preview');
   if(!prev)return;
@@ -4399,8 +4437,7 @@ function updateAvatarPreview(name){
     return;
   }
   // Look up Pokemon by name (case-insensitive)
-  const norm=normalizeSpriteKey(name);
-  const found=spriteSourceIndex().get(norm);
+  const found=avatarEntryForName(name);
   if(found?.no){
     const url=spriteUrl(found.no,found.name);
     if(url){prev.innerHTML=`<img src="${url}" alt="">`;return;}
@@ -4411,8 +4448,7 @@ function userAvatarHtml(username,size=28){
   const ud=allData.users?.[username]||{};
   const avPok=ud.avatarPokemon;
   if(avPok){
-    const norm=normalizeSpriteKey(avPok);
-    const found=spriteSourceIndex().get(norm);
+    const found=avatarEntryForName(avPok);
     if(found?.no){
       const url=spriteUrl(found.no,found.name);
       if(url)return `<div class="av" style="width:${size}px;height:${size}px;overflow:hidden;font-size:0"><img src="${url}" alt="" style="width:100%;height:100%;object-fit:contain;image-rendering:pixelated"></div>`;
