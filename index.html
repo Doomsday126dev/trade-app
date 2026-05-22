@@ -597,6 +597,103 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
 .tab,.fbtn,.ltab,.sfbtn,.pb,.flag-btn{transition:background .15s,color .15s,border-color .15s,transform .1s}
 .tab:active,.fbtn:active,.ltab:active,.sfbtn:active,.pb:active,.flag-btn:active{transform:scale(.96)}
 
+/* ADD-ALL-VARIANTS BANNER (#2) */
+.ac-family-banner{display:flex;align-items:center;gap:8px;padding:9px 12px;background:linear-gradient(90deg,rgba(108,99,255,.13),rgba(168,139,250,.13));border-bottom:1px solid var(--border);cursor:pointer;font-size:13px;color:var(--text);transition:.15s}
+.ac-family-banner:hover{background:linear-gradient(90deg,rgba(108,99,255,.2),rgba(168,139,250,.2))}
+.ac-family-banner:focus{outline:2px solid var(--accent);outline-offset:-2px}
+
+/* DIFF VIEW MODAL (#6) */
+.diff-fab{position:absolute;top:50%;right:46px;transform:translateY(-50%);background:transparent;border:1px solid var(--border2);color:var(--muted);width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;transition:.15s;flex-shrink:0;z-index:5}
+.diff-fab:hover{color:var(--ac2);border-color:var(--ac2);background:rgba(168,139,250,.1)}
+.user-str-hdr{position:relative}
+.diff-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:600;align-items:center;justify-content:center;padding:0;overflow-y:auto}
+.diff-modal-overlay.open{display:flex}
+.diff-modal{background:var(--card);border:1px solid var(--border2);border-radius:14px;width:100%;max-width:620px;max-height:90vh;display:flex;flex-direction:column;margin:auto;overflow:hidden}
+.diff-hdr{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:var(--bg2)}
+.diff-hdr-title{font-weight:700;font-size:15px;flex:1;min-width:0}
+.diff-hdr-close{background:transparent;border:none;color:var(--muted);font-size:22px;cursor:pointer;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.diff-hdr-close:hover{background:var(--bg);color:var(--text)}
+.diff-tabs{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;gap:5px;flex-wrap:wrap}
+.diff-tabs .ltab{padding:5px 12px;font-size:12px}
+.diff-summary-row{padding:10px 18px;background:var(--bg);border-bottom:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap;font-size:12px}
+.diff-summary-chip{padding:5px 10px;border-radius:14px;font-weight:600;display:inline-flex;align-items:center;gap:5px}
+.diff-summary-chip.both{background:rgba(16,185,129,.15);color:var(--ok);border:1px solid rgba(16,185,129,.3)}
+.diff-summary-chip.mine{background:rgba(108,99,255,.15);color:var(--ac2);border:1px solid rgba(108,99,255,.3)}
+.diff-summary-chip.theirs{background:rgba(245,158,11,.15);color:var(--warn);border:1px solid rgba(245,158,11,.3)}
+.diff-body{flex:1;overflow-y:auto;padding:14px 18px}
+.diff-section{margin-bottom:18px}
+.diff-section-hdr{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.diff-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
+.diff-card{display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r2);font-size:12px;min-width:0;position:relative}
+.diff-card-sprite-wrap{width:26px;height:26px;flex-shrink:0;position:relative}
+.diff-card-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.diff-card-name{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
+.diff-card-prio{display:inline-flex;gap:3px;font-size:9px;font-weight:700}
+.diff-prio-badge{padding:1px 5px;border-radius:3px;line-height:1.3}
+.diff-prio-badge.H{background:var(--Hbg);color:var(--H)}
+.diff-prio-badge.M{background:var(--Mbg);color:var(--M)}
+.diff-prio-badge.L{background:var(--Lbg);color:var(--L)}
+.diff-prio-badge.match::after{content:' ✓';font-weight:800}
+.diff-empty{padding:14px;text-align:center;color:var(--muted);font-size:12px;background:var(--bg);border-radius:var(--r2);border:1px dashed var(--border2)}
+@media(max-width:600px){
+  .diff-modal{max-height:100vh;height:100vh;border-radius:0}
+  .diff-hdr{padding:12px 14px}
+  .diff-body{padding:10px 12px}
+  .diff-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:5px}
+}
+
+/* ACTIVITY SPARKLINE (#18) */
+.sparkline{display:inline-flex;align-items:flex-end;gap:1px;height:14px;width:42px;margin-left:6px;vertical-align:middle}
+.sparkline-bar{flex:1;background:var(--accent);opacity:.4;border-radius:1px;min-height:1px}
+.sparkline-bar.recent{opacity:.85}
+.sparkline-empty{font-size:9px;color:var(--muted);font-style:italic;margin-left:6px}
+
+/* EVENT BADGES (#22) */
+.event-banner{background:linear-gradient(135deg,rgba(168,139,250,.18),rgba(108,99,255,.12));border:1px solid rgba(168,139,250,.32);border-radius:var(--r);padding:9px 13px;margin-bottom:12px;display:flex;align-items:center;gap:10px;font-size:13px;flex-wrap:wrap}
+.event-banner-icon{font-size:18px;flex-shrink:0}
+.event-banner-content{flex:1;min-width:0}
+.event-banner-title{font-weight:600;color:var(--ac2);font-size:13px}
+.event-banner-meta{font-size:11px;color:var(--muted);margin-top:1px}
+.event-pill{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:700;padding:2px 6px;border-radius:8px;background:rgba(168,139,250,.18);color:var(--ac2);border:1px solid rgba(168,139,250,.32);margin-left:5px;vertical-align:middle;white-space:nowrap}
+.event-pill.raid{background:rgba(239,68,68,.15);color:var(--danger);border-color:rgba(239,68,68,.3)}
+.event-pill.spotlight{background:rgba(245,158,11,.15);color:var(--warn);border-color:rgba(245,158,11,.3)}
+.event-pill.cday{background:rgba(16,185,129,.15);color:var(--ok);border-color:rgba(16,185,129,.3)}
+
+/* POKÉBALL LOADING (#31) */
+@keyframes pokeball-bounce{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-12px) rotate(180deg)}}
+@keyframes pokeball-spin{to{transform:rotate(360deg)}}
+.pokeball-loader{display:inline-block;width:28px;height:28px;position:relative;animation:pokeball-bounce 1.2s infinite ease-in-out}
+.pokeball-loader svg{width:100%;height:100%;display:block}
+.loader-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;gap:10px}
+.loader-text{font-size:12px;color:var(--muted);letter-spacing:.05em}
+.skel{position:relative;overflow:hidden}
+.skel::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.04),transparent);animation:shimmer 1.5s infinite}
+html[data-theme="light"] .skel::before{background:linear-gradient(90deg,transparent,rgba(0,0,0,.03),transparent)}
+
+/* WALLPAPER (#32) - tasteful subtle gradients applied to app background */
+body.wp-aurora{background:linear-gradient(135deg,#0f0f1a 0%,#1a1230 50%,#0f0f1a 100%)}
+body.wp-ocean{background:linear-gradient(180deg,#0a1929 0%,#0f0f1a 100%)}
+body.wp-forest{background:linear-gradient(180deg,#0a1d18 0%,#0f0f1a 100%)}
+body.wp-sunset{background:linear-gradient(180deg,#1a0f1f 0%,#0f0f1a 100%)}
+body.wp-mono{background:#0f0f1a}
+body.wp-mist{background:linear-gradient(180deg,#15151f 0%,#0f0f1a 100%)}
+html[data-theme="light"] body.wp-aurora{background:linear-gradient(135deg,#f5f7fa 0%,#ece9f7 50%,#f5f7fa 100%)}
+html[data-theme="light"] body.wp-ocean{background:linear-gradient(180deg,#eef5fa 0%,#f5f7fa 100%)}
+html[data-theme="light"] body.wp-forest{background:linear-gradient(180deg,#eef5ee 0%,#f5f7fa 100%)}
+html[data-theme="light"] body.wp-sunset{background:linear-gradient(180deg,#faeef0 0%,#f5f7fa 100%)}
+html[data-theme="light"] body.wp-mono{background:#f5f7fa}
+html[data-theme="light"] body.wp-mist{background:linear-gradient(180deg,#f9f9fc 0%,#f5f7fa 100%)}
+.wp-picker{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px}
+.wp-swatch{height:46px;border-radius:var(--r2);border:2px solid var(--border);cursor:pointer;position:relative;transition:.15s;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--text);font-weight:600;text-shadow:0 1px 2px rgba(0,0,0,.4)}
+.wp-swatch:hover{border-color:var(--accent)}
+.wp-swatch.selected{border-color:var(--accent);box-shadow:0 0 0 2px rgba(108,99,255,.3)}
+.wp-swatch.aurora{background:linear-gradient(135deg,#0f0f1a,#1a1230,#0f0f1a)}
+.wp-swatch.ocean{background:linear-gradient(180deg,#0a1929,#0f0f1a)}
+.wp-swatch.forest{background:linear-gradient(180deg,#0a1d18,#0f0f1a)}
+.wp-swatch.sunset{background:linear-gradient(180deg,#1a0f1f,#0f0f1a)}
+.wp-swatch.mono{background:#0f0f1a}
+.wp-swatch.mist{background:linear-gradient(180deg,#15151f,#0f0f1a)}
+
 /* IMPORT MODAL */
 .import-preview{max-height:260px;overflow-y:auto;margin:10px 0;border:1px solid var(--border);border-radius:var(--r2)}
 .import-preview-row{display:flex;align-items:center;gap:8px;padding:7px 11px;border-bottom:1px solid var(--border);font-size:13px}
@@ -788,6 +885,7 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
     </div>
 
     
+    <div id="event-banner-slot"></div>
     <div id="browse-out"></div>
   </div>
 
@@ -961,6 +1059,11 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
     <div class="field">
       <label>Discord handle <span style="color:var(--muted);font-weight:400;font-size:11px">(optional)</span></label>
       <input type="text" id="prof-discord" placeholder="username#1234 or username" maxlength="40">
+    </div>
+    <div class="field">
+      <label>Wallpaper <span style="color:var(--muted);font-weight:400;font-size:11px">(personal — only you see it)</span></label>
+      <input type="hidden" id="prof-wallpaper" value="mono">
+      <div class="wp-picker" id="wp-picker"></div>
     </div>
     <hr class="divider">
     <div class="field"><label>New PIN</label><input type="password" id="np1" placeholder="New 6-digit PIN" maxlength="6" inputmode="numeric"></div>
@@ -1479,16 +1582,109 @@ function spriteFallbackChain(no,name,gender='',dn=''){
   }
   return urls;
 }
+// ── PER-IMAGE SPRITE NORMALIZATION ─────────────────────────────
+// Different Pokémon have different padding within their sprites — Joltik fills 30% of frame,
+// Mewtwo fills 85%. Detect each sprite's actual character bounds via canvas + persist scale.
+const SPRITE_SCALE_CACHE_KEY='pogoSpriteScales_v2';
+const SPRITE_TARGET_FILL=0.86; // character should fill ~86% of cell after scaling
+let spriteScaleCache={};
+try{spriteScaleCache=JSON.parse(localStorage.getItem(SPRITE_SCALE_CACHE_KEY)||'{}')||{};}catch{}
+const _scaleDetectInflight=new Set();
+function _saveScaleCache(){
+  try{localStorage.setItem(SPRITE_SCALE_CACHE_KEY,JSON.stringify(spriteScaleCache));}catch{}
+}
+// Coarse default per source — used as fallback while detection runs (or fails on CORS).
+function spriteSourceScale(url){
+  if(!url)return 1;
+  if(url.includes('cdn08.net'))return 1;
+  if(url.includes('pokemondb.net'))return 1.1;
+  if(url.includes('PokeMiners'))return 1;
+  if(url.includes('serebii.net'))return 1.3;
+  if(url.includes('weserv.nl')){
+    if(url.includes('serebii.net'))return 1.3;
+    if(url.includes('cdn08.net'))return 1;
+    return 1.1;
+  }
+  if(/PokeAPI|pokeapi/.test(url))return 1.25;
+  return 1.15;
+}
+// Run alpha-channel detection through weserv proxy (CORS-safe). Cache by URL.
+function detectSpriteScale(url){
+  if(!url||_scaleDetectInflight.has(url))return;
+  if(spriteScaleCache[url]!==undefined)return;
+  _scaleDetectInflight.add(url);
+  // Use weserv proxy to get CORS-friendly bytes even for Serebii/cdn08
+  const proxiedUrl=url.startsWith('https://images.weserv.nl/')
+    ?url
+    :IMAGE_PROXY_BASE+encodeURIComponent(url.replace(/^https?:\/\//,''));
+  const img=new Image();
+  img.crossOrigin='anonymous';
+  img.onload=()=>{
+    let scale=spriteSourceScale(url);
+    try{
+      const c=document.createElement('canvas');
+      const W=img.naturalWidth||1,H=img.naturalHeight||1;
+      c.width=W;c.height=H;
+      const g=c.getContext('2d',{willReadFrequently:true});
+      g.drawImage(img,0,0);
+      const{data}=g.getImageData(0,0,W,H);
+      // Fast edge-walk bounds detection
+      let top=0,bottom=H-1,left=0,right=W-1;
+      const opaque=(x,y)=>data[(y*W+x)*4+3]>10;
+      outerT:for(top=0;top<H;top++){for(let x=0;x<W;x++){if(opaque(x,top))break outerT;}}
+      outerB:for(bottom=H-1;bottom>=0;bottom--){for(let x=0;x<W;x++){if(opaque(x,bottom))break outerB;}}
+      outerL:for(left=0;left<W;left++){for(let y=top;y<=bottom;y++){if(opaque(left,y))break outerL;}}
+      outerR:for(right=W-1;right>=0;right--){for(let y=top;y<=bottom;y++){if(opaque(right,y))break outerR;}}
+      if(right>=left&&bottom>=top){
+        const trimSize=Math.max(right-left+1,bottom-top+1);
+        const frameSize=Math.max(W,H);
+        const fill=trimSize/frameSize;
+        if(fill<SPRITE_TARGET_FILL&&fill>0.1){
+          scale=Math.min(2.2,SPRITE_TARGET_FILL/fill);
+        }else if(fill>=SPRITE_TARGET_FILL){
+          scale=1;
+        }
+      }
+    }catch(e){
+      // CORS or canvas error — keep default
+    }
+    spriteScaleCache[url]={scale:Math.round(scale*100)/100,t:Date.now()};
+    _saveScaleCache();
+    _scaleDetectInflight.delete(url);
+    // Apply to all rendered images using this URL
+    _updateRenderedScale(url,spriteScaleCache[url].scale);
+  };
+  img.onerror=()=>{
+    spriteScaleCache[url]={scale:spriteSourceScale(url),t:Date.now()};
+    _saveScaleCache();
+    _scaleDetectInflight.delete(url);
+  };
+  img.src=proxiedUrl;
+}
+function _updateRenderedScale(url,scale){
+  // Update all currently-rendered images with this URL
+  document.querySelectorAll('img[data-src-key]').forEach(img=>{
+    if(img.dataset.srcKey===url){
+      img.style.transform=`scale(${scale})`;
+    }
+  });
+}
+function effectiveSpriteScale(url){
+  const cached=spriteScaleCache[url];
+  return cached?cached.scale:spriteSourceScale(url);
+}
 function spriteImg(no,size=40,cls='',name='',gender='',dn=''){
   const urls=spriteFallbackChain(no,name,gender,dn);
   if(!urls.length)return`<div class="pc-sprite-placeholder" style="width:${size}px;height:${size}px">🎮</div>`;
   const url=urls[0];
   const isGo=url.includes('serebii.net')||url.includes('weserv.nl');
   const rendering=isGo?'auto':'pixelated';
-  // Build chain as JSON-encoded data attribute; on error, cycle to next
+  const scale=effectiveSpriteScale(url);
+  // Trigger async per-image trim detection (no-op if already cached)
+  if(spriteScaleCache[url]===undefined)detectSpriteScale(url);
   const fallbacks=urls.slice(1).map(u=>u.replace(/"/g,'&quot;')).join('|');
-  return`<img src="${url}" class="${cls||'pc-sprite'}" width="${size}" height="${size}" alt="" title="${escAttr(name||'Pokémon')}"
-    style="image-rendering:${rendering};object-fit:contain"
+  return`<img src="${url}" data-src-key="${escAttr(url)}" class="${cls||'pc-sprite'}" width="${size}" height="${size}" alt="" title="${escAttr(name||'Pokémon')}"
+    style="image-rendering:${rendering};object-fit:contain;transform:scale(${scale});transform-origin:center;clip-path:inset(0)"
     data-fallbacks="${fallbacks}" onerror="trySpriteFallback(this)" loading="lazy">`;
 }
 function trySpriteFallback(img){
@@ -1496,8 +1692,10 @@ function trySpriteFallback(img){
   if(!fbs.length){img.style.display='none';return;}
   const next=fbs.shift();
   img.dataset.fallbacks=fbs.join('|');
-  // Serebii URLs sometimes need rendering:auto for clean output
+  img.dataset.srcKey=next;
   if(next.includes('serebii.net'))img.style.imageRendering='auto';
+  img.style.transform=`scale(${effectiveSpriteScale(next)})`;
+  if(spriteScaleCache[next]===undefined)detectSpriteScale(next);
   img.src=next;
 }
 
@@ -1767,6 +1965,10 @@ async function repairMissingAuthMetadata(){
 async function writeList(type,u,list){
   const s=getLocal();
   if(!s[type])s[type]={};
+  // Record activity delta for sparkline
+  const prevCount=Object.keys(s[type][u]||{}).length;
+  const newCount=Object.keys(list||{}).length;
+  if(prevCount!==newCount)recordActivityEvent(u,newCount-prevCount);
   s[type][u]=list;
   s.users[u]={...s.users[u],lastUpdated:Date.now()};
   saveLocal(s);
@@ -1778,9 +1980,9 @@ function showSkeletonsIfEmpty(){
   // Show loading skeletons on first paint if no data yet
   if(!allData||!Object.keys(allData.users||{}).length){
     const ml=document.getElementById('mylist-out');
-    if(ml&&!ml.children.length)ml.innerHTML=`<div class="mygrid">${Array.from({length:6}).map(()=>'<div class="skel skel-row"></div>').join('')}</div>`;
+    if(ml&&!ml.children.length)ml.innerHTML=pokeballLoader('Loading your list…');
     const bo=document.getElementById('browse-out');
-    if(bo&&!bo.children.length)bo.innerHTML=`<div class="pgrid">${Array.from({length:5}).map(()=>'<div class="skel skel-card"></div>').join('')}</div>`;
+    if(bo&&!bo.children.length)bo.innerHTML=pokeballLoader('Loading community…');
   }
 }
 
@@ -2125,6 +2327,17 @@ function showApp(){
   checkWhatsNew();
   attachPullToRefresh();
   initAddAdvanced();
+  // PWA shortcut handling: deep-link via ?action=add|browse|strings
+  const params=new URLSearchParams(location.search);
+  const action=params.get('action');
+  if(action==='add'){switchTab('mylist');setTimeout(()=>document.getElementById('ac-input')?.focus(),100);}
+  else if(action==='strings'){switchTab('strings');}
+  else if(action==='browse'){switchTab('browse');}
+  if(action){history.replaceState({},'',location.pathname);}
+  // Apply user's chosen wallpaper
+  applyWallpaper(allData.users?.[cur]?.wallpaper||'');
+  // Fetch live Pokémon GO events in the background, then re-render Browse
+  fetchPogoEvents().then(()=>{renderEventBanner();renderBrowse();});
 }
 function switchTab(t){
   if(t==='admin'&&!allData.users?.[cur]?.isAdmin)t='browse';
@@ -2190,6 +2403,15 @@ function acMatchScore(e,rawQuery){
   if(!q)return-1;
   const text=e.search||acItemSearchText(e);
   const no=String(e.no||'');
+  // Pure-digit query: prioritize dex number matches (lower score = better)
+  const isPureDigits=/^\d+$/.test(q);
+  if(isPureDigits&&no){
+    if(no===q)return 0;                  // exact dex hit (Pikachu for "25")
+    if(no.startsWith(q))return 1;        // dex prefix (matches "2" → 2,20,25,...)
+    // For pure digits, demote non-dex matches strongly
+    if(text.includes(q))return 50;       // some text contains digits but isn't a dex hit
+    return -1;
+  }
   if(no&&q===no)return 0;
   if(text===q)return 1;
   if(text.startsWith(q))return 2;
@@ -2220,10 +2442,19 @@ function acSearch(q){
     .slice(0,AC_RESULT_LIMIT)
     .map(x=>x.e);
   acFocusIdx=-1;
-  if(!acFiltered.length){
+  // Detect if user is searching for a Pokemon family with multiple variants
+  const family=detectVariantFamily(q);
+  const variantCount=family?familyVariantEntries(family.key).length:0;
+  const familyBanner=(family&&variantCount>1)
+    ?`<div class="ac-family-banner" onmousedown="event.preventDefault();openAddAllVariantsModal('${family.key}')" role="button" tabindex="0">
+        <span style="flex:1">✨ Add all <strong>${variantCount}</strong> ${escHtml(family.label)} variants</span>
+        <span style="font-size:11px;color:var(--accent);font-weight:700">→</span>
+      </div>`
+    :'';
+  if(!acFiltered.length&&!familyBanner){
     dd.innerHTML=`<div class="ac-empty">No results</div>`;
   }else{
-    dd.innerHTML=acFiltered.map((e,i)=>`
+    dd.innerHTML=familyBanner+acFiltered.map((e,i)=>`
       <div class="ac-item" data-idx="${i}" onmousedown="acSelect(${i})">
         ${e.no||e.spriteUrl?spriteImg(e.no,28,'ac-item-sprite',e.name):''}
         ${e.no?`<span class="ac-item-no">#${e.no}</span>`:''}
@@ -2362,7 +2593,8 @@ function renderBrowse(){
       let ents=map[e.name]||[];if(browseFilter!=='ALL')ents=ents.filter(x=>x.p===browseFilter);
       ents=ents.filter(entryMatchesFlagFilters);
       ents=sortEntries(ents);
-      return`<div class="pc" data-dex="${e.no||''}"><div class="pc-hdr">${spriteImg(e.no,28,'pc-sprite',e.name)}<div class="pc-info"><div class="pc-name">${e.displayName||e.name}</div><div class="pc-no">#${e.no}</div></div></div>
+      const eventPill=eventBadgeForPokemon(e.name,e.no,_eventData);
+      return`<div class="pc" data-dex="${e.no||''}"><div class="pc-hdr">${spriteImg(e.no,28,'pc-sprite',e.name)}<div class="pc-info"><div class="pc-name">${e.displayName||e.name}${eventPill}</div><div class="pc-no">#${e.no}</div></div></div>
         <div class="pc-users">${ents.map(x=>userBadge(x)).join('')}</div></div>`;
     }).join('')}</div>`;
     applyTypeColors();
@@ -2396,10 +2628,11 @@ function renderBrowse(){
     ents=ents.filter(entryMatchesFlagFilters);
     ents=sortEntries(ents);
     const crownHtml=maxCrownSvg(maxTypeForEntry(info,browseList));
+    const eventPill=eventBadgeForPokemon(e.name,e.no,_eventData);
     return`<div class="pc" data-dex="${e.no||''}">
       <div class="pc-hdr">
         <span class="pc-sprite-wrap">${spriteImg(e.no,28,'pc-sprite',e.name)}${crownHtml}</span>
-        <div class="pc-info"><div class="pc-name">${info.dn}</div><div class="pc-no">#${e.no}</div></div>
+        <div class="pc-info"><div class="pc-name">${info.dn}${eventPill}</div><div class="pc-no">#${e.no}</div></div>
       </div>
       <div class="pc-users">${ents.map(x=>userBadge(x)).join('')}</div>
     </div>`;
@@ -3299,11 +3532,13 @@ function renderStrings(){
             <div style="display:flex;align-items:center;gap:8px;margin-top:2px;flex-wrap:wrap">
               <span style="font-size:11px;color:${luColor}">● ${freshnessLabel(ud.lastUpdated)}</span>
               <span style="font-size:11px;color:var(--muted)">${count} listed</span>
+              ${sparklineHtml(u)}
               ${discordHtml}
             </div>
             ${bioHtml}
           </div>
         </div>
+        ${isMe?'':`<button class="diff-fab" onclick="event.stopPropagation();openDiffModal('${escAttr(u)}')" aria-label="Compare lists with ${escAttr(u)}" title="Compare your list vs ${escAttr(u)}'s">⚖</button>`}
         <span class="collapse-icon">▼</span>
       </div>
       <div class="user-str-body">
@@ -3541,6 +3776,9 @@ function updateFcDisplay(){
   const bio=document.getElementById('prof-bio');if(bio)bio.value=ud.bio||'';
   const dis=document.getElementById('prof-discord');if(dis)dis.value=ud.discord||'';
   const avi=document.getElementById('prof-av-input');if(avi)avi.value=ud.avatarPokemon||'';
+  const wp=document.getElementById('prof-wallpaper');if(wp)wp.value=ud.wallpaper||'mono';
+  const picker=document.getElementById('wp-picker');
+  if(picker)picker.innerHTML=wallpaperPickerHtml(ud.wallpaper||'mono');
   updateAvatarPreview(ud.avatarPokemon||'');
 }
 async function saveProfile(){
@@ -3550,13 +3788,15 @@ async function saveProfile(){
   const bio=document.getElementById('prof-bio')?.value.trim()||'';
   const discord=document.getElementById('prof-discord')?.value.trim()||'';
   const avatarPokemon=document.getElementById('prof-av-input')?.value.trim()||'';
+  const wallpaper=document.getElementById('prof-wallpaper')?.value||'mono';
   const err=document.getElementById('pin-err');err.textContent='';
   if(fc&&!validateFc(fc)){err.textContent='Friend code must be 12 digits';return;}
   if(p1){
     if(!isSixDigitPin(p1)){err.textContent='PIN must be exactly 6 digits';return;}
     if(p1!==p2){err.textContent="PINs don't match";return;}
   }
-  const upd={friendCode:fc,bio,discord,avatarPokemon};
+  const upd={friendCode:fc,bio,discord,avatarPokemon,wallpaper};
+  applyWallpaper(wallpaper);
   if(p1){
     if(auth){
       if(!auth.currentUser){err.textContent='Sign out and back in before changing your PIN';return;}
@@ -3627,6 +3867,373 @@ function toast(msg,dur=2500){
   setTimeout(()=>t.classList.remove('show'),dur);
 }
 
+
+// ── DIFF VIEW (#6) ────────────────────────────────────────────
+let _activeDiff=null;
+function openDiffModal(otherUsername){
+  if(!cur||otherUsername===cur){toast('Pick another trainer');return;}
+  _activeDiff={them:otherUsername,type:strListType};
+  renderDiffModal();
+}
+function closeDiffModal(){
+  document.getElementById('diff-modal')?.remove();
+  _activeDiff=null;
+}
+function setDiffListType(t){
+  if(!_activeDiff)return;
+  _activeDiff.type=t;
+  renderDiffModal();
+}
+function computeDiff(typ,me,them){
+  const myList=allData[typ]?.[me]||{};
+  const theirList=allData[typ]?.[them]||{};
+  const srcArr=listSource(typ);
+  const dispMap={},noMap={};
+  srcArr.forEach(e=>{dispMap[e.name]=e.displayName||e.name;if(e.no)noMap[e.name]=e.no;});
+  const myKeys=new Set(Object.keys(myList));
+  const theirKeys=new Set(Object.keys(theirList));
+  const bothKeys=[...myKeys].filter(k=>theirKeys.has(k));
+  const onlyMine=[...myKeys].filter(k=>!theirKeys.has(k));
+  const onlyTheirs=[...theirKeys].filter(k=>!myKeys.has(k));
+  const entryFor=(name,val)=>{
+    const {p,mod,lucky,xxl,xxs}=parsePri(val);
+    return {name,dn:dispMap[name]||name,no:noMap[name]||'',p,mod,lucky,xxl,xxs,gender:entryGender(mod)};
+  };
+  const both=bothKeys.map(k=>({mine:entryFor(k,myList[k]),theirs:entryFor(k,theirList[k])}));
+  // Sort: priority match first, then dex
+  both.sort((a,b)=>{
+    const matchA=a.mine.p===a.theirs.p?0:1;
+    const matchB=b.mine.p===b.theirs.p?0:1;
+    return matchA-matchB||(parseInt(a.mine.no)||9999)-(parseInt(b.mine.no)||9999)||a.mine.dn.localeCompare(b.mine.dn);
+  });
+  return{
+    both,
+    onlyMine:onlyMine.map(k=>entryFor(k,myList[k])).sort(_familySort),
+    onlyTheirs:onlyTheirs.map(k=>entryFor(k,theirList[k])).sort(_familySort)
+  };
+}
+function renderDiffModal(){
+  if(!_activeDiff)return;
+  const{them,type}=_activeDiff;
+  const diff=computeDiff(type,cur,them);
+  const strongMatch=diff.both.filter(d=>d.mine.p===d.theirs.p&&d.mine.p).length;
+  const totalBoth=diff.both.length;
+  const renderCard=(e,otherP)=>{
+    const priBadge=e.p?`<span class="diff-prio-badge ${e.p}${otherP&&e.p===otherP?' match':''}">${e.p}</span>`:'';
+    const otherBadge=otherP?`<span class="diff-prio-badge ${otherP}">${otherP}</span>`:'';
+    const genderHtml=e.gender?`<span class="share-pcard-gender ${e.gender}" style="position:absolute;bottom:-2px;right:-2px">${e.gender==='f'?'♀':'♂'}</span>`:'';
+    return`<div class="diff-card" title="${escAttr(e.dn)}">
+      <div class="diff-card-sprite-wrap">${e.no?spriteImg(e.no,26,'share-pcard-sprite',e.name,e.gender,e.dn):'🎮'}${genderHtml}</div>
+      <div class="diff-card-info">
+        <span class="diff-card-name">${escHtml(e.dn)}</span>
+        ${(priBadge||otherBadge)?`<span class="diff-card-prio">${priBadge}${otherBadge&&otherBadge!==priBadge?' '+otherBadge:''}</span>`:''}
+      </div>
+    </div>`;
+  };
+  const html=`<div class="diff-modal-overlay open" id="diff-modal" role="dialog" aria-modal="true" onclick="if(event.target===this)closeDiffModal()">
+    <div class="diff-modal" onclick="event.stopPropagation()">
+      <div class="diff-hdr">
+        <div class="diff-hdr-title">⚖️ You ↔ <span style="color:var(--ac2)">${escHtml(them)}</span></div>
+        <button class="diff-hdr-close" onclick="closeDiffModal()" aria-label="Close">×</button>
+      </div>
+      <div class="diff-tabs">
+        ${['wishlist','dynamax','gmax','costumes'].map(t=>{
+          const myCount=Object.keys(allData[t]?.[cur]||{}).length;
+          const theirCount=Object.keys(allData[t]?.[them]||{}).length;
+          if(!myCount&&!theirCount)return'';
+          return`<button class="ltab ${t===type?'active':''}" onclick="setDiffListType('${t}')">${LIST_LABELS[t]}</button>`;
+        }).join('')}
+      </div>
+      <div class="diff-summary-row">
+        <span class="diff-summary-chip both">🤝 ${totalBoth} both want${strongMatch>0?` · ${strongMatch} priority match`:''}</span>
+        <span class="diff-summary-chip mine">⬅ ${diff.onlyMine.length} only mine</span>
+        <span class="diff-summary-chip theirs">${diff.onlyTheirs.length} only theirs ➡</span>
+      </div>
+      <div class="diff-body">
+        ${diff.both.length?`<div class="diff-section">
+          <div class="diff-section-hdr">Both want (${diff.both.length})</div>
+          <div class="diff-grid">${diff.both.map(d=>renderCard(d.mine,d.theirs.p)).join('')}</div>
+        </div>`:''}
+        ${diff.onlyMine.length?`<div class="diff-section">
+          <div class="diff-section-hdr">Only you want (${diff.onlyMine.length})</div>
+          <div class="diff-grid">${diff.onlyMine.map(e=>renderCard(e)).join('')}</div>
+        </div>`:''}
+        ${diff.onlyTheirs.length?`<div class="diff-section">
+          <div class="diff-section-hdr">Only ${escHtml(them)} wants (${diff.onlyTheirs.length})</div>
+          <div class="diff-grid">${diff.onlyTheirs.map(e=>renderCard(e)).join('')}</div>
+        </div>`:''}
+        ${!diff.both.length&&!diff.onlyMine.length&&!diff.onlyTheirs.length?`<div class="diff-empty">No entries in this list for either trainer.</div>`:''}
+      </div>
+    </div>
+  </div>`;
+  // Replace existing modal if open, else append
+  closeDiffModal();
+  _activeDiff={them,type};
+  const wrap=document.createElement('div');wrap.innerHTML=html;
+  document.body.appendChild(wrap.firstElementChild);
+}
+
+// ── ACTIVITY SPARKLINE (#18) ──────────────────────────────────
+// Uses lightweight activity log tracked per user. Built on top of writeList by
+// recording add/remove events. Stored in localStorage (per device).
+const ACTIVITY_LOG_KEY='pogoActivityLog_v1';
+function loadActivityLog(){try{return JSON.parse(localStorage.getItem(ACTIVITY_LOG_KEY)||'{}');}catch{return{};}}
+function recordActivityEvent(username,delta){
+  if(!username||!delta)return;
+  const log=loadActivityLog();
+  if(!log[username])log[username]=[];
+  log[username].push({t:Date.now(),d:delta});
+  // Keep only last 60 days
+  const cutoff=Date.now()-60*86400000;
+  log[username]=log[username].filter(e=>e.t>=cutoff);
+  try{localStorage.setItem(ACTIVITY_LOG_KEY,JSON.stringify(log));}catch{}
+}
+function buildSparkline(username,days=30){
+  // Returns array of activity counts per day, oldest → newest
+  const log=loadActivityLog()[username]||[];
+  const buckets=new Array(days).fill(0);
+  const dayMs=86400000;
+  const now=Date.now();
+  log.forEach(e=>{
+    const daysAgo=Math.floor((now-e.t)/dayMs);
+    if(daysAgo>=0&&daysAgo<days)buckets[days-1-daysAgo]+=Math.abs(e.d);
+  });
+  return buckets;
+}
+function sparklineHtml(username){
+  const buckets=buildSparkline(username,30);
+  const total=buckets.reduce((a,b)=>a+b,0);
+  if(total===0)return'<span class="sparkline-empty">— quiet</span>';
+  const max=Math.max(...buckets,1);
+  return `<span class="sparkline" title="${total} changes in last 30 days">
+    ${buckets.map((v,i)=>{
+      const h=Math.max(1,Math.round((v/max)*100));
+      const recent=i>=22?' recent':'';
+      return `<span class="sparkline-bar${recent}" style="height:${h}%"></span>`;
+    }).join('')}
+  </span>`;
+}
+
+// ── EVENT AWARENESS (#22) ─────────────────────────────────────
+const SCRAPEDDUCK_BASE='https://raw.githubusercontent.com/bigfoott/ScrapedDuck/data/';
+const EVENT_CACHE_KEY='pogoEventCache_v1';
+const EVENT_CACHE_TTL=2*60*60*1000; // 2 hours
+let _eventData=null;
+async function fetchPogoEvents(force=false){
+  if(_eventData&&!force)return _eventData;
+  // Check localStorage cache
+  if(!force){
+    try{
+      const cached=JSON.parse(localStorage.getItem(EVENT_CACHE_KEY)||'null');
+      if(cached&&Date.now()-cached.t<EVENT_CACHE_TTL){_eventData=cached.data;return _eventData;}
+    }catch{}
+  }
+  try{
+    const[eventsResp,raidsResp]=await Promise.all([
+      fetch(`${SCRAPEDDUCK_BASE}events.min.json`),
+      fetch(`${SCRAPEDDUCK_BASE}raids.min.json`)
+    ]);
+    const events=eventsResp.ok?await eventsResp.json():[];
+    const raids=raidsResp.ok?await raidsResp.json():[];
+    _eventData={events,raids,fetchedAt:Date.now()};
+    try{localStorage.setItem(EVENT_CACHE_KEY,JSON.stringify({t:Date.now(),data:_eventData}));}catch{}
+    return _eventData;
+  }catch(e){
+    return{events:[],raids:[],fetchedAt:0};
+  }
+}
+function currentEvents(eventData){
+  const now=Date.now();
+  return(eventData?.events||[]).filter(e=>{
+    const start=new Date(e.start||0).getTime();
+    const end=new Date(e.end||0).getTime();
+    return start<=now&&now<=end;
+  });
+}
+function eventBadgeForPokemon(name,no,eventData){
+  // Returns a small chip if this Pokemon is currently featured in a live event
+  if(!eventData)return'';
+  const norm=String(name||'').toLowerCase();
+  const dn=String(name||'').toLowerCase();
+  // Check current raids
+  const raid=(eventData.raids||[]).find(r=>{
+    const rn=String(r.name||'').toLowerCase();
+    return rn===norm||rn===dn||rn.includes(norm)||norm.includes(rn);
+  });
+  if(raid)return`<span class="event-pill raid" title="Currently in raids: ${escAttr(raid.tier||'')}">⚔ Raid</span>`;
+  // Check community day / spotlight events
+  const events=currentEvents(eventData);
+  for(const ev of events){
+    const evType=String(ev.eventType||'').toLowerCase();
+    const evName=String(ev.name||'').toLowerCase();
+    const heading=String(ev.heading||'').toLowerCase();
+    if(evName.includes(norm)||heading.includes(norm)){
+      if(evType.includes('community')||evName.includes('community day'))return'<span class="event-pill cday" title="Currently in Community Day">🌟 CDay</span>';
+      if(evType.includes('spotlight')||evName.includes('spotlight'))return'<span class="event-pill spotlight" title="Currently in Spotlight Hour">⏰ Spotlight</span>';
+      return'<span class="event-pill" title="Featured in current event">🎉 Event</span>';
+    }
+  }
+  return'';
+}
+function renderEventBanner(){
+  // Show the next upcoming/current notable event at top of Browse
+  const slot=document.getElementById('event-banner-slot');
+  if(!slot||!_eventData)return;
+  const events=currentEvents(_eventData);
+  const featured=events.find(e=>{
+    const t=String(e.eventType||'').toLowerCase();
+    return t.includes('community')||t.includes('spotlight')||t.includes('raid-day');
+  })||events[0];
+  if(!featured){slot.innerHTML='';return;}
+  const endDate=new Date(featured.end);
+  const daysLeft=Math.ceil((endDate-Date.now())/86400000);
+  slot.innerHTML=`<div class="event-banner">
+    <span class="event-banner-icon">🎉</span>
+    <div class="event-banner-content">
+      <div class="event-banner-title">${escHtml(featured.name||featured.heading||'Live event')}</div>
+      <div class="event-banner-meta">${daysLeft>0?`${daysLeft} day${daysLeft===1?'':'s'} left · `:''}${featured.heading||''} · <a href="${featured.link}" target="_blank" rel="noopener" style="color:var(--ac2)">details ↗</a></div>
+    </div>
+  </div>`;
+}
+
+// ── POKÉBALL LOADING SPINNER (#31) ────────────────────────────
+const POKEBALL_SVG=`<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="pb-top" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff5252"/><stop offset="1" stop-color="#d63a3a"/></linearGradient></defs><circle cx="16" cy="16" r="14" fill="#fff" stroke="#1a1a2e" stroke-width="2"/><path d="M 2 16 A 14 14 0 0 1 30 16 Z" fill="url(#pb-top)" stroke="#1a1a2e" stroke-width="2"/><line x1="2" y1="16" x2="30" y2="16" stroke="#1a1a2e" stroke-width="2"/><circle cx="16" cy="16" r="4" fill="#fff" stroke="#1a1a2e" stroke-width="2"/><circle cx="16" cy="16" r="1.5" fill="#1a1a2e"/></svg>`;
+function pokeballLoader(text=''){
+  return`<div class="loader-wrap">
+    <div class="pokeball-loader" role="status" aria-label="Loading">${POKEBALL_SVG}</div>
+    ${text?`<div class="loader-text">${escHtml(text)}</div>`:''}
+  </div>`;
+}
+
+// ── WALLPAPER (#32) ───────────────────────────────────────────
+const WALLPAPERS=[
+  {key:'mono',label:'Default'},
+  {key:'aurora',label:'Aurora'},
+  {key:'ocean',label:'Ocean'},
+  {key:'forest',label:'Forest'},
+  {key:'sunset',label:'Sunset'},
+  {key:'mist',label:'Mist'}
+];
+function applyWallpaper(key){
+  document.body.classList.forEach(c=>{if(c.startsWith('wp-'))document.body.classList.remove(c);});
+  document.body.classList.add(`wp-${key||'mono'}`);
+}
+function selectWallpaper(key){
+  applyWallpaper(key);
+  document.querySelectorAll('.wp-swatch').forEach(s=>s.classList.toggle('selected',s.dataset.key===key));
+  // Persist via profile (save on next profile save) — store in pending
+  const hidden=document.getElementById('prof-wallpaper');
+  if(hidden)hidden.value=key;
+}
+function wallpaperPickerHtml(current){
+  return WALLPAPERS.map(w=>`<button type="button" class="wp-swatch ${w.key} ${w.key===(current||'mono')?'selected':''}" data-key="${w.key}" onclick="selectWallpaper('${w.key}')" aria-label="${w.label} wallpaper" title="${w.label}">${w.label}</button>`).join('');
+}
+
+// ── ADD ALL VARIANTS (Vivillon, Unown, Furfrou, etc.) ────────
+// Detect Pokémon families with multiple variants and offer "Add all" shortcut
+const VARIANT_FAMILIES={
+  'vivillon':{label:'Vivillon',dex:666},
+  'unown':{label:'Unown',dex:201},
+  'furfrou':{label:'Furfrou',dex:676},
+  'spinda':{label:'Spinda',dex:327},
+  'rotom':{label:'Rotom',dex:479},
+  'tatsugiri':{label:'Tatsugiri',dex:978},
+  'oricorio':{label:'Oricorio',dex:741},
+  'flabebe':{label:'Flabébé',dex:669},
+  'castform':{label:'Castform',dex:351},
+  'burmy':{label:'Burmy',dex:412},
+  'wormadam':{label:'Wormadam',dex:413},
+  'deerling':{label:'Deerling',dex:585},
+  'sawsbuck':{label:'Sawsbuck',dex:586},
+  'shellos':{label:'Shellos',dex:422},
+  'gastrodon':{label:'Gastrodon',dex:423},
+  'pumpkaboo':{label:'Pumpkaboo',dex:710},
+  'tauros':{label:'Tauros (Paldean)',dex:128,namePrefix:'P-'},
+  'basculin':{label:'Basculin',dex:550},
+  'squawkabilly':{label:'Squawkabilly',dex:931},
+  'cherrim':{label:'Cherrim',dex:421},
+  'wishiwashi':{label:'Wishiwashi',dex:746},
+  'toxtricity':{label:'Toxtricity',dex:849}
+};
+function detectVariantFamily(query){
+  const q=String(query||'').toLowerCase().trim();
+  if(q.length<3)return null;
+  // Match family keyword in query
+  for(const[key,info]of Object.entries(VARIANT_FAMILIES)){
+    if(q.includes(key))return{key,...info};
+  }
+  return null;
+}
+function familyVariantEntries(familyKey){
+  // Find all entries in our data that belong to this family
+  const info=VARIANT_FAMILIES[familyKey];
+  if(!info)return[];
+  const all=listSource(myListType);
+  const seen=new Set();
+  const matches=[];
+  all.forEach(e=>{
+    if(seen.has(e.name))return;
+    const fname=String(e.name||'').toLowerCase();
+    const fdn=String(e.displayName||'').toLowerCase();
+    // Must be in this family by dex OR by name prefix
+    const dexMatch=info.dex&&parseInt(e.no)===info.dex;
+    const nameMatch=fname.includes(familyKey)||fdn.includes(familyKey);
+    if(dexMatch||nameMatch){
+      seen.add(e.name);
+      matches.push(e);
+    }
+  });
+  return matches;
+}
+function openAddAllVariantsModal(familyKey){
+  const info=VARIANT_FAMILIES[familyKey];
+  const variants=familyVariantEntries(familyKey);
+  if(!variants.length){toast('No variants found');return;}
+  // Build inline confirmation modal
+  const existingList=allData[myListType]?.[cur]||{};
+  const notYetAdded=variants.filter(v=>!existingList[v.name]);
+  if(!notYetAdded.length){toast(`✓ All ${variants.length} ${info.label} variants already in your list`);return;}
+  const modalHtml=`<div class="ov open" id="addall-modal" role="dialog" aria-modal="true">
+    <div class="modal" style="max-width:440px">
+      <h3>Add all ${info.label} variants</h3>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:14px">
+        ${notYetAdded.length} variants will be added to your <strong>${listLabel(myListType)}</strong> list
+        ${variants.length>notYetAdded.length?`<br><span style="font-size:11px">(${variants.length-notYetAdded.length} already added)</span>`:''}
+      </p>
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--r2);padding:8px;max-height:200px;overflow-y:auto;display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px">
+        ${notYetAdded.map(v=>`<span style="font-size:11px;background:var(--bg2);padding:3px 7px;border-radius:4px;border:1px solid var(--border)">${escHtml(v.displayName||v.name)}</span>`).join('')}
+      </div>
+      <div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px">Add as priority:</div>
+      <div class="import-pri-row" id="addall-pri-row">
+        <button class="import-pri-btn" data-pri="H" onclick="document.querySelectorAll('#addall-pri-row .import-pri-btn').forEach(b=>b.classList.remove('sel','H','M','L'));this.classList.add('sel','H')">H – High</button>
+        <button class="import-pri-btn sel M" data-pri="M" onclick="document.querySelectorAll('#addall-pri-row .import-pri-btn').forEach(b=>b.classList.remove('sel','H','M','L'));this.classList.add('sel','M')">M – Medium</button>
+        <button class="import-pri-btn" data-pri="L" onclick="document.querySelectorAll('#addall-pri-row .import-pri-btn').forEach(b=>b.classList.remove('sel','H','M','L'));this.classList.add('sel','L')">L – Low</button>
+      </div>
+      <div class="mact">
+        <button class="bghost" onclick="closeAddAllVariants()">Cancel</button>
+        <button class="bpri" onclick="confirmAddAllVariants('${familyKey}')">Add ${notYetAdded.length}</button>
+      </div>
+    </div>
+  </div>`;
+  const wrap=document.createElement('div');wrap.innerHTML=modalHtml;
+  document.body.appendChild(wrap.firstElementChild);
+}
+function closeAddAllVariants(){document.getElementById('addall-modal')?.remove();}
+function confirmAddAllVariants(familyKey){
+  const sel=document.querySelector('#addall-pri-row .import-pri-btn.sel');
+  const pri=sel?.dataset.pri||'M';
+  const variants=familyVariantEntries(familyKey);
+  const list={...(allData[myListType]?.[cur]||{})};
+  let added=0;
+  variants.forEach(v=>{
+    if(list[v.name])return;
+    list[v.name]=priValue(pri,'',false,false,false);
+    added++;
+  });
+  writeList(myListType,cur,list);
+  closeAddAllVariants();
+  toast(`✅ Added ${added} ${VARIANT_FAMILIES[familyKey].label} variants at ${pri}`);
+}
 
 // ── PWA INSTALL PROMPT (#1) ──────────────────────────────────
 let _deferredInstallPrompt=null;
@@ -4583,7 +5190,11 @@ Object.assign(window,{
   // Latest batch
   triggerInstall,openWhatsNew,closeWhatsNew,updateAvatarPreview,
   toggleExportMenu,closeExportMenu,exportMyListMarkdown,exportMyListCSV,copyShareLink,
-  exitShareView,renderShareView,setAddPri,toggleAddAdvanced,trySpriteFallback
+  exitShareView,renderShareView,setAddPri,toggleAddAdvanced,trySpriteFallback,
+  // Latest batch
+  openDiffModal,closeDiffModal,setDiffListType,
+  openAddAllVariantsModal,closeAddAllVariants,confirmAddAllVariants,
+  selectWallpaper,applyWallpaper
 });
 
 // ── BOOT ──────────────────────────────────────────────────────

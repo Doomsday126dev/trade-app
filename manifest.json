@@ -1,0 +1,48 @@
+{
+  "name": "PoGo Trades",
+  "short_name": "PoGo Trades",
+  "description": "Pokémon GO community trade list manager",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0f0f1a",
+  "theme_color": "#6c63ff",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Add Pokémon",
+      "short_name": "Add",
+      "description": "Open My List and focus the add form",
+      "url": "./?action=add",
+      "icons": [{"src": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/151.png", "sizes": "96x96"}]
+    },
+    {
+      "name": "My Search Strings",
+      "short_name": "Strings",
+      "description": "View and copy your search strings",
+      "url": "./?action=strings",
+      "icons": [{"src": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/133.png", "sizes": "96x96"}]
+    },
+    {
+      "name": "Browse Community",
+      "short_name": "Browse",
+      "description": "See what other trainers want",
+      "url": "./?action=browse",
+      "icons": [{"src": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/132.png", "sizes": "96x96"}]
+    }
+  ]
+}
