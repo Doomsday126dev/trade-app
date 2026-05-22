@@ -5318,33 +5318,17 @@ function fmtWeekRange(start){
 }
 const WKDS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
-// Classify an event by its name to determine trade bonus + whether it requires a paid ticket.
-// NOTE: ScrapedDuck/LeekDuck JSON does NOT include trade bonus data — we can only infer
-// from event names. Most events do NOT grant bonus trades. We only auto-bonus events that
-// reliably/historically grant them (Community Day) or are ticketed (GO Fest, GO Tour).
-// Other events (Raid Day, Hatch Day, etc.) vary case-by-case — user should check LeekDuck
-// details and use the manual override input if a bonus applies.
-// Returns {bonus, bonusType, requiresTicket, ambiguous}
+// Classify an event for display. We deliberately DO NOT auto-assign trade bonuses —
+// ScrapedDuck/LeekDuck doesn't expose that data, and event-by-event bonuses vary year to year.
+// All events are displayed honestly with "bonus unknown — check details" + a link to LeekDuck.
+// User must use the manual override to add any bonus specials they confirm from the article.
+// The `mayHaveTicket` flag is purely a visual hint for known ticketed events so users remember
+// to check ticket benefits — it does NOT auto-grant any bonus.
 function classifyEvent(ev){
   const name=String(ev.name||'').toLowerCase();
   const type=String(ev.eventType||'').toLowerCase();
-  // Pokémon GO Tour — ticketed, varies by year but typically grants extra specials
-  if(name.includes('go tour')||name.includes('pokémon go tour')||type.includes('tour')){
-    return{bonus:1,bonusType:'special',requiresTicket:true,ambiguous:false};
-  }
-  // GO Fest — ticketed, typically +1 special during paid event days
-  if(name.includes('go fest')||type.includes('go-fest')){
-    return{bonus:1,bonusType:'special',requiresTicket:true,ambiguous:false};
-  }
-  // Community Day — reliably grants +1 special trade window during the event
-  if(name.includes('community day')||type.includes('community-day')){
-    return{bonus:1,bonusType:'special',requiresTicket:false,ambiguous:false};
-  }
-  // Raid Day, Hatch Day, Spotlight Hour, etc. — bonus varies, treat as ambiguous
-  if(type.includes('raid-day')||name.includes('raid day')||name.includes('hatch day')){
-    return{bonus:0,bonusType:'',requiresTicket:false,ambiguous:true};
-  }
-  return{bonus:0,bonusType:'',requiresTicket:false,ambiguous:false};
+  const isTicketed=name.includes('go fest')||name.includes('go tour')||name.includes('pokémon go tour')||type.includes('go-fest')||type.includes('tour');
+  return{bonus:0,bonusType:'',mayHaveTicket:isTicketed};
 }
 // Stable ID for an event (used to track ticket ownership)
 function getEventId(ev){return ev.eventID||ev.eventID||`${ev.name}_${ev.start}`;}
@@ -5364,7 +5348,7 @@ async function toggleEventTicket(eventId,eventName){
 // Compute special trade bonus from event names for a given date.
 // Returns {specialBonus, regularBonus, events: [{name, link, image, bonus, requiresTicket, ticketed}]}
 function dailyEventBonuses(isoD){
-  const out={specialBonus:0,regularBonus:0,manualBonus:0,events:[]};
+  const out={specialBonus:0,manualBonus:0,events:[]};
   if(!_eventData||!_eventData.events)return out;
   const dayStart=new Date(parseIsoDate(isoD));dayStart.setHours(0,0,0,0);
   const dayEnd=new Date(dayStart);dayEnd.setHours(23,59,59,999);
@@ -5375,17 +5359,14 @@ function dailyEventBonuses(isoD){
     if(e<dayStart.getTime()||s>dayEnd.getTime())return;
     const cls=classifyEvent(ev);
     const eventId=getEventId(ev);
-    const ticketed=cls.requiresTicket&&hasEventTicket(eventId);
-    const effectiveBonus=cls.requiresTicket?(ticketed?cls.bonus:0):cls.bonus;
-    if(effectiveBonus)out.specialBonus+=effectiveBonus;
+    const ticketMarked=hasEventTicket(eventId);
     out.events.push({
       name:ev.name,heading:ev.heading,link:ev.link,image:ev.image,
-      bonus:cls.bonus,bonusType:cls.bonusType,
-      requiresTicket:cls.requiresTicket,ticketed,ambiguous:cls.ambiguous,eventId,
+      mayHaveTicket:cls.mayHaveTicket,ticketMarked,eventId,
       start:ev.start,end:ev.end
     });
   });
-  // Apply user's manual special-trade bonus override for this date
+  // The only source of special-trade bonus is the user's manual override (set via +/-)
   const customBonus=parseInt(allData.users?.[cur]?.customBonuses?.[isoD])||0;
   if(customBonus>0){out.specialBonus+=customBonus;out.manualBonus=customBonus;}
   return out;
@@ -5467,13 +5448,7 @@ function renderSchedule(){
           ${evt.events.length?'<span class="sched-day-event-dot" title="Event"></span>':''}
           ${trade_total?`<span class="sched-day-trade-count">${trade_total}</span>`:''}
         </div>
-        ${(()=>{
-          // Show effective bonus (with ticket) OR pending bonus (needs ticket) on day card
-          const ticketedPending=evt.events.filter(e=>e.bonus&&e.requiresTicket&&!e.ticketed).reduce((s,e)=>s+e.bonus,0);
-          if(evt.specialBonus)return`<span class="sched-day-special-bonus" title="+${evt.specialBonus} bonus special trades active">+${evt.specialBonus}⭐</span>`;
-          if(ticketedPending)return`<span class="sched-day-special-bonus" style="background:rgba(245,158,11,.12);color:var(--warn);border-color:rgba(245,158,11,.3);opacity:.7" title="Up to +${ticketedPending} special trades if you have a ticket">🎟+${ticketedPending}</span>`;
-          return'';
-        })()}
+        ${evt.specialBonus?`<span class="sched-day-special-bonus" title="+${evt.specialBonus} bonus special trades (manual)">+${evt.specialBonus}⭐</span>`:''}
       </div>`;
     }).join('');
   }
@@ -5497,27 +5472,15 @@ function renderSchedDayDetail(){
   const dayLabel=d.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric'});
   const eventsHtml=evt.events.length?`<div class="sched-event-list">
     ${evt.events.map(ev=>{
-      let bonusBadge='';
-      if(ev.bonus){
-        if(ev.requiresTicket){
-          bonusBadge=ev.ticketed
-            ?`<span class="sched-event-bonus">🎟 +${ev.bonus} ${ev.bonusType}</span>`
-            :`<span class="sched-event-bonus" style="background:rgba(245,158,11,.16);color:var(--warn);border-color:rgba(245,158,11,.32)">🎟 +${ev.bonus} if ticket</span>`;
-        }else{
-          bonusBadge=`<span class="sched-event-bonus">+${ev.bonus} ${ev.bonusType}</span>`;
-        }
-      }else if(ev.ambiguous){
-        bonusBadge=`<span class="sched-event-bonus" style="background:var(--bg2);color:var(--muted);border-color:var(--border2)" title="Bonus varies by event — check LeekDuck details">? bonus</span>`;
-      }
-      const ticketBtn=ev.requiresTicket?`<button class="sched-event-ticket-btn ${ev.ticketed?'owned':''}" onclick="toggleEventTicket('${escAttr(ev.eventId)}','${escAttr(ev.name||'')}')" title="${ev.ticketed?'You marked having a ticket. Click to remove.':'Mark as ticket holder to unlock the bonus.'}">${ev.ticketed?'🎟 Ticket ✓':'🎟 Mark as ticket holder'}</button>`:'';
-      const checkHint=ev.ambiguous?`<span class="sched-event-link" style="color:var(--muted);font-style:italic">Check details for bonus →</span>`:'';
+      const unknownBadge=`<span class="sched-event-bonus" style="background:var(--bg2);color:var(--muted);border-color:var(--border2)" title="Bonus info isn't in our data source. Check the LeekDuck article for trade-related bonuses and use the custom bonus control below if applicable.">? bonus — check details</span>`;
+      const ticketBtn=ev.mayHaveTicket?`<button class="sched-event-ticket-btn ${ev.ticketMarked?'owned':''}" onclick="toggleEventTicket('${escAttr(ev.eventId)}','${escAttr(ev.name||'')}')" title="${ev.ticketMarked?'You marked having a ticket. Click to remove.':'Mark if you bought a ticket for this event (reminder only — bonus is manual).'}">${ev.ticketMarked?'🎟 Ticket ✓':'🎟 Mark ticket holder'}</button>`:'';
       return`<div class="sched-event-row">
       <div class="sched-event-icon">🎉</div>
       <div class="sched-event-content">
-        <div class="sched-event-title">${escHtml(ev.name||ev.heading||'Event')}${bonusBadge}</div>
+        <div class="sched-event-title">${escHtml(ev.name||ev.heading||'Event')} ${unknownBadge}</div>
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:3px">
           ${ev.link?`<a class="sched-event-link" href="${ev.link}" target="_blank" rel="noopener">details ↗</a>`:''}
-          ${ticketBtn}${checkHint}
+          ${ticketBtn}
         </div>
       </div>
     </div>`;
@@ -5547,7 +5510,7 @@ function renderSchedDayDetail(){
       <div class="sched-quota">
         <div class="sched-quota-label">⭐ Special</div>
         <div class="sched-quota-val ${counts.special>=specialCap?'danger':counts.special>=specialCap-1?'warn':''}">${counts.special}/${specialCap}</div>
-        ${evt.specialBonus?`<div class="sched-quota-bonus">+${evt.specialBonus} bonus${evt.manualBonus?` (incl. ${evt.manualBonus} manual)`:''}</div>`:'<div class="sched-quota-meta">1 base · separate counter</div>'}
+        ${evt.specialBonus?`<div class="sched-quota-bonus">+${evt.specialBonus} custom bonus</div>`:'<div class="sched-quota-meta">1 base · separate counter</div>'}
       </div>
       <div class="sched-quota">
         <div class="sched-quota-label">🤝 Regular</div>
@@ -5590,6 +5553,7 @@ function renderTradeCard(t){
       ${noteHtml}
     </div>
     <div class="sched-trade-actions">
+      ${canEdit&&!completed&&t.status!=='cancelled'?`<button class="sched-trade-btn" onclick="openScheduleModal('${t.date}','${t.id}')" title="Edit this trade">✎ Edit</button>`:''}
       ${!completed&&t.status!=='cancelled'?`<button class="sched-trade-btn complete" onclick="markTradeComplete('${t.id}')" title="Mark as completed">✓ Done</button>`:''}
       ${canEdit&&!completed&&t.status!=='cancelled'?`<button class="sched-trade-btn cancel" onclick="cancelScheduledTrade('${t.id}')" title="Cancel">✗</button>`:''}
     </div>
@@ -5608,15 +5572,25 @@ async function cancelScheduledTrade(id){
   toast('Trade cancelled');
 }
 
-function openScheduleModal(dateIso){
-  const d=dateIso||schedSelectedDate||todayIso();
+function openScheduleModal(dateIso,editTradeId){
+  // Edit mode: pre-fill from existing trade record
+  const editing=editTradeId?allData.trades?.[editTradeId]:null;
+  const d=editing?editing.date:(dateIso||schedSelectedDate||todayIso());
+  const editTime=editing?editing.time||'':'';
+  const editType=editing?editing.type||'regular':'regular';
+  const editPartners=editing?Object.keys(editing.participants||{}).filter(u=>u!==editing.organizer):[];
+  const editPokemon=editing?(editing.pokemon||[]).join(', '):'';
+  const editNote=editing?editing.note||'':'';
   // Pull trainer list (exclude self, only active users from the community)
-  const myInv=allData.have?.[cur]||{};
   const otherUsers=Object.keys(allData.users||{}).filter(u=>u!==cur).sort();
-  // Find Pokemon I have that match others' wants (and vice versa) for suggestions
+  const typeBtnHtml=(type,emoji,label,hint)=>{
+    const isSel=editType===type;
+    return`<button type="button" class="sched-type-btn ${type} ${isSel?'selected':''}" data-type="${type}" onclick="selectSchedType('${type}')"${hint?` title="${hint}"`:''}>${emoji} ${label}</button>`;
+  };
   const html=`<div class="ov open" id="sched-modal" role="dialog" aria-modal="true" onclick="if(event.target===this)closeScheduleModal()">
     <div class="modal schedule-modal" onclick="event.stopPropagation()">
-      <h3>📅 Schedule a Trade</h3>
+      <h3>${editing?'✎ Edit Trade':'📅 Schedule a Trade'}</h3>
+      <input type="hidden" id="sched-edit-id" value="${editTradeId||''}">
       <div class="sched-form-time-row">
         <div class="sched-form-row">
           <label>Date</label>
@@ -5624,25 +5598,26 @@ function openScheduleModal(dateIso){
         </div>
         <div class="sched-form-row">
           <label>Time (optional)</label>
-          <input type="time" id="sched-time" placeholder="--:--">
+          <input type="time" id="sched-time" placeholder="--:--" value="${escAttr(editTime)}">
         </div>
       </div>
       <div class="sched-form-row">
         <label>Trade Type</label>
         <div class="sched-type-picker" id="sched-type-picker">
-          <button type="button" class="sched-type-btn regular selected" data-type="regular" onclick="selectSchedType('regular')">🤝 Regular</button>
-          <button type="button" class="sched-type-btn special" data-type="special" onclick="selectSchedType('special')">⭐ Special</button>
-          <button type="button" class="sched-type-btn remote" data-type="remote" onclick="selectSchedType('remote')" title="Remote trade — requires Forever Friend">📡 Remote</button>
+          ${typeBtnHtml('regular','🤝','Regular','')}
+          ${typeBtnHtml('special','⭐','Special','')}
+          ${typeBtnHtml('remote','📡','Remote','Remote trade — requires Forever Friend')}
         </div>
       </div>
-      <input type="hidden" id="sched-type" value="regular">
+      <input type="hidden" id="sched-type" value="${editType}">
       <div class="sched-form-row">
         <label>Trade With</label>
         <div class="sched-trainer-picker" id="sched-trainer-picker">
           ${otherUsers.length?otherUsers.map(u=>{
             const ud=allData.users?.[u]||{};
             const fresh=Date.now()-(ud.lastSeen||ud.lastUpdated||0)<7*86400000;
-            return`<span class="sched-trainer-chip" data-user="${escAttr(u)}" onclick="this.classList.toggle('selected')" title="${escAttr(u)}${ud.friendCode?' · '+escAttr(ud.friendCode):''}">
+            const isSel=editPartners.includes(u);
+            return`<span class="sched-trainer-chip ${isSel?'selected':''}" data-user="${escAttr(u)}" onclick="this.classList.toggle('selected')" title="${escAttr(u)}${ud.friendCode?' · '+escAttr(ud.friendCode):''}">
               ${userAvatarHtml(u,20)} <span>${escHtml(u)}</span>${fresh?'<span style="font-size:10px;color:var(--ok)">●</span>':''}
             </span>`;
           }).join(''):'<div style="font-size:12px;color:var(--muted);font-style:italic">No other trainers yet</div>'}
@@ -5650,15 +5625,15 @@ function openScheduleModal(dateIso){
       </div>
       <div class="sched-form-row">
         <label>Pokémon (optional, comma-separated names)</label>
-        <input type="text" id="sched-pokemon" placeholder="A-Raichu, Vivillon (Garden)">
+        <input type="text" id="sched-pokemon" placeholder="A-Raichu, Vivillon (Garden)" value="${escAttr(editPokemon)}">
       </div>
       <div class="sched-form-row">
         <label>Note (optional)</label>
-        <textarea id="sched-note" placeholder="Meet at Bryant Park · hundo hunt · etc."></textarea>
+        <textarea id="sched-note" placeholder="Meet at Bryant Park · hundo hunt · etc.">${escHtml(editNote)}</textarea>
       </div>
       <div class="mact">
         <button class="bghost" onclick="closeScheduleModal()">Cancel</button>
-        <button class="bpri" onclick="submitScheduledTrade()">Schedule</button>
+        <button class="bpri" onclick="submitScheduledTrade()">${editing?'Save Changes':'Schedule'}</button>
       </div>
     </div>
   </div>`;
@@ -5678,26 +5653,32 @@ async function submitScheduledTrade(){
   const partners=[...document.querySelectorAll('#sched-trainer-picker .sched-trainer-chip.selected')].map(c=>c.dataset.user);
   const pokemonRaw=document.getElementById('sched-pokemon')?.value||'';
   const note=document.getElementById('sched-note')?.value||'';
+  const editId=document.getElementById('sched-edit-id')?.value||'';
   if(!date){toast('⚠️ Pick a date');return;}
   if(!partners.length){toast('⚠️ Pick at least one trainer');return;}
   const pokemon=pokemonRaw.split(',').map(s=>s.trim()).filter(Boolean);
-  const id=`${Date.now()}_${cur}_${Math.random().toString(36).slice(2,7)}`;
-  const participants={[cur]:'organizer'};
+  // Edit mode preserves organizer + original createdAt; new mode generates new id
+  const existing=editId?allData.trades?.[editId]:null;
+  const id=editId||`${Date.now()}_${cur}_${Math.random().toString(36).slice(2,7)}`;
+  const organizer=existing?existing.organizer:cur;
+  // Only allow edit if current user is the organizer
+  if(existing&&organizer!==cur){toast('Only the organizer can edit this trade');return;}
+  const participants={[organizer]:'organizer'};
   partners.forEach(p=>{participants[p]='pending';});
   const trade={
     date,time,type,
-    organizer:cur,
+    organizer,
     participants,
     pokemon,
     note:String(note).slice(0,500),
-    createdAt:Date.now(),
-    status:'scheduled'
+    createdAt:existing?existing.createdAt:Date.now(),
+    updatedAt:existing?Date.now():undefined,
+    status:existing?(existing.status||'scheduled'):'scheduled'
   };
   await writeTrade(id,trade);
   closeScheduleModal();
-  toast(`📅 Trade scheduled for ${date}${time?' at '+time:''}`);
+  toast(existing?`✓ Trade updated`:`📅 Trade scheduled for ${date}${time?' at '+time:''}`);
   schedSelectedDate=date;
-  // Jump to the right week if needed
   const d=parseIsoDate(date);
   schedAnchor=startOfWeek(d);
   renderSchedule();
