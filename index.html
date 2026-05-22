@@ -180,7 +180,7 @@ input,select,textarea{font-family:var(--font);outline:none}
 .lucky-mark{background:rgba(250,204,21,.16);border:1px solid rgba(250,204,21,.36);color:#facc15}
 .flag-mark.xxl-mark{background:rgba(99,102,241,.16);border:1px solid rgba(99,102,241,.36);color:#818cf8}
 .flag-mark.xxs-mark{background:rgba(20,184,166,.16);border:1px solid rgba(20,184,166,.36);color:#2dd4bf}
-.ni{background:var(--bg);border:1px solid var(--border);color:var(--text);padding:2px 5px;border-radius:4px;font-size:10px;width:45px;max-width:45px;flex-shrink:0;font-family:var(--mono)}
+.ni{background:var(--bg);border:1px solid var(--border);color:var(--text);padding:2px 5px;border-radius:4px;font-size:10px;width:40px;max-width:40px;flex-shrink:0;font-family:var(--mono)}
 .rm{width:20px;height:20px;border-radius:4px;background:rgba(239,68,68,.1);color:var(--danger);border:1px solid rgba(239,68,68,.2);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center}
 
 /* STRINGS */
@@ -1960,7 +1960,7 @@ function renderMyList(filterVal){
         <button class="flag-btn lucky-flag ${lucky?'on':''}" onclick="setLucky('${sn}')" title="⚡ Lucky">⚡</button>
         <button class="flag-btn xxl-flag ${xxl?'on':''}" onclick="setXxl('${sn}')" title="XXL">XXL</button>
         <button class="flag-btn xxs-flag ${xxs?'on':''}" onclick="setXxs('${sn}')" title="XXS">XXS</button>
-        <input class="ni" type="text" value="${mod}" placeholder="notes" onchange="setNotes('${sn}',this.value)" style="width:50px;flex-shrink:0">
+        <input class="ni" type="text" value="${mod}" placeholder="notes" onchange="setNotes('${sn}',this.value)" style="width:40px">
         <button class="rm" onclick="removeEntry('${sn}')" title="Remove" aria-label="Remove ${escAttr(dn)}">×</button>
       </div>
     </div>`;
@@ -2105,7 +2105,7 @@ function drawCenteredFittedText(ctx,text,x,y,maxW,{weight=800,max=24,min=14,colo
 }
 async function renderListImage(entries,type,username){
   const W=560,frame=6,pad=12,gap=2,cols=5;
-  const cellW=(W-frame*2-pad*2-gap*(cols-1))/cols,cellH=86,sprSize=78;
+  const cellW=(W-frame*2-pad*2-gap*(cols-1))/cols,cellH=84,sprSize=82;
   const groupDefs=['H','M','L'].map(p=>({p,label:priLabel(p),entries:entries.filter(e=>e.p===p)}));
   const groups=groupDefs.filter(g=>g.entries.length);
   const headerH=52,groupTitleH=24,sectionPad=8,sectionGap=6,bottomPad=8;
@@ -2117,8 +2117,8 @@ async function renderListImage(entries,type,username){
   const ctx=canvas.getContext('2d');
   ctx.scale(scale,scale);
   const fullH=canvas.height/scale;
-  ctx.fillStyle='#10bed3';ctx.fillRect(0,0,W,fullH);
-  ctx.fillStyle='#079fb9';ctx.fillRect(0,0,W,3);
+  ctx.fillStyle='#2c3e50';ctx.fillRect(0,0,W,fullH);
+  ctx.fillStyle='#1a252f';ctx.fillRect(0,0,W,3);
 
   const title=`${username}'s ${listLabel(type)} List`;
   ctx.shadowColor='rgba(0,0,0,.35)';
@@ -2132,9 +2132,6 @@ async function renderListImage(entries,type,username){
   ctx.fillStyle='rgba(255,255,255,.95)';
   ctx.font='800 10px Space Grotesk, sans-serif';
   ctx.fillText('PoGo',W-frame-36,45);
-  [['#ef4444',0,0],['#3b82f6',-10,8],['#16a34a',10,8]].forEach(([c,dx,dy])=>{
-    ctx.fillStyle=c;ctx.beginPath();ctx.arc(W-frame-9+dx,17+dy,4,0,Math.PI*2);ctx.fill();
-  });
 
   const urls=[...new Set([
     ...entries.map(exportSpriteUrl).filter(Boolean),
@@ -2145,18 +2142,18 @@ async function renderListImage(entries,type,username){
   const priColors={H:'#ef4444',M:'#f59e0b',L:'#10b981','':'#8888aa'};
   let y=frame+headerH;
   groups.forEach(group=>{
-    ctx.fillStyle='#0aaec6';ctx.fillRect(frame,y,W-frame*2,groupTitleH);
+    ctx.fillStyle='#34495e';ctx.fillRect(frame,y,W-frame*2,groupTitleH);
     ctx.fillStyle='#fff';
     ctx.font='800 13px Space Grotesk, sans-serif';
     ctx.beginPath();ctx.arc(frame+13,y+groupTitleH/2,5,0,Math.PI*2);ctx.fill();
     ctx.strokeStyle=priColors[group.p]||'#8888aa';ctx.lineWidth=3;ctx.stroke();
     ctx.fillStyle='#fff';
-    ctx.fillText(`${group.label} ${group.entries.length}`,frame+24,y+16);
+    ctx.fillText(`${group.label} (${group.entries.length})`,frame+24,y+16);
     y+=groupTitleH;
     const rows=Math.ceil(group.entries.length/cols);
     const areaH=sectionPad*2+rows*cellH;
-    ctx.fillStyle='#fbfff8';ctx.fillRect(frame,y,W-frame*2,areaH);
-    ctx.strokeStyle='rgba(3,169,187,.55)';ctx.lineWidth=1;ctx.strokeRect(frame+.5,y+.5,W-frame*2-1,areaH-1);
+    ctx.fillStyle='#f8f9fa';ctx.fillRect(frame,y,W-frame*2,areaH);
+    ctx.strokeStyle='rgba(52,73,94,.3)';ctx.lineWidth=1;ctx.strokeRect(frame+.5,y+.5,W-frame*2-1,areaH-1);
     y+=sectionPad;
     group.entries.forEach((e,i)=>{
       const col=i%cols,row=Math.floor(i/cols);
