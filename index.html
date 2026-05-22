@@ -164,14 +164,13 @@ input,select,textarea{font-family:var(--font);outline:none}
 .myrow-name{font-size:13px;font-weight:500;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .myrow[data-full]:has(.myrow-name:hover)::after{content:attr(data-full);position:absolute;left:44px;bottom:calc(100% + 6px);max-width:min(360px,calc(100vw - 70px));background:rgba(18,17,34,.97);border:1px solid var(--border2);color:var(--text);border-radius:7px;padding:6px 9px;font-size:12px;line-height:1.25;white-space:normal;box-shadow:0 8px 24px rgba(0,0,0,.28);pointer-events:none;z-index:30}
 .myrow[data-full]:has(.myrow-name:hover)::before{content:'';position:absolute;left:55px;bottom:100%;border:5px solid transparent;border-top-color:var(--border2);pointer-events:none;z-index:31}
-.mctrl{display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0}
-.mctrl-row{display:flex;gap:3px;align-items:center}
+.mctrl{display:flex;gap:5px;align-items:center;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end}
 .mctrl-sep{width:1px;height:18px;background:var(--border2);margin:0 2px;flex-shrink:0}
 .pb{width:26px;height:24px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;transition:.15s}
 .pb.on.H{background:var(--Hbg);color:var(--H);border-color:rgba(239,68,68,.55)}
 .pb.on.M{background:var(--Mbg);color:var(--M);border-color:rgba(245,158,11,.55)}
 .pb.on.L{background:var(--Lbg);color:var(--L);border-color:rgba(16,185,129,.4)}
-.flag-btn{height:24px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:11px;font-weight:800;cursor:pointer;transition:.15s;padding:0 5px}
+.flag-btn{height:24px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:10px;font-weight:800;cursor:pointer;transition:.15s;padding:0 4px;flex-shrink:0}
 .flag-btn.lucky-flag.on{background:rgba(250,204,21,.15);color:#facc15;border-color:rgba(250,204,21,.5)}
 .flag-btn.xxl-flag.on{background:rgba(99,102,241,.15);color:#818cf8;border-color:rgba(99,102,241,.5)}
 .flag-btn.xxs-flag.on{background:rgba(20,184,166,.15);color:#2dd4bf;border-color:rgba(20,184,166,.5)}
@@ -544,9 +543,9 @@ input,select,textarea{font-family:var(--font);outline:none}
           <div class="ac-dropdown" id="ac-dropdown"></div>
         </div>
         <select id="add-pmon-pri">
-          <option value="">– None –</option>
+          <option value="" selected>– None –</option>
           <option value="H">H – High</option>
-          <option value="M" selected>M – Medium</option>
+          <option value="M">M – Medium</option>
           <option value="L">L – Low</option>
         </select>
         <label class="lucky-add" title="⚡ Lucky — generates a separate Lucky Dex search string">
@@ -1775,7 +1774,7 @@ function setMyList(t){
   if(document.getElementById('ac-input'))document.getElementById('ac-input').value='';
   document.getElementById('add-pmon-sel').value='';
   ['add-pmon-lucky','add-pmon-xxl','add-pmon-xxs'].forEach(id=>{const el=document.getElementById(id);if(el)el.checked=false;});
-  document.getElementById('add-pmon-pri').value='M';
+  document.getElementById('add-pmon-pri').value='';
   document.getElementById('ac-dropdown').classList.remove('open');
   document.getElementById('mylist-filter').value='';
   buildAcItems();renderMyList();
@@ -1938,7 +1937,7 @@ function renderMyList(filterVal){
   if(countEl)countEl.textContent=q?`(${entries.length} of ${count})`:`(${count})`;
 
   if(!entries.length){
-    el.innerHTML=q?emptyHtml('No matches','Clear the filter to see all.'):emptyHtml('Nothing here yet','Search for a Pokémon, set a priority (H/M/L) or flag (⚡ XXL XXS), then hit Add.','📋');
+    el.innerHTML=q?emptyHtml('No matches','Clear the filter to see all.'):emptyHtml('Nothing here yet','Search for a Pokémon, set a priority (H/M/L) and/or flag (⚡ XXL XXS), then Add.','📋');
     renderMyStrings();return;
   }
 
@@ -1956,17 +1955,13 @@ function renderMyList(filterVal){
       ${hasSprite?`<span class="myrow-sprite-wrap">${spriteImg(no,28,'myrow-sprite',name)}${crownHtml}</span>`:crownHtml}
       <div class="myrow-name">${dn}</div>
       <div class="mctrl">
-        <div class="mctrl-row">
-          ${['H','M','L'].map(b=>`<button class="pb ${p===b?'on '+b:''}" onclick="setPri('${sn}','${b}')" title="${priName(b)}" aria-label="Set ${escAttr(dn)} to ${priLabel(b)} priority">${b}</button>`).join('')}
-          <span class="mctrl-sep"></span>
-          <button class="flag-btn lucky-flag ${lucky?'on':''}" onclick="setLucky('${sn}')" title="⚡ Lucky — appear in Lucky Dex search string">⚡</button>
-          <button class="flag-btn xxl-flag ${xxl?'on':''}" onclick="setXxl('${sn}')" title="XXL — appear in XXL search string">XXL</button>
-          <button class="flag-btn xxs-flag ${xxs?'on':''}" onclick="setXxs('${sn}')" title="XXS — appear in XXS search string">XXS</button>
-        </div>
-        <div class="mctrl-row">
-          <input class="ni" type="text" value="${mod}" placeholder="notes" onchange="setNotes('${sn}',this.value)" style="flex:1;width:auto;min-width:40px;max-width:90px">
-          <button class="rm" onclick="removeEntry('${sn}')" title="Remove" aria-label="Remove ${escAttr(dn)}">×</button>
-        </div>
+        ${['H','M','L'].map(b=>`<button class="pb ${p===b?'on '+b:''}" onclick="setPri('${sn}','${b}')" title="${priName(b)}" aria-label="Set ${escAttr(dn)} to ${priLabel(b)} priority">${b}</button>`).join('')}
+        <span class="mctrl-sep"></span>
+        <button class="flag-btn lucky-flag ${lucky?'on':''}" onclick="setLucky('${sn}')" title="⚡ Lucky">⚡</button>
+        <button class="flag-btn xxl-flag ${xxl?'on':''}" onclick="setXxl('${sn}')" title="XXL">XXL</button>
+        <button class="flag-btn xxs-flag ${xxs?'on':''}" onclick="setXxs('${sn}')" title="XXS">XXS</button>
+        <input class="ni" type="text" value="${mod}" placeholder="notes" onchange="setNotes('${sn}',this.value)" style="width:50px;flex-shrink:0">
+        <button class="rm" onclick="removeEntry('${sn}')" title="Remove" aria-label="Remove ${escAttr(dn)}">×</button>
       </div>
     </div>`;
   }).join('')}</div>`;
@@ -2111,8 +2106,6 @@ async function renderListImage(entries,type,username){
   const W=560,frame=6,pad=12,gap=2,cols=5;
   const cellW=(W-frame*2-pad*2-gap*(cols-1))/cols,cellH=86,sprSize=78;
   const groupDefs=['H','M','L'].map(p=>({p,label:priLabel(p),entries:entries.filter(e=>e.p===p)}));
-  const other=entries.filter(e=>!PRI[e.p]);
-  if(other.length)groupDefs.push({p:'',label:'Other',entries:other});
   const groups=groupDefs.filter(g=>g.entries.length);
   const headerH=52,groupTitleH=24,sectionPad=8,sectionGap=6,bottomPad=8;
   let H=frame+headerH+bottomPad;
@@ -2173,9 +2166,11 @@ async function renderListImage(entries,type,username){
       else drawSpriteFallback(ctx,e,sx,sy,sprSize);
       if(e.lucky||e.xxl||e.xxs){
         let bx=x+cardW-4;
-        if(e.xxs){bx-=16;roundedRect(ctx,bx,cy+4,15,11,3);ctx.fillStyle='#2dd4bf';ctx.fill();ctx.fillStyle='#fff';ctx.font='700 6px Space Grotesk,sans-serif';ctx.textAlign='center';ctx.fillText('XXS',bx+7.5,cy+11.5);ctx.textAlign='left';}
-        if(e.xxl){bx-=17;roundedRect(ctx,bx,cy+4,15,11,3);ctx.fillStyle='#818cf8';ctx.fill();ctx.fillStyle='#fff';ctx.font='700 6px Space Grotesk,sans-serif';ctx.textAlign='center';ctx.fillText('XXL',bx+7.5,cy+11.5);ctx.textAlign='left';}
-        if(e.lucky){bx-=16;roundedRect(ctx,bx,cy+4,14,11,3);ctx.fillStyle='#facc15';ctx.fill();ctx.fillStyle='#7c2d12';ctx.font='800 9px serif';ctx.textAlign='center';ctx.fillText('⚡',bx+7,cy+11.5);ctx.textAlign='left';}
+        ctx.textAlign='center';
+        if(e.xxs){bx-=16;roundedRect(ctx,bx,cy+4,15,11,3);ctx.fillStyle='#2dd4bf';ctx.fill();ctx.fillStyle='#fff';ctx.font='700 6px Space Grotesk,sans-serif';ctx.fillText('XS',bx+7.5,cy+11.5);}
+        if(e.xxl){bx-=16;roundedRect(ctx,bx,cy+4,15,11,3);ctx.fillStyle='#818cf8';ctx.fill();ctx.fillStyle='#fff';ctx.font='700 6px Space Grotesk,sans-serif';ctx.fillText('XL',bx+7.5,cy+11.5);}
+        if(e.lucky){bx-=15;roundedRect(ctx,bx,cy+4,13,11,3);ctx.fillStyle='#facc15';ctx.fill();ctx.fillStyle='#7c2d12';ctx.font='800 8px Space Grotesk,sans-serif';ctx.fillText('L',bx+6.5,cy+11.5);}
+        ctx.textAlign='left';
       }
       const mark=maxMarkForEntry(e,type);
       if(mark){
@@ -2207,8 +2202,8 @@ async function renderListImage(entries,type,username){
 async function exportMyListImage(){
   const btn=document.querySelector('.image-btn');
   const old=btn?.textContent;
-  const entries=currentListEntries(myListType);
-  if(!entries.length){toast('Add entries before exporting an image.');return;}
+  const entries=currentListEntries(myListType).filter(e=>e.p&&PRI[e.p]);
+  if(!entries.length){toast('Add entries with H/M/L priority to export.');return;}
   try{
     if(btn){btn.disabled=true;btn.textContent='Building image…';}
     const blob=await renderListImage(entries,myListType,cur);
