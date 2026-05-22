@@ -720,6 +720,10 @@ html[data-theme="light"] .have-trainer-chip.match{color:#b45309}
 .sched-event-bonus{display:inline-block;background:rgba(16,185,129,.16);color:var(--ok);border:1px solid rgba(16,185,129,.32);padding:1px 6px;border-radius:8px;font-size:10px;font-weight:700;margin-left:6px}
 .sched-event-link{font-size:11px;color:var(--ac2);text-decoration:none}
 .sched-event-link:hover{text-decoration:underline}
+.sched-event-ticket-btn{background:transparent;border:1px dashed var(--warn);color:var(--warn);padding:3px 9px;border-radius:10px;font-size:11px;font-weight:600;cursor:pointer;font-family:var(--font);transition:.15s}
+.sched-event-ticket-btn:hover{background:rgba(245,158,11,.1)}
+.sched-event-ticket-btn.owned{background:rgba(16,185,129,.12);border:1px solid var(--ok);color:var(--ok)}
+.sched-event-ticket-btn.owned:hover{background:rgba(16,185,129,.2)}
 
 .sched-trades-list{display:flex;flex-direction:column;gap:6px}
 .sched-trade-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--r2);padding:10px 12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
@@ -4780,7 +4784,7 @@ async function triggerInstall(){
 
 // ── WHAT'S NEW (#28) ─────────────────────────────────────────
 const WHATS_NEW=[
-  {version:'3.0',title:'📅 Trade Schedule',desc:'New Schedule tab with week-view calendar. Plan trades with specific trainers, track your daily quota (1 special + 100 regular base), and see real-time event bonuses (Community Day +1, GO Fest +2, Pokémon Tour +3). Events auto-update from LeekDuck — no manual maintenance. Mark trades complete or cancel anytime.'},
+  {version:'3.0',title:'📅 Trade Schedule',desc:'New Schedule tab with week-view calendar. Plan trades with specific trainers, track your daily quota (1 special + 100 regular base), and see real-time event bonuses (Community Day +1, GO Fest +2 ticketed, Pokémon Tour +3 ticketed). Mark "🎟 Ticket holder" on ticketed events to unlock the bonus. Events auto-update from LeekDuck.'},
   {version:'2.9',title:'🔔 Public Offers & FCFS',desc:'Offers on inventory items are now public — see who already offered what & when (sorted oldest first). Compare offers before bidding. The 1st offer gets a green badge so everyone respects first-come-first-served. Withdraw your own offers anytime. Recipients see a 📬 inbox badge.'},
   {version:'2.8',title:'🎒 Inventory ("Have" tab)',desc:'Track what Pokémon you have to trade with simple quantity counts. Others can browse your inventory and click "Offer trade" to start a Discord conversation. ⭐ Auto-highlights items that match your wishlist.'},
   {version:'2.7.1',title:'Costume Sprite Fix',desc:'Fixed Flower Crown variants (Happiny, Chansey, etc.) and Worlds-event Pikachus showing generic sprites in My List and exports. Costume URLs are now resolved before generic fallback.'},
@@ -5301,12 +5305,53 @@ function fmtWeekRange(start){
 }
 const WKDS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
+// Classify an event by its name to determine trade bonus + whether it requires a paid ticket.
+// Returns {bonus, bonusType, requiresTicket, eventId}
+function classifyEvent(ev){
+  const name=String(ev.name||'').toLowerCase();
+  const type=String(ev.eventType||'').toLowerCase();
+  // Pokémon GO Tour — ticketed (free version exists but bonus specials are ticket-only)
+  if(name.includes('go tour')||name.includes('pokémon go tour')||type.includes('tour')){
+    return{bonus:3,bonusType:'special',requiresTicket:true};
+  }
+  // GO Fest — most special trade bonuses require ticket
+  if(name.includes('go fest')||type.includes('go-fest')){
+    return{bonus:2,bonusType:'special',requiresTicket:true};
+  }
+  // Community Day — FREE bonus +1 special (no ticket needed)
+  if(name.includes('community day')||type.includes('community-day')){
+    return{bonus:1,bonusType:'special',requiresTicket:false};
+  }
+  // Hatch Day — FREE bonus +1 special
+  if(name.includes('hatch day')){
+    return{bonus:1,bonusType:'special',requiresTicket:false};
+  }
+  // Raid Day — FREE bonus +1 special
+  if(type.includes('raid-day')||name.includes('raid day')){
+    return{bonus:1,bonusType:'special',requiresTicket:false};
+  }
+  return{bonus:0,bonusType:'',requiresTicket:false};
+}
+// Stable ID for an event (used to track ticket ownership)
+function getEventId(ev){return ev.eventID||ev.eventID||`${ev.name}_${ev.start}`;}
+// Check if current user has marked owning a ticket for an event
+function hasEventTicket(eventId){
+  return !!(allData.users?.[cur]?.tickets?.[eventId]);
+}
+async function toggleEventTicket(eventId,eventName){
+  const ud=allData.users?.[cur]||{};
+  const tickets={...(ud.tickets||{})};
+  if(tickets[eventId]){delete tickets[eventId];toast(`🎟 Removed ticket for ${eventName}`);}
+  else{tickets[eventId]=true;toast(`🎟 Marked as ticket holder for ${eventName}`);}
+  await writeUser(cur,{tickets});
+  renderSchedule();
+}
+
 // Compute special trade bonus from event names for a given date.
-// Returns {specialBonus, regularBonus, events: [{name, link, image, bonus}]}
+// Returns {specialBonus, regularBonus, events: [{name, link, image, bonus, requiresTicket, ticketed}]}
 function dailyEventBonuses(isoD){
   const out={specialBonus:0,regularBonus:0,events:[]};
   if(!_eventData||!_eventData.events)return out;
-  const target=parseIsoDate(isoD).getTime();
   const dayStart=new Date(parseIsoDate(isoD));dayStart.setHours(0,0,0,0);
   const dayEnd=new Date(dayStart);dayEnd.setHours(23,59,59,999);
   _eventData.events.forEach(ev=>{
@@ -5314,21 +5359,18 @@ function dailyEventBonuses(isoD){
     const e=new Date(ev.end||0).getTime();
     if(!s||!e)return;
     if(e<dayStart.getTime()||s>dayEnd.getTime())return;
-    const name=String(ev.name||'').toLowerCase();
-    const type=String(ev.eventType||'').toLowerCase();
-    let bonus=0,bonusType='';
-    // Community Day / Classic CDay → +1 special
-    if(name.includes('community day')||type.includes('community-day')){bonus=1;bonusType='special';}
-    // Pokemon Tour → +3 special (typically)
-    else if(name.includes('go tour')||name.includes('pokémon go tour')||type.includes('tour')){bonus=3;bonusType='special';}
-    // GO Fest → +1-2 special
-    else if(name.includes('go fest')||type.includes('go-fest')){bonus=2;bonusType='special';}
-    // Hatch Day → +1 special
-    else if(name.includes('hatch day')){bonus=1;bonusType='special';}
-    // Raid Day → +1 special
-    else if(type.includes('raid-day')||name.includes('raid day')){bonus=1;bonusType='special';}
-    if(bonus)out.specialBonus+=bonus;
-    out.events.push({name:ev.name,heading:ev.heading,link:ev.link,image:ev.image,bonus,bonusType,start:ev.start,end:ev.end});
+    const cls=classifyEvent(ev);
+    const eventId=getEventId(ev);
+    const ticketed=cls.requiresTicket&&hasEventTicket(eventId);
+    // Only apply bonus if either (a) event doesn't need ticket, or (b) user has marked ticket owned
+    const effectiveBonus=cls.requiresTicket?(ticketed?cls.bonus:0):cls.bonus;
+    if(effectiveBonus)out.specialBonus+=effectiveBonus;
+    out.events.push({
+      name:ev.name,heading:ev.heading,link:ev.link,image:ev.image,
+      bonus:cls.bonus,bonusType:cls.bonusType,
+      requiresTicket:cls.requiresTicket,ticketed,eventId,
+      start:ev.start,end:ev.end
+    });
   });
   return out;
 }
@@ -5399,7 +5441,13 @@ function renderSchedule(){
           ${evt.events.length?'<span class="sched-day-event-dot" title="Event"></span>':''}
           ${trade_total?`<span class="sched-day-trade-count">${trade_total}</span>`:''}
         </div>
-        ${evt.specialBonus?`<span class="sched-day-special-bonus" title="+${evt.specialBonus} bonus special trades">+${evt.specialBonus}⭐</span>`:''}
+        ${(()=>{
+          // Show effective bonus (with ticket) OR pending bonus (needs ticket) on day card
+          const ticketedPending=evt.events.filter(e=>e.bonus&&e.requiresTicket&&!e.ticketed).reduce((s,e)=>s+e.bonus,0);
+          if(evt.specialBonus)return`<span class="sched-day-special-bonus" title="+${evt.specialBonus} bonus special trades active">+${evt.specialBonus}⭐</span>`;
+          if(ticketedPending)return`<span class="sched-day-special-bonus" style="background:rgba(245,158,11,.12);color:var(--warn);border-color:rgba(245,158,11,.3);opacity:.7" title="Up to +${ticketedPending} special trades if you have a ticket">🎟+${ticketedPending}</span>`;
+          return'';
+        })()}
       </div>`;
     }).join('');
   }
@@ -5417,13 +5465,24 @@ function renderSchedDayDetail(){
   const specialCap=SPECIAL_BASE+evt.specialBonus;
   const dayLabel=d.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric'});
   const eventsHtml=evt.events.length?`<div class="sched-event-list">
-    ${evt.events.map(ev=>`<div class="sched-event-row">
+    ${evt.events.map(ev=>{
+      const bonusBadge=ev.bonus?(ev.requiresTicket
+        ? (ev.ticketed
+          ? `<span class="sched-event-bonus">🎟 +${ev.bonus} ${ev.bonusType}</span>`
+          : `<span class="sched-event-bonus" style="background:rgba(245,158,11,.16);color:var(--warn);border-color:rgba(245,158,11,.32)">🎟 +${ev.bonus} if ticket</span>`)
+        : `<span class="sched-event-bonus">+${ev.bonus} ${ev.bonusType}</span>`):'';
+      const ticketBtn=ev.requiresTicket?`<button class="sched-event-ticket-btn ${ev.ticketed?'owned':''}" onclick="toggleEventTicket('${escAttr(ev.eventId)}','${escAttr(ev.name||'')}')" title="${ev.ticketed?'You marked having a ticket. Click to remove.':'Mark as ticket holder to unlock the bonus.'}">${ev.ticketed?'🎟 Ticket ✓':'🎟 Mark as ticket holder'}</button>`:'';
+      return`<div class="sched-event-row">
       <div class="sched-event-icon">🎉</div>
       <div class="sched-event-content">
-        <div class="sched-event-title">${escHtml(ev.name||ev.heading||'Event')}${ev.bonus?`<span class="sched-event-bonus">+${ev.bonus} ${ev.bonusType}</span>`:''}</div>
-        ${ev.link?`<a class="sched-event-link" href="${ev.link}" target="_blank" rel="noopener">details ↗</a>`:''}
+        <div class="sched-event-title">${escHtml(ev.name||ev.heading||'Event')}${bonusBadge}</div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:3px">
+          ${ev.link?`<a class="sched-event-link" href="${ev.link}" target="_blank" rel="noopener">details ↗</a>`:''}
+          ${ticketBtn}
+        </div>
       </div>
-    </div>`).join('')}
+    </div>`;
+    }).join('')}
   </div>`:'';
   const tradesHtml=counts.trades.length?`<div class="sched-trades-list">${counts.trades.map(t=>renderTradeCard(t)).join('')}</div>`
     :'<div class="sched-empty-trades">No trades scheduled for this day yet.</div>';
@@ -6655,7 +6714,7 @@ Object.assign(window,{
   reloadForUpdate,checkForUpdate,
   // Schedule
   navigateSchedWeek,navigateSchedToday,selectSchedDay,openScheduleModal,closeScheduleModal,
-  selectSchedType,submitScheduledTrade,markTradeComplete,cancelScheduledTrade
+  selectSchedType,submitScheduledTrade,markTradeComplete,cancelScheduledTrade,toggleEventTicket
 });
 
 // ── BOOT ──────────────────────────────────────────────────────
