@@ -1280,7 +1280,8 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
         <div class="export-menu-wrap">
           <button class="image-btn" onclick="toggleExportMenu(event)" aria-haspopup="true" aria-expanded="false" id="export-menu-btn">📤 Export ▾</button>
           <div class="export-menu" id="export-menu" role="menu">
-            <button class="export-menu-item" role="menuitem" onclick="exportMyListImage();closeExportMenu()"><span class="icon">🖼️</span> Image (PNG)</button>
+            <button class="export-menu-item" role="menuitem" onclick="exportMyListImage('classic');closeExportMenu()"><span class="icon">🖼️</span> Image — Classic (light)</button>
+            <button class="export-menu-item" role="menuitem" onclick="exportMyListImage('cards');closeExportMenu()"><span class="icon">🌙</span> Image — Dark Cards</button>
             <button class="export-menu-item" role="menuitem" onclick="exportMyListMarkdown();closeExportMenu()"><span class="icon">📝</span> Markdown (Discord/Reddit)</button>
             <button class="export-menu-item" role="menuitem" onclick="exportMyListCSV();closeExportMenu()"><span class="icon">📊</span> CSV (Spreadsheet)</button>
             <div class="export-menu-sep"></div>
@@ -3627,7 +3628,8 @@ function _familySort(a,b){
   return String(a.dn||a.name||'').localeCompare(String(b.dn||b.name||''),undefined,{numeric:true,sensitivity:'base'});
 }
 
-async function renderListImage(entries,type,username){
+async function renderListImage(entries,type,username,style='classic'){
+  if(style==='cards')return renderListImageCards(entries,type,username);
   const W=560,frame=0,pad=6,gap=0,cols=6;
   const cellW=(W-frame*2-pad*2-gap*(cols-1))/cols,cellH=72,sprSize=68;
   // Cluster variants from same family together within each priority group
@@ -3641,6 +3643,11 @@ async function renderListImage(entries,type,username){
   canvas.width=W*scale;canvas.height=Math.max(H,360)*scale;
   const ctx=canvas.getContext('2d');
   ctx.scale(scale,scale);
+  // High-quality resampling so low-res (PokeAPI 96px) sprites upscale cleanly
+  // and high-res (PokemonDB 256px) sprites downscale without aliasing — yields a
+  // more visually consistent grid across heterogeneous sprite sources.
+  ctx.imageSmoothingEnabled=true;
+  ctx.imageSmoothingQuality='high';
   const fullH=canvas.height/scale;
   // Dark professional background
   ctx.fillStyle='#0f1419';ctx.fillRect(0,0,W,fullH);
@@ -3736,16 +3743,135 @@ async function renderListImage(entries,type,username){
   });
   return canvasBlob(canvas);
 }
-async function exportMyListImage(){
+// Dark-card style: 8-column grid where each Pokémon sits in its own bordered card
+// with a priority-coloured top stripe (red H / amber M / green L). Same sprite source
+// + trim/scale logic as the classic style, so icons stay consistent across both.
+async function renderListImageCards(entries,type,username){
+  const W=560,frame=12,pad=0,gap=6,cols=8;
+  const cellW=(W-frame*2-(cols-1)*gap)/cols,cellH=cellW,sprSize=Math.floor(cellW-12);
+  const groupDefs=['H','M','L'].map(p=>({p,label:priLabel(p),entries:entries.filter(e=>e.p===p).sort(_familySort)}));
+  const groups=groupDefs.filter(g=>g.entries.length);
+  const headerH=64,groupTitleH=26,sectionGap=12,bottomPad=16;
+  let H=headerH+bottomPad;
+  groups.forEach(g=>{H+=groupTitleH+Math.ceil(g.entries.length/cols)*cellH+(Math.ceil(g.entries.length/cols)-1)*gap+sectionGap;});
+
+  const canvas=document.createElement('canvas');
+  const scale=2;
+  canvas.width=W*scale;canvas.height=Math.max(H,360)*scale;
+  const ctx=canvas.getContext('2d');
+  ctx.scale(scale,scale);
+  // High-quality resampling for consistent look across mixed-resolution sources
+  ctx.imageSmoothingEnabled=true;
+  ctx.imageSmoothingQuality='high';
+  const fullH=canvas.height/scale;
+  // Dark background (matches app theme)
+  ctx.fillStyle='#0f0f1a';ctx.fillRect(0,0,W,fullH);
+
+  // Title block (left-aligned, large)
+  ctx.textAlign='left';
+  ctx.fillStyle='#ffffff';
+  ctx.font='800 22px Space Grotesk, sans-serif';
+  ctx.fillText(`${username}'s ${listLabel(type)} List`,frame,30);
+  ctx.fillStyle='rgba(255,255,255,.55)';
+  ctx.font='500 12px Space Grotesk, sans-serif';
+  const date=new Date().toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
+  ctx.fillText(`${entries.length} Pokémon · Generated ${date}`,frame,48);
+  // "PoGo Trades" branding top-right
+  ctx.textAlign='right';
+  ctx.fillStyle='#a78bfa';
+  ctx.font='700 13px Space Grotesk, sans-serif';
+  ctx.fillText('PoGo Trades',W-frame,30);
+  ctx.textAlign='left';
+
+  // Load sprites with cascading fallback (same as classic)
+  const entryImagePromises=entries.map(async e=>{
+    const primaryUrl=exportSpriteUrl(e);
+    const img=await loadCanvasImageWithFallback(exportSpriteFallbackUrls(e));
+    return[primaryUrl,img];
+  });
+  const cloudPromise=entries.some(e=>maxMarkForEntry(e,type))
+    ?loadCanvasImage(canvasSafeSpriteUrl(MAX_CLOUD_URL)).then(img=>[canvasSafeSpriteUrl(MAX_CLOUD_URL),img])
+    :Promise.resolve(null);
+  const results=await Promise.all([...entryImagePromises,cloudPromise]);
+  const images=new Map(results.filter(Boolean));
+
+  const priColors={H:'#ef4444',M:'#f59e0b',L:'#10b981'};
+  let y=headerH;
+  groups.forEach(group=>{
+    // Section header: vertical color bar + label + count
+    const c=priColors[group.p]||'#64748b';
+    ctx.fillStyle=c;
+    roundedRect(ctx,frame,y+4,4,groupTitleH-8,2);ctx.fill();
+    ctx.fillStyle='#ffffff';
+    ctx.font='800 16px Space Grotesk, sans-serif';
+    ctx.fillText(group.label,frame+12,y+18);
+    const labelW=ctx.measureText(group.label).width;
+    ctx.fillStyle='rgba(255,255,255,.4)';
+    ctx.font='600 12px Space Grotesk, sans-serif';
+    ctx.fillText(`${group.entries.length}`,frame+12+labelW+6,y+18);
+    y+=groupTitleH;
+
+    const rows=Math.ceil(group.entries.length/cols);
+    group.entries.forEach((e,i)=>{
+      const col=i%cols,row=Math.floor(i/cols);
+      const x=frame+col*(cellW+gap),cy=y+row*(cellH+gap);
+      // Card background
+      ctx.fillStyle='#1e1e35';
+      roundedRect(ctx,x,cy,cellW,cellH,8);ctx.fill();
+      // Priority-coloured top stripe
+      ctx.fillStyle=c;
+      roundedRect(ctx,x,cy,cellW,3,2);ctx.fill();
+      // Sprite (trimmed + scaled — same logic as classic)
+      const sx=x+(cellW-sprSize)/2,sy=cy+(cellH-sprSize)/2+1;
+      const img=images.get(exportSpriteUrl(e));
+      if(img)drawImageContain(ctx,img,sx,sy,sprSize,sprSize);
+      else drawSpriteFallback(ctx,e,sx,sy,sprSize);
+      // Max-form badge (Dynamax 'D' / Gigantamax 'G')
+      const mark=maxMarkForEntry(e,type);
+      if(mark){
+        const isG=mark==='G';
+        const bx=x+4,by=cy+6;
+        roundedRect(ctx,bx,by,11,11,5);
+        ctx.fillStyle=isG?'#7c3aed':'#dc2626';ctx.fill();
+        ctx.strokeStyle='rgba(255,255,255,.85)';ctx.lineWidth=1;ctx.stroke();
+        ctx.fillStyle='#fff';
+        ctx.font='800 8px Space Grotesk, sans-serif';
+        ctx.textAlign='center';
+        ctx.fillText(mark,bx+5.5,by+8.5);
+        ctx.textAlign='left';
+      }
+      // Gender badge (top-right corner)
+      if(e.gender==='f'||e.gender==='m'){
+        const isF=e.gender==='f';
+        const bx=x+cellW-15,by=cy+6;
+        roundedRect(ctx,bx,by,11,11,5);
+        ctx.fillStyle=isF?'#ec4899':'#3b82f6';ctx.fill();
+        ctx.strokeStyle='rgba(255,255,255,.9)';ctx.lineWidth=1;ctx.stroke();
+        ctx.fillStyle='#fff';
+        ctx.font='800 9px Space Grotesk, sans-serif';
+        ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.fillText(isF?'♀':'♂',bx+5.5,by+6);
+        ctx.textBaseline='alphabetic';ctx.textAlign='left';
+      }
+    });
+    y+=rows*cellH+(rows-1)*gap+sectionGap;
+  });
+  return canvasBlob(canvas);
+}
+
+async function exportMyListImage(style='classic'){
   const btn=document.querySelector('.image-btn');
   const old=btn?.textContent;
   const entries=currentListEntries(myListType).filter(e=>e.p&&PRI[e.p]);
   if(!entries.length){toast('Add entries with H/M/L priority to export.');return;}
   try{
     if(btn){btn.disabled=true;btn.textContent='Building image…';}
-    const blob=await renderListImage(entries,myListType,cur);
-    downloadBlob(blob,`pogo-${safeFilePart(cur)}-${safeFilePart(listLabel(myListType))}-${new Date().toISOString().slice(0,10)}.png`);
-    toast('🖼️ Image exported!');
+    const blob=await renderListImage(entries,myListType,cur,style);
+    const styleTag=style==='cards'?'-darkcards':'';
+    downloadBlob(blob,`pogo-${safeFilePart(cur)}-${safeFilePart(listLabel(myListType))}${styleTag}-${new Date().toISOString().slice(0,10)}.png`);
+    // Remember user's last choice for future exports
+    try{lsSet('pogoExportStyle',style);}catch{}
+    toast(`🖼️ Image exported (${style==='cards'?'dark cards':'classic'})!`);
   }catch(e){
     console.error(e);
     toast('⚠️ Image export failed. Try again.');
@@ -4892,6 +5018,7 @@ async function triggerInstall(){
 
 // ── WHAT'S NEW (#28) ─────────────────────────────────────────
 const WHATS_NEW=[
+  {version:'3.5',title:'🌙 Dark Cards Export Style',desc:'New image export option: "Image — Dark Cards" — bordered cards on a dark background with priority-coloured top stripes. The original light layout is still available as "Image — Classic". Both styles use the same sprite sources, with sharper resampling for more consistent icon quality across mixed-resolution sources.'},
   {version:'3.4',title:'☑ Bulk Inventory Edits',desc:'New Bulk edit toggle on the Have tab. Select multiple inventory entries to change mode in one go (Any / 🪞 Mirror / 🤝 Don\'t need back / 📤 Giveaway), bump quantities up/down by 1, or delete the whole selection. Same checkbox UX as My List bulk mode.'},
   {version:'3.3',title:'🤝 + 📤 Two New Inventory Modes',desc:'Four-way return preference: Any · 🪞 Mirror · 🤝 Don\'t need back · 📤 Giveaway. Mark items as "Don\'t need back" when it\'s rare but you don\'t need anything specific in return (still expecting something of equal rarity from my wishlist). Mark items as "Giveaway" when you can\'t hold them anymore — add an optional preference note (e.g., "any common Kanto starter works"). Per-row button cycles through modes.'},
   {version:'3.2',title:'🎒 Mirror-Only Inventory',desc:'Mark Have-tab inventory as Mirror only when you only want the exact same Pokémon/form back. Browse cards and offer modals now show the restriction clearly and public offers require the matching mirror.'},
