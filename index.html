@@ -617,6 +617,38 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
 .have-mirror-add{display:flex;align-items:center;gap:6px;background:var(--bg);border:1px solid var(--border2);color:var(--muted);padding:8px 11px;border-radius:var(--r2);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;min-height:38px}
 .have-mirror-add:hover{border-color:var(--accent);color:var(--ac2)}
 .have-mirror-add input{accent-color:var(--accent);width:15px;height:15px}
+/* 3-state return preference pill (Any / Mirror / Giveaway) — compact replacement for the old checkbox */
+.have-return-picker{display:inline-flex;background:var(--bg);border:1px solid var(--border2);border-radius:var(--r2);padding:2px;gap:1px;min-height:38px;align-items:center;flex-shrink:0}
+.hrp-btn{background:transparent;border:none;color:var(--muted);padding:6px 9px;border-radius:5px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);transition:.15s;min-width:32px;line-height:1.1}
+.hrp-btn:hover:not(.selected){color:var(--text);background:var(--bg2)}
+.hrp-btn.selected{background:var(--card);color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.18)}
+.hrp-btn.mirror.selected{color:#38bdf8}
+.hrp-btn.dnb.selected{color:#14b8a6}
+.hrp-btn.giveaway.selected{color:#fb923c}
+/* Per-row cycling button shows the current mode and cycles on click */
+.have-mode-btn{background:var(--bg);border:1px solid var(--border2);color:var(--muted);padding:5px 9px;border-radius:var(--r2);font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:var(--font);min-width:50px}
+.have-mode-btn:hover{border-color:var(--accent);color:var(--ac2)}
+.have-mode-btn.mirror{background:rgba(14,165,233,.14);border-color:rgba(14,165,233,.45);color:#38bdf8}
+.have-mode-btn.dnb{background:rgba(20,184,166,.14);border-color:rgba(20,184,166,.45);color:#14b8a6}
+.have-mode-btn.giveaway{background:rgba(251,146,60,.14);border-color:rgba(251,146,60,.45);color:#fb923c}
+/* Don't-need-back badge (teal, between mirror's cyan and giveaway's orange) */
+.have-dnb-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(20,184,166,.14);border:1px solid rgba(20,184,166,.4);color:#14b8a6;border-radius:999px;padding:2px 7px;font-size:10px;font-weight:800;line-height:1.1;white-space:nowrap}
+.have-dnb-badge.mini{font-size:9px;padding:1px 5px;margin-left:2px}
+.have-pmon-card.dnb{border-color:rgba(20,184,166,.45);background:rgba(20,184,166,.06)}
+.have-pmon-card .have-pmon-meta.dnb{color:#14b8a6;font-weight:700}
+/* Giveaway badge styling (orange, distinct from mirror's cyan + dnb's teal) */
+.have-giveaway-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(251,146,60,.14);border:1px solid rgba(251,146,60,.4);color:#fb923c;border-radius:999px;padding:2px 7px;font-size:10px;font-weight:800;line-height:1.1;white-space:nowrap}
+.have-giveaway-badge.mini{font-size:9px;padding:1px 5px;margin-left:2px}
+.have-pmon-card.giveaway{border-color:rgba(251,146,60,.45);background:rgba(251,146,60,.06)}
+.have-pmon-card .have-pmon-meta.giveaway{color:#fb923c;font-weight:700}
+/* Giveaway preference note input (appears only when Giveaway mode selected) */
+.have-giveaway-note-row{margin-top:8px}
+.have-giveaway-note-input{width:100%;background:var(--bg);border:1px solid rgba(251,146,60,.32);border-radius:var(--r2);color:var(--text);padding:8px 11px;font-size:13px;font-family:var(--font)}
+.have-giveaway-note-input:focus{border-color:#fb923c;outline:none}
+.have-giveaway-note-input::placeholder{color:var(--muted);font-style:italic}
+.have-pmon-note{font-size:10px;color:var(--muted);font-style:italic;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html[data-theme="light"] .have-dnb-badge,html[data-theme="light"] .have-mode-btn.dnb,html[data-theme="light"] .have-pmon-card .have-pmon-meta.dnb{color:#0f766e}
+html[data-theme="light"] .have-giveaway-badge,html[data-theme="light"] .have-mode-btn.giveaway,html[data-theme="light"] .have-pmon-card .have-pmon-meta.giveaway{color:#c2410c}
 .have-row{background:var(--card);border:1px solid var(--border);border-radius:var(--r2);padding:9px 12px;display:flex;align-items:center;gap:8px;margin-bottom:6px;transition:.15s}
 .have-row:hover{border-color:var(--border2)}
 .have-row-sprite{width:32px;height:32px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
@@ -674,6 +706,7 @@ html[data-theme="light"] .have-mirror-badge,html[data-theme="light"] .have-mirro
   .have-add-row .ac-wrap{grid-column:1}
   .have-add-row .have-qty-input{width:100%;grid-column:1}
   .have-add-row .have-mirror-add{grid-column:1;justify-content:center}
+  .have-add-row .have-return-picker{grid-column:1;justify-content:center;width:100%}
   .have-add-row .bsave{width:100%;grid-column:1}
   .have-trainer-grid{grid-template-columns:1fr}
   .have-by-pokemon-card{padding:10px 12px}
@@ -1320,8 +1353,17 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
             <div class="ac-dropdown" id="have-ac-dropdown"></div>
           </div>
           <input type="number" id="have-qty" min="1" max="999" value="1" placeholder="Qty" aria-label="Quantity" class="have-qty-input">
-          <label class="have-mirror-add" title="Only accept the same Pokémon/form in return"><input type="checkbox" id="have-mirror-only"> Mirror only</label>
+          <div class="have-return-picker" role="group" aria-label="Return preference">
+            <button type="button" class="hrp-btn any selected" data-mode="any" onclick="setHaveAddMode('any')" title="Standard — accepts any return">Any</button>
+            <button type="button" class="hrp-btn mirror" data-mode="mirror" onclick="setHaveAddMode('mirror')" title="Mirror — only accept the same Pokémon/form back">🪞</button>
+            <button type="button" class="hrp-btn dnb" data-mode="dontNeedBack" onclick="setHaveAddMode('dontNeedBack')" title="Don't need back — rare item, no specific Pokémon required in return but expecting something of equal rarity from your wishlist">🤝</button>
+            <button type="button" class="hrp-btn giveaway" data-mode="giveaway" onclick="setHaveAddMode('giveaway')" title="Giveaway — can't hold these any longer, take it for anything (add a preference note below if you like)">📤</button>
+          </div>
+          <input type="hidden" id="have-return-mode" value="any">
           <button class="bsave" onclick="addInventoryEntry()">Add</button>
+        </div>
+        <div class="have-giveaway-note-row" id="have-giveaway-note-row" style="display:none">
+          <input type="text" id="have-giveaway-note" maxlength="140" placeholder="Optional: what would you ideally take for this? e.g., 'any common Kanto starter'" class="have-giveaway-note-input">
         </div>
       </div>
       <div class="mylist-search">
@@ -4825,6 +4867,7 @@ async function triggerInstall(){
 
 // ── WHAT'S NEW (#28) ─────────────────────────────────────────
 const WHATS_NEW=[
+  {version:'3.3',title:'🤝 + 📤 Two New Inventory Modes',desc:'Four-way return preference: Any · 🪞 Mirror · 🤝 Don\'t need back · 📤 Giveaway. Mark items as "Don\'t need back" when it\'s rare but you don\'t need anything specific in return (still expecting something of equal rarity from your wishlist). Mark items as "Giveaway" when you can\'t hold them anymore — add an optional preference note (e.g., "any common Kanto starter works"). Per-row button cycles through modes.'},
   {version:'3.2',title:'🎒 Mirror-Only Inventory',desc:'Mark Have-tab inventory as Mirror only when you only want the exact same Pokémon/form back. Browse cards and offer modals now show the restriction clearly and public offers require the matching mirror.'},
   {version:'3.1',title:'📅 Schedule Edits',desc:'Edit scheduled trades after creating them, including switching Regular/Special/Remote. Event rows no longer guess bonus trades; add a custom bonus when event details confirm extra specials.'},
   {version:'3.0',title:'📅 Trade Schedule',desc:'New Schedule tab with week-view calendar. Plan trades with specific trainers, track your daily quota (1 special + 100 regular base), and see live Pokémon GO events from LeekDuck.'},
@@ -5777,20 +5820,49 @@ function updateScheduleNotif(){
 }
 
 // ── HAVE / INVENTORY ─────────────────────────────────────────
+// Inventory entry return-preference modes (mutually exclusive):
+//   'any'          — standard trade, no specific marking (default)
+//   'mirror'       — only accept the same Pokémon/form in return
+//   'dontNeedBack' — "DNB" — the item is RARE / valuable. Flexible on the specific
+//                    return Pokémon, but still expects something of equal rarity from my
+//                    wishlist. Good for high-tier items where mirror is too strict.
+//   'giveaway'     — "Take it" — I can't hold this any longer; literally take it
+//                    for anything. Optional `note` field for trader to specify
+//                    preferences (e.g., "common Kanto starters work").
 function haveEntryInfo(entry){
   if(entry&&typeof entry==='object'&&!Array.isArray(entry)){
+    const mirrorOnly=!!entry.mirrorOnly;
+    const dontNeedBack=!!entry.dontNeedBack&&!mirrorOnly;
+    const giveaway=!!entry.giveaway&&!mirrorOnly&&!dontNeedBack;
+    const mode=mirrorOnly?'mirror':dontNeedBack?'dontNeedBack':giveaway?'giveaway':'any';
     return{
       qty:Math.max(0,Math.min(999,parseInt(entry.qty)||0)),
-      mirrorOnly:!!entry.mirrorOnly
+      mirrorOnly,dontNeedBack,giveaway,
+      note:String(entry.note||'').slice(0,140),
+      mode
     };
   }
-  return{qty:Math.max(0,Math.min(999,parseInt(entry)||0)),mirrorOnly:false};
+  return{qty:Math.max(0,Math.min(999,parseInt(entry)||0)),mirrorOnly:false,dontNeedBack:false,giveaway:false,note:'',mode:'any'};
 }
 function haveEntryValue(qty,prev,opts={}){
   const old=haveEntryInfo(prev);
   const q=Math.max(0,Math.min(999,parseInt(qty)||0));
-  const mirrorOnly=opts.mirrorOnly!==undefined?!!opts.mirrorOnly:old.mirrorOnly;
-  return mirrorOnly?{qty:q,mirrorOnly:true}:q;
+  // Resolve new mode: opts.mode wins, else individual flags, else preserve old
+  let mode=old.mode;
+  if(opts.mode)mode=opts.mode;
+  else if(opts.mirrorOnly!==undefined||opts.dontNeedBack!==undefined||opts.giveaway!==undefined){
+    const m=opts.mirrorOnly!==undefined?!!opts.mirrorOnly:old.mirrorOnly;
+    const d=opts.dontNeedBack!==undefined?!!opts.dontNeedBack:old.dontNeedBack;
+    const g=opts.giveaway!==undefined?!!opts.giveaway:old.giveaway;
+    mode=m?'mirror':d?'dontNeedBack':g?'giveaway':'any';
+  }
+  // Note carries through for giveaway mode (other modes drop the note)
+  const note=opts.note!==undefined?String(opts.note||'').slice(0,140):old.note;
+  const obj={qty:q};
+  if(mode==='mirror'){obj.mirrorOnly=true;return obj;}
+  if(mode==='dontNeedBack'){obj.dontNeedBack=true;return obj;}
+  if(mode==='giveaway'){obj.giveaway=true;if(note)obj.note=note;return obj;}
+  return q;
 }
 function setHaveEntry(inv,name,qty,opts={}){
   const q=Math.max(0,Math.min(999,parseInt(qty)||0));
@@ -5799,6 +5871,12 @@ function setHaveEntry(inv,name,qty,opts={}){
 }
 function isMirrorOnlyHave(username,name){
   return haveEntryInfo(allData.have?.[username]?.[name]).mirrorOnly;
+}
+function isDontNeedBackHave(username,name){
+  return haveEntryInfo(allData.have?.[username]?.[name]).dontNeedBack;
+}
+function isGiveawayHave(username,name){
+  return haveEntryInfo(allData.have?.[username]?.[name]).giveaway;
 }
 async function writeHave(username,inv){
   const s=getLocal();
@@ -5893,23 +5971,47 @@ function haveAcKeydown(ev){
 function updateHaveAcFocus(){
   document.querySelectorAll('#have-ac-dropdown .ac-item').forEach((el,i)=>el.classList.toggle('focused',i===haveAcFocusIdx));
 }
+function setHaveAddMode(mode){
+  const hidden=document.getElementById('have-return-mode');
+  if(hidden)hidden.value=mode;
+  document.querySelectorAll('.have-return-picker .hrp-btn').forEach(b=>b.classList.toggle('selected',b.dataset.mode===mode));
+  // Show/hide giveaway note field — only relevant when Giveaway mode is selected
+  const noteRow=document.getElementById('have-giveaway-note-row');
+  if(noteRow)noteRow.style.display=mode==='giveaway'?'block':'none';
+  if(mode!=='giveaway'){const ni=document.getElementById('have-giveaway-note');if(ni)ni.value='';}
+}
 function addInventoryEntry(){
   const name=document.getElementById('have-pmon-sel').value;
   const qty=Math.max(1,Math.min(999,parseInt(document.getElementById('have-qty').value)||1));
-  const mirrorOnly=!!document.getElementById('have-mirror-only')?.checked;
+  const mode=document.getElementById('have-return-mode')?.value||'any';
+  const note=mode==='giveaway'?(document.getElementById('have-giveaway-note')?.value||'').trim():'';
   if(!name){toast('⚠️ Select a Pokémon');return;}
   const inv={...(allData.have?.[cur]||{})};
   const curInfo=haveEntryInfo(inv[name]);
-  setHaveEntry(inv,name,curInfo.qty+qty,{mirrorOnly:curInfo.mirrorOnly||mirrorOnly});
+  // If user selected a non-default mode, override the existing entry's mode.
+  // Otherwise preserve existing mode (so re-adding doesn't reset to 'any').
+  const newMode=mode!=='any'?mode:curInfo.mode;
+  const finalNote=newMode==='giveaway'?(note||curInfo.note):curInfo.note;
+  setHaveEntry(inv,name,curInfo.qty+qty,{mode:newMode,note:finalNote});
   writeHave(cur,inv);
   document.getElementById('have-ac-input').value='';
   document.getElementById('have-pmon-sel').value='';
   document.getElementById('have-qty').value='1';
-  const mirrorInput=document.getElementById('have-mirror-only');
-  if(mirrorInput)mirrorInput.checked=false;
+  setHaveAddMode('any');
   document.getElementById('have-ac-dropdown').classList.remove('open');
   const dn=haveAcItems.find(x=>x.name===name)?.dn||name;
-  toast(`✅ Added ${qty}× ${dn}${mirrorOnly?' (mirror only)':''}`);
+  const modeLabel=newMode==='mirror'?' (mirror only)':newMode==='dontNeedBack'?' (don\'t need back)':newMode==='giveaway'?' (giveaway)':'';
+  toast(`✅ Added ${qty}× ${dn}${modeLabel}`);
+}
+// Edit just the note on an existing giveaway entry
+async function editInventoryNote(name){
+  const inv={...(allData.have?.[cur]||{})};
+  const info=haveEntryInfo(inv[name]);
+  if(info.mode!=='giveaway')return;
+  const newNote=prompt(`Giveaway preference for ${name} (optional, e.g. "any common Kanto starter"):`,info.note||'');
+  if(newNote===null)return; // cancelled
+  setHaveEntry(inv,name,info.qty,{mode:'giveaway',note:String(newNote||'').trim()});
+  writeHave(cur,inv);
 }
 function updateInventoryQty(name,delta){
   const inv={...(allData.have?.[cur]||{})};
@@ -5933,6 +6035,18 @@ function toggleInventoryMirror(name){
   setHaveEntry(inv,name,info.qty,{mirrorOnly:!info.mirrorOnly});
   writeHave(cur,inv);
 }
+// Cycle: any → mirror → dontNeedBack → giveaway → any
+function cycleInventoryMode(name){
+  const inv={...(allData.have?.[cur]||{})};
+  const info=haveEntryInfo(inv[name]);
+  if(!info.qty)return;
+  const next=info.mode==='any'?'mirror'
+    :info.mode==='mirror'?'dontNeedBack'
+    :info.mode==='dontNeedBack'?'giveaway'
+    :'any';
+  setHaveEntry(inv,name,info.qty,{mode:next});
+  writeHave(cur,inv);
+}
 function removeInventoryEntry(name){
   const inv={...(allData.have?.[cur]||{})};
   delete inv[name];
@@ -5954,7 +6068,7 @@ function renderMyHave(filterVal){
   let entries=Object.entries(inv).map(([name,val])=>{
     const info=haveEntryInfo(val);
     const e=_nameToSpriteEntry(name);
-    return{name,qty:info.qty,mirrorOnly:info.mirrorOnly,dn:e.displayName||name,no:e.no};
+    return{name,qty:info.qty,mirrorOnly:info.mirrorOnly,dontNeedBack:info.dontNeedBack,giveaway:info.giveaway,note:info.note,mode:info.mode,dn:e.displayName||name,no:e.no};
   }).filter(e=>e.qty>0);
   if(q)entries=entries.filter(e=>(e.dn||'').toLowerCase().includes(q));
   entries.sort((a,b)=>(parseInt(a.no)||9999)-(parseInt(b.no)||9999)||a.dn.localeCompare(b.dn));
@@ -5982,16 +6096,31 @@ function renderMyHave(filterVal){
   el.innerHTML=inboxBanner+entries.map(e=>{
     const sn=e.name.replace(/'/g,"\\'").replace(/"/g,'&quot;');
     const offerCount=countOffersForItem(cur,e.name);
+    const modeBadge=e.mirrorOnly
+      ?'<span class="have-mirror-badge" title="Only accepting the same Pokémon/form in return">🪞 Mirror only</span>'
+      :e.dontNeedBack
+        ?'<span class="have-dnb-badge" title="Don\'t need back — rare item, flexible specific return but want something of equal rarity from your wishlist">🤝 Don\'t need back</span>'
+        :e.giveaway
+          ?`<span class="have-giveaway-badge" title="Giveaway — can't hold these any longer, take it for anything${e.note?'. Preference: '+escAttr(e.note):''}">📤 Giveaway${e.note?` · ${escHtml(e.note)}`:''}</span>`
+          :'';
+    const modeBtnClass=e.mirrorOnly?'mirror':e.dontNeedBack?'dnb':e.giveaway?'giveaway':'';
+    const modeBtnLabel=e.mirrorOnly?'🪞':e.dontNeedBack?'🤝':e.giveaway?'📤':'Any';
+    const modeBtnTitle=e.mirrorOnly?'Mirror only — click to switch to Don\'t need back'
+      :e.dontNeedBack?'Don\'t need back — click to switch to Giveaway'
+      :e.giveaway?'Giveaway — click to switch to Any'
+      :'Any return — click to switch to Mirror';
+    const editNoteBtn=e.giveaway?`<button class="have-mode-btn giveaway" onclick="event.stopPropagation();editInventoryNote('${sn}')" title="Edit giveaway preference note" style="min-width:32px;padding:5px 6px">✎</button>`:'';
     return`<div class="have-row" data-name="${escAttr(e.name)}">
       <div class="have-row-sprite">${e.no?spriteImg(e.no,32,'',e.name,'',e.dn):'🎮'}</div>
       <div class="have-row-info">
         <div class="have-row-name">${escHtml(e.dn)} ${offerCount?`<span class="offer-count-badge unseen" onclick="event.stopPropagation();openIncomingOffersModal('${sn}')" style="margin-left:4px">🔔 ${offerCount}</span>`:''}</div>
         <div class="have-row-meta">
           ${e.no?`<span class="have-row-dex">#${e.no}</span>`:''}
-          ${e.mirrorOnly?'<span class="have-mirror-badge" title="Only accepting the same Pokémon/form in return">Mirror only</span>':''}
+          ${modeBadge}
         </div>
       </div>
-      <button class="have-mirror-btn ${e.mirrorOnly?'on':''}" onclick="toggleInventoryMirror('${sn}')" title="Toggle mirror-only status">${e.mirrorOnly?'Mirror':'Any'}</button>
+      ${editNoteBtn}
+      <button class="have-mode-btn ${modeBtnClass}" onclick="cycleInventoryMode('${sn}')" title="${modeBtnTitle}">${modeBtnLabel}</button>
       <div class="have-row-qty-wrap">
         <button class="have-row-qty-btn" onclick="updateInventoryQty('${sn}',-1)" aria-label="Decrease quantity">−</button>
         <span class="have-row-qty">${e.qty}</span>
@@ -6085,7 +6214,7 @@ function renderHaveBrowse(){
         const info=haveEntryInfo(val);
         const e=_nameToSpriteEntry(n);
         const want=entryWantedByCur(n);
-        return{name:n,qty:info.qty,mirrorOnly:info.mirrorOnly,dn:e.displayName||n,no:e.no,match:want};
+        return{name:n,qty:info.qty,mirrorOnly:info.mirrorOnly,dontNeedBack:info.dontNeedBack,giveaway:info.giveaway,note:info.note,mode:info.mode,dn:e.displayName||n,no:e.no,match:want};
       }).filter(it=>it.qty>0);
       if(haveMatchOnly)items=items.filter(it=>it.match);
       if(q){items=items.filter(it=>it.dn.toLowerCase().includes(q)||u.toLowerCase().includes(q));}
@@ -6102,12 +6231,19 @@ function renderHaveBrowse(){
           <div class="have-trainer-grid">${items.map(it=>{
             const sn=it.name.replace(/'/g,"\\'").replace(/"/g,'&quot;');
             const offerCount=countOffersForItem(u,it.name);
-            return`<div class="have-pmon-card ${it.match?'match':''} ${it.mirrorOnly?'mirror-only':''}" title="${escAttr(it.mirrorOnly?`${it.dn} — mirror only, same Pokémon/form only`:it.dn+' — click to offer')}" onclick="openOfferModal('${escAttr(u)}','${sn}')" style="cursor:pointer">
+            const cardCls=`have-pmon-card ${it.match?'match':''} ${it.mirrorOnly?'mirror-only':''} ${it.dontNeedBack?'dnb':''} ${it.giveaway?'giveaway':''}`;
+            const cardTitle=it.mirrorOnly?`${it.dn} — mirror only, same Pokémon/form only`
+              :it.dontNeedBack?`${it.dn} — don't need back, flexible specific return but rare item`
+              :it.giveaway?`${it.dn} — giveaway${it.note?', note: '+it.note:''}`
+              :it.dn+' — click to offer';
+            return`<div class="${cardCls}" title="${escAttr(cardTitle)}" onclick="openOfferModal('${escAttr(u)}','${sn}')" style="cursor:pointer">
               <div class="have-row-sprite" style="width:24px;height:24px">${it.no?spriteImg(it.no,24,'',it.name,'',it.dn):'🎮'}</div>
               <div class="have-pmon-info">
                 <div class="have-pmon-name">${escHtml(it.dn)}</div>
                 ${it.match?`<div class="have-pmon-meta">You want · ${it.match.p||(it.match.lucky?'⚡':'')||(it.match.xxl?'XXL':'')||(it.match.xxs?'XXS':'')}</div>`:''}
-                ${it.mirrorOnly?'<div class="have-pmon-meta mirror">Mirror only</div>':''}
+                ${it.mirrorOnly?'<div class="have-pmon-meta mirror">🪞 Mirror only</div>':''}
+                ${it.dontNeedBack?'<div class="have-pmon-meta dnb">🤝 Don\'t need back</div>':''}
+                ${it.giveaway?`<div class="have-pmon-meta giveaway">📤 Giveaway</div>${it.note?`<div class="have-pmon-note" title="${escAttr(it.note)}">"${escHtml(it.note)}"</div>`:''}`:''}
               </div>
               <div class="have-pmon-qty">×${it.qty}</div>
               ${offerCount?`<span class="offer-count-badge" title="${offerCount} pending offer${offerCount===1?'':'s'}">🔔 ${offerCount}</span>`:''}
@@ -6128,7 +6264,7 @@ function renderHaveBrowse(){
         const info=haveEntryInfo(val);
         if(info.qty<=0)return;
         if(!byPokemon[name])byPokemon[name]=[];
-        byPokemon[name].push({user,qty:info.qty,mirrorOnly:info.mirrorOnly});
+        byPokemon[name].push({user,qty:info.qty,mirrorOnly:info.mirrorOnly,dontNeedBack:info.dontNeedBack,giveaway:info.giveaway,note:info.note,mode:info.mode});
       });
     });
     let pokemonList=Object.entries(byPokemon).map(([name,owners])=>{
@@ -6160,8 +6296,12 @@ function renderHaveBrowse(){
             const ud=allData.users?.[o.user]||{};
             const canDm=!!ud.discord;
             const offerCount=countOffersForItem(o.user,p.name);
-            return`<button class="have-trainer-chip ${p.want?'match':''}" onclick="openOfferModal('${escAttr(o.user)}','${escAttr(p.name)}')" title="${o.mirrorOnly?'Mirror only: same Pokémon/form only':canDm?'Click to offer trade':'No Discord linked, click to copy message'}">
-              ${escHtml(o.user)} <span class="qty">×${o.qty}</span>${o.mirrorOnly?'<span class="have-mirror-badge mini">Mirror</span>':''}${offerCount?`<span class="offer-count-badge" style="margin-left:2px;padding:1px 5px;font-size:9px">🔔 ${offerCount}</span>`:''}
+            const tooltip=o.mirrorOnly?'Mirror only: same Pokémon/form only'
+              :o.dontNeedBack?'Don\'t need back — rare item, flexible on specific return'
+              :o.giveaway?`Giveaway — anything works${o.note?' · '+o.note:''}`
+              :canDm?'Click to offer trade':'No Discord linked, click to copy message';
+            return`<button class="have-trainer-chip ${p.want?'match':''}" onclick="openOfferModal('${escAttr(o.user)}','${escAttr(p.name)}')" title="${escAttr(tooltip)}">
+              ${escHtml(o.user)} <span class="qty">×${o.qty}</span>${o.mirrorOnly?'<span class="have-mirror-badge mini">🪞</span>':''}${o.dontNeedBack?'<span class="have-dnb-badge mini">🤝</span>':''}${o.giveaway?'<span class="have-giveaway-badge mini">📤</span>':''}${offerCount?`<span class="offer-count-badge" style="margin-left:2px;padding:1px 5px;font-size:9px">🔔 ${offerCount}</span>`:''}
             </button>`;
           }).join('')}
         </div>
@@ -6293,12 +6433,12 @@ function openOfferModal(otherUser,specificPokemon=''){
   // Pokemon they have that I want
   const matches=Object.entries(otherInv).filter(([n,val])=>entryWantedByCur(n)&&haveEntryInfo(val).qty>0).map(([n,val])=>{
     const info=haveEntryInfo(val);
-    const e=_nameToSpriteEntry(n);return{name:n,dn:e.displayName||n,no:e.no,qty:info.qty,mirrorOnly:info.mirrorOnly,want:entryWantedByCur(n)};
+    const e=_nameToSpriteEntry(n);return{name:n,dn:e.displayName||n,no:e.no,qty:info.qty,mirrorOnly:info.mirrorOnly,dontNeedBack:info.dontNeedBack,giveaway:info.giveaway,note:info.note,want:entryWantedByCur(n)};
   });
   const focusedPokemon=specificPokemon?(()=>{
     const info=haveEntryInfo(otherInv[specificPokemon]);
     const e=_nameToSpriteEntry(specificPokemon);
-    return{name:specificPokemon,dn:e.displayName||specificPokemon,no:e.no,qty:info.qty,mirrorOnly:info.mirrorOnly,want:entryWantedByCur(specificPokemon)};
+    return{name:specificPokemon,dn:e.displayName||specificPokemon,no:e.no,qty:info.qty,mirrorOnly:info.mirrorOnly,dontNeedBack:info.dontNeedBack,giveaway:info.giveaway,note:info.note,want:entryWantedByCur(specificPokemon)};
   })():null;
   // Pokemon I have that they want — check their wishlist/dynamax/gmax/costumes
   const theyWant=[];
@@ -6316,7 +6456,9 @@ function openOfferModal(otherUser,specificPokemon=''){
   const defaultMessage=`Hey ${otherUser}! 👋\n\n`+
     (focusedPokemon?`I'd love to trade for your ${focusedPokemon.dn}.\n\n`:matches.length?`I saw you have ${matches.slice(0,3).map(m=>m.dn).join(', ')} on your inventory — interested in trading?\n\n`:'')+
     (focusedPokemon?.mirrorOnly?`I saw this is marked mirror only, so I'm offering the same ${focusedPokemon.dn} in return.\n\n`:'')+
-    (theyWant.length?`I have ${theyWant.slice(0,3).map(t=>`${t.qty}× ${_nameToSpriteEntry(t.name).displayName||t.name}`).join(', ')} that match your wishlist.\n\n`:'')+
+    (focusedPokemon?.dontNeedBack?`I saw this is marked "don't need back" — I have ${theyWant.length?theyWant.slice(0,3).map(t=>`${t.qty}× ${_nameToSpriteEntry(t.name).displayName||t.name}`).join(', '):'a few things from your wishlist'} that should be fair value for it. Let me know which works best.\n\n`:'')+
+    (focusedPokemon?.giveaway?`Noticed this is marked as a giveaway${focusedPokemon.note?` (note: "${focusedPokemon.note}")`:''} — happy to take it off your hands. ${theyWant.length?`I can send ${theyWant.slice(0,3).map(t=>`${t.qty}× ${_nameToSpriteEntry(t.name).displayName||t.name}`).join(', ')} or anything else from your list — just let me know.`:'Let me know what works!'}\n\n`:'')+
+    (!focusedPokemon?.giveaway&&!focusedPokemon?.mirrorOnly&&!focusedPokemon?.dontNeedBack&&theyWant.length?`I have ${theyWant.slice(0,3).map(t=>`${t.qty}× ${_nameToSpriteEntry(t.name).displayName||t.name}`).join(', ')} that match your wishlist.\n\n`:'')+
     `Let me know! 🎮`;
   // Show existing offers on the focused item for context
   const existingOffers=focusedPokemon?offersForItem(otherUser,focusedPokemon.name):[];
@@ -6334,10 +6476,12 @@ function openOfferModal(otherUser,specificPokemon=''){
         <div class="sprite-wrap">${focusedPokemon.no?spriteImg(focusedPokemon.no,42,'',focusedPokemon.name,'',focusedPokemon.dn):'🎮'}</div>
         <div style="flex:1">
           <div class="offer-name">${escHtml(focusedPokemon.dn)} <span style="color:var(--ac2);font-family:var(--mono);font-size:13px">×${focusedPokemon.qty}</span></div>
-          <div class="offer-meta">${focusedPokemon.mirrorOnly?'<span class="have-mirror-badge">Mirror only</span> ':''}${focusedPokemon.want?`You want this at ${focusedPokemon.want.p||'flag'}`:''}${existingOffers.length?` · <strong style="color:var(--warn)">🔔 ${existingOffers.length} existing offer${existingOffers.length===1?'':'s'}</strong>`:''}</div>
+          <div class="offer-meta">${focusedPokemon.mirrorOnly?'<span class="have-mirror-badge">🪞 Mirror only</span> ':''}${focusedPokemon.dontNeedBack?'<span class="have-dnb-badge">🤝 Don\'t need back</span> ':''}${focusedPokemon.giveaway?'<span class="have-giveaway-badge">📤 Giveaway</span> ':''}${focusedPokemon.want?`You want this at ${focusedPokemon.want.p||'flag'}`:''}${existingOffers.length?` · <strong style="color:var(--warn)">🔔 ${existingOffers.length} existing offer${existingOffers.length===1?'':'s'}</strong>`:''}</div>
         </div>
       </div>
-      ${focusedPokemon.mirrorOnly?`<div class="offer-no-discord" style="border-color:rgba(14,165,233,.35);color:#38bdf8;background:rgba(14,165,233,.08)">Mirror only: ${escHtml(otherUser)} is only accepting the same exact Pokémon/form for this.</div>`:''}
+      ${focusedPokemon.mirrorOnly?`<div class="offer-no-discord" style="border-color:rgba(14,165,233,.35);color:#38bdf8;background:rgba(14,165,233,.08)">🪞 Mirror only: ${escHtml(otherUser)} is only accepting the same exact Pokémon/form for this.</div>`:''}
+      ${focusedPokemon.dontNeedBack?`<div class="offer-no-discord" style="border-color:rgba(20,184,166,.4);color:#14b8a6;background:rgba(20,184,166,.08)">🤝 Don't need back: ${escHtml(otherUser)} doesn't need a specific Pokémon in return for this rare item, but is expecting something of equal rarity from their wishlist.</div>`:''}
+      ${focusedPokemon.giveaway?`<div class="offer-no-discord" style="border-color:rgba(251,146,60,.4);color:#fb923c;background:rgba(251,146,60,.08)">📤 Giveaway: ${escHtml(otherUser)} can't hold these any longer — they'll take anything reasonable.${focusedPokemon.note?` Their preference: <em>"${escHtml(focusedPokemon.note)}"</em>`:''}</div>`:''}
       ${existingOffers.length?`<div class="offer-section-label">Existing offers (FCFS):</div>
         <div class="offer-list">${renderOfferList(otherUser,focusedPokemon.name)}</div>`:''}
       `:''}
@@ -6875,7 +7019,7 @@ Object.assign(window,{
   selectWallpaper,applyWallpaper,
   // Inventory / Have
   setHaveView,setHaveSubTab,toggleHaveMatchOnly,haveAcSearch,haveAcSelect,haveAcKeydown,
-  addInventoryEntry,updateInventoryQty,setInventoryQty,toggleInventoryMirror,removeInventoryEntry,
+  addInventoryEntry,updateInventoryQty,setInventoryQty,toggleInventoryMirror,cycleInventoryMode,setHaveAddMode,editInventoryNote,removeInventoryEntry,
   renderMyHave,renderHaveBrowse,openOfferModal,closeOfferModal,copyOfferMessage,
   // Offer history
   submitOffer,submitOfferAction,withdrawOffer,markOfferTraded,
