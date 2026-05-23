@@ -415,6 +415,30 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
 .flag-btn.shiny-flag.on{background:rgba(244,114,182,.2);color:#f472b6;border-color:rgba(244,114,182,.5)}
 .shiny-mark{color:#f472b6;margin-left:3px}
 
+/* SPECIAL TRADE BOARD modal — manual LF/FT editor with image export */
+.special-board-modal{max-width:820px;width:96vw}
+.special-board-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px}
+@media(max-width:680px){.special-board-grid{grid-template-columns:1fr}}
+.special-board-col{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:10px;min-height:200px;display:flex;flex-direction:column;gap:8px}
+.special-board-col-lf{border-left:3px solid #6366f1}
+.special-board-col-ft{border-left:3px solid #10b981}
+.special-board-col-hdr{font-size:13px;font-weight:700;color:var(--text);letter-spacing:.02em}
+.special-board-add-row{display:flex;gap:6px;align-items:stretch;position:relative}
+.special-board-add-row .ac-wrap{flex:1;min-width:0;position:relative}
+.special-board-add-row .bsave{padding:6px 12px;font-size:12px;flex-shrink:0}
+.special-board-list{display:flex;flex-direction:column;gap:5px;max-height:340px;overflow-y:auto}
+.special-board-list:empty::before{content:'No entries yet — type a Pokémon above and hit Add.';display:block;color:var(--muted);font-size:11px;font-style:italic;text-align:center;padding:14px 6px}
+.sb-row{display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--border);border-radius:6px;padding:5px 7px;font-size:12px}
+.sb-row-sprite{width:24px;height:24px;flex-shrink:0;object-fit:contain;image-rendering:pixelated}
+.sb-row-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+.sb-row-flag{background:transparent;border:1px solid var(--border2);color:var(--muted);font-size:11px;padding:3px 6px;border-radius:5px;cursor:pointer;line-height:1;flex-shrink:0}
+.sb-row-flag.on.shiny{background:rgba(244,114,182,.18);color:#f472b6;border-color:rgba(244,114,182,.45)}
+.sb-row-flag.on.mirror{background:rgba(56,189,248,.18);color:#38bdf8;border-color:rgba(56,189,248,.45)}
+.sb-row-qty{width:42px;padding:3px 5px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:5px;text-align:center;font-family:var(--mono);font-size:11px;flex-shrink:0}
+.sb-row-note{flex:1;min-width:60px;padding:3px 5px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:5px;font-size:11px;font-family:var(--font)}
+.sb-row-rm{background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:14px;line-height:1;padding:2px 4px;flex-shrink:0}
+.sb-row-rm:hover{color:var(--danger)}
+
 /* OPTIONAL GENDER MARKER on inventory rows (#3) */
 .have-gender-btn{
   background:transparent;border:1px solid var(--border);border-radius:6px;
@@ -1331,6 +1355,7 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
           <div class="export-menu" id="export-menu" role="menu">
             <button class="export-menu-item" role="menuitem" onclick="exportMyListImage('classic');closeExportMenu()"><span class="icon">🖼️</span> Image — Classic (light)</button>
             <button class="export-menu-item" role="menuitem" onclick="exportMyListImage('cards');closeExportMenu()"><span class="icon">🌙</span> Image — Dark Cards</button>
+            <button class="export-menu-item" role="menuitem" onclick="openSpecialTradeBoard();closeExportMenu()"><span class="icon">🎯</span> Special Trade Board (LF/FT)</button>
             <button class="export-menu-item" role="menuitem" onclick="exportMyListMarkdown();closeExportMenu()"><span class="icon">📝</span> Markdown (Discord/Reddit)</button>
             <button class="export-menu-item" role="menuitem" onclick="exportMyListCSV();closeExportMenu()"><span class="icon">📊</span> CSV (Spreadsheet)</button>
             <div class="export-menu-sep"></div>
@@ -1628,6 +1653,51 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
       <div class="mact">
         <button class="bghost" onclick="backToStep1()">← Back</button>
         <button class="bpri" id="import-confirm-btn" onclick="confirmImport()">Import</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SPECIAL TRADE BOARD — 9DB-style LF/FT image export -->
+<div class="ov" id="special-board-modal" role="dialog" aria-modal="true" aria-labelledby="special-board-title">
+  <div class="modal special-board-modal">
+    <h3 id="special-board-title">🎯 Special Trade Board</h3>
+    <div style="font-size:12px;color:var(--muted);line-height:1.45;margin-bottom:12px">
+      Build a one-shot Looking For / For Trade board for special trades (legendaries, mythicals, costumes, shinies — anything you'd negotiate in DM). Mark <span style="color:#f472b6;font-weight:600">✨ shiny</span> or <span style="color:#38bdf8;font-weight:600">🪞 mirror-only</span> per entry so they're visually distinct in the exported image. Board auto-saves to your profile.
+    </div>
+    <div class="special-board-grid">
+      <div class="special-board-col special-board-col-lf">
+        <div class="special-board-col-hdr">🔍 Looking For (LF)</div>
+        <div class="special-board-add-row">
+          <div class="ac-wrap">
+            <input type="text" class="ac-input" id="special-lf-ac" placeholder="Add a Pokémon to LF…" autocomplete="off"
+              oninput="specialAcSearch('lf',this.value)" onkeydown="specialAcKeydown(event,'lf')" onfocus="specialAcSearch('lf',this.value)">
+            <input type="hidden" id="special-lf-sel">
+            <div class="ac-dropdown" id="special-lf-dd"></div>
+          </div>
+          <button class="bsave" onclick="addSpecialEntry('lf')">Add</button>
+        </div>
+        <div class="special-board-list" id="special-lf-list"></div>
+      </div>
+      <div class="special-board-col special-board-col-ft">
+        <div class="special-board-col-hdr">🤝 For Trade (FT)</div>
+        <div class="special-board-add-row">
+          <div class="ac-wrap">
+            <input type="text" class="ac-input" id="special-ft-ac" placeholder="Add a Pokémon to FT…" autocomplete="off"
+              oninput="specialAcSearch('ft',this.value)" onkeydown="specialAcKeydown(event,'ft')" onfocus="specialAcSearch('ft',this.value)">
+            <input type="hidden" id="special-ft-sel">
+            <div class="ac-dropdown" id="special-ft-dd"></div>
+          </div>
+          <button class="bsave" onclick="addSpecialEntry('ft')">Add</button>
+        </div>
+        <div class="special-board-list" id="special-ft-list"></div>
+      </div>
+    </div>
+    <div class="mact" style="justify-content:space-between;gap:10px;flex-wrap:wrap">
+      <button class="bghost" onclick="clearSpecialBoard()" title="Wipe both columns">🗑 Clear board</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="bghost" onclick="closeModal('special-board-modal')">Close</button>
+        <button class="bpri" onclick="exportSpecialBoardImage()">📤 Export as image</button>
       </div>
     </div>
   </div>
@@ -3210,7 +3280,12 @@ function acUpdateFocus(){
   document.querySelectorAll('.ac-item').forEach((el,i)=>el.classList.toggle('focused',i===acFocusIdx));
 }
 document.addEventListener('click',e=>{
-  if(!e.target.closest('.ac-wrap'))document.getElementById('ac-dropdown')?.classList.remove('open');
+  if(!e.target.closest('.ac-wrap')){
+    document.getElementById('ac-dropdown')?.classList.remove('open');
+    // Also close the special-board LF/FT autocompletes
+    document.getElementById('special-lf-dd')?.classList.remove('open');
+    document.getElementById('special-ft-dd')?.classList.remove('open');
+  }
 });
 
 // ── UNDO ──────────────────────────────────────────────────────
@@ -4110,7 +4185,7 @@ function setPri(name,p){
     writeList(myListType,cur,list);
     return;
   }
-  list[name]=priValue(newP,mod,lucky,xxl,xxs,shiny,iv);
+  list[name]=priValue(newP,mod,lucky,xxl,xxs,shiny);
   writeList(myListType,cur,list);
 }
 function setNotes(name,notes){
@@ -5418,6 +5493,307 @@ function exportMyListCSV(){
 function copyShareLink(){
   const url=`${location.origin}${location.pathname}?view=${encodeURIComponent(cur)}&list=${myListType}`;
   copyText(url).then(()=>toast('🔗 Share link copied!'));
+}
+
+// ── SPECIAL TRADE BOARD ──────────────────────────────────────
+// Manually-curated LF/FT board for one-off special trades. Persisted under
+// the user record so it survives reloads + syncs to Firebase. Image export
+// renders a 9DB-style two-column board with ✨ shiny / 🪞 mirror markers.
+function getSpecialBoard(){
+  const b=allData.users?.[cur]?.specialTradeBoard;
+  return{lf:Array.isArray(b?.lf)?b.lf:[],ft:Array.isArray(b?.ft)?b.ft:[]};
+}
+async function writeSpecialBoard(board){
+  await writeUser(cur,{specialTradeBoard:board});
+}
+let _specialAcFocus={lf:-1,ft:-1};
+function _specialAllItems(){
+  // Reuse the wishlist autocomplete pool (now includes legendaries via listSource)
+  const seen=new Set();const out=[];
+  ['wishlist','dynamax','gmax','costumes'].forEach(t=>{
+    listSource(t).forEach(e=>{
+      if(!e?.name||seen.has(e.name))return;
+      seen.add(e.name);
+      const item={name:e.name,dn:e.displayName||e.name,no:e.no||null,spriteUrl:entrySpriteUrl(e,e.name)};
+      item.search=acItemSearchText(item);
+      out.push(item);
+    });
+  });
+  return out;
+}
+let _specialAcItems=null;
+function _ensureSpecialAcItems(){if(!_specialAcItems)_specialAcItems=_specialAllItems();return _specialAcItems;}
+function specialAcSearch(side,q){
+  document.getElementById(`special-${side}-sel`).value='';
+  const dd=document.getElementById(`special-${side}-dd`);
+  if(!q||q.length<1){dd.classList.remove('open');return;}
+  const items=_ensureSpecialAcItems();
+  const filtered=items.map(e=>({e,score:acMatchScore(e,q)}))
+    .filter(x=>x.score>=0)
+    .sort((a,b)=>a.score-b.score||(parseInt(a.e.no)||9999)-(parseInt(b.e.no)||9999))
+    .slice(0,AC_RESULT_LIMIT)
+    .map(x=>x.e);
+  _specialAcFocus[side]=-1;
+  if(!filtered.length){dd.innerHTML='<div class="ac-empty">No results</div>';}
+  else{
+    dd.innerHTML=filtered.map((e,i)=>`
+      <div class="ac-item" data-idx="${i}" onmousedown="specialAcSelect('${side}',${i})">
+        ${e.no||e.spriteUrl?spriteImg(e.no,28,'ac-item-sprite',e.name):''}
+        <span class="ac-item-no">${e.no?`#${e.no}`:''}</span>
+        <span class="ac-item-name">${escHtml(e.dn)}</span>
+      </div>`).join('');
+  }
+  dd.dataset.matches=JSON.stringify(filtered.map(e=>e.name));
+  dd.classList.add('open');
+}
+function specialAcSelect(side,idx){
+  const dd=document.getElementById(`special-${side}-dd`);
+  const matches=JSON.parse(dd.dataset.matches||'[]');
+  const name=matches[idx];if(!name)return;
+  const items=_ensureSpecialAcItems();
+  const e=items.find(x=>x.name===name);
+  document.getElementById(`special-${side}-sel`).value=name;
+  document.getElementById(`special-${side}-ac`).value=e?.dn||name;
+  dd.classList.remove('open');
+}
+function specialAcKeydown(ev,side){
+  const dd=document.getElementById(`special-${side}-dd`);
+  if(!dd.classList.contains('open'))return;
+  const matches=JSON.parse(dd.dataset.matches||'[]');
+  if(ev.key==='ArrowDown'){ev.preventDefault();_specialAcFocus[side]=Math.min((_specialAcFocus[side]||-1)+1,matches.length-1);_paintSpecialAcFocus(side);}
+  else if(ev.key==='ArrowUp'){ev.preventDefault();_specialAcFocus[side]=Math.max((_specialAcFocus[side]||-1)-1,0);_paintSpecialAcFocus(side);}
+  else if(ev.key==='Enter'){
+    ev.preventDefault();
+    const i=_specialAcFocus[side]>=0?_specialAcFocus[side]:0;
+    if(matches[i])specialAcSelect(side,i);
+  }else if(ev.key==='Escape'){dd.classList.remove('open');}
+}
+function _paintSpecialAcFocus(side){
+  const dd=document.getElementById(`special-${side}-dd`);
+  [...dd.querySelectorAll('.ac-item')].forEach((el,i)=>el.classList.toggle('focused',i===_specialAcFocus[side]));
+}
+
+function openSpecialTradeBoard(){
+  openModal('special-board-modal');
+  // Reset add-form state
+  ['lf','ft'].forEach(s=>{
+    document.getElementById(`special-${s}-ac`).value='';
+    document.getElementById(`special-${s}-sel`).value='';
+    document.getElementById(`special-${s}-dd`).classList.remove('open');
+  });
+  renderSpecialBoard();
+}
+function renderSpecialBoard(){
+  const board=getSpecialBoard();
+  ['lf','ft'].forEach(side=>{
+    const el=document.getElementById(`special-${side}-list`);if(!el)return;
+    el.innerHTML=board[side].map((e,i)=>{
+      const spr=entrySpriteUrl(e,e.name)||spriteUrl(e.no,e.name);
+      const sprHtml=spr?`<img class="sb-row-sprite" src="${escAttr(spr)}" alt="" loading="lazy">`:'<span class="sb-row-sprite" style="display:inline-block">🎮</span>';
+      const qtyHtml=side==='ft'?`<input type="number" class="sb-row-qty" min="1" max="999" value="${e.qty||1}" onchange="setSpecialQty('${side}',${i},this.value)" aria-label="Quantity">`:'';
+      return`<div class="sb-row" data-idx="${i}">
+        ${sprHtml}
+        <span class="sb-row-name" title="${escAttr(e.dn||e.name)}">${escHtml(e.dn||e.name)}</span>
+        ${qtyHtml}
+        <button class="sb-row-flag ${e.shiny?'on shiny':''}" onclick="toggleSpecialFlag('${side}',${i},'shiny')" title="✨ Shiny variant" aria-pressed="${!!e.shiny}">✨</button>
+        <button class="sb-row-flag ${e.mirror?'on mirror':''}" onclick="toggleSpecialFlag('${side}',${i},'mirror')" title="🪞 Mirror-only (same Pokémon back)" aria-pressed="${!!e.mirror}">🪞</button>
+        <input type="text" class="sb-row-note" maxlength="40" placeholder="note…" value="${escAttr(e.note||'')}" onchange="setSpecialNote('${side}',${i},this.value)" aria-label="Note">
+        <button class="sb-row-rm" onclick="removeSpecialEntry('${side}',${i})" title="Remove" aria-label="Remove">×</button>
+      </div>`;
+    }).join('');
+  });
+}
+function addSpecialEntry(side){
+  const name=document.getElementById(`special-${side}-sel`).value;
+  if(!name){toast('⚠️ Pick a Pokémon from the dropdown');return;}
+  const items=_ensureSpecialAcItems();
+  const it=items.find(x=>x.name===name);if(!it){toast('⚠️ Pokémon not found');return;}
+  const board=getSpecialBoard();
+  // Avoid exact duplicates on same side (same name + same shiny + same mirror)
+  if(board[side].some(e=>e.name===name))toast('Already on this side — adjust the existing row');
+  else{
+    const entry={name:it.name,dn:it.dn,no:it.no||null,shiny:false,mirror:false,note:'',qty:side==='ft'?1:undefined};
+    board[side].push(entry);
+    writeSpecialBoard(board);
+  }
+  document.getElementById(`special-${side}-ac`).value='';
+  document.getElementById(`special-${side}-sel`).value='';
+  document.getElementById(`special-${side}-dd`).classList.remove('open');
+  renderSpecialBoard();
+}
+function removeSpecialEntry(side,idx){
+  const board=getSpecialBoard();
+  board[side].splice(idx,1);
+  writeSpecialBoard(board);
+  renderSpecialBoard();
+}
+function toggleSpecialFlag(side,idx,flag){
+  const board=getSpecialBoard();
+  const e=board[side][idx];if(!e)return;
+  e[flag]=!e[flag];
+  writeSpecialBoard(board);
+  renderSpecialBoard();
+}
+function setSpecialNote(side,idx,note){
+  const board=getSpecialBoard();
+  const e=board[side][idx];if(!e)return;
+  e.note=String(note||'').trim().slice(0,40);
+  writeSpecialBoard(board);
+}
+function setSpecialQty(side,idx,val){
+  const board=getSpecialBoard();
+  const e=board[side][idx];if(!e)return;
+  e.qty=Math.max(1,Math.min(999,parseInt(val)||1));
+  writeSpecialBoard(board);
+  renderSpecialBoard();
+}
+function clearSpecialBoard(){
+  if(!confirm('Wipe all LF and FT entries from this board?'))return;
+  writeSpecialBoard({lf:[],ft:[]});
+  renderSpecialBoard();
+}
+
+// ── SPECIAL TRADE BOARD — IMAGE EXPORT ───────────────────────
+async function exportSpecialBoardImage(){
+  const board=getSpecialBoard();
+  if(!board.lf.length&&!board.ft.length){toast('Add at least one entry to either side before exporting.');return;}
+  try{
+    const blob=await renderSpecialBoardImage(board,cur);
+    downloadBlob(blob,`pogo-${safeFilePart(cur)}-special-trade-${new Date().toISOString().slice(0,10)}.png`);
+    toast('🎯 Special trade board exported!');
+  }catch(e){console.error(e);toast('⚠️ Export failed — try again.');}
+}
+async function renderSpecialBoardImage(board,username){
+  const W=720,pad=14,colGap=10,rowH=64,sprSize=44,headerH=78,footerH=34;
+  const cols=2;
+  const colW=(W-pad*2-colGap)/cols;
+  const maxRows=Math.max(board.lf.length,board.ft.length,1);
+  const bodyH=Math.max(maxRows,1)*rowH+38; // 38 = col-header bar
+  const H=headerH+bodyH+footerH+pad*2;
+  const scale=2;
+  const canvas=document.createElement('canvas');
+  canvas.width=W*scale;canvas.height=H*scale;
+  const ctx=canvas.getContext('2d');
+  ctx.scale(scale,scale);
+  ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+
+  // Background
+  ctx.fillStyle='#0f1419';ctx.fillRect(0,0,W,H);
+
+  // Header bar with gradient
+  const headerGrad=ctx.createLinearGradient(0,0,W,0);
+  headerGrad.addColorStop(0,'#1e293b');headerGrad.addColorStop(1,'#334155');
+  ctx.fillStyle=headerGrad;ctx.fillRect(0,0,W,headerH);
+  ctx.fillStyle='#6366f1';ctx.fillRect(0,headerH-2,W,2);
+  // Title
+  drawCenteredFittedText(ctx,`${username} — Special Trade Board`,W/2,32,W-pad*2,{max:22,min:14,color:'#ffffff'});
+  // Subtitle: friend code + Discord if present
+  const ud=allData.users?.[username]||{};
+  const subBits=[];
+  if(ud.friendCode)subBits.push(`FC: ${ud.friendCode}`);
+  if(ud.discord)subBits.push(`Discord: ${ud.discord}`);
+  const date=new Date().toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
+  subBits.push(date);
+  ctx.font='600 12px Space Grotesk, sans-serif';
+  ctx.fillStyle='rgba(255,255,255,.7)';ctx.textAlign='center';
+  ctx.fillText(subBits.join(' · '),W/2,58);
+  ctx.textAlign='left';
+
+  // Pre-load all sprite images
+  const allEntries=[...board.lf,...board.ft];
+  const imgMap=new Map();
+  await Promise.all(allEntries.map(async e=>{
+    const urls=exportSpriteFallbackUrls({...e,spriteUrl:entrySpriteUrl(e,e.name)});
+    const img=await loadCanvasImageWithFallback(urls);
+    if(img)imgMap.set(e.name+(e.shiny?'_s':''),img);
+  }));
+
+  // Draw columns
+  const colY=headerH+pad;
+  const lfX=pad,ftX=pad+colW+colGap;
+  // LF column header
+  ctx.fillStyle='rgba(99,102,241,.18)';ctx.fillRect(lfX,colY,colW,32);
+  ctx.fillStyle='#a5b4fc';ctx.fillRect(lfX,colY,3,32);
+  ctx.font='700 14px Space Grotesk, sans-serif';ctx.fillStyle='#c7d2fe';
+  ctx.fillText(`🔍 Looking For  ·  ${board.lf.length}`,lfX+12,colY+21);
+  // FT column header
+  ctx.fillStyle='rgba(16,185,129,.18)';ctx.fillRect(ftX,colY,colW,32);
+  ctx.fillStyle='#34d399';ctx.fillRect(ftX,colY,3,32);
+  ctx.fillStyle='#a7f3d0';
+  ctx.fillText(`🤝 For Trade  ·  ${board.ft.length}`,ftX+12,colY+21);
+
+  const drawSide=(entries,xBase)=>{
+    let y=colY+38;
+    entries.forEach((e,i)=>{
+      // Row background — alternate stripes for legibility
+      if(i%2===0){ctx.fillStyle='rgba(255,255,255,.025)';ctx.fillRect(xBase,y,colW,rowH-4);}
+      // Sprite
+      const img=imgMap.get(e.name+(e.shiny?'_s':''));
+      const sx=xBase+8,sy=y+(rowH-4-sprSize)/2;
+      if(img)drawImageContain(ctx,img,sx,sy,sprSize,sprSize);
+      // Shiny sparkle overlay
+      if(e.shiny){
+        ctx.fillStyle='rgba(244,114,182,.95)';
+        ctx.font='600 14px Space Grotesk, sans-serif';
+        ctx.fillText('✨',sx+sprSize-12,sy+14);
+      }
+      // Name + badges
+      const nameX=sx+sprSize+10;
+      ctx.font='600 14px Space Grotesk, sans-serif';
+      ctx.fillStyle='#f1f5f9';
+      const dn=e.dn||e.name;
+      const qtyStr=e.qty&&e.qty>1?`  ×${e.qty}`:'';
+      const nameStr=dn+qtyStr;
+      // Truncate if too long
+      const maxNameW=colW-(nameX-xBase)-12;
+      let truncated=nameStr;
+      if(ctx.measureText(truncated).width>maxNameW){
+        while(truncated.length>4&&ctx.measureText(truncated+'…').width>maxNameW)truncated=truncated.slice(0,-1);
+        truncated+='…';
+      }
+      ctx.fillText(truncated,nameX,y+22);
+      // Badges row underneath
+      let badgeX=nameX;const badgeY=y+38;
+      ctx.font='600 10px Space Grotesk, sans-serif';
+      if(e.shiny){
+        const w=42;
+        ctx.fillStyle='rgba(244,114,182,.22)';ctx.fillRect(badgeX,badgeY-10,w,16);
+        ctx.fillStyle='#f472b6';ctx.fillText('SHINY',badgeX+5,badgeY+1);
+        badgeX+=w+4;
+      }
+      if(e.mirror){
+        const w=46;
+        ctx.fillStyle='rgba(56,189,248,.22)';ctx.fillRect(badgeX,badgeY-10,w,16);
+        ctx.fillStyle='#38bdf8';ctx.fillText('MIRROR',badgeX+5,badgeY+1);
+        badgeX+=w+4;
+      }
+      if(e.note){
+        ctx.fillStyle='rgba(255,255,255,.55)';
+        ctx.font='500 11px Space Grotesk, sans-serif';
+        let noteStr=e.note;
+        const maxNoteW=colW-(badgeX-xBase)-10;
+        if(ctx.measureText(noteStr).width>maxNoteW){
+          while(noteStr.length>3&&ctx.measureText(noteStr+'…').width>maxNoteW)noteStr=noteStr.slice(0,-1);
+          noteStr+='…';
+        }
+        ctx.fillText(noteStr,badgeX,badgeY+1);
+      }
+      y+=rowH;
+    });
+  };
+  drawSide(board.lf,lfX);
+  drawSide(board.ft,ftX);
+
+  // Footer
+  const footY=H-footerH;
+  ctx.fillStyle='rgba(15,20,25,.95)';ctx.fillRect(0,footY,W,footerH);
+  ctx.fillStyle='rgba(255,255,255,.4)';
+  ctx.font='500 10px Space Grotesk, sans-serif';
+  ctx.textAlign='center';
+  ctx.fillText('Generated with PoGo Trades · special trade rules apply (1 special trade/day, Great Friend+ for legendaries, Forever Friend for remote)',W/2,footY+20);
+  ctx.textAlign='left';
+
+  return new Promise(res=>canvas.toBlob(b=>res(b),'image/png'));
 }
 
 // ── READ-ONLY SHARE VIEW (#9) ────────────────────────────────
@@ -7136,7 +7512,7 @@ function bulkSetPri(){
   bulkSelected.forEach(name=>{
     if(!list[name])return;
     const{mod,lucky,xxl,xxs,shiny}=parsePri(list[name]);
-    list[name]=priValue(v==='_clear'?'':v,mod,lucky,xxl,xxs,shiny,iv);
+    list[name]=priValue(v==='_clear'?'':v,mod,lucky,xxl,xxs,shiny);
   });
   writeList(myListType,cur,list);
   sel.value='';
@@ -7161,7 +7537,7 @@ function bulkToggleFlag(flag){
     if(flag==='shiny')nsh=turnOn;
     if(flag==='xxl'){nx=turnOn;if(turnOn)ns=false;}
     if(flag==='xxs'){ns=turnOn;if(turnOn)nx=false;}
-    list[name]=priValue(p,mod,nl,nx,ns,nsh,iv);
+    list[name]=priValue(p,mod,nl,nx,ns,nsh);
   });
   writeList(myListType,cur,list);
   toast(`✅ ${turnOn?'Added':'Removed'} ${flag.toUpperCase()} on ${bulkSelected.size} entries`);
@@ -7685,7 +8061,11 @@ Object.assign(window,{
   navigateSchedWeek,navigateSchedToday,selectSchedDay,openScheduleModal,closeScheduleModal,
   selectSchedType,submitScheduledTrade,markTradeComplete,cancelScheduledTrade,setManualBonus,
   // Shiny + tour + shortcuts
-  setShiny,startTour,tourNext,tourPrev,skipTour,finishTour
+  setShiny,startTour,tourNext,tourPrev,skipTour,finishTour,
+  // Special Trade Board
+  openSpecialTradeBoard,specialAcSearch,specialAcSelect,specialAcKeydown,
+  addSpecialEntry,removeSpecialEntry,toggleSpecialFlag,setSpecialNote,setSpecialQty,
+  clearSpecialBoard,exportSpecialBoardImage
 });
 
 // ── BOOT ──────────────────────────────────────────────────────
