@@ -1547,6 +1547,17 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
       <input type="text" id="prof-discord" placeholder="username#1234 or username" maxlength="40">
     </div>
     <div class="field">
+      <label>Discord User ID <span style="color:var(--muted);font-weight:400;font-size:11px">(optional — lets others one-click DM you)</span></label>
+      <input type="text" id="prof-discord-id" placeholder="e.g. 123456789012345678" maxlength="22" pattern="[0-9]*" inputmode="numeric">
+      <button type="button" class="discord-id-help-toggle" onclick="this.nextElementSibling.classList.toggle('open');this.setAttribute('aria-expanded',this.nextElementSibling.classList.contains('open'))" aria-expanded="false">How do I find this? ▾</button>
+      <div class="discord-id-help">
+        1. Discord → User Settings (gear icon) → <strong>Advanced</strong> → enable <strong>Developer Mode</strong>.<br>
+        2. Click your own name/avatar anywhere → <strong>Copy User ID</strong>.<br>
+        3. Paste here. It's an 18-19 digit number — no name, no #.<br>
+        <span style="opacity:.7">With this set, other trainers' "Open Discord" button takes them straight to a DM with you (instead of just opening Discord's home screen).</span>
+      </div>
+    </div>
+    <div class="field">
       <label>Wallpaper <span style="color:var(--muted);font-weight:400;font-size:11px">(personal — only you see it)</span></label>
       <input type="hidden" id="prof-wallpaper" value="mono">
       <div class="wp-picker" id="wp-picker"></div>
@@ -3489,7 +3500,10 @@ function listSource(type){
   if(type==='costumes')return allCostumeEntries();
   if(type==='dynamax')return DB.dynamax;
   if(type==='gmax')return DB.gmax;
-  return uniqueEntries(DB.wishlist,maxTradeEntries('dynamax'),maxTradeEntries('gmax'),allCostumeEntries());
+  // Wishlist autocomplete needs to surface every tradeable species — including
+  // legendaries, mythicals, Ultra Beasts and Paradoxes that the community list
+  // hasn't touched yet. uniqueEntries dedupes by name so existing rows win.
+  return uniqueEntries(DB.wishlist,maxTradeEntries('dynamax'),maxTradeEntries('gmax'),allCostumeEntries(),LEGENDARY_AVATAR_ENTRIES);
 }
 function normalizeSpriteKey(s){
   return String(s||'').toLowerCase().replace(/[._-]+/g,' ').replace(/[^a-z0-9 ]/g,'').replace(/\s+/g,' ').trim();
@@ -4635,6 +4649,7 @@ function updateFcDisplay(){
   // Populate profile fields
   const bio=document.getElementById('prof-bio');if(bio)bio.value=ud.bio||'';
   const dis=document.getElementById('prof-discord');if(dis)dis.value=ud.discord||'';
+  const did=document.getElementById('prof-discord-id');if(did)did.value=ud.discordId||'';
   const avi=document.getElementById('prof-av-input');if(avi)avi.value=ud.avatarPokemon||'';
   renderAvatarOptions();
   const wp=document.getElementById('prof-wallpaper');if(wp)wp.value=ud.wallpaper||'mono';
