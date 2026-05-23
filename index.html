@@ -407,8 +407,46 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
 /* MULTI-SELECT FILTER */
 .fbtn.flag-filter{background:transparent}
 .fbtn.flag-filter.fLucky.on{background:rgba(250,204,21,.2);color:#facc15;border-color:rgba(250,204,21,.5)}
+.fbtn.flag-filter.fShiny.on{background:rgba(244,114,182,.2);color:#f472b6;border-color:rgba(244,114,182,.5)}
 .fbtn.flag-filter.fXxl.on{background:rgba(99,102,241,.2);color:#818cf8;border-color:rgba(99,102,241,.5)}
 .fbtn.flag-filter.fXxs.on{background:rgba(20,184,166,.2);color:#2dd4bf;border-color:rgba(20,184,166,.5)}
+/* SHINY FLAG STYLES */
+.flag-btn.shiny-flag{color:#f472b6}
+.flag-btn.shiny-flag.on{background:rgba(244,114,182,.2);color:#f472b6;border-color:rgba(244,114,182,.5)}
+.shiny-mark{color:#f472b6;margin-left:3px}
+
+/* OPTIONAL GENDER MARKER on inventory rows (#3) */
+.have-gender-btn{
+  background:transparent;border:1px solid var(--border);border-radius:6px;
+  width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:700;cursor:pointer;flex-shrink:0;line-height:1;
+  font-family:var(--font);transition:.15s;
+}
+.have-gender-btn.unset{color:var(--muted);opacity:.45;font-size:11px;letter-spacing:-1px}
+.have-gender-btn.unset:hover{opacity:.9;border-color:var(--accent);color:var(--ac2)}
+.have-gender-btn.m{color:#60a5fa;border-color:rgba(96,165,250,.5);background:rgba(96,165,250,.12)}
+.have-gender-btn.f{color:#f472b6;border-color:rgba(244,114,182,.5);background:rgba(244,114,182,.12)}
+.have-gender-pill{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:4px;font-size:11px;font-weight:700;line-height:1;margin-left:3px;vertical-align:1px}
+.have-gender-pill.m{color:#60a5fa;background:rgba(96,165,250,.18)}
+.have-gender-pill.f{color:#f472b6;background:rgba(244,114,182,.18)}
+
+/* KEYBOARD SHORTCUTS CHEAT SHEET (#17) */
+.shortcut-grid{display:flex;flex-direction:column;gap:4px;margin-top:8px}
+.shortcut-section-hdr{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-top:10px;margin-bottom:2px}
+.shortcut-row{display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:6px;font-size:13px}
+.shortcut-row:hover{background:var(--bg2)}
+.shortcut-row span{color:var(--text);flex:1}
+.shortcut-row kbd{font-family:var(--mono);background:var(--bg);border:1px solid var(--border2);border-bottom-width:2px;border-radius:4px;padding:2px 7px;font-size:12px;color:var(--ac2);min-width:24px;text-align:center;display:inline-block}
+
+/* FIRST-RUN TOUR (#25) */
+.tour-progress{display:flex;gap:5px;margin-bottom:14px}
+.tour-progress .dot{flex:1;height:4px;background:var(--border);border-radius:2px;transition:background .2s}
+.tour-progress .dot.done{background:var(--ac)}
+.tour-body{font-size:14px;line-height:1.6;color:var(--text);margin-bottom:6px}
+.tour-body p{margin:0 0 10px}
+.tour-body strong{color:var(--ac2)}
+.tour-body ul{margin:6px 0 10px;padding-left:22px}
+.tour-body li{margin-bottom:3px}
 
 /* CONFLICT MODAL */
 .conflict-preview{background:var(--bg);border:1px solid var(--border);border-radius:var(--r2);padding:10px;font-family:var(--mono);font-size:11px;margin:8px 0;max-height:120px;overflow-y:auto}
@@ -1203,6 +1241,7 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
       <div class="filter-group">
         <span class="filter-label">Flags:</span>
         <button class="fbtn flag-filter fLucky" onclick="toggleFlagFilter('lucky')" aria-pressed="false" title="Show entries with Lucky flag">⚡</button>
+        <button class="fbtn flag-filter fShiny" onclick="toggleFlagFilter('shiny')" aria-pressed="false" title="Show entries with Shiny flag">✨</button>
         <button class="fbtn flag-filter fXxl" onclick="toggleFlagFilter('xxl')" aria-pressed="false" title="Show entries with XXL flag">XXL</button>
         <button class="fbtn flag-filter fXxs" onclick="toggleFlagFilter('xxs')" aria-pressed="false" title="Show entries with XXS flag">XXS</button>
       </div>
@@ -1266,6 +1305,9 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
         <label class="lucky-add" title="⚡ Lucky — generates a separate Lucky Dex search string">
           <input type="checkbox" id="add-pmon-lucky"> ⚡ Lucky
         </label>
+        <label class="lucky-add" title="✨ Shiny — flag this entry as shiny-only (shinies are always special trades anyway, so no separate search string)">
+          <input type="checkbox" id="add-pmon-shiny"> ✨ Shiny
+        </label>
         <label class="lucky-add" title="XXL — mark as extra-large; generates a separate XXL search string">
           <input type="checkbox" id="add-pmon-xxl" onchange="if(this.checked)document.getElementById('add-pmon-xxs').checked=false"> XXL
         </label>
@@ -1301,6 +1343,7 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
         <option value="_clear">Clear priority</option>
       </select>
       <button class="bulk-btn" onclick="bulkToggleFlag('lucky')">Toggle ⚡</button>
+      <button class="bulk-btn" onclick="bulkToggleFlag('shiny')">Toggle ✨</button>
       <button class="bulk-btn" onclick="bulkToggleFlag('xxl')">Toggle XXL</button>
       <button class="bulk-btn" onclick="bulkToggleFlag('xxs')">Toggle XXS</button>
       <button class="bulk-btn bulk-del" onclick="bulkDelete()">🗑 Delete</button>
@@ -1578,6 +1621,47 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
   </div>
 </div>
 
+<!-- KEYBOARD SHORTCUTS CHEAT SHEET (#17) -->
+<div class="ov" id="shortcuts-modal" role="dialog" aria-modal="true" aria-labelledby="shortcuts-title">
+  <div class="modal" style="max-width:520px">
+    <h3 id="shortcuts-title">⌨️ Keyboard shortcuts</h3>
+    <div class="shortcut-grid">
+      <div class="shortcut-section-hdr">Navigation</div>
+      <div class="shortcut-row"><kbd>b</kbd><span>Browse tab</span></div>
+      <div class="shortcut-row"><kbd>m</kbd><span>My List tab</span></div>
+      <div class="shortcut-row"><kbd>s</kbd><span>Strings tab</span></div>
+      <div class="shortcut-row"><kbd>h</kbd><span>Have / Inventory tab</span></div>
+      <div class="shortcut-row"><kbd>c</kbd><span>Schedule (calendar) tab</span></div>
+      <div class="shortcut-section-hdr">Actions</div>
+      <div class="shortcut-row"><kbd>n</kbd><span>Focus add-Pokémon field (jumps to My List)</span></div>
+      <div class="shortcut-row"><kbd>/</kbd><span>Focus the search/filter on the active tab</span></div>
+      <div class="shortcut-row"><kbd>?</kbd><span>Show this cheat sheet</span></div>
+      <div class="shortcut-row"><kbd>Esc</kbd><span>Close any open modal</span></div>
+      <div class="shortcut-section-hdr">Inside a row</div>
+      <div class="shortcut-row"><kbd>Click</kbd> qty<span>Type the new quantity directly</span></div>
+      <div class="shortcut-row"><kbd>Enter</kbd><span>Commit edit · <kbd>Esc</kbd> reverts</span></div>
+    </div>
+    <div style="font-size:12px;color:var(--muted);margin-top:8px">Shortcuts are disabled while you're typing in an input.</div>
+    <div class="mact"><button class="bpri" onclick="closeModal('shortcuts-modal')">Got it</button></div>
+  </div>
+</div>
+
+<!-- FIRST-RUN TOUR (#25) -->
+<div class="ov" id="tour-modal" role="dialog" aria-modal="true" aria-labelledby="tour-title">
+  <div class="modal" style="max-width:480px">
+    <div class="tour-progress" id="tour-progress"></div>
+    <h3 id="tour-title"></h3>
+    <div id="tour-body" class="tour-body"></div>
+    <div class="mact" style="justify-content:space-between">
+      <button class="bghost" onclick="skipTour()">Skip tour</button>
+      <div style="display:flex;gap:6px">
+        <button class="bghost" id="tour-prev-btn" onclick="tourPrev()">← Back</button>
+        <button class="bpri" id="tour-next-btn" onclick="tourNext()">Next →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- PTR Indicator -->
 <div class="ptr-indicator" id="ptr-indicator" aria-hidden="true">↓</div>
 
@@ -1721,7 +1805,7 @@ const SECURE_RULES=`{
 let db=null,fbOn=false,cur=null,fbApp=null,auth=null,currentAuthUid=null;
 let allData={};
 let browseFilter='ALL',browseList='wishlist',staleFilter=0;
-let browseFlagFilters={lucky:false,xxl:false,xxs:false};
+let browseFlagFilters={lucky:false,xxl:false,xxs:false,shiny:false};
 let myListType='wishlist',strListType='wishlist';
 let rpinTarget=null;
 const SYNC_QUEUE_KEY='pogoSyncQueue_v1';
@@ -1957,15 +2041,36 @@ function entrySpriteUrl(entry,nameOverride='',gender=''){
 // Priority: hand-curated costume URLs (cdn08 wiki) → PokemonDB HOME 3D renders →
 // PokeAPI form/regional/gender variants → PokeAPI base sprite.
 // The actual <img> uses spriteFallbackChain() for graceful 404 cascade.
+// PokemonDB HOME 3D Unown — full A–Z + ! + ? at consistent 128×128
+const UNOWN_POKEMONDB_SLUGS={
+  'Unown (A)':'unown-a','Unown (B)':'unown-b','Unown (C)':'unown-c','Unown (D)':'unown-d',
+  'Unown (E)':'unown-e','Unown (F)':'unown-f','Unown (G)':'unown-g','Unown (H)':'unown-h',
+  'Unown (I)':'unown-i','Unown (J)':'unown-j','Unown (K)':'unown-k','Unown (L)':'unown-l',
+  'Unown (M)':'unown-m','Unown (N)':'unown-n','Unown (O)':'unown-o','Unown (P)':'unown-p',
+  'Unown (Q)':'unown-q','Unown (R)':'unown-r','Unown (S)':'unown-s','Unown (T)':'unown-t',
+  'Unown (U)':'unown-u','Unown (V)':'unown-v','Unown (W)':'unown-w','Unown (X)':'unown-x',
+  'Unown (Y)':'unown-y','Unown (Z)':'unown-z',
+  'Unown (!)':'unown-exclamation','Unown (?)':'unown-question'
+};
+function unownSpriteUrl(name){
+  const slug=UNOWN_POKEMONDB_SLUGS[name];
+  return slug?`${POKEMONDB_BASE}${slug}.png`:'';
+}
+
 function spriteUrl(no,name,gender='',dn=''){
   // 1. Hand-curated costume sprite URLs (e.g., Pikachu Santa, Spinda forms via Serebii)
   if(name&&EXTRA_COSTUME_SPRITES[name])return EXTRA_COSTUME_SPRITES[name];
+  // 1b. Unown letters — PokeAPI's per-letter pixel sprites are inconsistently sized
+  //     (some are tiny, some span the full tile). PokemonDB hosts the Pokémon HOME
+  //     3D renders for all 28 forms at a consistent 128×128, so use those instead.
+  const unownUrl=unownSpriteUrl(name);
+  if(unownUrl)return unownUrl;
   // 2. Serebii GO costume sprites (curated slug map → known-existing Serebii URL).
   //    Must come BEFORE PokemonDB because PokemonDB doesn't have costume variants
   //    (their HOME 3D sprites only cover base Pokémon and game forms, not GO costumes).
   const goUrl=goCostumeSpriteUrl(no,name);
   if(goUrl)return goUrl;
-  // 3. PokeAPI costume form variants (Unown, Vivillon, Furfrou — non-Pokemon-GO forms)
+  // 3. PokeAPI costume form variants (Vivillon, Furfrou — non-Pokemon-GO forms)
   if(name&&COSTUME_FORM_SPRITE_IDS[name])return`${SPRITE_BASE}${COSTUME_FORM_SPRITE_IDS[name]}.png`;
   // 4. PokeAPI regional form (Alolan, Galarian, Hisuian, Paldean)
   if(name&&REGIONAL_FORM_IDS[name])return`${SPRITE_BASE}${REGIONAL_FORM_IDS[name]}.png`;
@@ -2914,6 +3019,8 @@ function showApp(){
   checkWhatsNew();
   attachPullToRefresh();
   initAddAdvanced();
+  // First-time user tour (#25)
+  maybeStartTour();
   // PWA shortcut handling: deep-link via ?action=add|browse|strings
   const params=new URLSearchParams(location.search);
   const action=params.get('action');
@@ -2976,8 +3083,9 @@ function sortEntries(entries){
 }
 function userBadge(x){
   const lu=allData.users?.[x.user]?.lastUpdated;
-  return`<span class="badge ${x.p}" title="${x.user} · ${priLabel(x.p)} priority · Updated ${freshnessLabel(lu)}">
-    <span class="prio-mark">${x.p}</span>${x.user}${x.lucky?'<span class="lucky-mark">⚡</span>':''}${x.xxl?'<span class="flag-mark xxl-mark">XXL</span>':''}${x.xxs?'<span class="flag-mark xxs-mark">XXS</span>':''}${x.mod?`<span class="mod"> ${x.mod}</span>`:''}
+  const shinyPart=x.shiny?' · ✨ shiny only':'';
+  return`<span class="badge ${x.p}" title="${x.user} · ${priLabel(x.p)} priority${shinyPart} · Updated ${freshnessLabel(lu)}">
+    <span class="prio-mark">${x.p}</span>${x.user}${x.lucky?'<span class="lucky-mark">⚡</span>':''}${x.shiny?'<span class="shiny-mark">✨</span>':''}${x.xxl?'<span class="flag-mark xxl-mark">XXL</span>':''}${x.xxs?'<span class="flag-mark xxs-mark">XXS</span>':''}${x.mod?`<span class="mod"> ${x.mod}</span>`:''}
   </span>`;
 }
 
@@ -3118,8 +3226,15 @@ function validateFc(fc){
 }
 
 // ── PARSEPRI ─────────────────────────────────────────────────
+// Parses an entry value like:
+//   "H[lucky][shiny][xxl](f, m)" or legacy "H(f)"
+// Returns {p, mod, lucky, xxl, xxs, shiny}
+// Also legacy-migrates: a free-form note that contains the word "shiny"
+// gets shiny=true, with "shiny" stripped from the displayed mod text so the
+// search-string + UI use the structured flag. Any legacy [iv:…] tag is
+// silently dropped on parse — IV requirements are no longer tracked.
 function parsePri(v){
-  if(!v)return{p:'',mod:'',lucky:false,xxl:false,xxs:false};
+  if(!v)return{p:'',mod:'',lucky:false,xxl:false,xxs:false,shiny:false};
   const s=String(v);
   const priM=s.match(/^([HML])(.*)/);
   const p=priM?priM[1]:'';
@@ -3127,11 +3242,18 @@ function parsePri(v){
   const lucky=/\[lucky\]/i.test(rest);
   const xxl=/\[xxl\]/i.test(rest);
   const xxs=/\[xxs\]/i.test(rest);
-  rest=rest.replace(/\[lucky\]/gi,'').replace(/\[xxl\]/gi,'').replace(/\[xxs\]/gi,'');
-  return{p,mod:rest.replace(/[()]/g,'').trim(),lucky,xxl,xxs};
+  let shiny=/\[shiny\]/i.test(rest);
+  rest=rest.replace(/\[lucky\]/gi,'').replace(/\[xxl\]/gi,'').replace(/\[xxs\]/gi,'').replace(/\[shiny\]/gi,'').replace(/\[iv:[^\]]*\]/gi,'');
+  let mod=rest.replace(/[()]/g,'').trim();
+  // Auto-promote legacy "shiny" mentions in free-form notes to the structured flag
+  if(!shiny&&/\bshiny\b|\bshny\b/i.test(mod)){
+    shiny=true;
+    mod=mod.replace(/\bshiny\b/gi,'').replace(/\bshny\b/gi,'').replace(/,\s*,/g,',').replace(/^\s*,\s*|\s*,\s*$/g,'').trim();
+  }
+  return{p,mod,lucky,xxl,xxs,shiny};
 }
-function priValue(p,mod='',lucky=false,xxl=false,xxs=false){
-  return`${p||''}${lucky?'[lucky]':''}${xxl?'[xxl]':''}${xxs?'[xxs]':''}${mod?`(${mod})`:''}`;
+function priValue(p,mod='',lucky=false,xxl=false,xxs=false,shiny=false){
+  return`${p||''}${lucky?'[lucky]':''}${shiny?'[shiny]':''}${xxl?'[xxl]':''}${xxs?'[xxs]':''}${mod?`(${mod})`:''}`;
 }
 
 // ── BROWSE ────────────────────────────────────────────────────
@@ -3176,7 +3298,7 @@ function renderBrowse(){
       if(!list||allowed&&!allowed.has(user))return;
       Object.entries(list).forEach(([name,val])=>{
         if(!map[name])map[name]=[];
-        const{p,mod,lucky,xxl,xxs}=parsePri(val);if(p||lucky||xxl||xxs)map[name].push({user,p,mod,lucky,xxl,xxs});
+        const{p,mod,lucky,xxl,xxs,shiny}=parsePri(val);if(p||lucky||xxl||xxs||shiny)map[name].push({user,p,mod,lucky,xxl,xxs,shiny});
       });
     });
     const results=allCostumeEntries().filter(e=>{
@@ -3206,7 +3328,7 @@ function renderBrowse(){
     if(!list||allowed&&!allowed.has(user))return;
     Object.entries(list).forEach(([name,val])=>{
       if(!map[name])map[name]={no:'?',dn:name,entries:[]};
-      const{p,mod,lucky,xxl,xxs}=parsePri(val);if(p||lucky||xxl||xxs)map[name].entries.push({user,p,mod,lucky,xxl,xxs});
+      const{p,mod,lucky,xxl,xxs,shiny}=parsePri(val);if(p||lucky||xxl||xxs||shiny)map[name].entries.push({user,p,mod,lucky,xxl,xxs,shiny});
     });
   });
   const seen=new Set();
@@ -3248,7 +3370,7 @@ function setMyList(t){
     t==='costumes'?'+ Add Other':t==='gmax'?'+ Add Gigantamax Pokémon':t==='dynamax'?'+ Add Dynamax Pokémon':'+ Add Pokémon';
   if(document.getElementById('ac-input'))document.getElementById('ac-input').value='';
   document.getElementById('add-pmon-sel').value='';
-  ['add-pmon-lucky','add-pmon-xxl','add-pmon-xxs'].forEach(id=>{const el=document.getElementById(id);if(el)el.checked=false;});
+  ['add-pmon-lucky','add-pmon-xxl','add-pmon-xxs','add-pmon-shiny'].forEach(id=>{const el=document.getElementById(id);if(el)el.checked=false;});
   document.getElementById('add-pmon-pri').value='';
   document.querySelectorAll('.add-pri-btn').forEach(b=>{b.classList.remove('on','H','M','L');b.setAttribute('aria-pressed','false');});
   document.getElementById('ac-dropdown').classList.remove('open');
@@ -3296,17 +3418,18 @@ function addEntry(){
   const lucky=!!document.getElementById('add-pmon-lucky')?.checked;
   const xxl=!!document.getElementById('add-pmon-xxl')?.checked;
   const xxs=!!document.getElementById('add-pmon-xxs')?.checked;
+  const shiny=!!document.getElementById('add-pmon-shiny')?.checked;
   if(!name){toast('⚠️ Select a Pokémon from the list');return;}
-  if(!pri&&!lucky&&!xxl&&!xxs){toast('⚠️ Set a priority or at least one flag (⚡/XXL/XXS)');return;}
+  if(!pri&&!lucky&&!xxl&&!xxs&&!shiny){toast('⚠️ Set a priority or at least one flag (⚡/✨/XXL/XXS)');return;}
   const list={...(allData[myListType]?.[cur]||{})};
-  list[name]=priValue(pri,notes,lucky,xxl,xxs);
+  list[name]=priValue(pri,notes,lucky,xxl,xxs,shiny);
   writeList(myListType,cur,list);
   document.getElementById('ac-input').value='';
   document.getElementById('add-pmon-sel').value='';
   document.getElementById('add-pmon-notes').value='';
   document.getElementById('add-pmon-pri').value='';
   document.querySelectorAll('.add-pri-btn').forEach(b=>{b.classList.remove('on','H','M','L');b.setAttribute('aria-pressed','false');});
-  ['add-pmon-lucky','add-pmon-xxl','add-pmon-xxs'].forEach(id=>{const el=document.getElementById(id);if(el)el.checked=false;});
+  ['add-pmon-lucky','add-pmon-xxl','add-pmon-xxs','add-pmon-shiny'].forEach(id=>{const el=document.getElementById(id);if(el)el.checked=false;});
   document.getElementById('ac-dropdown').classList.remove('open');
   const dn=acItems.find(x=>x.name===name)?.dn||name;
   toast(`✅ ${dn} added!`);
@@ -3411,7 +3534,7 @@ function currentListEntries(type=myListType,filterVal=''){
   return Object.entries(list).map(([name,val])=>{
     const entry=srcMap[name]||{};
     const spriteEntry=spriteEntryForListItem(type,name,entry)||{};
-    const{p,mod,lucky,xxl,xxs}=parsePri(val);
+    const{p,mod,lucky,xxl,xxs,shiny}=parsePri(val);
     const dn=entry.displayName||name;
     const gender=entryGender(mod);
     return{
@@ -3422,6 +3545,7 @@ function currentListEntries(type=myListType,filterVal=''){
       lucky,
       xxl,
       xxs,
+      shiny,
       gender,
       no:spriteEntry.no||entry.no||null,
       maxType:maxTypeForEntry(entry,type),
@@ -3455,7 +3579,7 @@ function renderMyList(filterVal){
   }
 
   el.innerHTML=`<div class="mygrid" id="mylist-grid">${entries.map(([name,val],idx)=>{
-    const{p,mod,lucky,xxl,xxs}=parsePri(val);
+    const{p,mod,lucky,xxl,xxs,shiny}=parsePri(val);
     const dn=dispMap[name]||name;
     const no=noMap[name]||null;
     const entry=entryMap[name]||{name,dn,no};
@@ -3474,6 +3598,7 @@ function renderMyList(filterVal){
         ${['H','M','L'].map(b=>`<button class="pb ${p===b?'on '+b:''}" onclick="setPri('${sn}','${b}')" title="${priName(b)}" aria-pressed="${p===b}" aria-label="Set ${escAttr(dn)} to ${priLabel(b)} priority">${b}</button>`).join('')}
         <span class="mctrl-sep" aria-hidden="true"></span>
         <button class="flag-btn lucky-flag ${lucky?'on':''}" onclick="setLucky('${sn}')" title="⚡ Lucky" aria-pressed="${lucky}" aria-label="Toggle Lucky for ${escAttr(dn)}">⚡</button>
+        <button class="flag-btn shiny-flag ${shiny?'on':''}" onclick="setShiny('${sn}')" title="✨ Shiny only" aria-pressed="${shiny}" aria-label="Toggle Shiny for ${escAttr(dn)}">✨</button>
         <button class="flag-btn xxl-flag ${xxl?'on':''}" onclick="setXxl('${sn}')" title="XXL" aria-pressed="${xxl}" aria-label="Toggle XXL for ${escAttr(dn)}">XXL</button>
         <button class="flag-btn xxs-flag ${xxs?'on':''}" onclick="setXxs('${sn}')" title="XXS" aria-pressed="${xxs}" aria-label="Toggle XXS for ${escAttr(dn)}">XXS</button>
         <input class="ni" type="text" value="${mod}" placeholder="…" title="Notes" onchange="setNotes('${sn}',this.value)" aria-label="Notes for ${escAttr(dn)}">
@@ -3949,42 +4074,43 @@ function dragEnd(e){
 
 function setPri(name,p){
   const list={...(allData[myListType]?.[cur]||{})};
-  const{p:curP,mod,lucky,xxl,xxs}=parsePri(list[name]||'');
+  const{p:curP,mod,lucky,xxl,xxs,shiny}=parsePri(list[name]||'');
   // Toggle: clicking the same priority clears it
   const newP=curP===p?'':p;
   // If clearing leaves entry empty (no priority + no flags), confirm delete
-  if(!newP&&!lucky&&!xxl&&!xxs){
+  if(!newP&&!lucky&&!xxl&&!xxs&&!shiny){
     if(!confirm(`"${name}" will have no priority or flags. Remove it from your list?`))return;
     delete list[name];
     writeList(myListType,cur,list);
     return;
   }
-  list[name]=priValue(newP,mod,lucky,xxl,xxs);
+  list[name]=priValue(newP,mod,lucky,xxl,xxs,shiny,iv);
   writeList(myListType,cur,list);
 }
 function setNotes(name,notes){
   const list={...(allData[myListType]?.[cur]||{})};
-  const{p,lucky,xxl,xxs}=parsePri(list[name]||'');
-  list[name]=priValue(p,notes,lucky,xxl,xxs);
+  const{p,lucky,xxl,xxs,shiny}=parsePri(list[name]||'');
+  list[name]=priValue(p,notes,lucky,xxl,xxs,shiny);
   writeList(myListType,cur,list);
 }
 function _setFlags(name,update){
   const list={...(allData[myListType]?.[cur]||{})};
-  const{p,mod,lucky,xxl,xxs}=parsePri(list[name]||'');
-  const next=update({p,mod,lucky,xxl,xxs});
+  const{p,mod,lucky,xxl,xxs,shiny}=parsePri(list[name]||'');
+  const next=update({p,mod,lucky,xxl,xxs,shiny});
   // If toggling off leaves entry empty, confirm delete
-  if(!next.p&&!next.lucky&&!next.xxl&&!next.xxs){
+  if(!next.p&&!next.lucky&&!next.xxl&&!next.xxs&&!next.shiny){
     if(!confirm(`"${name}" will have no priority or flags. Remove it from your list?`))return;
     delete list[name];
     writeList(myListType,cur,list);
     return;
   }
-  list[name]=priValue(next.p,next.mod,next.lucky,next.xxl,next.xxs);
+  list[name]=priValue(next.p,next.mod,next.lucky,next.xxl,next.xxs,next.shiny);
   writeList(myListType,cur,list);
 }
 function setLucky(name){_setFlags(name,s=>({...s,lucky:!s.lucky}));}
 function setXxl(name){_setFlags(name,s=>{const nx=!s.xxl;return{...s,xxl:nx,xxs:nx?false:s.xxs};});}
 function setXxs(name){_setFlags(name,s=>{const ns=!s.xxs;return{...s,xxs:ns,xxl:ns?false:s.xxl};});}
+function setShiny(name){_setFlags(name,s=>({...s,shiny:!s.shiny}));}
 function removeEntry(name){
   const prevList={...(allData[myListType]?.[cur]||{})};
   const srcArr=listSource(myListType);
@@ -4618,8 +4744,8 @@ function computeTrainerDiff(typ,me,them){
   const onlyMine=[...myKeys].filter(k=>!theirKeys.has(k));
   const onlyTheirs=[...theirKeys].filter(k=>!myKeys.has(k));
   const entryFor=(name,val)=>{
-    const {p,mod,lucky,xxl,xxs}=parsePri(val);
-    return {name,dn:dispMap[name]||name,no:noMap[name]||'',p,mod,lucky,xxl,xxs,gender:entryGender(mod)};
+    const {p,mod,lucky,xxl,xxs,shiny}=parsePri(val);
+    return {name,dn:dispMap[name]||name,no:noMap[name]||'',p,mod,lucky,xxl,xxs,shiny,gender:entryGender(mod)};
   };
   const both=bothKeys.map(k=>({mine:entryFor(k,myList[k]),theirs:entryFor(k,theirList[k])}));
   // Sort: priority match first, then dex
@@ -5329,10 +5455,10 @@ function renderShareView(username,type){
   srcArr.forEach(e=>{dispMap[e.name]=e.displayName||e.name;if(e.no)noMap[e.name]=e.no;});
   const grouped={H:[],M:[],L:[],Other:[]};
   Object.entries(list).forEach(([name,val])=>{
-    const{p,mod,lucky,xxl,xxs}=parsePri(val);
+    const{p,mod,lucky,xxl,xxs,shiny}=parsePri(val);
     const tag=(p&&grouped[p])?p:'Other';
     const gender=entryGender(mod);
-    grouped[tag].push({name,dn:dispMap[name]||name,no:noMap[name]||'',p,mod,lucky,xxl,xxs,gender});
+    grouped[tag].push({name,dn:dispMap[name]||name,no:noMap[name]||'',p,mod,lucky,xxl,xxs,shiny,gender});
   });
   let html='';
   ['H','M','L'].forEach(p=>{
@@ -5349,6 +5475,7 @@ function renderShareView(username,type){
           e.gender==='f'?'<span class="share-pcard-flag gender-f" title="Female">♀</span>':'',
           e.gender==='m'?'<span class="share-pcard-flag gender-m" title="Male">♂</span>':'',
           e.lucky?'<span class="share-pcard-flag lucky" title="Lucky">⚡</span>':'',
+          e.shiny?'<span class="share-pcard-flag shiny" title="Shiny only" style="color:#f472b6">✨</span>':'',
           e.xxl?'<span class="share-pcard-flag xxl" title="Extra Large">XXL</span>':'',
           e.xxs?'<span class="share-pcard-flag xxs" title="Extra Small">XXS</span>':''
         ].filter(Boolean).join('');
@@ -6018,6 +6145,12 @@ function updateScheduleNotif(){
 //   'giveaway'     — "Take it" — I can't hold this any longer; literally take it
 //                    for anything. Optional `note` field for trader to specify
 //                    preferences (e.g., "common Kanto starters work").
+function _normGender(g){
+  const s=String(g||'').toLowerCase();
+  if(s==='f'||s==='female'||s==='♀')return'f';
+  if(s==='m'||s==='male'||s==='♂')return'm';
+  return'';
+}
 function haveEntryInfo(entry){
   if(entry&&typeof entry==='object'&&!Array.isArray(entry)){
     const mirrorOnly=!!entry.mirrorOnly;
@@ -6028,10 +6161,11 @@ function haveEntryInfo(entry){
       qty:Math.max(0,Math.min(999,parseInt(entry.qty)||0)),
       mirrorOnly,dontNeedBack,giveaway,
       note:String(entry.note||'').slice(0,140),
+      gender:_normGender(entry.gender),
       mode
     };
   }
-  return{qty:Math.max(0,Math.min(999,parseInt(entry)||0)),mirrorOnly:false,dontNeedBack:false,giveaway:false,note:'',mode:'any'};
+  return{qty:Math.max(0,Math.min(999,parseInt(entry)||0)),mirrorOnly:false,dontNeedBack:false,giveaway:false,note:'',gender:'',mode:'any'};
 }
 function haveEntryValue(qty,prev,opts={}){
   const old=haveEntryInfo(prev);
@@ -6047,11 +6181,24 @@ function haveEntryValue(qty,prev,opts={}){
   }
   // Note carries through for giveaway mode (other modes drop the note)
   const note=opts.note!==undefined?String(opts.note||'').slice(0,140):old.note;
+  const gender=opts.gender!==undefined?_normGender(opts.gender):old.gender;
+  // Plain-number storage only allowed when the entry is in default 'any' mode AND has no gender marker
+  if(mode==='any'&&!gender)return q;
   const obj={qty:q};
-  if(mode==='mirror'){obj.mirrorOnly=true;return obj;}
-  if(mode==='dontNeedBack'){obj.dontNeedBack=true;return obj;}
-  if(mode==='giveaway'){obj.giveaway=true;if(note)obj.note=note;return obj;}
-  return q;
+  if(mode==='mirror')obj.mirrorOnly=true;
+  else if(mode==='dontNeedBack')obj.dontNeedBack=true;
+  else if(mode==='giveaway'){obj.giveaway=true;if(note)obj.note=note;}
+  if(gender)obj.gender=gender;
+  return obj;
+}
+// Cycle gender: '' → 'm' → 'f' → ''
+function cycleInventoryGender(name){
+  const inv={...(allData.have?.[cur]||{})};
+  const info=haveEntryInfo(inv[name]);
+  if(!info.qty)return;
+  const next=info.gender===''?'m':info.gender==='m'?'f':'';
+  setHaveEntry(inv,name,info.qty,{gender:next});
+  writeHave(cur,inv);
 }
 function setHaveEntry(inv,name,qty,opts={}){
   const q=Math.max(0,Math.min(999,parseInt(qty)||0));
@@ -6326,7 +6473,7 @@ function renderMyHave(filterVal){
   let entries=Object.entries(inv).map(([name,val])=>{
     const info=haveEntryInfo(val);
     const e=_nameToSpriteEntry(name);
-    return{name,qty:info.qty,mirrorOnly:info.mirrorOnly,dontNeedBack:info.dontNeedBack,giveaway:info.giveaway,note:info.note,mode:info.mode,dn:e.displayName||name,no:e.no};
+    return{name,qty:info.qty,mirrorOnly:info.mirrorOnly,dontNeedBack:info.dontNeedBack,giveaway:info.giveaway,note:info.note,gender:info.gender,mode:info.mode,dn:e.displayName||name,no:e.no};
   }).filter(e=>e.qty>0);
   if(q)entries=entries.filter(e=>(e.dn||'').toLowerCase().includes(q));
   entries.sort((a,b)=>(parseInt(a.no)||9999)-(parseInt(b.no)||9999)||a.dn.localeCompare(b.dn));
@@ -6368,19 +6515,26 @@ function renderMyHave(filterVal){
       :e.giveaway?'Giveaway — click to switch to Any'
       :'Any return — click to switch to Mirror';
     const editNoteBtn=e.giveaway?`<button class="have-mode-btn giveaway" onclick="event.stopPropagation();editInventoryNote('${sn}')" title="Edit giveaway preference note" style="min-width:32px;padding:5px 6px">✎</button>`:'';
+    const genderLabel=e.gender==='m'?'♂':e.gender==='f'?'♀':'⚥';
+    const genderTitle=e.gender==='m'?'Male — click for Female'
+      :e.gender==='f'?'Female — click to clear'
+      :'Gender (optional) — click to mark Male';
+    const genderBtn=`<button class="have-gender-btn ${e.gender||'unset'}" onclick="event.stopPropagation();cycleInventoryGender('${sn}')" title="${genderTitle}" aria-label="${genderTitle}">${genderLabel}</button>`;
+    const genderMetaPill=e.gender?`<span class="have-gender-pill ${e.gender}" title="${e.gender==='f'?'Female':'Male'}-only listing">${e.gender==='f'?'♀':'♂'}</span>`:'';
     const isSel=haveBulkSelected.has(e.name);
     const rowClick=haveBulkMode?`onclick="event.stopPropagation();toggleHaveBulkSelection('${sn}')"`:'';
     return`<div class="have-row${isSel?' bulk-selected':''}" data-name="${escAttr(e.name)}" ${rowClick}>
       <input type="checkbox" class="bulk-chk" data-name="${sn}" ${isSel?'checked':''} onclick="event.stopPropagation();toggleHaveBulkSelection('${sn}')" aria-label="Select ${escAttr(e.dn)}">
-      <div class="have-row-sprite">${e.no?spriteImg(e.no,32,'',e.name,'',e.dn):'🎮'}</div>
+      <div class="have-row-sprite">${e.no?spriteImg(e.no,32,'',e.name,e.gender||'',e.dn):'🎮'}</div>
       <div class="have-row-info">
-        <div class="have-row-name">${escHtml(e.dn)} ${offerCount?`<span class="offer-count-badge unseen" onclick="event.stopPropagation();openIncomingOffersModal('${sn}')" style="margin-left:4px">🔔 ${offerCount}</span>`:''}</div>
+        <div class="have-row-name">${escHtml(e.dn)} ${genderMetaPill} ${offerCount?`<span class="offer-count-badge unseen" onclick="event.stopPropagation();openIncomingOffersModal('${sn}')" style="margin-left:4px">🔔 ${offerCount}</span>`:''}</div>
         <div class="have-row-meta">
           ${e.no?`<span class="have-row-dex">#${e.no}</span>`:''}
           ${modeBadge}
         </div>
       </div>
       ${editNoteBtn}
+      ${genderBtn}
       <button class="have-mode-btn ${modeBtnClass}" onclick="event.stopPropagation();cycleInventoryMode('${sn}')" title="${modeBtnTitle}">${modeBtnLabel}</button>
       <div class="have-row-qty-wrap">
         <button class="have-row-qty-btn" onclick="event.stopPropagation();updateInventoryQty('${sn}',-1)" aria-label="Decrease quantity">−</button>
@@ -6437,8 +6591,19 @@ function entryWantedByCur(name){
   for(const t of['wishlist','dynamax','gmax','costumes']){
     const val=allData[t]?.[cur]?.[name];
     if(val){
-      const{p,lucky,xxl,xxs}=parsePri(val);
-      if(p||lucky||xxl||xxs)return{type:t,p,lucky,xxl,xxs};
+      const{p,lucky,xxl,xxs,shiny}=parsePri(val);
+      if(p||lucky||xxl||xxs||shiny)return{type:t,p,lucky,xxl,xxs,shiny};
+    }
+  }
+  return null;
+}
+// Check what the OTHER user wants for this Pokémon — used by offer message
+function entryWantedByOther(otherUser,name){
+  for(const t of['wishlist','dynamax','gmax','costumes']){
+    const val=allData[t]?.[otherUser]?.[name];
+    if(val){
+      const{p,lucky,xxl,xxs,shiny,mod}=parsePri(val);
+      if(p||lucky||xxl||xxs||shiny)return{type:t,p,lucky,xxl,xxs,shiny,mod};
     }
   }
   return null;
@@ -6480,7 +6645,7 @@ function renderHaveBrowse(){
         const info=haveEntryInfo(val);
         const e=_nameToSpriteEntry(n);
         const want=entryWantedByCur(n);
-        return{name:n,qty:info.qty,mirrorOnly:info.mirrorOnly,dontNeedBack:info.dontNeedBack,giveaway:info.giveaway,note:info.note,mode:info.mode,dn:e.displayName||n,no:e.no,match:want};
+        return{name:n,qty:info.qty,mirrorOnly:info.mirrorOnly,dontNeedBack:info.dontNeedBack,giveaway:info.giveaway,note:info.note,gender:info.gender,mode:info.mode,dn:e.displayName||n,no:e.no,match:want};
       }).filter(it=>it.qty>0);
       if(haveMatchOnly)items=items.filter(it=>it.match);
       if(q){items=items.filter(it=>it.dn.toLowerCase().includes(q)||u.toLowerCase().includes(q));}
@@ -6503,9 +6668,9 @@ function renderHaveBrowse(){
               :it.giveaway?`${it.dn} — giveaway${it.note?', note: '+it.note:''}`
               :it.dn+' — click to offer';
             return`<div class="${cardCls}" title="${escAttr(cardTitle)}" onclick="openOfferModal('${escAttr(u)}','${sn}')" style="cursor:pointer">
-              <div class="have-row-sprite" style="width:24px;height:24px">${it.no?spriteImg(it.no,24,'',it.name,'',it.dn):'🎮'}</div>
+              <div class="have-row-sprite" style="width:24px;height:24px">${it.no?spriteImg(it.no,24,'',it.name,it.gender||'',it.dn):'🎮'}</div>
               <div class="have-pmon-info">
-                <div class="have-pmon-name">${escHtml(it.dn)}</div>
+                <div class="have-pmon-name">${escHtml(it.dn)}${it.gender?` <span class="have-gender-pill ${it.gender}" title="${it.gender==='f'?'Female':'Male'} only">${it.gender==='f'?'♀':'♂'}</span>`:''}</div>
                 ${it.match?`<div class="have-pmon-meta">You want · ${it.match.p||(it.match.lucky?'⚡':'')||(it.match.xxl?'XXL':'')||(it.match.xxs?'XXS':'')}</div>`:''}
                 ${it.mirrorOnly?'<div class="have-pmon-meta mirror">🪞 Mirror only</div>':''}
                 ${it.dontNeedBack?'<div class="have-pmon-meta dnb">🤝 Don\'t need back</div>':''}
@@ -6530,7 +6695,7 @@ function renderHaveBrowse(){
         const info=haveEntryInfo(val);
         if(info.qty<=0)return;
         if(!byPokemon[name])byPokemon[name]=[];
-        byPokemon[name].push({user,qty:info.qty,mirrorOnly:info.mirrorOnly,dontNeedBack:info.dontNeedBack,giveaway:info.giveaway,note:info.note,mode:info.mode});
+        byPokemon[name].push({user,qty:info.qty,mirrorOnly:info.mirrorOnly,dontNeedBack:info.dontNeedBack,giveaway:info.giveaway,note:info.note,gender:info.gender,mode:info.mode});
       });
     });
     let pokemonList=Object.entries(byPokemon).map(([name,owners])=>{
@@ -6567,7 +6732,7 @@ function renderHaveBrowse(){
               :o.giveaway?`Giveaway — anything works${o.note?' · '+o.note:''}`
               :canDm?'Click to offer trade':'No Discord linked, click to copy message';
             return`<button class="have-trainer-chip ${p.want?'match':''}" onclick="openOfferModal('${escAttr(o.user)}','${escAttr(p.name)}')" title="${escAttr(tooltip)}">
-              ${escHtml(o.user)} <span class="qty">×${o.qty}</span>${o.mirrorOnly?'<span class="have-mirror-badge mini">🪞</span>':''}${o.dontNeedBack?'<span class="have-dnb-badge mini">🤝</span>':''}${o.giveaway?'<span class="have-giveaway-badge mini">📤</span>':''}${offerCount?`<span class="offer-count-badge" style="margin-left:2px;padding:1px 5px;font-size:9px">🔔 ${offerCount}</span>`:''}
+              ${escHtml(o.user)} <span class="qty">×${o.qty}</span>${o.gender?`<span class="have-gender-pill ${o.gender}" title="${o.gender==='f'?'Female':'Male'} only">${o.gender==='f'?'♀':'♂'}</span>`:''}${o.mirrorOnly?'<span class="have-mirror-badge mini">🪞</span>':''}${o.dontNeedBack?'<span class="have-dnb-badge mini">🤝</span>':''}${o.giveaway?'<span class="have-giveaway-badge mini">📤</span>':''}${offerCount?`<span class="offer-count-badge" style="margin-left:2px;padding:1px 5px;font-size:9px">🔔 ${offerCount}</span>`:''}
             </button>`;
           }).join('')}
         </div>
@@ -6704,7 +6869,7 @@ function openOfferModal(otherUser,specificPokemon=''){
   const focusedPokemon=specificPokemon?(()=>{
     const info=haveEntryInfo(otherInv[specificPokemon]);
     const e=_nameToSpriteEntry(specificPokemon);
-    return{name:specificPokemon,dn:e.displayName||specificPokemon,no:e.no,qty:info.qty,mirrorOnly:info.mirrorOnly,dontNeedBack:info.dontNeedBack,giveaway:info.giveaway,note:info.note,want:entryWantedByCur(specificPokemon)};
+    return{name:specificPokemon,dn:e.displayName||specificPokemon,no:e.no,qty:info.qty,mirrorOnly:info.mirrorOnly,dontNeedBack:info.dontNeedBack,giveaway:info.giveaway,note:info.note,gender:info.gender,want:entryWantedByCur(specificPokemon)};
   })():null;
   // Pokemon I have that they want — check their wishlist/dynamax/gmax/costumes
   const theyWant=[];
@@ -6719,8 +6884,17 @@ function openOfferModal(otherUser,specificPokemon=''){
   // Default selection: items they want
   const mirrorMatchQty=focusedPokemon?haveEntryInfo(myInv[focusedPokemon.name]).qty:0;
   const preSelected=new Set(focusedPokemon?.mirrorOnly&&mirrorMatchQty>0?[focusedPokemon.name]:theyWant.slice(0,5).map(t=>t.name));
+  // Build per-item "they want" notes (shiny preference) for items I'm likely offering
+  const theyWantNotes=theyWant.map(t=>{
+    const w=entryWantedByOther(otherUser,t.name);
+    if(!w?.shiny)return null;
+    return `${_nameToSpriteEntry(t.name).displayName||t.name} (shiny)`;
+  }).filter(Boolean);
+  const myReqLine=focusedPokemon?.want?.shiny?`Heads up — I'm looking for a shiny ${focusedPokemon.dn}.\n\n`:'';
   const defaultMessage=`Hey ${otherUser}! 👋\n\n`+
     (focusedPokemon?`I'd love to trade for your ${focusedPokemon.dn}.\n\n`:matches.length?`I saw you have ${matches.slice(0,3).map(m=>m.dn).join(', ')} on your inventory — interested in trading?\n\n`:'')+
+    myReqLine+
+    (theyWantNotes.length?`Quick note on your wishlist requirements: ${theyWantNotes.slice(0,3).join('; ')}.\n\n`:'')+
     (focusedPokemon?.mirrorOnly?`I saw this is marked mirror only, so I'm offering the same ${focusedPokemon.dn} in return.\n\n`:'')+
     (focusedPokemon?.dontNeedBack?`I saw this is marked "don't need back" — I have ${theyWant.length?theyWant.slice(0,3).map(t=>`${t.qty}× ${_nameToSpriteEntry(t.name).displayName||t.name}`).join(', '):'a few things from your wishlist'} that should be fair value for it. Let me know which works best.\n\n`:'')+
     (focusedPokemon?.giveaway?`Noticed this is marked as a giveaway${focusedPokemon.note?` (note: "${focusedPokemon.note}")`:''} — happy to take it off your hands. ${theyWant.length?`I can send ${theyWant.slice(0,3).map(t=>`${t.qty}× ${_nameToSpriteEntry(t.name).displayName||t.name}`).join(', ')} or anything else from your list — just let me know.`:'Let me know what works!'}\n\n`:'')+
@@ -6739,10 +6913,10 @@ function openOfferModal(otherUser,specificPokemon=''){
     <div class="modal offer-modal" onclick="event.stopPropagation()">
       <h3>💬 Offer trade with ${escHtml(otherUser)}</h3>
       ${focusedPokemon?`<div class="offer-pkmn-display">
-        <div class="sprite-wrap">${focusedPokemon.no?spriteImg(focusedPokemon.no,42,'',focusedPokemon.name,'',focusedPokemon.dn):'🎮'}</div>
+        <div class="sprite-wrap">${focusedPokemon.no?spriteImg(focusedPokemon.no,42,'',focusedPokemon.name,focusedPokemon.gender||'',focusedPokemon.dn):'🎮'}</div>
         <div style="flex:1">
-          <div class="offer-name">${escHtml(focusedPokemon.dn)} <span style="color:var(--ac2);font-family:var(--mono);font-size:13px">×${focusedPokemon.qty}</span></div>
-          <div class="offer-meta">${focusedPokemon.mirrorOnly?'<span class="have-mirror-badge">🪞 Mirror only</span> ':''}${focusedPokemon.dontNeedBack?'<span class="have-dnb-badge">🤝 Don\'t need back</span> ':''}${focusedPokemon.giveaway?'<span class="have-giveaway-badge">📤 Giveaway</span> ':''}${focusedPokemon.want?`You want this at ${focusedPokemon.want.p||'flag'}`:''}${existingOffers.length?` · <strong style="color:var(--warn)">🔔 ${existingOffers.length} existing offer${existingOffers.length===1?'':'s'}</strong>`:''}</div>
+          <div class="offer-name">${escHtml(focusedPokemon.dn)}${focusedPokemon.gender?` <span class="have-gender-pill ${focusedPokemon.gender}" title="${focusedPokemon.gender==='f'?'Female':'Male'} only">${focusedPokemon.gender==='f'?'♀':'♂'}</span>`:''} <span style="color:var(--ac2);font-family:var(--mono);font-size:13px">×${focusedPokemon.qty}</span></div>
+          <div class="offer-meta">${focusedPokemon.mirrorOnly?'<span class="have-mirror-badge">🪞 Mirror only</span> ':''}${focusedPokemon.dontNeedBack?'<span class="have-dnb-badge">🤝 Don\'t need back</span> ':''}${focusedPokemon.giveaway?'<span class="have-giveaway-badge">📤 Giveaway</span> ':''}${focusedPokemon.want?`You want this at ${focusedPokemon.want.p||'flag'}${focusedPokemon.want.shiny?' · <span style="color:#f472b6">✨ shiny only</span>':''}`:''}${existingOffers.length?` · <strong style="color:var(--warn)">🔔 ${existingOffers.length} existing offer${existingOffers.length===1?'':'s'}</strong>`:''}</div>
         </div>
       </div>
       ${focusedPokemon.mirrorOnly?`<div class="offer-no-discord" style="border-color:rgba(14,165,233,.35);color:#38bdf8;background:rgba(14,165,233,.08)">🪞 Mirror only: ${escHtml(otherUser)} is only accepting the same exact Pokémon/form for this.</div>`:''}
@@ -6852,8 +7026,8 @@ function bulkSetPri(){
   const list={...(allData[myListType]?.[cur]||{})};
   bulkSelected.forEach(name=>{
     if(!list[name])return;
-    const{mod,lucky,xxl,xxs}=parsePri(list[name]);
-    list[name]=priValue(v==='_clear'?'':v,mod,lucky,xxl,xxs);
+    const{mod,lucky,xxl,xxs,shiny}=parsePri(list[name]);
+    list[name]=priValue(v==='_clear'?'':v,mod,lucky,xxl,xxs,shiny,iv);
   });
   writeList(myListType,cur,list);
   sel.value='';
@@ -6872,12 +7046,13 @@ function bulkToggleFlag(flag){
   const turnOn=setCount<bulkSelected.size/2;
   bulkSelected.forEach(name=>{
     if(!list[name])return;
-    const{p,mod,lucky,xxl,xxs}=parsePri(list[name]);
-    let nl=lucky,nx=xxl,ns=xxs;
+    const{p,mod,lucky,xxl,xxs,shiny}=parsePri(list[name]);
+    let nl=lucky,nx=xxl,ns=xxs,nsh=shiny;
     if(flag==='lucky')nl=turnOn;
+    if(flag==='shiny')nsh=turnOn;
     if(flag==='xxl'){nx=turnOn;if(turnOn)ns=false;}
     if(flag==='xxs'){ns=turnOn;if(turnOn)nx=false;}
-    list[name]=priValue(p,mod,nl,nx,ns);
+    list[name]=priValue(p,mod,nl,nx,ns,nsh,iv);
   });
   writeList(myListType,cur,list);
   toast(`✅ ${turnOn?'Added':'Removed'} ${flag.toUpperCase()} on ${bulkSelected.size} entries`);
@@ -7053,7 +7228,7 @@ function startVoiceInput(){
 // ── MULTI-SELECT FLAG FILTERS (#9) ────────────────────────────
 function toggleFlagFilter(flag){
   browseFlagFilters[flag]=!browseFlagFilters[flag];
-  const map={lucky:'fLucky',xxl:'fXxl',xxs:'fXxs'};
+  const map={lucky:'fLucky',xxl:'fXxl',xxs:'fXxs',shiny:'fShiny'};
   const btn=document.querySelector(`.fbtn.${map[flag]}`);
   if(btn){
     btn.classList.toggle('on',browseFlagFilters[flag]);
@@ -7063,8 +7238,8 @@ function toggleFlagFilter(flag){
 }
 function entryMatchesFlagFilters(x){
   const f=browseFlagFilters;
-  if(!f.lucky&&!f.xxl&&!f.xxs)return true;
-  return(f.lucky&&x.lucky)||(f.xxl&&x.xxl)||(f.xxs&&x.xxs);
+  if(!f.lucky&&!f.xxl&&!f.xxs&&!f.shiny)return true;
+  return(f.lucky&&x.lucky)||(f.xxl&&x.xxl)||(f.xxs&&x.xxs)||(f.shiny&&x.shiny);
 }
 
 // ── BACKUP REMINDER (#14) ─────────────────────────────────────
@@ -7260,6 +7435,110 @@ function confirmImport(){
   toast('Imported '+toAdd.length+' Pokemon as '+priName(importPri)+'!');
 }
 
+// ── GLOBAL KEYBOARD SHORTCUTS (#17) ───────────────────────────
+function isTypingTarget(t){
+  if(!t)return false;
+  const tag=t.tagName;
+  if(tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT')return true;
+  if(t.isContentEditable)return true;
+  return false;
+}
+function anyOpenModal(){
+  return!!document.querySelector('.ov.open');
+}
+function _focusActiveTabSearch(){
+  const map={browse:'browse-q',mylist:'mylist-filter',strings:'strings-q',have:'have-q',schedule:''};
+  // Detect active tab
+  const active=document.querySelector('.tab.active')?.dataset.tab;
+  // Special case: have tab has subtab-specific filters
+  if(active==='have'){
+    const haveQ=document.getElementById('have-q')||document.getElementById('have-browse-q');
+    haveQ?.focus();haveQ?.select?.();return;
+  }
+  const id=map[active];
+  if(id){const el=document.getElementById(id);el?.focus();el?.select?.();}
+}
+function _handleGlobalShortcut(ev){
+  if(ev.metaKey||ev.ctrlKey||ev.altKey)return;
+  if(isTypingTarget(ev.target))return;
+  // ? opens cheat sheet (Shift+/ on US layout)
+  if(ev.key==='?'){
+    if(anyOpenModal())return;
+    ev.preventDefault();
+    openModal('shortcuts-modal');
+    return;
+  }
+  if(anyOpenModal())return; // other shortcuts disabled while modal open
+  // Only handle inside the main app, not on login/share view
+  if(document.getElementById('app')?.style.display==='none')return;
+  switch(ev.key.toLowerCase()){
+    case'b':switchTab('browse');ev.preventDefault();break;
+    case'm':switchTab('mylist');ev.preventDefault();break;
+    case's':switchTab('strings');ev.preventDefault();break;
+    case'h':switchTab('have');ev.preventDefault();break;
+    case'c':switchTab('schedule');ev.preventDefault();break;
+    case'n':
+      switchTab('mylist');
+      setTimeout(()=>document.getElementById('ac-input')?.focus(),60);
+      ev.preventDefault();break;
+    case'/':
+      ev.preventDefault();
+      _focusActiveTabSearch();
+      break;
+  }
+}
+
+// ── FIRST-RUN TOUR (#25) ──────────────────────────────────────
+const TOUR_STEPS=[
+  {title:'👋 Welcome to PoGo Trades',body:`<p>This is your trainer's command center for community trades. Quick tour of what each tab does — <strong>under 30 seconds</strong>.</p>`},
+  {title:'🔍 Browse',body:`<p>Search the community wishlist. Filter by priority (H/M/L), flag (⚡ Lucky · ✨ Shiny · XXL/XXS), or trainer activity.</p><p>Tap a Pokémon card to see who wants it and at what priority.</p>`,tab:'browse'},
+  {title:'📋 My List',body:`<p>Add Pokémon to your own wishlist. Set priority + flags, leave a note (form, gender, region) and you'll get a custom search string.</p><ul><li>Drag rows to reorder</li><li>Bulk-select to update many at once</li><li>Hit the ✨ flag for shiny-only wants</li></ul>`,tab:'mylist'},
+  {title:'📤 Strings',body:`<p>Auto-generated Pokémon GO search strings split by priority (and ⚡ / ✨ / XXL / XXS). Copy → paste in-game.</p>`,tab:'strings'},
+  {title:'🎒 Have',body:`<p>Your inventory of tradeable Pokémon. Pick a return-preference mode (Any · Mirror · Don't-need-back · Giveaway) and trainers can offer trades publicly (FCFS).</p>`,tab:'have'},
+  {title:'📅 Schedule',body:`<p>Plan trades and see live event bonuses pulled from LeekDuck. Special trade allowances, lucky weeks, and Forever-Friend rules show up here.</p>`,tab:'schedule'},
+  {title:'⌨️ Pro tip',body:`<p>Press <kbd>?</kbd> any time to see all keyboard shortcuts. Press <kbd>n</kbd> to jump straight to adding a Pokémon.</p><p>You're all set — happy trading! 🎮</p>`}
+];
+let _tourIdx=0;
+function startTour(){
+  _tourIdx=0;
+  openModal('tour-modal');
+  renderTourStep();
+}
+function renderTourStep(){
+  const s=TOUR_STEPS[_tourIdx];if(!s)return;
+  document.getElementById('tour-title').textContent=s.title;
+  document.getElementById('tour-body').innerHTML=s.body;
+  const prog=document.getElementById('tour-progress');
+  if(prog)prog.innerHTML=TOUR_STEPS.map((_,i)=>`<div class="dot${i<=_tourIdx?' done':''}"></div>`).join('');
+  const prev=document.getElementById('tour-prev-btn');
+  const next=document.getElementById('tour-next-btn');
+  if(prev)prev.style.visibility=_tourIdx===0?'hidden':'visible';
+  if(next)next.textContent=_tourIdx===TOUR_STEPS.length-1?'Finish':'Next →';
+  if(s.tab){try{switchTab(s.tab);}catch{}}
+}
+function tourNext(){
+  if(_tourIdx>=TOUR_STEPS.length-1){finishTour();return;}
+  _tourIdx++;renderTourStep();
+}
+function tourPrev(){
+  if(_tourIdx<=0)return;
+  _tourIdx--;renderTourStep();
+}
+function finishTour(){
+  lsSet('pogoTourSeen',Date.now());
+  closeModal('tour-modal');
+  toast('🎉 You\'re ready! Press ? any time for shortcuts.');
+}
+function skipTour(){
+  lsSet('pogoTourSeen',Date.now());
+  closeModal('tour-modal');
+}
+function maybeStartTour(){
+  if(lsGet('pogoTourSeen',null))return;
+  // Delay so the app finishes rendering first
+  setTimeout(()=>{if(!anyOpenModal())startTour();},800);
+}
+
 // ── EXPOSE ────────────────────────────────────────────────────
 Object.assign(window,{
   openImport,setImportPri,parseImportString,toggleImportRow,toggleSelectAll,backToStep1,confirmImport,
@@ -7285,7 +7564,7 @@ Object.assign(window,{
   selectWallpaper,applyWallpaper,
   // Inventory / Have
   setHaveView,setHaveSubTab,toggleHaveMatchOnly,haveAcSearch,haveAcSelect,haveAcKeydown,
-  addInventoryEntry,updateInventoryQty,setInventoryQty,toggleInventoryMirror,cycleInventoryMode,setHaveAddMode,editInventoryNote,removeInventoryEntry,
+  addInventoryEntry,updateInventoryQty,setInventoryQty,toggleInventoryMirror,cycleInventoryMode,cycleInventoryGender,setHaveAddMode,editInventoryNote,removeInventoryEntry,
   toggleHaveBulkMode,toggleHaveBulkSelection,bulkHaveSetMode,bulkHaveAdjustQty,bulkHaveDelete,
   renderMyHave,renderHaveBrowse,openOfferModal,closeOfferModal,copyOfferMessage,
   // Offer history
@@ -7295,7 +7574,9 @@ Object.assign(window,{
   reloadForUpdate,checkForUpdate,
   // Schedule
   navigateSchedWeek,navigateSchedToday,selectSchedDay,openScheduleModal,closeScheduleModal,
-  selectSchedType,submitScheduledTrade,markTradeComplete,cancelScheduledTrade,setManualBonus
+  selectSchedType,submitScheduledTrade,markTradeComplete,cancelScheduledTrade,setManualBonus,
+  // Shiny + tour + shortcuts
+  setShiny,startTour,tourNext,tourPrev,skipTour,finishTour
 });
 
 // ── BOOT ──────────────────────────────────────────────────────
@@ -7329,6 +7610,22 @@ document.addEventListener('DOMContentLoaded',()=>{
   document.querySelector('.user-chip')?.addEventListener('keydown',e=>{
     if(e.key==='Enter'||e.key===' '){e.preventDefault();openModal('prof-modal');}
   });
+  // Global keyboard shortcuts (#17)
+  document.addEventListener('keydown',_handleGlobalShortcut);
+  // Service worker for offline support (#22)
+  if('serviceWorker'in navigator&&location.protocol!=='file:'){
+    navigator.serviceWorker.register('./sw.js').then(reg=>{
+      reg.addEventListener('updatefound',()=>{
+        const nw=reg.installing;if(!nw)return;
+        nw.addEventListener('statechange',()=>{
+          if(nw.state==='installed'&&navigator.serviceWorker.controller){
+            // New SW waiting — UI surface via existing checkForUpdate flow
+            try{checkForUpdate();}catch{}
+          }
+        });
+      });
+    }).catch(e=>console.warn('SW registration failed',e));
+  }
   buildAcItems();
 
   // Hardcoded Firebase URL — config screen never shown
