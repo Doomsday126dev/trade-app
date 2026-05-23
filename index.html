@@ -1642,7 +1642,7 @@ if(!DB)throw new Error('Trade data failed to load');
 const PREFILTER="!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&";
 const OWNER="Doomsday126";
 const STALE_WARN=7,STALE_OLD=30;
-const SESSION_TTL=7*24*60*60*1000; // 7 days
+const SESSION_TTL=30*24*60*60*1000; // 30 days; refreshed on each activity so active users stay logged in
 const SPRITE_BASE="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/";
 const FIREBASE_URL="https://trade-list-a4297-default-rtdb.firebaseio.com";
 const FIREBASE_PROJECT_ID="trade-list-a4297";
@@ -2191,20 +2191,50 @@ function trySpriteFallback(img){
   img.src=next;
 }
 
-// ── SESSION EXPIRY (fix: 7-day auto-logout) ───────────────────
-function checkSession(){
-  const ts=parseInt(sessionStorage.getItem('pguts')||'0');
-  const user=sessionStorage.getItem('pgu');
-  if(!user||!ts)return null;
-  if(Date.now()-ts>SESSION_TTL){
+// ── SESSION PERSISTENCE ──────────────────────────────────────
+// Uses localStorage (NOT sessionStorage) so users stay logged in across:
+//   – tab close/reopen
+//   – browser restart
+//   – PWA app close/reopen
+// The session is refreshed on every meaningful activity (login, tab focus,
+// any write) so active users effectively never expire. Only abandoned sessions
+// hit the 30-day TTL and get logged out.
+// Migration: if the user has a legacy sessionStorage token, copy it to localStorage.
+(()=>{
+  try{
+    const legacyUser=sessionStorage.getItem('pgu');
+    const legacyTs=sessionStorage.getItem('pguts');
+    if(legacyUser&&!localStorage.getItem('pgu')){
+      localStorage.setItem('pgu',legacyUser);
+      localStorage.setItem('pguts',legacyTs||Date.now().toString());
+    }
     sessionStorage.removeItem('pgu');sessionStorage.removeItem('pguts');
-    return null;
-  }
-  return user;
+  }catch{}
+})();
+function checkSession(){
+  try{
+    const ts=parseInt(localStorage.getItem('pguts')||'0');
+    const user=localStorage.getItem('pgu');
+    if(!user||!ts)return null;
+    if(Date.now()-ts>SESSION_TTL){
+      localStorage.removeItem('pgu');localStorage.removeItem('pguts');
+      return null;
+    }
+    return user;
+  }catch{return null;}
 }
 function stampSession(u){
-  sessionStorage.setItem('pgu',u);
-  sessionStorage.setItem('pguts',Date.now().toString());
+  try{
+    localStorage.setItem('pgu',u);
+    localStorage.setItem('pguts',Date.now().toString());
+  }catch{}
+}
+// Refresh the session timestamp without changing the user. Called on activity
+// so the 30-day clock keeps resetting for active users.
+function refreshSession(){
+  try{
+    if(localStorage.getItem('pgu'))localStorage.setItem('pguts',Date.now().toString());
+  }catch{}
 }
 
 // ── SYNC QUEUE (offline support) ─────────────────────────────
@@ -2486,8 +2516,10 @@ async function writeList(type,u,list){
 let _lastSeenBumpAt=0;
 async function bumpLastSeen(){
   if(!cur)return;
+  // Refresh the local session token every time (cheap; just touches localStorage)
+  refreshSession();
   const now=Date.now();
-  if(now-_lastSeenBumpAt<5*60*1000)return; // throttle: max once per 5min
+  if(now-_lastSeenBumpAt<5*60*1000)return; // throttle Firebase write to max once per 5min
   _lastSeenBumpAt=now;
   const s=getLocal();
   if(!s.users[cur])return;
@@ -2792,7 +2824,10 @@ async function doLogin(){
 
 function logout(){
   cur=null;
-  sessionStorage.removeItem('pgu');sessionStorage.removeItem('pguts');
+  try{
+    localStorage.removeItem('pgu');localStorage.removeItem('pguts');
+    sessionStorage.removeItem('pgu');sessionStorage.removeItem('pguts'); // belt-and-suspenders cleanup
+  }catch{}
   if(auth)firebaseSignOut(auth).catch(()=>{});
   closeModal('prof-modal');
   document.getElementById('app').style.display='none';
@@ -5018,6 +5053,7 @@ async function triggerInstall(){
 
 // ── WHAT'S NEW (#28) ─────────────────────────────────────────
 const WHATS_NEW=[
+  {version:'3.6',title:'🔓 Stay Logged In',desc:'Fixed the annoying auto-logout. Sessions now persist across tab close, browser restart, and PWA app close — no more re-entering your PIN every time. Active users effectively stay signed in forever (30-day idle timeout that resets on each visit). "Sign out" still works the way you expect.'},
   {version:'3.5',title:'🌙 Dark Cards Export Style',desc:'New image export option: "Image — Dark Cards" — bordered cards on a dark background with priority-coloured top stripes. The original light layout is still available as "Image — Classic". Both styles use the same sprite sources, with sharper resampling for more consistent icon quality across mixed-resolution sources.'},
   {version:'3.4',title:'☑ Bulk Inventory Edits',desc:'New Bulk edit toggle on the Have tab. Select multiple inventory entries to change mode in one go (Any / 🪞 Mirror / 🤝 Don\'t need back / 📤 Giveaway), bump quantities up/down by 1, or delete the whole selection. Same checkbox UX as My List bulk mode.'},
   {version:'3.3',title:'🤝 + 📤 Two New Inventory Modes',desc:'Four-way return preference: Any · 🪞 Mirror · 🤝 Don\'t need back · 📤 Giveaway. Mark items as "Don\'t need back" when it\'s rare but you don\'t need anything specific in return (still expecting something of equal rarity from my wishlist). Mark items as "Giveaway" when you can\'t hold them anymore — add an optional preference note (e.g., "any common Kanto starter works"). Per-row button cycles through modes.'},
