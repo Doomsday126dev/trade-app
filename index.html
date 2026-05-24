@@ -311,6 +311,14 @@ input,select,textarea{font-family:var(--font);outline:none}
 .stb-action-btn.secondary:hover{border-color:var(--accent);color:var(--ac2)}
 .stb-empty{font-size:13px;color:var(--muted);font-style:italic;text-align:center;padding:16px}
 
+/* Safety prefilter toggle */
+.stb-prefilter-row{display:flex;align-items:flex-start;gap:9px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r2);padding:10px 12px;cursor:pointer;transition:.15s;user-select:none}
+.stb-prefilter-row:hover{border-color:var(--ac2)}
+.stb-prefilter-row input[type="checkbox"]{margin:2px 0 0;accent-color:var(--accent);width:15px;height:15px;cursor:pointer;flex-shrink:0}
+.stb-prefilter-body{flex:1;min-width:0}
+.stb-prefilter-title{font-size:12px;font-weight:700;color:var(--text)}
+.stb-prefilter-desc{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.45;font-family:var(--mono);word-break:break-all}
+
 /* ADMIN */
 .utbl{width:100%;border-collapse:collapse;font-size:13px}
 .utbl th{background:var(--bg2);padding:8px 11px;text-align:left;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border)}
@@ -1872,6 +1880,15 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
         <div class="stb-trainer-grid" id="stb-trainer-grid"></div>
       </div>
       <div class="stb-section">
+        <label class="stb-prefilter-row" for="stb-prefilter-chk" title="Prepend a 'never transfer this' guard onto the output so favorited / shiny / shadow / purified / event / traded / hundo / legendary / mythical / high-CP Pokémon are filtered out of the result before the species list ever applies.">
+          <input type="checkbox" id="stb-prefilter-chk" checked onchange="toggleSafeTransferPrefilter(this.checked)">
+          <div class="stb-prefilter-body">
+            <div class="stb-prefilter-title">🛡️ Prepend "never transfer" safety filters</div>
+            <div class="stb-prefilter-desc" id="stb-prefilter-preview">!favorite&!4*&!shiny&!shadow&!purified&!background&!traded&!legendary&!mythical&cp-2500&</div>
+          </div>
+        </label>
+      </div>
+      <div class="stb-section">
         <div class="stb-summary" id="stb-summary"></div>
         <div id="stb-warn-wrap"></div>
         <textarea class="stb-output" id="stb-output" readonly placeholder="Pick at least one trade partner above to generate a search string." aria-label="Generated search string"></textarea>
@@ -2206,7 +2223,7 @@ if(!DB)throw new Error('Trade data failed to load');
 
 const PREFILTER="!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&";
 const OWNER="Doomsday126";
-const APP_VERSION="4.6.15";
+const APP_VERSION="4.6.16";
 const STALE_WARN=7,STALE_OLD=30;
 const SESSION_TTL=30*24*60*60*1000; // 30 days; refreshed on each activity so active users stay logged in
 const SPRITE_BASE="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/";
@@ -5946,6 +5963,17 @@ async function copyDiffSearch(section,btn){
 // selected trade partners have on their wishlist. Used for bag cleanup —
 // paste the result into PoGo's bag search to see safe-to-transfer mons.
 const SAFE_TRANSFER_DEFAULT_KEY='pogoSafeTransferDefault';
+const SAFE_TRANSFER_PREFILTER_KEY='pogoSafeTransferPrefilter';
+// Standard "you almost certainly don't want to transfer this" guards,
+// applied in PoGo's bag search BEFORE the dex-number filter. Order of clauses
+// doesn't matter — PoGo AND-combines them.
+// - !favorite: explicit user keep-list
+// - !4*: hundo IVs
+// - !shiny / !shadow / !purified / !background: rare/event variants
+// - !traded: lucky candidates
+// - !legendary / !mythical: irreversible if mis-transferred
+// - cp-2500: anything you've invested resources into
+const SAFE_TRANSFER_PREFILTER="!favorite&!4*&!shiny&!shadow&!purified&!background&!traded&!legendary&!mythical&cp-2500&";
 // Live selection (Set of usernames). Initialised in openSafeTransferModal()
 // from saved default if available, else empty.
 let _safeTransferSelected=null;
@@ -5976,6 +6004,12 @@ function openSafeTransferModal(){
   const active=new Set(_safeTransferAllTrainers());
   [..._safeTransferSelected].forEach(u=>{if(!active.has(u))_safeTransferSelected.delete(u);});
   openModal('safe-transfer-modal');
+  // Seed prefilter checkbox from saved pref (default ON — safer for new users).
+  const chk=document.getElementById('stb-prefilter-chk');
+  if(chk){
+    const saved=lsGet(SAFE_TRANSFER_PREFILTER_KEY,true);
+    chk.checked=saved!==false;
+  }
   renderSafeTransferTrainers();
   renderSafeTransferOutput();
 }
@@ -6019,6 +6053,14 @@ function saveSafeTransferAsDefault(){
   lsSet(SAFE_TRANSFER_DEFAULT_KEY,[..._safeTransferSelected]);
   toast(`✅ Default saved — ${_safeTransferSelected.size} trainer${_safeTransferSelected.size===1?'':'s'} will be pre-selected next time`);
 }
+function toggleSafeTransferPrefilter(on){
+  lsSet(SAFE_TRANSFER_PREFILTER_KEY,!!on);
+  renderSafeTransferOutput();
+}
+function _safeTransferPrefilterEnabled(){
+  const chk=document.getElementById('stb-prefilter-chk');
+  return chk?chk.checked:(lsGet(SAFE_TRANSFER_PREFILTER_KEY,true)!==false);
+}
 // Map every species the app knows about to its base dex number. We dedupe
 // by dex so costume variants (which share dex with their base) only count
 // once: protecting "Pikachu Party Hat" implicitly protects all dex-25.
@@ -6049,8 +6091,13 @@ function computeSafeTransferString(){
   });
   const all=_safeTransferAllDex();
   const safe=all.filter(n=>!wantedDex.has(n));
+  const dexStr=safe.join(',');
+  const usePrefilter=_safeTransferPrefilterEnabled();
+  const str=safe.length?(usePrefilter?SAFE_TRANSFER_PREFILTER:'')+dexStr:'';
   return{
-    str:safe.join(','),
+    str,
+    dexStr,
+    prefilter:usePrefilter?SAFE_TRANSFER_PREFILTER:'',
     safeCount:safe.length,
     wantedCount:wantedDex.size,
     totalDex:all.length,
@@ -6531,6 +6578,7 @@ async function triggerInstall(){
 
 // ── WHAT'S NEW (#28) ─────────────────────────────────────────
 const WHATS_NEW=[
+  {version:'4.6.16',title:'🛡️ Safe-to-transfer string now guards your favorites by default',desc:'The new Safe-to-transfer string now prepends "never transfer this" filters — !favorite, !4*, !shiny, !shadow, !purified, !background, !traded, !legendary, !mythical, cp-2500 — so hundos, shinies, lucky candidates, and event Pokémon are filtered out before the species list ever applies. Toggle in the modal if you ever need the raw list.'},
   {version:'4.6.15',title:'🎯 Sprite alignment fix — characters no longer drift off-tile',desc:'After 4.6.13 made all sprites scale to a readable size, some Pokémon (Cleffa, Igglybuff, Mime Jr., Pidgey) were rendering off-center because the game art isn\'t centered the same way for every species. The app now learns each sprite\'s actual character position and scales around it, so characters stay pinned to their tile no matter how big they need to grow.'},
   {version:'4.6.14',title:'🗑️ New: "Safe-to-transfer" search string',desc:'Strings tab has a new button that generates a Pokémon GO search string of every species nobody on your chosen trade-partner list wants. Paste it into your bag search to see what\'s safe to mass-transfer. Pick which trainers count (not everyone trades with everyone), save your usual circle as the default, and the modal warns if the string is getting close to PoGo\'s search-length limit.'},
   {version:'4.6.13',title:'🔍 Small Pokémon sprite fix (round 3 — the real one)',desc:'Even with the 4.6.12 fallback bump, Igglybuff / Mime Jr. and friends were still rendering tiny on some PWAs because the sprite-size auto-detector was getting tricked by their soft drop-shadows. The detector now ignores faint edge pixels, and a hard floor guarantees PokeMiners sprites can never render smaller than readable — even when detection completely fails.'},
@@ -10026,7 +10074,7 @@ Object.assign(window,{
   exitShareView,renderShareView,setAddPri,toggleAddAdvanced,trySpriteFallback,
   // Latest batch
   openDiffModal,closeDiffModal,setDiffListType,copyDiffSearch,
-  openSafeTransferModal,toggleSafeTransferTrainer,setAllSafeTransferTrainers,saveSafeTransferAsDefault,copySafeTransferString,
+  openSafeTransferModal,toggleSafeTransferTrainer,setAllSafeTransferTrainers,saveSafeTransferAsDefault,copySafeTransferString,toggleSafeTransferPrefilter,
   openAddAllVariantsModal,closeAddAllVariants,confirmAddAllVariants,
   selectWallpaper,applyWallpaper,
   // Inventory / Have
