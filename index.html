@@ -874,6 +874,11 @@ html[data-theme="light"] .have-dnb-badge,html[data-theme="light"] .have-mode-btn
 html[data-theme="light"] .have-giveaway-badge,html[data-theme="light"] .have-mode-btn.giveaway,html[data-theme="light"] .have-pmon-card .have-pmon-meta.giveaway{color:#c2410c}
 .have-row{background:var(--card);border:1px solid var(--border);border-radius:var(--r2);padding:9px 12px;display:flex;align-items:center;gap:8px;margin-bottom:6px;transition:.15s}
 .have-row:hover{border-color:var(--border2)}
+/* Auto-scale (effectiveSpriteScale) restored — small-bodied PokeMiners art
+   like Cleffa / Igglybuff was being crushed to thumbnail size by codex's
+   scaleCap:1.08. Layout-wise the box stays 32×32; the transform-scaled
+   image is allowed to bleed slightly past so the character reads clearly,
+   matching the pre-4.6.0 behaviour. */
 .have-row-sprite{width:32px;height:32px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
 .have-row-info{flex:1;min-width:0}
 .have-row-name{font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -2123,7 +2128,7 @@ if(!DB)throw new Error('Trade data failed to load');
 
 const PREFILTER="!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&";
 const OWNER="Doomsday126";
-const APP_VERSION="4.6.10";
+const APP_VERSION="4.6.11";
 const STALE_WARN=7,STALE_OLD=30;
 const SESSION_TTL=30*24*60*60*1000; // 30 days; refreshed on each activity so active users stay logged in
 const SPRITE_BASE="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/";
@@ -6222,6 +6227,7 @@ async function triggerInstall(){
 
 // ── WHAT'S NEW (#28) ─────────────────────────────────────────
 const WHATS_NEW=[
+  {version:'4.6.11',title:'🔍 Small-bodied Pokémon look the right size in Inventory again',desc:'Sprites like Cleffa, Igglybuff, Mime Jr. and Munchlax were rendering as tiny thumbnails after the last sprite update. They now auto-scale to fill the tile properly again.'},
   {version:'4.6.10',title:'🛠️ Cancel-trade fix when you\'re the offer bidder',desc:'Previously, if you cancelled a reserved/scheduled trade that you got into by offering on someone else\'s inventory, your inventory would silently inflate and the other trainer\'s wouldn\'t actually be restored. Now both sides get the right items back regardless of who organized the trade.'},
   {version:'4.6.9',title:'⚖️ Add-to-inventory mode buttons evenly spaced',desc:'The Any / Mirror / DNB / Giveaway buttons used to cluster left with empty space on the right. They now flex equally across the full row, each taking a quarter of the width — easier to tap and visually balanced.'},
   {version:'4.6.8',title:'🔢 Cleaner qty picker on the Add to inventory form',desc:'The quantity input used to render as a huge empty text field on mobile/tablet — it looked like a search box. Now it sits in a labeled "QTY [−] 1 [+]" pill paired with the gender picker, so it reads clearly as a quantity control no matter the screen size.'},
@@ -8339,7 +8345,7 @@ function renderMyHave(filterVal){
     const rowClick=haveBulkMode?`onclick="event.stopPropagation();toggleHaveBulkSelection('${sk}')"`:'';
     return`<div class="have-row${isSel?' bulk-selected':''}" data-name="${escAttr(e.name)}" data-key="${escAttr(e.key)}" ${rowClick}>
       <input type="checkbox" class="bulk-chk" data-key="${sk}" ${isSel?'checked':''} onclick="event.stopPropagation();toggleHaveBulkSelection('${sk}')" aria-label="Select ${escAttr(e.dn)}">
-      <div class="have-row-sprite">${e.no?spriteImg(e.no,32,'',e.name,e.gender||'',e.dn,{scaleCap:1.08}):'🎮'}</div>
+      <div class="have-row-sprite">${e.no?spriteImg(e.no,32,'',e.name,e.gender||'',e.dn):'🎮'}</div>
       <div class="have-row-info">
         <div class="have-row-name">${escHtml(e.dn)} ${genderMetaPill} ${offerCount?`<span class="offer-count-badge unseen" onclick="event.stopPropagation();openIncomingOffersModal('${sk}')" style="margin-left:4px">🔔 ${offerCount}</span>`:''}</div>
         <div class="have-row-meta">
@@ -8383,7 +8389,7 @@ function openIncomingOffersModal(scrollToItem=''){
         const offers=grouped[key];
         const genderPill=gender?`<span class="have-gender-pill ${gender}" style="margin-left:4px">${gender==='f'?'♀':'♂'}</span>`:'';
         return`<div class="have-pmon-card" id="inbox-${escAttr(offerKey(key))}" style="margin-bottom:8px;cursor:default">
-          <div class="have-row-sprite" style="width:32px;height:32px">${e.no?spriteImg(e.no,32,'',name,gender||'',e.displayName||name,{scaleCap:1.08}):'🎮'}</div>
+          <div class="have-row-sprite" style="width:32px;height:32px">${e.no?spriteImg(e.no,32,'',name,gender||'',e.displayName||name):'🎮'}</div>
           <div class="have-pmon-info">
             <div class="have-pmon-name" style="font-size:14px">${escHtml(e.displayName||name)}${genderPill}</div>
             <div class="have-pmon-meta">${offers.length} offer${offers.length===1?'':'s'}</div>
@@ -8486,7 +8492,7 @@ function renderHaveBrowse(){
               :it.giveaway?`${it.dn}${it.gender?(it.gender==='f'?' ♀':' ♂'):''} — giveaway${it.note?', note: '+it.note:''}`
               :it.dn+(it.gender?(it.gender==='f'?' ♀':' ♂'):'')+' — click to offer';
             return`<div class="${cardCls}" title="${escAttr(cardTitle)}" onclick="openOfferModal('${escAttr(u)}','${sk}')" style="cursor:pointer">
-              <div class="have-row-sprite" style="width:24px;height:24px">${it.no?spriteImg(it.no,24,'',it.name,it.gender||'',it.dn,{scaleCap:1.02}):'🎮'}</div>
+              <div class="have-row-sprite" style="width:24px;height:24px">${it.no?spriteImg(it.no,24,'',it.name,it.gender||'',it.dn):'🎮'}</div>
               <div class="have-pmon-info">
                 <div class="have-pmon-name">${escHtml(it.dn)}${it.gender?` <span class="have-gender-pill ${it.gender}" title="${it.gender==='f'?'Female':'Male'} only">${it.gender==='f'?'♀':'♂'}</span>`:''}</div>
                 ${it.match?`<div class="have-pmon-meta">You want · ${it.match.p||(it.match.lucky?'⚡':'')||(it.match.xxl?'XXL':'')||(it.match.xxs?'XXS':'')}</div>`:''}
@@ -8535,7 +8541,7 @@ function renderHaveBrowse(){
       const wantBadge=p.want?`<span class="event-pill" style="background:rgba(245,158,11,.15);color:var(--warn);border-color:rgba(245,158,11,.3)">⭐ You want (${p.want.p||''})</span>`:'';
       return`<div class="have-by-pokemon-card">
         <div class="have-by-pokemon-hdr">
-          <div class="have-row-sprite" style="width:34px;height:34px">${p.no?spriteImg(p.no,34,'',p.name,'',p.dn,{scaleCap:1.08}):'🎮'}</div>
+          <div class="have-row-sprite" style="width:34px;height:34px">${p.no?spriteImg(p.no,34,'',p.name,'',p.dn):'🎮'}</div>
           <div class="have-by-pokemon-name">
             <span class="pmname-text">${escHtml(p.dn)}</span>
             ${wantBadge}
