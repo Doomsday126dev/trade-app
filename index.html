@@ -438,6 +438,35 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
 .sb-row-note{flex:1;min-width:60px;padding:3px 5px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:5px;font-size:11px;font-family:var(--font)}
 .sb-row-rm{background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:14px;line-height:1;padding:2px 4px;flex-shrink:0}
 .sb-row-rm:hover{color:var(--danger)}
+.sb-bulk-btn{background:rgba(108,99,255,.14);color:var(--ac2);border:1px solid rgba(108,99,255,.4);width:34px;padding:0;font-size:14px;cursor:pointer;border-radius:6px;line-height:1;flex-shrink:0}
+.sb-bulk-btn:hover{background:rgba(108,99,255,.25)}
+
+/* Quick-add bulk picker — drops 10+ Pokémon in one shot */
+.sb-quickadd-panel{background:var(--card);border:1px solid var(--accent);border-radius:var(--r2);padding:8px;margin-top:-2px;display:flex;flex-direction:column;gap:6px;max-height:340px}
+.sb-quickadd-hdr{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);font-weight:500}
+.sb-quickadd-hdr strong{color:var(--ac2);font-weight:700}
+.sb-quickadd-filter{flex:1;min-width:60px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:5px;padding:4px 7px;font-size:11px;font-family:var(--font)}
+.sb-quickadd-grid{flex:1;overflow-y:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:4px;padding:4px;background:var(--bg);border-radius:5px;min-height:80px}
+.sb-quickadd-grid:empty::before{content:'No candidates — your wishlist/inventory is empty (for this side).';display:block;color:var(--muted);font-size:11px;font-style:italic;text-align:center;padding:20px;grid-column:1/-1}
+.sb-qa-chip{background:var(--bg2);border:1.5px solid var(--border);border-radius:6px;padding:5px 3px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;font-family:var(--font);transition:.1s;position:relative}
+.sb-qa-chip:hover{border-color:var(--accent)}
+.sb-qa-chip.sel{background:rgba(108,99,255,.18);border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+.sb-qa-chip img{width:32px;height:32px;object-fit:contain;image-rendering:pixelated}
+.sb-qa-chip-name{font-size:9px;color:var(--text);font-weight:600;text-align:center;line-height:1.15;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:100%;padding:0 2px}
+.sb-qa-chip.sel::after{content:'✓';position:absolute;top:1px;right:3px;color:var(--ac2);font-size:11px;font-weight:700;line-height:1}
+.sb-quickadd-foot{display:flex;justify-content:space-between;align-items:center;gap:6px;padding-top:2px}
+.sb-quickadd-foot button{padding:5px 12px;font-size:11px;border-radius:6px;border:1px solid var(--border2);background:var(--bg2);color:var(--text);cursor:pointer;font-family:var(--font);font-weight:600}
+.sb-quickadd-foot button.bpri{background:var(--accent);border-color:var(--accent);color:#fff}
+.sb-quickadd-foot button.bpri:disabled{opacity:.45;cursor:not-allowed}
+.sb-quickadd-foot button.sb-qa-select-all{background:transparent;border-color:transparent;color:var(--ac2);font-weight:500}
+
+/* Tighter list rows so the modal scrolls less */
+.sb-row{padding:4px 6px;font-size:11px}
+.sb-row-sprite{width:22px;height:22px}
+.sb-row-name{font-size:11px}
+.sb-row-flag{font-size:10px;padding:2px 5px}
+.sb-row-qty{width:36px;font-size:10px;padding:2px 3px}
+.sb-row-note{font-size:10px;padding:2px 4px;min-width:50px}
 
 /* ACCEPT-OFFER MODAL — per-item trade with qty matching */
 .accept-trade-summary{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:stretch;margin-bottom:14px}
@@ -1764,7 +1793,9 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
             <div class="ac-dropdown" id="special-lf-dd"></div>
           </div>
           <button class="bsave" onclick="addSpecialEntry('lf')">Add</button>
+          <button class="sb-bulk-btn" onclick="openQuickAdd('lf')" title="Bulk-add from your wishlist">📥</button>
         </div>
+        <div class="sb-quickadd-panel" id="special-lf-quickadd" style="display:none"></div>
         <div class="special-board-list" id="special-lf-list"></div>
       </div>
       <div class="special-board-col special-board-col-ft">
@@ -1777,7 +1808,9 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
             <div class="ac-dropdown" id="special-ft-dd"></div>
           </div>
           <button class="bsave" onclick="addSpecialEntry('ft')">Add</button>
+          <button class="sb-bulk-btn" onclick="openQuickAdd('ft')" title="Bulk-add from your inventory">📥</button>
         </div>
+        <div class="sb-quickadd-panel" id="special-ft-quickadd" style="display:none"></div>
         <div class="special-board-list" id="special-ft-list"></div>
       </div>
     </div>
@@ -5870,6 +5903,146 @@ function clearSpecialBoard(){
   renderSpecialBoard();
 }
 
+// ── QUICK-ADD BULK PICKER ────────────────────────────────────
+// LF side: candidates = my wishlist (wishlist + dynamax + gmax + costumes),
+// excluding entries already on the LF board.
+// FT side: candidates = my Have inventory (per-gender rows), qty > 0,
+// excluding entries already on the FT board.
+let _qaSelected={lf:new Set(),ft:new Set()};
+let _qaCandidatesCache={lf:null,ft:null};
+function _buildQuickAddCandidates(side){
+  const board=getSpecialBoard();
+  const onBoard=new Set(board[side].map(e=>e.name));
+  if(side==='lf'){
+    // Wishlist union across list types
+    const out=[];const seen=new Set();
+    ['wishlist','dynamax','gmax','costumes'].forEach(t=>{
+      const list=allData[t]?.[cur]||{};
+      Object.keys(list).forEach(name=>{
+        if(seen.has(name)||onBoard.has(name))return;
+        seen.add(name);
+        const sp=spriteEntryForListItem(t,name,{})||{};
+        const items=_ensureSpecialAcItems();
+        const ac=items.find(x=>x.name===name);
+        if(ac)out.push(ac);
+        else if(sp.no)out.push({name,dn:sp.displayName||name,no:sp.no,spriteUrl:entrySpriteUrl(sp,name)});
+      });
+    });
+    out.sort((a,b)=>(parseInt(a.no)||9999)-(parseInt(b.no)||9999)||a.dn.localeCompare(b.dn));
+    return out;
+  }
+  // FT side: inventory entries with qty > 0
+  const inv=allData.have?.[cur]||{};
+  const out=[];
+  Object.entries(inv).forEach(([key,val])=>{
+    const info=haveEntryInfo(val);
+    if(info.qty<=0)return;
+    const{name,gender}=splitHaveKey(key);
+    if(onBoard.has(name))return; // dedupe by base name (board doesn't track gender separately)
+    const e=_nameToSpriteEntry(name);
+    out.push({name,dn:e.displayName||name,no:e.no||null,_qty:info.qty,_gender:gender,spriteUrl:entrySpriteUrl(e,name,gender)});
+  });
+  // Sort: highest qty first, then by dex
+  out.sort((a,b)=>(b._qty||0)-(a._qty||0)||(parseInt(a.no)||9999)-(parseInt(b.no)||9999));
+  return out;
+}
+function openQuickAdd(side){
+  const panel=document.getElementById(`special-${side}-quickadd`);if(!panel)return;
+  // Close the autocomplete dropdown if it's open
+  document.getElementById(`special-${side}-dd`)?.classList.remove('open');
+  _qaSelected[side]=new Set();
+  _qaCandidatesCache[side]=_buildQuickAddCandidates(side);
+  const label=side==='lf'?'your wishlist':'your inventory';
+  panel.innerHTML=`
+    <div class="sb-quickadd-hdr">
+      <span>From ${label} · <strong>${_qaCandidatesCache[side].length}</strong> available · <strong id="${side}-qa-count">0</strong> picked</span>
+      <input type="text" class="sb-quickadd-filter" placeholder="Filter…" oninput="filterQuickAdd('${side}',this.value)">
+      <button onclick="closeQuickAdd('${side}')" style="background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:0 4px" aria-label="Close">×</button>
+    </div>
+    <div class="sb-quickadd-grid" id="${side}-qa-grid"></div>
+    <div class="sb-quickadd-foot">
+      <button class="sb-qa-select-all" onclick="qaSelectAll('${side}')">Select all (visible)</button>
+      <div style="display:flex;gap:6px">
+        <button onclick="closeQuickAdd('${side}')">Cancel</button>
+        <button class="bpri" id="${side}-qa-commit" onclick="commitQuickAdd('${side}')" disabled>Add 0</button>
+      </div>
+    </div>`;
+  panel.style.display='flex';
+  renderQuickAddGrid(side,'');
+}
+function closeQuickAdd(side){
+  const panel=document.getElementById(`special-${side}-quickadd`);
+  if(panel){panel.style.display='none';panel.innerHTML='';}
+  _qaSelected[side]=new Set();
+  _qaCandidatesCache[side]=null;
+}
+function renderQuickAddGrid(side,filterStr){
+  const grid=document.getElementById(`${side}-qa-grid`);if(!grid)return;
+  const q=String(filterStr||'').toLowerCase().trim();
+  const cands=(_qaCandidatesCache[side]||[]).filter(c=>!q||(c.dn||c.name).toLowerCase().includes(q)||String(c.no||'').includes(q));
+  grid.innerHTML=cands.map(c=>{
+    const sel=_qaSelected[side].has(c.name);
+    const spr=c.spriteUrl||spriteUrl(c.no,c.name);
+    const qtyTag=side==='ft'&&c._qty?`<span style="position:absolute;bottom:1px;right:3px;font-size:8px;color:var(--ac2);font-weight:700;font-family:var(--mono)">×${c._qty}</span>`:'';
+    return`<button type="button" class="sb-qa-chip ${sel?'sel':''}" data-name="${escAttr(c.name)}" onclick="toggleQuickAddPick('${side}','${escAttr(c.name)}')" title="${escAttr(c.dn||c.name)}">
+      ${spr?`<img src="${escAttr(spr)}" alt="" loading="lazy">`:'<span style="font-size:22px">🎮</span>'}
+      <span class="sb-qa-chip-name">${escHtml(c.dn||c.name)}</span>${qtyTag}
+    </button>`;
+  }).join('');
+}
+function filterQuickAdd(side,v){renderQuickAddGrid(side,v);}
+function toggleQuickAddPick(side,name){
+  if(_qaSelected[side].has(name))_qaSelected[side].delete(name);
+  else _qaSelected[side].add(name);
+  const chip=document.querySelector(`#${side}-qa-grid .sb-qa-chip[data-name="${name.replace(/"/g,'\\"')}"]`);
+  if(chip)chip.classList.toggle('sel',_qaSelected[side].has(name));
+  _updateQuickAddCount(side);
+}
+function qaSelectAll(side){
+  const grid=document.getElementById(`${side}-qa-grid`);if(!grid)return;
+  // Toggle all visible: if all visible are already selected, deselect them; else select them
+  const visibleNames=[...grid.querySelectorAll('.sb-qa-chip')].map(c=>c.dataset.name);
+  const allSel=visibleNames.length&&visibleNames.every(n=>_qaSelected[side].has(n));
+  visibleNames.forEach(n=>{
+    if(allSel)_qaSelected[side].delete(n);
+    else _qaSelected[side].add(n);
+  });
+  renderQuickAddGrid(side,document.querySelector(`#special-${side}-quickadd .sb-quickadd-filter`)?.value||'');
+  _updateQuickAddCount(side);
+}
+function _updateQuickAddCount(side){
+  const n=_qaSelected[side].size;
+  const lbl=document.getElementById(`${side}-qa-count`);
+  if(lbl)lbl.textContent=n;
+  const btn=document.getElementById(`${side}-qa-commit`);
+  if(btn){btn.disabled=n===0;btn.textContent=`Add ${n}`;}
+}
+function commitQuickAdd(side){
+  const picks=[..._qaSelected[side]];
+  if(!picks.length){closeQuickAdd(side);return;}
+  const items=_ensureSpecialAcItems();
+  const cands=_qaCandidatesCache[side]||[];
+  const board=getSpecialBoard();
+  let added=0;
+  picks.forEach(name=>{
+    if(board[side].some(e=>e.name===name))return; // already on board
+    const it=cands.find(c=>c.name===name)||items.find(x=>x.name===name);
+    if(!it)return;
+    board[side].push({
+      name:it.name,dn:it.dn,no:it.no||null,
+      shiny:false,mirror:false,note:'',
+      qty:side==='ft'?(it._qty||1):undefined
+    });
+    added++;
+  });
+  if(added){
+    writeSpecialBoard(board);
+    toast(`✅ Added ${added} to ${side.toUpperCase()}`);
+  }
+  closeQuickAdd(side);
+  renderSpecialBoard();
+}
+
 // ── SPECIAL TRADE BOARD — IMAGE EXPORT ───────────────────────
 async function exportSpecialBoardImage(){
   const board=getSpecialBoard();
@@ -5881,11 +6054,31 @@ async function exportSpecialBoardImage(){
   }catch(e){console.error(e);toast('⚠️ Export failed — try again.');}
 }
 async function renderSpecialBoardImage(board,username){
-  const W=720,pad=14,colGap=10,rowH=64,sprSize=44,headerH=78,footerH=34;
+  const W=720,pad=14,headerH=78,footerH=34;
+  // Pick layout based on density: if either side has more than 6 items, switch
+  // to a stacked dense-grid layout (5 cols, sprite + small name + shiny corner)
+  // — keeps the image readable even with 20-30 entries per side.
+  const denseThreshold=6;
+  const isDense=board.lf.length>denseThreshold||board.ft.length>denseThreshold;
+  // List-layout sizing
+  const colGap=10,rowH=64,sprSize=44;
   const cols=2;
   const colW=(W-pad*2-colGap)/cols;
-  const maxRows=Math.max(board.lf.length,board.ft.length,1);
-  const bodyH=Math.max(maxRows,1)*rowH+38; // 38 = col-header bar
+  // Grid-layout sizing (used when isDense)
+  const gridCols=5,gridGap=8,gridCellH=88,gridSprSize=52,sectionGap=12,sectionHdrH=32;
+  const gridFullW=W-pad*2;
+  const gridCellW=(gridFullW-(gridCols-1)*gridGap)/gridCols;
+  const gridRowsFor=n=>Math.max(1,Math.ceil(Math.max(n,1)/gridCols));
+  // Compute total body height
+  let bodyH;
+  if(isDense){
+    const lfBody=sectionHdrH+gridRowsFor(board.lf.length)*gridCellH+(board.lf.length?6:0);
+    const ftBody=sectionHdrH+gridRowsFor(board.ft.length)*gridCellH+(board.ft.length?6:0);
+    bodyH=lfBody+ftBody+sectionGap;
+  }else{
+    const maxRows=Math.max(board.lf.length,board.ft.length,1);
+    bodyH=Math.max(maxRows,1)*rowH+38;
+  }
   const H=headerH+bodyH+footerH+pad*2;
   const scale=2;
   const canvas=document.createElement('canvas');
@@ -5925,43 +6118,26 @@ async function renderSpecialBoardImage(board,username){
     if(img)imgMap.set(e.name+(e.shiny?'_s':''),img);
   }));
 
-  // Draw columns
-  const colY=headerH+pad;
-  const lfX=pad,ftX=pad+colW+colGap;
-  // LF column header
-  ctx.fillStyle='rgba(99,102,241,.18)';ctx.fillRect(lfX,colY,colW,32);
-  ctx.fillStyle='#a5b4fc';ctx.fillRect(lfX,colY,3,32);
-  ctx.font='700 14px Space Grotesk, sans-serif';ctx.fillStyle='#c7d2fe';
-  ctx.fillText(`🔍 Looking For  ·  ${board.lf.length}`,lfX+12,colY+21);
-  // FT column header
-  ctx.fillStyle='rgba(16,185,129,.18)';ctx.fillRect(ftX,colY,colW,32);
-  ctx.fillStyle='#34d399';ctx.fillRect(ftX,colY,3,32);
-  ctx.fillStyle='#a7f3d0';
-  ctx.fillText(`🤝 For Trade  ·  ${board.ft.length}`,ftX+12,colY+21);
-
-  const drawSide=(entries,xBase)=>{
-    let y=colY+38;
+  // ── Helpers used by both layouts ────────────────────────────
+  const drawSectionHeader=(label,color,bgColor,accentBar,x,y,w)=>{
+    ctx.fillStyle=bgColor;ctx.fillRect(x,y,w,32);
+    ctx.fillStyle=accentBar;ctx.fillRect(x,y,3,32);
+    ctx.font='700 14px Space Grotesk, sans-serif';ctx.fillStyle=color;
+    ctx.fillText(label,x+12,y+21);
+  };
+  const drawListSide=(entries,xBase,startY)=>{
+    let y=startY;
     entries.forEach((e,i)=>{
-      // Row background — alternate stripes for legibility
       if(i%2===0){ctx.fillStyle='rgba(255,255,255,.025)';ctx.fillRect(xBase,y,colW,rowH-4);}
-      // Sprite
       const img=imgMap.get(e.name+(e.shiny?'_s':''));
       const sx=xBase+8,sy=y+(rowH-4-sprSize)/2;
       if(img)drawImageContain(ctx,img,sx,sy,sprSize,sprSize);
-      // Shiny sparkle overlay
-      if(e.shiny){
-        ctx.fillStyle='rgba(244,114,182,.95)';
-        ctx.font='600 14px Space Grotesk, sans-serif';
-        ctx.fillText('✨',sx+sprSize-12,sy+14);
-      }
-      // Name + badges
+      if(e.shiny){ctx.fillStyle='rgba(244,114,182,.95)';ctx.font='600 14px Space Grotesk, sans-serif';ctx.fillText('✨',sx+sprSize-12,sy+14);}
       const nameX=sx+sprSize+10;
-      ctx.font='600 14px Space Grotesk, sans-serif';
-      ctx.fillStyle='#f1f5f9';
+      ctx.font='600 14px Space Grotesk, sans-serif';ctx.fillStyle='#f1f5f9';
       const dn=e.dn||e.name;
       const qtyStr=e.qty&&e.qty>1?`  ×${e.qty}`:'';
       const nameStr=dn+qtyStr;
-      // Truncate if too long
       const maxNameW=colW-(nameX-xBase)-12;
       let truncated=nameStr;
       if(ctx.measureText(truncated).width>maxNameW){
@@ -5969,26 +6145,13 @@ async function renderSpecialBoardImage(board,username){
         truncated+='…';
       }
       ctx.fillText(truncated,nameX,y+22);
-      // Badges row underneath
       let badgeX=nameX;const badgeY=y+38;
       ctx.font='600 10px Space Grotesk, sans-serif';
-      if(e.shiny){
-        const w=42;
-        ctx.fillStyle='rgba(244,114,182,.22)';ctx.fillRect(badgeX,badgeY-10,w,16);
-        ctx.fillStyle='#f472b6';ctx.fillText('SHINY',badgeX+5,badgeY+1);
-        badgeX+=w+4;
-      }
-      if(e.mirror){
-        const w=46;
-        ctx.fillStyle='rgba(56,189,248,.22)';ctx.fillRect(badgeX,badgeY-10,w,16);
-        ctx.fillStyle='#38bdf8';ctx.fillText('MIRROR',badgeX+5,badgeY+1);
-        badgeX+=w+4;
-      }
+      if(e.shiny){const w=42;ctx.fillStyle='rgba(244,114,182,.22)';ctx.fillRect(badgeX,badgeY-10,w,16);ctx.fillStyle='#f472b6';ctx.fillText('SHINY',badgeX+5,badgeY+1);badgeX+=w+4;}
+      if(e.mirror){const w=46;ctx.fillStyle='rgba(56,189,248,.22)';ctx.fillRect(badgeX,badgeY-10,w,16);ctx.fillStyle='#38bdf8';ctx.fillText('MIRROR',badgeX+5,badgeY+1);badgeX+=w+4;}
       if(e.note){
-        ctx.fillStyle='rgba(255,255,255,.55)';
-        ctx.font='500 11px Space Grotesk, sans-serif';
-        let noteStr=e.note;
-        const maxNoteW=colW-(badgeX-xBase)-10;
+        ctx.fillStyle='rgba(255,255,255,.55)';ctx.font='500 11px Space Grotesk, sans-serif';
+        let noteStr=e.note;const maxNoteW=colW-(badgeX-xBase)-10;
         if(ctx.measureText(noteStr).width>maxNoteW){
           while(noteStr.length>3&&ctx.measureText(noteStr+'…').width>maxNoteW)noteStr=noteStr.slice(0,-1);
           noteStr+='…';
@@ -5998,8 +6161,94 @@ async function renderSpecialBoardImage(board,username){
       y+=rowH;
     });
   };
-  drawSide(board.lf,lfX);
-  drawSide(board.ft,ftX);
+  const drawGridSection=(entries,xBase,startY,fullW)=>{
+    // Dense grid: 5 cols × N rows. Each cell = sprite + tiny name + corner badges.
+    let row=0,col=0;
+    entries.forEach(e=>{
+      const cx=xBase+col*(gridCellW+gridGap);
+      const cy=startY+row*gridCellH;
+      // Card background — subtle, helps visual grouping
+      ctx.fillStyle='rgba(255,255,255,.03)';
+      ctx.fillRect(cx,cy,gridCellW,gridCellH-6);
+      // Sprite centered horizontally near top
+      const img=imgMap.get(e.name+(e.shiny?'_s':''));
+      const sx=cx+(gridCellW-gridSprSize)/2,sy=cy+6;
+      if(img)drawImageContain(ctx,img,sx,sy,gridSprSize,gridSprSize);
+      // Shiny corner sparkle (top-right of sprite)
+      if(e.shiny){
+        ctx.fillStyle='rgba(244,114,182,.95)';
+        ctx.font='600 16px Space Grotesk, sans-serif';
+        ctx.fillText('✨',sx+gridSprSize-12,sy+14);
+      }
+      // Mirror corner badge (top-left of sprite) — small "M" dot
+      if(e.mirror){
+        ctx.fillStyle='rgba(56,189,248,.95)';
+        ctx.beginPath();ctx.arc(sx+6,sy+8,7,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle='#0f1419';ctx.font='800 9px Space Grotesk, sans-serif';
+        ctx.textAlign='center';ctx.fillText('M',sx+6,sy+11);ctx.textAlign='left';
+      }
+      // Name (centered, truncated)
+      ctx.font='600 10px Space Grotesk, sans-serif';
+      ctx.fillStyle='#e2e8f0';
+      ctx.textAlign='center';
+      const dn=e.dn||e.name;
+      let truncated=dn;const maxNameW=gridCellW-6;
+      if(ctx.measureText(truncated).width>maxNameW){
+        while(truncated.length>3&&ctx.measureText(truncated+'…').width>maxNameW)truncated=truncated.slice(0,-1);
+        truncated+='…';
+      }
+      ctx.fillText(truncated,cx+gridCellW/2,sy+gridSprSize+12);
+      // Qty (FT only)
+      if(e.qty&&e.qty>1){
+        ctx.font='700 10px Space Grotesk, sans-serif';
+        ctx.fillStyle='#a78bfa';
+        ctx.fillText(`×${e.qty}`,cx+gridCellW/2,sy+gridSprSize+24);
+      }
+      // Note (below qty, tiny, italic, muted)
+      if(e.note){
+        ctx.font='500 9px Space Grotesk, sans-serif';
+        ctx.fillStyle='rgba(255,255,255,.45)';
+        let noteStr=e.note;
+        if(ctx.measureText(noteStr).width>maxNameW){
+          while(noteStr.length>3&&ctx.measureText(noteStr+'…').width>maxNameW)noteStr=noteStr.slice(0,-1);
+          noteStr+='…';
+        }
+        const noteY=e.qty&&e.qty>1?sy+gridSprSize+34:sy+gridSprSize+24;
+        ctx.fillText(noteStr,cx+gridCellW/2,noteY);
+      }
+      ctx.textAlign='left';
+      col++;
+      if(col>=gridCols){col=0;row++;}
+    });
+  };
+
+  // ── Branch on layout ────────────────────────────────────────
+  const colY=headerH+pad;
+  if(isDense){
+    // STACKED: LF section on top, FT section below — each as a dense grid
+    const fullW=W-pad*2;
+    const sectionX=pad;
+    let curY=colY;
+    if(board.lf.length){
+      drawSectionHeader(`🔍 Looking For · ${board.lf.length}`,'#c7d2fe','rgba(99,102,241,.18)','#a5b4fc',sectionX,curY,fullW);
+      curY+=sectionHdrH+6;
+      drawGridSection(board.lf,sectionX,curY,fullW);
+      curY+=gridRowsFor(board.lf.length)*gridCellH;
+    }
+    if(board.ft.length){
+      if(board.lf.length)curY+=sectionGap-6;
+      drawSectionHeader(`🤝 For Trade · ${board.ft.length}`,'#a7f3d0','rgba(16,185,129,.18)','#34d399',sectionX,curY,fullW);
+      curY+=sectionHdrH+6;
+      drawGridSection(board.ft,sectionX,curY,fullW);
+    }
+  }else{
+    // SIDE-BY-SIDE list layout (compact mode for small boards)
+    const lfX=pad,ftX=pad+colW+colGap;
+    drawSectionHeader(`🔍 Looking For · ${board.lf.length}`,'#c7d2fe','rgba(99,102,241,.18)','#a5b4fc',lfX,colY,colW);
+    drawSectionHeader(`🤝 For Trade · ${board.ft.length}`,'#a7f3d0','rgba(16,185,129,.18)','#34d399',ftX,colY,colW);
+    drawListSide(board.lf,lfX,colY+38);
+    drawListSide(board.ft,ftX,colY+38);
+  }
 
   // Footer
   const footY=H-footerH;
@@ -8661,7 +8910,9 @@ Object.assign(window,{
   // Special Trade Board
   openSpecialTradeBoard,specialAcSearch,specialAcSelect,specialAcKeydown,
   addSpecialEntry,removeSpecialEntry,toggleSpecialFlag,setSpecialNote,setSpecialQty,
-  clearSpecialBoard,exportSpecialBoardImage
+  clearSpecialBoard,exportSpecialBoardImage,
+  // Quick-add bulk picker for the Special Trade Board
+  openQuickAdd,closeQuickAdd,filterQuickAdd,toggleQuickAddPick,qaSelectAll,commitQuickAdd
 });
 
 // ── BOOT ──────────────────────────────────────────────────────
