@@ -2826,9 +2826,10 @@ async function createMemberNow(username,pin,isAdmin=false,reqId=''){
   const s=getLocal();
   const iAmOwner=allData.users?.[cur]?.isOwner||cur===OWNER;
   const canCreateAdmin=!!isAdmin&&iAmOwner;
+  const pinHash=await hashPin(pin);
   const user=normalizedUserRecord(username,{},{
-    pin,isAdmin:canCreateAdmin,isOwner:false,friendCode:'',joined:Date.now(),lastSeen:null,lastUpdated:null,
-    pinHashed:false,authVersion:1,authEmail:authEmail(username,1)
+    pin:pinHash,isAdmin:canCreateAdmin,isOwner:false,friendCode:'',joined:Date.now(),lastSeen:null,lastUpdated:null,
+    pinHashed:true,authVersion:1,authEmail:authEmail(username,1)
   });
   if(fbOn&&db){
     const updates={};
@@ -3227,13 +3228,18 @@ async function doLogin(){
   btn.textContent='Signing in…';btn.disabled=true;
   // Always prefer live Firebase data for PIN check, fall back to local
   let ud=allData.users?.[u];
+  let liveUserReadFailed=false;
   if(fbOn&&db){
     try{
       const snap=await withTimeout(get(ref(db,`users/${u}`)),5000,'Firebase lookup timed out','db/read-timeout');
       if(snap.exists())ud={...ud,...snap.val()};
-    }catch{}
+    }catch(e){
+      liveUserReadFailed=true;
+      console.warn('Could not read live user record before login',e);
+    }
   }
-  if(!ud){err.textContent='User not found';btn.textContent='Sign in →';btn.disabled=false;return;}
+  const liveReadHint=liveUserReadFailed?' Live user data could not be checked before login, so this browser may be using stale cached info.':'';
+  if(!ud){err.textContent=liveUserReadFailed?'Could not load this user from Firebase before login. Ask an admin to update Firebase rules for login reads.':'User not found';btn.textContent='Sign in →';btn.disabled=false;return;}
   const ok=await verifyPin(p,ud.pin);
   if(ok){
     try{
@@ -3256,10 +3262,11 @@ async function doLogin(){
         :code==='PERMISSION_DENIED'||code==='auth/bind-failed'
           ?'Firebase rules blocked linking this trainer. Update the users rule, then try again.'
         :'Firebase Auth failed: '+(code||e.message||'check API key and auth settings');
+      err.textContent+=liveReadHint;
       btn.textContent='Sign in →';btn.disabled=false;
     }
   } else {
-    err.textContent='❌ Wrong PIN';
+    err.textContent=liveUserReadFailed?'❌ Wrong PIN, and Firebase live user data was blocked before login. Ask an admin to update Firebase rules, then retry.':'❌ Wrong PIN';
     btn.textContent='Sign in →';btn.disabled=false;
   }
 }
@@ -4868,7 +4875,8 @@ async function confirmReset(){
   const prev=allData.users?.[rpinTarget]||{};
   const nextVersion=authVersionForUser(prev)+1;
   try{
-    await writeUserStrict(rpinTarget,{pin,pinHashed:false,authVersion:nextVersion,authEmail:authEmail(rpinTarget,nextVersion),authUid:null,lastSeen:null});
+    const pinHash=await hashPin(pin);
+    await writeUserStrict(rpinTarget,{pin:pinHash,pinHashed:true,authVersion:nextVersion,authEmail:authEmail(rpinTarget,nextVersion),authUid:null,lastSeen:null});
     closeModal('rpin-modal');toast(`✅ PIN reset for ${rpinTarget}`);rpinTarget=null;
   }catch(e){
     toast('⚠️ Could not reset PIN in Firebase: '+(e.code||e.message||'permission denied'),5000);
