@@ -2123,7 +2123,7 @@ if(!DB)throw new Error('Trade data failed to load');
 
 const PREFILTER="!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&";
 const OWNER="Doomsday126";
-const APP_VERSION="4.6.9";
+const APP_VERSION="4.6.10";
 const STALE_WARN=7,STALE_OLD=30;
 const SESSION_TTL=30*24*60*60*1000; // 30 days; refreshed on each activity so active users stay logged in
 const SPRITE_BASE="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/";
@@ -6222,6 +6222,7 @@ async function triggerInstall(){
 
 // ── WHAT'S NEW (#28) ─────────────────────────────────────────
 const WHATS_NEW=[
+  {version:'4.6.10',title:'🛠️ Cancel-trade fix when you\'re the offer bidder',desc:'Previously, if you cancelled a reserved/scheduled trade that you got into by offering on someone else\'s inventory, your inventory would silently inflate and the other trainer\'s wouldn\'t actually be restored. Now both sides get the right items back regardless of who organized the trade.'},
   {version:'4.6.9',title:'⚖️ Add-to-inventory mode buttons evenly spaced',desc:'The Any / Mirror / DNB / Giveaway buttons used to cluster left with empty space on the right. They now flex equally across the full row, each taking a quarter of the width — easier to tap and visually balanced.'},
   {version:'4.6.8',title:'🔢 Cleaner qty picker on the Add to inventory form',desc:'The quantity input used to render as a huge empty text field on mobile/tablet — it looked like a search box. Now it sits in a labeled "QTY [−] 1 [+]" pill paired with the gender picker, so it reads clearly as a quantity control no matter the screen size.'},
   {version:'4.6.7',title:'🏷️ Browse filters now labeled clearly',desc:'The Browse-tab filters used to render as three rows of similar-looking pills with two identical "All" buttons. Each row now has a label (Priority / Flags / Activity / List) so it\'s obvious what each one filters, and the activity row says "Any / 7d / 30d" instead of doubling up on "All".'},
@@ -7714,7 +7715,15 @@ async function cancelScheduledTrade(id){
   const t=allData.trades?.[id];if(!t)return;
   // Only auto-logged trades (from offer-accept) decremented inventory at create time,
   // so only those have inventory to restore. Manual schedule entries just go away.
-  const cp=t.counterparty||Object.keys(t.participants||{}).find(u=>u!==cur)||'';
+  // IMPORTANT: t.counterparty is set from the ORGANIZER's perspective at create
+  // time (see _logAcceptedTrade), so when the OTHER side views/cancels the trade
+  // we'd pick ourselves and write the restoration record into our own bucket —
+  // a no-op for the real partner and a silent +qty inflation for us. Always
+  // resolve "the other person" from participants relative to cur.
+  const cp=Object.keys(t.participants||{}).find(u=>u!==cur)
+    ||(t.counterparty&&t.counterparty!==cur?t.counterparty:'')
+    ||(t.organizer&&t.organizer!==cur?t.organizer:'')
+    ||'';
   if(t.autoLogged&&(t.gave||t.received)){
     const giveBack=cur===t.organizer?t.gave:t.received;     // what I gave at accept time
     const theyGetBack=cur===t.organizer?t.received:t.gave;  // what counterparty gave

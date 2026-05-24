@@ -92,7 +92,7 @@ Diff from your current rules:
       "$username": {
         ".read": "auth != null && (root.child('users').child($username).child('authUid').val() === auth.uid || root.child('admins').child(auth.uid).val() === true)",
         "$decId": {
-          ".write": "auth != null && ((!data.exists() && newData.child('from').val() === root.child('authIndex').child(auth.uid).child('username').val() && newData.child('qty').isNumber() && newData.child('qty').val() > 0 && newData.child('qty').val() <= 999 && newData.child('key').isString() && newData.child('key').val().length > 0) || (data.exists() && root.child('users').child($username).child('authUid').val() === auth.uid) || root.child('admins').child(auth.uid).val() === true)"
+          ".write": "auth != null && ((!data.exists() && newData.child('from').val() === root.child('authIndex').child(auth.uid).child('username').val() && newData.child('qty').isNumber() && newData.child('qty').val() != 0 && newData.child('qty').val() >= -999 && newData.child('qty').val() <= 999 && newData.child('key').isString() && newData.child('key').val().length > 0) || (data.exists() && root.child('users').child($username).child('authUid').val() === auth.uid) || root.child('admins').child(auth.uid).val() === true)"
         }
       }
     },
@@ -113,9 +113,17 @@ need to read them.
 - Must be authenticated.
 - The new record's `from` field must match the writer's actual username
   (no spoofing — you can't post a decrement *as someone else*).
-- `qty` must be a number between 1 and 999 (no oversized writes, no
-  type confusion).
-- `key` must be a non-empty string (the inventory key to decrement).
+- `qty` must be a number in `[-999, 999]` and nonzero.
+  - Positive qty = "subtract this many from your inventory" (someone
+    accepted your offer — the standard decrement flow).
+  - Negative qty = "add this many back to your inventory" (the other side
+    cancelled a reserved trade — the restoration flow added in v4.6.10).
+- `key` must be a non-empty string (the inventory key to mutate).
+
+> ⚠️  If you already published the previous ruleset (which required
+> `qty > 0`), trade-cancel restorations from one side will silently fail
+> on the other side until you republish this version. Republish in
+> Firebase Console → Realtime Database → Rules → Publish.
 
 **Write — modify/delete case** (`data.exists()`):
 - Only the target user (the one whose `pendingDecrements/{$username}` bucket
