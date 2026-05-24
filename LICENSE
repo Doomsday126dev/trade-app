@@ -1,0 +1,54 @@
+Copyright (c) 2026 Amity Aagarwal. All rights reserved.
+
+PROPRIETARY AND CONFIDENTIAL
+============================
+
+This codebase, including all source files (HTML, CSS, JavaScript), the
+embedded data schemas, the user interface design and interaction patterns,
+the image export rendering pipeline, the trade-flow logic, and any
+derivatives thereof, is the proprietary property of the copyright holder.
+
+No license is granted, expressly or by implication, to any person or
+entity for any purpose, including without limitation:
+
+  - copying, in whole or in part, by any means;
+  - modifying, adapting, or creating derivative works;
+  - distributing, publishing, sublicensing, or selling;
+  - reverse engineering, decompiling, or disassembling;
+  - using the code, design, schemas, or algorithms as the basis for
+    any other product, project, or service, whether commercial or
+    non-commercial;
+  - hosting or serving the application outside of authorized
+    deployments operated by the copyright holder.
+
+The following are likewise considered proprietary and protected under
+this notice:
+
+  - The data structures, Firebase/Realtime Database schema layout, and
+    the path naming conventions used by this application.
+  - The autocomplete dataset, sprite-cascade resolution strategy,
+    multi-source sprite proxy approach, and the special-trade scoring
+    and bonus heuristics.
+  - The Looking For / For Trade ("Special Trade Board") rendering and
+    layout.
+  - The look and feel of the user interface, including its components,
+    color tokens, iconography choices, and interaction patterns.
+
+Authorized collaborators may interact with this codebase only under
+written authorization from the copyright holder, and only for the
+purposes for which authorization was granted.
+
+This notice does not grant any rights in third-party assets referenced
+or rendered by the application (Pokémon names, sprites, game data,
+event information, etc.), which remain the property of their respective
+owners. References to such assets are made for interoperability with
+the user's own legally-obtained game accounts and do not imply any
+affiliation with or endorsement by Niantic, Inc., The Pokémon Company,
+Nintendo, Game Freak, or Creatures Inc.
+
+For licensing, partnership, or use inquiries, contact the copyright
+holder directly.
+
+Unauthorized use, reproduction, or distribution may result in civil
+and criminal penalties and will be prosecuted to the fullest extent
+permitted by law.

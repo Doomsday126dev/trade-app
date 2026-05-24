@@ -463,12 +463,17 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
 .accept-qty-hint.warn{color:var(--warn);font-style:normal;font-weight:600}
 
 /* Per-item Accept buttons in offer rows */
-.offer-item-chip.acceptable{cursor:pointer;transition:.15s}
-.offer-item-chip.acceptable:hover{border-color:#10b981;background:rgba(16,185,129,.08);transform:translateY(-1px)}
-.offer-item-chip.acceptable::after{content:'✓ Accept';margin-left:6px;font-size:9px;color:#10b981;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.offer-item-chip.acceptable{cursor:pointer;transition:.15s;border-color:rgba(16,185,129,.4)}
+.offer-item-chip.acceptable:hover{border-color:#10b981;background:rgba(16,185,129,.12);transform:translateY(-1px);box-shadow:0 2px 6px rgba(16,185,129,.18)}
+.offer-item-chip.acceptable:active{transform:translateY(0)}
+.offer-item-chip.acceptable::after{content:'Trade →';margin-left:6px;font-size:10px;color:#fff;font-weight:700;letter-spacing:.04em;text-transform:uppercase;background:#10b981;padding:3px 7px;border-radius:4px;line-height:1}
 .offer-item-chip.out-of-stock{opacity:.45;text-decoration:line-through;cursor:not-allowed}
 .offer-item-chip.out-of-stock::after{content:'out of stock';margin-left:6px;font-size:9px;color:var(--danger);font-weight:700}
 .offer-item-chip .ofc-qty{margin-left:4px;font-family:var(--mono);font-size:10px;color:var(--ac2);font-weight:700}
+/* Accept-trade modal MUST render above the incoming-offers modal (which is
+   appended dynamically with z:500). Give it a higher stack so clicking
+   "Trade →" inside an open inbox actually surfaces the qty picker. */
+.ov#accept-offer-modal{z-index:600}
 
 /* OPTIONAL GENDER MARKER on inventory rows (#3) */
 .have-gender-btn{
@@ -7564,7 +7569,7 @@ function renderOfferList(recipient,itemName,opts={}){
     }).join('');
     const noneOffered=!o.offering||!o.offering.length;
     const msgHtml=o.message?`<button class="offer-msg-toggle" onclick="this.nextElementSibling.classList.toggle('shown')" aria-expanded="false">💬 Message</button><div class="offer-msg-collapsed">${escHtml(o.message)}</div>`:'';
-    const acceptHint=canAccept&&!noneOffered?`<div style="font-size:11px;color:var(--muted);margin-top:4px">↑ Tap an item to accept it — qty auto-caps at min(your ×${recipientLiveQty}, theirs)</div>`:'';
+    const acceptHint=canAccept&&!noneOffered?`<div style="font-size:11px;color:var(--muted);margin-top:6px">↑ Tap an item's green <strong style="color:#10b981">Trade →</strong> button to swap it for your <strong>×${recipientLiveQty}</strong> — qty auto-caps at the smaller side.</div>`:'';
     const noStockHint=amRecipient&&!isMine&&recipientLiveQty<=0?`<div style="font-size:11px;color:var(--warn);margin-top:4px">⚠ You\'re out of stock for this item — can\'t accept any offers until you add some back.</div>`:'';
     return`<div class="offer-row ${isFirst?'fcfs-first':''} ${isMine?'my-offer':''}">
       <div class="offer-av">${userAvatarHtml(o.from,28)}</div>
