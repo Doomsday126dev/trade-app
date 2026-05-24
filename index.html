@@ -439,6 +439,37 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
 .sb-row-rm{background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:14px;line-height:1;padding:2px 4px;flex-shrink:0}
 .sb-row-rm:hover{color:var(--danger)}
 
+/* ACCEPT-OFFER MODAL — per-item trade with qty matching */
+.accept-trade-summary{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:stretch;margin-bottom:14px}
+.accept-side{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:10px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.accept-side-give{border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.06)}
+.accept-side-take{border-color:rgba(16,185,129,.4);background:rgba(16,185,129,.06)}
+.accept-side-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.accept-side-give .accept-side-label{color:#fca5a5}
+.accept-side-take .accept-side-label{color:#6ee7b7}
+.accept-side-pkmn{display:flex;flex-direction:column;align-items:center;gap:3px}
+.accept-side-pkmn img{width:48px;height:48px;object-fit:contain;image-rendering:pixelated}
+.accept-side-name{font-size:13px;font-weight:600;color:var(--text);line-height:1.2}
+.accept-side-stock{font-size:10px;color:var(--muted);font-family:var(--mono)}
+.accept-arrow{display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--ac2);font-weight:300}
+.accept-qty-row{display:flex;align-items:center;gap:8px;justify-content:center;margin-bottom:6px;flex-wrap:wrap}
+.accept-qty-row label{font-size:12px;color:var(--muted);font-weight:500}
+.accept-qty-btn{background:var(--bg2);border:1px solid var(--border2);color:var(--text);width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:14px;font-weight:700;line-height:1}
+.accept-qty-btn:hover{border-color:var(--accent);color:var(--ac2)}
+#accept-qty-input{background:var(--bg);border:1px solid var(--border2);color:var(--text);width:60px;height:28px;text-align:center;border-radius:6px;font-family:var(--mono);font-size:13px;font-weight:700}
+.accept-qty-max-btn{background:rgba(108,99,255,.15);border:1px solid rgba(108,99,255,.4);color:var(--ac2);padding:4px 10px;border-radius:6px;cursor:pointer;font-size:10px;font-weight:700;letter-spacing:.05em}
+.accept-qty-max-btn:hover{background:rgba(108,99,255,.25)}
+.accept-qty-hint{font-size:11px;color:var(--muted);text-align:center;margin-bottom:10px;font-style:italic}
+.accept-qty-hint.warn{color:var(--warn);font-style:normal;font-weight:600}
+
+/* Per-item Accept buttons in offer rows */
+.offer-item-chip.acceptable{cursor:pointer;transition:.15s}
+.offer-item-chip.acceptable:hover{border-color:#10b981;background:rgba(16,185,129,.08);transform:translateY(-1px)}
+.offer-item-chip.acceptable::after{content:'✓ Accept';margin-left:6px;font-size:9px;color:#10b981;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.offer-item-chip.out-of-stock{opacity:.45;text-decoration:line-through;cursor:not-allowed}
+.offer-item-chip.out-of-stock::after{content:'out of stock';margin-left:6px;font-size:9px;color:var(--danger);font-weight:700}
+.offer-item-chip .ofc-qty{margin-left:4px;font-family:var(--mono);font-size:10px;color:var(--ac2);font-weight:700}
+
 /* OPTIONAL GENDER MARKER on inventory rows (#3) */
 .have-gender-btn{
   background:transparent;border:1px solid var(--border);border-radius:6px;
@@ -1654,6 +1685,26 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
         <button class="bghost" onclick="backToStep1()">← Back</button>
         <button class="bpri" id="import-confirm-btn" onclick="confirmImport()">Import</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ACCEPT OFFER MODAL — per-item accept with qty matching -->
+<div class="ov" id="accept-offer-modal" role="dialog" aria-modal="true" aria-labelledby="accept-offer-title">
+  <div class="modal" style="max-width:480px">
+    <h3 id="accept-offer-title">✓ Accept trade</h3>
+    <div class="accept-trade-summary" id="accept-trade-summary"></div>
+    <div class="accept-qty-row">
+      <label for="accept-qty-input">Quantity to trade:</label>
+      <button class="accept-qty-btn" type="button" onclick="adjustAcceptQty(-1)" aria-label="Decrease">−</button>
+      <input type="number" id="accept-qty-input" min="1" max="999" value="1" inputmode="numeric" onchange="clampAcceptQty()">
+      <button class="accept-qty-btn" type="button" onclick="adjustAcceptQty(1)" aria-label="Increase">+</button>
+      <button class="accept-qty-max-btn" type="button" onclick="maxAcceptQty()" title="Set to the maximum allowed by both sides">MAX</button>
+    </div>
+    <div class="accept-qty-hint" id="accept-qty-hint"></div>
+    <div class="mact" style="justify-content:space-between">
+      <button class="bghost" onclick="closeAcceptModal()">Cancel</button>
+      <button class="bpri" id="accept-confirm-btn" onclick="confirmAcceptTrade()">✓ Confirm trade</button>
     </div>
   </div>
 </div>
@@ -7345,27 +7396,176 @@ async function withdrawOffer(recipient,offerId){
   return true;
 }
 async function markOfferTraded(recipient,offerId){
-  // Just removes the offer; in a future version this could write to a "traded log"
+  // Just removes the offer; recipient is asserting "the trade happened externally"
   return withdrawOffer(recipient,offerId);
 }
+// ── PER-ITEM TRADE ACCEPTANCE WITH QTY MATCHING ──────────────
+// State captured when the accept modal opens. Read inside confirmAcceptTrade.
+let _acceptCtx=null;
+function _acceptItemDetails(recipient,offerId,offerItemKey){
+  const offer=allData.offers?.[recipient]?.[offerId];
+  if(!offer)return null;
+  const bidder=offer.from;
+  const recipientItemKey=offer.itemName;
+  const recipientInv=allData.have?.[recipient]||{};
+  const bidderInv=allData.have?.[bidder]||{};
+  const recipientQty=haveEntryInfo(recipientInv[recipientItemKey]).qty;
+  const bidderQty=haveEntryInfo(bidderInv[offerItemKey]).qty;
+  const rSplit=splitHaveKey(recipientItemKey);
+  const bSplit=splitHaveKey(offerItemKey);
+  const rEntry=_nameToSpriteEntry(rSplit.name);
+  const bEntry=_nameToSpriteEntry(bSplit.name);
+  return{
+    offer,bidder,recipient,offerId,offerItemKey,recipientItemKey,
+    recipientQty,bidderQty,
+    recipientName:rEntry.displayName||rSplit.name,recipientGender:rSplit.gender,recipientNo:rEntry.no,
+    bidderName:bEntry.displayName||bSplit.name,bidderGender:bSplit.gender,bidderNo:bEntry.no,
+    maxQty:Math.min(recipientQty,bidderQty)
+  };
+}
+function openAcceptModal(recipient,offerId,offerItemKey){
+  const d=_acceptItemDetails(recipient,offerId,offerItemKey);
+  if(!d){toast('Offer no longer exists');return;}
+  if(d.recipientQty<=0){toast(`You have no ${d.recipientName} left in your inventory.`);return;}
+  if(d.bidderQty<=0){toast(`${d.bidder} no longer has any ${d.bidderName}.`);return;}
+  _acceptCtx=d;
+  // Render the give/take summary
+  const giveSpr=d.recipientNo?spriteImg(d.recipientNo,48,'',d.recipientName,d.recipientGender||'',d.recipientName):'<span style="font-size:36px">🎮</span>';
+  const takeSpr=d.bidderNo?spriteImg(d.bidderNo,48,'',d.bidderName,d.bidderGender||'',d.bidderName):'<span style="font-size:36px">🎮</span>';
+  const gp=g=>g?` <span class="have-gender-pill ${g}" style="margin-left:2px">${g==='f'?'♀':'♂'}</span>`:'';
+  document.getElementById('accept-trade-summary').innerHTML=`
+    <div class="accept-side accept-side-give">
+      <div class="accept-side-label">You give</div>
+      <div class="accept-side-pkmn">${giveSpr}<div class="accept-side-name">${escHtml(d.recipientName)}${gp(d.recipientGender)}</div></div>
+      <div class="accept-side-stock">In stock: ×${d.recipientQty}</div>
+    </div>
+    <div class="accept-arrow">↔</div>
+    <div class="accept-side accept-side-take">
+      <div class="accept-side-label">You receive (from ${escHtml(d.bidder)})</div>
+      <div class="accept-side-pkmn">${takeSpr}<div class="accept-side-name">${escHtml(d.bidderName)}${gp(d.bidderGender)}</div></div>
+      <div class="accept-side-stock">They have: ×${d.bidderQty}</div>
+    </div>`;
+  document.getElementById('accept-qty-input').value=String(d.maxQty);
+  document.getElementById('accept-qty-input').max=String(d.maxQty);
+  _updateAcceptQtyHint();
+  openModal('accept-offer-modal');
+}
+function closeAcceptModal(){closeModal('accept-offer-modal');_acceptCtx=null;}
+function _updateAcceptQtyHint(){
+  if(!_acceptCtx)return;
+  const q=parseInt(document.getElementById('accept-qty-input').value)||1;
+  const hint=document.getElementById('accept-qty-hint');
+  const max=_acceptCtx.maxQty;
+  if(q>max)hint.innerHTML=`<span class="warn">⚠ Capped at ${max} — the smaller side can't cover more.</span>`;
+  else if(q===max)hint.innerHTML=`Max possible (capped by ${_acceptCtx.recipientQty===max?'your':'their'} stock).`;
+  else hint.innerHTML=`Up to <strong>${max}</strong> trade${max===1?'':'s'} possible — capped by min(your ×${_acceptCtx.recipientQty}, their ×${_acceptCtx.bidderQty}).`;
+}
+function adjustAcceptQty(delta){
+  if(!_acceptCtx)return;
+  const inp=document.getElementById('accept-qty-input');
+  const v=Math.max(1,Math.min(_acceptCtx.maxQty,(parseInt(inp.value)||1)+delta));
+  inp.value=String(v);
+  _updateAcceptQtyHint();
+}
+function clampAcceptQty(){
+  if(!_acceptCtx)return;
+  const inp=document.getElementById('accept-qty-input');
+  const v=Math.max(1,Math.min(_acceptCtx.maxQty,parseInt(inp.value)||1));
+  inp.value=String(v);
+  _updateAcceptQtyHint();
+}
+function maxAcceptQty(){
+  if(!_acceptCtx)return;
+  document.getElementById('accept-qty-input').value=String(_acceptCtx.maxQty);
+  _updateAcceptQtyHint();
+}
+async function confirmAcceptTrade(){
+  if(!_acceptCtx){closeAcceptModal();return;}
+  const ctx=_acceptCtx;
+  const qty=Math.max(1,Math.min(ctx.maxQty,parseInt(document.getElementById('accept-qty-input').value)||1));
+  // Re-check current state in case inventory changed since modal opened
+  const recipientInv={...(allData.have?.[ctx.recipient]||{})};
+  const bidderInv={...(allData.have?.[ctx.bidder]||{})};
+  const liveRecipientQty=haveEntryInfo(recipientInv[ctx.recipientItemKey]).qty;
+  const liveBidderQty=haveEntryInfo(bidderInv[ctx.offerItemKey]).qty;
+  if(liveRecipientQty<qty||liveBidderQty<qty){
+    toast(`⚠️ Stock changed — your ×${liveRecipientQty}, their ×${liveBidderQty}. Re-open the trade.`);
+    closeAcceptModal();return;
+  }
+  // Decrement recipient
+  const newR=liveRecipientQty-qty;
+  if(newR<=0)delete recipientInv[ctx.recipientItemKey];
+  else setHaveEntry(recipientInv,ctx.recipientItemKey,newR);
+  // Decrement bidder (skip lastSeen bump since they're not active)
+  const newB=liveBidderQty-qty;
+  if(newB<=0)delete bidderInv[ctx.offerItemKey];
+  else setHaveEntry(bidderInv,ctx.offerItemKey,newB);
+  // Confirmation
+  const btn=document.getElementById('accept-confirm-btn');
+  if(btn){btn.disabled=true;btn.textContent='Trading…';}
+  try{
+    await writeHave(ctx.recipient,recipientInv);
+    await _writeHaveSilent(ctx.bidder,bidderInv);
+    await withdrawOffer(ctx.recipient,ctx.offerId);
+    toast(`✅ Traded ${qty}× ${ctx.recipientName} ↔ ${qty}× ${ctx.bidderName} with ${ctx.bidder}`);
+  }catch(e){
+    console.error(e);
+    toast('⚠️ Trade failed to save — try again');
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='✓ Confirm trade';}
+    closeAcceptModal();
+  }
+}
+// Write the OTHER party's inventory without bumping their lastSeen/lastUpdated
+// (they didn't open the app — their inventory just had qty decremented by the
+// trade we both just executed).
+async function _writeHaveSilent(username,inv){
+  const s=getLocal();
+  if(!s.have)s.have={};
+  s.have[username]=inv;
+  saveLocal(s);
+  if(fbOn&&db)queueSync(`have/${username}`,inv);
+  syncFromLocal();
+}
+// Look up the live qty a given bidder has of an offered key (used to disable
+// chips for items that have been depleted since the offer was made).
+function _bidderLiveQty(bidder,offerItemKey){
+  return haveEntryInfo(allData.have?.[bidder]?.[offerItemKey]).qty;
+}
 // Render a list of offer rows for a specific item.
-// myView=true: viewer is the recipient (shows mark-traded button)
+// When the viewer IS the recipient, each offered item becomes a clickable
+// "✓ Accept" chip — clicking opens the accept modal where qty is auto-capped
+// at min(your stock of the listed item, their stock of the offered item) and
+// confirming decrements both inventories.
 function renderOfferList(recipient,itemName,opts={}){
   const offers=offersForItem(recipient,itemName);
   if(!offers.length)return'<div class="offer-list-empty">No offers yet — be the first!</div>';
+  // Live qty of the listed item — drives whether Accept is even possible
+  const recipientLiveQty=haveEntryInfo(allData.have?.[recipient]?.[itemName]).qty;
   return offers.map((o,i)=>{
     const isFirst=i===0;
     const isMine=o.from===cur;
     const amRecipient=recipient===cur;
+    const canAccept=amRecipient&&!isMine&&recipientLiveQty>0;
     const offeringHtml=(o.offering||[]).slice(0,6).map(k=>{
       const{name,gender}=splitHaveKey(k);
       const e=_nameToSpriteEntry(name);
       const url=spriteUrl(e.no,e.name,gender||'',e.displayName||e.name);
       const genderPill=gender?`<span class="have-gender-pill ${gender}" style="margin-left:2px">${gender==='f'?'♀':'♂'}</span>`:'';
-      return`<span class="offer-item-chip" title="${escAttr(e.displayName||name)}">${url?`<img src="${url}" alt="" loading="lazy">`:'🎮'}${escHtml(e.displayName||name)}${genderPill}</span>`;
+      // Live qty the bidder still has of this offering item (may be 0 if they've
+      // traded it away or removed it since posting the offer)
+      const bidderQty=_bidderLiveQty(o.from,k);
+      const qtyTag=bidderQty>0?`<span class="ofc-qty">×${bidderQty}</span>`:'';
+      const cls=canAccept?(bidderQty>0?'offer-item-chip acceptable':'offer-item-chip out-of-stock'):'offer-item-chip';
+      const sk=String(k).replace(/'/g,"\\'").replace(/"/g,'&quot;');
+      const onClick=(canAccept&&bidderQty>0)?` onclick="openAcceptModal('${escAttr(recipient)}','${o.id}','${sk}')" role="button" tabindex="0"`:'';
+      const title=canAccept?(bidderQty>0?`Accept ${e.displayName||name} — opens qty picker`:`${o.from} no longer has any ${e.displayName||name}`):escAttr(e.displayName||name);
+      return`<span class="${cls}" title="${escAttr(title)}"${onClick}>${url?`<img src="${url}" alt="" loading="lazy">`:'🎮'}${escHtml(e.displayName||name)}${genderPill}${qtyTag}</span>`;
     }).join('');
     const noneOffered=!o.offering||!o.offering.length;
     const msgHtml=o.message?`<button class="offer-msg-toggle" onclick="this.nextElementSibling.classList.toggle('shown')" aria-expanded="false">💬 Message</button><div class="offer-msg-collapsed">${escHtml(o.message)}</div>`:'';
+    const acceptHint=canAccept&&!noneOffered?`<div style="font-size:11px;color:var(--muted);margin-top:4px">↑ Tap an item to accept it — qty auto-caps at min(your ×${recipientLiveQty}, theirs)</div>`:'';
+    const noStockHint=amRecipient&&!isMine&&recipientLiveQty<=0?`<div style="font-size:11px;color:var(--warn);margin-top:4px">⚠ You\'re out of stock for this item — can\'t accept any offers until you add some back.</div>`:'';
     return`<div class="offer-row ${isFirst?'fcfs-first':''} ${isMine?'my-offer':''}">
       <div class="offer-av">${userAvatarHtml(o.from,28)}</div>
       <div class="offer-info">
@@ -7375,11 +7575,12 @@ function renderOfferList(recipient,itemName,opts={}){
           <span class="time-tag" title="${new Date(o.t).toLocaleString()}">${relativeTime(o.t)}</span>
         </div>
         ${noneOffered?'<div style="font-size:11px;color:var(--muted);font-style:italic">No specific offering listed</div>':`<div class="offer-items">${offeringHtml}</div>`}
+        ${acceptHint}${noStockHint}
         ${msgHtml}
       </div>
       <div class="offer-actions">
         ${isMine?`<button class="offer-withdraw-btn" onclick="withdrawOffer('${escAttr(recipient)}','${o.id}').then(t=>{if(t)toast('Offer withdrawn');});">Withdraw</button>`:''}
-        ${amRecipient&&!isMine?`<button class="offer-mark-traded-btn" onclick="markOfferTraded('${escAttr(recipient)}','${o.id}').then(t=>{if(t)toast('✅ Trade completed');});" title="Mark as traded and remove this offer">✓ Traded</button>`:''}
+        ${amRecipient&&!isMine?`<button class="offer-mark-traded-btn" onclick="markOfferTraded('${escAttr(recipient)}','${o.id}').then(t=>{if(t)toast('Offer removed — assumed traded externally');});" title="Trade happened outside the app — just clear this offer (no inventory change)">Clear (traded externally)</button>`:''}
       </div>
     </div>`;
   }).join('');
@@ -8111,6 +8312,8 @@ Object.assign(window,{
   renderMyHave,renderHaveBrowse,openOfferModal,closeOfferModal,copyOfferMessage,
   // Offer history
   submitOffer,submitOfferAction,withdrawOffer,markOfferTraded,
+  // Per-item trade acceptance
+  openAcceptModal,closeAcceptModal,adjustAcceptQty,clampAcceptQty,maxAcceptQty,confirmAcceptTrade,
   openIncomingOffersModal,closeIncomingOffersModal,
   // Update checker
   reloadForUpdate,checkForUpdate,
