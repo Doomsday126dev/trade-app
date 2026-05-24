@@ -2598,9 +2598,9 @@ function canvasSafeSpriteUrl(url){
 }
 function entrySpriteUrl(entry,nameOverride='',gender=''){
   const resolvedName=nameOverride||entry?.name||entry?.displayName||'';
+  if(entry?.spriteUrl||entry?.sprite)return entry.spriteUrl||entry.sprite;
   const pdbGoCostume=resolvedName?pokemondbGoCostumeUrl(resolvedName,{allowPattern:false}):'';
   if(pdbGoCostume)return pdbGoCostume;
-  if(entry?.spriteUrl||entry?.sprite)return entry.spriteUrl||entry.sprite;
   return spriteUrl(entry?.no,resolvedName,gender,entry?.displayName||resolvedName);
 }
 // Resolves the BEST QUALITY sprite URL.
@@ -2858,7 +2858,10 @@ function effectiveSpriteScale(url){
   return cached?cached.scale:spriteSourceScale(url);
 }
 function spriteImg(no,size=40,cls='',name='',gender='',dn='',opts={}){
-  const urls=spriteFallbackChain(no,name,gender,dn);
+  const urls=[
+    ...(opts?.urlOverride?[opts.urlOverride]:[]),
+    ...spriteFallbackChain(no,name,gender,dn)
+  ].filter((u,i,arr)=>u&&arr.indexOf(u)===i);
   if(!urls.length)return`<div class="pc-sprite-placeholder" style="width:${size}px;height:${size}px">🎮</div>`;
   const url=urls[0];
   const isGo=url.includes('serebii.net')||url.includes('weserv.nl')||url.includes('/sprites/go/')||url.includes('PokeMiners')||url.includes('pogo_assets');
@@ -3987,7 +3990,7 @@ function acSearch(q){
   }else{
     dd.innerHTML=familyBanner+acFiltered.map((e,i)=>`
       <div class="ac-item" data-idx="${i}" onmousedown="acSelect(${i})">
-        ${e.no||e.spriteUrl?spriteImg(e.no,28,'ac-item-sprite',e.name):''}
+        ${e.no||e.spriteUrl?spriteImg(e.no,28,'ac-item-sprite',e.name,'',e.dn,{urlOverride:e.spriteUrl}):''}
         ${e.no?`<span class="ac-item-no">#${e.no}</span>`:''}
         <span class="ac-item-name">${e.dn}</span>
       </div>`).join('');
@@ -4155,7 +4158,7 @@ function renderBrowse(){
       ents=ents.filter(entryMatchesFlagFilters);
       ents=sortEntries(ents);
       const eventPill=eventBadgeForPokemon(e.name,e.no,_eventData);
-      return`<div class="pc" data-dex="${e.no||''}"><div class="pc-hdr">${spriteImg(e.no,28,'pc-sprite',e.name)}<div class="pc-info"><div class="pc-name">${e.displayName||e.name}${eventPill}</div><div class="pc-no">#${e.no}</div></div></div>
+      return`<div class="pc" data-dex="${e.no||''}"><div class="pc-hdr">${spriteImg(e.no,28,'pc-sprite',e.name,'',e.displayName||e.name,{urlOverride:e.spriteUrl})}<div class="pc-info"><div class="pc-name">${e.displayName||e.name}${eventPill}</div><div class="pc-no">#${e.no}</div></div></div>
         <div class="pc-users">${ents.map(x=>userBadge(x)).join('')}</div></div>`;
     }).join('')}</div>`;
     applyTypeColors();
@@ -4192,7 +4195,7 @@ function renderBrowse(){
     const eventPill=eventBadgeForPokemon(e.name,e.no,_eventData);
     return`<div class="pc" data-dex="${e.no||''}">
       <div class="pc-hdr">
-        <span class="pc-sprite-wrap">${spriteImg(e.no,28,'pc-sprite',e.name)}${crownHtml}</span>
+        <span class="pc-sprite-wrap">${spriteImg(e.no,28,'pc-sprite',e.name,'',info.dn,{urlOverride:e.spriteUrl})}${crownHtml}</span>
         <div class="pc-info"><div class="pc-name">${info.dn}${eventPill}</div><div class="pc-no">#${e.no}</div></div>
       </div>
       <div class="pc-users">${ents.map(x=>userBadge(x)).join('')}</div>
@@ -4458,7 +4461,7 @@ function renderMyList(filterVal){
       ondragstart="dragStart(event)" ondragover="dragOver(event)" ondrop="dragDrop(event)" ondragend="dragEnd(event)">
       <input type="checkbox" class="bulk-chk" data-name="${sn}" ${isSel?'checked':''} onclick="event.stopPropagation();toggleBulkSelection('${sn}')" aria-label="Select ${escAttr(dn)}">
       <span class="drag-handle" title="Drag to reorder" aria-hidden="true">⠿</span>
-      ${hasSprite?`<span class="myrow-sprite-wrap">${spriteImg(no,28,'myrow-sprite',name)}${crownHtml}</span>`:crownHtml}
+      ${hasSprite?`<span class="myrow-sprite-wrap">${spriteImg(no,28,'myrow-sprite',name,'',dn,{urlOverride:entry.spriteUrl})}${crownHtml}</span>`:crownHtml}
       <div class="myrow-name">${dn}</div>
       <div class="mctrl">
         ${['H','M','L'].map(b=>`<button class="pb ${p===b?'on '+b:''}" onclick="setPri('${sn}','${b}')" title="${priName(b)}" aria-pressed="${p===b}" aria-label="Set ${escAttr(dn)} to ${priLabel(b)} priority">${b}</button>`).join('')}
