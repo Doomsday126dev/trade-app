@@ -2128,7 +2128,7 @@ if(!DB)throw new Error('Trade data failed to load');
 
 const PREFILTER="!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&";
 const OWNER="Doomsday126";
-const APP_VERSION="4.6.11";
+const APP_VERSION="4.6.12";
 const STALE_WARN=7,STALE_OLD=30;
 const SESSION_TTL=30*24*60*60*1000; // 30 days; refreshed on each activity so active users stay logged in
 const SPRITE_BASE="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/";
@@ -2780,7 +2780,10 @@ function spriteFallbackChain(no,name,gender='',dn=''){
 // ── PER-IMAGE SPRITE NORMALIZATION ─────────────────────────────
 // Different Pokémon have different padding within their sprites — Joltik fills 30% of frame,
 // Mewtwo fills 85%. Detect each sprite's actual character bounds via canvas + persist scale.
-const SPRITE_SCALE_CACHE_KEY='pogoSpriteScales_v2';
+// _v3 (4.6.12) — invalidates older caches where detectSpriteScale gave up via
+// onerror (CORS / weserv flake) and pinned PokeMiners URLs at scale 1, leaving
+// small-bodied species (Cleffa, Igglybuff, Mime Jr. …) rendering tiny.
+const SPRITE_SCALE_CACHE_KEY='pogoSpriteScales_v3';
 const SPRITE_TARGET_FILL=0.86; // character should fill ~86% of cell after scaling
 let spriteScaleCache={};
 try{spriteScaleCache=JSON.parse(localStorage.getItem(SPRITE_SCALE_CACHE_KEY)||'{}')||{};}catch{}
@@ -2793,11 +2796,19 @@ function spriteSourceScale(url){
   if(!url)return 1;
   if(url.includes('cdn08.net'))return 1;
   if(url.includes('pokemondb.net'))return 1.1;
-  if(url.includes('PokeMiners'))return 1;
+  // PokeMiners 256×256 art has lots of transparent padding around the
+  // character — a 32px tile rendered at scale 1 makes small-bodied species
+  // (Cleffa, Igglybuff, Mime Jr.) look like dots. The alpha-detect path
+  // refines this to the true per-sprite value (1.0–2.2), but when detection
+  // is blocked (CORS, weserv rate-limit, offline), this is what the user
+  // sees. 1.6 is a reasonable centre that leaves big species like Heracross
+  // a little oversized but never illegible.
+  if(url.includes('PokeMiners'))return 1.6;
   if(url.includes('serebii.net'))return 1.3;
   if(url.includes('weserv.nl')){
     if(url.includes('serebii.net'))return 1.3;
     if(url.includes('cdn08.net'))return 1;
+    if(url.includes('PokeMiners'))return 1.6;
     return 1.1;
   }
   if(/PokeAPI|pokeapi/.test(url))return 1.25;
@@ -6227,6 +6238,7 @@ async function triggerInstall(){
 
 // ── WHAT'S NEW (#28) ─────────────────────────────────────────
 const WHATS_NEW=[
+  {version:'4.6.12',title:'🔍 Small Pokémon sprite fix (round 2)',desc:'4.6.11 fixed the cap that was crushing Cleffa / Igglybuff / Mime Jr. sprites — but in PWAs where the sprite-size auto-detection had been blocked by a flaky proxy, the cached "tiny" value kept being used. This version resets the cache and gives PokeMiners art a reasonable default size up front, so the right size shows immediately even when auto-detection is offline.'},
   {version:'4.6.11',title:'🔍 Small-bodied Pokémon look the right size in Inventory again',desc:'Sprites like Cleffa, Igglybuff, Mime Jr. and Munchlax were rendering as tiny thumbnails after the last sprite update. They now auto-scale to fill the tile properly again.'},
   {version:'4.6.10',title:'🛠️ Cancel-trade fix when you\'re the offer bidder',desc:'Previously, if you cancelled a reserved/scheduled trade that you got into by offering on someone else\'s inventory, your inventory would silently inflate and the other trainer\'s wouldn\'t actually be restored. Now both sides get the right items back regardless of who organized the trade.'},
   {version:'4.6.9',title:'⚖️ Add-to-inventory mode buttons evenly spaced',desc:'The Any / Mirror / DNB / Giveaway buttons used to cluster left with empty space on the right. They now flex equally across the full row, each taking a quarter of the width — easier to tap and visually balanced.'},
