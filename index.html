@@ -2937,37 +2937,81 @@ function setupFirebase(url=FIREBASE_URL){
 }
 async function ensureFirebaseIdentity(username,pin,ud){
   if(!auth)return null;
-  const email=authEmailForUser(username,ud);
+  // ── Stranded-Auth-user auto-recovery ──────────────────────────
+  // A previous login could have created a Firebase Auth user for some
+  // version of this trainer's email (e.g. "skydragon_v2@…") but failed to
+  // bind it back to the DB (timeout, rule rejection right after create, app
+  // killed mid-flow, etc.). When that happens, every subsequent login of
+  // that version sees `signIn` fail (the stranded user has an unknown
+  // password) and `createUser` fail with `auth/email-already-in-use`,
+  // permanently locking the trainer out until an admin nukes the orphan in
+  // Firebase Console.
+  //
+  // To recover transparently, we treat `email-already-in-use` as a signal
+  // that this version's slot is stranded — bump `authVersion` to the next
+  // unused slot and retry. Bounded to 5 attempts so a deeply-broken account
+  // surfaces an error instead of looping forever.
+  const baseVersion=authVersionForUser(ud);
+  let currentVersion=baseVersion;
   let cred=null;
   let createdAuthUser=false;
-  try{
-    cred=await withTimeout(signInWithEmailAndPassword(auth,email,pin),10000,'Firebase Auth sign-in timed out','auth/timeout');
-  }catch(e){
-    if(!ud.authUid&&(e.code==='auth/user-not-found'||e.code==='auth/invalid-credential')){
+  let lastErr=null;
+  for(let attempt=0;attempt<5;attempt++){
+    const email=authEmail(username,currentVersion);
+    createdAuthUser=false;
+    try{
+      cred=await withTimeout(signInWithEmailAndPassword(auth,email,pin),10000,'Firebase Auth sign-in timed out','auth/timeout');
+      break; // sign-in succeeded
+    }catch(e){
+      lastErr=e;
+      // Only attempt a create when (a) the DB has no bound authUid yet (fresh
+      // login or post-reset) OR (b) we're already on a bumped retry (the
+      // original version's slot was stranded — earlier iterations of this
+      // loop have committed us to the recovery path).
+      const canCreate=(!ud.authUid||attempt>0)&&(e.code==='auth/user-not-found'||e.code==='auth/invalid-credential');
+      if(!canCreate)throw e;
       try{
         cred=await withTimeout(createUserWithEmailAndPassword(auth,email,pin),10000,'Firebase Auth account creation timed out','auth/timeout');
         createdAuthUser=true;
+        break; // create succeeded → we own this version
       }catch(createErr){
+        lastErr=createErr;
         if(createErr.code==='auth/email-already-in-use'){
-          const outOfSync=new Error('This trainer PIN is out of sync with Firebase Auth. Ask an admin to repair the Firebase Auth user.');
-          outOfSync.code='auth/pin-out-of-sync';
-          throw outOfSync;
+          // Stranded Auth user at this version — try the next one
+          currentVersion++;
+          continue;
         }
         throw createErr;
       }
-    }else{
-      throw e;
     }
   }
+  if(!cred){
+    const outOfSync=new Error('This trainer PIN is out of sync with Firebase Auth after multiple version bumps. Ask an admin to reset the PIN, or clean up the orphan auth users in Firebase Console.');
+    outOfSync.code='auth/pin-out-of-sync';
+    if(lastErr)console.warn('Auth recovery exhausted',lastErr);
+    throw outOfSync;
+  }
   currentAuthUid=cred.user.uid;
-  if(ud.authUid&&ud.authUid!==currentAuthUid){
+  // If the DB had a different authUid bound AND we're still on the original
+  // version (i.e. no recovery bump happened), that's a real out-of-sync —
+  // someone else's Auth account is bound to this trainer's record.
+  if(ud.authUid&&ud.authUid!==currentAuthUid&&currentVersion===baseVersion){
     const outOfSync=new Error('Realtime Database points this trainer at a different Firebase Auth user.');
     outOfSync.code='auth/pin-out-of-sync';
     throw outOfSync;
   }
-  const authUpdate={authEmail:email,authUid:currentAuthUid};
+  const finalEmail=authEmail(username,currentVersion);
+  const authUpdate={authEmail:finalEmail,authUid:currentAuthUid};
+  // If we bumped the version during recovery, persist the new one so future
+  // logins go straight to the working slot.
+  if(currentVersion!==baseVersion){
+    authUpdate.authVersion=currentVersion;
+    console.info(`Auth recovery: bumped ${username} from v${baseVersion} to v${currentVersion}`);
+  }
   try{
-    if(ud.authEmail!==email||ud.authUid!==currentAuthUid)await bindAuthUserNow(username,authUpdate);
+    if(ud.authEmail!==finalEmail||ud.authUid!==currentAuthUid||currentVersion!==baseVersion){
+      await bindAuthUserNow(username,authUpdate);
+    }
   }catch(bindErr){
     if(createdAuthUser&&auth.currentUser?.uid===currentAuthUid){
       await withTimeout(deleteUser(auth.currentUser),5000,'Cleanup timed out','auth/cleanup-timeout').catch(()=>{});
@@ -2976,7 +3020,7 @@ async function ensureFirebaseIdentity(username,pin,ud){
     throw bindErr;
   }
   if(db)await withTimeout(set(ref(db,`authIndex/${currentAuthUid}`),{username,isAdmin:!!ud.isAdmin,isOwner:!!ud.isOwner,lastSeen:Date.now()}),5000,'Updating login index timed out','db/index-timeout').catch(()=>{});
-  return{uid:currentAuthUid,email};
+  return{uid:currentAuthUid,email:finalEmail};
 }
 
 async function connectFirebase(){
