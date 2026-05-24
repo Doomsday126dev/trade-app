@@ -2128,7 +2128,7 @@ if(!DB)throw new Error('Trade data failed to load');
 
 const PREFILTER="!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&";
 const OWNER="Doomsday126";
-const APP_VERSION="4.6.12";
+const APP_VERSION="4.6.13";
 const STALE_WARN=7,STALE_OLD=30;
 const SESSION_TTL=30*24*60*60*1000; // 30 days; refreshed on each activity so active users stay logged in
 const SPRITE_BASE="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/";
@@ -2834,9 +2834,11 @@ function detectSpriteScale(url){
       const g=c.getContext('2d',{willReadFrequently:true});
       g.drawImage(img,0,0);
       const{data}=g.getImageData(0,0,W,H);
-      // Fast edge-walk bounds detection
+      // Fast edge-walk bounds detection. Threshold bumped from 10 → 60 so
+      // antialiased edges and soft drop-shadows don't get counted as "content"
+      // (which would inflate the detected fill % and make the scale way too small).
       let top=0,bottom=H-1,left=0,right=W-1;
-      const opaque=(x,y)=>data[(y*W+x)*4+3]>10;
+      const opaque=(x,y)=>data[(y*W+x)*4+3]>60;
       outerT:for(top=0;top<H;top++){for(let x=0;x<W;x++){if(opaque(x,top))break outerT;}}
       outerB:for(bottom=H-1;bottom>=0;bottom--){for(let x=0;x<W;x++){if(opaque(x,bottom))break outerB;}}
       outerL:for(left=0;left<W;left++){for(let y=top;y<=bottom;y++){if(opaque(left,y))break outerL;}}
@@ -2854,6 +2856,10 @@ function detectSpriteScale(url){
     }catch(e){
       // CORS or canvas error — keep default
     }
+    // PokeMiners URLs always need *some* upscale because the character occupies
+    // <50% of the 256×256 canvas. If detection got a too-low result (CORS error,
+    // proxy failure, shadow-edge confusion), floor it so we never render tiny.
+    if(url.includes('PokeMiners')&&scale<1.4)scale=1.4;
     spriteScaleCache[url]={scale:Math.round(scale*100)/100,t:Date.now()};
     _saveScaleCache();
     _scaleDetectInflight.delete(url);
@@ -2877,7 +2883,12 @@ function _updateRenderedScale(url,scale){
 }
 function effectiveSpriteScale(url){
   const cached=spriteScaleCache[url];
-  return cached?cached.scale:spriteSourceScale(url);
+  let scale=cached?cached.scale:spriteSourceScale(url);
+  // Heal cached values that were pinned too low for PokeMiners art (the v4.6.12
+  // cache bump + the new in-detect floor catch most of these going forward,
+  // but a user with mid-flight cache entries gets the floor applied here too).
+  if(url&&url.includes('PokeMiners')&&scale<1.4)scale=1.4;
+  return scale;
 }
 function spriteImg(no,size=40,cls='',name='',gender='',dn='',opts={}){
   const urls=[
@@ -6238,6 +6249,7 @@ async function triggerInstall(){
 
 // ── WHAT'S NEW (#28) ─────────────────────────────────────────
 const WHATS_NEW=[
+  {version:'4.6.13',title:'🔍 Small Pokémon sprite fix (round 3 — the real one)',desc:'Even with the 4.6.12 fallback bump, Igglybuff / Mime Jr. and friends were still rendering tiny on some PWAs because the sprite-size auto-detector was getting tricked by their soft drop-shadows. The detector now ignores faint edge pixels, and a hard floor guarantees PokeMiners sprites can never render smaller than readable — even when detection completely fails.'},
   {version:'4.6.12',title:'🔍 Small Pokémon sprite fix (round 2)',desc:'4.6.11 fixed the cap that was crushing Cleffa / Igglybuff / Mime Jr. sprites — but in PWAs where the sprite-size auto-detection had been blocked by a flaky proxy, the cached "tiny" value kept being used. This version resets the cache and gives PokeMiners art a reasonable default size up front, so the right size shows immediately even when auto-detection is offline.'},
   {version:'4.6.11',title:'🔍 Small-bodied Pokémon look the right size in Inventory again',desc:'Sprites like Cleffa, Igglybuff, Mime Jr. and Munchlax were rendering as tiny thumbnails after the last sprite update. They now auto-scale to fill the tile properly again.'},
   {version:'4.6.10',title:'🛠️ Cancel-trade fix when you\'re the offer bidder',desc:'Previously, if you cancelled a reserved/scheduled trade that you got into by offering on someone else\'s inventory, your inventory would silently inflate and the other trainer\'s wouldn\'t actually be restored. Now both sides get the right items back regardless of who organized the trade.'},
