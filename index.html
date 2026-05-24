@@ -2476,18 +2476,126 @@ function goCostumeSpriteUrl(no,name){
   if(!slug||!dex)return'';
   return`${SEREBII_GO_SPRITE_BASE}${dex}-${slug}.png`;
 }
+const POKEMONDB_GO_SPRITE_BASE='https://img.pokemondb.net/sprites/go/normal/1x/';
+const POKEMONDB_GO_COSTUME_ALIASES={
+  'Eevee Explorer Hat':['eevee-explorer-hat'],
+  'Eevee Flower Crown':['eevee-flower'],
+  'Eevee Holiday 2023':['eevee-holiday-hat'],
+  'Eevee Cherry Blossoms':['eevee-cherry-blossoms'],
+  'Eevee Moon Crown':['eevee-moon-crown'],
+  'Eevee Sun Crown':['eevee-sun-crown'],
+  'Vaporeon Flower Crown':['vaporeon-flower'],
+  'Vaporeon holiday 2023':['vaporeon-holiday-hat'],
+  'Vaporeon Holiday 2023':['vaporeon-holiday-hat'],
+  'Vaporeon Cherry Blossoms':['vaporeon-cherry-blossoms'],
+  'Vaporeon Explorer Hat':['vaporeon-explorer-hat'],
+  'Jolteon Flower Crown':['jolteon-flower'],
+  'Jolteon Holiday 2023':['jolteon-holiday-hat'],
+  'Jolteon Cherry Blossoms':['jolteon-cherry-blossoms'],
+  'Jolteon Explorer Hat':['jolteon-explorer-hat'],
+  'Flareon Flower Crown':['flareon-flower'],
+  'Flareon Holiday 2023':['flareon-holiday-hat'],
+  'Flareon Cherry Blossoms':['flareon-cherry-blossoms'],
+  'Flareon Explorer Hat':['flareon-explorer-hat'],
+  'Espeon Flower Crown':['espeon-flower'],
+  'Espeon Holiday 2023':['espeon-holiday-hat'],
+  'Espeon Cherry Blossoms':['espeon-cherry-blossoms'],
+  'Espeon Explorer Hat':['espeon-explorer-hat'],
+  'Espeon Day Scarf':['espeon-day-scarf'],
+  'Umbreon Flower Crown':['umbreon-flower'],
+  'Umbreon Holiday 2023':['umbreon-holiday-hat'],
+  'Umbreon Cherry Blossoms':['umbreon-cherry-blossoms'],
+  'Umbreon Explorer Hat':['umbreon-explorer-hat'],
+  'Umbreon Night Scarf':['umbreon-night-scarf'],
+  'Leafeon Flower Crown':['leafeon-flower'],
+  'Leafeon Holiday 2023':['leafeon-holiday-hat'],
+  'Leafeon Cherry Blossoms':['leafeon-cherry-blossoms'],
+  'Leafeon Explorer Hat':['leafeon-explorer-hat'],
+  'Glaceon Flower Crown':['glaceon-flower'],
+  'Glaceon Holiday 2023':['glaceon-holiday-hat'],
+  'Glaceon Cherry Blossoms':['glaceon-cherry-blossoms'],
+  'Glaceon Explorer Hat':['glaceon-explorer-hat'],
+  'Sylveon Flower Crown':['sylveon-flower'],
+  'Sylveon Holiday':['sylveon-holiday-hat'],
+  'Sylveon Cherry Blossoms':['sylveon-cherry-blossoms'],
+  'Sylveon Explorer Hat':['sylveon-explorer-hat']
+};
+const POKEMONDB_GO_SUFFIX_PATTERNS=[
+  [/ Explorer Hat$/i,['explorer-hat']],
+  [/ Cherry Blossoms$/i,['cherry-blossoms']],
+  [/ Flower Crown$/i,['flower','flower-crown']],
+  [/ Holiday 20\d{2}$/i,['holiday-hat','holiday']],
+  [/ Holidays$/i,['holiday-hat','holiday']],
+  [/ Holiday$/i,['holiday-hat','holiday']],
+  [/ Day Scarf$/i,['day-scarf']],
+  [/ Night Scarf$/i,['night-scarf']],
+  [/ Scarf$/i,['scarf']],
+  [/ Ribbon$/i,['ribbon']],
+  [/ Fashionable Costume$/i,['fashionable-costume','fashionable']],
+  [/ Fashionable Hat$/i,['fashionable-hat','fashionable']],
+  [/ Fashionable$/i,['fashionable']],
+  [/ Party Hat 20\d{2}$/i,['party-hat-2020','party-hat']],
+  [/ Party Hat$/i,['party-hat']],
+  [/ Party Top Hat$/i,['party-top-hat','top-hat']],
+  [/ Original Cap$/i,['original-cap']],
+  [/ World Cap$/i,['world-cap']],
+  [/ Fragment Cap$/i,['fragment-cap']],
+  [/ Flower Hat$/i,['flower-hat','flower']],
+  [/ Moon Crown$/i,['moon-crown']],
+  [/ Sun Crown$/i,['sun-crown']],
+  [/ Cempasuchil Crown$/i,['cempasuchil-crown','crown']],
+  [/ Holiday Attire$/i,['holiday-attire','holiday']],
+  [/ Swim Ring$/i,['swim-ring']],
+  [/ Witch Hat$/i,['witch-hat']],
+  [/ Bow$/i,['bow']],
+  [/ Backwards Cap$/i,['backwards-cap','backwardscap']],
+  [/ Halloween Mischief$/i,['halloween-mischief','halloween']],
+  [/ Halloween$/i,['halloween']],
+  [/ Spooky Festival$/i,['spooky-festival','spooky']],
+  [/ Night Cap$/i,['night-cap','nightcap']]
+];
+function pokemondbGoSpeciesSlug(name=''){
+  return String(name||'').trim().toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g,'')
+    .replace(/[.'’]/g,'')
+    .replace(/♀|♂/g,'')
+    .replace(/\s+/g,'-')
+    .replace(/-+/g,'-')
+    .replace(/^-|-$/g,'');
+}
+function pokemondbGoCostumeUrls(name=''){
+  const raw=String(name||'').trim();
+  if(!raw)return[];
+  const exact=POKEMONDB_GO_COSTUME_ALIASES[raw];
+  if(exact?.length)return exact.map(slug=>`${POKEMONDB_GO_SPRITE_BASE}${slug}.png`);
+  for(const [pattern,suffixes] of POKEMONDB_GO_SUFFIX_PATTERNS){
+    const match=raw.match(pattern);
+    if(!match)continue;
+    const species=raw.slice(0,match.index).trim();
+    const speciesSlug=pokemondbGoSpeciesSlug(species);
+    if(!speciesSlug)continue;
+    return suffixes.map(suffix=>`${POKEMONDB_GO_SPRITE_BASE}${speciesSlug}-${suffix}.png`);
+  }
+  return[];
+}
+function pokemondbGoCostumeUrl(name=''){
+  return pokemondbGoCostumeUrls(name)[0]||'';
+}
 function canvasSafeSpriteUrl(url){
   if(!url)return'';
   // Proxy CORS-restricted hosts through images.weserv.nl for canvas export
-  const NEEDS_PROXY=[SEREBII_GO_SPRITE_BASE,'https://cdn08.net/',POKEMONDB_BASE,POKEMINERS_BASE];
+  const NEEDS_PROXY=[SEREBII_GO_SPRITE_BASE,'https://cdn08.net/',POKEMONDB_BASE,POKEMONDB_GO_SPRITE_BASE,POKEMINERS_BASE];
   if(NEEDS_PROXY.some(prefix=>url.startsWith(prefix))){
     return IMAGE_PROXY_BASE+encodeURIComponent(url.replace(/^https?:\/\//,''));
   }
   return url;
 }
 function entrySpriteUrl(entry,nameOverride='',gender=''){
+  const resolvedName=nameOverride||entry?.name||entry?.displayName||'';
+  const pdbGoCostume=resolvedName?pokemondbGoCostumeUrl(resolvedName):'';
+  if(pdbGoCostume)return pdbGoCostume;
   if(entry?.spriteUrl||entry?.sprite)return entry.spriteUrl||entry.sprite;
-  return spriteUrl(entry?.no,nameOverride||entry?.name||entry?.displayName,gender,entry?.displayName||nameOverride||entry?.name);
+  return spriteUrl(entry?.no,resolvedName,gender,entry?.displayName||resolvedName);
 }
 // Resolves the BEST QUALITY sprite URL.
 // Priority: hand-curated costume URLs (cdn08 wiki) → PokemonDB HOME 3D renders →
@@ -2517,26 +2625,33 @@ function unownSpriteUrl(name){
 }
 
 function spriteUrl(no,name,gender='',dn=''){
-  // 1. Hand-curated costume sprite URLs (e.g., Pikachu Santa, Spinda forms via Serebii)
+  // 1. Prefer PokémonDB's GO-specific costume art when we can infer a reliable costume URL.
+  //    It is clearer than many legacy wiki assets and fixes several Eeveelution costume mismatches.
+  const pdbGoCostume=name?pokemondbGoCostumeUrl(name):'';
+  if(pdbGoCostume)return pdbGoCostume;
+  // 2. Hand-curated costume sprite URLs (legacy fallback for oddball costumes not covered above)
   if(name&&EXTRA_COSTUME_SPRITES[name])return EXTRA_COSTUME_SPRITES[name];
-  // 1b. Unown letters — PokeAPI's per-letter pixel sprites are inconsistently sized
+  // 3. Unown letters — PokeAPI's per-letter pixel sprites are inconsistently sized
   //     (some are tiny, some span the full tile). PokemonDB hosts the Pokémon HOME
   //     3D renders for all 28 forms at a consistent 128×128, so use those instead.
   const unownUrl=unownSpriteUrl(name);
   if(unownUrl)return unownUrl;
-  // 2. Serebii GO costume sprites (curated slug map → known-existing Serebii URL).
+  // 4. Serebii GO costume sprites (curated slug map → known-existing Serebii URL).
   //    Must come BEFORE PokemonDB because PokemonDB doesn't have costume variants
   //    (their HOME 3D sprites only cover base Pokémon and game forms, not GO costumes).
   const goUrl=goCostumeSpriteUrl(no,name);
   if(goUrl)return goUrl;
-  // 3. PokeAPI costume form variants (Vivillon, Furfrou — non-Pokemon-GO forms)
+  // 5. PokeAPI costume form variants (Vivillon, Furfrou — non-Pokemon-GO forms)
   if(name&&COSTUME_FORM_SPRITE_IDS[name])return`${SPRITE_BASE}${COSTUME_FORM_SPRITE_IDS[name]}.png`;
-  // 4. PokeAPI regional form (Alolan, Galarian, Hisuian, Paldean)
+  // 6. PokeAPI regional form (Alolan, Galarian, Hisuian, Paldean)
   if(name&&REGIONAL_FORM_IDS[name])return`${SPRITE_BASE}${REGIONAL_FORM_IDS[name]}.png`;
-  // 5. PokemonDB HOME 3D — high-quality renders for base Pokémon and game forms
+  // 7. PokeMiners GO asset — preferred for plain Pokémon because it matches in-game art.
+  const pmBase=(!name||!EXTRA_COSTUME_SPRITES[name])&&no?pokeminersSpriteUrl(no,'00'):'';
+  if(pmBase)return pmBase;
+  // 8. PokemonDB HOME 3D — fallback for game forms and anything PokeMiners doesn't expose cleanly
   const pdb=pokemondbSpriteUrl(name,dn||name,gender);
   if(pdb)return pdb;
-  // 6. PokeAPI female sprite (Pyroar ♀, Pikachu ♀ tail, etc.)
+  // 9. PokeAPI female sprite (Pyroar ♀, Pikachu ♀ tail, etc.)
   if(gender==='f'){
     const fUrl=femaleSpriteUrl(no);
     if(fUrl)return fUrl;
@@ -2613,12 +2728,18 @@ function spriteFallbackChain(no,name,gender='',dn=''){
   // Primary URL (from spriteUrl — uses GO costume slugs first now)
   const primary=spriteUrl(no,name,gender,dn);
   push(primary);
+  // If this looks like a GO costume, try PokémonDB GO costume art variants first.
+  for(const u of pokemondbGoCostumeUrls(name))push(u);
+  // Then legacy hand-curated URLs for costume edge cases.
+  if(name&&EXTRA_COSTUME_SPRITES[name])push(EXTRA_COSTUME_SPRITES[name]);
   // If this is a known GO costume, the Serebii URL is canonical — make sure it's tried explicitly
   const goUrl=goCostumeSpriteUrl(no,name);
   push(goUrl);
   // PokeAPI specific form variants
   if(name&&REGIONAL_FORM_IDS[name])push(`${SPRITE_BASE}${REGIONAL_FORM_IDS[name]}.png`);
   if(name&&COSTUME_FORM_SPRITE_IDS[name])push(`${SPRITE_BASE}${COSTUME_FORM_SPRITE_IDS[name]}.png`);
+  // PokeMiners GO art before HOME renders for plain Pokémon
+  if(no)push(pokeminersSpriteUrl(no,'00'));
   // PokemonDB HOME for any non-costume Pokémon (form/regional/gender variants)
   push(pokemondbSpriteUrl(name,dn||name,gender));
   if(gender==='f'){
@@ -2733,7 +2854,7 @@ function spriteImg(no,size=40,cls='',name='',gender='',dn=''){
   const urls=spriteFallbackChain(no,name,gender,dn);
   if(!urls.length)return`<div class="pc-sprite-placeholder" style="width:${size}px;height:${size}px">🎮</div>`;
   const url=urls[0];
-  const isGo=url.includes('serebii.net')||url.includes('weserv.nl');
+  const isGo=url.includes('serebii.net')||url.includes('weserv.nl')||url.includes('/sprites/go/')||url.includes('PokeMiners')||url.includes('pogo_assets');
   const rendering=isGo?'auto':'pixelated';
   const scale=effectiveSpriteScale(url);
   // Trigger async per-image trim detection (no-op if already cached)
