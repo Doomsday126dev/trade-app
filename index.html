@@ -2206,7 +2206,7 @@ if(!DB)throw new Error('Trade data failed to load');
 
 const PREFILTER="!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&";
 const OWNER="Doomsday126";
-const APP_VERSION="4.6.14";
+const APP_VERSION="4.6.15";
 const STALE_WARN=7,STALE_OLD=30;
 const SESSION_TTL=30*24*60*60*1000; // 30 days; refreshed on each activity so active users stay logged in
 const SPRITE_BASE="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/";
@@ -2858,10 +2858,13 @@ function spriteFallbackChain(no,name,gender='',dn=''){
 // ── PER-IMAGE SPRITE NORMALIZATION ─────────────────────────────
 // Different Pokémon have different padding within their sprites — Joltik fills 30% of frame,
 // Mewtwo fills 85%. Detect each sprite's actual character bounds via canvas + persist scale.
-// _v3 (4.6.12) — invalidates older caches where detectSpriteScale gave up via
-// onerror (CORS / weserv flake) and pinned PokeMiners URLs at scale 1, leaving
-// small-bodied species (Cleffa, Igglybuff, Mime Jr. …) rendering tiny.
-const SPRITE_SCALE_CACHE_KEY='pogoSpriteScales_v3';
+// _v4 (4.6.15) — cache shape grew to { scale, cx, cy, t }. cx/cy are the
+// character bounding-box centre as a fraction of source dimensions; we use
+// them as transform-origin so scaling up doesn't drift the character off the
+// tile when the source isn't perfectly centred (PokeMiners art typically isn't).
+// Older _v3 caches lacked cx/cy and would have rendered the v4.6.13 "always
+// scale ≥ 1.4" floor with the wrong anchor — visible misalignment.
+const SPRITE_SCALE_CACHE_KEY='pogoSpriteScales_v4';
 const SPRITE_TARGET_FILL=0.86; // character should fill ~86% of cell after scaling
 let spriteScaleCache={};
 try{spriteScaleCache=JSON.parse(localStorage.getItem(SPRITE_SCALE_CACHE_KEY)||'{}')||{};}catch{}
@@ -2905,6 +2908,10 @@ function detectSpriteScale(url){
   img.crossOrigin='anonymous';
   img.onload=()=>{
     let scale=spriteSourceScale(url);
+    // Character center as fraction of source dimensions (0..1). Default 0.5/0.5
+    // = "right at image center", which is what unprocessed images render at —
+    // so cache hits without cx/cy values behave identically to old behaviour.
+    let cx=0.5,cy=0.5;
     try{
       const c=document.createElement('canvas');
       const W=img.naturalWidth||1,H=img.naturalHeight||1;
@@ -2912,9 +2919,10 @@ function detectSpriteScale(url){
       const g=c.getContext('2d',{willReadFrequently:true});
       g.drawImage(img,0,0);
       const{data}=g.getImageData(0,0,W,H);
-      // Fast edge-walk bounds detection. Threshold bumped from 10 → 60 so
-      // antialiased edges and soft drop-shadows don't get counted as "content"
-      // (which would inflate the detected fill % and make the scale way too small).
+      // Fast edge-walk bounds detection. Threshold 60 (was 10) so antialiased
+      // edges and soft drop-shadows don't count as character — they would
+      // otherwise both inflate fill % (under-scaling) and pull the bounding-box
+      // centre away from the actual character (misalignment).
       let top=0,bottom=H-1,left=0,right=W-1;
       const opaque=(x,y)=>data[(y*W+x)*4+3]>60;
       outerT:for(top=0;top<H;top++){for(let x=0;x<W;x++){if(opaque(x,top))break outerT;}}
@@ -2930,6 +2938,12 @@ function detectSpriteScale(url){
         }else if(fill>=SPRITE_TARGET_FILL){
           scale=1;
         }
+        // Character centroid as fraction of source — used as transform-origin
+        // so scaling around it doesn't drift the character. PokeMiners art
+        // typically has the character feet near the bottom of the canvas, so
+        // cx is near 0.5 but cy is often 0.6-0.8.
+        cx=((left+right+1)/2)/W;
+        cy=((top+bottom+1)/2)/H;
       }
     }catch(e){
       // CORS or canvas error — keep default
@@ -2938,24 +2952,42 @@ function detectSpriteScale(url){
     // <50% of the 256×256 canvas. If detection got a too-low result (CORS error,
     // proxy failure, shadow-edge confusion), floor it so we never render tiny.
     if(url.includes('PokeMiners')&&scale<1.4)scale=1.4;
-    spriteScaleCache[url]={scale:Math.round(scale*100)/100,t:Date.now()};
+    spriteScaleCache[url]={
+      scale:Math.round(scale*100)/100,
+      cx:Math.round(cx*1000)/1000,
+      cy:Math.round(cy*1000)/1000,
+      t:Date.now()
+    };
     _saveScaleCache();
     _scaleDetectInflight.delete(url);
     // Apply to all rendered images using this URL
-    _updateRenderedScale(url,spriteScaleCache[url].scale);
+    _updateRenderedScale(url,spriteScaleCache[url]);
   };
   img.onerror=()=>{
-    spriteScaleCache[url]={scale:spriteSourceScale(url),t:Date.now()};
+    spriteScaleCache[url]={scale:spriteSourceScale(url),cx:0.5,cy:0.5,t:Date.now()};
     _saveScaleCache();
     _scaleDetectInflight.delete(url);
   };
   img.src=proxiedUrl;
 }
-function _updateRenderedScale(url,scale){
-  // Update all currently-rendered images with this URL
+// Builds the per-image transform: anchors scaling at the character centroid
+// (transform-origin in %) so the character stays put as it grows, instead of
+// drifting outward by (offset × (scale-1)) when the source isn't centered.
+function _spriteTransform(scale,cx,cy){
+  const ox=Math.round((cx??0.5)*1000)/10; // % of element
+  const oy=Math.round((cy??0.5)*1000)/10;
+  return{
+    transform:`scale(${scale})`,
+    transformOrigin:`${ox}% ${oy}%`
+  };
+}
+function _updateRenderedScale(url,entry){
+  const scale=entry?.scale||1;
+  const{transform,transformOrigin}=_spriteTransform(scale,entry?.cx,entry?.cy);
   document.querySelectorAll('img[data-src-key]').forEach(img=>{
     if(img.dataset.srcKey===url){
-      img.style.transform=`scale(${scale})`;
+      img.style.transform=transform;
+      img.style.transformOrigin=transformOrigin;
     }
   });
 }
@@ -2967,6 +2999,12 @@ function effectiveSpriteScale(url){
   // but a user with mid-flight cache entries gets the floor applied here too).
   if(url&&url.includes('PokeMiners')&&scale<1.4)scale=1.4;
   return scale;
+}
+// Pulls the cached character-centroid for a URL, falling back to image center
+// when detection hasn't run yet (or failed). Same shape as effectiveSpriteScale.
+function effectiveSpriteOrigin(url){
+  const c=spriteScaleCache[url];
+  return{cx:(c&&typeof c.cx==='number'?c.cx:0.5),cy:(c&&typeof c.cy==='number'?c.cy:0.5)};
 }
 function spriteImg(no,size=40,cls='',name='',gender='',dn='',opts={}){
   const urls=[
@@ -2980,11 +3018,13 @@ function spriteImg(no,size=40,cls='',name='',gender='',dn='',opts={}){
   const rawScale=effectiveSpriteScale(url);
   const scaleCap=Number.isFinite(opts?.scaleCap)?opts.scaleCap:null;
   const scale=scaleCap?Math.min(rawScale,scaleCap):rawScale;
+  const{cx,cy}=effectiveSpriteOrigin(url);
+  const{transform,transformOrigin}=_spriteTransform(scale,cx,cy);
   // Trigger async per-image trim detection (no-op if already cached)
   if(spriteScaleCache[url]===undefined)detectSpriteScale(url);
   const fallbacks=urls.slice(1).map(u=>u.replace(/"/g,'&quot;')).join('|');
   return`<img src="${url}" data-src-key="${escAttr(url)}" class="${cls||'pc-sprite'}" width="${size}" height="${size}" alt="" title="${escAttr(name||'Pokémon')}"
-    style="image-rendering:${rendering};object-fit:contain;transform:scale(${scale});transform-origin:center;clip-path:inset(0)"
+    style="image-rendering:${rendering};object-fit:contain;transform:${transform};transform-origin:${transformOrigin};clip-path:inset(0)"
     data-scale-cap="${scaleCap||''}" data-fallbacks="${fallbacks}" onerror="trySpriteFallback(this)" loading="lazy">`;
 }
 function trySpriteFallback(img){
@@ -2995,8 +3035,12 @@ function trySpriteFallback(img){
   img.dataset.srcKey=next;
   if(next.includes('serebii.net'))img.style.imageRendering='auto';
   const cap=parseFloat(img.dataset.scaleCap||'');
-  const nextScale=effectiveSpriteScale(next);
-  img.style.transform=`scale(${Number.isFinite(cap)&&cap>0?Math.min(nextScale,cap):nextScale})`;
+  const rawScale=effectiveSpriteScale(next);
+  const scale=Number.isFinite(cap)&&cap>0?Math.min(rawScale,cap):rawScale;
+  const{cx,cy}=effectiveSpriteOrigin(next);
+  const{transform,transformOrigin}=_spriteTransform(scale,cx,cy);
+  img.style.transform=transform;
+  img.style.transformOrigin=transformOrigin;
   if(spriteScaleCache[next]===undefined)detectSpriteScale(next);
   img.src=next;
 }
@@ -6487,6 +6531,7 @@ async function triggerInstall(){
 
 // ── WHAT'S NEW (#28) ─────────────────────────────────────────
 const WHATS_NEW=[
+  {version:'4.6.15',title:'🎯 Sprite alignment fix — characters no longer drift off-tile',desc:'After 4.6.13 made all sprites scale to a readable size, some Pokémon (Cleffa, Igglybuff, Mime Jr., Pidgey) were rendering off-center because the game art isn\'t centered the same way for every species. The app now learns each sprite\'s actual character position and scales around it, so characters stay pinned to their tile no matter how big they need to grow.'},
   {version:'4.6.14',title:'🗑️ New: "Safe-to-transfer" search string',desc:'Strings tab has a new button that generates a Pokémon GO search string of every species nobody on your chosen trade-partner list wants. Paste it into your bag search to see what\'s safe to mass-transfer. Pick which trainers count (not everyone trades with everyone), save your usual circle as the default, and the modal warns if the string is getting close to PoGo\'s search-length limit.'},
   {version:'4.6.13',title:'🔍 Small Pokémon sprite fix (round 3 — the real one)',desc:'Even with the 4.6.12 fallback bump, Igglybuff / Mime Jr. and friends were still rendering tiny on some PWAs because the sprite-size auto-detector was getting tricked by their soft drop-shadows. The detector now ignores faint edge pixels, and a hard floor guarantees PokeMiners sprites can never render smaller than readable — even when detection completely fails.'},
   {version:'4.6.12',title:'🔍 Small Pokémon sprite fix (round 2)',desc:'4.6.11 fixed the cap that was crushing Cleffa / Igglybuff / Mime Jr. sprites — but in PWAs where the sprite-size auto-detection had been blocked by a flaky proxy, the cached "tiny" value kept being used. This version resets the cache and gives PokeMiners art a reasonable default size up front, so the right size shows immediately even when auto-detection is offline.'},
