@@ -860,6 +860,37 @@ html[data-theme="light"] .have-mirror-badge,html[data-theme="light"] .have-mirro
 .sched-day-special-bonus{position:absolute;top:3px;right:4px;font-size:9px;background:rgba(245,158,11,.2);color:var(--warn);border:1px solid rgba(245,158,11,.4);padding:1px 4px;border-radius:6px;font-weight:700}
 
 .sched-day-detail{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-bottom:12px}
+/* RESERVED TRADES (from accepted offers) */
+.sched-reserved-block{background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.32);border-radius:var(--r);padding:12px 14px;margin-bottom:12px}
+.sched-reserved-hdr{font-size:13px;font-weight:700;color:#fbbf24;display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.sched-reserved-count{background:rgba(245,158,11,.2);color:#fbbf24;font-size:11px;padding:1px 7px;border-radius:10px;font-weight:700}
+.sched-reserved-hint{font-size:11px;font-weight:500;color:var(--muted);font-style:italic;margin-left:auto}
+.sched-reserved-list{display:flex;flex-direction:column;gap:8px}
+.sched-reserved-card{background:var(--card);border:1px solid var(--border);border-left:3px solid #f59e0b;border-radius:var(--r2);padding:10px 12px;font-size:12px}
+.sched-reserved-with{font-size:13px;color:var(--text);margin-bottom:8px}
+.sched-reserved-with strong{color:var(--ac2)}
+.sched-reserved-age{color:var(--muted);font-weight:400;font-size:11px}
+.sched-reserved-deal{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:stretch;margin-bottom:10px}
+.srd-side{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:6px 8px;display:flex;flex-direction:column;gap:3px;min-width:0}
+.srd-side.give{border-color:rgba(239,68,68,.32)}
+.srd-side.get{border-color:rgba(16,185,129,.32)}
+.srd-side-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.srd-side.give .srd-side-label{color:#fca5a5}
+.srd-side.get .srd-side-label{color:#6ee7b7}
+.srd-side-body{display:flex;align-items:center;gap:6px;font-weight:600;color:var(--text);min-width:0}
+.srd-side-body img{width:24px;height:24px;object-fit:contain;image-rendering:pixelated;flex-shrink:0}
+.srd-side-body span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
+.srd-arrow{display:flex;align-items:center;justify-content:center;color:var(--ac2);font-size:18px;font-weight:300}
+.sched-reserved-actions{display:flex;gap:6px;flex-wrap:wrap}
+.srvd-btn{background:var(--bg2);border:1px solid var(--border2);color:var(--text);padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:var(--font);transition:.15s}
+.srvd-btn:hover{border-color:var(--accent);color:var(--ac2)}
+.srvd-btn.schedule{border-color:rgba(108,99,255,.4);color:var(--ac2)}
+.srvd-btn.schedule:hover{background:rgba(108,99,255,.12)}
+.srvd-btn.done{border-color:rgba(16,185,129,.4);color:#34d399}
+.srvd-btn.done:hover{background:rgba(16,185,129,.1)}
+.srvd-btn.cancel{border-color:rgba(239,68,68,.32);color:#fca5a5}
+.srvd-btn.cancel:hover{background:rgba(239,68,68,.08)}
+@media(max-width:480px){.sched-reserved-deal{grid-template-columns:1fr;gap:4px}.srd-arrow{transform:rotate(90deg);padding:2px 0}}
 .sched-day-detail-hdr{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
 .sched-day-detail-date{font-size:16px;font-weight:700;flex:1;min-width:0}
 .sched-day-detail-quick-add{background:var(--accent);color:#fff;border:none;padding:6px 12px;border-radius:var(--r2);font-size:12px;font-weight:600;cursor:pointer}
@@ -1544,6 +1575,7 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
       <button class="bsave sched-add-btn" onclick="openScheduleModal()">+ Schedule Trade</button>
     </div>
     <div class="sched-week-strip" id="sched-week-strip"></div>
+    <div id="sched-reserved-block" class="sched-reserved-block" style="display:none"></div>
     <div id="sched-day-detail"></div>
   </div>
 
@@ -2202,7 +2234,10 @@ const LEGENDARY_AVATAR_ENTRIES=[
   [772,'Type: Null'],[773,'Silvally'],[785,'Tapu Koko'],[786,'Tapu Lele'],[787,'Tapu Bulu'],[788,'Tapu Fini'],[789,'Cosmog'],[790,'Cosmoem'],[791,'Solgaleo'],[792,'Lunala'],[793,'Nihilego'],[794,'Buzzwole'],[795,'Pheromosa'],[796,'Xurkitree'],[797,'Celesteela'],[798,'Kartana'],[799,'Guzzlord'],
   // Necrozma — base + fused Dusk Mane (Solgaleo) / Dawn Wings (Lunala)
   [800,'Necrozma'],[800,'Necrozma (Dusk Mane)'],[800,'Necrozma (Dawn Wings)'],
-  [801,'Magearna'],[802,'Marshadow'],[807,'Zeraora'],[808,'Meltan'],[809,'Melmetal'],
+  [801,'Magearna'],[802,'Marshadow'],
+  // Ultra Beasts released after Marshadow (Ultra Sun / Ultra Moon batch)
+  [803,'Poipole'],[804,'Naganadel'],[805,'Stakataka'],[806,'Blacephalon'],
+  [807,'Zeraora'],[808,'Meltan'],[809,'Melmetal'],
   // Zacian / Zamazenta — Hero + Crowned forms
   [888,'Zacian (Hero)'],[888,'Zacian (Crowned)'],
   [889,'Zamazenta (Hero)'],[889,'Zamazenta (Crowned)'],
@@ -6414,7 +6449,100 @@ function renderSchedule(){
       </div>`;
     }).join('');
   }
+  renderReservedSection();
   renderSchedDayDetail();
+}
+
+// ── RESERVED TRADES (from offer-accept flow) ─────────────────
+// Accepted offers create a no-date "reserved" trade. This section surfaces
+// them at the top of the Schedule view so they don't get lost. From here the
+// user can pick a date, mark traded, or cancel.
+function reservedTrades(){
+  const trades=allData.trades||{};
+  return Object.entries(trades)
+    .filter(([id,t])=>t&&t.status==='reserved')
+    .filter(([id,t])=>!t.participants||t.participants[cur]||t.organizer===cur)
+    .map(([id,t])=>({id,...t}))
+    .sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+}
+function renderReservedSection(){
+  const el=document.getElementById('sched-reserved-block');
+  if(!el)return;
+  const reserved=reservedTrades();
+  if(!reserved.length){el.innerHTML='';el.style.display='none';return;}
+  el.style.display='';
+  el.innerHTML=`
+    <div class="sched-reserved-hdr">
+      📌 Reserved trades <span class="sched-reserved-count">${reserved.length}</span>
+      <span class="sched-reserved-hint">Accepted offers waiting on a meet-up date</span>
+    </div>
+    <div class="sched-reserved-list">
+      ${reserved.map(t=>renderReservedCard(t)).join('')}
+    </div>`;
+}
+function renderReservedCard(t){
+  const cp=t.counterparty||Object.keys(t.participants||{}).find(u=>u!==cur)||'?';
+  const isMine=t.organizer===cur;
+  const giveLabel=t.gave?`${t.gave.qty||1}× ${t.gave.name||'?'}${t.gave.gender==='m'?' ♂':t.gave.gender==='f'?' ♀':''}`:'?';
+  const getLabel=t.received?`${t.received.qty||1}× ${t.received.name||'?'}${t.received.gender==='m'?' ♂':t.received.gender==='f'?' ♀':''}`:'?';
+  const giveSpr=t.gave?.name?spriteUrl(_nameToSpriteEntry(t.gave.name).no,t.gave.name,t.gave.gender||''):'';
+  const getSpr=t.received?.name?spriteUrl(_nameToSpriteEntry(t.received.name).no,t.received.name,t.received.gender||''):'';
+  const ageMin=t.createdAt?Math.max(0,Math.floor((Date.now()-t.createdAt)/60000)):0;
+  const ageLabel=ageMin<60?`${ageMin}m ago`:ageMin<1440?`${Math.floor(ageMin/60)}h ago`:`${Math.floor(ageMin/1440)}d ago`;
+  // From the accepting trainer's POV, we GAVE recipient-item and GOT bidder-item.
+  // From the bidder's POV (the other participant), the labels swap.
+  const youGive=isMine?giveLabel:getLabel;
+  const youGet=isMine?getLabel:giveLabel;
+  const youGiveSpr=isMine?giveSpr:getSpr;
+  const youGetSpr=isMine?getSpr:giveSpr;
+  return`<div class="sched-reserved-card" data-id="${escAttr(t.id)}">
+    <div class="sched-reserved-with">with <strong>${escHtml(cp)}</strong> <span class="sched-reserved-age">· reserved ${ageLabel}</span></div>
+    <div class="sched-reserved-deal">
+      <div class="srd-side give">
+        <div class="srd-side-label">You give</div>
+        <div class="srd-side-body">${youGiveSpr?`<img src="${escAttr(youGiveSpr)}" alt="" loading="lazy">`:'🎮'}<span>${escHtml(youGive)}</span></div>
+      </div>
+      <div class="srd-arrow">↔</div>
+      <div class="srd-side get">
+        <div class="srd-side-label">You get</div>
+        <div class="srd-side-body">${youGetSpr?`<img src="${escAttr(youGetSpr)}" alt="" loading="lazy">`:'🎮'}<span>${escHtml(youGet)}</span></div>
+      </div>
+    </div>
+    <div class="sched-reserved-actions">
+      <button class="srvd-btn schedule" onclick="scheduleReservedTrade('${escAttr(t.id)}')" title="Pick a date/time">📅 Schedule date</button>
+      <button class="srvd-btn done" onclick="markReservedTraded('${escAttr(t.id)}')" title="Mark as actually traded (saves to your trade history)">✓ Mark traded</button>
+      ${isMine?`<button class="srvd-btn cancel" onclick="cancelReservedTrade('${escAttr(t.id)}')" title="Cancel the reservation">✗ Cancel</button>`:''}
+    </div>
+  </div>`;
+}
+function scheduleReservedTrade(id){
+  const t=allData.trades?.[id];
+  if(!t){toast('Trade not found');return;}
+  // Open the existing schedule modal pre-filled with the reservation. Saving
+  // the modal upgrades status:'reserved' → 'scheduled' (handled in submitScheduledTrade).
+  openScheduleModal(todayIso(),id);
+}
+async function markReservedTraded(id){
+  const t=allData.trades?.[id];
+  if(!t){toast('Trade not found');return;}
+  const cp=t.counterparty||Object.keys(t.participants||{}).find(u=>u!==cur)||'partner';
+  if(!confirm(`Confirm that you actually completed this trade with ${cp} in-game? This moves it into your trade history.`))return;
+  await writeTrade(id,{
+    ...t,
+    date:t.date||todayIso(),
+    status:'completed',
+    completedAt:Date.now(),
+    updatedAt:Date.now()
+  });
+  toast('✅ Trade marked as completed');
+}
+async function cancelReservedTrade(id){
+  const t=allData.trades?.[id];
+  if(!t){toast('Trade not found');return;}
+  const cp=t.counterparty||Object.keys(t.participants||{}).find(u=>u!==cur)||'partner';
+  if(!confirm(`Cancel this reservation with ${cp}?\n\nThe Pokémon were already removed from your inventory when you accepted — cancelling won't add them back automatically. If you want them back, edit your Have tab manually after.`))return;
+  await writeTrade(id,{...t,status:'cancelled',updatedAt:Date.now()});
+  toast('✗ Reservation cancelled');
 }
 
 function renderSchedDayDetail(){
@@ -6647,7 +6775,8 @@ async function submitScheduledTrade(){
     note:String(note).slice(0,500),
     createdAt:existing?.createdAt||Date.now(),
     updatedAt:Date.now(),
-    status:existing?.status||'scheduled'
+    // 'reserved' upgrades to 'scheduled' once the user picks a real date in this modal
+    status:existing?.status==='reserved'?'scheduled':(existing?.status||'scheduled')
   };
   await writeTrade(id,trade);
   closeScheduleModal();
@@ -6660,15 +6789,17 @@ async function submitScheduledTrade(){
 }
 
 function updateScheduleNotif(){
-  // Show badge on Schedule tab if user has upcoming trades within 24 hours
+  // Show badge on Schedule tab for: (a) trades within the next 24 hours,
+  // (b) any open reservations that still need a date. Both are user-actionable.
   const badge=document.getElementById('schedule-notif');
   if(!badge||!cur)return;
   const now=Date.now();
   const inDay=now+24*60*60*1000;
   let count=0;
   Object.values(allData.trades||{}).forEach(t=>{
-    if(!t||t.status!=='scheduled')return;
-    if(!t.participants||!t.participants[cur])return;
+    if(!t||!t.participants||!t.participants[cur])return;
+    if(t.status==='reserved'){count++;return;}
+    if(t.status!=='scheduled'||!t.date)return;
     const tDate=parseIsoDate(t.date).getTime();
     if(tDate>=now-86400000&&tDate<=inDay)count++;
   });
@@ -7558,7 +7689,10 @@ async function confirmAcceptTrade(){
     });
     // 4) Remove the offer.
     await withdrawOffer(ctx.recipient,ctx.offerId);
-    toast(`✅ Traded ${qty}× ${ctx.recipientName} ↔ ${qty}× ${ctx.bidderName} with ${ctx.bidder}`);
+    // 5) Log a completed trade record so it shows up in both parties' Schedule
+    //    views for posterity (and to satisfy "I want a record of what happened").
+    await _logAcceptedTrade(ctx,qty).catch(e=>console.warn('Trade log write failed',e));
+    toast(`📌 Reserved ${qty}× ${ctx.recipientName} ↔ ${qty}× ${ctx.bidderName} with ${ctx.bidder} — see Schedule tab to plan a meet-up date`,4500);
   }catch(e){
     console.error(e);
     toast('⚠️ Trade failed to save — try again');
@@ -7566,6 +7700,40 @@ async function confirmAcceptTrade(){
     if(btn){btn.disabled=false;btn.textContent='✓ Confirm trade';}
     closeAcceptModal();
   }
+}
+// Write a completed-trade record for an accepted offer. Lands in allData.trades
+// and shows up in the Schedule tab for both the recipient (organizer) and the
+// bidder (participant). Auto-tagged with `autoLogged:true` so the UI can
+// distinguish these from manually-scheduled trades if we ever want to filter.
+async function _logAcceptedTrade(ctx,qty){
+  const id=`accept_${Date.now()}_${cur}_${Math.random().toString(36).slice(2,7)}`;
+  const now=Date.now();
+  const giveLabel=`${qty}× ${ctx.recipientName}${ctx.recipientGender==='m'?' ♂':ctx.recipientGender==='f'?' ♀':''}`;
+  const getLabel=`${qty}× ${ctx.bidderName}${ctx.bidderGender==='m'?' ♂':ctx.bidderGender==='f'?' ♀':''}`;
+  // A reservation, not a completed trade — the in-game swap hasn't happened
+  // yet. Both inventories are already decremented (earmarked for this trade)
+  // but the actual meetup may be days away. From the Schedule tab the user
+  // can pick a date (→ status:'scheduled'), mark it actually traded
+  // (→ status:'completed' with completedAt), or cancel the reservation.
+  const trade={
+    id,
+    date:'',  // empty — reservation has no date yet
+    time:'',
+    type:'regular',
+    organizer:cur,
+    participants:{[cur]:'organizer',[ctx.bidder]:'confirmed'},
+    pokemon:[ctx.recipientName,ctx.bidderName],
+    note:`Reserved via offer accept · ${cur} earmarked ${giveLabel} ↔ ${ctx.bidder} earmarked ${getLabel}`,
+    createdAt:now,
+    updatedAt:now,
+    status:'reserved',
+    autoLogged:true,
+    gave:{key:ctx.recipientItemKey,name:ctx.recipientName,gender:ctx.recipientGender||'',qty},
+    received:{key:ctx.offerItemKey,name:ctx.bidderName,gender:ctx.bidderGender||'',qty},
+    counterparty:ctx.bidder
+  };
+  await writeTrade(id,trade);
+  return id;
 }
 // Queue a one-way "decrement N of {key} from {bidder}'s have/" instruction.
 // Only the bidder can read/clear their bucket; any signed-in user can create
@@ -8443,6 +8611,7 @@ Object.assign(window,{
   // Schedule
   navigateSchedWeek,navigateSchedToday,selectSchedDay,openScheduleModal,closeScheduleModal,
   selectSchedType,submitScheduledTrade,markTradeComplete,cancelScheduledTrade,setManualBonus,
+  scheduleReservedTrade,markReservedTraded,cancelReservedTrade,
   // Shiny + tour + shortcuts
   setShiny,startTour,tourNext,tourPrev,skipTour,finishTour,
   // Special Trade Board
