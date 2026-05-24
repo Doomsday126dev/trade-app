@@ -1,257 +1,202 @@
-# Firebase Realtime Database — Security Rules Audit
+# Firebase Realtime Database — Security Rules
 
-This file documents the recommended Realtime Database rules for the PoGo
-Trades app and explains why. **The actual rules live in the Firebase Console**
-(Realtime Database → Rules tab), not in this repo. Paste the JSON from one
-of the sections below into that tab and click **Publish**.
+## What changed
 
----
+The app now uses a **per-user pending-decrements queue** for trade-accept
+(Option C in the previous audit). When a recipient accepts an offer, their
+client:
 
-## What the app reads/writes
+1. Decrements their own `have/` entry (own path — owner-write rule passes).
+2. Writes a `pendingDecrements/{bidder}/{id}` record describing the qty
+   to subtract from the bidder's inventory.
+3. The bidder's client picks up that record on next subscription delivery
+   (real-time if both online, on next login otherwise), applies the
+   decrement to its own `have/`, and clears the record.
 
-Mapped from the live code:
+This keeps the strict ownership lock on `have/` intact — no user can
+write directly to another user's inventory. Cross-user state changes
+flow through the queue, which has its own write-permission shape that
+prevents spoofing.
 
-| Path                            | Who reads                        | Who writes                                                                                                          |
-| ------------------------------- | -------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `users/{username}`              | Every signed-in user             | The user themselves (own record); admin reset path also writes other users' `pinHashed`/`authVersion`              |
-| `users/{username}/lastSeen`     | All                              | Self (bumped on every interaction)                                                                                  |
-| `users/{username}/lastUpdated`  | All                              | Self                                                                                                                |
-| `wishlist/{username}`           | All                              | Self                                                                                                                |
-| `dynamax/{username}`            | All                              | Self                                                                                                                |
-| `gmax/{username}`               | All                              | Self                                                                                                                |
-| `costumes/{username}`           | All                              | Self                                                                                                                |
-| `have/{username}`               | All                              | Self **and** counterparty during a trade-accept (qty decrement on the other person's inventory)                     |
-| `offers/{recipient}/{offerId}`  | All                              | Anyone authenticated (the whole point — anyone can bid on anyone's inventory item); recipient can also delete       |
-| `trades/{tradeId}`              | All                              | Any participant of the trade                                                                                        |
-| `requests/{requestId}`          | Admin only (ideally)             | Anyone — **including unauthenticated users**, because this is the signup flow                                       |
-| `authIndex/{firebaseUid}`       | All (used during login)          | The owner of the UID                                                                                                |
+## Final rules — paste this into Firebase Console → Realtime Database → Rules
 
-## What's most likely wrong right now
-
-If you've never touched the rules tab, your database is running on the
-default Firebase test-mode rules, which are one of:
-
-```json
-{ "rules": { ".read": true, ".write": true } }
-```
-
-— or, slightly less bad —
-
-```json
-{
-  "rules": {
-    ".read": "now < <expiry-timestamp>",
-    ".write": "now < <expiry-timestamp>"
-  }
-}
-```
-
-**Why this is the single biggest risk to your app:**
-
-1. **Anyone on the internet can read every trainer's data** — friend codes,
-   Discord handles, full inventories, offers, trade history, the lot. No
-   account required.
-2. **Anyone can delete the entire database** with a single HTTP request.
-   `curl -X DELETE 'https://<your-db>.firebaseio.com/.json'` wipes everything.
-3. **Anyone can spoof writes** — fake offers, vandalize wishlists, change
-   other people's PINs by writing to `users/{victim}/pinHashed`, etc.
-4. **Bots will find this.** Test-mode Firebase URLs leak into Google's
-   search index, GitHub, public crawlers. Once leaked, it's a matter of
-   *when*, not *if*.
-
-This is the #1 thing to fix today. Code-copying worries are noise compared
-to this.
-
----
-
-## Recommended rules — three tiers
-
-Pick **Tier 1 today** as a baseline. Move to Tier 2 when you have time to
-test signups and trade flows. Tier 3 is for when the app scales beyond
-the NYC community.
-
-### Tier 1 — Minimum viable (paste this **right now**)
-
-Blocks all anonymous access. Anyone with a valid Pokémon GO trainer login
-can still do anything (which matches the current trust model), but the
-internet at large can't see or touch your data.
+Diff from your current rules:
+- `".read": true` → `".read": "auth != null"` (the critical leak fix)
+- New `pendingDecrements` block at the bottom
+- Everything else identical
 
 ```json
 {
   "rules": {
     ".read": "auth != null",
-    ".write": "auth != null",
-    "requests": {
-      ".read": "auth != null",
-      ".write": true
-    }
-  }
-}
-```
-
-The `requests` override is required because new trainers submit their
-join request **before** they have an account — that path needs to stay
-open for anonymous writes.
-
-**Trade-off:** an authenticated trainer can still write to anyone else's
-data. Inside a trusted ~30-person community this is fine. It's also no
-worse than the status quo for authenticated users.
-
-### Tier 2 — Path-scoped writes (recommended)
-
-Same reads as Tier 1, but writes are scoped to each user's own data where
-possible. The two exceptions match the actual app behaviour: anyone can
-write to `offers/*` (you bid on others' offers) and `have/*` (because
-trade-accept decrements both parties' inventories).
-
-```json
-{
-  "rules": {
     "users": {
-      ".read": "auth != null",
-      "$uid": {
-        ".write": "auth != null && (
-          !data.exists()
-          || data.child('authEmail').val() == auth.token.email
-          || newData.child('authEmail').val() == auth.token.email
-        )"
+      "$username": {
+        ".write": "auth != null && (root.child('admins').child(auth.uid).val() === true || data.child('authUid').val() === auth.uid || (!data.child('authUid').exists() && newData.child('authUid').val() === auth.uid && newData.child('authEmail').val() === auth.token.email && (!data.child('authEmail').exists() || data.child('authEmail').val() === auth.token.email)))"
       }
     },
-
-    "wishlist":  { ".read": "auth != null", "$uid": { ".write": "auth != null && _ownerCheck($uid)" } },
-    "dynamax":   { ".read": "auth != null", "$uid": { ".write": "auth != null && _ownerCheck($uid)" } },
-    "gmax":      { ".read": "auth != null", "$uid": { ".write": "auth != null && _ownerCheck($uid)" } },
-    "costumes":  { ".read": "auth != null", "$uid": { ".write": "auth != null && _ownerCheck($uid)" } },
-
+    "wishlist": {
+      "$username": {
+        ".write": "auth != null && (root.child('admins').child(auth.uid).val() === true || root.child('users').child($username).child('authUid').val() === auth.uid)"
+      }
+    },
+    "dynamax": {
+      "$username": {
+        ".write": "auth != null && (root.child('admins').child(auth.uid).val() === true || root.child('users').child($username).child('authUid').val() === auth.uid)"
+      }
+    },
+    "gmax": {
+      "$username": {
+        ".write": "auth != null && (root.child('admins').child(auth.uid).val() === true || root.child('users').child($username).child('authUid').val() === auth.uid)"
+      }
+    },
+    "costumes": {
+      "$username": {
+        ".write": "auth != null && (root.child('admins').child(auth.uid).val() === true || root.child('users').child($username).child('authUid').val() === auth.uid)"
+      }
+    },
     "have": {
-      ".read": "auth != null",
-      "$uid": { ".write": "auth != null" }
+      "$username": {
+        ".write": "auth != null && (root.child('admins').child(auth.uid).val() === true || root.child('users').child($username).child('authUid').val() === auth.uid)"
+      }
     },
-
     "offers": {
-      ".read": "auth != null",
-      ".write": "auth != null"
+      "$recipient": {
+        "$offerId": {
+          ".write": "auth != null && ((!data.exists() && newData.child('from').val() === root.child('authIndex').child(auth.uid).child('username').val()) || (data.exists() && data.child('from').val() === root.child('authIndex').child(auth.uid).child('username').val()) || $recipient === root.child('authIndex').child(auth.uid).child('username').val() || root.child('admins').child(auth.uid).val() === true)"
+        }
+      }
     },
-
     "trades": {
-      ".read": "auth != null",
-      ".write": "auth != null"
+      "$tradeId": {
+        ".write": "auth != null && ((!data.exists() && newData.child('organizer').val() === root.child('authIndex').child(auth.uid).child('username').val()) || (data.exists() && data.child('organizer').val() === root.child('authIndex').child(auth.uid).child('username').val()) || (data.exists() && data.child('participants').child(root.child('authIndex').child(auth.uid).child('username').val()).exists()) || root.child('admins').child(auth.uid).val() === true)"
+      }
     },
-
+    "requests": {
+      "$id": {
+        ".write": "!data.exists() || (auth != null && root.child('admins').child(auth.uid).val() === true)"
+      }
+    },
     "authIndex": {
-      ".read": "auth != null",
-      "$uid": { ".write": "auth != null && auth.uid == $uid" }
+      "$uid": {
+        ".read": "auth != null && (auth.uid === $uid || root.child('admins').child(auth.uid).val() === true)",
+        ".write": "auth != null && auth.uid === $uid"
+      }
     },
-
-    "requests": {
-      ".read": "auth != null",
-      ".write": true
-    }
-  }
-}
-```
-
-**Important — `_ownerCheck` is not a real function**, it's pseudocode
-for "the username in the path maps to the signed-in user's auth email."
-You can't easily express that in vanilla RTDB rules because of how your
-auth emails are derived (`name.toLowerCase().replace(/[^a-z0-9]/g,'_') + '@pogotrades.nyc'`)
-and RTDB rules can't apply regex `.replace()`.
-
-**Two workable options:**
-
-**Option A — lookup against `users/{$uid}/authEmail`:**
-
-```json
-"wishlist": {
-  ".read": "auth != null",
-  "$uid": {
-    ".write": "auth != null && root.child('users').child($uid).child('authEmail').val() == auth.token.email"
-  }
-}
-```
-
-Repeat that block for `dynamax`, `gmax`, `costumes`, and `users`. This
-lets the rule resolve "is this signed-in user the owner of this path?"
-by reading the `authEmail` field you already store in each user record.
-
-**Option B — store a `uid` field in `users/{username}`:**
-
-When a user signs in, store `users/{username}/firebaseUid = auth.uid`,
-then the rule simplifies to:
-
-```json
-".write": "auth != null && root.child('users').child($uid).child('firebaseUid').val() == auth.uid"
-```
-
-This requires a tiny code change but rules become much cleaner.
-
-### Tier 3 — Admin gating (when you scale)
-
-Add a `users/{username}/isAdmin == true` flag in the rules so only
-admins can wipe `requests/*` (approving/denying), reset PINs on other
-users, or write to admin-only paths.
-
-```json
-{
-  "rules": {
-    "$rest": {
-      ".read": "auth != null",
+    "admins": {
+      "$uid": {
+        ".read": "auth != null",
+        ".write": "auth != null && root.child('admins').child(auth.uid).val() === true"
+      }
+    },
+    "pendingDecrements": {
+      "$username": {
+        ".read": "auth != null && (root.child('users').child($username).child('authUid').val() === auth.uid || root.child('admins').child(auth.uid).val() === true)",
+        "$decId": {
+          ".write": "auth != null && ((!data.exists() && newData.child('from').val() === root.child('authIndex').child(auth.uid).child('username').val() && newData.child('qty').isNumber() && newData.child('qty').val() > 0 && newData.child('qty').val() <= 999 && newData.child('key').isString() && newData.child('key').val().length > 0) || (data.exists() && root.child('users').child($username).child('authUid').val() === auth.uid) || root.child('admins').child(auth.uid).val() === true)"
+        }
+      }
+    },
+    "_ping": {
       ".write": "auth != null"
-    },
-
-    "requests": {
-      ".read": "auth != null && root.child('users').child(auth.token.email.split('@')[0]).child('isAdmin').val() == true",
-      ".write": true
     }
   }
 }
 ```
 
-(Caveat: `split` isn't a real RTDB rule method either — store an admin
-list at `meta/admins/{username} = true` and check
-`root.child('meta/admins').child(auth.token.username).val() == true` if
-you also stash `username` as a custom claim, or use Option B from Tier 2.)
+### What the new `pendingDecrements` rule says
 
----
+**Read:** only the target user (the one whose inventory will be debited) or
+an admin can read their own bucket. Recipients posting decrements never
+need to read them.
 
-## How to apply these rules (step by step)
+**Write — create case** (`!data.exists()`):
+- Must be authenticated.
+- The new record's `from` field must match the writer's actual username
+  (no spoofing — you can't post a decrement *as someone else*).
+- `qty` must be a number between 1 and 999 (no oversized writes, no
+  type confusion).
+- `key` must be a non-empty string (the inventory key to decrement).
 
-1. Open <https://console.firebase.google.com>.
-2. Pick your project (the one whose URL is in
-   `index.html` → `const FIREBASE_URL = …`).
-3. In the left sidebar, **Realtime Database** → top tab **Rules**.
-4. **Before you change anything**, copy the existing rules into a scratch
-   file. If the new rules break something, paste the old ones back.
-5. Replace the contents with the Tier 1 JSON above.
-6. Click **Publish**.
-7. Test from a logged-in session and an incognito window:
-   - Logged in: should be able to load the app, see inventories, post offers.
-   - Incognito (unauth): app should fail to load data (network panel will
-     show 401/403 from Firebase). The login screen should still render.
-   - Try the request-access flow from incognito — it should succeed since
-     the `requests` path stays open.
+**Write — modify/delete case** (`data.exists()`):
+- Only the target user (the one whose `pendingDecrements/{$username}` bucket
+  this is) can modify or delete their own queued records — used by the
+  reconciler to clear records after applying them.
 
-If anything breaks, paste the old rules back, then move on to Tier 2 once
-you have time to test thoroughly.
+**Admin override** for both, as a break-glass.
 
----
+This is the minimum permission shape that keeps trade-accept working while
+preventing:
+- Anyone from spoofing trade-decrements as another user (`from` field check).
+- Anyone from reading someone else's queue.
+- Oversized or malformed writes (qty/key validation).
 
-## Other security hardening to consider
+## How to apply
 
-- **Lock down the Firebase Web API key.** In Google Cloud Console →
-  APIs & Services → Credentials → click your Firebase API key →
-  **Application restrictions: HTTP referrers** → add your production
-  domain(s). Without this, anyone who reads your `index.html` and copies
-  the API key can spin up a clone pointing at your project.
-- **Enable Firebase App Check** if you go public. It stops requests that
-  don't come from your registered app.
-- **Audit your `users/{username}/pinHashed` field.** PINs should be
-  salted-hashed, never plaintext. (If `pinHashed: false` exists on any
-  legacy user, those PINs are stored in the clear — fix before tightening
-  rules in case the rules block the migration.)
-- **Backups.** Realtime Database has a built-in scheduled export — set up
-  a daily Google Cloud Storage backup. A single bad write or a vandal who
-  gets past auth could wipe data fast.
-- **Don't commit your Firebase config to a public repo.** Once you go
-  private this is moot; until then, anyone can take your `FIREBASE_URL`
-  and `FIREBASE_API_KEY` out of `index.html` directly.
+1. Open Firebase Console → your project → Realtime Database → **Rules** tab.
+2. **Copy the existing rules** into a scratch text file as a backup.
+3. Paste the JSON above wholesale (it's a full ruleset, not a diff — replace
+   everything).
+4. Click **Publish**.
+5. Test (next section).
+
+## How to verify
+
+### Anonymous read is blocked
+```
+curl 'https://<your-project>.firebaseio.com/users.json'
+```
+Should return `{"error": "Permission denied"}`. If it returns data, the
+ruleset didn't take.
+
+### Logged-in flows still work
+- Edit your wishlist → saves.
+- Post an offer → appears in the inbox of the recipient.
+- Open the recipient's account (separate browser or incognito) → accept
+  one of the offered items via the new green **Trade →** button → set qty
+  in the popup → confirm.
+
+### Trade-accept end-to-end
+- After the recipient confirms, their inventory should decrement immediately.
+- Inspect Firebase Console → `pendingDecrements/{bidder}/{some-id}` should
+  contain a record like:
+  ```json
+  { "from": "<recipient-name>", "key": "<bidder's offered item key>",
+    "qty": <N>, "t": <timestamp>, "inReturnFor": "..." }
+  ```
+- Reload the bidder's session (or wait if they're online). Their inventory
+  should decrement and the pending record should disappear.
+- A toast confirms on the bidder's side: *"✅ Synced 1 accepted trade
+  from <recipient> · N items removed from your inventory"*.
+
+### Brief UI flicker — known and expected
+Between the recipient hitting Confirm and the bidder's client applying the
+pending decrement, the bidder's inventory **on Firebase** still shows the
+old qty. If a third trainer is browsing the bidder's inventory in that
+window, they'll see the stale count until the bidder's client reconciles.
+This usually resolves in seconds to minutes. The trade itself is correct —
+the data is just lagging.
+
+## Two follow-ups worth doing afterward
+
+- **Lock the Firebase Web API key by HTTP referrer** (Google Cloud Console
+  → APIs & Services → Credentials). Restrict to your production domain so
+  anyone scraping the key from `index.html` can't initialize a Firebase
+  app against your project from elsewhere.
+- **Enable scheduled backups** of the Realtime Database (Console → Database
+  → Backups). A single mistake at scale erases everything; backups are
+  cheap insurance.
+
+## If you want the looser variant (Option A, NOT recommended)
+
+If you decide the pending-decrements path is too much architecture and
+just want trade-accept to work via direct cross-user writes, change the
+`have/$username/.write` line back to:
+
+```json
+"have": { "$username": { ".write": "auth != null" } }
+```
+
+Then any signed-in user can write to anyone's `have/`. The app would still
+work (the code falls back to optimistic local updates either way), but
+you'd be relying on community trust rather than schema-level protection.
+At 50+ trainers, I'd keep the strict version.

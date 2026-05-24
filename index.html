@@ -2680,7 +2680,7 @@ syncQueue=lsGet(SYNC_QUEUE_KEY,{})||{};
 function saveSyncQueue(){lsSet(SYNC_QUEUE_KEY,syncQueue||{});}
 function normalizeData(s){
   if(!s||typeof s!=='object')s={};
-  s.users=s.users||{};s.wishlist=s.wishlist||{};s.dynamax=s.dynamax||{};s.gmax=s.gmax||{};s.costumes=s.costumes||{};s.have=s.have||{};s.offers=s.offers||{};s.trades=s.trades||{};s.requests=s.requests||{};s.authIndex=s.authIndex||{};
+  s.users=s.users||{};s.wishlist=s.wishlist||{};s.dynamax=s.dynamax||{};s.gmax=s.gmax||{};s.costumes=s.costumes||{};s.have=s.have||{};s.offers=s.offers||{};s.trades=s.trades||{};s.requests=s.requests||{};s.authIndex=s.authIndex||{};s.pendingDecrements=s.pendingDecrements||{};
   Object.keys(s.users).forEach(u=>{
     s.users[u]=normalizedUserRecord(u,s.users[u]);
     if(!s.wishlist[u])s.wishlist[u]={};
@@ -3038,6 +3038,15 @@ function _onSubSnapshot(path,snap){
   else if(seg==='have')s.have=val||{};
   else if(seg==='offers')s.offers=val||{};
   else if(seg==='trades')s.trades=val||{};
+  else if(seg==='pendingDecrements'){
+    // Path is "pendingDecrements/{username}" — store under that username
+    if(!s.pendingDecrements)s.pendingDecrements={};
+    const u=path.split('/')[1];
+    if(u){
+      if(val)s.pendingDecrements[u]=val;
+      else delete s.pendingDecrements[u];
+    }
+  }
   saveLocal(s);
   allData=normalizeData(s);
   // Apply pending writes from sync queue
@@ -3046,6 +3055,10 @@ function _onSubSnapshot(path,snap){
   _pathLoadState[path]='loaded';
   setSyncStatus('online');
   showSyncDot(!!Object.keys(syncQueue).length);
+  // Reconcile any pending inventory decrements queued for us by counterparties
+  if(seg==='pendingDecrements'&&cur&&path===`pendingDecrements/${cur}`){
+    setTimeout(()=>_applyPendingDecrements(),50);
+  }
   if(cur)refreshAll();else populateLoginUsers();
   // If share view is active, re-render with new data
   if(document.getElementById('share-view')?.classList.contains('active')&&_activeShareView){
@@ -3075,6 +3088,16 @@ function startListener(){
   subscribePath('offers');
   subscribePath('trades');
   // Other list types loaded lazily when tabs are visited
+  // Subscribe to my own pending-decrements queue if we already know who I am
+  // (otherwise subscribeMyPendingDecrements() gets called after login).
+  if(cur)subscribeMyPendingDecrements();
+}
+// Per-user queue of "someone accepted a trade where you'd give away N of X".
+// Only the target user can read/write their own bucket (see security rules),
+// so we can only subscribe AFTER login when `cur` is set.
+function subscribeMyPendingDecrements(){
+  if(!db||!cur)return;
+  subscribePath(`pendingDecrements/${cur}`);
 }
 
 function skipFirebase(){lsSet('fbUrl','local');syncFromLocal();showLogin();}
@@ -3221,6 +3244,8 @@ function showApp(){
   checkWhatsNew();
   attachPullToRefresh();
   initAddAdvanced();
+  // Subscribe to my own pending-decrements queue (counterparties' trade-accepts)
+  subscribeMyPendingDecrements();
   // First-time user tour (#25)
   maybeStartTour();
   // PWA shortcut handling: deep-link via ?action=add|browse|strings
@@ -7509,8 +7534,29 @@ async function confirmAcceptTrade(){
   const btn=document.getElementById('accept-confirm-btn');
   if(btn){btn.disabled=true;btn.textContent='Trading…';}
   try{
+    // 1) Decrement OUR inventory — we own this path, write goes through.
     await writeHave(ctx.recipient,recipientInv);
-    await _writeHaveSilent(ctx.bidder,bidderInv);
+    // 2) Optimistic local update for the BIDDER's inventory so our own UI
+    //    shows the correct count right away. We do NOT queue this to Firebase
+    //    because we don't have write access to have/{bidder}. Their actual
+    //    Firebase row stays stale until they apply the pending decrement (3).
+    const s=getLocal();
+    if(!s.have)s.have={};
+    s.have[ctx.bidder]=bidderInv;
+    saveLocal(s);
+    syncFromLocal();
+    // 3) Queue a PENDING DECREMENT under the bidder's bucket — their client
+    //    will apply it on next sync (next time they open the app or while
+    //    they're already online via the subscription). This is the only
+    //    cross-user write needed and is allowed by the security rules
+    //    because the bidder's bucket explicitly accepts creates from any
+    //    authenticated user.
+    await _writePendingDecrement(ctx.bidder,{
+      key:ctx.offerItemKey,
+      qty,
+      inReturnFor:`${qty}× ${ctx.recipientName} from ${cur}`
+    });
+    // 4) Remove the offer.
     await withdrawOffer(ctx.recipient,ctx.offerId);
     toast(`✅ Traded ${qty}× ${ctx.recipientName} ↔ ${qty}× ${ctx.bidderName} with ${ctx.bidder}`);
   }catch(e){
@@ -7521,16 +7567,88 @@ async function confirmAcceptTrade(){
     closeAcceptModal();
   }
 }
-// Write the OTHER party's inventory without bumping their lastSeen/lastUpdated
-// (they didn't open the app — their inventory just had qty decremented by the
-// trade we both just executed).
-async function _writeHaveSilent(username,inv){
+// Queue a one-way "decrement N of {key} from {bidder}'s have/" instruction.
+// Only the bidder can read/clear their bucket; any signed-in user can create
+// records in it. The bidder reconciles via _applyPendingDecrements.
+async function _writePendingDecrement(bidder,payload){
+  if(!cur||!bidder)return;
+  const id=`${Date.now()}_${cur}_${Math.random().toString(36).slice(2,7)}`;
+  const record={
+    from:cur,
+    key:String(payload.key||''),
+    qty:Math.max(1,Math.min(999,parseInt(payload.qty)||1)),
+    t:Date.now(),
+    inReturnFor:String(payload.inReturnFor||'').slice(0,140)
+  };
+  // Optimistic local cache so a same-device test (e.g. dev with two windows)
+  // sees the record immediately even before Firebase round-trips.
   const s=getLocal();
-  if(!s.have)s.have={};
-  s.have[username]=inv;
+  if(!s.pendingDecrements)s.pendingDecrements={};
+  if(!s.pendingDecrements[bidder])s.pendingDecrements[bidder]={};
+  s.pendingDecrements[bidder][id]=record;
   saveLocal(s);
-  if(fbOn&&db)queueSync(`have/${username}`,inv);
   syncFromLocal();
+  if(fbOn&&db){
+    try{
+      await set(ref(db,`pendingDecrements/${bidder}/${id}`),record);
+    }catch(e){
+      // Permission denied or offline — fall back to queue so it retries
+      queueSync(`pendingDecrements/${bidder}/${id}`,record);
+    }
+  }
+  return id;
+}
+// Apply pending decrements queued for the current user. Runs whenever the
+// pendingDecrements/{cur} subscription delivers a snapshot. Idempotent:
+// gated by an inflight flag so concurrent snapshot bursts don't double-apply.
+let _pendingDecrementsInflight=false;
+async function _applyPendingDecrements(){
+  if(_pendingDecrementsInflight||!cur)return;
+  const pending=allData.pendingDecrements?.[cur]||{};
+  const ids=Object.keys(pending);
+  if(!ids.length)return;
+  _pendingDecrementsInflight=true;
+  try{
+    const inv={...(allData.have?.[cur]||{})};
+    // Sort by t so order is deterministic across clients (oldest first)
+    ids.sort((a,b)=>(pending[a]?.t||0)-(pending[b]?.t||0));
+    const summary=[];
+    for(const id of ids){
+      const dec=pending[id];
+      if(!dec)continue;
+      const qty=parseInt(dec.qty)||0;
+      if(!dec.key||qty<=0)continue;
+      const cur1=haveEntryInfo(inv[dec.key]).qty;
+      const applied=Math.min(qty,cur1);
+      const newQty=Math.max(0,cur1-applied);
+      if(newQty<=0)delete inv[dec.key];
+      else setHaveEntry(inv,dec.key,newQty);
+      summary.push({from:dec.from||'someone',key:dec.key,applied,requested:qty});
+    }
+    if(summary.length){
+      await writeHave(cur,inv);
+      // Clear processed records — own bucket, so the write is allowed.
+      for(const id of ids){
+        if(fbOn&&db)queueSync(`pendingDecrements/${cur}/${id}`,null);
+      }
+      const s=getLocal();
+      if(s.pendingDecrements?.[cur]){
+        ids.forEach(id=>{delete s.pendingDecrements[cur][id];});
+        if(!Object.keys(s.pendingDecrements[cur]).length)delete s.pendingDecrements[cur];
+        saveLocal(s);
+      }
+      // Friendly summary — one toast covers all decrements applied this pass
+      const totalQty=summary.reduce((acc,r)=>acc+r.applied,0);
+      const fromSet=[...new Set(summary.map(r=>r.from))];
+      const fromLabel=fromSet.length===1?fromSet[0]:`${fromSet.length} trainers`;
+      const shortage=summary.some(r=>r.applied<r.requested);
+      toast(`✅ Synced ${summary.length} accepted trade${summary.length===1?'':'s'} from ${fromLabel} · ${totalQty} item${totalQty===1?'':'s'} removed from your inventory${shortage?' (some capped at 0 — stock was already short)':''}`);
+    }
+  }catch(e){
+    console.error('Pending decrement reconcile failed',e);
+  }finally{
+    _pendingDecrementsInflight=false;
+  }
 }
 // Look up the live qty a given bidder has of an offered key (used to disable
 // chips for items that have been depleted since the offer was made).
