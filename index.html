@@ -1953,7 +1953,7 @@ window.__pogoBootWatch=setTimeout(function(){
 </script>
 <script src="data.js"></script>
 <script>
-let initializeApp,getDatabase,ref,set,get,onValue,update,getAuth,signInWithEmailAndPassword,createUserWithEmailAndPassword,firebaseSignOut,updatePassword,deleteUser;
+let initializeApp,getDatabase,ref,set,get,onValue,update,getAuth,signInWithEmailAndPassword,createUserWithEmailAndPassword,firebaseSignOut,updatePassword,deleteUser,onAuthStateChanged;
 let firebaseSdkPromise=null;
 function firebaseSdkReady(){return typeof initializeApp==='function'&&typeof getDatabase==='function'&&typeof getAuth==='function';}
 async function loadFirebaseSdk(){
@@ -1978,6 +1978,7 @@ async function loadFirebaseSdk(){
       firebaseSignOut=authMod.signOut;
       updatePassword=authMod.updatePassword;
       deleteUser=authMod.deleteUser;
+      onAuthStateChanged=authMod.onAuthStateChanged;
       return true;
     }).catch(err=>{
       firebaseSdkPromise=null;
@@ -1992,7 +1993,7 @@ if(!DB)throw new Error('Trade data failed to load');
 
 const PREFILTER="!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&";
 const OWNER="Doomsday126";
-const APP_VERSION="4.5.0";
+const APP_VERSION="4.5.1";
 const STALE_WARN=7,STALE_OLD=30;
 const SESSION_TTL=30*24*60*60*1000; // 30 days; refreshed on each activity so active users stay logged in
 const SPRITE_BASE="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/";
@@ -2674,10 +2675,16 @@ function queueSync(path,data){
   syncQueue[path]={path,data,ts:Date.now()};
   saveSyncQueue();
   showSyncDot(true);
+  if(firebaseAuthConfigured()&&auth&&!auth.currentUser)warnLocalOnlyMode();
   clearTimeout(syncFlushTimer);
   syncFlushTimer=setTimeout(flushSyncQueue,250);
 }
 async function flushSyncQueue(){
+  if(firebaseAuthConfigured()&&auth&&!auth.currentUser){
+    setSyncStatus('offline');
+    showSyncDot(!!Object.keys(syncQueue).length);
+    return;
+  }
   if(!fbOn||!db||!Object.keys(syncQueue).length)return;
   const entries=Object.entries(syncQueue);
   for(const[path,item] of entries){
@@ -2695,6 +2702,30 @@ async function flushSyncQueue(){
 }
 function showSyncDot(show){document.getElementById('sqd')?.classList.toggle('show',show);}
 window.addEventListener('online',()=>{if(fbOn)flushSyncQueue();});
+let _authObserverBound=false;
+let _localOnlyWarned=false;
+function warnLocalOnlyMode(){
+  if(_localOnlyWarned)return;
+  _localOnlyWarned=true;
+  toast('⚠️ This browser is only showing saved local data right now. Sign out and back in before expecting edits to sync for everyone else.',5200);
+}
+function bindAuthObserver(){
+  if(_authObserverBound||!auth||typeof onAuthStateChanged!=='function')return;
+  _authObserverBound=true;
+  onAuthStateChanged(auth,user=>{
+    currentAuthUid=user?.uid||'';
+    if(user){
+      _localOnlyWarned=false;
+      setSyncStatus(Object.keys(syncQueue).length?'syncing':'online');
+      if(Object.keys(syncQueue).length)flushSyncQueue();
+      return;
+    }
+    if(cur){
+      setSyncStatus('offline');
+      if(Object.keys(syncQueue).length)warnLocalOnlyMode();
+    }
+  });
+}
 
 // ── PIN HASHING ───────────────────────────────────────────────
 async function hashPin(pin){
@@ -3023,7 +3054,10 @@ function setupFirebase(url=FIREBASE_URL){
   if(!firebaseSdkReady())throw new Error('Firebase SDK is still loading');
   fbApp=initializeApp(firebaseConfig(url),'pogo');
   db=getDatabase(fbApp);fbOn=true;
-  if(firebaseAuthConfigured())auth=getAuth(fbApp);
+  if(firebaseAuthConfigured()){
+    auth=getAuth(fbApp);
+    bindAuthObserver();
+  }
   return fbApp;
 }
 async function ensureFirebaseIdentity(username,pin,ud){
@@ -3314,7 +3348,7 @@ async function runLoginHealthCheck(){
     healthRow('App version',APP_VERSION,`Page: ${location.href}`,'info'),
     healthRow('Selected user',selectedUser||'None selected',selectedUser?`Live read check will test users/${selectedUser}.`:'Choose a username on the login screen if you want to test one specific account.','info')
   ];
-  renderHealthRows([...rows,healthRow('Firebase connected','Checking...','Loading Firebase SDK and database handle.','info'),healthRow('Live user read','Waiting...','This checks whether this browser can read the login user list.','info'),healthRow('Service worker','Checking...','Checking cached app shell status.','info')]);
+  renderHealthRows([...rows,healthRow('Firebase connected','Checking...','Loading Firebase SDK and database handle.','info'),healthRow('Firebase Auth session','Checking...','If this says Missing while the app looks logged in, that browser is only viewing cached local data.','info'),healthRow('Live user read','Waiting...','This checks whether this browser can read the login user list.','info'),healthRow('Service worker','Checking...','Checking cached app shell status.','info')]);
   let firebaseOk=false;
   try{
     firebaseOk=await withTimeout(ensureFirebaseForHealth(),8000,'Firebase setup timed out','firebase/health-timeout');
@@ -3322,6 +3356,7 @@ async function runLoginHealthCheck(){
   }catch(e){
     rows.push(healthRow('Firebase connected','Failed',e.code?`${e.code}: ${e.message}`:(e.message||String(e)),'bad'));
   }
+  rows.push(healthRow('Firebase Auth session',auth?.currentUser?'Signed in':'Missing',auth?.currentUser?`UID: ${auth.currentUser.uid}`:'This browser can show saved local app data, but live writes will not sync until the user signs in again. ',auth?.currentUser?'ok':'warn'));
   if(firebaseOk&&db){
     try{
       const path=selectedUser?`users/${selectedUser}`:'users';
@@ -5729,6 +5764,7 @@ async function triggerInstall(){
 
 // ── WHAT'S NEW (#28) ─────────────────────────────────────────
 const WHATS_NEW=[
+  {version:'4.5.1',title:'🔐 Shared-sync reliability fix',desc:'The app now detects when a browser still looks signed in locally but has lost its real Firebase Auth session. In that state, edits only existed on that one device. Health Check now shows Firebase Auth session status, and the app warns users before they keep making local-only edits.'},
   {version:'4.5',title:'⚡ Speed add + cleaner schedule + tighter board exports',desc:'My List now has a Speed add mode so priority and flags stay selected during big 40-50+ Pokémon sessions. The sign-in health check shows which username is being tested. Schedule event clutter is now tucked into a compact live-events tray instead of a long stack of repetitive rows. Special Trade Board exports drop redundant friend-code / Discord / rules text and use a narrower portrait-friendly layout.'},
   {version:'4.4',title:'🩺 Login Health + compact special boards',desc:'New "Having trouble signing in?" check on the login page shows app version, Firebase reachability, live user-read status, and service worker cache status, with a one-tap local cache reset for stuck browsers. Special Trade Board image exports now use a compact stacked sprite grid that scales better for big 50+ Pokémon boards, and Unown punctuation forms are available in pickers.'},
   {version:'4.3',title:'🎯 Special Trade Board (LF/FT image export)',desc:'New "Special Trade Board" option in the Export menu opens a dedicated editor where you stage Looking-For and For-Trade entries side by side, with per-row ✨ shiny and 🪞 mirror-only toggles, qty and short notes. Export the board as a 9DB-style two-column PNG ready to paste into Discord. Board auto-saves to your profile so it survives reloads.'},
