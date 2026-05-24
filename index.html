@@ -150,6 +150,7 @@ input,select,textarea{font-family:var(--font);outline:none}
 /* ADD FORM */
 .add-form{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:13px;margin-bottom:14px}
 .add-ttl{font-size:13px;font-weight:600;color:var(--ac2);margin-bottom:10px}
+.add-subhelp{font-size:11px;color:var(--muted);margin:-3px 0 10px;line-height:1.45}
 .frow{display:flex;gap:7px;flex-wrap:wrap}
 .frow select,.frow input{flex:1;min-width:120px;background:var(--bg);border:1px solid var(--border2);color:var(--text);padding:8px 11px;border-radius:var(--r2);font-size:14px}
 .frow select option{background:var(--bg2)}
@@ -313,6 +314,7 @@ input,select,textarea{font-family:var(--font);outline:none}
 .health-status.bad{color:var(--danger);background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.32)}
 .health-status.info{color:var(--ac2);background:rgba(108,99,255,.12);border-color:rgba(108,99,255,.32)}
 .health-detail{grid-column:1/-1;font-size:11px;color:var(--muted);line-height:1.4;word-break:break-word}
+.health-detail code{font-family:var(--mono);font-size:11px;color:var(--ac2)}
 .health-actions{display:flex;gap:8px;justify-content:space-between;flex-wrap:wrap;margin-top:14px}
 .health-danger{border-color:rgba(239,68,68,.35);color:var(--danger)}
 .health-danger:hover{background:rgba(239,68,68,.12);color:var(--danger)}
@@ -438,7 +440,8 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
 .special-board-col{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:10px;min-height:200px;display:flex;flex-direction:column;gap:8px}
 .special-board-col-lf{border-left:3px solid #6366f1}
 .special-board-col-ft{border-left:3px solid #10b981}
-.special-board-col-hdr{font-size:13px;font-weight:700;color:var(--text);letter-spacing:.02em}
+.special-board-col-hdr{font-size:13px;font-weight:700;color:var(--text);letter-spacing:.02em;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.special-board-col-hdr small{font-size:10px;color:var(--muted);font-weight:600}
 .special-board-add-row{display:flex;gap:6px;align-items:stretch;position:relative}
 .special-board-add-row .ac-wrap{flex:1;min-width:0;position:relative}
 .special-board-add-row .bsave{padding:6px 12px;font-size:12px;flex-shrink:0}
@@ -581,7 +584,7 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
   .add-advanced input#add-pmon-notes{width:100%;flex:none !important;min-width:0 !important}
   .add-actions{flex-wrap:wrap;align-items:stretch;gap:6px}
   .add-actions .bsave{flex:1 1 100%;justify-content:center;padding:10px;font-size:14px}
-  .add-actions .import-btn,.add-actions .export-menu-wrap,.add-actions .bulk-toggle{flex:1 1 calc(33% - 4px);text-align:center}
+  .add-actions .import-btn,.add-actions .export-menu-wrap,.add-actions .bulk-toggle,.add-actions .speed-add-toggle{flex:1 1 calc(50% - 4px);text-align:center;justify-content:center}
   .add-actions .image-btn{width:100%;justify-content:center}
 
   /* MY LIST ROWS: restructure as 2-row stacked layout to prevent horizontal overflow */
@@ -950,15 +953,22 @@ html[data-theme="light"] .have-mirror-badge,html[data-theme="light"] .have-mirro
 .sched-quota-meta{font-size:10px;color:var(--muted);margin-top:1px}
 .sched-quota-bonus{font-size:10px;color:var(--ok);font-weight:600;margin-top:2px}
 
-.sched-event-list{margin-bottom:12px}
-.sched-event-row{display:flex;align-items:flex-start;gap:9px;padding:8px 10px;background:linear-gradient(90deg,rgba(168,139,250,.08),transparent);border:1px solid rgba(168,139,250,.18);border-radius:var(--r2);margin-bottom:5px;font-size:12px}
-.sched-event-icon{font-size:18px;flex-shrink:0;line-height:1}
-.sched-event-content{flex:1;min-width:0}
-.sched-event-title{font-weight:600;color:var(--text);line-height:1.3}
-.sched-event-bonus{display:inline-block;background:rgba(16,185,129,.16);color:var(--ok);border:1px solid rgba(16,185,129,.32);padding:1px 6px;border-radius:8px;font-size:10px;font-weight:700;margin-left:6px}
-.sched-event-bonus.unknown{background:var(--bg2);color:var(--muted);border-color:var(--border2)}
-.sched-event-link{font-size:11px;color:var(--ac2);text-decoration:none}
-.sched-event-link:hover{text-decoration:underline}
+.sched-events-panel{margin-bottom:12px}
+.sched-events-details{background:var(--bg);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden}
+.sched-events-summary{list-style:none;display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px;font-size:12px;font-weight:700;color:var(--text)}
+.sched-events-summary::-webkit-details-marker{display:none}
+.sched-events-summary:hover{background:rgba(255,255,255,.02)}
+.sched-events-kicker{display:inline-flex;align-items:center;gap:6px;color:var(--ac2)}
+.sched-events-count{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:rgba(108,99,255,.15);border:1px solid rgba(108,99,255,.32);color:var(--ac2);font-size:10px;font-weight:800}
+.sched-events-note{font-size:11px;color:var(--muted);font-weight:500;flex:1;min-width:120px}
+.sched-events-caret{font-size:11px;color:var(--muted);transition:transform .2s}
+.sched-events-details[open] .sched-events-caret{transform:rotate(180deg)}
+.sched-event-chip-list{display:flex;flex-wrap:wrap;gap:8px;padding:0 12px 12px}
+.sched-event-chip{display:inline-flex;align-items:center;gap:6px;max-width:100%;background:var(--card);border:1px solid var(--border2);border-radius:999px;padding:7px 11px;font-size:11px;font-weight:600;color:var(--text);text-decoration:none}
+.sched-event-chip:hover{border-color:var(--accent);color:var(--ac2)}
+.sched-event-chip-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:320px}
+.sched-event-bonus{display:inline-flex;align-items:center;background:rgba(16,185,129,.16);color:var(--ok);border:1px solid rgba(16,185,129,.32);padding:1px 6px;border-radius:999px;font-size:10px;font-weight:800}
+.sched-event-chip-link{color:var(--muted);font-size:11px}
 .sched-manual-bonus{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--bg);border:1px dashed var(--border2);border-radius:var(--r2);margin-bottom:10px;font-size:12px;flex-wrap:wrap}
 .sched-manual-bonus-text{flex:1;min-width:160px}
 .sched-manual-bonus-text strong{color:var(--text);font-size:12px;display:block;margin-bottom:1px}
@@ -1137,6 +1147,8 @@ html[data-theme="light"] .have-mirror-badge,html[data-theme="light"] .have-mirro
 .diff-copy-chip:hover{transform:translateY(-1px);filter:brightness(1.08)}
 .diff-copy-chip:active{transform:scale(.98)}
 .diff-copy-chip.copied{background:var(--ok);color:#06140f;border-color:rgba(16,185,129,.55)}
+.diff-tip{padding:12px 14px;margin-bottom:12px;background:rgba(108,99,255,.1);border:1px solid rgba(108,99,255,.26);border-radius:var(--r2);font-size:12px;color:var(--text);line-height:1.45}
+.diff-tip strong{color:var(--ac2)}
 .diff-body{flex:1;overflow-y:auto;padding:14px 18px}
 .diff-section{margin-bottom:18px}
 .diff-section-hdr{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
@@ -1239,6 +1251,11 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
 .import-btn:hover{border-color:var(--ac2);color:var(--ac2)}
 .add-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}
 .add-actions .bsave,.add-actions .import-btn,.add-actions .image-btn{margin-top:0}
+.speed-add-toggle{display:inline-flex;align-items:center;gap:6px;background:var(--bg);border:1px solid var(--border2);color:var(--muted);padding:7px 11px;border-radius:var(--r2);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);transition:.15s}
+.speed-add-toggle:hover{border-color:var(--accent);color:var(--ac2)}
+.speed-add-toggle.on{background:rgba(108,99,255,.15);border-color:rgba(108,99,255,.45);color:var(--ac2)}
+.speed-add-hint{font-size:11px;color:var(--muted);margin-top:8px;padding:8px 10px;border-radius:var(--r2);background:rgba(108,99,255,.08);border:1px dashed rgba(108,99,255,.28);display:none}
+.speed-add-hint.on{display:block}
 .image-btn{background:var(--bg);border:1px solid var(--border2);color:var(--text);padding:6px 13px;border-radius:var(--r2);font-size:12px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:5px;font-family:var(--font)}
 .image-btn:hover{border-color:var(--ok);color:var(--ok)}
 .select-all-row{display:flex;align-items:center;gap:6px;padding:6px 11px;font-size:12px;color:var(--muted);border-bottom:1px solid var(--border);cursor:pointer}
@@ -1427,6 +1444,7 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
     </div>
     <div class="add-form">
       <div class="add-ttl" id="add-ttl">+ Add Pokémon</div>
+      <div class="add-subhelp">For long sessions, turn on Speed add so priority and flags stay put while you work through a big list.</div>
       <div class="frow">
         <div class="ac-wrap">
           <input type="text" class="ac-input" id="ac-input" placeholder="Search Pokémon…" autocomplete="off"
@@ -1463,6 +1481,7 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
       <div class="add-actions">
         <button class="bsave" onclick="addEntry()">Add</button>
         <button class="import-btn" onclick="openImport()">📥 Import string</button>
+        <button type="button" class="speed-add-toggle" id="speed-add-toggle" onclick="toggleSpeedAddMode()" aria-pressed="false">⚡ Speed add</button>
         <div class="export-menu-wrap">
           <button class="image-btn" onclick="toggleExportMenu(event)" aria-haspopup="true" aria-expanded="false" id="export-menu-btn">📤 Export ▾</button>
           <div class="export-menu" id="export-menu" role="menu">
@@ -1477,6 +1496,7 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
         </div>
         <button class="bulk-toggle" onclick="toggleBulkMode()" aria-pressed="false" id="bulk-toggle-btn">☑ Bulk edit</button>
       </div>
+      <div class="speed-add-hint" id="speed-add-hint">Speed add is on — after each add, your priority and flags stay selected so you can keep going faster.</div>
     </div>
     <div class="bulk-bar" id="bulk-bar" role="toolbar" aria-label="Bulk actions">
       <span class="bulk-count" id="bulk-count">0 selected</span>
@@ -1817,7 +1837,7 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
     </div>
     <div class="special-board-grid">
       <div class="special-board-col special-board-col-lf">
-        <div class="special-board-col-hdr">🔍 Looking For (LF)</div>
+        <div class="special-board-col-hdr"><span>🔍 Looking For (LF)</span><small>bulk-add from your wants</small></div>
         <div class="special-board-add-row">
           <div class="ac-wrap">
             <input type="text" class="ac-input" id="special-lf-ac" placeholder="Add a Pokémon to LF…" autocomplete="off"
@@ -1832,7 +1852,7 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
         <div class="special-board-list" id="special-lf-list"></div>
       </div>
       <div class="special-board-col special-board-col-ft">
-        <div class="special-board-col-hdr">🤝 For Trade (FT)</div>
+        <div class="special-board-col-hdr"><span>🤝 For Trade (FT)</span><small>bulk-add from your inventory</small></div>
         <div class="special-board-add-row">
           <div class="ac-wrap">
             <input type="text" class="ac-input" id="special-ft-ac" placeholder="Add a Pokémon to FT…" autocomplete="off"
@@ -1972,7 +1992,7 @@ if(!DB)throw new Error('Trade data failed to load');
 
 const PREFILTER="!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&";
 const OWNER="Doomsday126";
-const APP_VERSION="4.4.0";
+const APP_VERSION="4.5.0";
 const STALE_WARN=7,STALE_OLD=30;
 const SESSION_TTL=30*24*60*60*1000; // 30 days; refreshed on each activity so active users stay logged in
 const SPRITE_BASE="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/";
@@ -3290,7 +3310,10 @@ async function openLoginHealthCheck(){
 }
 async function runLoginHealthCheck(){
   const selectedUser=document.getElementById('login-user')?.value||'';
-  const rows=[healthRow('App version',APP_VERSION,`Page: ${location.href}`,'info')];
+  const rows=[
+    healthRow('App version',APP_VERSION,`Page: ${location.href}`,'info'),
+    healthRow('Selected user',selectedUser||'None selected',selectedUser?`Live read check will test users/${selectedUser}.`:'Choose a username on the login screen if you want to test one specific account.','info')
+  ];
   renderHealthRows([...rows,healthRow('Firebase connected','Checking...','Loading Firebase SDK and database handle.','info'),healthRow('Live user read','Waiting...','This checks whether this browser can read the login user list.','info'),healthRow('Service worker','Checking...','Checking cached app shell status.','info')]);
   let firebaseOk=false;
   try{
@@ -3453,6 +3476,10 @@ function showLogin(){
   document.getElementById('app').style.display='none';
   document.getElementById('req-form-card').style.display='none';
   document.getElementById('login-pg').querySelector('.lcard').style.display='block';
+  const pinInput=document.getElementById('login-pin');
+  if(pinInput)pinInput.value='';
+  const err=document.getElementById('login-err');
+  if(err)err.textContent='';
   const btn=document.getElementById('login-btn');
   btn.textContent='Sign in →';btn.disabled=false;
   populateLoginUsers();
@@ -3580,12 +3607,17 @@ function normalizeAcText(s){
     .replace(/\b(gmax|gigantamax)\b/g,'gigantamax')
     .replace(/\b(dmax|dynamax)\b/g,'dynamax')
     .replace(/\bpika\b/g,'pikachu')
+    .replace(/\?/g,' question ')
+    .replace(/!/g,' exclamation ')
     .replace(/[^a-z0-9]+/g,' ')
     .replace(/\s+/g,' ')
     .trim();
 }
 function acItemSearchText(e){
-  return normalizeAcText(`${e.name} ${e.dn} ${e.no||''} #${e.no||''}`);
+  let aliases='';
+  if(/\(\?\)/.test(e.name))aliases+=' question questionmark question-mark';
+  if(/\(!\)/.test(e.name))aliases+=' exclamation exclamationmark exclamation-mark';
+  return normalizeAcText(`${e.name} ${e.dn} ${e.no||''} #${e.no||''}${aliases}`);
 }
 function acMatchScore(e,rawQuery){
   const q=normalizeAcText(rawQuery);
@@ -3887,6 +3919,23 @@ function initAddAdvanced(){
   adv.classList.toggle('open',open);
   btn.setAttribute('aria-expanded',open?'true':'false');
 }
+function syncSpeedAddMode(){
+  const on=!!lsGet('pogoSpeedAdd',false);
+  const btn=document.getElementById('speed-add-toggle');
+  const hint=document.getElementById('speed-add-hint');
+  if(btn){
+    btn.classList.toggle('on',on);
+    btn.setAttribute('aria-pressed',on?'true':'false');
+  }
+  if(hint)hint.classList.toggle('on',on);
+  return on;
+}
+function toggleSpeedAddMode(){
+  const next=!lsGet('pogoSpeedAdd',false);
+  lsSet('pogoSpeedAdd',next);
+  syncSpeedAddMode();
+  toast(next?'⚡ Speed add on':'⚡ Speed add off');
+}
 function setAddPri(p){
   const hidden=document.getElementById('add-pmon-pri');
   const cur=hidden?.value||'';
@@ -3912,15 +3961,20 @@ function addEntry(){
   const list={...(allData[myListType]?.[cur]||{})};
   list[name]=priValue(pri,notes,lucky,xxl,xxs,shiny);
   writeList(myListType,cur,list);
+  const speedAdd=syncSpeedAddMode();
   document.getElementById('ac-input').value='';
   document.getElementById('add-pmon-sel').value='';
   document.getElementById('add-pmon-notes').value='';
-  document.getElementById('add-pmon-pri').value='';
-  document.querySelectorAll('.add-pri-btn').forEach(b=>{b.classList.remove('on','H','M','L');b.setAttribute('aria-pressed','false');});
-  ['add-pmon-lucky','add-pmon-xxl','add-pmon-xxs','add-pmon-shiny'].forEach(id=>{const el=document.getElementById(id);if(el)el.checked=false;});
+  if(!speedAdd){
+    document.getElementById('add-pmon-pri').value='';
+    document.querySelectorAll('.add-pri-btn').forEach(b=>{b.classList.remove('on','H','M','L');b.setAttribute('aria-pressed','false');});
+    ['add-pmon-lucky','add-pmon-xxl','add-pmon-xxs','add-pmon-shiny'].forEach(id=>{const el=document.getElementById(id);if(el)el.checked=false;});
+  }
   document.getElementById('ac-dropdown').classList.remove('open');
   const dn=acItems.find(x=>x.name===name)?.dn||name;
   toast(`✅ ${dn} added!`);
+  const input=document.getElementById('ac-input');
+  if(input)input.focus();
 }
 
 function uniqueEntries(...groups){
@@ -4065,7 +4119,7 @@ function renderMyList(filterVal){
   if(countEl)countEl.textContent=q?`(${entries.length} of ${count})`:`(${count})`;
 
   if(!entries.length){
-    el.innerHTML=q?emptyHtml('No matches','Clear the filter to see all.'):emptyHtml('Nothing here yet','Search for a Pokémon, set a priority (H/M/L) and/or flag (⚡ XXL XXS), then Add.','📋');
+    el.innerHTML=q?emptyHtml('No matches','Clear the filter to see all.'):emptyHtml('Nothing here yet','Search for a Pokémon, set a priority or flag, then Add. For big migrations, use Import string. For long sessions, Speed add keeps your settings sticky.','📋');
     renderMyStrings();return;
   }
 
@@ -5273,6 +5327,8 @@ function renderDiffModal(){
   if(!_activeDiff)return;
   const{them,type}=_activeDiff;
   const diff=computeTrainerDiff(type,cur,them);
+  const myCount=Object.keys(allData[type]?.[cur]||{}).length;
+  const theirCount=Object.keys(allData[type]?.[them]||{}).length;
   const strongMatch=diff.both.filter(d=>d.mine.p===d.theirs.p&&d.mine.p).length;
   const totalBoth=diff.both.length;
   const renderCard=(e,otherP)=>{
@@ -5307,6 +5363,7 @@ function renderDiffModal(){
         <button class="diff-summary-chip diff-copy-chip theirs" type="button" onclick="copyDiffSearch('theirs',this)" aria-label="Copy only theirs search string" title="Copy only theirs search string">${diff.onlyTheirs.length} only theirs ➡</button>
       </div>
       <div class="diff-body">
+        ${!myCount&&theirCount?`<div class="diff-tip"><strong>Your ${LIST_LABELS[type].toLowerCase()} list is empty.</strong> Add a few entries in My List first, then come back here and the compare view becomes much more useful.</div>`:''}
         ${diff.both.length?`<div class="diff-section">
           <div class="diff-section-hdr">Both want (${diff.both.length})</div>
           <div class="diff-grid">${diff.both.map(d=>renderCard(d.mine,d.theirs.p)).join('')}</div>
@@ -5672,6 +5729,7 @@ async function triggerInstall(){
 
 // ── WHAT'S NEW (#28) ─────────────────────────────────────────
 const WHATS_NEW=[
+  {version:'4.5',title:'⚡ Speed add + cleaner schedule + tighter board exports',desc:'My List now has a Speed add mode so priority and flags stay selected during big 40-50+ Pokémon sessions. The sign-in health check shows which username is being tested. Schedule event clutter is now tucked into a compact live-events tray instead of a long stack of repetitive rows. Special Trade Board exports drop redundant friend-code / Discord / rules text and use a narrower portrait-friendly layout.'},
   {version:'4.4',title:'🩺 Login Health + compact special boards',desc:'New "Having trouble signing in?" check on the login page shows app version, Firebase reachability, live user-read status, and service worker cache status, with a one-tap local cache reset for stuck browsers. Special Trade Board image exports now use a compact stacked sprite grid that scales better for big 50+ Pokémon boards, and Unown punctuation forms are available in pickers.'},
   {version:'4.3',title:'🎯 Special Trade Board (LF/FT image export)',desc:'New "Special Trade Board" option in the Export menu opens a dedicated editor where you stage Looking-For and For-Trade entries side by side, with per-row ✨ shiny and 🪞 mirror-only toggles, qty and short notes. Export the board as a 9DB-style two-column PNG ready to paste into Discord. Board auto-saves to your profile so it survives reloads.'},
   {version:'4.2',title:'🌟 Full legendary roster + multi-form variants',desc:'Mewtwo, Mew, every Ultra Beast (Nihilego → Guzzlord), Magearna/Marshadow/Zeraora/Meltan/Melmetal, every Galar/Hisui/Paldea legendary, and the full Paradox Pokémon set are now searchable in the autocomplete (they were only in the avatar picker before). Multi-form legendaries are now separate rows so you can distinguish them: Giratina Altered/Origin, Dialga & Palkia + Hisuian Origin, all four Deoxys formes, Tornadus/Thundurus/Landorus Incarnate/Therian, Shaymin Land/Sky, Hoopa Confined/Unbound, Necrozma Dusk Mane/Dawn Wings, Calyrex Ice/Shadow Rider, Zacian/Zamazenta Hero/Crowned, Zygarde 10/50/Complete, Keldeo Ordinary/Resolute, Ogerpon\'s four masks, Enamorus Incarnate/Therian. Each form gets its own PokeAPI sprite.'},
@@ -6200,19 +6258,19 @@ async function exportSpecialBoardImage(){
   }catch(e){console.error(e);toast('⚠️ Export failed — try again.');}
 }
 async function renderSpecialBoardImage(board,username){
-  const W=720,pad=14,headerH=78,footerH=34;
+  const W=620,pad=14,headerH=64,footerH=22;
   // Always export as a stacked grid so boards with 50+ entries stay shareable
   // while small boards do not waste a wide empty column.
   const totalBoardEntries=board.lf.length+board.ft.length;
   const isDense=true;
-  const ultraDense=totalBoardEntries>36;
-  const showGridNames=!ultraDense;
+  const ultraDense=totalBoardEntries>42;
+  const showGridNames=totalBoardEntries<=24;
   // List-layout sizing
   const colGap=10,rowH=64,sprSize=44;
   const cols=2;
   const colW=(W-pad*2-colGap)/cols;
   // Grid-layout sizing (used when isDense)
-  const gridCols=ultraDense?6:5,gridGap=ultraDense?6:8,gridCellH=ultraDense?64:82,gridSprSize=ultraDense?48:52,sectionGap=12,sectionHdrH=32;
+  const gridCols=ultraDense?5:4,gridGap=7,gridCellH=ultraDense?58:74,gridSprSize=ultraDense?42:50,sectionGap=12,sectionHdrH=32;
   const gridFullW=W-pad*2;
   const gridCellW=(gridFullW-(gridCols-1)*gridGap)/gridCols;
   const gridRowsFor=n=>Math.ceil(Math.max(n,0)/gridCols);
@@ -6245,17 +6303,11 @@ async function renderSpecialBoardImage(board,username){
   ctx.fillStyle=headerGrad;ctx.fillRect(0,0,W,headerH);
   ctx.fillStyle='#6366f1';ctx.fillRect(0,headerH-2,W,2);
   // Title
-  drawCenteredFittedText(ctx,`${username} — Special Trade Board`,W/2,32,W-pad*2,{max:22,min:14,color:'#ffffff'});
-  // Subtitle: friend code + Discord if present
-  const ud=allData.users?.[username]||{};
-  const subBits=[];
-  if(ud.friendCode)subBits.push(`FC: ${ud.friendCode}`);
-  if(ud.discord)subBits.push(`Discord: ${ud.discord}`);
+  drawCenteredFittedText(ctx,`${username} — Special Trade Board`,W/2,28,W-pad*2,{max:21,min:14,color:'#ffffff'});
   const date=new Date().toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
-  subBits.push(date);
   ctx.font='600 12px Space Grotesk, sans-serif';
   ctx.fillStyle='rgba(255,255,255,.7)';ctx.textAlign='center';
-  ctx.fillText(subBits.join(' · '),W/2,58);
+  ctx.fillText(`Generated ${date}`,W/2,48);
   ctx.textAlign='left';
 
   // Pre-load all sprite images
@@ -6422,7 +6474,7 @@ async function renderSpecialBoardImage(board,username){
   ctx.fillStyle='rgba(255,255,255,.4)';
   ctx.font='500 10px Space Grotesk, sans-serif';
   ctx.textAlign='center';
-  ctx.fillText('Generated with PoGo Trades · special trade rules apply (1 special trade/day, Great Friend+ for legendaries, Forever Friend for remote)',W/2,footY+20);
+  ctx.fillText('PoGo Trades',W/2,footY+14);
   ctx.textAlign='left';
 
   return new Promise(res=>canvas.toBlob(b=>res(b),'image/png'));
@@ -7029,26 +7081,24 @@ function renderSchedDayDetail(){
     return bits.join(' · ');
   };
   const dayLabel=d.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric'});
-  const eventsHtml=evt.events.length?`<div class="sched-event-list">
-    ${evt.events.map(ev=>{
-      let bonusBadge='';
-      if(ev.bonus){
-        bonusBadge=`<span class="sched-event-bonus" title="${escAttr(ev.bonusText||'Confirmed in event details')}">+${ev.bonus} ${ev.bonusType}</span>`;
-      }else{
-        bonusBadge=`<span class="sched-event-bonus unknown" title="No explicit special-trade bonus was found in the scraped event details">Special bonus unknown</span>`;
-      }
-      const checkHint=`<span class="sched-event-link" style="color:var(--muted);font-style:italic">Use custom bonus if details confirm extra specials</span>`;
-      return`<div class="sched-event-row">
-      <div class="sched-event-icon">🎉</div>
-      <div class="sched-event-content">
-        <div class="sched-event-title">${escHtml(ev.name||ev.heading||'Event')}${bonusBadge}</div>
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:3px">
-          ${ev.link?`<a class="sched-event-link" href="${ev.link}" target="_blank" rel="noopener">details ↗</a>`:''}
-          ${checkHint}
-        </div>
+  const eventsHtml=evt.events.length?`<div class="sched-events-panel">
+    <details class="sched-events-details" ${evt.events.length<=2?'open':''}>
+      <summary class="sched-events-summary">
+        <span class="sched-events-kicker">🎉 Live events</span>
+        <span class="sched-events-count">${evt.events.length}</span>
+        <span class="sched-events-note">${evt.specialBonus?`+${evt.specialBonus} confirmed extra special trade${evt.specialBonus===1?'':'s'} today`:'No confirmed extra special trades found in the live event details'}</span>
+        <span class="sched-events-caret">▾</span>
+      </summary>
+      <div class="sched-event-chip-list">
+        ${evt.events.map(ev=>{
+          const badge=ev.bonus?`<span class="sched-event-bonus" title="${escAttr(ev.bonusText||'Confirmed in event details')}">+${ev.bonus} ${escHtml(ev.bonusType||'special')}</span>`:'';
+          const body=`<span class="sched-event-chip-name">${escHtml(ev.name||ev.heading||'Event')}</span>${badge}${ev.link?'<span class="sched-event-chip-link">↗</span>':''}`;
+          return ev.link
+            ?`<a class="sched-event-chip" href="${ev.link}" target="_blank" rel="noopener">${body}</a>`
+            :`<div class="sched-event-chip">${body}</div>`;
+        }).join('')}
       </div>
-    </div>`;
-    }).join('')}
+    </details>
   </div>`:'';
   // Manual override row — let user add a custom special-trade bonus for this date
   const manualBonus=parseInt(allData.users?.[cur]?.customBonuses?.[iso])||0;
@@ -9129,6 +9179,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     }).catch(e=>console.warn('SW registration failed',e));
   }
   buildAcItems();
+  syncSpeedAddMode();
 
   // Hardcoded Firebase URL — config screen never shown
   lsSet('fbUrl',FIREBASE_URL);
