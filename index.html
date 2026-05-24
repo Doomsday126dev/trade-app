@@ -271,6 +271,46 @@ input,select,textarea{font-family:var(--font);outline:none}
 .collapse-icon{color:var(--muted);font-size:12px;transition:transform .2s;flex-shrink:0}
 .user-str-block.expanded .collapse-icon{transform:rotate(180deg)}
 
+/* SAFE-TO-TRANSFER FEATURE (v4.6.14) — community bag-management tool */
+.safe-transfer-cta{margin-bottom:10px}
+.safe-transfer-btn{display:inline-flex;align-items:center;gap:8px;background:rgba(108,99,255,.12);border:1px solid rgba(108,99,255,.32);color:var(--ac2);padding:9px 14px;border-radius:var(--r2);font-size:13px;font-weight:600;cursor:pointer;transition:.15s;font-family:var(--font)}
+.safe-transfer-btn:hover{background:rgba(108,99,255,.22);border-color:var(--accent);color:var(--text)}
+@media(max-width:600px){.safe-transfer-btn{width:100%;justify-content:center}.stb-label{font-size:12px}}
+
+/* Modal layout */
+.stb-modal-body{padding:14px 16px 16px;max-height:80vh;overflow-y:auto}
+.stb-intro{font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:14px}
+.stb-section{margin-bottom:14px}
+.stb-section-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:6px}
+.stb-section-title{font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.05em}
+.stb-section-actions{display:flex;gap:6px;font-size:11px}
+.stb-link-btn{background:transparent;border:none;color:var(--ac2);font-size:11px;font-weight:600;cursor:pointer;padding:2px 6px;border-radius:4px;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;font-family:var(--font)}
+.stb-link-btn:hover{color:var(--accent);background:rgba(108,99,255,.08);text-decoration:none}
+
+/* Trainer chip grid */
+.stb-trainer-grid{display:flex;flex-wrap:wrap;gap:5px;max-height:260px;overflow-y:auto;background:var(--bg);border:1px solid var(--border);border-radius:var(--r2);padding:9px;align-content:flex-start}
+.stb-trainer-chip{display:inline-flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--border2);color:var(--muted);padding:5px 10px;border-radius:14px;font-size:12px;font-weight:600;cursor:pointer;transition:.12s;font-family:var(--font);line-height:1.2;user-select:none}
+.stb-trainer-chip:hover{border-color:var(--ac2);color:var(--text)}
+.stb-trainer-chip.on{background:rgba(108,99,255,.18);border-color:var(--ac2);color:var(--text)}
+.stb-trainer-chip.on::before{content:'✓';color:var(--ac2);font-weight:800;margin-right:-2px}
+.stb-trainer-chip.is-me{font-style:italic;opacity:.7;cursor:default}
+.stb-trainer-chip.is-me:hover{border-color:var(--border2);color:var(--muted)}
+
+/* Output */
+.stb-summary{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;font-size:12px;color:var(--muted);margin-bottom:6px}
+.stb-summary strong{color:var(--text);font-family:var(--mono)}
+.stb-warn{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.35);color:var(--warn);padding:8px 11px;border-radius:var(--r2);font-size:12px;margin-bottom:8px;line-height:1.45}
+.stb-warn strong{color:var(--warn)}
+.stb-output{width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--text);padding:10px 12px;border-radius:var(--r2);font-family:var(--mono);font-size:12px;line-height:1.5;min-height:90px;max-height:180px;resize:vertical;box-sizing:border-box}
+.stb-output:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px rgba(108,99,255,.15)}
+.stb-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.stb-action-btn{flex:1;min-width:140px;background:var(--accent);color:#fff;border:none;padding:10px 14px;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);transition:.15s}
+.stb-action-btn:hover{filter:brightness(1.1)}
+.stb-action-btn:disabled{opacity:.45;cursor:not-allowed;filter:none}
+.stb-action-btn.secondary{background:var(--bg);color:var(--text);border:1px solid var(--border2);flex:0 1 auto}
+.stb-action-btn.secondary:hover{border-color:var(--accent);color:var(--ac2)}
+.stb-empty{font-size:13px;color:var(--muted);font-style:italic;text-align:center;padding:16px}
+
 /* ADMIN */
 .utbl{width:100%;border-collapse:collapse;font-size:13px}
 .utbl th{background:var(--bg2);padding:8px 11px;text-align:left;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border)}
@@ -1665,6 +1705,11 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
       <button class="ltab" onclick="setStrList('gmax')"><span class="ltab-full">Gigantamax</span><span class="ltab-short">Gmax</span></button>
       <button class="ltab" onclick="setStrList('costumes')">Others</button>
     </div>
+    <div class="safe-transfer-cta">
+      <button class="safe-transfer-btn" onclick="openSafeTransferModal()" title="Generate a Pokémon GO search string for everything nobody on your selected partner list wants — paste into the bag for safe mass-transfer">
+        🗑️ <span class="stb-label">Safe-to-transfer search string</span>
+      </button>
+    </div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Tap a trainer to expand their strings</div>
     <div id="strings-out"></div>
   </div>
@@ -1802,6 +1847,39 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
     <div style="overflow-x:auto;border:1px solid var(--border);border-radius:var(--r)">
       <table class="utbl"><thead><tr><th>Trainer</th><th>Activity</th><th>Listed</th><th>Role</th><th>PIN</th></tr></thead>
       <tbody id="admin-tbody"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<!-- SAFE-TO-TRANSFER MODAL (v4.6.14) -->
+<div class="ov" id="safe-transfer-modal" role="dialog" aria-modal="true" aria-labelledby="stb-title">
+  <div class="modal" style="max-width:520px">
+    <button class="ov-x" onclick="closeModal('safe-transfer-modal')" aria-label="Close">×</button>
+    <h3 id="stb-title">🗑️ Safe-to-transfer search string</h3>
+    <div class="stb-modal-body">
+      <div class="stb-intro">
+        Generates a Pokémon GO search string for every species that <strong>none</strong> of your selected trade partners have on their wishlist. Paste it into your bag's search to see what's safe to mass-transfer.
+      </div>
+      <div class="stb-section">
+        <div class="stb-section-hdr">
+          <span class="stb-section-title">Trade partners to consider</span>
+          <span class="stb-section-actions">
+            <button class="stb-link-btn" onclick="setAllSafeTransferTrainers(true)">Select all</button>
+            <button class="stb-link-btn" onclick="setAllSafeTransferTrainers(false)">Clear</button>
+            <button class="stb-link-btn" onclick="saveSafeTransferAsDefault()" title="Save the current selection as the default next time you open this">Save as default</button>
+          </span>
+        </div>
+        <div class="stb-trainer-grid" id="stb-trainer-grid"></div>
+      </div>
+      <div class="stb-section">
+        <div class="stb-summary" id="stb-summary"></div>
+        <div id="stb-warn-wrap"></div>
+        <textarea class="stb-output" id="stb-output" readonly placeholder="Pick at least one trade partner above to generate a search string." aria-label="Generated search string"></textarea>
+        <div class="stb-actions">
+          <button class="stb-action-btn" id="stb-copy-btn" onclick="copySafeTransferString()">📋 Copy search string</button>
+          <button class="stb-action-btn secondary" onclick="closeModal('safe-transfer-modal')">Close</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -2128,7 +2206,7 @@ if(!DB)throw new Error('Trade data failed to load');
 
 const PREFILTER="!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&";
 const OWNER="Doomsday126";
-const APP_VERSION="4.6.13";
+const APP_VERSION="4.6.14";
 const STALE_WARN=7,STALE_OLD=30;
 const SESSION_TTL=30*24*60*60*1000; // 30 days; refreshed on each activity so active users stay logged in
 const SPRITE_BASE="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/";
@@ -5818,6 +5896,166 @@ async function copyDiffSearch(section,btn){
   if(!str){toast('No Pokémon in that section');return;}
   await copyStr(str,btn);
 }
+
+// ── SAFE-TO-TRANSFER SEARCH STRING (v4.6.14) ─────────────────
+// Generates a PoGo search string of every dex number that NONE of the
+// selected trade partners have on their wishlist. Used for bag cleanup —
+// paste the result into PoGo's bag search to see safe-to-transfer mons.
+const SAFE_TRANSFER_DEFAULT_KEY='pogoSafeTransferDefault';
+// Live selection (Set of usernames). Initialised in openSafeTransferModal()
+// from saved default if available, else empty.
+let _safeTransferSelected=null;
+function _safeTransferAllTrainers(){
+  // Everyone who has a non-empty wishlist (so selecting an inactive trainer
+  // who never added anything wouldn't usefully constrain anything anyway).
+  return Object.keys(allData.users||{})
+    .filter(u=>Object.keys(allData.wishlist?.[u]||{}).length>0)
+    .sort((a,b)=>(a===cur?-1:b===cur?1:0)||a.localeCompare(b,undefined,{sensitivity:'base'}));
+}
+function _loadSafeTransferDefault(){
+  const saved=lsGet(SAFE_TRANSFER_DEFAULT_KEY,null);
+  if(Array.isArray(saved))return new Set(saved.filter(u=>typeof u==='string'));
+  return null;
+}
+function openSafeTransferModal(){
+  // Initialise selection: saved default → fall back to "everyone except me"
+  // so the very first interaction does something useful even with no save.
+  if(!_safeTransferSelected){
+    const def=_loadSafeTransferDefault();
+    if(def&&def.size){
+      _safeTransferSelected=def;
+    }else{
+      _safeTransferSelected=new Set(_safeTransferAllTrainers().filter(u=>u!==cur));
+    }
+  }
+  // Prune anyone who's since become inactive / been removed.
+  const active=new Set(_safeTransferAllTrainers());
+  [..._safeTransferSelected].forEach(u=>{if(!active.has(u))_safeTransferSelected.delete(u);});
+  openModal('safe-transfer-modal');
+  renderSafeTransferTrainers();
+  renderSafeTransferOutput();
+}
+function renderSafeTransferTrainers(){
+  const grid=document.getElementById('stb-trainer-grid');
+  if(!grid)return;
+  const trainers=_safeTransferAllTrainers();
+  if(!trainers.length){
+    grid.innerHTML=`<div class="stb-empty">No trainers with wishlists yet.</div>`;
+    return;
+  }
+  grid.innerHTML=trainers.map(u=>{
+    const isMe=u===cur;
+    const on=_safeTransferSelected.has(u);
+    const cls=`stb-trainer-chip${on?' on':''}${isMe?' is-me':''}`;
+    const label=isMe?`${escHtml(u)} (you)`:escHtml(u);
+    const click=isMe?'':`onclick="toggleSafeTransferTrainer('${escAttr(u)}')"`;
+    const title=isMe?'You\'re excluded by default — your own wishlist doesn\'t need to protect itself from your transfers.':`Toggle ${escAttr(u)}`;
+    return`<span class="${cls}" ${click} title="${title}">${label}</span>`;
+  }).join('');
+}
+function toggleSafeTransferTrainer(name){
+  if(!_safeTransferSelected)return;
+  if(_safeTransferSelected.has(name))_safeTransferSelected.delete(name);
+  else _safeTransferSelected.add(name);
+  renderSafeTransferTrainers();
+  renderSafeTransferOutput();
+}
+function setAllSafeTransferTrainers(all){
+  if(!_safeTransferSelected)_safeTransferSelected=new Set();
+  if(all){
+    _safeTransferAllTrainers().forEach(u=>{if(u!==cur)_safeTransferSelected.add(u);});
+  }else{
+    _safeTransferSelected.clear();
+  }
+  renderSafeTransferTrainers();
+  renderSafeTransferOutput();
+}
+function saveSafeTransferAsDefault(){
+  if(!_safeTransferSelected){toast('Nothing to save yet');return;}
+  lsSet(SAFE_TRANSFER_DEFAULT_KEY,[..._safeTransferSelected]);
+  toast(`✅ Default saved — ${_safeTransferSelected.size} trainer${_safeTransferSelected.size===1?'':'s'} will be pre-selected next time`);
+}
+// Map every species the app knows about to its base dex number. We dedupe
+// by dex so costume variants (which share dex with their base) only count
+// once: protecting "Pikachu Party Hat" implicitly protects all dex-25.
+function _safeTransferAllDex(){
+  const seen=new Set();
+  (DB.wishlist||[]).forEach(e=>{
+    const n=parseInt(e.no);
+    if(Number.isFinite(n)&&n>0)seen.add(n);
+  });
+  return [...seen].sort((a,b)=>a-b);
+}
+function computeSafeTransferString(){
+  if(!_safeTransferSelected||!_safeTransferSelected.size){
+    return{str:'',safeCount:0,wantedCount:0,totalDex:_safeTransferAllDex().length,picked:0};
+  }
+  // Build the "wanted" dex set from all selected trainers' wishlists.
+  // Conservative — any wishlist entry, regardless of priority or flags, counts.
+  const wantedDex=new Set();
+  const wishSrcByName={};
+  (DB.wishlist||[]).forEach(e=>{if(!wishSrcByName[e.name])wishSrcByName[e.name]=e;});
+  _safeTransferSelected.forEach(u=>{
+    const list=allData.wishlist?.[u]||{};
+    Object.keys(list).forEach(name=>{
+      const entry=wishSrcByName[name];
+      const dex=parseInt(entry?.no);
+      if(Number.isFinite(dex)&&dex>0)wantedDex.add(dex);
+    });
+  });
+  const all=_safeTransferAllDex();
+  const safe=all.filter(n=>!wantedDex.has(n));
+  return{
+    str:safe.join(','),
+    safeCount:safe.length,
+    wantedCount:wantedDex.size,
+    totalDex:all.length,
+    picked:_safeTransferSelected.size
+  };
+}
+function renderSafeTransferOutput(){
+  const out=document.getElementById('stb-output');
+  const summary=document.getElementById('stb-summary');
+  const warnWrap=document.getElementById('stb-warn-wrap');
+  const copyBtn=document.getElementById('stb-copy-btn');
+  if(!out||!summary)return;
+  const r=computeSafeTransferString();
+  if(!r.picked){
+    summary.innerHTML=`<span>Select at least one trainer above.</span>`;
+    out.value='';
+    warnWrap.innerHTML='';
+    if(copyBtn)copyBtn.disabled=true;
+    return;
+  }
+  out.value=r.str;
+  const charCount=r.str.length;
+  summary.innerHTML=`
+    <span><strong>${r.safeCount}</strong> safe of <strong>${r.totalDex}</strong> total · protecting <strong>${r.wantedCount}</strong> wanted by <strong>${r.picked}</strong> trainer${r.picked===1?'':'s'}</span>
+    <span style="font-family:var(--mono);font-size:11px">${charCount} chars</span>
+  `;
+  // Pokémon GO's bag search box accepts up to ~1000 chars before truncating
+  // silently. Warn well before the cliff so trainers can chunk the output.
+  if(charCount>=900){
+    warnWrap.innerHTML=`<div class="stb-warn"><strong>Heads up:</strong> this string is <strong>${charCount} characters</strong>, which is close to or past PoGo's ~1000-char search limit. Paste it in two halves (split at a comma), or narrow your trainer selection to shrink the list.</div>`;
+  }else if(charCount>=700){
+    warnWrap.innerHTML=`<div class="stb-warn" style="background:rgba(108,99,255,.08);border-color:rgba(108,99,255,.25);color:var(--ac2)"><strong>FYI:</strong> ${charCount} characters — should fit in PoGo's search but you're approaching the limit. Adding more trainers to the protect list will only shrink it from here.</div>`;
+  }else{
+    warnWrap.innerHTML='';
+  }
+  if(copyBtn)copyBtn.disabled=!r.str;
+}
+async function copySafeTransferString(){
+  const out=document.getElementById('stb-output');
+  if(!out||!out.value){toast('Nothing to copy — pick at least one trainer');return;}
+  try{
+    await copyText(out.value);
+    toast(`📋 Copied ${out.value.length}-char search string — paste into PoGo bag search`);
+  }catch{
+    out.select();
+    document.execCommand('copy');
+    toast('📋 Copied (fallback path)');
+  }
+}
 function renderDiffModal(){
   if(!_activeDiff)return;
   const{them,type}=_activeDiff;
@@ -6249,6 +6487,7 @@ async function triggerInstall(){
 
 // ── WHAT'S NEW (#28) ─────────────────────────────────────────
 const WHATS_NEW=[
+  {version:'4.6.14',title:'🗑️ New: "Safe-to-transfer" search string',desc:'Strings tab has a new button that generates a Pokémon GO search string of every species nobody on your chosen trade-partner list wants. Paste it into your bag search to see what\'s safe to mass-transfer. Pick which trainers count (not everyone trades with everyone), save your usual circle as the default, and the modal warns if the string is getting close to PoGo\'s search-length limit.'},
   {version:'4.6.13',title:'🔍 Small Pokémon sprite fix (round 3 — the real one)',desc:'Even with the 4.6.12 fallback bump, Igglybuff / Mime Jr. and friends were still rendering tiny on some PWAs because the sprite-size auto-detector was getting tricked by their soft drop-shadows. The detector now ignores faint edge pixels, and a hard floor guarantees PokeMiners sprites can never render smaller than readable — even when detection completely fails.'},
   {version:'4.6.12',title:'🔍 Small Pokémon sprite fix (round 2)',desc:'4.6.11 fixed the cap that was crushing Cleffa / Igglybuff / Mime Jr. sprites — but in PWAs where the sprite-size auto-detection had been blocked by a flaky proxy, the cached "tiny" value kept being used. This version resets the cache and gives PokeMiners art a reasonable default size up front, so the right size shows immediately even when auto-detection is offline.'},
   {version:'4.6.11',title:'🔍 Small-bodied Pokémon look the right size in Inventory again',desc:'Sprites like Cleffa, Igglybuff, Mime Jr. and Munchlax were rendering as tiny thumbnails after the last sprite update. They now auto-scale to fill the tile properly again.'},
@@ -9742,6 +9981,7 @@ Object.assign(window,{
   exitShareView,renderShareView,setAddPri,toggleAddAdvanced,trySpriteFallback,
   // Latest batch
   openDiffModal,closeDiffModal,setDiffListType,copyDiffSearch,
+  openSafeTransferModal,toggleSafeTransferTrainer,setAllSafeTransferTrainers,saveSafeTransferAsDefault,copySafeTransferString,
   openAddAllVariantsModal,closeAddAllVariants,confirmAddAllVariants,
   selectWallpaper,applyWallpaper,
   // Inventory / Have
