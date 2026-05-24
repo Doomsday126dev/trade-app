@@ -196,6 +196,10 @@ input,select,textarea{font-family:var(--font);outline:none}
 .ac-item-no{font-family:var(--mono);font-size:10px;color:var(--muted);min-width:30px}
 .ac-item-name{flex:1}
 .ac-empty{padding:10px 12px;font-size:13px;color:var(--muted)}
+.ac-section-label{padding:7px 12px 5px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.ac-item-muted{padding:7px 11px;font-size:13px;display:flex;align-items:center;gap:8px;opacity:.72;border-top:1px solid rgba(255,255,255,.04)}
+.ac-item-muted .ac-item-name{flex:1}
+.ac-item-note{font-size:11px;color:var(--muted);font-weight:600;white-space:nowrap}
 
 /* MY LIST ROWS */
 .mygrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(390px,1fr));gap:7px;margin-bottom:12px}
@@ -309,6 +313,8 @@ input,select,textarea{font-family:var(--font);outline:none}
 .btn-approve:hover{background:rgba(16,185,129,.25)}
 .btn-deny{background:rgba(239,68,68,.1);color:var(--danger);border:1px solid rgba(239,68,68,.2);padding:6px 16px;border-radius:var(--r2);font-size:13px;font-weight:600;cursor:pointer}
 .btn-deny:hover{background:rgba(239,68,68,.2)}
+.btn-copy-login{background:rgba(108,99,255,.14);color:var(--ac2);border:1px solid rgba(108,99,255,.28);padding:6px 14px;border-radius:var(--r2);font-size:12px;font-weight:700;cursor:pointer}
+.btn-copy-login:hover{background:rgba(108,99,255,.24)}
 .pin-reveal{font-family:var(--mono);font-size:13px;background:var(--bg2);border:1px solid var(--border2);border-radius:4px;padding:4px 10px;color:var(--ac2);display:inline-block;margin-top:4px}
 
 /* FRESHNESS */
@@ -1432,7 +1438,7 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
     </div>
     <button class="lbtn" id="login-btn" onclick="doLogin()">Sign in →</button>
     <div class="err" id="login-err"></div>
-    <div class="lnote">First time logging in? Your default PIN is <strong>123456</strong>.<br>PINs are 6 digits. Ask an admin to reset yours if needed.</div>
+    <div class="lnote">New here? Request access first. When an admin approves you, they’ll give you a unique 6-digit first-time PIN.<br>Already had access before? Ask an admin to reset your PIN if needed.</div>
     <button type="button" class="login-help-link" onclick="openLoginHealthCheck()">Having trouble signing in?</button>
     <div class="req-link" onclick="showRequestForm()">🙋 Request access to join</div>
   </div>
@@ -1451,7 +1457,7 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
     <div id="req-sent-status" style="display:none" class="req-status">
       <div class="req-status-icon">✅</div>
       <div class="req-status-text">Request sent!</div>
-      <div class="req-status-sub">An admin will review your request and send you login details.</div>
+      <div class="req-status-sub">An admin will review your request and send you a unique first-time PIN.</div>
     </div>
   </div>
 </div>
@@ -1782,7 +1788,7 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
       <h3>➕ Add member</h3>
       <div class="frow">
         <input type="text" id="nu-name" placeholder="Username" style="max-width:180px">
-        <input type="text" id="nu-pin" placeholder="6-digit PIN" maxlength="6" inputmode="numeric" style="max-width:120px">
+        <input type="text" id="nu-pin" placeholder="Auto-generate or enter PIN" maxlength="6" inputmode="numeric" style="max-width:180px">
         <label id="nu-admin-wrap" class="admin-role-toggle"><input type="checkbox" id="nu-admin"><span>Admin</span></label>
       </div>
       <button class="bsave" onclick="addUser()" style="margin-top:10px">Add member</button>
@@ -3206,6 +3212,19 @@ async function createMemberNow(username,pin,isAdmin=false,reqId=''){
   saveLocal(s);allData=normalizeData(s);refreshAll();
   return user;
 }
+function generatedFirstTimePin(){
+  return String(Math.floor(100000+Math.random()*900000));
+}
+function firstTimeLoginMessage(username,pin){
+  return[
+    `You're approved for PoGo Trades.`,
+    '',
+    `Username: ${username}`,
+    `First-time PIN: ${pin}`,
+    '',
+    'Sign in, then change your PIN from Profile after your first login.'
+  ].join('\n');
+}
 async function repairMissingAuthMetadata(){
   if(authRepairStarted||!fbOn||!db||!auth?.currentUser||!allData.users?.[cur]?.isAdmin)return;
   authRepairStarted=true;
@@ -3970,10 +3989,22 @@ function acSearch(q){
   document.getElementById('add-pmon-sel').value='';
   const dd=document.getElementById('ac-dropdown');
   if(!q||q.length<1){dd.classList.remove('open');return;}
+  const arr=listSource(myListType);
+  const existing=new Set(Object.keys(allData[myListType]?.[cur]||{}));
   acFiltered=acItems.map(e=>({e,score:acMatchScore(e,q)}))
     .filter(x=>x.score>=0)
     .sort((a,b)=>a.score-b.score||(parseInt(a.e.no)||9999)-(parseInt(b.e.no)||9999)||alphaCompare(a.e.dn,b.e.dn))
     .slice(0,AC_RESULT_LIMIT)
+    .map(x=>x.e);
+  const existingMatches=arr
+    .filter(e=>existing.has(e.name))
+    .map(e=>{
+      const item={name:e.name,dn:e.displayName||e.name,no:e.no||null,spriteUrl:entrySpriteUrl(e,e.name)};
+      return{e:item,score:acMatchScore({name:item.name,dn:item.dn,no:item.no,search:acItemSearchText(item)},q)};
+    })
+    .filter(x=>x.score>=0)
+    .sort((a,b)=>a.score-b.score||(parseInt(a.e.no)||9999)-(parseInt(b.e.no)||9999)||alphaCompare(a.e.dn,b.e.dn))
+    .slice(0,6)
     .map(x=>x.e);
   acFocusIdx=-1;
   // Detect if user is searching for a Pokemon family with multiple variants
@@ -3985,7 +4016,16 @@ function acSearch(q){
         <span style="font-size:11px;color:var(--accent);font-weight:700">→</span>
       </div>`
     :'';
-  if(!acFiltered.length&&!familyBanner){
+  const existingSection=existingMatches.length
+    ?`<div class="ac-section-label">Already On Your List</div>${existingMatches.map(e=>`
+      <div class="ac-item-muted">
+        ${e.no||e.spriteUrl?spriteImg(e.no,28,'ac-item-sprite',e.name,'',e.dn,{urlOverride:e.spriteUrl}):''}
+        ${e.no?`<span class="ac-item-no">#${e.no}</span>`:''}
+        <span class="ac-item-name">${e.dn}</span>
+        <span class="ac-item-note">added</span>
+      </div>`).join('')}`
+    :'';
+  if(!acFiltered.length&&!familyBanner&&!existingSection){
     dd.innerHTML=`<div class="ac-empty">No results</div>`;
   }else{
     dd.innerHTML=familyBanner+acFiltered.map((e,i)=>`
@@ -3993,7 +4033,7 @@ function acSearch(q){
         ${e.no||e.spriteUrl?spriteImg(e.no,28,'ac-item-sprite',e.name,'',e.dn,{urlOverride:e.spriteUrl}):''}
         ${e.no?`<span class="ac-item-no">#${e.no}</span>`:''}
         <span class="ac-item-name">${e.dn}</span>
-      </div>`).join('');
+      </div>`).join('')+existingSection;
   }
   dd.classList.add('open');
 }
@@ -5358,18 +5398,19 @@ function toggleAdmin(u,makeAdmin){
 }
 async function addUser(){
   const name=document.getElementById('nu-name').value.trim();
-  const pin=document.getElementById('nu-pin').value.trim();
+  const pinInput=document.getElementById('nu-pin').value.trim();
   const iAmOwner=allData.users?.[cur]?.isOwner||cur===OWNER;
   const adminRequested=document.getElementById('nu-admin')?.checked;
   if(adminRequested&&!iAmOwner){toast('⚠️ Only the owner can create admins');return;}
   const isAdmin=iAmOwner&&adminRequested;
   if(!name){toast('⚠️ Enter username');return;}
+  const pin=pinInput||generatedFirstTimePin();
   if(!isSixDigitPin(pin)){toast('⚠️ PIN must be exactly 6 digits');return;}
   if(allData.users?.[name]){toast('⚠️ Username exists');return;}
   try{
     await createMemberNow(name,pin,isAdmin);
     document.getElementById('nu-name').value='';document.getElementById('nu-pin').value='';document.getElementById('nu-admin').checked=false;
-    toast(`✅ ${name} added!`);renderAdmin();populateLoginUsers();
+    toast(`✅ ${name} added! PIN: ${pin}`,5000);renderAdmin();populateLoginUsers();
   }catch(e){
     toast('⚠️ Could not add member in Firebase: '+(e.code||e.message||'permission denied'),5000);
   }
@@ -5458,22 +5499,37 @@ function renderPendingRequests(){
 }
 async function approveRequest(reqId,username){
   if(allData.users?.[username]){toast('⚠️ Username already exists');return;}
-  const pin=String(Math.floor(100000+Math.random()*900000));
+  const pin=generatedFirstTimePin();
   try{
     await createMemberNow(username,pin,false,reqId);
   }catch(e){
     toast('⚠️ Could not create login in Firebase: '+(e.code||e.message||'permission denied'),5000);
     return;
   }
+  let copied=true;
+  try{
+    await copyText(firstTimeLoginMessage(username,pin));
+  }catch{
+    copied=false;
+  }
   const card=document.getElementById(`reqcard-${reqId}`);
   if(card)card.innerHTML=`
     <div style="font-size:14px;font-weight:700;color:var(--ok);margin-bottom:8px">✅ ${username} approved</div>
-    <div style="font-size:13px;color:var(--muted);margin-bottom:6px">Share their login details:</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:6px">${copied?'Login details copied — paste them to the trainer:':'Send them these first-time login details:'}</div>
     <div style="font-size:13px">Trainer: <strong>${username}</strong></div>
     <div style="font-size:13px;margin-top:4px">PIN: <span class="pin-reveal">${pin}</span></div>
-    <div style="font-size:11px;color:var(--muted);margin-top:8px">Tell them to change PIN on first login.</div>`;
-  renderAdmin();populateLoginUsers();toast(`✅ ${username} approved! PIN: ${pin}`,5000);
+    <div style="font-size:11px;color:var(--muted);margin-top:8px">They should change their PIN after the first sign-in.</div>
+    <button class="btn-copy-login" style="margin-top:10px" onclick="copyApprovedLogin('${username.replace(/'/g,"\\'")}','${pin}')">${copied?'📋 Copy again':'📋 Copy login details'}</button>`;
+  renderAdmin();populateLoginUsers();toast(copied?`✅ ${username} approved! Login details copied.`:`✅ ${username} approved! PIN: ${pin}`,5000);
   setTimeout(()=>renderPendingRequests(),4000);
+}
+async function copyApprovedLogin(username,pin){
+  try{
+    await copyText(firstTimeLoginMessage(username,pin));
+    toast(`📋 Login details copied for ${username}`);
+  }catch{
+    toast('⚠️ Could not copy login details automatically');
+  }
 }
 async function denyRequest(reqId){
   const s=getLocal();if(s.requests?.[reqId])s.requests[reqId].status='denied';
@@ -9634,7 +9690,7 @@ Object.assign(window,{
   dragStart,dragOver,dragDrop,dragEnd,
   addUser,openReset,confirmReset,toggleAdmin,exportData,triggerRestore,restoreData,
   saveProfile,openModal,closeModal,renderStrings,renderBrowse,setStrList,
-  showRequestForm,hideRequestForm,submitRequest,approveRequest,denyRequest,
+  showRequestForm,hideRequestForm,submitRequest,approveRequest,copyApprovedLogin,denyRequest,
   acSearch,acSelect,acKeydown,formatFc,toggleStrUser,toggleComboStrings,renderMyList,
   // New enhancements
   toggleTheme,toggleBulkMode,toggleBulkSelection,bulkSetPri,bulkToggleFlag,bulkDelete,
