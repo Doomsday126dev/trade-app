@@ -3953,9 +3953,11 @@ function acMatchScore(e,rawQuery){
 }
 function buildAcItems(){
   const arr=listSource(myListType);
+  const existing=new Set(Object.keys(allData[myListType]?.[cur]||{}));
   const seen=new Set();acItems=[];
   arr.forEach(e=>{
-    if(seen.has(e.name))return;seen.add(e.name);
+    if(existing.has(e.name)||seen.has(e.name))return;
+    seen.add(e.name);
     const item={name:e.name,dn:e.displayName||e.name,no:e.no||null,spriteUrl:entrySpriteUrl(e,e.name)};
     item.search=acItemSearchText(item);
     acItems.push(item);
@@ -3973,10 +3975,10 @@ function acSearch(q){
   acFocusIdx=-1;
   // Detect if user is searching for a Pokemon family with multiple variants
   const family=detectVariantFamily(q);
-  const variantCount=family?familyVariantEntries(family.key).length:0;
-  const familyBanner=(family&&variantCount>1)
+  const remainingVariantCount=family?familyVariantEntries(family.key).filter(e=>!Object.prototype.hasOwnProperty.call(allData[myListType]?.[cur]||{},e.name)).length:0;
+  const familyBanner=(family&&remainingVariantCount>1)
     ?`<div class="ac-family-banner" onmousedown="event.preventDefault();openAddAllVariantsModal('${family.key}')" role="button" tabindex="0">
-        <span style="flex:1">✨ Add all <strong>${variantCount}</strong> ${escHtml(family.label)} variants</span>
+        <span style="flex:1">✨ Add all <strong>${remainingVariantCount}</strong> remaining ${escHtml(family.label)} variants</span>
         <span style="font-size:11px;color:var(--accent);font-weight:700">→</span>
       </div>`
     :'';
