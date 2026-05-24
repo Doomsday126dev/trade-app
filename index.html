@@ -300,6 +300,22 @@ input,select,textarea{font-family:var(--font);outline:none}
 .lbtn:hover{opacity:.9}
 .err{color:var(--danger);font-size:12px;text-align:center;margin-top:7px;min-height:18px}
 .lnote{font-size:11px;color:var(--muted);text-align:center;margin-top:14px;line-height:1.6}
+.login-help-link{display:block;text-align:center;margin:10px auto 0;background:transparent;border:0;font:inherit;font-size:12px;color:var(--muted);cursor:pointer;font-weight:600}
+.login-help-link:hover{color:var(--ac2)}
+.health-modal{max-width:460px}
+.health-sub{font-size:12px;color:var(--muted);line-height:1.45;margin:-4px 0 12px}
+.health-grid{display:flex;flex-direction:column;gap:8px}
+.health-row{background:var(--bg);border:1px solid var(--border);border-radius:var(--r2);padding:10px 11px;display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center}
+.health-label{font-size:12px;color:var(--muted);font-weight:700}
+.health-status{font-size:12px;font-weight:800;border-radius:999px;padding:2px 8px;border:1px solid var(--border2);white-space:nowrap}
+.health-status.ok{color:var(--ok);background:rgba(16,185,129,.12);border-color:rgba(16,185,129,.32)}
+.health-status.warn{color:var(--warn);background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.32)}
+.health-status.bad{color:var(--danger);background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.32)}
+.health-status.info{color:var(--ac2);background:rgba(108,99,255,.12);border-color:rgba(108,99,255,.32)}
+.health-detail{grid-column:1/-1;font-size:11px;color:var(--muted);line-height:1.4;word-break:break-word}
+.health-actions{display:flex;gap:8px;justify-content:space-between;flex-wrap:wrap;margin-top:14px}
+.health-danger{border-color:rgba(239,68,68,.35);color:var(--danger)}
+.health-danger:hover{background:rgba(239,68,68,.12);color:var(--danger)}
 .cstep{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:13px;margin-bottom:10px}
 .cstep-n{font-size:11px;font-weight:700;color:var(--ac2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}
 .cstep p{color:var(--text);font-size:13px;margin-bottom:7px;line-height:1.5}
@@ -1304,6 +1320,7 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
     <button class="lbtn" id="login-btn" onclick="doLogin()">Sign in →</button>
     <div class="err" id="login-err"></div>
     <div class="lnote">First time logging in? Your default PIN is <strong>123456</strong>.<br>PINs are 6 digits. Ask an admin to reset yours if needed.</div>
+    <button type="button" class="login-help-link" onclick="openLoginHealthCheck()">Having trouble signing in?</button>
     <div class="req-link" onclick="showRequestForm()">🙋 Request access to join</div>
   </div>
 
@@ -1713,6 +1730,22 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
   </div>
 </div>
 
+<!-- LOGIN HEALTH CHECK MODAL -->
+<div class="ov" id="login-health-modal" role="dialog" aria-modal="true" aria-labelledby="login-health-title">
+  <div class="modal health-modal">
+    <h3 id="login-health-title">🩺 Sign-in health check</h3>
+    <div class="health-sub">Use this on a device that cannot sign in. It checks the app build, Firebase reachability, live user reads, and the service worker cache for this browser.</div>
+    <div class="health-grid" id="login-health-grid"></div>
+    <div class="health-actions">
+      <button class="bghost health-danger" onclick="clearLoginLocalCache()">Clear local cache + reload</button>
+      <div style="display:flex;gap:8px">
+        <button class="bghost" onclick="runLoginHealthCheck()">Recheck</button>
+        <button class="bpri" onclick="closeModal('login-health-modal')">Done</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- IMPORT MODAL -->
 <div class="ov" id="import-modal" role="dialog" aria-modal="true" aria-labelledby="import-title">
   <div class="modal import-modal">
@@ -1939,6 +1972,7 @@ if(!DB)throw new Error('Trade data failed to load');
 
 const PREFILTER="!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&";
 const OWNER="Doomsday126";
+const APP_VERSION="4.4.0";
 const STALE_WARN=7,STALE_OLD=30;
 const SESSION_TTL=30*24*60*60*1000; // 30 days; refreshed on each activity so active users stay logged in
 const SPRITE_BASE="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/";
@@ -2232,7 +2266,10 @@ const EXTRA_FORM_ENTRIES=[
   {no:327,name:"Spinda (Form 6)",displayName:"Spinda (Form 6)",spriteUrl:"https://www.serebii.net/pokemongo/pokemon/327-6.png",users:{}},
   {no:327,name:"Spinda (Form 7)",displayName:"Spinda (Form 7)",spriteUrl:"https://www.serebii.net/pokemongo/pokemon/327-7.png",users:{}},
   {no:327,name:"Spinda (Form 8)",displayName:"Spinda (Form 8)",spriteUrl:"https://www.serebii.net/pokemongo/pokemon/327-8.png",users:{}},
-  {no:327,name:"Spinda (Heart)",displayName:"Spinda (Heart)",spriteUrl:"https://www.serebii.net/pokemongo/pokemon/327-9.png",users:{}}
+  {no:327,name:"Spinda (Heart)",displayName:"Spinda (Heart)",spriteUrl:"https://www.serebii.net/pokemongo/pokemon/327-9.png",users:{}},
+  ...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(ch=>({no:201,name:`Unown (${ch})`,displayName:`Unown (${ch})`,users:{}})),
+  {no:201,name:"Unown (!)",displayName:"Unown (!)",users:{}},
+  {no:201,name:"Unown (?)",displayName:"Unown (?)",users:{}}
 ];
 const LEGENDARY_AVATAR_ENTRIES=[
   [144,'Articuno'],[144,'G-Articuno','Galarian Articuno'],[145,'Zapdos'],[145,'G-Zapdos','Galarian Zapdos'],[146,'Moltres'],[146,'G-Moltres','Galarian Moltres'],[150,'Mewtwo'],[151,'Mew'],
@@ -3214,6 +3251,106 @@ function subscribeMyPendingDecrements(){
 }
 
 function skipFirebase(){lsSet('fbUrl','local');syncFromLocal();showLogin();}
+
+function healthRow(label,status,detail='',kind='info'){
+  return{label,status,detail,kind};
+}
+function renderHealthRows(rows){
+  const grid=document.getElementById('login-health-grid');
+  if(!grid)return;
+  grid.innerHTML=rows.map(r=>`<div class="health-row">
+    <div class="health-label">${escHtml(r.label)}</div>
+    <div class="health-status ${escAttr(r.kind)}">${escHtml(r.status)}</div>
+    ${r.detail?`<div class="health-detail">${escHtml(r.detail)}</div>`:''}
+  </div>`).join('');
+}
+async function ensureFirebaseForHealth(){
+  await loadFirebaseSdk();
+  if(!fbApp)setupFirebase(FIREBASE_URL);
+  return!!db;
+}
+async function serviceWorkerHealth(){
+  const details=[];
+  if(!('serviceWorker'in navigator))return{status:'Not supported',kind:'warn',detail:'This browser does not support service workers.'};
+  let registration=null;
+  try{registration=await navigator.serviceWorker.getRegistration();}catch(e){details.push(`registration check failed: ${e.message||e}`);}
+  let version='unknown';
+  try{
+    const res=await fetch(`./sw.js?health=${Date.now()}`,{cache:'no-store'});
+    const text=await res.text();
+    const m=text.match(/const\s+VERSION\s*=\s*['"]([^'"]+)['"]/);
+    if(m)version=m[1];
+  }catch(e){details.push(`version fetch failed: ${e.message||e}`);}
+  if(!registration)return{status:version==='unknown'?'Not registered':'Fresh app shell',kind:'warn',detail:`Service worker version: ${version}. A first reload may install it.`};
+  return{status:'Registered',kind:'ok',detail:`Service worker version: ${version}${details.length?`; ${details.join('; ')}`:''}`};
+}
+async function openLoginHealthCheck(){
+  openModal('login-health-modal');
+  await runLoginHealthCheck();
+}
+async function runLoginHealthCheck(){
+  const selectedUser=document.getElementById('login-user')?.value||'';
+  const rows=[healthRow('App version',APP_VERSION,`Page: ${location.href}`,'info')];
+  renderHealthRows([...rows,healthRow('Firebase connected','Checking...','Loading Firebase SDK and database handle.','info'),healthRow('Live user read','Waiting...','This checks whether this browser can read the login user list.','info'),healthRow('Service worker','Checking...','Checking cached app shell status.','info')]);
+  let firebaseOk=false;
+  try{
+    firebaseOk=await withTimeout(ensureFirebaseForHealth(),8000,'Firebase setup timed out','firebase/health-timeout');
+    rows.push(healthRow('Firebase connected',firebaseOk?'Connected':'Not connected',`Project: ${FIREBASE_PROJECT_ID}`,'ok'));
+  }catch(e){
+    rows.push(healthRow('Firebase connected','Failed',e.code?`${e.code}: ${e.message}`:(e.message||String(e)),'bad'));
+  }
+  if(firebaseOk&&db){
+    try{
+      const path=selectedUser?`users/${selectedUser}`:'users';
+      const snap=await withTimeout(get(ref(db,path)),6000,'Live user read timed out','db/read-timeout');
+      if(selectedUser){
+        rows.push(healthRow('Live user read',snap.exists()?'OK':'Missing user',snap.exists()?`Read users/${selectedUser} successfully.`:`Firebase responded, but ${selectedUser} is not under users/.`,snap.exists()?'ok':'warn'));
+      }else{
+        const count=snap.exists()?Object.keys(snap.val()||{}).length:0;
+        rows.push(healthRow('Live user read',snap.exists()?'OK':'No users found',`Read users/ successfully. ${count} trainer${count===1?'':'s'} visible to this browser.`,snap.exists()?'ok':'warn'));
+      }
+    }catch(e){
+      const msg=e.code==='PERMISSION_DENIED'
+        ?'Firebase rules blocked this read. If this happens on the login screen, that device may only have stale cached user data.'
+        :e.message||String(e);
+      rows.push(healthRow('Live user read','Blocked',e.code?`${e.code}: ${msg}`:msg,'bad'));
+    }
+  }else{
+    rows.push(healthRow('Live user read','Skipped','Firebase did not connect on this browser.','warn'));
+  }
+  const sw=await serviceWorkerHealth();
+  rows.push(healthRow('Service worker',sw.status,sw.detail,sw.kind));
+  renderHealthRows(rows);
+}
+async function clearLoginLocalCache(){
+  const ok=confirm('Clear saved app data and cached files on this device, then reload? This only affects this browser.');
+  if(!ok)return;
+  const appKeys=['pogo3','fbUrl','pgu','pguts','pogoAdvancedOpen','pogoExportStyle','pogoLastBackup','pogoWhatsNewSeen','pogoTheme','pogoBackupDismissed','pogoTourSeen','pogoSpriteScales_v2'];
+  const clearStore=store=>{
+    try{
+      appKeys.forEach(k=>store.removeItem(k));
+      Array.from({length:store.length},(_,i)=>store.key(i)).filter(k=>k&&(/^pogo/i.test(k)||/^pg/i.test(k))).forEach(k=>store.removeItem(k));
+    }catch{}
+  };
+  clearStore(localStorage);
+  clearStore(sessionStorage);
+  if('caches'in window){
+    try{
+      const names=await caches.keys();
+      await Promise.all(names.filter(n=>/^(shell|sprites)-pogo-trades/.test(n)).map(n=>caches.delete(n)));
+    }catch{}
+  }
+  if('serviceWorker'in navigator){
+    try{
+      const regs=await navigator.serviceWorker.getRegistrations();
+      const basePath=location.pathname.endsWith('/')?location.pathname:location.pathname.replace(/\/[^/]*$/,'/');
+      await Promise.all(regs.filter(r=>{
+        try{return new URL(r.scope).pathname.startsWith(basePath);}catch{return false;}
+      }).map(r=>r.unregister()));
+    }catch{}
+  }
+  location.replace(`${location.pathname}?fresh=${Date.now()}`);
+}
 
 // ── AUTH ──────────────────────────────────────────────────────
 async function doLogin(){
@@ -5535,6 +5672,7 @@ async function triggerInstall(){
 
 // ── WHAT'S NEW (#28) ─────────────────────────────────────────
 const WHATS_NEW=[
+  {version:'4.4',title:'🩺 Login Health + compact special boards',desc:'New "Having trouble signing in?" check on the login page shows app version, Firebase reachability, live user-read status, and service worker cache status, with a one-tap local cache reset for stuck browsers. Special Trade Board image exports now use a compact stacked sprite grid that scales better for big 50+ Pokémon boards, and Unown punctuation forms are available in pickers.'},
   {version:'4.3',title:'🎯 Special Trade Board (LF/FT image export)',desc:'New "Special Trade Board" option in the Export menu opens a dedicated editor where you stage Looking-For and For-Trade entries side by side, with per-row ✨ shiny and 🪞 mirror-only toggles, qty and short notes. Export the board as a 9DB-style two-column PNG ready to paste into Discord. Board auto-saves to your profile so it survives reloads.'},
   {version:'4.2',title:'🌟 Full legendary roster + multi-form variants',desc:'Mewtwo, Mew, every Ultra Beast (Nihilego → Guzzlord), Magearna/Marshadow/Zeraora/Meltan/Melmetal, every Galar/Hisui/Paldea legendary, and the full Paradox Pokémon set are now searchable in the autocomplete (they were only in the avatar picker before). Multi-form legendaries are now separate rows so you can distinguish them: Giratina Altered/Origin, Dialga & Palkia + Hisuian Origin, all four Deoxys formes, Tornadus/Thundurus/Landorus Incarnate/Therian, Shaymin Land/Sky, Hoopa Confined/Unbound, Necrozma Dusk Mane/Dawn Wings, Calyrex Ice/Shadow Rider, Zacian/Zamazenta Hero/Crowned, Zygarde 10/50/Complete, Keldeo Ordinary/Resolute, Ogerpon\'s four masks, Enamorus Incarnate/Therian. Each form gets its own PokeAPI sprite.'},
   {version:'4.1',title:'♂ ♀ Per-gender inventory rows',desc:'For species where gender actually matters (Heracross horns, Nidoran lines, Pyroar, etc.), you can now keep separate ♂ / ♀ / unspecified rows with independent counts in your Have tab. New gender pill in the add form (⚥ default, ♂, ♀) — pick a gender to create a separate entry; leave it ⚥ for genderless tracking. Cycling the gender on an existing row rekeys it and offers to merge if you already have an entry for that gender. Browse views show the ♂ / ♀ symbol next to each owner\'s chip; mirror-only matches across genders of the same species.'},
@@ -6063,26 +6201,29 @@ async function exportSpecialBoardImage(){
 }
 async function renderSpecialBoardImage(board,username){
   const W=720,pad=14,headerH=78,footerH=34;
-  // Pick layout based on density: if either side has more than 6 items, switch
-  // to a stacked dense-grid layout (5 cols, sprite + small name + shiny corner)
-  // — keeps the image readable even with 20-30 entries per side.
-  const denseThreshold=6;
-  const isDense=board.lf.length>denseThreshold||board.ft.length>denseThreshold;
+  // Always export as a stacked grid so boards with 50+ entries stay shareable
+  // while small boards do not waste a wide empty column.
+  const totalBoardEntries=board.lf.length+board.ft.length;
+  const isDense=true;
+  const ultraDense=totalBoardEntries>36;
+  const showGridNames=!ultraDense;
   // List-layout sizing
   const colGap=10,rowH=64,sprSize=44;
   const cols=2;
   const colW=(W-pad*2-colGap)/cols;
   // Grid-layout sizing (used when isDense)
-  const gridCols=5,gridGap=8,gridCellH=88,gridSprSize=52,sectionGap=12,sectionHdrH=32;
+  const gridCols=ultraDense?6:5,gridGap=ultraDense?6:8,gridCellH=ultraDense?64:82,gridSprSize=ultraDense?48:52,sectionGap=12,sectionHdrH=32;
   const gridFullW=W-pad*2;
   const gridCellW=(gridFullW-(gridCols-1)*gridGap)/gridCols;
-  const gridRowsFor=n=>Math.max(1,Math.ceil(Math.max(n,1)/gridCols));
+  const gridRowsFor=n=>Math.ceil(Math.max(n,0)/gridCols);
+  const sectionHeight=n=>n?sectionHdrH+6+gridRowsFor(n)*gridCellH:0;
   // Compute total body height
   let bodyH;
   if(isDense){
-    const lfBody=sectionHdrH+gridRowsFor(board.lf.length)*gridCellH+(board.lf.length?6:0);
-    const ftBody=sectionHdrH+gridRowsFor(board.ft.length)*gridCellH+(board.ft.length?6:0);
-    bodyH=lfBody+ftBody+sectionGap;
+    const lfBody=sectionHeight(board.lf.length);
+    const ftBody=sectionHeight(board.ft.length);
+    bodyH=lfBody+ftBody+(lfBody&&ftBody?sectionGap:0);
+    bodyH=Math.max(bodyH,sectionHdrH+6+gridCellH);
   }else{
     const maxRows=Math.max(board.lf.length,board.ft.length,1);
     bodyH=Math.max(maxRows,1)*rowH+38;
@@ -6170,7 +6311,8 @@ async function renderSpecialBoardImage(board,username){
     });
   };
   const drawGridSection=(entries,xBase,startY,fullW)=>{
-    // Dense grid: 5 cols × N rows. Each cell = sprite + tiny name + corner badges.
+    // Dense grid. Names are kept for small boards; large boards become a clean
+    // sprite sheet with only compact badges so 50-60 entries still fit.
     let row=0,col=0;
     entries.forEach(e=>{
       const cx=xBase+col*(gridCellW+gridGap);
@@ -6180,7 +6322,7 @@ async function renderSpecialBoardImage(board,username){
       ctx.fillRect(cx,cy,gridCellW,gridCellH-6);
       // Sprite centered horizontally near top
       const img=imgMap.get(e.name+(e.shiny?'_s':''));
-      const sx=cx+(gridCellW-gridSprSize)/2,sy=cy+6;
+      const sx=cx+(gridCellW-gridSprSize)/2,sy=cy+(showGridNames?6:Math.max(4,(gridCellH-6-gridSprSize)/2));
       if(img)drawImageContain(ctx,img,sx,sy,gridSprSize,gridSprSize);
       // Shiny corner sparkle (top-right of sprite)
       if(e.shiny){
@@ -6194,6 +6336,22 @@ async function renderSpecialBoardImage(board,username){
         ctx.beginPath();ctx.arc(sx+6,sy+8,7,0,Math.PI*2);ctx.fill();
         ctx.fillStyle='#0f1419';ctx.font='800 9px Space Grotesk, sans-serif';
         ctx.textAlign='center';ctx.fillText('M',sx+6,sy+11);ctx.textAlign='left';
+      }
+      if(!showGridNames){
+        if(e.qty&&e.qty>1){
+          const q=`×${e.qty}`;
+          ctx.font='800 10px Space Grotesk, sans-serif';
+          const qw=ctx.measureText(q).width+10;
+          ctx.fillStyle='rgba(167,139,250,.92)';
+          ctx.fillRect(cx+gridCellW-qw-5,cy+5,qw,16);
+          ctx.fillStyle='#10101a';
+          ctx.textAlign='center';
+          ctx.fillText(q,cx+gridCellW-qw/2-5,cy+17);
+          ctx.textAlign='left';
+        }
+        col++;
+        if(col>=gridCols){col=0;row++;}
+        return;
       }
       // Name (centered, truncated)
       ctx.font='600 10px Space Grotesk, sans-serif';
@@ -8878,7 +9036,7 @@ function maybeStartTour(){
 Object.assign(window,{
   openImport,setImportPri,parseImportString,toggleImportRow,toggleSelectAll,backToStep1,confirmImport,
   setFilter,setBrowseList,setMyList,setStaleFilter,switchTab,
-  doLogin,logout,connectFirebase,skipFirebase,
+  doLogin,logout,connectFirebase,skipFirebase,openLoginHealthCheck,runLoginHealthCheck,clearLoginLocalCache,
   addEntry,setPri,setNotes,setLucky,setXxl,setXxs,removeEntry,doUndo,copyStr,
   exportMyListImage,
   dragStart,dragOver,dragDrop,dragEnd,
