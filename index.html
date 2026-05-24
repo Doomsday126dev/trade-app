@@ -578,7 +578,7 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
 .have-add-gender-btn.on[data-gender=""]{background:var(--card);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.2)}
 .have-add-gender-btn.on[data-gender="m"]{background:rgba(96,165,250,.18);color:#60a5fa;box-shadow:0 1px 3px rgba(0,0,0,.2)}
 .have-add-gender-btn.on[data-gender="f"]{background:rgba(244,114,182,.18);color:#f472b6;box-shadow:0 1px 3px rgba(0,0,0,.2)}
-@media(max-width:600px){.have-add-gender-picker{width:100%;justify-content:center}.have-add-gender-btn{flex:1;padding:8px 4px}}
+@media(max-width:600px){.have-add-gender-btn{padding:8px 9px}}
 
 /* KEYBOARD SHORTCUTS CHEAT SHEET (#17) */
 .shortcut-grid{display:flex;flex-direction:column;gap:4px;margin-top:8px}
@@ -805,8 +805,16 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
 .have-view{display:none}
 .have-view.active{display:block}
 .have-add-row{align-items:center;gap:7px}
-.have-qty-input{width:70px;background:var(--bg);border:1px solid var(--border2);color:var(--text);padding:8px 11px;border-radius:var(--r2);font-size:14px;text-align:center;flex-shrink:0;font-family:var(--mono)}
-.have-qty-input::-webkit-inner-spin-button,.have-qty-input::-webkit-outer-spin-button{opacity:1}
+/* Qty input lives inside a labeled pill with − / + steppers around it so the
+   numeric field reads as "Qty" and not as a confusing empty text box. */
+.have-add-qty-gender{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap}
+.have-qty-wrap{display:inline-flex;align-items:center;gap:2px;background:var(--bg);border:1px solid var(--border2);border-radius:var(--r2);padding:2px;flex-shrink:0;cursor:default}
+.have-qty-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;padding:0 8px 0 6px}
+.have-qty-step{background:transparent;border:none;color:var(--text);width:26px;height:26px;font-size:14px;font-weight:700;cursor:pointer;border-radius:5px;line-height:1;display:flex;align-items:center;justify-content:center;font-family:var(--font);flex-shrink:0}
+.have-qty-step:hover{background:var(--bg2);color:var(--ac2)}
+.have-qty-input{width:42px;background:transparent;border:none;color:var(--ac2);padding:4px 2px;font-size:14px;font-weight:700;text-align:center;flex-shrink:0;font-family:var(--mono);-moz-appearance:textfield}
+.have-qty-input:focus{outline:none}
+.have-qty-input::-webkit-inner-spin-button,.have-qty-input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
 .have-mirror-add{display:flex;align-items:center;gap:6px;background:var(--bg);border:1px solid var(--border2);color:var(--muted);padding:8px 11px;border-radius:var(--r2);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;min-height:38px}
 .have-mirror-add:hover{border-color:var(--accent);color:var(--ac2)}
 .have-mirror-add input{accent-color:var(--accent);width:15px;height:15px}
@@ -908,7 +916,8 @@ html[data-theme="light"] .have-mirror-badge,html[data-theme="light"] .have-mirro
 @media(max-width:600px){
   .have-add-row{display:grid;grid-template-columns:1fr;gap:8px}
   .have-add-row .ac-wrap{grid-column:1}
-  .have-add-row .have-qty-input{width:100%;grid-column:1}
+  /* Qty + gender wrap together in one labeled pair, centered as a unit */
+  .have-add-row .have-add-qty-gender{grid-column:1;justify-content:space-between;gap:6px}
   .have-add-row .have-mirror-add{grid-column:1;justify-content:center}
   .have-add-row .have-return-picker{grid-column:1;justify-content:center;width:100%}
   .have-add-row .bsave{width:100%;grid-column:1}
@@ -1658,11 +1667,21 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
             <input type="hidden" id="have-pmon-sel">
             <div class="ac-dropdown" id="have-ac-dropdown"></div>
           </div>
-          <input type="number" id="have-qty" min="1" max="999" value="1" placeholder="Qty" aria-label="Quantity" class="have-qty-input">
-          <div class="have-add-gender-picker" role="group" aria-label="Gender (optional)">
-            <button type="button" class="have-add-gender-btn on" data-gender="" onclick="setHaveAddGender('')" aria-pressed="true" title="Genderless / unspecified (default)">⚥</button>
-            <button type="button" class="have-add-gender-btn" data-gender="m" onclick="setHaveAddGender('m')" aria-pressed="false" title="Male — adds as a separate ♂ entry">♂</button>
-            <button type="button" class="have-add-gender-btn" data-gender="f" onclick="setHaveAddGender('f')" aria-pressed="false" title="Female — adds as a separate ♀ entry">♀</button>
+          <!-- Qty + gender live in one flex pair so they don't render as
+               isolated full-width controls (the old layout made the qty box
+               look like an empty search field). -->
+          <div class="have-add-qty-gender">
+            <label class="have-qty-wrap" title="How many to add">
+              <span class="have-qty-label">Qty</span>
+              <button type="button" class="have-qty-step" onclick="(()=>{const i=document.getElementById('have-qty');i.value=Math.max(1,(parseInt(i.value)||1)-1)})()" aria-label="Decrease quantity">−</button>
+              <input type="number" id="have-qty" min="1" max="999" value="1" aria-label="Quantity" class="have-qty-input">
+              <button type="button" class="have-qty-step" onclick="(()=>{const i=document.getElementById('have-qty');i.value=Math.min(999,(parseInt(i.value)||1)+1)})()" aria-label="Increase quantity">+</button>
+            </label>
+            <div class="have-add-gender-picker" role="group" aria-label="Gender (optional)">
+              <button type="button" class="have-add-gender-btn on" data-gender="" onclick="setHaveAddGender('')" aria-pressed="true" title="Genderless / unspecified (default)">⚥</button>
+              <button type="button" class="have-add-gender-btn" data-gender="m" onclick="setHaveAddGender('m')" aria-pressed="false" title="Male — adds as a separate ♂ entry">♂</button>
+              <button type="button" class="have-add-gender-btn" data-gender="f" onclick="setHaveAddGender('f')" aria-pressed="false" title="Female — adds as a separate ♀ entry">♀</button>
+            </div>
           </div>
           <div class="have-return-picker" role="group" aria-label="Return preference">
             <button type="button" class="hrp-btn any selected" data-mode="any" onclick="setHaveAddMode('any')" title="Standard — accepts any return"><span class="hrp-ico">🤲</span><span class="hrp-lbl">Any</span></button>
@@ -2087,7 +2106,7 @@ if(!DB)throw new Error('Trade data failed to load');
 
 const PREFILTER="!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&";
 const OWNER="Doomsday126";
-const APP_VERSION="4.6.7";
+const APP_VERSION="4.6.8";
 const STALE_WARN=7,STALE_OLD=30;
 const SESSION_TTL=30*24*60*60*1000; // 30 days; refreshed on each activity so active users stay logged in
 const SPRITE_BASE="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/";
@@ -5971,6 +5990,7 @@ async function triggerInstall(){
 
 // ── WHAT'S NEW (#28) ─────────────────────────────────────────
 const WHATS_NEW=[
+  {version:'4.6.8',title:'🔢 Cleaner qty picker on the Add to inventory form',desc:'The quantity input used to render as a huge empty text field on mobile/tablet — it looked like a search box. Now it sits in a labeled "QTY [−] 1 [+]" pill paired with the gender picker, so it reads clearly as a quantity control no matter the screen size.'},
   {version:'4.6.7',title:'🏷️ Browse filters now labeled clearly',desc:'The Browse-tab filters used to render as three rows of similar-looking pills with two identical "All" buttons. Each row now has a label (Priority / Flags / Activity / List) so it\'s obvious what each one filters, and the activity row says "Any / 7d / 30d" instead of doubling up on "All".'},
   {version:'4.6.6',title:'↩️ Cancelling a trade now restores both inventories',desc:'When you ✗ cancel a reserved or scheduled trade that came from accepting an offer, your Pokémon go straight back into your inventory. The other trainer\'s side restores on their next sync, and they see a "trade cancelled" toast so they know what happened. The trade record stays in history marked "cancelled" instead of disappearing.'},
   {version:'4.6.5',title:'🎚️ Cleaner qty picker on accept-trade popup',desc:'Removed the tiny browser arrows next to the quantity input — the − / + / MAX buttons next to it already do everything they did, so they were just visual noise.'},
