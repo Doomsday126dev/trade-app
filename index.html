@@ -2223,7 +2223,7 @@ if(!DB)throw new Error('Trade data failed to load');
 
 const PREFILTER="!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&";
 const OWNER="Doomsday126";
-const APP_VERSION="4.6.16";
+const APP_VERSION="4.6.17";
 const STALE_WARN=7,STALE_OLD=30;
 const SESSION_TTL=30*24*60*60*1000; // 30 days; refreshed on each activity so active users stay logged in
 const SPRITE_BASE="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/";
@@ -2756,15 +2756,22 @@ function spriteUrl(no,name,gender='',dn=''){
   if(goUrl)return goUrl;
   // 5. PokeAPI costume form variants (Vivillon, Furfrou — non-Pokemon-GO forms)
   if(name&&COSTUME_FORM_SPRITE_IDS[name])return`${SPRITE_BASE}${COSTUME_FORM_SPRITE_IDS[name]}.png`;
-  // 6. PokeAPI regional form (Alolan, Galarian, Hisuian, Paldean)
-  if(name&&REGIONAL_FORM_IDS[name])return`${SPRITE_BASE}${REGIONAL_FORM_IDS[name]}.png`;
+  // 6. PokeAPI regional form (Alolan, Galarian, Hisuian, Paldean) — but
+  //    a few form IDs map to PokeAPI placeholder PNGs (200 OK, ~400 bytes,
+  //    no real character art). For those we skip ahead so PokemonDB HOME wins.
+  if(name&&REGIONAL_FORM_IDS[name]&&!POKEAPI_PLACEHOLDER_FORM_IDS.has(REGIONAL_FORM_IDS[name])){
+    return`${SPRITE_BASE}${REGIONAL_FORM_IDS[name]}.png`;
+  }
   // 7. PokeAPI female sprite (Pyroar ♀, Pikachu ♀ tail, etc.) should outrank plain base art.
   if(gender==='f'){
     const fUrl=femaleSpriteUrl(no);
     if(fUrl)return fUrl;
   }
   // 8. PokeMiners GO asset — preferred for plain Pokémon because it matches in-game art.
-  const pmBase=(!name||!EXTRA_COSTUME_SPRITES[name])&&no?pokeminersSpriteUrl(no,'00'):'';
+  //    Skip for regional-prefix names (A-/G-/H-/P-) since their `no` points at
+  //    the BASE species and PokeMiners would return the wrong regional variant.
+  const isRegional=name&&/^[AGHP]-/.test(name);
+  const pmBase=(!name||!EXTRA_COSTUME_SPRITES[name])&&pokeminersHasDex(no)&&!isRegional?pokeminersSpriteUrl(no,'00'):'';
   if(pmBase)return pmBase;
   // 9. PokemonDB HOME 3D — fallback for game forms and anything PokeMiners doesn't expose cleanly
   const pdb=pokemondbSpriteUrl(name,dn||name,gender);
@@ -2781,6 +2788,38 @@ function spriteUrl(no,name,gender='',dn=''){
 // URL pattern: .../Images/Pokemon - 256x256/pokemon_icon_{dex3}_{form}.png
 const POKEMONDB_BASE='https://img.pokemondb.net/sprites/home/normal/';
 const POKEMINERS_BASE='https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/Pokemon%20-%20256x256/';
+// Dex numbers that don't exist in PokeMiners /Pokemon - 256x256/. Codex made
+// PokeMiners the preferred source for plain species, but gen 7/8/9 coverage
+// is ~2%/0%/0% — without this exclusion list every render of a Wooloo,
+// Sprigatito, etc. logs a 404 in the console and triggers the onerror cascade
+// before the actual sprite (PokemonDB HOME usually) loads. Enumerated by
+// scripted HEAD-check across dex 1..1025; refresh whenever PokeMiners updates.
+const POKEMINERS_MISSING_DEX=new Set([
+  201,386,412,413,421,422,423,479,487,492,550,555,585,586,641,642,645,646,647,648,649,666,669,670,671,676,681,697,703,708,
+  709,710,711,712,713,719,720,721,722,723,724,725,726,727,728,729,730,731,732,733,734,735,736,737,738,739,740,741,742,743,
+  744,745,746,747,748,749,750,751,752,753,754,755,756,757,758,759,760,761,762,763,764,765,766,767,768,769,770,771,772,773,
+  774,775,776,777,778,779,780,781,782,783,784,785,786,787,788,789,790,791,792,793,794,795,796,797,798,799,800,801,802,803,
+  804,805,806,807,810,811,812,813,814,815,816,817,818,819,820,821,822,823,824,825,826,827,828,829,830,831,832,833,834,835,
+  836,837,838,839,840,841,842,843,844,845,846,847,848,849,850,851,852,853,854,855,856,857,858,859,860,861,862,863,864,865,
+  866,867,868,869,870,871,872,873,874,875,876,877,878,879,880,881,882,883,884,885,886,887,888,889,890,891,892,893,894,895,
+  896,897,898,899,900,901,902,903,904,905,906,907,908,909,910,911,912,913,914,915,916,917,918,919,920,921,922,923,924,925,
+  926,927,928,929,930,931,932,933,934,935,936,937,938,939,940,941,942,943,944,945,946,947,948,949,950,951,952,953,954,955,
+  956,957,958,959,960,961,962,963,964,965,966,967,968,969,970,971,972,973,974,975,976,977,978,979,980,981,982,983,984,985,
+  986,987,988,989,990,991,992,993,994,995,996,997,998,999,1000,1001,1002,1003,1004,1005,1006,1007,1008,1009,1010,1011,1012,1013,1014,1015,
+  1016,1017,1018,1019,1020,1021,1022,1023,1024,1025
+]);
+function pokeminersHasDex(no){
+  const n=parseInt(no);
+  return Number.isFinite(n)&&n>0&&!POKEMINERS_MISSING_DEX.has(n);
+}
+// PokeAPI form IDs that return 200 OK with a ~400-byte placeholder PNG instead
+// of real sprite art (PokeAPI is inconsistent about which regional forms have
+// proper assets). Without skipping these, the resolver lands on the placeholder
+// and the user sees a "missing image" icon. Discovered via sprite-audit v4.6.17.
+const POKEAPI_PLACEHOLDER_FORM_IDS=new Set([
+  10105, // A-Diglett
+  10179  // G-Yamask
+]);
 const REGIONAL_SLUG_MAP={A:'alolan',G:'galarian',H:'hisuian',P:'paldean'};
 function pokemondbSlug(name,dn,gender=''){
   let s=String(dn||name||'').trim();
@@ -2854,7 +2893,7 @@ function spriteFallbackChain(no,name,gender='',dn=''){
   if(name&&COSTUME_FORM_SPRITE_IDS[name])push(`${SPRITE_BASE}${COSTUME_FORM_SPRITE_IDS[name]}.png`);
   if(gender==='f')push(femaleSpriteUrl(no));
   // PokeMiners GO art before HOME renders for plain Pokémon
-  if(no)push(pokeminersSpriteUrl(no,'00'));
+  if(pokeminersHasDex(no))push(pokeminersSpriteUrl(no,'00'));
   // PokemonDB HOME for any non-costume Pokémon (form/regional/gender variants)
   push(pokemondbSpriteUrl(name,dn||name,gender));
   if(gender==='f'){
@@ -6578,6 +6617,7 @@ async function triggerInstall(){
 
 // ── WHAT'S NEW (#28) ─────────────────────────────────────────
 const WHATS_NEW=[
+  {version:'4.6.17',title:'🧹 Sprite source cleanup — quieter console, correct regional forms',desc:'Audit of every sprite the app resolves turned up two issues: (1) PokeMiners art doesn\'t cover most gen 7+ Pokémon (Wooloo, Sprigatito, etc.), so every render was hitting a 404 and cascading to backup — now the app skips PokeMiners for those species up front, and (2) Alolan Diglett and Galarian Yamask were rendering as broken-image placeholders because the data source returns a generic 400-byte stub for those two forms. Both fixed; rendering is now both faster and correct for ~340 affected species.'},
   {version:'4.6.16',title:'🛡️ Safe-to-transfer string now guards your favorites by default',desc:'The new Safe-to-transfer string now prepends "never transfer this" filters — !favorite, !4*, !shiny, !shadow, !purified, !background, !traded, !legendary, !mythical, cp-2500 — so hundos, shinies, lucky candidates, and event Pokémon are filtered out before the species list ever applies. Toggle in the modal if you ever need the raw list.'},
   {version:'4.6.15',title:'🎯 Sprite alignment fix — characters no longer drift off-tile',desc:'After 4.6.13 made all sprites scale to a readable size, some Pokémon (Cleffa, Igglybuff, Mime Jr., Pidgey) were rendering off-center because the game art isn\'t centered the same way for every species. The app now learns each sprite\'s actual character position and scales around it, so characters stay pinned to their tile no matter how big they need to grow.'},
   {version:'4.6.14',title:'🗑️ New: "Safe-to-transfer" search string',desc:'Strings tab has a new button that generates a Pokémon GO search string of every species nobody on your chosen trade-partner list wants. Paste it into your bag search to see what\'s safe to mass-transfer. Pick which trainers count (not everyone trades with everyone), save your usual circle as the default, and the modal warns if the string is getting close to PoGo\'s search-length limit.'},
