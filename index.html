@@ -1357,11 +1357,15 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
 .filter-bar .fbtn.fL.on{background:var(--L);color:#03140e;border-color:transparent}
 .filter-bar .sfbtn.on,
 .filter-bar .ltab.active{background:var(--accent);color:#fff;border-color:transparent}
-/* Mobile: dividers hidden, wrap naturally into rows */
+/* Mobile: dividers hidden, but keep the group labels so the rows aren't
+   ambiguous (otherwise the "All" buttons in different groups look identical
+   and you can't tell which "All" you're toggling). Each .filter-group will
+   wrap onto its own line with its label as a prefix. */
 @media(max-width:600px){
   .filter-divider{display:none}
-  .filter-label{display:none}
-  .filter-bar{gap:5px}
+  .filter-bar{gap:5px;flex-direction:column;align-items:flex-start}
+  .filter-group{width:100%;gap:5px}
+  .filter-label{display:inline-block;font-size:10px;text-transform:uppercase;letter-spacing:.05em;opacity:.7;min-width:56px}
   .filter-bar .fbtn,
   .filter-bar .sfbtn,
   .filter-bar .ltab{padding:5px 11px;font-size:12px;border-radius:20px}
@@ -1477,6 +1481,7 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
     <div class="srch"><span class="srch-icon">🔍</span><input type="text" id="bq" placeholder="Search Pokémon name, #number, or trainer…" oninput="renderBrowse()"></div>
     <div class="filter-bar">
       <div class="filter-group">
+        <span class="filter-label">Priority:</span>
         <button class="fbtn fALL on" onclick="setFilter('ALL')" aria-pressed="true">All</button>
         <button class="fbtn fH" onclick="setFilter('H')" aria-pressed="false">High</button>
         <button class="fbtn fM" onclick="setFilter('M')" aria-pressed="false">Medium</button>
@@ -1493,12 +1498,13 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
       <div class="filter-divider"></div>
       <div class="filter-group">
         <span class="filter-label">Activity:</span>
-        <button class="sfbtn on" data-days="0" onclick="setStaleFilter(0)" aria-pressed="true">All</button>
-        <button class="sfbtn" data-days="7" onclick="setStaleFilter(7)" aria-pressed="false">Active 7d</button>
-        <button class="sfbtn" data-days="30" onclick="setStaleFilter(30)" aria-pressed="false">Active 30d</button>
+        <button class="sfbtn on" data-days="0" onclick="setStaleFilter(0)" aria-pressed="true">Any</button>
+        <button class="sfbtn" data-days="7" onclick="setStaleFilter(7)" aria-pressed="false">7d</button>
+        <button class="sfbtn" data-days="30" onclick="setStaleFilter(30)" aria-pressed="false">30d</button>
       </div>
       <div class="filter-divider"></div>
       <div class="filter-group" id="browse-list-tabs-inline">
+        <span class="filter-label">List:</span>
         <button class="ltab active" onclick="setBrowseList('wishlist')" aria-pressed="true">Trades</button>
         <button class="ltab" onclick="setBrowseList('dynamax')" aria-pressed="false"><span class="ltab-full">Dynamax</span><span class="ltab-short">Dmax</span></button>
         <button class="ltab" onclick="setBrowseList('gmax')" aria-pressed="false"><span class="ltab-full">Gigantamax</span><span class="ltab-short">Gmax</span></button>
@@ -2081,7 +2087,7 @@ if(!DB)throw new Error('Trade data failed to load');
 
 const PREFILTER="!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&";
 const OWNER="Doomsday126";
-const APP_VERSION="4.6.6";
+const APP_VERSION="4.6.7";
 const STALE_WARN=7,STALE_OLD=30;
 const SESSION_TTL=30*24*60*60*1000; // 30 days; refreshed on each activity so active users stay logged in
 const SPRITE_BASE="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/";
@@ -5965,6 +5971,7 @@ async function triggerInstall(){
 
 // ── WHAT'S NEW (#28) ─────────────────────────────────────────
 const WHATS_NEW=[
+  {version:'4.6.7',title:'🏷️ Browse filters now labeled clearly',desc:'The Browse-tab filters used to render as three rows of similar-looking pills with two identical "All" buttons. Each row now has a label (Priority / Flags / Activity / List) so it\'s obvious what each one filters, and the activity row says "Any / 7d / 30d" instead of doubling up on "All".'},
   {version:'4.6.6',title:'↩️ Cancelling a trade now restores both inventories',desc:'When you ✗ cancel a reserved or scheduled trade that came from accepting an offer, your Pokémon go straight back into your inventory. The other trainer\'s side restores on their next sync, and they see a "trade cancelled" toast so they know what happened. The trade record stays in history marked "cancelled" instead of disappearing.'},
   {version:'4.6.5',title:'🎚️ Cleaner qty picker on accept-trade popup',desc:'Removed the tiny browser arrows next to the quantity input — the − / + / MAX buttons next to it already do everything they did, so they were just visual noise.'},
   {version:'4.6.4',title:'🎒 "Have" tab renamed → Inventory · bidding bug fix',desc:'The tab is now labeled "Inventory" since "Have" was a bit cryptic. Keyboard shortcut works as both `i` and `h`. Also fixed a bug where posting a public offer would silently fail if the browser blocked the clipboard copy — the offer now always posts, with a clear message if the copy didn\'t work.'},
