@@ -4106,6 +4106,11 @@ function uniqueEntries(...groups){
 function costumeDedupeKey(entry){
   const label=String(entry?.displayName||entry?.name||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')
     .replace(/['’]s\b/g,'').replace(/[_.]/g,' ')
+    // Preserve ? and ! as distinct word tokens BEFORE the alphanumeric strip
+    // below, otherwise "Unown (!)" and "Unown (?)" both collapse to "unown"
+    // and the question-mark variant gets silently dropped as a duplicate.
+    .replace(/\?/g,' qmark ')
+    .replace(/!/g,' exclaim ')
     .replace(/\b(galarian|g)\s+/g,'g ').replace(/\b(alolan|a)\s+/g,'a ')
     .replace(/\b(hisuian|h)\s+/g,'h ').replace(/\b(paldean|p)\s+/g,'p ')
     .replace(/\bwcs\b/g,'world championships').replace(/\bworlds\b/g,'world championships')
