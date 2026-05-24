@@ -702,7 +702,9 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
 .share-pcard:hover{border-color:var(--border2);transform:translateY(-1px)}
 .share-pcard-sprite{width:26px;height:26px;flex-shrink:0;object-fit:contain;image-rendering:pixelated}
 .share-pcard-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
-.share-pcard-name{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
+/* Allow long Pokémon names like "Basculin (White Stripe)" to wrap to a second
+   line instead of truncating to "Basculin (White…)" — keeps full identity visible. */
+.share-pcard-name{font-weight:500;font-size:12px;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}
 .share-pcard-meta{display:inline-flex;gap:4px;align-items:center;font-size:9px}
 .share-pcard-mod{color:var(--muted);font-family:var(--mono)}
 .share-pcard-flag{padding:1px 4px;border-radius:3px;font-weight:700;font-size:9px}
@@ -1213,7 +1215,8 @@ html[data-theme="light"] .have-mirror-badge,html[data-theme="light"] .have-mirro
 .diff-card{display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r2);font-size:12px;min-width:0;position:relative}
 .diff-card-sprite-wrap{width:26px;height:26px;flex-shrink:0;position:relative}
 .diff-card-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
-.diff-card-name{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
+/* Allow up to 2 lines so long names like "P-Tauros (Combat)" don't truncate to "P-Tauros (Com…)" */
+.diff-card-name{font-weight:500;font-size:12px;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}
 .diff-card-prio{display:inline-flex;gap:3px;font-size:9px;font-weight:700}
 .diff-prio-badge{padding:1px 5px;border-radius:3px;line-height:1.3}
 .diff-prio-badge.H{background:var(--Hbg);color:var(--H)}
@@ -1850,7 +1853,7 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
         Paste a PoGo search string. Dex numbers and regional forms will be matched to Pokémon automatically.
       </div>
       <textarea class="import-textarea" id="import-str-input"
-        placeholder="!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&alola&26,galar&52,115,paldea&128&#10;&#10;Or just the numbers: 26,83,115,122,128&#10;&#10;Modifiers like female&757 and xs&19 are supported too"></textarea>
+        placeholder="Paste your Pokémon GO search string here…&#10;&#10;e.g. 26,52,115,122,128  •  alola&26,galar&52  •  female&757  •  xs&19"></textarea>
       <div class="err" id="import-err"></div>
       <div style="font-size:12px;font-weight:600;color:var(--muted);margin-top:12px;margin-bottom:4px">Add as priority:</div>
       <div class="import-pri-row">
@@ -2066,7 +2069,7 @@ if(!DB)throw new Error('Trade data failed to load');
 
 const PREFILTER="!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&";
 const OWNER="Doomsday126";
-const APP_VERSION="4.6.1";
+const APP_VERSION="4.6.2";
 const STALE_WARN=7,STALE_OLD=30;
 const SESSION_TTL=30*24*60*60*1000; // 30 days; refreshed on each activity so active users stay logged in
 const SPRITE_BASE="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/";
@@ -2442,20 +2445,27 @@ function entrySpriteUrl(entry,nameOverride='',gender=''){
 // Priority: hand-curated costume URLs (cdn08 wiki) → PokemonDB HOME 3D renders →
 // PokeAPI form/regional/gender variants → PokeAPI base sprite.
 // The actual <img> uses spriteFallbackChain() for graceful 404 cascade.
-// PokemonDB HOME 3D Unown — full A–Z + ! + ? at consistent 128×128
-const UNOWN_POKEMONDB_SLUGS={
-  'Unown (A)':'unown-a','Unown (B)':'unown-b','Unown (C)':'unown-c','Unown (D)':'unown-d',
-  'Unown (E)':'unown-e','Unown (F)':'unown-f','Unown (G)':'unown-g','Unown (H)':'unown-h',
-  'Unown (I)':'unown-i','Unown (J)':'unown-j','Unown (K)':'unown-k','Unown (L)':'unown-l',
-  'Unown (M)':'unown-m','Unown (N)':'unown-n','Unown (O)':'unown-o','Unown (P)':'unown-p',
-  'Unown (Q)':'unown-q','Unown (R)':'unown-r','Unown (S)':'unown-s','Unown (T)':'unown-t',
-  'Unown (U)':'unown-u','Unown (V)':'unown-v','Unown (W)':'unown-w','Unown (X)':'unown-x',
-  'Unown (Y)':'unown-y','Unown (Z)':'unown-z',
-  'Unown (!)':'unown-exclamation','Unown (?)':'unown-question'
+// All 28 Unown variants live on PokeMiners (Pokémon GO's actual 256×256 game
+// art), which is the ONLY source that has them all in a consistent style.
+// PokemonDB has clean HOME 3D renders for A-Z but no `unown-exclamation` /
+// `unown-question` (Pokémon HOME never included punctuation Unown), and using
+// it caused the ! / ? variants to fall back to a broken-image placeholder
+// that looked dramatically different from the letters. Niantic's internal
+// form IDs map A=11, B=12, … Z=36, !=37, ?=38.
+const UNOWN_POKEMINERS_FORM_IDS={
+  'Unown (A)':'11','Unown (B)':'12','Unown (C)':'13','Unown (D)':'14',
+  'Unown (E)':'15','Unown (F)':'16','Unown (G)':'17','Unown (H)':'18',
+  'Unown (I)':'19','Unown (J)':'20','Unown (K)':'21','Unown (L)':'22',
+  'Unown (M)':'23','Unown (N)':'24','Unown (O)':'25','Unown (P)':'26',
+  'Unown (Q)':'27','Unown (R)':'28','Unown (S)':'29','Unown (T)':'30',
+  'Unown (U)':'31','Unown (V)':'32','Unown (W)':'33','Unown (X)':'34',
+  'Unown (Y)':'35','Unown (Z)':'36',
+  'Unown (!)':'37','Unown (?)':'38'
 };
 function unownSpriteUrl(name){
-  const slug=UNOWN_POKEMONDB_SLUGS[name];
-  return slug?`${POKEMONDB_BASE}${slug}.png`:'';
+  const formId=UNOWN_POKEMINERS_FORM_IDS[name];
+  if(!formId)return'';
+  return`${POKEMINERS_BASE}pokemon_icon_201_${formId}.png`;
 }
 
 function spriteUrl(no,name,gender='',dn=''){
@@ -5922,34 +5932,35 @@ async function triggerInstall(){
 
 // ── WHAT'S NEW (#28) ─────────────────────────────────────────
 const WHATS_NEW=[
-  {version:'4.6.1',title:'⚡ Browse-tab perf — 11× faster scroll/resize',desc:'The community Browse list is now natively virtualized via `content-visibility: auto` — the browser auto-skips layout and paint for off-screen Pokémon cards. Forced layout cost on the 500+ species grid dropped from ~80ms to ~7ms, search-filter response dropped from ~45ms to ~32ms, and scroll holds a steady 60fps even with the whole roster expanded. Same trick is now applied to the Strings trainer list and the Have community-browse cards. Zero functional change — search, filter, scroll position, and card content all behave exactly as before.'},
-  {version:'4.6.0',title:'📱 Mobile polish + cross-device "What\'s New"',desc:'Inventory rows on phones now stack name + controls onto two lines so long names like "Heracross (Mega)" never truncate to "Hera…". Tabs are tighter on narrow screens so all five (Browse / My List / Strings / Have / Schedule) fit without clipping; Dynamax and Gigantamax sub-tabs shrink to Dmax / Gmax on mobile. The autocomplete dropdown now caps at 50 results (down from 250) for snappier typing. The "What\'s New" badge now syncs across your devices — if you read the changelog on desktop, your phone won\'t re-prompt you. The "— quiet" sparkline label in Strings is gone (visual noise removed).'},
-  {version:'4.5.2',title:'📵 Visible sync health + one-click recovery',desc:'When your Firebase session quietly expires, you now get a clear amber banner at the top of the app: "Local-only mode — your edits aren\'t syncing to the community". Edits keep saving safely on your device, and a single "Sign back in" button re-authenticates and auto-pushes everything you edited while disconnected. The sync pill in the header is now clickable for a status detail toast (Live / Syncing / Offline / Local only).'},
-  {version:'4.5.1',title:'🔐 Shared-sync reliability fix',desc:'The app now detects when a browser still looks signed in locally but has lost its real Firebase Auth session. In that state, edits only existed on that one device. Health Check now shows Firebase Auth session status, and the app warns users before they keep making local-only edits.'},
-  {version:'4.5',title:'⚡ Speed add + cleaner schedule + tighter board exports',desc:'My List now has a Speed add mode so priority and flags stay selected during big 40-50+ Pokémon sessions. The sign-in health check shows which username is being tested. Schedule event clutter is now tucked into a compact live-events tray instead of a long stack of repetitive rows. Special Trade Board exports drop redundant friend-code / Discord / rules text and use a narrower portrait-friendly layout.'},
-  {version:'4.4',title:'🩺 Login Health + compact special boards',desc:'New "Having trouble signing in?" check on the login page shows app version, Firebase reachability, live user-read status, and service worker cache status, with a one-tap local cache reset for stuck browsers. Special Trade Board image exports now use a compact stacked sprite grid that scales better for big 50+ Pokémon boards, and Unown punctuation forms are available in pickers.'},
-  {version:'4.3',title:'🎯 Special Trade Board (LF/FT image export)',desc:'New "Special Trade Board" option in the Export menu opens a dedicated editor where you stage Looking-For and For-Trade entries side by side, with per-row ✨ shiny and 🪞 mirror-only toggles, qty and short notes. Export the board as a 9DB-style two-column PNG ready to paste into Discord. Board auto-saves to your profile so it survives reloads.'},
-  {version:'4.2',title:'🌟 Full legendary roster + multi-form variants',desc:'Mewtwo, Mew, every Ultra Beast (Nihilego → Guzzlord), Magearna/Marshadow/Zeraora/Meltan/Melmetal, every Galar/Hisui/Paldea legendary, and the full Paradox Pokémon set are now searchable in the autocomplete (they were only in the avatar picker before). Multi-form legendaries are now separate rows so you can distinguish them: Giratina Altered/Origin, Dialga & Palkia + Hisuian Origin, all four Deoxys formes, Tornadus/Thundurus/Landorus Incarnate/Therian, Shaymin Land/Sky, Hoopa Confined/Unbound, Necrozma Dusk Mane/Dawn Wings, Calyrex Ice/Shadow Rider, Zacian/Zamazenta Hero/Crowned, Zygarde 10/50/Complete, Keldeo Ordinary/Resolute, Ogerpon\'s four masks, Enamorus Incarnate/Therian. Each form gets its own PokeAPI sprite.'},
-  {version:'4.1',title:'♂ ♀ Per-gender inventory rows',desc:'For species where gender actually matters (Heracross horns, Nidoran lines, Pyroar, etc.), you can now keep separate ♂ / ♀ / unspecified rows with independent counts in your Have tab. New gender pill in the add form (⚥ default, ♂, ♀) — pick a gender to create a separate entry; leave it ⚥ for genderless tracking. Cycling the gender on an existing row rekeys it and offers to merge if you already have an entry for that gender. Browse views show the ♂ / ♀ symbol next to each owner\'s chip; mirror-only matches across genders of the same species.'},
-  {version:'4.0',title:'✨ Shiny flag + offline mode + keyboard shortcuts + first-run tour',desc:'Big quality-of-life batch: new ✨ Shiny flag on wishlist entries (visible badge in Browse, share view, image exports — no separate search string since shinies are always special trades anyway). Service worker added: app shell + sprites are cached, so you can launch offline and the app still renders your last-synced data. New keyboard shortcuts — press ? any time to see the full cheat sheet (b/m/s/h/c jump between tabs, n focuses the add form, / focuses the active search). First-time users now get a 7-step welcome tour walking through each tab. The Ditto Hat costume entry split into the Blue Party Hat and Yellow Party Hat variants. Unown sprites swapped to PokemonDB HOME 3D renders so all 28 letters (A–Z + ! + ?) are now consistently sized.'},
-  {version:'3.6',title:'🔓 Stay Logged In',desc:'Fixed the annoying auto-logout. Sessions now persist across tab close, browser restart, and PWA app close — no more re-entering your PIN every time. Active users effectively stay signed in forever (30-day idle timeout that resets on each visit). "Sign out" still works the way you expect.'},
-  {version:'3.5',title:'🌙 Dark Cards Export Style',desc:'New image export option: "Image — Dark Cards" — bordered cards on a dark background with priority-coloured top stripes. The original light layout is still available as "Image — Classic". Both styles use the same sprite sources, with sharper resampling for more consistent icon quality across mixed-resolution sources.'},
-  {version:'3.4',title:'☑ Bulk Inventory Edits',desc:'New Bulk edit toggle on the Have tab. Select multiple inventory entries to change mode in one go (Any / 🪞 Mirror / 🤝 Don\'t need back / 📤 Giveaway), bump quantities up/down by 1, or delete the whole selection. Same checkbox UX as My List bulk mode.'},
-  {version:'3.3',title:'🤝 + 📤 Two New Inventory Modes',desc:'Four-way return preference: Any · 🪞 Mirror · 🤝 Don\'t need back · 📤 Giveaway. Mark items as "Don\'t need back" when it\'s rare but you don\'t need anything specific in return (still expecting something of equal rarity from my wishlist). Mark items as "Giveaway" when you can\'t hold them anymore — add an optional preference note (e.g., "any common Kanto starter works"). Per-row button cycles through modes.'},
-  {version:'3.2',title:'🎒 Mirror-Only Inventory',desc:'Mark Have-tab inventory as Mirror only when you only want the exact same Pokémon/form back. Browse cards and offer modals now show the restriction clearly and public offers require the matching mirror.'},
-  {version:'3.1',title:'📅 Schedule Edits',desc:'Edit scheduled trades after creating them, including switching Regular/Special/Remote. Event rows no longer guess bonus trades; add a custom bonus when event details confirm extra specials.'},
-  {version:'3.0',title:'📅 Trade Schedule',desc:'New Schedule tab with week-view calendar. Plan trades with specific trainers, track your daily quota (1 special + 100 regular base), and see live Pokémon GO events from LeekDuck.'},
-  {version:'2.9',title:'🔔 Public Offers & FCFS',desc:'Offers on inventory items are now public — see who already offered what & when (sorted oldest first). Compare offers before bidding. The 1st offer gets a green badge so everyone respects first-come-first-served. Withdraw your own offers anytime. Recipients see a 📬 inbox badge.'},
-  {version:'2.8',title:'🎒 Inventory ("Have" tab)',desc:'Track what Pokémon you have to trade with simple quantity counts. Others can browse your inventory and click "Offer trade" to start a Discord conversation. ⭐ Auto-highlights items that match your wishlist.'},
-  {version:'2.7.1',title:'Costume Sprite Fix',desc:'Fixed Flower Crown variants (Happiny, Chansey, etc.) and Worlds-event Pikachus showing generic sprites in My List and exports. Costume URLs are now resolved before generic fallback.'},
-  {version:'2.7',title:'Updated Max Lists',desc:'Dynamax now matches the current released Pokemon GO roster, including Drilbur and Excadrill, and Max tabs use full readable names.'},
-  {version:'2.6',title:'Trainer Compare Strings',desc:'Use the scale button in Strings to compare two trainers, then tap Both Want, Only Mine, or Only Theirs to copy that exact search string.'},
-  {version:'2.5',title:'Visual & UX Polish',desc:'Type colors, theme toggle, loading skeletons, subtle animations, empty state illustrations, "what\'s new" notifications.'},
-  {version:'2.4',title:'Export & Share',desc:'Export to Markdown (Discord/Reddit) and CSV. Read-only share links via ?view=username. PWA install prompt.'},
-  {version:'2.3',title:'Mobile First',desc:'Swipe-to-delete on My List. Pull-to-refresh. Improved mobile add form.'},
-  {version:'2.2',title:'Trainer Profiles',desc:'Custom Pokémon avatars, bio, Discord handle. Diff view shows what changed in trainers\' lists since you last looked.'},
-  {version:'2.1',title:'Bulk Operations',desc:'Toggle bulk edit mode to select multiple entries and apply priority, flags, or delete in one go.'},
-  {version:'2.0',title:'Flags & Filters',desc:'Independent ⚡ Lucky / XXL / XXS flags with their own search strings. Filter Browse by flags. Char count warnings.'}
+  {version:'4.6.2',title:'🔤 Unown ! and ? sprites match the letters now',desc:'The ! and ? Unown were showing up as broken placeholders next to the clean A–Z sprites. All 28 now use the same Pokémon GO art so they look identical in style.'},
+  {version:'4.6.1',title:'⚡ Snappier Browse tab',desc:'Scrolling the community Browse list is buttery smooth now, even with 500+ Pokémon expanded. Filters and search respond instantly.'},
+  {version:'4.6.0',title:'📱 Mobile polish + cross-device "What\'s New"',desc:'Inventory rows on phones no longer cut off long names like "Heracross". All five tabs (Browse / My List / Strings / Have / Schedule) fit on one row, and Dynamax / Gigantamax tabs shrink to Dmax / Gmax. If you read the "What\'s New" changelog on desktop, your phone won\'t prompt you again.'},
+  {version:'4.5.2',title:'📵 Clear message when your edits aren\'t syncing',desc:'If your sign-in quietly expires, you\'ll see an amber banner at the top of the app explaining your edits are only saved on this device. One tap to sign back in pushes everything to the community.'},
+  {version:'4.5.1',title:'🔐 Sync reliability fix',desc:'The app now notices when your sign-in has dropped silently and warns you before you keep editing things only you can see.'},
+  {version:'4.5',title:'⚡ Speed-add mode for long sessions',desc:'My List has a "Speed add" toggle so the priority and flags you picked stay selected while you add a big batch of Pokémon. The Schedule tab\'s events list is more compact, and Special Trade Board exports look cleaner.'},
+  {version:'4.4',title:'🩺 Login health check',desc:'New "Having trouble signing in?" link on the login screen runs a quick check and tells you what\'s wrong. Special Trade Board exports use a tighter layout that handles 50+ Pokémon without sprawling.'},
+  {version:'4.3',title:'🎯 Special Trade Board (LF / FT image export)',desc:'New option in the Export menu lets you build a one-shot Looking-For and For-Trade board. Mark items as ✨ shiny or 🪞 mirror-only, then export as a clean image ready to paste in Discord.'},
+  {version:'4.2',title:'🌟 Every legendary + multi-form Pokémon',desc:'Mewtwo, Mew, every Ultra Beast, every Galar/Hisui/Paldea legendary, and all the Paradox Pokémon are now in the picker. Multi-form Pokémon like Giratina (Altered/Origin), Deoxys (4 forms), and Ogerpon\'s masks each show up as their own entry with the right sprite.'},
+  {version:'4.1',title:'♂ ♀ Track Pokémon by gender',desc:'For species where gender matters (Heracross horns, Nidoran lines, etc.), you can now keep separate ♂ / ♀ rows with their own counts in your Have tab. Each row shows the gender symbol so others can see at a glance.'},
+  {version:'4.0',title:'✨ Shiny flag, offline mode, shortcuts, welcome tour',desc:'New ✨ Shiny flag on wishlist entries. App now works offline once you\'ve loaded it. Press ? at any time to see all keyboard shortcuts. First-time users get a quick welcome tour. Ditto party hat split into Blue and Yellow variants.'},
+  {version:'3.6',title:'🔓 Stay signed in',desc:'Sessions now last 30 days and refresh every time you use the app. No more re-entering your PIN every time you open the app.'},
+  {version:'3.5',title:'🌙 New "Dark Cards" image export style',desc:'Image exports come in two styles now — Classic (light) and Dark Cards. Both have cleaner, more consistent sprite quality.'},
+  {version:'3.4',title:'☑ Bulk inventory edits',desc:'Select multiple inventory entries to change their return mode, bump quantities, or delete in one go.'},
+  {version:'3.3',title:'🤝 + 📤 Two new inventory modes',desc:'Mark items as "Don\'t need back" (rare but flexible on what you take in return) or "Giveaway" (take it off my hands for anything reasonable).'},
+  {version:'3.2',title:'🎒 Mirror-only inventory',desc:'Mark items as "Mirror only" when you only want the exact same Pokémon back. Browse and offer screens show this clearly.'},
+  {version:'3.1',title:'📅 Edit scheduled trades',desc:'You can now edit a scheduled trade after creating it — switch between Regular / Special / Remote, change date/time, etc.'},
+  {version:'3.0',title:'📅 Trade Schedule tab',desc:'New Schedule tab with a week-view calendar. Plan trades with specific trainers, track your daily quota, and see live Pokémon GO events.'},
+  {version:'2.9',title:'🔔 Public offers (first-come-first-served)',desc:'Offers on inventory items are now public, so you can see who offered what and when. The first offer gets a green "1st" badge so everyone respects FCFS.'},
+  {version:'2.8',title:'🎒 Inventory ("Have" tab)',desc:'Track what Pokémon you have to trade. Others can browse your inventory and offer trades. ⭐ Auto-highlights items that match your wishlist.'},
+  {version:'2.7.1',title:'Costume sprite fix',desc:'Flower Crown Happinys, Chanseys, and Worlds-event Pikachus now show the right sprite instead of a generic one.'},
+  {version:'2.7',title:'Updated Max lists',desc:'Dynamax list matches the current Pokémon GO roster, including Drilbur and Excadrill.'},
+  {version:'2.6',title:'Compare two trainers',desc:'Tap the scale icon in Strings to compare your list against another trainer. See what you both want, only you want, or only they want.'},
+  {version:'2.5',title:'Visual polish',desc:'Type colors, theme toggle, smoother animations, nicer empty states, "what\'s new" notifications.'},
+  {version:'2.4',title:'Export & share',desc:'Export your list as Markdown (Discord/Reddit) or CSV. Send a read-only share link to anyone.'},
+  {version:'2.3',title:'Mobile-first',desc:'Swipe to delete on My List. Pull to refresh. Cleaner mobile add form.'},
+  {version:'2.2',title:'Trainer profiles',desc:'Custom Pokémon avatars, bios, Discord handles. Diff view shows what changed in someone\'s list since you last looked.'},
+  {version:'2.1',title:'Bulk operations',desc:'Toggle bulk edit to select multiple entries and apply priority, flags, or delete in one go.'},
+  {version:'2.0',title:'Flags & filters',desc:'Independent ⚡ Lucky / XXL / XXS flags with their own search strings. Filter Browse by any combination.'}
 ];
 function whatsNewLatestVersion(){return WHATS_NEW[0]?.version||'1.0';}
 // "Have I seen the latest changelog yet?" — used to live in localStorage, which
