@@ -2485,7 +2485,6 @@ const POKEMONDB_GO_COSTUME_ALIASES={
   'Eevee Moon Crown':['eevee-moon-crown'],
   'Eevee Sun Crown':['eevee-sun-crown'],
   'Vaporeon Flower Crown':['vaporeon-flower'],
-  'Vaporeon holiday 2023':['vaporeon-holiday-hat'],
   'Vaporeon Holiday 2023':['vaporeon-holiday-hat'],
   'Vaporeon Cherry Blossoms':['vaporeon-cherry-blossoms'],
   'Vaporeon Explorer Hat':['vaporeon-explorer-hat'],
@@ -2520,6 +2519,12 @@ const POKEMONDB_GO_COSTUME_ALIASES={
   'Sylveon Cherry Blossoms':['sylveon-cherry-blossoms'],
   'Sylveon Explorer Hat':['sylveon-explorer-hat']
 };
+function normalizeCostumeLookupKey(name=''){
+  return String(name||'').trim().toLowerCase().replace(/\s+/g,' ');
+}
+const POKEMONDB_GO_COSTUME_ALIAS_LOOKUP=Object.fromEntries(
+  Object.entries(POKEMONDB_GO_COSTUME_ALIASES).map(([key,value])=>[normalizeCostumeLookupKey(key),value])
+);
 const POKEMONDB_GO_SUFFIX_PATTERNS=[
   [/ Explorer Hat$/i,['explorer-hat']],
   [/ Cherry Blossoms$/i,['cherry-blossoms']],
@@ -2563,11 +2568,12 @@ function pokemondbGoSpeciesSlug(name=''){
     .replace(/-+/g,'-')
     .replace(/^-|-$/g,'');
 }
-function pokemondbGoCostumeUrls(name=''){
+function pokemondbGoCostumeUrls(name='',{allowPattern=true}={}){
   const raw=String(name||'').trim();
   if(!raw)return[];
-  const exact=POKEMONDB_GO_COSTUME_ALIASES[raw];
+  const exact=POKEMONDB_GO_COSTUME_ALIAS_LOOKUP[normalizeCostumeLookupKey(raw)];
   if(exact?.length)return exact.map(slug=>`${POKEMONDB_GO_SPRITE_BASE}${slug}.png`);
+  if(!allowPattern)return[];
   for(const [pattern,suffixes] of POKEMONDB_GO_SUFFIX_PATTERNS){
     const match=raw.match(pattern);
     if(!match)continue;
@@ -2578,8 +2584,8 @@ function pokemondbGoCostumeUrls(name=''){
   }
   return[];
 }
-function pokemondbGoCostumeUrl(name=''){
-  return pokemondbGoCostumeUrls(name)[0]||'';
+function pokemondbGoCostumeUrl(name='',options){
+  return pokemondbGoCostumeUrls(name,options)[0]||'';
 }
 function canvasSafeSpriteUrl(url){
   if(!url)return'';
@@ -2592,7 +2598,7 @@ function canvasSafeSpriteUrl(url){
 }
 function entrySpriteUrl(entry,nameOverride='',gender=''){
   const resolvedName=nameOverride||entry?.name||entry?.displayName||'';
-  const pdbGoCostume=resolvedName?pokemondbGoCostumeUrl(resolvedName):'';
+  const pdbGoCostume=resolvedName?pokemondbGoCostumeUrl(resolvedName,{allowPattern:false}):'';
   if(pdbGoCostume)return pdbGoCostume;
   if(entry?.spriteUrl||entry?.sprite)return entry.spriteUrl||entry.sprite;
   return spriteUrl(entry?.no,resolvedName,gender,entry?.displayName||resolvedName);
@@ -2627,7 +2633,8 @@ function unownSpriteUrl(name){
 function spriteUrl(no,name,gender='',dn=''){
   // 1. Prefer PokémonDB's GO-specific costume art when we can infer a reliable costume URL.
   //    It is clearer than many legacy wiki assets and fixes several Eeveelution costume mismatches.
-  const pdbGoCostume=name?pokemondbGoCostumeUrl(name):'';
+  //    Keep this to exact mappings only; broad suffix guesses belong in the fallback chain.
+  const pdbGoCostume=name?pokemondbGoCostumeUrl(name,{allowPattern:false}):'';
   if(pdbGoCostume)return pdbGoCostume;
   // 2. Hand-curated costume sprite URLs (legacy fallback for oddball costumes not covered above)
   if(name&&EXTRA_COSTUME_SPRITES[name])return EXTRA_COSTUME_SPRITES[name];
@@ -2645,17 +2652,17 @@ function spriteUrl(no,name,gender='',dn=''){
   if(name&&COSTUME_FORM_SPRITE_IDS[name])return`${SPRITE_BASE}${COSTUME_FORM_SPRITE_IDS[name]}.png`;
   // 6. PokeAPI regional form (Alolan, Galarian, Hisuian, Paldean)
   if(name&&REGIONAL_FORM_IDS[name])return`${SPRITE_BASE}${REGIONAL_FORM_IDS[name]}.png`;
-  // 7. PokeMiners GO asset — preferred for plain Pokémon because it matches in-game art.
-  const pmBase=(!name||!EXTRA_COSTUME_SPRITES[name])&&no?pokeminersSpriteUrl(no,'00'):'';
-  if(pmBase)return pmBase;
-  // 8. PokemonDB HOME 3D — fallback for game forms and anything PokeMiners doesn't expose cleanly
-  const pdb=pokemondbSpriteUrl(name,dn||name,gender);
-  if(pdb)return pdb;
-  // 9. PokeAPI female sprite (Pyroar ♀, Pikachu ♀ tail, etc.)
+  // 7. PokeAPI female sprite (Pyroar ♀, Pikachu ♀ tail, etc.) should outrank plain base art.
   if(gender==='f'){
     const fUrl=femaleSpriteUrl(no);
     if(fUrl)return fUrl;
   }
+  // 8. PokeMiners GO asset — preferred for plain Pokémon because it matches in-game art.
+  const pmBase=(!name||!EXTRA_COSTUME_SPRITES[name])&&no?pokeminersSpriteUrl(no,'00'):'';
+  if(pmBase)return pmBase;
+  // 9. PokemonDB HOME 3D — fallback for game forms and anything PokeMiners doesn't expose cleanly
+  const pdb=pokemondbSpriteUrl(name,dn||name,gender);
+  if(pdb)return pdb;
   if(!no)return null;
   const n=parseInt(no);
   if(isNaN(n))return null;
@@ -2728,16 +2735,18 @@ function spriteFallbackChain(no,name,gender='',dn=''){
   // Primary URL (from spriteUrl — uses GO costume slugs first now)
   const primary=spriteUrl(no,name,gender,dn);
   push(primary);
-  // If this looks like a GO costume, try PokémonDB GO costume art variants first.
-  for(const u of pokemondbGoCostumeUrls(name))push(u);
-  // Then legacy hand-curated URLs for costume edge cases.
+  // Exact GO costume aliases first, then legacy hand-curated URLs for edge cases.
+  for(const u of pokemondbGoCostumeUrls(name,{allowPattern:false}))push(u);
   if(name&&EXTRA_COSTUME_SPRITES[name])push(EXTRA_COSTUME_SPRITES[name]);
   // If this is a known GO costume, the Serebii URL is canonical — make sure it's tried explicitly
   const goUrl=goCostumeSpriteUrl(no,name);
   push(goUrl);
+  // Pattern-guessed PokemonDB GO filenames are helpful, but should not outrank known-good sources.
+  for(const u of pokemondbGoCostumeUrls(name,{allowPattern:true}))push(u);
   // PokeAPI specific form variants
   if(name&&REGIONAL_FORM_IDS[name])push(`${SPRITE_BASE}${REGIONAL_FORM_IDS[name]}.png`);
   if(name&&COSTUME_FORM_SPRITE_IDS[name])push(`${SPRITE_BASE}${COSTUME_FORM_SPRITE_IDS[name]}.png`);
+  if(gender==='f')push(femaleSpriteUrl(no));
   // PokeMiners GO art before HOME renders for plain Pokémon
   if(no)push(pokeminersSpriteUrl(no,'00'));
   // PokemonDB HOME for any non-costume Pokémon (form/regional/gender variants)
@@ -2752,8 +2761,6 @@ function spriteFallbackChain(no,name,gender='',dn=''){
   if(dex){
     // PokeAPI canonical base dex (always exists)
     push(`${SPRITE_BASE}${parseInt(no)}.png`);
-    // PokeMiners (Pokémon GO actual game art, 256x256)
-    push(pokeminersSpriteUrl(no,'00'));
     // Serebii GO base sprite as final visual fallback
     push(`${SEREBII_GO_SPRITE_BASE}${dex}.png`);
   }
@@ -2850,19 +2857,21 @@ function effectiveSpriteScale(url){
   const cached=spriteScaleCache[url];
   return cached?cached.scale:spriteSourceScale(url);
 }
-function spriteImg(no,size=40,cls='',name='',gender='',dn=''){
+function spriteImg(no,size=40,cls='',name='',gender='',dn='',opts={}){
   const urls=spriteFallbackChain(no,name,gender,dn);
   if(!urls.length)return`<div class="pc-sprite-placeholder" style="width:${size}px;height:${size}px">🎮</div>`;
   const url=urls[0];
   const isGo=url.includes('serebii.net')||url.includes('weserv.nl')||url.includes('/sprites/go/')||url.includes('PokeMiners')||url.includes('pogo_assets');
   const rendering=isGo?'auto':'pixelated';
-  const scale=effectiveSpriteScale(url);
+  const rawScale=effectiveSpriteScale(url);
+  const scaleCap=Number.isFinite(opts?.scaleCap)?opts.scaleCap:null;
+  const scale=scaleCap?Math.min(rawScale,scaleCap):rawScale;
   // Trigger async per-image trim detection (no-op if already cached)
   if(spriteScaleCache[url]===undefined)detectSpriteScale(url);
   const fallbacks=urls.slice(1).map(u=>u.replace(/"/g,'&quot;')).join('|');
   return`<img src="${url}" data-src-key="${escAttr(url)}" class="${cls||'pc-sprite'}" width="${size}" height="${size}" alt="" title="${escAttr(name||'Pokémon')}"
     style="image-rendering:${rendering};object-fit:contain;transform:scale(${scale});transform-origin:center;clip-path:inset(0)"
-    data-fallbacks="${fallbacks}" onerror="trySpriteFallback(this)" loading="lazy">`;
+    data-scale-cap="${scaleCap||''}" data-fallbacks="${fallbacks}" onerror="trySpriteFallback(this)" loading="lazy">`;
 }
 function trySpriteFallback(img){
   const fbs=(img.dataset.fallbacks||'').split('|').filter(Boolean);
@@ -2871,7 +2880,9 @@ function trySpriteFallback(img){
   img.dataset.fallbacks=fbs.join('|');
   img.dataset.srcKey=next;
   if(next.includes('serebii.net'))img.style.imageRendering='auto';
-  img.style.transform=`scale(${effectiveSpriteScale(next)})`;
+  const cap=parseFloat(img.dataset.scaleCap||'');
+  const nextScale=effectiveSpriteScale(next);
+  img.style.transform=`scale(${Number.isFinite(cap)&&cap>0?Math.min(nextScale,cap):nextScale})`;
   if(spriteScaleCache[next]===undefined)detectSpriteScale(next);
   img.src=next;
 }
@@ -4383,6 +4394,11 @@ function maxTypeForEntry(entry,type=''){
   if(/\bdynamax\b/i.test(label))return'dynamax';
   return'';
 }
+function priorityFamilySort(a,b){
+  return (PRI_ORDER[a.p]??9)-(PRI_ORDER[b.p]??9)
+    || _familySort(a,b)
+    || String(a.dn||a.name||'').localeCompare(String(b.dn||b.name||''),undefined,{numeric:true,sensitivity:'base'});
+}
 function currentListEntries(type=myListType,filterVal=''){
   const list=allData[type]?.[cur]||{};
   const src=listSource(type);
@@ -4411,21 +4427,14 @@ function currentListEntries(type=myListType,filterVal=''){
       spriteUrl:entrySpriteUrl(spriteEntry.no?spriteEntry:entry,name,gender)
     };
   }).filter(e=>!q||e.dn.toLowerCase().includes(q))
-    .sort((a,b)=>(PRI_ORDER[a.p]??9)-(PRI_ORDER[b.p]??9)||a.dn.localeCompare(b.dn,undefined,{sensitivity:'base'}));
+    .sort(priorityFamilySort);
 }
 
 function renderMyList(filterVal){
   const q=(filterVal??document.getElementById('mylist-filter')?.value??'').toLowerCase();
   const list=allData[myListType]?.[cur]||{};
   const el=document.getElementById('mylist-out');if(!el)return;
-  const srcArr=listSource(myListType);
-  const dispMap={};const noMap={};const entryMap={};
-  srcArr.forEach(e=>{dispMap[e.name]=e.displayName||e.name;if(e.no)noMap[e.name]=e.no;if(!entryMap[e.name])entryMap[e.name]=e;});
-
-  // Respect custom order stored in list values as order prefix, or fall back to H/M/L sort
-  let entries=Object.entries(list);
-  if(q)entries=entries.filter(([name])=>(dispMap[name]||name).toLowerCase().includes(q));
-  entries.sort((a,b)=>{const o={H:0,M:1,L:2};return(o[a[1]?.[0]]??3)-(o[b[1]?.[0]]??3);});
+  const entries=currentListEntries(myListType,q);
 
   const count=Object.keys(list).length;
   const countEl=document.getElementById('mylist-count');
@@ -4436,14 +4445,11 @@ function renderMyList(filterVal){
     renderMyStrings();return;
   }
 
-  el.innerHTML=`<div class="mygrid" id="mylist-grid">${entries.map(([name,val],idx)=>{
-    const{p,mod,lucky,xxl,xxs,shiny}=parsePri(val);
-    const dn=dispMap[name]||name;
-    const no=noMap[name]||null;
-    const entry=entryMap[name]||{name,dn,no};
+  el.innerHTML=`<div class="mygrid" id="mylist-grid">${entries.map((entry,idx)=>{
+    const{name,dn,p,mod,lucky,xxl,xxs,shiny,no}=entry;
     const sn=name.replace(/'/g,"\\'").replace(/"/g,'&quot;');
-    const hasSprite=no||COSTUME_FORM_SPRITE_IDS[name]||GO_COSTUME_SPRITE_SLUGS[name];
-    const crownHtml=maxCrownSvg(maxTypeForEntry(entry,myListType));
+    const hasSprite=no||entry.spriteUrl||COSTUME_FORM_SPRITE_IDS[name]||GO_COSTUME_SPRITE_SLUGS[name];
+    const crownHtml=maxCrownSvg(entry.maxType);
     const isSel=bulkSelected.has(name);
     const clickHandler=bulkMode?`onclick="event.stopPropagation();toggleBulkSelection('${sn}')"`:'';
     return`<div class="myrow${isSel?' bulk-selected':''}" ${bulkMode?'':'draggable="true"'} data-name="${sn}" data-dex="${no||''}" data-idx="${idx}" data-full="${escAttr(dn)}" aria-label="${escAttr(dn)}" ${clickHandler}
@@ -8263,7 +8269,7 @@ function renderMyHave(filterVal){
     const rowClick=haveBulkMode?`onclick="event.stopPropagation();toggleHaveBulkSelection('${sk}')"`:'';
     return`<div class="have-row${isSel?' bulk-selected':''}" data-name="${escAttr(e.name)}" data-key="${escAttr(e.key)}" ${rowClick}>
       <input type="checkbox" class="bulk-chk" data-key="${sk}" ${isSel?'checked':''} onclick="event.stopPropagation();toggleHaveBulkSelection('${sk}')" aria-label="Select ${escAttr(e.dn)}">
-      <div class="have-row-sprite">${e.no?spriteImg(e.no,32,'',e.name,e.gender||'',e.dn):'🎮'}</div>
+      <div class="have-row-sprite">${e.no?spriteImg(e.no,32,'',e.name,e.gender||'',e.dn,{scaleCap:1.08}):'🎮'}</div>
       <div class="have-row-info">
         <div class="have-row-name">${escHtml(e.dn)} ${genderMetaPill} ${offerCount?`<span class="offer-count-badge unseen" onclick="event.stopPropagation();openIncomingOffersModal('${sk}')" style="margin-left:4px">🔔 ${offerCount}</span>`:''}</div>
         <div class="have-row-meta">
@@ -8307,7 +8313,7 @@ function openIncomingOffersModal(scrollToItem=''){
         const offers=grouped[key];
         const genderPill=gender?`<span class="have-gender-pill ${gender}" style="margin-left:4px">${gender==='f'?'♀':'♂'}</span>`:'';
         return`<div class="have-pmon-card" id="inbox-${escAttr(offerKey(key))}" style="margin-bottom:8px;cursor:default">
-          <div class="have-row-sprite" style="width:32px;height:32px">${e.no?spriteImg(e.no,32,'',name,gender||'',e.displayName||name):'🎮'}</div>
+          <div class="have-row-sprite" style="width:32px;height:32px">${e.no?spriteImg(e.no,32,'',name,gender||'',e.displayName||name,{scaleCap:1.08}):'🎮'}</div>
           <div class="have-pmon-info">
             <div class="have-pmon-name" style="font-size:14px">${escHtml(e.displayName||name)}${genderPill}</div>
             <div class="have-pmon-meta">${offers.length} offer${offers.length===1?'':'s'}</div>
@@ -8410,7 +8416,7 @@ function renderHaveBrowse(){
               :it.giveaway?`${it.dn}${it.gender?(it.gender==='f'?' ♀':' ♂'):''} — giveaway${it.note?', note: '+it.note:''}`
               :it.dn+(it.gender?(it.gender==='f'?' ♀':' ♂'):'')+' — click to offer';
             return`<div class="${cardCls}" title="${escAttr(cardTitle)}" onclick="openOfferModal('${escAttr(u)}','${sk}')" style="cursor:pointer">
-              <div class="have-row-sprite" style="width:24px;height:24px">${it.no?spriteImg(it.no,24,'',it.name,it.gender||'',it.dn):'🎮'}</div>
+              <div class="have-row-sprite" style="width:24px;height:24px">${it.no?spriteImg(it.no,24,'',it.name,it.gender||'',it.dn,{scaleCap:1.02}):'🎮'}</div>
               <div class="have-pmon-info">
                 <div class="have-pmon-name">${escHtml(it.dn)}${it.gender?` <span class="have-gender-pill ${it.gender}" title="${it.gender==='f'?'Female':'Male'} only">${it.gender==='f'?'♀':'♂'}</span>`:''}</div>
                 ${it.match?`<div class="have-pmon-meta">You want · ${it.match.p||(it.match.lucky?'⚡':'')||(it.match.xxl?'XXL':'')||(it.match.xxs?'XXS':'')}</div>`:''}
@@ -8459,7 +8465,7 @@ function renderHaveBrowse(){
       const wantBadge=p.want?`<span class="event-pill" style="background:rgba(245,158,11,.15);color:var(--warn);border-color:rgba(245,158,11,.3)">⭐ You want (${p.want.p||''})</span>`:'';
       return`<div class="have-by-pokemon-card">
         <div class="have-by-pokemon-hdr">
-          <div class="have-row-sprite" style="width:34px;height:34px">${p.no?spriteImg(p.no,34,'',p.name,'',p.dn):'🎮'}</div>
+          <div class="have-row-sprite" style="width:34px;height:34px">${p.no?spriteImg(p.no,34,'',p.name,'',p.dn,{scaleCap:1.08}):'🎮'}</div>
           <div class="have-by-pokemon-name">
             <span class="pmname-text">${escHtml(p.dn)}</span>
             ${wantBadge}
