@@ -1796,8 +1796,8 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
 </div>
 
 <!-- TOASTS -->
-<div class="toast" id="toast" role="status" aria-live="polite"></div>
-<div class="undo-toast" id="undo-toast"><span id="undo-msg"></span><button class="undo-btn" onclick="doUndo()">Undo</button></div>
+<div class="toast" id="toast" role="status" aria-live="polite" aria-hidden="true" hidden></div>
+<div class="undo-toast" id="undo-toast" aria-hidden="true" hidden><span id="undo-msg"></span><button class="undo-btn" onclick="doUndo()">Undo</button></div>
 
 <!-- PROFILE MODAL -->
 <div class="ov" id="prof-modal" role="dialog" aria-modal="true" aria-labelledby="prof-title">
@@ -3889,14 +3889,25 @@ document.addEventListener('click',e=>{
 // ── UNDO ──────────────────────────────────────────────────────
 function showUndo(name){
   clearTimeout(undoTimer);
+  const toastEl=document.getElementById('undo-toast');
   document.getElementById('undo-msg').textContent=`Removed "${name}"`;
-  document.getElementById('undo-toast').classList.add('show');
-  undoTimer=setTimeout(()=>{document.getElementById('undo-toast').classList.remove('show');undoStack=null;},4000);
+  toastEl.hidden=false;
+  toastEl.setAttribute('aria-hidden','false');
+  toastEl.classList.add('show');
+  undoTimer=setTimeout(()=>{
+    toastEl.classList.remove('show');
+    toastEl.setAttribute('aria-hidden','true');
+    toastEl.hidden=true;
+    undoStack=null;
+  },4000);
 }
 function doUndo(){
   if(!undoStack)return;
   clearTimeout(undoTimer);
-  document.getElementById('undo-toast').classList.remove('show');
+  const toastEl=document.getElementById('undo-toast');
+  toastEl.classList.remove('show');
+  toastEl.setAttribute('aria-hidden','true');
+  toastEl.hidden=true;
   writeList(undoStack.type,undoStack.username,undoStack.list);
   toast(`↩️ ${undoStack.name} restored`);
   undoStack=null;
@@ -5364,15 +5375,18 @@ async function saveProfile(){
   const p2=document.getElementById('np2').value;
   const bio=document.getElementById('prof-bio')?.value.trim()||'';
   const discord=document.getElementById('prof-discord')?.value.trim()||'';
+  const discordIdRaw=document.getElementById('prof-discord-id')?.value.trim()||'';
+  const discordId=discordIdRaw.replace(/\D/g,'');
   const avatarPokemon=document.getElementById('prof-av-input')?.value.trim()||'';
   const wallpaper=document.getElementById('prof-wallpaper')?.value||'mono';
   const err=document.getElementById('pin-err');err.textContent='';
   if(fc&&!validateFc(fc)){err.textContent='Friend code must be 12 digits';return;}
+  if(discordIdRaw&&discordId.length<17){err.textContent='Discord User ID should be a full numeric Discord ID';return;}
   if(p1){
     if(!isSixDigitPin(p1)){err.textContent='PIN must be exactly 6 digits';return;}
     if(p1!==p2){err.textContent="PINs don't match";return;}
   }
-  const upd={friendCode:fc,bio,discord,avatarPokemon,wallpaper};
+  const upd={friendCode:fc,bio,discord,discordId,avatarPokemon,wallpaper};
   applyWallpaper(wallpaper);
   if(p1){
     if(auth){
@@ -5477,11 +5491,19 @@ function emptyHtml(t,s='',icon='🔍'){
   const svg=(typeof EMPTY_SVGS!=='undefined'&&EMPTY_SVGS[icon])||null;
   return`<div class="empty">${svg||`<div class="empty-i">${icon}</div>`}<div class="empty-t">${t}</div>${s?`<div class="empty-s">${s}</div>`:''}</div>`;
 }
+function resetProfileHelp(){
+  const help=document.querySelector('.discord-id-help');
+  const toggle=document.querySelector('.discord-id-help-toggle');
+  if(help)help.classList.remove('open');
+  if(toggle)toggle.setAttribute('aria-expanded','false');
+}
 let _modalPrevFocus=null;
 let _modalKeyHandler=null;
+let _toastTimer=null;
 function openModal(id){
   const m=document.getElementById(id);if(!m)return;
   _modalPrevFocus=document.activeElement;
+  if(id==='prof-modal')resetProfileHelp();
   m.classList.add('open');
   // Focus first focusable element
   setTimeout(()=>{
@@ -5501,12 +5523,23 @@ function openModal(id){
 }
 function closeModal(id){
   document.getElementById(id)?.classList.remove('open');
+  if(id==='prof-modal')resetProfileHelp();
   if(_modalKeyHandler){document.removeEventListener('keydown',_modalKeyHandler);_modalKeyHandler=null;}
   _modalPrevFocus?.focus?.();
 }
 function toast(msg,dur=2500){
-  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),dur);
+  const t=document.getElementById('toast');
+  if(!t)return;
+  clearTimeout(_toastTimer);
+  t.hidden=false;
+  t.setAttribute('aria-hidden','false');
+  t.textContent=msg;
+  t.classList.add('show');
+  _toastTimer=setTimeout(()=>{
+    t.classList.remove('show');
+    t.setAttribute('aria-hidden','true');
+    t.hidden=true;
+  },dur);
 }
 
 
