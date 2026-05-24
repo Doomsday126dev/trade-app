@@ -820,6 +820,10 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
 .have-mirror-add input{accent-color:var(--accent);width:15px;height:15px}
 /* 3-state return preference pill (Any / Mirror / Giveaway) — compact replacement for the old checkbox */
 .have-return-picker{display:inline-flex;background:var(--bg);border:1px solid var(--border2);border-radius:var(--r2);padding:2px;gap:1px;min-height:38px;align-items:center;flex-shrink:0}
+/* When the picker spans the full row (add-to-inventory form), let each button
+   flex equally so they fill the available width instead of clustering left. */
+.have-add-row .have-return-picker{display:flex;width:100%}
+.have-add-row .have-return-picker .hrp-btn{flex:1 1 0;justify-content:center;min-width:0}
 .hrp-btn{background:transparent;border:none;color:var(--muted);padding:6px 9px;border-radius:5px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);transition:.15s;min-width:32px;line-height:1.1;display:inline-flex;align-items:center;gap:4px}
 .hrp-btn:hover:not(.selected){color:var(--text);background:var(--bg2)}
 .hrp-btn.selected{background:var(--card);color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.18)}
@@ -2106,7 +2110,7 @@ if(!DB)throw new Error('Trade data failed to load');
 
 const PREFILTER="!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&";
 const OWNER="Doomsday126";
-const APP_VERSION="4.6.8";
+const APP_VERSION="4.6.9";
 const STALE_WARN=7,STALE_OLD=30;
 const SESSION_TTL=30*24*60*60*1000; // 30 days; refreshed on each activity so active users stay logged in
 const SPRITE_BASE="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/";
@@ -5990,6 +5994,7 @@ async function triggerInstall(){
 
 // ── WHAT'S NEW (#28) ─────────────────────────────────────────
 const WHATS_NEW=[
+  {version:'4.6.9',title:'⚖️ Add-to-inventory mode buttons evenly spaced',desc:'The Any / Mirror / DNB / Giveaway buttons used to cluster left with empty space on the right. They now flex equally across the full row, each taking a quarter of the width — easier to tap and visually balanced.'},
   {version:'4.6.8',title:'🔢 Cleaner qty picker on the Add to inventory form',desc:'The quantity input used to render as a huge empty text field on mobile/tablet — it looked like a search box. Now it sits in a labeled "QTY [−] 1 [+]" pill paired with the gender picker, so it reads clearly as a quantity control no matter the screen size.'},
   {version:'4.6.7',title:'🏷️ Browse filters now labeled clearly',desc:'The Browse-tab filters used to render as three rows of similar-looking pills with two identical "All" buttons. Each row now has a label (Priority / Flags / Activity / List) so it\'s obvious what each one filters, and the activity row says "Any / 7d / 30d" instead of doubling up on "All".'},
   {version:'4.6.6',title:'↩️ Cancelling a trade now restores both inventories',desc:'When you ✗ cancel a reserved or scheduled trade that came from accepting an offer, your Pokémon go straight back into your inventory. The other trainer\'s side restores on their next sync, and they see a "trade cancelled" toast so they know what happened. The trade record stays in history marked "cancelled" instead of disappearing.'},
