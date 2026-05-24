@@ -2081,7 +2081,7 @@ if(!DB)throw new Error('Trade data failed to load');
 
 const PREFILTER="!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&";
 const OWNER="Doomsday126";
-const APP_VERSION="4.6.5";
+const APP_VERSION="4.6.6";
 const STALE_WARN=7,STALE_OLD=30;
 const SESSION_TTL=30*24*60*60*1000; // 30 days; refreshed on each activity so active users stay logged in
 const SPRITE_BASE="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/";
@@ -5965,6 +5965,7 @@ async function triggerInstall(){
 
 // ── WHAT'S NEW (#28) ─────────────────────────────────────────
 const WHATS_NEW=[
+  {version:'4.6.6',title:'↩️ Cancelling a trade now restores both inventories',desc:'When you ✗ cancel a reserved or scheduled trade that came from accepting an offer, your Pokémon go straight back into your inventory. The other trainer\'s side restores on their next sync, and they see a "trade cancelled" toast so they know what happened. The trade record stays in history marked "cancelled" instead of disappearing.'},
   {version:'4.6.5',title:'🎚️ Cleaner qty picker on accept-trade popup',desc:'Removed the tiny browser arrows next to the quantity input — the − / + / MAX buttons next to it already do everything they did, so they were just visual noise.'},
   {version:'4.6.4',title:'🎒 "Have" tab renamed → Inventory · bidding bug fix',desc:'The tab is now labeled "Inventory" since "Have" was a bit cryptic. Keyboard shortcut works as both `i` and `h`. Also fixed a bug where posting a public offer would silently fail if the browser blocked the clipboard copy — the offer now always posts, with a clear message if the copy didn\'t work.'},
   {version:'4.6.3',title:'⚖️ Clearer priority mismatches in Compare mode',desc:'When you and another trainer both want a Pokémon at different priorities, the badges now clearly label whose is whose ("You H · AC53 M") with a subtle amber stripe on the card. Matching priorities show a single badge with a ✓ instead.'},
@@ -7321,12 +7322,9 @@ async function markReservedTraded(id){
   toast('✅ Trade marked as completed');
 }
 async function cancelReservedTrade(id){
-  const t=allData.trades?.[id];
-  if(!t){toast('Trade not found');return;}
-  const cp=t.counterparty||Object.keys(t.participants||{}).find(u=>u!==cur)||'partner';
-  if(!confirm(`Cancel this reservation with ${cp}?\n\nThe Pokémon were already removed from your inventory when you accepted — cancelling won't add them back automatically. If you want them back, edit your Have tab manually after.`))return;
-  await writeTrade(id,{...t,status:'cancelled',updatedAt:Date.now()});
-  toast('✗ Reservation cancelled');
+  // Same behavior as cancelling a scheduled trade — restore both sides' inventory.
+  // The cancelScheduledTrade helper handles the autoLogged / gave / received branching.
+  return cancelScheduledTrade(id);
 }
 
 function renderSchedDayDetail(){
@@ -7454,8 +7452,41 @@ async function markTradeComplete(id){
 }
 async function cancelScheduledTrade(id){
   const t=allData.trades?.[id];if(!t)return;
+  // Only auto-logged trades (from offer-accept) decremented inventory at create time,
+  // so only those have inventory to restore. Manual schedule entries just go away.
+  const cp=t.counterparty||Object.keys(t.participants||{}).find(u=>u!==cur)||'';
+  if(t.autoLogged&&(t.gave||t.received)){
+    const giveBack=cur===t.organizer?t.gave:t.received;     // what I gave at accept time
+    const theyGetBack=cur===t.organizer?t.received:t.gave;  // what counterparty gave
+    const giveBackLabel=giveBack?`${giveBack.qty}× ${giveBack.name}`:'';
+    const theirLabel=theyGetBack?`${theyGetBack.qty}× ${theyGetBack.name}`:'';
+    const msg=`Cancel this trade with ${cp||'partner'}?\n\nYour ${giveBackLabel} will be restored to your inventory immediately.${theirLabel?`\n${cp}'s ${theirLabel} will be restored on their next sync.`:''}\n\nThe trade record stays in your history marked "cancelled".`;
+    if(!confirm(msg))return;
+    // 1) Restore my own inventory (own path — direct write)
+    if(giveBack&&giveBack.key&&giveBack.qty>0){
+      const inv={...(allData.have?.[cur]||{})};
+      const cur1=haveEntryInfo(inv[giveBack.key]).qty;
+      const newQty=Math.min(999,cur1+giveBack.qty);
+      setHaveEntry(inv,giveBack.key,newQty);
+      await writeHave(cur,inv);
+    }
+    // 2) Queue restoration to counterparty via pendingDecrements with NEGATIVE qty.
+    //    _applyPendingDecrements reads negative qty as "add this amount back".
+    if(cp&&theyGetBack&&theyGetBack.key&&theyGetBack.qty>0){
+      await _writePendingDecrement(cp,{
+        key:theyGetBack.key,
+        qty:-theyGetBack.qty,
+        inReturnFor:`Trade cancelled by ${cur} — restoring ${theyGetBack.qty}× ${theyGetBack.name}`
+      });
+    }
+    // 3) Mark cancelled (preserve record so both parties see it)
+    await writeTrade(id,{...t,status:'cancelled',cancelledAt:Date.now(),cancelledBy:cur,updatedAt:Date.now()});
+    toast(`✗ Cancelled — ${giveBackLabel} restored to your inventory${theirLabel?`, ${cp} gets ${theirLabel} back on their next sync`:''}`,4500);
+    return;
+  }
+  // Plain manual-scheduled trade — just confirm + mark cancelled
   if(!confirm('Cancel this scheduled trade?'))return;
-  await writeTrade(id,null);
+  await writeTrade(id,{...t,status:'cancelled',cancelledAt:Date.now(),cancelledBy:cur,updatedAt:Date.now()});
   toast('Trade cancelled');
 }
 
@@ -8523,10 +8554,16 @@ async function _logAcceptedTrade(ctx,qty){
 async function _writePendingDecrement(bidder,payload){
   if(!cur||!bidder)return;
   const id=`${Date.now()}_${cur}_${Math.random().toString(36).slice(2,7)}`;
+  // Positive qty = decrement (someone accepted my offer, subtract from them).
+  // Negative qty = restoration (I cancelled a trade, give them back what I had).
+  // Clamp magnitude only — preserve sign — so the reconciler can branch on it.
+  const rawQty=parseInt(payload.qty)||1;
+  const sign=rawQty<0?-1:1;
+  const mag=Math.max(1,Math.min(999,Math.abs(rawQty)));
   const record={
     from:cur,
     key:String(payload.key||''),
-    qty:Math.max(1,Math.min(999,parseInt(payload.qty)||1)),
+    qty:sign*mag,
     t:Date.now(),
     inReturnFor:String(payload.inReturnFor||'').slice(0,140)
   };
@@ -8562,19 +8599,31 @@ async function _applyPendingDecrements(){
     const inv={...(allData.have?.[cur]||{})};
     // Sort by t so order is deterministic across clients (oldest first)
     ids.sort((a,b)=>(pending[a]?.t||0)-(pending[b]?.t||0));
-    const summary=[];
+    // Separate the two flows so we can craft distinct user-facing toasts.
+    // Negative qty = restoration (a trade we accepted was later cancelled).
+    // Positive qty = standard decrement (someone accepted our offer).
+    const removed=[],restored=[];
     for(const id of ids){
       const dec=pending[id];
       if(!dec)continue;
       const qty=parseInt(dec.qty)||0;
-      if(!dec.key||qty<=0)continue;
+      if(!dec.key||qty===0)continue;
       const cur1=haveEntryInfo(inv[dec.key]).qty;
-      const applied=Math.min(qty,cur1);
-      const newQty=Math.max(0,cur1-applied);
-      if(newQty<=0)delete inv[dec.key];
-      else setHaveEntry(inv,dec.key,newQty);
-      summary.push({from:dec.from||'someone',key:dec.key,applied,requested:qty});
+      if(qty>0){
+        const applied=Math.min(qty,cur1);
+        const newQty=Math.max(0,cur1-applied);
+        if(newQty<=0)delete inv[dec.key];
+        else setHaveEntry(inv,dec.key,newQty);
+        removed.push({from:dec.from||'someone',key:dec.key,applied,requested:qty});
+      }else{
+        // Restoration — add Math.abs(qty) back. Capped at 999.
+        const give=Math.abs(qty);
+        const newQty=Math.min(999,cur1+give);
+        setHaveEntry(inv,dec.key,newQty);
+        restored.push({from:dec.from||'someone',key:dec.key,added:newQty-cur1,requested:give});
+      }
     }
+    const summary=[...removed,...restored];
     if(summary.length){
       await writeHave(cur,inv);
       // Clear processed records — own bucket, so the write is allowed.
@@ -8587,12 +8636,20 @@ async function _applyPendingDecrements(){
         if(!Object.keys(s.pendingDecrements[cur]).length)delete s.pendingDecrements[cur];
         saveLocal(s);
       }
-      // Friendly summary — one toast covers all decrements applied this pass
-      const totalQty=summary.reduce((acc,r)=>acc+r.applied,0);
-      const fromSet=[...new Set(summary.map(r=>r.from))];
-      const fromLabel=fromSet.length===1?fromSet[0]:`${fromSet.length} trainers`;
-      const shortage=summary.some(r=>r.applied<r.requested);
-      toast(`✅ Synced ${summary.length} accepted trade${summary.length===1?'':'s'} from ${fromLabel} · ${totalQty} item${totalQty===1?'':'s'} removed from your inventory${shortage?' (some capped at 0 — stock was already short)':''}`);
+      // Separate toasts for clarity — accepted offers vs cancelled-trade restorations
+      if(removed.length){
+        const totalQty=removed.reduce((acc,r)=>acc+r.applied,0);
+        const fromSet=[...new Set(removed.map(r=>r.from))];
+        const fromLabel=fromSet.length===1?fromSet[0]:`${fromSet.length} trainers`;
+        const shortage=removed.some(r=>r.applied<r.requested);
+        toast(`✅ Synced ${removed.length} accepted trade${removed.length===1?'':'s'} from ${fromLabel} · ${totalQty} item${totalQty===1?'':'s'} removed from your inventory${shortage?' (some capped at 0 — stock was already short)':''}`,4500);
+      }
+      if(restored.length){
+        const totalGiven=restored.reduce((acc,r)=>acc+r.added,0);
+        const fromSet=[...new Set(restored.map(r=>r.from))];
+        const fromLabel=fromSet.length===1?fromSet[0]:`${fromSet.length} trainers`;
+        toast(`↩️ ${restored.length} trade${restored.length===1?'':'s'} cancelled by ${fromLabel} — ${totalGiven} item${totalGiven===1?'':'s'} restored to your inventory`,4500);
+      }
     }
   }catch(e){
     console.error('Pending decrement reconcile failed',e);
