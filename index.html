@@ -110,6 +110,13 @@ input,select,textarea{font-family:var(--font);outline:none}
 .list-tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
 .ltab{background:var(--card);border:1px solid var(--border);color:var(--muted);padding:6px 14px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;transition:.15s}
 .ltab.active{background:var(--accent);color:#fff;border-color:transparent}
+/* Show full Dynamax/Gigantamax labels by default; swap to Dmax/Gmax on narrow screens so all 4 sub-tabs fit in one row */
+.ltab .ltab-short{display:none}
+@media(max-width:480px){
+  .ltab .ltab-full{display:none}
+  .ltab .ltab-short{display:inline}
+  .ltab{padding:6px 11px;font-size:12px}
+}
 
 /* LEGEND */
 .legend{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px}
@@ -384,13 +391,18 @@ input,select,textarea{font-family:var(--font);outline:none}
   .user-chip span{font-size:11px}
   .install-btn{display:none !important}
   .bell-btn,.theme-toggle{width:28px;height:28px;font-size:12px}
-  .tabs{justify-content:space-around}
-  .tab{flex:1;padding:12px 9px;font-size:12px;text-align:center}
+  .tabs{justify-content:space-around;gap:0}
+  /* Tighter tabs so all 5 (Browse/My List/Strings/Have/Schedule) fit ~375px without clipping */
+  .tab{flex:1;padding:12px 4px;font-size:11px;text-align:center;letter-spacing:-.01em;min-width:0}
   .page{padding:11px;max-width:100vw;overflow-x:hidden}
   .mygrid{grid-template-columns:1fr;max-width:100%}
   .lcard{padding:22px 16px}
   .pgrid .pc{max-width:100%;overflow:hidden}
   .filter-bar{max-width:100%}
+}
+/* Squeeze tabs harder on the smallest devices so nothing wraps */
+@media(max-width:360px){
+  .tab{font-size:10px;padding:11px 3px}
 }
 
 /* TYPE COLORS (Pokemon primary type accent) */
@@ -1464,8 +1476,8 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
       <div class="filter-divider"></div>
       <div class="filter-group" id="browse-list-tabs-inline">
         <button class="ltab active" onclick="setBrowseList('wishlist')" aria-pressed="true">Trades</button>
-        <button class="ltab" onclick="setBrowseList('dynamax')" aria-pressed="false">Dynamax</button>
-        <button class="ltab" onclick="setBrowseList('gmax')" aria-pressed="false">Gigantamax</button>
+        <button class="ltab" onclick="setBrowseList('dynamax')" aria-pressed="false"><span class="ltab-full">Dynamax</span><span class="ltab-short">Dmax</span></button>
+        <button class="ltab" onclick="setBrowseList('gmax')" aria-pressed="false"><span class="ltab-full">Gigantamax</span><span class="ltab-short">Gmax</span></button>
         <button class="ltab" onclick="setBrowseList('costumes')" aria-pressed="false">Others</button>
       </div>
     </div>
@@ -1486,8 +1498,8 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
     </div>
     <div class="list-tabs">
       <button class="ltab active" onclick="setMyList('wishlist')">Trades</button>
-      <button class="ltab" onclick="setMyList('dynamax')">Dynamax</button>
-      <button class="ltab" onclick="setMyList('gmax')">Gigantamax</button>
+      <button class="ltab" onclick="setMyList('dynamax')"><span class="ltab-full">Dynamax</span><span class="ltab-short">Dmax</span></button>
+      <button class="ltab" onclick="setMyList('gmax')"><span class="ltab-full">Gigantamax</span><span class="ltab-short">Gmax</span></button>
       <button class="ltab" onclick="setMyList('costumes')">Others</button>
     </div>
     <div class="add-form">
@@ -1588,8 +1600,8 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
     <div class="srch" style="margin-bottom:10px"><span class="srch-icon">🔍</span><input type="text" id="stq" placeholder="Filter by trainer…" oninput="renderStrings()"></div>
     <div class="list-tabs" id="str-list-tabs">
       <button class="ltab active" onclick="setStrList('wishlist')">Trades</button>
-      <button class="ltab" onclick="setStrList('dynamax')">Dynamax</button>
-      <button class="ltab" onclick="setStrList('gmax')">Gigantamax</button>
+      <button class="ltab" onclick="setStrList('dynamax')"><span class="ltab-full">Dynamax</span><span class="ltab-short">Dmax</span></button>
+      <button class="ltab" onclick="setStrList('gmax')"><span class="ltab-full">Gigantamax</span><span class="ltab-short">Gmax</span></button>
       <button class="ltab" onclick="setStrList('costumes')">Others</button>
     </div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Tap a trainer to expand their strings</div>
@@ -2045,7 +2057,7 @@ if(!DB)throw new Error('Trade data failed to load');
 
 const PREFILTER="!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&";
 const OWNER="Doomsday126";
-const APP_VERSION="4.5.2";
+const APP_VERSION="4.6.0";
 const STALE_WARN=7,STALE_OLD=30;
 const SESSION_TTL=30*24*60*60*1000; // 30 days; refreshed on each activity so active users stay logged in
 const SPRITE_BASE="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/";
@@ -3661,6 +3673,9 @@ function refreshAll(){
   const badge=document.getElementById('have-notif');
   if(badge){badge.textContent=inCount>0?inCount:'';badge.style.display=inCount>0?'':'none';}
   if(allData.users?.[cur]?.isAdmin){renderAdmin();renderPendingRequests();renderBackupReminder();}
+  // Re-check What's New badge — covers the case where the user dismissed the
+  // changelog on another device and we just synced their updated user record.
+  checkWhatsNew();
 }
 
 // ── FRESHNESS ─────────────────────────────────────────────────
@@ -3694,7 +3709,7 @@ function userBadge(x){
 }
 
 // ── AUTOCOMPLETE ──────────────────────────────────────────────
-const AC_RESULT_LIMIT=250;
+const AC_RESULT_LIMIT=50; // Humans rarely scroll past ~20; capping at 50 keeps single-char queries from injecting 250 list items
 function normalizeAcText(s){
   return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')
     .replace(/ph[._\s-]*d/g,'phd')
@@ -5893,6 +5908,7 @@ async function triggerInstall(){
 
 // ── WHAT'S NEW (#28) ─────────────────────────────────────────
 const WHATS_NEW=[
+  {version:'4.6.0',title:'📱 Mobile polish + cross-device "What\'s New"',desc:'Inventory rows on phones now stack name + controls onto two lines so long names like "Heracross (Mega)" never truncate to "Hera…". Tabs are tighter on narrow screens so all five (Browse / My List / Strings / Have / Schedule) fit without clipping; Dynamax and Gigantamax sub-tabs shrink to Dmax / Gmax on mobile. The autocomplete dropdown now caps at 50 results (down from 250) for snappier typing. The "What\'s New" badge now syncs across your devices — if you read the changelog on desktop, your phone won\'t re-prompt you. The "— quiet" sparkline label in Strings is gone (visual noise removed).'},
   {version:'4.5.2',title:'📵 Visible sync health + one-click recovery',desc:'When your Firebase session quietly expires, you now get a clear amber banner at the top of the app: "Local-only mode — your edits aren\'t syncing to the community". Edits keep saving safely on your device, and a single "Sign back in" button re-authenticates and auto-pushes everything you edited while disconnected. The sync pill in the header is now clickable for a status detail toast (Live / Syncing / Offline / Local only).'},
   {version:'4.5.1',title:'🔐 Shared-sync reliability fix',desc:'The app now detects when a browser still looks signed in locally but has lost its real Firebase Auth session. In that state, edits only existed on that one device. Health Check now shows Firebase Auth session status, and the app warns users before they keep making local-only edits.'},
   {version:'4.5',title:'⚡ Speed add + cleaner schedule + tighter board exports',desc:'My List now has a Speed add mode so priority and flags stay selected during big 40-50+ Pokémon sessions. The sign-in health check shows which username is being tested. Schedule event clutter is now tucked into a compact live-events tray instead of a long stack of repetitive rows. Special Trade Board exports drop redundant friend-code / Discord / rules text and use a narrower portrait-friendly layout.'},
@@ -5921,8 +5937,33 @@ const WHATS_NEW=[
   {version:'2.0',title:'Flags & Filters',desc:'Independent ⚡ Lucky / XXL / XXS flags with their own search strings. Filter Browse by flags. Char count warnings.'}
 ];
 function whatsNewLatestVersion(){return WHATS_NEW[0]?.version||'1.0';}
+// "Have I seen the latest changelog yet?" — used to live in localStorage, which
+// meant the bell badge re-fired on every device (mobile would show it again
+// even after you read it on desktop). Now we prefer the value stored on the
+// user record (users/{cur}/whatsNewSeen), which syncs across devices via
+// Firebase. localStorage stays as a fallback for unauthenticated/offline use
+// and gets updated alongside the user record so we degrade gracefully.
+function _maxSemver(a,b){
+  const sa=String(a||''),sb=String(b||'');
+  if(!sa)return sb;if(!sb)return sa;
+  const pa=sa.split('.').map(n=>parseInt(n)||0);
+  const pb=sb.split('.').map(n=>parseInt(n)||0);
+  for(let i=0;i<Math.max(pa.length,pb.length);i++){
+    const x=pa[i]||0,y=pb[i]||0;
+    if(x>y)return sa;
+    if(y>x)return sb;
+  }
+  return sa;
+}
+function getWhatsNewSeen(){
+  // Take the HIGHER of (user-record value, localStorage value) so the badge
+  // doesn't re-fire during the brief window between local mark-as-seen and
+  // the Firebase echo, AND so cross-device "I saw it on desktop" propagates
+  // correctly the moment Firebase syncs.
+  return _maxSemver(allData.users?.[cur]?.whatsNewSeen||'',lsGet('pogoWhatsNewSeen','')||'');
+}
 function checkWhatsNew(){
-  const seen=lsGet('pogoWhatsNewSeen','');
+  const seen=getWhatsNewSeen();
   const latest=whatsNewLatestVersion();
   const badge=document.getElementById('bell-badge');
   if(seen!==latest)badge?.classList.add('show');
@@ -5938,8 +5979,12 @@ function openWhatsNew(){
     </div>`).join('');
   }
   openModal('whatsnew-modal');
-  // Mark as seen
-  lsSet('pogoWhatsNewSeen',whatsNewLatestVersion());
+  // Mark as seen — both locally (offline-safe) and in the user record (cross-device)
+  const latest=whatsNewLatestVersion();
+  lsSet('pogoWhatsNewSeen',latest);
+  if(cur&&allData.users?.[cur]?.whatsNewSeen!==latest){
+    writeUser(cur,{whatsNewSeen:latest}).catch(e=>console.warn('Could not sync whatsNewSeen',e));
+  }
   document.getElementById('bell-badge')?.classList.remove('show');
 }
 function closeWhatsNew(){closeModal('whatsnew-modal');}
