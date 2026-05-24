@@ -537,7 +537,9 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
 .accept-qty-row label{font-size:12px;color:var(--muted);font-weight:500}
 .accept-qty-btn{background:var(--bg2);border:1px solid var(--border2);color:var(--text);width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:14px;font-weight:700;line-height:1}
 .accept-qty-btn:hover{border-color:var(--accent);color:var(--ac2)}
-#accept-qty-input{background:var(--bg);border:1px solid var(--border2);color:var(--text);width:60px;height:28px;text-align:center;border-radius:6px;font-family:var(--mono);font-size:13px;font-weight:700}
+#accept-qty-input{background:var(--bg);border:1px solid var(--border2);color:var(--text);width:60px;height:28px;text-align:center;border-radius:6px;font-family:var(--mono);font-size:13px;font-weight:700;-moz-appearance:textfield}
+/* Hide the browser-default spin buttons — we already have − / + / MAX controls */
+#accept-qty-input::-webkit-inner-spin-button,#accept-qty-input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
 .accept-qty-max-btn{background:rgba(108,99,255,.15);border:1px solid rgba(108,99,255,.4);color:var(--ac2);padding:4px 10px;border-radius:6px;cursor:pointer;font-size:10px;font-weight:700;letter-spacing:.05em}
 .accept-qty-max-btn:hover{background:rgba(108,99,255,.25)}
 .accept-qty-hint{font-size:11px;color:var(--muted);text-align:center;margin-bottom:10px;font-style:italic}
@@ -2079,7 +2081,7 @@ if(!DB)throw new Error('Trade data failed to load');
 
 const PREFILTER="!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&";
 const OWNER="Doomsday126";
-const APP_VERSION="4.6.4";
+const APP_VERSION="4.6.5";
 const STALE_WARN=7,STALE_OLD=30;
 const SESSION_TTL=30*24*60*60*1000; // 30 days; refreshed on each activity so active users stay logged in
 const SPRITE_BASE="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/";
@@ -5963,6 +5965,7 @@ async function triggerInstall(){
 
 // ── WHAT'S NEW (#28) ─────────────────────────────────────────
 const WHATS_NEW=[
+  {version:'4.6.5',title:'🎚️ Cleaner qty picker on accept-trade popup',desc:'Removed the tiny browser arrows next to the quantity input — the − / + / MAX buttons next to it already do everything they did, so they were just visual noise.'},
   {version:'4.6.4',title:'🎒 "Have" tab renamed → Inventory · bidding bug fix',desc:'The tab is now labeled "Inventory" since "Have" was a bit cryptic. Keyboard shortcut works as both `i` and `h`. Also fixed a bug where posting a public offer would silently fail if the browser blocked the clipboard copy — the offer now always posts, with a clear message if the copy didn\'t work.'},
   {version:'4.6.3',title:'⚖️ Clearer priority mismatches in Compare mode',desc:'When you and another trainer both want a Pokémon at different priorities, the badges now clearly label whose is whose ("You H · AC53 M") with a subtle amber stripe on the card. Matching priorities show a single badge with a ✓ instead.'},
   {version:'4.6.2',title:'🔤 Unown ! and ? sprites match the letters now',desc:'The ! and ? Unown were showing up as broken placeholders next to the clean A–Z sprites. All 28 now use the same Pokémon GO art so they look identical in style.'},
