@@ -1364,6 +1364,10 @@ html[data-theme="light"] .have-mirror-badge,html[data-theme="light"] .have-mirro
 .diff-match-count{margin-left:auto;color:var(--muted);font-family:var(--mono);font-size:10px}
 .diff-match-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:6px}
 .diff-match-chip{display:inline-flex;align-items:center;gap:7px;max-width:100%;background:var(--card);border:1px solid var(--border2);border-radius:var(--r2);padding:6px 8px;font-size:11px;color:var(--text);min-width:0}
+.diff-match-chip.extra{display:none}
+.diff-match-box.expanded .diff-match-chip.extra{display:inline-flex}
+.diff-match-more{font-family:var(--font);font-weight:800;cursor:pointer;justify-content:center}
+.diff-match-more:hover{border-color:var(--ac2);color:var(--ac2)}
 .diff-match-chip img{width:24px;height:24px;object-fit:contain;image-rendering:pixelated;flex-shrink:0}
 .diff-match-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 .diff-match-qty{flex-shrink:0;color:var(--text);font-weight:800}
@@ -6877,15 +6881,15 @@ function computeTradeMatchSummary(them){
 }
 function renderTradeMatchSummary(them){
   const m=computeTradeMatchSummary(them);
-  const chip=(it,extra='')=>{
+  const chip=(it,extra='',cls='')=>{
     const img=it.no?spriteImg(it.no,18,'',it.name,it.gender||'',it.dn):'';
     const gender=it.gender?` ${it.gender==='f'?'♀':'♂'}`:'';
     const qty=it.qty>1?`×${it.qty}`:'';
-    return`<span class="diff-match-chip" title="${escAttr(it.dn+gender+(qty?' '+qty:'')+extra)}">${img}<span class="diff-match-name">${escHtml(it.dn)}${gender}</span>${qty?`<span class="diff-match-qty">${qty}</span>`:''}</span>`;
+    return`<span class="diff-match-chip ${cls}" title="${escAttr(it.dn+gender+(qty?' '+qty:'')+extra)}">${img}<span class="diff-match-name">${escHtml(it.dn)}${gender}</span>${qty?`<span class="diff-match-qty">${qty}</span>`:''}</span>`;
   };
   const box=(cls,title,count,items,empty,extraFn)=>`<div class="diff-match-box ${cls}">
     <div class="diff-match-title">${title}<span class="diff-match-count">${count}</span></div>
-    ${items.length?`<div class="diff-match-list">${items.slice(0,14).map(it=>chip(it,extraFn?extraFn(it):'')).join('')}${items.length>14?`<span class="diff-match-chip"><span>+${items.length-14} more</span></span>`:''}</div>`:`<div class="diff-match-empty">${empty}</div>`}
+    ${items.length?`<div class="diff-match-list">${items.map((it,i)=>chip(it,extraFn?extraFn(it):'',i>=14?'extra':'')).join('')}${items.length>14?`<button type="button" class="diff-match-chip diff-match-more" data-more="+${items.length-14} more" onclick="toggleTradeMatchSection(this)">+${items.length-14} more</button>`:''}</div>`:`<div class="diff-match-empty">${empty}</div>`}
   </div>`;
   return`<div class="diff-match-panel" aria-label="Trade match summary">
     ${box('want','⭐ They have that you want',m.theyHaveYouWant.length,m.theyHaveYouWant,`${escHtml(them)} has not posted inventory matching your wants yet.`)}
@@ -6909,6 +6913,12 @@ function renderTradeMatchModal(){
   </div>`;
   document.getElementById('trade-match-modal')?.remove();
   document.body.insertAdjacentHTML('beforeend',html);
+}
+function toggleTradeMatchSection(btn){
+  const box=btn.closest('.diff-match-box');
+  if(!box)return;
+  const expanded=box.classList.toggle('expanded');
+  btn.textContent=expanded?'Show less':(btn.dataset.more||'Show more');
 }
 
 // ── SAFE-TO-TRANSFER SEARCH STRING (v4.6.14) ─────────────────
@@ -11171,7 +11181,7 @@ Object.assign(window,{
   toggleExportMenu,closeExportMenu,exportMyListMarkdown,exportMyListCSV,copyShareLink,
   exitShareView,renderShareView,setAddPri,toggleAddAdvanced,trySpriteFallback,
   // Latest batch
-  openDiffModal,closeDiffModal,setDiffListType,copyDiffSearch,openTradeMatchModal,closeTradeMatchModal,
+  openDiffModal,closeDiffModal,setDiffListType,copyDiffSearch,openTradeMatchModal,closeTradeMatchModal,toggleTradeMatchSection,
   openSafeTransferModal,toggleSafeTransferTrainer,setAllSafeTransferTrainers,saveSafeTransferAsDefault,copySafeTransferString,toggleSafeTransferPrefilter,
   openAddAllVariantsModal,closeAddAllVariants,confirmAddAllVariants,
   openAddShownResultsModal,closeAddShownResults,confirmAddShownResults,
