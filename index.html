@@ -2258,7 +2258,13 @@ const CASTFORM_TYPE_TERMS=new Set(['fire','water','ice','normal']);
 const FORM_QUALIFIER_TERMS=new Set([]);
 const SECURE_RULES=`{
   "rules": {
-    ".read": true,
+    ".read": "auth != null",
+    "loginDirectory": {
+      ".read": true,
+      "$username": {
+        ".write": "auth != null && root.child('admins').child(auth.uid).val() === true"
+      }
+    },
     "users": {
       "$username": {
         ".write": "auth != null && (root.child('admins').child(auth.uid).val() === true || data.child('authUid').val() === auth.uid || (!data.child('authUid').exists() && newData.child('authUid').val() === auth.uid && newData.child('authEmail').val() === auth.token.email && (!data.child('authEmail').exists() || data.child('authEmail').val() === auth.token.email)))"
@@ -3254,6 +3260,7 @@ function bindAuthObserver(){
       _localOnlyWarned=false;
       // Auth recovered — setSyncStatus emits the "✅ Back online" toast if we were previously local-only/offline
       setSyncStatus(Object.keys(syncQueue).length?'syncing':'online');
+      ensureProtectedSubscriptions();
       if(Object.keys(syncQueue).length)flushSyncQueue();
       return;
     }
@@ -3379,9 +3386,10 @@ syncQueue=lsGet(SYNC_QUEUE_KEY,{})||{};
 function saveSyncQueue(){lsSet(SYNC_QUEUE_KEY,syncQueue||{});}
 function normalizeData(s){
   if(!s||typeof s!=='object')s={};
-  s.users=s.users||{};s.wishlist=s.wishlist||{};s.dynamax=s.dynamax||{};s.gmax=s.gmax||{};s.costumes=s.costumes||{};s.have=s.have||{};s.offers=s.offers||{};s.trades=s.trades||{};s.requests=s.requests||{};s.authIndex=s.authIndex||{};s.pendingDecrements=s.pendingDecrements||{};
+  s.users=s.users||{};s.wishlist=s.wishlist||{};s.dynamax=s.dynamax||{};s.gmax=s.gmax||{};s.costumes=s.costumes||{};s.have=s.have||{};s.offers=s.offers||{};s.trades=s.trades||{};s.requests=s.requests||{};s.authIndex=s.authIndex||{};s.pendingDecrements=s.pendingDecrements||{};s.loginDirectory=s.loginDirectory||{};
   Object.keys(s.users).forEach(u=>{
     s.users[u]=normalizedUserRecord(u,s.users[u]);
+    s.loginDirectory[u]=normalizedLoginDirectoryRecord(u,s.users[u],s.loginDirectory[u]);
     if(!s.wishlist[u])s.wishlist[u]={};
     if(!s.dynamax[u])s.dynamax[u]={};
     if(!s.gmax[u])s.gmax[u]={};
@@ -3394,9 +3402,10 @@ function normalizeData(s){
 function initLocal(){
   let s=lsGet('pogo3',null);
   if(!s){
-    s={users:{},wishlist:{},dynamax:{},gmax:{},costumes:{},have:{},offers:{},trades:{},requests:{},authIndex:{}};
+    s={users:{},wishlist:{},dynamax:{},gmax:{},costumes:{},have:{},offers:{},trades:{},requests:{},authIndex:{},loginDirectory:{}};
     DB.users.filter(u=>u&&u.trim()&&u.trim()!=='EVERYONE').map(u=>u.trim()).forEach(u=>{
       s.users[u]=normalizedUserRecord(u,{}, {pin:'123456',isAdmin:u===OWNER,isOwner:u===OWNER,authVersion:1,authEmail:authEmail(u,1)});
+      s.loginDirectory[u]=normalizedLoginDirectoryRecord(u,s.users[u],s.loginDirectory[u]);
       s.wishlist[u]={};s.dynamax[u]={};s.gmax[u]={};s.costumes[u]={};s.have[u]={};
       DB.wishlist.forEach(e=>{const v=e.users[u];if(v)s.wishlist[u][e.name]=v;});
       DB.dynamax.forEach(e=>{const v=e.users[u];if(v)s.dynamax[u][e.name]=v;});
@@ -3466,24 +3475,28 @@ function saveLocal(s){
 }
 
 async function writeUser(u,data){
-  const s=getLocal();s.users[u]=normalizedUserRecord(u,s.users[u],data);saveLocal(s);
-  if(fbOn&&db)queueSync(`users/${u}`,s.users[u]);
+  const s=getLocal();s.users[u]=normalizedUserRecord(u,s.users[u],data);s.loginDirectory[u]=normalizedLoginDirectoryRecord(u,s.users[u],s.loginDirectory[u]);saveLocal(s);
+  if(fbOn&&db){queueSync(`users/${u}`,s.users[u]);queueSync(`loginDirectory/${u}`,s.loginDirectory[u]);}
   syncFromLocal();
 }
 async function writeUserNow(u,data){
-  const s=getLocal();s.users[u]=normalizedUserRecord(u,s.users[u],data);saveLocal(s);
+  const s=getLocal();s.users[u]=normalizedUserRecord(u,s.users[u],data);
   if(auth?.currentUser?.email===authEmailForUser(u,s.users[u])){
     s.users[u].authEmail=authEmailForUser(u,s.users[u]);
     s.users[u].authUid=auth.currentUser.uid;
-    saveLocal(s);
   }
+  s.loginDirectory[u]=normalizedLoginDirectoryRecord(u,s.users[u],s.loginDirectory[u]);
+  saveLocal(s);
   if(fbOn&&db){
     try{
       await withTimeout(set(ref(db,`users/${u}`),s.users[u]),8000,'Saving login timed out','db/write-timeout');
+      await withTimeout(set(ref(db,`loginDirectory/${u}`),s.loginDirectory[u]),8000,'Saving login directory timed out','db/directory-timeout');
       delete syncQueue[`users/${u}`];
+      delete syncQueue[`loginDirectory/${u}`];
       if(!Object.keys(syncQueue).length)showSyncDot(false);
     }catch{
       queueSync(`users/${u}`,s.users[u]);
+      queueSync(`loginDirectory/${u}`,s.loginDirectory[u]);
     }
   }
   syncFromLocal();
@@ -3491,7 +3504,11 @@ async function writeUserNow(u,data){
 async function writeUserStrict(u,data){
   const s=getLocal();
   s.users[u]=normalizedUserRecord(u,s.users[u],data);
-  if(fbOn&&db)await withTimeout(set(ref(db,`users/${u}`),s.users[u]),8000,'Saving user timed out','db/write-timeout');
+  s.loginDirectory[u]=normalizedLoginDirectoryRecord(u,s.users[u],s.loginDirectory[u]);
+  if(fbOn&&db){
+    await withTimeout(set(ref(db,`users/${u}`),s.users[u]),8000,'Saving user timed out','db/write-timeout');
+    await withTimeout(set(ref(db,`loginDirectory/${u}`),s.loginDirectory[u]),8000,'Saving login directory timed out','db/directory-timeout');
+  }
   saveLocal(s);allData=normalizeData(s);refreshAll();
   return s.users[u];
 }
@@ -3500,10 +3517,14 @@ async function bindAuthUserNow(username,authUpdate){
   const next=normalizedUserRecord(username,s.users[username],authUpdate);
   if(fbOn&&db){
     await withTimeout(set(ref(db,`users/${username}`),next),8000,'Linking login timed out','auth/bind-timeout');
+    const dirNext=normalizedLoginDirectoryRecord(username,next,{...(s.loginDirectory?.[username]||{}),authReady:true});
+    await withTimeout(set(ref(db,`loginDirectory/${username}`),dirNext),8000,'Linking login directory timed out','auth/directory-timeout');
     delete syncQueue[`users/${username}`];
+    delete syncQueue[`loginDirectory/${username}`];
     if(!Object.keys(syncQueue).length)showSyncDot(false);
   }
   s.users[username]=next;
+  s.loginDirectory[username]=normalizedLoginDirectoryRecord(username,next,{...(s.loginDirectory?.[username]||{}),authReady:true});
   saveLocal(s);
   allData=normalizeData(s);
   return next;
@@ -3513,13 +3534,16 @@ async function createMemberNow(username,pin,isAdmin=false,reqId=''){
   const iAmOwner=allData.users?.[cur]?.isOwner||cur===OWNER;
   const canCreateAdmin=!!isAdmin&&iAmOwner;
   const pinHash=await hashPin(pin);
+  const authProvision=await provisionFirebaseAuthForTrainer(username,pin,1);
   const user=normalizedUserRecord(username,{},{
     pin:pinHash,isAdmin:canCreateAdmin,isOwner:false,friendCode:'',joined:Date.now(),lastSeen:null,lastUpdated:null,
-    pinHashed:true,authVersion:1,authEmail:authEmail(username,1)
+    pinHashed:true,authVersion:1,authEmail:authEmail(username,1),authUid:authProvision.uid||null
   });
+  const loginDir=normalizedLoginDirectoryRecord(username,user,{authReady:true,approvedAt:user.joined});
   if(fbOn&&db){
     const updates={};
     updates[`users/${username}`]=user;
+    updates[`loginDirectory/${username}`]=loginDir;
     if(reqId)updates[`requests/${reqId}/status`]='approved';
     await withTimeout(update(ref(db),updates),8000,'Creating member timed out','db/write-timeout');
     // Firebase Realtime DB's update() resolves the promise as soon as the
@@ -3534,13 +3558,15 @@ async function createMemberNow(username,pin,isAdmin=false,reqId=''){
     // throw so the caller's try/catch can surface a clear error — and the
     // local cache stays clean because we throw BEFORE writing to it below.
     const snap=await withTimeout(get(ref(db,`users/${username}`)),6000,'Verifying member create timed out','db/verify-timeout');
-    if(!snap.exists()){
+    const dirSnap=await withTimeout(get(ref(db,`loginDirectory/${username}`)),6000,'Verifying login directory timed out','db/verify-timeout');
+    if(!snap.exists()||!dirSnap.exists()){
       const err=new Error('Server rejected the new-member write. Most likely your Firebase auth session has silently expired or your admin record is missing. Sign out and back in, then try again.');
       err.code='db/write-rejected-silently';
       throw err;
     }
   }
   s.users[username]=user;
+  s.loginDirectory[username]=loginDir;
   s.wishlist[username]=s.wishlist[username]||{};
   s.dynamax[username]=s.dynamax[username]||{};
   s.gmax[username]=s.gmax[username]||{};
@@ -3583,6 +3609,49 @@ async function repairMissingAuthMetadata(){
   }catch(e){
     console.warn('Auth metadata repair failed',e);
     authRepairStarted=false;
+  }
+}
+async function provisionFirebaseAuthForTrainer(username,pin,version=1){
+  if(!firebaseAuthConfigured()){
+    const err=new Error('Firebase Auth is not configured for admin onboarding.');
+    err.code='auth/not-configured';
+    throw err;
+  }
+  const email=authEmail(username,version);
+  const res=await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${encodeURIComponent(FIREBASE_API_KEY)}`,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({email,password:pin,returnSecureToken:true})
+  });
+  const data=await res.json().catch(()=>({}));
+  if(res.ok)return{email,uid:data.localId||null,created:true};
+  const message=String(data?.error?.message||`HTTP_${res.status}`);
+  if(message==='EMAIL_EXISTS')return{email,uid:null,created:false,exists:true};
+  const err=new Error(`Firebase Auth provisioning failed: ${message}`);
+  err.code='auth/provision-failed';
+  throw err;
+}
+let _loginDirectoryRepairStarted=false;
+async function ensureLoginDirectoryPublished(){
+  if(_loginDirectoryRepairStarted||!fbOn||!db||!cur||!allData.users?.[cur]?.isAdmin)return;
+  _loginDirectoryRepairStarted=true;
+  const updates={};
+  Object.entries(allData.users||{}).forEach(([u,d])=>{
+    const existing=allData.loginDirectory?.[u]||{};
+    const next=normalizedLoginDirectoryRecord(u,d,existing);
+    if(JSON.stringify(existing)!==JSON.stringify(next))updates[`loginDirectory/${u}`]=next;
+  });
+  if(!Object.keys(updates).length)return;
+  try{
+    await withTimeout(update(ref(db),updates),8000,'Publishing login directory timed out','db/directory-timeout');
+    const s=getLocal();
+    Object.entries(allData.users||{}).forEach(([u,d])=>{
+      s.loginDirectory[u]=normalizedLoginDirectoryRecord(u,d,s.loginDirectory?.[u]||{});
+    });
+    saveLocal(s);
+    allData=normalizeData(s);
+  }catch(e){
+    console.warn('Could not publish login directory',e);
   }
 }
 async function writeList(type,u,list){
@@ -3646,6 +3715,29 @@ function authVersionForUser(ud={}){
 }
 function authEmailForUser(username,ud={}){
   return ud?.authEmail||authEmail(username,authVersionForUser(ud));
+}
+function normalizedLoginDirectoryRecord(username,ud={},prev={}){
+  return{
+    authVersion:authVersionForUser(ud),
+    authReady:!!(prev?.authReady||ud?.authUid),
+    approvedAt:prev?.approvedAt||ud?.joined||Date.now()
+  };
+}
+function knownLoginUsernames(){
+  return Array.from(new Set([
+    ...Object.keys(allData.loginDirectory||{}),
+    ...Object.keys(allData.users||{})
+  ].filter(Boolean)));
+}
+function canonicalUsernameInput(raw=''){
+  const trimmed=String(raw||'').trim();
+  if(!trimmed)return'';
+  const names=knownLoginUsernames();
+  const exact=names.find(n=>n===trimmed);
+  if(exact)return exact;
+  const lower=trimmed.toLowerCase();
+  const matches=names.filter(n=>n.toLowerCase()===lower);
+  return matches[0]||trimmed;
 }
 function normalizedUserRecord(username,prev={},data={}){
   const merged={friendCode:'',joined:Date.now(),lastSeen:null,lastUpdated:null,pinHashed:false,...prev,...data};
@@ -3814,6 +3906,7 @@ function applyDataPath(root,path,data){
 function mergeRemoteData(d){
   const merged=normalizeData({
     users:d?.users||{},
+    loginDirectory:d?.loginDirectory||{},
     wishlist:d?.wishlist||{},
     dynamax:d?.dynamax||{},
     gmax:d?.gmax||{},
@@ -3862,6 +3955,7 @@ function _onSubSnapshot(path,snap){
   const s=getLocal();
   const seg=path.split('/')[0];
   if(seg==='users')s.users=val||{};
+  else if(seg==='loginDirectory')s.loginDirectory=val||{};
   else if(seg==='authIndex')s.authIndex=val||{};
   else if(seg==='requests')s.requests=val||{};
   else if(seg==='wishlist')s.wishlist=val||{};
@@ -3934,8 +4028,8 @@ function ensureListSubscribed(type){
   if(!db)return;
   if(['wishlist','dynamax','gmax','costumes'].includes(type))subscribePath(type);
 }
-function startListener(){
-  // Always load: users (metadata), authIndex (auth), requests (admin), wishlist (default tab)
+function ensureProtectedSubscriptions(){
+  if(!db||!auth?.currentUser)return;
   subscribePath('users');
   subscribePath('authIndex');
   subscribePath('requests');
@@ -3943,10 +4037,14 @@ function startListener(){
   subscribePath('have');
   subscribePath('offers');
   subscribePath('trades');
-  // Other list types loaded lazily when tabs are visited
-  // Subscribe to my own pending-decrements queue if we already know who I am
-  // (otherwise subscribeMyPendingDecrements() gets called after login).
   if(cur)subscribeMyPendingDecrements();
+}
+function startListener(){
+  // Before login, only the public directory should load. Protected community
+  // data subscribes after Firebase Auth is present.
+  subscribePath('loginDirectory');
+  ensureProtectedSubscriptions();
+  // Other list types loaded lazily when tabs are visited
 }
 // Per-user queue of "someone accepted a trade where you'd give away N of X".
 // Only the target user can read/write their own bucket (see security rules),
@@ -4128,18 +4226,41 @@ async function clearLoginLocalCache(){
 async function doLogin(){
   // Trim free-text input — datalist value may carry trailing whitespace from
   // mobile autocomplete suggestions, and we don't want "Doomsday126 " ≠ key.
-  const u=(document.getElementById('login-user').value||'').trim();
+  const u=canonicalUsernameInput(document.getElementById('login-user').value||'');
   const p=document.getElementById('login-pin').value;
   const err=document.getElementById('login-err');
   const btn=document.getElementById('login-btn');
+  const dirEntry=allData.loginDirectory?.[u]||null;
   if(!u){err.textContent='Enter your username';return;}
   if(!p){err.textContent='Enter PIN';return;}
   if(!isSixDigitPin(p)){err.textContent='PIN must be exactly 6 digits';return;}
   err.textContent='';
+  document.getElementById('login-user').value=u;
   btn.textContent='Signing in…';btn.disabled=true;
-  // Always prefer live Firebase data for PIN check, fall back to local
   let ud=allData.users?.[u];
   let liveUserReadFailed=false;
+  let ident=null;
+  if(fbOn&&db&&auth&&dirEntry?.authReady){
+    try{
+      const email=authEmail(u,dirEntry.authVersion||1);
+      const cred=await withTimeout(signInWithEmailAndPassword(auth,email,p),10000,'Firebase Auth sign-in timed out','auth/timeout');
+      currentAuthUid=cred.user.uid;
+      ident={uid:cred.user.uid,email};
+      const snap=await withTimeout(get(ref(db,`users/${u}`)),5000,'Firebase lookup timed out','db/read-timeout');
+      if(snap.exists())ud={...ud,...snap.val(),authUid:cred.user.uid,authEmail:email};
+      else{
+        err.textContent='This trainer has a login account, but no matching database record. Ask an admin to repair the account.';
+        btn.textContent='Sign in →';btn.disabled=false;return;
+      }
+    }catch(e){
+      if(['auth/invalid-credential','auth/wrong-password','auth/invalid-login-credentials','auth/user-not-found'].includes(e.code)){
+        err.textContent='❌ Wrong PIN';
+        btn.textContent='Sign in →';btn.disabled=false;return;
+      }
+      console.warn('Public-directory auth sign-in failed',e);
+    }
+  }
+  // Always prefer live Firebase data for PIN check, fall back to local
   if(fbOn&&db){
     try{
       const snap=await withTimeout(get(ref(db,`users/${u}`)),5000,'Firebase lookup timed out','db/read-timeout');
@@ -4150,11 +4271,18 @@ async function doLogin(){
     }
   }
   const liveReadHint=liveUserReadFailed?' Live user data could not be checked before login, so this browser may be using stale cached info.':'';
-  if(!ud){err.textContent=liveUserReadFailed?'Could not load this user from Firebase before login. Ask an admin to update Firebase rules for login reads.':'User not found';btn.textContent='Sign in →';btn.disabled=false;return;}
-  const ok=await verifyPin(p,ud.pin);
+  if(!ud){
+    err.textContent=dirEntry&&!dirEntry.authReady
+      ?'This trainer was approved, but their login setup is incomplete. Ask an admin to reset the PIN once to finish setup.'
+      :liveUserReadFailed
+        ?'Could not load this user from Firebase before login. Ask an admin to update the login directory / rules, then retry.'
+        :'User not found';
+    btn.textContent='Sign in →';btn.disabled=false;return;
+  }
+  const ok=ident?true:await verifyPin(p,ud.pin);
   if(ok){
     try{
-      const ident=auth?await ensureFirebaseIdentity(u,p,ud):null;
+      ident=ident||(auth?await ensureFirebaseIdentity(u,p,ud):null);
       cur=u;stampSession(u);
       const loginUpdate={lastSeen:Date.now()};
       if(ident){loginUpdate.authEmail=ident.email;loginUpdate.authUid=ident.uid;}
@@ -4239,13 +4367,10 @@ function populateLoginUsers(){
   const input=document.getElementById('login-user');
   const list=document.getElementById('login-user-list');
   if(!input||!list)return;
-  // Populate the suggestion list with whatever users we know about locally
-  // (Firebase rules block anonymous /users reads, so this is what was cached
-  // from the last signed-in session). Users can ALSO type freely — covers
-  // brand-new community members whose name isn't in any local cache yet, and
-  // anyone whose cache is stale relative to recent admin additions.
+  // Prefer the public login directory so clean browsers and new members can
+  // still discover approved usernames before signing in.
   list.innerHTML='';
-  Object.keys(allData.users||{}).sort(alphaCompare).forEach(u=>{
+  knownLoginUsernames().sort(alphaCompare).forEach(u=>{
     const o=document.createElement('option');o.value=u;list.appendChild(o);
   });
 }
@@ -4278,7 +4403,7 @@ function showApp(){
   updateFcDisplay();
   buildAcItems();
   renderBrowse();renderMyList();renderStrings();
-  if(isAdmin){renderAdmin();renderPendingRequests();repairMissingAuthMetadata();}
+  if(isAdmin){renderAdmin();renderPendingRequests();repairMissingAuthMetadata();ensureLoginDirectoryPublished();}
   checkWhatsNew();
   attachPullToRefresh();
   initAddAdvanced();
@@ -4321,7 +4446,7 @@ function refreshAll(){
   const inCount=totalOffersForRecipient(cur);
   const badge=document.getElementById('have-notif');
   if(badge){badge.textContent=inCount>0?inCount:'';badge.style.display=inCount>0?'':'none';}
-  if(allData.users?.[cur]?.isAdmin){renderAdmin();renderPendingRequests();renderBackupReminder();}
+  if(allData.users?.[cur]?.isAdmin){renderAdmin();renderPendingRequests();renderBackupReminder();ensureLoginDirectoryPublished();}
   // Re-check What's New badge — covers the case where the user dismissed the
   // changelog on another device and we just synced their updated user record.
   checkWhatsNew();
@@ -5792,7 +5917,7 @@ function renderSecurityPanel(){
   el.innerHTML=`
     <div class="sec" style="margin-top:0">Firebase security</div>
     <div style="font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:8px">
-      Current rules you pasted allow public writes. To lock down writes, enable Email/Password Auth, paste this app's Web API key into <span style="font-family:var(--mono)">FIREBASE_API_KEY</span>, sign in once, then add your UID to <span style="font-family:var(--mono)">admins/${escHtml(uid)}</span> in Firebase before replacing rules.
+      Current repo guidance expects the canonical rules in <span style="font-family:var(--mono)">SECURITY-RULES.md</span>, including a public <span style="font-family:var(--mono)">loginDirectory</span> for pre-login username discovery and admin-only writes everywhere sensitive. If you update rules, add your UID to <span style="font-family:var(--mono)">admins/${escHtml(uid)}</span> first so you don't lock yourself out.
     </div>
     <div style="font-size:11px;color:var(--muted);font-family:var(--mono);word-break:break-all">Your Auth UID: ${escHtml(uid)}</div>
     <textarea readonly id="secure-rules-text">${escHtml(SECURE_RULES)}</textarea>
@@ -5855,16 +5980,17 @@ function toggleAdmin(u,makeAdmin){
   toast(`✅ ${u} is now ${makeAdmin?'an admin':'a member'}`);renderAdmin();
 }
 async function addUser(){
-  const name=document.getElementById('nu-name').value.trim();
+  const rawName=document.getElementById('nu-name').value.trim();
+  const name=canonicalUsernameInput(rawName);
   const pinInput=document.getElementById('nu-pin').value.trim();
   const iAmOwner=allData.users?.[cur]?.isOwner||cur===OWNER;
   const adminRequested=document.getElementById('nu-admin')?.checked;
   if(adminRequested&&!iAmOwner){toast('⚠️ Only the owner can create admins');return;}
   const isAdmin=iAmOwner&&adminRequested;
-  if(!name){toast('⚠️ Enter username');return;}
+  if(!rawName){toast('⚠️ Enter username');return;}
   const pin=pinInput||generatedFirstTimePin();
   if(!isSixDigitPin(pin)){toast('⚠️ PIN must be exactly 6 digits');return;}
-  if(allData.users?.[name]){toast('⚠️ Username exists');return;}
+  if(knownLoginUsernames().some(u=>u.toLowerCase()===rawName.toLowerCase())){toast(`⚠️ Username already exists${name&&name!==rawName?` as ${name}`:''}`);return;}
   try{
     await createMemberNow(name,pin,isAdmin);
     document.getElementById('nu-name').value='';document.getElementById('nu-pin').value='';document.getElementById('nu-admin').checked=false;
@@ -5889,8 +6015,9 @@ async function confirmReset(){
   const prev=allData.users?.[rpinTarget]||{};
   const nextVersion=authVersionForUser(prev)+1;
   try{
+    const authProvision=await provisionFirebaseAuthForTrainer(rpinTarget,pin,nextVersion);
     const pinHash=await hashPin(pin);
-    await writeUserStrict(rpinTarget,{pin:pinHash,pinHashed:true,authVersion:nextVersion,authEmail:authEmail(rpinTarget,nextVersion),authUid:null,lastSeen:null});
+    await writeUserStrict(rpinTarget,{pin:pinHash,pinHashed:true,authVersion:nextVersion,authEmail:authEmail(rpinTarget,nextVersion),authUid:authProvision.uid||null,lastSeen:null});
     closeModal('rpin-modal');toast(`✅ PIN reset for ${rpinTarget}`);rpinTarget=null;
   }catch(e){
     toast('⚠️ Could not reset PIN in Firebase: '+(e.code||e.message||'permission denied'),5000);
@@ -5912,13 +6039,14 @@ function hideRequestForm(){
   document.getElementById('req-err').textContent='';
 }
 async function submitRequest(){
-  const username=document.getElementById('req-username').value.trim();
+  const rawUsername=document.getElementById('req-username').value.trim();
+  const username=canonicalUsernameInput(rawUsername);
   const note=document.getElementById('req-note').value.trim();
   const err=document.getElementById('req-err');err.textContent='';
-  if(!username){err.textContent='Enter your trainer name';return;}
-  if(username.length<2){err.textContent='Too short';return;}
-  if(allData.users?.[username]){err.textContent='That name is already registered';return;}
-  const existing=Object.values(allData.requests||{}).find(r=>r.username===username&&r.status==='pending');
+  if(!rawUsername){err.textContent='Enter your trainer name';return;}
+  if(rawUsername.length<2){err.textContent='Too short';return;}
+  if(knownLoginUsernames().some(u=>u.toLowerCase()===rawUsername.toLowerCase())){err.textContent=`That name is already registered${username&&username!==rawUsername?` as ${username}`:''}`;return;}
+  const existing=Object.values(allData.requests||{}).find(r=>String(r.username||'').toLowerCase()===rawUsername.toLowerCase()&&r.status==='pending');
   if(existing){err.textContent='A request for this name is already pending';return;}
   const reqId='req_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
   const reqData={username,note:note||'',requestedAt:Date.now(),status:'pending'};

@@ -9,11 +9,11 @@
 
 ---
 
-## Current status (as of v4.6.20, 2026-05-24)
+## Current status (as of v4.6.24, 2026-05-24)
 
 | Item | Status |
 |---|---|
-| Canonical ruleset version | **v3** — requires `qty` in `[-999, 999]` (allows negative qty for trade-cancel restoration) |
+| Canonical ruleset version | **v4** — adds public `loginDirectory` for clean-browser username discovery and keeps `qty` in `[-999, 999]` |
 | Published in Firebase Console | ✅ **Confirmed published 2026-05-24** by user |
 | API key HTTP-referrer lock | ✅ Confirmed configured (Google Cloud Console → Credentials, restricted to `https://doomsday126dev.github.io/*`) |
 | Scheduled RTDB backups | ⏸️ Not yet enabled (low priority at 40 trainers) |
@@ -34,6 +34,12 @@ Publish.
 {
   "rules": {
     ".read": "auth != null",
+    "loginDirectory": {
+      ".read": true,
+      "$username": {
+        ".write": "auth != null && root.child('admins').child(auth.uid).val() === true"
+      }
+    },
     "users": {
       "$username": {
         ".write": "auth != null && (root.child('admins').child(auth.uid).val() === true || data.child('authUid').val() === auth.uid || (!data.child('authUid').exists() && newData.child('authUid').val() === auth.uid && newData.child('authEmail').val() === auth.token.email && (!data.child('authEmail').exists() || data.child('authEmail').val() === auth.token.email)))"
@@ -111,6 +117,15 @@ Publish.
 ---
 
 ## What each path locks down
+
+### Public login directory (`loginDirectory`)
+- **Read**: anyone, even before login
+- **Write**: admins only
+
+This path exists solely so clean browsers and brand-new members can discover
+approved trainer names before signing in. It should only contain minimal login
+metadata such as the current auth version / readiness flag — not PINs or
+private profile fields.
 
 ### Public-read, owner-write data (`users`, `wishlist`, `dynamax`, `gmax`, `costumes`, `have`)
 - **Read**: any authenticated user (community-visible by design)
@@ -237,6 +252,7 @@ schema-level protection. At 50+ trainers I'd keep the strict version.
 When you ship a rule change (or other related work), append a one-line
 entry here. Newest first.
 
+- **2026-05-24, v4.6.24** — Added public `loginDirectory` path so newly approved trainers appear on the login screen in clean browsers; app now expects admins to maintain it alongside `users/`.
 - **2026-05-24, v4.6.20** — User confirmed v3 ruleset is published and API
   key is referrer-locked. Doc restructured into living-format. (Claude)
 - **2026-05-24, v4.6.18** — Documented `POKEAPI_PLACEHOLDER_FORM_IDS` skip
