@@ -728,8 +728,6 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
   .login-audit-actions .rpin{flex:1}
   .login-audit-row{grid-template-columns:1fr;gap:6px}
   .login-audit-row .rpin{width:100%}
-  .have-fit-row{margin:0 0 8px 0}
-
   /* MY LIST ROWS: restructure as 2-row stacked layout to prevent horizontal overflow */
   .myrow{display:grid;grid-template-columns:auto auto 1fr;grid-template-rows:auto auto;gap:6px 8px;padding:8px 10px;overflow:hidden;min-width:0;max-width:100%}
   .myrow .bulk-chk{grid-row:1/2;grid-column:1/2;align-self:center}
@@ -1012,11 +1010,6 @@ input.have-row-qty::-webkit-inner-spin-button,input.have-row-qty::-webkit-outer-
 .have-trainer-hdr{display:flex;align-items:center;gap:10px;margin-bottom:8px;cursor:pointer}
 .have-trainer-name{font-weight:600;font-size:14px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
 .have-trainer-count{font-size:11px;color:var(--muted)}
-.have-fit-row{display:flex;gap:5px;flex-wrap:wrap;margin:-2px 0 8px 42px}
-.have-fit-chip{display:inline-flex;align-items:center;gap:4px;border-radius:999px;border:1px solid var(--border2);background:var(--bg);padding:4px 8px;font-size:11px;font-weight:700;color:var(--muted)}
-.have-fit-chip.want{border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.10);color:#fbbf24}
-.have-fit-chip.give{border-color:rgba(16,185,129,.35);background:rgba(16,185,129,.10);color:#34d399}
-.have-fit-chip.mirror{border-color:rgba(96,165,250,.35);background:rgba(96,165,250,.10);color:#60a5fa}
 .have-trainer-body{display:none;padding-top:8px;border-top:1px solid var(--border);margin-top:6px}
 .have-trainer-card.expanded .have-trainer-body{display:block}
 .have-trainer-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px}
@@ -1358,6 +1351,18 @@ html[data-theme="light"] .have-mirror-badge,html[data-theme="light"] .have-mirro
 .diff-copy-chip:hover{transform:translateY(-1px);filter:brightness(1.08)}
 .diff-copy-chip:active{transform:scale(.98)}
 .diff-copy-chip.copied{background:var(--ok);color:#06140f;border-color:rgba(16,185,129,.55)}
+.diff-match-panel{padding:12px 18px;background:rgba(108,99,255,.055);border-bottom:1px solid var(--border);display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.diff-match-box{background:var(--bg);border:1px solid var(--border);border-radius:var(--r2);padding:9px;min-width:0}
+.diff-match-box.want{border-color:rgba(245,158,11,.28)}
+.diff-match-box.give{border-color:rgba(16,185,129,.28)}
+.diff-match-box.mirror{border-color:rgba(96,165,250,.28)}
+.diff-match-title{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:800;color:var(--text);margin-bottom:7px}
+.diff-match-count{margin-left:auto;color:var(--muted);font-family:var(--mono);font-size:10px}
+.diff-match-list{display:flex;gap:5px;flex-wrap:wrap;max-height:96px;overflow-y:auto}
+.diff-match-chip{display:inline-flex;align-items:center;gap:5px;max-width:100%;background:var(--card);border:1px solid var(--border2);border-radius:999px;padding:4px 7px;font-size:10px;color:var(--text);min-width:0}
+.diff-match-chip img{width:18px;height:18px;object-fit:contain;image-rendering:pixelated;flex-shrink:0}
+.diff-match-chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.diff-match-empty{font-size:11px;color:var(--muted);line-height:1.35}
 .diff-tip{padding:12px 14px;margin-bottom:12px;background:rgba(108,99,255,.1);border:1px solid rgba(108,99,255,.26);border-radius:var(--r2);font-size:12px;color:var(--text);line-height:1.45}
 .diff-tip strong{color:var(--ac2)}
 .diff-body{flex:1;overflow-y:auto;padding:14px 18px}
@@ -1389,6 +1394,7 @@ html[data-theme="light"] .have-mirror-badge,html[data-theme="light"] .have-mirro
 @media(max-width:600px){
   .diff-modal{max-height:100vh;height:100vh;border-radius:0}
   .diff-hdr{padding:12px 14px}
+  .diff-match-panel{grid-template-columns:1fr;padding:10px 12px;gap:7px}
   .diff-body{padding:10px 12px}
   .diff-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:5px}
 }
@@ -6825,6 +6831,45 @@ async function copyDiffSearch(section,btn){
   if(!str){toast('No Pokémon in that section');return;}
   await copyStr(str,btn);
 }
+function diffInventoryEntries(username){
+  return Object.entries(allData.have?.[username]||{}).map(([key,val])=>{
+    const info=haveEntryInfo(val);
+    if(info.qty<=0)return null;
+    const{name,gender}=splitHaveKey(key);
+    const e=_nameToSpriteEntry(name);
+    return{key,name,gender,qty:info.qty,mirrorOnly:info.mirrorOnly,dn:e.displayName||name,no:e.no};
+  }).filter(Boolean).sort((a,b)=>(parseInt(a.no)||9999)-(parseInt(b.no)||9999)||alphaCompare(a.dn,b.dn));
+}
+function computeTradeMatchSummary(them){
+  const mine=diffInventoryEntries(cur);
+  const theirs=diffInventoryEntries(them);
+  const theirByExact=new Map(theirs.map(it=>[joinHaveKey(it.name,it.gender),it]));
+  const theyHaveYouWant=theirs.filter(it=>entryWantedByCur(it.name));
+  const youHaveTheyWant=mine.filter(it=>entryWantedByOther(them,it.name));
+  const mirrors=mine
+    .filter(it=>theirByExact.has(joinHaveKey(it.name,it.gender)))
+    .map(it=>({...it,theirQty:theirByExact.get(joinHaveKey(it.name,it.gender)).qty,theirMirrorOnly:theirByExact.get(joinHaveKey(it.name,it.gender)).mirrorOnly}))
+    .sort((a,b)=>(b.mirrorOnly||b.theirMirrorOnly?1:0)-(a.mirrorOnly||a.theirMirrorOnly?1:0)||(parseInt(a.no)||9999)-(parseInt(b.no)||9999)||alphaCompare(a.dn,b.dn));
+  return{theyHaveYouWant,youHaveTheyWant,mirrors};
+}
+function renderTradeMatchSummary(them){
+  const m=computeTradeMatchSummary(them);
+  const chip=(it,extra='')=>{
+    const img=it.no?spriteImg(it.no,18,'',it.name,it.gender||'',it.dn):'';
+    const gender=it.gender?` ${it.gender==='f'?'♀':'♂'}`:'';
+    const qty=it.qty>1?` ×${it.qty}`:'';
+    return`<span class="diff-match-chip" title="${escAttr(it.dn+gender+qty+extra)}">${img}<span>${escHtml(it.dn)}${gender}${qty}</span></span>`;
+  };
+  const box=(cls,title,count,items,empty,extraFn)=>`<div class="diff-match-box ${cls}">
+    <div class="diff-match-title">${title}<span class="diff-match-count">${count}</span></div>
+    ${items.length?`<div class="diff-match-list">${items.slice(0,14).map(it=>chip(it,extraFn?extraFn(it):'')).join('')}${items.length>14?`<span class="diff-match-chip"><span>+${items.length-14} more</span></span>`:''}</div>`:`<div class="diff-match-empty">${empty}</div>`}
+  </div>`;
+  return`<div class="diff-match-panel" aria-label="Trade match summary">
+    ${box('want','⭐ They have what you want',m.theyHaveYouWant.length,m.theyHaveYouWant,`${escHtml(them)} has not posted inventory matching your wants yet.`)}
+    ${box('give','🤝 You have what they want',m.youHaveTheyWant.length,m.youHaveTheyWant,`Your inventory does not currently match ${escHtml(them)}'s wants.`)}
+    ${box('mirror','🪞 Possible mirrors',m.mirrors.length,m.mirrors,'No exact inventory overlap for mirrors yet.',it=>` · their qty ${it.theirQty||1}`)}
+  </div>`;
+}
 
 // ── SAFE-TO-TRANSFER SEARCH STRING (v4.6.14) ─────────────────
 // Generates a PoGo search string of every dex number that NONE of the
@@ -7078,6 +7123,7 @@ function renderDiffModal(){
         <button class="diff-summary-chip diff-copy-chip mine" type="button" onclick="copyDiffSearch('mine',this)" aria-label="Copy only mine search string" title="Copy only mine search string">⬅ ${diff.onlyMine.length} only mine</button>
         <button class="diff-summary-chip diff-copy-chip theirs" type="button" onclick="copyDiffSearch('theirs',this)" aria-label="Copy only theirs search string" title="Copy only theirs search string">${diff.onlyTheirs.length} only theirs ➡</button>
       </div>
+      ${renderTradeMatchSummary(them)}
       <div class="diff-body">
         ${!myCount&&theirCount?`<div class="diff-tip"><strong>Your ${LIST_LABELS[type].toLowerCase()} list is empty.</strong> Add a few entries in My List first, then come back here and the compare view becomes much more useful.</div>`:''}
         ${diff.both.length?`<div class="diff-section">
@@ -7519,12 +7565,13 @@ async function triggerInstall(){
 
 // ── WHAT'S NEW (#28) ─────────────────────────────────────────
 const WHATS_NEW=[
+  {version:'4.6.26',title:'🤝 Compare trade match summary',desc:'Compare view now has one consolidated panel for what they have that you want, what you have that they want, and possible mirrors.'},
   {version:'4.6.25',notify:false,title:'Small reliability cleanup',desc:'Mobile username suggestions are more reliable, Health Check is clearer, and string import copy now explains the dex-only format without ringing the update bell.'},
   {version:'4.6.18',title:'🚫 Untradeable Mythicals out of the trade list',desc:'Mythicals that can\'t actually be traded in PoGo no longer appear in the trade dropdown. Meltan / Melmetal / Gimmighoul still do.'},
   {version:'4.6.15',title:'🎯 Sprite rework — size & alignment',desc:'Inventory and Browse sprites now scale and center cleanly even for small-bodied species like Cleffa, Igglybuff, Mime Jr.'},
   {version:'4.6.14',title:'🗑️ "Safe-to-transfer" search string',desc:'Strings tab → generate a PoGo bag-search string for every species nobody on your chosen trade-partner list wants. Auto-filters favorites, shinies, hundos, shadows, and events.'},
   {version:'4.6.6',title:'↩️ Cancelling a trade restores both inventories',desc:'When you ✗ cancel a reserved trade, your Pokémon return immediately. The other trainer\'s side restores on their next sync.'},
-  {version:'4.6.4',title:'🎒 "Have" tab renamed → Inventory',desc:'Tab relabeled. Keyboard shortcut works as both `i` and `h`. Posting a public offer also no longer silently fails when the browser blocks the clipboard.'},
+  {version:'4.6.4',title:'🎒 Inventory tab rename',desc:'The old Have tab is now Inventory. Keyboard shortcut works as both `i` and `h`. Posting a public offer also no longer silently fails when the browser blocks the clipboard.'},
   {version:'4.6.3',title:'⚖️ Clearer priority mismatches in Compare mode',desc:'Badges now label whose H/M/L is whose ("You H · AC53 M"). Matching priorities show a ✓.'},
   {version:'4.6.0',title:'📱 Cross-device "What\'s New" sync',desc:'Read the changelog on desktop, your phone won\'t re-prompt.'},
   {version:'4.5.2',title:'📵 "Edits not syncing" banner',desc:'When your sign-in quietly expires, an amber banner explains and offers one-tap re-sign-in.'},
@@ -9769,36 +9816,6 @@ function entryWantedByOther(otherUser,name){
   }
   return null;
 }
-function currentInventoryNames(){
-  const out=new Set();
-  Object.entries(allData.have?.[cur]||{}).forEach(([key,val])=>{
-    if(haveEntryInfo(val).qty>0)out.add(splitHaveKey(key).name);
-  });
-  return out;
-}
-function tradeFitSummaryFor(otherUser,theirItems){
-  if(!cur||!otherUser||otherUser===cur)return{theyHaveIWant:0,iHaveTheyWant:0,mirrors:0};
-  const myHave=currentInventoryNames();
-  let theyHaveIWant=0,mirrors=0;
-  (theirItems||[]).forEach(it=>{
-    if(!it?.name)return;
-    if(entryWantedByCur(it.name))theyHaveIWant++;
-    if(it.mirrorOnly&&myHave.has(it.name))mirrors++;
-  });
-  let iHaveTheyWant=0;
-  myHave.forEach(name=>{
-    if(entryWantedByOther(otherUser,name))iHaveTheyWant++;
-  });
-  return{theyHaveIWant,iHaveTheyWant,mirrors};
-}
-function tradeFitSummaryHtml(fit){
-  if(!fit||(!fit.theyHaveIWant&&!fit.iHaveTheyWant&&!fit.mirrors))return'';
-  return`<div class="have-fit-row">
-    ${fit.theyHaveIWant?`<span class="have-fit-chip want">⭐ ${fit.theyHaveIWant} you want</span>`:''}
-    ${fit.iHaveTheyWant?`<span class="have-fit-chip give">🤝 ${fit.iHaveTheyWant} they want</span>`:''}
-    ${fit.mirrors?`<span class="have-fit-chip mirror">🪞 ${fit.mirrors} mirror${fit.mirrors===1?'':'s'}</span>`:''}
-  </div>`;
-}
 function renderHaveBrowse(){
   const q=String(document.getElementById('have-browse-q')?.value||'').toLowerCase();
   const el=document.getElementById('have-browse-out');if(!el)return;
@@ -9840,7 +9857,6 @@ function renderHaveBrowse(){
         const want=entryWantedByCur(n);
         return{key,name:n,gender,qty:info.qty,mirrorOnly:info.mirrorOnly,dontNeedBack:info.dontNeedBack,giveaway:info.giveaway,note:info.note,mode:info.mode,dn:e.displayName||n,no:e.no,match:want};
       }).filter(it=>it.qty>0);
-      const fit=tradeFitSummaryFor(u,rawItems);
       let items=rawItems.slice();
       if(haveMatchOnly)items=items.filter(it=>it.match);
       if(q){items=items.filter(it=>it.dn.toLowerCase().includes(q)||u.toLowerCase().includes(q));}
@@ -9853,7 +9869,6 @@ function renderHaveBrowse(){
           <div class="have-trainer-count">${items.length} item${items.length===1?'':'s'}${matchCount>0?` · <span style="color:var(--warn);font-weight:700">⭐ ${matchCount} match${matchCount===1?'':'es'}</span>`:''}</div>
           <span class="collapse-icon">▼</span>
         </div>
-        ${tradeFitSummaryHtml(fit)}
         <div class="have-trainer-body">
           <div class="have-trainer-grid">${items.map(it=>{
             const sk=it.key.replace(/'/g,"\\'").replace(/"/g,'&quot;');
