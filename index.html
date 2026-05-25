@@ -52,7 +52,9 @@ input,select,textarea{font-family:var(--font);outline:none}
 .sync-queue-dot{position:absolute;top:-2px;right:-2px;width:8px;height:8px;background:var(--warn);border-radius:50%;display:none;border:2px solid var(--bg)}
 .sync-queue-dot.show{display:block}
 .topbar-sync-wrap{position:relative;display:flex;align-items:center}
-.sync-row{cursor:pointer;padding:3px 6px;border-radius:6px;transition:background .15s}
+.sync-row{cursor:pointer;padding:3px 6px;border-radius:6px;transition:background .15s;border:1px solid transparent}
+.sync-row.localOnly,.sync-row.offline{border-color:rgba(251,146,60,.35);background:rgba(251,146,60,.08)}
+.sync-row.syncing{border-color:rgba(217,119,6,.25);background:rgba(217,119,6,.06)}
 .sync-row:hover{background:rgba(255,255,255,.05)}
 /* Sync recovery banner — appears under topbar when in local-only mode */
 .sync-banner{display:flex;align-items:center;gap:10px;background:rgba(251,146,60,.1);border:1px solid rgba(251,146,60,.4);border-radius:var(--r2);padding:10px 12px;margin:10px 14px;color:var(--text)}
@@ -736,6 +738,10 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
 .whats-new-title{font-weight:600;margin-bottom:2px}
 .whats-new-desc{color:var(--muted);font-size:12px;line-height:1.4}
 .whats-new-list{max-height:400px;overflow-y:auto;background:var(--bg);border:1px solid var(--border);border-radius:var(--r2);margin-top:8px}
+.acct-pill{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--border2);border-radius:999px;padding:2px 7px;font-size:10px;font-weight:700;color:var(--muted);white-space:nowrap}
+.acct-pill.ok{color:var(--ok);background:rgba(16,185,129,.1);border-color:rgba(16,185,129,.28)}
+.acct-pill.warn{color:var(--warn);background:rgba(245,158,11,.1);border-color:rgba(245,158,11,.28)}
+.acct-mini{font-size:10px;color:var(--muted);margin-top:4px;display:flex;flex-wrap:wrap;gap:4px}
 
 /* PROFILE CUSTOMIZATION (#8) */
 .profile-avatar-picker{display:flex;align-items:center;gap:10px;margin-bottom:14px}
@@ -3201,6 +3207,7 @@ function queueSync(path,data){
   syncQueue[path]={path,data,ts:Date.now()};
   saveSyncQueue();
   showSyncDot(true);
+  refreshSyncUi();
   if(firebaseAuthConfigured()&&auth&&!auth.currentUser)warnLocalOnlyMode();
   clearTimeout(syncFlushTimer);
   syncFlushTimer=setTimeout(flushSyncQueue,250);
@@ -3220,6 +3227,7 @@ async function flushSyncQueue(){
       await set(ref(db,path),item.data??null);
       if(syncQueue[path]?.ts===item.ts)delete syncQueue[path];
       saveSyncQueue();
+      refreshSyncUi();
     }catch(e){
       // Distinguish permanent rejection (rules said no — retrying won't help)
       // from transient failure (offline, network). Permanent rejections were
@@ -3229,6 +3237,7 @@ async function flushSyncQueue(){
       if(code.includes('PERMISSION_DENIED')||code.includes('INVALID_TOKEN')||code.includes('UNAUTH')){
         delete syncQueue[path];
         saveSyncQueue();
+        refreshSyncUi();
         permanentDrops++;
         console.warn(`flushSyncQueue: dropped ${path} (${code}). Server rejected it permanently; not retrying.`);
       }else{
@@ -3242,8 +3251,9 @@ async function flushSyncQueue(){
   }
   if(!Object.keys(syncQueue).length)showSyncDot(false);
   else syncFlushTimer=setTimeout(flushSyncQueue,5000);
+  refreshSyncUi();
 }
-function showSyncDot(show){document.getElementById('sqd')?.classList.toggle('show',show);}
+function showSyncDot(show){document.getElementById('sqd')?.classList.toggle('show',show);refreshSyncUi();}
 window.addEventListener('online',()=>{if(fbOn)flushSyncQueue();});
 let _authObserverBound=false;
 let _localOnlyWarned=false;
@@ -3549,6 +3559,55 @@ async function bindAuthUserNow(username,authUpdate){
   saveLocal(s);
   allData=normalizeData(s);
   return next;
+}
+async function repairMemberAccount(username,opts={}){
+  if(!allData.users?.[cur]?.isAdmin){toast('⚠️ Admin only');return null;}
+  const existing=allData.users?.[username]||{};
+  if(!existing.joined&&!allData.users?.[username])throw Object.assign(new Error('User record missing'),{code:'repair/missing-user'});
+  const resetPin=opts.pin||'';
+  let next={...existing};
+  let pinForCopy='';
+  if(resetPin){
+    if(!isSixDigitPin(resetPin))throw Object.assign(new Error('PIN must be exactly 6 digits'),{code:'repair/bad-pin'});
+    let nextVersion=authVersionForUser(existing)+1;
+    let authProvision=null;
+    for(let attempt=0;attempt<5;attempt++){
+      authProvision=await provisionFirebaseAuthForTrainer(username,resetPin,nextVersion);
+      if(authProvision?.uid)break;
+      nextVersion++;
+    }
+    if(!authProvision?.uid){
+      throw Object.assign(new Error('Could not create a fresh Firebase Auth login. Try Repair again, or delete old Auth rows for this username and retry.'),{code:'repair/auth-provision-failed'});
+    }
+    const pinHash=await hashPin(resetPin);
+    next=normalizedUserRecord(username,existing,{
+      pin:pinHash,pinHashed:true,authVersion:nextVersion,authEmail:authEmail(username,nextVersion),authUid:authProvision.uid,lastSeen:null
+    });
+    pinForCopy=resetPin;
+  }else{
+    next=normalizedUserRecord(username,existing);
+  }
+  const loginDir=normalizedLoginDirectoryRecord(username,next,{...(allData.loginDirectory?.[username]||{}),authReady:!!next.authUid,approvedAt:next.joined||Date.now()});
+  if(fbOn&&db){
+    const updates={};
+    updates[`users/${username}`]=next;
+    updates[`loginDirectory/${username}`]=loginDir;
+    if(next.authUid)updates[`authIndex/${next.authUid}`]={username,isAdmin:!!next.isAdmin,isOwner:!!next.isOwner,lastSeen:Date.now()};
+    await withTimeout(update(ref(db),updates),9000,'Repairing account timed out','db/repair-timeout');
+    const userSnap=await withTimeout(get(ref(db,`users/${username}`)),6000,'Verifying user repair timed out','db/verify-timeout');
+    const dirSnap=await withTimeout(get(ref(db,`loginDirectory/${username}`)),6000,'Verifying login directory repair timed out','db/verify-timeout');
+    if(!userSnap.exists()||!dirSnap.exists())throw Object.assign(new Error('Server did not confirm the repaired account. Sign out/back in as admin and retry.'),{code:'repair/not-confirmed'});
+    delete syncQueue[`users/${username}`];
+    delete syncQueue[`loginDirectory/${username}`];
+    if(next.authUid)delete syncQueue[`authIndex/${next.authUid}`];
+    if(!Object.keys(syncQueue).length)showSyncDot(false);
+  }
+  const s=getLocal();
+  s.users[username]=next;
+  s.loginDirectory[username]=loginDir;
+  if(next.authUid){s.authIndex=s.authIndex||{};s.authIndex[next.authUid]={username,isAdmin:!!next.isAdmin,isOwner:!!next.isOwner,lastSeen:Date.now()};}
+  saveLocal(s);allData=normalizeData(s);refreshAll();populateLoginUsers();
+  return{user:next,pin:pinForCopy};
 }
 async function createMemberNow(username,pin,isAdmin=false,reqId=''){
   const s=getLocal();
@@ -4672,6 +4731,12 @@ function acSearch(q){
         <span style="font-size:11px;color:var(--accent);font-weight:700">→</span>
       </div>`
     :'';
+  const shownBanner=acFiltered.length>1
+    ?`<div class="ac-family-banner" onmousedown="event.preventDefault();openAddShownResultsModal()" role="button" tabindex="0">
+        <span style="flex:1">⚡ Add all <strong>${acFiltered.length}</strong> shown results</span>
+        <span style="font-size:11px;color:var(--accent);font-weight:700">→</span>
+      </div>`
+    :'';
   const existingSection=existingMatches.length
     ?`<div class="ac-section-label">Already On Your List</div>${existingMatches.map(e=>`
       <div class="ac-item-muted">
@@ -4684,7 +4749,7 @@ function acSearch(q){
   if(!acFiltered.length&&!familyBanner&&!existingSection){
     dd.innerHTML=`<div class="ac-empty">No results</div>`;
   }else{
-    dd.innerHTML=familyBanner+acFiltered.map((e,i)=>`
+    dd.innerHTML=familyBanner+shownBanner+acFiltered.map((e,i)=>`
       <div class="ac-item" data-idx="${i}" onmousedown="acSelect(${i})">
         ${e.no||e.spriteUrl?spriteImg(e.no,28,'ac-item-sprite',e.name,'',e.dn,{urlOverride:e.spriteUrl}):''}
         ${e.no?`<span class="ac-item-no">#${e.no}</span>`:''}
@@ -6043,11 +6108,21 @@ function renderAdmin(){
     const wc=Object.keys(allData.wishlist?.[u]||{}).length;
     const lu=d.lastUpdated,ls=d.lastSeen||(d.authUid&&allData.authIndex?.[d.authUid]?.lastSeen);
     const luColor=freshnessColor(freshnessClass(lu));
+    const dir=allData.loginDirectory?.[u]||{};
+    const authOk=!!(d.authUid&&d.authEmail&&dir.authReady);
+    const authIssues=[
+      !d.authUid?'missing auth UID':'',
+      !d.authEmail?'missing email':'',
+      !dir.authReady?'directory not ready':''
+    ].filter(Boolean);
     const canPromote=iAmOwner&&u!==cur&&u!==OWNER;
     const isOwnerRow=u===OWNER||d.isOwner;
     const isAdmin=d.isAdmin&&!isOwnerRow;
     // Only owner can reset admin PINs (fix: admin reset restriction)
     const canReset=iAmOwner||(cur!==OWNER&&!isAdmin&&!isOwnerRow);
+    const repairTitle=canReset
+      ?`Repair login directory/auth metadata${authOk?'':' or reset first-time PIN'}`
+      :'Only owner can repair admin accounts';
     return`<tr>
       <td>
         <div style="display:flex;align-items:center;gap:7px">
@@ -6055,6 +6130,10 @@ function renderAdmin(){
           <div>
             <div style="font-weight:500">${u}</div>
             ${d.friendCode?`<div style="font-family:var(--mono);font-size:10px;color:var(--muted)">${d.friendCode}</div>`:''}
+            <div class="acct-mini">
+              <span class="acct-pill ${authOk?'ok':'warn'}">${authOk?'Login ready':'Needs repair'}</span>
+              ${authIssues.length?`<span>${escHtml(authIssues.join(' · '))}</span>`:''}
+            </div>
           </div>
         </div>
       </td>
@@ -6070,9 +6149,40 @@ function renderAdmin(){
       </td>
       <td>
         <button class="rpin" onclick="openReset('${u}')" ${canReset?'':' disabled title="Only owner can reset admin PINs"'}>Reset</button>
+        <button class="rpin" onclick="repairAccount('${u}')" ${canReset?'':'disabled'} title="${escAttr(repairTitle)}">Repair</button>
       </td>
     </tr>`;
   }).join('');
+}
+
+async function repairAccount(u){
+  if(!allData.users?.[cur]?.isAdmin){toast('⚠️ Admin only');return;}
+  const target=allData.users?.[u];
+  if(!target){toast('⚠️ User record missing');return;}
+  const iAmOwner=allData.users?.[cur]?.isOwner||cur===OWNER;
+  const targetIsOwner=u===OWNER||target.isOwner;
+  const targetIsAdmin=target.isAdmin&&!targetIsOwner;
+  if((targetIsOwner||targetIsAdmin)&&!iAmOwner){toast('⚠️ Only the owner can repair admin accounts');return;}
+  const needsPin=!target.authUid;
+  let pin='';
+  if(needsPin){
+    pin=prompt(`${u} is missing a Firebase Auth link.\n\nEnter a new 6-digit PIN to repair the account and give them a fresh login:`,generatedFirstTimePin())||'';
+    if(!pin)return;
+    pin=pin.trim();
+    if(!isSixDigitPin(pin)){toast('⚠️ PIN must be exactly 6 digits');return;}
+  }
+  try{
+    const result=await repairMemberAccount(u,{pin});
+    renderAdmin();renderPendingRequests();populateLoginUsers();
+    if(result?.pin){
+      await copyText(firstTimeLoginMessage(u,result.pin)).catch(()=>{});
+      toast(`✅ ${u} repaired. New login details copied.`,5000);
+    }else{
+      toast(`✅ ${u} login directory repaired`,3500);
+    }
+  }catch(e){
+    toast('⚠️ Account repair failed: '+(e.code||e.message||'permission denied'),6000);
+  }
 }
 
 function toggleAdmin(u,makeAdmin){
@@ -6295,19 +6405,40 @@ async function saveProfile(){
 
 // ── UI HELPERS ────────────────────────────────────────────────
 let _syncStatusCurrent='';
+function syncLabelForStatus(s){
+  const q=Object.keys(syncQueue||{}).length;
+  if(s==='online')return q?`Saving ${q}`:'Saved';
+  if(s==='syncing')return q?`Saving ${q}`:'Saving…';
+  if(s==='offline')return q?`Offline · ${q}`:'Offline';
+  if(s==='localOnly')return q?`Local · ${q}`:'Local only';
+  return'—';
+}
+function refreshSyncUi(){
+  const s=_syncStatusCurrent;
+  if(!s)return;
+  const pill=document.getElementById('sync-pill');
+  const lbl=document.getElementById('slbl');
+  if(pill){
+    pill.classList.remove('online','syncing','offline','localOnly');
+    pill.classList.add(s);
+  }
+  if(lbl)lbl.textContent=syncLabelForStatus(s);
+  const q=Object.keys(syncQueue||{}).length;
+  const qEl=document.getElementById('sync-banner-queue-count');if(qEl)qEl.textContent=q;
+}
 function setSyncStatus(s){
   const dot=document.getElementById('sdot');const lbl=document.getElementById('slbl');if(!dot)return;
   dot.className='sync-dot '+s;
-  lbl.textContent={online:'Live',syncing:'Syncing…',offline:'Offline','localOnly':'Local only'}[s]||'';
   const pill=document.getElementById('sync-pill');
   if(pill)pill.title={
-    online:'All edits are syncing to the community in real time.',
-    syncing:'Pushing your edits to the community now…',
+    online:'Saved — edits are live for the community.',
+    syncing:'Saving your edits to the community now…',
     offline:'No connection to Firebase right now. Edits are saved locally and will sync when you\'re back online.',
     localOnly:'Your Firebase Auth session expired. Edits save locally but won\'t reach the community until you sign back in. Click to recover.'
   }[s]||'';
   const prev=_syncStatusCurrent;
   _syncStatusCurrent=s;
+  refreshSyncUi();
   if(s==='localOnly')showSyncBanner();
   else hideSyncBanner();
   // Auto-confirmation toast when we recover FROM local-only / offline TO live
@@ -7019,6 +7150,76 @@ function confirmAddAllVariants(familyKey){
   writeList(myListType,cur,list);
   closeAddAllVariants();
   toast(`✅ Added ${added} ${VARIANT_FAMILIES[familyKey].label} variants at ${pri}`);
+}
+function currentAddFlags(){
+  return{
+    lucky:!!document.getElementById('add-pmon-lucky')?.checked,
+    shiny:!!document.getElementById('add-pmon-shiny')?.checked,
+    xxl:!!document.getElementById('add-pmon-xxl')?.checked,
+    xxs:!!document.getElementById('add-pmon-xxs')?.checked,
+    notes:(document.getElementById('add-pmon-notes')?.value||'').trim()
+  };
+}
+function openAddShownResultsModal(){
+  const existingList=allData[myListType]?.[cur]||{};
+  const shown=(acFiltered||[]).filter(v=>v?.name&&!existingList[v.name]);
+  if(!shown.length){toast('✓ All shown results are already on your list');return;}
+  const pri=document.getElementById('add-pmon-pri')?.value||'M';
+  const flags=currentAddFlags();
+  const flagText=[
+    flags.lucky?'⚡ Lucky':'',
+    flags.shiny?'✨ Shiny':'',
+    flags.xxl?'XXL':'',
+    flags.xxs?'XXS':'',
+    flags.notes?'notes':''
+  ].filter(Boolean).join(' · ');
+  const modalHtml=`<div class="ov open" id="addshown-modal" role="dialog" aria-modal="true">
+    <div class="modal" style="max-width:500px">
+      <h3>Add shown results</h3>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:14px">
+        ${shown.length} visible search results will be added to your <strong>${listLabel(myListType)}</strong> list.
+        ${flagText?`<br><span style="font-size:11px">Current flags: ${escHtml(flagText)}</span>`:''}
+      </p>
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--r2);padding:8px;max-height:220px;overflow-y:auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:5px;margin-bottom:14px">
+        ${shown.map(v=>`<span style="font-size:11px;background:var(--bg2);padding:5px 7px;border-radius:5px;border:1px solid var(--border);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${v.no?`#${v.no} `:''}${escHtml(v.dn||v.name)}</span>`).join('')}
+      </div>
+      <div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px">Add as priority:</div>
+      <div class="import-pri-row" id="addshown-pri-row">
+        <button class="import-pri-btn ${pri==='H'?'sel H':''}" data-pri="H" onclick="document.querySelectorAll('#addshown-pri-row .import-pri-btn').forEach(b=>b.classList.remove('sel','H','M','L'));this.classList.add('sel','H')">H – High</button>
+        <button class="import-pri-btn ${pri==='M'||!pri?'sel M':''}" data-pri="M" onclick="document.querySelectorAll('#addshown-pri-row .import-pri-btn').forEach(b=>b.classList.remove('sel','H','M','L'));this.classList.add('sel','M')">M – Medium</button>
+        <button class="import-pri-btn ${pri==='L'?'sel L':''}" data-pri="L" onclick="document.querySelectorAll('#addshown-pri-row .import-pri-btn').forEach(b=>b.classList.remove('sel','H','M','L'));this.classList.add('sel','L')">L – Low</button>
+      </div>
+      <div class="mact">
+        <button class="bghost" onclick="closeAddShownResults()">Cancel</button>
+        <button class="bpri" onclick="confirmAddShownResults()">Add ${shown.length}</button>
+      </div>
+    </div>
+  </div>`;
+  const wrap=document.createElement('div');wrap.innerHTML=modalHtml;
+  document.body.appendChild(wrap.firstElementChild);
+}
+function closeAddShownResults(){document.getElementById('addshown-modal')?.remove();}
+function confirmAddShownResults(){
+  const existingList=allData[myListType]?.[cur]||{};
+  const shown=(acFiltered||[]).filter(v=>v?.name&&!existingList[v.name]);
+  if(!shown.length){closeAddShownResults();toast('✓ Nothing new to add');return;}
+  const sel=document.querySelector('#addshown-pri-row .import-pri-btn.sel');
+  const pri=sel?.dataset.pri||document.getElementById('add-pmon-pri')?.value||'M';
+  const flags=currentAddFlags();
+  const list={...existingList};
+  let added=0;
+  shown.forEach(v=>{
+    if(list[v.name])return;
+    list[v.name]=priValue(pri,flags.notes,flags.lucky,flags.xxl,flags.xxs,flags.shiny);
+    added++;
+  });
+  writeList(myListType,cur,list);
+  closeAddShownResults();
+  document.getElementById('ac-dropdown')?.classList.remove('open');
+  document.getElementById('ac-input').value='';
+  document.getElementById('add-pmon-sel').value='';
+  renderMyList();
+  toast(`✅ Added ${added} shown results as ${priName(pri)}`);
 }
 
 // ── UPDATE CHECKER ───────────────────────────────────────────
@@ -10619,7 +10820,7 @@ Object.assign(window,{
   addEntry,setPri,setNotes,setLucky,setXxl,setXxs,removeEntry,doUndo,copyStr,
   exportMyListImage,
   dragStart,dragOver,dragDrop,dragEnd,
-  addUser,openReset,confirmReset,toggleAdmin,exportData,triggerRestore,restoreData,
+  addUser,openReset,confirmReset,repairAccount,toggleAdmin,exportData,triggerRestore,restoreData,
   saveProfile,openModal,closeModal,renderStrings,renderBrowse,setStrList,
   showRequestForm,hideRequestForm,submitRequest,approveRequest,copyApprovedLogin,denyRequest,
   acSearch,acSelect,acKeydown,formatFc,toggleStrUser,toggleComboStrings,renderMyList,
@@ -10636,6 +10837,7 @@ Object.assign(window,{
   openDiffModal,closeDiffModal,setDiffListType,copyDiffSearch,
   openSafeTransferModal,toggleSafeTransferTrainer,setAllSafeTransferTrainers,saveSafeTransferAsDefault,copySafeTransferString,toggleSafeTransferPrefilter,
   openAddAllVariantsModal,closeAddAllVariants,confirmAddAllVariants,
+  openAddShownResultsModal,closeAddShownResults,confirmAddShownResults,
   selectWallpaper,applyWallpaper,
   // Inventory / Have
   setHaveView,setHaveSubTab,toggleHaveMatchOnly,haveAcSearch,haveAcSelect,haveAcKeydown,
