@@ -7101,8 +7101,7 @@ async function triggerInstall(){
 
 // ── WHAT'S NEW (#28) ─────────────────────────────────────────
 const WHATS_NEW=[
-  {version:'4.6.25',title:'🩺 Cleaner login diagnostics',desc:'Health Check now tests the public login directory before sign-in, shows pending local edits, and mobile username suggestions no longer depend on browser autocomplete.'},
-  {version:'4.6.25',title:'📥 Safer string imports',desc:'Import text now matches the app’s dex-only string format. Regional & filters are treated as best-effort import hints, not recommended Pokémon GO search strings.'},
+  {version:'4.6.25',notify:false,title:'Small reliability cleanup',desc:'Mobile username suggestions are more reliable, Health Check is clearer, and string import copy now explains the dex-only format without ringing the update bell.'},
   {version:'4.6.18',title:'🚫 Untradeable Mythicals out of the trade list',desc:'Mythicals that can\'t actually be traded in PoGo no longer appear in the trade dropdown. Meltan / Melmetal / Gimmighoul still do.'},
   {version:'4.6.15',title:'🎯 Sprite rework — size & alignment',desc:'Inventory and Browse sprites now scale and center cleanly even for small-bodied species like Cleffa, Igglybuff, Mime Jr.'},
   {version:'4.6.14',title:'🗑️ "Safe-to-transfer" search string',desc:'Strings tab → generate a PoGo bag-search string for every species nobody on your chosen trade-partner list wants. Auto-filters favorites, shinies, hundos, shadows, and events.'},
@@ -7135,7 +7134,14 @@ const WHATS_NEW=[
   {version:'2.1',title:'Bulk operations',desc:'Toggle bulk edit to select multiple entries and apply priority, flags, or delete in one go.'},
   {version:'2.0',title:'Flags & filters',desc:'Independent ⚡ Lucky / XXL / XXS flags with their own search strings. Filter Browse by any combination.'}
 ];
-function whatsNewLatestVersion(){return WHATS_NEW[0]?.version||'1.0';}
+function whatsNewVisibleEntries(){
+  const isAdmin=!!(cur&&allData.users?.[cur]?.isAdmin);
+  return WHATS_NEW.filter(w=>!w.adminOnly||isAdmin);
+}
+function whatsNewNotifiableEntries(){
+  return whatsNewVisibleEntries().filter(w=>w.notify!==false);
+}
+function whatsNewLatestVersion(){return whatsNewNotifiableEntries()[0]?.version||whatsNewVisibleEntries()[0]?.version||'1.0';}
 // "Have I seen the latest changelog yet?" — used to live in localStorage, which
 // meant the bell badge re-fired on every device (mobile would show it again
 // even after you read it on desktop). Now we prefer the value stored on the
@@ -7171,7 +7177,7 @@ function checkWhatsNew(){
 function openWhatsNew(){
   const list=document.getElementById('whatsnew-list');
   if(list){
-    list.innerHTML=WHATS_NEW.map(w=>`<div class="whats-new-item">
+    list.innerHTML=whatsNewVisibleEntries().map(w=>`<div class="whats-new-item">
       <div class="whats-new-version">v${w.version}</div>
       <div class="whats-new-title">${w.title}</div>
       <div class="whats-new-desc">${w.desc}</div>
