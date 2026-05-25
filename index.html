@@ -1194,6 +1194,7 @@ html[data-theme="light"] .have-mirror-badge,html[data-theme="light"] .have-mirro
 .sched-trade-type-pill.special{background:rgba(245,158,11,.16);color:var(--warn);border:1px solid rgba(245,158,11,.32)}
 .sched-trade-type-pill.regular{background:rgba(108,99,255,.16);color:var(--ac2);border:1px solid rgba(108,99,255,.32)}
 .sched-trade-type-pill.remote{background:rgba(20,184,166,.16);color:#2dd4bf;border:1px solid rgba(20,184,166,.32)}
+.sched-trade-count-pill{display:inline-flex;align-items:center;gap:3px;margin-left:4px;font-size:9px;font-weight:800;padding:2px 6px;border-radius:8px;background:rgba(168,139,250,.12);border:1px solid rgba(168,139,250,.28);color:var(--ac2);vertical-align:middle}
 .sched-trade-pokemon{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
 .sched-trade-pkmn-chip{display:inline-flex;align-items:center;gap:3px;background:var(--card);padding:2px 6px;border-radius:4px;font-size:10px;border:1px solid var(--border)}
 .sched-trade-pkmn-chip img{width:16px;height:16px;object-fit:contain}
@@ -1226,6 +1227,11 @@ html[data-theme="light"] .have-mirror-badge,html[data-theme="light"] .have-mirro
 .sched-type-btn.selected.special{background:rgba(245,158,11,.16);color:var(--warn);border-color:var(--warn)}
 .sched-type-btn.selected.regular{background:rgba(108,99,255,.16);color:var(--ac2);border-color:var(--accent)}
 .sched-type-btn.selected.remote{background:rgba(20,184,166,.16);color:#2dd4bf;border-color:#2dd4bf}
+.sched-count-control{display:grid;grid-template-columns:42px 1fr 42px;gap:6px;align-items:stretch}
+.sched-count-btn{border:1px solid var(--border2);background:var(--bg);color:var(--text);border-radius:var(--r2);font-size:18px;font-weight:800;cursor:pointer}
+.sched-count-btn:hover{border-color:var(--accent);color:var(--ac2)}
+.sched-form-row input.sched-count-input{text-align:center;font-family:var(--mono);font-weight:800}
+.sched-field-help{font-size:11px;color:var(--muted);margin-top:5px;line-height:1.35}
 
 @media(max-width:600px){
   .sched-week-nav{gap:4px}
@@ -8721,6 +8727,12 @@ function tradesOnDate(isoD){
     .filter(([id,t])=>!t.participants||t.participants[cur]||t.organizer===cur)
     .map(([id,t])=>({id,...t}));
 }
+function scheduledTradeQuantity(t){
+  if((t?.type||'regular')!=='regular')return 1;
+  if(!t)return 1;
+  const n=parseInt(t?.regularCount,10);
+  return Number.isFinite(n)&&n>0?Math.min(100,n):1;
+}
 function tradeCountsForDay(isoD){
   const trades=tradesOnDate(isoD);
   let special=0,regular=0,remote=0,scheduled=0,completed=0;
@@ -8732,10 +8744,11 @@ function tradeCountsForDay(isoD){
   trades.forEach(t=>{
     const bucket=t.type==='special'?'special':t.type==='remote'?'remote':'regular';
     const status=t.status==='completed'?'completed':'scheduled';
-    if(bucket==='special')special++;
-    else if(bucket==='remote')remote++;
-    else regular++;
-    byStatus[bucket][status]++;
+    const qty=bucket==='regular'?scheduledTradeQuantity(t):1;
+    if(bucket==='special')special+=qty;
+    else if(bucket==='remote')remote+=qty;
+    else regular+=qty;
+    byStatus[bucket][status]+=qty;
     if(status==='completed')completed++;
     else scheduled++;
   });
@@ -8982,6 +8995,7 @@ function renderTradeCard(t){
   const time=t.time?`${t.time}`:'flexible';
   const typeClass=t.type||'regular';
   const typeLabel=t.type==='special'?'Special':t.type==='remote'?'Remote':'Regular';
+  const regularCount=typeClass==='regular'?scheduledTradeQuantity(t):1;
   const pokemonHtml=(t.pokemon||[]).length?`<div class="sched-trade-pokemon">${t.pokemon.slice(0,8).map(n=>{
     const e=_nameToSpriteEntry(n);
     const url=spriteUrl(e.no,e.name,'',e.displayName||e.name);
@@ -8991,7 +9005,7 @@ function renderTradeCard(t){
   const canEdit=t.organizer===cur;
   return`<div class="sched-trade-card ${isMine?'is-mine':''} ${completed?'completed':''} ${t.status==='cancelled'?'cancelled':''}">
     <div class="sched-trade-info">
-      <div class="sched-trade-when">${escHtml(time)} <span class="sched-trade-type-pill ${typeClass}">${typeLabel}</span></div>
+      <div class="sched-trade-when">${escHtml(time)} <span class="sched-trade-type-pill ${typeClass}">${typeLabel}</span>${regularCount>1?` <span class="sched-trade-count-pill" title="${regularCount} regular trades reserved">×${regularCount}</span>`:''}</div>
       <div class="sched-trade-with">
         with ${others.length?others.map(u=>escHtml(u)).join(', '):'<em>no one yet</em>'}
         ${t.organizer&&t.organizer!==cur?` · organized by ${escHtml(t.organizer)}`:''}
@@ -9065,6 +9079,7 @@ function openScheduleModal(dateIso,editTradeId=''){
   if(editTradeId&&!editTrade){toast('⚠️ Could not find that scheduled trade');renderSchedule();return;}
   const d=editTrade?.date||dateIso||schedSelectedDate||todayIso();
   const selectedType=editTrade?.type||'regular';
+  const regularCount=selectedType==='regular'?scheduledTradeQuantity(editTrade||{}):1;
   const selectedPartners=new Set(editTrade?Object.keys(editTrade.participants||{}).filter(u=>u!==cur):[]);
   const pokemonValue=(editTrade?.pokemon||[]).join(', ');
   const noteValue=editTrade?.note||'';
@@ -9097,6 +9112,15 @@ function openScheduleModal(dateIso,editTradeId=''){
         </div>
       </div>
       <input type="hidden" id="sched-type" value="${escAttr(selectedType)}">
+      <div class="sched-form-row" id="sched-regular-count-row" style="${selectedType==='regular'?'':'display:none'}">
+        <label>Number of regular trades</label>
+        <div class="sched-count-control">
+          <button type="button" class="sched-count-btn" onclick="adjustSchedRegularCount(-1)" aria-label="Decrease regular trade count">−</button>
+          <input type="number" class="sched-count-input" id="sched-regular-count" min="1" max="100" step="1" value="${regularCount}" inputmode="numeric">
+          <button type="button" class="sched-count-btn" onclick="adjustSchedRegularCount(1)" aria-label="Increase regular trade count">+</button>
+        </div>
+        <div class="sched-field-help">Reserve several regular swaps at once, e.g. 25 mirror trades. Special and remote trades still count as one scheduled trade.</div>
+      </div>
       <div class="sched-form-row">
         <label>Trade With</label>
         <div class="sched-trainer-picker" id="sched-trainer-picker">
@@ -9128,9 +9152,16 @@ function openScheduleModal(dateIso,editTradeId=''){
   document.body.appendChild(wrap.firstElementChild);
 }
 function closeScheduleModal(){document.getElementById('sched-modal')?.remove();}
+function adjustSchedRegularCount(delta){
+  const input=document.getElementById('sched-regular-count');if(!input)return;
+  const curN=parseInt(input.value,10)||1;
+  input.value=String(Math.max(1,Math.min(100,curN+delta)));
+}
 function selectSchedType(t){
   document.getElementById('sched-type').value=t;
   document.querySelectorAll('#sched-type-picker .sched-type-btn').forEach(b=>b.classList.toggle('selected',b.dataset.type===t));
+  const row=document.getElementById('sched-regular-count-row');
+  if(row)row.style.display=t==='regular'?'':'none';
 }
 async function submitScheduledTrade(){
   const editId=document.getElementById('sched-edit-id')?.value||'';
@@ -9139,11 +9170,18 @@ async function submitScheduledTrade(){
   const date=document.getElementById('sched-date')?.value;
   const time=document.getElementById('sched-time')?.value||'';
   const type=document.getElementById('sched-type')?.value||'regular';
+  const regularCount=Math.max(1,Math.min(100,parseInt(document.getElementById('sched-regular-count')?.value,10)||1));
   const partners=[...document.querySelectorAll('#sched-trainer-picker .sched-trainer-chip.selected')].map(c=>c.dataset.user);
   const pokemonRaw=document.getElementById('sched-pokemon')?.value||'';
   const note=document.getElementById('sched-note')?.value||'';
   if(!date){toast('⚠️ Pick a date');return;}
   if(!partners.length){toast('⚠️ Pick at least one trainer');return;}
+  if(type==='regular'){
+    const currentDayRegular=tradeCountsForDay(date).regular;
+    const existingRegular=existing&&existing.date===date&&(existing.type||'regular')==='regular'?scheduledTradeQuantity(existing):0;
+    const projected=currentDayRegular-existingRegular+regularCount;
+    if(projected>100){toast(`⚠️ That would reserve ${projected}/100 regular trades for ${date}. Lower the count first.`,6000);return;}
+  }
   const pokemon=pokemonRaw.split(',').map(s=>s.trim()).filter(Boolean);
   const id=editId||`${Date.now()}_${cur}_${Math.random().toString(36).slice(2,7)}`;
   const organizer=existing?.organizer||cur;
@@ -9152,6 +9190,7 @@ async function submitScheduledTrade(){
   const trade={
     ...(existing||{}),
     date,time,type,
+    regularCount:type==='regular'?regularCount:null,
     organizer,
     participants,
     pokemon,
@@ -11092,7 +11131,7 @@ Object.assign(window,{
   reloadForUpdate,checkForUpdate,
   // Schedule
   navigateSchedWeek,navigateSchedToday,selectSchedDay,openScheduleModal,closeScheduleModal,
-  selectSchedType,submitScheduledTrade,markTradeComplete,cancelScheduledTrade,setManualBonus,
+  selectSchedType,adjustSchedRegularCount,submitScheduledTrade,markTradeComplete,cancelScheduledTrade,setManualBonus,
   scheduleReservedTrade,markReservedTraded,cancelReservedTrade,
   // Shiny + tour + shortcuts
   setShiny,startTour,tourNext,tourPrev,skipTour,finishTour,
