@@ -2223,7 +2223,7 @@ if(!DB)throw new Error('Trade data failed to load');
 
 const PREFILTER="!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&";
 const OWNER="Doomsday126";
-const APP_VERSION="4.6.17";
+const APP_VERSION="4.6.18";
 const STALE_WARN=7,STALE_OLD=30;
 const SESSION_TTL=30*24*60*60*1000; // 30 days; refreshed on each activity so active users stay logged in
 const SPRITE_BASE="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/";
@@ -4038,8 +4038,8 @@ function showApp(){
     if(ud.avatarPokemon){
       const found=avatarEntryForName(ud.avatarPokemon);
       if(found?.no){
-        const url=spriteUrl(found.no,found.name);
-        if(url){el.innerHTML=`<img src="${url}" alt="" style="width:100%;height:100%;object-fit:contain;image-rendering:pixelated">`;el.style.overflow='hidden';return;}
+        const img=_avatarImgHtml(found.no,found.name);
+        if(img){el.innerHTML=img;el.style.overflow='hidden';return;}
       }
     }
     el.textContent=ini;el.style.overflow='';
@@ -4589,14 +4589,42 @@ function maxTradeEntries(type){
     return{...e,name,displayName:type==='gmax'?base:name,spriteName:e.name,maxType:type};
   });
 }
+// PoGo lets you trade Legendaries (special trades) but blocks the vast majority
+// of Mythicals — only Meltan / Melmetal / Gimmighoul are tradeable Mythicals.
+// Listing the others in the wishlist autocomplete is misleading: someone might
+// add "Mew" expecting a trade partner can fulfil it, when nobody can. We keep
+// them in LEGENDARY_AVATAR_ENTRIES (the source) so the avatar picker still
+// shows them — just filtered out from the trade dropdown specifically.
+const UNTRADEABLE_MYTHICAL_NAMES=new Set([
+  'Mew','Celebi','Jirachi',
+  'Deoxys (Normal)','Deoxys (Attack)','Deoxys (Defense)','Deoxys (Speed)',
+  'Victini',
+  'Phione','Manaphy','Darkrai',
+  'Shaymin (Land)','Shaymin (Sky)',
+  'Arceus',
+  'Keldeo (Ordinary)','Keldeo (Resolute)',
+  'Meloetta','Genesect',
+  'Diancie',
+  'Hoopa (Confined)','Hoopa (Unbound)',
+  'Volcanion',
+  'Magearna','Marshadow','Zeraora',
+  'Zarude','Pecharunt'
+]);
+function isTradeableForWishlist(entry){
+  return !UNTRADEABLE_MYTHICAL_NAMES.has(entry?.name);
+}
 function listSource(type){
   if(type==='costumes')return allCostumeEntries();
   if(type==='dynamax')return DB.dynamax;
   if(type==='gmax')return DB.gmax;
   // Wishlist autocomplete needs to surface every tradeable species — including
-  // legendaries, mythicals, Ultra Beasts and Paradoxes that the community list
-  // hasn't touched yet. uniqueEntries dedupes by name so existing rows win.
-  return uniqueEntries(DB.wishlist,maxTradeEntries('dynamax'),maxTradeEntries('gmax'),allCostumeEntries(),LEGENDARY_AVATAR_ENTRIES);
+  // legendaries, Ultra Beasts and Paradoxes that the community list hasn't
+  // touched yet. Mythicals (except Meltan/Melmetal/Gimmighoul) are filtered out
+  // since PoGo doesn't allow trading them. uniqueEntries dedupes by name so
+  // existing rows win.
+  const wishlistOnly=DB.wishlist.filter(isTradeableForWishlist);
+  const legendariesOnly=LEGENDARY_AVATAR_ENTRIES.filter(isTradeableForWishlist);
+  return uniqueEntries(wishlistOnly,maxTradeEntries('dynamax'),maxTradeEntries('gmax'),allCostumeEntries(),legendariesOnly);
 }
 function normalizeSpriteKey(s){
   return String(s||'').toLowerCase().replace(/[._-]+/g,' ').replace(/[^a-z0-9 ]/g,'').replace(/\s+/g,' ').trim();
@@ -5801,8 +5829,8 @@ async function saveProfile(){
   if(topAv&&avatarPokemon){
     const found=avatarEntryForName(avatarPokemon);
     if(found?.no){
-      const url=spriteUrl(found.no,found.name);
-      if(url){topAv.innerHTML=`<img src="${url}" alt="" style="width:100%;height:100%;object-fit:contain">`;topAv.style.overflow='hidden';}
+      const img=_avatarImgHtml(found.no,found.name);
+      if(img){topAv.innerHTML=img;topAv.style.overflow='hidden';}
     }
   }
   refreshAll();
@@ -6617,6 +6645,7 @@ async function triggerInstall(){
 
 // ── WHAT'S NEW (#28) ─────────────────────────────────────────
 const WHATS_NEW=[
+  {version:'4.6.18',title:'🖼️ Profile-avatar fallback + 🚫 mythicals out of the trade list',desc:'Two follow-ups: (1) profile avatars for species without a PokeMiners sprite (Wooloo and friends) were rendering broken — they now use the same fallback chain as inventory sprites so they always resolve. (2) Untradeable Mythicals (Mew, Celebi, Jirachi, Deoxys, Phione, Manaphy, Darkrai, Shaymin, Arceus, Keldeo, Meloetta, Genesect, Diancie, Hoopa, Volcanion, Magearna, Marshadow, Zeraora, Zarude, Victini, Pecharunt) no longer show up in the trade list dropdown — adding them was misleading since nobody can actually trade them. Meltan / Melmetal / Gimmighoul stay (PoGo does allow trading those). All are still available in the profile-avatar picker.'},
   {version:'4.6.17',title:'🧹 Sprite source cleanup — quieter console, correct regional forms',desc:'Audit of every sprite the app resolves turned up two issues: (1) PokeMiners art doesn\'t cover most gen 7+ Pokémon (Wooloo, Sprigatito, etc.), so every render was hitting a 404 and cascading to backup — now the app skips PokeMiners for those species up front, and (2) Alolan Diglett and Galarian Yamask were rendering as broken-image placeholders because the data source returns a generic 400-byte stub for those two forms. Both fixed; rendering is now both faster and correct for ~340 affected species.'},
   {version:'4.6.16',title:'🛡️ Safe-to-transfer string now guards your favorites by default',desc:'The new Safe-to-transfer string now prepends "never transfer this" filters — !favorite, !4*, !shiny, !shadow, !purified, !background, !traded, !legendary, !mythical, cp-2500 — so hundos, shinies, lucky candidates, and event Pokémon are filtered out before the species list ever applies. Toggle in the modal if you ever need the raw list.'},
   {version:'4.6.15',title:'🎯 Sprite alignment fix — characters no longer drift off-tile',desc:'After 4.6.13 made all sprites scale to a readable size, some Pokémon (Cleffa, Igglybuff, Mime Jr., Pidgey) were rendering off-center because the game art isn\'t centered the same way for every species. The app now learns each sprite\'s actual character position and scales around it, so characters stay pinned to their tile no matter how big they need to grow.'},
@@ -6753,10 +6782,23 @@ function updateAvatarPreview(name){
   // Look up Pokemon by name (case-insensitive)
   const found=avatarEntryForName(name);
   if(found?.no){
-    const url=spriteUrl(found.no,found.name);
-    if(url){prev.innerHTML=`<img src="${url}" alt="">`;return;}
+    const img=_avatarImgHtml(found.no,found.name);
+    if(img){prev.innerHTML=img;return;}
   }
   prev.innerHTML=(cur||'?').slice(0,2).toUpperCase();
+}
+// Build a <img> that uses the full sprite fallback chain — same cascade
+// logic spriteImg() uses, but with avatar styling (no transform-scale, just
+// object-fit:contain in a fixed box). Avatars previously hardcoded a single
+// URL with no onerror handler, so any 404 (e.g. Wooloo / Sprigatito before
+// v4.6.17 routed them to PokemonDB HOME) showed a broken-image icon.
+function _avatarImgHtml(no,name,extraStyle=''){
+  if(!no||!name)return'';
+  const urls=spriteFallbackChain(no,name,'',name).filter(Boolean);
+  if(!urls.length)return'';
+  const primary=urls[0];
+  const fallbacks=urls.slice(1).map(u=>u.replace(/"/g,'&quot;')).join('|');
+  return`<img src="${primary}" alt="" data-src-key="${escAttr(primary)}" data-fallbacks="${fallbacks}" onerror="trySpriteFallback(this)" style="width:100%;height:100%;object-fit:contain;image-rendering:pixelated;${extraStyle}">`;
 }
 function userAvatarHtml(username,size=28){
   const ud=allData.users?.[username]||{};
@@ -6764,8 +6806,8 @@ function userAvatarHtml(username,size=28){
   if(avPok){
     const found=avatarEntryForName(avPok);
     if(found?.no){
-      const url=spriteUrl(found.no,found.name);
-      if(url)return `<div class="av" style="width:${size}px;height:${size}px;overflow:hidden;font-size:0"><img src="${url}" alt="" style="width:100%;height:100%;object-fit:contain;image-rendering:pixelated"></div>`;
+      const img=_avatarImgHtml(found.no,found.name);
+      if(img)return `<div class="av" style="width:${size}px;height:${size}px;overflow:hidden;font-size:0">${img}</div>`;
     }
   }
   return `<div class="av" style="width:${size}px;height:${size}px;font-size:${Math.round(size*.35)}px">${username.slice(0,2).toUpperCase()}</div>`;
