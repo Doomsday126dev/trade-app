@@ -389,8 +389,14 @@ input,select,textarea{font-family:var(--font);outline:none}
 .health-sub{font-size:12px;color:var(--muted);line-height:1.45;margin:-4px 0 12px}
 .health-grid{display:flex;flex-direction:column;gap:8px}
 .health-row{background:var(--bg);border:1px solid var(--border);border-radius:var(--r2);padding:10px 11px;display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center}
+/* Long-status variant: when status text doesn't fit in the right-side pill
+   (perf rows with "avg 33ms · p95 35ms · max 35ms over last 3"), drop the
+   grid and stack label / status / detail vertically so nothing word-wraps
+   awkwardly in a narrow column. */
+.health-row.long-status{display:flex;flex-direction:column;align-items:stretch;gap:6px}
 .health-label{font-size:12px;color:var(--muted);font-weight:700}
 .health-status{font-size:12px;font-weight:800;border-radius:999px;padding:2px 8px;border:1px solid var(--border2);white-space:nowrap}
+.health-row.long-status .health-status{border-radius:var(--r2);font-family:var(--mono);font-size:11px;font-weight:700;padding:6px 10px;white-space:normal;word-break:break-word;text-align:left}
 .health-status.ok{color:var(--ok);background:rgba(16,185,129,.12);border-color:rgba(16,185,129,.32)}
 .health-status.warn{color:var(--warn);background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.32)}
 .health-status.bad{color:var(--danger);background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.32)}
@@ -2223,7 +2229,7 @@ if(!DB)throw new Error('Trade data failed to load');
 
 const PREFILTER="!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&";
 const OWNER="Doomsday126";
-const APP_VERSION="4.6.20";
+const APP_VERSION="4.6.22";
 const STALE_WARN=7,STALE_OLD=30;
 const SESSION_TTL=30*24*60*60*1000; // 30 days; refreshed on each activity so active users stay logged in
 const SPRITE_BASE="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/";
@@ -3877,12 +3883,28 @@ function _onSubSnapshot(path,snap){
   _firstSyncDone=true;
   // Record snapshot cost + payload size for the perf panel. Bucket by top-level
   // segment so e.g. 30 pendingDecrements/${cur} samples don't dilute the data.
+  // Skip the FIRST snapshot per path — initial full-tree delivery is always
+  // slower than steady-state per-change snapshots and would bias the average
+  // toward "scary" numbers that don't reflect ongoing cost. The first
+  // snapshot's payload size IS interesting though, so record it as a static
+  // lastSize without polluting the timing samples.
   try{
     const _dt=((typeof performance!=='undefined'&&performance.now)?performance.now():Date.now())-_t0;
     const _sz=val?JSON.stringify(val).length:0;
-    perfRecord(`snapshot:${seg}`,_dt,_sz);
+    const opKey=`snapshot:${seg}`;
+    if(_snapshotFirstSeen.has(seg)){
+      perfRecord(opKey,_dt,_sz);
+    }else{
+      _snapshotFirstSeen.add(seg);
+      // Record payload size only — keep timing samples empty until we have
+      // a steady-state measurement to show.
+      const buf=_perfBuf[opKey]||(_perfBuf[opKey]={samples:[]});
+      buf.lastSize=_sz;
+      buf.initialLoadMs=_dt; // available via perfStats if anyone wants it
+    }
   }catch{}
 }
+const _snapshotFirstSeen=new Set();
 let _activeShareView=null;
 function subscribePath(path){
   if(!db||_activeSubs[path])return;
@@ -3925,11 +3947,17 @@ function healthRow(label,status,detail='',kind='info'){
 function renderHealthRows(rows){
   const grid=document.getElementById('login-health-grid');
   if(!grid)return;
-  grid.innerHTML=rows.map(r=>`<div class="health-row">
-    <div class="health-label">${escHtml(r.label)}</div>
-    <div class="health-status ${escAttr(r.kind)}">${escHtml(r.status)}</div>
-    ${r.detail?`<div class="health-detail">${escHtml(r.detail)}</div>`:''}
-  </div>`).join('');
+  grid.innerHTML=rows.map(r=>{
+    // 22-char threshold balances readability of short pill labels
+    // ("Connected", "40 trainers", "89 KB") against the long perf-data
+    // strings that need to stack to a separate line. Picked empirically.
+    const longStatus=(r.status||'').length>22;
+    return`<div class="health-row${longStatus?' long-status':''}">
+      <div class="health-label">${escHtml(r.label)}</div>
+      <div class="health-status ${escAttr(r.kind)}">${escHtml(r.status)}</div>
+      ${r.detail?`<div class="health-detail">${escHtml(r.detail)}</div>`:''}
+    </div>`;
+  }).join('');
 }
 async function ensureFirebaseForHealth(){
   await loadFirebaseSdk();
@@ -4026,10 +4054,22 @@ async function runLoginHealthCheck(){
       ];
       opsToShow.forEach(([op,label])=>{
         const s=stats[op];
-        if(!s)return; // Only show ops we actually measured this session
-        const sz=s.lastSize?` · last payload ${Math.round(s.lastSize/1024)} KB`:'';
-        const kind=s.p95>500?'warn':s.p95>200?'info':'ok';
-        rows.push(healthRow(label,`avg ${s.avg.toFixed(0)}ms · p95 ${s.p95.toFixed(0)}ms · max ${s.max.toFixed(0)}ms over last ${s.n}${sz}`,'Action threshold: p95 >200ms or render >500ms means it\'s time to start scaling Phase 2 (per-user subscriptions). See SCALING-NOTES.md.',kind));
+        const buf=_perfBuf[op];
+        // For snapshot:* ops we record lastSize/initialLoadMs even before the
+        // first steady-state sample arrives, so a row can still be useful at
+        // n=0 by showing the initial-load info.
+        if(!s&&!buf?.lastSize)return;
+        const sz=buf?.lastSize?` · payload ${Math.round(buf.lastSize/1024)} KB`:'';
+        const initInfo=buf?.initialLoadMs?` · initial ${buf.initialLoadMs.toFixed(0)}ms`:'';
+        let statusText,kind;
+        if(s){
+          statusText=`avg ${s.avg.toFixed(0)}ms · p95 ${s.p95.toFixed(0)}ms · n=${s.n}${sz}`;
+          kind=s.p95>500?'warn':s.p95>200?'info':'ok';
+        }else{
+          statusText=`waiting for steady-state${initInfo}${sz}`;
+          kind='info';
+        }
+        rows.push(healthRow(label,statusText,'Steady-state cost (initial-load sample is excluded — that\'s always slower). Trigger to start Phase 2 per-user subscriptions: p95 >200ms here, OR a render row p95 >500ms. See SCALING-NOTES.md.',kind));
       });
     }
   }catch(e){
