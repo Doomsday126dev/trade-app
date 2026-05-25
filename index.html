@@ -3165,15 +3165,31 @@ async function flushSyncQueue(){
   }
   if(!fbOn||!db||!Object.keys(syncQueue).length)return;
   const entries=Object.entries(syncQueue);
+  let permanentDrops=0;
   for(const[path,item] of entries){
     try{
       await set(ref(db,path),item.data??null);
       if(syncQueue[path]?.ts===item.ts)delete syncQueue[path];
       saveSyncQueue();
-    }catch{
-      syncQueue[path]=item;
-      saveSyncQueue();
+    }catch(e){
+      // Distinguish permanent rejection (rules said no — retrying won't help)
+      // from transient failure (offline, network). Permanent rejections were
+      // previously kept in the queue forever and re-attempted every 5s,
+      // spamming the console and never succeeding. Drop them instead.
+      const code=String(e?.code||e?.message||'').toUpperCase();
+      if(code.includes('PERMISSION_DENIED')||code.includes('INVALID_TOKEN')||code.includes('UNAUTH')){
+        delete syncQueue[path];
+        saveSyncQueue();
+        permanentDrops++;
+        console.warn(`flushSyncQueue: dropped ${path} (${code}). Server rejected it permanently; not retrying.`);
+      }else{
+        syncQueue[path]=item;
+        saveSyncQueue();
+      }
     }
+  }
+  if(permanentDrops>0){
+    toast(`⚠️ ${permanentDrops} edit${permanentDrops===1?'':'s'} couldn't sync to the community (permission denied). Local copy preserved; check Health Check or sign back in.`,5000);
   }
   if(!Object.keys(syncQueue).length)showSyncDot(false);
   else syncFlushTimer=setTimeout(flushSyncQueue,5000);
@@ -3191,22 +3207,37 @@ function warnLocalOnlyMode(){
   toast('💾 Edit saved locally. You\'re in local-only mode — sign back in to push it to the community (banner at top has the button).',4500);
   showSyncBanner();
 }
+// Debounce the "auth dropped" branch so transient blips (token refresh,
+// brief reconnects, the few-hundred-ms gap between sign-in attempts) don't
+// flash the local-only banner. If auth recovers within the debounce window,
+// the show is cancelled silently. The "auth recovered" branch is NOT
+// debounced — recovery should be immediate.
+let _authDropTimer=null;
+const AUTH_DROP_DEBOUNCE_MS=2500;
 function bindAuthObserver(){
   if(_authObserverBound||!auth||typeof onAuthStateChanged!=='function')return;
   _authObserverBound=true;
   onAuthStateChanged(auth,user=>{
     currentAuthUid=user?.uid||'';
     if(user){
+      // Cancel any pending "auth dropped" notification — turned out to be transient.
+      if(_authDropTimer){clearTimeout(_authDropTimer);_authDropTimer=null;}
       _localOnlyWarned=false;
       // Auth recovered — setSyncStatus emits the "✅ Back online" toast if we were previously local-only/offline
       setSyncStatus(Object.keys(syncQueue).length?'syncing':'online');
       if(Object.keys(syncQueue).length)flushSyncQueue();
       return;
     }
-    if(cur){
+    if(!cur)return;
+    if(_authDropTimer)return; // already pending
+    _authDropTimer=setTimeout(()=>{
+      _authDropTimer=null;
+      // Re-check at fire time — auth might've recovered without the observer
+      // running again (shouldn't happen, but defensive).
+      if(auth?.currentUser)return;
       setSyncStatus('localOnly');
       if(Object.keys(syncQueue).length)warnLocalOnlyMode();
-    }
+    },AUTH_DROP_DEBOUNCE_MS);
   });
 }
 
@@ -9279,7 +9310,27 @@ async function _writePendingDecrement(bidder,payload){
     try{
       await set(ref(db,`pendingDecrements/${bidder}/${id}`),record);
     }catch(e){
-      // Permission denied or offline — fall back to queue so it retries
+      // Distinguish PERMANENT rejection (Firebase rules said no — retrying
+      // won't help) from TRANSIENT failure (offline, network blip — should
+      // queue for retry). The permanent case is dangerous: leaving the
+      // optimistic local record in place means _applyPendingDecrements will
+      // re-apply it on the next snapshot in this bucket, silently mutating
+      // inventory based on data the server never accepted. Roll it back.
+      const code=String(e?.code||e?.message||'').toUpperCase();
+      const permanent=code.includes('PERMISSION_DENIED')||code.includes('INVALID_TOKEN')||code.includes('UNAUTH');
+      if(permanent){
+        const s2=getLocal();
+        if(s2.pendingDecrements?.[bidder]?.[id]){
+          delete s2.pendingDecrements[bidder][id];
+          if(!Object.keys(s2.pendingDecrements[bidder]).length)delete s2.pendingDecrements[bidder];
+          saveLocal(s2);
+          syncFromLocal();
+        }
+        console.warn(`_writePendingDecrement: server rejected (${code}). Rolled back local optimistic record so it doesn't apply spuriously.`);
+        toast(`⚠️ Couldn't reach the community for that trade adjustment — try again, or sign back in if the issue persists.`,4000);
+        return null;
+      }
+      // Transient — keep local optimism, queue for retry when network returns.
       queueSync(`pendingDecrements/${bidder}/${id}`,record);
     }
   }
