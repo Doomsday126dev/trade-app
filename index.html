@@ -5589,8 +5589,17 @@ function downloadBlob(blob,filename){
   document.body.appendChild(a);a.click();document.body.removeChild(a);
   setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
+function shouldUseNativeImageShare(){
+  if(typeof navigator==='undefined'||typeof window==='undefined')return false;
+  const ua=navigator.userAgent||'';
+  const isiPadOS=navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1;
+  const mobileUA=/Android|iPhone|iPad|iPod/i.test(ua)||isiPadOS;
+  const coarsePointer=typeof matchMedia==='function'&&matchMedia('(pointer: coarse)').matches;
+  const narrowViewport=window.innerWidth<=900;
+  return mobileUA||(coarsePointer&&narrowViewport);
+}
 async function deliverImageBlob(blob,filename,title='PoGo Trades image'){
-  if(typeof navigator!=='undefined'&&navigator.canShare&&typeof File!=='undefined'){
+  if(shouldUseNativeImageShare()&&typeof navigator!=='undefined'&&navigator.canShare&&typeof File!=='undefined'){
     const file=new File([blob],filename,{type:blob.type||'image/png'});
     try{
       if(navigator.canShare({files:[file]})){
