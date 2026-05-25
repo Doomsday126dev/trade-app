@@ -7024,6 +7024,9 @@ function renderDiffModal(){
   const strongMatch=diff.both.filter(d=>d.mine.p===d.theirs.p&&d.mine.p).length;
   const totalBoth=diff.both.length;
   const themShort=String(them||'').slice(0,8);
+  const availableDiffTypes=['wishlist','dynamax','gmax','costumes'].filter(t=>
+    Object.keys(allData[t]?.[cur]||{}).length||Object.keys(allData[t]?.[them]||{}).length
+  );
   const renderCard=(e,otherP)=>{
     const yours=e.p||'';
     const theirs=otherP||'';
@@ -7062,14 +7065,14 @@ function renderDiffModal(){
         <div class="diff-hdr-title">⚖️ You ↔ <span style="color:var(--ac2)">${escHtml(them)}</span></div>
         <button class="diff-hdr-close" onclick="closeDiffModal()" aria-label="Close">×</button>
       </div>
-      <div class="diff-tabs">
-        ${['wishlist','dynamax','gmax','costumes'].map(t=>{
+      ${availableDiffTypes.length>1?`<div class="diff-tabs">
+        ${availableDiffTypes.map(t=>{
           const myCount=Object.keys(allData[t]?.[cur]||{}).length;
           const theirCount=Object.keys(allData[t]?.[them]||{}).length;
           if(!myCount&&!theirCount)return'';
           return`<button class="ltab ${t===type?'active':''}" onclick="setDiffListType('${t}')">${LIST_LABELS[t]}</button>`;
         }).join('')}
-      </div>
+      </div>`:''}
       <div class="diff-summary-row">
         <button class="diff-summary-chip diff-copy-chip both" type="button" onclick="copyDiffSearch('both',this)" aria-label="Copy both want search string" title="Copy both want search string">🤝 ${totalBoth} both want${strongMatch>0?` · ${strongMatch} priority match`:''}</button>
         <button class="diff-summary-chip diff-copy-chip mine" type="button" onclick="copyDiffSearch('mine',this)" aria-label="Copy only mine search string" title="Copy only mine search string">⬅ ${diff.onlyMine.length} only mine</button>
