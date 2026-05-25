@@ -1490,7 +1490,7 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
   <div class="lcard">
     <div class="llogo">🎮 <span>PoGo Trades</span></div>
     <div class="lsub">NYC Community Trade List</div>
-    <div class="field"><label>Username</label><select id="login-user"><option value="">Select username…</option></select></div>
+    <div class="field"><label>Username</label><input type="text" id="login-user" list="login-user-list" placeholder="Type or pick your username…" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false"><datalist id="login-user-list"></datalist></div>
     <div class="field">
       <label>PIN</label>
       <input type="password" id="login-pin" placeholder="6-digit PIN" maxlength="6" inputmode="numeric" autocomplete="current-password">
@@ -2229,7 +2229,7 @@ if(!DB)throw new Error('Trade data failed to load');
 
 const PREFILTER="!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&";
 const OWNER="Doomsday126";
-const APP_VERSION="4.6.23";
+const APP_VERSION="4.6.24";
 const STALE_WARN=7,STALE_OLD=30;
 const SESSION_TTL=30*24*60*60*1000; // 30 days; refreshed on each activity so active users stay logged in
 const SPRITE_BASE="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/";
@@ -4126,11 +4126,13 @@ async function clearLoginLocalCache(){
 
 // ── AUTH ──────────────────────────────────────────────────────
 async function doLogin(){
-  const u=document.getElementById('login-user').value;
+  // Trim free-text input — datalist value may carry trailing whitespace from
+  // mobile autocomplete suggestions, and we don't want "Doomsday126 " ≠ key.
+  const u=(document.getElementById('login-user').value||'').trim();
   const p=document.getElementById('login-pin').value;
   const err=document.getElementById('login-err');
   const btn=document.getElementById('login-btn');
-  if(!u){err.textContent='Select username';return;}
+  if(!u){err.textContent='Enter your username';return;}
   if(!p){err.textContent='Enter PIN';return;}
   if(!isSixDigitPin(p)){err.textContent='PIN must be exactly 6 digits';return;}
   err.textContent='';
@@ -4234,14 +4236,18 @@ function showLogin(){
   populateLoginUsers();
 }
 function populateLoginUsers(){
-  const sel=document.getElementById('login-user');
-  if(!sel)return;
-  const prev=sel.value;
-  sel.innerHTML='<option value="">Select username…</option>';
+  const input=document.getElementById('login-user');
+  const list=document.getElementById('login-user-list');
+  if(!input||!list)return;
+  // Populate the suggestion list with whatever users we know about locally
+  // (Firebase rules block anonymous /users reads, so this is what was cached
+  // from the last signed-in session). Users can ALSO type freely — covers
+  // brand-new community members whose name isn't in any local cache yet, and
+  // anyone whose cache is stale relative to recent admin additions.
+  list.innerHTML='';
   Object.keys(allData.users||{}).sort(alphaCompare).forEach(u=>{
-    const o=document.createElement('option');o.value=u;o.textContent=u;sel.appendChild(o);
+    const o=document.createElement('option');o.value=u;list.appendChild(o);
   });
-  if(prev&&allData.users?.[prev])sel.value=prev;
 }
 function showApp(){
   document.getElementById('login-pg').style.display='none';
@@ -10431,9 +10437,13 @@ document.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('login-pin').addEventListener('keydown',e=>{
     if(e.key==='Enter'){e.preventDefault();doLogin();}
   });
-  // Enter on username select = focus PIN
-  document.getElementById('login-user').addEventListener('change',()=>{
+  // Datalist pick or Enter on username field → focus PIN
+  const loginUserInput=document.getElementById('login-user');
+  loginUserInput?.addEventListener('change',()=>{
     setTimeout(()=>document.getElementById('login-pin').focus(),50);
+  });
+  loginUserInput?.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){e.preventDefault();document.getElementById('login-pin').focus();}
   });
   document.querySelectorAll('.ov').forEach(el=>el.addEventListener('click',e=>{
     if(e.target===el)closeModal(el.id);
