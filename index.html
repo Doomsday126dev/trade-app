@@ -3992,43 +3992,48 @@ async function runLoginHealthCheck(){
   }
   const sw=await serviceWorkerHealth();
   rows.push(healthRow('Service worker',sw.status,sw.detail,sw.kind));
-  // ── PERF / SCALE PANEL ──────────────────────────────────────
-  // Surface live-measured costs of the hot paths plus dataset sizes, so the
-  // owner can spot growth before it becomes user-visible. Thresholds chosen
-  // from SCALING-NOTES.md "trigger points to revisit this doc".
+  // ── COMMUNITY & PERF PANEL ──────────────────────────────────
+  // Community size row is fine for everyone (interesting context). The
+  // technical perf rows (storage, render p95, snapshot timing, action
+  // thresholds) are debugging info — only useful to owner/admins and
+  // confusing/cluttery for regular trainers. Gate them.
   try{
     const trainers=Object.keys(allData.users||{}).length;
     const wishlistTrainers=Object.keys(allData.wishlist||{}).length;
     const haveTrainers=Object.keys(allData.have||{}).length;
     const offerCount=Object.values(allData.offers||{}).reduce((n,bucket)=>n+Object.keys(bucket||{}).length,0);
     const tradeCount=Object.keys(allData.trades||{}).length;
-    const scaleSize=Object.keys(spriteScaleCache||{}).length;
-    let lsBytes=0;try{lsBytes=(localStorage.getItem('pogo3')||'').length;}catch{}
-    const lsKB=Math.round(lsBytes/1024);
     const trainerKind=trainers>=150?'warn':trainers>=100?'info':'ok';
-    rows.push(healthRow('Community size',`${trainers} trainer${trainers===1?'':'s'}`,`${wishlistTrainers} with wishlists · ${haveTrainers} with inventory · ${offerCount} open offers · ${tradeCount} trades. Scaling design (SCALING-NOTES.md) suggests acting on subscription narrowing past ~120 trainers.`,trainerKind));
-    const lsKind=lsKB>=3072?'warn':lsKB>=1024?'info':'ok';
-    rows.push(healthRow('Local storage (pogo3 blob)',`${lsKB} KB`,`Safari iOS quota is ~5 MB. At ~3 MB it\'s worth pruning archived offers/trades. Sprite-scale cache holds ${scaleSize} entries (max ${SPRITE_SCALE_CACHE_MAX} before LRU eviction).`,lsKind));
-    const stats=perfStats();
-    const fmt=op=>{const s=stats[op];if(!s)return'(no samples yet)';return `avg ${s.avg.toFixed(0)}ms · p95 ${s.p95.toFixed(0)}ms · max ${s.max.toFixed(0)}ms over last ${s.n}`;};
-    const opsToShow=[
-      ['snapshot:users','Snapshot · users'],
-      ['snapshot:wishlist','Snapshot · wishlist'],
-      ['snapshot:have','Snapshot · have'],
-      ['snapshot:offers','Snapshot · offers'],
-      ['snapshot:trades','Snapshot · trades'],
-      ['render:browse','Render · Browse tab'],
-      ['render:strings','Render · Strings tab']
-    ];
-    opsToShow.forEach(([op,label])=>{
-      const s=stats[op];
-      if(!s)return; // Only show ops we actually measured this session
-      const sz=s.lastSize?` · last payload ${Math.round(s.lastSize/1024)} KB`:'';
-      const kind=s.p95>500?'warn':s.p95>200?'info':'ok';
-      rows.push(healthRow(label,fmt(op)+sz,'Action threshold: if p95 trends >200ms or render >500ms, it\'s time to start scaling Phase 2 (per-user subscriptions).',kind));
-    });
+    rows.push(healthRow('Community size',`${trainers} trainer${trainers===1?'':'s'}`,`${wishlistTrainers} with wishlists · ${haveTrainers} with inventory · ${offerCount} open offers · ${tradeCount} trades.`,trainerKind));
+    const showAdminPanel=!!(cur&&allData.users?.[cur]?.isAdmin);
+    if(showAdminPanel){
+      const scaleSize=Object.keys(spriteScaleCache||{}).length;
+      let lsBytes=0;try{lsBytes=(localStorage.getItem('pogo3')||'').length;}catch{}
+      const lsKB=Math.round(lsBytes/1024);
+      const lsKind=lsKB>=3072?'warn':lsKB>=1024?'info':'ok';
+      rows.push(healthRow('Local storage size',`${lsKB} KB`,`Safari iOS quota is ~5 MB. At ~3 MB it\'s worth pruning archived offers/trades. Sprite-scale cache holds ${scaleSize} entries (max ${SPRITE_SCALE_CACHE_MAX} before LRU eviction).`,lsKind));
+      const stats=perfStats();
+      // Use short, single-word labels to avoid the awkward " · " line-break
+      // splitting that happens in narrow health-row columns.
+      const opsToShow=[
+        ['snapshot:users','Users sync'],
+        ['snapshot:wishlist','Wishlist sync'],
+        ['snapshot:have','Inventory sync'],
+        ['snapshot:offers','Offers sync'],
+        ['snapshot:trades','Trades sync'],
+        ['render:browse','Browse render'],
+        ['render:strings','Strings render']
+      ];
+      opsToShow.forEach(([op,label])=>{
+        const s=stats[op];
+        if(!s)return; // Only show ops we actually measured this session
+        const sz=s.lastSize?` · last payload ${Math.round(s.lastSize/1024)} KB`:'';
+        const kind=s.p95>500?'warn':s.p95>200?'info':'ok';
+        rows.push(healthRow(label,`avg ${s.avg.toFixed(0)}ms · p95 ${s.p95.toFixed(0)}ms · max ${s.max.toFixed(0)}ms over last ${s.n}${sz}`,'Action threshold: p95 >200ms or render >500ms means it\'s time to start scaling Phase 2 (per-user subscriptions). See SCALING-NOTES.md.',kind));
+      });
+    }
   }catch(e){
-    rows.push(healthRow('Perf panel','Error',String(e?.message||e),'warn'));
+    if(cur&&allData.users?.[cur]?.isAdmin)rows.push(healthRow('Admin panel','Error',String(e?.message||e),'warn'));
   }
   renderHealthRows(rows);
 }

@@ -1,29 +1,34 @@
 # Firebase Realtime Database — Security Rules
 
-## What changed
+> **Maintenance convention**: This doc is a living plan. Anyone who ships
+> rule-related work should update the relevant section before pushing.
+> Format mirrors `SCALING-NOTES.md`: status banner at top, an Update log at
+> the bottom, history-preserving so any future contributor (Claude / codex /
+> human) can reconstruct what changed when. The canonical ruleset to publish
+> lives in **§ Canonical ruleset** below — copy that block verbatim.
 
-The app now uses a **per-user pending-decrements queue** for trade-accept
-(Option C in the previous audit). When a recipient accepts an offer, their
-client:
+---
 
-1. Decrements their own `have/` entry (own path — owner-write rule passes).
-2. Writes a `pendingDecrements/{bidder}/{id}` record describing the qty
-   to subtract from the bidder's inventory.
-3. The bidder's client picks up that record on next subscription delivery
-   (real-time if both online, on next login otherwise), applies the
-   decrement to its own `have/`, and clears the record.
+## Current status (as of v4.6.20, 2026-05-24)
 
-This keeps the strict ownership lock on `have/` intact — no user can
-write directly to another user's inventory. Cross-user state changes
-flow through the queue, which has its own write-permission shape that
-prevents spoofing.
+| Item | Status |
+|---|---|
+| Canonical ruleset version | **v3** — requires `qty` in `[-999, 999]` (allows negative qty for trade-cancel restoration) |
+| Published in Firebase Console | ✅ **Confirmed published 2026-05-24** by user |
+| API key HTTP-referrer lock | ✅ Confirmed configured (Google Cloud Console → Credentials, restricted to `https://doomsday126dev.github.io/*`) |
+| Scheduled RTDB backups | ⏸️ Not yet enabled (low priority at 40 trainers) |
 
-## Final rules — paste this into Firebase Console → Realtime Database → Rules
+**No pending changes.** The canonical ruleset below matches what's
+currently live in Firebase. If you need to change the rules, edit this
+doc first (the canonical block + the changelog), then publish.
 
-Diff from your current rules:
-- `".read": true` → `".read": "auth != null"` (the critical leak fix)
-- New `pendingDecrements` block at the bottom
-- Everything else identical
+---
+
+## Canonical ruleset
+
+This is the **single source of truth** for what's in Firebase. Paste this
+block verbatim into Firebase Console → Realtime Database → **Rules** →
+Publish.
 
 ```json
 {
@@ -103,108 +108,143 @@ Diff from your current rules:
 }
 ```
 
-### What the new `pendingDecrements` rule says
+---
 
-**Read:** only the target user (the one whose inventory will be debited) or
-an admin can read their own bucket. Recipients posting decrements never
-need to read them.
+## What each path locks down
 
-**Write — create case** (`!data.exists()`):
-- Must be authenticated.
-- The new record's `from` field must match the writer's actual username
-  (no spoofing — you can't post a decrement *as someone else*).
-- `qty` must be a number in `[-999, 999]` and nonzero.
-  - Positive qty = "subtract this many from your inventory" (someone
-    accepted your offer — the standard decrement flow).
-  - Negative qty = "add this many back to your inventory" (the other side
-    cancelled a reserved trade — the restoration flow added in v4.6.10).
-- `key` must be a non-empty string (the inventory key to mutate).
+### Public-read, owner-write data (`users`, `wishlist`, `dynamax`, `gmax`, `costumes`, `have`)
+- **Read**: any authenticated user (community-visible by design)
+- **Write**: only the trainer themselves, or an admin (break-glass)
 
-> ⚠️  If you already published the previous ruleset (which required
-> `qty > 0`), trade-cancel restorations from one side will silently fail
-> on the other side until you republish this version. Republish in
-> Firebase Console → Realtime Database → Rules → Publish.
+### Cross-user data (`offers`, `trades`, `pendingDecrements`)
+These need more nuanced rules because multiple users legitimately touch the
+same record.
 
-**Write — modify/delete case** (`data.exists()`):
-- Only the target user (the one whose `pendingDecrements/{$username}` bucket
-  this is) can modify or delete their own queued records — used by the
-  reconciler to clear records after applying them.
+**Offers**: `from` user can create/modify their own. The `$recipient` user
+can modify too (to mark accepted/declined). Admins can do anything.
 
-**Admin override** for both, as a break-glass.
+**Trades**: organizer can create/modify. Any participant can modify
+(participants update meeting details, mark traded, cancel). Admins can do
+anything.
 
-This is the minimum permission shape that keeps trade-accept working while
-preventing:
-- Anyone from spoofing trade-decrements as another user (`from` field check).
-- Anyone from reading someone else's queue.
-- Oversized or malformed writes (qty/key validation).
+**pendingDecrements** (the cross-user inventory restoration queue):
+- **Read**: only the target user (whose inventory will be debited) or an admin
+- **Write — create**: writer's `from` field must match their actual username
+  (anti-spoofing); `qty` must be a nonzero number in `[-999, 999]`;
+  `key` must be non-empty string
+- **Write — modify/delete**: only the target user (the bucket owner) — used
+  by the reconciler to clear records after applying them
 
-## How to apply
+The qty range allows **positive** values for the standard decrement flow
+(someone accepted my offer → subtract N from my inventory) and **negative**
+values for the restoration flow (the other side cancelled → add N back to
+my inventory; added in app v4.6.10).
 
-1. Open Firebase Console → your project → Realtime Database → **Rules** tab.
-2. **Copy the existing rules** into a scratch text file as a backup.
-3. Paste the JSON above wholesale (it's a full ruleset, not a diff — replace
-   everything).
-4. Click **Publish**.
-5. Test (next section).
+### Admin-restricted (`requests`, `admins`)
+- **requests**: anyone can create a new join request (no auth needed —
+  prospective members can't log in yet). Only admins can modify/delete.
+- **admins**: only existing admins can modify the admin list. All
+  authenticated users can read the list (used to surface "this user is an
+  admin" UI).
 
-## How to verify
+---
 
-### Anonymous read is blocked
+## How to verify the published ruleset
+
+After publishing in Firebase Console, run these checks. Each one targets a
+specific protection.
+
+### 1. Anonymous read is blocked
 ```
 curl 'https://<your-project>.firebaseio.com/users.json'
 ```
 Should return `{"error": "Permission denied"}`. If it returns data, the
 ruleset didn't take.
 
-### Logged-in flows still work
-- Edit your wishlist → saves.
-- Post an offer → appears in the inbox of the recipient.
-- Open the recipient's account (separate browser or incognito) → accept
-  one of the offered items via the new green **Trade →** button → set qty
-  in the popup → confirm.
+### 2. Logged-in editing still works
+- Edit your wishlist → saves
+- Post an offer → appears in the recipient's inbox
 
-### Trade-accept end-to-end
-- After the recipient confirms, their inventory should decrement immediately.
+### 3. Trade-accept end-to-end (positive qty path)
+- Accept an offer from another trainer via the **Trade →** button
+- Confirm the qty in the popup
 - Inspect Firebase Console → `pendingDecrements/{bidder}/{some-id}` should
-  contain a record like:
-  ```json
-  { "from": "<recipient-name>", "key": "<bidder's offered item key>",
-    "qty": <N>, "t": <timestamp>, "inReturnFor": "..." }
-  ```
-- Reload the bidder's session (or wait if they're online). Their inventory
-  should decrement and the pending record should disappear.
-- A toast confirms on the bidder's side: *"✅ Synced 1 accepted trade
-  from <recipient> · N items removed from your inventory"*.
+  contain `{ "from": "<recipient>", "key": "...", "qty": <positive N>, ... }`
+- Reload the bidder's session → their inventory decrements and the pending
+  record disappears
+- Toast on bidder's side: *"✅ Synced 1 accepted trade…"*
 
-### Brief UI flicker — known and expected
+### 4. Trade-cancel restoration (negative qty path, the v4.6.10 flow)
+- Cancel an accepted trade via the ✗ button in the schedule
+- Inspect `pendingDecrements/{counterparty}/{some-id}` — should contain
+  `{ ..., "qty": <negative N>, ... }`
+- Sign in as the counterparty → toast: *"✅ Synced 1 cancellation…"* and
+  inventory restores
+- **If this fails**: the published ruleset is probably the old v2 (which
+  required `qty > 0`). Republish using the canonical block above.
+
+### 5. Brief UI flicker — known and expected
 Between the recipient hitting Confirm and the bidder's client applying the
 pending decrement, the bidder's inventory **on Firebase** still shows the
-old qty. If a third trainer is browsing the bidder's inventory in that
-window, they'll see the stale count until the bidder's client reconciles.
-This usually resolves in seconds to minutes. The trade itself is correct —
-the data is just lagging.
+old qty. A third trainer browsing the bidder's inventory in that window
+will see the stale count until the bidder's client reconciles. Usually
+resolves in seconds. The trade itself is correct — only the displayed
+value lags.
 
-## Two follow-ups worth doing afterward
+---
 
-- **Lock the Firebase Web API key by HTTP referrer** (Google Cloud Console
-  → APIs & Services → Credentials). Restrict to your production domain so
-  anyone scraping the key from `index.html` can't initialize a Firebase
-  app against your project from elsewhere.
-- **Enable scheduled backups** of the Realtime Database (Console → Database
-  → Backups). A single mistake at scale erases everything; backups are
-  cheap insurance.
+## Defense-in-depth (outside the rules themselves)
 
-## If you want the looser variant (Option A, NOT recommended)
+### ✅ HTTP-referrer lock on the Web API key
+Restricts the Firebase Web API key so it only works when requests come from
+your production domain. Anyone scraping the key from `index.html` can't
+initialize a Firebase app against your project from somewhere else.
 
-If you decide the pending-decrements path is too much architecture and
-just want trade-accept to work via direct cross-user writes, change the
-`have/$username/.write` line back to:
+- **Where**: Google Cloud Console → APIs & Services → Credentials → your
+  Firebase Web API key → Application restrictions → HTTP referrers
+- **Current allow-list**: `https://doomsday126dev.github.io/*`
+- **Note**: if you ever move to a custom domain, add it here too.
+
+### ⏸️ Scheduled backups (not yet enabled)
+A single mass-edit mistake (or a malicious admin) can erase a lot at once.
+RTDB has scheduled exports to Cloud Storage for cheap insurance.
+
+- **Where**: Firebase Console → Realtime Database → Backups
+- **Recommended**: daily exports, keep 7-day rolling window
+- **Cost**: ~$0.05/month for a 50MB database at this scale
+- **Priority**: low at 40 trainers, worth doing before 100+
+
+---
+
+## If you ever want the LOOSE variant (NOT recommended)
+
+If the per-user `pendingDecrements` queue ever becomes a maintenance
+burden, you can drop it and let any signed-in user write to anyone's
+`have/` directly:
 
 ```json
 "have": { "$username": { ".write": "auth != null" } }
 ```
 
-Then any signed-in user can write to anyone's `have/`. The app would still
-work (the code falls back to optimistic local updates either way), but
-you'd be relying on community trust rather than schema-level protection.
-At 50+ trainers, I'd keep the strict version.
+The app would still work (the code falls back to optimistic local updates
+either way), but you'd be relying on community trust rather than
+schema-level protection. At 50+ trainers I'd keep the strict version.
+
+---
+
+## Update log
+
+When you ship a rule change (or other related work), append a one-line
+entry here. Newest first.
+
+- **2026-05-24, v4.6.20** — User confirmed v3 ruleset is published and API
+  key is referrer-locked. Doc restructured into living-format. (Claude)
+- **2026-05-24, v4.6.18** — Documented `POKEAPI_PLACEHOLDER_FORM_IDS` skip
+  set (app-side only, not a rule change). (Claude)
+- **2026-05-24, v4.6.10** — Canonical ruleset bumped from v2 (`qty > 0`)
+  to v3 (`qty in [-999, 999], qty != 0`) to allow negative qty for the
+  trade-cancel restoration flow. Required republish in Firebase Console.
+  (Claude)
+- **2026-05-23** — Initial pendingDecrements rules drafted (v2 — `qty > 0`).
+  Replaced `.read: true` with `.read: auth != null` (closed the anonymous
+  read leak). (Claude)
