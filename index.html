@@ -379,6 +379,15 @@ input,select,textarea{font-family:var(--font);outline:none}
 .field input,.field select{width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--text);padding:10px 13px;border-radius:var(--r2);font-size:14px;transition:.2s}
 .field input:focus,.field select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(108,99,255,.15)}
 .field select option{background:var(--bg2)}
+.login-user-field{position:relative}
+.login-user-suggestions{position:absolute;left:0;right:0;top:calc(100% + 4px);display:none;max-height:min(280px,45vh);overflow-y:auto;background:var(--card);border:1px solid var(--border2);border-radius:var(--r2);box-shadow:0 12px 28px rgba(0,0,0,.45);z-index:320}
+.login-user-suggestions.open{display:block}
+.login-user-option{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;padding:9px 12px;background:transparent;border:0;border-bottom:1px solid rgba(255,255,255,.04);color:var(--text);font:inherit;font-size:13px;text-align:left;cursor:pointer}
+.login-user-option:last-child{border-bottom:0}
+.login-user-option:hover,.login-user-option.focused{background:var(--bg2)}
+.login-user-option-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:650}
+.login-user-option-status{font-size:10px;color:var(--muted);white-space:nowrap}
+.login-user-empty{padding:10px 12px;font-size:12px;color:var(--muted)}
 .lbtn{width:100%;background:linear-gradient(135deg,var(--accent),var(--ac2));color:#fff;padding:12px;border-radius:var(--r2);font-size:15px;font-weight:600;cursor:pointer;margin-top:6px;border:none;transition:.2s}
 .lbtn:hover{opacity:.9}
 .err{color:var(--danger);font-size:12px;text-align:center;margin-top:7px;min-height:18px}
@@ -433,9 +442,9 @@ input,select,textarea{font-family:var(--font);outline:none}
 .fc-hint{font-size:11px;color:var(--muted);margin-top:4px}
 
 /* TOASTS */
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--card);border:1px solid var(--border2);border-radius:var(--r2);padding:9px 18px;font-size:13px;font-weight:500;z-index:9999;transition:transform .3s;white-space:nowrap;pointer-events:none}
+.toast{position:fixed;bottom:calc(24px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(100px);background:var(--card);border:1px solid var(--border2);border-radius:var(--r2);padding:9px 18px;font-size:13px;font-weight:500;z-index:9999;transition:transform .3s;white-space:normal;max-width:min(520px,calc(100vw - 28px));overflow-wrap:anywhere;line-height:1.35;text-align:center;pointer-events:none}
 .toast.show{transform:translateX(-50%) translateY(0)}
-.undo-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--card);border:1px solid var(--border2);border-radius:var(--r2);padding:10px 16px;font-size:13px;font-weight:500;z-index:9998;transition:transform .3s;display:flex;align-items:center;gap:12px;white-space:nowrap}
+.undo-toast{position:fixed;bottom:calc(24px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(100px);background:var(--card);border:1px solid var(--border2);border-radius:var(--r2);padding:10px 16px;font-size:13px;font-weight:500;z-index:9998;transition:transform .3s;display:flex;align-items:center;justify-content:center;gap:12px;white-space:normal;flex-wrap:wrap;max-width:min(520px,calc(100vw - 28px));line-height:1.35;text-align:center}
 .undo-toast.show{transform:translateX(-50%) translateY(0)}
 .undo-btn{background:var(--accent);color:#fff;border:none;padding:4px 12px;border-radius:4px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font)}
 
@@ -1490,7 +1499,12 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
   <div class="lcard">
     <div class="llogo">🎮 <span>PoGo Trades</span></div>
     <div class="lsub">NYC Community Trade List</div>
-    <div class="field"><label>Username</label><input type="text" id="login-user" list="login-user-list" placeholder="Type or pick your username…" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false"><datalist id="login-user-list"></datalist></div>
+    <div class="field login-user-field">
+      <label>Username</label>
+      <input type="text" id="login-user" placeholder="Type or pick your username…" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" aria-autocomplete="list" aria-controls="login-user-suggestions">
+      <div class="login-user-suggestions" id="login-user-suggestions" role="listbox" aria-label="Username suggestions"></div>
+      <datalist id="login-user-list"></datalist>
+    </div>
     <div class="field">
       <label>PIN</label>
       <input type="password" id="login-pin" placeholder="6-digit PIN" maxlength="6" inputmode="numeric" autocomplete="current-password">
@@ -3224,7 +3238,7 @@ async function flushSyncQueue(){
     }
   }
   if(permanentDrops>0){
-    toast(`⚠️ ${permanentDrops} edit${permanentDrops===1?'':'s'} couldn't sync to the community (permission denied). Local copy preserved; check Health Check or sign back in.`,5000);
+    toast(`⚠️ ${permanentDrops} edit${permanentDrops===1?'':'s'} did not sync. Local copy saved; open Health Check or sign back in.`,5000);
   }
   if(!Object.keys(syncQueue).length)showSyncDot(false);
   else syncFlushTimer=setTimeout(flushSyncQueue,5000);
@@ -3476,8 +3490,15 @@ function saveLocal(s){
 
 async function writeUser(u,data){
   const s=getLocal();s.users[u]=normalizedUserRecord(u,s.users[u],data);s.loginDirectory[u]=normalizedLoginDirectoryRecord(u,s.users[u],s.loginDirectory[u]);saveLocal(s);
-  if(fbOn&&db){queueSync(`users/${u}`,s.users[u]);queueSync(`loginDirectory/${u}`,s.loginDirectory[u]);}
+  if(fbOn&&db){
+    queueSync(`users/${u}`,s.users[u]);
+    if(canWriteLoginDirectoryNow())queueSync(`loginDirectory/${u}`,s.loginDirectory[u]);
+  }
   syncFromLocal();
+}
+function canWriteLoginDirectoryNow(){
+  const localUser=allData.users?.[cur]||getLocal().users?.[cur];
+  return !!(auth?.currentUser&&cur&&localUser?.isAdmin);
 }
 async function writeUserNow(u,data){
   const s=getLocal();s.users[u]=normalizedUserRecord(u,s.users[u],data);
@@ -3490,13 +3511,13 @@ async function writeUserNow(u,data){
   if(fbOn&&db){
     try{
       await withTimeout(set(ref(db,`users/${u}`),s.users[u]),8000,'Saving login timed out','db/write-timeout');
-      await withTimeout(set(ref(db,`loginDirectory/${u}`),s.loginDirectory[u]),8000,'Saving login directory timed out','db/directory-timeout');
+      if(canWriteLoginDirectoryNow())await withTimeout(set(ref(db,`loginDirectory/${u}`),s.loginDirectory[u]),8000,'Saving login directory timed out','db/directory-timeout');
       delete syncQueue[`users/${u}`];
-      delete syncQueue[`loginDirectory/${u}`];
+      if(canWriteLoginDirectoryNow())delete syncQueue[`loginDirectory/${u}`];
       if(!Object.keys(syncQueue).length)showSyncDot(false);
     }catch{
       queueSync(`users/${u}`,s.users[u]);
-      queueSync(`loginDirectory/${u}`,s.loginDirectory[u]);
+      if(canWriteLoginDirectoryNow())queueSync(`loginDirectory/${u}`,s.loginDirectory[u]);
     }
   }
   syncFromLocal();
@@ -4284,7 +4305,7 @@ async function doLogin(){
     try{
       ident=ident||(auth?await ensureFirebaseIdentity(u,p,ud):null);
       cur=u;stampSession(u);
-      const loginUpdate={lastSeen:Date.now()};
+      const loginUpdate={...ud,lastSeen:Date.now()};
       if(ident){loginUpdate.authEmail=ident.email;loginUpdate.authUid=ident.uid;}
       // Upgrade plaintext PIN to hashed
       if(!ud.pinHashed){const h=await hashPin(p);loginUpdate.pin=h;loginUpdate.pinHashed=true;}
@@ -4363,16 +4384,92 @@ function showLogin(){
   btn.textContent='Sign in →';btn.disabled=false;
   populateLoginUsers();
 }
+let loginUserOptions=[],loginUserFiltered=[],loginUserFocusIdx=-1;
 function populateLoginUsers(){
   const input=document.getElementById('login-user');
   const list=document.getElementById('login-user-list');
-  if(!input||!list)return;
+  if(!input)return;
   // Prefer the public login directory so clean browsers and new members can
   // still discover approved usernames before signing in.
-  list.innerHTML='';
-  knownLoginUsernames().sort(alphaCompare).forEach(u=>{
-    const o=document.createElement('option');o.value=u;list.appendChild(o);
-  });
+  loginUserOptions=knownLoginUsernames().sort(alphaCompare);
+  if(list){
+    list.innerHTML='';
+    loginUserOptions.forEach(u=>{const o=document.createElement('option');o.value=u;list.appendChild(o);});
+  }
+  renderLoginUserSuggestions(false);
+}
+function renderLoginUserSuggestions(open=true){
+  const input=document.getElementById('login-user');
+  const box=document.getElementById('login-user-suggestions');
+  if(!input||!box)return;
+  const q=String(input.value||'').trim().toLowerCase();
+  const scored=loginUserOptions
+    .map(name=>{
+      const n=name.toLowerCase();
+      let score=-1;
+      if(!q)score=5;
+      else if(n===q)score=0;
+      else if(n.startsWith(q))score=1;
+      else if(n.includes(q))score=2;
+      return{name,score};
+    })
+    .filter(x=>x.score>=0)
+    .sort((a,b)=>a.score-b.score||alphaCompare(a.name,b.name))
+    .slice(0,12);
+  loginUserFiltered=scored.map(x=>x.name);
+  loginUserFocusIdx=Math.min(loginUserFocusIdx,loginUserFiltered.length-1);
+  if(!open){box.classList.remove('open');return;}
+  if(!loginUserFiltered.length){
+    box.innerHTML=q?`<div class="login-user-empty">No matching approved usernames. You can still type the exact name.</div>`:'';
+  }else{
+    box.innerHTML=loginUserFiltered.map((name,i)=>{
+      const dir=allData.loginDirectory?.[name]||{};
+      const status=dir.authReady?'ready':'setup pending';
+      return`<button type="button" class="login-user-option${i===loginUserFocusIdx?' focused':''}" role="option" aria-selected="${i===loginUserFocusIdx?'true':'false'}" onpointerdown="event.preventDefault();selectLoginUserByIndex(${i})">
+        <span class="login-user-option-name">${escHtml(name)}</span>
+        <span class="login-user-option-status">${escHtml(status)}</span>
+      </button>`;
+    }).join('');
+  }
+  box.classList.toggle('open',!!box.innerHTML);
+}
+function hideLoginUserSuggestions(){
+  document.getElementById('login-user-suggestions')?.classList.remove('open');
+}
+function selectLoginUser(name){
+  const input=document.getElementById('login-user');
+  if(input)input.value=name;
+  hideLoginUserSuggestions();
+  setTimeout(()=>document.getElementById('login-pin')?.focus(),50);
+}
+function selectLoginUserByIndex(i){
+  const name=loginUserFiltered[i];
+  if(name)selectLoginUser(name);
+}
+function loginUserKeydown(e){
+  const box=document.getElementById('login-user-suggestions');
+  const open=box?.classList.contains('open');
+  if(e.key==='ArrowDown'){
+    e.preventDefault();
+    if(!open)renderLoginUserSuggestions(true);
+    loginUserFocusIdx=Math.min(loginUserFocusIdx+1,loginUserFiltered.length-1);
+    renderLoginUserSuggestions(true);
+    return true;
+  }
+  if(e.key==='ArrowUp'){
+    e.preventDefault();
+    loginUserFocusIdx=Math.max(loginUserFocusIdx-1,0);
+    renderLoginUserSuggestions(true);
+    return true;
+  }
+  if(e.key==='Enter'){
+    e.preventDefault();
+    if(open&&loginUserFocusIdx>=0&&loginUserFiltered[loginUserFocusIdx])selectLoginUser(loginUserFiltered[loginUserFocusIdx]);
+    else document.getElementById('login-pin')?.focus();
+    return true;
+  }
+  if(e.key==='Escape'){hideLoginUserSuggestions();return true;}
+  return false;
 }
 function showApp(){
   document.getElementById('login-pg').style.display='none';
@@ -10496,7 +10593,7 @@ function maybeStartTour(){
 Object.assign(window,{
   openImport,setImportPri,parseImportString,toggleImportRow,toggleSelectAll,backToStep1,confirmImport,
   setFilter,setBrowseList,setMyList,setStaleFilter,switchTab,
-  doLogin,logout,connectFirebase,skipFirebase,openLoginHealthCheck,runLoginHealthCheck,clearLoginLocalCache,
+  doLogin,logout,connectFirebase,skipFirebase,openLoginHealthCheck,runLoginHealthCheck,clearLoginLocalCache,selectLoginUserByIndex,
   addEntry,setPri,setNotes,setLucky,setXxl,setXxs,removeEntry,doUndo,copyStr,
   exportMyListImage,
   dragStart,dragOver,dragDrop,dragEnd,
@@ -10570,8 +10667,12 @@ document.addEventListener('DOMContentLoaded',()=>{
   loginUserInput?.addEventListener('change',()=>{
     setTimeout(()=>document.getElementById('login-pin').focus(),50);
   });
-  loginUserInput?.addEventListener('keydown',e=>{
-    if(e.key==='Enter'){e.preventDefault();document.getElementById('login-pin').focus();}
+  loginUserInput?.addEventListener('input',()=>{loginUserFocusIdx=0;renderLoginUserSuggestions(true);});
+  loginUserInput?.addEventListener('focus',()=>{loginUserFocusIdx=0;renderLoginUserSuggestions(true);});
+  loginUserInput?.addEventListener('blur',()=>setTimeout(hideLoginUserSuggestions,120));
+  loginUserInput?.addEventListener('keydown',loginUserKeydown);
+  document.addEventListener('pointerdown',e=>{
+    if(!e.target.closest?.('.login-user-field'))hideLoginUserSuggestions();
   });
   document.querySelectorAll('.ov').forEach(el=>el.addEventListener('click',e=>{
     if(e.target===el)closeModal(el.id);
