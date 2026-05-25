@@ -214,3 +214,50 @@
 - Do not expose community UI to members or ordinary admins yet.
 - Do not make Browse/Strings/Inventory/Schedule community-scoped until `communities/nyc` exists on the server.
 - When starting Phase 2, treat missing `communityId` on old records as `nyc`.
+
+## 2026-05-25 - Codex - Multi-community Phase 1 foundation, pass 3
+
+### Summary
+- Added owner-only verification details to the NYC community foundation panel.
+- The panel now shows whether it is using the Firebase community record or local preview data.
+- Added dry-run scoping counts for Browse, Strings, Inventory browse, and Schedule picker.
+- Added server drift detection so the owner can see when local users are missing from `communities/nyc` and refresh the foundation write.
+- Kept `MULTI_COMMUNITY_ENABLED=false`; no production behavior changed for members or ordinary admins.
+- Marked the v5 Firebase rules as confirmed after the owner successfully created `communities/nyc`.
+
+### Files touched
+- `index.html`
+- `SECURITY-RULES.md`
+- `SCALING-NOTES.md`
+- `docs/MAINTENANCE-LOG.md`
+
+### Feature flags added/changed
+- `MULTI_COMMUNITY_ENABLED` remains `false`.
+- No public or admin-wide community UI was enabled.
+
+### Firebase paths added/changed
+- No new paths beyond the Phase 1 pass 2 foundation:
+  - `communities/nyc`
+  - `userCommunities/{uid}/nyc`
+- The owner-only Prepare/Refresh NYC action may update those same paths if local users drift from the server copy.
+
+### Security rules changes needed
+- No new rules beyond v5.
+- `SECURITY-RULES.md` now notes that v5 was confirmed by the owner on 2026-05-25.
+
+### Manual test checklist
+- Owner should see the maintenance panel in Admin.
+- Non-owner admins and members should not see the maintenance panel.
+- The panel should show "Server ready" after `communities/nyc/preparedAt` exists and member counts are current.
+- If new users are added later, the panel should show server drift and allow refreshing NYC.
+- Dry-run counts should not change Browse, Strings, Inventory, Schedule, login, or exports while `MULTI_COMMUNITY_ENABLED=false`.
+
+### Known risks / TODOs
+- Dry-run counts are trainer-level estimates; they do not yet prove every per-Pokemon filter path is scoped correctly.
+- Users without `authUid` can only be represented in `communities/nyc/memberUsernames` until their accounts are repaired/logged in.
+- Future Phase 2 still needs actual scoped rendering and then subscription reduction.
+
+### Instructions for the next contributor
+- Keep this panel owner-only until the community switcher/scoping UX is ready.
+- Use the dry-run counts to validate that all intended NYC members are present before enabling any scoping.
+- When implementing Phase 2, scope one surface at a time: Browse first, then Strings/Compare/Trade Match, then Inventory browse, then Schedule picker.

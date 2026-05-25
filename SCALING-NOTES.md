@@ -139,6 +139,9 @@ when any of these trigger:
 - Adds an owner-only Admin maintenance control to write the default NYC
   community foundation to Firebase after v5 rules are published. Successful
   runs mark `communities/nyc/preparedAt`.
+- Adds an owner-only dry-run verification panel showing whether Firebase's
+  `nyc` community record is current and how many trainers Browse, Strings,
+  Inventory browse, and Schedule would include after scoping is enabled.
 - Adds helper functions for future scoping without changing production UI:
   `getCurrentCommunityId()`, `getCommunityMemberUsernames()`,
   `filterUsersBySelectedCommunity()`, `isUserInCommunity()`,
@@ -153,6 +156,8 @@ when any of these trigger:
 - No public UI for admins or members.
 - No subscription reduction. This is a model/helper foundation, not a
   bandwidth win yet.
+- No actual scoping is applied from the dry-run counts while
+  `MULTI_COMMUNITY_ENABLED=false`.
 
 **Compatibility rule**: missing `communityId` on old requests, offers, or
 trades means `nyc`. Pokemon lists remain global per user for now.
@@ -299,6 +304,9 @@ on phones and slow networks first.
 
 When you ship scaling work, append a one-line entry here. Newest first.
 
+- **2026-05-25, v4.6.25** — Added owner-only community verification/dry-run
+  counts for Browse, Strings, Inventory browse, and Schedule, plus server drift
+  detection for `communities/nyc`; no public behavior change. (Codex)
 - **2026-05-25, v4.6.25** — Multi-community foundation started behind
   `MULTI_COMMUNITY_ENABLED=false`: normalized `communities`,
   `userCommunities`, and `communityRequests`; added default `nyc`

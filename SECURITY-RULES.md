@@ -14,13 +14,13 @@
 | Item | Status |
 |---|---|
 | Canonical ruleset version | **v5** — adds owner-only community foundation paths for the future NYC default community migration |
-| Published in Firebase Console | ⏸️ **Not yet confirmed** after v5 community-path additions |
+| Published in Firebase Console | ✅ Confirmed by owner on 2026-05-25; `communities/nyc` was created successfully |
 | API key HTTP-referrer lock | ✅ Confirmed configured (Google Cloud Console → Credentials, restricted to `https://doomsday126dev.github.io/*`) |
 | Scheduled RTDB backups | ⏸️ Not yet enabled (low priority at 40 trainers) |
 
-**Pending publish:** v5 adds `communities`, `userCommunities`, and
-`communityRequests`. Publish the canonical block below before running the
-owner-only NYC community preparation tool.
+**Current note:** v5 adds `communities`, `userCommunities`, and
+`communityRequests`. The owner confirmed this ruleset was published and used
+successfully for the owner-only NYC community preparation tool.
 
 ---
 

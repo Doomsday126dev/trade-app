@@ -6564,6 +6564,32 @@ function buildDefaultCommunityMigration(){
     missingAuth
   };
 }
+function communityPreviewStats(migration,existing={}){
+  const serverNames=new Set(Object.keys(existing.memberUsernames||{}));
+  const localNames=new Set(Object.keys(migration.community?.memberUsernames||{}));
+  const scopeNames=serverNames.size?serverNames:localNames;
+  const allUsers=Object.keys(allData.users||{});
+  const scopedUsers=allUsers.filter(u=>scopeNames.has(u));
+  const scopedSet=new Set(scopedUsers);
+  const missingOnServer=[...localNames].filter(u=>!serverNames.has(u)).sort(alphaCompare);
+  const extraOnServer=[...serverNames].filter(u=>!localNames.has(u)).sort(alphaCompare);
+  const stringUsers=scopedUsers.filter(u=>['wishlist','dynamax','gmax','costumes'].some(t=>Object.keys(allData[t]?.[u]||{}).length));
+  const inventoryUsers=scopedUsers.filter(u=>u!==cur&&Object.keys(allData.have?.[u]||{}).length);
+  const scheduleUsers=scopedUsers.filter(u=>u!==cur);
+  const browseUsers=scopedUsers.filter(u=>['wishlist','dynamax','gmax','costumes'].some(t=>Object.keys(allData[t]?.[u]||{}).length));
+  const hiddenUsers=allUsers.filter(u=>!scopedSet.has(u)).sort(alphaCompare);
+  return{
+    source:serverNames.size?'Firebase community record':'local preview only',
+    scopedUsers,
+    browseUsers,
+    stringUsers,
+    inventoryUsers,
+    scheduleUsers,
+    hiddenUsers,
+    missingOnServer,
+    extraOnServer
+  };
+}
 function renderCommunityMigrationPanel(){
   const el=document.getElementById('community-migration-panel');if(!el)return;
   if(!ownerCanUseCommunityTools()){el.style.display='none';el.innerHTML='';return;}
@@ -6572,6 +6598,14 @@ function renderCommunityMigrationPanel(){
   const serverMembers=Object.keys(existing.memberUsernames||{}).length;
   const serverUidMembers=Object.keys(existing.members||{}).length;
   const ready=!!existing.preparedAt&&serverMembers>=migration.memberCount&&serverUidMembers>=migration.uidMemberCount;
+  const preview=communityPreviewStats(migration,existing);
+  const serverDrift=preview.missingOnServer.length||preview.extraOnServer.length;
+  const canRefreshServer=!ready||preview.missingOnServer.length>0;
+  const driftHtml=serverDrift?`
+    <div style="font-size:11px;color:var(--muted);margin-top:6px">
+      Firebase drift: ${preview.missingOnServer.length?`${preview.missingOnServer.length} local username${preview.missingOnServer.length===1?'':'s'} not on server${preview.missingOnServer.length<=6?`: ${escHtml(preview.missingOnServer.join(', '))}`:''}`:''}
+      ${preview.extraOnServer.length?`${preview.extraOnServer.length} server-only username${preview.extraOnServer.length===1?'':'s'}${preview.extraOnServer.length<=6?`: ${escHtml(preview.extraOnServer.join(', '))}`:''}`:''}
+    </div>`:'';
   el.style.display='block';
   el.innerHTML=`
     <div class="login-audit-head">
@@ -6580,7 +6614,7 @@ function renderCommunityMigrationPanel(){
         <div class="login-audit-sub">Private prep for future multi-community support. This does not change Browse, Strings, Inventory, Schedule, or login behavior.</div>
       </div>
       <div class="login-audit-actions">
-        <button class="rpin" onclick="prepareDefaultCommunity()" ${ready?'disabled':''}>${ready?'NYC prepared':'Prepare NYC'}</button>
+        <button class="rpin" onclick="prepareDefaultCommunity()" ${canRefreshServer?'':'disabled'}>${ready?(preview.missingOnServer.length?'Refresh NYC':'NYC prepared'):'Prepare NYC'}</button>
       </div>
     </div>
     <div class="login-audit-list">
@@ -6592,8 +6626,23 @@ function renderCommunityMigrationPanel(){
             <span class="login-audit-chip">${migration.uidMemberCount} auth-linked members</span>
             <span class="login-audit-chip">${migration.adminCount} owner/admin UID${migration.adminCount===1?'':'s'}</span>
             ${ready?'<span class="acct-pill ok">Server ready</span>':'<span class="acct-pill warn">Not written to Firebase yet</span>'}
+            ${serverDrift?'<span class="acct-pill warn">Server needs refresh</span>':''}
           </div>
           ${migration.missingAuth.length?`<div style="font-size:11px;color:var(--muted);margin-top:6px">Missing Auth UID and indexed by username only for now: ${escHtml(migration.missingAuth.slice(0,8).join(', '))}${migration.missingAuth.length>8?'…':''}</div>`:''}
+          ${driftHtml}
+        </div>
+      </div>
+      <div class="login-audit-row">
+        <div>
+          <div class="login-audit-user">Dry-run scoping preview <span class="cb">${escHtml(preview.source)}</span></div>
+          <div class="login-audit-issues">
+            <span class="login-audit-chip">Browse: ${preview.browseUsers.length} trainers</span>
+            <span class="login-audit-chip">Strings: ${preview.stringUsers.length} trainers</span>
+            <span class="login-audit-chip">Inventory browse: ${preview.inventoryUsers.length} trainers</span>
+            <span class="login-audit-chip">Schedule picker: ${preview.scheduleUsers.length} trainers</span>
+            <span class="login-audit-chip">Hidden outside NYC: ${preview.hiddenUsers.length}</span>
+          </div>
+          <div style="font-size:11px;color:var(--muted);margin-top:6px">Preview only. Because <span class="cb">MULTI_COMMUNITY_ENABLED=false</span>, the app still uses the current global NYC behavior.</div>
         </div>
       </div>
     </div>`;
