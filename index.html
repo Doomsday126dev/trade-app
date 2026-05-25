@@ -2024,10 +2024,10 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
     <!-- STEP 1: Paste -->
     <div class="import-step active" id="import-step1">
       <div style="font-size:13px;color:var(--muted);margin-bottom:10px;line-height:1.5">
-        Paste a PoGo search string. Dex numbers and regional forms will be matched to Pokémon automatically.
+        Paste a Pokémon GO search string. Dex numbers will be matched automatically; generated app strings use dex numbers only because PoGO evaluates commas before & filters.
       </div>
       <textarea class="import-textarea" id="import-str-input"
-        placeholder="Paste your Pokémon GO search string here…&#10;&#10;e.g. 26,52,115,122,128  •  alola&26,galar&52  •  female&757  •  xs&19"></textarea>
+        placeholder="Paste your Pokémon GO search string here…&#10;&#10;e.g. 26,52,115,122,128&#10;or: !4*&!traded&!shiny&26,52,115,122,128"></textarea>
       <div class="err" id="import-err"></div>
       <div style="font-size:12px;font-weight:600;color:var(--muted);margin-top:12px;margin-bottom:4px">Add as priority:</div>
       <div class="import-pri-row">
@@ -2243,7 +2243,7 @@ if(!DB)throw new Error('Trade data failed to load');
 
 const PREFILTER="!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&";
 const OWNER="Doomsday126";
-const APP_VERSION="4.6.24";
+const APP_VERSION="4.6.25";
 const STALE_WARN=7,STALE_OLD=30;
 const SESSION_TTL=30*24*60*60*1000; // 30 days; refreshed on each activity so active users stay logged in
 const SPRITE_BASE="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/";
@@ -4120,13 +4120,14 @@ async function openLoginHealthCheck(){
   await runLoginHealthCheck();
 }
 async function runLoginHealthCheck(){
-  const selectedUser=cur||document.getElementById('login-user')?.value||'';
+  const typedUser=document.getElementById('login-user')?.value||'';
+  const selectedUser=cur||canonicalUsernameInput(typedUser);
   const sessionState=auth?.currentUser?'Signed in':'Not signed in';
   const rows=[
     healthRow('App version',APP_VERSION,`Page: ${location.href}`,'info'),
     healthRow(cur?'Current trainer':'Selected user',selectedUser||'None selected',selectedUser?`Live read check will test users/${selectedUser}.`:'Choose a username on the login screen if you want to test one specific account.','info')
   ];
-  renderHealthRows([...rows,healthRow('Firebase connected','Checking...','Loading Firebase SDK and database handle.','info'),healthRow('Firebase Auth session','Checking...',cur?'After sign-in, this should say Signed in. If it does not, edits may stay local to this device.':'On the login screen, Not signed in is normal before entering a PIN.','info'),healthRow('Live user read','Waiting...','This checks whether this browser can read the login user list.','info'),healthRow('Service worker','Checking...','Checking cached app shell status.','info')]);
+  renderHealthRows([...rows,healthRow('Firebase connected','Checking...','Loading Firebase SDK and database handle.','info'),healthRow('Firebase Auth session','Checking...',cur?'After sign-in, this should say Signed in. If it does not, edits may stay local to this device.':'On the login screen, Not signed in is normal before entering a PIN.','info'),healthRow('Login data read','Waiting...','Before login this checks the public username directory; after login it checks protected user data.','info'),healthRow('Service worker','Checking...','Checking cached app shell status.','info')]);
   let firebaseOk=false;
   try{
     firebaseOk=await withTimeout(ensureFirebaseForHealth(),8000,'Firebase setup timed out','firebase/health-timeout');
@@ -4135,24 +4136,29 @@ async function runLoginHealthCheck(){
     rows.push(healthRow('Firebase connected','Failed',e.code?`${e.code}: ${e.message}`:(e.message||String(e)),'bad'));
   }
   rows.push(healthRow('Firebase Auth session',sessionState,auth?.currentUser?`UID: ${auth.currentUser.uid}`:(cur?'This browser can show saved local app data, but live writes will not sync until the user signs in again.':'Normal before login.'),auth?.currentUser?'ok':(cur?'warn':'info')));
+  const queuedPaths=Object.keys(syncQueue||{});
+  rows.push(healthRow('Pending local edits',queuedPaths.length?`${queuedPaths.length} queued`:'None',queuedPaths.length?`Waiting to sync: ${queuedPaths.slice(0,4).join(', ')}${queuedPaths.length>4?'…':''}`:'No unsynced edits are waiting on this device.',queuedPaths.length?'warn':'ok'));
   if(firebaseOk&&db){
     try{
-      const path=selectedUser?`users/${selectedUser}`:'users';
+      const signedIn=!!auth?.currentUser;
+      const path=signedIn
+        ?(selectedUser?`users/${selectedUser}`:'users')
+        :(selectedUser?`loginDirectory/${selectedUser}`:'loginDirectory');
       const snap=await withTimeout(get(ref(db,path)),6000,'Live user read timed out','db/read-timeout');
       if(selectedUser){
-        rows.push(healthRow('Live user read',snap.exists()?'OK':'Missing user',snap.exists()?`Read users/${selectedUser} successfully.`:`Firebase responded, but ${selectedUser} is not under users/.`,snap.exists()?'ok':'warn'));
+        rows.push(healthRow('Login data read',snap.exists()?'OK':'Missing user',snap.exists()?`Read ${path} successfully.`:`Firebase responded, but ${selectedUser} is not under ${signedIn?'users':'loginDirectory'}/.`,snap.exists()?'ok':'warn'));
       }else{
         const count=snap.exists()?Object.keys(snap.val()||{}).length:0;
-        rows.push(healthRow('Live user read',snap.exists()?'OK':'No users found',`Read users/ successfully. ${count} trainer${count===1?'':'s'} visible to this browser.`,snap.exists()?'ok':'warn'));
+        rows.push(healthRow('Login data read',snap.exists()?'OK':'No users found',`Read ${path}/ successfully. ${count} trainer${count===1?'':'s'} visible to this browser.`,snap.exists()?'ok':'warn'));
       }
     }catch(e){
       const msg=e.code==='PERMISSION_DENIED'
-        ?'Firebase rules blocked this read. If this happens on the login screen, that device may only have stale cached user data.'
+        ?'Firebase rules blocked this read. Before login, loginDirectory should be readable; after login, users/ should be readable.'
         :e.message||String(e);
-      rows.push(healthRow('Live user read','Blocked',e.code?`${e.code}: ${msg}`:msg,'bad'));
+      rows.push(healthRow('Login data read','Blocked',e.code?`${e.code}: ${msg}`:msg,'bad'));
     }
   }else{
-    rows.push(healthRow('Live user read','Skipped','Firebase did not connect on this browser.','warn'));
+    rows.push(healthRow('Login data read','Skipped','Firebase did not connect on this browser.','warn'));
   }
   const sw=await serviceWorkerHealth();
   rows.push(healthRow('Service worker',sw.status,sw.detail,sw.kind));
@@ -7095,6 +7101,8 @@ async function triggerInstall(){
 
 // ── WHAT'S NEW (#28) ─────────────────────────────────────────
 const WHATS_NEW=[
+  {version:'4.6.25',title:'🩺 Cleaner login diagnostics',desc:'Health Check now tests the public login directory before sign-in, shows pending local edits, and mobile username suggestions no longer depend on browser autocomplete.'},
+  {version:'4.6.25',title:'📥 Safer string imports',desc:'Import text now matches the app’s dex-only string format. Regional & filters are treated as best-effort import hints, not recommended Pokémon GO search strings.'},
   {version:'4.6.18',title:'🚫 Untradeable Mythicals out of the trade list',desc:'Mythicals that can\'t actually be traded in PoGo no longer appear in the trade dropdown. Meltan / Melmetal / Gimmighoul still do.'},
   {version:'4.6.15',title:'🎯 Sprite rework — size & alignment',desc:'Inventory and Browse sprites now scale and center cleanly even for small-bodied species like Cleffa, Igglybuff, Mime Jr.'},
   {version:'4.6.14',title:'🗑️ "Safe-to-transfer" search string',desc:'Strings tab → generate a PoGo bag-search string for every species nobody on your chosen trade-partner list wants. Auto-filters favorites, shinies, hundos, shadows, and events.'},
@@ -10392,8 +10400,9 @@ function parseImportString(){
     const numStart=afterPre.search(/[0-9]/);
     if(numStart!==-1)working=afterPre.slice(numStart);
   }
-  const tokens=working.split(',').map(t=>t.trim()).filter(Boolean);
+  const tokens=working.split(/[,:;\n]+/).map(t=>t.trim()).filter(Boolean);
   const matched=[];const skipped=[];
+  const regionalTermsSeen=new Set(),filterTermsSeen=new Set();
   tokens.forEach(token=>{
     let mod='',numStr=token;
     let regionTerm='',castformType='',formVariant='',maxType='';
@@ -10403,6 +10412,8 @@ function parseImportString(){
       const filters=parts.slice(0,-1).map(p=>p.toLowerCase());
       mod=modFromSearchFilters(filters);
       regionTerm=filters.find(p=>REGION_SEARCH_TERMS.has(p))||'';
+      if(regionTerm)regionalTermsSeen.add(regionTerm);
+      filters.forEach(f=>{if(f&&!/^\d+$/.test(f)&&!f.startsWith('!'))filterTermsSeen.add(f);});
       maxType=filters.find(p=>p==='dynamax'||p==='gigantamax')||'';
       castformType=castformTypeFromSearchFilters(filters);
       formVariant=formVariantFromSearchFilters(filters);
@@ -10424,9 +10435,14 @@ function parseImportString(){
   if(!matched.length){err.textContent='No matching Pokemon found. Make sure the string contains dex numbers.';return;}
   importMatches=matched;
   const warnBox=document.getElementById('import-warn-box');
-  if(skipped.length)
-    warnBox.innerHTML='<div class="import-warn">Warning: '+skipped.length+' dex number(s) not in database: '+[...new Set(skipped)].join(', ')+'</div>';
-  else warnBox.innerHTML='';
+  const warnings=[];
+  if(regionalTermsSeen.size){
+    warnings.push('Regional filters like '+[...regionalTermsSeen].join(', ')+' are parsed here as a best-effort import aid, but the app exports dex-only strings because Pokémon GO applies comma/semicolon/colon before &.');
+  }else if(filterTermsSeen.size){
+    warnings.push('Extra & filters are parsed only for import. App-generated strings stay dex-only so they work when multiple Pokémon are combined.');
+  }
+  if(skipped.length)warnings.push(skipped.length+' dex number(s) not in database: '+[...new Set(skipped)].join(', '));
+  warnBox.innerHTML=warnings.map(w=>'<div class="import-warn">Warning: '+escHtml(w)+'</div>').join('');
   const existing=allData[myListType]?.[cur]||{};
   const rows=matched.map(function(e,i){
     const alreadyHas=!!existing[e.name];
