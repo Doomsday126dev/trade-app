@@ -2319,6 +2319,10 @@ if(!DB)throw new Error('Trade data failed to load');
 const PREFILTER="!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&";
 const OWNER="Doomsday126";
 const APP_VERSION="4.6.25";
+const MULTI_COMMUNITY_ENABLED=false;
+const DEFAULT_COMMUNITY_ID='nyc';
+const DEFAULT_COMMUNITY_NAME='NYC';
+const SELECTED_COMMUNITY_KEY='pogoSelectedCommunityId_v1';
 const STALE_WARN=7,STALE_OLD=30;
 const SESSION_TTL=30*24*60*60*1000; // 30 days; refreshed on each activity so active users stay logged in
 const SPRITE_BASE="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/";
@@ -3478,9 +3482,120 @@ function lsGet(k,d){try{return JSON.parse(localStorage.getItem(k)??'null')??d}ca
 function lsSet(k,v){localStorage.setItem(k,JSON.stringify(v))}
 syncQueue=lsGet(SYNC_QUEUE_KEY,{})||{};
 function saveSyncQueue(){lsSet(SYNC_QUEUE_KEY,syncQueue||{});}
+function communityRoleForUser(username,ud={}){
+  if(ud?.isOwner||username===OWNER)return'owner';
+  if(ud?.isAdmin)return'admin';
+  return'member';
+}
+function strongerCommunityRole(a,b){
+  const rank={member:0,admin:1,owner:2};
+  return(rank[a]??-1)>=(rank[b]??-1)?a:b;
+}
+function normalizeCommunityId(id){
+  const clean=String(id||'').trim().toLowerCase().replace(/[^a-z0-9_-]+/g,'-').replace(/^-+|-+$/g,'');
+  return clean||DEFAULT_COMMUNITY_ID;
+}
+function normalizeCommunityRecord(id,prev={},root={}){
+  const cid=normalizeCommunityId(id);
+  const users=root?.users||{};
+  const isDefault=cid===DEFAULT_COMMUNITY_ID;
+  const members={...(prev?.members||{})};
+  const memberUsernames={...(prev?.memberUsernames||{})};
+  const admins={...(prev?.admins||{})};
+  if(isDefault){
+    Object.entries(users).forEach(([u,ud])=>{
+      memberUsernames[u]=true;
+      if(ud?.authUid){
+        members[ud.authUid]=true;
+        if(communityRoleForUser(u,ud)!=='member')admins[ud.authUid]=true;
+      }
+    });
+  }
+  const owner=users[OWNER]||{};
+  const fallbackOwnerId=isDefault?(owner?.authUid||''):'';
+  const fallbackOwnerUsername=isDefault?OWNER:'';
+  return{
+    name:isDefault?DEFAULT_COMMUNITY_NAME:(prev?.name||cid),
+    slug:cid,
+    description:isDefault?'NYC Community Trade List':'',
+    visibility:isDefault?'private':'private',
+    ownerId:fallbackOwnerId,
+    ownerUsername:fallbackOwnerUsername,
+    createdAt:0,
+    updatedAt:0,
+    ...prev,
+    slug:prev?.slug||cid,
+    ownerId:prev?.ownerId||fallbackOwnerId,
+    ownerUsername:prev?.ownerUsername||fallbackOwnerUsername,
+    admins,
+    members,
+    memberUsernames
+  };
+}
+function ensureCommunityModel(s){
+  s.communities=s.communities||{};
+  s.userCommunities=s.userCommunities||{};
+  s.communityRequests=s.communityRequests||{};
+  s.communities[DEFAULT_COMMUNITY_ID]=normalizeCommunityRecord(DEFAULT_COMMUNITY_ID,s.communities[DEFAULT_COMMUNITY_ID],s);
+  Object.entries(s.users||{}).forEach(([u,ud])=>{
+    const uid=ud?.authUid;
+    if(!uid)return;
+    const role=communityRoleForUser(u,ud);
+    if(!s.userCommunities[uid])s.userCommunities[uid]={};
+    s.userCommunities[uid][DEFAULT_COMMUNITY_ID]={
+      role,
+      username:u,
+      joinedAt:ud?.joined||0,
+      ...(s.userCommunities[uid][DEFAULT_COMMUNITY_ID]||{}),
+      role:strongerCommunityRole(s.userCommunities[uid][DEFAULT_COMMUNITY_ID]?.role,role),
+      username:u
+    };
+  });
+  Object.keys(s.communities||{}).forEach(id=>{
+    s.communities[id]=normalizeCommunityRecord(id,s.communities[id],s);
+  });
+  return s;
+}
+function getCurrentCommunityId(){
+  if(!MULTI_COMMUNITY_ENABLED)return DEFAULT_COMMUNITY_ID;
+  const stored=normalizeCommunityId(lsGet(SELECTED_COMMUNITY_KEY,DEFAULT_COMMUNITY_ID));
+  return allData.communities?.[stored]?stored:DEFAULT_COMMUNITY_ID;
+}
+function setCurrentCommunityId(id){
+  const cid=normalizeCommunityId(id);
+  lsSet(SELECTED_COMMUNITY_KEY,cid);
+  return cid;
+}
+function getCommunityMemberUsernames(communityId=getCurrentCommunityId()){
+  if(!MULTI_COMMUNITY_ENABLED)return new Set(Object.keys(allData.users||{}));
+  const community=allData.communities?.[normalizeCommunityId(communityId)]||allData.communities?.[DEFAULT_COMMUNITY_ID]||{};
+  const names=Object.keys(community.memberUsernames||{});
+  return new Set(names.length?names:Object.keys(allData.users||{}));
+}
+function isUserInCommunity(username,communityId=getCurrentCommunityId()){
+  if(!MULTI_COMMUNITY_ENABLED)return true;
+  return getCommunityMemberUsernames(communityId).has(username);
+}
+function filterUsersBySelectedCommunity(usernames){
+  if(!MULTI_COMMUNITY_ENABLED)return usernames;
+  const members=getCommunityMemberUsernames();
+  return usernames.filter(u=>members.has(u));
+}
+function canManageCommunity(uid=currentAuthUid,communityId=getCurrentCommunityId()){
+  if(!MULTI_COMMUNITY_ENABLED)return !!(cur&&allData.users?.[cur]?.isAdmin);
+  const community=allData.communities?.[normalizeCommunityId(communityId)];
+  return !!(uid&&community&&(community.ownerId===uid||community.admins?.[uid]));
+}
+function recordCommunityId(record){
+  return normalizeCommunityId(record?.communityId||DEFAULT_COMMUNITY_ID);
+}
+function recordBelongsToSelectedCommunity(record){
+  if(!MULTI_COMMUNITY_ENABLED)return true;
+  return recordCommunityId(record)===getCurrentCommunityId();
+}
 function normalizeData(s){
   if(!s||typeof s!=='object')s={};
-  s.users=s.users||{};s.wishlist=s.wishlist||{};s.dynamax=s.dynamax||{};s.gmax=s.gmax||{};s.costumes=s.costumes||{};s.have=s.have||{};s.offers=s.offers||{};s.trades=s.trades||{};s.requests=s.requests||{};s.authIndex=s.authIndex||{};s.pendingDecrements=s.pendingDecrements||{};s.loginDirectory=s.loginDirectory||{};
+  s.users=s.users||{};s.wishlist=s.wishlist||{};s.dynamax=s.dynamax||{};s.gmax=s.gmax||{};s.costumes=s.costumes||{};s.have=s.have||{};s.offers=s.offers||{};s.trades=s.trades||{};s.requests=s.requests||{};s.authIndex=s.authIndex||{};s.pendingDecrements=s.pendingDecrements||{};s.loginDirectory=s.loginDirectory||{};s.communities=s.communities||{};s.userCommunities=s.userCommunities||{};s.communityRequests=s.communityRequests||{};
   Object.keys(s.users).forEach(u=>{
     s.users[u]=normalizedUserRecord(u,s.users[u]);
     s.loginDirectory[u]=normalizedLoginDirectoryRecord(u,s.users[u],s.loginDirectory[u]);
@@ -3490,13 +3605,13 @@ function normalizeData(s){
     if(!s.costumes[u])s.costumes[u]={};
     if(!s.have[u])s.have[u]={};
   });
-  return s;
+  return ensureCommunityModel(s);
 }
 
 function initLocal(){
   let s=lsGet('pogo3',null);
   if(!s){
-    s={users:{},wishlist:{},dynamax:{},gmax:{},costumes:{},have:{},offers:{},trades:{},requests:{},authIndex:{},loginDirectory:{}};
+    s={users:{},wishlist:{},dynamax:{},gmax:{},costumes:{},have:{},offers:{},trades:{},requests:{},authIndex:{},loginDirectory:{},communities:{},userCommunities:{},communityRequests:{}};
     DB.users.filter(u=>u&&u.trim()&&u.trim()!=='EVERYONE').map(u=>u.trim()).forEach(u=>{
       s.users[u]=normalizedUserRecord(u,{}, {pin:'123456',isAdmin:u===OWNER,isOwner:u===OWNER,authVersion:1,authEmail:authEmail(u,1)});
       s.loginDirectory[u]=normalizedLoginDirectoryRecord(u,s.users[u],s.loginDirectory[u]);
@@ -4065,7 +4180,10 @@ function mergeRemoteData(d){
     offers:d?.offers||{},
     trades:d?.trades||{},
     requests:d?.requests||{},
-    authIndex:d?.authIndex||{}
+    authIndex:d?.authIndex||{},
+    communities:d?.communities||{},
+    userCommunities:d?.userCommunities||{},
+    communityRequests:d?.communityRequests||{}
   });
   // Conflict detection (#13) — only flag when sync queue is EMPTY (no pending writes)
   // but local & remote differ. Pending writes during sync are not conflicts.
@@ -4115,6 +4233,9 @@ function _onSubSnapshot(path,snap){
   else if(seg==='have')s.have=val||{};
   else if(seg==='offers')s.offers=val||{};
   else if(seg==='trades')s.trades=val||{};
+  else if(seg==='communities')s.communities=val||{};
+  else if(seg==='userCommunities')s.userCommunities=val||{};
+  else if(seg==='communityRequests')s.communityRequests=val||{};
   else if(seg==='pendingDecrements'){
     // Path is "pendingDecrements/{username}" — store under that username
     if(!s.pendingDecrements)s.pendingDecrements={};
@@ -4183,6 +4304,11 @@ function ensureProtectedSubscriptions(){
   subscribePath('users');
   subscribePath('authIndex');
   subscribePath('requests');
+  if(MULTI_COMMUNITY_ENABLED){
+    subscribePath('communities');
+    subscribePath('userCommunities');
+    subscribePath('communityRequests');
+  }
   subscribePath('wishlist');
   subscribePath('have');
   subscribePath('offers');

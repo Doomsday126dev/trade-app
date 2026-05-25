@@ -10,6 +10,7 @@
 - ✅ **Phase 1 (visibility + defensive guards)**: shipped
 - ⏸️ **Phase 2 (per-user subscriptions)**: not started; not needed at current size
 - ⏸️ **Phase 3 (offers/trades pagination)**: not started; not needed at current size
+- 🧱 **Multi-community foundation**: started behind `MULTI_COMMUNITY_ENABLED=false`; current production behavior remains global/NYC-only
 - ✅ **Defensive: sprite cache LRU**: shipped (v4.6.20)
 - ✅ **Defensive: localStorage quota guard**: shipped (v4.6.20)
 
@@ -122,6 +123,39 @@ when any of these trigger:
 | Trainer count > 120 | Start prepping Phase 2 |
 | pogo3 blob > 3 MB | Start prepping Phase 3 |
 | User reports "first load takes >3s on phone" | Phase 2 is urgent |
+
+---
+
+## 🧱 Multi-community scaling foundation (STARTED, FLAG OFF)
+
+**Status**: First foundation pass added with `MULTI_COMMUNITY_ENABLED=false`.
+
+**What it does now**:
+- Normalizes future community paths into local/Firebase snapshots:
+  `communities`, `userCommunities`, and `communityRequests`.
+- Ensures a default `nyc` community exists in normalized local state.
+- Auto-indexes existing users into the default NYC community in local
+  normalized data.
+- Adds helper functions for future scoping without changing production UI:
+  `getCurrentCommunityId()`, `getCommunityMemberUsernames()`,
+  `filterUsersBySelectedCommunity()`, `isUserInCommunity()`,
+  `canManageCommunity()`, `recordCommunityId()`, and
+  `recordBelongsToSelectedCommunity()`.
+
+**What it deliberately does not do yet**:
+- No community switcher.
+- No community-scoped Browse/Strings/Inventory/Schedule filtering.
+- No Firebase writes to create community records for existing production data.
+- No security-rule changes.
+- No subscription reduction. This is a model/helper foundation, not a
+  bandwidth win yet.
+
+**Compatibility rule**: missing `communityId` on old requests, offers, or
+trades means `nyc`. Pokemon lists remain global per user for now.
+
+**Next step**: write the default `nyc` community to Firebase only after the
+rules and admin migration flow are ready, then enable selected screens one at
+a time behind the feature flag.
 
 ---
 
@@ -261,6 +295,10 @@ on phones and slow networks first.
 
 When you ship scaling work, append a one-line entry here. Newest first.
 
+- **2026-05-25, v4.6.25** — Multi-community foundation started behind
+  `MULTI_COMMUNITY_ENABLED=false`: normalized `communities`,
+  `userCommunities`, and `communityRequests`; added default `nyc`
+  community helpers without changing production behavior. (Codex)
 - **2026-05-24, v4.6.22** — Perf panel layout fix (long-status rows stack
   cleanly instead of wrapping) + snapshot:* timings now skip the first
   per-path sample so displayed p95 reflects steady-state edit cost, not
