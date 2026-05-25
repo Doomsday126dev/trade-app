@@ -197,11 +197,24 @@ input,select,textarea{font-family:var(--font);outline:none}
 .ac-item-sprite{width:28px;height:28px;object-fit:contain;flex-shrink:0;image-rendering:pixelated}
 .ac-item-no{font-family:var(--mono);font-size:10px;color:var(--muted);min-width:30px}
 .ac-item-name{flex:1}
+.ac-tray-btn{width:26px;height:26px;border-radius:7px;border:1px solid var(--border2);background:var(--bg);color:var(--ac2);font-size:14px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+.ac-tray-btn:hover,.ac-tray-btn.on{background:rgba(168,139,250,.16);border-color:var(--accent);color:var(--text)}
 .ac-empty{padding:10px 12px;font-size:13px;color:var(--muted)}
 .ac-section-label{padding:7px 12px 5px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .ac-item-muted{padding:7px 11px;font-size:13px;display:flex;align-items:center;gap:8px;opacity:.72;border-top:1px solid rgba(255,255,255,.04)}
 .ac-item-muted .ac-item-name{flex:1}
 .ac-item-note{font-size:11px;color:var(--muted);font-weight:600;white-space:nowrap}
+.add-tray{margin-top:10px;background:rgba(108,99,255,.07);border:1px solid rgba(168,139,250,.25);border-radius:var(--r2);padding:9px}
+.add-tray[hidden]{display:none!important}
+.add-tray-head{display:flex;align-items:center;gap:8px;margin-bottom:7px;font-size:12px;color:var(--muted)}
+.add-tray-title{font-weight:700;color:var(--ac2);flex:1}
+.add-tray-chips{display:flex;gap:5px;flex-wrap:wrap;max-height:92px;overflow-y:auto;padding-right:2px}
+.add-tray-chip{display:inline-flex;align-items:center;gap:5px;max-width:220px;background:var(--bg);border:1px solid var(--border2);border-radius:999px;padding:4px 7px;font-size:11px;color:var(--text)}
+.add-tray-chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.add-tray-remove{border:0;background:transparent;color:var(--bad);cursor:pointer;font-size:12px;line-height:1;padding:0 1px}
+.add-tray-actions{display:flex;gap:6px;justify-content:flex-end;margin-top:8px}
+.add-tray-actions button{border-radius:7px;border:1px solid var(--border2);background:var(--bg);color:var(--text);font-size:12px;font-weight:700;padding:6px 10px;cursor:pointer}
+.add-tray-actions .primary{background:var(--accent);border-color:var(--accent);color:#fff}
 
 /* MY LIST ROWS */
 .mygrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(390px,1fr));gap:7px;margin-bottom:12px}
@@ -677,6 +690,18 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
 .backup-reminder-btn{background:var(--warn);color:#1a1a2e;border:none;padding:5px 12px;border-radius:var(--r2);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
 .backup-reminder-dismiss{background:none;border:none;color:var(--warn);cursor:pointer;font-size:16px;opacity:.7;padding:0 4px}
 
+/* ADMIN LOGIN AUDIT */
+.login-audit{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:12px;margin-bottom:14px}
+.login-audit-head{display:flex;align-items:flex-start;gap:10px;justify-content:space-between;margin-bottom:8px}
+.login-audit-title{font-weight:800;color:var(--text);font-size:14px}
+.login-audit-sub{font-size:12px;color:var(--muted);line-height:1.4;margin-top:2px}
+.login-audit-actions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+.login-audit-list{display:grid;gap:6px}
+.login-audit-row{display:grid;grid-template-columns:minmax(120px,1fr) 2fr auto;gap:8px;align-items:center;background:var(--bg);border:1px solid var(--border);border-radius:var(--r2);padding:8px 10px}
+.login-audit-user{font-weight:700;font-size:13px}
+.login-audit-issues{display:flex;gap:4px;flex-wrap:wrap}
+.login-audit-chip{border-radius:999px;border:1px solid rgba(245,158,11,.35);background:rgba(245,158,11,.10);color:var(--warn);font-size:10px;font-weight:700;padding:3px 7px}
+
 /* BETTER MOBILE ADD FORM */
 @media(max-width:600px){
   .add-form .frow{display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center}
@@ -692,6 +717,18 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
   .add-actions .bsave{flex:1 1 100%;justify-content:center;padding:10px;font-size:14px}
   .add-actions .import-btn,.add-actions .export-menu-wrap,.add-actions .bulk-toggle,.add-actions .speed-add-toggle{flex:1 1 calc(50% - 4px);text-align:center;justify-content:center}
   .add-actions .image-btn{width:100%;justify-content:center}
+  .add-tray{position:sticky;bottom:calc(8px + env(safe-area-inset-bottom));z-index:90;box-shadow:0 10px 28px rgba(0,0,0,.4);background:rgba(31,29,59,.97)}
+  .add-tray-head{margin-bottom:6px}
+  .add-tray-chips{max-height:76px}
+  .add-tray-chip{max-width:calc(50vw - 28px)}
+  .add-tray-actions{justify-content:stretch}
+  .add-tray-actions button{flex:1}
+  .login-audit-head{display:block}
+  .login-audit-actions{justify-content:stretch;margin-top:8px}
+  .login-audit-actions .rpin{flex:1}
+  .login-audit-row{grid-template-columns:1fr;gap:6px}
+  .login-audit-row .rpin{width:100%}
+  .have-fit-row{margin:0 0 8px 0}
 
   /* MY LIST ROWS: restructure as 2-row stacked layout to prevent horizontal overflow */
   .myrow{display:grid;grid-template-columns:auto auto 1fr;grid-template-rows:auto auto;gap:6px 8px;padding:8px 10px;overflow:hidden;min-width:0;max-width:100%}
@@ -975,6 +1012,11 @@ input.have-row-qty::-webkit-inner-spin-button,input.have-row-qty::-webkit-outer-
 .have-trainer-hdr{display:flex;align-items:center;gap:10px;margin-bottom:8px;cursor:pointer}
 .have-trainer-name{font-weight:600;font-size:14px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
 .have-trainer-count{font-size:11px;color:var(--muted)}
+.have-fit-row{display:flex;gap:5px;flex-wrap:wrap;margin:-2px 0 8px 42px}
+.have-fit-chip{display:inline-flex;align-items:center;gap:4px;border-radius:999px;border:1px solid var(--border2);background:var(--bg);padding:4px 8px;font-size:11px;font-weight:700;color:var(--muted)}
+.have-fit-chip.want{border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.10);color:#fbbf24}
+.have-fit-chip.give{border-color:rgba(16,185,129,.35);background:rgba(16,185,129,.10);color:#34d399}
+.have-fit-chip.mirror{border-color:rgba(96,165,250,.35);background:rgba(96,165,250,.10);color:#60a5fa}
 .have-trainer-body{display:none;padding-top:8px;border-top:1px solid var(--border);margin-top:6px}
 .have-trainer-card.expanded .have-trainer-body{display:block}
 .have-trainer-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px}
@@ -1657,21 +1699,22 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
         <input type="hidden" id="add-pmon-pri" value="">
         <button type="button" class="add-advanced-toggle" id="add-adv-toggle" onclick="toggleAddAdvanced()" aria-expanded="false" aria-controls="add-advanced">⚙ Advanced <span class="caret">▾</span></button>
       </div>
+      <div class="add-tray" id="add-tray" hidden></div>
       <div class="add-advanced" id="add-advanced">
         <span class="add-adv-label">Flags:</span>
         <label class="lucky-add" title="⚡ Lucky — generates a separate Lucky Dex search string">
-          <input type="checkbox" id="add-pmon-lucky"> ⚡ Lucky
+          <input type="checkbox" id="add-pmon-lucky" onchange="renderAddTray()"> ⚡ Lucky
         </label>
         <label class="lucky-add" title="✨ Shiny — flag this entry as shiny-only (shinies are always special trades anyway, so no separate search string)">
-          <input type="checkbox" id="add-pmon-shiny"> ✨ Shiny
+          <input type="checkbox" id="add-pmon-shiny" onchange="renderAddTray()"> ✨ Shiny
         </label>
         <label class="lucky-add" title="XXL — mark as extra-large; generates a separate XXL search string">
-          <input type="checkbox" id="add-pmon-xxl" onchange="if(this.checked)document.getElementById('add-pmon-xxs').checked=false"> XXL
+          <input type="checkbox" id="add-pmon-xxl" onchange="if(this.checked)document.getElementById('add-pmon-xxs').checked=false;renderAddTray()"> XXL
         </label>
         <label class="lucky-add" title="XXS — mark as extra-small; generates a separate XXS search string">
-          <input type="checkbox" id="add-pmon-xxs" onchange="if(this.checked)document.getElementById('add-pmon-xxl').checked=false"> XXS
+          <input type="checkbox" id="add-pmon-xxs" onchange="if(this.checked)document.getElementById('add-pmon-xxl').checked=false;renderAddTray()"> XXS
         </label>
-        <input type="text" id="add-pmon-notes" placeholder="Notes: f, m, shadow…" aria-label="Notes" style="flex:1;min-width:120px">
+        <input type="text" id="add-pmon-notes" placeholder="Notes: f, m, shadow…" aria-label="Notes" style="flex:1;min-width:120px" oninput="renderAddTray()">
       </div>
       <div class="add-actions">
         <button class="bsave" onclick="addEntry()">Add</button>
@@ -1864,6 +1907,7 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
       <input type="file" id="restore-file" accept="application/json,.json" style="display:none" onchange="restoreData(this.files?.[0])">
     </div>
     <div class="security-box" id="security-panel"></div>
+    <div class="login-audit" id="login-audit-panel" style="display:none"></div>
     <div id="pending-requests-section" style="display:none;margin-bottom:16px">
       <div class="sec" style="margin-top:0;display:flex;align-items:center;gap:6px">Pending requests <span class="notif-badge" id="req-count-badge">0</span></div>
       <div id="pending-requests-list"></div>
@@ -2343,6 +2387,7 @@ const SYNC_QUEUE_KEY='pogoSyncQueue_v1';
 let syncQueue={},syncFlushTimer=null;
 let undoStack=null,undoTimer=null;
 let acItems=[],acFiltered=[],acFocusIdx=-1;
+let addTray=[];
 let dragSrc=null;
 let authRepairStarted=false;
 let bulkMode=false,bulkSelected=new Set();
@@ -4757,6 +4802,7 @@ function acSearch(q){
         ${e.no||e.spriteUrl?spriteImg(e.no,28,'ac-item-sprite',e.name,'',e.dn,{urlOverride:e.spriteUrl}):''}
         ${e.no?`<span class="ac-item-no">#${e.no}</span>`:''}
         <span class="ac-item-name">${e.dn}</span>
+        <button type="button" class="ac-tray-btn ${isInAddTray(e.name)?'on':''}" title="${isInAddTray(e.name)?'Already queued':'Queue without closing search'}" onmousedown="event.preventDefault();event.stopPropagation();addToTrayFromAc(${i})">${isInAddTray(e.name)?'✓':'+'}</button>
       </div>`).join('')+existingSection;
   }
   dd.classList.add('open');
@@ -4777,6 +4823,83 @@ function acKeydown(ev){
 }
 function acUpdateFocus(){
   document.querySelectorAll('.ac-item').forEach((el,i)=>el.classList.toggle('focused',i===acFocusIdx));
+}
+function isInAddTray(name){return addTray.some(x=>x.name===name);}
+function addToTrayFromAc(idx){
+  const e=acFiltered[idx];if(!e?.name)return;
+  const existing=allData[myListType]?.[cur]||{};
+  if(existing[e.name]){toast('✓ Already on your list');return;}
+  if(isInAddTray(e.name)){toast('✓ Already queued');return;}
+  addTray.push({name:e.name,dn:e.dn||e.name,no:e.no||null,spriteUrl:e.spriteUrl||''});
+  renderAddTray();
+  acSearch(document.getElementById('ac-input')?.value||'');
+}
+function removeFromAddTray(idx){
+  addTray.splice(idx,1);
+  renderAddTray();
+  const q=document.getElementById('ac-input')?.value||'';
+  if(q)acSearch(q);
+}
+function clearAddTray(){
+  addTray=[];
+  renderAddTray();
+  const q=document.getElementById('ac-input')?.value||'';
+  if(q)acSearch(q);
+}
+function renderAddTray(){
+  const el=document.getElementById('add-tray');if(!el)return;
+  const existing=allData[myListType]?.[cur]||{};
+  addTray=addTray.filter(x=>x?.name&&!existing[x.name]);
+  if(!addTray.length){el.hidden=true;el.innerHTML='';return;}
+  const pri=document.getElementById('add-pmon-pri')?.value||'';
+  const flags=currentAddFlags();
+  const flagText=[
+    pri?priName(pri):'choose H/M/L',
+    flags.lucky?'⚡':'',
+    flags.shiny?'✨':'',
+    flags.xxl?'XXL':'',
+    flags.xxs?'XXS':'',
+    flags.notes?'notes':''
+  ].filter(Boolean).join(' · ');
+  el.hidden=false;
+  el.innerHTML=`
+    <div class="add-tray-head">
+      <span class="add-tray-title">Queue · ${addTray.length}</span>
+      <span>${escHtml(flagText)}</span>
+    </div>
+    <div class="add-tray-chips">
+      ${addTray.map((e,i)=>`<span class="add-tray-chip" title="${escAttr(e.dn||e.name)}">
+        ${e.no||e.spriteUrl?spriteImg(e.no,18,'',e.name,'',e.dn||e.name,{urlOverride:e.spriteUrl}):''}
+        <span>${escHtml(e.dn||e.name)}</span>
+        <button type="button" class="add-tray-remove" onclick="removeFromAddTray(${i})" aria-label="Remove ${escAttr(e.dn||e.name)}">×</button>
+      </span>`).join('')}
+    </div>
+    <div class="add-tray-actions">
+      <button type="button" onclick="clearAddTray()">Clear</button>
+      <button type="button" class="primary" onclick="confirmAddTray()">Add queue</button>
+    </div>`;
+}
+function confirmAddTray(){
+  if(!addTray.length){toast('Queue is empty');return;}
+  const pri=document.getElementById('add-pmon-pri')?.value||'';
+  const flags=currentAddFlags();
+  if(!pri&&!flags.lucky&&!flags.xxl&&!flags.xxs&&!flags.shiny){toast('⚠️ Set a priority or at least one flag before adding the queue');return;}
+  const list={...(allData[myListType]?.[cur]||{})};
+  let added=0;
+  addTray.forEach(e=>{
+    if(!e?.name||list[e.name])return;
+    list[e.name]=priValue(pri,flags.notes,flags.lucky,flags.xxl,flags.xxs,flags.shiny);
+    added++;
+  });
+  if(!added){clearAddTray();toast('✓ Nothing new to add');return;}
+  writeList(myListType,cur,list);
+  addTray=[];
+  renderAddTray();
+  document.getElementById('add-pmon-sel').value='';
+  document.getElementById('ac-dropdown')?.classList.remove('open');
+  buildAcItems();
+  renderMyList();
+  toast(`✅ Added ${added} queued Pokémon`);
 }
 document.addEventListener('click',e=>{
   if(!e.target.closest('.ac-wrap')){
@@ -4972,6 +5095,8 @@ function _renderBrowseInner(){
 // ── MY LIST ───────────────────────────────────────────────────
 function setMyList(t){
   myListType=t;
+  addTray=[];
+  renderAddTray();
   document.querySelectorAll('#tab-mylist .list-tabs .ltab').forEach((b,i)=>{
     b.classList.toggle('active',['wishlist','dynamax','gmax','costumes'][i]===t);
   });
@@ -5036,6 +5161,7 @@ function setAddPri(p){
     if(on)b.classList.add(next);else b.classList.remove('H','M','L');
     b.setAttribute('aria-pressed',on?'true':'false');
   });
+  renderAddTray();
 }
 function addEntry(){
   const name=document.getElementById('add-pmon-sel').value;
@@ -5047,6 +5173,7 @@ function addEntry(){
   const shiny=!!document.getElementById('add-pmon-shiny')?.checked;
   if(!name){toast('⚠️ Select a Pokémon from the list');return;}
   if(!pri&&!lucky&&!xxl&&!xxs&&!shiny){toast('⚠️ Set a priority or at least one flag (⚡/✨/XXL/XXS)');return;}
+  const dn=acItems.find(x=>x.name===name)?.dn||name;
   const list={...(allData[myListType]?.[cur]||{})};
   list[name]=priValue(pri,notes,lucky,xxl,xxs,shiny);
   writeList(myListType,cur,list);
@@ -5054,13 +5181,15 @@ function addEntry(){
   document.getElementById('ac-input').value='';
   document.getElementById('add-pmon-sel').value='';
   document.getElementById('add-pmon-notes').value='';
+  addTray=addTray.filter(x=>x.name!==name);
+  renderAddTray();
   if(!speedAdd){
     document.getElementById('add-pmon-pri').value='';
     document.querySelectorAll('.add-pri-btn').forEach(b=>{b.classList.remove('on','H','M','L');b.setAttribute('aria-pressed','false');});
     ['add-pmon-lucky','add-pmon-xxl','add-pmon-xxs','add-pmon-shiny'].forEach(id=>{const el=document.getElementById(id);if(el)el.checked=false;});
   }
   document.getElementById('ac-dropdown').classList.remove('open');
-  const dn=acItems.find(x=>x.name===name)?.dn||name;
+  buildAcItems();
   toast(`✅ ${dn} added!`);
   const input=document.getElementById('ac-input');
   if(input)input.focus();
@@ -6095,10 +6224,84 @@ function renderSecurityPanel(){
     <button class="btn-export" style="margin-top:8px" data-copy="${escAttr(SECURE_RULES)}" onclick="copyStr(this.dataset.copy,this)" aria-label="Copy secure Firebase rules">📋 Copy secure rules</button>`;
 }
 
+function loginAuditRows(){
+  const users=allData.users||{};
+  return Object.entries(users).map(([u,d])=>{
+    const dir=allData.loginDirectory?.[u]||null;
+    const expectedVersion=authVersionForUser(d);
+    const expectedEmail=authEmail(u,expectedVersion);
+    const issues=[];
+    if(!d.authUid)issues.push('missing auth UID');
+    if(!d.authEmail)issues.push('missing auth email');
+    if(d.authEmail&&d.authEmail!==expectedEmail)issues.push('email mismatch');
+    if(!dir)issues.push('missing login directory');
+    else{
+      if(!dir.authReady)issues.push('directory not ready');
+      if(dir.authEmail&&d.authEmail&&dir.authEmail!==d.authEmail)issues.push('directory email mismatch');
+      if(parseInt(dir.authVersion||1)!==expectedVersion)issues.push('directory version mismatch');
+    }
+    const needsPin=!d.authUid||!d.authEmail;
+    return{u,d,dir,issues,needsPin};
+  }).filter(r=>r.issues.length).sort((a,b)=>
+    (b.needsPin?1:0)-(a.needsPin?1:0)||alphaCompare(a.u,b.u)
+  );
+}
+function renderLoginAudit(){
+  const el=document.getElementById('login-audit-panel');if(!el)return;
+  if(!allData.users?.[cur]?.isAdmin){el.style.display='none';el.innerHTML='';return;}
+  const rows=loginAuditRows();
+  if(!rows.length){el.style.display='none';el.innerHTML='';return;}
+  const dirOnly=rows.filter(r=>!r.needsPin).length;
+  el.style.display='block';
+  el.innerHTML=`
+    <div class="login-audit-head">
+      <div>
+        <div class="login-audit-title">Login repair audit · ${rows.length}</div>
+        <div class="login-audit-sub">Finds members whose Firebase Auth metadata or public login directory is incomplete, which can hide names from sign-in or break PIN changes.</div>
+      </div>
+      <div class="login-audit-actions">
+        ${dirOnly?`<button class="rpin" onclick="repairLoginDirectories()">Repair ${dirOnly} directory-only</button>`:''}
+      </div>
+    </div>
+    <div class="login-audit-list">
+      ${rows.map(r=>{
+        const su=r.u.replace(/'/g,"\\'").replace(/"/g,'&quot;');
+        return`<div class="login-audit-row">
+          <div class="login-audit-user">${escHtml(r.u)}</div>
+          <div class="login-audit-issues">${r.issues.map(x=>`<span class="login-audit-chip">${escHtml(x)}</span>`).join('')}</div>
+          <button class="rpin" onclick="${r.needsPin?`repairAccount('${su}')`:`repairLoginDirectory('${su}')`}">${r.needsPin?'Repair + PIN':'Repair directory'}</button>
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+async function repairLoginDirectory(u){
+  if(!allData.users?.[cur]?.isAdmin){toast('⚠️ Admin only');return;}
+  try{
+    await repairMemberAccount(u,{});
+    renderAdmin();populateLoginUsers();
+    toast(`✅ ${u} login directory repaired`);
+  }catch(e){
+    toast('⚠️ Directory repair failed: '+(e.code||e.message||'permission denied'),6000);
+  }
+}
+async function repairLoginDirectories(){
+  if(!allData.users?.[cur]?.isAdmin){toast('⚠️ Admin only');return;}
+  const rows=loginAuditRows().filter(r=>!r.needsPin);
+  if(!rows.length){toast('✓ No directory-only repairs needed');return;}
+  let ok=0,fail=0;
+  for(const r of rows){
+    try{await repairMemberAccount(r.u,{});ok++;}
+    catch(e){console.warn('Directory repair failed',r.u,e);fail++;}
+  }
+  renderAdmin();populateLoginUsers();
+  toast(fail?`⚠️ Repaired ${ok}, ${fail} failed`:`✅ Repaired ${ok} login directories`,5000);
+}
+
 // ── ADMIN ─────────────────────────────────────────────────────
 function renderAdmin(){
   const el=document.getElementById('admin-tbody');if(!el)return;
   renderSecurityPanel();
+  renderLoginAudit();
   const iAmOwner=allData.users?.[cur]?.isOwner||cur===OWNER;
   const adminWrap=document.getElementById('nu-admin-wrap');
   const adminInput=document.getElementById('nu-admin');
@@ -9522,6 +9725,36 @@ function entryWantedByOther(otherUser,name){
   }
   return null;
 }
+function currentInventoryNames(){
+  const out=new Set();
+  Object.entries(allData.have?.[cur]||{}).forEach(([key,val])=>{
+    if(haveEntryInfo(val).qty>0)out.add(splitHaveKey(key).name);
+  });
+  return out;
+}
+function tradeFitSummaryFor(otherUser,theirItems){
+  if(!cur||!otherUser||otherUser===cur)return{theyHaveIWant:0,iHaveTheyWant:0,mirrors:0};
+  const myHave=currentInventoryNames();
+  let theyHaveIWant=0,mirrors=0;
+  (theirItems||[]).forEach(it=>{
+    if(!it?.name)return;
+    if(entryWantedByCur(it.name))theyHaveIWant++;
+    if(it.mirrorOnly&&myHave.has(it.name))mirrors++;
+  });
+  let iHaveTheyWant=0;
+  myHave.forEach(name=>{
+    if(entryWantedByOther(otherUser,name))iHaveTheyWant++;
+  });
+  return{theyHaveIWant,iHaveTheyWant,mirrors};
+}
+function tradeFitSummaryHtml(fit){
+  if(!fit||(!fit.theyHaveIWant&&!fit.iHaveTheyWant&&!fit.mirrors))return'';
+  return`<div class="have-fit-row">
+    ${fit.theyHaveIWant?`<span class="have-fit-chip want">⭐ ${fit.theyHaveIWant} you want</span>`:''}
+    ${fit.iHaveTheyWant?`<span class="have-fit-chip give">🤝 ${fit.iHaveTheyWant} they want</span>`:''}
+    ${fit.mirrors?`<span class="have-fit-chip mirror">🪞 ${fit.mirrors} mirror${fit.mirrors===1?'':'s'}</span>`:''}
+  </div>`;
+}
 function renderHaveBrowse(){
   const q=String(document.getElementById('have-browse-q')?.value||'').toLowerCase();
   const el=document.getElementById('have-browse-out');if(!el)return;
@@ -9556,13 +9789,15 @@ function renderHaveBrowse(){
     el.innerHTML=trainers.map(u=>{
       const inv=haveData[u]||{};
       const ud=allData.users?.[u]||{};
-      let items=Object.entries(inv).map(([key,val])=>{
+      const rawItems=Object.entries(inv).map(([key,val])=>{
         const{name:n,gender}=splitHaveKey(key);
         const info=haveEntryInfo(val);
         const e=_nameToSpriteEntry(n);
         const want=entryWantedByCur(n);
         return{key,name:n,gender,qty:info.qty,mirrorOnly:info.mirrorOnly,dontNeedBack:info.dontNeedBack,giveaway:info.giveaway,note:info.note,mode:info.mode,dn:e.displayName||n,no:e.no,match:want};
       }).filter(it=>it.qty>0);
+      const fit=tradeFitSummaryFor(u,rawItems);
+      let items=rawItems.slice();
       if(haveMatchOnly)items=items.filter(it=>it.match);
       if(q){items=items.filter(it=>it.dn.toLowerCase().includes(q)||u.toLowerCase().includes(q));}
       items.sort((a,b)=>(b.match?1:0)-(a.match?1:0)||(parseInt(a.no)||9999)-(parseInt(b.no)||9999));
@@ -9574,6 +9809,7 @@ function renderHaveBrowse(){
           <div class="have-trainer-count">${items.length} item${items.length===1?'':'s'}${matchCount>0?` · <span style="color:var(--warn);font-weight:700">⭐ ${matchCount} match${matchCount===1?'':'es'}</span>`:''}</div>
           <span class="collapse-icon">▼</span>
         </div>
+        ${tradeFitSummaryHtml(fit)}
         <div class="have-trainer-body">
           <div class="have-trainer-grid">${items.map(it=>{
             const sk=it.key.replace(/'/g,"\\'").replace(/"/g,'&quot;');
@@ -10820,10 +11056,10 @@ Object.assign(window,{
   openImport,setImportPri,parseImportString,toggleImportRow,toggleSelectAll,backToStep1,confirmImport,
   setFilter,setBrowseList,setMyList,setStaleFilter,switchTab,
   doLogin,logout,connectFirebase,skipFirebase,openLoginHealthCheck,runLoginHealthCheck,clearLoginLocalCache,selectLoginUserByIndex,
-  addEntry,setPri,setNotes,setLucky,setXxl,setXxs,removeEntry,doUndo,copyStr,
+  addEntry,addToTrayFromAc,removeFromAddTray,clearAddTray,confirmAddTray,renderAddTray,setPri,setNotes,setLucky,setXxl,setXxs,removeEntry,doUndo,copyStr,
   exportMyListImage,
   dragStart,dragOver,dragDrop,dragEnd,
-  addUser,openReset,confirmReset,repairAccount,toggleAdmin,exportData,triggerRestore,restoreData,
+  addUser,openReset,confirmReset,repairAccount,repairLoginDirectory,repairLoginDirectories,toggleAdmin,exportData,triggerRestore,restoreData,
   saveProfile,openModal,closeModal,renderStrings,renderBrowse,setStrList,
   showRequestForm,hideRequestForm,submitRequest,approveRequest,copyApprovedLogin,denyRequest,
   acSearch,acSelect,acKeydown,formatFc,toggleStrUser,toggleComboStrings,renderMyList,
