@@ -6,7 +6,7 @@
 > **Next step**. Future contributors (Claude / codex / human) should be
 > able to read this top-to-bottom and know exactly where things stand.
 
-**Current status as of v4.6.20 (2026-05-24)**:
+**Current status as of v4.6.22 (2026-05-24)**:
 - ✅ **Phase 1 (visibility + defensive guards)**: shipped
 - ⏸️ **Phase 2 (per-user subscriptions)**: not started; not needed at current size
 - ⏸️ **Phase 3 (offers/trades pagination)**: not started; not needed at current size
@@ -261,6 +261,13 @@ on phones and slow networks first.
 
 When you ship scaling work, append a one-line entry here. Newest first.
 
+- **2026-05-24, v4.6.22** — Perf panel layout fix (long-status rows stack
+  cleanly instead of wrapping) + snapshot:* timings now skip the first
+  per-path sample so displayed p95 reflects steady-state edit cost, not
+  initial full-tree download. (Claude)
+- **2026-05-24, v4.6.21** — Perf rows gated to admins only (allData.users
+  [cur].isAdmin); Community size stays visible to everyone. Labels
+  renamed to single words to avoid " · " word-break. (Claude)
 - **2026-05-24, v4.6.20** — Phase 1 visibility + defensive guards shipped.
   Sprite-cache LRU eviction, localStorage quota guard, Health Check perf
   panel, perfTime module. (Claude)
