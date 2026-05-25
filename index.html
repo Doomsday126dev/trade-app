@@ -5434,6 +5434,7 @@ function confirmRemove(name,dn){
 }
 
 const canvasImageCache=new Map();
+const canvasImageUsableCache=new WeakMap();
 function exportSpriteUrl(e){
   return canvasSafeSpriteUrl(e.spriteUrl||(e.no?spriteUrl(e.no,e.spriteName,e.gender,e.dn):''));
 }
@@ -5462,9 +5463,39 @@ function loadCanvasImage(url){
 async function loadCanvasImageWithFallback(urls){
   for(const url of urls){
     const img=await loadCanvasImage(url);
-    if(img)return img;
+    if(img&&canvasImageHasVisiblePixels(img))return img;
   }
   return null;
+}
+function canvasImageHasVisiblePixels(img){
+  if(canvasImageUsableCache.has(img))return canvasImageUsableCache.get(img);
+  if(!img?.naturalWidth||!img?.naturalHeight)return false;
+  let ok=true;
+  try{
+    const max=96;
+    const ratio=Math.min(1,max/img.naturalWidth,max/img.naturalHeight);
+    const w=Math.max(1,Math.round(img.naturalWidth*ratio));
+    const h=Math.max(1,Math.round(img.naturalHeight*ratio));
+    const c=document.createElement('canvas');
+    c.width=w;c.height=h;
+    const g=c.getContext('2d',{willReadFrequently:true});
+    g.drawImage(img,0,0,w,h);
+    const data=g.getImageData(0,0,w,h).data;
+    let visible=0,alphaTotal=0;
+    for(let i=3;i<data.length;i+=4){
+      const a=data[i];
+      if(a>12){visible++;alphaTotal+=a;}
+    }
+    // Some remote sprite hosts successfully load transparent placeholders.
+    // Treat those as failures so export falls through to the next sprite source.
+    ok=visible>=8&&alphaTotal>=900;
+  }catch{
+    // If the browser refuses pixel inspection, keep the image instead of
+    // accidentally rejecting all CORS-restricted fallbacks.
+    ok=true;
+  }
+  canvasImageUsableCache.set(img,ok);
+  return ok;
 }
 function roundedRect(ctx,x,y,w,h,r){
   const rr=Math.min(r,w/2,h/2);
@@ -5557,6 +5588,22 @@ function downloadBlob(blob,filename){
   a.href=url;a.download=filename;
   document.body.appendChild(a);a.click();document.body.removeChild(a);
   setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+async function deliverImageBlob(blob,filename,title='PoGo Trades image'){
+  if(typeof navigator!=='undefined'&&navigator.canShare&&typeof File!=='undefined'){
+    const file=new File([blob],filename,{type:blob.type||'image/png'});
+    try{
+      if(navigator.canShare({files:[file]})){
+        await navigator.share({files:[file],title});
+        return 'shared';
+      }
+    }catch(e){
+      if(e?.name==='AbortError')return 'cancelled';
+      console.warn('Native image share failed, falling back to download',e);
+    }
+  }
+  downloadBlob(blob,filename);
+  return 'downloaded';
 }
 function safeFilePart(s){
   return String(s||'list').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'list';
@@ -5844,10 +5891,12 @@ async function exportMyListImage(style='classic'){
     if(btn){btn.disabled=true;btn.textContent='Building image…';}
     const blob=await renderListImage(entries,myListType,cur,style);
     const styleTag=style==='cards'?'-darkcards':'';
-    downloadBlob(blob,`pogo-${safeFilePart(cur)}-${safeFilePart(listLabel(myListType))}${styleTag}-${new Date().toISOString().slice(0,10)}.png`);
+    const filename=`pogo-${safeFilePart(cur)}-${safeFilePart(listLabel(myListType))}${styleTag}-${new Date().toISOString().slice(0,10)}.png`;
+    const delivery=await deliverImageBlob(blob,filename,`${cur}'s ${listLabel(myListType)} List`);
     // Remember user's last choice for future exports
     try{lsSet('pogoExportStyle',style);}catch{}
-    toast(`🖼️ Image exported (${style==='cards'?'dark cards':'classic'})!`);
+    if(delivery==='cancelled')toast('Image export cancelled.');
+    else toast(delivery==='shared'?`🖼️ Image ready to save/share (${style==='cards'?'dark cards':'classic'}).`:`🖼️ Image exported (${style==='cards'?'dark cards':'classic'})!`);
   }catch(e){
     console.error(e);
     toast('⚠️ Image export failed. Try again.');
@@ -8195,8 +8244,10 @@ async function exportSpecialBoardImage(){
   if(!board.lf.length&&!board.ft.length){toast('Add at least one entry to either side before exporting.');return;}
   try{
     const blob=await renderSpecialBoardImage(board,cur);
-    downloadBlob(blob,`pogo-${safeFilePart(cur)}-special-trade-${new Date().toISOString().slice(0,10)}.png`);
-    toast('🎯 Special trade board exported!');
+    const filename=`pogo-${safeFilePart(cur)}-special-trade-${new Date().toISOString().slice(0,10)}.png`;
+    const delivery=await deliverImageBlob(blob,filename,`${cur}'s Special Trade Board`);
+    if(delivery==='cancelled')toast('Image export cancelled.');
+    else toast(delivery==='shared'?'🎯 Special trade board ready to save/share!':'🎯 Special trade board exported!');
   }catch(e){console.error(e);toast('⚠️ Export failed — try again.');}
 }
 async function renderSpecialBoardImage(board,username){
