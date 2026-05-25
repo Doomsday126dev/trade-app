@@ -2223,7 +2223,7 @@ if(!DB)throw new Error('Trade data failed to load');
 
 const PREFILTER="!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&";
 const OWNER="Doomsday126";
-const APP_VERSION="4.6.18";
+const APP_VERSION="4.6.20";
 const STALE_WARN=7,STALE_OLD=30;
 const SESSION_TTL=30*24*60*60*1000; // 30 days; refreshed on each activity so active users stay logged in
 const SPRITE_BASE="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/";
@@ -2925,8 +2925,31 @@ const SPRITE_TARGET_FILL=0.86; // character should fill ~86% of cell after scali
 let spriteScaleCache={};
 try{spriteScaleCache=JSON.parse(localStorage.getItem(SPRITE_SCALE_CACHE_KEY)||'{}')||{};}catch{}
 const _scaleDetectInflight=new Set();
+// LRU-ish cap on the scale cache. Without this, every unique URL ever
+// rendered (costume variants × species × shiny × gender combinations) sits
+// in localStorage forever. At ~1000 entries it's ~60KB, mostly harmless,
+// but it grows monotonically and contributes to localStorage quota pressure
+// over time. Drop the oldest 20% when we cross the threshold.
+const SPRITE_SCALE_CACHE_MAX=800;
+function _trimScaleCache(){
+  const keys=Object.keys(spriteScaleCache);
+  if(keys.length<=SPRITE_SCALE_CACHE_MAX)return;
+  const drop=Math.ceil(keys.length*0.2);
+  keys.sort((a,b)=>(spriteScaleCache[a]?.t||0)-(spriteScaleCache[b]?.t||0));
+  for(let i=0;i<drop;i++)delete spriteScaleCache[keys[i]];
+}
 function _saveScaleCache(){
-  try{localStorage.setItem(SPRITE_SCALE_CACHE_KEY,JSON.stringify(spriteScaleCache));}catch{}
+  try{
+    _trimScaleCache();
+    localStorage.setItem(SPRITE_SCALE_CACHE_KEY,JSON.stringify(spriteScaleCache));
+  }catch(e){
+    // Quota likely — try one aggressive trim then give up silently.
+    try{
+      const keys=Object.keys(spriteScaleCache).sort((a,b)=>(spriteScaleCache[a]?.t||0)-(spriteScaleCache[b]?.t||0));
+      for(let i=0;i<Math.ceil(keys.length*0.5);i++)delete spriteScaleCache[keys[i]];
+      localStorage.setItem(SPRITE_SCALE_CACHE_KEY,JSON.stringify(spriteScaleCache));
+    }catch{}
+  }
 }
 // Coarse default per source — used as fallback while detection runs (or fails on CORS).
 function spriteSourceScale(url){
@@ -3379,7 +3402,62 @@ function initLocal(){
   return normalizeData(s);
 }
 function getLocal(){return normalizeData(lsGet('pogo3',null)||initLocal())}
-function saveLocal(s){lsSet('pogo3',normalizeData(s))}
+// ── PERF VISIBILITY (scaling phase 1) ────────────────────────
+// Lightweight rolling-buffer timer for hot paths. Surfaced in Health Check
+// so the owner can spot growing per-snapshot / per-render cost before it
+// becomes painful for users. Designed for ~zero overhead at normal scale.
+const _perfBuf={}; // op → { samples:number[], lastSize:number }
+const PERF_KEEP=20;
+function perfTime(op,fn){
+  const t0=(typeof performance!=='undefined'&&performance.now)?performance.now():Date.now();
+  try{return fn();}finally{
+    const dt=((typeof performance!=='undefined'&&performance.now)?performance.now():Date.now())-t0;
+    const buf=_perfBuf[op]||(_perfBuf[op]={samples:[]});
+    buf.samples.push(dt);
+    if(buf.samples.length>PERF_KEEP)buf.samples.shift();
+  }
+}
+function perfRecord(op,ms,size){
+  const buf=_perfBuf[op]||(_perfBuf[op]={samples:[]});
+  buf.samples.push(ms);
+  if(buf.samples.length>PERF_KEEP)buf.samples.shift();
+  if(typeof size==='number')buf.lastSize=size;
+}
+function perfStats(){
+  const out={};
+  Object.entries(_perfBuf).forEach(([op,buf])=>{
+    if(!buf.samples.length)return;
+    const sorted=[...buf.samples].sort((a,b)=>a-b);
+    const sum=sorted.reduce((a,b)=>a+b,0);
+    out[op]={
+      n:sorted.length,
+      avg:sum/sorted.length,
+      p50:sorted[Math.floor(sorted.length*0.5)],
+      p95:sorted[Math.floor(sorted.length*0.95)],
+      max:sorted[sorted.length-1],
+      lastSize:buf.lastSize
+    };
+  });
+  return out;
+}
+function saveLocal(s){
+  try{
+    lsSet('pogo3',normalizeData(s));
+  }catch(e){
+    // QuotaExceededError on Safari iOS first (~5MB). We can't easily prune
+    // safely so we keep the in-memory copy correct and surface the warning
+    // — the user will lose offline restore on the next reload but won't
+    // silently lose data this session. (allData is updated by callers
+    // separately, not via saveLocal.)
+    const code=e?.name||e?.code||'';
+    if(/Quota/i.test(code)||/Quota/i.test(String(e?.message||''))){
+      console.warn('saveLocal: localStorage quota exceeded — offline cache disabled this session.',e);
+      if(typeof toast==='function')toast('⚠️ Local storage full — offline mode disabled. App still works online; clear browser data to restore offline support.',6000);
+    }else{
+      console.error('saveLocal failed:',e);
+    }
+  }
+}
 
 async function writeUser(u,data){
   const s=getLocal();s.users[u]=normalizedUserRecord(u,s.users[u],data);saveLocal(s);
@@ -3755,6 +3833,7 @@ let _firstSyncDone=false;
 let _pathLoadState={};       // path → 'loading'|'loaded'
 
 function _onSubSnapshot(path,snap){
+  const _t0=(typeof performance!=='undefined'&&performance.now)?performance.now():Date.now();
   const val=snap.exists()?snap.val():null;
   // Update local cache for this path
   const s=getLocal();
@@ -3796,6 +3875,13 @@ function _onSubSnapshot(path,snap){
     renderShareView(_activeShareView.username,_activeShareView.type);
   }
   _firstSyncDone=true;
+  // Record snapshot cost + payload size for the perf panel. Bucket by top-level
+  // segment so e.g. 30 pendingDecrements/${cur} samples don't dilute the data.
+  try{
+    const _dt=((typeof performance!=='undefined'&&performance.now)?performance.now():Date.now())-_t0;
+    const _sz=val?JSON.stringify(val).length:0;
+    perfRecord(`snapshot:${seg}`,_dt,_sz);
+  }catch{}
 }
 let _activeShareView=null;
 function subscribePath(path){
@@ -3906,6 +3992,44 @@ async function runLoginHealthCheck(){
   }
   const sw=await serviceWorkerHealth();
   rows.push(healthRow('Service worker',sw.status,sw.detail,sw.kind));
+  // ── PERF / SCALE PANEL ──────────────────────────────────────
+  // Surface live-measured costs of the hot paths plus dataset sizes, so the
+  // owner can spot growth before it becomes user-visible. Thresholds chosen
+  // from SCALING-NOTES.md "trigger points to revisit this doc".
+  try{
+    const trainers=Object.keys(allData.users||{}).length;
+    const wishlistTrainers=Object.keys(allData.wishlist||{}).length;
+    const haveTrainers=Object.keys(allData.have||{}).length;
+    const offerCount=Object.values(allData.offers||{}).reduce((n,bucket)=>n+Object.keys(bucket||{}).length,0);
+    const tradeCount=Object.keys(allData.trades||{}).length;
+    const scaleSize=Object.keys(spriteScaleCache||{}).length;
+    let lsBytes=0;try{lsBytes=(localStorage.getItem('pogo3')||'').length;}catch{}
+    const lsKB=Math.round(lsBytes/1024);
+    const trainerKind=trainers>=150?'warn':trainers>=100?'info':'ok';
+    rows.push(healthRow('Community size',`${trainers} trainer${trainers===1?'':'s'}`,`${wishlistTrainers} with wishlists · ${haveTrainers} with inventory · ${offerCount} open offers · ${tradeCount} trades. Scaling design (SCALING-NOTES.md) suggests acting on subscription narrowing past ~120 trainers.`,trainerKind));
+    const lsKind=lsKB>=3072?'warn':lsKB>=1024?'info':'ok';
+    rows.push(healthRow('Local storage (pogo3 blob)',`${lsKB} KB`,`Safari iOS quota is ~5 MB. At ~3 MB it\'s worth pruning archived offers/trades. Sprite-scale cache holds ${scaleSize} entries (max ${SPRITE_SCALE_CACHE_MAX} before LRU eviction).`,lsKind));
+    const stats=perfStats();
+    const fmt=op=>{const s=stats[op];if(!s)return'(no samples yet)';return `avg ${s.avg.toFixed(0)}ms · p95 ${s.p95.toFixed(0)}ms · max ${s.max.toFixed(0)}ms over last ${s.n}`;};
+    const opsToShow=[
+      ['snapshot:users','Snapshot · users'],
+      ['snapshot:wishlist','Snapshot · wishlist'],
+      ['snapshot:have','Snapshot · have'],
+      ['snapshot:offers','Snapshot · offers'],
+      ['snapshot:trades','Snapshot · trades'],
+      ['render:browse','Render · Browse tab'],
+      ['render:strings','Render · Strings tab']
+    ];
+    opsToShow.forEach(([op,label])=>{
+      const s=stats[op];
+      if(!s)return; // Only show ops we actually measured this session
+      const sz=s.lastSize?` · last payload ${Math.round(s.lastSize/1024)} KB`:'';
+      const kind=s.p95>500?'warn':s.p95>200?'info':'ok';
+      rows.push(healthRow(label,fmt(op)+sz,'Action threshold: if p95 trends >200ms or render >500ms, it\'s time to start scaling Phase 2 (per-user subscriptions).',kind));
+    });
+  }catch(e){
+    rows.push(healthRow('Perf panel','Error',String(e?.message||e),'warn'));
+  }
   renderHealthRows(rows);
 }
 async function clearLoginLocalCache(){
@@ -4406,7 +4530,8 @@ function activeUsers(){
   return new Set(Object.entries(allData.users||{}).filter(([,d])=>d.lastUpdated&&d.lastUpdated>cutoff).map(([u])=>u));
 }
 
-function renderBrowse(){
+function renderBrowse(){return perfTime('render:browse',()=>_renderBrowseInner());}
+function _renderBrowseInner(){
   const q=(document.getElementById('bq')?.value||'').toLowerCase();
   const el=document.getElementById('browse-out');if(!el)return;
   const allowed=activeUsers();
@@ -5514,7 +5639,8 @@ function toggleComboStrings(btn){
   const isOpen=wrap.classList.toggle('open');
   btn.setAttribute('aria-expanded',isOpen?'true':'false');
 }
-function renderStrings(){
+function renderStrings(){return perfTime('render:strings',()=>_renderStringsInner());}
+function _renderStringsInner(){
   const q=(document.getElementById('stq')?.value||'').toLowerCase();
   const el=document.getElementById('strings-out');if(!el)return;
   const users=Object.keys(allData.users||{}).filter(u=>{
