@@ -1330,8 +1330,10 @@ html[data-theme="light"] .have-mirror-badge,html[data-theme="light"] .have-mirro
 .ac-family-banner:focus{outline:2px solid var(--accent);outline-offset:-2px}
 
 /* DIFF VIEW MODAL (#6) */
-.diff-fab{position:absolute;top:50%;right:46px;transform:translateY(-50%);background:transparent;border:1px solid var(--border2);color:var(--muted);width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;transition:.15s;flex-shrink:0;z-index:5}
+.user-str-actions{display:flex;align-items:center;gap:6px;margin-left:auto;flex-shrink:0}
+.diff-fab{background:transparent;border:1px solid var(--border2);color:var(--muted);width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;transition:.15s;flex-shrink:0}
 .diff-fab:hover{color:var(--ac2);border-color:var(--ac2);background:rgba(168,139,250,.1)}
+.trade-match-fab:hover{color:var(--ok);border-color:rgba(16,185,129,.55);background:rgba(16,185,129,.1)}
 .user-str-hdr{position:relative}
 .diff-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:600;align-items:center;justify-content:center;padding:0;overflow-y:auto}
 .diff-modal-overlay.open{display:flex}
@@ -1351,16 +1353,18 @@ html[data-theme="light"] .have-mirror-badge,html[data-theme="light"] .have-mirro
 .diff-copy-chip:hover{transform:translateY(-1px);filter:brightness(1.08)}
 .diff-copy-chip:active{transform:scale(.98)}
 .diff-copy-chip.copied{background:var(--ok);color:#06140f;border-color:rgba(16,185,129,.55)}
-.diff-match-panel{padding:12px 18px;background:rgba(108,99,255,.055);border-bottom:1px solid var(--border);display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.trade-match-modal{max-width:760px}
+.trade-match-body{padding:16px 18px;overflow-y:auto}
+.diff-match-panel{display:grid;grid-template-columns:1fr;gap:12px}
 .diff-match-box{background:var(--bg);border:1px solid var(--border);border-radius:var(--r2);padding:9px;min-width:0}
 .diff-match-box.want{border-color:rgba(245,158,11,.28)}
 .diff-match-box.give{border-color:rgba(16,185,129,.28)}
 .diff-match-box.mirror{border-color:rgba(96,165,250,.28)}
 .diff-match-title{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:800;color:var(--text);margin-bottom:7px}
 .diff-match-count{margin-left:auto;color:var(--muted);font-family:var(--mono);font-size:10px}
-.diff-match-list{display:flex;gap:5px;flex-wrap:wrap;max-height:96px;overflow-y:auto}
-.diff-match-chip{display:inline-flex;align-items:center;gap:5px;max-width:100%;background:var(--card);border:1px solid var(--border2);border-radius:999px;padding:4px 7px;font-size:10px;color:var(--text);min-width:0}
-.diff-match-chip img{width:18px;height:18px;object-fit:contain;image-rendering:pixelated;flex-shrink:0}
+.diff-match-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:6px}
+.diff-match-chip{display:inline-flex;align-items:center;gap:7px;max-width:100%;background:var(--card);border:1px solid var(--border2);border-radius:var(--r2);padding:6px 8px;font-size:11px;color:var(--text);min-width:0}
+.diff-match-chip img{width:24px;height:24px;object-fit:contain;image-rendering:pixelated;flex-shrink:0}
 .diff-match-chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .diff-match-empty{font-size:11px;color:var(--muted);line-height:1.35}
 .diff-tip{padding:12px 14px;margin-bottom:12px;background:rgba(108,99,255,.1);border:1px solid rgba(108,99,255,.26);border-radius:var(--r2);font-size:12px;color:var(--text);line-height:1.45}
@@ -1394,7 +1398,9 @@ html[data-theme="light"] .have-mirror-badge,html[data-theme="light"] .have-mirro
 @media(max-width:600px){
   .diff-modal{max-height:100vh;height:100vh;border-radius:0}
   .diff-hdr{padding:12px 14px}
-  .diff-match-panel{grid-template-columns:1fr;padding:10px 12px;gap:7px}
+  .user-str-actions{gap:5px}
+  .diff-fab{width:28px;height:28px;font-size:13px}
+  .diff-match-list{grid-template-columns:1fr}
   .diff-body{padding:10px 12px}
   .diff-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:5px}
 }
@@ -6183,7 +6189,10 @@ function _renderStringsInner(){
             ${bioHtml}
           </div>
         </div>
-        ${isMe?'':`<button class="diff-fab" onclick="event.stopPropagation();openDiffModal(this.closest('.user-str-block').dataset.username)" aria-label="Compare lists with ${escAttr(u)}" title="Compare your list vs ${escAttr(u)}'s">⚖</button>`}
+        ${isMe?'':`<div class="user-str-actions">
+          <button class="diff-fab" onclick="event.stopPropagation();openDiffModal(this.closest('.user-str-block').dataset.username)" aria-label="Compare lists with ${escAttr(u)}" title="Compare your list vs ${escAttr(u)}'s">⚖</button>
+          <button class="diff-fab trade-match-fab" onclick="event.stopPropagation();openTradeMatchModal(this.closest('.user-str-block').dataset.username)" aria-label="Trade match with ${escAttr(u)}" title="Trade match with ${escAttr(u)}">🤝</button>
+        </div>`}
         <span class="collapse-icon">▼</span>
       </div>
       <div class="user-str-body">
@@ -6773,8 +6782,10 @@ function toast(msg,dur=2500){
 
 // ── DIFF VIEW (#6) ────────────────────────────────────────────
 let _activeDiff=null;
+let _activeTradeMatch=null;
 function openDiffModal(otherUsername){
   if(!cur||otherUsername===cur){toast('Pick another trainer');return;}
+  closeTradeMatchModal();
   _activeDiff={them:otherUsername,type:strListType};
   renderDiffModal();
 }
@@ -6831,6 +6842,16 @@ async function copyDiffSearch(section,btn){
   if(!str){toast('No Pokémon in that section');return;}
   await copyStr(str,btn);
 }
+function openTradeMatchModal(otherUsername){
+  if(!cur||otherUsername===cur){toast('Pick another trainer');return;}
+  closeDiffModal();
+  _activeTradeMatch={them:otherUsername};
+  renderTradeMatchModal();
+}
+function closeTradeMatchModal(){
+  document.getElementById('trade-match-modal')?.remove();
+  _activeTradeMatch=null;
+}
 function diffInventoryEntries(username){
   return Object.entries(allData.have?.[username]||{}).map(([key,val])=>{
     const info=haveEntryInfo(val);
@@ -6869,6 +6890,23 @@ function renderTradeMatchSummary(them){
     ${box('give','🤝 You have what they want',m.youHaveTheyWant.length,m.youHaveTheyWant,`Your inventory does not currently match ${escHtml(them)}'s wants.`)}
     ${box('mirror','🪞 Possible mirrors',m.mirrors.length,m.mirrors,'No exact inventory overlap for mirrors yet.',it=>` · their qty ${it.theirQty||1}`)}
   </div>`;
+}
+function renderTradeMatchModal(){
+  if(!_activeTradeMatch)return;
+  const{them}=_activeTradeMatch;
+  const html=`<div class="diff-modal-overlay open" id="trade-match-modal" role="dialog" aria-modal="true" onclick="if(event.target===this)closeTradeMatchModal()">
+    <div class="diff-modal trade-match-modal" onclick="event.stopPropagation()">
+      <div class="diff-hdr">
+        <div class="diff-hdr-title">🤝 Trade match · You ↔ <span style="color:var(--ac2)">${escHtml(them)}</span></div>
+        <button class="diff-hdr-close" onclick="closeTradeMatchModal()" aria-label="Close">×</button>
+      </div>
+      <div class="trade-match-body">
+        ${renderTradeMatchSummary(them)}
+      </div>
+    </div>
+  </div>`;
+  document.getElementById('trade-match-modal')?.remove();
+  document.body.insertAdjacentHTML('beforeend',html);
 }
 
 // ── SAFE-TO-TRANSFER SEARCH STRING (v4.6.14) ─────────────────
@@ -7123,7 +7161,6 @@ function renderDiffModal(){
         <button class="diff-summary-chip diff-copy-chip mine" type="button" onclick="copyDiffSearch('mine',this)" aria-label="Copy only mine search string" title="Copy only mine search string">⬅ ${diff.onlyMine.length} only mine</button>
         <button class="diff-summary-chip diff-copy-chip theirs" type="button" onclick="copyDiffSearch('theirs',this)" aria-label="Copy only theirs search string" title="Copy only theirs search string">${diff.onlyTheirs.length} only theirs ➡</button>
       </div>
-      ${renderTradeMatchSummary(them)}
       <div class="diff-body">
         ${!myCount&&theirCount?`<div class="diff-tip"><strong>Your ${LIST_LABELS[type].toLowerCase()} list is empty.</strong> Add a few entries in My List first, then come back here and the compare view becomes much more useful.</div>`:''}
         ${diff.both.length?`<div class="diff-section">
@@ -7565,7 +7602,7 @@ async function triggerInstall(){
 
 // ── WHAT'S NEW (#28) ─────────────────────────────────────────
 const WHATS_NEW=[
-  {version:'4.6.26',title:'🤝 Compare trade match summary',desc:'Compare view now has one consolidated panel for what they have that you want, what you have that they want, and possible mirrors.'},
+  {version:'4.6.26',title:'🤝 Trade match view',desc:'Strings now has a separate trade-match button next to Compare, showing what they have that you want, what you have that they want, and possible mirrors.'},
   {version:'4.6.25',notify:false,title:'Small reliability cleanup',desc:'Mobile username suggestions are more reliable, Health Check is clearer, and string import copy now explains the dex-only format without ringing the update bell.'},
   {version:'4.6.18',title:'🚫 Untradeable Mythicals out of the trade list',desc:'Mythicals that can\'t actually be traded in PoGo no longer appear in the trade dropdown. Meltan / Melmetal / Gimmighoul still do.'},
   {version:'4.6.15',title:'🎯 Sprite rework — size & alignment',desc:'Inventory and Browse sprites now scale and center cleanly even for small-bodied species like Cleffa, Igglybuff, Mime Jr.'},
@@ -11132,7 +11169,7 @@ Object.assign(window,{
   toggleExportMenu,closeExportMenu,exportMyListMarkdown,exportMyListCSV,copyShareLink,
   exitShareView,renderShareView,setAddPri,toggleAddAdvanced,trySpriteFallback,
   // Latest batch
-  openDiffModal,closeDiffModal,setDiffListType,copyDiffSearch,
+  openDiffModal,closeDiffModal,setDiffListType,copyDiffSearch,openTradeMatchModal,closeTradeMatchModal,
   openSafeTransferModal,toggleSafeTransferTrainer,setAllSafeTransferTrainers,saveSafeTransferAsDefault,copySafeTransferString,toggleSafeTransferPrefilter,
   openAddAllVariantsModal,closeAddAllVariants,confirmAddAllVariants,
   openAddShownResultsModal,closeAddShownResults,confirmAddShownResults,
