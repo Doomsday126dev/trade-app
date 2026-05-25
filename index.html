@@ -6870,6 +6870,7 @@ function computeTradeMatchSummary(them){
   const youHaveTheyWant=mine.filter(it=>entryWantedByOther(them,it.name));
   const mirrors=mine
     .filter(it=>theirByExact.has(joinHaveKey(it.name,it.gender)))
+    .filter(it=>entryWantedByCur(it.name)&&entryWantedByOther(them,it.name))
     .map(it=>({...it,theirQty:theirByExact.get(joinHaveKey(it.name,it.gender)).qty,theirMirrorOnly:theirByExact.get(joinHaveKey(it.name,it.gender)).mirrorOnly}))
     .sort((a,b)=>(b.mirrorOnly||b.theirMirrorOnly?1:0)-(a.mirrorOnly||a.theirMirrorOnly?1:0)||(parseInt(a.no)||9999)-(parseInt(b.no)||9999)||alphaCompare(a.dn,b.dn));
   return{theyHaveYouWant,youHaveTheyWant,mirrors};
@@ -6887,9 +6888,9 @@ function renderTradeMatchSummary(them){
     ${items.length?`<div class="diff-match-list">${items.slice(0,14).map(it=>chip(it,extraFn?extraFn(it):'')).join('')}${items.length>14?`<span class="diff-match-chip"><span>+${items.length-14} more</span></span>`:''}</div>`:`<div class="diff-match-empty">${empty}</div>`}
   </div>`;
   return`<div class="diff-match-panel" aria-label="Trade match summary">
-    ${box('want','⭐ They have what you want',m.theyHaveYouWant.length,m.theyHaveYouWant,`${escHtml(them)} has not posted inventory matching your wants yet.`)}
-    ${box('give','🤝 You have what they want',m.youHaveTheyWant.length,m.youHaveTheyWant,`Your inventory does not currently match ${escHtml(them)}'s wants.`)}
-    ${box('mirror','🪞 Possible mirrors',m.mirrors.length,m.mirrors,'No exact inventory overlap for mirrors yet.',it=>` · their qty ${it.theirQty||1}`)}
+    ${box('want','⭐ They have that you want',m.theyHaveYouWant.length,m.theyHaveYouWant,`${escHtml(them)} has not posted inventory matching your wants yet.`)}
+    ${box('give','🤝 You have that they want',m.youHaveTheyWant.length,m.youHaveTheyWant,`Your inventory does not currently match ${escHtml(them)}'s wants.`)}
+    ${box('mirror','🪞 Possible mirrors',m.mirrors.length,m.mirrors,'No exact overlap where both trainers have it and both trainers want it yet.',it=>` · their qty ${it.theirQty||1}`)}
   </div>`;
 }
 function renderTradeMatchModal(){
