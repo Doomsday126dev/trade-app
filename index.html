@@ -2229,7 +2229,7 @@ if(!DB)throw new Error('Trade data failed to load');
 
 const PREFILTER="!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&";
 const OWNER="Doomsday126";
-const APP_VERSION="4.6.22";
+const APP_VERSION="4.6.23";
 const STALE_WARN=7,STALE_OLD=30;
 const SESSION_TTL=30*24*60*60*1000; // 30 days; refreshed on each activity so active users stay logged in
 const SPRITE_BASE="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/";
@@ -3522,6 +3522,23 @@ async function createMemberNow(username,pin,isAdmin=false,reqId=''){
     updates[`users/${username}`]=user;
     if(reqId)updates[`requests/${reqId}/status`]='approved';
     await withTimeout(update(ref(db),updates),8000,'Creating member timed out','db/write-timeout');
+    // Firebase Realtime DB's update() resolves the promise as soon as the
+    // CLIENT-SIDE optimistic cache is updated — *before* the server confirms.
+    // If the server later rejects the write (silent auth expiry, missing
+    // admin record, rules mismatch), the local SDK keeps the optimistic
+    // value but other clients never see it. The previous version of this
+    // function trusted the update() promise and returned "success" to the
+    // admin while the new user existed only on the admin's device.
+    //
+    // Verify by reading back from the server. If the record isn't there,
+    // throw so the caller's try/catch can surface a clear error — and the
+    // local cache stays clean because we throw BEFORE writing to it below.
+    const snap=await withTimeout(get(ref(db,`users/${username}`)),6000,'Verifying member create timed out','db/verify-timeout');
+    if(!snap.exists()){
+      const err=new Error('Server rejected the new-member write. Most likely your Firebase auth session has silently expired or your admin record is missing. Sign out and back in, then try again.');
+      err.code='db/write-rejected-silently';
+      throw err;
+    }
   }
   s.users[username]=user;
   s.wishlist[username]=s.wishlist[username]||{};
@@ -6847,6 +6864,7 @@ async function triggerInstall(){
 
 // ── WHAT'S NEW (#28) ─────────────────────────────────────────
 const WHATS_NEW=[
+  {version:'4.6.23',title:'🛠️ Admin fix: new approved users now actually reach the community',desc:'Approving a join request was returning a "✅ Approved" toast even in cases where the Firebase server silently rejected the write (typically because the admin\'s sign-in had quietly expired). The new user existed only on the admin\'s device and never showed up in other trainers\' login dropdowns. The app now reads back from the server after every new-member create — if the record isn\'t there, the admin gets a clear error instead of a false-positive. If you had approvals fail this way before this version, re-approve the affected trainers from the Admin panel.'},
   {version:'4.6.18',title:'🚫 Untradeable Mythicals out of the trade list',desc:'Untradeable Mythicals (Mew, Celebi, Jirachi, Deoxys, Phione, Manaphy, Darkrai, Shaymin, Arceus, Keldeo, Meloetta, Genesect, Diancie, Hoopa, Volcanion, Magearna, Marshadow, Zeraora, Zarude, Victini, Pecharunt) no longer show up in the trade-list dropdown — adding them was misleading since nobody can actually trade them. Meltan / Melmetal / Gimmighoul stay. All are still available in the profile-avatar picker. Bonus: broken profile avatars (e.g. Wooloo) now resolve correctly via the sprite fallback chain.'},
   {version:'4.6.15',title:'🎯 Sprite system rework — correct size & alignment everywhere',desc:'The inventory and Browse sprites that had been rendering tiny, off-center, or stretched (especially small-bodied species like Cleffa, Igglybuff, Mime Jr., Munchlax) are now rebuilt to detect each character\'s actual position in the source art and scale around it. Sprites that PokeMiners doesn\'t host (Wooloo, Sprigatito, etc.) now resolve cleanly to PokemonDB without console errors, and two regional forms (Alolan Diglett, Galarian Yamask) that were rendering as broken placeholders are fixed.'},
   {version:'4.6.14',title:'🗑️ New: "Safe-to-transfer" search string',desc:'Strings tab has a new button that generates a Pokémon GO search string of every species nobody on your chosen trade-partner list wants. Paste it into your bag search to see what\'s safe to mass-transfer. Pick which trainers count, save your usual circle as the default. By default the output also prepends standard "never transfer" filters — !favorite, !4*, !shiny, !shadow, !purified, !background, !traded, !legendary, !mythical, cp-2500 — so hundos, shinies, lucky candidates, and event Pokémon are excluded automatically. Toggle in the modal if you ever need the raw list.'},
