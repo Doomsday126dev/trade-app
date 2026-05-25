@@ -155,3 +155,62 @@
 - Keep the flag off until a Firebase rules draft and NYC migration write path are ready.
 - Do not scope Browse/Strings/Inventory/Schedule yet unless the default community exists server-side.
 - When adding server writes, verify an admin account can create `communities/nyc`, `userCommunities/{uid}/nyc`, and request migration data without breaking old users.
+
+## 2026-05-25 - Codex - Multi-community Phase 1 foundation, pass 2
+
+### Summary
+- Added an owner-only Admin maintenance panel for preparing the default NYC community foundation.
+- The panel is hidden from non-owner admins and all members.
+- Added a controlled `prepareDefaultCommunity()` write path for `communities/nyc` and `userCommunities/{uid}/nyc`.
+- The panel only treats NYC as prepared after a successful write stores `communities/nyc/preparedAt`.
+- Kept `MULTI_COMMUNITY_ENABLED=false`; no user-facing community switcher or scoped browsing behavior was enabled.
+- Synced the Admin security copy box with the canonical rules in `SECURITY-RULES.md`.
+
+### Files touched
+- `index.html`
+- `SECURITY-RULES.md`
+- `SCALING-NOTES.md`
+- `docs/MAINTENANCE-LOG.md`
+
+### Feature flags added/changed
+- `MULTI_COMMUNITY_ENABLED` remains `false`.
+- No public feature flag was enabled.
+
+### Firebase paths added/changed
+- Owner-only migration writes may create/update:
+  - `communities/nyc`
+  - `userCommunities/{uid}/nyc`
+- Existing app data remains global:
+  - `users`
+  - `wishlist`
+  - `dynamax`
+  - `gmax`
+  - `costumes`
+  - `have`
+  - `offers`
+  - `trades`
+
+### Security rules changes needed
+- `SECURITY-RULES.md` canonical block was updated to v5.
+- v5 adds owner-only write rules for:
+  - `communities`
+  - `userCommunities`
+  - `communityRequests`
+- Publish v5 rules before running the owner-only NYC preparation button in production.
+
+### Manual test checklist
+- Non-owner admins should not see the "Owner maintenance · NYC community foundation" panel.
+- Owner should see the panel in Admin.
+- Before v5 rules are published, the Prepare NYC action may fail with permission denied; that is expected.
+- After v5 rules are published, owner can click Prepare NYC and verify `communities/nyc` exists in Firebase.
+- Confirm Browse, Strings, Inventory, Schedule, and login behavior remain unchanged.
+
+### Known risks / TODOs
+- The owner-only migration relies on existing users having `authUid`; users without `authUid` are indexed by username only until repaired.
+- `communityRequests` rules are owner-only for now; later create/join flows need more nuanced rules.
+- `MULTI_COMMUNITY_ENABLED` must stay false until the default community write has been verified and scoping screens are implemented.
+
+### Instructions for the next contributor
+- Do not expose community UI to members or ordinary admins yet.
+- Do not make Browse/Strings/Inventory/Schedule community-scoped until `communities/nyc` exists on the server.
+- When starting Phase 2, treat missing `communityId` on old records as `nyc`.

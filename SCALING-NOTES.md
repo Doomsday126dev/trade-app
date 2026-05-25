@@ -136,6 +136,9 @@ when any of these trigger:
 - Ensures a default `nyc` community exists in normalized local state.
 - Auto-indexes existing users into the default NYC community in local
   normalized data.
+- Adds an owner-only Admin maintenance control to write the default NYC
+  community foundation to Firebase after v5 rules are published. Successful
+  runs mark `communities/nyc/preparedAt`.
 - Adds helper functions for future scoping without changing production UI:
   `getCurrentCommunityId()`, `getCommunityMemberUsernames()`,
   `filterUsersBySelectedCommunity()`, `isUserInCommunity()`,
@@ -145,8 +148,9 @@ when any of these trigger:
 **What it deliberately does not do yet**:
 - No community switcher.
 - No community-scoped Browse/Strings/Inventory/Schedule filtering.
-- No Firebase writes to create community records for existing production data.
-- No security-rule changes.
+- No automatic Firebase writes to create community records for existing
+  production data; the owner must run the private maintenance action.
+- No public UI for admins or members.
 - No subscription reduction. This is a model/helper foundation, not a
   bandwidth win yet.
 
@@ -154,8 +158,8 @@ when any of these trigger:
 trades means `nyc`. Pokemon lists remain global per user for now.
 
 **Next step**: write the default `nyc` community to Firebase only after the
-rules and admin migration flow are ready, then enable selected screens one at
-a time behind the feature flag.
+owner-only maintenance tool, then enable selected screens one at a time
+behind the feature flag.
 
 ---
 
@@ -298,7 +302,8 @@ When you ship scaling work, append a one-line entry here. Newest first.
 - **2026-05-25, v4.6.25** — Multi-community foundation started behind
   `MULTI_COMMUNITY_ENABLED=false`: normalized `communities`,
   `userCommunities`, and `communityRequests`; added default `nyc`
-  community helpers without changing production behavior. (Codex)
+  community helpers plus an owner-only maintenance writer, without changing
+  production behavior for members/admins. (Codex)
 - **2026-05-24, v4.6.22** — Perf panel layout fix (long-status rows stack
   cleanly instead of wrapping) + snapshot:* timings now skip the first
   per-path sample so displayed p95 reflects steady-state edit cost, not

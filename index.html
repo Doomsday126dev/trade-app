@@ -1933,6 +1933,7 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
     </div>
     <div class="security-box" id="security-panel"></div>
     <div class="login-audit" id="login-audit-panel" style="display:none"></div>
+    <div class="login-audit" id="community-migration-panel" style="display:none"></div>
     <div id="pending-requests-section" style="display:none;margin-bottom:16px">
       <div class="sec" style="margin-top:0;display:flex;align-items:center;gap:6px">Pending requests <span class="notif-badge" id="req-count-badge">0</span></div>
       <div id="pending-requests-list"></div>
@@ -2383,6 +2384,23 @@ const SECURE_RULES=`{
         ".write": "auth != null && (root.child('admins').child(auth.uid).val() === true || root.child('users').child($username).child('authUid').val() === auth.uid)"
       }
     },
+    "have": {
+      "$username": {
+        ".write": "auth != null && (root.child('admins').child(auth.uid).val() === true || root.child('users').child($username).child('authUid').val() === auth.uid)"
+      }
+    },
+    "offers": {
+      "$recipient": {
+        "$offerId": {
+          ".write": "auth != null && ((!data.exists() && newData.child('from').val() === root.child('authIndex').child(auth.uid).child('username').val()) || (data.exists() && data.child('from').val() === root.child('authIndex').child(auth.uid).child('username').val()) || $recipient === root.child('authIndex').child(auth.uid).child('username').val() || root.child('admins').child(auth.uid).val() === true)"
+        }
+      }
+    },
+    "trades": {
+      "$tradeId": {
+        ".write": "auth != null && ((!data.exists() && newData.child('organizer').val() === root.child('authIndex').child(auth.uid).child('username').val()) || (data.exists() && data.child('organizer').val() === root.child('authIndex').child(auth.uid).child('username').val()) || (data.exists() && data.child('participants').child(root.child('authIndex').child(auth.uid).child('username').val()).exists()) || root.child('admins').child(auth.uid).val() === true)"
+      }
+    },
     "requests": {
       "$id": {
         ".write": "!data.exists() || (auth != null && root.child('admins').child(auth.uid).val() === true)"
@@ -2398,6 +2416,36 @@ const SECURE_RULES=`{
       "$uid": {
         ".read": "auth != null",
         ".write": "auth != null && root.child('admins').child(auth.uid).val() === true"
+      }
+    },
+    "communities": {
+      ".read": "auth != null",
+      "$communityId": {
+        ".write": "auth != null && (root.child('authIndex').child(auth.uid).child('username').val() === 'Doomsday126' || root.child('users').child(root.child('authIndex').child(auth.uid).child('username').val()).child('isOwner').val() === true)"
+      }
+    },
+    "userCommunities": {
+      ".read": "auth != null",
+      "$uid": {
+        "$communityId": {
+          ".write": "auth != null && (root.child('authIndex').child(auth.uid).child('username').val() === 'Doomsday126' || root.child('users').child(root.child('authIndex').child(auth.uid).child('username').val()).child('isOwner').val() === true)"
+        }
+      }
+    },
+    "communityRequests": {
+      ".read": "auth != null",
+      "$communityId": {
+        "$requestId": {
+          ".write": "auth != null && (root.child('authIndex').child(auth.uid).child('username').val() === 'Doomsday126' || root.child('users').child(root.child('authIndex').child(auth.uid).child('username').val()).child('isOwner').val() === true)"
+        }
+      }
+    },
+    "pendingDecrements": {
+      "$username": {
+        ".read": "auth != null && (root.child('users').child($username).child('authUid').val() === auth.uid || root.child('admins').child(auth.uid).val() === true)",
+        "$decId": {
+          ".write": "auth != null && ((!data.exists() && newData.child('from').val() === root.child('authIndex').child(auth.uid).child('username').val() && newData.child('qty').isNumber() && newData.child('qty').val() != 0 && newData.child('qty').val() >= -999 && newData.child('qty').val() <= 999 && newData.child('key').isString() && newData.child('key').val().length > 0) || (data.exists() && root.child('users').child($username).child('authUid').val() === auth.uid) || root.child('admins').child(auth.uid).val() === true)"
+        }
       }
     },
     "_ping": {
@@ -6485,6 +6533,94 @@ function renderLoginAudit(){
       }).join('')}
     </div>`;
 }
+function ownerCanUseCommunityTools(){
+  return !!(cur&&(cur===OWNER||allData.users?.[cur]?.isOwner));
+}
+function buildDefaultCommunityMigration(){
+  const s=normalizeData(getLocal());
+  const community=normalizeCommunityRecord(DEFAULT_COMMUNITY_ID,s.communities?.[DEFAULT_COMMUNITY_ID],s);
+  const updates={};
+  const missingAuth=[];
+  Object.entries(s.users||{}).forEach(([u,ud])=>{
+    community.memberUsernames[u]=true;
+    if(!ud?.authUid){missingAuth.push(u);return;}
+    const role=communityRoleForUser(u,ud);
+    community.members[ud.authUid]=true;
+    if(role!=='member')community.admins[ud.authUid]=true;
+    updates[`userCommunities/${ud.authUid}/${DEFAULT_COMMUNITY_ID}`]={
+      role,
+      username:u,
+      joinedAt:ud?.joined||0
+    };
+  });
+  community.updatedAt=Date.now();
+  updates[`communities/${DEFAULT_COMMUNITY_ID}`]=community;
+  return{
+    updates,
+    community,
+    memberCount:Object.keys(community.memberUsernames||{}).length,
+    uidMemberCount:Object.keys(community.members||{}).length,
+    adminCount:Object.keys(community.admins||{}).length,
+    missingAuth
+  };
+}
+function renderCommunityMigrationPanel(){
+  const el=document.getElementById('community-migration-panel');if(!el)return;
+  if(!ownerCanUseCommunityTools()){el.style.display='none';el.innerHTML='';return;}
+  const migration=buildDefaultCommunityMigration();
+  const existing=allData.communities?.[DEFAULT_COMMUNITY_ID]||{};
+  const serverMembers=Object.keys(existing.memberUsernames||{}).length;
+  const serverUidMembers=Object.keys(existing.members||{}).length;
+  const ready=!!existing.preparedAt&&serverMembers>=migration.memberCount&&serverUidMembers>=migration.uidMemberCount;
+  el.style.display='block';
+  el.innerHTML=`
+    <div class="login-audit-head">
+      <div>
+        <div class="login-audit-title">Owner maintenance · NYC community foundation</div>
+        <div class="login-audit-sub">Private prep for future multi-community support. This does not change Browse, Strings, Inventory, Schedule, or login behavior.</div>
+      </div>
+      <div class="login-audit-actions">
+        <button class="rpin" onclick="prepareDefaultCommunity()" ${ready?'disabled':''}>${ready?'NYC prepared':'Prepare NYC'}</button>
+      </div>
+    </div>
+    <div class="login-audit-list">
+      <div class="login-audit-row">
+        <div>
+          <div class="login-audit-user">Default community: ${escHtml(DEFAULT_COMMUNITY_NAME)} <span class="cb">${escHtml(DEFAULT_COMMUNITY_ID)}</span></div>
+          <div class="login-audit-issues">
+            <span class="login-audit-chip">${migration.memberCount} usernames</span>
+            <span class="login-audit-chip">${migration.uidMemberCount} auth-linked members</span>
+            <span class="login-audit-chip">${migration.adminCount} owner/admin UID${migration.adminCount===1?'':'s'}</span>
+            ${ready?'<span class="acct-pill ok">Server ready</span>':'<span class="acct-pill warn">Not written to Firebase yet</span>'}
+          </div>
+          ${migration.missingAuth.length?`<div style="font-size:11px;color:var(--muted);margin-top:6px">Missing Auth UID and indexed by username only for now: ${escHtml(migration.missingAuth.slice(0,8).join(', '))}${migration.missingAuth.length>8?'…':''}</div>`:''}
+        </div>
+      </div>
+    </div>`;
+}
+async function prepareDefaultCommunity(){
+  if(!ownerCanUseCommunityTools()){toast('⚠️ Owner only');return;}
+  if(!fbOn||!db||!auth?.currentUser){toast('⚠️ Sign in with Firebase before preparing community data');return;}
+  const migration=buildDefaultCommunityMigration();
+  if(!confirm(`Prepare the private NYC community foundation?\n\nThis writes ${migration.memberCount} usernames and ${migration.uidMemberCount} auth-linked memberships. It will not change what users see yet.`))return;
+  try{
+    migration.community.preparedAt=Date.now();
+    migration.updates[`communities/${DEFAULT_COMMUNITY_ID}`]=migration.community;
+    await withTimeout(update(ref(db),migration.updates),9000,'Preparing NYC community timed out','db/community-timeout');
+    const snap=await withTimeout(get(ref(db,`communities/${DEFAULT_COMMUNITY_ID}`)),6000,'Verifying NYC community timed out','db/community-verify-timeout');
+    if(!snap.exists())throw Object.assign(new Error('Server did not confirm communities/nyc. Publish the community rules from SECURITY-RULES.md and retry.'),{code:'community/not-confirmed'});
+    const s=getLocal();
+    applyDataPath(s,`communities/${DEFAULT_COMMUNITY_ID}`,migration.community);
+    Object.entries(migration.updates).forEach(([path,data])=>{if(path.startsWith('userCommunities/'))applyDataPath(s,path,data);});
+    saveLocal(s);
+    allData=normalizeData(s);
+    renderCommunityMigrationPanel();
+    toast(`✅ NYC community prepared for ${migration.memberCount} member${migration.memberCount===1?'':'s'}`,5000);
+  }catch(e){
+    console.warn('Default community prep failed',e);
+    toast('⚠️ Could not prepare NYC community: '+(e.code||e.message||'permission denied'),7000);
+  }
+}
 async function repairLoginDirectory(u){
   if(!allData.users?.[cur]?.isAdmin){toast('⚠️ Admin only');return;}
   try{
@@ -6513,6 +6649,7 @@ function renderAdmin(){
   const el=document.getElementById('admin-tbody');if(!el)return;
   renderSecurityPanel();
   renderLoginAudit();
+  renderCommunityMigrationPanel();
   const iAmOwner=allData.users?.[cur]?.isOwner||cur===OWNER;
   const adminWrap=document.getElementById('nu-admin-wrap');
   const adminInput=document.getElementById('nu-admin');

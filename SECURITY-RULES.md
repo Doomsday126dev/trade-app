@@ -9,18 +9,18 @@
 
 ---
 
-## Current status (as of v4.6.24, 2026-05-24)
+## Current status (as of v4.6.25, 2026-05-25)
 
 | Item | Status |
 |---|---|
-| Canonical ruleset version | **v4** — adds public `loginDirectory` for clean-browser username discovery and keeps `qty` in `[-999, 999]` |
-| Published in Firebase Console | ✅ **Confirmed published 2026-05-24** by user |
+| Canonical ruleset version | **v5** — adds owner-only community foundation paths for the future NYC default community migration |
+| Published in Firebase Console | ⏸️ **Not yet confirmed** after v5 community-path additions |
 | API key HTTP-referrer lock | ✅ Confirmed configured (Google Cloud Console → Credentials, restricted to `https://doomsday126dev.github.io/*`) |
 | Scheduled RTDB backups | ⏸️ Not yet enabled (low priority at 40 trainers) |
 
-**No pending changes.** The canonical ruleset below matches what's
-currently live in Firebase. If you need to change the rules, edit this
-doc first (the canonical block + the changelog), then publish.
+**Pending publish:** v5 adds `communities`, `userCommunities`, and
+`communityRequests`. Publish the canonical block below before running the
+owner-only NYC community preparation tool.
 
 ---
 
@@ -99,6 +99,28 @@ Publish.
         ".write": "auth != null && root.child('admins').child(auth.uid).val() === true"
       }
     },
+    "communities": {
+      ".read": "auth != null",
+      "$communityId": {
+        ".write": "auth != null && (root.child('authIndex').child(auth.uid).child('username').val() === 'Doomsday126' || root.child('users').child(root.child('authIndex').child(auth.uid).child('username').val()).child('isOwner').val() === true)"
+      }
+    },
+    "userCommunities": {
+      ".read": "auth != null",
+      "$uid": {
+        "$communityId": {
+          ".write": "auth != null && (root.child('authIndex').child(auth.uid).child('username').val() === 'Doomsday126' || root.child('users').child(root.child('authIndex').child(auth.uid).child('username').val()).child('isOwner').val() === true)"
+        }
+      }
+    },
+    "communityRequests": {
+      ".read": "auth != null",
+      "$communityId": {
+        "$requestId": {
+          ".write": "auth != null && (root.child('authIndex').child(auth.uid).child('username').val() === 'Doomsday126' || root.child('users').child(root.child('authIndex').child(auth.uid).child('username').val()).child('isOwner').val() === true)"
+        }
+      }
+    },
     "pendingDecrements": {
       "$username": {
         ".read": "auth != null && (root.child('users').child($username).child('authUid').val() === auth.uid || root.child('admins').child(auth.uid).val() === true)",
@@ -161,6 +183,17 @@ my inventory; added in app v4.6.10).
 - **admins**: only existing admins can modify the admin list. All
   authenticated users can read the list (used to surface "this user is an
   admin" UI).
+
+### Community foundation (`communities`, `userCommunities`, `communityRequests`)
+- **Read**: any authenticated user, matching the current app's authenticated
+  community visibility model.
+- **Write**: owner only for now (`Doomsday126` or a user record marked
+  `isOwner: true`).
+
+These paths are intentionally conservative during Phase 1. They exist only
+to prepare the default NYC community and membership indexes. Later phases
+can loosen writes for community owners/admins after the create/join/manage
+flows exist.
 
 ---
 
@@ -252,6 +285,10 @@ schema-level protection. At 50+ trainers I'd keep the strict version.
 When you ship a rule change (or other related work), append a one-line
 entry here. Newest first.
 
+- **2026-05-25, v4.6.25** — Drafted v5 owner-only community foundation
+  rules for `communities`, `userCommunities`, and `communityRequests`.
+  Publish before running the owner-only NYC community preparation tool.
+  (Codex)
 - **2026-05-24, v4.6.24** — Added public `loginDirectory` path so newly approved trainers appear on the login screen in clean browsers; app now expects admins to maintain it alongside `users/`.
 - **2026-05-24, v4.6.20** — User confirmed v3 ruleset is published and API
   key is referrer-locked. Doc restructured into living-format. (Claude)
