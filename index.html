@@ -4346,8 +4346,11 @@ async function doLogin(){
       console.warn('Public-directory auth sign-in failed',e);
     }
   }
-  // Always prefer live Firebase data for PIN check, fall back to local
-  if(fbOn&&db){
+  // Legacy PIN fallback only works when a cached/local user exists. With secure
+  // rules, users/ is intentionally not readable before Firebase Auth, so do not
+  // probe it pre-login and turn a missing loginDirectory entry into a scary
+  // permission-denied loop.
+  if(!ident&&fbOn&&db&&ud){
     try{
       const snap=await withTimeout(get(ref(db,`users/${u}`)),5000,'Firebase lookup timed out','db/read-timeout');
       if(snap.exists())ud={...ud,...snap.val()};
