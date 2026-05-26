@@ -1112,3 +1112,50 @@
 - Do not duplicate offers under community nodes unless a later data model review decides it is necessary.
 - Keep offer filtering centralized through `ownerPreviewAllowsOffer()` while Phase 2 remains preview-gated.
 - When public community switching is enabled, evolve `ownerPreviewAllowsOffer()` into a general `offerBelongsToSelectedCommunity()` helper and update Firebase rules at the same time.
+
+## 2026-05-26 - Codex - Admin repair permission fix
+
+### Summary
+- Fixed the Admin -> Repair account flow that was failing with `PERMISSION_DENIED`.
+- Root cause: `repairMemberAccount()` wrote `authIndex/{targetAuthUid}` for another user, but the canonical Firebase rules intentionally allow only the signed-in user to write their own `authIndex` row.
+- Repair now writes the target `users/{username}`, `loginDirectory/{username}`, and default NYC community membership paths, but leaves `authIndex` to be created by the repaired user on their next successful sign-in.
+- Bumped `APP_VERSION` to `4.6.28` for health-check/debug visibility.
+
+### Files touched
+- `index.html`
+- `SECURITY-RULES.md`
+- `docs/MAINTENANCE-LOG.md`
+
+### Feature flags added/changed
+- None.
+
+### Firebase paths added/changed
+- No new paths.
+- Admin Repair no longer writes:
+  - `authIndex/{targetAuthUid}`
+- Admin Repair still writes, when applicable:
+  - `users/{username}`
+  - `loginDirectory/{username}`
+  - `communities/nyc/memberUsernames/{username}`
+  - `communities/nyc/members/{authUid}`
+  - `communities/nyc/admins/{authUid}` for admin/owner users
+  - `userCommunities/{authUid}/nyc`
+
+### Security rules changes needed
+- None. This fix preserves the current canonical rules.
+- `SECURITY-RULES.md` now documents that `authIndex` is self-published by the signed-in user and should not be written during admin repair.
+
+### Manual test checklist
+- As Doomsday126, click Repair on a user marked `Needs repair`.
+- If prompted, enter/generate a 6-digit PIN and verify the success toast copies login details.
+- Verify Firebase has updated `users/{username}` and `loginDirectory/{username}`.
+- If the user has/gets an Auth UID, verify NYC membership paths are written.
+- Ask the repaired user to sign in once; after that, verify `authIndex/{theirUid}` appears/updates.
+
+### Known risks / TODOs
+- Immediately after repair and before the user signs in, their `authIndex` row may still be missing. That is expected and should not block login.
+- If a user still cannot log in after repair, check `users/{username}/authUid`, `users/{username}/authEmail`, `loginDirectory/{username}/authReady`, and Firebase Authentication for the generated email row.
+
+### Instructions for the next contributor
+- Do not re-add target-user `authIndex` writes to admin repair unless Firebase rules are intentionally changed and documented.
+- Keep the repair flow aligned with the security model: admins prepare login records; users publish their own Auth UID index when they actually authenticate.

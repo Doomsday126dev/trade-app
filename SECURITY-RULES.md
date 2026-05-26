@@ -184,6 +184,16 @@ my inventory; added in app v4.6.10).
   authenticated users can read the list (used to surface "this user is an
   admin" UI).
 
+### Self-published login index (`authIndex`)
+- **Read**: the signed-in user can read their own row; admins can read all
+  rows.
+- **Write**: only the signed-in user's own UID row.
+
+Admin repair/reset flows should **not** write another user's `authIndex`
+record. The repaired user publishes their own row automatically on their
+next successful sign-in. This keeps the rules tighter and avoids
+owner/admin account-repair writes failing on an otherwise valid user repair.
+
 ### Community foundation (`communities`, `userCommunities`, `communityRequests`)
 - **Read**: any authenticated user, matching the current app's authenticated
   community visibility model.

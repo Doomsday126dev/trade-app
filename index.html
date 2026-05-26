@@ -2374,7 +2374,7 @@ if(!DB)throw new Error('Trade data failed to load');
 
 const PREFILTER="!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&";
 const OWNER="Doomsday126";
-const APP_VERSION="4.6.27";
+const APP_VERSION="4.6.28";
 const MULTI_COMMUNITY_ENABLED=false;
 const MULTI_COMMUNITY_OWNER_PREVIEW_AVAILABLE=true;
 const DEFAULT_COMMUNITY_ID='nyc';
@@ -3927,7 +3927,9 @@ async function repairMemberAccount(username,opts={}){
     const updates={};
     updates[`users/${username}`]=next;
     updates[`loginDirectory/${username}`]=loginDir;
-    if(next.authUid)updates[`authIndex/${next.authUid}`]={username,isAdmin:!!next.isAdmin,isOwner:!!next.isOwner,lastSeen:Date.now()};
+    // Do not write authIndex for another user's UID here. Firebase rules only
+    // allow users to publish their own authIndex row; the repaired user will
+    // create it automatically on their next successful sign-in.
     if(ownerCanUseCommunityTools())Object.assign(updates,defaultCommunityMembershipUpdates(username,next,next.joined||Date.now()));
     await withTimeout(update(ref(db),updates),9000,'Repairing account timed out','db/repair-timeout');
     const userSnap=await withTimeout(get(ref(db,`users/${username}`)),6000,'Verifying user repair timed out','db/verify-timeout');
@@ -3935,13 +3937,11 @@ async function repairMemberAccount(username,opts={}){
     if(!userSnap.exists()||!dirSnap.exists())throw Object.assign(new Error('Server did not confirm the repaired account. Sign out/back in as admin and retry.'),{code:'repair/not-confirmed'});
     delete syncQueue[`users/${username}`];
     delete syncQueue[`loginDirectory/${username}`];
-    if(next.authUid)delete syncQueue[`authIndex/${next.authUid}`];
     if(!Object.keys(syncQueue).length)showSyncDot(false);
   }
   const s=getLocal();
   s.users[username]=next;
   s.loginDirectory[username]=loginDir;
-  if(next.authUid){s.authIndex=s.authIndex||{};s.authIndex[next.authUid]={username,isAdmin:!!next.isAdmin,isOwner:!!next.isOwner,lastSeen:Date.now()};}
   if(ownerCanUseCommunityTools())applyDefaultCommunityMembershipLocal(s,username,next,next.joined||Date.now());
   saveLocal(s);allData=normalizeData(s);refreshAll();populateLoginUsers();
   return{user:next,pin:pinForCopy};
