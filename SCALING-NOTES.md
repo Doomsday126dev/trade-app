@@ -312,6 +312,10 @@ on phones and slow networks first.
 
 When you ship scaling work, append a one-line entry here. Newest first.
 
+- **2026-05-25, v4.6.25** — Fixed owner preview stale membership by
+  subscribing the owner-preview path to live `communities`,
+  `userCommunities`, and `communityRequests` even while
+  `MULTI_COMMUNITY_ENABLED=false`. (Codex)
 - **2026-05-25, v4.6.25** — Phase 2 pass 2 expanded owner preview to
   Strings, Compare, and Trade Match using the same `communities/nyc`
   membership set; Inventory and Schedule remain untouched. (Codex)

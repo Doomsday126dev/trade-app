@@ -4365,7 +4365,8 @@ function ensureProtectedSubscriptions(){
   subscribePath('users');
   subscribePath('authIndex');
   subscribePath('requests');
-  if(MULTI_COMMUNITY_ENABLED){
+  const needsCommunityPreviewData=MULTI_COMMUNITY_OWNER_PREVIEW_AVAILABLE&&ownerCanUseCommunityTools();
+  if(MULTI_COMMUNITY_ENABLED||needsCommunityPreviewData){
     subscribePath('communities');
     subscribePath('userCommunities');
     subscribePath('communityRequests');
@@ -4820,6 +4821,7 @@ function showApp(){
   document.getElementById('admin-tab').style.display=isAdmin?'':'none';
   const activeTab=document.querySelector('.tab.active')?.dataset.tab;
   const nextTab=activeTab&&(activeTab!=='admin'||isAdmin)?activeTab:'browse';
+  ensureProtectedSubscriptions();
   switchTab(nextTab);
   window.scrollTo(0,0);
   updateFcDisplay();
@@ -6559,6 +6561,7 @@ function ownerCommunityPreviewOn(){
 function setOwnerCommunityPreview(on){
   if(!ownerCanUseCommunityTools())return;
   lsSet(OWNER_COMMUNITY_PREVIEW_KEY,!!on);
+  if(on)ensureProtectedSubscriptions();
   renderCommunityMigrationPanel();
   renderBrowse();
   renderStrings();

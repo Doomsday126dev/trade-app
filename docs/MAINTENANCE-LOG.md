@@ -353,3 +353,46 @@
 - Validate owner preview against production before implementing Inventory browse scoping.
 - Keep future scoping helpers surface-specific until the UX is proven stable.
 - If preview shows no visible difference, that likely means all current users are in NYC; test by temporarily removing a test member from `communities/nyc/memberUsernames` in a local/dev copy before shipping public scoping.
+
+## 2026-05-25 - Codex - Owner preview live community subscription fix
+
+### Summary
+- Fixed owner preview using stale local community membership after Firebase edits.
+- The app now subscribes to `communities`, `userCommunities`, and `communityRequests` for the owner-preview path even while `MULTI_COMMUNITY_ENABLED=false`.
+- `showApp()` re-checks protected subscriptions after `cur` is known, so owner-only community preview data can load reliably after sign-in/session restore.
+- Turning the owner preview toggle on also requests protected subscriptions again, so the preview can recover if the first auth observer fired before `cur` was set.
+- Kept the preview UI owner-only; ordinary admins and members still do not see the maintenance panel or preview toggle.
+
+### Files touched
+- `index.html`
+- `SCALING-NOTES.md`
+- `docs/MAINTENANCE-LOG.md`
+
+### Feature flags added/changed
+- No new flags.
+- `MULTI_COMMUNITY_OWNER_PREVIEW_AVAILABLE=true` now also controls owner-only community data subscriptions.
+- `MULTI_COMMUNITY_ENABLED` remains `false`.
+
+### Firebase paths added/changed
+- No new paths.
+- Owner preview now live-subscribes to existing `communities`, `userCommunities`, and `communityRequests` paths.
+
+### Security rules changes needed
+- None beyond the current community-aware rules.
+- These paths must be readable to signed-in users under the current rules; writes remain constrained by rules.
+
+### Manual test checklist
+- Owner signs in, enables Browse + Strings preview, and sees preview banners.
+- Remove `TestUser` from `communities/nyc/memberUsernames` in Firebase.
+- After refresh/sign-in, `TestUser` should disappear from Browse and Strings while preview is on.
+- Turn preview off and verify global Browse/Strings behavior returns.
+- Add `TestUser: true` back to `communities/nyc/memberUsernames`.
+- Non-owner admins/members should still not see owner preview controls.
+
+### Known risks / TODOs
+- Owner preview now downloads community metadata for the owner even with the public multi-community feature disabled.
+- This still does not reduce global list subscriptions; it only makes owner preview scoping accurate.
+
+### Instructions for the next contributor
+- If owner preview looks stale again, first inspect `_pathLoadState.communities` and whether `subscribePath('communities')` is active after owner sign-in.
+- Keep Phase 2 scoping behind owner preview until Browse and Strings are verified against production data.
