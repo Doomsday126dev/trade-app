@@ -871,3 +871,35 @@
 
 ### Instructions for the next contributor
 - Keep `Fair trade` distinct from `Mirror only`: fair trade means comparable rarity/value from the other trainer's wishlist, while mirror means same Pokemon/form only.
+
+## 2026-05-26 - Codex - Sprite normalization restored inside fixed slots
+
+### Summary
+- Restored the app's existing per-sprite visual scaling inside fixed sprite slots so padded sprites no longer render as tiny dots.
+- Kept overflow containment on Inventory/compare/share/offer row slots so large sprites cannot bleed into row text or quantities.
+- Wrapped the Browse costume/other-list branch in `.pc-sprite-wrap` so Browse rows use the same fixed sprite-slot behavior as the main trade list branch.
+
+### Files touched
+- `index.html`
+- `docs/MAINTENANCE-LOG.md`
+
+### Feature flags added/changed
+- None.
+
+### Firebase paths added/changed
+- None.
+
+### Security rules changes needed
+- None.
+
+### Manual test checklist
+- Browse tab on mobile: small species such as Bulbasaur, Pidgey, Rattata, and Pikachu should be visibly larger than before while staying in the sprite column.
+- Inventory -> Browse community expanded trainer cards: Heracross, Mewtwo, Latias, Dialga, Wailmer, and baby Pokemon should stay inside their row/card and not overlap names, badges, notes, or quantities.
+- Costume/Others Browse rows should use the same alignment behavior as regular Trades Browse rows.
+- Max crowns/chips in Browse/My List should still render near the sprite and not affect row text.
+
+### Known risks / TODOs
+- Some sprite scale values are cached in browser localStorage. A hard refresh or health-check cache clear may be needed to see corrected scaling immediately on devices with stale sprite-scale cache entries.
+
+### Instructions for the next contributor
+- Do not globally disable `transform` on row sprite images again; that prevents overflow but also disables transparent-padding normalization. Prefer fixed wrappers plus selective `overflow:hidden` on row surfaces that need hard containment.
