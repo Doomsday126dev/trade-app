@@ -146,6 +146,12 @@ input,select,textarea{font-family:var(--font);outline:none}
 .pc:hover{border-color:var(--border2)}
 .pc-hdr{display:flex;align-items:center;gap:9px;margin-bottom:8px}
 .pc-sprite{width:40px;height:40px;object-fit:contain;flex-shrink:0;image-rendering:pixelated}
+.pokemon-sprite-slot,.pc-sprite-wrap,.myrow-sprite-wrap,.have-row-sprite,.diff-card-sprite-wrap,.share-pcard-sprite-wrap,.offer-pkmn-display .sprite-wrap{position:relative;display:flex;align-items:center;justify-content:center;flex:0 0 auto;box-sizing:border-box}
+.pc-sprite-wrap{width:40px;height:40px}
+.pgrid .pc-sprite-wrap{width:28px;height:28px}
+.myrow-sprite-wrap{width:28px;height:28px}
+.pokemon-sprite-slot img,.pc-sprite-wrap > img,.myrow-sprite-wrap > img,.have-row-sprite > img,.diff-card-sprite-wrap > img,.share-pcard-sprite-wrap > img,.offer-pkmn-display .sprite-wrap > img{width:100%!important;height:100%!important;max-width:100%;max-height:100%;object-fit:contain;object-position:center;display:block;flex:0 0 auto;transform:none!important;transform-origin:center center!important;clip-path:none!important}
+.pc-hdr > img.pc-sprite,.ac-item-sprite,.import-sprite,.sb-row-sprite{object-fit:contain;object-position:center;display:block;transform:none!important;transform-origin:center center!important;clip-path:none!important}
 .pc-sprite-placeholder{width:40px;height:40px;flex-shrink:0;background:var(--bg2);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:16px}
 .pc-info{flex:1;min-width:0}
 .pc-name{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -225,7 +231,7 @@ input,select,textarea{font-family:var(--font);outline:none}
 .myrow.drag-over{border-color:var(--accent);background:rgba(108,99,255,.08)}
 .drag-handle{color:var(--border2);font-size:14px;cursor:grab;flex-shrink:0;user-select:none;padding:2px 4px}
 .myrow-sprite{width:28px;height:28px;object-fit:contain;flex-shrink:0;image-rendering:pixelated}
-.myrow-sprite-wrap,.pc-sprite-wrap{position:relative;display:inline-flex;flex-shrink:0;overflow:visible}
+.myrow-sprite-wrap,.pc-sprite-wrap{overflow:visible}
 .max-crown{position:absolute;top:-9px;left:50%;transform:translateX(-50%);width:22px;height:13px;pointer-events:none;object-fit:contain;image-rendering:auto;filter:drop-shadow(0 1px 1px rgba(0,0,0,.45))}
 .max-chip{position:absolute;right:-5px;bottom:-3px;width:14px;height:14px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.55);font-family:var(--mono);font-size:8px;font-weight:800;color:#fff;box-shadow:0 1px 4px rgba(0,0,0,.35)}
 .max-chip.dmax-chip{background:#dc2626}
@@ -986,11 +992,9 @@ html[data-theme="light"] .have-dnb-badge,html[data-theme="light"] .have-mode-btn
 html[data-theme="light"] .have-giveaway-badge,html[data-theme="light"] .have-mode-btn.giveaway,html[data-theme="light"] .have-pmon-card .have-pmon-meta.giveaway{color:#c2410c}
 .have-row{background:var(--card);border:1px solid var(--border);border-radius:var(--r2);padding:9px 12px;display:flex;align-items:center;gap:8px;margin-bottom:6px;transition:.15s}
 .have-row:hover{border-color:var(--border2)}
-/* Auto-scale (effectiveSpriteScale) restored — small-bodied PokeMiners art
-   like Cleffa / Igglybuff was being crushed to thumbnail size by codex's
-   scaleCap:1.08. Layout-wise the box stays 32×32; the transform-scaled
-   image is allowed to bleed slightly past so the character reads clearly,
-   matching the pre-4.6.0 behaviour. */
+/* Fixed sprite slot for inventory rows. The image helper may try to transform
+   sprites for visual normalization, but row slots override that so oversized
+   sprites do not bleed into text or outside card boundaries. */
 .have-row-sprite{width:32px;height:32px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
 .have-row-info{flex:1;min-width:0}
 .have-row-name{font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}

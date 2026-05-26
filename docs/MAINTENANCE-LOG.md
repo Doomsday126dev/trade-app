@@ -803,3 +803,36 @@
 
 ### Instructions for the next contributor
 - Keep this as a single shared legend near the Browse community controls; avoid repeating labels under every inventory card unless user testing shows it is still unclear.
+
+## 2026-05-26 - Codex - Row sprite slot containment
+
+### Summary
+- Fixed Pokémon sprite alignment/overflow in row-style UI by adding shared fixed sprite-slot CSS for Browse, My List, Inventory, compare/share cards, and offer modal sprite wrappers.
+- Row images now fill their reserved slot with `object-fit: contain`, centered positioning, and inline sprite-normalization transforms disabled inside those fixed slots.
+- This specifically prevents large sprites such as Wailmer, Dialga, Latias, and Mewtwo from bleeding into names, tags, quantities, or row boundaries while keeping small sprites centered.
+
+### Files touched
+- `index.html`
+- `docs/MAINTENANCE-LOG.md`
+
+### Feature flags added/changed
+- None.
+
+### Firebase paths added/changed
+- None.
+
+### Security rules changes needed
+- None.
+
+### Manual test checklist
+- Inventory -> Browse community: expand a trainer with large Pokémon such as Wailmer, Dialga, Latias, Mewtwo, Heracross, and Pikachu; sprites should stay inside the left sprite column.
+- Inventory -> Browse community on mobile width: large sprites should not overlap names, mode badges, notes, quantities, or offer buttons.
+- My List rows: costumes/forms with crowns or max chips still render inside the sprite column and row controls still align.
+- Browse tab rows and compare/trade-match cards: sprite thumbnails stay centered and do not shift text.
+- Desktop and mobile dark theme should preserve existing badges and row spacing.
+
+### Known risks / TODOs
+- Row surfaces intentionally disable the sprite helper's transform-based normalization to protect layout. If very small sprites feel too small later, add a contained per-slot scaling pass that respects the slot bounds instead of re-enabling unrestricted transform bleed.
+
+### Instructions for the next contributor
+- Prefer wrapping new row thumbnails in `.pokemon-sprite-slot` or an existing fixed wrapper such as `.have-row-sprite`; avoid placing raw `spriteImg()` output directly next to text without a fixed-size slot.
