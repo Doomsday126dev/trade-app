@@ -980,3 +980,37 @@
 - Do not commit `node_modules/`, `test-results/`, or `playwright-report/`.
 - Keep test credentials in environment variables only; do not hardcode real trainer PINs in test files.
 - Prefer adding focused smoke tests for high-risk UI regressions instead of broad brittle screenshot snapshots.
+
+## 2026-05-26 - Codex - Inventory tag toggle responsiveness
+
+### Summary
+- Investigated user feedback that toggling Inventory return-preference categories felt sluggish.
+- Root cause: each Inventory row edit wrote the local/Firebase-backed inventory object and then called the global `syncFromLocal()` path, which re-rendered Browse, My List, Strings, Inventory, Schedule, admin panels, and notifications. That is unnecessary for rapid row-level edits such as cycling Open/Mirror/Fair trade/Giveaway.
+- Added a scoped refresh path for Inventory writes. Current-user Inventory edits now update local data, queue Firebase sync exactly as before, and debounce a My Inventory-only render instead of forcing a whole-app refresh.
+
+### Files touched
+- `index.html`
+- `docs/MAINTENANCE-LOG.md`
+
+### Feature flags added/changed
+- None.
+
+### Firebase paths added/changed
+- None. Writes still target the same `have/{username}` and `users/{username}/lastUpdated|lastSeen` paths.
+
+### Security rules changes needed
+- None.
+
+### Manual test checklist
+- My Inventory: click the return-preference button repeatedly on several rows; the UI should feel more responsive and should still cycle Open -> Mirror -> Fair trade -> Giveaway -> Open.
+- My Inventory: change quantity, gender, giveaway note, bulk mode, bulk quantity, bulk delete, and single delete; rows/counts should update and persist after refresh.
+- Inventory -> Browse community: after refresh or Firebase sync, other users should still see the updated return preferences.
+- Offers and accepted-trade inventory decrements should still trigger the broader refresh path; do not scope those unless tested separately.
+
+### Known risks / TODOs
+- The row still re-renders the full My Inventory list after a short debounce; if users grow into hundreds of inventory rows, row-level DOM patching or list virtualization may be worth adding.
+- Firebase snapshot echoes may still cause a broader refresh after the server accepts the queued write, but the immediate tap response no longer blocks on that full redraw.
+
+### Instructions for the next contributor
+- Keep row-level Inventory edits on the scoped `writeHave(...,{refresh:'mine'})` path unless the edit affects other tabs immediately.
+- Do not change the `have/` data shape for this responsiveness issue; it is a render-scope problem, not a schema problem.

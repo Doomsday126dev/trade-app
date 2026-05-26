@@ -10030,7 +10030,7 @@ function cycleInventoryGender(key){
     inv[newKey]=inv[key];
     delete inv[key];
   }
-  writeHave(cur,inv);
+  writeHave(cur,inv,{refresh:'mine'});
 }
 function setHaveEntry(inv,name,qty,opts={}){
   const q=Math.max(0,Math.min(999,parseInt(qty)||0));
@@ -10046,7 +10046,24 @@ function isDontNeedBackHave(username,name){
 function isGiveawayHave(username,name){
   return haveEntryInfo(allData.have?.[username]?.[name]).giveaway;
 }
-async function writeHave(username,inv){
+let _myHaveRenderTimer=0;
+function queueRenderMyHave(delay=60){
+  clearTimeout(_myHaveRenderTimer);
+  _myHaveRenderTimer=setTimeout(()=>renderMyHave(),delay);
+}
+function refreshAfterHaveWrite(username,scope='all'){
+  allData=getLocal();
+  Object.values(syncQueue||{}).forEach(({path,data})=>applyDataPath(allData,path,data));
+  if(scope==='mine'&&username===cur){
+    queueRenderMyHave();
+    const inCount=totalOffersForRecipient(cur);
+    const badge=document.getElementById('have-notif');
+    if(badge){badge.textContent=inCount>0?inCount:'';badge.style.display=inCount>0?'':'none';}
+  }else{
+    refreshAll();
+  }
+}
+async function writeHave(username,inv,opts={}){
   const s=getLocal();
   if(!s.have)s.have={};
   // Track inventory entry changes for activity sparkline
@@ -10062,7 +10079,7 @@ async function writeHave(username,inv){
     queueSync(`users/${username}/lastUpdated`,now);
     queueSync(`users/${username}/lastSeen`,now);
   }
-  syncFromLocal();
+  refreshAfterHaveWrite(username,opts.refresh||'all');
 }
 function setHaveView(v){
   haveView=v;
@@ -10172,7 +10189,7 @@ function addInventoryEntry(){
   const newMode=mode!=='any'?mode:curInfo.mode;
   const finalNote=newMode==='giveaway'?(note||curInfo.note):curInfo.note;
   setHaveEntry(inv,key,curInfo.qty+qty,{mode:newMode,note:finalNote});
-  writeHave(cur,inv);
+  writeHave(cur,inv,{refresh:'mine'});
   document.getElementById('have-ac-input').value='';
   document.getElementById('have-pmon-sel').value='';
   document.getElementById('have-qty').value='1';
@@ -10194,7 +10211,7 @@ async function editInventoryNote(key){
   const newNote=prompt(`Giveaway preference for ${label} (optional, e.g. "any common Kanto starter"):`,info.note||'');
   if(newNote===null)return; // cancelled
   setHaveEntry(inv,key,info.qty,{mode:'giveaway',note:String(newNote||'').trim()});
-  writeHave(cur,inv);
+  writeHave(cur,inv,{refresh:'mine'});
 }
 function updateInventoryQty(name,delta){
   const inv={...(allData.have?.[cur]||{})};
@@ -10202,21 +10219,21 @@ function updateInventoryQty(name,delta){
   const new_qty=curInfo.qty+delta;
   if(new_qty>999)return;
   setHaveEntry(inv,name,new_qty);
-  writeHave(cur,inv);
+  writeHave(cur,inv,{refresh:'mine'});
 }
 function setInventoryQty(name,val){
   const v=parseInt(val);
   if(!Number.isFinite(v))return;
   const inv={...(allData.have?.[cur]||{})};
   setHaveEntry(inv,name,Math.min(999,v));
-  writeHave(cur,inv);
+  writeHave(cur,inv,{refresh:'mine'});
 }
 function toggleInventoryMirror(name){
   const inv={...(allData.have?.[cur]||{})};
   const info=haveEntryInfo(inv[name]);
   if(!info.qty)return;
   setHaveEntry(inv,name,info.qty,{mirrorOnly:!info.mirrorOnly});
-  writeHave(cur,inv);
+  writeHave(cur,inv,{refresh:'mine'});
 }
 // Cycle: any → mirror → dontNeedBack → giveaway → any
 function cycleInventoryMode(name){
@@ -10228,7 +10245,7 @@ function cycleInventoryMode(name){
     :info.mode==='dontNeedBack'?'giveaway'
     :'any';
   setHaveEntry(inv,name,info.qty,{mode:next});
-  writeHave(cur,inv);
+  writeHave(cur,inv,{refresh:'mine'});
 }
 // ── INVENTORY BULK OPERATIONS ────────────────────────────────
 function toggleHaveBulkMode(){
@@ -10268,7 +10285,7 @@ function bulkHaveSetMode(){
     setHaveEntry(inv,name,info.qty,{mode:v});
     count++;
   });
-  writeHave(cur,inv);
+  writeHave(cur,inv,{refresh:'mine'});
   if(sel)sel.value='';
   const label=v==='mirror'?'🪞 Mirror only':v==='dontNeedBack'?'🤝 Fair trade':v==='giveaway'?'📤 Giveaway':'🤲 Open';
   toast(`✅ Set ${count} entr${count===1?'y':'ies'} to ${label}`);
@@ -10284,7 +10301,7 @@ function bulkHaveAdjustQty(delta){
     if(newQty<=0){delete inv[name];removed++;}
     else if(newQty<=999){setHaveEntry(inv,name,newQty,{mode:info.mode,note:info.note});changed++;}
   });
-  writeHave(cur,inv);
+  writeHave(cur,inv,{refresh:'mine'});
   toast(`✅ ${delta>0?'Added':'Removed'} ${Math.abs(delta)} from ${changed} entr${changed===1?'y':'ies'}${removed?` · ${removed} reached 0 and got removed`:''}`);
   if(removed)haveBulkSelected=new Set([...haveBulkSelected].filter(n=>inv[n]));
 }
@@ -10294,7 +10311,7 @@ function bulkHaveDelete(){
   const inv={...(allData.have?.[cur]||{})};
   const count=haveBulkSelected.size;
   haveBulkSelected.forEach(name=>{delete inv[name];});
-  writeHave(cur,inv);
+  writeHave(cur,inv,{refresh:'mine'});
   haveBulkSelected.clear();
   updateHaveBulkCount();
   toast(`✅ Deleted ${count} entries`);
@@ -10302,7 +10319,7 @@ function bulkHaveDelete(){
 function removeInventoryEntry(name){
   const inv={...(allData.have?.[cur]||{})};
   delete inv[name];
-  writeHave(cur,inv);
+  writeHave(cur,inv,{refresh:'mine'});
 }
 function _nameToSpriteEntry(name){
   // Lookup sprite metadata for a Pokemon name across all sources
