@@ -546,3 +546,51 @@
 - Do not revert the lazy trainer hydration unless replacing it with real virtualization/windowing.
 - If reports continue, compare `render:inventory-browse` timings between By Trainer and By Pokemon before changing Firebase subscriptions.
 - Keep future Scatterbug changes consistent with the existing form-name model unless the app gets a broader form-normalization layer.
+
+## 2026-05-26 - Codex - Inventory browse trainer-first collapsed layout
+
+### Summary
+- Confirmed the prior Inventory browse performance pass already supported the core mechanics for a trainer-first model: collapsed trainer cards, lazy item-grid hydration, and search filtering that works while cards are collapsed.
+- Added the second pass needed for the requested default UX:
+  - Inventory -> Browse now opens on `By Trainer` instead of the heavier `By Pokemon` grid.
+  - Trainer cards show compact summary chips for wanted-match count, visible item count, mirror-only, don't-need-back, and giveaway counts.
+  - Trainers are sorted with current-user want-list matches first, then offered quantity/item count, then recent activity/name fallback.
+  - Expanding a trainer still lazily renders only that trainer's matching items.
+  - Pokemon search still filters collapsed trainer cards and expansion shows the matching inventory items.
+- Kept `By Pokemon` available as a secondary tab for users who prefer the old grouped view.
+
+### Files touched
+- `index.html`
+- `SCALING-NOTES.md`
+- `docs/MAINTENANCE-LOG.md`
+
+### Feature flags added/changed
+- No new feature flags.
+- Existing community owner-preview flags are unchanged.
+
+### Firebase paths added/changed
+- No Firebase paths changed.
+- No data migration required.
+
+### Security rules changes needed
+- None.
+- This is a client-side rendering and sorting change only.
+
+### Manual test checklist
+- Inventory -> Browse community defaults to `By Trainer` after loading the tab.
+- Trainers with Pokemon from the current user's want list appear before trainers with no matches.
+- Search a Pokemon name/form; collapsed trainer cards should still filter to trainers offering it.
+- Expand a filtered trainer card; only matching/visible items should render.
+- Toggle "Only matches" and verify trainer cards and summary counts remain coherent.
+- Switch to `By Pokemon` and verify the previous grouped browse still works.
+- Mobile: summary chips should wrap under the trainer name without forcing hidden grids/sprites to render before expansion.
+
+### Known risks / TODOs
+- Trainer summaries still compute item lists to support counts and search matching, but avoid the much heavier DOM/sprite render until expansion.
+- `By Pokemon` remains heavier and should be treated as a secondary/legacy browse mode unless future performance work adds windowing there.
+- Summary chip labels are intentionally compact; if users find them unclear, add a small legend or tooltip rather than expanding every card.
+
+### Instructions for the next contributor
+- Keep `By Trainer` as the Community Browse default unless a measured regression shows otherwise.
+- Before changing Firebase subscriptions, compare Health Check `render:inventory-browse` timings for `By Trainer` versus `By Pokemon`.
+- If adding more inventory filters, route them through the existing `makeHaveBrowseContext()` / `haveBrowseTrainerSummary()` path so collapsed search stays consistent.
