@@ -1014,3 +1014,54 @@
 ### Instructions for the next contributor
 - Keep row-level Inventory edits on the scoped `writeHave(...,{refresh:'mine'})` path unless the edit affects other tabs immediately.
 - Do not change the `have/` data shape for this responsiveness issue; it is a render-scope problem, not a schema problem.
+
+## 2026-05-26 - Codex - Approval enrollment and Trade Match placement
+
+### Summary
+- Fixed the new-member approval path so owner-approved users are added to the default NYC community membership index at the same time as their `users/` and `loginDirectory/` records.
+- Added the same owner-only community-membership repair hook when repairing an existing account, so `communities/nyc/memberUsernames`, UID membership, and `userCommunities` can catch up when the owner repairs a user.
+- Moved the Trade Match entry point out of Strings and into Inventory -> Browse community trainer rows, where the feature has the right inventory context.
+- Updated app version and What's New copy for the Trade Match move.
+
+### Files touched
+- `index.html`
+- `SCALING-NOTES.md`
+- `docs/MAINTENANCE-LOG.md`
+
+### Feature flags added/changed
+- None. This keeps using the existing owner-preview/community foundation flags:
+  - `MULTI_COMMUNITY_ENABLED=false`
+  - `MULTI_COMMUNITY_OWNER_PREVIEW_AVAILABLE=true`
+
+### Firebase paths added/changed
+- New owner approval/repair writes may touch:
+  - `communities/nyc/memberUsernames/{username}: true`
+  - `communities/nyc/members/{authUid}: true` when the account has an Auth UID
+  - `communities/nyc/admins/{authUid}: true` for owner/admin users
+  - `userCommunities/{authUid}/nyc`
+- Existing approval writes still touch:
+  - `users/{username}`
+  - `loginDirectory/{username}`
+  - `requests/{requestId}/status`
+
+### Security rules changes needed
+- No new rules beyond the existing community-foundation rules in `SECURITY-RULES.md`.
+- Important: current community writes are owner-only. If non-owner admins should approve members directly into communities later, update rules intentionally instead of relying on the owner-only path.
+
+### Manual test checklist
+- Owner approves a pending request; verify Firebase contains both `users/{username}` and `communities/nyc/memberUsernames/{username}: true`.
+- Owner repairs an existing user; if the user has `authUid`, verify `communities/nyc/members/{authUid}` and `userCommunities/{authUid}/nyc` are written.
+- With owner Community preview on, newly approved users should appear in community-scoped Browse/Strings/Inventory/Schedule surfaces without clicking Prepare/Refresh NYC again.
+- Strings tab: trainer rows should still show Compare/scale, but no longer show the Trade Match handshake button.
+- Inventory -> Browse community: each trainer row should show a handshake button that opens the Trade Match modal for that trainer without expanding/collapsing the card.
+- What's New should show v4.6.27 once per user/device sync state.
+
+### Known risks / TODOs
+- If a non-owner admin approves a member, the current owner-only community rules mean the approval can still succeed without a community enrollment write. Decide whether community membership management should be owner-only or admin-capable before Phase 3.
+- This is still default-NYC only. Future community-specific approvals need a selected/requested community ID instead of always writing `nyc`.
+- Trade Match still computes from global Pokemon list data; community preview only limits which trainer rows can open it.
+
+### Instructions for the next contributor
+- Keep approval and community enrollment coupled for owner actions; otherwise Phase 2 preview can silently hide newly approved users.
+- Do not duplicate Pokemon list data under communities. Membership remains the scoping layer; wishlist/inventory data stays global for now.
+- If adding a public community join flow, replace the hardcoded default-NYC approval path with a community-aware helper and update Firebase rules in the same change.

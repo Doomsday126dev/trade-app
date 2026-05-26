@@ -312,6 +312,10 @@ on phones and slow networks first.
 
 When you ship scaling work, append a one-line entry here. Newest first.
 
+- **2026-05-26, v4.6.27** — Kept Phase 2 paused but tightened the Phase 1/2
+  bridge: owner-approved new members now write `communities/nyc/memberUsernames`
+  during approval/repair, and Trade Match moved from Strings into Inventory ->
+  Browse community where inventory context lives. (Codex)
 - **2026-05-26, v4.6.25** — Follow-up Inventory -> Browse UX/perf pass:
   made trainer-first collapsed browse the default, added trainer summary chips,
   and sorted matching trainers first while keeping the heavier By Pokemon view

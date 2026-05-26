@@ -1033,6 +1033,9 @@ input.have-row-qty::-webkit-inner-spin-button,input.have-row-qty::-webkit-outer-
 .have-trainer-pill.mirror{color:#38bdf8;border-color:rgba(14,165,233,.34);background:rgba(14,165,233,.1)}
 .have-trainer-pill.dnb{color:#14b8a6;border-color:rgba(20,184,166,.34);background:rgba(20,184,166,.1)}
 .have-trainer-pill.giveaway{color:#fb923c;border-color:rgba(251,146,60,.34);background:rgba(251,146,60,.1)}
+.have-trainer-actions{display:flex;align-items:center;gap:6px;flex-shrink:0;margin-left:2px}
+.have-trainer-action{width:30px;height:30px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:var(--bg);border:1px solid var(--border2);color:var(--muted);font-size:14px;cursor:pointer;font-family:var(--font);transition:.15s}
+.have-trainer-action:hover,.have-trainer-action:focus-visible{border-color:var(--accent);color:var(--ac2);background:rgba(168,139,250,.1);outline:none}
 .have-browse-legend{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:-2px 0 12px;color:var(--muted);font-size:11px}
 .have-browse-legend-label{font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
 .have-browse-legend-chip{display:inline-flex;align-items:center;gap:4px;padding:4px 7px;border-radius:999px;background:var(--card);border:1px solid var(--border);line-height:1.1;white-space:nowrap}
@@ -1082,6 +1085,8 @@ html[data-theme="light"] .have-mirror-badge,html[data-theme="light"] .have-mirro
   .have-trainer-grid{grid-template-columns:1fr}
   .have-trainer-hdr{align-items:flex-start;flex-wrap:wrap}
   .have-trainer-summary{justify-content:flex-start;flex:0 0 100%;padding-left:42px}
+  .have-trainer-actions{margin-left:auto}
+  .have-trainer-action{width:28px;height:28px;font-size:13px}
   .have-trainer-pill{font-size:10px;padding:5px 6px}
   .have-browse-legend{gap:5px;margin-top:2px;margin-bottom:10px;font-size:10px}
   .have-browse-legend-label{flex:0 0 100%}
@@ -2369,7 +2374,7 @@ if(!DB)throw new Error('Trade data failed to load');
 
 const PREFILTER="!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&";
 const OWNER="Doomsday126";
-const APP_VERSION="4.6.25";
+const APP_VERSION="4.6.27";
 const MULTI_COMMUNITY_ENABLED=false;
 const MULTI_COMMUNITY_OWNER_PREVIEW_AVAILABLE=true;
 const DEFAULT_COMMUNITY_ID='nyc';
@@ -3659,6 +3664,48 @@ function ensureCommunityModel(s){
   });
   return s;
 }
+function defaultCommunityMembershipUpdates(username,userRecord={},joinedAt=Date.now()){
+  const updates={};
+  const user=normalizedUserRecord(username,userRecord);
+  const role=communityRoleForUser(username,user);
+  const uid=user.authUid;
+  updates[`communities/${DEFAULT_COMMUNITY_ID}/memberUsernames/${username}`]=true;
+  updates[`communities/${DEFAULT_COMMUNITY_ID}/updatedAt`]=Date.now();
+  if(uid){
+    updates[`communities/${DEFAULT_COMMUNITY_ID}/members/${uid}`]=true;
+    if(role!=='member')updates[`communities/${DEFAULT_COMMUNITY_ID}/admins/${uid}`]=true;
+    updates[`userCommunities/${uid}/${DEFAULT_COMMUNITY_ID}`]={
+      role,
+      username,
+      joinedAt:user.joined||joinedAt
+    };
+  }
+  return updates;
+}
+function applyDefaultCommunityMembershipLocal(s,username,userRecord={},joinedAt=Date.now()){
+  s.communities=s.communities||{};
+  s.userCommunities=s.userCommunities||{};
+  const user=normalizedUserRecord(username,userRecord);
+  const role=communityRoleForUser(username,user);
+  const uid=user.authUid;
+  const community=normalizeCommunityRecord(DEFAULT_COMMUNITY_ID,s.communities[DEFAULT_COMMUNITY_ID],s,{autoEnrollDefault:false});
+  community.memberUsernames={...(community.memberUsernames||{}),[username]:true};
+  community.updatedAt=Date.now();
+  if(uid){
+    community.members={...(community.members||{}),[uid]:true};
+    if(role!=='member')community.admins={...(community.admins||{}),[uid]:true};
+    s.userCommunities[uid]=s.userCommunities[uid]||{};
+    s.userCommunities[uid][DEFAULT_COMMUNITY_ID]={
+      role,
+      username,
+      joinedAt:user.joined||joinedAt,
+      ...(s.userCommunities[uid][DEFAULT_COMMUNITY_ID]||{}),
+      role:strongerCommunityRole(s.userCommunities[uid][DEFAULT_COMMUNITY_ID]?.role,role),
+      username
+    };
+  }
+  s.communities[DEFAULT_COMMUNITY_ID]=community;
+}
 function getCurrentCommunityId(){
   if(!MULTI_COMMUNITY_ENABLED)return DEFAULT_COMMUNITY_ID;
   const stored=normalizeCommunityId(lsGet(SELECTED_COMMUNITY_KEY,DEFAULT_COMMUNITY_ID));
@@ -3881,6 +3928,7 @@ async function repairMemberAccount(username,opts={}){
     updates[`users/${username}`]=next;
     updates[`loginDirectory/${username}`]=loginDir;
     if(next.authUid)updates[`authIndex/${next.authUid}`]={username,isAdmin:!!next.isAdmin,isOwner:!!next.isOwner,lastSeen:Date.now()};
+    if(ownerCanUseCommunityTools())Object.assign(updates,defaultCommunityMembershipUpdates(username,next,next.joined||Date.now()));
     await withTimeout(update(ref(db),updates),9000,'Repairing account timed out','db/repair-timeout');
     const userSnap=await withTimeout(get(ref(db,`users/${username}`)),6000,'Verifying user repair timed out','db/verify-timeout');
     const dirSnap=await withTimeout(get(ref(db,`loginDirectory/${username}`)),6000,'Verifying login directory repair timed out','db/verify-timeout');
@@ -3894,6 +3942,7 @@ async function repairMemberAccount(username,opts={}){
   s.users[username]=next;
   s.loginDirectory[username]=loginDir;
   if(next.authUid){s.authIndex=s.authIndex||{};s.authIndex[next.authUid]={username,isAdmin:!!next.isAdmin,isOwner:!!next.isOwner,lastSeen:Date.now()};}
+  if(ownerCanUseCommunityTools())applyDefaultCommunityMembershipLocal(s,username,next,next.joined||Date.now());
   saveLocal(s);allData=normalizeData(s);refreshAll();populateLoginUsers();
   return{user:next,pin:pinForCopy};
 }
@@ -3908,11 +3957,13 @@ async function createMemberNow(username,pin,isAdmin=false,reqId=''){
     pinHashed:true,authVersion:1,authEmail:authEmail(username,1),authUid:authProvision.uid||null
   });
   const loginDir=normalizedLoginDirectoryRecord(username,user,{authReady:true,approvedAt:user.joined});
+  const shouldWriteDefaultCommunity=ownerCanUseCommunityTools();
   if(fbOn&&db){
     const updates={};
     updates[`users/${username}`]=user;
     updates[`loginDirectory/${username}`]=loginDir;
     if(reqId)updates[`requests/${reqId}/status`]='approved';
+    if(shouldWriteDefaultCommunity)Object.assign(updates,defaultCommunityMembershipUpdates(username,user,user.joined));
     await withTimeout(update(ref(db),updates),8000,'Creating member timed out','db/write-timeout');
     // Firebase Realtime DB's update() resolves the promise as soon as the
     // CLIENT-SIDE optimistic cache is updated — *before* the server confirms.
@@ -3927,7 +3978,8 @@ async function createMemberNow(username,pin,isAdmin=false,reqId=''){
     // local cache stays clean because we throw BEFORE writing to it below.
     const snap=await withTimeout(get(ref(db,`users/${username}`)),6000,'Verifying member create timed out','db/verify-timeout');
     const dirSnap=await withTimeout(get(ref(db,`loginDirectory/${username}`)),6000,'Verifying login directory timed out','db/verify-timeout');
-    if(!snap.exists()||!dirSnap.exists()){
+    const communitySnap=shouldWriteDefaultCommunity?await withTimeout(get(ref(db,`communities/${DEFAULT_COMMUNITY_ID}/memberUsernames/${username}`)),6000,'Verifying NYC membership timed out','db/community-verify-timeout'):null;
+    if(!snap.exists()||!dirSnap.exists()||(shouldWriteDefaultCommunity&&!communitySnap.exists())){
       const err=new Error('Server rejected the new-member write. Most likely your Firebase auth session has silently expired or your admin record is missing. Sign out and back in, then try again.');
       err.code='db/write-rejected-silently';
       throw err;
@@ -3939,6 +3991,7 @@ async function createMemberNow(username,pin,isAdmin=false,reqId=''){
   s.dynamax[username]=s.dynamax[username]||{};
   s.gmax[username]=s.gmax[username]||{};
   s.costumes[username]=s.costumes[username]||{};
+  if(shouldWriteDefaultCommunity)applyDefaultCommunityMembershipLocal(s,username,user,user.joined);
   if(reqId&&s.requests?.[reqId])s.requests[reqId].status='approved';
   saveLocal(s);allData=normalizeData(s);refreshAll();
   return user;
@@ -6520,7 +6573,6 @@ function _renderStringsInner(){
         </div>
         ${isMe?'':`<div class="user-str-actions">
           <button class="diff-fab" onclick="event.stopPropagation();openDiffModal(this.closest('.user-str-block').dataset.username)" aria-label="Compare lists with ${escAttr(u)}" title="Compare your list vs ${escAttr(u)}'s">⚖</button>
-          <button class="diff-fab trade-match-fab" onclick="event.stopPropagation();openTradeMatchModal(this.closest('.user-str-block').dataset.username)" aria-label="Trade match with ${escAttr(u)}" title="Trade match with ${escAttr(u)}">🤝</button>
         </div>`}
         <span class="collapse-icon">▼</span>
       </div>
@@ -6694,7 +6746,7 @@ function renderOwnerStringsPreviewBanner(allowed){
   const scoped=allowed?allowed.size:Object.keys(allData.users||{}).length;
   el.style.display='';
   el.classList.add('show');
-  el.innerHTML=`<span>🔭 Owner preview: Strings, Compare, and Trade Match are scoped to ${escHtml(DEFAULT_COMMUNITY_NAME)} members only.</span><span>${members?`${scoped} trainer${scoped===1?'':'s'} available before list/search filters`:'Prepare NYC before trusting this preview'}</span>`;
+  el.innerHTML=`<span>🔭 Owner preview: Strings and Compare are scoped to ${escHtml(DEFAULT_COMMUNITY_NAME)} members only.</span><span>${members?`${scoped} trainer${scoped===1?'':'s'} available before list/search filters`:'Prepare NYC before trusting this preview'}</span>`;
 }
 function renderOwnerInventoryPreviewBanner(allowed){
   const el=document.getElementById('owner-inventory-preview-banner');if(!el)return;
@@ -8179,7 +8231,8 @@ async function triggerInstall(){
 
 // ── WHAT'S NEW (#28) ─────────────────────────────────────────
 const WHATS_NEW=[
-  {version:'4.6.26',title:'🤝 Trade match view',desc:'Strings now has a separate trade-match button next to Compare, showing what they have that you want, what you have that they want, and possible mirrors.'},
+  {version:'4.6.27',title:'🤝 Trade match in Inventory',desc:'Trade Match now lives in Inventory → Browse community beside each trainer, where their posted inventory is already in context.'},
+  {version:'4.6.26',notify:false,title:'🤝 Trade match view',desc:'Trade Match shows what they have that you want, what you have that they want, and possible mirrors.'},
   {version:'4.6.25',notify:false,title:'Small reliability cleanup',desc:'Mobile username suggestions are more reliable, Health Check is clearer, and string import copy now explains the dex-only format without ringing the update bell.'},
   {version:'4.6.18',title:'🚫 Untradeable Mythicals out of the trade list',desc:'Mythicals that can\'t actually be traded in PoGo no longer appear in the trade dropdown. Meltan / Melmetal / Gimmighoul still do.'},
   {version:'4.6.15',title:'🎯 Sprite rework — size & alignment',desc:'Inventory and Browse sprites now scale and center cleanly even for small-bodied species like Cleffa, Igglybuff, Mime Jr.'},
@@ -10673,6 +10726,9 @@ function _renderHaveBrowseInner(){
             ${summary.mirrorCount?`<button type="button" class="have-trainer-pill mirror" onclick="sortHaveTrainerInventory(event,this,'mirror')" title="Sort this trainer by mirror-only listings" aria-label="${summary.mirrorCount} mirror-only listing${summary.mirrorCount===1?'':'s'}">🪞 ${summary.mirrorCount}</button>`:''}
             ${summary.dnbCount?`<button type="button" class="have-trainer-pill dnb" onclick="sortHaveTrainerInventory(event,this,'dnb')" title="Sort this trainer by fair-trade listings" aria-label="${summary.dnbCount} fair-trade listing${summary.dnbCount===1?'':'s'}">🤝 ${summary.dnbCount}</button>`:''}
             ${summary.giveawayCount?`<button type="button" class="have-trainer-pill giveaway" onclick="sortHaveTrainerInventory(event,this,'giveaway')" title="Sort this trainer by giveaway listings" aria-label="${summary.giveawayCount} giveaway listing${summary.giveawayCount===1?'':'s'}">📤 ${summary.giveawayCount}</button>`:''}
+          </div>
+          <div class="have-trainer-actions">
+            <button type="button" class="have-trainer-action trade-match-fab" onclick="event.stopPropagation();openTradeMatchModal(this.closest('.have-trainer-card').dataset.user)" aria-label="Trade match with ${escAttr(u)}" title="Trade match with ${escAttr(u)}">🤝</button>
           </div>
           <span class="collapse-icon">▼</span>
         </div>
