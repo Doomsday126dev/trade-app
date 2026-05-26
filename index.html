@@ -138,7 +138,7 @@ input,select,textarea{font-family:var(--font);outline:none}
 .pgrid .pc:last-child{border-bottom:none}
 .pgrid .pc:hover{background:var(--bg2)}
 .pgrid .pc-hdr{margin-bottom:0;flex-shrink:0;display:flex;align-items:center;gap:8px;width:190px;min-width:190px}
-.pgrid .pc-sprite{width:28px;height:28px}
+.pgrid .pc-sprite{width:42px;height:42px}
 .pgrid .pc-name{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pgrid .pc-no{font-size:10px}
 .pgrid .pc-users{flex:1;display:flex;flex-wrap:wrap;gap:4px;align-items:center}
@@ -148,7 +148,7 @@ input,select,textarea{font-family:var(--font);outline:none}
 .pc-sprite{width:40px;height:40px;object-fit:contain;flex-shrink:0;image-rendering:pixelated}
 .pokemon-sprite-slot,.pc-sprite-wrap,.myrow-sprite-wrap,.have-row-sprite,.diff-card-sprite-wrap,.share-pcard-sprite-wrap,.offer-pkmn-display .sprite-wrap{position:relative;display:flex;align-items:center;justify-content:center;flex:0 0 auto;box-sizing:border-box}
 .pc-sprite-wrap{width:40px;height:40px}
-.pgrid .pc-sprite-wrap{width:28px;height:28px}
+.pgrid .pc-sprite-wrap{width:42px;height:42px}
 .myrow-sprite-wrap{width:28px;height:28px}
 .pokemon-sprite-slot img,.pc-sprite-wrap > img,.myrow-sprite-wrap > img,.have-row-sprite > img,.diff-card-sprite-wrap > img,.share-pcard-sprite-wrap > img,.offer-pkmn-display .sprite-wrap > img{width:100%!important;height:100%!important;max-width:100%;max-height:100%;object-fit:contain;object-position:center;display:block;flex:0 0 auto}
 .have-row-sprite,.diff-card-sprite-wrap,.share-pcard-sprite-wrap,.offer-pkmn-display .sprite-wrap{overflow:hidden}
@@ -5303,7 +5303,7 @@ function _renderBrowseInner(){
       ents=ents.filter(entryMatchesFlagFilters);
       ents=sortEntries(ents);
       const eventPill=eventBadgeForPokemon(e.name,e.no,_eventData);
-      return`<div class="pc" data-dex="${e.no||''}"><div class="pc-hdr"><span class="pc-sprite-wrap">${spriteImg(e.no,28,'pc-sprite',e.name,'',e.displayName||e.name,{urlOverride:e.spriteUrl})}</span><div class="pc-info"><div class="pc-name">${e.displayName||e.name}${eventPill}</div><div class="pc-no">#${e.no}</div></div></div>
+      return`<div class="pc" data-dex="${e.no||''}"><div class="pc-hdr"><span class="pc-sprite-wrap">${spriteImg(e.no,42,'pc-sprite',e.name,'',e.displayName||e.name,{urlOverride:e.spriteUrl})}</span><div class="pc-info"><div class="pc-name">${e.displayName||e.name}${eventPill}</div><div class="pc-no">#${e.no}</div></div></div>
         <div class="pc-users">${ents.map(x=>userBadge(x)).join('')}</div></div>`;
     }).join('')}</div>`;
     applyTypeColors();
@@ -5340,7 +5340,7 @@ function _renderBrowseInner(){
     const eventPill=eventBadgeForPokemon(e.name,e.no,_eventData);
     return`<div class="pc" data-dex="${e.no||''}">
       <div class="pc-hdr">
-        <span class="pc-sprite-wrap">${spriteImg(e.no,28,'pc-sprite',e.name,'',info.dn,{urlOverride:e.spriteUrl})}${crownHtml}</span>
+        <span class="pc-sprite-wrap">${spriteImg(e.no,42,'pc-sprite',e.name,'',info.dn,{urlOverride:e.spriteUrl})}${crownHtml}</span>
         <div class="pc-info"><div class="pc-name">${info.dn}${eventPill}</div><div class="pc-no">#${e.no}</div></div>
       </div>
       <div class="pc-users">${ents.map(x=>userBadge(x)).join('')}</div>

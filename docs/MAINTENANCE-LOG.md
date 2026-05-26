@@ -903,3 +903,80 @@
 
 ### Instructions for the next contributor
 - Do not globally disable `transform` on row sprite images again; that prevents overflow but also disables transparent-padding normalization. Prefer fixed wrappers plus selective `overflow:hidden` on row surfaces that need hard containment.
+
+## 2026-05-26 - Codex - Browse sprite readability threshold
+
+### Summary
+- Increased Browse row sprite slots from 28px to 42px and render-requested Browse sprites at 42px so small species are readable instead of technically visible but tiny.
+- Tightened the visual smoke test for Browse rows so it now checks fixed slot size and rendered image size, not just whether `.pc-sprite-wrap` exists.
+- This is a targeted follow-up to the sprite overflow fix: the previous test guarded against clipping/overlap but did not fail on micro-sized Browse sprites.
+
+### Files touched
+- `index.html`
+- `tests/visual-smoke.spec.js`
+- `docs/MAINTENANCE-LOG.md`
+
+### Feature flags added/changed
+- None.
+
+### Firebase paths added/changed
+- None.
+
+### Security rules changes needed
+- None.
+
+### Manual test checklist
+- Browse tab on desktop: Bulbasaur, Charmander, Squirtle, Caterpie, Weedle, Pidgey, Rattata, Pikachu, and Alolan Raichu should be visibly larger than before.
+- Browse tab on mobile: those same rows should keep a fixed sprite column and names/trainer chips should not overlap the sprite.
+- Dynamax/Gigantamax/Others Browse rows should still show sprites and max/crown indicators without pushing text around.
+- Inventory -> Browse community expanded trainer cards should still keep large sprites contained after this Browse-only sizing change.
+
+### Known risks / TODOs
+- Local authenticated Playwright runs may fail unless Firebase API key referrer settings allow localhost; deployed authenticated runs test the current GitHub Pages build, not unpushed local edits.
+- The Browse visual test intentionally checks slot/readability. It does not measure actual opaque sprite pixels because many sprite sources are cross-origin.
+- Control run on 2026-05-26 against the currently deployed GitHub Pages build failed as expected with 28px Browse slots (`Bulbasaur`, `Charmander`, `Squirtle`, etc.), confirming the stricter test catches the regression the old wrapper-only test missed.
+
+### Instructions for the next contributor
+- Do not weaken the Browse sprite test back to wrapper-only checks. If sprite sizing changes, keep a test assertion that would fail for 28px Browse slots.
+
+## 2026-05-26 - Codex - Playwright visual smoke harness
+
+### Summary
+- Installed Playwright test tooling for repeatable desktop/mobile Chromium visual checks.
+- Added a local static-server Playwright config and smoke tests for authenticated sprite/layout checks in Browse and Inventory -> Browse community.
+- Added `PLAYWRIGHT_BASE_URL` support so the same smoke tests can run against deployed GitHub Pages when Firebase API-key referrer restrictions block local authenticated runs.
+- Added `.gitignore` entries for generated dependency and Playwright artifact folders.
+
+### Files touched
+- `package.json`
+- `package-lock.json`
+- `playwright.config.js`
+- `tests/visual-smoke.spec.js`
+- `.gitignore`
+- `docs/MAINTENANCE-LOG.md`
+
+### Feature flags added/changed
+- None.
+
+### Firebase paths added/changed
+- None.
+
+### Security rules changes needed
+- None for the harness itself.
+
+### Manual test checklist
+- Run `npm run visual` without credentials; it should start the local server and skip authenticated tests cleanly.
+- Run `POGO_TEST_USER=<username> POGO_TEST_PIN=<pin> npm run visual` with a confirmed working test account; desktop and mobile Chromium projects should verify Inventory community sprites and Browse sprite wrappers.
+- To test the deployed site instead of local files, run `PLAYWRIGHT_BASE_URL=https://doomsday126dev.github.io/trade-app/ POGO_TEST_USER=<username> POGO_TEST_PIN=<pin> npm run visual`.
+- Verified on 2026-05-26 before the stricter Browse readability assertion: deployed smoke test passed with `TestUser` across desktop and mobile Chromium (`4 passed`).
+- If login fails, inspect the test failure message first; it reports the login-screen error text.
+
+### Known risks / TODOs
+- The current Firebase rules require auth for most live reads, so visual tests need a confirmed working account/PIN. A stale or non-member test account will fail before reaching layout checks.
+- The Firebase Web API key is intentionally HTTP-referrer restricted to the GitHub Pages origin. Authenticated local Playwright runs from `localhost` will not fully exercise Firebase unless `http://localhost:*` and/or `http://127.0.0.1:*` are temporarily added to the API key's allowed referrers in Google Cloud Console.
+- The mobile project uses Chromium device emulation rather than WebKit/iOS Safari; this keeps setup lightweight but does not replace real iPhone Safari spot checks.
+
+### Instructions for the next contributor
+- Do not commit `node_modules/`, `test-results/`, or `playwright-report/`.
+- Keep test credentials in environment variables only; do not hardcode real trainer PINs in test files.
+- Prefer adding focused smoke tests for high-risk UI regressions instead of broad brittle screenshot snapshots.

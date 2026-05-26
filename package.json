@@ -1,0 +1,28 @@
+{
+  "name": "repo-trade-app",
+  "version": "1.0.0",
+  "description": "",
+  "main": "data.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "visual": "playwright test",
+    "visual:headed": "playwright test --headed"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://Doomsday126dev@github.com/Doomsday126dev/trade-app.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Doomsday126dev/trade-app/issues"
+  },
+  "homepage": "https://github.com/Doomsday126dev/trade-app#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.60.0"
+  }
+}
