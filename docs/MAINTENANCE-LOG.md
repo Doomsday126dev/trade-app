@@ -594,3 +594,69 @@
 - Keep `By Trainer` as the Community Browse default unless a measured regression shows otherwise.
 - Before changing Firebase subscriptions, compare Health Check `render:inventory-browse` timings for `By Trainer` versus `By Pokemon`.
 - If adding more inventory filters, route them through the existing `makeHaveBrowseContext()` / `haveBrowseTrainerSummary()` path so collapsed search stays consistent.
+
+## 2026-05-26 - Codex - Inventory browse icon hints
+
+### Summary
+- Added subtle native hover/accessibility hints to the compact Inventory -> Browse trainer summary chips.
+- The star, backpack, mirror-only, don't-need-back, and giveaway chips now explain what their counts represent without adding visible UI.
+- Added the same hint to the per-Pokemon match star badge and the "Only matches" control.
+
+### Files touched
+- `index.html`
+- `docs/MAINTENANCE-LOG.md`
+
+### Feature flags added/changed
+- None.
+
+### Firebase paths added/changed
+- None.
+
+### Security rules changes needed
+- None.
+
+### Manual test checklist
+- Inventory -> Browse -> By Trainer: hover the summary chips on desktop and confirm the tooltip text explains each icon.
+- Expand a trainer with matching items and hover the small star badge on a Pokemon card.
+- Confirm mobile layout is unchanged; hints are additive only.
+
+### Known risks / TODOs
+- Native `title` hints are desktop-friendly but not a full mobile long-press tooltip system. If mobile users need the same guidance, add a small legend instead of per-card visible labels.
+
+### Instructions for the next contributor
+- Keep compact icon chips paired with either `title`/`aria-label` or a nearby legend when adding new inventory summary symbols.
+
+## 2026-05-26 - Codex - Trade match mirror-only intent
+
+### Summary
+- Updated the trade match modal's `Possible mirrors` logic.
+- A mirror candidate still requires both trainers to have the exact inventory entry.
+- Each side's mirror intent can now come from either:
+  - that Pokemon/form being on their want list, or
+  - that exact inventory entry being marked `mirror only`.
+- This covers the common case where a trainer marks an inventory item as mirror-only but forgets to also add it to their want list.
+
+### Files touched
+- `index.html`
+- `docs/MAINTENANCE-LOG.md`
+
+### Feature flags added/changed
+- None.
+
+### Firebase paths added/changed
+- None.
+
+### Security rules changes needed
+- None.
+
+### Manual test checklist
+- Open Strings -> trade match with a trainer where both users have the same Pokemon/form and both list it in wants; it should still appear under `Possible mirrors`.
+- Remove the other trainer's wishlist entry but keep their inventory item marked mirror-only; it should still appear under `Possible mirrors` if you want or mirror-own the same item.
+- Confirm normal inventory overlap with no want-list entry and no mirror-only flag on either side does not appear as a possible mirror.
+- Confirm `They have that you want` and `You have that they want` sections are unchanged.
+
+### Known risks / TODOs
+- Matching remains exact by stored inventory key, including form and gender where present. If the product should treat mirror-only gender as flexible, adjust this separately and test offer preselection too.
+
+### Instructions for the next contributor
+- Keep `Possible mirrors` stricter than plain inventory overlap. Mirror-only can imply "I want the same thing back," but normal inventory alone should not.

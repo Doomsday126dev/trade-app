@@ -1922,7 +1922,7 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
         <button class="fbtn have-sub-tab" data-sub="pokemon" onclick="setHaveSubTab('pokemon')">By Pokémon</button>
         <span class="filter-divider"></span>
         <span class="filter-label">Match my wants:</span>
-        <button class="fbtn have-match-tgl" onclick="toggleHaveMatchOnly()" aria-pressed="false" id="have-match-btn">⭐ Only matches</button>
+        <button class="fbtn have-match-tgl" onclick="toggleHaveMatchOnly()" aria-pressed="false" id="have-match-btn" title="Only show trainers or Pokémon that match your want list">⭐ Only matches</button>
       </div>
       <div id="have-browse-out"></div>
     </div>
@@ -7406,10 +7406,15 @@ function computeTradeMatchSummary(them){
   const theirByExact=new Map(theirs.map(it=>[joinHaveKey(it.name,it.gender),it]));
   const theyHaveYouWant=theirs.filter(it=>entryWantedByCur(it.name));
   const youHaveTheyWant=mine.filter(it=>entryWantedByOther(them,it.name));
+  const myMirrorIntent=it=>!!entryWantedByCur(it.name)||!!it.mirrorOnly;
+  const theirMirrorIntent=it=>!!entryWantedByOther(them,it.name)||!!it.mirrorOnly;
   const mirrors=mine
     .filter(it=>theirByExact.has(joinHaveKey(it.name,it.gender)))
-    .filter(it=>entryWantedByCur(it.name)&&entryWantedByOther(them,it.name))
-    .map(it=>({...it,theirQty:theirByExact.get(joinHaveKey(it.name,it.gender)).qty,theirMirrorOnly:theirByExact.get(joinHaveKey(it.name,it.gender)).mirrorOnly}))
+    .map(it=>{
+      const theirsExact=theirByExact.get(joinHaveKey(it.name,it.gender));
+      return{...it,theirQty:theirsExact.qty,theirMirrorOnly:theirsExact.mirrorOnly,theirWants:!!entryWantedByOther(them,it.name),youWant:!!entryWantedByCur(it.name)};
+    })
+    .filter(it=>myMirrorIntent(it)&&theirMirrorIntent({name:it.name,mirrorOnly:it.theirMirrorOnly}))
     .sort((a,b)=>(b.mirrorOnly||b.theirMirrorOnly?1:0)-(a.mirrorOnly||a.theirMirrorOnly?1:0)||(parseInt(a.no)||9999)-(parseInt(b.no)||9999)||alphaCompare(a.dn,b.dn));
   return{theyHaveYouWant,youHaveTheyWant,mirrors};
 }
@@ -7428,7 +7433,7 @@ function renderTradeMatchSummary(them){
   return`<div class="diff-match-panel" aria-label="Trade match summary">
     ${box('want','⭐ They have that you want',m.theyHaveYouWant.length,m.theyHaveYouWant,`${escHtml(them)} has not posted inventory matching your wants yet.`)}
     ${box('give','🤝 You have that they want',m.youHaveTheyWant.length,m.youHaveTheyWant,`Your inventory does not currently match ${escHtml(them)}'s wants.`)}
-    ${box('mirror','🪞 Possible mirrors',m.mirrors.length,m.mirrors,'No exact overlap where both trainers have it and both trainers want it yet.',it=>` · their qty ${it.theirQty||1}`)}
+    ${box('mirror','🪞 Possible mirrors',m.mirrors.length,m.mirrors,'No exact overlap where both trainers have it and both trainers want it or marked it mirror-only yet.',it=>` · their qty ${it.theirQty||1}`)}
   </div>`;
 }
 function renderTradeMatchModal(){
@@ -10527,7 +10532,7 @@ function renderHaveBrowseItemCard(u,it,ctx){
     </div>
     <div class="have-pmon-qty">×${it.qty}</div>
     ${offerCount?`<span class="offer-count-badge" title="${offerCount} pending offer${offerCount===1?'':'s'}">🔔 ${offerCount}</span>`:''}
-    ${it.match?'<span class="match-badge">⭐</span>':''}
+    ${it.match?'<span class="match-badge" title="Matches your want list" aria-label="Matches your want list">⭐</span>':''}
   </div>`;
 }
 function hydrateHaveTrainerCard(card){
@@ -10593,11 +10598,11 @@ function _renderHaveBrowseInner(){
             </div>
           </div>
           <div class="have-trainer-summary" aria-label="${escAttr(u)} inventory summary">
-            <span class="have-trainer-pill match">⭐ ${summary.matchCount}</span>
-            <span class="have-trainer-pill total">🎒 ${summary.visibleCount}</span>
-            ${summary.mirrorCount?`<span class="have-trainer-pill mirror">🪞 ${summary.mirrorCount}</span>`:''}
-            ${summary.dnbCount?`<span class="have-trainer-pill dnb">🤝 ${summary.dnbCount}</span>`:''}
-            ${summary.giveawayCount?`<span class="have-trainer-pill giveaway">📤 ${summary.giveawayCount}</span>`:''}
+            <span class="have-trainer-pill match" title="${summary.matchCount} Pokémon match your want list" aria-label="${summary.matchCount} Pokémon match your want list">⭐ ${summary.matchCount}</span>
+            <span class="have-trainer-pill total" title="${summary.visibleCount} visible inventory entries for this trainer" aria-label="${summary.visibleCount} visible inventory entries for this trainer">🎒 ${summary.visibleCount}</span>
+            ${summary.mirrorCount?`<span class="have-trainer-pill mirror" title="${summary.mirrorCount} mirror-only listing${summary.mirrorCount===1?'':'s'}" aria-label="${summary.mirrorCount} mirror-only listing${summary.mirrorCount===1?'':'s'}">🪞 ${summary.mirrorCount}</span>`:''}
+            ${summary.dnbCount?`<span class="have-trainer-pill dnb" title="${summary.dnbCount} don't-need-back listing${summary.dnbCount===1?'':'s'}" aria-label="${summary.dnbCount} don't-need-back listing${summary.dnbCount===1?'':'s'}">🤝 ${summary.dnbCount}</span>`:''}
+            ${summary.giveawayCount?`<span class="have-trainer-pill giveaway" title="${summary.giveawayCount} giveaway listing${summary.giveawayCount===1?'':'s'}" aria-label="${summary.giveawayCount} giveaway listing${summary.giveawayCount===1?'':'s'}">📤 ${summary.giveawayCount}</span>`:''}
           </div>
           <span class="collapse-icon">▼</span>
         </div>
