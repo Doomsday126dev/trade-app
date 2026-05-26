@@ -312,6 +312,9 @@ on phones and slow networks first.
 
 When you ship scaling work, append a one-line entry here. Newest first.
 
+- **2026-05-25, v4.6.25** — Phase 2 pass 3 expanded owner preview to
+  Inventory -> Browse community, renamed the toggle to Community preview,
+  and kept My inventory and Schedule unchanged. (Codex)
 - **2026-05-25, v4.6.25** — Fixed owner preview stale membership by
   subscribing the owner-preview path to live `communities`,
   `userCommunities`, and `communityRequests` even while

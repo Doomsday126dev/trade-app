@@ -396,3 +396,49 @@
 ### Instructions for the next contributor
 - If owner preview looks stale again, first inspect `_pathLoadState.communities` and whether `subscribePath('communities')` is active after owner sign-in.
 - Keep Phase 2 scoping behind owner preview until Browse and Strings are verified against production data.
+
+## 2026-05-25 - Codex - Multi-community Phase 2 pass 3, owner Inventory browse preview
+
+### Summary
+- Expanded the owner-only community preview to Inventory -> Browse community.
+- Renamed the owner toggle from "Browse + Strings preview" to "Community preview" because it now covers Browse, Strings, Compare, Trade Match, and Inventory browse.
+- Added an owner preview banner inside Inventory browse.
+- Inventory browse now filters trainers by `communities/nyc/memberUsernames` when owner preview is on, while preserving the existing activity filter and self-exclusion.
+- My inventory remains unchanged.
+- Schedule remains unchanged.
+- Kept `MULTI_COMMUNITY_ENABLED=false`; this remains an owner-only preview, not a public launch.
+
+### Files touched
+- `index.html`
+- `SCALING-NOTES.md`
+- `docs/MAINTENANCE-LOG.md`
+
+### Feature flags added/changed
+- No new flags.
+- Existing localStorage opt-in `pogoOwnerCommunityPreview_v1` now controls Browse, Strings, Compare, Trade Match, and Inventory browse preview.
+
+### Firebase paths added/changed
+- No new Firebase paths.
+- Inventory browse preview reads existing `communities/nyc/memberUsernames` from the live owner-preview subscription.
+
+### Security rules changes needed
+- None beyond the current community-aware rules.
+- This is read-only UI filtering.
+
+### Manual test checklist
+- Owner with preview off should see global Inventory -> Browse community behavior.
+- Owner with preview on should see an Inventory browse preview banner.
+- Remove `TestUser` from `communities/nyc/memberUsernames`; with preview on, `TestUser` should disappear from Inventory browse in both By Pokemon and By Trainer modes.
+- My inventory should still show the current user's own inventory regardless of community preview.
+- Browse and Strings preview behavior should remain unchanged.
+- Schedule should remain unchanged.
+- Non-owner admins/members should not see the owner preview controls or banners.
+
+### Known risks / TODOs
+- This still does not reduce Firebase bandwidth because the global `have` subscription remains unchanged.
+- Offer modals still use the currently rendered Inventory browse result as the primary entry point; if direct console calls become a concern, add an owner-preview guard around `openOfferModal`.
+- Schedule scoping remains the next separate pass because scheduled trades have quota/reservation side effects.
+
+### Instructions for the next contributor
+- Validate Inventory browse preview in production before touching Schedule.
+- Keep Schedule as a separate Phase 2 pass; do not bundle it with offer/trade quota changes.

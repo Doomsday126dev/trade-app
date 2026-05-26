@@ -1903,6 +1903,7 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
       <div id="have-mine-out"></div>
     </div>
     <div id="have-browse-view" class="have-view">
+      <div id="owner-inventory-preview-banner" class="owner-preview-banner" style="display:none"></div>
       <div class="srch"><span class="srch-icon">🔍</span><input type="text" id="have-browse-q" placeholder="Find a Pokémon or trainer…" oninput="renderHaveBrowse()" aria-label="Search community inventory"></div>
       <div class="filter-bar" style="margin-bottom:10px">
         <button class="fbtn have-sub-tab active" data-sub="pokemon" onclick="setHaveSubTab('pokemon')">By Pokémon</button>
@@ -6565,6 +6566,7 @@ function setOwnerCommunityPreview(on){
   renderCommunityMigrationPanel();
   renderBrowse();
   renderStrings();
+  if(haveView==='browse')renderHaveBrowse();
 }
 function ownerPreviewCommunityMemberUsernames(){
   if(!ownerCommunityPreviewOn())return null;
@@ -6587,6 +6589,13 @@ function stringsAllowedUsers(){
   const communityMembers=ownerPreviewCommunityMemberUsernames();
   return communityMembers?new Set(Object.keys(allData.users||{}).filter(u=>communityMembers.has(u))):null;
 }
+function inventoryBrowseAllowedUsers(){
+  const active=activeUsers();
+  const communityMembers=ownerPreviewCommunityMemberUsernames();
+  if(!active&&!communityMembers)return null;
+  const users=Object.keys(allData.users||{});
+  return new Set(users.filter(u=>(!active||active.has(u))&&(!communityMembers||communityMembers.has(u))));
+}
 function renderOwnerBrowsePreviewBanner(allowed){
   const el=document.getElementById('owner-browse-preview-banner');if(!el)return;
   const on=ownerCommunityPreviewOn();
@@ -6608,6 +6617,17 @@ function renderOwnerStringsPreviewBanner(allowed){
   el.style.display='';
   el.classList.add('show');
   el.innerHTML=`<span>🔭 Owner preview: Strings, Compare, and Trade Match are scoped to ${escHtml(DEFAULT_COMMUNITY_NAME)} members only.</span><span>${members?`${scoped} trainer${scoped===1?'':'s'} available before list/search filters`:'Prepare NYC before trusting this preview'}</span>`;
+}
+function renderOwnerInventoryPreviewBanner(allowed){
+  const el=document.getElementById('owner-inventory-preview-banner');if(!el)return;
+  const on=ownerCommunityPreviewOn();
+  if(!on){el.classList.remove('show');el.style.display='none';el.innerHTML='';return;}
+  const community=allData.communities?.[DEFAULT_COMMUNITY_ID]||{};
+  const members=Object.keys(community.memberUsernames||{}).length;
+  const scoped=allowed?allowed.size:Object.keys(allData.users||{}).length;
+  el.style.display='';
+  el.classList.add('show');
+  el.innerHTML=`<span>🔭 Owner preview: Inventory browse is scoped to ${escHtml(DEFAULT_COMMUNITY_NAME)} members only.</span><span>${members?`${scoped} trainer${scoped===1?'':'s'} allowed before inventory filters`:'Prepare NYC before trusting this preview'}</span>`;
 }
 function guardOwnerPreviewTrainer(username,feature='that trainer'){
   if(ownerPreviewAllowsUser(username))return true;
@@ -6693,7 +6713,7 @@ function renderCommunityMigrationPanel(){
         <div class="login-audit-sub">Private prep for future multi-community support. This does not change Browse, Strings, Inventory, Schedule, or login behavior.</div>
       </div>
       <div class="login-audit-actions">
-        ${MULTI_COMMUNITY_OWNER_PREVIEW_AVAILABLE?`<label class="owner-preview-toggle ${previewOn?'on':''}" title="Owner-only Browse and Strings preview; hidden from admins and members"><input type="checkbox" ${previewOn?'checked':''} onchange="setOwnerCommunityPreview(this.checked)"> Browse + Strings preview</label>`:''}
+        ${MULTI_COMMUNITY_OWNER_PREVIEW_AVAILABLE?`<label class="owner-preview-toggle ${previewOn?'on':''}" title="Owner-only community preview for Browse, Strings, Compare, Trade Match, and Inventory browse; hidden from admins and members"><input type="checkbox" ${previewOn?'checked':''} onchange="setOwnerCommunityPreview(this.checked)"> Community preview</label>`:''}
         <button class="rpin" onclick="prepareDefaultCommunity()" ${canRefreshServer?'':'disabled'}>${ready?(preview.missingOnServer.length?'Refresh NYC':'NYC prepared'):'Prepare NYC'}</button>
       </div>
     </div>
@@ -10323,7 +10343,8 @@ function renderHaveBrowse(){
   const el=document.getElementById('have-browse-out');if(!el)return;
   const haveData=allData.have||{};
   // Filter trainers (exclude self, only active users)
-  const allowed=activeUsers();
+  const allowed=inventoryBrowseAllowedUsers();
+  renderOwnerInventoryPreviewBanner(allowed);
   if(haveSubTab==='trainer'){
     let trainers=Object.keys(haveData).filter(u=>{
       if(u===cur)return false;
