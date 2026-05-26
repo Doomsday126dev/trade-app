@@ -1904,7 +1904,7 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
     </div>
     <div id="have-browse-view" class="have-view">
       <div id="owner-inventory-preview-banner" class="owner-preview-banner" style="display:none"></div>
-      <div class="srch"><span class="srch-icon">🔍</span><input type="text" id="have-browse-q" placeholder="Find a Pokémon or trainer…" oninput="renderHaveBrowse()" aria-label="Search community inventory"></div>
+      <div class="srch"><span class="srch-icon">🔍</span><input type="text" id="have-browse-q" placeholder="Find a Pokémon or trainer…" oninput="queueRenderHaveBrowse()" aria-label="Search community inventory"></div>
       <div class="filter-bar" style="margin-bottom:10px">
         <button class="fbtn have-sub-tab active" data-sub="pokemon" onclick="setHaveSubTab('pokemon')">By Pokémon</button>
         <button class="fbtn have-sub-tab" data-sub="trainer" onclick="setHaveSubTab('trainer')">By Trainer</button>
@@ -2357,6 +2357,7 @@ const PRI={
 const PRI_ORDER={H:0,M:1,L:2};
 const LIST_LABELS={wishlist:'Trades',dynamax:'Dynamax',gmax:'Gigantamax',costumes:'Others'};
 const VIVILLON_PATTERNS=new Set(['Archipelago','Continental','Elegant','Fancy','Garden','High Plains','Icy Snow','Jungle','Marine','Meadow','Modern','Monsoon','Ocean','Poke Ball','Poké Ball','Polar','River','Sandstorm','Savanna','Sun','Tundra']);
+const SCATTERBUG_PATTERNS=['Archipelago','Continental','Elegant','Garden','High Plains','Icy Snow','Jungle','Marine','Meadow','Modern','Monsoon','Ocean','Polar','River','Sandstorm','Savanna','Sun','Tundra'];
 const REGION_CODE_TERMS={K:'kanto',J:'johto',H:'hoenn',S:'sinnoh',U:'unova',L:'kalos',A:'alola',G:'galar',P:'paldea'};
 const REGIONAL_FORM_TERMS={A:'alola',G:'galar',H:'hisui',P:'paldea'};
 const REGION_SEARCH_TERMS=new Set([...Object.values(REGION_CODE_TERMS),'hisui']);
@@ -2686,6 +2687,7 @@ const EXTRA_FORM_ENTRIES=[
   {no:327,name:"Spinda (Form 7)",displayName:"Spinda (Form 7)",spriteUrl:"https://www.serebii.net/pokemongo/pokemon/327-7.png",users:{}},
   {no:327,name:"Spinda (Form 8)",displayName:"Spinda (Form 8)",spriteUrl:"https://www.serebii.net/pokemongo/pokemon/327-8.png",users:{}},
   {no:327,name:"Spinda (Heart)",displayName:"Spinda (Heart)",spriteUrl:"https://www.serebii.net/pokemongo/pokemon/327-9.png",users:{}},
+  ...SCATTERBUG_PATTERNS.map(pattern=>({no:664,name:`Scatterbug (${pattern})`,displayName:`Scatterbug (${pattern})`,spriteUrl:`${SPRITE_BASE}664.png`,users:{}})),
   ...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(ch=>({no:201,name:`Unown (${ch})`,displayName:`Unown (${ch})`,users:{}})),
   {no:201,name:"Unown (!)",displayName:"Unown (!)",users:{}},
   {no:201,name:"Unown (?)",displayName:"Unown (?)",users:{}}
@@ -5508,6 +5510,7 @@ function spriteSourceIndex(){
     add(e.name,e);add(e.displayName,e);
   });
   add('Vivillon',{no:666,name:'Vivillon',displayName:'Vivillon'});
+  add('Scatterbug',{no:664,name:'Scatterbug',displayName:'Scatterbug'});
   add('Unown',{no:201,name:'Unown',displayName:'Unown'});
   return spriteIndex;
 }
@@ -5515,6 +5518,7 @@ function costumeBaseName(name,dn){
   const raw=String(name||dn||'').replace(/^([AGHP])[._ ]+/,'$1-').replace(/\s+/g,' ').trim();
   const label=String(dn||name||'').replace(/^([AGHP])[._ ]+/,'$1-').replace(/\s+/g,' ').trim();
   if(VIVILLON_PATTERNS.has(raw)||VIVILLON_PATTERNS.has(label))return'Vivillon';
+  if(/^Scatterbug(\s|$|\()/i.test(raw)||/^Scatterbug(\s|$|\()/i.test(label))return'Scatterbug';
   if(/^Unown(\s|$|\()/i.test(raw)||/^Unown(\s|$|\()/i.test(label))return'Unown';
   return raw.split('(')[0].trim()||label.split('(')[0].trim()||raw||label;
 }
@@ -5833,6 +5837,34 @@ function drawCenteredFittedText(ctx,text,x,y,maxW,{weight=800,max=24,min=14,colo
   ctx.textAlign='left';
   return size;
 }
+function scatterbugPatternLabel(e){
+  const label=String(e?.dn||e?.displayName||e?.name||'');
+  const m=label.match(/^Scatterbug\s*\(([^)]+)\)/i);
+  return m?m[1]:'';
+}
+function drawScatterbugExportLabel(ctx,e,x,y,w,{dark=false}={}){
+  const label=scatterbugPatternLabel(e);
+  if(!label)return;
+  const maxW=Math.max(28,w-8);
+  let text=label;
+  ctx.font='800 7.5px Space Grotesk, sans-serif';
+  while(text.length>4&&ctx.measureText(text).width>maxW-8)text=text.slice(0,-1);
+  if(text!==label)text=text.trim()+'…';
+  const tw=Math.min(maxW,ctx.measureText(text).width+8);
+  const bx=x+(w-tw)/2,by=y+3;
+  roundedRect(ctx,bx,by,tw,11,5);
+  ctx.fillStyle=dark?'rgba(15,23,42,.82)':'rgba(15,23,42,.74)';
+  ctx.fill();
+  ctx.strokeStyle=dark?'rgba(167,139,250,.55)':'rgba(255,255,255,.75)';
+  ctx.lineWidth=0.75;
+  ctx.stroke();
+  ctx.fillStyle='#ffffff';
+  ctx.textAlign='center';
+  ctx.textBaseline='middle';
+  ctx.fillText(text,bx+tw/2,by+6);
+  ctx.textAlign='left';
+  ctx.textBaseline='alphabetic';
+}
 // Family-clustering sort: groups Pokemon variants (Vivillon, Unown, Furfrou, regional forms)
 // together. Primary key = dex number, secondary = family-base name (strips parens/regional prefix),
 // tertiary = full name. So all dex 666 entries cluster, all "Vivillon (X)" stay together inside.
@@ -5933,6 +5965,7 @@ async function renderListImage(entries,type,username,style='classic'){
       const img=images.get(exportSpriteUrl(e));
       if(img)drawImageContain(ctx,img,sx,sy,sprSize,sprSize);
       else drawSpriteFallback(ctx,e,sx,sy,sprSize);
+      drawScatterbugExportLabel(ctx,e,x,cy,cellW);
       // Export is a clean H/M/L view — flag indicators (Lucky/XXL/XXS) are intentionally omitted
       const mark=maxMarkForEntry(e,type);
       if(mark){
@@ -6050,6 +6083,7 @@ async function renderListImageCards(entries,type,username){
       const img=images.get(exportSpriteUrl(e));
       if(img)drawImageContain(ctx,img,sx,sy,sprSize,sprSize);
       else drawSpriteFallback(ctx,e,sx,sy,sprSize);
+      drawScatterbugExportLabel(ctx,e,x,cy,cellW,{dark:true});
       // Max-form badge (Dynamax 'D' / Gigantamax 'G')
       const mark=maxMarkForEntry(e,type);
       if(mark){
@@ -10386,85 +10420,142 @@ function entryWantedByOther(otherUser,name){
   }
   return null;
 }
+let _haveBrowseRenderTimer=0;
+function queueRenderHaveBrowse(){
+  clearTimeout(_haveBrowseRenderTimer);
+  _haveBrowseRenderTimer=setTimeout(()=>renderHaveBrowse(),120);
+}
+function makeHaveBrowseContext(qRaw=''){
+  const q=String(qRaw||'').toLowerCase().trim();
+  const wanted=new Map();
+  for(const t of['wishlist','dynamax','gmax','costumes']){
+    Object.entries(allData[t]?.[cur]||{}).forEach(([name,val])=>{
+      if(wanted.has(name))return;
+      const{p,lucky,xxl,xxs,shiny}=parsePri(val);
+      if(p||lucky||xxl||xxs||shiny)wanted.set(name,{type:t,p,lucky,xxl,xxs,shiny});
+    });
+  }
+  const spriteCache=new Map();
+  const offerIndex=new Map();
+  const spriteEntry=name=>{
+    if(!spriteCache.has(name))spriteCache.set(name,_nameToSpriteEntry(name));
+    return spriteCache.get(name);
+  };
+  const offersFor=(recipient,itemName)=>{
+    if(!offerIndex.has(recipient)){
+      const grouped=new Map();
+      Object.entries(allData.offers?.[recipient]||{}).forEach(([id,o])=>{
+        if(!o?.itemKey)return;
+        const arr=grouped.get(o.itemKey)||[];
+        arr.push({id,...o});
+        grouped.set(o.itemKey,arr);
+      });
+      grouped.forEach(arr=>arr.sort((a,b)=>(a.t||0)-(b.t||0)));
+      offerIndex.set(recipient,grouped);
+    }
+    return offerIndex.get(recipient).get(offerKey(itemName))||[];
+  };
+  return{
+    q,
+    wantFor:name=>wanted.get(name)||null,
+    spriteEntry,
+    offerCount:(recipient,itemName)=>offersFor(recipient,itemName).length,
+    offersFor
+  };
+}
+function haveBrowseItemsForTrainer(u,ctx){
+  const inv=allData.have?.[u]||{};
+  const userMatch=!!(ctx.q&&u.toLowerCase().includes(ctx.q));
+  let items=Object.entries(inv).map(([key,val])=>{
+    const{name:n,gender}=splitHaveKey(key);
+    const info=haveEntryInfo(val);
+    if(info.qty<=0)return null;
+    const e=ctx.spriteEntry(n);
+    const want=ctx.wantFor(n);
+    return{key,name:n,gender,qty:info.qty,mirrorOnly:info.mirrorOnly,dontNeedBack:info.dontNeedBack,giveaway:info.giveaway,note:info.note,mode:info.mode,dn:e.displayName||n,no:e.no,match:want};
+  }).filter(Boolean);
+  if(haveMatchOnly)items=items.filter(it=>it.match);
+  if(ctx.q&&!userMatch)items=items.filter(it=>it.dn.toLowerCase().includes(ctx.q));
+  items.sort((a,b)=>(b.match?1:0)-(a.match?1:0)||(parseInt(a.no)||9999)-(parseInt(b.no)||9999)||a.dn.localeCompare(b.dn));
+  return items;
+}
+function renderHaveBrowseItemCard(u,it,ctx){
+  const sk=it.key.replace(/'/g,"\\'").replace(/"/g,'&quot;');
+  const offerCount=ctx.offerCount(u,it.key);
+  const cardCls=`have-pmon-card ${it.match?'match':''} ${it.mirrorOnly?'mirror-only':''} ${it.dontNeedBack?'dnb':''} ${it.giveaway?'giveaway':''}`;
+  const cardTitle=it.mirrorOnly?`${it.dn}${it.gender?(it.gender==='f'?' ♀':' ♂'):''} — mirror only, same Pokémon/form only`
+    :it.dontNeedBack?`${it.dn}${it.gender?(it.gender==='f'?' ♀':' ♂'):''} — don't need back, flexible specific return but rare item`
+    :it.giveaway?`${it.dn}${it.gender?(it.gender==='f'?' ♀':' ♂'):''} — giveaway${it.note?', note: '+it.note:''}`
+    :it.dn+(it.gender?(it.gender==='f'?' ♀':' ♂'):'')+' — click to offer';
+  return`<div class="${cardCls}" title="${escAttr(cardTitle)}" onclick="openOfferModal('${escAttr(u)}','${sk}')" style="cursor:pointer">
+    <div class="have-row-sprite" style="width:24px;height:24px">${it.no?spriteImg(it.no,24,'',it.name,it.gender||'',it.dn):'🎮'}</div>
+    <div class="have-pmon-info">
+      <div class="have-pmon-name">${escHtml(it.dn)}${it.gender?` <span class="have-gender-pill ${it.gender}" title="${it.gender==='f'?'Female':'Male'} only">${it.gender==='f'?'♀':'♂'}</span>`:''}</div>
+      ${it.match?`<div class="have-pmon-meta">You want · ${it.match.p||(it.match.lucky?'⚡':'')||(it.match.xxl?'XXL':'')||(it.match.xxs?'XXS':'')}</div>`:''}
+      ${it.mirrorOnly?'<div class="have-pmon-meta mirror">🪞 Mirror only</div>':''}
+      ${it.dontNeedBack?'<div class="have-pmon-meta dnb">🤝 Don\'t need back</div>':''}
+      ${it.giveaway?`<div class="have-pmon-meta giveaway">📤 Giveaway</div>${it.note?`<div class="have-pmon-note" title="${escAttr(it.note)}">"${escHtml(it.note)}"</div>`:''}`:''}
+    </div>
+    <div class="have-pmon-qty">×${it.qty}</div>
+    ${offerCount?`<span class="offer-count-badge" title="${offerCount} pending offer${offerCount===1?'':'s'}">🔔 ${offerCount}</span>`:''}
+    ${it.match?'<span class="match-badge">⭐</span>':''}
+  </div>`;
+}
+function hydrateHaveTrainerCard(card){
+  if(!card)return;
+  const body=card.querySelector('.have-trainer-body');
+  if(!body||body.dataset.loaded==='1')return;
+  const u=card.dataset.user||'';
+  const ctx=makeHaveBrowseContext(document.getElementById('have-browse-q')?.value||'');
+  const items=haveBrowseItemsForTrainer(u,ctx);
+  body.innerHTML=items.length
+    ?`<div class="have-trainer-grid">${items.map(it=>renderHaveBrowseItemCard(u,it,ctx)).join('')}</div>
+      <button class="have-offer-btn" onclick="openOfferModal('${escAttr(u)}')">💬 General offer message to ${escHtml(u)}</button>`
+    :'<div class="have-empty-pmon">No visible inventory matches this filter.</div>';
+  body.dataset.loaded='1';
+}
+function toggleHaveTrainerCard(card){
+  if(!card)return;
+  const expanded=card.classList.toggle('expanded');
+  if(expanded)hydrateHaveTrainerCard(card);
+}
 function renderHaveBrowse(){
+  return perfTime('render:inventory-browse',()=>_renderHaveBrowseInner());
+}
+function _renderHaveBrowseInner(){
   const q=String(document.getElementById('have-browse-q')?.value||'').toLowerCase();
   const el=document.getElementById('have-browse-out');if(!el)return;
   const haveData=allData.have||{};
+  const ctx=makeHaveBrowseContext(q);
   // Filter trainers (exclude self, only active users)
   const allowed=inventoryBrowseAllowedUsers();
   renderOwnerInventoryPreviewBanner(allowed);
   if(haveSubTab==='trainer'){
+    const trainerItemsCache=new Map();
+    const visibleItemsFor=u=>{
+      if(!trainerItemsCache.has(u))trainerItemsCache.set(u,haveBrowseItemsForTrainer(u,ctx));
+      return trainerItemsCache.get(u);
+    };
     let trainers=Object.keys(haveData).filter(u=>{
       if(u===cur)return false;
       if(allowed&&!allowed.has(u))return false;
-      const inv=haveData[u]||{};
-      if(!Object.keys(inv).length)return false;
-      if(haveMatchOnly){
-        const hasMatch=Object.keys(inv).some(k=>entryWantedByCur(splitHaveKey(k).name));
-        if(!hasMatch)return false;
-      }
-      if(q&&!u.toLowerCase().includes(q)){
-        // Allow match if trainer has a Pokemon matching query
-        const matchByPokemon=Object.keys(inv).some(k=>{
-          const n=splitHaveKey(k).name;
-          const e=_nameToSpriteEntry(n);
-          return(e.displayName||n).toLowerCase().includes(q);
-        });
-        if(!matchByPokemon)return false;
-      }
-      return true;
+      return visibleItemsFor(u).length>0;
     }).sort((a,b)=>(allData.users?.[b]?.lastUpdated||0)-(allData.users?.[a]?.lastUpdated||0));
     if(!trainers.length){
       el.innerHTML=emptyHtml(haveMatchOnly?'No matching trainers':'No inventories yet',haveMatchOnly?'Turn off "Only matches" to see all inventories.':'When trainers add to their inventory, they\'ll appear here.','🎒');
       return;
     }
     el.innerHTML=trainers.map(u=>{
-      const inv=haveData[u]||{};
-      const ud=allData.users?.[u]||{};
-      const rawItems=Object.entries(inv).map(([key,val])=>{
-        const{name:n,gender}=splitHaveKey(key);
-        const info=haveEntryInfo(val);
-        const e=_nameToSpriteEntry(n);
-        const want=entryWantedByCur(n);
-        return{key,name:n,gender,qty:info.qty,mirrorOnly:info.mirrorOnly,dontNeedBack:info.dontNeedBack,giveaway:info.giveaway,note:info.note,mode:info.mode,dn:e.displayName||n,no:e.no,match:want};
-      }).filter(it=>it.qty>0);
-      let items=rawItems.slice();
-      if(haveMatchOnly)items=items.filter(it=>it.match);
-      if(q){items=items.filter(it=>it.dn.toLowerCase().includes(q)||u.toLowerCase().includes(q));}
-      items.sort((a,b)=>(b.match?1:0)-(a.match?1:0)||(parseInt(a.no)||9999)-(parseInt(b.no)||9999));
+      const items=visibleItemsFor(u);
       const matchCount=items.filter(it=>it.match).length;
       return`<div class="have-trainer-card" data-user="${escAttr(u)}">
-        <div class="have-trainer-hdr" onclick="this.parentElement.classList.toggle('expanded')">
+        <div class="have-trainer-hdr" onclick="toggleHaveTrainerCard(this.parentElement)">
           ${userAvatarHtml(u,32)}
           <div class="have-trainer-name">${escHtml(u)}</div>
           <div class="have-trainer-count">${items.length} item${items.length===1?'':'s'}${matchCount>0?` · <span style="color:var(--warn);font-weight:700">⭐ ${matchCount} match${matchCount===1?'':'es'}</span>`:''}</div>
           <span class="collapse-icon">▼</span>
         </div>
-        <div class="have-trainer-body">
-          <div class="have-trainer-grid">${items.map(it=>{
-            const sk=it.key.replace(/'/g,"\\'").replace(/"/g,'&quot;');
-            const offerCount=countOffersForItem(u,it.key);
-            const cardCls=`have-pmon-card ${it.match?'match':''} ${it.mirrorOnly?'mirror-only':''} ${it.dontNeedBack?'dnb':''} ${it.giveaway?'giveaway':''}`;
-            const cardTitle=it.mirrorOnly?`${it.dn}${it.gender?(it.gender==='f'?' ♀':' ♂'):''} — mirror only, same Pokémon/form only`
-              :it.dontNeedBack?`${it.dn}${it.gender?(it.gender==='f'?' ♀':' ♂'):''} — don't need back, flexible specific return but rare item`
-              :it.giveaway?`${it.dn}${it.gender?(it.gender==='f'?' ♀':' ♂'):''} — giveaway${it.note?', note: '+it.note:''}`
-              :it.dn+(it.gender?(it.gender==='f'?' ♀':' ♂'):'')+' — click to offer';
-            return`<div class="${cardCls}" title="${escAttr(cardTitle)}" onclick="openOfferModal('${escAttr(u)}','${sk}')" style="cursor:pointer">
-              <div class="have-row-sprite" style="width:24px;height:24px">${it.no?spriteImg(it.no,24,'',it.name,it.gender||'',it.dn):'🎮'}</div>
-              <div class="have-pmon-info">
-                <div class="have-pmon-name">${escHtml(it.dn)}${it.gender?` <span class="have-gender-pill ${it.gender}" title="${it.gender==='f'?'Female':'Male'} only">${it.gender==='f'?'♀':'♂'}</span>`:''}</div>
-                ${it.match?`<div class="have-pmon-meta">You want · ${it.match.p||(it.match.lucky?'⚡':'')||(it.match.xxl?'XXL':'')||(it.match.xxs?'XXS':'')}</div>`:''}
-                ${it.mirrorOnly?'<div class="have-pmon-meta mirror">🪞 Mirror only</div>':''}
-                ${it.dontNeedBack?'<div class="have-pmon-meta dnb">🤝 Don\'t need back</div>':''}
-                ${it.giveaway?`<div class="have-pmon-meta giveaway">📤 Giveaway</div>${it.note?`<div class="have-pmon-note" title="${escAttr(it.note)}">"${escHtml(it.note)}"</div>`:''}`:''}
-              </div>
-              <div class="have-pmon-qty">×${it.qty}</div>
-              ${offerCount?`<span class="offer-count-badge" title="${offerCount} pending offer${offerCount===1?'':'s'}">🔔 ${offerCount}</span>`:''}
-              ${it.match?'<span class="match-badge">⭐</span>':''}
-            </div>`;
-          }).join('')}</div>
-          <button class="have-offer-btn" onclick="openOfferModal('${escAttr(u)}')">💬 General offer message to ${escHtml(u)}</button>
-        </div>
+        <div class="have-trainer-body" data-loaded="0"></div>
       </div>`;
     }).join('');
   }else{
@@ -10483,8 +10574,8 @@ function renderHaveBrowse(){
       });
     });
     let pokemonList=Object.entries(byPokemon).map(([name,owners])=>{
-      const e=_nameToSpriteEntry(name);
-      const want=entryWantedByCur(name);
+      const e=ctx.spriteEntry(name);
+      const want=ctx.wantFor(name);
       return{name,dn:e.displayName||name,no:e.no,owners,want};
     });
     if(haveMatchOnly)pokemonList=pokemonList.filter(p=>p.want);
@@ -10510,7 +10601,7 @@ function renderHaveBrowse(){
           ${p.owners.sort((a,b)=>b.qty-a.qty).map(o=>{
             const ud=allData.users?.[o.user]||{};
             const canDm=!!ud.discord;
-            const offerCount=countOffersForItem(o.user,o.key);
+            const offerCount=ctx.offerCount(o.user,o.key);
             const tooltip=o.mirrorOnly?'Mirror only: same Pokémon/form only'
               :o.dontNeedBack?'Don\'t need back — rare item, flexible on specific return'
               :o.giveaway?`Giveaway — anything works${o.note?' · '+o.note:''}`
@@ -10522,14 +10613,14 @@ function renderHaveBrowse(){
         </div>
         ${(()=>{
           // Show consolidated offers list under this Pokémon across all owners + gender variants
-          const allOwnerOffers=p.owners.flatMap(o=>offersForItem(o.user,o.key).map(of=>({...of,recipient:o.user})));
+          const allOwnerOffers=p.owners.flatMap(o=>ctx.offersFor(o.user,o.key).map(of=>({...of,recipient:o.user})));
           if(!allOwnerOffers.length)return'';
           allOwnerOffers.sort((a,b)=>(a.t||0)-(b.t||0));
           return`<div style="margin-top:8px"><div class="offer-section-label" style="margin:6px 0 4px">Pending offers (FCFS):</div>
             <div class="offer-list">${allOwnerOffers.map((o,i)=>{
               const isFirst=i===0,isMine=o.from===cur;
               const offeringHtml=(o.offering||[]).slice(0,4).map(n=>{
-                const e=_nameToSpriteEntry(n);
+                const e=ctx.spriteEntry(n);
                 const url=spriteUrl(e.no,e.name,'',e.displayName||e.name);
                 return`<span class="offer-item-chip">${url?`<img src="${url}" alt="" loading="lazy">`:'🎮'}${escHtml(e.displayName||n)}</span>`;
               }).join('');

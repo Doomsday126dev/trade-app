@@ -488,3 +488,61 @@
 - Validate Schedule preview in production before touching create/join community flows.
 - If a hidden trade still affects quota cards, that is expected; do not "fix" it unless product direction changes.
 - The next safe Phase 2 pass is a small audit of cross-surface consistency before exposing any community switcher or create/join UI.
+
+## 2026-05-26 - Codex - Inventory browse performance + Scatterbug pattern support
+
+### Summary
+- Paused broader Phase 2 community work to investigate reports that Inventory -> Browse community is slow on mobile and desktop.
+- Audit finding: the slow path was mostly client-side rendering, not Firebase reads. `renderHaveBrowse()` rebuilt large hidden trainer item grids on every search keystroke/refresh, repeatedly scanned wishlist/list sources for matches/sprites, repeatedly filtered offers per item, and created many sprite tags before users expanded trainer cards.
+- Implemented a localized fix without changing the data model:
+  - Debounced the Inventory browse search input via `queueRenderHaveBrowse()`.
+  - Added per-render caches for current-user wanted entries, sprite lookup, and offer lookup/counts.
+  - Changed By Trainer view so the header/counts still render immediately, but the item grid and its sprites are hydrated only when that trainer card is expanded.
+  - Wrapped the render path with existing `perfTime('render:inventory-browse', ...)` so Health Check/perf output can show the timing.
+- Added selectable Scatterbug pattern entries using the existing `EXTRA_FORM_ENTRIES` model.
+- Exported list images now draw a small pattern label on Scatterbug form sprites so same-looking Scatterbug sprites are distinguishable without making normal UI messy.
+
+### Files touched
+- `index.html`
+- `SCALING-NOTES.md`
+- `docs/MAINTENANCE-LOG.md`
+
+### Feature flags added/changed
+- No new flags.
+- `MULTI_COMMUNITY_ENABLED` and owner preview flags are unchanged.
+
+### Firebase paths added/changed
+- No new Firebase paths.
+- Existing Scatterbug entries remain valid; new form names are stored exactly like other form entries, e.g. `wishlist/{username}/Scatterbug (Garden)`.
+
+### Security rules changes needed
+- None.
+- This uses existing list/inventory write paths and existing global read/subscription behavior.
+
+### Manual test checklist
+- Inventory -> Browse community -> By Trainer:
+  - Search for a trainer and a Pokemon name; verify the results update after a short debounce.
+  - Expand a trainer and verify item cards, sprites, offer badges, match badges, and "General offer message" still work.
+  - Toggle "Only matches" and verify trainer counts/results still make sense.
+- Inventory -> Browse community -> By Pokemon:
+  - Search by Pokemon and trainer name; verify cards and pending offer sections still render.
+  - Open an offer modal from a trainer chip.
+- Performance:
+  - On a phone, type into Inventory browse search and confirm the page no longer visibly locks on each keystroke.
+  - In Health Check/perf panel, inspect `render:inventory-browse` after using Community Browse.
+- Scatterbug:
+  - Add `Scatterbug (Garden)` and another pattern to My List.
+  - Verify normal list rows display the full form name but do not add extra visual clutter.
+  - Verify matching/trade behavior uses exact form names, consistent with other forms.
+  - Export a list image and confirm Scatterbug form labels are visible on the sprites.
+  - Existing plain `Scatterbug` entries should still display and export as plain Scatterbug with no pattern label.
+
+### Known risks / TODOs
+- By Pokemon view still renders all Pokemon cards in one pass. The new caches help, but a future low-risk pass could add a "show more" or windowed rendering if large communities still report slowness there.
+- By Trainer view still computes per-trainer item summaries for counts and search matching, but no longer creates all hidden item DOM/sprite tags up front.
+- Scatterbug pattern matching is exact-name based. Plain `Scatterbug` is intentionally left as a generic legacy entry and does not automatically match every pattern.
+
+### Instructions for the next contributor
+- Do not revert the lazy trainer hydration unless replacing it with real virtualization/windowing.
+- If reports continue, compare `render:inventory-browse` timings between By Trainer and By Pokemon before changing Firebase subscriptions.
+- Keep future Scatterbug changes consistent with the existing form-name model unless the app gets a broader form-normalization layer.
