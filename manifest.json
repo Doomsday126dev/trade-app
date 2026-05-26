@@ -1,7 +1,7 @@
 {
   "name": "PoGo Trades",
   "short_name": "PoGo Trades",
-  "description": "Pokémon GO community trade list manager",
+  "description": "Community trade list manager for GO trainers",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
@@ -10,16 +10,16 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png",
+      "src": "assets/tradeloop-icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     },
     {
-      "src": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png",
+      "src": "assets/tradeloop-icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     }
   ],
   "shortcuts": [
@@ -28,35 +28,35 @@
       "short_name": "Add",
       "description": "Open My List and focus the add form",
       "url": "./?action=add",
-      "icons": [{"src": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/151.png", "sizes": "96x96"}]
+      "icons": [{"src": "assets/tradeloop-icon-96.png", "sizes": "96x96", "type": "image/png"}]
     },
     {
       "name": "My Search Strings",
       "short_name": "Strings",
       "description": "View and copy your search strings",
       "url": "./?action=strings",
-      "icons": [{"src": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/133.png", "sizes": "96x96"}]
+      "icons": [{"src": "assets/tradeloop-icon-96.png", "sizes": "96x96", "type": "image/png"}]
     },
     {
       "name": "Browse Community",
       "short_name": "Browse",
       "description": "See what other trainers want",
       "url": "./?action=browse",
-      "icons": [{"src": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/132.png", "sizes": "96x96"}]
+      "icons": [{"src": "assets/tradeloop-icon-96.png", "sizes": "96x96", "type": "image/png"}]
     },
     {
       "name": "My Inventory",
       "short_name": "Inventory",
       "description": "Track Pokémon you have to trade",
       "url": "./?action=have",
-      "icons": [{"src": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/143.png", "sizes": "96x96"}]
+      "icons": [{"src": "assets/tradeloop-icon-96.png", "sizes": "96x96", "type": "image/png"}]
     },
     {
       "name": "Trade Schedule",
       "short_name": "Schedule",
       "description": "Plan trades and see live event bonuses",
       "url": "./?action=schedule",
-      "icons": [{"src": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/483.png", "sizes": "96x96"}]
+      "icons": [{"src": "assets/tradeloop-icon-96.png", "sizes": "96x96", "type": "image/png"}]
     }
   ]
 }

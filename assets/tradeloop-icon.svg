@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">PoGo Trades trade loop icon</title>
+  <desc id="desc">Original abstract trade-loop arrows around a glowing four-point star.</desc>
+  <defs>
+    <radialGradient id="tile" cx="40%" cy="18%" r="92%">
+      <stop offset="0" stop-color="#37246d"/>
+      <stop offset=".42" stop-color="#17182d"/>
+      <stop offset="1" stop-color="#090d1e"/>
+    </radialGradient>
+    <radialGradient id="disc" cx="40%" cy="30%" r="72%">
+      <stop offset="0" stop-color="#3c2c7c"/>
+      <stop offset=".48" stop-color="#17152d"/>
+      <stop offset="1" stop-color="#080b1a"/>
+    </radialGradient>
+    <linearGradient id="upperLoop" x1="24" y1="43" x2="106" y2="43" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#a78bfa"/>
+      <stop offset=".48" stop-color="#7067ff"/>
+      <stop offset="1" stop-color="#22d3ee"/>
+    </linearGradient>
+    <linearGradient id="lowerLoop" x1="23" y1="82" x2="104" y2="82" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#22d3ee"/>
+      <stop offset=".56" stop-color="#14b8a6"/>
+      <stop offset="1" stop-color="#84cc16"/>
+    </linearGradient>
+    <radialGradient id="starCore" cx="50%" cy="45%" r="54%">
+      <stop offset="0" stop-color="#f8fafc"/>
+      <stop offset=".36" stop-color="#67e8f9"/>
+      <stop offset="1" stop-color="#2563eb"/>
+    </radialGradient>
+    <filter id="drop" x="-30%" y="-30%" width="160%" height="170%">
+      <feDropShadow dx="0" dy="8" stdDeviation="8" flood-color="#020617" flood-opacity=".42"/>
+    </filter>
+    <filter id="glow" x="-55%" y="-55%" width="210%" height="210%">
+      <feGaussianBlur stdDeviation="3.4" result="blur"/>
+      <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0.39 0 0 0 0 0.33 0 0 0 0 1 0 0 0 .62 0" result="outer"/>
+      <feMerge>
+        <feMergeNode in="outer"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="starGlow" x="-70%" y="-70%" width="240%" height="240%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0.22 0 0 0 0 0.85 0 0 0 0 0.95 0 0 0 .65 0" result="cyanGlow"/>
+      <feMerge>
+        <feMergeNode in="cyanGlow"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect width="128" height="128" rx="30" fill="url(#tile)"/>
+  <circle cx="64" cy="64" r="50" fill="url(#disc)" filter="url(#drop)"/>
+  <path d="M28 32c13-11 32-16 52-12 18 4 31 14 39 28" fill="none" stroke="#ffffff" stroke-opacity=".08" stroke-width="12" stroke-linecap="round"/>
+  <path d="M101 98c-14 10-35 13-54 7-17-5-29-17-36-33" fill="none" stroke="#ffffff" stroke-opacity=".07" stroke-width="12" stroke-linecap="round"/>
+  <path d="M25 51c12-22 39-34 65-25 10 3 18 9 25 17" fill="none" stroke="#ffffff" stroke-opacity=".06" stroke-width="20" stroke-linecap="round"/>
+  <path d="M101 78c-13 22-42 32-67 21-9-4-17-10-22-19" fill="none" stroke="#ffffff" stroke-opacity=".055" stroke-width="20" stroke-linecap="round"/>
+
+  <g filter="url(#glow)">
+    <path d="M31 45c8-14 23-23 41-23 16 0 30 7 39 19" fill="none" stroke="url(#upperLoop)" stroke-width="14" stroke-linecap="round"/>
+    <path d="M100 39c7 1 13 3 18 8-5 2-11 6-16 11" fill="none" stroke="url(#upperLoop)" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <path d="M97 83c-9 14-25 22-43 20-16-1-29-9-37-22" fill="none" stroke="url(#lowerLoop)" stroke-width="14" stroke-linecap="round"/>
+    <path d="M29 89c-7-1-13-4-18-9 5-2 11-5 17-10" fill="none" stroke="url(#lowerLoop)" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <circle cx="64" cy="64" r="20" fill="#080b1a" stroke="#ffffff" stroke-opacity=".13" stroke-width="2"/>
+  <g filter="url(#starGlow)">
+    <path d="M64 35l8.4 20.6L93 64l-20.6 8.4L64 93l-8.4-20.6L35 64l20.6-8.4z" fill="#fff4b8"/>
+    <path d="M64 44l5.7 14.3L84 64l-14.3 5.7L64 84l-5.7-14.3L44 64l14.3-5.7z" fill="url(#starCore)"/>
+    <path d="M64 52l3.1 8.9L76 64l-8.9 3.1L64 76l-3.1-8.9L52 64l8.9-3.1z" fill="#e0f2fe" opacity=".72"/>
+  </g>
+
+  <circle cx="28" cy="33" r="4.2" fill="#2dd4bf" filter="url(#glow)"/>
+  <circle cx="97" cy="96" r="4" fill="#a78bfa" filter="url(#glow)"/>
+  <circle cx="111" cy="72" r="2.2" fill="#22d3ee" opacity=".82"/>
+</svg>

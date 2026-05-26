@@ -5,7 +5,7 @@
 //     trimmed by max entry count to keep storage bounded
 //   - Firebase realtime endpoints: never cached (always network)
 
-const VERSION='pogo-trades-v5';
+const VERSION='pogo-trades-v7';
 const SHELL_CACHE=`shell-${VERSION}`;
 const SPRITE_CACHE=`sprites-${VERSION}`;
 
@@ -16,7 +16,12 @@ const SHELL_URLS=[
   './',
   './index.html',
   './data.js',
-  './manifest.json'
+  './manifest.json',
+  './assets/tradeloop-icon.svg',
+  './assets/tradeloop-icon-96.png',
+  './assets/tradeloop-icon-180.png',
+  './assets/tradeloop-icon-192.png',
+  './assets/tradeloop-icon-512.png'
 ];
 
 const SPRITE_CACHE_LIMIT=400;

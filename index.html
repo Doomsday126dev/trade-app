@@ -7,6 +7,8 @@
 <meta name="theme-color" content="#0f0f1a">
 <title>PoGo Trade List</title>
 <link rel="manifest" href="manifest.json">
+<link rel="icon" href="assets/tradeloop-icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/tradeloop-icon-180.png">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
 :root,html[data-theme="dark"]{
@@ -73,6 +75,8 @@ input,select,textarea{font-family:var(--font);outline:none}
 .topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 16px;height:var(--topbar-h);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
 .logo{font-weight:700;font-size:17px;letter-spacing:-.3px;display:flex;align-items:center;gap:8px}
 .logo span{background:linear-gradient(135deg,var(--accent),var(--ac2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.brand-mark{width:26px;height:26px;display:block;flex:0 0 auto;border-radius:7px;box-shadow:0 0 0 1px rgba(255,255,255,.08),0 6px 16px rgba(108,99,255,.22)}
+.brand-mark.lg{width:32px;height:32px;border-radius:9px}
 .topbar-r{display:flex;align-items:center;gap:10px;min-width:0}
 .sync-row{display:flex;align-items:center;gap:5px}
 .user-chip{display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--border2);border-radius:20px;padding:4px 12px 4px 4px;font-size:13px;font-weight:500;cursor:pointer;min-width:0}
@@ -393,7 +397,7 @@ input,select,textarea{font-family:var(--font);outline:none}
 /* LOGIN / CONFIG */
 #login-pg,#config-pg{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;background:var(--bg)}
 .lcard{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:30px 26px;width:100%;max-width:380px}
-.llogo{font-size:22px;font-weight:700;margin-bottom:4px}
+.llogo{font-size:22px;font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:9px;line-height:1.1}
 .llogo span{background:linear-gradient(135deg,var(--accent),var(--ac2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .lsub{color:var(--muted);font-size:14px;margin-bottom:26px}
 .field{margin-bottom:13px}
@@ -1599,7 +1603,7 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
 <!-- CONFIG -->
 <div id="config-pg" style="display:none">
   <div class="lcard">
-    <div class="llogo">🎮 <span>PoGo Trades</span></div>
+    <div class="llogo"><img class="brand-mark lg" src="assets/tradeloop-icon.svg" alt="" aria-hidden="true"> <span>PoGo Trades</span></div>
     <div style="margin-top:4px"></div>
     <h2 style="font-size:19px;font-weight:700;margin-bottom:5px">Connect Firebase</h2>
     <p style="color:var(--muted);font-size:13px;margin-bottom:22px;line-height:1.6">One-time setup. Takes ~5 minutes.</p>
@@ -1617,7 +1621,7 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
 <!-- LOGIN -->
 <div id="login-pg" style="display:none">
   <div class="lcard">
-    <div class="llogo">🎮 <span>PoGo Trades</span></div>
+    <div class="llogo"><img class="brand-mark lg" src="assets/tradeloop-icon.svg" alt="" aria-hidden="true"> <span>PoGo Trades</span></div>
     <div class="lsub">NYC Community Trade List</div>
     <div class="field login-user-field">
       <label>Username</label>
@@ -1658,7 +1662,7 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
 <!-- APP -->
 <div id="app" style="display:none">
   <div class="topbar">
-    <div class="logo">🎮 <span>PoGo Trades</span></div>
+    <div class="logo"><img class="brand-mark" src="assets/tradeloop-icon.svg" alt="" aria-hidden="true"> <span>PoGo Trades</span></div>
     <div class="topbar-r">
       <div class="topbar-sync-wrap">
         <div class="sync-row" id="sync-pill" title="Click for sync status detail" onclick="openSyncDetail()" role="button" tabindex="0"><div class="sync-dot" id="sdot"></div><span class="sync-lbl" id="slbl">—</span></div>
@@ -2378,7 +2382,7 @@ if(!DB)throw new Error('Trade data failed to load');
 
 const PREFILTER="!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&";
 const OWNER="Doomsday126";
-const APP_VERSION="4.6.31";
+const APP_VERSION="4.6.32";
 const MULTI_COMMUNITY_ENABLED=false;
 const MULTI_COMMUNITY_OWNER_PREVIEW_AVAILABLE=true;
 const DEFAULT_COMMUNITY_ID='nyc';
