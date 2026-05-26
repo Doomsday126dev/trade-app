@@ -442,3 +442,49 @@
 ### Instructions for the next contributor
 - Validate Inventory browse preview in production before touching Schedule.
 - Keep Schedule as a separate Phase 2 pass; do not bundle it with offer/trade quota changes.
+
+## 2026-05-25 - Codex - Multi-community Phase 2 pass 4, owner Schedule preview
+
+### Summary
+- Expanded the owner-only community preview to the Schedule tab.
+- Schedule preview now scopes visible scheduled rows, reserved-trade rows, the Schedule notification badge, and the schedule partner picker to `communities/nyc/memberUsernames`.
+- Quota cards intentionally still use the owner's real daily scheduled/completed trade usage, even if a hidden out-of-community trainer is involved. This keeps the owner from overbooking regular/special/remote usage while testing the preview.
+- Added an owner preview banner inside Schedule explaining the scope and quota behavior.
+- Kept `MULTI_COMMUNITY_ENABLED=false`; this remains an owner-only preview, not a public launch.
+
+### Files touched
+- `index.html`
+- `SCALING-NOTES.md`
+- `docs/MAINTENANCE-LOG.md`
+
+### Feature flags added/changed
+- No new flags.
+- Existing localStorage opt-in `pogoOwnerCommunityPreview_v1` now controls Browse, Strings, Compare, Trade Match, Inventory browse, and Schedule preview.
+
+### Firebase paths added/changed
+- No new Firebase paths.
+- Schedule preview reads existing `communities/nyc/memberUsernames` from the live owner-preview subscription.
+
+### Security rules changes needed
+- None beyond the current community-aware rules.
+- This is read-only UI filtering plus client-side schedule partner validation.
+
+### Manual test checklist
+- Owner with preview off should see global Schedule behavior.
+- Owner with preview on should see a Schedule preview banner.
+- Remove `TestUser` from `communities/nyc/memberUsernames`; with preview on, `TestUser` should disappear from the Schedule partner picker.
+- Any scheduled/reserved rows involving only out-of-community counterparties should be hidden while preview is on.
+- Schedule quota cards should still reflect the owner's real trade usage for the day.
+- Turn preview off and verify global Schedule behavior returns.
+- Add `TestUser: true` back to `communities/nyc/memberUsernames`.
+- Non-owner admins/members should not see the owner preview controls or banners.
+
+### Known risks / TODOs
+- This still does not reduce Firebase bandwidth because the global `trades` subscription remains unchanged.
+- Schedule quota counters are intentionally not community-scoped; this should be revisited only if/when quotas become community-specific, which they are not in Pokemon GO.
+- Offers and accepted-offer trade creation remain globally stored; community scoping is currently a preview filter only.
+
+### Instructions for the next contributor
+- Validate Schedule preview in production before touching create/join community flows.
+- If a hidden trade still affects quota cards, that is expected; do not "fix" it unless product direction changes.
+- The next safe Phase 2 pass is a small audit of cross-surface consistency before exposing any community switcher or create/join UI.

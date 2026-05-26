@@ -1929,6 +1929,7 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
       <div class="sched-week-label" id="sched-week-label"></div>
       <button class="bsave sched-add-btn" onclick="openScheduleModal()">+ Schedule Trade</button>
     </div>
+    <div id="owner-schedule-preview-banner" class="owner-preview-banner" style="display:none"></div>
     <div class="sched-week-strip" id="sched-week-strip"></div>
     <div id="sched-reserved-block" class="sched-reserved-block" style="display:none"></div>
     <div id="sched-day-detail"></div>
@@ -6566,6 +6567,7 @@ function setOwnerCommunityPreview(on){
   renderCommunityMigrationPanel();
   renderBrowse();
   renderStrings();
+  renderSchedule();
   if(haveView==='browse')renderHaveBrowse();
 }
 function ownerPreviewCommunityMemberUsernames(){
@@ -6595,6 +6597,10 @@ function inventoryBrowseAllowedUsers(){
   if(!active&&!communityMembers)return null;
   const users=Object.keys(allData.users||{});
   return new Set(users.filter(u=>(!active||active.has(u))&&(!communityMembers||communityMembers.has(u))));
+}
+function scheduleAllowedUsers(){
+  const communityMembers=ownerPreviewCommunityMemberUsernames();
+  return communityMembers?new Set(Object.keys(allData.users||{}).filter(u=>communityMembers.has(u))):null;
 }
 function renderOwnerBrowsePreviewBanner(allowed){
   const el=document.getElementById('owner-browse-preview-banner');if(!el)return;
@@ -6628,6 +6634,17 @@ function renderOwnerInventoryPreviewBanner(allowed){
   el.style.display='';
   el.classList.add('show');
   el.innerHTML=`<span>🔭 Owner preview: Inventory browse is scoped to ${escHtml(DEFAULT_COMMUNITY_NAME)} members only.</span><span>${members?`${scoped} trainer${scoped===1?'':'s'} allowed before inventory filters`:'Prepare NYC before trusting this preview'}</span>`;
+}
+function renderOwnerSchedulePreviewBanner(allowed){
+  const el=document.getElementById('owner-schedule-preview-banner');if(!el)return;
+  const on=ownerCommunityPreviewOn();
+  if(!on){el.classList.remove('show');el.style.display='none';el.innerHTML='';return;}
+  const community=allData.communities?.[DEFAULT_COMMUNITY_ID]||{};
+  const members=Object.keys(community.memberUsernames||{}).length;
+  const scoped=allowed?allowed.size:Object.keys(allData.users||{}).length;
+  el.style.display='';
+  el.classList.add('show');
+  el.innerHTML=`<span>🔭 Owner preview: Schedule rows and partner picker are scoped to ${escHtml(DEFAULT_COMMUNITY_NAME)} members only.</span><span>${members?`${Math.max(0,scoped-1)} schedulable trainer${Math.max(0,scoped-1)===1?'':'s'} · quota cards still show your real daily usage`:'Prepare NYC before trusting this preview'}</span>`;
 }
 function guardOwnerPreviewTrainer(username,feature='that trainer'){
   if(ownerPreviewAllowsUser(username))return true;
@@ -6713,7 +6730,7 @@ function renderCommunityMigrationPanel(){
         <div class="login-audit-sub">Private prep for future multi-community support. This does not change Browse, Strings, Inventory, Schedule, or login behavior.</div>
       </div>
       <div class="login-audit-actions">
-        ${MULTI_COMMUNITY_OWNER_PREVIEW_AVAILABLE?`<label class="owner-preview-toggle ${previewOn?'on':''}" title="Owner-only community preview for Browse, Strings, Compare, Trade Match, and Inventory browse; hidden from admins and members"><input type="checkbox" ${previewOn?'checked':''} onchange="setOwnerCommunityPreview(this.checked)"> Community preview</label>`:''}
+        ${MULTI_COMMUNITY_OWNER_PREVIEW_AVAILABLE?`<label class="owner-preview-toggle ${previewOn?'on':''}" title="Owner-only community preview for Browse, Strings, Compare, Trade Match, Inventory browse, and Schedule; hidden from admins and members"><input type="checkbox" ${previewOn?'checked':''} onchange="setOwnerCommunityPreview(this.checked)"> Community preview</label>`:''}
         <button class="rpin" onclick="prepareDefaultCommunity()" ${canRefreshServer?'':'disabled'}>${ready?(preview.missingOnServer.length?'Refresh NYC':'NYC prepared'):'Prepare NYC'}</button>
       </div>
     </div>
@@ -9301,14 +9318,28 @@ function tradesOnDate(isoD){
     .filter(([id,t])=>!t.participants||t.participants[cur]||t.organizer===cur)
     .map(([id,t])=>({id,...t}));
 }
+function scheduledTradeOtherUsers(t){
+  const names=new Set(Object.keys(t?.participants||{}));
+  if(t?.organizer)names.add(t.organizer);
+  if(t?.counterparty)names.add(t.counterparty);
+  names.delete(cur);
+  return [...names].filter(Boolean);
+}
+function schedulePreviewAllowsTrade(t){
+  const members=ownerPreviewCommunityMemberUsernames();
+  if(!members)return true;
+  return scheduledTradeOtherUsers(t).every(u=>members.has(u));
+}
+function visibleTradesOnDate(isoD){
+  return tradesOnDate(isoD).filter(schedulePreviewAllowsTrade);
+}
 function scheduledTradeQuantity(t){
   if((t?.type||'regular')!=='regular')return 1;
   if(!t)return 1;
   const n=parseInt(t?.regularCount,10);
   return Number.isFinite(n)&&n>0?Math.min(100,n):1;
 }
-function tradeCountsForDay(isoD){
-  const trades=tradesOnDate(isoD);
+function summarizeScheduledTrades(trades){
   let special=0,regular=0,remote=0,scheduled=0,completed=0;
   const byStatus={
     special:{scheduled:0,completed:0},
@@ -9327,6 +9358,12 @@ function tradeCountsForDay(isoD){
     else scheduled++;
   });
   return{special,regular,remote,total:special+regular+remote,scheduled,completed,byStatus,trades};
+}
+function tradeCountsForDay(isoD){
+  return summarizeScheduledTrades(tradesOnDate(isoD));
+}
+function visibleTradeCountsForDay(isoD){
+  return summarizeScheduledTrades(visibleTradesOnDate(isoD));
 }
 
 async function writeTrade(id,trade){
@@ -9357,6 +9394,8 @@ function selectSchedDay(isoD){
 function renderSchedule(){
   if(!schedAnchor)schedAnchor=startOfWeek(new Date());
   if(!schedSelectedDate)schedSelectedDate=todayIso();
+  const scheduleAllowed=scheduleAllowedUsers();
+  renderOwnerSchedulePreviewBanner(scheduleAllowed);
   const labelEl=document.getElementById('sched-week-label');
   if(labelEl)labelEl.textContent=fmtWeekRange(schedAnchor);
   const strip=document.getElementById('sched-week-strip');
@@ -9369,7 +9408,7 @@ function renderSchedule(){
       const isSel=iso===schedSelectedDate;
       const isPast=d<new Date()&&!isToday;
       const evt=dailyEventBonuses(iso);
-      const counts=tradeCountsForDay(iso);
+      const counts=visibleTradeCountsForDay(iso);
       const trade_total=counts.total;
       const tradeTitle=trade_total?`${counts.scheduled} open · ${counts.completed} done`:'';
       return`<div class="sched-day-card ${isToday?'today':''} ${isSel?'selected':''} ${isPast?'past':''}" onclick="selectSchedDay('${iso}')" role="button" tabindex="0">
@@ -9399,10 +9438,13 @@ function reservedTrades(){
     .map(([id,t])=>({id,...t}))
     .sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
 }
+function visibleReservedTrades(){
+  return reservedTrades().filter(schedulePreviewAllowsTrade);
+}
 function renderReservedSection(){
   const el=document.getElementById('sched-reserved-block');
   if(!el)return;
-  const reserved=reservedTrades();
+  const reserved=visibleReservedTrades();
   if(!reserved.length){el.innerHTML='';el.style.display='none';return;}
   el.style.display='';
   el.innerHTML=`
@@ -9483,6 +9525,7 @@ function renderSchedDayDetail(){
   const d=parseIsoDate(iso);
   const evt=dailyEventBonuses(iso);
   const counts=tradeCountsForDay(iso);
+  const visibleCounts=visibleTradeCountsForDay(iso);
   // PoGo trade rules:
   //   - 100 regular trades/day cap (does NOT include special trades)
   //   - 1 special trade/day base + event bonuses (independent counter)
@@ -9533,7 +9576,7 @@ function renderSchedDayDetail(){
       <button onclick="setManualBonus('${iso}',1)" class="sched-manual-bonus-btn" aria-label="Increase custom bonus">+</button>
     </div>
   </div>`;
-  const tradesHtml=counts.trades.length?`<div class="sched-trades-list">${counts.trades.map(t=>renderTradeCard(t)).join('')}</div>`
+  const tradesHtml=visibleCounts.trades.length?`<div class="sched-trades-list">${visibleCounts.trades.map(t=>renderTradeCard(t)).join('')}</div>`
     :'<div class="sched-empty-trades">No trades scheduled for this day yet.</div>';
   el.innerHTML=`<div class="sched-day-detail">
     <div class="sched-day-detail-hdr">
@@ -9661,7 +9704,8 @@ function openScheduleModal(dateIso,editTradeId=''){
   const submitText=editTrade?'Save Changes':'Schedule';
   // Pull trainer list (exclude self, only active users from the community)
   const myInv=allData.have?.[cur]||{};
-  const otherUsers=Object.keys(allData.users||{}).filter(u=>u!==cur).sort();
+  const allowed=scheduleAllowedUsers();
+  const otherUsers=Object.keys(allData.users||{}).filter(u=>u!==cur&&(!allowed||allowed.has(u)||selectedPartners.has(u))).sort();
   // Find Pokemon I have that match others' wants (and vice versa) for suggestions
   const html=`<div class="ov open" id="sched-modal" role="dialog" aria-modal="true" onclick="if(event.target===this)closeScheduleModal()">
     <div class="modal schedule-modal" onclick="event.stopPropagation()">
@@ -9750,6 +9794,9 @@ async function submitScheduledTrade(){
   const note=document.getElementById('sched-note')?.value||'';
   if(!date){toast('⚠️ Pick a date');return;}
   if(!partners.length){toast('⚠️ Pick at least one trainer');return;}
+  const allowed=scheduleAllowedUsers();
+  const blocked=allowed?partners.filter(p=>!allowed.has(p)):[];
+  if(blocked.length){toast(`🔭 Owner preview: ${blocked.join(', ')} ${blocked.length===1?'is':'are'} outside ${DEFAULT_COMMUNITY_NAME}. Turn preview off or add them to the community first.`,6500);return;}
   if(type==='regular'){
     const currentDayRegular=tradeCountsForDay(date).regular;
     const existingRegular=existing&&existing.date===date&&(existing.type||'regular')==='regular'?scheduledTradeQuantity(existing):0;
@@ -9794,6 +9841,7 @@ function updateScheduleNotif(){
   let count=0;
   Object.values(allData.trades||{}).forEach(t=>{
     if(!t||!t.participants||!t.participants[cur])return;
+    if(!schedulePreviewAllowsTrade(t))return;
     if(t.status==='reserved'){count++;return;}
     if(t.status!=='scheduled'||!t.date)return;
     const tDate=parseIsoDate(t.date).getTime();

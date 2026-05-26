@@ -312,6 +312,10 @@ on phones and slow networks first.
 
 When you ship scaling work, append a one-line entry here. Newest first.
 
+- **2026-05-25, v4.6.25** — Phase 2 pass 4 expanded owner preview to
+  Schedule rows, reserved trades, notification badge, and partner picker while
+  intentionally keeping quota cards tied to the owner's real daily usage.
+  (Codex)
 - **2026-05-25, v4.6.25** — Phase 2 pass 3 expanded owner preview to
   Inventory -> Browse community, renamed the toggle to Community preview,
   and kept My inventory and Schedule unchanged. (Codex)
