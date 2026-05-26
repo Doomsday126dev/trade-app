@@ -660,3 +660,146 @@
 
 ### Instructions for the next contributor
 - Keep `Possible mirrors` stricter than plain inventory overlap. Mirror-only can imply "I want the same thing back," but normal inventory alone should not.
+
+## 2026-05-26 - Codex - Inventory return-preference wording pass
+
+### Summary
+- Reviewed Inventory return-preference flags against Pokemon GO trading intent.
+- Kept the existing Firebase/data fields unchanged for compatibility:
+  - `any`
+  - `mirrorOnly`
+  - `dontNeedBack`
+  - `giveaway`
+- Renamed the confusing user-facing `Don't need back` / `DNB` language to `Fair trade`.
+- Updated labels/tooltips/copy so the mental model is:
+  - `Open`: mirror preferred, but anything from the user's want list is okay.
+  - `Mirror only`: strictly same Pokemon/form back.
+  - `Fair trade`: comparable value from the user's want list; not necessarily a mirror.
+  - `Giveaway`: bag-space pressure; wishlist/lucky/size offers preferred, but anything is okay.
+- Did not add a What's New entry because this is clarity/polish for an existing feature, not a new capability regular users need to be alerted about.
+
+### Files touched
+- `index.html`
+- `docs/MAINTENANCE-LOG.md`
+
+### Feature flags added/changed
+- None.
+
+### Firebase paths added/changed
+- None.
+
+### Security rules changes needed
+- None.
+
+### Manual test checklist
+- Inventory add form shows `Open`, `Mirror`, `Fair trade`, and `Giveaway`.
+- Bulk edit mode selector uses `Open`, `Mirror only`, `Fair trade`, and `Giveaway`.
+- Existing entries with `dontNeedBack: true` still render, but display as `Fair trade`.
+- Cycling an inventory row mode still follows `Open -> Mirror -> Fair trade -> Giveaway -> Open`.
+- Community Browse cards and offer modal copy explain Fair trade without using "don't need back."
+
+### Known risks / TODOs
+- The underlying field is still `dontNeedBack` to avoid data migration. Do not rename it casually.
+- If the UI still feels busy, the next pass should consider a small legend or moving some mode badges to hover/detail only, but the labels are now shorter and more player-aligned.
+
+### Instructions for the next contributor
+- Treat `dontNeedBack` as the stored legacy field for the visible `Fair trade` mode.
+- When adding new inventory surfaces, use player-facing `Fair trade` copy instead of exposing `DNB` or `Don't need back`.
+
+## 2026-05-26 - Codex - Inventory fair-trade wording follow-up
+
+### Summary
+- Renamed the visible `Flexible` inventory return preference to `Fair trade` to avoid confusion with `Open`.
+- Kept the underlying `dontNeedBack` field unchanged for backward compatibility.
+- Updated add controls, bulk selector, badges, tooltips, offer modal copy, tour copy, and the historical What's New text for that mode.
+
+### Files touched
+- `index.html`
+- `docs/MAINTENANCE-LOG.md`
+
+### Feature flags added/changed
+- None.
+
+### Firebase paths added/changed
+- None.
+
+### Security rules changes needed
+- None.
+
+### Manual test checklist
+- Existing `dontNeedBack` inventory entries display as `Fair trade`.
+- Add form return preferences read `Open`, `Mirror`, `Fair trade`, `Giveaway`.
+- Cycling an inventory row still moves through the same four stored modes.
+- Offer modal and Community Browse use `Fair trade` copy.
+
+### Known risks / TODOs
+- Stored data and code variable names still say `dontNeedBack`; this is intentional to avoid migration risk.
+
+### Instructions for the next contributor
+- Use `Fair trade` in user-facing UI. Do not reintroduce `Flexible`, `DNB`, or `Don't need back` unless doing a deliberate copy redesign.
+
+## 2026-05-26 - Codex - Inventory return-preference semantics follow-up
+
+### Summary
+- Refined the return-preference copy after product clarification:
+  - `Open` now means mirror preferred, but anything from the user's want list is okay.
+  - `Fair trade` now means comparable value from the user's want list, not necessarily a mirror.
+- Updated add-form tooltips, row button tooltips, Community Browse tooltips, offer modal copy, code comments, and historical What's New wording.
+- Kept stored fields unchanged (`any`, `mirrorOnly`, `dontNeedBack`, `giveaway`).
+
+### Files touched
+- `index.html`
+- `docs/MAINTENANCE-LOG.md`
+
+### Feature flags added/changed
+- None.
+
+### Firebase paths added/changed
+- None.
+
+### Security rules changes needed
+- None.
+
+### Manual test checklist
+- Hover `Open` in the Inventory add form; it should say mirror preferred but want-list offers are okay.
+- Hover `Fair trade`; it should not say mirror preferred.
+- Existing `dontNeedBack` entries should still display as `Fair trade`.
+- Offer modal copy for Fair trade should ask for comparable value from the trainer's want list.
+
+### Known risks / TODOs
+- `Open` has no visible badge on inventory cards because it remains the default/no-special-condition stored mode. The add/bulk controls explain its meaning.
+
+### Instructions for the next contributor
+- Keep user-facing semantics distinct: `Open` is loose, `Fair trade` is value-sensitive, `Mirror` is strict, `Giveaway` is bag-pressure.
+
+## 2026-05-26 - Codex - Inventory browse mobile icon legend
+
+### Summary
+- Added a compact icon legend above Inventory -> Browse community results so mobile users can understand trainer summary chips without hover.
+- Legend explains want matches, listed inventory count, mirror-only, fair-trade, and giveaway inventory modes.
+- Kept desktop hover titles in place; this is additive and does not change inventory data, community scoping, or matching logic.
+
+### Files touched
+- `index.html`
+- `docs/MAINTENANCE-LOG.md`
+
+### Feature flags added/changed
+- None.
+
+### Firebase paths added/changed
+- None.
+
+### Security rules changes needed
+- None.
+
+### Manual test checklist
+- Inventory -> Browse community shows the icon legend above trainer cards.
+- Legend wraps cleanly on narrow mobile screens.
+- Trainer cards still collapse/expand and summary chips remain unchanged.
+- Desktop hover titles still explain summary chips.
+
+### Known risks / TODOs
+- The legend adds a little vertical space. If mobile feels crowded, make the legend collapsible or show only the mode chips after a small `Icons` disclosure.
+
+### Instructions for the next contributor
+- Keep this as a single shared legend near the Browse community controls; avoid repeating labels under every inventory card unless user testing shows it is still unclear.
