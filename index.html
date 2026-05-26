@@ -1226,6 +1226,7 @@ html[data-theme="light"] .have-mirror-badge,html[data-theme="light"] .have-mirro
 .sched-trade-info{flex:1;min-width:0}
 .sched-trade-when{font-size:13px;font-weight:700;color:var(--text)}
 .sched-trade-with{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:5px;margin-top:2px;flex-wrap:wrap}
+.sched-external-pill{display:inline-flex;align-items:center;gap:4px;padding:2px 6px;border-radius:999px;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.28);color:var(--warn);font-size:10px;font-weight:700}
 .sched-trade-type-pill{display:inline-flex;align-items:center;font-size:9px;font-weight:700;padding:2px 6px;border-radius:8px;text-transform:uppercase;letter-spacing:.04em;flex-shrink:0}
 .sched-trade-type-pill.special{background:rgba(245,158,11,.16);color:var(--warn);border:1px solid rgba(245,158,11,.32)}
 .sched-trade-type-pill.regular{background:rgba(108,99,255,.16);color:var(--ac2);border:1px solid rgba(108,99,255,.32)}
@@ -1244,6 +1245,9 @@ html[data-theme="light"] .have-mirror-badge,html[data-theme="light"] .have-mirro
 .sched-trade-btn.complete:hover{background:rgba(16,185,129,.12)}
 .sched-trade-btn.cancel{color:var(--danger);border-color:rgba(239,68,68,.3)}
 .sched-trade-btn.cancel:hover{background:rgba(239,68,68,.12)}
+.sched-external-input-wrap{display:grid;grid-template-columns:minmax(0,1fr);gap:4px;margin-top:8px}
+.sched-external-input-wrap input{width:100%}
+.sched-external-hint{font-size:11px;color:var(--muted);line-height:1.35}
 
 .sched-empty-trades{padding:14px;text-align:center;color:var(--muted);font-size:13px;border:1px dashed var(--border2);border-radius:var(--r2)}
 
@@ -2374,7 +2378,7 @@ if(!DB)throw new Error('Trade data failed to load');
 
 const PREFILTER="!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&";
 const OWNER="Doomsday126";
-const APP_VERSION="4.6.29";
+const APP_VERSION="4.6.31";
 const MULTI_COMMUNITY_ENABLED=false;
 const MULTI_COMMUNITY_OWNER_PREVIEW_AVAILABLE=true;
 const DEFAULT_COMMUNITY_ID='nyc';
@@ -4953,12 +4957,12 @@ function showApp(){
   const activeTab=document.querySelector('.tab.active')?.dataset.tab;
   const nextTab=activeTab&&(activeTab!=='admin'||isAdmin)?activeTab:'browse';
   ensureProtectedSubscriptions();
-  switchTab(nextTab);
+  let finalTab=nextTab;
+  switchTab(finalTab,{render:false});
   window.scrollTo(0,0);
   updateFcDisplay();
   buildAcItems();
-  renderBrowse();renderMyList();renderStrings();
-  if(isAdmin){renderAdmin();renderPendingRequests();repairMissingAuthMetadata();ensureLoginDirectoryPublished();}
+  if(isAdmin){repairMissingAuthMetadata();ensureLoginDirectoryPublished();}
   checkWhatsNew();
   attachPullToRefresh();
   initAddAdvanced();
@@ -4969,42 +4973,78 @@ function showApp(){
   // PWA shortcut handling: deep-link via ?action=add|browse|strings
   const params=new URLSearchParams(location.search);
   const action=params.get('action');
-  if(action==='add'){switchTab('mylist');setTimeout(()=>document.getElementById('ac-input')?.focus(),100);}
-  else if(action==='strings'){switchTab('strings');}
-  else if(action==='browse'){switchTab('browse');}
-  else if(action==='have'){switchTab('have');}
-  else if(action==='schedule'){switchTab('schedule');}
+  if(action==='add'){finalTab='mylist';switchTab(finalTab,{render:false});setTimeout(()=>document.getElementById('ac-input')?.focus(),100);}
+  else if(action==='strings'){finalTab='strings';switchTab(finalTab,{render:false});}
+  else if(action==='browse'){finalTab='browse';switchTab(finalTab,{render:false});}
+  else if(action==='have'){finalTab='have';switchTab(finalTab,{render:false});}
+  else if(action==='schedule'){finalTab='schedule';switchTab(finalTab,{render:false});}
   if(action){history.replaceState({},'',location.pathname);}
+  renderActiveTab(finalTab);
   // Apply user's chosen wallpaper
   applyWallpaper(allData.users?.[cur]?.wallpaper||'');
-  // Fetch live Pokémon GO events in the background, then re-render Browse + Schedule
-  fetchPogoEvents().then(()=>{renderEventBanner();renderBrowse();renderSchedule();});
+  // Fetch live Pokémon GO events in the background, then refresh only visible surfaces.
+  fetchPogoEvents().then(()=>{
+    renderEventBanner();
+    const tab=activeTabName();
+    if(tab==='browse')renderBrowse();
+    else if(tab==='schedule')renderSchedule();
+  });
   // Bump last-seen so admins know the user opened the app (not just edited)
   bumpLastSeen();
 }
-function switchTab(t){
+const renderFrame=window.requestAnimationFrame?.bind(window)||((fn)=>setTimeout(fn,0));
+const cancelRenderFrame=window.cancelAnimationFrame?.bind(window)||clearTimeout;
+let activeTabRenderHandle=0;
+function activeTabName(){
+  return document.querySelector('.tab.active')?.dataset.tab||'browse';
+}
+function renderActiveTab(t=activeTabName()){
+  if(!cur)return;
+  if(t==='browse')renderBrowse();
+  else if(t==='mylist')renderMyList();
+  else if(t==='strings')renderStrings();
+  else if(t==='have'){
+    if(haveView==='mine')renderMyHave();
+    else renderHaveBrowse();
+  }else if(t==='schedule')renderSchedule();
+  else if(t==='admin'&&allData.users?.[cur]?.isAdmin){
+    renderAdmin();renderPendingRequests();renderBackupReminder();
+  }
+}
+function queueRenderActiveTab(t=activeTabName()){
+  if(activeTabRenderHandle)cancelRenderFrame(activeTabRenderHandle);
+  activeTabRenderHandle=renderFrame(()=>{
+    activeTabRenderHandle=0;
+    renderActiveTab(t);
+  });
+}
+function refreshBadgesAndLightChrome(){
+  updateScheduleNotif();
+  const inCount=totalOffersForRecipient(cur);
+  const badge=document.getElementById('have-notif');
+  if(badge){badge.textContent=inCount>0?inCount:'';badge.style.display=inCount>0?'':'none';}
+  checkWhatsNew();
+}
+function switchTab(t,opts={}){
   if(t==='admin'&&!allData.users?.[cur]?.isAdmin)t='browse';
   document.querySelectorAll('.tab').forEach(b=>{b.classList.remove('active');b.setAttribute('aria-selected','false');});
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   const tabBtn=document.querySelector(`[data-tab="${t}"]`);
+  const page=document.getElementById(`tab-${t}`);
+  if(!tabBtn||!page)return;
   tabBtn.classList.add('active');tabBtn.setAttribute('aria-selected','true');
-  document.getElementById(`tab-${t}`).classList.add('active');
+  page.classList.add('active');
   window.scrollTo(0,0);
+  if(opts.render!==false)queueRenderActiveTab(t);
 }
 function refreshAll(){
   if(!cur)return;
-  renderBrowse();renderMyList();renderStrings();
-  if(haveView==='mine')renderMyHave();else renderHaveBrowse();
-  renderSchedule();
-  updateScheduleNotif();
-  // Update Have tab notification badge for incoming offers
-  const inCount=totalOffersForRecipient(cur);
-  const badge=document.getElementById('have-notif');
-  if(badge){badge.textContent=inCount>0?inCount:'';badge.style.display=inCount>0?'':'none';}
-  if(allData.users?.[cur]?.isAdmin){renderAdmin();renderPendingRequests();renderBackupReminder();ensureLoginDirectoryPublished();}
-  // Re-check What's New badge — covers the case where the user dismissed the
-  // changelog on another device and we just synced their updated user record.
-  checkWhatsNew();
+  renderActiveTab();
+  refreshBadgesAndLightChrome();
+  if(allData.users?.[cur]?.isAdmin){
+    if(activeTabName()==='admin')renderBackupReminder();
+    ensureLoginDirectoryPublished();
+  }
 }
 
 // ── FRESHNESS ─────────────────────────────────────────────────
@@ -8275,6 +8315,7 @@ async function triggerInstall(){
 
 // ── WHAT'S NEW (#28) ─────────────────────────────────────────
 const WHATS_NEW=[
+  {version:'4.6.31',title:'📅 Schedule outside-app trades',desc:'Schedule can now reserve regular, special, or remote trades with someone who is not on the app, so your daily counters stay accurate.'},
   {version:'4.6.27',title:'🤝 Trade match in Inventory',desc:'Trade Match now lives in Inventory → Browse community beside each trainer, where their posted inventory is already in context.'},
   {version:'4.6.26',notify:false,title:'🤝 Trade match view',desc:'Trade Match shows what they have that you want, what you have that they want, and possible mirrors.'},
   {version:'4.6.25',notify:false,title:'Small reliability cleanup',desc:'Mobile username suggestions are more reliable, Health Check is clearer, and string import copy now explains the dex-only format without ringing the update bell.'},
@@ -9499,6 +9540,13 @@ function scheduledTradeOtherUsers(t){
   names.delete(cur);
   return [...names].filter(Boolean);
 }
+function externalTradePartners(t){
+  const raw=Array.isArray(t?.externalPartners)?t.externalPartners:(t?.externalPartner?[t.externalPartner]:[]);
+  return raw.map(v=>String(v||'').trim()).filter(Boolean).slice(0,6);
+}
+function parseExternalTradePartners(raw){
+  return String(raw||'').split(',').map(v=>v.trim()).filter(Boolean).slice(0,6);
+}
 function schedulePreviewAllowsTrade(t){
   const members=ownerPreviewCommunityMemberUsernames();
   if(!members)return true;
@@ -9781,6 +9829,7 @@ function renderSchedDayDetail(){
 }
 function renderTradeCard(t){
   const others=Object.keys(t.participants||{}).filter(u=>u!==cur);
+  const externalPartners=externalTradePartners(t);
   const isMine=t.organizer===cur||others.length>0;
   const completed=t.status==='completed';
   const time=t.time?`${t.time}`:'flexible';
@@ -9798,7 +9847,9 @@ function renderTradeCard(t){
     <div class="sched-trade-info">
       <div class="sched-trade-when">${escHtml(time)} <span class="sched-trade-type-pill ${typeClass}">${typeLabel}</span>${regularCount>1?` <span class="sched-trade-count-pill" title="${regularCount} regular trades reserved">×${regularCount}</span>`:''}</div>
       <div class="sched-trade-with">
-        with ${others.length?others.map(u=>escHtml(u)).join(', '):'<em>no one yet</em>'}
+        with ${others.length?others.map(u=>escHtml(u)).join(', '):''}
+        ${externalPartners.map(n=>`<span class="sched-external-pill" title="Not on the app">Outside app: ${escHtml(n)}</span>`).join('')}
+        ${!others.length&&!externalPartners.length?'<em>no one yet</em>':''}
         ${t.organizer&&t.organizer!==cur?` · organized by ${escHtml(t.organizer)}`:''}
       </div>
       ${pokemonHtml}
@@ -9872,6 +9923,7 @@ function openScheduleModal(dateIso,editTradeId=''){
   const selectedType=editTrade?.type||'regular';
   const regularCount=selectedType==='regular'?scheduledTradeQuantity(editTrade||{}):1;
   const selectedPartners=new Set(editTrade?Object.keys(editTrade.participants||{}).filter(u=>u!==cur):[]);
+  const externalValue=externalTradePartners(editTrade||{}).join(', ');
   const pokemonValue=(editTrade?.pokemon||[]).join(', ');
   const noteValue=editTrade?.note||'';
   const modalTitle=editTrade?'Edit Scheduled Trade':'Schedule a Trade';
@@ -9924,6 +9976,10 @@ function openScheduleModal(dateIso,editTradeId=''){
             </span>`;
           }).join(''):'<div style="font-size:12px;color:var(--muted);font-style:italic">No other trainers yet</div>'}
         </div>
+        <div class="sched-external-input-wrap">
+          <input type="text" id="sched-external-partners" value="${escAttr(externalValue)}" placeholder="Outside app: trainer name or Discord handle">
+          <div class="sched-external-hint">Use this for trades with people who are not app members. Separate multiple names with commas.</div>
+        </div>
       </div>
       <div class="sched-form-row">
         <label>Pokémon (optional, comma-separated names)</label>
@@ -9964,10 +10020,11 @@ async function submitScheduledTrade(){
   const type=document.getElementById('sched-type')?.value||'regular';
   const regularCount=Math.max(1,Math.min(100,parseInt(document.getElementById('sched-regular-count')?.value,10)||1));
   const partners=[...document.querySelectorAll('#sched-trainer-picker .sched-trainer-chip.selected')].map(c=>c.dataset.user);
+  const externalPartners=parseExternalTradePartners(document.getElementById('sched-external-partners')?.value||'');
   const pokemonRaw=document.getElementById('sched-pokemon')?.value||'';
   const note=document.getElementById('sched-note')?.value||'';
   if(!date){toast('⚠️ Pick a date');return;}
-  if(!partners.length){toast('⚠️ Pick at least one trainer');return;}
+  if(!partners.length&&!externalPartners.length){toast('⚠️ Pick an app trainer or enter someone outside the app');return;}
   const allowed=scheduleAllowedUsers();
   const blocked=allowed?partners.filter(p=>!allowed.has(p)):[];
   if(blocked.length){toast(`🔭 Owner preview: ${blocked.join(', ')} ${blocked.length===1?'is':'are'} outside ${DEFAULT_COMMUNITY_NAME}. Turn preview off or add them to the community first.`,6500);return;}
@@ -9988,6 +10045,8 @@ async function submitScheduledTrade(){
     regularCount:type==='regular'?regularCount:null,
     organizer,
     participants,
+    externalPartners,
+    externalPartner:externalPartners[0]||null,
     pokemon,
     note:String(note).slice(0,500),
     createdAt:existing?.createdAt||Date.now(),

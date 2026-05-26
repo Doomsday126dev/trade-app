@@ -1210,3 +1210,84 @@
 - Keep the invariant that Reset/Create/Repair must not update a user's PIN/hash unless Firebase Auth returned a real `uid` for the generated email/version.
 - If future auth work adds Google sign-in or passwordless flows, keep `loginDirectory` as the pre-auth public lookup surface and avoid reading private `/users` before authentication.
 - Do not treat `EMAIL_EXISTS` as success unless the code also verifies that the existing Auth row can sign in with the same PIN.
+
+## 2026-05-26 - Codex - Tab INP render-scheduling pass
+
+### Summary
+- Investigated an early Cloudflare Web Analytics INP report pointing at `#app>div.tabs>button.tab.active`.
+- Cloudflare's sample was tiny, but the app still had a real performance risk: `showApp()` and `refreshAll()` eagerly rendered Browse, My List, Strings, Inventory, Schedule, and Admin even when only one tab was visible.
+- Added a small active-tab render scheduler so tab clicks update the selected tab immediately and only the visible surface renders.
+- Changed data refreshes to update the active tab plus lightweight badges instead of rebuilding hidden tabs.
+- Background event refresh now rerenders Browse or Schedule only when one of those tabs is currently visible.
+- Bumped `APP_VERSION` to `4.6.30` for health-check/debug visibility.
+
+### Files touched
+- `index.html`
+- `docs/MAINTENANCE-LOG.md`
+
+### Feature flags added/changed
+- None.
+
+### Firebase paths added/changed
+- None.
+
+### Security rules changes needed
+- None.
+
+### Manual test checklist
+- Sign in as a normal user and switch between Browse, My List, Strings, Inventory, and Schedule; each tab should populate after it opens.
+- Sign in as Doomsday126 and open Admin; admin rows, pending requests, and repair controls should still render.
+- Make an Inventory change and verify the current tab updates without visibly refreshing unrelated tabs.
+- Open Schedule after event data loads and verify event banners/counters still appear.
+- In Cloudflare Web Analytics, re-check INP after more real interactions; treat the first few samples as directional, not conclusive.
+- Automated attempt: `POGO_TEST_USER=TestUser POGO_TEST_PIN=123456 npm run visual -- --project=desktop tests/visual-smoke.spec.js` could start locally with approval, but failed before app assertions because the local test login returned `User not found`. This needs a separate test-harness/auth-directory follow-up and does not validate or invalidate the render-scheduling patch.
+
+### Known risks / TODOs
+- Hidden tabs no longer rerender on every Firebase sync; if a hidden view ever looks stale, switching away/back should refresh it. If users report stale hidden data after this pass, add targeted dirty flags rather than restoring full `refreshAll()` rendering.
+- The active tab can still be heavy if that tab itself renders many DOM nodes; Inventory Community Browse already moved toward trainer-first lazy rendering, but Browse/Strings can still be optimized further.
+
+### Instructions for the next contributor
+- Keep `switchTab()` lightweight. Do not reintroduce "render every screen" work directly into tab clicks.
+- Prefer `renderActiveTab()` or `queueRenderActiveTab()` for future refresh paths.
+- If adding another top-level tab, update `renderActiveTab()` so the tab participates in the lazy render model.
+
+## 2026-05-26 - Codex - Schedule outside-app trades
+
+### Summary
+- Added support for scheduling trades with people who are not app members.
+- Schedule modal still supports selecting app trainers, but now also has an "Outside app" text field for trainer names or Discord handles.
+- Scheduled external-only trades are owned by the organizer and still count against daily regular/special/remote availability.
+- External people are displayed as small "Outside app" pills on schedule cards instead of creating fake user/member records.
+- Bumped `APP_VERSION` to `4.6.31` and added a user-facing What's New entry.
+
+### Files touched
+- `index.html`
+- `docs/MAINTENANCE-LOG.md`
+
+### Feature flags added/changed
+- None.
+
+### Firebase paths added/changed
+- No new top-level paths.
+- `trades/{tradeId}` may now include optional fields:
+  - `externalPartners`: string array of non-app trainer labels
+  - `externalPartner`: first label for backward/simple display compatibility
+
+### Security rules changes needed
+- None. External-only schedule records still satisfy the existing `trades/{tradeId}` rule because `organizer` is the signed-in username.
+
+### Manual test checklist
+- Schedule a regular trade with no app trainer selected but with an outside-app name; verify it saves and regular-left decreases by the chosen count.
+- Schedule a special trade with only an outside-app name; verify special-left decreases.
+- Schedule a remote trade with only an outside-app name; verify remote-open increases.
+- Edit the external scheduled trade; verify the outside-app field is prefilled and can be changed/cleared.
+- Try saving with no app trainer and no outside-app name; verify the app blocks it with a helpful toast.
+- Confirm the trade does not create a fake user, `authIndex`, or community member.
+
+### Known risks / TODOs
+- External partner labels are display-only. They do not receive notifications, offers, inventory restoration, or app-visible trade records.
+- Multiple outside-app names are accepted as comma-separated labels, but there is no structured identity model for them yet.
+
+### Instructions for the next contributor
+- Keep external scheduled trades organizer-owned unless/until a real "guest contact" model is intentionally designed.
+- Do not add non-app people to `users`, `authIndex`, or community membership just to make Schedule counters work.
