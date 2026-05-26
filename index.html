@@ -6775,6 +6775,14 @@ function guardOwnerPreviewTrainer(username,feature='that trainer'){
   toast(`🔭 Owner preview: ${username} is outside ${DEFAULT_COMMUNITY_NAME}, so ${feature} is hidden.`,4500);
   return false;
 }
+function ownerPreviewAllowsOffer(offer,recipient=''){
+  const members=ownerPreviewCommunityMemberUsernames();
+  if(!members)return true;
+  const communityId=offer?.communityId?normalizeCommunityId(offer.communityId):DEFAULT_COMMUNITY_ID;
+  if(communityId!==DEFAULT_COMMUNITY_ID)return false;
+  const from=offer?.from||'';
+  return (!from||members.has(from))&&(!recipient||members.has(recipient)||recipient===cur);
+}
 function buildDefaultCommunityMigration(){
   const s=normalizeData(getLocal());
   const community=normalizeCommunityRecord(DEFAULT_COMMUNITY_ID,s.communities?.[DEFAULT_COMMUNITY_ID],s,{autoEnrollDefault:true});
@@ -6854,7 +6862,7 @@ function renderCommunityMigrationPanel(){
         <div class="login-audit-sub">Private prep for future multi-community support. This does not change Browse, Strings, Inventory, Schedule, or login behavior.</div>
       </div>
       <div class="login-audit-actions">
-        ${MULTI_COMMUNITY_OWNER_PREVIEW_AVAILABLE?`<label class="owner-preview-toggle ${previewOn?'on':''}" title="Owner-only community preview for Browse, Strings, Compare, Trade Match, Inventory browse, and Schedule; hidden from admins and members"><input type="checkbox" ${previewOn?'checked':''} onchange="setOwnerCommunityPreview(this.checked)"> Community preview</label>`:''}
+        ${MULTI_COMMUNITY_OWNER_PREVIEW_AVAILABLE?`<label class="owner-preview-toggle ${previewOn?'on':''}" title="Owner-only community preview for Browse, Strings, Compare, Trade Match, Inventory browse, Offers, and Schedule; hidden from admins and members"><input type="checkbox" ${previewOn?'checked':''} onchange="setOwnerCommunityPreview(this.checked)"> Community preview</label>`:''}
         <button class="rpin" onclick="prepareDefaultCommunity()" ${canRefreshServer?'':'disabled'}>${ready?(preview.missingOnServer.length?'Refresh NYC':'NYC prepared'):'Prepare NYC'}</button>
       </div>
     </div>
@@ -10408,8 +10416,7 @@ function renderMyHave(filterVal){
     return;
   }
   // Incoming offers count
-  const myOffers=allData.offers?.[cur]||{};
-  const incomingCount=Object.keys(myOffers).length;
+  const incomingCount=totalOffersForRecipient(cur);
   const inboxBanner=incomingCount>0?`<div class="inbox-banner" onclick="openIncomingOffersModal()">
     <div class="inbox-banner-icon">📬</div>
     <div class="inbox-banner-text">
@@ -10473,7 +10480,7 @@ function renderMyHave(filterVal){
   }).join('');
 }
 function openIncomingOffersModal(scrollToItem=''){
-  const myOffers=allData.offers?.[cur]||{};
+  const myOffers=Object.fromEntries(Object.entries(allData.offers?.[cur]||{}).filter(([,o])=>ownerPreviewAllowsOffer(o,cur)));
   // Group by itemName
   const grouped={};
   Object.entries(myOffers).forEach(([id,o])=>{
@@ -10823,12 +10830,14 @@ function offersForItem(recipient,itemName){
   const all=allData.offers?.[recipient]||{};
   const key=offerKey(itemName);
   return Object.entries(all)
-    .filter(([id,o])=>o&&o.itemKey===key)
+    .filter(([id,o])=>o&&o.itemKey===key&&ownerPreviewAllowsOffer(o,recipient))
     .map(([id,o])=>({id,...o}))
     .sort((a,b)=>(a.t||0)-(b.t||0)); // oldest first for FCFS visibility
 }
 function countOffersForItem(recipient,itemName){return offersForItem(recipient,itemName).length;}
-function totalOffersForRecipient(recipient){return Object.keys(allData.offers?.[recipient]||{}).length;}
+function totalOffersForRecipient(recipient){
+  return Object.values(allData.offers?.[recipient]||{}).filter(o=>ownerPreviewAllowsOffer(o,recipient)).length;
+}
 function relativeTime(ts){
   if(!ts)return'';
   const d=(Date.now()-ts)/1000;
@@ -10844,6 +10853,7 @@ async function submitOffer(recipient,itemName,offering,message){
     from:cur,
     itemKey:offerKey(itemName),
     itemName:itemName,
+    communityId:getCurrentCommunityId(),
     offering:Array.isArray(offering)?offering:[],
     message:String(message||'').slice(0,500),
     t:Date.now()
@@ -11238,6 +11248,7 @@ function renderOfferList(recipient,itemName,opts={}){
 }
 
 function openOfferModal(otherUser,specificPokemon=''){
+  if(!guardOwnerPreviewTrainer(otherUser,'offers'))return;
   const otherUd=allData.users?.[otherUser]||{};
   const otherInv=allData.have?.[otherUser]||{};
   const myInv=allData.have?.[cur]||{};

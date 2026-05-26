@@ -1065,3 +1065,50 @@
 - Keep approval and community enrollment coupled for owner actions; otherwise Phase 2 preview can silently hide newly approved users.
 - Do not duplicate Pokemon list data under communities. Membership remains the scoping layer; wishlist/inventory data stays global for now.
 - If adding a public community join flow, replace the hardcoded default-NYC approval path with a community-aware helper and update Firebase rules in the same change.
+
+## 2026-05-26 - Codex - Phase 2 owner-preview offer scoping
+
+### Summary
+- Scoped public-offer side channels to the selected community membership set when owner Community preview is enabled.
+- Offer badges, total incoming-offer counts, incoming-offer modal rows, and per-item offer lists now ignore offers from trainers outside `communities/nyc/memberUsernames` during owner preview.
+- Opening an offer modal for an out-of-community trainer is now guarded in the same style as Compare/Trade Match.
+- New public offers now include `communityId` metadata so later multi-community passes can filter by record metadata instead of only inferring from sender/recipient membership.
+
+### Files touched
+- `index.html`
+- `SCALING-NOTES.md`
+- `docs/MAINTENANCE-LOG.md`
+
+### Feature flags added/changed
+- No new flags.
+- Behavior is still gated by the existing owner-only preview path:
+  - `MULTI_COMMUNITY_ENABLED=false`
+  - `MULTI_COMMUNITY_OWNER_PREVIEW_AVAILABLE=true`
+  - local owner toggle `pogo_owner_community_preview`
+
+### Firebase paths added/changed
+- Existing path remains `offers/{recipient}/{offerId}`.
+- New offer records may include:
+  - `communityId: "nyc"`
+- No migration was applied to existing offers. Existing offers without `communityId` remain visible when both sender and recipient are in the selected community.
+
+### Security rules changes needed
+- None for this pass. Existing `offers` rules already allow the added child field.
+- Future community-specific offer rules should validate `communityId` against sender/recipient membership before exposing this outside owner preview.
+
+### Manual test checklist
+- Owner removes `TestUser` from `communities/nyc/memberUsernames`, enables Community preview, and verifies TestUser is hidden from Inventory -> Browse and Strings as before.
+- With owner preview on, stale/direct offer entry points for TestUser should show the owner-preview guard toast instead of opening the offer modal.
+- If an offer exists from a removed trainer, incoming offer counts and per-item badges should not count it while owner preview is on.
+- Create a new public offer while preview is on/off; verify Firebase writes `offers/{recipient}/{offerId}/communityId: "nyc"`.
+- Disable owner preview and verify normal offer counts/lists still behave as before.
+
+### Known risks / TODOs
+- This is still preview-only and membership-inferred for old offers. Phase 3 should make offer creation explicitly community-aware for public multi-community use.
+- Existing offers from a user who later leaves NYC are hidden in owner preview but not deleted. That is intentional for this pass.
+- No user-facing What's New entry was added because this is an owner-only internal scoping pass.
+
+### Instructions for the next contributor
+- Do not duplicate offers under community nodes unless a later data model review decides it is necessary.
+- Keep offer filtering centralized through `ownerPreviewAllowsOffer()` while Phase 2 remains preview-gated.
+- When public community switching is enabled, evolve `ownerPreviewAllowsOffer()` into a general `offerBelongsToSelectedCommunity()` helper and update Firebase rules at the same time.

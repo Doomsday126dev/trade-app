@@ -312,6 +312,11 @@ on phones and slow networks first.
 
 When you ship scaling work, append a one-line entry here. Newest first.
 
+- **2026-05-26, v4.6.27** — Phase 2 pass 5 scoped public-offer side channels
+  under owner Community preview: offer badges/counts/inbox rows now respect
+  `communities/nyc/memberUsernames`, opening an offer modal for an
+  out-of-community trainer is guarded, and newly posted offers carry
+  `communityId` metadata for future community filtering. (Codex)
 - **2026-05-26, v4.6.27** — Kept Phase 2 paused but tightened the Phase 1/2
   bridge: owner-approved new members now write `communities/nyc/memberUsernames`
   during approval/repair, and Trade Match moved from Strings into Inventory ->
