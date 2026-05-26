@@ -776,7 +776,7 @@
 
 ### Summary
 - Added a compact icon legend above Inventory -> Browse community results so mobile users can understand trainer summary chips without hover.
-- Legend explains want matches, listed inventory count, mirror-only, fair-trade, and giveaway inventory modes.
+- Legend explains wants matches, distinct inventory entries, mirror-only, fair-trade, and giveaway inventory modes.
 - Kept desktop hover titles in place; this is additive and does not change inventory data, community scoping, or matching logic.
 
 ### Files touched
