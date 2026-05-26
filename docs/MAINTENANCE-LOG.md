@@ -1159,3 +1159,54 @@
 ### Instructions for the next contributor
 - Do not re-add target-user `authIndex` writes to admin repair unless Firebase rules are intentionally changed and documented.
 - Keep the repair flow aligned with the security model: admins prepare login records; users publish their own Auth UID index when they actually authenticate.
+
+## 2026-05-26 - Codex - PIN reset auth hardening and offer message refresh
+
+### Summary
+- Fixed a recurring existing-user login failure where Admin Reset/Repair could point Realtime Database at a new PIN/hash even when Firebase Auth did not actually create a matching login row.
+- Root cause: `provisionFirebaseAuthForTrainer()` returned `EMAIL_EXISTS` as a non-fatal result, and Reset/Create paths could still write `authUid: null` or a stale `authVersion`. Users like `djentaprize` could then appear present in `/users`, Firebase Auth, and NYC membership, while fresh-browser login still returned "Wrong PIN".
+- Added bounded auth-version provisioning: Reset/Create/Repair now require a fresh Firebase Auth UID and automatically advance generated auth email versions when an older generated email already exists.
+- Added bounded auth-version login scanning so a stale `loginDirectory/{username}/authVersion` can still recover if the correct PIN exists at a nearby newer auth version, then self-heal on successful login.
+- Updated the offer modal so selecting/deselecting offered inventory chips refreshes the generated message until the user manually edits the message textarea.
+- Bumped `APP_VERSION` to `4.6.29` for health-check/debug visibility.
+
+### Files touched
+- `index.html`
+- `docs/MAINTENANCE-LOG.md`
+
+### Feature flags added/changed
+- None.
+
+### Firebase paths added/changed
+- No new paths.
+- Existing writes remain:
+  - `users/{username}`
+  - `loginDirectory/{username}`
+  - default NYC community membership paths during admin create/repair
+- Successful sign-in may self-heal `users/{username}/authVersion`, `authEmail`, and `authUid` if the public login directory was stale.
+
+### Security rules changes needed
+- None. This pass works with the current rules model.
+- Admin repair still does not write another user's `authIndex/{uid}`; the user publishes that row on their own next successful sign-in.
+
+### Manual test checklist
+- As Doomsday126, Reset `djentaprize` to a fresh six-digit PIN after this patch is deployed.
+- Verify Firebase after reset:
+  - `users/djentaprize/authUid` is non-empty
+  - `users/djentaprize/authVersion` increased
+  - `loginDirectory/djentaprize/authVersion` matches the user record
+  - `loginDirectory/djentaprize/authReady` is `true`
+- Have `djentaprize` sign in from a fresh browser/incognito with the new PIN.
+- If a browser had stale login directory data, verify login still succeeds when the correct auth version is within the bounded scan window.
+- In Inventory -> Browse Community, open an offer modal, select/deselect offered chips, and verify the message text updates.
+- Type into the offer message manually, then select another chip; verify the app does not overwrite the manual edit.
+
+### Known risks / TODOs
+- If a username has more than `AUTH_VERSION_SCAN_LIMIT` stale generated auth rows, Reset/Repair may still fail until old Firebase Auth rows for that username are deleted or the scan limit is intentionally raised.
+- Existing bad resets already written before this patch need one new Reset or Repair after deployment so the app can create a real fresh Auth UID.
+- Auth-version scanning adds a few extra Firebase Auth attempts only when the login directory is stale; normal current users still sign in on the first attempt.
+
+### Instructions for the next contributor
+- Keep the invariant that Reset/Create/Repair must not update a user's PIN/hash unless Firebase Auth returned a real `uid` for the generated email/version.
+- If future auth work adds Google sign-in or passwordless flows, keep `loginDirectory` as the pre-auth public lookup surface and avoid reading private `/users` before authentication.
+- Do not treat `EMAIL_EXISTS` as success unless the code also verifies that the existing Auth row can sign in with the same PIN.

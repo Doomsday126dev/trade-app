@@ -2374,7 +2374,7 @@ if(!DB)throw new Error('Trade data failed to load');
 
 const PREFILTER="!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&";
 const OWNER="Doomsday126";
-const APP_VERSION="4.6.28";
+const APP_VERSION="4.6.29";
 const MULTI_COMMUNITY_ENABLED=false;
 const MULTI_COMMUNITY_OWNER_PREVIEW_AVAILABLE=true;
 const DEFAULT_COMMUNITY_ID='nyc';
@@ -2536,6 +2536,7 @@ let pokemonTypes={};
 let entryTimestamps={}; // for conflict detection
 const POGO_STR_LIMIT=1500;
 const BACKUP_REMINDER_INTERVAL=7*24*60*60*1000; // 7 days
+const AUTH_VERSION_SCAN_LIMIT=12;
 // Pokemon primary type colors (from PokeAPI)
 const TYPE_COLORS={normal:'#A8A878',fire:'#F08030',water:'#6890F0',electric:'#F8D030',grass:'#78C850',ice:'#98D8D8',fighting:'#C03028',poison:'#A040A0',ground:'#E0C068',flying:'#A890F0',psychic:'#F85888',bug:'#A8B820',rock:'#B8A038',ghost:'#705898',dragon:'#7038F8',dark:'#705848',steel:'#B8B8D0',fairy:'#EE99AC'};
 
@@ -3904,16 +3905,8 @@ async function repairMemberAccount(username,opts={}){
   let pinForCopy='';
   if(resetPin){
     if(!isSixDigitPin(resetPin))throw Object.assign(new Error('PIN must be exactly 6 digits'),{code:'repair/bad-pin'});
-    let nextVersion=authVersionForUser(existing)+1;
-    let authProvision=null;
-    for(let attempt=0;attempt<5;attempt++){
-      authProvision=await provisionFirebaseAuthForTrainer(username,resetPin,nextVersion);
-      if(authProvision?.uid)break;
-      nextVersion++;
-    }
-    if(!authProvision?.uid){
-      throw Object.assign(new Error('Could not create a fresh Firebase Auth login. Try Repair again, or delete old Auth rows for this username and retry.'),{code:'repair/auth-provision-failed'});
-    }
+    const authProvision=await provisionFreshFirebaseAuthForTrainer(username,resetPin,authVersionForUser(existing)+1);
+    const nextVersion=authProvision.version;
     const pinHash=await hashPin(resetPin);
     next=normalizedUserRecord(username,existing,{
       pin:pinHash,pinHashed:true,authVersion:nextVersion,authEmail:authEmail(username,nextVersion),authUid:authProvision.uid,lastSeen:null
@@ -3951,10 +3944,11 @@ async function createMemberNow(username,pin,isAdmin=false,reqId=''){
   const iAmOwner=allData.users?.[cur]?.isOwner||cur===OWNER;
   const canCreateAdmin=!!isAdmin&&iAmOwner;
   const pinHash=await hashPin(pin);
-  const authProvision=await provisionFirebaseAuthForTrainer(username,pin,1);
+  const authProvision=await provisionFreshFirebaseAuthForTrainer(username,pin,1);
+  const authVersion=authProvision.version;
   const user=normalizedUserRecord(username,{},{
     pin:pinHash,isAdmin:canCreateAdmin,isOwner:false,friendCode:'',joined:Date.now(),lastSeen:null,lastUpdated:null,
-    pinHashed:true,authVersion:1,authEmail:authEmail(username,1),authUid:authProvision.uid||null
+    pinHashed:true,authVersion,authEmail:authEmail(username,authVersion),authUid:authProvision.uid
   });
   const loginDir=normalizedLoginDirectoryRecord(username,user,{authReady:true,approvedAt:user.joined});
   const shouldWriteDefaultCommunity=ownerCanUseCommunityTools();
@@ -4051,6 +4045,47 @@ async function provisionFirebaseAuthForTrainer(username,pin,version=1){
   const err=new Error(`Firebase Auth provisioning failed: ${message}`);
   err.code='auth/provision-failed';
   throw err;
+}
+async function provisionFreshFirebaseAuthForTrainer(username,pin,startVersion=1,maxAttempts=AUTH_VERSION_SCAN_LIMIT){
+  let version=Math.max(1,parseInt(startVersion,10)||1);
+  let lastProvision=null;
+  for(let attempt=0;attempt<maxAttempts;attempt++,version++){
+    const provision=await provisionFirebaseAuthForTrainer(username,pin,version);
+    lastProvision=provision;
+    if(provision?.uid)return{...provision,version};
+    if(!provision?.exists)break;
+  }
+  const err=new Error('Could not create a fresh Firebase Auth login. Try Repair again, or delete old Auth rows for this username and retry.');
+  err.code='repair/auth-provision-failed';
+  err.lastProvision=lastProvision;
+  throw err;
+}
+function authVersionCandidates(startVersion=1){
+  const start=Math.max(1,parseInt(startVersion,10)||1);
+  const seen=new Set();
+  const out=[];
+  const add=v=>{
+    const n=Math.max(1,parseInt(v,10)||1);
+    if(!seen.has(n)){seen.add(n);out.push(n);}
+  };
+  add(start);
+  for(let v=start+1;out.length<AUTH_VERSION_SCAN_LIMIT&&v<start+AUTH_VERSION_SCAN_LIMIT+1;v++)add(v);
+  for(let v=1;out.length<AUTH_VERSION_SCAN_LIMIT&&v<start;v++)add(v);
+  return out;
+}
+async function signInWithAuthVersionScan(username,pin,startVersion=1){
+  let lastAuthErr=null;
+  for(const version of authVersionCandidates(startVersion)){
+    const email=authEmail(username,version);
+    try{
+      const cred=await withTimeout(signInWithEmailAndPassword(auth,email,pin),10000,'Firebase Auth sign-in timed out','auth/timeout');
+      return{cred,email,version};
+    }catch(e){
+      lastAuthErr=e;
+      if(!['auth/invalid-credential','auth/wrong-password','auth/invalid-login-credentials','auth/user-not-found'].includes(e.code))throw e;
+    }
+  }
+  throw lastAuthErr||Object.assign(new Error('Wrong PIN'),{code:'auth/invalid-credential'});
 }
 let _loginDirectoryRepairStarted=false;
 async function ensureLoginDirectoryPublished(){
@@ -4681,12 +4716,12 @@ async function doLogin(){
   let ident=null;
   if(fbOn&&db&&auth&&dirEntry?.authReady){
     try{
-      const email=authEmail(u,dirEntry.authVersion||1);
-      const cred=await withTimeout(signInWithEmailAndPassword(auth,email,p),10000,'Firebase Auth sign-in timed out','auth/timeout');
+      const signedIn=await signInWithAuthVersionScan(u,p,dirEntry.authVersion||1);
+      const {cred,email,version}=signedIn;
       currentAuthUid=cred.user.uid;
-      ident={uid:cred.user.uid,email};
+      ident={uid:cred.user.uid,email,version};
       const snap=await withTimeout(get(ref(db,`users/${u}`)),5000,'Firebase lookup timed out','db/read-timeout');
-      if(snap.exists())ud={...ud,...snap.val(),authUid:cred.user.uid,authEmail:email};
+      if(snap.exists())ud={...ud,...snap.val(),authUid:cred.user.uid,authEmail:email,authVersion:version};
       else{
         err.textContent='This trainer has a login account, but no matching database record. Ask an admin to repair the account.';
         btn.textContent='Sign in →';btn.disabled=false;return;
@@ -4728,6 +4763,7 @@ async function doLogin(){
       cur=u;stampSession(u);
       const loginUpdate={...ud,lastSeen:Date.now()};
       if(ident){loginUpdate.authEmail=ident.email;loginUpdate.authUid=ident.uid;}
+      if(ident?.version)loginUpdate.authVersion=ident.version;
       // Upgrade plaintext PIN to hashed
       if(!ud.pinHashed){const h=await hashPin(p);loginUpdate.pin=h;loginUpdate.pinHashed=true;}
       await writeUserNow(u,loginUpdate);
@@ -7078,11 +7114,11 @@ async function confirmReset(){
   const pin=document.getElementById('rpin-val').value.trim();
   if(!isSixDigitPin(pin)){toast('⚠️ PIN must be exactly 6 digits');return;}
   const prev=allData.users?.[rpinTarget]||{};
-  const nextVersion=authVersionForUser(prev)+1;
   try{
-    const authProvision=await provisionFirebaseAuthForTrainer(rpinTarget,pin,nextVersion);
+    const authProvision=await provisionFreshFirebaseAuthForTrainer(rpinTarget,pin,authVersionForUser(prev)+1);
+    const nextVersion=authProvision.version;
     const pinHash=await hashPin(pin);
-    await writeUserStrict(rpinTarget,{pin:pinHash,pinHashed:true,authVersion:nextVersion,authEmail:authEmail(rpinTarget,nextVersion),authUid:authProvision.uid||null,lastSeen:null});
+    await writeUserStrict(rpinTarget,{pin:pinHash,pinHashed:true,authVersion:nextVersion,authEmail:authEmail(rpinTarget,nextVersion),authUid:authProvision.uid,lastSeen:null});
     closeModal('rpin-modal');toast(`✅ PIN reset for ${rpinTarget}`);rpinTarget=null;
   }catch(e){
     toast('⚠️ Could not reset PIN in Firebase: '+(e.code||e.message||'permission denied'),5000);
@@ -11247,6 +11283,48 @@ function renderOfferList(recipient,itemName,opts={}){
   }).join('');
 }
 
+let activeOfferDraft=null;
+function offerSelectedKeys(){
+  return[...document.querySelectorAll('#offer-pick-row .offer-pick-chip.selected')].map(el=>el.dataset.key||'').filter(Boolean);
+}
+function offerItemsLine(draft,keys=[]){
+  if(!draft)return'';
+  const items=keys.map(k=>draft.myInvByKey?.[k]).filter(Boolean);
+  if(!items.length)return'';
+  const shown=items.slice(0,4).map(it=>`${it.qty}× ${it.dn}`);
+  return shown.join(', ')+(items.length>4?`, and ${items.length-4} more`:'');
+}
+function buildOfferMessage(draft,selectedKeys=[]){
+  if(!draft)return'';
+  const{otherUser,focusedPokemon,matches,theyWantNotes}=draft;
+  const selectedLine=offerItemsLine(draft,selectedKeys);
+  const fallbackLine=draft.theyWant?.length?draft.theyWant.slice(0,3).map(t=>`${t.qty}× ${_nameToSpriteEntry(t.name).displayName||t.name}`).join(', '):'';
+  const offeredLine=selectedLine||fallbackLine;
+  const myReqLine=focusedPokemon?.want?.shiny?`Heads up — I'm looking for a shiny ${focusedPokemon.dn}.\n\n`:'';
+  return`Hey ${otherUser}! 👋\n\n`+
+    (focusedPokemon?`I'd love to trade for your ${focusedPokemon.dn}.\n\n`:matches.length?`I saw you have ${matches.slice(0,3).map(m=>m.dn).join(', ')} on your inventory — interested in trading?\n\n`:'')+
+    myReqLine+
+    (theyWantNotes.length?`Quick note on your wishlist requirements: ${theyWantNotes.slice(0,3).join('; ')}.\n\n`:'')+
+    (focusedPokemon?.mirrorOnly?`I saw this is marked mirror only, so I'm offering ${offeredLine||`the same ${focusedPokemon.dn}`} in return.\n\n`:'')+
+    (focusedPokemon?.dontNeedBack?`I saw this is marked fair trade — I can offer ${offeredLine||'a few things from your wishlist'} for it. Let me know which feels comparable.\n\n`:'')+
+    (focusedPokemon?.giveaway?`Noticed this is marked as a giveaway${focusedPokemon.note?` (note: "${focusedPokemon.note}")`:''} — happy to take it off your hands. ${offeredLine?`I can send ${offeredLine} or anything else from your list — just let me know.`:'Let me know what works!'}\n\n`:'')+
+    (!focusedPokemon?.giveaway&&!focusedPokemon?.mirrorOnly&&!focusedPokemon?.dontNeedBack&&offeredLine?`I have ${offeredLine} that match your wishlist.\n\n`:'')+
+    `Let me know! 🎮`;
+}
+function refreshOfferMessage(force=false){
+  const msg=document.getElementById('offer-msg');
+  if(!msg||!activeOfferDraft)return;
+  if(!force&&msg.dataset.dirty==='1')return;
+  msg.value=buildOfferMessage(activeOfferDraft,offerSelectedKeys());
+}
+function toggleOfferPickChip(el){
+  el?.classList.toggle('selected');
+  refreshOfferMessage(false);
+}
+function markOfferMessageEdited(el){
+  if(el)el.dataset.dirty='1';
+}
+
 function openOfferModal(otherUser,specificPokemon=''){
   if(!guardOwnerPreviewTrainer(otherUser,'offers'))return;
   const otherUd=allData.users?.[otherUser]||{};
@@ -11291,16 +11369,6 @@ function openOfferModal(otherUser,specificPokemon=''){
     if(!w?.shiny)return null;
     return `${_nameToSpriteEntry(t.name).displayName||t.name} (shiny)`;
   }).filter(Boolean);
-  const myReqLine=focusedPokemon?.want?.shiny?`Heads up — I'm looking for a shiny ${focusedPokemon.dn}.\n\n`:'';
-  const defaultMessage=`Hey ${otherUser}! 👋\n\n`+
-    (focusedPokemon?`I'd love to trade for your ${focusedPokemon.dn}.\n\n`:matches.length?`I saw you have ${matches.slice(0,3).map(m=>m.dn).join(', ')} on your inventory — interested in trading?\n\n`:'')+
-    myReqLine+
-    (theyWantNotes.length?`Quick note on your wishlist requirements: ${theyWantNotes.slice(0,3).join('; ')}.\n\n`:'')+
-    (focusedPokemon?.mirrorOnly?`I saw this is marked mirror only, so I'm offering the same ${focusedPokemon.dn} in return.\n\n`:'')+
-    (focusedPokemon?.dontNeedBack?`I saw this is marked fair trade — I have ${theyWant.length?theyWant.slice(0,3).map(t=>`${t.qty}× ${_nameToSpriteEntry(t.name).displayName||t.name}`).join(', '):'a few things from your wishlist'} that should be comparable rarity for it. Let me know which works best.\n\n`:'')+
-    (focusedPokemon?.giveaway?`Noticed this is marked as a giveaway${focusedPokemon.note?` (note: "${focusedPokemon.note}")`:''} — happy to take it off your hands. ${theyWant.length?`I can send ${theyWant.slice(0,3).map(t=>`${t.qty}× ${_nameToSpriteEntry(t.name).displayName||t.name}`).join(', ')} or anything else from your list — just let me know.`:'Let me know what works!'}\n\n`:'')+
-    (!focusedPokemon?.giveaway&&!focusedPokemon?.mirrorOnly&&!focusedPokemon?.dontNeedBack&&theyWant.length?`I have ${theyWant.slice(0,3).map(t=>`${t.qty}× ${_nameToSpriteEntry(t.name).displayName||t.name}`).join(', ')} that match your wishlist.\n\n`:'')+
-    `Let me know! 🎮`;
   // Show existing offers on the focused item for context (offers are scoped to the gendered key)
   const existingOffers=focusedPokemon?offersForItem(otherUser,focusedPokemon.key):[];
   let myInvEntries=Object.entries(myInv).map(([k,val])=>{
@@ -11311,6 +11379,9 @@ function openOfferModal(otherUser,specificPokemon=''){
   }).filter(it=>it.qty>0);
   if(focusedPokemon?.mirrorOnly)myInvEntries=myInvEntries.filter(it=>it.name===focusedPokemon.name);
   myInvEntries.sort((a,b)=>(b.theyWant?1:0)-(a.theyWant?1:0)||a.dn.localeCompare(b.dn)||({'':0,'m':1,'f':2}[a.gender]??9)-({'':0,'m':1,'f':2}[b.gender]??9));
+  const myInvByKey=Object.fromEntries(myInvEntries.map(it=>[it.key,it]));
+  const offerDraft={otherUser,focusedPokemon,matches,theyWant,theyWantNotes,myInvByKey};
+  const defaultMessage=buildOfferMessage(offerDraft,[...preSelected]);
   const html=`<div class="ov open" id="offer-modal" role="dialog" aria-modal="true" onclick="if(event.target===this)closeOfferModal()">
     <div class="modal offer-modal" onclick="event.stopPropagation()">
       <h3>💬 Offer trade with ${escHtml(otherUser)}</h3>
@@ -11336,13 +11407,13 @@ function openOfferModal(otherUser,specificPokemon=''){
         ${myInvEntries.map(it=>{
           const url=spriteUrl(it.no,it.name,it.gender||'',it.dn);
           const genderPill=it.gender?`<span class="have-gender-pill ${it.gender}" style="margin-left:2px">${it.gender==='f'?'♀':'♂'}</span>`:'';
-          return`<span class="offer-pick-chip ${preSelected.has(it.key)?'selected':''}" data-key="${escAttr(it.key)}" onclick="this.classList.toggle('selected')" title="${escAttr(it.dn)}">
+          return`<span class="offer-pick-chip ${preSelected.has(it.key)?'selected':''}" data-key="${escAttr(it.key)}" onclick="toggleOfferPickChip(this)" title="${escAttr(it.dn)}">
             ${url?`<img src="${url}" alt="" loading="lazy">`:''}<span>${escHtml(it.dn)}</span>${genderPill}<span style="color:var(--ac2);font-family:var(--mono);font-size:11px">×${it.qty}</span>${it.theyWant?'<span style="font-size:9px;color:var(--warn);font-weight:700">⭐</span>':''}
           </span>`;
         }).join('')}
       </div>`:'<div class="offer-pick-empty">Your inventory is empty. You can still send a message offer without specific items.</div>'}
       <div class="offer-section-label">Message:</div>
-      <textarea class="offer-textarea" id="offer-msg" placeholder="Optional message...">${escHtml(defaultMessage)}</textarea>
+      <textarea class="offer-textarea" id="offer-msg" placeholder="Optional message..." oninput="markOfferMessageEdited(this)">${escHtml(defaultMessage)}</textarea>
       ${otherUd.discord?`<div style="margin-top:10px;font-size:12px;color:var(--muted)">
         Discord: <code style="color:var(--ac2);font-family:var(--mono)">${escHtml(otherUd.discord)}</code>
         <a class="offer-discord-link" href="https://discord.com/channels/@me" target="_blank" rel="noopener">Open Discord ↗</a>
@@ -11363,10 +11434,11 @@ function openOfferModal(otherUser,specificPokemon=''){
     </div>
   </div>`;
   closeOfferModal();
+  activeOfferDraft=offerDraft;
   const wrap=document.createElement('div');wrap.innerHTML=html;
   document.body.appendChild(wrap.firstElementChild);
 }
-function closeOfferModal(){document.getElementById('offer-modal')?.remove();}
+function closeOfferModal(){activeOfferDraft=null;document.getElementById('offer-modal')?.remove();}
 async function submitOfferAction(otherUser,itemKey){
   const msg=document.getElementById('offer-msg')?.value||'';
   const makePublic=!!document.getElementById('offer-public')?.checked;
@@ -11993,6 +12065,7 @@ Object.assign(window,{
   addInventoryEntry,updateInventoryQty,setInventoryQty,toggleInventoryMirror,cycleInventoryMode,cycleInventoryGender,setHaveAddMode,setHaveAddGender,editInventoryNote,removeInventoryEntry,
   toggleHaveBulkMode,toggleHaveBulkSelection,bulkHaveSetMode,bulkHaveAdjustQty,bulkHaveDelete,
   renderMyHave,renderHaveBrowse,openOfferModal,closeOfferModal,copyOfferMessage,
+  toggleOfferPickChip,markOfferMessageEdited,refreshOfferMessage,
   // Offer history
   submitOffer,submitOfferAction,withdrawOffer,markOfferTraded,
   // Per-item trade acceptance
