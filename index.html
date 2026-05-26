@@ -1821,6 +1821,7 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
         🗑️ <span class="stb-label">Safe-to-transfer search string</span>
       </button>
     </div>
+    <div id="owner-strings-preview-banner" class="owner-preview-banner" style="display:none"></div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Tap a trainer to expand their strings</div>
     <div id="strings-out"></div>
   </div>
@@ -6406,7 +6407,10 @@ function renderStrings(){return perfTime('render:strings',()=>_renderStringsInne
 function _renderStringsInner(){
   const q=(document.getElementById('stq')?.value||'').toLowerCase();
   const el=document.getElementById('strings-out');if(!el)return;
+  const allowed=stringsAllowedUsers();
+  renderOwnerStringsPreviewBanner(allowed);
   const users=Object.keys(allData.users||{}).filter(u=>{
+    if(allowed&&!allowed.has(u))return false;
     const list=allData[strListType]?.[u]||{};
     return Object.keys(list).length>0&&(!q||u.toLowerCase().includes(q));
   }).sort((a,b)=>(allData.users?.[b]?.lastUpdated||0)-(allData.users?.[a]?.lastUpdated||0));
@@ -6557,6 +6561,7 @@ function setOwnerCommunityPreview(on){
   lsSet(OWNER_COMMUNITY_PREVIEW_KEY,!!on);
   renderCommunityMigrationPanel();
   renderBrowse();
+  renderStrings();
 }
 function ownerPreviewCommunityMemberUsernames(){
   if(!ownerCommunityPreviewOn())return null;
@@ -6564,12 +6569,20 @@ function ownerPreviewCommunityMemberUsernames(){
   const names=Object.keys(community.memberUsernames||{});
   return community.preparedAt&&names.length?new Set(names):null;
 }
+function ownerPreviewAllowsUser(username){
+  const members=ownerPreviewCommunityMemberUsernames();
+  return !members||members.has(username);
+}
 function browseAllowedUsers(){
   const active=activeUsers();
   const communityMembers=ownerPreviewCommunityMemberUsernames();
   if(!active&&!communityMembers)return null;
   const users=Object.keys(allData.users||{});
   return new Set(users.filter(u=>(!active||active.has(u))&&(!communityMembers||communityMembers.has(u))));
+}
+function stringsAllowedUsers(){
+  const communityMembers=ownerPreviewCommunityMemberUsernames();
+  return communityMembers?new Set(Object.keys(allData.users||{}).filter(u=>communityMembers.has(u))):null;
 }
 function renderOwnerBrowsePreviewBanner(allowed){
   const el=document.getElementById('owner-browse-preview-banner');if(!el)return;
@@ -6581,6 +6594,22 @@ function renderOwnerBrowsePreviewBanner(allowed){
   el.style.display='';
   el.classList.add('show');
   el.innerHTML=`<span>🔭 Owner preview: Browse is scoped to ${escHtml(DEFAULT_COMMUNITY_NAME)} community members only.</span><span>${members?`${scoped} trainer${scoped===1?'':'s'} allowed by current Browse filters`:'Prepare NYC before trusting this preview'}</span>`;
+}
+function renderOwnerStringsPreviewBanner(allowed){
+  const el=document.getElementById('owner-strings-preview-banner');if(!el)return;
+  const on=ownerCommunityPreviewOn();
+  if(!on){el.classList.remove('show');el.style.display='none';el.innerHTML='';return;}
+  const community=allData.communities?.[DEFAULT_COMMUNITY_ID]||{};
+  const members=Object.keys(community.memberUsernames||{}).length;
+  const scoped=allowed?allowed.size:Object.keys(allData.users||{}).length;
+  el.style.display='';
+  el.classList.add('show');
+  el.innerHTML=`<span>🔭 Owner preview: Strings, Compare, and Trade Match are scoped to ${escHtml(DEFAULT_COMMUNITY_NAME)} members only.</span><span>${members?`${scoped} trainer${scoped===1?'':'s'} available before list/search filters`:'Prepare NYC before trusting this preview'}</span>`;
+}
+function guardOwnerPreviewTrainer(username,feature='that trainer'){
+  if(ownerPreviewAllowsUser(username))return true;
+  toast(`🔭 Owner preview: ${username} is outside ${DEFAULT_COMMUNITY_NAME}, so ${feature} is hidden.`,4500);
+  return false;
 }
 function buildDefaultCommunityMigration(){
   const s=normalizeData(getLocal());
@@ -6661,7 +6690,7 @@ function renderCommunityMigrationPanel(){
         <div class="login-audit-sub">Private prep for future multi-community support. This does not change Browse, Strings, Inventory, Schedule, or login behavior.</div>
       </div>
       <div class="login-audit-actions">
-        ${MULTI_COMMUNITY_OWNER_PREVIEW_AVAILABLE?`<label class="owner-preview-toggle ${previewOn?'on':''}" title="Owner-only Browse preview; hidden from admins and members"><input type="checkbox" ${previewOn?'checked':''} onchange="setOwnerCommunityPreview(this.checked)"> Browse preview</label>`:''}
+        ${MULTI_COMMUNITY_OWNER_PREVIEW_AVAILABLE?`<label class="owner-preview-toggle ${previewOn?'on':''}" title="Owner-only Browse and Strings preview; hidden from admins and members"><input type="checkbox" ${previewOn?'checked':''} onchange="setOwnerCommunityPreview(this.checked)"> Browse + Strings preview</label>`:''}
         <button class="rpin" onclick="prepareDefaultCommunity()" ${canRefreshServer?'':'disabled'}>${ready?(preview.missingOnServer.length?'Refresh NYC':'NYC prepared'):'Prepare NYC'}</button>
       </div>
     </div>
@@ -7207,6 +7236,7 @@ let _activeDiff=null;
 let _activeTradeMatch=null;
 function openDiffModal(otherUsername){
   if(!cur||otherUsername===cur){toast('Pick another trainer');return;}
+  if(!guardOwnerPreviewTrainer(otherUsername,'compare'))return;
   closeTradeMatchModal();
   _activeDiff={them:otherUsername,type:strListType};
   renderDiffModal();
@@ -7266,6 +7296,7 @@ async function copyDiffSearch(section,btn){
 }
 function openTradeMatchModal(otherUsername){
   if(!cur||otherUsername===cur){toast('Pick another trainer');return;}
+  if(!guardOwnerPreviewTrainer(otherUsername,'trade match'))return;
   closeDiffModal();
   _activeTradeMatch={them:otherUsername};
   renderTradeMatchModal();

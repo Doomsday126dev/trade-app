@@ -142,10 +142,11 @@ when any of these trigger:
 - Adds an owner-only dry-run verification panel showing whether Firebase's
   `nyc` community record is current and how many trainers Browse, Strings,
   Inventory browse, and Schedule would include after scoping is enabled.
-- Adds an owner-only Browse preview toggle behind
-  `MULTI_COMMUNITY_OWNER_PREVIEW_AVAILABLE=true`; this can scope Browse to
-  explicit `communities/nyc/memberUsernames` without affecting members,
-  ordinary admins, or other screens.
+- Adds an owner-only Browse + Strings preview toggle behind
+  `MULTI_COMMUNITY_OWNER_PREVIEW_AVAILABLE=true`; this can scope Browse,
+  Strings, Compare, and Trade Match to explicit
+  `communities/nyc/memberUsernames` without affecting members, ordinary
+  admins, Inventory, or Schedule.
 - Adds helper functions for future scoping without changing production UI:
   `getCurrentCommunityId()`, `getCommunityMemberUsernames()`,
   `filterUsersBySelectedCommunity()`, `isUserInCommunity()`,
@@ -155,7 +156,7 @@ when any of these trigger:
 **What it deliberately does not do yet**:
 - No community switcher.
 - No public community-scoped Browse/Strings/Inventory/Schedule filtering.
-- No Strings/Compare/Trade Match/Inventory/Schedule scoping yet.
+- No Inventory/Schedule scoping yet.
 - No automatic Firebase writes to create community records for existing
   production data; the owner must run the private maintenance action.
 - No public UI for admins or members.
@@ -311,6 +312,9 @@ on phones and slow networks first.
 
 When you ship scaling work, append a one-line entry here. Newest first.
 
+- **2026-05-25, v4.6.25** — Phase 2 pass 2 expanded owner preview to
+  Strings, Compare, and Trade Match using the same `communities/nyc`
+  membership set; Inventory and Schedule remain untouched. (Codex)
 - **2026-05-25, v4.6.25** — Phase 2 pass 1 started as owner-only Browse
   preview: added `MULTI_COMMUNITY_OWNER_PREVIEW_AVAILABLE`, a localStorage
   owner toggle, an owner Browse preview banner, and Browse-only member scoping

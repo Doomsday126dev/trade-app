@@ -307,3 +307,49 @@
 - Keep owner preview as a local opt-in until at least Browse and Strings have been validated.
 - Next Phase 2 pass should scope Strings/Compare/Trade Match separately; do not reuse Browse-only helper names for other surfaces.
 - If adding a true community switcher later, keep this owner-preview localStorage key separate from the public selected-community state.
+
+## 2026-05-25 - Codex - Multi-community Phase 2 pass 2, owner Strings/Compare preview
+
+### Summary
+- Expanded the owner-only preview toggle from Browse-only to Browse + Strings.
+- Added an owner preview banner on the Strings tab.
+- Scoped the Strings trainer list to `communities/nyc/memberUsernames` only when owner preview is on and the owner is signed in.
+- Added guards so Compare and Trade Match cannot be opened for out-of-community trainers while owner preview is enabled.
+- Kept Inventory browse, Schedule picker, login, exports, and Firebase subscriptions unchanged.
+- Kept `MULTI_COMMUNITY_ENABLED=false`; this remains an owner-only preview, not a public launch.
+
+### Files touched
+- `index.html`
+- `SCALING-NOTES.md`
+- `docs/MAINTENANCE-LOG.md`
+
+### Feature flags added/changed
+- `MULTI_COMMUNITY_OWNER_PREVIEW_AVAILABLE` remains `true`.
+- `MULTI_COMMUNITY_ENABLED` remains `false`.
+- Existing localStorage opt-in `pogoOwnerCommunityPreview_v1` now controls Browse + Strings preview.
+
+### Firebase paths added/changed
+- No new Firebase paths.
+- Preview reads existing `communities/nyc/memberUsernames` when `communities/nyc/preparedAt` exists.
+
+### Security rules changes needed
+- None beyond v5.
+- This is read-only UI filtering.
+
+### Manual test checklist
+- Owner with preview off should see global Browse and global Strings behavior.
+- Owner with preview on should see the Browse banner and the Strings banner.
+- Owner with preview on should only see trainers from `communities/nyc/memberUsernames` in Strings.
+- Compare and Trade Match buttons should only appear for the scoped Strings trainers; direct calls for out-of-community trainers should toast and stop.
+- Inventory browse and Schedule should remain unchanged.
+- Non-owner admins and members should not see the owner maintenance panel, preview toggle, or preview banners.
+
+### Known risks / TODOs
+- This still does not reduce Firebase bandwidth because protected subscriptions are unchanged.
+- The preview does not yet scope Safe-to-transfer trainer selection, Inventory browse, or Schedule.
+- Direct console access could still call old functions, but the guard blocks out-of-community compare/trade-match modals when owner preview is enabled.
+
+### Instructions for the next contributor
+- Validate owner preview against production before implementing Inventory browse scoping.
+- Keep future scoping helpers surface-specific until the UX is proven stable.
+- If preview shows no visible difference, that likely means all current users are in NYC; test by temporarily removing a test member from `communities/nyc/memberUsernames` in a local/dev copy before shipping public scoping.
