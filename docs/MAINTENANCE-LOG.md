@@ -261,3 +261,49 @@
 - Keep this panel owner-only until the community switcher/scoping UX is ready.
 - Use the dry-run counts to validate that all intended NYC members are present before enabling any scoping.
 - When implementing Phase 2, scope one surface at a time: Browse first, then Strings/Compare/Trade Match, then Inventory browse, then Schedule picker.
+
+## 2026-05-25 - Codex - Multi-community Phase 2 pass 1, owner Browse preview
+
+### Summary
+- Added an owner-only Browse preview toggle to the NYC community foundation panel.
+- Added `MULTI_COMMUNITY_OWNER_PREVIEW_AVAILABLE=true` as a code availability gate and `pogoOwnerCommunityPreview_v1` as the owner's local opt-in state.
+- Added Browse-only community member filtering through `browseAllowedUsers()`; `activeUsers()` itself was left unchanged so Strings, Inventory, and Schedule cannot inherit preview behavior accidentally.
+- Added a Browse banner when preview is active so the owner can tell the Browse tab is scoped.
+- Tightened default community normalization so a prepared `communities/nyc` record can be trusted as explicit membership instead of always being overwritten with every local user.
+- Kept `MULTI_COMMUNITY_ENABLED=false`; no public community switcher or member/admin-visible community behavior was enabled.
+
+### Files touched
+- `index.html`
+- `SCALING-NOTES.md`
+- `docs/MAINTENANCE-LOG.md`
+
+### Feature flags added/changed
+- Added `MULTI_COMMUNITY_OWNER_PREVIEW_AVAILABLE=true`.
+- `MULTI_COMMUNITY_ENABLED` remains `false`.
+- Owner runtime toggle is stored in localStorage as `pogoOwnerCommunityPreview_v1`.
+
+### Firebase paths added/changed
+- No new Firebase paths.
+- Browse preview reads existing `communities/nyc/memberUsernames` when `communities/nyc/preparedAt` exists.
+
+### Security rules changes needed
+- None beyond v5.
+- Preview is read-only and owner-only in the UI.
+
+### Manual test checklist
+- Owner can see the "Browse preview" toggle in the owner maintenance panel.
+- Non-owner admins and members do not see the owner maintenance panel or toggle.
+- With preview off, Browse behaves exactly as before.
+- With preview on, Browse shows the owner preview banner and only includes trainers in `communities/nyc/memberUsernames`.
+- Activity filters still apply on top of the community preview.
+- Strings, Compare, Trade Match, Inventory browse, Schedule picker, login, and exports remain unchanged.
+
+### Known risks / TODOs
+- This pass scopes only Browse rendering, not Firebase subscriptions, so bandwidth is unchanged.
+- Browse preview depends on `communities/nyc/preparedAt`; if the community record is stale, refresh NYC from the owner panel first.
+- The dry-run trainer counts are still estimates; verify actual rendered Browse results before copying this pattern to Strings.
+
+### Instructions for the next contributor
+- Keep owner preview as a local opt-in until at least Browse and Strings have been validated.
+- Next Phase 2 pass should scope Strings/Compare/Trade Match separately; do not reuse Browse-only helper names for other surfaces.
+- If adding a true community switcher later, keep this owner-preview localStorage key separate from the public selected-community state.

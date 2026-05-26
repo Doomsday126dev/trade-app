@@ -142,6 +142,10 @@ when any of these trigger:
 - Adds an owner-only dry-run verification panel showing whether Firebase's
   `nyc` community record is current and how many trainers Browse, Strings,
   Inventory browse, and Schedule would include after scoping is enabled.
+- Adds an owner-only Browse preview toggle behind
+  `MULTI_COMMUNITY_OWNER_PREVIEW_AVAILABLE=true`; this can scope Browse to
+  explicit `communities/nyc/memberUsernames` without affecting members,
+  ordinary admins, or other screens.
 - Adds helper functions for future scoping without changing production UI:
   `getCurrentCommunityId()`, `getCommunityMemberUsernames()`,
   `filterUsersBySelectedCommunity()`, `isUserInCommunity()`,
@@ -150,7 +154,8 @@ when any of these trigger:
 
 **What it deliberately does not do yet**:
 - No community switcher.
-- No community-scoped Browse/Strings/Inventory/Schedule filtering.
+- No public community-scoped Browse/Strings/Inventory/Schedule filtering.
+- No Strings/Compare/Trade Match/Inventory/Schedule scoping yet.
 - No automatic Firebase writes to create community records for existing
   production data; the owner must run the private maintenance action.
 - No public UI for admins or members.
@@ -158,6 +163,8 @@ when any of these trigger:
   bandwidth win yet.
 - No actual scoping is applied from the dry-run counts while
   `MULTI_COMMUNITY_ENABLED=false`.
+- Owner Browse preview is localStorage opt-in and remains owner-only; it is not
+  a public feature flag flip.
 
 **Compatibility rule**: missing `communityId` on old requests, offers, or
 trades means `nyc`. Pokemon lists remain global per user for now.
@@ -304,6 +311,10 @@ on phones and slow networks first.
 
 When you ship scaling work, append a one-line entry here. Newest first.
 
+- **2026-05-25, v4.6.25** — Phase 2 pass 1 started as owner-only Browse
+  preview: added `MULTI_COMMUNITY_OWNER_PREVIEW_AVAILABLE`, a localStorage
+  owner toggle, an owner Browse preview banner, and Browse-only member scoping
+  from `communities/nyc/memberUsernames`; no public behavior change. (Codex)
 - **2026-05-25, v4.6.25** — Added owner-only community verification/dry-run
   counts for Browse, Strings, Inventory browse, and Schedule, plus server drift
   detection for `communities/nyc`; no public behavior change. (Codex)
