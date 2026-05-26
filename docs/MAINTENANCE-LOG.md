@@ -836,3 +836,38 @@
 
 ### Instructions for the next contributor
 - Prefer wrapping new row thumbnails in `.pokemon-sprite-slot` or an existing fixed wrapper such as `.have-row-sprite`; avoid placing raw `spriteImg()` output directly next to text without a fixed-size slot.
+
+## 2026-05-26 - Codex - Inventory summary chip sorting and Fair trade copy
+
+### Summary
+- Clarified `Fair trade` copy so it means comparable rarity from the trainer's wishlist, without implying it may still be a mirror trade.
+- Renamed the Inventory Browse match legend to `Wishlist match`.
+- Made trainer summary chips in Inventory -> Browse community clickable: clicking ⭐/🎒/🪞/🤝/📤 expands that trainer and sorts their visible inventory by that category.
+
+### Files touched
+- `index.html`
+- `docs/MAINTENANCE-LOG.md`
+
+### Feature flags added/changed
+- None.
+
+### Firebase paths added/changed
+- None.
+
+### Security rules changes needed
+- None.
+
+### Manual test checklist
+- Inventory -> Browse community: hover or tap Fair trade surfaces; copy should say comparable rarity from the trainer's wishlist and should not mention mirrors.
+- Inventory -> Browse community: the legend should read `⭐ Wishlist match`.
+- Click a trainer's ⭐ chip; the trainer card should expand and wishlist matches should appear first.
+- Click a trainer's 🪞, 🤝, or 📤 chip; that trainer's visible inventory should sort by mirror-only, fair-trade, or giveaway entries.
+- Click a trainer's 🎒 chip; that trainer's visible inventory should sort with larger quantities first, then wishlist matches and dex order.
+- Summary chip clicks should not collapse the trainer card accidentally.
+
+### Known risks / TODOs
+- The chip sort is per expanded trainer card and is intentionally not persisted across full re-renders.
+- Historical maintenance-log entries may still describe earlier Fair trade wording for context; current UI semantics should follow this entry.
+
+### Instructions for the next contributor
+- Keep `Fair trade` distinct from `Mirror only`: fair trade means comparable rarity/value from the other trainer's wishlist, while mirror means same Pokemon/form only.
