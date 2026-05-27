@@ -973,7 +973,7 @@
 
 ### Known risks / TODOs
 - The current Firebase rules require auth for most live reads, so visual tests need a confirmed working account/PIN. A stale or non-member test account will fail before reaching layout checks.
-- The Firebase Web API key is intentionally HTTP-referrer restricted to the GitHub Pages origin. Authenticated local Playwright runs from `localhost` will not fully exercise Firebase unless `http://localhost:*` and/or `http://127.0.0.1:*` are temporarily added to the API key's allowed referrers in Google Cloud Console.
+- The Firebase Web API key is intentionally HTTP-referrer restricted to the GitHub Pages origin. Authenticated Playwright runs should target `https://doomsday126dev.github.io/trade-app/`; local `localhost`, `127.0.0.1`, and `file://` runs should skip auth-backed flows or use a future explicit mock mode.
 - The mobile project uses Chromium device emulation rather than WebKit/iOS Safari; this keeps setup lightweight but does not replace real iPhone Safari spot checks.
 
 ### Instructions for the next contributor
@@ -1291,3 +1291,37 @@
 ### Instructions for the next contributor
 - Keep external scheduled trades organizer-owned unless/until a real "guest contact" model is intentionally designed.
 - Do not add non-app people to `users`, `authIndex`, or community membership just to make Schedule counters work.
+
+## 2026-05-27 - Codex - Playwright auth test target clarification
+
+### Summary
+- Updated the authenticated visual smoke helper so local `localhost`, `127.0.0.1`, and `file://` runs skip auth-backed flows instead of failing against production Firebase restrictions.
+- Added `docs/TESTING.md` with the required deployed GitHub Pages command for auth-backed Playwright smoke tests.
+- Kept Firebase restrictions and production auth logic unchanged.
+
+### Files touched
+- `tests/visual-smoke.spec.js`
+- `docs/TESTING.md`
+- `docs/MAINTENANCE-LOG.md`
+
+### Feature flags added/changed
+- None.
+
+### Firebase paths added/changed
+- None.
+
+### Security rules changes needed
+- None.
+
+### Manual test checklist
+- Local: run `PLAYWRIGHT_BASE_URL=http://127.0.0.1:8878 npm run visual -- --project=desktop tests/visual-smoke.spec.js`; authenticated tests should skip rather than attempt Firebase login.
+- Deployed auth-backed: run `PLAYWRIGHT_BASE_URL=https://doomsday126dev.github.io/trade-app/ POGO_TEST_USER=TestUser POGO_TEST_PIN=123456 npm run visual`.
+- Confirm no localhost or 127.0.0.1 referrers were added to Firebase/API-key restrictions.
+
+### Known risks / TODOs
+- There is no local mock/test mode yet, so current local Playwright coverage is limited for authenticated flows.
+- Deployed auth-backed tests validate the published app, not unpushed local edits.
+
+### Instructions for the next contributor
+- Keep production Firebase origin restrictions intact.
+- Add a deliberate mock/test mode before attempting local authenticated Playwright coverage.

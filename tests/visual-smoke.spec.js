@@ -1,8 +1,22 @@
 const { test, expect } = require('@playwright/test');
 
+function isLocalAuthBaseURL() {
+  const raw = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:4174';
+  try {
+    const url = new URL(raw);
+    return url.protocol === 'file:' || ['localhost', '127.0.0.1', '::1'].includes(url.hostname);
+  } catch {
+    return false;
+  }
+}
+
 async function signIn(page) {
   const user = process.env.POGO_TEST_USER;
   const pin = process.env.POGO_TEST_PIN;
+  test.skip(
+    isLocalAuthBaseURL(),
+    'Authenticated Firebase smoke tests run against deployed GitHub Pages. Use PLAYWRIGHT_BASE_URL=https://doomsday126dev.github.io/trade-app/.'
+  );
   test.skip(!user || !pin, 'Set POGO_TEST_USER and POGO_TEST_PIN to run authenticated visual smoke tests.');
 
   await page.addInitScript(() => {
