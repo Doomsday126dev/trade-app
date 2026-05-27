@@ -4472,7 +4472,7 @@ function _onSubSnapshot(path,snap){
   if(seg==='pendingDecrements'&&cur&&path===`pendingDecrements/${cur}`){
     setTimeout(()=>_applyPendingDecrements(),50);
   }
-  if(cur)refreshAll();else populateLoginUsers();
+  if(cur)queueRefreshAll(`snapshot:${seg}`);else populateLoginUsers();
   // If share view is active, re-render with new data
   if(document.getElementById('share-view')?.classList.contains('active')&&_activeShareView){
     renderShareView(_activeShareView.username,_activeShareView.type);
@@ -5036,6 +5036,17 @@ function queueRenderActiveTab(t=activeTabName()){
   activeTabRenderHandle=renderFrame(()=>{
     activeTabRenderHandle=0;
     renderActiveTab(t);
+  });
+}
+let refreshAllHandle=0;
+let refreshAllReasons=new Set();
+function queueRefreshAll(reason=''){
+  if(reason)refreshAllReasons.add(reason);
+  if(refreshAllHandle)return;
+  refreshAllHandle=renderFrame(()=>{
+    refreshAllHandle=0;
+    refreshAllReasons.clear();
+    refreshAll();
   });
 }
 function refreshBadgesAndLightChrome(){
