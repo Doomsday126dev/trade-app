@@ -1526,3 +1526,37 @@
 
 ### Instructions for the next contributor
 - Keep UI markup helpers, sprite helpers, search-string helpers, and formatting helpers in `index.html` until they can be extracted as cohesive behavior-tested clusters.
+
+## 2026-05-27 - Codex - Public security rules doc sanitization
+
+### Summary
+- Sanitized `SECURITY-RULES.md` for public-repo safety.
+- Replaced private owner/deployment specifics with placeholders or generic guidance.
+- Removed the copy-pasteable loose `have/` write variant and replaced it with a warning to preserve ownership checks.
+- No deployed Firebase rules or application behavior changed.
+
+### Files touched
+- `SECURITY-RULES.md`
+- `docs/MAINTENANCE-LOG.md`
+
+### Feature flags added/changed
+- None.
+
+### Firebase paths added/changed
+- None.
+
+### Security rules changes needed
+- None for this docs-only sanitization.
+- Future hardening: move production community-owner rules away from username literals and toward verified UID/owner-role checks.
+
+### Manual test checklist
+- Confirm `SECURITY-RULES.md` contains no real owner username, exact production referrer allow-list, or copy-pasteable loose write variant.
+- Confirm the canonical block is clearly labeled as a sanitized public template requiring placeholder replacement before publishing.
+
+### Known risks / TODOs
+- The public template is no longer paste-verbatim until `OWNER_USERNAME_PLACEHOLDER` is replaced privately.
+- Keep private deployment status and exact owner identifiers out of the public repo.
+
+### Instructions for the next contributor
+- Do not publish the public placeholder literally.
+- If changing actual Firebase rules, update both this public reference and private operational notes deliberately.

@@ -4,31 +4,33 @@
 > rule-related work should update the relevant section before pushing.
 > Format mirrors `SCALING-NOTES.md`: status banner at top, an Update log at
 > the bottom, history-preserving so any future contributor (Claude / codex /
-> human) can reconstruct what changed when. The canonical ruleset to publish
-> lives in **§ Canonical ruleset** below — copy that block verbatim.
+> human) can reconstruct what changed when. The public ruleset template lives
+> in **§ Canonical ruleset** below; replace placeholders with private
+> production values before publishing.
 
 ---
 
-## Current status (as of v4.6.25, 2026-05-25)
+## Current status
 
 | Item | Status |
 |---|---|
-| Canonical ruleset version | **v5** — adds owner-only community foundation paths for the future NYC default community migration |
-| Published in Firebase Console | ✅ Confirmed by owner on 2026-05-25; `communities/nyc` was created successfully |
-| API key HTTP-referrer lock | ✅ Confirmed configured (Google Cloud Console → Credentials, restricted to `https://doomsday126dev.github.io/*`) |
-| Scheduled RTDB backups | ⏸️ Not yet enabled (low priority at 40 trainers) |
+| Public ruleset template version | **v5** — adds owner-only community foundation paths for the default community migration |
+| Published in Firebase Console | Check Firebase Console/private operational notes before assuming this public template matches production |
+| API key HTTP-referrer lock | Recommended for the production GitHub Pages or custom-domain origin |
+| Scheduled RTDB backups | Recommended before the community grows substantially |
 
 **Current note:** v5 adds `communities`, `userCommunities`, and
-`communityRequests`. The owner confirmed this ruleset was published and used
-successfully for the owner-only NYC community preparation tool.
+`communityRequests`. This public document intentionally omits exact
+deployment status and private owner identifiers.
 
 ---
 
 ## Canonical ruleset
 
-This is the **single source of truth** for what's in Firebase. Paste this
-block verbatim into Firebase Console → Realtime Database → **Rules** →
-Publish.
+This is a sanitized public template for the Firebase Console → Realtime
+Database → **Rules** block. Before publishing, replace
+`OWNER_USERNAME_PLACEHOLDER` with the private production owner username.
+Do not publish the placeholder literally.
 
 ```json
 {
@@ -102,14 +104,14 @@ Publish.
     "communities": {
       ".read": "auth != null",
       "$communityId": {
-        ".write": "auth != null && (root.child('authIndex').child(auth.uid).child('username').val() === 'Doomsday126' || root.child('users').child(root.child('authIndex').child(auth.uid).child('username').val()).child('isOwner').val() === true)"
+        ".write": "auth != null && (root.child('authIndex').child(auth.uid).child('username').val() === 'OWNER_USERNAME_PLACEHOLDER' || root.child('users').child(root.child('authIndex').child(auth.uid).child('username').val()).child('isOwner').val() === true)"
       }
     },
     "userCommunities": {
       ".read": "auth != null",
       "$uid": {
         "$communityId": {
-          ".write": "auth != null && (root.child('authIndex').child(auth.uid).child('username').val() === 'Doomsday126' || root.child('users').child(root.child('authIndex').child(auth.uid).child('username').val()).child('isOwner').val() === true)"
+          ".write": "auth != null && (root.child('authIndex').child(auth.uid).child('username').val() === 'OWNER_USERNAME_PLACEHOLDER' || root.child('users').child(root.child('authIndex').child(auth.uid).child('username').val()).child('isOwner').val() === true)"
         }
       }
     },
@@ -117,7 +119,7 @@ Publish.
       ".read": "auth != null",
       "$communityId": {
         "$requestId": {
-          ".write": "auth != null && (root.child('authIndex').child(auth.uid).child('username').val() === 'Doomsday126' || root.child('users').child(root.child('authIndex').child(auth.uid).child('username').val()).child('isOwner').val() === true)"
+          ".write": "auth != null && (root.child('authIndex').child(auth.uid).child('username').val() === 'OWNER_USERNAME_PLACEHOLDER' || root.child('users').child(root.child('authIndex').child(auth.uid).child('username').val()).child('isOwner').val() === true)"
         }
       }
     },
@@ -197,8 +199,11 @@ owner/admin account-repair writes failing on an otherwise valid user repair.
 ### Community foundation (`communities`, `userCommunities`, `communityRequests`)
 - **Read**: any authenticated user, matching the current app's authenticated
   community visibility model.
-- **Write**: owner only for now (`Doomsday126` or a user record marked
+- **Write**: owner only for now (`OWNER_USERNAME_PLACEHOLDER` or a user record marked
   `isOwner: true`).
+
+TODO: After verification, move production community-owner checks away from
+username literals and toward UID- or `isOwner`-based ownership only.
 
 These paths are intentionally conservative during Phase 1. They exist only
 to prepare the default NYC community and membership indexes. Later phases
@@ -260,8 +265,9 @@ initialize a Firebase app against your project from somewhere else.
 
 - **Where**: Google Cloud Console → APIs & Services → Credentials → your
   Firebase Web API key → Application restrictions → HTTP referrers
-- **Current allow-list**: `https://doomsday126dev.github.io/*`
-- **Note**: if you ever move to a custom domain, add it here too.
+- **Allow-list**: your production GitHub Pages or custom-domain origin.
+- **Note**: if you ever move domains, update the private production
+  allow-list too.
 
 ### ⏸️ Scheduled backups (not yet enabled)
 A single mass-edit mistake (or a malicious admin) can erase a lot at once.
@@ -269,24 +275,17 @@ RTDB has scheduled exports to Cloud Storage for cheap insurance.
 
 - **Where**: Firebase Console → Realtime Database → Backups
 - **Recommended**: daily exports, keep 7-day rolling window
-- **Cost**: ~$0.05/month for a 50MB database at this scale
-- **Priority**: low at 40 trainers, worth doing before 100+
+- **Cost**: usually low at small community scale
+- **Priority**: worth doing before relying on many admins or large communities
 
 ---
 
-## If you ever want the LOOSE variant (NOT recommended)
+## Avoid loose write variants
 
-If the per-user `pendingDecrements` queue ever becomes a maintenance
-burden, you can drop it and let any signed-in user write to anyone's
-`have/` directly:
-
-```json
-"have": { "$username": { ".write": "auth != null" } }
-```
-
-The app would still work (the code falls back to optimistic local updates
-either way), but you'd be relying on community trust rather than
-schema-level protection. At 50+ trainers I'd keep the strict version.
+Do not loosen `have/` writes to all authenticated users. Keep cross-user
+inventory changes mediated through the pending decrement/restoration flow.
+If that queue becomes hard to maintain, design a replacement that preserves
+schema-level ownership checks rather than relying on community trust.
 
 ---
 
@@ -295,9 +294,13 @@ schema-level protection. At 50+ trainers I'd keep the strict version.
 When you ship a rule change (or other related work), append a one-line
 entry here. Newest first.
 
+- **2026-05-27, docs-only** — Sanitized the public rules reference by
+  replacing private owner/deployment details with placeholders and removing
+  a copy-pasteable loose write variant. No deployed Firebase rule change.
+  (Codex)
 - **2026-05-25, v4.6.25** — Drafted v5 owner-only community foundation
   rules for `communities`, `userCommunities`, and `communityRequests`.
-  Publish before running the owner-only NYC community preparation tool.
+  Publish before running the owner-only default community preparation tool.
   (Codex)
 - **2026-05-24, v4.6.24** — Added public `loginDirectory` path so newly approved trainers appear on the login screen in clean browsers; app now expects admins to maintain it alongside `users/`.
 - **2026-05-24, v4.6.20** — User confirmed v3 ruleset is published and API
