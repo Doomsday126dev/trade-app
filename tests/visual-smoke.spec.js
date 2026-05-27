@@ -54,7 +54,86 @@ async function openInventoryBrowse(page) {
   await expect(page.locator('#have-browse-out')).toBeVisible();
 }
 
+async function openMainTab(page, tab) {
+  await page.locator(`.tab[data-tab="${tab}"]`).click();
+  await expect(page.locator(`#tab-${tab}`)).toBeVisible();
+}
+
+async function expectAppNotBlank(page) {
+  await expect(page.locator('#app')).toBeVisible();
+  await expect(page.locator('.tab.active')).toBeVisible();
+  await expect(page.locator('.page.active')).toBeVisible();
+}
+
 test.describe('visual smoke', () => {
+  test('browse renders and search/filter update visible results', async ({ page }) => {
+    await signIn(page);
+    await openMainTab(page, 'browse');
+    await expect(page.locator('#browse-out')).toBeVisible();
+    await expect(page.locator('#browse-out .pc').first()).toBeVisible({ timeout: 20_000 });
+
+    const initialCount = await page.locator('#browse-out .pc').count();
+    expect(initialCount).toBeGreaterThan(0);
+
+    await page.locator('#bq').fill('Bulbasaur');
+    await expect(page.locator('#browse-out .pc').first()).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('#browse-out')).toContainText(/Bulbasaur/i);
+    const searchedCount = await page.locator('#browse-out .pc').count();
+    expect(searchedCount).toBeGreaterThan(0);
+    expect(searchedCount).toBeLessThanOrEqual(initialCount);
+
+    await page.locator('#bq').fill('');
+    await page.locator('.fbtn.fH').click();
+    await expect(page.locator('.fbtn.fH')).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('#browse-out')).toBeVisible();
+  });
+
+  test('strings renders trainer sections', async ({ page }) => {
+    await signIn(page);
+    await openMainTab(page, 'strings');
+    await expect(page.locator('#strings-out')).toBeVisible();
+    await expect(page.locator('#strings-out .user-str-block').first()).toBeVisible({ timeout: 20_000 });
+    await expect(page.locator('#strings-out .user-str-block .user-str-hdr').first()).toBeVisible();
+  });
+
+  test('inventory opens my inventory and community browse, then expands a trainer', async ({ page }) => {
+    await signIn(page);
+    await openMainTab(page, 'have');
+    await expect(page.locator('#have-mine-view')).toBeVisible();
+    await expect(page.locator('#have-mine-out')).toBeVisible();
+
+    await page.locator('.have-toggle-btn[data-view="browse"]').click();
+    await expect(page.locator('#have-browse-view')).toBeVisible();
+    await expect(page.locator('#have-browse-out .have-trainer-card').first()).toBeVisible({ timeout: 20_000 });
+
+    const firstTrainer = page.locator('#have-browse-out .have-trainer-card').first();
+    await firstTrainer.locator('.have-trainer-hdr').click();
+    await expect(firstTrainer).toHaveClass(/expanded/);
+    await expect(firstTrainer.locator('.have-trainer-body')).toBeVisible();
+  });
+
+  test('schedule renders and schedule modal opens/closes', async ({ page }) => {
+    await signIn(page);
+    await openMainTab(page, 'schedule');
+    await expect(page.locator('#sched-week-strip')).toBeVisible({ timeout: 20_000 });
+    await expect(page.locator('#sched-day-detail')).toBeVisible();
+
+    await page.locator('.sched-add-btn').click();
+    await expect(page.locator('#sched-modal')).toBeVisible();
+    await expect(page.locator('#sched-modal')).toContainText(/Schedule a Trade|Edit Scheduled Trade/);
+    await page.locator('#sched-modal .bghost').click();
+    await expect(page.locator('#sched-modal')).toHaveCount(0);
+    await expectAppNotBlank(page);
+  });
+
+  test('main tab switching keeps the app rendered', async ({ page }) => {
+    await signIn(page);
+    for (const tab of ['browse', 'mylist', 'strings', 'have', 'schedule']) {
+      await openMainTab(page, tab);
+      await expectAppNotBlank(page);
+    }
+  });
+
   test('inventory community sprites stay in their slots', async ({ page }) => {
     await signIn(page);
     await openInventoryBrowse(page);

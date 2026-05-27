@@ -8,6 +8,8 @@ Firebase/Auth is intentionally restricted to the deployed GitHub Pages origin. A
 PLAYWRIGHT_BASE_URL=https://doomsday126dev.github.io/trade-app/ POGO_TEST_USER=TestUser POGO_TEST_PIN=123456 npm run visual
 ```
 
+Current auth-backed smoke coverage includes Browse render/search/filter, Strings render, Inventory My Inventory + Community Browse expansion, Schedule render/modal open-close, tab switching, and sprite layout checks.
+
 Local URLs such as `localhost`, `127.0.0.1`, and `file://` should not be added to production Firebase/API-key restrictions just to make these tests pass. Local Playwright runs skip auth-backed flows unless a future explicit mock mode is added.
 
 ## Local visual checks

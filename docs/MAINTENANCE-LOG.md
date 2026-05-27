@@ -1394,3 +1394,37 @@
 
 ### Instructions for the next contributor
 - Continue extracting only pure helpers until the app has enough tests around auth, Firebase writes, and rendering-heavy paths.
+
+## 2026-05-27 - Codex - Behavior smoke coverage expansion
+
+### Summary
+- Expanded Playwright smoke coverage before further `index.html` modularization.
+- Added auth-backed checks for Browse render/search/filter, Strings trainer sections, Inventory My Inventory and Community Browse expansion, Schedule render/modal open-close, and main tab switching.
+- Kept localhost behavior unchanged: auth-backed flows still skip locally because Firebase/Auth is restricted to the GitHub Pages origin.
+
+### Files touched
+- `tests/visual-smoke.spec.js`
+- `docs/TESTING.md`
+- `docs/MAINTENANCE-LOG.md`
+
+### Feature flags added/changed
+- None.
+
+### Firebase paths added/changed
+- None.
+
+### Security rules changes needed
+- None.
+
+### Manual test checklist
+- Local: run `PLAYWRIGHT_BASE_URL=http://127.0.0.1:8878 npm run visual -- --project=desktop tests/visual-smoke.spec.js`; auth-backed cases should skip on localhost.
+- Deployed auth-backed: run `PLAYWRIGHT_BASE_URL=https://doomsday126dev.github.io/trade-app/ POGO_TEST_USER=TestUser POGO_TEST_PIN=123456 npm run visual`.
+- Confirm Browse, Strings, Inventory, and Schedule still render normally after login.
+
+### Known risks / TODOs
+- These tests validate current visible UI behavior, not Firebase write edge cases.
+- Deployed auth-backed tests validate the published app, so run them after pushing when checking production.
+
+### Instructions for the next contributor
+- Keep adding smoke coverage before extracting rendering-heavy modules.
+- Do not loosen Firebase origin restrictions for local tests; add an explicit mock/test mode first if local authenticated testing becomes necessary.
