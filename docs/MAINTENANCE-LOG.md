@@ -1428,3 +1428,33 @@
 ### Instructions for the next contributor
 - Keep adding smoke coverage before extracting rendering-heavy modules.
 - Do not loosen Firebase origin restrictions for local tests; add an explicit mock/test mode first if local authenticated testing becomes necessary.
+
+## 2026-05-27 - Codex - Deployed smoke verification for sprite containment
+
+### Summary
+- Verified the deployed GitHub Pages auth-backed Playwright smoke suite passed after the sprite containment fix.
+- The previous 4 sprite-slot failures are cleared.
+- Current smoke coverage includes Browse, Strings, Inventory, Schedule, tab switching, and sprite slot invariants.
+- No production behavior changes were made in this docs-only update.
+
+### Files touched
+- `docs/MAINTENANCE-LOG.md`
+
+### Feature flags added/changed
+- None.
+
+### Firebase paths added/changed
+- None.
+
+### Security rules changes needed
+- None.
+
+### Manual test checklist
+- Deployed auth-backed smoke passed with: `PLAYWRIGHT_BASE_URL=https://doomsday126dev.github.io/trade-app/ POGO_TEST_USER=TestUser POGO_TEST_PIN=123456 npm run visual`.
+- Result: 14 passed.
+
+### Known risks / TODOs
+- None for this docs-only verification entry.
+
+### Instructions for the next contributor
+- Keep the sprite-slot invariants intact; do not weaken those tests when adjusting sprite rendering.
