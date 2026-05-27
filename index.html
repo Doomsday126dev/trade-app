@@ -2360,6 +2360,7 @@ window.__pogoBootWatch=setTimeout(function(){
 <script src="js/domain/priorities.js"></script>
 <script src="js/domain/username.js"></script>
 <script src="js/domain/priorityValues.js"></script>
+<script src="js/domain/scheduleDates.js"></script>
 <script src="js/utils/textSafety.js"></script>
 <script>
 let initializeApp,getDatabase,ref,set,get,onValue,update,getAuth,signInWithEmailAndPassword,createUserWithEmailAndPassword,firebaseSignOut,updatePassword,deleteUser,onAuthStateChanged;
@@ -2429,6 +2430,9 @@ const {alphaCompare}=usernameDomain;
 const priorityValueDomain=window.PogoDomain?.priorityValues;
 if(!priorityValueDomain)throw new Error('Priority value helpers failed to load');
 const {entryGender,parsePri,priValue}=priorityValueDomain;
+const scheduleDateDomain=window.PogoDomain?.scheduleDates;
+if(!scheduleDateDomain)throw new Error('Schedule date helpers failed to load');
+const {isoDate,parseIsoDate,todayIso,startOfWeek,addDays,fmtWeekRange,WKDS}=scheduleDateDomain;
 const textSafety=window.PogoUtils?.textSafety;
 if(!textSafety)throw new Error('Text safety helpers failed to load');
 const {safeFilePart,escHtml,escAttr}=textSafety;
@@ -9419,21 +9423,6 @@ function strWarnHtml(str){
 
 // ── TRADE SCHEDULE ──────────────────────────────────────────
 // Date utilities (local time)
-function isoDate(d){const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),da=String(d.getDate()).padStart(2,'0');return`${y}-${m}-${da}`;}
-function parseIsoDate(s){const[y,m,d]=String(s||'').split('-').map(Number);return new Date(y,(m||1)-1,d||1);}
-function todayIso(){return isoDate(new Date());}
-function startOfWeek(d){const dt=new Date(d);dt.setDate(dt.getDate()-dt.getDay());dt.setHours(0,0,0,0);return dt;}
-function addDays(d,n){const dt=new Date(d);dt.setDate(dt.getDate()+n);return dt;}
-function fmtWeekRange(start){
-  const end=addDays(start,6);
-  const sameMonth=start.getMonth()===end.getMonth();
-  const opts={month:'short',day:'numeric'};
-  return sameMonth
-    ?`${start.toLocaleDateString(undefined,{month:'long'})} ${start.getDate()}–${end.getDate()}, ${end.getFullYear()}`
-    :`${start.toLocaleDateString(undefined,opts)} – ${end.toLocaleDateString(undefined,opts)}, ${end.getFullYear()}`;
-}
-const WKDS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-
 function collectEventBonusTexts(ev){
   const texts=[];
   const visit=(value,depth=0)=>{

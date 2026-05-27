@@ -1560,3 +1560,37 @@
 ### Instructions for the next contributor
 - Do not publish the public placeholder literally.
 - If changing actual Firebase rules, update both this public reference and private operational notes deliberately.
+
+## 2026-05-27 - Codex - Schedule date helper extraction
+
+### Summary
+- Extracted pure local-date schedule helpers from `index.html` into `js/domain/scheduleDates.js`.
+- The new classic browser script exposes `window.PogoDomain.scheduleDates` and `index.html` binds `isoDate`, `parseIsoDate`, `todayIso`, `startOfWeek`, `addDays`, `fmtWeekRange`, and `WKDS` back to the same local names used by existing call sites.
+- No behavior, Firebase paths, schemas, auth, persistence, rendering, schedule writes, inventory write, admin, backup, import, or export logic was changed.
+
+### Files touched
+- `index.html`
+- `js/domain/scheduleDates.js`
+- `docs/MAINTENANCE-LOG.md`
+
+### Feature flags added/changed
+- None.
+
+### Firebase paths added/changed
+- None.
+
+### Security rules changes needed
+- None.
+
+### Manual test checklist
+- Run `node --check js/domain/scheduleDates.js`.
+- Run the inline script parse check for `index.html`.
+- Assert `isoDate(new Date(2026, 4, 7))`, `parseIsoDate('2026-05-07')`, `startOfWeek(new Date(2026, 4, 27))`, `addDays(new Date(2026, 4, 24), 6)`, and `WKDS.length`.
+- Run local visual smoke; auth-backed flows may skip locally per `docs/TESTING.md`.
+- After deploy, run `PLAYWRIGHT_BASE_URL=https://doomsday126dev.github.io/trade-app/ POGO_TEST_USER=TestUser POGO_TEST_PIN=123456 npm run visual`.
+
+### Known risks / TODOs
+- These helpers intentionally preserve local-time behavior. Do not convert them to UTC helpers without a schedule behavior review.
+
+### Instructions for the next contributor
+- Keep event bonus parsing, schedule trade quota logic, and schedule persistence in `index.html` until they can be extracted as separate behavior-tested clusters.
