@@ -5039,13 +5039,11 @@ function queueRenderActiveTab(t=activeTabName()){
   });
 }
 let refreshAllHandle=0;
-let refreshAllReasons=new Set();
 function queueRefreshAll(reason=''){
-  if(reason)refreshAllReasons.add(reason);
+  void reason;
   if(refreshAllHandle)return;
   refreshAllHandle=renderFrame(()=>{
     refreshAllHandle=0;
-    refreshAllReasons.clear();
     refreshAll();
   });
 }
