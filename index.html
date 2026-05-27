@@ -2360,6 +2360,7 @@ window.__pogoBootWatch=setTimeout(function(){
 <script src="js/domain/priorities.js"></script>
 <script src="js/domain/username.js"></script>
 <script src="js/domain/priorityValues.js"></script>
+<script src="js/utils/textSafety.js"></script>
 <script>
 let initializeApp,getDatabase,ref,set,get,onValue,update,getAuth,signInWithEmailAndPassword,createUserWithEmailAndPassword,firebaseSignOut,updatePassword,deleteUser,onAuthStateChanged;
 let firebaseSdkPromise=null;
@@ -2428,6 +2429,9 @@ const {alphaCompare}=usernameDomain;
 const priorityValueDomain=window.PogoDomain?.priorityValues;
 if(!priorityValueDomain)throw new Error('Priority value helpers failed to load');
 const {entryGender,parsePri,priValue}=priorityValueDomain;
+const textSafety=window.PogoUtils?.textSafety;
+if(!textSafety)throw new Error('Text safety helpers failed to load');
+const {safeFilePart,escHtml,escAttr}=textSafety;
 const VIVILLON_PATTERNS=new Set(['Archipelago','Continental','Elegant','Fancy','Garden','High Plains','Icy Snow','Jungle','Marine','Meadow','Modern','Monsoon','Ocean','Poke Ball','Poké Ball','Polar','River','Sandstorm','Savanna','Sun','Tundra']);
 const SCATTERBUG_PATTERNS=['Archipelago','Continental','Elegant','Garden','High Plains','Icy Snow','Jungle','Marine','Meadow','Modern','Monsoon','Ocean','Polar','River','Sandstorm','Savanna','Sun','Tundra'];
 const REGION_CODE_TERMS={K:'kanto',J:'johto',H:'hoenn',S:'sinnoh',U:'unova',L:'kalos',A:'alola',G:'galar',P:'paldea'};
@@ -5972,9 +5976,6 @@ async function deliverImageBlob(blob,filename,title='PoGo Trades image'){
   downloadBlob(blob,filename);
   return 'downloaded';
 }
-function safeFilePart(s){
-  return String(s||'list').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'list';
-}
 function drawFittedText(ctx,text,x,y,maxW,{weight=800,max=28,min=18,color='#111827'}={}){
   let size=max;
   do{
@@ -6539,10 +6540,6 @@ function renderMyStrings(){
   if(!strs){el.innerHTML=emptyHtml('No search strings yet','Add entries to generate priority and Lucky Dex strings.','📋');return;}
   el.innerHTML=strLevelsHtml(strs);
 }
-function escHtml(s){
-  return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
-function escAttr(s){return escHtml(s);}
 async function copyText(str){
   if(navigator.clipboard&&window.isSecureContext){
     try{

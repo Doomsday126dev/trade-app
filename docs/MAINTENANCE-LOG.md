@@ -1492,3 +1492,37 @@
 
 ### Instructions for the next contributor
 - Continue with cohesive pure domain helper clusters before moving UI markup helpers like `priBadge` or search-string/import helpers.
+
+## 2026-05-27 - Codex - Text safety helper extraction
+
+### Summary
+- Extracted pure text safety helpers from `index.html` into `js/utils/textSafety.js`.
+- The new classic browser script exposes `window.PogoUtils.textSafety` and `index.html` binds `safeFilePart`, `escHtml`, and `escAttr` back to the same local names used by existing call sites.
+- No behavior, Firebase paths, schemas, auth, persistence, rendering, schedule, inventory write, admin, backup, import, or export logic was changed.
+
+### Files touched
+- `index.html`
+- `js/utils/textSafety.js`
+- `docs/MAINTENANCE-LOG.md`
+
+### Feature flags added/changed
+- None.
+
+### Firebase paths added/changed
+- None.
+
+### Security rules changes needed
+- None.
+
+### Manual test checklist
+- Run `node --check js/utils/textSafety.js`.
+- Run the inline script parse check for `index.html`.
+- Assert `safeFilePart("Mazer's Trades List 2026!")`, `safeFilePart("")`, `escHtml('<div class="x">Tom & \\'Jerry\\'</div>')`, and `escAttr('"onmouseover=1"')`.
+- Run local visual smoke; auth-backed flows may skip locally per `docs/TESTING.md`.
+- After deploy, run `PLAYWRIGHT_BASE_URL=https://doomsday126dev.github.io/trade-app/ POGO_TEST_USER=TestUser POGO_TEST_PIN=123456 npm run visual`.
+
+### Known risks / TODOs
+- These helpers are used by both generated HTML and exported filenames, so keep direct escaping/filename assertions alongside smoke tests before further utility extraction.
+
+### Instructions for the next contributor
+- Keep UI markup helpers, sprite helpers, search-string helpers, and formatting helpers in `index.html` until they can be extracted as cohesive behavior-tested clusters.
