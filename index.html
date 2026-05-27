@@ -3300,10 +3300,12 @@ function _spriteTransform(scale,cx,cy){
   };
 }
 function _updateRenderedScale(url,entry){
-  const scale=entry?.scale||1;
-  const{transform,transformOrigin}=_spriteTransform(scale,entry?.cx,entry?.cy);
   document.querySelectorAll('img[data-src-key]').forEach(img=>{
     if(img.dataset.srcKey===url){
+      const cap=parseFloat(img.dataset.scaleCap||'');
+      const rawScale=entry?.scale||1;
+      const scale=Number.isFinite(cap)&&cap>0?Math.min(rawScale,cap):rawScale;
+      const{transform,transformOrigin}=_spriteTransform(scale,entry?.cx,entry?.cy);
       img.style.transform=transform;
       img.style.transformOrigin=transformOrigin;
     }
@@ -5458,7 +5460,7 @@ function _renderBrowseInner(){
       ents=ents.filter(entryMatchesFlagFilters);
       ents=sortEntries(ents);
       const eventPill=eventBadgeForPokemon(e.name,e.no,_eventData);
-      return`<div class="pc" data-dex="${e.no||''}"><div class="pc-hdr"><span class="pc-sprite-wrap">${spriteImg(e.no,42,'pc-sprite',e.name,'',e.displayName||e.name,{urlOverride:e.spriteUrl})}</span><div class="pc-info"><div class="pc-name">${e.displayName||e.name}${eventPill}</div><div class="pc-no">#${e.no}</div></div></div>
+      return`<div class="pc" data-dex="${e.no||''}"><div class="pc-hdr"><span class="pc-sprite-wrap">${spriteImg(e.no,42,'pc-sprite',e.name,'',e.displayName||e.name,{urlOverride:e.spriteUrl,scaleCap:1})}</span><div class="pc-info"><div class="pc-name">${e.displayName||e.name}${eventPill}</div><div class="pc-no">#${e.no}</div></div></div>
         <div class="pc-users">${ents.map(x=>userBadge(x)).join('')}</div></div>`;
     }).join('')}</div>`;
     applyTypeColors();
@@ -5495,7 +5497,7 @@ function _renderBrowseInner(){
     const eventPill=eventBadgeForPokemon(e.name,e.no,_eventData);
     return`<div class="pc" data-dex="${e.no||''}">
       <div class="pc-hdr">
-        <span class="pc-sprite-wrap">${spriteImg(e.no,42,'pc-sprite',e.name,'',info.dn,{urlOverride:e.spriteUrl})}${crownHtml}</span>
+        <span class="pc-sprite-wrap">${spriteImg(e.no,42,'pc-sprite',e.name,'',info.dn,{urlOverride:e.spriteUrl,scaleCap:1})}${crownHtml}</span>
         <div class="pc-info"><div class="pc-name">${info.dn}${eventPill}</div><div class="pc-no">#${e.no}</div></div>
       </div>
       <div class="pc-users">${ents.map(x=>userBadge(x)).join('')}</div>
@@ -10761,7 +10763,7 @@ function renderHaveBrowseItemCard(u,it,ctx){
     :it.giveaway?`${it.dn}${it.gender?(it.gender==='f'?' ♀':' ♂'):''} — giveaway${it.note?', note: '+it.note:''}`
     :it.dn+(it.gender?(it.gender==='f'?' ♀':' ♂'):'')+' — click to offer';
   return`<div class="${cardCls}" title="${escAttr(cardTitle)}" onclick="openOfferModal('${escAttr(u)}','${sk}')" style="cursor:pointer">
-    <div class="have-row-sprite" style="width:24px;height:24px">${it.no?spriteImg(it.no,24,'',it.name,it.gender||'',it.dn):'🎮'}</div>
+    <div class="have-row-sprite" style="width:24px;height:24px">${it.no?spriteImg(it.no,24,'',it.name,it.gender||'',it.dn,{scaleCap:1}):'🎮'}</div>
     <div class="have-pmon-info">
       <div class="have-pmon-name">${escHtml(it.dn)}${it.gender?` <span class="have-gender-pill ${it.gender}" title="${it.gender==='f'?'Female':'Male'} only">${it.gender==='f'?'♀':'♂'}</span>`:''}</div>
       ${it.match?`<div class="have-pmon-meta">You want · ${it.match.p||(it.match.lucky?'⚡':'')||(it.match.xxl?'XXL':'')||(it.match.xxs?'XXS':'')}</div>`:''}
@@ -10895,7 +10897,7 @@ function _renderHaveBrowseInner(){
       const wantBadge=p.want?`<span class="event-pill" style="background:rgba(245,158,11,.15);color:var(--warn);border-color:rgba(245,158,11,.3)">⭐ You want (${p.want.p||''})</span>`:'';
       return`<div class="have-by-pokemon-card">
         <div class="have-by-pokemon-hdr">
-          <div class="have-row-sprite" style="width:34px;height:34px">${p.no?spriteImg(p.no,34,'',p.name,'',p.dn):'🎮'}</div>
+          <div class="have-row-sprite" style="width:34px;height:34px">${p.no?spriteImg(p.no,34,'',p.name,'',p.dn,{scaleCap:1}):'🎮'}</div>
           <div class="have-by-pokemon-name">
             <span class="pmname-text">${escHtml(p.dn)}</span>
             ${wantBadge}
