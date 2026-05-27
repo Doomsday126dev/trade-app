@@ -947,10 +947,12 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
    numeric field reads as "Qty" and not as a confusing empty text box. */
 .have-add-qty-gender{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap}
 .have-qty-wrap{display:inline-flex;align-items:center;gap:2px;background:var(--bg);border:1px solid var(--border2);border-radius:var(--r2);padding:2px;flex-shrink:0;cursor:default}
+.have-add-row .have-qty-wrap{height:38px;box-sizing:border-box}
 .have-qty-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;padding:0 8px 0 6px}
 .have-qty-step{background:transparent;border:none;color:var(--text);width:26px;height:26px;font-size:14px;font-weight:700;cursor:pointer;border-radius:5px;line-height:1;display:flex;align-items:center;justify-content:center;font-family:var(--font);flex-shrink:0}
 .have-qty-step:hover{background:var(--bg2);color:var(--ac2)}
 .have-qty-input{width:38px;min-width:38px;flex:0 0 38px;background:transparent;border:none;color:var(--ac2);padding:4px 2px;font-size:14px;font-weight:700;text-align:center;font-family:var(--mono);-moz-appearance:textfield}
+.have-add-row input.have-qty-input{width:42px;min-width:42px;flex:0 0 42px;height:30px;min-height:0;padding:0 4px;background:transparent;border:0;border-radius:6px;box-sizing:border-box;line-height:30px}
 .have-qty-input:focus{outline:none}
 .have-qty-input::-webkit-inner-spin-button,.have-qty-input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
 .have-mirror-add{display:flex;align-items:center;gap:6px;background:var(--bg);border:1px solid var(--border2);color:var(--muted);padding:8px 11px;border-radius:var(--r2);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;min-height:38px}
@@ -2391,7 +2393,7 @@ if(!DB)throw new Error('Trade data failed to load');
 
 const PREFILTER="!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&";
 const OWNER="Doomsday126";
-const APP_VERSION="4.6.34";
+const APP_VERSION="4.6.35";
 const MULTI_COMMUNITY_ENABLED=false;
 const MULTI_COMMUNITY_OWNER_PREVIEW_AVAILABLE=true;
 const DEFAULT_COMMUNITY_ID='nyc';
