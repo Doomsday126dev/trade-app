@@ -1458,3 +1458,37 @@
 
 ### Instructions for the next contributor
 - Keep the sprite-slot invariants intact; do not weaken those tests when adjusting sprite rendering.
+
+## 2026-05-27 - Codex - Priority value helper extraction
+
+### Summary
+- Extracted pure priority value parsing/serialization helpers from `index.html` into `js/domain/priorityValues.js`.
+- The new classic browser script exposes `window.PogoDomain.priorityValues` and `index.html` binds `entryGender`, `parsePri`, and `priValue` back to the same local names used by existing call sites.
+- No behavior, Firebase paths, schemas, auth, persistence, rendering, schedule, inventory write, admin, backup, import, or export logic was changed.
+
+### Files touched
+- `index.html`
+- `js/domain/priorityValues.js`
+- `docs/MAINTENANCE-LOG.md`
+
+### Feature flags added/changed
+- None.
+
+### Firebase paths added/changed
+- None.
+
+### Security rules changes needed
+- None.
+
+### Manual test checklist
+- Run `node --check js/domain/priorityValues.js`.
+- Run the inline script parse check for `index.html`.
+- Assert `parsePri('H[lucky][shiny][xxl](female)')`, `parsePri('M(shiny f)')`, `priValue('L','m',false,false,true,false)`, and `entryGender('female')`.
+- Run local visual smoke; auth-backed flows may skip locally per `docs/TESTING.md`.
+- After deploy, run `PLAYWRIGHT_BASE_URL=https://doomsday126dev.github.io/trade-app/ POGO_TEST_USER=TestUser POGO_TEST_PIN=123456 npm run visual`.
+
+### Known risks / TODOs
+- `parsePri` remains a broad behavior dependency across lists, matching, strings, and exports, so keep deployed smoke coverage green before further extraction.
+
+### Instructions for the next contributor
+- Continue with cohesive pure domain helper clusters before moving UI markup helpers like `priBadge` or search-string/import helpers.

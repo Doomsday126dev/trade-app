@@ -2359,6 +2359,7 @@ window.__pogoBootWatch=setTimeout(function(){
 <script src="data.js"></script>
 <script src="js/domain/priorities.js"></script>
 <script src="js/domain/username.js"></script>
+<script src="js/domain/priorityValues.js"></script>
 <script>
 let initializeApp,getDatabase,ref,set,get,onValue,update,getAuth,signInWithEmailAndPassword,createUserWithEmailAndPassword,firebaseSignOut,updatePassword,deleteUser,onAuthStateChanged;
 let firebaseSdkPromise=null;
@@ -2424,6 +2425,9 @@ const {PRI,PRI_ORDER,LIST_LABELS,priLabel,priName,listLabel}=priorityDomain;
 const usernameDomain=window.PogoDomain?.username;
 if(!usernameDomain)throw new Error('Username helpers failed to load');
 const {alphaCompare}=usernameDomain;
+const priorityValueDomain=window.PogoDomain?.priorityValues;
+if(!priorityValueDomain)throw new Error('Priority value helpers failed to load');
+const {entryGender,parsePri,priValue}=priorityValueDomain;
 const VIVILLON_PATTERNS=new Set(['Archipelago','Continental','Elegant','Fancy','Garden','High Plains','Icy Snow','Jungle','Marine','Meadow','Modern','Monsoon','Ocean','Poke Ball','Poké Ball','Polar','River','Sandstorm','Savanna','Sun','Tundra']);
 const SCATTERBUG_PATTERNS=['Archipelago','Continental','Elegant','Garden','High Plains','Icy Snow','Jungle','Marine','Meadow','Modern','Monsoon','Ocean','Polar','River','Sandstorm','Savanna','Sun','Tundra'];
 const REGION_CODE_TERMS={K:'kanto',J:'johto',H:'hoenn',S:'sinnoh',U:'unova',L:'kalos',A:'alola',G:'galar',P:'paldea'};
@@ -2599,12 +2603,6 @@ const GENDER_DIFF_MAJOR=new Set([449,450,521,592,593,668,678,757,876]);
 // Pokémon where one gender is the only form that evolves into the next stage
 // (useful context for trade lists — e.g., only female Combee → Vespiquen)
 const GENDER_EVOLUTION_LOCKED={415:'f',678:'both',876:'both',758:'f'}; // 758=Salazzle is female-only species
-function entryGender(mod){
-  const m=String(mod||'').toLowerCase();
-  if(/\bfemale\b|♀|\bf\b/.test(m))return'f';
-  if(/\bmale\b|♂|\bm\b/.test(m))return'm';
-  return'';
-}
 function femaleSpriteUrl(no){
   const n=parseInt(no);
   if(!Number.isFinite(n)||!GENDER_DIFF_DEX_FEMALE.has(n))return null;
@@ -5367,37 +5365,6 @@ function formatFc(input){
 }
 function validateFc(fc){
   return fc===''||fc.replace(/\s/g,'').length===12;
-}
-
-// ── PARSEPRI ─────────────────────────────────────────────────
-// Parses an entry value like:
-//   "H[lucky][shiny][xxl](f, m)" or legacy "H(f)"
-// Returns {p, mod, lucky, xxl, xxs, shiny}
-// Also legacy-migrates: a free-form note that contains the word "shiny"
-// gets shiny=true, with "shiny" stripped from the displayed mod text so the
-// search-string + UI use the structured flag. Any legacy [iv:…] tag is
-// silently dropped on parse — IV requirements are no longer tracked.
-function parsePri(v){
-  if(!v)return{p:'',mod:'',lucky:false,xxl:false,xxs:false,shiny:false};
-  const s=String(v);
-  const priM=s.match(/^([HML])(.*)/);
-  const p=priM?priM[1]:'';
-  let rest=priM?(priM[2]||''):s;
-  const lucky=/\[lucky\]/i.test(rest);
-  const xxl=/\[xxl\]/i.test(rest);
-  const xxs=/\[xxs\]/i.test(rest);
-  let shiny=/\[shiny\]/i.test(rest);
-  rest=rest.replace(/\[lucky\]/gi,'').replace(/\[xxl\]/gi,'').replace(/\[xxs\]/gi,'').replace(/\[shiny\]/gi,'').replace(/\[iv:[^\]]*\]/gi,'');
-  let mod=rest.replace(/[()]/g,'').trim();
-  // Auto-promote legacy "shiny" mentions in free-form notes to the structured flag
-  if(!shiny&&/\bshiny\b|\bshny\b/i.test(mod)){
-    shiny=true;
-    mod=mod.replace(/\bshiny\b/gi,'').replace(/\bshny\b/gi,'').replace(/,\s*,/g,',').replace(/^\s*,\s*|\s*,\s*$/g,'').trim();
-  }
-  return{p,mod,lucky,xxl,xxs,shiny};
-}
-function priValue(p,mod='',lucky=false,xxl=false,xxs=false,shiny=false){
-  return`${p||''}${lucky?'[lucky]':''}${shiny?'[shiny]':''}${xxl?'[xxl]':''}${xxs?'[xxs]':''}${mod?`(${mod})`:''}`;
 }
 
 // ── BROWSE ────────────────────────────────────────────────────
