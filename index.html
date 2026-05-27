@@ -400,6 +400,8 @@ input,select,textarea{font-family:var(--font);outline:none}
 .llogo{font-size:22px;font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:9px;line-height:1.1}
 .llogo span{background:linear-gradient(135deg,var(--accent),var(--ac2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .lsub{color:var(--muted);font-size:14px;margin-bottom:26px}
+.brand-disclaimer{color:var(--muted);font-size:10px;line-height:1.35;opacity:.72;margin-top:-16px;margin-bottom:20px}
+.brand-disclaimer.compact{margin:10px 0 0;text-align:center;font-size:10px}
 .field{margin-bottom:13px}
 .field label{display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:5px}
 .field input,.field select{width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--text);padding:10px 13px;border-radius:var(--r2);font-size:14px;transition:.2s}
@@ -1503,9 +1505,13 @@ html[data-theme="light"] body.wp-sunset{background:linear-gradient(145deg,#f5f7f
 html[data-theme="light"] body.wp-mono{background:#f5f7fa}
 html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 0%,#f2f4f8 48%,#eef2f7 100%)}
 .wp-picker{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px}
-.wp-swatch{height:46px;border-radius:var(--r2);border:2px solid var(--border);cursor:pointer;position:relative;transition:.15s;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--text);font-weight:600;text-shadow:0 1px 2px rgba(0,0,0,.4)}
+.wp-swatch{height:46px;border-radius:var(--r2);border:2px solid var(--border);cursor:pointer;position:relative;transition:.15s;display:flex;align-items:center;justify-content:center;font-size:10px;color:#f8fafc;font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,.75);overflow:hidden;isolation:isolate}
+.wp-swatch::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.12),rgba(0,0,0,.34));z-index:-1}
 .wp-swatch:hover{border-color:var(--accent)}
 .wp-swatch.selected{border-color:var(--accent);box-shadow:0 0 0 2px rgba(108,99,255,.3)}
+html[data-theme="light"] .wp-swatch{border-color:rgba(15,23,42,.16);box-shadow:0 1px 3px rgba(15,23,42,.12)}
+html[data-theme="light"] .wp-swatch:hover{border-color:var(--accent)}
+html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shadow:0 0 0 3px rgba(108,99,255,.32),0 1px 3px rgba(15,23,42,.16)}
 .wp-swatch.aurora{background:linear-gradient(145deg,#0f0f1a,#171a2d,#102622)}
 .wp-swatch.ocean{background:linear-gradient(145deg,#0f0f1a,#132333,#17172a)}
 .wp-swatch.forest{background:linear-gradient(145deg,#0f0f1a,#17251c,#17162a)}
@@ -1607,6 +1613,7 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
     <div style="margin-top:4px"></div>
     <h2 style="font-size:19px;font-weight:700;margin-bottom:5px">Connect Firebase</h2>
     <p style="color:var(--muted);font-size:13px;margin-bottom:22px;line-height:1.6">One-time setup. Takes ~5 minutes.</p>
+    <div class="brand-disclaimer">Unofficial community tool. Not affiliated with, endorsed by, or sponsored by Niantic, Nintendo, or The Pokémon Company.</div>
     <div class="cstep"><div class="cstep-n">Step 1</div><p>Go to <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a> → New project.</p></div>
     <div class="cstep"><div class="cstep-n">Step 2</div><p>Build → <strong>Realtime Database</strong> → Create database → <em>Start in test mode</em>.</p></div>
     <div class="cstep"><div class="cstep-n">Step 3</div><p>Also go to <strong>Authentication → Get started → Email/Password → Enable</strong> (we use this for security).</p></div>
@@ -1623,6 +1630,7 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
   <div class="lcard">
     <div class="llogo"><img class="brand-mark lg" src="assets/tradeloop-icon.svg" alt="" aria-hidden="true"> <span>PoGo Trades</span></div>
     <div class="lsub">NYC Community Trade List</div>
+    <div class="brand-disclaimer">Unofficial community tool. Not affiliated with Niantic, Nintendo, or The Pokémon Company.</div>
     <div class="field login-user-field">
       <label>Username</label>
       <input type="text" id="login-user" placeholder="Type or pick your username…" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" aria-autocomplete="list" aria-controls="login-user-suggestions">
@@ -2115,6 +2123,7 @@ html[data-theme="light"] body.wp-mist{background:linear-gradient(145deg,#f5f7fa 
       <button class="bghost" onclick="closeModal('prof-modal')">Cancel</button>
       <button class="bpri" onclick="saveProfile()">Save</button>
     </div>
+    <div class="brand-disclaimer compact">Unofficial community tool. Not affiliated with Niantic, Nintendo, or The Pokémon Company.</div>
     <hr class="divider" style="margin-top:14px">
     <button class="bghost" style="width:100%;color:var(--danger);border-color:rgba(239,68,68,.3)" onclick="logout()">Sign out</button>
   </div>
@@ -2382,7 +2391,7 @@ if(!DB)throw new Error('Trade data failed to load');
 
 const PREFILTER="!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&";
 const OWNER="Doomsday126";
-const APP_VERSION="4.6.32";
+const APP_VERSION="4.6.34";
 const MULTI_COMMUNITY_ENABLED=false;
 const MULTI_COMMUNITY_OWNER_PREVIEW_AVAILABLE=true;
 const DEFAULT_COMMUNITY_ID='nyc';
