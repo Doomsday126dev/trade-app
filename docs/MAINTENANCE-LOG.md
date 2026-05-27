@@ -1325,3 +1325,39 @@
 ### Instructions for the next contributor
 - Keep production Firebase origin restrictions intact.
 - Add a deliberate mock/test mode before attempting local authenticated Playwright coverage.
+
+## 2026-05-27 - Codex - Priority helper modularization
+
+### Summary
+- Started the first low-risk modularization pass by extracting pure priority/list label helpers out of the monolithic `index.html`.
+- Added a classic browser script at `js/domain/priorities.js` that exposes `window.PogoDomain.priorities`.
+- Kept the existing inline app identifiers bound in `index.html` so callers still use `PRI`, `PRI_ORDER`, `LIST_LABELS`, `priLabel`, `priName`, and `listLabel` unchanged.
+- Left `priBadge` in `index.html` because it returns UI-facing markup/text and belongs with a later UI badge extraction.
+
+### Files touched
+- `index.html`
+- `js/domain/priorities.js`
+- `docs/MAINTENANCE-LOG.md`
+
+### Feature flags added/changed
+- None.
+
+### Firebase paths added/changed
+- None.
+
+### Security rules changes needed
+- None.
+
+### Manual test checklist
+- Load the app and confirm the main script starts without "Priority helpers failed to load".
+- Confirm H/M/L labels still render as High/Medium/Low in My List, Browse, Strings, and Inventory.
+- Confirm list tab labels still render as Trades, Dynamax, Gigantamax, and Others.
+- Run the available local visual smoke command; auth-backed flows may skip locally per `docs/TESTING.md`.
+
+### Known risks / TODOs
+- `index.html` still owns most app globals. Keep future extractions similarly small and behavior-preserving.
+- Do not extract Firebase/auth/schedule/inventory write paths until they have narrower tests.
+
+### Instructions for the next contributor
+- Prefer extracting pure domain helpers before UI or service code.
+- Do not move `priBadge` until a dedicated UI badge/helper module exists.
