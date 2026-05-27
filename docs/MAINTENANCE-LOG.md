@@ -1361,3 +1361,36 @@
 ### Instructions for the next contributor
 - Prefer extracting pure domain helpers before UI or service code.
 - Do not move `priBadge` until a dedicated UI badge/helper module exists.
+
+## 2026-05-27 - Codex - Username sort helper modularization
+
+### Summary
+- Extracted the pure `alphaCompare` sort helper from `index.html` into `js/domain/username.js`.
+- Added a classic browser script that exposes `window.PogoDomain.username.alphaCompare`.
+- Bound `alphaCompare` back into the main inline script so existing sort call sites remain unchanged.
+- Left login/auth-shaped username helpers in `index.html` because they read app state and should be extracted later with stronger tests.
+
+### Files touched
+- `index.html`
+- `js/domain/username.js`
+- `docs/MAINTENANCE-LOG.md`
+
+### Feature flags added/changed
+- None.
+
+### Firebase paths added/changed
+- None.
+
+### Security rules changes needed
+- None.
+
+### Manual test checklist
+- Load the app and confirm the main script starts without "Username helpers failed to load".
+- Confirm alphabetic/numeric user and Pokémon sorting still behaves normally in login, Browse, Strings, Admin, and Inventory.
+- Run the local visual smoke command; auth-backed flows may skip locally per `docs/TESTING.md`.
+
+### Known risks / TODOs
+- `knownLoginUsernames`, `canonicalUsernameInput`, `normalizedUserRecord`, and `lastLoginTime` remain in `index.html` because they are coupled to auth/login state.
+
+### Instructions for the next contributor
+- Continue extracting only pure helpers until the app has enough tests around auth, Firebase writes, and rendering-heavy paths.

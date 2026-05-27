@@ -2358,6 +2358,7 @@ window.__pogoBootWatch=setTimeout(function(){
 </script>
 <script src="data.js"></script>
 <script src="js/domain/priorities.js"></script>
+<script src="js/domain/username.js"></script>
 <script>
 let initializeApp,getDatabase,ref,set,get,onValue,update,getAuth,signInWithEmailAndPassword,createUserWithEmailAndPassword,firebaseSignOut,updatePassword,deleteUser,onAuthStateChanged;
 let firebaseSdkPromise=null;
@@ -2420,6 +2421,9 @@ const FIREBASE_MEASUREMENT_ID="G-0ZFL5NDQFP";
 const priorityDomain=window.PogoDomain?.priorities;
 if(!priorityDomain)throw new Error('Priority helpers failed to load');
 const {PRI,PRI_ORDER,LIST_LABELS,priLabel,priName,listLabel}=priorityDomain;
+const usernameDomain=window.PogoDomain?.username;
+if(!usernameDomain)throw new Error('Username helpers failed to load');
+const {alphaCompare}=usernameDomain;
 const VIVILLON_PATTERNS=new Set(['Archipelago','Continental','Elegant','Fancy','Garden','High Plains','Icy Snow','Jungle','Marine','Meadow','Modern','Monsoon','Ocean','Poke Ball','Poké Ball','Polar','River','Sandstorm','Savanna','Sun','Tundra']);
 const SCATTERBUG_PATTERNS=['Archipelago','Continental','Elegant','Garden','High Plains','Icy Snow','Jungle','Marine','Meadow','Modern','Monsoon','Ocean','Polar','River','Sandstorm','Savanna','Sun','Tundra'];
 const REGION_CODE_TERMS={K:'kanto',J:'johto',H:'hoenn',S:'sinnoh',U:'unova',L:'kalos',A:'alola',G:'galar',P:'paldea'};
@@ -3517,7 +3521,6 @@ async function verifyPin(pin,stored){
 }
 function isSixDigitPin(pin){return/^\d{6}$/.test(pin);}
 function priBadge(p){return `${PRI[p]?.emoji||''} ${priLabel(p)}`.trim();}
-function alphaCompare(a,b){return String(a||'').localeCompare(String(b||''),undefined,{sensitivity:'base',numeric:true});}
 function lastLoginTime(username,data){
   return Number(data?.lastSeen||(data?.authUid&&allData.authIndex?.[data.authUid]?.lastSeen)||data?.lastUpdated||0);
 }
