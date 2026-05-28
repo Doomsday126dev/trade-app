@@ -45,6 +45,7 @@ function deepEq(actual, expected, message) {
   'js/domain/pokemonSearchTerms.js',
   'js/domain/searchStrings.js',
   'js/domain/scheduleEventRules.js',
+  'js/domain/scheduleTradeRules.js',
   'js/utils/textSafety.js'
 ].forEach(loadBrowserScript);
 
@@ -60,6 +61,7 @@ assert(domain.scheduleDates, 'scheduleDates namespace should exist');
 assert(domain.pokemonSearchTerms, 'pokemonSearchTerms namespace should exist');
 assert(domain.searchStrings, 'searchStrings namespace should exist');
 assert(domain.scheduleEventRules, 'scheduleEventRules namespace should exist');
+assert(domain.scheduleTradeRules, 'scheduleTradeRules namespace should exist');
 assert(utils.textSafety, 'textSafety namespace should exist');
 
 const { priLabel, priName, listLabel } = domain.priorities;
@@ -186,6 +188,56 @@ deepEq(
 );
 eq(getEventId({ eventID: 'abc', name: 'x', start: 1 }), 'abc', 'getEventId should prefer eventID');
 eq(getEventId({ name: 'Event', start: 123 }), 'Event_123', 'getEventId should fallback to name and start');
+
+const {
+  externalTradePartners,
+  parseExternalTradePartners,
+  scheduledTradeQuantity,
+  summarizeScheduledTrades
+} = domain.scheduleTradeRules;
+deepEq(
+  externalTradePartners({ externalPartners: [' Alice ', '', null, 'Bob', 'Cara', 'Dan', 'Eve', 'Fox', 'Gina'] }),
+  ['Alice', 'Bob', 'Cara', 'Dan', 'Eve', 'Fox'],
+  'externalTradePartners should trim, filter, and cap partner arrays'
+);
+deepEq(
+  externalTradePartners({ externalPartner: ' Solo ' }),
+  ['Solo'],
+  'externalTradePartners should preserve legacy single external partner'
+);
+deepEq(
+  parseExternalTradePartners(' Alice, , Bob, Cara, Dan, Eve, Fox, Gina '),
+  ['Alice', 'Bob', 'Cara', 'Dan', 'Eve', 'Fox'],
+  'parseExternalTradePartners should trim, filter, and cap comma-separated names'
+);
+eq(scheduledTradeQuantity({ type: 'regular', regularCount: 25 }), 25, 'scheduledTradeQuantity should use regularCount for regular trades');
+eq(scheduledTradeQuantity({ type: 'regular', regularCount: 999 }), 100, 'scheduledTradeQuantity should cap regular trades at 100');
+eq(scheduledTradeQuantity({ type: 'regular', regularCount: 0 }), 1, 'scheduledTradeQuantity should fallback to 1 for invalid regular counts');
+eq(scheduledTradeQuantity({ type: 'special', regularCount: 25 }), 1, 'scheduledTradeQuantity should count non-regular trades as 1');
+const tradeRows = [
+  { type: 'regular', status: 'scheduled', regularCount: 5 },
+  { type: 'regular', status: 'completed', regularCount: 3 },
+  { type: 'special', status: 'completed' },
+  { type: 'remote', status: 'scheduled' },
+  { status: 'cancelled', regularCount: 2 }
+];
+const summary = summarizeScheduledTrades(tradeRows);
+eq(summary.special, 1, 'summarizeScheduledTrades should count special trades');
+eq(summary.regular, 10, 'summarizeScheduledTrades should count regular quantities, including current cancelled-row behavior');
+eq(summary.remote, 1, 'summarizeScheduledTrades should count remote trades');
+eq(summary.total, 12, 'summarizeScheduledTrades should total trade quantities');
+eq(summary.scheduled, 3, 'summarizeScheduledTrades should count scheduled rows, not regular quantities');
+eq(summary.completed, 2, 'summarizeScheduledTrades should count completed rows, not regular quantities');
+deepEq(
+  summary.byStatus,
+  {
+    special: { scheduled: 0, completed: 1 },
+    regular: { scheduled: 7, completed: 3 },
+    remote: { scheduled: 1, completed: 0 }
+  },
+  'summarizeScheduledTrades should preserve current byStatus quantity behavior'
+);
+eq(summary.trades, tradeRows, 'summarizeScheduledTrades should return the original trades array reference');
 
 const { safeFilePart, escHtml, escAttr } = utils.textSafety;
 eq(safeFilePart("Mazer's Trades List 2026!"), 'mazer-s-trades-list-2026', 'safeFilePart should slug names');

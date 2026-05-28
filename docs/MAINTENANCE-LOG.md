@@ -1770,3 +1770,41 @@
 ### Instructions for the next contributor
 - Keep event parsing behavior pinned with `npm run check:domain` before moving more schedule helpers.
 - Do not merge `dailyEventBonuses` or schedule persistence into this pure domain helper without adding broader schedule behavior coverage first.
+
+## 2026-05-28 - Codex - Schedule trade rule helper extraction
+
+### Summary
+- Extracted pure schedule trade rule helpers from `index.html` into `js/domain/scheduleTradeRules.js`.
+- Bound the exported helpers back to their original local names in `index.html`, so schedule calculations continue to use the same call sites.
+- Added repeatable `check:domain` coverage for external partner parsing, regular trade quantity clamping, and current scheduled-trade summary behavior.
+
+### Files touched
+- `index.html`
+- `js/domain/scheduleTradeRules.js`
+- `scripts/check-domain-helpers.js`
+- `docs/MAINTENANCE-LOG.md`
+
+### Feature flags added/changed
+- None.
+
+### Firebase paths added/changed
+- None.
+
+### Security rules changes needed
+- None.
+
+### Manual test checklist
+- Run `node --check js/domain/scheduleTradeRules.js`.
+- Run `node --check scripts/check-domain-helpers.js`.
+- Run `npm run check:domain`.
+- Run the inline script parse check for `index.html`.
+- Run local visual smoke; auth-backed flows may skip locally per `docs/TESTING.md`.
+- After deploy, run `PLAYWRIGHT_BASE_URL=https://doomsday126dev.github.io/trade-app/ POGO_TEST_USER=TestUser POGO_TEST_PIN=123456 npm run visual`.
+
+### Known risks / TODOs
+- `summarizeScheduledTrades` behavior was preserved exactly, including counting `scheduled`/`completed` as row counts while `regular`, `special`, `remote`, and `byStatus` use quantities.
+- `tradesOnDate`, `visibleTradesOnDate`, `tradeCountsForDay`, preview filtering, schedule writes, and schedule rendering remain in `index.html`.
+
+### Instructions for the next contributor
+- Treat any quota semantics change as a product behavior change, not modularization cleanup.
+- Keep extracting only helpers that receive all needed state as arguments until schedule render/write coverage is broader.
