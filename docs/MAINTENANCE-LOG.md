@@ -1629,3 +1629,36 @@
 
 ### Instructions for the next contributor
 - Do not change regional qualifier behavior as part of extraction work. Treat any Niantic search-token changes as product behavior changes with separate review and tests.
+
+## 2026-05-27 - Codex - Repeatable domain helper checks
+
+### Summary
+- Added a Node-based domain helper check harness for the extracted classic browser helper modules.
+- The script evaluates the helper files in a controlled `vm` context with a fake `window`, asserts exported namespaces, and verifies behavior for priorities, username sorting, priority value parsing, schedule dates, Pokemon search terms, and text escaping.
+- No production app code, Firebase paths, auth, persistence, rendering, schedule, inventory, admin, backup, import, or export behavior was changed.
+
+### Files touched
+- `package.json`
+- `scripts/check-domain-helpers.js`
+- `docs/MAINTENANCE-LOG.md`
+
+### Feature flags added/changed
+- None.
+
+### Firebase paths added/changed
+- None.
+
+### Security rules changes needed
+- None.
+
+### Manual test checklist
+- Run `npm run check:domain`.
+- Run `node --check scripts/check-domain-helpers.js`.
+- Run local visual smoke when app files change; auth-backed flows may skip locally per `docs/TESTING.md`.
+
+### Known risks / TODOs
+- `modSearchFilters('shiny male xxl')` currently returns `['male','xxl']`; shiny is handled elsewhere in current app behavior. Changing that expectation would be a product behavior change, not a test-harness change.
+
+### Instructions for the next contributor
+- Run `npm run check:domain` before and after future helper extractions.
+- Add new direct assertions here when extracting additional pure helper modules so behavior drift is caught before deployed smoke tests.
