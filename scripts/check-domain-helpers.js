@@ -43,6 +43,7 @@ function deepEq(actual, expected, message) {
   'js/domain/priorityValues.js',
   'js/domain/scheduleDates.js',
   'js/domain/pokemonSearchTerms.js',
+  'js/domain/pokemonEntryRules.js',
   'js/domain/searchStrings.js',
   'js/domain/scheduleEventRules.js',
   'js/domain/scheduleTradeRules.js',
@@ -60,6 +61,7 @@ assert(domain.username, 'username namespace should exist');
 assert(domain.priorityValues, 'priorityValues namespace should exist');
 assert(domain.scheduleDates, 'scheduleDates namespace should exist');
 assert(domain.pokemonSearchTerms, 'pokemonSearchTerms namespace should exist');
+assert(domain.pokemonEntryRules, 'pokemonEntryRules namespace should exist');
 assert(domain.searchStrings, 'searchStrings namespace should exist');
 assert(domain.scheduleEventRules, 'scheduleEventRules namespace should exist');
 assert(domain.scheduleTradeRules, 'scheduleTradeRules namespace should exist');
@@ -128,6 +130,42 @@ deepEq(modSearchFilters('shiny male xxl'), ['shiny', 'male', 'xxl'], 'modSearchF
 eq(modFromSearchFilters(['female', 'xxs']), 'f', 'modFromSearchFilters should prefer female');
 eq(modFromSearchFilters(['male', 'xxl']), 'm', 'modFromSearchFilters should prefer male');
 eq(castformTypeFromSearchFilters(['water', 'female']), 'water', 'castformTypeFromSearchFilters should find water');
+
+const {
+  uniqueEntries,
+  costumeDedupeKey,
+  isTradeableForWishlist
+} = domain.pokemonEntryRules;
+deepEq(
+  uniqueEntries([{ name: 'Bulbasaur', no: 1 }, { name: 'Charmander', no: 4 }], [{ name: 'Bulbasaur', no: 999 }]),
+  [{ name: 'Bulbasaur', no: 1 }, { name: 'Charmander', no: 4 }],
+  'uniqueEntries should preserve first occurrence when deduping'
+);
+deepEq(
+  uniqueEntries([{ name: 'Squirtle' }], [{ name: 'Squirtle' }, { name: 'Caterpie' }]).map(e => e.name),
+  ['Squirtle', 'Caterpie'],
+  'uniqueEntries should dedupe duplicate names across groups'
+);
+deepEq(
+  uniqueEntries([{ name: 'Unown (?)', no: 201 }], [{ name: 'Unown (!)', no: 201 }]).map(e => e.name),
+  ['Unown (?)', 'Unown (!)'],
+  'uniqueEntries should preserve distinct Unown form names'
+);
+eq(costumeDedupeKey({ no: 25, name: 'Pikachu' }), '25|pikachu', 'costumeDedupeKey should normalize plain entries');
+eq(costumeDedupeKey({ no: 201, displayName: 'Unown (?)' }), '201|unown qmark', 'costumeDedupeKey should preserve Unown question form');
+eq(costumeDedupeKey({ no: 201, displayName: 'Unown (!)' }), '201|unown exclaim', 'costumeDedupeKey should preserve Unown exclamation form');
+eq(
+  costumeDedupeKey({ no: 222, name: 'Galarian Corsola Pink Sunglasses' }),
+  '222|g corsola pink sunglasses',
+  'costumeDedupeKey should preserve current regional shorthand behavior'
+);
+eq(isTradeableForWishlist({ name: 'Mew' }), false, 'isTradeableForWishlist should block untradeable Mythicals');
+eq(isTradeableForWishlist({ name: 'Deoxys (Attack)' }), false, 'isTradeableForWishlist should block current Deoxys forms');
+eq(isTradeableForWishlist({ name: 'Meltan' }), true, 'isTradeableForWishlist should preserve current Meltan behavior');
+eq(isTradeableForWishlist({ name: 'Melmetal' }), true, 'isTradeableForWishlist should preserve current Melmetal behavior');
+eq(isTradeableForWishlist({ name: 'Giratina (Origin)' }), true, 'isTradeableForWishlist should allow normal legendary entries');
+eq(isTradeableForWishlist(null), true, 'isTradeableForWishlist should preserve null edge behavior');
+eq(isTradeableForWishlist({}), true, 'isTradeableForWishlist should preserve blank object edge behavior');
 
 const {
   PREFILTER,

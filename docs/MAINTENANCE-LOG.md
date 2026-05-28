@@ -1847,3 +1847,41 @@
 ### Instructions for the next contributor
 - Treat inventory mode semantics and stored object shape as data-model behavior, not cleanup.
 - Keep any future extraction around inventory writes separate from pure key/value normalization and cover it with browser smoke tests.
+
+## 2026-05-28 - Codex - Pokemon entry rule helper extraction
+
+### Summary
+- Extracted pure Pokemon entry/tradeability helpers from `index.html` into `js/domain/pokemonEntryRules.js`.
+- Bound the exported helpers back to their original local names in `index.html`, so costume dedupe, list-source filtering, and wishlist tradeability call sites continue to use the same symbols.
+- Added repeatable `check:domain` coverage for unique entry dedupe, Unown form preservation, costume dedupe keys, untradeable Mythical filtering, and current Meltan/Melmetal/legendary/null behavior.
+
+### Files touched
+- `index.html`
+- `js/domain/pokemonEntryRules.js`
+- `scripts/check-domain-helpers.js`
+- `docs/MAINTENANCE-LOG.md`
+
+### Feature flags added/changed
+- None.
+
+### Firebase paths added/changed
+- None.
+
+### Security rules changes needed
+- None.
+
+### Manual test checklist
+- Run `node --check js/domain/pokemonEntryRules.js`.
+- Run `node --check scripts/check-domain-helpers.js`.
+- Run `npm run check:domain`.
+- Run the inline script parse check for `index.html`.
+- Run `git diff --check`.
+- Local visual smoke is optional; auth-backed flows may skip locally per `docs/TESTING.md`.
+
+### Known risks / TODOs
+- Behavior was preserved exactly: `uniqueEntries` still dedupes by `name`, and `isTradeableForWishlist` still only blocks exact names in `UNTRADEABLE_MYTHICAL_NAMES`.
+- `allCostumeEntries`, `maxTradeEntries`, `listSource`, sprite normalization, sprite lookup, rendering, and write paths remain in `index.html`.
+
+### Instructions for the next contributor
+- Treat any wishlist eligibility change as a product behavior change, not modularization cleanup.
+- Do not merge sprite/cache/catalog source helpers into this module without separate visual and domain coverage.
