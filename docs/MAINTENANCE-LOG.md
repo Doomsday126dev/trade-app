@@ -1594,3 +1594,38 @@
 
 ### Instructions for the next contributor
 - Keep event bonus parsing, schedule trade quota logic, and schedule persistence in `index.html` until they can be extracted as separate behavior-tested clusters.
+
+## 2026-05-27 - Codex - Pokemon search term helper extraction
+
+### Summary
+- Extracted pure Pokemon search qualifier constants and helpers from `index.html` into `js/domain/pokemonSearchTerms.js`.
+- The new classic browser script exposes `window.PogoDomain.pokemonSearchTerms` and `index.html` binds the same helper names back locally so existing call sites remain unchanged.
+- No search-token behavior, import/export parsing, sprite logic, Firebase, auth, persistence, inventory writes, schedule writes, admin, backup, or rendering logic was changed.
+
+### Files touched
+- `index.html`
+- `js/domain/pokemonSearchTerms.js`
+- `docs/MAINTENANCE-LOG.md`
+
+### Feature flags added/changed
+- None.
+
+### Firebase paths added/changed
+- None.
+
+### Security rules changes needed
+- None.
+
+### Manual test checklist
+- Run `node --check js/domain/pokemonSearchTerms.js`.
+- Run the inline script parse check for `index.html`.
+- Assert regional form, dex region, Castform type, modifier filter, and form-variant helper outputs directly.
+- Run local visual smoke; auth-backed flows may skip locally per `docs/TESTING.md`.
+- After deploy, run `PLAYWRIGHT_BASE_URL=https://doomsday126dev.github.io/trade-app/ POGO_TEST_USER=TestUser POGO_TEST_PIN=123456 npm run visual`.
+
+### Known risks / TODOs
+- This is a medium-risk pure extraction because these helpers feed generated search strings and import matching. Keep direct assertions around these helpers before any future search-token behavior changes.
+- `entrySearchFilters`, `dexStringFromNumbers`, and import/export parsing intentionally remain in `index.html` for later, separately tested extractions.
+
+### Instructions for the next contributor
+- Do not change regional qualifier behavior as part of extraction work. Treat any Niantic search-token changes as product behavior changes with separate review and tests.
