@@ -44,6 +44,7 @@ function deepEq(actual, expected, message) {
   'js/domain/scheduleDates.js',
   'js/domain/pokemonSearchTerms.js',
   'js/domain/searchStrings.js',
+  'js/domain/scheduleEventRules.js',
   'js/utils/textSafety.js'
 ].forEach(loadBrowserScript);
 
@@ -58,6 +59,7 @@ assert(domain.priorityValues, 'priorityValues namespace should exist');
 assert(domain.scheduleDates, 'scheduleDates namespace should exist');
 assert(domain.pokemonSearchTerms, 'pokemonSearchTerms namespace should exist');
 assert(domain.searchStrings, 'searchStrings namespace should exist');
+assert(domain.scheduleEventRules, 'scheduleEventRules namespace should exist');
 assert(utils.textSafety, 'textSafety namespace should exist');
 
 const { priLabel, priName, listLabel } = domain.priorities;
@@ -153,6 +155,37 @@ eq(
 );
 deepEq(strLenInfo('abc'), { len: 3, cls: '' }, 'strLenInfo should classify short strings as safe');
 assert(strLenInfo('x'.repeat(POGO_STR_LIMIT + 1)).cls !== '', 'strLenInfo should classify over-limit strings');
+
+const {
+  eventNumberTokenToInt,
+  parseSpecialTradeBonus,
+  classifyEvent,
+  getEventId
+} = domain.scheduleEventRules;
+eq(eventNumberTokenToInt('three'), 3, 'eventNumberTokenToInt should parse word numbers');
+eq(eventNumberTokenToInt('7'), 7, 'eventNumberTokenToInt should parse numeric strings');
+deepEq(
+  parseSpecialTradeBonus(['You can make one additional special trade']),
+  { bonus: 1, text: 'You can make one additional special trade', kind: 'additional' },
+  'parseSpecialTradeBonus should parse one additional special trade'
+);
+deepEq(
+  parseSpecialTradeBonus(['up to three special trades']),
+  { bonus: 2, text: 'up to three special trades', kind: 'total' },
+  'parseSpecialTradeBonus should preserve current total-to-bonus behavior'
+);
+deepEq(
+  classifyEvent({ extraData: { text: 'two additional special trades' } }),
+  { bonus: 2, bonusType: 'special', ambiguous: false, bonusText: 'two additional special trades', bonusKind: 'additional' },
+  'classifyEvent should classify explicit special trade bonuses'
+);
+deepEq(
+  classifyEvent({ extraData: { text: 'raid bonuses only' } }),
+  { bonus: 0, bonusType: 'special', ambiguous: true, bonusText: '' },
+  'classifyEvent should leave non-special-trade events ambiguous'
+);
+eq(getEventId({ eventID: 'abc', name: 'x', start: 1 }), 'abc', 'getEventId should prefer eventID');
+eq(getEventId({ name: 'Event', start: 123 }), 'Event_123', 'getEventId should fallback to name and start');
 
 const { safeFilePart, escHtml, escAttr } = utils.textSafety;
 eq(safeFilePart("Mazer's Trades List 2026!"), 'mazer-s-trades-list-2026', 'safeFilePart should slug names');

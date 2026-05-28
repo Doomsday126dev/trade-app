@@ -1732,3 +1732,41 @@
 
 ### Instructions for the next contributor
 - Treat changes to `PREFILTER`, PoGo operator precedence, or region-qualified generated strings as product behavior changes, not modularization cleanup.
+
+## 2026-05-28 - Codex - Schedule event rule helper extraction
+
+### Summary
+- Extracted pure schedule event bonus parsing/classification helpers from `index.html` into `js/domain/scheduleEventRules.js`.
+- Bound the exported helpers back to the original local names in `index.html`, so schedule calculations continue to call the same function names.
+- Added repeatable `check:domain` coverage for word/number parsing, current additional-vs-total special trade bonus behavior, event classification, and event ID fallback behavior.
+
+### Files touched
+- `index.html`
+- `js/domain/scheduleEventRules.js`
+- `scripts/check-domain-helpers.js`
+- `docs/MAINTENANCE-LOG.md`
+
+### Feature flags added/changed
+- None.
+
+### Firebase paths added/changed
+- None.
+
+### Security rules changes needed
+- None.
+
+### Manual test checklist
+- Run `node --check js/domain/scheduleEventRules.js`.
+- Run `node --check scripts/check-domain-helpers.js`.
+- Run `npm run check:domain`.
+- Run the inline script parse check for `index.html`.
+- Run local visual smoke; auth-backed flows may skip locally per `docs/TESTING.md`.
+- After deploy, run `PLAYWRIGHT_BASE_URL=https://doomsday126dev.github.io/trade-app/ POGO_TEST_USER=TestUser POGO_TEST_PIN=123456 npm run visual`.
+
+### Known risks / TODOs
+- Event wording detection was intentionally not changed. Any improvement to ambiguous event handling or scraped bonus wording should be a separate product behavior change.
+- `dailyEventBonuses`, manual bonus controls, trade count calculations, and schedule write/render helpers remain in `index.html`.
+
+### Instructions for the next contributor
+- Keep event parsing behavior pinned with `npm run check:domain` before moving more schedule helpers.
+- Do not merge `dailyEventBonuses` or schedule persistence into this pure domain helper without adding broader schedule behavior coverage first.
