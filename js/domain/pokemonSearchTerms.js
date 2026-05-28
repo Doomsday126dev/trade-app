@@ -47,6 +47,7 @@ function castformTypeFilter(entry,mod=''){
 function modSearchFilters(mod){
   const m=String(mod||'').toLowerCase();
   const out=[];
+  if(/\bshiny\b|\bshny\b/.test(m))out.push('shiny');
   if(/\bfemale\b|\bf\b/.test(m))out.push('female');
   else if(/\bmale\b|\bm\b/.test(m))out.push('male');
   if(m.includes('xxs'))out.push('xxs');

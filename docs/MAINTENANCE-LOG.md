@@ -1662,3 +1662,36 @@
 ### Instructions for the next contributor
 - Run `npm run check:domain` before and after future helper extractions.
 - Add new direct assertions here when extracting additional pure helper modules so behavior drift is caught before deployed smoke tests.
+
+## 2026-05-27 - Codex - Shiny modifier search helper check
+
+### Summary
+- Updated the pure Pokemon search-term helper so raw modifier parsing keeps `shiny` alongside gender/size filters.
+- Updated the repeatable domain helper check to assert `modSearchFilters('shiny male xxl')` returns `['shiny','male','xxl']`.
+- Generated H/M/L search strings remain dex-only; stored shiny list entries still use `parsePri`/`priValue` shiny flags. No Firebase, auth, persistence, rendering, schedule, inventory write, admin, backup, import, or export logic was changed.
+
+### Files touched
+- `js/domain/pokemonSearchTerms.js`
+- `scripts/check-domain-helpers.js`
+- `docs/MAINTENANCE-LOG.md`
+
+### Feature flags added/changed
+- None.
+
+### Firebase paths added/changed
+- None.
+
+### Security rules changes needed
+- None.
+
+### Manual test checklist
+- Run `npm run check:domain`.
+- Run `node --check js/domain/pokemonSearchTerms.js`.
+- Run the inline script parse check for `index.html`.
+- After deploy, run `PLAYWRIGHT_BASE_URL=https://doomsday126dev.github.io/trade-app/ POGO_TEST_USER=TestUser POGO_TEST_PIN=123456 npm run visual`.
+
+### Known risks / TODOs
+- Import parsing still uses `modFromSearchFilters`; converting imported `shiny&25` strings into stored shiny flags would be a separate product behavior change.
+
+### Instructions for the next contributor
+- Do not reintroduce combined generated PoGo strings like `shiny&25,26` without reviewing Pokémon GO operator precedence. The current app intentionally keeps exported combined strings dex-only.
