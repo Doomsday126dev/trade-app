@@ -1885,3 +1885,40 @@
 ### Instructions for the next contributor
 - Treat any wishlist eligibility change as a product behavior change, not modularization cleanup.
 - Do not merge sprite/cache/catalog source helpers into this module without separate visual and domain coverage.
+
+## 2026-05-28 - Codex - Fuzzy text helper extraction
+
+### Summary
+- Extracted pure fuzzy text helpers from `index.html` into `js/domain/fuzzyText.js`.
+- Bound `_phoneticCode` and `_levenshtein` back to their original local names in `index.html`, so `fuzzyMatchPokemon` and voice/search behavior continue to call the same symbols.
+- Added repeatable `check:domain` coverage for current phonetic normalization quirks and Levenshtein edge cases.
+
+### Files touched
+- `index.html`
+- `js/domain/fuzzyText.js`
+- `scripts/check-domain-helpers.js`
+- `docs/MAINTENANCE-LOG.md`
+
+### Feature flags added/changed
+- None.
+
+### Firebase paths added/changed
+- None.
+
+### Security rules changes needed
+- None.
+
+### Manual test checklist
+- Run `node --check js/domain/fuzzyText.js`.
+- Run `node --check scripts/check-domain-helpers.js`.
+- Run `npm run check:domain`.
+- Run the inline script parse check for `index.html`.
+- Run `git diff --check`.
+
+### Known risks / TODOs
+- `fuzzyMatchPokemon` intentionally remains in `index.html` because it reads mutable autocomplete state (`acItems`) and belongs with voice/search UI behavior.
+- The phonetic normalization outputs are preserved exactly, including odd-looking compressed forms such as `Pikachu -> pkch`.
+
+### Instructions for the next contributor
+- Treat any voice matching quality change as a behavior change, not modularization cleanup.
+- Keep future fuzzy/search UI changes separate from this pure helper module unless they have browser coverage.

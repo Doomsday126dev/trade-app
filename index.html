@@ -2367,6 +2367,7 @@ window.__pogoBootWatch=setTimeout(function(){
 <script src="js/domain/scheduleEventRules.js"></script>
 <script src="js/domain/scheduleTradeRules.js"></script>
 <script src="js/domain/pokemonKeys.js"></script>
+<script src="js/domain/fuzzyText.js"></script>
 <script src="js/utils/textSafety.js"></script>
 <script>
 let initializeApp,getDatabase,ref,set,get,onValue,update,getAuth,signInWithEmailAndPassword,createUserWithEmailAndPassword,firebaseSignOut,updatePassword,deleteUser,onAuthStateChanged;
@@ -2456,6 +2457,9 @@ const {externalTradePartners,parseExternalTradePartners,scheduledTradeQuantity,s
 const pokemonKeysDomain=window.PogoDomain?.pokemonKeys;
 if(!pokemonKeysDomain)throw new Error('Pokemon key helpers failed to load');
 const {_normGender,HAVE_KEY_SEP,splitHaveKey,joinHaveKey,totalQtyForName,haveEntryInfo,haveEntryValue}=pokemonKeysDomain;
+const fuzzyTextDomain=window.PogoDomain?.fuzzyText;
+if(!fuzzyTextDomain)throw new Error('Fuzzy text helpers failed to load');
+const {_phoneticCode,_levenshtein}=fuzzyTextDomain;
 const textSafety=window.PogoUtils?.textSafety;
 if(!textSafety)throw new Error('Text safety helpers failed to load');
 const {safeFilePart,escHtml,escAttr}=textSafety;
@@ -11309,30 +11313,6 @@ function bulkDelete(){
 // ── PHONETIC POKEMON NAME MATCHING ───────────────────────────
 // Pokemon names are foreign to most speech recognition engines.
 // Use phonetic encoding + Levenshtein distance to find the best match.
-function _phoneticCode(s){
-  // Simple phonetic normalization: strip vowels except leading, collapse similar consonants
-  return String(s||'').toLowerCase()
-    .replace(/[^a-z]/g,'')
-    .replace(/ph/g,'f').replace(/ck/g,'k').replace(/qu/g,'kw').replace(/x/g,'ks')
-    .replace(/(.)\1+/g,'$1') // collapse doubles
-    .replace(/([^aeiouy])[aeiouy]+/g,'$1') // strip vowels after consonants
-    .replace(/y/g,'i');
-}
-function _levenshtein(a,b){
-  if(a===b)return 0;
-  const m=a.length,n=b.length;
-  if(!m)return n;if(!n)return m;
-  const prev=Array(n+1).fill(0).map((_,i)=>i);
-  for(let i=1;i<=m;i++){
-    let curr=[i];
-    for(let j=1;j<=n;j++){
-      const cost=a[i-1]===b[j-1]?0:1;
-      curr[j]=Math.min(curr[j-1]+1,prev[j]+1,prev[j-1]+cost);
-    }
-    for(let j=0;j<=n;j++)prev[j]=curr[j];
-  }
-  return prev[n];
-}
 function fuzzyMatchPokemon(spoken){
   if(!spoken)return null;
   const cleaned=String(spoken).toLowerCase().trim();

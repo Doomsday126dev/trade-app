@@ -48,6 +48,7 @@ function deepEq(actual, expected, message) {
   'js/domain/scheduleEventRules.js',
   'js/domain/scheduleTradeRules.js',
   'js/domain/pokemonKeys.js',
+  'js/domain/fuzzyText.js',
   'js/utils/textSafety.js'
 ].forEach(loadBrowserScript);
 
@@ -66,6 +67,7 @@ assert(domain.searchStrings, 'searchStrings namespace should exist');
 assert(domain.scheduleEventRules, 'scheduleEventRules namespace should exist');
 assert(domain.scheduleTradeRules, 'scheduleTradeRules namespace should exist');
 assert(domain.pokemonKeys, 'pokemonKeys namespace should exist');
+assert(domain.fuzzyText, 'fuzzyText namespace should exist');
 assert(utils.textSafety, 'textSafety namespace should exist');
 
 const { priLabel, priName, listLabel } = domain.priorities;
@@ -387,6 +389,18 @@ deepEq(
   { qty: 6, dontNeedBack: true },
   'haveEntryValue should drop notes outside giveaway mode'
 );
+
+const { _phoneticCode, _levenshtein } = domain.fuzzyText;
+eq(_levenshtein('kitten', 'sitting'), 3, '_levenshtein should preserve classic edit distance behavior');
+eq(_levenshtein('', 'abc'), 3, '_levenshtein should count insertions from empty source');
+eq(_levenshtein('abc', ''), 3, '_levenshtein should count deletions to empty target');
+eq(_levenshtein('same', 'same'), 0, '_levenshtein should return zero for equal strings');
+eq(_phoneticCode('Pikachu'), 'pkch', '_phoneticCode should preserve current Pikachu normalization');
+eq(_phoneticCode('PIKACHU'), 'pkch', '_phoneticCode should preserve case-insensitive normalization');
+eq(_phoneticCode('Farfetch’d'), 'frftchd', '_phoneticCode should strip punctuation-like characters');
+eq(_phoneticCode('Charizard'), 'chrzrd', '_phoneticCode should preserve current Pokemon-ish normalization');
+eq(_phoneticCode('charzard'), 'chrzrd', '_phoneticCode should preserve current misspelling normalization');
+eq(_phoneticCode(''), '', '_phoneticCode should preserve empty-string behavior');
 
 const { safeFilePart, escHtml, escAttr } = utils.textSafety;
 eq(safeFilePart("Mazer's Trades List 2026!"), 'mazer-s-trades-list-2026', 'safeFilePart should slug names');
