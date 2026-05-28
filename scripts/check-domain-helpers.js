@@ -115,7 +115,9 @@ const {
   castformTypeFilter,
   modSearchFilters,
   modFromSearchFilters,
-  castformTypeFromSearchFilters
+  castformTypeFromSearchFilters,
+  formVariantFilter,
+  formVariantFromSearchFilters
 } = domain.pokemonSearchTerms;
 eq(regionalFormPrefix('A-Raichu'), 'A', 'regionalFormPrefix should find A prefix');
 eq(regionalFormTerm('G-Corsola'), 'galar', 'regionalFormTerm should resolve G prefix');
@@ -123,13 +125,21 @@ eq(regionTermFromDex(25), 'kanto', 'regionTermFromDex should resolve Kanto');
 eq(regionTermFromDex(900), 'hisui', 'regionTermFromDex should resolve Hisui');
 eq(dexSearchTerm({ name: 'A-Raichu', no: 26 }, {}), 'alola&26', 'dexSearchTerm should include Alola qualifier');
 eq(dexSearchTerm({ name: 'P-Tauros (Aqua)', no: 128 }, {}), 'paldea&128', 'dexSearchTerm should include Paldea qualifier');
+eq(dexSearchTerm({ name: 'Raichu', no: 26, region: 'K' }, { 26: true }), 'kanto&26', 'dexSearchTerm should qualify base Kanto entries when dex has regional forms');
+eq(dexSearchTerm({ name: 'Raichu', no: 26 }, { 26: true }), 'kanto&26', 'dexSearchTerm should fallback to dex region for base entries with regional forms');
+eq(dexSearchTerm({ name: 'Raichu', no: 26 }, {}), '26', 'dexSearchTerm should leave base entries unqualified when dex has no regional forms');
 eq(castformTypeFilter({ name: 'Castform (Snowy)', no: 351 }, ''), 'ice', 'castformTypeFilter should resolve Snowy');
 eq(castformTypeFilter({ name: 'Castform', no: 351 }, 'rainy'), 'water', 'castformTypeFilter should resolve rainy modifier');
+eq(castformTypeFilter({ name: 'Castform', no: 351 }, 'sun'), 'fire', 'castformTypeFilter should resolve sun modifier');
+eq(castformTypeFilter({ name: 'Castform', no: 351 }, 'plain'), 'normal', 'castformTypeFilter should resolve plain modifier');
 deepEq(modSearchFilters('female xxs'), ['female', 'xxs'], 'modSearchFilters should parse female and xxs');
 deepEq(modSearchFilters('shiny male xxl'), ['shiny', 'male', 'xxl'], 'modSearchFilters should parse shiny, male, and xxl');
 eq(modFromSearchFilters(['female', 'xxs']), 'f', 'modFromSearchFilters should prefer female');
 eq(modFromSearchFilters(['male', 'xxl']), 'm', 'modFromSearchFilters should prefer male');
 eq(castformTypeFromSearchFilters(['water', 'female']), 'water', 'castformTypeFromSearchFilters should find water');
+eq(castformTypeFromSearchFilters(['normal', 'xxl']), 'normal', 'castformTypeFromSearchFilters should find normal');
+eq(formVariantFilter({ name: 'Basculin (White Stripe)', no: 550 }, 'white'), '', 'formVariantFilter should preserve current empty qualifier behavior');
+eq(formVariantFromSearchFilters(['white']), '', 'formVariantFromSearchFilters should preserve current empty qualifier behavior');
 
 const {
   uniqueEntries,
@@ -173,6 +183,7 @@ const {
   dexStringFromNumbers,
   stringFromSearchItems,
   stringParts,
+  searchPartSort,
   combineStrings,
   combinedStringOptions,
   strLenInfo
@@ -185,6 +196,10 @@ eq(
   'stringFromSearchItems should preserve existing dex-only extraction from item terms'
 );
 deepEq(stringParts(PREFILTER + '26, alola&27'), ['26', 'alola&27'], 'stringParts should trim and split terms');
+deepEq(stringParts('1,2'), ['1', '2'], 'stringParts should split strings without PREFILTER');
+assert(searchPartSort('2', '10') < 0, 'searchPartSort should compare numeric terms naturally');
+assert(searchPartSort('alola&26', 'galar&52') < 0, 'searchPartSort should fallback to locale order when numeric dex values differ predictably');
+assert(searchPartSort('27', 'alola&27') < 0, 'searchPartSort should order equal dex terms by full term text');
 eq(
   combineStrings({ H: PREFILTER + '1,4', M: PREFILTER + '4,7' }, ['H', 'M']),
   PREFILTER + '1,4,7',
@@ -196,9 +211,14 @@ eq(
   'combinedStringOptions should offer High + Medium and All priorities when H and M exist'
 );
 deepEq(strLenInfo('abc'), { len: 3, cls: '' }, 'strLenInfo should classify short strings as safe');
+eq(strLenInfo('x'.repeat(Math.floor(POGO_STR_LIMIT * 0.85))).cls, '', 'strLenInfo should stay safe at the warn boundary floor');
+eq(strLenInfo('x'.repeat(Math.floor(POGO_STR_LIMIT * 0.85) + 1)).cls, 'warn', 'strLenInfo should warn just above the warn boundary');
+eq(strLenInfo('x'.repeat(POGO_STR_LIMIT)).cls, 'warn', 'strLenInfo should warn at the hard limit');
+eq(strLenInfo('x'.repeat(POGO_STR_LIMIT + 1)).cls, 'danger', 'strLenInfo should mark strings over the hard limit as danger');
 assert(strLenInfo('x'.repeat(POGO_STR_LIMIT + 1)).cls !== '', 'strLenInfo should classify over-limit strings');
 
 const {
+  collectEventBonusTexts,
   eventNumberTokenToInt,
   parseSpecialTradeBonus,
   classifyEvent,
@@ -216,6 +236,13 @@ deepEq(
   { bonus: 2, text: 'up to three special trades', kind: 'total' },
   'parseSpecialTradeBonus should preserve current total-to-bonus behavior'
 );
+deepEq(collectEventBonusTexts({ extraData: {} }), [], 'collectEventBonusTexts should preserve empty extraData behavior');
+deepEq(
+  collectEventBonusTexts({ extraData: [{ text: 'first bonus' }, { description: 'second bonus' }, { text: 'first bonus' }] }),
+  ['first bonus', 'second bonus'],
+  'collectEventBonusTexts should walk arrays and dedupe repeated text'
+);
+eq(parseSpecialTradeBonus(['']), null, 'parseSpecialTradeBonus should ignore blank bonus text');
 deepEq(
   classifyEvent({ extraData: { text: 'two additional special trades' } }),
   { bonus: 2, bonusType: 'special', ambiguous: false, bonusText: 'two additional special trades', bonusKind: 'additional' },
@@ -225,6 +252,16 @@ deepEq(
   classifyEvent({ extraData: { text: 'raid bonuses only' } }),
   { bonus: 0, bonusType: 'special', ambiguous: true, bonusText: '' },
   'classifyEvent should leave non-special-trade events ambiguous'
+);
+deepEq(
+  classifyEvent(null),
+  { bonus: 0, bonusType: 'special', ambiguous: true, bonusText: '' },
+  'classifyEvent should preserve null event behavior'
+);
+deepEq(
+  classifyEvent({ extraData: [{ text: 'up to three special trades' }] }),
+  { bonus: 2, bonusType: 'special', ambiguous: false, bonusText: 'up to three special trades', bonusKind: 'total' },
+  'classifyEvent should preserve current array text handling for total special trades'
 );
 eq(getEventId({ eventID: 'abc', name: 'x', start: 1 }), 'abc', 'getEventId should prefer eventID');
 eq(getEventId({ name: 'Event', start: 123 }), 'Event_123', 'getEventId should fallback to name and start');
@@ -253,31 +290,42 @@ deepEq(
 eq(scheduledTradeQuantity({ type: 'regular', regularCount: 25 }), 25, 'scheduledTradeQuantity should use regularCount for regular trades');
 eq(scheduledTradeQuantity({ type: 'regular', regularCount: 999 }), 100, 'scheduledTradeQuantity should cap regular trades at 100');
 eq(scheduledTradeQuantity({ type: 'regular', regularCount: 0 }), 1, 'scheduledTradeQuantity should fallback to 1 for invalid regular counts');
+eq(scheduledTradeQuantity({ type: 'regular' }), 1, 'scheduledTradeQuantity should fallback to 1 when regularCount is missing');
+eq(scheduledTradeQuantity({ type: 'regular', regularCount: '12 trades' }), 12, 'scheduledTradeQuantity should preserve parseInt behavior for regularCount text');
+eq(scheduledTradeQuantity(null), 1, 'scheduledTradeQuantity should preserve null trade behavior');
 eq(scheduledTradeQuantity({ type: 'special', regularCount: 25 }), 1, 'scheduledTradeQuantity should count non-regular trades as 1');
 const tradeRows = [
   { type: 'regular', status: 'scheduled', regularCount: 5 },
   { type: 'regular', status: 'completed', regularCount: 3 },
   { type: 'special', status: 'completed' },
   { type: 'remote', status: 'scheduled' },
-  { status: 'cancelled', regularCount: 2 }
+  { status: 'cancelled', regularCount: 2 },
+  { type: 'regular', status: 'reserved', regularCount: 4 },
+  { type: 'regular' }
 ];
 const summary = summarizeScheduledTrades(tradeRows);
 eq(summary.special, 1, 'summarizeScheduledTrades should count special trades');
-eq(summary.regular, 10, 'summarizeScheduledTrades should count regular quantities, including current cancelled-row behavior');
+eq(summary.regular, 15, 'summarizeScheduledTrades should count regular quantities, including current cancelled/reserved-row behavior');
 eq(summary.remote, 1, 'summarizeScheduledTrades should count remote trades');
-eq(summary.total, 12, 'summarizeScheduledTrades should total trade quantities');
-eq(summary.scheduled, 3, 'summarizeScheduledTrades should count scheduled rows, not regular quantities');
+eq(summary.total, 17, 'summarizeScheduledTrades should total trade quantities');
+eq(summary.scheduled, 5, 'summarizeScheduledTrades should count scheduled rows, not regular quantities');
 eq(summary.completed, 2, 'summarizeScheduledTrades should count completed rows, not regular quantities');
 deepEq(
   summary.byStatus,
   {
     special: { scheduled: 0, completed: 1 },
-    regular: { scheduled: 7, completed: 3 },
+    regular: { scheduled: 12, completed: 3 },
     remote: { scheduled: 1, completed: 0 }
   },
   'summarizeScheduledTrades should preserve current byStatus quantity behavior'
 );
 eq(summary.trades, tradeRows, 'summarizeScheduledTrades should return the original trades array reference');
+deepEq(
+  externalTradePartners({ externalPartners: ['', '  ', 0, false, 'Bob'] }),
+  ['Bob'],
+  'externalTradePartners should filter falsy malformed array partners before coercion'
+);
+deepEq(parseExternalTradePartners(' , Alice,,  Bob , , '), ['Alice', 'Bob'], 'parseExternalTradePartners should drop blank malformed chunks');
 
 const {
   _normGender,
@@ -294,8 +342,12 @@ eq(_normGender('♂'), 'm', '_normGender should normalize male symbol');
 eq(_normGender('unknown'), '', '_normGender should blank unknown gender text');
 deepEq(splitHaveKey('Heracross::m'), { name: 'Heracross', gender: 'm' }, 'splitHaveKey should split male suffix');
 deepEq(splitHaveKey("Farfetch'd::x"), { name: "Farfetch'd::x", gender: '' }, 'splitHaveKey should preserve invalid suffixes');
+deepEq(splitHaveKey("Farfetch'd::f::m"), { name: "Farfetch'd::f", gender: 'm' }, 'splitHaveKey should split only the final valid gender suffix');
+deepEq(splitHaveKey('Heracross::m::x'), { name: 'Heracross::m::x', gender: '' }, 'splitHaveKey should preserve keys with invalid final suffixes');
 eq(joinHaveKey('Heracross', 'female'), 'Heracross::f', 'joinHaveKey should append normalized female suffix');
 eq(joinHaveKey('Heracross', ''), 'Heracross', 'joinHaveKey should leave blank gender off');
+eq(joinHaveKey('', 'female'), '::f', 'joinHaveKey should preserve current blank-name female key behavior');
+eq(joinHaveKey('', ''), '', 'joinHaveKey should preserve current blank-name genderless key behavior');
 eq(
   totalQtyForName({ Heracross: 2, 'Heracross::m': 3, 'Heracross::f': 4 }, 'Heracross'),
   9,
@@ -318,11 +370,17 @@ deepEq(
 );
 deepEq(haveEntryValue(5, 0, { mode: 'mirror' }), { qty: 5, mirrorOnly: true }, 'haveEntryValue should preserve mirror shape');
 deepEq(haveEntryValue(5, 0, { mode: 'giveaway', note: 'take it' }), { qty: 5, giveaway: true, note: 'take it' }, 'haveEntryValue should preserve giveaway note');
+deepEq(haveEntryValue(0, { qty: 3, giveaway: true, note: 'old note' }, {}), { qty: 0, giveaway: true, note: 'old note' }, 'haveEntryValue should preserve previous object mode and note at zero quantity');
 eq(haveEntryValue(0, { qty: 3, mirrorOnly: true }, { mode: 'any' }), 0, 'haveEntryValue should preserve direct zero any-mode behavior');
 deepEq(
   haveEntryValue(4, { qty: 3, giveaway: true, note: 'old note' }, {}),
   { qty: 4, giveaway: true, note: 'old note' },
   'haveEntryValue should preserve previous mode and note when opts are blank'
+);
+deepEq(
+  haveEntryValue(4, { qty: 3, giveaway: true, note: 'old note' }, { mode: 'giveaway', note: '' }),
+  { qty: 4, giveaway: true },
+  'haveEntryValue should remove previous notes when giveaway mode receives blank note'
 );
 deepEq(
   haveEntryValue(6, { qty: 3, giveaway: true, note: 'old note' }, { mode: 'dontNeedBack' }),
