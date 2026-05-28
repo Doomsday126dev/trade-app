@@ -1695,3 +1695,40 @@
 
 ### Instructions for the next contributor
 - Do not reintroduce combined generated PoGo strings like `shiny&25,26` without reviewing Pokémon GO operator precedence. The current app intentionally keeps exported combined strings dex-only.
+
+## 2026-05-27 - Codex - Search string domain helper extraction
+
+### Summary
+- Extracted pure Pokémon GO search-string constants and helper functions from `index.html` into a classic browser helper module.
+- Bound the exported helpers back to the original local names in `index.html`, so existing call sites and generated string behavior remain unchanged.
+- Added repeatable `check:domain` coverage for exact prefilter text, dex-only string generation, string splitting, combined priority strings, and string length classification.
+
+### Files touched
+- `index.html`
+- `js/domain/searchStrings.js`
+- `scripts/check-domain-helpers.js`
+- `docs/MAINTENANCE-LOG.md`
+
+### Feature flags added/changed
+- None.
+
+### Firebase paths added/changed
+- None.
+
+### Security rules changes needed
+- None.
+
+### Manual test checklist
+- Run `node --check js/domain/searchStrings.js`.
+- Run `node --check scripts/check-domain-helpers.js`.
+- Run `npm run check:domain`.
+- Run the inline script parse check for `index.html`.
+- Run local visual smoke; auth-backed flows may skip locally per `docs/TESTING.md`.
+- After deploy, run `PLAYWRIGHT_BASE_URL=https://doomsday126dev.github.io/trade-app/ POGO_TEST_USER=TestUser POGO_TEST_PIN=123456 npm run visual`.
+
+### Known risks / TODOs
+- `stringFromSearchItems` intentionally keeps the existing dex-only extraction behavior from `{term}` objects. It does not preserve region-qualified terms in generated combined strings.
+- `buildStrings`, `entrySearchFilters`, import/export parsing, and string UI markup remain in `index.html` for later, separately tested extractions.
+
+### Instructions for the next contributor
+- Treat changes to `PREFILTER`, PoGo operator precedence, or region-qualified generated strings as product behavior changes, not modularization cleanup.

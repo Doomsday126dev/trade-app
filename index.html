@@ -2362,6 +2362,7 @@ window.__pogoBootWatch=setTimeout(function(){
 <script src="js/domain/priorityValues.js"></script>
 <script src="js/domain/scheduleDates.js"></script>
 <script src="js/domain/pokemonSearchTerms.js"></script>
+<script src="js/domain/searchStrings.js"></script>
 <script src="js/utils/textSafety.js"></script>
 <script>
 let initializeApp,getDatabase,ref,set,get,onValue,update,getAuth,signInWithEmailAndPassword,createUserWithEmailAndPassword,firebaseSignOut,updatePassword,deleteUser,onAuthStateChanged;
@@ -2402,7 +2403,6 @@ async function loadFirebaseSdk(){
 const DB=window.POGO_TRADE_DB;
 if(!DB)throw new Error('Trade data failed to load');
 
-const PREFILTER="!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&";
 const OWNER="Doomsday126";
 const APP_VERSION="4.6.37";
 const MULTI_COMMUNITY_ENABLED=false;
@@ -2437,6 +2437,9 @@ const {isoDate,parseIsoDate,todayIso,startOfWeek,addDays,fmtWeekRange,WKDS}=sche
 const pokemonSearchTermsDomain=window.PogoDomain?.pokemonSearchTerms;
 if(!pokemonSearchTermsDomain)throw new Error('Pokemon search term helpers failed to load');
 const {REGION_CODE_TERMS,REGIONAL_FORM_TERMS,REGION_SEARCH_TERMS,CASTFORM_TYPE_TERMS,FORM_QUALIFIER_TERMS,regionalFormPrefix,regionalFormTerm,regionTermFromDex,dexRegionTerm,dexSearchTerm,castformTypeFilter,modSearchFilters,modFromSearchFilters,castformTypeFromSearchFilters,formVariantFilter,formVariantFromSearchFilters}=pokemonSearchTermsDomain;
+const searchStringDomain=window.PogoDomain?.searchStrings;
+if(!searchStringDomain)throw new Error('Search string helpers failed to load');
+const {PREFILTER,POGO_STR_LIMIT,dexStringFromNumbers,stringFromSearchItems,stringParts,searchPartSort,combineStrings,combinedStringOptions,strLenInfo}=searchStringDomain;
 const textSafety=window.PogoUtils?.textSafety;
 if(!textSafety)throw new Error('Text safety helpers failed to load');
 const {safeFilePart,escHtml,escAttr}=textSafety;
@@ -2568,7 +2571,6 @@ let schedSelectedDate=null; // currently selected day (ISO YYYY-MM-DD)
 let voiceRecognition=null;
 let pokemonTypes={};
 let entryTimestamps={}; // for conflict detection
-const POGO_STR_LIMIT=1500;
 const BACKUP_REMINDER_INTERVAL=7*24*60*60*1000; // 7 days
 const AUTH_VERSION_SCAN_LIMIT=12;
 // Pokemon primary type colors (from PokeAPI)
@@ -6326,15 +6328,6 @@ function removeEntry(name){
 }
 
 // ── SEARCH STRINGS ────────────────────────────────────────────
-function dexStringFromNumbers(nums){
-  const dexes=[...new Set(nums.map(n=>parseInt(n)).filter(Number.isFinite))].sort((a,b)=>a-b);
-  return dexes.length?PREFILTER+dexes.join(','):'';
-}
-function stringFromSearchItems(items){
-  if(!items.length)return'';
-  const dexes=[...new Set(items.map(({term})=>parseInt(String(term||'').match(/\d+/)?.[0]||'',10)).filter(Number.isFinite))].sort((a,b)=>a-b);
-  return dexes.length?PREFILTER+dexes.join(','):'';
-}
 function buildStrings(type,username){
   const list=allData[type]?.[username]||{};
   if(!Object.keys(list).length)return null;
@@ -6393,30 +6386,6 @@ function buildStrings(type,username){
   return Object.keys(out).length?out:null;
 }
 
-function stringParts(str){
-  const body=String(str||'').startsWith(PREFILTER)?String(str).slice(PREFILTER.length):String(str||'');
-  return body.split(',').map(x=>x.trim()).filter(Boolean);
-}
-function searchPartSort(a,b){
-  const da=parseInt(String(a).match(/\d+/)?.[0]||'0');
-  const db=parseInt(String(b).match(/\d+/)?.[0]||'0');
-  return da-db||String(a).localeCompare(String(b),undefined,{numeric:true,sensitivity:'base'});
-}
-function combineStrings(strs,levels){
-  const parts=[];
-  levels.forEach(p=>{if(strs[p])parts.push(...stringParts(strs[p]));});
-  const unique=[...new Set(parts)].sort(searchPartSort);
-  return unique.length?PREFILTER+unique.join(','):'';
-}
-function combinedStringOptions(strs){
-  return[
-    {levels:['H','M'],label:'High + Medium'},
-    {levels:['H','L'],label:'High + Low'},
-    {levels:['M','L'],label:'Medium + Low'},
-    {levels:['H','M','L'],label:'All priorities'}
-  ].map(o=>({...o,value:combineStrings(strs,o.levels)}))
-    .filter(o=>o.value&&o.levels.filter(p=>strs[p]).length>1);
-}
 function strLevelsHtml(strs){
   const combos=combinedStringOptions(strs);
   return`<div class="str-levels">${['H','M','L'].filter(p=>strs[p]).map(p=>`
@@ -9330,11 +9299,6 @@ function applyTypeColors(){
 }
 
 // ── SEARCH STRING VALIDATION (#12) ────────────────────────────
-function strLenInfo(str){
-  const len=(str||'').length;
-  const cls=len>POGO_STR_LIMIT?'danger':len>POGO_STR_LIMIT*0.85?'warn':'';
-  return{len,cls};
-}
 function strLenHtml(str){
   const{len,cls}=strLenInfo(str);
   const limit=POGO_STR_LIMIT;

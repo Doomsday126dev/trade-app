@@ -43,6 +43,7 @@ function deepEq(actual, expected, message) {
   'js/domain/priorityValues.js',
   'js/domain/scheduleDates.js',
   'js/domain/pokemonSearchTerms.js',
+  'js/domain/searchStrings.js',
   'js/utils/textSafety.js'
 ].forEach(loadBrowserScript);
 
@@ -56,6 +57,7 @@ assert(domain.username, 'username namespace should exist');
 assert(domain.priorityValues, 'priorityValues namespace should exist');
 assert(domain.scheduleDates, 'scheduleDates namespace should exist');
 assert(domain.pokemonSearchTerms, 'pokemonSearchTerms namespace should exist');
+assert(domain.searchStrings, 'searchStrings namespace should exist');
 assert(utils.textSafety, 'textSafety namespace should exist');
 
 const { priLabel, priName, listLabel } = domain.priorities;
@@ -120,6 +122,37 @@ deepEq(modSearchFilters('shiny male xxl'), ['shiny', 'male', 'xxl'], 'modSearchF
 eq(modFromSearchFilters(['female', 'xxs']), 'f', 'modFromSearchFilters should prefer female');
 eq(modFromSearchFilters(['male', 'xxl']), 'm', 'modFromSearchFilters should prefer male');
 eq(castformTypeFromSearchFilters(['water', 'female']), 'water', 'castformTypeFromSearchFilters should find water');
+
+const {
+  PREFILTER,
+  POGO_STR_LIMIT,
+  dexStringFromNumbers,
+  stringFromSearchItems,
+  stringParts,
+  combineStrings,
+  combinedStringOptions,
+  strLenInfo
+} = domain.searchStrings;
+eq(PREFILTER, '!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&', 'PREFILTER should stay exact');
+eq(dexStringFromNumbers([26, 1, 26]), PREFILTER + '1,26', 'dexStringFromNumbers should sort and dedupe dex numbers');
+eq(
+  stringFromSearchItems([{ term: '26' }, { term: 'alola&27' }]),
+  PREFILTER + '26,27',
+  'stringFromSearchItems should preserve existing dex-only extraction from item terms'
+);
+deepEq(stringParts(PREFILTER + '26, alola&27'), ['26', 'alola&27'], 'stringParts should trim and split terms');
+eq(
+  combineStrings({ H: PREFILTER + '1,4', M: PREFILTER + '4,7' }, ['H', 'M']),
+  PREFILTER + '1,4,7',
+  'combineStrings should merge, dedupe, and sort selected priority strings'
+);
+eq(
+  combinedStringOptions({ H: PREFILTER + '1', M: PREFILTER + '4' }).length,
+  2,
+  'combinedStringOptions should offer High + Medium and All priorities when H and M exist'
+);
+deepEq(strLenInfo('abc'), { len: 3, cls: '' }, 'strLenInfo should classify short strings as safe');
+assert(strLenInfo('x'.repeat(POGO_STR_LIMIT + 1)).cls !== '', 'strLenInfo should classify over-limit strings');
 
 const { safeFilePart, escHtml, escAttr } = utils.textSafety;
 eq(safeFilePart("Mazer's Trades List 2026!"), 'mazer-s-trades-list-2026', 'safeFilePart should slug names');
