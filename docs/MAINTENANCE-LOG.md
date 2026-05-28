@@ -1808,3 +1808,42 @@
 ### Instructions for the next contributor
 - Treat any quota semantics change as a product behavior change, not modularization cleanup.
 - Keep extracting only helpers that receive all needed state as arguments until schedule render/write coverage is broader.
+
+## 2026-05-28 - Codex - Pokemon inventory key helper extraction
+
+### Summary
+- Extracted pure inventory/stored Pokemon key helpers from `index.html` into `js/domain/pokemonKeys.js`.
+- Bound the exported helpers back to their original local names in `index.html`, so inventory, offer, and trade-match call sites continue to use the same symbols.
+- Added repeatable `check:domain` coverage for gender key parsing, inventory quantity aggregation, inventory entry mode precedence, note preservation, and current zero-value behavior.
+
+### Files touched
+- `index.html`
+- `js/domain/pokemonKeys.js`
+- `scripts/check-domain-helpers.js`
+- `docs/MAINTENANCE-LOG.md`
+
+### Feature flags added/changed
+- None.
+
+### Firebase paths added/changed
+- None.
+
+### Security rules changes needed
+- None.
+
+### Manual test checklist
+- Run `node --check js/domain/pokemonKeys.js`.
+- Run `node --check scripts/check-domain-helpers.js`.
+- Run `npm run check:domain`.
+- Run the inline script parse check for `index.html`.
+- Run `git diff --check`.
+- Local visual smoke is optional; auth-backed flows may skip locally per `docs/TESTING.md`.
+
+### Known risks / TODOs
+- The extracted helpers preserve the existing `dontNeedBack` stored field for the visible "Fair trade" mode. Do not rename this field without a migration plan.
+- `setHaveEntry`, `cycleInventoryGender`, inventory writes, offer writes, and trade-match behavior remain in `index.html`.
+- `normalizeSpriteKey`, `costumeBaseName`, `spriteEntryForListItem`, and costume dedupe/source helpers remain in `index.html` because they touch sprite/catalog behavior.
+
+### Instructions for the next contributor
+- Treat inventory mode semantics and stored object shape as data-model behavior, not cleanup.
+- Keep any future extraction around inventory writes separate from pure key/value normalization and cover it with browser smoke tests.

@@ -46,6 +46,7 @@ function deepEq(actual, expected, message) {
   'js/domain/searchStrings.js',
   'js/domain/scheduleEventRules.js',
   'js/domain/scheduleTradeRules.js',
+  'js/domain/pokemonKeys.js',
   'js/utils/textSafety.js'
 ].forEach(loadBrowserScript);
 
@@ -62,6 +63,7 @@ assert(domain.pokemonSearchTerms, 'pokemonSearchTerms namespace should exist');
 assert(domain.searchStrings, 'searchStrings namespace should exist');
 assert(domain.scheduleEventRules, 'scheduleEventRules namespace should exist');
 assert(domain.scheduleTradeRules, 'scheduleTradeRules namespace should exist');
+assert(domain.pokemonKeys, 'pokemonKeys namespace should exist');
 assert(utils.textSafety, 'textSafety namespace should exist');
 
 const { priLabel, priName, listLabel } = domain.priorities;
@@ -238,6 +240,57 @@ deepEq(
   'summarizeScheduledTrades should preserve current byStatus quantity behavior'
 );
 eq(summary.trades, tradeRows, 'summarizeScheduledTrades should return the original trades array reference');
+
+const {
+  _normGender,
+  splitHaveKey,
+  joinHaveKey,
+  totalQtyForName,
+  haveEntryInfo,
+  haveEntryValue
+} = domain.pokemonKeys;
+eq(_normGender('female'), 'f', '_normGender should normalize female');
+eq(_normGender('♀'), 'f', '_normGender should normalize female symbol');
+eq(_normGender('male'), 'm', '_normGender should normalize male');
+eq(_normGender('♂'), 'm', '_normGender should normalize male symbol');
+eq(_normGender('unknown'), '', '_normGender should blank unknown gender text');
+deepEq(splitHaveKey('Heracross::m'), { name: 'Heracross', gender: 'm' }, 'splitHaveKey should split male suffix');
+deepEq(splitHaveKey("Farfetch'd::x"), { name: "Farfetch'd::x", gender: '' }, 'splitHaveKey should preserve invalid suffixes');
+eq(joinHaveKey('Heracross', 'female'), 'Heracross::f', 'joinHaveKey should append normalized female suffix');
+eq(joinHaveKey('Heracross', ''), 'Heracross', 'joinHaveKey should leave blank gender off');
+eq(
+  totalQtyForName({ Heracross: 2, 'Heracross::m': 3, 'Heracross::f': 4 }, 'Heracross'),
+  9,
+  'totalQtyForName should aggregate genderless, male, and female keys'
+);
+deepEq(
+  haveEntryInfo(7),
+  { qty: 7, mirrorOnly: false, dontNeedBack: false, giveaway: false, note: '', mode: 'any' },
+  'haveEntryInfo should preserve numeric entries as any mode'
+);
+deepEq(
+  haveEntryInfo({ qty: 12, mirrorOnly: true, dontNeedBack: true }),
+  { qty: 12, mirrorOnly: true, dontNeedBack: false, giveaway: false, note: '', mode: 'mirror' },
+  'haveEntryInfo should preserve mirror mode precedence over fair trade'
+);
+deepEq(
+  haveEntryInfo({ qty: 1000, giveaway: true, note: 'x'.repeat(141) }),
+  { qty: 999, mirrorOnly: false, dontNeedBack: false, giveaway: true, note: 'x'.repeat(140), mode: 'giveaway' },
+  'haveEntryInfo should clamp qty and note length'
+);
+deepEq(haveEntryValue(5, 0, { mode: 'mirror' }), { qty: 5, mirrorOnly: true }, 'haveEntryValue should preserve mirror shape');
+deepEq(haveEntryValue(5, 0, { mode: 'giveaway', note: 'take it' }), { qty: 5, giveaway: true, note: 'take it' }, 'haveEntryValue should preserve giveaway note');
+eq(haveEntryValue(0, { qty: 3, mirrorOnly: true }, { mode: 'any' }), 0, 'haveEntryValue should preserve direct zero any-mode behavior');
+deepEq(
+  haveEntryValue(4, { qty: 3, giveaway: true, note: 'old note' }, {}),
+  { qty: 4, giveaway: true, note: 'old note' },
+  'haveEntryValue should preserve previous mode and note when opts are blank'
+);
+deepEq(
+  haveEntryValue(6, { qty: 3, giveaway: true, note: 'old note' }, { mode: 'dontNeedBack' }),
+  { qty: 6, dontNeedBack: true },
+  'haveEntryValue should drop notes outside giveaway mode'
+);
 
 const { safeFilePart, escHtml, escAttr } = utils.textSafety;
 eq(safeFilePart("Mazer's Trades List 2026!"), 'mazer-s-trades-list-2026', 'safeFilePart should slug names');
