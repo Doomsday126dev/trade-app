@@ -2251,3 +2251,28 @@
 ### Known risks / TODOs
 - `pokemonEntryRules` now depends on `pokemonSearchTerms`; any future re-ordering of the module `<script>` tags must keep `pokemonSearchTerms.js` loading first.
 - This is the planned final small modularization pass — remaining candidates are tiny, impure (`diffDetailsHtml`/`listSource`), or guardrailed data tables. Pause and reassess before further extraction.
+
+## 2026-05-29 - Codex - Backup/restore safety hardening
+
+### Summary
+- Added function-level admin guards to `exportData()`, `triggerRestore()`, and `restoreData(file)` so direct console calls by non-admin users return before local mutation or Firebase restore attempts.
+- `restoreData(file)` now validates the parsed backup before `saveLocal(data)` or `allData=data`: the payload must be a plain object, include the required top-level sections, and contain at least one user.
+- Strengthened the restore confirmation copy to make clear that restore replaces local app data and may attempt a full Firebase sync.
+- Reset the hidden restore file input before opening and after restore/cancel/error paths so selecting the same backup file again still fires the `change` event.
+
+### Files touched
+- `index.html`
+- `docs/MAINTENANCE-LOG.md`
+
+### Firebase paths / rules
+- No Firebase paths or security rules changed.
+- Root Firebase restore remains best-effort/admin-only. Current rules may block `set(ref(db,'/'),data)`, preserving the existing “restored locally, Firebase sync was blocked by rules” path.
+
+### Manual test checklist
+- Admin export still downloads the same backup JSON format and updates the backup reminder.
+- Admin restore with invalid JSON, missing required sections, or zero users fails before local state mutation.
+- Admin restore cancel leaves local data unchanged and allows selecting the same file again.
+- Non-admin console calls to `exportData()`, `triggerRestore()`, and `restoreData(file)` show an admin-only message and do not mutate local state or attempt Firebase writes.
+
+### Known risks / TODOs
+- Full root restore is still a blunt recovery tool. A future safer restore flow should restore selected sections or use a server-side/admin-only tool instead of attempting a root client write.

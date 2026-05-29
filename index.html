@@ -6363,7 +6363,30 @@ function _renderStringsInner(){
 }
 
 // ── EXPORT ────────────────────────────────────────────────────
+function canUseBackupTools(){
+  return !!(cur&&allData.users?.[cur]?.isAdmin);
+}
+function guardBackupTool(){
+  if(canUseBackupTools())return true;
+  console.warn('Admin-only backup tool blocked');
+  toast('⚠️ Admin only');
+  return false;
+}
+function resetRestoreInput(){
+  const inp=document.getElementById('restore-file');if(inp)inp.value='';
+}
+function validatedBackupPayload(raw){
+  if(!raw||typeof raw!=='object'||Array.isArray(raw))throw new Error('Backup must be a JSON object');
+  const required=['users','wishlist','dynamax','costumes'];
+  const missing=required.filter(k=>!raw[k]||typeof raw[k]!=='object'||Array.isArray(raw[k]));
+  if(missing.length)throw new Error('Missing required backup sections: '+missing.join(', '));
+  const data=normalizeData(raw);
+  const userCount=Object.keys(data.users||{}).length;
+  if(!userCount)throw new Error('Backup has no users');
+  return{data,userCount};
+}
 function exportData(){
+  if(!guardBackupTool())return false;
   const s=getLocal();
   const blob=new Blob([JSON.stringify(s,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob);
@@ -6373,16 +6396,21 @@ function exportData(){
   lsSet('pogoLastBackup',Date.now());
   renderBackupReminder();
   toast('✅ Backup downloaded!');
+  return true;
 }
-function triggerRestore(){document.getElementById('restore-file')?.click();}
+function triggerRestore(){
+  if(!guardBackupTool()){resetRestoreInput();return;}
+  resetRestoreInput();
+  document.getElementById('restore-file')?.click();
+}
 async function restoreData(file){
-  if(!file)return;
+  if(!guardBackupTool()){resetRestoreInput();return;}
+  if(!file){resetRestoreInput();return;}
   try{
     const text=await file.text();
-    const data=normalizeData(JSON.parse(text));
-    if(!data.users||!data.wishlist||!data.dynamax||!data.costumes)throw new Error('Missing required backup sections (wishlist/dynamax/costumes)');
-    const userCount=Object.keys(data.users).length;
-    if(!confirm(`Restore backup with ${userCount} members? This replaces the current local data${fbOn?' and syncs it to Firebase':''}.`))return;
+    const {data,userCount}=validatedBackupPayload(JSON.parse(text));
+    const syncText=fbOn&&db?'replace local app data and attempt to sync the full backup to Firebase':'replace local app data only';
+    if(!confirm(`Restore backup with ${userCount} member${userCount===1?'':'s'}?\n\nThis will ${syncText}.\n\nFirebase root restore may be blocked by security rules. Continue only if you trust this backup.`))return;
     saveLocal(data);allData=data;
     let synced=true;
     if(fbOn&&db)await set(ref(db,'/'),data).catch(()=>{synced=false;});
@@ -6390,7 +6418,7 @@ async function restoreData(file){
   }catch(e){
     toast('⚠️ Restore failed: '+(e.message||'invalid backup'));
   }finally{
-    const inp=document.getElementById('restore-file');if(inp)inp.value='';
+    resetRestoreInput();
   }
 }
 function renderSecurityPanel(){
@@ -11259,7 +11287,7 @@ function renderBackupReminder(){
   slot.innerHTML=`<div class="backup-reminder">
     <span>📦 Last backup: ${last?days+' days ago':'never'}. Recommended weekly to protect community data.</span>
     <div style="display:flex;gap:6px">
-      <button class="backup-reminder-btn" onclick="exportData();recordBackup()">Backup now</button>
+      <button class="backup-reminder-btn" onclick="if(exportData())recordBackup()">Backup now</button>
       <button class="backup-reminder-dismiss" onclick="lsSet('pogoBackupDismissed',Date.now());renderBackupReminder()" aria-label="Dismiss reminder">×</button>
     </div>
   </div>`;
