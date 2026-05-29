@@ -8,6 +8,7 @@
   },
   "scripts": {
     "check:domain": "node scripts/check-domain-helpers.js",
+    "check:community": "node scripts/check-community-membership.js",
     "visual": "playwright test",
     "visual:headed": "playwright test --headed"
   },
