@@ -50,6 +50,7 @@ function deepEq(actual, expected, message) {
   'js/domain/pokemonKeys.js',
   'js/domain/fuzzyText.js',
   'js/domain/autocompleteText.js',
+  'js/domain/autocompleteMatching.js',
   'js/domain/relativeTime.js',
   'js/domain/spriteSlugs.js',
   'js/utils/textSafety.js'
@@ -72,6 +73,7 @@ assert(domain.scheduleTradeRules, 'scheduleTradeRules namespace should exist');
 assert(domain.pokemonKeys, 'pokemonKeys namespace should exist');
 assert(domain.fuzzyText, 'fuzzyText namespace should exist');
 assert(domain.autocompleteText, 'autocompleteText namespace should exist');
+assert(domain.autocompleteMatching, 'autocompleteMatching namespace should exist');
 assert(domain.relativeTime, 'relativeTime namespace should exist');
 assert(domain.spriteSlugs, 'spriteSlugs namespace should exist');
 assert(utils.textSafety, 'textSafety namespace should exist');
@@ -483,6 +485,41 @@ eq(normalizeAcText(0), '', 'normalizeAcText should preserve zero behavior');
 eq(normalizeAcText(25), '25', 'normalizeAcText should stringify truthy numbers');
 eq(normalizeAcText({}), 'object object', 'normalizeAcText should preserve object stringification behavior');
 eq(normalizeAcText(['Pika', 'Gmax']), 'pikachu gigantamax', 'normalizeAcText should preserve array stringification behavior');
+
+// --- autocompleteMatching ---
+const { AC_RESULT_LIMIT, acItemSearchText, acMatchScore } = domain.autocompleteMatching;
+eq(AC_RESULT_LIMIT, 50, 'AC_RESULT_LIMIT should preserve current result cap');
+eq(
+  acItemSearchText({ name: 'Pikachu', dn: 'Pikachu', no: 25 }),
+  'pikachu pikachu 25 25',
+  'acItemSearchText should include normalized name, display name, and dex text'
+);
+assert(
+  acItemSearchText({ name: 'Unown (?)', dn: 'Unown (?)', no: 201 }).includes('questionmark'),
+  'acItemSearchText should include question-mark aliases for Unown (?)'
+);
+assert(
+  acItemSearchText({ name: 'Unown (!)', dn: 'Unown (!)', no: 201 }).includes('exclamationmark'),
+  'acItemSearchText should include exclamation-mark aliases for Unown (!)'
+);
+eq(
+  acItemSearchText({ name: 'Pika Libre', dn: 'Pika Libre', no: 25 }),
+  'pikachu libre pikachu libre 25 25',
+  'acItemSearchText should preserve current pika alias expansion'
+);
+assert(
+  acItemSearchText({ name: 'A-Raichu', dn: 'A-Raichu', no: 26 }).includes('26'),
+  'acItemSearchText should include dex-number text when present'
+);
+eq(acMatchScore({ name: 'Pikachu', dn: 'Pikachu', no: 25 }, ''), -1, 'acMatchScore should reject blank queries');
+eq(acMatchScore({ search: 'pikachu libre', no: 25 }, 'Pika Libre'), 1, 'acMatchScore should score exact normalized matches');
+eq(acMatchScore({ search: 'pikachu libre', no: 25 }, 'pika'), 2, 'acMatchScore should score prefix matches');
+eq(acMatchScore({ search: 'pikachu libre', no: 25 }, 'libre'), 3, 'acMatchScore should score contains matches');
+eq(acMatchScore({ search: 'pikachu libre costume', no: 25 }, 'libre pika'), 10, 'acMatchScore should score token matches after exact/prefix/includes');
+eq(acMatchScore({ search: 'pikachu 25', no: 25 }, '25'), 0, 'acMatchScore should score exact pure dex queries first');
+eq(acMatchScore({ search: 'pikachu 25', no: 25 }, '2'), 1, 'acMatchScore should score pure dex prefixes');
+eq(acMatchScore({ search: 'pikachu 25', no: 25 }, '999'), -1, 'acMatchScore should reject unmatched pure dex queries');
+eq(acMatchScore({ search: 'pikachu libre', no: 25 }, 'raichu'), -1, 'acMatchScore should reject no-match text queries');
 
 // --- relativeTime ---
 // These helpers compute deltas against Date.now() internally, so tests build

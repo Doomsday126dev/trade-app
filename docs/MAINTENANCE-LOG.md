@@ -2069,3 +2069,26 @@
 ### Known risks / TODOs
 - Autocomplete UI behavior is not directly covered by the deployed smoke suite; this extraction is protected by golden helper tests and script-load guards.
 - Add an autocomplete-specific smoke test before changing scoring, rendering, or alias behavior.
+
+## 2026-05-28 - Codex - Autocomplete matching helper extraction
+
+### Summary
+- Extracted `AC_RESULT_LIMIT`, `acItemSearchText(e)`, and `acMatchScore(e, rawQuery)` from `index.html` into `js/domain/autocompleteMatching.js`.
+- The new classic script depends on `js/domain/autocompleteText.js` and loads immediately after it; `index.html` rebinds the same local names so My List, special trade board, and Inventory autocomplete call sites remain unchanged.
+- Added golden domain checks for result cap, normalized autocomplete search text, Unown punctuation aliases, pika alias behavior, dex matching, prefix/includes/token scoring, blank-query handling, and no-match behavior.
+
+### Files touched
+- `index.html`
+- `js/domain/autocompleteMatching.js`
+- `scripts/check-domain-helpers.js`
+- `docs/MAINTENANCE-LOG.md`
+
+### Verification
+- Run `node --check js/domain/autocompleteMatching.js`.
+- Run `node --check scripts/check-domain-helpers.js`.
+- Run `npm run check:domain`.
+- Run the inline `index.html` parse check.
+- Run `git diff --check`.
+
+### Known risks / TODOs
+- Autocomplete rendering and event handlers remain inline and are not covered by deployed smoke. Add focused autocomplete UI smoke before changing scoring behavior or result rendering.
