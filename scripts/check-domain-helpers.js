@@ -57,7 +57,8 @@ function deepEq(actual, expected, message) {
   'js/domain/relativeTime.js',
   'js/domain/spriteSlugs.js',
   'js/utils/textSafety.js',
-  'js/ui/stringPanels.js'
+  'js/ui/stringPanels.js',
+  'js/ui/emptyState.js'
 ].forEach(loadBrowserScript);
 
 const domain = context.window.PogoDomain;
@@ -87,6 +88,7 @@ assert(domain.spriteSlugs, 'spriteSlugs namespace should exist');
 assert(utils.textSafety, 'textSafety namespace should exist');
 assert(ui.stringHtml, 'stringHtml namespace should exist');
 assert(ui.stringPanels, 'stringPanels namespace should exist');
+assert(ui.emptyState, 'emptyState namespace should exist');
 
 // --- priorities ---
 const { priLabel, priName, listLabel, sortEntries } = domain.priorities;
@@ -848,5 +850,22 @@ eq(strLevelsHtml({"L":"!4*&!traded&!shiny&CP-2500&!shadow&!purified&!background&
 const escSnapshot = strLevelsHtml({ H: 'a&b"c<d' });
 assert(escSnapshot.includes('data-copy="a&amp;b&quot;c&lt;d"'), 'strLevelsHtml data-copy should use escAttr-escaped value');
 assert(escSnapshot.includes('<div class="strbox">a&amp;b&quot;c&lt;d</div>'), 'strLevelsHtml strbox should use escHtml-escaped value');
+
+// --- emptyState ---
+const { emptyHtml, EMPTY_SVGS } = ui.emptyState;
+assert(EMPTY_SVGS && typeof EMPTY_SVGS === 'object', 'EMPTY_SVGS map should exist');
+// known SVG icons render the inline <svg> markup
+eq(emptyHtml('No matches','Clear the filter.','🔍'), "<div class=\"empty\"><svg class=\"empty-svg\" viewBox=\"0 0 64 64\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"28\" cy=\"28\" r=\"14\"/><line x1=\"38\" y1=\"38\" x2=\"50\" y2=\"50\"/></svg><div class=\"empty-t\">No matches</div><div class=\"empty-s\">Clear the filter.</div></div>", 'emptyHtml search icon');
+eq(emptyHtml('No search strings yet','','📋'), "<div class=\"empty\"><svg class=\"empty-svg\" viewBox=\"0 0 64 64\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"14\" y=\"8\" width=\"36\" height=\"48\" rx=\"3\"/><line x1=\"20\" y1=\"20\" x2=\"44\" y2=\"20\"/><line x1=\"20\" y1=\"28\" x2=\"44\" y2=\"28\"/><line x1=\"20\" y1=\"36\" x2=\"36\" y2=\"36\"/><circle cx=\"44\" cy=\"44\" r=\"7\" stroke-dasharray=\"2 3\"/></svg><div class=\"empty-t\">No search strings yet</div></div>", 'emptyHtml clipboard icon, no subtitle');
+eq(emptyHtml('Settings','Adjust below','⚙️'), "<div class=\"empty\"><svg class=\"empty-svg\" viewBox=\"0 0 64 64\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"32\" cy=\"32\" r=\"6\"/><path d=\"M32 12v6M32 46v6M52 32h-6M18 32h-6M46 18l-4 4M22 42l-4 4M46 46l-4-4M22 22l-4-4\"/></svg><div class=\"empty-t\">Settings</div><div class=\"empty-s\">Adjust below</div></div>", 'emptyHtml gear icon');
+// unknown icon falls back to <div class="empty-i">icon</div>
+eq(emptyHtml('Nothing','sub','🎒'), "<div class=\"empty\"><div class=\"empty-i\">🎒</div><div class=\"empty-t\">Nothing</div><div class=\"empty-s\">sub</div></div>", 'emptyHtml unknown icon fallback');
+// subtitle present vs omitted
+eq(emptyHtml('Title','A subtitle','🔍'), "<div class=\"empty\"><svg class=\"empty-svg\" viewBox=\"0 0 64 64\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"28\" cy=\"28\" r=\"14\"/><line x1=\"38\" y1=\"38\" x2=\"50\" y2=\"50\"/></svg><div class=\"empty-t\">Title</div><div class=\"empty-s\">A subtitle</div></div>", 'emptyHtml with subtitle');
+eq(emptyHtml('Title','','🔍'), "<div class=\"empty\"><svg class=\"empty-svg\" viewBox=\"0 0 64 64\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"28\" cy=\"28\" r=\"14\"/><line x1=\"38\" y1=\"38\" x2=\"50\" y2=\"50\"/></svg><div class=\"empty-t\">Title</div></div>", 'emptyHtml without subtitle');
+// raw/unescaped behavior for title, subtitle, and fallback icon (no escaping is applied)
+eq(emptyHtml('<b>a&b</b>','<i>s"x</i>','🌟'), "<div class=\"empty\"><div class=\"empty-i\">🌟</div><div class=\"empty-t\"><b>a&b</b></div><div class=\"empty-s\"><i>s\"x</i></div></div>", 'emptyHtml leaves t/s/icon raw and unescaped');
+assert(emptyHtml('<b>a&b</b>','','🌟').includes('<b>a&b</b>'), 'title is not HTML-escaped');
+assert(emptyHtml('x','','🌟').includes('<div class="empty-i">🌟</div>'), 'unknown icon rendered raw in fallback');
 
 console.log('Domain helper checks passed.');

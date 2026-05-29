@@ -2196,3 +2196,31 @@
 - `renderShareView` (the public share page) is not covered by the deployed smoke; rely on the golden snapshots for that call site.
 - `copyStr` and `toggleComboStrings` globals remain inline; `strLevelsHtml` emits them as string literals only.
 - Render bodies and the remaining badge/empty-state HTML helpers stay inline.
+
+## 2026-05-29 - Claude - Empty-state HTML helper extraction
+
+### Summary
+- Extracted the empty-state markup helper `emptyHtml(t,s='',icon='🔍')` and its `EMPTY_SVGS` icon map from `index.html` into a new `js/ui/emptyState.js` (`window.PogoUi.emptyState`). Both symbols were moved byte-exact.
+- In the module, `EMPTY_SVGS` is now defined *before* `emptyHtml`, removing the former ~1,900-line forward reference in `index.html` (the inline `emptyHtml` at the old line 7135 read `EMPTY_SVGS`, which wasn't defined until ~9036). The defensive `typeof EMPTY_SVGS!=='undefined'` guard is intentionally preserved to keep output byte-identical.
+- Deleted the dead `const _origEmptyHtml=…` line (and its "Override emptyHtml to use SVGs" comment) at the old line 9042: it was never referenced and `emptyHtml` was never reassigned, so the historical override had been folded into the live definition and abandoned.
+- The module has **no dependencies** — no cross-module wiring. `index.html` rebinds `const {emptyHtml,EMPTY_SVGS}=emptyStateUi;` with a fail-fast guard near the other UI rebinds; all 9 `emptyHtml(...)` call-site lines (Browse, MyList, Strings, Inventory empty states) are unchanged.
+- `emptyHtml` interpolates `t`/`s`/`icon` raw — no escaping is applied, and that behavior is preserved. Known icons render their inline `<svg>`; unknown icons fall back to `<div class="empty-i">icon</div>`.
+- Added a `// --- emptyState ---` golden block to `scripts/check-domain-helpers.js`: full-string snapshots for the three known SVG icons (🔍/📋/⚙️), the unknown-icon fallback, with/without subtitle, and a raw/unescaped fixture, plus two targeted asserts confirming no HTML-escaping and raw fallback-icon rendering.
+
+### Files touched
+- `index.html`
+- `js/ui/emptyState.js`
+- `scripts/check-domain-helpers.js`
+- `docs/MAINTENANCE-LOG.md`
+
+### Verification
+- Run `node --check js/ui/emptyState.js`.
+- Run `node --check scripts/check-domain-helpers.js`.
+- Run `npm run check:domain`.
+- Run the inline `index.html` parse check.
+- Run `git diff --check`.
+- Run deployed GitHub Pages smoke because this affects empty-state markup across multiple tabs.
+
+### Known risks / TODOs
+- `EMPTY_SVGS` is rebound in `index.html` but currently has no consumer there other than `emptyHtml` (kept in the rebind per spec / to preserve the global name).
+- Clean pure-logic helpers are nearly exhausted; remaining candidates (`entrySearchFilters`, `diffDetailsHtml`/`listSource`, large sprite/costume data tables) are smaller, impure, or guardrailed. Modularization should pause after at most one more small extraction.
