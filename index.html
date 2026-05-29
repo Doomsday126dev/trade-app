@@ -2455,7 +2455,7 @@ if(!pokemonSearchTermsDomain)throw new Error('Pokemon search term helpers failed
 const {REGION_CODE_TERMS,REGIONAL_FORM_TERMS,REGION_SEARCH_TERMS,CASTFORM_TYPE_TERMS,FORM_QUALIFIER_TERMS,regionalFormPrefix,regionalFormTerm,regionTermFromDex,dexRegionTerm,dexSearchTerm,castformTypeFilter,modSearchFilters,modFromSearchFilters,castformTypeFromSearchFilters,formVariantFilter,formVariantFromSearchFilters}=pokemonSearchTermsDomain;
 const pokemonEntryRulesDomain=window.PogoDomain?.pokemonEntryRules;
 if(!pokemonEntryRulesDomain)throw new Error('Pokemon entry rule helpers failed to load');
-const {uniqueEntries,costumeDedupeKey,UNTRADEABLE_MYTHICAL_NAMES,isTradeableForWishlist,maxTypeForEntry}=pokemonEntryRulesDomain;
+const {uniqueEntries,costumeDedupeKey,UNTRADEABLE_MYTHICAL_NAMES,isTradeableForWishlist,maxTypeForEntry,MAX_TYPE_SEARCH,entrySearchFilters}=pokemonEntryRulesDomain;
 const searchStringDomain=window.PogoDomain?.searchStrings;
 if(!searchStringDomain)throw new Error('Search string helpers failed to load');
 const {PREFILTER,POGO_STR_LIMIT,dexStringFromNumbers,stringFromSearchItems,stringParts,searchPartSort,combineStrings,combinedStringOptions,strLenInfo}=searchStringDomain;
@@ -2638,7 +2638,6 @@ const SEREBII_GO_SPRITE_BASE='https://www.serebii.net/pokemongo/pokemon/';
 const IMAGE_PROXY_BASE='https://images.weserv.nl/?url=';
 const MAX_CLOUD_URL='https://cdn08.net/pokemongo/wiki/cloud.png';
 const MAX_TYPE_LABELS={dynamax:'Dynamax',gmax:'Gigantamax'};
-const MAX_TYPE_SEARCH={dynamax:'dynamax',gmax:'gigantamax'};
 // ── GENDER DIFFERENCES ──────────────────────────────────────
 // Dex numbers where PokeAPI has a distinct /female/{id}.png sprite.
 // Comprehensive list from PokeAPI sprites repo (sprites/pokemon/female/).
@@ -3531,16 +3530,6 @@ async function verifyPin(pin,stored){
 function isSixDigitPin(pin){return/^\d{6}$/.test(pin);}
 function lastLoginTime(username,data){
   return Number(data?.lastSeen||(data?.authUid&&allData.authIndex?.[data.authUid]?.lastSeen)||data?.lastUpdated||0);
-}
-function entrySearchFilters(entry,mod){
-  const filters=modSearchFilters(mod);
-  const maxFilter=MAX_TYPE_SEARCH[maxTypeForEntry(entry)]||'';
-  if(maxFilter)filters.unshift(maxFilter);
-  const castform=castformTypeFilter(entry,mod);
-  if(castform&&!filters.includes(castform))filters.unshift(castform);
-  const variant=formVariantFilter(entry,mod);
-  if(variant&&!filters.includes(variant))filters.push(variant);
-  return filters;
 }
 
 // ── LOCAL STORAGE ─────────────────────────────────────────────

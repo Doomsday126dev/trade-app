@@ -2224,3 +2224,30 @@
 ### Known risks / TODOs
 - `EMPTY_SVGS` is rebound in `index.html` but currently has no consumer there other than `emptyHtml` (kept in the rebind per spec / to preserve the global name).
 - Clean pure-logic helpers are nearly exhausted; remaining candidates (`entrySearchFilters`, `diffDetailsHtml`/`listSource`, large sprite/costume data tables) are smaller, impure, or guardrailed. Modularization should pause after at most one more small extraction.
+
+## 2026-05-29 - Claude - Entry search filters extraction
+
+### Summary
+- Extracted `entrySearchFilters(entry,mod)` from `index.html` into the existing `js/domain/pokemonEntryRules.js` (`window.PogoDomain.pokemonEntryRules`), co-located with `maxTypeForEntry` which it already depended on. Body is functionally identical (pure logic returning an array — re-indented to module style, no template literals, so output is whitespace-independent).
+- Co-moved the `MAX_TYPE_SEARCH` map (`{dynamax:'dynamax',gmax:'gigantamax'}`) into the same module because `entrySearchFilters` consumes it. It is exported and rebound in `index.html` under the same local name, so the other consumer (the import-parsing `maxType` filter near the bottom of the inline script) still resolves it unchanged.
+- This introduces the **first cross-module dependency** for `pokemonEntryRules`: it now wires `window.PogoDomain.pokemonSearchTerms` at load (fail-fast guard) to destructure `modSearchFilters`, `castformTypeFilter`, `formVariantFilter`. Load order is safe — `pokemonSearchTerms.js` loads immediately before `pokemonEntryRules.js` — and there is **no circular dependency** (`pokemonSearchTerms` never references `pokemonEntryRules`).
+- Output and ordering preserved exactly: mod filters first, max-type `unshift` to the front, castform `unshift` to the front, form-variant `push` to the end (the form-variant branch currently adds nothing since no form cases are enabled). The single caller (the search-string item builder) is unchanged.
+- Added a golden block to `scripts/check-domain-helpers.js` (under the existing `// --- pokemonEntryRules ---` section): the `MAX_TYPE_SEARCH` map, plain/mod-only/dynamax/gmax/castform/form-variant cases, an explicit ordering snapshot (`['ice','dynamax','shiny','xxl']`), and an empty-entry case.
+
+### Files touched
+- `index.html`
+- `js/domain/pokemonEntryRules.js`
+- `scripts/check-domain-helpers.js`
+- `docs/MAINTENANCE-LOG.md`
+
+### Verification
+- Run `node --check js/domain/pokemonEntryRules.js`.
+- Run `node --check scripts/check-domain-helpers.js`.
+- Run `npm run check:domain`.
+- Run the inline `index.html` parse check.
+- Run `git diff --check`.
+- Run deployed GitHub Pages smoke because this feeds Strings-tab search-string generation.
+
+### Known risks / TODOs
+- `pokemonEntryRules` now depends on `pokemonSearchTerms`; any future re-ordering of the module `<script>` tags must keep `pokemonSearchTerms.js` loading first.
+- This is the planned final small modularization pass — remaining candidates are tiny, impure (`diffDetailsHtml`/`listSource`), or guardrailed data tables. Pause and reassess before further extraction.

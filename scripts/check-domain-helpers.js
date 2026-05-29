@@ -234,7 +234,9 @@ const {
   uniqueEntries,
   costumeDedupeKey,
   isTradeableForWishlist,
-  maxTypeForEntry
+  maxTypeForEntry,
+  MAX_TYPE_SEARCH,
+  entrySearchFilters
 } = domain.pokemonEntryRules;
 deepEq(
   uniqueEntries([{ name: 'Bulbasaur', no: 1 }, { name: 'Charmander', no: 4 }], [{ name: 'Bulbasaur', no: 999 }]),
@@ -279,6 +281,17 @@ eq(maxTypeForEntry({ dn: 'Snorlax Dynamax' }), 'dynamax', 'maxTypeForEntry shoul
 eq(maxTypeForEntry({ name: 'Pikachu' }), '', 'maxTypeForEntry should return empty for a plain entry');
 eq(maxTypeForEntry({ name: 'Pikachu' }, 'sparkle'), '', 'maxTypeForEntry should ignore an unrecognized type argument');
 eq(maxTypeForEntry({ name: 'Pikachu', maxType: 'frenzy' }), 'frenzy', 'maxTypeForEntry should pass through an unrecognized entry.maxType verbatim');
+
+// entrySearchFilters composes modSearchFilters + maxTypeForEntry/MAX_TYPE_SEARCH + castform/form filters
+deepEq(MAX_TYPE_SEARCH, { dynamax: 'dynamax', gmax: 'gigantamax' }, 'MAX_TYPE_SEARCH map should be exported intact');
+deepEq(entrySearchFilters({ no: 1, name: 'Bulbasaur' }, ''), [], 'entrySearchFilters: plain wishlist entry yields no filters');
+deepEq(entrySearchFilters({ no: 1, name: 'Bulbasaur' }, 'shiny female'), ['shiny', 'female'], 'entrySearchFilters: mod-only filters pass through in order');
+deepEq(entrySearchFilters({ no: 1, name: 'Bulbasaur', maxType: 'dynamax' }, 'shiny'), ['dynamax', 'shiny'], 'entrySearchFilters: dynamax max-type is unshifted ahead of mod filters');
+deepEq(entrySearchFilters({ no: 1, name: 'Bulbasaur', maxType: 'gmax' }, ''), ['gigantamax'], 'entrySearchFilters: gmax max-type maps to gigantamax');
+deepEq(entrySearchFilters({ no: 351, name: 'Castform (Snowy)' }, ''), ['ice'], 'entrySearchFilters: castform variant resolves to its type filter');
+deepEq(entrySearchFilters({ no: 550, name: 'Basculin' }, ''), [], 'entrySearchFilters: form-variant path currently adds nothing (no enabled form cases)');
+deepEq(entrySearchFilters({ no: 351, name: 'Castform (Snowy)', maxType: 'dynamax' }, 'shiny xxl'), ['ice', 'dynamax', 'shiny', 'xxl'], 'entrySearchFilters: ordering — castform unshifted to front, then max-type, then mod filters');
+deepEq(entrySearchFilters({}, ''), [], 'entrySearchFilters: empty entry preserves current empty-array behavior');
 
 // --- searchStrings ---
 const {

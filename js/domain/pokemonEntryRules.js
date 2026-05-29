@@ -1,6 +1,10 @@
 (function(global){
   const root=global.PogoDomain=global.PogoDomain||{};
 
+  const searchTerms=global.PogoDomain&&global.PogoDomain.pokemonSearchTerms;
+  if(!searchTerms)throw new Error('Pokemon search term helpers must load before entry rule helpers');
+  const {modSearchFilters,castformTypeFilter,formVariantFilter}=searchTerms;
+
   function uniqueEntries(...groups){
     const seen=new Set(),out=[];
     groups.flat().forEach(e=>{
@@ -60,11 +64,25 @@
     return'';
   }
 
+  const MAX_TYPE_SEARCH={dynamax:'dynamax',gmax:'gigantamax'};
+  function entrySearchFilters(entry,mod){
+    const filters=modSearchFilters(mod);
+    const maxFilter=MAX_TYPE_SEARCH[maxTypeForEntry(entry)]||'';
+    if(maxFilter)filters.unshift(maxFilter);
+    const castform=castformTypeFilter(entry,mod);
+    if(castform&&!filters.includes(castform))filters.unshift(castform);
+    const variant=formVariantFilter(entry,mod);
+    if(variant&&!filters.includes(variant))filters.push(variant);
+    return filters;
+  }
+
   root.pokemonEntryRules=Object.freeze({
     uniqueEntries,
     costumeDedupeKey,
     UNTRADEABLE_MYTHICAL_NAMES,
     isTradeableForWishlist,
-    maxTypeForEntry
+    maxTypeForEntry,
+    MAX_TYPE_SEARCH,
+    entrySearchFilters
   });
 })(window);
