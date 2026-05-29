@@ -74,15 +74,18 @@ assert(domain.relativeTime, 'relativeTime namespace should exist');
 assert(domain.spriteSlugs, 'spriteSlugs namespace should exist');
 assert(utils.textSafety, 'textSafety namespace should exist');
 
+// --- priorities ---
 const { priLabel, priName, listLabel } = domain.priorities;
 eq(priLabel('H'), 'High', 'priLabel should resolve H');
 eq(priName('M'), 'M - Medium', 'priName should resolve M');
 eq(listLabel('wishlist'), 'Trades', 'listLabel should resolve wishlist');
 
+// --- username ---
 const { alphaCompare } = domain.username;
 assert(alphaCompare('a2', 'a10') < 0, 'alphaCompare should sort natural numeric suffixes');
 eq(alphaCompare('Mazer', 'mazer'), 0, 'alphaCompare should be case-insensitive');
 
+// --- priorityValues ---
 const { parsePri, priValue, entryGender } = domain.priorityValues;
 deepEq(
   parsePri('H[lucky][shiny][xxl](female)'),
@@ -97,6 +100,7 @@ deepEq(
 eq(priValue('L', 'm', false, false, true, false), 'L[xxs](m)', 'priValue should serialize flags and modifier');
 eq(entryGender('female'), 'f', 'entryGender should normalize female');
 
+// --- scheduleDates ---
 const {
   isoDate,
   parseIsoDate,
@@ -113,6 +117,7 @@ eq(isoDate(startOfWeek(new Date(2026, 4, 27))), '2026-05-24', 'startOfWeek shoul
 eq(isoDate(addDays(new Date(2026, 4, 24), 6)), '2026-05-30', 'addDays should add local days');
 assert(Array.isArray(WKDS) && WKDS.length === 7, 'WKDS should contain seven labels');
 
+// --- pokemonSearchTerms ---
 const {
   regionalFormPrefix,
   regionalFormTerm,
@@ -147,6 +152,7 @@ eq(castformTypeFromSearchFilters(['normal', 'xxl']), 'normal', 'castformTypeFrom
 eq(formVariantFilter({ name: 'Basculin (White Stripe)', no: 550 }, 'white'), '', 'formVariantFilter should preserve current empty qualifier behavior');
 eq(formVariantFromSearchFilters(['white']), '', 'formVariantFromSearchFilters should preserve current empty qualifier behavior');
 
+// --- pokemonEntryRules ---
 const {
   uniqueEntries,
   costumeDedupeKey,
@@ -183,6 +189,7 @@ eq(isTradeableForWishlist({ name: 'Giratina (Origin)' }), true, 'isTradeableForW
 eq(isTradeableForWishlist(null), true, 'isTradeableForWishlist should preserve null edge behavior');
 eq(isTradeableForWishlist({}), true, 'isTradeableForWishlist should preserve blank object edge behavior');
 
+// --- searchStrings ---
 const {
   PREFILTER,
   POGO_STR_LIMIT,
@@ -223,6 +230,7 @@ eq(strLenInfo('x'.repeat(POGO_STR_LIMIT)).cls, 'warn', 'strLenInfo should warn a
 eq(strLenInfo('x'.repeat(POGO_STR_LIMIT + 1)).cls, 'danger', 'strLenInfo should mark strings over the hard limit as danger');
 assert(strLenInfo('x'.repeat(POGO_STR_LIMIT + 1)).cls !== '', 'strLenInfo should classify over-limit strings');
 
+// --- scheduleEventRules ---
 const {
   collectEventBonusTexts,
   eventNumberTokenToInt,
@@ -272,6 +280,7 @@ deepEq(
 eq(getEventId({ eventID: 'abc', name: 'x', start: 1 }), 'abc', 'getEventId should prefer eventID');
 eq(getEventId({ name: 'Event', start: 123 }), 'Event_123', 'getEventId should fallback to name and start');
 
+// --- scheduleTradeRules ---
 const {
   externalTradePartners,
   parseExternalTradePartners,
@@ -333,6 +342,7 @@ deepEq(
 );
 deepEq(parseExternalTradePartners(' , Alice,,  Bob , , '), ['Alice', 'Bob'], 'parseExternalTradePartners should drop blank malformed chunks');
 
+// --- pokemonKeys ---
 const {
   _normGender,
   splitHaveKey,
@@ -394,6 +404,7 @@ deepEq(
   'haveEntryValue should drop notes outside giveaway mode'
 );
 
+// --- fuzzyText ---
 const { _phoneticCode, _levenshtein } = domain.fuzzyText;
 eq(_levenshtein('kitten', 'sitting'), 3, '_levenshtein should preserve classic edit distance behavior');
 eq(_levenshtein('', 'abc'), 3, '_levenshtein should count insertions from empty source');
@@ -405,16 +416,6 @@ eq(_phoneticCode('Farfetch’d'), 'frftchd', '_phoneticCode should strip punctua
 eq(_phoneticCode('Charizard'), 'chrzrd', '_phoneticCode should preserve current Pokemon-ish normalization');
 eq(_phoneticCode('charzard'), 'chrzrd', '_phoneticCode should preserve current misspelling normalization');
 eq(_phoneticCode(''), '', '_phoneticCode should preserve empty-string behavior');
-
-const { safeFilePart, escHtml, escAttr } = utils.textSafety;
-eq(safeFilePart("Mazer's Trades List 2026!"), 'mazer-s-trades-list-2026', 'safeFilePart should slug names');
-eq(safeFilePart(''), 'list', 'safeFilePart should fallback for empty input');
-eq(
-  escHtml(`<div class="x">Tom & 'Jerry'</div>`),
-  '&lt;div class=&quot;x&quot;&gt;Tom &amp; &#39;Jerry&#39;&lt;/div&gt;',
-  'escHtml should escape HTML-sensitive characters'
-);
-eq(escAttr('"onmouseover=1"'), '&quot;onmouseover=1&quot;', 'escAttr should escape attribute text');
 
 // --- relativeTime ---
 // These helpers compute deltas against Date.now() internally, so tests build
@@ -561,5 +562,16 @@ eq(pokemondbSlug('', ''), '', 'pokemondbSlug should return empty for empty input
 eq(pokemondbSlug('   ', '   '), '', 'pokemondbSlug should return empty for blank input');
 eq(pokemondbSlug(undefined, undefined), '', 'pokemondbSlug should return empty for undefined input');
 eq(pokemondbSlug(undefined, undefined, 'f'), '', 'pokemondbSlug should early-return before female append on empty input');
+
+// --- textSafety ---
+const { safeFilePart, escHtml, escAttr } = utils.textSafety;
+eq(safeFilePart("Mazer's Trades List 2026!"), 'mazer-s-trades-list-2026', 'safeFilePart should slug names');
+eq(safeFilePart(''), 'list', 'safeFilePart should fallback for empty input');
+eq(
+  escHtml(`<div class="x">Tom & 'Jerry'</div>`),
+  '&lt;div class=&quot;x&quot;&gt;Tom &amp; &#39;Jerry&#39;&lt;/div&gt;',
+  'escHtml should escape HTML-sensitive characters'
+);
+eq(escAttr('"onmouseover=1"'), '&quot;onmouseover=1&quot;', 'escAttr should escape attribute text');
 
 console.log('Domain helper checks passed.');
