@@ -2167,3 +2167,32 @@
 ### Known risks / TODOs
 - `emptyHtml`, `EMPTY_SVGS`, `userBadge`, `sparklineHtml`, and `eventBadgeForPokemon` remain inline.
 - Continue requiring exact snapshot assertions before extracting additional markup helpers.
+
+## 2026-05-29 - Claude - String panels HTML helper extraction
+
+### Summary
+- Extracted the markup-sensitive `strLevelsHtml(strs)` helper from `index.html` into a new `js/ui/stringPanels.js` (`window.PogoUi.stringPanels`).
+- The function body was moved byte-exact (sliced, not re-indented) to preserve load-bearing whitespace inside its template literals; `diff` confirmed the moved body is byte-identical to the former inline definition.
+- The module wires five dependencies at load with fail-fast guards: `PogoDomain.searchStrings` (`combinedStringOptions`), `PogoDomain.priorities` (`priLabel`), `PogoUi.badges` (`priBadge`), `PogoUi.stringHtml` (`strLenHtml`, `strWarnHtml`), and `PogoUtils.textSafety` (`escHtml`, `escAttr`). The script loads after all of those modules.
+- `index.html` rebinds the same local `strLevelsHtml` name immediately after its dependency rebinds, so all three call sites (`renderMyStrings`, `_renderStringsInner`, `renderShareView`) are unchanged.
+- The inline `onclick="copyStr(...)"` / `onclick="toggleComboStrings(this)"` handlers stay as string literals pointing at the still-inline globals.
+- Added a `// --- stringPanels ---` golden block to `scripts/check-domain-helpers.js`: eight full-string snapshot assertions across priority mixes, Lucky/XXL/XXS flags, combined options, and HTML-escaping fixtures, plus two targeted escaping asserts.
+
+### Files touched
+- `index.html`
+- `js/ui/stringPanels.js`
+- `scripts/check-domain-helpers.js`
+- `docs/MAINTENANCE-LOG.md`
+
+### Verification
+- Run `node --check js/ui/stringPanels.js`.
+- Run `node --check scripts/check-domain-helpers.js`.
+- Run `npm run check:domain`.
+- Run the inline `index.html` parse check.
+- Run `git diff --check`.
+- Run deployed GitHub Pages smoke because this affects Strings-tab markup (and the public share view, which is not smoke-covered — golden snapshots are the primary guard there).
+
+### Known risks / TODOs
+- `renderShareView` (the public share page) is not covered by the deployed smoke; rely on the golden snapshots for that call site.
+- `copyStr` and `toggleComboStrings` globals remain inline; `strLevelsHtml` emits them as string literals only.
+- Render bodies and the remaining badge/empty-state HTML helpers stay inline.

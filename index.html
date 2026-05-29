@@ -2376,6 +2376,7 @@ window.__pogoBootWatch=setTimeout(function(){
 <script src="js/domain/autocompleteRanking.js"></script>
 <script src="js/domain/relativeTime.js"></script>
 <script src="js/utils/textSafety.js"></script>
+<script src="js/ui/stringPanels.js"></script>
 <script>
 let initializeApp,getDatabase,ref,set,get,onValue,update,getAuth,signInWithEmailAndPassword,createUserWithEmailAndPassword,firebaseSignOut,updatePassword,deleteUser,onAuthStateChanged;
 let firebaseSdkPromise=null;
@@ -2490,6 +2491,9 @@ const {STALE_WARN,STALE_OLD,freshnessClass,freshnessLabel,freshnessColor,relativ
 const textSafety=window.PogoUtils?.textSafety;
 if(!textSafety)throw new Error('Text safety helpers failed to load');
 const {safeFilePart,escHtml,escAttr}=textSafety;
+const stringPanelsUi=window.PogoUi?.stringPanels;
+if(!stringPanelsUi)throw new Error('String panel HTML helpers failed to load');
+const {strLevelsHtml}=stringPanelsUi;
 const VIVILLON_PATTERNS=new Set(['Archipelago','Continental','Elegant','Fancy','Garden','High Plains','Icy Snow','Jungle','Marine','Meadow','Modern','Monsoon','Ocean','Poke Ball','Poké Ball','Polar','River','Sandstorm','Savanna','Sun','Tundra']);
 const SCATTERBUG_PATTERNS=['Archipelago','Continental','Elegant','Garden','High Plains','Icy Snow','Jungle','Marine','Meadow','Modern','Monsoon','Ocean','Polar','River','Sandstorm','Savanna','Sun','Tundra'];
 const SECURE_RULES=`{
@@ -6247,53 +6251,6 @@ function buildStrings(type,username){
   return Object.keys(out).length?out:null;
 }
 
-function strLevelsHtml(strs){
-  const combos=combinedStringOptions(strs);
-  return`<div class="str-levels">${['H','M','L'].filter(p=>strs[p]).map(p=>`
-    <div class="str-level">
-      <div class="str-level-hdr">
-        <span class="badge ${p}"><span class="prio-mark">${p}</span>${priBadge(p)}</span>${strLenHtml(strs[p])}
-        <button class="cpbtn" type="button" data-copy="${escAttr(strs[p])}" onclick="copyStr(this.dataset.copy,this)" aria-label="Copy ${priLabel(p)} priority search string" style="margin-left:auto">📋 Copy</button>
-      </div>
-      <div class="strbox">${escHtml(strs[p])}</div>
-      ${strWarnHtml(strs[p])}
-    </div>`).join('')}${strs.LUCKY?`<div class="str-level lucky-str">
-      <div class="str-level-hdr">
-        <span class="combo-badge">⚡ Lucky Dex</span>${strLenHtml(strs.LUCKY)}
-        <button class="cpbtn" type="button" data-copy="${escAttr(strs.LUCKY)}" onclick="copyStr(this.dataset.copy,this)" aria-label="Copy Lucky Dex search string" style="margin-left:auto">📋 Copy</button>
-      </div>
-      <div class="strbox">${escHtml(strs.LUCKY)}</div>
-      ${strWarnHtml(strs.LUCKY)}
-    </div>`:''}${strs.XXL?`<div class="str-level xxl-str">
-      <div class="str-level-hdr">
-        <span class="combo-badge">XXL</span>${strLenHtml(strs.XXL)}
-        <button class="cpbtn" type="button" data-copy="${escAttr(strs.XXL)}" onclick="copyStr(this.dataset.copy,this)" aria-label="Copy XXL search string" style="margin-left:auto">📋 Copy</button>
-      </div>
-      <div class="strbox">${escHtml(strs.XXL)}</div>
-      ${strWarnHtml(strs.XXL)}
-    </div>`:''}${strs.XXS?`<div class="str-level xxs-str">
-      <div class="str-level-hdr">
-        <span class="combo-badge">XXS</span>${strLenHtml(strs.XXS)}
-        <button class="cpbtn" type="button" data-copy="${escAttr(strs.XXS)}" onclick="copyStr(this.dataset.copy,this)" aria-label="Copy XXS search string" style="margin-left:auto">📋 Copy</button>
-      </div>
-      <div class="strbox">${escHtml(strs.XXS)}</div>
-      ${strWarnHtml(strs.XXS)}
-    </div>`:''}${combos.length?`<div class="combo-wrap">
-      <button class="combo-toggle" type="button" onclick="toggleComboStrings(this)" aria-expanded="false">
-        <span>Combined options <span class="combo-meta">${combos.length} available</span></span>
-        <span class="collapse-icon">▼</span>
-      </button>
-      <div class="combo-body">${combos.map(o=>`
-        <div class="str-level">
-          <div class="str-level-hdr">
-            <span class="combo-badge">${escHtml(o.label)}</span>${strLenHtml(o.value)}
-            <button class="cpbtn" type="button" data-copy="${escAttr(o.value)}" onclick="copyStr(this.dataset.copy,this)" aria-label="Copy ${escAttr(o.label)} search string" style="margin-left:auto">📋 Copy</button>
-          </div>
-          <div class="strbox">${escHtml(o.value)}</div>
-          ${strWarnHtml(o.value)}
-        </div>`).join('')}</div>
-    </div>`:''}</div>`;
-}
 function renderMyStrings(){
   const el=document.getElementById('my-strings-out');if(!el)return;
   const strs=buildStrings(myListType,cur);
