@@ -2117,3 +2117,28 @@
 ### Known risks / TODOs
 - Autocomplete rendering, item builders, and event handlers remain in `index.html`; do not move them without UI smoke/snapshot coverage.
 - Special board autocomplete intentionally disables alpha tiebreaking so equal score/dex matches preserve insertion order.
+
+## 2026-05-28 - Codex - String HTML helper extraction
+
+### Summary
+- Extracted the markup-only search-string length helpers `strLenHtml(str)` and `strWarnHtml(str)` from `index.html` into `js/ui/stringHtml.js`.
+- Added the first `window.PogoUi` classic-script namespace module; it depends on `window.PogoDomain.searchStrings` for `strLenInfo` and `POGO_STR_LIMIT`.
+- Added exact snapshot assertions for safe/warn/danger length metadata and warning banners, including the intentional blank class spacing in `class="str-meta "`.
+
+### Files touched
+- `index.html`
+- `js/ui/stringHtml.js`
+- `scripts/check-domain-helpers.js`
+- `docs/MAINTENANCE-LOG.md`
+
+### Verification
+- Run `node --check js/ui/stringHtml.js`.
+- Run `node --check scripts/check-domain-helpers.js`.
+- Run `npm run check:domain`.
+- Run the inline `index.html` parse check.
+- Run `git diff --check`.
+- Run deployed GitHub Pages smoke because this affects Strings-tab markup.
+
+### Known risks / TODOs
+- `strLevelsHtml`, render bodies, and the remaining badge/empty-state HTML helpers stay inline.
+- Future UI helper extractions should add exact snapshot assertions before moving markup-sensitive helpers.

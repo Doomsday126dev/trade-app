@@ -2364,6 +2364,7 @@ window.__pogoBootWatch=setTimeout(function(){
 <script src="js/domain/pokemonSearchTerms.js"></script>
 <script src="js/domain/pokemonEntryRules.js"></script>
 <script src="js/domain/searchStrings.js"></script>
+<script src="js/ui/stringHtml.js"></script>
 <script src="js/domain/scheduleEventRules.js"></script>
 <script src="js/domain/scheduleTradeRules.js"></script>
 <script src="js/domain/pokemonKeys.js"></script>
@@ -2452,6 +2453,9 @@ const {uniqueEntries,costumeDedupeKey,UNTRADEABLE_MYTHICAL_NAMES,isTradeableForW
 const searchStringDomain=window.PogoDomain?.searchStrings;
 if(!searchStringDomain)throw new Error('Search string helpers failed to load');
 const {PREFILTER,POGO_STR_LIMIT,dexStringFromNumbers,stringFromSearchItems,stringParts,searchPartSort,combineStrings,combinedStringOptions,strLenInfo}=searchStringDomain;
+const stringHtmlUi=window.PogoUi?.stringHtml;
+if(!stringHtmlUi)throw new Error('String HTML helpers failed to load');
+const {strLenHtml,strWarnHtml}=stringHtmlUi;
 const scheduleEventRulesDomain=window.PogoDomain?.scheduleEventRules;
 if(!scheduleEventRulesDomain)throw new Error('Schedule event rule helpers failed to load');
 const {collectEventBonusTexts,eventNumberTokenToInt,parseSpecialTradeBonus,classifyEvent,getEventId}=scheduleEventRulesDomain;
@@ -9146,19 +9150,6 @@ function applyTypeColors(){
       if(t&&TYPE_COLORS[t])el.style.setProperty('--type-color',TYPE_COLORS[t]);
     }
   });
-}
-
-// ── SEARCH STRING VALIDATION (#12) ────────────────────────────
-function strLenHtml(str){
-  const{len,cls}=strLenInfo(str);
-  const limit=POGO_STR_LIMIT;
-  return `<span class="str-meta ${cls}" title="PoGo search limit is ~${limit} chars">${len}/${limit}</span>`;
-}
-function strWarnHtml(str){
-  const{len,cls}=strLenInfo(str);
-  if(!cls)return'';
-  if(cls==='danger')return `<div class="str-warn-banner danger">⚠️ This string exceeds PoGo's ~${POGO_STR_LIMIT} char limit (${len}). It will be truncated in-game. Consider splitting into multiple priority lists.</div>`;
-  return `<div class="str-warn-banner">⚠️ Approaching PoGo's ~${POGO_STR_LIMIT} char limit (${len}). Consider splitting soon.</div>`;
 }
 
 // ── TRADE SCHEDULE ──────────────────────────────────────────

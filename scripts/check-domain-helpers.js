@@ -45,6 +45,7 @@ function deepEq(actual, expected, message) {
   'js/domain/pokemonSearchTerms.js',
   'js/domain/pokemonEntryRules.js',
   'js/domain/searchStrings.js',
+  'js/ui/stringHtml.js',
   'js/domain/scheduleEventRules.js',
   'js/domain/scheduleTradeRules.js',
   'js/domain/pokemonKeys.js',
@@ -59,9 +60,11 @@ function deepEq(actual, expected, message) {
 
 const domain = context.window.PogoDomain;
 const utils = context.window.PogoUtils;
+const ui = context.window.PogoUi;
 
 assert(domain, 'window.PogoDomain namespace should exist');
 assert(utils, 'window.PogoUtils namespace should exist');
+assert(ui, 'window.PogoUi namespace should exist');
 assert(domain.priorities, 'priorities namespace should exist');
 assert(domain.username, 'username namespace should exist');
 assert(domain.priorityValues, 'priorityValues namespace should exist');
@@ -79,6 +82,7 @@ assert(domain.autocompleteRanking, 'autocompleteRanking namespace should exist')
 assert(domain.relativeTime, 'relativeTime namespace should exist');
 assert(domain.spriteSlugs, 'spriteSlugs namespace should exist');
 assert(utils.textSafety, 'textSafety namespace should exist');
+assert(ui.stringHtml, 'stringHtml namespace should exist');
 
 // --- priorities ---
 const { priLabel, priName, listLabel, sortEntries } = domain.priorities;
@@ -269,6 +273,34 @@ eq(strLenInfo('x'.repeat(Math.floor(POGO_STR_LIMIT * 0.85) + 1)).cls, 'warn', 's
 eq(strLenInfo('x'.repeat(POGO_STR_LIMIT)).cls, 'warn', 'strLenInfo should warn at the hard limit');
 eq(strLenInfo('x'.repeat(POGO_STR_LIMIT + 1)).cls, 'danger', 'strLenInfo should mark strings over the hard limit as danger');
 assert(strLenInfo('x'.repeat(POGO_STR_LIMIT + 1)).cls !== '', 'strLenInfo should classify over-limit strings');
+
+// --- stringHtml ---
+eq(
+  ui.stringHtml.strLenHtml('abc'),
+  '<span class="str-meta " title="PoGo search limit is ~1500 chars">3/1500</span>',
+  'strLenHtml should preserve blank class spacing'
+);
+eq(
+  ui.stringHtml.strLenHtml('x'.repeat(1276)),
+  '<span class="str-meta warn" title="PoGo search limit is ~1500 chars">1276/1500</span>',
+  'strLenHtml should render warning snapshot'
+);
+eq(
+  ui.stringHtml.strLenHtml('x'.repeat(1501)),
+  '<span class="str-meta danger" title="PoGo search limit is ~1500 chars">1501/1500</span>',
+  'strLenHtml should render danger snapshot'
+);
+eq(ui.stringHtml.strWarnHtml('abc'), '', 'strWarnHtml should render no banner for safe strings');
+eq(
+  ui.stringHtml.strWarnHtml('x'.repeat(1276)),
+  "<div class=\"str-warn-banner\">⚠️ Approaching PoGo's ~1500 char limit (1276). Consider splitting soon.</div>",
+  'strWarnHtml should render warning snapshot'
+);
+eq(
+  ui.stringHtml.strWarnHtml('x'.repeat(1501)),
+  "<div class=\"str-warn-banner danger\">⚠️ This string exceeds PoGo's ~1500 char limit (1501). It will be truncated in-game. Consider splitting into multiple priority lists.</div>",
+  'strWarnHtml should render danger snapshot'
+);
 
 // --- scheduleEventRules ---
 const {
