@@ -2368,6 +2368,7 @@ window.__pogoBootWatch=setTimeout(function(){
 <script src="js/domain/scheduleTradeRules.js"></script>
 <script src="js/domain/pokemonKeys.js"></script>
 <script src="js/domain/fuzzyText.js"></script>
+<script src="js/domain/relativeTime.js"></script>
 <script src="js/utils/textSafety.js"></script>
 <script>
 let initializeApp,getDatabase,ref,set,get,onValue,update,getAuth,signInWithEmailAndPassword,createUserWithEmailAndPassword,firebaseSignOut,updatePassword,deleteUser,onAuthStateChanged;
@@ -2416,7 +2417,6 @@ const DEFAULT_COMMUNITY_ID='nyc';
 const DEFAULT_COMMUNITY_NAME='NYC';
 const SELECTED_COMMUNITY_KEY='pogoSelectedCommunityId_v1';
 const OWNER_COMMUNITY_PREVIEW_KEY='pogoOwnerCommunityPreview_v1';
-const STALE_WARN=7,STALE_OLD=30;
 const SESSION_TTL=30*24*60*60*1000; // 30 days; refreshed on each activity so active users stay logged in
 const SPRITE_BASE="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/";
 const FIREBASE_URL="https://trade-list-a4297-default-rtdb.firebaseio.com";
@@ -2460,6 +2460,9 @@ const {_normGender,HAVE_KEY_SEP,splitHaveKey,joinHaveKey,totalQtyForName,haveEnt
 const fuzzyTextDomain=window.PogoDomain?.fuzzyText;
 if(!fuzzyTextDomain)throw new Error('Fuzzy text helpers failed to load');
 const {_phoneticCode,_levenshtein}=fuzzyTextDomain;
+const relativeTimeDomain=window.PogoDomain?.relativeTime;
+if(!relativeTimeDomain)throw new Error('Relative time helpers failed to load');
+const {STALE_WARN,STALE_OLD,freshnessClass,freshnessLabel,freshnessColor,relativeTime}=relativeTimeDomain;
 const textSafety=window.PogoUtils?.textSafety;
 if(!textSafety)throw new Error('Text safety helpers failed to load');
 const {safeFilePart,escHtml,escAttr}=textSafety;
@@ -5030,20 +5033,6 @@ function refreshAll(){
 }
 
 // ── FRESHNESS ─────────────────────────────────────────────────
-function freshnessClass(ts){
-  if(!ts)return'stale';
-  const d=(Date.now()-ts)/86400000;
-  return d<STALE_WARN?'fresh':d<STALE_OLD?'warn':'stale';
-}
-function freshnessLabel(ts){
-  if(!ts)return'Never';
-  const m=Math.floor((Date.now()-ts)/60000);
-  if(m<2)return'Just now';if(m<60)return`${m}m ago`;
-  const h=Math.floor(m/60);if(h<24)return`${h}h ago`;
-  const d=Math.floor(h/24);if(d<7)return`${d}d ago`;
-  if(d<30)return`${Math.floor(d/7)}w ago`;return`${Math.floor(d/30)}mo ago`;
-}
-function freshnessColor(cls){return{fresh:'var(--ok)',warn:'var(--warn)',stale:'var(--danger)'}[cls]||'var(--muted)';}
 function sortEntries(entries){
   return[...entries].sort((a,b)=>
     (PRI_ORDER[a.p]??9)-(PRI_ORDER[b.p]??9)||
@@ -10625,14 +10614,6 @@ function offersForItem(recipient,itemName){
 function countOffersForItem(recipient,itemName){return offersForItem(recipient,itemName).length;}
 function totalOffersForRecipient(recipient){
   return Object.values(allData.offers?.[recipient]||{}).filter(o=>ownerPreviewAllowsOffer(o,recipient)).length;
-}
-function relativeTime(ts){
-  if(!ts)return'';
-  const d=(Date.now()-ts)/1000;
-  if(d<60)return'just now';
-  if(d<3600)return`${Math.floor(d/60)}m ago`;
-  if(d<86400)return`${Math.floor(d/3600)}h ago`;
-  return`${Math.floor(d/86400)}d ago`;
 }
 async function submitOffer(recipient,itemName,offering,message){
   if(!cur||!recipient||!itemName)return false;

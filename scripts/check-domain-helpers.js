@@ -49,6 +49,7 @@ function deepEq(actual, expected, message) {
   'js/domain/scheduleTradeRules.js',
   'js/domain/pokemonKeys.js',
   'js/domain/fuzzyText.js',
+  'js/domain/relativeTime.js',
   'js/utils/textSafety.js'
 ].forEach(loadBrowserScript);
 
@@ -68,6 +69,7 @@ assert(domain.scheduleEventRules, 'scheduleEventRules namespace should exist');
 assert(domain.scheduleTradeRules, 'scheduleTradeRules namespace should exist');
 assert(domain.pokemonKeys, 'pokemonKeys namespace should exist');
 assert(domain.fuzzyText, 'fuzzyText namespace should exist');
+assert(domain.relativeTime, 'relativeTime namespace should exist');
 assert(utils.textSafety, 'textSafety namespace should exist');
 
 const { priLabel, priName, listLabel } = domain.priorities;
@@ -411,5 +413,60 @@ eq(
   'escHtml should escape HTML-sensitive characters'
 );
 eq(escAttr('"onmouseover=1"'), '&quot;onmouseover=1&quot;', 'escAttr should escape attribute text');
+
+// --- relativeTime ---
+// These helpers compute deltas against Date.now() internally, so tests build
+// timestamps as (now - offset) and use mid-bucket offsets that stay safely
+// away from boundaries, keeping results deterministic despite millisecond
+// drift between this capture and the internal Date.now() call.
+const { STALE_WARN, STALE_OLD, freshnessClass, freshnessLabel, freshnessColor, relativeTime } = domain.relativeTime;
+const rtNow = Date.now();
+const minsAgo = (m) => rtNow - m * 60000;
+const hoursAgo = (h) => rtNow - h * 3600000;
+const daysAgo = (d) => rtNow - d * 86400000;
+const secsAgo = (s) => rtNow - s * 1000;
+
+eq(STALE_WARN, 7, 'STALE_WARN should preserve current 7-day threshold');
+eq(STALE_OLD, 30, 'STALE_OLD should preserve current 30-day threshold');
+
+// freshnessClass: <7d fresh, 7d..<30d warn, >=30d stale, falsy stale
+eq(freshnessClass(0), 'stale', 'freshnessClass should treat falsy ts as stale');
+eq(freshnessClass(daysAgo(3)), 'fresh', 'freshnessClass should be fresh under 7 days');
+eq(freshnessClass(daysAgo(6.9)), 'fresh', 'freshnessClass should be fresh just under 7 days');
+eq(freshnessClass(daysAgo(7.1)), 'warn', 'freshnessClass should be warn just over 7 days');
+eq(freshnessClass(daysAgo(15)), 'warn', 'freshnessClass should be warn between 7 and 30 days');
+eq(freshnessClass(daysAgo(29)), 'warn', 'freshnessClass should be warn just under 30 days');
+eq(freshnessClass(daysAgo(31)), 'stale', 'freshnessClass should be stale just over 30 days');
+
+// freshnessLabel: minute/hour/day/week/month-ish ranges
+eq(freshnessLabel(0), 'Never', 'freshnessLabel should treat falsy ts as Never');
+eq(freshnessLabel(secsAgo(30)), 'Just now', 'freshnessLabel should say Just now under 2 minutes');
+eq(freshnessLabel(minsAgo(1.5)), 'Just now', 'freshnessLabel should say Just now at 1 minute');
+eq(freshnessLabel(minsAgo(5.5)), '5m ago', 'freshnessLabel should report minutes');
+eq(freshnessLabel(minsAgo(59.5)), '59m ago', 'freshnessLabel should report 59 minutes');
+eq(freshnessLabel(hoursAgo(3.5)), '3h ago', 'freshnessLabel should report hours');
+eq(freshnessLabel(hoursAgo(23.5)), '23h ago', 'freshnessLabel should report 23 hours');
+eq(freshnessLabel(daysAgo(3.5)), '3d ago', 'freshnessLabel should report days');
+eq(freshnessLabel(daysAgo(6.5)), '6d ago', 'freshnessLabel should report 6 days');
+eq(freshnessLabel(daysAgo(14.5)), '2w ago', 'freshnessLabel should report weeks');
+eq(freshnessLabel(daysAgo(21.5)), '3w ago', 'freshnessLabel should report 3 weeks');
+eq(freshnessLabel(daysAgo(60.5)), '2mo ago', 'freshnessLabel should report months');
+eq(freshnessLabel(daysAgo(90.5)), '3mo ago', 'freshnessLabel should report 3 months');
+
+// freshnessColor: fresh/warn/stale + unknown fallback
+eq(freshnessColor('fresh'), 'var(--ok)', 'freshnessColor fresh should map to --ok');
+eq(freshnessColor('warn'), 'var(--warn)', 'freshnessColor warn should map to --warn');
+eq(freshnessColor('stale'), 'var(--danger)', 'freshnessColor stale should map to --danger');
+eq(freshnessColor('unknown'), 'var(--muted)', 'freshnessColor should fall back to --muted');
+eq(freshnessColor(''), 'var(--muted)', 'freshnessColor should fall back for empty input');
+
+// relativeTime: just-now/minute/hour/day ranges (second-based deltas)
+eq(relativeTime(0), '', 'relativeTime should return empty for falsy ts');
+eq(relativeTime(secsAgo(30)), 'just now', 'relativeTime should say just now under a minute');
+eq(relativeTime(secsAgo(90)), '1m ago', 'relativeTime should report minutes');
+eq(relativeTime(minsAgo(59.5)), '59m ago', 'relativeTime should report 59 minutes');
+eq(relativeTime(hoursAgo(3.5)), '3h ago', 'relativeTime should report hours');
+eq(relativeTime(hoursAgo(23.5)), '23h ago', 'relativeTime should report 23 hours');
+eq(relativeTime(daysAgo(2.5)), '2d ago', 'relativeTime should report days');
 
 console.log('Domain helper checks passed.');
