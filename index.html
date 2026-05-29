@@ -2369,6 +2369,7 @@ window.__pogoBootWatch=setTimeout(function(){
 <script src="js/domain/pokemonKeys.js"></script>
 <script src="js/domain/spriteSlugs.js"></script>
 <script src="js/domain/fuzzyText.js"></script>
+<script src="js/domain/autocompleteText.js"></script>
 <script src="js/domain/relativeTime.js"></script>
 <script src="js/utils/textSafety.js"></script>
 <script>
@@ -2464,6 +2465,9 @@ const {padDex,normalizeCostumeLookupKey,pokemondbGoSpeciesSlug,normalizeSpriteKe
 const fuzzyTextDomain=window.PogoDomain?.fuzzyText;
 if(!fuzzyTextDomain)throw new Error('Fuzzy text helpers failed to load');
 const {_phoneticCode,_levenshtein}=fuzzyTextDomain;
+const autocompleteTextDomain=window.PogoDomain?.autocompleteText;
+if(!autocompleteTextDomain)throw new Error('Autocomplete text helpers failed to load');
+const {normalizeAcText}=autocompleteTextDomain;
 const relativeTimeDomain=window.PogoDomain?.relativeTime;
 if(!relativeTimeDomain)throw new Error('Relative time helpers failed to load');
 const {STALE_WARN,STALE_OLD,freshnessClass,freshnessLabel,freshnessColor,relativeTime}=relativeTimeDomain;
@@ -4994,18 +4998,6 @@ function userBadge(x){
 
 // ── AUTOCOMPLETE ──────────────────────────────────────────────
 const AC_RESULT_LIMIT=50; // Humans rarely scroll past ~20; capping at 50 keeps single-char queries from injecting 250 list items
-function normalizeAcText(s){
-  return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')
-    .replace(/ph[._\s-]*d/g,'phd')
-    .replace(/\b(gmax|gigantamax)\b/g,'gigantamax')
-    .replace(/\b(dmax|dynamax)\b/g,'dynamax')
-    .replace(/\bpika\b/g,'pikachu')
-    .replace(/\?/g,' question ')
-    .replace(/!/g,' exclamation ')
-    .replace(/[^a-z0-9]+/g,' ')
-    .replace(/\s+/g,' ')
-    .trim();
-}
 function acItemSearchText(e){
   let aliases='';
   if(/\(\?\)/.test(e.name))aliases+=' question questionmark question-mark';

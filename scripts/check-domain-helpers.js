@@ -49,6 +49,7 @@ function deepEq(actual, expected, message) {
   'js/domain/scheduleTradeRules.js',
   'js/domain/pokemonKeys.js',
   'js/domain/fuzzyText.js',
+  'js/domain/autocompleteText.js',
   'js/domain/relativeTime.js',
   'js/domain/spriteSlugs.js',
   'js/utils/textSafety.js'
@@ -70,6 +71,7 @@ assert(domain.scheduleEventRules, 'scheduleEventRules namespace should exist');
 assert(domain.scheduleTradeRules, 'scheduleTradeRules namespace should exist');
 assert(domain.pokemonKeys, 'pokemonKeys namespace should exist');
 assert(domain.fuzzyText, 'fuzzyText namespace should exist');
+assert(domain.autocompleteText, 'autocompleteText namespace should exist');
 assert(domain.relativeTime, 'relativeTime namespace should exist');
 assert(domain.spriteSlugs, 'spriteSlugs namespace should exist');
 assert(utils.textSafety, 'textSafety namespace should exist');
@@ -450,6 +452,37 @@ eq(_phoneticCode('Farfetch’d'), 'frftchd', '_phoneticCode should strip punctua
 eq(_phoneticCode('Charizard'), 'chrzrd', '_phoneticCode should preserve current Pokemon-ish normalization');
 eq(_phoneticCode('charzard'), 'chrzrd', '_phoneticCode should preserve current misspelling normalization');
 eq(_phoneticCode(''), '', '_phoneticCode should preserve empty-string behavior');
+
+// --- autocompleteText ---
+const { normalizeAcText } = domain.autocompleteText;
+eq(normalizeAcText('Pikachu'), 'pikachu', 'normalizeAcText should normalize plain names');
+eq(normalizeAcText('pIkA'), 'pikachu', 'normalizeAcText should expand pika after case normalization');
+eq(normalizeAcText('Pika Libre'), 'pikachu libre', 'normalizeAcText should expand pika aliases in phrases');
+eq(normalizeAcText('pikapika'), 'pikapika', 'normalizeAcText should not expand embedded pika text');
+eq(normalizeAcText('GMAX Charizard'), 'gigantamax charizard', 'normalizeAcText should expand gmax');
+eq(normalizeAcText('Gigantamax Charizard'), 'gigantamax charizard', 'normalizeAcText should normalize gigantamax');
+eq(normalizeAcText('gmaxed Charizard'), 'gmaxed charizard', 'normalizeAcText should preserve non-word-boundary gmax text');
+eq(normalizeAcText('dmax Squirtle'), 'dynamax squirtle', 'normalizeAcText should expand dmax');
+eq(normalizeAcText('Dynamax Squirtle'), 'dynamax squirtle', 'normalizeAcText should normalize dynamax');
+eq(normalizeAcText('Flabébé (Blue Flower)'), 'flabebe blue flower', 'normalizeAcText should strip accents and punctuation');
+eq(normalizeAcText('Pokémon'), 'pokemon', 'normalizeAcText should strip Pokemon accent');
+eq(normalizeAcText('Unown (?)'), 'unown question', 'normalizeAcText should turn question mark into text');
+eq(normalizeAcText('Unown (!)'), 'unown exclamation', 'normalizeAcText should turn exclamation mark into text');
+eq(normalizeAcText('?!'), 'question exclamation', 'normalizeAcText should preserve question/exclamation token order');
+eq(normalizeAcText('  Mr.   Mime  '), 'mr mime', 'normalizeAcText should trim and collapse spaces');
+eq(normalizeAcText("Farfetch'd"), 'farfetch d', 'normalizeAcText should preserve current apostrophe split behavior');
+eq(normalizeAcText('A-Raichu'), 'a raichu', 'normalizeAcText should collapse hyphenated names');
+eq(normalizeAcText('Pikachu Ph.D.'), 'pikachu phd', 'normalizeAcText should collapse dotted PhD');
+eq(normalizeAcText('Pikachu Ph D'), 'pikachu phd', 'normalizeAcText should collapse spaced PhD');
+eq(normalizeAcText('Pikachu Ph_D'), 'pikachu phd', 'normalizeAcText should collapse underscored PhD');
+eq(normalizeAcText(''), '', 'normalizeAcText should preserve empty string behavior');
+eq(normalizeAcText(null), '', 'normalizeAcText should preserve null behavior');
+eq(normalizeAcText(undefined), '', 'normalizeAcText should preserve undefined behavior');
+eq(normalizeAcText(false), '', 'normalizeAcText should preserve false behavior');
+eq(normalizeAcText(0), '', 'normalizeAcText should preserve zero behavior');
+eq(normalizeAcText(25), '25', 'normalizeAcText should stringify truthy numbers');
+eq(normalizeAcText({}), 'object object', 'normalizeAcText should preserve object stringification behavior');
+eq(normalizeAcText(['Pika', 'Gmax']), 'pikachu gigantamax', 'normalizeAcText should preserve array stringification behavior');
 
 // --- relativeTime ---
 // These helpers compute deltas against Date.now() internally, so tests build

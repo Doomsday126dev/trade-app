@@ -2045,3 +2045,27 @@
 ### Cluster C remaining (deferred — NOT yet extracted)
 - `normalizeAcText` (autocomplete text normalization) — MEDIUM risk: autocomplete matching depends on its exact substitution chain (`pika→pikachu`, `gmax/dmax` expansions, `?/!` tokenization, accent strip) and the deployed smoke does NOT cover autocomplete, so it needs an exhaustive golden matrix and likely its own small module (e.g. `autocompleteText.js`). Pure, but do not rush.
 - `scatterbugPatternLabel` (parses the pattern from a `Scatterbug (X)` label) — LOW risk but niche; feeds only the canvas image-export label and isn't smoke-covered. Best folded into a future export-helper module rather than moved alone.
+
+## 2026-05-28 - Codex - Autocomplete text normalizer extraction
+
+### Summary
+- Extracted the pure `normalizeAcText(s)` helper from `index.html` into `js/domain/autocompleteText.js`.
+- Body copied behavior-exact; exported via `window.PogoDomain.autocompleteText` and rebound to the same local name in `index.html`.
+- Added golden checks for aliases, accents, punctuation, PhD collapsing, marker text, and existing falsy/non-string coercion behavior.
+
+### Files touched
+- `index.html`
+- `js/domain/autocompleteText.js`
+- `scripts/check-domain-helpers.js`
+- `docs/MAINTENANCE-LOG.md`
+
+### Verification
+- Run `node --check js/domain/autocompleteText.js`.
+- Run `node --check scripts/check-domain-helpers.js`.
+- Run `npm run check:domain`.
+- Run the inline `index.html` parse check.
+- Run `git diff --check`.
+
+### Known risks / TODOs
+- Autocomplete UI behavior is not directly covered by the deployed smoke suite; this extraction is protected by golden helper tests and script-load guards.
+- Add an autocomplete-specific smoke test before changing scoring, rendering, or alias behavior.
