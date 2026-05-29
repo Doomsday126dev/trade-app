@@ -2092,3 +2092,28 @@
 
 ### Known risks / TODOs
 - Autocomplete rendering and event handlers remain inline and are not covered by deployed smoke. Add focused autocomplete UI smoke before changing scoring behavior or result rendering.
+
+## 2026-05-28 - Codex - Autocomplete ranking helper extraction
+
+### Summary
+- Extracted the repeated autocomplete ranking/filtering pipeline into `js/domain/autocompleteRanking.js`.
+- New helpers: `autocompleteDexSortValue(e)`, `compareAutocompleteMatches(a,b,opts)`, and `rankAutocompleteItems(items,rawQuery,opts)`.
+- `index.html` now keeps autocomplete builders/rendering/event handlers inline, while My List, special board, and Inventory autocomplete call sites use the shared ranking helper.
+
+### Files touched
+- `index.html`
+- `js/domain/autocompleteRanking.js`
+- `scripts/check-domain-helpers.js`
+- `docs/MAINTENANCE-LOG.md`
+
+### Verification
+- Run `node --check js/domain/autocompleteRanking.js`.
+- Run `node --check scripts/check-domain-helpers.js`.
+- Run `npm run check:domain`.
+- Run the inline `index.html` parse check.
+- Run `git diff --check`.
+- Deployed GitHub Pages smoke passed after the extraction: 18 passed.
+
+### Known risks / TODOs
+- Autocomplete rendering, item builders, and event handlers remain in `index.html`; do not move them without UI smoke/snapshot coverage.
+- Special board autocomplete intentionally disables alpha tiebreaking so equal score/dex matches preserve insertion order.

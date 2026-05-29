@@ -51,6 +51,7 @@ function deepEq(actual, expected, message) {
   'js/domain/fuzzyText.js',
   'js/domain/autocompleteText.js',
   'js/domain/autocompleteMatching.js',
+  'js/domain/autocompleteRanking.js',
   'js/domain/relativeTime.js',
   'js/domain/spriteSlugs.js',
   'js/utils/textSafety.js'
@@ -74,6 +75,7 @@ assert(domain.pokemonKeys, 'pokemonKeys namespace should exist');
 assert(domain.fuzzyText, 'fuzzyText namespace should exist');
 assert(domain.autocompleteText, 'autocompleteText namespace should exist');
 assert(domain.autocompleteMatching, 'autocompleteMatching namespace should exist');
+assert(domain.autocompleteRanking, 'autocompleteRanking namespace should exist');
 assert(domain.relativeTime, 'relativeTime namespace should exist');
 assert(domain.spriteSlugs, 'spriteSlugs namespace should exist');
 assert(utils.textSafety, 'textSafety namespace should exist');
@@ -520,6 +522,84 @@ eq(acMatchScore({ search: 'pikachu 25', no: 25 }, '25'), 0, 'acMatchScore should
 eq(acMatchScore({ search: 'pikachu 25', no: 25 }, '2'), 1, 'acMatchScore should score pure dex prefixes');
 eq(acMatchScore({ search: 'pikachu 25', no: 25 }, '999'), -1, 'acMatchScore should reject unmatched pure dex queries');
 eq(acMatchScore({ search: 'pikachu libre', no: 25 }, 'raichu'), -1, 'acMatchScore should reject no-match text queries');
+
+// --- autocompleteRanking ---
+const { autocompleteDexSortValue, compareAutocompleteMatches, rankAutocompleteItems } = domain.autocompleteRanking;
+eq(autocompleteDexSortValue({ no: 25 }), 25, 'autocompleteDexSortValue should parse numeric dex values');
+eq(autocompleteDexSortValue({}), 9999, 'autocompleteDexSortValue should fallback for missing dex values');
+eq(autocompleteDexSortValue({ no: null }), 9999, 'autocompleteDexSortValue should fallback for null dex values');
+eq(autocompleteDexSortValue({ no: '' }), 9999, 'autocompleteDexSortValue should fallback for empty dex values');
+eq(autocompleteDexSortValue({ no: '0' }), 9999, 'autocompleteDexSortValue should preserve parseInt zero fallback quirk');
+eq(
+  compareAutocompleteMatches(
+    { e: { dn: 'Beta', no: 25 }, score: 1 },
+    { e: { dn: 'Alpha', no: 25 }, score: 1 },
+    { alphaTieBreak: false }
+  ),
+  0,
+  'compareAutocompleteMatches should omit alpha sorting when alphaTieBreak is false'
+);
+deepEq(
+  rankAutocompleteItems([{ name: 'Pikachu', dn: 'Pikachu', no: 25, search: 'pikachu' }], 'raichu'),
+  [],
+  'rankAutocompleteItems should filter no-match results'
+);
+deepEq(
+  rankAutocompleteItems([
+    { name: 'Libre', dn: 'Libre', no: 1, search: 'pikachu libre' },
+    { name: 'Pikachu', dn: 'Pikachu', no: 25, search: 'pikachu' }
+  ], 'pika').map(e => e.dn),
+  ['Pikachu', 'Libre'],
+  'rankAutocompleteItems should order by score before dex'
+);
+deepEq(
+  rankAutocompleteItems([
+    { name: 'Pikachu Z', dn: 'Zzz', no: 25, search: 'pikachu zzz' },
+    { name: 'Pikachu A', dn: 'Aaa', no: 26, search: 'pikachu aaa' }
+  ], 'pika').map(e => e.dn),
+  ['Zzz', 'Aaa'],
+  'rankAutocompleteItems should order equal scores by dex before alpha'
+);
+deepEq(
+  rankAutocompleteItems([
+    { name: 'Pikachu B', dn: 'Beta', no: 25, search: 'pikachu beta' },
+    { name: 'Pikachu A', dn: 'Alpha', no: 25, search: 'pikachu alpha' }
+  ], 'pika').map(e => e.dn),
+  ['Alpha', 'Beta'],
+  'rankAutocompleteItems should alpha-sort equal score and dex by default'
+);
+deepEq(
+  rankAutocompleteItems([
+    { name: 'Pikachu B', dn: 'Beta', no: 25, search: 'pikachu beta' },
+    { name: 'Pikachu A', dn: 'Alpha', no: 25, search: 'pikachu alpha' }
+  ], 'pika', { alphaTieBreak: false }).map(e => e.dn),
+  ['Beta', 'Alpha'],
+  'rankAutocompleteItems should preserve insertion order for equal score/dex when alpha tiebreak is disabled'
+);
+eq(
+  rankAutocompleteItems(Array.from({ length: AC_RESULT_LIMIT + 5 }, (_, i) => ({ name: `Pikachu ${i}`, dn: `Pikachu ${i}`, no: 25, search: `pikachu ${i}` })), 'pika').length,
+  AC_RESULT_LIMIT,
+  'rankAutocompleteItems should use AC_RESULT_LIMIT by default'
+);
+eq(
+  rankAutocompleteItems(Array.from({ length: 10 }, (_, i) => ({ name: `Pikachu ${i}`, dn: `Pikachu ${i}`, no: 25, search: `pikachu ${i}` })), 'pika', { limit: 6 }).length,
+  6,
+  'rankAutocompleteItems should honor a custom limit'
+);
+deepEq(
+  rankAutocompleteItems([
+    { name: 'Pikachu', dn: 'Pikachu', no: 25, search: 'pikachu 25' },
+    { name: 'Ivysaur', dn: 'Ivysaur', no: 2, search: 'ivysaur 2' }
+  ], '2').map(e => e.no),
+  [2, 25],
+  'rankAutocompleteItems should preserve pure-digit exact dex scoring over dex prefix scoring'
+);
+const rankInput = [
+  { name: 'Pikachu B', dn: 'Beta', no: 25, search: 'pikachu beta' },
+  { name: 'Pikachu A', dn: 'Alpha', no: 25, search: 'pikachu alpha' }
+];
+rankAutocompleteItems(rankInput, 'pika');
+deepEq(rankInput.map(e => e.dn), ['Beta', 'Alpha'], 'rankAutocompleteItems should not mutate the input array order');
 
 // --- relativeTime ---
 // These helpers compute deltas against Date.now() internally, so tests build

@@ -2371,6 +2371,7 @@ window.__pogoBootWatch=setTimeout(function(){
 <script src="js/domain/fuzzyText.js"></script>
 <script src="js/domain/autocompleteText.js"></script>
 <script src="js/domain/autocompleteMatching.js"></script>
+<script src="js/domain/autocompleteRanking.js"></script>
 <script src="js/domain/relativeTime.js"></script>
 <script src="js/utils/textSafety.js"></script>
 <script>
@@ -2472,6 +2473,9 @@ const {normalizeAcText}=autocompleteTextDomain;
 const autocompleteMatchingDomain=window.PogoDomain?.autocompleteMatching;
 if(!autocompleteMatchingDomain)throw new Error('Autocomplete matching helpers failed to load');
 const {AC_RESULT_LIMIT,acItemSearchText,acMatchScore}=autocompleteMatchingDomain;
+const autocompleteRankingDomain=window.PogoDomain?.autocompleteRanking;
+if(!autocompleteRankingDomain)throw new Error('Autocomplete ranking helpers failed to load');
+const {autocompleteDexSortValue,compareAutocompleteMatches,rankAutocompleteItems}=autocompleteRankingDomain;
 const relativeTimeDomain=window.PogoDomain?.relativeTime;
 if(!relativeTimeDomain)throw new Error('Relative time helpers failed to load');
 const {STALE_WARN,STALE_OLD,freshnessClass,freshnessLabel,freshnessColor,relativeTime}=relativeTimeDomain;
@@ -5019,21 +5023,14 @@ function acSearch(q){
   if(!q||q.length<1){dd.classList.remove('open');return;}
   const arr=listSource(myListType);
   const existing=new Set(Object.keys(allData[myListType]?.[cur]||{}));
-  acFiltered=acItems.map(e=>({e,score:acMatchScore(e,q)}))
-    .filter(x=>x.score>=0)
-    .sort((a,b)=>a.score-b.score||(parseInt(a.e.no)||9999)-(parseInt(b.e.no)||9999)||alphaCompare(a.e.dn,b.e.dn))
-    .slice(0,AC_RESULT_LIMIT)
-    .map(x=>x.e);
-  const existingMatches=arr
+  acFiltered=rankAutocompleteItems(acItems,q);
+  const existingItems=arr
     .filter(e=>existing.has(e.name))
     .map(e=>{
       const item={name:e.name,dn:e.displayName||e.name,no:e.no||null,spriteUrl:entrySpriteUrl(e,e.name)};
-      return{e:item,score:acMatchScore({name:item.name,dn:item.dn,no:item.no,search:acItemSearchText(item)},q)};
-    })
-    .filter(x=>x.score>=0)
-    .sort((a,b)=>a.score-b.score||(parseInt(a.e.no)||9999)-(parseInt(b.e.no)||9999)||alphaCompare(a.e.dn,b.e.dn))
-    .slice(0,6)
-    .map(x=>x.e);
+      return item;
+    });
+  const existingMatches=rankAutocompleteItems(existingItems,q,{limit:6});
   acFocusIdx=-1;
   // Detect if user is searching for a Pokemon family with multiple variants
   const family=detectVariantFamily(q);
@@ -8376,11 +8373,7 @@ function specialAcSearch(side,q){
   const dd=document.getElementById(`special-${side}-dd`);
   if(!q||q.length<1){dd.classList.remove('open');return;}
   const items=_ensureSpecialAcItems();
-  const filtered=items.map(e=>({e,score:acMatchScore(e,q)}))
-    .filter(x=>x.score>=0)
-    .sort((a,b)=>a.score-b.score||(parseInt(a.e.no)||9999)-(parseInt(b.e.no)||9999))
-    .slice(0,AC_RESULT_LIMIT)
-    .map(x=>x.e);
+  const filtered=rankAutocompleteItems(items,q,{alphaTieBreak:false});
   _specialAcFocus[side]=-1;
   if(!filtered.length){dd.innerHTML='<div class="ac-empty">No results</div>';}
   else{
@@ -9855,11 +9848,7 @@ function haveAcSearch(q){
   const dd=document.getElementById('have-ac-dropdown');
   if(!q||q.length<1){dd.classList.remove('open');return;}
   if(!haveAcItems.length)buildHaveAcItems();
-  haveAcFiltered=haveAcItems.map(e=>({e,score:acMatchScore(e,q)}))
-    .filter(x=>x.score>=0)
-    .sort((a,b)=>a.score-b.score||(parseInt(a.e.no)||9999)-(parseInt(b.e.no)||9999)||alphaCompare(a.e.dn,b.e.dn))
-    .slice(0,AC_RESULT_LIMIT)
-    .map(x=>x.e);
+  haveAcFiltered=rankAutocompleteItems(haveAcItems,q);
   haveAcFocusIdx=-1;
   if(!haveAcFiltered.length){
     dd.innerHTML=`<div class="ac-empty">No results</div>`;
