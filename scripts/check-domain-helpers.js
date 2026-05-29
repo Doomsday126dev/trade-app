@@ -502,4 +502,64 @@ eq(normalizeSpriteKey('Nidoran♀'), 'nidoran', 'normalizeSpriteKey should strip
 eq(normalizeSpriteKey('Porygon_Z.test-form'), 'porygon z test form', 'normalizeSpriteKey should collapse underscore/dot/hyphen separators');
 eq(normalizeSpriteKey(''), '', 'normalizeSpriteKey should handle empty string');
 
+// --- pokemondbSlug ---
+const { pokemondbSlug, REGIONAL_SLUG_MAP } = domain.spriteSlugs;
+
+deepEq(REGIONAL_SLUG_MAP, { A: 'alolan', G: 'galarian', H: 'hisuian', P: 'paldean' }, 'REGIONAL_SLUG_MAP should preserve region words');
+
+// Regional prefix, no parenthetical (A/G/H/P)
+eq(pokemondbSlug('A-Raichu', 'A-Raichu'), 'raichu-alolan', 'pokemondbSlug should expand Alolan prefix');
+eq(pokemondbSlug('G-Meowth', 'G-Meowth'), 'meowth-galarian', 'pokemondbSlug should expand Galarian prefix');
+eq(pokemondbSlug('H-Zorua', 'H-Zorua'), 'zorua-hisuian', 'pokemondbSlug should expand Hisuian prefix');
+eq(pokemondbSlug('P-Wooper', 'P-Wooper'), 'wooper-paldean', 'pokemondbSlug should expand Paldean prefix');
+
+// Regional + parenthetical reorder
+eq(pokemondbSlug('P-Tauros (Aqua)', 'P-Tauros (Aqua)'), 'tauros-paldean-aqua', 'pokemondbSlug should reorder regional + form');
+
+// Regional + punctuation
+eq(pokemondbSlug("G-Farfetch'd", "G-Farfetch'd"), 'farfetchd-galarian', 'pokemondbSlug should strip apostrophe in regional name');
+eq(pokemondbSlug('G-Mr_ Mime', 'G-Mr. Mime'), 'mr-mime-galarian', 'pokemondbSlug should drop period in regional name (dn precedence)');
+
+// Basculin: synthetic quirk-trigger path + real-data over-match guard
+eq(pokemondbSlug('Basculin (Red)', 'Basculin (Red)'), 'basculin-red-striped', 'pokemondbSlug should apply basculin striped quirk for bare colour');
+eq(pokemondbSlug('Basculin (Red Stripe)', 'Basculin (Red Stripe)'), 'basculin-red-stripe', 'pokemondbSlug should NOT over-match real-data Red Stripe (quirk dead)');
+
+// Flabébé: real flower quirk + over-match guard
+eq(pokemondbSlug('Flabébé (Red Flower)', 'Flabébé (Red Flower)'), 'flabebe-red', 'pokemondbSlug should drop -flower for Flabebe');
+eq(pokemondbSlug('Flabébé', 'Flabébé'), 'flabebe', 'pokemondbSlug should not over-match bare Flabebe');
+
+// Oricorio: real-data apostrophe path (quirk dead) + synthetic Pa-u path (quirk live)
+eq(pokemondbSlug("Oricorio (Pa'u)", "Oricorio (Pa'u)"), 'oricorio-pau', 'pokemondbSlug should produce oricorio-pau from apostrophe form');
+eq(pokemondbSlug('Oricorio (Pa-u)', 'Oricorio (Pa-u)'), 'oricorio-pau', 'pokemondbSlug should apply oricorio pa-u quirk for hyphen form');
+
+// Shellos sea-name quirks + over-match guard
+eq(pokemondbSlug('Shellos (Pink)', 'Shellos (Pink)'), 'shellos-west', 'pokemondbSlug should map Shellos Pink to west');
+eq(pokemondbSlug('Shellos (Blue)', 'Shellos (Blue)'), 'shellos-east', 'pokemondbSlug should map Shellos Blue to east');
+eq(pokemondbSlug('Shellos', 'Shellos'), 'shellos', 'pokemondbSlug should not over-match bare Shellos');
+
+// Plain punctuation / non-regional parenthetical
+eq(pokemondbSlug('Mr. Mime', 'Mr. Mime'), 'mr-mime', 'pokemondbSlug should slug Mr. Mime');
+eq(pokemondbSlug("Farfetch'd", "Farfetch'd"), 'farfetchd', 'pokemondbSlug should slug Farfetchd');
+eq(pokemondbSlug('Vivillon (Garden)', 'Vivillon (Garden)'), 'vivillon-garden', 'pokemondbSlug should flatten non-regional parenthetical');
+
+// Female suffix: append / non-append / no double-append
+eq(pokemondbSlug('Pikachu', 'Pikachu', 'f'), 'pikachu-female', 'pokemondbSlug should append -female for f');
+eq(pokemondbSlug('Pikachu', 'Pikachu', ''), 'pikachu', 'pokemondbSlug should not append for empty gender');
+eq(pokemondbSlug('Pikachu', 'Pikachu', 'm'), 'pikachu', 'pokemondbSlug should not append for m');
+eq(pokemondbSlug('Frillish (Female)', 'Frillish (Female)', 'f'), 'frillish-female', 'pokemondbSlug should not double-append female');
+
+// dn precedence + fallback to name
+eq(pokemondbSlug('A-Raichu', 'Raichu (Alolan)'), 'raichu-alolan', 'pokemondbSlug should prefer dn over name');
+eq(pokemondbSlug('Pikachu', ''), 'pikachu', 'pokemondbSlug should fall back to name when dn empty');
+
+// Regional regex no-over-match
+eq(pokemondbSlug('Ho-Oh', 'Ho-Oh'), 'ho-oh', 'pokemondbSlug should not treat Ho-Oh as regional');
+eq(pokemondbSlug('Hitmonlee', 'Hitmonlee'), 'hitmonlee', 'pokemondbSlug should leave plain names alone');
+
+// Empty / blank / undefined / undefined-with-female early return
+eq(pokemondbSlug('', ''), '', 'pokemondbSlug should return empty for empty input');
+eq(pokemondbSlug('   ', '   '), '', 'pokemondbSlug should return empty for blank input');
+eq(pokemondbSlug(undefined, undefined), '', 'pokemondbSlug should return empty for undefined input');
+eq(pokemondbSlug(undefined, undefined, 'f'), '', 'pokemondbSlug should early-return before female append on empty input');
+
 console.log('Domain helper checks passed.');
