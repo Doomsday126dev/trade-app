@@ -2358,6 +2358,7 @@ window.__pogoBootWatch=setTimeout(function(){
 </script>
 <script src="data.js"></script>
 <script src="js/domain/priorities.js"></script>
+<script src="js/ui/badges.js"></script>
 <script src="js/domain/username.js"></script>
 <script src="js/domain/priorityValues.js"></script>
 <script src="js/domain/scheduleDates.js"></script>
@@ -2435,6 +2436,9 @@ const FIREBASE_MEASUREMENT_ID="G-0ZFL5NDQFP";
 const priorityDomain=window.PogoDomain?.priorities;
 if(!priorityDomain)throw new Error('Priority helpers failed to load');
 const {PRI,PRI_ORDER,LIST_LABELS,priLabel,priName,listLabel,sortEntries}=priorityDomain;
+const badgeUi=window.PogoUi?.badges;
+if(!badgeUi)throw new Error('Badge HTML helpers failed to load');
+const {priBadge,diffBadgeHtml}=badgeUi;
 const usernameDomain=window.PogoDomain?.username;
 if(!usernameDomain)throw new Error('Username helpers failed to load');
 const {alphaCompare}=usernameDomain;
@@ -3517,7 +3521,6 @@ async function verifyPin(pin,stored){
   return(await hashPin(pin))===storedStr;
 }
 function isSixDigitPin(pin){return/^\d{6}$/.test(pin);}
-function priBadge(p){return `${PRI[p]?.emoji||''} ${priLabel(p)}`.trim();}
 function lastLoginTime(username,data){
   return Number(data?.lastSeen||(data?.authUid&&allData.authIndex?.[data.authUid]?.lastSeen)||data?.lastUpdated||0);
 }
@@ -8249,16 +8252,6 @@ function computeSnapshotDiff(type,username){
   const removed=[...prevSet].filter(k=>!curSet.has(k));
   const changed=[...curSet].filter(k=>prevSet.has(k)&&prev.values?.[k]!==cur[k]);
   return{firstVisit:false,added,removed,changed,savedAt:prev.savedAt};
-}
-function diffBadgeHtml(diff){
-  if(diff.firstVisit)return'';
-  const total=diff.added.length+diff.removed.length+diff.changed.length;
-  if(!total)return'';
-  const parts=[];
-  if(diff.added.length)parts.push(`<span class="user-str-diff-badge added">+${diff.added.length}</span>`);
-  if(diff.removed.length)parts.push(`<span class="user-str-diff-badge removed">−${diff.removed.length}</span>`);
-  if(diff.changed.length)parts.push(`<span class="user-str-diff-badge">~${diff.changed.length}</span>`);
-  return parts.join('');
 }
 function diffDetailsHtml(diff,type,username){
   if(diff.firstVisit)return'';

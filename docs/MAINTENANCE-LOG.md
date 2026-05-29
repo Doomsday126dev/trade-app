@@ -2142,3 +2142,28 @@
 ### Known risks / TODOs
 - `strLevelsHtml`, render bodies, and the remaining badge/empty-state HTML helpers stay inline.
 - Future UI helper extractions should add exact snapshot assertions before moving markup-sensitive helpers.
+
+## 2026-05-29 - Codex - Badge HTML helper extraction
+
+### Summary
+- Extracted the markup-sensitive badge helpers `priBadge(p)` and `diffBadgeHtml(diff)` from `index.html` into `js/ui/badges.js`.
+- The new `window.PogoUi.badges` module depends on `window.PogoDomain.priorities` and loads immediately after `js/domain/priorities.js`; `index.html` rebinds the same local helper names so existing render call sites remain unchanged.
+- Added exact snapshot assertions for priority labels and string-diff badges, including the intentional real minus character `−` for removed counts.
+
+### Files touched
+- `index.html`
+- `js/ui/badges.js`
+- `scripts/check-domain-helpers.js`
+- `docs/MAINTENANCE-LOG.md`
+
+### Verification
+- Run `node --check js/ui/badges.js`.
+- Run `node --check scripts/check-domain-helpers.js`.
+- Run `npm run check:domain`.
+- Run the inline `index.html` parse check.
+- Run `git diff --check`.
+- Run deployed GitHub Pages smoke because this affects Strings-tab badge markup.
+
+### Known risks / TODOs
+- `emptyHtml`, `EMPTY_SVGS`, `userBadge`, `sparklineHtml`, and `eventBadgeForPokemon` remain inline.
+- Continue requiring exact snapshot assertions before extracting additional markup helpers.

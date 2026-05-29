@@ -39,6 +39,7 @@ function deepEq(actual, expected, message) {
 
 [
   'js/domain/priorities.js',
+  'js/ui/badges.js',
   'js/domain/username.js',
   'js/domain/priorityValues.js',
   'js/domain/scheduleDates.js',
@@ -66,6 +67,7 @@ assert(domain, 'window.PogoDomain namespace should exist');
 assert(utils, 'window.PogoUtils namespace should exist');
 assert(ui, 'window.PogoUi namespace should exist');
 assert(domain.priorities, 'priorities namespace should exist');
+assert(ui.badges, 'badges namespace should exist');
 assert(domain.username, 'username namespace should exist');
 assert(domain.priorityValues, 'priorityValues namespace should exist');
 assert(domain.scheduleDates, 'scheduleDates namespace should exist');
@@ -109,6 +111,47 @@ const sortOutput = sortEntries(sortInput);
 assert(sortOutput !== sortInput, 'sortEntries should return a new array, not mutate in place');
 eq(sortInput[0].p, 'L', 'sortEntries should leave the input array order unchanged');
 eq(sortOutput[0].p, 'H', 'sortEntries should sort the returned copy');
+
+// --- badges ---
+eq(ui.badges.priBadge('H'), '🔴 High', 'priBadge should render high priority snapshot');
+eq(ui.badges.priBadge('M'), '🟡 Medium', 'priBadge should render medium priority snapshot');
+eq(ui.badges.priBadge('L'), '🟢 Low', 'priBadge should render low priority snapshot');
+eq(ui.badges.priBadge('X'), 'X', 'priBadge should preserve unknown priority behavior');
+eq(ui.badges.priBadge(''), '', 'priBadge should preserve blank priority behavior');
+eq(ui.badges.priBadge(null), 'null', 'priBadge should preserve null priority behavior');
+eq(
+  ui.badges.diffBadgeHtml({ firstVisit: true, added: [], removed: [], changed: [] }),
+  '',
+  'diffBadgeHtml should render nothing on first visit'
+);
+eq(
+  ui.badges.diffBadgeHtml({ firstVisit: false, added: [], removed: [], changed: [] }),
+  '',
+  'diffBadgeHtml should render nothing when there are no changes'
+);
+eq(
+  ui.badges.diffBadgeHtml({ firstVisit: false, added: ['a'], removed: [], changed: [] }),
+  '<span class="user-str-diff-badge added">+1</span>',
+  'diffBadgeHtml should render added snapshot'
+);
+const removedDiffSnapshot = ui.badges.diffBadgeHtml({ firstVisit: false, added: [], removed: ['a', 'b'], changed: [] });
+eq(
+  removedDiffSnapshot,
+  '<span class="user-str-diff-badge removed">−2</span>',
+  'diffBadgeHtml should render removed snapshot with real minus'
+);
+assert(removedDiffSnapshot.includes('−2'), 'diffBadgeHtml removed snapshot should contain the real minus character');
+assert(!removedDiffSnapshot.includes('-2'), 'diffBadgeHtml removed snapshot should not contain ASCII hyphen minus');
+eq(
+  ui.badges.diffBadgeHtml({ firstVisit: false, added: [], removed: [], changed: ['a', 'b', 'c'] }),
+  '<span class="user-str-diff-badge">~3</span>',
+  'diffBadgeHtml should render changed snapshot'
+);
+eq(
+  ui.badges.diffBadgeHtml({ firstVisit: false, added: ['a'], removed: ['b', 'c'], changed: ['d'] }),
+  '<span class="user-str-diff-badge added">+1</span><span class="user-str-diff-badge removed">−2</span><span class="user-str-diff-badge">~1</span>',
+  'diffBadgeHtml should preserve added removed changed ordering'
+);
 
 // --- username ---
 const { alphaCompare } = domain.username;
