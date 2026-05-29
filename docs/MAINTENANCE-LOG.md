@@ -1966,3 +1966,82 @@
 ### Instructions for the next contributor
 - Any change to `pokemondbSlug` output is a behavior change (it picks sprite URLs), not modularization cleanup; pair it with the golden matrix and a deployed smoke run.
 - Preserve the dead Basculin/Oricorio quirks unless a deliberate, separately-scoped sprite-correctness task decides to address them.
+
+## 2026-05-28 - Claude - Relative-time helper extraction (Cluster A)
+
+### Summary
+- Extracted pure freshness/relative-time helpers from `index.html` into `js/domain/relativeTime.js` (commit `refactor: extract relative time helpers`).
+- Moved `freshnessClass`, `freshnessLabel`, `freshnessColor`, `relativeTime`, and the `STALE_WARN`/`STALE_OLD` constants (verified those two constants were referenced nowhere else, so they were co-located into the module).
+- Bodies copied byte-exact; all five exported via `window.PogoDomain.relativeTime` and rebound to the same local names in `index.html`.
+- `freshnessLabel` and `relativeTime` overlap (two slightly different relative-time formatters); they were intentionally preserved as separate functions, NOT merged — merging would be a behavior change.
+
+### Files touched
+- `index.html`
+- `js/domain/relativeTime.js`
+- `scripts/check-domain-helpers.js`
+- `docs/MAINTENANCE-LOG.md`
+
+### Verification
+- `node --check` on the module and harness, `npm run check:domain`, inline `index.html` parse check, and `git diff --check` all passed. Golden tests use a captured `now` plus mid-bucket offsets so timestamp deltas stay deterministic.
+
+### Known risks / TODOs
+- Output is display text only (no sprite/URL/render-shape impact), so a deployed smoke was not required for this one.
+- Do not "dedupe" `freshnessLabel`/`relativeTime` without an explicit behavior-change task.
+
+## 2026-05-28 - Claude - Group domain helper checks by module (test-only)
+
+### Summary
+- Reorganized `scripts/check-domain-helpers.js` so assertions are grouped under `// --- <module> ---` headers in script/module load order (commit `test: group domain helper checks by module`).
+- Pure test organization: added section-header comments and relocated the `textSafety` block to the end so section order matches the actual `loadBrowserScript` array (the only block move).
+- Proved no behavior change: the sorted set of `eq`/`deepEq`/`assert` lines is byte-identical before/after (244 == 244), and the non-comment code multiset is identical.
+
+### Files touched
+- `scripts/check-domain-helpers.js`
+- `docs/MAINTENANCE-LOG.md`
+
+### Verification
+- `node --check`, `npm run check:domain`, `git diff --check` all passed. No app code touched; no deployed smoke needed (harness-only).
+
+### Known risks / TODOs
+- The harness is ~590 lines now. If it keeps growing, consider per-module helper functions, but do not introduce a test framework.
+
+## 2026-05-28 - Claude - Max-type entry helper extraction (Cluster C)
+
+### Summary
+- Extracted `maxTypeForEntry(entry, type)` from `index.html` into existing `js/domain/pokemonEntryRules.js` (commit `refactor: extract max type entry helper`) — it is an entry classifier and belongs with `uniqueEntries`/`costumeDedupeKey`/`isTradeableForWishlist`.
+- Body copied byte-exact; exported via `window.PogoDomain.pokemonEntryRules` and rebound in `index.html`. All 7 callers (search-string max filter, Browse crown map/render, currentListEntries, maxMarkForEntry, combined/diff entry build, parseImportString) resolve the rebound name.
+- `MAX_TYPE_SEARCH` (used by callers, not inside the function) intentionally left in `index.html`.
+
+### Files touched
+- `index.html`
+- `js/domain/pokemonEntryRules.js`
+- `scripts/check-domain-helpers.js`
+- `docs/MAINTENANCE-LOG.md`
+
+### Verification
+- `node --check` (both files), `npm run check:domain` (13 new golden assertions), inline parse check, `git diff --check` all passed.
+- Deployed Playwright smoke run against the live build: `14 passed, 0 failed, 0 skipped`; Browse + sprite-slot checks passed (this helper drives Browse crown icons + Dmax/Gmax search qualifiers).
+
+### Known risks / TODOs
+- Wide call surface (7 sites) — any future signature change ripples across search/render/import; keep it pure.
+
+## 2026-05-28 - Claude - Sort-entries helper extraction (Cluster C)
+
+### Summary
+- Extracted `sortEntries(entries)` from `index.html` into `js/domain/priorities.js` (commit `refactor: extract sort entries helper`), co-located with `PRI_ORDER` so it references the module-local constant with no cross-module dependency.
+- Body copied byte-exact; exported via `window.PogoDomain.priorities` and rebound in `index.html`. Both callers (in `renderBrowse`) resolve the rebound name.
+- Sorts Browse trainer badges by priority (`H→M→L`, unknown last), then case-insensitive user, then mod.
+
+### Files touched
+- `index.html`
+- `js/domain/priorities.js`
+- `scripts/check-domain-helpers.js`
+- `docs/MAINTENANCE-LOG.md`
+
+### Verification
+- `node --check` (both files), `npm run check:domain` (6 new golden order-tests incl. input-not-mutated), inline parse check, `git diff --check` all passed.
+- Affects visible Browse badge ordering; deployed Playwright smoke is the rendering gate (run after deploy and confirm 14/14).
+
+### Cluster C remaining (deferred — NOT yet extracted)
+- `normalizeAcText` (autocomplete text normalization) — MEDIUM risk: autocomplete matching depends on its exact substitution chain (`pika→pikachu`, `gmax/dmax` expansions, `?/!` tokenization, accent strip) and the deployed smoke does NOT cover autocomplete, so it needs an exhaustive golden matrix and likely its own small module (e.g. `autocompleteText.js`). Pure, but do not rush.
+- `scatterbugPatternLabel` (parses the pattern from a `Scatterbug (X)` label) — LOW risk but niche; feeds only the canvas image-export label and isn't smoke-covered. Best folded into a future export-helper module rather than moved alone.
