@@ -2367,6 +2367,7 @@ window.__pogoBootWatch=setTimeout(function(){
 <script src="js/domain/scheduleEventRules.js"></script>
 <script src="js/domain/scheduleTradeRules.js"></script>
 <script src="js/domain/pokemonKeys.js"></script>
+<script src="js/domain/spriteSlugs.js"></script>
 <script src="js/domain/fuzzyText.js"></script>
 <script src="js/domain/relativeTime.js"></script>
 <script src="js/utils/textSafety.js"></script>
@@ -2457,6 +2458,9 @@ const {externalTradePartners,parseExternalTradePartners,scheduledTradeQuantity,s
 const pokemonKeysDomain=window.PogoDomain?.pokemonKeys;
 if(!pokemonKeysDomain)throw new Error('Pokemon key helpers failed to load');
 const {_normGender,HAVE_KEY_SEP,splitHaveKey,joinHaveKey,totalQtyForName,haveEntryInfo,haveEntryValue}=pokemonKeysDomain;
+const spriteSlugsDomain=window.PogoDomain?.spriteSlugs;
+if(!spriteSlugsDomain)throw new Error('Sprite slug helpers failed to load');
+const {padDex,normalizeCostumeLookupKey,pokemondbGoSpeciesSlug,normalizeSpriteKey}=spriteSlugsDomain;
 const fuzzyTextDomain=window.PogoDomain?.fuzzyText;
 if(!fuzzyTextDomain)throw new Error('Fuzzy text helpers failed to load');
 const {_phoneticCode,_levenshtein}=fuzzyTextDomain;
@@ -2839,10 +2843,6 @@ const LEGENDARY_AVATAR_ENTRIES=[
   [1020,'Gouging Fire'],[1021,'Raging Bolt'],[1022,'Iron Boulder'],[1023,'Iron Crown'],[1024,'Terapagos'],[1025,'Pecharunt']
 ].map(([no,name,displayName])=>({no,name,displayName:displayName||name,users:{}}));
 const EXTRA_COSTUME_SPRITES=Object.fromEntries([...EXTRA_COSTUME_ENTRIES,...EXTRA_FORM_ENTRIES].map(e=>[e.name,e.spriteUrl]));
-function padDex(no){
-  const n=parseInt(no);
-  return Number.isFinite(n)?String(n).padStart(3,'0'):'';
-}
 function goCostumeSpriteUrl(no,name){
   const slug=GO_COSTUME_SPRITE_SLUGS[name];
   const dex=padDex(no);
@@ -2892,9 +2892,6 @@ const POKEMONDB_GO_COSTUME_ALIASES={
   'Sylveon Cherry Blossoms':['sylveon-cherry-blossoms'],
   'Sylveon Explorer Hat':['sylveon-explorer-hat']
 };
-function normalizeCostumeLookupKey(name=''){
-  return String(name||'').trim().toLowerCase().replace(/\s+/g,' ');
-}
 const POKEMONDB_GO_COSTUME_ALIAS_LOOKUP=Object.fromEntries(
   Object.entries(POKEMONDB_GO_COSTUME_ALIASES).map(([key,value])=>[normalizeCostumeLookupKey(key),value])
 );
@@ -2932,15 +2929,6 @@ const POKEMONDB_GO_SUFFIX_PATTERNS=[
   [/ Spooky Festival$/i,['spooky-festival','spooky']],
   [/ Night Cap$/i,['night-cap','nightcap']]
 ];
-function pokemondbGoSpeciesSlug(name=''){
-  return String(name||'').trim().toLowerCase()
-    .normalize('NFD').replace(/[̀-ͯ]/g,'')
-    .replace(/[.'’]/g,'')
-    .replace(/♀|♂/g,'')
-    .replace(/\s+/g,'-')
-    .replace(/-+/g,'-')
-    .replace(/^-|-$/g,'');
-}
 function pokemondbGoCostumeUrls(name='',{allowPattern=true}={}){
   const raw=String(name||'').trim();
   if(!raw)return[];
@@ -5551,9 +5539,6 @@ function listSource(type){
   const wishlistOnly=DB.wishlist.filter(isTradeableForWishlist);
   const legendariesOnly=LEGENDARY_AVATAR_ENTRIES.filter(isTradeableForWishlist);
   return uniqueEntries(wishlistOnly,maxTradeEntries('dynamax'),maxTradeEntries('gmax'),allCostumeEntries(),legendariesOnly);
-}
-function normalizeSpriteKey(s){
-  return String(s||'').toLowerCase().replace(/[._-]+/g,' ').replace(/[^a-z0-9 ]/g,'').replace(/\s+/g,' ').trim();
 }
 let spriteIndex=null;
 function spriteSourceIndex(){

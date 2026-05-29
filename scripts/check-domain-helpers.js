@@ -50,6 +50,7 @@ function deepEq(actual, expected, message) {
   'js/domain/pokemonKeys.js',
   'js/domain/fuzzyText.js',
   'js/domain/relativeTime.js',
+  'js/domain/spriteSlugs.js',
   'js/utils/textSafety.js'
 ].forEach(loadBrowserScript);
 
@@ -70,6 +71,7 @@ assert(domain.scheduleTradeRules, 'scheduleTradeRules namespace should exist');
 assert(domain.pokemonKeys, 'pokemonKeys namespace should exist');
 assert(domain.fuzzyText, 'fuzzyText namespace should exist');
 assert(domain.relativeTime, 'relativeTime namespace should exist');
+assert(domain.spriteSlugs, 'spriteSlugs namespace should exist');
 assert(utils.textSafety, 'textSafety namespace should exist');
 
 const { priLabel, priName, listLabel } = domain.priorities;
@@ -468,5 +470,36 @@ eq(relativeTime(minsAgo(59.5)), '59m ago', 'relativeTime should report 59 minute
 eq(relativeTime(hoursAgo(3.5)), '3h ago', 'relativeTime should report hours');
 eq(relativeTime(hoursAgo(23.5)), '23h ago', 'relativeTime should report 23 hours');
 eq(relativeTime(daysAgo(2.5)), '2d ago', 'relativeTime should report days');
+
+// --- spriteSlugs ---
+const { padDex, normalizeCostumeLookupKey, pokemondbGoSpeciesSlug, normalizeSpriteKey } = domain.spriteSlugs;
+
+eq(padDex(1), '001', 'padDex should zero-pad single digit');
+eq(padDex(25), '025', 'padDex should zero-pad two digits');
+eq(padDex(386), '386', 'padDex should leave three digits');
+eq(padDex('25'), '025', 'padDex should accept numeric strings');
+eq(padDex(0), '000', 'padDex should pad zero');
+eq(padDex(''), '', 'padDex should return empty for empty string');
+eq(padDex('abc'), '', 'padDex should return empty for non-numeric');
+eq(padDex(undefined), '', 'padDex should return empty for undefined');
+
+eq(normalizeCostumeLookupKey('Eevee Flower Crown'), 'eevee flower crown', 'normalizeCostumeLookupKey should lowercase');
+eq(normalizeCostumeLookupKey('  PIKACHU   Party  '), 'pikachu party', 'normalizeCostumeLookupKey should trim and collapse whitespace');
+eq(normalizeCostumeLookupKey(''), '', 'normalizeCostumeLookupKey should handle empty string');
+eq(normalizeCostumeLookupKey(undefined), '', 'normalizeCostumeLookupKey should handle undefined');
+
+eq(pokemondbGoSpeciesSlug('Pikachu'), 'pikachu', 'pokemondbGoSpeciesSlug should lowercase plain name');
+eq(pokemondbGoSpeciesSlug("Farfetch'd"), 'farfetchd', 'pokemondbGoSpeciesSlug should strip apostrophe');
+eq(pokemondbGoSpeciesSlug('Mr. Mime'), 'mr-mime', 'pokemondbGoSpeciesSlug should drop period and hyphenate space');
+eq(pokemondbGoSpeciesSlug('Nidoran♀'), 'nidoran', 'pokemondbGoSpeciesSlug should strip gender symbol');
+eq(pokemondbGoSpeciesSlug('Flabébé'), 'flabebe', 'pokemondbGoSpeciesSlug should strip accents');
+eq(pokemondbGoSpeciesSlug('  Mime   Jr  '), 'mime-jr', 'pokemondbGoSpeciesSlug should trim and collapse to single hyphens');
+eq(pokemondbGoSpeciesSlug(''), '', 'pokemondbGoSpeciesSlug should handle empty string');
+
+eq(normalizeSpriteKey('Mr. Mime'), 'mr mime', 'normalizeSpriteKey should drop period and keep single space');
+eq(normalizeSpriteKey('A-Raichu'), 'a raichu', 'normalizeSpriteKey should turn hyphen into space');
+eq(normalizeSpriteKey('Nidoran♀'), 'nidoran', 'normalizeSpriteKey should strip gender symbol');
+eq(normalizeSpriteKey('Porygon_Z.test-form'), 'porygon z test form', 'normalizeSpriteKey should collapse underscore/dot/hyphen separators');
+eq(normalizeSpriteKey(''), '', 'normalizeSpriteKey should handle empty string');
 
 console.log('Domain helper checks passed.');
