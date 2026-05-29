@@ -156,7 +156,8 @@ eq(formVariantFromSearchFilters(['white']), '', 'formVariantFromSearchFilters sh
 const {
   uniqueEntries,
   costumeDedupeKey,
-  isTradeableForWishlist
+  isTradeableForWishlist,
+  maxTypeForEntry
 } = domain.pokemonEntryRules;
 deepEq(
   uniqueEntries([{ name: 'Bulbasaur', no: 1 }, { name: 'Charmander', no: 4 }], [{ name: 'Bulbasaur', no: 999 }]),
@@ -188,6 +189,19 @@ eq(isTradeableForWishlist({ name: 'Melmetal' }), true, 'isTradeableForWishlist s
 eq(isTradeableForWishlist({ name: 'Giratina (Origin)' }), true, 'isTradeableForWishlist should allow normal legendary entries');
 eq(isTradeableForWishlist(null), true, 'isTradeableForWishlist should preserve null edge behavior');
 eq(isTradeableForWishlist({}), true, 'isTradeableForWishlist should preserve blank object edge behavior');
+eq(maxTypeForEntry(null), '', 'maxTypeForEntry should return empty for null entry');
+eq(maxTypeForEntry({}), '', 'maxTypeForEntry should return empty for blank entry');
+eq(maxTypeForEntry({ name: 'Charizard' }, 'gmax'), 'gmax', 'maxTypeForEntry should honor explicit gmax type argument');
+eq(maxTypeForEntry({ name: 'Charizard' }, 'dynamax'), 'dynamax', 'maxTypeForEntry should honor explicit dynamax type argument');
+eq(maxTypeForEntry({ name: 'Charizard', maxType: 'gmax' }), 'gmax', 'maxTypeForEntry should pass through entry.maxType');
+eq(maxTypeForEntry({ name: 'Charizard', maxType: 'dynamax' }, ''), 'dynamax', 'maxTypeForEntry should pass through entry.maxType when type arg is blank');
+eq(maxTypeForEntry({ name: 'Venusaur (Gigantamax)' }), 'gmax', 'maxTypeForEntry should detect Gigantamax from name');
+eq(maxTypeForEntry({ displayName: 'Gigantamax Lapras' }), 'gmax', 'maxTypeForEntry should detect Gigantamax from displayName');
+eq(maxTypeForEntry({ name: 'Excadrill (Dynamax)' }), 'dynamax', 'maxTypeForEntry should detect Dynamax from name');
+eq(maxTypeForEntry({ dn: 'Snorlax Dynamax' }), 'dynamax', 'maxTypeForEntry should scan the dn field');
+eq(maxTypeForEntry({ name: 'Pikachu' }), '', 'maxTypeForEntry should return empty for a plain entry');
+eq(maxTypeForEntry({ name: 'Pikachu' }, 'sparkle'), '', 'maxTypeForEntry should ignore an unrecognized type argument');
+eq(maxTypeForEntry({ name: 'Pikachu', maxType: 'frenzy' }), 'frenzy', 'maxTypeForEntry should pass through an unrecognized entry.maxType verbatim');
 
 // --- searchStrings ---
 const {

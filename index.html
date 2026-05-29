@@ -2445,7 +2445,7 @@ if(!pokemonSearchTermsDomain)throw new Error('Pokemon search term helpers failed
 const {REGION_CODE_TERMS,REGIONAL_FORM_TERMS,REGION_SEARCH_TERMS,CASTFORM_TYPE_TERMS,FORM_QUALIFIER_TERMS,regionalFormPrefix,regionalFormTerm,regionTermFromDex,dexRegionTerm,dexSearchTerm,castformTypeFilter,modSearchFilters,modFromSearchFilters,castformTypeFromSearchFilters,formVariantFilter,formVariantFromSearchFilters}=pokemonSearchTermsDomain;
 const pokemonEntryRulesDomain=window.PogoDomain?.pokemonEntryRules;
 if(!pokemonEntryRulesDomain)throw new Error('Pokemon entry rule helpers failed to load');
-const {uniqueEntries,costumeDedupeKey,UNTRADEABLE_MYTHICAL_NAMES,isTradeableForWishlist}=pokemonEntryRulesDomain;
+const {uniqueEntries,costumeDedupeKey,UNTRADEABLE_MYTHICAL_NAMES,isTradeableForWishlist,maxTypeForEntry}=pokemonEntryRulesDomain;
 const searchStringDomain=window.PogoDomain?.searchStrings;
 if(!searchStringDomain)throw new Error('Search string helpers failed to load');
 const {PREFILTER,POGO_STR_LIMIT,dexStringFromNumbers,stringFromSearchItems,stringParts,searchPartSort,combineStrings,combinedStringOptions,strLenInfo}=searchStringDomain;
@@ -5538,15 +5538,6 @@ function spriteEntryForListItem(type,name,entry){
     if(found)return found;
   }
   return null;
-}
-function maxTypeForEntry(entry,type=''){
-  if(type==='gmax')return'gmax';
-  if(type==='dynamax')return'dynamax';
-  if(entry?.maxType)return entry.maxType;
-  const label=`${entry?.name||''} ${entry?.displayName||''} ${entry?.dn||''}`;
-  if(/\bgigantamax\b/i.test(label))return'gmax';
-  if(/\bdynamax\b/i.test(label))return'dynamax';
-  return'';
 }
 function priorityFamilySort(a,b){
   return (PRI_ORDER[a.p]??9)-(PRI_ORDER[b.p]??9)

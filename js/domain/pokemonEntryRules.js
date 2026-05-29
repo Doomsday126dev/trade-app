@@ -50,11 +50,21 @@
   function isTradeableForWishlist(entry){
     return !UNTRADEABLE_MYTHICAL_NAMES.has(entry?.name);
   }
+  function maxTypeForEntry(entry,type=''){
+    if(type==='gmax')return'gmax';
+    if(type==='dynamax')return'dynamax';
+    if(entry?.maxType)return entry.maxType;
+    const label=`${entry?.name||''} ${entry?.displayName||''} ${entry?.dn||''}`;
+    if(/\bgigantamax\b/i.test(label))return'gmax';
+    if(/\bdynamax\b/i.test(label))return'dynamax';
+    return'';
+  }
 
   root.pokemonEntryRules=Object.freeze({
     uniqueEntries,
     costumeDedupeKey,
     UNTRADEABLE_MYTHICAL_NAMES,
-    isTradeableForWishlist
+    isTradeableForWishlist,
+    maxTypeForEntry
   });
 })(window);
