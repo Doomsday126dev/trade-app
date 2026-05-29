@@ -65,6 +65,18 @@ async function expectAppNotBlank(page) {
   await expect(page.locator('.page.active')).toBeVisible();
 }
 
+async function expectAutocompleteResult(page, inputSelector, dropdownSelector, query, expected) {
+  await page.locator(inputSelector).fill(query);
+  await expect(page.locator(`${dropdownSelector}.open`)).toBeVisible({ timeout: 10_000 });
+  await expect(page.locator(`${dropdownSelector}.open .ac-item, ${dropdownSelector}.open .ac-item-muted`).first()).toBeVisible();
+  await expect(page.locator(dropdownSelector)).toContainText(expected);
+}
+
+async function expectAutocompleteClears(page, inputSelector, dropdownSelector) {
+  await page.locator(inputSelector).fill('');
+  await expect(page.locator(`${dropdownSelector}.open`)).toHaveCount(0);
+}
+
 test.describe('visual smoke', () => {
   test('browse renders and search/filter update visible results', async ({ page }) => {
     await signIn(page);
@@ -96,6 +108,20 @@ test.describe('visual smoke', () => {
     await expect(page.locator('#strings-out .user-str-block .user-str-hdr').first()).toBeVisible();
   });
 
+  test('my list add pokemon autocomplete shows normalized and dex results', async ({ page }) => {
+    await signIn(page);
+    await openMainTab(page, 'mylist');
+    await expect(page.locator('#ac-input')).toBeVisible();
+
+    await expectAutocompleteResult(page, '#ac-input', '#ac-dropdown', 'pika', /Pikachu/i);
+    await expectAutocompleteResult(page, '#ac-input', '#ac-dropdown', 'Unown ?', /Unown\s*\(\?\)|Unown.*Question/i);
+    await expectAutocompleteResult(page, '#ac-input', '#ac-dropdown', '25', /Pikachu/i);
+    await expect(page.locator('#ac-dropdown')).toContainText('#25');
+
+    await expectAutocompleteClears(page, '#ac-input', '#ac-dropdown');
+    await expect(page.locator('#add-pmon-sel')).toHaveValue('');
+  });
+
   test('inventory opens my inventory and community browse, then expands a trainer', async ({ page }) => {
     await signIn(page);
     await openMainTab(page, 'have');
@@ -110,6 +136,17 @@ test.describe('visual smoke', () => {
     await firstTrainer.locator('.have-trainer-hdr').click();
     await expect(firstTrainer).toHaveClass(/expanded/);
     await expect(firstTrainer.locator('.have-trainer-body')).toBeVisible();
+  });
+
+  test('inventory add pokemon autocomplete opens and clears without adding', async ({ page }) => {
+    await signIn(page);
+    await openMainTab(page, 'have');
+    await expect(page.locator('#have-mine-view')).toBeVisible();
+    await expect(page.locator('#have-ac-input')).toBeVisible();
+
+    await expectAutocompleteResult(page, '#have-ac-input', '#have-ac-dropdown', 'pika', /Pikachu/i);
+    await expectAutocompleteClears(page, '#have-ac-input', '#have-ac-dropdown');
+    await expect(page.locator('#have-pmon-sel')).toHaveValue('');
   });
 
   test('schedule renders and schedule modal opens/closes', async ({ page }) => {
