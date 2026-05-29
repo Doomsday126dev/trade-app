@@ -17,6 +17,13 @@
   function priLabel(p){return PRI[p]?.label||p;}
   function priName(p){return `${p} - ${priLabel(p)}`;}
   function listLabel(type){return LIST_LABELS[type]||type;}
+  function sortEntries(entries){
+    return[...entries].sort((a,b)=>
+      (PRI_ORDER[a.p]??9)-(PRI_ORDER[b.p]??9)||
+      a.user.localeCompare(b.user,undefined,{sensitivity:'base'})||
+      String(a.mod||'').localeCompare(String(b.mod||''),undefined,{sensitivity:'base'})
+    );
+  }
 
   root.priorities=Object.freeze({
     PRI,
@@ -24,6 +31,7 @@
     LIST_LABELS,
     priLabel,
     priName,
-    listLabel
+    listLabel,
+    sortEntries
   });
 })(window);

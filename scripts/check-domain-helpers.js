@@ -75,10 +75,30 @@ assert(domain.spriteSlugs, 'spriteSlugs namespace should exist');
 assert(utils.textSafety, 'textSafety namespace should exist');
 
 // --- priorities ---
-const { priLabel, priName, listLabel } = domain.priorities;
+const { priLabel, priName, listLabel, sortEntries } = domain.priorities;
 eq(priLabel('H'), 'High', 'priLabel should resolve H');
 eq(priName('M'), 'M - Medium', 'priName should resolve M');
 eq(listLabel('wishlist'), 'Trades', 'listLabel should resolve wishlist');
+deepEq(
+  sortEntries([{ p: 'L', user: 'a' }, { p: 'H', user: 'a' }, { p: '?', user: 'a' }, { p: 'M', user: 'a' }]).map(e => e.p),
+  ['H', 'M', 'L', '?'],
+  'sortEntries should order by priority with unknown priority last'
+);
+deepEq(
+  sortEntries([{ p: 'H', user: 'Bob' }, { p: 'H', user: 'alice' }, { p: 'H', user: 'Charlie' }]).map(e => e.user),
+  ['alice', 'Bob', 'Charlie'],
+  'sortEntries should break ties on user case-insensitively'
+);
+deepEq(
+  sortEntries([{ p: 'H', user: 'a', mod: 'zzz' }, { p: 'H', user: 'a', mod: 'aaa' }, { p: 'H', user: 'a' }]).map(e => String(e.mod || '')),
+  ['', 'aaa', 'zzz'],
+  'sortEntries should break further ties on mod, with missing mod first'
+);
+const sortInput = [{ p: 'L', user: 'a' }, { p: 'H', user: 'a' }];
+const sortOutput = sortEntries(sortInput);
+assert(sortOutput !== sortInput, 'sortEntries should return a new array, not mutate in place');
+eq(sortInput[0].p, 'L', 'sortEntries should leave the input array order unchanged');
+eq(sortOutput[0].p, 'H', 'sortEntries should sort the returned copy');
 
 // --- username ---
 const { alphaCompare } = domain.username;

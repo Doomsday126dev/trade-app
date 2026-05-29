@@ -2430,7 +2430,7 @@ const FIREBASE_APP_ID="1:1053781218847:web:378b312470943152d9a72a";
 const FIREBASE_MEASUREMENT_ID="G-0ZFL5NDQFP";
 const priorityDomain=window.PogoDomain?.priorities;
 if(!priorityDomain)throw new Error('Priority helpers failed to load');
-const {PRI,PRI_ORDER,LIST_LABELS,priLabel,priName,listLabel}=priorityDomain;
+const {PRI,PRI_ORDER,LIST_LABELS,priLabel,priName,listLabel,sortEntries}=priorityDomain;
 const usernameDomain=window.PogoDomain?.username;
 if(!usernameDomain)throw new Error('Username helpers failed to load');
 const {alphaCompare}=usernameDomain;
@@ -4984,13 +4984,6 @@ function refreshAll(){
 }
 
 // ── FRESHNESS ─────────────────────────────────────────────────
-function sortEntries(entries){
-  return[...entries].sort((a,b)=>
-    (PRI_ORDER[a.p]??9)-(PRI_ORDER[b.p]??9)||
-    a.user.localeCompare(b.user,undefined,{sensitivity:'base'})||
-    String(a.mod||'').localeCompare(String(b.mod||''),undefined,{sensitivity:'base'})
-  );
-}
 function userBadge(x){
   const lu=allData.users?.[x.user]?.lastUpdated;
   const shinyPart=x.shiny?' · ✨ shiny only':'';
