@@ -1922,3 +1922,47 @@
 ### Instructions for the next contributor
 - Treat any voice matching quality change as a behavior change, not modularization cleanup.
 - Keep future fuzzy/search UI changes separate from this pure helper module unless they have browser coverage.
+
+## 2026-05-28 - Claude - Sprite slug helper extraction (Cluster B)
+
+### Summary
+- Extracted pure sprite slug/key string helpers from `index.html` into `js/domain/spriteSlugs.js`, in two separate commits by risk.
+- Low-risk pass (`refactor: extract sprite slug helpers`): moved `padDex`, `normalizeCostumeLookupKey`, `pokemondbGoSpeciesSlug`, and `normalizeSpriteKey`. `normalizeCostumeLookupKey` runs during script evaluation to build `POKEMONDB_GO_COSTUME_ALIAS_LOOKUP`, so its rebind is placed in the grouped rebind block above that const's initialization.
+- Higher-risk isolated pass (committed separately): moved `REGIONAL_SLUG_MAP` and `pokemondbSlug` into the same module. `pokemondbSlug` directly determines which PokemonDB HOME sprite URL is built, so it was kept to its own commit for clean bisection.
+- All moved bodies were verified byte-identical (whitespace-insensitive diff) against the originals before removal, including the combining-marks accent-strip regex.
+- All four low-risk helpers plus `pokemondbSlug`/`REGIONAL_SLUG_MAP` are exported via `window.PogoDomain.spriteSlugs` and rebound to the same local names in `index.html`. Callers continue to call the rebound local names unchanged.
+
+### Behavior preservation
+- `pokemondbSlug` was protected with a full golden-test matrix in `check:domain` covering: A/G/H/P regional prefixes; `P-Tauros (Aqua)` reorder; regional punctuation (`G-Farfetch'd`, `G-Mr. Mime` with `dn` precedence); Basculin; Flabébé; Oricorio; Shellos; `Mr. Mime`; `Farfetch'd`; `Vivillon (Garden)`; female suffix (append / non-append / no double-append); `dn || name || ''` precedence and fallback; `Ho-Oh`/`Hitmonlee` no-overmatch; and empty/blank/undefined plus undefined-with-female early-return behavior.
+- Pre-existing quirks were preserved exactly, including two that are effectively dead for the current data:
+  - The `basculin-(red|blue|white)` -> `-striped` quirk does not fire for real entries, which are `Basculin (Red Stripe)` etc. (normalize to `basculin-red-stripe`, no match). Tests lock both the synthetic trigger (`Basculin (Red)` -> `basculin-red-striped`) and the real-data path (`basculin-red-stripe`).
+  - The `oricorio-pa-u` -> `oricorio-pau` quirk does not fire for the real entry `Oricorio (Pa'u)` because the apostrophe is stripped to `oricorio-pau` before the quirk runs. Tests lock both the real apostrophe path and the synthetic `Oricorio (Pa-u)` hyphen path.
+- These dead/synthetic quirks were intentionally NOT "fixed" — this was modularization only.
+
+### Files touched
+- `index.html`
+- `js/domain/spriteSlugs.js`
+- `scripts/check-domain-helpers.js`
+- `docs/MAINTENANCE-LOG.md`
+
+### Feature flags added/changed
+- None.
+
+### Firebase paths added/changed
+- None.
+
+### Security rules changes needed
+- None.
+
+### Verification
+- `node --check js/domain/spriteSlugs.js`, `node --check scripts/check-domain-helpers.js`, `npm run check:domain`, inline `index.html` parse check, and `git diff --check` all passed for both commits.
+- Deployed Playwright smoke was run against the actual extraction build (deploy confirmed serving the extracted module before running): `14 passed, 0 failed, 0 skipped`. Browse and Inventory sprite-slot checks passed on both desktop and mobile projects.
+
+### Known risks / TODOs
+- No sprite cache/fallback/image-loading/export/avatar/render logic was changed. `pokemondbSpriteUrl`, `spriteUrl`, and `spriteFallbackChain` are untouched and still call the rebound `pokemondbSlug`.
+- `check:domain` proves string-output parity but cannot detect a wrong-but-valid sprite URL; the deployed smoke is the rendering gate and is mandatory for any future change to `pokemondbSlug`.
+- The next sprite-pipeline candidates (`goCostumeSpriteUrl`, `pokemondbGoCostumeUrls`, `pokemondbSpriteUrl`, `spriteFallbackChain`, `spriteSourceIndex`, `costumeBaseName`, `spriteImg`) read app/sprite-cache state and are NOT pure; do not extract them as part of this modularization track without separate analysis.
+
+### Instructions for the next contributor
+- Any change to `pokemondbSlug` output is a behavior change (it picks sprite URLs), not modularization cleanup; pair it with the golden matrix and a deployed smoke run.
+- Preserve the dead Basculin/Oricorio quirks unless a deliberate, separately-scoped sprite-correctness task decides to address them.
