@@ -2426,6 +2426,7 @@ const MULTI_COMMUNITY_ENABLED=false;
 const MULTI_COMMUNITY_OWNER_PREVIEW_AVAILABLE=true;
 const DEFAULT_COMMUNITY_ID='nyc';
 const DEFAULT_COMMUNITY_NAME='NYC';
+const COMMUNITY_VISIBILITIES=['private','inviteOnly','public'];
 const SELECTED_COMMUNITY_KEY='pogoSelectedCommunityId_v1';
 const OWNER_COMMUNITY_PREVIEW_KEY='pogoOwnerCommunityPreview_v1';
 const SESSION_TTL=30*24*60*60*1000; // 30 days; refreshed on each activity so active users stay logged in
@@ -6706,6 +6707,52 @@ function buildDefaultCommunityMigration(){
     missingAuth
   };
 }
+function validateNonDefaultCommunityId(rawId){
+  const id=String(rawId||'').trim();
+  if(!id)return{ok:false,error:'Enter a community id first.'};
+  if(id!==id.toLowerCase())return{ok:false,error:'Use lowercase letters, numbers, and hyphens only.'};
+  if(id===DEFAULT_COMMUNITY_ID)return{ok:false,error:'NYC already has its own preparation path.'};
+  if(/[.#$\[\]\/]/.test(id))return{ok:false,error:'Community id cannot contain . # $ [ ] or / characters.'};
+  if(!/^[a-z0-9-]+$/.test(id))return{ok:false,error:'Use lowercase letters, numbers, and hyphens only.'};
+  return{ok:true,id};
+}
+function buildNonDefaultCommunityPreparation(input={}){
+  const validated=validateNonDefaultCommunityId(input.communityId);
+  if(!validated.ok)return{ok:false,error:validated.error,updates:{}};
+  const ownerUid=allData.users?.[cur]?.authUid||currentAuthUid||auth?.currentUser?.uid||'';
+  if(!cur||!ownerUid)return{ok:false,error:'Sign in as the owner before preparing a new community.',updates:{}};
+  const id=validated.id;
+  const now=Date.now();
+  const existing=allData.communities?.[id]||{};
+  const community=normalizeCommunityRecord(id,existing,allData,{autoEnrollDefault:false});
+  community.name=String(input.name||'').trim()||id;
+  community.slug=id;
+  community.description=String(input.description||'').trim();
+  community.visibility=COMMUNITY_VISIBILITIES.includes(input.visibility)?input.visibility:'private';
+  community.ownerId=community.ownerId||ownerUid;
+  community.ownerUsername=community.ownerUsername||cur;
+  community.createdAt=community.createdAt||now;
+  community.updatedAt=now;
+  community.preparedAt=community.preparedAt||now;
+  community.memberUsernames={...(community.memberUsernames||{}),[cur]:true};
+  community.members={...(community.members||{}),[ownerUid]:true};
+  community.admins={...(community.admins||{}),[ownerUid]:true};
+  const existingReverse=allData.userCommunities?.[ownerUid]?.[id]||{};
+  const updates={
+    [`communities/${id}`]:community,
+    [`userCommunities/${ownerUid}/${id}`]:{
+      role:'owner',
+      username:cur,
+      joinedAt:existingReverse.joinedAt||now
+    }
+  };
+  return{ok:true,id,ownerUid,community,updates};
+}
+function setNonDefaultCommunityPrepStatus(message='',kind=''){
+  const el=document.getElementById('non-default-community-prep-status');if(!el)return;
+  el.className=kind==='ok'?'acct-pill ok':kind==='warn'?'acct-pill warn':'';
+  el.textContent=message;
+}
 function communityPreviewStats(migration,existing={}){
   const serverNames=new Set(Object.keys(existing.memberUsernames||{}));
   const localNames=new Set(Object.keys(migration.community?.memberUsernames||{}));
@@ -6789,6 +6836,24 @@ function renderCommunityMigrationPanel(){
           <div style="font-size:11px;color:var(--muted);margin-top:6px">Preview only. Because <span class="cb">MULTI_COMMUNITY_ENABLED=false</span>, the app still uses the current global NYC behavior.</div>
         </div>
       </div>
+      <div class="login-audit-row">
+        <div style="width:100%">
+          <div class="login-audit-user">Prepare another community <span class="cb">owner only</span></div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px">Creates metadata and owner membership only. It does not switch anyone, enroll existing users, or change current NYC behavior.</div>
+          <div style="display:grid;grid-template-columns:minmax(140px,1fr) minmax(160px,1fr) minmax(120px,.6fr);gap:8px;margin-top:10px">
+            <input id="non-default-community-id" placeholder="community-id" autocapitalize="off" autocomplete="off" spellcheck="false">
+            <input id="non-default-community-name" placeholder="Display name">
+            <select id="non-default-community-visibility">
+              ${COMMUNITY_VISIBILITIES.map(v=>`<option value="${escAttr(v)}">${escHtml(v)}</option>`).join('')}
+            </select>
+          </div>
+          <input id="non-default-community-description" placeholder="Optional description" style="margin-top:8px">
+          <div class="login-audit-actions" style="justify-content:space-between;margin-top:10px">
+            <span id="non-default-community-prep-status" style="font-size:12px;color:var(--muted)"></span>
+            <button class="rpin" onclick="prepareNonDefaultCommunity()">Prepare community</button>
+          </div>
+        </div>
+      </div>
     </div>`;
 }
 async function prepareDefaultCommunity(){
@@ -6812,6 +6877,40 @@ async function prepareDefaultCommunity(){
   }catch(e){
     console.warn('Default community prep failed',e);
     toast('⚠️ Could not prepare NYC community: '+(e.code||e.message||'permission denied'),7000);
+  }
+}
+async function prepareNonDefaultCommunity(){
+  if(!ownerCanUseCommunityTools()){toast('⚠️ Owner only');return;}
+  if(!fbOn||!db||!auth?.currentUser){toast('⚠️ Sign in with Firebase before preparing community data');return;}
+  const input={
+    communityId:document.getElementById('non-default-community-id')?.value||'',
+    name:document.getElementById('non-default-community-name')?.value||'',
+    description:document.getElementById('non-default-community-description')?.value||'',
+    visibility:document.getElementById('non-default-community-visibility')?.value||'private'
+  };
+  const prep=buildNonDefaultCommunityPreparation(input);
+  if(!prep.ok){
+    setNonDefaultCommunityPrepStatus(prep.error,'warn');
+    toast('⚠️ '+prep.error,5000);
+    return;
+  }
+  const paths=Object.keys(prep.updates);
+  setNonDefaultCommunityPrepStatus(`Ready: ${prep.id} (${prep.community.visibility})`,'');
+  if(!confirm(`Prepare community "${prep.community.name}" (${prep.id})?\n\nThis writes only:\n- communities/${prep.id}\n- userCommunities/${prep.ownerUid}/${prep.id}\n\nNo users are enrolled except the owner, and current NYC behavior will not change.`))return;
+  try{
+    await withTimeout(update(ref(db),prep.updates),9000,`Preparing ${prep.id} community timed out`,'db/community-timeout');
+    const snap=await withTimeout(get(ref(db,`communities/${prep.id}`)),6000,`Verifying ${prep.id} community timed out`,'db/community-verify-timeout');
+    if(!snap.exists())throw Object.assign(new Error(`Server did not confirm communities/${prep.id}. Check community rules and retry.`),{code:'community/not-confirmed'});
+    const s=getLocal();
+    paths.forEach(path=>applyDataPath(s,path,prep.updates[path]));
+    saveLocal(s);
+    allData=normalizeData(s);
+    renderCommunityMigrationPanel();
+    toast(`✅ ${prep.community.name} prepared for owner-only setup`,5000);
+  }catch(e){
+    console.warn('Non-default community prep failed',e);
+    setNonDefaultCommunityPrepStatus('Could not prepare community: '+(e.code||e.message||'permission denied'),'warn');
+    toast('⚠️ Could not prepare community: '+(e.code||e.message||'permission denied'),7000);
   }
 }
 async function repairLoginDirectory(u){

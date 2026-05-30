@@ -77,6 +77,9 @@ function runSourceWiringChecks() {
   const createMemberNow = extractFunctionSource('createMemberNow');
   const repairMemberAccount = extractFunctionSource('repairMemberAccount');
   const defaultCommunityMembershipUpdates = extractFunctionSource('defaultCommunityMembershipUpdates');
+  const validateNonDefaultCommunityId = extractFunctionSource('validateNonDefaultCommunityId');
+  const buildNonDefaultCommunityPreparation = extractFunctionSource('buildNonDefaultCommunityPreparation');
+  const prepareNonDefaultCommunity = extractFunctionSource('prepareNonDefaultCommunity');
   const recordCommunityId = extractFunctionSource('recordCommunityId');
 
   assertSourceIncludes(
@@ -134,12 +137,52 @@ function runSourceWiringChecks() {
     /\bconst\s+MULTI_COMMUNITY_ENABLED\s*=\s*false\s*;/.test(html),
     'MULTI_COMMUNITY_ENABLED must remain false for current production behavior'
   );
+  assert(
+    /\bconst\s+DEFAULT_COMMUNITY_ID\s*=\s*'nyc'\s*;/.test(html),
+    "DEFAULT_COMMUNITY_ID must remain 'nyc'"
+  );
+  assertSourceIncludes(
+    validateNonDefaultCommunityId,
+    'if(id===DEFAULT_COMMUNITY_ID)',
+    'non-default community validator must reject the default NYC id'
+  );
+  assertSourceIncludes(
+    validateNonDefaultCommunityId,
+    '/[.#$\\[\\]\\/]/',
+    'non-default community validator must reject Firebase-forbidden key characters'
+  );
+  assertSourceIncludes(
+    validateNonDefaultCommunityId,
+    '/^[a-z0-9-]+$/',
+    'non-default community validator must use conservative lowercase id pattern'
+  );
+  assertSourceIncludes(
+    buildNonDefaultCommunityPreparation,
+    'communities/${id}',
+    'non-default community prep must write the community record path'
+  );
+  assertSourceIncludes(
+    buildNonDefaultCommunityPreparation,
+    'userCommunities/${ownerUid}/${id}',
+    'non-default community prep must write the owner reverse-index path'
+  );
+  assertSourceIncludes(
+    prepareNonDefaultCommunity,
+    'ownerCanUseCommunityTools()',
+    'non-default community prep action must be function-level owner guarded'
+  );
+  assert(
+    !prepareNonDefaultCommunity.includes('setCurrentCommunityId('),
+    'non-default community prep must not switch the selected community'
+  );
 }
 
 function runBehaviorChecks() {
   const sandbox = {
     Date,
+    OWNER: 'Doomsday126',
     DEFAULT_COMMUNITY_ID: 'nyc',
+    COMMUNITY_VISIBILITIES: ['private', 'inviteOnly', 'public'],
     MULTI_COMMUNITY_ENABLED: false,
     SELECTED_COMMUNITY_KEY: 'selectedCommunityId',
     currentAuthUid: 'auth-admin',
@@ -147,6 +190,7 @@ function runBehaviorChecks() {
     allData: {
       users: {
         AdminUser: { isAdmin: true },
+        OwnerUser: { authUid: 'uid-owner', isOwner: true, joined: 777 },
         Alpha: {},
         Beta: {}
       },
@@ -178,6 +222,9 @@ function runBehaviorChecks() {
   vm.runInContext(
     [
       extractFunctionSource('defaultCommunityMembershipUpdates'),
+      extractFunctionSource('validateNonDefaultCommunityId'),
+      extractFunctionSource('normalizeCommunityRecord'),
+      extractFunctionSource('buildNonDefaultCommunityPreparation'),
       extractFunctionSource('getCurrentCommunityId'),
       extractFunctionSource('getCommunityMemberUsernames'),
       extractFunctionSource('isUserInCommunity'),
@@ -259,7 +306,7 @@ function runBehaviorChecks() {
   );
   assertDeepEqual(
     Array.from(sandbox.getCommunityMemberUsernames()).sort(),
-    ['AdminUser', 'Alpha', 'Beta'],
+    ['AdminUser', 'Alpha', 'Beta', 'OwnerUser'],
     'getCommunityMemberUsernames falls back to all users when feature flag is false'
   );
 
@@ -273,6 +320,68 @@ function runBehaviorChecks() {
     sandbox.canManageCommunity('any-uid', 'not-nyc'),
     false,
     'canManageCommunity still respects existing admin flag when feature flag is false'
+  );
+
+  assertEqual(sandbox.validateNonDefaultCommunityId('').ok, false, 'validateNonDefaultCommunityId rejects blank ids');
+  assertEqual(sandbox.validateNonDefaultCommunityId('nyc').ok, false, 'validateNonDefaultCommunityId rejects nyc');
+  assertEqual(sandbox.validateNonDefaultCommunityId('Chicago').ok, false, 'validateNonDefaultCommunityId rejects uppercase ids');
+  ['bad.id', 'bad#id', 'bad$id', 'bad[id', 'bad]id', 'bad/id', 'bad_id'].forEach(value => {
+    assertEqual(
+      sandbox.validateNonDefaultCommunityId(value).ok,
+      false,
+      `validateNonDefaultCommunityId rejects invalid id ${value}`
+    );
+  });
+  assertDeepEqual(
+    sandbox.validateNonDefaultCommunityId('chicago-go-fest'),
+    { ok: true, id: 'chicago-go-fest' },
+    'validateNonDefaultCommunityId accepts lowercase path-safe ids'
+  );
+
+  sandbox.cur = 'OwnerUser';
+  sandbox.currentAuthUid = 'uid-owner';
+  sandbox.allData.userCommunities = {};
+  const prep = sandbox.buildNonDefaultCommunityPreparation({
+    communityId: 'chicago-go-fest',
+    name: 'Chicago GO Fest',
+    description: 'Private test community',
+    visibility: 'inviteOnly'
+  });
+  assertEqual(prep.ok, true, 'buildNonDefaultCommunityPreparation accepts valid owner input');
+  assertDeepEqual(
+    Object.keys(prep.updates).sort(),
+    ['communities/chicago-go-fest', 'userCommunities/uid-owner/chicago-go-fest'],
+    'buildNonDefaultCommunityPreparation limits writes to community record and owner reverse index'
+  );
+  assertEqual(
+    prep.updates['communities/chicago-go-fest'].memberUsernames.OwnerUser,
+    true,
+    'buildNonDefaultCommunityPreparation indexes owner username in the new community'
+  );
+  assertEqual(
+    prep.updates['communities/chicago-go-fest'].members['uid-owner'],
+    true,
+    'buildNonDefaultCommunityPreparation indexes owner UID as a member'
+  );
+  assertEqual(
+    prep.updates['communities/chicago-go-fest'].admins['uid-owner'],
+    true,
+    'buildNonDefaultCommunityPreparation indexes owner UID as an admin'
+  );
+  assertDeepEqual(
+    prep.updates['userCommunities/uid-owner/chicago-go-fest'],
+    { role: 'owner', username: 'OwnerUser', joinedAt: prep.updates['communities/chicago-go-fest'].createdAt },
+    'buildNonDefaultCommunityPreparation writes owner reverse index payload'
+  );
+  assertEqual(
+    prep.updates['communities/chicago-go-fest'].visibility,
+    'inviteOnly',
+    'buildNonDefaultCommunityPreparation preserves supported visibility'
+  );
+  assertEqual(
+    sandbox.buildNonDefaultCommunityPreparation({ communityId: 'bad/id' }).ok,
+    false,
+    'buildNonDefaultCommunityPreparation rejects invalid ids before producing writes'
   );
 }
 

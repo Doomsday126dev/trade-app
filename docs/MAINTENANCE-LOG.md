@@ -2298,3 +2298,30 @@
 
 ### Known risks / TODOs
 - Keep future support-report fields allowlist-only. If a diagnostic value might reveal app data or identity data, leave it out unless there is an explicit privacy review.
+
+## 2026-05-29 - Codex - Owner-only non-NYC community preparation
+
+### Summary
+- Added an owner-only admin maintenance tool to prepare a non-NYC community record ahead of future multi-community work.
+- The tool validates lowercase path-safe community IDs, rejects `nyc`, and writes only the community metadata plus owner member/admin/reverse-index entries.
+- `MULTI_COMMUNITY_ENABLED` remains `false`; normal users still see the current NYC/global behavior and no public community switcher or join flow was added.
+
+### Files touched
+- `index.html`
+- `scripts/check-community-membership.js`
+- `docs/MAINTENANCE-LOG.md`
+
+### Firebase paths / rules
+- New owner-only preparation can write:
+  - `communities/{communityId}`
+  - `userCommunities/{ownerUid}/{communityId}`
+- No Firebase rules changed. Current owner-only community rules must still be present in production before using the tool.
+
+### Manual test checklist
+- Owner can prepare a lowercase non-NYC community ID such as `chicago-go-fest`.
+- Invalid IDs are rejected before any Firebase write attempt: blank, `nyc`, uppercase, underscores, and `. # $ [ ] /`.
+- Re-running the same community preparation updates metadata and preserves owner membership/admin indexes.
+- Normal Browse, Strings, Inventory, Schedule, requests, offers, and login behavior remain unchanged while `MULTI_COMMUNITY_ENABLED=false`.
+
+### Known risks / TODOs
+- This is metadata/owner-prep only. Member assignment, public switching, request/join flows, and per-community offers/schedule scoping remain deferred.
