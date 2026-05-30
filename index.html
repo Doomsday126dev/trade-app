@@ -78,6 +78,11 @@ input,select,textarea{font-family:var(--font);outline:none}
 .brand-mark{width:26px;height:26px;display:block;flex:0 0 auto;border-radius:7px;box-shadow:0 0 0 1px rgba(255,255,255,.08),0 6px 16px rgba(108,99,255,.22)}
 .brand-mark.lg{width:32px;height:32px;border-radius:9px}
 .topbar-r{display:flex;align-items:center;gap:10px;min-width:0}
+.member-community-switcher{display:none;align-items:center;gap:6px;background:var(--card);border:1px solid var(--border2);border-radius:999px;padding:4px 8px;color:var(--muted);font-size:12px;font-weight:700;white-space:nowrap;min-width:0}
+.member-community-switcher.show{display:inline-flex}
+.member-community-switcher label{display:flex;align-items:center;gap:6px;min-width:0}
+.member-community-switcher select{max-width:150px;background:var(--bg2);border:1px solid var(--border);border-radius:999px;color:var(--text);font-family:var(--font);font-size:12px;font-weight:700;padding:2px 22px 2px 8px}
+.member-community-switcher .member-community-name{max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)}
 .sync-row{display:flex;align-items:center;gap:5px}
 .user-chip{display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--border2);border-radius:20px;padding:4px 12px 4px 4px;font-size:13px;font-weight:500;cursor:pointer;min-width:0}
 .user-chip span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -1684,6 +1689,7 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
         <div class="sync-row" id="sync-pill" title="Click for sync status detail" onclick="openSyncDetail()" role="button" tabindex="0"><div class="sync-dot" id="sdot"></div><span class="sync-lbl" id="slbl">—</span></div>
         <div class="sync-queue-dot" id="sqd" title="Unsynced changes pending"></div>
       </div>
+      <div id="member-community-switcher" class="member-community-switcher" aria-live="polite"></div>
       <button class="install-btn" id="install-btn" onclick="triggerInstall()" aria-label="Install app">⬇️ Install</button>
       <button class="bell-btn" id="bell-btn" onclick="openWhatsNew()" aria-label="What's new" title="What's new">🔔<span class="bell-badge" id="bell-badge">!</span></button>
       <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme" title="Toggle light/dark theme">🌙</button>
@@ -3659,21 +3665,61 @@ function applyDefaultCommunityMembershipLocal(s,username,userRecord={},joinedAt=
   }
   s.communities[DEFAULT_COMMUNITY_ID]=community;
 }
+function memberCommunityOptions(username=cur,uid=currentAuthUid){
+  if(!MULTI_COMMUNITY_ENABLED||!username)return[];
+  const communities=allData.communities||{};
+  const options=new Map();
+  const add=(rawId,source={})=>{
+    const id=normalizeCommunityId(rawId);
+    const community=communities[id];
+    if(!community)return;
+    const reverse=uid&&allData.userCommunities?.[uid]?.[id];
+    const usernameMember=!!community.memberUsernames?.[username];
+    if(!reverse&&!usernameMember)return;
+    options.set(id,{
+      id,
+      name:community.name||community.slug||(id===DEFAULT_COMMUNITY_ID?DEFAULT_COMMUNITY_NAME:id),
+      role:source.role||reverse?.role||(community.admins?.[uid]?'admin':'member')
+    });
+  };
+  if(uid){
+    Object.entries(allData.userCommunities?.[uid]||{}).forEach(([id,record])=>add(id,record||{}));
+  }
+  Object.keys(communities).forEach(id=>add(id,{}));
+  return[...options.values()].sort((a,b)=>{
+    if(a.id===DEFAULT_COMMUNITY_ID)return-1;
+    if(b.id===DEFAULT_COMMUNITY_ID)return 1;
+    return alphaCompare(a.name,b.name)||alphaCompare(a.id,b.id);
+  });
+}
+function currentCommunityIsSelectable(id){
+  const cid=normalizeCommunityId(id);
+  return memberCommunityOptions().some(c=>c.id===cid);
+}
 function getCurrentCommunityId(){
   if(!MULTI_COMMUNITY_ENABLED)return DEFAULT_COMMUNITY_ID;
   const stored=normalizeCommunityId(lsGet(SELECTED_COMMUNITY_KEY,DEFAULT_COMMUNITY_ID));
-  return allData.communities?.[stored]?stored:DEFAULT_COMMUNITY_ID;
+  return currentCommunityIsSelectable(stored)?stored:DEFAULT_COMMUNITY_ID;
 }
 function setCurrentCommunityId(id){
   const cid=normalizeCommunityId(id);
-  lsSet(SELECTED_COMMUNITY_KEY,cid);
-  return cid;
+  if(!MULTI_COMMUNITY_ENABLED){
+    lsSet(SELECTED_COMMUNITY_KEY,cid);
+    return cid;
+  }
+  const selected=MULTI_COMMUNITY_ENABLED&&currentCommunityIsSelectable(cid)?cid:DEFAULT_COMMUNITY_ID;
+  lsSet(SELECTED_COMMUNITY_KEY,selected);
+  if(MULTI_COMMUNITY_ENABLED&&cur){
+    renderMemberCommunitySwitcher();
+    renderActiveTab();
+    refreshBadgesAndLightChrome();
+  }
+  return selected;
 }
 function getCommunityMemberUsernames(communityId=getCurrentCommunityId()){
   if(!MULTI_COMMUNITY_ENABLED)return new Set(Object.keys(allData.users||{}));
-  const community=allData.communities?.[normalizeCommunityId(communityId)]||allData.communities?.[DEFAULT_COMMUNITY_ID]||{};
-  const names=Object.keys(community.memberUsernames||{});
-  return new Set(names.length?names:Object.keys(allData.users||{}));
+  const community=allData.communities?.[normalizeCommunityId(communityId)]||{};
+  return new Set(Object.keys(community.memberUsernames||{}));
 }
 function isUserInCommunity(username,communityId=getCurrentCommunityId()){
   if(!MULTI_COMMUNITY_ENABLED)return true;
@@ -3695,6 +3741,32 @@ function recordCommunityId(record){
 function recordBelongsToSelectedCommunity(record){
   if(!MULTI_COMMUNITY_ENABLED)return true;
   return recordCommunityId(record)===getCurrentCommunityId();
+}
+function renderMemberCommunitySwitcher(){
+  const el=document.getElementById('member-community-switcher');
+  if(!el)return;
+  if(!MULTI_COMMUNITY_ENABLED||!cur){
+    el.classList.remove('show');
+    el.style.display='none';
+    el.innerHTML='';
+    return;
+  }
+  const options=memberCommunityOptions();
+  if(!options.length){
+    el.classList.remove('show');
+    el.style.display='none';
+    el.innerHTML='';
+    return;
+  }
+  const selected=getCurrentCommunityId();
+  const current=options.find(c=>c.id===selected)||options.find(c=>c.id===DEFAULT_COMMUNITY_ID)||options[0];
+  el.style.display='';
+  el.classList.add('show');
+  if(options.length===1){
+    el.innerHTML=`<span>Community</span><span class="member-community-name">${escHtml(current.name)}</span>`;
+    return;
+  }
+  el.innerHTML=`<label><span>Community</span><select aria-label="Choose community view" onchange="setCurrentCommunityId(this.value)">${options.map(c=>`<option value="${escAttr(c.id)}" ${c.id===selected?'selected':''}>${escHtml(c.name)}</option>`).join('')}</select></label>`;
 }
 function normalizeData(s){
   if(!s||typeof s!=='object')s={};
@@ -5082,6 +5154,7 @@ function switchTab(t,opts={}){
 }
 function refreshAll(){
   if(!cur)return;
+  renderMemberCommunitySwitcher();
   renderActiveTab();
   refreshBadgesAndLightChrome();
   if(allData.users?.[cur]?.isAdmin){

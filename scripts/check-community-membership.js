@@ -93,8 +93,12 @@ function runSourceWiringChecks() {
   const ownerPreviewAllowsOffer = extractFunctionSource('ownerPreviewAllowsOffer');
   const schedulePreviewAllowsTrade = extractFunctionSource('schedulePreviewAllowsTrade');
   const renderCommunityMigrationPanel = extractFunctionSource('renderCommunityMigrationPanel');
+  const memberCommunityOptions = extractFunctionSource('memberCommunityOptions');
+  const currentCommunityIsSelectable = extractFunctionSource('currentCommunityIsSelectable');
   const getCurrentCommunityId = extractFunctionSource('getCurrentCommunityId');
+  const setCurrentCommunityId = extractFunctionSource('setCurrentCommunityId');
   const filterUsersBySelectedCommunity = extractFunctionSource('filterUsersBySelectedCommunity');
+  const renderMemberCommunitySwitcher = extractFunctionSource('renderMemberCommunitySwitcher');
 
   assertSourceIncludes(
     approveRequest,
@@ -282,8 +286,51 @@ function runSourceWiringChecks() {
   );
   assertSourceIncludes(
     getCurrentCommunityId,
-    'return allData.communities?.[stored]?stored:DEFAULT_COMMUNITY_ID;',
-    'future public selected-community helper must fall back to DEFAULT_COMMUNITY_ID for missing communities'
+    'currentCommunityIsSelectable(stored)?stored:DEFAULT_COMMUNITY_ID',
+    'future public selected-community helper must fall back to DEFAULT_COMMUNITY_ID when selected community is missing or not one of the member memberships'
+  );
+  assertSourceIncludes(
+    memberCommunityOptions,
+    'allData.userCommunities?.[uid]',
+    'member-facing community options must use userCommunities when available'
+  );
+  assertSourceIncludes(
+    memberCommunityOptions,
+    'community.memberUsernames?.[username]',
+    'member-facing community options must fall back to community memberUsernames'
+  );
+  assertSourceIncludes(
+    currentCommunityIsSelectable,
+    'memberCommunityOptions().some(c=>c.id===cid)',
+    'future public selected community must be one of the signed-in user memberships'
+  );
+  assertSourceIncludes(
+    setCurrentCommunityId,
+    'lsSet(SELECTED_COMMUNITY_KEY,selected)',
+    'member-facing switcher must store selection in the public selected-community localStorage key'
+  );
+  assert(
+    !setCurrentCommunityId.includes('OWNER_COMMUNITY_PREVIEW_SELECTED_KEY'),
+    'member-facing switcher must not write owner-preview localStorage state'
+  );
+  assert(
+    !/[^\w]update\s*\(|[^\w]set\s*\(|ref\s*\(/.test(setCurrentCommunityId),
+    'member-facing switcher selection must not write Firebase'
+  );
+  assertSourceIncludes(
+    renderMemberCommunitySwitcher,
+    'if(!MULTI_COMMUNITY_ENABLED||!cur)',
+    'member-facing switcher UI must be gated by MULTI_COMMUNITY_ENABLED'
+  );
+  assertSourceIncludes(
+    renderMemberCommunitySwitcher,
+    'memberCommunityOptions()',
+    'member-facing switcher UI must list only current member communities'
+  );
+  assertSourceIncludes(
+    renderMemberCommunitySwitcher,
+    'onchange="setCurrentCommunityId(this.value)"',
+    'member-facing switcher UI must update through selected-community helper'
   );
   assertSourceIncludes(
     filterUsersBySelectedCommunity,
@@ -435,6 +482,9 @@ function runBehaviorChecks() {
     },
     ensureProtectedSubscriptions() {},
     renderCommunityMigrationPanel() {},
+    renderMemberCommunitySwitcher() {},
+    renderActiveTab() {},
+    refreshBadgesAndLightChrome() {},
     renderBrowse() {},
     renderStrings() {},
     renderSchedule() {},
@@ -481,7 +531,10 @@ function runBehaviorChecks() {
       extractFunctionSource('ownerPreviewAllowsOffer'),
       extractFunctionSource('scheduledTradeOtherUsers'),
       extractFunctionSource('schedulePreviewAllowsTrade'),
+      extractFunctionSource('memberCommunityOptions'),
+      extractFunctionSource('currentCommunityIsSelectable'),
       extractFunctionSource('getCurrentCommunityId'),
+      extractFunctionSource('setCurrentCommunityId'),
       extractFunctionSource('getCommunityMemberUsernames'),
       extractFunctionSource('isUserInCommunity'),
       extractFunctionSource('filterUsersBySelectedCommunity'),
@@ -565,6 +618,17 @@ function runBehaviorChecks() {
     Array.from(sandbox.getCommunityMemberUsernames()).sort(),
     ['AdminInCommunity', 'AdminUser', 'Alpha', 'Beta', 'FalseAdminEntry', 'MemberUser', 'OwnerUser', 'UsernameOnly'],
     'getCommunityMemberUsernames falls back to all users when feature flag is false'
+  );
+  sandbox.lsWrites = [];
+  assertEqual(
+    sandbox.setCurrentCommunityId('new-jersey'),
+    'new-jersey',
+    'setCurrentCommunityId preserves existing setter behavior while feature flag is false'
+  );
+  assertDeepEqual(
+    sandbox.lsWrites,
+    [[sandbox.SELECTED_COMMUNITY_KEY, 'new-jersey']],
+    'setCurrentCommunityId writes only the public selected-community key while feature flag is false'
   );
 
   assertEqual(
@@ -827,6 +891,19 @@ function runBehaviorChecks() {
   );
 
   sandbox.MULTI_COMMUNITY_ENABLED = true;
+  sandbox.cur = 'OwnerUser';
+  sandbox.currentAuthUid = 'uid-owner';
+  sandbox.allData.userCommunities = {
+    'uid-owner': {
+      'new-jersey': { role: 'owner', username: 'OwnerUser', joinedAt: 777 }
+    },
+    'uid-community-admin': {
+      'new-jersey': { role: 'admin', username: 'AdminInCommunity', joinedAt: 333 }
+    },
+    'uid-false-admin': {
+      'new-jersey': { role: 'member', username: 'FalseAdminEntry', joinedAt: 444 }
+    }
+  };
   sandbox.allData.wishlist = { Alpha: { Pikachu: 'H' }, OwnerUser: { Eevee: 'M' } };
   sandbox.allData.dynamax = { UsernameOnly: { Bulbasaur: 'L' } };
   sandbox.allData.gmax = { AdminInCommunity: { Charizard: 'H' } };
@@ -839,6 +916,20 @@ function runBehaviorChecks() {
     costumes: sandbox.allData.costumes,
     have: sandbox.allData.have
   });
+  assertDeepEqual(
+    sandbox.memberCommunityOptions().map(c => c.id),
+    ['new-jersey'],
+    'future public switcher: memberCommunityOptions lists only communities for the signed-in user'
+  );
+  sandbox.cur = 'UsernameOnly';
+  sandbox.currentAuthUid = '';
+  assertDeepEqual(
+    sandbox.memberCommunityOptions().map(c => c.id),
+    ['new-jersey'],
+    'future public switcher: memberCommunityOptions falls back to memberUsernames when userCommunities is unavailable'
+  );
+  sandbox.cur = 'OwnerUser';
+  sandbox.currentAuthUid = 'uid-owner';
   localStore[sandbox.SELECTED_COMMUNITY_KEY] = 'new-jersey';
   assertEqual(
     sandbox.getCurrentCommunityId(),
@@ -879,6 +970,30 @@ function runBehaviorChecks() {
     sandbox.recordBelongsToSelectedCommunity({ communityId: 'new-jersey' }),
     true,
     'future public switcher: selected community records remain visible'
+  );
+  localStore[sandbox.SELECTED_COMMUNITY_KEY] = 'draft-only';
+  assertEqual(
+    sandbox.getCurrentCommunityId(),
+    'nyc',
+    'future public switcher: existing but unjoined selected community falls back to nyc'
+  );
+  sandbox.lsWrites = [];
+  sandbox.setCurrentCommunityId('new-jersey');
+  assertDeepEqual(
+    sandbox.lsWrites,
+    [[sandbox.SELECTED_COMMUNITY_KEY, 'new-jersey']],
+    'future public switcher: setCurrentCommunityId writes only the public selected-community key for joined communities'
+  );
+  sandbox.lsWrites = [];
+  sandbox.setCurrentCommunityId('draft-only');
+  assertDeepEqual(
+    sandbox.lsWrites,
+    [[sandbox.SELECTED_COMMUNITY_KEY, 'nyc']],
+    'future public switcher: setCurrentCommunityId stores nyc fallback for unjoined communities'
+  );
+  assert(
+    !sandbox.lsWrites.some(([key]) => key === sandbox.OWNER_COMMUNITY_PREVIEW_SELECTED_KEY),
+    'future public switcher: setCurrentCommunityId must not write owner-preview localStorage'
   );
   localStore[sandbox.SELECTED_COMMUNITY_KEY] = 'missing-community';
   assertEqual(

@@ -2401,3 +2401,27 @@
 
 ### Known risks / TODOs
 - Copy-only polish; public community switching remains deferred.
+
+## 2026-05-30 - Codex - Flagged member community switcher
+
+### Summary
+- Added a member-facing community selector shell behind `MULTI_COMMUNITY_ENABLED=false`. It is hidden in current production behavior and uses the future public selected-community key `pogoSelectedCommunityId_v1`.
+- The selector lists only communities the signed-in user belongs to, preferring `userCommunities/{uid}` and falling back to `communities/{communityId}/memberUsernames/{username}`.
+- Owner preview remains separate on `pogoOwnerCommunityPreviewCommunity_v1`, and Pokémon wishlist/inventory/profile data remains user-global.
+
+### Files touched
+- `index.html`
+- `scripts/check-community-membership.js`
+- `docs/MAINTENANCE-LOG.md`
+
+### Firebase paths / rules
+- No Firebase writes, paths, or security rules changed.
+- Public member selection is localStorage-only while the feature flag is off.
+
+### Manual test checklist
+- With `MULTI_COMMUNITY_ENABLED=false`, normal users do not see the member community selector and existing behavior is unchanged.
+- In a future flagged sandbox, multi-community members can select only communities they belong to; invalid selections fall back to NYC.
+- Selecting a community changes visible member filtering only and does not create, move, copy, or delete Pokémon list/inventory data.
+
+### Known risks / TODOs
+- Public multi-community switching remains disabled. A future launch still needs explicit flag enablement, deployed smoke, and manual QA across Browse, Strings/Compare/Trade Match, Inventory Community Browse, Offers read views, and Schedule read views.
