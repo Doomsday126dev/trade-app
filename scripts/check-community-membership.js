@@ -93,6 +93,8 @@ function runSourceWiringChecks() {
   const ownerPreviewAllowsOffer = extractFunctionSource('ownerPreviewAllowsOffer');
   const schedulePreviewAllowsTrade = extractFunctionSource('schedulePreviewAllowsTrade');
   const renderCommunityMigrationPanel = extractFunctionSource('renderCommunityMigrationPanel');
+  const getCurrentCommunityId = extractFunctionSource('getCurrentCommunityId');
+  const filterUsersBySelectedCommunity = extractFunctionSource('filterUsersBySelectedCommunity');
 
   assertSourceIncludes(
     approveRequest,
@@ -272,6 +274,21 @@ function runSourceWiringChecks() {
   assert(
     html.includes("const SELECTED_COMMUNITY_KEY='pogoSelectedCommunityId_v1';"),
     'public selected-community key must remain separate from owner preview selection key'
+  );
+  assertSourceIncludes(
+    getCurrentCommunityId,
+    'lsGet(SELECTED_COMMUNITY_KEY,DEFAULT_COMMUNITY_ID)',
+    'future public selected-community helper must read the public selected-community localStorage key'
+  );
+  assertSourceIncludes(
+    getCurrentCommunityId,
+    'return allData.communities?.[stored]?stored:DEFAULT_COMMUNITY_ID;',
+    'future public selected-community helper must fall back to DEFAULT_COMMUNITY_ID for missing communities'
+  );
+  assertSourceIncludes(
+    filterUsersBySelectedCommunity,
+    'return usernames.filter(u=>members.has(u));',
+    'future public selected-community filtering must filter username lists, not Pokémon records'
   );
   assertSourceIncludes(
     preparedPreviewCommunities,
@@ -469,7 +486,8 @@ function runBehaviorChecks() {
       extractFunctionSource('isUserInCommunity'),
       extractFunctionSource('filterUsersBySelectedCommunity'),
       extractFunctionSource('canManageCommunity'),
-      extractFunctionSource('recordCommunityId')
+      extractFunctionSource('recordCommunityId'),
+      extractFunctionSource('recordBelongsToSelectedCommunity')
     ].join('\n'),
     sandbox
   );
@@ -806,6 +824,89 @@ function runBehaviorChecks() {
     sandbox.buildNonDefaultCommunityMemberRemoval({ communityId: 'nyc', username: 'MemberUser' }).ok,
     false,
     'buildNonDefaultCommunityMemberRemoval rejects nyc removal'
+  );
+
+  sandbox.MULTI_COMMUNITY_ENABLED = true;
+  sandbox.allData.wishlist = { Alpha: { Pikachu: 'H' }, OwnerUser: { Eevee: 'M' } };
+  sandbox.allData.dynamax = { UsernameOnly: { Bulbasaur: 'L' } };
+  sandbox.allData.gmax = { AdminInCommunity: { Charizard: 'H' } };
+  sandbox.allData.costumes = { FalseAdminEntry: { 'Pikachu (Holiday)': 'M' } };
+  sandbox.allData.have = { OwnerUser: { Heracross: 2 }, Alpha: { Pidgey: 5 } };
+  const pokemonDataBefore = JSON.stringify({
+    wishlist: sandbox.allData.wishlist,
+    dynamax: sandbox.allData.dynamax,
+    gmax: sandbox.allData.gmax,
+    costumes: sandbox.allData.costumes,
+    have: sandbox.allData.have
+  });
+  localStore[sandbox.SELECTED_COMMUNITY_KEY] = 'new-jersey';
+  assertEqual(
+    sandbox.getCurrentCommunityId(),
+    'new-jersey',
+    'future public switcher: getCurrentCommunityId reads selected community from public localStorage key'
+  );
+  assertDeepEqual(
+    Array.from(sandbox.getCommunityMemberUsernames()).sort(),
+    ['AdminInCommunity', 'FalseAdminEntry', 'OwnerUser', 'UsernameOnly'],
+    'future public switcher: getCommunityMemberUsernames returns selected community memberUsernames'
+  );
+  assertDeepEqual(
+    sandbox.filterUsersBySelectedCommunity(['Alpha', 'OwnerUser', 'UsernameOnly', 'Missing']),
+    ['OwnerUser', 'UsernameOnly'],
+    'future public switcher: filterUsersBySelectedCommunity filters usernames only'
+  );
+  assertEqual(
+    sandbox.isUserInCommunity('OwnerUser'),
+    true,
+    'future public switcher: isUserInCommunity returns true for selected community members'
+  );
+  assertEqual(
+    sandbox.isUserInCommunity('Alpha'),
+    false,
+    'future public switcher: isUserInCommunity returns false for users outside the selected community'
+  );
+  assertEqual(
+    sandbox.recordCommunityId({}),
+    'nyc',
+    'future public switcher: recordCommunityId defaults missing communityId to nyc'
+  );
+  assertEqual(
+    sandbox.recordBelongsToSelectedCommunity({}),
+    false,
+    'future public switcher: missing communityId records are treated as nyc and hidden when another community is selected'
+  );
+  assertEqual(
+    sandbox.recordBelongsToSelectedCommunity({ communityId: 'new-jersey' }),
+    true,
+    'future public switcher: selected community records remain visible'
+  );
+  localStore[sandbox.SELECTED_COMMUNITY_KEY] = 'missing-community';
+  assertEqual(
+    sandbox.getCurrentCommunityId(),
+    'nyc',
+    'future public switcher: missing selected community falls back to nyc'
+  );
+  assertEqual(
+    sandbox.recordBelongsToSelectedCommunity({}),
+    true,
+    'future public switcher: missing communityId records are visible after fallback to nyc'
+  );
+  localStore[sandbox.SELECTED_COMMUNITY_KEY] = '';
+  assertEqual(
+    sandbox.getCurrentCommunityId(),
+    'nyc',
+    'future public switcher: blank selected community falls back to nyc'
+  );
+  assertEqual(
+    JSON.stringify({
+      wishlist: sandbox.allData.wishlist,
+      dynamax: sandbox.allData.dynamax,
+      gmax: sandbox.allData.gmax,
+      costumes: sandbox.allData.costumes,
+      have: sandbox.allData.have
+    }),
+    pokemonDataBefore,
+    'future public switcher: selected-community helpers do not mutate user-global Pokémon records'
   );
 }
 
