@@ -2382,3 +2382,22 @@
 
 ### Known risks / TODOs
 - This is still owner-only preview tooling, not a public switcher. Public member-facing community switching, join/request flows, and per-community offers/schedule write semantics remain deferred.
+
+## 2026-05-30 - Codex - Owner preview label polish
+
+### Summary
+- Clarified the owner-only community preview controls so the community selector reads as a preview target and the checkbox reads as the action that enables preview mode.
+
+### Files touched
+- `index.html`
+- `docs/MAINTENANCE-LOG.md`
+
+### Firebase paths / rules
+- No Firebase paths or security rules changed.
+
+### Manual test checklist
+- Owner maintenance panel labels are clear: select the preview community, then enable owner preview.
+- Normal users still do not see owner preview controls.
+
+### Known risks / TODOs
+- Copy-only polish; public community switching remains deferred.

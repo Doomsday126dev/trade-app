@@ -6929,8 +6929,8 @@ function renderCommunityMigrationPanel(){
         <div class="login-audit-sub">Private prep for future multi-community support. Owner preview is not public mode and does not change login or normal member behavior.</div>
       </div>
       <div class="login-audit-actions">
-        ${previewCommunities.length?`<label class="owner-preview-toggle" title="Owner-only local preview community; this never writes Firebase or changes public selected-community state">Preview <select onchange="setOwnerPreviewCommunityId(this.value)" ${previewCommunities.length?'':'disabled'}>${previewOptions}</select></label>`:''}
-        ${MULTI_COMMUNITY_OWNER_PREVIEW_AVAILABLE?`<label class="owner-preview-toggle ${previewOn?'on':''}" title="Owner-only community preview for Browse, Strings, Compare, Trade Match, Inventory browse, Offers, and Schedule; hidden from admins and members"><input type="checkbox" ${previewOn?'checked':''} onchange="setOwnerCommunityPreview(this.checked)"> Community preview</label>`:''}
+        ${previewCommunities.length?`<label class="owner-preview-toggle" title="Owner-only local preview community; this never writes Firebase or changes public selected-community state">Preview community <select onchange="setOwnerPreviewCommunityId(this.value)" ${previewCommunities.length?'':'disabled'}>${previewOptions}</select></label>`:''}
+        ${MULTI_COMMUNITY_OWNER_PREVIEW_AVAILABLE?`<label class="owner-preview-toggle ${previewOn?'on':''}" title="Owner-only preview for Browse, Strings, Compare, Trade Match, Inventory browse, Offers, and Schedule; hidden from admins and members"><input type="checkbox" ${previewOn?'checked':''} onchange="setOwnerCommunityPreview(this.checked)"> Enable owner preview</label>`:''}
         <button class="rpin" onclick="prepareDefaultCommunity()" ${canRefreshServer?'':'disabled'}>${ready?(preview.missingOnServer.length?'Refresh NYC':'NYC prepared'):'Prepare NYC'}</button>
       </div>
     </div>
