@@ -6748,10 +6748,82 @@ function buildNonDefaultCommunityPreparation(input={}){
   };
   return{ok:true,id,ownerUid,community,updates};
 }
+function preparedNonDefaultCommunities(){
+  return Object.entries(allData.communities||{})
+    .filter(([id,c])=>id!==DEFAULT_COMMUNITY_ID&&c?.preparedAt)
+    .sort((a,b)=>alphaCompare(a[1]?.name||a[0],b[1]?.name||b[0]));
+}
+function validatePreparedNonDefaultCommunityId(rawId){
+  const validated=validateNonDefaultCommunityId(rawId);
+  if(!validated.ok)return{ok:false,error:validated.error};
+  const community=allData.communities?.[validated.id];
+  if(!community||!community.preparedAt)return{ok:false,error:'Prepare this non-NYC community before assigning members.'};
+  return{ok:true,id:validated.id,community};
+}
+function buildNonDefaultCommunityMemberAssignment(input={}){
+  const validated=validatePreparedNonDefaultCommunityId(input.communityId);
+  if(!validated.ok)return{ok:false,error:validated.error,updates:{}};
+  const username=String(input.username||'').trim();
+  if(!username)return{ok:false,error:'Enter an existing username first.',updates:{}};
+  const existingUser=allData.users?.[username];
+  if(!existingUser)return{ok:false,error:`${username} is not an existing user. Add or approve them first.`,updates:{}};
+  const user=normalizedUserRecord(username,existingUser);
+  const uid=user.authUid||'';
+  const id=validated.id;
+  const now=Date.now();
+  const existingReverse=uid?(allData.userCommunities?.[uid]?.[id]||{}):{};
+  const updates={
+    [`communities/${id}/memberUsernames/${username}`]:true,
+    [`communities/${id}/updatedAt`]:now
+  };
+  if(uid){
+    updates[`communities/${id}/members/${uid}`]=true;
+    updates[`userCommunities/${uid}/${id}`]={
+      role:'member',
+      username,
+      joinedAt:existingReverse.joinedAt||user.joined||now
+    };
+  }
+  return{ok:true,id,community:validated.community,username,uid,updates};
+}
+function buildNonDefaultCommunityMemberRemoval(input={}){
+  const validated=validatePreparedNonDefaultCommunityId(input.communityId);
+  if(!validated.ok)return{ok:false,error:validated.error,updates:{}};
+  const username=String(input.username||'').trim();
+  if(!username)return{ok:false,error:'Enter an existing username first.',updates:{}};
+  const existingUser=allData.users?.[username];
+  if(!existingUser)return{ok:false,error:`${username} is not an existing user.`,updates:{}};
+  const user=normalizedUserRecord(username,existingUser);
+  const uid=user.authUid||'';
+  const id=validated.id;
+  const community=validated.community;
+  if(community.ownerUsername===username||(uid&&community.ownerId===uid))return{ok:false,error:'Cannot remove the community owner.',updates:{}};
+  const updates={
+    [`communities/${id}/memberUsernames/${username}`]:null,
+    [`communities/${id}/updatedAt`]:Date.now()
+  };
+  if(uid){
+    updates[`communities/${id}/members/${uid}`]=null;
+    updates[`userCommunities/${uid}/${id}`]=null;
+    if(Object.prototype.hasOwnProperty.call(community.admins||{},uid))updates[`communities/${id}/admins/${uid}`]=null;
+  }
+  return{ok:true,id,community,username,uid,updates};
+}
 function setNonDefaultCommunityPrepStatus(message='',kind=''){
   const el=document.getElementById('non-default-community-prep-status');if(!el)return;
   el.className=kind==='ok'?'acct-pill ok':kind==='warn'?'acct-pill warn':'';
   el.textContent=message;
+}
+function setCommunityMemberToolStatus(message='',kind=''){
+  const el=document.getElementById('non-default-member-status');if(!el)return;
+  el.className=kind==='ok'?'acct-pill ok':kind==='warn'?'acct-pill warn':'';
+  el.textContent=message;
+}
+function nonDefaultCommunityMemberToolInput(){
+  return{
+    communityId:document.getElementById('non-default-member-community')?.value||'',
+    username:document.getElementById('non-default-member-username')?.value||''
+  };
 }
 function communityPreviewStats(migration,existing={}){
   const serverNames=new Set(Object.keys(existing.memberUsernames||{}));
@@ -6791,6 +6863,9 @@ function renderCommunityMigrationPanel(){
   const serverDrift=preview.missingOnServer.length||preview.extraOnServer.length;
   const canRefreshServer=!ready||preview.missingOnServer.length>0;
   const previewOn=ownerCommunityPreviewOn();
+  const preparedCommunities=preparedNonDefaultCommunities();
+  const preparedOptions=preparedCommunities.map(([id,c])=>`<option value="${escAttr(id)}">${escHtml(c.name||id)} (${escHtml(id)})</option>`).join('');
+  const userOptions=Object.keys(allData.users||{}).sort(alphaCompare).map(u=>`<option value="${escAttr(u)}"></option>`).join('');
   const driftHtml=serverDrift?`
     <div style="font-size:11px;color:var(--muted);margin-top:6px">
       Firebase drift: ${preview.missingOnServer.length?`${preview.missingOnServer.length} local username${preview.missingOnServer.length===1?'':'s'} not on server${preview.missingOnServer.length<=6?`: ${escHtml(preview.missingOnServer.join(', '))}`:''}`:''}
@@ -6854,6 +6929,26 @@ function renderCommunityMigrationPanel(){
           </div>
         </div>
       </div>
+      <div class="login-audit-row">
+        <div style="width:100%">
+          <div class="login-audit-user">Assign members to prepared community <span class="cb">owner only</span></div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px">Adds or removes existing users from prepared non-NYC communities only. This does not switch views, enroll NYC users automatically, or copy Pokémon data.</div>
+          <div style="display:grid;grid-template-columns:minmax(180px,1fr) minmax(160px,1fr);gap:8px;margin-top:10px">
+            <select id="non-default-member-community" ${preparedCommunities.length?'':'disabled'}>
+              ${preparedCommunities.length?preparedOptions:'<option value="">Prepare a non-NYC community first</option>'}
+            </select>
+            <input id="non-default-member-username" list="community-member-username-options" placeholder="Existing username" autocapitalize="off" autocomplete="off" spellcheck="false" ${preparedCommunities.length?'':'disabled'}>
+            <datalist id="community-member-username-options">${userOptions}</datalist>
+          </div>
+          <div class="login-audit-actions" style="justify-content:space-between;margin-top:10px">
+            <span id="non-default-member-status" style="font-size:12px;color:var(--muted)"></span>
+            <span style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="rpin" onclick="assignNonDefaultCommunityMember()" ${preparedCommunities.length?'':'disabled'}>Add member</button>
+              <button class="rpin danger" onclick="removeNonDefaultCommunityMember()" ${preparedCommunities.length?'':'disabled'}>Remove member</button>
+            </span>
+          </div>
+        </div>
+      </div>
     </div>`;
 }
 async function prepareDefaultCommunity(){
@@ -6911,6 +7006,60 @@ async function prepareNonDefaultCommunity(){
     console.warn('Non-default community prep failed',e);
     setNonDefaultCommunityPrepStatus('Could not prepare community: '+(e.code||e.message||'permission denied'),'warn');
     toast('⚠️ Could not prepare community: '+(e.code||e.message||'permission denied'),7000);
+  }
+}
+async function assignNonDefaultCommunityMember(){
+  if(!ownerCanUseCommunityTools()){toast('⚠️ Owner only');return;}
+  if(!fbOn||!db||!auth?.currentUser){toast('⚠️ Sign in with Firebase before assigning community members');return;}
+  const assignment=buildNonDefaultCommunityMemberAssignment(nonDefaultCommunityMemberToolInput());
+  if(!assignment.ok){
+    setCommunityMemberToolStatus(assignment.error,'warn');
+    toast('⚠️ '+assignment.error,5000);
+    return;
+  }
+  const paths=Object.keys(assignment.updates);
+  setCommunityMemberToolStatus(`Ready: add ${assignment.username} to ${assignment.id}`,'');
+  const uidLine=assignment.uid?`- communities/${assignment.id}/members/${assignment.uid}\n- userCommunities/${assignment.uid}/${assignment.id}`:'- username-only user: no UID membership paths will be written';
+  if(!confirm(`Add ${assignment.username} to "${assignment.community.name||assignment.id}" (${assignment.id})?\n\nThis writes only:\n- communities/${assignment.id}/memberUsernames/${assignment.username}\n${uidLine}\n- communities/${assignment.id}/updatedAt\n\nNo Pokémon data will be copied, and current NYC behavior will not change.`))return;
+  try{
+    await withTimeout(update(ref(db),assignment.updates),9000,`Assigning ${assignment.username} to ${assignment.id} timed out`,'db/community-member-timeout');
+    const s=getLocal();
+    paths.forEach(path=>applyDataPath(s,path,assignment.updates[path]));
+    saveLocal(s);
+    allData=normalizeData(s);
+    renderCommunityMigrationPanel();
+    toast(`✅ ${assignment.username} added to ${assignment.community.name||assignment.id}`,5000);
+  }catch(e){
+    console.warn('Non-default community member assignment failed',e);
+    setCommunityMemberToolStatus('Could not add member: '+(e.code||e.message||'permission denied'),'warn');
+    toast('⚠️ Could not add member: '+(e.code||e.message||'permission denied'),7000);
+  }
+}
+async function removeNonDefaultCommunityMember(){
+  if(!ownerCanUseCommunityTools()){toast('⚠️ Owner only');return;}
+  if(!fbOn||!db||!auth?.currentUser){toast('⚠️ Sign in with Firebase before removing community members');return;}
+  const removal=buildNonDefaultCommunityMemberRemoval(nonDefaultCommunityMemberToolInput());
+  if(!removal.ok){
+    setCommunityMemberToolStatus(removal.error,'warn');
+    toast('⚠️ '+removal.error,5000);
+    return;
+  }
+  const paths=Object.keys(removal.updates);
+  setCommunityMemberToolStatus(`Ready: remove ${removal.username} from ${removal.id}`,'');
+  const uidLine=removal.uid?`- communities/${removal.id}/members/${removal.uid}\n- userCommunities/${removal.uid}/${removal.id}${removal.updates[`communities/${removal.id}/admins/${removal.uid}`]===null?`\n- communities/${removal.id}/admins/${removal.uid}`:''}`:'- username-only user: no UID membership paths will be deleted';
+  if(!confirm(`Remove ${removal.username} from "${removal.community.name||removal.id}" (${removal.id})?\n\nThis deletes only:\n- communities/${removal.id}/memberUsernames/${removal.username}\n${uidLine}\n- updates communities/${removal.id}/updatedAt\n\nThis tool cannot remove users from NYC or remove a community owner.`))return;
+  try{
+    await withTimeout(update(ref(db),removal.updates),9000,`Removing ${removal.username} from ${removal.id} timed out`,'db/community-member-timeout');
+    const s=getLocal();
+    paths.forEach(path=>applyDataPath(s,path,removal.updates[path]));
+    saveLocal(s);
+    allData=normalizeData(s);
+    renderCommunityMigrationPanel();
+    toast(`✅ ${removal.username} removed from ${removal.community.name||removal.id}`,5000);
+  }catch(e){
+    console.warn('Non-default community member removal failed',e);
+    setCommunityMemberToolStatus('Could not remove member: '+(e.code||e.message||'permission denied'),'warn');
+    toast('⚠️ Could not remove member: '+(e.code||e.message||'permission denied'),7000);
   }
 }
 async function repairLoginDirectory(u){

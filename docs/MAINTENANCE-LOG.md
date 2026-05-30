@@ -2325,3 +2325,35 @@
 
 ### Known risks / TODOs
 - This is metadata/owner-prep only. Member assignment, public switching, request/join flows, and per-community offers/schedule scoping remain deferred.
+
+## 2026-05-29 - Codex - Owner-only non-NYC member assignment
+
+### Summary
+- Added owner-only maintenance UI for assigning or removing existing users from already prepared non-NYC communities.
+- The tool remains private while `MULTI_COMMUNITY_ENABLED=false`; normal users still see current NYC/global behavior and no public community switcher, join flow, or request flow was added.
+- Assignment/removal is member-only, rejects `nyc`, rejects unprepared community IDs, rejects unknown usernames, and refuses to remove a community owner.
+
+### Files touched
+- `index.html`
+- `scripts/check-community-membership.js`
+- `docs/MAINTENANCE-LOG.md`
+
+### Firebase paths / rules
+- Assignment can write:
+  - `communities/{communityId}/memberUsernames/{username}`
+  - `communities/{communityId}/members/{uid}` when the user has `authUid`
+  - `userCommunities/{uid}/{communityId}` when the user has `authUid`
+  - `communities/{communityId}/updatedAt`
+- Removal can delete the corresponding membership/reverse-index paths and any stale `communities/{communityId}/admins/{uid}` entry for that user, then updates `communities/{communityId}/updatedAt`.
+- Username-only users are indexed by `memberUsernames` only; no fake UID paths are written.
+- No Firebase rules changed.
+
+### Manual test checklist
+- Owner can select a prepared non-NYC community, add an existing auth-linked user, and see membership/reverse-index paths created.
+- Owner can add a username-only existing user and see only the username index plus `updatedAt` written.
+- Owner can remove a non-owner member from a prepared non-NYC community and see membership/reverse-index paths deleted.
+- Attempts to remove from `nyc`, remove a community owner, assign to an unprepared/missing community, or assign an unknown username are rejected before writes.
+- Browse, Strings, Inventory, Schedule, requests, offers, login, and NYC preparation/preview behavior remain unchanged while `MULTI_COMMUNITY_ENABLED=false`.
+
+### Known risks / TODOs
+- This is owner-only setup tooling. Public community switching, user-facing join/request flows, per-community roles beyond owner/member, and per-community offers/schedule behavior remain deferred.
