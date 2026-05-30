@@ -2276,3 +2276,25 @@
 
 ### Known risks / TODOs
 - Full root restore is still a blunt recovery tool. A future safer restore flow should restore selected sections or use a server-side/admin-only tool instead of attempting a root client write.
+
+## 2026-05-29 - Codex - Login Health Check support report
+
+### Summary
+- Added a "Copy report" action to the existing Login Health Check modal. The copied text is designed for Discord/DM support debugging and uses only explicit allowlisted fields.
+- The support report intentionally avoids serializing app state, Firebase snapshots, localStorage contents, user records, auth identifiers, Pokémon lists, offers, friend codes, Discord IDs, PINs, or raw private paths.
+- Added copy success/failure feedback in the Health Check modal and reused the existing clipboard helper/fallback path.
+
+### Files touched
+- `index.html`
+- `docs/MAINTENANCE-LOG.md`
+
+### Firebase paths / rules
+- No Firebase paths or security rules changed.
+
+### Manual test checklist
+- Logged-out Health Check copy includes only app/build/connectivity/cache/auth-status-category details and no PIN, UID, email, friend code, Discord ID, Pokémon list, offer, or Firebase token data.
+- Logged-in Health Check copy includes only the same allowlisted diagnostics; auth is reported as a category only, never a raw UID or email.
+- Copy feedback appears after success or failure.
+
+### Known risks / TODOs
+- Keep future support-report fields allowlist-only. If a diagnostic value might reveal app data or identity data, leave it out unless there is an explicit privacy review.

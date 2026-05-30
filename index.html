@@ -441,6 +441,7 @@ input,select,textarea{font-family:var(--font);outline:none}
 .health-detail{grid-column:1/-1;font-size:11px;color:var(--muted);line-height:1.4;word-break:break-word}
 .health-detail code{font-family:var(--mono);font-size:11px;color:var(--ac2)}
 .health-actions{display:flex;gap:8px;justify-content:space-between;flex-wrap:wrap;margin-top:14px}
+.health-copy-status{font-size:11px;color:var(--muted);min-height:16px;margin-top:8px;text-align:right}
 .health-danger{border-color:rgba(239,68,68,.35);color:var(--danger)}
 .health-danger:hover{background:rgba(239,68,68,.12);color:var(--danger)}
 .cstep{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:13px;margin-bottom:10px}
@@ -2164,10 +2165,12 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
     <div class="health-actions">
       <button class="bghost health-danger" onclick="clearLoginLocalCache()">Clear local cache + reload</button>
       <div style="display:flex;gap:8px">
+        <button class="bghost" onclick="copyLoginHealthReport()">Copy report</button>
         <button class="bghost" onclick="runLoginHealthCheck()">Recheck</button>
         <button class="bpri" onclick="closeModal('login-health-modal')">Done</button>
       </div>
     </div>
+    <div class="health-copy-status" id="login-health-copy-status"></div>
   </div>
 </div>
 
@@ -4489,6 +4492,62 @@ function renderHealthRows(rows){
     </div>`;
   }).join('');
 }
+let _lastLoginHealthReport='';
+function setLoginHealthCopyStatus(msg='',kind='info'){
+  const el=document.getElementById('login-health-copy-status');
+  if(!el)return;
+  el.textContent=msg;
+  el.style.color=kind==='ok'?'var(--ok)':kind==='bad'?'var(--danger)':'var(--muted)';
+}
+function safeVisibleLoginError(){
+  const msg=(document.getElementById('login-err')?.textContent||'').replace(/\s+/g,' ').trim();
+  if(!msg||msg.includes('@'))return'';
+  return msg.slice(0,180);
+}
+function loginLocalCacheSummary(){
+  try{
+    const offlineBytes=localStorage.getItem(LS_OFFLINE)?.length||0;
+    let spriteEntries=0;
+    try{ spriteEntries=Object.keys(JSON.parse(localStorage.getItem(SPRITE_SCALE_CACHE_KEY)||'{}')).length; }catch(_e){ spriteEntries=0; }
+    return`Offline cache ${Math.round(offlineBytes/1024)} KB; sprite scale cache ${spriteEntries} entries`;
+  }catch(_e){ return'Unavailable'; }
+}
+function safeReportValue(v){
+  const s=String(v??'').replace(/\s+/g,' ').trim();
+  return s||'Unknown';
+}
+function buildLoginHealthReport(info){
+  // Allowlist-only support report: never serialize app state, Firebase snapshots, localStorage, or user records.
+  const lines=[
+    'PoGo Trades troubleshooting report',
+    `Generated: ${safeReportValue(info.generatedAt)}`,
+    `App version: ${safeReportValue(info.appVersion)}`,
+    `Page: ${safeReportValue(info.pageOrigin)}${safeReportValue(info.pagePath)}`,
+    `Network: ${safeReportValue(info.networkStatus)}`,
+    `Firebase config: ${safeReportValue(info.firebaseConfigured)}`,
+    `Firebase connection: ${safeReportValue(info.firebaseConnected)}`,
+    `Firebase read: ${safeReportValue(info.firebaseRead)}`,
+    `Auth session: ${safeReportValue(info.authStatus)}`,
+    `Service worker: ${safeReportValue(info.serviceWorker)}`,
+    `Local cache: ${safeReportValue(info.localCache)}`,
+    `Pending local edits: ${safeReportValue(info.pendingLocalEdits)}`
+  ];
+  if(info.selectedUser)lines.push(`Selected trainer: ${safeReportValue(info.selectedUser)}`);
+  if(info.safeError)lines.push(`Visible error: ${safeReportValue(info.safeError)}`);
+  return lines.join('\n');
+}
+async function copyLoginHealthReport(){
+  try{
+    if(!_lastLoginHealthReport)await runLoginHealthCheck();
+    if(!_lastLoginHealthReport)throw new Error('Health report was not available');
+    await copyText(_lastLoginHealthReport);
+    setLoginHealthCopyStatus('Report copied. Paste it into support chat.','ok');
+    toast('📋 Troubleshooting report copied');
+  }catch(e){
+    setLoginHealthCopyStatus('Copy failed. Try again from the live HTTPS app if clipboard access is blocked.','bad');
+    toast(`⚠️ Could not copy report: ${e?.message||'clipboard unavailable'}`);
+  }
+}
 async function ensureFirebaseForHealth(){
   await loadFirebaseSdk();
   if(!fbApp)setupFirebase(FIREBASE_URL);
@@ -4511,12 +4570,32 @@ async function serviceWorkerHealth(){
 }
 async function openLoginHealthCheck(){
   openModal('login-health-modal');
+  setLoginHealthCopyStatus('');
   await runLoginHealthCheck();
 }
 async function runLoginHealthCheck(){
+  _lastLoginHealthReport='';
+  setLoginHealthCopyStatus('');
   const typedUser=document.getElementById('login-user')?.value||'';
-  const selectedUser=cur||canonicalUsernameInput(typedUser);
+  const typedSelectedUser=canonicalUsernameInput(typedUser);
+  const selectedUser=cur||typedSelectedUser;
   const sessionState=auth?.currentUser?'Signed in':'Not signed in';
+  const reportInfo={
+    generatedAt:new Date().toLocaleString(),
+    appVersion:APP_VERSION,
+    pageOrigin:location.origin||'file://',
+    pagePath:location.protocol==='file:'?'local file':(location.pathname||'/'),
+    networkStatus:navigator.onLine?'Online':'Offline',
+    firebaseConfigured:FIREBASE_URL?'Configured':'Missing config',
+    firebaseConnected:'Checking',
+    firebaseRead:'Not checked',
+    authStatus:sessionState,
+    selectedUser:typedSelectedUser||'',
+    serviceWorker:'Checking',
+    localCache:loginLocalCacheSummary(),
+    pendingLocalEdits:'Checking',
+    safeError:safeVisibleLoginError()
+  };
   const rows=[
     healthRow('App version',APP_VERSION,`Page: ${location.href}`,'info'),
     healthRow(cur?'Current trainer':'Selected user',selectedUser||'None selected',selectedUser?`Live read check will test users/${selectedUser}.`:'Choose a username on the login screen if you want to test one specific account.','info')
@@ -4526,12 +4605,15 @@ async function runLoginHealthCheck(){
   try{
     firebaseOk=await withTimeout(ensureFirebaseForHealth(),8000,'Firebase setup timed out','firebase/health-timeout');
     rows.push(healthRow('Firebase connected',firebaseOk?'Connected':'Not connected',`Project: ${FIREBASE_PROJECT_ID}`,'ok'));
+    reportInfo.firebaseConnected=firebaseOk?'Connected':'Not connected';
   }catch(e){
     rows.push(healthRow('Firebase connected','Failed',e.code?`${e.code}: ${e.message}`:(e.message||String(e)),'bad'));
+    reportInfo.firebaseConnected=e?.code?`Failed (${e.code})`:'Failed';
   }
   rows.push(healthRow('Firebase Auth session',sessionState,auth?.currentUser?`UID: ${auth.currentUser.uid}`:(cur?'This browser can show saved local app data, but live writes will not sync until the user signs in again.':'Normal before login.'),auth?.currentUser?'ok':(cur?'warn':'info')));
   const queuedPaths=Object.keys(syncQueue||{});
   rows.push(healthRow('Pending local edits',queuedPaths.length?`${queuedPaths.length} queued`:'None',queuedPaths.length?`Waiting to sync: ${queuedPaths.slice(0,4).join(', ')}${queuedPaths.length>4?'…':''}`:'No unsynced edits are waiting on this device.',queuedPaths.length?'warn':'ok'));
+  reportInfo.pendingLocalEdits=queuedPaths.length?`${queuedPaths.length} queued`:'None';
   if(firebaseOk&&db){
     try{
       const signedIn=!!auth?.currentUser;
@@ -4541,21 +4623,26 @@ async function runLoginHealthCheck(){
       const snap=await withTimeout(get(ref(db,path)),6000,'Live user read timed out','db/read-timeout');
       if(selectedUser){
         rows.push(healthRow('Login data read',snap.exists()?'OK':'Missing user',snap.exists()?`Read ${path} successfully.`:`Firebase responded, but ${selectedUser} is not under ${signedIn?'users':'loginDirectory'}/.`,snap.exists()?'ok':'warn'));
+        reportInfo.firebaseRead=snap.exists()?'Selected user OK':'Selected user missing';
       }else{
         const count=snap.exists()?Object.keys(snap.val()||{}).length:0;
         rows.push(healthRow('Login data read',snap.exists()?'OK':'No users found',`Read ${path}/ successfully. ${count} trainer${count===1?'':'s'} visible to this browser.`,snap.exists()?'ok':'warn'));
+        reportInfo.firebaseRead=snap.exists()?`Directory readable (${count} trainer${count===1?'':'s'})`:'No users found';
       }
     }catch(e){
       const msg=e.code==='PERMISSION_DENIED'
         ?'Firebase rules blocked this read. Before login, loginDirectory should be readable; after login, users/ should be readable.'
         :e.message||String(e);
       rows.push(healthRow('Login data read','Blocked',e.code?`${e.code}: ${msg}`:msg,'bad'));
+      reportInfo.firebaseRead=e?.code?`Blocked (${e.code})`:'Blocked';
     }
   }else{
     rows.push(healthRow('Login data read','Skipped','Firebase did not connect on this browser.','warn'));
+    reportInfo.firebaseRead='Skipped';
   }
   const sw=await serviceWorkerHealth();
   rows.push(healthRow('Service worker',sw.status,sw.detail,sw.kind));
+  reportInfo.serviceWorker=sw.detail?`${sw.status} (${sw.detail})`:sw.status;
   // ── COMMUNITY & PERF PANEL ──────────────────────────────────
   // Community size row is fine for everyone (interesting context). The
   // technical perf rows (storage, render p95, snapshot timing, action
@@ -4576,6 +4663,7 @@ async function runLoginHealthCheck(){
       const lsKB=Math.round(lsBytes/1024);
       const lsKind=lsKB>=3072?'warn':lsKB>=1024?'info':'ok';
       rows.push(healthRow('Local storage size',`${lsKB} KB`,`Safari iOS quota is ~5 MB. At ~3 MB it\'s worth pruning archived offers/trades. Sprite-scale cache holds ${scaleSize} entries (max ${SPRITE_SCALE_CACHE_MAX} before LRU eviction).`,lsKind));
+      reportInfo.localCache=`Local app cache ${lsKB} KB; sprite scale cache ${scaleSize} entries`;
       const stats=perfStats();
       // Use short, single-word labels to avoid the awkward " · " line-break
       // splitting that happens in narrow health-row columns.
@@ -4611,6 +4699,7 @@ async function runLoginHealthCheck(){
   }catch(e){
     if(cur&&allData.users?.[cur]?.isAdmin)rows.push(healthRow('Admin panel','Error',String(e?.message||e),'warn'));
   }
+  _lastLoginHealthReport=buildLoginHealthReport(reportInfo);
   renderHealthRows(rows);
 }
 async function clearLoginLocalCache(){
