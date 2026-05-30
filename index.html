@@ -2429,6 +2429,7 @@ const DEFAULT_COMMUNITY_NAME='NYC';
 const COMMUNITY_VISIBILITIES=['private','inviteOnly','public'];
 const SELECTED_COMMUNITY_KEY='pogoSelectedCommunityId_v1';
 const OWNER_COMMUNITY_PREVIEW_KEY='pogoOwnerCommunityPreview_v1';
+const OWNER_COMMUNITY_PREVIEW_SELECTED_KEY='pogoOwnerCommunityPreviewCommunity_v1';
 const SESSION_TTL=30*24*60*60*1000; // 30 days; refreshed on each activity so active users stay logged in
 const SPRITE_BASE="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/";
 const FIREBASE_URL="https://trade-list-a4297-default-rtdb.firebaseio.com";
@@ -6580,6 +6581,43 @@ function ownerCanUseCommunityTools(){
 function ownerCommunityPreviewOn(){
   return !!(MULTI_COMMUNITY_OWNER_PREVIEW_AVAILABLE&&ownerCanUseCommunityTools()&&lsGet(OWNER_COMMUNITY_PREVIEW_KEY,false));
 }
+function preparedPreviewCommunities(){
+  const communities=allData.communities||{};
+  return Object.entries(communities)
+    .filter(([id,c])=>c&&c.preparedAt)
+    .sort(([aId,a],[bId,b])=>{
+      if(aId===DEFAULT_COMMUNITY_ID)return-1;
+      if(bId===DEFAULT_COMMUNITY_ID)return 1;
+      return alphaCompare(a?.name||aId,b?.name||bId);
+    });
+}
+function ownerPreviewCommunityId(){
+  if(!ownerCanUseCommunityTools())return DEFAULT_COMMUNITY_ID;
+  const stored=normalizeCommunityId(lsGet(OWNER_COMMUNITY_PREVIEW_SELECTED_KEY,DEFAULT_COMMUNITY_ID));
+  const community=allData.communities?.[stored];
+  return community?.preparedAt?stored:DEFAULT_COMMUNITY_ID;
+}
+function ownerPreviewCommunityRecord(){
+  return allData.communities?.[ownerPreviewCommunityId()]||allData.communities?.[DEFAULT_COMMUNITY_ID]||{};
+}
+function ownerPreviewCommunityName(){
+  const id=ownerPreviewCommunityId();
+  const community=allData.communities?.[id]||{};
+  return community.name||community.slug||(id===DEFAULT_COMMUNITY_ID?DEFAULT_COMMUNITY_NAME:id);
+}
+function setOwnerPreviewCommunityId(id){
+  if(!ownerCanUseCommunityTools())return;
+  const cid=normalizeCommunityId(id);
+  const community=allData.communities?.[cid];
+  if(!community?.preparedAt){toast('⚠️ Prepare that community before previewing it');return;}
+  lsSet(OWNER_COMMUNITY_PREVIEW_SELECTED_KEY,cid);
+  if(ownerCommunityPreviewOn())ensureProtectedSubscriptions();
+  renderCommunityMigrationPanel();
+  renderBrowse();
+  renderStrings();
+  renderSchedule();
+  if(haveView==='browse')renderHaveBrowse();
+}
 function setOwnerCommunityPreview(on){
   if(!ownerCanUseCommunityTools())return;
   lsSet(OWNER_COMMUNITY_PREVIEW_KEY,!!on);
@@ -6592,7 +6630,7 @@ function setOwnerCommunityPreview(on){
 }
 function ownerPreviewCommunityMemberUsernames(){
   if(!ownerCommunityPreviewOn())return null;
-  const community=allData.communities?.[DEFAULT_COMMUNITY_ID]||{};
+  const community=ownerPreviewCommunityRecord();
   const names=Object.keys(community.memberUsernames||{});
   return community.preparedAt&&names.length?new Set(names):null;
 }
@@ -6626,56 +6664,60 @@ function renderOwnerBrowsePreviewBanner(allowed){
   const el=document.getElementById('owner-browse-preview-banner');if(!el)return;
   const on=ownerCommunityPreviewOn();
   if(!on){el.classList.remove('show');el.style.display='none';el.innerHTML='';return;}
-  const community=allData.communities?.[DEFAULT_COMMUNITY_ID]||{};
+  const community=ownerPreviewCommunityRecord();
+  const previewName=ownerPreviewCommunityName();
   const members=Object.keys(community.memberUsernames||{}).length;
   const scoped=allowed?allowed.size:Object.keys(allData.users||{}).length;
   el.style.display='';
   el.classList.add('show');
-  el.innerHTML=`<span>🔭 Owner preview: Browse is scoped to ${escHtml(DEFAULT_COMMUNITY_NAME)} community members only.</span><span>${members?`${scoped} trainer${scoped===1?'':'s'} allowed by current Browse filters`:'Prepare NYC before trusting this preview'}</span>`;
+  el.innerHTML=`<span>🔭 Owner preview: Browse is scoped to ${escHtml(previewName)} community members only.</span><span>${members?`${scoped} trainer${scoped===1?'':'s'} allowed by current Browse filters`:`Prepare ${escHtml(previewName)} before trusting this preview`}</span>`;
 }
 function renderOwnerStringsPreviewBanner(allowed){
   const el=document.getElementById('owner-strings-preview-banner');if(!el)return;
   const on=ownerCommunityPreviewOn();
   if(!on){el.classList.remove('show');el.style.display='none';el.innerHTML='';return;}
-  const community=allData.communities?.[DEFAULT_COMMUNITY_ID]||{};
+  const community=ownerPreviewCommunityRecord();
+  const previewName=ownerPreviewCommunityName();
   const members=Object.keys(community.memberUsernames||{}).length;
   const scoped=allowed?allowed.size:Object.keys(allData.users||{}).length;
   el.style.display='';
   el.classList.add('show');
-  el.innerHTML=`<span>🔭 Owner preview: Strings and Compare are scoped to ${escHtml(DEFAULT_COMMUNITY_NAME)} members only.</span><span>${members?`${scoped} trainer${scoped===1?'':'s'} available before list/search filters`:'Prepare NYC before trusting this preview'}</span>`;
+  el.innerHTML=`<span>🔭 Owner preview: Strings and Compare are scoped to ${escHtml(previewName)} members only.</span><span>${members?`${scoped} trainer${scoped===1?'':'s'} available before list/search filters`:`Prepare ${escHtml(previewName)} before trusting this preview`}</span>`;
 }
 function renderOwnerInventoryPreviewBanner(allowed){
   const el=document.getElementById('owner-inventory-preview-banner');if(!el)return;
   const on=ownerCommunityPreviewOn();
   if(!on){el.classList.remove('show');el.style.display='none';el.innerHTML='';return;}
-  const community=allData.communities?.[DEFAULT_COMMUNITY_ID]||{};
+  const community=ownerPreviewCommunityRecord();
+  const previewName=ownerPreviewCommunityName();
   const members=Object.keys(community.memberUsernames||{}).length;
   const scoped=allowed?allowed.size:Object.keys(allData.users||{}).length;
   el.style.display='';
   el.classList.add('show');
-  el.innerHTML=`<span>🔭 Owner preview: Inventory browse is scoped to ${escHtml(DEFAULT_COMMUNITY_NAME)} members only.</span><span>${members?`${scoped} trainer${scoped===1?'':'s'} allowed before inventory filters`:'Prepare NYC before trusting this preview'}</span>`;
+  el.innerHTML=`<span>🔭 Owner preview: Inventory browse is scoped to ${escHtml(previewName)} members only.</span><span>${members?`${scoped} trainer${scoped===1?'':'s'} allowed before inventory filters`:`Prepare ${escHtml(previewName)} before trusting this preview`}</span>`;
 }
 function renderOwnerSchedulePreviewBanner(allowed){
   const el=document.getElementById('owner-schedule-preview-banner');if(!el)return;
   const on=ownerCommunityPreviewOn();
   if(!on){el.classList.remove('show');el.style.display='none';el.innerHTML='';return;}
-  const community=allData.communities?.[DEFAULT_COMMUNITY_ID]||{};
+  const community=ownerPreviewCommunityRecord();
+  const previewName=ownerPreviewCommunityName();
   const members=Object.keys(community.memberUsernames||{}).length;
   const scoped=allowed?allowed.size:Object.keys(allData.users||{}).length;
   el.style.display='';
   el.classList.add('show');
-  el.innerHTML=`<span>🔭 Owner preview: Schedule rows and partner picker are scoped to ${escHtml(DEFAULT_COMMUNITY_NAME)} members only.</span><span>${members?`${Math.max(0,scoped-1)} schedulable trainer${Math.max(0,scoped-1)===1?'':'s'} · quota cards still show your real daily usage`:'Prepare NYC before trusting this preview'}</span>`;
+  el.innerHTML=`<span>🔭 Owner preview: Schedule rows and partner picker are scoped to ${escHtml(previewName)} members only.</span><span>${members?`${Math.max(0,scoped-1)} schedulable trainer${Math.max(0,scoped-1)===1?'':'s'} · quota cards still show your real daily usage`:`Prepare ${escHtml(previewName)} before trusting this preview`}</span>`;
 }
 function guardOwnerPreviewTrainer(username,feature='that trainer'){
   if(ownerPreviewAllowsUser(username))return true;
-  toast(`🔭 Owner preview: ${username} is outside ${DEFAULT_COMMUNITY_NAME}, so ${feature} is hidden.`,4500);
+  toast(`🔭 Owner preview: ${username} is outside ${ownerPreviewCommunityName()}, so ${feature} is hidden.`,4500);
   return false;
 }
 function ownerPreviewAllowsOffer(offer,recipient=''){
   const members=ownerPreviewCommunityMemberUsernames();
   if(!members)return true;
   const communityId=offer?.communityId?normalizeCommunityId(offer.communityId):DEFAULT_COMMUNITY_ID;
-  if(communityId!==DEFAULT_COMMUNITY_ID)return false;
+  if(communityId!==ownerPreviewCommunityId())return false;
   const from=offer?.from||'';
   return (!from||members.has(from))&&(!recipient||members.has(recipient)||recipient===cur);
 }
@@ -6859,10 +6901,18 @@ function renderCommunityMigrationPanel(){
   const serverMembers=Object.keys(existing.memberUsernames||{}).length;
   const serverUidMembers=Object.keys(existing.members||{}).length;
   const ready=!!existing.preparedAt&&serverMembers>=migration.memberCount&&serverUidMembers>=migration.uidMemberCount;
-  const preview=communityPreviewStats(migration,existing);
+  const previewCommunityId=ownerPreviewCommunityId();
+  const previewCommunity=ownerPreviewCommunityRecord();
+  const previewLabel=ownerPreviewCommunityName();
+  const preview=communityPreviewStats(
+    previewCommunityId===DEFAULT_COMMUNITY_ID?migration:{community:previewCommunity},
+    previewCommunityId===DEFAULT_COMMUNITY_ID?existing:previewCommunity
+  );
   const serverDrift=preview.missingOnServer.length||preview.extraOnServer.length;
   const canRefreshServer=!ready||preview.missingOnServer.length>0;
   const previewOn=ownerCommunityPreviewOn();
+  const previewCommunities=preparedPreviewCommunities();
+  const previewOptions=previewCommunities.map(([id,c])=>`<option value="${escAttr(id)}" ${id===previewCommunityId?'selected':''}>${escHtml(c.name||id)} (${escHtml(id)})</option>`).join('');
   const preparedCommunities=preparedNonDefaultCommunities();
   const preparedOptions=preparedCommunities.map(([id,c])=>`<option value="${escAttr(id)}">${escHtml(c.name||id)} (${escHtml(id)})</option>`).join('');
   const userOptions=Object.keys(allData.users||{}).sort(alphaCompare).map(u=>`<option value="${escAttr(u)}"></option>`).join('');
@@ -6875,10 +6925,11 @@ function renderCommunityMigrationPanel(){
   el.innerHTML=`
     <div class="login-audit-head">
       <div>
-        <div class="login-audit-title">Owner maintenance · NYC community foundation</div>
-        <div class="login-audit-sub">Private prep for future multi-community support. This does not change Browse, Strings, Inventory, Schedule, or login behavior.</div>
+        <div class="login-audit-title">Owner maintenance · Community foundation</div>
+        <div class="login-audit-sub">Private prep for future multi-community support. Owner preview is not public mode and does not change login or normal member behavior.</div>
       </div>
       <div class="login-audit-actions">
+        ${previewCommunities.length?`<label class="owner-preview-toggle" title="Owner-only local preview community; this never writes Firebase or changes public selected-community state">Preview <select onchange="setOwnerPreviewCommunityId(this.value)" ${previewCommunities.length?'':'disabled'}>${previewOptions}</select></label>`:''}
         ${MULTI_COMMUNITY_OWNER_PREVIEW_AVAILABLE?`<label class="owner-preview-toggle ${previewOn?'on':''}" title="Owner-only community preview for Browse, Strings, Compare, Trade Match, Inventory browse, Offers, and Schedule; hidden from admins and members"><input type="checkbox" ${previewOn?'checked':''} onchange="setOwnerCommunityPreview(this.checked)"> Community preview</label>`:''}
         <button class="rpin" onclick="prepareDefaultCommunity()" ${canRefreshServer?'':'disabled'}>${ready?(preview.missingOnServer.length?'Refresh NYC':'NYC prepared'):'Prepare NYC'}</button>
       </div>
@@ -6900,15 +6951,15 @@ function renderCommunityMigrationPanel(){
       </div>
       <div class="login-audit-row">
         <div>
-          <div class="login-audit-user">Dry-run scoping preview <span class="cb">${escHtml(preview.source)}</span></div>
+          <div class="login-audit-user">Dry-run scoping preview: ${escHtml(previewLabel)} <span class="cb">${escHtml(previewCommunityId)}</span> <span class="cb">${escHtml(preview.source)}</span></div>
           <div class="login-audit-issues">
             <span class="login-audit-chip">Browse: ${preview.browseUsers.length} trainers</span>
             <span class="login-audit-chip">Strings: ${preview.stringUsers.length} trainers</span>
             <span class="login-audit-chip">Inventory browse: ${preview.inventoryUsers.length} trainers</span>
             <span class="login-audit-chip">Schedule picker: ${preview.scheduleUsers.length} trainers</span>
-            <span class="login-audit-chip">Hidden outside NYC: ${preview.hiddenUsers.length}</span>
+            <span class="login-audit-chip">Hidden outside ${escHtml(previewLabel)}: ${preview.hiddenUsers.length}</span>
           </div>
-          <div style="font-size:11px;color:var(--muted);margin-top:6px">Preview only. Because <span class="cb">MULTI_COMMUNITY_ENABLED=false</span>, the app still uses the current global NYC behavior.</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:6px">Preview only. The chosen preview community is stored locally on this browser and only filters visible trainer sets; Pokémon lists and inventory stay user-global. Because <span class="cb">MULTI_COMMUNITY_ENABLED=false</span>, normal users still use the current global NYC behavior.</div>
         </div>
       </div>
       <div class="login-audit-row">
@@ -9504,6 +9555,7 @@ function scheduledTradeOtherUsers(t){
 function schedulePreviewAllowsTrade(t){
   const members=ownerPreviewCommunityMemberUsernames();
   if(!members)return true;
+  if(recordCommunityId(t)!==ownerPreviewCommunityId())return false;
   return scheduledTradeOtherUsers(t).every(u=>members.has(u));
 }
 function visibleTradesOnDate(isoD){

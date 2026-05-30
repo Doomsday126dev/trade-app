@@ -86,6 +86,13 @@ function runSourceWiringChecks() {
   const assignNonDefaultCommunityMember = extractFunctionSource('assignNonDefaultCommunityMember');
   const removeNonDefaultCommunityMember = extractFunctionSource('removeNonDefaultCommunityMember');
   const recordCommunityId = extractFunctionSource('recordCommunityId');
+  const preparedPreviewCommunities = extractFunctionSource('preparedPreviewCommunities');
+  const ownerPreviewCommunityId = extractFunctionSource('ownerPreviewCommunityId');
+  const setOwnerPreviewCommunityId = extractFunctionSource('setOwnerPreviewCommunityId');
+  const ownerPreviewCommunityMemberUsernames = extractFunctionSource('ownerPreviewCommunityMemberUsernames');
+  const ownerPreviewAllowsOffer = extractFunctionSource('ownerPreviewAllowsOffer');
+  const schedulePreviewAllowsTrade = extractFunctionSource('schedulePreviewAllowsTrade');
+  const renderCommunityMigrationPanel = extractFunctionSource('renderCommunityMigrationPanel');
 
   assertSourceIncludes(
     approveRequest,
@@ -258,18 +265,100 @@ function runSourceWiringChecks() {
     !assignNonDefaultCommunityMember.includes('setCurrentCommunityId(') && !removeNonDefaultCommunityMember.includes('setCurrentCommunityId('),
     'non-default member assignment/removal must not switch the selected community'
   );
+  assert(
+    /\bconst\s+OWNER_COMMUNITY_PREVIEW_SELECTED_KEY\s*=\s*'pogoOwnerCommunityPreviewCommunity_v1'\s*;/.test(html),
+    'owner preview community selection must use a dedicated localStorage key'
+  );
+  assert(
+    html.includes("const SELECTED_COMMUNITY_KEY='pogoSelectedCommunityId_v1';"),
+    'public selected-community key must remain separate from owner preview selection key'
+  );
+  assertSourceIncludes(
+    preparedPreviewCommunities,
+    '.filter(([id,c])=>c&&c.preparedAt)',
+    'owner preview selector must list prepared communities only'
+  );
+  assertSourceIncludes(
+    ownerPreviewCommunityId,
+    'lsGet(OWNER_COMMUNITY_PREVIEW_SELECTED_KEY,DEFAULT_COMMUNITY_ID)',
+    'owner preview community id must read the dedicated localStorage key'
+  );
+  assertSourceIncludes(
+    ownerPreviewCommunityId,
+    "return community?.preparedAt?stored:DEFAULT_COMMUNITY_ID;",
+    'owner preview community id must fall back to DEFAULT_COMMUNITY_ID when the selected community is not prepared'
+  );
+  assertSourceIncludes(
+    setOwnerPreviewCommunityId,
+    'ownerCanUseCommunityTools()',
+    'owner preview community setter must be function-level owner guarded'
+  );
+  assertSourceIncludes(
+    setOwnerPreviewCommunityId,
+    'lsSet(OWNER_COMMUNITY_PREVIEW_SELECTED_KEY,cid)',
+    'owner preview community setter must persist preview selection in localStorage only'
+  );
+  assert(
+    !setOwnerPreviewCommunityId.includes('SELECTED_COMMUNITY_KEY') && !setOwnerPreviewCommunityId.includes('setCurrentCommunityId('),
+    'owner preview community setter must not write public selected-community state'
+  );
+  assert(
+    !/[^\w]update\s*\(|[^\w]set\s*\(|ref\s*\(/.test(setOwnerPreviewCommunityId),
+    'owner preview community setter must not write Firebase'
+  );
+  assertSourceIncludes(
+    ownerPreviewCommunityMemberUsernames,
+    'ownerPreviewCommunityRecord()',
+    'owner preview member filter must use the selected preview community record'
+  );
+  assertSourceIncludes(
+    ownerPreviewCommunityMemberUsernames,
+    'community.memberUsernames',
+    'owner preview must filter by community memberUsernames'
+  );
+  assertSourceIncludes(
+    ownerPreviewAllowsOffer,
+    'communityId!==ownerPreviewCommunityId()',
+    'owner preview offer filtering must respect the selected preview community'
+  );
+  assertSourceIncludes(
+    schedulePreviewAllowsTrade,
+    'recordCommunityId(t)!==ownerPreviewCommunityId()',
+    'owner preview schedule filtering must respect the selected preview community'
+  );
+  assertSourceIncludes(
+    renderCommunityMigrationPanel,
+    'Pokémon lists and inventory stay user-global',
+    'owner preview UI must state the user-global Pokémon data invariant'
+  );
+  assert(
+    !/communities\/(?:\$\{[^}]+\}|[^`'"\s]+)\/(?:wishlist|dynamax|gmax|costumes|have)\b/.test(html),
+    'community paths must not nest Pokémon list/inventory data under communities'
+  );
+  assert(
+    !/`(?:wishlist|dynamax|gmax|costumes|have)\/\$\{[^}]*community/i.test(html),
+    'selected community must not be used to write or read community-scoped Pokémon data paths'
+  );
 }
 
 function runBehaviorChecks() {
+  const localStore = {};
   const sandbox = {
     Date,
     OWNER: 'Doomsday126',
     DEFAULT_COMMUNITY_ID: 'nyc',
     COMMUNITY_VISIBILITIES: ['private', 'inviteOnly', 'public'],
     MULTI_COMMUNITY_ENABLED: false,
+    MULTI_COMMUNITY_OWNER_PREVIEW_AVAILABLE: true,
     SELECTED_COMMUNITY_KEY: 'selectedCommunityId',
+    OWNER_COMMUNITY_PREVIEW_KEY: 'ownerPreviewEnabled',
+    OWNER_COMMUNITY_PREVIEW_SELECTED_KEY: 'ownerPreviewCommunity',
     currentAuthUid: 'auth-admin',
     cur: 'AdminUser',
+    haveView: 'browse',
+    localStore,
+    lsWrites: [],
+    toastMessages: [],
     allData: {
       users: {
         AdminUser: { isAdmin: true },
@@ -283,6 +372,8 @@ function runBehaviorChecks() {
       },
       communities: {
         nyc: {
+          name: 'NYC',
+          preparedAt: 111,
           memberUsernames: { Alpha: true },
           members: { 'uid-alpha': true },
           admins: {}
@@ -315,8 +406,24 @@ function runBehaviorChecks() {
         }
       }
     },
-    lsGet(_key, fallback) {
-      return fallback;
+    lsGet(key, fallback) {
+      return Object.prototype.hasOwnProperty.call(localStore, key) ? localStore[key] : fallback;
+    },
+    lsSet(key, value) {
+      localStore[key] = value;
+      sandbox.lsWrites.push([key, value]);
+    },
+    toast(message) {
+      sandbox.toastMessages.push(message);
+    },
+    ensureProtectedSubscriptions() {},
+    renderCommunityMigrationPanel() {},
+    renderBrowse() {},
+    renderStrings() {},
+    renderSchedule() {},
+    renderHaveBrowse() {},
+    activeUsers() {
+      return null;
     },
     alphaCompare(a, b) {
       return String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' });
@@ -345,6 +452,18 @@ function runBehaviorChecks() {
       extractFunctionSource('buildNonDefaultCommunityPreparation'),
       extractFunctionSource('buildNonDefaultCommunityMemberAssignment'),
       extractFunctionSource('buildNonDefaultCommunityMemberRemoval'),
+      extractFunctionSource('ownerCanUseCommunityTools'),
+      extractFunctionSource('ownerCommunityPreviewOn'),
+      extractFunctionSource('preparedPreviewCommunities'),
+      extractFunctionSource('ownerPreviewCommunityId'),
+      extractFunctionSource('ownerPreviewCommunityRecord'),
+      extractFunctionSource('ownerPreviewCommunityName'),
+      extractFunctionSource('setOwnerPreviewCommunityId'),
+      extractFunctionSource('ownerPreviewCommunityMemberUsernames'),
+      extractFunctionSource('ownerPreviewAllowsUser'),
+      extractFunctionSource('ownerPreviewAllowsOffer'),
+      extractFunctionSource('scheduledTradeOtherUsers'),
+      extractFunctionSource('schedulePreviewAllowsTrade'),
       extractFunctionSource('getCurrentCommunityId'),
       extractFunctionSource('getCommunityMemberUsernames'),
       extractFunctionSource('isUserInCommunity'),
@@ -523,6 +642,69 @@ function runBehaviorChecks() {
     sandbox.validatePreparedNonDefaultCommunityId('missing-community').ok,
     false,
     'validatePreparedNonDefaultCommunityId rejects missing communities'
+  );
+
+  assertDeepEqual(
+    sandbox.preparedPreviewCommunities().map(([id]) => id),
+    ['nyc', 'new-jersey'],
+    'preparedPreviewCommunities lists prepared communities with nyc first'
+  );
+  localStore[sandbox.OWNER_COMMUNITY_PREVIEW_KEY] = true;
+  localStore[sandbox.OWNER_COMMUNITY_PREVIEW_SELECTED_KEY] = 'new-jersey';
+  assertEqual(sandbox.ownerCommunityPreviewOn(), true, 'ownerCommunityPreviewOn enables owner-only preview from localStorage');
+  assertEqual(sandbox.ownerPreviewCommunityId(), 'new-jersey', 'ownerPreviewCommunityId reads the local-only preview community key');
+  assertEqual(sandbox.ownerPreviewCommunityName(), 'New Jersey', 'ownerPreviewCommunityName resolves selected prepared community name');
+  assertDeepEqual(
+    Array.from(sandbox.ownerPreviewCommunityMemberUsernames()).sort(),
+    ['AdminInCommunity', 'FalseAdminEntry', 'OwnerUser', 'UsernameOnly'],
+    'ownerPreviewCommunityMemberUsernames filters by selected community memberUsernames'
+  );
+  assertEqual(sandbox.ownerPreviewAllowsUser('UsernameOnly'), true, 'owner preview allows selected community members');
+  assertEqual(sandbox.ownerPreviewAllowsUser('Alpha'), false, 'owner preview hides users outside the selected community');
+  assertEqual(
+    sandbox.ownerPreviewAllowsOffer({ from: 'OwnerUser', communityId: 'new-jersey' }, 'UsernameOnly'),
+    true,
+    'ownerPreviewAllowsOffer allows selected-community offers between selected-community members'
+  );
+  assertEqual(
+    sandbox.ownerPreviewAllowsOffer({ from: 'OwnerUser' }, 'UsernameOnly'),
+    false,
+    'ownerPreviewAllowsOffer treats missing communityId as nyc and hides it in non-nyc preview'
+  );
+  assertEqual(
+    sandbox.schedulePreviewAllowsTrade({
+      organizer: 'OwnerUser',
+      participants: { OwnerUser: true, UsernameOnly: true },
+      communityId: 'new-jersey'
+    }),
+    true,
+    'schedulePreviewAllowsTrade allows selected-community schedule rows whose partners are selected-community members'
+  );
+  assertEqual(
+    sandbox.schedulePreviewAllowsTrade({
+      organizer: 'OwnerUser',
+      participants: { OwnerUser: true, UsernameOnly: true }
+    }),
+    false,
+    'schedulePreviewAllowsTrade treats missing communityId as nyc and hides it in non-nyc preview'
+  );
+  sandbox.lsWrites = [];
+  sandbox.setOwnerPreviewCommunityId('new-jersey');
+  assertDeepEqual(
+    sandbox.lsWrites,
+    [[sandbox.OWNER_COMMUNITY_PREVIEW_SELECTED_KEY, 'new-jersey']],
+    'setOwnerPreviewCommunityId writes only the owner-preview localStorage key'
+  );
+  assert(
+    !sandbox.lsWrites.some(([key]) => key === sandbox.SELECTED_COMMUNITY_KEY),
+    'setOwnerPreviewCommunityId must not write public selected-community localStorage'
+  );
+  sandbox.lsWrites = [];
+  sandbox.setOwnerPreviewCommunityId('draft-only');
+  assertDeepEqual(
+    sandbox.lsWrites,
+    [],
+    'setOwnerPreviewCommunityId rejects unprepared communities without mutating localStorage'
   );
 
   const assignment = sandbox.buildNonDefaultCommunityMemberAssignment({

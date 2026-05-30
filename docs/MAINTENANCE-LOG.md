@@ -2357,3 +2357,28 @@
 
 ### Known risks / TODOs
 - This is owner-only setup tooling. Public community switching, user-facing join/request flows, per-community roles beyond owner/member, and per-community offers/schedule behavior remain deferred.
+
+## 2026-05-30 - Codex - Owner-only community preview switcher
+
+### Summary
+- Added an owner-only preview community selector in the existing community maintenance panel. The selection is stored in localStorage only and is separate from the future public selected-community state.
+- Owner preview can now scope already-previewed read surfaces to a prepared community's `memberUsernames`, including non-NYC communities. This changes visible trainer sets for the owner preview only; normal users remain on current NYC/global behavior while `MULTI_COMMUNITY_ENABLED=false`.
+- Reaffirmed the data-model invariant that Pokémon wishlist, Dynamax, Gigantamax, costume, inventory, and profile data remain user-global. Community preview filters users, not Pokémon records.
+
+### Files touched
+- `index.html`
+- `scripts/check-community-membership.js`
+- `docs/MAINTENANCE-LOG.md`
+
+### Firebase paths / rules
+- No Firebase writes, paths, or security rules changed.
+- Preview selection uses localStorage key `pogoOwnerCommunityPreviewCommunity_v1` only.
+
+### Manual test checklist
+- Owner can choose NYC or another prepared community in the owner maintenance panel and enable community preview.
+- Browse, Strings/Compare/Trade Match, Inventory Community Browse, Offers read views, and Schedule preview surfaces show only trainers allowed by the selected prepared community.
+- Normal users and admins without owner privileges do not see the owner preview controls.
+- Changing the preview community does not write Firebase and does not create, move, copy, or delete any Pokémon data.
+
+### Known risks / TODOs
+- This is still owner-only preview tooling, not a public switcher. Public member-facing community switching, join/request flows, and per-community offers/schedule write semantics remain deferred.
