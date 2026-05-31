@@ -92,6 +92,10 @@ function runSourceWiringChecks() {
   const ownerPreviewCommunityMemberUsernames = extractFunctionSource('ownerPreviewCommunityMemberUsernames');
   const ownerPreviewAllowsOffer = extractFunctionSource('ownerPreviewAllowsOffer');
   const schedulePreviewAllowsTrade = extractFunctionSource('schedulePreviewAllowsTrade');
+  const browseAllowedUsers = extractFunctionSource('browseAllowedUsers');
+  const stringsAllowedUsers = extractFunctionSource('stringsAllowedUsers');
+  const inventoryBrowseAllowedUsers = extractFunctionSource('inventoryBrowseAllowedUsers');
+  const scheduleAllowedUsers = extractFunctionSource('scheduleAllowedUsers');
   const renderCommunityMigrationPanel = extractFunctionSource('renderCommunityMigrationPanel');
   const memberCommunityOptions = extractFunctionSource('memberCommunityOptions');
   const currentCommunityIsSelectable = extractFunctionSource('currentCommunityIsSelectable');
@@ -337,6 +341,22 @@ function runSourceWiringChecks() {
     'return usernames.filter(u=>members.has(u));',
     'future public selected-community filtering must filter username lists, not Pokémon records'
   );
+  [
+    ['browseAllowedUsers', browseAllowedUsers],
+    ['stringsAllowedUsers', stringsAllowedUsers],
+    ['inventoryBrowseAllowedUsers', inventoryBrowseAllowedUsers],
+    ['scheduleAllowedUsers', scheduleAllowedUsers]
+  ].forEach(([name, source]) => {
+    assertSourceIncludes(
+      source,
+      'ownerPreviewCommunityMemberUsernames()',
+      `${name} must still be treated as owner-preview scoped, not fully public selected-community scoped`
+    );
+    assert(
+      !source.includes('getCommunityMemberUsernames()') && !source.includes('filterUsersBySelectedCommunity('),
+      `${name} must not be mistaken for a public selected-community surface yet`
+    );
+  });
   assertSourceIncludes(
     preparedPreviewCommunities,
     '.filter(([id,c])=>c&&c.preparedAt)',
@@ -407,6 +427,27 @@ function runSourceWiringChecks() {
 
 function runBehaviorChecks() {
   const localStore = {};
+  function makeFakeElement() {
+    return {
+      innerHTML: '',
+      style: {},
+      classes: new Set(),
+      classList: {
+        add(name) {
+          this._owner.classes.add(name);
+        },
+        remove(name) {
+          this._owner.classes.delete(name);
+        },
+        contains(name) {
+          return this._owner.classes.has(name);
+        },
+        _owner: null
+      }
+    };
+  }
+  const switcherEl = makeFakeElement();
+  switcherEl.classList._owner = switcherEl;
   const sandbox = {
     Date,
     OWNER: 'Doomsday126',
@@ -480,6 +521,11 @@ function runBehaviorChecks() {
     toast(message) {
       sandbox.toastMessages.push(message);
     },
+    document: {
+      getElementById(id) {
+        return id === 'member-community-switcher' ? switcherEl : null;
+      }
+    },
     ensureProtectedSubscriptions() {},
     renderCommunityMigrationPanel() {},
     renderMemberCommunitySwitcher() {},
@@ -494,6 +540,12 @@ function runBehaviorChecks() {
     },
     alphaCompare(a, b) {
       return String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' });
+    },
+    escHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+    },
+    escAttr(value) {
+      return sandbox.escHtml(value);
     },
     normalizeCommunityId(value) {
       return String(value || '').trim().toLowerCase() || 'nyc';
@@ -531,6 +583,10 @@ function runBehaviorChecks() {
       extractFunctionSource('ownerPreviewAllowsOffer'),
       extractFunctionSource('scheduledTradeOtherUsers'),
       extractFunctionSource('schedulePreviewAllowsTrade'),
+      extractFunctionSource('browseAllowedUsers'),
+      extractFunctionSource('stringsAllowedUsers'),
+      extractFunctionSource('inventoryBrowseAllowedUsers'),
+      extractFunctionSource('scheduleAllowedUsers'),
       extractFunctionSource('memberCommunityOptions'),
       extractFunctionSource('currentCommunityIsSelectable'),
       extractFunctionSource('getCurrentCommunityId'),
@@ -540,7 +596,8 @@ function runBehaviorChecks() {
       extractFunctionSource('filterUsersBySelectedCommunity'),
       extractFunctionSource('canManageCommunity'),
       extractFunctionSource('recordCommunityId'),
-      extractFunctionSource('recordBelongsToSelectedCommunity')
+      extractFunctionSource('recordBelongsToSelectedCommunity'),
+      extractFunctionSource('renderMemberCommunitySwitcher')
     ].join('\n'),
     sandbox
   );
@@ -629,6 +686,17 @@ function runBehaviorChecks() {
     sandbox.lsWrites,
     [[sandbox.SELECTED_COMMUNITY_KEY, 'new-jersey']],
     'setCurrentCommunityId writes only the public selected-community key while feature flag is false'
+  );
+  sandbox.renderMemberCommunitySwitcher();
+  assertEqual(
+    switcherEl.style.display,
+    'none',
+    'flag-gated switcher behavior: renderMemberCommunitySwitcher hides while MULTI_COMMUNITY_ENABLED is false'
+  );
+  assertEqual(
+    switcherEl.innerHTML,
+    '',
+    'flag-gated switcher behavior: hidden switcher does not render stale content while flag is false'
   );
 
   assertEqual(
@@ -893,8 +961,11 @@ function runBehaviorChecks() {
   sandbox.MULTI_COMMUNITY_ENABLED = true;
   sandbox.cur = 'OwnerUser';
   sandbox.currentAuthUid = 'uid-owner';
+  sandbox.allData.communities.nyc.memberUsernames.OwnerUser = true;
+  sandbox.allData.communities.nyc.members['uid-owner'] = true;
   sandbox.allData.userCommunities = {
     'uid-owner': {
+      nyc: { role: 'member', username: 'OwnerUser', joinedAt: 777 },
       'new-jersey': { role: 'owner', username: 'OwnerUser', joinedAt: 777 }
     },
     'uid-community-admin': {
@@ -918,15 +989,48 @@ function runBehaviorChecks() {
   });
   assertDeepEqual(
     sandbox.memberCommunityOptions().map(c => c.id),
-    ['new-jersey'],
-    'future public switcher: memberCommunityOptions lists only communities for the signed-in user'
+    ['nyc', 'new-jersey'],
+    'future public switcher: memberCommunityOptions lists only communities for the signed-in user, with nyc first'
+  );
+  switcherEl.innerHTML = '';
+  switcherEl.style.display = 'none';
+  switcherEl.classes.clear();
+  sandbox.renderMemberCommunitySwitcher();
+  assert(
+    switcherEl.classList.contains('show'),
+    'flag-gated switcher behavior: renderMemberCommunitySwitcher shows when flag is true and user has memberships'
+  );
+  assert(
+    /<select[^>]+aria-label="Choose community view"/.test(switcherEl.innerHTML),
+    'flag-gated switcher behavior: multiple memberships render a selector'
+  );
+  assert(
+    switcherEl.innerHTML.includes('value="nyc"') && switcherEl.innerHTML.includes('value="new-jersey"'),
+    'flag-gated switcher behavior: selector includes only joined communities'
+  );
+  assert(
+    !switcherEl.innerHTML.includes('draft-only'),
+    'flag-gated switcher behavior: selector excludes unjoined prepared communities'
   );
   sandbox.cur = 'UsernameOnly';
   sandbox.currentAuthUid = '';
+  localStore[sandbox.SELECTED_COMMUNITY_KEY] = 'new-jersey';
   assertDeepEqual(
     sandbox.memberCommunityOptions().map(c => c.id),
     ['new-jersey'],
     'future public switcher: memberCommunityOptions falls back to memberUsernames when userCommunities is unavailable'
+  );
+  switcherEl.innerHTML = '';
+  switcherEl.style.display = 'none';
+  switcherEl.classes.clear();
+  sandbox.renderMemberCommunitySwitcher();
+  assert(
+    !switcherEl.innerHTML.includes('<select'),
+    'flag-gated switcher behavior: one-community membership follows current passive-label behavior instead of rendering a selector'
+  );
+  assert(
+    switcherEl.innerHTML.includes('New Jersey'),
+    'flag-gated switcher behavior: one-community membership labels the current community'
   );
   sandbox.cur = 'OwnerUser';
   sandbox.currentAuthUid = 'uid-owner';
