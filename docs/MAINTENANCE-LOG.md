@@ -2478,3 +2478,7 @@
 - Firebase rules, auth (PIN / Google sign-in), request/join flow, public flag enablement, and the Pokémon data model remain deferred. UI read filtering is still not security at the rules layer; any public launch needs a rules/security review.
 - Old trade records without `communityId` continue to resolve to `'nyc'` at read time via `recordCommunityId`; no migration write was issued.
 - The 100/day trade quota is intentionally still global (per real account), not per-community.
+
+## 2026-05-30 - Claude - Google auth design plan (docs-only)
+
+Added `docs/AUTH-PLAN.md` capturing the Phase 0 design plan for adding Google sign-in / stronger auth: current model snapshot, identity invariants, a five-phase roadmap (Phase 0 docs → Phase 1 owner-only prototype behind a disabled `GOOGLE_AUTH_ENABLED` flag → Phase 2 self-service linking → Phase 3 Google onboarding → optional Phase 4 PIN sunset → optional Phase 5 Firebase Emulator Suite), rejected approaches, and deferrals. The plan is the living-doc artifact future auth commits will be checked against. No app code, test code, Firebase rules, login behavior, approval flow, repair flow, PIN handling, data paths, or feature flags were changed by this commit.
