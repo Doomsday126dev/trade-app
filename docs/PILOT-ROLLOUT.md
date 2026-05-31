@@ -14,7 +14,7 @@
 
 | Item | Status |
 |---|---|
-| Document version | **v1** — initial trusted multi-community pilot rollout checklist captured |
+| Document version | **v2** — clarified that owner-only approvals constraint mirrors Firebase rules; rejected client-only one-line fix |
 | Pilot status | **not started** |
 | App flag | `MULTI_COMMUNITY_ENABLED=false` |
 | Pilot communities | NYC (default) + New Jersey (prepared) |
@@ -33,8 +33,8 @@ any tests, or change Firebase rules.
 - **Pilot is limited to a few dozen invited users known to the
   owner.** All pilot users have been told personally what to expect.
 - **Owner is the sole operator and approver during the pilot** unless
-  a future one-line fix to `createMemberNow` (see § Known constraints
-  and gaps) is shipped first.
+  the coordinated rules-plus-client milestone described in § Known
+  constraints and gaps is explicitly shipped first.
 - **Current Firebase rules allow any signed-in user to read broad app
   data.** Specifically, `".read": "auth != null"` at the root of the
   canonical ruleset means every authenticated user can read every
@@ -64,20 +64,46 @@ any tests, or change Firebase rules.
   `index.html` around the `shouldWriteDefaultCommunity` block in the
   function body).
 - `ownerCanUseCommunityTools()` requires `cur===OWNER` or
-  `allData.users?.[cur]?.isOwner`. **A non-owner admin who approves a
-  request leaves the new user with no community membership.** Under
-  `MULTI_COMMUNITY_ENABLED=false` this is harmless. Under flag-on,
-  the new user's `memberCommunityOptions()` would be empty, their
-  switcher would not render, and read surfaces would be empty.
-- **Acceptable mitigations:**
-  1. **Owner handles all approvals during the pilot.** This runbook
-     assumes this mitigation unless option 2 is shipped first.
-  2. **Future one-line fix:** drop the `ownerCanUseCommunityTools()`
-     gate on the NYC default enrollment block in `createMemberNow`,
-     so every newly approved user is auto-enrolled in NYC regardless
-     of which admin approved them. NYC is the default; this is the
-     right long-term behavior. This fix is intentionally out of
-     scope for this docs commit (see § Deferrals).
+  `allData.users?.[cur]?.isOwner`. Under `MULTI_COMMUNITY_ENABLED=false`
+  this is harmless. Under flag-on, a non-owner admin approving a
+  request still successfully creates the user (`users/{u}`,
+  `loginDirectory/{u}`, `requests/{reqId}/status='approved'`) but
+  leaves the new user with no community membership — their
+  `memberCommunityOptions()` would be empty, their switcher would not
+  render, and read surfaces would be empty.
+- **The client gate is not a footgun; it mirrors Firebase rules.**
+  The canonical ruleset (see `SECURITY-RULES.md`) gates `communities/`,
+  `userCommunities/`, and `communityRequests/` writes to the owner —
+  `auth.uid` must resolve to `OWNER` or to a user with `isOwner:true`.
+  There is no admin exception on any of those three subtrees. The
+  client-side `ownerCanUseCommunityTools()` gate exists to keep the
+  approval write batch within what the rules will accept, not as a
+  UI choice independent of rules.
+- **Do not remove the client gate alone.** `createMemberNow`'s
+  approval is a single atomic `update(ref(db), updates)` batch. If the
+  client gate is dropped without a matching rules change, the batch
+  will include `communities/nyc/...` and `userCommunities/{uid}/nyc`
+  paths that the rules reject — and Firebase rejects the **whole**
+  batch atomically. The result is that the new user is not created
+  at all and the admin sees `db/write-rejected-silently` after the
+  verification step. That is a regression, not a fix.
+- **Pilot mitigation:** owner handles all approvals during the
+  pilot. This is the supported path; the runbook assumes it. It
+  remains the pilot assumption unless the coordinated rules-plus-client
+  milestone described below is explicitly shipped.
+- **Deferred future alternative (not part of pilot):** a coordinated
+  rules + client change scoped to NYC default-only. Rules would gain
+  a narrow admin-write permission on `communities/nyc/memberUsernames/$username`,
+  `communities/nyc/members/$uid`, and `userCommunities/$uid/nyc`,
+  ideally with add-only constraints such as `!data.exists()` to
+  prevent admins from removing or rewriting existing NYC memberships.
+  The client would drop the `ownerCanUseCommunityTools()` gate inside
+  `createMemberNow` (only — community prep, member assignment, and
+  owner-preview tools stay owner-only). This belongs in the
+  public-launch rules-tightening track, alongside the broader
+  per-subtree read narrowing and write-time community precondition
+  on offers/trades. It is **not** part of this pilot runbook and is
+  intentionally out of scope for any pilot commit.
 
 ### Other known constraints
 
@@ -308,10 +334,16 @@ Explicitly out of scope of this doc and of the Phase 0 docs commit:
 - **The actual flag-flip commit.** Belongs in a separate commit
   after this runbook is reviewed and the pre-flight checklist is
   fully ticked.
-- **One-line `createMemberNow` default NYC enrollment fix** (drop
-  the `ownerCanUseCommunityTools()` gate). Should be its own narrow
-  commit if mitigation option 2 in § Known constraints and gaps is
-  chosen over the owner-only-approvals constraint.
+- **Coordinated rules + client change to allow non-owner admin
+  enrollment into NYC default during approval.** Would pair a narrow
+  rules update (admin write on `communities/nyc/memberUsernames/$username`,
+  `communities/nyc/members/$uid`, and `userCommunities/$uid/nyc`,
+  ideally with add-only constraints such as `!data.exists()`) with a
+  client change that drops the `ownerCanUseCommunityTools()` gate
+  inside `createMemberNow` only. Belongs in the public-launch
+  rules-tightening track, not the pilot. A client-only "drop the
+  gate" change without the matching rules update would atomically
+  break approval at the Firebase layer and is explicitly rejected.
 - **Firebase rule tightening** — separate pre-public-launch
   milestone with its own design doc.
 - **Google auth Phase 1 prototype** — already deferred to
@@ -332,3 +364,4 @@ Explicitly out of scope of this doc and of the Phase 0 docs commit:
 | Date | Version | Change |
 |---|---|---|
 | 2026-05-30 | v1 | Initial trusted multi-community pilot rollout checklist captured; no app or test code changed. |
+| 2026-05-30 | v2 | Clarified that the owner-only approvals constraint mirrors current Firebase rules (not just a client/UI preference) and rejected the previously suggested client-only one-line fix because it would atomically break the approval write batch at the rules layer. Future alternative is a coordinated rules + client change scoped to NYC default-only, deferred to the public-launch rules-tightening track. No app or test code changed. |
