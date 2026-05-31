@@ -291,6 +291,14 @@ are not performed by landing this doc.
 
 ## Live-pilot monitoring
 
+The day-to-day operational companion to this section lives in
+**`docs/PILOT-MONITORING.md`** — daily-check ritual, severity
+classification (Sev-1 / Sev-2 / Sev-3), data-path investigation
+recipes for visibility complaints, a symptom playbook, the rollback
+decision criteria, and a daily log. The bullets immediately below
+are the short-form signals; the monitoring doc is the operating
+runbook.
+
 Watch for these signals during the first 24/72 hours and ongoing:
 
 - **Health Check / support reports.** Ask pilot users to use the
