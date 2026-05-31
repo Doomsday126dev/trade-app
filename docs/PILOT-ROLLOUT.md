@@ -14,17 +14,65 @@
 
 | Item | Status |
 |---|---|
-| Document version | **v2** — clarified that owner-only approvals constraint mirrors Firebase rules; rejected client-only one-line fix |
-| Pilot status | **not started** |
-| App flag | `MULTI_COMMUNITY_ENABLED=false` |
+| Document version | **v3** — pilot is live; flag flipped, deployed smoke passed, manual owner QA passed |
+| Pilot status | **LIVE** (since flag-flip commit `6f22668`) |
+| App flag | `MULTI_COMMUNITY_ENABLED=true` |
 | Pilot communities | NYC (default) + New Jersey (prepared) |
 | Pilot operator | owner |
-| Rollback path | revert the flag-flip commit and redeploy |
+| Rollback path | revert flag-flip commit `6f22668` (or commit the flag back to `false`) and redeploy; pre-flip baseline SHA is `06c8b52` |
 
-This document is the operator runbook the owner walks through before
-flipping `MULTI_COMMUNITY_ENABLED` to `true` for the trusted pilot.
-The doc landing does not flip the flag, change any app code, change
-any tests, or change Firebase rules.
+This document is the operator runbook for the trusted multi-community
+pilot. The pilot is now **live in production** after a successful flag
+flip (commit `6f22668`), a deployed-smoke pass of 18/18, and the
+owner's manual post-flip QA. The runbook remains the canonical
+reference for live-pilot operations, monitoring, and rollback.
+
+---
+
+## Live pilot record
+
+Captured at pilot go-live to provide a durable audit trail and to
+inform the post-pilot review.
+
+- **Flag flip commit:** `6f22668` — flips `const MULTI_COMMUNITY_ENABLED=false;`
+  → `true` at `index.html:2431` and updates the matching
+  source-invariant guard at `scripts/check-community-membership.js`
+  lines 169–170.
+- **Pre-flip baseline / rollback SHA:** `06c8b52`. Recorded before
+  the flip per the runbook's pre-flight checklist.
+- **Deployed verification (against
+  `https://doomsday126dev.github.io/trade-app/index.html`):**
+  - `const MULTI_COMMUNITY_ENABLED=true;` present (1 occurrence).
+  - `const MULTI_COMMUNITY_ENABLED=false;` absent (0 occurrences).
+  - `const DEFAULT_COMMUNITY_ID='nyc';` preserved unchanged.
+- **Deployed smoke result:** 18 passed, 0 failed, 0 skipped against
+  the post-flip build (`PLAYWRIGHT_BASE_URL=https://doomsday126dev.github.io/trade-app/`,
+  `POGO_TEST_USER=TestUser`, desktop + mobile chromium, 2 workers).
+- **Manual owner QA (post-smoke, against the live production app):
+  PASSED.** Each item checked:
+  - Owner preview works.
+  - Owner preview precedence over the public top Community dropdown
+    is intentional and verified.
+  - A non-owner member who belongs to both NYC and New Jersey can
+    use the top Community dropdown normally.
+  - NYC and New Jersey scoping work on every checked surface
+    (Browse, Strings / Compare / Trade Match, Inventory Community
+    Browse, Schedule views, incoming-offer panes).
+  - A New Jersey scheduled trade created during QA stamps
+    `communityId:'new-jersey'` on the new record.
+  - Switching back to NYC hides the New-Jersey-only scheduled trade.
+  - Legacy missing-`communityId` records resolve to `'nyc'` via
+    `recordCommunityId`.
+  - No Pokémon data was moved or duplicated under communities;
+    `wishlist/{username}`, `have/{username}`, etc. remain the sole
+    data paths.
+  - Owner-only approvals remain the pilot operating process per the
+    constraint documented in § Known constraints and gaps.
+
+The pre-flight checklist, manual-QA rehearsal checklist, flag-flip
+procedure, rollback procedure, live-pilot monitoring guidance, and
+post-pilot review template below all remain canonical for the live
+pilot.
 
 ---
 
@@ -365,3 +413,4 @@ Explicitly out of scope of this doc and of the Phase 0 docs commit:
 |---|---|---|
 | 2026-05-30 | v1 | Initial trusted multi-community pilot rollout checklist captured; no app or test code changed. |
 | 2026-05-30 | v2 | Clarified that the owner-only approvals constraint mirrors current Firebase rules (not just a client/UI preference) and rejected the previously suggested client-only one-line fix because it would atomically break the approval write batch at the rules layer. Future alternative is a coordinated rules + client change scoped to NYC default-only, deferred to the public-launch rules-tightening track. No app or test code changed. |
+| 2026-05-30 | v3 | Trusted multi-community pilot is now live. Flag-flip commit `6f22668` flipped `MULTI_COMMUNITY_ENABLED` to `true`; pre-flip baseline SHA `06c8b52` recorded for rollback. Deployed verification confirmed the production build serves the flag as `true` with `DEFAULT_COMMUNITY_ID='nyc'` unchanged. Deployed smoke passed 18/18 against the post-flip build. Owner-led manual QA against the live production app passed every item, including owner-preview precedence, the public top Community dropdown for a non-owner NYC+NJ member, all four read-scope surfaces, `communityId` stamping on a new New Jersey scheduled trade, NYC hiding NJ-only records, legacy missing-`communityId` defaulting to nyc, no Pokémon data nesting, and the owner-only-approvals operating process. No app code, test code, or Firebase rules changed by this docs update. |
