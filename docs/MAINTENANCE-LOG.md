@@ -2482,3 +2482,7 @@
 ## 2026-05-30 - Claude - Google auth design plan (docs-only)
 
 Added `docs/AUTH-PLAN.md` capturing the Phase 0 design plan for adding Google sign-in / stronger auth: current model snapshot, identity invariants, a five-phase roadmap (Phase 0 docs → Phase 1 owner-only prototype behind a disabled `GOOGLE_AUTH_ENABLED` flag → Phase 2 self-service linking → Phase 3 Google onboarding → optional Phase 4 PIN sunset → optional Phase 5 Firebase Emulator Suite), rejected approaches, and deferrals. The plan is the living-doc artifact future auth commits will be checked against. No app code, test code, Firebase rules, login behavior, approval flow, repair flow, PIN handling, data paths, or feature flags were changed by this commit.
+
+## 2026-05-30 - Claude - Trusted multi-community pilot rollout checklist (docs-only)
+
+Added `docs/PILOT-ROLLOUT.md` as the operator runbook for the trusted multi-community pilot: pilot scope and trust assumption, known constraints and gaps (notably the owner-only-approvals constraint stemming from `createMemberNow`'s `ownerCanUseCommunityTools()` gate on NYC default enrollment), pre-flight and manual-QA checklists for NYC + New Jersey, the future flag-flip and rollback procedures, live-pilot monitoring guidance, a post-pilot review template, and explicit deferrals. The runbook does not flip the flag and does not change any app code, tests, or Firebase rules.
