@@ -2425,3 +2425,27 @@
 
 ### Known risks / TODOs
 - Public multi-community switching remains disabled. A future launch still needs explicit flag enablement, deployed smoke, and manual QA across Browse, Strings/Compare/Trade Match, Inventory Community Browse, Offers read views, and Schedule read views.
+
+## 2026-05-30 - Codex - Flagged public community read scoping
+
+### Summary
+- Added shared read-scope helpers so owner preview remains the highest-priority community filter, and future public selected-community membership can scope read surfaces only when `MULTI_COMMUNITY_ENABLED=true`.
+- Wired Browse, Strings/Compare/Trade Match, Inventory Community Browse, and Schedule read/partner views through the shared read scope. With the flag still disabled, current production behavior remains global/NYC as before.
+- Pokémon wishlist, Dynamax, Gigantamax, costume, inventory, and profile data remain user-global. Community scoping filters visible users/member sets only.
+
+### Files touched
+- `index.html`
+- `scripts/check-community-membership.js`
+- `docs/MAINTENANCE-LOG.md`
+
+### Firebase paths / rules
+- No Firebase writes, paths, or security rules changed.
+- Owner preview still uses `pogoOwnerCommunityPreviewCommunity_v1`; future public member selection still uses `pogoSelectedCommunityId_v1`.
+
+### Manual test checklist
+- With `MULTI_COMMUNITY_ENABLED=false`, normal users see no community read-scope behavior change.
+- Owner preview still takes precedence over the public selected-community localStorage key.
+- In a future flagged sandbox, Browse, Strings/Compare/Trade Match, Inventory Community Browse, and Schedule read views filter to selected community members without moving or copying Pokémon data.
+
+### Known risks / TODOs
+- Public flag enablement remains deferred. Offer read/write semantics, offer creation/submission, schedule write payloads, public join/request flows, and Firebase rules are intentionally unchanged in this step.

@@ -6711,26 +6711,38 @@ function ownerPreviewAllowsUser(username){
   const members=ownerPreviewCommunityMemberUsernames();
   return !members||members.has(username);
 }
+function selectedCommunityMemberUsernames(){
+  if(!MULTI_COMMUNITY_ENABLED)return null;
+  const members=getCommunityMemberUsernames();
+  return members.size?members:null;
+}
+function readScopeMemberUsernames(){
+  return ownerPreviewCommunityMemberUsernames()||selectedCommunityMemberUsernames();
+}
+function readScopeAllowsUser(username){
+  const members=readScopeMemberUsernames();
+  return !members||members.has(username);
+}
 function browseAllowedUsers(){
   const active=activeUsers();
-  const communityMembers=ownerPreviewCommunityMemberUsernames();
+  const communityMembers=readScopeMemberUsernames();
   if(!active&&!communityMembers)return null;
   const users=Object.keys(allData.users||{});
   return new Set(users.filter(u=>(!active||active.has(u))&&(!communityMembers||communityMembers.has(u))));
 }
 function stringsAllowedUsers(){
-  const communityMembers=ownerPreviewCommunityMemberUsernames();
+  const communityMembers=readScopeMemberUsernames();
   return communityMembers?new Set(Object.keys(allData.users||{}).filter(u=>communityMembers.has(u))):null;
 }
 function inventoryBrowseAllowedUsers(){
   const active=activeUsers();
-  const communityMembers=ownerPreviewCommunityMemberUsernames();
+  const communityMembers=readScopeMemberUsernames();
   if(!active&&!communityMembers)return null;
   const users=Object.keys(allData.users||{});
   return new Set(users.filter(u=>(!active||active.has(u))&&(!communityMembers||communityMembers.has(u))));
 }
 function scheduleAllowedUsers(){
-  const communityMembers=ownerPreviewCommunityMemberUsernames();
+  const communityMembers=readScopeMemberUsernames();
   return communityMembers?new Set(Object.keys(allData.users||{}).filter(u=>communityMembers.has(u))):null;
 }
 function renderOwnerBrowsePreviewBanner(allowed){
@@ -6784,6 +6796,12 @@ function renderOwnerSchedulePreviewBanner(allowed){
 function guardOwnerPreviewTrainer(username,feature='that trainer'){
   if(ownerPreviewAllowsUser(username))return true;
   toast(`🔭 Owner preview: ${username} is outside ${ownerPreviewCommunityName()}, so ${feature} is hidden.`,4500);
+  return false;
+}
+function guardReadScopeTrainer(username,feature='that trainer'){
+  if(readScopeAllowsUser(username))return true;
+  const label=ownerCommunityPreviewOn()?ownerPreviewCommunityName():(allData.communities?.[getCurrentCommunityId()]?.name||getCurrentCommunityId());
+  toast(`🔭 ${username} is outside ${label}, so ${feature} is hidden.`,4500);
   return false;
 }
 function ownerPreviewAllowsOffer(offer,recipient=''){
@@ -7671,7 +7689,7 @@ let _activeDiff=null;
 let _activeTradeMatch=null;
 function openDiffModal(otherUsername){
   if(!cur||otherUsername===cur){toast('Pick another trainer');return;}
-  if(!guardOwnerPreviewTrainer(otherUsername,'compare'))return;
+  if(!guardReadScopeTrainer(otherUsername,'compare'))return;
   closeTradeMatchModal();
   _activeDiff={them:otherUsername,type:strListType};
   renderDiffModal();
@@ -7731,7 +7749,7 @@ async function copyDiffSearch(section,btn){
 }
 function openTradeMatchModal(otherUsername){
   if(!cur||otherUsername===cur){toast('Pick another trainer');return;}
-  if(!guardOwnerPreviewTrainer(otherUsername,'trade match'))return;
+  if(!guardReadScopeTrainer(otherUsername,'trade match'))return;
   closeDiffModal();
   _activeTradeMatch={them:otherUsername};
   renderTradeMatchModal();
@@ -9626,9 +9644,10 @@ function scheduledTradeOtherUsers(t){
   return [...names].filter(Boolean);
 }
 function schedulePreviewAllowsTrade(t){
-  const members=ownerPreviewCommunityMemberUsernames();
+  const members=readScopeMemberUsernames();
   if(!members)return true;
-  if(recordCommunityId(t)!==ownerPreviewCommunityId())return false;
+  const scopedCommunityId=ownerCommunityPreviewOn()?ownerPreviewCommunityId():getCurrentCommunityId();
+  if(recordCommunityId(t)!==scopedCommunityId)return false;
   return scheduledTradeOtherUsers(t).every(u=>members.has(u));
 }
 function visibleTradesOnDate(isoD){

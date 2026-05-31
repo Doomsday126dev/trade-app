@@ -92,10 +92,19 @@ function runSourceWiringChecks() {
   const ownerPreviewCommunityMemberUsernames = extractFunctionSource('ownerPreviewCommunityMemberUsernames');
   const ownerPreviewAllowsOffer = extractFunctionSource('ownerPreviewAllowsOffer');
   const schedulePreviewAllowsTrade = extractFunctionSource('schedulePreviewAllowsTrade');
+  const selectedCommunityMemberUsernames = extractFunctionSource('selectedCommunityMemberUsernames');
+  const readScopeMemberUsernames = extractFunctionSource('readScopeMemberUsernames');
+  const readScopeAllowsUser = extractFunctionSource('readScopeAllowsUser');
   const browseAllowedUsers = extractFunctionSource('browseAllowedUsers');
   const stringsAllowedUsers = extractFunctionSource('stringsAllowedUsers');
   const inventoryBrowseAllowedUsers = extractFunctionSource('inventoryBrowseAllowedUsers');
   const scheduleAllowedUsers = extractFunctionSource('scheduleAllowedUsers');
+  const guardReadScopeTrainer = extractFunctionSource('guardReadScopeTrainer');
+  const openDiffModal = extractFunctionSource('openDiffModal');
+  const openTradeMatchModal = extractFunctionSource('openTradeMatchModal');
+  const submitOffer = extractFunctionSource('submitOffer');
+  const submitScheduledTrade = extractFunctionSource('submitScheduledTrade');
+  const writeTrade = extractFunctionSource('writeTrade');
   const renderCommunityMigrationPanel = extractFunctionSource('renderCommunityMigrationPanel');
   const memberCommunityOptions = extractFunctionSource('memberCommunityOptions');
   const currentCommunityIsSelectable = extractFunctionSource('currentCommunityIsSelectable');
@@ -341,6 +350,26 @@ function runSourceWiringChecks() {
     'return usernames.filter(u=>members.has(u));',
     'future public selected-community filtering must filter username lists, not Pokémon records'
   );
+  assertSourceIncludes(
+    selectedCommunityMemberUsernames,
+    'if(!MULTI_COMMUNITY_ENABLED)return null;',
+    'selected-community read scope must remain disabled while MULTI_COMMUNITY_ENABLED is false'
+  );
+  assertSourceIncludes(
+    selectedCommunityMemberUsernames,
+    'getCommunityMemberUsernames()',
+    'selected-community read scope must use the public selected-community membership helper'
+  );
+  assertSourceIncludes(
+    readScopeMemberUsernames,
+    'ownerPreviewCommunityMemberUsernames()||selectedCommunityMemberUsernames()',
+    'shared read scope must prefer owner preview before public selected-community membership'
+  );
+  assertSourceIncludes(
+    readScopeAllowsUser,
+    'return !members||members.has(username);',
+    'shared read-scope user guard must only filter usernames/member sets'
+  );
   [
     ['browseAllowedUsers', browseAllowedUsers],
     ['stringsAllowedUsers', stringsAllowedUsers],
@@ -349,14 +378,53 @@ function runSourceWiringChecks() {
   ].forEach(([name, source]) => {
     assertSourceIncludes(
       source,
-      'ownerPreviewCommunityMemberUsernames()',
-      `${name} must still be treated as owner-preview scoped, not fully public selected-community scoped`
+      'readScopeMemberUsernames()',
+      `${name} must use the shared read-scope helper`
     );
     assert(
-      !source.includes('getCommunityMemberUsernames()') && !source.includes('filterUsersBySelectedCommunity('),
-      `${name} must not be mistaken for a public selected-community surface yet`
+      !source.includes('ownerPreviewCommunityMemberUsernames()'),
+      `${name} must not bypass shared read scope with owner-preview-only membership`
     );
   });
+  assertSourceIncludes(
+    schedulePreviewAllowsTrade,
+    'readScopeMemberUsernames()',
+    'schedule visible-row filtering must use shared read scope'
+  );
+  assertSourceIncludes(
+    schedulePreviewAllowsTrade,
+    'ownerCommunityPreviewOn()?ownerPreviewCommunityId():getCurrentCommunityId()',
+    'schedule visible-row filtering must use owner preview community first, then public selected community'
+  );
+  assertSourceIncludes(
+    guardReadScopeTrainer,
+    'readScopeAllowsUser(username)',
+    'Compare/Trade Match guard must use shared read-scope membership'
+  );
+  assertSourceIncludes(
+    openDiffModal,
+    "guardReadScopeTrainer(otherUsername,'compare')",
+    'Compare modal must use read-scope-aware trainer guard'
+  );
+  assertSourceIncludes(
+    openTradeMatchModal,
+    "guardReadScopeTrainer(otherUsername,'trade match')",
+    'Trade Match modal must use read-scope-aware trainer guard'
+  );
+  assertSourceIncludes(
+    ownerPreviewAllowsOffer,
+    'ownerPreviewCommunityMemberUsernames()',
+    'offer read semantics must remain owner-preview scoped in this commit'
+  );
+  assertSourceIncludes(
+    submitOffer,
+    'communityId:getCurrentCommunityId()',
+    'offer submission payload must remain unchanged'
+  );
+  assert(
+    !submitScheduledTrade.includes('communityId') && !writeTrade.includes('getCurrentCommunityId()'),
+    'schedule write payloads must not be changed to selected-community writes in this commit'
+  );
   assertSourceIncludes(
     preparedPreviewCommunities,
     '.filter(([id,c])=>c&&c.preparedAt)',
@@ -407,8 +475,8 @@ function runSourceWiringChecks() {
   );
   assertSourceIncludes(
     schedulePreviewAllowsTrade,
-    'recordCommunityId(t)!==ownerPreviewCommunityId()',
-    'owner preview schedule filtering must respect the selected preview community'
+    'recordCommunityId(t)!==scopedCommunityId',
+    'schedule preview/read filtering must respect the active read-scope community'
   );
   assertSourceIncludes(
     renderCommunityMigrationPanel,
@@ -583,10 +651,14 @@ function runBehaviorChecks() {
       extractFunctionSource('ownerPreviewAllowsOffer'),
       extractFunctionSource('scheduledTradeOtherUsers'),
       extractFunctionSource('schedulePreviewAllowsTrade'),
+      extractFunctionSource('selectedCommunityMemberUsernames'),
+      extractFunctionSource('readScopeMemberUsernames'),
+      extractFunctionSource('readScopeAllowsUser'),
       extractFunctionSource('browseAllowedUsers'),
       extractFunctionSource('stringsAllowedUsers'),
       extractFunctionSource('inventoryBrowseAllowedUsers'),
       extractFunctionSource('scheduleAllowedUsers'),
+      extractFunctionSource('guardReadScopeTrainer'),
       extractFunctionSource('memberCommunityOptions'),
       extractFunctionSource('currentCommunityIsSelectable'),
       extractFunctionSource('getCurrentCommunityId'),
@@ -697,6 +769,21 @@ function runBehaviorChecks() {
     switcherEl.innerHTML,
     '',
     'flag-gated switcher behavior: hidden switcher does not render stale content while flag is false'
+  );
+  assertEqual(
+    sandbox.selectedCommunityMemberUsernames(),
+    null,
+    'read-scope behavior: selected-community membership is disabled while MULTI_COMMUNITY_ENABLED is false'
+  );
+  assertEqual(
+    sandbox.readScopeMemberUsernames(),
+    null,
+    'read-scope behavior: shared read scope returns no filter while flag is false and owner preview is off'
+  );
+  assertEqual(
+    sandbox.readScopeAllowsUser('OutsideUser'),
+    true,
+    'read-scope behavior: shared guard preserves global visibility while flag is false'
   );
 
   assertEqual(
@@ -811,6 +898,22 @@ function runBehaviorChecks() {
   );
   assertEqual(sandbox.ownerPreviewAllowsUser('UsernameOnly'), true, 'owner preview allows selected community members');
   assertEqual(sandbox.ownerPreviewAllowsUser('Alpha'), false, 'owner preview hides users outside the selected community');
+  localStore[sandbox.SELECTED_COMMUNITY_KEY] = 'nyc';
+  assertDeepEqual(
+    Array.from(sandbox.readScopeMemberUsernames()).sort(),
+    ['AdminInCommunity', 'FalseAdminEntry', 'OwnerUser', 'UsernameOnly'],
+    'read-scope behavior: owner preview takes precedence over public selected-community membership'
+  );
+  assertEqual(
+    sandbox.readScopeAllowsUser('UsernameOnly'),
+    true,
+    'read-scope behavior: owner preview allows selected preview-community members'
+  );
+  assertEqual(
+    sandbox.readScopeAllowsUser('Alpha'),
+    false,
+    'read-scope behavior: owner preview hides users outside the preview community even when public selection differs'
+  );
   assertEqual(
     sandbox.ownerPreviewAllowsOffer({ from: 'OwnerUser', communityId: 'new-jersey' }, 'UsernameOnly'),
     true,
@@ -959,6 +1062,7 @@ function runBehaviorChecks() {
   );
 
   sandbox.MULTI_COMMUNITY_ENABLED = true;
+  localStore[sandbox.OWNER_COMMUNITY_PREVIEW_KEY] = false;
   sandbox.cur = 'OwnerUser';
   sandbox.currentAuthUid = 'uid-owner';
   sandbox.allData.communities.nyc.memberUsernames.OwnerUser = true;
@@ -1046,6 +1150,51 @@ function runBehaviorChecks() {
     'future public switcher: getCommunityMemberUsernames returns selected community memberUsernames'
   );
   assertDeepEqual(
+    Array.from(sandbox.selectedCommunityMemberUsernames()).sort(),
+    ['AdminInCommunity', 'FalseAdminEntry', 'OwnerUser', 'UsernameOnly'],
+    'future public read scope: selectedCommunityMemberUsernames returns selected public community members'
+  );
+  assertDeepEqual(
+    Array.from(sandbox.readScopeMemberUsernames()).sort(),
+    ['AdminInCommunity', 'FalseAdminEntry', 'OwnerUser', 'UsernameOnly'],
+    'future public read scope: shared read scope uses selected public community when owner preview is off'
+  );
+  assertDeepEqual(
+    Array.from(sandbox.browseAllowedUsers()).sort(),
+    ['AdminInCommunity', 'FalseAdminEntry', 'OwnerUser', 'UsernameOnly'],
+    'future public read scope: Browse filters to selected community members'
+  );
+  assertDeepEqual(
+    Array.from(sandbox.stringsAllowedUsers()).sort(),
+    ['AdminInCommunity', 'FalseAdminEntry', 'OwnerUser', 'UsernameOnly'],
+    'future public read scope: Strings filters to selected community members'
+  );
+  assertDeepEqual(
+    Array.from(sandbox.inventoryBrowseAllowedUsers()).sort(),
+    ['AdminInCommunity', 'FalseAdminEntry', 'OwnerUser', 'UsernameOnly'],
+    'future public read scope: Inventory Community Browse filters to selected community members'
+  );
+  assertDeepEqual(
+    Array.from(sandbox.scheduleAllowedUsers()).sort(),
+    ['AdminInCommunity', 'FalseAdminEntry', 'OwnerUser', 'UsernameOnly'],
+    'future public read scope: Schedule filters to selected community members'
+  );
+  assertEqual(
+    sandbox.guardReadScopeTrainer('OwnerUser', 'compare'),
+    true,
+    'future public read scope: Compare/Trade Match guard allows selected community members'
+  );
+  sandbox.toastMessages = [];
+  assertEqual(
+    sandbox.guardReadScopeTrainer('Alpha', 'compare'),
+    false,
+    'future public read scope: Compare/Trade Match guard blocks users outside selected community'
+  );
+  assert(
+    sandbox.toastMessages[0]?.includes('outside New Jersey'),
+    'future public read scope: Compare/Trade Match guard names the selected community in its toast'
+  );
+  assertDeepEqual(
     sandbox.filterUsersBySelectedCommunity(['Alpha', 'OwnerUser', 'UsernameOnly', 'Missing']),
     ['OwnerUser', 'UsernameOnly'],
     'future public switcher: filterUsersBySelectedCommunity filters usernames only'
@@ -1074,6 +1223,32 @@ function runBehaviorChecks() {
     sandbox.recordBelongsToSelectedCommunity({ communityId: 'new-jersey' }),
     true,
     'future public switcher: selected community records remain visible'
+  );
+  assertEqual(
+    sandbox.schedulePreviewAllowsTrade({
+      organizer: 'OwnerUser',
+      participants: { OwnerUser: true, UsernameOnly: true },
+      communityId: 'new-jersey'
+    }),
+    true,
+    'future public read scope: Schedule allows selected-community rows whose partners are selected-community members'
+  );
+  assertEqual(
+    sandbox.schedulePreviewAllowsTrade({
+      organizer: 'OwnerUser',
+      participants: { OwnerUser: true, Alpha: true },
+      communityId: 'new-jersey'
+    }),
+    false,
+    'future public read scope: Schedule hides selected-community rows with partners outside selected community'
+  );
+  assertEqual(
+    sandbox.schedulePreviewAllowsTrade({
+      organizer: 'OwnerUser',
+      participants: { OwnerUser: true, UsernameOnly: true }
+    }),
+    false,
+    'future public read scope: Schedule treats missing communityId rows as nyc and hides them in non-nyc public selection'
   );
   localStore[sandbox.SELECTED_COMMUNITY_KEY] = 'draft-only';
   assertEqual(
