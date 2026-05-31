@@ -166,8 +166,8 @@ function runSourceWiringChecks() {
   );
 
   assert(
-    /\bconst\s+MULTI_COMMUNITY_ENABLED\s*=\s*false\s*;/.test(html),
-    'MULTI_COMMUNITY_ENABLED must remain false for current production behavior'
+    /\bconst\s+MULTI_COMMUNITY_ENABLED\s*=\s*true\s*;/.test(html),
+    'MULTI_COMMUNITY_ENABLED must be true for the trusted multi-community pilot'
   );
   assert(
     /\bconst\s+DEFAULT_COMMUNITY_ID\s*=\s*'nyc'\s*;/.test(html),
