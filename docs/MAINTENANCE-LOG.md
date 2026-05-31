@@ -2449,3 +2449,32 @@
 
 ### Known risks / TODOs
 - Public flag enablement remains deferred. Offer read/write semantics, offer creation/submission, schedule write payloads, public join/request flows, and Firebase rules are intentionally unchanged in this step.
+
+## 2026-05-30 - Claude - Offer read-scope parity + schedule communityId stamping
+
+### Summary
+- Replaced the offer visibility helper `ownerPreviewAllowsOffer(offer,recipient)` with `offerInReadScope(offer,recipient)`. The new helper routes through the shared `readScopeMemberUsernames()` so it covers (a) owner preview, (b) the future flag-on public-selected-community mode, and (c) the current flag-off global behavior (short-circuits to "allow all" when no read scope is active). Mirrors `schedulePreviewAllowsTrade`'s structure: when a scope is active, it compares `recordCommunityId(offer)` against owner preview's community id (if active) or `getCurrentCommunityId()` (otherwise) and rejects mismatched offers; missing `offer.communityId` continues to default to `DEFAULT_COMMUNITY_ID` via `recordCommunityId`.
+- Migrated all three callers to the new name without changing call shape: `openIncomingOffersModal` body, `offersForItem`, and `totalOffersForRecipient`. Deleted the now-unused `ownerPreviewAllowsOffer` definition (verified `grep` reports zero occurrences post-edit).
+- Stamped `communityId` on every newly created scheduled-trade record:
+  - `submitScheduledTrade`: added `communityId: existing?.communityId || getCurrentCommunityId()` to the trade object literal. New records get the user's current community; edits preserve any explicit `communityId` already on the record; legacy edits without `communityId` fall back to `getCurrentCommunityId()` (which resolves to `'nyc'` under flag-off, matching legacy behavior).
+  - `_logAcceptedTrade` (auto-logged reservations from offer-accept): added `communityId: getCurrentCommunityId()` to the trade object literal. Always a new record at this site, so unconditional stamp.
+- `writeTrade`, `cancelScheduledTrade`, and the complete/cancel write paths are untouched; they continue to use `{...t, …}` spread so `communityId` is preserved through cancel/complete by the existing code.
+
+### Files touched
+- `index.html`
+- `scripts/check-community-membership.js`
+- `docs/MAINTENANCE-LOG.md`
+
+### Verification
+- `node --check scripts/check-community-membership.js` → OK.
+- `npm run check:community` → "Community membership indexing checks passed."
+- `npm run check:domain` → "Domain helper checks passed."
+- Inline `index.html` parse check → 2 scripts, 0 failed.
+- `git diff --check` → no whitespace errors.
+- Deployed GitHub Pages smoke required after commit/push/Pages rebuild because `index.html` changed (offer read filtering + schedule write objects).
+
+### Known risks / TODOs
+- `MULTI_COMMUNITY_ENABLED=false` and `DEFAULT_COMMUNITY_ID='nyc'` remain unchanged. With the flag off, `readScopeMemberUsernames()` returns null and `offerInReadScope` short-circuits to "allow all", so end-user behavior is unchanged. New trade records now explicitly carry `communityId:'nyc'`, which is intentional and backward-compatible with `recordCommunityId`'s default.
+- Firebase rules, auth (PIN / Google sign-in), request/join flow, public flag enablement, and the Pokémon data model remain deferred. UI read filtering is still not security at the rules layer; any public launch needs a rules/security review.
+- Old trade records without `communityId` continue to resolve to `'nyc'` at read time via `recordCommunityId`; no migration write was issued.
+- The 100/day trade quota is intentionally still global (per real account), not per-community.

@@ -90,7 +90,7 @@ function runSourceWiringChecks() {
   const ownerPreviewCommunityId = extractFunctionSource('ownerPreviewCommunityId');
   const setOwnerPreviewCommunityId = extractFunctionSource('setOwnerPreviewCommunityId');
   const ownerPreviewCommunityMemberUsernames = extractFunctionSource('ownerPreviewCommunityMemberUsernames');
-  const ownerPreviewAllowsOffer = extractFunctionSource('ownerPreviewAllowsOffer');
+  const offerInReadScope = extractFunctionSource('offerInReadScope');
   const schedulePreviewAllowsTrade = extractFunctionSource('schedulePreviewAllowsTrade');
   const selectedCommunityMemberUsernames = extractFunctionSource('selectedCommunityMemberUsernames');
   const readScopeMemberUsernames = extractFunctionSource('readScopeMemberUsernames');
@@ -104,6 +104,7 @@ function runSourceWiringChecks() {
   const openTradeMatchModal = extractFunctionSource('openTradeMatchModal');
   const submitOffer = extractFunctionSource('submitOffer');
   const submitScheduledTrade = extractFunctionSource('submitScheduledTrade');
+  const _logAcceptedTrade = extractFunctionSource('_logAcceptedTrade');
   const writeTrade = extractFunctionSource('writeTrade');
   const renderCommunityMigrationPanel = extractFunctionSource('renderCommunityMigrationPanel');
   const memberCommunityOptions = extractFunctionSource('memberCommunityOptions');
@@ -412,18 +413,42 @@ function runSourceWiringChecks() {
     'Trade Match modal must use read-scope-aware trainer guard'
   );
   assertSourceIncludes(
-    ownerPreviewAllowsOffer,
-    'ownerPreviewCommunityMemberUsernames()',
-    'offer read semantics must remain owner-preview scoped in this commit'
+    offerInReadScope,
+    'readScopeMemberUsernames()',
+    'offer read filtering must use shared read scope (owner preview + public selected community)'
+  );
+  assertSourceIncludes(
+    offerInReadScope,
+    'ownerCommunityPreviewOn()?ownerPreviewCommunityId():getCurrentCommunityId()',
+    'offer read filtering must scope by owner preview first, then public selected community'
+  );
+  assertSourceIncludes(
+    offerInReadScope,
+    'recordCommunityId(offer)',
+    'offer read filtering must default missing offer.communityId to DEFAULT_COMMUNITY_ID via recordCommunityId'
+  );
+  assert(
+    !/\bownerPreviewAllowsOffer\b/.test(html),
+    'ownerPreviewAllowsOffer must be fully removed once read scope is unified'
   );
   assertSourceIncludes(
     submitOffer,
     'communityId:getCurrentCommunityId()',
     'offer submission payload must remain unchanged'
   );
+  assertSourceIncludes(
+    submitScheduledTrade,
+    'communityId:existing?.communityId||getCurrentCommunityId()',
+    'submitScheduledTrade must stamp current community on new trades and preserve existing communityId on edits'
+  );
+  assertSourceIncludes(
+    _logAcceptedTrade,
+    'communityId:getCurrentCommunityId()',
+    'auto-logged trades from offer-accept must stamp the organizer current community'
+  );
   assert(
-    !submitScheduledTrade.includes('communityId') && !writeTrade.includes('getCurrentCommunityId()'),
-    'schedule write payloads must not be changed to selected-community writes in this commit'
+    !/getCurrentCommunityId\s*\(/.test(writeTrade),
+    'writeTrade itself must not be modified to call getCurrentCommunityId'
   );
   assertSourceIncludes(
     preparedPreviewCommunities,
@@ -469,9 +494,9 @@ function runSourceWiringChecks() {
     'owner preview must filter by community memberUsernames'
   );
   assertSourceIncludes(
-    ownerPreviewAllowsOffer,
-    'communityId!==ownerPreviewCommunityId()',
-    'owner preview offer filtering must respect the selected preview community'
+    offerInReadScope,
+    'recordCommunityId(offer)!==scopedCommunityId',
+    'offer read filtering must reject offers whose communityId does not match the active read-scope community'
   );
   assertSourceIncludes(
     schedulePreviewAllowsTrade,
@@ -648,7 +673,7 @@ function runBehaviorChecks() {
       extractFunctionSource('setOwnerPreviewCommunityId'),
       extractFunctionSource('ownerPreviewCommunityMemberUsernames'),
       extractFunctionSource('ownerPreviewAllowsUser'),
-      extractFunctionSource('ownerPreviewAllowsOffer'),
+      extractFunctionSource('offerInReadScope'),
       extractFunctionSource('scheduledTradeOtherUsers'),
       extractFunctionSource('schedulePreviewAllowsTrade'),
       extractFunctionSource('selectedCommunityMemberUsernames'),
@@ -915,15 +940,30 @@ function runBehaviorChecks() {
     'read-scope behavior: owner preview hides users outside the preview community even when public selection differs'
   );
   assertEqual(
-    sandbox.ownerPreviewAllowsOffer({ from: 'OwnerUser', communityId: 'new-jersey' }, 'UsernameOnly'),
+    sandbox.offerInReadScope({ from: 'OwnerUser', communityId: 'new-jersey' }, 'UsernameOnly'),
     true,
-    'ownerPreviewAllowsOffer allows selected-community offers between selected-community members'
+    'offerInReadScope allows selected-community offers between owner-preview-community members'
   );
   assertEqual(
-    sandbox.ownerPreviewAllowsOffer({ from: 'OwnerUser' }, 'UsernameOnly'),
+    sandbox.offerInReadScope({ from: 'OwnerUser' }, 'UsernameOnly'),
     false,
-    'ownerPreviewAllowsOffer treats missing communityId as nyc and hides it in non-nyc preview'
+    'offerInReadScope treats missing communityId as nyc and hides it in non-nyc preview'
   );
+  // Owner preview must take precedence over public selected-community state.
+  localStore[sandbox.SELECTED_COMMUNITY_KEY] = 'new-jersey';
+  sandbox.MULTI_COMMUNITY_ENABLED = true;
+  assertEqual(
+    sandbox.offerInReadScope({ from: 'OwnerUser', communityId: 'new-jersey' }, 'UsernameOnly'),
+    true,
+    'offerInReadScope: owner preview takes precedence over public selected-community when both target new-jersey'
+  );
+  assertEqual(
+    sandbox.offerInReadScope({ from: 'Alpha', communityId: 'nyc' }, 'Alpha'),
+    false,
+    'offerInReadScope: owner preview hides nyc offers even when public selection is also non-nyc'
+  );
+  sandbox.MULTI_COMMUNITY_ENABLED = false;
+  localStore[sandbox.SELECTED_COMMUNITY_KEY] = 'nyc';
   assertEqual(
     sandbox.schedulePreviewAllowsTrade({
       organizer: 'OwnerUser',
@@ -1249,6 +1289,22 @@ function runBehaviorChecks() {
     }),
     false,
     'future public read scope: Schedule treats missing communityId rows as nyc and hides them in non-nyc public selection'
+  );
+  // offerInReadScope under flag-on public-selected-community ('new-jersey'), owner preview off.
+  assertEqual(
+    sandbox.offerInReadScope({ from: 'OwnerUser', communityId: 'new-jersey' }, 'UsernameOnly'),
+    true,
+    'future public read scope: offerInReadScope allows selected-community offers between selected-community members'
+  );
+  assertEqual(
+    sandbox.offerInReadScope({ from: 'Alpha', communityId: 'nyc' }, 'OwnerUser'),
+    false,
+    'future public read scope: offerInReadScope rejects offers stamped with a different communityId than the public selection'
+  );
+  assertEqual(
+    sandbox.offerInReadScope({ from: 'OwnerUser' }, 'UsernameOnly'),
+    false,
+    'future public read scope: offerInReadScope defaults missing offer.communityId to nyc and hides it in non-nyc public selection'
   );
   localStore[sandbox.SELECTED_COMMUNITY_KEY] = 'draft-only';
   assertEqual(

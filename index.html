@@ -6804,11 +6804,11 @@ function guardReadScopeTrainer(username,feature='that trainer'){
   toast(`🔭 ${username} is outside ${label}, so ${feature} is hidden.`,4500);
   return false;
 }
-function ownerPreviewAllowsOffer(offer,recipient=''){
-  const members=ownerPreviewCommunityMemberUsernames();
+function offerInReadScope(offer,recipient=''){
+  const members=readScopeMemberUsernames();
   if(!members)return true;
-  const communityId=offer?.communityId?normalizeCommunityId(offer.communityId):DEFAULT_COMMUNITY_ID;
-  if(communityId!==ownerPreviewCommunityId())return false;
+  const scopedCommunityId=ownerCommunityPreviewOn()?ownerPreviewCommunityId():getCurrentCommunityId();
+  if(recordCommunityId(offer)!==scopedCommunityId)return false;
   const from=offer?.from||'';
   return (!from||members.has(from))&&(!recipient||members.has(recipient)||recipient===cur);
 }
@@ -10123,6 +10123,11 @@ async function submitScheduledTrade(){
     note:String(note).slice(0,500),
     createdAt:existing?.createdAt||Date.now(),
     updatedAt:Date.now(),
+    // Stamp the current community on new records; preserve any explicit
+    // communityId already on the existing record so edits don't reassign.
+    // Legacy records without communityId fall back to getCurrentCommunityId(),
+    // which resolves to DEFAULT_COMMUNITY_ID while MULTI_COMMUNITY_ENABLED=false.
+    communityId:existing?.communityId||getCurrentCommunityId(),
     // 'reserved' upgrades to 'scheduled' once the user picks a real date in this modal
     status:existing?.status==='reserved'?'scheduled':(existing?.status||'scheduled')
   };
@@ -10575,7 +10580,7 @@ function renderMyHave(filterVal){
   }).join('');
 }
 function openIncomingOffersModal(scrollToItem=''){
-  const myOffers=Object.fromEntries(Object.entries(allData.offers?.[cur]||{}).filter(([,o])=>ownerPreviewAllowsOffer(o,cur)));
+  const myOffers=Object.fromEntries(Object.entries(allData.offers?.[cur]||{}).filter(([,o])=>offerInReadScope(o,cur)));
   // Group by itemName
   const grouped={};
   Object.entries(myOffers).forEach(([id,o])=>{
@@ -10925,13 +10930,13 @@ function offersForItem(recipient,itemName){
   const all=allData.offers?.[recipient]||{};
   const key=offerKey(itemName);
   return Object.entries(all)
-    .filter(([id,o])=>o&&o.itemKey===key&&ownerPreviewAllowsOffer(o,recipient))
+    .filter(([id,o])=>o&&o.itemKey===key&&offerInReadScope(o,recipient))
     .map(([id,o])=>({id,...o}))
     .sort((a,b)=>(a.t||0)-(b.t||0)); // oldest first for FCFS visibility
 }
 function countOffersForItem(recipient,itemName){return offersForItem(recipient,itemName).length;}
 function totalOffersForRecipient(recipient){
-  return Object.values(allData.offers?.[recipient]||{}).filter(o=>ownerPreviewAllowsOffer(o,recipient)).length;
+  return Object.values(allData.offers?.[recipient]||{}).filter(o=>offerInReadScope(o,recipient)).length;
 }
 async function submitOffer(recipient,itemName,offering,message){
   if(!cur||!recipient||!itemName)return false;
@@ -11139,6 +11144,9 @@ async function _logAcceptedTrade(ctx,qty){
     updatedAt:now,
     status:'reserved',
     autoLogged:true,
+    // Stamp the organizer's current community so flag-on read scoping
+    // surfaces the reservation in the same community as the accepting user.
+    communityId:getCurrentCommunityId(),
     gave:{key:ctx.recipientItemKey,name:ctx.recipientName,gender:ctx.recipientGender||'',qty},
     received:{key:ctx.offerItemKey,name:ctx.bidderName,gender:ctx.bidderGender||'',qty},
     counterparty:ctx.bidder
