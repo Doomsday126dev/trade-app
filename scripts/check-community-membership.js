@@ -77,6 +77,8 @@ function runSourceWiringChecks() {
   const createMemberNow = extractFunctionSource('createMemberNow');
   const repairMemberAccount = extractFunctionSource('repairMemberAccount');
   const defaultCommunityMembershipUpdates = extractFunctionSource('defaultCommunityMembershipUpdates');
+  const targetedCommunityMembershipUpdates = extractFunctionSource('targetedCommunityMembershipUpdates');
+  const renderPendingRequests = extractFunctionSource('renderPendingRequests');
   const validateNonDefaultCommunityId = extractFunctionSource('validateNonDefaultCommunityId');
   const buildNonDefaultCommunityPreparation = extractFunctionSource('buildNonDefaultCommunityPreparation');
   const prepareNonDefaultCommunity = extractFunctionSource('prepareNonDefaultCommunity');
@@ -116,14 +118,14 @@ function runSourceWiringChecks() {
 
   assertSourceIncludes(
     approveRequest,
-    'await createMemberNow(username,pin,false,reqId);',
-    'approveRequest must route approvals through createMemberNow(username, pin, false, reqId)'
+    'await createMemberNow(username,pin,false,reqId,opts);',
+    'approveRequest must route approvals through createMemberNow(username, pin, false, reqId, opts) with the owner-picker opts forwarded'
   );
 
   assertSourceIncludes(
     createMemberNow,
-    'defaultCommunityMembershipUpdates(username,user,user.joined)',
-    'createMemberNow must write default community membership updates'
+    'targetedCommunityMembershipUpdates(username,user,targetCommunityIds,user.joined)',
+    'createMemberNow must write community memberships through targetedCommunityMembershipUpdates, driven by the owner picker (with NYC-default fallback)'
   );
 
   assertSourceIncludes(
@@ -150,13 +152,13 @@ function runSourceWiringChecks() {
 
   assertSourceIncludes(
     createMemberNow,
-    'communities/${DEFAULT_COMMUNITY_ID}/memberUsernames/${username}',
-    'createMemberNow must verify the default community memberUsernames index after update'
+    'communities/${id}/memberUsernames/${username}',
+    'createMemberNow must verify every selected community memberUsernames index after the atomic write'
   );
   assertSourceIncludes(
     createMemberNow,
-    'shouldWriteDefaultCommunity&&!communitySnap.exists()',
-    'createMemberNow must fail verification if the default community index was not written'
+    '!communityMembershipOk',
+    'createMemberNow must fail verification if any selected community membership index did not land'
   );
 
   assertSourceIncludes(
@@ -516,6 +518,73 @@ function runSourceWiringChecks() {
     !/`(?:wishlist|dynamax|gmax|costumes|have)\/\$\{[^}]*community/i.test(html),
     'selected community must not be used to write or read community-scoped Pokémon data paths'
   );
+
+  // Owner-selected onboarding community — Phase 1 source wiring.
+  assertSourceIncludes(
+    createMemberNow,
+    'opts={}',
+    'createMemberNow must accept an opts object so the owner approval flow can pass a community selection'
+  );
+  assertSourceIncludes(
+    createMemberNow,
+    'opts.communityIds',
+    'createMemberNow must consult opts.communityIds when the owner approval flow passes a target community list'
+  );
+  assertSourceIncludes(
+    createMemberNow,
+    'targetedCommunityMembershipUpdates(username,user,targetCommunityIds,user.joined)',
+    'createMemberNow must build community writes via targetedCommunityMembershipUpdates so the picker drives the batch'
+  );
+  assertSourceIncludes(
+    createMemberNow,
+    'applyTargetedCommunityMembershipLocal(s,username,user,targetCommunityIds,user.joined)',
+    'createMemberNow must mirror the targeted community writes into the local cache so the UI reflects the chosen memberships'
+  );
+  assertSourceIncludes(
+    createMemberNow,
+    'ownerCanUseCommunityTools()?[DEFAULT_COMMUNITY_ID]:[]',
+    'createMemberNow must preserve today\'s behavior when opts.communityIds is absent: owner default to NYC, non-owner skip community writes'
+  );
+  assertSourceIncludes(
+    targetedCommunityMembershipUpdates,
+    'validatePreparedNonDefaultCommunityId(id)',
+    'targetedCommunityMembershipUpdates must validate every non-default community before emitting writes'
+  );
+  assertSourceIncludes(
+    targetedCommunityMembershipUpdates,
+    "id!==DEFAULT_COMMUNITY_ID",
+    'targetedCommunityMembershipUpdates must skip validation for DEFAULT_COMMUNITY_ID (NYC is always allowed)'
+  );
+  assertSourceIncludes(
+    approveRequest,
+    'approve-community-${reqId}',
+    'approveRequest must read the owner approval community picker by id'
+  );
+  assertSourceIncludes(
+    approveRequest,
+    'opts.communityIds=ids',
+    'approveRequest must pass the selected community ids to createMemberNow via opts.communityIds'
+  );
+  assertSourceIncludes(
+    approveRequest,
+    'createMemberNow(username,pin,false,reqId,opts)',
+    'approveRequest must forward opts to createMemberNow as the fifth argument'
+  );
+  assertSourceIncludes(
+    renderPendingRequests,
+    'ownerCanUseCommunityTools()',
+    'renderPendingRequests must only render the community picker for the owner during the pilot'
+  );
+  assertSourceIncludes(
+    renderPendingRequests,
+    'approve-community-${id}',
+    'renderPendingRequests must give each pending-request picker a deterministic dom id'
+  );
+  assertSourceIncludes(
+    renderPendingRequests,
+    'preparedNonDefaultCommunities()',
+    'renderPendingRequests must source picker options from the prepared-non-default helper'
+  );
 }
 
 function runBehaviorChecks() {
@@ -657,6 +726,7 @@ function runBehaviorChecks() {
   vm.runInContext(
     [
       extractFunctionSource('defaultCommunityMembershipUpdates'),
+      extractFunctionSource('targetedCommunityMembershipUpdates'),
       extractFunctionSource('validateNonDefaultCommunityId'),
       extractFunctionSource('preparedNonDefaultCommunities'),
       extractFunctionSource('validatePreparedNonDefaultCommunityId'),
@@ -753,6 +823,115 @@ function runBehaviorChecks() {
   assert(
     !Object.keys(usernameOnlyUpdates).some(key => key.startsWith('userCommunities/')),
     'defaultCommunityMembershipUpdates does not create reverse index without authUid'
+  );
+
+  // --- targetedCommunityMembershipUpdates (owner approval picker) ---
+  const pilotMember = { authUid: 'uid-pilot', joined: 5000 };
+  const nycOnlyDefault = sandbox.defaultCommunityMembershipUpdates('NewPilot', pilotMember, 5000);
+  const nycOnlyTargeted = sandbox.targetedCommunityMembershipUpdates('NewPilot', pilotMember, ['nyc'], 5000);
+  assertEqual(nycOnlyTargeted.ok, true, 'targetedCommunityMembershipUpdates: NYC only succeeds');
+  assertDeepEqual(
+    Object.keys(nycOnlyTargeted.updates).sort(),
+    Object.keys(nycOnlyDefault).sort(),
+    'targetedCommunityMembershipUpdates: NYC-only key set matches defaultCommunityMembershipUpdates exactly'
+  );
+  assertEqual(
+    nycOnlyTargeted.updates['communities/nyc/memberUsernames/NewPilot'],
+    true,
+    'targetedCommunityMembershipUpdates: NYC-only stamps memberUsernames index'
+  );
+  assertEqual(
+    nycOnlyTargeted.updates['communities/nyc/members/uid-pilot'],
+    true,
+    'targetedCommunityMembershipUpdates: NYC-only stamps UID member index for an auth-linked user'
+  );
+  assertDeepEqual(
+    nycOnlyTargeted.updates['userCommunities/uid-pilot/nyc'],
+    { role: 'member', username: 'NewPilot', joinedAt: 5000 },
+    'targetedCommunityMembershipUpdates: NYC-only writes the reverse index with role=member and the provided joinedAt'
+  );
+
+  const njOnly = sandbox.targetedCommunityMembershipUpdates('NewPilot', pilotMember, ['new-jersey'], 5000);
+  assertEqual(njOnly.ok, true, 'targetedCommunityMembershipUpdates: New Jersey only succeeds');
+  assert(
+    !Object.keys(njOnly.updates).some(k => k.startsWith('communities/nyc/')),
+    'targetedCommunityMembershipUpdates: NJ-only emits NO communities/nyc/* paths'
+  );
+  assert(
+    !Object.keys(njOnly.updates).some(k => k === 'userCommunities/uid-pilot/nyc'),
+    'targetedCommunityMembershipUpdates: NJ-only emits NO userCommunities/{uid}/nyc reverse index'
+  );
+  assertEqual(
+    njOnly.updates['communities/new-jersey/memberUsernames/NewPilot'],
+    true,
+    'targetedCommunityMembershipUpdates: NJ-only stamps the NJ memberUsernames index'
+  );
+  assertEqual(
+    njOnly.updates['communities/new-jersey/members/uid-pilot'],
+    true,
+    'targetedCommunityMembershipUpdates: NJ-only stamps the NJ UID member index for an auth-linked user'
+  );
+  assertDeepEqual(
+    njOnly.updates['userCommunities/uid-pilot/new-jersey'],
+    { role: 'member', username: 'NewPilot', joinedAt: 5000 },
+    'targetedCommunityMembershipUpdates: NJ-only writes the NJ reverse index'
+  );
+
+  const both = sandbox.targetedCommunityMembershipUpdates('NewPilot', pilotMember, ['nyc', 'new-jersey'], 5000);
+  assertEqual(both.ok, true, 'targetedCommunityMembershipUpdates: NYC + NJ succeeds');
+  assertDeepEqual(
+    Object.keys(both.updates).sort(),
+    [
+      'communities/new-jersey/memberUsernames/NewPilot',
+      'communities/new-jersey/members/uid-pilot',
+      'communities/new-jersey/updatedAt',
+      'communities/nyc/memberUsernames/NewPilot',
+      'communities/nyc/members/uid-pilot',
+      'communities/nyc/updatedAt',
+      'userCommunities/uid-pilot/new-jersey',
+      'userCommunities/uid-pilot/nyc'
+    ].sort(),
+    'targetedCommunityMembershipUpdates: NYC + NJ emits the union of both communities exactly'
+  );
+
+  const usernameOnlyTargeted = sandbox.targetedCommunityMembershipUpdates('ImportedPilot', {}, ['new-jersey'], 5000);
+  assertEqual(usernameOnlyTargeted.ok, true, 'targetedCommunityMembershipUpdates: username-only into NJ succeeds');
+  assert(
+    !Object.keys(usernameOnlyTargeted.updates).some(k => k.startsWith('communities/new-jersey/members/')),
+    'targetedCommunityMembershipUpdates: username-only user gets no UID member path'
+  );
+  assert(
+    !Object.keys(usernameOnlyTargeted.updates).some(k => k.startsWith('userCommunities/')),
+    'targetedCommunityMembershipUpdates: username-only user gets no reverse index'
+  );
+  assertEqual(
+    usernameOnlyTargeted.updates['communities/new-jersey/memberUsernames/ImportedPilot'],
+    true,
+    'targetedCommunityMembershipUpdates: username-only user still gets the memberUsernames index'
+  );
+
+  const unprepared = sandbox.targetedCommunityMembershipUpdates('NewPilot', pilotMember, ['draft-only'], 5000);
+  assertEqual(unprepared.ok, false, 'targetedCommunityMembershipUpdates: unprepared community is rejected');
+  assertDeepEqual(unprepared.updates, {}, 'targetedCommunityMembershipUpdates: unprepared community emits no partial updates');
+
+  const empty = sandbox.targetedCommunityMembershipUpdates('NewPilot', pilotMember, [], 5000);
+  assertEqual(empty.ok, false, 'targetedCommunityMembershipUpdates: empty communityIds is rejected');
+  assertDeepEqual(empty.updates, {}, 'targetedCommunityMembershipUpdates: empty communityIds emits no partial updates');
+
+  const missing = sandbox.targetedCommunityMembershipUpdates('NewPilot', pilotMember, undefined, 5000);
+  assertEqual(missing.ok, false, 'targetedCommunityMembershipUpdates: missing communityIds is rejected');
+
+  const invalidId = sandbox.targetedCommunityMembershipUpdates('NewPilot', pilotMember, ['DOES NOT EXIST'], 5000);
+  assertEqual(invalidId.ok, false, 'targetedCommunityMembershipUpdates: invalid community id is rejected');
+  assertDeepEqual(invalidId.updates, {}, 'targetedCommunityMembershipUpdates: invalid community id emits no partial updates');
+
+  // Duplicate ids must not double-emit. The dedupe is internal to the helper.
+  const dupes = sandbox.targetedCommunityMembershipUpdates('NewPilot', pilotMember, ['nyc', 'nyc', 'new-jersey', 'new-jersey'], 5000);
+  assertEqual(dupes.ok, true, 'targetedCommunityMembershipUpdates: duplicate ids accepted');
+  assertEqual(
+    Object.keys(dupes.updates).length,
+    Object.keys(both.updates).length,
+    'targetedCommunityMembershipUpdates: duplicate ids dedupe to the same key set as unique ids'
   );
 
   assertEqual(sandbox.recordCommunityId({}), 'nyc', 'recordCommunityId defaults missing communityId');

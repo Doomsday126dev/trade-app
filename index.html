@@ -3665,6 +3665,73 @@ function applyDefaultCommunityMembershipLocal(s,username,userRecord={},joinedAt=
   }
   s.communities[DEFAULT_COMMUNITY_ID]=community;
 }
+// Owner-selected approval target: build the Firebase update map for any
+// combination of communities (NYC + zero or more prepared non-NYC ids).
+// Pure function — returns {ok, error, updates}. NYC is always allowed as a
+// target (matching defaultCommunityMembershipUpdates' bootstrap behavior);
+// any non-NYC id is validated via validatePreparedNonDefaultCommunityId so an
+// unprepared or invalid choice refuses the whole batch before any write.
+function targetedCommunityMembershipUpdates(username,userRecord={},communityIds=[],joinedAt=Date.now()){
+  if(!Array.isArray(communityIds)||!communityIds.length){
+    return{ok:false,error:'Pick at least one community for this user.',updates:{}};
+  }
+  const user=normalizedUserRecord(username,userRecord);
+  const role=communityRoleForUser(username,user);
+  const uid=user.authUid;
+  const updates={};
+  const seen=new Set();
+  for(const rawId of communityIds){
+    const id=normalizeCommunityId(rawId);
+    if(seen.has(id))continue;
+    seen.add(id);
+    if(id!==DEFAULT_COMMUNITY_ID){
+      const validated=validatePreparedNonDefaultCommunityId(id);
+      if(!validated.ok)return{ok:false,error:validated.error,updates:{}};
+    }
+    updates[`communities/${id}/memberUsernames/${username}`]=true;
+    updates[`communities/${id}/updatedAt`]=Date.now();
+    if(uid){
+      updates[`communities/${id}/members/${uid}`]=true;
+      if(role!=='member')updates[`communities/${id}/admins/${uid}`]=true;
+      updates[`userCommunities/${uid}/${id}`]={role,username,joinedAt:user.joined||joinedAt};
+    }
+  }
+  return{ok:true,updates};
+}
+// Local-cache mirror for targetedCommunityMembershipUpdates. Updates the
+// in-memory s.communities[id] and s.userCommunities[uid][id] for each chosen
+// community so the UI reflects the same data the Firebase write produced.
+function applyTargetedCommunityMembershipLocal(s,username,userRecord={},communityIds=[],joinedAt=Date.now()){
+  if(!Array.isArray(communityIds)||!communityIds.length)return;
+  s.communities=s.communities||{};
+  s.userCommunities=s.userCommunities||{};
+  const user=normalizedUserRecord(username,userRecord);
+  const role=communityRoleForUser(username,user);
+  const uid=user.authUid;
+  const seen=new Set();
+  for(const rawId of communityIds){
+    const id=normalizeCommunityId(rawId);
+    if(seen.has(id))continue;
+    seen.add(id);
+    const community=normalizeCommunityRecord(id,s.communities[id],s,{autoEnrollDefault:false});
+    community.memberUsernames={...(community.memberUsernames||{}),[username]:true};
+    community.updatedAt=Date.now();
+    if(uid){
+      community.members={...(community.members||{}),[uid]:true};
+      if(role!=='member')community.admins={...(community.admins||{}),[uid]:true};
+      s.userCommunities[uid]=s.userCommunities[uid]||{};
+      s.userCommunities[uid][id]={
+        role,
+        username,
+        joinedAt:user.joined||joinedAt,
+        ...(s.userCommunities[uid][id]||{}),
+        role:strongerCommunityRole(s.userCommunities[uid][id]?.role,role),
+        username
+      };
+    }
+    s.communities[id]=community;
+  }
+}
 function memberCommunityOptions(username=cur,uid=currentAuthUid){
   if(!MULTI_COMMUNITY_ENABLED||!username)return[];
   const communities=allData.communities||{};
@@ -3963,7 +4030,7 @@ async function repairMemberAccount(username,opts={}){
   saveLocal(s);allData=normalizeData(s);refreshAll();populateLoginUsers();
   return{user:next,pin:pinForCopy};
 }
-async function createMemberNow(username,pin,isAdmin=false,reqId=''){
+async function createMemberNow(username,pin,isAdmin=false,reqId='',opts={}){
   const s=getLocal();
   const iAmOwner=allData.users?.[cur]?.isOwner||cur===OWNER;
   const canCreateAdmin=!!isAdmin&&iAmOwner;
@@ -3975,13 +4042,29 @@ async function createMemberNow(username,pin,isAdmin=false,reqId=''){
     pinHashed:true,authVersion,authEmail:authEmail(username,authVersion),authUid:authProvision.uid
   });
   const loginDir=normalizedLoginDirectoryRecord(username,user,{authReady:true,approvedAt:user.joined});
-  const shouldWriteDefaultCommunity=ownerCanUseCommunityTools();
+  // Community enrollment target. When the caller passes opts.communityIds
+  // (currently only the owner approval picker), use that selection. Otherwise
+  // fall back to today's behavior: owner approvals enroll into NYC by default;
+  // non-owner admin approvals skip the community block entirely (matching the
+  // rules-gated reality where only the owner can write community paths).
+  const requestedCommunityIds=Array.isArray(opts.communityIds)&&opts.communityIds.length?opts.communityIds:null;
+  const targetCommunityIds=requestedCommunityIds||(ownerCanUseCommunityTools()?[DEFAULT_COMMUNITY_ID]:[]);
+  let communityUpdates={};
+  if(targetCommunityIds.length){
+    const built=targetedCommunityMembershipUpdates(username,user,targetCommunityIds,user.joined);
+    if(!built.ok){
+      const err=new Error(built.error||'Could not build community membership updates.');
+      err.code='community/invalid-target';
+      throw err;
+    }
+    communityUpdates=built.updates;
+  }
   if(fbOn&&db){
     const updates={};
     updates[`users/${username}`]=user;
     updates[`loginDirectory/${username}`]=loginDir;
     if(reqId)updates[`requests/${reqId}/status`]='approved';
-    if(shouldWriteDefaultCommunity)Object.assign(updates,defaultCommunityMembershipUpdates(username,user,user.joined));
+    Object.assign(updates,communityUpdates);
     await withTimeout(update(ref(db),updates),8000,'Creating member timed out','db/write-timeout');
     // Firebase Realtime DB's update() resolves the promise as soon as the
     // CLIENT-SIDE optimistic cache is updated — *before* the server confirms.
@@ -3996,8 +4079,14 @@ async function createMemberNow(username,pin,isAdmin=false,reqId=''){
     // local cache stays clean because we throw BEFORE writing to it below.
     const snap=await withTimeout(get(ref(db,`users/${username}`)),6000,'Verifying member create timed out','db/verify-timeout');
     const dirSnap=await withTimeout(get(ref(db,`loginDirectory/${username}`)),6000,'Verifying login directory timed out','db/verify-timeout');
-    const communitySnap=shouldWriteDefaultCommunity?await withTimeout(get(ref(db,`communities/${DEFAULT_COMMUNITY_ID}/memberUsernames/${username}`)),6000,'Verifying NYC membership timed out','db/community-verify-timeout'):null;
-    if(!snap.exists()||!dirSnap.exists()||(shouldWriteDefaultCommunity&&!communitySnap.exists())){
+    // Verify every chosen community's memberUsernames index landed before
+    // declaring success. Any one missing → throw the same atomic-write error.
+    let communityMembershipOk=true;
+    for(const id of targetCommunityIds){
+      const communitySnap=await withTimeout(get(ref(db,`communities/${id}/memberUsernames/${username}`)),6000,`Verifying ${id} membership timed out`,'db/community-verify-timeout');
+      if(!communitySnap.exists()){communityMembershipOk=false;break;}
+    }
+    if(!snap.exists()||!dirSnap.exists()||!communityMembershipOk){
       const err=new Error('Server rejected the new-member write. Most likely your Firebase auth session has silently expired or your admin record is missing. Sign out and back in, then try again.');
       err.code='db/write-rejected-silently';
       throw err;
@@ -4009,7 +4098,7 @@ async function createMemberNow(username,pin,isAdmin=false,reqId=''){
   s.dynamax[username]=s.dynamax[username]||{};
   s.gmax[username]=s.gmax[username]||{};
   s.costumes[username]=s.costumes[username]||{};
-  if(shouldWriteDefaultCommunity)applyDefaultCommunityMembershipLocal(s,username,user,user.joined);
+  if(targetCommunityIds.length)applyTargetedCommunityMembershipLocal(s,username,user,targetCommunityIds,user.joined);
   if(reqId&&s.requests?.[reqId])s.requests[reqId].status='approved';
   saveLocal(s);allData=normalizeData(s);refreshAll();
   return user;
@@ -7418,8 +7507,26 @@ function renderPendingRequests(){
   section.style.display='block';
   if(badge)badge.textContent=pending.length;
   if(adminNotif){adminNotif.style.display='inline-flex';adminNotif.textContent=pending.length;}
+  // Owner-only community picker for new approvals. Only renders when the
+  // current user satisfies ownerCanUseCommunityTools() AND at least one
+  // prepared non-default community exists. Default selection is NYC-only so
+  // that the single-click approval rhythm matches today's behavior.
+  const showCommunityPicker=ownerCanUseCommunityTools();
+  const preparedNonDefault=showCommunityPicker?preparedNonDefaultCommunities():[];
   listEl.innerHTML=pending.map(([id,r])=>{
     const needsRepair=r.status==='approved'&&!allData.users?.[r.username];
+    const communityPickerHtml=(showCommunityPicker&&preparedNonDefault.length&&!needsRepair)?`
+      <div class="req-card-community">
+        <label for="approve-community-${id}">Enroll into</label>
+        <select id="approve-community-${id}" class="approve-community-select">
+          <option value="${escAttr(DEFAULT_COMMUNITY_ID)}" selected>${escHtml(DEFAULT_COMMUNITY_NAME)} only</option>
+          ${preparedNonDefault.map(([cid,c])=>{
+            const name=escHtml(c?.name||cid);
+            const v=escAttr(cid);
+            return`<option value="${v}">${name} only</option><option value="${escAttr(DEFAULT_COMMUNITY_ID)},${v}">${escHtml(DEFAULT_COMMUNITY_NAME)} + ${name}</option>`;
+          }).join('')}
+        </select>
+      </div>`:'';
     return`
     <div class="req-card" id="reqcard-${id}">
       <div class="req-card-hdr">
@@ -7427,6 +7534,7 @@ function renderPendingRequests(){
         <div class="req-card-time">${needsRepair?'approved but no login':freshnessLabel(r.requestedAt)}</div>
       </div>
       ${r.note?`<div class="req-card-note">"${r.note}"</div>`:'<div class="req-card-note" style="color:var(--border2)">No note</div>'}
+      ${communityPickerHtml}
       <div class="req-actions">
         <button class="btn-approve" onclick="approveRequest('${id}','${r.username.replace(/'/g,"\\'")}')">${needsRepair?'🔧 Create login':'✅ Approve'}</button>
         <button class="btn-deny" onclick="denyRequest('${id}')">✗ Deny</button>
@@ -7436,8 +7544,18 @@ function renderPendingRequests(){
 async function approveRequest(reqId,username){
   if(allData.users?.[username]){toast('⚠️ Username already exists');return;}
   const pin=generatedFirstTimePin();
+  // Read the owner approval community picker for this card, if rendered.
+  // Format: comma-separated community ids (e.g. "nyc", "new-jersey", or
+  // "nyc,new-jersey"). Absent picker means today's default (no opts).
+  const pickerEl=document.getElementById(`approve-community-${reqId}`);
+  const pickerValue=String(pickerEl?.value||'').trim();
+  const opts={};
+  if(pickerValue){
+    const ids=pickerValue.split(',').map(s=>s.trim()).filter(Boolean);
+    if(ids.length)opts.communityIds=ids;
+  }
   try{
-    await createMemberNow(username,pin,false,reqId);
+    await createMemberNow(username,pin,false,reqId,opts);
   }catch(e){
     toast('⚠️ Could not create login in Firebase: '+(e.code||e.message||'permission denied'),5000);
     return;
