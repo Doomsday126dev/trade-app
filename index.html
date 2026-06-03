@@ -127,6 +127,17 @@ input,select,textarea{font-family:var(--font);outline:none}
   .ltab .ltab-full{display:none}
   .ltab .ltab-short{display:inline}
   .ltab{padding:6px 11px;font-size:12px}
+  /* Compact community switcher on phone: drop the "Community" prefix text
+     (still announced via the select's aria-label), lead with a globe glyph
+     to keep the pill recognizable, trim padding/font, and cap the name/select
+     width so the pill never bleeds past the topbar's rounded edge. */
+  .member-community-switcher{gap:4px;padding:3px 10px;font-size:11px}
+  .member-community-switcher::before{content:"🌐";font-size:11px;line-height:1}
+  .member-community-switcher > span:first-child,
+  .member-community-switcher label > span:first-child{display:none}
+  .member-community-switcher label{gap:4px}
+  .member-community-switcher select{font-size:11px;padding:2px 20px 2px 6px;max-width:120px}
+  .member-community-switcher .member-community-name{font-size:11.5px;max-width:120px}
 }
 
 /* LEGEND */
@@ -699,8 +710,15 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
 .tour-body{font-size:14px;line-height:1.6;color:var(--text);margin-bottom:6px}
 .tour-body p{margin:0 0 10px}
 .tour-body strong{color:var(--ac2)}
-.tour-body ul{margin:6px 0 10px;padding-left:22px}
+.tour-body ul,.tour-body ol{margin:6px 0 10px;padding-left:22px}
 .tour-body li{margin-bottom:3px}
+.tour-body kbd{display:inline-block;font-family:var(--mono);font-size:11px;line-height:1;padding:2px 6px;border-radius:4px;background:var(--bg2);border:1px solid var(--border2);color:var(--ac2)}
+@media(max-width:480px){
+  .tour-body{font-size:13.5px;line-height:1.55}
+  .tour-body ul,.tour-body ol{padding-left:20px}
+  .tour-body li{margin-bottom:4px}
+  .tour-progress{margin-bottom:12px}
+}
 
 /* CONFLICT MODAL */
 .conflict-preview{background:var(--bg);border:1px solid var(--border);border-radius:var(--r2);padding:10px;font-family:var(--mono);font-size:11px;margin:8px 0;max-height:120px;overflow-y:auto}
@@ -1104,8 +1122,14 @@ html[data-theme="light"] .have-mirror-badge,html[data-theme="light"] .have-mirro
   .have-trainer-grid{grid-template-columns:1fr}
   .have-trainer-hdr{align-items:flex-start;flex-wrap:wrap}
   .have-trainer-summary{justify-content:flex-start;flex:0 0 100%;padding-left:42px}
-  .have-trainer-actions{margin-left:auto}
+  /* Row-1 right edge on mobile: keep the 🤝 action and the ▼ expand arrow
+     vertically centered against the avatar so the card feels balanced. The
+     arrow becomes a 28x28 box matching the action button so the right edge
+     reads as two equal-weight icons rather than "round button + drifting
+     text glyph". Wrapped summary (row 2) is unaffected. */
+  .have-trainer-actions{margin-left:auto;align-self:center}
   .have-trainer-action{width:28px;height:28px;font-size:13px}
+  .have-trainer-hdr .collapse-icon{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;flex-shrink:0;margin-left:4px;font-size:13px;line-height:1;color:var(--muted);align-self:center}
   .have-trainer-pill{font-size:10px;padding:5px 6px}
   .have-browse-legend{gap:5px;margin-top:2px;margin-bottom:10px;font-size:10px}
   .have-browse-legend-label{flex:0 0 100%}
@@ -12136,13 +12160,14 @@ function _handleGlobalShortcut(ev){
 
 // ── FIRST-RUN TOUR (#25) ──────────────────────────────────────
 const TOUR_STEPS=[
-  {title:'👋 Welcome to PoGo Trades',body:`<p>This is your trainer's command center for community trades. Quick tour of what each tab does — <strong>under 30 seconds</strong>.</p>`},
-  {title:'🔍 Browse',body:`<p>Search the community wishlist. Filter by priority (H/M/L), flag (⚡ Lucky · ✨ Shiny · XXL/XXS), or trainer activity.</p><p>Tap a Pokémon card to see who wants it and at what priority.</p>`,tab:'browse'},
-  {title:'📋 My List',body:`<p>Add Pokémon to your own wishlist. Set priority + flags, leave a note (form, gender, region) and you'll get a custom search string.</p><ul><li>Drag rows to reorder</li><li>Bulk-select to update many at once</li><li>Hit the ✨ flag for shiny-only wants</li></ul>`,tab:'mylist'},
-  {title:'📤 Strings',body:`<p>Auto-generated Pokémon GO search strings split by priority (and ⚡ / ✨ / XXL / XXS). Copy → paste in-game.</p>`,tab:'strings'},
-  {title:'🎒 Inventory',body:`<p>Your tradeable Pokémon. Pick a return preference: Open, Mirror only, Fair trade, or Giveaway. Trainers can offer trades publicly (FCFS).</p>`,tab:'have'},
-  {title:'📅 Schedule',body:`<p>Plan trades and see live event bonuses pulled from LeekDuck. Special trade allowances, lucky weeks, and Forever-Friend rules show up here.</p>`,tab:'schedule'},
-  {title:'⌨️ Pro tip',body:`<p>Press <kbd>?</kbd> any time to see all keyboard shortcuts. Press <kbd>n</kbd> to jump straight to adding a Pokémon.</p><p>You're all set — happy trading! 🎮</p>`}
+  {title:'👋 Welcome to PoGo Trades',body:`<p>This is your community trade command center. Quick tour — <strong>under a minute</strong>. You can skip and reopen it any time from the help menu.</p><p>By the end you'll know how to find trades, list what you want, and generate in-game search strings.</p>`},
+  {title:'🔍 Browse',body:`<p>See what every trainer in the community wants. Filter by priority (<strong>H</strong>/<strong>M</strong>/<strong>L</strong>), by flag (⚡ Lucky · ✨ Shiny · XXL/XXS), or by trainer activity.</p><p>Tap any Pokémon card to see exactly who wants it and at what priority — that's how you find the right partner fast.</p>`,tab:'browse'},
+  {title:'📋 My List',body:`<p>This is your wishlist. Tap <strong>+ Add</strong>, type a Pokémon, set priority and flags, and you're done.</p><ul><li>Use notes for form, gender, or region (they show up in your search strings)</li><li>Drag rows to reorder, or bulk-select to update many at once</li><li>Hit ✨ for shiny-only, ⚡ for Lucky Dex, XXL/XXS for size hunting</li></ul><p>Your list drives everything else — Browse matches, Strings, and the wishlist matches other trainers see.</p>`,tab:'mylist'},
+  {title:'📤 Strings',body:`<p>Auto-generated Pokémon GO search strings, split by priority and flag. Copy → paste into the in-game search bar.</p><p>They update automatically whenever you change My List — no manual maintenance needed. Use the per-section copy buttons to grab exactly what you need.</p>`,tab:'strings'},
+  {title:'🎒 Inventory',body:`<p>Track what you have available to trade. Two views:</p><ul><li><strong>Mine</strong> — add Pokémon with quantity, gender, and a return preference (Open · Mirror only · Fair trade · Giveaway)</li><li><strong>Browse</strong> — see other trainers' inventories with ⭐ wishlist matches surfaced first, plus 🪞 mirror / 🤝 fair-trade / 📤 giveaway indicators</li></ul><p>The 🤝 button on a trainer card opens Trade Match — a side-by-side of what each of you wants and has. Other trainers can offer trades publicly (first-come-first-served).</p>`,tab:'have'},
+  {title:'📅 Schedule',body:`<p>Plan trades on a calendar and track your daily quota. Regular trades cap at 100/day per real account; special trades (legendaries, shiny, region-locked, etc.) have their own limit.</p><p>Live event bonuses from LeekDuck show up here — extra special trades, Lucky weeks, and Forever-Friend rules. Pick a date, pick a partner, add the Pokémon, save.</p>`,tab:'schedule'},
+  {title:'🌐 Communities',body:`<p>If you belong to more than one community (e.g. NYC + a regional one), a <strong>Community</strong> dropdown shows up at the top of the app. Switching it narrows Browse, Strings/Compare, Inventory, and Schedule to that community's trainers — your own Pokémon data stays the same across all of them.</p><p>If you only belong to one community, you won't see the dropdown — nothing to do here.</p>`},
+  {title:'🚀 First steps',body:`<p>Recommended order for a brand-new account:</p><ol style="padding-left:22px;margin:6px 0 10px"><li>Open Profile → add your <strong>friend code</strong> and (optional) <strong>Discord</strong> so trainers can reach you</li><li>Build out <strong>My List</strong> with what you want (priorities + flags)</li><li>Add tradeable Pokémon to <strong>Inventory</strong> with return preferences</li><li>Copy your <strong>Strings</strong> and paste them into Pokémon GO</li></ol><p>Press <kbd>?</kbd> any time for keyboard shortcuts, or <kbd>n</kbd> to jump straight to adding a Pokémon. Happy trading! 🎮</p>`}
 ];
 let _tourIdx=0;
 function startTour(){
