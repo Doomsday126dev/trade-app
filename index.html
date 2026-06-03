@@ -129,15 +129,18 @@ input,select,textarea{font-family:var(--font);outline:none}
   .ltab{padding:6px 11px;font-size:12px}
   /* Compact community switcher on phone: drop the "Community" prefix text
      (still announced via the select's aria-label), lead with a globe glyph
-     to keep the pill recognizable, trim padding/font, and cap the name/select
-     width so the pill never bleeds past the topbar's rounded edge. */
-  .member-community-switcher{gap:4px;padding:3px 10px;font-size:11px}
-  .member-community-switcher::before{content:"🌐";font-size:11px;line-height:1}
+     to keep the pill recognizable, trim padding/font, and aggressively cap
+     the select width — browsers size a <select> to fit its LONGEST <option>
+     by default, so leaving the cap loose means the pill bloats to fit
+     "New Jersey" even when "NYC" is selected. The cap clips the unused
+     reserve space; the iOS native picker still shows full option text. */
+  .member-community-switcher{gap:3px;padding:2px 8px;font-size:11px}
+  .member-community-switcher::before{content:"🌐";font-size:10px;line-height:1}
   .member-community-switcher > span:first-child,
   .member-community-switcher label > span:first-child{display:none}
-  .member-community-switcher label{gap:4px}
-  .member-community-switcher select{font-size:11px;padding:2px 20px 2px 6px;max-width:120px}
-  .member-community-switcher .member-community-name{font-size:11.5px;max-width:120px}
+  .member-community-switcher label{gap:3px}
+  .member-community-switcher select{font-size:11px;padding:1px 16px 1px 5px;max-width:84px;text-overflow:ellipsis}
+  .member-community-switcher .member-community-name{font-size:11.5px;max-width:84px}
 }
 
 /* LEGEND */
@@ -12160,9 +12163,9 @@ function _handleGlobalShortcut(ev){
 
 // ── FIRST-RUN TOUR (#25) ──────────────────────────────────────
 const TOUR_STEPS=[
-  {title:'👋 Welcome to PoGo Trades',body:`<p>This is your community trade command center. Quick tour — <strong>under a minute</strong>. You can skip and reopen it any time from the help menu.</p><p>By the end you'll know how to find trades, list what you want, and generate in-game search strings.</p>`},
+  {title:'👋 Welcome to PoGo Trades',body:`<p>Your hub for trading with the community. Let's take a quick look around.</p>`},
   {title:'🔍 Browse',body:`<p>See what every trainer in the community wants. Filter by priority (<strong>H</strong>/<strong>M</strong>/<strong>L</strong>), by flag (⚡ Lucky · ✨ Shiny · XXL/XXS), or by trainer activity.</p><p>Tap any Pokémon card to see exactly who wants it and at what priority — that's how you find the right partner fast.</p>`,tab:'browse'},
-  {title:'📋 My List',body:`<p>This is your wishlist. Tap <strong>+ Add</strong>, type a Pokémon, set priority and flags, and you're done.</p><ul><li>Use notes for form, gender, or region (they show up in your search strings)</li><li>Drag rows to reorder, or bulk-select to update many at once</li><li>Hit ✨ for shiny-only, ⚡ for Lucky Dex, XXL/XXS for size hunting</li></ul><p>Your list drives everything else — Browse matches, Strings, and the wishlist matches other trainers see.</p>`,tab:'mylist'},
+  {title:'📋 My List',body:`<p>This is your wishlist. Tap <strong>+ Add</strong>, type a Pokémon, set priority and flags.</p><ul><li>Add a quick note for gender or costume — it gets tagged onto your in-game search string</li><li>Drag rows to reorder, or bulk-select to update many at once</li><li>Hit ✨ for shiny-only, ⚡ for Lucky Dex, XXL/XXS for size hunting</li></ul><p>Your list drives everything else — Browse matches, Strings, and the wishlist matches other trainers see.</p>`,tab:'mylist'},
   {title:'📤 Strings',body:`<p>Auto-generated Pokémon GO search strings, split by priority and flag. Copy → paste into the in-game search bar.</p><p>They update automatically whenever you change My List — no manual maintenance needed. Use the per-section copy buttons to grab exactly what you need.</p>`,tab:'strings'},
   {title:'🎒 Inventory',body:`<p>Track what you have available to trade. Two views:</p><ul><li><strong>Mine</strong> — add Pokémon with quantity, gender, and a return preference (Open · Mirror only · Fair trade · Giveaway)</li><li><strong>Browse</strong> — see other trainers' inventories with ⭐ wishlist matches surfaced first, plus 🪞 mirror / 🤝 fair-trade / 📤 giveaway indicators</li></ul><p>The 🤝 button on a trainer card opens Trade Match — a side-by-side of what each of you wants and has. Other trainers can offer trades publicly (first-come-first-served).</p>`,tab:'have'},
   {title:'📅 Schedule',body:`<p>Plan trades on a calendar and track your daily quota. Regular trades cap at 100/day per real account; special trades (legendaries, shiny, region-locked, etc.) have their own limit.</p><p>Live event bonuses from LeekDuck show up here — extra special trades, Lucky weeks, and Forever-Friend rules. Pick a date, pick a partner, add the Pokémon, save.</p>`,tab:'schedule'},
