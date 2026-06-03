@@ -127,20 +127,28 @@ input,select,textarea{font-family:var(--font);outline:none}
   .ltab .ltab-full{display:none}
   .ltab .ltab-short{display:inline}
   .ltab{padding:6px 11px;font-size:12px}
-  /* Compact community switcher on phone: drop the "Community" prefix text
-     (still announced via the select's aria-label), lead with a globe glyph
-     to keep the pill recognizable, trim padding/font, and aggressively cap
-     the select width — browsers size a <select> to fit its LONGEST <option>
-     by default, so leaving the cap loose means the pill bloats to fit
-     "New Jersey" even when "NYC" is selected. The cap clips the unused
-     reserve space; the iOS native picker still shows full option text. */
+  /* Compact community switcher on phone. iOS Safari's native <select>
+     widget enforces a minimum width based on the longest <option>
+     regardless of CSS max-width, so on phones we strip the native
+     appearance, force a fixed width, and supply our own chevron via a
+     background SVG. The native picker still opens on tap and shows
+     full option text; only the closed-state pill is clipped. */
   .member-community-switcher{gap:3px;padding:2px 8px;font-size:11px}
   .member-community-switcher::before{content:"🌐";font-size:10px;line-height:1}
   .member-community-switcher > span:first-child,
   .member-community-switcher label > span:first-child{display:none}
   .member-community-switcher label{gap:3px}
-  .member-community-switcher select{font-size:11px;padding:1px 16px 1px 5px;max-width:84px;text-overflow:ellipsis}
-  .member-community-switcher .member-community-name{font-size:11.5px;max-width:84px}
+  .member-community-switcher select{
+    -webkit-appearance:none;appearance:none;
+    width:78px;max-width:78px;min-width:0;
+    font-size:11px;padding:2px 16px 2px 7px;
+    text-overflow:ellipsis;overflow:hidden;white-space:nowrap;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6' fill='none' stroke='%23a78bfa' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'><path d='M1 1l4 4 4-4'/></svg>");
+    background-repeat:no-repeat;
+    background-position:right 6px center;
+    background-size:8px 5px;
+  }
+  .member-community-switcher .member-community-name{font-size:11.5px;max-width:78px}
 }
 
 /* LEGEND */
