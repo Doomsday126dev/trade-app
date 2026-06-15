@@ -2502,3 +2502,28 @@ Added `docs/PILOT-MONITORING.md` as the day-to-day operational companion to `doc
 ## 2026-05-30 - Claude - Owner-selected onboarding community (Phase 1)
 
 Added an owner-only community-target picker to the new-user approval flow so the owner can choose at approval time whether a brand-new pilot user is enrolled into NYC only, New Jersey only, or NYC + New Jersey. Default selection is "NYC only" so the single-click approval rhythm is preserved. Implementation: a new pure helper `targetedCommunityMembershipUpdates(username, userRecord, communityIds, joinedAt)` returns `{ok, error, updates}` for any combination of NYC and prepared non-default communities (NYC always allowed; non-default ids validated via `validatePreparedNonDefaultCommunityId`); a matching local-cache mirror `applyTargetedCommunityMembershipLocal` keeps the in-memory store consistent with the Firebase write; `createMemberNow` now accepts an optional fifth `opts={}` parameter and consults `opts.communityIds` — when absent it falls back to today's behavior (owner approvals default to NYC, non-owner admin approvals skip community writes, matching the rules-gated reality); post-write verification loops over every selected community and throws the same `db/write-rejected-silently` if any membership index did not land; `approveRequest` reads the comma-separated picker value from `#approve-community-${reqId}` and forwards it via `opts.communityIds`; `renderPendingRequests` renders the picker only when `ownerCanUseCommunityTools()` is true AND at least one prepared non-default community exists, with NYC-only selected by default and prepared non-default communities surfacing both "{name} only" and "NYC + {name}" options. Existing `defaultCommunityMembershipUpdates`, `applyDefaultCommunityMembershipLocal`, `repairMemberAccount`, `buildNonDefaultCommunityMemberAssignment`, and `buildNonDefaultCommunityMemberRemoval` are unchanged; the "Add member directly" admin form (`addMemberNow`) is unchanged and still uses today's NYC-only default. Added 14 new sandbox assertions in `scripts/check-community-membership.js` covering key-set equivalence with the default helper for NYC-only, no-NYC-paths invariant for NJ-only, NYC+NJ union, username-only user shape, unprepared/invalid/empty/undefined-communityIds rejection with no partial writes, and duplicate-id dedupe; updated three pre-existing source-wiring guards to reference the new function names and the new verification flag. No Firebase rules changed; no auth, PIN provisioning, loginDirectory shape, repair flow, offer/schedule/inventory/list writes, Pokémon data paths, owner-preview behavior, or public request form changed. `MULTI_COMMUNITY_ENABLED=true` and `DEFAULT_COMMUNITY_ID='nyc'` are unchanged. Deployed smoke required after commit/push/Pages rebuild because `index.html` behavior/UI changed.
+
+## 2026-06-15 - Codex - Public live share links
+
+### Summary
+- Added a sanitized `publicShares/{username}` snapshot so anyone with a share link can view the trainer's shared trade list without an app login once Firebase rules are updated.
+- Copying a share link publishes the current public snapshot immediately; profile/list edits queue a refreshed snapshot so public links stay current.
+- Share view now prefers the realtime `publicShares/{username}` listener and only falls back to protected raw app paths for signed-in viewers when an old/unpublished public snapshot is missing.
+
+### Files touched
+- `index.html`
+- `SECURITY-RULES.md`
+- `docs/MAINTENANCE-LOG.md`
+
+### Firebase paths / rules
+- Added a documented rules-template path for `publicShares/{username}` with public read and owner/admin write.
+- Raw app data remains protected. The public snapshot is allowlist-only and contains the share-view profile fields plus `wishlist`, `dynamax`, `gmax`, and `costumes`; it does not include PINs, Auth UIDs/emails, Discord IDs, inventory, offers, trades, requests, or private app state.
+
+### Manual test checklist
+- Publish the updated Firebase rules template, then copy a share link while signed in as the trainer.
+- Open the link in a clean signed-out/private browser; it should show the public share view without app login.
+- While the share view is open, edit the shared trainer's list from another signed-in session; the share view should update from `publicShares/{username}`.
+- Confirm the public snapshot contains only the allowlisted share data and no inventory/offers/trades/PIN/Auth fields.
+
+### Known risks / TODOs
+- Production Firebase rules must be updated before anonymous viewers can read `publicShares/{username}`.

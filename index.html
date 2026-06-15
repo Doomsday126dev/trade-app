@@ -2555,6 +2555,12 @@ const SECURE_RULES=`{
         ".write": "auth != null && root.child('admins').child(auth.uid).val() === true"
       }
     },
+    "publicShares": {
+      "$username": {
+        ".read": true,
+        ".write": "auth != null && (root.child('admins').child(auth.uid).val() === true || root.child('users').child($username).child('authUid').val() === auth.uid)"
+      }
+    },
     "users": {
       "$username": {
         ".write": "auth != null && (root.child('admins').child(auth.uid).val() === true || data.child('authUid').val() === auth.uid || (!data.child('authUid').exists() && newData.child('authUid').val() === auth.uid && newData.child('authEmail').val() === auth.token.email && (!data.child('authEmail').exists() || data.child('authEmail').val() === auth.token.email)))"
@@ -3518,6 +3524,8 @@ function showSyncDot(show){document.getElementById('sqd')?.classList.toggle('sho
 window.addEventListener('online',()=>{if(fbOn)flushSyncQueue();});
 let _authObserverBound=false;
 let _localOnlyWarned=false;
+let _authStateKnown=false;
+const _authStateWaiters=[];
 function warnLocalOnlyMode(){
   // The persistent header banner is now the primary signal — only fire a toast
   // for the very first edit in a local-only session so the user knows it's
@@ -3538,6 +3546,8 @@ function bindAuthObserver(){
   if(_authObserverBound||!auth||typeof onAuthStateChanged!=='function')return;
   _authObserverBound=true;
   onAuthStateChanged(auth,user=>{
+    _authStateKnown=true;
+    _authStateWaiters.splice(0).forEach(fn=>fn(user||null));
     currentAuthUid=user?.uid||'';
     if(user){
       // Cancel any pending "auth dropped" notification — turned out to be transient.
@@ -3546,6 +3556,14 @@ function bindAuthObserver(){
       // Auth recovered — setSyncStatus emits the "✅ Back online" toast if we were previously local-only/offline
       setSyncStatus(Object.keys(syncQueue).length?'syncing':'online');
       ensureProtectedSubscriptions();
+      if(_pendingShareRequest){
+        ensureShareViewSubscriptions(_pendingShareRequest.username);
+        loadShareViewData(_pendingShareRequest.username).then(ok=>{
+          if(ok&&_pendingShareRequest&&allData.users?.[_pendingShareRequest.username]){
+            enterShareView(_pendingShareRequest.username,_pendingShareRequest.type);
+          }
+        });
+      }
       if(Object.keys(syncQueue).length)flushSyncQueue();
       return;
     }
@@ -3559,6 +3577,19 @@ function bindAuthObserver(){
       setSyncStatus('localOnly');
       if(Object.keys(syncQueue).length)warnLocalOnlyMode();
     },AUTH_DROP_DEBOUNCE_MS);
+  });
+}
+function waitForAuthState(timeout=3500){
+  if(!auth||typeof onAuthStateChanged!=='function'||_authStateKnown)return Promise.resolve(auth?.currentUser||null);
+  return new Promise(resolve=>{
+    let done=false;
+    const finish=user=>{
+      if(done)return;
+      done=true;
+      resolve(user||auth?.currentUser||null);
+    };
+    _authStateWaiters.push(finish);
+    setTimeout(()=>finish(auth?.currentUser||null),timeout);
   });
 }
 
@@ -3960,11 +3991,70 @@ function saveLocal(s){
   }
 }
 
+const PUBLIC_SHARE_TYPES=['wishlist','dynamax','gmax','costumes'];
+function publicShareSnapshotForUser(username,source=allData){
+  const data=normalizeData(source||{});
+  const ud=data.users?.[username]||{};
+  // Allowlist-only public payload. Do not serialize allData, user records,
+  // Firebase snapshots, localStorage, auth fields, PINs, Discord IDs, offers,
+  // trades, inventory, or private app state into publicShares.
+  const profile={
+    friendCode:String(ud.friendCode||'').slice(0,32),
+    bio:String(ud.bio||'').slice(0,120),
+    discord:String(ud.discord||'').slice(0,40),
+    avatarPokemon:String(ud.avatarPokemon||'').slice(0,80),
+    lastUpdated:Number(ud.lastUpdated||0)||null
+  };
+  const lists={};
+  PUBLIC_SHARE_TYPES.forEach(type=>{
+    lists[type]={...(data[type]?.[username]||{})};
+  });
+  return{version:1,username,profile,lists,updatedAt:Date.now()};
+}
+function applyPublicShareSnapshot(s,snapshot){
+  const username=String(snapshot?.username||'').trim();
+  if(!username||!snapshot||typeof snapshot!=='object')return false;
+  if(!s.users)s.users={};
+  const profile=snapshot.profile&&typeof snapshot.profile==='object'?snapshot.profile:{};
+  s.users[username]={
+    friendCode:String(profile.friendCode||''),
+    bio:String(profile.bio||''),
+    discord:String(profile.discord||''),
+    avatarPokemon:String(profile.avatarPokemon||''),
+    joined:null,
+    lastSeen:null,
+    lastUpdated:Number(profile.lastUpdated||snapshot.updatedAt||0)||null
+  };
+  const lists=snapshot.lists&&typeof snapshot.lists==='object'?snapshot.lists:{};
+  PUBLIC_SHARE_TYPES.forEach(type=>{
+    if(!s[type])s[type]={};
+    s[type][username]={...(lists[type]||{})};
+  });
+  return true;
+}
+function queuePublicShareSnapshot(source,username){
+  if(!fbOn||!db||!username||!auth?.currentUser)return;
+  queueSync(`publicShares/${username}`,publicShareSnapshotForUser(username,source));
+}
+async function publishPublicShareNow(username=cur){
+  if(!username)return false;
+  const snapshot=publicShareSnapshotForUser(username,allData);
+  if(fbOn&&db&&auth?.currentUser){
+    await withTimeout(set(ref(db,`publicShares/${username}`),snapshot),8000,'Publishing share link timed out','db/public-share-timeout');
+    delete syncQueue[`publicShares/${username}`];
+    if(!Object.keys(syncQueue).length)showSyncDot(false);
+    return true;
+  }
+  queuePublicShareSnapshot(allData,username);
+  return false;
+}
+
 async function writeUser(u,data){
   const s=getLocal();s.users[u]=normalizedUserRecord(u,s.users[u],data);s.loginDirectory[u]=normalizedLoginDirectoryRecord(u,s.users[u],s.loginDirectory[u]);saveLocal(s);
   if(fbOn&&db){
     queueSync(`users/${u}`,s.users[u]);
     if(canWriteLoginDirectoryNow())queueSync(`loginDirectory/${u}`,s.loginDirectory[u]);
+    if(u===cur)queuePublicShareSnapshot(s,u);
   }
   syncFromLocal();
 }
@@ -3984,12 +4074,15 @@ async function writeUserNow(u,data){
     try{
       await withTimeout(set(ref(db,`users/${u}`),s.users[u]),8000,'Saving login timed out','db/write-timeout');
       if(canWriteLoginDirectoryNow())await withTimeout(set(ref(db,`loginDirectory/${u}`),s.loginDirectory[u]),8000,'Saving login directory timed out','db/directory-timeout');
+      if(u===cur)await withTimeout(set(ref(db,`publicShares/${u}`),publicShareSnapshotForUser(u,s)),8000,'Publishing share link timed out','db/public-share-timeout').catch(e=>console.warn('Could not publish public share snapshot',e));
       delete syncQueue[`users/${u}`];
       if(canWriteLoginDirectoryNow())delete syncQueue[`loginDirectory/${u}`];
+      if(u===cur)delete syncQueue[`publicShares/${u}`];
       if(!Object.keys(syncQueue).length)showSyncDot(false);
     }catch{
       queueSync(`users/${u}`,s.users[u]);
       if(canWriteLoginDirectoryNow())queueSync(`loginDirectory/${u}`,s.loginDirectory[u]);
+      if(u===cur)queuePublicShareSnapshot(s,u);
     }
   }
   syncFromLocal();
@@ -4273,6 +4366,7 @@ async function writeList(type,u,list){
     queueSync(`${type}/${u}`,list);
     queueSync(`users/${u}/lastUpdated`,now);
     queueSync(`users/${u}/lastSeen`,now);
+    if(u===cur)queuePublicShareSnapshot(s,u);
   }
   syncFromLocal();
 }
@@ -4627,6 +4721,8 @@ function _onSubSnapshot(path,snap){
 }
 const _snapshotFirstSeen=new Set();
 let _activeShareView=null;
+let _pendingShareRequest=null;
+const _activeShareSubs={};
 function subscribePath(path){
   if(!db||_activeSubs[path])return;
   _pathLoadState[path]='loading';
@@ -4661,6 +4757,142 @@ function startListener(){
   subscribePath('loginDirectory');
   ensureProtectedSubscriptions();
   // Other list types loaded lazily when tabs are visited
+}
+function applyShareDataPath(s,path,val){
+  const [seg,username]=String(path||'').split('/');
+  if(!seg||!username)return;
+  if(seg==='users'){
+    if(val)s.users[username]=normalizedUserRecord(username,s.users?.[username],val);
+    else if(s.users)delete s.users[username];
+    return;
+  }
+  if(PUBLIC_SHARE_TYPES.includes(seg)){
+    if(!s[seg])s[seg]={};
+    if(val)s[seg][username]=val;
+    else delete s[seg][username];
+  }
+}
+function shareDataPaths(username){
+  return[`users/${username}`,...PUBLIC_SHARE_TYPES.map(t=>`${t}/${username}`)];
+}
+async function loadPublicShareData(username){
+  if(!db||!username)return false;
+  try{
+    const snap=await get(ref(db,`publicShares/${username}`));
+    if(!snap.exists())return false;
+    const s=getLocal();
+    if(!applyPublicShareSnapshot(s,snap.val()))return false;
+    allData=normalizeData(s);
+    setSyncStatus('online');
+    return true;
+  }catch(e){
+    console.warn('Could not load public share data',e);
+    return false;
+  }
+}
+async function loadShareViewData(username){
+  if(!db||!username)return false;
+  if(auth&&firebaseAuthConfigured()&&!auth.currentUser)return false;
+  try{
+    const pairs=await Promise.all(shareDataPaths(username).map(async path=>{
+      const snap=await get(ref(db,path));
+      return[path,snap.exists()?snap.val():null];
+    }));
+    const s=getLocal();
+    pairs.forEach(([path,val])=>applyShareDataPath(s,path,val));
+    saveLocal(s);
+    allData=normalizeData(s);
+    setSyncStatus('online');
+    return true;
+  }catch(e){
+    console.warn('Could not load live share data',e);
+    return false;
+  }
+}
+function renderUnavailableShareView(username,message){
+  _activeShareView={username,type:'wishlist'};
+  document.getElementById('app').style.display='none';
+  document.getElementById('login-pg').style.display='none';
+  document.getElementById('config-pg').style.display='none';
+  document.getElementById('share-view').classList.add('active');
+  const hdr=document.getElementById('share-hdr');
+  if(hdr)hdr.innerHTML=`<div class="share-hdr-info"><div class="share-hdr-name">${escHtml(username)}'s Trade List</div><div class="share-hdr-meta"><span class="meta-item">🔗 Public share link</span></div></div>`;
+  const tabs=document.getElementById('share-list-tabs');
+  if(tabs)tabs.innerHTML='';
+  const out=document.getElementById('share-list-out');
+  if(out)out.innerHTML=emptyHtml(message,'Ask the trainer to copy their share link again after the public share rules are published.','🔗');
+}
+function clearShareViewSubscriptions(){
+  Object.values(_activeShareSubs).forEach(unsub=>{try{unsub();}catch{}});
+  Object.keys(_activeShareSubs).forEach(path=>delete _activeShareSubs[path]);
+}
+function onPublicShareSnapshot(username,snap){
+  if(!snap.exists())return;
+  const s=getLocal();
+  if(!applyPublicShareSnapshot(s,snap.val()))return;
+  allData=normalizeData(s);
+  setSyncStatus('online');
+  if(document.getElementById('share-view')?.classList.contains('active')&&_activeShareView?.username===username){
+    renderShareView(_activeShareView.username,_activeShareView.type);
+  }
+}
+function onShareSnapshot(path,snap){
+  const val=snap.exists()?snap.val():null;
+  const s=getLocal();
+  applyShareDataPath(s,path,val);
+  saveLocal(s);
+  allData=normalizeData(s);
+  setSyncStatus('online');
+  const username=path.split('/')[1];
+  if(document.getElementById('share-view')?.classList.contains('active')&&_activeShareView?.username===username){
+    renderShareView(_activeShareView.username,_activeShareView.type);
+  }
+}
+function ensureShareViewSubscriptions(username){
+  if(!db||!username)return false;
+  const publicPath=`publicShares/${username}`;
+  if(!_activeShareSubs[publicPath]){
+    _activeShareSubs[publicPath]=onValue(ref(db,publicPath),snap=>onPublicShareSnapshot(username,snap),e=>{
+      console.warn('Public share subscription failed',e);
+      setSyncStatus('offline');
+    });
+  }
+  if(auth&&firebaseAuthConfigured()&&!auth.currentUser)return true;
+  shareDataPaths(username).forEach(path=>{
+    if(_activeShareSubs[path])return;
+    _activeShareSubs[path]=onValue(ref(db,path),snap=>onShareSnapshot(path,snap),e=>{
+      console.warn('Share view subscription failed',path,e);
+      setSyncStatus('offline');
+    });
+  });
+  return true;
+}
+async function openShareViewFromRequest(shareReq){
+  if(!shareReq)return;
+  _pendingShareRequest=shareReq;
+  const publicLoaded=await loadPublicShareData(shareReq.username);
+  ensureShareViewSubscriptions(shareReq.username);
+  if(publicLoaded&&allData.users?.[shareReq.username]){
+    enterShareView(shareReq.username,shareReq.type);
+    return;
+  }
+  await waitForAuthState();
+  const liveLoaded=await loadShareViewData(shareReq.username);
+  if(liveLoaded)ensureShareViewSubscriptions(shareReq.username);
+  if(liveLoaded&&allData.users?.[shareReq.username]){
+    enterShareView(shareReq.username,shareReq.type);
+    return;
+  }
+  if(firebaseAuthConfigured()&&auth&&!auth.currentUser){
+    renderUnavailableShareView(shareReq.username,'This public share is not published yet.');
+    return;
+  }
+  if(allData.users?.[shareReq.username]){
+    enterShareView(shareReq.username,shareReq.type);
+  }else{
+    toast(`Trainer "${shareReq.username}" not found`);
+    showLogin();
+  }
 }
 // Per-user queue of "someone accepted a trade where you'd give away N of X".
 // Only the target user can read/write their own bucket (see security rules),
@@ -5001,6 +5233,8 @@ async function doLogin(){
       // Upgrade plaintext PIN to hashed
       if(!ud.pinHashed){const h=await hashPin(p);loginUpdate.pin=h;loginUpdate.pinHashed=true;}
       await writeUserNow(u,loginUpdate);
+      if(document.getElementById('share-view')?.classList.contains('active'))return;
+      if(_pendingShareRequest){openShareViewFromRequest(_pendingShareRequest);return;}
       showApp();
     }catch(e){
       const code=e.code||'';
@@ -8938,9 +9172,17 @@ function exportMyListCSV(){
   document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
   toast('📊 CSV downloaded!');
 }
-function copyShareLink(){
+async function copyShareLink(){
   const url=`${location.origin}${location.pathname}?view=${encodeURIComponent(cur)}&list=${myListType}`;
-  copyText(url).then(()=>toast('🔗 Share link copied!'));
+  let published=false;
+  try{
+    published=await publishPublicShareNow(cur);
+  }catch(e){
+    console.warn('Could not publish public share snapshot',e);
+  }
+  copyText(url).then(()=>{
+    toast(published?'🔗 Public share link copied and updated!':'🔗 Share link copied. Publish the public share rules if viewers cannot open it yet.',6000);
+  });
 }
 
 // ── SPECIAL TRADE BOARD ──────────────────────────────────────
@@ -9481,16 +9723,20 @@ function checkShareViewParam(){
   return null;
 }
 function enterShareView(username,type){
+  if(_activeShareView?.username!==username)clearShareViewSubscriptions();
+  _pendingShareRequest=null;
   document.getElementById('app').style.display='none';
   document.getElementById('login-pg').style.display='none';
   document.getElementById('config-pg').style.display='none';
   document.getElementById('share-view').classList.add('active');
   // Share view needs all list types to allow tab switching
-  ['wishlist','dynamax','gmax','costumes'].forEach(t=>ensureListSubscribed(t));
+  ensureShareViewSubscriptions(username);
   renderShareView(username,type);
 }
 function exitShareView(){
+  _pendingShareRequest=null;
   _activeShareView=null;
+  clearShareViewSubscriptions();
   document.getElementById('share-view').classList.remove('active');
   history.replaceState({},'',location.pathname);
   // Re-init normal flow
@@ -12349,10 +12595,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     startListener();
     flushSyncQueue();
     if(shareReq){
-      setTimeout(()=>{
-        if(allData.users?.[shareReq.username])enterShareView(shareReq.username,shareReq.type);
-        else{toast(`Trainer "${shareReq.username}" not found`);showLogin();}
-      },1500);
+      openShareViewFromRequest(shareReq);
     }
   }).catch(e=>{
     console.warn('Firebase SDK failed to load',e);

@@ -42,6 +42,12 @@ Do not publish the placeholder literally.
         ".write": "auth != null && root.child('admins').child(auth.uid).val() === true"
       }
     },
+    "publicShares": {
+      "$username": {
+        ".read": true,
+        ".write": "auth != null && (root.child('admins').child(auth.uid).val() === true || root.child('users').child($username).child('authUid').val() === auth.uid)"
+      }
+    },
     "users": {
       "$username": {
         ".write": "auth != null && (root.child('admins').child(auth.uid).val() === true || data.child('authUid').val() === auth.uid || (!data.child('authUid').exists() && newData.child('authUid').val() === auth.uid && newData.child('authEmail').val() === auth.token.email && (!data.child('authEmail').exists() || data.child('authEmail').val() === auth.token.email)))"
@@ -151,7 +157,17 @@ approved trainer names before signing in. It should only contain minimal login
 metadata such as the current auth version / readiness flag — not PINs or
 private profile fields.
 
-### Public-read, owner-write data (`users`, `wishlist`, `dynamax`, `gmax`, `costumes`, `have`)
+### Public share snapshots (`publicShares`)
+- **Read**: anyone with the share link
+- **Write**: the trainer themselves, or an admin
+
+This is the only anonymous/public trade-list surface. It should contain a
+sanitized share-view snapshot only: public profile display fields and the
+shareable `wishlist`, `dynamax`, `gmax`, and `costumes` lists. Do not copy
+PINs, Auth UIDs/emails, Discord IDs, inventory, offers, trades, requests, or
+raw user records into this path.
+
+### Authenticated app data (`users`, `wishlist`, `dynamax`, `gmax`, `costumes`, `have`)
 - **Read**: any authenticated user (community-visible by design)
 - **Write**: only the trainer themselves, or an admin (break-glass)
 
