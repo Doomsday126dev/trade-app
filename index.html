@@ -9174,14 +9174,20 @@ function exportMyListCSV(){
 }
 async function copyShareLink(){
   const url=`${location.origin}${location.pathname}?view=${encodeURIComponent(cur)}&list=${myListType}`;
-  let published=false;
   try{
-    published=await publishPublicShareNow(cur);
+    await copyText(url);
   }catch(e){
-    console.warn('Could not publish public share snapshot',e);
+    console.warn('Could not copy share link',e);
+    toast('⚠️ Could not copy the share link. Try again or copy it from the address bar.',6000);
+    return;
   }
-  copyText(url).then(()=>{
-    toast(published?'🔗 Public share link copied and updated!':'🔗 Share link copied. Publish the public share rules if viewers cannot open it yet.',6000);
+  toast('🔗 Share link copied! Updating public snapshot…',3500);
+  publishPublicShareNow(cur).then(published=>{
+    if(published)toast('✅ Public share snapshot updated.',3500);
+    else toast('🔗 Link copied. Publish the public share rules if signed-out viewers cannot open it yet.',6000);
+  }).catch(e=>{
+    console.warn('Could not publish public share snapshot',e);
+    toast('🔗 Link copied. Public live view needs the Firebase publicShares rule before signed-out viewers can open it.',7000);
   });
 }
 
