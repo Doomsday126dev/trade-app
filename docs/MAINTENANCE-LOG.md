@@ -2535,3 +2535,7 @@ Added Electabuzz to the static Dynamax catalog with no trainer data so it is ava
 ## 2026-06-17 - Codex - Strings diff details "See all"
 
 Improved the Strings tab change-diff details so truncated trainer diffs now show a "See all changes" action with the complete added/removed/changed list for the current render. Changed entries now include a compact before → after priority/flag summary, making `~ changed` rows less opaque. The existing local snapshot key and mark-seen behavior are unchanged; this is a UI-only diff-detail improvement with no Firebase rules, auth, list writes, inventory, offers, schedule, import/export, community scoping, or data model changes.
+
+## 2026-06-17 - Codex - Viewer-scoped Strings diff tracking
+
+Scoped local Strings-tab diff snapshots by the currently logged-in viewer so switching between accounts in the same browser no longer shares one account's "seen" baseline with another account. Existing legacy local snapshots are still read as a fallback, then future opens save into the viewer-specific bucket. First-time trainer views now show a small "tracking changes from now on" note instead of silently showing no diff. This remains a local UI tracking feature only; no Firebase history, rules, auth, list writes, inventory, offers, schedule, import/export, community scoping, or data model changes were added.

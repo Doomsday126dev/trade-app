@@ -935,6 +935,7 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
 .diff-see-all:hover{border-color:var(--ac2);background:rgba(168,139,250,.1)}
 .string-diff-list{display:flex;flex-direction:column;gap:4px}
 .string-diff-list .diff-line{background:var(--bg);border:1px solid var(--border);border-radius:var(--r2);padding:6px 8px}
+.diff-track-note{font-size:12px;color:var(--muted);padding:8px 12px;background:rgba(108,99,255,.08);border:1px solid rgba(108,99,255,.18);border-radius:var(--r2);margin-bottom:10px}
 
 /* SWIPE GESTURES (#12) */
 .myrow{transition:transform .2s,opacity .2s,border-color .15s,background .15s}
@@ -9094,15 +9095,27 @@ function userAvatarHtml(username,size=28){
 // ── DIFF VIEW (#17) ──────────────────────────────────────────
 const DIFF_SNAPSHOT_KEY='pogoListSnapshots_v1';
 function loadSnapshots(){try{return JSON.parse(localStorage.getItem(DIFF_SNAPSHOT_KEY)||'{}');}catch{return{};}}
+function snapshotViewerKey(){return cur||'_anonymous';}
+function viewerSnapshotBucket(snaps,create=false){
+  const viewer=snapshotViewerKey();
+  if(create){
+    snaps.viewers=snaps.viewers||{};
+    snaps.viewers[viewer]=snaps.viewers[viewer]||{};
+    return snaps.viewers[viewer];
+  }
+  return snaps.viewers?.[viewer]||null;
+}
 function saveSnapshot(type,username,list){
   const snaps=loadSnapshots();
-  if(!snaps[type])snaps[type]={};
-  snaps[type][username]={keys:Object.keys(list||{}),values:Object.assign({},list||{}),savedAt:Date.now()};
+  const bucket=viewerSnapshotBucket(snaps,true);
+  if(!bucket[type])bucket[type]={};
+  bucket[type][username]={keys:Object.keys(list||{}),values:Object.assign({},list||{}),savedAt:Date.now()};
   try{localStorage.setItem(DIFF_SNAPSHOT_KEY,JSON.stringify(snaps));}catch{}
 }
 function computeSnapshotDiff(type,username){
   const snaps=loadSnapshots();
-  const prev=snaps[type]?.[username];
+  const bucket=viewerSnapshotBucket(snaps,false);
+  const prev=bucket?.[type]?.[username]||snaps[type]?.[username];
   const cur=allData[type]?.[username]||{};
   if(!prev)return{firstVisit:true,added:[],removed:[],changed:[]};
   const prevSet=new Set(prev.keys||[]);
@@ -9147,7 +9160,7 @@ function diffLineHtml(kind,k,dn,diff){
   return`<div class="diff-line ${kind}">${name}</div>`;
 }
 function diffDetailsHtml(diff,type,username){
-  if(diff.firstVisit)return'';
+  if(diff.firstVisit)return`<div class="diff-track-note">Tracking changes for ${escHtml(username)} from now on. Future edits will show added, removed, and changed entries here.</div>`;
   const total=diff.added.length+diff.removed.length+diff.changed.length;
   if(!total)return'';
   const dn=diffDisplayNames(type);
