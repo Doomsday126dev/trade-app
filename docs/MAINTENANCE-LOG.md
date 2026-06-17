@@ -2531,3 +2531,7 @@ Added an owner-only community-target picker to the new-user approval flow so the
 ## 2026-06-16 - Codex - Dynamax Electabuzz and special board export sprite fallback
 
 Added Electabuzz to the static Dynamax catalog with no trainer data so it is available in the Dmax list without changing anyone's saved priorities. Audited the current Dmax/Gmax catalog through the app's sprite resolver; all existing Dmax/Gmax entries have sprite fallback chains. Tightened canvas export fallbacks so custom cdn08 costume sprites, such as Armored Mewtwo on the Special Trade Board, try the proxied and direct costume image instead of falling through to regular base-dex art. No auth, Firebase rules, community logic, offers, schedule, inventory writes, public-share rules, or data model shape changed.
+
+## 2026-06-17 - Codex - Strings diff details "See all"
+
+Improved the Strings tab change-diff details so truncated trainer diffs now show a "See all changes" action with the complete added/removed/changed list for the current render. Changed entries now include a compact before → after priority/flag summary, making `~ changed` rows less opaque. The existing local snapshot key and mark-seen behavior are unchanged; this is a UI-only diff-detail improvement with no Firebase rules, auth, list writes, inventory, offers, schedule, import/export, community scoping, or data model changes.

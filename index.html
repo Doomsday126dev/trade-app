@@ -930,6 +930,11 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
 .diff-line.removed::before{content:'− ';font-weight:700;text-decoration:none;display:inline-block}
 .diff-line.changed{color:var(--warn)}
 .diff-line.changed::before{content:'~ ';font-weight:700}
+.diff-change-meta{display:block;color:var(--muted);font-family:var(--font);font-size:10px;margin-top:1px;line-height:1.3}
+.diff-see-all{margin-top:6px;background:transparent;border:1px solid var(--border2);color:var(--ac2);border-radius:999px;padding:4px 9px;font-family:var(--font);font-size:11px;font-weight:700;cursor:pointer}
+.diff-see-all:hover{border-color:var(--ac2);background:rgba(168,139,250,.1)}
+.string-diff-list{display:flex;flex-direction:column;gap:4px}
+.string-diff-list .diff-line{background:var(--bg);border:1px solid var(--border);border-radius:var(--r2);padding:6px 8px}
 
 /* SWIPE GESTURES (#12) */
 .myrow{transition:transform .2s,opacity .2s,border-color .15s,background .15s}
@@ -6849,6 +6854,7 @@ function renderStrings(){return perfTime('render:strings',()=>_renderStringsInne
 function _renderStringsInner(){
   const q=(document.getElementById('stq')?.value||'').toLowerCase();
   const el=document.getElementById('strings-out');if(!el)return;
+  resetStringDiffCache();
   const allowed=stringsAllowedUsers();
   renderOwnerStringsPreviewBanner(allowed);
   const users=Object.keys(allData.users||{}).filter(u=>{
@@ -9104,25 +9110,98 @@ function computeSnapshotDiff(type,username){
   const added=[...curSet].filter(k=>!prevSet.has(k));
   const removed=[...prevSet].filter(k=>!curSet.has(k));
   const changed=[...curSet].filter(k=>prevSet.has(k)&&prev.values?.[k]!==cur[k]);
-  return{firstVisit:false,added,removed,changed,savedAt:prev.savedAt};
+  return{firstVisit:false,added,removed,changed,savedAt:prev.savedAt,prevValues:prev.values||{},curValues:{...cur}};
+}
+let stringDiffCacheSeq=0;
+const stringDiffCache=new Map();
+function resetStringDiffCache(){stringDiffCacheSeq=0;stringDiffCache.clear();}
+function registerStringDiff(type,username,diff){
+  const key=`sd${++stringDiffCacheSeq}`;
+  stringDiffCache.set(key,{type,username,diff});
+  return key;
+}
+function diffDisplayNames(type){
+  const srcArr=listSource(type);
+  const dn={};srcArr.forEach(e=>{dn[e.name]=e.displayName||e.name;});
+  return dn;
+}
+function diffValueSummary(v){
+  if(v===undefined||v===null||v==='')return'No priority';
+  const{p,mod,lucky,xxl,xxs,shiny}=parsePri(v);
+  const bits=[];
+  bits.push(p?priName(p):'No priority');
+  if(lucky)bits.push('Lucky');
+  if(shiny)bits.push('Shiny');
+  if(xxl)bits.push('XXL');
+  if(xxs)bits.push('XXS');
+  if(mod)bits.push(mod);
+  return bits.join(' · ');
+}
+function diffLineHtml(kind,k,dn,diff){
+  const name=escHtml(dn[k]||k);
+  if(kind==='changed'){
+    const before=diffValueSummary(diff.prevValues?.[k]);
+    const after=diffValueSummary(diff.curValues?.[k]);
+    return`<div class="diff-line changed">${name}<span class="diff-change-meta">${escHtml(before)} → ${escHtml(after)}</span></div>`;
+  }
+  return`<div class="diff-line ${kind}">${name}</div>`;
 }
 function diffDetailsHtml(diff,type,username){
   if(diff.firstVisit)return'';
   const total=diff.added.length+diff.removed.length+diff.changed.length;
   if(!total)return'';
-  const srcArr=listSource(type);
-  const dn={};srcArr.forEach(e=>{dn[e.name]=e.displayName||e.name;});
+  const dn=diffDisplayNames(type);
   const dt=diff.savedAt?new Date(diff.savedAt).toLocaleDateString(undefined,{month:'short',day:'numeric'}):'last visit';
   const lines=[];
-  diff.added.slice(0,8).forEach(k=>lines.push(`<div class="diff-line added">${escHtml(dn[k]||k)}</div>`));
-  diff.removed.slice(0,4).forEach(k=>lines.push(`<div class="diff-line removed">${escHtml(dn[k]||k)}</div>`));
-  diff.changed.slice(0,4).forEach(k=>lines.push(`<div class="diff-line changed">${escHtml(dn[k]||k)}</div>`));
+  diff.added.slice(0,8).forEach(k=>lines.push(diffLineHtml('added',k,dn,diff)));
+  diff.removed.slice(0,4).forEach(k=>lines.push(diffLineHtml('removed',k,dn,diff)));
+  diff.changed.slice(0,4).forEach(k=>lines.push(diffLineHtml('changed',k,dn,diff)));
   const omitted=total-(Math.min(8,diff.added.length)+Math.min(4,diff.removed.length)+Math.min(4,diff.changed.length));
+  const diffKey=omitted>0?registerStringDiff(type,username,diff):'';
   return `<div class="diff-summary">📊 Changes since ${dt}: <strong>+${diff.added.length} added · −${diff.removed.length} removed · ~${diff.changed.length} changed</strong>
-    <div style="margin-top:6px">${lines.join('')}${omitted>0?`<div class="diff-line" style="color:var(--muted)">…and ${omitted} more</div>`:''}</div>
+    <div style="margin-top:6px">${lines.join('')}${omitted>0?`<div class="diff-line" style="color:var(--muted)">…and ${omitted} more</div><button type="button" class="diff-see-all" onclick="event.stopPropagation();openStringDiffDetails('${diffKey}')">See all changes</button>`:''}</div>
   </div>`;
 }
 function markSnapshotSeen(type,username){saveSnapshot(type,username,allData[type]?.[username]||{});}
+function stringDiffSectionHtml(title,items,kind,dn,diff){
+  if(!items.length)return'';
+  return`<div class="diff-section">
+    <div class="diff-section-hdr">${title} (${items.length})</div>
+    <div class="string-diff-list">${items.map(k=>diffLineHtml(kind,k,dn,diff)).join('')}</div>
+  </div>`;
+}
+function closeStringDiffDetails(){document.getElementById('string-diff-modal')?.remove();}
+function openStringDiffDetails(key){
+  const rec=stringDiffCache.get(key);
+  if(!rec){toast('Changes were refreshed. Re-open this trainer to view them.');return;}
+  const{type,username,diff}=rec;
+  const dn=diffDisplayNames(type);
+  const dt=diff.savedAt?new Date(diff.savedAt).toLocaleDateString(undefined,{month:'short',day:'numeric'}):'last visit';
+  const total=diff.added.length+diff.removed.length+diff.changed.length;
+  const html=`<div class="diff-modal-overlay open" id="string-diff-modal" role="dialog" aria-modal="true" onclick="if(event.target===this)closeStringDiffDetails()">
+    <div class="diff-modal" onclick="event.stopPropagation()">
+      <div class="diff-hdr">
+        <div class="diff-hdr-title">📊 ${escHtml(username)} changes since ${escHtml(dt)}</div>
+        <button class="diff-hdr-close" onclick="closeStringDiffDetails()" aria-label="Close">×</button>
+      </div>
+      <div class="diff-summary-row">
+        <span class="diff-summary-chip both">+${diff.added.length} added</span>
+        <span class="diff-summary-chip theirs">−${diff.removed.length} removed</span>
+        <span class="diff-summary-chip mine">~${diff.changed.length} changed</span>
+      </div>
+      <div class="diff-body">
+        ${total?[
+          stringDiffSectionHtml('Added',diff.added,'added',dn,diff),
+          stringDiffSectionHtml('Removed',diff.removed,'removed',dn,diff),
+          stringDiffSectionHtml('Changed priority / flags',diff.changed,'changed',dn,diff)
+        ].join(''):'<div class="diff-empty">No changes.</div>'}
+      </div>
+    </div>
+  </div>`;
+  closeStringDiffDetails();
+  const wrap=document.createElement('div');wrap.innerHTML=html;
+  document.body.appendChild(wrap.firstElementChild);
+}
 
 // ── EXPORT TO FORMATS (#10) ──────────────────────────────────
 function toggleExportMenu(ev){
