@@ -2527,3 +2527,7 @@ Added an owner-only community-target picker to the new-user approval flow so the
 
 ### Known risks / TODOs
 - Production Firebase rules must be updated before anonymous viewers can read `publicShares/{username}`.
+
+## 2026-06-16 - Codex - Dynamax Electabuzz and special board export sprite fallback
+
+Added Electabuzz to the static Dynamax catalog with no trainer data so it is available in the Dmax list without changing anyone's saved priorities. Audited the current Dmax/Gmax catalog through the app's sprite resolver; all existing Dmax/Gmax entries have sprite fallback chains. Tightened canvas export fallbacks so custom cdn08 costume sprites, such as Armored Mewtwo on the Special Trade Board, try the proxied and direct costume image instead of falling through to regular base-dex art. No auth, Firebase rules, community logic, offers, schedule, inventory writes, public-share rules, or data model shape changed.

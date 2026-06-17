@@ -6118,7 +6118,20 @@ function exportSpriteFallbackUrls(e){
   const chain=spriteFallbackChain(e.no,e.spriteName||e.name,e.gender,e.dn);
   // Insert custom spriteUrl override at the head if entry provides one (e.g., EXTRA_FORM_ENTRIES with Serebii URL)
   if(e.spriteUrl)chain.unshift(e.spriteUrl);
-  return [...new Set(chain.filter(Boolean).map(canvasSafeSpriteUrl))];
+  const exactFormUrl=pokemondbSpriteUrl(e.spriteName||e.name,e.dn||e.name,e.gender);
+  if(e.spriteUrl&&exactFormUrl&&exactFormUrl!==e.spriteUrl){
+    const i=chain.indexOf(exactFormUrl);
+    if(i>=0)chain.splice(i,1);
+    chain.splice(1,0,exactFormUrl);
+  }
+  const urls=[...new Set(chain.filter(Boolean).map(canvasSafeSpriteUrl))];
+  if(e.spriteUrl&&e.spriteUrl.startsWith('https://cdn08.net/')){
+    const proxied=canvasSafeSpriteUrl(e.spriteUrl);
+    const i=urls.indexOf(proxied);
+    if(i>=0&&!urls.includes(e.spriteUrl))urls.splice(i+1,0,e.spriteUrl);
+    return urls.filter(u=>u===proxied||u===e.spriteUrl||(exactFormUrl&&u===canvasSafeSpriteUrl(exactFormUrl)));
+  }
+  return urls;
 }
 function loadCanvasImage(url){
   if(!url)return Promise.resolve(null);
