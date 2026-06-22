@@ -6355,8 +6355,14 @@ function exportEntryNoteLabel(e){
   const spinda=spindaExportPatternLabel(e);
   addLabel(spinda);
   let text=String(e?.mod||'').trim().replace(/\s+/g,' ');
-  const spindaPatternOnly=spinda&&/^(?:(?:form|pattern|no\.?|#)\s*)?[1-9]$/i.test(text);
-  if(text&&!spindaPatternOnly&&!/^(?:m|f|male|female)$/i.test(text)){
+  if(spinda){
+    text=text
+      .replace(/\b(?:form|pattern|no\.?|#)?\s*[1-9]\b/ig,' ')
+      .replace(/\bheart\b/ig,' ')
+      .replace(/^[\s,;:/&-]+|[\s,;:/&-]+$/g,'')
+      .replace(/\s+/g,' ');
+  }
+  if(text&&!/^(?:m|f|male|female)$/i.test(text)){
     text=text
       .replace(/\bxs\b/gi,'XS')
       .replace(/\bxxs\b/gi,'XXS')
@@ -6365,8 +6371,10 @@ function exportEntryNoteLabel(e){
       .replace(/\bphony\b/gi,'Phony');
     addLabel(text);
   }
-  if(e?.xxs)addLabel('XXS');
-  if(e?.xxl)addLabel('XXL');
+  const noteHasXxs=/\bXXS\b/.test(text);
+  const noteHasXxl=/\bXXL\b/.test(text);
+  if(e?.xxs&&!noteHasXxs)addLabel('XXS');
+  if(e?.xxl&&!noteHasXxl)addLabel('XXL');
   text=labels.join(' · ');
   if(text.length>16)text=text.slice(0,15).trimEnd()+'…';
   return text;
