@@ -2539,3 +2539,7 @@ Improved the Strings tab change-diff details so truncated trainer diffs now show
 ## 2026-06-17 - Codex - Viewer-scoped Strings diff tracking
 
 Scoped local Strings-tab diff snapshots by the currently logged-in viewer so switching between accounts in the same browser no longer shares one account's "seen" baseline with another account. Existing legacy local snapshots are still read as a fallback, then future opens save into the viewer-specific bucket. First-time trainer views now show a small "tracking changes from now on" note instead of silently showing no diff. This remains a local UI tracking feature only; no Firebase history, rules, auth, list writes, inventory, offers, schedule, import/export, community scoping, or data model changes were added.
+
+## 2026-06-22 - Codex - Export image note labels
+
+Added compact canvas labels to trade-list image exports so Spinda forms show their pattern number/heart marker and short list notes such as `antique` or `xs` are visible on the exported image. This reuses existing saved list note/form data only; no Pokémon data model, Firebase rules, auth, inventory/offers/schedule writes, share links, import/export file formats, or normal list rendering behavior changed.

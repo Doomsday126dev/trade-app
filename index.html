@@ -6336,6 +6336,30 @@ function scatterbugPatternLabel(e){
   const m=label.match(/^Scatterbug\s*\(([^)]+)\)/i);
   return m?m[1]:'';
 }
+function spindaExportPatternLabel(e){
+  const label=String(e?.dn||e?.displayName||e?.name||'');
+  const name=String(e?.name||'');
+  if(parseInt(e?.no)!==327&&!/^Spinda\b/i.test(label)&&!/^Spinda\b/i.test(name))return'';
+  const raw=String(e?.mod||'').trim();
+  const text=`${label} ${name} ${raw}`;
+  const m=text.match(/\b(?:form|pattern|no\.?|#)?\s*([1-9])\b/i);
+  if(m)return m[1];
+  return /\bheart\b/i.test(text)?'♥':'';
+}
+function exportEntryNoteLabel(e){
+  const spinda=spindaExportPatternLabel(e);
+  if(spinda)return spinda;
+  let text=String(e?.mod||'').trim().replace(/\s+/g,' ');
+  if(!text||/^(?:m|f|male|female)$/i.test(text))return'';
+  text=text
+    .replace(/\bxs\b/gi,'XS')
+    .replace(/\bxxs\b/gi,'XXS')
+    .replace(/\bxxl\b/gi,'XXL')
+    .replace(/\bantique\b/gi,'Antique')
+    .replace(/\bphony\b/gi,'Phony');
+  if(text.length>16)text=text.slice(0,15).trimEnd()+'…';
+  return text;
+}
 function drawScatterbugExportLabel(ctx,e,x,y,w,{dark=false}={}){
   const label=scatterbugPatternLabel(e);
   if(!label)return;
@@ -6356,6 +6380,29 @@ function drawScatterbugExportLabel(ctx,e,x,y,w,{dark=false}={}){
   ctx.textAlign='center';
   ctx.textBaseline='middle';
   ctx.fillText(text,bx+tw/2,by+6);
+  ctx.textAlign='left';
+  ctx.textBaseline='alphabetic';
+}
+function drawExportEntryNoteLabel(ctx,e,x,y,w,h,{dark=false}={}){
+  const label=exportEntryNoteLabel(e);
+  if(!label)return;
+  const maxW=Math.max(20,w-8);
+  let text=label;
+  ctx.font='800 9px Space Grotesk, sans-serif';
+  while(text.length>2&&ctx.measureText(text).width>maxW-8)text=text.slice(0,-1);
+  if(text!==label)text=text.trim()+'…';
+  const tw=Math.min(maxW,ctx.measureText(text).width+10);
+  const bx=x+(w-tw)/2,by=y+h-15;
+  roundedRect(ctx,bx,by,tw,13,6);
+  ctx.fillStyle=dark?'rgba(15,23,42,.88)':'rgba(15,23,42,.78)';
+  ctx.fill();
+  ctx.strokeStyle=dark?'rgba(167,139,250,.65)':'rgba(255,255,255,.82)';
+  ctx.lineWidth=0.75;
+  ctx.stroke();
+  ctx.fillStyle='#ffffff';
+  ctx.textAlign='center';
+  ctx.textBaseline='middle';
+  ctx.fillText(text,bx+tw/2,by+7);
   ctx.textAlign='left';
   ctx.textBaseline='alphabetic';
 }
@@ -6460,6 +6507,7 @@ async function renderListImage(entries,type,username,style='classic'){
       if(img)drawImageContain(ctx,img,sx,sy,sprSize,sprSize);
       else drawSpriteFallback(ctx,e,sx,sy,sprSize);
       drawScatterbugExportLabel(ctx,e,x,cy,cellW);
+      drawExportEntryNoteLabel(ctx,e,x,cy,cellW,cellH);
       // Export is a clean H/M/L view — flag indicators (Lucky/XXL/XXS) are intentionally omitted
       const mark=maxMarkForEntry(e,type);
       if(mark){
@@ -6578,6 +6626,7 @@ async function renderListImageCards(entries,type,username){
       if(img)drawImageContain(ctx,img,sx,sy,sprSize,sprSize);
       else drawSpriteFallback(ctx,e,sx,sy,sprSize);
       drawScatterbugExportLabel(ctx,e,x,cy,cellW,{dark:true});
+      drawExportEntryNoteLabel(ctx,e,x,cy,cellW,cellH,{dark:true});
       // Max-form badge (Dynamax 'D' / Gigantamax 'G')
       const mark=maxMarkForEntry(e,type);
       if(mark){
