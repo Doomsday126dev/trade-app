@@ -2542,4 +2542,4 @@ Scoped local Strings-tab diff snapshots by the currently logged-in viewer so swi
 
 ## 2026-06-22 - Codex - Export image note labels
 
-Added compact canvas labels to trade-list image exports so Spinda forms show their pattern number/heart marker and short list notes such as `antique` or `xs` are visible on the exported image. This reuses existing saved list note/form data only; no Pokémon data model, Firebase rules, auth, inventory/offers/schedule writes, share links, import/export file formats, or normal list rendering behavior changed.
+Added compact canvas labels to trade-list image exports so Spinda forms show their pattern number/heart marker, XXS/XXL priority toggles are visible, and short list notes such as `antique` or `xs` appear on the exported image. This reuses existing saved list note/form/size data only; no Pokémon data model, Firebase rules, auth, inventory/offers/schedule writes, share links, import/export file formats, or normal list rendering behavior changed.

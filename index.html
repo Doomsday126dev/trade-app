@@ -6347,16 +6347,27 @@ function spindaExportPatternLabel(e){
   return /\bheart\b/i.test(text)?'♥':'';
 }
 function exportEntryNoteLabel(e){
+  const labels=[];
+  const addLabel=label=>{
+    label=String(label||'').trim();
+    if(label&&!labels.some(x=>x.toLowerCase()===label.toLowerCase()))labels.push(label);
+  };
   const spinda=spindaExportPatternLabel(e);
-  if(spinda)return spinda;
+  addLabel(spinda);
   let text=String(e?.mod||'').trim().replace(/\s+/g,' ');
-  if(!text||/^(?:m|f|male|female)$/i.test(text))return'';
-  text=text
-    .replace(/\bxs\b/gi,'XS')
-    .replace(/\bxxs\b/gi,'XXS')
-    .replace(/\bxxl\b/gi,'XXL')
-    .replace(/\bantique\b/gi,'Antique')
-    .replace(/\bphony\b/gi,'Phony');
+  const spindaPatternOnly=spinda&&/^(?:(?:form|pattern|no\.?|#)\s*)?[1-9]$/i.test(text);
+  if(text&&!spindaPatternOnly&&!/^(?:m|f|male|female)$/i.test(text)){
+    text=text
+      .replace(/\bxs\b/gi,'XS')
+      .replace(/\bxxs\b/gi,'XXS')
+      .replace(/\bxxl\b/gi,'XXL')
+      .replace(/\bantique\b/gi,'Antique')
+      .replace(/\bphony\b/gi,'Phony');
+    addLabel(text);
+  }
+  if(e?.xxs)addLabel('XXS');
+  if(e?.xxl)addLabel('XXL');
+  text=labels.join(' · ');
   if(text.length>16)text=text.slice(0,15).trimEnd()+'…';
   return text;
 }
@@ -6508,7 +6519,7 @@ async function renderListImage(entries,type,username,style='classic'){
       else drawSpriteFallback(ctx,e,sx,sy,sprSize);
       drawScatterbugExportLabel(ctx,e,x,cy,cellW);
       drawExportEntryNoteLabel(ctx,e,x,cy,cellW,cellH);
-      // Export is a clean H/M/L view — flag indicators (Lucky/XXL/XXS) are intentionally omitted
+      // Export is a clean H/M/L view — Lucky/shiny indicators stay omitted; size notes are labeled below the sprite.
       const mark=maxMarkForEntry(e,type);
       if(mark){
         const isG=mark==='G';
