@@ -4375,6 +4375,7 @@ async function writeList(type,u,list){
     if(u===cur)queuePublicShareSnapshot(s,u);
   }
   syncFromLocal();
+  refreshAddPokemonChoices(type,u);
 }
 async function writeListItem(type,u,name,value){
   const s=getLocal();
@@ -4396,6 +4397,15 @@ async function writeListItem(type,u,name,value){
     if(u===cur)queuePublicShareSnapshot(s,u);
   }
   syncFromLocal();
+  refreshAddPokemonChoices(type,u);
+}
+function refreshAddPokemonChoices(type,u){
+  if(type!==myListType||u!==cur)return;
+  buildAcItems();
+  renderAddTray();
+  const input=document.getElementById('ac-input');
+  const dd=document.getElementById('ac-dropdown');
+  if(input?.value&&dd?.classList.contains('open'))acSearch(input.value);
 }
 // Bump last-seen timestamp for activity tracking (throttled to once per 5 minutes
 // to avoid spamming Firebase on every action). Called on app open + tab focus.
@@ -6101,6 +6111,7 @@ function renderMyList(filterVal){
   el.innerHTML=`<div class="mygrid" id="mylist-grid">${entries.map((entry,idx)=>{
     const{name,dn,p,mod,lucky,xxl,xxs,shiny,no}=entry;
     const jsName=escAttr(name.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r?\n/g,' '));
+    const jsDn=escAttr(String(dn).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r?\n/g,' '));
     const attrName=escAttr(name);
     const hasSprite=no||entry.spriteUrl||COSTUME_FORM_SPRITE_IDS[name]||GO_COSTUME_SPRITE_SLUGS[name];
     const crownHtml=maxCrownSvg(entry.maxType);
@@ -6120,7 +6131,7 @@ function renderMyList(filterVal){
         <button class="flag-btn xxl-flag ${xxl?'on':''}" onclick="setXxl('${jsName}')" title="XXL" aria-pressed="${xxl}" aria-label="Toggle XXL for ${escAttr(dn)}">XXL</button>
         <button class="flag-btn xxs-flag ${xxs?'on':''}" onclick="setXxs('${jsName}')" title="XXS" aria-pressed="${xxs}" aria-label="Toggle XXS for ${escAttr(dn)}">XXS</button>
         <input class="ni" type="text" value="${escAttr(mod)}" placeholder="…" title="Notes" onchange="setNotes('${jsName}',this.value)" aria-label="Notes for ${escAttr(dn)}">
-        <button class="rm" onclick="confirmRemove('${jsName}','${escAttr(dn)}')" title="Remove" aria-label="Remove ${escAttr(dn)}">×</button>
+        <button class="rm" onclick="confirmRemove('${jsName}','${jsDn}')" title="Remove" aria-label="Remove ${escAttr(dn)}">×</button>
       </div>
     </div>`;
   }).join('')}</div>`;
@@ -12152,8 +12163,10 @@ function toggleBulkMode(){
 }
 function toggleBulkSelection(name){
   if(bulkSelected.has(name))bulkSelected.delete(name);else bulkSelected.add(name);
-  document.querySelector(`.myrow[data-name="${name.replace(/"/g,'\\"')}"]`)?.classList.toggle('bulk-selected',bulkSelected.has(name));
-  const chk=document.querySelector(`.bulk-chk[data-name="${name.replace(/"/g,'\\"')}"]`);
+  document.querySelectorAll('.myrow').forEach(row=>{
+    if(row.dataset.name===name)row.classList.toggle('bulk-selected',bulkSelected.has(name));
+  });
+  const chk=[...document.querySelectorAll('.bulk-chk')].find(el=>el.dataset.name===name);
   if(chk)chk.checked=bulkSelected.has(name);
   updateBulkCount();
 }
