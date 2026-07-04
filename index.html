@@ -4376,6 +4376,27 @@ async function writeList(type,u,list){
   }
   syncFromLocal();
 }
+async function writeListItem(type,u,name,value){
+  const s=getLocal();
+  if(!s[type])s[type]={};
+  const prevCount=Object.keys(s[type][u]||{}).length;
+  const list={...(s[type][u]||{})};
+  if(value==null)delete list[name];
+  else list[name]=value;
+  const newCount=Object.keys(list).length;
+  if(prevCount!==newCount)recordActivityEvent(u,newCount-prevCount);
+  s[type][u]=list;
+  const now=Date.now();
+  s.users[u]={...s.users[u],lastUpdated:now,lastSeen:now};
+  saveLocal(s);
+  if(fbOn&&db){
+    queueSync(`${type}/${u}/${name}`,value??null);
+    queueSync(`users/${u}/lastUpdated`,now);
+    queueSync(`users/${u}/lastSeen`,now);
+    if(u===cur)queuePublicShareSnapshot(s,u);
+  }
+  syncFromLocal();
+}
 // Bump last-seen timestamp for activity tracking (throttled to once per 5 minutes
 // to avoid spamming Firebase on every action). Called on app open + tab focus.
 let _lastSeenBumpAt=0;
@@ -6079,26 +6100,27 @@ function renderMyList(filterVal){
 
   el.innerHTML=`<div class="mygrid" id="mylist-grid">${entries.map((entry,idx)=>{
     const{name,dn,p,mod,lucky,xxl,xxs,shiny,no}=entry;
-    const sn=name.replace(/'/g,"\\'").replace(/"/g,'&quot;');
+    const jsName=escAttr(name.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r?\n/g,' '));
+    const attrName=escAttr(name);
     const hasSprite=no||entry.spriteUrl||COSTUME_FORM_SPRITE_IDS[name]||GO_COSTUME_SPRITE_SLUGS[name];
     const crownHtml=maxCrownSvg(entry.maxType);
     const isSel=bulkSelected.has(name);
-    const clickHandler=bulkMode?`onclick="event.stopPropagation();toggleBulkSelection('${sn}')"`:'';
-    return`<div class="myrow${isSel?' bulk-selected':''}" ${bulkMode?'':'draggable="true"'} data-name="${sn}" data-dex="${no||''}" data-idx="${idx}" data-full="${escAttr(dn)}" aria-label="${escAttr(dn)}" ${clickHandler}
+    const clickHandler=bulkMode?`onclick="event.stopPropagation();toggleBulkSelection('${jsName}')"`:'';
+    return`<div class="myrow${isSel?' bulk-selected':''}" ${bulkMode?'':'draggable="true"'} data-name="${attrName}" data-dex="${no||''}" data-idx="${idx}" data-full="${escAttr(dn)}" aria-label="${escAttr(dn)}" ${clickHandler}
       ondragstart="dragStart(event)" ondragover="dragOver(event)" ondrop="dragDrop(event)" ondragend="dragEnd(event)">
-      <input type="checkbox" class="bulk-chk" data-name="${sn}" ${isSel?'checked':''} onclick="event.stopPropagation();toggleBulkSelection('${sn}')" aria-label="Select ${escAttr(dn)}">
+      <input type="checkbox" class="bulk-chk" data-name="${attrName}" ${isSel?'checked':''} onclick="event.stopPropagation();toggleBulkSelection('${jsName}')" aria-label="Select ${escAttr(dn)}">
       <span class="drag-handle" title="Drag to reorder" aria-hidden="true">⠿</span>
       ${hasSprite?`<span class="myrow-sprite-wrap">${spriteImg(no,28,'myrow-sprite',name,'',dn,{urlOverride:entry.spriteUrl})}${crownHtml}</span>`:crownHtml}
       <div class="myrow-name">${dn}</div>
       <div class="mctrl">
-        ${['H','M','L'].map(b=>`<button class="pb ${p===b?'on '+b:''}" onclick="setPri('${sn}','${b}')" title="${priName(b)}" aria-pressed="${p===b}" aria-label="Set ${escAttr(dn)} to ${priLabel(b)} priority">${b}</button>`).join('')}
+        ${['H','M','L'].map(b=>`<button class="pb ${p===b?'on '+b:''}" onclick="setPri('${jsName}','${b}')" title="${priName(b)}" aria-pressed="${p===b}" aria-label="Set ${escAttr(dn)} to ${priLabel(b)} priority">${b}</button>`).join('')}
         <span class="mctrl-sep" aria-hidden="true"></span>
-        <button class="flag-btn lucky-flag ${lucky?'on':''}" onclick="setLucky('${sn}')" title="⚡ Lucky" aria-pressed="${lucky}" aria-label="Toggle Lucky for ${escAttr(dn)}">⚡</button>
-        <button class="flag-btn shiny-flag ${shiny?'on':''}" onclick="setShiny('${sn}')" title="✨ Shiny only" aria-pressed="${shiny}" aria-label="Toggle Shiny for ${escAttr(dn)}">✨</button>
-        <button class="flag-btn xxl-flag ${xxl?'on':''}" onclick="setXxl('${sn}')" title="XXL" aria-pressed="${xxl}" aria-label="Toggle XXL for ${escAttr(dn)}">XXL</button>
-        <button class="flag-btn xxs-flag ${xxs?'on':''}" onclick="setXxs('${sn}')" title="XXS" aria-pressed="${xxs}" aria-label="Toggle XXS for ${escAttr(dn)}">XXS</button>
-        <input class="ni" type="text" value="${mod}" placeholder="…" title="Notes" onchange="setNotes('${sn}',this.value)" aria-label="Notes for ${escAttr(dn)}">
-        <button class="rm" onclick="confirmRemove('${sn}','${escAttr(dn)}')" title="Remove" aria-label="Remove ${escAttr(dn)}">×</button>
+        <button class="flag-btn lucky-flag ${lucky?'on':''}" onclick="setLucky('${jsName}')" title="⚡ Lucky" aria-pressed="${lucky}" aria-label="Toggle Lucky for ${escAttr(dn)}">⚡</button>
+        <button class="flag-btn shiny-flag ${shiny?'on':''}" onclick="setShiny('${jsName}')" title="✨ Shiny only" aria-pressed="${shiny}" aria-label="Toggle Shiny for ${escAttr(dn)}">✨</button>
+        <button class="flag-btn xxl-flag ${xxl?'on':''}" onclick="setXxl('${jsName}')" title="XXL" aria-pressed="${xxl}" aria-label="Toggle XXL for ${escAttr(dn)}">XXL</button>
+        <button class="flag-btn xxs-flag ${xxs?'on':''}" onclick="setXxs('${jsName}')" title="XXS" aria-pressed="${xxs}" aria-label="Toggle XXS for ${escAttr(dn)}">XXS</button>
+        <input class="ni" type="text" value="${escAttr(mod)}" placeholder="…" title="Notes" onchange="setNotes('${jsName}',this.value)" aria-label="Notes for ${escAttr(dn)}">
+        <button class="rm" onclick="confirmRemove('${jsName}','${escAttr(dn)}')" title="Remove" aria-label="Remove ${escAttr(dn)}">×</button>
       </div>
     </div>`;
   }).join('')}</div>`;
@@ -6779,17 +6801,15 @@ function removeEntry(name){
   const dn=srcArr.find(x=>x.name===name)?.displayName||name;
   undoStack={type:myListType,username:cur,list:{...prevList},name:dn};
   // Animate the row out
-  const row=document.querySelector(`.myrow[data-name="${name.replace(/"/g,'\\"')}"]`);
+  const row=[...document.querySelectorAll('.myrow')].find(r=>r.dataset.name===name);
   if(row){
     row.classList.add('removing');
     setTimeout(()=>{
-      const list={...prevList};delete list[name];
-      writeList(myListType,cur,list);
+      writeListItem(myListType,cur,name,null);
       showUndo(dn);
     },220);
   }else{
-    const list={...prevList};delete list[name];
-    writeList(myListType,cur,list);
+    writeListItem(myListType,cur,name,null);
     showUndo(dn);
   }
 }

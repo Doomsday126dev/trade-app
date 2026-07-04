@@ -2543,3 +2543,7 @@ Scoped local Strings-tab diff snapshots by the currently logged-in viewer so swi
 ## 2026-06-22 - Codex - Export image note labels
 
 Added compact canvas labels to trade-list image exports so Spinda forms show their pattern number/heart marker, XXS/XXL priority toggles are visible, and short list notes such as `antique` or `xs` appear on the exported image. This reuses existing saved list note/form/size data only; no Pokémon data model, Firebase rules, auth, inventory/offers/schedule writes, share links, import/export file formats, or normal list rendering behavior changed.
+
+## 2026-07-04 - Codex - My List apostrophe-name delete fix
+
+Fixed My List row key handling so Pokémon names with apostrophes, such as `Farfetch'd`, keep their real stored key in row data while inline button handlers use separately escaped JavaScript strings. Single-item removals now queue an item-level delete instead of rewriting the whole list, reducing stale overwrite risk when removing one Pokémon. No Firebase rules, auth flow, Pokémon data shape, inventory/offers/schedule writes, share-link behavior, or community scoping changed.
