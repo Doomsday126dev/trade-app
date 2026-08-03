@@ -2563,3 +2563,7 @@ Recorded the read-only audit of 44 current trainer names (zero collisions under 
 ## 2026-08-03 - Codex - Community authorization hardening candidate
 
 Prepared a rules candidate and emulator coverage that make `admins/{uid}` the sole authority for community and privileged user-field writes, lock established self-published `authIndex` usernames, and preserve explicit UID-bound first-login initialization. The captured deployed rules remain unchanged as a rollback fixture, broad authenticated root reads remain unchanged, and no rules have been deployed from this change yet.
+
+## 2026-08-03 - Codex - Existing-user authIndex refresh fix
+
+Converged both successful Firebase Auth login paths on one `syncOwnAuthIndex` step. Established mappings now update only `lastSeen` after verifying the signed-in UID and exact username, preserving every other field; missing mappings initialize only after the server-side trainer record proves the same UID binding. Mismatched identity state and permission denials stop login, while a transient metadata-update failure may defer only after the existing mapping was positively verified. First-login Auth creation, recovery, and user binding behavior remain unchanged. Added focused app-flow tests plus emulator coverage for metadata-only refresh field preservation; no Firebase rules or production data changed.

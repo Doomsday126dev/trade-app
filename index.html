@@ -4334,6 +4334,50 @@ async function signInWithAuthVersionScan(username,pin,startVersion=1){
   }
   throw lastAuthErr||Object.assign(new Error('Wrong PIN'),{code:'auth/invalid-credential'});
 }
+function isRecoverableAuthIndexError(error){
+  const code=String(error?.code||'').toLowerCase();
+  return code==='db/index-timeout'||code.includes('network')||code.includes('unavailable');
+}
+function authIndexError(code,message,cause){
+  const error=new Error(message);error.code=code;
+  if(cause)error.cause=cause;
+  return error;
+}
+async function syncOwnAuthIndex(username,ident,userRecord={}){
+  if(!db||!ident?.uid)return{status:'skipped'};
+  const uid=ident.uid;
+  if(auth?.currentUser?.uid!==uid){
+    throw authIndexError('auth/index-session-mismatch','The signed-in Firebase user does not match this login identity.');
+  }
+  const indexRef=ref(db,`authIndex/${uid}`);
+  const indexSnap=await withTimeout(get(indexRef),5000,'Reading login index timed out','db/index-read-timeout');
+  const now=Date.now();
+  if(indexSnap.exists()){
+    const existing=indexSnap.val()||{};
+    if(existing.username!==username){
+      throw authIndexError('auth/index-mismatch','This Firebase login is already linked to a different trainer.');
+    }
+    try{
+      await withTimeout(update(indexRef,{lastSeen:now}),5000,'Updating login index timed out','db/index-timeout');
+      return{status:'refreshed',lastSeen:now};
+    }catch(error){
+      if(!isRecoverableAuthIndexError(error))throw error;
+      console.warn('Could not refresh login index metadata; continuing with verified mapping',error);
+      return{status:'deferred',lastSeen:existing.lastSeen||null};
+    }
+  }
+  const userUidSnap=await withTimeout(get(ref(db,`users/${username}/authUid`)),5000,'Verifying login identity timed out','db/index-read-timeout');
+  if(userUidSnap.val()!==uid){
+    throw authIndexError('auth/index-binding-mismatch','This trainer record is not linked to the signed-in Firebase user.');
+  }
+  await withTimeout(set(indexRef,{
+    username,
+    isAdmin:!!userRecord.isAdmin,
+    isOwner:!!userRecord.isOwner,
+    lastSeen:now
+  }),5000,'Initializing login index timed out','db/index-timeout');
+  return{status:'initialized',lastSeen:now};
+}
 let _loginDirectoryRepairStarted=false;
 async function ensureLoginDirectoryPublished(){
   if(_loginDirectoryRepairStarted||!fbOn||!db||!cur||!allData.users?.[cur]?.isAdmin)return;
@@ -4599,7 +4643,6 @@ async function ensureFirebaseIdentity(username,pin,ud){
     bindErr.code=bindErr.code||'auth/bind-failed';
     throw bindErr;
   }
-  if(db)await withTimeout(set(ref(db,`authIndex/${currentAuthUid}`),{username,isAdmin:!!ud.isAdmin,isOwner:!!ud.isOwner,lastSeen:Date.now()}),5000,'Updating login index timed out','db/index-timeout').catch(()=>{});
   return{uid:currentAuthUid,email:finalEmail};
 }
 
@@ -5263,6 +5306,7 @@ async function doLogin(){
   if(ok){
     try{
       ident=ident||(auth?await ensureFirebaseIdentity(u,p,ud):null);
+      if(ident&&db)await syncOwnAuthIndex(u,ident,ud);
       cur=u;stampSession(u);
       const loginUpdate={...ud,lastSeen:Date.now()};
       if(ident){loginUpdate.authEmail=ident.email;loginUpdate.authUid=ident.uid;}
@@ -5279,9 +5323,13 @@ async function doLogin(){
         ?'Firebase Auth is out of sync for this trainer. Ask an admin to reset the Auth user.'
         :code==='auth/timeout'
           ?'Firebase Auth timed out. Check connection, refresh, and try again.'
-        :code==='db/write-timeout'||code==='auth/bind-timeout'||code==='db/index-timeout'
+        :code==='db/write-timeout'||code==='auth/bind-timeout'||code==='db/index-timeout'||code==='db/index-read-timeout'
           ?'Firebase Database timed out while saving login. Refresh and try again.'
-        :code==='PERMISSION_DENIED'||code==='auth/bind-failed'
+        :code==='auth/index-mismatch'
+          ?'This Firebase login is linked to a different trainer. Ask an admin to repair the account.'
+        :code==='auth/index-session-mismatch'||code==='auth/index-binding-mismatch'
+          ?'This trainer login has an identity-binding mismatch. Ask an admin to repair the account.'
+        :code==='PERMISSION_DENIED'||code==='database/permission-denied'||code==='auth/bind-failed'
           ?'Firebase rules blocked linking this trainer. Update the users rule, then try again.'
         :'Firebase Auth failed: '+(code||e.message||'check API key and auth settings');
       err.textContent+=liveReadHint;

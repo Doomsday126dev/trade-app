@@ -259,9 +259,17 @@ test('legitimate account initialization may create and refresh only its UID-boun
     'UID-bound authIndex initialization'
   );
   await assertSucceeds(
-    databaseRequest('PATCH', `authIndex/${IDS.initializing}`, { username: USERS.initializing, lastSeen: 2 }, TOKENS.initializing),
+    databaseRequest('PATCH', `authIndex/${IDS.initializing}`, { lastSeen: 2 }, TOKENS.initializing),
     'Same-username authIndex metadata refresh'
   );
+  const refreshedIndex = await databaseRequest('GET', `authIndex/${IDS.initializing}`, undefined, TOKENS.initializing);
+  assert.equal(refreshedIndex.status, 200, 'Initialized user should read back its refreshed authIndex');
+  assert.deepEqual(refreshedIndex.body, {
+    username: USERS.initializing,
+    isAdmin: false,
+    isOwner: false,
+    lastSeen: 2
+  }, 'Metadata-only refresh should preserve the established username and authority metadata');
   await assertFails(
     databaseRequest('PATCH', `authIndex/${IDS.initializing}`, { username: USERS.ordinary }, TOKENS.initializing),
     'Established authIndex username reassignment'
