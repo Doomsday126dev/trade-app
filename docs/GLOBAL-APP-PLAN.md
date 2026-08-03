@@ -196,7 +196,7 @@ accounts silently.
 
 ### Current trainer-name normalization audit
 
-A read-only audit of the production `loginDirectory` on 2026-08-03 found 44
+A read-only audit of the production `loginDirectory` on 2026-08-03 found 35
 current trainer names. Under the candidate comparison transform
 `trim -> NFKC -> toLowerCase`:
 
@@ -653,6 +653,49 @@ to restore broad subscriptions.
 Pokemon-based global discovery and automatic global matching remain deferred
 beyond these phases unless a separate indexed design is approved.
 
+## Cross-cutting engineering requirements
+
+These are acceptance criteria for every remaining global-app commit, including
+temporary compatibility work.
+
+### Modularity and maintainability
+
+- Separate domain logic, validation, data access, Firebase integration,
+  presentation, and feature-flag behavior.
+- Put new functionality in focused modules under clear boundaries such as
+  `js/domain`, `js/data`, `js/services`, and `js/ui` when reasonable. Do not
+  continue expanding monolithic `index.html` feature logic by default.
+- Reuse canonical trainer-name normalization, projection, visibility, privacy,
+  and validation logic rather than duplicating it at call sites.
+- Use explicit interfaces and predictable success/error shapes. Avoid hidden
+  mutable-global dependencies and flag any proposal that materially increases
+  coupling or global state.
+- Add unit tests for domain logic, emulator/integration tests for Firebase
+  contracts, and browser tests for user-visible workflows.
+- Record phased technical debt with its compatibility purpose, owner, removal
+  gate, and test coverage.
+
+### Internationalization readiness
+
+- Centralize new user-facing strings behind stable translation keys and locale
+  catalogs. English is the fallback catalog; planned catalogs include `en`,
+  `ja`, `es`, and `de`, with future locales requiring data rather than an
+  architectural rewrite.
+- Do not hardcode user-facing text in domain, validation, data-access, or
+  Firebase modules. Use complete translated templates with placeholders rather
+  than concatenating translated fragments.
+- Keep database keys, normalized trainer handles, identifiers, and stored enum
+  values locale-independent. Translate enums only in the presentation layer.
+- Use `Intl` for dates, times, numbers, and relative-time output. Do not rely on
+  capitalization for semantics or UI behavior.
+- Treat localized Pokemon names separately from general interface translation;
+  localized display names must not replace canonical Pokemon keys.
+- Design controls and layouts for longer labels and different writing systems.
+
+The actual locale-catalog foundation must land before substantial Settings,
+privacy, profile, or Find Trainer UI. Commit 4 remains schema/rules tooling only
+and does not introduce a partial localization framework.
+
 ## Proposed small implementation commits
 
 Each commit has its own approval, tests, and rollback point. Path names remain
@@ -696,7 +739,7 @@ public-directory implementation.**
 ### 3. Add pure trainer-name normalization and migration-audit tooling
 
 - **Purpose:** implement the still-provisional normalizer as a pure helper,
-  lock all 44 current names as private migration fixtures, and generate a
+  lock all 35 current names as private migration fixtures, and generate a
   collision report without writing Firebase.
 - **Likely files:** one domain helper, Node check script/tests, package script,
   and docs. No UI or production rules.
@@ -708,32 +751,103 @@ public-directory implementation.**
 
 ### 4. Add disabled global identity/visibility schema and rules
 
-- **Purpose:** establish private-by-default UID-owned account/profile settings,
-  trainer-handle reservations, and allowlisted public projections behind a
-  disabled feature flag.
-- **Likely files:** `index.html` only if needed for the disabled flag/wiring,
-  rules source/docs, emulator tests, and maintenance log.
-- **Firebase paths changed:** proposed `accounts/{uid}`,
+- **Purpose:** define the UID-owned account/profile, private handle reservation,
+  public projection, unlisted share, and legacy-index contract without making
+  it reachable from the production client.
+- **Files:** `docs/GLOBAL-IDENTITY-SCHEMA.md`, a separate emulator-only rules
+  fixture/config/runner, emulator tests, package script, and maintenance log.
+  `index.html`, deployed rules, and Firebase app configuration are excluded.
+- **Firebase paths modeled but not deployed or seeded:** `accounts/{uid}`,
   `trainerHandles/{normalizedTrainerName}`, `privateProfiles/{uid}`,
-  `publicProfiles/{uid}`, `publicLists/{uid}`, `publicShares/{shareId}`, and
-  private `handleReviews`; legacy paths stay intact.
-- **Tests/rollback:** anonymous/private/unlisted/public and contact-field matrix,
-  atomic claim contention, and public projection allowlist tests. Flag remains
-  off; rollback removes unused paths/rules after confirming no seeded data.
+  `publicProfiles/{uid}`, `publicLists/{uid}`, `unlistedShares/{shareId}`,
+  private `unlistedShareOwners/{shareId}`, `legacyUsernameIndex/{username}`, and
+  `globalIdentityConfig/writesEnabled`.
+- **Tests/rollback:** writes fail when the flag is missing/false; emulator-only
+  flag-on tests cover uniqueness, ownership, visibility, and projection
+  allowlists. A characterization test proves authenticated root reads still
+  expose private candidate paths. The candidate is unsafe to deploy until root
+  read removal. Rollback is deletion of unused test/docs files only.
 
-### 5. Dry-run and seed existing UID/handle mappings
+### 5. Build a completely local UID/handle migration dry-run
 
-- **Purpose:** reserve existing trainers before self-service claims and preserve
-  existing-user priority without changing display names or list ownership.
-- **Likely files:** migration script, fixture/report output, runbook, and log.
-- **Firebase paths changed:** `accounts/{uid}`,
-  `trainerHandles/{normalizedTrainerName}`, and `legacyUsernameIndex/{username}`;
-  existing `users`, lists, and auth mappings are read but not rewritten.
-- **Tests/rollback:** mandatory dry run, zero unresolved collisions, record
-  counts/checksums, idempotent rerun, and owner backup. Rollback deletes only
-  newly seeded keys from the recorded manifest.
+- **Purpose:** join a private local export of existing `users`, `authIndex`, and
+  `loginDirectory` into a proposed UID/handle manifest before any rules cutover
+  or production write.
+- **Files:** read-only local migration script, synthetic fixtures/tests,
+  git-ignore rules, runbook, and aggregate documentation.
+- **Firebase paths changed:** none. Production output is a private local report;
+  no reservation, account, index, rename, or migration write exists.
+- **Tests/rollback:** zero unresolved normalized collisions, duplicate-UID and
+  missing-binding reporting, deterministic counts/checksums, and no write APIs.
+  Rollback removes the unused local tool.
 
-### 6. Add Settings visibility/contact controls behind the disabled flag
+### 6. Eliminate client dependence on global subscriptions
+
+- **Purpose:** replace root/global listeners with bounded current-user,
+  one-profile, public projection, event, and explicitly retained legacy reads.
+  UI changes stay behind disabled flags where a production surface is not ready.
+- **Likely files:** `index.html`, subscription-focused tests, Playwright smoke,
+  scaling/security docs, and maintenance log.
+- **Firebase paths read:** current legacy paths during transition, one exact
+  trainer/list at a time, and explicit public/event paths. No new identity data
+  is written.
+- **Tests/rollback:** listener inventory/counts, cleanup on navigation/sign-out,
+  payload targets, current production behavior with flags off, and deployed
+  smoke. Roll back the client commit if existing users lose required reads.
+
+### 7. Prepare and test narrow-read production rules
+
+- **Purpose:** remove the authenticated root grant in a candidate and enumerate
+  every current-client read explicitly, including temporary legacy allowances.
+- **Likely files:** a separate rules candidate, emulator fixtures/tests,
+  `SECURITY-RULES.md`, rollout/rollback runbook, and maintenance log.
+- **Firebase paths changed in the candidate:** root `.read`, owner-owned current
+  records, explicitly retained legacy/public/event reads, and the new identity
+  contract. No production data changes.
+- **Tests/rollback:** full anonymous/owner/other/admin matrix, legacy-client
+  compatibility, public-share behavior, and proof that proposed private paths
+  deny cross-account reads. Do not publish until all active client reads are
+  represented.
+
+### 8. Deploy narrow reads and verify private-path isolation
+
+- **Purpose:** publish the reviewed narrow-read rules before any global identity
+  record exists, then prove the privacy boundary with minimal production smoke.
+- **Likely files:** deployment evidence and maintenance log only after approval.
+- **Firebase paths changed:** rules only; no identity or handle records seeded.
+- **Tests/rollback:** owner and ordinary login/edit smoke, public share smoke,
+  exact private cross-account denial, browser error review, and saved-rule
+  rollback. Any blocked legitimate current-client read or private-path exposure
+  is a stop/rollback trigger.
+
+### 9. Seed existing UID/handle mappings after the isolation gate
+
+- **Purpose:** reserve existing trainers and preserve existing-user priority
+  only after narrow rules have been live and private-path isolation is proven.
+- **Likely files:** separately reviewed idempotent migration script, private
+  manifest/report, runbook, and maintenance log.
+- **Firebase paths written:** `accounts/{uid}`,
+  `trainerHandles/{normalizedTrainerName}`, and
+  `legacyUsernameIndex/{username}` only. Existing users/lists are not rewritten.
+- **Tests/rollback:** local dry-run approval, zero unresolved collisions, exact
+  record counts/checksums, write manifest, idempotent rerun, owner backup, and
+  delete-only-new-keys rollback. This is a separate approval from Commit 5.
+
+### 10. Establish module boundaries and the locale-catalog foundation
+
+- **Purpose:** create the minimal global-feature service/data/UI boundaries and
+  translation-key/catalog loader before building substantial profile-facing UI.
+- **Likely files:** focused `js/services`, `js/data`, and `js/ui` modules, locale
+  catalogs beginning with English plus fallback tests, script-load wiring,
+  architecture docs, and maintenance log.
+- **Firebase paths changed:** none. This milestone defines interfaces and UI
+  text plumbing; it does not read or write global identity records.
+- **Tests/rollback:** module dependency/load-order checks, fallback/missing-key
+  behavior, placeholder formatting, locale-independent enum assertions,
+  representative Japanese/Spanish/German fixture strings, responsive layout
+  smoke, and flag-off behavior. Rollback removes unused modules/catalogs.
+
+### 11. Add Settings visibility/contact controls behind the disabled flag
 
 - **Purpose:** let a user complete setup privately and explicitly choose profile
   and per-contact visibility. Publishing requires verified email or Google.
@@ -744,7 +858,7 @@ public-directory implementation.**
   authentication email never projected, unverified users cannot publish, and
   deployed smoke. Flag-off rollback restores the previous UI immediately.
 
-### 7. Link Google credentials to existing accounts behind an auth flag
+### 12. Link Google credentials to existing accounts behind an auth flag
 
 - **Purpose:** provider-link existing users before allowing Google-first account
   creation, preserving UID, handles, lists, and memberships.
@@ -757,7 +871,7 @@ public-directory implementation.**
   cancelled flow, orphan prevention, PIN fallback, and staged test-account QA.
   Keep the auth flag off and unlink only test credentials on rollback.
 
-### 8. Add Find Trainer and one-profile reads behind the global flag
+### 13. Add Find Trainer and one-profile reads behind the global flag
 
 - **Purpose:** bounded exact/prefix directory search and one selected public
   profile/list listener; no Pokemon-wide discovery.
@@ -769,7 +883,7 @@ public-directory implementation.**
   unlisted exclusion, listener cleanup, payload budget, anonymous share access,
   and deployed smoke. Disable the flag to restore the old navigation.
 
-### 9. Add pairwise matching inside a selected profile
+### 14. Add pairwise matching inside a selected profile
 
 - **Purpose:** compare the signed-in user's owned list with exactly one public
   list and generate relevant search strings.
@@ -781,7 +895,7 @@ public-directory implementation.**
   privacy boundaries, anonymous sign-in prompt, and deployed smoke. Remove the
   profile comparison entry point without touching data.
 
-### 10. Retire primary Inventory/Schedule/community navigation behind flags
+### 15. Retire primary Inventory/Schedule/community navigation behind flags
 
 - **Purpose:** expose read-only Legacy Inventory/export and Events while
   stopping obsolete subscriptions only after dependent UI is disabled.
@@ -793,19 +907,10 @@ public-directory implementation.**
   no data deletion, subscription counts, and deployed smoke. Feature flags
   restore old navigation during the rollback window.
 
-### 11. Cut over narrow reads and remove the root authenticated read grant
-
-- **Purpose:** complete the global privacy boundary after all clients use
-  UID-owned private paths and allowlisted public projections.
-- **Likely files:** Firebase rules source/docs, emulator tests, app read wiring,
-  Playwright smoke, rollout runbook.
-- **Firebase paths changed:** root `.read`, all private UID-owned paths, bounded
-  directory/public profile/list/share/event reads, and archived legacy access.
-- **Tests/rollback:** full anonymous/owner/other-user/admin matrix, old-client
-  compatibility decision, staged deployment, connection/download monitoring,
-  and production smoke. Restore saved rules only if the staged client cannot
-  read its explicitly required paths; never restore broad access as a silent
-  long-term workaround.
+The former combined “dry-run and seed” step is intentionally split between
+Commit 5 and Commit 9. Local mapping analysis is safe before rules cutover;
+production seeding is forbidden until Commit 8 has removed the authenticated
+root grant and verified the proposed private paths in production.
 
 ## Genuinely unresolved questions
 

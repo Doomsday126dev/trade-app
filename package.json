@@ -12,6 +12,8 @@
     "check:auth-index": "node --test tests/auth-index-flow.test.cjs",
     "check:trainer-names": "node --test tests/trainer-name-audit.test.cjs",
     "check:rules": "bash scripts/check-firebase-rules.sh",
+    "check:global-contract": "node scripts/check-global-identity-contract.js",
+    "check:global-rules": "bash scripts/check-global-identity-rules.sh",
     "audit:trainer-names": "node scripts/audit-trainer-names.js",
     "visual": "playwright test",
     "visual:headed": "playwright test --headed"

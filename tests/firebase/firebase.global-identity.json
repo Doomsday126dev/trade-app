@@ -1,0 +1,17 @@
+{
+  "database": {
+    "rules": "database.rules.global-identity.json"
+  },
+  "emulators": {
+    "auth": {
+      "port": 9199
+    },
+    "database": {
+      "port": 9100
+    },
+    "ui": {
+      "enabled": false
+    },
+    "singleProjectMode": true
+  }
+}

@@ -41,3 +41,25 @@ The hardened tests require UID-bound `authIndex` initialization, immutable
 privileged user flags for ordinary users, and `/admins/{uid}` authority for
 community writes. Broad authenticated root read behavior remains unchanged and
 is still characterized explicitly.
+
+## Emulator-only global identity contract
+
+`database.rules.global-identity.json` and `firebase.global-identity.json` are a
+separate, inactive design contract for the trainer-first global app. Run them
+with:
+
+```sh
+npm run check:global-rules
+```
+
+This suite uses only the demo project `demo-pogo-global-identity`. It proves
+that all new writes are denied while `globalIdentityConfig/writesEnabled` is
+missing or false, then uses an emulator-only enabled state to test UID ownership,
+handle uniqueness, contact/list projection allowlists, anonymous point reads,
+and admin authority.
+
+**Do not deploy this fixture.** The current root authenticated read grant still
+overrides child privacy rules. A named characterization test proves that an
+ordinary authenticated user can currently read the proposed private nodes.
+No global identity data may be seeded until narrow production reads are live
+and that isolation has been verified.
