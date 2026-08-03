@@ -1,17 +1,21 @@
-# Firebase Rules Emulator Baseline
+# Firebase Rules Emulator Baseline And Hardening Candidate
 
 This directory characterizes the Realtime Database rules deployed on
 2026-08-03. It does not contain a production deployment configuration and must
 not be used with `firebase deploy`.
 
-`database.rules.current.json` is byte-identical to the rules read from the live
-Firebase Console Rules editor at the start of this work. Its SHA-256 is locked
-by the test suite. A second timestamped copy is kept in the git-ignored
+`database.rules.current.json` remains byte-identical to the rules read from the
+live Firebase Console Rules editor at the start of this work. Its SHA-256 is
+locked by the test suite. A second timestamped copy is kept in the git-ignored
 `.firebase-local/` workflow for private/local rollback evidence.
 
-The deployed rules literally contain `OWNER_USERNAME_PLACEHOLDER`. That is not
-a redaction performed by this fixture. Tests use the literal deployed value so
-they characterize current behavior exactly.
+`database.rules.hardened.json` is the commit-2 candidate. The emulator config
+loads this candidate while the baseline remains available for exact diff and
+rollback review. The candidate is not deployed by this test setup.
+
+The captured deployed rules literally contain `OWNER_USERNAME_PLACEHOLDER`.
+That is not a redaction performed by the baseline fixture. The hardened
+candidate removes authorization dependence on that value.
 
 ## Run locally
 
@@ -33,6 +37,7 @@ and Realtime Database emulators. It runs with the demo project ID
 `demo-pogo-rules`, the config in this directory, and `emulators:exec`. It does
 not connect to or write production Firebase data.
 
-Tests prefixed with `[expected current vulnerability]` deliberately assert the
-unsafe behavior of the deployed rules. They are characterization tests for the
-next hardening commit, not endorsements of that behavior.
+The hardened tests require UID-bound `authIndex` initialization, immutable
+privileged user flags for ordinary users, and `/admins/{uid}` authority for
+community writes. Broad authenticated root read behavior remains unchanged and
+is still characterized explicitly.

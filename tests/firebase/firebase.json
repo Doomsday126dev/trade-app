@@ -1,6 +1,6 @@
 {
   "database": {
-    "rules": "database.rules.current.json"
+    "rules": "database.rules.hardened.json"
   },
   "emulators": {
     "auth": {

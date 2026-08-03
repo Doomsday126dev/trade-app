@@ -14,23 +14,22 @@
 
 | Item | Status |
 |---|---|
-| Public ruleset template version | **v5** — adds owner-only community foundation paths for the default community migration |
+| Public ruleset template version | **v6 candidate** — uses protected UID admin authority for community writes |
 | Published in Firebase Console | Check Firebase Console/private operational notes before assuming this public template matches production |
 | API key HTTP-referrer lock | Recommended for the production GitHub Pages or custom-domain origin |
 | Scheduled RTDB backups | Recommended before the community grows substantially |
 
-**Current note:** v5 adds `communities`, `userCommunities`, and
-`communityRequests`. This public document intentionally omits exact
-deployment status and private owner identifiers.
+**Current note:** v6 is an emulator-tested candidate and is not documented as
+deployed until Firebase Console verification is complete. It removes mutable
+username and user-role fields from community-write authorization.
 
 ---
 
 ## Canonical ruleset
 
-This is a sanitized public template for the Firebase Console → Realtime
-Database → **Rules** block. Before publishing, replace
-`OWNER_USERNAME_PLACEHOLDER` with the private production owner username.
-Do not publish the placeholder literally.
+This is the proposed Firebase Console → Realtime Database → **Rules** block.
+It contains no private owner identifier: privileged authority comes from the
+protected `admins/{uid}` index.
 
 ```json
 {
@@ -50,7 +49,7 @@ Do not publish the placeholder literally.
     },
     "users": {
       "$username": {
-        ".write": "auth != null && (root.child('admins').child(auth.uid).val() === true || data.child('authUid').val() === auth.uid || (!data.child('authUid').exists() && newData.child('authUid').val() === auth.uid && newData.child('authEmail').val() === auth.token.email && (!data.child('authEmail').exists() || data.child('authEmail').val() === auth.token.email)))"
+        ".write": "auth != null && (root.child('admins').child(auth.uid).val() === true || (((data.child('authUid').val() === auth.uid) || (!data.child('authUid').exists() && newData.child('authUid').val() === auth.uid && newData.child('authEmail').val() === auth.token.email && (!data.child('authEmail').exists() || data.child('authEmail').val() === auth.token.email))) && (newData.child('isOwner').val() === data.child('isOwner').val() || (!data.child('isOwner').exists() && newData.child('isOwner').val() === false)) && (newData.child('isAdmin').val() === data.child('isAdmin').val() || (!data.child('isAdmin').exists() && newData.child('isAdmin').val() === false))))"
       }
     },
     "wishlist": {
@@ -98,7 +97,7 @@ Do not publish the placeholder literally.
     "authIndex": {
       "$uid": {
         ".read": "auth != null && (auth.uid === $uid || root.child('admins').child(auth.uid).val() === true)",
-        ".write": "auth != null && auth.uid === $uid"
+        ".write": "auth != null && (root.child('admins').child(auth.uid).val() === true || (auth.uid === $uid && ((!data.exists() && newData.child('username').isString() && root.child('users').child(newData.child('username').val()).child('authUid').val() === auth.uid) || (data.exists() && newData.child('username').val() === data.child('username').val()))))"
       }
     },
     "admins": {
@@ -110,14 +109,14 @@ Do not publish the placeholder literally.
     "communities": {
       ".read": "auth != null",
       "$communityId": {
-        ".write": "auth != null && (root.child('authIndex').child(auth.uid).child('username').val() === 'OWNER_USERNAME_PLACEHOLDER' || root.child('users').child(root.child('authIndex').child(auth.uid).child('username').val()).child('isOwner').val() === true)"
+        ".write": "auth != null && root.child('admins').child(auth.uid).val() === true"
       }
     },
     "userCommunities": {
       ".read": "auth != null",
       "$uid": {
         "$communityId": {
-          ".write": "auth != null && (root.child('authIndex').child(auth.uid).child('username').val() === 'OWNER_USERNAME_PLACEHOLDER' || root.child('users').child(root.child('authIndex').child(auth.uid).child('username').val()).child('isOwner').val() === true)"
+          ".write": "auth != null && root.child('admins').child(auth.uid).val() === true"
         }
       }
     },
@@ -125,7 +124,7 @@ Do not publish the placeholder literally.
       ".read": "auth != null",
       "$communityId": {
         "$requestId": {
-          ".write": "auth != null && (root.child('authIndex').child(auth.uid).child('username').val() === 'OWNER_USERNAME_PLACEHOLDER' || root.child('users').child(root.child('authIndex').child(auth.uid).child('username').val()).child('isOwner').val() === true)"
+          ".write": "auth != null && root.child('admins').child(auth.uid).val() === true"
         }
       }
     },
@@ -205,7 +204,10 @@ my inventory; added in app v4.6.10).
 ### Self-published login index (`authIndex`)
 - **Read**: the signed-in user can read their own row; admins can read all
   rows.
-- **Write**: only the signed-in user's own UID row.
+- **Write**: admins may repair mappings. A signed-in user may create their own
+  row only when its username points to a `users/{username}` record already
+  bound to the same UID; afterward they may refresh metadata only while the
+  username remains unchanged.
 
 Admin repair/reset flows should **not** write another user's `authIndex`
 record. The repaired user publishes their own row automatically on their
@@ -215,11 +217,8 @@ owner/admin account-repair writes failing on an otherwise valid user repair.
 ### Community foundation (`communities`, `userCommunities`, `communityRequests`)
 - **Read**: any authenticated user, matching the current app's authenticated
   community visibility model.
-- **Write**: owner only for now (`OWNER_USERNAME_PLACEHOLDER` or a user record marked
-  `isOwner: true`).
-
-TODO: After verification, move production community-owner checks away from
-username literals and toward UID- or `isOwner`-based ownership only.
+- **Write**: authenticated UIDs present at `admins/{uid}` only. Mutable
+  usernames, `isOwner`, and `isAdmin` profile fields grant no rules authority.
 
 These paths are intentionally conservative during Phase 1. They exist only
 to prepare the default NYC community and membership indexes. Later phases
@@ -310,6 +309,9 @@ schema-level ownership checks rather than relying on community trust.
 When you ship a rule change (or other related work), append a one-line
 entry here. Newest first.
 
+- **2026-08-03, v6 candidate** — Prepared emulator-tested UID-based
+  community authority, privileged profile-field protection, and immutable
+  self-published auth-index usernames. Not deployed yet. (Codex)
 - **2026-05-27, docs-only** — Sanitized the public rules reference by
   replacing private owner/deployment details with placeholders and removing
   a copy-pasteable loose write variant. No deployed Firebase rule change.

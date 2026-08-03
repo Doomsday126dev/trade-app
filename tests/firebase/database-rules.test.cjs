@@ -7,8 +7,10 @@ const path = require('node:path');
 const PROJECT_ID = 'demo-pogo-rules';
 const DATABASE_NAMESPACE = `${PROJECT_ID}-default-rtdb`;
 const DEPLOYED_RULES_SHA256 = '5c238b9fc9ad10422e3470863aca6fee26a3ef8ce7c7bbdf4051cdc2da9c7268';
-const RULES_PATH = path.join(__dirname, 'database.rules.current.json');
-const RULES = readFileSync(RULES_PATH, 'utf8');
+const DEPLOYED_RULES_PATH = path.join(__dirname, 'database.rules.current.json');
+const DEPLOYED_RULES = readFileSync(DEPLOYED_RULES_PATH, 'utf8');
+const HARDENED_RULES_PATH = path.join(__dirname, 'database.rules.hardened.json');
+const HARDENED_RULES = readFileSync(HARDENED_RULES_PATH, 'utf8');
 const AUTH_HOST = process.env.FIREBASE_AUTH_EMULATOR_HOST || '127.0.0.1:9099';
 const DATABASE_HOST = process.env.FIREBASE_DATABASE_EMULATOR_HOST || '127.0.0.1:9000';
 
@@ -17,7 +19,8 @@ const TOKENS = {};
 const USERS = Object.freeze({
   ordinary: 'OrdinaryTrainer',
   communityAdmin: 'CommunityAdmin',
-  protectedOwner: 'OWNER_USERNAME_PLACEHOLDER'
+  protectedOwner: 'ProtectedOwner',
+  initializing: 'InitializingTrainer'
 });
 
 async function jsonRequest(url, method = 'GET', value, extraHeaders = {}) {
@@ -108,12 +111,12 @@ async function seedCurrentRuleFixture() {
         [USERS.communityAdmin]: {
           authUid: IDS.communityAdmin,
           authEmail: 'communityadmin@example.test',
-          isAdmin: true,
+          isAdmin: false,
           isOwner: false
         },
         [USERS.protectedOwner]: {
           authUid: IDS.protectedOwner,
-          authEmail: 'owner_username_placeholder@example.test',
+          authEmail: 'protectedowner@example.test',
           isAdmin: true,
           isOwner: true
         }
@@ -145,13 +148,18 @@ async function seedCurrentRuleFixture() {
 
 before(async () => {
   assert.equal(
-    createHash('sha256').update(RULES).digest('hex'),
+    createHash('sha256').update(DEPLOYED_RULES).digest('hex'),
     DEPLOYED_RULES_SHA256,
     'Committed rules fixture must remain byte-identical to the captured deployed baseline'
+  );
+  assert.ok(
+    !HARDENED_RULES.includes('OWNER_USERNAME_PLACEHOLDER'),
+    'Hardened rules must not depend on the deployed owner username placeholder'
   );
   await createAuthUser('ordinary', USERS.ordinary);
   await createAuthUser('communityAdmin', USERS.communityAdmin);
   await createAuthUser('protectedOwner', USERS.protectedOwner);
+  await createAuthUser('initializing', USERS.initializing);
 });
 
 beforeEach(async () => {
@@ -208,38 +216,94 @@ test('[expected current behavior] authenticated users inherit broad root read ac
   }
 });
 
-test('ordinary users cannot initially write owner-only community paths', async () => {
+test('ordinary users cannot write protected community paths', async () => {
   await assertFails(databaseRequest('PUT', 'communities/nj', { name: 'New Jersey' }, TOKENS.ordinary), 'Ordinary community write');
   await assertFails(databaseRequest('PUT', `userCommunities/${IDS.ordinary}/nj`, true, TOKENS.ordinary), 'Ordinary reverse-index write');
   await assertFails(databaseRequest('PUT', 'communityRequests/nj/request-1', { username: USERS.ordinary }, TOKENS.ordinary), 'Ordinary community request write');
   await assertFails(databaseRequest('PUT', `admins/${IDS.ordinary}`, true, TOKENS.ordinary), 'Ordinary admins write');
 });
 
-test('[expected current behavior] users may write their own authIndex row but not another UID row', async () => {
-  await assertSucceeds(databaseRequest('PUT', `authIndex/${IDS.ordinary}`, { username: USERS.ordinary }, TOKENS.ordinary), 'Own authIndex write');
-  await assertFails(databaseRequest('PUT', `authIndex/${IDS.protectedOwner}`, { username: USERS.ordinary }, TOKENS.ordinary), 'Foreign authIndex write');
+test('legitimate account initialization may create and refresh only its UID-bound authIndex mapping', async () => {
+  await assertFails(
+    databaseRequest('PUT', `users/${USERS.initializing}`, {
+      authUid: IDS.initializing,
+      authEmail: 'initializingtrainer@example.test',
+      isAdmin: true,
+      isOwner: false
+    }, TOKENS.initializing),
+    'Initial user creation with a privileged flag'
+  );
+  await assertSucceeds(
+    databaseRequest('PUT', `users/${USERS.initializing}`, {
+      authUid: IDS.initializing,
+      authEmail: 'initializingtrainer@example.test',
+      bio: 'Private setup'
+    }, TOKENS.initializing),
+    'UID and auth-email-bound user initialization'
+  );
+  await assertSucceeds(
+    databaseRequest('PATCH', `users/${USERS.initializing}`, { isAdmin: false, isOwner: false }, TOKENS.initializing),
+    'Missing privileged flags may initialize to false during migration'
+  );
+  await assertFails(
+    databaseRequest('PUT', `authIndex/${IDS.initializing}`, { username: USERS.ordinary }, TOKENS.initializing),
+    'Initial authIndex mapping to a username bound to another UID'
+  );
+  await assertSucceeds(
+    databaseRequest('PUT', `authIndex/${IDS.initializing}`, {
+      username: USERS.initializing,
+      isAdmin: false,
+      isOwner: false,
+      lastSeen: 1
+    }, TOKENS.initializing),
+    'UID-bound authIndex initialization'
+  );
+  await assertSucceeds(
+    databaseRequest('PATCH', `authIndex/${IDS.initializing}`, { username: USERS.initializing, lastSeen: 2 }, TOKENS.initializing),
+    'Same-username authIndex metadata refresh'
+  );
+  await assertFails(
+    databaseRequest('PATCH', `authIndex/${IDS.initializing}`, { username: USERS.ordinary }, TOKENS.initializing),
+    'Established authIndex username reassignment'
+  );
+  await assertFails(
+    databaseRequest('DELETE', `authIndex/${IDS.initializing}`, undefined, TOKENS.initializing),
+    'Established authIndex deletion'
+  );
+  await assertFails(
+    databaseRequest('PUT', `authIndex/${IDS.protectedOwner}`, { username: USERS.initializing }, TOKENS.initializing),
+    'Foreign authIndex write'
+  );
 });
 
-test('[expected current vulnerability] an ordinary user can set isOwner on their own user record and gain community writes', async () => {
-  await assertSucceeds(databaseRequest('PATCH', `users/${USERS.ordinary}`, { isOwner: true }, TOKENS.ordinary), 'Self isOwner escalation');
-  await assertSucceeds(databaseRequest('PUT', 'communities/nj', { name: 'New Jersey' }, TOKENS.ordinary), 'Escalated community write');
-  await assertSucceeds(databaseRequest('PUT', `userCommunities/${IDS.ordinary}/nj`, true, TOKENS.ordinary), 'Escalated reverse-index write');
-  await assertSucceeds(databaseRequest('PUT', 'communityRequests/nj/request-1', { username: USERS.ordinary }, TOKENS.ordinary), 'Escalated community request write');
+test('ordinary users cannot change privileged fields or gain authority from legacy privileged profile values', async () => {
+  await assertSucceeds(databaseRequest('PATCH', `users/${USERS.ordinary}`, { bio: 'Safe profile update' }, TOKENS.ordinary), 'Ordinary profile update');
+  await assertFails(databaseRequest('PATCH', `users/${USERS.ordinary}`, { isOwner: true }, TOKENS.ordinary), 'Self isOwner escalation');
+  await assertFails(databaseRequest('PATCH', `users/${USERS.ordinary}`, { isAdmin: true }, TOKENS.ordinary), 'Self isAdmin escalation');
+  await assertFails(databaseRequest('PATCH', `users/${USERS.ordinary}`, { isOwner: null }, TOKENS.ordinary), 'Self isOwner deletion');
+  await assertFails(databaseRequest('PATCH', `users/${USERS.ordinary}`, { isAdmin: null }, TOKENS.ordinary), 'Self isAdmin deletion');
+  await assertSucceeds(
+    databaseRequest('PATCH', `users/${USERS.ordinary}`, { isOwner: true, isAdmin: true }, TOKENS.protectedOwner),
+    'Protected admin may preserve legacy privileged profile metadata'
+  );
+  await assertFails(databaseRequest('PUT', 'communities/nj', { name: 'New Jersey' }, TOKENS.ordinary), 'Legacy profile flags do not grant community authority');
+  await assertFails(databaseRequest('PUT', `userCommunities/${IDS.ordinary}/nj`, true, TOKENS.ordinary), 'Legacy profile flags do not grant reverse-index authority');
+  await assertFails(databaseRequest('PUT', 'communityRequests/nj/request-1', { username: USERS.ordinary }, TOKENS.ordinary), 'Legacy profile flags do not grant community-request authority');
 });
 
-test('[expected current vulnerability] an ordinary user can spoof the placeholder username in their own authIndex and gain community writes', async () => {
-  await assertSucceeds(databaseRequest('PATCH', `authIndex/${IDS.ordinary}`, { username: USERS.protectedOwner }, TOKENS.ordinary), 'Self authIndex spoof');
-  await assertSucceeds(databaseRequest('PUT', 'communities/nj', { name: 'New Jersey' }, TOKENS.ordinary), 'Spoofed community write');
-  await assertSucceeds(databaseRequest('PUT', `userCommunities/${IDS.ordinary}/nj`, true, TOKENS.ordinary), 'Spoofed reverse-index write');
-  await assertSucceeds(databaseRequest('PUT', 'communityRequests/nj/request-1', { username: USERS.ordinary }, TOKENS.ordinary), 'Spoofed community request write');
+test('ordinary users cannot spoof an established authIndex username to gain community writes', async () => {
+  await assertFails(databaseRequest('PATCH', `authIndex/${IDS.ordinary}`, { username: 'OWNER_USERNAME_PLACEHOLDER' }, TOKENS.ordinary), 'Self authIndex spoof');
+  await assertFails(databaseRequest('PUT', 'communities/nj', { name: 'New Jersey' }, TOKENS.ordinary), 'Community write after denied authIndex spoof');
+  await assertFails(databaseRequest('PUT', `userCommunities/${IDS.ordinary}/nj`, true, TOKENS.ordinary), 'Reverse-index write after denied authIndex spoof');
+  await assertFails(databaseRequest('PUT', 'communityRequests/nj/request-1', { username: USERS.ordinary }, TOKENS.ordinary), 'Community request write after denied authIndex spoof');
 });
 
-test('[expected current mismatch] an admins UID without owner username/isOwner cannot write community paths', async () => {
+test('an admins UID receives community authority without username or user-role checks', async () => {
   await assertSucceeds(databaseRequest('PUT', `admins/${IDS.ordinary}`, true, TOKENS.communityAdmin), 'Admin authority write');
   await assertSucceeds(databaseRequest('PATCH', `users/${USERS.ordinary}`, { isAdmin: true }, TOKENS.communityAdmin), 'Admin user metadata write');
-  await assertFails(databaseRequest('PUT', 'communities/nj', { name: 'New Jersey' }, TOKENS.communityAdmin), 'Admins UID community write');
-  await assertFails(databaseRequest('PUT', `userCommunities/${IDS.communityAdmin}/nj`, true, TOKENS.communityAdmin), 'Admins UID reverse-index write');
-  await assertFails(databaseRequest('PUT', 'communityRequests/nj/request-1', { username: USERS.communityAdmin }, TOKENS.communityAdmin), 'Admins UID community request write');
+  await assertSucceeds(databaseRequest('PUT', 'communities/nj', { name: 'New Jersey' }, TOKENS.communityAdmin), 'Admins UID community write');
+  await assertSucceeds(databaseRequest('PUT', `userCommunities/${IDS.communityAdmin}/nj`, true, TOKENS.communityAdmin), 'Admins UID reverse-index write');
+  await assertSucceeds(databaseRequest('PUT', 'communityRequests/nj/request-1', { username: USERS.communityAdmin }, TOKENS.communityAdmin), 'Admins UID community request write');
 });
 
 test('the protected owner/admin fixture can write all current authority and community paths', async () => {

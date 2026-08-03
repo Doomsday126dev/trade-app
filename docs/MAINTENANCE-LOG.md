@@ -2559,3 +2559,7 @@ Recorded the initial global-app policies in `docs/GLOBAL-APP-PLAN.md`: new profi
 ## 2026-08-03 - Codex - Global identity and migration decisions (docs-only)
 
 Recorded the read-only audit of 44 current trainer names (zero collisions under the candidate trim + NFKC + case-insensitive comparison), while leaving the final normalizer provisional pending fixture tests. Clarified verified-provider publishing, provider-first recovery and frozen impersonation review, quantity-private public For Trade projections, archived legacy communities, anonymous-comparison deferral, monitoring-based Spark/Blaze decisions, and the shortened legacy-backup retention window. Added a sequence of small implementation commits with path, test, and rollback boundaries; the current community authorization vulnerability is explicitly scheduled for the second commit, immediately after rules-emulator coverage and before global identity work. No application code, UI, tests, Firebase data/rules, authentication behavior, subscriptions, or production records changed.
+
+## 2026-08-03 - Codex - Community authorization hardening candidate
+
+Prepared a rules candidate and emulator coverage that make `admins/{uid}` the sole authority for community and privileged user-field writes, lock established self-published `authIndex` usernames, and preserve explicit UID-bound first-login initialization. The captured deployed rules remain unchanged as a rollback fixture, broad authenticated root reads remain unchanged, and no rules have been deployed from this change yet.
