@@ -2571,3 +2571,7 @@ Converged both successful Firebase Auth login paths on one `syncOwnAuthIndex` st
 ## 2026-08-03 - Codex - Existing-user authIndex production validation (docs-only)
 
 Validated the deployed `82656a8` login refresh fix against production using the normal existing-user login flow for TestUser and the protected owner account. Both logins succeeded and advanced only `authIndex/{uid}/lastSeen`; each established username and every other `authIndex` field remained unchanged. No unexpected writes, login errors, or warnings occurred. Commit `82656a8` remains deployed, the hardened Firebase rules remain live, and no rollback was required. This entry records validation only; no application code, Firebase rules, or production data changed.
+
+## 2026-08-03 - Codex - Trainer-name normalization and audit candidate
+
+Added a reusable, currently unwired trainer-name normalizer using the provisional `trim -> NFKC -> toLowerCase` policy and a read-only audit CLI that defaults to synthetic fixture data. Detailed name-bearing reports are written only to a git-ignored local directory; console output is aggregate-only. Emulator access is loopback-only, and production reads fail closed unless the project, database, HTTPS host, explicit production-read flag, and auth-token environment variable are all supplied and agree. The CLI performs a single GET of `loginDirectory.json` and contains no Firebase writes, migration, reservation, authentication, rules, UI, profile, or production-record changes.

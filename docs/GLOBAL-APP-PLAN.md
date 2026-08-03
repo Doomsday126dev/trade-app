@@ -198,17 +198,64 @@ accounts silently.
 
 A read-only audit of the production `loginDirectory` on 2026-08-03 found 44
 current trainer names. Under the candidate comparison transform
-`NFKC -> trim -> lowercase`:
+`trim -> NFKC -> toLowerCase`:
 
 - **0 normalized collisions** were found.
 - **0 names** contained leading or trailing whitespace.
 - **0 names** changed under NFKC normalization.
 
 This clears the current dataset for continued design work, but it does not
-finalize the algorithm. The implementation must first preserve all 44 names as
-fixtures and add punctuation, Unicode, case, spacing, and provider-migration
-collision tests. The audit report records counts/results rather than publishing
-the private directory as documentation.
+finalize the algorithm. The implementation must preserve the current names only
+in a git-ignored local audit report and use synthetic tracked fixtures for
+punctuation, Unicode, case, spacing, and provider-migration collision tests.
+Tracked documentation records counts/results rather than publishing the private
+directory.
+
+The Commit 3 audit helper now makes that provisional transform executable and
+testable without using it in the application. `toLowerCase()` means ECMAScript's
+locale-independent Unicode lowercase mapping; it is deterministic across app
+and Node usage but is not the Unicode Default Case Folding algorithm. The helper
+does not strip punctuation, collapse internal whitespace, transliterate, or
+merge visually similar characters from different scripts. The original input,
+trimmed display value, NFKC value, and normalized comparison key are retained as
+separate audit fields so later migration review can detect every transformation.
+
+`npm run audit:trainer-names` defaults to the tracked synthetic fixture and
+writes a detailed, machine-readable JSON report under the git-ignored
+`.local/trainer-name-audits/` directory. Emulator reads require an explicit
+loopback database URL and project ID. A production read additionally requires
+all of the following: `--source production`, `--allow-production-read`, an HTTPS
+Firebase database URL, matching `--project-id`/`--confirm-project` and
+`--database-id`/`--confirm-database` values, and the name of a non-empty auth
+token environment variable via `--auth-token-env`. The command performs only a
+GET of `loginDirectory.json`; it has no Firebase migration or reservation write
+path. Console output contains aggregates and hashed collision IDs only. The
+local report contains trainer names and must not be committed or pasted into
+tracked documentation.
+
+Example fixture audit:
+
+```sh
+npm run audit:trainer-names
+```
+
+Example production shape (values intentionally illustrative):
+
+```sh
+TRAINER_AUDIT_TOKEN='<short-lived Firebase ID token>' npm run audit:trainer-names -- \
+  --source production \
+  --allow-production-read \
+  --database-url https://PROJECT-default-rtdb.firebaseio.com \
+  --project-id PROJECT \
+  --database-id PROJECT-default-rtdb \
+  --confirm-project PROJECT \
+  --confirm-database PROJECT-default-rtdb \
+  --auth-token-env TRAINER_AUDIT_TOKEN
+```
+
+The later migration commit may consume a reviewed local JSON report as dry-run
+input, but that consumer and every handle-reservation write remain separately
+scoped and separately approved.
 
 ## Conceptual Firebase model
 

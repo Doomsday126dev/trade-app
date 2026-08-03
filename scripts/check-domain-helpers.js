@@ -41,6 +41,7 @@ function deepEq(actual, expected, message) {
   'js/domain/priorities.js',
   'js/ui/badges.js',
   'js/domain/username.js',
+  'js/domain/trainerNames.js',
   'js/domain/priorityValues.js',
   'js/domain/scheduleDates.js',
   'js/domain/pokemonSearchTerms.js',
@@ -71,6 +72,7 @@ assert(ui, 'window.PogoUi namespace should exist');
 assert(domain.priorities, 'priorities namespace should exist');
 assert(ui.badges, 'badges namespace should exist');
 assert(domain.username, 'username namespace should exist');
+assert(domain.trainerNames, 'trainerNames namespace should exist');
 assert(domain.priorityValues, 'priorityValues namespace should exist');
 assert(domain.scheduleDates, 'scheduleDates namespace should exist');
 assert(domain.pokemonSearchTerms, 'pokemonSearchTerms namespace should exist');
@@ -161,6 +163,29 @@ eq(
 const { alphaCompare } = domain.username;
 assert(alphaCompare('a2', 'a10') < 0, 'alphaCompare should sort natural numeric suffixes');
 eq(alphaCompare('Mazer', 'mazer'), 0, 'alphaCompare should be case-insensitive');
+
+// --- trainerNames ---
+const { trainerNameParts, normalizeTrainerName, auditTrainerNames } = domain.trainerNames;
+eq(normalizeTrainerName('TrainerOne'), 'trainerone', 'normalizeTrainerName should lowercase deterministically');
+eq(normalizeTrainerName('  TrainerOne  '), 'trainerone', 'normalizeTrainerName should trim outer whitespace');
+eq(normalizeTrainerName('Ｔｒａｉｎｅｒ１'), 'trainer1', 'normalizeTrainerName should apply NFKC');
+eq(normalizeTrainerName('Ace-007!'), 'ace-007!', 'normalizeTrainerName should preserve punctuation and digits');
+eq(normalizeTrainerName('Ace  007'), 'ace  007', 'normalizeTrainerName should preserve internal spacing');
+assert(normalizeTrainerName('Ace') !== normalizeTrainerName('Аce'), 'normalizeTrainerName should not merge Latin and Cyrillic lookalikes');
+deepEq(
+  trainerNameParts('  PogoName  '),
+  {
+    originalValue: '  PogoName  ',
+    trainerName: 'PogoName',
+    nfkcTrainerName: 'PogoName',
+    normalizedTrainerName: 'pogoname',
+    changedByTrimming: true,
+    changedByNfkc: false,
+    valid: true
+  },
+  'trainerNameParts should preserve original and display values'
+);
+eq(auditTrainerNames(['Ace', ' ACE ']).summary.collisionGroups, 1, 'auditTrainerNames should detect normalized collisions');
 
 // --- priorityValues ---
 const { parsePri, priValue, entryGender } = domain.priorityValues;

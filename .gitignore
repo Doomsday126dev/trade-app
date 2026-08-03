@@ -3,3 +3,4 @@ test-results/
 playwright-report/
 .firebase-local/
 database-debug.log
+.local/trainer-name-audits/
