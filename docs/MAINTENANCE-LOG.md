@@ -2567,3 +2567,7 @@ Prepared a rules candidate and emulator coverage that make `admins/{uid}` the so
 ## 2026-08-03 - Codex - Existing-user authIndex refresh fix
 
 Converged both successful Firebase Auth login paths on one `syncOwnAuthIndex` step. Established mappings now update only `lastSeen` after verifying the signed-in UID and exact username, preserving every other field; missing mappings initialize only after the server-side trainer record proves the same UID binding. Mismatched identity state and permission denials stop login, while a transient metadata-update failure may defer only after the existing mapping was positively verified. First-login Auth creation, recovery, and user binding behavior remain unchanged. Added focused app-flow tests plus emulator coverage for metadata-only refresh field preservation; no Firebase rules or production data changed.
+
+## 2026-08-03 - Codex - Existing-user authIndex production validation (docs-only)
+
+Validated the deployed `82656a8` login refresh fix against production using the normal existing-user login flow for TestUser and the protected owner account. Both logins succeeded and advanced only `authIndex/{uid}/lastSeen`; each established username and every other `authIndex` field remained unchanged. No unexpected writes, login errors, or warnings occurred. Commit `82656a8` remains deployed, the hardened Firebase rules remain live, and no rollback was required. This entry records validation only; no application code, Firebase rules, or production data changed.
