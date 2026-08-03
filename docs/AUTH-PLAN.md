@@ -26,6 +26,24 @@ against. No app code, test code, Firebase rules, login behavior,
 approval flow, repair flow, PIN handling, or data paths are changed by
 this plan landing.
 
+> **2026-08-03 architecture checkpoint:** implementation of this roadmap is
+> paused while the trainer-first global application proposal in
+> `docs/GLOBAL-APP-PLAN.md` is evaluated. Its initial Phase 0 direction adopts
+> Firebase Auth UID as durable account identity and Pokemon GO trainer name as
+> a unique-at-claim, mutable public handle. This document's original invariant
+> that username remains a permanently stable primary app identity reflects the
+> community-pilot design and is no longer the proposed global target. Do not
+> implement an auth phase until this plan is rewritten around provider linking,
+> normalized handle claims, collision prevention, and legacy-account migration.
+> The approved Phase 0 direction allows a new account to build privately before
+> verification, requires verified email or Google before searchable publishing,
+> preserves existing migrated handle claims, and uses provider recovery as the
+> routine path. Google/email migration must link to the existing Firebase UID
+> rather than silently creating a duplicate trainer account. Exceptional handle
+> disputes use a private frozen-review state and cannot be resolved from public
+> profile evidence alone. See `docs/GLOBAL-APP-PLAN.md` for the current policy
+> and implementation sequence.
+
 ---
 
 ## Current model snapshot
@@ -82,11 +100,13 @@ this section makes no recommendations.
 
 ---
 
-## Identity invariants
+## Legacy community-pilot identity invariants
 
-These are the contract that any Google-auth work in Phase 1 and later
-must preserve. Future implementation prompts should reference this
-section directly.
+These were the contract for the original community-pilot Google-auth roadmap.
+They remain useful as a description of compatibility requirements during
+migration, but they are superseded as the global target by
+`docs/GLOBAL-APP-PLAN.md`. Do not implement this section literally without the
+UID/handle migration design and explicit approval.
 
 - **Username remains the primary app identity.** Adding Google
   sign-in does not change how Pokémon, offer, schedule, or community
