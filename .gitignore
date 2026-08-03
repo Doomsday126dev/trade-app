@@ -4,3 +4,4 @@ playwright-report/
 .firebase-local/
 database-debug.log
 .local/trainer-name-audits/
+.local/uid-handle-audits/

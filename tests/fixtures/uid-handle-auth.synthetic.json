@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "identities": [
+    {"uid":"synthetic-uid-ready","disabled":false,"emailVerified":false,"providers":["password"],"expectedSyntheticEmailMatches":true},
+    {"uid":"synthetic-uid-protected","disabled":false,"emailVerified":true,"providers":["google.com"],"expectedSyntheticEmailMatches":true},
+    {"uid":"synthetic-uid-inactive","disabled":false,"emailVerified":false,"providers":["password"],"expectedSyntheticEmailMatches":true}
+  ]
+}

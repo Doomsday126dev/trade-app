@@ -770,16 +770,25 @@ public-directory implementation.**
 
 ### 5. Build a completely local UID/handle migration dry-run
 
-- **Purpose:** join a private local export of existing `users`, `authIndex`, and
-  `loginDirectory` into a proposed UID/handle manifest before any rules cutover
-  or production write.
+- **Purpose:** reconcile `loginDirectory`, `users`, `authIndex`, protected
+  `admins`, and a separate sanitized Auth export before any rules cutover or
+  production write. The result is a review report, not a migration manifest.
 - **Files:** read-only local migration script, synthetic fixtures/tests,
   git-ignore rules, runbook, and aggregate documentation.
 - **Firebase paths changed:** none. Production output is a private local report;
   no reservation, account, index, rename, or migration write exists.
-- **Tests/rollback:** zero unresolved normalized collisions, duplicate-UID and
-  missing-binding reporting, deterministic counts/checksums, and no write APIs.
-  Rollback removes the unused local tool.
+- **Tests/rollback:** conflict-first classification, absent/incomplete Auth,
+  protected-admin review, inactive/orphan records, deterministic source hashes,
+  aggregate-only output, private report permissions, exactly four production
+  GETs, target mismatch denial, token redaction, and proof that no seed-capable
+  output exists. Every record remains `seedEligible: false`; rollback removes
+  the unused local tool.
+
+The detailed contract and sanitized Auth schema are in
+`docs/UID-HANDLE-DRY-RUN.md`. Public shares, communities, lists, inventory, and
+prior profile publication are excluded as identity or consent signals. A later
+seeding step must re-read and revalidate an explicitly reviewed subset after
+private-path isolation is live; the dry-run report is never permanent authority.
 
 ### 6. Eliminate client dependence on global subscriptions
 

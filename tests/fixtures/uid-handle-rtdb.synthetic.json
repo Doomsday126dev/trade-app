@@ -1,0 +1,19 @@
+{
+  "loginDirectory": {
+    "ReadyTrainer": {"authReady": true, "authVersion": 1},
+    "ProtectedTrainer": {"authReady": true, "authVersion": 1},
+    "NoUidTrainer": {"authReady": true, "authVersion": 1}
+  },
+  "users": {
+    "ReadyTrainer": {"authUid": "synthetic-uid-ready"},
+    "ProtectedTrainer": {"authUid": "synthetic-uid-protected", "isOwner": true},
+    "NoUidTrainer": {},
+    "InactiveTrainer": {"authUid": "synthetic-uid-inactive"}
+  },
+  "authIndex": {
+    "synthetic-uid-ready": {"username": "ReadyTrainer", "lastSeen": 1},
+    "synthetic-uid-protected": {"username": "ProtectedTrainer"},
+    "synthetic-uid-inactive": {"username": "InactiveTrainer"}
+  },
+  "admins": {"synthetic-uid-protected": true}
+}
