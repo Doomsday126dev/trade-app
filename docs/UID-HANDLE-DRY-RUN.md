@@ -79,6 +79,53 @@ name or UID. Raw authentication email is never stored.
 The detailed report contains private identity facts and must not be copied into
 tracked documentation. Console output contains aggregate counts only.
 
+## Local conflict review
+
+`npm run review:uid-handles -- ...` is a separate, local-only evidence
+organizer for an existing reconciliation report. It accepts only local fixture
+inputs or files confined to `.local/uid-handle-audits/`; it has no production,
+network, token, credential, Admin SDK, or Firebase write mode. The four-source
+RTDB snapshot is rejected if it contains any root other than
+`loginDirectory`, `users`, `authIndex`, and `admins`.
+
+The private review artifact records the source-report SHA-256, recomputed
+source hashes, and a staleness warning. A mismatch marks the artifact stale and
+explicitly unsuitable for decisions. Each record remains `seedEligible:false`
+and `reviewDecision:unreviewed`. Suggested dispositions are stable review
+labels only: `passive_login`, `conflict_review`, `protected_review`,
+`legacy_hold`, `unassociated_hold`, and `no_action`.
+
+For private review, the artifact may show trainer names and candidate UIDs plus
+allowlisted evidence: UID-bound user records, username-to-UID index rows,
+sanitized Auth presence/disabled/verification/provider facts, protected-admin
+membership, and non-secret account-history timestamps. It never stores raw
+Auth email, password material, provider payloads, or credentials. Email
+prefixes, Firebase display names, lists, public shares, communities, profile
+privilege flags, and similar names are explicitly non-authoritative. The tool
+does not choose a winning UID or create an approval manifest, reservation,
+migration payload, Firebase update object, rollback write plan, or executable
+command.
+
+Production review generation requires a separately approved fresh read because
+the raw production snapshots are intentionally not retained after the original
+audit. The current milestone adds and tests the offline workflow only; it does
+not perform that read or create a production review artifact.
+
+After a separately approved collection places all three inputs under the
+private directory, the local-only command shape is:
+
+```sh
+npm run review:uid-handles -- \
+  --source private \
+  --report .local/uid-handle-audits/reports/RECONCILIATION.json \
+  --rtdb-input .local/uid-handle-audits/inputs/RTDB-SNAPSHOT.json \
+  --auth-input .local/uid-handle-audits/inputs/firebase-auth.sanitized.json \
+  --output .local/uid-handle-audits/reviews/IDENTITY-REVIEW.json
+```
+
+The placeholders are local filenames, not Firebase paths or credentials. The
+command performs filesystem reads and one private artifact write only.
+
 ## Running safely
 
 The default command uses synthetic fixtures only:
@@ -107,4 +154,5 @@ permanent authority and never an executable seed manifest.
 - No inference of public-profile consent.
 - No production seed before authenticated root reads are removed and private
   path isolation is verified.
-
+- No automatic ownership decision or owner-side bulk repair for missing
+  `authIndex` records.

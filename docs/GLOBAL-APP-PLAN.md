@@ -790,6 +790,29 @@ prior profile publication are excluded as identity or consent signals. A later
 seeding step must re-read and revalidate an explicitly reviewed subset after
 private-path isolation is live; the dry-run report is never permanent authority.
 
+### 5a. Add local-only conflict diagnostics and private review
+
+- **Purpose:** organize source-by-source evidence for duplicate/multi-UID,
+  mismatched, protected-admin, and unassociated-Auth records without deciding
+  ownership or producing repair instructions. Clean missing `authIndex`
+  records remain passive-login candidates under the deployed UID-bound login
+  flow.
+- **Files:** pure domain diagnostics, local-only source reader, private review
+  reporter, thin CLI, focused tests, and documentation. `index.html` and active
+  Firebase configuration are excluded.
+- **Firebase paths changed:** none. The CLI accepts only local fixture or
+  git-ignored private files and has no network or production mode. A fresh
+  production source collection requires separate approval.
+- **Tests/rollback:** candidate-UID evidence, protected/manual handling,
+  disposition labels, source-hash staleness, aggregate-only console output,
+  private path and `0600` enforcement, rejected unapproved roots/options, and
+  proof that no ownership decision, seed manifest, write payload, or executable
+  repair command exists. Rollback removes the unused offline tooling.
+
+After this small diagnostic milestone, client read/subscription work in step 6
+is the next major engineering priority. No admin repair UI or production
+identity cleanup is implied by the review artifact.
+
 ### 6. Eliminate client dependence on global subscriptions
 
 - **Purpose:** replace root/global listeners with bounded current-user,
