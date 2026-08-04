@@ -1,6 +1,6 @@
 (function(global){
   const root=global.PogoData=global.PogoData||{};
-  const LISTENER_SCOPES=Object.freeze(['session','screen','selectedTrainer','legacyAdmin']);
+  const LISTENER_SCOPES=Object.freeze(['public','session','screen','selectedTrainer','legacyAdmin']);
 
   function errorDetails(error,fallbackCode){
     return Object.freeze({

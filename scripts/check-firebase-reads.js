@@ -12,7 +12,7 @@ vm.runInNewContext(registrySource,{window});
 const {READ_SURFACES,SOURCE_CALL_CONTRACT}=window.PogoData.firebaseReadRegistry;
 
 const requiredFields=['id','path','method','breadth','ownerScope','audience','consumers','status'];
-const validScopes=new Set(['session','screen','selectedTrainer','legacyAdmin']);
+const validScopes=new Set(['public','session','screen','selectedTrainer','legacyAdmin']);
 const validBreadths=new Set(['exact','broad','dynamic']);
 const validStatuses=new Set(['transitional','retained','planned_retirement']);
 
@@ -49,16 +49,19 @@ assert.equal(directCallCount('get'),SOURCE_CALL_CONTRACT.directGetCount,
   'Unregistered direct Firebase get() call detected; update the explicit registry and this contract intentionally');
 assert.equal(directCallCount('onValue'),SOURCE_CALL_CONTRACT.directOnValueCount,
   'Unregistered direct Firebase onValue() call detected; update the explicit registry and this contract intentionally');
+assert.equal(occurrenceCount('managedFirebaseClient.listen('),SOURCE_CALL_CONTRACT.managedListenCount,
+  'Managed Firebase listener entry points changed; register the lifecycle wiring intentionally');
 for(const contract of SOURCE_CALL_CONTRACT.needles){
   assert.equal(occurrenceCount(contract.text),contract.count,
     `Firebase read wiring changed for registered source call: ${contract.text}`);
 }
-const legacyContract=SOURCE_CALL_CONTRACT.legacyListenerBlock;
-const legacyHash=createHash('sha256')
-  .update(sourceBetween(legacyContract.start,legacyContract.end))
-  .digest('hex');
-assert.equal(legacyHash,legacyContract.sha256,
-  'Existing production listener block changed during the inert read-boundary phase');
+for(const handlerContract of SOURCE_CALL_CONTRACT.unchangedHandlerBlocks){
+  const handlerHash=createHash('sha256')
+    .update(sourceBetween(handlerContract.start,handlerContract.end))
+    .digest('hex');
+  assert.equal(handlerHash,handlerContract.sha256,
+    `Existing Firebase snapshot behavior changed at ${handlerContract.start}`);
+}
 
 const repositoryCallFiles=jsFiles(path.join(root,'js'))
   .filter(file=>/client\.(?:read|listen)\s*\(/.test(readFileSync(file,'utf8')))
@@ -82,13 +85,45 @@ assert.ok(indexSource.includes("['wishlist','dynamax','gmax','costumes'].include
   'Lazy list subscriptions must remain explicitly constrained');
 assert.ok(indexSource.includes('subscribePath(`pendingDecrements/${cur}`);'),
   'Current-user pending decrement listener must remain exact');
-assert.ok(indexSource.includes('const _activeSubs={};'),
-  'Phase 1 must preserve the existing production listener implementation');
+assert.ok(!indexSource.includes('_activeSubs'),
+  'Legacy _activeSubs ownership must not coexist with managed listeners');
+assert.ok(!indexSource.includes('_activeShareSubs'),
+  'Legacy _activeShareSubs ownership must not coexist with managed listeners');
+assert.ok(indexSource.includes("managedListenerLifecycle.subscribePublic({...options,key:'public:loginDirectory'})"),
+  'loginDirectory must use the managed public listener scope');
+assert.ok(indexSource.includes('managedListenerLifecycle.subscribeSession({...options,key:`session:${path}`})'),
+  'Protected subscribePath listeners must use the managed session scope');
+assert.ok(indexSource.includes('managedListenerLifecycle.subscribeSelectedTrainer({'),
+  'Share listeners must use selected-trainer ownership');
+assert.ok(indexSource.includes("return[`users/${username}`,...PUBLIC_SHARE_TYPES.map(t=>`${t}/${username}`)];"),
+  'Authenticated share fallback paths must remain users plus the four existing list paths');
 assert.ok(indexSource.includes('const NARROW_READ_CLIENT_ENABLED=false;'),
-  'Narrow-read client foundation must remain disabled in Phase 1');
+  'Narrow-read client foundation must remain disabled during listener migration');
+const logoutSource=sourceBetween('function logout(){','// ── NAV');
+assert.ok(logoutSource.indexOf("managedListenerLifecycle.deactivateSession('logout');")<logoutSource.indexOf('cur=null;'),
+  'Logout must invalidate protected listeners before clearing app identity');
+assert.ok(logoutSource.indexOf('clearOwnedSession();')<logoutSource.indexOf('cur=null;'),
+  'Logout must clear protected cache and queue state before clearing app identity');
+assert.ok(logoutSource.indexOf('cur=null;')<logoutSource.indexOf('firebaseSignOut(auth)'),
+  'Logout must clear local app identity before Firebase sign-out');
+const authObserverSource=sourceBetween('function bindAuthObserver(){','function waitForAuthState');
+assert.ok(authObserverSource.indexOf("managedListenerLifecycle.deactivateSession('auth_loss');")<authObserverSource.indexOf("currentAuthUid=user?.uid||'';"),
+  'Auth loss must invalidate protected listeners before clearing the authenticated UID');
+assert.ok(authObserverSource.indexOf("suspendOwnedSession('auth_loss');")<authObserverSource.indexOf("currentAuthUid=user?.uid||'';"),
+  'Auth loss must lock protected cache and queue state before clearing the authenticated UID');
+const publicShareHandler=sourceBetween('function onPublicShareSnapshot(username,snap){','function onShareSnapshot(path,snap){');
+const authenticatedShareHandler=sourceBetween('function onShareSnapshot(path,snap){','function ensureShareViewSubscriptions(username){');
+assert.ok(!publicShareHandler.includes('saveLocal(')&&!authenticatedShareHandler.includes('saveLocal('),
+  'Selected-trainer snapshots must remain runtime-only and outside the protected persisted cache');
+assert.ok(indexSource.includes('managedSessionCache.writeData(normalizeData(s))'),
+  'Protected session-cache writes must pass through the session cache boundary');
+assert.ok(indexSource.includes('managedSessionCache.writeQueue(syncQueue||{})'),
+  'Pending sync writes must pass through the owner-bound queue boundary');
+assert.ok(!indexSource.includes("const SYNC_QUEUE_KEY='pogoSyncQueue_v1';"),
+  'The unowned legacy sync queue must not remain active');
 const moduleOrder=[
   'js/i18n/locales/en.js','js/i18n/core.js','js/services/firebaseClient.js',
-  'js/data/subscriptionManager.js','js/data/firebaseReadRegistry.js',
+  'js/data/subscriptionManager.js','js/data/listenerLifecycle.js','js/data/sessionCacheBoundary.js','js/data/firebaseReadRegistry.js',
   'js/data/currentUserRepository.js','js/data/publicShareRepository.js',
   'js/domain/cacheAdapters.js'
 ];

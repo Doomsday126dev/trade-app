@@ -1,12 +1,30 @@
 # Firebase read boundary
 
-## Phase 1 status
+## Phase status
 
-Phase 1 adds an inert client boundary around future Firebase reads without
-changing any production subscription or screen data source. The compatibility
-flag `NARROW_READ_CLIENT_ENABLED` remains `false`. The existing `_activeSubs`
-and `subscribePath` implementation remains the active production path until a
-later, separately reviewed migration.
+Phase 1 added an inert client boundary around future Firebase reads without
+changing any production subscription or screen data source. At that checkpoint,
+the existing `_activeSubs` implementation remained active. The compatibility
+flag `NARROW_READ_CLIENT_ENABLED` remains `false` throughout Phase 2.
+
+Phase 2 moves listener ownership, but not paths or snapshot behavior, to the
+subscription manager. `loginDirectory` uses the persistent `public`
+scope, authenticated broad listeners use a UID/username-fingerprinted `session`
+scope, and share listeners use `selectedTrainer`. The legacy `_activeSubs` and
+`_activeShareSubs` maps are removed so the same logical listener cannot run in
+both systems.
+
+The same phase replaces legacy `pogo3` with a `pogoSessionCache_v2` envelope containing an anonymous-safe
+`public.loginDirectory` section and one protected partition tagged by both
+Firebase Auth UID and username. `pogoSyncQueue_v2` uses the same two-part owner
+identity. Explicit logout removes protected persisted data and pending writes;
+transient auth loss locks them until the exact same identity returns. Partial
+UID/username matches fail closed. Legacy protected snapshots are discarded and
+legacy unowned pending writes are discarded with a translated warning rather
+than attributed to the next login.
+
+Selected-trainer snapshots remain runtime-only and are never written into the
+shared public or protected cache.
 
 The authenticated root read is also unchanged. This foundation is not evidence
 that narrow production rules are ready to publish.
@@ -39,9 +57,22 @@ stored paths, enums, scopes, error codes, or domain identifiers.
 Each future subscription has one logical key and one owner scope:
 
 - `session`: authenticated-session reads; cleared on logout or auth loss.
+- `public`: anonymous-safe app-lifetime reads such as `loginDirectory`.
 - `screen`: reads owned by a currently mounted screen, including lazy lists.
 - `selectedTrainer`: one opened trainer/profile/share context.
 - `legacyAdmin`: retained maintenance reads that require explicit admin cleanup.
+
+## Cache inventory
+
+| Data | Classification | Phase 2 storage |
+|---|---|---|
+| `loginDirectory` | public | `pogoSessionCache_v2.public.loginDirectory` |
+| `users`, lists, `have`, offers, trades, requests, auth/community indexes | protected/session-owned | `pogoSessionCache_v2.protected.data`, gated by exact UID and username |
+| Public-share and authenticated selected-trainer snapshots | selected-trainer runtime-only | memory only |
+| Owner maintenance snapshots | legacy-admin/session-owned | protected partition while retained |
+| Pokémon catalog and sprite metadata | static/non-Firebase | unchanged existing catalog/cache locations |
+| Legacy unowned `pogo3` protected fields | obsolete/unsafe | discarded during v2 migration |
+| Legacy unowned `pogoSyncQueue_v1` entries | obsolete/ambiguous | discarded; never replayed |
 
 Subscribing the same key, scope, and fingerprint is idempotent. Reusing a key
 with different ownership or identity replaces and unsubscribes the previous

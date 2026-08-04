@@ -823,6 +823,11 @@ identity cleanup is implied by the review artifact.
   minimal locale-catalog foundation. Keep `NARROW_READ_CLIENT_ENABLED=false`
   and preserve every active production subscription during this phase. See
   `docs/FIREBASE-READ-BOUNDARY.md`.
+- **Phase 2 delivery:** migrate listener ownership and partition the protected
+  cache and pending-write queue by verified UID and username as one cohesive
+  change. Preserve all Firebase paths and read breadth, keep the narrow-read
+  flag disabled, and run production smoke only after the complete lifecycle and
+  storage boundary is present.
 - **Likely files:** `index.html`, subscription-focused tests, Playwright smoke,
   scaling/security docs, and maintenance log.
 - **Firebase paths read:** current legacy paths during transition, one exact

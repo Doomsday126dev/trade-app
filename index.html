@@ -2432,6 +2432,8 @@ window.__pogoBootWatch=setTimeout(function(){
 <script src="js/i18n/core.js"></script>
 <script src="js/services/firebaseClient.js"></script>
 <script src="js/data/subscriptionManager.js"></script>
+<script src="js/data/listenerLifecycle.js"></script>
+<script src="js/data/sessionCacheBoundary.js"></script>
 <script src="js/data/firebaseReadRegistry.js"></script>
 <script src="js/data/currentUserRepository.js"></script>
 <script src="js/data/publicShareRepository.js"></script>
@@ -2483,6 +2485,10 @@ const firebaseClientService=window.PogoServices?.firebaseClient;
 if(!firebaseClientService)throw new Error('Firebase client service failed to load');
 const subscriptionManagerData=window.PogoData?.subscriptionManager;
 if(!subscriptionManagerData)throw new Error('Subscription manager failed to load');
+const listenerLifecycleData=window.PogoData?.listenerLifecycle;
+if(!listenerLifecycleData)throw new Error('Listener lifecycle failed to load');
+const sessionCacheBoundaryData=window.PogoData?.sessionCacheBoundary;
+if(!sessionCacheBoundaryData)throw new Error('Session cache boundary failed to load');
 const firebaseReadRegistryData=window.PogoData?.firebaseReadRegistry;
 if(!firebaseReadRegistryData)throw new Error('Firebase read registry failed to load');
 const currentUserRepositoryData=window.PogoData?.currentUserRepository;
@@ -2491,6 +2497,10 @@ const publicShareRepositoryData=window.PogoData?.publicShareRepository;
 if(!publicShareRepositoryData)throw new Error('Public-share repository failed to load');
 const cacheAdapterDomain=window.PogoDomain?.cacheAdapters;
 if(!cacheAdapterDomain)throw new Error('Cache adapters failed to load');
+const managedSubscriptions=subscriptionManagerData.createSubscriptionManager();
+const managedListenerLifecycle=listenerLifecycleData.createListenerLifecycle({subscriptions:managedSubscriptions});
+const managedSessionCache=sessionCacheBoundaryData.createSessionCacheBoundary({storage:localStorage});
+let managedFirebaseClient=null;
 
 const OWNER="Doomsday126";
 const APP_VERSION="4.6.37";
@@ -2689,11 +2699,11 @@ const SECURE_RULES=`{
 
 let db=null,fbOn=false,cur=null,fbApp=null,auth=null,currentAuthUid=null;
 let allData={};
+let selectedTrainerRuntime={username:'',publicData:null,authenticatedData:null};
 let browseFilter='ALL',browseList='wishlist',staleFilter=0;
 let browseFlagFilters={lucky:false,xxl:false,xxs:false,shiny:false};
 let myListType='wishlist',strListType='wishlist';
 let rpinTarget=null;
-const SYNC_QUEUE_KEY='pogoSyncQueue_v1';
 let syncQueue={},syncFlushTimer=null;
 let undoStack=null,undoTimer=null;
 let acItems=[],acFiltered=[],acFocusIdx=-1;
@@ -3503,12 +3513,17 @@ function refreshSession(){
 // ── SYNC QUEUE (offline support) ─────────────────────────────
 function queueSync(path,data){
   syncQueue[path]={path,data,ts:Date.now()};
-  saveSyncQueue();
+  const saved=saveSyncQueue();
+  if(!saved.ok){
+    toast(i18nCore.t('storage.offlineRecoveryUnavailable'),5000);
+    return false;
+  }
   showSyncDot(true);
   refreshSyncUi();
   if(firebaseAuthConfigured()&&auth&&!auth.currentUser)warnLocalOnlyMode();
   clearTimeout(syncFlushTimer);
   syncFlushTimer=setTimeout(flushSyncQueue,250);
+  return true;
 }
 async function flushSyncQueue(){
   if(firebaseAuthConfigured()&&auth&&!auth.currentUser){
@@ -3579,14 +3594,44 @@ function bindAuthObserver(){
   onAuthStateChanged(auth,user=>{
     _authStateKnown=true;
     _authStateWaiters.splice(0).forEach(fn=>fn(user||null));
+    if(!user){
+      managedListenerLifecycle.deactivateSession('auth_loss');
+      suspendOwnedSession('auth_loss');
+      clearAuthenticatedSelectedTrainerData();
+      allData=runtimeDataWithSelectedTrainer(getLocal());
+    }
     currentAuthUid=user?.uid||'';
     if(user){
+      const rememberedUsername=cur||checkSession();
+      if(rememberedUsername&&storedSessionMatches(user.uid,rememberedUsername)){
+        try{
+          activateOwnedSession(user.uid,rememberedUsername);
+          cur=rememberedUsername;
+        }catch(error){
+          managedListenerLifecycle.deactivateSession('identity_mismatch');
+          suspendOwnedSession('identity_mismatch');
+          cur=null;
+          try{localStorage.removeItem('pgu');localStorage.removeItem('pguts');}catch{}
+          showLogin();
+          toast(i18nCore.t('storage.sessionOwnershipMismatch'),6000);
+          return;
+        }
+      }else if(rememberedUsername&&managedSessionCache.snapshot().cacheOwner){
+        managedListenerLifecycle.deactivateSession('identity_mismatch');
+        suspendOwnedSession('identity_mismatch');
+        cur=null;
+        try{localStorage.removeItem('pgu');localStorage.removeItem('pguts');}catch{}
+        showLogin();
+        toast(i18nCore.t('storage.sessionOwnershipMismatch'),6000);
+        return;
+      }
       // Cancel any pending "auth dropped" notification — turned out to be transient.
       if(_authDropTimer){clearTimeout(_authDropTimer);_authDropTimer=null;}
       _localOnlyWarned=false;
       // Auth recovered — setSyncStatus emits the "✅ Back online" toast if we were previously local-only/offline
       setSyncStatus(Object.keys(syncQueue).length?'syncing':'online');
       ensureProtectedSubscriptions();
+      if(_activeShareView?.username)ensureShareViewSubscriptions(_activeShareView.username);
       if(_pendingShareRequest){
         ensureShareViewSubscriptions(_pendingShareRequest.username);
         loadShareViewData(_pendingShareRequest.username).then(ok=>{
@@ -3595,10 +3640,14 @@ function bindAuthObserver(){
           }
         });
       }
+      if(cur&&document.getElementById('app')?.style.display==='none'&&!document.getElementById('share-view')?.classList.contains('active'))showApp();
       if(Object.keys(syncQueue).length)flushSyncQueue();
       return;
     }
     if(!cur)return;
+    document.querySelectorAll('.ov.open').forEach(el=>closeModal(el.id));
+    document.getElementById('app').style.display='none';
+    showLogin();
     if(_authDropTimer)return; // already pending
     _authDropTimer=setTimeout(()=>{
       _authDropTimer=null;
@@ -3643,8 +3692,48 @@ function lastLoginTime(username,data){
 // ── LOCAL STORAGE ─────────────────────────────────────────────
 function lsGet(k,d){try{return JSON.parse(localStorage.getItem(k)??'null')??d}catch{return d}}
 function lsSet(k,v){localStorage.setItem(k,JSON.stringify(v))}
-syncQueue=lsGet(SYNC_QUEUE_KEY,{})||{};
-function saveSyncQueue(){lsSet(SYNC_QUEUE_KEY,syncQueue||{});}
+function saveSyncQueue(){
+  const result=managedSessionCache.writeQueue(syncQueue||{});
+  if(!result.ok)syncQueue={};
+  return result;
+}
+function activateOwnedSession(uid,username){
+  const result=managedSessionCache.activate({uid,username});
+  if(!result.ok){
+    const error=new Error(result.error.message);
+    error.code=result.error.code;
+    throw error;
+  }
+  syncQueue=managedSessionCache.readQueue();
+  allData=getLocal();
+  return result;
+}
+function storedSessionMatches(uid,username){
+  const owner=managedSessionCache.snapshot().cacheOwner;
+  return!!owner&&owner.uid===uid&&owner.username===username;
+}
+function suspendOwnedSession(reason='auth_loss'){
+  managedSessionCache.suspend(reason);
+  syncQueue={};
+  allData=getLocal();
+}
+function clearOwnedSession(){
+  managedSessionCache.clearForLogout();
+  syncQueue={};
+  allData=getLocal();
+}
+function showSessionStorageNotices(){
+  managedSessionCache.drainNotices().forEach(code=>{
+    const key={
+      'storage/legacy-queue-discarded':'storage.pendingChangesDiscarded',
+      'storage/queue-reset':'storage.pendingChangesDiscarded',
+      'storage/cache-migrated':'storage.cacheReset',
+      'storage/cache-reset':'storage.cacheReset',
+      'storage/cache-owner-reset':'storage.cacheReset'
+    }[code];
+    if(key)toast(i18nCore.t(key),5000);
+  });
+}
 function communityRoleForUser(username,ud={}){
   if(ud?.isOwner||username===OWNER)return'owner';
   if(ud?.isAdmin)return'admin';
@@ -3948,23 +4037,9 @@ function normalizeData(s){
 }
 
 function initLocal(){
-  let s=lsGet('pogo3',null);
-  if(!s){
-    s={users:{},wishlist:{},dynamax:{},gmax:{},costumes:{},have:{},offers:{},trades:{},requests:{},authIndex:{},loginDirectory:{},communities:{},userCommunities:{},communityRequests:{}};
-    DB.users.filter(u=>u&&u.trim()&&u.trim()!=='EVERYONE').map(u=>u.trim()).forEach(u=>{
-      s.users[u]=normalizedUserRecord(u,{}, {pin:'123456',isAdmin:u===OWNER,isOwner:u===OWNER,authVersion:1,authEmail:authEmail(u,1)});
-      s.loginDirectory[u]=normalizedLoginDirectoryRecord(u,s.users[u],s.loginDirectory[u]);
-      s.wishlist[u]={};s.dynamax[u]={};s.gmax[u]={};s.costumes[u]={};s.have[u]={};
-      DB.wishlist.forEach(e=>{const v=e.users[u];if(v)s.wishlist[u][e.name]=v;});
-      DB.dynamax.forEach(e=>{const v=e.users[u];if(v)s.dynamax[u][e.name]=v;});
-      DB.gmax.forEach(e=>{const v=e.users[u];if(v)s.gmax[u][e.name]=v;});
-      DB.costumes.forEach(e=>{const v=e.users[u];if(v)s.costumes[u][e.name]=v;});
-    });
-    lsSet('pogo3',s);
-  }
-  return normalizeData(s);
+  return normalizeData(managedSessionCache.readData());
 }
-function getLocal(){return normalizeData(lsGet('pogo3',null)||initLocal())}
+function getLocal(){return normalizeData(managedSessionCache.readData()||initLocal())}
 // ── PERF VISIBILITY (scaling phase 1) ────────────────────────
 // Lightweight rolling-buffer timer for hot paths. Surfaced in Health Check
 // so the owner can spot growing per-snapshot / per-render cost before it
@@ -4005,7 +4080,8 @@ function perfStats(){
 }
 function saveLocal(s){
   try{
-    lsSet('pogo3',normalizeData(s));
+    const result=managedSessionCache.writeData(normalizeData(s));
+    if(!result.ok)throw Object.assign(new Error(result.error.message),{code:result.error.code});
   }catch(e){
     // QuotaExceededError on Safari iOS first (~5MB). We can't easily prune
     // safely so we keep the in-memory copy correct and surface the warning
@@ -4073,6 +4149,7 @@ async function publishPublicShareNow(username=cur){
   if(fbOn&&db&&auth?.currentUser){
     await withTimeout(set(ref(db,`publicShares/${username}`),snapshot),8000,'Publishing share link timed out','db/public-share-timeout');
     delete syncQueue[`publicShares/${username}`];
+    saveSyncQueue();
     if(!Object.keys(syncQueue).length)showSyncDot(false);
     return true;
   }
@@ -4109,6 +4186,7 @@ async function writeUserNow(u,data){
       delete syncQueue[`users/${u}`];
       if(canWriteLoginDirectoryNow())delete syncQueue[`loginDirectory/${u}`];
       if(u===cur)delete syncQueue[`publicShares/${u}`];
+      saveSyncQueue();
       if(!Object.keys(syncQueue).length)showSyncDot(false);
     }catch{
       queueSync(`users/${u}`,s.users[u]);
@@ -4138,6 +4216,7 @@ async function bindAuthUserNow(username,authUpdate){
     await withTimeout(set(ref(db,`loginDirectory/${username}`),dirNext),8000,'Linking login directory timed out','auth/directory-timeout');
     delete syncQueue[`users/${username}`];
     delete syncQueue[`loginDirectory/${username}`];
+    saveSyncQueue();
     if(!Object.keys(syncQueue).length)showSyncDot(false);
   }
   s.users[username]=next;
@@ -4180,6 +4259,7 @@ async function repairMemberAccount(username,opts={}){
     if(!userSnap.exists()||!dirSnap.exists())throw Object.assign(new Error('Server did not confirm the repaired account. Sign out/back in as admin and retry.'),{code:'repair/not-confirmed'});
     delete syncQueue[`users/${username}`];
     delete syncQueue[`loginDirectory/${username}`];
+    saveSyncQueue();
     if(!Object.keys(syncQueue).length)showSyncDot(false);
   }
   const s=getLocal();
@@ -4492,7 +4572,7 @@ async function bumpLastSeen(){
   saveLocal(s);
   if(fbOn&&db)queueSync(`users/${cur}/lastSeen`,now);
 }
-function syncFromLocal(){allData=getLocal();refreshAll();}
+function syncFromLocal(){allData=runtimeDataWithSelectedTrainer(getLocal());refreshAll();}
 function showSkeletonsIfEmpty(){
   // Show loading skeletons on first paint if no data yet
   if(!allData||!Object.keys(allData.users||{}).length){
@@ -4578,6 +4658,7 @@ function setupFirebase(url=FIREBASE_URL){
   if(!firebaseSdkReady())throw new Error('Firebase SDK is still loading');
   fbApp=initializeApp(firebaseConfig(url),'pogo');
   db=getDatabase(fbApp);fbOn=true;
+  managedFirebaseClient=firebaseClientService.createFirebaseClient({database:db,ref,get,onValue});
   if(firebaseAuthConfigured()){
     auth=getAuth(fbApp);
     bindAuthObserver();
@@ -4750,7 +4831,6 @@ function mergeRemoteData(d){
 // ── LAZY-LOAD LISTENERS ───────────────────────────────────────
 // Instead of downloading the entire DB on connect, subscribe to each
 // path independently. Only subscribe to a list type when needed.
-const _activeSubs={};        // path → unsubscribe fn
 let _firstSyncDone=false;
 let _pathLoadState={};       // path → 'loading'|'loaded'
 
@@ -4784,7 +4864,7 @@ function _onSubSnapshot(path,snap){
     }
   }
   saveLocal(s);
-  allData=normalizeData(s);
+  allData=runtimeDataWithSelectedTrainer(s);
   // Apply pending writes from sync queue
   Object.values(syncQueue||{}).forEach(({path:p,data})=>applyDataPath(allData,p,data));
   if(Object.keys(syncQueue||{}).length)saveLocal(allData);
@@ -4827,13 +4907,39 @@ function _onSubSnapshot(path,snap){
 const _snapshotFirstSeen=new Set();
 let _activeShareView=null;
 let _pendingShareRequest=null;
-const _activeShareSubs={};
+function startManagedSnapshotListener(path,{next,error}){
+  if(!managedFirebaseClient){
+    const unavailable=new Error('Firebase listener client is not ready');
+    unavailable.code='listener/client-unavailable';
+    throw unavailable;
+  }
+  const result=managedFirebaseClient.listen(path,{
+    onData:(_value,snapshot)=>next(snapshot),
+    onError:error
+  });
+  if(!result.ok){
+    const failed=new Error(result.error.message);
+    failed.code=result.error.code;
+    throw failed;
+  }
+  return result.unsubscribe;
+}
 function subscribePath(path){
-  if(!db||_activeSubs[path])return;
-  _pathLoadState[path]='loading';
-  const r=ref(db,path);
-  const unsub=onValue(r,snap=>_onSubSnapshot(path,snap),()=>setSyncStatus('offline'));
-  _activeSubs[path]=unsub;
+  if(!db)return false;
+  const options={
+    path,
+    start:handlers=>{
+      _pathLoadState[path]='loading';
+      return startManagedSnapshotListener(path,handlers);
+    },
+    onValue:snap=>_onSubSnapshot(path,snap),
+    onError:()=>setSyncStatus('offline')
+  };
+  const result=path==='loginDirectory'
+    ?managedListenerLifecycle.subscribePublic({...options,key:'public:loginDirectory'})
+    :managedListenerLifecycle.subscribeSession({...options,key:`session:${path}`});
+  if(!result.ok)setSyncStatus('offline');
+  return result.ok;
 }
 function ensureListSubscribed(type){
   if(!db)return;
@@ -4841,6 +4947,8 @@ function ensureListSubscribed(type){
 }
 function ensureProtectedSubscriptions(){
   if(!db||!auth?.currentUser)return;
+  const active=managedListenerLifecycle.activateSession({uid:auth.currentUser.uid,username:cur});
+  if(!active.ok)return;
   subscribePath('users');
   subscribePath('authIndex');
   subscribePath('requests');
@@ -4880,14 +4988,42 @@ function applyShareDataPath(s,path,val){
 function shareDataPaths(username){
   return[`users/${username}`,...PUBLIC_SHARE_TYPES.map(t=>`${t}/${username}`)];
 }
+function selectedTrainerData(username,access='public'){
+  const clean=String(username||'').trim();
+  if(!clean)return null;
+  if(selectedTrainerRuntime.username!==clean){
+    selectedTrainerRuntime={username:clean,publicData:null,authenticatedData:null};
+  }
+  const key=access==='authenticated'?'authenticatedData':'publicData';
+  if(!selectedTrainerRuntime[key])selectedTrainerRuntime[key]=normalizeData({});
+  return selectedTrainerRuntime[key];
+}
+function clearSelectedTrainerData(){
+  selectedTrainerRuntime={username:'',publicData:null,authenticatedData:null};
+}
+function clearAuthenticatedSelectedTrainerData(){
+  selectedTrainerRuntime.authenticatedData=null;
+}
+function runtimeDataWithSelectedTrainer(source){
+  const base=normalizeData(source||{});
+  const username=selectedTrainerRuntime.username;
+  if(!username)return base;
+  [selectedTrainerRuntime.publicData,selectedTrainerRuntime.authenticatedData].filter(Boolean).forEach(overlay=>{
+    if(overlay.users?.[username])base.users[username]=overlay.users[username];
+    PUBLIC_SHARE_TYPES.forEach(type=>{
+      if(overlay[type]?.[username])base[type][username]=overlay[type][username];
+    });
+  });
+  return base;
+}
 async function loadPublicShareData(username){
   if(!db||!username)return false;
   try{
     const snap=await get(ref(db,`publicShares/${username}`));
     if(!snap.exists())return false;
-    const s=getLocal();
+    const s=selectedTrainerData(username);
     if(!applyPublicShareSnapshot(s,snap.val()))return false;
-    allData=normalizeData(s);
+    allData=runtimeDataWithSelectedTrainer(getLocal());
     setSyncStatus('online');
     return true;
   }catch(e){
@@ -4903,10 +5039,9 @@ async function loadShareViewData(username){
       const snap=await get(ref(db,path));
       return[path,snap.exists()?snap.val():null];
     }));
-    const s=getLocal();
+    const s=selectedTrainerData(username,'authenticated');
     pairs.forEach(([path,val])=>applyShareDataPath(s,path,val));
-    saveLocal(s);
-    allData=normalizeData(s);
+    allData=runtimeDataWithSelectedTrainer(getLocal());
     setSyncStatus('online');
     return true;
   }catch(e){
@@ -4928,14 +5063,15 @@ function renderUnavailableShareView(username,message){
   if(out)out.innerHTML=emptyHtml(message,'Ask the trainer to copy their share link again after the public share rules are published.','🔗');
 }
 function clearShareViewSubscriptions(){
-  Object.values(_activeShareSubs).forEach(unsub=>{try{unsub();}catch{}});
-  Object.keys(_activeShareSubs).forEach(path=>delete _activeShareSubs[path]);
+  managedListenerLifecycle.clearSelectedTrainer('share_closed');
+  clearSelectedTrainerData();
+  allData=getLocal();
 }
 function onPublicShareSnapshot(username,snap){
   if(!snap.exists())return;
-  const s=getLocal();
+  const s=selectedTrainerData(username);
   if(!applyPublicShareSnapshot(s,snap.val()))return;
-  allData=normalizeData(s);
+  allData=runtimeDataWithSelectedTrainer(getLocal());
   setSyncStatus('online');
   if(document.getElementById('share-view')?.classList.contains('active')&&_activeShareView?.username===username){
     renderShareView(_activeShareView.username,_activeShareView.type);
@@ -4943,31 +5079,42 @@ function onPublicShareSnapshot(username,snap){
 }
 function onShareSnapshot(path,snap){
   const val=snap.exists()?snap.val():null;
-  const s=getLocal();
-  applyShareDataPath(s,path,val);
-  saveLocal(s);
-  allData=normalizeData(s);
-  setSyncStatus('online');
   const username=path.split('/')[1];
+  const s=selectedTrainerData(username,'authenticated');
+  applyShareDataPath(s,path,val);
+  allData=runtimeDataWithSelectedTrainer(getLocal());
+  setSyncStatus('online');
   if(document.getElementById('share-view')?.classList.contains('active')&&_activeShareView?.username===username){
     renderShareView(_activeShareView.username,_activeShareView.type);
   }
 }
 function ensureShareViewSubscriptions(username){
   if(!db||!username)return false;
+  selectedTrainerData(username);
   const publicPath=`publicShares/${username}`;
-  if(!_activeShareSubs[publicPath]){
-    _activeShareSubs[publicPath]=onValue(ref(db,publicPath),snap=>onPublicShareSnapshot(username,snap),e=>{
+  const publicResult=managedListenerLifecycle.subscribeSelectedTrainer({
+    username,path:publicPath,key:`share:${username}:public`,
+    start:handlers=>startManagedSnapshotListener(publicPath,handlers),
+    onValue:snap=>onPublicShareSnapshot(username,snap),
+    onError:e=>{
       console.warn('Public share subscription failed',e);
       setSyncStatus('offline');
-    });
+    }
+  });
+  if(!publicResult.ok)return false;
+  if(auth&&firebaseAuthConfigured()&&!auth.currentUser){
+    managedListenerLifecycle.clearAuthenticatedShareListeners();
+    return true;
   }
-  if(auth&&firebaseAuthConfigured()&&!auth.currentUser)return true;
   shareDataPaths(username).forEach(path=>{
-    if(_activeShareSubs[path])return;
-    _activeShareSubs[path]=onValue(ref(db,path),snap=>onShareSnapshot(path,snap),e=>{
-      console.warn('Share view subscription failed',path,e);
-      setSyncStatus('offline');
+    managedListenerLifecycle.subscribeSelectedTrainer({
+      username,path,authenticated:true,key:`share:${username}:legacy:${path}`,
+      start:handlers=>startManagedSnapshotListener(path,handlers),
+      onValue:snap=>onShareSnapshot(path,snap),
+      onError:e=>{
+        console.warn('Share view subscription failed',path,e);
+        setSyncStatus('offline');
+      }
     });
   });
   return true;
@@ -5194,7 +5341,7 @@ async function runLoginHealthCheck(){
     const showAdminPanel=!!(cur&&allData.users?.[cur]?.isAdmin);
     if(showAdminPanel){
       const scaleSize=Object.keys(spriteScaleCache||{}).length;
-      let lsBytes=0;try{lsBytes=(localStorage.getItem('pogo3')||'').length;}catch{}
+      let lsBytes=0;try{lsBytes=(localStorage.getItem('pogoSessionCache_v2')||'').length;}catch{}
       const lsKB=Math.round(lsBytes/1024);
       const lsKind=lsKB>=3072?'warn':lsKB>=1024?'info':'ok';
       rows.push(healthRow('Local storage size',`${lsKB} KB`,`Safari iOS quota is ~5 MB. At ~3 MB it\'s worth pruning archived offers/trades. Sprite-scale cache holds ${scaleSize} entries (max ${SPRITE_SCALE_CACHE_MAX} before LRU eviction).`,lsKind));
@@ -5240,7 +5387,7 @@ async function runLoginHealthCheck(){
 async function clearLoginLocalCache(){
   const ok=confirm('Clear saved app data and cached files on this device, then reload? This only affects this browser.');
   if(!ok)return;
-  const appKeys=['pogo3','fbUrl','pgu','pguts','pogoAdvancedOpen','pogoExportStyle','pogoLastBackup','pogoWhatsNewSeen','pogoTheme','pogoBackupDismissed','pogoTourSeen','pogoSpriteScales_v2'];
+  const appKeys=['pogo3','pogoSessionCache_v2','pogoSyncQueue_v1','pogoSyncQueue_v2','fbUrl','pgu','pguts','pogoAdvancedOpen','pogoExportStyle','pogoLastBackup','pogoWhatsNewSeen','pogoTheme','pogoBackupDismissed','pogoTourSeen','pogoSpriteScales_v2'];
   const clearStore=store=>{
     try{
       appKeys.forEach(k=>store.removeItem(k));
@@ -5332,6 +5479,12 @@ async function doLogin(){
     try{
       ident=ident||(auth?await ensureFirebaseIdentity(u,p,ud):null);
       if(ident&&db)await syncOwnAuthIndex(u,ident,ud);
+      if(!ident?.uid){
+        const identityError=new Error('A verified Firebase identity is required to unlock cached account data');
+        identityError.code='storage/identity-required';
+        throw identityError;
+      }
+      activateOwnedSession(ident.uid,u);
       cur=u;stampSession(u);
       const loginUpdate={...ud,lastSeen:Date.now()};
       if(ident){loginUpdate.authEmail=ident.email;loginUpdate.authUid=ident.uid;}
@@ -5354,6 +5507,8 @@ async function doLogin(){
           ?'This Firebase login is linked to a different trainer. Ask an admin to repair the account.'
         :code==='auth/index-session-mismatch'||code==='auth/index-binding-mismatch'
           ?'This trainer login has an identity-binding mismatch. Ask an admin to repair the account.'
+        :code==='storage/owner-mismatch'||code==='storage/identity-required'
+          ?i18nCore.t('storage.sessionOwnershipMismatch')
         :code==='PERMISSION_DENIED'||code==='database/permission-denied'||code==='auth/bind-failed'
           ?'Firebase rules blocked linking this trainer. Update the users rule, then try again.'
         :'Firebase Auth failed: '+(code||e.message||'check API key and auth settings');
@@ -5367,13 +5522,16 @@ async function doLogin(){
 }
 
 function logout(){
+  managedListenerLifecycle.deactivateSession('logout');
+  clearAuthenticatedSelectedTrainerData();
+  clearOwnedSession();
   cur=null;
   try{
     localStorage.removeItem('pgu');localStorage.removeItem('pguts');
     sessionStorage.removeItem('pgu');sessionStorage.removeItem('pguts'); // belt-and-suspenders cleanup
   }catch{}
   if(auth)firebaseSignOut(auth).catch(()=>{});
-  closeModal('prof-modal');
+  document.querySelectorAll('.ov.open').forEach(el=>closeModal(el.id));
   document.getElementById('app').style.display='none';
   showLogin();
 }
@@ -12868,6 +13026,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   // Hardcoded Firebase URL — config screen never shown
   lsSet('fbUrl',FIREBASE_URL);
   syncFromLocal();
+  showSessionStorageNotices();
   // Check for read-only share view
   const shareReq=checkShareViewParam();
   const s=checkSession();

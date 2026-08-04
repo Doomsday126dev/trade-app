@@ -51,3 +51,11 @@ test('the default catalog provides parameterized data-state keys',()=>{
   assert.equal(core.t('data.loading',{resource:'trainer'}),'Loading trainer…');
   assert.equal(core.t('data.empty',{resource:'trainers'}),'No trainers found.');
 });
+
+test('session ownership warnings use stable translation keys with English fallback',()=>{
+  const core=load();
+  assert.match(core.t('storage.pendingChangesDiscarded'),/ownership could not be verified/);
+  assert.match(core.t('storage.cacheReset'),/Cached session data was reset/);
+  assert.match(core.t('storage.sessionOwnershipMismatch'),/does not match the authenticated account/);
+  assert.match(core.t('storage.offlineRecoveryUnavailable'),/securely verified again/);
+});
