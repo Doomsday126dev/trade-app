@@ -1,5 +1,10 @@
 # Maintenance Log
 
+## 2026-08-04 - Clear account-owned transient UI at session boundaries
+
+- Clear undo actions, notifications, open modals, temporary selections, filters, and delayed account actions on logout, confirmed auth loss, and account replacement.
+- Preserve same-user navigation and public/anonymous state while preventing one trainer's transient activity from appearing after another trainer signs in.
+
 ## 2026-05-25 - Codex - Multi-community architecture audit
 
 ### Summary

@@ -2746,6 +2746,7 @@ let schedSelectedDate=null; // currently selected day (ISO YYYY-MM-DD)
 let voiceRecognition=null;
 let pokemonTypes={};
 let entryTimestamps={}; // for conflict detection
+let _sessionTransientGeneration=0;
 const BACKUP_REMINDER_INTERVAL=7*24*60*60*1000; // 7 days
 const AUTH_VERSION_SCAN_LIMIT=12;
 // Pokemon primary type colors (from PokeAPI)
@@ -3622,6 +3623,7 @@ function bindAuthObserver(){
     _authStateKnown=true;
     _authStateWaiters.splice(0).forEach(fn=>fn(user||null));
     if(!user){
+      resetSessionTransientUi('auth_loss');
       managedListenerLifecycle.deactivateSession('auth_loss');
       managedOwnedDataCoordinator?.reset();
       suspendOwnedSession('auth_loss');
@@ -3726,7 +3728,84 @@ function saveSyncQueue(){
   if(!result.ok)syncQueue={};
   return result;
 }
+function sessionTransientCallback(callback){
+  const generation=_sessionTransientGeneration;
+  return(...args)=>{
+    if(generation!==_sessionTransientGeneration)return false;
+    callback(...args);
+    return true;
+  };
+}
+function resetSessionTransientUi(reason='session_boundary'){
+  _sessionTransientGeneration++;
+
+  if(undoTimer)clearTimeout(undoTimer);
+  undoTimer=null;
+  undoStack=null;
+  if(_toastTimer)clearTimeout(_toastTimer);
+  _toastTimer=null;
+
+  const undoToast=document.getElementById('undo-toast');
+  if(undoToast){
+    undoToast.classList.remove('show');
+    undoToast.setAttribute('aria-hidden','true');
+    undoToast.hidden=true;
+  }
+  const undoMessage=document.getElementById('undo-msg');
+  if(undoMessage)undoMessage.textContent='';
+  const toastEl=document.getElementById('toast');
+  if(toastEl){
+    toastEl.classList.remove('show');
+    toastEl.setAttribute('aria-hidden','true');
+    toastEl.hidden=true;
+    toastEl.textContent='';
+  }
+
+  document.querySelectorAll('.ov.open').forEach(el=>el.classList.remove('open'));
+  document.querySelectorAll('.undo-toast').forEach(el=>{if(el.id!=='undo-toast')el.remove();});
+  document.querySelectorAll('.bulk-selected,.swiping,.swipe-action,.swipe-action-select').forEach(el=>{
+    el.classList.remove('bulk-selected','swiping','swipe-action','swipe-action-select');
+    if(el.style?.transform)el.style.transform='';
+  });
+  document.querySelectorAll('.bulk-check:checked,.have-bulk-check:checked').forEach(el=>{el.checked=false;});
+  ['mylist-filter','have-filter','ac-input','add-pmon-sel','add-pmon-notes'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.value='';
+  });
+  document.getElementById('ac-dropdown')?.classList.remove('open');
+  document.getElementById('have-ac-dropdown')?.classList.remove('open');
+  const tray=document.getElementById('add-tray');
+  if(tray){tray.hidden=true;tray.innerHTML='';}
+  const syncBanner=document.getElementById('sync-banner');
+  if(syncBanner)syncBanner.hidden=true;
+
+  if(_modalKeyHandler)document.removeEventListener('keydown',_modalKeyHandler);
+  _modalKeyHandler=null;
+  _modalPrevFocus=null;
+  rpinTarget=null;
+  addTray=[];
+  acItems=[];acFiltered=[];acFocusIdx=-1;
+  haveAcItems=[];haveAcFiltered=[];haveAcFocusIdx=-1;
+  dragSrc=null;
+  bulkMode=false;bulkSelected.clear();
+  haveBulkMode=false;haveBulkSelected.clear();
+  _safeTransferSelected=null;
+  _qaSelected={lf:new Set(),ft:new Set()};
+  _activeDiff=null;
+  _activeTradeMatch=null;
+  _swipeState=null;
+  _ptrState=null;
+  if(voiceRecognition){try{voiceRecognition.abort();}catch{}voiceRecognition=null;}
+  document.body?.classList.remove('bulk-mode','have-bulk-mode');
+  return{ok:true,reason,generation:_sessionTransientGeneration};
+}
+function resetTransientUiBeforeSessionActivation(uid,username){
+  const owner=managedSessionCache?.snapshot?.().activeOwner;
+  if(!owner||owner.uid===uid&&owner.username===username)return false;
+  resetSessionTransientUi('identity_switch');
+  return true;
+}
 function activateOwnedSession(uid,username){
+  resetTransientUiBeforeSessionActivation(uid,username);
   const result=managedSessionCache.activate({uid,username});
   if(!result.ok){
     const error=new Error(result.error.message);
@@ -5570,6 +5649,7 @@ async function doLogin(){
 }
 
 function logout(){
+  resetSessionTransientUi('logout');
   managedListenerLifecycle.deactivateSession('logout');
   managedOwnedDataCoordinator?.reset();
   clearOwnedSession();
@@ -7144,10 +7224,10 @@ function removeEntry(name){
   const row=[...document.querySelectorAll('.myrow')].find(r=>r.dataset.name===name);
   if(row){
     row.classList.add('removing');
-    setTimeout(()=>{
+    setTimeout(sessionTransientCallback(()=>{
       writeListItem(myListType,cur,name,null);
       showUndo(dn);
-    },220);
+    }),220);
   }else{
     writeListItem(myListType,cur,name,null);
     showUndo(dn);
@@ -10407,7 +10487,7 @@ function swipeEnd(ev){
   if(!vert&&dx<-80){
     // Swipe left = delete
     row.style.transform='translateX(-100%)';
-    setTimeout(()=>{const n=row.dataset.name;if(n)confirmRemove(n,row.dataset.full||n);},150);
+    setTimeout(sessionTransientCallback(()=>{const n=row.dataset.name;if(n)confirmRemove(n,row.dataset.full||n);}),150);
   }else if(!vert&&dx>80){
     // Swipe right = toggle bulk select
     row.style.transform='';
@@ -12798,7 +12878,7 @@ function showConflictModal(conflicts,onLocal,onRemote){
   document.body.appendChild(el);
   document.getElementById(`${id}-local`).onclick=()=>{onLocal();el.remove();};
   document.getElementById(`${id}-remote`).onclick=()=>{onRemote();el.remove();};
-  setTimeout(()=>{if(el.parentNode){onRemote();el.remove();}},30000); // default to remote after 30s
+  setTimeout(sessionTransientCallback(()=>{if(el.parentNode){onRemote();el.remove();}}),30000); // default to remote after 30s
 }
 
 // ── IMPORT FROM SEARCH STRING ─────────────────────────────────
