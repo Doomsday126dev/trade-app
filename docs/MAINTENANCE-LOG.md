@@ -1,5 +1,12 @@
 # Maintenance Log
 
+## 2026-08-04 - Production validation for transient-state cleanup
+
+- Verified the owner session contained no prior TestUser toast, modal, banner, selected row, pending confirmation, or other visible transient state.
+- Verified owner-only Admin reads opened once, stopped when Admin closed, and reopened without duplicate rows, repeated rendering, warnings, or errors.
+- Verified logout preserved anonymous username-directory access and an existing realtime public share continued to load read-only without authentication.
+- No Firebase rules or production data changed during this validation, and no rollback was required.
+
 ## 2026-08-04 - Clear account-owned transient UI at session boundaries
 
 - Clear undo actions, notifications, open modals, temporary selections, filters, and delayed account actions on logout, confirmed auth loss, and account replacement.
