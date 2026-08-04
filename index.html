@@ -2428,6 +2428,14 @@ window.__pogoBootWatch=setTimeout(function(){
 <script src="js/utils/textSafety.js"></script>
 <script src="js/ui/stringPanels.js"></script>
 <script src="js/ui/emptyState.js"></script>
+<script src="js/i18n/locales/en.js"></script>
+<script src="js/i18n/core.js"></script>
+<script src="js/services/firebaseClient.js"></script>
+<script src="js/data/subscriptionManager.js"></script>
+<script src="js/data/firebaseReadRegistry.js"></script>
+<script src="js/data/currentUserRepository.js"></script>
+<script src="js/data/publicShareRepository.js"></script>
+<script src="js/domain/cacheAdapters.js"></script>
 <script>
 let initializeApp,getDatabase,ref,set,get,onValue,update,getAuth,signInWithEmailAndPassword,createUserWithEmailAndPassword,firebaseSignOut,updatePassword,deleteUser,onAuthStateChanged;
 let firebaseSdkPromise=null;
@@ -2466,6 +2474,23 @@ async function loadFirebaseSdk(){
 
 const DB=window.POGO_TRADE_DB;
 if(!DB)throw new Error('Trade data failed to load');
+
+// Phase 1 compatibility bridge only. Existing reads and listeners remain active.
+const NARROW_READ_CLIENT_ENABLED=false;
+const i18nCore=window.PogoI18n?.core;
+if(!i18nCore)throw new Error('Locale foundation failed to load');
+const firebaseClientService=window.PogoServices?.firebaseClient;
+if(!firebaseClientService)throw new Error('Firebase client service failed to load');
+const subscriptionManagerData=window.PogoData?.subscriptionManager;
+if(!subscriptionManagerData)throw new Error('Subscription manager failed to load');
+const firebaseReadRegistryData=window.PogoData?.firebaseReadRegistry;
+if(!firebaseReadRegistryData)throw new Error('Firebase read registry failed to load');
+const currentUserRepositoryData=window.PogoData?.currentUserRepository;
+if(!currentUserRepositoryData)throw new Error('Current-user repository failed to load');
+const publicShareRepositoryData=window.PogoData?.publicShareRepository;
+if(!publicShareRepositoryData)throw new Error('Public-share repository failed to load');
+const cacheAdapterDomain=window.PogoDomain?.cacheAdapters;
+if(!cacheAdapterDomain)throw new Error('Cache adapters failed to load');
 
 const OWNER="Doomsday126";
 const APP_VERSION="4.6.37";

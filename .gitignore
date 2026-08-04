@@ -3,5 +3,6 @@ test-results/
 playwright-report/
 .firebase-local/
 database-debug.log
+firebase-debug*.log
 .local/trainer-name-audits/
 .local/uid-handle-audits/

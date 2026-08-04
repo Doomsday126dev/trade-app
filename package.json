@@ -13,6 +13,8 @@
     "check:trainer-names": "node --test tests/trainer-name-audit.test.cjs",
     "check:uid-handle-audit": "node --test tests/uid-handle-reconciliation.test.cjs tests/uid-handle-source-reader.test.cjs tests/private-identity-report.test.cjs",
     "check:identity-review": "node --test tests/identity-conflict-diagnostics.test.cjs tests/identity-review-source-reader.test.cjs tests/private-identity-review.test.cjs",
+    "check:read-boundary": "node --test tests/subscription-manager.test.cjs tests/firebase-data-boundary.test.cjs tests/i18n.test.cjs",
+    "check:firebase-reads": "node scripts/check-firebase-reads.js",
     "check:rules": "bash scripts/check-firebase-rules.sh",
     "check:global-contract": "node scripts/check-global-identity-contract.js",
     "check:global-rules": "bash scripts/check-global-identity-rules.sh",

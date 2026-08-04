@@ -818,6 +818,11 @@ identity cleanup is implied by the review artifact.
 - **Purpose:** replace root/global listeners with bounded current-user,
   one-profile, public projection, event, and explicitly retained legacy reads.
   UI changes stay behind disabled flags where a production surface is not ready.
+- **Phase 1 foundation:** first add an inert Firebase client/repository boundary,
+  explicit listener ownership, a static read registry, cache adapters, and the
+  minimal locale-catalog foundation. Keep `NARROW_READ_CLIENT_ENABLED=false`
+  and preserve every active production subscription during this phase. See
+  `docs/FIREBASE-READ-BOUNDARY.md`.
 - **Likely files:** `index.html`, subscription-focused tests, Playwright smoke,
   scaling/security docs, and maintenance log.
 - **Firebase paths read:** current legacy paths during transition, one exact
