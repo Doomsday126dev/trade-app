@@ -59,11 +59,12 @@ test('current-user repository constructs owner-exact paths only',async()=>{
   repo.listenList('gmax','Trainer',{});
   await repo.readInventory('Trainer');
   await repo.readAuthIndex('uid-1');
+  repo.listenAuthIndex('uid-1',{});
   repo.listenMemberships('uid-1',{});
   repo.listenPendingDecrements('Trainer',{});
   assert.deepEqual(calls,[
     ['read','users/Trainer'],['read','wishlist/Trainer'],['listen','gmax/Trainer'],
-    ['read','have/Trainer'],['read','authIndex/uid-1'],['listen','userCommunities/uid-1'],
+    ['read','have/Trainer'],['read','authIndex/uid-1'],['listen','authIndex/uid-1'],['listen','userCommunities/uid-1'],
     ['listen','pendingDecrements/Trainer']
   ]);
   assert.throws(()=>repo.readProfile('bad/name'),/valid Firebase key/);
@@ -96,4 +97,30 @@ test('cache adapters update exact records without mutating the source cache',()=
   const replaced=replaceTopLevel(source,'wishlist',{B:[2]});
   assert.deepEqual(replaced.wishlist,{B:[2]});
   assert.deepEqual(source.wishlist,{A:[1]});
+});
+
+test('owned exact snapshots preserve the legacy cache shape across app surfaces',()=>{
+  const window=load(['js/domain/cacheAdapters.js']);
+  const {applyExactRecord}=window.PogoDomain.cacheAdapters;
+  const snapshots=[
+    ['users/Trainer',{bio:'safe'}],
+    ['wishlist/Trainer',{Pikachu:{p:'H'}}],
+    ['dynamax/Trainer',{Electabuzz:{p:'M'}}],
+    ['gmax/Trainer',{Lapras:{p:'L'}}],
+    ['costumes/Trainer',{'Pikachu (Hat)':{p:'H'}}],
+    ['have/Trainer',{Pikachu:2}],
+    ['authIndex/uid-1',{username:'Trainer',lastSeen:1}],
+    ['userCommunities/uid-1',{nyc:{role:'member'}}],
+    ['pendingDecrements/Trainer',{dec1:{key:'Pikachu',qty:-1}}]
+  ];
+  const result=snapshots.reduce((cache,[target,value])=>applyExactRecord(cache,target,value),{});
+  assert.deepEqual(result.users.Trainer,{bio:'safe'});
+  assert.equal(result.wishlist.Trainer.Pikachu.p,'H');
+  assert.equal(result.dynamax.Trainer.Electabuzz.p,'M');
+  assert.equal(result.gmax.Trainer.Lapras.p,'L');
+  assert.equal(result.costumes.Trainer['Pikachu (Hat)'].p,'H');
+  assert.equal(result.have.Trainer.Pikachu,2);
+  assert.equal(result.authIndex['uid-1'].username,'Trainer');
+  assert.equal(result.userCommunities['uid-1'].nyc.role,'member');
+  assert.equal(result.pendingDecrements.Trainer.dec1.qty,-1);
 });

@@ -103,3 +103,31 @@ modules. Pokemon-name localization remains a separate catalog because species
 names and interface language have different sources and release cadence.
 
 Phase 1 adds no new user-facing states and does not translate existing UI.
+
+## Owned-data exact-read candidate
+
+The next candidate adds `ownedDataCoordinator` on top of the existing
+current-user repository and listener lifecycle. It can subscribe to the signed-in
+owner's exact profile, four list types, inventory, auth index, membership index,
+and pending-decrement bucket while preserving the existing global cache shape.
+Listener and payload instrumentation records only surface names, counts, and
+serialized byte totals; it does not record paths, usernames, UIDs, or payloads.
+
+Activation is deliberately mutually exclusive:
+
+```text
+NARROW_READ_CLIENT_ENABLED=false
+LEGACY_BROAD_READS_ENABLED=true
+```
+
+Exact owned reads run only when narrow reads are enabled and legacy broad reads
+are disabled. The current production combination therefore retains every
+existing listener and screen behavior. Enabling exact mode is blocked until the
+community-wide Browse/Strings dependencies on broad `users` and list collections
+have their own bounded replacement. Offers, Trades, Requests, community-wide
+reads, and their write flows are outside this candidate and remain registered as
+deferred broad surfaces.
+
+Rollback is a flag-only return to the legacy broad path. The versioned session
+cache uses the same data shape in both modes, so rollback does not require a data
+migration and Firebase can rebuild discarded snapshots.

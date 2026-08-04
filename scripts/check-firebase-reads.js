@@ -76,13 +76,24 @@ const registeredBroad=READ_SURFACES
   .map(entry=>entry.path).sort();
 assert.deepEqual(Array.from(registeredBroad),Array.from(expectedBroad),
   'Broad onValue paths must be fully represented in the read registry');
+const requiredOwnedExactPaths=[
+  'users/{currentUsername}','wishlist/{currentUsername}','dynamax/{currentUsername}',
+  'gmax/{currentUsername}','costumes/{currentUsername}','have/{currentUsername}',
+  'authIndex/{currentUid}','userCommunities/{currentUid}','pendingDecrements/{username}'
+];
+const registeredExact=new Set(READ_SURFACES
+  .filter(entry=>entry.method==='onValue'&&entry.breadth==='exact')
+  .map(entry=>entry.path));
+for(const exactPath of requiredOwnedExactPaths){
+  assert.ok(registeredExact.has(exactPath),`Owned exact read is not registered: ${exactPath}`);
+}
 
 const literalSubscriptions=[...indexSource.matchAll(/subscribePath\(\s*['"]([^'"]+)['"]\s*\)/g)].map(match=>match[1]);
 for(const pathName of literalSubscriptions){
   assert.ok(expectedBroad.includes(pathName),`Literal subscribePath(${pathName}) is not registered`);
 }
-assert.ok(indexSource.includes("['wishlist','dynamax','gmax','costumes'].includes(type))subscribePath(type);"),
-  'Lazy list subscriptions must remain explicitly constrained');
+assert.ok(indexSource.includes("if(!['wishlist','dynamax','gmax','costumes'].includes(type))return;"),
+  'Legacy lazy list subscriptions must remain explicitly constrained');
 assert.ok(indexSource.includes('subscribePath(`pendingDecrements/${cur}`);'),
   'Current-user pending decrement listener must remain exact');
 assert.ok(!indexSource.includes('_activeSubs'),
@@ -98,7 +109,15 @@ assert.ok(indexSource.includes('managedListenerLifecycle.subscribeSelectedTraine
 assert.ok(indexSource.includes("return[`users/${username}`,...PUBLIC_SHARE_TYPES.map(t=>`${t}/${username}`)];"),
   'Authenticated share fallback paths must remain users plus the four existing list paths');
 assert.ok(indexSource.includes('const NARROW_READ_CLIENT_ENABLED=false;'),
-  'Narrow-read client foundation must remain disabled during listener migration');
+  'Narrow-read client must remain disabled during exact-read migration');
+assert.ok(indexSource.includes('const LEGACY_BROAD_READS_ENABLED=true;'),
+  'Legacy broad reads must remain the production default during exact-read migration');
+assert.ok(indexSource.includes('return NARROW_READ_CLIENT_ENABLED&&!LEGACY_BROAD_READS_ENABLED;'),
+  'Exact and legacy owned-data listeners must be mutually exclusive');
+assert.ok(indexSource.includes("managedOwnedDataCoordinator?.subscribeList(type)"),
+  'Lazy owned lists must route through the exact-read coordinator when enabled');
+assert.ok(indexSource.includes("managedOwnedDataCoordinator?.subscribeSurface('pendingDecrements')"),
+  'Pending decrements must route through the exact-read coordinator when enabled');
 const logoutSource=sourceBetween('function logout(){','// ── NAV');
 assert.ok(logoutSource.indexOf("managedListenerLifecycle.deactivateSession('logout');")<logoutSource.indexOf('cur=null;'),
   'Logout must invalidate protected listeners before clearing app identity');
@@ -124,7 +143,7 @@ assert.ok(!indexSource.includes("const SYNC_QUEUE_KEY='pogoSyncQueue_v1';"),
 const moduleOrder=[
   'js/i18n/locales/en.js','js/i18n/core.js','js/services/firebaseClient.js',
   'js/data/subscriptionManager.js','js/data/listenerLifecycle.js','js/data/sessionCacheBoundary.js','js/data/firebaseReadRegistry.js',
-  'js/data/currentUserRepository.js','js/data/publicShareRepository.js',
+  'js/data/currentUserRepository.js','js/data/ownedDataCoordinator.js','js/data/publicShareRepository.js',
   'js/domain/cacheAdapters.js'
 ];
 let previous=-1;

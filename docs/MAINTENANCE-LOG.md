@@ -2599,3 +2599,7 @@ Replaced the legacy listener maps with one managed lifecycle while preserving ev
 ## 2026-08-03 - Codex - Phase 2 production validation (docs-only)
 
 Validated deployed commit `8f8101c` in production. Anonymous login-directory discovery and public-share realtime updates passed; TestUser and owner login, existing screens, and a reversible list edit with restoration passed. Logout removed protected state while preserving public access, and same-browser account switching exposed no cross-user data or queued writes. No listener duplication, stale callbacks, cache-reset loop, browser warnings, or errors occurred. No rollback was required.
+
+## 2026-08-03 - Codex - Owned-data exact-read migration candidate
+
+Added a disabled, mutually exclusive exact-read path for the signed-in user's profile, lists, inventory, auth index, memberships, and pending decrements. The coordinator uses the existing repository and session listener lifecycle, preserves current cache shapes, suppresses stale cross-session callbacks, and records aggregate listener/payload metrics without private content. Production remains on legacy broad reads with `NARROW_READ_CLIENT_ENABLED=false` and `LEGACY_BROAD_READS_ENABLED=true`; community-wide discovery, Admin, Offers, Trades, Requests, and write flows remain deferred. Firebase rules and production data are unchanged.

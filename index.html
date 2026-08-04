@@ -2436,6 +2436,7 @@ window.__pogoBootWatch=setTimeout(function(){
 <script src="js/data/sessionCacheBoundary.js"></script>
 <script src="js/data/firebaseReadRegistry.js"></script>
 <script src="js/data/currentUserRepository.js"></script>
+<script src="js/data/ownedDataCoordinator.js"></script>
 <script src="js/data/publicShareRepository.js"></script>
 <script src="js/domain/cacheAdapters.js"></script>
 <script>
@@ -2477,8 +2478,9 @@ async function loadFirebaseSdk(){
 const DB=window.POGO_TRADE_DB;
 if(!DB)throw new Error('Trade data failed to load');
 
-// Phase 1 compatibility bridge only. Existing reads and listeners remain active.
+// Exact owned-data reads remain disabled until the broad discovery surfaces migrate.
 const NARROW_READ_CLIENT_ENABLED=false;
+const LEGACY_BROAD_READS_ENABLED=true;
 const i18nCore=window.PogoI18n?.core;
 if(!i18nCore)throw new Error('Locale foundation failed to load');
 const firebaseClientService=window.PogoServices?.firebaseClient;
@@ -2493,6 +2495,8 @@ const firebaseReadRegistryData=window.PogoData?.firebaseReadRegistry;
 if(!firebaseReadRegistryData)throw new Error('Firebase read registry failed to load');
 const currentUserRepositoryData=window.PogoData?.currentUserRepository;
 if(!currentUserRepositoryData)throw new Error('Current-user repository failed to load');
+const ownedDataCoordinatorData=window.PogoData?.ownedDataCoordinator;
+if(!ownedDataCoordinatorData)throw new Error('Owned-data coordinator failed to load');
 const publicShareRepositoryData=window.PogoData?.publicShareRepository;
 if(!publicShareRepositoryData)throw new Error('Public-share repository failed to load');
 const cacheAdapterDomain=window.PogoDomain?.cacheAdapters;
@@ -2501,6 +2505,8 @@ const managedSubscriptions=subscriptionManagerData.createSubscriptionManager();
 const managedListenerLifecycle=listenerLifecycleData.createListenerLifecycle({subscriptions:managedSubscriptions});
 const managedSessionCache=sessionCacheBoundaryData.createSessionCacheBoundary({storage:localStorage});
 let managedFirebaseClient=null;
+let managedCurrentUserRepository=null;
+let managedOwnedDataCoordinator=null;
 
 const OWNER="Doomsday126";
 const APP_VERSION="4.6.37";
@@ -3596,6 +3602,7 @@ function bindAuthObserver(){
     _authStateWaiters.splice(0).forEach(fn=>fn(user||null));
     if(!user){
       managedListenerLifecycle.deactivateSession('auth_loss');
+      managedOwnedDataCoordinator?.reset();
       suspendOwnedSession('auth_loss');
       clearAuthenticatedSelectedTrainerData();
       allData=runtimeDataWithSelectedTrainer(getLocal());
@@ -3609,6 +3616,7 @@ function bindAuthObserver(){
           cur=rememberedUsername;
         }catch(error){
           managedListenerLifecycle.deactivateSession('identity_mismatch');
+          managedOwnedDataCoordinator?.reset();
           suspendOwnedSession('identity_mismatch');
           cur=null;
           try{localStorage.removeItem('pgu');localStorage.removeItem('pguts');}catch{}
@@ -3618,6 +3626,7 @@ function bindAuthObserver(){
         }
       }else if(rememberedUsername&&managedSessionCache.snapshot().cacheOwner){
         managedListenerLifecycle.deactivateSession('identity_mismatch');
+        managedOwnedDataCoordinator?.reset();
         suspendOwnedSession('identity_mismatch');
         cur=null;
         try{localStorage.removeItem('pgu');localStorage.removeItem('pguts');}catch{}
@@ -4659,6 +4668,13 @@ function setupFirebase(url=FIREBASE_URL){
   fbApp=initializeApp(firebaseConfig(url),'pogo');
   db=getDatabase(fbApp);fbOn=true;
   managedFirebaseClient=firebaseClientService.createFirebaseClient({database:db,ref,get,onValue});
+  managedCurrentUserRepository=currentUserRepositoryData.createCurrentUserRepository(managedFirebaseClient);
+  managedOwnedDataCoordinator=ownedDataCoordinatorData.createOwnedDataCoordinator({
+    repository:managedCurrentUserRepository,
+    lifecycle:managedListenerLifecycle,
+    onSnapshot:_onOwnedDataSnapshot,
+    onError:_onOwnedDataError
+  });
   if(firebaseAuthConfigured()){
     auth=getAuth(fbApp);
     bindAuthObserver();
@@ -4941,14 +4957,73 @@ function subscribePath(path){
   if(!result.ok)setSyncStatus('offline');
   return result.ok;
 }
+function ownedExactReadsEnabled(){
+  return NARROW_READ_CLIENT_ENABLED&&!LEGACY_BROAD_READS_ENABLED;
+}
+let _ownedReadErrorShown=false;
+function _onOwnedDataSnapshot({surface,path,value}){
+  const started=(typeof performance!=='undefined'&&performance.now)?performance.now():Date.now();
+  let s=cacheAdapterDomain.applyExactRecord(getLocal(),path,value);
+  s=normalizeData(s);
+  saveLocal(s);
+  allData=runtimeDataWithSelectedTrainer(s);
+  Object.values(syncQueue||{}).forEach(({path:queuedPath,data})=>applyDataPath(allData,queuedPath,data));
+  if(Object.keys(syncQueue||{}).length)saveLocal(allData);
+  _pathLoadState[path]='loaded';
+  _ownedReadErrorShown=false;
+  setSyncStatus('online');
+  showSyncDot(!!Object.keys(syncQueue).length);
+  if(surface==='pendingDecrements'&&cur)setTimeout(()=>_applyPendingDecrements(),50);
+  if(cur)queueRefreshAll(`snapshot:${surface}`);
+  _firstSyncDone=true;
+  try{
+    const finished=(typeof performance!=='undefined'&&performance.now)?performance.now():Date.now();
+    const size=value==null?0:JSON.stringify(value).length;
+    perfRecord(`snapshot:exact:${surface}`,finished-started,size);
+  }catch{}
+}
+function _onOwnedDataError(){
+  setSyncStatus('offline');
+  if(_ownedReadErrorShown)return;
+  _ownedReadErrorShown=true;
+  toast(i18nCore.t('data.ownedReadUnavailable'),5000);
+}
+function ensureOwnedExactSubscriptions(){
+  if(!managedOwnedDataCoordinator||!auth?.currentUser||!cur)return false;
+  const activated=managedOwnedDataCoordinator.activate({uid:auth.currentUser.uid,username:cur});
+  if(!activated.ok){_onOwnedDataError();return false;}
+  const subscribed=managedOwnedDataCoordinator.subscribeCore();
+  if(!subscribed.ok){_onOwnedDataError();return false;}
+  return true;
+}
 function ensureListSubscribed(type){
   if(!db)return;
-  if(['wishlist','dynamax','gmax','costumes'].includes(type))subscribePath(type);
+  if(!['wishlist','dynamax','gmax','costumes'].includes(type))return;
+  if(ownedExactReadsEnabled()){
+    const result=managedOwnedDataCoordinator?.subscribeList(type);
+    if(!result?.ok)_onOwnedDataError();
+    return;
+  }
+  if(LEGACY_BROAD_READS_ENABLED)subscribePath(type);
 }
 function ensureProtectedSubscriptions(){
   if(!db||!auth?.currentUser)return;
   const active=managedListenerLifecycle.activateSession({uid:auth.currentUser.uid,username:cur});
   if(!active.ok)return;
+  if(ownedExactReadsEnabled()){
+    ensureOwnedExactSubscriptions();
+    // Deferred broad surfaces remain available only for isolated sandbox parity.
+    subscribePath('requests');
+    const needsCommunityPreviewData=MULTI_COMMUNITY_OWNER_PREVIEW_AVAILABLE&&ownerCanUseCommunityTools();
+    if(MULTI_COMMUNITY_ENABLED||needsCommunityPreviewData){
+      subscribePath('communities');
+      subscribePath('communityRequests');
+    }
+    subscribePath('offers');
+    subscribePath('trades');
+    return;
+  }
+  if(!LEGACY_BROAD_READS_ENABLED)return;
   subscribePath('users');
   subscribePath('authIndex');
   subscribePath('requests');
@@ -5151,6 +5226,12 @@ async function openShareViewFromRequest(shareReq){
 // so we can only subscribe AFTER login when `cur` is set.
 function subscribeMyPendingDecrements(){
   if(!db||!cur)return;
+  if(ownedExactReadsEnabled()){
+    const result=managedOwnedDataCoordinator?.subscribeSurface('pendingDecrements');
+    if(!result?.ok)_onOwnedDataError();
+    return;
+  }
+  if(!LEGACY_BROAD_READS_ENABLED)return;
   subscribePath(`pendingDecrements/${cur}`);
 }
 
@@ -5523,6 +5604,7 @@ async function doLogin(){
 
 function logout(){
   managedListenerLifecycle.deactivateSession('logout');
+  managedOwnedDataCoordinator?.reset();
   clearAuthenticatedSelectedTrainerData();
   clearOwnedSession();
   cur=null;

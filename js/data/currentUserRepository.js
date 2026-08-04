@@ -24,6 +24,7 @@
       readInventory:username=>readPath(`have/${segment(username,'username')}`),
       listenInventory:(username,handlers)=>listenPath(`have/${segment(username,'username')}`,handlers),
       readAuthIndex:uid=>readPath(`authIndex/${segment(uid,'uid')}`),
+      listenAuthIndex:(uid,handlers)=>listenPath(`authIndex/${segment(uid,'uid')}`,handlers),
       listenMemberships:(uid,handlers)=>listenPath(`userCommunities/${segment(uid,'uid')}`,handlers),
       listenPendingDecrements:(username,handlers)=>listenPath(`pendingDecrements/${segment(username,'username')}`,handlers)
     });

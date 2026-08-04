@@ -58,4 +58,5 @@ test('session ownership warnings use stable translation keys with English fallba
   assert.match(core.t('storage.cacheReset'),/Cached session data was reset/);
   assert.match(core.t('storage.sessionOwnershipMismatch'),/does not match the authenticated account/);
   assert.match(core.t('storage.offlineRecoveryUnavailable'),/securely verified again/);
+  assert.match(core.t('data.ownedReadUnavailable'),/verified offline cache remains available/);
 });
