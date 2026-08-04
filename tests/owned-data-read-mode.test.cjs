@@ -5,9 +5,10 @@ const path=require('node:path');
 
 const source=readFileSync(path.join(__dirname,'..','index.html'),'utf8');
 
-test('production remains on legacy broad reads with narrow mode disabled',()=>{
-  assert.match(source,/const NARROW_READ_CLIENT_ENABLED=false;/);
-  assert.match(source,/const LEGACY_BROAD_READS_ENABLED=true;/);
+test('production activates exact owned reads with legacy broad startup disabled',()=>{
+  assert.match(source,/const TRAINER_FIRST_INTERIM_ENABLED=true;/);
+  assert.match(source,/const NARROW_READ_CLIENT_ENABLED=true;/);
+  assert.match(source,/const LEGACY_BROAD_READS_ENABLED=false;/);
   assert.match(source,/return NARROW_READ_CLIENT_ENABLED&&!LEGACY_BROAD_READS_ENABLED;/);
 });
 
@@ -38,4 +39,29 @@ test('deferred write and broad discovery surfaces are not migrated',()=>{
     assert.equal(coordinator.includes(`surface==='${forbidden}'`),false);
   }
   assert.doesNotMatch(coordinator,/(?:repository|client)\.(?:set|update|remove|write)\s*\(/);
+});
+
+test('broad private consumers are retired from exact-mode startup',()=>{
+  const protectedSource=source.slice(source.indexOf('function ensureProtectedSubscriptions(){'),source.indexOf('function startListener(){'));
+  const exactBranch=protectedSource.slice(protectedSource.indexOf('if(ownedExactReadsEnabled())'),protectedSource.indexOf('if(!LEGACY_BROAD_READS_ENABLED)return;'));
+  assert.doesNotMatch(exactBranch,/subscribePath\(/);
+  assert.match(source,/const LEGACY_ADMIN_COLLECTION_PATHS=Object\.freeze/);
+  assert.match(source,/managedListenerLifecycle\.subscribeLegacyAdmin/);
+});
+
+test('cross-trainer reads use only publicShares and never authenticated private fallback',()=>{
+  const shareSubscriptions=source.slice(source.indexOf('function ensureShareViewSubscriptions'),source.indexOf('async function openShareViewFromRequest'));
+  assert.match(shareSubscriptions,/publicShares\/\$\{username\}/);
+  assert.doesNotMatch(shareSubscriptions,/shareDataPaths\(|authenticated:true|users\/\$\{username\}/);
+  const loader=source.slice(source.indexOf('async function loadShareViewData'),source.indexOf('function renderUnavailableShareView'));
+  assert.match(loader,/return loadPublicShareData\(username\)/);
+  assert.doesNotMatch(loader,/Promise\.all|get\(ref/);
+});
+
+test('retired surfaces are replaced by owned or read-only interim behavior',()=>{
+  assert.match(source,/const LEGACY_INVENTORY_READ_ONLY=true;/);
+  assert.match(source,/if\(LEGACY_INVENTORY_READ_ONLY\)\{toast\(i18nCore\.t\('inventory\.legacyReadOnly'/);
+  assert.match(source,/const users=\[cur\]\.filter/);
+  assert.match(source,/if\(TRAINER_FIRST_INTERIM_ENABLED\)\{renderEventsOnly\(\);return;\}/);
+  assert.match(source,/typeof TRAINER_FIRST_INTERIM_ENABLED!=='undefined'&&TRAINER_FIRST_INTERIM_ENABLED/);
 });

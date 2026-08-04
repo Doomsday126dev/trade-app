@@ -121,3 +121,17 @@ test('session and trainer subscriptions fail closed without required identity',(
   assert.equal(h.lifecycle.subscribeSession(h.options('users')).error.code,'listener/session-inactive');
   assert.equal(h.lifecycle.subscribeSelectedTrainer({username:'',...h.options('publicShares/x')}).error.code,'listener/trainer-required');
 });
+
+test('legacy admin listeners are session-bound, idempotent, and cleared on admin close',()=>{
+  const h=createHarness();
+  assert.equal(h.lifecycle.subscribeLegacyAdmin(h.options('users')).error.code,'listener/session-inactive');
+  h.lifecycle.activateSession({uid:'uid-owner',username:'Owner'});
+  const first=h.lifecycle.subscribeLegacyAdmin({...h.options('users'),key:'legacyAdmin:users'});
+  const duplicate=h.lifecycle.subscribeLegacyAdmin({...h.options('users'),key:'legacyAdmin:users'});
+  const cleared=h.lifecycle.clearLegacyAdmin('admin_closed');
+  assert.equal(first.status,'subscribed');
+  assert.equal(duplicate.status,'existing');
+  assert.equal(cleared.count,1);
+  assert.equal(h.starts[0].stopped,true);
+  assert.equal(h.subscriptions.size(),0);
+});

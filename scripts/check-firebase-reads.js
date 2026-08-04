@@ -104,14 +104,19 @@ assert.ok(indexSource.includes("managedListenerLifecycle.subscribePublic({...opt
   'loginDirectory must use the managed public listener scope');
 assert.ok(indexSource.includes('managedListenerLifecycle.subscribeSession({...options,key:`session:${path}`})'),
   'Protected subscribePath listeners must use the managed session scope');
+assert.ok(indexSource.includes('managedListenerLifecycle.subscribeLegacyAdmin({'),
+  'Retained broad admin listeners must use the legacyAdmin scope');
 assert.ok(indexSource.includes('managedListenerLifecycle.subscribeSelectedTrainer({'),
   'Share listeners must use selected-trainer ownership');
-assert.ok(indexSource.includes("return[`users/${username}`,...PUBLIC_SHARE_TYPES.map(t=>`${t}/${username}`)];"),
-  'Authenticated share fallback paths must remain users plus the four existing list paths');
-assert.ok(indexSource.includes('const NARROW_READ_CLIENT_ENABLED=false;'),
-  'Narrow-read client must remain disabled during exact-read migration');
-assert.ok(indexSource.includes('const LEGACY_BROAD_READS_ENABLED=true;'),
-  'Legacy broad reads must remain the production default during exact-read migration');
+const shareSubscriptions=sourceBetween('function ensureShareViewSubscriptions(username){','async function openShareViewFromRequest');
+assert.ok(shareSubscriptions.includes('publicShares/${username}'),
+  'Selected-trainer subscriptions must use the public projection');
+assert.ok(!shareSubscriptions.includes('authenticated:true')&&!shareSubscriptions.includes('shareDataPaths('),
+  'Selected-trainer subscriptions must not fall back to private trainer records');
+assert.ok(indexSource.includes('const NARROW_READ_CLIENT_ENABLED=true;'),
+  'Narrow-read client must be enabled after retiring broad private consumers');
+assert.ok(indexSource.includes('const LEGACY_BROAD_READS_ENABLED=false;'),
+  'Legacy broad startup reads must be disabled');
 assert.ok(indexSource.includes('return NARROW_READ_CLIENT_ENABLED&&!LEGACY_BROAD_READS_ENABLED;'),
   'Exact and legacy owned-data listeners must be mutually exclusive');
 assert.ok(indexSource.includes("managedOwnedDataCoordinator?.subscribeList(type)"),
@@ -130,9 +135,8 @@ assert.ok(authObserverSource.indexOf("managedListenerLifecycle.deactivateSession
   'Auth loss must invalidate protected listeners before clearing the authenticated UID');
 assert.ok(authObserverSource.indexOf("suspendOwnedSession('auth_loss');")<authObserverSource.indexOf("currentAuthUid=user?.uid||'';"),
   'Auth loss must lock protected cache and queue state before clearing the authenticated UID');
-const publicShareHandler=sourceBetween('function onPublicShareSnapshot(username,snap){','function onShareSnapshot(path,snap){');
-const authenticatedShareHandler=sourceBetween('function onShareSnapshot(path,snap){','function ensureShareViewSubscriptions(username){');
-assert.ok(!publicShareHandler.includes('saveLocal(')&&!authenticatedShareHandler.includes('saveLocal('),
+const publicShareHandler=sourceBetween('function onPublicShareSnapshot(username,snap){','function ensureShareViewSubscriptions(username){');
+assert.ok(!publicShareHandler.includes('saveLocal('),
   'Selected-trainer snapshots must remain runtime-only and outside the protected persisted cache');
 assert.ok(indexSource.includes('managedSessionCache.writeData(normalizeData(s))'),
   'Protected session-cache writes must pass through the session cache boundary');

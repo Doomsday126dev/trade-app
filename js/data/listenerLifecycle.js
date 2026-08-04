@@ -51,6 +51,17 @@
       const fingerprint=`${activeSession.uid}\u0000${activeSession.username}\u0000${path}`;
       return subscriptions.subscribe({...options,key,scope:'session',fingerprint});
     }
+    function subscribeLegacyAdmin(options){
+      if(!activeSession)return lifecycleError('listener/session-inactive','Admin listener requested without an active identity');
+      const path=String(options?.path||'');
+      const key=String(options?.key||`legacyAdmin:${path}`);
+      const fingerprint=`${activeSession.uid}\u0000${activeSession.username}\u0000${path}`;
+      return subscriptions.subscribe({...options,key,scope:'legacyAdmin',fingerprint});
+    }
+    function clearLegacyAdmin(reason='admin_closed'){
+      const result=subscriptions.unsubscribeByScope('legacyAdmin');
+      return{ok:true,status:'legacy_admin_inactive',reason,count:result.count};
+    }
     function selectTrainer(username){
       const next=String(username||'').trim();
       if(!next)return lifecycleError('listener/trainer-required','Selected-trainer listeners require a username');
@@ -93,7 +104,7 @@
       });
     }
     return Object.freeze({
-      subscribePublic,activateSession,subscribeSession,deactivateSession,
+      subscribePublic,activateSession,subscribeSession,subscribeLegacyAdmin,clearLegacyAdmin,deactivateSession,
       selectTrainer,subscribeSelectedTrainer,clearAuthenticatedShareListeners,
       clearSelectedTrainer,snapshot
     });

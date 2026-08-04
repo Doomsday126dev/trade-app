@@ -1,7 +1,7 @@
 {
   "name": "PoGo Trades",
   "short_name": "PoGo Trades",
-  "description": "Community trade list manager for GO trainers",
+  "description": "Trainer-first trade list manager for Pokémon GO",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
@@ -38,23 +38,23 @@
       "icons": [{"src": "assets/tradeloop-icon-96.png", "sizes": "96x96", "type": "image/png"}]
     },
     {
-      "name": "Browse Community",
-      "short_name": "Browse",
-      "description": "See what other trainers want",
+      "name": "Find Trainer",
+      "short_name": "Find",
+      "description": "Open a trainer's published trade list",
       "url": "./?action=browse",
       "icons": [{"src": "assets/tradeloop-icon-96.png", "sizes": "96x96", "type": "image/png"}]
     },
     {
-      "name": "My Inventory",
+      "name": "Legacy Inventory",
       "short_name": "Inventory",
-      "description": "Track Pokémon you have to trade",
+      "description": "View and export your saved legacy inventory",
       "url": "./?action=have",
       "icons": [{"src": "assets/tradeloop-icon-96.png", "sizes": "96x96", "type": "image/png"}]
     },
     {
-      "name": "Trade Schedule",
-      "short_name": "Schedule",
-      "description": "Plan trades and see live event bonuses",
+      "name": "Pokémon GO Events",
+      "short_name": "Events",
+      "description": "View upcoming Pokémon GO events",
       "url": "./?action=schedule",
       "icons": [{"src": "assets/tradeloop-icon-96.png", "sizes": "96x96", "type": "image/png"}]
     }

@@ -2,10 +2,10 @@
 
 ## Phase status
 
-Phase 1 added an inert client boundary around future Firebase reads without
-changing any production subscription or screen data source. At that checkpoint,
-the existing `_activeSubs` implementation remained active. The compatibility
-flag `NARROW_READ_CLIENT_ENABLED` remains `false` throughout Phase 2.
+Phase 1 added an inert client boundary around future Firebase reads. Phase 2
+moved listener/cache ownership behind verified UID and username boundaries.
+The owned-data candidate then proved exact reads for the current profile, four
+list types, inventory, auth index, memberships, and pending decrements.
 
 Phase 2 moves listener ownership, but not paths or snapshot behavior, to the
 subscription manager. `loginDirectory` uses the persistent `public`
@@ -26,8 +26,18 @@ than attributed to the next login.
 Selected-trainer snapshots remain runtime-only and are never written into the
 shared public or protected cache.
 
-The authenticated root read is also unchanged. This foundation is not evidence
-that narrow production rules are ready to publish.
+The trainer-first interim activation now runs with
+`NARROW_READ_CLIENT_ENABLED=true` and `LEGACY_BROAD_READS_ENABLED=false`.
+Community-wide Browse, trainer enumeration in Strings, Inventory Community
+Browse, Offers, Trade Match, and personal Schedule are retired from navigation
+instead of recreating their broad architecture. Selected trainers load only
+`publicShares/{username}`. Retained owner maintenance collections start only
+when the protected owner opens Admin, use `legacyAdmin`, and stop when Admin
+closes, on logout, or on auth loss.
+
+The authenticated root read is still unchanged. Client activation reduces the
+dependency surface but is not evidence that narrow production rules are ready
+to publish.
 
 ## Module boundaries
 
@@ -104,7 +114,7 @@ names and interface language have different sources and release cadence.
 
 Phase 1 adds no new user-facing states and does not translate existing UI.
 
-## Owned-data exact-read candidate
+## Owned-data exact-read activation
 
 The next candidate adds `ownedDataCoordinator` on top of the existing
 current-user repository and listener lifecycle. It can subscribe to the signed-in
@@ -116,18 +126,18 @@ serialized byte totals; it does not record paths, usernames, UIDs, or payloads.
 Activation is deliberately mutually exclusive:
 
 ```text
-NARROW_READ_CLIENT_ENABLED=false
-LEGACY_BROAD_READS_ENABLED=true
+NARROW_READ_CLIENT_ENABLED=true
+LEGACY_BROAD_READS_ENABLED=false
 ```
 
-Exact owned reads run only when narrow reads are enabled and legacy broad reads
-are disabled. The current production combination therefore retains every
-existing listener and screen behavior. Enabling exact mode is blocked until the
-community-wide Browse/Strings dependencies on broad `users` and list collections
-have their own bounded replacement. Offers, Trades, Requests, community-wide
-reads, and their write flows are outside this candidate and remain registered as
-deferred broad surfaces.
+Exact owned reads run only in this combination. Broad collections remain in the
+registry for rollback and protected owner maintenance, but they no longer start
+for ordinary sessions. My List and own Strings use exact owned lists. Legacy
+Inventory is read-only with CSV export. Events uses the external event feed and
+does not render personal trades or quotas. Cross-trainer viewing/comparison uses
+one runtime-only public projection and never falls back to another trainer's
+private `users`, list, or inventory paths.
 
-Rollback is a flag-only return to the legacy broad path. The versioned session
-cache uses the same data shape in both modes, so rollback does not require a data
-migration and Firebase can rebuild discarded snapshots.
+Rollback is a flag/revert return to the legacy broad path and navigation. No
+Firebase records are deleted or migrated. The versioned session cache uses the
+same data shape in both modes, so Firebase can rebuild discarded snapshots.

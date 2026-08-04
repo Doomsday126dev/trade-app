@@ -196,9 +196,8 @@ test('auth loss locks storage before authenticated identity is cleared',()=>{
 test('selected-trainer snapshots are runtime-only and never persisted',()=>{
   const source=readFileSync(path.join(__dirname,'..','index.html'),'utf8');
   const publicStart=source.indexOf('function onPublicShareSnapshot(username,snap){');
-  const authStart=source.indexOf('function onShareSnapshot(path,snap){');
-  const end=source.indexOf('function ensureShareViewSubscriptions(username){',authStart);
-  assert.equal(source.slice(publicStart,authStart).includes('saveLocal('),false);
-  assert.equal(source.slice(authStart,end).includes('saveLocal('),false);
+  const end=source.indexOf('function ensureShareViewSubscriptions(username){',publicStart);
+  assert.ok(publicStart>=0&&end>publicStart);
+  assert.equal(source.slice(publicStart,end).includes('saveLocal('),false);
   assert.ok(source.slice(publicStart,end).includes('runtimeDataWithSelectedTrainer(getLocal())'));
 });

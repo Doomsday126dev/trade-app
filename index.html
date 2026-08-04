@@ -1754,16 +1754,17 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
   </div>
 
   <div class="tabs" role="tablist" aria-label="Main sections">
-    <button class="tab active" data-tab="browse" onclick="switchTab('browse')" role="tab" aria-selected="true">🔍 Browse</button>
-    <button class="tab" data-tab="mylist" onclick="switchTab('mylist')" role="tab" aria-selected="false">📋 My List</button>
+    <button class="tab active" data-tab="mylist" onclick="switchTab('mylist')" role="tab" aria-selected="true">📋 My List</button>
+    <button class="tab" data-tab="find" onclick="switchTab('find')" role="tab" aria-selected="false">🔍 Find Trainer</button>
     <button class="tab" data-tab="strings" onclick="switchTab('strings')" role="tab" aria-selected="false">📤 Strings</button>
-    <button class="tab" data-tab="have" onclick="switchTab('have')" role="tab" aria-selected="false">🎒 Inventory<span class="notif-badge" id="have-notif" style="display:none">!</span></button>
-    <button class="tab" data-tab="schedule" onclick="switchTab('schedule')" role="tab" aria-selected="false">📅 Schedule<span class="notif-badge" id="schedule-notif" style="display:none">!</span></button>
+    <button class="tab" data-tab="schedule" onclick="switchTab('schedule')" role="tab" aria-selected="false">📅 Events</button>
+    <button class="tab" data-tab="have" onclick="switchTab('have')" role="tab" aria-selected="false">🗄 Legacy Inventory</button>
+    <button class="tab" data-tab="settings" onclick="switchTab('settings')" role="tab" aria-selected="false">⚙️ Settings</button>
     <button class="tab" data-tab="admin" onclick="switchTab('admin')" id="admin-tab" style="display:none" role="tab" aria-selected="false">⚙️ Admin<span class="notif-badge" id="admin-notif" style="display:none">!</span></button>
   </div>
 
   <!-- BROWSE -->
-  <div class="page active" id="tab-browse">
+  <div class="page" id="tab-browse">
     <div class="srch"><span class="srch-icon">🔍</span><input type="text" id="bq" placeholder="Search Pokémon name, #number, or trainer…" oninput="renderBrowse()"></div>
     <div class="filter-bar">
       <div class="filter-group">
@@ -1804,8 +1805,23 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
     <div id="browse-out"></div>
   </div>
 
+  <!-- FIND TRAINER (public projection only) -->
+  <div class="page" id="tab-find">
+    <div class="have-hdr">
+      <div class="have-title" id="find-trainer-title"></div>
+      <div class="have-subtitle" id="find-trainer-description"></div>
+    </div>
+    <div class="add-form">
+      <div class="frow">
+        <input type="text" id="find-trainer-input" autocomplete="off" autocapitalize="none" spellcheck="false" onkeydown="if(event.key==='Enter'){event.preventDefault();openTrainerPublicShare()}" style="flex:1;min-width:220px">
+        <button class="bsave" id="find-trainer-button" onclick="openTrainerPublicShare()"></button>
+      </div>
+      <div id="find-trainer-status" role="status" aria-live="polite" style="font-size:12px;color:var(--muted);margin-top:8px"></div>
+    </div>
+  </div>
+
   <!-- MY LIST -->
-  <div class="page" id="tab-mylist">
+  <div class="page active" id="tab-mylist">
     <div class="my-hdr">
       <div class="av lg" id="my-av">?</div>
       <div class="my-info">
@@ -1915,35 +1931,36 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
 
   <!-- STRINGS -->
   <div class="page" id="tab-strings">
-    <div class="srch" style="margin-bottom:10px"><span class="srch-icon">🔍</span><input type="text" id="stq" placeholder="Filter by trainer…" oninput="renderStrings()"></div>
+    <div class="have-hdr"><div class="have-title">📤 Strings</div><div class="have-subtitle" id="own-strings-description"></div></div>
+    <input type="hidden" id="stq" value="">
     <div class="list-tabs" id="str-list-tabs">
       <button class="ltab active" onclick="setStrList('wishlist')">Trades</button>
       <button class="ltab" onclick="setStrList('dynamax')"><span class="ltab-full">Dynamax</span><span class="ltab-short">Dmax</span></button>
       <button class="ltab" onclick="setStrList('gmax')"><span class="ltab-full">Gigantamax</span><span class="ltab-short">Gmax</span></button>
       <button class="ltab" onclick="setStrList('costumes')">Others</button>
     </div>
-    <div class="safe-transfer-cta">
+    <div class="safe-transfer-cta" style="display:none">
       <button class="safe-transfer-btn" onclick="openSafeTransferModal()" title="Generate a Pokémon GO search string for everything nobody on your selected partner list wants — paste into the bag for safe mass-transfer">
         🗑️ <span class="stb-label">Safe-to-transfer search string</span>
       </button>
     </div>
     <div id="owner-strings-preview-banner" class="owner-preview-banner" style="display:none"></div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Tap a trainer to expand their strings</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Tap your trainer card to expand your strings</div>
     <div id="strings-out"></div>
   </div>
 
   <!-- HAVE (Inventory) -->
   <div class="page" id="tab-have">
     <div class="have-hdr">
-      <div class="have-title">🎒 Inventory</div>
-      <div class="have-subtitle">Track what you have to trade. Others can browse and offer to trade.</div>
+      <div class="have-title" id="legacy-inventory-title"></div>
+      <div class="have-subtitle" id="legacy-inventory-description"></div>
     </div>
-    <div class="have-toggle-row">
+    <div class="have-toggle-row" style="display:none">
       <button class="have-toggle-btn active" data-view="mine" onclick="setHaveView('mine')">📦 My inventory</button>
       <button class="have-toggle-btn" data-view="browse" onclick="setHaveView('browse')">👀 Browse community</button>
     </div>
     <div id="have-mine-view" class="have-view active">
-      <div class="add-form">
+      <div class="add-form" style="display:none">
         <div class="add-ttl">+ Add to inventory</div>
         <div class="frow have-add-row">
           <div class="ac-wrap">
@@ -1989,10 +2006,10 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
         <span>My inventory <span id="have-count" style="font-weight:400;text-transform:none;font-size:11px;margin-left:4px"></span></span>
         <span style="display:inline-flex;align-items:center;gap:8px;font-weight:500;text-transform:none">
           <span id="have-total" style="font-size:11px;color:var(--muted)"></span>
-          <button class="bulk-toggle" onclick="toggleHaveBulkMode()" aria-pressed="false" id="have-bulk-toggle-btn">☑ Bulk edit</button>
+          <button class="bulk-toggle" onclick="exportLegacyInventoryCsv()" id="legacy-inventory-export"></button>
         </span>
       </div>
-      <div class="bulk-bar" id="have-bulk-bar" role="toolbar" aria-label="Bulk inventory actions">
+      <div class="bulk-bar" id="have-bulk-bar" role="toolbar" aria-label="Bulk inventory actions" style="display:none">
         <span class="bulk-count" id="have-bulk-count">0 selected</span>
         <select id="have-bulk-mode-sel" class="bulk-btn" aria-label="Set mode for selected">
           <option value="">Set mode…</option>
@@ -2033,20 +2050,21 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
   <!-- SCHEDULE -->
   <div class="page" id="tab-schedule">
     <div class="sched-hdr">
-      <div class="sched-title">📅 Trade Schedule</div>
-      <div class="sched-subtitle">Plan trades with the community. Daily quota, live events, and confirmed special-trade bonuses stay visible.</div>
+      <div class="sched-title" id="events-title"></div>
+      <div class="sched-subtitle" id="events-description"></div>
     </div>
-    <div class="sched-week-nav">
-      <button class="sched-nav-btn" onclick="navigateSchedWeek(-1)" aria-label="Previous week">‹</button>
-      <button class="sched-nav-today" onclick="navigateSchedToday()">Today</button>
-      <button class="sched-nav-btn" onclick="navigateSchedWeek(1)" aria-label="Next week">›</button>
-      <div class="sched-week-label" id="sched-week-label"></div>
-      <button class="bsave sched-add-btn" onclick="openScheduleModal()">+ Schedule Trade</button>
+    <div id="events-out"></div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="page" id="tab-settings">
+    <div class="have-hdr"><div class="have-title" id="settings-title"></div><div class="have-subtitle" id="settings-description"></div></div>
+    <div class="admin-actions" style="justify-content:flex-start;flex-wrap:wrap">
+      <button class="btn-export" id="settings-profile" onclick="openModal('prof-modal')"></button>
+      <button class="btn-export" id="settings-health" onclick="openLoginHealthCheck()"></button>
+      <button class="btn-export" id="settings-shortcuts" onclick="openModal('shortcuts-modal')"></button>
+      <button class="btn-export" id="settings-logout" onclick="logout()"></button>
     </div>
-    <div id="owner-schedule-preview-banner" class="owner-preview-banner" style="display:none"></div>
-    <div class="sched-week-strip" id="sched-week-strip"></div>
-    <div id="sched-reserved-block" class="sched-reserved-block" style="display:none"></div>
-    <div id="sched-day-detail"></div>
   </div>
 
   <!-- ADMIN -->
@@ -2349,11 +2367,11 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
     <h3 id="shortcuts-title">⌨️ Keyboard shortcuts</h3>
     <div class="shortcut-grid">
       <div class="shortcut-section-hdr">Navigation</div>
-      <div class="shortcut-row"><kbd>b</kbd><span>Browse tab</span></div>
+      <div class="shortcut-row"><kbd>b</kbd><span>Find Trainer tab</span></div>
       <div class="shortcut-row"><kbd>m</kbd><span>My List tab</span></div>
       <div class="shortcut-row"><kbd>s</kbd><span>Strings tab</span></div>
-      <div class="shortcut-row"><kbd>i</kbd> <kbd>h</kbd><span>Inventory tab</span></div>
-      <div class="shortcut-row"><kbd>c</kbd><span>Schedule (calendar) tab</span></div>
+      <div class="shortcut-row"><kbd>i</kbd> <kbd>h</kbd><span>Legacy Inventory tab</span></div>
+      <div class="shortcut-row"><kbd>c</kbd><span>Events tab</span></div>
       <div class="shortcut-section-hdr">Actions</div>
       <div class="shortcut-row"><kbd>n</kbd><span>Focus add-Pokémon field (jumps to My List)</span></div>
       <div class="shortcut-row"><kbd>/</kbd><span>Focus the search/filter on the active tab</span></div>
@@ -2478,9 +2496,12 @@ async function loadFirebaseSdk(){
 const DB=window.POGO_TRADE_DB;
 if(!DB)throw new Error('Trade data failed to load');
 
-// Exact owned-data reads remain disabled until the broad discovery surfaces migrate.
-const NARROW_READ_CLIENT_ENABLED=false;
-const LEGACY_BROAD_READS_ENABLED=true;
+// Trainer-first interim mode retires broad community consumers while preserving
+// the old loaders behind a simple flag/revert rollback path.
+const TRAINER_FIRST_INTERIM_ENABLED=true;
+const NARROW_READ_CLIENT_ENABLED=true;
+const LEGACY_BROAD_READS_ENABLED=false;
+const LEGACY_INVENTORY_READ_ONLY=true;
 const i18nCore=window.PogoI18n?.core;
 if(!i18nCore)throw new Error('Locale foundation failed to load');
 const firebaseClientService=window.PogoServices?.firebaseClient;
@@ -2705,7 +2726,7 @@ const SECURE_RULES=`{
 
 let db=null,fbOn=false,cur=null,fbApp=null,auth=null,currentAuthUid=null;
 let allData={};
-let selectedTrainerRuntime={username:'',publicData:null,authenticatedData:null};
+let selectedTrainerRuntime={username:'',publicData:null};
 let browseFilter='ALL',browseList='wishlist',staleFilter=0;
 let browseFlagFilters={lucky:false,xxl:false,xxs:false,shiny:false};
 let myListType='wishlist',strListType='wishlist';
@@ -3604,7 +3625,6 @@ function bindAuthObserver(){
       managedListenerLifecycle.deactivateSession('auth_loss');
       managedOwnedDataCoordinator?.reset();
       suspendOwnedSession('auth_loss');
-      clearAuthenticatedSelectedTrainerData();
       allData=runtimeDataWithSelectedTrainer(getLocal());
     }
     currentAuthUid=user?.uid||'';
@@ -4007,6 +4027,12 @@ function recordBelongsToSelectedCommunity(record){
 function renderMemberCommunitySwitcher(){
   const el=document.getElementById('member-community-switcher');
   if(!el)return;
+  if(typeof TRAINER_FIRST_INTERIM_ENABLED!=='undefined'&&TRAINER_FIRST_INTERIM_ENABLED){
+    el.classList.remove('show');
+    el.style.display='none';
+    el.innerHTML='';
+    return;
+  }
   if(!MULTI_COMMUNITY_ENABLED||!cur){
     el.classList.remove('show');
     el.style.display='none';
@@ -4957,6 +4983,33 @@ function subscribePath(path){
   if(!result.ok)setSyncStatus('offline');
   return result.ok;
 }
+function protectedOwnerSession(){
+  const user=allData.users?.[cur];
+  return !!(auth?.currentUser&&cur===OWNER&&user?.authUid===auth.currentUser.uid&&(user.isOwner||user.isAdmin));
+}
+function subscribeLegacyAdminPath(path){
+  if(!db||!protectedOwnerSession())return false;
+  const result=managedListenerLifecycle.subscribeLegacyAdmin({
+    path,key:`legacyAdmin:${path}`,
+    start:handlers=>startManagedSnapshotListener(path,handlers),
+    onValue:snap=>_onSubSnapshot(path,snap),
+    onError:()=>setSyncStatus('offline')
+  });
+  if(!result.ok)setSyncStatus('offline');
+  return result.ok;
+}
+const LEGACY_ADMIN_COLLECTION_PATHS=Object.freeze([
+  'users','authIndex','requests','communities','userCommunities','communityRequests',
+  'wishlist','dynamax','gmax','costumes','have','offers','trades'
+]);
+function startLegacyAdminReads(){
+  if(!protectedOwnerSession())return false;
+  LEGACY_ADMIN_COLLECTION_PATHS.forEach(subscribeLegacyAdminPath);
+  return true;
+}
+function stopLegacyAdminReads(reason='admin_closed'){
+  return managedListenerLifecycle.clearLegacyAdmin(reason);
+}
 function ownedExactReadsEnabled(){
   return NARROW_READ_CLIENT_ENABLED&&!LEGACY_BROAD_READS_ENABLED;
 }
@@ -5012,15 +5065,7 @@ function ensureProtectedSubscriptions(){
   if(!active.ok)return;
   if(ownedExactReadsEnabled()){
     ensureOwnedExactSubscriptions();
-    // Deferred broad surfaces remain available only for isolated sandbox parity.
-    subscribePath('requests');
-    const needsCommunityPreviewData=MULTI_COMMUNITY_OWNER_PREVIEW_AVAILABLE&&ownerCanUseCommunityTools();
-    if(MULTI_COMMUNITY_ENABLED||needsCommunityPreviewData){
-      subscribePath('communities');
-      subscribePath('communityRequests');
-    }
-    subscribePath('offers');
-    subscribePath('trades');
+    // Retained broad collections are owner-only and start on demand in Admin.
     return;
   }
   if(!LEGACY_BROAD_READS_ENABLED)return;
@@ -5046,44 +5091,23 @@ function startListener(){
   ensureProtectedSubscriptions();
   // Other list types loaded lazily when tabs are visited
 }
-function applyShareDataPath(s,path,val){
-  const [seg,username]=String(path||'').split('/');
-  if(!seg||!username)return;
-  if(seg==='users'){
-    if(val)s.users[username]=normalizedUserRecord(username,s.users?.[username],val);
-    else if(s.users)delete s.users[username];
-    return;
-  }
-  if(PUBLIC_SHARE_TYPES.includes(seg)){
-    if(!s[seg])s[seg]={};
-    if(val)s[seg][username]=val;
-    else delete s[seg][username];
-  }
-}
-function shareDataPaths(username){
-  return[`users/${username}`,...PUBLIC_SHARE_TYPES.map(t=>`${t}/${username}`)];
-}
-function selectedTrainerData(username,access='public'){
+function selectedTrainerData(username){
   const clean=String(username||'').trim();
   if(!clean)return null;
   if(selectedTrainerRuntime.username!==clean){
-    selectedTrainerRuntime={username:clean,publicData:null,authenticatedData:null};
+    selectedTrainerRuntime={username:clean,publicData:null};
   }
-  const key=access==='authenticated'?'authenticatedData':'publicData';
-  if(!selectedTrainerRuntime[key])selectedTrainerRuntime[key]=normalizeData({});
-  return selectedTrainerRuntime[key];
+  if(!selectedTrainerRuntime.publicData)selectedTrainerRuntime.publicData=normalizeData({});
+  return selectedTrainerRuntime.publicData;
 }
 function clearSelectedTrainerData(){
-  selectedTrainerRuntime={username:'',publicData:null,authenticatedData:null};
-}
-function clearAuthenticatedSelectedTrainerData(){
-  selectedTrainerRuntime.authenticatedData=null;
+  selectedTrainerRuntime={username:'',publicData:null};
 }
 function runtimeDataWithSelectedTrainer(source){
   const base=normalizeData(source||{});
   const username=selectedTrainerRuntime.username;
   if(!username)return base;
-  [selectedTrainerRuntime.publicData,selectedTrainerRuntime.authenticatedData].filter(Boolean).forEach(overlay=>{
+  [selectedTrainerRuntime.publicData].filter(Boolean).forEach(overlay=>{
     if(overlay.users?.[username])base.users[username]=overlay.users[username];
     PUBLIC_SHARE_TYPES.forEach(type=>{
       if(overlay[type]?.[username])base[type][username]=overlay[type][username];
@@ -5107,22 +5131,7 @@ async function loadPublicShareData(username){
   }
 }
 async function loadShareViewData(username){
-  if(!db||!username)return false;
-  if(auth&&firebaseAuthConfigured()&&!auth.currentUser)return false;
-  try{
-    const pairs=await Promise.all(shareDataPaths(username).map(async path=>{
-      const snap=await get(ref(db,path));
-      return[path,snap.exists()?snap.val():null];
-    }));
-    const s=selectedTrainerData(username,'authenticated');
-    pairs.forEach(([path,val])=>applyShareDataPath(s,path,val));
-    allData=runtimeDataWithSelectedTrainer(getLocal());
-    setSyncStatus('online');
-    return true;
-  }catch(e){
-    console.warn('Could not load live share data',e);
-    return false;
-  }
+  return loadPublicShareData(username);
 }
 function renderUnavailableShareView(username,message){
   _activeShareView={username,type:'wishlist'};
@@ -5135,7 +5144,7 @@ function renderUnavailableShareView(username,message){
   const tabs=document.getElementById('share-list-tabs');
   if(tabs)tabs.innerHTML='';
   const out=document.getElementById('share-list-out');
-  if(out)out.innerHTML=emptyHtml(message,'Ask the trainer to copy their share link again after the public share rules are published.','🔗');
+  if(out)out.innerHTML=emptyHtml(message,i18nCore.t('trainer.publicHint'),'🔗');
 }
 function clearShareViewSubscriptions(){
   managedListenerLifecycle.clearSelectedTrainer('share_closed');
@@ -5146,17 +5155,6 @@ function onPublicShareSnapshot(username,snap){
   if(!snap.exists())return;
   const s=selectedTrainerData(username);
   if(!applyPublicShareSnapshot(s,snap.val()))return;
-  allData=runtimeDataWithSelectedTrainer(getLocal());
-  setSyncStatus('online');
-  if(document.getElementById('share-view')?.classList.contains('active')&&_activeShareView?.username===username){
-    renderShareView(_activeShareView.username,_activeShareView.type);
-  }
-}
-function onShareSnapshot(path,snap){
-  const val=snap.exists()?snap.val():null;
-  const username=path.split('/')[1];
-  const s=selectedTrainerData(username,'authenticated');
-  applyShareDataPath(s,path,val);
   allData=runtimeDataWithSelectedTrainer(getLocal());
   setSyncStatus('online');
   if(document.getElementById('share-view')?.classList.contains('active')&&_activeShareView?.username===username){
@@ -5176,23 +5174,8 @@ function ensureShareViewSubscriptions(username){
       setSyncStatus('offline');
     }
   });
-  if(!publicResult.ok)return false;
-  if(auth&&firebaseAuthConfigured()&&!auth.currentUser){
-    managedListenerLifecycle.clearAuthenticatedShareListeners();
-    return true;
-  }
-  shareDataPaths(username).forEach(path=>{
-    managedListenerLifecycle.subscribeSelectedTrainer({
-      username,path,authenticated:true,key:`share:${username}:legacy:${path}`,
-      start:handlers=>startManagedSnapshotListener(path,handlers),
-      onValue:snap=>onShareSnapshot(path,snap),
-      onError:e=>{
-        console.warn('Share view subscription failed',path,e);
-        setSyncStatus('offline');
-      }
-    });
-  });
-  return true;
+  managedListenerLifecycle.clearAuthenticatedShareListeners();
+  return publicResult.ok;
 }
 async function openShareViewFromRequest(shareReq){
   if(!shareReq)return;
@@ -5203,23 +5186,7 @@ async function openShareViewFromRequest(shareReq){
     enterShareView(shareReq.username,shareReq.type);
     return;
   }
-  await waitForAuthState();
-  const liveLoaded=await loadShareViewData(shareReq.username);
-  if(liveLoaded)ensureShareViewSubscriptions(shareReq.username);
-  if(liveLoaded&&allData.users?.[shareReq.username]){
-    enterShareView(shareReq.username,shareReq.type);
-    return;
-  }
-  if(firebaseAuthConfigured()&&auth&&!auth.currentUser){
-    renderUnavailableShareView(shareReq.username,'This public share is not published yet.');
-    return;
-  }
-  if(allData.users?.[shareReq.username]){
-    enterShareView(shareReq.username,shareReq.type);
-  }else{
-    toast(`Trainer "${shareReq.username}" not found`);
-    showLogin();
-  }
+  renderUnavailableShareView(shareReq.username,i18nCore.t('trainer.publicUnavailable'));
 }
 // Per-user queue of "someone accepted a trade where you'd give away N of X".
 // Only the target user can read/write their own bucket (see security rules),
@@ -5605,7 +5572,6 @@ async function doLogin(){
 function logout(){
   managedListenerLifecycle.deactivateSession('logout');
   managedOwnedDataCoordinator?.reset();
-  clearAuthenticatedSelectedTrainerData();
   clearOwnedSession();
   cur=null;
   try{
@@ -5746,6 +5712,56 @@ function loginUserKeydown(e){
   if(e.key==='Escape'){hideLoginUserSuggestions();return true;}
   return false;
 }
+function setText(id,key){
+  const el=document.getElementById(id);
+  if(el)el.textContent=i18nCore.t(key);
+}
+function renderInterimProductLabels(){
+  setText('find-trainer-title','trainer.findTitle');
+  setText('find-trainer-description','trainer.findDescription');
+  setText('find-trainer-button','trainer.findAction');
+  const findInput=document.getElementById('find-trainer-input');
+  if(findInput)findInput.placeholder=i18nCore.t('trainer.findPlaceholder');
+  setText('own-strings-description','strings.ownDescription');
+  setText('legacy-inventory-title','inventory.legacyTitle');
+  setText('legacy-inventory-description','inventory.legacyDescription');
+  setText('legacy-inventory-export','inventory.exportAction');
+  setText('events-title','events.title');
+  setText('events-description','events.description');
+  setText('settings-title','settings.title');
+  setText('settings-description','settings.description');
+  setText('settings-profile','settings.profileAction');
+  setText('settings-health','settings.healthAction');
+  setText('settings-shortcuts','settings.shortcutsAction');
+  setText('settings-logout','settings.logoutAction');
+}
+function renderFindTrainer(){
+  renderInterimProductLabels();
+  const status=document.getElementById('find-trainer-status');
+  if(status)status.textContent='';
+}
+function publicShareRequestFromInput(value){
+  const raw=String(value||'').trim();
+  if(!raw)return null;
+  try{
+    const url=new URL(raw,location.href);
+    const username=url.searchParams.get('view');
+    if(username)return{username:String(username).trim(),type:url.searchParams.get('list')||'wishlist'};
+  }catch{}
+  if(/[.#$\[\]\/]/.test(raw))return null;
+  return{username:raw,type:'wishlist'};
+}
+async function openTrainerPublicShare(){
+  const req=publicShareRequestFromInput(document.getElementById('find-trainer-input')?.value);
+  const status=document.getElementById('find-trainer-status');
+  if(!req?.username){if(status)status.textContent=i18nCore.t('trainer.publicInvalid');return;}
+  if(status)status.textContent=i18nCore.t('data.loading',{resource:i18nCore.t('trainer.findTitle')});
+  const loaded=await loadPublicShareData(req.username);
+  ensureShareViewSubscriptions(req.username);
+  if(loaded&&allData.users?.[req.username]){enterShareView(req.username,req.type);return;}
+  if(status)status.textContent=i18nCore.t('trainer.publicUnavailable');
+}
+function renderSettings(){renderInterimProductLabels();}
 function showApp(){
   document.getElementById('login-pg').style.display='none';
   document.getElementById('config-pg').style.display='none';
@@ -5766,17 +5782,18 @@ function showApp(){
   });
   document.getElementById('top-un').textContent=cur;
   document.getElementById('my-un').textContent=cur;
-  const isAdmin=allData.users?.[cur]?.isAdmin;
+  const isAdmin=protectedOwnerSession();
   document.getElementById('admin-tab').style.display=isAdmin?'':'none';
+  renderInterimProductLabels();
   const activeTab=document.querySelector('.tab.active')?.dataset.tab;
-  const nextTab=activeTab&&(activeTab!=='admin'||isAdmin)?activeTab:'browse';
+  const nextTab=activeTab&&(activeTab!=='admin'||isAdmin)&&activeTab!=='browse'?activeTab:'mylist';
   ensureProtectedSubscriptions();
   let finalTab=nextTab;
   switchTab(finalTab,{render:false});
   window.scrollTo(0,0);
   updateFcDisplay();
   buildAcItems();
-  if(isAdmin){repairMissingAuthMetadata();ensureLoginDirectoryPublished();}
+  if(isAdmin)ensureLoginDirectoryPublished();
   checkWhatsNew();
   attachPullToRefresh();
   initAddAdvanced();
@@ -5789,7 +5806,7 @@ function showApp(){
   const action=params.get('action');
   if(action==='add'){finalTab='mylist';switchTab(finalTab,{render:false});setTimeout(()=>document.getElementById('ac-input')?.focus(),100);}
   else if(action==='strings'){finalTab='strings';switchTab(finalTab,{render:false});}
-  else if(action==='browse'){finalTab='browse';switchTab(finalTab,{render:false});}
+  else if(action==='browse'){finalTab='find';switchTab(finalTab,{render:false});}
   else if(action==='have'){finalTab='have';switchTab(finalTab,{render:false});}
   else if(action==='schedule'){finalTab='schedule';switchTab(finalTab,{render:false});}
   if(action){history.replaceState({},'',location.pathname);}
@@ -5800,8 +5817,7 @@ function showApp(){
   fetchPogoEvents().then(()=>{
     renderEventBanner();
     const tab=activeTabName();
-    if(tab==='browse')renderBrowse();
-    else if(tab==='schedule')renderSchedule();
+    if(tab==='schedule')renderSchedule();
   });
   // Bump last-seen so admins know the user opened the app (not just edited)
   bumpLastSeen();
@@ -5810,18 +5826,18 @@ const renderFrame=window.requestAnimationFrame?.bind(window)||((fn)=>setTimeout(
 const cancelRenderFrame=window.cancelAnimationFrame?.bind(window)||clearTimeout;
 let activeTabRenderHandle=0;
 function activeTabName(){
-  return document.querySelector('.tab.active')?.dataset.tab||'browse';
+  return document.querySelector('.tab.active')?.dataset.tab||'mylist';
 }
 function renderActiveTab(t=activeTabName()){
   if(!cur)return;
-  if(t==='browse')renderBrowse();
-  else if(t==='mylist')renderMyList();
+  if(t==='mylist')renderMyList();
+  else if(t==='find')renderFindTrainer();
   else if(t==='strings')renderStrings();
-  else if(t==='have'){
-    if(haveView==='mine')renderMyHave();
-    else renderHaveBrowse();
-  }else if(t==='schedule')renderSchedule();
-  else if(t==='admin'&&allData.users?.[cur]?.isAdmin){
+  else if(t==='have')renderMyHave();
+  else if(t==='schedule')renderSchedule();
+  else if(t==='settings')renderSettings();
+  else if(t==='admin'&&protectedOwnerSession()){
+    startLegacyAdminReads();
     renderAdmin();renderPendingRequests();renderBackupReminder();
   }
 }
@@ -5842,14 +5858,13 @@ function queueRefreshAll(reason=''){
   });
 }
 function refreshBadgesAndLightChrome(){
-  updateScheduleNotif();
-  const inCount=totalOffersForRecipient(cur);
-  const badge=document.getElementById('have-notif');
-  if(badge){badge.textContent=inCount>0?inCount:'';badge.style.display=inCount>0?'':'none';}
   checkWhatsNew();
 }
 function switchTab(t,opts={}){
-  if(t==='admin'&&!allData.users?.[cur]?.isAdmin)t='browse';
+  const previous=activeTabName();
+  if(t==='admin'&&!protectedOwnerSession())t='mylist';
+  if(t==='browse')t='find';
+  if(previous==='admin'&&t!=='admin')stopLegacyAdminReads('admin_closed');
   document.querySelectorAll('.tab').forEach(b=>{b.classList.remove('active');b.setAttribute('aria-selected','false');});
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   const tabBtn=document.querySelector(`[data-tab="${t}"]`);
@@ -5862,10 +5877,11 @@ function switchTab(t,opts={}){
 }
 function refreshAll(){
   if(!cur)return;
-  renderMemberCommunitySwitcher();
+  const switcher=document.getElementById('member-community-switcher');
+  if(switcher)switcher.innerHTML='';
   renderActiveTab();
   refreshBadgesAndLightChrome();
-  if(allData.users?.[cur]?.isAdmin){
+  if(protectedOwnerSession()){
     if(activeTabName()==='admin')renderBackupReminder();
     ensureLoginDirectoryPublished();
   }
@@ -7265,17 +7281,14 @@ function toggleComboStrings(btn){
 }
 function renderStrings(){return perfTime('render:strings',()=>_renderStringsInner());}
 function _renderStringsInner(){
-  const q=(document.getElementById('stq')?.value||'').toLowerCase();
   const el=document.getElementById('strings-out');if(!el)return;
   resetStringDiffCache();
-  const allowed=stringsAllowedUsers();
-  renderOwnerStringsPreviewBanner(allowed);
-  const users=Object.keys(allData.users||{}).filter(u=>{
-    if(allowed&&!allowed.has(u))return false;
+  const q='';
+  const users=[cur].filter(u=>{
     const list=allData[strListType]?.[u]||{};
-    return Object.keys(list).length>0&&(!q||u.toLowerCase().includes(q));
-  }).sort((a,b)=>(allData.users?.[b]?.lastUpdated||0)-(allData.users?.[a]?.lastUpdated||0));
-  if(!users.length){el.innerHTML=emptyHtml(q?'No trainers match':'No search strings yet',q?'Try a different trainer name.':'Once members add entries, their strings will appear here.','📋');return;}
+    return Object.keys(list).length>0;
+  });
+  if(!users.length){el.innerHTML=emptyHtml('No search strings yet','Add entries in My List to generate your strings.','📋');return;}
   el.innerHTML=users.map(u=>{
     const strs=buildStrings(strListType,u);
     const ud=allData.users?.[u]||{};
@@ -8506,9 +8519,14 @@ function toast(msg,dur=2500){
 // ── DIFF VIEW (#6) ────────────────────────────────────────────
 let _activeDiff=null;
 let _activeTradeMatch=null;
+function openActiveShareComparison(){
+  const username=_activeShareView?.username;
+  if(username)openDiffModal(username);
+}
 function openDiffModal(otherUsername){
   if(!cur||otherUsername===cur){toast('Pick another trainer');return;}
-  if(!guardReadScopeTrainer(otherUsername,'compare'))return;
+  const publicShareActive=_activeShareView?.username===otherUsername&&!!selectedTrainerRuntime.publicData;
+  if(!publicShareActive&&!guardReadScopeTrainer(otherUsername,'compare'))return;
   closeTradeMatchModal();
   _activeDiff={them:otherUsername,type:strListType};
   renderDiffModal();
@@ -10281,6 +10299,7 @@ function renderShareView(username,type){
         ${ud.discord?`<span class="meta-item profile-discord">${escHtml(ud.discord)}</span>`:''}
         <span class="meta-item">📅 Updated ${freshnessLabel(ud.lastUpdated)}</span>
       </div>
+      ${cur&&cur!==username?`<button class="bpri" style="margin-top:9px" onclick="openActiveShareComparison()">${escHtml(i18nCore.t('trainer.compareAction'))}</button>`:''}
       ${bioHtml}
     </div>`;
   // Tabs
@@ -10607,7 +10626,25 @@ function selectSchedDay(isoD){
   renderSchedule();
 }
 
+function renderEventsOnly(){
+  const out=document.getElementById('events-out');if(!out)return;
+  if(!_eventData){out.innerHTML=pokeballLoader(i18nCore.t('events.loading'));return;}
+  const now=Date.now();
+  const events=(_eventData.events||[]).filter(event=>new Date(event.end||0).getTime()>=now)
+    .sort((a,b)=>new Date(a.start||0)-new Date(b.start||0)).slice(0,40);
+  if(!events.length){out.innerHTML=emptyHtml(i18nCore.t('events.empty'),'','📅');return;}
+  out.innerHTML=`<div class="sched-events-panel">${events.map(event=>{
+    const start=new Date(event.start||0),end=new Date(event.end||0);
+    const when=Number.isFinite(start.getTime())
+      ?`${start.toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}${Number.isFinite(end.getTime())?` – ${end.toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}`:''}`
+      :'';
+    const title=event.name||event.heading||'Pokémon GO event';
+    const link=String(event.link||'');
+    return`<div class="sched-event-row"><div class="sched-event-info"><div class="sched-event-name">${escHtml(title)}</div><div class="sched-event-time">${escHtml(when)}</div></div>${link?`<a href="${escAttr(link)}" target="_blank" rel="noopener" class="sched-nav-today">Details ↗</a>`:''}</div>`;
+  }).join('')}</div>`;
+}
 function renderSchedule(){
+  if(TRAINER_FIRST_INTERIM_ENABLED){renderEventsOnly();return;}
   if(!schedAnchor)schedAnchor=startOfWeek(new Date());
   if(!schedSelectedDate)schedSelectedDate=todayIso();
   const scheduleAllowed=scheduleAllowedUsers();
@@ -11151,6 +11188,7 @@ function refreshAfterHaveWrite(username,scope='all'){
   }
 }
 async function writeHave(username,inv,opts={}){
+  if(LEGACY_INVENTORY_READ_ONLY){toast(i18nCore.t('inventory.legacyReadOnly'),4500);return false;}
   const s=getLocal();
   if(!s.have)s.have={};
   // Track inventory entry changes for activity sparkline
@@ -11167,6 +11205,7 @@ async function writeHave(username,inv,opts={}){
     queueSync(`users/${username}/lastSeen`,now);
   }
   refreshAfterHaveWrite(username,opts.refresh||'all');
+  return true;
 }
 function setHaveView(v){
   haveView=v;
@@ -11434,7 +11473,19 @@ function renderMyHave(filterVal){
   const totalEl=document.getElementById('have-total');
   if(totalEl)totalEl.textContent=totalCount?`${totalCount} total Pokémon`:'';
   if(!entries.length){
-    el.innerHTML=q?emptyHtml('No matches','Clear the filter.'):emptyHtml('Inventory empty','Add Pokémon you have so others can offer trades.','📋');
+    el.innerHTML=q?emptyHtml('No matches','Clear the filter.'):emptyHtml(i18nCore.t('inventory.legacyEmpty'),'','📋');
+    return;
+  }
+  if(LEGACY_INVENTORY_READ_ONLY){
+    el.innerHTML=entries.map(e=>{
+      const gender=e.gender==='m'?' ♂':e.gender==='f'?' ♀':'';
+      const mode=e.mirrorOnly?'🪞 Mirror only':e.dontNeedBack?'🤝 Fair trade':e.giveaway?'📤 Giveaway':'Open';
+      return`<div class="have-row" data-name="${escAttr(e.name)}" data-key="${escAttr(e.key)}">
+        <div class="have-row-sprite">${e.no?spriteImg(e.no,32,'',e.name,e.gender||'',e.dn):'🎮'}</div>
+        <div class="have-row-info"><div class="have-row-name">${escHtml(e.dn)}${gender}</div><div class="have-row-meta"><span>${escHtml(mode)}</span>${e.note?`<span> · ${escHtml(e.note)}</span>`:''}</div></div>
+        <span class="cb">×${e.qty}</span>
+      </div>`;
+    }).join('');
     return;
   }
   // Incoming offers count
@@ -11500,6 +11551,18 @@ function renderMyHave(filterVal){
       <button class="have-row-rm" onclick="event.stopPropagation();removeInventoryEntry('${sk}')" aria-label="Remove">×</button>
     </div>`;
   }).join('');
+}
+function exportLegacyInventoryCsv(){
+  const inv=allData.have?.[cur]||{};
+  const rows=[['Pokemon','Gender','Quantity','Mode','Note']];
+  Object.entries(inv).forEach(([key,value])=>{
+    const{name,gender}=splitHaveKey(key);
+    const info=haveEntryInfo(value);
+    if(info.qty<=0)return;
+    rows.push([name,gender,info.qty,info.mode,info.note||'']);
+  });
+  const csv=rows.map(row=>row.map(value=>`"${String(value??'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  downloadBlob(new Blob([csv],{type:'text/csv;charset=utf-8'}),`${String(cur||'trainer').replace(/[^A-Za-z0-9_-]/g,'_')}-legacy-inventory.csv`);
 }
 function openIncomingOffersModal(scrollToItem=''){
   const myOffers=Object.fromEntries(Object.entries(allData.offers?.[cur]||{}).filter(([,o])=>offerInReadScope(o,cur)));
@@ -12138,6 +12201,7 @@ async function _writePendingDecrement(bidder,payload){
 // gated by an inflight flag so concurrent snapshot bursts don't double-apply.
 let _pendingDecrementsInflight=false;
 async function _applyPendingDecrements(){
+  if(LEGACY_INVENTORY_READ_ONLY)return;
   if(_pendingDecrementsInflight||!cur)return;
   const pending=allData.pendingDecrements?.[cur]||{};
   const ids=Object.keys(pending);
@@ -12899,7 +12963,7 @@ function anyOpenModal(){
   return!!document.querySelector('.ov.open');
 }
 function _focusActiveTabSearch(){
-  const map={browse:'browse-q',mylist:'mylist-filter',strings:'strings-q',have:'have-q',schedule:''};
+  const map={find:'find-trainer-input',mylist:'mylist-filter',strings:'',have:'have-filter',schedule:'',settings:''};
   // Detect active tab
   const active=document.querySelector('.tab.active')?.dataset.tab;
   // Special case: have tab has subtab-specific filters
@@ -12924,7 +12988,7 @@ function _handleGlobalShortcut(ev){
   // Only handle inside the main app, not on login/share view
   if(document.getElementById('app')?.style.display==='none')return;
   switch(ev.key.toLowerCase()){
-    case'b':switchTab('browse');ev.preventDefault();break;
+    case'b':switchTab('find');ev.preventDefault();break;
     case'm':switchTab('mylist');ev.preventDefault();break;
     case's':switchTab('strings');ev.preventDefault();break;
     case'h':case'i':switchTab('have');ev.preventDefault();break;
@@ -12987,6 +13051,7 @@ function skipTour(){
   closeModal('tour-modal');
 }
 function maybeStartTour(){
+  if(TRAINER_FIRST_INTERIM_ENABLED)return;
   if(lsGet('pogoTourSeen',null))return;
   // Delay so the app finishes rendering first
   setTimeout(()=>{if(!anyOpenModal())startTour();},800);
@@ -13025,6 +13090,7 @@ Object.assign(window,{
   addInventoryEntry,updateInventoryQty,setInventoryQty,toggleInventoryMirror,cycleInventoryMode,cycleInventoryGender,setHaveAddMode,setHaveAddGender,editInventoryNote,removeInventoryEntry,
   toggleHaveBulkMode,toggleHaveBulkSelection,bulkHaveSetMode,bulkHaveAdjustQty,bulkHaveDelete,
   renderMyHave,renderHaveBrowse,openOfferModal,closeOfferModal,copyOfferMessage,
+  exportLegacyInventoryCsv,openTrainerPublicShare,
   toggleOfferPickChip,markOfferMessageEdited,refreshOfferMessage,
   // Offer history
   submitOffer,submitOfferAction,withdrawOffer,markOfferTraded,

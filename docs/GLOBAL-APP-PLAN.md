@@ -828,6 +828,13 @@ identity cleanup is implied by the review artifact.
   change. Preserve all Firebase paths and read breadth, keep the narrow-read
   flag disabled, and run production smoke only after the complete lifecycle and
   storage boundary is present.
+- **Trainer-first activation:** activate exact owned reads after retiring the
+  broad community consumers rather than rebuilding per-trainer listeners.
+  Keep My List, own Strings, read-only Legacy Inventory/export, Events,
+  anonymous public shares, public-share pairwise comparison, Settings, and
+  protected owner Admin. Selected-trainer reads use only
+  `publicShares/{username}`; owner Admin broad reads are on demand and scoped to
+  `legacyAdmin`.
 - **Likely files:** `index.html`, subscription-focused tests, Playwright smoke,
   scaling/security docs, and maintenance log.
 - **Firebase paths read:** current legacy paths during transition, one exact
@@ -948,6 +955,10 @@ identity cleanup is implied by the review artifact.
 - **Tests/rollback:** legacy export/read access, no hidden write entry points,
   no data deletion, subscription counts, and deployed smoke. Feature flags
   restore old navigation during the rollback window.
+- **Implemented interim boundary:** the primary navigation now uses My List,
+  Find Trainer, own Strings, Events, read-only Legacy Inventory, Settings, and
+  protected owner Admin. Legacy records remain untouched; this is not the
+  eventual deletion/archive approval.
 
 The former combined “dry-run and seed” step is intentionally split between
 Commit 5 and Commit 9. Local mapping analysis is safe before rules cutover;
