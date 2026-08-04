@@ -2595,3 +2595,7 @@ Added an inert Firebase client/repository boundary, explicit listener ownership 
 ## 2026-08-03 - Codex - Session-owned listeners, cache, and pending changes
 
 Replaced the legacy listener maps with one managed lifecycle while preserving every existing Firebase path and read shape. Public login-directory, UID/username-owned protected-session, and selected-trainer listeners now suppress stale callbacks across logout, auth loss, user replacement, trainer replacement, and share exit. The versioned `pogoSessionCache_v2` cache separates public directory data from protected snapshots, and `pogoSyncQueue_v2` binds pending changes to the same verified owner. Explicit logout clears protected local state; temporary auth loss locks it for same-user recovery; ambiguous legacy queues are discarded with translated notice text. Selected-trainer snapshots remain runtime-only. `NARROW_READ_CLIENT_ENABLED` remains false; Firebase rules and production data are unchanged.
+
+## 2026-08-03 - Codex - Phase 2 production validation (docs-only)
+
+Validated deployed commit `8f8101c` in production. Anonymous login-directory discovery and public-share realtime updates passed; TestUser and owner login, existing screens, and a reversible list edit with restoration passed. Logout removed protected state while preserving public access, and same-browser account switching exposed no cross-user data or queued writes. No listener duplication, stale callbacks, cache-reset loop, browser warnings, or errors occurred. No rollback was required.
