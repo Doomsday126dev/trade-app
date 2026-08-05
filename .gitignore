@@ -4,6 +4,10 @@ playwright-report/
 .firebase-local/
 database-debug.log
 firebase-debug*.log
+functions/.env*
+functions/.firebase/
+functions/emulator-data/
+functions/*-debug.log
 .local/trainer-name-audits/
 .local/uid-handle-audits/
 .local/admin-tools/

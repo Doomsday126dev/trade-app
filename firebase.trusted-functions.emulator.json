@@ -1,0 +1,26 @@
+{
+  "functions": {
+    "source": "functions"
+  },
+  "database": {
+    "rules": "tests/firebase/database.rules.share-visibility.json"
+  },
+  "emulators": {
+    "auth": {
+      "host": "127.0.0.1",
+      "port": 9399
+    },
+    "database": {
+      "host": "127.0.0.1",
+      "port": 9400
+    },
+    "functions": {
+      "host": "127.0.0.1",
+      "port": 9501
+    },
+    "ui": {
+      "enabled": false
+    },
+    "singleProjectMode": true
+  }
+}
