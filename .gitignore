@@ -5,6 +5,7 @@ playwright-report/
 database-debug.log
 firebase-debug*.log
 functions/.env*
+!functions/.env.staging.example
 functions/.firebase/
 functions/emulator-data/
 functions/*-debug.log
