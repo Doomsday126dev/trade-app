@@ -17,7 +17,8 @@ function between(start,end){
 
 test('interim navigation exposes trainer-first retained surfaces only',()=>{
   const tabs=between('<div class="tabs" role="tablist"','</div>');
-  for(const tab of ['mylist','find','strings','schedule','have','settings','admin'])assert.match(tabs,new RegExp(`data-tab="${tab}"`));
+  for(const tab of ['mylist','find','schedule','have','settings','admin'])assert.match(tabs,new RegExp(`data-tab="${tab}"`));
+  assert.doesNotMatch(tabs,/data-tab="strings"/);
   assert.doesNotMatch(tabs,/data-tab="browse"/);
   assert.match(tabs,/Legacy Inventory/);
   assert.match(tabs,/Events/);
@@ -41,11 +42,28 @@ test('selected-trainer bridge loads and listens to publicShares only',()=>{
   assert.doesNotMatch(listen,/authenticated:true|shareDataPaths/);
 });
 
-test('Strings is current-user only and Trade Match is not in retained navigation',()=>{
+test('My List owns current-user strings and Trade Match is not in retained navigation',()=>{
   const strings=between('function _renderStringsInner(){','// ── EXPORT');
   assert.match(strings,/const users=\[cur\]\.filter/);
   const tabs=between('<div class="tabs" role="tablist"','</div>');
   assert.doesNotMatch(tabs,/Trade Match|Offers/);
+  assert.match(source,/id="my-strings-out"/);
+});
+
+test('Find Trainer autocomplete uses the public directory and selected trainer uses public shares only',()=>{
+  const find=between('function renderFindTrainer(){','function publicShareRequestFromInput');
+  assert.match(find,/Object\.keys\(allData\.loginDirectory\|\|\{\}\)/);
+  assert.match(find,/managedPublicShareRepository\.read/);
+  assert.match(source,/trainerDiscoveryDomain\.fold\(name\)===trainerDiscoveryDomain\.fold\(value\)/);
+  assert.doesNotMatch(find,/allData\.users\?\.|wishlist\[|have\[/);
+});
+
+test('favorites are owner-scoped local state and event cards use grouped presentation helpers',()=>{
+  assert.match(source,/createTrainerHistoryStore\(\{storage:localStorage,identity:\{uid,username:cur\}\}\)/);
+  assert.match(source,/eventPresentationDomain\.prepareEvents/);
+  for(const key of ['trainer.searchStart','trainer.favoritesTitle','trainer.changesTitle','events.groupNow','events.filterMax']){
+    assert.match(locale,new RegExp(`'${key.replace('.','\\.')}'`));
+  }
 });
 
 test('Legacy Inventory is read-only and export does not write Firebase',()=>{

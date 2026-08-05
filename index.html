@@ -524,8 +524,10 @@ input,select,textarea{font-family:var(--font);outline:none}
   .install-btn{display:none !important}
   .bell-btn,.theme-toggle{width:28px;height:28px;font-size:12px}
   .tabs{justify-content:space-around;gap:0}
-  /* Tighter tabs so all 5 (Browse/My List/Strings/Have/Schedule) fit ~375px without clipping */
-  .tab{flex:1;padding:12px 4px;font-size:11px;text-align:center;letter-spacing:-.01em;min-width:0}
+  /* Compact labels keep all retained surfaces reachable without horizontal clipping. */
+  .tab{flex:1;padding:12px 3px;font-size:0;text-align:center;letter-spacing:0;min-width:0;overflow:hidden}
+  .tab::after{content:attr(data-short);font-size:10px;white-space:nowrap}
+  .tab .notif-badge{font-size:9px}
   .page{padding:11px;max-width:100vw;overflow-x:hidden}
   .mygrid{grid-template-columns:1fr;max-width:100%}
   .lcard{padding:22px 16px}
@@ -534,7 +536,7 @@ input,select,textarea{font-family:var(--font);outline:none}
 }
 /* Squeeze tabs harder on the smallest devices so nothing wraps */
 @media(max-width:360px){
-  .tab{font-size:10px;padding:11px 3px}
+  .tab{padding:11px 2px}.tab::after{font-size:9px}
 }
 
 /* TYPE COLORS (Pokemon primary type accent) */
@@ -1268,6 +1270,26 @@ html[data-theme="light"] .have-mirror-badge,html[data-theme="light"] .have-mirro
 .sched-event-chip-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:320px}
 .sched-event-bonus{display:inline-flex;align-items:center;background:rgba(16,185,129,.16);color:var(--ok);border:1px solid rgba(16,185,129,.32);padding:1px 6px;border-radius:999px;font-size:10px;font-weight:800}
 .sched-event-chip-link{color:var(--muted);font-size:11px}
+.trainer-search-shell{position:relative;max-width:760px}
+.trainer-search-row{display:flex;gap:8px;align-items:stretch}
+.trainer-search-row input{flex:1;min-width:0}
+.trainer-suggestions{position:absolute;z-index:30;top:calc(100% + 5px);left:0;right:0;display:none;background:var(--card);border:1px solid var(--border2);border-radius:6px;box-shadow:var(--shadow);max-height:min(320px,45vh);overflow:auto}
+.trainer-suggestions.open{display:block}
+.trainer-suggestion{width:100%;border:0;border-bottom:1px solid var(--border);background:transparent;color:var(--text);padding:11px 13px;text-align:left;font:600 13px var(--font);cursor:pointer;min-height:44px}
+.trainer-suggestion:last-child{border-bottom:0}.trainer-suggestion:hover,.trainer-suggestion.active{background:var(--bg2);outline:none}.trainer-suggestion mark{background:rgba(168,139,250,.22);color:var(--ac2);border-radius:2px;padding:0 1px}
+.trainer-quick-section{margin-top:18px}.trainer-quick-heading{font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;margin-bottom:8px}
+.trainer-quick-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:9px}
+.trainer-quick-card{border:1px solid var(--border);background:var(--card);border-radius:6px;padding:11px;display:flex;gap:9px;align-items:center;min-width:0}
+.trainer-quick-main{flex:1;min-width:0}.trainer-quick-name{font-weight:750;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.trainer-quick-meta{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.4}.trainer-change-counts{font-size:11px;color:var(--ac2);margin-top:4px}.trainer-unread{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--accent);margin-right:5px}
+.trainer-quick-actions{display:flex;gap:5px}.trainer-icon-btn{width:40px;height:40px;border:1px solid var(--border2);border-radius:6px;background:var(--bg);color:var(--text);cursor:pointer;font-size:16px}.trainer-icon-btn:hover{border-color:var(--accent)}
+.favorite-detail{grid-column:1/-1;border-top:1px solid var(--border);padding-top:8px;margin-top:4px;font-size:11px;color:var(--muted)}
+.favorite-detail summary{cursor:pointer;font-weight:700;color:var(--text)}
+.share-profile-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px}.share-profile-actions button{min-height:38px}
+.my-string-heading{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}.my-string-heading span{font-size:11px;color:var(--muted);font-weight:500;text-transform:none}
+.event-filter-row{display:flex;gap:7px;overflow-x:auto;padding:2px 0 12px;scrollbar-width:thin}.event-filter{white-space:nowrap;border:1px solid var(--border2);background:var(--card);color:var(--muted);border-radius:999px;padding:8px 12px;min-height:40px;font:700 12px var(--font);cursor:pointer}.event-filter.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.event-group{margin-bottom:22px}.event-group-title{font-size:14px;font-weight:800;margin-bottom:10px}.event-card-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.event-card{border:1px solid var(--border);border-left:3px solid var(--accent);background:var(--card);border-radius:6px;padding:13px;display:flex;flex-direction:column;gap:9px;min-width:0;cursor:pointer}.event-card:hover{border-color:var(--ac2)}.event-card-title{font-size:14px;font-weight:800;line-height:1.3;overflow-wrap:anywhere}.event-card-time{font-size:11px;color:var(--muted);line-height:1.45}.event-type-tag{align-self:flex-start;border-radius:999px;padding:3px 7px;background:var(--bg2);border:1px solid var(--border2);font-size:10px;font-weight:800;color:var(--ac2)}.event-card-details{font-size:11px;color:var(--ac2);text-decoration:none;margin-top:auto;align-self:flex-start}
+@media(max-width:900px){.event-card-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.trainer-search-row{display:grid;grid-template-columns:1fr auto}.trainer-search-row .bsave{min-width:44px;padding-inline:12px}.trainer-quick-grid,.event-card-grid{grid-template-columns:1fr}.trainer-quick-card{padding:10px}.trainer-icon-btn{width:44px;height:44px}.event-card{padding:12px}.my-string-heading{align-items:flex-start}}
 .sched-manual-bonus{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--bg);border:1px dashed var(--border2);border-radius:var(--r2);margin-bottom:10px;font-size:12px;flex-wrap:wrap}
 .sched-manual-bonus-text{flex:1;min-width:160px}
 .sched-manual-bonus-text strong{color:var(--text);font-size:12px;display:block;margin-bottom:1px}
@@ -1754,13 +1776,12 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
   </div>
 
   <div class="tabs" role="tablist" aria-label="Main sections">
-    <button class="tab active" data-tab="mylist" onclick="switchTab('mylist')" role="tab" aria-selected="true">📋 My List</button>
-    <button class="tab" data-tab="find" onclick="switchTab('find')" role="tab" aria-selected="false">🔍 Find Trainer</button>
-    <button class="tab" data-tab="strings" onclick="switchTab('strings')" role="tab" aria-selected="false">📤 Strings</button>
-    <button class="tab" data-tab="schedule" onclick="switchTab('schedule')" role="tab" aria-selected="false">📅 Events</button>
-    <button class="tab" data-tab="have" onclick="switchTab('have')" role="tab" aria-selected="false">🗄 Legacy Inventory</button>
-    <button class="tab" data-tab="settings" onclick="switchTab('settings')" role="tab" aria-selected="false">⚙️ Settings</button>
-    <button class="tab" data-tab="admin" onclick="switchTab('admin')" id="admin-tab" style="display:none" role="tab" aria-selected="false">⚙️ Admin<span class="notif-badge" id="admin-notif" style="display:none">!</span></button>
+    <button class="tab active" id="nav-mylist" data-tab="mylist" data-short="📋 List" onclick="switchTab('mylist')" role="tab" aria-selected="true">📋 My List</button>
+    <button class="tab" id="nav-find" data-tab="find" data-short="🔍 Find" onclick="switchTab('find')" role="tab" aria-selected="false">🔍 Find Trainer</button>
+    <button class="tab" id="nav-events" data-tab="schedule" data-short="📅 Events" onclick="switchTab('schedule')" role="tab" aria-selected="false">📅 Events</button>
+    <button class="tab" id="nav-inventory" data-tab="have" data-short="🗄 Items" onclick="switchTab('have')" role="tab" aria-selected="false">🗄 Legacy Inventory</button>
+    <button class="tab" id="nav-settings" data-tab="settings" data-short="⚙️ Settings" onclick="switchTab('settings')" role="tab" aria-selected="false">⚙️ Settings</button>
+    <button class="tab" data-tab="admin" data-short="⚙️ Admin" onclick="switchTab('admin')" id="admin-tab" style="display:none" role="tab" aria-selected="false">⚙️ Admin<span class="notif-badge" id="admin-notif" style="display:none">!</span></button>
   </div>
 
   <!-- BROWSE -->
@@ -1811,13 +1832,19 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
       <div class="have-title" id="find-trainer-title"></div>
       <div class="have-subtitle" id="find-trainer-description"></div>
     </div>
-    <div class="add-form">
-      <div class="frow">
-        <input type="text" id="find-trainer-input" autocomplete="off" autocapitalize="none" spellcheck="false" onkeydown="if(event.key==='Enter'){event.preventDefault();openTrainerPublicShare()}" style="flex:1;min-width:220px">
+    <div class="add-form trainer-search-shell">
+      <div class="trainer-search-row">
+        <input type="text" id="find-trainer-input" autocomplete="off" autocapitalize="none" spellcheck="false"
+          role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="find-trainer-suggestions"
+          oninput="queueTrainerSuggestions(this.value)" onfocus="queueTrainerSuggestions(this.value,true)" onblur="setTimeout(closeTrainerSuggestions,120)" onkeydown="trainerSearchKeydown(event)">
         <button class="bsave" id="find-trainer-button" onclick="openTrainerPublicShare()"></button>
       </div>
+      <div class="trainer-suggestions" id="find-trainer-suggestions" role="listbox"></div>
       <div id="find-trainer-status" role="status" aria-live="polite" style="font-size:12px;color:var(--muted);margin-top:8px"></div>
     </div>
+    <div id="favorite-trainers" class="trainer-quick-section"></div>
+    <div id="recent-trainers" class="trainer-quick-section"></div>
+    <div id="trainer-history-note" style="display:none;font-size:11px;color:var(--muted);margin-top:12px"></div>
   </div>
 
   <!-- MY LIST -->
@@ -1923,30 +1950,8 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
       </span>
     </div>
     <div id="mylist-out"></div>
-    <div class="sec" style="margin-top:22px">Search strings</div>
+    <div class="sec my-string-heading" style="margin-top:22px"><strong id="my-string-title"></strong><span id="my-string-help"></span></div>
     <div id="my-strings-out"></div>
-  </div>
-
-
-
-  <!-- STRINGS -->
-  <div class="page" id="tab-strings">
-    <div class="have-hdr"><div class="have-title">📤 Strings</div><div class="have-subtitle" id="own-strings-description"></div></div>
-    <input type="hidden" id="stq" value="">
-    <div class="list-tabs" id="str-list-tabs">
-      <button class="ltab active" onclick="setStrList('wishlist')">Trades</button>
-      <button class="ltab" onclick="setStrList('dynamax')"><span class="ltab-full">Dynamax</span><span class="ltab-short">Dmax</span></button>
-      <button class="ltab" onclick="setStrList('gmax')"><span class="ltab-full">Gigantamax</span><span class="ltab-short">Gmax</span></button>
-      <button class="ltab" onclick="setStrList('costumes')">Others</button>
-    </div>
-    <div class="safe-transfer-cta" style="display:none">
-      <button class="safe-transfer-btn" onclick="openSafeTransferModal()" title="Generate a Pokémon GO search string for everything nobody on your selected partner list wants — paste into the bag for safe mass-transfer">
-        🗑️ <span class="stb-label">Safe-to-transfer search string</span>
-      </button>
-    </div>
-    <div id="owner-strings-preview-banner" class="owner-preview-banner" style="display:none"></div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Tap your trainer card to expand your strings</div>
-    <div id="strings-out"></div>
   </div>
 
   <!-- HAVE (Inventory) -->
@@ -2369,7 +2374,7 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
       <div class="shortcut-section-hdr">Navigation</div>
       <div class="shortcut-row"><kbd>b</kbd><span>Find Trainer tab</span></div>
       <div class="shortcut-row"><kbd>m</kbd><span>My List tab</span></div>
-      <div class="shortcut-row"><kbd>s</kbd><span>Strings tab</span></div>
+      <div class="shortcut-row"><kbd>s</kbd><span>My List search strings</span></div>
       <div class="shortcut-row"><kbd>i</kbd> <kbd>h</kbd><span>Legacy Inventory tab</span></div>
       <div class="shortcut-row"><kbd>c</kbd><span>Events tab</span></div>
       <div class="shortcut-section-hdr">Actions</div>
@@ -2443,6 +2448,8 @@ window.__pogoBootWatch=setTimeout(function(){
 <script src="js/domain/autocompleteMatching.js"></script>
 <script src="js/domain/autocompleteRanking.js"></script>
 <script src="js/domain/relativeTime.js"></script>
+<script src="js/domain/trainerDiscovery.js"></script>
+<script src="js/domain/eventPresentation.js"></script>
 <script src="js/utils/textSafety.js"></script>
 <script src="js/ui/stringPanels.js"></script>
 <script src="js/ui/emptyState.js"></script>
@@ -2456,6 +2463,7 @@ window.__pogoBootWatch=setTimeout(function(){
 <script src="js/data/currentUserRepository.js"></script>
 <script src="js/data/ownedDataCoordinator.js"></script>
 <script src="js/data/publicShareRepository.js"></script>
+<script src="js/data/trainerHistoryStore.js"></script>
 <script src="js/domain/cacheAdapters.js"></script>
 <script>
 let initializeApp,getDatabase,ref,set,get,onValue,update,getAuth,signInWithEmailAndPassword,createUserWithEmailAndPassword,firebaseSignOut,updatePassword,deleteUser,onAuthStateChanged;
@@ -2520,6 +2528,12 @@ const ownedDataCoordinatorData=window.PogoData?.ownedDataCoordinator;
 if(!ownedDataCoordinatorData)throw new Error('Owned-data coordinator failed to load');
 const publicShareRepositoryData=window.PogoData?.publicShareRepository;
 if(!publicShareRepositoryData)throw new Error('Public-share repository failed to load');
+const trainerHistoryStoreData=window.PogoData?.trainerHistoryStore;
+if(!trainerHistoryStoreData)throw new Error('Trainer history store failed to load');
+const trainerDiscoveryDomain=window.PogoDomain?.trainerDiscovery;
+if(!trainerDiscoveryDomain)throw new Error('Trainer discovery helpers failed to load');
+const eventPresentationDomain=window.PogoDomain?.eventPresentation;
+if(!eventPresentationDomain)throw new Error('Event presentation helpers failed to load');
 const cacheAdapterDomain=window.PogoDomain?.cacheAdapters;
 if(!cacheAdapterDomain)throw new Error('Cache adapters failed to load');
 const managedSubscriptions=subscriptionManagerData.createSubscriptionManager();
@@ -2528,6 +2542,8 @@ const managedSessionCache=sessionCacheBoundaryData.createSessionCacheBoundary({s
 let managedFirebaseClient=null;
 let managedCurrentUserRepository=null;
 let managedOwnedDataCoordinator=null;
+let managedPublicShareRepository=null;
+let trainerHistoryStore=null;
 
 const OWNER="Doomsday126";
 const APP_VERSION="4.6.37";
@@ -3624,6 +3640,7 @@ function bindAuthObserver(){
     _authStateWaiters.splice(0).forEach(fn=>fn(user||null));
     if(!user){
       resetSessionTransientUi('auth_loss');
+      trainerHistoryStore=null;
       managedListenerLifecycle.deactivateSession('auth_loss');
       managedOwnedDataCoordinator?.reset();
       suspendOwnedSession('auth_loss');
@@ -4774,6 +4791,7 @@ function setupFirebase(url=FIREBASE_URL){
   db=getDatabase(fbApp);fbOn=true;
   managedFirebaseClient=firebaseClientService.createFirebaseClient({database:db,ref,get,onValue});
   managedCurrentUserRepository=currentUserRepositoryData.createCurrentUserRepository(managedFirebaseClient);
+  managedPublicShareRepository=publicShareRepositoryData.createPublicShareRepository(managedFirebaseClient);
   managedOwnedDataCoordinator=ownedDataCoordinatorData.createOwnedDataCoordinator({
     repository:managedCurrentUserRepository,
     lifecycle:managedListenerLifecycle,
@@ -5262,6 +5280,7 @@ async function openShareViewFromRequest(shareReq){
   const publicLoaded=await loadPublicShareData(shareReq.username);
   ensureShareViewSubscriptions(shareReq.username);
   if(publicLoaded&&allData.users?.[shareReq.username]){
+    if(cur)rememberTrainerOpened(shareReq.username);
     enterShareView(shareReq.username,shareReq.type);
     return;
   }
@@ -5650,6 +5669,7 @@ async function doLogin(){
 
 function logout(){
   resetSessionTransientUi('logout');
+  trainerHistoryStore=null;
   managedListenerLifecycle.deactivateSession('logout');
   managedOwnedDataCoordinator?.reset();
   clearOwnedSession();
@@ -5797,12 +5817,27 @@ function setText(id,key){
   if(el)el.textContent=i18nCore.t(key);
 }
 function renderInterimProductLabels(){
+  const navLabels=[
+    ['nav-mylist','nav.myList','nav.myListShort'],['nav-find','nav.findTrainer','nav.findTrainerShort'],
+    ['nav-events','nav.events','nav.eventsShort'],['nav-inventory','nav.legacyInventory','nav.legacyInventoryShort'],
+    ['nav-settings','nav.settings','nav.settingsShort'],['admin-tab','nav.admin','nav.adminShort']
+  ];
+  navLabels.forEach(([id,labelKey,shortKey])=>{
+    const el=document.getElementById(id);if(!el)return;
+    const text=i18nCore.t(labelKey),node=[...el.childNodes].find(child=>child.nodeType===Node.TEXT_NODE);
+    if(node)node.nodeValue=text;else el.prepend(document.createTextNode(text));
+    el.dataset.short=i18nCore.t(shortKey);
+    el.setAttribute('aria-label',text);
+  });
   setText('find-trainer-title','trainer.findTitle');
   setText('find-trainer-description','trainer.findDescription');
   setText('find-trainer-button','trainer.findAction');
   const findInput=document.getElementById('find-trainer-input');
   if(findInput)findInput.placeholder=i18nCore.t('trainer.findPlaceholder');
-  setText('own-strings-description','strings.ownDescription');
+  const suggestions=document.getElementById('find-trainer-suggestions');
+  if(suggestions)suggestions.setAttribute('aria-label',i18nCore.t('trainer.suggestionsLabel'));
+  setText('my-string-title','strings.title');
+  setText('my-string-help','strings.myListHelp');
   setText('legacy-inventory-title','inventory.legacyTitle');
   setText('legacy-inventory-description','inventory.legacyDescription');
   setText('legacy-inventory-export','inventory.exportAction');
@@ -5815,30 +5850,141 @@ function renderInterimProductLabels(){
   setText('settings-shortcuts','settings.shortcutsAction');
   setText('settings-logout','settings.logoutAction');
 }
+let trainerSuggestionTimer=0;
+let trainerSuggestionItems=[];
+let trainerSuggestionIndex=-1;
+let eventTypeFilter='all';
+function ensureTrainerHistoryStore(){
+  const uid=auth?.currentUser?.uid;
+  if(!uid||!cur)return null;
+  trainerHistoryStore=trainerHistoryStoreData.createTrainerHistoryStore({storage:localStorage,identity:{uid,username:cur}});
+  return trainerHistoryStore;
+}
 function renderFindTrainer(){
   renderInterimProductLabels();
   const status=document.getElementById('find-trainer-status');
-  if(status)status.textContent='';
+  if(status&&!document.getElementById('find-trainer-input')?.value.trim())status.textContent=i18nCore.t('trainer.searchStart');
+  renderTrainerQuickLists();
+}
+function closeTrainerSuggestions(){
+  const box=document.getElementById('find-trainer-suggestions'),input=document.getElementById('find-trainer-input');
+  if(box){box.classList.remove('open');box.innerHTML='';}
+  if(input){input.setAttribute('aria-expanded','false');input.removeAttribute('aria-activedescendant');}
+  trainerSuggestionItems=[];trainerSuggestionIndex=-1;
+}
+function trainerSuggestionHtml(item,index){
+  const before=item.name.slice(0,item.matchStart),match=item.name.slice(item.matchStart,item.matchStart+item.matchLength),after=item.name.slice(item.matchStart+item.matchLength);
+  return`<button type="button" class="trainer-suggestion${index===trainerSuggestionIndex?' active':''}" role="option" id="trainer-suggestion-${index}" aria-selected="${index===trainerSuggestionIndex}" data-index="${index}" onmousedown="event.preventDefault()" onclick="selectTrainerSuggestion(${index})">${escHtml(before)}<mark>${escHtml(match)}</mark>${escHtml(after)}</button>`;
+}
+function renderTrainerSuggestions(value){
+  const input=document.getElementById('find-trainer-input'),box=document.getElementById('find-trainer-suggestions'),status=document.getElementById('find-trainer-status');
+  if(!input||!box)return;
+  const query=String(value||'').trim();
+  if(query.length<2){closeTrainerSuggestions();if(status)status.textContent=i18nCore.t('trainer.searchStart');return;}
+  trainerSuggestionItems=trainerDiscoveryDomain.trainerSuggestions(Object.keys(allData.loginDirectory||{}),query,{minLength:2,limit:8});
+  trainerSuggestionIndex=trainerSuggestionItems.length?0:-1;
+  if(!trainerSuggestionItems.length){closeTrainerSuggestions();if(status)status.textContent=i18nCore.t('trainer.noMatch');return;}
+  box.innerHTML=trainerSuggestionItems.map(trainerSuggestionHtml).join('');box.classList.add('open');input.setAttribute('aria-expanded','true');
+  input.setAttribute('aria-activedescendant','trainer-suggestion-0');if(status)status.textContent='';
+}
+function queueTrainerSuggestions(value,immediate=false){
+  clearTimeout(trainerSuggestionTimer);
+  const status=document.getElementById('find-trainer-status');
+  if(String(value||'').trim().length>=2&&status)status.textContent=i18nCore.t('trainer.searching');
+  trainerSuggestionTimer=setTimeout(()=>renderTrainerSuggestions(value),immediate?0:220);
+}
+function selectTrainerSuggestion(index){
+  const item=trainerSuggestionItems[index];if(!item)return;
+  const input=document.getElementById('find-trainer-input');if(input)input.value=item.name;
+  closeTrainerSuggestions();openTrainerPublicShare(item.name);
+}
+function trainerSearchKeydown(event){
+  if(event.key==='ArrowDown'||event.key==='ArrowUp'){
+    if(!trainerSuggestionItems.length){queueTrainerSuggestions(event.currentTarget.value,true);return;}
+    event.preventDefault();const delta=event.key==='ArrowDown'?1:-1;
+    trainerSuggestionIndex=(trainerSuggestionIndex+delta+trainerSuggestionItems.length)%trainerSuggestionItems.length;
+    const box=document.getElementById('find-trainer-suggestions');if(box)box.innerHTML=trainerSuggestionItems.map(trainerSuggestionHtml).join('');
+    event.currentTarget.setAttribute('aria-activedescendant',`trainer-suggestion-${trainerSuggestionIndex}`);box?.querySelector('.active')?.scrollIntoView({block:'nearest'});return;
+  }
+  if(event.key==='Enter'){event.preventDefault();if(trainerSuggestionItems[trainerSuggestionIndex])selectTrainerSuggestion(trainerSuggestionIndex);else openTrainerPublicShare();return;}
+  if(event.key==='Escape'){event.preventDefault();closeTrainerSuggestions();}
+}
+function trainerDate(value){
+  const date=new Date(Number(value)||value);if(!Number.isFinite(date.getTime()))return'';
+  return new Intl.DateTimeFormat(i18nCore.getLocale(),{year:'numeric',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}).format(date);
+}
+function changeCountsText(diff){
+  return[i18nCore.t('trainer.changesAdded',{count:diff.added.length}),i18nCore.t('trainer.changesRemoved',{count:diff.removed.length}),i18nCore.t('trainer.changesModified',{count:diff.modified.length})].join(' · ');
+}
+function changeDetailsHtml(diff){
+  const row=(key,items,labels)=>items.length?`<div><strong>${escHtml(key)}:</strong> ${(labels||items.map(item=>item.name)).map(escHtml).join(', ')}</div>`:'';
+  const modified=diff.modified.map(item=>{
+    if(item.categoryChanged)return i18nCore.t('trainer.changeCategory',{name:item.name});
+    const before=parsePri(item.before||''),after=parsePri(item.value||'');
+    return i18nCore.t(before.p!==after.p?'trainer.changePriority':'trainer.changeDetails',{name:item.name});
+  });
+  return`${row(i18nCore.t('trainer.changesAdded',{count:diff.added.length}),diff.added)}${row(i18nCore.t('trainer.changesRemoved',{count:diff.removed.length}),diff.removed)}${row(i18nCore.t('trainer.changesModified',{count:diff.modified.length}),diff.modified,modified)}`;
+}
+async function favoriteStatus(item,store){
+  if(!managedPublicShareRepository)return{item,available:false,diff:null,updatedAt:null};
+  const result=await managedPublicShareRepository.read(item.displayName);
+  if(!result.ok||!result.value)return{item,available:false,diff:null,updatedAt:null};
+  const prior=store.snapshotFor(item.displayName)?.snapshot||null;
+  return{item,available:true,diff:trainerDiscoveryDomain.diffPublishedLists(prior,result.value),updatedAt:result.value.updatedAt||result.value.profile?.lastUpdated||null};
+}
+async function renderTrainerQuickLists(){
+  const store=ensureTrainerHistoryStore(),favoritesEl=document.getElementById('favorite-trainers'),recentEl=document.getElementById('recent-trainers'),noteEl=document.getElementById('trainer-history-note');
+  if(!store||!favoritesEl||!recentEl)return;
+  const state=store.read();
+  if(noteEl){noteEl.style.display=state.favorites.length||state.recent.length?'':'none';noteEl.textContent=i18nCore.t('trainer.deviceLocalHelp');}
+  favoritesEl.innerHTML=state.favorites.length?`<div class="trainer-quick-heading">${escHtml(i18nCore.t('trainer.favoritesTitle'))}</div><div class="trainer-quick-grid"><div class="trainer-quick-card"><div class="trainer-quick-main">${escHtml(i18nCore.t('trainer.searching'))}</div></div></div>`:'';
+  const statuses=await Promise.all(state.favorites.map(item=>favoriteStatus(item,store)));
+  if(!document.getElementById('tab-find')?.classList.contains('active'))return;
+  favoritesEl.innerHTML=statuses.length?`<div class="trainer-quick-heading">${escHtml(i18nCore.t('trainer.favoritesTitle'))}</div><div class="trainer-quick-grid">${statuses.map(({item,available,diff,updatedAt})=>{
+    const unread=!!(available&&diff&&!diff.firstView&&diff.total);
+    return`<div class="trainer-quick-card"><div class="trainer-quick-main"><div class="trainer-quick-name">${unread?'<span class="trainer-unread"></span>':''}${escHtml(item.displayName)}</div><div class="trainer-quick-meta">${available?(trainerDate(updatedAt)||''):`${escHtml(i18nCore.t('trainer.listUnavailable'))}`}</div>${unread?`<div class="trainer-change-counts">${escHtml(changeCountsText(diff))}</div>`:''}${unread?`<details class="favorite-detail"><summary>${escHtml(i18nCore.t('trainer.changesTitle'))}</summary>${changeDetailsHtml(diff)}</details>`:''}</div><div class="trainer-quick-actions"><button class="trainer-icon-btn" onclick="openTrainerByName('${escAttr(item.displayName)}')" aria-label="${escAttr(i18nCore.t('trainer.openAction'))}">↗</button><button class="trainer-icon-btn" onclick="toggleTrainerFavorite('${escAttr(item.displayName)}')" aria-label="${escAttr(i18nCore.t('trainer.favoriteRemove'))}">★</button></div></div>`;
+  }).join('')}</div>`:'';
+  recentEl.innerHTML=state.recent.length?`<div class="trainer-quick-heading">${escHtml(i18nCore.t('trainer.recentTitle'))}</div><div class="trainer-quick-grid">${state.recent.map(item=>`<div class="trainer-quick-card"><div class="trainer-quick-main"><div class="trainer-quick-name">${escHtml(item.displayName)}</div><div class="trainer-quick-meta">${trainerDate(item.openedAt)}</div></div><button class="trainer-icon-btn" onclick="openTrainerByName('${escAttr(item.displayName)}')" aria-label="${escAttr(i18nCore.t('trainer.openAction'))}">↗</button></div>`).join('')}</div>`:'';
+}
+function toggleTrainerFavorite(username){
+  const store=ensureTrainerHistoryStore();if(!store)return;
+  const result=store.toggleFavorite(username);toast(result.favorite?'★ '+i18nCore.t('trainer.favoriteAdd'):'☆ '+i18nCore.t('trainer.favoriteRemove'));renderTrainerQuickLists();
+  if(_activeShareView?.username===username)renderShareView(username,_activeShareView.type);
+}
+function rememberTrainerOpened(username){
+  const store=ensureTrainerHistoryStore();
+  const snapshot=selectedTrainerRuntime.username===username?selectedTrainerRuntime.publicData?publicShareSnapshotFromRuntime(username):null:null;
+  if(store&&snapshot)store.rememberOpened(username,snapshot);
+}
+function publicShareSnapshotFromRuntime(username){
+  const data=selectedTrainerRuntime.publicData;if(!data?.users?.[username])return null;
+  const lists={};PUBLIC_SHARE_TYPES.forEach(type=>{lists[type]={...(data[type]?.[username]||{})};});
+  return{version:1,username,profile:{...data.users[username]},lists,updatedAt:data.users[username].lastUpdated||Date.now()};
+}
+function openTrainerByName(username){
+  const input=document.getElementById('find-trainer-input');if(input)input.value=username;
+  openTrainerPublicShare(username);
 }
 function publicShareRequestFromInput(value){
   const raw=String(value||'').trim();
   if(!raw)return null;
+  const canonical=value=>Object.keys(allData.loginDirectory||{}).find(name=>trainerDiscoveryDomain.fold(name)===trainerDiscoveryDomain.fold(value))||String(value||'').trim();
   try{
     const url=new URL(raw,location.href);
     const username=url.searchParams.get('view');
-    if(username)return{username:String(username).trim(),type:url.searchParams.get('list')||'wishlist'};
+    if(username)return{username:canonical(username),type:url.searchParams.get('list')||'wishlist'};
   }catch{}
   if(/[.#$\[\]\/]/.test(raw))return null;
-  return{username:raw,type:'wishlist'};
+  return{username:canonical(raw),type:'wishlist'};
 }
-async function openTrainerPublicShare(){
-  const req=publicShareRequestFromInput(document.getElementById('find-trainer-input')?.value);
+async function openTrainerPublicShare(value){
+  const req=publicShareRequestFromInput(value||document.getElementById('find-trainer-input')?.value);
   const status=document.getElementById('find-trainer-status');
   if(!req?.username){if(status)status.textContent=i18nCore.t('trainer.publicInvalid');return;}
   if(status)status.textContent=i18nCore.t('data.loading',{resource:i18nCore.t('trainer.findTitle')});
   const loaded=await loadPublicShareData(req.username);
   ensureShareViewSubscriptions(req.username);
-  if(loaded&&allData.users?.[req.username]){enterShareView(req.username,req.type);return;}
+  if(loaded&&allData.users?.[req.username]){rememberTrainerOpened(req.username);enterShareView(req.username,req.type);return;}
   if(status)status.textContent=i18nCore.t('trainer.publicUnavailable');
 }
 function renderSettings(){renderInterimProductLabels();}
@@ -5862,6 +6008,7 @@ function showApp(){
   });
   document.getElementById('top-un').textContent=cur;
   document.getElementById('my-un').textContent=cur;
+  ensureTrainerHistoryStore();
   const isAdmin=protectedOwnerSession();
   document.getElementById('admin-tab').style.display=isAdmin?'':'none';
   renderInterimProductLabels();
@@ -5885,7 +6032,7 @@ function showApp(){
   const params=new URLSearchParams(location.search);
   const action=params.get('action');
   if(action==='add'){finalTab='mylist';switchTab(finalTab,{render:false});setTimeout(()=>document.getElementById('ac-input')?.focus(),100);}
-  else if(action==='strings'){finalTab='strings';switchTab(finalTab,{render:false});}
+  else if(action==='strings'){finalTab='mylist';switchTab(finalTab,{render:false});setTimeout(()=>document.getElementById('my-strings-out')?.scrollIntoView({behavior:'smooth'}),100);}
   else if(action==='browse'){finalTab='find';switchTab(finalTab,{render:false});}
   else if(action==='have'){finalTab='have';switchTab(finalTab,{render:false});}
   else if(action==='schedule'){finalTab='schedule';switchTab(finalTab,{render:false});}
@@ -5912,7 +6059,6 @@ function renderActiveTab(t=activeTabName()){
   if(!cur)return;
   if(t==='mylist')renderMyList();
   else if(t==='find')renderFindTrainer();
-  else if(t==='strings')renderStrings();
   else if(t==='have')renderMyHave();
   else if(t==='schedule')renderSchedule();
   else if(t==='settings')renderSettings();
@@ -10369,6 +10515,7 @@ function renderShareView(username,type){
   _activeShareView={username,type};
   const ud=allData.users?.[username]||{};
   const list=allData[type]?.[username]||{};
+  const favorite=ensureTrainerHistoryStore()?.isFavorite(username)||false;
   const hdr=document.getElementById('share-hdr');
   const bioHtml=ud.bio?`<div class="share-hdr-bio">"${escHtml(ud.bio)}"</div>`:'';
   hdr.innerHTML=`${userAvatarHtml(username,64)}
@@ -10379,7 +10526,7 @@ function renderShareView(username,type){
         ${ud.discord?`<span class="meta-item profile-discord">${escHtml(ud.discord)}</span>`:''}
         <span class="meta-item">📅 Updated ${freshnessLabel(ud.lastUpdated)}</span>
       </div>
-      ${cur&&cur!==username?`<button class="bpri" style="margin-top:9px" onclick="openActiveShareComparison()">${escHtml(i18nCore.t('trainer.compareAction'))}</button>`:''}
+      ${cur&&cur!==username?`<div class="share-profile-actions"><button class="bpri" onclick="openActiveShareComparison()">${escHtml(i18nCore.t('trainer.compareAction'))}</button><button class="bghost" onclick="toggleTrainerFavorite('${escAttr(username)}')" aria-pressed="${favorite}">${favorite?'★':'☆'} ${escHtml(i18nCore.t(favorite?'trainer.favoriteRemove':'trainer.favoriteAdd'))}</button></div>`:''}
       ${bioHtml}
     </div>`;
   // Tabs
@@ -10706,22 +10853,33 @@ function selectSchedDay(isoD){
   renderSchedule();
 }
 
+function setEventTypeFilter(type){
+  eventTypeFilter=eventPresentationDomain.TYPES.includes(type)?type:'all';
+  renderEventsOnly();
+}
+function openEventDetails(link){
+  const safe=String(link||'');
+  if(/^https:\/\//i.test(safe))window.open(safe,'_blank','noopener');
+}
+function eventTypeLabel(type){
+  return i18nCore.t({raids:'events.filterRaids',max:'events.filterMax',gbl:'events.filterGbl',research:'events.filterResearch',general:'events.filterGeneral'}[type]||'events.filterGeneral');
+}
+function eventGroupLabel(group){
+  return i18nCore.t({now:'events.groupNow',soon:'events.groupSoon',later:'events.groupLater'}[group]||'events.groupLater');
+}
 function renderEventsOnly(){
   const out=document.getElementById('events-out');if(!out)return;
   if(!_eventData){out.innerHTML=pokeballLoader(i18nCore.t('events.loading'));return;}
-  const now=Date.now();
-  const events=(_eventData.events||[]).filter(event=>new Date(event.end||0).getTime()>=now)
-    .sort((a,b)=>new Date(a.start||0)-new Date(b.start||0)).slice(0,40);
-  if(!events.length){out.innerHTML=emptyHtml(i18nCore.t('events.empty'),'','📅');return;}
-  out.innerHTML=`<div class="sched-events-panel">${events.map(event=>{
-    const start=new Date(event.start||0),end=new Date(event.end||0);
-    const when=Number.isFinite(start.getTime())
-      ?`${start.toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}${Number.isFinite(end.getTime())?` – ${end.toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}`:''}`
-      :'';
-    const title=event.name||event.heading||'Pokémon GO event';
-    const link=String(event.link||'');
-    return`<div class="sched-event-row"><div class="sched-event-info"><div class="sched-event-name">${escHtml(title)}</div><div class="sched-event-time">${escHtml(when)}</div></div>${link?`<a href="${escAttr(link)}" target="_blank" rel="noopener" class="sched-nav-today">Details ↗</a>`:''}</div>`;
-  }).join('')}</div>`;
+  if(!_eventData.fetchedAt&&!(_eventData.events||[]).length){out.innerHTML=emptyHtml(i18nCore.t('events.error'),'','⚠️');return;}
+  const sections=eventPresentationDomain.prepareEvents(_eventData.events||[],{filter:eventTypeFilter});
+  const filters=[['all','events.filterAll'],['raids','events.filterRaids'],['max','events.filterMax'],['gbl','events.filterGbl'],['research','events.filterResearch'],['general','events.filterGeneral']];
+  const filterHtml=`<div class="event-filter-row" role="tablist" aria-label="${escAttr(i18nCore.t('events.filtersLabel'))}">${filters.map(([type,key])=>`<button class="event-filter ${eventTypeFilter===type?'active':''}" role="tab" aria-selected="${eventTypeFilter===type}" onclick="setEventTypeFilter('${type}')">${escHtml(i18nCore.t(key))}</button>`).join('')}</div>`;
+  if(!sections.length){out.innerHTML=filterHtml+emptyHtml(i18nCore.t('events.empty'),'','📅');return;}
+  out.innerHTML=filterHtml+sections.map(section=>`<section class="event-group"><h2 class="event-group-title">${escHtml(eventGroupLabel(section.group))}</h2><div class="event-card-grid">${section.events.map(event=>{
+    const when=eventPresentationDomain.eventTimeLabel(event,{locale:i18nCore.getLocale()});
+    const title=event.name||event.heading||i18nCore.t('events.title'),link=eventPresentationDomain.safeHttpsUrl(event.link);
+    return`<article class="event-card" ${link?`role="link" tabindex="0" data-link="${escAttr(link)}" onclick="openEventDetails(this.dataset.link)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openEventDetails(this.dataset.link)}"`:''}><span class="event-type-tag">${escHtml(eventTypeLabel(event.uiType))}</span><div class="event-card-title">${escHtml(title)}</div><div class="event-card-time">${escHtml(when)}</div>${link?`<a class="event-card-details" href="${escAttr(link)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${escHtml(i18nCore.t('events.details'))} ↗</a>`:''}</article>`;
+  }).join('')}</div></section>`).join('');
 }
 function renderSchedule(){
   if(TRAINER_FIRST_INTERIM_ENABLED){renderEventsOnly();return;}
@@ -13043,7 +13201,7 @@ function anyOpenModal(){
   return!!document.querySelector('.ov.open');
 }
 function _focusActiveTabSearch(){
-  const map={find:'find-trainer-input',mylist:'mylist-filter',strings:'',have:'have-filter',schedule:'',settings:''};
+  const map={find:'find-trainer-input',mylist:'mylist-filter',have:'have-filter',schedule:'',settings:''};
   // Detect active tab
   const active=document.querySelector('.tab.active')?.dataset.tab;
   // Special case: have tab has subtab-specific filters
@@ -13070,7 +13228,7 @@ function _handleGlobalShortcut(ev){
   switch(ev.key.toLowerCase()){
     case'b':switchTab('find');ev.preventDefault();break;
     case'm':switchTab('mylist');ev.preventDefault();break;
-    case's':switchTab('strings');ev.preventDefault();break;
+    case's':switchTab('mylist');setTimeout(()=>document.getElementById('my-strings-out')?.scrollIntoView({behavior:'smooth'}),0);ev.preventDefault();break;
     case'h':case'i':switchTab('have');ev.preventDefault();break;
     case'c':switchTab('schedule');ev.preventDefault();break;
     case'n':
@@ -13086,14 +13244,13 @@ function _handleGlobalShortcut(ev){
 
 // ── FIRST-RUN TOUR (#25) ──────────────────────────────────────
 const TOUR_STEPS=[
-  {title:'👋 Welcome to PoGo Trades',body:`<p>Your hub for trading with the community. Let's take a quick look around.</p>`},
-  {title:'🔍 Browse',body:`<p>See what every trainer in the community wants. Filter by priority (<strong>H</strong>/<strong>M</strong>/<strong>L</strong>), by flag (⚡ Lucky · ✨ Shiny · XXL/XXS), or by trainer activity.</p><p>Tap any Pokémon card to see exactly who wants it and at what priority — that's how you find the right partner fast.</p>`,tab:'browse'},
-  {title:'📋 My List',body:`<p>This is your wishlist. Tap <strong>+ Add</strong>, type a Pokémon, set priority and flags.</p><ul><li>Add a quick note for gender or costume — it gets tagged onto your in-game search string</li><li>Drag rows to reorder, or bulk-select to update many at once</li><li>Hit ✨ for shiny-only, ⚡ for Lucky Dex, XXL/XXS for size hunting</li></ul><p>Your list drives everything else — Browse matches, Strings, and the wishlist matches other trainers see.</p>`,tab:'mylist'},
-  {title:'📤 Strings',body:`<p>Auto-generated Pokémon GO search strings, split by priority and flag. Copy → paste into the in-game search bar.</p><p>They update automatically whenever you change My List — no manual maintenance needed. Use the per-section copy buttons to grab exactly what you need.</p>`,tab:'strings'},
-  {title:'🎒 Inventory',body:`<p>Track what you have available to trade. Two views:</p><ul><li><strong>Mine</strong> — add Pokémon with quantity, gender, and a return preference (Open · Mirror only · Fair trade · Giveaway)</li><li><strong>Browse</strong> — see other trainers' inventories with ⭐ wishlist matches surfaced first, plus 🪞 mirror / 🤝 fair-trade / 📤 giveaway indicators</li></ul><p>The 🤝 button on a trainer card opens Trade Match — a side-by-side of what each of you wants and has. Other trainers can offer trades publicly (first-come-first-served).</p>`,tab:'have'},
-  {title:'📅 Schedule',body:`<p>Plan trades on a calendar and track your daily quota. Regular trades cap at 100/day per real account; special trades (legendaries, shiny, region-locked, etc.) have their own limit.</p><p>Live event bonuses from LeekDuck show up here — extra special trades, Lucky weeks, and Forever-Friend rules. Pick a date, pick a partner, add the Pokémon, save.</p>`,tab:'schedule'},
-  {title:'🌐 Communities',body:`<p>If you belong to more than one community (e.g. NYC + a regional one), a <strong>Community</strong> dropdown shows up at the top of the app. Switching it narrows Browse, Strings/Compare, Inventory, and Schedule to that community's trainers — your own Pokémon data stays the same across all of them.</p><p>If you only belong to one community, you won't see the dropdown — nothing to do here.</p>`},
-  {title:'🚀 First steps',body:`<p>Recommended order for a brand-new account:</p><ol style="padding-left:22px;margin:6px 0 10px"><li>Open Profile → add your <strong>friend code</strong> and (optional) <strong>Discord</strong> so trainers can reach you</li><li>Build out <strong>My List</strong> with what you want (priorities + flags)</li><li>Add tradeable Pokémon to <strong>Inventory</strong> with return preferences</li><li>Copy your <strong>Strings</strong> and paste them into Pokémon GO</li></ol><p>Press <kbd>?</kbd> any time for keyboard shortcuts, or <kbd>n</kbd> to jump straight to adding a Pokémon. Happy trading! 🎮</p>`}
+  {title:'👋 Welcome to PoGo Trades',body:`<p>Build your trade list, find a trainer, and compare your published lists. Let's take a quick look around.</p>`},
+  {title:'📋 My List',body:`<p>This is your wishlist. Tap <strong>+ Add</strong>, type a Pokémon, set priority and flags.</p><ul><li>Add a quick note for gender or costume — it gets tagged onto your in-game search string</li><li>Drag rows to reorder, or bulk-select to update many at once</li><li>Hit ✨ for shiny-only, ⚡ for Lucky Dex, XXL/XXS for size hunting</li></ul><p>Your list powers search strings and comparisons with trainers whose published lists you open.</p>`,tab:'mylist'},
+  {title:'📤 Search strings',body:`<p>Auto-generated Pokémon GO search strings live at the bottom of My List, split by priority and flag. Copy → paste into the in-game search bar.</p><p>They update automatically whenever you change My List — no manual maintenance needed.</p>`,tab:'mylist'},
+  {title:'🔍 Find Trainer',body:`<p>Search by trainer name, open a published list, and compare it with your own list. Favorites and recent trainers make repeat visits faster.</p><p>Only the selected trainer's published share is loaded; private or unavailable lists stay private.</p>`,tab:'find'},
+  {title:'📅 Events',body:`<p>Browse upcoming Pokémon GO events by type and timing. Event details open from their source page.</p>`,tab:'schedule'},
+  {title:'🎒 Legacy Inventory',body:`<p>Your existing Inventory is preserved as a private, read-only archive. You can review it and export a CSV, but new Inventory editing is retired.</p>`,tab:'have'},
+  {title:'🚀 First steps',body:`<p>Recommended order for a new account:</p><ol style="padding-left:22px;margin:6px 0 10px"><li>Build <strong>My List</strong> with priorities, flags, and notes</li><li>Copy your Pokémon GO <strong>search strings</strong></li><li>Use <strong>Find Trainer</strong> to open and compare a published list</li><li>Review profile and sharing choices in <strong>Settings</strong></li></ol><p>Press <kbd>?</kbd> any time for keyboard shortcuts, or <kbd>n</kbd> to jump straight to adding a Pokémon.</p>`}
 ];
 let _tourIdx=0;
 function startTour(){

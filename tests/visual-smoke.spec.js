@@ -78,34 +78,19 @@ async function expectAutocompleteClears(page, inputSelector, dropdownSelector) {
 }
 
 test.describe('visual smoke', () => {
-  test('browse renders and search/filter update visible results', async ({ page }) => {
+  test('find trainer autocomplete suggests public directory names', async ({ page }) => {
     await signIn(page);
-    await openMainTab(page, 'browse');
-    await expect(page.locator('#browse-out')).toBeVisible();
-    await expect(page.locator('#browse-out .pc').first()).toBeVisible({ timeout: 20_000 });
-
-    const initialCount = await page.locator('#browse-out .pc').count();
-    expect(initialCount).toBeGreaterThan(0);
-
-    await page.locator('#bq').fill('Bulbasaur');
-    await expect(page.locator('#browse-out .pc').first()).toBeVisible({ timeout: 10_000 });
-    await expect(page.locator('#browse-out')).toContainText(/Bulbasaur/i);
-    const searchedCount = await page.locator('#browse-out .pc').count();
-    expect(searchedCount).toBeGreaterThan(0);
-    expect(searchedCount).toBeLessThanOrEqual(initialCount);
-
-    await page.locator('#bq').fill('');
-    await page.locator('.fbtn.fH').click();
-    await expect(page.locator('.fbtn.fH')).toHaveAttribute('aria-pressed', 'true');
-    await expect(page.locator('#browse-out')).toBeVisible();
+    await openMainTab(page, 'find');
+    await page.locator('#find-trainer-input').fill('Tes');
+    await expect(page.locator('#find-trainer-suggestions.open')).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('.trainer-suggestion').first()).toContainText(/TestUser/i);
   });
 
-  test('strings renders trainer sections', async ({ page }) => {
+  test('my list renders embedded search strings', async ({ page }) => {
     await signIn(page);
-    await openMainTab(page, 'strings');
-    await expect(page.locator('#strings-out')).toBeVisible();
-    await expect(page.locator('#strings-out .user-str-block').first()).toBeVisible({ timeout: 20_000 });
-    await expect(page.locator('#strings-out .user-str-block .user-str-hdr').first()).toBeVisible();
+    await openMainTab(page, 'mylist');
+    await expect(page.locator('#my-strings-out')).toBeVisible();
+    await expect(page.locator('#my-strings-out .str-level').first()).toBeVisible({ timeout: 20_000 });
   });
 
   test('my list add pokemon autocomplete shows normalized and dex results', async ({ page }) => {
@@ -122,106 +107,50 @@ test.describe('visual smoke', () => {
     await expect(page.locator('#add-pmon-sel')).toHaveValue('');
   });
 
-  test('inventory opens my inventory and community browse, then expands a trainer', async ({ page }) => {
+  test('legacy inventory is read-only and export remains available', async ({ page }) => {
     await signIn(page);
     await openMainTab(page, 'have');
     await expect(page.locator('#have-mine-view')).toBeVisible();
     await expect(page.locator('#have-mine-out')).toBeVisible();
-
-    await page.locator('.have-toggle-btn[data-view="browse"]').click();
-    await expect(page.locator('#have-browse-view')).toBeVisible();
-    await expect(page.locator('#have-browse-out .have-trainer-card').first()).toBeVisible({ timeout: 20_000 });
-
-    const firstTrainer = page.locator('#have-browse-out .have-trainer-card').first();
-    await firstTrainer.locator('.have-trainer-hdr').click();
-    await expect(firstTrainer).toHaveClass(/expanded/);
-    await expect(firstTrainer.locator('.have-trainer-body')).toBeVisible();
+    await expect(page.locator('#legacy-inventory-export')).toBeVisible();
+    await expect(page.locator('.have-toggle-row')).toBeHidden();
   });
 
-  test('inventory add pokemon autocomplete opens and clears without adding', async ({ page }) => {
+  test('legacy inventory editing controls stay retired', async ({ page }) => {
     await signIn(page);
     await openMainTab(page, 'have');
-    await expect(page.locator('#have-mine-view')).toBeVisible();
-    await expect(page.locator('#have-ac-input')).toBeVisible();
-
-    await expectAutocompleteResult(page, '#have-ac-input', '#have-ac-dropdown', 'pika', /Pikachu/i);
-    await expectAutocompleteClears(page, '#have-ac-input', '#have-ac-dropdown');
-    await expect(page.locator('#have-pmon-sel')).toHaveValue('');
+    await expect(page.locator('#have-ac-input')).toBeHidden();
+    await expect(page.locator('#legacy-inventory-export')).toBeVisible();
   });
 
-  test('schedule renders and schedule modal opens/closes', async ({ page }) => {
+  test('events renders responsive grouped cards', async ({ page }) => {
     await signIn(page);
     await openMainTab(page, 'schedule');
-    await expect(page.locator('#sched-week-strip')).toBeVisible({ timeout: 20_000 });
-    await expect(page.locator('#sched-day-detail')).toBeVisible();
-
-    await page.locator('.sched-add-btn').click();
-    await expect(page.locator('#sched-modal')).toBeVisible();
-    await expect(page.locator('#sched-modal')).toContainText(/Schedule a Trade|Edit Scheduled Trade/);
-    await page.locator('#sched-modal .bghost').click();
-    await expect(page.locator('#sched-modal')).toHaveCount(0);
+    await expect(page.locator('.event-filter-row')).toBeVisible({ timeout: 20_000 });
+    await expect(page.locator('.event-card, #events-out .empty').first()).toBeVisible({ timeout: 20_000 });
     await expectAppNotBlank(page);
   });
 
   test('main tab switching keeps the app rendered', async ({ page }) => {
     await signIn(page);
-    for (const tab of ['browse', 'mylist', 'strings', 'have', 'schedule']) {
+    for (const tab of ['mylist', 'find', 'have', 'schedule', 'settings']) {
       await openMainTab(page, tab);
       await expectAppNotBlank(page);
     }
   });
 
-  test('inventory community sprites stay in their slots', async ({ page }) => {
+  test('find trainer touch targets remain usable on mobile', async ({ page }) => {
     await signIn(page);
-    await openInventoryBrowse(page);
-
-    const firstTrainer = page.locator('.have-trainer-card').first();
-    await expect(firstTrainer).toBeVisible({ timeout: 20_000 });
-    await firstTrainer.locator('.have-trainer-hdr').click();
-    await expect(firstTrainer.locator('.have-pmon-card').first()).toBeVisible({ timeout: 10_000 });
-
-    const violations = await firstTrainer.locator('.have-pmon-card').evaluateAll(cards =>
-      cards.slice(0, 40).flatMap(card => {
-        const slot = card.querySelector('.have-row-sprite');
-        const img = slot?.querySelector('img');
-        if (!slot || !img) return [];
-        const sr = slot.getBoundingClientRect();
-        const ir = img.getBoundingClientRect();
-        const cr = card.getBoundingClientRect();
-        const slotOk = ir.left >= sr.left - 4 && ir.right <= sr.right + 4 && ir.top >= sr.top - 4 && ir.bottom <= sr.bottom + 4;
-        const cardOk = ir.left >= cr.left - 2 && ir.right <= cr.right + 2 && ir.top >= cr.top - 2 && ir.bottom <= cr.bottom + 2;
-        const visibleEnough = ir.width >= 14 && ir.height >= 14;
-        return slotOk && cardOk && visibleEnough
-          ? []
-          : [{ name: card.innerText.split('\n')[0], slotOk, cardOk, visibleEnough, img: { w: ir.width, h: ir.height }, slot: { w: sr.width, h: sr.height } }];
-      })
-    );
-
-    expect(violations).toEqual([]);
+    await openMainTab(page, 'find');
+    await page.locator('#find-trainer-input').fill('Tes');
+    await expect(page.locator('.trainer-suggestion').first()).toBeVisible();
+    const box=await page.locator('.trainer-suggestion').first().boundingBox();
+    expect(box.height).toBeGreaterThanOrEqual(40);
   });
 
-  test('browse rows use readable fixed sprite slots', async ({ page }) => {
+  test('retired top-level surfaces are absent', async ({ page }) => {
     await signIn(page);
-    await page.getByText('Browse', { exact: false }).first().click();
-    await expect(page.locator('.pgrid .pc').first()).toBeVisible({ timeout: 20_000 });
-
-    const violations = await page.locator('.pgrid .pc').evaluateAll(rows =>
-      rows.slice(0, 50).flatMap(row => {
-        const slot = row.querySelector('.pc-sprite-wrap');
-        const img = slot?.querySelector('img');
-        const name = row.querySelector('.pc-name')?.textContent?.trim() || row.innerText.split('\n')[0];
-        if (!slot || !img) return [{ name, reason: 'missing sprite wrapper' }];
-        const sr = slot.getBoundingClientRect();
-        const ir = img.getBoundingClientRect();
-        const rowRect = row.getBoundingClientRect();
-        const slotReadable = sr.width >= 38 && sr.height >= 38;
-        const imgReadable = Math.max(ir.width, ir.height) >= 32;
-        const rowContained = ir.top >= rowRect.top - 12 && ir.bottom <= rowRect.bottom + 12;
-        return slotReadable && imgReadable && rowContained
-          ? []
-          : [{ name, slotReadable, imgReadable, rowContained, img: { w: ir.width, h: ir.height }, slot: { w: sr.width, h: sr.height } }];
-      })
-    );
-    expect(violations).toEqual([]);
+    await expect(page.locator('.tab[data-tab="browse"], .tab[data-tab="strings"]')).toHaveCount(0);
+    await expect(page.locator('.tabs')).not.toContainText(/Offers|Schedule/);
   });
 });
