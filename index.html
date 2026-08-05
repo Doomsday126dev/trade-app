@@ -443,6 +443,7 @@ input,select,textarea{font-family:var(--font);outline:none}
 .login-user-option-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:650}
 .login-user-option-status{font-size:10px;color:var(--muted);white-space:nowrap}
 .login-user-empty{padding:10px 12px;font-size:12px;color:var(--muted)}
+.login-user-retry{margin-left:8px;padding:5px 9px;border:1px solid var(--border2);border-radius:var(--r1);background:var(--bg2);color:var(--text);font:inherit;font-size:11px;cursor:pointer}
 .lbtn{width:100%;background:linear-gradient(135deg,var(--accent),var(--ac2));color:#fff;padding:12px;border-radius:var(--r2);font-size:15px;font-weight:600;cursor:pointer;margin-top:6px;border:none;transition:.2s}
 .lbtn:hover{opacity:.9}
 .err{color:var(--danger);font-size:12px;text-align:center;margin-top:7px;min-height:18px}
@@ -2451,6 +2452,7 @@ window.__pogoBootWatch=setTimeout(function(){
 <script src="js/domain/trainerDiscovery.js"></script>
 <script src="js/domain/eventPresentation.js"></script>
 <script src="js/domain/publicSharePublication.js"></script>
+<script src="js/domain/loginDirectory.js"></script>
 <script src="js/utils/textSafety.js"></script>
 <script src="js/ui/stringPanels.js"></script>
 <script src="js/ui/emptyState.js"></script>
@@ -2537,6 +2539,8 @@ const eventPresentationDomain=window.PogoDomain?.eventPresentation;
 if(!eventPresentationDomain)throw new Error('Event presentation helpers failed to load');
 const publicSharePublicationDomain=window.PogoDomain?.publicSharePublication;
 if(!publicSharePublicationDomain)throw new Error('Public-share publication helpers failed to load');
+const loginDirectoryDomain=window.PogoDomain?.loginDirectory;
+if(!loginDirectoryDomain)throw new Error('Login-directory helpers failed to load');
 const cacheAdapterDomain=window.PogoDomain?.cacheAdapters;
 if(!cacheAdapterDomain)throw new Error('Cache adapters failed to load');
 const managedSubscriptions=subscriptionManagerData.createSubscriptionManager();
@@ -2548,6 +2552,7 @@ let managedOwnedDataCoordinator=null;
 let managedPublicShareRepository=null;
 let trainerHistoryStore=null;
 const managedPublicSharePublication=publicSharePublicationDomain.createPublicSharePublicationGate();
+const managedLoginDirectory=loginDirectoryDomain.createLoginDirectoryState();
 let activePublicShareHydrationToken=null;
 let _lastPublicShareBlockedNotice='';
 
@@ -4174,7 +4179,6 @@ function normalizeData(s){
   s.users=s.users||{};s.wishlist=s.wishlist||{};s.dynamax=s.dynamax||{};s.gmax=s.gmax||{};s.costumes=s.costumes||{};s.have=s.have||{};s.offers=s.offers||{};s.trades=s.trades||{};s.requests=s.requests||{};s.authIndex=s.authIndex||{};s.pendingDecrements=s.pendingDecrements||{};s.loginDirectory=s.loginDirectory||{};s.communities=s.communities||{};s.userCommunities=s.userCommunities||{};s.communityRequests=s.communityRequests||{};
   Object.keys(s.users).forEach(u=>{
     s.users[u]=normalizedUserRecord(u,s.users[u]);
-    s.loginDirectory[u]=normalizedLoginDirectoryRecord(u,s.users[u],s.loginDirectory[u]);
     if(!s.wishlist[u])s.wishlist[u]={};
     if(!s.dynamax[u])s.dynamax[u]={};
     if(!s.gmax[u])s.gmax[u]={};
@@ -4337,7 +4341,9 @@ async function publishPublicShareNow(username=cur,trigger='explicit_share'){
 }
 
 async function writeUser(u,data){
-  const s=getLocal();s.users[u]=normalizedUserRecord(u,s.users[u],data);s.loginDirectory[u]=normalizedLoginDirectoryRecord(u,s.users[u],s.loginDirectory[u]);saveLocal(s);
+  const s=getLocal();s.users[u]=normalizedUserRecord(u,s.users[u],data);
+  if(canWriteLoginDirectoryNow())s.loginDirectory[u]=normalizedLoginDirectoryRecord(u,s.users[u],s.loginDirectory[u]);
+  saveLocal(s);
   if(fbOn&&db){
     queueSync(`users/${u}`,s.users[u]);
     if(canWriteLoginDirectoryNow())queueSync(`loginDirectory/${u}`,s.loginDirectory[u]);
@@ -4354,7 +4360,7 @@ async function writeUserNow(u,data){
     s.users[u].authEmail=authEmailForUser(u,s.users[u]);
     s.users[u].authUid=auth.currentUser.uid;
   }
-  s.loginDirectory[u]=normalizedLoginDirectoryRecord(u,s.users[u],s.loginDirectory[u]);
+  if(canWriteLoginDirectoryNow())s.loginDirectory[u]=normalizedLoginDirectoryRecord(u,s.users[u],s.loginDirectory[u]);
   saveLocal(s);
   if(fbOn&&db){
     try{
@@ -4427,7 +4433,23 @@ async function repairMemberAccount(username,opts={}){
     // Do not write authIndex for another user's UID here. Firebase rules only
     // allow users to publish their own authIndex row; the repaired user will
     // create it automatically on their next successful sign-in.
-    if(ownerCanUseCommunityTools())Object.assign(updates,defaultCommunityMembershipUpdates(username,next,next.joined||Date.now()));
+    if(ownerCanUseCommunityTools()){
+      const membershipUpdates=defaultCommunityMembershipUpdates(username,next,next.joined||Date.now());
+      if(next.authUid){
+        const reversePath=`userCommunities/${next.authUid}/${DEFAULT_COMMUNITY_ID}`;
+        const existingReverse=allData.userCommunities?.[next.authUid]?.[DEFAULT_COMMUNITY_ID];
+        if(existingReverse&&membershipUpdates[reversePath]){
+          const proposed=membershipUpdates[reversePath];
+          membershipUpdates[reversePath]={
+            ...existingReverse,
+            ...proposed,
+            role:strongerCommunityRole(existingReverse.role,proposed.role),
+            joinedAt:existingReverse.joinedAt||proposed.joinedAt
+          };
+        }
+      }
+      Object.assign(updates,membershipUpdates);
+    }
     await withTimeout(update(ref(db),updates),9000,'Repairing account timed out','db/repair-timeout');
     const userSnap=await withTimeout(get(ref(db,`users/${username}`)),6000,'Verifying user repair timed out','db/verify-timeout');
     const dirSnap=await withTimeout(get(ref(db,`loginDirectory/${username}`)),6000,'Verifying login directory repair timed out','db/verify-timeout');
@@ -4783,10 +4805,7 @@ function normalizedLoginDirectoryRecord(username,ud={},prev={}){
   };
 }
 function knownLoginUsernames(){
-  return Array.from(new Set([
-    ...Object.keys(allData.loginDirectory||{}),
-    ...Object.keys(allData.users||{})
-  ].filter(Boolean)));
+  return loginDirectoryDomain.usernames(allData.loginDirectory||{});
 }
 function canonicalUsernameInput(raw=''){
   const trimmed=String(raw||'').trim();
@@ -5017,14 +5036,18 @@ function mergeRemoteData(d){
 let _firstSyncDone=false;
 let _pathLoadState={};       // path → 'loading'|'loaded'
 
-function _onSubSnapshot(path,snap){
+function _onSubSnapshot(path,snap,meta={}){
   const _t0=(typeof performance!=='undefined'&&performance.now)?performance.now():Date.now();
   const val=snap.exists()?snap.val():null;
   // Update local cache for this path
   const s=getLocal();
   const seg=path.split('/')[0];
   if(seg==='users')s.users=val||{};
-  else if(seg==='loginDirectory')s.loginDirectory=val||{};
+  else if(seg==='loginDirectory'){
+    const applied=managedLoginDirectory.succeed(meta.directoryToken,val||{});
+    if(!applied.ok)return;
+    s.loginDirectory=managedLoginDirectory.snapshot().directory;
+  }
   else if(seg==='authIndex')s.authIndex=val||{};
   else if(seg==='requests')s.requests=val||{};
   else if(seg==='wishlist')s.wishlist=val||{};
@@ -5058,7 +5081,7 @@ function _onSubSnapshot(path,snap){
   if(seg==='pendingDecrements'&&cur&&path===`pendingDecrements/${cur}`){
     setTimeout(()=>_applyPendingDecrements(),50);
   }
-  if(cur)queueRefreshAll(`snapshot:${seg}`);else populateLoginUsers();
+  if(cur)queueRefreshAll(`snapshot:${seg}`);else populateLoginUsers(loginUserSuggestionsShouldOpen());
   // If share view is active, re-render with new data
   if(document.getElementById('share-view')?.classList.contains('active')&&_activeShareView){
     renderShareView(_activeShareView.username,_activeShareView.type);
@@ -5109,20 +5132,41 @@ function startManagedSnapshotListener(path,{next,error}){
 }
 function subscribePath(path){
   if(!db)return false;
+  let directoryToken=null;
   const options={
     path,
     start:handlers=>{
       _pathLoadState[path]='loading';
+      if(path==='loginDirectory'){
+        directoryToken=managedLoginDirectory.begin();
+        populateLoginUsers(loginUserSuggestionsShouldOpen());
+      }
       return startManagedSnapshotListener(path,handlers);
     },
-    onValue:snap=>_onSubSnapshot(path,snap),
-    onError:()=>setSyncStatus('offline')
+    onValue:snap=>_onSubSnapshot(path,snap,{directoryToken}),
+    onError:error=>{
+      if(path==='loginDirectory'){
+        managedLoginDirectory.fail(directoryToken,error);
+        populateLoginUsers(loginUserSuggestionsShouldOpen());
+      }
+      setSyncStatus('offline');
+    }
   };
   const result=path==='loginDirectory'
     ?managedListenerLifecycle.subscribePublic({...options,key:'public:loginDirectory'})
     :managedListenerLifecycle.subscribeSession({...options,key:`session:${path}`});
-  if(!result.ok)setSyncStatus('offline');
+  if(!result.ok){
+    if(path==='loginDirectory'){
+      managedLoginDirectory.fail(directoryToken,result.error);
+      populateLoginUsers(loginUserSuggestionsShouldOpen());
+    }
+    setSyncStatus('offline');
+  }
   return result.ok;
+}
+function retryLoginDirectory(){
+  managedSubscriptions.unsubscribeByKey('public:loginDirectory');
+  subscribePath('loginDirectory');
 }
 function protectedOwnerSession(){
   const user=allData.users?.[cur];
@@ -5623,17 +5667,21 @@ async function doLogin(){
   const p=document.getElementById('login-pin').value;
   const err=document.getElementById('login-err');
   const btn=document.getElementById('login-btn');
-  const dirEntry=allData.loginDirectory?.[u]||null;
+  const directoryState=managedLoginDirectory.snapshot();
+  const dirEntry=directoryState.status===loginDirectoryDomain.STATES.LOADED?directoryState.directory[u]||null:null;
   if(!u){err.textContent='Enter your username';return;}
   if(!p){err.textContent='Enter PIN';return;}
   if(!isSixDigitPin(p)){err.textContent='PIN must be exactly 6 digits';return;}
+  if(directoryState.status===loginDirectoryDomain.STATES.LOADING||directoryState.status===loginDirectoryDomain.STATES.IDLE){err.textContent=i18nCore.t('login.directoryLoading');return;}
+  if(directoryState.status===loginDirectoryDomain.STATES.ERROR){err.textContent=i18nCore.t('login.directoryError');return;}
+  if(!dirEntry){err.textContent=i18nCore.t('login.directoryUnknown');return;}
   err.textContent='';
   document.getElementById('login-user').value=u;
   btn.textContent='Signing in…';btn.disabled=true;
   let ud=allData.users?.[u];
   let liveUserReadFailed=false;
   let ident=null;
-  if(fbOn&&db&&auth&&dirEntry?.authReady){
+  if(fbOn&&db&&auth&&loginDirectoryDomain.readyRecord(dirEntry)){
     try{
       const signedIn=await signInWithAuthVersionScan(u,p,dirEntry.authVersion||1);
       const {cred,email,version}=signedIn;
@@ -5668,7 +5716,7 @@ async function doLogin(){
   }
   const liveReadHint=liveUserReadFailed?' Live user data could not be checked before login, so this browser may be using stale cached info.':'';
   if(!ud){
-    err.textContent=dirEntry&&!dirEntry.authReady
+    err.textContent=dirEntry&&!loginDirectoryDomain.readyRecord(dirEntry)
       ?'This trainer was approved, but their login setup is incomplete. Ask an admin to reset the PIN once to finish setup.'
       :liveUserReadFailed
         ?'Could not load this user from Firebase before login. Ask an admin to update the login directory / rules, then retry.'
@@ -5781,46 +5829,46 @@ function showLogin(){
   populateLoginUsers();
 }
 let loginUserOptions=[],loginUserFiltered=[],loginUserFocusIdx=-1;
-function populateLoginUsers(){
+function loginUserSuggestionsShouldOpen(){
+  const input=document.getElementById('login-user');
+  return!!(input&&(document.activeElement===input||String(input.value||'').trim()));
+}
+function populateLoginUsers(open=false){
   const input=document.getElementById('login-user');
   const list=document.getElementById('login-user-list');
   if(!input)return;
   // Prefer the public login directory so clean browsers and new members can
   // still discover approved usernames before signing in.
-  loginUserOptions=knownLoginUsernames().sort(alphaCompare);
+  const directoryState=managedLoginDirectory.snapshot();
+  loginUserOptions=directoryState.status===loginDirectoryDomain.STATES.LOADED?knownLoginUsernames().sort(alphaCompare):[];
   if(list){
     list.innerHTML='';
     loginUserOptions.forEach(u=>{const o=document.createElement('option');o.value=u;list.appendChild(o);});
   }
-  renderLoginUserSuggestions(false);
+  renderLoginUserSuggestions(open);
 }
 function renderLoginUserSuggestions(open=true){
   const input=document.getElementById('login-user');
   const box=document.getElementById('login-user-suggestions');
   if(!input||!box)return;
   const q=String(input.value||'').trim().toLowerCase();
-  const scored=loginUserOptions
-    .map(name=>{
-      const n=name.toLowerCase();
-      let score=-1;
-      if(!q)score=5;
-      else if(n===q)score=0;
-      else if(n.startsWith(q))score=1;
-      else if(n.includes(q))score=2;
-      return{name,score};
-    })
-    .filter(x=>x.score>=0)
-    .sort((a,b)=>a.score-b.score||alphaCompare(a.name,b.name))
-    .slice(0,12);
-  loginUserFiltered=scored.map(x=>x.name);
+  const directoryState=managedLoginDirectory.snapshot();
+  const scored=directoryState.status===loginDirectoryDomain.STATES.LOADED
+    ?managedLoginDirectory.suggestions(q,{limit:12,compare:alphaCompare})
+    :[];
+  loginUserFiltered=scored.map(item=>item.name);
   loginUserFocusIdx=Math.min(loginUserFocusIdx,loginUserFiltered.length-1);
   if(!open){box.classList.remove('open');return;}
-  if(!loginUserFiltered.length){
-    box.innerHTML=q?`<div class="login-user-empty">No matching approved usernames. You can still type the exact name.</div>`:'';
+  if(directoryState.status===loginDirectoryDomain.STATES.LOADING||directoryState.status===loginDirectoryDomain.STATES.IDLE){
+    box.innerHTML=`<div class="login-user-empty">${escHtml(i18nCore.t('login.directoryLoading'))}</div>`;
+  }else if(directoryState.status===loginDirectoryDomain.STATES.ERROR){
+    box.innerHTML=`<div class="login-user-empty">${escHtml(i18nCore.t('login.directoryError'))}<button type="button" class="login-user-retry" onclick="retryLoginDirectory()">${escHtml(i18nCore.t('login.directoryRetry'))}</button></div>`;
+  }else if(!loginUserFiltered.length){
+    box.innerHTML=q?`<div class="login-user-empty">${escHtml(i18nCore.t('login.directoryNoMatch'))}</div>`:'';
   }else{
-    box.innerHTML=loginUserFiltered.map((name,i)=>{
-      const dir=allData.loginDirectory?.[name]||{};
-      const status=dir.authReady?'ready':'setup pending';
+    box.innerHTML=scored.map((item,i)=>{
+      const name=item.name;
+      const status=i18nCore.t(item.ready?'login.directoryReady':'login.directoryPending');
       return`<button type="button" class="login-user-option${i===loginUserFocusIdx?' focused':''}" role="option" aria-selected="${i===loginUserFocusIdx?'true':'false'}" onpointerdown="event.preventDefault();selectLoginUserByIndex(${i})">
         <span class="login-user-option-name">${escHtml(name)}</span>
         <span class="login-user-option-status">${escHtml(status)}</span>
