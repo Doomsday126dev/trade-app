@@ -5,6 +5,8 @@
     'data.empty':'No {resource} found.',
     'data.readError':'Could not load {resource}. Try again.',
     'data.ownedReadUnavailable':'Some account data could not be refreshed. Your verified offline cache remains available.',
+    'app.updateRequired':'A new version is available. Refresh to continue.',
+    'app.reloadAction':'Refresh app',
     'login.directoryLoading':'Loading approved usernames…',
     'login.directoryError':'Approved usernames could not be loaded.',
     'login.directoryRetry':'Retry',

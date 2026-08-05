@@ -5,17 +5,59 @@
 //     trimmed by max entry count to keep storage bounded
 //   - Firebase realtime endpoints: never cached (always network)
 
-const VERSION='pogo-trades-v12';
+const RELEASE='2026-08-05.1';
+const VERSION=`pogo-trades-${RELEASE}`;
 const SHELL_CACHE=`shell-${VERSION}`;
 const SPRITE_CACHE=`sprites-${VERSION}`;
 
 // Files we explicitly precache on install. The actual HTML/JS bytes vary by
 // commit, so we revalidate them with a network-first fetch — but we still want
 // them in the cache before the user first goes offline.
+const RELEASE_ASSETS=[
+  'data.js',
+  'js/domain/priorities.js',
+  'js/ui/badges.js',
+  'js/domain/username.js',
+  'js/domain/priorityValues.js',
+  'js/domain/scheduleDates.js',
+  'js/domain/pokemonSearchTerms.js',
+  'js/domain/pokemonEntryRules.js',
+  'js/domain/searchStrings.js',
+  'js/ui/stringHtml.js',
+  'js/domain/scheduleEventRules.js',
+  'js/domain/scheduleTradeRules.js',
+  'js/domain/pokemonKeys.js',
+  'js/domain/spriteSlugs.js',
+  'js/domain/fuzzyText.js',
+  'js/domain/autocompleteText.js',
+  'js/domain/autocompleteMatching.js',
+  'js/domain/autocompleteRanking.js',
+  'js/domain/relativeTime.js',
+  'js/domain/clientRelease.js',
+  'js/domain/trainerDiscovery.js',
+  'js/domain/eventPresentation.js',
+  'js/domain/publicSharePublication.js',
+  'js/domain/loginDirectory.js',
+  'js/utils/textSafety.js',
+  'js/ui/stringPanels.js',
+  'js/ui/emptyState.js',
+  'js/i18n/locales/en.js',
+  'js/i18n/core.js',
+  'js/services/firebaseClient.js',
+  'js/data/subscriptionManager.js',
+  'js/data/listenerLifecycle.js',
+  'js/data/sessionCacheBoundary.js',
+  'js/data/firebaseReadRegistry.js',
+  'js/data/currentUserRepository.js',
+  'js/data/ownedDataCoordinator.js',
+  'js/data/publicShareRepository.js',
+  'js/data/trainerHistoryStore.js',
+  'js/domain/cacheAdapters.js'
+];
 const SHELL_URLS=[
-  './',
-  './index.html',
-  './data.js',
+  `./?v=${RELEASE}`,
+  `./index.html?v=${RELEASE}`,
+  ...RELEASE_ASSETS.map(path=>`./${path}?v=${RELEASE}`),
   './manifest.json',
   './assets/tradeloop-icon.svg',
   './assets/tradeloop-icon-96.png',
@@ -85,15 +127,24 @@ async function networkFirst(req){
     if(fresh&&fresh.ok&&req.method==='GET')cache.put(req,fresh.clone());
     return fresh;
   }catch(e){
-    const cached=await cache.match(req,{ignoreSearch:true});
+    const cached=await cache.match(req);
     if(cached)return cached;
     // Last resort: serve cached index.html for navigations
     if(req.mode==='navigate'){
-      const root=await cache.match('./index.html')||await cache.match('./');
+      const root=await cache.match(`./index.html?v=${RELEASE}`)||await cache.match(`./?v=${RELEASE}`);
       if(root)return root;
     }
     throw e;
   }
+}
+
+async function releaseAsset(req){
+  const cache=await caches.open(SHELL_CACHE);
+  const hit=await cache.match(req);
+  if(hit)return hit;
+  const fresh=await fetch(req,{cache:'reload'});
+  if(fresh&&fresh.ok)cache.put(req,fresh.clone());
+  return fresh;
 }
 
 async function cacheFirst(req){
@@ -127,7 +178,7 @@ self.addEventListener('fetch',ev=>{
   }
   // Same-origin app shell
   if(url.origin===self.location.origin){
-    ev.respondWith(networkFirst(req));
+    ev.respondWith(url.searchParams.get('v')===RELEASE?releaseAsset(req):networkFirst(req));
     return;
   }
 });

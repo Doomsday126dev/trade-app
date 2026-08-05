@@ -1842,6 +1842,7 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
       </div>
       <div class="trainer-suggestions" id="find-trainer-suggestions" role="listbox"></div>
       <div id="find-trainer-status" role="status" aria-live="polite" style="font-size:12px;color:var(--muted);margin-top:8px"></div>
+      <button class="bghost" id="find-trainer-reload" style="display:none;margin-top:8px" onclick="reloadCompatibleClient()"></button>
     </div>
     <div id="favorite-trainers" class="trainer-quick-section"></div>
     <div id="recent-trainers" class="trainer-quick-section"></div>
@@ -2413,6 +2414,7 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
 <div class="ptr-indicator" id="ptr-indicator" aria-hidden="true">↓</div>
 
 <script>
+window.__POGO_RELEASE_ID='2026-08-05.1';
 window.__pogoBootWatch=setTimeout(function(){
   var visible=['config-pg','login-pg','app'].some(function(id){
     var el=document.getElementById(id);
@@ -2431,44 +2433,45 @@ window.__pogoBootWatch=setTimeout(function(){
   if(err)err.textContent='App scripts did not finish loading. Refresh once; if this stays, send this screenshot.';
 },4000);
 </script>
-<script src="data.js"></script>
-<script src="js/domain/priorities.js"></script>
-<script src="js/ui/badges.js"></script>
-<script src="js/domain/username.js"></script>
-<script src="js/domain/priorityValues.js"></script>
-<script src="js/domain/scheduleDates.js"></script>
-<script src="js/domain/pokemonSearchTerms.js"></script>
-<script src="js/domain/pokemonEntryRules.js"></script>
-<script src="js/domain/searchStrings.js"></script>
-<script src="js/ui/stringHtml.js"></script>
-<script src="js/domain/scheduleEventRules.js"></script>
-<script src="js/domain/scheduleTradeRules.js"></script>
-<script src="js/domain/pokemonKeys.js"></script>
-<script src="js/domain/spriteSlugs.js"></script>
-<script src="js/domain/fuzzyText.js"></script>
-<script src="js/domain/autocompleteText.js"></script>
-<script src="js/domain/autocompleteMatching.js"></script>
-<script src="js/domain/autocompleteRanking.js"></script>
-<script src="js/domain/relativeTime.js"></script>
-<script src="js/domain/trainerDiscovery.js"></script>
-<script src="js/domain/eventPresentation.js"></script>
-<script src="js/domain/publicSharePublication.js"></script>
-<script src="js/domain/loginDirectory.js"></script>
-<script src="js/utils/textSafety.js"></script>
-<script src="js/ui/stringPanels.js"></script>
-<script src="js/ui/emptyState.js"></script>
-<script src="js/i18n/locales/en.js"></script>
-<script src="js/i18n/core.js"></script>
-<script src="js/services/firebaseClient.js"></script>
-<script src="js/data/subscriptionManager.js"></script>
-<script src="js/data/listenerLifecycle.js"></script>
-<script src="js/data/sessionCacheBoundary.js"></script>
-<script src="js/data/firebaseReadRegistry.js"></script>
-<script src="js/data/currentUserRepository.js"></script>
-<script src="js/data/ownedDataCoordinator.js"></script>
-<script src="js/data/publicShareRepository.js"></script>
-<script src="js/data/trainerHistoryStore.js"></script>
-<script src="js/domain/cacheAdapters.js"></script>
+<script src="data.js?v=2026-08-05.1"></script>
+<script src="js/domain/priorities.js?v=2026-08-05.1"></script>
+<script src="js/ui/badges.js?v=2026-08-05.1"></script>
+<script src="js/domain/username.js?v=2026-08-05.1"></script>
+<script src="js/domain/priorityValues.js?v=2026-08-05.1"></script>
+<script src="js/domain/scheduleDates.js?v=2026-08-05.1"></script>
+<script src="js/domain/pokemonSearchTerms.js?v=2026-08-05.1"></script>
+<script src="js/domain/pokemonEntryRules.js?v=2026-08-05.1"></script>
+<script src="js/domain/searchStrings.js?v=2026-08-05.1"></script>
+<script src="js/ui/stringHtml.js?v=2026-08-05.1"></script>
+<script src="js/domain/scheduleEventRules.js?v=2026-08-05.1"></script>
+<script src="js/domain/scheduleTradeRules.js?v=2026-08-05.1"></script>
+<script src="js/domain/pokemonKeys.js?v=2026-08-05.1"></script>
+<script src="js/domain/spriteSlugs.js?v=2026-08-05.1"></script>
+<script src="js/domain/fuzzyText.js?v=2026-08-05.1"></script>
+<script src="js/domain/autocompleteText.js?v=2026-08-05.1"></script>
+<script src="js/domain/autocompleteMatching.js?v=2026-08-05.1"></script>
+<script src="js/domain/autocompleteRanking.js?v=2026-08-05.1"></script>
+<script src="js/domain/relativeTime.js?v=2026-08-05.1"></script>
+<script src="js/domain/clientRelease.js?v=2026-08-05.1"></script>
+<script src="js/domain/trainerDiscovery.js?v=2026-08-05.1"></script>
+<script src="js/domain/eventPresentation.js?v=2026-08-05.1"></script>
+<script src="js/domain/publicSharePublication.js?v=2026-08-05.1"></script>
+<script src="js/domain/loginDirectory.js?v=2026-08-05.1"></script>
+<script src="js/utils/textSafety.js?v=2026-08-05.1"></script>
+<script src="js/ui/stringPanels.js?v=2026-08-05.1"></script>
+<script src="js/ui/emptyState.js?v=2026-08-05.1"></script>
+<script src="js/i18n/locales/en.js?v=2026-08-05.1"></script>
+<script src="js/i18n/core.js?v=2026-08-05.1"></script>
+<script src="js/services/firebaseClient.js?v=2026-08-05.1"></script>
+<script src="js/data/subscriptionManager.js?v=2026-08-05.1"></script>
+<script src="js/data/listenerLifecycle.js?v=2026-08-05.1"></script>
+<script src="js/data/sessionCacheBoundary.js?v=2026-08-05.1"></script>
+<script src="js/data/firebaseReadRegistry.js?v=2026-08-05.1"></script>
+<script src="js/data/currentUserRepository.js?v=2026-08-05.1"></script>
+<script src="js/data/ownedDataCoordinator.js?v=2026-08-05.1"></script>
+<script src="js/data/publicShareRepository.js?v=2026-08-05.1"></script>
+<script src="js/data/trainerHistoryStore.js?v=2026-08-05.1"></script>
+<script src="js/domain/cacheAdapters.js?v=2026-08-05.1"></script>
 <script>
 let initializeApp,getDatabase,ref,set,get,onValue,update,getAuth,signInWithEmailAndPassword,createUserWithEmailAndPassword,firebaseSignOut,updatePassword,deleteUser,onAuthStateChanged;
 let firebaseSdkPromise=null;
@@ -2534,6 +2537,7 @@ const publicShareRepositoryData=window.PogoData?.publicShareRepository;
 if(!publicShareRepositoryData)throw new Error('Public-share repository failed to load');
 const trainerHistoryStoreData=window.PogoData?.trainerHistoryStore;
 if(!trainerHistoryStoreData)throw new Error('Trainer history store failed to load');
+const clientReleaseDomain=window.PogoDomain?.clientRelease;
 const trainerDiscoveryDomain=window.PogoDomain?.trainerDiscovery;
 if(!trainerDiscoveryDomain)throw new Error('Trainer discovery helpers failed to load');
 const eventPresentationDomain=window.PogoDomain?.eventPresentation;
@@ -5958,6 +5962,7 @@ function renderInterimProductLabels(){
   setText('find-trainer-title','trainer.findTitle');
   setText('find-trainer-description','trainer.findDescription');
   setText('find-trainer-button','trainer.findAction');
+  setText('find-trainer-reload','app.reloadAction');
   const findInput=document.getElementById('find-trainer-input');
   if(findInput)findInput.placeholder=i18nCore.t('trainer.findPlaceholder');
   const suggestions=document.getElementById('find-trainer-suggestions');
@@ -5987,8 +5992,47 @@ function ensureTrainerHistoryStore(){
   trainerHistoryStore=trainerHistoryStoreData.createTrainerHistoryStore({storage:localStorage,identity:{uid,username:cur}});
   return trainerHistoryStore;
 }
+function trainerSearchCompatibility(){
+  const state=clientReleaseDomain?.trainerSearchControlState?.(trainerDiscoveryDomain);
+  if(state)return{ok:state.compatible,missing:state.missing,code:state.code};
+  return{ok:false,missing:['clientRelease'],code:'client/reload-required'};
+}
+async function reloadCompatibleClient(){
+  try{
+    if('caches'in window){
+      const names=await caches.keys();
+      await Promise.all(names.filter(name=>name.startsWith('shell-pogo-trades-')).map(name=>caches.delete(name)));
+    }
+    const registration=await navigator.serviceWorker?.getRegistration?.();
+    await registration?.update?.();
+  }catch(error){
+    console.warn('Client release refresh cleanup failed',error);
+  }
+  location.reload();
+}
+function requireCompatibleTrainerSearch(){
+  const compatibility=trainerSearchCompatibility();
+  const input=document.getElementById('find-trainer-input');
+  const button=document.getElementById('find-trainer-button');
+  const reload=document.getElementById('find-trainer-reload');
+  const status=document.getElementById('find-trainer-status');
+  if(compatibility.ok){
+    if(input)input.disabled=false;
+    if(button)button.disabled=false;
+    if(reload)reload.style.display='none';
+    return true;
+  }
+  clearTimeout(trainerSuggestionTimer);
+  closeTrainerSuggestions();
+  if(input)input.disabled=true;
+  if(button)button.disabled=true;
+  if(reload)reload.style.display='inline-flex';
+  if(status)status.textContent=i18nCore.t('app.updateRequired');
+  return false;
+}
 function renderFindTrainer(){
   renderInterimProductLabels();
+  if(!requireCompatibleTrainerSearch())return;
   const status=document.getElementById('find-trainer-status');
   if(status&&!document.getElementById('find-trainer-input')?.value.trim())status.textContent=i18nCore.t('trainer.searchStart');
   renderTrainerQuickLists();
@@ -6008,6 +6052,7 @@ function trainerSuggestionOptions(){
   };
 }
 function rankedTrainerSuggestions(value){
+  if(!requireCompatibleTrainerSearch())return[];
   return trainerDiscoveryDomain.trainerSuggestions(Object.keys(allData.loginDirectory||{}),value,trainerSuggestionOptions());
 }
 function trainerSuggestionHtml(item,index){
@@ -6015,6 +6060,7 @@ function trainerSuggestionHtml(item,index){
   return`<button type="button" class="trainer-suggestion${index===trainerSuggestionIndex?' active':''}" role="option" id="trainer-suggestion-${index}" aria-selected="${index===trainerSuggestionIndex}" data-index="${index}" onmousedown="event.preventDefault()" onclick="selectTrainerSuggestion(${index})">${escHtml(before)}<mark>${escHtml(match)}</mark>${escHtml(after)}</button>`;
 }
 function renderTrainerSuggestions(value){
+  if(!requireCompatibleTrainerSearch())return;
   const input=document.getElementById('find-trainer-input'),box=document.getElementById('find-trainer-suggestions'),status=document.getElementById('find-trainer-status');
   if(!input||!box)return;
   const query=String(value||'').trim();
@@ -6026,17 +6072,20 @@ function renderTrainerSuggestions(value){
   input.setAttribute('aria-activedescendant','trainer-suggestion-0');if(status)status.textContent='';
 }
 function queueTrainerSuggestions(value,immediate=false){
+  if(!requireCompatibleTrainerSearch())return;
   clearTimeout(trainerSuggestionTimer);
   const status=document.getElementById('find-trainer-status');
   if(String(value||'').trim().length>=2&&status)status.textContent=i18nCore.t('trainer.searching');
   trainerSuggestionTimer=setTimeout(()=>renderTrainerSuggestions(value),immediate?0:220);
 }
 function selectTrainerSuggestion(index){
+  if(!requireCompatibleTrainerSearch())return;
   const item=trainerSuggestionItems[index];if(!item)return;
   const input=document.getElementById('find-trainer-input');if(input)input.value=item.name;
   closeTrainerSuggestions();openTrainerPublicShare(item.name);
 }
 function trainerSearchKeydown(event){
+  if(!requireCompatibleTrainerSearch()){event.preventDefault();return;}
   if(event.key==='ArrowDown'||event.key==='ArrowUp'){
     if(trainerSuggestionQuery!==trainerDiscoveryDomain.fold(event.currentTarget.value))renderTrainerSuggestions(event.currentTarget.value);
     if(!trainerSuggestionItems.length)return;
@@ -6123,11 +6172,13 @@ function publicShareRequestFromInput(value){
   return{username:canonical(raw),type:'wishlist'};
 }
 function resolvedTrainerSearchValue(value){
+  if(!requireCompatibleTrainerSearch())return'';
   const raw=String(value||'').trim();if(!raw)return raw;
   try{const url=new URL(raw,location.href);if(url.searchParams.get('view'))return raw;}catch{}
   return trainerDiscoveryDomain.bestTrainerSuggestion(Object.keys(allData.loginDirectory||{}),raw,trainerSuggestionOptions())?.name||raw;
 }
 async function openTrainerPublicShare(value){
+  if(!requireCompatibleTrainerSearch())return;
   clearTimeout(trainerSuggestionTimer);
   const requested=value||document.getElementById('find-trainer-input')?.value;
   const resolved=resolvedTrainerSearchValue(requested);
@@ -13567,7 +13618,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   document.addEventListener('keydown',_handleGlobalShortcut);
   // Service worker for offline support (#22)
   if('serviceWorker'in navigator&&location.protocol!=='file:'){
-    navigator.serviceWorker.register('./sw.js').then(reg=>{
+    navigator.serviceWorker.register(`./sw.js?v=${window.__POGO_RELEASE_ID}`).then(reg=>{
       reg.addEventListener('updatefound',()=>{
         const nw=reg.installing;if(!nw)return;
         nw.addEventListener('statechange',()=>{

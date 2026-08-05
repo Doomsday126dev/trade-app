@@ -152,7 +152,7 @@ const moduleOrder=[
 ];
 let previous=-1;
 for(const modulePath of moduleOrder){
-  const at=indexSource.indexOf(`<script src="${modulePath}"></script>`);
+  const at=indexSource.indexOf(`<script src="${modulePath}?v=`);
   assert.ok(at>previous,`Read-boundary module load order is invalid at ${modulePath}`);
   previous=at;
 }

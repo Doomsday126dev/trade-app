@@ -1,5 +1,12 @@
 # Maintenance Log
 
+## 2026-08-05 - Version critical client assets as one release
+
+- Append one shared release identifier to every first-party JavaScript URL loaded by `index.html` and to the service-worker registration URL. Bump that identifier whenever a deployed first-party module changes.
+- Version the service-worker shell cache with the same identifier, precache the matching module graph, remove older app-shell caches on activation, and never satisfy a versioned module request by ignoring its query string.
+- GitHub Pages does not retain historical assets by query string, so the release token is primarily a cache invalidator rather than a permanent immutable archive. Exact service-worker cache keys keep already-cached releases coherent; a translated compatibility guard stops trainer search and offers a reload if required APIs are still mismatched.
+- Firebase reads, writes, rules, paths, schemas, and production data are unchanged.
+
 ## 2026-08-04 — Established-account Reset safety candidate
 
 Disabled the legacy Admin Reset action for users with an existing `authUid` and added matching function-level guards before its fresh-account provisioning path. Admin now shows a translated explanation directing established accounts to the separately reviewed identity-preserving secure reset process. This client safety change does not reset a PIN, create an Auth account, rotate identity fields, or write production data.
