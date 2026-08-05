@@ -1006,6 +1006,23 @@ Commit 5 and Commit 9. Local mapping analysis is safe before rules cutover;
 production seeding is forbidden until Commit 8 has removed the authenticated
 root grant and verified the proposed private paths in production.
 
+## Trainer-share visibility candidate
+
+The next server-enforced sharing contract is documented in
+`docs/SHARE-VISIBILITY-MODEL.md`. It keeps personal Favorite Trainers separate
+from owner-managed Approved Viewers and proposes UID-owned `trainerShares`,
+`shareVisibility`, and `shareAccess` paths. The candidate is disabled,
+unseeded, and emulator-only. It cannot be deployed while the authenticated root
+read remains active; narrow-read rules and private-path isolation must precede
+any visibility migration or production record creation.
+
+The same candidate now defines private cross-device `userPreferences/{uid}`
+for Favorite Trainers, normalized custom tags, 30 bounded recent slots, and a
+monotonic public-share seen baseline. These preferences never participate in
+share authorization and remain disabled behind a separate synced-preferences
+flag and write gate. The existing UID-partitioned local store remains the
+production path until owner-matched import and multi-device convergence pass.
+
 ## Genuinely unresolved questions
 
 - What exact Pokemon GO trainer-name character rules and Unicode case-folding

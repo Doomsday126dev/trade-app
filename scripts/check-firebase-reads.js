@@ -14,7 +14,7 @@ const {READ_SURFACES,SOURCE_CALL_CONTRACT}=window.PogoData.firebaseReadRegistry;
 const requiredFields=['id','path','method','breadth','ownerScope','audience','consumers','status'];
 const validScopes=new Set(['public','session','screen','selectedTrainer','legacyAdmin']);
 const validBreadths=new Set(['exact','broad','dynamic']);
-const validStatuses=new Set(['transitional','retained','planned_retirement']);
+const validStatuses=new Set(['transitional','retained','planned_retirement','candidate_inactive']);
 
 assert.ok(READ_SURFACES.length>0,'Firebase read registry must not be empty');
 assert.equal(new Set(READ_SURFACES.map(entry=>entry.id)).size,READ_SURFACES.length,'Firebase read registry IDs must be unique');

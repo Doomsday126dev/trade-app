@@ -63,3 +63,17 @@ overrides child privacy rules. A named characterization test proves that an
 ordinary authenticated user can currently read the proposed private nodes.
 No global identity data may be seeded until narrow production reads are live
 and that isolation has been verified.
+
+## Emulator-only trainer-share visibility contract
+
+`database.rules.share-visibility.json` and `firebase.share-visibility.json`
+define a separate UID-owned sharing model with owner-managed Approved Viewers
+and public-mode-only legacy link compatibility. The same fixture includes a
+separately gated owner-private preference model for synced favorites, tags,
+bounded recents, and monotonic seen history. Run the pure client contract
+with `npm run check:share-visibility` and its isolated emulator matrix with
+`npm run check:share-visibility-rules`.
+
+**Do not deploy this fixture.** Its root read is denied and it intentionally
+does not provide every temporary production-client allowance. No visibility,
+grant, share, or compatibility record may be seeded from this candidate.

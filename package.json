@@ -21,6 +21,8 @@
     "check:rules": "bash scripts/check-firebase-rules.sh",
     "check:global-contract": "node scripts/check-global-identity-contract.js",
     "check:global-rules": "bash scripts/check-global-identity-rules.sh",
+    "check:share-visibility": "node --test tests/share-visibility-client.test.cjs tests/trainer-preferences.test.cjs",
+    "check:share-visibility-rules": "bash scripts/check-share-visibility-rules.sh",
     "audit:trainer-names": "node scripts/audit-trainer-names.js",
     "audit:uid-handles": "node scripts/audit-uid-handle-mappings.js",
     "review:uid-handles": "node scripts/build-identity-review.js",

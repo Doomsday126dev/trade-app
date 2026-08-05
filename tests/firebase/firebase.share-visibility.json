@@ -1,0 +1,9 @@
+{
+  "database": { "rules": "database.rules.share-visibility.json" },
+  "emulators": {
+    "auth": { "port": 9299 },
+    "database": { "port": 9200 },
+    "ui": { "enabled": false },
+    "singleProjectMode": true
+  }
+}
