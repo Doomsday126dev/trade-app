@@ -1,5 +1,10 @@
 # Trusted Multi-Community Pilot — Rollout Checklist
 
+> **ARCHIVED HISTORICAL RUNBOOK:** The trainer-first client and narrow-read
+> rules deployment superseded this pilot. Broad-read statements below describe
+> the former production state and must not be used as current deployment
+> guidance.
+
 > **Maintenance convention**: This is a living plan. Anyone executing
 > or revising the pilot should update the relevant section before
 > shipping, and append a new row to the Update log at the bottom.
@@ -15,7 +20,7 @@
 | Item | Status |
 |---|---|
 | Document version | **v3** — pilot is live; flag flipped, deployed smoke passed, manual owner QA passed |
-| Pilot status | **LIVE** (since flag-flip commit `6f22668`) |
+| Pilot status | **ARCHIVED** — superseded by trainer-first exact reads and narrow-read rules |
 | App flag | `MULTI_COMMUNITY_ENABLED=true` |
 | Pilot communities | NYC (default) + New Jersey (prepared) |
 | Pilot operator | owner |

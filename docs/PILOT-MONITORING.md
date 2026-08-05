@@ -1,5 +1,10 @@
 # Trusted Multi-Community Pilot — Monitoring & Incident Runbook
 
+> **ARCHIVED HISTORICAL RUNBOOK:** The trainer-first client and narrow-read
+> rules deployment superseded this pilot. Broad-read statements below describe
+> the former production state and must not be used as current deployment
+> guidance.
+
 > **Maintenance convention**: This is a living plan. Anyone updating
 > the pilot or responding to a pilot incident should update the
 > relevant section before pushing, and append a new row to the Update
@@ -18,7 +23,7 @@ pilot is watched, triaged, and (if needed) rolled back* while live.
 | Item | Status |
 |---|---|
 | Document version | **v1** — initial monitoring and incident runbook |
-| Pilot status | **LIVE** (since flag-flip commit `6f22668`) |
+| Pilot status | **ARCHIVED** — superseded by trainer-first exact reads and narrow-read rules |
 | App flag | `MULTI_COMMUNITY_ENABLED=true` |
 | Pilot communities | NYC (default) + New Jersey |
 | Pilot operator | owner |

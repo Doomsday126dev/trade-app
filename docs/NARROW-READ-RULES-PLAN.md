@@ -1,22 +1,20 @@
 # Narrow Production Read Rules Candidate
 
-> **Status:** Emulator-only and uncommitted. Do not publish this rules file until
-> `npm run check:narrow-read-rules` passes in normal Terminal and a separate
-> deployment review is approved. This candidate does not enable trainer-share
-> visibility, synced preferences, or global identity writes.
+> **Status:** Deployed and production-validated on 2026-08-05 at 10:05:15 EDT.
+> This ruleset does not enable trainer-share visibility, synced preferences, or
+> global identity writes.
 
 ## Candidate and rollback artifacts
 
 - Candidate: `tests/firebase/database.rules.narrow-read.json`
 - Candidate SHA-256: `e0632a98ed106117f03e61da0446ef4b2c2e6ed02ea8c6f1c498a0e7edcb17bf`
-- Private rollback copy:
-  `.local/firebase-rule-backups/deployed-before-narrow-read-2026-08-05.json`
+- Private rollback copy: verified local, mode `0600`, and git-ignored
 - Rollback SHA-256:
   `bc54eec92875d1d544cc59b92c05b9dec2308340577bd66be22a032efa491926`
 
-The rollback copy is byte-identical to
-`tests/firebase/database.rules.hardened.json`, parses as JSON, is mode `0600`,
-and is git-ignored. Recalculate both hashes immediately before publication.
+The rollback copy is byte-identical to the reviewed hardened fixture, parses as
+JSON, is mode `0600`, and is git-ignored. Recalculate both hashes immediately
+before any future publication.
 
 ## Authority model
 

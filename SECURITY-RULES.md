@@ -1,334 +1,101 @@
-# Firebase Realtime Database — Security Rules
+# Firebase Realtime Database Security Rules
 
-> **Maintenance convention**: This doc is a living plan. Anyone who ships
-> rule-related work should update the relevant section before pushing.
-> Format mirrors `SCALING-NOTES.md`: status banner at top, an Update log at
-> the bottom, history-preserving so any future contributor (Claude / codex /
-> human) can reconstruct what changed when. The public ruleset template lives
-> in **§ Canonical ruleset** below; replace placeholders with private
-> production values before publishing.
+> This document records the active rules contract and operational source of
+> truth. It intentionally does not embed copyable production rules JSON.
 
----
-
-## Current status
+## Current Status
 
 | Item | Status |
 |---|---|
-| Public ruleset template version | **v6 candidate** — uses protected UID admin authority for community writes |
-| Published in Firebase Console | Check Firebase Console/private operational notes before assuming this public template matches production |
-| API key HTTP-referrer lock | Recommended for the production GitHub Pages or custom-domain origin |
-| Scheduled RTDB backups | Recommended before the community grows substantially |
+| Production contract | Narrow-read rules deployed |
+| Deployment timestamp | 2026-08-05 10:05:15 EDT |
+| Reviewed artifact | `tests/firebase/database.rules.narrow-read.json` |
+| Candidate SHA-256 | `e0632a98ed106117f03e61da0446ef4b2c2e6ed02ea8c6f1c498a0e7edcb17bf` |
+| Rollback readiness | Verified private rollback baseline is available |
 
-**Current note:** v6 is an emulator-tested candidate and is not documented as
-deployed until Firebase Console verification is complete. It removes mutable
-username and user-role fields from community-write authorization.
+Production rules must be managed from the reviewed repository artifact. The
+browser Admin panel, cached application state, documentation examples, and
+historical fixtures are not rules-generation sources.
 
----
+The private rollback artifact and its contents must remain local, ignored, and
+non-public. Verify its hash and file mode through the reviewed deployment
+runbook before any rules change.
 
-## Canonical ruleset
+## Active Read Contract
 
-This is the proposed Firebase Console → Realtime Database → **Rules** block.
-It contains no private owner identifier: privileged authority comes from the
-protected `admins/{uid}` index.
+- Root reads are denied.
+- `loginDirectory` remains anonymously readable for lightweight trainer-name
+  discovery. Writes remain protected-admin only.
+- Exact `publicShares/{username}` records remain anonymously readable and
+  realtime-capable. Owners may publish only their own projection; protected
+  admins retain reviewed maintenance authority.
+- Ordinary signed-in users read only their UID-bound profile, owned list paths,
+  Inventory, own auth-index row, memberships, and pending decrements.
+- Parent collection enumeration and cross-user private reads are denied.
+- Admin-wide collection reads depend only on `admins/{uid} === true` and are
+  used on demand by the protected Admin surface.
+- Disabled global identity, visibility, preference, and group paths remain
+  denied until separately reviewed activation work.
 
-```json
-{
-  "rules": {
-    ".read": "auth != null",
-    "loginDirectory": {
-      ".read": true,
-      "$username": {
-        ".write": "auth != null && root.child('admins').child(auth.uid).val() === true"
-      }
-    },
-    "publicShares": {
-      "$username": {
-        ".read": true,
-        ".write": "auth != null && (root.child('admins').child(auth.uid).val() === true || root.child('users').child($username).child('authUid').val() === auth.uid)"
-      }
-    },
-    "users": {
-      "$username": {
-        ".write": "auth != null && (root.child('admins').child(auth.uid).val() === true || (((data.child('authUid').val() === auth.uid) || (!data.child('authUid').exists() && newData.child('authUid').val() === auth.uid && newData.child('authEmail').val() === auth.token.email && (!data.child('authEmail').exists() || data.child('authEmail').val() === auth.token.email))) && (newData.child('isOwner').val() === data.child('isOwner').val() || (!data.child('isOwner').exists() && newData.child('isOwner').val() === false)) && (newData.child('isAdmin').val() === data.child('isAdmin').val() || (!data.child('isAdmin').exists() && newData.child('isAdmin').val() === false))))"
-      }
-    },
-    "wishlist": {
-      "$username": {
-        ".write": "auth != null && (root.child('admins').child(auth.uid).val() === true || root.child('users').child($username).child('authUid').val() === auth.uid)"
-      }
-    },
-    "dynamax": {
-      "$username": {
-        ".write": "auth != null && (root.child('admins').child(auth.uid).val() === true || root.child('users').child($username).child('authUid').val() === auth.uid)"
-      }
-    },
-    "gmax": {
-      "$username": {
-        ".write": "auth != null && (root.child('admins').child(auth.uid).val() === true || root.child('users').child($username).child('authUid').val() === auth.uid)"
-      }
-    },
-    "costumes": {
-      "$username": {
-        ".write": "auth != null && (root.child('admins').child(auth.uid).val() === true || root.child('users').child($username).child('authUid').val() === auth.uid)"
-      }
-    },
-    "have": {
-      "$username": {
-        ".write": "auth != null && (root.child('admins').child(auth.uid).val() === true || root.child('users').child($username).child('authUid').val() === auth.uid)"
-      }
-    },
-    "offers": {
-      "$recipient": {
-        "$offerId": {
-          ".write": "auth != null && ((!data.exists() && newData.child('from').val() === root.child('authIndex').child(auth.uid).child('username').val()) || (data.exists() && data.child('from').val() === root.child('authIndex').child(auth.uid).child('username').val()) || $recipient === root.child('authIndex').child(auth.uid).child('username').val() || root.child('admins').child(auth.uid).val() === true)"
-        }
-      }
-    },
-    "trades": {
-      "$tradeId": {
-        ".write": "auth != null && ((!data.exists() && newData.child('organizer').val() === root.child('authIndex').child(auth.uid).child('username').val()) || (data.exists() && data.child('organizer').val() === root.child('authIndex').child(auth.uid).child('username').val()) || (data.exists() && data.child('participants').child(root.child('authIndex').child(auth.uid).child('username').val()).exists()) || root.child('admins').child(auth.uid).val() === true)"
-      }
-    },
-    "requests": {
-      "$id": {
-        ".write": "!data.exists() || (auth != null && root.child('admins').child(auth.uid).val() === true)"
-      }
-    },
-    "authIndex": {
-      "$uid": {
-        ".read": "auth != null && (auth.uid === $uid || root.child('admins').child(auth.uid).val() === true)",
-        ".write": "auth != null && (root.child('admins').child(auth.uid).val() === true || (auth.uid === $uid && ((!data.exists() && newData.child('username').isString() && root.child('users').child(newData.child('username').val()).child('authUid').val() === auth.uid) || (data.exists() && newData.child('username').val() === data.child('username').val()))))"
-      }
-    },
-    "admins": {
-      "$uid": {
-        ".read": "auth != null",
-        ".write": "auth != null && root.child('admins').child(auth.uid).val() === true"
-      }
-    },
-    "communities": {
-      ".read": "auth != null",
-      "$communityId": {
-        ".write": "auth != null && root.child('admins').child(auth.uid).val() === true"
-      }
-    },
-    "userCommunities": {
-      ".read": "auth != null",
-      "$uid": {
-        "$communityId": {
-          ".write": "auth != null && root.child('admins').child(auth.uid).val() === true"
-        }
-      }
-    },
-    "communityRequests": {
-      ".read": "auth != null",
-      "$communityId": {
-        "$requestId": {
-          ".write": "auth != null && root.child('admins').child(auth.uid).val() === true"
-        }
-      }
-    },
-    "pendingDecrements": {
-      "$username": {
-        ".read": "auth != null && (root.child('users').child($username).child('authUid').val() === auth.uid || root.child('admins').child(auth.uid).val() === true)",
-        "$decId": {
-          ".write": "auth != null && ((!data.exists() && newData.child('from').val() === root.child('authIndex').child(auth.uid).child('username').val() && newData.child('qty').isNumber() && newData.child('qty').val() != 0 && newData.child('qty').val() >= -999 && newData.child('qty').val() <= 999 && newData.child('key').isString() && newData.child('key').val().length > 0) || (data.exists() && root.child('users').child($username).child('authUid').val() === auth.uid) || root.child('admins').child(auth.uid).val() === true)"
-        }
-      }
-    },
-    "_ping": {
-      ".write": "auth != null"
-    }
-  }
-}
-```
+The exact path-to-rule contract and emulator coverage are maintained in
+`docs/NARROW-READ-RULES-PLAN.md`, `scripts/check-narrow-read-contract.js`, and
+the narrow-read emulator suite.
 
----
+## Write Contract
 
-## What each path locks down
+The narrow-read deployment retained the reviewed hardened write semantics:
 
-### Public login directory (`loginDirectory`)
-- **Read**: anyone, even before login
-- **Write**: admins only
+- Mutable usernames, profile `isOwner` / `isAdmin` values, and community
+  membership do not grant rules authority.
+- Established `authIndex/{uid}/username` mappings cannot be reassigned by an
+  ordinary user.
+- Privileged profile fields cannot be changed by an ordinary user.
+- Community maintenance requires protected UID authority.
+- Public-share writes remain limited to the trainer bound to the target
+  username or a protected admin.
 
-This path exists solely so clean browsers and brand-new members can discover
-approved trainer names before signing in. It should only contain minimal login
-metadata such as the current auth version / readiness flag — not PINs or
-private profile fields.
+Any write-contract change requires a separate fixture, emulator coverage,
+reviewed SHA, rollback verification, and explicit production approval.
 
-### Public share snapshots (`publicShares`)
-- **Read**: anyone with the share link
-- **Write**: the trainer themselves, or an admin
+## Deployment Safety
 
-This is the only anonymous/public trade-list surface. It should contain a
-sanitized share-view snapshot only: public profile display fields and the
-shareable `wishlist`, `dynamax`, `gmax`, and `costumes` lists. Do not copy
-PINs, Auth UIDs/emails, Discord IDs, inventory, offers, trades, requests, or
-raw user records into this path.
+1. Run `npm run check:narrow-read-contract` and
+   `npm run check:narrow-read-rules`.
+2. Verify the candidate file hash against the reviewed value above.
+3. Privately export and verify the currently deployed rules as the rollback
+   baseline.
+4. Replace the complete Firebase Console Rules editor with the complete
+   reviewed artifact. Never merge fragments or generate rules from browser
+   state.
+5. Publish once, record the timestamp/version, and execute the ordered smoke
+   test in `docs/NARROW-READ-RULES-PLAN.md`.
+6. At the first rollback trigger, publish the complete verified private
+   rollback artifact without improvising live edits.
 
-### Authenticated app data (`users`, `wishlist`, `dynamax`, `gmax`, `costumes`, `have`)
-- **Read**: any authenticated user (community-visible by design)
-- **Write**: only the trainer themselves, or an admin (break-glass)
+## Defense In Depth
 
-### Cross-user data (`offers`, `trades`, `pendingDecrements`)
-These need more nuanced rules because multiple users legitimately touch the
-same record.
+### API Key Restrictions
 
-**Offers**: `from` user can create/modify their own. The `$recipient` user
-can modify too (to mark accepted/declined). Admins can do anything.
+Restrict the Firebase Web API key to the production GitHub Pages or custom
+domain origin through Google Cloud Console HTTP-referrer restrictions. Update
+the private allowlist before changing domains.
 
-**Trades**: organizer can create/modify. Any participant can modify
-(participants update meeting details, mark traded, cancel). Admins can do
-anything.
+### Backups
 
-**pendingDecrements** (the cross-user inventory restoration queue):
-- **Read**: only the target user (whose inventory will be debited) or an admin
-- **Write — create**: writer's `from` field must match their actual username
-  (anti-spoofing); `qty` must be a nonzero number in `[-999, 999]`;
-  `key` must be non-empty string
-- **Write — modify/delete**: only the target user (the bucket owner) — used
-  by the reconciler to clear records after applying them
+Maintain reviewed rollback exports before rules deployments. Scheduled RTDB
+backups are recommended before the community or write volume grows
+substantially.
 
-The qty range allows **positive** values for the standard decrement flow
-(someone accepted my offer → subtract N from my inventory) and **negative**
-values for the restoration flow (the other side cancelled → add N back to
-my inventory; added in app v4.6.10).
+## Update Log
 
-### Admin-restricted (`requests`, `admins`)
-- **requests**: anyone can create a new join request (no auth needed —
-  prospective members can't log in yet). Only admins can modify/delete.
-- **admins**: only existing admins can modify the admin list. All
-  authenticated users can read the list (used to surface "this user is an
-  admin" UI).
-
-### Self-published login index (`authIndex`)
-- **Read**: the signed-in user can read their own row; admins can read all
-  rows.
-- **Write**: admins may repair mappings. A signed-in user may create their own
-  row only when its username points to a `users/{username}` record already
-  bound to the same UID; afterward they may refresh metadata only while the
-  username remains unchanged.
-
-Admin repair/reset flows should **not** write another user's `authIndex`
-record. The repaired user publishes their own row automatically on their
-next successful sign-in. This keeps the rules tighter and avoids
-owner/admin account-repair writes failing on an otherwise valid user repair.
-
-### Community foundation (`communities`, `userCommunities`, `communityRequests`)
-- **Read**: any authenticated user, matching the current app's authenticated
-  community visibility model.
-- **Write**: authenticated UIDs present at `admins/{uid}` only. Mutable
-  usernames, `isOwner`, and `isAdmin` profile fields grant no rules authority.
-
-These paths are intentionally conservative during Phase 1. They exist only
-to prepare the default NYC community and membership indexes. Later phases
-can loosen writes for community owners/admins after the create/join/manage
-flows exist.
-
----
-
-## How to verify the published ruleset
-
-After publishing in Firebase Console, run these checks. Each one targets a
-specific protection.
-
-### 1. Anonymous read is blocked
-```
-curl 'https://<your-project>.firebaseio.com/users.json'
-```
-Should return `{"error": "Permission denied"}`. If it returns data, the
-ruleset didn't take.
-
-### 2. Logged-in editing still works
-- Edit your wishlist → saves
-- Post an offer → appears in the recipient's inbox
-
-### 3. Trade-accept end-to-end (positive qty path)
-- Accept an offer from another trainer via the **Trade →** button
-- Confirm the qty in the popup
-- Inspect Firebase Console → `pendingDecrements/{bidder}/{some-id}` should
-  contain `{ "from": "<recipient>", "key": "...", "qty": <positive N>, ... }`
-- Reload the bidder's session → their inventory decrements and the pending
-  record disappears
-- Toast on bidder's side: *"✅ Synced 1 accepted trade…"*
-
-### 4. Trade-cancel restoration (negative qty path, the v4.6.10 flow)
-- Cancel an accepted trade via the ✗ button in the schedule
-- Inspect `pendingDecrements/{counterparty}/{some-id}` — should contain
-  `{ ..., "qty": <negative N>, ... }`
-- Sign in as the counterparty → toast: *"✅ Synced 1 cancellation…"* and
-  inventory restores
-- **If this fails**: the published ruleset is probably the old v2 (which
-  required `qty > 0`). Republish using the canonical block above.
-
-### 5. Brief UI flicker — known and expected
-Between the recipient hitting Confirm and the bidder's client applying the
-pending decrement, the bidder's inventory **on Firebase** still shows the
-old qty. A third trainer browsing the bidder's inventory in that window
-will see the stale count until the bidder's client reconciles. Usually
-resolves in seconds. The trade itself is correct — only the displayed
-value lags.
-
----
-
-## Defense-in-depth (outside the rules themselves)
-
-### ✅ HTTP-referrer lock on the Web API key
-Restricts the Firebase Web API key so it only works when requests come from
-your production domain. Anyone scraping the key from `index.html` can't
-initialize a Firebase app against your project from somewhere else.
-
-- **Where**: Google Cloud Console → APIs & Services → Credentials → your
-  Firebase Web API key → Application restrictions → HTTP referrers
-- **Allow-list**: your production GitHub Pages or custom-domain origin.
-- **Note**: if you ever move domains, update the private production
-  allow-list too.
-
-### ⏸️ Scheduled backups (not yet enabled)
-A single mass-edit mistake (or a malicious admin) can erase a lot at once.
-RTDB has scheduled exports to Cloud Storage for cheap insurance.
-
-- **Where**: Firebase Console → Realtime Database → Backups
-- **Recommended**: daily exports, keep 7-day rolling window
-- **Cost**: usually low at small community scale
-- **Priority**: worth doing before relying on many admins or large communities
-
----
-
-## Avoid loose write variants
-
-Do not loosen `have/` writes to all authenticated users. Keep cross-user
-inventory changes mediated through the pending decrement/restoration flow.
-If that queue becomes hard to maintain, design a replacement that preserves
-schema-level ownership checks rather than relying on community trust.
-
----
-
-## Update log
-
-When you ship a rule change (or other related work), append a one-line
-entry here. Newest first.
-
-- **2026-08-03, v6 candidate** — Prepared emulator-tested UID-based
-  community authority, privileged profile-field protection, and immutable
-  self-published auth-index usernames. Not deployed yet. (Codex)
-- **2026-05-27, docs-only** — Sanitized the public rules reference by
-  replacing private owner/deployment details with placeholders and removing
-  a copy-pasteable loose write variant. No deployed Firebase rule change.
-  (Codex)
-- **2026-05-25, v4.6.25** — Drafted v5 owner-only community foundation
-  rules for `communities`, `userCommunities`, and `communityRequests`.
-  Publish before running the owner-only default community preparation tool.
-  (Codex)
-- **2026-05-24, v4.6.24** — Added public `loginDirectory` path so newly approved trainers appear on the login screen in clean browsers; app now expects admins to maintain it alongside `users/`.
-- **2026-05-24, v4.6.20** — User confirmed v3 ruleset is published and API
-  key is referrer-locked. Doc restructured into living-format. (Claude)
-- **2026-05-24, v4.6.18** — Documented `POKEAPI_PLACEHOLDER_FORM_IDS` skip
-  set (app-side only, not a rule change). (Claude)
-- **2026-05-24, v4.6.10** — Canonical ruleset bumped from v2 (`qty > 0`)
-  to v3 (`qty in [-999, 999], qty != 0`) to allow negative qty for the
-  trade-cancel restoration flow. Required republish in Firebase Console.
-  (Claude)
-- **2026-05-23** — Initial pendingDecrements rules drafted (v2 — `qty > 0`).
-  Replaced `.read: true` with `.read: auth != null` (closed the anonymous
-  read leak). (Claude)
+- **2026-08-05, narrow-read deployed** - Removed the authenticated root read,
+  mapped all active client read surfaces to explicit rules, and established the
+  reviewed narrow-read fixture as the sole repository rules source of truth.
+- **2026-08-03, community hardening deployed** - Replaced mutable username and
+  profile-role authorization with protected UID-based authority.
+- **2026-05-27, docs-only** - Removed private production identifiers from the
+  public security reference.
+- **2026-05-25, community foundation** - Added temporary community paths and
+  protected owner maintenance behavior.
+- **2026-05-24, login directory** - Added the public minimal login directory
+  required for pre-login username discovery.
