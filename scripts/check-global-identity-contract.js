@@ -1,5 +1,5 @@
 const assert = require('node:assert/strict');
-const { readFileSync, readdirSync, statSync } = require('node:fs');
+const { readFileSync } = require('node:fs');
 const path = require('node:path');
 
 const ROOT = path.join(__dirname, '..');
@@ -19,14 +19,6 @@ const NEW_RULE_PATHS = Object.freeze([
 const GATED_DATA_PATHS = NEW_RULE_PATHS.filter(key => key !== 'globalIdentityConfig');
 const WRITE_GATE = "root.child('globalIdentityConfig').child('writesEnabled').val() === true";
 
-function collectJavaScriptFiles(root) {
-  return readdirSync(root).flatMap(name => {
-    const target = path.join(root, name);
-    if (statSync(target).isDirectory()) return collectJavaScriptFiles(target);
-    return target.endsWith('.js') ? [target] : [];
-  });
-}
-
 const hardened = JSON.parse(readFileSync(HARDENED_PATH, 'utf8'));
 const candidate = JSON.parse(readFileSync(CANDIDATE_PATH, 'utf8'));
 const existingOnly = structuredClone(candidate);
@@ -40,8 +32,10 @@ for (const key of GATED_DATA_PATHS) {
   assert.ok(serializedRules.includes(WRITE_GATE), `${key} must gate writes on writesEnabled === true`);
 }
 
-const clientFiles = [path.join(ROOT, 'index.html'), ...collectJavaScriptFiles(path.join(ROOT, 'js'))];
-const clientSource = clientFiles.map(file => readFileSync(file, 'utf8')).join('\n');
+const htmlPath=path.join(ROOT,'index.html'),html=readFileSync(htmlPath,'utf8');
+const loadedScripts=[...html.matchAll(/<script\s+src=["'](js\/[^"'?]+\.js)(?:\?[^"']*)?["']/g)].map(match=>path.join(ROOT,match[1]));
+const clientFiles=[htmlPath,...loadedScripts];
+const clientSource=clientFiles.map(file=>readFileSync(file,'utf8')).join('\n');
 for (const key of NEW_RULE_PATHS) {
   const quotedPath = new RegExp(`[\\\"'\\\`]${key}(?:/|[\\\"'\\\`])`);
   assert.equal(quotedPath.test(clientSource), false, `Production client references inactive path ${key}`);

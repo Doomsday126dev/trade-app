@@ -25,6 +25,8 @@
     "check:share-visibility": "node --test tests/share-visibility-client.test.cjs tests/trainer-preferences.test.cjs",
     "check:share-migration-audit": "node --test tests/share-migration-audit.test.cjs",
     "check:share-migration-review": "node --test tests/share-migration-review.test.cjs",
+    "check:trusted-backend": "node --test tests/trusted-backend-contracts.test.cjs tests/share-activation-planning.test.cjs",
+    "check:share-activation-readiness": "node scripts/check-share-activation-readiness.js",
     "check:share-visibility-contract": "node scripts/check-share-visibility-contract.js",
     "check:share-visibility-rules": "bash scripts/check-share-visibility-rules.sh",
     "check:narrow-read-contract": "node scripts/check-narrow-read-contract.js",
