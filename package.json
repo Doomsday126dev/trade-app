@@ -31,6 +31,7 @@
     "check:trusted-functions-emulator": "bash scripts/check-trusted-functions-emulator.sh",
     "check:trusted-functions-staging": "node --test functions/test/staging-readiness.test.cjs && node functions/scripts/check-staging-readiness.cjs",
     "check:staging-creation-approval": "node --test functions/test/staging-creation-approval.test.cjs && node functions/scripts/check-staging-creation-approval.cjs",
+    "check:staging-recommendations": "node --test functions/test/staging-recommendations.test.cjs && node functions/scripts/check-staging-recommendations.cjs",
     "check:share-activation-readiness": "node scripts/check-share-activation-readiness.js",
     "check:share-visibility-contract": "node scripts/check-share-visibility-contract.js",
     "check:share-visibility-rules": "bash scripts/check-share-visibility-rules.sh",
