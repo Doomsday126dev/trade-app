@@ -335,6 +335,47 @@ Public projections must be built from explicit allowlists. Directory entries,
 public profiles, and unlisted share snapshots are separate projections so an
 unlisted contact choice cannot leak through trainer search.
 
+Current `publicShares/{username}` snapshots carry an explicit list-completeness
+marker in addition to the four allowlisted list categories. This is required
+because Realtime Database removes empty object children: the marker lets the
+reader distinguish a fully hydrated but genuinely empty publication from an
+incomplete projection. Readers normalize the current schema and narrowly
+supported legacy category aliases, reject malformed or unknown list content,
+and never fill a missing public projection from private owned-list paths.
+
+### Proposed list-audience extension (not implemented)
+
+The next visibility review should model list audience with locale-independent
+values such as `public`, `favorites`, and `private`. This is a rules and trusted
+projection contract, not a client-side filter:
+
+- `public` permits anonymous profile/share reads from the allowlisted public
+  projection.
+- `favorites` requires a signed-in viewer UID with an owner-managed grant. The
+  current device-local Favorites feature is only a personal bookmark and must
+  never be treated as authorization.
+- `private` permits only the owning UID and protected administrators performing
+  an explicitly authorized support action.
+
+The authoritative visibility value and viewer grants must be owner-writable,
+UID-based, and checked by Firebase rules or a trusted projection service.
+Revoking a grant, blocking a viewer, or changing visibility must immediately
+remove read access; cached copies must be treated as stale and cleared. Public
+links remain anonymous only in `public` mode. Any future unlisted token remains
+a separate revocable grant rather than weakening `favorites` or `private`.
+
+Existing active accounts are not blindly migrated. A read-only audit must
+classify complete public projections, missing projections, stale or empty
+projections, inactive records, identity conflicts, and unresolved accounts.
+Only reviewed, valid, already-published projections may be assigned `public`.
+Missing or stale shares must never be fabricated from private owned-list data.
+
+Future user-created groups may extend the same UID grant model with explicit
+group ownership, moderator/member roles, invitations, revocation, and
+group-scoped projections. They are not a continuation of the legacy community
+authorization system and are deferred until the base visibility contract is
+deployed and verified.
+
 The initial public `forTrade` projection may expose Pokemon variants,
 attributes, and user-entered trade notes. Inventory quantities remain private
 by default. A future explicit quantity-sharing preference may populate a

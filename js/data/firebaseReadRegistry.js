@@ -51,7 +51,7 @@
       Object.freeze({
         start:'function onPublicShareSnapshot',
         end:'function ensureShareViewSubscriptions',
-        sha256:'9e01607fed3a4c0e4a9daceef4380b292cf7e8c01fcf53ef6605b1d73f677b74'
+        sha256:'c71f7ced04fa98d6205914f94fb8e4f9deef9ac2db382e3d37e0da9d12bb4768'
       })
     ]),
     needles:Object.freeze([

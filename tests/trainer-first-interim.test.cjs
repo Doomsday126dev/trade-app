@@ -42,6 +42,21 @@ test('selected-trainer bridge loads and listens to publicShares only',()=>{
   assert.doesNotMatch(listen,/authenticated:true|shareDataPaths/);
 });
 
+test('Find Trainer normalizes public projections and never falls back to private owned paths',()=>{
+  const load=between('async function loadPublicShareData','async function loadShareViewData');
+  const apply=between('function applyPublicShareSnapshot','function notePublicSharePublicationBlocked');
+  assert.match(load,/publicShareProjectionStatus/);
+  assert.match(load,/projection\.snapshot/);
+  assert.match(apply,/publicShareProjectionStatus/);
+  assert.doesNotMatch(`${load}\n${apply}`,/users\/\$\{username\}|wishlist\/\$\{username\}|dynamax\/\$\{username\}|gmax\/\$\{username\}|costumes\/\$\{username\}/);
+});
+
+test('Find Trainer distinguishes unpublished, incomplete, malformed, and transport failures',()=>{
+  const status=between('function publicShareStatusMessageKey','function clearShareViewSubscriptions');
+  for(const value of ['not_published','projection_incomplete','projection_unsupported','transport_error'])assert.match(status,new RegExp(value));
+  for(const key of ['trainer.notPublished','trainer.shareNeedsRepublishing','trainer.sharedMalformed','trainer.sharedReadFailed'])assert.match(locale,new RegExp(key.replace('.','\\.')));
+});
+
 test('My List owns current-user strings and Trade Match is not in retained navigation',()=>{
   const strings=between('function _renderStringsInner(){','// ── EXPORT');
   assert.match(strings,/const users=\[cur\]\.filter/);
@@ -96,9 +111,10 @@ test('retired records remain present and no deletion migration is introduced',()
 });
 
 test('new unavailable and read-only states use locale keys',()=>{
-  for(const key of ['trainer.publicUnavailable','inventory.legacyReadOnly','events.empty','settings.title']){
+  for(const key of ['trainer.notPublished','trainer.sharedUnavailable','trainer.shareNeedsRepublishing','trainer.sharedMalformed','trainer.sharedReadFailed','trainer.restrictedFavorites','inventory.legacyReadOnly','events.empty','settings.title']){
     assert.match(locale,new RegExp(`'${key.replace('.','\\.')}'`));
   }
-  assert.match(source,/i18nCore\.t\('trainer\.publicUnavailable'\)/);
+  assert.match(source,/publicShareStatusMessageKey/);
+  assert.doesNotMatch(source,/private or unavailable/);
   assert.match(source,/i18nCore\.t\('inventory\.legacyReadOnly'\)/);
 });

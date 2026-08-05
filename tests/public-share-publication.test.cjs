@@ -31,6 +31,50 @@ function shareSource(username='TrainerA'){
   };
 }
 
+test('public projection status distinguishes unpublished, incomplete, empty, and available shares',()=>{
+  assert.equal(publication.publicShareProjectionStatus(null,{username:'TrainerA'}).status,'not_published');
+  assert.equal(publication.publicShareProjectionStatus({version:1,username:'TrainerA',profile:{}},{username:'TrainerA'}).status,'projection_incomplete');
+  const h=hydratedHarness();complete(h.gate,h.token);
+  const empty=publication.buildPublicShareSnapshot({gate:h.gate,token:h.token,trigger:'explicit_share',username:'TrainerA',source:{users:{TrainerA:{}},wishlist:{},dynamax:{},gmax:{},costumes:{}}}).snapshot;
+  assert.equal(publication.publicShareProjectionStatus(empty,{username:'TrainerA'}).status,'published_empty');
+  const populated=publication.buildPublicShareSnapshot({gate:h.gate,token:h.token,trigger:'explicit_share',username:'TrainerA',source:shareSource()}).snapshot;
+  assert.equal(publication.publicShareProjectionStatus(populated,{username:'TrainerA'}).status,'published');
+});
+
+test('RTDB-stripped empty categories remain valid when a recognized list is present',()=>{
+  const stored={version:1,username:'TrainerA',profile:{},lists:{wishlist:{Pikachu:'H'}}};
+  const result=publication.publicShareProjectionStatus(stored,{username:'TrainerA'});
+  assert.equal(result.status,'published');
+  assert.equal(result.entryCount,1);
+  assert.deepEqual(JSON.parse(JSON.stringify(result.snapshot.lists)),{wishlist:{Pikachu:'H'},dynamax:{},gmax:{},costumes:{}});
+});
+
+test('completeness marker distinguishes a genuinely empty share from an incomplete projection',()=>{
+  const empty={version:1,username:'TrainerA',profile:{},publishedListTypes:['wishlist','dynamax','gmax','costumes']};
+  const result=publication.publicShareProjectionStatus(empty,{username:'TrainerA'});
+  assert.equal(result.status,'published_empty');
+  assert.equal(result.entryCount,0);
+  assert.equal(publication.publicShareProjectionStatus({version:1,username:'TrainerA',profile:{}},{username:'TrainerA'}).status,'projection_incomplete');
+});
+
+test('supported legacy category aliases normalize without discarding entries',()=>{
+  const legacy={username:'TrainerA',profile:{},trades:{Pikachu:'H'},dynamax:{Bulbasaur:'M'},gigantamax:{Lapras:'L'},others:{Ditto:'H'}};
+  const result=publication.publicShareProjectionStatus(legacy,{username:'TrainerA'});
+  assert.equal(result.status,'published');
+  assert.equal(result.shape,'legacy');
+  assert.deepEqual(Object.fromEntries(Object.entries(result.snapshot.lists).map(([key,value])=>[key,Object.keys(value).length])),{wishlist:1,dynamax:1,gmax:1,costumes:1});
+});
+
+test('malformed entries return an unsupported projection instead of a false zero count',()=>{
+  const malformed={version:1,username:'TrainerA',profile:{},lists:{wishlist:{Pikachu:42}}};
+  const result=publication.publicShareProjectionStatus(malformed,{username:'TrainerA'});
+  assert.equal(result.status,'projection_unsupported');
+  assert.equal(result.rejectionCounts.invalid_entry_value,1);
+  const unknown=publication.publicShareProjectionStatus({version:1,username:'TrainerA',profile:{},lists:{wishlist:{Pikachu:'H'},secret:{Hidden:'H'}}},{username:'TrainerA'});
+  assert.equal(unknown.status,'projection_unsupported');
+  assert.equal(unknown.rejectionCounts.unsupported_category,1);
+});
+
 test('cold hydration preserves a populated existing share until every source loads',()=>{
   const h=hydratedHarness();
   const existing={version:1,lists:{wishlist:{Pikachu:{p:'H'}}}};
@@ -63,6 +107,7 @@ test('genuinely empty lists publish after their exact reads complete',()=>{
   const built=publication.buildPublicShareSnapshot({gate:h.gate,token:h.token,trigger:'explicit_share',username:'TrainerA',source:empty,now:20});
   assert.equal(built.ok,true);
   assert.deepEqual(Object.fromEntries(Object.entries(built.snapshot.lists).map(([key,value])=>[key,Object.keys(value).length])),{wishlist:0,dynamax:0,gmax:0,costumes:0});
+  assert.deepEqual(Array.from(built.snapshot.publishedListTypes),['wishlist','dynamax','gmax','costumes']);
 });
 
 test('explicit publication emits the complete allowlisted hydrated projection',()=>{
@@ -74,6 +119,16 @@ test('explicit publication emits the complete allowlisted hydrated projection',(
   assert.deepEqual(Object.keys(built.snapshot.profile).sort(),['avatarPokemon','bio','discord','friendCode','lastUpdated']);
   assert.equal(JSON.stringify(built.snapshot).includes('private@example.test'),false);
   assert.equal(JSON.stringify(built.snapshot).includes('authUid'),false);
+});
+
+test('a completely hydrated 71-entry publication is recognized without private fallback',()=>{
+  const h=hydratedHarness();complete(h.gate,h.token);
+  const entries=Object.fromEntries(Array.from({length:71},(_,index)=>[`Pokemon-${index+1}`,'H']));
+  const data={users:{TrainerA:{}},wishlist:{TrainerA:entries},dynamax:{TrainerA:{}},gmax:{TrainerA:{}},costumes:{TrainerA:{}}};
+  const built=publication.buildPublicShareSnapshot({gate:h.gate,token:h.token,trigger:'explicit_share',username:'TrainerA',source:data});
+  const parsed=publication.publicShareProjectionStatus(built.snapshot,{username:'TrainerA'});
+  assert.equal(parsed.status,'published');
+  assert.equal(parsed.entryCount,71);
 });
 
 test('owned list edits and profile updates are the only non-explicit triggers',()=>{

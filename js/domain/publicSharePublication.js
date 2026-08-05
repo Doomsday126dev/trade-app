@@ -4,6 +4,12 @@
   const REQUIRED_SOURCE_SURFACES=Object.freeze(['profile',...REQUIRED_LIST_SURFACES]);
   const ALLOWED_TRIGGERS=Object.freeze(['explicit_share','owned_list_edit','share_profile_update']);
   const TRIGGER_PRIORITY=Object.freeze(['explicit_share','share_profile_update','owned_list_edit']);
+  const LIST_ALIASES=Object.freeze({
+    wishlist:Object.freeze(['wishlist','trades']),
+    dynamax:Object.freeze(['dynamax']),
+    gmax:Object.freeze(['gmax','gigantamax']),
+    costumes:Object.freeze(['costumes','others'])
+  });
 
   function errorResult(code,message,details={}){
     return{ok:false,error:Object.freeze({code,message,...details})};
@@ -18,6 +24,78 @@
     return!!active&&!!token&&active.generation===token.generation&&sameIdentity(active,token);
   }
   function plainObject(value){return!!value&&typeof value==='object'&&!Array.isArray(value);}
+  function normalizedPublicProfile(profile){
+    return{
+      friendCode:String(profile?.friendCode||'').slice(0,32),
+      bio:String(profile?.bio||'').slice(0,120),
+      discord:String(profile?.discord||'').slice(0,40),
+      avatarPokemon:String(profile?.avatarPokemon||'').slice(0,80),
+      lastUpdated:Number(profile?.lastUpdated||0)||null
+    };
+  }
+
+  function normalizedPublishedTypes(value){
+    if(!Array.isArray(value))return[];
+    return REQUIRED_LIST_SURFACES.filter(type=>value.includes(type));
+  }
+  function projectionLists(snapshot){
+    if(plainObject(snapshot?.lists))return{container:snapshot.lists,shape:'current'};
+    const hasLegacy=Object.values(LIST_ALIASES).flat().some(key=>plainObject(snapshot?.[key]));
+    return hasLegacy?{container:snapshot,shape:'legacy'}:null;
+  }
+  function normalizeProjectionEntries(container,{strictCategories=false}={}){
+    const lists={};
+    const rejectionCounts={invalid_entry_name:0,invalid_entry_value:0,unsupported_category:0};
+    if(strictCategories){
+      const known=new Set(Object.values(LIST_ALIASES).flat());
+      rejectionCounts.unsupported_category=Object.keys(container||{}).filter(key=>!known.has(key)).length;
+    }
+    for(const type of REQUIRED_LIST_SURFACES){
+      const merged={};
+      for(const alias of [...LIST_ALIASES[type]].reverse()){
+        const entries=container?.[alias];
+        if(entries===undefined)continue;
+        if(!plainObject(entries)){rejectionCounts.invalid_entry_value++;continue;}
+        for(const [name,value] of Object.entries(entries)){
+          if(!String(name||'').trim()){rejectionCounts.invalid_entry_name++;continue;}
+          if(typeof value!=='string'&&!plainObject(value)){rejectionCounts.invalid_entry_value++;continue;}
+          merged[name]=value;
+        }
+      }
+      lists[type]=merged;
+    }
+    return{lists,rejectionCounts};
+  }
+  function publicShareProjectionStatus(snapshot,{username}={}){
+    if(snapshot===null||snapshot===undefined)return{ok:false,status:'not_published'};
+    const expectedUsername=String(username||'').trim();
+    const snapshotUsername=String(snapshot?.username||'').trim();
+    if(!plainObject(snapshot)||!snapshotUsername||
+      (expectedUsername&&snapshotUsername!==expectedUsername)||!plainObject(snapshot.profile)){
+      return{ok:false,status:'projection_unsupported',rejectionCounts:{invalid_projection:1}};
+    }
+    const source=projectionLists(snapshot);
+    const publishedTypes=normalizedPublishedTypes(snapshot.publishedListTypes);
+    if(!source&&publishedTypes.length!==REQUIRED_LIST_SURFACES.length){
+      return{ok:false,status:'projection_incomplete',rejectionCounts:{missing_list_projection:1}};
+    }
+    if(snapshot.version!==1&&source?.shape!=='legacy'){
+      return{ok:false,status:'projection_unsupported',rejectionCounts:{unsupported_version:1}};
+    }
+    const normalized=normalizeProjectionEntries(source?.container||{},{strictCategories:source?.shape==='current'});
+    const rejected=Object.values(normalized.rejectionCounts).reduce((count,value)=>count+value,0);
+    if(rejected)return{ok:false,status:'projection_unsupported',rejectionCounts:normalized.rejectionCounts};
+    const entryCount=REQUIRED_LIST_SURFACES.reduce((count,type)=>count+Object.keys(normalized.lists[type]).length,0);
+    return{
+      ok:true,status:entryCount?'published':'published_empty',entryCount,
+      shape:source?.shape||'current',rejectionCounts:normalized.rejectionCounts,
+      snapshot:{
+        version:1,username:snapshotUsername,profile:normalizedPublicProfile(snapshot.profile),
+        lists:normalized.lists,publishedListTypes:[...REQUIRED_LIST_SURFACES],
+        updatedAt:Number(snapshot.updatedAt||0)||null
+      }
+    };
+  }
 
   function createPublicSharePublicationGate(){
     let generation=0;
@@ -125,19 +203,15 @@
     return{ok:true,status:'ready',snapshot:{
       version:1,
       username:cleanUsername,
-      profile:{
-        friendCode:String(profile.friendCode||'').slice(0,32),
-        bio:String(profile.bio||'').slice(0,120),
-        discord:String(profile.discord||'').slice(0,40),
-        avatarPokemon:String(profile.avatarPokemon||'').slice(0,80),
-        lastUpdated:Number(profile.lastUpdated||0)||null
-      },
+      profile:normalizedPublicProfile(profile),
       lists,
+      publishedListTypes:[...REQUIRED_LIST_SURFACES],
       updatedAt:Number(now)||Date.now()
     }};
   }
 
   root.publicSharePublication=Object.freeze({
-    REQUIRED_LIST_SURFACES,REQUIRED_SOURCE_SURFACES,ALLOWED_TRIGGERS,createPublicSharePublicationGate,buildPublicShareSnapshot
+    REQUIRED_LIST_SURFACES,REQUIRED_SOURCE_SURFACES,ALLOWED_TRIGGERS,LIST_ALIASES,
+    publicShareProjectionStatus,createPublicSharePublicationGate,buildPublicShareSnapshot
   });
 })(window);

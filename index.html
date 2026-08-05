@@ -3694,8 +3694,8 @@ function bindAuthObserver(){
       if(_activeShareView?.username)ensureShareViewSubscriptions(_activeShareView.username);
       if(_pendingShareRequest){
         ensureShareViewSubscriptions(_pendingShareRequest.username);
-        loadShareViewData(_pendingShareRequest.username).then(ok=>{
-          if(ok&&_pendingShareRequest&&allData.users?.[_pendingShareRequest.username]){
+        loadShareViewData(_pendingShareRequest.username).then(result=>{
+          if(result.ok&&_pendingShareRequest&&allData.users?.[_pendingShareRequest.username]){
             enterShareView(_pendingShareRequest.username,_pendingShareRequest.type);
           }
         });
@@ -4270,8 +4270,10 @@ function publicShareSnapshotForUser(username,source=allData,trigger='explicit_sh
   });
 }
 function applyPublicShareSnapshot(s,snapshot){
-  const username=String(snapshot?.username||'').trim();
-  if(!username||!snapshot||typeof snapshot!=='object')return false;
+  const projection=publicSharePublicationDomain.publicShareProjectionStatus(snapshot,{username:snapshot?.username});
+  if(!projection.ok)return false;
+  snapshot=projection.snapshot;
+  const username=String(snapshot.username||'').trim();
   if(!s.users)s.users={};
   const profile=snapshot.profile&&typeof snapshot.profile==='object'?snapshot.profile:{};
   s.users[username]={
@@ -5313,18 +5315,20 @@ function runtimeDataWithSelectedTrainer(source){
   return base;
 }
 async function loadPublicShareData(username){
-  if(!db||!username)return false;
+  if(!db||!username)return{ok:false,status:'transport_error'};
   try{
     const snap=await get(ref(db,`publicShares/${username}`));
-    if(!snap.exists())return false;
+    if(!snap.exists())return{ok:false,status:'not_published'};
+    const projection=publicSharePublicationDomain.publicShareProjectionStatus(snap.val(),{username});
+    if(!projection.ok)return projection;
     const s=selectedTrainerData(username);
-    if(!applyPublicShareSnapshot(s,snap.val()))return false;
+    if(!applyPublicShareSnapshot(s,projection.snapshot))return{ok:false,status:'projection_unsupported'};
     allData=runtimeDataWithSelectedTrainer(getLocal());
     setSyncStatus('online');
-    return true;
+    return projection;
   }catch(e){
     console.warn('Could not load public share data',e);
-    return false;
+    return{ok:false,status:'transport_error'};
   }
 }
 async function loadShareViewData(username){
@@ -5343,15 +5347,30 @@ function renderUnavailableShareView(username,message){
   const out=document.getElementById('share-list-out');
   if(out)out.innerHTML=emptyHtml(message,i18nCore.t('trainer.publicHint'),'🔗');
 }
+function publicShareStatusMessageKey(status){
+  if(status==='not_published')return'trainer.notPublished';
+  if(status==='projection_incomplete')return'trainer.shareNeedsRepublishing';
+  if(status==='projection_unsupported')return'trainer.sharedMalformed';
+  if(status==='transport_error')return'trainer.sharedReadFailed';
+  return'trainer.sharedUnavailable';
+}
 function clearShareViewSubscriptions(){
   managedListenerLifecycle.clearSelectedTrainer('share_closed');
   clearSelectedTrainerData();
   allData=getLocal();
 }
 function onPublicShareSnapshot(username,snap){
-  if(!snap.exists())return;
+  const projection=publicSharePublicationDomain.publicShareProjectionStatus(snap.exists()?snap.val():null,{username});
+  if(!projection.ok){
+    selectedTrainerRuntime={username,publicData:null};
+    allData=runtimeDataWithSelectedTrainer(getLocal());
+    if(document.getElementById('share-view')?.classList.contains('active')&&_activeShareView?.username===username){
+      renderUnavailableShareView(username,i18nCore.t(publicShareStatusMessageKey(projection.status)));
+    }
+    return;
+  }
   const s=selectedTrainerData(username);
-  if(!applyPublicShareSnapshot(s,snap.val()))return;
+  if(!applyPublicShareSnapshot(s,projection.snapshot))return;
   allData=runtimeDataWithSelectedTrainer(getLocal());
   setSyncStatus('online');
   if(document.getElementById('share-view')?.classList.contains('active')&&_activeShareView?.username===username){
@@ -5369,6 +5388,9 @@ function ensureShareViewSubscriptions(username){
     onError:e=>{
       console.warn('Public share subscription failed',e);
       setSyncStatus('offline');
+      if(document.getElementById('share-view')?.classList.contains('active')&&_activeShareView?.username===username){
+        renderUnavailableShareView(username,i18nCore.t('trainer.sharedReadFailed'));
+      }
     }
   });
   managedListenerLifecycle.clearAuthenticatedShareListeners();
@@ -5379,12 +5401,12 @@ async function openShareViewFromRequest(shareReq){
   _pendingShareRequest=shareReq;
   const publicLoaded=await loadPublicShareData(shareReq.username);
   ensureShareViewSubscriptions(shareReq.username);
-  if(publicLoaded&&allData.users?.[shareReq.username]){
+  if(publicLoaded.ok&&allData.users?.[shareReq.username]){
     if(cur)rememberTrainerOpened(shareReq.username);
     enterShareView(shareReq.username,shareReq.type);
     return;
   }
-  renderUnavailableShareView(shareReq.username,i18nCore.t('trainer.publicUnavailable'));
+  renderUnavailableShareView(shareReq.username,i18nCore.t(publicShareStatusMessageKey(publicLoaded.status)));
 }
 // Per-user queue of "someone accepted a trade where you'd give away N of X".
 // Only the target user can read/write their own bucket (see security rules),
@@ -6118,8 +6140,8 @@ async function openTrainerPublicShare(value){
   if(status)status.textContent=i18nCore.t('data.loading',{resource:i18nCore.t('trainer.findTitle')});
   const loaded=await loadPublicShareData(req.username);
   ensureShareViewSubscriptions(req.username);
-  if(loaded&&allData.users?.[req.username]){rememberTrainerOpened(req.username);enterShareView(req.username,req.type);return;}
-  if(status)status.textContent=i18nCore.t('trainer.publicUnavailable');
+  if(loaded.ok&&allData.users?.[req.username]){rememberTrainerOpened(req.username);enterShareView(req.username,req.type);return;}
+  if(status)status.textContent=i18nCore.t(publicShareStatusMessageKey(loaded.status));
 }
 function renderSettings(){renderInterimProductLabels();}
 function showApp(){
@@ -13399,7 +13421,7 @@ const TOUR_STEPS=[
   {title:'👋 Welcome to PoGo Trades',body:`<p>Build your trade list, find a trainer, and compare your published lists. Let's take a quick look around.</p>`},
   {title:'📋 My List',body:`<p>This is your wishlist. Tap <strong>+ Add</strong>, type a Pokémon, set priority and flags.</p><ul><li>Add a quick note for gender or costume — it gets tagged onto your in-game search string</li><li>Drag rows to reorder, or bulk-select to update many at once</li><li>Hit ✨ for shiny-only, ⚡ for Lucky Dex, XXL/XXS for size hunting</li></ul><p>Your list powers search strings and comparisons with trainers whose published lists you open.</p>`,tab:'mylist'},
   {title:'📤 Search strings',body:`<p>Auto-generated Pokémon GO search strings live at the bottom of My List, split by priority and flag. Copy → paste into the in-game search bar.</p><p>They update automatically whenever you change My List — no manual maintenance needed.</p>`,tab:'mylist'},
-  {title:'🔍 Find Trainer',body:`<p>Search by trainer name, open a published list, and compare it with your own list. Favorites and recent trainers make repeat visits faster.</p><p>Only the selected trainer's published share is loaded; private or unavailable lists stay private.</p>`,tab:'find'},
+  {title:'🔍 Find Trainer',body:`<p>Search by trainer name, open a published list, and compare it with your own list. Favorites and recent trainers make repeat visits faster.</p><p>Only the selected trainer's published share is loaded; private trainer records are never used as fallback.</p>`,tab:'find'},
   {title:'📅 Events',body:`<p>Browse upcoming Pokémon GO events by type and timing. Event details open from their source page.</p>`,tab:'schedule'},
   {title:'🎒 Legacy Inventory',body:`<p>Your existing Inventory is preserved as a private, read-only archive. You can review it and export a CSV, but new Inventory editing is retired.</p>`,tab:'have'},
   {title:'🚀 First steps',body:`<p>Recommended order for a new account:</p><ol style="padding-left:22px;margin:6px 0 10px"><li>Build <strong>My List</strong> with priorities, flags, and notes</li><li>Copy your Pokémon GO <strong>search strings</strong></li><li>Use <strong>Find Trainer</strong> to open and compare a published list</li><li>Review profile and sharing choices in <strong>Settings</strong></li></ol><p>Press <kbd>?</kbd> any time for keyboard shortcuts, or <kbd>n</kbd> to jump straight to adding a Pokémon.</p>`}
