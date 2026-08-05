@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "inputs": {
+    "APP_SLUG": "<APP_SLUG>",
+    "RANDOM_SUFFIX": "<RANDOM_SUFFIX>",
+    "STAGING_PROJECT_ID": "<STAGING_PROJECT_ID>",
+    "BILLING_ACCOUNT": "<BILLING_ACCOUNT>",
+    "BILLING_OPERATOR": "<BILLING_OPERATOR>",
+    "STAGING_WEB_APP_NAME": "<STAGING_WEB_APP_NAME>",
+    "RUNTIME_SERVICE_ACCOUNT": "<RUNTIME_SERVICE_ACCOUNT>",
+    "DEPLOYMENT_SERVICE_ACCOUNT": "<DEPLOYMENT_SERVICE_ACCOUNT>",
+    "RULES_OPERATOR_IDENTITY": "<RULES_OPERATOR_IDENTITY>",
+    "HUMAN_OPERATOR": "<HUMAN_OPERATOR>",
+    "BILLING_ALERT_RECIPIENT": "<BILLING_ALERT_RECIPIENT>",
+    "BILLING_ESCALATION_TARGET": "<BILLING_ESCALATION_TARGET>",
+    "RESOURCE_LABELS": {
+      "environment": "staging",
+      "data_classification": "synthetic",
+      "managed_by": "manual-reviewed",
+      "cost_center": "staging",
+      "lifecycle": "temporary"
+    },
+    "RESOURCE_CREATION_WINDOW": {
+      "startAt": "<ISO_8601_START>",
+      "expiresAt": "<ISO_8601_EXPIRATION>"
+    },
+    "SMOKE_AND_ROLLBACK_WINDOW": {
+      "startAt": "<ISO_8601_START>",
+      "expiresAt": "<ISO_8601_EXPIRATION>"
+    },
+    "TEARDOWN_OWNER": "<TEARDOWN_OWNER>",
+    "TEARDOWN_OWNER_ACKNOWLEDGED": false
+  },
+  "approvals": {
+    "resourceCreation": { "approvalStatus": "undecided", "approvedBy": "", "approvedAt": "" },
+    "additiveRulesDeployment": { "approvalStatus": "undecided", "approvedBy": "", "approvedAt": "" },
+    "functionsDeployment": { "approvalStatus": "undecided", "approvedBy": "", "approvedAt": "" },
+    "appCheckRegistration": { "approvalStatus": "undecided", "approvedBy": "", "approvedAt": "" },
+    "syntheticFixtureCreation": { "approvalStatus": "undecided", "approvedBy": "", "approvedAt": "" },
+    "shareVisibilityWriteGate": { "approvalStatus": "undecided", "approvedBy": "", "approvedAt": "" },
+    "trainerPreferencesWriteGate": { "approvalStatus": "undecided", "approvedBy": "", "approvedAt": "" },
+    "syntheticCanary": { "approvalStatus": "undecided", "approvedBy": "", "approvedAt": "" },
+    "appCheckEnforcement": { "approvalStatus": "undecided", "approvedBy": "", "approvedAt": "" },
+    "stagingClientWiring": { "approvalStatus": "undecided", "approvedBy": "", "approvedAt": "" },
+    "productionAction": { "approvalStatus": "undecided", "approvedBy": "", "approvedAt": "" }
+  }
+}

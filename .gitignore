@@ -11,6 +11,7 @@ functions/staging/staging-creation.approval.local.json
 functions/.firebase/
 functions/emulator-data/
 functions/*-debug.log
+functions/.local/
 .local/trainer-name-audits/
 .local/uid-handle-audits/
 .local/admin-tools/

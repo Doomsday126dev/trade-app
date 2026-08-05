@@ -33,6 +33,8 @@
     "check:staging-creation-approval": "node --test functions/test/staging-creation-approval.test.cjs && node functions/scripts/check-staging-creation-approval.cjs",
     "check:staging-recommendations": "node --test functions/test/staging-recommendations.test.cjs && node functions/scripts/check-staging-recommendations.cjs",
     "check:staging-decision-summary": "node --test functions/test/staging-decision-summary.test.cjs && node functions/scripts/check-staging-decision-summary.cjs",
+    "check:staging-resource-preflight": "node --test functions/test/staging-resource-preflight.test.cjs && node functions/scripts/check-staging-resource-preflight.cjs",
+    "staging:resource-preflight": "node functions/scripts/staging-resource-preflight.cjs",
     "check:share-activation-readiness": "node scripts/check-share-activation-readiness.js",
     "check:share-visibility-contract": "node scripts/check-share-visibility-contract.js",
     "check:share-visibility-rules": "bash scripts/check-share-visibility-rules.sh",
