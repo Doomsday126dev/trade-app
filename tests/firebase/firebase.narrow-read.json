@@ -1,0 +1,9 @@
+{
+  "database": { "rules": "database.rules.narrow-read.json" },
+  "emulators": {
+    "auth": { "port": 9399 },
+    "database": { "port": 9300 },
+    "ui": { "enabled": false },
+    "singleProjectMode": true
+  }
+}

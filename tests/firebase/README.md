@@ -77,3 +77,25 @@ with `npm run check:share-visibility` and its isolated emulator matrix with
 **Do not deploy this fixture.** Its root read is denied and it intentionally
 does not provide every temporary production-client allowance. No visibility,
 grant, share, or compatibility record may be seeded from this candidate.
+
+## Emulator-only narrow production-read candidate
+
+`database.rules.narrow-read.json` removes the broad authenticated root read in
+an isolated candidate while preserving the current trainer-first client's 34
+registered read surfaces. Its machine-readable mapping is
+`narrow-read-surface-map.json`; `npm run check:narrow-read-contract` fails when
+an active registry surface lacks a rule/test mapping, an undeclared broad rule
+appears, or a direct Firebase read is unregistered.
+
+Run the isolated emulator matrix with:
+
+```sh
+npm run check:narrow-read-rules
+```
+
+The suite uses only `demo-pogo-narrow-read`. It tests anonymous public reads,
+exact owner reads, protected Admin collections, parent/query denial, identity
+fail-closed behavior, memberships, pending decrements, inactive future paths,
+and retained writes. **Do not deploy this fixture from the repository.** The
+rules cutover requires a separate Console publication review and the private
+rollback artifact documented in `docs/NARROW-READ-RULES-PLAN.md`.

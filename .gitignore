@@ -8,3 +8,4 @@ firebase-debug*.log
 .local/uid-handle-audits/
 .local/admin-tools/
 .local/admin-credentials/
+.local/firebase-rule-backups/

@@ -1042,3 +1042,18 @@ production path until owner-matched import and multi-device convergence pass.
 
 No implementation should start until the identity, visibility, security, and
 migration decisions relevant to that commit have explicit approval.
+
+## Narrow-read cutover candidate
+
+The emulator-only narrow-read candidate is specified in
+`docs/NARROW-READ-RULES-PLAN.md`. It replaces the authenticated root read with
+exact owner paths, exact public shares, a public lightweight login directory,
+and thirteen protected Admin-only collection reads. It does not enable or seed
+the disabled global identity, trainer-share visibility, Approved Viewer, or
+synced-preference contracts.
+
+This candidate is the security gate before any production global-identity
+records may be written. It must pass its full emulator matrix in normal
+Terminal, receive a separate rules publication approval, and demonstrate
+private-path isolation in production. Production seeding remains forbidden
+until that cutover and validation are complete.

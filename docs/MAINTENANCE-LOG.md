@@ -2651,3 +2651,17 @@ Approved production writes were limited to `publicShares/ScoopskiPotat0` for exp
 ## 2026-08-05 - Codex - Emulator-only trainer-share visibility candidate
 
 Added a disabled, unseeded architecture and emulator contract for UID-owned trainer shares with rules-enforced `public`, `approved_viewers`, and `private` modes. Personal Favorite Trainers remain private bookmarks; separate owner-managed Approved Viewer grants control restricted-share access. The candidate also defines private cross-device Favorite Trainers, normalized custom tags, 30 bounded recent slots, and monotonic public-share seen history behind a separate disabled preference gate. The narrow fixture denies root reads, blocks parent enumeration and private-list fallback, reserves future group paths without enabling them, and gates all candidate writes. Read-only unwired domain contracts preserve the current production paths while disabled. No production client wiring, Firebase rules, data, migration, identity mapping, or user-visible behavior changed; the authenticated production root read remains the deployment blocker.
+
+## 2026-08-05 - Codex - Narrow-read rules candidate (emulator-only)
+
+Prepared an undeployed RTDB rules candidate that removes the authenticated root
+read and maps all 34 registered client read surfaces to explicit public, exact
+owner, protected Admin, or denied access. Existing write expressions remain
+unchanged; retired ordinary-user collection reads and inactive future identity,
+visibility, preference, and group paths remain denied. Captured the current
+hardened rules as a private mode-0600 rollback artifact with SHA-256
+`bc54eec92875d1d544cc59b92c05b9dec2308340577bd66be22a032efa491926`.
+The candidate SHA-256 is
+`e0632a98ed106117f03e61da0446ef4b2c2e6ed02ea8c6f1c498a0e7edcb17bf`.
+No rules, data, identity records, feature flags, or production behavior changed.
+Normal-Terminal emulator validation remains required before local commit review.
