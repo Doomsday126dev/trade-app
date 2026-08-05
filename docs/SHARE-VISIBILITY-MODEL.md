@@ -283,9 +283,17 @@ the owner UID and reads only `shareVisibility/{ownerUid}/mode` when signed in
 and `trainerShares/{ownerUid}`. It exposes no write, grant, migration, or
 private-list method.
 
-`trainerPreferences.js` is likewise unwired and defaults synced preferences to
-off. It centralizes tag normalization, bounded recent merging, monotonic seen
-updates, and UID-partition migration checks without any Firebase access.
+`trainerPreferences.js` is loaded as an inactive domain candidate and defaults
+synced preferences to off. It centralizes private Favorite merge semantics,
+tag normalization, fixed-slot Recents convergence, monotonic seen updates,
+public-only change snapshots, and UID-partition migration checks without any
+Firebase access. The repository exposes writes only when both its feature and
+server-write options are explicitly true; the production bridge passes neither.
+
+The hidden UI view models describe a wrapping mobile sheet and desktop dialog,
+44-pixel minimum targets, keyboard navigation, focus trapping, screen-reader
+labels, and non-hover actions. They cannot save while disabled and production
+continues to describe Favorites, Recents, and history as device-local.
 
 Client presentation states are stable identifiers:
 
@@ -383,6 +391,7 @@ behind the trusted-service boundary.
 7. Enable UID share reads for a controlled cohort while retaining legacy
    public-link compatibility.
 8. Enable synced preferences separately after multi-device convergence smoke.
+9. Remove compatibility only after stable links have migrated.
 
 Rollback republishes the current narrow-read artifact. Any UID-based records
 created in later approved stages remain inert while both client flags and write
@@ -400,7 +409,6 @@ normalized handle claims/renames, canonical normalized tag claims when strict
 uniqueness is required, and strict history count/fingerprint reconciliation.
 Future group invitation or role workflows also require a separately reviewed
 trusted multi-party authority boundary.
-9. Remove compatibility only after stable links have migrated.
 
 Rollback before rules deployment is deletion/revert of these inactive files.
 After a future staged activation, turn the client flag off first, restore the

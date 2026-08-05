@@ -26,6 +26,17 @@
     return result(false,'restricted');
   }
 
+  function visibilityPresentation(input={}){
+    const state=accessState(input);
+    const statusKeys={
+      published_public:'share.visibilityPublic',published_authorized:'share.visibilityApproved',private_owner:'share.visibilityPrivateOwner',
+      approved_viewers_restricted:'share.visibilityRestricted',private:'share.visibilityPrivate',restricted:'share.visibilityRestricted',
+      not_published:'share.visibilityUnpublished',projection_incomplete:'share.visibilityIncomplete',projection_unsupported:'share.visibilityUnsupported',transport_error:'share.visibilityReadError'
+    };
+    const metadataVisible=state.ok===true;
+    return Object.freeze({ok:state.ok,status:state.status,statusKey:statusKeys[state.status]||'share.visibilityUnavailable',metadataVisible,showEntryCount:metadataVisible,showUpdatedAt:metadataVisible,showFingerprint:metadataVisible});
+  }
+
   function readPlan({enabled=false,legacyCompat=true,ownerUid='',username='',authenticated=false}={}){
     if(!enabled){
       return legacyCompat&&username
@@ -50,9 +61,23 @@
     return result(projectionStatus==='published'||projectionStatus==='published_empty',statusMap[projectionStatus]||'unresolved',{seedEligible:false});
   }
 
+  function approvedViewerPlan({enabled=false,writesEnabled=false,activeOwnerUid='',targetViewerUid='',currentGrant=false,action='grant'}={}){
+    const ownerUid=String(activeOwnerUid||'').trim(),viewerUid=String(targetViewerUid||'').trim();
+    if(!ownerUid||!viewerUid)return result(false,'identity_unresolved',{code:'share-visibility/identity-required',executable:false});
+    if(ownerUid===viewerUid)return result(false,'self_grant_denied',{code:'share-visibility/self-grant-denied',executable:false});
+    if(!['grant','revoke'].includes(action))return result(false,'action_invalid',{code:'share-visibility/action-invalid',executable:false});
+    const alreadyApplied=(action==='grant'&&currentGrant===true)||(action==='revoke'&&currentGrant!==true);
+    return Object.freeze({ok:true,status:alreadyApplied?'no_change':(enabled&&writesEnabled?'ready':'disabled_candidate'),action,ownerUid,viewerUid,executable:enabled===true&&writesEnabled===true&&!alreadyApplied,preferencePaths:Object.freeze([]),favoriteMutation:false});
+  }
+
+  function visibilitySettingsModel({enabled=false,currentMode='public'}={}){
+    const mode=validMode(currentMode)?currentMode:'public';
+    return Object.freeze({status:enabled?'ready':'disabled_candidate',interactive:enabled===true,currentMode:mode,options:Object.freeze(MODES.map(value=>Object.freeze({value,labelKey:`share.mode.${value}`}))),approvedViewerLabelKey:'share.approvedViewersTitle',anonymousHelpKey:`share.anonymous.${mode}`});
+  }
+
   root.shareVisibility=Object.freeze({
     SHARE_VISIBILITY_MODEL_ENABLED:false,
     LEGACY_PUBLIC_SHARE_COMPAT_ENABLED:true,
-    MODES,CLIENT_STATES,MIGRATION_CLASSES,validMode,accessState,readPlan,classifyMigrationRecord
+    MODES,CLIENT_STATES,MIGRATION_CLASSES,validMode,accessState,visibilityPresentation,readPlan,classifyMigrationRecord,approvedViewerPlan,visibilitySettingsModel
   });
 })(window);

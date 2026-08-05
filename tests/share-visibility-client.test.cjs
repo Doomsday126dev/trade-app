@@ -59,6 +59,14 @@ test('public, approved, private, and owner access states remain distinct without
   assert.equal('entryCount' in accessState({mode:'private'}),false);
 });
 
+test('unauthorized presentations expose no share metadata',()=>{
+  const {visibilityPresentation}=load().PogoDomain.shareVisibility;
+  for(const input of [{mode:'private'},{mode:'approved_viewers',authenticated:true,approved:false},{mode:'public',projectionStatus:'projection_incomplete'}]){
+    const state=visibilityPresentation(input);assert.equal(state.metadataVisible,false);assert.equal(state.showEntryCount,false);assert.equal(state.showUpdatedAt,false);assert.equal(state.showFingerprint,false);
+  }
+  assert.equal(visibilityPresentation({mode:'public'}).metadataVisible,true);
+});
+
 test('projection and transport failures map to explicit client states',()=>{
   const {accessState}=load().PogoDomain.shareVisibility;
   for(const status of ['not_published','projection_incomplete','projection_unsupported','transport_error']){
@@ -107,4 +115,37 @@ test('repository exposes read-only exact paths with no write capability',async()
   assert.deepEqual(calls,[['read','shareDirectory/trainer'],['read','shareVisibility/uid-a/mode'],['read','trainerShares/uid-a'],['listen','trainerShares/uid-a'],['read','publicShares/Trainer']]);
   assert.equal('write' in repo,false);
   assert.equal('grant' in repo,false);
+});
+
+test('Approved Viewer plans are owner controlled, idempotent, and independent from Favorites',()=>{
+  const {approvedViewerPlan}=load().PogoDomain.shareVisibility;
+  assert.equal(approvedViewerPlan({activeOwnerUid:'a',targetViewerUid:'a'}).status,'self_grant_denied');
+  const disabled=approvedViewerPlan({activeOwnerUid:'a',targetViewerUid:'b',action:'grant'});assert.equal(disabled.status,'disabled_candidate');assert.equal(disabled.executable,false);assert.equal(disabled.favoriteMutation,false);assert.deepEqual(Array.from(disabled.preferencePaths),[]);
+  assert.equal(approvedViewerPlan({enabled:true,writesEnabled:true,activeOwnerUid:'a',targetViewerUid:'b',currentGrant:true,action:'grant'}).status,'no_change');
+  assert.equal(approvedViewerPlan({enabled:true,writesEnabled:true,activeOwnerUid:'a',targetViewerUid:'b',currentGrant:true,action:'revoke'}).executable,true);
+});
+
+test('visibility settings remain hidden-capable and language neutral',()=>{
+  const {visibilitySettingsModel}=load().PogoDomain.shareVisibility,model=visibilitySettingsModel({enabled:false,currentMode:'approved_viewers'});
+  assert.equal(model.status,'disabled_candidate');assert.equal(model.interactive,false);assert.equal(model.currentMode,'approved_viewers');assert.deepEqual(Array.from(model.options,x=>x.value),['public','approved_viewers','private']);
+  assert.ok(model.options.every(option=>option.labelKey.startsWith('share.mode.')));
+});
+
+test('read registry preserves 39 surfaces and rejects disabled surface activation',()=>{
+  const window={};vm.runInNewContext(readFileSync(path.join(__dirname,'..','js/data/firebaseReadRegistry.js'),'utf8'),{window});const registry=window.PogoData.firebaseReadRegistry;
+  assert.equal(registry.READ_SURFACES.length,39);assert.equal(registry.READ_SURFACES.filter(item=>item.status==='candidate_inactive').length,9);
+  assert.equal(registry.validateFeatureGateContract({}).ok,true);
+  assert.equal(registry.validateFeatureGateContract({activeSurfaceIds:['candidate_trainer_share_read']}).violations[0],'firebase-reads/share-visibility-active-while-disabled');
+  assert.equal(registry.validateFeatureGateContract({activeSurfaceIds:['candidate_preference_tags_live']}).violations[0],'firebase-reads/preferences-active-while-disabled');
+  assert.equal(registry.validateFeatureGateContract({shareWritesEnabled:true}).ok,false);assert.equal(registry.validateFeatureGateContract({preferenceWritesEnabled:true}).ok,false);
+});
+
+test('disabled share controls remain hidden and expose no grant action',()=>{
+  const window=load();vm.runInNewContext(readFileSync(path.join(__dirname,'..','js/ui/trainerTagPanel.js'),'utf8'),{window});const model=window.PogoUI.trainerTagPanel.shareControlsModel({shareDomain:window.PogoDomain.shareVisibility,currentMode:'private',width:375});
+  assert.equal(model.hidden,true);assert.equal(model.interactive,false);assert.equal(model.grantActionEnabled,false);assert.equal(model.revokeActionEnabled,false);assert.equal(model.layout.mode,'mobile_sheet');
+});
+
+test('translation catalog covers visibility, Approved Viewer, sync, migration, note, and unread states',()=>{
+  const locale=readFileSync(path.join(__dirname,'..','js/i18n/locales/en.js'),'utf8');
+  for(const key of ['share.mode.public','share.approvedViewersTitle','trainer.syncUnavailable','trainer.migrationReady','trainer.privateNoteAction','trainer.unreadChanges','share.visibilityRestricted'])assert.ok(locale.includes(`'${key}'`),key);
 });

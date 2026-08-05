@@ -80,5 +80,19 @@
     broadSubscribePaths:Object.freeze(['authIndex','communities','communityRequests','costumes','dynamax','gmax','have','loginDirectory','offers','requests','trades','userCommunities','users','wishlist'])
   });
 
-  root.firebaseReadRegistry=Object.freeze({READ_SURFACES,SOURCE_CALL_CONTRACT});
+  const CANDIDATE_SURFACE_GROUPS=Object.freeze({
+    shareVisibility:Object.freeze(['candidate_share_directory_read','candidate_share_mode_read','candidate_trainer_share_read','candidate_trainer_share_live']),
+    syncedPreferences:Object.freeze(['candidate_preference_favorites_live','candidate_preference_tags_live','candidate_preference_tag_labels_live','candidate_preference_recents_live','candidate_preference_history_live'])
+  });
+  function validateFeatureGateContract({shareVisibilityEnabled=false,syncedPreferencesEnabled=false,shareWritesEnabled=false,preferenceWritesEnabled=false,activeSurfaceIds=[]}={}){
+    const active=new Set(activeSurfaceIds);
+    const violations=[];
+    if(!shareVisibilityEnabled&&CANDIDATE_SURFACE_GROUPS.shareVisibility.some(id=>active.has(id)))violations.push('firebase-reads/share-visibility-active-while-disabled');
+    if(!syncedPreferencesEnabled&&CANDIDATE_SURFACE_GROUPS.syncedPreferences.some(id=>active.has(id)))violations.push('firebase-reads/preferences-active-while-disabled');
+    if(shareWritesEnabled&&!shareVisibilityEnabled)violations.push('firebase-reads/share-write-gate-without-feature');
+    if(preferenceWritesEnabled&&!syncedPreferencesEnabled)violations.push('firebase-reads/preference-write-gate-without-feature');
+    return Object.freeze({ok:violations.length===0,violations:Object.freeze(violations)});
+  }
+
+  root.firebaseReadRegistry=Object.freeze({READ_SURFACES,SOURCE_CALL_CONTRACT,CANDIDATE_SURFACE_GROUPS,validateFeatureGateContract});
 })(window);
