@@ -84,6 +84,7 @@
     'settings.shortcutsAction':'Keyboard shortcuts',
     'settings.logoutAction':'Sign out',
     'admin.loading':'Loading owner maintenance data…',
+    'admin.establishedResetUnavailable':'Established accounts require the identity-preserving secure reset process. The legacy Reset action is disabled.',
     'storage.pendingChangesDiscarded':'Pending offline changes were discarded because their account ownership could not be verified.',
     'storage.cacheReset':'Cached session data was reset because its account ownership could not be verified.',
     'storage.sessionOwnershipMismatch':'This saved session does not match the authenticated account. Sign out and sign in again.',

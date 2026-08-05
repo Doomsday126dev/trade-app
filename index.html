@@ -2097,6 +2097,7 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
       </div>
       <button class="bsave" onclick="addUser()" style="margin-top:10px">Add member</button>
     </div>
+    <div class="login-audit" id="admin-reset-safety-note"></div>
     <div class="sec" style="margin-top:0">All members</div>
     <div style="overflow-x:auto;border:1px solid var(--border);border-radius:var(--r)">
       <table class="utbl"><thead><tr><th>Trainer</th><th>Activity</th><th>Listed</th><th>Role</th><th>PIN</th></tr></thead>
@@ -8370,6 +8371,8 @@ function renderAdmin(){
   const adminInput=document.getElementById('nu-admin');
   if(adminWrap)adminWrap.style.display=iAmOwner?'inline-flex':'none';
   if(adminInput&&!iAmOwner)adminInput.checked=false;
+  const resetSafetyNote=document.getElementById('admin-reset-safety-note');
+  if(resetSafetyNote)resetSafetyNote.textContent=i18nCore.t('admin.establishedResetUnavailable');
   const users=Object.entries(allData.users||{}).sort((a,b)=>
     lastLoginTime(b[0],b[1])-lastLoginTime(a[0],a[1])||alphaCompare(a[0],b[0])
   );
@@ -8387,6 +8390,7 @@ function renderAdmin(){
     const canPromote=iAmOwner&&u!==cur&&u!==OWNER;
     const isOwnerRow=u===OWNER||d.isOwner;
     const isAdmin=d.isAdmin&&!isOwnerRow;
+    const establishedResetBlocked=!!d.authUid;
     // Only owner can reset admin PINs (fix: admin reset restriction)
     const canReset=iAmOwner||(cur!==OWNER&&!isAdmin&&!isOwnerRow);
     const repairTitle=canReset
@@ -8417,7 +8421,7 @@ function renderAdmin(){
           :`<span style="color:var(--muted);font-size:12px">Member</span>${canPromote?`<button class="rpin" style="margin-left:6px" onclick="toggleAdmin('${u}',true)">→ Admin</button>`:''}`}
       </td>
       <td>
-        <button class="rpin" onclick="openReset('${u}')" ${canReset?'':' disabled title="Only owner can reset admin PINs"'}>Reset</button>
+        <button class="rpin" onclick="openReset('${u}')" ${canReset&&!establishedResetBlocked?'':` disabled title="${escAttr(establishedResetBlocked?i18nCore.t('admin.establishedResetUnavailable'):'Only owner can reset admin PINs')}"`}>Reset</button>
         <button class="rpin" onclick="repairAccount('${u}')" ${canReset?'':'disabled'} title="${escAttr(repairTitle)}">Repair</button>
       </td>
     </tr>`;
@@ -8481,17 +8485,29 @@ async function addUser(){
     toast('⚠️ Could not add member in Firebase: '+(e.code||e.message||'permission denied'),5000);
   }
 }
+function establishedAccountResetBlocked(username){
+  return!!allData.users?.[username]?.authUid;
+}
+function establishedAccountResetMessage(){
+  return i18nCore.t('admin.establishedResetUnavailable');
+}
 function openReset(u){
   // Check permission
   const iAmOwner=allData.users?.[cur]?.isOwner||cur===OWNER;
   const targetIsAdmin=allData.users?.[u]?.isAdmin||u===OWNER;
   if(!iAmOwner&&targetIsAdmin){toast('⚠️ Only the owner can reset admin PINs');return;}
+  if(establishedAccountResetBlocked(u)){toast(establishedAccountResetMessage(),6000);return;}
   rpinTarget=u;
   document.getElementById('rpin-target').textContent=u;
   document.getElementById('rpin-val').value='';
   openModal('rpin-modal');
 }
 async function confirmReset(){
+  if(!rpinTarget||establishedAccountResetBlocked(rpinTarget)){
+    closeModal('rpin-modal');rpinTarget=null;
+    toast(establishedAccountResetMessage(),6000);
+    return;
+  }
   const pin=document.getElementById('rpin-val').value.trim();
   if(!isSixDigitPin(pin)){toast('⚠️ PIN must be exactly 6 digits');return;}
   const prev=allData.users?.[rpinTarget]||{};

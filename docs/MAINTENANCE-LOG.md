@@ -1,5 +1,9 @@
 # Maintenance Log
 
+## 2026-08-04 — Established-account Reset safety candidate
+
+Disabled the legacy Admin Reset action for users with an existing `authUid` and added matching function-level guards before its fresh-account provisioning path. Admin now shows a translated explanation directing established accounts to the separately reviewed identity-preserving secure reset process. This client safety change does not reset a PIN, create an Auth account, rotate identity fields, or write production data.
+
 ## 2026-08-04 - Preserve public shares during exact-read login
 
 - Prevent cold exact-read login and routine profile persistence from rebuilding `publicShares/{username}` before the profile and all four publishable owned-list reads finish successfully.
