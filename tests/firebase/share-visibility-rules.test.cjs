@@ -35,7 +35,7 @@ async function seed(){
   await succeeds(db('PUT','',{
     admins:{[IDS.admin]:true},
     shareVisibilityConfig:{writesEnabled:false,legacyCompatEnabled:true},
-    trainerPreferenceConfig:{writesEnabled:false},
+    trainerPreferencesConfig:{writesEnabled:false},
     accounts:{[IDS.owner]:{trainerName:'OwnerTrainer',normalizedTrainerName:'ownertrainer'}},
     loginDirectory:{OwnerTrainer:{authReady:true}},
     users:{OwnerTrainer:{authUid:IDS.owner,isOwner:true,isAdmin:true}},
@@ -49,7 +49,7 @@ async function seed(){
   },'emulator-owner'),'seed fixture');
 }
 async function enableWrites(){await succeeds(db('PUT','shareVisibilityConfig/writesEnabled',true,TOKENS.admin),'admin enables emulator-only writes');}
-async function enablePreferences(){await succeeds(db('PUT','trainerPreferenceConfig/writesEnabled',true,TOKENS.admin),'admin enables emulator-only preference writes');}
+async function enablePreferences(){await succeeds(db('PUT','trainerPreferencesConfig/writesEnabled',true,TOKENS.admin),'admin enables emulator-only preference writes');}
 
 before(async()=>{for(const name of ['owner','approved','other','admin'])await createUser(name);});
 beforeEach(async()=>{await succeeds(db('PUT','',null,'emulator-owner'),'clear fixture');await seed();});
@@ -135,17 +135,17 @@ test('private share leaks no projection or list metadata',async()=>{
   assert.equal(JSON.parse(mode.body),'private');
 });
 
-test('legacy public link works only while mapped owner mode is public',async()=>{
+test('legacy public link compatibility remains unchanged across future visibility modes',async()=>{
   await succeeds(db('GET','publicShares/OwnerTrainer',undefined),'legacy public link');
   await succeeds(db('PUT',`shareVisibility/${IDS.owner}/mode`,'approved_viewers','emulator-owner'),'restrict link');
-  await fails(db('GET','publicShares/OwnerTrainer',undefined),'anonymous legacy approved-viewer link');
+  await succeeds(db('GET','publicShares/OwnerTrainer',undefined),'anonymous legacy link remains compatible');
   await succeeds(db('PUT',`shareVisibility/${IDS.owner}/mode`,'public','emulator-owner'),'restore public mode');
   await succeeds(db('GET','publicShares/OwnerTrainer',undefined),'restored legacy link');
 });
 
-test('legacy compatibility does not expose unmapped or restricted records',async()=>{
+test('legacy compatibility preserves exact links while parent enumeration stays denied',async()=>{
   await succeeds(db('PUT','publicShares/Unmapped',{username:'Unmapped'},'emulator-owner'),'seed unmapped legacy record');
-  await fails(db('GET','publicShares/Unmapped',undefined),'unmapped legacy record');
+  await succeeds(db('GET','publicShares/Unmapped',undefined),'unmapped exact legacy record');
   await fails(db('GET','publicShares',undefined),'legacy parent enumeration');
 });
 
@@ -160,6 +160,23 @@ test('writes are denied while the feature gate is false',async()=>{
   await fails(db('PUT',`shareVisibility/${IDS.owner}`,{mode:'private',updatedAt:200},TOKENS.owner),'disabled visibility write');
   await fails(db('PUT',`shareAccess/${IDS.owner}/${IDS.other}`,true,TOKENS.owner),'disabled grant write');
   await fails(db('PUT',`trainerShares/${IDS.owner}`,projection(),TOKENS.owner),'disabled projection write');
+});
+
+test('disabled gates prevent ordinary account directory compatibility and preference seeding',async()=>{
+  await fails(db('PUT',`accounts/${IDS.other}`,{trainerName:'OtherTrainer',normalizedTrainerName:'othertrainer'},TOKENS.other),'disabled account seed');
+  await fails(db('PUT','shareDirectory/othertrainer',{ownerUid:IDS.other,trainerName:'OtherTrainer',state:'published'},TOKENS.other),'disabled directory seed');
+  await fails(db('PUT','legacyShareOwners/OtherTrainer',IDS.other,TOKENS.other),'disabled compatibility seed');
+  await fails(db('PUT',`userPreferences/${IDS.other}/favoriteTrainers/${IDS.owner}`,{trainerName:'OwnerTrainer',addedAt:100},TOKENS.other),'disabled preference seed');
+  await fails(db('PUT','shareVisibilityConfig/writesEnabled',true,TOKENS.other),'ordinary visibility gate enable');
+  await fails(db('PUT','trainerPreferencesConfig/writesEnabled',true,TOKENS.other),'ordinary preference gate enable');
+});
+
+test('parent and query reads cannot bypass exact future visibility rules',async()=>{
+  for(const target of ['shareDirectory','trainerShares','shareVisibility','shareAccess','userPreferences']){
+    await fails(db('GET',target,undefined,TOKENS.other),`parent enumeration ${target}`);
+    const url=dbUrl(target,TOKENS.other);url.searchParams.set('orderBy','"$key"');url.searchParams.set('limitToFirst','1');
+    await fails(request(url),'queried parent enumeration');
+  }
 });
 
 test('future group paths are reserved and inactive',async()=>{

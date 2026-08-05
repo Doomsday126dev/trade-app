@@ -1,6 +1,6 @@
 # Trainer Share Visibility Contract
 
-Status: **emulator-only candidate, disabled, unseeded, and unsafe to deploy**
+Status: **additive emulator-only candidate, disabled, unseeded, and not deployed**
 
 This candidate defines server-enforced visibility for published trainer shares.
 It does not change the production client, production rules, or production data.
@@ -14,14 +14,15 @@ LEGACY_PUBLIC_SHARE_COMPAT_ENABLED = true
 The client constants currently live only in the unwired domain candidate
 `js/domain/shareVisibility.js`. No production page loads that module.
 
-## Security blocker
+## Narrow-read prerequisite
 
-The deployed rules still inherit `.read: "auth != null"` at the database root.
-Realtime Database child rules cannot revoke a read granted by a parent. A real
-approved-viewer/private model therefore cannot be deployed until the root grant is
-removed and every retained client read has an explicit narrow rule. The
-candidate fixture `tests/firebase/database.rules.share-visibility.json` starts
-with root reads and writes denied and contains no broad authenticated bypass.
+The production rules now deny root reads and explicitly map the active client
+surfaces. The additive candidate is generated from that reviewed narrow-read
+artifact and preserves every existing rule root, including exact legacy
+`publicShares/{username}` behavior. It adds only disabled future paths. This
+removes the former root-read blocker, but it does not authorize seeding or client
+activation: the private production audit, individual mapping review, gated
+deployment, and controlled cohort stages remain required.
 
 ## Final schema
 
@@ -104,17 +105,16 @@ discovery metadata without moving `trainerShares`, `shareVisibility`, or
 
 ### Compatibility indexes
 
-`legacyShareOwners/{username}: ownerUid` is private and admin-managed.
-`publicShares/{username}` remains available only when:
+`legacyShareOwners/{username}: ownerUid` is private and admin-managed. The
+additive candidate deliberately preserves the deployed
+`publicShares/{username}` rule byte-for-byte, so existing exact anonymous links
+and owner writes remain unchanged while all new paths are unseeded and unwired.
 
-1. `shareVisibilityConfig/legacyCompatEnabled` is true;
-2. the username has an explicitly reviewed UID mapping; and
-3. that UID's mode is `public`.
-
-This keeps an existing safe link stable during migration. Favorites/private
-modes immediately disable anonymous legacy access. Unmapped legacy records and
-parent enumeration remain denied. Compatibility writes are gated and
-UID-authorized; the long-term writer targets `trainerShares/{ownerUid}`.
+A later, separately reviewed compatibility cutover may require
+`shareVisibilityConfig/legacyCompatEnabled`, an explicitly reviewed UID mapping,
+and `public` mode before serving the legacy path. That behavior is not part of
+this additive candidate. The long-term writer targets
+`trainerShares/{ownerUid}`; no legacy record is moved or deleted here.
 
 ## Cross-device private trainer preferences
 
@@ -123,7 +123,7 @@ installed PWA sessions. It remains disabled behind:
 
 ```text
 SYNCED_TRAINER_PREFERENCES_ENABLED = false
-trainerPreferenceConfig/writesEnabled = false
+trainerPreferencesConfig/writesEnabled = false
 ```
 
 The production device-local store remains authoritative until private narrow
@@ -305,20 +305,24 @@ restricted presentation. Signed-in exact mode lookup may distinguish
 Approved Viewers from private without revealing list metadata. All eventual UI
 labels and messages must use translation keys.
 
-## Read-only migration audit design
+## Read-only migration audit
 
-The later audit reuses the existing private identity-report workflow and reads
-only reviewed identity mappings plus existing public projections. It must not
-read owned lists to fabricate a share. Every record remains `seedEligible:
-false` and is classified as one of:
+`scripts/audit-share-visibility-migration.js` reuses the private identity-report
+workflow and reads only `loginDirectory`, `users`, `authIndex`, `admins`, the
+sanitized Auth input, and exact `publicShares/{username}` children. It never
+reads owned lists to fabricate a share. Every record remains `seedEligible:
+false`; the classification and reason-code output covers:
 
-- `valid_complete_public`
+- `valid_complete_projection`
 - `incomplete_profile_only`
 - `missing_projection`
 - `unsupported_malformed`
-- `inactive_legacy`
-- `duplicate_conflict`
+- `inactive_or_legacy`
 - `unresolved`
+- `identity_mapping_conflict`
+- `normalized_name_collision`
+- `protected_account`
+- `individually_reviewable` (a review label, never seed approval)
 
 Valid complete projections may be proposed for an explicit public default.
 Incomplete and missing records stay unpublished until their owner republishes.
@@ -328,16 +332,33 @@ capable. No migration runs in this milestone.
 
 ## Staged deployment and rollback
 
-1. Finish the explicit narrow-read rules map for every active client surface.
-2. Run this emulator matrix alongside existing rules suites.
-3. Audit current public projections and UID mappings without writes.
-4. Deploy narrow reads first and prove cross-account private-path denial.
-5. Seed only approved UID mappings and valid existing public projections.
+1. Run the private production audit and review aggregate blockers without writes.
+2. Run the rebased emulator matrix, including the complete narrow-read suite.
+3. Commit and deploy the additive rules with both write gates disabled.
+4. Smoke all existing production behavior; legacy public links remain unchanged.
+5. Seed only individually approved UID mappings and valid projections for a tiny cohort.
 6. Validate private preference rules and perform an owner-matched local import
    for test accounts with the synced-preference flag still off.
-7. Enable the client model for a controlled cohort while retaining legacy
+7. Enable UID share reads for a controlled cohort while retaining legacy
    public-link compatibility.
 8. Enable synced preferences separately after multi-device convergence smoke.
+
+Rollback republishes the current narrow-read artifact. Any UID-based records
+created in later approved stages remain inert while both client flags and write
+gates are off; legacy `publicShares/{username}` records are never moved or
+deleted during this compatibility window.
+
+## Trusted service boundary
+
+RTDB rules enforce UID ownership, exact-child privacy, Approved Viewer grants,
+revocation, fixed recent slots, monotonic history metadata, and declared
+bounds. They cannot verify canonical NFKC/case folding, prove that an arbitrary
+snapshot child count equals `entryCount`, or prove that client fingerprints
+match projection content. A minimal future trusted callable service should own
+normalized handle claims/renames, canonical normalized tag claims when strict
+uniqueness is required, and strict history count/fingerprint reconciliation.
+Future group invitation or role workflows also require a separately reviewed
+trusted multi-party authority boundary.
 9. Remove compatibility only after stable links have migrated.
 
 Rollback before rules deployment is deletion/revert of these inactive files.
@@ -348,10 +369,16 @@ access, or broken safe public link is an immediate rollback trigger.
 
 ## Production blockers
 
-- Authenticated root `.read` remains live.
-- Current production shares are username-keyed and lack reviewed UID owner
-  mappings for this contract.
-- The migration audit has not classified all current projections.
+- Root `.read` is denied in production, but current production shares remain
+  username-keyed and most records lack a fully corroborated UID owner mapping
+  for this contract.
+- The completed read-only production audit found only six individually
+  reviewable records. That label is not approval to seed; all report records
+  remain `seedEligible:false`.
+- Identity conflicts, unresolved mappings, invalid auth-index linkage, and
+  missing projections require separate private review or owner-driven
+  publication. They cannot be repaired from profile content, community
+  membership, similar names, or legacy role flags.
 - No production `shareVisibility`, `shareAccess`, `trainerShares`, or
   compatibility-owner records exist.
 - No production private preference records exist, and the current local

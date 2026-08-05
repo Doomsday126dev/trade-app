@@ -1,7 +1,7 @@
 const {test,before,beforeEach,after}=require('node:test');
 const assert=require('node:assert/strict');
 
-const PROJECT_ID='demo-pogo-narrow-read';
+const PROJECT_ID=process.env.POGO_RULES_PROJECT_ID||'demo-pogo-narrow-read';
 const DATABASE_HOST=process.env.FIREBASE_DATABASE_EMULATOR_HOST||'127.0.0.1:9300';
 const AUTH_HOST=process.env.FIREBASE_AUTH_EMULATOR_HOST||'127.0.0.1:9399';
 const DATABASE_NAMESPACE=`${PROJECT_ID}-default-rtdb`;
@@ -165,11 +165,29 @@ test('pending decrement reads and retained writes remain exact and identity boun
   await succeeds(db('DELETE',`pendingDecrements/${NAMES.ordinary}/decExisting`,undefined,TOKENS.ordinary),'owner consumes decrement');
 });
 
-test('disabled visibility preference identity and group paths remain denied',async()=>{
-  const paths=['shareDirectory/ordinarytrainer',`shareVisibility/${IDS.ordinary}`,`shareAccess/${IDS.ordinary}`,`trainerShares/${IDS.ordinary}`,`userPreferences/${IDS.ordinary}`,`accounts/${IDS.ordinary}`,`privateProfiles/${IDS.ordinary}`,`publicProfiles/${IDS.ordinary}`,`publicLists/${IDS.ordinary}`,'unlistedShares/share1','groups/group1',`shareGroupAccess/${IDS.ordinary}`];
-  for(const actor of [undefined,TOKENS.ordinary,TOKENS.admin])for(const path of paths)await fails(db('GET',path,undefined,actor),`disabled ${path}`);
+test('inactive future paths keep bounded reads while writes and legacy identity or group paths remain denied',async()=>{
+  await succeeds(db('GET','shareDirectory/ordinarytrainer',undefined),'anonymous exact future directory');
+  await succeeds(db('GET',`trainerShares/${IDS.ordinary}`,undefined),'anonymous future public share');
+  await fails(db('GET','shareDirectory',undefined),'future directory enumeration');
+  await fails(db('GET','trainerShares',undefined),'future share enumeration');
+  await fails(db('GET',`shareVisibility/${IDS.ordinary}`,undefined,TOKENS.other),'foreign visibility metadata');
+  await fails(db('GET',`shareAccess/${IDS.ordinary}`,undefined,TOKENS.other),'foreign access grants');
+  await fails(db('GET',`userPreferences/${IDS.ordinary}`,undefined,TOKENS.other),'foreign preferences');
+  await fails(db('GET',`accounts/${IDS.ordinary}`,undefined,TOKENS.other),'foreign account');
+  await fails(db('GET',`shareGroupAccess/${IDS.ordinary}`,undefined,TOKENS.other),'foreign group grants');
+  for(const actor of [TOKENS.ordinary,TOKENS.admin]){
+    await succeeds(db('GET',`shareVisibility/${IDS.ordinary}`,undefined,actor),'owner or admin visibility metadata');
+    await succeeds(db('GET',`shareAccess/${IDS.ordinary}`,undefined,actor),'owner or admin access grants');
+    await succeeds(db('GET',`userPreferences/${IDS.ordinary}`,undefined,actor),'owner or admin preferences');
+    await succeeds(db('GET',`accounts/${IDS.ordinary}`,undefined,actor),'owner or admin account');
+    await succeeds(db('GET',`shareGroupAccess/${IDS.ordinary}`,undefined,actor),'owner or admin reserved group grants');
+  }
+  const deniedPaths=[`privateProfiles/${IDS.ordinary}`,`publicProfiles/${IDS.ordinary}`,`publicLists/${IDS.ordinary}`,'unlistedShares/share1','groups/group1'];
+  for(const actor of [undefined,TOKENS.ordinary,TOKENS.admin])for(const path of deniedPaths)await fails(db('GET',path,undefined,actor),`denied ${path}`);
   await fails(db('PUT',`userPreferences/${IDS.ordinary}/favoriteTrainers/${IDS.other}`,{trainerName:NAMES.other},TOKENS.ordinary),'disabled preference write');
   await fails(db('PUT',`shareAccess/${IDS.ordinary}/${IDS.other}`,true,TOKENS.ordinary),'disabled access write');
+  await fails(db('PUT',`trainerShares/${IDS.ordinary}`,{schemaVersion:1},TOKENS.admin),'disabled admin share write');
+  await fails(db('PUT',`userPreferences/${IDS.ordinary}`,{favoriteTrainers:{}},TOKENS.admin),'disabled admin preference write');
 });
 
 test('retained owner list profile share auth-index request and Admin writes still succeed',async()=>{

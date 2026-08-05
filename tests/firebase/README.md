@@ -66,23 +66,26 @@ and that isolation has been verified.
 
 ## Emulator-only trainer-share visibility contract
 
-`database.rules.share-visibility.json` and `firebase.share-visibility.json`
-define a separate UID-owned sharing model with owner-managed Approved Viewers
-and public-mode-only legacy link compatibility. The same fixture includes a
+`database.rules.share-visibility.json` is deterministically rebased on the live
+narrow-read artifact by `scripts/build-share-visibility-additive-rules.cjs`.
+It defines a UID-owned sharing model with owner-managed Approved Viewers while
+leaving exact legacy public links unchanged. The same fixture includes a
 separately gated owner-private preference model for synced favorites, tags,
 bounded recents, and monotonic seen history. Run the pure client contract
-with `npm run check:share-visibility` and its isolated emulator matrix with
-`npm run check:share-visibility-rules`.
+with `npm run check:share-visibility`, verify additive preservation with
+`npm run check:share-visibility-contract`, and run the combined narrow-read plus
+visibility emulator matrix with `npm run check:share-visibility-rules`.
 
-**Do not deploy this fixture.** Its root read is denied and it intentionally
-does not provide every temporary production-client allowance. No visibility,
-grant, share, or compatibility record may be seeded from this candidate.
+**Do not deploy this fixture yet.** All current narrow-read rules are preserved,
+but both future write gates and both client flags remain disabled. No visibility,
+grant, share, compatibility, or preference record may be seeded from this candidate.
 
 ## Emulator-only narrow production-read candidate
 
 `database.rules.narrow-read.json` removes the broad authenticated root read in
 an isolated candidate while preserving the current trainer-first client's 34
-registered read surfaces. Its machine-readable mapping is
+registered production read surfaces plus five disabled future preference
+surfaces. Its machine-readable mapping is
 `narrow-read-surface-map.json`; `npm run check:narrow-read-contract` fails when
 an active registry surface lacks a rule/test mapping, an undeclared broad rule
 appears, or a direct Firebase read is unregistered.

@@ -32,10 +32,12 @@ test('production page does not load or activate the candidate modules',()=>{
 test('rules candidate has no broad authenticated root read and gates every candidate write',()=>{
   const rules=JSON.parse(readFileSync(path.join(__dirname,'firebase','database.rules.share-visibility.json'),'utf8')).rules;
   assert.equal(rules['.read'],false);
-  assert.equal(rules['.write'],false);
-  for(const pathName of ['shareVisibility','shareAccess','shareDirectory','trainerShares','legacyShareOwners','publicShares','userPreferences']){
+  assert.equal(rules['.write'],undefined);
+  for(const pathName of ['accounts','shareVisibility','shareAccess','shareDirectory','trainerShares','legacyShareOwners','userPreferences']){
     assert.match(JSON.stringify(rules[pathName]),/writesEnabled/);
   }
+  const baseline=JSON.parse(readFileSync(path.join(__dirname,'firebase','database.rules.narrow-read.json'),'utf8')).rules;
+  assert.deepEqual(rules.publicShares,baseline.publicShares);
   assert.equal(rules.groups['.read'],false);
   assert.equal(rules.groups['.write'],false);
 });

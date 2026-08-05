@@ -1012,9 +1012,10 @@ The next server-enforced sharing contract is documented in
 `docs/SHARE-VISIBILITY-MODEL.md`. It keeps personal Favorite Trainers separate
 from owner-managed Approved Viewers and proposes UID-owned `trainerShares`,
 `shareVisibility`, and `shareAccess` paths. The candidate is disabled,
-unseeded, and emulator-only. It cannot be deployed while the authenticated root
-read remains active; narrow-read rules and private-path isolation must precede
-any visibility migration or production record creation.
+unseeded, and emulator-only. Narrow-read rules and private-path isolation are
+now live; the next gates are the refreshed private migration audit, additive-
+rule validation, disabled-gate deployment, and individually reviewed cohort
+seeding.
 
 The same candidate now defines private cross-device `userPreferences/{uid}`
 for Favorite Trainers, normalized custom tags, 30 bounded recent slots, and a
@@ -1052,8 +1053,7 @@ and thirteen protected Admin-only collection reads. It does not enable or seed
 the disabled global identity, trainer-share visibility, Approved Viewer, or
 synced-preference contracts.
 
-This candidate is the security gate before any production global-identity
-records may be written. It must pass its full emulator matrix in normal
-Terminal, receive a separate rules publication approval, and demonstrate
-private-path isolation in production. Production seeding remains forbidden
-until that cutover and validation are complete.
+This security gate is complete in production. Global-identity and visibility
+seeding nevertheless remains forbidden until the refreshed private audit,
+additive gated rules, and individually approved cohort plan receive separate
+review.

@@ -25,7 +25,9 @@ if [[ -z "$NODE_BIN" || ! -x "$NODE_BIN" ]] || ! "$NODE_BIN" -e "require('node:t
 fi
 echo "Share visibility rules test Node: $NODE_BIN ($("$NODE_BIN" --version))"
 echo "WARNING: emulator-only narrow-read candidate; do not deploy or seed."
-printf -v NODE_TEST_COMMAND '%q --test %q' "$NODE_BIN" "tests/firebase/share-visibility-rules.test.cjs"
+printf -v NODE_TEST_COMMAND 'POGO_RULES_PROJECT_ID=%q FIREBASE_DATABASE_EMULATOR_HOST=%q FIREBASE_AUTH_EMULATOR_HOST=%q %q --test --test-concurrency=1 %q %q' \
+  "demo-pogo-share-visibility" "127.0.0.1:9200" "127.0.0.1:9299" "$NODE_BIN" \
+  "tests/firebase/narrow-read-rules.test.cjs" "tests/firebase/share-visibility-rules.test.cjs"
 exec "${FIREBASE[@]}" emulators:exec \
   --only auth,database \
   --project demo-pogo-share-visibility \
