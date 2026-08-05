@@ -24,6 +24,31 @@ test('trainer suggestions are case-insensitive, preserve display case, and prefe
   assert.equal(discovery.trainerSuggestions(['Alpha'],'a',{minLength:2}).length,0);
 });
 
+test('trainer suggestions rank exact, prefix, token prefix, and substring matches deterministically',()=>{
+  const names=['The Alpha Club','myAlpha','AlphaNYC','Alpha'];
+  assert.equal(JSON.stringify(discovery.trainerSuggestions(names,'alpha').map(item=>item.name)),JSON.stringify(['Alpha','AlphaNYC','The Alpha Club','myAlpha']));
+});
+
+test('mixed-case trainers match lowercase, uppercase, partial prefix, and substring queries',()=>{
+  const names=['ScoopskiPotat0'];
+  for(const query of ['scoo','SCOO','potat','scoopskipotat0','SCOOPSKIPOTAT0'])assert.equal(discovery.bestTrainerSuggestion(names,query).name,'ScoopskiPotat0');
+});
+
+test('favorites and recents break textual ties but never outrank a stronger match',()=>{
+  const names=['Alpha','AlphaNYC','myAlpha'];
+  const ranked=discovery.trainerSuggestions(names,'alpha',{favoriteNames:['myAlpha'],recentNames:['AlphaNYC']}).map(item=>item.name);
+  assert.equal(JSON.stringify(ranked),JSON.stringify(['Alpha','AlphaNYC','myAlpha']));
+  const tied=discovery.trainerSuggestions(['AlphaTwo','AlphaOne'],'alpha',{favoriteNames:['AlphaTwo']}).map(item=>item.name);
+  assert.equal(JSON.stringify(tied),JSON.stringify(['AlphaTwo','AlphaOne']));
+});
+
+test('desktop and mobile suggestion inputs produce identical stable results',()=>{
+  const names=['ScoopskiPotat0','PotatoFan','The Potato'];
+  const desktop=discovery.trainerSuggestions(names,'POT',{favoriteNames:['The Potato']});
+  const mobile=discovery.trainerSuggestions(names,'pot',{favoriteNames:['The Potato']});
+  assert.equal(JSON.stringify(desktop),JSON.stringify(mobile));
+});
+
 test('published-list diff detects add, remove, value changes, and category moves',()=>{
   const before={lists:{wishlist:{Pikachu:'H',Tauros:'M'},dynamax:{Bulbasaur:'L'}}};
   const after={lists:{wishlist:{Pikachu:'M',Bulbasaur:'L',Lugia:'H'}}};

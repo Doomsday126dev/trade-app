@@ -5957,6 +5957,7 @@ function renderInterimProductLabels(){
 let trainerSuggestionTimer=0;
 let trainerSuggestionItems=[];
 let trainerSuggestionIndex=-1;
+let trainerSuggestionQuery='';
 let eventTypeFilter='all';
 function ensureTrainerHistoryStore(){
   const uid=auth?.currentUser?.uid;
@@ -5974,7 +5975,18 @@ function closeTrainerSuggestions(){
   const box=document.getElementById('find-trainer-suggestions'),input=document.getElementById('find-trainer-input');
   if(box){box.classList.remove('open');box.innerHTML='';}
   if(input){input.setAttribute('aria-expanded','false');input.removeAttribute('aria-activedescendant');}
-  trainerSuggestionItems=[];trainerSuggestionIndex=-1;
+  trainerSuggestionItems=[];trainerSuggestionIndex=-1;trainerSuggestionQuery='';
+}
+function trainerSuggestionOptions(){
+  const store=ensureTrainerHistoryStore(),state=store?.read?.();
+  return{
+    minLength:2,limit:8,
+    favoriteNames:(state?.favorites||[]).map(item=>item.displayName),
+    recentNames:(state?.recent||[]).map(item=>item.displayName)
+  };
+}
+function rankedTrainerSuggestions(value){
+  return trainerDiscoveryDomain.trainerSuggestions(Object.keys(allData.loginDirectory||{}),value,trainerSuggestionOptions());
 }
 function trainerSuggestionHtml(item,index){
   const before=item.name.slice(0,item.matchStart),match=item.name.slice(item.matchStart,item.matchStart+item.matchLength),after=item.name.slice(item.matchStart+item.matchLength);
@@ -5985,7 +5997,7 @@ function renderTrainerSuggestions(value){
   if(!input||!box)return;
   const query=String(value||'').trim();
   if(query.length<2){closeTrainerSuggestions();if(status)status.textContent=i18nCore.t('trainer.searchStart');return;}
-  trainerSuggestionItems=trainerDiscoveryDomain.trainerSuggestions(Object.keys(allData.loginDirectory||{}),query,{minLength:2,limit:8});
+  trainerSuggestionItems=rankedTrainerSuggestions(query);trainerSuggestionQuery=trainerDiscoveryDomain.fold(query);
   trainerSuggestionIndex=trainerSuggestionItems.length?0:-1;
   if(!trainerSuggestionItems.length){closeTrainerSuggestions();if(status)status.textContent=i18nCore.t('trainer.noMatch');return;}
   box.innerHTML=trainerSuggestionItems.map(trainerSuggestionHtml).join('');box.classList.add('open');input.setAttribute('aria-expanded','true');
@@ -6004,13 +6016,20 @@ function selectTrainerSuggestion(index){
 }
 function trainerSearchKeydown(event){
   if(event.key==='ArrowDown'||event.key==='ArrowUp'){
-    if(!trainerSuggestionItems.length){queueTrainerSuggestions(event.currentTarget.value,true);return;}
+    if(trainerSuggestionQuery!==trainerDiscoveryDomain.fold(event.currentTarget.value))renderTrainerSuggestions(event.currentTarget.value);
+    if(!trainerSuggestionItems.length)return;
     event.preventDefault();const delta=event.key==='ArrowDown'?1:-1;
     trainerSuggestionIndex=(trainerSuggestionIndex+delta+trainerSuggestionItems.length)%trainerSuggestionItems.length;
     const box=document.getElementById('find-trainer-suggestions');if(box)box.innerHTML=trainerSuggestionItems.map(trainerSuggestionHtml).join('');
     event.currentTarget.setAttribute('aria-activedescendant',`trainer-suggestion-${trainerSuggestionIndex}`);box?.querySelector('.active')?.scrollIntoView({block:'nearest'});return;
   }
-  if(event.key==='Enter'){event.preventDefault();if(trainerSuggestionItems[trainerSuggestionIndex])selectTrainerSuggestion(trainerSuggestionIndex);else openTrainerPublicShare();return;}
+  if(event.key==='Enter'){
+    event.preventDefault();clearTimeout(trainerSuggestionTimer);
+    const best=trainerDiscoveryDomain.bestTrainerSuggestion(Object.keys(allData.loginDirectory||{}),event.currentTarget.value,trainerSuggestionOptions());
+    if(best){event.currentTarget.value=best.name;closeTrainerSuggestions();openTrainerPublicShare(best.name);}
+    else openTrainerPublicShare(event.currentTarget.value);
+    return;
+  }
   if(event.key==='Escape'){event.preventDefault();closeTrainerSuggestions();}
 }
 function trainerDate(value){
@@ -6081,8 +6100,19 @@ function publicShareRequestFromInput(value){
   if(/[.#$\[\]\/]/.test(raw))return null;
   return{username:canonical(raw),type:'wishlist'};
 }
+function resolvedTrainerSearchValue(value){
+  const raw=String(value||'').trim();if(!raw)return raw;
+  try{const url=new URL(raw,location.href);if(url.searchParams.get('view'))return raw;}catch{}
+  return trainerDiscoveryDomain.bestTrainerSuggestion(Object.keys(allData.loginDirectory||{}),raw,trainerSuggestionOptions())?.name||raw;
+}
 async function openTrainerPublicShare(value){
-  const req=publicShareRequestFromInput(value||document.getElementById('find-trainer-input')?.value);
+  clearTimeout(trainerSuggestionTimer);
+  const requested=value||document.getElementById('find-trainer-input')?.value;
+  const resolved=resolvedTrainerSearchValue(requested);
+  const input=document.getElementById('find-trainer-input');
+  if(input&&resolved&&!String(resolved).includes('?view='))input.value=resolved;
+  closeTrainerSuggestions();
+  const req=publicShareRequestFromInput(resolved);
   const status=document.getElementById('find-trainer-status');
   if(!req?.username){if(status)status.textContent=i18nCore.t('trainer.publicInvalid');return;}
   if(status)status.textContent=i18nCore.t('data.loading',{resource:i18nCore.t('trainer.findTitle')});

@@ -3,18 +3,47 @@
   const LIST_TYPES=Object.freeze(['wishlist','dynamax','gmax','costumes']);
 
   function fold(value){
-    return String(value||'').normalize('NFKC').toLocaleLowerCase('en-US');
+    return String(value||'').normalize('NFKC').toLocaleLowerCase('en-US').trim();
   }
 
-  function trainerSuggestions(names,query,{minLength=2,limit=8}={}){
-    const needle=fold(query).trim();
+  function normalizedTokens(value){
+    return fold(value).split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+  }
+
+  function preferenceRanks(values){
+    return new Map((values||[]).map((value,index)=>[fold(value),index]));
+  }
+
+  function trainerSuggestions(names,query,{minLength=2,limit=8,favoriteNames=[],recentNames=[]}={}){
+    const needle=fold(query);
     if(needle.length<minLength)return[];
-    return [...new Set((names||[]).map(name=>String(name||'').trim()).filter(Boolean))]
-      .map(name=>({name,index:fold(name).indexOf(needle)}))
-      .filter(item=>item.index>=0)
-      .sort((a,b)=>(a.index>0)-(b.index>0)||a.index-b.index||a.name.localeCompare(b.name,'en',{sensitivity:'base'}))
+    const unique=new Map();
+    (names||[]).map(name=>String(name||'').trim()).filter(Boolean).forEach(name=>{
+      const normalized=fold(name);if(normalized&&!unique.has(normalized))unique.set(normalized,name);
+    });
+    const favorites=preferenceRanks(favoriteNames),recents=preferenceRanks(recentNames);
+    return [...unique.entries()]
+      .map(([normalized,name])=>{
+        const index=normalized.indexOf(needle);
+        if(index<0)return null;
+        const tokens=normalizedTokens(name);
+        const matchType=normalized===needle?'exact'
+          :normalized.startsWith(needle)?'prefix'
+          :tokens.some(token=>token.startsWith(needle))?'token_prefix'
+          :'substring';
+        const score={exact:0,prefix:1,token_prefix:2,substring:3}[matchType];
+        return{name,normalized,index,score,matchType,
+          favoriteRank:favorites.has(normalized)?favorites.get(normalized):Number.MAX_SAFE_INTEGER,
+          recentRank:recents.has(normalized)?recents.get(normalized):Number.MAX_SAFE_INTEGER};
+      })
+      .filter(Boolean)
+      .sort((a,b)=>a.score-b.score||a.favoriteRank-b.favoriteRank||a.recentRank-b.recentRank||a.index-b.index||a.name.localeCompare(b.name,'en',{sensitivity:'base'}))
       .slice(0,limit)
-      .map(item=>({name:item.name,matchStart:item.index,matchLength:needle.length}));
+      .map(item=>({name:item.name,matchStart:item.index,matchLength:needle.length,matchType:item.matchType}));
+  }
+
+  function bestTrainerSuggestion(names,query,options={}){
+    return trainerSuggestions(names,query,{...options,limit:1})[0]||null;
   }
 
   function canonicalPublishedValue(value){
@@ -67,5 +96,5 @@
     return{available:true,firstView:false,added,removed,modified,total:added.length+removed.length+modified.length};
   }
 
-  root.trainerDiscovery=Object.freeze({LIST_TYPES,fold,trainerSuggestions,canonicalPublishedValue,publishedEntries,diffPublishedLists});
+  root.trainerDiscovery=Object.freeze({LIST_TYPES,fold,normalizedTokens,trainerSuggestions,bestTrainerSuggestion,canonicalPublishedValue,publishedEntries,diffPublishedLists});
 })(window);

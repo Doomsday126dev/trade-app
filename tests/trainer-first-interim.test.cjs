@@ -55,6 +55,8 @@ test('Find Trainer autocomplete uses the public directory and selected trainer u
   assert.match(find,/Object\.keys\(allData\.loginDirectory\|\|\{\}\)/);
   assert.match(find,/managedPublicShareRepository\.read/);
   assert.match(source,/trainerDiscoveryDomain\.fold\(name\)===trainerDiscoveryDomain\.fold\(value\)/);
+  assert.match(source,/bestTrainerSuggestion\(Object\.keys\(allData\.loginDirectory\|\|\{\}\)/);
+  assert.match(source,/const resolved=resolvedTrainerSearchValue\(requested\)/);
   assert.doesNotMatch(find,/allData\.users\?\.|wishlist\[|have\[/);
 });
 
