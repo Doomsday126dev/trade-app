@@ -1,5 +1,12 @@
 # Maintenance Log
 
+## 2026-08-04 - Preserve public shares during exact-read login
+
+- Prevent cold exact-read login and routine profile persistence from rebuilding `publicShares/{username}` before the profile and all four publishable owned-list reads finish successfully.
+- Gate publication by authenticated UID, username, hydration generation, source readiness, and an explicit allowed trigger: share action, confirmed list edit, or intentional share-profile update.
+- Preserve existing public projections when hydration is pending or failed; logout, auth loss, and account switching invalidate pending publication.
+- Firebase rules, schemas, production data, private list paths, and the public-share JSON format are unchanged.
+
 ## 2026-08-04 - Production validation for transient-state cleanup
 
 - Verified the owner session contained no prior TestUser toast, modal, banner, selected row, pending confirmation, or other visible transient state.

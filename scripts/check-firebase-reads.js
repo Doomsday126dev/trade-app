@@ -145,7 +145,7 @@ assert.ok(indexSource.includes('managedSessionCache.writeQueue(syncQueue||{})'),
 assert.ok(!indexSource.includes("const SYNC_QUEUE_KEY='pogoSyncQueue_v1';"),
   'The unowned legacy sync queue must not remain active');
 const moduleOrder=[
-  'js/i18n/locales/en.js','js/i18n/core.js','js/services/firebaseClient.js',
+  'js/domain/publicSharePublication.js','js/i18n/locales/en.js','js/i18n/core.js','js/services/firebaseClient.js',
   'js/data/subscriptionManager.js','js/data/listenerLifecycle.js','js/data/sessionCacheBoundary.js','js/data/firebaseReadRegistry.js',
   'js/data/currentUserRepository.js','js/data/ownedDataCoordinator.js','js/data/publicShareRepository.js',
   'js/domain/cacheAdapters.js'

@@ -2450,6 +2450,7 @@ window.__pogoBootWatch=setTimeout(function(){
 <script src="js/domain/relativeTime.js"></script>
 <script src="js/domain/trainerDiscovery.js"></script>
 <script src="js/domain/eventPresentation.js"></script>
+<script src="js/domain/publicSharePublication.js"></script>
 <script src="js/utils/textSafety.js"></script>
 <script src="js/ui/stringPanels.js"></script>
 <script src="js/ui/emptyState.js"></script>
@@ -2534,6 +2535,8 @@ const trainerDiscoveryDomain=window.PogoDomain?.trainerDiscovery;
 if(!trainerDiscoveryDomain)throw new Error('Trainer discovery helpers failed to load');
 const eventPresentationDomain=window.PogoDomain?.eventPresentation;
 if(!eventPresentationDomain)throw new Error('Event presentation helpers failed to load');
+const publicSharePublicationDomain=window.PogoDomain?.publicSharePublication;
+if(!publicSharePublicationDomain)throw new Error('Public-share publication helpers failed to load');
 const cacheAdapterDomain=window.PogoDomain?.cacheAdapters;
 if(!cacheAdapterDomain)throw new Error('Cache adapters failed to load');
 const managedSubscriptions=subscriptionManagerData.createSubscriptionManager();
@@ -2544,6 +2547,9 @@ let managedCurrentUserRepository=null;
 let managedOwnedDataCoordinator=null;
 let managedPublicShareRepository=null;
 let trainerHistoryStore=null;
+const managedPublicSharePublication=publicSharePublicationDomain.createPublicSharePublicationGate();
+let activePublicShareHydrationToken=null;
+let _lastPublicShareBlockedNotice='';
 
 const OWNER="Doomsday126";
 const APP_VERSION="4.6.37";
@@ -3831,6 +3837,13 @@ function activateOwnedSession(uid,username){
   }
   syncQueue=managedSessionCache.readQueue();
   allData=getLocal();
+  const hydration=managedPublicSharePublication.activate({uid,username});
+  if(!hydration.ok){
+    const error=new Error(hydration.error.message);
+    error.code=hydration.error.code;
+    throw error;
+  }
+  activePublicShareHydrationToken=hydration.token;
   return result;
 }
 function storedSessionMatches(uid,username){
@@ -3838,11 +3851,15 @@ function storedSessionMatches(uid,username){
   return!!owner&&owner.uid===uid&&owner.username===username;
 }
 function suspendOwnedSession(reason='auth_loss'){
+  managedPublicSharePublication.invalidate(reason);
+  activePublicShareHydrationToken=null;
   managedSessionCache.suspend(reason);
   syncQueue={};
   allData=getLocal();
 }
 function clearOwnedSession(){
+  managedPublicSharePublication.invalidate('logout');
+  activePublicShareHydrationToken=null;
   managedSessionCache.clearForLogout();
   syncQueue={};
   allData=getLocal();
@@ -4230,24 +4247,22 @@ function saveLocal(s){
 }
 
 const PUBLIC_SHARE_TYPES=['wishlist','dynamax','gmax','costumes'];
-function publicShareSnapshotForUser(username,source=allData){
-  const data=normalizeData(source||{});
-  const ud=data.users?.[username]||{};
-  // Allowlist-only public payload. Do not serialize allData, user records,
-  // Firebase snapshots, localStorage, auth fields, PINs, Discord IDs, offers,
-  // trades, inventory, or private app state into publicShares.
-  const profile={
-    friendCode:String(ud.friendCode||'').slice(0,32),
-    bio:String(ud.bio||'').slice(0,120),
-    discord:String(ud.discord||'').slice(0,40),
-    avatarPokemon:String(ud.avatarPokemon||'').slice(0,80),
-    lastUpdated:Number(ud.lastUpdated||0)||null
-  };
-  const lists={};
-  PUBLIC_SHARE_TYPES.forEach(type=>{
-    lists[type]={...(data[type]?.[username]||{})};
+function publicShareSessionMatches(username){
+  return!!(auth?.currentUser&&cur===username&&activePublicShareHydrationToken&&
+    activePublicShareHydrationToken.uid===auth.currentUser.uid&&
+    activePublicShareHydrationToken.username===username);
+}
+function publicShareSnapshotForUser(username,source=allData,trigger='explicit_share'){
+  if(!publicShareSessionMatches(username)){
+    return{ok:false,error:{code:'share-publication/session-mismatch',message:'Public-share session identity changed'}};
+  }
+  // Allowlist-only. Missing or failed exact-read sources are rejected instead
+  // of being converted into a valid-looking empty public projection.
+  return publicSharePublicationDomain.buildPublicShareSnapshot({
+    gate:managedPublicSharePublication,
+    token:activePublicShareHydrationToken,
+    trigger,username,source
   });
-  return{version:1,username,profile,lists,updatedAt:Date.now()};
 }
 function applyPublicShareSnapshot(s,snapshot){
   const username=String(snapshot?.username||'').trim();
@@ -4270,22 +4285,55 @@ function applyPublicShareSnapshot(s,snapshot){
   });
   return true;
 }
-function queuePublicShareSnapshot(source,username){
-  if(!fbOn||!db||!username||!auth?.currentUser)return;
-  queueSync(`publicShares/${username}`,publicShareSnapshotForUser(username,source));
+function notePublicSharePublicationBlocked(result,trigger){
+  const code=result?.error?.code||'share-publication/blocked';
+  const fingerprint=`${activePublicShareHydrationToken?.generation||0}:${trigger}:${code}`;
+  if(_lastPublicShareBlockedNotice===fingerprint)return;
+  _lastPublicShareBlockedNotice=fingerprint;
+  console.warn('Public-share publication blocked',{code,trigger});
 }
-async function publishPublicShareNow(username=cur){
-  if(!username)return false;
-  const snapshot=publicShareSnapshotForUser(username,allData);
+function queueHydratedPublicShareSnapshot(source,username,trigger){
+  if(!fbOn||!db||!username||!auth?.currentUser){
+    return{ok:false,error:{code:'share-publication/offline',message:'Firebase session is unavailable'}};
+  }
+  const built=publicShareSnapshotForUser(username,source,trigger);
+  if(!built.ok){notePublicSharePublicationBlocked(built,trigger);return built;}
+  queueSync(`publicShares/${username}`,built.snapshot);
+  return{ok:true,status:'queued'};
+}
+function requestPublicSharePublication(trigger,source=allData,username=cur){
+  if(!publicShareSessionMatches(username)){
+    return{ok:false,error:{code:'share-publication/session-mismatch',message:'Public-share session identity changed'}};
+  }
+  const requested=managedPublicSharePublication.request(activePublicShareHydrationToken,trigger);
+  if(!requested.ok){notePublicSharePublicationBlocked(requested,trigger);return requested;}
+  if(requested.status==='pending')return requested;
+  return queueHydratedPublicShareSnapshot(source,username,trigger);
+}
+function flushPendingPublicSharePublication(){
+  if(!activePublicShareHydrationToken||!cur)return{ok:false,status:'inactive'};
+  const pending=managedPublicSharePublication.consumePending(activePublicShareHydrationToken);
+  if(!pending.ok||!pending.trigger)return pending;
+  return queueHydratedPublicShareSnapshot(allData,cur,pending.trigger);
+}
+async function publishPublicShareNow(username=cur,trigger='explicit_share'){
+  if(!username)return{ok:false,error:{code:'share-publication/username-required',message:'Trainer username is required'}};
+  if(!publicShareSessionMatches(username)){
+    return{ok:false,error:{code:'share-publication/session-mismatch',message:'Public-share session identity changed'}};
+  }
+  const requested=managedPublicSharePublication.request(activePublicShareHydrationToken,trigger);
+  if(!requested.ok){notePublicSharePublicationBlocked(requested,trigger);return requested;}
+  if(requested.status==='pending')return requested;
+  const built=publicShareSnapshotForUser(username,allData,trigger);
+  if(!built.ok){notePublicSharePublicationBlocked(built,trigger);return built;}
   if(fbOn&&db&&auth?.currentUser){
-    await withTimeout(set(ref(db,`publicShares/${username}`),snapshot),8000,'Publishing share link timed out','db/public-share-timeout');
+    await withTimeout(set(ref(db,`publicShares/${username}`),built.snapshot),8000,'Publishing share link timed out','db/public-share-timeout');
     delete syncQueue[`publicShares/${username}`];
     saveSyncQueue();
     if(!Object.keys(syncQueue).length)showSyncDot(false);
-    return true;
+    return{ok:true,status:'published'};
   }
-  queuePublicShareSnapshot(allData,username);
-  return false;
+  return{ok:false,error:{code:'share-publication/offline',message:'Firebase session is unavailable'}};
 }
 
 async function writeUser(u,data){
@@ -4293,7 +4341,6 @@ async function writeUser(u,data){
   if(fbOn&&db){
     queueSync(`users/${u}`,s.users[u]);
     if(canWriteLoginDirectoryNow())queueSync(`loginDirectory/${u}`,s.loginDirectory[u]);
-    if(u===cur)queuePublicShareSnapshot(s,u);
   }
   syncFromLocal();
 }
@@ -4313,16 +4360,13 @@ async function writeUserNow(u,data){
     try{
       await withTimeout(set(ref(db,`users/${u}`),s.users[u]),8000,'Saving login timed out','db/write-timeout');
       if(canWriteLoginDirectoryNow())await withTimeout(set(ref(db,`loginDirectory/${u}`),s.loginDirectory[u]),8000,'Saving login directory timed out','db/directory-timeout');
-      if(u===cur)await withTimeout(set(ref(db,`publicShares/${u}`),publicShareSnapshotForUser(u,s)),8000,'Publishing share link timed out','db/public-share-timeout').catch(e=>console.warn('Could not publish public share snapshot',e));
       delete syncQueue[`users/${u}`];
       if(canWriteLoginDirectoryNow())delete syncQueue[`loginDirectory/${u}`];
-      if(u===cur)delete syncQueue[`publicShares/${u}`];
       saveSyncQueue();
       if(!Object.keys(syncQueue).length)showSyncDot(false);
     }catch{
       queueSync(`users/${u}`,s.users[u]);
       if(canWriteLoginDirectoryNow())queueSync(`loginDirectory/${u}`,s.loginDirectory[u]);
-      if(u===cur)queuePublicShareSnapshot(s,u);
     }
   }
   syncFromLocal();
@@ -4652,7 +4696,7 @@ async function writeList(type,u,list){
     queueSync(`${type}/${u}`,list);
     queueSync(`users/${u}/lastUpdated`,now);
     queueSync(`users/${u}/lastSeen`,now);
-    if(u===cur)queuePublicShareSnapshot(s,u);
+    if(u===cur)requestPublicSharePublication('owned_list_edit',s,u);
   }
   syncFromLocal();
   refreshAddPokemonChoices(type,u);
@@ -4674,7 +4718,7 @@ async function writeListItem(type,u,name,value){
     queueSync(`${type}/${u}/${name}`,value??null);
     queueSync(`users/${u}/lastUpdated`,now);
     queueSync(`users/${u}/lastSeen`,now);
-    if(u===cur)queuePublicShareSnapshot(s,u);
+    if(u===cur)requestPublicSharePublication('owned_list_edit',s,u);
   }
   syncFromLocal();
   refreshAddPokemonChoices(type,u);
@@ -5119,6 +5163,10 @@ function _onOwnedDataSnapshot({surface,path,value}){
   allData=runtimeDataWithSelectedTrainer(s);
   Object.values(syncQueue||{}).forEach(({path:queuedPath,data})=>applyDataPath(allData,queuedPath,data));
   if(Object.keys(syncQueue||{}).length)saveLocal(allData);
+  if((surface==='profile'||PUBLIC_SHARE_TYPES.includes(surface))&&activePublicShareHydrationToken){
+    const marked=managedPublicSharePublication.markLoaded(activePublicShareHydrationToken,surface);
+    if(marked.ok&&marked.ready)flushPendingPublicSharePublication();
+  }
   _pathLoadState[path]='loaded';
   _ownedReadErrorShown=false;
   setSyncStatus('online');
@@ -5132,7 +5180,10 @@ function _onOwnedDataSnapshot({surface,path,value}){
     perfRecord(`snapshot:exact:${surface}`,finished-started,size);
   }catch{}
 }
-function _onOwnedDataError(){
+function _onOwnedDataError(detail={}){
+  if((detail.surface==='profile'||PUBLIC_SHARE_TYPES.includes(detail.surface))&&activePublicShareHydrationToken){
+    managedPublicSharePublication.markFailed(activePublicShareHydrationToken,detail.surface);
+  }
   setSyncStatus('offline');
   if(_ownedReadErrorShown)return;
   _ownedReadErrorShown=true;
@@ -5144,6 +5195,10 @@ function ensureOwnedExactSubscriptions(){
   if(!activated.ok){_onOwnedDataError();return false;}
   const subscribed=managedOwnedDataCoordinator.subscribeCore();
   if(!subscribed.ok){_onOwnedDataError();return false;}
+  for(const type of PUBLIC_SHARE_TYPES){
+    const listResult=managedOwnedDataCoordinator.subscribeList(type);
+    if(!listResult.ok){_onOwnedDataError({surface:type,error:listResult.error});return false;}
+  }
   return true;
 }
 function ensureListSubscribed(type){
@@ -8584,7 +8639,9 @@ async function saveProfile(){
     }
     upd.pin=await hashPin(p1);upd.pinHashed=true;
   }
-  await writeUser(cur,upd);closeModal('prof-modal');updateFcDisplay();
+  await writeUser(cur,upd);
+  requestPublicSharePublication('share_profile_update',getLocal(),cur);
+  closeModal('prof-modal');updateFcDisplay();
   // Update topbar avatar
   const topAv=document.getElementById('top-av');
   if(topAv&&avatarPokemon){
@@ -9943,9 +10000,10 @@ async function copyShareLink(){
     return;
   }
   toast('🔗 Share link copied! Updating public snapshot…',3500);
-  publishPublicShareNow(cur).then(published=>{
-    if(published)toast('✅ Public share snapshot updated.',3500);
-    else toast('🔗 Link copied. Publish the public share rules if signed-out viewers cannot open it yet.',6000);
+  publishPublicShareNow(cur,'explicit_share').then(result=>{
+    if(result?.status==='published')toast(i18nCore.t('share.publicationUpdated'),3500);
+    else if(result?.status==='pending')toast(i18nCore.t('share.publicationPending'),6000);
+    else toast(i18nCore.t('share.publicationNotReady'),6000);
   }).catch(e=>{
     console.warn('Could not publish public share snapshot',e);
     toast('🔗 Link copied. Public live view needs the Firebase publicShares rule before signed-out viewers can open it.',7000);
