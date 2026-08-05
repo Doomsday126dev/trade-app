@@ -95,7 +95,42 @@ this section makes no recommendations.
 | `authEmail(username, version)` | 4183 | Derives the synthetic Firebase Auth email for a (username, version) pair. |
 | `signInWithAuthVersionScan(username, pin, startVersion)` | 4100 | Tries `signInWithEmailAndPassword` against each candidate version's synthetic email until one succeeds. |
 | `createMemberNow(username, pin, isAdmin, reqId)` | 3966 | Owner/admin onboarding: provisions a Firebase Auth account at version 1, writes `users/{u}`, `loginDirectory/{u}`, and the default community membership. |
-| `repairMemberAccount(username, opts)` | 3923 | Admin-only legacy recovery: provisions a fresh Firebase Auth account at the next `authVersion`, rotates `authUid`. The previous Firebase Auth user and its `authIndex/{old-uid}` row are left orphaned. |
+| `repairMemberAccount(username, opts)` | 3923 | Admin-only legacy recovery: provisions a fresh Firebase Auth account at the next `authVersion`, rotates `authUid`. The previous Firebase Auth user and its `authIndex/{old-uid}` row are left orphaned. This is unsafe for an established UID-bound account and must not be used as a password-reset mechanism. |
+
+### Established-account PIN reset safety
+
+The current Admin **Reset** button provisions a new synthetic Firebase Auth
+identity and is unsafe for established UID-bound accounts. Until that UI is
+replaced, owners must not use it for a trainer whose `users/{username}/authUid`
+and `authIndex/{uid}` mapping already exist.
+
+The separately reviewed local tool `scripts/reset-existing-auth-pin.cjs` is
+dry-run-only by default and uses Firebase Admin SDK `updateUser(uid,
+{password})` against the already-bound UID. It then updates only the app's
+salted SHA-256 `pin` value and `pinHashed: true`. It preserves `authUid`,
+`authEmail`, `authVersion`, `authIndex`, timestamps, memberships, lists,
+profiles, public shares, and the login directory. The tool has no user-create,
+user-list, user-delete, bulk-target, or identity-repair capability.
+
+Install Firebase Admin SDK only in the ignored local tool directory, not in
+the browser application dependency tree:
+
+```bash
+npm install --prefix .local/admin-tools firebase-admin@14.2.0
+```
+
+Preflight performs bounded exact lookups for the established UID and the
+trainer's supported synthetic Auth emails. More than one matching UID aborts;
+the tool never calls `listUsers()` or exposes a bulk-account operation.
+
+Run with `NODE_PATH=.local/admin-tools/node_modules`, Application Default
+Credentials or an ignored credential under `.local/admin-credentials/`, exact
+project/database confirmations, and a private identity report. Dry run accepts
+no PIN and is the default. Apply additionally requires a six-digit PIN provided
+through a non-persisted environment variable and an explicit `--apply`. The
+previous password cannot be recovered after apply, and
+an Auth-success/RTDB-failure result requires manual review rather than automatic
+identity reconciliation.
 | `authIndex/{currentAuthUid}` write | 4347 | Each user publishes their own `authIndex` row on sign-in success; rules forbid writing another user's row. |
 
 ---

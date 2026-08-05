@@ -6,3 +6,5 @@ database-debug.log
 firebase-debug*.log
 .local/trainer-name-audits/
 .local/uid-handle-audits/
+.local/admin-tools/
+.local/admin-credentials/
