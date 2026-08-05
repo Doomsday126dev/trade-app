@@ -2737,3 +2737,42 @@ hash chain verified successfully. Validation suites passed 17/17, 13/13,
 20/20, 26/26, and 18/18, and the working tree remained clean after the private
 review session. No additional identities, evidence, or private artifact details
 are recorded here.
+
+## 2026-08-05 - Codex - Share recovery production validation
+
+Pushed commits `b223692` and `2e63501`, completed the GitHub Pages rebuild, and
+confirmed `main` matched `origin/main` at `2e63501`. A normal warm-client reload
+coherently loaded all 42 first-party scripts with `?v=2026-08-05.3`; no
+mixed-version warning, cache loop, browser error, Firebase warning, or Firebase
+error occurred.
+
+The protected owner's public projection was initially profile-only while the
+private lists remained intact. Login performed zero publication writes. After
+exact owned-data hydration completed, the explicit **Republish shared list**
+action wrote only `publicShares/Doomsday126`. The resulting projection contained
+58 wishlist entries, passed the deployed completeness-marker validator, and
+cleared the recovery notice only after the client reread and verified it. Find
+Trainer and the anonymous read-only share both rendered all 58 entries. No
+private list, identity, membership, `authIndex`, Admin, unrelated trainer, or
+other production path changed.
+
+Desktop trainer search passed partial, mixed-case, exact, fast-Enter, Arrow
+Up/Down, Enter, Escape, mouse-selection, and canonical-capitalization checks.
+Device-local Favorite add/remove passed and was restored. Favorites, Recents,
+and snapshots remained partitioned by account; Favorites did not alter share
+access. No UI claimed that trainer tags currently sync, no Firebase preference
+write occurred, and synced trainer preferences remained disabled. Owner and
+TestUser same-browser isolation passed, no pending publication survived logout,
+and final anonymous directory and public-share checks passed.
+
+Responsive checks passed at 320, 375, 390, and 430 px, with keyboard-reduced
+checks at 390 x 420 and 390 x 300. Dropdown anchoring, upward placement when
+constrained, internal scrolling, 48 px targets, ARIA state, and horizontal
+overflow protection passed. Mobile-sized pointer selection opened the 71-entry
+share successfully. Physical mobile Safari and installed Home Screen/PWA
+keyboard-and-touch testing remain externally pending because those surfaces
+were unavailable in the Codex browser.
+
+There were zero browser or Firebase warnings and errors. No rollback was
+required. Final verdict: release `2026-08-05.3` is healthy for all validated
+production paths.
