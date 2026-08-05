@@ -2665,3 +2665,13 @@ The candidate SHA-256 is
 `e0632a98ed106117f03e61da0446ef4b2c2e6ed02ea8c6f1c498a0e7edcb17bf`.
 No rules, data, identity records, feature flags, or production behavior changed.
 Normal-Terminal emulator validation remains required before local commit review.
+
+## 2026-08-05 - Codex - Narrow-read rules production deployment
+
+Published the complete narrow-read RTDB rules candidate at 2026-08-05 10:05:15 EDT. The staged and post-publish editor content both matched SHA-256 `e0632a98ed106117f03e61da0446ef4b2c2e6ed02ea8c6f1c498a0e7edcb17bf`; Firebase Console did not display a separate rules-version identifier. The private rollback artifact remained available at SHA-256 `bc54eec92875d1d544cc59b92c05b9dec2308340577bd66be22a032efa491926`, and no rollback was required.
+
+Anonymous login-directory autocomplete and exact realtime public-share access passed, including the 71-entry `ScoopskiPotat0` read-only share. TestUser login and exact owned My List categories, Legacy Inventory, Events, Settings, auth-index refresh, memberships, and pending-decrement startup completed without permission errors. A reversible Charmander priority edit propagated to the public projection and was fully restored. Production writes were limited to `wishlist/TestUser`, `users/TestUser/lastUpdated`, `users/TestUser/lastSeen`, and `publicShares/TestUser`; the original list state was restored.
+
+Ordinary-user parent-collection, cross-user profile, disabled share-visibility, private-preference, and Admin collection reads were denied by the deployed rules. Query-around denial remains covered by the 17-test emulator suite because Firebase Rules Playground rejects query strings in its Location field; the deployed parent collection read was independently denied. TestUser logout cleared protected state while preserving the public directory. Same-browser owner login exposed no TestUser residue. Protected Admin open/close/reopen loaded all 13 configured Admin collections without permission errors, removed the Admin surface on close, and reopened with the same 53 rendered rows and no duplicate listeners. Final owner logout, anonymous directory discovery, and the realtime public share recheck passed. No browser warnings, Firebase permission errors on valid flows, listener errors, cache-reset loops, identity changes, membership changes, schema writes, or unrelated production writes occurred.
+
+The Admin Security panel's copyable rules text still reflects the earlier broad-read artifact and must not be used to republish rules. Synchronizing that maintenance-only copy block with the deployed narrow-read rules requires a separately reviewed client documentation fix.
