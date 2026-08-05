@@ -1024,6 +1024,14 @@ share authorization and remain disabled behind a separate synced-preferences
 flag and write gate. The existing UID-partitioned local store remains the
 production path until owner-matched import and multi-device convergence pass.
 
+The completed production share-migration audit now feeds a private local-only
+manual review queue. Review decisions are diagnostic labels with immutable
+source evidence and append-only local history; every record remains
+`seedEligible:false`. Conflict review, owner confirmation, and projection
+republish recommendations do not authorize repair or seeding. Production
+identity changes and normalized handle reservations remain separate milestones
+requiring their own reviewed authority and trusted-service design.
+
 ## Genuinely unresolved questions
 
 - What exact Pokemon GO trainer-name character rules and Unicode case-folding

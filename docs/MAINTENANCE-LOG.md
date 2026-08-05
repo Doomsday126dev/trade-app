@@ -2687,3 +2687,16 @@ This validation performed zero production mutations and changed no Firebase rule
 ## 2026-08-05 - Codex - Additive share visibility migration candidate
 
 Rebased the disabled UID share-visibility and synced-preference rules contract onto the live narrow-read artifact. All existing rule roots and exact `publicShares/{username}` compatibility remain unchanged; the candidate adds only gated future identity, visibility, Approved Viewer, UID-share, compatibility-index, private-preference, and denied group paths. The registry retains the existing 34 production surfaces and adds five disabled exact preference surfaces. Added a GET-only private migration audit for the four approved identity roots, sanitized Auth facts, and bounded exact public-share reads. Every private report record remains `seedEligible:false`, output is aggregate-only, and no migration or write payload can be generated. No production rules, data, identity mappings, client flags, or UI changed.
+
+## 2026-08-05 - Codex - Private share-migration review candidate
+
+Added a local-only diagnostic workflow for the completed share-visibility
+migration audit. The private mode-0600 artifact contains one record per audit
+finding, immutable evidence digests, source-audit and snapshot hashes,
+risk-ordered queues, explicit confidence rules, and append-only hash-chained
+review history. All 52 records begin `unreviewed` and remain
+`seedEligible:false`; the six individually reviewable records are not approved
+for seeding. Normal output is aggregate-only. The tool has no network,
+Firebase, Admin SDK, production credential, repair, projection-generation,
+migration, or seeding capability, and local generation performed zero
+production reads and zero production writes.

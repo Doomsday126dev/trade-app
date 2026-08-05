@@ -330,6 +330,47 @@ Conflicts and unresolved identities require manual review. Console output is
 aggregate-only; detailed reports remain private, git-ignored, and non-write-
 capable. No migration runs in this milestone.
 
+## Private diagnostic review workflow
+
+The local `review:share-visibility` workflow turns one immutable private audit
+into a mode-0600 review queue. It has no Firebase client, network adapter,
+Admin SDK dependency, production credential option, or write-capable output.
+Every imported record starts with `reviewerDecision: unreviewed` and
+`seedEligible: false`; changing a local diagnostic decision never changes that
+seed constraint.
+
+The queue is ordered by protected accounts, duplicate/conflict evidence,
+invalid UID/auth-index linkage, individually reviewable complete projections,
+unresolved records, and missing/incomplete projections. The earlier queue wins
+when one record has several findings, so queue counts do not replace the
+overlapping aggregate reason counts. Exact identities and evidence remain only
+inside the ignored report.
+
+High confidence requires a ready canonical directory entry, a UID-bound user
+record, a matching reverse auth index, and one enabled corroborating sanitized
+Auth identity without conflicts. Public-share contents, entry counts,
+community membership, Pokemon lists, profile flags, and similar display names
+are explicitly excluded as identity authority.
+
+Allowed review decisions are stable diagnostic codes. They can record a
+confirmed conflict, inactive legacy state, need for owner confirmation,
+identity-repair design, projection republishing, insufficient evidence, or a
+protected no-action result. They are not production authorization. Protected
+and conflicting records cannot be labeled as confirmed valid through this
+tool. Missing projections cannot be generated from owned data.
+
+Immutable evidence has per-record digests and a report-level evidence root.
+Local decision changes append a hash-chained history entry while preserving the
+prior decision and note. Each operation verifies the exact source-audit hash;
+changed production state requires a new read-only audit and a regenerated
+review instead of silently merging evidence. This is tamper-evident local
+bookkeeping, not a trusted production approval service.
+
+An actual identity repair, owner-driven share publication, UID mapping seed, or
+visibility activation requires a separate reviewed operation. Normalization,
+handle reservation, strict tag uniqueness, and future identity changes remain
+behind the trusted-service boundary.
+
 ## Staged deployment and rollback
 
 1. Run the private production audit and review aggregate blockers without writes.
