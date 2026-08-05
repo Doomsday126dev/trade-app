@@ -1270,12 +1270,14 @@ html[data-theme="light"] .have-mirror-badge,html[data-theme="light"] .have-mirro
 .sched-event-chip-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:320px}
 .sched-event-bonus{display:inline-flex;align-items:center;background:rgba(16,185,129,.16);color:var(--ok);border:1px solid rgba(16,185,129,.32);padding:1px 6px;border-radius:999px;font-size:10px;font-weight:800}
 .sched-event-chip-link{color:var(--muted);font-size:11px}
-.trainer-search-shell{position:relative;max-width:760px}
+.trainer-search-shell{position:relative;max-width:760px;overflow:visible}
 .trainer-search-row{display:flex;gap:8px;align-items:stretch}
-.trainer-search-row input{flex:1;min-width:0}
-.trainer-suggestions{position:absolute;z-index:30;top:calc(100% + 5px);left:0;right:0;display:none;background:var(--card);border:1px solid var(--border2);border-radius:6px;box-shadow:var(--shadow);max-height:min(320px,45vh);overflow:auto}
+.trainer-combobox{position:relative;flex:1;min-width:0}
+.trainer-combobox input{width:100%;min-width:0}
+.trainer-suggestions{position:absolute;z-index:340;top:calc(100% + 5px);left:0;right:0;display:none;background:var(--card);border:1px solid var(--border2);border-radius:6px;box-shadow:var(--shadow);max-height:var(--trainer-suggestion-max-height,min(320px,45vh));overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.trainer-suggestions[data-placement="above"]{top:auto;bottom:calc(100% + 5px)}
 .trainer-suggestions.open{display:block}
-.trainer-suggestion{width:100%;border:0;border-bottom:1px solid var(--border);background:transparent;color:var(--text);padding:11px 13px;text-align:left;font:600 13px var(--font);cursor:pointer;min-height:44px}
+.trainer-suggestion{width:100%;border:0;border-bottom:1px solid var(--border);background:transparent;color:var(--text);padding:11px 13px;text-align:left;font:600 13px var(--font);cursor:pointer;min-height:44px;overflow-wrap:anywhere}
 .trainer-suggestion:last-child{border-bottom:0}.trainer-suggestion:hover,.trainer-suggestion.active{background:var(--bg2);outline:none}.trainer-suggestion mark{background:rgba(168,139,250,.22);color:var(--ac2);border-radius:2px;padding:0 1px}
 .trainer-quick-section{margin-top:18px}.trainer-quick-heading{font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;margin-bottom:8px}
 .trainer-quick-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:9px}
@@ -1289,7 +1291,9 @@ html[data-theme="light"] .have-mirror-badge,html[data-theme="light"] .have-mirro
 .event-filter-row{display:flex;gap:7px;overflow-x:auto;padding:2px 0 12px;scrollbar-width:thin}.event-filter{white-space:nowrap;border:1px solid var(--border2);background:var(--card);color:var(--muted);border-radius:999px;padding:8px 12px;min-height:40px;font:700 12px var(--font);cursor:pointer}.event-filter.active{background:var(--accent);border-color:var(--accent);color:#fff}
 .event-group{margin-bottom:22px}.event-group-title{font-size:14px;font-weight:800;margin-bottom:10px}.event-card-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.event-card{border:1px solid var(--border);border-left:3px solid var(--accent);background:var(--card);border-radius:6px;padding:13px;display:flex;flex-direction:column;gap:9px;min-width:0;cursor:pointer}.event-card:hover{border-color:var(--ac2)}.event-card-title{font-size:14px;font-weight:800;line-height:1.3;overflow-wrap:anywhere}.event-card-time{font-size:11px;color:var(--muted);line-height:1.45}.event-type-tag{align-self:flex-start;border-radius:999px;padding:3px 7px;background:var(--bg2);border:1px solid var(--border2);font-size:10px;font-weight:800;color:var(--ac2)}.event-card-details{font-size:11px;color:var(--ac2);text-decoration:none;margin-top:auto;align-self:flex-start}
 @media(max-width:900px){.event-card-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:600px){.trainer-search-row{display:grid;grid-template-columns:1fr auto}.trainer-search-row .bsave{min-width:44px;padding-inline:12px}.trainer-quick-grid,.event-card-grid{grid-template-columns:1fr}.trainer-quick-card{padding:10px}.trainer-icon-btn{width:44px;height:44px}.event-card{padding:12px}.my-string-heading{align-items:flex-start}}
+@media(max-width:600px){#tab-find{overflow:visible}.trainer-search-shell.suggestions-open{z-index:330}.trainer-search-row{display:grid;grid-template-columns:minmax(0,1fr) auto}.trainer-search-row .bsave{min-width:44px;padding-inline:12px}.trainer-suggestion{min-height:48px;font-size:14px}.trainer-quick-grid,.event-card-grid{grid-template-columns:1fr}.trainer-quick-card{padding:10px}.trainer-icon-btn{width:44px;height:44px}.event-card{padding:12px}.my-string-heading{align-items:flex-start}}
+.owner-share-notice{display:none;margin:10px 0 2px;padding:12px;border:1px solid rgba(245,158,11,.38);border-radius:6px;background:rgba(245,158,11,.08)}
+.owner-share-notice.visible{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap}.owner-share-notice-copy{flex:1;min-width:210px}.owner-share-notice-title{font-weight:800;font-size:13px}.owner-share-notice-body{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.5}.owner-share-notice button{min-height:44px}
 .sched-manual-bonus{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--bg);border:1px dashed var(--border2);border-radius:var(--r2);margin-bottom:10px;font-size:12px;flex-wrap:wrap}
 .sched-manual-bonus-text{flex:1;min-width:160px}
 .sched-manual-bonus-text strong{color:var(--text);font-size:12px;display:block;margin-bottom:1px}
@@ -1834,12 +1838,14 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
     </div>
     <div class="add-form trainer-search-shell">
       <div class="trainer-search-row">
-        <input type="text" id="find-trainer-input" autocomplete="off" autocapitalize="none" spellcheck="false"
-          role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="find-trainer-suggestions"
-          oninput="queueTrainerSuggestions(this.value)" onfocus="queueTrainerSuggestions(this.value,true)" onblur="setTimeout(closeTrainerSuggestions,120)" onkeydown="trainerSearchKeydown(event)">
+        <div class="trainer-combobox">
+          <input type="text" id="find-trainer-input" autocomplete="off" autocapitalize="none" spellcheck="false"
+            role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="find-trainer-suggestions"
+            oninput="queueTrainerSuggestions(this.value)" onfocus="trainerSearchFocused(this)" onblur="setTimeout(closeTrainerSuggestions,120)" onkeydown="trainerSearchKeydown(event)">
+          <div class="trainer-suggestions" id="find-trainer-suggestions" role="listbox"></div>
+        </div>
         <button class="bsave" id="find-trainer-button" onclick="openTrainerPublicShare()"></button>
       </div>
-      <div class="trainer-suggestions" id="find-trainer-suggestions" role="listbox"></div>
       <div id="find-trainer-status" role="status" aria-live="polite" style="font-size:12px;color:var(--muted);margin-top:8px"></div>
       <button class="bghost" id="find-trainer-reload" style="display:none;margin-top:8px" onclick="reloadCompatibleClient()"></button>
     </div>
@@ -1920,6 +1926,7 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
       </div>
       <div class="speed-add-hint" id="speed-add-hint">Speed add is on — after each add, your priority and flags stay selected so you can keep going faster.</div>
     </div>
+    <div class="owner-share-notice" id="owner-share-notice" role="status" aria-live="polite"></div>
     <div class="bulk-bar" id="bulk-bar" role="toolbar" aria-label="Bulk actions">
       <span class="bulk-count" id="bulk-count">0 selected</span>
       <select id="bulk-pri-sel" class="bulk-btn" aria-label="Set priority for selected">
@@ -2413,7 +2420,7 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
 <div class="ptr-indicator" id="ptr-indicator" aria-hidden="true">↓</div>
 
 <script>
-window.__POGO_RELEASE_ID='2026-08-05.2';
+window.__POGO_RELEASE_ID='2026-08-05.3';
 window.__pogoBootWatch=setTimeout(function(){
   var visible=['config-pg','login-pg','app'].some(function(id){
     var el=document.getElementById(id);
@@ -2432,45 +2439,48 @@ window.__pogoBootWatch=setTimeout(function(){
   if(err)err.textContent='App scripts did not finish loading. Refresh once; if this stays, send this screenshot.';
 },4000);
 </script>
-<script src="data.js?v=2026-08-05.2"></script>
-<script src="js/domain/priorities.js?v=2026-08-05.2"></script>
-<script src="js/ui/badges.js?v=2026-08-05.2"></script>
-<script src="js/domain/username.js?v=2026-08-05.2"></script>
-<script src="js/domain/priorityValues.js?v=2026-08-05.2"></script>
-<script src="js/domain/scheduleDates.js?v=2026-08-05.2"></script>
-<script src="js/domain/pokemonSearchTerms.js?v=2026-08-05.2"></script>
-<script src="js/domain/pokemonEntryRules.js?v=2026-08-05.2"></script>
-<script src="js/domain/searchStrings.js?v=2026-08-05.2"></script>
-<script src="js/ui/stringHtml.js?v=2026-08-05.2"></script>
-<script src="js/domain/scheduleEventRules.js?v=2026-08-05.2"></script>
-<script src="js/domain/scheduleTradeRules.js?v=2026-08-05.2"></script>
-<script src="js/domain/pokemonKeys.js?v=2026-08-05.2"></script>
-<script src="js/domain/spriteSlugs.js?v=2026-08-05.2"></script>
-<script src="js/domain/fuzzyText.js?v=2026-08-05.2"></script>
-<script src="js/domain/autocompleteText.js?v=2026-08-05.2"></script>
-<script src="js/domain/autocompleteMatching.js?v=2026-08-05.2"></script>
-<script src="js/domain/autocompleteRanking.js?v=2026-08-05.2"></script>
-<script src="js/domain/relativeTime.js?v=2026-08-05.2"></script>
-<script src="js/domain/clientRelease.js?v=2026-08-05.2"></script>
-<script src="js/domain/trainerDiscovery.js?v=2026-08-05.2"></script>
-<script src="js/domain/eventPresentation.js?v=2026-08-05.2"></script>
-<script src="js/domain/publicSharePublication.js?v=2026-08-05.2"></script>
-<script src="js/domain/loginDirectory.js?v=2026-08-05.2"></script>
-<script src="js/utils/textSafety.js?v=2026-08-05.2"></script>
-<script src="js/ui/stringPanels.js?v=2026-08-05.2"></script>
-<script src="js/ui/emptyState.js?v=2026-08-05.2"></script>
-<script src="js/i18n/locales/en.js?v=2026-08-05.2"></script>
-<script src="js/i18n/core.js?v=2026-08-05.2"></script>
-<script src="js/services/firebaseClient.js?v=2026-08-05.2"></script>
-<script src="js/data/subscriptionManager.js?v=2026-08-05.2"></script>
-<script src="js/data/listenerLifecycle.js?v=2026-08-05.2"></script>
-<script src="js/data/sessionCacheBoundary.js?v=2026-08-05.2"></script>
-<script src="js/data/firebaseReadRegistry.js?v=2026-08-05.2"></script>
-<script src="js/data/currentUserRepository.js?v=2026-08-05.2"></script>
-<script src="js/data/ownedDataCoordinator.js?v=2026-08-05.2"></script>
-<script src="js/data/publicShareRepository.js?v=2026-08-05.2"></script>
-<script src="js/data/trainerHistoryStore.js?v=2026-08-05.2"></script>
-<script src="js/domain/cacheAdapters.js?v=2026-08-05.2"></script>
+<script src="data.js?v=2026-08-05.3"></script>
+<script src="js/domain/priorities.js?v=2026-08-05.3"></script>
+<script src="js/ui/badges.js?v=2026-08-05.3"></script>
+<script src="js/domain/username.js?v=2026-08-05.3"></script>
+<script src="js/domain/priorityValues.js?v=2026-08-05.3"></script>
+<script src="js/domain/scheduleDates.js?v=2026-08-05.3"></script>
+<script src="js/domain/pokemonSearchTerms.js?v=2026-08-05.3"></script>
+<script src="js/domain/pokemonEntryRules.js?v=2026-08-05.3"></script>
+<script src="js/domain/searchStrings.js?v=2026-08-05.3"></script>
+<script src="js/ui/stringHtml.js?v=2026-08-05.3"></script>
+<script src="js/domain/scheduleEventRules.js?v=2026-08-05.3"></script>
+<script src="js/domain/scheduleTradeRules.js?v=2026-08-05.3"></script>
+<script src="js/domain/pokemonKeys.js?v=2026-08-05.3"></script>
+<script src="js/domain/spriteSlugs.js?v=2026-08-05.3"></script>
+<script src="js/domain/fuzzyText.js?v=2026-08-05.3"></script>
+<script src="js/domain/autocompleteText.js?v=2026-08-05.3"></script>
+<script src="js/domain/autocompleteMatching.js?v=2026-08-05.3"></script>
+<script src="js/domain/autocompleteRanking.js?v=2026-08-05.3"></script>
+<script src="js/domain/relativeTime.js?v=2026-08-05.3"></script>
+<script src="js/domain/clientRelease.js?v=2026-08-05.3"></script>
+<script src="js/domain/trainerDiscovery.js?v=2026-08-05.3"></script>
+<script src="js/domain/eventPresentation.js?v=2026-08-05.3"></script>
+<script src="js/domain/publicSharePublication.js?v=2026-08-05.3"></script>
+<script src="js/domain/trainerPreferences.js?v=2026-08-05.3"></script>
+<script src="js/domain/loginDirectory.js?v=2026-08-05.3"></script>
+<script src="js/utils/textSafety.js?v=2026-08-05.3"></script>
+<script src="js/ui/stringPanels.js?v=2026-08-05.3"></script>
+<script src="js/ui/emptyState.js?v=2026-08-05.3"></script>
+<script src="js/i18n/locales/en.js?v=2026-08-05.3"></script>
+<script src="js/i18n/core.js?v=2026-08-05.3"></script>
+<script src="js/services/firebaseClient.js?v=2026-08-05.3"></script>
+<script src="js/data/subscriptionManager.js?v=2026-08-05.3"></script>
+<script src="js/data/listenerLifecycle.js?v=2026-08-05.3"></script>
+<script src="js/data/sessionCacheBoundary.js?v=2026-08-05.3"></script>
+<script src="js/data/firebaseReadRegistry.js?v=2026-08-05.3"></script>
+<script src="js/data/currentUserRepository.js?v=2026-08-05.3"></script>
+<script src="js/data/ownedDataCoordinator.js?v=2026-08-05.3"></script>
+<script src="js/data/publicShareRepository.js?v=2026-08-05.3"></script>
+<script src="js/data/trainerHistoryStore.js?v=2026-08-05.3"></script>
+<script src="js/data/trainerPreferencesRepository.js?v=2026-08-05.3"></script>
+<script src="js/domain/cacheAdapters.js?v=2026-08-05.3"></script>
+<script src="js/ui/trainerTagPanel.js?v=2026-08-05.3"></script>
 <script>
 let initializeApp,getDatabase,ref,set,get,onValue,update,getAuth,signInWithEmailAndPassword,createUserWithEmailAndPassword,firebaseSignOut,updatePassword,deleteUser,onAuthStateChanged;
 let firebaseSdkPromise=null;
@@ -2543,6 +2553,12 @@ const eventPresentationDomain=window.PogoDomain?.eventPresentation;
 if(!eventPresentationDomain)throw new Error('Event presentation helpers failed to load');
 const publicSharePublicationDomain=window.PogoDomain?.publicSharePublication;
 if(!publicSharePublicationDomain)throw new Error('Public-share publication helpers failed to load');
+const trainerPreferencesDomain=window.PogoDomain?.trainerPreferences;
+if(!trainerPreferencesDomain||trainerPreferencesDomain.SYNCED_TRAINER_PREFERENCES_ENABLED!==false)throw new Error('Disabled trainer-preference helpers failed to load safely');
+const trainerPreferencesRepositoryData=window.PogoData?.trainerPreferencesRepository;
+if(!trainerPreferencesRepositoryData)throw new Error('Trainer-preference repository failed to load');
+const trainerTagPanelUi=window.PogoUI?.trainerTagPanel;
+if(!trainerTagPanelUi)throw new Error('Trainer-tag UI helpers failed to load');
 const loginDirectoryDomain=window.PogoDomain?.loginDirectory;
 if(!loginDirectoryDomain)throw new Error('Login-directory helpers failed to load');
 const cacheAdapterDomain=window.PogoDomain?.cacheAdapters;
@@ -2556,9 +2572,11 @@ let managedOwnedDataCoordinator=null;
 let managedPublicShareRepository=null;
 let trainerHistoryStore=null;
 const managedPublicSharePublication=publicSharePublicationDomain.createPublicSharePublicationGate();
+const managedTrainerPreferencesRepository=trainerPreferencesRepositoryData.createTrainerPreferencesRepository({enabled:false});
 const managedLoginDirectory=loginDirectoryDomain.createLoginDirectoryState();
 let activePublicShareHydrationToken=null;
 let _lastPublicShareBlockedNotice='';
+let ownerPublicShareReview={generation:0,status:'idle',republishRequired:false,busy:false};
 
 const OWNER="Doomsday126";
 const APP_VERSION="4.6.37";
@@ -3498,6 +3516,9 @@ async function flushSyncQueue(){
       if(syncQueue[path]?.ts===item.ts)delete syncQueue[path];
       saveSyncQueue();
       refreshSyncUi();
+      if(path===`publicShares/${cur}`&&activePublicShareHydrationToken&&publicShareSessionMatches(cur)){
+        inspectOwnPublicShareAfterHydration(activePublicShareHydrationToken);
+      }
     }catch(e){
       // Distinguish permanent rejection (rules said no — retrying won't help)
       // from transient failure (offline, network). Permanent rejections were
@@ -3751,6 +3772,7 @@ function activateOwnedSession(uid,username){
     throw error;
   }
   activePublicShareHydrationToken=hydration.token;
+  ownerPublicShareReview={generation:hydration.token.generation,status:'waiting_for_hydration',republishRequired:false,busy:false};
   return result;
 }
 function storedSessionMatches(uid,username){
@@ -3760,6 +3782,7 @@ function storedSessionMatches(uid,username){
 function suspendOwnedSession(reason='auth_loss'){
   managedPublicSharePublication.invalidate(reason);
   activePublicShareHydrationToken=null;
+  ownerPublicShareReview={generation:0,status:'idle',republishRequired:false,busy:false};
   managedSessionCache.suspend(reason);
   syncQueue={};
   allData=getLocal();
@@ -3767,6 +3790,7 @@ function suspendOwnedSession(reason='auth_loss'){
 function clearOwnedSession(){
   managedPublicSharePublication.invalidate('logout');
   activePublicShareHydrationToken=null;
+  ownerPublicShareReview={generation:0,status:'idle',republishRequired:false,busy:false};
   managedSessionCache.clearForLogout();
   syncQueue={};
   allData=getLocal();
@@ -4242,6 +4266,54 @@ async function publishPublicShareNow(username=cur,trigger='explicit_share'){
     return{ok:true,status:'published'};
   }
   return{ok:false,error:{code:'share-publication/offline',message:'Firebase session is unavailable'}};
+}
+
+function ownerShareNoticeKey(status){
+  return{
+    missing_projection:'share.ownerMissing',profile_only:'share.ownerProfileOnly',
+    missing_published_list_types:'share.ownerMissingMarkers',incomplete_list_projection:'share.ownerIncomplete',
+    unsupported_projection:'share.ownerUnsupported',transport_error:'share.ownerReadError'
+  }[status]||'share.ownerIncomplete';
+}
+function renderOwnerShareRepublishNotice(){
+  const el=document.getElementById('owner-share-notice');if(!el)return;
+  const state=ownerPublicShareReview;
+  if(!cur||!state.republishRequired){el.classList.remove('visible');el.innerHTML='';return;}
+  el.classList.add('visible');
+  el.innerHTML=`<div class="owner-share-notice-copy"><div class="owner-share-notice-title">${escHtml(i18nCore.t('share.ownerTitle'))}</div><div class="owner-share-notice-body">${escHtml(i18nCore.t(ownerShareNoticeKey(state.status)))} ${escHtml(i18nCore.t('share.ownerPrivateSafe'))}</div></div><button class="bsave" onclick="republishOwnPublicShare()" ${state.busy?'disabled':''}>${escHtml(i18nCore.t(state.busy?'share.ownerRepublishing':'share.ownerRepublishAction'))}</button>`;
+}
+async function inspectOwnPublicShareAfterHydration(token=activePublicShareHydrationToken){
+  if(!token||!publicShareSessionMatches(token.username)||managedPublicSharePublication.snapshot().surfaces.profile!=='loaded')return{ok:false,status:'not_ready'};
+  const readiness=managedPublicSharePublication.authorize(token,'explicit_share');
+  if(!readiness.ok)return readiness;
+  const generation=token.generation;
+  let status;
+  try{
+    const result=await managedPublicShareRepository.read(token.username);
+    if(!publicShareSessionMatches(token.username)||activePublicShareHydrationToken?.generation!==generation)return{ok:false,status:'stale'};
+    if(!result.ok)status={status:'transport_error',republishRequired:true};
+    else status=publicSharePublicationDomain.ownerProjectionReview(result.value,{username:token.username});
+  }catch(error){status={status:'transport_error',republishRequired:true};}
+  if(!publicShareSessionMatches(token.username)||activePublicShareHydrationToken?.generation!==generation)return{ok:false,status:'stale'};
+  ownerPublicShareReview={generation,status:status.status,republishRequired:!!status.republishRequired,busy:false};
+  renderOwnerShareRepublishNotice();
+  return{ok:true,...ownerPublicShareReview};
+}
+async function republishOwnPublicShare(){
+  const token=activePublicShareHydrationToken;if(!token||!publicShareSessionMatches(token.username))return;
+  ownerPublicShareReview={...ownerPublicShareReview,busy:true};renderOwnerShareRepublishNotice();
+  try{
+    const result=await publishPublicShareNow(token.username,'explicit_share');
+    if(!result.ok||result.status!=='published')throw new Error(result.error?.code||result.status||'publication_failed');
+    const verified=await inspectOwnPublicShareAfterHydration(token);
+    if(!verified.ok||verified.republishRequired)throw new Error('share-publication/verification-failed');
+    toast(i18nCore.t('share.ownerRepublishSuccess'),3500);
+  }catch(error){
+    if(publicShareSessionMatches(token.username)&&activePublicShareHydrationToken?.generation===token.generation){
+      ownerPublicShareReview={...ownerPublicShareReview,busy:false,republishRequired:true};renderOwnerShareRepublishNotice();
+      toast(i18nCore.t('share.ownerRepublishFailed'),6000);
+    }
+  }
 }
 
 async function writeUser(u,data){
@@ -5113,7 +5185,10 @@ function _onOwnedDataSnapshot({surface,path,value}){
   if(Object.keys(syncQueue||{}).length)saveLocal(allData);
   if((surface==='profile'||PUBLIC_SHARE_TYPES.includes(surface))&&activePublicShareHydrationToken){
     const marked=managedPublicSharePublication.markLoaded(activePublicShareHydrationToken,surface);
-    if(marked.ok&&marked.ready)flushPendingPublicSharePublication();
+    if(marked.ok&&marked.ready){
+      const pendingPublication=flushPendingPublicSharePublication();
+      if(pendingPublication?.status!=='queued')inspectOwnPublicShareAfterHydration(activePublicShareHydrationToken);
+    }
   }
   _pathLoadState[path]='loaded';
   _ownedReadErrorShown=false;
@@ -5935,11 +6010,27 @@ function renderFindTrainer(){
   renderTrainerQuickLists();
 }
 function closeTrainerSuggestions(){
-  const box=document.getElementById('find-trainer-suggestions'),input=document.getElementById('find-trainer-input');
+  const box=document.getElementById('find-trainer-suggestions'),input=document.getElementById('find-trainer-input'),shell=document.querySelector('.trainer-search-shell');
   if(box){box.classList.remove('open');box.innerHTML='';}
+  shell?.classList.remove('suggestions-open');
   if(input){input.setAttribute('aria-expanded','false');input.removeAttribute('aria-activedescendant');}
   trainerSuggestionItems=[];trainerSuggestionIndex=-1;trainerSuggestionQuery='';
 }
+function positionTrainerSuggestions(){
+  const input=document.getElementById('find-trainer-input'),box=document.getElementById('find-trainer-suggestions');if(!input||!box)return;
+  const viewport=window.visualViewport;
+  const top=viewport?.offsetTop||0,height=viewport?.height||window.innerHeight,bottom=top+height;
+  const rect=input.getBoundingClientRect(),safe=12,spaceBelow=bottom-rect.bottom-safe,spaceAbove=rect.top-top-safe;
+  const above=spaceBelow<176&&spaceAbove>spaceBelow;
+  box.dataset.placement=above?'above':'below';
+  box.style.setProperty('--trainer-suggestion-max-height',`${Math.max(96,Math.min(320,(above?spaceAbove:spaceBelow)-8))}px`);
+}
+function trainerSearchFocused(input){
+  input?.scrollIntoView?.({block:'center',behavior:'smooth'});
+  queueTrainerSuggestions(input?.value,true);
+}
+window.visualViewport?.addEventListener('resize',()=>document.getElementById('find-trainer-suggestions')?.classList.contains('open')&&positionTrainerSuggestions());
+window.visualViewport?.addEventListener('scroll',()=>document.getElementById('find-trainer-suggestions')?.classList.contains('open')&&positionTrainerSuggestions());
 function trainerSuggestionOptions(){
   const store=ensureTrainerHistoryStore(),state=store?.read?.();
   return{
@@ -5965,7 +6056,7 @@ function renderTrainerSuggestions(value){
   trainerSuggestionItems=rankedTrainerSuggestions(query);trainerSuggestionQuery=trainerDiscoveryDomain.fold(query);
   trainerSuggestionIndex=trainerSuggestionItems.length?0:-1;
   if(!trainerSuggestionItems.length){closeTrainerSuggestions();if(status)status.textContent=i18nCore.t('trainer.noMatch');return;}
-  box.innerHTML=trainerSuggestionItems.map(trainerSuggestionHtml).join('');box.classList.add('open');input.setAttribute('aria-expanded','true');
+  box.innerHTML=trainerSuggestionItems.map(trainerSuggestionHtml).join('');box.classList.add('open');document.querySelector('.trainer-search-shell')?.classList.add('suggestions-open');positionTrainerSuggestions();input.setAttribute('aria-expanded','true');
   input.setAttribute('aria-activedescendant','trainer-suggestion-0');if(status)status.textContent='';
 }
 function queueTrainerSuggestions(value,immediate=false){
@@ -6764,7 +6855,7 @@ function renderMyList(filterVal){
 
   if(!entries.length){
     el.innerHTML=q?emptyHtml('No matches','Clear the filter to see all.'):emptyHtml('Nothing here yet','Search for a Pokémon, set a priority or flag, then Add. For big migrations, use Import string. For long sessions, Speed add keeps your settings sticky.','📋');
-    renderMyStrings();return;
+    renderMyStrings();renderOwnerShareRepublishNotice();return;
   }
 
   el.innerHTML=`<div class="mygrid" id="mylist-grid">${entries.map((entry,idx)=>{
@@ -6795,6 +6886,7 @@ function renderMyList(filterVal){
     </div>`;
   }).join('')}</div>`;
   renderMyStrings();
+  renderOwnerShareRepublishNotice();
   applyTypeColors();
   attachSwipeHandlers();
 }
@@ -10071,7 +10163,10 @@ async function copyShareLink(){
   }
   toast('🔗 Share link copied! Updating public snapshot…',3500);
   publishPublicShareNow(cur,'explicit_share').then(result=>{
-    if(result?.status==='published')toast(i18nCore.t('share.publicationUpdated'),3500);
+    if(result?.status==='published'){
+      toast(i18nCore.t('share.publicationUpdated'),3500);
+      inspectOwnPublicShareAfterHydration(activePublicShareHydrationToken);
+    }
     else if(result?.status==='pending')toast(i18nCore.t('share.publicationPending'),6000);
     else toast(i18nCore.t('share.publicationNotReady'),6000);
   }).catch(e=>{

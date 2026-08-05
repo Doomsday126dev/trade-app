@@ -78,6 +78,35 @@ async function expectAutocompleteClears(page, inputSelector, dropdownSelector) {
 }
 
 test.describe('visual smoke', () => {
+  for (const width of [320, 375, 390, 430]) {
+    test(`find trainer suggestions stay visible at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 640 });
+      await page.goto(`./?autocomplete-layout=${width}-${Date.now()}`, { waitUntil: 'domcontentloaded' });
+      await page.waitForFunction(() => typeof renderTrainerSuggestions === 'function');
+      await page.evaluate(() => {
+        document.getElementById('login-pg').style.display='none';
+        document.getElementById('app').style.display='block';
+        document.querySelectorAll('.page').forEach(node=>node.classList.remove('active'));
+        document.getElementById('tab-find').classList.add('active');
+        allData.loginDirectory={LongTrainerNameForMobileTesting:{ready:true},TrainerAlpha:{ready:true},TrainerBeta:{ready:true}};
+        const input=document.getElementById('find-trainer-input');
+        input.value='Tr';
+        renderTrainerSuggestions('Tr');
+      });
+      const dropdown=page.locator('#find-trainer-suggestions.open');
+      await expect(dropdown).toBeVisible();
+      const box=await dropdown.boundingBox();
+      const bodyWidth=await page.evaluate(()=>document.documentElement.scrollWidth);
+      expect(box.x).toBeGreaterThanOrEqual(0);
+      expect(box.x+box.width).toBeLessThanOrEqual(width+1);
+      expect(box.y).toBeGreaterThanOrEqual(0);
+      expect(box.y).toBeLessThan(640);
+      expect(bodyWidth).toBeLessThanOrEqual(width);
+      await page.keyboard.press('ArrowDown');
+      await expect(page.locator('.trainer-suggestion.active')).toBeVisible();
+    });
+  }
+
   test('find trainer autocomplete suggests public directory names', async ({ page }) => {
     await signIn(page);
     await openMainTab(page, 'find');

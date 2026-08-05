@@ -47,16 +47,80 @@
       lastSeenSnapshot:Object.freeze({...entries})
     })});
   }
-  function planLocalImport({activeIdentity,partitionIdentity,local={}}={}){
+  function preferenceMergePreview(local={},server={}){
+    const favorites={...(server.favorites||{})};
+    for(const [ownerUid,value] of Object.entries(local.favorites||{}))if(!favorites[ownerUid])favorites[ownerUid]={...value,ownerUid};
+    const history={...(server.history||{})};
+    for(const [ownerUid,value] of Object.entries(local.history||{})){
+      const remote=history[ownerUid];
+      if(!remote||Number(value?.lastSeenUpdatedAt||0)>Number(remote?.lastSeenUpdatedAt||0))history[ownerUid]={...value};
+    }
+    return Object.freeze({favorites:Object.freeze(favorites),history:Object.freeze(history)});
+  }
+  function planLocalImport({activeIdentity,partitionIdentity,local={},server={}}={}){
     const activeUid=String(activeIdentity?.uid||''),activeUsername=String(activeIdentity?.username||'');
     if(!activeUid||!activeUsername)return error('trainer-preferences/identity-required','Verified identity is required');
     if(activeUid!==String(partitionIdentity?.uid||'')||activeUsername!==String(partitionIdentity?.username||''))return error('trainer-preferences/partition-mismatch','Local preferences belong to another account');
-    return Object.freeze({ok:true,status:'review_required',owner:Object.freeze({uid:activeUid,username:activeUsername}),counts:Object.freeze({favorites:Object.keys(local.favorites||{}).length,recents:Object.keys(local.recents||{}).length}),writesEnabled:false,deleteLocal:false});
+    const preview=preferenceMergePreview(local,server);
+    return Object.freeze({ok:true,status:'review_required',owner:Object.freeze({uid:activeUid,username:activeUsername}),counts:Object.freeze({favorites:Object.keys(preview.favorites).length,recents:Object.keys(local.recents||{}).length,history:Object.keys(preview.history).length}),strategy:Object.freeze({dedupeFavoritesBy:'ownerUid',preserveNewerHistoryBy:'lastSeenUpdatedAt',requireServerVerification:true}),writesEnabled:false,deleteLocal:false});
+  }
+
+  function normalizeTagRecord(tagId,value={}){
+    const id=String(tagId||'').trim();
+    if(!/^tag_[a-z0-9_-]{1,80}$/.test(id))return error('trainer-preferences/tag-id-invalid','Tag identifier is invalid');
+    const label=normalizeTagLabel(value.displayLabel);
+    if(!label.ok)return label;
+    return Object.freeze({ok:true,value:Object.freeze({tagId:id,displayLabel:label.displayLabel,normalizedLabel:label.normalizedLabel,labelKey:label.labelKey,deletedAt:Number(value.deletedAt||0)||null})});
+  }
+  function createTag(state,label,{tagId,now=Date.now()}={}){
+    const normalized=normalizeTagLabel(label);if(!normalized.ok)return normalized;
+    const tags={...(state?.tags||{})};
+    const duplicate=Object.values(tags).some(tag=>!tag?.deletedAt&&tag?.normalizedLabel===normalized.normalizedLabel);
+    if(duplicate)return error('trainer-preferences/tag-duplicate','A tag with this normalized label already exists');
+    const id=String(tagId||`tag_${Number(now).toString(36)}`);
+    const record=normalizeTagRecord(id,{displayLabel:normalized.displayLabel});if(!record.ok)return record;
+    tags[id]={...record.value,createdAt:Number(now),updatedAt:Number(now)};
+    return Object.freeze({ok:true,tags:Object.freeze(tags)});
+  }
+  function renameTag(state,tagId,label,{now=Date.now()}={}){
+    const tags={...(state?.tags||{})},current=tags[tagId];
+    if(!current||current.deletedAt)return error('trainer-preferences/tag-missing','Tag does not exist');
+    const normalized=normalizeTagLabel(label);if(!normalized.ok)return normalized;
+    if(Object.entries(tags).some(([id,tag])=>id!==tagId&&!tag?.deletedAt&&tag?.normalizedLabel===normalized.normalizedLabel))return error('trainer-preferences/tag-duplicate','A tag with this normalized label already exists');
+    tags[tagId]={...current,displayLabel:normalized.displayLabel,normalizedLabel:normalized.normalizedLabel,labelKey:normalized.labelKey,updatedAt:Number(now)};
+    return Object.freeze({ok:true,tags:Object.freeze(tags)});
+  }
+  function softDeleteTag(state,tagId,{now=Date.now()}={}){
+    const tags={...(state?.tags||{})},current=tags[tagId];
+    if(!current)return error('trainer-preferences/tag-missing','Tag does not exist');
+    tags[tagId]={...current,deletedAt:Number(now),updatedAt:Number(now)};
+    const favorites=Object.fromEntries(Object.entries(state?.favorites||{}).map(([ownerUid,favorite])=>[ownerUid,{...favorite,tagIds:(favorite.tagIds||[]).filter(id=>id!==tagId)}]));
+    return Object.freeze({ok:true,tags:Object.freeze(tags),favorites:Object.freeze(favorites)});
+  }
+  function setFavoriteTags(state,ownerUid,tagIds=[]){
+    const uid=String(ownerUid||'').trim();if(!uid)return error('trainer-preferences/favorite-invalid','Favorite trainer is invalid');
+    const tags=state?.tags||{},ids=[...new Set(tagIds.map(String))];
+    if(ids.some(id=>!tags[id]||tags[id].deletedAt))return error('trainer-preferences/tag-assignment-invalid','Tag assignment references an unavailable tag');
+    const favorites={...(state?.favorites||{})},current=favorites[uid]||{ownerUid:uid};
+    favorites[uid]={...current,tagIds:ids};
+    return Object.freeze({ok:true,favorites:Object.freeze(favorites)});
+  }
+  function filterFavorites(state,{query='',tagIds=[],matchAllTags=false}={}){
+    const needle=String(query||'').normalize('NFKC').trim().toLowerCase();
+    const selected=[...new Set(tagIds.map(String))];
+    const tags=state?.tags||{};
+    return Object.values(state?.favorites||{}).filter(favorite=>{
+      const assigned=favorite.tagIds||[];
+      const tagsMatch=!selected.length||(matchAllTags?selected.every(id=>assigned.includes(id)):selected.some(id=>assigned.includes(id)));
+      const text=[favorite.trainerName,...assigned.map(id=>tags[id]?.displayLabel||'')].join(' ').normalize('NFKC').toLowerCase();
+      return tagsMatch&&(!needle||text.includes(needle));
+    });
   }
 
   root.trainerPreferences=Object.freeze({
     SYNCED_TRAINER_PREFERENCES_ENABLED:false,
     MAX_TAG_LABEL_LENGTH,MAX_NOTE_LENGTH,MAX_RECENT_TRAINERS,MAX_HISTORY_ENTRIES,
-    normalizeTagLabel,mergeRecentTrainerSlots,advanceSeenState,planLocalImport
+    normalizeTagLabel,normalizeTagRecord,createTag,renameTag,softDeleteTag,setFavoriteTags,filterFavorites,
+    mergeRecentTrainerSlots,advanceSeenState,preferenceMergePreview,planLocalImport
   });
 })(window);

@@ -97,6 +97,24 @@
     };
   }
 
+  function ownerProjectionReview(snapshot,{username}={}){
+    if(snapshot===null||snapshot===undefined)return{ok:true,status:'missing_projection',republishRequired:true};
+    if(!plainObject(snapshot))return{ok:true,status:'unsupported_projection',republishRequired:true};
+    const hasProfile=plainObject(snapshot.profile);
+    const source=projectionLists(snapshot);
+    const publishedTypes=normalizedPublishedTypes(snapshot.publishedListTypes);
+    if(hasProfile&&!source&&publishedTypes.length===0)return{ok:true,status:'profile_only',republishRequired:true};
+    if(source&&publishedTypes.length!==REQUIRED_LIST_SURFACES.length){
+      return{ok:true,status:'missing_published_list_types',republishRequired:true};
+    }
+    if(!source&&publishedTypes.length!==REQUIRED_LIST_SURFACES.length)return{ok:true,status:'incomplete_list_projection',republishRequired:true};
+    const projection=publicShareProjectionStatus(snapshot,{username});
+    if(!projection.ok){
+      return{ok:true,status:projection.status==='projection_incomplete'?'incomplete_list_projection':'unsupported_projection',republishRequired:true};
+    }
+    return{ok:true,status:'valid_complete_projection',republishRequired:false,entryCount:projection.entryCount};
+  }
+
   function createPublicSharePublicationGate(){
     let generation=0;
     let active=null;
@@ -212,6 +230,6 @@
 
   root.publicSharePublication=Object.freeze({
     REQUIRED_LIST_SURFACES,REQUIRED_SOURCE_SURFACES,ALLOWED_TRIGGERS,LIST_ALIASES,
-    publicShareProjectionStatus,createPublicSharePublicationGate,buildPublicShareSnapshot
+    publicShareProjectionStatus,ownerProjectionReview,createPublicSharePublicationGate,buildPublicShareSnapshot
   });
 })(window);

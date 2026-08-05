@@ -41,6 +41,16 @@ test('public projection status distinguishes unpublished, incomplete, empty, and
   assert.equal(publication.publicShareProjectionStatus(populated,{username:'TrainerA'}).status,'published');
 });
 
+test('owner review distinguishes repair states and accepts only current complete projections',()=>{
+  assert.equal(publication.ownerProjectionReview(null,{username:'TrainerA'}).status,'missing_projection');
+  assert.equal(publication.ownerProjectionReview({version:1,username:'TrainerA',profile:{}},{username:'TrainerA'}).status,'profile_only');
+  assert.equal(publication.ownerProjectionReview({version:1,username:'TrainerA',profile:{},lists:{wishlist:{Pikachu:'H'}}},{username:'TrainerA'}).status,'missing_published_list_types');
+  assert.equal(publication.ownerProjectionReview({version:1,username:'TrainerA',profile:{},publishedListTypes:['wishlist','dynamax','gmax','costumes']},{username:'TrainerA'}).status,'valid_complete_projection');
+  const h=hydratedHarness();complete(h.gate,h.token);
+  const completeShare=publication.buildPublicShareSnapshot({gate:h.gate,token:h.token,trigger:'explicit_share',username:'TrainerA',source:shareSource()}).snapshot;
+  assert.deepEqual(JSON.parse(JSON.stringify(publication.ownerProjectionReview(completeShare,{username:'TrainerA'}))),{ok:true,status:'valid_complete_projection',republishRequired:false,entryCount:1});
+});
+
 test('RTDB-stripped empty categories remain valid when a recognized list is present',()=>{
   const stored={version:1,username:'TrainerA',profile:{},lists:{wishlist:{Pikachu:'H'}}};
   const result=publication.publicShareProjectionStatus(stored,{username:'TrainerA'});
@@ -207,6 +217,17 @@ test('actual login ordering never republishes from writeUserNow before exact hyd
   assert.doesNotMatch(writeNow,/publicShares|publicShareSnapshotForUser|requestPublicSharePublication/);
   assert.match(exact,/for\(const type of PUBLIC_SHARE_TYPES\)/);
   assert.match(exact,/managedOwnedDataCoordinator\.subscribeList\(type\)/);
+});
+
+test('owner republish prompt reads only the owner projection and clears after verified explicit success',()=>{
+  const inspect=between('async function inspectOwnPublicShareAfterHydration','async function republishOwnPublicShare');
+  const republish=between('async function republishOwnPublicShare','async function writeUser(u,data)');
+  assert.match(inspect,/managedPublicSharePublication\.authorize\(token,'explicit_share'\)/);
+  assert.match(inspect,/managedPublicShareRepository\.read\(token\.username\)/);
+  assert.doesNotMatch(inspect,/wishlist\/|dynamax\/|gmax\/|costumes\/|users\//);
+  assert.match(republish,/publishPublicShareNow\(token\.username,'explicit_share'\)/);
+  assert.match(republish,/inspectOwnPublicShareAfterHydration\(token\)/);
+  assert.match(republish,/verified\.republishRequired/);
 });
 
 test('only confirmed list and profile changes request automatic publication',()=>{

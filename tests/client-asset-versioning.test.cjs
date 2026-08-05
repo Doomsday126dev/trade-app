@@ -26,6 +26,9 @@ test('every first-party JavaScript URL uses the current release identifier',()=>
   firstPartyScripts.forEach(src=>assert.equal(new URL(src,'https://example.test/').searchParams.get('v'),release,src));
   assert.ok(html.includes("serviceWorker.register(`./sw.js?v=${window.__POGO_RELEASE_ID}`)"));
   assert.match(worker,new RegExp(`const RELEASE='${release.replaceAll('.','\\.')}';`));
+  const precached=[...worker.matchAll(/^\s+'([^']+\.js)',?$/gm)].map(match=>match[1]);
+  const requested=firstPartyScripts.map(src=>new URL(src,'https://example.test/').pathname.slice(1));
+  assert.deepEqual(precached,requested);
 });
 
 test('release changes produce different critical module and cache keys',()=>{

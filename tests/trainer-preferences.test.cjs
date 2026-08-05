@@ -53,6 +53,27 @@ test('local migration accepts only the matching UID and username partition',()=>
   assert.equal(plan.status,'review_required');assert.equal(plan.writesEnabled,false);assert.equal(plan.deleteLocal,false);
 });
 
+test('local migration deduplicates favorites and preserves newer local seen state until server verification',()=>{
+  const value=domain(),identity={uid:'uid-a',username:'TrainerA'};
+  const plan=value.planLocalImport({activeIdentity:identity,partitionIdentity:identity,
+    local:{favorites:{ownerA:{trainerName:'Alpha'}},history:{ownerA:{lastSeenUpdatedAt:20}}},
+    server:{favorites:{ownerA:{trainerName:'Alpha'}},history:{ownerA:{lastSeenUpdatedAt:10}}}});
+  assert.equal(plan.counts.favorites,1);assert.equal(plan.counts.history,1);
+  assert.equal(plan.strategy.preserveNewerHistoryBy,'lastSeenUpdatedAt');assert.equal(plan.strategy.requireServerVerification,true);
+  assert.equal(plan.deleteLocal,false);assert.equal(plan.writesEnabled,false);
+});
+
+test('tags create, rename, soft-delete, assign, and filter without duplicate normalized labels',()=>{
+  const value=domain();
+  let state={tags:{},favorites:{uidA:{ownerUid:'uidA',trainerName:'Trainer Alpha',tagIds:[]},uidB:{ownerUid:'uidB',trainerName:'Trainer Beta',tagIds:[]}}};
+  const created=value.createTag(state,'  Lucky Trade  ',{tagId:'tag_lucky',now:1});assert.equal(created.ok,true);state={...state,tags:created.tags};
+  assert.equal(value.createTag(state,'ＬＵＣＫＹ trade',{tagId:'tag_duplicate'}).error.code,'trainer-preferences/tag-duplicate');
+  const renamed=value.renameTag(state,'tag_lucky','High Priority',{now:2});state={...state,tags:renamed.tags};assert.equal(state.tags.tag_lucky.displayLabel,'High Priority');
+  const assigned=value.setFavoriteTags(state,'uidA',['tag_lucky']);state={...state,favorites:assigned.favorites};
+  assert.deepEqual(Array.from(value.filterFavorites(state,{query:'priority',tagIds:['tag_lucky']}),item=>item.ownerUid),['uidA']);
+  const deleted=value.softDeleteTag(state,'tag_lucky',{now:3});assert.equal(deleted.tags.tag_lucky.deletedAt,3);assert.deepEqual(Array.from(deleted.favorites.uidA.tagIds),[]);
+});
+
 test('Favorites rendering is read-only and history advances only through an explicit open action',()=>{
   const html=readFileSync(path.join(__dirname,'..','index.html'),'utf8');
   const render=html.slice(html.indexOf('function renderTrainerQuickLists'),html.indexOf('function toggleTrainerFavorite'));
@@ -61,9 +82,42 @@ test('Favorites rendering is read-only and history advances only through an expl
   assert.match(opened,/rememberOpened/);
 });
 
-test('production page does not load or activate synced preference candidate',()=>{
+test('production page loads the preference candidate but keeps repository and UI inactive',()=>{
   const html=readFileSync(path.join(__dirname,'..','index.html'),'utf8');
-  assert.doesNotMatch(html,/js\/domain\/trainerPreferences\.js/);
-  assert.doesNotMatch(html,/SYNCED_TRAINER_PREFERENCES_ENABLED/);
-  assert.doesNotMatch(html,/trainerTagLabels\//);
+  assert.match(html,/js\/domain\/trainerPreferences\.js\?v=/);
+  assert.match(html,/js\/data\/trainerPreferencesRepository\.js\?v=/);
+  assert.match(html,/js\/ui\/trainerTagPanel\.js\?v=/);
+  assert.match(html,/SYNCED_TRAINER_PREFERENCES_ENABLED!==false/);
+  assert.match(html,/createTrainerPreferencesRepository\(\{enabled:false\}\)/);
+  assert.doesNotMatch(html,/managedTrainerPreferencesRepository\.(read|subscribe)\(/);
+});
+
+test('disabled repository has no Firebase write capability',()=>{
+  const window={};vm.runInNewContext(readFileSync(path.join(__dirname,'..','js/data/trainerPreferencesRepository.js'),'utf8'),{window});
+  const repository=window.PogoData.trainerPreferencesRepository.createTrainerPreferencesRepository({enabled:false});
+  assert.equal(repository.enabled,false);assert.equal(typeof repository.write,'undefined');assert.equal(typeof repository.update,'undefined');
+  assert.equal(typeof repository.readFavorites,'function');assert.equal(typeof repository.subscribeTags,'function');
+  assert.doesNotMatch(readFileSync(path.join(__dirname,'..','js/domain/trainerPreferences.js'),'utf8'),/shareAccess/);
+});
+
+test('enabled repository contract is limited to exact private preference child paths',async()=>{
+  const window={};vm.runInNewContext(readFileSync(path.join(__dirname,'..','js/data/trainerPreferencesRepository.js'),'utf8'),{window});
+  const paths=[];
+  const repository=window.PogoData.trainerPreferencesRepository.createTrainerPreferencesRepository({enabled:true,readExact:async path=>{paths.push(path);return{ok:true};},listenExact:path=>{paths.push(path);return{ok:true};}});
+  await repository.readFavorites('viewer-a');await repository.readTags('viewer-a');repository.subscribeTagLabels('viewer-a',{});repository.subscribeRecents('viewer-a',{});repository.subscribeHistory('viewer-a',{});
+  assert.deepEqual(paths,['userPreferences/viewer-a/favoriteTrainers','userPreferences/viewer-a/trainerTags','userPreferences/viewer-a/trainerTagLabels','userPreferences/viewer-a/recentTrainerSlots','userPreferences/viewer-a/trainerHistory']);
+  assert.equal(typeof repository.write,'undefined');
+});
+
+test('disabled tag UI models compact mobile chips and rich desktop cards with translation keys',()=>{
+  const window={};
+  vm.runInNewContext(readFileSync(path.join(__dirname,'..','js/domain/trainerPreferences.js'),'utf8'),{window});
+  vm.runInNewContext(readFileSync(path.join(__dirname,'..','js/ui/trainerTagPanel.js'),'utf8'),{window});
+  const preferences={tags:{tag_local:{tagId:'tag_local',displayLabel:'Local'}},favorites:{ownerA:{ownerUid:'ownerA',trainerName:'Trainer A',tagIds:['tag_local']}}};
+  const mobile=window.PogoUI.trainerTagPanel.viewModel({preferences,compact:true,domain:window.PogoDomain.trainerPreferences});
+  const desktop=window.PogoUI.trainerTagPanel.viewModel({preferences,compact:false,domain:window.PogoDomain.trainerPreferences});
+  assert.equal(mobile.presentation,'compact_mobile');assert.equal(mobile.favorites[0].presentation,'compact_chip_row');
+  assert.equal(desktop.presentation,'rich_desktop');assert.equal(desktop.favorites[0].presentation,'rich_tagged_card');
+  assert.deepEqual(Array.from(mobile.actions),['trainer.tagsCreate','trainer.tagsRename','trainer.tagsDelete','trainer.tagsFilter','trainer.tagsSearch']);
+  assert.deepEqual(JSON.parse(JSON.stringify(mobile.favorites[0].chips)),[{id:'tag_local',label:'Local'}]);
 });
