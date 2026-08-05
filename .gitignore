@@ -4,8 +4,10 @@ playwright-report/
 .firebase-local/
 database-debug.log
 firebase-debug*.log
+firepit-log.txt
 functions/.env*
 !functions/.env.staging.example
+functions/staging/staging-creation.approval.local.json
 functions/.firebase/
 functions/emulator-data/
 functions/*-debug.log
@@ -14,3 +16,4 @@ functions/*-debug.log
 .local/admin-tools/
 .local/admin-credentials/
 .local/firebase-rule-backups/
+.local/staging-creation-approvals/

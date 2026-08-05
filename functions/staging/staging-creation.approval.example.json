@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "operationCapability": "none",
+  "decisions": {
+    "STAGING_PROJECT_ID": { "status": "undecided", "value": "<STAGING_PROJECT_ID>" },
+    "BILLING_ACCOUNT": { "status": "undecided", "value": "<BILLING_ACCOUNT>" },
+    "RTDB_LOCATION": { "status": "undecided", "value": "<RTDB_LOCATION>" },
+    "FUNCTIONS_REGION": { "status": "undecided", "value": "<REGION>" },
+    "STAGING_WEB_APP_NAME": { "status": "undecided", "value": "<STAGING_WEB_APP_NAME>" },
+    "APP_CHECK_PROVIDER": { "status": "undecided", "value": "<APP_CHECK_PROVIDER>" },
+    "RUNTIME_SERVICE_ACCOUNT": { "status": "undecided", "value": "<RUNTIME_SERVICE_ACCOUNT>" },
+    "DEPLOYMENT_SERVICE_ACCOUNT": { "status": "undecided", "value": "<DEPLOYMENT_SERVICE_ACCOUNT>" },
+    "RULES_OPERATOR_IDENTITY": { "status": "undecided", "value": "<RULES_OPERATOR_IDENTITY>" },
+    "HUMAN_OPERATOR": { "status": "undecided", "value": "<HUMAN_OPERATOR>" },
+    "BUDGET_AMOUNT": { "status": "undecided", "value": "<BUDGET_AMOUNT>" },
+    "BUDGET_ALERT_THRESHOLDS": { "status": "undecided", "value": "<BUDGET_ALERT_THRESHOLDS>" },
+    "SYNTHETIC_FIXTURE_NAMESPACE": { "status": "undecided", "value": "<SYNTHETIC_FIXTURE_NAMESPACE>" }
+  },
+  "approvals": {
+    "staging_project_creation": "undecided",
+    "billing_attachment": "undecided",
+    "rtdb_location": "undecided",
+    "functions_region": "undecided",
+    "web_app_registration": "undecided",
+    "app_check_provider": "undecided",
+    "runtime_service_account": "undecided",
+    "deployment_service_account": "undecided",
+    "iam_roles": "undecided",
+    "rules_operator": "undecided",
+    "human_operator": "undecided",
+    "budget_amount": "undecided",
+    "alert_thresholds": "undecided",
+    "fixture_namespace": "undecided",
+    "additive_rules_sha": "undecided",
+    "rollback_rules_sha": "undecided",
+    "functions_deployment": "undecided",
+    "synthetic_fixture_creation": "undecided",
+    "share_visibility_gate_enablement": "undecided",
+    "trainer_preferences_gate_enablement": "undecided",
+    "canary_execution": "undecided",
+    "retention_cleanup": "undecided"
+  },
+  "safety": {
+    "expectedCommit": "<EXPECTED_COMMIT_SHA>",
+    "productionProjectId": "<PRODUCTION_PROJECT_ID>",
+    "additiveRulesSha": "fc781919003a5afcba4fcf1e5235498090352deb1448e746b6c69ec61add6ac3",
+    "rollbackRulesSha": "e0632a98ed106117f03e61da0446ef4b2c2e6ed02ea8c6f1c498a0e7edcb17bf",
+    "bothWriteGatesFalse": true,
+    "syntheticOnly": true
+  }
+}
