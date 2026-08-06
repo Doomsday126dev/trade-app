@@ -12,6 +12,7 @@ functions/.firebase/
 functions/emulator-data/
 functions/*-debug.log
 functions/.local/
+.local/
 .local/trainer-name-audits/
 .local/uid-handle-audits/
 .local/admin-tools/

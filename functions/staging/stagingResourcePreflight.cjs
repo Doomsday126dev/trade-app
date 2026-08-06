@@ -280,11 +280,14 @@ function validatePreflight(document, options = {}) {
 function redactedSummary(validation) {
   return Object.freeze({
     fieldCompletion: `${validation.completedFieldCount}/${validation.fieldCount}`,
+    configuredFieldCount: validation.completedFieldCount,
+    missingFieldCount: validation.fieldCount - validation.completedFieldCount,
     invalidFieldCount: validation.invalidFieldCount,
     missingDependencyCount: validation.missingDependencies.length,
     unresolvedPlaceholderCount: validation.unresolvedPlaceholderCount,
     configured: Object.freeze(Object.fromEntries(Object.entries(validation.fields).map(([key, value]) => [key, value.configured]))),
     approvalStates: validation.approvalStates,
+    resourceCreationReady: validation.status === 'inputs-valid-approval-required',
     status: validation.status,
     cloudOperations: 0,
     stagingReads: 0,
