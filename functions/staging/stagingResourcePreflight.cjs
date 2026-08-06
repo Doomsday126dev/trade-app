@@ -51,13 +51,56 @@ const FIELD_SCHEMA = Object.freeze({
 });
 
 const PROPOSED_STATE = Object.freeze({
+  appSlug: 'trainer-hub',
+  randomSuffix: '<unresolved>',
+  stagingProjectId: 'trainer-hub-staging-<RANDOM_SUFFIX>',
+  stagingWebAppName: 'Trainer Hub Staging',
+  runtimeServiceAccount: 'trainer-hub-runtime-stg',
+  deploymentServiceAccount: 'trainer-hub-deployer-stg',
+  resourceLabels: Object.freeze({
+    environment: 'staging',
+    data_classification: 'synthetic',
+    managed_by: 'manual-reviewed',
+    lifecycle: 'temporary',
+    application: 'trainer-hub'
+  }),
   rtdbLocation: 'us-central1',
   functionsRegion: 'us-central1',
+  appCheckProvider: 'recaptcha-enterprise',
   budgetAmount: 'USD 10/month',
   manualInvestigationThreshold: 'USD 3-5/month',
   actualAlertUsd: Object.freeze([1, 2.5, 3, 5, 7.5, 9, 10]),
   forecastAlertPercent: Object.freeze([50, 75, 100]),
+  privateRoleRelationship: Object.freeze({
+    relationship: 'same_private_person_initially_holds_all_six_responsibilities',
+    roles: Object.freeze([
+      'BILLING_OPERATOR', 'RULES_OPERATOR_IDENTITY', 'HUMAN_OPERATOR',
+      'BILLING_ALERT_RECIPIENT', 'BILLING_ESCALATION_TARGET', 'TEARDOWN_OWNER'
+    ]),
+    independentTwoPersonReview: false,
+    concreteIdentitiesResolved: false
+  }),
+  billingAccount: '<PRIVATE_BILLING_ACCOUNT>',
+  resourceCreationWindowDuration: '2 hours',
+  smokeAndRollbackWindowDuration: '2 hours',
+  resourceCreationWindow: '<UNRESOLVED>',
+  smokeAndRollbackWindow: '<UNRESOLVED>',
+  dependencyOrder: Object.freeze([
+    'complete_and_locally_validate_private_preflight_fields',
+    'reverify_current_official_pricing',
+    'record_explicit_resource_creation_approval_and_two_hour_window',
+    'attach_private_billing_account_and_establish_budget_alerts',
+    'create_only_approved_empty_staging_resources',
+    'verify_complete_resource_inventory_and_stop',
+    'close_resource_creation_window_and_remove_temporary_access',
+    'obtain_separate_additive_rules_approval',
+    'obtain_separate_functions_deployment_approval',
+    'obtain_separate_app_check_fixture_gate_canary_and_client_wiring_approvals',
+    'open_distinct_two_hour_smoke_and_rollback_window_per_deployment',
+    'revoke_temporary_operator_permissions_when_window_closes'
+  ]),
   fixtureLedger: 'stagingFixtureRuns/{fixtureRunId}',
+  fixtureStrategy: 'actual_candidate_roots_with_synthetic_only_identities',
   rulesHashes: RULE_HASHES
 });
 
@@ -137,7 +180,7 @@ function validateServiceAccount(value, role) {
 
 function validateLabels(value) {
   const errors = [];
-  const mandatory = { environment: 'staging', data_classification: 'synthetic', managed_by: 'manual-reviewed', lifecycle: 'temporary' };
+  const mandatory = { environment: 'staging', data_classification: 'synthetic', managed_by: 'manual-reviewed', lifecycle: 'temporary', application: 'trainer-hub' };
   if (!value || typeof value !== 'object' || Array.isArray(value)) return ['format_invalid'];
   for (const [key, expected] of Object.entries(mandatory)) if (value[key] !== expected) errors.push(`mandatory_label_invalid:${key}`);
   for (const [key, label] of Object.entries(value)) {

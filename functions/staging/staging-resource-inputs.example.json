@@ -17,8 +17,8 @@
       "environment": "staging",
       "data_classification": "synthetic",
       "managed_by": "manual-reviewed",
-      "cost_center": "staging",
-      "lifecycle": "temporary"
+      "lifecycle": "temporary",
+      "application": "trainer-hub"
     },
     "RESOURCE_CREATION_WINDOW": {
       "startAt": "<ISO_8601_START>",

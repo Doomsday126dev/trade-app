@@ -99,6 +99,34 @@ test('resource labels require safe mandatory synthetic staging labels', () => {
   assert.ok(contract.validateLabels({ ...labels, 'Bad Key': 'x' }).some((error) => error.startsWith('label_key_invalid')));
 });
 
+test('Group A recommendations are valid while the suffix stays unresolved', () => {
+  const proposed = contract.PROPOSED_STATE;
+  assert.equal(proposed.appSlug, 'trainer-hub');
+  assert.equal(proposed.randomSuffix, '<unresolved>');
+  assert.equal(proposed.stagingProjectId, 'trainer-hub-staging-<RANDOM_SUFFIX>');
+  assert.equal('trainer-hub-staging-'.length + 8, 28);
+  assert.deepEqual(contract.validateAppSlug(proposed.appSlug), []);
+  assert.deepEqual(contract.validateServiceAccount(proposed.runtimeServiceAccount, 'runtime'), []);
+  assert.deepEqual(contract.validateServiceAccount(proposed.deploymentServiceAccount, 'deployer'), []);
+  assert.deepEqual(contract.validateLabels(proposed.resourceLabels), []);
+  assert.equal(proposed.stagingWebAppName, 'Trainer Hub Staging');
+});
+
+test('Groups B and C retain relationships durations and unresolved private values only', () => {
+  const proposed = contract.PROPOSED_STATE;
+  assert.equal(proposed.privateRoleRelationship.relationship, 'same_private_person_initially_holds_all_six_responsibilities');
+  assert.equal(proposed.privateRoleRelationship.roles.length, 6);
+  assert.equal(proposed.privateRoleRelationship.independentTwoPersonReview, false);
+  assert.equal(proposed.privateRoleRelationship.concreteIdentitiesResolved, false);
+  assert.equal(proposed.billingAccount, '<PRIVATE_BILLING_ACCOUNT>');
+  assert.equal(proposed.resourceCreationWindowDuration, '2 hours');
+  assert.equal(proposed.smokeAndRollbackWindowDuration, '2 hours');
+  assert.equal(proposed.resourceCreationWindow, '<UNRESOLVED>');
+  assert.equal(proposed.smokeAndRollbackWindow, '<UNRESOLVED>');
+  assert.equal(proposed.dependencyOrder.length, 12);
+  assert.doesNotMatch(JSON.stringify(proposed), /@[A-Za-z0-9.-]+\.[A-Za-z]{2,}|billingAccounts\/[0-9A-Z]{6}-/);
+});
+
 test('approval windows require timezone bounds and reject expiration', () => {
   const now = Date.parse('2030-01-01T11:00:00Z');
   assert.deepEqual(contract.validateWindow({ startAt: '2030-01-01T12:00:00Z', expiresAt: '2030-01-01T16:00:00Z' }, now, 4), []);

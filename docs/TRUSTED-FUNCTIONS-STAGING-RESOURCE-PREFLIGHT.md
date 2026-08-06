@@ -62,7 +62,7 @@ never prints field values or the private file path.
 | `HUMAN_OPERATOR` | Private selected identity. Reviewer and operator responsibilities remain separately recorded even when the same person performs both. This is not independent two-person review. | Required before the resource window and resource-creation approval. |
 | `BILLING_ALERT_RECIPIENT` | Private notification destination. Output reveals only configured true/false. | Billing account; budget and alert approval. |
 | `BILLING_ESCALATION_TARGET` | Private escalation destination; may initially match the recipient. | Billing account; budget and alert approval. |
-| `RESOURCE_LABELS` | Google Cloud label syntax, no sensitive values. Mandatory: `environment=staging`, `data_classification=synthetic`, `managed_by=manual-reviewed`, `lifecycle=temporary`. Recommended optional: `cost_center=staging`. | Project ID; resource-creation approval. |
+| `RESOURCE_LABELS` | Google Cloud label syntax, no sensitive values. Mandatory: `environment=staging`, `data_classification=synthetic`, `managed_by=manual-reviewed`, `lifecycle=temporary`, `application=trainer-hub`. | Project ID; resource-creation approval. |
 | `RESOURCE_CREATION_WINDOW` | ISO-8601 `startAt` and `expiresAt` with timezone; expiration after start; maximum four hours; must be unexpired. | Human operator; resource-creation approval. |
 | `SMOKE_AND_ROLLBACK_WINDOW` | ISO-8601 bounded window with timezone; maximum 24 hours; must be unexpired. | Resource-creation window; later deployment and smoke approvals. |
 | `TEARDOWN_OWNER` | Private named responsibility. | Teardown acknowledgment and resource-creation approval. |
@@ -115,10 +115,60 @@ Validation fails closed when configured fields have missing dependencies.
 `RTDB_LOCATION=us-central1` and `FUNCTIONS_REGION=us-central1` are already
 proposed values, not approvals.
 
+## Formalized Group A-C Recommendations
+
+These are non-secret proposed values. They are stored separately from the
+private input document and do not complete a field, change an approval, or
+invoke an operation.
+
+- `APP_SLUG=trainer-hub`
+- `RANDOM_SUFFIX=<unresolved 8-character CSPRNG value>`
+- `STAGING_PROJECT_ID=trainer-hub-staging-<RANDOM_SUFFIX>` (28 characters
+  after suffix generation)
+- `STAGING_WEB_APP_NAME=Trainer Hub Staging`
+- `RUNTIME_SERVICE_ACCOUNT=trainer-hub-runtime-stg`
+- `DEPLOYMENT_SERVICE_ACCOUNT=trainer-hub-deployer-stg`
+- Labels: `environment=staging`, `data_classification=synthetic`,
+  `managed_by=manual-reviewed`, `lifecycle=temporary`, and
+  `application=trainer-hub`.
+
+The same private person may initially hold `BILLING_OPERATOR`,
+`RULES_OPERATOR_IDENTITY`, `HUMAN_OPERATOR`, `BILLING_ALERT_RECIPIENT`,
+`BILLING_ESCALATION_TARGET`, and `TEARDOWN_OWNER`. The duties retain separate
+checklists, timestamps, access windows, and acknowledgments. This is explicitly
+not independent two-person review. No concrete identity or contact destination
+is tracked.
+
+- `BILLING_ACCOUNT=<PRIVATE_BILLING_ACCOUNT>`
+- `RESOURCE_CREATION_WINDOW_DURATION=2 hours`
+- `SMOKE_AND_ROLLBACK_WINDOW_DURATION=2 hours`
+- `RESOURCE_CREATION_WINDOW=<UNRESOLVED>`
+- `SMOKE_AND_ROLLBACK_WINDOW=<UNRESOLVED>`
+
+The suffix, billing identifier, and actual dates remain unresolved. The suffix
+may be generated locally from a CSPRNG only after explicit resource-creation
+approval. Availability and production-similarity checks occur in that same
+future preflight window.
+
+## Dependency Order
+
+1. Complete and locally validate all private preflight fields.
+2. Reverify current official pricing.
+3. Record explicit resource-creation approval and its two-hour window.
+4. Attach the privately selected billing account and establish budget/alerts.
+5. Create only the approved empty staging resources.
+6. Verify the complete resource inventory and stop.
+7. Close the resource-creation window and remove temporary access where applicable.
+8. Obtain separate approval for additive staging rules.
+9. Obtain separate approval for Functions deployment.
+10. Obtain separate approvals for App Check, fixtures, each gate, canaries, and client wiring.
+11. Open a distinct two-hour smoke-and-rollback window for every deployment.
+12. Revoke temporary operator permissions when the window closes.
+
 ## Window Recommendations
 
 - Resource creation: two hours normally, with a hard maximum of four hours.
-- Deployment and smoke: four to eight hours normally.
+- Deployment and smoke: two hours for the initial staging deployments.
 - Emergency rollback access: retain through the same bounded smoke window,
   never longer than 24 hours without fresh review.
 - Begin no operation before `startAt`. Expiration procedurally cancels approval
