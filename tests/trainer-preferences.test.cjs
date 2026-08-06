@@ -9,6 +9,14 @@ function favorite(trainerName,addedAt=10,extra={}){return{trainerName,addedAt,no
 
 test('synced preferences stay disabled and bounded',()=>{const value=domain();assert.equal(value.SYNCED_TRAINER_PREFERENCES_ENABLED,false);assert.equal(value.MAX_RECENT_TRAINERS,30);assert.equal(value.MAX_HISTORY_ENTRIES,1500);});
 
+test('future sync states are modeled while the active state remains local-only',()=>{
+  const value=domain();
+  assert.deepEqual(Array.from(value.PREFERENCE_SYNC_STATES),['local-only','pending-sync','synced','conflict','sync-error']);
+  assert.equal(value.preferenceSyncState('pending-sync').state,'local-only');
+  assert.equal(value.preferenceSyncState('pending-sync').remoteWritesAllowed,false);
+  assert.equal(value.preferenceSyncState('synced',{enabled:true}).state,'local-only');
+});
+
 test('tag normalization is NFKC, case-insensitive, whitespace-stable, and display-preserving',()=>{
   const value=domain(),a=value.normalizeTagLabel('  Lucky   Trade  '),b=value.normalizeTagLabel('ＬＵＣＫＹ trade');
   assert.equal(a.displayLabel,'Lucky Trade');assert.equal(a.normalizedLabel,'lucky trade');assert.equal(a.labelKey,b.labelKey);
@@ -116,6 +124,45 @@ test('repository exposes no writes until both feature and write gate are true',a
 test('disabled UI models are hidden, inaccessible to save, responsive, and translation-key driven',()=>{
   const window={};vm.runInNewContext(readFileSync(path.join(__dirname,'..','js/domain/trainerPreferences.js'),'utf8'),{window});vm.runInNewContext(readFileSync(path.join(__dirname,'..','js/ui/trainerTagPanel.js'),'utf8'),{window});
   const preferences={tags:{tag_local:{tagId:'tag_local',label:'Local',active:true}},favorites:{ownerA:{ownerUid:'ownerA',...favorite('A very long trainer name that must wrap'),tagIds:['tag_local']}}};
-  for(const width of [320,375,390,430,768,1024,1440]){const model=window.PogoUI.trainerTagPanel.viewModel({preferences,width,height:420,domain:window.PogoDomain.trainerPreferences});assert.equal(model.hidden,true);assert.equal(model.interactive,false);assert.equal(model.controls.saveDisabled,true);assert.equal(model.layout.horizontalOverflow,false);assert.equal(model.layout.touchTargetPx>=44,true);assert.equal(model.accessibility.focusTrap,true);}
+  for(const width of [320,375,390,430,768,1024,1440]){const model=window.PogoUI.trainerTagPanel.viewModel({preferences,width,height:420,domain:window.PogoDomain.trainerPreferences});assert.equal(model.hidden,true);assert.equal(model.interactive,false);assert.equal(model.controls.saveDisabled,true);assert.equal(model.layout.horizontalOverflow,false);assert.equal(model.layout.touchTargetPx>=48,true);assert.equal(model.accessibility.focusTrap,true);}
   assert.equal(window.PogoUI.trainerTagPanel.layoutForWidth(390).mode,'mobile_sheet');assert.equal(window.PogoUI.trainerTagPanel.layoutForWidth(768).mode,'desktop_dialog');
+});
+
+test('local organizer model is interactive without enabling remote preference sync',()=>{
+  const window={};vm.runInNewContext(readFileSync(path.join(__dirname,'..','js/domain/trainerPreferences.js'),'utf8'),{window});vm.runInNewContext(readFileSync(path.join(__dirname,'..','js/ui/trainerTagPanel.js'),'utf8'),{window});
+  const preferences={tags:{tag_local:{tagId:'tag_local',label:'Raid',active:true}},favorites:{ownerA:{ownerUid:'ownerA',...favorite('Trainer A'),tagIds:['tag_local']}}};
+  const model=window.PogoUI.trainerTagPanel.localOrganizerViewModel({preferences,query:'raid',tagIds:['tag_local'],width:390,height:300,domain:window.PogoDomain.trainerPreferences});
+  assert.equal(model.hidden,false);assert.equal(model.interactive,true);assert.equal(model.syncState,'local-only');assert.equal(model.controls.saveDisabled,false);assert.equal(model.layout.mode,'mobile_sheet');assert.equal(model.layout.touchTargetPx,48);
+});
+
+test('private organizer data is absent from public-share publication code',()=>{
+  const html=readFileSync(path.join(__dirname,'..','index.html'),'utf8');
+  const publication=html.slice(html.indexOf('function publicShareSnapshotForUser'),html.indexOf('function applyPublicShareSnapshot'));
+  assert.doesNotMatch(publication,/trainerHistoryStore|tagIds|privateNote|\.note\b/);
+  assert.match(html,/createTrainerPreferencesRepository\(\{enabled:false\}\)/);
+});
+
+test('local organizer storage has no network, logging, URL, clipboard, or export capability',()=>{
+  const store=readFileSync(path.join(__dirname,'..','js/data/trainerHistoryStore.js'),'utf8'),html=readFileSync(path.join(__dirname,'..','index.html'),'utf8');
+  assert.doesNotMatch(store,/Firebase|firebase|fetch\(|XMLHttpRequest|writeDataPath|queueSync|console\.|location\.|URLSearchParams|copyText|clipboard|export/);
+  const references=[...html.matchAll(/trainerHistoryStore/g)].length;
+  assert.equal(references,10);
+  for(const boundary of [
+    ['function publicShareSnapshotForUser','function requestPublicSharePublication'],
+    ['function renderStrings','function renderBrowse'],
+    ['function exportMyListMarkdown','function exportMyListCSV'],
+    ['function exportMyListCSV','function copyShareLink'],
+    ['function checkShareViewParam','function enterShareView']
+  ]){
+    const section=html.slice(html.indexOf(boundary[0]),html.indexOf(boundary[1],html.indexOf(boundary[0])));
+    assert.doesNotMatch(section,/trainerHistoryStore|trainerOrganizerState|draftNote|draftTagIds/);
+  }
+});
+
+test('tag deletion is confirmed and stable IDs preserve assignments across rename',()=>{
+  const html=readFileSync(path.join(__dirname,'..','index.html'),'utf8'),deletion=html.slice(html.indexOf('function deleteLocalTrainerTag'),html.indexOf('function saveTrainerOrganizer'));
+  assert.match(deletion,/confirm\(i18nCore\.t\('organizer\.deleteConfirm'/);
+  const value=domain(),created=value.createTag({tags:{}},'Raid',{tagId:'tag_stable',now:1});
+  const renamed=value.renameTag({tags:created.tags},'tag_stable','レイド',{now:2});
+  assert.equal(renamed.ok,true);assert.equal(renamed.tags.tag_stable.displayLabel,'レイド');
 });

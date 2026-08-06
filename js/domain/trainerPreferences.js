@@ -4,11 +4,15 @@
   const MAX_NOTE_LENGTH=240;
   const MAX_RECENT_TRAINERS=30;
   const MAX_HISTORY_ENTRIES=1500;
+  const PREFERENCE_SYNC_STATES=Object.freeze(['local-only','pending-sync','synced','conflict','sync-error']);
   const PUBLIC_CATEGORIES=Object.freeze(['wishlist','dynamax','gmax','costumes']);
 
   function error(code,message){return Object.freeze({ok:false,error:Object.freeze({code,message})});}
   function freezeMap(value){return Object.freeze(Object.fromEntries(Object.entries(value).map(([key,item])=>[key,Object.freeze({...item})])));}
   function normalizeText(value){return String(value??'').normalize('NFKC').trim();}
+  function preferenceSyncState(){
+    return Object.freeze({state:'local-only',interactive:false,remoteWritesAllowed:false});
+  }
   function normalizeNote(value){
     const note=normalizeText(value);
     if(Array.from(note).length>MAX_NOTE_LENGTH)return error('trainer-preferences/note-too-long','Private note exceeds the bounded length');
@@ -209,7 +213,7 @@
 
   root.trainerPreferences=Object.freeze({
     SYNCED_TRAINER_PREFERENCES_ENABLED:false,
-    MAX_TAG_LABEL_LENGTH,MAX_NOTE_LENGTH,MAX_RECENT_TRAINERS,MAX_HISTORY_ENTRIES,PUBLIC_CATEGORIES,
+    MAX_TAG_LABEL_LENGTH,MAX_NOTE_LENGTH,MAX_RECENT_TRAINERS,MAX_HISTORY_ENTRIES,PUBLIC_CATEGORIES,PREFERENCE_SYNC_STATES,preferenceSyncState,
     normalizeNote,normalizeTagLabel,normalizeFavorite,favoriteTrainer,unfavoriteTrainer,updateFavoriteNote,mergeFavorites,
     normalizeTagRecord,createTag,renameTag,softDeleteTag,setFavoriteTags,filterFavorites,
     mergeRecentTrainerSlots,mergeRecentSlotSets,normalizeHistorySnapshot,advanceSeenState,mergeHistoryState,historyStatus,diffPublicSnapshots,

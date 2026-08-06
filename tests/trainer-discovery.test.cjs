@@ -93,6 +93,87 @@ test('reading favorites and history never marks a stored snapshot as seen',()=>{
   assert.equal(JSON.stringify(store.read()),before);
 });
 
+test('legacy local favorites migrate once into the existing account partition',()=>{
+  const storage=memoryStorage(),identity={uid:'uid-a',username:'Alice'};
+  storage.setItem(`${history.PREFIX}uid-a`,JSON.stringify({version:1,owner:identity,favorites:[{trainerName:'zeta'},{trainerName:'Alpha'}],recent:[{trainerName:'zeta',openedAt:4}],snapshots:{}}));
+  const store=history.createTrainerHistoryStore({storage,identity});
+  const first=store.read(),persisted=storage.getItem(store.key);
+  assert.equal(first.version,2);
+  assert.equal(JSON.stringify(first.favorites.map(item=>item.displayName)),JSON.stringify(['Alpha','zeta']));
+  assert.equal(first.syncState,'local-only');
+  store.read();
+  assert.equal(storage.getItem(store.key),persisted);
+});
+
+test('empty, absent, and interrupted local migrations are safe and repeatable',()=>{
+  const storage=memoryStorage(),identity={uid:'uid-a',username:'Alice'},store=history.createTrainerHistoryStore({storage,identity});
+  assert.equal(store.read().favorites.length,0);
+  storage.setItem(store.key,JSON.stringify({version:1,owner:identity,favorites:[],recent:[]}));
+  assert.equal(store.read().version,2);assert.equal(store.read().favorites.length,0);
+  storage.setItem(store.key,JSON.stringify({version:2,schemaVersion:2,migrationVersion:1,owner:identity,favorites:[{trainerName:'Alpha'}],recent:[],tags:{}}));
+  const completed=store.read(),persisted=JSON.parse(storage.getItem(store.key));
+  assert.equal(completed.favorites[0].displayName,'Alpha');assert.equal(persisted.migrationVersion,2);
+  const once=storage.getItem(store.key);store.read();assert.equal(storage.getItem(store.key),once);
+});
+
+test('partially malformed and duplicate legacy records retain valid favorites and recents',()=>{
+  const storage=memoryStorage(),identity={uid:'uid-a',username:'Alice'},store=history.createTrainerHistoryStore({storage,identity});
+  storage.setItem(store.key,JSON.stringify({version:1,owner:identity,favorites:[null,{trainerName:''},{trainerName:'TrainerOne'},{trainerName:'trainerone'},{trainerName:'TrainerTwo'}],recent:[null,{trainerName:'TrainerOne',openedAt:'bad'},{trainerName:'TrainerOne',openedAt:4},{trainerName:'trainerone',openedAt:3}],snapshots:{}}));
+  const state=store.read();
+  assert.equal(JSON.stringify(state.favorites.map(item=>item.displayName)),JSON.stringify(['TrainerOne','TrainerTwo']));
+  assert.equal(state.recent.length,1);assert.equal(state.recent[0].displayName,'TrainerOne');
+  assert.equal(state.migration.skippedFavorites,3);assert.equal(state.migration.skippedRecents,3);
+  assert.equal(store.updateCanonicalName('TRAINERONE'),true);assert.equal(store.favoriteFor('trainerone').displayName,'TRAINERONE');
+});
+
+test('migration persistence failure leaves valid local records usable',()=>{
+  const backing=memoryStorage(),identity={uid:'uid-a',username:'Alice'};
+  const key=`${history.PREFIX}uid-a`;backing.setItem(key,JSON.stringify({version:1,owner:identity,favorites:[{trainerName:'TrainerOne'}],recent:[]}));
+  const storage={getItem:backing.getItem,setItem(){throw new Error('quota');},removeItem:backing.removeItem};
+  const state=history.createTrainerHistoryStore({storage,identity}).read();
+  assert.equal(state.favorites[0].displayName,'TrainerOne');assert.equal(state.version,2);
+});
+
+test('signed-out and other-account local records are never adopted during sign-in',()=>{
+  const storage=memoryStorage();
+  storage.setItem(`${history.PREFIX}signed-out`,JSON.stringify({version:1,favorites:[{trainerName:'PrivateTrainer'}]}));
+  const alice=history.createTrainerHistoryStore({storage,identity:{uid:'uid-a',username:'Alice'}}),bob=history.createTrainerHistoryStore({storage,identity:{uid:'uid-b',username:'Bob'}});
+  alice.toggleFavorite('AliceFavorite');
+  assert.equal(JSON.stringify(alice.read().favorites.map(item=>item.displayName)),JSON.stringify(['AliceFavorite']));
+  assert.equal(bob.read().favorites.length,0);
+  assert.ok(storage.getItem(`${history.PREFIX}signed-out`));
+});
+
+test('private tags and notes remain bounded, searchable, and account isolated',()=>{
+  const storage=memoryStorage(),alice=history.createTrainerHistoryStore({storage,identity:{uid:'uid-a',username:'Alice'},now:()=>100});
+  alice.toggleFavorite('ScoopskiPotat0');
+  const travel=alice.createTag(' Travel '),duplicate=alice.createTag('ＴＲＡＶＥＬ');
+  assert.equal(travel.ok,true);assert.equal(duplicate.code,'tag-duplicate');
+  assert.equal(alice.setFavoriteTags('scoopskipotat0',[travel.id]).ok,true);
+  assert.equal(alice.setFavoriteNote('ScoopskiPotat0','Bring costume trades').ok,true);
+  assert.equal(alice.filterFavorites({query:'travel',tagIds:[travel.id]}).length,1);
+  assert.equal(alice.setFavoriteNote('ScoopskiPotat0','x'.repeat(241)).code,'note-too-long');
+  const bob=history.createTrainerHistoryStore({storage,identity:{uid:'uid-b',username:'Bob'}});
+  assert.equal(bob.read().favorites.length,0);assert.equal(Object.keys(bob.read().tags).length,0);
+});
+
+test('favorite organization saves tags and note atomically',()=>{
+  const storage=memoryStorage(),store=history.createTrainerHistoryStore({storage,identity:{uid:'uid-a',username:'Alice'},now:()=>200});
+  store.toggleFavorite('TrainerOne');const tag=store.createTag('Raid');
+  assert.equal(store.updateFavoriteOrganization('TrainerOne',{tagIds:[tag.id],note:'Meet at six'}).ok,true);
+  const before=JSON.stringify(store.favoriteFor('TrainerOne'));
+  assert.equal(store.updateFavoriteOrganization('TrainerOne',{tagIds:[],note:'x'.repeat(241)}).code,'note-too-long');
+  assert.equal(JSON.stringify(store.favoriteFor('TrainerOne')),before);
+});
+
+test('deleting a stable tag removes it from every assigned favorite without removing favorites',()=>{
+  const storage=memoryStorage(),store=history.createTrainerHistoryStore({storage,identity:{uid:'uid-a',username:'Alice'},now:()=>300});
+  store.toggleFavorite('TrainerOne');store.toggleFavorite('TrainerTwo');const tag=store.createTag('レイド候補');
+  store.setFavoriteTags('TrainerOne',[tag.id]);store.setFavoriteTags('TrainerTwo',[tag.id]);
+  assert.equal(store.deleteTag(tag.id).ok,true);
+  const state=store.read();assert.equal(state.favorites.length,2);assert.equal(state.favorites.every(item=>item.tagIds.length===0),true);assert.equal(Object.keys(state.tags).length,0);
+});
+
 test('event presentation hides expired events and groups/filter types deterministically',()=>{
   const now=Date.parse('2026-08-04T12:00:00Z');
   const source=[

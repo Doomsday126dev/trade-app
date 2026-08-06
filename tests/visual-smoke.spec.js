@@ -164,6 +164,40 @@ test.describe('visual smoke', () => {
     }
   });
 
+  test('local trainer organizer remains contained and reachable on compact viewports',async({page})=>{
+    for(const [width,height] of [[320,640],[375,700],[390,420],[390,300],[430,760],[1024,800]]){
+      await page.setViewportSize({width,height});
+      await page.goto(`./?local-organizer=${width}-${height}-${Date.now()}`,{waitUntil:'domcontentloaded'});
+      await page.waitForFunction(()=>typeof openTrainerOrganizer==='function');
+      await page.evaluate(()=>{
+        cur='LocalTester';auth={currentUser:{uid:'uid-local-tester'}};
+        const store=PogoData.trainerHistoryStore.createTrainerHistoryStore({storage:localStorage,identity:{uid:'uid-local-tester',username:'LocalTester'}});
+        store.clear();
+        store.toggleFavorite('TrainerNameThatIsDeliberatelyLongForCompactLayouts');
+        const japanese=store.createTag('交換候補とレイドの予定'),german=store.createTag('Besonders lange private Tauschplanung');
+        store.setFavoriteTags('TrainerNameThatIsDeliberatelyLongForCompactLayouts',[japanese.id,german.id]);
+        document.getElementById('login-pg').style.display='none';document.getElementById('app').style.display='flex';
+        const trigger=document.createElement('button');trigger.className='trainer-icon-btn';trigger.textContent='⚙';trigger.setAttribute('aria-label','Organize favorite');document.body.appendChild(trigger);
+        openTrainerOrganizer('TrainerNameThatIsDeliberatelyLongForCompactLayouts');
+      });
+      const modal=page.locator('#trainer-organizer-modal'),close=page.locator('.organizer-close');
+      await expect(modal).toBeVisible();
+      const organizerTrigger=page.locator('.trainer-icon-btn').filter({hasText:'⚙'}).first();
+      await organizerTrigger.evaluate(button=>{button.style.position='fixed';button.style.left='0';button.style.top='0';button.style.display='inline-flex';});
+      const triggerBox=await organizerTrigger.boundingBox();expect(triggerBox?.width).toBeGreaterThanOrEqual(48);expect(triggerBox?.height).toBeGreaterThanOrEqual(48);
+      const closeBox=await close.boundingBox();expect(closeBox?.width).toBeGreaterThanOrEqual(48);expect(closeBox?.height).toBeGreaterThanOrEqual(48);
+      expect(await page.evaluate(()=>{
+        const body=document.querySelector('.organizer-body'),panel=document.querySelector('.organizer-modal');
+        const rect=panel.getBoundingClientRect();
+        return document.documentElement.scrollWidth<=document.documentElement.clientWidth&&rect.left>=0&&rect.right<=innerWidth&&rect.bottom<=innerHeight+1&&getComputedStyle(body).overflowY==='auto';
+      })).toBe(true);
+      page.once('dialog',dialog=>dialog.accept());
+      await page.locator('#organizer-note').fill('A private note draft');
+      await page.keyboard.press('Escape');
+      await expect(modal).toBeHidden();
+    }
+  });
+
   test('translated active UI has no horizontal overflow at representative widths',async({page})=>{
     const viewports=[[320,640],[375,700],[390,700],[430,760],[768,800],[1024,800],[1440,900],[390,420],[390,300]];
     for(const [width,height] of viewports){

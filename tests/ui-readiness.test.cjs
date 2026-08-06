@@ -45,6 +45,14 @@ test('account and Settings controls expose 48px minimum touch targets',()=>{
   assert.match(html,/\.settings-modal-close\{[^}]*width:48px;height:48px;min-width:48px;min-height:48px/);
 });
 
+test('favorite organizer trigger and sheet controls expose 48px touch targets',()=>{
+  assert.match(html,/\.trainer-icon-btn\{width:48px;height:48px/);
+  assert.match(html,/\.organizer-close\{width:48px;height:48px;min-width:48px/);
+  assert.match(html,/\.organizer-tag-row button,\.organizer-add-tag button\{width:48px;height:48px;min-width:48px/);
+  assert.match(html,/\.organizer-body\{[^}]*overflow-y:auto/);
+  assert.match(html,/padding-bottom:calc\(20px \+ env\(safe-area-inset-bottom\)\)/);
+});
+
 test('signed-out and anonymous screens expose language settings without a profile menu',()=>{
   assert.match(html,/id="login-language-trigger"[^>]+openSettingsPanel\('public'\)/);
   assert.match(html,/id="share-language-trigger"[^>]+openSettingsPanel\('public'\)/);
@@ -55,7 +63,7 @@ test('signed-out and anonymous screens expose language settings without a profil
 test('account menu and Settings dialog preserve keyboard focus and route compatibility',()=>{
   assert.match(html,/popover\.querySelector\('button'\)\?\.focus\(\)/);
   assert.match(html,/if\(e\.key==='Escape'&&popover&&!popover\.hidden\)/);
-  assert.match(html,/if\(ev\.key==='Escape'\)\{closeModal\(id\);return;\}/);
+  assert.match(html,/if\(ev\.key==='Escape'\)\{if\(id==='trainer-organizer-modal'\)closeTrainerOrganizer\(\);else closeModal\(id\);return;\}/);
   assert.match(html,/_modalPrevFocus\?\.focus\?\.\(\)/);
   assert.match(html,/history\.pushState\([^\n]+settingsPanel:true/);
   assert.match(html,/window\.addEventListener\('popstate',syncSettingsRoute\)/);
@@ -92,6 +100,21 @@ test('local preferences stay clearly device-local and expose no enabled sync con
   assert.doesNotMatch(html,/id="settings-(?:sync|save)-preferences"/);
 });
 
+test('favorite organizer protects dirty drafts and clears stale deleted-tag filters',()=>{
+  const opener=html.slice(html.indexOf('function openTrainerOrganizer'),html.indexOf('function closeTrainerOrganizer'));
+  const closer=html.slice(html.indexOf('function closeTrainerOrganizer'),html.indexOf('function createLocalTrainerTag'));
+  const deletion=html.slice(html.indexOf('function deleteLocalTrainerTag'),html.indexOf('function saveTrainerOrganizer'));
+  assert.match(opener,/trainerOrganizerState\.dirty.*trainerOrganizerState\.username!==username.*confirm\(i18nCore\.t\('organizer\.discardChanges'\)\)/s);
+  assert.match(closer,/trainerOrganizerState\.dirty.*confirm\(i18nCore\.t\('organizer\.discardChanges'\)\)/s);
+  assert.match(deletion,/trainerOrganizerState\.tagIds=trainerOrganizerState\.tagIds\.filter/);
+  assert.match(deletion,/trainerOrganizerState\.draftTagIds=trainerOrganizerState\.draftTagIds\?\.filter/);
+  assert.match(html,/if\(el\.id==='trainer-organizer-modal'\)closeTrainerOrganizer\(\)/);
+  const accountSwitch=html.slice(html.indexOf('function resetTransientUiBeforeSessionActivation'),html.indexOf('function activateOwnedSession'));
+  const authLoss=html.slice(html.indexOf('function bindAuthObserver'),html.indexOf('function waitForAuthState'));
+  assert.match(accountSwitch,/resetSessionTransientUi\('identity_switch'\);\s*resetTrainerOrganizerState\(\)/);
+  assert.match(authLoss,/resetSessionTransientUi\('auth_loss'\);\s*resetTrainerOrganizerState\(\)/);
+});
+
 test('responsive and accessibility safeguards cover compact screens, long labels, focus, and reduced motion',()=>{
   assert.match(html,/@media\(max-width:360px\)/);
   assert.match(html,/overflow-wrap:anywhere/);
@@ -100,7 +123,7 @@ test('responsive and accessibility safeguards cover compact screens, long labels
   assert.match(html,/min-height:48px/);
   assert.match(html,/window\.visualViewport/);
   assert.match(html,/role="combobox" aria-autocomplete="list"/);
-  assert.match(html,/if\(ev\.key==='Escape'\)\{closeModal\(id\);return;\}/);
+  assert.match(html,/if\(ev\.key==='Escape'\)\{if\(id==='trainer-organizer-modal'\)closeTrainerOrganizer\(\);else closeModal\(id\);return;\}/);
 });
 
 test('Events distinguish loading, offline, filtered-empty, and legitimate empty states',()=>{

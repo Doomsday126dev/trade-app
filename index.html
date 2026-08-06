@@ -1302,7 +1302,8 @@ html[data-theme="light"] .have-mirror-badge,html[data-theme="light"] .have-mirro
 .trainer-quick-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:9px}
 .trainer-quick-card{border:1px solid var(--border);background:var(--card);border-radius:6px;padding:11px;display:flex;gap:9px;align-items:center;min-width:0}
 .trainer-quick-main{flex:1;min-width:0}.trainer-quick-name{font-weight:750;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.trainer-quick-meta{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.4}.trainer-change-counts{font-size:11px;color:var(--ac2);margin-top:4px}.trainer-unread{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--accent);margin-right:5px}
-.trainer-quick-actions{display:flex;gap:5px}.trainer-icon-btn{width:40px;height:40px;border:1px solid var(--border2);border-radius:6px;background:var(--bg);color:var(--text);cursor:pointer;font-size:16px}.trainer-icon-btn:hover{border-color:var(--accent)}
+.trainer-quick-actions{display:flex;gap:5px}.trainer-icon-btn{width:48px;height:48px;min-width:48px;min-height:48px;border:1px solid var(--border2);border-radius:6px;background:var(--bg);color:var(--text);cursor:pointer;font-size:16px}.trainer-icon-btn:hover{border-color:var(--accent)}
+.favorite-toolbar{display:grid;grid-template-columns:minmax(180px,1fr) auto;gap:8px;margin-bottom:10px}.favorite-toolbar input{min-width:0}.favorite-filter-tags,.favorite-card-tags,.organizer-tag-list{display:flex;flex-wrap:wrap;gap:6px}.favorite-filter-tags{grid-column:1/-1}.favorite-filter-chip,.favorite-card-tag{max-width:100%;border:1px solid var(--border2);border-radius:999px;background:var(--bg);color:var(--muted);font:700 11px var(--font);padding:6px 9px;overflow-wrap:anywhere}.favorite-filter-chip{cursor:pointer;min-height:40px}.favorite-filter-chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}.favorite-card-tags{margin-top:7px}.favorite-card-tag{padding:3px 7px;color:var(--ac2)}.favorite-note-preview{font-size:11px;color:var(--muted);margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.favorite-empty{border:1px dashed var(--border2);border-radius:6px;padding:18px;color:var(--muted);font-size:12px}.organizer-modal{max-width:680px;padding:0;overflow:hidden;display:flex;flex-direction:column}.organizer-header{display:flex;justify-content:space-between;gap:12px;padding:18px 20px 13px;border-bottom:1px solid var(--border)}.organizer-header h2{font-size:18px;margin:0}.organizer-header p{font-size:11px;color:var(--muted);margin-top:4px}.organizer-close{width:48px;height:48px;min-width:48px;flex:0 0 48px;border:1px solid var(--border2);border-radius:50%;background:transparent;color:var(--text);font-size:22px}.organizer-body{padding:16px 20px 20px;overflow-y:auto;overscroll-behavior:contain}.organizer-section{padding:14px 0;border-bottom:1px solid var(--border)}.organizer-section:last-child{border-bottom:0}.organizer-section h3{font-size:13px;margin:0 0 5px}.organizer-help{font-size:11px;color:var(--muted);line-height:1.45;margin-bottom:10px}.organizer-assignment{display:flex;flex-wrap:wrap;gap:7px}.organizer-check{display:inline-flex;align-items:center;gap:7px;min-height:48px;max-width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:6px;cursor:pointer}.organizer-check input{width:18px;height:18px}.organizer-check span{overflow-wrap:anywhere}.organizer-note{width:100%;min-height:110px;resize:vertical}.organizer-note-meta{display:flex;justify-content:space-between;gap:8px;font-size:10px;color:var(--muted);margin-top:5px}.organizer-tag-row{display:grid;grid-template-columns:minmax(0,1fr) 48px 48px;gap:6px;width:100%}.organizer-tag-row input{min-width:0}.organizer-tag-row button,.organizer-add-tag button{width:48px;height:48px;min-width:48px}.organizer-add-tag{display:grid;grid-template-columns:minmax(0,1fr) 48px;gap:6px;margin-top:9px}.organizer-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;padding-top:14px}.organizer-actions button{min-height:48px}.organizer-status{min-height:18px;font-size:11px;color:var(--muted);margin-top:8px}
 .favorite-detail{grid-column:1/-1;border-top:1px solid var(--border);padding-top:8px;margin-top:4px;font-size:11px;color:var(--muted)}
 .favorite-detail summary{cursor:pointer;font-weight:700;color:var(--text)}
 .share-profile-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px}.share-profile-actions button{min-height:38px}
@@ -1310,7 +1311,7 @@ html[data-theme="light"] .have-mirror-badge,html[data-theme="light"] .have-mirro
 .event-filter-row{display:flex;gap:7px;overflow-x:auto;padding:2px 0 12px;scrollbar-width:thin}.event-filter{white-space:nowrap;border:1px solid var(--border2);background:var(--card);color:var(--muted);border-radius:999px;padding:8px 12px;min-height:40px;font:700 12px var(--font);cursor:pointer}.event-filter.active{background:var(--accent);border-color:var(--accent);color:#fff}
 .event-group{margin-bottom:22px}.event-group-title{font-size:14px;font-weight:800;margin-bottom:10px}.event-card-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.event-card{border:1px solid var(--border);border-left:3px solid var(--accent);background:var(--card);border-radius:6px;padding:13px;display:flex;flex-direction:column;gap:9px;min-width:0;cursor:pointer}.event-card:hover{border-color:var(--ac2)}.event-card-title{font-size:14px;font-weight:800;line-height:1.3;overflow-wrap:anywhere}.event-card-time{font-size:11px;color:var(--muted);line-height:1.45}.event-type-tag{align-self:flex-start;border-radius:999px;padding:3px 7px;background:var(--bg2);border:1px solid var(--border2);font-size:10px;font-weight:800;color:var(--ac2)}.event-card-details{font-size:11px;color:var(--ac2);text-decoration:none;margin-top:auto;align-self:flex-start}
 @media(max-width:900px){.event-card-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:600px){#tab-find{overflow:visible}.trainer-search-shell.suggestions-open{z-index:330}.trainer-search-row{display:grid;grid-template-columns:minmax(0,1fr) auto}.trainer-search-row .bsave{min-width:44px;padding-inline:12px}.trainer-suggestion{min-height:48px;font-size:14px}.trainer-quick-grid,.event-card-grid{grid-template-columns:1fr}.trainer-quick-card{padding:10px}.trainer-icon-btn{width:44px;height:44px}.event-card{padding:12px}.my-string-heading{align-items:flex-start}}
+@media(max-width:600px){#tab-find{overflow:visible}.trainer-search-shell.suggestions-open{z-index:330}.trainer-search-row{display:grid;grid-template-columns:minmax(0,1fr) auto}.trainer-search-row .bsave{min-width:48px;padding-inline:12px}.trainer-suggestion{min-height:48px;font-size:14px}.trainer-quick-grid,.event-card-grid{grid-template-columns:1fr}.trainer-quick-card{padding:10px;align-items:flex-start}.trainer-quick-actions{flex-wrap:wrap;justify-content:flex-end}.event-card{padding:12px}.my-string-heading{align-items:flex-start}.favorite-toolbar{grid-template-columns:1fr}.favorite-toolbar .bghost{width:100%;min-height:48px}.favorite-filter-tags{grid-column:1}.organizer-overlay{align-items:flex-end;padding:0}.organizer-modal{width:100%;max-width:none;max-height:calc(100dvh - env(safe-area-inset-top));margin:auto 0 0;border-radius:14px 14px 0 0;border-bottom:0}.organizer-body{max-height:calc(100dvh - 82px - env(safe-area-inset-top));padding-bottom:calc(20px + env(safe-area-inset-bottom))}}
 .owner-share-notice{display:none;margin:10px 0 2px;padding:12px;border:1px solid rgba(245,158,11,.38);border-radius:6px;background:rgba(245,158,11,.08)}
 .owner-share-notice.visible{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap}.owner-share-notice-copy{flex:1;min-width:210px}.owner-share-notice-title{font-weight:800;font-size:13px}.owner-share-notice-body{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.5}.owner-share-notice button{min-height:44px}
 .sched-manual-bonus{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--bg);border:1px dashed var(--border2);border-radius:var(--r2);margin-bottom:10px;font-size:12px;flex-wrap:wrap}
@@ -2410,6 +2411,38 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
   </div>
 </div>
 
+<!-- DEVICE-LOCAL FAVORITE ORGANIZER -->
+<div class="ov organizer-overlay" id="trainer-organizer-modal" role="dialog" aria-modal="true" aria-labelledby="trainer-organizer-title" aria-describedby="trainer-organizer-description">
+  <div class="modal organizer-modal">
+    <div class="organizer-header">
+      <div><h2 id="trainer-organizer-title" data-i18n="organizer.title">Organize trainer</h2><p id="trainer-organizer-description" data-i18n="organizer.localOnly">Favorites, tags, and notes are currently saved on this device.</p></div>
+      <button type="button" class="organizer-close" onclick="closeTrainerOrganizer()" data-i18n-aria-label="organizer.close" aria-label="Close organizer">×</button>
+    </div>
+    <div class="organizer-body">
+      <div class="settings-account-summary"><div class="av" id="organizer-trainer-av">?</div><div><span data-i18n="organizer.favoriteTrainer">Favorite trainer</span><strong id="organizer-trainer-name">—</strong></div></div>
+      <section class="organizer-section" aria-labelledby="organizer-tags-heading">
+        <h3 id="organizer-tags-heading" data-i18n="organizer.tags">Tags</h3>
+        <p class="organizer-help" data-i18n="organizer.tagsHelp">Select one or more private tags for this trainer.</p>
+        <div class="organizer-assignment" id="organizer-tag-assignment"></div>
+      </section>
+      <section class="organizer-section" aria-labelledby="organizer-note-heading">
+        <h3 id="organizer-note-heading" data-i18n="organizer.privateNote">Private note</h3>
+        <p class="organizer-help" data-i18n="organizer.noteHelp">This note stays on this device and is never included in shared lists or exports.</p>
+        <textarea class="organizer-note" id="organizer-note" maxlength="240" oninput="trainerOrganizerChanged()" data-i18n-placeholder="organizer.notePlaceholder" placeholder="Add a private note…"></textarea>
+        <div class="organizer-note-meta"><span data-i18n="organizer.noteLimit">Maximum 240 characters</span><span id="organizer-note-count">0/240</span></div>
+      </section>
+      <section class="organizer-section" aria-labelledby="organizer-manage-tags-heading">
+        <h3 id="organizer-manage-tags-heading" data-i18n="organizer.manageTags">Manage tags</h3>
+        <p class="organizer-help" data-i18n="organizer.manageTagsHelp">Tag names are private and can be changed without changing trainer data.</p>
+        <div class="organizer-tag-list" id="organizer-tag-manager"></div>
+        <div class="organizer-add-tag"><input id="organizer-new-tag" maxlength="40" data-i18n-placeholder="organizer.addTagPlaceholder" placeholder="New tag"><button class="bghost" onclick="createLocalTrainerTag()" data-i18n-aria-label="organizer.addTag" aria-label="Add tag">＋</button></div>
+      </section>
+      <div class="organizer-status" id="organizer-status" role="status" aria-live="polite" aria-atomic="true"></div>
+      <div class="organizer-actions"><button class="bghost" onclick="closeTrainerOrganizer()" data-i18n="common.cancel">Cancel</button><button class="bpri" onclick="saveTrainerOrganizer()" data-i18n="common.save">Save</button></div>
+    </div>
+  </div>
+</div>
+
 <!-- SETTINGS — account-owned dialog on desktop and bottom sheet on mobile -->
 <div class="ov settings-overlay" id="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title" aria-describedby="settings-description">
   <div class="modal settings-modal">
@@ -2485,7 +2518,7 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
 <div class="ptr-indicator" id="ptr-indicator" aria-hidden="true">↓</div>
 
 <script>
-window.__POGO_RELEASE_ID='2026-08-05.7';
+window.__POGO_RELEASE_ID='2026-08-05.8';
 window.__pogoBootWatch=setTimeout(function(){
   var visible=['config-pg','login-pg','app'].some(function(id){
     var el=document.getElementById(id);
@@ -2504,51 +2537,51 @@ window.__pogoBootWatch=setTimeout(function(){
   if(err)err.textContent='App scripts did not finish loading. Refresh once; if this stays, send this screenshot.';
 },4000);
 </script>
-<script src="data.js?v=2026-08-05.7"></script>
-<script src="js/domain/priorities.js?v=2026-08-05.7"></script>
-<script src="js/ui/badges.js?v=2026-08-05.7"></script>
-<script src="js/domain/username.js?v=2026-08-05.7"></script>
-<script src="js/domain/priorityValues.js?v=2026-08-05.7"></script>
-<script src="js/domain/scheduleDates.js?v=2026-08-05.7"></script>
-<script src="js/domain/pokemonSearchTerms.js?v=2026-08-05.7"></script>
-<script src="js/domain/pokemonEntryRules.js?v=2026-08-05.7"></script>
-<script src="js/domain/searchStrings.js?v=2026-08-05.7"></script>
-<script src="js/ui/stringHtml.js?v=2026-08-05.7"></script>
-<script src="js/domain/scheduleEventRules.js?v=2026-08-05.7"></script>
-<script src="js/domain/scheduleTradeRules.js?v=2026-08-05.7"></script>
-<script src="js/domain/pokemonKeys.js?v=2026-08-05.7"></script>
-<script src="js/domain/spriteSlugs.js?v=2026-08-05.7"></script>
-<script src="js/domain/fuzzyText.js?v=2026-08-05.7"></script>
-<script src="js/domain/autocompleteText.js?v=2026-08-05.7"></script>
-<script src="js/domain/autocompleteMatching.js?v=2026-08-05.7"></script>
-<script src="js/domain/autocompleteRanking.js?v=2026-08-05.7"></script>
-<script src="js/domain/relativeTime.js?v=2026-08-05.7"></script>
-<script src="js/domain/clientRelease.js?v=2026-08-05.7"></script>
-<script src="js/domain/trainerDiscovery.js?v=2026-08-05.7"></script>
-<script src="js/domain/eventPresentation.js?v=2026-08-05.7"></script>
-<script src="js/domain/publicSharePublication.js?v=2026-08-05.7"></script>
-<script src="js/domain/trainerPreferences.js?v=2026-08-05.7"></script>
-<script src="js/domain/loginDirectory.js?v=2026-08-05.7"></script>
-<script src="js/utils/textSafety.js?v=2026-08-05.7"></script>
-<script src="js/ui/stringPanels.js?v=2026-08-05.7"></script>
-<script src="js/ui/emptyState.js?v=2026-08-05.7"></script>
-<script src="js/i18n/locales/en.js?v=2026-08-05.7"></script>
-<script src="js/i18n/locales/ja.js?v=2026-08-05.7"></script>
-<script src="js/i18n/locales/es.js?v=2026-08-05.7"></script>
-<script src="js/i18n/locales/de.js?v=2026-08-05.7"></script>
-<script src="js/i18n/core.js?v=2026-08-05.7"></script>
-<script src="js/services/firebaseClient.js?v=2026-08-05.7"></script>
-<script src="js/data/subscriptionManager.js?v=2026-08-05.7"></script>
-<script src="js/data/listenerLifecycle.js?v=2026-08-05.7"></script>
-<script src="js/data/sessionCacheBoundary.js?v=2026-08-05.7"></script>
-<script src="js/data/firebaseReadRegistry.js?v=2026-08-05.7"></script>
-<script src="js/data/currentUserRepository.js?v=2026-08-05.7"></script>
-<script src="js/data/ownedDataCoordinator.js?v=2026-08-05.7"></script>
-<script src="js/data/publicShareRepository.js?v=2026-08-05.7"></script>
-<script src="js/data/trainerHistoryStore.js?v=2026-08-05.7"></script>
-<script src="js/data/trainerPreferencesRepository.js?v=2026-08-05.7"></script>
-<script src="js/domain/cacheAdapters.js?v=2026-08-05.7"></script>
-<script src="js/ui/trainerTagPanel.js?v=2026-08-05.7"></script>
+<script src="data.js?v=2026-08-05.8"></script>
+<script src="js/domain/priorities.js?v=2026-08-05.8"></script>
+<script src="js/ui/badges.js?v=2026-08-05.8"></script>
+<script src="js/domain/username.js?v=2026-08-05.8"></script>
+<script src="js/domain/priorityValues.js?v=2026-08-05.8"></script>
+<script src="js/domain/scheduleDates.js?v=2026-08-05.8"></script>
+<script src="js/domain/pokemonSearchTerms.js?v=2026-08-05.8"></script>
+<script src="js/domain/pokemonEntryRules.js?v=2026-08-05.8"></script>
+<script src="js/domain/searchStrings.js?v=2026-08-05.8"></script>
+<script src="js/ui/stringHtml.js?v=2026-08-05.8"></script>
+<script src="js/domain/scheduleEventRules.js?v=2026-08-05.8"></script>
+<script src="js/domain/scheduleTradeRules.js?v=2026-08-05.8"></script>
+<script src="js/domain/pokemonKeys.js?v=2026-08-05.8"></script>
+<script src="js/domain/spriteSlugs.js?v=2026-08-05.8"></script>
+<script src="js/domain/fuzzyText.js?v=2026-08-05.8"></script>
+<script src="js/domain/autocompleteText.js?v=2026-08-05.8"></script>
+<script src="js/domain/autocompleteMatching.js?v=2026-08-05.8"></script>
+<script src="js/domain/autocompleteRanking.js?v=2026-08-05.8"></script>
+<script src="js/domain/relativeTime.js?v=2026-08-05.8"></script>
+<script src="js/domain/clientRelease.js?v=2026-08-05.8"></script>
+<script src="js/domain/trainerDiscovery.js?v=2026-08-05.8"></script>
+<script src="js/domain/eventPresentation.js?v=2026-08-05.8"></script>
+<script src="js/domain/publicSharePublication.js?v=2026-08-05.8"></script>
+<script src="js/domain/trainerPreferences.js?v=2026-08-05.8"></script>
+<script src="js/domain/loginDirectory.js?v=2026-08-05.8"></script>
+<script src="js/utils/textSafety.js?v=2026-08-05.8"></script>
+<script src="js/ui/stringPanels.js?v=2026-08-05.8"></script>
+<script src="js/ui/emptyState.js?v=2026-08-05.8"></script>
+<script src="js/i18n/locales/en.js?v=2026-08-05.8"></script>
+<script src="js/i18n/locales/ja.js?v=2026-08-05.8"></script>
+<script src="js/i18n/locales/es.js?v=2026-08-05.8"></script>
+<script src="js/i18n/locales/de.js?v=2026-08-05.8"></script>
+<script src="js/i18n/core.js?v=2026-08-05.8"></script>
+<script src="js/services/firebaseClient.js?v=2026-08-05.8"></script>
+<script src="js/data/subscriptionManager.js?v=2026-08-05.8"></script>
+<script src="js/data/listenerLifecycle.js?v=2026-08-05.8"></script>
+<script src="js/data/sessionCacheBoundary.js?v=2026-08-05.8"></script>
+<script src="js/data/firebaseReadRegistry.js?v=2026-08-05.8"></script>
+<script src="js/data/currentUserRepository.js?v=2026-08-05.8"></script>
+<script src="js/data/ownedDataCoordinator.js?v=2026-08-05.8"></script>
+<script src="js/data/publicShareRepository.js?v=2026-08-05.8"></script>
+<script src="js/data/trainerHistoryStore.js?v=2026-08-05.8"></script>
+<script src="js/data/trainerPreferencesRepository.js?v=2026-08-05.8"></script>
+<script src="js/domain/cacheAdapters.js?v=2026-08-05.8"></script>
+<script src="js/ui/trainerTagPanel.js?v=2026-08-05.8"></script>
 <script>
 let initializeApp,getDatabase,ref,set,get,onValue,update,getAuth,signInWithEmailAndPassword,createUserWithEmailAndPassword,firebaseSignOut,updatePassword,deleteUser,onAuthStateChanged;
 let firebaseSdkPromise=null;
@@ -3642,6 +3675,7 @@ function bindAuthObserver(){
     _authStateWaiters.splice(0).forEach(fn=>fn(user||null));
     if(!user){
       resetSessionTransientUi('auth_loss');
+      resetTrainerOrganizerState();
       trainerHistoryStore=null;
       managedListenerLifecycle.deactivateSession('auth_loss');
       managedOwnedDataCoordinator?.reset();
@@ -3821,6 +3855,7 @@ function resetTransientUiBeforeSessionActivation(uid,username){
   const owner=managedSessionCache?.snapshot?.().activeOwner;
   if(!owner||owner.uid===uid&&owner.username===username)return false;
   resetSessionTransientUi('identity_switch');
+  resetTrainerOrganizerState();
   return true;
 }
 function activateOwnedSession(uid,username){
@@ -5841,6 +5876,7 @@ function logout(){
   closeAccountMenu(false);
   if(location.hash==='#settings')history.replaceState({},'',settingsRouteUrl(false));
   resetSessionTransientUi('logout');
+  resetTrainerOrganizerState();
   trainerHistoryStore=null;
   managedListenerLifecycle.deactivateSession('logout');
   managedOwnedDataCoordinator?.reset();
@@ -6047,6 +6083,7 @@ function changeInterfaceLocale(locale){
   if(cur){
     renderMyList();renderFindTrainer();renderSettings();renderEventsOnly();renderMyHave(document.getElementById('have-filter')?.value||'');
     if(_activeShareView?.username)renderShareView(_activeShareView.username,_activeShareView.type);
+    if(document.getElementById('trainer-organizer-modal')?.classList.contains('open'))renderTrainerOrganizer();
   }else populateLoginUsers(loginUserSuggestionsShouldOpen());
   toast(i18nCore.t('settings.languageSaved'));
 }
@@ -6055,6 +6092,11 @@ let trainerSuggestionItems=[];
 let trainerSuggestionIndex=-1;
 let trainerSuggestionQuery='';
 let eventTypeFilter='all';
+let trainerOrganizerState={query:'',tagIds:[],username:'',dirty:false,draftNote:null,draftTagIds:null};
+function resetTrainerOrganizerState(){
+  trainerOrganizerState={query:'',tagIds:[],username:'',dirty:false,draftNote:null,draftTagIds:null};
+  if(document.getElementById('trainer-organizer-modal')?.classList.contains('open'))closeTrainerOrganizer(true);
+}
 function ensureTrainerHistoryStore(){
   const uid=auth?.currentUser?.uid;
   if(!uid||!cur)return null;
@@ -6211,24 +6253,94 @@ async function favoriteStatus(item,store){
   const prior=store.snapshotFor(item.displayName)?.snapshot||null;
   return{item,available:true,diff:trainerDiscoveryDomain.diffPublishedLists(prior,result.value),updatedAt:result.value.updatedAt||result.value.profile?.lastUpdated||null};
 }
+function canonicalTrainerName(username){
+  const folded=trainerDiscoveryDomain.fold(username);
+  return Object.keys(allData.loginDirectory||{}).find(name=>trainerDiscoveryDomain.fold(name)===folded)||username;
+}
+function favoriteTagChips(item,state){
+  return(item.tagIds||[]).map(id=>state.tags[id]).filter(Boolean).map(tag=>`<span class="favorite-card-tag">${escHtml(tag.label)}</span>`).join('');
+}
+function setFavoriteSearch(value){trainerOrganizerState.query=String(value||'');renderTrainerQuickLists();}
+function toggleFavoriteTagFilter(id){
+  const selected=new Set(trainerOrganizerState.tagIds);selected.has(id)?selected.delete(id):selected.add(id);trainerOrganizerState.tagIds=[...selected].sort();renderTrainerQuickLists();
+}
+function clearFavoriteFilters(){trainerOrganizerState.query='';trainerOrganizerState.tagIds=[];renderTrainerQuickLists();}
 async function renderTrainerQuickLists(){
   const store=ensureTrainerHistoryStore(),favoritesEl=document.getElementById('favorite-trainers'),recentEl=document.getElementById('recent-trainers'),noteEl=document.getElementById('trainer-history-note');
   if(!store||!favoritesEl||!recentEl)return;
   const state=store.read();
   if(noteEl){noteEl.style.display=state.favorites.length||state.recent.length?'':'none';noteEl.textContent=i18nCore.t('trainer.deviceLocalHelp');}
-  favoritesEl.innerHTML=state.favorites.length?`<div class="trainer-quick-heading">${escHtml(i18nCore.t('trainer.favoritesTitle'))}</div><div class="trainer-quick-grid"><div class="trainer-quick-card"><div class="trainer-quick-main">${escHtml(i18nCore.t('trainer.searching'))}</div></div></div>`:'';
-  const statuses=await Promise.all(state.favorites.map(item=>favoriteStatus(item,store)));
+  const activeTags=Object.values(state.tags||{}).sort((a,b)=>a.label.localeCompare(b.label,i18nCore.getLocale(),{sensitivity:'base'}));
+  const filtered=store.filterFavorites({query:trainerOrganizerState.query,tagIds:trainerOrganizerState.tagIds});
+  const filtersActive=!!(trainerOrganizerState.query||trainerOrganizerState.tagIds.length);
+  const toolbar=state.favorites.length?`<div class="favorite-toolbar"><input value="${escAttr(trainerOrganizerState.query)}" oninput="setFavoriteSearch(this.value)" data-i18n-placeholder="organizer.searchFavorites" placeholder="Search favorites" aria-label="${escAttr(i18nCore.t('organizer.searchFavorites'))}"><button class="bghost" onclick="clearFavoriteFilters()" ${filtersActive?'':'disabled'}>${escHtml(i18nCore.t('organizer.clearFilters'))}</button>${activeTags.length?`<div class="favorite-filter-tags" aria-label="${escAttr(i18nCore.t('organizer.filterTags'))}">${activeTags.map(tag=>`<button class="favorite-filter-chip" aria-pressed="${trainerOrganizerState.tagIds.includes(tag.id)}" onclick="toggleFavoriteTagFilter('${tag.id}')">${escHtml(tag.label)}</button>`).join('')}</div>`:''}</div>`:'';
+  favoritesEl.innerHTML=`<div class="trainer-quick-heading">${escHtml(i18nCore.t('trainer.favoritesTitle'))}</div>${toolbar}${state.favorites.length?`<div class="trainer-quick-grid"><div class="trainer-quick-card"><div class="trainer-quick-main">${escHtml(i18nCore.t('trainer.searching'))}</div></div></div>`:`<div class="favorite-empty">${escHtml(i18nCore.t('organizer.noFavorites'))}</div>`}`;
+  const statuses=await Promise.all(filtered.map(item=>{const canonical=canonicalTrainerName(item.displayName);if(canonical!==item.displayName)store.updateCanonicalName(canonical);return favoriteStatus({...item,displayName:canonical},store);}));
   if(!document.getElementById('tab-find')?.classList.contains('active'))return;
-  favoritesEl.innerHTML=statuses.length?`<div class="trainer-quick-heading">${escHtml(i18nCore.t('trainer.favoritesTitle'))}</div><div class="trainer-quick-grid">${statuses.map(({item,available,diff,updatedAt})=>{
+  favoritesEl.innerHTML=`<div class="trainer-quick-heading">${escHtml(i18nCore.t('trainer.favoritesTitle'))}</div>${toolbar}${statuses.length?`<div class="trainer-quick-grid">${statuses.map(({item,available,diff,updatedAt})=>{
     const unread=!!(available&&diff&&!diff.firstView&&diff.total);
-    return`<div class="trainer-quick-card"><div class="trainer-quick-main"><div class="trainer-quick-name">${unread?'<span class="trainer-unread"></span>':''}${escHtml(item.displayName)}</div><div class="trainer-quick-meta">${available?(trainerDate(updatedAt)||''):`${escHtml(i18nCore.t('trainer.listUnavailable'))}`}</div>${unread?`<div class="trainer-change-counts">${escHtml(changeCountsText(diff))}</div>`:''}${unread?`<details class="favorite-detail"><summary>${escHtml(i18nCore.t('trainer.changesTitle'))}</summary>${changeDetailsHtml(diff)}</details>`:''}</div><div class="trainer-quick-actions"><button class="trainer-icon-btn" onclick="openTrainerByName('${escAttr(item.displayName)}')" aria-label="${escAttr(i18nCore.t('trainer.openAction'))}">↗</button><button class="trainer-icon-btn" onclick="toggleTrainerFavorite('${escAttr(item.displayName)}')" aria-label="${escAttr(i18nCore.t('trainer.favoriteRemove'))}">★</button></div></div>`;
-  }).join('')}</div>`:'';
+    const note=String(item.note||''),preview=Array.from(note).slice(0,60).join('');
+    return`<div class="trainer-quick-card"><div class="trainer-quick-main"><div class="trainer-quick-name">${unread?'<span class="trainer-unread"></span>':''}${escHtml(item.displayName)}</div><div class="trainer-quick-meta">${available?(trainerDate(updatedAt)||''):`${escHtml(i18nCore.t('trainer.listUnavailable'))}`}</div>${item.tagIds?.length?`<div class="favorite-card-tags">${favoriteTagChips(item,state)}</div>`:''}${preview?`<div class="favorite-note-preview" title="${escAttr(i18nCore.t('organizer.privateNote'))}">📝 ${escHtml(preview)}${Array.from(note).length>60?'…':''}</div>`:''}${unread?`<div class="trainer-change-counts">${escHtml(changeCountsText(diff))}</div>`:''}${unread?`<details class="favorite-detail"><summary>${escHtml(i18nCore.t('trainer.changesTitle'))}</summary>${changeDetailsHtml(diff)}</details>`:''}</div><div class="trainer-quick-actions"><button class="trainer-icon-btn" onclick="toggleTrainerFavorite('${escAttr(item.displayName)}')" aria-label="${escAttr(i18nCore.t('trainer.favoriteRemove'))}" aria-pressed="true">★</button><button class="trainer-icon-btn" onclick="openTrainerOrganizer('${escAttr(item.displayName)}')" aria-label="${escAttr(i18nCore.t('organizer.organize'))}">⚙</button><button class="trainer-icon-btn" onclick="openTrainerByName('${escAttr(item.displayName)}')" aria-label="${escAttr(i18nCore.t('trainer.openAction'))}">↗</button></div></div>`;
+  }).join('')}</div>`:`<div class="favorite-empty">${escHtml(i18nCore.t(state.favorites.length?'organizer.noMatches':'organizer.noFavorites'))}</div>`}`;
   recentEl.innerHTML=state.recent.length?`<div class="trainer-quick-heading">${escHtml(i18nCore.t('trainer.recentTitle'))}</div><div class="trainer-quick-grid">${state.recent.map(item=>`<div class="trainer-quick-card"><div class="trainer-quick-main"><div class="trainer-quick-name">${escHtml(item.displayName)}</div><div class="trainer-quick-meta">${trainerDate(item.openedAt)}</div></div><button class="trainer-icon-btn" onclick="openTrainerByName('${escAttr(item.displayName)}')" aria-label="${escAttr(i18nCore.t('trainer.openAction'))}">↗</button></div>`).join('')}</div>`:'';
 }
 function toggleTrainerFavorite(username){
   const store=ensureTrainerHistoryStore();if(!store)return;
   const result=store.toggleFavorite(username);toast(i18nCore.t(result.favorite?'trainer.favoriteAdded':'trainer.favoriteRemoved'));renderTrainerQuickLists();
   if(_activeShareView?.username===username)renderShareView(username,_activeShareView.type);
+}
+function organizerMessage(code){return i18nCore.t(`organizer.${code}`);}
+function trainerOrganizerChanged(){
+  trainerOrganizerState.dirty=true;
+  const note=document.getElementById('organizer-note'),count=document.getElementById('organizer-note-count');
+  trainerOrganizerState.draftNote=note?.value||'';
+  trainerOrganizerState.draftTagIds=[...document.querySelectorAll('#organizer-tag-assignment input:checked')].map(input=>input.dataset.tagId);
+  if(count&&note)count.textContent=`${Array.from(note.value).length}/240`;
+}
+function renderTrainerOrganizer(){
+  const store=ensureTrainerHistoryStore(),favorite=store?.favoriteFor(trainerOrganizerState.username);if(!store||!favorite)return closeTrainerOrganizer(true);
+  const state=store.read(),tags=Object.values(state.tags).sort((a,b)=>a.label.localeCompare(b.label,i18nCore.getLocale(),{sensitivity:'base'}));
+  document.getElementById('organizer-trainer-name').textContent=favorite.displayName;
+  document.getElementById('organizer-trainer-av').textContent=favorite.displayName.slice(0,2).toUpperCase();
+  const assignment=document.getElementById('organizer-tag-assignment');
+  const selected=trainerOrganizerState.draftTagIds??favorite.tagIds;
+  assignment.innerHTML=tags.length?tags.map(tag=>`<label class="organizer-check"><input type="checkbox" data-tag-id="${tag.id}" ${selected.includes(tag.id)?'checked':''} onchange="trainerOrganizerChanged()"><span>${escHtml(tag.label)}</span></label>`).join(''):`<span class="organizer-help">${escHtml(i18nCore.t('organizer.noTags'))}</span>`;
+  const manager=document.getElementById('organizer-tag-manager');
+  manager.innerHTML=tags.map(tag=>`<div class="organizer-tag-row"><input id="organizer-tag-${tag.id}" value="${escAttr(tag.label)}" maxlength="40" aria-label="${escAttr(i18nCore.t('organizer.tagName',{tag:tag.label}))}"><button class="bghost" onclick="renameLocalTrainerTag('${tag.id}')" aria-label="${escAttr(i18nCore.t('organizer.renameTagNamed',{tag:tag.label}))}">✓</button><button class="bghost" onclick="deleteLocalTrainerTag('${tag.id}')" aria-label="${escAttr(i18nCore.t('organizer.deleteTagNamed',{tag:tag.label}))}">×</button></div>`).join('');
+  const note=document.getElementById('organizer-note');note.value=trainerOrganizerState.draftNote??favorite.note??'';document.getElementById('organizer-note-count').textContent=`${Array.from(note.value).length}/240`;
+}
+function openTrainerOrganizer(username){
+  const store=ensureTrainerHistoryStore();if(!store?.isFavorite(username))return;
+  const modal=document.getElementById('trainer-organizer-modal');
+  if(modal?.classList.contains('open')&&trainerOrganizerState.dirty&&trainerOrganizerState.username!==username&&!confirm(i18nCore.t('organizer.discardChanges')))return;
+  const favorite=store.favoriteFor(username);
+  trainerOrganizerState.username=username;trainerOrganizerState.dirty=false;trainerOrganizerState.draftNote=favorite.note||'';trainerOrganizerState.draftTagIds=[...favorite.tagIds];renderInterimProductLabels();renderTrainerOrganizer();document.getElementById('organizer-status').textContent=i18nCore.t('organizer.savedLocal');openModal('trainer-organizer-modal',{returnFocus:document.activeElement});
+}
+function closeTrainerOrganizer(force=false){
+  if(!force&&trainerOrganizerState.dirty&&!confirm(i18nCore.t('organizer.discardChanges')))return;
+  trainerOrganizerState.dirty=false;trainerOrganizerState.draftNote=null;trainerOrganizerState.draftTagIds=null;closeModal('trainer-organizer-modal');
+}
+function createLocalTrainerTag(){
+  const input=document.getElementById('organizer-new-tag'),store=ensureTrainerHistoryStore(),result=store?.createTag(input?.value||'');
+  const status=document.getElementById('organizer-status');if(!result?.ok){if(status)status.textContent=organizerMessage(result?.code||'saveFailed');return;}
+  if(input)input.value='';if(status)status.textContent=i18nCore.t('organizer.tagCreated');renderTrainerOrganizer();renderTrainerQuickLists();
+}
+function renameLocalTrainerTag(id){
+  const input=document.getElementById(`organizer-tag-${id}`),result=ensureTrainerHistoryStore()?.renameTag(id,input?.value||''),status=document.getElementById('organizer-status');
+  if(!result?.ok){if(status)status.textContent=organizerMessage(result?.code||'saveFailed');return;}
+  if(status)status.textContent=i18nCore.t('organizer.tagRenamed');renderTrainerOrganizer();renderTrainerQuickLists();
+}
+function deleteLocalTrainerTag(id){
+  const store=ensureTrainerHistoryStore(),tag=store?.read().tags[id];if(!tag||!confirm(i18nCore.t('organizer.deleteConfirm',{tag:tag.label})))return;
+  const result=store.deleteTag(id),status=document.getElementById('organizer-status');
+  if(result.ok){trainerOrganizerState.tagIds=trainerOrganizerState.tagIds.filter(value=>value!==id);trainerOrganizerState.draftTagIds=trainerOrganizerState.draftTagIds?.filter(value=>value!==id)??null;}
+  if(status)status.textContent=i18nCore.t(result.ok?'organizer.tagDeleted':'organizer.saveFailed');renderTrainerOrganizer();renderTrainerQuickLists();
+}
+function saveTrainerOrganizer(){
+  const store=ensureTrainerHistoryStore(),username=trainerOrganizerState.username,note=document.getElementById('organizer-note')?.value||'',tagIds=[...document.querySelectorAll('#organizer-tag-assignment input:checked')].map(input=>input.dataset.tagId);
+  const result=store?.updateFavoriteOrganization(username,{tagIds,note}),status=document.getElementById('organizer-status');
+  if(!result?.ok){if(status)status.textContent=organizerMessage(result?.code||'saveFailed');return;}
+  trainerOrganizerState.dirty=false;trainerOrganizerState.draftNote=note;trainerOrganizerState.draftTagIds=[...tagIds];if(status)status.textContent=i18nCore.t('organizer.savedLocal');renderTrainerQuickLists();toast(i18nCore.t('organizer.savedLocal'));
 }
 function rememberTrainerOpened(username){
   const store=ensureTrainerHistoryStore();
@@ -9092,7 +9204,7 @@ function openModal(id,options={}){
     focusables[0]?.focus();
   },50);
   _modalKeyHandler=ev=>{
-    if(ev.key==='Escape'){closeModal(id);return;}
+    if(ev.key==='Escape'){if(id==='trainer-organizer-modal')closeTrainerOrganizer();else closeModal(id);return;}
     if(ev.key!=='Tab')return;
     const focusables=[...m.querySelectorAll('input:not([type=hidden]),select,textarea,button,[tabindex]:not([tabindex="-1"])')].filter(el=>!el.disabled&&el.offsetParent!==null);
     if(!focusables.length)return;
@@ -13774,9 +13886,9 @@ document.addEventListener('DOMContentLoaded',()=>{
     if(!e.target.closest?.('.login-user-field'))hideLoginUserSuggestions();
     if(!e.target.closest?.('.account-control'))closeAccountMenu(false);
   });
-  document.querySelectorAll('.ov').forEach(el=>el.addEventListener('click',e=>{
-    if(e.target===el)closeModal(el.id);
-  }));
+      document.querySelectorAll('.ov').forEach(el=>el.addEventListener('click',e=>{
+        if(e.target===el){if(el.id==='trainer-organizer-modal')closeTrainerOrganizer();else closeModal(el.id);}
+      }));
   document.addEventListener('keydown',e=>{
     const popover=document.getElementById('account-popover');
     if(e.key==='Escape'&&popover&&!popover.hidden){e.preventDefault();closeAccountMenu();}
