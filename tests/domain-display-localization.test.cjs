@@ -190,7 +190,7 @@ test('catalog asset remains bounded and offline-precacheable',()=>{
   assert.ok(gzipSync(catalog).length<45000);
   assert.ok(brotliCompressSync(catalog).length<40000);
   assert.match(source('sw.js'),/'js\/i18n\/pokemonNames\/catalog\.js'/);
-  assert.match(html,/js\/i18n\/pokemonNames\/catalog\.js\?v=2026-08-05\.12/);
+  assert.match(html,/js\/i18n\/pokemonNames\/catalog\.js\?v=2026-08-05\.13/);
 });
 
 test('generated Pokemon GO strings remain canonical and localization has no storage or Firebase capability',()=>{

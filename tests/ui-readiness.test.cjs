@@ -95,7 +95,9 @@ test('Find Trainer preserves public-only reads and distinct projection states',(
 
 test('local preferences stay clearly device-local and expose no enabled sync control',()=>{
   assert.match(html,/class="settings-panel local-preferences-panel settings-account-only"/);
-  assert.match(html,/data-i18n="settings\.syncComingLater"/);
+  assert.match(html,/id="trainer-sync-local-status"[^>]*role="status"[^>]*aria-live="polite"/);
+  assert.match(html,/data-i18n="trainer\.syncState\.local-only"/);
+  assert.match(html,/data-i18n="trainer\.syncStatus\.localOnlyDetail"/);
   assert.match(html,/createTrainerPreferencesRepository\(\{enabled:false\}\)/);
   assert.doesNotMatch(html,/id="settings-(?:sync|save)-preferences"/);
 });
