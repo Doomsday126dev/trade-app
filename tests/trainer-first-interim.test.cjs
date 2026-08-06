@@ -17,7 +17,8 @@ function between(start,end){
 
 test('interim navigation exposes trainer-first retained surfaces only',()=>{
   const tabs=between('<div class="tabs" role="tablist"','</div>');
-  for(const tab of ['mylist','find','schedule','have','settings','admin'])assert.match(tabs,new RegExp(`data-tab="${tab}"`));
+  for(const tab of ['mylist','find','schedule','have','admin'])assert.match(tabs,new RegExp(`data-tab="${tab}"`));
+  assert.doesNotMatch(tabs,/data-tab="settings"|nav-settings/);
   assert.doesNotMatch(tabs,/data-tab="strings"/);
   assert.doesNotMatch(tabs,/data-tab="browse"/);
   assert.match(tabs,/Legacy Inventory/);

@@ -11,8 +11,28 @@ function emptyHtml(t,s='',icon='🔍'){
   return`<div class="empty">${svg||`<div class="empty-i">${icon}</div>`}<div class="empty-t">${t}</div>${s?`<div class="empty-s">${s}</div>`:''}</div>`;
 }
 
+const STATE_CONFIG=Object.freeze({
+  loading:{icon:'📋',live:'polite',busy:true},
+  offline:{icon:'⚠️',live:'polite'},retrying:{icon:'📋',live:'polite',busy:true},
+  unavailable:{icon:'⚠️',live:'polite'},permission_denied:{icon:'⚠️',live:'assertive'},
+  signed_out:{icon:'⚠️',live:'assertive'},empty:{icon:'🔍',live:'polite'},
+  stale:{icon:'⚠️',live:'polite'},update_required:{icon:'⚠️',live:'assertive'}
+});
+function stateModel(kind,{title='',detail='',actionLabel='',action='' }={}){
+  const safeKind=Object.prototype.hasOwnProperty.call(STATE_CONFIG,kind)?kind:'unavailable';
+  return Object.freeze({kind:safeKind,title:String(title),detail:String(detail),actionLabel:String(actionLabel),action:String(action),...STATE_CONFIG[safeKind]});
+}
+function stateHtml(model){
+  const m=stateModel(model?.kind||'unavailable',model||{}),esc=value=>String(value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  const action=m.actionLabel&&m.action?`<button type="button" class="ui-state-action" data-state-action="${esc(m.action)}">${esc(m.actionLabel)}</button>`:'';
+  return`<div class="ui-state ui-state-${m.kind}" role="status" aria-live="${m.live}"${m.busy?' aria-busy="true"':''}><div class="ui-state-icon" aria-hidden="true">${m.icon}</div><div class="ui-state-copy"><div class="ui-state-title">${esc(m.title)}</div>${m.detail?`<div class="ui-state-detail">${esc(m.detail)}</div>`:''}</div>${action}</div>`;
+}
+
   root.emptyState=Object.freeze({
     EMPTY_SVGS,
-    emptyHtml
+    STATE_CONFIG,
+    emptyHtml,
+    stateModel,
+    stateHtml
   });
 })(window);

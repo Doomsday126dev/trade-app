@@ -78,6 +78,67 @@ async function expectAutocompleteClears(page, inputSelector, dropdownSelector) {
 }
 
 test.describe('visual smoke', () => {
+  test('signed-out language control opens local Settings without a profile menu',async({page})=>{
+    await page.goto(`./?signed-out-settings=${Date.now()}`,{waitUntil:'domcontentloaded'});
+    await page.waitForFunction(()=>typeof openSettingsPanel==='function');
+    await page.waitForTimeout(350);
+    await expect(page.locator('#login-language-trigger')).toBeVisible();
+    await expect(page.locator('#account-trigger')).toBeHidden();
+    await page.locator('#login-language-trigger').click();
+    await expect(page.locator('#settings-modal')).toBeVisible();
+    await expect(page.locator('#settings-language')).toBeVisible();
+    await expect(page.locator('#settings-account-summary')).toBeHidden();
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#settings-modal')).toBeHidden();
+    await expect(page.locator('#login-language-trigger')).toBeFocused();
+  });
+
+  test('signed-in account menu opens Settings and restores focus on Escape',async({page})=>{
+    await page.goto(`./?account-menu=${Date.now()}`,{waitUntil:'domcontentloaded'});
+    await page.waitForFunction(()=>typeof toggleAccountMenu==='function');
+    await page.waitForTimeout(250);
+    await page.evaluate(()=>{
+      cur='TrainerNameThatIsDeliberatelyLongForTheHeader';
+      document.getElementById('login-pg').style.display='none';
+      document.getElementById('app').style.display='flex';
+      document.getElementById('top-un').textContent=cur;
+      document.getElementById('account-menu-name').textContent=cur;
+    });
+    await page.locator('#account-trigger').click();
+    await expect(page.locator('#account-trigger')).toHaveAttribute('aria-expanded','true');
+    await expect(page.locator('#account-popover')).toBeVisible();
+    await expect(page.locator('#account-settings-action')).toBeFocused();
+    await page.locator('#account-settings-action').click();
+    await expect(page.locator('#settings-modal')).toBeVisible();
+    await expect(page).toHaveURL(/#settings$/);
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#settings-modal')).toBeHidden();
+    await expect(page.locator('#account-trigger')).toBeFocused();
+  });
+
+  test('translated active UI has no horizontal overflow at representative widths',async({page})=>{
+    const viewports=[[320,640],[375,700],[390,700],[430,760],[768,800],[1024,800],[1440,900],[390,420],[390,300]];
+    for(const [width,height] of viewports){
+      await page.setViewportSize({width,height});
+      await page.goto(`./?locale-layout=${width}-${height}-${Date.now()}`,{waitUntil:'domcontentloaded'});
+      await page.waitForFunction(()=>typeof changeInterfaceLocale==='function');
+      await page.waitForTimeout(350);
+      for(const locale of ['ja','de']){
+        await page.evaluate(value=>{
+          document.getElementById('login-pg').style.display='none';
+          document.getElementById('config-pg').style.display='none';
+          document.getElementById('app').style.display='flex';
+          document.getElementById('settings-modal').classList.add('open');
+          configureSettingsPanel('public');
+          changeInterfaceLocale(value);
+        },locale);
+        await expect(page.locator('#settings-language')).toHaveValue(locale);
+        await expect(page.locator('#settings-language-heading')).toBeVisible();
+        expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
+      }
+    }
+  });
+
   for (const width of [320, 375, 390, 430]) {
     test(`find trainer suggestions stay visible at ${width}px`, async ({ page }) => {
       await page.setViewportSize({ width, height: 640 });
@@ -162,10 +223,14 @@ test.describe('visual smoke', () => {
 
   test('main tab switching keeps the app rendered', async ({ page }) => {
     await signIn(page);
-    for (const tab of ['mylist', 'find', 'have', 'schedule', 'settings']) {
+    for (const tab of ['mylist', 'find', 'have', 'schedule']) {
       await openMainTab(page, tab);
       await expectAppNotBlank(page);
     }
+    await page.locator('#account-trigger').click();
+    await expect(page.locator('#account-popover')).toBeVisible();
+    await page.locator('#account-settings-action').click();
+    await expect(page.locator('#settings-modal')).toBeVisible();
   });
 
   test('find trainer touch targets remain usable on mobile', async ({ page }) => {

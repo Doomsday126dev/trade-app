@@ -88,6 +88,18 @@ input,select,textarea{font-family:var(--font);outline:none}
 .user-chip span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .av{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--ac2));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
 .av.lg{width:48px;height:48px;font-size:18px}
+.account-control{position:relative;min-width:0}
+.account-trigger{max-width:220px;color:var(--text)}
+.account-trigger .account-chevron{font-size:11px;color:var(--muted);overflow:visible}
+.account-popover{position:absolute;top:calc(100% + 8px);right:0;width:min(290px,calc(100vw - 24px));padding:8px;background:var(--card);border:1px solid var(--border2);border-radius:8px;box-shadow:0 16px 38px rgba(0,0,0,.42);z-index:180}
+.account-popover[hidden]{display:none}
+.account-summary{display:flex;align-items:center;gap:10px;padding:8px;min-width:0}
+.account-summary-copy{min-width:0;flex:1}.account-summary-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase}.account-summary-name{font-size:14px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.account-divider{height:1px;background:var(--border);margin:5px 0}
+.account-action{width:100%;min-height:44px;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:6px;background:transparent;color:var(--text);font-size:13px;font-weight:650;text-align:left}
+.account-action:hover{background:var(--bg2)}.account-action.signout{color:var(--danger);font-weight:800}
+.local-settings-trigger{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:44px;padding:7px 11px;border:1px solid var(--border2);border-radius:999px;background:var(--card);color:var(--text);font-size:12px;font-weight:700}
+.login-local-settings{position:absolute;top:calc(12px + env(safe-area-inset-top));right:12px;z-index:5}
 
 /* TABS */
 .tabs{display:flex;background:var(--bg2);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;position:sticky;top:var(--topbar-h);z-index:90}
@@ -488,6 +500,13 @@ input,select,textarea{font-family:var(--font);outline:none}
 .ov.open{display:flex}
 .modal{background:var(--card);border:1px solid var(--border2);border-radius:16px;padding:22px;width:100%;max-width:350px;max-height:calc(100vh - 32px);overflow-y:auto;margin:auto}
 .modal h3{font-size:16px;font-weight:700;margin-bottom:14px}
+.settings-modal{max-width:720px;padding:0;overflow:hidden;display:flex;flex-direction:column}
+.settings-modal-header{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:20px 20px 14px;border-bottom:1px solid var(--border)}
+.settings-modal-header h2{font-size:19px;margin:0 0 4px}.settings-modal-header p{font-size:12px;color:var(--muted);line-height:1.45}
+.settings-modal-close{width:44px;height:44px;flex:0 0 44px;border:1px solid var(--border2);border-radius:50%;background:transparent;color:var(--text);font-size:22px;line-height:1}
+.settings-modal-body{padding:0 20px 20px;overflow-y:auto;overscroll-behavior:contain}
+.settings-account-summary{display:flex;align-items:center;gap:11px;padding:14px 0 0}.settings-account-summary strong{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.settings-account-summary span{display:block;color:var(--muted);font-size:11px}
+.settings-account-only[hidden]{display:none!important}
 .mact{display:flex;gap:7px;margin-top:18px;justify-content:flex-end}
 .bghost{background:transparent;border:1px solid var(--border2);color:var(--text);padding:7px 14px;border-radius:var(--r2);font-size:13px;font-weight:500;cursor:pointer}
 .bpri{background:var(--accent);color:#fff;padding:7px 14px;border-radius:var(--r2);font-size:13px;font-weight:600;cursor:pointer;border:none}
@@ -866,7 +885,7 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
 .share-body{max-width:760px;margin:0 auto}
 .share-back-link{display:inline-flex;align-items:center;gap:4px;margin-bottom:12px;color:var(--ac2);font-size:13px;text-decoration:none;cursor:pointer;font-weight:500;padding:6px 0}
 .share-back-link:hover{text-decoration:underline}
-.share-meta-banner{max-width:760px;margin:0 auto 10px;font-size:11px;color:var(--muted);text-align:center;padding:4px}
+.share-meta-banner{max-width:760px;margin:0 auto 10px;font-size:11px;color:var(--muted);text-align:center;padding:4px;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}
 .share-list-tabs{max-width:760px;margin:0 auto 14px;display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-start}
 .share-list-tabs .ltab{padding:6px 14px;font-size:13px}
 
@@ -1682,6 +1701,20 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
   .pgrid .pc-hdr{width:100%;flex-basis:auto}
   .pgrid .pc-users{width:100%}
 }
+/* Shared production UI primitives */
+:where(button,a,input,select,textarea,[role="button"],[tabindex]):focus-visible{outline:3px solid var(--ac2);outline-offset:2px}
+.settings-panel{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:14px 0;padding:14px 16px;border:1px solid var(--border);border-radius:6px;background:var(--card)}
+.settings-panel h2{font-size:14px;line-height:1.3;margin:0 0 4px}.settings-panel p{font-size:12px;line-height:1.5;color:var(--muted);margin:0;max-width:620px}
+.language-field{display:flex;flex-direction:column;gap:5px;min-width:210px;font-size:11px;font-weight:700;color:var(--muted)}
+.language-field select{min-height:44px;width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:6px;color:var(--text);font:600 14px var(--font);padding:9px 34px 9px 11px}
+.status-badge{display:inline-flex;align-items:center;min-height:32px;padding:5px 9px;border:1px solid var(--border2);border-radius:999px;color:var(--muted);font-size:11px;font-weight:700;text-align:center}
+.ui-state{display:flex;align-items:flex-start;gap:11px;padding:14px;border:1px solid var(--border);border-radius:6px;background:var(--card);min-width:0}.ui-state-icon{font-size:18px;line-height:1.3}.ui-state-copy{flex:1;min-width:0}.ui-state-title{font-weight:800;overflow-wrap:anywhere}.ui-state-detail{margin-top:3px;color:var(--muted);font-size:12px;line-height:1.5}.ui-state-action{min-height:44px;border:1px solid var(--border2);border-radius:6px;background:var(--bg);color:var(--text);font:700 12px var(--font);padding:8px 12px}
+.event-card:focus-visible,.trainer-quick-card:focus-within{border-color:var(--ac2)}
+@media(max-width:600px){.page{padding:12px}.settings-panel{align-items:stretch;flex-direction:column;padding:12px}.language-field{min-width:0}.status-badge{align-self:flex-start}.add-actions>button,.add-actions .image-btn{min-height:44px}.trainer-quick-name{white-space:normal;overflow-wrap:anywhere}}
+@media(max-width:600px){.settings-overlay{align-items:flex-end;padding:0}.settings-modal{max-width:none;width:100%;max-height:calc(100dvh - env(safe-area-inset-top));margin:auto 0 0;border-radius:14px 14px 0 0;border-bottom:0}.settings-modal-header{padding-top:16px}.settings-modal-body{padding-bottom:calc(20px + env(safe-area-inset-bottom));max-height:calc(100dvh - 88px - env(safe-area-inset-top))}.topbar{padding-inline:10px}.topbar-r{gap:6px}.account-trigger{max-width:150px}.account-trigger #top-un{max-width:84px}.account-popover{position:fixed;top:auto;right:8px;bottom:calc(8px + env(safe-area-inset-bottom));width:calc(100vw - 16px);max-height:calc(100dvh - 24px - env(safe-area-inset-top));overflow-y:auto}.local-settings-trigger span{display:none}}
+@media(max-width:390px){.account-trigger{padding-right:7px}.account-trigger #top-un{display:none}.account-trigger .account-chevron{display:block}.install-btn{display:none!important}}
+@media(max-width:360px){.page{padding-inline:10px}.add-form,.event-card,.trainer-quick-card{padding:10px}.trainer-search-row{grid-template-columns:minmax(0,1fr)}.trainer-search-row .bsave{width:100%}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
 </style>
 </head>
 <body>
@@ -1707,25 +1740,26 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
 
 <!-- LOGIN -->
 <div id="login-pg" style="display:none">
+  <button type="button" class="local-settings-trigger login-local-settings" id="login-language-trigger" onclick="openSettingsPanel('public')" data-i18n-aria-label="account.languageSettings" aria-label="Language settings">🌐 <span data-i18n="account.language">Language</span></button>
   <div class="lcard">
     <div class="llogo"><img class="brand-mark lg" src="assets/tradeloop-icon.svg" alt="" aria-hidden="true"> <span>PoGo Trades</span></div>
-    <div class="lsub">NYC Community Trade List</div>
-    <div class="brand-disclaimer">Unofficial community tool. Not affiliated with Niantic, Nintendo, or The Pokémon Company.</div>
+    <div class="lsub" data-i18n="login.subtitle">NYC Community Trade List</div>
+    <div class="brand-disclaimer" data-i18n="login.disclaimer">Unofficial community tool. Not affiliated with Niantic, Nintendo, or The Pokémon Company.</div>
     <div class="field login-user-field">
-      <label>Username</label>
-      <input type="text" id="login-user" placeholder="Type or pick your username…" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" aria-autocomplete="list" aria-controls="login-user-suggestions">
-      <div class="login-user-suggestions" id="login-user-suggestions" role="listbox" aria-label="Username suggestions"></div>
+      <label data-i18n="login.username">Username</label>
+      <input type="text" id="login-user" data-i18n-placeholder="login.usernamePlaceholder" placeholder="Type or pick your username…" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" aria-autocomplete="list" aria-controls="login-user-suggestions">
+      <div class="login-user-suggestions" id="login-user-suggestions" role="listbox" data-i18n-aria-label="login.usernameSuggestions" aria-label="Username suggestions"></div>
       <datalist id="login-user-list"></datalist>
     </div>
     <div class="field">
-      <label>PIN</label>
-      <input type="password" id="login-pin" placeholder="6-digit PIN" maxlength="6" inputmode="numeric" autocomplete="current-password">
+      <label data-i18n="login.pin">PIN</label>
+      <input type="password" id="login-pin" data-i18n-placeholder="login.pinPlaceholder" placeholder="6-digit PIN" maxlength="6" inputmode="numeric" autocomplete="current-password">
     </div>
-    <button class="lbtn" id="login-btn" onclick="doLogin()">Sign in →</button>
+    <button class="lbtn" id="login-btn" onclick="doLogin()" data-i18n="login.signIn">Sign in</button>
     <div class="err" id="login-err"></div>
-    <div class="lnote">New here? Request access first. When an admin approves you, they’ll give you a unique 6-digit first-time PIN.<br>Already had access before? Ask an admin to reset your PIN if needed.</div>
-    <button type="button" class="login-help-link" onclick="openLoginHealthCheck()">Having trouble signing in?</button>
-    <div class="req-link" onclick="showRequestForm()">🙋 Request access to join</div>
+    <div class="lnote"><span data-i18n="login.newUserHelp"></span><br><span data-i18n="login.existingUserHelp"></span></div>
+    <button type="button" class="login-help-link" onclick="openLoginHealthCheck()" data-i18n="login.trouble">Having trouble signing in?</button>
+    <div class="req-link" onclick="showRequestForm()" data-i18n="login.requestAccess">Request access to join</div>
   </div>
 
   <!-- REQUEST FORM -->
@@ -1760,31 +1794,43 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
       <button class="install-btn" id="install-btn" onclick="triggerInstall()" aria-label="Install app">⬇️ Install</button>
       <button class="bell-btn" id="bell-btn" onclick="openWhatsNew()" aria-label="What's new" title="What's new">🔔<span class="bell-badge" id="bell-badge">!</span></button>
       <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme" title="Toggle light/dark theme">🌙</button>
-      <div class="user-chip" onclick="openModal('prof-modal')" role="button" tabindex="0" aria-label="Open profile">
-        <div class="av" id="top-av">?</div>
-        <span id="top-un">—</span>
+      <div class="account-control">
+        <button type="button" class="user-chip account-trigger" id="account-trigger" onclick="toggleAccountMenu(event)" aria-expanded="false" aria-controls="account-popover" data-i18n-aria-label="account.openMenu" aria-label="Open account menu">
+          <div class="av" id="top-av">?</div>
+          <span id="top-un">—</span>
+          <span class="account-chevron" aria-hidden="true">⌄</span>
+        </button>
+        <div class="account-popover" id="account-popover" aria-labelledby="account-trigger" hidden>
+          <div class="account-summary">
+            <div class="av" id="account-menu-av">?</div>
+            <div class="account-summary-copy"><div class="account-summary-label" data-i18n="account.signedInAs">Signed in as</div><div class="account-summary-name" id="account-menu-name">—</div></div>
+          </div>
+          <div class="account-divider"></div>
+          <button type="button" class="account-action" id="account-settings-action" onclick="openSettingsPanel('account')">⚙️ <span data-i18n="account.settings">Settings</span></button>
+          <div class="account-divider"></div>
+          <button type="button" class="account-action signout" id="account-signout-action" onclick="logout()">↪ <span data-i18n="account.signOut">Sign out</span></button>
+        </div>
       </div>
     </div>
   </div>
 
   <!-- Sync recovery banner — only shows when auth has dropped but the user looks logged in.
        Edits keep working (local cache), but writes don't reach the community until they re-sign-in. -->
-  <div class="sync-banner" id="sync-banner" role="status" aria-live="polite" hidden>
+  <div class="sync-banner" id="sync-banner" role="status" aria-live="polite" aria-atomic="true" hidden>
     <div class="sync-banner-icon">📵</div>
     <div class="sync-banner-text">
-      <div class="sync-banner-title">Local-only mode — your edits aren't syncing to the community</div>
-      <div class="sync-banner-sub" id="sync-banner-sub">You can keep editing safely. Sign back in to push your changes (<span id="sync-banner-queue-count">0</span> pending) to everyone else.</div>
+      <div class="sync-banner-title" id="sync-banner-title">Local-only mode</div>
+      <div class="sync-banner-sub" id="sync-banner-sub">Your edits remain safe on this device.</div>
     </div>
-    <button class="sync-banner-btn" type="button" onclick="reconnectAuth()">Sign back in</button>
-    <button class="sync-banner-dismiss" type="button" onclick="dismissSyncBanner()" aria-label="Dismiss for this session">×</button>
+    <button class="sync-banner-btn" id="sync-banner-action" type="button" onclick="reconnectAuth()">Sign back in</button>
+    <button class="sync-banner-dismiss" type="button" onclick="dismissSyncBanner()" data-i18n-aria-label="app.dismiss" aria-label="Dismiss for this session">×</button>
   </div>
 
-  <div class="tabs" role="tablist" aria-label="Main sections">
+  <div class="tabs" role="tablist" aria-label="Main sections" data-i18n-aria-label="app.mainSections">
     <button class="tab active" id="nav-mylist" data-tab="mylist" data-short="📋 List" onclick="switchTab('mylist')" role="tab" aria-selected="true">📋 My List</button>
     <button class="tab" id="nav-find" data-tab="find" data-short="🔍 Find" onclick="switchTab('find')" role="tab" aria-selected="false">🔍 Find Trainer</button>
     <button class="tab" id="nav-events" data-tab="schedule" data-short="📅 Events" onclick="switchTab('schedule')" role="tab" aria-selected="false">📅 Events</button>
     <button class="tab" id="nav-inventory" data-tab="have" data-short="🗄 Items" onclick="switchTab('have')" role="tab" aria-selected="false">🗄 Legacy Inventory</button>
-    <button class="tab" id="nav-settings" data-tab="settings" data-short="⚙️ Settings" onclick="switchTab('settings')" role="tab" aria-selected="false">⚙️ Settings</button>
     <button class="tab" data-tab="admin" data-short="⚙️ Admin" onclick="switchTab('admin')" id="admin-tab" style="display:none" role="tab" aria-selected="false">⚙️ Admin<span class="notif-badge" id="admin-notif" style="display:none">!</span></button>
   </div>
 
@@ -1846,7 +1892,7 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
         </div>
         <button class="bsave" id="find-trainer-button" onclick="openTrainerPublicShare()"></button>
       </div>
-      <div id="find-trainer-status" role="status" aria-live="polite" style="font-size:12px;color:var(--muted);margin-top:8px"></div>
+      <div id="find-trainer-status" role="status" aria-live="polite" aria-atomic="true" style="font-size:12px;color:var(--muted);margin-top:8px"></div>
       <button class="bghost" id="find-trainer-reload" style="display:none;margin-top:8px" onclick="reloadCompatibleClient()"></button>
     </div>
     <div id="favorite-trainers" class="trainer-quick-section"></div>
@@ -1864,34 +1910,34 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
       </div>
     </div>
     <div class="list-tabs">
-      <button class="ltab active" onclick="setMyList('wishlist')">Trades</button>
-      <button class="ltab" onclick="setMyList('dynamax')"><span class="ltab-full">Dynamax</span><span class="ltab-short">Dmax</span></button>
-      <button class="ltab" onclick="setMyList('gmax')"><span class="ltab-full">Gigantamax</span><span class="ltab-short">Gmax</span></button>
-      <button class="ltab" onclick="setMyList('costumes')">Others</button>
+      <button class="ltab active" onclick="setMyList('wishlist')" data-i18n="list.wishlist">Trades</button>
+      <button class="ltab" onclick="setMyList('dynamax')" data-i18n="list.dynamax">Dynamax</button>
+      <button class="ltab" onclick="setMyList('gmax')" data-i18n="list.gigantamax">Gigantamax</button>
+      <button class="ltab" onclick="setMyList('costumes')" data-i18n="list.others">Others</button>
     </div>
     <div class="add-form">
-      <div class="add-ttl" id="add-ttl">+ Add Pokémon</div>
-      <div class="add-subhelp">For long sessions, turn on Speed add so priority and flags stay put while you work through a big list.</div>
+      <div class="add-ttl" id="add-ttl" data-i18n="myList.addTitle">Add Pokémon</div>
+      <div class="add-subhelp" data-i18n="myList.addHelp">For long sessions, Speed add keeps priority and flags selected.</div>
       <div class="frow">
         <div class="ac-wrap">
-          <input type="text" class="ac-input" id="ac-input" placeholder="Search Pokémon…" autocomplete="off"
+          <input type="text" class="ac-input" id="ac-input" data-i18n-placeholder="myList.searchPlaceholder" placeholder="Search Pokémon…" autocomplete="off"
             oninput="acSearch(this.value)" onkeydown="acKeydown(event)" onfocus="acSearch(this.value)">
           <input type="hidden" id="add-pmon-sel">
           <div class="ac-dropdown" id="ac-dropdown"></div>
         </div>
         <button type="button" class="voice-btn" id="voice-btn" onclick="startVoiceInput()" aria-label="Voice input" title="Speak to search">🎤</button>
         <div class="add-pri-group" role="group" aria-label="Priority">
-          <span class="add-pri-label">Priority:</span>
+          <span class="add-pri-label" data-i18n="myList.priority">Priority</span>
           <button type="button" class="pb add-pri-btn" data-pri="H" onclick="setAddPri('H')" aria-pressed="false" title="High priority">H</button>
           <button type="button" class="pb add-pri-btn" data-pri="M" onclick="setAddPri('M')" aria-pressed="false" title="Medium priority">M</button>
           <button type="button" class="pb add-pri-btn" data-pri="L" onclick="setAddPri('L')" aria-pressed="false" title="Low priority">L</button>
         </div>
         <input type="hidden" id="add-pmon-pri" value="">
-        <button type="button" class="add-advanced-toggle" id="add-adv-toggle" onclick="toggleAddAdvanced()" aria-expanded="false" aria-controls="add-advanced">⚙ Advanced <span class="caret">▾</span></button>
+        <button type="button" class="add-advanced-toggle" id="add-adv-toggle" onclick="toggleAddAdvanced()" aria-expanded="false" aria-controls="add-advanced"><span data-i18n="myList.advanced">Advanced</span> <span class="caret">▾</span></button>
       </div>
       <div class="add-tray" id="add-tray" hidden></div>
       <div class="add-advanced" id="add-advanced">
-        <span class="add-adv-label">Flags:</span>
+        <span class="add-adv-label" data-i18n="myList.flags">Flags</span>
         <label class="lucky-add" title="⚡ Lucky — generates a separate Lucky Dex search string">
           <input type="checkbox" id="add-pmon-lucky" onchange="renderAddTray()"> ⚡ Lucky
         </label>
@@ -1904,14 +1950,14 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
         <label class="lucky-add" title="XXS — mark as extra-small; generates a separate XXS search string">
           <input type="checkbox" id="add-pmon-xxs" onchange="if(this.checked)document.getElementById('add-pmon-xxl').checked=false;renderAddTray()"> XXS
         </label>
-        <input type="text" id="add-pmon-notes" placeholder="Notes: f, m, shadow…" aria-label="Notes" style="flex:1;min-width:120px" oninput="renderAddTray()">
+        <input type="text" id="add-pmon-notes" data-i18n-placeholder="myList.notesPlaceholder" placeholder="Notes: f, m, shadow…" aria-label="Notes" style="flex:1;min-width:120px" oninput="renderAddTray()">
       </div>
       <div class="add-actions">
-        <button class="bsave" onclick="addEntry()">Add</button>
-        <button class="import-btn" onclick="openImport()">📥 Import string</button>
-        <button type="button" class="speed-add-toggle" id="speed-add-toggle" onclick="toggleSpeedAddMode()" aria-pressed="false">⚡ Speed add</button>
+        <button class="bsave" onclick="addEntry()" data-i18n="myList.addAction">Add</button>
+        <button class="import-btn" onclick="openImport()" data-i18n="myList.importAction">Import string</button>
+        <button type="button" class="speed-add-toggle" id="speed-add-toggle" onclick="toggleSpeedAddMode()" aria-pressed="false" data-i18n="myList.speedAdd">Speed add</button>
         <div class="export-menu-wrap">
-          <button class="image-btn" onclick="toggleExportMenu(event)" aria-haspopup="true" aria-expanded="false" id="export-menu-btn">📤 Export ▾</button>
+          <button class="image-btn" onclick="toggleExportMenu(event)" aria-haspopup="true" aria-expanded="false" id="export-menu-btn" data-i18n="myList.exportAction">Export</button>
           <div class="export-menu" id="export-menu" role="menu">
             <button class="export-menu-item" role="menuitem" onclick="exportMyListImage('classic');closeExportMenu()"><span class="icon">🖼️</span> Image — Classic (light)</button>
             <button class="export-menu-item" role="menuitem" onclick="exportMyListImage('cards');closeExportMenu()"><span class="icon">🌙</span> Image — Dark Cards</button>
@@ -1922,7 +1968,7 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
             <button class="export-menu-item" role="menuitem" onclick="copyShareLink();closeExportMenu()"><span class="icon">🔗</span> Copy share link</button>
           </div>
         </div>
-        <button class="bulk-toggle" onclick="toggleBulkMode()" aria-pressed="false" id="bulk-toggle-btn">☑ Bulk edit</button>
+        <button class="bulk-toggle" onclick="toggleBulkMode()" aria-pressed="false" id="bulk-toggle-btn" data-i18n="myList.bulkEdit">Bulk edit</button>
       </div>
       <div class="speed-add-hint" id="speed-add-hint">Speed add is on — after each add, your priority and flags stay selected so you can keep going faster.</div>
     </div>
@@ -1945,10 +1991,10 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
     </div>
     <div class="mylist-search">
       <span class="mylist-srch-icon" aria-hidden="true">🔍</span>
-      <input type="text" placeholder="Filter my list…" oninput="renderMyList(this.value)" id="mylist-filter" aria-label="Filter my list">
+      <input type="text" data-i18n-placeholder="myList.filterPlaceholder" placeholder="Filter my list…" oninput="renderMyList(this.value)" id="mylist-filter" aria-label="Filter my list">
     </div>
     <div class="sec" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
-      <span>My list <span id="mylist-count" style="font-weight:400;text-transform:none;font-size:11px;margin-left:4px"></span></span>
+      <span><span data-i18n="myList.listTitle">My list</span> <span id="mylist-count" style="font-weight:400;text-transform:none;font-size:11px;margin-left:4px"></span></span>
       <span style="font-size:10px;color:var(--muted);display:inline-flex;gap:6px;align-items:center;text-transform:none;letter-spacing:0;font-weight:500">
         <span title="Lucky — separate Lucky Dex search string">⚡ Lucky</span>
         <span style="color:var(--border2)">·</span>
@@ -2069,17 +2115,6 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
     <div id="events-out"></div>
   </div>
 
-  <!-- SETTINGS -->
-  <div class="page" id="tab-settings">
-    <div class="have-hdr"><div class="have-title" id="settings-title"></div><div class="have-subtitle" id="settings-description"></div></div>
-    <div class="admin-actions" style="justify-content:flex-start;flex-wrap:wrap">
-      <button class="btn-export" id="settings-profile" onclick="openModal('prof-modal')"></button>
-      <button class="btn-export" id="settings-health" onclick="openLoginHealthCheck()"></button>
-      <button class="btn-export" id="settings-shortcuts" onclick="openModal('shortcuts-modal')"></button>
-      <button class="btn-export" id="settings-logout" onclick="logout()"></button>
-    </div>
-  </div>
-
   <!-- ADMIN -->
   <div class="page" id="tab-admin">
     <div id="backup-reminder-slot"></div>
@@ -2156,7 +2191,7 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
 </div>
 
 <!-- TOASTS -->
-<div class="toast" id="toast" role="status" aria-live="polite" aria-hidden="true" hidden></div>
+<div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true" aria-hidden="true" hidden></div>
 <div class="undo-toast" id="undo-toast" aria-hidden="true" hidden><span id="undo-msg"></span><button class="undo-btn" onclick="doUndo()">Undo</button></div>
 
 <!-- PROFILE MODAL -->
@@ -2366,12 +2401,42 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
 
 <!-- READ-ONLY SHARE VIEW (#9) -->
 <div id="share-view">
-  <div class="share-meta-banner">📋 Read-only shared trade list · Anyone with this link can view</div>
+  <div class="share-meta-banner">📋 Read-only shared trade list · Anyone with this link can view <button type="button" class="local-settings-trigger" id="share-language-trigger" onclick="openSettingsPanel('public')" data-i18n-aria-label="account.languageSettings" aria-label="Language settings">🌐 <span data-i18n="account.language">Language</span></button></div>
   <div class="share-hdr" id="share-hdr"></div>
   <div class="share-body">
     <a class="share-back-link" onclick="exitShareView()">← Back to app</a>
     <div class="share-list-tabs" id="share-list-tabs"></div>
     <div id="share-list-out"></div>
+  </div>
+</div>
+
+<!-- SETTINGS — account-owned dialog on desktop and bottom sheet on mobile -->
+<div class="ov settings-overlay" id="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title" aria-describedby="settings-description">
+  <div class="modal settings-modal">
+    <div class="settings-modal-header">
+      <div><h2 id="settings-title" data-i18n="settings.title">Settings</h2><p id="settings-description" data-i18n="settings.description">Manage your profile, app health, appearance, and session.</p></div>
+      <button type="button" class="settings-modal-close" onclick="closeModal('settings-modal')" data-i18n-aria-label="account.closeSettings" aria-label="Close settings">×</button>
+    </div>
+    <div class="settings-modal-body">
+      <div class="settings-account-summary settings-account-only" id="settings-account-summary">
+        <div class="av" id="settings-account-av">?</div>
+        <div><span data-i18n="account.signedInAs">Signed in as</span><strong id="settings-account-name">—</strong></div>
+      </div>
+      <section class="settings-panel" aria-labelledby="settings-language-heading">
+        <div><h2 id="settings-language-heading" data-i18n="settings.languageTitle">Language</h2><p data-i18n="settings.languageDescription">Interface language is saved privately on this device.</p></div>
+        <label class="language-field"><span data-i18n="settings.languageLabel">Interface language</span><select id="settings-language" onchange="changeInterfaceLocale(this.value)"><option value="en" data-i18n="locale.en">English</option><option value="ja" data-i18n="locale.ja">日本語</option><option value="es" data-i18n="locale.es">Español</option><option value="de" data-i18n="locale.de">Deutsch</option></select></label>
+      </section>
+      <section class="settings-panel local-preferences-panel settings-account-only" aria-labelledby="settings-local-tools-heading">
+        <div><h2 id="settings-local-tools-heading" data-i18n="settings.localToolsTitle">Trainer preferences</h2><p data-i18n="settings.localToolsDescription">Favorites and recent trainers remain private to this device.</p></div>
+        <span class="status-badge" data-i18n="settings.syncComingLater">Sync across devices — coming later</span>
+      </section>
+      <div class="admin-actions settings-account-only" id="settings-account-actions" style="justify-content:flex-start;flex-wrap:wrap">
+        <button class="btn-export" id="settings-profile" onclick="openSettingsTool('profile')"></button>
+        <button class="btn-export" id="settings-health" onclick="openSettingsTool('health')"></button>
+        <button class="btn-export" id="settings-shortcuts" onclick="openSettingsTool('shortcuts')"></button>
+        <button class="btn-export" id="settings-logout" onclick="logout()"></button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -2420,7 +2485,7 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
 <div class="ptr-indicator" id="ptr-indicator" aria-hidden="true">↓</div>
 
 <script>
-window.__POGO_RELEASE_ID='2026-08-05.4';
+window.__POGO_RELEASE_ID='2026-08-05.6';
 window.__pogoBootWatch=setTimeout(function(){
   var visible=['config-pg','login-pg','app'].some(function(id){
     var el=document.getElementById(id);
@@ -2439,48 +2504,51 @@ window.__pogoBootWatch=setTimeout(function(){
   if(err)err.textContent='App scripts did not finish loading. Refresh once; if this stays, send this screenshot.';
 },4000);
 </script>
-<script src="data.js?v=2026-08-05.4"></script>
-<script src="js/domain/priorities.js?v=2026-08-05.4"></script>
-<script src="js/ui/badges.js?v=2026-08-05.4"></script>
-<script src="js/domain/username.js?v=2026-08-05.4"></script>
-<script src="js/domain/priorityValues.js?v=2026-08-05.4"></script>
-<script src="js/domain/scheduleDates.js?v=2026-08-05.4"></script>
-<script src="js/domain/pokemonSearchTerms.js?v=2026-08-05.4"></script>
-<script src="js/domain/pokemonEntryRules.js?v=2026-08-05.4"></script>
-<script src="js/domain/searchStrings.js?v=2026-08-05.4"></script>
-<script src="js/ui/stringHtml.js?v=2026-08-05.4"></script>
-<script src="js/domain/scheduleEventRules.js?v=2026-08-05.4"></script>
-<script src="js/domain/scheduleTradeRules.js?v=2026-08-05.4"></script>
-<script src="js/domain/pokemonKeys.js?v=2026-08-05.4"></script>
-<script src="js/domain/spriteSlugs.js?v=2026-08-05.4"></script>
-<script src="js/domain/fuzzyText.js?v=2026-08-05.4"></script>
-<script src="js/domain/autocompleteText.js?v=2026-08-05.4"></script>
-<script src="js/domain/autocompleteMatching.js?v=2026-08-05.4"></script>
-<script src="js/domain/autocompleteRanking.js?v=2026-08-05.4"></script>
-<script src="js/domain/relativeTime.js?v=2026-08-05.4"></script>
-<script src="js/domain/clientRelease.js?v=2026-08-05.4"></script>
-<script src="js/domain/trainerDiscovery.js?v=2026-08-05.4"></script>
-<script src="js/domain/eventPresentation.js?v=2026-08-05.4"></script>
-<script src="js/domain/publicSharePublication.js?v=2026-08-05.4"></script>
-<script src="js/domain/trainerPreferences.js?v=2026-08-05.4"></script>
-<script src="js/domain/loginDirectory.js?v=2026-08-05.4"></script>
-<script src="js/utils/textSafety.js?v=2026-08-05.4"></script>
-<script src="js/ui/stringPanels.js?v=2026-08-05.4"></script>
-<script src="js/ui/emptyState.js?v=2026-08-05.4"></script>
-<script src="js/i18n/locales/en.js?v=2026-08-05.4"></script>
-<script src="js/i18n/core.js?v=2026-08-05.4"></script>
-<script src="js/services/firebaseClient.js?v=2026-08-05.4"></script>
-<script src="js/data/subscriptionManager.js?v=2026-08-05.4"></script>
-<script src="js/data/listenerLifecycle.js?v=2026-08-05.4"></script>
-<script src="js/data/sessionCacheBoundary.js?v=2026-08-05.4"></script>
-<script src="js/data/firebaseReadRegistry.js?v=2026-08-05.4"></script>
-<script src="js/data/currentUserRepository.js?v=2026-08-05.4"></script>
-<script src="js/data/ownedDataCoordinator.js?v=2026-08-05.4"></script>
-<script src="js/data/publicShareRepository.js?v=2026-08-05.4"></script>
-<script src="js/data/trainerHistoryStore.js?v=2026-08-05.4"></script>
-<script src="js/data/trainerPreferencesRepository.js?v=2026-08-05.4"></script>
-<script src="js/domain/cacheAdapters.js?v=2026-08-05.4"></script>
-<script src="js/ui/trainerTagPanel.js?v=2026-08-05.4"></script>
+<script src="data.js?v=2026-08-05.6"></script>
+<script src="js/domain/priorities.js?v=2026-08-05.6"></script>
+<script src="js/ui/badges.js?v=2026-08-05.6"></script>
+<script src="js/domain/username.js?v=2026-08-05.6"></script>
+<script src="js/domain/priorityValues.js?v=2026-08-05.6"></script>
+<script src="js/domain/scheduleDates.js?v=2026-08-05.6"></script>
+<script src="js/domain/pokemonSearchTerms.js?v=2026-08-05.6"></script>
+<script src="js/domain/pokemonEntryRules.js?v=2026-08-05.6"></script>
+<script src="js/domain/searchStrings.js?v=2026-08-05.6"></script>
+<script src="js/ui/stringHtml.js?v=2026-08-05.6"></script>
+<script src="js/domain/scheduleEventRules.js?v=2026-08-05.6"></script>
+<script src="js/domain/scheduleTradeRules.js?v=2026-08-05.6"></script>
+<script src="js/domain/pokemonKeys.js?v=2026-08-05.6"></script>
+<script src="js/domain/spriteSlugs.js?v=2026-08-05.6"></script>
+<script src="js/domain/fuzzyText.js?v=2026-08-05.6"></script>
+<script src="js/domain/autocompleteText.js?v=2026-08-05.6"></script>
+<script src="js/domain/autocompleteMatching.js?v=2026-08-05.6"></script>
+<script src="js/domain/autocompleteRanking.js?v=2026-08-05.6"></script>
+<script src="js/domain/relativeTime.js?v=2026-08-05.6"></script>
+<script src="js/domain/clientRelease.js?v=2026-08-05.6"></script>
+<script src="js/domain/trainerDiscovery.js?v=2026-08-05.6"></script>
+<script src="js/domain/eventPresentation.js?v=2026-08-05.6"></script>
+<script src="js/domain/publicSharePublication.js?v=2026-08-05.6"></script>
+<script src="js/domain/trainerPreferences.js?v=2026-08-05.6"></script>
+<script src="js/domain/loginDirectory.js?v=2026-08-05.6"></script>
+<script src="js/utils/textSafety.js?v=2026-08-05.6"></script>
+<script src="js/ui/stringPanels.js?v=2026-08-05.6"></script>
+<script src="js/ui/emptyState.js?v=2026-08-05.6"></script>
+<script src="js/i18n/locales/en.js?v=2026-08-05.6"></script>
+<script src="js/i18n/locales/ja.js?v=2026-08-05.6"></script>
+<script src="js/i18n/locales/es.js?v=2026-08-05.6"></script>
+<script src="js/i18n/locales/de.js?v=2026-08-05.6"></script>
+<script src="js/i18n/core.js?v=2026-08-05.6"></script>
+<script src="js/services/firebaseClient.js?v=2026-08-05.6"></script>
+<script src="js/data/subscriptionManager.js?v=2026-08-05.6"></script>
+<script src="js/data/listenerLifecycle.js?v=2026-08-05.6"></script>
+<script src="js/data/sessionCacheBoundary.js?v=2026-08-05.6"></script>
+<script src="js/data/firebaseReadRegistry.js?v=2026-08-05.6"></script>
+<script src="js/data/currentUserRepository.js?v=2026-08-05.6"></script>
+<script src="js/data/ownedDataCoordinator.js?v=2026-08-05.6"></script>
+<script src="js/data/publicShareRepository.js?v=2026-08-05.6"></script>
+<script src="js/data/trainerHistoryStore.js?v=2026-08-05.6"></script>
+<script src="js/data/trainerPreferencesRepository.js?v=2026-08-05.6"></script>
+<script src="js/domain/cacheAdapters.js?v=2026-08-05.6"></script>
+<script src="js/ui/trainerTagPanel.js?v=2026-08-05.6"></script>
 <script>
 let initializeApp,getDatabase,ref,set,get,onValue,update,getAuth,signInWithEmailAndPassword,createUserWithEmailAndPassword,firebaseSignOut,updatePassword,deleteUser,onAuthStateChanged;
 let firebaseSdkPromise=null;
@@ -2660,7 +2728,7 @@ if(!stringPanelsUi)throw new Error('String panel HTML helpers failed to load');
 const {strLevelsHtml}=stringPanelsUi;
 const emptyStateUi=window.PogoUi?.emptyState;
 if(!emptyStateUi)throw new Error('Empty-state HTML helpers failed to load');
-const {emptyHtml,EMPTY_SVGS}=emptyStateUi;
+const {emptyHtml,stateModel,stateHtml,EMPTY_SVGS}=emptyStateUi;
 const VIVILLON_PATTERNS=new Set(['Archipelago','Continental','Elegant','Fancy','Garden','High Plains','Icy Snow','Jungle','Marine','Meadow','Modern','Monsoon','Ocean','Poke Ball','Poké Ball','Polar','River','Sandstorm','Savanna','Sun','Tundra']);
 const SCATTERBUG_PATTERNS=['Archipelago','Continental','Elegant','Garden','High Plains','Icy Snow','Jungle','Marine','Meadow','Modern','Monsoon','Ocean','Polar','River','Sandstorm','Savanna','Sun','Tundra'];
 const FIREBASE_RULES_STATUS=Object.freeze({
@@ -5317,7 +5385,7 @@ function renderUnavailableShareView(username,message){
   document.getElementById('config-pg').style.display='none';
   document.getElementById('share-view').classList.add('active');
   const hdr=document.getElementById('share-hdr');
-  if(hdr)hdr.innerHTML=`<div class="share-hdr-info"><div class="share-hdr-name">${escHtml(username)}'s Trade List</div><div class="share-hdr-meta"><span class="meta-item">🔗 Public share link</span></div></div>`;
+  if(hdr)hdr.innerHTML=`<div class="share-hdr-info"><div class="share-hdr-name">${escHtml(i18nCore.t('share.listTitle',{username}))}</div><div class="share-hdr-meta"><span class="meta-item">${escHtml(i18nCore.t('share.publicLink'))}</span></div></div>`;
   const tabs=document.getElementById('share-list-tabs');
   if(tabs)tabs.innerHTML='';
   const out=document.getElementById('share-list-out');
@@ -5770,6 +5838,8 @@ async function doLogin(){
 }
 
 function logout(){
+  closeAccountMenu(false);
+  if(location.hash==='#settings')history.replaceState({},'',settingsRouteUrl(false));
   resetSessionTransientUi('logout');
   trainerHistoryStore=null;
   managedListenerLifecycle.deactivateSession('logout');
@@ -5824,7 +5894,8 @@ function showLogin(){
   const err=document.getElementById('login-err');
   if(err)err.textContent='';
   const btn=document.getElementById('login-btn');
-  btn.textContent='Sign in →';btn.disabled=false;
+  btn.textContent=i18nCore.t('login.signIn');btn.disabled=false;
+  renderInterimProductLabels();
   populateLoginUsers();
 }
 let loginUserOptions=[],loginUserFiltered=[],loginUserFocusIdx=-1;
@@ -5918,11 +5989,19 @@ function setText(id,key){
   const el=document.getElementById(id);
   if(el)el.textContent=i18nCore.t(key);
 }
+function applyTranslationAttributes(root=document){
+  root.querySelectorAll('[data-i18n]').forEach(el=>{el.textContent=i18nCore.t(el.dataset.i18n);});
+  root.querySelectorAll('[data-i18n-placeholder]').forEach(el=>{el.placeholder=i18nCore.t(el.dataset.i18nPlaceholder);});
+  root.querySelectorAll('[data-i18n-aria-label]').forEach(el=>{el.setAttribute('aria-label',i18nCore.t(el.dataset.i18nAriaLabel));});
+  root.querySelectorAll('[data-i18n-title]').forEach(el=>{el.title=i18nCore.t(el.dataset.i18nTitle);});
+}
 function renderInterimProductLabels(){
+  document.documentElement.lang=i18nCore.getLocale();
+  applyTranslationAttributes();
   const navLabels=[
     ['nav-mylist','nav.myList','nav.myListShort'],['nav-find','nav.findTrainer','nav.findTrainerShort'],
     ['nav-events','nav.events','nav.eventsShort'],['nav-inventory','nav.legacyInventory','nav.legacyInventoryShort'],
-    ['nav-settings','nav.settings','nav.settingsShort'],['admin-tab','nav.admin','nav.adminShort']
+    ['admin-tab','nav.admin','nav.adminShort']
   ];
   navLabels.forEach(([id,labelKey,shortKey])=>{
     const el=document.getElementById(id);if(!el)return;
@@ -5952,6 +6031,24 @@ function renderInterimProductLabels(){
   setText('settings-health','settings.healthAction');
   setText('settings-shortcuts','settings.shortcutsAction');
   setText('settings-logout','settings.logoutAction');
+  setText('account-menu-name',cur||'');
+  setText('settings-account-name',cur||'');
+  setText('sync-banner-title','status.localOnlyTitle');
+  setText('sync-banner-action','status.signBackIn');
+  const syncBannerSub=document.getElementById('sync-banner-sub');
+  if(syncBannerSub)syncBannerSub.textContent=i18nCore.t('status.localOnlyBody',{count:i18nCore.formatNumber(Object.keys(syncQueue||{}).length)});
+  const language=document.getElementById('settings-language');if(language)language.value=i18nCore.getLocale();
+  const accountTrigger=document.getElementById('account-trigger');
+  if(accountTrigger?.getAttribute('aria-expanded')==='true')accountTrigger.setAttribute('aria-label',i18nCore.t('account.closeMenu'));
+}
+function changeInterfaceLocale(locale){
+  i18nCore.setLocale(locale);
+  renderInterimProductLabels();
+  if(cur){
+    renderMyList();renderFindTrainer();renderSettings();renderEventsOnly();renderMyHave(document.getElementById('have-filter')?.value||'');
+    if(_activeShareView?.username)renderShareView(_activeShareView.username,_activeShareView.type);
+  }else populateLoginUsers(loginUserSuggestionsShouldOpen());
+  toast(i18nCore.t('settings.languageSaved'));
 }
 let trainerSuggestionTimer=0;
 let trainerSuggestionItems=[];
@@ -6130,7 +6227,7 @@ async function renderTrainerQuickLists(){
 }
 function toggleTrainerFavorite(username){
   const store=ensureTrainerHistoryStore();if(!store)return;
-  const result=store.toggleFavorite(username);toast(result.favorite?'★ '+i18nCore.t('trainer.favoriteAdd'):'☆ '+i18nCore.t('trainer.favoriteRemove'));renderTrainerQuickLists();
+  const result=store.toggleFavorite(username);toast(i18nCore.t(result.favorite?'trainer.favoriteAdded':'trainer.favoriteRemoved'));renderTrainerQuickLists();
   if(_activeShareView?.username===username)renderShareView(username,_activeShareView.type);
 }
 function rememberTrainerOpened(username){
@@ -6182,7 +6279,7 @@ async function openTrainerPublicShare(value){
   if(loaded.ok&&allData.users?.[req.username]){rememberTrainerOpened(req.username);enterShareView(req.username,req.type);return;}
   if(status)status.textContent=i18nCore.t(publicShareStatusMessageKey(loaded.status));
 }
-function renderSettings(){renderInterimProductLabels();}
+function renderSettings(){renderInterimProductLabels();configureSettingsPanel(_settingsContext);}
 function showApp(){
   document.getElementById('login-pg').style.display='none';
   document.getElementById('config-pg').style.display='none';
@@ -6190,7 +6287,7 @@ function showApp(){
   // Set avatars with optional custom Pokemon
   const ud=allData.users?.[cur]||{};
   const ini=cur.slice(0,2).toUpperCase();
-  ['top-av','my-av'].forEach(id=>{
+  ['top-av','my-av','account-menu-av','settings-account-av'].forEach(id=>{
     const el=document.getElementById(id);if(!el)return;
     if(ud.avatarPokemon){
       const found=avatarEntryForName(ud.avatarPokemon);
@@ -6203,6 +6300,8 @@ function showApp(){
   });
   document.getElementById('top-un').textContent=cur;
   document.getElementById('my-un').textContent=cur;
+  document.getElementById('account-menu-name').textContent=cur;
+  document.getElementById('settings-account-name').textContent=cur;
   ensureTrainerHistoryStore();
   const isAdmin=protectedOwnerSession();
   document.getElementById('admin-tab').style.display=isAdmin?'':'none';
@@ -6231,8 +6330,10 @@ function showApp(){
   else if(action==='browse'){finalTab='find';switchTab(finalTab,{render:false});}
   else if(action==='have'){finalTab='have';switchTab(finalTab,{render:false});}
   else if(action==='schedule'){finalTab='schedule';switchTab(finalTab,{render:false});}
-  if(action){history.replaceState({},'',location.pathname);}
+  else if(action==='settings'){history.replaceState({},'',settingsRouteUrl(true));}
+  if(action&&action!=='settings'){history.replaceState({},'',location.pathname);}
   renderActiveTab(finalTab);
+  if(action==='settings'||location.hash==='#settings')setTimeout(syncSettingsRoute,0);
   // Apply user's chosen wallpaper
   applyWallpaper(allData.users?.[cur]?.wallpaper||'');
   // Fetch live Pokémon GO events in the background, then refresh only visible surfaces.
@@ -6256,7 +6357,6 @@ function renderActiveTab(t=activeTabName()){
   else if(t==='find')renderFindTrainer();
   else if(t==='have')renderMyHave();
   else if(t==='schedule')renderSchedule();
-  else if(t==='settings')renderSettings();
   else if(t==='admin'&&protectedOwnerSession()){
     startLegacyAdminReads();
     renderAdmin();renderPendingRequests();renderBackupReminder();
@@ -6283,6 +6383,7 @@ function refreshBadgesAndLightChrome(){
 }
 function switchTab(t,opts={}){
   const previous=activeTabName();
+  if(t==='settings'){openSettingsPanel('account');return;}
   if(t==='admin'&&!protectedOwnerSession())t='mylist';
   if(t==='browse')t='find';
   if(previous==='admin'&&t!=='admin')stopLegacyAdminReads('admin_closed');
@@ -6851,10 +6952,10 @@ function renderMyList(filterVal){
 
   const count=Object.keys(list).length;
   const countEl=document.getElementById('mylist-count');
-  if(countEl)countEl.textContent=q?`(${entries.length} of ${count})`:`(${count})`;
+  if(countEl)countEl.textContent=i18nCore.t(q?'myList.filteredCount':'myList.count',q?{visible:i18nCore.formatNumber(entries.length),total:i18nCore.formatNumber(count)}:{count:i18nCore.formatNumber(count)});
 
   if(!entries.length){
-    el.innerHTML=q?emptyHtml('No matches','Clear the filter to see all.'):emptyHtml('Nothing here yet','Search for a Pokémon, set a priority or flag, then Add. For big migrations, use Import string. For long sessions, Speed add keeps your settings sticky.','📋');
+    el.innerHTML=q?emptyHtml(i18nCore.t('myList.noMatches'),i18nCore.t('myList.clearFilter')):emptyHtml(i18nCore.t('myList.emptyTitle'),i18nCore.t('myList.emptyHelp'),'📋');
     renderMyStrings();renderOwnerShareRepublishNotice();return;
   }
 
@@ -6869,19 +6970,19 @@ function renderMyList(filterVal){
     const clickHandler=bulkMode?`onclick="event.stopPropagation();toggleBulkSelection('${jsName}')"`:'';
     return`<div class="myrow${isSel?' bulk-selected':''}" ${bulkMode?'':'draggable="true"'} data-name="${attrName}" data-dex="${no||''}" data-idx="${idx}" data-full="${escAttr(dn)}" aria-label="${escAttr(dn)}" ${clickHandler}
       ondragstart="dragStart(event)" ondragover="dragOver(event)" ondrop="dragDrop(event)" ondragend="dragEnd(event)">
-      <input type="checkbox" class="bulk-chk" data-name="${attrName}" ${isSel?'checked':''} onclick="event.stopPropagation();toggleBulkSelection('${jsName}')" aria-label="Select ${escAttr(dn)}">
-      <span class="drag-handle" title="Drag to reorder" aria-hidden="true">⠿</span>
+      <input type="checkbox" class="bulk-chk" data-name="${attrName}" ${isSel?'checked':''} onclick="event.stopPropagation();toggleBulkSelection('${jsName}')" aria-label="${escAttr(i18nCore.t('myList.selectEntry',{name:dn}))}">
+      <span class="drag-handle" title="${escAttr(i18nCore.t('myList.dragEntry'))}" aria-hidden="true">⠿</span>
       ${hasSprite?`<span class="myrow-sprite-wrap">${spriteImg(no,28,'myrow-sprite',name,'',dn,{urlOverride:entry.spriteUrl})}${crownHtml}</span>`:crownHtml}
       <div class="myrow-name">${dn}</div>
       <div class="mctrl">
-        ${['H','M','L'].map(b=>`<button class="pb ${p===b?'on '+b:''}" onclick="setPri('${jsName}','${b}')" title="${priName(b)}" aria-pressed="${p===b}" aria-label="Set ${escAttr(dn)} to ${priLabel(b)} priority">${b}</button>`).join('')}
+        ${['H','M','L'].map(b=>`<button class="pb ${p===b?'on '+b:''}" onclick="setPri('${jsName}','${b}')" title="${escAttr(i18nCore.t({'H':'priority.high','M':'priority.medium','L':'priority.low'}[b]))}" aria-pressed="${p===b}" aria-label="${escAttr(i18nCore.t('myList.setPriority',{name:dn,priority:i18nCore.t({'H':'priority.high','M':'priority.medium','L':'priority.low'}[b])}))}">${b}</button>`).join('')}
         <span class="mctrl-sep" aria-hidden="true"></span>
         <button class="flag-btn lucky-flag ${lucky?'on':''}" onclick="setLucky('${jsName}')" title="⚡ Lucky" aria-pressed="${lucky}" aria-label="Toggle Lucky for ${escAttr(dn)}">⚡</button>
         <button class="flag-btn shiny-flag ${shiny?'on':''}" onclick="setShiny('${jsName}')" title="✨ Shiny only" aria-pressed="${shiny}" aria-label="Toggle Shiny for ${escAttr(dn)}">✨</button>
         <button class="flag-btn xxl-flag ${xxl?'on':''}" onclick="setXxl('${jsName}')" title="XXL" aria-pressed="${xxl}" aria-label="Toggle XXL for ${escAttr(dn)}">XXL</button>
         <button class="flag-btn xxs-flag ${xxs?'on':''}" onclick="setXxs('${jsName}')" title="XXS" aria-pressed="${xxs}" aria-label="Toggle XXS for ${escAttr(dn)}">XXS</button>
-        <input class="ni" type="text" value="${escAttr(mod)}" placeholder="…" title="Notes" onchange="setNotes('${jsName}',this.value)" aria-label="Notes for ${escAttr(dn)}">
-        <button class="rm" onclick="confirmRemove('${jsName}','${jsDn}')" title="Remove" aria-label="Remove ${escAttr(dn)}">×</button>
+        <input class="ni" type="text" value="${escAttr(mod)}" placeholder="…" onchange="setNotes('${jsName}',this.value)" aria-label="${escAttr(i18nCore.t('myList.notesFor',{name:dn}))}">
+        <button class="rm" onclick="confirmRemove('${jsName}','${jsDn}')" aria-label="${escAttr(i18nCore.t('myList.removeEntry',{name:dn}))}">×</button>
       </div>
     </div>`;
   }).join('')}</div>`;
@@ -6893,7 +6994,7 @@ function renderMyList(filterVal){
 function confirmRemove(name,dn){
   const list=allData[myListType]?.[cur]||{};
   const{mod}=parsePri(list[name]||'');
-  if(mod&&!confirm(`Delete "${dn}"? It has notes: "${mod}"`))return;
+  if(mod&&!confirm(i18nCore.t('myList.confirmDelete',{name:dn,notes:mod})))return;
   removeEntry(name);
 }
 
@@ -7638,7 +7739,7 @@ function buildStrings(type,username){
 function renderMyStrings(){
   const el=document.getElementById('my-strings-out');if(!el)return;
   const strs=buildStrings(myListType,cur);
-  if(!strs){el.innerHTML=emptyHtml('No search strings yet','Add entries to generate priority and Lucky Dex strings.','📋');return;}
+  if(!strs){el.innerHTML=emptyHtml(i18nCore.t('strings.emptyTitle'),i18nCore.t('strings.emptyHelp'),'📋');return;}
   el.innerHTML=strLevelsHtml(strs);
 }
 async function copyText(str){
@@ -7660,14 +7761,14 @@ async function copyStr(str,btn){
     await copyText(str);
     if(btn){
       const old=btn.textContent;
-      btn.textContent='Copied';
+      btn.textContent=i18nCore.t('strings.copied');
       btn.classList.add('copied');
       btn.disabled=true;
       setTimeout(()=>{btn.textContent=old;btn.classList.remove('copied');btn.disabled=false;},1200);
     }
-    toast('📋 Copied!');
+    toast(i18nCore.t('strings.copySuccess'));
   }catch{
-    toast('⚠️ Copy failed. Select the text manually.');
+    toast(i18nCore.t('strings.copyFailed'));
   }
 }
 
@@ -8918,9 +9019,71 @@ function resetProfileHelp(){
 let _modalPrevFocus=null;
 let _modalKeyHandler=null;
 let _toastTimer=null;
-function openModal(id){
+let _settingsContext='public';
+function accountMenuElements(){return{trigger:document.getElementById('account-trigger'),popover:document.getElementById('account-popover')};}
+function closeAccountMenu(restoreFocus=true){
+  const{trigger,popover}=accountMenuElements();if(!trigger||!popover)return;
+  const wasOpen=!popover.hidden;
+  popover.hidden=true;trigger.setAttribute('aria-expanded','false');trigger.setAttribute('aria-label',i18nCore.t('account.openMenu'));
+  if(wasOpen&&restoreFocus)trigger.focus();
+}
+function openAccountMenu(){
+  if(!cur)return;
+  const{trigger,popover}=accountMenuElements();if(!trigger||!popover)return;
+  popover.hidden=false;trigger.setAttribute('aria-expanded','true');trigger.setAttribute('aria-label',i18nCore.t('account.closeMenu'));
+  popover.querySelector('button')?.focus();
+}
+function toggleAccountMenu(event){
+  event?.stopPropagation?.();
+  const{popover}=accountMenuElements();if(!popover)return;
+  if(popover.hidden)openAccountMenu();else closeAccountMenu();
+}
+function settingsRouteUrl(includeHash=true){
+  const url=new URL(location.href);if(url.searchParams.get('action')==='settings')url.searchParams.delete('action');
+  url.hash=includeHash?'settings':'';
+  return`${url.pathname}${url.search}${url.hash}`;
+}
+function configureSettingsPanel(context='public'){
+  _settingsContext=context==='account'&&cur?'account':'public';
+  document.querySelectorAll('.settings-account-only').forEach(el=>{el.hidden=_settingsContext!=='account';});
+  const description=document.getElementById('settings-description');
+  if(description)description.textContent=i18nCore.t(_settingsContext==='account'?'settings.description':'settings.publicDescription');
+  const name=document.getElementById('settings-account-name');if(name)name.textContent=cur||'';
+  const language=document.getElementById('settings-language');if(language)language.value=i18nCore.getLocale();
+}
+function openSettingsPanel(context='public',options={}){
+  const accountContext=context==='account'&&!!cur;
+  const returnFocus=accountContext?document.getElementById('account-trigger'):(document.activeElement instanceof HTMLElement?document.activeElement:null);
+  closeAccountMenu(false);renderInterimProductLabels();configureSettingsPanel(accountContext?'account':'public');
+  if(options.updateHistory!==false&&location.hash!=='#settings')history.pushState({...history.state,settingsPanel:true},'',settingsRouteUrl(true));
+  openModal('settings-modal',{returnFocus});
+}
+function closeSettingsRoute(){
+  if(location.hash!=='#settings')return false;
+  if(history.state?.settingsPanel){history.back();return true;}
+  history.replaceState({...history.state,settingsPanel:false},'',settingsRouteUrl(false));
+  return false;
+}
+function syncSettingsRoute(){
+  const modal=document.getElementById('settings-modal');if(!modal)return;
+  if(location.hash==='#settings'&&!modal.classList.contains('open')){
+    const publicContext=document.getElementById('share-view')?.classList.contains('active')||!cur;
+    openSettingsPanel(publicContext?'public':'account',{updateHistory:false});
+  }else if(location.hash!=='#settings'&&modal.classList.contains('open'))closeModal('settings-modal',{route:false});
+}
+function openSettingsTool(tool){
+  if(!cur)return;
+  closeModal('settings-modal',{route:false});
+  if(location.hash==='#settings')history.replaceState({...history.state,settingsPanel:false},'',settingsRouteUrl(false));
+  setTimeout(()=>{
+    if(tool==='profile')openModal('prof-modal',{returnFocus:document.getElementById('account-trigger')});
+    else if(tool==='health')openLoginHealthCheck();
+    else if(tool==='shortcuts')openModal('shortcuts-modal',{returnFocus:document.getElementById('account-trigger')});
+  },0);
+}
+function openModal(id,options={}){
   const m=document.getElementById(id);if(!m)return;
-  _modalPrevFocus=document.activeElement;
+  _modalPrevFocus=options.returnFocus||document.activeElement;
   if(id==='prof-modal')resetProfileHelp();
   m.classList.add('open');
   // Focus first focusable element
@@ -8940,6 +9103,8 @@ function openModal(id){
   document.addEventListener('keydown',_modalKeyHandler);
 }
 function closeModal(id){
+  const options=arguments[1]||{};
+  if(id==='settings-modal'&&options.route!==false&&closeSettingsRoute())return;
   document.getElementById(id)?.classList.remove('open');
   if(id==='prof-modal')resetProfileHelp();
   if(_modalKeyHandler){document.removeEventListener('keydown',_modalKeyHandler);_modalKeyHandler=null;}
@@ -11092,12 +11257,13 @@ function eventGroupLabel(group){
 }
 function renderEventsOnly(){
   const out=document.getElementById('events-out');if(!out)return;
-  if(!_eventData){out.innerHTML=pokeballLoader(i18nCore.t('events.loading'));return;}
+  if(!_eventData){out.innerHTML=stateHtml(stateModel('loading',{title:i18nCore.t('events.loading')}));return;}
+  if(navigator.onLine===false&&!(_eventData.events||[]).length){out.innerHTML=stateHtml(stateModel('offline',{title:i18nCore.t('events.offline')}));return;}
   if(!_eventData.fetchedAt&&!(_eventData.events||[]).length){out.innerHTML=emptyHtml(i18nCore.t('events.error'),'','⚠️');return;}
   const sections=eventPresentationDomain.prepareEvents(_eventData.events||[],{filter:eventTypeFilter});
   const filters=[['all','events.filterAll'],['raids','events.filterRaids'],['max','events.filterMax'],['gbl','events.filterGbl'],['research','events.filterResearch'],['general','events.filterGeneral']];
   const filterHtml=`<div class="event-filter-row" role="tablist" aria-label="${escAttr(i18nCore.t('events.filtersLabel'))}">${filters.map(([type,key])=>`<button class="event-filter ${eventTypeFilter===type?'active':''}" role="tab" aria-selected="${eventTypeFilter===type}" onclick="setEventTypeFilter('${type}')">${escHtml(i18nCore.t(key))}</button>`).join('')}</div>`;
-  if(!sections.length){out.innerHTML=filterHtml+emptyHtml(i18nCore.t('events.empty'),'','📅');return;}
+  if(!sections.length){out.innerHTML=filterHtml+emptyHtml(i18nCore.t(eventTypeFilter==='all'?'events.empty':'events.filteredEmpty'),'','📅');return;}
   out.innerHTML=filterHtml+sections.map(section=>`<section class="event-group"><h2 class="event-group-title">${escHtml(eventGroupLabel(section.group))}</h2><div class="event-card-grid">${section.events.map(event=>{
     const when=eventPresentationDomain.eventTimeLabel(event,{locale:i18nCore.getLocale()});
     const title=event.name||event.heading||i18nCore.t('events.title'),link=eventPresentationDomain.safeHttpsUrl(event.link);
@@ -13424,7 +13590,7 @@ function anyOpenModal(){
   return!!document.querySelector('.ov.open');
 }
 function _focusActiveTabSearch(){
-  const map={find:'find-trainer-input',mylist:'mylist-filter',have:'have-filter',schedule:'',settings:''};
+  const map={find:'find-trainer-input',mylist:'mylist-filter',have:'have-filter',schedule:''};
   // Detect active tab
   const active=document.querySelector('.tab.active')?.dataset.tab;
   // Special case: have tab has subtab-specific filters
@@ -13536,7 +13702,7 @@ Object.assign(window,{
   setOwnerCommunityPreview,
   startVoiceInput,toggleFlagFilter,recordBackup,renderBackupReminder,confirmRemove,lsSet,
   // Latest batch
-  triggerInstall,openWhatsNew,closeWhatsNew,updateAvatarPreview,
+  triggerInstall,openWhatsNew,closeWhatsNew,updateAvatarPreview,changeInterfaceLocale,
   toggleExportMenu,closeExportMenu,exportMyListMarkdown,exportMyListCSV,copyShareLink,
   exitShareView,renderShareView,setAddPri,toggleAddAdvanced,trySpriteFallback,
   // Latest batch
@@ -13576,6 +13742,7 @@ Object.assign(window,{
 // ── BOOT ──────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded',()=>{
   try{
+  renderInterimProductLabels();
   // Initialize theme + type cache
   initTheme();
   loadTypeCache();
@@ -13605,13 +13772,17 @@ document.addEventListener('DOMContentLoaded',()=>{
   loginUserInput?.addEventListener('keydown',loginUserKeydown);
   document.addEventListener('pointerdown',e=>{
     if(!e.target.closest?.('.login-user-field'))hideLoginUserSuggestions();
+    if(!e.target.closest?.('.account-control'))closeAccountMenu(false);
   });
   document.querySelectorAll('.ov').forEach(el=>el.addEventListener('click',e=>{
     if(e.target===el)closeModal(el.id);
   }));
-  document.querySelector('.user-chip')?.addEventListener('keydown',e=>{
-    if(e.key==='Enter'||e.key===' '){e.preventDefault();openModal('prof-modal');}
+  document.addEventListener('keydown',e=>{
+    const popover=document.getElementById('account-popover');
+    if(e.key==='Escape'&&popover&&!popover.hidden){e.preventDefault();closeAccountMenu();}
   });
+  window.addEventListener('popstate',syncSettingsRoute);
+  window.addEventListener('hashchange',syncSettingsRoute);
   // Global keyboard shortcuts (#17)
   document.addEventListener('keydown',_handleGlobalShortcut);
   // Service worker for offline support (#22)
@@ -13641,6 +13812,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   if(shareReq)showLogin();
   else if(s&&allData.users?.[s]){cur=s;showApp();}
   else showLogin();
+  if(location.hash==='#settings')setTimeout(syncSettingsRoute,0);
   setSyncStatus('syncing');
   loadFirebaseSdk().then(()=>{
     setupFirebase(FIREBASE_URL);
