@@ -116,6 +116,54 @@ test.describe('visual smoke', () => {
     await expect(page.locator('#account-trigger')).toBeFocused();
   });
 
+  test('account and Settings controls keep accessible mobile touch geometry',async({page})=>{
+    const viewports=[[320,640],[375,700],[390,700],[430,760],[768,800],[1024,800],[1440,900],[390,420],[390,300]];
+    for(const [width,height] of viewports){
+      await page.setViewportSize({width,height});
+      await page.goto(`./?account-touch-targets=${width}-${height}-${Date.now()}`,{waitUntil:'domcontentloaded'});
+      await page.waitForFunction(()=>typeof toggleAccountMenu==='function');
+      await page.waitForTimeout(250);
+      await page.evaluate(()=>{
+        cur='TrainerNameThatIsDeliberatelyLongForTheHeader';
+        document.getElementById('login-pg').style.display='none';
+        document.getElementById('app').style.display='flex';
+        document.getElementById('top-un').textContent=cur;
+        document.getElementById('account-menu-name').textContent=cur;
+      });
+
+      const trigger=page.locator('#account-trigger');
+      const triggerBox=await trigger.boundingBox();
+      expect(triggerBox?.width).toBeGreaterThanOrEqual(48);
+      expect(triggerBox?.height).toBeGreaterThanOrEqual(48);
+      expect(await page.evaluate(()=>{
+        const name=document.getElementById('top-un');
+        const style=getComputedStyle(name);
+        const deliberatelyHandled=style.display==='none'||style.textOverflow==='ellipsis';
+        return deliberatelyHandled&&document.documentElement.scrollWidth<=document.documentElement.clientWidth;
+      })).toBe(true);
+
+      await trigger.click();
+      const popoverBox=await page.locator('#account-popover').boundingBox();
+      expect(popoverBox?.x).toBeGreaterThanOrEqual(0);
+      expect((popoverBox?.x||0)+(popoverBox?.width||0)).toBeLessThanOrEqual(width);
+      await page.locator('#account-settings-action').click();
+
+      const close=page.locator('.settings-modal-close');
+      const closeBox=await close.boundingBox();
+      expect(closeBox?.width).toBeGreaterThanOrEqual(48);
+      expect(closeBox?.height).toBeGreaterThanOrEqual(48);
+      expect(closeBox?.x).toBeGreaterThanOrEqual(0);
+      expect(closeBox?.y).toBeGreaterThanOrEqual(0);
+      expect((closeBox?.x||0)+(closeBox?.width||0)).toBeLessThanOrEqual(width);
+      expect((closeBox?.y||0)+(closeBox?.height||0)).toBeLessThanOrEqual(height);
+      expect(await page.evaluate(()=>{
+        const body=document.querySelector('.settings-modal-body');
+        return document.documentElement.scrollWidth<=document.documentElement.clientWidth&&
+          getComputedStyle(body).overflowY==='auto'&&body.scrollHeight>=body.clientHeight;
+      })).toBe(true);
+    }
+  });
+
   test('translated active UI has no horizontal overflow at representative widths',async({page})=>{
     const viewports=[[320,640],[375,700],[390,700],[430,760],[768,800],[1024,800],[1440,900],[390,420],[390,300]];
     for(const [width,height] of viewports){

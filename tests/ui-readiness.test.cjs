@@ -40,6 +40,11 @@ test('Settings is removed from primary navigation and relocated to an account di
   assert.doesNotMatch(html,/id="tab-settings"/);
 });
 
+test('account and Settings controls expose 48px minimum touch targets',()=>{
+  assert.match(html,/\.account-trigger\{[^}]*min-width:48px;min-height:48px/);
+  assert.match(html,/\.settings-modal-close\{[^}]*width:48px;height:48px;min-width:48px;min-height:48px/);
+});
+
 test('signed-out and anonymous screens expose language settings without a profile menu',()=>{
   assert.match(html,/id="login-language-trigger"[^>]+openSettingsPanel\('public'\)/);
   assert.match(html,/id="share-language-trigger"[^>]+openSettingsPanel\('public'\)/);

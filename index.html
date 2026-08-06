@@ -89,7 +89,7 @@ input,select,textarea{font-family:var(--font);outline:none}
 .av{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--ac2));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
 .av.lg{width:48px;height:48px;font-size:18px}
 .account-control{position:relative;min-width:0}
-.account-trigger{max-width:220px;color:var(--text)}
+.account-trigger{min-width:48px;min-height:48px;max-width:220px;color:var(--text)}
 .account-trigger .account-chevron{font-size:11px;color:var(--muted);overflow:visible}
 .account-popover{position:absolute;top:calc(100% + 8px);right:0;width:min(290px,calc(100vw - 24px));padding:8px;background:var(--card);border:1px solid var(--border2);border-radius:8px;box-shadow:0 16px 38px rgba(0,0,0,.42);z-index:180}
 .account-popover[hidden]{display:none}
@@ -503,7 +503,7 @@ input,select,textarea{font-family:var(--font);outline:none}
 .settings-modal{max-width:720px;padding:0;overflow:hidden;display:flex;flex-direction:column}
 .settings-modal-header{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:20px 20px 14px;border-bottom:1px solid var(--border)}
 .settings-modal-header h2{font-size:19px;margin:0 0 4px}.settings-modal-header p{font-size:12px;color:var(--muted);line-height:1.45}
-.settings-modal-close{width:44px;height:44px;flex:0 0 44px;border:1px solid var(--border2);border-radius:50%;background:transparent;color:var(--text);font-size:22px;line-height:1}
+.settings-modal-close{width:48px;height:48px;min-width:48px;min-height:48px;flex:0 0 48px;border:1px solid var(--border2);border-radius:50%;background:transparent;color:var(--text);font-size:22px;line-height:1}
 .settings-modal-body{padding:0 20px 20px;overflow-y:auto;overscroll-behavior:contain}
 .settings-account-summary{display:flex;align-items:center;gap:11px;padding:14px 0 0}.settings-account-summary strong{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.settings-account-summary span{display:block;color:var(--muted);font-size:11px}
 .settings-account-only[hidden]{display:none!important}
@@ -2485,7 +2485,7 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
 <div class="ptr-indicator" id="ptr-indicator" aria-hidden="true">↓</div>
 
 <script>
-window.__POGO_RELEASE_ID='2026-08-05.6';
+window.__POGO_RELEASE_ID='2026-08-05.7';
 window.__pogoBootWatch=setTimeout(function(){
   var visible=['config-pg','login-pg','app'].some(function(id){
     var el=document.getElementById(id);
@@ -2504,51 +2504,51 @@ window.__pogoBootWatch=setTimeout(function(){
   if(err)err.textContent='App scripts did not finish loading. Refresh once; if this stays, send this screenshot.';
 },4000);
 </script>
-<script src="data.js?v=2026-08-05.6"></script>
-<script src="js/domain/priorities.js?v=2026-08-05.6"></script>
-<script src="js/ui/badges.js?v=2026-08-05.6"></script>
-<script src="js/domain/username.js?v=2026-08-05.6"></script>
-<script src="js/domain/priorityValues.js?v=2026-08-05.6"></script>
-<script src="js/domain/scheduleDates.js?v=2026-08-05.6"></script>
-<script src="js/domain/pokemonSearchTerms.js?v=2026-08-05.6"></script>
-<script src="js/domain/pokemonEntryRules.js?v=2026-08-05.6"></script>
-<script src="js/domain/searchStrings.js?v=2026-08-05.6"></script>
-<script src="js/ui/stringHtml.js?v=2026-08-05.6"></script>
-<script src="js/domain/scheduleEventRules.js?v=2026-08-05.6"></script>
-<script src="js/domain/scheduleTradeRules.js?v=2026-08-05.6"></script>
-<script src="js/domain/pokemonKeys.js?v=2026-08-05.6"></script>
-<script src="js/domain/spriteSlugs.js?v=2026-08-05.6"></script>
-<script src="js/domain/fuzzyText.js?v=2026-08-05.6"></script>
-<script src="js/domain/autocompleteText.js?v=2026-08-05.6"></script>
-<script src="js/domain/autocompleteMatching.js?v=2026-08-05.6"></script>
-<script src="js/domain/autocompleteRanking.js?v=2026-08-05.6"></script>
-<script src="js/domain/relativeTime.js?v=2026-08-05.6"></script>
-<script src="js/domain/clientRelease.js?v=2026-08-05.6"></script>
-<script src="js/domain/trainerDiscovery.js?v=2026-08-05.6"></script>
-<script src="js/domain/eventPresentation.js?v=2026-08-05.6"></script>
-<script src="js/domain/publicSharePublication.js?v=2026-08-05.6"></script>
-<script src="js/domain/trainerPreferences.js?v=2026-08-05.6"></script>
-<script src="js/domain/loginDirectory.js?v=2026-08-05.6"></script>
-<script src="js/utils/textSafety.js?v=2026-08-05.6"></script>
-<script src="js/ui/stringPanels.js?v=2026-08-05.6"></script>
-<script src="js/ui/emptyState.js?v=2026-08-05.6"></script>
-<script src="js/i18n/locales/en.js?v=2026-08-05.6"></script>
-<script src="js/i18n/locales/ja.js?v=2026-08-05.6"></script>
-<script src="js/i18n/locales/es.js?v=2026-08-05.6"></script>
-<script src="js/i18n/locales/de.js?v=2026-08-05.6"></script>
-<script src="js/i18n/core.js?v=2026-08-05.6"></script>
-<script src="js/services/firebaseClient.js?v=2026-08-05.6"></script>
-<script src="js/data/subscriptionManager.js?v=2026-08-05.6"></script>
-<script src="js/data/listenerLifecycle.js?v=2026-08-05.6"></script>
-<script src="js/data/sessionCacheBoundary.js?v=2026-08-05.6"></script>
-<script src="js/data/firebaseReadRegistry.js?v=2026-08-05.6"></script>
-<script src="js/data/currentUserRepository.js?v=2026-08-05.6"></script>
-<script src="js/data/ownedDataCoordinator.js?v=2026-08-05.6"></script>
-<script src="js/data/publicShareRepository.js?v=2026-08-05.6"></script>
-<script src="js/data/trainerHistoryStore.js?v=2026-08-05.6"></script>
-<script src="js/data/trainerPreferencesRepository.js?v=2026-08-05.6"></script>
-<script src="js/domain/cacheAdapters.js?v=2026-08-05.6"></script>
-<script src="js/ui/trainerTagPanel.js?v=2026-08-05.6"></script>
+<script src="data.js?v=2026-08-05.7"></script>
+<script src="js/domain/priorities.js?v=2026-08-05.7"></script>
+<script src="js/ui/badges.js?v=2026-08-05.7"></script>
+<script src="js/domain/username.js?v=2026-08-05.7"></script>
+<script src="js/domain/priorityValues.js?v=2026-08-05.7"></script>
+<script src="js/domain/scheduleDates.js?v=2026-08-05.7"></script>
+<script src="js/domain/pokemonSearchTerms.js?v=2026-08-05.7"></script>
+<script src="js/domain/pokemonEntryRules.js?v=2026-08-05.7"></script>
+<script src="js/domain/searchStrings.js?v=2026-08-05.7"></script>
+<script src="js/ui/stringHtml.js?v=2026-08-05.7"></script>
+<script src="js/domain/scheduleEventRules.js?v=2026-08-05.7"></script>
+<script src="js/domain/scheduleTradeRules.js?v=2026-08-05.7"></script>
+<script src="js/domain/pokemonKeys.js?v=2026-08-05.7"></script>
+<script src="js/domain/spriteSlugs.js?v=2026-08-05.7"></script>
+<script src="js/domain/fuzzyText.js?v=2026-08-05.7"></script>
+<script src="js/domain/autocompleteText.js?v=2026-08-05.7"></script>
+<script src="js/domain/autocompleteMatching.js?v=2026-08-05.7"></script>
+<script src="js/domain/autocompleteRanking.js?v=2026-08-05.7"></script>
+<script src="js/domain/relativeTime.js?v=2026-08-05.7"></script>
+<script src="js/domain/clientRelease.js?v=2026-08-05.7"></script>
+<script src="js/domain/trainerDiscovery.js?v=2026-08-05.7"></script>
+<script src="js/domain/eventPresentation.js?v=2026-08-05.7"></script>
+<script src="js/domain/publicSharePublication.js?v=2026-08-05.7"></script>
+<script src="js/domain/trainerPreferences.js?v=2026-08-05.7"></script>
+<script src="js/domain/loginDirectory.js?v=2026-08-05.7"></script>
+<script src="js/utils/textSafety.js?v=2026-08-05.7"></script>
+<script src="js/ui/stringPanels.js?v=2026-08-05.7"></script>
+<script src="js/ui/emptyState.js?v=2026-08-05.7"></script>
+<script src="js/i18n/locales/en.js?v=2026-08-05.7"></script>
+<script src="js/i18n/locales/ja.js?v=2026-08-05.7"></script>
+<script src="js/i18n/locales/es.js?v=2026-08-05.7"></script>
+<script src="js/i18n/locales/de.js?v=2026-08-05.7"></script>
+<script src="js/i18n/core.js?v=2026-08-05.7"></script>
+<script src="js/services/firebaseClient.js?v=2026-08-05.7"></script>
+<script src="js/data/subscriptionManager.js?v=2026-08-05.7"></script>
+<script src="js/data/listenerLifecycle.js?v=2026-08-05.7"></script>
+<script src="js/data/sessionCacheBoundary.js?v=2026-08-05.7"></script>
+<script src="js/data/firebaseReadRegistry.js?v=2026-08-05.7"></script>
+<script src="js/data/currentUserRepository.js?v=2026-08-05.7"></script>
+<script src="js/data/ownedDataCoordinator.js?v=2026-08-05.7"></script>
+<script src="js/data/publicShareRepository.js?v=2026-08-05.7"></script>
+<script src="js/data/trainerHistoryStore.js?v=2026-08-05.7"></script>
+<script src="js/data/trainerPreferencesRepository.js?v=2026-08-05.7"></script>
+<script src="js/domain/cacheAdapters.js?v=2026-08-05.7"></script>
+<script src="js/ui/trainerTagPanel.js?v=2026-08-05.7"></script>
 <script>
 let initializeApp,getDatabase,ref,set,get,onValue,update,getAuth,signInWithEmailAndPassword,createUserWithEmailAndPassword,firebaseSignOut,updatePassword,deleteUser,onAuthStateChanged;
 let firebaseSdkPromise=null;
