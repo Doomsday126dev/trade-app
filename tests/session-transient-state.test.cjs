@@ -50,7 +50,7 @@ function transientHarness(){
     dragSrc:{},bulkMode:true,bulkSelected:new Set(['Pidgey']),haveBulkMode:true,haveBulkSelected:new Set(['Pidgey']),
     _safeTransferSelected:new Set(['TrainerB']),_qaSelected:{lf:new Set(['Pidgey']),ft:new Set()},
     _activeDiff:{username:'TrainerB'},_activeTradeMatch:{username:'TrainerB'},_swipeState:{},_ptrState:{},
-    voiceRecognition:{aborted:false,abort(){this.aborted=true;}},
+    voiceRecognition:{aborted:false,abort(){this.aborted=true;}},resetTrainerOrganizerState(){},
     managedSessionCache:{snapshot:()=>({activeOwner:{uid:'uid-a',username:'TrainerA'}})}
   });
   vm.runInContext(between('function sessionTransientCallback','function activateOwnedSession'),context);
