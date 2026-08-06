@@ -36,6 +36,9 @@ test('rules candidate has no broad authenticated root read and gates every candi
   for(const pathName of ['accounts','shareVisibility','shareAccess','shareDirectory','trainerShares','legacyShareOwners','userPreferences']){
     assert.match(JSON.stringify(rules[pathName]),/writesEnabled/);
   }
+  assert.match(rules.trainerPreferencesConfig.readsEnabled['.validate'],/isBoolean/);
+  assert.match(rules.userPreferences.$viewerUid['.read'],/readsEnabled/);
+  assert.equal(rules.userPreferences.$viewerUid.favoriteTrainers['.write'],false);
   const baseline=JSON.parse(readFileSync(path.join(__dirname,'firebase','database.rules.narrow-read.json'),'utf8')).rules;
   assert.deepEqual(rules.publicShares,baseline.publicShares);
   assert.equal(rules.groups['.read'],false);

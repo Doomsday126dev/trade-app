@@ -40,7 +40,7 @@ async function seed(){
   await succeeds(db('PUT','',{
     admins:{[IDS.admin]:true},
     shareVisibilityConfig:{writesEnabled:false,legacyCompatEnabled:true},
-    trainerPreferencesConfig:{writesEnabled:false},
+    trainerPreferencesConfig:{writesEnabled:false,readsEnabled:false},
     accounts:{[IDS.owner]:{trainerName:'OwnerTrainer',normalizedTrainerName:'ownertrainer'}},
     loginDirectory:{OwnerTrainer:{authReady:true}},
     users:{OwnerTrainer:{authUid:IDS.owner,isOwner:true,isAdmin:true}},
@@ -54,7 +54,10 @@ async function seed(){
   },'emulator-owner'),'seed fixture');
 }
 async function enableWrites(){await succeeds(db('PUT','shareVisibilityConfig/writesEnabled',true,TOKENS.admin),'admin enables emulator-only writes');}
-async function enablePreferences(){await succeeds(db('PUT','trainerPreferencesConfig/writesEnabled',true,TOKENS.admin),'admin enables emulator-only preference writes');}
+async function enablePreferences(){
+  await succeeds(db('PUT','trainerPreferencesConfig/writesEnabled',true,TOKENS.admin),'admin enables emulator-only preference writes');
+  await succeeds(db('PUT','trainerPreferencesConfig/readsEnabled',true,TOKENS.admin),'admin enables emulator-only preference reads');
+}
 
 before(async()=>{for(const name of ['owner','approved','other','admin'])await createUser(name);});
 beforeEach(async()=>{await succeeds(db('PUT','',null,'emulator-owner'),'clear fixture');await seed();});
@@ -176,6 +179,14 @@ test('disabled gates prevent ordinary account directory compatibility and prefer
   await fails(db('PUT','trainerPreferencesConfig/writesEnabled',true,TOKENS.other),'ordinary preference gate enable');
 });
 
+test('private preference reads remain disabled until the exact read gate is enabled',async()=>{
+  await succeeds(db('PUT',`userPreferences/${IDS.owner}/favoriteTrainers/${IDS.other}`,favoriteRecord(),'emulator-owner'),'trusted disabled preference fixture');
+  await fails(db('GET',`userPreferences/${IDS.owner}`,undefined,TOKENS.owner),'disabled owner preference read');
+  await succeeds(db('PUT','trainerPreferencesConfig/readsEnabled',true,TOKENS.admin),'admin enables emulator-only preference reads');
+  await succeeds(db('GET',`userPreferences/${IDS.owner}`,undefined,TOKENS.owner),'enabled exact owner preference read');
+  await fails(db('GET',`userPreferences/${IDS.owner}`,undefined,TOKENS.other),'enabled cross-owner preference read');
+});
+
 test('parent and query reads cannot bypass exact future visibility rules',async()=>{
   for(const target of ['shareDirectory','trainerShares','shareVisibility','shareAccess','userPreferences']){
     await fails(db('GET',target,undefined,TOKENS.other),`parent enumeration ${target}`);
@@ -192,7 +203,8 @@ test('future group paths are reserved and inactive',async()=>{
 test('viewer alone owns private preferences; other users and admins cannot read or enumerate them',async()=>{
   await enablePreferences();
   const favorite=favoriteRecord('ApprovedTrainer');
-  await succeeds(db('PUT',`userPreferences/${IDS.owner}/favoriteTrainers/${IDS.approved}`,favorite,TOKENS.owner),'owner creates favorite');
+  await fails(db('PUT',`userPreferences/${IDS.owner}/favoriteTrainers/${IDS.approved}`,favorite,TOKENS.owner),'direct owner favorite write');
+  await succeeds(db('PUT',`userPreferences/${IDS.owner}/favoriteTrainers/${IDS.approved}`,favorite,'emulator-owner'),'trusted fixture creates favorite');
   await succeeds(db('GET',`userPreferences/${IDS.owner}`,undefined,TOKENS.owner),'owner reads preferences');
   await fails(db('GET',`userPreferences/${IDS.owner}`,undefined,TOKENS.other),'other reads preferences');
   await fails(db('GET',`userPreferences/${IDS.owner}`,undefined,TOKENS.admin),'admin reads preferences');
@@ -213,15 +225,16 @@ test('preference metadata requires schema one, bounded declared counts, and mono
   await succeeds(db('PUT',`userPreferences/${IDS.owner}/metadata`,{...metadata,revision:2,updatedAt:200,migrationState:'verified',migrationFingerprint:'prefs_12345678'},TOKENS.owner),'verified metadata');
 });
 
-test('favorite entities use monotonic revisions and tombstones instead of physical deletion',async()=>{
+test('favorite entities are trusted-only and parent writes cannot bypass the boundary',async()=>{
   await enablePreferences();
   const target=`userPreferences/${IDS.owner}/favoriteTrainers/${IDS.other}`,favorite=favoriteRecord();
-  await succeeds(db('PUT',target,favorite,TOKENS.owner),'favorite create');
-  await fails(db('DELETE',target,undefined,TOKENS.owner),'physical favorite delete');
-  await fails(db('PUT',target,{...favorite,revision:3,updatedAt:300,operationId:operationId(3)},TOKENS.owner),'skipped favorite revision');
+  await fails(db('PUT',target,favorite,TOKENS.owner),'direct favorite create');
+  await succeeds(db('PUT',target,favorite,'emulator-owner'),'trusted fixture favorite create');
+  await fails(db('DELETE',target,undefined,TOKENS.owner),'direct physical favorite delete');
+  await fails(db('PUT',target,{...favorite,revision:3,updatedAt:300,operationId:operationId(3)},TOKENS.owner),'direct favorite revision change');
   const tombstone={...favorite,revision:2,updatedAt:200,operationId:operationId(2),deleted:true,deletedAt:200};
-  await succeeds(db('PUT',target,tombstone,TOKENS.owner),'favorite tombstone');
-  await fails(db('PUT',target,{...favorite,revision:2,updatedAt:250,operationId:operationId('stale')},TOKENS.owner),'stale edit after deletion');
+  await succeeds(db('PUT',target,tombstone,'emulator-owner'),'trusted fixture favorite tombstone');
+  await fails(db('PUT',target,{...favorite,revision:2,updatedAt:250,operationId:operationId('stale')},TOKENS.owner),'direct stale edit after deletion');
   await enableWrites();
   const ownFavorite=`userPreferences/${IDS.owner}/favoriteTrainers/${IDS.approved}`;
   const attacks=[
@@ -242,7 +255,7 @@ test('favorite entities use monotonic revisions and tombstones instead of physic
 
 test('personal favorites and Approved Viewer grants remain independent',async()=>{
   await enablePreferences();await enableWrites();
-  await succeeds(db('PUT',`userPreferences/${IDS.owner}/favoriteTrainers/${IDS.other}`,favoriteRecord(),TOKENS.owner),'personal favorite');
+  await succeeds(db('PUT',`userPreferences/${IDS.owner}/favoriteTrainers/${IDS.other}`,favoriteRecord(),'emulator-owner'),'trusted personal favorite fixture');
   const noGrant=await succeeds(db('GET',`shareAccess/${IDS.owner}/${IDS.other}`,undefined,TOKENS.owner),'owner reads absent grant');
   assert.equal(noGrant.body,'null');
   await succeeds(db('PUT',`shareAccess/${IDS.owner}/${IDS.other}`,true,TOKENS.owner),'approved viewer grant');

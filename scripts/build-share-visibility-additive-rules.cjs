@@ -7,7 +7,7 @@ const baselineFile=path.join(root,'tests/firebase/database.rules.narrow-read.jso
 const outputFile=path.join(root,'tests/firebase/database.rules.share-visibility.json');
 const prior=JSON.parse(fs.readFileSync(outputFile,'utf8')).rules;
 const preferenceRootsSha=crypto.createHash('sha256').update(JSON.stringify({trainerPreferencesConfig:prior.trainerPreferencesConfig,userPreferences:prior.userPreferences})).digest('hex');
-if(preferenceRootsSha!=='ab5b7659337a3414fd5fc76e4da6b487004ea6854af516d9acc51dd258494ef7')throw new Error('Reviewed preference rules changed; update only after emulator review');
+if(preferenceRootsSha!=='0a9ac481a3a73a3918929624bd58d089be9a3744314086f49bd97a6acffc2dae')throw new Error('Reviewed preference rules changed; update only after emulator review');
 const candidate=JSON.parse(fs.readFileSync(baselineFile,'utf8'));
 const rules=candidate.rules;
 const admin="root.child('admins').child(auth.uid).val() === true";

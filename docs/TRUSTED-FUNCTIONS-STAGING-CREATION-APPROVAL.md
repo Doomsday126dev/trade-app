@@ -103,8 +103,8 @@ figures warn about unbounded automation; they do not model ordinary usage.
 
 Every row assumes one conservative App Check assessment per callable request,
 although token reuse may reduce actual assessment count; one vCPU; 0.25 GiB
-memory; durations of 250/180/350/180 ms for handle/tag/history/viewer calls;
-6/4, 4/4, 8/4, and 7/3 RTDB reads/writes respectively; 2 KiB downloaded per
+memory; durations of 250/180/200/350/180 ms for handle/tag/Favorite/history/viewer calls;
+6/4, 4/4, 6/3, 8/4, and 7/3 RTDB reads/writes respectively; 2 KiB downloaded per
 RTDB read; 1,600 structured-log bytes and 8 KiB egress per invocation; no
 cleanup Scheduler job; `maxInstances: 5`; and concurrency 10. Dollar ranges
 apply published free allowances and use `us-central1` Tier 1 only as a pricing
@@ -113,15 +113,15 @@ selection.
 
 | MAU | Activity | Calls | vCPU-s | GiB-s | RTDB reads / writes / MiB downloaded | App Check | Logs MiB | Egress MiB |
 | ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| 100 | normal | 1,055 | 327 | 82 | 7,580 / 4,170 / 15 | 1,055 | 2 | 9 |
-| 100 | high | 7,310 | 2,337 | 585 | 54,160 / 28,940 / 106 | 7,310 | 12 | 58 |
-| 100 | bounded abuse | 1,359,000 | 398,250 | 99,563 | 9,504,000 / 5,286,000 / 18,563 | 1,359,000 | 2,074 | 10,618 |
-| 1,000 | normal | 10,550 | 3,263 | 816 | 75,800 / 41,700 / 149 | 10,550 | 17 | 83 |
-| 1,000 | high | 73,100 | 23,365 | 5,842 | 541,600 / 289,400 / 1,058 | 73,100 | 112 | 572 |
-| 1,000 | bounded abuse | 13,590,000 | 3,982,500 | 995,625 | 95,040,000 / 52,860,000 / 185,625 | 13,590,000 | 20,737 | 106,172 |
-| 10,000 | normal | 105,500 | 32,625 | 8,157 | 758,000 / 417,000 / 1,481 | 105,500 | 161 | 825 |
-| 10,000 | high | 731,000 | 233,650 | 58,413 | 5,416,000 / 2,894,000 / 10,579 | 731,000 | 1,116 | 5,711 |
-| 10,000 | bounded abuse | 135,900,000 | 39,825,000 | 9,956,250 | 950,400,000 / 528,600,000 / 1,856,250 | 135,900,000 | 207,367 | 1,061,719 |
+| 100 | normal | 1,255 | 367 | 92 | 8,780 / 4,770 / 18 | 1,255 | 2 | 10 |
+| 100 | high | 8,810 | 2,637 | 660 | 63,160 / 33,440 / 124 | 8,810 | 14 | 69 |
+| 100 | bounded abuse | 1,959,000 | 518,250 | 129,563 | 13,104,000 / 7,086,000 / 25,594 | 1,959,000 | 2,990 | 15,305 |
+| 1,000 | normal | 12,550 | 3,663 | 916 | 87,800 / 47,700 / 172 | 12,550 | 20 | 99 |
+| 1,000 | high | 88,100 | 26,365 | 6,592 | 631,600 / 334,400 / 1,234 | 88,100 | 135 | 689 |
+| 1,000 | bounded abuse | 19,590,000 | 5,182,500 | 1,295,625 | 131,040,000 / 70,860,000 / 255,938 | 19,590,000 | 29,892 | 153,047 |
+| 10,000 | normal | 125,500 | 36,625 | 9,157 | 878,000 / 477,000 / 1,715 | 125,500 | 192 | 981 |
+| 10,000 | high | 881,000 | 263,650 | 65,913 | 6,316,000 / 3,344,000 / 12,336 | 881,000 | 1,345 | 6,883 |
+| 10,000 | bounded abuse | 195,900,000 | 51,825,000 | 12,956,250 | 1,310,400,000 / 708,600,000 / 2,559,375 | 195,900,000 | 298,920 | 1,530,469 |
 
 `verifyTrainerHistory` dominates normal/high compute and database work. Under
 abuse, App Check assessments, compute, RTDB traffic, logs, and egress can all
@@ -145,14 +145,14 @@ The guarded launch assumes write gates enabled only for tested operations,
 active per-UID limits, no passive page-load or login calls, no polling, no
 scheduled cleanup, unchanged-history short-circuiting, `maxInstances: 5`,
 bounded logs, one monthly deployment, 0.5 GiB retained images with cleanup, and
-billing alerts. Its raw monthly calls are 328, 3,280, and 32,800 at 100, 1,000,
+billing alerts. Its raw monthly calls are 428, 4,280, and 42,800 at 100, 1,000,
 and 10,000 MAU respectively.
 
 ### Why normal 1,000 MAU is USD 8-20
 
-The model produces 10,550 calls: 50 handle, 2,000 tag, 8,000 history, and 500
-viewer operations. Conservatively assigning one reCAPTCHA/App Check assessment
-to every request puts it 550 assessments above the current 10,000 allowance.
+The model produces 12,550 calls: 50 handle, 2,000 tag, 2,000 Favorite, 8,000
+history, and 500 viewer operations. Conservatively assigning one reCAPTCHA/App
+Check assessment to every request puts it 2,550 assessments above the current 10,000 allowance.
 At the pricing verified above, the 10,001-100,000 assessment tier contributes
 approximately USD 8. If real token reuse causes fewer assessments, this portion
 may remain within allowance.
@@ -160,9 +160,9 @@ may remain within allowance.
 | Service | Modeled contribution |
 | --- | --- |
 | reCAPTCHA/App Check | About USD 8 under the conservative assessment assumption |
-| Cloud Run requests/CPU/memory | USD 0: 10,550 requests, 3,263 vCPU-s, and 816 GiB-s remain below cited allowances |
-| RTDB | USD 0: about 149 MiB downloaded remains below the cited 10 GiB allowance; no incremental stored-data charge modeled |
-| Logging | USD 0: about 17 MiB remains below the cited ingestion allowance |
+| Cloud Run requests/CPU/memory | USD 0: 12,550 requests, 3,663 vCPU-s, and 916 GiB-s remain below cited allowances |
+| RTDB | USD 0: about 172 MiB downloaded remains below the cited 10 GiB allowance; no incremental stored-data charge modeled |
+| Logging | USD 0: about 20 MiB remains below the cited ingestion allowance |
 | Cloud Build | USD 0: two modeled deployments remain far below the cited build-minute allowance |
 | Artifact Registry | USD 0 when its 0.5 GiB allowance is available; retained/shared-account usage can change this |
 | Egress/region/rounding buffer | USD 0-12 because `<REGION>`, routing, token reuse, shared allowances, and retained artifacts are unresolved |
@@ -218,8 +218,8 @@ rules, schemas, idempotency, and rate limits; it replaces none of them.
 Rules prerequisite:
 
 - Live narrow-read baseline: `e0632a98ed106117f03e61da0446ef4b2c2e6ed02ea8c6f1c498a0e7edcb17bf`
-- Additive disabled candidate: `cbcea2a672e1f9b1d6a4582410bb89bca765ca307c0495c7cc80ea35f805071c`
-- Reconfirm the visibility emulator matrix: 44 passed, 0 failed.
+- Additive disabled candidate: `ba7322a59a4c3cf6b503dc52b1394313ac9421106a6c05fc6835200d49e3e72d`
+- Reconfirm the visibility emulator matrix: 45 passed, 0 failed.
 
 Deploy the additive rules to staging before Functions, with both write gates
 false. Verify anonymous/ordinary/admin reads, root denial, disabled future
@@ -227,9 +227,9 @@ paths, non-enumerability, and rollback SHA. Functions must reject disabled
 operations before acquiring idempotency records.
 
 Resource creation and staging deployment readiness are distinct from preference
-sync activation readiness. The strict 100-Favorite arbitrary-map reconciliation
-blocker requires a separately reviewed server-enforced design before either
-preference gate can be enabled.
+sync activation readiness. The local narrow Favorite callable now enforces the
+strict 100-active-record limit, but its deployment, synthetic canary, and gate
+activation still require separate approvals.
 
 Fixtures use only `<SYNTHETIC_FIXTURE_NAMESPACE>`, deterministic fake identities,
 `example.invalid` addresses, and synthetic list data. No production export,
@@ -268,7 +268,7 @@ operators but do not stop charges. The manual response order is:
 
 1. Set both server write gates false.
 2. Disable every staging client invocation path.
-3. Disable or delete the four staging Functions.
+3. Disable or delete the five staging Functions.
 4. Disable App Check enforcement if it blocks diagnosis.
 5. Stop scheduled resources if any were separately created.
 6. Inspect and prune Artifact Registry storage.
@@ -283,7 +283,7 @@ images, or scheduled work. No automated billing-triggered shutdown is included.
 
 | Category | Action | Immediate? | Retained billing/log data and verification |
 | --- | --- | --- | --- |
-| Functions | Disable gates, delete four staging Functions | Invocation stop is prompt; deletion is asynchronous | Images/logs may remain; verify no callable endpoint |
+| Functions | Disable gates, delete five staging Functions | Invocation stop is prompt; deletion is asynchronous | Images/logs may remain; verify no callable endpoint |
 | RTDB synthetic data | Delete only approved fixture roots | Data deletion is prompt | Usage records remain; verify namespace absent and unrelated data untouched |
 | Auth synthetic users | Delete only fixture UIDs | Prompt | Audit records may remain; verify fixture Auth count zero |
 | App Check registration and debug tokens | Revoke tokens and unregister staging app/provider | Revocation is prompt | Historical metrics may remain; verify no active token/provider |
@@ -320,8 +320,8 @@ Operator order after future approvals:
 5. Register the staging web app and App Check provider with gates false.
 6. Create separate identities and assign only approved, time-bounded roles.
 7. Verify both rule hashes and deploy additive staging rules with gates false.
-8. Re-run 44/44 rules tests and disabled-path canaries.
-9. Deploy four Functions with gates false and verify disabled responses create no idempotency rows.
+8. Re-run 45/45 rules tests and disabled-path canaries.
+9. Deploy five Functions with gates false and verify disabled responses create no idempotency rows.
 10. Create deterministic synthetic fixtures only after a separate approval.
 11. Enable one gate for one bounded canary group, restore false, and review evidence.
 12. Tear down using the full checklist or seek a new approval for retained staging.

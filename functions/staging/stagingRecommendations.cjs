@@ -56,7 +56,7 @@ const DECISION_RECOMMENDATIONS = Object.freeze({
   FUNCTIONS_REGION: decision(
     '<REGION> resolved to the approved RTDB-colocated Gen 2 region',
     'A nearby supported Gen 2 region only when exact colocation is unavailable and its transfer tradeoff is approved',
-    'One region for all four callables minimizes latency and operational variance at the current scale.',
+    'One region for all five callables minimizes latency and operational variance at the current scale.',
     'Colocation reduces cross-region traffic; invocation and compute pricing must be checked for the chosen region.',
     'The current source declaration must be parameterized and deployment must fail while <REGION> is unresolved.',
     'Low with one region; multi-region deployment adds monitoring, IAM, and rollback work.',
@@ -89,7 +89,7 @@ const DECISION_RECOMMENDATIONS = Object.freeze({
   RUNTIME_SERVICE_ACCOUNT: decision(
     '<APP_SLUG>-trusted-runtime-staging',
     'One runtime identity per callable after trust boundaries diverge',
-    'One unique runtime identity for this fixed four-function set is proportional today because all four share the same bounded roots and controls.',
+    'One unique runtime identity for this fixed five-function set is proportional today because all five share the same bounded roots and controls.',
     'No direct fee; its authority can enable billable RTDB, logging, and callable activity.',
     'Runtime-only roles: instance-wide RTDB Admin, App Check token verification, and log writing. It cannot deploy, manage IAM/Auth, or publish rules.',
     'One shared runtime identity: medium. Per-callable identities: higher operational burden with limited current benefit.',

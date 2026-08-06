@@ -13,7 +13,7 @@ remains empty. No proposal triggers an operation.
 - Billing: the future production billing account, with an isolated staging
   project, labels, budget, and alerts. Its identifier stays private.
 - RTDB location: proposed `us-central1`.
-- Functions region: proposed `us-central1` for all four callables.
+- Functions region: proposed `us-central1` for all five callables.
 - Existing `us-east1` callable declarations are unapproved technical debt.
   Parameterization requires a separate reviewed implementation.
 
@@ -31,7 +31,7 @@ remains empty. No proposal triggers an operation.
 
 ## Identities And IAM
 
-- Use one dedicated staging runtime identity for the four callables.
+- Use one dedicated staging runtime identity for the five callables.
 - Use a separate deployment identity through short-lived impersonation. Do not
   generate downloadable service-account keys.
 - The same named human may initially perform separately recorded reviewer and
@@ -96,7 +96,7 @@ Preferred narrow-read rollback:
 
 Additive visibility/preferences candidate:
 
-`cbcea2a672e1f9b1d6a4582410bb89bca765ca307c0495c7cc80ea35f805071c`
+`ba7322a59a4c3cf6b503dc52b1394313ac9421106a6c05fc6835200d49e3e72d`
 
 These hashes are proposed values only. Future publication requires immediate
 hash recomputation, staging-target verification, confirmation that both write

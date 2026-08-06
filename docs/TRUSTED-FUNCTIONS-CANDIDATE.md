@@ -2,11 +2,12 @@
 
 Status: **local emulator-only, undeployed, production-inactive**
 
-This workspace implements four Firebase Cloud Functions 2nd generation callable
+This workspace implements five Firebase Cloud Functions 2nd generation callable
 entrypoints as a review candidate:
 
 - `reserveTrainerHandle`
 - `claimTrainerTagLabel`
+- `mutateFavoriteTrainer`
 - `verifyTrainerHistory`
 - `setApprovedViewer`
 
@@ -27,6 +28,7 @@ private content is returned.
 | --- | --- | --- |
 | `reserveTrainerHandle` | `requestedHandle`, `requestId` | 4 KiB; handle 64 code points |
 | `claimTrainerTagLabel` | `action`, `tagId`, `label` when required, `baseRevision`, `requestId` | 4 KiB; label 40 code points |
+| `mutateFavoriteTrainer` | `operation`, `trainerUid`, `canonicalTrainerLabel`, `expectedRevision`, `requestId`, `schemaVersion` | 4 KiB; label 64 code points; one Favorite |
 | `verifyTrainerHistory` | `ownerUid`, `shareVersion`, `shareUpdatedAt`, `declaredEntryCount`, `publicSnapshot`, `requestId` | 256 KiB; 1,500 entries |
 | `setApprovedViewer` | `viewerUid`, `action`, `requestId` | 4 KiB |
 
@@ -97,6 +99,17 @@ stores the idempotency request ID; a stale base revision is rejected.
 The additive rules candidate denies direct client writes to both tag roots, so
 normalized label claims cannot bypass this trusted operation.
 
+Favorite add/remove transactions are confined to
+`userPreferences/{callerUid}/favoriteTrainers`. The Auth UID is the sole
+preference owner; no owner UID or path is accepted. The target UID and canonical
+label must match `accounts/{trainerUid}` and its exact `shareDirectory` claim.
+Each transaction rereads the complete bounded Favorite map, rejects malformed
+state, counts actual non-tombstoned records, and enforces 100 active Favorites.
+Adds preserve an existing active row, restore an exact-revision tombstone, and
+retain the earliest valid `addedAt`. Removes require the exact revision and
+write a tombstone; absent removal is an explicit no-op. The undeployed additive
+rules deny every direct client write to this map.
+
 History writes are confined to
 `userPreferences/{callerUid}/trainerHistory/{ownerUid}`. The callable reads the
 exact `trainerShares/{ownerUid}` source and the exact visibility/access records,
@@ -150,10 +163,15 @@ status. They exclude UID, email, handles, normalized keys, labels, tag IDs,
 owner/viewer identity, snapshots, payloads, tokens, credentials, URLs, and
 identifier-bearing Firebase paths.
 
-Stable errors are: `unauthenticated`, `app_check_required`, `invalid_argument`,
+Stable error classes are: `unauthenticated`, `app_check_required`, `invalid_argument`,
 `permission_denied`, `conflict`, `stale_state`, `replay_mismatch`,
 `payload_too_large`, `unavailable`, and `internal`. Raw Admin SDK errors are
 mapped to `internal`.
+Favorite reasons are stable and redacted: `operation/write_gate_disabled`,
+`favorite/operation_invalid`, `favorite/schema_unsupported`,
+`favorite/revision_conflict`, `favorite/limit_reached`,
+`idempotency/fingerprint_mismatch`, `favorite/identity_mismatch`, and
+`favorite/state_invalid`.
 
 ## Threat model
 

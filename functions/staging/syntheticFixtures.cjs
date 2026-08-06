@@ -19,7 +19,7 @@ function generateSyntheticFixtures() {
     ]),
     rtdb: Object.freeze({
       shareVisibilityConfig: Object.freeze({ writesEnabled: false }),
-      trainerPreferencesConfig: Object.freeze({ writesEnabled: false }),
+      trainerPreferencesConfig: Object.freeze({ writesEnabled: false, readsEnabled: false }),
       admins: Object.freeze({ [admin]: true }),
       accounts: Object.freeze({
         [owner]: Object.freeze({ trainerName: 'SyntheticOwner', normalizedTrainerName: 'syntheticowner' }),

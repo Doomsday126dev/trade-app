@@ -1,6 +1,7 @@
 'use strict';
 
 const MAX_ACTIVE_TAGS = 24;
+const MAX_ACTIVE_FAVORITES = 100;
 
 const { fail } = require('../domain/errors');
 const { snapshotFromTrainerShare } = require('./firebaseTrustedAdapter');
@@ -108,6 +109,57 @@ function createInMemoryTrustedAdapter(seed = {}) {
       } catch (error) { Object.assign(state, before); throw error; }
     });
   }
+  async function getCanonicalTrainerIdentity(trainerUid) {
+    const account = state.accounts[trainerUid];
+    if (!account?.trainerName || !account?.normalizedTrainerName) return null;
+    const directory = state.shareDirectory[account.normalizedTrainerName];
+    if (directory?.ownerUid !== trainerUid || directory?.trainerName !== account.trainerName) return null;
+    return { trainerName: account.trainerName };
+  }
+  async function mutateFavoriteForViewer({ callerUid, operation, trainerUid, canonicalTrainerLabel, expectedRevision, operationId, now }) {
+    return serialized(() => {
+      maybeFail('mutateFavoriteForViewer');
+      const prefs = state.userPreferences[callerUid] ||= {};
+      const favorites = prefs.favoriteTrainers ||= {};
+      if (!favorites || typeof favorites !== 'object' || Array.isArray(favorites)) fail('conflict', 'favorite/state_invalid');
+      for (const record of Object.values(favorites)) {
+        if (!record || typeof record !== 'object' || Array.isArray(record) || !Number.isSafeInteger(record.revision) || record.revision < 1 || typeof record.deleted !== 'boolean') {
+          fail('conflict', 'favorite/state_invalid');
+        }
+      }
+      const current = favorites[trainerUid];
+      const revision = current?.revision || 0;
+      if (revision !== expectedRevision) fail('stale_state', 'favorite/revision_conflict');
+      if (operation === 'remove') {
+        if (!current) return { status: 'already_absent' };
+        if (current.deleted === true) return { status: 'already_removed' };
+        favorites[trainerUid] = {
+          trainerName: current.trainerName,
+          addedAt: current.addedAt,
+          revision: revision + 1,
+          updatedAt: now,
+          operationId,
+          deleted: true,
+          deletedAt: now
+        };
+        count('mutateFavoriteForViewer');
+        return { status: 'removed' };
+      }
+      if (current?.deleted === false) return { status: 'already_active' };
+      const activeCount = Object.values(favorites).filter((record) => record.deleted === false).length;
+      if (activeCount >= MAX_ACTIVE_FAVORITES) fail('payload_too_large', 'favorite/limit_reached');
+      favorites[trainerUid] = {
+        trainerName: canonicalTrainerLabel,
+        addedAt: Number.isSafeInteger(current?.addedAt) && current.addedAt >= 0 ? current.addedAt : now,
+        revision: revision + 1,
+        updatedAt: now,
+        operationId,
+        deleted: false
+      };
+      count('mutateFavoriteForViewer');
+      return { status: current ? 'restored' : 'added' };
+    });
+  }
   async function getAuthorizedTrainerShare({ callerUid, ownerUid }) {
     const mode = state.shareVisibility[ownerUid]?.mode;
     const allowed = mode === 'public' || callerUid === ownerUid || state.admins[callerUid] === true || (mode === 'approved_viewers' && state.shareAccess[ownerUid]?.[callerUid] === true);
@@ -158,7 +210,7 @@ function createInMemoryTrustedAdapter(seed = {}) {
 
   return Object.freeze({
     assertOperationEnabled, beginOperationRequest, completeOperationRequest, failOperationRequest,
-    reserveHandleForUid, claimTagForViewer, getAuthorizedTrainerShare,
+    reserveHandleForUid, claimTagForViewer, getCanonicalTrainerIdentity, mutateFavoriteForViewer, getAuthorizedTrainerShare,
     advanceHistoryForViewer, isKnownAccountUid, setViewerGrantForOwner,
     inspect: () => clone(state),
     mutationCounts: () => clone(mutationCounts),

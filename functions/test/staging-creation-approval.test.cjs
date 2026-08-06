@@ -70,11 +70,11 @@ test('cost model is deterministic for all requested MAU and activity scenarios',
   for (const mau of [100, 1000, 10000]) for (const activity of ['guarded', 'normal', 'high', 'abusive', 'catastrophic']) {
     assert.deepEqual(contract.costScenario(mau, activity), contract.costScenario(mau, activity));
   }
-  assert.equal(contract.costScenario(100, 'normal').invocations, 1055);
-  assert.equal(contract.costScenario(1000, 'high').invocations, 73100);
-  assert.equal(contract.costScenario(10000, 'abusive').invocations, 135900000);
-  assert.equal(contract.costScenario(100, 'guarded').invocations, 328);
-  assert.equal(contract.costScenario(100, 'catastrophic').invocations, 13590000);
+  assert.equal(contract.costScenario(100, 'normal').invocations, 1255);
+  assert.equal(contract.costScenario(1000, 'high').invocations, 88100);
+  assert.equal(contract.costScenario(10000, 'abusive').invocations, 195900000);
+  assert.equal(contract.costScenario(100, 'guarded').invocations, 428);
+  assert.equal(contract.costScenario(100, 'catastrophic').invocations, 19590000);
 });
 
 test('abusive activity exceeds high activity and retains bounded infrastructure assumptions', () => {
@@ -126,9 +126,9 @@ test('teardown covers every resource and persistent-cost category', () => {
 
 test('rules prerequisites retain exact reviewed hashes and disabled gates', () => {
   assert.equal(contract.RULE_HASHES.narrowReadBaseline, 'e0632a98ed106117f03e61da0446ef4b2c2e6ed02ea8c6f1c498a0e7edcb17bf');
-  assert.equal(contract.RULE_HASHES.additiveCandidate, 'cbcea2a672e1f9b1d6a4582410bb89bca765ca307c0495c7cc80ea35f805071c');
+  assert.equal(contract.RULE_HASHES.additiveCandidate, 'ba7322a59a4c3cf6b503dc52b1394313ac9421106a6c05fc6835200d49e3e72d');
   assert.equal(template.safety.bothWriteGatesFalse, true);
-  assert.match(docs, /44 passed, 0 failed/);
+  assert.match(docs, /45 passed, 0 failed/);
 });
 
 test('synthetic namespace excludes production-derived fixtures', () => {
@@ -147,7 +147,7 @@ test('App Check approval covers browser PWA debug observation enforcement and ro
 test('manual billing kill switch covers gates clients functions schedules and retained costs', () => {
   assert.match(docs, /Set both server write gates false/);
   assert.match(docs, /Disable every staging client invocation path/);
-  assert.match(docs, /Disable or delete the four staging Functions/);
+  assert.match(docs, /Disable or delete the five staging Functions/);
   assert.match(docs, /Artifact Registry storage/);
   assert.match(docs, /No automated billing-triggered shutdown/);
 });

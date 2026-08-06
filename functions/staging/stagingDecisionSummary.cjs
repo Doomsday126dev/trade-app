@@ -4,7 +4,7 @@ const APPROVAL_STATUS = 'undecided';
 
 const RULE_HASHES = Object.freeze({
   rollback: 'e0632a98ed106117f03e61da0446ef4b2c2e6ed02ea8c6f1c498a0e7edcb17bf',
-  additive: 'cbcea2a672e1f9b1d6a4582410bb89bca765ca307c0495c7cc80ea35f805071c'
+  additive: 'ba7322a59a4c3cf6b503dc52b1394313ac9421106a6c05fc6835200d49e3e72d'
 });
 
 const EXECUTION_APPROVAL_KEYS = Object.freeze([
@@ -50,7 +50,7 @@ const PROPOSED_CHOICES = Object.freeze({
     maximumUnexplainedLegitimateRejections: 0,
     enforcementRequiresSeparateApproval: true
   }),
-  runtimeIdentityStrategy: 'one_dedicated_staging_runtime_service_account_for_four_callables',
+  runtimeIdentityStrategy: 'one_dedicated_staging_runtime_service_account_for_five_callables',
   deploymentIdentityStrategy: 'separate_deployment_service_account_with_short_lived_impersonation',
   rulesReviewStrategy: 'same_named_human_two_separately_recorded_procedural_steps_initially',
   iam: Object.freeze({

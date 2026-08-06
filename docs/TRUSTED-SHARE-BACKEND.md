@@ -117,7 +117,7 @@ the trusted backend. The rules documentation must not claim otherwise.
 - Live narrow-read baseline:
   `e0632a98ed106117f03e61da0446ef4b2c2e6ed02ea8c6f1c498a0e7edcb17bf`
 - Additive candidate:
-  `cbcea2a672e1f9b1d6a4582410bb89bca765ca307c0495c7cc80ea35f805071c`
+  `ba7322a59a4c3cf6b503dc52b1394313ac9421106a6c05fc6835200d49e3e72d`
 - Preferred rollback is the live narrow-read baseline above. The historical
   broad-read artifact is not the rollback target for this additive change.
 
@@ -230,10 +230,10 @@ candidate.
 
 ## Backend emulator gate
 
-Preference activation remains blocked even after this backend gate passes:
-RTDB Rules cannot strictly reconcile the arbitrary Favorite-map count. A narrow
-trusted Favorite mutation callable is the current recommendation and requires a
-separate design, implementation, emulator, deployment, and activation approval.
+RTDB Rules cannot strictly reconcile the arbitrary Favorite-map count. The
+local `mutateFavoriteTrainer` candidate now performs that real-map transaction,
+but preference activation remains blocked pending its emulator evidence,
+deployment, staging canary, and activation approvals.
 
 Before any callable implementation is deployable, the Functions/Auth/RTDB
 Emulator Suite must exercise authenticated owner, ordinary user, protected

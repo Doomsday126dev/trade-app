@@ -87,7 +87,7 @@ bound operation volume more directly than the instance cap.
 ### 4. Functions region
 
 - **Recommend:** keep `FUNCTIONS_REGION=<REGION>` tracked, then resolve it to the
-  approved RTDB-colocated Gen 2 region. Initially run all four callables in one
+  approved RTDB-colocated Gen 2 region. Initially run all five callables in one
   region.
 - **Alternative:** a nearby supported Gen 2 region only if exact colocation is
   unavailable and its latency/transfer impact is approved.
@@ -147,12 +147,12 @@ valid-client rejection returns enforcement to off while gates remain false.
 
 ### 7. Runtime service account
 
-- **Recommend:** `<APP_SLUG>-trusted-runtime-staging`, unique to these four fixed
+- **Recommend:** `<APP_SLUG>-trusted-runtime-staging`, unique to these five fixed
   callables.
 - **Alternative:** one runtime identity per callable after adapters or trust
   boundaries materially diverge.
-- **Why:** all four currently use the same bounded mutation roots and controls;
-  four service accounts add operational burden without meaningful path-level
+- **Why:** all five currently use the same bounded mutation roots and controls;
+  five service accounts add operational burden without meaningful path-level
   isolation because RTDB IAM is instance-wide.
 - **Permissions/danger:** runtime-only
   `roles/firebasedatabase.admin`, `roles/firebaseappcheck.tokenVerifier`, and
@@ -284,16 +284,16 @@ artifacts, and egress do. Official pricing was reviewed on 2026-08-05 and must
 be reverified from the sources in the staging-creation approval package before
 any resource is created.
 
-| Scenario | Calls per MAU-month: handle / tag / history / viewer | Safeguards assumed | Meaning |
+| Scenario | Calls per MAU-month: handle / tag / Favorite / history / viewer | Safeguards assumed | Meaning |
 | --- | --- | --- | --- |
-| Guarded | `0.03 / 1 / 2 / 0.25` | Gates opened only for tested work, App Check, limits, idempotency, no passive/login/poll calls | Recommended lower-risk launch sensitivity |
-| Normal | `0.05 / 2 / 8 / 0.5` | All safeguards active | Product-planning sensitivity, not a staging target |
-| High | `0.1 / 10 / 60 / 3` | All safeguards active but users invoke features frequently | High legitimate-use sensitivity |
-| Bounded abuse | `90 / 3,000 / 9,000 / 1,500` | Per-UID limits active but **every MAU reaches every daily ceiling for 30 days** | Deliberately severe incident case, not likely behavior |
-| Catastrophic safeguards-disabled | effective `900 / 30,000 / 90,000 / 15,000` attempted demand | 10x runaway retry/automation; gates, limits, and effective App Check rejection are absent, failed, or bypassed; the instance cap is not assumed effective for the full range | Catastrophic demand envelope only |
+| Guarded | `0.03 / 1 / 1 / 2 / 0.25` | Gates opened only for tested work, App Check, limits, idempotency, no passive/login/poll calls | Recommended lower-risk launch sensitivity |
+| Normal | `0.05 / 2 / 2 / 8 / 0.5` | All safeguards active | Product-planning sensitivity, not a staging target |
+| High | `0.1 / 10 / 15 / 60 / 3` | All safeguards active but users invoke features frequently | High legitimate-use sensitivity |
+| Bounded abuse | `90 / 3,000 / 6,000 / 9,000 / 1,500` | Per-UID limits active but **every MAU reaches every daily ceiling for 30 days** | Deliberately severe incident case, not likely behavior |
+| Catastrophic safeguards-disabled | effective `900 / 30,000 / 60,000 / 90,000 / 15,000` attempted demand | 10x runaway retry/automation; gates, limits, and effective App Check rejection are absent, failed, or bypassed; the instance cap is not assumed effective for the full range | Catastrophic demand envelope only |
 
-All rows use one vCPU, 0.25 GiB, 250/180/350/180 ms average durations,
-6/4, 4/4, 8/4, and 7/3 RTDB reads/writes, 2 KiB per RTDB read, one
+All rows use one vCPU, 0.25 GiB, 250/180/200/350/180 ms average durations,
+6/4, 4/4, 6/3, 8/4, and 7/3 RTDB reads/writes, 2 KiB per RTDB read, one
 conservative App Check assessment, 1,600 log bytes, and 8 KiB egress per
 invocation. They use `minInstances: 0`, `maxInstances: 5`, concurrency 10, and
 a 30-second timeout. The model applies current published allowances, assumes
@@ -311,7 +311,7 @@ promise of throughput or cost.
 
 The catastrophic row multiplies demand by 10 and explicitly assumes operation
 limits and the other safeguards are absent or bypassed. Its 10,000-MAU value of
-about 1.359 billion attempted calls cannot all complete under an effective
+about 1.959 billion attempted calls cannot all complete under an effective
 five-instance, concurrency-10 cap at the modeled durations. That dollar range
 is therefore an uncapped attempted-demand stress envelope, not a completed
 Functions-work estimate. If the instance cap holds, completed compute is lower;
@@ -329,7 +329,7 @@ rapid shutdown make these incident rows remote rather than expected.
 | 10,000 | USD 8-20 | USD 15-35 | USD 640-750 | USD 136,000-150,000 | USD 1.36-1.50 million |
 
 At normal 1,000 MAU, the model's first meaningful charge is reCAPTCHA/App Check:
-10,550 conservative assessments cross the currently cited 10,000-assessment
+12,550 conservative assessments cross the currently cited 10,000-assessment
 allowance and contribute about USD 8. Modeled Cloud Run requests/compute,
 RTDB download, Logging, and Build remain inside cited allowances; Artifact
 Registry remains inside 0.5 GiB only if that allowance is available. The rest

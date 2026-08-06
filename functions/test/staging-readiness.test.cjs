@@ -51,7 +51,7 @@ test('rules and gate order keeps both capabilities disabled between canary group
     'deploy_additive_rules_gates_false', 'deploy_functions_gates_false',
     'verify_all_disabled_before_idempotency', 'enable_share_visibility_staging_only',
     'canary_handle_and_approved_viewer', 'disable_share_visibility',
-    'enable_trainer_preferences_staging_only', 'canary_tags_and_history',
+    'enable_trainer_preferences_staging_only', 'canary_favorites_tags_and_history',
     'disable_trainer_preferences', 'review_evidence_before_simultaneous_enablement'
   ]);
   assert.match(docs, /No\s+callable can change its gate/);
@@ -73,6 +73,7 @@ test('synthetic fixtures are deterministic, fake, gated off, and independently d
   assert.equal(first.authUsers.every((user) => user.email.endsWith('@example.invalid')), true);
   assert.equal(first.rtdb.shareVisibilityConfig.writesEnabled, false);
   assert.equal(first.rtdb.trainerPreferencesConfig.writesEnabled, false);
+  assert.equal(first.rtdb.trainerPreferencesConfig.readsEnabled, false);
   assert.equal(new Set(first.resetRoots).size, first.resetRoots.length);
 });
 
@@ -127,7 +128,7 @@ test('cost model is deterministic and bounded for every requested MAU scenario',
     assert.equal(normal.appCheckAssessments, normal.invocations);
     assert.equal(high.structuredLogEvents, high.invocations * 2);
   }
-  assert.deepEqual(contract.workloadFor(100, 'normal').byOperation, { reserveTrainerHandle: 5, claimTrainerTagLabel: 200, verifyTrainerHistory: 800, setApprovedViewer: 50 });
+  assert.deepEqual(contract.workloadFor(100, 'normal').byOperation, { reserveTrainerHandle: 5, claimTrainerTagLabel: 200, mutateFavoriteTrainer: 200, verifyTrainerHistory: 800, setApprovedViewer: 50 });
 });
 
 test('monitoring plan has identity-free tiny-traffic thresholds and kill switches', () => {

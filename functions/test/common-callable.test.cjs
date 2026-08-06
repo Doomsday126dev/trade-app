@@ -5,7 +5,7 @@ const assert = require('node:assert/strict');
 const { createCallableHandler } = require('../src/callable/common');
 const { createRedactedLogger } = require('../src/domain/redactedLogging');
 const { emulatorBypassAllowed, firebaseAdminOptions } = require('../src/domain/runtimePolicy');
-const { harness, requestId } = require('./helpers.cjs');
+const { favoriteRequest, harness, requestId } = require('./helpers.cjs');
 
 function wrapped(env = {}, sink = { values: [], info(value) { this.values.push(value); } }) {
   const { operations } = harness();
@@ -51,6 +51,22 @@ test('logs contain only redacted allowlisted metadata', async () => {
   const logged = sink.values.join('\n');
   assert.doesNotMatch(logged, /SecretHandle|newuid_logs|secret-app|secret-token|requestedHandle/);
   assert.match(logged, /reserveTrainerHandle/);
+});
+
+test('Favorite logs and public errors expose no labels UIDs or payloads', async () => {
+  const sink = { values: [], info(value) { this.values.push(value); } };
+  const { operations } = harness();
+  const handler = createCallableHandler({ operation: 'mutateFavoriteTrainer', invoke: operations.mutateFavoriteTrainer, logger: createRedactedLogger(sink), env: {}, makePublicError: (value) => value });
+  await handler({ data: favoriteRequest(), auth: { uid: 'viewer_001' }, app: { appId: 'private-app' } });
+  const logged = sink.values.join('\n');
+  assert.match(logged, /mutateFavoriteTrainer/);
+  assert.doesNotMatch(logged, /OwnerOne|owner_001|viewer_001|private-app|canonicalTrainerLabel|trainerUid|favoriteTrainers/);
+  await assert.rejects(handler({ data: favoriteRequest({ canonicalTrainerLabel: 'Private Alias', requestId: requestId('private-error') }), auth: { uid: 'viewer_001' }, app: { appId: 'private-app' } }), (error) => {
+    assert.equal(error.code, 'conflict');
+    assert.equal(error.reason, 'favorite/identity_mismatch');
+    assert.doesNotMatch(JSON.stringify(error), /Private Alias|owner_001|viewer_001/);
+    return true;
+  });
 });
 
 test('raw internal errors are mapped to stable internal errors', async () => {

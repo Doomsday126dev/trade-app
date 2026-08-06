@@ -3,6 +3,7 @@
 const CALLABLES = Object.freeze([
   'reserveTrainerHandle',
   'claimTrainerTagLabel',
+  'mutateFavoriteTrainer',
   'verifyTrainerHistory',
   'setApprovedViewer'
 ]);
@@ -54,6 +55,10 @@ const PATH_MATRIX = Object.freeze({
     reads: Object.freeze(['trainerPreferencesConfig/writesEnabled', 'userPreferences/{callerUid}/trainerTags/{tagId}', 'userPreferences/{callerUid}/trainerTagLabels/{normalizedLabelKey}', 'trustedOperationRequests/{callerUid}/claimTrainerTagLabel/{requestId}']),
     writes: Object.freeze(['userPreferences/{callerUid}/trainerTags/{tagId}', 'userPreferences/{callerUid}/trainerTagLabels/{normalizedLabelKey}', 'trustedOperationRequests/{callerUid}/claimTrainerTagLabel/{requestId}'])
   }),
+  mutateFavoriteTrainer: Object.freeze({
+    reads: Object.freeze(['trainerPreferencesConfig/writesEnabled', 'accounts/{trainerUid}', 'shareDirectory/{normalizedTrainerName}', 'userPreferences/{callerUid}/favoriteTrainers', 'trustedOperationRequests/{callerUid}/mutateFavoriteTrainer/{requestId}']),
+    writes: Object.freeze(['userPreferences/{callerUid}/favoriteTrainers', 'trustedOperationRequests/{callerUid}/mutateFavoriteTrainer/{requestId}'])
+  }),
   verifyTrainerHistory: Object.freeze({
     reads: Object.freeze(['trainerPreferencesConfig/writesEnabled', 'trainerShares/{ownerUid}', 'shareVisibility/{ownerUid}/mode', 'shareAccess/{ownerUid}/{callerUid}', 'admins/{callerUid}', 'userPreferences/{callerUid}/trainerHistory/{ownerUid}', 'trustedOperationRequests/{callerUid}/verifyTrainerHistory/{requestId}']),
     writes: Object.freeze(['userPreferences/{callerUid}/trainerHistory/{ownerUid}', 'trustedOperationRequests/{callerUid}/verifyTrainerHistory/{requestId}'])
@@ -72,7 +77,7 @@ const GATE_SEQUENCE = Object.freeze([
   'canary_handle_and_approved_viewer',
   'disable_share_visibility',
   'enable_trainer_preferences_staging_only',
-  'canary_tags_and_history',
+  'canary_favorites_tags_and_history',
   'disable_trainer_preferences',
   'review_evidence_before_simultaneous_enablement'
 ]);
@@ -80,6 +85,7 @@ const GATE_SEQUENCE = Object.freeze([
 const RATE_LIMITS = Object.freeze({
   reserveTrainerHandle: Object.freeze({ shortWindowSeconds: 3600, shortLimit: 2, dailyLimit: 3 }),
   claimTrainerTagLabel: Object.freeze({ shortWindowSeconds: 600, shortLimit: 20, dailyLimit: 100 }),
+  mutateFavoriteTrainer: Object.freeze({ shortWindowSeconds: 600, shortLimit: 40, dailyLimit: 300 }),
   verifyTrainerHistory: Object.freeze({ shortWindowSeconds: 600, shortLimit: 30, dailyLimit: 300 }),
   setApprovedViewer: Object.freeze({ shortWindowSeconds: 600, shortLimit: 10, dailyLimit: 50 }),
   keyShape: 'trustedRateLimits/{callerUid}/{operation}/{windowKey}',
@@ -91,18 +97,20 @@ const RATE_LIMITS = Object.freeze({
 const CANARIES = Object.freeze({
   reserveTrainerHandle: Object.freeze(['valid_reservation', 'same_owner_replay', 'collision', 'malformed_or_confusable', 'replay_mismatch', 'gate_disabled']),
   claimTrainerTagLabel: Object.freeze(['create', 'exact_replay', 'duplicate_normalized_label', 'rename', 'rename_collision', 'soft_delete', 'cross_viewer_denial', 'gate_disabled']),
+  mutateFavoriteTrainer: Object.freeze(['add', 'exact_replay', 'operation_id_reused', 'remove_tombstone', 'restore', 'stale_revision', 'favorite_limit', 'concurrent_adds', 'cross_viewer_denial', 'gate_disabled']),
   verifyTrainerHistory: Object.freeze(['valid_snapshot', 'count_mismatch', 'oversized_snapshot', 'stale_version', 'same_version_conflict', 'exact_replay', 'restricted_source_denial', 'gate_disabled']),
   setApprovedViewer: Object.freeze(['grant', 'exact_replay', 'self_grant_denial', 'cross_owner_denial', 'revoke', 'immediate_read_denial_after_revoke', 'gate_disabled']),
   evidence: Object.freeze(['expected_result', 'changed_roots', 'unchanged_roots', 'redacted_log', 'idempotency_status', 'teardown_status'])
 });
 
 const COST_ASSUMPTIONS = Object.freeze({
-  perMauNormal: Object.freeze({ reserveTrainerHandle: 0.05, claimTrainerTagLabel: 2, verifyTrainerHistory: 8, setApprovedViewer: 0.5 }),
-  perMauHigh: Object.freeze({ reserveTrainerHandle: 0.1, claimTrainerTagLabel: 10, verifyTrainerHistory: 60, setApprovedViewer: 3 }),
-  averageDurationMs: Object.freeze({ reserveTrainerHandle: 250, claimTrainerTagLabel: 180, verifyTrainerHistory: 350, setApprovedViewer: 180 }),
+  perMauNormal: Object.freeze({ reserveTrainerHandle: 0.05, claimTrainerTagLabel: 2, mutateFavoriteTrainer: 2, verifyTrainerHistory: 8, setApprovedViewer: 0.5 }),
+  perMauHigh: Object.freeze({ reserveTrainerHandle: 0.1, claimTrainerTagLabel: 10, mutateFavoriteTrainer: 15, verifyTrainerHistory: 60, setApprovedViewer: 3 }),
+  averageDurationMs: Object.freeze({ reserveTrainerHandle: 250, claimTrainerTagLabel: 180, mutateFavoriteTrainer: 200, verifyTrainerHistory: 350, setApprovedViewer: 180 }),
   rtdbOperations: Object.freeze({
     reserveTrainerHandle: Object.freeze({ reads: 6, writes: 4 }),
     claimTrainerTagLabel: Object.freeze({ reads: 4, writes: 4 }),
+    mutateFavoriteTrainer: Object.freeze({ reads: 6, writes: 3 }),
     verifyTrainerHistory: Object.freeze({ reads: 8, writes: 4 }),
     setApprovedViewer: Object.freeze({ reads: 7, writes: 3 })
   }),
@@ -185,7 +193,7 @@ const APPROVALS = Object.freeze([
 const COMMAND_TEMPLATES = Object.freeze({
   verifyProject: "firebase projects:list # manually confirm <STAGING_PROJECT_ID>",
   deployRules: "firebase deploy --only database --project <STAGING_PROJECT_ID> --config <STAGING_FIREBASE_CONFIG>",
-  deployFunctions: "TRUSTED_FUNCTIONS_REGION=<REGION> TRUSTED_FUNCTIONS_RUNTIME_SERVICE_ACCOUNT=<RUNTIME_SERVICE_ACCOUNT> firebase deploy --only functions:reserveTrainerHandle,functions:claimTrainerTagLabel,functions:verifyTrainerHistory,functions:setApprovedViewer --project <STAGING_PROJECT_ID> --config <STAGING_FIREBASE_CONFIG>"
+  deployFunctions: "TRUSTED_FUNCTIONS_REGION=<REGION> TRUSTED_FUNCTIONS_RUNTIME_SERVICE_ACCOUNT=<RUNTIME_SERVICE_ACCOUNT> firebase deploy --only functions:reserveTrainerHandle,functions:claimTrainerTagLabel,functions:mutateFavoriteTrainer,functions:verifyTrainerHistory,functions:setApprovedViewer --project <STAGING_PROJECT_ID> --config <STAGING_FIREBASE_CONFIG>"
 });
 
 module.exports = Object.freeze({

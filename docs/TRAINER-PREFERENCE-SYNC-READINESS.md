@@ -232,10 +232,10 @@ Least-privilege recommendation:
   and migration metadata. Rules fully enforce exact UID ownership, allowlisted
   fields, revisions, timestamps, operation IDs, tombstones, note/tag bounds,
   active tag references, fixed `00..29` Recents keys, and monotonic activity.
-- Favorite entity transactions currently have the same owner, shape, revision,
-  operation-ID, and tombstone enforcement, but **cannot be activated as direct
-  writes** because RTDB Rules cannot prove the arbitrary map contains at most
-  100 Favorites. This is the explicit activation blocker below.
+- Favorite entity writes are now modeled only through the undeployed
+  `mutateFavoriteTrainer` callable. Direct client writes remain denied because
+  RTDB Rules cannot prove the arbitrary map contains at most 100 Favorites.
+  The callable transacts the actual map and enforces the real active count.
 - Existing purpose-specific trusted callable `claimTrainerTagLabel`: NFKC tag
   uniqueness and atomic tag/claim create, rename, and tombstone with a required
   base revision and idempotency operation ID. Its authoritative transaction
@@ -244,10 +244,9 @@ Least-privilege recommendation:
   the source share, calculate true entry count and canonical fingerprints, and
   advance monotonic history with server-derived entity revisions.
 
-No new callable is implemented by this candidate. The existing callables remain
-undeployed and gate-disabled. Preference activation requires a separately
-reviewed Favorite-count solution; the recommendation is a narrow trusted
-Favorite mutation callable, not a generic path writer. If a later canary proves
+The narrow trusted Favorite mutation candidate is implemented locally but
+remains undeployed and gate-disabled. Preference activation still requires its
+separate rules, Functions, staging-canary, and gate approvals. If a later canary proves
 migration finalization cannot be safely expressed as exact owner transactions,
 a narrowly scoped `finalizePreferenceMigration` may also be separately designed.
 Auth administration, public-share writing, Approved-Viewer coupling, identity
@@ -255,9 +254,10 @@ repair, arbitrary paths, and bulk maps remain prohibited.
 
 ## Favorite Count Activation Decision
 
-Strict reconciliation of the arbitrary Favorite map is unresolved and blocks
-sync activation. Declared `favoriteCount` metadata is useful for diagnostics but
-is not a server-enforced map count and cannot make direct Favorite writes safe.
+Strict reconciliation is resolved in the local candidate through the narrow
+callable, but production activation remains blocked until that candidate is
+separately reviewed, deployed, and canaried. Declared `favoriteCount` metadata
+remains diagnostic only and cannot make direct Favorite writes safe.
 
 | Design | Correctness and concurrency | Enforcement and operations | Cost and migration |
 | --- | --- | --- | --- |
@@ -266,13 +266,12 @@ is not a server-enforced map count and cannot make direct Favorite writes safe.
 | Narrow trusted Favorite mutation callable | Transaction counts actual active records, enforces 100, applies exact revisions/tombstones, and makes idempotent offline replay observable. | Strongest practical correctness; fixed adapter and schema, no arbitrary path or bulk input. | One callable per mutation and modest transaction cost; simplest safe migration and telemetry. |
 | Declared count + periodic reconciliation | Concurrent hostile clients can exceed 100 before reconciliation; not strict. | Rules validate only the declaration. A trusted repair job would detect rather than prevent drift. | Lowest initial write cost, but recurring scans, ambiguous conflicts, and weak activation safety. |
 
-**Recommendation:** design, implement, emulator-test, and separately approve a
-narrow trusted Favorite mutation callable before enabling the preference gate
-or client flag. It must transact the caller's exact Favorite collection, enforce
-100 actual active records, preserve earliest `addedAt`, apply revisioned
-tombstones, support complete-fingerprint idempotency, and expose redacted
-operational metrics. This decision is not implemented here and grants no
-deployment or activation approval.
+**Decision:** use the implemented `mutateFavoriteTrainer` candidate and require
+its emulator, deployment, and canary approvals before enabling the preference
+gate or client flag. It transacts the caller's exact Favorite collection,
+enforces 100 actual active records, preserves earliest `addedAt`, applies
+revisioned tombstones, and uses complete-fingerprint idempotency with redacted
+operational metadata. This grants no deployment or activation approval.
 
 ## Rules And Read Boundaries
 
@@ -351,8 +350,8 @@ queue is not reused for preference sync.
 
 Before any production activation, separately approve and complete:
 
-1. Resolve the strict 100-Favorite reconciliation blocker through a separately
-   reviewed implementation, emulator suite, and deployment approval.
+1. Complete review, emulator validation, deployment approval, and staging
+   canaries for the strict 100-Favorite trusted mutation candidate.
 2. Additive rules deployment with the preference gate false.
 3. Trusted callable staging and synthetic canary validation.
 4. App Check, per-UID limits, logs, alerts, and rollback readiness.

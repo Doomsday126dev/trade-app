@@ -50,7 +50,7 @@ const APPROVAL_ITEMS = Object.freeze([
 
 const RULE_HASHES = Object.freeze({
   narrowReadBaseline: 'e0632a98ed106117f03e61da0446ef4b2c2e6ed02ea8c6f1c498a0e7edcb17bf',
-  additiveCandidate: 'cbcea2a672e1f9b1d6a4582410bb89bca765ca307c0495c7cc80ea35f805071c'
+  additiveCandidate: 'ba7322a59a4c3cf6b503dc52b1394313ac9421106a6c05fc6835200d49e3e72d'
 });
 
 const LOCATION_GUIDE = Object.freeze({
@@ -118,16 +118,17 @@ const OFFICIAL_PRICING = Object.freeze({
 
 const COST_ASSUMPTIONS = Object.freeze({
   operationsPerMau: Object.freeze({
-    guarded: Object.freeze({ reserveTrainerHandle: 0.03, claimTrainerTagLabel: 1, verifyTrainerHistory: 2, setApprovedViewer: 0.25 }),
-    normal: Object.freeze({ reserveTrainerHandle: 0.05, claimTrainerTagLabel: 2, verifyTrainerHistory: 8, setApprovedViewer: 0.5 }),
-    high: Object.freeze({ reserveTrainerHandle: 0.1, claimTrainerTagLabel: 10, verifyTrainerHistory: 60, setApprovedViewer: 3 }),
-    abusive: Object.freeze({ reserveTrainerHandle: 90, claimTrainerTagLabel: 3000, verifyTrainerHistory: 9000, setApprovedViewer: 1500 }),
-    catastrophic: Object.freeze({ reserveTrainerHandle: 90, claimTrainerTagLabel: 3000, verifyTrainerHistory: 9000, setApprovedViewer: 1500 })
+    guarded: Object.freeze({ reserveTrainerHandle: 0.03, claimTrainerTagLabel: 1, mutateFavoriteTrainer: 1, verifyTrainerHistory: 2, setApprovedViewer: 0.25 }),
+    normal: Object.freeze({ reserveTrainerHandle: 0.05, claimTrainerTagLabel: 2, mutateFavoriteTrainer: 2, verifyTrainerHistory: 8, setApprovedViewer: 0.5 }),
+    high: Object.freeze({ reserveTrainerHandle: 0.1, claimTrainerTagLabel: 10, mutateFavoriteTrainer: 15, verifyTrainerHistory: 60, setApprovedViewer: 3 }),
+    abusive: Object.freeze({ reserveTrainerHandle: 90, claimTrainerTagLabel: 3000, mutateFavoriteTrainer: 6000, verifyTrainerHistory: 9000, setApprovedViewer: 1500 }),
+    catastrophic: Object.freeze({ reserveTrainerHandle: 90, claimTrainerTagLabel: 3000, mutateFavoriteTrainer: 6000, verifyTrainerHistory: 9000, setApprovedViewer: 1500 })
   }),
-  durationMs: Object.freeze({ reserveTrainerHandle: 250, claimTrainerTagLabel: 180, verifyTrainerHistory: 350, setApprovedViewer: 180 }),
+  durationMs: Object.freeze({ reserveTrainerHandle: 250, claimTrainerTagLabel: 180, mutateFavoriteTrainer: 200, verifyTrainerHistory: 350, setApprovedViewer: 180 }),
   rtdbOperations: Object.freeze({
     reserveTrainerHandle: Object.freeze({ reads: 6, writes: 4 }),
     claimTrainerTagLabel: Object.freeze({ reads: 4, writes: 4 }),
+    mutateFavoriteTrainer: Object.freeze({ reads: 6, writes: 3 }),
     verifyTrainerHistory: Object.freeze({ reads: 8, writes: 4 }),
     setApprovedViewer: Object.freeze({ reads: 7, writes: 3 })
   }),

@@ -5,7 +5,7 @@ const { fail } = require('./errors');
 const { fingerprint } = require('./fingerprints');
 const { runIdempotent } = require('./idempotency');
 const { normalizeHandle, normalizeTagLabel } = require('./normalization');
-const { boundedPayload, exactFields, publicSnapshot, requestId, safeInteger, tagId, uid } = require('./validation');
+const { boundedPayload, exactFields, publicSnapshot, requestId, safeInteger, tagId, trainerLabel, uid } = require('./validation');
 
 const MAX_SMALL_PAYLOAD = 4096;
 const MAX_HISTORY_PAYLOAD = 256 * 1024;
@@ -52,6 +52,33 @@ function createTrustedOperations({ adapter, now = Date.now }) {
       execute: async () => {
         const state = await adapter.claimTagForViewer({ callerUid, action, tagId: stableTagId, label, baseRevision, operationId: id, now: now() });
         return operationResult('claimTrainerTagLabel', state.status);
+      }
+    });
+  }
+
+  async function mutateFavoriteTrainer(data, context) {
+    const callerUid = requireAuth(context);
+    await adapter.assertOperationEnabled('trainer_preferences');
+    exactFields(data, ['operation', 'trainerUid', 'canonicalTrainerLabel', 'expectedRevision', 'requestId', 'schemaVersion']);
+    boundedPayload(data, MAX_SMALL_PAYLOAD);
+    const operation = String(data.operation);
+    if (!['add', 'remove'].includes(operation)) fail('invalid_argument', 'favorite/operation_invalid');
+    if (data.schemaVersion !== 1) fail('invalid_argument', 'favorite/schema_unsupported');
+    const id = requestId(data.requestId);
+    const trainerUid = uid(data.trainerUid, 'favorite/trainer_uid_invalid');
+    const canonicalTrainerLabel = trainerLabel(data.canonicalTrainerLabel);
+    const expectedRevision = safeInteger(data.expectedRevision, 0, Number.MAX_SAFE_INTEGER, 'favorite/revision_invalid');
+    return runIdempotent({
+      adapter, callerUid, operation: 'mutateFavoriteTrainer', requestId: id,
+      requestFingerprint: fingerprint({ operation, trainerUid, canonicalTrainerLabel, expectedRevision, schemaVersion: 1 }), now,
+      execute: async () => {
+        const identity = await adapter.getCanonicalTrainerIdentity(trainerUid);
+        if (!identity || identity.trainerName !== canonicalTrainerLabel) fail('conflict', 'favorite/identity_mismatch');
+        const state = await adapter.mutateFavoriteForViewer({
+          callerUid, operation, trainerUid, canonicalTrainerLabel,
+          expectedRevision, operationId: id, now: now()
+        });
+        return operationResult('mutateFavoriteTrainer', state.status);
       }
     });
   }
@@ -110,7 +137,7 @@ function createTrustedOperations({ adapter, now = Date.now }) {
     });
   }
 
-  return Object.freeze({ reserveTrainerHandle, claimTrainerTagLabel, verifyTrainerHistory, setApprovedViewer });
+  return Object.freeze({ reserveTrainerHandle, claimTrainerTagLabel, mutateFavoriteTrainer, verifyTrainerHistory, setApprovedViewer });
 }
 
 module.exports = { createTrustedOperations, MAX_HISTORY_PAYLOAD, MAX_SMALL_PAYLOAD };

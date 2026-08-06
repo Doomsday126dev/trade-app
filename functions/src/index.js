@@ -10,6 +10,7 @@ const { createTrustedOperations } = require('./domain/trustedOperations');
 
 const createReserveTrainerHandle = require('./callable/reserveTrainerHandle');
 const createClaimTrainerTagLabel = require('./callable/claimTrainerTagLabel');
+const createMutateFavoriteTrainer = require('./callable/mutateFavoriteTrainer');
 const createVerifyTrainerHistory = require('./callable/verifyTrainerHistory');
 const createSetApprovedViewer = require('./callable/setApprovedViewer');
 
@@ -34,5 +35,6 @@ const options = Object.freeze({ region: 'us-east1', enforceAppCheck: appCheckReq
 
 exports.reserveTrainerHandle = onCall(options, createReserveTrainerHandle({ operations, logger, makePublicError }));
 exports.claimTrainerTagLabel = onCall(options, createClaimTrainerTagLabel({ operations, logger, makePublicError }));
+exports.mutateFavoriteTrainer = onCall(options, createMutateFavoriteTrainer({ operations, logger, makePublicError }));
 exports.verifyTrainerHistory = onCall(options, createVerifyTrainerHistory({ operations, logger, makePublicError }));
 exports.setApprovedViewer = onCall(options, createSetApprovedViewer({ operations, logger, makePublicError }));

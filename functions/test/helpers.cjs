@@ -51,9 +51,20 @@ function historyRequest(overrides = {}) {
   const snapshot = snapshotFromTrainerShare(share);
   return { ownerUid: IDS.owner, shareVersion: share.shareVersion, shareUpdatedAt: share.updatedAt, declaredEntryCount: Object.keys(snapshot).length, publicSnapshot: snapshot, requestId: requestId('history'), ...overrides };
 }
+function favoriteRequest(overrides = {}) {
+  return {
+    operation: 'add',
+    trainerUid: IDS.owner,
+    canonicalTrainerLabel: 'OwnerOne',
+    expectedRevision: 0,
+    requestId: requestId('favorite'),
+    schemaVersion: 1,
+    ...overrides
+  };
+}
 
 async function rejectsCode(promise, code, reason) {
   await require('node:assert/strict').rejects(promise, (error) => error?.code === code && (!reason || error?.reason === reason));
 }
 
-module.exports = { IDS, context, harness, historyRequest, rejectsCode, requestId, seed, tagRequest };
+module.exports = { IDS, context, favoriteRequest, harness, historyRequest, rejectsCode, requestId, seed, tagRequest };

@@ -54,6 +54,11 @@
       const item=Object.values(state.operations).filter(value=>value.status!=='acknowledged'&&value.attempts<domain.MAX_RETRY_ATTEMPTS&&Number(value.nextAttemptAt||0)<=timestamp).sort((a,b)=>a.operation.createdAt-b.operation.createdAt||a.operation.operationId.localeCompare(b.operation.operationId))[0];
       return Object.freeze({ok:true,status:item?'ready':'empty',operation:item?Object.freeze(clone(item.operation)):null});
     }
+    function nextFavoriteDispatch(activeIdentity){
+      const ready=next(activeIdentity);if(!ready.ok||!ready.operation)return ready;
+      const dispatch=domain.favoriteCallableRequest(ready.operation);if(!dispatch.ok)return dispatch;
+      return Object.freeze({ok:true,status:'ready',callable:dispatch.callable,request:dispatch.request,operationFingerprint:dispatch.operationFingerprint});
+    }
     function recordAttempt(operationId,{retryable=true,errorCode='sync-error'}={}){
       if(!enabled()||!active)return error('trainer-preference-sync/disabled','Preference synchronization is disabled');
       const state=read(),item=state.operations[operationId];if(!item)return error('trainer-preference-sync/operation-missing','Queued operation was not found');
@@ -71,7 +76,7 @@
     function suspend(){active=false;return Object.freeze({ok:true,status:'suspended'});}
     function resume(activeIdentity){if(!same(identity(activeIdentity),partition))return error('trainer-preference-sync/owner-mismatch','Another account cannot resume this queue');active=true;return Object.freeze({ok:true,status:'resumed'});}
     function snapshot(){const state=read(),items=Object.values(state.operations);return Object.freeze({ownerBound:true,enabled:enabled(),active,pendingCount:items.filter(item=>item.status==='pending').length,conflictCount:items.filter(item=>item.status==='conflict').length,operationCount:items.length,privateValuesExposed:false});}
-    return Object.freeze({key,enabled:enabled(),enqueue,next,recordAttempt,acknowledge,suspend,resume,snapshot});
+    return Object.freeze({key,enabled:enabled(),enqueue,next,nextFavoriteDispatch,recordAttempt,acknowledge,suspend,resume,snapshot});
   }
   root.trainerPreferenceSyncQueue=Object.freeze({PREFIX,createTrainerPreferenceSyncQueue});
 })(window);

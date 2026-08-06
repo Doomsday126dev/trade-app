@@ -60,6 +60,7 @@ async function seed(){
     shareVisibility:{[IDS.ordinary]:{mode:'public'}},
     shareAccess:{[IDS.ordinary]:{[IDS.other]:true}},
     trainerShares:{[IDS.ordinary]:{schemaVersion:1,trainerName:ordinary}},
+    trainerPreferencesConfig:{readsEnabled:true,writesEnabled:false},
     userPreferences:{[IDS.ordinary]:{favoriteTrainers:{[IDS.other]:{trainerName:other,addedAt:100}}}},
     accounts:{[IDS.ordinary]:{trainerName:ordinary}},
     privateProfiles:{[IDS.ordinary]:{email:'private@example.test'}},

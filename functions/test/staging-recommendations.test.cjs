@@ -74,7 +74,7 @@ test('Functions region stays unresolved and requires source parameterization', (
   assert.equal(template.decisions.FUNCTIONS_REGION.value, '<REGION>');
   assert.match(doc, /us-east1.*not approval/s);
   assert.match(doc, /must be parameterized/);
-  assert.match(doc, /all four callables in one\s+region/i);
+  assert.match(doc, /all five callables in one\s+region/i);
 });
 
 test('staging web app recommendation keeps production configuration untracked', () => {
@@ -108,7 +108,7 @@ test('instance-wide RTDB IAM risk keeps required compensating controls', () => {
   for (const value of ['isolated staging', 'fixed adapters', 'disabled gates', 'App Check', 'idempotency/rate limits', 'mutation-root']) {
     assert.ok(doc.includes(value));
   }
-  assert.match(doc, /four service accounts add operational burden/);
+  assert.match(doc, /five service accounts add operational burden/);
 });
 
 test('budget recommendation compares five ten and twenty-five dollars', () => {
@@ -155,7 +155,7 @@ test('expected staging spend uses ranges and never promises zero', () => {
 test('cost scenarios retain ranges assumptions and service attribution', () => {
   for (const label of ['Guarded', 'Normal', 'High', 'Bounded abuse', 'Catastrophic safeguards-disabled']) assert.ok(doc.includes(label));
   assert.match(doc, /sensitivity and incident-planning estimates, not expected\s+bills or quotes/i);
-  assert.match(doc, /10,550 conservative assessments/);
+  assert.match(doc, /12,550 conservative assessments/);
   assert.match(doc, /about USD 8/);
   assert.match(doc, /USD 0-12 uncertainty buffer/);
   assert.match(doc, /not a vague aggregate Firebase charge/);
@@ -171,7 +171,7 @@ test('bounded and catastrophic scenarios state their failed safeguard assumption
   assert.match(doc, /absent, failed, or bypassed/);
   assert.match(doc, /does \*\*not\*\* impose a hard monthly bill/);
   assert.match(doc, /roughly 442 million\s+completed calls/);
-  assert.match(doc, /1\.359 billion attempted calls cannot all complete/);
+  assert.match(doc, /1\.959 billion attempted calls cannot all complete/);
   assert.match(doc, /uncapped attempted-demand stress envelope/);
 });
 

@@ -7,7 +7,7 @@
     "node": "22"
   },
   "scripts": {
-    "test": "node --test test/approved-viewer.test.cjs test/common-callable.test.cjs test/handle.test.cjs test/history.test.cjs test/safety-contract.test.cjs test/tags.test.cjs",
+    "test": "node --test test/approved-viewer.test.cjs test/common-callable.test.cjs test/favorites.test.cjs test/handle.test.cjs test/history.test.cjs test/safety-contract.test.cjs test/tags.test.cjs",
     "test:emulator": "node --test --test-concurrency=1 test/emulator-contract.test.cjs",
     "check:contract": "node scripts/check-contract.cjs"
   },

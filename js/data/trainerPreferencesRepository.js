@@ -7,7 +7,6 @@
     return clean;
   }
   function disabled(){return Object.freeze({ok:false,error:Object.freeze({code:'trainer-preferences/disabled'})});}
-  function favoritePayload(value={}){return{trainerName:String(value.trainerName||''),addedAt:Number(value.addedAt),revision:Number(value.revision),updatedAt:Number(value.updatedAt),operationId:key(value.operationId,'Operation ID'),deleted:value.deleted===true,...(value.deleted===true?{deletedAt:Number(value.deletedAt)}:{})};}
   function trainerMetadataPayload(value={}){
     const ids=Array.isArray(value.tagIds)?value.tagIds:Object.entries(value.tagIds||{}).filter(([,active])=>active===true).map(([id])=>id);
     return{note:String(value.note||''),tagIds:Object.fromEntries([...new Set(ids.map(id=>key(id,'Tag ID')))].sort().map(id=>[id,true])),revision:Number(value.revision),updatedAt:Number(value.updatedAt),operationId:key(value.operationId,'Operation ID'),deleted:value.deleted===true,...(value.deleted===true?{deletedAt:Number(value.deletedAt)}:{})};
@@ -37,7 +36,6 @@
     if(writesEnabled===true){
       if(typeof transactionExact!=='function')throw new TypeError('Enabled preference writes require an exact transaction adapter');
       Object.assign(repository,{
-        mutateFavorite:(viewerUid,ownerUid,updater)=>transactionExact(`${base(viewerUid)}/favoriteTrainers/${key(ownerUid,'Owner UID')}`,updater),
         mutateTrainerMetadata:(viewerUid,ownerUid,updater)=>transactionExact(`${base(viewerUid)}/trainerMetadata/${key(ownerUid,'Owner UID')}`,updater),
         mergeRecents:(viewerUid,updater)=>transactionExact(`${base(viewerUid)}/recentTrainerSlots`,updater),
         mutateMetadata:(viewerUid,updater)=>transactionExact(`${base(viewerUid)}/metadata`,updater)
@@ -46,5 +44,5 @@
     return Object.freeze(repository);
   }
 
-  root.trainerPreferencesRepository=Object.freeze({createTrainerPreferencesRepository,favoritePayload,trainerMetadataPayload,metadataPayload});
+  root.trainerPreferencesRepository=Object.freeze({createTrainerPreferencesRepository,trainerMetadataPayload,metadataPayload});
 })(window);

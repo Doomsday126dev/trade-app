@@ -1,6 +1,7 @@
 'use strict';
 
 const MAX_ACTIVE_TAGS = 24;
+const MAX_ACTIVE_FAVORITES = 100;
 
 const { fail } = require('../domain/errors');
 const { fingerprint } = require('../domain/fingerprints');
@@ -33,7 +34,8 @@ function createFirebaseTrustedAdapter({ database }) {
     database.ref(`trustedOperationRequests/${callerUid}/${operation}/${requestId}`);
 
   async function hydratedTransaction(ref, update) {
-    await ref.get();
+    if (typeof ref.once === 'function') await ref.once('value');
+    else await ref.get();
     return ref.transaction(update, undefined, false);
   }
 
@@ -159,6 +161,66 @@ function createFirebaseTrustedAdapter({ database }) {
     return { status };
   }
 
+  async function getCanonicalTrainerIdentity(trainerUid) {
+    const account = (await database.ref(`accounts/${trainerUid}`).get()).val();
+    if (!account?.trainerName || !account?.normalizedTrainerName) return null;
+    const directory = (await database.ref(`shareDirectory/${account.normalizedTrainerName}`).get()).val();
+    if (directory?.ownerUid !== trainerUid || directory?.trainerName !== account.trainerName) return null;
+    return { trainerName: account.trainerName };
+  }
+
+  async function mutateFavoriteForViewer({ callerUid, operation, trainerUid, canonicalTrainerLabel, expectedRevision, operationId, now }) {
+    let status = operation === 'add' ? 'added' : 'removed';
+    const result = await hydratedTransaction(database.ref(`userPreferences/${callerUid}/favoriteTrainers`), (value) => {
+      status = operation === 'add' ? 'added' : 'removed';
+      const favorites = value == null ? {} : deepClone(value);
+      if (!favorites || typeof favorites !== 'object' || Array.isArray(favorites)) { status = 'state_invalid'; return favorites; }
+      for (const record of Object.values(favorites)) {
+        if (!record || typeof record !== 'object' || Array.isArray(record) || !Number.isSafeInteger(record.revision) || record.revision < 1 || typeof record.deleted !== 'boolean') {
+          status = 'state_invalid'; return favorites;
+        }
+      }
+      const current = favorites[trainerUid];
+      const revision = current?.revision || 0;
+      if (revision !== expectedRevision) { status = 'stale_revision'; return favorites; }
+      if (operation === 'remove') {
+        if (!current) { status = 'already_absent'; return favorites; }
+        if (current.deleted === true) { status = 'already_removed'; return favorites; }
+        status = 'removed';
+        favorites[trainerUid] = {
+          trainerName: current.trainerName,
+          addedAt: current.addedAt,
+          revision: revision + 1,
+          updatedAt: now,
+          operationId,
+          deleted: true,
+          deletedAt: now
+        };
+        return favorites;
+      }
+      if (current?.deleted === false) { status = 'already_active'; return favorites; }
+      const activeCount = Object.values(favorites).filter((record) => record.deleted === false).length;
+      if (activeCount >= MAX_ACTIVE_FAVORITES) { status = 'limit_reached'; return favorites; }
+      status = current ? 'restored' : 'added';
+      favorites[trainerUid] = {
+        trainerName: canonicalTrainerLabel,
+        addedAt: Number.isSafeInteger(current?.addedAt) && current.addedAt >= 0 ? current.addedAt : now,
+        revision: revision + 1,
+        updatedAt: now,
+        operationId,
+        deleted: false
+      };
+      return favorites;
+    });
+    if (status === 'stale_revision') fail('stale_state', 'favorite/revision_conflict');
+    if (status === 'limit_reached') fail('payload_too_large', 'favorite/limit_reached');
+    if (status === 'state_invalid') fail('conflict', 'favorite/state_invalid');
+    if (!result.committed) {
+      fail('unavailable', 'favorite/transaction_failed');
+    }
+    return { status };
+  }
+
   async function getAuthorizedTrainerShare({ callerUid, ownerUid }) {
     const [shareSnap, visibilitySnap, accessSnap, adminSnap] = await Promise.all([
       database.ref(`trainerShares/${ownerUid}`).get(),
@@ -223,6 +285,8 @@ function createFirebaseTrustedAdapter({ database }) {
     failOperationRequest,
     reserveHandleForUid,
     claimTagForViewer,
+    getCanonicalTrainerIdentity,
+    mutateFavoriteForViewer,
     getAuthorizedTrainerShare,
     advanceHistoryForViewer,
     isKnownAccountUid,

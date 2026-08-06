@@ -74,6 +74,21 @@
     if(JSON.stringify(payload).length>MAX_OPERATION_JSON_LENGTH)return failure('trainer-preference-sync/payload-too-large','Operation payload is too large');
     return Object.freeze({ok:true,value:Object.freeze({operationId:id,kind,viewerUid,entityId,baseRevision,createdAt,schemaVersion,payload:Object.freeze(payload),fingerprint:fingerprint({kind,viewerUid,entityId,baseRevision,createdAt,schemaVersion,payload})})});
   }
+  function favoriteCallableRequest(rawOperation){
+    const normalized=normalizeOperation(rawOperation);if(!normalized.ok)return normalized;
+    const operation=normalized.value;
+    if(!['favorite-upsert','favorite-delete'].includes(operation.kind))return failure('trainer-preference-sync/kind-invalid','Favorite operation kind is invalid');
+    const canonicalTrainerLabel=text(operation.payload.trainerName);
+    if(!canonicalTrainerLabel||Array.from(canonicalTrainerLabel).length>64)return failure('trainer-preference-sync/favorite-invalid','Favorite payload is invalid');
+    return Object.freeze({ok:true,callable:'mutateFavoriteTrainer',request:Object.freeze({
+      operation:operation.kind==='favorite-upsert'?'add':'remove',
+      trainerUid:operation.entityId,
+      canonicalTrainerLabel,
+      expectedRevision:operation.baseRevision,
+      requestId:operation.operationId,
+      schemaVersion:SERVER_SCHEMA_VERSION
+    }),operationFingerprint:operation.fingerprint});
+  }
   function currentRevision(value){return integer(value?.revision)??0;}
   function exactReplay(current,operation){return!!current&&current.operationId===operation.operationId;}
   function nextRecord(current,operation,fields){
@@ -198,7 +213,7 @@
     const preview=stable({...normalized.value,serverRevision:baselineRevision});
     const migrationFingerprint=fingerprint({owner:{uid:identityText(activeIdentity.uid),username:identityText(activeIdentity.username)},sourceFingerprint,baselineRevision});
     const executable=featureEnabled===true&&writesEnabled===true&&userApproved===true;
-    return Object.freeze({ok:true,status:executable?'approved-for-future-execution':'review-required',owner:Object.freeze({uid:identityText(activeIdentity.uid),username:identityText(activeIdentity.username)}),counts,sourceFingerprint,migrationFingerprint,baselineRevision,resumable:true,idempotent:true,publicShareWrites:0,deleteLocal:false,executable,preview:Object.freeze(preview)});
+    return Object.freeze({ok:true,status:executable?'approved-for-future-execution':'review-required',owner:Object.freeze({uid:identityText(activeIdentity.uid),username:identityText(activeIdentity.username)}),counts,sourceFingerprint,migrationFingerprint,baselineRevision,resumable:true,idempotent:true,publicShareWrites:0,deleteLocal:false,executable,preview:Object.freeze(preview),favoriteMigration:Object.freeze({strategy:'one-at-a-time-trusted-callable',callable:'mutateFavoriteTrainer',operationCount:counts.favorites,batchEndpoint:false,stableUidResolutionRequired:true,sourceFingerprintRequired:true})});
   }
   function migrationSourceMatches(plan,local){const normalized=normalizeMigrationSource(local);return!!plan?.sourceFingerprint&&normalized.ok&&fingerprint(normalized.value)===plan.sourceFingerprint;}
   function verifyMigration(plan,serverMetadata={},currentLocal){
@@ -212,7 +227,7 @@
   root.trainerPreferenceSync=Object.freeze({
     SERVER_SCHEMA_VERSION,LOCAL_SCHEMA_VERSION,MAX_QUEUE_OPERATIONS,MAX_RETRY_ATTEMPTS,TOMBSTONE_RETENTION_DAYS,
     MAX_FAVORITES,MAX_TAGS,MAX_TAGS_PER_TRAINER,MAX_RECENTS,MAX_HISTORY,MAX_NOTE_LENGTH,MAX_OPERATION_ID_LENGTH,MAX_OPERATION_JSON_LENGTH,MUTATION_KINDS,
-    SYNCABLE_PRIVATE_DATA,DEVICE_ONLY_DATA,CONFLICT_MATRIX,sameIdentity,fingerprint,normalizeOperation,resolveFavoriteMutation,
+    SYNCABLE_PRIVATE_DATA,DEVICE_ONLY_DATA,CONFLICT_MATRIX,sameIdentity,fingerprint,normalizeOperation,favoriteCallableRequest,resolveFavoriteMutation,
     resolveMetadataMutation,resolveTagMutation,preferenceSyncPresentation,normalizeMigrationSource,buildMigrationPlan,migrationSourceMatches,verifyMigration,localeSyncRecommendation
   });
 })(window);

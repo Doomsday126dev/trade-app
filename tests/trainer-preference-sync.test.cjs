@@ -79,9 +79,22 @@ test('queue is disabled by default and exposes no private values in summaries',(
   const window=load(),queue=window.PogoData.trainerPreferenceSyncQueue.createTrainerPreferenceSyncQueue({storage:storage(),identity:{uid:'viewer-a',username:'ViewerA'},domain:window.PogoDomain.trainerPreferenceSync});
   assert.equal(queue.enabled,false);assert.equal(queue.enqueue(operation('favorite-upsert')).error.code,'trainer-preference-sync/disabled');
   assert.equal(queue.next({uid:'viewer-a',username:'ViewerA'}).error.code,'trainer-preference-sync/disabled');
+  assert.equal(queue.nextFavoriteDispatch({uid:'viewer-a',username:'ViewerA'}).error.code,'trainer-preference-sync/disabled');
   assert.equal(queue.recordAttempt('operation-0000001').error.code,'trainer-preference-sync/disabled');
   assert.equal(queue.acknowledge('operation-0000001','prefs_invalid').error.code,'trainer-preference-sync/disabled');
   assert.deepEqual(JSON.parse(JSON.stringify(queue.snapshot())),{ownerBound:true,enabled:false,active:true,pendingCount:0,conflictCount:0,operationCount:0,privateValuesExposed:false});
+});
+
+test('Favorite queue dispatch targets only the narrow Auth-owned callable',()=>{
+  const window=load(),owner={uid:'viewer-a',username:'ViewerA'},queue=window.PogoData.trainerPreferenceSyncQueue.createTrainerPreferenceSyncQueue({storage:storage(),identity:owner,domain:window.PogoDomain.trainerPreferenceSync,featureEnabled:true,writesEnabled:true});
+  const input=operation('favorite-upsert',{entityId:'owner-stable-uid',payload:{trainerName:'Trainer A',addedAt:1}});
+  assert.equal(queue.enqueue(input).status,'queued');
+  const dispatch=queue.nextFavoriteDispatch(owner);
+  assert.equal(dispatch.callable,'mutateFavoriteTrainer');
+  assert.deepEqual(JSON.parse(JSON.stringify(dispatch.request)),{operation:'add',trainerUid:'owner-stable-uid',canonicalTrainerLabel:'Trainer A',expectedRevision:0,requestId:'operation-0000001',schemaVersion:1});
+  assert.equal('viewerUid' in dispatch.request,false);
+  assert.equal('ownerUid' in dispatch.request,false);
+  assert.equal('path' in dispatch.request,false);
 });
 
 test('operation payloads and schemas are bounded before queue persistence',()=>{
@@ -136,6 +149,7 @@ test('migration is explicit, current-generation hydrated, resumable, and never d
   assert.equal(sync.buildMigrationPlan({activeIdentity:owner,partitionIdentity:owner,localSchemaVersion:2,local}).error.code,'trainer-preference-sync/hydration-required');
   const plan=sync.buildMigrationPlan({activeIdentity:owner,partitionIdentity:owner,localSchemaVersion:2,local,serverHydrated:true,hydrationGeneration:2,activeGeneration:2,userApproved:true,featureEnabled:false,writesEnabled:false});
   assert.equal(plan.status,'review-required');assert.equal(plan.executable,false);assert.equal(plan.deleteLocal,false);assert.equal(plan.publicShareWrites,0);
+  assert.deepEqual(JSON.parse(JSON.stringify(plan.favoriteMigration)),{strategy:'one-at-a-time-trusted-callable',callable:'mutateFavoriteTrainer',operationCount:1,batchEndpoint:false,stableUidResolutionRequired:true,sourceFingerprintRequired:true});
   assert.equal(sync.verifyMigration(plan,{migrationFingerprint:plan.migrationFingerprint,migrationState:'verified'},local).localDeletionAllowed,false);
   assert.equal(sync.verifyMigration(plan,{migrationFingerprint:plan.migrationFingerprint,migrationState:'verified'},{...local,recent:[]}).error.code,'trainer-preference-sync/migration-source-changed');
 });
@@ -167,9 +181,9 @@ test('production activation routes cannot reach preference sync while disabled',
   assert.doesNotMatch(html,/createTrainerPreferenceSyncQueue\s*\(/);
   assert.doesNotMatch(html,/managedTrainerPreferencesRepository\.(?:read|subscribe|mutate|transaction|write)/);
   for(const route of ["addEventListener('online'","onAuthStateChanged(auth","visibilitychange","setInterval(checkForUpdate","serviceWorker.register"]){
-    const start=html.indexOf(route);assert.notEqual(start,-1);assert.doesNotMatch(html.slice(start,start+900),/trainerPreferenceSync|userPreferences|claimTrainerTagLabel|verifyTrainerHistory/);
+    const start=html.indexOf(route);assert.notEqual(start,-1);assert.doesNotMatch(html.slice(start,start+900),/trainerPreferenceSync|userPreferences|claimTrainerTagLabel|mutateFavoriteTrainer|verifyTrainerHistory/);
   }
-  assert.doesNotMatch(sw,/userPreferences|claimTrainerTagLabel|verifyTrainerHistory|pogoTrainerPreferenceSync_v1/);
+  assert.doesNotMatch(sw,/userPreferences|claimTrainerTagLabel|mutateFavoriteTrainer|verifyTrainerHistory|pogoTrainerPreferenceSync_v1/);
   assert.doesNotMatch(html,/id=["'][^"']*(?:sync-preference|preference-sync|migration-sync)[^"']*["']/i);
 });
 
@@ -178,11 +192,11 @@ test('sync modules have no Firebase, network, logging, public-share, or access-g
   assert.doesNotMatch(files,/firebase|fetch\(|XMLHttpRequest|console\.|publicShares|shareAccess|Approved Viewer|writeDataPath|queueSync/);
 });
 
-test('readiness documentation preserves the Favorite blocker and disabled status',()=>{
+test('readiness documentation records the narrow Favorite decision and disabled status',()=>{
   const readiness=readFileSync(path.join(root,'docs/TRAINER-PREFERENCE-SYNC-READINESS.md'),'utf8');
   assert.match(readiness,/Status: \*\*production-inactive client and emulator candidate\*\*/);
-  assert.match(readiness,/Strict reconciliation of the arbitrary Favorite map is unresolved and blocks/);
-  assert.match(readiness,/Narrow trusted Favorite mutation callable/);
+  assert.match(readiness,/Strict reconciliation is resolved in the local candidate/);
+  assert.match(readiness,/`mutateFavoriteTrainer`/);
   assert.match(readiness,/cannot make direct Favorite writes safe/);
   assert.match(readiness,/This candidate grants none of those approvals/);
 });

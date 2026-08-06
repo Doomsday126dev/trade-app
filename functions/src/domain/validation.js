@@ -46,6 +46,15 @@ function tagId(value) {
   return id;
 }
 
+function trainerLabel(value) {
+  if (typeof value !== 'string') fail('invalid_argument', 'favorite/label_invalid');
+  const label = String(value ?? '').normalize('NFKC').trim();
+  if (!label || Array.from(label).length > 64 || /[\u0000-\u001f\u007f\u200e\u200f\u202a-\u202e\u2066-\u2069]/u.test(label)) {
+    fail('invalid_argument', 'favorite/label_invalid');
+  }
+  return label;
+}
+
 function safeInteger(value, min, max, reason) {
   if (!Number.isSafeInteger(value) || value < min || value > max) fail('invalid_argument', reason);
   return value;
@@ -68,4 +77,4 @@ function publicSnapshot(value) {
   return snapshot;
 }
 
-module.exports = { boundedPayload, exactFields, plainObject, publicSnapshot, requestId, safeInteger, tagId, uid };
+module.exports = { boundedPayload, exactFields, plainObject, publicSnapshot, requestId, safeInteger, tagId, trainerLabel, uid };

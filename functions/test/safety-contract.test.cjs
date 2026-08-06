@@ -16,10 +16,10 @@ test('adapter exports no arbitrary-path capability', () => {
   for (const method of ['read', 'write', 'set', 'update', 'remove', 'mutatePath', 'bulk']) assert.equal(adapter[method], undefined);
 });
 
-test('exactly four callable entrypoints are exported and rename remains absent', () => {
+test('exactly five narrow callable entrypoints are exported and rename remains absent', () => {
   const source = fs.readFileSync(path.join(functionsRoot, 'src/index.js'), 'utf8');
   const names = [...source.matchAll(/exports\.([A-Za-z0-9_]+)\s*=/g)].map((match) => match[1]).sort();
-  assert.deepEqual(names, ['claimTrainerTagLabel', 'reserveTrainerHandle', 'setApprovedViewer', 'verifyTrainerHistory']);
+  assert.deepEqual(names, ['claimTrainerTagLabel', 'mutateFavoriteTrainer', 'reserveTrainerHandle', 'setApprovedViewer', 'verifyTrainerHistory']);
   assert.doesNotMatch(source, /exports\.renameTrainerHandle/);
 });
 
@@ -104,13 +104,14 @@ test('Firebase idempotency completion fails closed without replacing mismatched 
   assert.deepEqual(records.get(path), { fingerprint: 'b'.repeat(64), status: 'pending' });
 });
 
-test('Firebase fixed transactions hydrate server state before a sequential revoke', async () => {
+test('Firebase fixed transactions prime the local event cache before a sequential revoke', async () => {
   const records = new Map();
   const hydrated = new Set();
   const database = {
     ref(path = '') {
       return {
-        async get() {
+        async once(event) {
+          assert.equal(event, 'value');
           hydrated.add(path);
           return { val: () => structuredClone(records.get(path) ?? null) };
         },
@@ -152,11 +153,37 @@ test('Firebase transaction retries replace status inferred from an earlier cache
   const result = await adapter.setViewerGrantForOwner({ ownerUid: 'owner_001', viewerUid: 'viewer_001', action: 'revoke' });
   assert.equal(result.status, 'revoked');
   assert.equal(value, null);
+
+  const favoritePath = 'userPreferences/caller_001/favoriteTrainers';
+  let favorites = {
+    trainer_001: { trainerName: 'Synthetic Trainer', addedAt: 1, revision: 1, updatedAt: 1, operationId: 'request-seed-favorite', deleted: false }
+  };
+  const favoriteDatabase = {
+    ref(refPath = '') {
+      assert.equal(refPath, favoritePath);
+      return {
+        async once(event) { assert.equal(event, 'value'); return { val: () => structuredClone(favorites) }; },
+        async transaction(update) {
+          update(null);
+          favorites = update(structuredClone(favorites));
+          return { committed: true };
+        }
+      };
+    }
+  };
+  const favoriteAdapter = createFirebaseTrustedAdapter({ database: favoriteDatabase });
+  const favoriteResult = await favoriteAdapter.mutateFavoriteForViewer({
+    callerUid: 'caller_001', operation: 'remove', trainerUid: 'trainer_001', canonicalTrainerLabel: 'Synthetic Trainer',
+    expectedRevision: 1, operationId: 'request-remove-favorite', now: 2
+  });
+  assert.equal(favoriteResult.status, 'removed');
+  assert.equal(favorites.trainer_001.deleted, true);
+  assert.equal(favorites.trainer_001.revision, 2);
 });
 
 test('server write gates are checked before idempotency acquisition', () => {
   const source = fs.readFileSync(path.join(functionsRoot, 'src/domain/trustedOperations.js'), 'utf8');
-  for (const functionName of ['reserveTrainerHandle', 'claimTrainerTagLabel', 'verifyTrainerHistory', 'setApprovedViewer']) {
+  for (const functionName of ['reserveTrainerHandle', 'claimTrainerTagLabel', 'mutateFavoriteTrainer', 'verifyTrainerHistory', 'setApprovedViewer']) {
     const block = source.slice(source.indexOf(`async function ${functionName}`), source.indexOf('\n  }', source.indexOf(`async function ${functionName}`)));
     assert.ok(block.indexOf('assertOperationEnabled') < block.indexOf('runIdempotent'));
   }

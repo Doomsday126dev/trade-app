@@ -43,7 +43,7 @@
   "safety": {
     "expectedCommit": "<EXPECTED_COMMIT_SHA>",
     "productionProjectId": "<PRODUCTION_PROJECT_ID>",
-    "additiveRulesSha": "cbcea2a672e1f9b1d6a4582410bb89bca765ca307c0495c7cc80ea35f805071c",
+    "additiveRulesSha": "ba7322a59a4c3cf6b503dc52b1394313ac9421106a6c05fc6835200d49e3e72d",
     "rollbackRulesSha": "e0632a98ed106117f03e61da0446ef4b2c2e6ed02ea8c6f1c498a0e7edcb17bf",
     "bothWriteGatesFalse": true,
     "syntheticOnly": true

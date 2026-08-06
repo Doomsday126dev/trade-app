@@ -3,8 +3,8 @@
 Status: **local design candidate; no staging or production resources exist**
 
 This package reviews a future synthetic-only deployment of
-`reserveTrainerHandle`, `claimTrainerTagLabel`, `verifyTrainerHistory`, and
-`setApprovedViewer`. It contains no Firebase adapter for staging setup, deploy
+`reserveTrainerHandle`, `claimTrainerTagLabel`, `mutateFavoriteTrainer`,
+`verifyTrainerHistory`, and `setApprovedViewer`. It contains no Firebase adapter for staging setup, deploy
 script, project alias, credential, client wiring, enabled gate, or live target.
 
 ## Isolation and configuration
@@ -38,7 +38,7 @@ Use three identities:
 | Human reviewer | Functions, Logging, and Monitoring viewer | no mutation |
 
 RTDB IAM is instance-level, not data-path-granular. The predefined
-`roles/firebasedatabase.admin` is therefore broader than the four data
+`roles/firebasedatabase.admin` is therefore broader than the five callable data
 contracts. The compensating controls are mandatory: isolated staging project,
 dedicated runtime identity, fixed adapters, strict schemas, disabled gates,
 reviewed additive rules, App Check, mutation-root tests, redacted logs, and
@@ -57,6 +57,7 @@ granted to human or runtime identities.
 | --- | --- | --- |
 | `reserveTrainerHandle` | share gate, caller account, normalized directory claim, exact idempotency record | caller account, normalized directory claim, exact idempotency record |
 | `claimTrainerTagLabel` | preference gate, caller tag/label claims, exact idempotency record | caller tag/label claims, exact idempotency record |
+| `mutateFavoriteTrainer` | preference gate, exact target account/directory claim, caller Favorite map, exact idempotency record | caller Favorite map, exact idempotency record |
 | `verifyTrainerHistory` | preference gate, exact UID share, visibility mode, exact grant, protected-admin bit, caller history row, exact idempotency record | caller history row, exact idempotency record |
 | `setApprovedViewer` | share gate, exact target account/directory claim, exact owner/viewer grant, exact idempotency record | exact owner/viewer grant, exact idempotency record |
 
@@ -68,16 +69,15 @@ There is no arbitrary path input or generic Admin operation.
 Staging starts from the reviewed live narrow-read baseline SHA-256
 `e0632a98ed106117f03e61da0446ef4b2c2e6ed02ea8c6f1c498a0e7edcb17bf`
 and the additive candidate SHA-256
-`cbcea2a672e1f9b1d6a4582410bb89bca765ca307c0495c7cc80ea35f805071c`.
+`ba7322a59a4c3cf6b503dc52b1394313ac9421106a6c05fc6835200d49e3e72d`.
 Before Functions deployment, verify those files locally, export the staging
 rules rollback artifact privately, replace staging rules atomically with the
 additive candidate, and keep both write gates false.
 
 Staging infrastructure and callable deployability do not remove the preference
-sync activation blocker. Strict reconciliation of the arbitrary Favorite map remains
-blocked pending a separately designed and approved server-enforced 100-record
-solution; the current recommendation is a narrow trusted Favorite mutation
-callable. Neither preference gate may be enabled before that review completes.
+sync activation blocker. The local narrow Favorite callable enforces the real
+100-active-record limit, but neither preference gate may be enabled before its
+emulator evidence, deployment review, and synthetic canary are approved.
 
 Verify anonymously and with synthetic Auth that root reads fail, legacy exact
 reads still work, all new roots are non-enumerable, private preferences remain
@@ -90,9 +90,9 @@ callable can change its gate. The sequence is:
 
 1. Additive rules, both gates false.
 2. Functions deployment, both gates false.
-3. Disabled-gate canaries for all four callables.
+3. Disabled-gate canaries for all five callables.
 4. Enable share visibility; test handles and grants; disable it.
-5. Enable preferences; test tags and history; disable it.
+5. Enable preferences; test Favorites, tags, and history; disable it.
 6. Review evidence before any simultaneous staging enablement.
 
 Manual Console changes are acceptable for the first isolated staging canary if
@@ -206,18 +206,18 @@ identity-free; correlation hashes are not used as stable user identifiers.
 ## Cost model
 
 The model is a workload estimate, not a guaranteed bill. Normal activity per
-MAU is 0.05 handle, 2 tag, 8 history, and 0.5 grant calls monthly. High activity
-is 0.1, 10, 60, and 3. Each invocation is modeled at 180-350 ms, 256 MiB, two
+MAU is 0.05 handle, 2 tag, 2 Favorite, 8 history, and 0.5 grant calls monthly. High activity
+is 0.1, 10, 15, 60, and 3. Each invocation is modeled at 180-350 ms, 256 MiB, two
 log events, one App Check assessment, and 8 KiB egress.
 
 | MAU | Scenario | Calls | vCPU-s | GiB-s | RTDB reads/writes | App Check | Egress MiB |
 | ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| 100 | normal | 1,055 | 327 | 82 | 7,580 / 4,170 | 1,055 | 9 |
-| 100 | high | 7,310 | 2,337 | 585 | 54,160 / 28,940 | 7,310 | 58 |
-| 1,000 | normal | 10,550 | 3,263 | 816 | 75,800 / 41,700 | 10,550 | 83 |
-| 1,000 | high | 73,100 | 23,365 | 5,842 | 541,600 / 289,400 | 73,100 | 572 |
-| 10,000 | normal | 105,500 | 32,625 | 8,157 | 758,000 / 417,000 | 105,500 | 825 |
-| 10,000 | high | 731,000 | 233,650 | 58,413 | 5,416,000 / 2,894,000 | 731,000 | 5,711 |
+| 100 | normal | 1,255 | 367 | 92 | 8,780 / 4,770 | 1,255 | 10 |
+| 100 | high | 8,810 | 2,637 | 660 | 63,160 / 33,440 | 8,810 | 69 |
+| 1,000 | normal | 12,550 | 3,663 | 916 | 87,800 / 47,700 | 12,550 | 99 |
+| 1,000 | high | 88,100 | 26,365 | 6,592 | 631,600 / 334,400 | 88,100 | 689 |
+| 10,000 | normal | 125,500 | 36,625 | 9,157 | 878,000 / 477,000 | 125,500 | 981 |
+| 10,000 | high | 881,000 | 263,650 | 65,913 | 6,316,000 / 3,344,000 | 881,000 | 6,883 |
 
 Normal operations assume two deployments/month; high activity assumes eight.
 Allow 0.5 GiB Artifact Registry storage and apply an artifact cleanup policy.
@@ -267,7 +267,7 @@ firebase projects:list # manually confirm <STAGING_PROJECT_ID>
 firebase deploy --only database --project <STAGING_PROJECT_ID> --config <STAGING_FIREBASE_CONFIG>
 TRUSTED_FUNCTIONS_REGION=<REGION> \
 TRUSTED_FUNCTIONS_RUNTIME_SERVICE_ACCOUNT=<RUNTIME_SERVICE_ACCOUNT> \
-firebase deploy --only functions:reserveTrainerHandle,functions:claimTrainerTagLabel,functions:verifyTrainerHistory,functions:setApprovedViewer \
+firebase deploy --only functions:reserveTrainerHandle,functions:claimTrainerTagLabel,functions:mutateFavoriteTrainer,functions:verifyTrainerHistory,functions:setApprovedViewer \
   --project <STAGING_PROJECT_ID> --config <STAGING_FIREBASE_CONFIG>
 ```
 

@@ -251,13 +251,16 @@
       "writesEnabled": {
         ".validate": "newData.isBoolean()"
       },
+      "readsEnabled": {
+        ".validate": "newData.isBoolean()"
+      },
       "$other": {
         ".validate": false
       }
     },
     "userPreferences": {
       "$viewerUid": {
-        ".read": "auth != null && auth.uid === $viewerUid",
+        ".read": "auth != null && auth.uid === $viewerUid && root.child('trainerPreferencesConfig').child('readsEnabled').val() === true",
         "metadata": {
           ".write": "auth != null && auth.uid === $viewerUid && newData.exists() && root.child('trainerPreferencesConfig').child('writesEnabled').val() === true",
           ".validate": "newData.hasChildren(['schemaVersion', 'revision', 'updatedAt', 'favoriteCount', 'tagCount', 'lastSuccessfulSyncAt', 'migrationState', 'migrationFingerprint']) && newData.child('schemaVersion').val() === 1 && newData.child('revision').isNumber() && newData.child('revision').val() >= 1 && (!data.exists() || newData.child('revision').val() === data.child('revision').val() + 1 || newData.val() === data.val()) && newData.child('updatedAt').isNumber() && (!data.exists() || newData.child('updatedAt').val() >= data.child('updatedAt').val()) && newData.child('favoriteCount').isNumber() && newData.child('favoriteCount').val() >= 0 && newData.child('favoriteCount').val() <= 100 && newData.child('tagCount').isNumber() && newData.child('tagCount').val() >= 0 && newData.child('tagCount').val() <= 24 && newData.child('lastSuccessfulSyncAt').isNumber() && newData.child('lastSuccessfulSyncAt').val() >= 0 && (newData.child('migrationState').val() === 'not-started' || newData.child('migrationState').val() === 'pending' || newData.child('migrationState').val() === 'verified' || newData.child('migrationState').val() === 'conflict') && newData.child('migrationFingerprint').isString() && newData.child('migrationFingerprint').val().length <= 128",
@@ -266,8 +269,8 @@
           }
         },
         "favoriteTrainers": {
+          ".write": false,
           "$ownerUid": {
-            ".write": "auth != null && auth.uid === $viewerUid && newData.exists() && root.child('trainerPreferencesConfig').child('writesEnabled').val() === true",
             ".validate": "newData.hasChildren(['trainerName', 'addedAt', 'revision', 'updatedAt', 'operationId', 'deleted']) && newData.child('trainerName').isString() && newData.child('trainerName').val().length > 0 && newData.child('trainerName').val().length <= 64 && newData.child('addedAt').isNumber() && (!data.exists() || newData.child('addedAt').val() === data.child('addedAt').val()) && newData.child('revision').isNumber() && newData.child('revision').val() >= 1 && (!data.exists() || newData.child('revision').val() === data.child('revision').val() + 1 || newData.val() === data.val()) && newData.child('updatedAt').isNumber() && (!data.exists() || newData.child('updatedAt').val() >= data.child('updatedAt').val()) && newData.child('operationId').isString() && newData.child('operationId').val().length >= 16 && newData.child('operationId').val().length <= 80 && newData.child('deleted').isBoolean() && ((newData.child('deleted').val() === false && !newData.child('deletedAt').exists()) || (newData.child('deleted').val() === true && newData.child('deletedAt').isNumber() && newData.child('deletedAt').val() === newData.child('updatedAt').val()))",
             "$other": {
               ".validate": "$other === 'trainerName' || $other === 'addedAt' || $other === 'revision' || $other === 'updatedAt' || $other === 'operationId' || $other === 'deleted' || $other === 'deletedAt'"
