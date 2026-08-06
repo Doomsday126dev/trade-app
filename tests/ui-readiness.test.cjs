@@ -64,7 +64,7 @@ test('account menu and Settings dialog preserve keyboard focus and route compati
   assert.match(html,/popover\.querySelector\('button'\)\?\.focus\(\)/);
   assert.match(html,/if\(e\.key==='Escape'&&popover&&!popover\.hidden\)/);
   assert.match(html,/if\(ev\.key==='Escape'\)\{if\(id==='trainer-organizer-modal'\)closeTrainerOrganizer\(\);else closeModal\(id\);return;\}/);
-  assert.match(html,/_modalPrevFocus\?\.focus\?\.\(\)/);
+  assert.match(html,/if\(returnFocus\?\.isConnected&&!returnFocus\.disabled\)returnFocus\.focus\(\)/);
   assert.match(html,/history\.pushState\([^\n]+settingsPanel:true/);
   assert.match(html,/window\.addEventListener\('popstate',syncSettingsRoute\)/);
   assert.match(html,/window\.addEventListener\('hashchange',syncSettingsRoute\)/);
@@ -113,6 +113,17 @@ test('favorite organizer protects dirty drafts and clears stale deleted-tag filt
   const authLoss=html.slice(html.indexOf('function bindAuthObserver'),html.indexOf('function waitForAuthState'));
   assert.match(accountSwitch,/resetSessionTransientUi\('identity_switch'\);\s*resetTrainerOrganizerState\(\)/);
   assert.match(authLoss,/resetSessionTransientUi\('auth_loss'\);\s*resetTrainerOrganizerState\(\)/);
+});
+
+test('modal lifecycle reuses one handler and cancels stale focus restoration',()=>{
+  const lifecycle=html.slice(html.indexOf('function openModal'),html.indexOf('function toast'));
+  assert.match(html,/let _modalFocusTimer=null;\s*let _modalActiveId='';/);
+  assert.match(lifecycle,/if\(_modalKeyHandler\)\{document\.removeEventListener\('keydown',_modalKeyHandler\);_modalKeyHandler=null;\}/);
+  assert.match(lifecycle,/if\(_modalFocusTimer\)\{clearTimeout\(_modalFocusTimer\);_modalFocusTimer=null;\}/);
+  assert.match(lifecycle,/if\(_modalActiveId==='trainer-organizer-modal'\)closeTrainerOrganizer\(\);else closeModal\(_modalActiveId,\{route:false\}\)/);
+  assert.match(lifecycle,/if\(active\?\.classList\.contains\('open'\)\)return;/);
+  assert.match(lifecycle,/if\(_modalActiveId!==id\|\|!m\.classList\.contains\('open'\)\)return;/);
+  assert.match(lifecycle,/if\(returnFocus\?\.isConnected&&!returnFocus\.disabled\)returnFocus\.focus\(\)/);
 });
 
 test('responsive and accessibility safeguards cover compact screens, long labels, focus, and reduced motion',()=>{
