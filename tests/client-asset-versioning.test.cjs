@@ -24,6 +24,7 @@ test('every first-party JavaScript URL uses the current release identifier',()=>
   assert.ok(release);
   assert.ok(firstPartyScripts.length>30);
   firstPartyScripts.forEach(src=>assert.equal(new URL(src,'https://example.test/').searchParams.get('v'),release,src));
+  assert.equal(loadDomain(['js/domain/clientRelease.js']).clientRelease.RELEASE_ID,release);
   assert.ok(html.includes("serviceWorker.register(`./sw.js?v=${window.__POGO_RELEASE_ID}`)"));
   assert.match(worker,new RegExp(`const RELEASE='${release.replaceAll('.','\\.')}';`));
   const precached=[...worker.matchAll(/^\s+'([^']+\.js)',?$/gm)].map(match=>match[1]);

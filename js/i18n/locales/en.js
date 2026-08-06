@@ -245,6 +245,7 @@
     'status.localOnlyTitle':'Local-only mode',
     'status.localOnlyBody':'Your edits remain safe on this device. Sign in again to sync {count} pending changes.',
     'status.signBackIn':'Sign back in',
+    'trainer.syncTitle':'Saved trainer sync','trainer.syncPreview':'Review what is saved on this device and in the cloud before syncing.','trainer.syncDeviceCount':'On this device','trainer.syncCloudCount':'In the cloud','trainer.syncPending':'Changes are waiting to sync.','trainer.syncSuccess':'Saved trainers are up to date.','trainer.syncError':'Sync could not finish. Your device copy is unchanged.','trainer.syncConflict':'Some changes need your review.','trainer.syncLastSuccess':'Last successful sync: {time}','trainer.syncRemoveCloudKeepLocal':'Remove cloud copy and keep this device copy','trainer.syncRemoveCloudAndLocal':'Remove cloud and device copies','trainer.syncState.local-only':'Saved on this device','trainer.syncState.pending-sync':'Waiting to sync','trainer.syncState.synced':'Synced','trainer.syncState.conflict':'Needs review','trainer.syncState.sync-error':'Sync error',
     'admin.loading':'Loading owner maintenance data…',
     'admin.establishedResetUnavailable':'Established accounts require the identity-preserving secure reset process. The legacy Reset action is disabled.',
     'admin.securityTitle':'Firebase security',

@@ -117,17 +117,17 @@ the trusted backend. The rules documentation must not claim otherwise.
 - Live narrow-read baseline:
   `e0632a98ed106117f03e61da0446ef4b2c2e6ed02ea8c6f1c498a0e7edcb17bf`
 - Additive candidate:
-  `fc781919003a5afcba4fcf1e5235498090352deb1448e746b6c69ec61add6ac3`
+  `cbcea2a672e1f9b1d6a4582410bb89bca765ca307c0495c7cc80ea35f805071c`
 - Preferred rollback is the live narrow-read baseline above. The historical
   broad-read artifact is not the rollback target for this additive change.
 
 The candidate preserves all 19 live root entries byte-for-byte, including root
 `.read: false` and `publicShares/{username}`. It adds 11 rule roots covering
-nine registered future read surfaces plus config/denied group scaffolding.
+11 registered future read surfaces plus config/denied group scaffolding.
 Both new write gates remain false or absent, so unseeded roots are inert.
 
-The registry now contains 39 surfaces: the 34 pre-preferences entries are
-unchanged, and five disabled preference surfaces were added. Nine total future
+The registry now contains 41 surfaces: the 34 pre-preferences entries are
+unchanged, and seven disabled preference surfaces were added. Eleven total future
 surfaces are inactive, leaving 30 current, administrative, or legacy production
 surfaces. This milestone changes none of them.
 
@@ -230,6 +230,11 @@ candidate.
 
 ## Backend emulator gate
 
+Preference activation remains blocked even after this backend gate passes:
+RTDB Rules cannot strictly reconcile the arbitrary Favorite-map count. A narrow
+trusted Favorite mutation callable is the current recommendation and requires a
+separate design, implementation, emulator, deployment, and activation approval.
+
 Before any callable implementation is deployable, the Functions/Auth/RTDB
 Emulator Suite must exercise authenticated owner, ordinary user, protected
 admin, removed admin, unauthenticated, and invalid/missing App Check contexts.
@@ -240,7 +245,6 @@ idempotent replay, fixed target allowlists, redacted logs, and transaction
 failure with zero partial state. Emulator tests must also prove a grant changes
 no preference subtree and a preference mutation changes no access subtree.
 
-No backend code exists in this milestone. The executable pure contract tests
-define those validation decisions without Firebase, network, credentials, or
-production access; the emulator gate remains mandatory before implementation
-can be reviewed for deployment.
+The fixed callable candidates are local and undeployed. Their pure contracts and
+emulator suites define these validation decisions without production credentials
+or access; a separate staging deployment review remains mandatory.

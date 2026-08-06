@@ -79,8 +79,18 @@ test('reserveTrainerHandle runs once and replays safely', async () => {
 });
 
 test('claimTrainerTagLabel creates a normalized private tag claim', async () => {
-  const response = await call('claimTrainerTagLabel', { action: 'create', tagId: 'tag_demo', label: 'Demo Group', requestId: 'request-emulator-tag' });
+  const response = await call('claimTrainerTagLabel', { action: 'create', tagId: 'tag_demo', label: 'Demo Group', baseRevision: 0, requestId: 'request-emulator-tag' });
   assert.equal(callableResult(response, 'claimTrainerTagLabel').status, 'created');
+  const concurrent = await Promise.all([
+    call('claimTrainerTagLabel', { action: 'create', tagId: 'tag_concurrent_a', label: 'Ｃｏｎｃｕｒｒｅｎｔ Group', baseRevision: 0, requestId: 'request-emulator-tag-concurrent-a' }),
+    call('claimTrainerTagLabel', { action: 'create', tagId: 'tag_concurrent_b', label: 'concurrent group', baseRevision: 0, requestId: 'request-emulator-tag-concurrent-b' })
+  ]);
+  assert.equal(concurrent.filter(result => result.status === 200 && result.body?.result).length, 1);
+  assert.equal(concurrent.filter(result => result.status >= 400 && result.body?.error).length, 1);
+  const ids = (await database.ref('_test').get()).val();
+  const prefs = (await database.ref(`userPreferences/${ids.callerUid}`).get()).val();
+  assert.equal(Object.values(prefs.trainerTags).filter(tag => tag.active === true).length, 2);
+  assert.equal(Object.keys(prefs.trainerTagLabels).length, 2);
 });
 
 test('verifyTrainerHistory verifies exact public source and records one entry', async () => {

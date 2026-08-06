@@ -45,11 +45,11 @@ function generateSyntheticFixtures() {
       }),
       userPreferences: Object.freeze({
         [viewer]: Object.freeze({
-          trainerTags: Object.freeze({ tag_existing: Object.freeze({ label: 'Synthetic Group', normalizedLabel: 'synthetic group', labelKey: 'synthetic_group', active: true, createdAt: FIXTURE_EPOCH, updatedAt: FIXTURE_EPOCH }) }),
+          trainerTags: Object.freeze({ tag_existing: Object.freeze({ label: 'Synthetic Group', normalizedLabel: 'synthetic group', labelKey: 'synthetic_group', active: true, deleted: false, createdAt: FIXTURE_EPOCH, updatedAt: FIXTURE_EPOCH, revision: 1, operationId: 'synthetic-tag-op-0001' }) }),
           trainerTagLabels: Object.freeze({ synthetic_group: 'tag_existing' }),
           trainerHistory: Object.freeze({
-            [owner]: Object.freeze({ lastSeenShareVersion: 2, lastSeenUpdatedAt: FIXTURE_EPOCH, lastSeenFingerprint: 'a'.repeat(64), entryCount: 1, lastSeenSnapshot: Object.freeze({ entry_alpha: Object.freeze({ category: 'wishlist', fingerprint: 'b'.repeat(64) }) }) }),
-            [admin]: Object.freeze({ lastSeenShareVersion: 3, lastSeenUpdatedAt: FIXTURE_EPOCH + 1000, lastSeenFingerprint: 'c'.repeat(64), entryCount: 0, lastSeenSnapshot: Object.freeze({}) })
+            [owner]: Object.freeze({ lastSeenShareVersion: 2, lastSeenUpdatedAt: FIXTURE_EPOCH, lastSeenFingerprint: 'a'.repeat(64), entryCount: 1, lastSeenSnapshot: Object.freeze({ entry_alpha: Object.freeze({ category: 'wishlist', fingerprint: 'b'.repeat(64) }) }), revision: 1, operationId: 'synthetic-history-op-0001' }),
+            [admin]: Object.freeze({ lastSeenShareVersion: 3, lastSeenUpdatedAt: FIXTURE_EPOCH + 1000, lastSeenFingerprint: 'c'.repeat(64), entryCount: 0, lastSeenSnapshot: Object.freeze({}), revision: 1, operationId: 'synthetic-history-op-0002' })
           })
         })
       }),

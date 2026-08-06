@@ -50,7 +50,7 @@ const APPROVAL_ITEMS = Object.freeze([
 
 const RULE_HASHES = Object.freeze({
   narrowReadBaseline: 'e0632a98ed106117f03e61da0446ef4b2c2e6ed02ea8c6f1c498a0e7edcb17bf',
-  additiveCandidate: 'fc781919003a5afcba4fcf1e5235498090352deb1448e746b6c69ec61add6ac3'
+  additiveCandidate: 'cbcea2a672e1f9b1d6a4582410bb89bca765ca307c0495c7cc80ea35f805071c'
 });
 
 const LOCATION_GUIDE = Object.freeze({

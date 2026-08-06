@@ -31,6 +31,11 @@ async function fails(promise,label){const response=await promise;assert.ok(respo
 function projection(name='OwnerTrainer'){
   return{schemaVersion:1,shareVersion:1,trainerName:name,profile:{bio:'Published'},lists:{wishlist:{Pikachu:'H'}},publishedListTypes:{wishlist:true,dynamax:true,gmax:true,costumes:true},publishedAt:100,updatedAt:100};
 }
+function operationId(suffix){return`operation-${String(suffix).padStart(7,'0')}`;}
+function favoriteRecord(name='OtherTrainer',revision=1,updatedAt=100){return{trainerName:name,addedAt:100,revision,updatedAt,operationId:operationId(revision),deleted:false};}
+function tagRecord({label='Lucky',key='tag_lucky',revision=1,updatedAt=100,active=true}={}){return{label,normalizedLabel:label.toLowerCase(),labelKey:key,active,createdAt:100,updatedAt,revision,operationId:operationId(`tag${revision}`),deleted:!active,...(!active?{deletedAt:updatedAt}:{})};}
+function recentRecord(revision=1,lastOpenedAt=100){return{ownerUid:IDS.other,trainerName:'OtherTrainer',lastOpenedAt,revision,operationId:operationId(`recent${revision}`)};}
+function historyRecord(revision=1,version=5,updatedAt=500){return{lastSeenShareVersion:version,lastSeenUpdatedAt:updatedAt,lastSeenFingerprint:`version-${version}`,entryCount:1,lastSeenSnapshot:{Pikachu:{category:'wishlist',fingerprint:'a'}},revision,operationId:operationId(`history${revision}`)};}
 async function seed(){
   await succeeds(db('PUT','',{
     admins:{[IDS.admin]:true},
@@ -184,26 +189,60 @@ test('future group paths are reserved and inactive',async()=>{
   await fails(db('PUT',`shareGroupAccess/${IDS.owner}/group-a`,true,TOKENS.owner),'group grant write');
 });
 
-test('viewer owns private preferences; other users cannot read or enumerate them',async()=>{
+test('viewer alone owns private preferences; other users and admins cannot read or enumerate them',async()=>{
   await enablePreferences();
-  const favorite={trainerName:'ApprovedTrainer',addedAt:100,note:'Private note'};
+  const favorite=favoriteRecord('ApprovedTrainer');
   await succeeds(db('PUT',`userPreferences/${IDS.owner}/favoriteTrainers/${IDS.approved}`,favorite,TOKENS.owner),'owner creates favorite');
   await succeeds(db('GET',`userPreferences/${IDS.owner}`,undefined,TOKENS.owner),'owner reads preferences');
   await fails(db('GET',`userPreferences/${IDS.owner}`,undefined,TOKENS.other),'other reads preferences');
+  await fails(db('GET',`userPreferences/${IDS.owner}`,undefined,TOKENS.admin),'admin reads preferences');
   await fails(db('GET','userPreferences',undefined,TOKENS.other),'other enumerates preferences');
   await fails(db('PUT',`userPreferences/${IDS.owner}/favoriteTrainers/${IDS.other}`,favorite,TOKENS.other),'other writes preferences');
+  await fails(db('PUT',`userPreferences/${IDS.owner}/favoriteTrainers/${IDS.other}`,favorite,TOKENS.admin),'admin writes preferences');
 });
 
-test('protected admin can read and manage private preferences',async()=>{
+test('preference metadata requires schema one, bounded declared counts, and monotonic revisions',async()=>{
   await enablePreferences();
-  const favorite={trainerName:'OtherTrainer',addedAt:100};
-  await succeeds(db('PUT',`userPreferences/${IDS.owner}/favoriteTrainers/${IDS.other}`,favorite,TOKENS.admin),'admin writes preference');
-  await succeeds(db('GET',`userPreferences/${IDS.owner}`,undefined,TOKENS.admin),'admin reads preference');
+  const metadata={schemaVersion:1,revision:1,updatedAt:100,favoriteCount:1,tagCount:0,lastSuccessfulSyncAt:0,migrationState:'not-started',migrationFingerprint:''};
+  await succeeds(db('PUT',`userPreferences/${IDS.owner}/metadata`,metadata,TOKENS.owner),'valid metadata');
+  await fails(db('DELETE',`userPreferences/${IDS.owner}/metadata`,undefined,TOKENS.owner),'physical metadata delete');
+  await fails(db('PUT',`userPreferences/${IDS.owner}/metadata`,{...metadata,schemaVersion:2,revision:2,updatedAt:200},TOKENS.owner),'unsupported server schema');
+  await fails(db('PUT',`userPreferences/${IDS.owner}/metadata`,{...metadata,revision:2,updatedAt:200,favoriteCount:101},TOKENS.owner),'favorite count bound');
+  await fails(db('PUT',`userPreferences/${IDS.owner}/metadata`,{...metadata,revision:2,updatedAt:200,tagCount:25},TOKENS.owner),'tag count bound');
+  await fails(db('PUT',`userPreferences/${IDS.owner}/metadata`,{...metadata,revision:3,updatedAt:300},TOKENS.owner),'skipped metadata revision');
+  await succeeds(db('PUT',`userPreferences/${IDS.owner}/metadata`,{...metadata,revision:2,updatedAt:200,migrationState:'verified',migrationFingerprint:'prefs_12345678'},TOKENS.owner),'verified metadata');
+});
+
+test('favorite entities use monotonic revisions and tombstones instead of physical deletion',async()=>{
+  await enablePreferences();
+  const target=`userPreferences/${IDS.owner}/favoriteTrainers/${IDS.other}`,favorite=favoriteRecord();
+  await succeeds(db('PUT',target,favorite,TOKENS.owner),'favorite create');
+  await fails(db('DELETE',target,undefined,TOKENS.owner),'physical favorite delete');
+  await fails(db('PUT',target,{...favorite,revision:3,updatedAt:300,operationId:operationId(3)},TOKENS.owner),'skipped favorite revision');
+  const tombstone={...favorite,revision:2,updatedAt:200,operationId:operationId(2),deleted:true,deletedAt:200};
+  await succeeds(db('PUT',target,tombstone,TOKENS.owner),'favorite tombstone');
+  await fails(db('PUT',target,{...favorite,revision:2,updatedAt:250,operationId:operationId('stale')},TOKENS.owner),'stale edit after deletion');
+  await enableWrites();
+  const ownFavorite=`userPreferences/${IDS.owner}/favoriteTrainers/${IDS.approved}`;
+  const attacks=[
+    {[ownFavorite]:favoriteRecord('ApprovedTrainer'),[`userPreferences/${IDS.other}/favoriteTrainers/${IDS.owner}`]:favoriteRecord('OwnerTrainer')},
+    {[ownFavorite]:favoriteRecord('ApprovedTrainer'),[`publicShares/OtherTrainer/updatedAt`]:999},
+    {[ownFavorite]:favoriteRecord('ApprovedTrainer'),[`authIndex/${IDS.other}/username`]:'OwnerTrainer'},
+    {[ownFavorite]:favoriteRecord('ApprovedTrainer'),[`shareAccess/${IDS.other}/${IDS.owner}`]:true},
+    {[`userPreferences/${IDS.owner}/trainerTagLabels/tag_attack`]:'tag-attack',[`unexpectedRoot/child`]:true},
+    {[`userPreferences/${IDS.owner}/trainerHistory/${IDS.other}`]:historyRecord(),[`unexpectedRoot/child`]:true}
+  ];
+  for(const [index,attack] of attacks.entries()){
+    await fails(db('PATCH','',attack,TOKENS.owner),`atomic multi-location attack ${index+1}`);
+    const state=await succeeds(db('GET',ownFavorite,undefined,TOKENS.owner),`atomic rollback ${index+1}`);assert.equal(state.body,'null');
+  }
+  await fails(db('PUT',`userPreferences/${IDS.owner}`,{favoriteTrainers:{[IDS.approved]:favoriteRecord()},unknown:{nested:true}},TOKENS.owner),'higher-level validation bypass');
+  await fails(db('PUT',`userPreferences/${IDS.owner}/favoriteTrainers`,{[IDS.approved]:favoriteRecord(),unexpected:{nested:true}},TOKENS.owner),'favorite parent validation bypass');
 });
 
 test('personal favorites and Approved Viewer grants remain independent',async()=>{
   await enablePreferences();await enableWrites();
-  await succeeds(db('PUT',`userPreferences/${IDS.owner}/favoriteTrainers/${IDS.other}`,{trainerName:'OtherTrainer',addedAt:100},TOKENS.owner),'personal favorite');
+  await succeeds(db('PUT',`userPreferences/${IDS.owner}/favoriteTrainers/${IDS.other}`,favoriteRecord(),TOKENS.owner),'personal favorite');
   const noGrant=await succeeds(db('GET',`shareAccess/${IDS.owner}/${IDS.other}`,undefined,TOKENS.owner),'owner reads absent grant');
   assert.equal(noGrant.body,'null');
   await succeeds(db('PUT',`shareAccess/${IDS.owner}/${IDS.other}`,true,TOKENS.owner),'approved viewer grant');
@@ -211,34 +250,44 @@ test('personal favorites and Approved Viewer grants remain independent',async()=
   assert.equal(noReverseFavorite.body,'null');
 });
 
-test('tag create, rename, assignment, removal, and soft deletion remain owner-private',async()=>{
+test('tag claims are trusted-only while owner metadata assignments remain private and exact',async()=>{
   await enablePreferences();
-  const tagId='tag-a',firstKey='tag_00006c-000075-000063-00006b-000079',nextKey='tag_000072-000061-000069-000064';
-  await succeeds(db('PUT',`userPreferences/${IDS.owner}/trainerTagLabels/${firstKey}`,tagId,TOKENS.owner),'claim label');
-  await succeeds(db('PUT',`userPreferences/${IDS.owner}/trainerTags/${tagId}`,{label:'Lucky',normalizedLabel:'lucky',labelKey:firstKey,active:true,createdAt:100,updatedAt:100},TOKENS.owner),'create tag');
-  await succeeds(db('PUT',`userPreferences/${IDS.owner}/favoriteTrainers/${IDS.other}`,{trainerName:'OtherTrainer',addedAt:100,tagIds:{[tagId]:true}},TOKENS.owner),'assign tag');
-  await succeeds(db('DELETE',`userPreferences/${IDS.owner}/favoriteTrainers/${IDS.other}/tagIds/${tagId}`,undefined,TOKENS.owner),'remove assignment');
-  await succeeds(db('PUT',`userPreferences/${IDS.owner}/trainerTagLabels/${nextKey}`,tagId,TOKENS.owner),'claim renamed label');
-  await succeeds(db('PUT',`userPreferences/${IDS.owner}/trainerTags/${tagId}`,{label:'Raid',normalizedLabel:'raid',labelKey:nextKey,active:true,createdAt:100,updatedAt:200},TOKENS.owner),'rename tag');
-  await succeeds(db('PUT',`userPreferences/${IDS.owner}/trainerTags/${tagId}`,{label:'Raid',normalizedLabel:'raid',labelKey:nextKey,active:false,createdAt:100,updatedAt:300},TOKENS.owner),'soft delete tag');
-  await fails(db('PUT',`userPreferences/${IDS.owner}/favoriteTrainers/${IDS.other}`,{trainerName:'OtherTrainer',addedAt:100,tagIds:{[tagId]:true}},TOKENS.owner),'assign inactive tag');
+  const tagId='tag-a',firstKey='tag_lucky',nextKey='tag_raid',root=`userPreferences/${IDS.owner}`;
+  await fails(db('PUT',`${root}/trainerTagLabels/${firstKey}`,tagId,TOKENS.owner),'client cannot claim tag label');
+  await fails(db('PUT',`${root}/trainerTags/${tagId}`,tagRecord({key:firstKey}),TOKENS.owner),'client cannot create tag');
+  await succeeds(db('PUT',`${root}/trainerTagLabels/${firstKey}`,tagId,'emulator-owner'),'trusted fixture claims tag label');
+  await succeeds(db('PUT',`${root}/trainerTags/${tagId}`,tagRecord({key:firstKey}),'emulator-owner'),'trusted fixture creates tag');
+  const metadata={note:'Private note',tagIds:{[tagId]:true},revision:1,updatedAt:100,operationId:operationId('meta1'),deleted:false};
+  await succeeds(db('PUT',`${root}/trainerMetadata/${IDS.other}`,metadata,TOKENS.owner),'assign tag and note');
+  await fails(db('DELETE',`${root}/trainerMetadata/${IDS.other}`,undefined,TOKENS.owner),'physical trainer metadata delete');
+  await succeeds(db('PUT',`${root}/trainerMetadata/${IDS.other}`,{...metadata,tagIds:{},revision:2,updatedAt:200,operationId:operationId('meta2')},TOKENS.owner),'remove assignment');
+  await fails(db('PUT',`${root}/trainerTags/${tagId}`,tagRecord({label:'Raid',key:nextKey,revision:2,updatedAt:200}),TOKENS.owner),'client cannot rename tag');
+  await succeeds(db('PUT',`${root}/trainerTagLabels/${nextKey}`,tagId,'emulator-owner'),'trusted fixture claims renamed label');
+  await succeeds(db('PUT',`${root}/trainerTags/${tagId}`,tagRecord({label:'Raid',key:nextKey,revision:2,updatedAt:200}),'emulator-owner'),'trusted fixture renames tag');
+  await succeeds(db('DELETE',`${root}/trainerTagLabels/${firstKey}`,undefined,'emulator-owner'),'trusted fixture releases old label');
+  await succeeds(db('DELETE',`${root}/trainerTagLabels/${nextKey}`,undefined,'emulator-owner'),'trusted fixture releases deleted label');
+  await succeeds(db('PUT',`${root}/trainerTags/${tagId}`,tagRecord({label:'Raid',key:nextKey,revision:3,updatedAt:300,active:false}),'emulator-owner'),'trusted fixture soft deletes tag');
+  await fails(db('PUT',`${root}/trainerMetadata/${IDS.other}`,{...metadata,revision:3,updatedAt:300,operationId:operationId('meta3')},TOKENS.owner),'assign inactive tag');
+  await fails(db('DELETE',`${root}/trainerTags/${tagId}`,undefined,TOKENS.owner),'physical tag delete');
 });
 
-test('duplicate normalized tag claims and foreign-namespace assignments are denied',async()=>{
+test('direct normalized tag claims and foreign-namespace assignments are denied',async()=>{
   await enablePreferences();
   const key='tag_00006c-00006f-000063-000061-00006c';
-  await succeeds(db('PUT',`userPreferences/${IDS.owner}/trainerTagLabels/${key}`,'tag-a',TOKENS.owner),'first claim');
+  await fails(db('PUT',`userPreferences/${IDS.owner}/trainerTagLabels/${key}`,'tag-a',TOKENS.owner),'direct first claim');
+  await succeeds(db('PUT',`userPreferences/${IDS.owner}/trainerTagLabels/${key}`,'tag-a','emulator-owner'),'trusted fixture first claim');
   await fails(db('PUT',`userPreferences/${IDS.owner}/trainerTagLabels/${key}`,'tag-b',TOKENS.owner),'duplicate normalized claim');
-  await succeeds(db('PUT',`userPreferences/${IDS.approved}/trainerTagLabels/${key}`,'tag-foreign',TOKENS.approved),'foreign label claim');
-  await succeeds(db('PUT',`userPreferences/${IDS.approved}/trainerTags/tag-foreign`,{label:'Local',normalizedLabel:'local',labelKey:key,active:true,createdAt:100,updatedAt:100},TOKENS.approved),'foreign tag');
-  await fails(db('PUT',`userPreferences/${IDS.owner}/favoriteTrainers/${IDS.other}`,{trainerName:'OtherTrainer',addedAt:100,tagIds:{'tag-foreign':true}},TOKENS.owner),'foreign namespace assignment');
+  await succeeds(db('PUT',`userPreferences/${IDS.approved}/trainerTagLabels/${key}`,'tag-foreign','emulator-owner'),'trusted fixture foreign label claim');
+  await succeeds(db('PUT',`userPreferences/${IDS.approved}/trainerTags/tag-foreign`,tagRecord({label:'Local',key}),'emulator-owner'),'trusted fixture foreign tag');
+  await fails(db('PUT',`userPreferences/${IDS.owner}/trainerMetadata/${IDS.other}`,{note:'',tagIds:{'tag-foreign':true},revision:1,updatedAt:100,operationId:operationId('foreign'),deleted:false},TOKENS.owner),'foreign namespace assignment');
 });
 
 test('recent trainer slots are structurally capped at thirty',async()=>{
   await enablePreferences();
-  const valid={ownerUid:IDS.other,trainerName:'OtherTrainer',lastOpenedAt:100};
+  const valid=recentRecord();
   await succeeds(db('PUT',`userPreferences/${IDS.owner}/recentTrainerSlots/00`,valid,TOKENS.owner),'valid recent slot');
-  await succeeds(db('PUT',`userPreferences/${IDS.owner}/recentTrainerSlots/29`,{ownerUid:IDS.approved,trainerName:'ApprovedTrainer',lastOpenedAt:200},TOKENS.owner),'last valid recent slot');
+  await succeeds(db('PUT',`userPreferences/${IDS.owner}/recentTrainerSlots/29`,{...recentRecord(),ownerUid:IDS.approved,trainerName:'ApprovedTrainer',lastOpenedAt:200},TOKENS.owner),'last valid recent slot');
+  await fails(db('PUT',`userPreferences/${IDS.owner}/recentTrainerSlots/00`,{...valid,lastOpenedAt:90,revision:2,operationId:operationId('recent2')},TOKENS.owner),'stale recent activity');
   await fails(db('PUT',`userPreferences/${IDS.owner}/recentTrainerSlots/30`,valid,TOKENS.owner),'overflow recent slot');
   await fails(db('PUT',`userPreferences/${IDS.owner}/recentTrainerSlots/arbitrary`,valid,TOKENS.owner),'arbitrary recent key');
   await fails(db('PUT',`userPreferences/${IDS.owner}/recentTrainerSlots/0`,valid,TOKENS.owner),'malformed recent key');
@@ -246,21 +295,20 @@ test('recent trainer slots are structurally capped at thirty',async()=>{
   await fails(db('PUT',`userPreferences/${IDS.owner}/recentTrainerSlots`,{'00':valid,'30':valid},TOKENS.owner),'parent write cannot bypass slot keys');
 });
 
-test('declared history bounds, stale versions, and conflicting fingerprints are rejected',async()=>{
+test('history writes remain trusted-only while exact owner reads stay private',async()=>{
   await enablePreferences();
-  const history={lastSeenShareVersion:5,lastSeenUpdatedAt:500,lastSeenFingerprint:'version-5',entryCount:1,lastSeenSnapshot:{Pikachu:{category:'wishlist',fingerprint:'a'}}};
-  await succeeds(db('PUT',`userPreferences/${IDS.owner}/trainerHistory/${IDS.other}`,history,TOKENS.owner),'initial seen state');
-  await fails(db('PUT',`userPreferences/${IDS.owner}/trainerHistory/${IDS.other}`,{...history,lastSeenShareVersion:4,lastSeenUpdatedAt:600},TOKENS.owner),'stale seen version');
-  await fails(db('PUT',`userPreferences/${IDS.owner}/trainerHistory/${IDS.other}`,{...history,lastSeenUpdatedAt:600,lastSeenFingerprint:'conflicting-version-5'},TOKENS.owner),'same-version fingerprint conflict');
-  await fails(db('PUT',`userPreferences/${IDS.owner}/trainerHistory/${IDS.other}`,{...history,lastSeenShareVersion:6,lastSeenUpdatedAt:600,lastSeenFingerprint:'version-6',entryCount:-1},TOKENS.owner),'negative declared history count');
-  await fails(db('PUT',`userPreferences/${IDS.owner}/trainerHistory/${IDS.other}`,{...history,lastSeenShareVersion:6,lastSeenUpdatedAt:600,lastSeenFingerprint:'version-6',entryCount:1501},TOKENS.owner),'oversized declared history count');
-  await fails(db('PUT',`userPreferences/${IDS.owner}/trainerHistory/${IDS.other}`,{...history,lastSeenShareVersion:6,lastSeenUpdatedAt:600,lastSeenFingerprint:'version-6',entryCount:'1'},TOKENS.owner),'malformed declared history count');
-  await succeeds(db('PUT',`userPreferences/${IDS.owner}/trainerHistory/${IDS.other}`,{...history,lastSeenShareVersion:6,lastSeenUpdatedAt:600,lastSeenFingerprint:'version-6'},TOKENS.owner),'advance seen state');
+  const history=historyRecord();
+  await fails(db('PUT',`userPreferences/${IDS.owner}/trainerHistory/${IDS.other}`,history,TOKENS.owner),'direct history write');
+  await succeeds(db('PUT',`userPreferences/${IDS.owner}/trainerHistory/${IDS.other}`,history,'emulator-owner'),'trusted fixture history write');
+  const next={...history,revision:2,operationId:operationId('history2'),lastSeenShareVersion:6,lastSeenUpdatedAt:600,lastSeenFingerprint:'version-6'};
+  await fails(db('PUT',`userPreferences/${IDS.owner}/trainerHistory/${IDS.other}`,next,TOKENS.owner),'direct history advance');
+  const ownState=await succeeds(db('GET',`userPreferences/${IDS.owner}/trainerHistory/${IDS.other}`,undefined,TOKENS.owner),'owner reads trusted history');
+  assert.equal(JSON.parse(ownState.body).entryCount,history.entryCount);
   const otherState=await succeeds(db('GET',`userPreferences/${IDS.other}/trainerHistory/${IDS.owner}`,undefined,TOKENS.other),'other viewer unaffected');
   assert.equal(otherState.body,'null');
 });
 
 test('preference writes are denied while synced-preference gate is false',async()=>{
-  await fails(db('PUT',`userPreferences/${IDS.owner}/favoriteTrainers/${IDS.other}`,{trainerName:'OtherTrainer',addedAt:100},TOKENS.owner),'disabled favorite write');
-  await fails(db('PUT',`userPreferences/${IDS.owner}/recentTrainerSlots/00`,{ownerUid:IDS.other,trainerName:'OtherTrainer',lastOpenedAt:100},TOKENS.owner),'disabled recent write');
+  await fails(db('PUT',`userPreferences/${IDS.owner}/favoriteTrainers/${IDS.other}`,favoriteRecord(),TOKENS.owner),'disabled favorite write');
+  await fails(db('PUT',`userPreferences/${IDS.owner}/recentTrainerSlots/00`,recentRecord(),TOKENS.owner),'disabled recent write');
 });

@@ -111,14 +111,14 @@ test('Favorites rendering is read-only and history advances only through an expl
 });
 
 test('production page loads the preference candidate but keeps repository and UI inactive',()=>{
-  const html=readFileSync(path.join(__dirname,'..','index.html'),'utf8');assert.match(html,/js\/domain\/trainerPreferences\.js\?v=/);assert.match(html,/SYNCED_TRAINER_PREFERENCES_ENABLED!==false/);assert.match(html,/createTrainerPreferencesRepository\(\{enabled:false\}\)/);assert.doesNotMatch(html,/managedTrainerPreferencesRepository\.(read|subscribe|save|remove|merge)/);
+  const html=readFileSync(path.join(__dirname,'..','index.html'),'utf8');assert.match(html,/js\/domain\/trainerPreferences\.js\?v=/);assert.match(html,/js\/domain\/trainerPreferenceSync\.js\?v=/);assert.match(html,/js\/data\/trainerPreferenceSyncQueue\.js\?v=/);assert.match(html,/SYNCED_TRAINER_PREFERENCES_ENABLED!==false/);assert.match(html,/createTrainerPreferencesRepository\(\{enabled:false\}\)/);assert.doesNotMatch(html,/managedTrainerPreferencesRepository\.(read|subscribe|mutate|finalize|merge)/);
 });
 
 test('repository exposes no writes until both feature and write gate are true',async()=>{
   const window={};vm.runInNewContext(readFileSync(path.join(__dirname,'..','js/data/trainerPreferencesRepository.js'),'utf8'),{window});const factory=window.PogoData.trainerPreferencesRepository.createTrainerPreferencesRepository;
-  const disabled=factory({enabled:false});assert.equal(disabled.enabled,false);assert.equal(typeof disabled.saveFavorite,'undefined');
-  const paths=[],readOnly=factory({enabled:true,writesEnabled:false,readExact:async p=>paths.push(p),listenExact:p=>paths.push(p)});await readOnly.readFavorites('viewer-a');readOnly.subscribeHistory('viewer-a',{});assert.equal(typeof readOnly.saveFavorite,'undefined');
-  let payload;const writable=factory({enabled:true,writesEnabled:true,readExact:async()=>{},listenExact:()=>{},writeExact:(p,v)=>{paths.push(p);payload=v;},removeExact:(p)=>paths.push(p),transactionExact:(p)=>paths.push(p)});writable.saveFavorite('viewer-a','owner-a',favorite('A',10,{tagIds:['tag_a'],domainOnly:'ignored'}));assert.equal(typeof writable.saveFavorite,'function');assert.ok(paths.includes('userPreferences/viewer-a/favoriteTrainers/owner-a'));assert.deepEqual(JSON.parse(JSON.stringify(payload)),{trainerName:'A',addedAt:10,note:'',tagIds:{tag_a:true}});
+  const disabled=factory({enabled:false});assert.equal(disabled.enabled,false);assert.equal(typeof disabled.mutateFavorite,'undefined');
+  const paths=[],readOnly=factory({enabled:true,writesEnabled:false,readExact:async p=>paths.push(p),listenExact:p=>paths.push(p)});await readOnly.readMetadata('viewer-a');await readOnly.readTrainerMetadata('viewer-a');readOnly.subscribeHistory('viewer-a',{});assert.equal(typeof readOnly.mutateFavorite,'undefined');
+  const writable=factory({enabled:true,writesEnabled:true,readExact:async()=>{},listenExact:()=>{},transactionExact:(p)=>paths.push(p)});writable.mutateFavorite('viewer-a','owner-a',()=>{});writable.mutateTrainerMetadata('viewer-a','owner-a',()=>{});writable.mutateMetadata('viewer-a',()=>{});assert.equal(typeof writable.mutateFavorite,'function');assert.ok(paths.includes('userPreferences/viewer-a/favoriteTrainers/owner-a'));assert.ok(paths.includes('userPreferences/viewer-a/trainerMetadata/owner-a'));assert.ok(paths.includes('userPreferences/viewer-a/metadata'));assert.equal(typeof writable.finalizeMigration,'undefined');assert.equal(typeof writable.saveTag,'undefined');assert.equal(typeof writable.saveHistory,'undefined');
 });
 
 test('disabled UI models are hidden, inaccessible to save, responsive, and translation-key driven',()=>{
@@ -133,6 +133,12 @@ test('local organizer model is interactive without enabling remote preference sy
   const preferences={tags:{tag_local:{tagId:'tag_local',label:'Raid',active:true}},favorites:{ownerA:{ownerUid:'ownerA',...favorite('Trainer A'),tagIds:['tag_local']}}};
   const model=window.PogoUI.trainerTagPanel.localOrganizerViewModel({preferences,query:'raid',tagIds:['tag_local'],width:390,height:300,domain:window.PogoDomain.trainerPreferences});
   assert.equal(model.hidden,false);assert.equal(model.interactive,true);assert.equal(model.syncState,'local-only');assert.equal(model.controls.saveDisabled,false);assert.equal(model.layout.mode,'mobile_sheet');assert.equal(model.layout.touchTargetPx,48);
+});
+
+test('future sync UI remains hidden and exposes no functional action while disabled',()=>{
+  const window={};for(const file of ['js/domain/trainerPreferenceSync.js','js/ui/trainerTagPanel.js'])vm.runInNewContext(readFileSync(path.join(__dirname,'..',file),'utf8'),{window});
+  const model=window.PogoUI.trainerTagPanel.syncReadinessViewModel({featureEnabled:false,writesEnabled:false,state:'synced',localCounts:{favorites:2},cloudCounts:{favorites:1},width:390,height:300,syncDomain:window.PogoDomain.trainerPreferenceSync});
+  assert.equal(model.hidden,true);assert.equal(model.interactive,false);assert.equal(model.state,'local-only');assert.equal(model.controls.startSyncDisabled,true);assert.equal(model.migration.automaticOnLogin,false);assert.equal(model.migration.rereadVerificationRequired,true);assert.equal(model.layout.touchTargetPx,48);
 });
 
 test('private organizer data is absent from public-share publication code',()=>{

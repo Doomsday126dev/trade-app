@@ -43,6 +43,9 @@ function harness(overrides = {}) {
 
 function context(uid = IDS.viewer) { return { auth: { uid }, app: { appId: 'demo-app' } }; }
 function requestId(suffix) { return `request-${suffix}-0001`; }
+function tagRequest(action, tagId, label, suffix, baseRevision = action === 'create' ? 0 : 1) {
+  return { action, tagId, ...(label == null ? {} : { label }), baseRevision, requestId: requestId(suffix) };
+}
 function historyRequest(overrides = {}) {
   const share = seed().trainerShares[IDS.owner];
   const snapshot = snapshotFromTrainerShare(share);
@@ -53,4 +56,4 @@ async function rejectsCode(promise, code, reason) {
   await require('node:assert/strict').rejects(promise, (error) => error?.code === code && (!reason || error?.reason === reason));
 }
 
-module.exports = { IDS, context, harness, historyRequest, rejectsCode, requestId, seed };
+module.exports = { IDS, context, harness, historyRequest, rejectsCode, requestId, seed, tagRequest };

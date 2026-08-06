@@ -17,7 +17,7 @@ const added=Object.keys(candidate).filter(key=>!Object.hasOwn(baseline,key)).sor
 assert.deepEqual(added,['accounts','groups','legacyShareOwners','shareAccess','shareDirectory','shareGroupAccess','shareVisibility','shareVisibilityConfig','trainerPreferencesConfig','trainerShares','userPreferences']);
 assert.deepEqual(candidate.publicShares,baseline.publicShares,'Legacy publicShares compatibility changed');
 assert.equal(new Set(map.surfaces.map(item=>item.registryId)).size,map.surfaces.length);
-assert.equal(map.surfaces.length,9);
+assert.equal(map.surfaces.length,11);
 for(const surface of map.surfaces){
   const registered=registry.get(surface.registryId);assert.ok(registered,`Missing registry entry ${surface.registryId}`);
   assert.equal(registered.path,surface.path);assert.equal(registered.status,'candidate_inactive');
@@ -29,6 +29,6 @@ for(const pathName of ['accounts','shareVisibility','shareAccess','shareDirector
 assert.match(JSON.stringify(candidate.userPreferences),/trainerPreferencesConfig.*writesEnabled/);
 assert.equal(candidate.groups['.read'],false);assert.equal(candidate.groups['.write'],false);assert.equal(candidate.shareGroupAccess.$ownerUid['.write'],false);
 assert.doesNotMatch(html,/js\/domain\/shareVisibility\.js|SHARE_VISIBILITY_MODEL_ENABLED/);
-assert.match(html,/js\/domain\/trainerPreferences\.js\?v=2026-08-05\.4/);
+assert.match(html,/js\/domain\/trainerPreferences\.js\?v=2026-08-05\.11/);
 assert.match(html,/SYNCED_TRAINER_PREFERENCES_ENABLED!==false/);
 console.log(`Share visibility additive contract passed (${Object.keys(baseline).length} live rule roots preserved; ${map.surfaces.length} disabled future surfaces mapped).`);

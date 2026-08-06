@@ -9,7 +9,10 @@ test('history verifies the actual count and server-authorized public projection'
   const { adapter, operations } = harness();
   const result = await operations.verifyTrainerHistory(historyRequest(), context());
   assert.equal(result.status, 'recorded');
-  assert.equal(adapter.inspect().userPreferences.viewer_001.trainerHistory.owner_001.entryCount, 2);
+  const row = adapter.inspect().userPreferences.viewer_001.trainerHistory.owner_001;
+  assert.equal(row.entryCount, 2);
+  assert.equal(row.revision, 1);
+  assert.equal(row.operationId, requestId('history'));
 });
 
 test('declared count mismatch is rejected', async () => {
@@ -28,6 +31,12 @@ test('unknown and private fields are rejected', async () => {
   const input = historyRequest();
   input.publicSnapshot.entry_a.privateNote = 'secret';
   await rejectsCode(operations.verifyTrainerHistory(input, context()), 'invalid_argument');
+});
+
+test('client-provided source labels and caller identities cannot forge authorization', async () => {
+  const { operations } = harness();
+  await rejectsCode(operations.verifyTrainerHistory({ ...historyRequest(), sourceCategory: 'owned-private' }, context()), 'invalid_argument');
+  await rejectsCode(operations.verifyTrainerHistory({ ...historyRequest(), callerUid: IDS.admin }, context()), 'invalid_argument');
 });
 
 test('client snapshot differing from exact authorized share is rejected', async () => {
@@ -82,6 +91,20 @@ test('history transaction failure leaves no partial row', async () => {
   adapter.injectFailure('advanceHistoryForViewer');
   await rejectsCode(operations.verifyTrainerHistory(historyRequest({ requestId: requestId('history-failure') }), context()), 'unavailable');
   assert.equal(adapter.inspect().userPreferences.viewer_001, undefined);
+});
+
+test('disabled preference gate blocks history mutation before idempotency storage', async () => {
+  const { adapter, operations } = harness({ gates: { share_visibility: true, trainer_preferences: false } });
+  await rejectsCode(operations.verifyTrainerHistory(historyRequest({ requestId: requestId('history-disabled') }), context()), 'unavailable');
+  assert.deepEqual(adapter.inspect().trustedOperationRequests, {});
+  assert.equal(adapter.inspect().userPreferences.viewer_001, undefined);
+});
+
+test('reusing a completed history request ID with changed input is rejected', async () => {
+  const { operations } = harness();
+  const initial = historyRequest({ requestId: requestId('history-reused') });
+  await operations.verifyTrainerHistory(initial, context());
+  await rejectsCode(operations.verifyTrainerHistory({ ...initial, shareUpdatedAt: initial.shareUpdatedAt + 1 }, context()), 'replay_mismatch');
 });
 
 test('history uses public share source and never private owned lists', () => {

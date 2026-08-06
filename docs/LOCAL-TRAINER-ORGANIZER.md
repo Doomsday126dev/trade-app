@@ -26,8 +26,8 @@ These bounds keep device storage and compact-screen controls predictable. Displa
 
 Tags and notes never enter public-share snapshots, exports, Firebase reads, Firebase writes, share-access grants, or cross-trainer lookups. Find Trainer continues to read another trainer only through `publicShares/{username}`. Favorites and tags do not imply Approved Viewer access.
 
-The active sync state is `local-only`. Future states (`pending-sync`, `synced`, `conflict`, and `sync-error`) are modeled for compatibility, but the synced-preferences feature flag and server write gate remain disabled. No automatic migration runs. A future migration must require exact UID and username ownership, completed server reads, explicit approval, enabled gates, and reread verification before local data can be removed.
+The active sync state is `local-only`. Future states (`pending-sync`, `synced`, `conflict`, and `sync-error`) are modeled for compatibility, but the synced-preferences feature flag and server write gate remain disabled. The separate readiness contract adds entity revisions, tombstones, bounded UID-partitioned operations, conflict states, and explicit schema-v2 migration planning without changing this store. No automatic migration runs. A future migration must require exact UID and username ownership, current-generation completed server reads, explicit approval, enabled gates, and reread verification. Local data is never deleted automatically.
 
 ## Non-Goals
 
-This release does not sync organizer data across devices, grant share access, migrate signed-out data, expose tags on public trainer cards, or provide a production preference repository. It performs no Firebase read or write for tags or notes. Conflict resolution and remote persistence remain disabled future work.
+This release does not sync organizer data across devices, grant share access, migrate signed-out data, expose tags on public trainer cards, or activate the production preference repository. It performs no Firebase read or write for tags or notes. The disabled conflict, queue, migration, rules, and UI contracts are documented in `TRAINER-PREFERENCE-SYNC-READINESS.md`.

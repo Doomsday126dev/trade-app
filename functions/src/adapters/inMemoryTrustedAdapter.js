@@ -1,5 +1,7 @@
 'use strict';
 
+const MAX_ACTIVE_TAGS = 24;
+
 const { fail } = require('../domain/errors');
 const { snapshotFromTrainerShare } = require('./firebaseTrustedAdapter');
 
@@ -70,7 +72,7 @@ function createInMemoryTrustedAdapter(seed = {}) {
       } catch (error) { Object.assign(state, before); throw error; }
     });
   }
-  async function claimTagForViewer({ callerUid, action, tagId, label, now }) {
+  async function claimTagForViewer({ callerUid, action, tagId, label, baseRevision, operationId, now }) {
     return serialized(() => {
       maybeFail('claimTagForViewer');
       const before = clone(state);
@@ -79,14 +81,16 @@ function createInMemoryTrustedAdapter(seed = {}) {
         const tags = prefs.trainerTags ||= {}, claims = prefs.trainerTagLabels ||= {};
         const existing = tags[tagId];
         if (action === 'create' && existing) {
-          if (existing.active === true && existing.labelKey === label.labelKey) return { status: 'idempotent' };
+          if (existing.active === true && existing.deleted !== true && existing.labelKey === label.labelKey) return { status: 'idempotent' };
           fail('conflict', 'tag/tag_exists');
         }
+        if (action === 'create' && Object.values(tags).filter(tag => tag?.active === true && tag?.deleted !== true).length >= MAX_ACTIVE_TAGS) fail('payload_too_large', 'tag/limit');
         if ((action === 'rename' || action === 'soft_delete') && !existing) fail('invalid_argument', 'tag/not_found');
+        if (action === 'soft_delete' && existing.deleted === true) return { status: 'idempotent' };
+        if (Number(existing?.revision || 0) !== baseRevision) fail('stale_state', 'tag/revision_conflict');
         if (action === 'soft_delete') {
-          if (existing.active === false) return { status: 'idempotent' };
           if (claims[existing.labelKey] === tagId) delete claims[existing.labelKey];
-          tags[tagId] = { ...existing, active: false, updatedAt: now };
+          tags[tagId] = { ...existing, active: false, deleted: true, deletedAt: now, updatedAt: now, revision: Number(existing.revision || 0) + 1, operationId };
           count('claimTagForViewer');
           return { status: 'soft_deleted' };
         }
@@ -94,7 +98,11 @@ function createInMemoryTrustedAdapter(seed = {}) {
         if (existing?.labelKey === label.labelKey && existing.active === true) return { status: 'idempotent' };
         if (existing?.labelKey && claims[existing.labelKey] === tagId) delete claims[existing.labelKey];
         claims[label.labelKey] = tagId;
-        tags[tagId] = { label: label.display, normalizedLabel: label.normalized, labelKey: label.labelKey, active: true, createdAt: existing?.createdAt || now, updatedAt: now };
+        tags[tagId] = {
+          label: label.display, normalizedLabel: label.normalized, labelKey: label.labelKey,
+          active: true, deleted: false, createdAt: existing?.createdAt || now, updatedAt: now,
+          revision: Number(existing?.revision || 0) + 1, operationId
+        };
         count('claimTagForViewer');
         return { status: action === 'rename' ? 'renamed' : 'created' };
       } catch (error) { Object.assign(state, before); throw error; }
@@ -117,7 +125,12 @@ function createInMemoryTrustedAdapter(seed = {}) {
         if (input.shareVersion === current.lastSeenShareVersion && input.snapshotFingerprint !== current.lastSeenFingerprint) fail('stale_state', 'history/version_conflict');
         if (input.shareVersion === current.lastSeenShareVersion) return { status: 'idempotent' };
       }
-      history[input.ownerUid] = { lastSeenShareVersion: input.shareVersion, lastSeenUpdatedAt: input.shareUpdatedAt, lastSeenFingerprint: input.snapshotFingerprint, entryCount: input.entryCount, lastSeenSnapshot: clone(input.snapshot) };
+      history[input.ownerUid] = {
+        lastSeenShareVersion: input.shareVersion, lastSeenUpdatedAt: input.shareUpdatedAt,
+        lastSeenFingerprint: input.snapshotFingerprint, entryCount: input.entryCount,
+        lastSeenSnapshot: clone(input.snapshot), revision: Number(current?.revision || 0) + 1,
+        operationId: input.operationId
+      };
       count('advanceHistoryForViewer');
       return { status: 'recorded' };
     });

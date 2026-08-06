@@ -7,44 +7,44 @@
     return clean;
   }
   function disabled(){return Object.freeze({ok:false,error:Object.freeze({code:'trainer-preferences/disabled'})});}
-  function favoritePayload(value={}){
-    const payload={trainerName:String(value.trainerName||''),addedAt:Number(value.addedAt),note:String(value.note||'')};
+  function favoritePayload(value={}){return{trainerName:String(value.trainerName||''),addedAt:Number(value.addedAt),revision:Number(value.revision),updatedAt:Number(value.updatedAt),operationId:key(value.operationId,'Operation ID'),deleted:value.deleted===true,...(value.deleted===true?{deletedAt:Number(value.deletedAt)}:{})};}
+  function trainerMetadataPayload(value={}){
     const ids=Array.isArray(value.tagIds)?value.tagIds:Object.entries(value.tagIds||{}).filter(([,active])=>active===true).map(([id])=>id);
-    if(ids.length)payload.tagIds=Object.fromEntries([...new Set(ids.map(id=>key(id,'Tag ID')))].sort().map(id=>[id,true]));
-    return payload;
+    return{note:String(value.note||''),tagIds:Object.fromEntries([...new Set(ids.map(id=>key(id,'Tag ID')))].sort().map(id=>[id,true])),revision:Number(value.revision),updatedAt:Number(value.updatedAt),operationId:key(value.operationId,'Operation ID'),deleted:value.deleted===true,...(value.deleted===true?{deletedAt:Number(value.deletedAt)}:{})};
   }
-  function tagPayload(value={}){return{label:String(value.label??value.displayLabel??''),normalizedLabel:String(value.normalizedLabel||''),labelKey:key(value.labelKey,'Tag label key'),active:value.active!==false,createdAt:Number(value.createdAt),updatedAt:Number(value.updatedAt)};}
-  function historyPayload(value={}){return{lastSeenShareVersion:Number(value.lastSeenShareVersion),lastSeenUpdatedAt:Number(value.lastSeenUpdatedAt),lastSeenFingerprint:String(value.lastSeenFingerprint||''),entryCount:Number(value.entryCount),lastSeenSnapshot:Object.fromEntries(Object.entries(value.lastSeenSnapshot||{}).map(([id,item])=>[key(id,'History entry ID'),{category:String(item.category||''),fingerprint:String(item.fingerprint||'')}]))};}
-  function createTrainerPreferencesRepository({enabled=false,writesEnabled=false,readExact,listenExact,writeExact,removeExact,transactionExact}={}){
-    if(enabled!==true)return Object.freeze({enabled:false,writesEnabled:false,readFavorites:async()=>disabled(),readTags:async()=>disabled(),readTagLabels:async()=>disabled(),subscribeFavorites:disabled,subscribeTags:disabled,subscribeTagLabels:disabled,subscribeRecents:disabled,subscribeHistory:disabled});
+  function metadataPayload(value={}){return{schemaVersion:Number(value.schemaVersion),revision:Number(value.revision),updatedAt:Number(value.updatedAt),favoriteCount:Number(value.favoriteCount),tagCount:Number(value.tagCount),lastSuccessfulSyncAt:Number(value.lastSuccessfulSyncAt||0),migrationState:String(value.migrationState||'not-started'),migrationFingerprint:String(value.migrationFingerprint||'')};}
+  function createTrainerPreferencesRepository({enabled=false,writesEnabled=false,readExact,listenExact,transactionExact}={}){
+    if(enabled!==true)return Object.freeze({enabled:false,writesEnabled:false,readMetadata:async()=>disabled(),readFavorites:async()=>disabled(),readTrainerMetadata:async()=>disabled(),readTags:async()=>disabled(),readTagLabels:async()=>disabled(),readRecents:async()=>disabled(),readHistory:async()=>disabled(),subscribeMetadata:disabled,subscribeFavorites:disabled,subscribeTrainerMetadata:disabled,subscribeTags:disabled,subscribeTagLabels:disabled,subscribeRecents:disabled,subscribeHistory:disabled});
     if(typeof readExact!=='function'||typeof listenExact!=='function')throw new TypeError('Enabled trainer preferences require exact read adapters');
     const base=viewerUid=>`userPreferences/${key(viewerUid,'Viewer UID')}`;
     const repository={
       enabled:true,writesEnabled:writesEnabled===true,
+      readMetadata:viewerUid=>readExact(`${base(viewerUid)}/metadata`),
       readFavorites:viewerUid=>readExact(`${base(viewerUid)}/favoriteTrainers`),
+      readTrainerMetadata:viewerUid=>readExact(`${base(viewerUid)}/trainerMetadata`),
       readTags:viewerUid=>readExact(`${base(viewerUid)}/trainerTags`),
       readTagLabels:viewerUid=>readExact(`${base(viewerUid)}/trainerTagLabels`),
       readRecents:viewerUid=>readExact(`${base(viewerUid)}/recentTrainerSlots`),
       readHistory:viewerUid=>readExact(`${base(viewerUid)}/trainerHistory`),
+      subscribeMetadata:(viewerUid,callbacks)=>listenExact(`${base(viewerUid)}/metadata`,callbacks),
       subscribeFavorites:(viewerUid,callbacks)=>listenExact(`${base(viewerUid)}/favoriteTrainers`,callbacks),
+      subscribeTrainerMetadata:(viewerUid,callbacks)=>listenExact(`${base(viewerUid)}/trainerMetadata`,callbacks),
       subscribeTags:(viewerUid,callbacks)=>listenExact(`${base(viewerUid)}/trainerTags`,callbacks),
       subscribeTagLabels:(viewerUid,callbacks)=>listenExact(`${base(viewerUid)}/trainerTagLabels`,callbacks),
       subscribeRecents:(viewerUid,callbacks)=>listenExact(`${base(viewerUid)}/recentTrainerSlots`,callbacks),
       subscribeHistory:(viewerUid,callbacks)=>listenExact(`${base(viewerUid)}/trainerHistory`,callbacks)
     };
     if(writesEnabled===true){
-      if(typeof writeExact!=='function'||typeof removeExact!=='function'||typeof transactionExact!=='function')throw new TypeError('Enabled preference writes require exact write, remove, and transaction adapters');
+      if(typeof transactionExact!=='function')throw new TypeError('Enabled preference writes require an exact transaction adapter');
       Object.assign(repository,{
-        saveFavorite:(viewerUid,ownerUid,value)=>writeExact(`${base(viewerUid)}/favoriteTrainers/${key(ownerUid,'Owner UID')}`,favoritePayload(value)),
-        removeFavorite:(viewerUid,ownerUid)=>removeExact(`${base(viewerUid)}/favoriteTrainers/${key(ownerUid,'Owner UID')}`),
-        saveTag:(viewerUid,tagId,value)=>writeExact(`${base(viewerUid)}/trainerTags/${key(tagId,'Tag ID')}`,tagPayload(value)),
-        claimTagLabel:(viewerUid,labelKey,tagId)=>writeExact(`${base(viewerUid)}/trainerTagLabels/${key(labelKey,'Tag label key')}`,key(tagId,'Tag ID')),
-        saveHistory:(viewerUid,ownerUid,value)=>writeExact(`${base(viewerUid)}/trainerHistory/${key(ownerUid,'Owner UID')}`,historyPayload(value)),
-        mergeRecents:(viewerUid,updater)=>transactionExact(`${base(viewerUid)}/recentTrainerSlots`,updater)
+        mutateFavorite:(viewerUid,ownerUid,updater)=>transactionExact(`${base(viewerUid)}/favoriteTrainers/${key(ownerUid,'Owner UID')}`,updater),
+        mutateTrainerMetadata:(viewerUid,ownerUid,updater)=>transactionExact(`${base(viewerUid)}/trainerMetadata/${key(ownerUid,'Owner UID')}`,updater),
+        mergeRecents:(viewerUid,updater)=>transactionExact(`${base(viewerUid)}/recentTrainerSlots`,updater),
+        mutateMetadata:(viewerUid,updater)=>transactionExact(`${base(viewerUid)}/metadata`,updater)
       });
     }
     return Object.freeze(repository);
   }
 
-  root.trainerPreferencesRepository=Object.freeze({createTrainerPreferencesRepository,favoritePayload,tagPayload,historyPayload});
+  root.trainerPreferencesRepository=Object.freeze({createTrainerPreferencesRepository,favoritePayload,trainerMetadataPayload,metadataPayload});
 })(window);

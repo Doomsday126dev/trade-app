@@ -178,10 +178,11 @@ test('inactive future paths keep bounded reads while writes and legacy identity 
   for(const actor of [TOKENS.ordinary,TOKENS.admin]){
     await succeeds(db('GET',`shareVisibility/${IDS.ordinary}`,undefined,actor),'owner or admin visibility metadata');
     await succeeds(db('GET',`shareAccess/${IDS.ordinary}`,undefined,actor),'owner or admin access grants');
-    await succeeds(db('GET',`userPreferences/${IDS.ordinary}`,undefined,actor),'owner or admin preferences');
     await succeeds(db('GET',`accounts/${IDS.ordinary}`,undefined,actor),'owner or admin account');
     await succeeds(db('GET',`shareGroupAccess/${IDS.ordinary}`,undefined,actor),'owner or admin reserved group grants');
   }
+  await succeeds(db('GET',`userPreferences/${IDS.ordinary}`,undefined,TOKENS.ordinary),'owner preferences');
+  await fails(db('GET',`userPreferences/${IDS.ordinary}`,undefined,TOKENS.admin),'admin private preferences');
   const deniedPaths=[`privateProfiles/${IDS.ordinary}`,`publicProfiles/${IDS.ordinary}`,`publicLists/${IDS.ordinary}`,'unlistedShares/share1','groups/group1'];
   for(const actor of [undefined,TOKENS.ordinary,TOKENS.admin])for(const path of deniedPaths)await fails(db('GET',path,undefined,actor),`denied ${path}`);
   await fails(db('PUT',`userPreferences/${IDS.ordinary}/favoriteTrainers/${IDS.other}`,{trainerName:NAMES.other},TOKENS.ordinary),'disabled preference write');

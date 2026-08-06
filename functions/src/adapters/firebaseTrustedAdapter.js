@@ -1,5 +1,7 @@
 'use strict';
 
+const MAX_ACTIVE_TAGS = 24;
+
 const { fail } = require('../domain/errors');
 const { fingerprint } = require('../domain/fingerprints');
 
@@ -103,7 +105,7 @@ function createFirebaseTrustedAdapter({ database }) {
     return { status };
   }
 
-  async function claimTagForViewer({ callerUid, action, tagId, label, now }) {
+  async function claimTagForViewer({ callerUid, action, tagId, label, baseRevision, operationId, now }) {
     let status = action === 'soft_delete' ? 'soft_deleted' : action === 'rename' ? 'renamed' : 'created';
     const result = await hydratedTransaction(database.ref(`userPreferences/${callerUid}`), (preferences) => {
       preferences ||= {};
@@ -111,14 +113,21 @@ function createFirebaseTrustedAdapter({ database }) {
       preferences.trainerTagLabels ||= {};
       const existing = preferences.trainerTags[tagId];
       if (action === 'create' && existing) {
-        if (existing.active === true && existing.labelKey === label.labelKey) { status = 'idempotent'; return preferences; }
+        if (existing.active === true && existing.deleted !== true && existing.labelKey === label.labelKey) { status = 'idempotent'; return preferences; }
         status = 'tag_exists'; return;
       }
+      if (action === 'create' && Object.values(preferences.trainerTags).filter(tag => tag?.active === true && tag?.deleted !== true).length >= MAX_ACTIVE_TAGS) {
+        status = 'tag_limit'; return;
+      }
       if ((action === 'rename' || action === 'soft_delete') && !existing) { status = 'tag_missing'; return; }
+      if (action === 'soft_delete' && existing.deleted === true) { status = 'idempotent'; return preferences; }
+      if (Number(existing?.revision || 0) !== baseRevision) { status = 'stale_revision'; return; }
       if (action === 'soft_delete') {
-        if (existing.active === false) { status = 'idempotent'; return preferences; }
         if (preferences.trainerTagLabels[existing.labelKey] === tagId) delete preferences.trainerTagLabels[existing.labelKey];
-        preferences.trainerTags[tagId] = { ...existing, active: false, updatedAt: now };
+        preferences.trainerTags[tagId] = {
+          ...existing, active: false, deleted: true, deletedAt: now, updatedAt: now,
+          revision: Number(existing.revision || 0) + 1, operationId
+        };
         return preferences;
       }
       const claimant = preferences.trainerTagLabels[label.labelKey];
@@ -132,14 +141,19 @@ function createFirebaseTrustedAdapter({ database }) {
         normalizedLabel: label.normalized,
         labelKey: label.labelKey,
         active: true,
+        deleted: false,
         createdAt: existing?.createdAt || now,
-        updatedAt: now
+        updatedAt: now,
+        revision: Number(existing?.revision || 0) + 1,
+        operationId
       };
       return preferences;
     });
     if (!result.committed) {
       if (status === 'label_collision' || status === 'tag_exists') fail('conflict', `tag/${status}`);
       if (status === 'tag_missing') fail('invalid_argument', 'tag/not_found');
+      if (status === 'stale_revision') fail('stale_state', 'tag/revision_conflict');
+      if (status === 'tag_limit') fail('payload_too_large', 'tag/limit');
       fail('unavailable', 'tag/transaction_failed');
     }
     return { status };
@@ -159,7 +173,7 @@ function createFirebaseTrustedAdapter({ database }) {
     return { availability: 'available', shareVersion: share.shareVersion, updatedAt: share.updatedAt, snapshot: snapshotFromTrainerShare(share) };
   }
 
-  async function advanceHistoryForViewer({ callerUid, ownerUid, shareVersion, shareUpdatedAt, entryCount, snapshotFingerprint, snapshot }) {
+  async function advanceHistoryForViewer({ callerUid, ownerUid, shareVersion, shareUpdatedAt, entryCount, snapshotFingerprint, snapshot, operationId }) {
     let status = 'recorded';
     const result = await hydratedTransaction(database.ref(`userPreferences/${callerUid}/trainerHistory/${ownerUid}`), (current) => {
       if (current) {
@@ -168,7 +182,11 @@ function createFirebaseTrustedAdapter({ database }) {
         if (shareVersion === current.lastSeenShareVersion && snapshotFingerprint === current.lastSeenFingerprint) { status = 'idempotent'; return current; }
       }
       status = 'recorded';
-      return { lastSeenShareVersion: shareVersion, lastSeenUpdatedAt: shareUpdatedAt, lastSeenFingerprint: snapshotFingerprint, entryCount, lastSeenSnapshot: snapshot };
+      return {
+        lastSeenShareVersion: shareVersion, lastSeenUpdatedAt: shareUpdatedAt,
+        lastSeenFingerprint: snapshotFingerprint, entryCount, lastSeenSnapshot: snapshot,
+        revision: Number(current?.revision || 0) + 1, operationId
+      };
     });
     if (!result.committed) {
       if (status === 'stale' || status === 'version_conflict') fail('stale_state', `history/${status}`);

@@ -1,6 +1,6 @@
 # Trusted Functions Staging Decision Summary
 
-Status: proposal-only, non-operational, and uncommitted candidate.
+Status: proposal-only, non-operational, and local candidate.
 
 This document records selected proposed values from the three conversational
 decision groups. It does not record formal execution approval. Every
@@ -96,7 +96,7 @@ Preferred narrow-read rollback:
 
 Additive visibility/preferences candidate:
 
-`fc781919003a5afcba4fcf1e5235498090352deb1448e746b6c69ec61add6ac3`
+`cbcea2a672e1f9b1d6a4582410bb89bca765ca307c0495c7cc80ea35f805071c`
 
 These hashes are proposed values only. Future publication requires immediate
 hash recomputation, staging-target verification, confirmation that both write

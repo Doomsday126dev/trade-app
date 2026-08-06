@@ -36,5 +36,20 @@
     return Object.freeze({...model,status:'local_only',hidden:false,interactive:true,syncState:'local-only',syncStateKey:'organizer.localOnly',controls:Object.freeze({...model.controls,saveDisabled:false})});
   }
 
-  root.trainerTagPanel=Object.freeze({viewModel,localOrganizerViewModel,shareControlsModel,layoutForWidth,accessibilityModel});
+  function syncReadinessViewModel({featureEnabled=false,writesEnabled=false,state='local-only',localCounts={},cloudCounts={},pendingCount=0,conflictCount=0,lastSuccessfulSyncAt=0,width=1024,height=800,syncDomain}={}){
+    if(!syncDomain)throw new TypeError('Trainer preference sync UI requires the sync domain');
+    const presentation=syncDomain.preferenceSyncPresentation({featureEnabled,writesEnabled,state,pendingCount,conflictCount,lastSuccessfulSyncAt});
+    const active=featureEnabled===true&&writesEnabled===true;
+    return Object.freeze({
+      status:active?'future-enabled-model':'disabled-candidate',hidden:!active,interactive:active,state:presentation.state,statusKey:presentation.statusKey,
+      layout:layoutForWidth(width,height),accessibility:accessibilityModel(),
+      counts:Object.freeze({local:Object.freeze({...localCounts}),cloud:Object.freeze({...cloudCounts})}),
+      migration:Object.freeze({previewable:true,requiresExplicitApproval:true,automaticOnLogin:false,hydrationRequired:true,rereadVerificationRequired:true}),
+      controls:Object.freeze({startSyncDisabled:!active,retryDisabled:!active,resolveConflictDisabled:!active,removeCloudCopyDisabled:!active}),
+      removalChoices:Object.freeze(['trainer.syncRemoveCloudKeepLocal','trainer.syncRemoveCloudAndLocal']),
+      labelKeys:Object.freeze(['trainer.syncTitle','trainer.syncPreview','trainer.syncDeviceCount','trainer.syncCloudCount','trainer.syncPending','trainer.syncSuccess','trainer.syncError','trainer.syncConflict','trainer.syncLastSuccess'])
+    });
+  }
+
+  root.trainerTagPanel=Object.freeze({viewModel,localOrganizerViewModel,syncReadinessViewModel,shareControlsModel,layoutForWidth,accessibilityModel});
 })(window);

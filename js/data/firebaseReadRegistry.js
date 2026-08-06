@@ -31,11 +31,13 @@
     {id:'candidate_share_mode_read',path:'shareVisibility/{ownerUid}/mode',method:'get',breadth:'exact',ownerScope:'selectedTrainer',audience:'authenticated',consumers:['future_share_visibility'],status:'candidate_inactive'},
     {id:'candidate_trainer_share_read',path:'trainerShares/{ownerUid}',method:'get',breadth:'exact',ownerScope:'selectedTrainer',audience:'visibility_authorized',consumers:['future_share_visibility'],status:'candidate_inactive'},
     {id:'candidate_trainer_share_live',path:'trainerShares/{ownerUid}',method:'onValue',breadth:'exact',ownerScope:'selectedTrainer',audience:'visibility_authorized',consumers:['future_share_visibility'],status:'candidate_inactive'},
-    {id:'candidate_preference_favorites_live',path:'userPreferences/{viewerUid}/favoriteTrainers',method:'onValue',breadth:'exact',ownerScope:'session',audience:'owner_or_admin',consumers:['future_synced_preferences'],status:'candidate_inactive'},
-    {id:'candidate_preference_tags_live',path:'userPreferences/{viewerUid}/trainerTags',method:'onValue',breadth:'exact',ownerScope:'session',audience:'owner_or_admin',consumers:['future_synced_preferences'],status:'candidate_inactive'},
-    {id:'candidate_preference_tag_labels_live',path:'userPreferences/{viewerUid}/trainerTagLabels',method:'onValue',breadth:'exact',ownerScope:'session',audience:'owner_or_admin',consumers:['future_synced_preferences'],status:'candidate_inactive'},
-    {id:'candidate_preference_recents_live',path:'userPreferences/{viewerUid}/recentTrainerSlots',method:'onValue',breadth:'exact',ownerScope:'session',audience:'owner_or_admin',consumers:['future_synced_preferences'],status:'candidate_inactive'},
-    {id:'candidate_preference_history_live',path:'userPreferences/{viewerUid}/trainerHistory',method:'onValue',breadth:'exact',ownerScope:'session',audience:'owner_or_admin',consumers:['future_synced_preferences'],status:'candidate_inactive'},
+    {id:'candidate_preference_metadata_live',path:'userPreferences/{viewerUid}/metadata',method:'onValue',breadth:'exact',ownerScope:'session',audience:'owner',consumers:['future_synced_preferences'],status:'candidate_inactive'},
+    {id:'candidate_preference_favorites_live',path:'userPreferences/{viewerUid}/favoriteTrainers',method:'onValue',breadth:'exact',ownerScope:'session',audience:'owner',consumers:['future_synced_preferences'],status:'candidate_inactive'},
+    {id:'candidate_preference_trainer_metadata_live',path:'userPreferences/{viewerUid}/trainerMetadata',method:'onValue',breadth:'exact',ownerScope:'session',audience:'owner',consumers:['future_synced_preferences'],status:'candidate_inactive'},
+    {id:'candidate_preference_tags_live',path:'userPreferences/{viewerUid}/trainerTags',method:'onValue',breadth:'exact',ownerScope:'session',audience:'owner',consumers:['future_synced_preferences'],status:'candidate_inactive'},
+    {id:'candidate_preference_tag_labels_live',path:'userPreferences/{viewerUid}/trainerTagLabels',method:'onValue',breadth:'exact',ownerScope:'session',audience:'owner',consumers:['future_synced_preferences'],status:'candidate_inactive'},
+    {id:'candidate_preference_recents_live',path:'userPreferences/{viewerUid}/recentTrainerSlots',method:'onValue',breadth:'exact',ownerScope:'session',audience:'owner',consumers:['future_synced_preferences'],status:'candidate_inactive'},
+    {id:'candidate_preference_history_live',path:'userPreferences/{viewerUid}/trainerHistory',method:'onValue',breadth:'exact',ownerScope:'session',audience:'owner',consumers:['future_synced_preferences'],status:'candidate_inactive'},
     {id:'login_identity_reads',path:'users/{username} + authIndex/{uid}',method:'get',breadth:'exact',ownerScope:'session',audience:'owner_or_admin',consumers:['login','account_binding'],status:'retained'},
     {id:'admin_verification_reads',path:'users/{username} + loginDirectory/{username}',method:'get',breadth:'exact',ownerScope:'legacyAdmin',audience:'admin',consumers:['account_repair','member_creation'],status:'transitional'},
     {id:'community_verification_reads',path:'communities/{communityId}',method:'get',breadth:'exact',ownerScope:'legacyAdmin',audience:'admin',consumers:['community_admin'],status:'planned_retirement'},
@@ -82,7 +84,7 @@
 
   const CANDIDATE_SURFACE_GROUPS=Object.freeze({
     shareVisibility:Object.freeze(['candidate_share_directory_read','candidate_share_mode_read','candidate_trainer_share_read','candidate_trainer_share_live']),
-    syncedPreferences:Object.freeze(['candidate_preference_favorites_live','candidate_preference_tags_live','candidate_preference_tag_labels_live','candidate_preference_recents_live','candidate_preference_history_live'])
+    syncedPreferences:Object.freeze(['candidate_preference_metadata_live','candidate_preference_favorites_live','candidate_preference_trainer_metadata_live','candidate_preference_tags_live','candidate_preference_tag_labels_live','candidate_preference_recents_live','candidate_preference_history_live'])
   });
   function validateFeatureGateContract({shareVisibilityEnabled=false,syncedPreferencesEnabled=false,shareWritesEnabled=false,preferenceWritesEnabled=false,activeSurfaceIds=[]}={}){
     const active=new Set(activeSurfaceIds);

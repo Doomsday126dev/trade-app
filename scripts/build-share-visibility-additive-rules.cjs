@@ -1,14 +1,17 @@
 #!/usr/bin/env node
 const fs=require('fs');
 const path=require('path');
+const crypto=require('crypto');
 const root=path.resolve(__dirname,'..');
 const baselineFile=path.join(root,'tests/firebase/database.rules.narrow-read.json');
 const outputFile=path.join(root,'tests/firebase/database.rules.share-visibility.json');
+const prior=JSON.parse(fs.readFileSync(outputFile,'utf8')).rules;
+const preferenceRootsSha=crypto.createHash('sha256').update(JSON.stringify({trainerPreferencesConfig:prior.trainerPreferencesConfig,userPreferences:prior.userPreferences})).digest('hex');
+if(preferenceRootsSha!=='ab5b7659337a3414fd5fc76e4da6b487004ea6854af516d9acc51dd258494ef7')throw new Error('Reviewed preference rules changed; update only after emulator review');
 const candidate=JSON.parse(fs.readFileSync(baselineFile,'utf8'));
 const rules=candidate.rules;
 const admin="root.child('admins').child(auth.uid).val() === true";
 const visibilityGate="root.child('shareVisibilityConfig').child('writesEnabled').val() === true";
-const preferencesGate="root.child('trainerPreferencesConfig').child('writesEnabled').val() === true";
 
 rules.accounts={"$uid":{
   ".read":`auth != null && (auth.uid === $uid || ${admin})`,
@@ -57,22 +60,11 @@ rules.legacyShareOwners={"$username":{
   ".write":`auth != null && ${visibilityGate} && ${admin}`,
   ".validate":"newData.isString() && newData.val().length > 0"
 }};
-rules.trainerPreferencesConfig={
-  ".read":`auth != null && ${admin}`,
-  ".write":`auth != null && ${admin}`,
-  "writesEnabled":{".validate":"newData.isBoolean()"},
-  "$other":{".validate":false}
-};
-rules.userPreferences={"$viewerUid":{
-  ".read":`auth != null && (auth.uid === $viewerUid || ${admin})`,
-  ".write":`auth != null && ${preferencesGate} && (auth.uid === $viewerUid || ${admin})`,
-  "favoriteTrainers":{"$ownerUid":{".validate":"newData.hasChildren(['trainerName', 'addedAt']) && newData.child('trainerName').isString() && newData.child('trainerName').val().length > 0 && newData.child('trainerName').val().length <= 64 && newData.child('addedAt').isNumber() && (!data.exists() || newData.child('addedAt').val() === data.child('addedAt').val())","note":{".validate":"newData.isString() && newData.val().length <= 240"},"tagIds":{"$tagId":{".validate":"newData.val() === true && root.child('userPreferences').child($viewerUid).child('trainerTags').child($tagId).child('active').val() === true"}},"$other":{".validate":"$other === 'trainerName' || $other === 'addedAt'"}}},
-  "trainerTags":{"$tagId":{".validate":"newData.hasChildren(['label', 'normalizedLabel', 'labelKey', 'active', 'createdAt', 'updatedAt']) && newData.child('label').isString() && newData.child('label').val().length > 0 && newData.child('label').val().length <= 160 && newData.child('normalizedLabel').isString() && newData.child('normalizedLabel').val().length > 0 && newData.child('normalizedLabel').val().length <= 160 && newData.child('labelKey').isString() && newData.child('labelKey').val().length > 0 && newData.child('labelKey').val().length <= 500 && newData.child('active').isBoolean() && newData.child('createdAt').isNumber() && newData.child('updatedAt').isNumber() && (!data.exists() || newData.child('createdAt').val() === data.child('createdAt').val()) && root.child('userPreferences').child($viewerUid).child('trainerTagLabels').child(newData.child('labelKey').val()).val() === $tagId","$other":{".validate":"$other === 'label' || $other === 'normalizedLabel' || $other === 'labelKey' || $other === 'active' || $other === 'createdAt' || $other === 'updatedAt'"}}},
-  "trainerTagLabels":{"$labelKey":{".validate":"!newData.exists() || (newData.isString() && (!data.exists() || newData.val() === data.val()))"}},
-  "recentTrainerSlots":{"$slot":{".validate":"($slot === '00' || $slot === '01' || $slot === '02' || $slot === '03' || $slot === '04' || $slot === '05' || $slot === '06' || $slot === '07' || $slot === '08' || $slot === '09' || $slot === '10' || $slot === '11' || $slot === '12' || $slot === '13' || $slot === '14' || $slot === '15' || $slot === '16' || $slot === '17' || $slot === '18' || $slot === '19' || $slot === '20' || $slot === '21' || $slot === '22' || $slot === '23' || $slot === '24' || $slot === '25' || $slot === '26' || $slot === '27' || $slot === '28' || $slot === '29') && newData.hasChildren(['ownerUid', 'trainerName', 'lastOpenedAt']) && newData.child('ownerUid').isString() && newData.child('ownerUid').val().length > 0 && newData.child('trainerName').isString() && newData.child('trainerName').val().length > 0 && newData.child('trainerName').val().length <= 64 && newData.child('lastOpenedAt').isNumber()","$other":{".validate":"$other === 'ownerUid' || $other === 'trainerName' || $other === 'lastOpenedAt'"}}},
-  "trainerHistory":{"$ownerUid":{".validate":"newData.hasChildren(['lastSeenShareVersion', 'lastSeenUpdatedAt', 'lastSeenFingerprint', 'entryCount']) && newData.child('lastSeenShareVersion').isNumber() && newData.child('lastSeenShareVersion').val() >= 1 && (!data.exists() || newData.child('lastSeenShareVersion').val() >= data.child('lastSeenShareVersion').val()) && (!data.exists() || newData.child('lastSeenShareVersion').val() !== data.child('lastSeenShareVersion').val() || newData.child('lastSeenFingerprint').val() === data.child('lastSeenFingerprint').val()) && newData.child('lastSeenUpdatedAt').isNumber() && (!data.exists() || newData.child('lastSeenUpdatedAt').val() >= data.child('lastSeenUpdatedAt').val()) && newData.child('lastSeenFingerprint').isString() && newData.child('lastSeenFingerprint').val().length > 0 && newData.child('lastSeenFingerprint').val().length <= 128 && newData.child('entryCount').isNumber() && newData.child('entryCount').val() >= 0 && newData.child('entryCount').val() <= 1500","lastSeenSnapshot":{"$entryId":{".validate":"newData.hasChildren(['category', 'fingerprint']) && (newData.child('category').val() === 'wishlist' || newData.child('category').val() === 'dynamax' || newData.child('category').val() === 'gmax' || newData.child('category').val() === 'costumes') && newData.child('fingerprint').isString() && newData.child('fingerprint').val().length > 0 && newData.child('fingerprint').val().length <= 128","$other":{".validate":"$other === 'category' || $other === 'fingerprint'"}}},"$other":{".validate":"$other === 'lastSeenShareVersion' || $other === 'lastSeenUpdatedAt' || $other === 'lastSeenFingerprint' || $other === 'entryCount'"}}},
-  "$other":{".validate":false}
-}};
+
+// Preference roots are authored and emulator-reviewed in the additive fixture.
+// Rebase preserves those roots while replacing every live root from baseline.
+rules.trainerPreferencesConfig=prior.trainerPreferencesConfig;
+rules.userPreferences=prior.userPreferences;
 rules.shareGroupAccess={"$ownerUid":{".read":`auth != null && (auth.uid === $ownerUid || ${admin})`,".write":false}};
 rules.groups={".read":false,".write":false};
 

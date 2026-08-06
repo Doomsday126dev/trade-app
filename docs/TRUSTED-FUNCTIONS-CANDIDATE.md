@@ -26,7 +26,7 @@ private content is returned.
 | Callable | Request fields | Maximum |
 | --- | --- | --- |
 | `reserveTrainerHandle` | `requestedHandle`, `requestId` | 4 KiB; handle 64 code points |
-| `claimTrainerTagLabel` | `action`, `tagId`, `label` when required, `requestId` | 4 KiB; label 40 code points |
+| `claimTrainerTagLabel` | `action`, `tagId`, `label` when required, `baseRevision`, `requestId` | 4 KiB; label 40 code points |
 | `verifyTrainerHistory` | `ownerUid`, `shareVersion`, `shareUpdatedAt`, `declaredEntryCount`, `publicSnapshot`, `requestId` | 256 KiB; 1,500 entries |
 | `setApprovedViewer` | `viewerUid`, `action`, `requestId` | 4 KiB |
 
@@ -92,7 +92,10 @@ Tag create/rename/soft-delete transactions are confined to
 `userPreferences/{callerUid}` and update only `trainerTags` and
 `trainerTagLabels`. Rename releases and claims labels atomically. Soft deletion
 does not scan or rewrite Favorite assignments; inactive assignments are ignored
-by the client domain.
+by the client domain. Each accepted mutation advances the tag revision and
+stores the idempotency request ID; a stale base revision is rejected.
+The additive rules candidate denies direct client writes to both tag roots, so
+normalized label claims cannot bypass this trusted operation.
 
 History writes are confined to
 `userPreferences/{callerUid}/trainerHistory/{ownerUid}`. The callable reads the
@@ -101,6 +104,9 @@ then compares its canonical public snapshot to the supplied snapshot. This is
 safer than trusting client data because the backend verifies availability and
 content without reading `users`, owned lists, Inventory, or other private data.
 Restricted, absent, or changed sources cannot create removal history.
+Accepted history advances store a server-derived entity revision and the
+idempotency request ID alongside the verified snapshot metadata.
+The additive rules candidate likewise denies direct client history writes.
 
 Approved Viewer changes are confined to
 `shareAccess/{callerUid}/{viewerUid}`. Target identity must have a coherent

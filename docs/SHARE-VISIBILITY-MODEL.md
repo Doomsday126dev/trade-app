@@ -118,8 +118,17 @@ this additive candidate. The long-term writer targets
 
 ## Cross-device private trainer preferences
 
-The final preference model syncs across signed-in browsers, iOS, Android, and
-installed PWA sessions. It remains disabled behind:
+> **Superseded preference detail:** The production-readiness schema, conflict
+> rules, queue, migration, privacy, and direct-write/trusted-backend boundary now
+> live in `TRAINER-PREFERENCE-SYNC-READINESS.md`. The earlier foundation examples
+> below remain historical architecture context only and must not be copied into
+> rules or client wiring. In particular, private notes/tag assignments now use
+> `trainerMetadata/{ownerUid}`, all remote entities use revisions and
+> tombstones, and private preferences are owner-only with no Admin read bypass.
+
+The disabled future preference model is designed to sync across signed-in
+browsers, iOS, Android, and installed PWA sessions. It remains production-
+inactive behind:
 
 ```text
 SYNCED_TRAINER_PREFERENCES_ENABLED = false
@@ -141,8 +150,9 @@ userPreferences/{viewerUid}/favoriteTrainers/{ownerUid}/
 
 This is a private bookmark keyed by the selected trainer's stable owner UID.
 The optional note is capped at 240 characters. `addedAt` is immutable. Only the
-viewer and protected admins can read or write the viewer's preference subtree.
-The tagged trainer and other ordinary users cannot enumerate or read it.
+exact authenticated viewer can read the viewer's preference subtree; there is
+no Admin read exception. The tagged trainer and other users cannot enumerate or
+read it.
 
 Favorite Trainers never participate in `trainerShares` read rules. Favoriting
 B does not let B read A, and granting B under `shareAccess/A/B` does not create
@@ -291,7 +301,7 @@ Firebase access. The repository exposes writes only when both its feature and
 server-write options are explicitly true; the production bridge passes neither.
 
 The hidden UI view models describe a wrapping mobile sheet and desktop dialog,
-44-pixel minimum targets, keyboard navigation, focus trapping, screen-reader
+48-pixel minimum targets, keyboard navigation, focus trapping, screen-reader
 labels, and non-hover actions. They cannot save while disabled and production
 continues to describe Favorites, Recents, and history as device-local.
 
@@ -390,7 +400,9 @@ behind the trusted-service boundary.
    for test accounts with the synced-preference flag still off.
 7. Enable UID share reads for a controlled cohort while retaining legacy
    public-link compatibility.
-8. Enable synced preferences separately after multi-device convergence smoke.
+8. Resolve the strict arbitrary Favorite-map count blocker through a separately
+   reviewed server-enforced design, then enable synced preferences only after
+   multi-device convergence smoke.
 9. Remove compatibility only after stable links have migrated.
 
 Rollback republishes the current narrow-read artifact. Any UID-based records

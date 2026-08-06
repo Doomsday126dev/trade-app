@@ -84,7 +84,10 @@ test('fixture covers ordinary admin unregistered visibility collision history an
   assert.deepEqual(Object.values(fixture.rtdb.shareVisibility).map((item) => item.mode).sort(), ['approved_viewers', 'private', 'public']);
   assert.ok(fixture.rtdb.shareDirectory.collisioncandidate);
   assert.ok(fixture.rtdb.userPreferences[SYNTHETIC_UIDS.viewer].trainerTagLabels.synthetic_group);
+  assert.equal(fixture.rtdb.userPreferences[SYNTHETIC_UIDS.viewer].trainerTags.tag_existing.revision, 1);
+  assert.equal(fixture.rtdb.userPreferences[SYNTHETIC_UIDS.viewer].trainerTags.tag_existing.deleted, false);
   assert.equal(Object.keys(fixture.rtdb.userPreferences[SYNTHETIC_UIDS.viewer].trainerHistory).length, 2);
+  assert.equal(fixture.rtdb.userPreferences[SYNTHETIC_UIDS.viewer].trainerHistory[SYNTHETIC_UIDS.owner].revision, 1);
   assert.equal(fixture.rtdb.trustedOperationRequests[SYNTHETIC_UIDS.owner].reserveTrainerHandle.synthetic_replay_0001.status, 'complete');
 });
 

@@ -131,9 +131,9 @@ test('visibility settings remain hidden-capable and language neutral',()=>{
   assert.ok(model.options.every(option=>option.labelKey.startsWith('share.mode.')));
 });
 
-test('read registry preserves 39 surfaces and rejects disabled surface activation',()=>{
+test('read registry preserves 41 surfaces and rejects disabled surface activation',()=>{
   const window={};vm.runInNewContext(readFileSync(path.join(__dirname,'..','js/data/firebaseReadRegistry.js'),'utf8'),{window});const registry=window.PogoData.firebaseReadRegistry;
-  assert.equal(registry.READ_SURFACES.length,39);assert.equal(registry.READ_SURFACES.filter(item=>item.status==='candidate_inactive').length,9);
+  assert.equal(registry.READ_SURFACES.length,41);assert.equal(registry.READ_SURFACES.filter(item=>item.status==='candidate_inactive').length,11);
   assert.equal(registry.validateFeatureGateContract({}).ok,true);
   assert.equal(registry.validateFeatureGateContract({activeSurfaceIds:['candidate_trainer_share_read']}).violations[0],'firebase-reads/share-visibility-active-while-disabled');
   assert.equal(registry.validateFeatureGateContract({activeSurfaceIds:['candidate_preference_tags_live']}).violations[0],'firebase-reads/preferences-active-while-disabled');

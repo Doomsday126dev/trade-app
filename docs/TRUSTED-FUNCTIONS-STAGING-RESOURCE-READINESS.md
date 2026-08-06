@@ -91,7 +91,7 @@ npm run staging:resource-readiness -- verify-rules
 ```
 
 - Narrow-read rollback: `e0632a98ed106117f03e61da0446ef4b2c2e6ed02ea8c6f1c498a0e7edcb17bf`
-- Additive candidate: `fc781919003a5afcba4fcf1e5235498090352deb1448e746b6c69ec61add6ac3`
+- Additive candidate: `cbcea2a672e1f9b1d6a4582410bb89bca765ca307c0495c7cc80ea35f805071c`
 
 Pricing was reverified on 2026-08-05 against the official Cloud Run, Cloud Run
 functions, Firebase Realtime Database, reCAPTCHA, Cloud Build, Artifact

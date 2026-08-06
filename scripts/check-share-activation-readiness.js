@@ -10,7 +10,7 @@ const baselineBytes=fs.readFileSync(baselineFile),candidateBytes=fs.readFileSync
 const baseline=JSON.parse(baselineBytes).rules,candidate=JSON.parse(candidateBytes).rules;
 const sha=bytes=>crypto.createHash('sha256').update(bytes).digest('hex');
 const expectedBaseline='e0632a98ed106117f03e61da0446ef4b2c2e6ed02ea8c6f1c498a0e7edcb17bf';
-const expectedCandidate='fc781919003a5afcba4fcf1e5235498090352deb1448e746b6c69ec61add6ac3';
+const expectedCandidate='cbcea2a672e1f9b1d6a4582410bb89bca765ca307c0495c7cc80ea35f805071c';
 const futureRoots=['accounts','groups','legacyShareOwners','shareAccess','shareDirectory','shareGroupAccess','shareVisibility','shareVisibilityConfig','trainerPreferencesConfig','trainerShares','userPreferences'];
 
 assert.equal(sha(baselineBytes),expectedBaseline);
@@ -26,4 +26,4 @@ assert.equal(candidate.groups['.read'],false);assert.equal(candidate.groups['.wr
 const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
 assert.doesNotMatch(html,/shareActivationPlanning|trustedBackendContracts/);
 assert.match(html,/SYNCED_TRAINER_PREFERENCES_ENABLED!==false/);
-console.log(JSON.stringify({status:'share-activation-readiness-passed',liveRootsPreserved:Object.keys(baseline).length,futureRootsInactive:futureRoots.length,baselineSha256:expectedBaseline,candidateSha256:expectedCandidate,productionReads:0,productionWrites:0},null,2));
+console.log(JSON.stringify({status:'share-additive-artifacts-ready',preferenceSyncActivationReady:false,activationBlockers:['strict-favorite-map-count'],liveRootsPreserved:Object.keys(baseline).length,futureRootsInactive:futureRoots.length,baselineSha256:expectedBaseline,candidateSha256:expectedCandidate,productionReads:0,productionWrites:0},null,2));

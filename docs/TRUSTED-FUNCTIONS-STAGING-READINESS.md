@@ -68,10 +68,16 @@ There is no arbitrary path input or generic Admin operation.
 Staging starts from the reviewed live narrow-read baseline SHA-256
 `e0632a98ed106117f03e61da0446ef4b2c2e6ed02ea8c6f1c498a0e7edcb17bf`
 and the additive candidate SHA-256
-`fc781919003a5afcba4fcf1e5235498090352deb1448e746b6c69ec61add6ac3`.
+`cbcea2a672e1f9b1d6a4582410bb89bca765ca307c0495c7cc80ea35f805071c`.
 Before Functions deployment, verify those files locally, export the staging
 rules rollback artifact privately, replace staging rules atomically with the
 additive candidate, and keep both write gates false.
+
+Staging infrastructure and callable deployability do not remove the preference
+sync activation blocker. Strict reconciliation of the arbitrary Favorite map remains
+blocked pending a separately designed and approved server-enforced 100-record
+solution; the current recommendation is a narrow trusted Favorite mutation
+callable. Neither preference gate may be enabled before that review completes.
 
 Verify anonymously and with synthetic Auth that root reads fail, legacy exact
 reads still work, all new roots are non-enumerable, private preferences remain

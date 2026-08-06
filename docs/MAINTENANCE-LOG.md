@@ -2776,3 +2776,14 @@ were unavailable in the Codex browser.
 There were zero browser or Firebase warnings and errors. No rollback was
 required. Final verdict: release `2026-08-05.3` is healthy for all validated
 production paths.
+# 2026-08-06 - Codex - Release 2026-08-05.10 validation
+
+Release `2026-08-05.10` is accepted as healthy for the validated organizer,
+localized domain-display, and lifecycle paths. Physical Safari, installed-PWA,
+and live second-account-switch checks remain bounded external follow-ups and are
+not release blockers.
+
+During a normal reload, one pre-existing queued community sync completed. Its
+owner-partitioned retry behavior was expected; no organizer, Favorite, tag,
+note, Recent, history, or trainer-list mutation was observed. No change to that
+queue is part of the trainer-preference sync-readiness milestone.

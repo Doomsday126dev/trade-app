@@ -218,13 +218,18 @@ rules, schemas, idempotency, and rate limits; it replaces none of them.
 Rules prerequisite:
 
 - Live narrow-read baseline: `e0632a98ed106117f03e61da0446ef4b2c2e6ed02ea8c6f1c498a0e7edcb17bf`
-- Additive disabled candidate: `fc781919003a5afcba4fcf1e5235498090352deb1448e746b6c69ec61add6ac3`
-- Reconfirm the visibility emulator matrix: 43 passed, 0 failed.
+- Additive disabled candidate: `cbcea2a672e1f9b1d6a4582410bb89bca765ca307c0495c7cc80ea35f805071c`
+- Reconfirm the visibility emulator matrix: 44 passed, 0 failed.
 
 Deploy the additive rules to staging before Functions, with both write gates
 false. Verify anonymous/ordinary/admin reads, root denial, disabled future
 paths, non-enumerability, and rollback SHA. Functions must reject disabled
 operations before acquiring idempotency records.
+
+Resource creation and staging deployment readiness are distinct from preference
+sync activation readiness. The strict 100-Favorite arbitrary-map reconciliation
+blocker requires a separately reviewed server-enforced design before either
+preference gate can be enabled.
 
 Fixtures use only `<SYNTHETIC_FIXTURE_NAMESPACE>`, deterministic fake identities,
 `example.invalid` addresses, and synthetic list data. No production export,
@@ -315,7 +320,7 @@ Operator order after future approvals:
 5. Register the staging web app and App Check provider with gates false.
 6. Create separate identities and assign only approved, time-bounded roles.
 7. Verify both rule hashes and deploy additive staging rules with gates false.
-8. Re-run 43/43 rules tests and disabled-path canaries.
+8. Re-run 44/44 rules tests and disabled-path canaries.
 9. Deploy four Functions with gates false and verify disabled responses create no idempotency rows.
 10. Create deterministic synthetic fixtures only after a separate approval.
 11. Enable one gate for one bounded canary group, restore false, and review evidence.

@@ -38,18 +38,19 @@ function createTrustedOperations({ adapter, now = Date.now }) {
     const callerUid = requireAuth(context);
     await adapter.assertOperationEnabled('trainer_preferences');
     const action = String(data?.action || '');
-    const required = action === 'soft_delete' ? ['action', 'tagId', 'requestId'] : ['action', 'tagId', 'label', 'requestId'];
+    const required = action === 'soft_delete' ? ['action', 'tagId', 'baseRevision', 'requestId'] : ['action', 'tagId', 'label', 'baseRevision', 'requestId'];
     exactFields(data, required);
     boundedPayload(data, MAX_SMALL_PAYLOAD);
     if (!['create', 'rename', 'soft_delete'].includes(action)) fail('invalid_argument', 'tag/action_invalid');
     const id = requestId(data.requestId);
     const stableTagId = tagId(data.tagId);
+    const baseRevision = safeInteger(data.baseRevision, 0, Number.MAX_SAFE_INTEGER, 'tag/revision_invalid');
     const label = action === 'soft_delete' ? null : normalizeTagLabel(data.label);
     return runIdempotent({
       adapter, callerUid, operation: 'claimTrainerTagLabel', requestId: id,
-      requestFingerprint: fingerprint({ action, tagId: stableTagId, normalizedLabel: label?.normalized || null }), now,
+      requestFingerprint: fingerprint({ action, tagId: stableTagId, normalizedLabel: label?.normalized || null, baseRevision }), now,
       execute: async () => {
-        const state = await adapter.claimTagForViewer({ callerUid, action, tagId: stableTagId, label, now: now() });
+        const state = await adapter.claimTagForViewer({ callerUid, action, tagId: stableTagId, label, baseRevision, operationId: id, now: now() });
         return operationResult('claimTrainerTagLabel', state.status);
       }
     });
@@ -81,7 +82,7 @@ function createTrustedOperations({ adapter, now = Date.now }) {
         }
         const state = await adapter.advanceHistoryForViewer({
           callerUid, ownerUid, shareVersion, shareUpdatedAt, entryCount: actualEntryCount,
-          snapshotFingerprint, snapshot, now: now()
+          snapshotFingerprint, snapshot, operationId: id, now: now()
         });
         return operationResult('verifyTrainerHistory', state.status);
       }
