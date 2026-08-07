@@ -17,7 +17,7 @@
   const {escHtml,escAttr}=textSafety;
 
 function strLevelsHtml(strs,options={}){
-  const combos=combinedStringOptions(strs);
+  const combos=combinedStringOptions(strs,{locale:options.searchLocale||'en'});
   const localized=typeof options.t==='function';
   const t=localized?options.t:(key,params={})=>({
     'share.copy':'Copy','share.luckyDex':'Lucky Dex','share.combinedOptions':'Combined options',

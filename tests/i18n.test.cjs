@@ -66,7 +66,7 @@ test('session ownership warnings use stable translation keys with English fallba
 test('English, Japanese, Spanish, and German expose the same UI key set',()=>{
   const {catalogs}=load();
   const expected=Object.keys(catalogs.en).sort();
-  assert.equal(expected.length,852);
+  assert.equal(expected.length,865);
   for(const locale of ['ja','es','de'])assert.deepEqual(Object.keys(catalogs[locale]).sort(),expected,locale);
 });
 
@@ -119,7 +119,9 @@ test('covered active runtime surfaces use locale keys instead of English-only fe
 
 test('canonical and private values remain outside interface translation',()=>{
   assert.match(html,/placeholder="https:\/\/your-project-default-rtdb\.firebaseio\.com"/);
-  assert.match(html,/const SAFE_TRANSFER_PREFILTER="!favorite&!4\*&!shiny/);
+  assert.doesNotMatch(html,/const SAFE_TRANSFER_PREFILTER=/);
+  assert.match(html,/pokemonGoSearchSyntaxDomain\.safeTransferQuery\(safe\)/);
+  assert.match(html,/pokemonGoSearchSyntaxDomain\.serializeQuery\(query,pokemonGoSearchLocale\(\)\)/);
   assert.match(html,/tag\.label/);
   assert.match(html,/favorite\.note/);
   const exportBlock=html.slice(html.indexOf('function exportMyListMarkdown'),html.indexOf('// ── SPECIAL TRADE BOARD'));

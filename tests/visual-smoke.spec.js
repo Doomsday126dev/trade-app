@@ -115,9 +115,23 @@ async function installLocalOrganizerFixture(page) {
   });
 }
 
+async function waitForSettingsStartupReady(page) {
+  await page.waitForFunction(() => (
+    document.readyState === 'complete' &&
+    typeof openSettingsPanel === 'function' &&
+    typeof syncSettingsRoute === 'function' &&
+    typeof _authStateKnown === 'boolean' &&
+    _authStateKnown === true
+  ));
+}
+
 async function installSettingsScrollFixture(page, surface='share', offset=900) {
-  await page.waitForFunction(() => typeof openSettingsPanel === 'function');
-  await page.evaluate(({surface,offset}) => {
+  await waitForSettingsStartupReady(page);
+  await page.evaluate(async({surface,offset}) => {
+    const settings=document.getElementById('settings-modal');
+    if(settings?.classList.contains('open'))closeModal('settings-modal',{route:false});
+    _settingsScrollSnapshot=null;
+    closeAccountMenu(false);
     const login=document.getElementById('login-pg'),app=document.getElementById('app'),share=document.getElementById('share-view');
     login.style.display=surface==='login'?'flex':'none';
     app.style.display=surface==='account'?'flex':'none';
@@ -134,12 +148,23 @@ async function installSettingsScrollFixture(page, surface='share', offset=900) {
     filler.id='settings-scroll-fixture';filler.style.height='2800px';filler.setAttribute('aria-hidden','true');
     document.body.appendChild(filler);
     history.replaceState({},'',`${location.pathname}?settings-scroll-surface=${surface}`);
+    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
     window.scrollTo(0,offset);
   },{surface,offset});
+  await page.waitForFunction(() => (
+    location.hash !== '#settings' &&
+    !document.getElementById('settings-modal')?.classList.contains('open') &&
+    _modalActiveId !== 'settings-modal'
+  ));
   await expect.poll(()=>page.evaluate(()=>window.scrollY)).toBeGreaterThanOrEqual(offset-2);
 }
 
+function activeSettingsClose(page) {
+  return page.locator('#settings-modal.open button.settings-modal-close');
+}
+
 async function expectSettingsScrollNear(page, expected) {
+  await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
   await expect.poll(()=>page.evaluate(()=>window.scrollY)).toBeGreaterThanOrEqual(expected-2);
   expect(await page.evaluate(value=>Math.abs(window.scrollY-value),expected)).toBeLessThanOrEqual(2);
 }
@@ -147,8 +172,7 @@ async function expectSettingsScrollNear(page, expected) {
 test.describe('visual smoke', () => {
   test('signed-out language control opens local Settings without a profile menu',async({page})=>{
     await page.goto(`./?signed-out-settings=${Date.now()}`,{waitUntil:'domcontentloaded'});
-    await page.waitForFunction(()=>typeof openSettingsPanel==='function');
-    await page.waitForTimeout(350);
+    await waitForSettingsStartupReady(page);
     await expect(page.locator('#login-language-trigger')).toBeVisible();
     await expect(page.locator('#account-trigger')).toBeHidden();
     await page.locator('#login-language-trigger').click();
@@ -162,8 +186,7 @@ test.describe('visual smoke', () => {
 
   test('signed-in account menu opens Settings and restores focus on Escape',async({page})=>{
     await page.goto(`./?account-menu=${Date.now()}`,{waitUntil:'domcontentloaded'});
-    await page.waitForFunction(()=>typeof toggleAccountMenu==='function');
-    await page.waitForTimeout(250);
+    await waitForSettingsStartupReady(page);
     await page.evaluate(()=>{
       cur='TrainerNameThatIsDeliberatelyLongForTheHeader';
       document.getElementById('login-pg').style.display='none';
@@ -190,7 +213,7 @@ test.describe('visual smoke', () => {
       await page.evaluate(context=>openSettingsPanel(context),surface==='account'?'account':'public');
       await expect(page.locator('#settings-modal')).toBeVisible();
       await expectSettingsScrollNear(page,900);
-      await page.locator('.settings-modal-close').click();
+      await activeSettingsClose(page).click();
       await expect(page.locator('#settings-modal')).toBeHidden();
       await expectSettingsScrollNear(page,900);
     }
@@ -213,10 +236,11 @@ test.describe('visual smoke', () => {
     await expect(page.locator('#settings-modal')).toBeHidden();
     await expectSettingsScrollNear(page,1250);
 
-    await page.evaluate(()=>window.scrollTo(0,700));
+    await page.goto(`./?settings-scroll-locale=${Date.now()}`,{waitUntil:'domcontentloaded'});
+    await installSettingsScrollFixture(page,'share',700);
     await page.evaluate(()=>openSettingsPanel('public'));
     for(const locale of ['ja','de','es'])await page.locator('#settings-language').selectOption(locale);
-    await page.locator('.settings-modal-close').click();
+    await activeSettingsClose(page).click();
     await expect(page.locator('#settings-modal')).toBeHidden();
     await expectSettingsScrollNear(page,700);
   });
@@ -228,7 +252,7 @@ test.describe('visual smoke', () => {
     await page.evaluate(()=>syncSettingsRoute({captureScroll:false}));
     await expect(page.locator('#settings-modal')).toBeVisible();
     expect(await page.evaluate(()=>window.scrollY)).toBe(0);
-    await page.locator('.settings-modal-close').click();
+    await activeSettingsClose(page).click();
     await expect(page.locator('#settings-modal')).toBeHidden();
     expect(await page.evaluate(()=>window.scrollY)).toBe(0);
 
@@ -242,7 +266,7 @@ test.describe('visual smoke', () => {
     await page.waitForFunction(()=>_authStateKnown===true);
     await page.evaluate(()=>syncSettingsRoute({captureScroll:false}));
     await expect(page.locator('#settings-modal')).toBeVisible();
-    await page.locator('.settings-modal-close').click();
+    await activeSettingsClose(page).click();
     await expect(page.locator('#settings-modal')).toBeHidden();
     expect(await page.evaluate(()=>window.scrollY)).toBe(0);
 
@@ -268,17 +292,41 @@ test.describe('visual smoke', () => {
       await page.evaluate(()=>openSettingsPanel('public'));
       await expect(page.locator('#settings-modal')).toBeVisible();
       await expectSettingsScrollNear(page,900);
-      const closeBox=await page.locator('.settings-modal-close').boundingBox();
+      await expect(activeSettingsClose(page)).toHaveCount(1);
+      const closeBox=await activeSettingsClose(page).boundingBox();
       expect(closeBox?.width).toBeGreaterThanOrEqual(48);expect(closeBox?.height).toBeGreaterThanOrEqual(48);
       expect(await page.evaluate(()=>{
         const body=document.querySelector('.settings-modal-body'),modal=document.querySelector('.settings-modal');
         const rect=modal.getBoundingClientRect();
         return document.documentElement.scrollWidth<=document.documentElement.clientWidth&&rect.left>=0&&rect.right<=innerWidth+1&&rect.bottom<=innerHeight+1&&getComputedStyle(body).overflowY==='auto';
       })).toBe(true);
-      await page.locator('.settings-modal-close').click();
+      await activeSettingsClose(page).click();
       await expect(page.locator('#settings-modal')).toBeHidden();
       await expectSettingsScrollNear(page,900);
     }
+  });
+
+  test('Settings keeps one reachable close control across live desktop and mobile breakpoint changes',async({page})=>{
+    await page.setViewportSize({width:1440,height:900});
+    await page.goto(`./?settings-live-breakpoint=${Date.now()}`,{waitUntil:'domcontentloaded'});
+    await installSettingsScrollFixture(page,'share',900);
+    await page.evaluate(()=>openSettingsPanel('public'));
+    await expect(page.locator('#settings-modal')).toBeVisible();
+    await expect(activeSettingsClose(page)).toHaveCount(1);
+
+    for(const viewport of [{width:390,height:420},{width:390,height:300},{width:1440,height:900}]){
+      await page.setViewportSize(viewport);
+      await expect(page.locator('#settings-modal')).toBeVisible();
+      await expect(activeSettingsClose(page)).toBeVisible();
+      const box=await activeSettingsClose(page).boundingBox();
+      expect(box?.width).toBeGreaterThanOrEqual(48);
+      expect(box?.height).toBeGreaterThanOrEqual(48);
+      expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
+    }
+
+    await activeSettingsClose(page).click();
+    await expect(page.locator('#settings-modal')).toBeHidden();
+    await expectSettingsScrollNear(page,900);
   });
 
   test('account and Settings controls keep accessible mobile touch geometry',async({page})=>{
@@ -286,8 +334,7 @@ test.describe('visual smoke', () => {
     for(const [width,height] of viewports){
       await page.setViewportSize({width,height});
       await page.goto(`./?account-touch-targets=${width}-${height}-${Date.now()}`,{waitUntil:'domcontentloaded'});
-      await page.waitForFunction(()=>typeof toggleAccountMenu==='function');
-      await page.waitForTimeout(250);
+      await waitForSettingsStartupReady(page);
       await page.evaluate(()=>{
         cur='TrainerNameThatIsDeliberatelyLongForTheHeader';
         document.getElementById('login-pg').style.display='none';
@@ -313,7 +360,7 @@ test.describe('visual smoke', () => {
       expect((popoverBox?.x||0)+(popoverBox?.width||0)).toBeLessThanOrEqual(width);
       await page.locator('#account-settings-action').click();
 
-      const close=page.locator('.settings-modal-close');
+      const close=activeSettingsClose(page);
       const closeBox=await close.boundingBox();
       expect(closeBox?.width).toBeGreaterThanOrEqual(48);
       expect(closeBox?.height).toBeGreaterThanOrEqual(48);

@@ -46,6 +46,7 @@ function deepEq(actual, expected, message) {
   'js/domain/scheduleDates.js',
   'js/domain/pokemonSearchTerms.js',
   'js/domain/pokemonEntryRules.js',
+  'js/domain/pokemonGoSearchSyntax.js',
   'js/domain/searchStrings.js',
   'js/ui/stringHtml.js',
   'js/domain/scheduleEventRules.js',
@@ -77,6 +78,7 @@ assert(domain.priorityValues, 'priorityValues namespace should exist');
 assert(domain.scheduleDates, 'scheduleDates namespace should exist');
 assert(domain.pokemonSearchTerms, 'pokemonSearchTerms namespace should exist');
 assert(domain.pokemonEntryRules, 'pokemonEntryRules namespace should exist');
+assert(domain.pokemonGoSearchSyntax, 'pokemonGoSearchSyntax namespace should exist');
 assert(domain.searchStrings, 'searchStrings namespace should exist');
 assert(domain.scheduleEventRules, 'scheduleEventRules namespace should exist');
 assert(domain.scheduleTradeRules, 'scheduleTradeRules namespace should exist');
@@ -337,7 +339,7 @@ eq(
   PREFILTER + '26,27',
   'stringFromSearchItems should preserve existing dex-only extraction from item terms'
 );
-deepEq(stringParts(PREFILTER + '26, alola&27'), ['26', 'alola&27'], 'stringParts should trim and split terms');
+deepEq(stringParts(PREFILTER + '26, alola&27'), ['27'], 'stringParts should keep only numeric dex terms from the final generated clause');
 deepEq(stringParts('1,2'), ['1', '2'], 'stringParts should split strings without PREFILTER');
 assert(searchPartSort('2', '10') < 0, 'searchPartSort should compare numeric terms naturally');
 assert(searchPartSort('alola&26', 'galar&52') < 0, 'searchPartSort should fallback to locale order when numeric dex values differ predictably');

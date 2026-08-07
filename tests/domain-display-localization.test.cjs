@@ -15,7 +15,7 @@ function load(files){
   return window;
 }
 const window=load([
-  'js/i18n/pokemonNames/catalog.js','js/i18n/pokemonNames/variants.js','js/i18n/pokemonNames/core.js','js/i18n/eventLabels/core.js',
+  'js/i18n/pokemonNames/catalog.js','js/i18n/pokemonNames/variants.js','js/i18n/pokemonNames/core.js','js/i18n/eventLabels/currentTitles.js','js/i18n/eventLabels/core.js',
   'js/domain/autocompleteText.js','js/domain/autocompleteMatching.js','js/domain/eventPresentation.js'
 ]);
 const pokemon=window.PogoI18n.pokemonNames;
@@ -197,13 +197,13 @@ test('recurring event titles compose only from exact species and locale template
   assert.equal(events.title({eventID:'cd-1',eventType:'community-day',name:'Nickit Community Day'},'de'),'Community Day mit Kleptifux');
   assert.equal(events.title({eventID:'max-1',eventType:'max-mondays',name:'Dynamax Beldum during Max Monday'},'ja'),'マックスマンデー：ダイマックスダンバル');
   assert.equal(events.title({eventID:'unique-1',eventType:'pokemon-go-fest',name:'Pokémon GO Fest 2026: Mega Finale'},'ja'),'Pokémon GO Fest 2026: Mega Finale');
-  assert.equal(events.title({eventID:'multi-1',eventType:'raid-hour',name:'Uxie, Mesprit, and Azelf Raid Hour'},'de'),'Uxie, Mesprit, and Azelf Raid Hour');
+  assert.equal(events.title({eventID:'multi-1',eventType:'raid-hour',name:'Uxie, Mesprit, and Azelf Raid Hour'},'de'),'Raid-Stunde mit Selfe, Vesprit und Tobutz');
 });
 
 test('official event maps win while English-only maps and prose fall back cleanly',()=>{
   const official={eventID:'mapped',title:{en:'Official English',ja:'公式タイトル'},summary:{en:'English prose',de:'Deutscher Text'}};
-  assert.deepEqual(JSON.parse(JSON.stringify(events.titleResolution(official,'ja'))),{text:'公式タイトル',status:'official-localized',stableId:'mapped'});
-  assert.deepEqual(JSON.parse(JSON.stringify(events.titleResolution(official,'es'))),{text:'Official English',status:'english-fallback',stableId:'mapped'});
+  assert.deepEqual(JSON.parse(JSON.stringify(events.titleResolution(official,'ja'))),{text:'公式タイトル',status:'official-localized',stableId:'mapped',ambiguous:false});
+  assert.deepEqual(JSON.parse(JSON.stringify(events.titleResolution(official,'es'))),{text:'Official English',status:'english-fallback',stableId:'mapped',ambiguous:false});
   assert.equal(events.summary(official,'de'),'Deutscher Text');
   assert.equal(events.summary(official,'es'),'English prose');
 });
@@ -261,10 +261,11 @@ test('catalog asset remains bounded and offline-precacheable',()=>{
   assert.ok(html.includes(`js/i18n/pokemonNames/variants.js?v=${release}`));
 });
 
-test('generated Pokemon GO strings remain canonical and localization has no storage or Firebase capability',()=>{
+test('generated Pokemon GO strings preserve canonical data while localizing only final command syntax',()=>{
   const strings=html.slice(html.indexOf('function buildStrings'),html.indexOf('function renderMyStrings'));
-  assert.doesNotMatch(strings,/pokemonDisplayName|pokemonNamesI18n|i18nCore\.getLocale/);
-  for(const file of ['js/i18n/pokemonNames/catalog.js','js/i18n/pokemonNames/variants.js','js/i18n/pokemonNames/core.js','js/i18n/eventLabels/core.js']){
+  assert.doesNotMatch(strings,/pokemonDisplayName|pokemonNamesI18n|PogoLocales/);
+  assert.match(strings,/const searchOptions=\{locale:pokemonGoSearchLocale\(\)\}/);
+  for(const file of ['js/i18n/pokemonNames/catalog.js','js/i18n/pokemonNames/variants.js','js/i18n/pokemonNames/core.js','js/i18n/eventLabels/currentTitles.js','js/i18n/eventLabels/core.js','js/domain/pokemonGoSearchSyntax.js']){
     assert.doesNotMatch(source(file),/localStorage|sessionStorage|firebase|firebaseio|queueSync|fetch\(|XMLHttpRequest|\.set\(|\.update\(/i,file);
   }
 });

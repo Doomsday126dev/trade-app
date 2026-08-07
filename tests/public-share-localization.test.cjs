@@ -17,7 +17,7 @@ function load(){
   const context=vm.createContext({window,Intl,Date,URL});
   for(const file of [
     'js/i18n/locales/en.js','js/i18n/locales/ja.js','js/i18n/locales/es.js','js/i18n/locales/de.js',
-    'js/i18n/core.js','js/domain/priorities.js','js/ui/badges.js','js/domain/searchStrings.js',
+    'js/i18n/core.js','js/domain/priorities.js','js/ui/badges.js','js/domain/pokemonGoSearchSyntax.js','js/domain/searchStrings.js',
     'js/utils/textSafety.js','js/ui/stringHtml.js','js/ui/stringPanels.js'
   ])vm.runInContext(source(file),context,{filename:file});
   return window;
@@ -33,7 +33,7 @@ function block(start,end){
 test('anonymous share catalogs have exact parity and natural share chrome',()=>{
   const window=load(),catalogs=window.PogoLocales;
   const keys=Object.keys(catalogs.en).sort();
-  assert.equal(keys.length,852);
+  assert.equal(keys.length,865);
   for(const locale of ['ja','es','de'])assert.deepEqual(Object.keys(catalogs[locale]).sort(),keys,locale);
   assert.equal(catalogs.ja['share.listTitle'],'{username} の交換リスト');
   assert.equal(catalogs.es['share.listTitle'],'Lista de intercambios de {username}');
@@ -69,7 +69,7 @@ test('share renderer routes dynamic chrome through i18n without changing priorit
   ])assert.ok(render.includes(key),key);
   assert.match(render,/publicShareUpdatedLabel\(ud\.lastUpdated\)/);
   assert.match(render,/publicSharePriorityBadge\(p\)/);
-  assert.match(render,/strLevelsHtml\(strs,\{t:i18nCore\.t,formatNumber:i18nCore\.formatNumber,priorityLabel:publicSharePriorityLabel\}\)/);
+  assert.match(render,/strLevelsHtml\(strs,\{t:i18nCore\.t,formatNumber:i18nCore\.formatNumber,priorityLabel:publicSharePriorityLabel,searchLocale:pokemonGoSearchLocale\(\)\}\)/);
   assert.doesNotMatch(render,/'s Trade List|Updated \$\{|LIST_LABELS\[t\]|No entries in this list|sorted\.length===1\?'entry':'entries'/);
   const priorities=load().PogoDomain.priorities;
   assert.deepEqual(JSON.parse(JSON.stringify(priorities.PRI)),{
@@ -133,13 +133,13 @@ test('Japanese and German share chrome retains bounded responsive wrapping',()=>
   assert.match(html,/#share-view\s+\.cpbtn\{[^}]*min-height:48px/);
 });
 
-test('release 2026-08-05.17 is coherent and contains no active .16 assets',()=>{
+test('release 2026-08-05.18 is coherent and contains no active .17 assets',()=>{
   const worker=source('sw.js'),release=source('js/domain/clientRelease.js');
-  assert.match(html,/window\.__POGO_RELEASE_ID='2026-08-05\.17'/);
-  assert.match(worker,/const RELEASE='2026-08-05\.17'/);
-  assert.match(release,/RELEASE_ID='2026-08-05\.17'/);
+  assert.match(html,/window\.__POGO_RELEASE_ID='2026-08-05\.18'/);
+  assert.match(worker,/const RELEASE='2026-08-05\.18'/);
+  assert.match(release,/RELEASE_ID='2026-08-05\.18'/);
   const firstParty=[...html.matchAll(/<script\s+src="([^"]+)"/g)].map(match=>match[1]).filter(src=>!/^https?:/.test(src));
-  assert.equal(firstParty.length,51);
-  for(const src of firstParty)assert.equal(new URL(src,'https://example.test').searchParams.get('v'),'2026-08-05.17');
-  assert.doesNotMatch(`${html}\n${worker}\n${release}`,/2026-08-05\.16/);
+  assert.equal(firstParty.length,53);
+  for(const src of firstParty)assert.equal(new URL(src,'https://example.test').searchParams.get('v'),'2026-08-05.18');
+  assert.doesNotMatch(`${html}\n${worker}\n${release}`,/2026-08-05\.17/);
 });

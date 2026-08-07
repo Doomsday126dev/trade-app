@@ -21,6 +21,7 @@
     "check:read-boundary": "node --test tests/subscription-manager.test.cjs tests/listener-lifecycle.test.cjs tests/session-cache-boundary.test.cjs tests/session-transient-state.test.cjs tests/firebase-data-boundary.test.cjs tests/owned-data-coordinator.test.cjs tests/owned-data-read-mode.test.cjs tests/public-share-publication.test.cjs tests/login-directory-state.test.cjs tests/trainer-first-interim.test.cjs tests/trainer-first-product-journeys.test.cjs tests/trainer-discovery.test.cjs tests/trainer-autocomplete-layout.test.cjs tests/client-asset-versioning.test.cjs tests/i18n.test.cjs tests/domain-display-localization.test.cjs tests/ui-readiness.test.cjs",
     "check:ui-readiness": "node --test tests/i18n.test.cjs tests/domain-display-localization.test.cjs tests/public-share-localization.test.cjs tests/ui-readiness.test.cjs tests/trainer-autocomplete-layout.test.cjs tests/trainer-first-product-journeys.test.cjs tests/client-asset-versioning.test.cjs",
     "check:public-share-localization": "node --test tests/public-share-localization.test.cjs",
+    "check:pokemon-go-localization": "node --test tests/pokemon-go-search-syntax.test.cjs tests/event-title-localization.test.cjs",
     "check:client-assets": "node --test tests/client-asset-versioning.test.cjs tests/domain-display-localization.test.cjs tests/trainer-discovery.test.cjs tests/trainer-first-interim.test.cjs tests/trainer-first-product-journeys.test.cjs",
     "check:firebase-reads": "node scripts/check-firebase-reads.js",
     "check:rules": "bash scripts/check-firebase-rules.sh",

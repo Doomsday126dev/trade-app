@@ -2471,6 +2471,7 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
       <section class="settings-panel" aria-labelledby="settings-language-heading">
         <div><h2 id="settings-language-heading" data-i18n="settings.languageTitle">Language</h2><p data-i18n="settings.languageDescription">Interface language is saved privately on this device.</p></div>
         <label class="language-field"><span data-i18n="settings.languageLabel">Interface language</span><select id="settings-language" onchange="changeInterfaceLocale(this.value)"><option value="en" data-i18n="locale.en">English</option><option value="ja" data-i18n="locale.ja">日本語</option><option value="es" data-i18n="locale.es">Español</option><option value="de" data-i18n="locale.de">Deutsch</option></select></label>
+        <label class="language-field"><span data-i18n="settings.searchLanguageLabel">Pokémon GO search language</span><select id="settings-search-language" onchange="changePokemonGoSearchLocale(this.value)"><option value="follow-app" data-i18n="settings.searchLanguageFollow">Follow app language</option><option value="en" data-i18n="locale.en">English</option><option value="ja" data-i18n="locale.ja">日本語</option><option value="es" data-i18n="locale.es">Español</option><option value="de" data-i18n="locale.de">Deutsch</option></select><small data-i18n="settings.searchLanguageDescription">Search commands are saved only on this device and can differ from the app language.</small></label>
       </section>
       <section class="settings-panel local-preferences-panel settings-account-only" aria-labelledby="settings-local-tools-heading">
         <div><h2 id="settings-local-tools-heading" data-i18n="settings.localToolsTitle">Trainer preferences</h2><p data-i18n="settings.localToolsDescription">Favorites and recent trainers remain private to this device.</p></div>
@@ -2534,7 +2535,7 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
 <div class="ptr-indicator" id="ptr-indicator" aria-hidden="true">↓</div>
 
 <script>
-window.__POGO_RELEASE_ID='2026-08-05.17';
+window.__POGO_RELEASE_ID='2026-08-05.18';
 window.__pogoBootWatch=setTimeout(function(){
   var visible=['config-pg','login-pg','app'].some(function(id){
     var el=document.getElementById(id);
@@ -2553,57 +2554,59 @@ window.__pogoBootWatch=setTimeout(function(){
   if(err)err.textContent='App scripts did not finish loading. Refresh once; if this stays, send this screenshot.';
 },4000);
 </script>
-<script src="data.js?v=2026-08-05.17"></script>
-<script src="js/domain/priorities.js?v=2026-08-05.17"></script>
-<script src="js/ui/badges.js?v=2026-08-05.17"></script>
-<script src="js/domain/username.js?v=2026-08-05.17"></script>
-<script src="js/domain/priorityValues.js?v=2026-08-05.17"></script>
-<script src="js/domain/scheduleDates.js?v=2026-08-05.17"></script>
-<script src="js/domain/pokemonSearchTerms.js?v=2026-08-05.17"></script>
-<script src="js/domain/pokemonEntryRules.js?v=2026-08-05.17"></script>
-<script src="js/domain/searchStrings.js?v=2026-08-05.17"></script>
-<script src="js/ui/stringHtml.js?v=2026-08-05.17"></script>
-<script src="js/domain/scheduleEventRules.js?v=2026-08-05.17"></script>
-<script src="js/domain/scheduleTradeRules.js?v=2026-08-05.17"></script>
-<script src="js/domain/pokemonKeys.js?v=2026-08-05.17"></script>
-<script src="js/domain/spriteSlugs.js?v=2026-08-05.17"></script>
-<script src="js/domain/fuzzyText.js?v=2026-08-05.17"></script>
-<script src="js/domain/autocompleteText.js?v=2026-08-05.17"></script>
-<script src="js/domain/autocompleteMatching.js?v=2026-08-05.17"></script>
-<script src="js/domain/autocompleteRanking.js?v=2026-08-05.17"></script>
-<script src="js/domain/relativeTime.js?v=2026-08-05.17"></script>
-<script src="js/domain/clientRelease.js?v=2026-08-05.17"></script>
-<script src="js/domain/trainerDiscovery.js?v=2026-08-05.17"></script>
-<script src="js/domain/eventPresentation.js?v=2026-08-05.17"></script>
-<script src="js/domain/publicSharePublication.js?v=2026-08-05.17"></script>
-<script src="js/domain/trainerPreferences.js?v=2026-08-05.17"></script>
-<script src="js/domain/trainerPreferenceSync.js?v=2026-08-05.17"></script>
-<script src="js/domain/loginDirectory.js?v=2026-08-05.17"></script>
-<script src="js/utils/textSafety.js?v=2026-08-05.17"></script>
-<script src="js/ui/stringPanels.js?v=2026-08-05.17"></script>
-<script src="js/ui/emptyState.js?v=2026-08-05.17"></script>
-<script src="js/i18n/locales/en.js?v=2026-08-05.17"></script>
-<script src="js/i18n/locales/ja.js?v=2026-08-05.17"></script>
-<script src="js/i18n/locales/es.js?v=2026-08-05.17"></script>
-<script src="js/i18n/locales/de.js?v=2026-08-05.17"></script>
-<script src="js/i18n/pokemonNames/catalog.js?v=2026-08-05.17"></script>
-<script src="js/i18n/pokemonNames/variants.js?v=2026-08-05.17"></script>
-<script src="js/i18n/pokemonNames/core.js?v=2026-08-05.17"></script>
-<script src="js/i18n/eventLabels/core.js?v=2026-08-05.17"></script>
-<script src="js/i18n/core.js?v=2026-08-05.17"></script>
-<script src="js/services/firebaseClient.js?v=2026-08-05.17"></script>
-<script src="js/data/subscriptionManager.js?v=2026-08-05.17"></script>
-<script src="js/data/listenerLifecycle.js?v=2026-08-05.17"></script>
-<script src="js/data/sessionCacheBoundary.js?v=2026-08-05.17"></script>
-<script src="js/data/firebaseReadRegistry.js?v=2026-08-05.17"></script>
-<script src="js/data/currentUserRepository.js?v=2026-08-05.17"></script>
-<script src="js/data/ownedDataCoordinator.js?v=2026-08-05.17"></script>
-<script src="js/data/publicShareRepository.js?v=2026-08-05.17"></script>
-<script src="js/data/trainerHistoryStore.js?v=2026-08-05.17"></script>
-<script src="js/data/trainerPreferencesRepository.js?v=2026-08-05.17"></script>
-<script src="js/data/trainerPreferenceSyncQueue.js?v=2026-08-05.17"></script>
-<script src="js/domain/cacheAdapters.js?v=2026-08-05.17"></script>
-<script src="js/ui/trainerTagPanel.js?v=2026-08-05.17"></script>
+<script src="data.js?v=2026-08-05.18"></script>
+<script src="js/domain/priorities.js?v=2026-08-05.18"></script>
+<script src="js/ui/badges.js?v=2026-08-05.18"></script>
+<script src="js/domain/username.js?v=2026-08-05.18"></script>
+<script src="js/domain/priorityValues.js?v=2026-08-05.18"></script>
+<script src="js/domain/scheduleDates.js?v=2026-08-05.18"></script>
+<script src="js/domain/pokemonSearchTerms.js?v=2026-08-05.18"></script>
+<script src="js/domain/pokemonEntryRules.js?v=2026-08-05.18"></script>
+<script src="js/domain/pokemonGoSearchSyntax.js?v=2026-08-05.18"></script>
+<script src="js/domain/searchStrings.js?v=2026-08-05.18"></script>
+<script src="js/ui/stringHtml.js?v=2026-08-05.18"></script>
+<script src="js/domain/scheduleEventRules.js?v=2026-08-05.18"></script>
+<script src="js/domain/scheduleTradeRules.js?v=2026-08-05.18"></script>
+<script src="js/domain/pokemonKeys.js?v=2026-08-05.18"></script>
+<script src="js/domain/spriteSlugs.js?v=2026-08-05.18"></script>
+<script src="js/domain/fuzzyText.js?v=2026-08-05.18"></script>
+<script src="js/domain/autocompleteText.js?v=2026-08-05.18"></script>
+<script src="js/domain/autocompleteMatching.js?v=2026-08-05.18"></script>
+<script src="js/domain/autocompleteRanking.js?v=2026-08-05.18"></script>
+<script src="js/domain/relativeTime.js?v=2026-08-05.18"></script>
+<script src="js/domain/clientRelease.js?v=2026-08-05.18"></script>
+<script src="js/domain/trainerDiscovery.js?v=2026-08-05.18"></script>
+<script src="js/domain/eventPresentation.js?v=2026-08-05.18"></script>
+<script src="js/domain/publicSharePublication.js?v=2026-08-05.18"></script>
+<script src="js/domain/trainerPreferences.js?v=2026-08-05.18"></script>
+<script src="js/domain/trainerPreferenceSync.js?v=2026-08-05.18"></script>
+<script src="js/domain/loginDirectory.js?v=2026-08-05.18"></script>
+<script src="js/utils/textSafety.js?v=2026-08-05.18"></script>
+<script src="js/ui/stringPanels.js?v=2026-08-05.18"></script>
+<script src="js/ui/emptyState.js?v=2026-08-05.18"></script>
+<script src="js/i18n/locales/en.js?v=2026-08-05.18"></script>
+<script src="js/i18n/locales/ja.js?v=2026-08-05.18"></script>
+<script src="js/i18n/locales/es.js?v=2026-08-05.18"></script>
+<script src="js/i18n/locales/de.js?v=2026-08-05.18"></script>
+<script src="js/i18n/pokemonNames/catalog.js?v=2026-08-05.18"></script>
+<script src="js/i18n/pokemonNames/variants.js?v=2026-08-05.18"></script>
+<script src="js/i18n/pokemonNames/core.js?v=2026-08-05.18"></script>
+<script src="js/i18n/eventLabels/currentTitles.js?v=2026-08-05.18"></script>
+<script src="js/i18n/eventLabels/core.js?v=2026-08-05.18"></script>
+<script src="js/i18n/core.js?v=2026-08-05.18"></script>
+<script src="js/services/firebaseClient.js?v=2026-08-05.18"></script>
+<script src="js/data/subscriptionManager.js?v=2026-08-05.18"></script>
+<script src="js/data/listenerLifecycle.js?v=2026-08-05.18"></script>
+<script src="js/data/sessionCacheBoundary.js?v=2026-08-05.18"></script>
+<script src="js/data/firebaseReadRegistry.js?v=2026-08-05.18"></script>
+<script src="js/data/currentUserRepository.js?v=2026-08-05.18"></script>
+<script src="js/data/ownedDataCoordinator.js?v=2026-08-05.18"></script>
+<script src="js/data/publicShareRepository.js?v=2026-08-05.18"></script>
+<script src="js/data/trainerHistoryStore.js?v=2026-08-05.18"></script>
+<script src="js/data/trainerPreferencesRepository.js?v=2026-08-05.18"></script>
+<script src="js/data/trainerPreferenceSyncQueue.js?v=2026-08-05.18"></script>
+<script src="js/domain/cacheAdapters.js?v=2026-08-05.18"></script>
+<script src="js/ui/trainerTagPanel.js?v=2026-08-05.18"></script>
 <script>
 let initializeApp,getDatabase,ref,set,get,onValue,update,getAuth,signInWithEmailAndPassword,createUserWithEmailAndPassword,firebaseSignOut,updatePassword,deleteUser,onAuthStateChanged;
 let firebaseSdkPromise=null;
@@ -2719,6 +2722,7 @@ const COMMUNITY_VISIBILITIES=['private','inviteOnly','public'];
 const SELECTED_COMMUNITY_KEY='pogoSelectedCommunityId_v1';
 const OWNER_COMMUNITY_PREVIEW_KEY='pogoOwnerCommunityPreview_v1';
 const OWNER_COMMUNITY_PREVIEW_SELECTED_KEY='pogoOwnerCommunityPreviewCommunity_v1';
+const POGO_SEARCH_LANGUAGE_KEY='pogoPokemonGoSearchLocale:v1';
 const SESSION_TTL=30*24*60*60*1000; // 30 days; refreshed on each activity so active users stay logged in
 const SPRITE_BASE="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/";
 const FIREBASE_URL="https://trade-list-a4297-default-rtdb.firebaseio.com";
@@ -2750,6 +2754,8 @@ const {REGION_CODE_TERMS,REGIONAL_FORM_TERMS,REGION_SEARCH_TERMS,CASTFORM_TYPE_T
 const pokemonEntryRulesDomain=window.PogoDomain?.pokemonEntryRules;
 if(!pokemonEntryRulesDomain)throw new Error('Pokemon entry rule helpers failed to load');
 const {uniqueEntries,costumeDedupeKey,UNTRADEABLE_MYTHICAL_NAMES,isTradeableForWishlist,maxTypeForEntry,MAX_TYPE_SEARCH,entrySearchFilters}=pokemonEntryRulesDomain;
+const pokemonGoSearchSyntaxDomain=window.PogoDomain?.pokemonGoSearchSyntax;
+if(!pokemonGoSearchSyntaxDomain)throw new Error('Pokémon GO search syntax failed to load');
 const searchStringDomain=window.PogoDomain?.searchStrings;
 if(!searchStringDomain)throw new Error('Search string helpers failed to load');
 const {PREFILTER,POGO_STR_LIMIT,dexStringFromNumbers,stringFromSearchItems,stringParts,searchPartSort,combineStrings,combinedStringOptions,strLenInfo}=searchStringDomain;
@@ -3806,6 +3812,26 @@ function lastLoginTime(username,data){
 // ── LOCAL STORAGE ─────────────────────────────────────────────
 function lsGet(k,d){try{return JSON.parse(localStorage.getItem(k)??'null')??d}catch{return d}}
 function lsSet(k,v){localStorage.setItem(k,JSON.stringify(v))}
+function pokemonGoSearchLanguagePreference(){
+  const value=lsGet(POGO_SEARCH_LANGUAGE_KEY,'follow-app');
+  return value==='follow-app'||pokemonGoSearchSyntaxDomain.SUPPORTED_LOCALES.includes(value)?value:'follow-app';
+}
+function pokemonGoSearchLocale(){
+  const value=pokemonGoSearchLanguagePreference();
+  return value==='follow-app'?pokemonGoSearchSyntaxDomain.localeKey(i18nCore.getLocale()):value;
+}
+function syncPokemonGoSearchLanguageControl(){
+  const select=document.getElementById('settings-search-language');
+  if(select)select.value=pokemonGoSearchLanguagePreference();
+}
+function changePokemonGoSearchLocale(value){
+  const next=value==='follow-app'||pokemonGoSearchSyntaxDomain.SUPPORTED_LOCALES.includes(value)?value:'follow-app';
+  lsSet(POGO_SEARCH_LANGUAGE_KEY,next);
+  syncPokemonGoSearchLanguageControl();
+  if(cur){renderMyStrings();renderStrings();if(_activeDiff)renderDiffModal();renderSafeTransferOutput();}
+  if(_activeShareView?.username)renderShareView(_activeShareView.username,_activeShareView.type);
+  toast(i18nCore.t('settings.searchLanguageSaved'));
+}
 function saveSyncQueue(){
   const result=managedSessionCache.writeQueue(syncQueue||{});
   if(!result.ok)syncQueue={};
@@ -6107,6 +6133,7 @@ function renderInterimProductLabels(){
   const syncBannerSub=document.getElementById('sync-banner-sub');
   if(syncBannerSub)syncBannerSub.textContent=i18nCore.t('status.localOnlyBody',{count:i18nCore.formatNumber(Object.keys(syncQueue||{}).length)});
   const language=document.getElementById('settings-language');if(language)language.value=i18nCore.getLocale();
+  syncPokemonGoSearchLanguageControl();
   const accountTrigger=document.getElementById('account-trigger');
   if(accountTrigger?.getAttribute('aria-expanded')==='true')accountTrigger.setAttribute('aria-label',i18nCore.t('account.closeMenu'));
 }
@@ -6120,12 +6147,14 @@ function changeInterfaceLocale(locale){
     if(active==='mylist'){buildAcItems();renderMyList();}
     else if(active==='find')renderFindTrainer();
     else if(active==='schedule')renderEventsOnly();
+    else if(active==='strings')renderStrings();
     else if(active==='have'){haveAcItems=[];renderMyHave(document.getElementById('have-filter')?.value||'');}
     else if(active==='admin')renderAdmin();
     if(document.getElementById('settings-modal')?.classList.contains('open'))renderSettings();
     if(_activeDiff)renderDiffModal();
     if(_activeTradeMatch)renderTradeMatchModal();
     if(document.getElementById('trainer-organizer-modal')?.classList.contains('open'))renderTrainerOrganizer();
+    renderSafeTransferOutput();
   }else populateLoginUsers(loginUserSuggestionsShouldOpen());
   if(_activeShareView?.username)renderShareView(_activeShareView.username,_activeShareView.type);
   requestAnimationFrame(()=>window.scrollTo(scrollX,scrollY));
@@ -7150,16 +7179,16 @@ function renderMyList(filterVal){
     return`<div class="myrow${isSel?' bulk-selected':''}" ${bulkMode?'':'draggable="true"'} data-name="${attrName}" data-dex="${no||''}" data-idx="${idx}" data-full="${escAttr(dn)}" aria-label="${escAttr(dn)}" ${clickHandler}
       ondragstart="dragStart(event)" ondragover="dragOver(event)" ondrop="dragDrop(event)" ondragend="dragEnd(event)">
       <input type="checkbox" class="bulk-chk" data-name="${attrName}" ${isSel?'checked':''} onclick="event.stopPropagation();toggleBulkSelection('${jsName}')" aria-label="${escAttr(i18nCore.t('myList.selectEntry',{name:dn}))}">
-      <span class="drag-handle" title="${escAttr(i18nCore.t('myList.dragEntry'))}" aria-hidden="true">⠿</span>
+      <span class="drag-handle" title="${escAttr(i18nCore.t('myList.reorderEntry',{name:dn}))}" aria-hidden="true">⠿</span>
       ${hasSprite?`<span class="myrow-sprite-wrap">${spriteImg(no,28,'myrow-sprite',name,'',dn,{urlOverride:entry.spriteUrl})}${crownHtml}</span>`:crownHtml}
       <div class="myrow-name">${escHtml(dn)}</div>
       <div class="mctrl">
-        ${['H','M','L'].map(b=>`<button class="pb ${p===b?'on '+b:''}" onclick="setPri('${jsName}','${b}')" title="${escAttr(i18nCore.t({'H':'priority.high','M':'priority.medium','L':'priority.low'}[b]))}" aria-pressed="${p===b}" aria-label="${escAttr(i18nCore.t('myList.setPriority',{name:dn,priority:i18nCore.t({'H':'priority.high','M':'priority.medium','L':'priority.low'}[b])}))}">${b}</button>`).join('')}
+        ${['H','M','L'].map(b=>`<button class="pb ${p===b?'on '+b:''}" onclick="setPri('${jsName}','${b}')" title="${escAttr(i18nCore.t({'H':'priority.high','M':'priority.medium','L':'priority.low'}[b]))}" aria-pressed="${p===b}" aria-label="${escAttr(i18nCore.t({'H':'myList.setHighPriority','M':'myList.setMediumPriority','L':'myList.setLowPriority'}[b],{name:dn}))}">${b}</button>`).join('')}
         <span class="mctrl-sep" aria-hidden="true"></span>
-        <button class="flag-btn lucky-flag ${lucky?'on':''}" onclick="setLucky('${jsName}')" title="⚡ Lucky" aria-pressed="${lucky}" aria-label="Toggle Lucky for ${escAttr(dn)}">⚡</button>
-        <button class="flag-btn shiny-flag ${shiny?'on':''}" onclick="setShiny('${jsName}')" title="✨ Shiny only" aria-pressed="${shiny}" aria-label="Toggle Shiny for ${escAttr(dn)}">✨</button>
-        <button class="flag-btn xxl-flag ${xxl?'on':''}" onclick="setXxl('${jsName}')" title="XXL" aria-pressed="${xxl}" aria-label="Toggle XXL for ${escAttr(dn)}">XXL</button>
-        <button class="flag-btn xxs-flag ${xxs?'on':''}" onclick="setXxs('${jsName}')" title="XXS" aria-pressed="${xxs}" aria-label="Toggle XXS for ${escAttr(dn)}">XXS</button>
+        <button class="flag-btn lucky-flag ${lucky?'on':''}" onclick="setLucky('${jsName}')" title="${escAttr(i18nCore.t('myList.lucky'))}" aria-pressed="${lucky}" aria-label="${escAttr(i18nCore.t('myList.toggleLuckyFor',{name:dn}))}">⚡</button>
+        <button class="flag-btn shiny-flag ${shiny?'on':''}" onclick="setShiny('${jsName}')" title="${escAttr(i18nCore.t('myList.shiny'))}" aria-pressed="${shiny}" aria-label="${escAttr(i18nCore.t('myList.toggleShinyFor',{name:dn}))}">✨</button>
+        <button class="flag-btn xxl-flag ${xxl?'on':''}" onclick="setXxl('${jsName}')" title="XXL" aria-pressed="${xxl}" aria-label="${escAttr(i18nCore.t('myList.toggleXxlFor',{name:dn}))}">XXL</button>
+        <button class="flag-btn xxs-flag ${xxs?'on':''}" onclick="setXxs('${jsName}')" title="XXS" aria-pressed="${xxs}" aria-label="${escAttr(i18nCore.t('myList.toggleXxsFor',{name:dn}))}">XXS</button>
         <input class="ni" type="text" value="${escAttr(mod)}" placeholder="…" onchange="setNotes('${jsName}',this.value)" aria-label="${escAttr(i18nCore.t('myList.notesFor',{name:dn}))}">
         <button class="rm" onclick="confirmRemove('${jsName}','${jsDn}')" aria-label="${escAttr(i18nCore.t('myList.removeEntry',{name:dn}))}">×</button>
       </div>
@@ -7860,6 +7889,7 @@ function removeEntry(name){
 function buildStrings(type,username){
   const list=allData[type]?.[username]||{};
   if(!Object.keys(list).length)return null;
+  const searchOptions={locale:pokemonGoSearchLocale()};
   if(type==='costumes'){
     const costumeNoMap={};
     allCostumeEntries().forEach(e=>{if(e.no)costumeNoMap[e.name]=e.no;});
@@ -7878,11 +7908,11 @@ function buildStrings(type,username){
     const out={};
     ['H','M','L'].forEach(p=>{
       if(!byP[p].length)return;
-      out[p]=dexStringFromNumbers(byP[p]);
+      out[p]=dexStringFromNumbers(byP[p],searchOptions);
     });
-    const luckyStr=dexStringFromNumbers(luckyDex);if(luckyStr)out.LUCKY=luckyStr;
-    const xxlStr=dexStringFromNumbers(xxlDex);if(xxlStr)out.XXL=xxlStr;
-    const xxsStr=dexStringFromNumbers(xxsDex);if(xxsStr)out.XXS=xxsStr;
+    const luckyStr=dexStringFromNumbers(luckyDex,searchOptions);if(luckyStr)out.LUCKY=luckyStr;
+    const xxlStr=dexStringFromNumbers(xxlDex,searchOptions);if(xxlStr)out.XXL=xxlStr;
+    const xxsStr=dexStringFromNumbers(xxsDex,searchOptions);if(xxsStr)out.XXS=xxsStr;
     return Object.keys(out).length?out:null;
   }
   const srcArr=listSource(type);
@@ -7907,11 +7937,11 @@ function buildStrings(type,username){
   const out={};
   ['H','M','L'].forEach(p=>{
     if(!byP[p].length)return;
-    out[p]=stringFromSearchItems(byP[p]);
+    out[p]=stringFromSearchItems(byP[p],searchOptions);
   });
-  const luckyStr=stringFromSearchItems(luckyItems);if(luckyStr)out.LUCKY=luckyStr;
-  const xxlStr=stringFromSearchItems(xxlItems);if(xxlStr)out.XXL=xxlStr;
-  const xxsStr=stringFromSearchItems(xxsItems);if(xxsStr)out.XXS=xxsStr;
+  const luckyStr=stringFromSearchItems(luckyItems,searchOptions);if(luckyStr)out.LUCKY=luckyStr;
+  const xxlStr=stringFromSearchItems(xxlItems,searchOptions);if(xxlStr)out.XXL=xxlStr;
+  const xxsStr=stringFromSearchItems(xxsItems,searchOptions);if(xxsStr)out.XXS=xxsStr;
   return Object.keys(out).length?out:null;
 }
 
@@ -7919,7 +7949,7 @@ function renderMyStrings(){
   const el=document.getElementById('my-strings-out');if(!el)return;
   const strs=buildStrings(myListType,cur);
   if(!strs){el.innerHTML=emptyHtml(i18nCore.t('strings.emptyTitle'),i18nCore.t('strings.emptyHelp'),'📋');return;}
-  el.innerHTML=strLevelsHtml(strs);
+  el.innerHTML=strLevelsHtml(strs,{t:i18nCore.t,formatNumber:i18nCore.formatNumber,priorityLabel:publicSharePriorityLabel,searchLocale:pokemonGoSearchLocale()});
 }
 async function copyText(str){
   if(navigator.clipboard&&window.isSecureContext){
@@ -8026,7 +8056,7 @@ function _renderStringsInner(){
       </div>
       <div class="user-str-body">
         ${diffDetails}
-        ${strs?strLevelsHtml(strs):`<div style="color:var(--muted);font-size:12px;padding:4px 0">${escHtml(i18nCore.t('strings.emptyList'))}</div>`}
+        ${strs?strLevelsHtml(strs,{t:i18nCore.t,formatNumber:i18nCore.formatNumber,priorityLabel:publicSharePriorityLabel,searchLocale:pokemonGoSearchLocale()}):`<div style="color:var(--muted);font-size:12px;padding:4px 0">${escHtml(i18nCore.t('strings.emptyList'))}</div>`}
       </div>
     </div>`;
   }).join('');
@@ -9258,6 +9288,7 @@ function configureSettingsPanel(context='public'){
   if(description)description.textContent=i18nCore.t(_settingsContext==='account'?'settings.description':'settings.publicDescription');
   const name=document.getElementById('settings-account-name');if(name)name.textContent=cur||'';
   const language=document.getElementById('settings-language');if(language)language.value=i18nCore.getLocale();
+  syncPokemonGoSearchLanguageControl();
 }
 function openSettingsPanel(context='public',options={}){
   const accountContext=context==='account'&&!!cur;
@@ -9415,7 +9446,7 @@ function diffSectionEntries(diff,section){
 function diffSectionSearchString(section){
   if(!_activeDiff||!cur)return'';
   const diff=computeTrainerDiff(_activeDiff.type,cur,_activeDiff.them);
-  return dexStringFromNumbers(diffSectionEntries(diff,section).map(e=>e.no));
+  return dexStringFromNumbers(diffSectionEntries(diff,section).map(e=>e.no),{locale:pokemonGoSearchLocale()});
 }
 async function copyDiffSearch(section,btn){
   const str=diffSectionSearchString(section);
@@ -9517,7 +9548,6 @@ const SAFE_TRANSFER_PREFILTER_KEY='pogoSafeTransferPrefilter';
 // - !traded: lucky candidates
 // - !legendary / !mythical: irreversible if mis-transferred
 // - cp-2500: anything you've invested resources into
-const SAFE_TRANSFER_PREFILTER="!favorite&!4*&!shiny&!shadow&!purified&!background&!traded&!legendary&!mythical&cp-2500&";
 // Live selection (Set of usernames). Initialised in openSafeTransferModal()
 // from saved default if available, else empty.
 let _safeTransferSelected=null;
@@ -9637,11 +9667,12 @@ function computeSafeTransferString(){
   const safe=all.filter(n=>!wantedDex.has(n));
   const dexStr=safe.join(',');
   const usePrefilter=_safeTransferPrefilterEnabled();
-  const str=safe.length?(usePrefilter?SAFE_TRANSFER_PREFILTER:'')+dexStr:'';
+  const query=pokemonGoSearchSyntaxDomain.safeTransferQuery(safe);
+  const str=safe.length?(usePrefilter?pokemonGoSearchSyntaxDomain.serializeQuery(query,pokemonGoSearchLocale()):dexStr):'';
   return{
     str,
     dexStr,
-    prefilter:usePrefilter?SAFE_TRANSFER_PREFILTER:'',
+    prefilter:usePrefilter?pokemonGoSearchSyntaxDomain.queryPrefix(query,pokemonGoSearchLocale()):'',
     safeCount:safe.length,
     wantedCount:wantedDex.size,
     totalDex:all.length,
@@ -11226,7 +11257,7 @@ function renderShareView(username,type){
       }).join('')}</div>
     </div>`;
   });
-  if(strs)html+=strLevelsHtml(strs,{t:i18nCore.t,formatNumber:i18nCore.formatNumber,priorityLabel:publicSharePriorityLabel});
+  if(strs)html+=strLevelsHtml(strs,{t:i18nCore.t,formatNumber:i18nCore.formatNumber,priorityLabel:publicSharePriorityLabel,searchLocale:pokemonGoSearchLocale()});
   out.innerHTML=html;
 }
 
