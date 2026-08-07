@@ -64,11 +64,28 @@ test('account menu and Settings dialog preserve keyboard focus and route compati
   assert.match(html,/popover\.querySelector\('button'\)\?\.focus\(\)/);
   assert.match(html,/if\(e\.key==='Escape'&&popover&&!popover\.hidden\)/);
   assert.match(html,/if\(ev\.key==='Escape'\)\{if\(id==='trainer-organizer-modal'\)closeTrainerOrganizer\(\);else closeModal\(id\);return;\}/);
-  assert.match(html,/if\(returnFocus\?\.isConnected&&!returnFocus\.disabled\)returnFocus\.focus\(\)/);
+  assert.match(html,/if\(returnFocus\?\.isConnected&&!returnFocus\.disabled\)returnFocus\.focus\(/);
   assert.match(html,/history\.pushState\([^\n]+settingsPanel:true/);
   assert.match(html,/window\.addEventListener\('popstate',syncSettingsRoute\)/);
   assert.match(html,/window\.addEventListener\('hashchange',syncSettingsRoute\)/);
   assert.match(html,/action==='settings'/);
+});
+
+test('Settings routing owns one transient route-scoped scroll snapshot',()=>{
+  const lifecycle=html.slice(html.indexOf("let _settingsScrollSnapshot=null;"),html.indexOf('function openSettingsTool'));
+  const modalLifecycle=html.slice(html.indexOf('function openModal'),html.indexOf('function toast'));
+  const sessionReset=html.slice(html.indexOf("function resetSessionTransientUi"),html.indexOf('function resetTransientUiBeforeSessionActivation'));
+  assert.match(lifecycle,/let _settingsScrollSnapshot=null;/);
+  assert.match(lifecycle,/function settingsRouteKey\(\)/);
+  assert.match(lifecycle,/_settingsScrollSnapshot=\{x:window\.scrollX,y:window\.scrollY,routeKey:settingsRouteKey\(\)\}/);
+  assert.match(lifecycle,/if\(_settingsScrollSnapshot\.routeKey!==settingsRouteKey\(\)\)/);
+  assert.match(lifecycle,/options\.captureScroll!==false\)captureSettingsScrollSnapshot\(\)/);
+  assert.match(lifecycle,/openSettingsPanel\(publicContext\?'public':'account',\{updateHistory:false,captureScroll:options\.captureScroll!==false\}\)/);
+  assert.match(modalLifecycle,/focus\(id==='settings-modal'\?\{preventScroll:true\}:undefined\)/);
+  assert.match(modalLifecycle,/if\(id==='settings-modal'\)restoreAndClearSettingsScrollSnapshot\(\)/);
+  assert.match(html,/setTimeout\(\(\)=>syncSettingsRoute\(\{captureScroll:false\}\),0\)/);
+  assert.match(sessionReset,/_settingsScrollSnapshot=null;/);
+  assert.doesNotMatch(lifecycle,/(firebase|userPreferences|publicShares|fetch\(|WebSocket|localStorage|sessionStorage)/i);
 });
 
 test('relocated Settings retains local locale controls and exposes no preference writes',()=>{
@@ -125,7 +142,7 @@ test('modal lifecycle reuses one handler and cancels stale focus restoration',()
   assert.match(lifecycle,/if\(_modalActiveId==='trainer-organizer-modal'\)closeTrainerOrganizer\(\);else closeModal\(_modalActiveId,\{route:false\}\)/);
   assert.match(lifecycle,/if\(active\?\.classList\.contains\('open'\)\)return;/);
   assert.match(lifecycle,/if\(_modalActiveId!==id\|\|!m\.classList\.contains\('open'\)\)return;/);
-  assert.match(lifecycle,/if\(returnFocus\?\.isConnected&&!returnFocus\.disabled\)returnFocus\.focus\(\)/);
+  assert.match(lifecycle,/if\(returnFocus\?\.isConnected&&!returnFocus\.disabled\)returnFocus\.focus\(/);
 });
 
 test('responsive and accessibility safeguards cover compact screens, long labels, focus, and reduced motion',()=>{

@@ -115,6 +115,35 @@ async function installLocalOrganizerFixture(page) {
   });
 }
 
+async function installSettingsScrollFixture(page, surface='share', offset=900) {
+  await page.waitForFunction(() => typeof openSettingsPanel === 'function');
+  await page.evaluate(({surface,offset}) => {
+    const login=document.getElementById('login-pg'),app=document.getElementById('app'),share=document.getElementById('share-view');
+    login.style.display=surface==='login'?'flex':'none';
+    app.style.display=surface==='account'?'flex':'none';
+    share.classList.toggle('active',surface==='share');
+    share.style.display=surface==='share'?'block':'none';
+    if(surface==='account'){
+      cur='LocalSettingsFixture';
+      document.getElementById('top-un').textContent=cur;
+      document.getElementById('account-menu-name').textContent=cur;
+      document.getElementById('account-trigger').focus({preventScroll:true});
+    }else cur=null;
+    document.getElementById('settings-scroll-fixture')?.remove();
+    const filler=document.createElement('div');
+    filler.id='settings-scroll-fixture';filler.style.height='2800px';filler.setAttribute('aria-hidden','true');
+    document.body.appendChild(filler);
+    history.replaceState({},'',`${location.pathname}?settings-scroll-surface=${surface}`);
+    window.scrollTo(0,offset);
+  },{surface,offset});
+  await expect.poll(()=>page.evaluate(()=>window.scrollY)).toBeGreaterThanOrEqual(offset-2);
+}
+
+async function expectSettingsScrollNear(page, expected) {
+  await expect.poll(()=>page.evaluate(()=>window.scrollY)).toBeGreaterThanOrEqual(expected-2);
+  expect(await page.evaluate(value=>Math.abs(window.scrollY-value),expected)).toBeLessThanOrEqual(2);
+}
+
 test.describe('visual smoke', () => {
   test('signed-out language control opens local Settings without a profile menu',async({page})=>{
     await page.goto(`./?signed-out-settings=${Date.now()}`,{waitUntil:'domcontentloaded'});
@@ -152,6 +181,104 @@ test.describe('visual smoke', () => {
     await page.keyboard.press('Escape');
     await expect(page.locator('#settings-modal')).toBeHidden();
     await expect(page.locator('#account-trigger')).toBeFocused();
+  });
+
+  test('Settings route restores the latest same-session scroll across close, Escape, Back, Forward, locale, and surfaces',async({page})=>{
+    await page.goto(`./?settings-scroll-lifecycle=${Date.now()}`,{waitUntil:'domcontentloaded'});
+    for(const surface of ['share','login','account']){
+      await installSettingsScrollFixture(page,surface,900);
+      await page.evaluate(context=>openSettingsPanel(context),surface==='account'?'account':'public');
+      await expect(page.locator('#settings-modal')).toBeVisible();
+      await expectSettingsScrollNear(page,900);
+      await page.locator('.settings-modal-close').click();
+      await expect(page.locator('#settings-modal')).toBeHidden();
+      await expectSettingsScrollNear(page,900);
+    }
+
+    await installSettingsScrollFixture(page,'share',1050);
+    await page.evaluate(()=>openSettingsPanel('public'));
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#settings-modal')).toBeHidden();
+    await expectSettingsScrollNear(page,1050);
+
+    await page.evaluate(()=>window.scrollTo(0,1250));
+    await page.evaluate(()=>openSettingsPanel('public'));
+    await page.goBack();
+    await expect(page.locator('#settings-modal')).toBeHidden();
+    await expectSettingsScrollNear(page,1250);
+    await page.goForward();
+    await expect(page.locator('#settings-modal')).toBeVisible();
+    await expectSettingsScrollNear(page,1250);
+    await page.goBack();
+    await expect(page.locator('#settings-modal')).toBeHidden();
+    await expectSettingsScrollNear(page,1250);
+
+    await page.evaluate(()=>window.scrollTo(0,700));
+    await page.evaluate(()=>openSettingsPanel('public'));
+    for(const locale of ['ja','de','es'])await page.locator('#settings-language').selectOption(locale);
+    await page.locator('.settings-modal-close').click();
+    await expect(page.locator('#settings-modal')).toBeHidden();
+    await expectSettingsScrollNear(page,700);
+  });
+
+  test('direct and reloaded Settings routes deliberately have no prior scroll snapshot',async({page})=>{
+    await page.goto(`./?direct-settings=${Date.now()}#settings`,{waitUntil:'domcontentloaded'});
+    await page.waitForFunction(()=>typeof syncSettingsRoute==='function');
+    await page.waitForFunction(()=>_authStateKnown===true);
+    await page.evaluate(()=>syncSettingsRoute({captureScroll:false}));
+    await expect(page.locator('#settings-modal')).toBeVisible();
+    expect(await page.evaluate(()=>window.scrollY)).toBe(0);
+    await page.locator('.settings-modal-close').click();
+    await expect(page.locator('#settings-modal')).toBeHidden();
+    expect(await page.evaluate(()=>window.scrollY)).toBe(0);
+
+    await page.goto(`./?reload-settings=${Date.now()}#settings`,{waitUntil:'domcontentloaded'});
+    await page.waitForFunction(()=>typeof syncSettingsRoute==='function');
+    await page.waitForFunction(()=>_authStateKnown===true);
+    await page.evaluate(()=>syncSettingsRoute({captureScroll:false}));
+    await expect(page.locator('#settings-modal')).toBeVisible();
+    await page.reload({waitUntil:'domcontentloaded'});
+    await page.waitForFunction(()=>typeof syncSettingsRoute==='function');
+    await page.waitForFunction(()=>_authStateKnown===true);
+    await page.evaluate(()=>syncSettingsRoute({captureScroll:false}));
+    await expect(page.locator('#settings-modal')).toBeVisible();
+    await page.locator('.settings-modal-close').click();
+    await expect(page.locator('#settings-modal')).toBeHidden();
+    expect(await page.evaluate(()=>window.scrollY)).toBe(0);
+
+    await page.goto(`./?legacy-settings=${Date.now()}`,{waitUntil:'domcontentloaded'});
+    await page.waitForFunction(()=>typeof syncSettingsRoute==='function');
+    await page.waitForFunction(()=>_authStateKnown===true);
+    await page.evaluate(()=>{
+      history.replaceState({},'',`${location.pathname}?action=settings`);
+      history.replaceState({},'',settingsRouteUrl(true));
+      syncSettingsRoute({captureScroll:false});
+    });
+    await expect(page.locator('#settings-modal')).toBeVisible();
+    await expect(page).toHaveURL(/#settings$/);
+    expect(await page.evaluate(()=>window.scrollY)).toBe(0);
+  });
+
+  test('Settings scroll restoration remains stable across desktop dialogs and mobile sheets',async({page})=>{
+    const viewports=[[320,640],[375,700],[390,700],[430,760],[768,800],[1024,800],[1440,900],[390,420],[390,300]];
+    for(const [width,height] of viewports){
+      await page.setViewportSize({width,height});
+      await page.goto(`./?settings-scroll-responsive=${width}-${height}-${Date.now()}`,{waitUntil:'domcontentloaded'});
+      await installSettingsScrollFixture(page,'share',900);
+      await page.evaluate(()=>openSettingsPanel('public'));
+      await expect(page.locator('#settings-modal')).toBeVisible();
+      await expectSettingsScrollNear(page,900);
+      const closeBox=await page.locator('.settings-modal-close').boundingBox();
+      expect(closeBox?.width).toBeGreaterThanOrEqual(48);expect(closeBox?.height).toBeGreaterThanOrEqual(48);
+      expect(await page.evaluate(()=>{
+        const body=document.querySelector('.settings-modal-body'),modal=document.querySelector('.settings-modal');
+        const rect=modal.getBoundingClientRect();
+        return document.documentElement.scrollWidth<=document.documentElement.clientWidth&&rect.left>=0&&rect.right<=innerWidth+1&&rect.bottom<=innerHeight+1&&getComputedStyle(body).overflowY==='auto';
+      })).toBe(true);
+      await page.locator('.settings-modal-close').click();
+      await expect(page.locator('#settings-modal')).toBeHidden();
+      await expectSettingsScrollNear(page,900);
+    }
   });
 
   test('account and Settings controls keep accessible mobile touch geometry',async({page})=>{
