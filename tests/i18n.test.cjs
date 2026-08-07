@@ -3,6 +3,7 @@ const assert=require('node:assert/strict');
 const {readFileSync}=require('node:fs');
 const path=require('node:path');
 const vm=require('node:vm');
+const html=readFileSync(path.join(__dirname,'..','index.html'),'utf8');
 
 function load({languages=['en-US'],storedLocale=''}={}){
   const values=new Map(storedLocale?[['pogoUiLocale:v1',storedLocale]]:[]);
@@ -65,7 +66,71 @@ test('session ownership warnings use stable translation keys with English fallba
 test('English, Japanese, Spanish, and German expose the same UI key set',()=>{
   const {catalogs}=load();
   const expected=Object.keys(catalogs.en).sort();
+  assert.equal(expected.length,805);
   for(const locale of ['ja','es','de'])assert.deepEqual(Object.keys(catalogs[locale]).sort(),expected,locale);
+});
+
+test('active setup, Admin, profile, import, export, and safety surfaces use catalog keys',()=>{
+  const required=[
+    'setup.title','setup.failed','request.sendFailed','admin.pendingRequests','admin.memberAddFailed',
+    'profile.title','profile.friendCodeInvalid','health.title','import.summary','export.shareCopyFailed',
+    'safeTransfer.limitWarning','specialBoard.description','shortcuts.title','bulk.deleteConfirm'
+  ];
+  const {catalogs}=load();
+  for(const key of required){
+    for(const locale of ['en','ja','es','de'])assert.ok(String(catalogs[locale][key]||'').trim(),`${locale}:${key}`);
+    for(const locale of ['ja','es','de'])assert.notEqual(catalogs[locale][key],catalogs.en[key],`${locale}:${key}`);
+  }
+  for(const marker of [
+    'data-i18n="setup.title"','data-i18n="request.title"','data-i18n="admin.pendingRequests"',
+    'data-i18n="profile.title"','data-i18n="health.title"','data-i18n="import.title"',
+    'data-i18n="safeTransfer.title"','data-i18n="specialBoard.title"','data-i18n="shortcuts.title"'
+  ])assert.match(html,new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));
+});
+
+test('active runtime feedback does not expose raw Firebase errors',()=>{
+  const requestBlock=html.slice(html.indexOf('async function submitRequest'),html.indexOf('// ── PROFILE'));
+  const profileBlock=html.slice(html.indexOf('async function saveProfile'),html.indexOf('// ── UI HELPERS'));
+  const setupBlock=html.slice(html.indexOf('async function connectFirebase'),html.indexOf('function applyDataPath'));
+  for(const block of [requestBlock,profileBlock,setupBlock]){
+    assert.match(block,/i18nCore\.t\(/);
+    assert.doesNotMatch(block,/textContent\s*=\s*['"`]❌?\s*['"`]\s*\+\s*e\.message/);
+  }
+  assert.match(html,/console\.warn\('Firebase setup failed',e\)/);
+});
+
+test('covered active runtime surfaces use locale keys instead of English-only feedback',()=>{
+  for(const literal of [
+    "toast('✅ Backup downloaded!')","toast('⚠️ Admin only')",
+    "emptyHtml('No search strings yet'","emptyHtml('No matching Pokémon'",
+    "toast('⚠️ Select a Pokémon from the list')","toast('✅ App installed!')",
+    "confirm('Wipe all LF and FT entries from this board?')","toast('No variants found')",
+    "toast('Pick another trainer')","toast('🎤 Voice input requires HTTPS')",
+    "textContent=`${haveBulkSelected.size} selected`"
+  ])assert.ok(!html.includes(literal),literal);
+  for(const key of [
+    'common.noResults','myList.queueAdded','browse.noMatches','strings.noSearchStrings',
+    'backup.restoreConfirm','inventory.bulkDeleteConfirm','health.clearCacheConfirm',
+    'specialBoard.clearConfirm','install.unavailable','myList.addAllVariantsTitle',
+    'compare.pickAnother','voice.requiresHttps'
+  ])assert.ok(html.includes(`i18nCore.t('${key}'`)||html.includes(`i18nCore.t(\`${key}\``),key);
+  assert.match(html,/i18nCore\.t\(`saveStatus\.\$\{s\}Help`\)/);
+});
+
+test('canonical and private values remain outside interface translation',()=>{
+  assert.match(html,/placeholder="https:\/\/your-project-default-rtdb\.firebaseio\.com"/);
+  assert.match(html,/const SAFE_TRANSFER_PREFILTER="!favorite&!4\*&!shiny/);
+  assert.match(html,/tag\.label/);
+  assert.match(html,/favorite\.note/);
+  const exportBlock=html.slice(html.indexOf('function exportMyListMarkdown'),html.indexOf('// ── SPECIAL TRADE BOARD'));
+  assert.doesNotMatch(exportBlock,/trainerPreferences|trainerHistoryStore|favorite\.note|tag\.label|organizer/);
+});
+
+test('retired trade-offer surfaces stay classified and unreachable in trainer-first mode',()=>{
+  assert.match(html,/const TRAINER_FIRST_INTERIM_ENABLED=true/);
+  assert.match(html,/id="accept-offer-modal"/);
+  const interim=readFileSync(path.join(__dirname,'trainer-first-interim.test.cjs'),'utf8');
+  assert.match(interim,/retired records remain present and no deletion migration is introduced/);
 });
 
 test('browser locale detection uses a supported base language and stored choice wins',()=>{

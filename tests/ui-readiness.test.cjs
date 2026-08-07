@@ -139,6 +139,18 @@ test('responsive and accessibility safeguards cover compact screens, long labels
   assert.match(html,/if\(ev\.key==='Escape'\)\{if\(id==='trainer-organizer-modal'\)closeTrainerOrganizer\(\);else closeModal\(id\);return;\}/);
 });
 
+test('localized Admin and dialog surfaces preserve bounded responsive geometry',()=>{
+  for(const marker of [
+    'data-i18n="admin.pendingRequests"','data-i18n="profile.discordInstructions"',
+    "i18nCore.t('safeTransfer.limitWarning'",'data-i18n="specialBoard.description"'
+  ])assert.ok(html.includes(marker),marker);
+  assert.match(html,/overflow-x:auto;border:1px solid var\(--border\)/);
+  assert.match(html,/\.modal\{[^}]*overflow-y:auto/);
+  assert.match(html,/\.health-actions\{[^}]*flex-wrap:wrap/);
+  assert.match(html,/\.export-menu-item\{[^}]*white-space:normal/);
+  assert.match(html,/overflow-wrap:anywhere/);
+});
+
 test('Events distinguish loading, offline, filtered-empty, and legitimate empty states',()=>{
   assert.match(html,/stateModel\('loading',\{title:i18nCore\.t\('events\.loading'\)/);
   assert.match(html,/stateModel\('offline',\{title:i18nCore\.t\('events\.offline'\)/);

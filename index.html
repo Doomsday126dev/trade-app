@@ -934,7 +934,7 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
 .export-menu-wrap{position:relative;display:inline-flex}
 .export-menu{display:none;position:absolute;top:100%;right:0;margin-top:4px;background:var(--card);border:1px solid var(--border2);border-radius:var(--r2);box-shadow:var(--shadow);z-index:50;min-width:180px;padding:4px;overflow:hidden}
 .export-menu.open{display:block}
-.export-menu-item{display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:13px;cursor:pointer;border-radius:4px;color:var(--text);background:none;border:none;width:100%;text-align:left;font-family:var(--font)}
+.export-menu-item{display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:13px;cursor:pointer;border-radius:4px;color:var(--text);background:none;border:none;width:100%;text-align:left;font-family:var(--font);white-space:normal;overflow-wrap:anywhere}
 .export-menu-item:hover{background:var(--bg2)}
 .export-menu-item .icon{width:18px;text-align:center}
 .export-menu-sep{height:1px;background:var(--border);margin:4px 0}
@@ -1726,17 +1726,17 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
   <div class="lcard">
     <div class="llogo"><img class="brand-mark lg" src="assets/tradeloop-icon.svg" alt="" aria-hidden="true"> <span>PoGo Trades</span></div>
     <div style="margin-top:4px"></div>
-    <h2 style="font-size:19px;font-weight:700;margin-bottom:5px">Connect Firebase</h2>
-    <p style="color:var(--muted);font-size:13px;margin-bottom:22px;line-height:1.6">One-time setup. Takes ~5 minutes.</p>
-    <div class="brand-disclaimer">Unofficial community tool. Not affiliated with, endorsed by, or sponsored by Niantic, Nintendo, or The Pokémon Company.</div>
-    <div class="cstep"><div class="cstep-n">Step 1</div><p>Go to <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a> → New project.</p></div>
-    <div class="cstep"><div class="cstep-n">Step 2</div><p>Build → <strong>Realtime Database</strong> → Create database → <em>Start in test mode</em>.</p></div>
-    <div class="cstep"><div class="cstep-n">Step 3</div><p>Also go to <strong>Authentication → Get started → Email/Password → Enable</strong> (we use this for security).</p></div>
-    <div class="cstep"><div class="cstep-n">Step 4</div><p>Paste your database URL:</p>
-      <div class="irow"><input type="text" id="fb-url" placeholder="https://your-project-default-rtdb.firebaseio.com"><button class="cbtn" onclick="connectFirebase()">Connect →</button></div>
+    <h2 style="font-size:19px;font-weight:700;margin-bottom:5px" data-i18n="setup.title">Connect Firebase</h2>
+    <p style="color:var(--muted);font-size:13px;margin-bottom:22px;line-height:1.6" data-i18n="setup.subtitle">One-time setup. Takes about five minutes.</p>
+    <div class="brand-disclaimer" data-i18n="setup.disclaimer">Unofficial community tool. Not affiliated with, endorsed by, or sponsored by Niantic, Nintendo, or The Pokémon Company.</div>
+    <div class="cstep"><div class="cstep-n" data-i18n="setup.step1Label">Step 1</div><p><a href="https://console.firebase.google.com/" target="_blank" rel="noopener noreferrer">Firebase Console</a>: <span data-i18n="setup.step1">Create a new project.</span></p></div>
+    <div class="cstep"><div class="cstep-n" data-i18n="setup.step2Label">Step 2</div><p data-i18n="setup.step2">Under Build, create a Realtime Database in test mode.</p></div>
+    <div class="cstep"><div class="cstep-n" data-i18n="setup.step3Label">Step 3</div><p data-i18n="setup.step3">Under Authentication, enable the Email/Password sign-in provider.</p></div>
+    <div class="cstep"><div class="cstep-n" data-i18n="setup.step4Label">Step 4</div><p data-i18n="setup.step4">Paste the Realtime Database URL:</p>
+      <div class="irow"><input type="text" id="fb-url" placeholder="https://your-project-default-rtdb.firebaseio.com" data-i18n-aria-label="setup.databaseUrl"><button class="cbtn" onclick="connectFirebase()" data-i18n="setup.connect">Connect →</button></div>
       <div class="err" id="cfg-err"></div>
     </div>
-    <div class="skip" onclick="skipFirebase()">⚠️ Skip — use local storage only</div>
+    <button type="button" class="skip" onclick="skipFirebase()" data-i18n="setup.skip">Skip and use device storage only</button>
   </div>
 </div>
 
@@ -1766,19 +1766,19 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
 
   <!-- REQUEST FORM -->
   <div class="lcard" id="req-form-card" style="display:none">
-    <button class="req-back" onclick="hideRequestForm()">← Back to login</button>
+    <button class="req-back" onclick="hideRequestForm()" data-i18n="request.back">← Back to sign in</button>
     <div id="req-form-inner">
-      <div class="llogo">🙋 <span>Request Access</span></div>
-      <div class="lsub">An admin will review and approve you</div>
-      <div class="field"><label>Your Pokémon GO trainer name</label><input type="text" id="req-username" placeholder="Exact trainer name" autocomplete="off"></div>
-      <div class="field"><label>Note for admin <span style="color:var(--muted);font-weight:400">(optional)</span></label><input type="text" id="req-note" placeholder="e.g. I raid in Queens with the Tuesday group"></div>
-      <button class="lbtn" onclick="submitRequest()">Send request →</button>
+      <div class="llogo">🙋 <span data-i18n="request.title">Request access</span></div>
+      <div class="lsub" data-i18n="request.subtitle">An admin will review your request.</div>
+      <div class="field"><label data-i18n="request.trainerName">Your Pokémon GO trainer name</label><input type="text" id="req-username" data-i18n-placeholder="request.trainerPlaceholder" placeholder="Exact trainer name" autocomplete="off"></div>
+      <div class="field"><label><span data-i18n="request.note">Note for admin</span> <span style="color:var(--muted);font-weight:400" data-i18n="common.optional">(optional)</span></label><input type="text" id="req-note" data-i18n-placeholder="request.notePlaceholder" placeholder="For example, your local group"></div>
+      <button class="lbtn" onclick="submitRequest()" data-i18n="request.send">Send request →</button>
       <div class="err" id="req-err"></div>
     </div>
     <div id="req-sent-status" style="display:none" class="req-status">
       <div class="req-status-icon">✅</div>
-      <div class="req-status-text">Request sent!</div>
-      <div class="req-status-sub">An admin will review your request and send you a unique first-time PIN.</div>
+      <div class="req-status-text" data-i18n="request.sent">Request sent</div>
+      <div class="req-status-sub" data-i18n="request.sentHelp">An admin will review it and send you a unique first-time PIN.</div>
     </div>
   </div>
 </div>
@@ -1789,13 +1789,13 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
     <div class="logo"><img class="brand-mark" src="assets/tradeloop-icon.svg" alt="" aria-hidden="true"> <span>PoGo Trades</span></div>
     <div class="topbar-r">
       <div class="topbar-sync-wrap">
-        <div class="sync-row" id="sync-pill" title="Click for sync status detail" onclick="openSyncDetail()" role="button" tabindex="0"><div class="sync-dot" id="sdot"></div><span class="sync-lbl" id="slbl">—</span></div>
-        <div class="sync-queue-dot" id="sqd" title="Unsynced changes pending"></div>
+        <div class="sync-row" id="sync-pill" data-i18n-title="status.details" title="Open save status details" onclick="openSyncDetail()" role="button" tabindex="0"><div class="sync-dot" id="sdot"></div><span class="sync-lbl" id="slbl">—</span></div>
+        <div class="sync-queue-dot" id="sqd" data-i18n-title="status.pendingChanges" title="Unsaved changes pending"></div>
       </div>
       <div id="member-community-switcher" class="member-community-switcher" aria-live="polite"></div>
-      <button class="install-btn" id="install-btn" onclick="triggerInstall()" aria-label="Install app">⬇️ Install</button>
-      <button class="bell-btn" id="bell-btn" onclick="openWhatsNew()" aria-label="What's new" title="What's new">🔔<span class="bell-badge" id="bell-badge">!</span></button>
-      <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme" title="Toggle light/dark theme">🌙</button>
+      <button class="install-btn" id="install-btn" onclick="triggerInstall()" data-i18n-aria-label="app.installLabel" aria-label="Install app">⬇️ <span data-i18n="app.install">Install</span></button>
+      <button class="bell-btn" id="bell-btn" onclick="openWhatsNew()" data-i18n-aria-label="app.whatsNew" data-i18n-title="app.whatsNew" aria-label="What's new" title="What's new">🔔<span class="bell-badge" id="bell-badge">!</span></button>
+      <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" data-i18n-aria-label="app.theme" data-i18n-title="app.theme" aria-label="Toggle theme" title="Toggle light/dark theme">🌙</button>
       <div class="account-control">
         <button type="button" class="user-chip account-trigger" id="account-trigger" onclick="toggleAccountMenu(event)" aria-expanded="false" aria-controls="account-popover" data-i18n-aria-label="account.openMenu" aria-label="Open account menu">
           <div class="av" id="top-av">?</div>
@@ -1838,37 +1838,37 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
 
   <!-- BROWSE -->
   <div class="page" id="tab-browse">
-    <div class="srch"><span class="srch-icon">🔍</span><input type="text" id="bq" placeholder="Search Pokémon name, #number, or trainer…" oninput="renderBrowse()"></div>
+    <div class="srch"><span class="srch-icon">🔍</span><input type="text" id="bq" data-i18n-placeholder="browse.searchPlaceholder" placeholder="Search Pokémon name, number, or trainer…" oninput="renderBrowse()"></div>
     <div class="filter-bar">
       <div class="filter-group">
-        <span class="filter-label">Priority:</span>
-        <button class="fbtn fALL on" onclick="setFilter('ALL')" aria-pressed="true">All</button>
-        <button class="fbtn fH" onclick="setFilter('H')" aria-pressed="false">High</button>
-        <button class="fbtn fM" onclick="setFilter('M')" aria-pressed="false">Medium</button>
-        <button class="fbtn fL" onclick="setFilter('L')" aria-pressed="false">Low</button>
+        <span class="filter-label" data-i18n="browse.priority">Priority:</span>
+        <button class="fbtn fALL on" onclick="setFilter('ALL')" aria-pressed="true" data-i18n="common.all">All</button>
+        <button class="fbtn fH" onclick="setFilter('H')" aria-pressed="false" data-i18n="priority.high">High</button>
+        <button class="fbtn fM" onclick="setFilter('M')" aria-pressed="false" data-i18n="priority.medium">Medium</button>
+        <button class="fbtn fL" onclick="setFilter('L')" aria-pressed="false" data-i18n="priority.low">Low</button>
       </div>
       <div class="filter-divider"></div>
       <div class="filter-group">
-        <span class="filter-label">Flags:</span>
-        <button class="fbtn flag-filter fLucky" onclick="toggleFlagFilter('lucky')" aria-pressed="false" title="Show entries with Lucky flag">⚡</button>
-        <button class="fbtn flag-filter fShiny" onclick="toggleFlagFilter('shiny')" aria-pressed="false" title="Show entries with Shiny flag">✨</button>
-        <button class="fbtn flag-filter fXxl" onclick="toggleFlagFilter('xxl')" aria-pressed="false" title="Show entries with XXL flag">XXL</button>
-        <button class="fbtn flag-filter fXxs" onclick="toggleFlagFilter('xxs')" aria-pressed="false" title="Show entries with XXS flag">XXS</button>
+        <span class="filter-label" data-i18n="myList.flags">Flags:</span>
+        <button class="fbtn flag-filter fLucky" onclick="toggleFlagFilter('lucky')" aria-pressed="false" data-i18n-title="browse.luckyFilter" title="Show entries with Lucky flag">⚡</button>
+        <button class="fbtn flag-filter fShiny" onclick="toggleFlagFilter('shiny')" aria-pressed="false" data-i18n-title="browse.shinyFilter" title="Show entries with Shiny flag">✨</button>
+        <button class="fbtn flag-filter fXxl" onclick="toggleFlagFilter('xxl')" aria-pressed="false" data-i18n-title="browse.xxlFilter" title="Show entries with XXL flag">XXL</button>
+        <button class="fbtn flag-filter fXxs" onclick="toggleFlagFilter('xxs')" aria-pressed="false" data-i18n-title="browse.xxsFilter" title="Show entries with XXS flag">XXS</button>
       </div>
       <div class="filter-divider"></div>
       <div class="filter-group">
-        <span class="filter-label">Activity:</span>
-        <button class="sfbtn on" data-days="0" onclick="setStaleFilter(0)" aria-pressed="true">Any</button>
+        <span class="filter-label" data-i18n="browse.activity">Activity:</span>
+        <button class="sfbtn on" data-days="0" onclick="setStaleFilter(0)" aria-pressed="true" data-i18n="common.any">Any</button>
         <button class="sfbtn" data-days="7" onclick="setStaleFilter(7)" aria-pressed="false">7d</button>
         <button class="sfbtn" data-days="30" onclick="setStaleFilter(30)" aria-pressed="false">30d</button>
       </div>
       <div class="filter-divider"></div>
       <div class="filter-group" id="browse-list-tabs-inline">
-        <span class="filter-label">List:</span>
-        <button class="ltab active" onclick="setBrowseList('wishlist')" aria-pressed="true">Trades</button>
+        <span class="filter-label" data-i18n="browse.list">List:</span>
+        <button class="ltab active" onclick="setBrowseList('wishlist')" aria-pressed="true" data-i18n="list.wishlist">Trades</button>
         <button class="ltab" onclick="setBrowseList('dynamax')" aria-pressed="false"><span class="ltab-full">Dynamax</span><span class="ltab-short">Dmax</span></button>
         <button class="ltab" onclick="setBrowseList('gmax')" aria-pressed="false"><span class="ltab-full">Gigantamax</span><span class="ltab-short">Gmax</span></button>
-        <button class="ltab" onclick="setBrowseList('costumes')" aria-pressed="false">Others</button>
+        <button class="ltab" onclick="setBrowseList('costumes')" aria-pressed="false" data-i18n="list.others">Others</button>
       </div>
     </div>
 
@@ -1927,12 +1927,12 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
           <input type="hidden" id="add-pmon-sel">
           <div class="ac-dropdown" id="ac-dropdown"></div>
         </div>
-        <button type="button" class="voice-btn" id="voice-btn" onclick="startVoiceInput()" aria-label="Voice input" title="Speak to search">🎤</button>
-        <div class="add-pri-group" role="group" aria-label="Priority">
+        <button type="button" class="voice-btn" id="voice-btn" onclick="startVoiceInput()" data-i18n-aria-label="myList.voiceInput" data-i18n-title="myList.speakToSearch" aria-label="Voice input" title="Speak to search">🎤</button>
+        <div class="add-pri-group" role="group" data-i18n-aria-label="myList.priority" aria-label="Priority">
           <span class="add-pri-label" data-i18n="myList.priority">Priority</span>
-          <button type="button" class="pb add-pri-btn" data-pri="H" onclick="setAddPri('H')" aria-pressed="false" title="High priority">H</button>
-          <button type="button" class="pb add-pri-btn" data-pri="M" onclick="setAddPri('M')" aria-pressed="false" title="Medium priority">M</button>
-          <button type="button" class="pb add-pri-btn" data-pri="L" onclick="setAddPri('L')" aria-pressed="false" title="Low priority">L</button>
+          <button type="button" class="pb add-pri-btn" data-pri="H" onclick="setAddPri('H')" aria-pressed="false" data-i18n-title="priority.high">H</button>
+          <button type="button" class="pb add-pri-btn" data-pri="M" onclick="setAddPri('M')" aria-pressed="false" data-i18n-title="priority.medium">M</button>
+          <button type="button" class="pb add-pri-btn" data-pri="L" onclick="setAddPri('L')" aria-pressed="false" data-i18n-title="priority.low">L</button>
         </div>
         <input type="hidden" id="add-pmon-pri" value="">
         <button type="button" class="add-advanced-toggle" id="add-adv-toggle" onclick="toggleAddAdvanced()" aria-expanded="false" aria-controls="add-advanced"><span data-i18n="myList.advanced">Advanced</span> <span class="caret">▾</span></button>
@@ -1940,11 +1940,11 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
       <div class="add-tray" id="add-tray" hidden></div>
       <div class="add-advanced" id="add-advanced">
         <span class="add-adv-label" data-i18n="myList.flags">Flags</span>
-        <label class="lucky-add" title="⚡ Lucky — generates a separate Lucky Dex search string">
-          <input type="checkbox" id="add-pmon-lucky" onchange="renderAddTray()"> ⚡ Lucky
+        <label class="lucky-add" data-i18n-title="myList.luckyHelp" title="Lucky entries generate a separate search string">
+          <input type="checkbox" id="add-pmon-lucky" onchange="renderAddTray()"> ⚡ <span data-i18n="myList.lucky">Lucky</span>
         </label>
-        <label class="lucky-add" title="✨ Shiny — flag this entry as shiny-only (shinies are always special trades anyway, so no separate search string)">
-          <input type="checkbox" id="add-pmon-shiny" onchange="renderAddTray()"> ✨ Shiny
+        <label class="lucky-add" data-i18n-title="myList.shinyHelp" title="Mark this entry as Shiny only">
+          <input type="checkbox" id="add-pmon-shiny" onchange="renderAddTray()"> ✨ <span data-i18n="myList.shiny">Shiny</span>
         </label>
         <label class="lucky-add" title="XXL — mark as extra-large; generates a separate XXL search string">
           <input type="checkbox" id="add-pmon-xxl" onchange="if(this.checked)document.getElementById('add-pmon-xxs').checked=false;renderAddTray()"> XXL
@@ -1952,7 +1952,7 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
         <label class="lucky-add" title="XXS — mark as extra-small; generates a separate XXS search string">
           <input type="checkbox" id="add-pmon-xxs" onchange="if(this.checked)document.getElementById('add-pmon-xxl').checked=false;renderAddTray()"> XXS
         </label>
-        <input type="text" id="add-pmon-notes" data-i18n-placeholder="myList.notesPlaceholder" placeholder="Notes: f, m, shadow…" aria-label="Notes" style="flex:1;min-width:120px" oninput="renderAddTray()">
+        <input type="text" id="add-pmon-notes" data-i18n-placeholder="myList.notesPlaceholder" data-i18n-aria-label="myList.notes" placeholder="Notes: f, m, shadow…" aria-label="Notes" style="flex:1;min-width:120px" oninput="renderAddTray()">
       </div>
       <div class="add-actions">
         <button class="bsave" onclick="addEntry()" data-i18n="myList.addAction">Add</button>
@@ -1961,48 +1961,48 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
         <div class="export-menu-wrap">
           <button class="image-btn" onclick="toggleExportMenu(event)" aria-haspopup="true" aria-expanded="false" id="export-menu-btn" data-i18n="myList.exportAction">Export</button>
           <div class="export-menu" id="export-menu" role="menu">
-            <button class="export-menu-item" role="menuitem" onclick="exportMyListImage('classic');closeExportMenu()"><span class="icon">🖼️</span> Image — Classic (light)</button>
-            <button class="export-menu-item" role="menuitem" onclick="exportMyListImage('cards');closeExportMenu()"><span class="icon">🌙</span> Image — Dark Cards</button>
-            <button class="export-menu-item" role="menuitem" onclick="openSpecialTradeBoard();closeExportMenu()"><span class="icon">🎯</span> Special Trade Board (LF/FT)</button>
-            <button class="export-menu-item" role="menuitem" onclick="exportMyListMarkdown();closeExportMenu()"><span class="icon">📝</span> Markdown (Discord/Reddit)</button>
-            <button class="export-menu-item" role="menuitem" onclick="exportMyListCSV();closeExportMenu()"><span class="icon">📊</span> CSV (Spreadsheet)</button>
+            <button class="export-menu-item" role="menuitem" onclick="exportMyListImage('classic');closeExportMenu()"><span class="icon">🖼️</span> <span data-i18n="export.classicImage">Classic image (light)</span></button>
+            <button class="export-menu-item" role="menuitem" onclick="exportMyListImage('cards');closeExportMenu()"><span class="icon">🌙</span> <span data-i18n="export.darkImage">Dark card image</span></button>
+            <button class="export-menu-item" role="menuitem" onclick="openSpecialTradeBoard();closeExportMenu()"><span class="icon">🎯</span> <span data-i18n="export.specialBoard">Special Trade Board (LF/FT)</span></button>
+            <button class="export-menu-item" role="menuitem" onclick="exportMyListMarkdown();closeExportMenu()"><span class="icon">📝</span> <span data-i18n="export.markdown">Markdown (Discord/Reddit)</span></button>
+            <button class="export-menu-item" role="menuitem" onclick="exportMyListCSV();closeExportMenu()"><span class="icon">📊</span> <span data-i18n="export.csv">CSV spreadsheet</span></button>
             <div class="export-menu-sep"></div>
-            <button class="export-menu-item" role="menuitem" onclick="copyShareLink();closeExportMenu()"><span class="icon">🔗</span> Copy share link</button>
+            <button class="export-menu-item" role="menuitem" onclick="copyShareLink();closeExportMenu()"><span class="icon">🔗</span> <span data-i18n="export.copyShareLink">Copy share link</span></button>
           </div>
         </div>
         <button class="bulk-toggle" onclick="toggleBulkMode()" aria-pressed="false" id="bulk-toggle-btn" data-i18n="myList.bulkEdit">Bulk edit</button>
       </div>
-      <div class="speed-add-hint" id="speed-add-hint">Speed add is on — after each add, your priority and flags stay selected so you can keep going faster.</div>
+      <div class="speed-add-hint" id="speed-add-hint" data-i18n="myList.speedAddHint">Speed add is on. Priority and flags stay selected after each addition.</div>
     </div>
     <div class="owner-share-notice" id="owner-share-notice" role="status" aria-live="polite"></div>
-    <div class="bulk-bar" id="bulk-bar" role="toolbar" aria-label="Bulk actions">
-      <span class="bulk-count" id="bulk-count">0 selected</span>
-      <select id="bulk-pri-sel" class="bulk-btn" aria-label="Set priority for selected">
-        <option value="">Set priority…</option>
-        <option value="H">H – High</option>
-        <option value="M">M – Medium</option>
-        <option value="L">L – Low</option>
-        <option value="_clear">Clear priority</option>
+    <div class="bulk-bar" id="bulk-bar" role="toolbar" data-i18n-aria-label="bulk.actions" aria-label="Bulk actions">
+      <span class="bulk-count" id="bulk-count" data-i18n="bulk.noneSelected">0 selected</span>
+      <select id="bulk-pri-sel" class="bulk-btn" data-i18n-aria-label="bulk.setPriority" aria-label="Set priority for selected">
+        <option value="" data-i18n="bulk.setPriority">Set priority…</option>
+        <option value="H" data-i18n="bulk.high">H – High</option>
+        <option value="M" data-i18n="bulk.medium">M – Medium</option>
+        <option value="L" data-i18n="bulk.low">L – Low</option>
+        <option value="_clear" data-i18n="bulk.clearPriority">Clear priority</option>
       </select>
-      <button class="bulk-btn" onclick="bulkToggleFlag('lucky')">Toggle ⚡</button>
-      <button class="bulk-btn" onclick="bulkToggleFlag('shiny')">Toggle ✨</button>
-      <button class="bulk-btn" onclick="bulkToggleFlag('xxl')">Toggle XXL</button>
-      <button class="bulk-btn" onclick="bulkToggleFlag('xxs')">Toggle XXS</button>
-      <button class="bulk-btn bulk-del" onclick="bulkDelete()">🗑 Delete</button>
-      <button class="bulk-btn bulk-cancel" onclick="toggleBulkMode()">Done</button>
+      <button class="bulk-btn" onclick="bulkToggleFlag('lucky')" data-i18n="bulk.toggleLucky">Toggle Lucky</button>
+      <button class="bulk-btn" onclick="bulkToggleFlag('shiny')" data-i18n="bulk.toggleShiny">Toggle Shiny</button>
+      <button class="bulk-btn" onclick="bulkToggleFlag('xxl')" data-i18n="bulk.toggleXxl">Toggle XXL</button>
+      <button class="bulk-btn" onclick="bulkToggleFlag('xxs')" data-i18n="bulk.toggleXxs">Toggle XXS</button>
+      <button class="bulk-btn bulk-del" onclick="bulkDelete()">🗑 <span data-i18n="common.delete">Delete</span></button>
+      <button class="bulk-btn bulk-cancel" onclick="toggleBulkMode()" data-i18n="common.done">Done</button>
     </div>
     <div class="mylist-search">
       <span class="mylist-srch-icon" aria-hidden="true">🔍</span>
-      <input type="text" data-i18n-placeholder="myList.filterPlaceholder" placeholder="Filter my list…" oninput="renderMyList(this.value)" id="mylist-filter" aria-label="Filter my list">
+      <input type="text" data-i18n-placeholder="myList.filterPlaceholder" data-i18n-aria-label="myList.filterLabel" placeholder="Filter my list…" oninput="renderMyList(this.value)" id="mylist-filter" aria-label="Filter my list">
     </div>
     <div class="sec" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
       <span><span data-i18n="myList.listTitle">My list</span> <span id="mylist-count" style="font-weight:400;text-transform:none;font-size:11px;margin-left:4px"></span></span>
       <span style="font-size:10px;color:var(--muted);display:inline-flex;gap:6px;align-items:center;text-transform:none;letter-spacing:0;font-weight:500">
-        <span title="Lucky — separate Lucky Dex search string">⚡ Lucky</span>
+        <span data-i18n-title="myList.luckyHelp" title="Lucky entries generate a separate search string">⚡ <span data-i18n="myList.lucky">Lucky</span></span>
         <span style="color:var(--border2)">·</span>
-        <span style="color:#818cf8" title="XXL — separate XXL search string">XXL</span>
+        <span style="color:#818cf8" data-i18n-title="myList.xxlHelp" title="XXL entries generate a separate search string">XXL</span>
         <span style="color:var(--border2)">·</span>
-        <span style="color:#2dd4bf" title="XXS — separate XXS search string">XXS</span>
+        <span style="color:#2dd4bf" data-i18n-title="myList.xxsHelp" title="XXS entries generate a separate search string">XXS</span>
       </span>
     </div>
     <div id="mylist-out"></div>
@@ -2061,16 +2061,16 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
       </div>
       <div class="mylist-search">
         <span class="mylist-srch-icon" aria-hidden="true">🔍</span>
-        <input type="text" placeholder="Filter my inventory…" oninput="renderMyHave(this.value)" id="have-filter" aria-label="Filter inventory">
+        <input type="text" data-i18n-placeholder="inventory.filterPlaceholder" data-i18n-aria-label="inventory.filterLabel" placeholder="Filter my inventory…" oninput="renderMyHave(this.value)" id="have-filter" aria-label="Filter inventory">
       </div>
       <div class="sec" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px">
-        <span>My inventory <span id="have-count" style="font-weight:400;text-transform:none;font-size:11px;margin-left:4px"></span></span>
+        <span><span data-i18n="inventory.myInventory">My inventory</span> <span id="have-count" style="font-weight:400;text-transform:none;font-size:11px;margin-left:4px"></span></span>
         <span style="display:inline-flex;align-items:center;gap:8px;font-weight:500;text-transform:none">
           <span id="have-total" style="font-size:11px;color:var(--muted)"></span>
           <button class="bulk-toggle" onclick="exportLegacyInventoryCsv()" id="legacy-inventory-export"></button>
         </span>
       </div>
-      <div class="bulk-bar" id="have-bulk-bar" role="toolbar" aria-label="Bulk inventory actions" style="display:none">
+      <div class="bulk-bar" id="have-bulk-bar" role="toolbar" data-i18n-aria-label="inventory.bulkActions" aria-label="Bulk inventory actions" style="display:none">
         <span class="bulk-count" id="have-bulk-count">0 selected</span>
         <select id="have-bulk-mode-sel" class="bulk-btn" aria-label="Set mode for selected">
           <option value="">Set mode…</option>
@@ -2081,14 +2081,14 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
         </select>
         <button class="bulk-btn" onclick="bulkHaveAdjustQty(1)" title="Add 1 to qty of each selected">+1 qty</button>
         <button class="bulk-btn" onclick="bulkHaveAdjustQty(-1)" title="Subtract 1 from qty of each selected">−1 qty</button>
-        <button class="bulk-btn bulk-del" onclick="bulkHaveDelete()">🗑 Delete</button>
-        <button class="bulk-btn bulk-cancel" onclick="toggleHaveBulkMode()">Done</button>
+        <button class="bulk-btn bulk-del" onclick="bulkHaveDelete()">🗑 <span data-i18n="common.delete">Delete</span></button>
+        <button class="bulk-btn bulk-cancel" onclick="toggleHaveBulkMode()" data-i18n="common.done">Done</button>
       </div>
       <div id="have-mine-out"></div>
     </div>
     <div id="have-browse-view" class="have-view">
       <div id="owner-inventory-preview-banner" class="owner-preview-banner" style="display:none"></div>
-      <div class="srch"><span class="srch-icon">🔍</span><input type="text" id="have-browse-q" placeholder="Find a Pokémon or trainer…" oninput="queueRenderHaveBrowse()" aria-label="Search community inventory"></div>
+      <div class="srch"><span class="srch-icon">🔍</span><input type="text" id="have-browse-q" data-i18n-placeholder="inventory.communitySearchPlaceholder" data-i18n-aria-label="inventory.communitySearchLabel" placeholder="Find a Pokémon or trainer…" oninput="queueRenderHaveBrowse()" aria-label="Search community inventory"></div>
       <div class="filter-bar" style="margin-bottom:10px">
         <button class="fbtn have-sub-tab on" data-sub="trainer" onclick="setHaveSubTab('trainer')">By Trainer</button>
         <button class="fbtn have-sub-tab" data-sub="pokemon" onclick="setHaveSubTab('pokemon')">By Pokémon</button>
@@ -2121,30 +2121,30 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
   <div class="page" id="tab-admin">
     <div id="backup-reminder-slot"></div>
     <div class="admin-actions">
-      <button class="btn-export" onclick="exportData()" aria-label="Export backup">⬇️ Export backup</button>
-      <button class="btn-export" onclick="triggerRestore()" aria-label="Restore backup">⬆️ Restore backup</button>
+      <button class="btn-export" onclick="exportData()" data-i18n-aria-label="admin.exportBackup" aria-label="Export backup">⬇️ <span data-i18n="admin.exportBackup">Export backup</span></button>
+      <button class="btn-export" onclick="triggerRestore()" data-i18n-aria-label="admin.restoreBackup" aria-label="Restore backup">⬆️ <span data-i18n="admin.restoreBackup">Restore backup</span></button>
       <input type="file" id="restore-file" accept="application/json,.json" style="display:none" onchange="restoreData(this.files?.[0])">
     </div>
     <div class="security-box" id="security-panel"></div>
     <div class="login-audit" id="login-audit-panel" style="display:none"></div>
     <div class="login-audit" id="community-migration-panel" style="display:none"></div>
     <div id="pending-requests-section" style="display:none;margin-bottom:16px">
-      <div class="sec" style="margin-top:0;display:flex;align-items:center;gap:6px">Pending requests <span class="notif-badge" id="req-count-badge">0</span></div>
+      <div class="sec" style="margin-top:0;display:flex;align-items:center;gap:6px"><span data-i18n="admin.pendingRequests">Pending requests</span> <span class="notif-badge" id="req-count-badge">0</span></div>
       <div id="pending-requests-list"></div>
     </div>
     <div class="new-user-form">
-      <h3>➕ Add member</h3>
+      <h3>➕ <span data-i18n="admin.addMember">Add member</span></h3>
       <div class="frow">
-        <input type="text" id="nu-name" placeholder="Username" style="max-width:180px">
-        <input type="text" id="nu-pin" placeholder="Auto-generate or enter PIN" maxlength="6" inputmode="numeric" style="max-width:180px">
+        <input type="text" id="nu-name" data-i18n-placeholder="login.username" placeholder="Username" style="max-width:180px">
+        <input type="text" id="nu-pin" data-i18n-placeholder="admin.pinPlaceholder" placeholder="Auto-generate or enter PIN" maxlength="6" inputmode="numeric" style="max-width:180px">
         <label id="nu-admin-wrap" class="admin-role-toggle"><input type="checkbox" id="nu-admin"><span>Admin</span></label>
       </div>
-      <button class="bsave" onclick="addUser()" style="margin-top:10px">Add member</button>
+      <button class="bsave" onclick="addUser()" style="margin-top:10px" data-i18n="admin.addMember">Add member</button>
     </div>
     <div class="login-audit" id="admin-reset-safety-note"></div>
-    <div class="sec" style="margin-top:0">All members</div>
+    <div class="sec" style="margin-top:0" data-i18n="admin.allMembers">All members</div>
     <div style="overflow-x:auto;border:1px solid var(--border);border-radius:var(--r)">
-      <table class="utbl"><thead><tr><th>Trainer</th><th>Activity</th><th>Listed</th><th>Role</th><th>PIN</th></tr></thead>
+      <table class="utbl"><thead><tr><th data-i18n="admin.trainer">Trainer</th><th data-i18n="admin.activity">Activity</th><th data-i18n="admin.listed">Listed</th><th data-i18n="admin.role">Role</th><th>PIN</th></tr></thead>
       <tbody id="admin-tbody"></tbody></table>
     </div>
   </div>
@@ -2153,28 +2153,28 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
 <!-- SAFE-TO-TRANSFER MODAL (v4.6.14) -->
 <div class="ov" id="safe-transfer-modal" role="dialog" aria-modal="true" aria-labelledby="stb-title">
   <div class="modal" style="max-width:520px">
-    <button class="ov-x" onclick="closeModal('safe-transfer-modal')" aria-label="Close">×</button>
-    <h3 id="stb-title">🗑️ Safe-to-transfer search string</h3>
+    <button class="ov-x" onclick="closeModal('safe-transfer-modal')" data-i18n-aria-label="common.close" aria-label="Close">×</button>
+    <h3 id="stb-title">🗑️ <span data-i18n="safeTransfer.title">Safe-to-transfer search string</span></h3>
     <div class="stb-modal-body">
       <div class="stb-intro">
-        Generates a Pokémon GO search string for every species that <strong>none</strong> of your selected trade partners have on their wishlist. Paste it into your bag's search to see what's safe to mass-transfer.
+        <span data-i18n="safeTransfer.intro">Creates a Pokémon GO search string for species that none of the selected trainers have on their wishlist. Paste it into your Pokémon storage search before reviewing transfers.</span>
       </div>
       <div class="stb-section">
         <div class="stb-section-hdr">
-          <span class="stb-section-title">Trade partners to consider</span>
+          <span class="stb-section-title" data-i18n="safeTransfer.partners">Trainers to consider</span>
           <span class="stb-section-actions">
-            <button class="stb-link-btn" onclick="setAllSafeTransferTrainers(true)">Select all</button>
-            <button class="stb-link-btn" onclick="setAllSafeTransferTrainers(false)">Clear</button>
-            <button class="stb-link-btn" onclick="saveSafeTransferAsDefault()" title="Save the current selection as the default next time you open this">Save as default</button>
+            <button class="stb-link-btn" onclick="setAllSafeTransferTrainers(true)" data-i18n="common.selectAll">Select all</button>
+            <button class="stb-link-btn" onclick="setAllSafeTransferTrainers(false)" data-i18n="common.clear">Clear</button>
+            <button class="stb-link-btn" onclick="saveSafeTransferAsDefault()" data-i18n="safeTransfer.saveDefault" data-i18n-title="safeTransfer.saveDefaultHelp" title="Save the current selection as the default next time you open this">Save as default</button>
           </span>
         </div>
         <div class="stb-trainer-grid" id="stb-trainer-grid"></div>
       </div>
       <div class="stb-section">
-        <label class="stb-prefilter-row" for="stb-prefilter-chk" title="Prepend a 'never transfer this' guard onto the output so favorited / shiny / shadow / purified / event / traded / hundo / legendary / mythical / high-CP Pokémon are filtered out of the result before the species list ever applies.">
+        <label class="stb-prefilter-row" for="stb-prefilter-chk" data-i18n-title="safeTransfer.safetyFiltersHelp" title="Adds safeguards for favorites, special states, and high-CP Pokémon before the species filter.">
           <input type="checkbox" id="stb-prefilter-chk" checked onchange="toggleSafeTransferPrefilter(this.checked)">
           <div class="stb-prefilter-body">
-            <div class="stb-prefilter-title">🛡️ Prepend "never transfer" safety filters</div>
+            <div class="stb-prefilter-title">🛡️ <span data-i18n="safeTransfer.safetyFilters">Add never-transfer safety filters</span></div>
             <div class="stb-prefilter-desc" id="stb-prefilter-preview">!favorite&!4*&!shiny&!shadow&!purified&!background&!traded&!legendary&!mythical&cp-2500&</div>
           </div>
         </label>
@@ -2182,10 +2182,10 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
       <div class="stb-section">
         <div class="stb-summary" id="stb-summary"></div>
         <div id="stb-warn-wrap"></div>
-        <textarea class="stb-output" id="stb-output" readonly placeholder="Pick at least one trade partner above to generate a search string." aria-label="Generated search string"></textarea>
+        <textarea class="stb-output" id="stb-output" readonly data-i18n-placeholder="safeTransfer.placeholder" data-i18n-aria-label="safeTransfer.outputLabel" placeholder="Choose at least one trainer to create a search string." aria-label="Generated search string"></textarea>
         <div class="stb-actions">
-          <button class="stb-action-btn" id="stb-copy-btn" onclick="copySafeTransferString()">📋 Copy search string</button>
-          <button class="stb-action-btn secondary" onclick="closeModal('safe-transfer-modal')">Close</button>
+          <button class="stb-action-btn" id="stb-copy-btn" onclick="copySafeTransferString()">📋 <span data-i18n="safeTransfer.copy">Copy search string</span></button>
+          <button class="stb-action-btn secondary" onclick="closeModal('safe-transfer-modal')" data-i18n="common.close">Close</button>
         </div>
       </div>
     </div>
@@ -2194,96 +2194,91 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
 
 <!-- TOASTS -->
 <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true" aria-hidden="true" hidden></div>
-<div class="undo-toast" id="undo-toast" aria-hidden="true" hidden><span id="undo-msg"></span><button class="undo-btn" onclick="doUndo()">Undo</button></div>
+<div class="undo-toast" id="undo-toast" aria-hidden="true" hidden><span id="undo-msg"></span><button class="undo-btn" onclick="doUndo()" data-i18n="common.undo">Undo</button></div>
 
 <!-- PROFILE MODAL -->
 <div class="ov" id="prof-modal" role="dialog" aria-modal="true" aria-labelledby="prof-title">
   <div class="modal" style="max-width:420px">
-    <h3 id="prof-title">👤 Profile</h3>
+    <h3 id="prof-title">👤 <span data-i18n="profile.title">Profile</span></h3>
     <div class="profile-avatar-picker">
       <div class="profile-avatar-preview" id="prof-av-preview">?</div>
       <div style="flex:1;min-width:0">
-        <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px">Avatar Pokémon (optional)</label>
-        <input type="text" id="prof-av-input" list="prof-av-list" placeholder="Search or pick a Pokémon…" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--text);padding:7px 10px;border-radius:var(--r2);font-size:13px" oninput="updateAvatarPreview(this.value)">
+        <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px" data-i18n="profile.avatar">Avatar Pokémon (optional)</label>
+        <input type="text" id="prof-av-input" list="prof-av-list" data-i18n-placeholder="profile.avatarPlaceholder" placeholder="Search or pick a Pokémon…" style="width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--text);padding:7px 10px;border-radius:var(--r2);font-size:13px" oninput="updateAvatarPreview(this.value)">
         <datalist id="prof-av-list"></datalist>
       </div>
     </div>
-    <div class="pfc"><div class="pfc-lbl">Friend Code</div><div class="pfc-val" id="pfc-disp">—</div></div>
+    <div class="pfc"><div class="pfc-lbl" data-i18n="profile.friendCode">Friend Code</div><div class="pfc-val" id="pfc-disp">—</div></div>
     <div class="field">
-      <label>Update Friend Code</label>
+      <label data-i18n="profile.updateFriendCode">Update Friend Code</label>
       <input type="text" id="fc-inp" placeholder="0000 0000 0000" maxlength="14" inputmode="numeric" oninput="formatFc(this)">
       <div class="fc-hint" id="fc-hint"></div>
     </div>
     <div class="field profile-bio-field">
-      <label>Bio <span style="color:var(--muted);font-weight:400;font-size:11px">(optional, shown to other trainers)</span></label>
-      <textarea id="prof-bio" placeholder="e.g. Queens raids • prefer hundo trades" maxlength="120" rows="2"></textarea>
+      <label><span data-i18n="profile.bio">Bio</span> <span style="color:var(--muted);font-weight:400;font-size:11px" data-i18n="profile.bioVisibility">(optional, shown to other trainers)</span></label>
+      <textarea id="prof-bio" data-i18n-placeholder="profile.bioPlaceholder" placeholder="For example, your area and trade preferences" maxlength="120" rows="2"></textarea>
     </div>
     <div class="field">
-      <label>Discord handle <span style="color:var(--muted);font-weight:400;font-size:11px">(optional)</span></label>
+      <label><span data-i18n="profile.discordHandle">Discord handle</span> <span style="color:var(--muted);font-weight:400;font-size:11px" data-i18n="common.optional">(optional)</span></label>
       <input type="text" id="prof-discord" placeholder="username#1234 or username" maxlength="40">
     </div>
     <div class="field">
-      <label>Discord User ID <span style="color:var(--muted);font-weight:400;font-size:11px">(optional — lets others one-click DM you)</span></label>
+      <label>Discord User ID <span style="color:var(--muted);font-weight:400;font-size:11px" data-i18n="profile.discordIdHelp">(optional; lets others open a direct message)</span></label>
       <input type="text" id="prof-discord-id" placeholder="e.g. 123456789012345678" maxlength="22" pattern="[0-9]*" inputmode="numeric">
-      <button type="button" class="discord-id-help-toggle" onclick="this.nextElementSibling.classList.toggle('open');this.setAttribute('aria-expanded',this.nextElementSibling.classList.contains('open'))" aria-expanded="false">How do I find this? ▾</button>
-      <div class="discord-id-help">
-        1. Discord → User Settings (gear icon) → <strong>Advanced</strong> → enable <strong>Developer Mode</strong>.<br>
-        2. Click your own name/avatar anywhere → <strong>Copy User ID</strong>.<br>
-        3. Paste here. It's an 18-19 digit number — no name, no #.<br>
-        <span style="opacity:.7">With this set, other trainers' "Open Discord" button takes them straight to a DM with you (instead of just opening Discord's home screen).</span>
-      </div>
+      <button type="button" class="discord-id-help-toggle" onclick="this.nextElementSibling.classList.toggle('open');this.setAttribute('aria-expanded',this.nextElementSibling.classList.contains('open'))" aria-expanded="false" data-i18n="profile.discordHowTo">How do I find this? ▾</button>
+      <div class="discord-id-help" data-i18n="profile.discordInstructions">In Discord, enable Developer Mode under User Settings and Advanced. Then choose Copy User ID from your profile and paste the numeric ID here.</div>
     </div>
     <div class="field">
-      <label>Wallpaper <span style="color:var(--muted);font-weight:400;font-size:11px">(personal — only you see it)</span></label>
+      <label><span data-i18n="profile.wallpaper">Wallpaper</span> <span style="color:var(--muted);font-weight:400;font-size:11px" data-i18n="profile.wallpaperPrivate">(personal; only you see it)</span></label>
       <input type="hidden" id="prof-wallpaper" value="mono">
       <div class="wp-picker" id="wp-picker"></div>
     </div>
     <hr class="divider">
-    <div class="field"><label>New PIN</label><input type="password" id="np1" placeholder="New 6-digit PIN" maxlength="6" inputmode="numeric"></div>
-    <div class="field"><label>Confirm PIN</label><input type="password" id="np2" placeholder="Confirm" maxlength="6" inputmode="numeric"></div>
+    <div class="field"><label data-i18n="profile.newPin">New PIN</label><input type="password" id="np1" data-i18n-placeholder="profile.newPinPlaceholder" placeholder="New 6-digit PIN" maxlength="6" inputmode="numeric"></div>
+    <div class="field"><label data-i18n="profile.confirmPin">Confirm PIN</label><input type="password" id="np2" data-i18n-placeholder="profile.confirmPinPlaceholder" placeholder="Confirm" maxlength="6" inputmode="numeric"></div>
     <div class="err" id="pin-err"></div>
     <div class="mact">
-      <button class="bghost" onclick="openLoginHealthCheck()">App health</button>
-      <button class="bghost" onclick="closeModal('prof-modal')">Cancel</button>
-      <button class="bpri" onclick="saveProfile()">Save</button>
+      <button class="bghost" onclick="openLoginHealthCheck()" data-i18n="settings.healthAction">App health</button>
+      <button class="bghost" onclick="closeModal('prof-modal')" data-i18n="common.cancel">Cancel</button>
+      <button class="bpri" onclick="saveProfile()" data-i18n="common.save">Save</button>
     </div>
-    <div class="brand-disclaimer compact">Unofficial community tool. Not affiliated with Niantic, Nintendo, or The Pokémon Company.</div>
+    <div class="brand-disclaimer compact" data-i18n="login.disclaimer">Unofficial community tool. Not affiliated with Niantic, Nintendo, or The Pokémon Company.</div>
     <hr class="divider" style="margin-top:14px">
-    <button class="bghost" style="width:100%;color:var(--danger);border-color:rgba(239,68,68,.3)" onclick="logout()">Sign out</button>
+    <button class="bghost" style="width:100%;color:var(--danger);border-color:rgba(239,68,68,.3)" onclick="logout()" data-i18n="account.signOut">Sign out</button>
   </div>
 </div>
 
 <!-- WHAT'S NEW MODAL -->
 <div class="ov" id="whatsnew-modal" role="dialog" aria-modal="true" aria-labelledby="whatsnew-title">
   <div class="modal" style="max-width:480px">
-    <h3 id="whatsnew-title">🔔 What's New</h3>
+    <h3 id="whatsnew-title">🔔 <span data-i18n="whatsNew.title">What’s new</span></h3>
     <div class="whats-new-list" id="whatsnew-list"></div>
-    <div class="mact"><button class="bpri" onclick="closeWhatsNew()">Got it</button></div>
+    <div class="mact"><button class="bpri" onclick="closeWhatsNew()" data-i18n="common.gotIt">Got it</button></div>
   </div>
 </div>
 
 <!-- RESET PIN MODAL -->
 <div class="ov" id="rpin-modal" role="dialog" aria-modal="true" aria-labelledby="rpin-title">
   <div class="modal">
-    <h3 id="rpin-title">🔑 Reset PIN</h3>
-    <p style="font-size:13px;color:var(--muted);margin-bottom:14px">For: <strong id="rpin-target">—</strong></p>
-    <div class="field"><label>New PIN</label><input type="text" id="rpin-val" placeholder="New 6-digit PIN" maxlength="6" inputmode="numeric"></div>
-    <div class="mact"><button class="bghost" onclick="closeModal('rpin-modal')">Cancel</button><button class="bpri" onclick="confirmReset()">Reset</button></div>
+    <h3 id="rpin-title">🔑 <span data-i18n="admin.resetPin">Reset PIN</span></h3>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:14px"><span data-i18n="admin.forTrainer">For:</span> <strong id="rpin-target">—</strong></p>
+    <div class="field"><label data-i18n="profile.newPin">New PIN</label><input type="text" id="rpin-val" data-i18n-placeholder="profile.newPinPlaceholder" placeholder="New 6-digit PIN" maxlength="6" inputmode="numeric"></div>
+    <div class="mact"><button class="bghost" onclick="closeModal('rpin-modal')" data-i18n="common.cancel">Cancel</button><button class="bpri" onclick="confirmReset()" data-i18n="admin.resetAction">Reset</button></div>
   </div>
 </div>
 
 <!-- LOGIN HEALTH CHECK MODAL -->
 <div class="ov" id="login-health-modal" role="dialog" aria-modal="true" aria-labelledby="login-health-title">
   <div class="modal health-modal">
-    <h3 id="login-health-title">🩺 Sign-in health check</h3>
-    <div class="health-sub">Use this on a device that cannot sign in. It checks the app build, Firebase reachability, live user reads, and the service worker cache for this browser.</div>
+    <h3 id="login-health-title">🩺 <span data-i18n="health.title">Sign-in health check</span></h3>
+    <div class="health-sub" data-i18n="health.description">Use this on a device that cannot sign in. It checks the app build, Firebase reachability, user access, and this browser’s service-worker cache.</div>
     <div class="health-grid" id="login-health-grid"></div>
     <div class="health-actions">
-      <button class="bghost health-danger" onclick="clearLoginLocalCache()">Clear local cache + reload</button>
+      <button class="bghost health-danger" onclick="clearLoginLocalCache()" data-i18n="health.clearCache">Clear local cache and reload</button>
       <div style="display:flex;gap:8px">
-        <button class="bghost" onclick="copyLoginHealthReport()">Copy report</button>
-        <button class="bghost" onclick="runLoginHealthCheck()">Recheck</button>
-        <button class="bpri" onclick="closeModal('login-health-modal')">Done</button>
+        <button class="bghost" onclick="copyLoginHealthReport()" data-i18n="health.copyReport">Copy report</button>
+        <button class="bghost" onclick="runLoginHealthCheck()" data-i18n="health.recheck">Recheck</button>
+        <button class="bpri" onclick="closeModal('login-health-modal')" data-i18n="common.done">Done</button>
       </div>
     </div>
     <div class="health-copy-status" id="login-health-copy-status"></div>
@@ -2293,25 +2288,25 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
 <!-- IMPORT MODAL -->
 <div class="ov" id="import-modal" role="dialog" aria-modal="true" aria-labelledby="import-title">
   <div class="modal import-modal">
-    <h3 id="import-title">📥 Import from search string</h3>
+    <h3 id="import-title">📥 <span data-i18n="import.title">Import from search string</span></h3>
 
     <!-- STEP 1: Paste -->
     <div class="import-step active" id="import-step1">
       <div style="font-size:13px;color:var(--muted);margin-bottom:10px;line-height:1.5">
-        Paste a Pokémon GO search string. Dex numbers will be matched automatically; generated app strings use dex numbers only because PoGO evaluates commas before & filters.
+        <span data-i18n="import.description">Paste a Pokémon GO search string. Pokédex numbers are matched automatically. Generated strings keep canonical Pokémon GO search syntax.</span>
       </div>
       <textarea class="import-textarea" id="import-str-input"
-        placeholder="Paste your Pokémon GO search string here…&#10;&#10;e.g. 26,52,115,122,128&#10;or: !4*&!traded&!shiny&26,52,115,122,128"></textarea>
+        data-i18n-placeholder="import.placeholder" placeholder="Paste your Pokémon GO search string here…"></textarea>
       <div class="err" id="import-err"></div>
-      <div style="font-size:12px;font-weight:600;color:var(--muted);margin-top:12px;margin-bottom:4px">Add as priority:</div>
+      <div style="font-size:12px;font-weight:600;color:var(--muted);margin-top:12px;margin-bottom:4px" data-i18n="import.priority">Add with priority:</div>
       <div class="import-pri-row">
-        <button class="import-pri-btn" data-pri="H" onclick="setImportPri('H')">H – High</button>
-        <button class="import-pri-btn sel M" data-pri="M" onclick="setImportPri('M')">M – Medium</button>
-        <button class="import-pri-btn" data-pri="L" onclick="setImportPri('L')">L – Low</button>
+        <button class="import-pri-btn" data-pri="H" onclick="setImportPri('H')">H – <span data-i18n="priority.high">High</span></button>
+        <button class="import-pri-btn sel M" data-pri="M" onclick="setImportPri('M')">M – <span data-i18n="priority.medium">Medium</span></button>
+        <button class="import-pri-btn" data-pri="L" onclick="setImportPri('L')">L – <span data-i18n="priority.low">Low</span></button>
       </div>
       <div class="mact">
-        <button class="bghost" onclick="closeModal('import-modal')">Cancel</button>
-        <button class="bpri" onclick="parseImportString()">Preview →</button>
+        <button class="bghost" onclick="closeModal('import-modal')" data-i18n="common.cancel">Cancel</button>
+        <button class="bpri" onclick="parseImportString()" data-i18n="import.preview">Preview →</button>
       </div>
     </div>
 
@@ -2321,12 +2316,12 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
       <div id="import-warn-box"></div>
       <div class="import-preview" id="import-preview-list">
         <div class="select-all-row" onclick="toggleSelectAll()">
-          <input type="checkbox" id="select-all-chk" checked class="import-check"> Select all
+          <input type="checkbox" id="select-all-chk" checked class="import-check"> <span data-i18n="common.selectAll">Select all</span>
         </div>
       </div>
       <div class="mact">
-        <button class="bghost" onclick="backToStep1()">← Back</button>
-        <button class="bpri" id="import-confirm-btn" onclick="confirmImport()">Import</button>
+        <button class="bghost" onclick="backToStep1()" data-i18n="common.back">← Back</button>
+        <button class="bpri" id="import-confirm-btn" onclick="confirmImport()" data-i18n="import.action">Import</button>
       </div>
     </div>
   </div>
@@ -2355,47 +2350,45 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
 <!-- SPECIAL TRADE BOARD — 9DB-style LF/FT image export -->
 <div class="ov" id="special-board-modal" role="dialog" aria-modal="true" aria-labelledby="special-board-title">
   <div class="modal special-board-modal">
-    <h3 id="special-board-title">🎯 Special Trade Board</h3>
-    <div style="font-size:12px;color:var(--muted);line-height:1.45;margin-bottom:12px">
-      Build a one-shot Looking For / For Trade board for special trades (legendaries, mythicals, costumes, shinies — anything you'd negotiate in DM). Mark <span style="color:#f472b6;font-weight:600">✨ shiny</span> or <span style="color:#38bdf8;font-weight:600">🪞 mirror-only</span> per entry so they're visually distinct in the exported image. Board auto-saves to your profile.
-    </div>
+    <h3 id="special-board-title">🎯 <span data-i18n="specialBoard.title">Special Trade Board</span></h3>
+    <div style="font-size:12px;color:var(--muted);line-height:1.45;margin-bottom:12px" data-i18n="specialBoard.description">Build a Looking For and For Trade image for special trades. Mark Shiny or mirror-only entries so they are distinct. The board is saved with your profile.</div>
     <div class="special-board-grid">
       <div class="special-board-col special-board-col-lf">
-        <div class="special-board-col-hdr"><span>🔍 Looking For (LF)</span><small>bulk-add from your wants</small></div>
+        <div class="special-board-col-hdr"><span>🔍 <span data-i18n="specialBoard.lookingFor">Looking For (LF)</span></span><small data-i18n="specialBoard.fromWants">add from your wants</small></div>
         <div class="special-board-add-row">
           <div class="ac-wrap">
-            <input type="text" class="ac-input" id="special-lf-ac" placeholder="Add a Pokémon to LF…" autocomplete="off"
+            <input type="text" class="ac-input" id="special-lf-ac" data-i18n-placeholder="specialBoard.addLookingFor" placeholder="Add a Pokémon to LF…" autocomplete="off"
               oninput="specialAcSearch('lf',this.value)" onkeydown="specialAcKeydown(event,'lf')" onfocus="specialAcSearch('lf',this.value)">
             <input type="hidden" id="special-lf-sel">
             <div class="ac-dropdown" id="special-lf-dd"></div>
           </div>
-          <button class="bsave" onclick="addSpecialEntry('lf')">Add</button>
-          <button class="sb-bulk-btn" onclick="openQuickAdd('lf')" title="Bulk-add from your wishlist">📥</button>
+          <button class="bsave" onclick="addSpecialEntry('lf')" data-i18n="myList.addAction">Add</button>
+          <button class="sb-bulk-btn" onclick="openQuickAdd('lf')" data-i18n-title="specialBoard.bulkWants" title="Add several from your wishlist">📥</button>
         </div>
         <div class="sb-quickadd-panel" id="special-lf-quickadd" style="display:none"></div>
         <div class="special-board-list" id="special-lf-list"></div>
       </div>
       <div class="special-board-col special-board-col-ft">
-        <div class="special-board-col-hdr"><span>🤝 For Trade (FT)</span><small>bulk-add from your inventory</small></div>
+        <div class="special-board-col-hdr"><span>🤝 <span data-i18n="specialBoard.forTrade">For Trade (FT)</span></span><small data-i18n="specialBoard.fromInventory">add from your inventory</small></div>
         <div class="special-board-add-row">
           <div class="ac-wrap">
-            <input type="text" class="ac-input" id="special-ft-ac" placeholder="Add a Pokémon to FT…" autocomplete="off"
+            <input type="text" class="ac-input" id="special-ft-ac" data-i18n-placeholder="specialBoard.addForTrade" placeholder="Add a Pokémon to FT…" autocomplete="off"
               oninput="specialAcSearch('ft',this.value)" onkeydown="specialAcKeydown(event,'ft')" onfocus="specialAcSearch('ft',this.value)">
             <input type="hidden" id="special-ft-sel">
             <div class="ac-dropdown" id="special-ft-dd"></div>
           </div>
-          <button class="bsave" onclick="addSpecialEntry('ft')">Add</button>
-          <button class="sb-bulk-btn" onclick="openQuickAdd('ft')" title="Bulk-add from your inventory">📥</button>
+          <button class="bsave" onclick="addSpecialEntry('ft')" data-i18n="myList.addAction">Add</button>
+          <button class="sb-bulk-btn" onclick="openQuickAdd('ft')" data-i18n-title="specialBoard.bulkInventory" title="Add several from your inventory">📥</button>
         </div>
         <div class="sb-quickadd-panel" id="special-ft-quickadd" style="display:none"></div>
         <div class="special-board-list" id="special-ft-list"></div>
       </div>
     </div>
     <div class="mact" style="justify-content:space-between;gap:10px;flex-wrap:wrap">
-      <button class="bghost" onclick="clearSpecialBoard()" title="Wipe both columns">🗑 Clear board</button>
+      <button class="bghost" onclick="clearSpecialBoard()" data-i18n-title="specialBoard.clearHelp" title="Remove every entry from both columns">🗑 <span data-i18n="specialBoard.clear">Clear board</span></button>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="bghost" onclick="closeModal('special-board-modal')">Close</button>
-        <button class="bpri" onclick="exportSpecialBoardImage()">📤 Export as image</button>
+        <button class="bghost" onclick="closeModal('special-board-modal')" data-i18n="common.close">Close</button>
+        <button class="bpri" onclick="exportSpecialBoardImage()">📤 <span data-i18n="specialBoard.export">Export as image</span></button>
       </div>
     </div>
   </div>
@@ -2403,10 +2396,10 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
 
 <!-- READ-ONLY SHARE VIEW (#9) -->
 <div id="share-view">
-  <div class="share-meta-banner">📋 Read-only shared trade list · Anyone with this link can view <button type="button" class="local-settings-trigger" id="share-language-trigger" onclick="openSettingsPanel('public')" data-i18n-aria-label="account.languageSettings" aria-label="Language settings">🌐 <span data-i18n="account.language">Language</span></button></div>
+  <div class="share-meta-banner">📋 <span data-i18n="share.readOnlyBanner">Read-only shared trade list. Anyone with this link can view it.</span> <button type="button" class="local-settings-trigger" id="share-language-trigger" onclick="openSettingsPanel('public')" data-i18n-aria-label="account.languageSettings" aria-label="Language settings">🌐 <span data-i18n="account.language">Language</span></button></div>
   <div class="share-hdr" id="share-hdr"></div>
   <div class="share-body">
-    <a class="share-back-link" onclick="exitShareView()">← Back to app</a>
+    <a class="share-back-link" onclick="exitShareView()" data-i18n="share.backToApp">← Back to app</a>
     <div class="share-list-tabs" id="share-list-tabs"></div>
     <div id="share-list-out"></div>
   </div>
@@ -2480,25 +2473,25 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
 <!-- KEYBOARD SHORTCUTS CHEAT SHEET (#17) -->
 <div class="ov" id="shortcuts-modal" role="dialog" aria-modal="true" aria-labelledby="shortcuts-title">
   <div class="modal" style="max-width:520px">
-    <h3 id="shortcuts-title">⌨️ Keyboard shortcuts</h3>
+    <h3 id="shortcuts-title">⌨️ <span data-i18n="shortcuts.title">Keyboard shortcuts</span></h3>
     <div class="shortcut-grid">
-      <div class="shortcut-section-hdr">Navigation</div>
-      <div class="shortcut-row"><kbd>b</kbd><span>Find Trainer tab</span></div>
-      <div class="shortcut-row"><kbd>m</kbd><span>My List tab</span></div>
-      <div class="shortcut-row"><kbd>s</kbd><span>My List search strings</span></div>
-      <div class="shortcut-row"><kbd>i</kbd> <kbd>h</kbd><span>Legacy Inventory tab</span></div>
-      <div class="shortcut-row"><kbd>c</kbd><span>Events tab</span></div>
-      <div class="shortcut-section-hdr">Actions</div>
-      <div class="shortcut-row"><kbd>n</kbd><span>Focus add-Pokémon field (jumps to My List)</span></div>
-      <div class="shortcut-row"><kbd>/</kbd><span>Focus the search/filter on the active tab</span></div>
-      <div class="shortcut-row"><kbd>?</kbd><span>Show this cheat sheet</span></div>
-      <div class="shortcut-row"><kbd>Esc</kbd><span>Close any open modal</span></div>
-      <div class="shortcut-section-hdr">Inside a row</div>
-      <div class="shortcut-row"><kbd>Click</kbd> qty<span>Type the new quantity directly</span></div>
-      <div class="shortcut-row"><kbd>Enter</kbd><span>Commit edit · <kbd>Esc</kbd> reverts</span></div>
+      <div class="shortcut-section-hdr" data-i18n="shortcuts.navigation">Navigation</div>
+      <div class="shortcut-row"><kbd>b</kbd><span data-i18n="shortcuts.findTrainer">Open Find Trainer</span></div>
+      <div class="shortcut-row"><kbd>m</kbd><span data-i18n="shortcuts.myList">Open My List</span></div>
+      <div class="shortcut-row"><kbd>s</kbd><span data-i18n="shortcuts.searchStrings">Open My List search strings</span></div>
+      <div class="shortcut-row"><kbd>i</kbd> <kbd>h</kbd><span data-i18n="shortcuts.inventory">Open Legacy Inventory</span></div>
+      <div class="shortcut-row"><kbd>c</kbd><span data-i18n="shortcuts.events">Open Events</span></div>
+      <div class="shortcut-section-hdr" data-i18n="shortcuts.actions">Actions</div>
+      <div class="shortcut-row"><kbd>n</kbd><span data-i18n="shortcuts.focusAdd">Focus the add-Pokémon field</span></div>
+      <div class="shortcut-row"><kbd>/</kbd><span data-i18n="shortcuts.focusSearch">Focus search on the current section</span></div>
+      <div class="shortcut-row"><kbd>?</kbd><span data-i18n="shortcuts.showHelp">Show this shortcut list</span></div>
+      <div class="shortcut-row"><kbd>Esc</kbd><span data-i18n="shortcuts.closeDialog">Close the open dialog</span></div>
+      <div class="shortcut-section-hdr" data-i18n="shortcuts.rowEditing">Editing a row</div>
+      <div class="shortcut-row"><kbd data-i18n="shortcuts.click">Click</kbd><span data-i18n="shortcuts.editQuantity">Type a new quantity directly</span></div>
+      <div class="shortcut-row"><kbd>Enter</kbd><span data-i18n="shortcuts.commit">Save the edit; Esc cancels it</span></div>
     </div>
-    <div style="font-size:12px;color:var(--muted);margin-top:8px">Shortcuts are disabled while you're typing in an input.</div>
-    <div class="mact"><button class="bpri" onclick="closeModal('shortcuts-modal')">Got it</button></div>
+    <div style="font-size:12px;color:var(--muted);margin-top:8px" data-i18n="shortcuts.typingDisabled">Shortcuts are disabled while you type in a field.</div>
+    <div class="mact"><button class="bpri" onclick="closeModal('shortcuts-modal')" data-i18n="common.gotIt">Got it</button></div>
   </div>
 </div>
 
@@ -2509,10 +2502,10 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
     <h3 id="tour-title"></h3>
     <div id="tour-body" class="tour-body"></div>
     <div class="mact" style="justify-content:space-between">
-      <button class="bghost" onclick="skipTour()">Skip tour</button>
+      <button class="bghost" onclick="skipTour()" data-i18n="tour.skip">Skip tour</button>
       <div style="display:flex;gap:6px">
-        <button class="bghost" id="tour-prev-btn" onclick="tourPrev()">← Back</button>
-        <button class="bpri" id="tour-next-btn" onclick="tourNext()">Next →</button>
+        <button class="bghost" id="tour-prev-btn" onclick="tourPrev()" data-i18n="common.back">← Back</button>
+        <button class="bpri" id="tour-next-btn" onclick="tourNext()" data-i18n="common.next">Next →</button>
       </div>
     </div>
   </div>
@@ -2522,7 +2515,7 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
 <div class="ptr-indicator" id="ptr-indicator" aria-hidden="true">↓</div>
 
 <script>
-window.__POGO_RELEASE_ID='2026-08-05.13';
+window.__POGO_RELEASE_ID='2026-08-05.14';
 window.__pogoBootWatch=setTimeout(function(){
   var visible=['config-pg','login-pg','app'].some(function(id){
     var el=document.getElementById(id);
@@ -2541,56 +2534,56 @@ window.__pogoBootWatch=setTimeout(function(){
   if(err)err.textContent='App scripts did not finish loading. Refresh once; if this stays, send this screenshot.';
 },4000);
 </script>
-<script src="data.js?v=2026-08-05.13"></script>
-<script src="js/domain/priorities.js?v=2026-08-05.13"></script>
-<script src="js/ui/badges.js?v=2026-08-05.13"></script>
-<script src="js/domain/username.js?v=2026-08-05.13"></script>
-<script src="js/domain/priorityValues.js?v=2026-08-05.13"></script>
-<script src="js/domain/scheduleDates.js?v=2026-08-05.13"></script>
-<script src="js/domain/pokemonSearchTerms.js?v=2026-08-05.13"></script>
-<script src="js/domain/pokemonEntryRules.js?v=2026-08-05.13"></script>
-<script src="js/domain/searchStrings.js?v=2026-08-05.13"></script>
-<script src="js/ui/stringHtml.js?v=2026-08-05.13"></script>
-<script src="js/domain/scheduleEventRules.js?v=2026-08-05.13"></script>
-<script src="js/domain/scheduleTradeRules.js?v=2026-08-05.13"></script>
-<script src="js/domain/pokemonKeys.js?v=2026-08-05.13"></script>
-<script src="js/domain/spriteSlugs.js?v=2026-08-05.13"></script>
-<script src="js/domain/fuzzyText.js?v=2026-08-05.13"></script>
-<script src="js/domain/autocompleteText.js?v=2026-08-05.13"></script>
-<script src="js/domain/autocompleteMatching.js?v=2026-08-05.13"></script>
-<script src="js/domain/autocompleteRanking.js?v=2026-08-05.13"></script>
-<script src="js/domain/relativeTime.js?v=2026-08-05.13"></script>
-<script src="js/domain/clientRelease.js?v=2026-08-05.13"></script>
-<script src="js/domain/trainerDiscovery.js?v=2026-08-05.13"></script>
-<script src="js/domain/eventPresentation.js?v=2026-08-05.13"></script>
-<script src="js/domain/publicSharePublication.js?v=2026-08-05.13"></script>
-<script src="js/domain/trainerPreferences.js?v=2026-08-05.13"></script>
-<script src="js/domain/trainerPreferenceSync.js?v=2026-08-05.13"></script>
-<script src="js/domain/loginDirectory.js?v=2026-08-05.13"></script>
-<script src="js/utils/textSafety.js?v=2026-08-05.13"></script>
-<script src="js/ui/stringPanels.js?v=2026-08-05.13"></script>
-<script src="js/ui/emptyState.js?v=2026-08-05.13"></script>
-<script src="js/i18n/locales/en.js?v=2026-08-05.13"></script>
-<script src="js/i18n/locales/ja.js?v=2026-08-05.13"></script>
-<script src="js/i18n/locales/es.js?v=2026-08-05.13"></script>
-<script src="js/i18n/locales/de.js?v=2026-08-05.13"></script>
-<script src="js/i18n/pokemonNames/catalog.js?v=2026-08-05.13"></script>
-<script src="js/i18n/pokemonNames/core.js?v=2026-08-05.13"></script>
-<script src="js/i18n/eventLabels/core.js?v=2026-08-05.13"></script>
-<script src="js/i18n/core.js?v=2026-08-05.13"></script>
-<script src="js/services/firebaseClient.js?v=2026-08-05.13"></script>
-<script src="js/data/subscriptionManager.js?v=2026-08-05.13"></script>
-<script src="js/data/listenerLifecycle.js?v=2026-08-05.13"></script>
-<script src="js/data/sessionCacheBoundary.js?v=2026-08-05.13"></script>
-<script src="js/data/firebaseReadRegistry.js?v=2026-08-05.13"></script>
-<script src="js/data/currentUserRepository.js?v=2026-08-05.13"></script>
-<script src="js/data/ownedDataCoordinator.js?v=2026-08-05.13"></script>
-<script src="js/data/publicShareRepository.js?v=2026-08-05.13"></script>
-<script src="js/data/trainerHistoryStore.js?v=2026-08-05.13"></script>
-<script src="js/data/trainerPreferencesRepository.js?v=2026-08-05.13"></script>
-<script src="js/data/trainerPreferenceSyncQueue.js?v=2026-08-05.13"></script>
-<script src="js/domain/cacheAdapters.js?v=2026-08-05.13"></script>
-<script src="js/ui/trainerTagPanel.js?v=2026-08-05.13"></script>
+<script src="data.js?v=2026-08-05.14"></script>
+<script src="js/domain/priorities.js?v=2026-08-05.14"></script>
+<script src="js/ui/badges.js?v=2026-08-05.14"></script>
+<script src="js/domain/username.js?v=2026-08-05.14"></script>
+<script src="js/domain/priorityValues.js?v=2026-08-05.14"></script>
+<script src="js/domain/scheduleDates.js?v=2026-08-05.14"></script>
+<script src="js/domain/pokemonSearchTerms.js?v=2026-08-05.14"></script>
+<script src="js/domain/pokemonEntryRules.js?v=2026-08-05.14"></script>
+<script src="js/domain/searchStrings.js?v=2026-08-05.14"></script>
+<script src="js/ui/stringHtml.js?v=2026-08-05.14"></script>
+<script src="js/domain/scheduleEventRules.js?v=2026-08-05.14"></script>
+<script src="js/domain/scheduleTradeRules.js?v=2026-08-05.14"></script>
+<script src="js/domain/pokemonKeys.js?v=2026-08-05.14"></script>
+<script src="js/domain/spriteSlugs.js?v=2026-08-05.14"></script>
+<script src="js/domain/fuzzyText.js?v=2026-08-05.14"></script>
+<script src="js/domain/autocompleteText.js?v=2026-08-05.14"></script>
+<script src="js/domain/autocompleteMatching.js?v=2026-08-05.14"></script>
+<script src="js/domain/autocompleteRanking.js?v=2026-08-05.14"></script>
+<script src="js/domain/relativeTime.js?v=2026-08-05.14"></script>
+<script src="js/domain/clientRelease.js?v=2026-08-05.14"></script>
+<script src="js/domain/trainerDiscovery.js?v=2026-08-05.14"></script>
+<script src="js/domain/eventPresentation.js?v=2026-08-05.14"></script>
+<script src="js/domain/publicSharePublication.js?v=2026-08-05.14"></script>
+<script src="js/domain/trainerPreferences.js?v=2026-08-05.14"></script>
+<script src="js/domain/trainerPreferenceSync.js?v=2026-08-05.14"></script>
+<script src="js/domain/loginDirectory.js?v=2026-08-05.14"></script>
+<script src="js/utils/textSafety.js?v=2026-08-05.14"></script>
+<script src="js/ui/stringPanels.js?v=2026-08-05.14"></script>
+<script src="js/ui/emptyState.js?v=2026-08-05.14"></script>
+<script src="js/i18n/locales/en.js?v=2026-08-05.14"></script>
+<script src="js/i18n/locales/ja.js?v=2026-08-05.14"></script>
+<script src="js/i18n/locales/es.js?v=2026-08-05.14"></script>
+<script src="js/i18n/locales/de.js?v=2026-08-05.14"></script>
+<script src="js/i18n/pokemonNames/catalog.js?v=2026-08-05.14"></script>
+<script src="js/i18n/pokemonNames/core.js?v=2026-08-05.14"></script>
+<script src="js/i18n/eventLabels/core.js?v=2026-08-05.14"></script>
+<script src="js/i18n/core.js?v=2026-08-05.14"></script>
+<script src="js/services/firebaseClient.js?v=2026-08-05.14"></script>
+<script src="js/data/subscriptionManager.js?v=2026-08-05.14"></script>
+<script src="js/data/listenerLifecycle.js?v=2026-08-05.14"></script>
+<script src="js/data/sessionCacheBoundary.js?v=2026-08-05.14"></script>
+<script src="js/data/firebaseReadRegistry.js?v=2026-08-05.14"></script>
+<script src="js/data/currentUserRepository.js?v=2026-08-05.14"></script>
+<script src="js/data/ownedDataCoordinator.js?v=2026-08-05.14"></script>
+<script src="js/data/publicShareRepository.js?v=2026-08-05.14"></script>
+<script src="js/data/trainerHistoryStore.js?v=2026-08-05.14"></script>
+<script src="js/data/trainerPreferencesRepository.js?v=2026-08-05.14"></script>
+<script src="js/data/trainerPreferenceSyncQueue.js?v=2026-08-05.14"></script>
+<script src="js/domain/cacheAdapters.js?v=2026-08-05.14"></script>
+<script src="js/ui/trainerTagPanel.js?v=2026-08-05.14"></script>
 <script>
 let initializeApp,getDatabase,ref,set,get,onValue,update,getAuth,signInWithEmailAndPassword,createUserWithEmailAndPassword,firebaseSignOut,updatePassword,deleteUser,onAuthStateChanged;
 let firebaseSdkPromise=null;
@@ -3656,7 +3649,7 @@ async function flushSyncQueue(){
     }
   }
   if(permanentDrops>0){
-    toast(`⚠️ ${permanentDrops} edit${permanentDrops===1?'':'s'} did not sync. Local copy saved; open Health Check or sign back in.`,5000);
+    toast(i18nCore.t('storage.editsDidNotSync',{count:i18nCore.formatNumber(permanentDrops)}),5000);
   }
   if(!Object.keys(syncQueue).length)showSyncDot(false);
   else syncFlushTimer=setTimeout(flushSyncQueue,5000);
@@ -3674,7 +3667,7 @@ function warnLocalOnlyMode(){
   // saved but not synced.
   if(_localOnlyWarned)return;
   _localOnlyWarned=true;
-  toast('💾 Edit saved locally. You\'re in local-only mode — sign back in to push it to the community (banner at top has the button).',4500);
+  toast(i18nCore.t('storage.localOnlySaved'),4500);
   showSyncBanner();
 }
 // Debounce the "auth dropped" branch so transient blips (token refresh,
@@ -4289,7 +4282,7 @@ function saveLocal(s){
     const code=e?.name||e?.code||'';
     if(/Quota/i.test(code)||/Quota/i.test(String(e?.message||''))){
       console.warn('saveLocal: localStorage quota exceeded — offline cache disabled this session.',e);
-      if(typeof toast==='function')toast('⚠️ Local storage full — offline mode disabled. App still works online; clear browser data to restore offline support.',6000);
+      if(typeof toast==='function')toast(i18nCore.t('storage.quotaFull'),6000);
     }else{
       console.error('saveLocal failed:',e);
     }
@@ -4503,7 +4496,7 @@ async function bindAuthUserNow(username,authUpdate){
   return next;
 }
 async function repairMemberAccount(username,opts={}){
-  if(!allData.users?.[cur]?.isAdmin){toast('⚠️ Admin only');return null;}
+  if(!allData.users?.[cur]?.isAdmin){toast(i18nCore.t('admin.only'));return null;}
   const existing=allData.users?.[username]||{};
   if(!existing.joined&&!allData.users?.[username])throw Object.assign(new Error('User record missing'),{code:'repair/missing-user'});
   const resetPin=opts.pin||'';
@@ -5053,7 +5046,7 @@ async function ensureFirebaseIdentity(username,pin,ud){
 async function connectFirebase(){
   const url=document.getElementById('fb-url').value.trim();
   const err=document.getElementById('cfg-err');
-  if(!url||!url.includes('firebaseio.com')){err.textContent='Enter a valid Firebase Realtime Database URL';return;}
+  if(!url||!url.includes('firebaseio.com')){err.textContent=i18nCore.t('setup.invalidUrl');return;}
   try{
     setSyncStatus('syncing');
     await loadFirebaseSdk();
@@ -5062,14 +5055,14 @@ async function connectFirebase(){
     lsSet('fbUrl',url);err.textContent='';
     await seedFirebase();
     startListener();
-    toast('✅ Firebase connected!');
+    toast(i18nCore.t('setup.connected'));
     showLogin();
-  }catch(e){err.textContent='❌ '+e.message;setSyncStatus('offline');}
+  }catch(e){console.warn('Firebase setup failed',e);err.textContent=i18nCore.t('setup.failed');setSyncStatus('offline');}
 }
 
 async function seedFirebase(){
   const snap=await get(ref(db,'users'));
-  if(!snap.exists()){const s=getLocal();await set(ref(db,'/'),s);toast('📦 Data seeded!');}
+  if(!snap.exists()){const s=getLocal();await set(ref(db,'/'),s);toast(i18nCore.t('setup.seeded'));}
 }
 
 function applyDataPath(root,path,data){
@@ -5587,11 +5580,12 @@ async function copyLoginHealthReport(){
     if(!_lastLoginHealthReport)await runLoginHealthCheck();
     if(!_lastLoginHealthReport)throw new Error('Health report was not available');
     await copyText(_lastLoginHealthReport);
-    setLoginHealthCopyStatus('Report copied. Paste it into support chat.','ok');
-    toast('📋 Troubleshooting report copied');
+    setLoginHealthCopyStatus(i18nCore.t('health.reportCopiedHelp'),'ok');
+    toast(i18nCore.t('health.reportCopied'));
   }catch(e){
-    setLoginHealthCopyStatus('Copy failed. Try again from the live HTTPS app if clipboard access is blocked.','bad');
-    toast(`⚠️ Could not copy report: ${e?.message||'clipboard unavailable'}`);
+    console.warn('Health report copy failed',e);
+    setLoginHealthCopyStatus(i18nCore.t('health.reportCopyFailedHelp'),'bad');
+    toast(i18nCore.t('health.reportCopyFailed'));
   }
 }
 async function ensureFirebaseForHealth(){
@@ -5749,7 +5743,7 @@ async function runLoginHealthCheck(){
   renderHealthRows(rows);
 }
 async function clearLoginLocalCache(){
-  const ok=confirm('Clear saved app data and cached files on this device, then reload? This only affects this browser.');
+  const ok=confirm(i18nCore.t('health.clearCacheConfirm'));
   if(!ok)return;
   const appKeys=['pogo3','pogoSessionCache_v2','pogoSyncQueue_v1','pogoSyncQueue_v2','fbUrl','pgu','pguts','pogoAdvancedOpen','pogoExportStyle','pogoLastBackup','pogoWhatsNewSeen','pogoTheme','pogoBackupDismissed','pogoTourSeen','pogoSpriteScales_v2'];
   const clearStore=store=>{
@@ -5928,7 +5922,7 @@ function showBootError(err){
   const req=document.getElementById('req-form-card');
   if(req)req.style.display='none';
   const errEl=document.getElementById('login-err');
-  if(errEl)errEl.textContent='App had trouble starting. Please refresh once; if this stays, send a screenshot of this message.';
+  if(errEl)errEl.textContent=i18nCore.t('app.startupError');
   setSyncStatus('offline');
 }
 function showConfig(){
@@ -6100,6 +6094,7 @@ function changeInterfaceLocale(locale){
   renderInterimProductLabels();
   if(cur){
     _specialAcItems=null;haveAcItems=[];buildAcItems();renderMyList();renderFindTrainer();renderSettings();renderEventsOnly();renderMyHave(document.getElementById('have-filter')?.value||'');renderBrowse();
+    if(document.getElementById('tab-admin')?.classList.contains('active'))renderAdmin();
     if(_activeDiff)renderDiffModal();
     if(_activeTradeMatch)renderTradeMatchModal();
     if(document.getElementById('trainer-organizer-modal')?.classList.contains('open'))renderTrainerOrganizer();
@@ -6617,7 +6612,7 @@ function acSearch(q){
       </div>`).join('')}`
     :'';
   if(!acFiltered.length&&!familyBanner&&!existingSection){
-    dd.innerHTML=`<div class="ac-empty">No results</div>`;
+    dd.innerHTML=`<div class="ac-empty">${escHtml(i18nCore.t('common.noResults'))}</div>`;
   }else{
     dd.innerHTML=familyBanner+shownBanner+acFiltered.map((e,i)=>`
       <div class="ac-item" data-idx="${i}" onmousedown="acSelect(${i})">
@@ -6650,8 +6645,8 @@ function isInAddTray(name){return addTray.some(x=>x.name===name);}
 function addToTrayFromAc(idx){
   const e=acFiltered[idx];if(!e?.name)return;
   const existing=allData[myListType]?.[cur]||{};
-  if(existing[e.name]){toast('✓ Already on your list');return;}
-  if(isInAddTray(e.name)){toast('✓ Already queued');return;}
+  if(existing[e.name]){toast(i18nCore.t('myList.alreadyListed'));return;}
+  if(isInAddTray(e.name)){toast(i18nCore.t('myList.alreadyQueued'));return;}
   addTray.push({name:e.name,dn:e.dn||e.name,no:e.no||null,spriteUrl:e.spriteUrl||''});
   renderAddTray();
   acSearch(document.getElementById('ac-input')?.value||'');
@@ -6693,19 +6688,19 @@ function renderAddTray(){
       ${addTray.map((e,i)=>`<span class="add-tray-chip" title="${escAttr(e.dn||e.name)}">
         ${e.no||e.spriteUrl?spriteImg(e.no,18,'',e.name,'',e.dn||e.name,{urlOverride:e.spriteUrl}):''}
         <span>${escHtml(e.dn||e.name)}</span>
-        <button type="button" class="add-tray-remove" onclick="removeFromAddTray(${i})" aria-label="Remove ${escAttr(e.dn||e.name)}">×</button>
+        <button type="button" class="add-tray-remove" onclick="removeFromAddTray(${i})" aria-label="${escAttr(i18nCore.t('myList.removeEntry',{name:e.dn||e.name}))}">×</button>
       </span>`).join('')}
     </div>
     <div class="add-tray-actions">
-      <button type="button" onclick="clearAddTray()">Clear</button>
-      <button type="button" class="primary" onclick="confirmAddTray()">Add queue</button>
+      <button type="button" onclick="clearAddTray()">${escHtml(i18nCore.t('common.clear'))}</button>
+      <button type="button" class="primary" onclick="confirmAddTray()">${escHtml(i18nCore.t('myList.addQueue'))}</button>
     </div>`;
 }
 function confirmAddTray(){
-  if(!addTray.length){toast('Queue is empty');return;}
+  if(!addTray.length){toast(i18nCore.t('myList.queueEmpty'));return;}
   const pri=document.getElementById('add-pmon-pri')?.value||'';
   const flags=currentAddFlags();
-  if(!pri&&!flags.lucky&&!flags.xxl&&!flags.xxs&&!flags.shiny){toast('⚠️ Set a priority or at least one flag before adding the queue');return;}
+  if(!pri&&!flags.lucky&&!flags.xxl&&!flags.xxs&&!flags.shiny){toast(i18nCore.t('myList.queueNeedsPriority'));return;}
   const list={...(allData[myListType]?.[cur]||{})};
   let added=0;
   addTray.forEach(e=>{
@@ -6713,7 +6708,7 @@ function confirmAddTray(){
     list[e.name]=priValue(pri,flags.notes,flags.lucky,flags.xxl,flags.xxs,flags.shiny);
     added++;
   });
-  if(!added){clearAddTray();toast('✓ Nothing new to add');return;}
+  if(!added){clearAddTray();toast(i18nCore.t('myList.nothingNew'));return;}
   writeList(myListType,cur,list);
   addTray=[];
   renderAddTray();
@@ -6721,7 +6716,7 @@ function confirmAddTray(){
   document.getElementById('ac-dropdown')?.classList.remove('open');
   buildAcItems();
   renderMyList();
-  toast(`✅ Added ${added} queued Pokémon`);
+  toast(i18nCore.t('myList.queueAdded',{count:i18nCore.formatNumber(added)}));
 }
 document.addEventListener('click',e=>{
   if(!e.target.closest('.ac-wrap')){
@@ -6736,7 +6731,7 @@ document.addEventListener('click',e=>{
 function showUndo(name){
   clearTimeout(undoTimer);
   const toastEl=document.getElementById('undo-toast');
-  document.getElementById('undo-msg').textContent=`Removed "${name}"`;
+  document.getElementById('undo-msg').textContent=i18nCore.t('myList.removed',{name});
   toastEl.hidden=false;
   toastEl.setAttribute('aria-hidden','false');
   toastEl.classList.add('show');
@@ -6755,7 +6750,7 @@ function doUndo(){
   toastEl.setAttribute('aria-hidden','true');
   toastEl.hidden=true;
   writeList(undoStack.type,undoStack.username,undoStack.list);
-  toast(`↩️ ${undoStack.name} restored`);
+  toast(i18nCore.t('myList.restored',{name:undoStack.name}));
   undoStack=null;
 }
 
@@ -6769,8 +6764,8 @@ function formatFc(input){
   const hint=document.getElementById('fc-hint');
   if(hint){
     if(digits.length===0)hint.textContent='';
-    else if(digits.length<12)hint.textContent=`${12-digits.length} digits remaining`;
-    else hint.textContent='✅ Valid format';
+    else if(digits.length<12)hint.textContent=i18nCore.t('profile.friendCodeDigitsRemaining',{count:i18nCore.formatNumber(12-digits.length)});
+    else hint.textContent=i18nCore.t('profile.friendCodeValid');
     hint.style.color=digits.length===12?'var(--ok)':'var(--muted)';
   }
 }
@@ -6832,7 +6827,7 @@ function _renderBrowseInner(){
       if(!q)return true;
       return normalizeAcText(pokemonSearchLabels(e).join(' ')).includes(q)||ents.some(x=>x.user.toLowerCase().includes(q));
     });
-    if(!results.length){el.innerHTML=emptyHtml('No matching other entries','Try a different search, activity filter, or priority.');return;}
+    if(!results.length){el.innerHTML=emptyHtml(i18nCore.t('browse.noOtherMatches'),i18nCore.t('browse.tryFilters'));return;}
     el.innerHTML=`<div class="pgrid">${results.map(e=>{
       let ents=map[e.name]||[];if(browseFilter!=='ALL')ents=ents.filter(x=>x.p===browseFilter);
       ents=ents.filter(entryMatchesFlagFilters);
@@ -6866,7 +6861,7 @@ function _renderBrowseInner(){
     if(!q)return true;
     return normalizeAcText(pokemonSearchLabels(e).join(' ')).includes(q)||String(e.no||'').includes(q)||ents.some(x=>x.user.toLowerCase().includes(q));
   });
-  if(!results.length){el.innerHTML=emptyHtml('No matching Pokémon','Try a different search, activity filter, or priority.');return;}
+  if(!results.length){el.innerHTML=emptyHtml(i18nCore.t('browse.noMatches'),i18nCore.t('browse.tryFilters'));return;}
   el.innerHTML=`<div class="pgrid">${results.map(e=>{
     const info=map[e.name];
     let ents=info.entries;if(browseFilter!=='ALL')ents=ents.filter(x=>x.p===browseFilter);
@@ -6893,8 +6888,9 @@ function setMyList(t){
   document.querySelectorAll('#tab-mylist .list-tabs .ltab').forEach((b,i)=>{
     b.classList.toggle('active',['wishlist','dynamax','gmax','costumes'][i]===t);
   });
-  document.getElementById('add-ttl').textContent=
-    t==='costumes'?'+ Add Other':t==='gmax'?'+ Add Gigantamax Pokémon':t==='dynamax'?'+ Add Dynamax Pokémon':'+ Add Pokémon';
+  document.getElementById('add-ttl').textContent=i18nCore.t(
+    t==='costumes'?'myList.addOther':t==='gmax'?'myList.addGigantamax':t==='dynamax'?'myList.addDynamax':'myList.addTitle'
+  );
   if(document.getElementById('ac-input'))document.getElementById('ac-input').value='';
   document.getElementById('add-pmon-sel').value='';
   ['add-pmon-lucky','add-pmon-xxl','add-pmon-xxs','add-pmon-shiny'].forEach(id=>{const el=document.getElementById(id);if(el)el.checked=false;});
@@ -6941,7 +6937,7 @@ function toggleSpeedAddMode(){
   const next=!lsGet('pogoSpeedAdd',false);
   lsSet('pogoSpeedAdd',next);
   syncSpeedAddMode();
-  toast(next?'⚡ Speed add on':'⚡ Speed add off');
+  toast(i18nCore.t(next?'myList.speedAddOn':'myList.speedAddOff'));
 }
 function setAddPri(p){
   const hidden=document.getElementById('add-pmon-pri');
@@ -6964,8 +6960,8 @@ function addEntry(){
   const xxl=!!document.getElementById('add-pmon-xxl')?.checked;
   const xxs=!!document.getElementById('add-pmon-xxs')?.checked;
   const shiny=!!document.getElementById('add-pmon-shiny')?.checked;
-  if(!name){toast('⚠️ Select a Pokémon from the list');return;}
-  if(!pri&&!lucky&&!xxl&&!xxs&&!shiny){toast('⚠️ Set a priority or at least one flag (⚡/✨/XXL/XXS)');return;}
+  if(!name){toast(i18nCore.t('myList.selectPokemon'));return;}
+  if(!pri&&!lucky&&!xxl&&!xxs&&!shiny){toast(i18nCore.t('myList.priorityOrFlagRequired'));return;}
   const dn=acItems.find(x=>x.name===name)?.dn||name;
   const list={...(allData[myListType]?.[cur]||{})};
   list[name]=priValue(pri,notes,lucky,xxl,xxs,shiny);
@@ -6983,7 +6979,7 @@ function addEntry(){
   }
   document.getElementById('ac-dropdown').classList.remove('open');
   buildAcItems();
-  toast(`✅ ${dn} added!`);
+  toast(i18nCore.t('myList.added',{name:dn}));
   const input=document.getElementById('ac-input');
   if(input)input.focus();
 }
@@ -7717,20 +7713,20 @@ async function exportMyListImage(style='classic'){
   const btn=document.querySelector('.image-btn');
   const old=btn?.textContent;
   const entries=currentListEntries(myListType).filter(e=>e.p&&PRI[e.p]);
-  if(!entries.length){toast('Add entries with H/M/L priority to export.');return;}
+  if(!entries.length){toast(i18nCore.t('export.priorityRequired'));return;}
   try{
-    if(btn){btn.disabled=true;btn.textContent='Building image…';}
+    if(btn){btn.disabled=true;btn.textContent=i18nCore.t('export.buildingImage');}
     const blob=await renderListImage(entries,myListType,cur,style);
     const styleTag=style==='cards'?'-darkcards':'';
     const filename=`pogo-${safeFilePart(cur)}-${safeFilePart(listLabel(myListType))}${styleTag}-${new Date().toISOString().slice(0,10)}.png`;
     const delivery=await deliverImageBlob(blob,filename,`${cur}'s ${listLabel(myListType)} List`);
     // Remember user's last choice for future exports
     try{lsSet('pogoExportStyle',style);}catch{}
-    if(delivery==='cancelled')toast('Image export cancelled.');
-    else toast(delivery==='shared'?`🖼️ Image ready to save/share (${style==='cards'?'dark cards':'classic'}).`:`🖼️ Image exported (${style==='cards'?'dark cards':'classic'})!`);
+    if(delivery==='cancelled')toast(i18nCore.t('export.cancelled'));
+    else toast(i18nCore.t(delivery==='shared'?'export.imageReady':'export.imageSaved'));
   }catch(e){
     console.error(e);
-    toast('⚠️ Image export failed. Try again.');
+    toast(i18nCore.t('export.failed'));
   }finally{
     if(btn){btn.disabled=false;btn.textContent=old;}
   }
@@ -7960,7 +7956,7 @@ function _renderStringsInner(){
     const list=allData[strListType]?.[u]||{};
     return Object.keys(list).length>0;
   });
-  if(!users.length){el.innerHTML=emptyHtml('No search strings yet','Add entries in My List to generate your strings.','📋');return;}
+  if(!users.length){el.innerHTML=emptyHtml(i18nCore.t('strings.noSearchStrings'),i18nCore.t('strings.addEntriesHelp'),'📋');return;}
   el.innerHTML=users.map(u=>{
     const strs=buildStrings(strListType,u);
     const ud=allData.users?.[u]||{};
@@ -7978,11 +7974,11 @@ function _renderStringsInner(){
         <div class="user-str-info">
           ${avInner}
           <div>
-            <span style="font-weight:600;font-size:14px">${escHtml(u)}${isMe?' (you)':''}</span>${diffBadge}
+            <span style="font-weight:600;font-size:14px">${escHtml(u)}${isMe?` (${escHtml(i18nCore.t('common.you'))})`:''}</span>${diffBadge}
             ${ud.friendCode?`<span style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:6px">${escHtml(ud.friendCode)}</span>`:''}
             <div style="display:flex;align-items:center;gap:8px;margin-top:2px;flex-wrap:wrap">
               <span style="font-size:11px;color:${luColor}">● ${freshnessLabel(ud.lastUpdated)}</span>
-              <span style="font-size:11px;color:var(--muted)">${count} listed</span>
+              <span style="font-size:11px;color:var(--muted)">${escHtml(i18nCore.t('strings.listed',{count:i18nCore.formatNumber(count)}))}</span>
               ${discordHtml}
             </div>
             ${bioHtml}
@@ -7995,7 +7991,7 @@ function _renderStringsInner(){
       </div>
       <div class="user-str-body">
         ${diffDetails}
-        ${strs?strLevelsHtml(strs):'<div style="color:var(--muted);font-size:12px;padding:4px 0">Empty list</div>'}
+        ${strs?strLevelsHtml(strs):`<div style="color:var(--muted);font-size:12px;padding:4px 0">${escHtml(i18nCore.t('strings.emptyList'))}</div>`}
       </div>
     </div>`;
   }).join('');
@@ -8008,7 +8004,7 @@ function canUseBackupTools(){
 function guardBackupTool(){
   if(canUseBackupTools())return true;
   console.warn('Admin-only backup tool blocked');
-  toast('⚠️ Admin only');
+  toast(i18nCore.t('admin.only'));
   return false;
 }
 function resetRestoreInput(){
@@ -8034,7 +8030,7 @@ function exportData(){
   document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
   lsSet('pogoLastBackup',Date.now());
   renderBackupReminder();
-  toast('✅ Backup downloaded!');
+  toast(i18nCore.t('backup.downloaded'));
   return true;
 }
 function triggerRestore(){
@@ -8048,14 +8044,15 @@ async function restoreData(file){
   try{
     const text=await file.text();
     const {data,userCount}=validatedBackupPayload(JSON.parse(text));
-    const syncText=fbOn&&db?'replace local app data and attempt to sync the full backup to Firebase':'replace local app data only';
-    if(!confirm(`Restore backup with ${userCount} member${userCount===1?'':'s'}?\n\nThis will ${syncText}.\n\nFirebase root restore may be blocked by security rules. Continue only if you trust this backup.`))return;
+    const consequence=i18nCore.t(fbOn&&db?'backup.restoreSyncConsequence':'backup.restoreLocalConsequence');
+    if(!confirm(i18nCore.t('backup.restoreConfirm',{count:i18nCore.formatNumber(userCount),consequence})))return;
     saveLocal(data);allData=data;
     let synced=true;
     if(fbOn&&db)await set(ref(db,'/'),data).catch(()=>{synced=false;});
-    refreshAll();renderAdmin();toast(synced?'✅ Backup restored!':'✅ Restored locally. Firebase sync was blocked by rules.');
+    refreshAll();renderAdmin();toast(i18nCore.t(synced?'backup.restored':'backup.restoredLocal'));
   }catch(e){
-    toast('⚠️ Restore failed: '+(e.message||'invalid backup'));
+    console.warn('Backup restore failed',e);
+    toast(i18nCore.t('backup.restoreFailed'));
   }finally{
     resetRestoreInput();
   }
@@ -8497,25 +8494,25 @@ function renderCommunityMigrationPanel(){
   el.innerHTML=`
     <div class="login-audit-head">
       <div>
-        <div class="login-audit-title">Owner maintenance · Community foundation</div>
-        <div class="login-audit-sub">Private prep for future multi-community support. Owner preview is not public mode and does not change login or normal member behavior.</div>
+        <div class="login-audit-title">${escHtml(i18nCore.t('admin.communityTitle'))}</div>
+        <div class="login-audit-sub">${escHtml(i18nCore.t('admin.communityDescription'))}</div>
       </div>
       <div class="login-audit-actions">
-        ${previewCommunities.length?`<label class="owner-preview-toggle" title="Owner-only local preview community; this never writes Firebase or changes public selected-community state">Preview community <select onchange="setOwnerPreviewCommunityId(this.value)" ${previewCommunities.length?'':'disabled'}>${previewOptions}</select></label>`:''}
-        ${MULTI_COMMUNITY_OWNER_PREVIEW_AVAILABLE?`<label class="owner-preview-toggle ${previewOn?'on':''}" title="Owner-only preview for Browse, Strings, Compare, Trade Match, Inventory browse, Offers, and Schedule; hidden from admins and members"><input type="checkbox" ${previewOn?'checked':''} onchange="setOwnerCommunityPreview(this.checked)"> Enable owner preview</label>`:''}
-        <button class="rpin" onclick="prepareDefaultCommunity()" ${canRefreshServer?'':'disabled'}>${ready?(preview.missingOnServer.length?'Refresh NYC':'NYC prepared'):'Prepare NYC'}</button>
+        ${previewCommunities.length?`<label class="owner-preview-toggle" title="${escAttr(i18nCore.t('admin.communityPreviewHelp'))}">${escHtml(i18nCore.t('admin.communityPreview'))} <select onchange="setOwnerPreviewCommunityId(this.value)" ${previewCommunities.length?'':'disabled'}>${previewOptions}</select></label>`:''}
+        ${MULTI_COMMUNITY_OWNER_PREVIEW_AVAILABLE?`<label class="owner-preview-toggle ${previewOn?'on':''}" title="${escAttr(i18nCore.t('admin.communityPreviewScope'))}"><input type="checkbox" ${previewOn?'checked':''} onchange="setOwnerCommunityPreview(this.checked)"> ${escHtml(i18nCore.t('admin.communityEnablePreview'))}</label>`:''}
+        <button class="rpin" onclick="prepareDefaultCommunity()" ${canRefreshServer?'':'disabled'}>${escHtml(i18nCore.t(ready?(preview.missingOnServer.length?'admin.communityRefreshDefault':'admin.communityDefaultPrepared'):'admin.communityPrepareDefault'))}</button>
       </div>
     </div>
     <div class="login-audit-list">
       <div class="login-audit-row">
         <div>
-          <div class="login-audit-user">Default community: ${escHtml(DEFAULT_COMMUNITY_NAME)} <span class="cb">${escHtml(DEFAULT_COMMUNITY_ID)}</span></div>
+          <div class="login-audit-user">${escHtml(i18nCore.t('admin.communityDefault'))}: ${escHtml(DEFAULT_COMMUNITY_NAME)} <span class="cb">${escHtml(DEFAULT_COMMUNITY_ID)}</span></div>
           <div class="login-audit-issues">
-            <span class="login-audit-chip">${migration.memberCount} usernames</span>
-            <span class="login-audit-chip">${migration.uidMemberCount} auth-linked members</span>
-            <span class="login-audit-chip">${migration.adminCount} owner/admin UID${migration.adminCount===1?'':'s'}</span>
-            ${ready?'<span class="acct-pill ok">Server ready</span>':'<span class="acct-pill warn">Not written to Firebase yet</span>'}
-            ${serverDrift?'<span class="acct-pill warn">Server needs refresh</span>':''}
+            <span class="login-audit-chip">${escHtml(i18nCore.t('admin.communityUsernames',{count:i18nCore.formatNumber(migration.memberCount)}))}</span>
+            <span class="login-audit-chip">${escHtml(i18nCore.t('admin.communityAuthLinked',{count:i18nCore.formatNumber(migration.uidMemberCount)}))}</span>
+            <span class="login-audit-chip">${escHtml(i18nCore.t('admin.communityAdminUids',{count:i18nCore.formatNumber(migration.adminCount)}))}</span>
+            ${ready?`<span class="acct-pill ok">${escHtml(i18nCore.t('admin.communityServerReady'))}</span>`:`<span class="acct-pill warn">${escHtml(i18nCore.t('admin.communityNotWritten'))}</span>`}
+            ${serverDrift?`<span class="acct-pill warn">${escHtml(i18nCore.t('admin.communityNeedsRefresh'))}</span>`:''}
           </div>
           ${migration.missingAuth.length?`<div style="font-size:11px;color:var(--muted);margin-top:6px">Missing Auth UID and indexed by username only for now: ${escHtml(migration.missingAuth.slice(0,8).join(', '))}${migration.missingAuth.length>8?'…':''}</div>`:''}
           ${driftHtml}
@@ -8536,38 +8533,38 @@ function renderCommunityMigrationPanel(){
       </div>
       <div class="login-audit-row">
         <div style="width:100%">
-          <div class="login-audit-user">Prepare another community <span class="cb">owner only</span></div>
-          <div style="font-size:11px;color:var(--muted);margin-top:4px">Creates metadata and owner membership only. It does not switch anyone, enroll existing users, or change current NYC behavior.</div>
+          <div class="login-audit-user">${escHtml(i18nCore.t('admin.communityPrepareAnother'))} <span class="cb">${escHtml(i18nCore.t('admin.ownerOnly'))}</span></div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px">${escHtml(i18nCore.t('admin.communityPrepareAnotherHelp'))}</div>
           <div style="display:grid;grid-template-columns:minmax(140px,1fr) minmax(160px,1fr) minmax(120px,.6fr);gap:8px;margin-top:10px">
             <input id="non-default-community-id" placeholder="community-id" autocapitalize="off" autocomplete="off" spellcheck="false">
-            <input id="non-default-community-name" placeholder="Display name">
+            <input id="non-default-community-name" placeholder="${escAttr(i18nCore.t('admin.communityDisplayName'))}">
             <select id="non-default-community-visibility">
               ${COMMUNITY_VISIBILITIES.map(v=>`<option value="${escAttr(v)}">${escHtml(v)}</option>`).join('')}
             </select>
           </div>
-          <input id="non-default-community-description" placeholder="Optional description" style="margin-top:8px">
+          <input id="non-default-community-description" placeholder="${escAttr(i18nCore.t('admin.communityOptionalDescription'))}" style="margin-top:8px">
           <div class="login-audit-actions" style="justify-content:space-between;margin-top:10px">
             <span id="non-default-community-prep-status" style="font-size:12px;color:var(--muted)"></span>
-            <button class="rpin" onclick="prepareNonDefaultCommunity()">Prepare community</button>
+            <button class="rpin" onclick="prepareNonDefaultCommunity()">${escHtml(i18nCore.t('admin.communityPrepare'))}</button>
           </div>
         </div>
       </div>
       <div class="login-audit-row">
         <div style="width:100%">
-          <div class="login-audit-user">Assign members to prepared community <span class="cb">owner only</span></div>
-          <div style="font-size:11px;color:var(--muted);margin-top:4px">Adds or removes existing users from prepared non-NYC communities only. This does not switch views, enroll NYC users automatically, or copy Pokémon data.</div>
+          <div class="login-audit-user">${escHtml(i18nCore.t('admin.communityAssignMembers'))} <span class="cb">${escHtml(i18nCore.t('admin.ownerOnly'))}</span></div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px">${escHtml(i18nCore.t('admin.communityAssignHelp'))}</div>
           <div style="display:grid;grid-template-columns:minmax(180px,1fr) minmax(160px,1fr);gap:8px;margin-top:10px">
             <select id="non-default-member-community" ${preparedCommunities.length?'':'disabled'}>
-              ${preparedCommunities.length?preparedOptions:'<option value="">Prepare a non-NYC community first</option>'}
+              ${preparedCommunities.length?preparedOptions:`<option value="">${escHtml(i18nCore.t('admin.communityPrepareFirst'))}</option>`}
             </select>
-            <input id="non-default-member-username" list="community-member-username-options" placeholder="Existing username" autocapitalize="off" autocomplete="off" spellcheck="false" ${preparedCommunities.length?'':'disabled'}>
+            <input id="non-default-member-username" list="community-member-username-options" placeholder="${escAttr(i18nCore.t('admin.communityExistingUsername'))}" autocapitalize="off" autocomplete="off" spellcheck="false" ${preparedCommunities.length?'':'disabled'}>
             <datalist id="community-member-username-options">${userOptions}</datalist>
           </div>
           <div class="login-audit-actions" style="justify-content:space-between;margin-top:10px">
             <span id="non-default-member-status" style="font-size:12px;color:var(--muted)"></span>
             <span style="display:flex;gap:8px;flex-wrap:wrap">
-              <button class="rpin" onclick="assignNonDefaultCommunityMember()" ${preparedCommunities.length?'':'disabled'}>Add member</button>
-              <button class="rpin danger" onclick="removeNonDefaultCommunityMember()" ${preparedCommunities.length?'':'disabled'}>Remove member</button>
+              <button class="rpin" onclick="assignNonDefaultCommunityMember()" ${preparedCommunities.length?'':'disabled'}>${escHtml(i18nCore.t('admin.communityAddMember'))}</button>
+              <button class="rpin danger" onclick="removeNonDefaultCommunityMember()" ${preparedCommunities.length?'':'disabled'}>${escHtml(i18nCore.t('admin.communityRemoveMember'))}</button>
             </span>
           </div>
         </div>
@@ -8575,8 +8572,8 @@ function renderCommunityMigrationPanel(){
     </div>`;
 }
 async function prepareDefaultCommunity(){
-  if(!ownerCanUseCommunityTools()){toast('⚠️ Owner only');return;}
-  if(!fbOn||!db||!auth?.currentUser){toast('⚠️ Sign in with Firebase before preparing community data');return;}
+  if(!ownerCanUseCommunityTools()){toast(i18nCore.t('admin.ownerOnly'));return;}
+  if(!fbOn||!db||!auth?.currentUser){toast(i18nCore.t('admin.communitySignInRequired'));return;}
   const migration=buildDefaultCommunityMigration();
   if(!confirm(`Prepare the private NYC community foundation?\n\nThis writes ${migration.memberCount} usernames and ${migration.uidMemberCount} auth-linked memberships. It will not change what users see yet.`))return;
   try{
@@ -8591,15 +8588,15 @@ async function prepareDefaultCommunity(){
     saveLocal(s);
     allData=normalizeData(s);
     renderCommunityMigrationPanel();
-    toast(`✅ NYC community prepared for ${migration.memberCount} member${migration.memberCount===1?'':'s'}`,5000);
+    toast(i18nCore.t('admin.communityDefaultPreparedCount',{count:i18nCore.formatNumber(migration.memberCount)}),5000);
   }catch(e){
     console.warn('Default community prep failed',e);
-    toast('⚠️ Could not prepare NYC community: '+(e.code||e.message||'permission denied'),7000);
+    toast(i18nCore.t('admin.communityOperationFailed'),7000);
   }
 }
 async function prepareNonDefaultCommunity(){
-  if(!ownerCanUseCommunityTools()){toast('⚠️ Owner only');return;}
-  if(!fbOn||!db||!auth?.currentUser){toast('⚠️ Sign in with Firebase before preparing community data');return;}
+  if(!ownerCanUseCommunityTools()){toast(i18nCore.t('admin.ownerOnly'));return;}
+  if(!fbOn||!db||!auth?.currentUser){toast(i18nCore.t('admin.communitySignInRequired'));return;}
   const input={
     communityId:document.getElementById('non-default-community-id')?.value||'',
     name:document.getElementById('non-default-community-name')?.value||'',
@@ -8624,16 +8621,16 @@ async function prepareNonDefaultCommunity(){
     saveLocal(s);
     allData=normalizeData(s);
     renderCommunityMigrationPanel();
-    toast(`✅ ${prep.community.name} prepared for owner-only setup`,5000);
+    toast(i18nCore.t('admin.communityPreparedNamed',{name:prep.community.name}),5000);
   }catch(e){
     console.warn('Non-default community prep failed',e);
     setNonDefaultCommunityPrepStatus('Could not prepare community: '+(e.code||e.message||'permission denied'),'warn');
-    toast('⚠️ Could not prepare community: '+(e.code||e.message||'permission denied'),7000);
+    toast(i18nCore.t('admin.communityOperationFailed'),7000);
   }
 }
 async function assignNonDefaultCommunityMember(){
-  if(!ownerCanUseCommunityTools()){toast('⚠️ Owner only');return;}
-  if(!fbOn||!db||!auth?.currentUser){toast('⚠️ Sign in with Firebase before assigning community members');return;}
+  if(!ownerCanUseCommunityTools()){toast(i18nCore.t('admin.ownerOnly'));return;}
+  if(!fbOn||!db||!auth?.currentUser){toast(i18nCore.t('admin.communitySignInRequired'));return;}
   const assignment=buildNonDefaultCommunityMemberAssignment(nonDefaultCommunityMemberToolInput());
   if(!assignment.ok){
     setCommunityMemberToolStatus(assignment.error,'warn');
@@ -8651,16 +8648,16 @@ async function assignNonDefaultCommunityMember(){
     saveLocal(s);
     allData=normalizeData(s);
     renderCommunityMigrationPanel();
-    toast(`✅ ${assignment.username} added to ${assignment.community.name||assignment.id}`,5000);
+    toast(i18nCore.t('admin.communityMemberAdded',{trainer:assignment.username,community:assignment.community.name||assignment.id}),5000);
   }catch(e){
     console.warn('Non-default community member assignment failed',e);
     setCommunityMemberToolStatus('Could not add member: '+(e.code||e.message||'permission denied'),'warn');
-    toast('⚠️ Could not add member: '+(e.code||e.message||'permission denied'),7000);
+    toast(i18nCore.t('admin.communityOperationFailed'),7000);
   }
 }
 async function removeNonDefaultCommunityMember(){
-  if(!ownerCanUseCommunityTools()){toast('⚠️ Owner only');return;}
-  if(!fbOn||!db||!auth?.currentUser){toast('⚠️ Sign in with Firebase before removing community members');return;}
+  if(!ownerCanUseCommunityTools()){toast(i18nCore.t('admin.ownerOnly'));return;}
+  if(!fbOn||!db||!auth?.currentUser){toast(i18nCore.t('admin.communitySignInRequired'));return;}
   const removal=buildNonDefaultCommunityMemberRemoval(nonDefaultCommunityMemberToolInput());
   if(!removal.ok){
     setCommunityMemberToolStatus(removal.error,'warn');
@@ -8678,34 +8675,34 @@ async function removeNonDefaultCommunityMember(){
     saveLocal(s);
     allData=normalizeData(s);
     renderCommunityMigrationPanel();
-    toast(`✅ ${removal.username} removed from ${removal.community.name||removal.id}`,5000);
+    toast(i18nCore.t('admin.communityMemberRemoved',{trainer:removal.username,community:removal.community.name||removal.id}),5000);
   }catch(e){
     console.warn('Non-default community member removal failed',e);
     setCommunityMemberToolStatus('Could not remove member: '+(e.code||e.message||'permission denied'),'warn');
-    toast('⚠️ Could not remove member: '+(e.code||e.message||'permission denied'),7000);
+    toast(i18nCore.t('admin.communityOperationFailed'),7000);
   }
 }
 async function repairLoginDirectory(u){
-  if(!allData.users?.[cur]?.isAdmin){toast('⚠️ Admin only');return;}
+  if(!allData.users?.[cur]?.isAdmin){toast(i18nCore.t('admin.only'));return;}
   try{
     await repairMemberAccount(u,{});
     renderAdmin();populateLoginUsers();
-    toast(`✅ ${u} login directory repaired`);
+    toast(i18nCore.t('admin.directoryRepaired',{trainer:u}));
   }catch(e){
-    toast('⚠️ Directory repair failed: '+(e.code||e.message||'permission denied'),6000);
+    toast(i18nCore.t('admin.directoryRepairFailed'),6000);
   }
 }
 async function repairLoginDirectories(){
-  if(!allData.users?.[cur]?.isAdmin){toast('⚠️ Admin only');return;}
+  if(!allData.users?.[cur]?.isAdmin){toast(i18nCore.t('admin.only'));return;}
   const rows=loginAuditRows().filter(r=>!r.needsPin);
-  if(!rows.length){toast('✓ No directory-only repairs needed');return;}
+  if(!rows.length){toast(i18nCore.t('admin.directoryNoRepairs'));return;}
   let ok=0,fail=0;
   for(const r of rows){
     try{await repairMemberAccount(r.u,{});ok++;}
     catch(e){console.warn('Directory repair failed',r.u,e);fail++;}
   }
   renderAdmin();populateLoginUsers();
-  toast(fail?`⚠️ Repaired ${ok}, ${fail} failed`:`✅ Repaired ${ok} login directories`,5000);
+  toast(i18nCore.t(fail?'admin.directoryRepairSummaryFailed':'admin.directoryRepairSummary',{ok:i18nCore.formatNumber(ok),failed:i18nCore.formatNumber(fail)}),5000);
 }
 
 // ── ADMIN ─────────────────────────────────────────────────────
@@ -8731,9 +8728,9 @@ function renderAdmin(){
     const dir=allData.loginDirectory?.[u]||{};
     const authOk=!!(d.authUid&&d.authEmail&&dir.authReady);
     const authIssues=[
-      !d.authUid?'missing auth UID':'',
-      !d.authEmail?'missing email':'',
-      !dir.authReady?'directory not ready':''
+      !d.authUid?i18nCore.t('admin.missingAuthUid'):'',
+      !d.authEmail?i18nCore.t('admin.missingEmail'):'',
+      !dir.authReady?i18nCore.t('admin.directoryNotReady'):''
     ].filter(Boolean);
     const canPromote=iAmOwner&&u!==cur&&u!==OWNER;
     const isOwnerRow=u===OWNER||d.isOwner;
@@ -8742,8 +8739,8 @@ function renderAdmin(){
     // Only owner can reset admin PINs (fix: admin reset restriction)
     const canReset=iAmOwner||(cur!==OWNER&&!isAdmin&&!isOwnerRow);
     const repairTitle=canReset
-      ?`Repair login directory/auth metadata${authOk?'':' or reset first-time PIN'}`
-      :'Only owner can repair admin accounts';
+      ?i18nCore.t(authOk?'admin.repairLogin':'admin.repairOrReset')
+      :i18nCore.t('admin.ownerRepairOnly');
     return`<tr>
       <td>
         <div style="display:flex;align-items:center;gap:7px">
@@ -8752,7 +8749,7 @@ function renderAdmin(){
             <div style="font-weight:500">${u}</div>
             ${d.friendCode?`<div style="font-family:var(--mono);font-size:10px;color:var(--muted)">${d.friendCode}</div>`:''}
             <div class="acct-mini">
-              <span class="acct-pill ${authOk?'ok':'warn'}">${authOk?'Login ready':'Needs repair'}</span>
+              <span class="acct-pill ${authOk?'ok':'warn'}">${escHtml(i18nCore.t(authOk?'admin.loginReady':'admin.needsRepair'))}</span>
               ${authIssues.length?`<span>${escHtml(authIssues.join(' · '))}</span>`:''}
             </div>
           </div>
@@ -8764,54 +8761,54 @@ function renderAdmin(){
       </td>
       <td><span class="cb">${wc}</span></td>
       <td>
-        ${isOwnerRow?'<span class="ab" style="background:rgba(168,139,250,.15);color:var(--ac2);border-color:rgba(168,139,250,.3)">Owner</span>'
-          :isAdmin?`<span class="ab">Admin</span>${canPromote?`<button class="rpin" style="margin-left:6px" onclick="toggleAdmin('${u}',false)">Demote</button>`:''}`
-          :`<span style="color:var(--muted);font-size:12px">Member</span>${canPromote?`<button class="rpin" style="margin-left:6px" onclick="toggleAdmin('${u}',true)">→ Admin</button>`:''}`}
+        ${isOwnerRow?`<span class="ab" style="background:rgba(168,139,250,.15);color:var(--ac2);border-color:rgba(168,139,250,.3)">${escHtml(i18nCore.t('admin.owner'))}</span>`
+          :isAdmin?`<span class="ab">Admin</span>${canPromote?`<button class="rpin" style="margin-left:6px" onclick="toggleAdmin('${u}',false)">${escHtml(i18nCore.t('admin.demote'))}</button>`:''}`
+          :`<span style="color:var(--muted);font-size:12px">${escHtml(i18nCore.t('admin.member'))}</span>${canPromote?`<button class="rpin" style="margin-left:6px" onclick="toggleAdmin('${u}',true)">→ Admin</button>`:''}`}
       </td>
       <td>
-        <button class="rpin" onclick="openReset('${u}')" ${canReset&&!establishedResetBlocked?'':` disabled title="${escAttr(establishedResetBlocked?i18nCore.t('admin.establishedResetUnavailable'):'Only owner can reset admin PINs')}"`}>Reset</button>
-        <button class="rpin" onclick="repairAccount('${u}')" ${canReset?'':'disabled'} title="${escAttr(repairTitle)}">Repair</button>
+        <button class="rpin" onclick="openReset('${u}')" ${canReset&&!establishedResetBlocked?'':` disabled title="${escAttr(establishedResetBlocked?i18nCore.t('admin.establishedResetUnavailable'):i18nCore.t('admin.ownerResetOnly'))}"`}>${escHtml(i18nCore.t('admin.resetAction'))}</button>
+        <button class="rpin" onclick="repairAccount('${u}')" ${canReset?'':'disabled'} title="${escAttr(repairTitle)}">${escHtml(i18nCore.t('admin.repair'))}</button>
       </td>
     </tr>`;
   }).join('');
 }
 
 async function repairAccount(u){
-  if(!allData.users?.[cur]?.isAdmin){toast('⚠️ Admin only');return;}
+  if(!allData.users?.[cur]?.isAdmin){toast(i18nCore.t('admin.only'));return;}
   const target=allData.users?.[u];
-  if(!target){toast('⚠️ User record missing');return;}
+  if(!target){toast(i18nCore.t('admin.userMissing'));return;}
   const iAmOwner=allData.users?.[cur]?.isOwner||cur===OWNER;
   const targetIsOwner=u===OWNER||target.isOwner;
   const targetIsAdmin=target.isAdmin&&!targetIsOwner;
-  if((targetIsOwner||targetIsAdmin)&&!iAmOwner){toast('⚠️ Only the owner can repair admin accounts');return;}
+  if((targetIsOwner||targetIsAdmin)&&!iAmOwner){toast(i18nCore.t('admin.ownerRepairOnly'));return;}
   const needsPin=!target.authUid;
   let pin='';
   if(needsPin){
     pin=prompt(`${u} is missing a Firebase Auth link.\n\nEnter a new 6-digit PIN to repair the account and give them a fresh login:`,generatedFirstTimePin())||'';
     if(!pin)return;
     pin=pin.trim();
-    if(!isSixDigitPin(pin)){toast('⚠️ PIN must be exactly 6 digits');return;}
+    if(!isSixDigitPin(pin)){toast(i18nCore.t('validation.pinSixDigits'));return;}
   }
   try{
     const result=await repairMemberAccount(u,{pin});
     renderAdmin();renderPendingRequests();populateLoginUsers();
     if(result?.pin){
       await copyText(firstTimeLoginMessage(u,result.pin)).catch(()=>{});
-      toast(`✅ ${u} repaired. New login details copied.`,5000);
+      toast(i18nCore.t('admin.accountRepairedCopied',{trainer:u}),5000);
     }else{
-      toast(`✅ ${u} login directory repaired`,3500);
+      toast(i18nCore.t('admin.directoryRepaired',{trainer:u}),3500);
     }
   }catch(e){
-    toast('⚠️ Account repair failed: '+(e.code||e.message||'permission denied'),6000);
+    toast(i18nCore.t('admin.accountRepairFailed'),6000);
   }
 }
 
 function toggleAdmin(u,makeAdmin){
   const iAmOwner=allData.users?.[cur]?.isOwner||cur===OWNER;
-  if(!iAmOwner){toast('⚠️ Only the owner can change admin roles');return;}
-  if(u===OWNER){toast('⚠️ Cannot change owner');return;}
+  if(!iAmOwner){toast(i18nCore.t('admin.ownerRoleOnly'));return;}
+  if(u===OWNER){toast(i18nCore.t('admin.cannotChangeOwner'));return;}
   writeUser(u,{isAdmin:makeAdmin});
-  toast(`✅ ${u} is now ${makeAdmin?'an admin':'a member'}`);renderAdmin();
+  toast(i18nCore.t('admin.roleChanged',{trainer:u,role:i18nCore.t(makeAdmin?'admin.admin':'admin.member')}));renderAdmin();
 }
 async function addUser(){
   const rawName=document.getElementById('nu-name').value.trim();
@@ -8819,18 +8816,19 @@ async function addUser(){
   const pinInput=document.getElementById('nu-pin').value.trim();
   const iAmOwner=allData.users?.[cur]?.isOwner||cur===OWNER;
   const adminRequested=document.getElementById('nu-admin')?.checked;
-  if(adminRequested&&!iAmOwner){toast('⚠️ Only the owner can create admins');return;}
+  if(adminRequested&&!iAmOwner){toast(i18nCore.t('admin.ownerCreateAdminsOnly'));return;}
   const isAdmin=iAmOwner&&adminRequested;
-  if(!rawName){toast('⚠️ Enter username');return;}
+  if(!rawName){toast(i18nCore.t('admin.enterUsername'));return;}
   const pin=pinInput||generatedFirstTimePin();
-  if(!isSixDigitPin(pin)){toast('⚠️ PIN must be exactly 6 digits');return;}
-  if(knownLoginUsernames().some(u=>u.toLowerCase()===rawName.toLowerCase())){toast(`⚠️ Username already exists${name&&name!==rawName?` as ${name}`:''}`);return;}
+  if(!isSixDigitPin(pin)){toast(i18nCore.t('validation.pinSixDigits'));return;}
+  if(knownLoginUsernames().some(u=>u.toLowerCase()===rawName.toLowerCase())){toast(i18nCore.t('admin.usernameExists'));return;}
   try{
     await createMemberNow(name,pin,isAdmin);
     document.getElementById('nu-name').value='';document.getElementById('nu-pin').value='';document.getElementById('nu-admin').checked=false;
-    toast(`✅ ${name} added! PIN: ${pin}`,5000);renderAdmin();populateLoginUsers();
+    toast(i18nCore.t('admin.memberAdded',{trainer:name,pin}),5000);renderAdmin();populateLoginUsers();
   }catch(e){
-    toast('⚠️ Could not add member in Firebase: '+(e.code||e.message||'permission denied'),5000);
+    console.warn('Could not add member in Firebase',e);
+    toast(i18nCore.t('admin.memberAddFailed'),5000);
   }
 }
 function establishedAccountResetBlocked(username){
@@ -8843,7 +8841,7 @@ function openReset(u){
   // Check permission
   const iAmOwner=allData.users?.[cur]?.isOwner||cur===OWNER;
   const targetIsAdmin=allData.users?.[u]?.isAdmin||u===OWNER;
-  if(!iAmOwner&&targetIsAdmin){toast('⚠️ Only the owner can reset admin PINs');return;}
+  if(!iAmOwner&&targetIsAdmin){toast(i18nCore.t('admin.ownerResetOnly'));return;}
   if(establishedAccountResetBlocked(u)){toast(establishedAccountResetMessage(),6000);return;}
   rpinTarget=u;
   document.getElementById('rpin-target').textContent=u;
@@ -8857,16 +8855,17 @@ async function confirmReset(){
     return;
   }
   const pin=document.getElementById('rpin-val').value.trim();
-  if(!isSixDigitPin(pin)){toast('⚠️ PIN must be exactly 6 digits');return;}
+  if(!isSixDigitPin(pin)){toast(i18nCore.t('validation.pinSixDigits'));return;}
   const prev=allData.users?.[rpinTarget]||{};
   try{
     const authProvision=await provisionFreshFirebaseAuthForTrainer(rpinTarget,pin,authVersionForUser(prev)+1);
     const nextVersion=authProvision.version;
     const pinHash=await hashPin(pin);
     await writeUserStrict(rpinTarget,{pin:pinHash,pinHashed:true,authVersion:nextVersion,authEmail:authEmail(rpinTarget,nextVersion),authUid:authProvision.uid,lastSeen:null});
-    closeModal('rpin-modal');toast(`✅ PIN reset for ${rpinTarget}`);rpinTarget=null;
+    closeModal('rpin-modal');toast(i18nCore.t('admin.pinResetSuccess',{trainer:rpinTarget}));rpinTarget=null;
   }catch(e){
-    toast('⚠️ Could not reset PIN in Firebase: '+(e.code||e.message||'permission denied'),5000);
+    console.warn('Could not reset PIN in Firebase',e);
+    toast(i18nCore.t('admin.pinResetFailed'),5000);
   }
 }
 
@@ -8889,16 +8888,16 @@ async function submitRequest(){
   const username=canonicalUsernameInput(rawUsername);
   const note=document.getElementById('req-note').value.trim();
   const err=document.getElementById('req-err');err.textContent='';
-  if(!rawUsername){err.textContent='Enter your trainer name';return;}
-  if(rawUsername.length<2){err.textContent='Too short';return;}
-  if(knownLoginUsernames().some(u=>u.toLowerCase()===rawUsername.toLowerCase())){err.textContent=`That name is already registered${username&&username!==rawUsername?` as ${username}`:''}`;return;}
+  if(!rawUsername){err.textContent=i18nCore.t('request.nameRequired');return;}
+  if(rawUsername.length<2){err.textContent=i18nCore.t('request.nameTooShort');return;}
+  if(knownLoginUsernames().some(u=>u.toLowerCase()===rawUsername.toLowerCase())){err.textContent=i18nCore.t('request.nameRegistered');return;}
   const existing=Object.values(allData.requests||{}).find(r=>String(r.username||'').toLowerCase()===rawUsername.toLowerCase()&&r.status==='pending');
-  if(existing){err.textContent='A request for this name is already pending';return;}
+  if(existing){err.textContent=i18nCore.t('request.alreadyPending');return;}
   const reqId='req_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
   const reqData={username,note:note||'',requestedAt:Date.now(),status:'pending'};
   const s=getLocal();if(!s.requests)s.requests={};
   s.requests[reqId]=reqData;saveLocal(s);allData=s;
-  if(fbOn&&db)await set(ref(db,`requests/${reqId}`),reqData).catch(e=>{err.textContent='Could not send: '+e.message;});
+  if(fbOn&&db)await set(ref(db,`requests/${reqId}`),reqData).catch(e=>{console.warn('Request submission failed',e);err.textContent=i18nCore.t('request.sendFailed');});
   document.getElementById('req-form-inner').style.display='none';
   document.getElementById('req-sent-status').style.display='block';
 }
@@ -8924,7 +8923,7 @@ function renderPendingRequests(){
     const needsRepair=r.status==='approved'&&!allData.users?.[r.username];
     const communityPickerHtml=(showCommunityPicker&&preparedNonDefault.length&&!needsRepair)?`
       <div class="req-card-community">
-        <label for="approve-community-${id}">Enroll into</label>
+        <label for="approve-community-${id}">${escHtml(i18nCore.t('admin.enrollInto'))}</label>
         <select id="approve-community-${id}" class="approve-community-select">
           <option value="${escAttr(DEFAULT_COMMUNITY_ID)}" selected>${escHtml(DEFAULT_COMMUNITY_NAME)} only</option>
           ${preparedNonDefault.map(([cid,c])=>{
@@ -8937,19 +8936,19 @@ function renderPendingRequests(){
     return`
     <div class="req-card" id="reqcard-${id}">
       <div class="req-card-hdr">
-        <div class="req-card-name">🎮 ${r.username}${needsRepair?' <span class="notif-badge">repair</span>':''}</div>
-        <div class="req-card-time">${needsRepair?'approved but no login':freshnessLabel(r.requestedAt)}</div>
+        <div class="req-card-name">🎮 ${r.username}${needsRepair?` <span class="notif-badge">${escHtml(i18nCore.t('admin.repair'))}</span>`:''}</div>
+        <div class="req-card-time">${needsRepair?escHtml(i18nCore.t('admin.approvedNoLogin')):freshnessLabel(r.requestedAt)}</div>
       </div>
-      ${r.note?`<div class="req-card-note">"${r.note}"</div>`:'<div class="req-card-note" style="color:var(--border2)">No note</div>'}
+      ${r.note?`<div class="req-card-note">"${escHtml(r.note)}"</div>`:`<div class="req-card-note" style="color:var(--border2)">${escHtml(i18nCore.t('admin.noNote'))}</div>`}
       ${communityPickerHtml}
       <div class="req-actions">
-        <button class="btn-approve" onclick="approveRequest('${id}','${r.username.replace(/'/g,"\\'")}')">${needsRepair?'🔧 Create login':'✅ Approve'}</button>
-        <button class="btn-deny" onclick="denyRequest('${id}')">✗ Deny</button>
+        <button class="btn-approve" onclick="approveRequest('${id}','${r.username.replace(/'/g,"\\'")}')">${needsRepair?'🔧 '+escHtml(i18nCore.t('admin.createLogin')):'✅ '+escHtml(i18nCore.t('admin.approve'))}</button>
+        <button class="btn-deny" onclick="denyRequest('${id}')">✗ ${escHtml(i18nCore.t('admin.deny'))}</button>
       </div>
     </div>`}).join('');
 }
 async function approveRequest(reqId,username){
-  if(allData.users?.[username]){toast('⚠️ Username already exists');return;}
+  if(allData.users?.[username]){toast(i18nCore.t('admin.usernameExists'));return;}
   const pin=generatedFirstTimePin();
   // Read the owner approval community picker for this card, if rendered.
   // Format: comma-separated community ids (e.g. "nyc", "new-jersey", or
@@ -8964,7 +8963,8 @@ async function approveRequest(reqId,username){
   try{
     await createMemberNow(username,pin,false,reqId,opts);
   }catch(e){
-    toast('⚠️ Could not create login in Firebase: '+(e.code||e.message||'permission denied'),5000);
+    console.warn('Could not create login in Firebase',e);
+    toast(i18nCore.t('admin.loginCreateFailed'),5000);
     return;
   }
   let copied=true;
@@ -8975,27 +8975,27 @@ async function approveRequest(reqId,username){
   }
   const card=document.getElementById(`reqcard-${reqId}`);
   if(card)card.innerHTML=`
-    <div style="font-size:14px;font-weight:700;color:var(--ok);margin-bottom:8px">✅ ${username} approved</div>
-    <div style="font-size:13px;color:var(--muted);margin-bottom:6px">${copied?'Login details copied — paste them to the trainer:':'Send them these first-time login details:'}</div>
-    <div style="font-size:13px">Trainer: <strong>${username}</strong></div>
+    <div style="font-size:14px;font-weight:700;color:var(--ok);margin-bottom:8px">✅ ${escHtml(i18nCore.t('admin.approvedTrainer',{trainer:username}))}</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:6px">${escHtml(i18nCore.t(copied?'admin.loginCopiedHelp':'admin.loginSendHelp'))}</div>
+    <div style="font-size:13px">${escHtml(i18nCore.t('admin.trainer'))}: <strong>${escHtml(username)}</strong></div>
     <div style="font-size:13px;margin-top:4px">PIN: <span class="pin-reveal">${pin}</span></div>
-    <div style="font-size:11px;color:var(--muted);margin-top:8px">They should change their PIN after the first sign-in.</div>
-    <button class="btn-copy-login" style="margin-top:10px" onclick="copyApprovedLogin('${username.replace(/'/g,"\\'")}','${pin}')">${copied?'📋 Copy again':'📋 Copy login details'}</button>`;
-  renderAdmin();populateLoginUsers();toast(copied?`✅ ${username} approved! Login details copied.`:`✅ ${username} approved! PIN: ${pin}`,5000);
+    <div style="font-size:11px;color:var(--muted);margin-top:8px">${escHtml(i18nCore.t('admin.changePinHelp'))}</div>
+    <button class="btn-copy-login" style="margin-top:10px" onclick="copyApprovedLogin('${username.replace(/'/g,"\\'")}','${pin}')">📋 ${escHtml(i18nCore.t(copied?'admin.copyAgain':'admin.copyLogin'))}</button>`;
+  renderAdmin();populateLoginUsers();toast(i18nCore.t(copied?'admin.approvedCopied':'admin.approved',{trainer:username}),5000);
   setTimeout(()=>renderPendingRequests(),4000);
 }
 async function copyApprovedLogin(username,pin){
   try{
     await copyText(firstTimeLoginMessage(username,pin));
-    toast(`📋 Login details copied for ${username}`);
+    toast(i18nCore.t('admin.loginCopied',{trainer:username}));
   }catch{
-    toast('⚠️ Could not copy login details automatically');
+    toast(i18nCore.t('admin.loginCopyFailed'));
   }
 }
 async function denyRequest(reqId){
   const s=getLocal();if(s.requests?.[reqId])s.requests[reqId].status='denied';
   saveLocal(s);if(fbOn&&db)await update(ref(db,`requests/${reqId}`),{status:'denied'}).catch(console.error);
-  allData=s;renderPendingRequests();toast('Request denied');
+  allData=s;renderPendingRequests();toast(i18nCore.t('admin.requestDenied'));
 }
 
 // ── PROFILE ───────────────────────────────────────────────────
@@ -9004,8 +9004,8 @@ function updateFcDisplay(){
   const fc=ud.friendCode||'';
   document.getElementById('my-fc-wrap').innerHTML=fc
     ?`<div class="fc-chip" onclick="openModal('prof-modal')">🎮 ${fc}</div>`
-    :`<div class="fc-chip" onclick="openModal('prof-modal')">+ Add Friend Code</div>`;
-  document.getElementById('pfc-disp').textContent=fc||'Not set';
+    :`<div class="fc-chip" onclick="openModal('prof-modal')">+ ${escHtml(i18nCore.t('profile.addFriendCode'))}</div>`;
+  document.getElementById('pfc-disp').textContent=fc||i18nCore.t('profile.notSet');
   document.getElementById('fc-inp').value=fc;
   // Populate profile fields
   const bio=document.getElementById('prof-bio');if(bio)bio.value=ud.bio||'';
@@ -9029,23 +9029,23 @@ async function saveProfile(){
   const avatarPokemon=document.getElementById('prof-av-input')?.value.trim()||'';
   const wallpaper=document.getElementById('prof-wallpaper')?.value||'mono';
   const err=document.getElementById('pin-err');err.textContent='';
-  if(fc&&!validateFc(fc)){err.textContent='Friend code must be 12 digits';return;}
-  if(discordIdRaw&&discordId.length<17){err.textContent='Discord User ID should be a full numeric Discord ID';return;}
+  if(fc&&!validateFc(fc)){err.textContent=i18nCore.t('profile.friendCodeInvalid');return;}
+  if(discordIdRaw&&discordId.length<17){err.textContent=i18nCore.t('profile.discordIdInvalid');return;}
   if(p1){
-    if(!isSixDigitPin(p1)){err.textContent='PIN must be exactly 6 digits';return;}
-    if(p1!==p2){err.textContent="PINs don't match";return;}
+    if(!isSixDigitPin(p1)){err.textContent=i18nCore.t('validation.pinSixDigits');return;}
+    if(p1!==p2){err.textContent=i18nCore.t('profile.pinMismatch');return;}
   }
   const upd={friendCode:fc,bio,discord,discordId,avatarPokemon,wallpaper};
   applyWallpaper(wallpaper);
   if(p1){
     if(auth){
-      if(!auth.currentUser){err.textContent='Sign out and back in before changing your PIN';return;}
+      if(!auth.currentUser){err.textContent=i18nCore.t('profile.reauthenticate');return;}
       try{
         await updatePassword(auth.currentUser,p1);
       }catch(e){
         err.textContent=e.code==='auth/requires-recent-login'
-          ?'Sign out and back in, then change your PIN again'
-          :'Could not update Firebase Auth. Your PIN was not changed.';
+          ?i18nCore.t('profile.reauthenticate')
+          :i18nCore.t('profile.pinUpdateFailed');
         return;
       }
     }
@@ -9064,17 +9064,17 @@ async function saveProfile(){
     }
   }
   refreshAll();
-  toast('✅ Profile saved!');
+  toast(i18nCore.t('profile.saved'));
 }
 
 // ── UI HELPERS ────────────────────────────────────────────────
 let _syncStatusCurrent='';
 function syncLabelForStatus(s){
   const q=Object.keys(syncQueue||{}).length;
-  if(s==='online')return q?`Saving ${q}`:'Saved';
-  if(s==='syncing')return q?`Saving ${q}`:'Saving…';
-  if(s==='offline')return q?`Offline · ${q}`:'Offline';
-  if(s==='localOnly')return q?`Local · ${q}`:'Local only';
+  if(s==='online')return q?i18nCore.t('saveStatus.savingCount',{count:i18nCore.formatNumber(q)}):i18nCore.t('saveStatus.saved');
+  if(s==='syncing')return q?i18nCore.t('saveStatus.savingCount',{count:i18nCore.formatNumber(q)}):i18nCore.t('saveStatus.saving');
+  if(s==='offline')return q?i18nCore.t('saveStatus.offlineCount',{count:i18nCore.formatNumber(q)}):i18nCore.t('saveStatus.offline');
+  if(s==='localOnly')return q?i18nCore.t('saveStatus.localCount',{count:i18nCore.formatNumber(q)}):i18nCore.t('saveStatus.localOnly');
   return'—';
 }
 function refreshSyncUi(){
@@ -9094,12 +9094,7 @@ function setSyncStatus(s){
   const dot=document.getElementById('sdot');const lbl=document.getElementById('slbl');if(!dot)return;
   dot.className='sync-dot '+s;
   const pill=document.getElementById('sync-pill');
-  if(pill)pill.title={
-    online:'Saved — edits are live for the community.',
-    syncing:'Saving your edits to the community now…',
-    offline:'No connection to Firebase right now. Edits are saved locally and will sync when you\'re back online.',
-    localOnly:'Your Firebase Auth session expired. Edits save locally but won\'t reach the community until you sign back in. Click to recover.'
-  }[s]||'';
+  if(pill)pill.title=i18nCore.t(`saveStatus.${s}Help`);
   const prev=_syncStatusCurrent;
   _syncStatusCurrent=s;
   refreshSyncUi();
@@ -9108,8 +9103,8 @@ function setSyncStatus(s){
   // Auto-confirmation toast when we recover FROM local-only / offline TO live
   if((prev==='localOnly'||prev==='offline')&&(s==='online'||s==='syncing')){
     const pending=Object.keys(syncQueue||{}).length;
-    if(pending)toast(`✅ Back online — syncing ${pending} queued edit${pending===1?'':'s'} to the community`,3500);
-    else toast('✅ Back online',2200);
+    if(pending)toast(i18nCore.t('saveStatus.backOnlinePending',{count:i18nCore.formatNumber(pending)}),3500);
+    else toast(i18nCore.t('saveStatus.backOnline'),2200);
   }
 }
 // ── SYNC RECOVERY BANNER ─────────────────────────────────────
@@ -9131,33 +9126,28 @@ function dismissSyncBanner(){
 }
 async function reconnectAuth(){
   // Re-prompt for PIN to refresh the Auth session — most user-friendly recovery path
-  if(!cur){toast('Sign in from the login screen.');return;}
+  if(!cur){toast(i18nCore.t('saveStatus.signInFromLogin'));return;}
   const ud=allData.users?.[cur];
-  if(!ud){toast('User record missing — refresh the app.');return;}
-  const pin=prompt(`Sign back in as ${cur}\n\nYour edits are safe — just enter your PIN to push them to the community:`);
+  if(!ud){toast(i18nCore.t('saveStatus.userRecordMissing'));return;}
+  const pin=prompt(i18nCore.t('saveStatus.reconnectPrompt',{trainer:cur}));
   if(!pin)return;
-  if(!isSixDigitPin(pin)){toast('⚠️ PIN must be exactly 6 digits');return;}
+  if(!isSixDigitPin(pin)){toast(i18nCore.t('validation.pinSixDigits'));return;}
   const ok=await verifyPin(pin,ud.pin);
-  if(!ok){toast('❌ Wrong PIN — your edits are still safe locally.');return;}
+  if(!ok){toast(i18nCore.t('saveStatus.wrongPin'));return;}
   try{
     await ensureFirebaseIdentity(cur,pin,ud);
     // Auth observer will pick up the signin and auto-flush the queue
-    toast('✅ Reconnected — pushing your edits now',3000);
+    toast(i18nCore.t('saveStatus.reconnected'),3000);
   }catch(e){
     console.error('Reconnect failed',e);
-    toast('⚠️ Reconnect failed — try refreshing the app. Your edits are still saved locally.',4500);
+    toast(i18nCore.t('saveStatus.reconnectFailed'),4500);
   }
 }
 function openSyncDetail(){
   const s=_syncStatusCurrent||'offline';
   const q=Object.keys(syncQueue||{}).length;
-  const msgs={
-    online:`✅ Live — all edits are syncing.${q?` ${q} write${q===1?'':'s'} still flushing.`:''}`,
-    syncing:`⏳ Pushing ${q} edit${q===1?'':'s'} to the community now…`,
-    offline:`📡 Offline — ${q?q+' edit'+(q===1?'':'s')+' queued for when you\'re back online.':'no pending writes.'}`,
-    localOnly:`📵 Local-only mode — your Firebase session expired. Click "Sign back in" to push ${q?q+' queued edit'+(q===1?'':'s'):'future edits'} to the community.`
-  };
-  toast(msgs[s]||`Sync status: ${s}`,4500);
+  const key={online:'saveStatus.onlineDetail',syncing:'saveStatus.syncingDetail',offline:'saveStatus.offlineDetail',localOnly:'saveStatus.localOnlyDetail'}[s]||'saveStatus.unknownDetail';
+  toast(i18nCore.t(key,{count:i18nCore.formatNumber(q),status:s}),4500);
 }
 function resetProfileHelp(){
   const help=document.querySelector('.discord-id-help');
@@ -9301,7 +9291,7 @@ function openActiveShareComparison(){
   if(username)openDiffModal(username);
 }
 function openDiffModal(otherUsername){
-  if(!cur||otherUsername===cur){toast('Pick another trainer');return;}
+  if(!cur||otherUsername===cur){toast(i18nCore.t('compare.pickAnother'));return;}
   const publicShareActive=_activeShareView?.username===otherUsername&&!!selectedTrainerRuntime.publicData;
   if(!publicShareActive&&!guardReadScopeTrainer(otherUsername,'compare'))return;
   closeTradeMatchModal();
@@ -9358,11 +9348,11 @@ function diffSectionSearchString(section){
 }
 async function copyDiffSearch(section,btn){
   const str=diffSectionSearchString(section);
-  if(!str){toast('No Pokémon in that section');return;}
+  if(!str){toast(i18nCore.t('compare.emptySection'));return;}
   await copyStr(str,btn);
 }
 function openTradeMatchModal(otherUsername){
-  if(!cur||otherUsername===cur){toast('Pick another trainer');return;}
+  if(!cur||otherUsername===cur){toast(i18nCore.t('compare.pickAnother'));return;}
   if(!guardReadScopeTrainer(otherUsername,'trade match'))return;
   closeDiffModal();
   _activeTradeMatch={them:otherUsername};
@@ -9438,7 +9428,7 @@ function toggleTradeMatchSection(btn){
   const box=btn.closest('.diff-match-box');
   if(!box)return;
   const expanded=box.classList.toggle('expanded');
-  btn.textContent=expanded?'Show less':(btn.dataset.more||'Show more');
+  btn.textContent=expanded?i18nCore.t('common.showLess'):(btn.dataset.more||i18nCore.t('common.showMore'));
 }
 
 // ── SAFE-TO-TRANSFER SEARCH STRING (v4.6.14) ─────────────────
@@ -9501,16 +9491,16 @@ function renderSafeTransferTrainers(){
   if(!grid)return;
   const trainers=_safeTransferAllTrainers();
   if(!trainers.length){
-    grid.innerHTML=`<div class="stb-empty">No trainers with wishlists yet.</div>`;
+    grid.innerHTML=`<div class="stb-empty">${escHtml(i18nCore.t('safeTransfer.noTrainers'))}</div>`;
     return;
   }
   grid.innerHTML=trainers.map(u=>{
     const isMe=u===cur;
     const on=_safeTransferSelected.has(u);
     const cls=`stb-trainer-chip${on?' on':''}${isMe?' is-me':''}`;
-    const label=isMe?`${escHtml(u)} (you)`:escHtml(u);
+    const label=isMe?`${escHtml(u)} (${escHtml(i18nCore.t('common.you'))})`:escHtml(u);
     const click=isMe?'':`onclick="toggleSafeTransferTrainer('${escAttr(u)}')"`;
-    const title=isMe?'You\'re excluded by default — your own wishlist doesn\'t need to protect itself from your transfers.':`Toggle ${escAttr(u)}`;
+    const title=isMe?i18nCore.t('safeTransfer.selfExcluded'):i18nCore.t('safeTransfer.toggleTrainer',{trainer:u});
     return`<span class="${cls}" ${click} title="${title}">${label}</span>`;
   }).join('');
 }
@@ -9532,9 +9522,9 @@ function setAllSafeTransferTrainers(all){
   renderSafeTransferOutput();
 }
 function saveSafeTransferAsDefault(){
-  if(!_safeTransferSelected){toast('Nothing to save yet');return;}
+  if(!_safeTransferSelected){toast(i18nCore.t('safeTransfer.nothingToSave'));return;}
   lsSet(SAFE_TRANSFER_DEFAULT_KEY,[..._safeTransferSelected]);
-  toast(`✅ Default saved — ${_safeTransferSelected.size} trainer${_safeTransferSelected.size===1?'':'s'} will be pre-selected next time`);
+  toast(i18nCore.t('safeTransfer.defaultSaved',{count:i18nCore.formatNumber(_safeTransferSelected.size)}));
 }
 function toggleSafeTransferPrefilter(on){
   lsSet(SAFE_TRANSFER_PREFILTER_KEY,!!on);
@@ -9595,7 +9585,7 @@ function renderSafeTransferOutput(){
   if(!out||!summary)return;
   const r=computeSafeTransferString();
   if(!r.picked){
-    summary.innerHTML=`<span>Select at least one trainer above.</span>`;
+    summary.innerHTML=`<span>${escHtml(i18nCore.t('safeTransfer.selectTrainer'))}</span>`;
     out.value='';
     warnWrap.innerHTML='';
     if(copyBtn)copyBtn.disabled=true;
@@ -9604,15 +9594,15 @@ function renderSafeTransferOutput(){
   out.value=r.str;
   const charCount=r.str.length;
   summary.innerHTML=`
-    <span><strong>${r.safeCount}</strong> safe of <strong>${r.totalDex}</strong> total · protecting <strong>${r.wantedCount}</strong> wanted by <strong>${r.picked}</strong> trainer${r.picked===1?'':'s'}</span>
-    <span style="font-family:var(--mono);font-size:11px">${charCount} chars</span>
+    <span>${escHtml(i18nCore.t('safeTransfer.summary',{safe:i18nCore.formatNumber(r.safeCount),total:i18nCore.formatNumber(r.totalDex),wanted:i18nCore.formatNumber(r.wantedCount),trainers:i18nCore.formatNumber(r.picked)}))}</span>
+    <span style="font-family:var(--mono);font-size:11px">${escHtml(i18nCore.t('safeTransfer.characters',{count:i18nCore.formatNumber(charCount)}))}</span>
   `;
   // Pokémon GO's bag search box accepts up to ~1000 chars before truncating
   // silently. Warn well before the cliff so trainers can chunk the output.
   if(charCount>=900){
-    warnWrap.innerHTML=`<div class="stb-warn"><strong>Heads up:</strong> this string is <strong>${charCount} characters</strong>, which is close to or past PoGo's ~1000-char search limit. Paste it in two halves (split at a comma), or narrow your trainer selection to shrink the list.</div>`;
+    warnWrap.innerHTML=`<div class="stb-warn">${escHtml(i18nCore.t('safeTransfer.limitWarning',{count:i18nCore.formatNumber(charCount)}))}</div>`;
   }else if(charCount>=700){
-    warnWrap.innerHTML=`<div class="stb-warn" style="background:rgba(108,99,255,.08);border-color:rgba(108,99,255,.25);color:var(--ac2)"><strong>FYI:</strong> ${charCount} characters — should fit in PoGo's search but you're approaching the limit. Adding more trainers to the protect list will only shrink it from here.</div>`;
+    warnWrap.innerHTML=`<div class="stb-warn" style="background:rgba(108,99,255,.08);border-color:rgba(108,99,255,.25);color:var(--ac2)">${escHtml(i18nCore.t('safeTransfer.nearLimit',{count:i18nCore.formatNumber(charCount)}))}</div>`;
   }else{
     warnWrap.innerHTML='';
   }
@@ -9620,14 +9610,14 @@ function renderSafeTransferOutput(){
 }
 async function copySafeTransferString(){
   const out=document.getElementById('stb-output');
-  if(!out||!out.value){toast('Nothing to copy — pick at least one trainer');return;}
+  if(!out||!out.value){toast(i18nCore.t('safeTransfer.nothingToCopy'));return;}
   try{
     await copyText(out.value);
-    toast(`📋 Copied ${out.value.length}-char search string — paste into PoGo bag search`);
+    toast(i18nCore.t('safeTransfer.copied',{count:i18nCore.formatNumber(out.value.length)}));
   }catch{
     out.select();
     document.execCommand('copy');
-    toast('📋 Copied (fallback path)');
+    toast(i18nCore.t('safeTransfer.copiedFallback'));
   }
 }
 function renderDiffModal(){
@@ -9938,30 +9928,30 @@ function familyVariantEntries(familyKey){
 function openAddAllVariantsModal(familyKey){
   const info=VARIANT_FAMILIES[familyKey];
   const variants=familyVariantEntries(familyKey);
-  if(!variants.length){toast('No variants found');return;}
+  if(!variants.length){toast(i18nCore.t('myList.noVariants'));return;}
   // Build inline confirmation modal
   const existingList=allData[myListType]?.[cur]||{};
   const notYetAdded=variants.filter(v=>!existingList[v.name]);
-  if(!notYetAdded.length){toast(`✓ All ${variants.length} ${info.label} variants already in your list`);return;}
+  if(!notYetAdded.length){toast(i18nCore.t('myList.allVariantsListed',{count:i18nCore.formatNumber(variants.length),family:info.label}));return;}
   const modalHtml=`<div class="ov open" id="addall-modal" role="dialog" aria-modal="true">
     <div class="modal" style="max-width:440px">
-      <h3>Add all ${info.label} variants</h3>
+      <h3>${escHtml(i18nCore.t('myList.addAllVariantsTitle',{family:info.label}))}</h3>
       <p style="font-size:13px;color:var(--muted);margin-bottom:14px">
-        ${notYetAdded.length} variants will be added to your <strong>${listLabel(myListType)}</strong> list
-        ${variants.length>notYetAdded.length?`<br><span style="font-size:11px">(${variants.length-notYetAdded.length} already added)</span>`:''}
+        ${escHtml(i18nCore.t('myList.variantsWillAdd',{count:i18nCore.formatNumber(notYetAdded.length),list:listLabel(myListType)}))}
+        ${variants.length>notYetAdded.length?`<br><span style="font-size:11px">${escHtml(i18nCore.t('myList.alreadyAddedCount',{count:i18nCore.formatNumber(variants.length-notYetAdded.length)}))}</span>`:''}
       </p>
       <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--r2);padding:8px;max-height:200px;overflow-y:auto;display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px">
         ${notYetAdded.map(v=>`<span style="font-size:11px;background:var(--bg2);padding:3px 7px;border-radius:4px;border:1px solid var(--border)">${escHtml(v.displayName||v.name)}</span>`).join('')}
       </div>
-      <div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px">Add as priority:</div>
+      <div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px">${escHtml(i18nCore.t('myList.addAsPriority'))}</div>
       <div class="import-pri-row" id="addall-pri-row">
         <button class="import-pri-btn" data-pri="H" onclick="document.querySelectorAll('#addall-pri-row .import-pri-btn').forEach(b=>b.classList.remove('sel','H','M','L'));this.classList.add('sel','H')">H – High</button>
         <button class="import-pri-btn sel M" data-pri="M" onclick="document.querySelectorAll('#addall-pri-row .import-pri-btn').forEach(b=>b.classList.remove('sel','H','M','L'));this.classList.add('sel','M')">M – Medium</button>
         <button class="import-pri-btn" data-pri="L" onclick="document.querySelectorAll('#addall-pri-row .import-pri-btn').forEach(b=>b.classList.remove('sel','H','M','L'));this.classList.add('sel','L')">L – Low</button>
       </div>
       <div class="mact">
-        <button class="bghost" onclick="closeAddAllVariants()">Cancel</button>
-        <button class="bpri" onclick="confirmAddAllVariants('${familyKey}')">Add ${notYetAdded.length}</button>
+        <button class="bghost" onclick="closeAddAllVariants()">${escHtml(i18nCore.t('common.cancel'))}</button>
+        <button class="bpri" onclick="confirmAddAllVariants('${familyKey}')">${escHtml(i18nCore.t('myList.addCount',{count:i18nCore.formatNumber(notYetAdded.length)}))}</button>
       </div>
     </div>
   </div>`;
@@ -9982,7 +9972,7 @@ function confirmAddAllVariants(familyKey){
   });
   writeList(myListType,cur,list);
   closeAddAllVariants();
-  toast(`✅ Added ${added} ${VARIANT_FAMILIES[familyKey].label} variants at ${pri}`);
+  toast(i18nCore.t('myList.variantsAdded',{count:i18nCore.formatNumber(added),family:VARIANT_FAMILIES[familyKey].label,priority:priLabel(pri)}));
 }
 function currentAddFlags(){
   return{
@@ -9996,7 +9986,7 @@ function currentAddFlags(){
 function openAddShownResultsModal(){
   const existingList=allData[myListType]?.[cur]||{};
   const shown=(acFiltered||[]).filter(v=>v?.name&&!existingList[v.name]);
-  if(!shown.length){toast('✓ All shown results are already on your list');return;}
+  if(!shown.length){toast(i18nCore.t('myList.allShownListed'));return;}
   const pri=document.getElementById('add-pmon-pri')?.value||'M';
   const flags=currentAddFlags();
   const flagText=[
@@ -10008,23 +9998,23 @@ function openAddShownResultsModal(){
   ].filter(Boolean).join(' · ');
   const modalHtml=`<div class="ov open" id="addshown-modal" role="dialog" aria-modal="true">
     <div class="modal" style="max-width:500px">
-      <h3>Add shown results</h3>
+      <h3>${escHtml(i18nCore.t('myList.addShownTitle'))}</h3>
       <p style="font-size:13px;color:var(--muted);margin-bottom:14px">
-        ${shown.length} visible search results will be added to your <strong>${listLabel(myListType)}</strong> list.
-        ${flagText?`<br><span style="font-size:11px">Current flags: ${escHtml(flagText)}</span>`:''}
+        ${escHtml(i18nCore.t('myList.shownWillAdd',{count:i18nCore.formatNumber(shown.length),list:listLabel(myListType)}))}
+        ${flagText?`<br><span style="font-size:11px">${escHtml(i18nCore.t('myList.currentFlags',{flags:flagText}))}</span>`:''}
       </p>
       <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--r2);padding:8px;max-height:220px;overflow-y:auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:5px;margin-bottom:14px">
         ${shown.map(v=>`<span style="font-size:11px;background:var(--bg2);padding:5px 7px;border-radius:5px;border:1px solid var(--border);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${v.no?`#${v.no} `:''}${escHtml(v.dn||v.name)}</span>`).join('')}
       </div>
-      <div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px">Add as priority:</div>
+      <div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px">${escHtml(i18nCore.t('myList.addAsPriority'))}</div>
       <div class="import-pri-row" id="addshown-pri-row">
         <button class="import-pri-btn ${pri==='H'?'sel H':''}" data-pri="H" onclick="document.querySelectorAll('#addshown-pri-row .import-pri-btn').forEach(b=>b.classList.remove('sel','H','M','L'));this.classList.add('sel','H')">H – High</button>
         <button class="import-pri-btn ${pri==='M'||!pri?'sel M':''}" data-pri="M" onclick="document.querySelectorAll('#addshown-pri-row .import-pri-btn').forEach(b=>b.classList.remove('sel','H','M','L'));this.classList.add('sel','M')">M – Medium</button>
         <button class="import-pri-btn ${pri==='L'?'sel L':''}" data-pri="L" onclick="document.querySelectorAll('#addshown-pri-row .import-pri-btn').forEach(b=>b.classList.remove('sel','H','M','L'));this.classList.add('sel','L')">L – Low</button>
       </div>
       <div class="mact">
-        <button class="bghost" onclick="closeAddShownResults()">Cancel</button>
-        <button class="bpri" onclick="confirmAddShownResults()">Add ${shown.length}</button>
+        <button class="bghost" onclick="closeAddShownResults()">${escHtml(i18nCore.t('common.cancel'))}</button>
+        <button class="bpri" onclick="confirmAddShownResults()">${escHtml(i18nCore.t('myList.addCount',{count:i18nCore.formatNumber(shown.length)}))}</button>
       </div>
     </div>
   </div>`;
@@ -10035,7 +10025,7 @@ function closeAddShownResults(){document.getElementById('addshown-modal')?.remov
 function confirmAddShownResults(){
   const existingList=allData[myListType]?.[cur]||{};
   const shown=(acFiltered||[]).filter(v=>v?.name&&!existingList[v.name]);
-  if(!shown.length){closeAddShownResults();toast('✓ Nothing new to add');return;}
+  if(!shown.length){closeAddShownResults();toast(i18nCore.t('myList.nothingNew'));return;}
   const sel=document.querySelector('#addshown-pri-row .import-pri-btn.sel');
   const pri=sel?.dataset.pri||document.getElementById('add-pmon-pri')?.value||'M';
   const flags=currentAddFlags();
@@ -10052,7 +10042,7 @@ function confirmAddShownResults(){
   document.getElementById('ac-input').value='';
   document.getElementById('add-pmon-sel').value='';
   renderMyList();
-  toast(`✅ Added ${added} shown results as ${priName(pri)}`);
+  toast(i18nCore.t('myList.shownAdded',{count:i18nCore.formatNumber(added),priority:priName(pri)}));
 }
 
 // ── UPDATE CHECKER ───────────────────────────────────────────
@@ -10122,13 +10112,13 @@ window.addEventListener('beforeinstallprompt',e=>{
 window.addEventListener('appinstalled',()=>{
   _deferredInstallPrompt=null;
   document.getElementById('install-btn')?.classList.remove('show');
-  toast('✅ App installed!');
+  toast(i18nCore.t('install.installed'));
 });
 async function triggerInstall(){
-  if(!_deferredInstallPrompt){toast('Install not available on this browser');return;}
+  if(!_deferredInstallPrompt){toast(i18nCore.t('install.unavailable'));return;}
   _deferredInstallPrompt.prompt();
   const{outcome}=await _deferredInstallPrompt.userChoice;
-  if(outcome==='accepted'){toast('✅ Installing…');}
+  if(outcome==='accepted'){toast(i18nCore.t('install.installing'));}
   _deferredInstallPrompt=null;
   document.getElementById('install-btn')?.classList.remove('show');
 }
@@ -10447,7 +10437,7 @@ function closeExportMenu(){
 }
 function exportMyListMarkdown(){
   const entries=currentListEntries(myListType).filter(e=>e.p&&PRI[e.p]);
-  if(!entries.length){toast('Add H/M/L entries first');return;}
+  if(!entries.length){toast(i18nCore.t('export.priorityRequired'));return;}
   const groups={H:[],M:[],L:[]};
   entries.forEach(e=>{if(groups[e.p])groups[e.p].push(e);});
   const ud=allData.users?.[cur]||{};
@@ -10465,11 +10455,11 @@ function exportMyListMarkdown(){
     });
     md+='\n';
   });
-  copyText(md).then(()=>toast('📝 Markdown copied to clipboard!'));
+  copyText(md).then(()=>toast(i18nCore.t('export.markdownCopied')));
 }
 function exportMyListCSV(){
   const entries=currentListEntries(myListType);
-  if(!entries.length){toast('Add entries first');return;}
+  if(!entries.length){toast(i18nCore.t('export.entriesRequired'));return;}
   const rows=[['Name','Dex','Priority','Lucky','XXL','XXS','Notes']];
   entries.forEach(e=>{
     rows.push([e.dn,e.no||'',e.p||'',e.lucky?'Y':'',e.xxl?'Y':'',e.xxs?'Y':'',e.mod||'']);
@@ -10483,7 +10473,7 @@ function exportMyListCSV(){
   const a=document.createElement('a');
   a.href=url;a.download=`pogo-${safeFilePart(cur)}-${safeFilePart(listLabel(myListType))}-${new Date().toISOString().slice(0,10)}.csv`;
   document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
-  toast('📊 CSV downloaded!');
+  toast(i18nCore.t('export.csvDownloaded'));
 }
 async function copyShareLink(){
   const url=`${location.origin}${location.pathname}?view=${encodeURIComponent(cur)}&list=${myListType}`;
@@ -10491,10 +10481,10 @@ async function copyShareLink(){
     await copyText(url);
   }catch(e){
     console.warn('Could not copy share link',e);
-    toast('⚠️ Could not copy the share link. Try again or copy it from the address bar.',6000);
+    toast(i18nCore.t('export.shareCopyFailed'),6000);
     return;
   }
-  toast('🔗 Share link copied! Updating public snapshot…',3500);
+  toast(i18nCore.t('export.shareCopiedUpdating'),3500);
   publishPublicShareNow(cur,'explicit_share').then(result=>{
     if(result?.status==='published'){
       toast(i18nCore.t('share.publicationUpdated'),3500);
@@ -10504,7 +10494,7 @@ async function copyShareLink(){
     else toast(i18nCore.t('share.publicationNotReady'),6000);
   }).catch(e=>{
     console.warn('Could not publish public share snapshot',e);
-    toast('🔗 Link copied. Public live view needs the Firebase publicShares rule before signed-out viewers can open it.',7000);
+    toast(i18nCore.t('export.shareCopiedPublishFailed'),7000);
   });
 }
 
@@ -10543,7 +10533,7 @@ function specialAcSearch(side,q){
   const items=_ensureSpecialAcItems();
   const filtered=rankAutocompleteItems(items,q,{alphaTieBreak:false});
   _specialAcFocus[side]=-1;
-  if(!filtered.length){dd.innerHTML='<div class="ac-empty">No results</div>';}
+  if(!filtered.length){dd.innerHTML=`<div class="ac-empty">${escHtml(i18nCore.t('common.noResults'))}</div>`;}
   else{
     dd.innerHTML=filtered.map((e,i)=>`
       <div class="ac-item" data-idx="${i}" onmousedown="specialAcSelect('${side}',${i})">
@@ -10615,12 +10605,12 @@ function renderSpecialBoard(){
 }
 function addSpecialEntry(side){
   const name=document.getElementById(`special-${side}-sel`).value;
-  if(!name){toast('⚠️ Pick a Pokémon from the dropdown');return;}
+  if(!name){toast(i18nCore.t('specialBoard.pickPokemon'));return;}
   const items=_ensureSpecialAcItems();
-  const it=items.find(x=>x.name===name);if(!it){toast('⚠️ Pokémon not found');return;}
+  const it=items.find(x=>x.name===name);if(!it){toast(i18nCore.t('specialBoard.notFound'));return;}
   const board=getSpecialBoard();
   // Avoid exact duplicates on same side (same name + same shiny + same mirror)
-  if(board[side].some(e=>e.name===name))toast('Already on this side — adjust the existing row');
+  if(board[side].some(e=>e.name===name))toast(i18nCore.t('specialBoard.alreadyOnSide'));
   else{
     const entry={name:it.name,dn:it.canonicalDn||it.name,no:it.no||null,shiny:false,mirror:false,note:'',qty:side==='ft'?1:undefined};
     board[side].push(entry);
@@ -10658,7 +10648,7 @@ function setSpecialQty(side,idx,val){
   renderSpecialBoard();
 }
 function clearSpecialBoard(){
-  if(!confirm('Wipe all LF and FT entries from this board?'))return;
+  if(!confirm(i18nCore.t('specialBoard.clearConfirm')))return;
   writeSpecialBoard({lf:[],ft:[]});
   renderSpecialBoard();
 }
@@ -10806,14 +10796,14 @@ function commitQuickAdd(side){
 // ── SPECIAL TRADE BOARD — IMAGE EXPORT ───────────────────────
 async function exportSpecialBoardImage(){
   const board=getSpecialBoard();
-  if(!board.lf.length&&!board.ft.length){toast('Add at least one entry to either side before exporting.');return;}
+  if(!board.lf.length&&!board.ft.length){toast(i18nCore.t('specialBoard.emptyExport'));return;}
   try{
     const blob=await renderSpecialBoardImage(board,cur);
     const filename=`pogo-${safeFilePart(cur)}-special-trade-${new Date().toISOString().slice(0,10)}.png`;
     const delivery=await deliverImageBlob(blob,filename,`${cur}'s Special Trade Board`);
-    if(delivery==='cancelled')toast('Image export cancelled.');
-    else toast(delivery==='shared'?'🎯 Special trade board ready to save/share!':'🎯 Special trade board exported!');
-  }catch(e){console.error(e);toast('⚠️ Export failed — try again.');}
+    if(delivery==='cancelled')toast(i18nCore.t('export.cancelled'));
+    else toast(i18nCore.t(delivery==='shared'?'specialBoard.ready':'specialBoard.exported'));
+  }catch(e){console.error(e);toast(i18nCore.t('export.failed'));}
 }
 async function renderSpecialBoardImage(board,username){
   const W=620,pad=14,headerH=64,footerH=22;
@@ -12058,7 +12048,7 @@ function haveAcSearch(q){
   haveAcFiltered=rankAutocompleteItems(haveAcItems,q);
   haveAcFocusIdx=-1;
   if(!haveAcFiltered.length){
-    dd.innerHTML=`<div class="ac-empty">No results</div>`;
+    dd.innerHTML=`<div class="ac-empty">${escHtml(i18nCore.t('common.noResults'))}</div>`;
   }else{
     dd.innerHTML=haveAcFiltered.map((e,i)=>`
       <div class="ac-item" data-idx="${i}" onmousedown="haveAcSelect(${i})">
@@ -12110,7 +12100,7 @@ function addInventoryEntry(){
   const qty=Math.max(1,Math.min(999,parseInt(document.getElementById('have-qty').value)||1));
   const mode=document.getElementById('have-return-mode')?.value||'any';
   const note=mode==='giveaway'?(document.getElementById('have-giveaway-note')?.value||'').trim():'';
-  if(!name){toast('⚠️ Select a Pokémon');return;}
+  if(!name){toast(i18nCore.t('myList.selectPokemon'));return;}
   const gender=_normGender(_haveAddGender);
   const key=joinHaveKey(name,gender);
   const inv={...(allData.have?.[cur]||{})};
@@ -12202,7 +12192,7 @@ function toggleHaveBulkSelection(key){
 }
 function updateHaveBulkCount(){
   const el=document.getElementById('have-bulk-count');
-  if(el)el.textContent=`${haveBulkSelected.size} selected`;
+  if(el)el.textContent=i18nCore.t('bulk.selected',{count:i18nCore.formatNumber(haveBulkSelected.size)});
 }
 function bulkHaveSetMode(){
   const sel=document.getElementById('have-bulk-mode-sel');
@@ -12218,11 +12208,11 @@ function bulkHaveSetMode(){
   });
   writeHave(cur,inv,{refresh:'mine'});
   if(sel)sel.value='';
-  const label=v==='mirror'?'🪞 Mirror only':v==='dontNeedBack'?'🤝 Fair trade':v==='giveaway'?'📤 Giveaway':'🤲 Open';
-  toast(`✅ Set ${count} entr${count===1?'y':'ies'} to ${label}`);
+  const label=i18nCore.t(`inventory.mode.${v}`);
+  toast(i18nCore.t('inventory.bulkModeSet',{count:i18nCore.formatNumber(count),mode:label}));
 }
 function bulkHaveAdjustQty(delta){
-  if(!haveBulkSelected.size){toast('Select entries first');return;}
+  if(!haveBulkSelected.size){toast(i18nCore.t('bulk.selectFirst'));return;}
   const inv={...(allData.have?.[cur]||{})};
   let changed=0,removed=0;
   haveBulkSelected.forEach(name=>{
@@ -12233,19 +12223,19 @@ function bulkHaveAdjustQty(delta){
     else if(newQty<=999){setHaveEntry(inv,name,newQty,{mode:info.mode,note:info.note});changed++;}
   });
   writeHave(cur,inv,{refresh:'mine'});
-  toast(`✅ ${delta>0?'Added':'Removed'} ${Math.abs(delta)} from ${changed} entr${changed===1?'y':'ies'}${removed?` · ${removed} reached 0 and got removed`:''}`);
+  toast(i18nCore.t(delta>0?'inventory.bulkAdded':'inventory.bulkRemoved',{amount:i18nCore.formatNumber(Math.abs(delta)),changed:i18nCore.formatNumber(changed),removed:i18nCore.formatNumber(removed)}));
   if(removed)haveBulkSelected=new Set([...haveBulkSelected].filter(n=>inv[n]));
 }
 function bulkHaveDelete(){
-  if(!haveBulkSelected.size){toast('Select entries first');return;}
-  if(!confirm(`Delete ${haveBulkSelected.size} inventory entries? Can't be undone.`))return;
+  if(!haveBulkSelected.size){toast(i18nCore.t('bulk.selectFirst'));return;}
+  if(!confirm(i18nCore.t('inventory.bulkDeleteConfirm',{count:i18nCore.formatNumber(haveBulkSelected.size)})))return;
   const inv={...(allData.have?.[cur]||{})};
   const count=haveBulkSelected.size;
   haveBulkSelected.forEach(name=>{delete inv[name];});
   writeHave(cur,inv,{refresh:'mine'});
   haveBulkSelected.clear();
   updateHaveBulkCount();
-  toast(`✅ Deleted ${count} entries`);
+  toast(i18nCore.t('inventory.bulkDeleted',{count:i18nCore.formatNumber(count)}));
 }
 function removeInventoryEntry(name){
   const inv={...(allData.have?.[cur]||{})};
@@ -12280,17 +12270,17 @@ function renderMyHave(filterVal){
   const totalCount=Object.values(inv).reduce((s,n)=>s+haveEntryInfo(n).qty,0);
   const entryCount=Object.keys(inv).length;
   const countEl=document.getElementById('have-count');
-  if(countEl)countEl.textContent=q?`(${entries.length} of ${entryCount})`:`(${entryCount})`;
+  if(countEl)countEl.textContent=q?i18nCore.t('myList.filteredCount',{visible:i18nCore.formatNumber(entries.length),total:i18nCore.formatNumber(entryCount)}):i18nCore.t('myList.count',{count:i18nCore.formatNumber(entryCount)});
   const totalEl=document.getElementById('have-total');
-  if(totalEl)totalEl.textContent=totalCount?`${totalCount} total Pokémon`:'';
+  if(totalEl)totalEl.textContent=totalCount?i18nCore.t('inventory.totalPokemon',{count:i18nCore.formatNumber(totalCount)}):'';
   if(!entries.length){
-    el.innerHTML=q?emptyHtml('No matches','Clear the filter.'):emptyHtml(i18nCore.t('inventory.legacyEmpty'),'','📋');
+    el.innerHTML=q?emptyHtml(i18nCore.t('myList.noMatches'),i18nCore.t('myList.clearFilter')):emptyHtml(i18nCore.t('inventory.legacyEmpty'),'','📋');
     return;
   }
   if(LEGACY_INVENTORY_READ_ONLY){
     el.innerHTML=entries.map(e=>{
       const gender=e.gender==='m'?' ♂':e.gender==='f'?' ♀':'';
-      const mode=e.mirrorOnly?'🪞 Mirror only':e.dontNeedBack?'🤝 Fair trade':e.giveaway?'📤 Giveaway':'Open';
+      const mode=i18nCore.t(`inventory.mode.${e.mode||'any'}`);
       return`<div class="have-row" data-name="${escAttr(e.name)}" data-key="${escAttr(e.key)}">
         <div class="have-row-sprite">${e.no?spriteImg(e.no,32,'',e.name,e.gender||'',e.dn):'🎮'}</div>
         <div class="have-row-info"><div class="have-row-name">${escHtml(e.dn)}${gender}</div><div class="have-row-meta"><span>${escHtml(mode)}</span>${e.note?`<span> · ${escHtml(e.note)}</span>`:''}</div></div>
@@ -13361,7 +13351,7 @@ function toggleBulkSelection(name){
 }
 function updateBulkCount(){
   const el=document.getElementById('bulk-count');
-  if(el)el.textContent=`${bulkSelected.size} selected`;
+  if(el)el.textContent=i18nCore.t('bulk.selected',{count:i18nCore.formatNumber(bulkSelected.size)});
 }
 function bulkSetPri(){
   const sel=document.getElementById('bulk-pri-sel');
@@ -13375,10 +13365,10 @@ function bulkSetPri(){
   });
   writeList(myListType,cur,list);
   sel.value='';
-  toast(`✅ Updated ${bulkSelected.size} entries`);
+  toast(i18nCore.t('bulk.updated',{count:i18nCore.formatNumber(bulkSelected.size)}));
 }
 function bulkToggleFlag(flag){
-  if(!bulkSelected.size){toast('Select entries first');return;}
+  if(!bulkSelected.size){toast(i18nCore.t('bulk.selectFirst'));return;}
   const list={...(allData[myListType]?.[cur]||{})};
   // Determine if MOST are already set — toggle to opposite
   let setCount=0;
@@ -13399,19 +13389,19 @@ function bulkToggleFlag(flag){
     list[name]=priValue(p,mod,nl,nx,ns,nsh);
   });
   writeList(myListType,cur,list);
-  toast(`✅ ${turnOn?'Added':'Removed'} ${flag.toUpperCase()} on ${bulkSelected.size} entries`);
+  toast(i18nCore.t(turnOn?'bulk.flagAdded':'bulk.flagRemoved',{flag:flag.toUpperCase(),count:i18nCore.formatNumber(bulkSelected.size)}));
 }
 function bulkDelete(){
-  if(!bulkSelected.size){toast('Select entries first');return;}
-  if(!confirm(`Delete ${bulkSelected.size} entries? Can't be undone for the full batch.`))return;
+  if(!bulkSelected.size){toast(i18nCore.t('bulk.selectFirst'));return;}
+  if(!confirm(i18nCore.t('bulk.deleteConfirm',{count:i18nCore.formatNumber(bulkSelected.size)})))return;
   const prevList={...(allData[myListType]?.[cur]||{})};
   const list={...prevList};
   bulkSelected.forEach(name=>{delete list[name];});
   const count=bulkSelected.size;
   // Single undo for the batch
-  undoStack={type:myListType,username:cur,list:prevList,name:`${count} entries`};
+  undoStack={type:myListType,username:cur,list:prevList,name:i18nCore.t('bulk.entries',{count:i18nCore.formatNumber(count)})};
   writeList(myListType,cur,list);
-  showUndo(`${count} entries`);
+  showUndo(i18nCore.t('bulk.entries',{count:i18nCore.formatNumber(count)}));
   bulkSelected.clear();
   updateBulkCount();
 }
@@ -13452,8 +13442,8 @@ function startVoiceInput(){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   const btn=document.getElementById('voice-btn');
   const input=document.getElementById('ac-input');
-  if(!SR){toast('🎤 Voice input not supported here. Try Chrome on desktop or Android.');return;}
-  if(!window.isSecureContext){toast('🎤 Voice input requires HTTPS');return;}
+  if(!SR){toast(i18nCore.t('voice.unsupported'));return;}
+  if(!window.isSecureContext){toast(i18nCore.t('voice.requiresHttps'));return;}
   if(voiceRecognition){
     try{voiceRecognition.stop();}catch{}
     voiceRecognition=null;
@@ -13466,8 +13456,8 @@ function startVoiceInput(){
   voiceRecognition.interimResults=true; // show live feedback
   voiceRecognition.maxAlternatives=5;   // get multiple guesses
   btn?.classList.add('listening');
-  if(input)input.placeholder='🎤 Listening… say a Pokémon name';
-  toast('🎤 Listening…');
+  if(input)input.placeholder=i18nCore.t('voice.listeningPlaceholder');
+  toast(i18nCore.t('voice.listening'));
   let finalTranscript='';
   voiceRecognition.onresult=ev=>{
     let interim='';
@@ -13511,37 +13501,37 @@ function startVoiceInput(){
           }
         }
         const confEmoji={exact:'✅',high:'✅',medium:'🤔',low:'❓',substring:'✅'}[bestMatch.confidence]||'';
-        toast(`${confEmoji} Heard "${finalTranscript}" → ${bestMatch.match.dn}`);
+        toast(`${confEmoji} ${i18nCore.t('voice.heardMatch',{heard:finalTranscript,name:bestMatch.match.dn})}`);
       }else if(input){
         input.value=finalTranscript;
         acSearch(finalTranscript);
-        toast(`🎤 Heard "${finalTranscript}" — no Pokémon match, try typing`);
+        toast(i18nCore.t('voice.heardNoMatch',{heard:finalTranscript}));
       }
     }
   };
   voiceRecognition.onend=()=>{
     btn?.classList.remove('listening');
     voiceRecognition=null;
-    if(input)input.placeholder='Search Pokémon…';
+    if(input)input.placeholder=i18nCore.t('myList.searchPlaceholder');
   };
   voiceRecognition.onerror=ev=>{
     btn?.classList.remove('listening');
     voiceRecognition=null;
-    if(input)input.placeholder='Search Pokémon…';
+    if(input)input.placeholder=i18nCore.t('myList.searchPlaceholder');
     const msg={
-      'not-allowed':'Mic permission denied — enable in browser settings',
-      'no-speech':'Didn\'t hear anything — try again',
-      'audio-capture':'No microphone found',
-      'network':'Network error — check connection',
+      'not-allowed':i18nCore.t('voice.permissionDenied'),
+      'no-speech':i18nCore.t('voice.noSpeech'),
+      'audio-capture':i18nCore.t('voice.noMicrophone'),
+      'network':i18nCore.t('voice.networkError'),
       'aborted':null,
-      'service-not-allowed':'Speech service blocked'
-    }[ev.error]||`Voice error: ${ev.error}`;
-    if(msg)toast(`🎤 ${msg}`);
+      'service-not-allowed':i18nCore.t('voice.serviceBlocked')
+    }[ev.error]||i18nCore.t('voice.error',{code:ev.error});
+    if(msg)toast(msg);
   };
   try{voiceRecognition.start();}catch(e){
     btn?.classList.remove('listening');voiceRecognition=null;
-    if(input)input.placeholder='Search Pokémon…';
-    toast('🎤 Could not start voice input');
+    if(input)input.placeholder=i18nCore.t('myList.searchPlaceholder');
+    toast(i18nCore.t('voice.startFailed'));
   }
 }
 
@@ -13622,7 +13612,7 @@ function openImport(){
   document.getElementById('import-str-input').value='';
   document.getElementById('import-err').textContent='';
   document.getElementById('import-warn-box').innerHTML='';
-  document.getElementById('import-preview-list').innerHTML='<div class="select-all-row" onclick="toggleSelectAll()"><input type="checkbox" id="select-all-chk" checked class="import-check"> Select all</div>';
+  document.getElementById('import-preview-list').innerHTML=`<div class="select-all-row" onclick="toggleSelectAll()"><input type="checkbox" id="select-all-chk" checked class="import-check"> ${escHtml(i18nCore.t('common.selectAll'))}</div>`;
   document.getElementById('import-step1').classList.add('active');
   document.getElementById('import-step2').classList.remove('active');
   document.querySelectorAll('.import-pri-btn').forEach(b=>{
@@ -13644,7 +13634,7 @@ function parseImportString(){
   const raw=document.getElementById('import-str-input').value.trim();
   const err=document.getElementById('import-err');
   err.textContent='';
-  if(!raw){err.textContent='Paste a search string first';return;}
+  if(!raw){err.textContent=i18nCore.t('import.required');return;}
   const srcArr=listSource(myListType);
   const dexToEntries={},dexHasRegional={};
   srcArr.forEach(e=>{if(e.no&&regionalFormTerm(e.name))dexHasRegional[e.no]=true;});
@@ -13694,24 +13684,24 @@ function parseImportString(){
       matched.push({...e,mod,dex,checked:true});
     });
   });
-  if(!matched.length){err.textContent='No matching Pokemon found. Make sure the string contains dex numbers.';return;}
+  if(!matched.length){err.textContent=i18nCore.t('import.noMatches');return;}
   importMatches=matched;
   const warnBox=document.getElementById('import-warn-box');
   const warnings=[];
   if(regionalTermsSeen.size){
-    warnings.push('Regional filters like '+[...regionalTermsSeen].join(', ')+' are parsed here as a best-effort import aid, but the app exports dex-only strings because Pokémon GO applies comma/semicolon/colon before &.');
+    warnings.push(i18nCore.t('import.regionalWarning',{filters:[...regionalTermsSeen].join(', ')}));
   }else if(filterTermsSeen.size){
-    warnings.push('Extra & filters are parsed only for import. App-generated strings stay dex-only so they work when multiple Pokémon are combined.');
+    warnings.push(i18nCore.t('import.filterWarning'));
   }
-  if(skipped.length)warnings.push(skipped.length+' dex number(s) not in database: '+[...new Set(skipped)].join(', '));
-  warnBox.innerHTML=warnings.map(w=>'<div class="import-warn">Warning: '+escHtml(w)+'</div>').join('');
+  if(skipped.length)warnings.push(i18nCore.t('import.skipped',{count:i18nCore.formatNumber(skipped.length),numbers:[...new Set(skipped)].join(', ')}));
+  warnBox.innerHTML=warnings.map(w=>`<div class="import-warn">${escHtml(i18nCore.t('import.warning'))}: ${escHtml(w)}</div>`).join('');
   const existing=allData[myListType]?.[cur]||{};
   const rows=matched.map(function(e,i){
     const alreadyHas=!!existing[e.name];
     const modLabel=e.mod?' ('+e.mod+')':'';
     const spriteSrc=e.no?spriteUrl(e.no,e.name):'';
     const sprite=spriteSrc?('<img src="'+escAttr(spriteSrc)+'" class="import-sprite" width="28" height="28" alt="" title="'+escAttr(e.dn)+'" loading="lazy">'):"<div class=\"import-sprite-ph\"></div>";
-    const already=alreadyHas?'<span style="font-size:10px;color:var(--muted)">already listed</span>':'';
+    const already=alreadyHas?`<span style="font-size:10px;color:var(--muted)">${escHtml(i18nCore.t('import.alreadyListed'))}</span>`:'';
     return '<div class="import-preview-row '+(alreadyHas?'skip':'')+'" id="import-row-'+i+'">'+
       '<input type="checkbox" class="import-check" id="import-chk-'+i+'" '+(e.checked&&!alreadyHas?'checked':'')+' onchange="toggleImportRow('+i+')">'+
       sprite+
@@ -13721,11 +13711,11 @@ function parseImportString(){
       '</div>';
   }).join('');
   document.getElementById('import-preview-list').innerHTML=
-    '<div class="select-all-row" onclick="toggleSelectAll()"><input type="checkbox" id="select-all-chk" checked class="import-check"> Select all ('+matched.length+')</div>'+rows;
+    `<div class="select-all-row" onclick="toggleSelectAll()"><input type="checkbox" id="select-all-chk" checked class="import-check"> ${escHtml(i18nCore.t('import.selectAllCount',{count:i18nCore.formatNumber(matched.length)}))}</div>`+rows;
   importMatches.forEach(function(e,i){if(!!existing[e.name])importMatches[i].checked=false;});
   const checkedCount=importMatches.filter(function(m){return m.checked;}).length;
-  document.getElementById('import-summary').textContent='Found '+matched.length+' Pokemon — '+checkedCount+' will be added as '+priName(importPri)+'.';
-  document.getElementById('import-confirm-btn').textContent='Import '+checkedCount;
+  document.getElementById('import-summary').textContent=i18nCore.t('import.summary',{found:i18nCore.formatNumber(matched.length),selected:i18nCore.formatNumber(checkedCount),priority:priLabel(importPri)});
+  document.getElementById('import-confirm-btn').textContent=i18nCore.t('import.actionCount',{count:i18nCore.formatNumber(checkedCount)});
   document.getElementById('import-step1').classList.remove('active');
   document.getElementById('import-step2').classList.add('active');
 }
@@ -13746,8 +13736,8 @@ function toggleSelectAll(){
 }
 function updateImportCount(){
   const count=importMatches.filter(function(m){return m.checked;}).length;
-  document.getElementById('import-summary').textContent=count+' Pokemon will be added as '+priName(importPri)+'.';
-  document.getElementById('import-confirm-btn').textContent='Import '+count;
+  document.getElementById('import-summary').textContent=i18nCore.t('import.selectedSummary',{selected:i18nCore.formatNumber(count),priority:priLabel(importPri)});
+  document.getElementById('import-confirm-btn').textContent=i18nCore.t('import.actionCount',{count:i18nCore.formatNumber(count)});
 }
 function backToStep1(){
   document.getElementById('import-step2').classList.remove('active');
@@ -13755,12 +13745,12 @@ function backToStep1(){
 }
 function confirmImport(){
   const toAdd=importMatches.filter(function(m){return m.checked;});
-  if(!toAdd.length){toast('Nothing selected');return;}
+  if(!toAdd.length){toast(i18nCore.t('import.nothingSelected'));return;}
   const list=Object.assign({},allData[myListType]&&allData[myListType][cur]||{});
   toAdd.forEach(function(e){list[e.name]=importPri+(e.mod?'('+e.mod+')':'');});
   writeList(myListType,cur,list);
   closeModal('import-modal');
-  toast('Imported '+toAdd.length+' Pokemon as '+priName(importPri)+'!');
+  toast(i18nCore.t('import.completed',{count:i18nCore.formatNumber(toAdd.length),priority:priLabel(importPri)}));
 }
 
 // ── GLOBAL KEYBOARD SHORTCUTS (#17) ───────────────────────────
@@ -14009,7 +13999,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   }).catch(e=>{
     console.warn('Firebase SDK failed to load',e);
     setSyncStatus('offline');
-    if(shareReq)toast('Could not load shared list while Firebase is offline.');
+    if(shareReq)toast(i18nCore.t('share.offlineLoadFailed'));
   });
   setTimeout(()=>{if(!hasVisibleScreen())showBootError('No visible screen after startup');},2500);
   }catch(e){

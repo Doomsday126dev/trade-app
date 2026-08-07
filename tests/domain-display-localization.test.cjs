@@ -186,11 +186,13 @@ test('all Pokemon render surfaces route displayed labels through the resolver',(
 
 test('catalog asset remains bounded and offline-precacheable',()=>{
   const catalog=Buffer.from(source('js/i18n/pokemonNames/catalog.js'));
+  const release=source('js/domain/clientRelease.js').match(/RELEASE_ID='([^']+)'/)?.[1];
   assert.ok(catalog.length<100000,`catalog bytes ${catalog.length}`);
   assert.ok(gzipSync(catalog).length<45000);
   assert.ok(brotliCompressSync(catalog).length<40000);
   assert.match(source('sw.js'),/'js\/i18n\/pokemonNames\/catalog\.js'/);
-  assert.match(html,/js\/i18n\/pokemonNames\/catalog\.js\?v=2026-08-05\.13/);
+  assert.ok(release);
+  assert.ok(html.includes(`js/i18n/pokemonNames/catalog.js?v=${release}`));
 });
 
 test('generated Pokemon GO strings remain canonical and localization has no storage or Firebase capability',()=>{
