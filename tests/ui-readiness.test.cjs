@@ -29,6 +29,17 @@ test('manual language selection is device-local and exposes all four supported l
   assert.doesNotMatch(html,/changeInterfaceLocale[\s\S]{0,300}(userPreferences|shareAccess|managedTrainerPreferencesRepository)/);
 });
 
+test('Settings presents one primary language with an accessible optional search-language override',()=>{
+  assert.match(html,/class="settings-panel language-settings-panel"/);
+  assert.match(html,/id="settings-search-language-automatic"[^>]+data-i18n="settings\.searchLanguageAutomatic"/);
+  assert.match(html,/id="settings-search-language-override"[^>]+aria-controls="settings-search-language-override-row"[^>]+aria-describedby="settings-search-language-override-help"/);
+  assert.match(html,/id="settings-search-language-override-row" hidden/);
+  assert.match(html,/id="settings-search-language"[^>]+disabled[^>]+aria-describedby="settings-search-language-override-help"/);
+  assert.match(html,/\.language-field select\{[^}]*min-height:48px/);
+  assert.match(html,/\.language-override-toggle\{[^}]*min-height:48px/);
+  assert.match(html,/\.language-primary-row select,\.language-override-row select\{min-height:48px\}/);
+});
+
 test('Settings is removed from primary navigation and relocated to an account dialog',()=>{
   const tabs=html.slice(html.indexOf('<div class="tabs" role="tablist"'),html.indexOf('</div>',html.indexOf('<div class="tabs" role="tablist"')));
   assert.doesNotMatch(tabs,/settings|nav-settings/);

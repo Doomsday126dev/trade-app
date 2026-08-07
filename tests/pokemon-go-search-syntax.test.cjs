@@ -103,15 +103,35 @@ test('1500-character warning boundary remains exact after localization',()=>{
 
 test('search-language override is device-local and regenerates every visible string surface',()=>{
   assert.match(html,/const POGO_SEARCH_LANGUAGE_KEY='pogoPokemonGoSearchLocale:v1'/);
+  assert.match(html,/id="settings-search-language-override"[^>]*onchange="togglePokemonGoSearchLocaleOverride\(this\.checked\)"/);
+  assert.match(html,/id="settings-search-language-override-row" hidden/);
   assert.match(html,/id="settings-search-language"[^>]*onchange="changePokemonGoSearchLocale\(this\.value\)"/);
   const block=html.slice(html.indexOf('function pokemonGoSearchLanguagePreference'),html.indexOf('function saveSyncQueue'));
-  assert.match(block,/lsGet\(POGO_SEARCH_LANGUAGE_KEY,'follow-app'\)/);
+  assert.match(block,/lsGet\(POGO_SEARCH_LANGUAGE_KEY,null\)/);
+  assert.match(block,/if\(value!==null\)lsRemove\(POGO_SEARCH_LANGUAGE_KEY\)/);
+  assert.match(block,/function togglePokemonGoSearchLocaleOverride\(enabled\)/);
+  assert.match(block,/if\(next==='follow-app'\)lsRemove\(POGO_SEARCH_LANGUAGE_KEY\)/);
   assert.match(block,/lsSet\(POGO_SEARCH_LANGUAGE_KEY,next\)/);
+  assert.match(block,/checkbox\.checked=override/);
+  assert.match(block,/row\.hidden=!override/);
+  assert.match(block,/select\.disabled=!override/);
   assert.match(block,/renderMyStrings\(\);renderStrings\(\)/);
   assert.match(block,/renderDiffModal\(\)/);
   assert.match(block,/renderSafeTransferOutput\(\)/);
   assert.match(block,/renderShareView\(_activeShareView\.username,_activeShareView\.type\)/);
   assert.doesNotMatch(block,/userPreferences|trainerPreferences|firebase|queueSync|set\s*\(\s*ref|update\s*\(\s*ref|fetch\s*\(/i);
+});
+
+test('language panel makes app language primary and the search override subordinate',()=>{
+  const panel=html.slice(html.indexOf('<section class="settings-panel language-settings-panel"'),html.indexOf('</section>',html.indexOf('<section class="settings-panel language-settings-panel"')));
+  assert.match(panel,/class="language-primary-row"/);
+  assert.match(panel,/settings\.searchLanguageAutomatic/);
+  assert.match(panel,/settings\.searchLanguageOverride/);
+  assert.match(panel,/aria-controls="settings-search-language-override-row"/);
+  assert.doesNotMatch(panel,/option value="follow-app"/);
+  assert.match(html,/\.language-override-toggle\{[^}]*min-height:48px/);
+  assert.match(html,/\.language-primary-row select,\.language-override-row select\{min-height:48px\}/);
+  assert.match(html,/\.language-primary-row\{grid-template-columns:1fr;gap:6px\}/);
 });
 
 test('visible and copied query bytes share one selected-locale value',()=>{

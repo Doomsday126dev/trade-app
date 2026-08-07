@@ -206,6 +206,66 @@ test.describe('visual smoke', () => {
     await expect(page.locator('#account-trigger')).toBeFocused();
   });
 
+  test('language Settings keeps the search-language override subordinate, responsive, and device-local',async({page})=>{
+    const viewports=[[320,640],[375,700],[390,700],[430,760],[768,800],[1024,800],[1440,900]];
+    for(const [width,height] of viewports){
+      await page.setViewportSize({width,height});
+      await page.goto(`./?language-settings=${width}-${Date.now()}`,{waitUntil:'domcontentloaded'});
+      await waitForSettingsStartupReady(page);
+      await page.evaluate(()=>{
+        localStorage.removeItem('pogoPokemonGoSearchLocale:v1');
+        changeInterfaceLocale('ja');
+        openSettingsPanel('public');
+      });
+      const override=page.locator('#settings-search-language-override');
+      const row=page.locator('#settings-search-language-override-row');
+      const searchLanguage=page.locator('#settings-search-language');
+      await expect(override).not.toBeChecked();
+      await expect(row).toBeHidden();
+      await expect(searchLanguage).toBeDisabled();
+      expect(await page.evaluate(()=>pokemonGoSearchLocale())).toBe('ja');
+
+      await override.check();
+      await expect(row).toBeVisible();
+      await expect(searchLanguage).toBeEnabled();
+      await searchLanguage.selectOption('en');
+      await page.locator('#settings-language').selectOption('de');
+      expect(await page.evaluate(()=>pokemonGoSearchLocale())).toBe('en');
+      await override.uncheck();
+      await expect(row).toBeHidden();
+      expect(await page.evaluate(()=>pokemonGoSearchLocale())).toBe('de');
+
+      const geometry=await page.evaluate(()=>{
+        const panel=document.querySelector('.language-settings-panel');
+        const checkbox=document.getElementById('settings-search-language-override');
+        const label=checkbox.closest('label');
+        return{
+          noOverflow:document.documentElement.scrollWidth<=document.documentElement.clientWidth&&panel.scrollWidth<=panel.clientWidth,
+          touchHeight:label.getBoundingClientRect().height,
+          panelRight:panel.getBoundingClientRect().right,
+          viewport:innerWidth
+        };
+      });
+      expect(geometry.noOverflow).toBe(true);
+      expect(geometry.touchHeight).toBeGreaterThanOrEqual(48);
+      expect(geometry.panelRight).toBeLessThanOrEqual(geometry.viewport+1);
+      await page.keyboard.press('Escape');
+    }
+
+    await page.evaluate(()=>localStorage.setItem('pogoPokemonGoSearchLocale:v1',JSON.stringify('en')));
+    await page.reload({waitUntil:'domcontentloaded'});
+    await waitForSettingsStartupReady(page);
+    await page.evaluate(()=>openSettingsPanel('public'));
+    await expect(page.locator('#settings-search-language-override')).toBeChecked();
+    await expect(page.locator('#settings-search-language')).toHaveValue('en');
+    await page.evaluate(()=>localStorage.setItem('pogoPokemonGoSearchLocale:v1',JSON.stringify('follow-app')));
+    await page.reload({waitUntil:'domcontentloaded'});
+    await waitForSettingsStartupReady(page);
+    await page.evaluate(()=>openSettingsPanel('public'));
+    await expect(page.locator('#settings-search-language-override')).not.toBeChecked();
+    expect(await page.evaluate(()=>localStorage.getItem('pogoPokemonGoSearchLocale:v1'))).toBeNull();
+  });
+
   test('Settings route restores the latest same-session scroll across close, Escape, Back, Forward, locale, and surfaces',async({page})=>{
     await page.goto(`./?settings-scroll-lifecycle=${Date.now()}`,{waitUntil:'domcontentloaded'});
     for(const surface of ['share','login','account']){
