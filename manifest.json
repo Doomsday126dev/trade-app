@@ -45,13 +45,6 @@
       "icons": [{"src": "assets/tradeloop-icon-96.png", "sizes": "96x96", "type": "image/png"}]
     },
     {
-      "name": "Legacy Inventory",
-      "short_name": "Inventory",
-      "description": "View and export your saved legacy inventory",
-      "url": "./?action=have",
-      "icons": [{"src": "assets/tradeloop-icon-96.png", "sizes": "96x96", "type": "image/png"}]
-    },
-    {
       "name": "Pokémon GO Events",
       "short_name": "Events",
       "description": "View upcoming Pokémon GO events",

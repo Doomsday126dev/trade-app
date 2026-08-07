@@ -2,6 +2,7 @@ const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const {readFileSync}=require('node:fs');
 const {gzipSync,brotliCompressSync}=require('node:zlib');
+const {performance}=require('node:perf_hooks');
 const path=require('node:path');
 const vm=require('node:vm');
 
@@ -14,8 +15,8 @@ function load(files){
   return window;
 }
 const window=load([
-  'js/i18n/pokemonNames/catalog.js','js/i18n/pokemonNames/core.js','js/i18n/eventLabels/core.js',
-  'js/domain/autocompleteText.js','js/domain/autocompleteMatching.js'
+  'js/i18n/pokemonNames/catalog.js','js/i18n/pokemonNames/variants.js','js/i18n/pokemonNames/core.js','js/i18n/eventLabels/core.js',
+  'js/domain/autocompleteText.js','js/domain/autocompleteMatching.js','js/domain/eventPresentation.js'
 ]);
 const pokemon=window.PogoI18n.pokemonNames;
 const events=window.PogoI18n.eventLabels;
@@ -48,6 +49,62 @@ test('regional forms use locale-aware templates without changing canonical keys'
   assert.equal(pokemon.identity(alolan).variantId,'A-Vulpix');
 });
 
+test('structured official variants localize while app-specific costumes preserve canonical descriptors',()=>{
+  const examples=[
+    [{no:666,name:'Garden',displayName:'Vivillon (Garden)'},'ja','ビビヨン（ていえんのもよう）','full'],
+    [{no:978,name:'Tatsugiri (Curly)',displayName:'Tatsugiri (Curly)'},'ja','シャリタツ（そったすがた）','full'],
+    [{no:741,name:"Oricorio (Pa'u)",displayName:"Oricorio (Pa'u)"},'es','Oricorio (Estilo Plácido)','full'],
+    [{no:676,name:'Furfrou (Heart)',displayName:'Furfrou (Heart)'},'de','Coiffwaff (Herzchenschnitt)','full'],
+    [{no:479,name:'Rotom (Wash)',displayName:'Rotom (Wash)'},'ja','ウォッシュロトム','full'],
+    [{no:201,name:'Unown (A)',displayName:'Unown (A)'},'de','Icognito (A)','full'],
+    [{no:25,name:'Pikachu (Ethan)',displayName:'Pikachu (Ethan)'},'ja','ピカチュウ（Ethan）','partial']
+  ];
+  for(const[entry,locale,label,status]of examples){
+    const before=JSON.stringify(entry),resolved=pokemon.resolveDisplayName(entry,{locale});
+    assert.equal(resolved.text,label,`${locale} ${entry.name}`);assert.equal(resolved.status,status);assert.equal(JSON.stringify(entry),before);
+  }
+});
+
+test('all 966 canonical entries have measurable full partial and fallback coverage',()=>{
+  const baseline={full:620,partial:0,fallback:346};
+  const expected={ja:{full:769,partial:197,fallback:0},es:{full:725,partial:241,fallback:0},de:{full:762,partial:204,fallback:0}};
+  for(const locale of ['ja','es','de']){
+    const report=JSON.parse(JSON.stringify(pokemon.variantCoverage(appEntries,locale)));
+    assert.equal(report.total,966);assert.deepEqual({full:report.full,partial:report.partial,fallback:report.fallback},expected[locale]);
+    assert.deepEqual(baseline,{full:620,partial:0,fallback:346});
+    assert.equal(report.categories['app-specific-costume'].partial,192);
+    assert.equal(report.categories['vivillon-pattern'].total,20);
+    assert.equal(report.categories['gigantamax'].total,31);
+  }
+  assert.equal(pokemon.variantSource.mappedEntries,143);
+  assert.equal(pokemon.variantSource.gitBlobShas.names,'b178676a000d8e162536a7270961a8083096ba2d');
+});
+
+test('trainer-first display transformations stay within conservative timing budgets',t=>{
+  const measure=fn=>{const started=performance.now();fn();return performance.now()-started;};
+  const myListMs=measure(()=>appEntries.map(entry=>({
+    name:pokemon.displayName(entry,{locale:'ja'}),
+    search:pokemon.searchLabels(entry,{locale:'ja'}).join(' ')
+  })).sort((a,b)=>a.name.localeCompare(b.name,'ja')));
+  const localeSwitchMs=measure(()=>{
+    for(const locale of ['en','ja','de','es'])appEntries.map(entry=>pokemon.displayName(entry,{locale}));
+  });
+  const now=Date.now(),eventsFixture=Array.from({length:180},(_,index)=>({
+    eventID:`fixture-${index}`,
+    eventType:index%3===0?'raid-hour':index%3===1?'max-battles':'research',
+    name:`Fixture ${index}`,
+    start:new Date(now+(index-20)*3600000).toISOString(),
+    end:new Date(now+(index-19)*3600000).toISOString()
+  }));
+  const eventsMs=measure(()=>window.PogoDomain.eventPresentation.prepareEvents(eventsFixture,{now,filter:'all'}));
+  assert.ok(myListMs<250,`My List display model took ${myListMs.toFixed(2)}ms`);
+  assert.ok(eventsMs<100,`Events presentation model took ${eventsMs.toFixed(2)}ms`);
+  assert.ok(localeSwitchMs<250,`four-locale switch model took ${localeSwitchMs.toFixed(2)}ms`);
+  t.diagnostic(`My List display/search/sort model: ${myListMs.toFixed(2)}ms`);
+  t.diagnostic(`Events grouping/sort model: ${eventsMs.toFixed(2)}ms`);
+  t.diagnostic(`four-locale active-label model: ${localeSwitchMs.toFixed(2)}ms`);
+});
+
 test('localized and English Pokemon names remain searchable together',()=>{
   const entry={no:1,name:'Bulbasaur',displayName:'Bulbasaur'};
   const item={name:entry.name,dn:pokemon.displayName(entry,{locale:'ja'}),no:entry.no};
@@ -55,6 +112,12 @@ test('localized and English Pokemon names remain searchable together',()=>{
   assert.notEqual(matching.acMatchScore(item,'フシギダネ'),-1);
   assert.notEqual(matching.acMatchScore(item,'Bulbasaur'),-1);
   assert.equal(item.name,'Bulbasaur');
+});
+
+test('localized variants remain searchable by localized label species English canonical and dex',()=>{
+  const entry={no:666,name:'Garden',displayName:'Vivillon (Garden)'},labels=pokemon.searchLabels(entry,{locale:'ja'});
+  const item={name:entry.name,dn:pokemon.displayName(entry,{locale:'ja'}),no:entry.no,search:window.PogoDomain.autocompleteText.normalizeAcText(labels.join(' '))};
+  for(const query of ['ビビヨン','ていえんのもよう','Vivillon','Garden','666'])assert.notEqual(matching.acMatchScore(item,query),-1,query);
 });
 
 test('coverage reports are explicit and do not claim a complete catalog',()=>{
@@ -148,8 +211,9 @@ test('official event maps win while English-only maps and prose fall back cleanl
 test('locale switching rerenders active shares and never publishes or mutates stored identities',()=>{
   const change=html.slice(html.indexOf('function changeInterfaceLocale'),html.indexOf('let trainerSuggestionTimer'));
   assert.match(change,/renderShareView\(_activeShareView\.username,_activeShareView\.type\)/);
-  assert.match(change,/buildAcItems\(\)/);
-  assert.match(change,/renderEventsOnly\(\)/);
+  assert.match(change,/active==='mylist'.*buildAcItems\(\);renderMyList\(\)/s);
+  assert.match(change,/active==='schedule'.*renderEventsOnly\(\)/s);
+  assert.doesNotMatch(change,/renderBrowse\(\)/);
   assert.doesNotMatch(change,/eventTypeFilter\s*=/);
   assert.match(change,/trainer-organizer-modal[\s\S]*renderTrainerOrganizer\(\)/);
   assert.doesNotMatch(change,/resetTrainerOrganizerState\(\)/);
@@ -191,14 +255,16 @@ test('catalog asset remains bounded and offline-precacheable',()=>{
   assert.ok(gzipSync(catalog).length<45000);
   assert.ok(brotliCompressSync(catalog).length<40000);
   assert.match(source('sw.js'),/'js\/i18n\/pokemonNames\/catalog\.js'/);
+  assert.match(source('sw.js'),/'js\/i18n\/pokemonNames\/variants\.js'/);
   assert.ok(release);
   assert.ok(html.includes(`js/i18n/pokemonNames/catalog.js?v=${release}`));
+  assert.ok(html.includes(`js/i18n/pokemonNames/variants.js?v=${release}`));
 });
 
 test('generated Pokemon GO strings remain canonical and localization has no storage or Firebase capability',()=>{
   const strings=html.slice(html.indexOf('function buildStrings'),html.indexOf('function renderMyStrings'));
   assert.doesNotMatch(strings,/pokemonDisplayName|pokemonNamesI18n|i18nCore\.getLocale/);
-  for(const file of ['js/i18n/pokemonNames/catalog.js','js/i18n/pokemonNames/core.js','js/i18n/eventLabels/core.js']){
+  for(const file of ['js/i18n/pokemonNames/catalog.js','js/i18n/pokemonNames/variants.js','js/i18n/pokemonNames/core.js','js/i18n/eventLabels/core.js']){
     assert.doesNotMatch(source(file),/localStorage|sessionStorage|firebase|firebaseio|queueSync|fetch\(|XMLHttpRequest|\.set\(|\.update\(/i,file);
   }
 });

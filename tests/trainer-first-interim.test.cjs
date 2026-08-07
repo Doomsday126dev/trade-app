@@ -17,13 +17,17 @@ function between(start,end){
 
 test('interim navigation exposes trainer-first retained surfaces only',()=>{
   const tabs=between('<div class="tabs" role="tablist"','</div>');
-  for(const tab of ['mylist','find','schedule','have','admin'])assert.match(tabs,new RegExp(`data-tab="${tab}"`));
+  for(const tab of ['mylist','find','schedule','admin'])assert.match(tabs,new RegExp(`data-tab="${tab}"`));
+  assert.doesNotMatch(tabs,/data-tab="have"|Legacy Inventory/);
   assert.doesNotMatch(tabs,/data-tab="settings"|nav-settings/);
   assert.doesNotMatch(tabs,/data-tab="strings"/);
   assert.doesNotMatch(tabs,/data-tab="browse"/);
-  assert.match(tabs,/Legacy Inventory/);
   assert.match(tabs,/Events/);
-  assert.deepEqual(manifest.shortcuts.slice(2).map(item=>item.name),['Find Trainer','Legacy Inventory','Pokémon GO Events']);
+  assert.deepEqual(manifest.shortcuts.slice(2).map(item=>item.name),['Find Trainer','Pokémon GO Events']);
+  const account=between('<div class="account-popover"','</div>\n      </div>');
+  assert.match(account,/account-legacy-inventory-action/);
+  assert.match(account,/openLegacyInventoryTool\(\)/);
+  assert.match(account,/inventory\.readOnlyBadge/);
 });
 
 test('exact owned mode is active and startup has no broad private listeners',()=>{
@@ -90,6 +94,8 @@ test('Legacy Inventory is read-only and export does not write Firebase',()=>{
   const exportSource=between('function exportLegacyInventoryCsv','function openIncomingOffersModal');
   assert.match(exportSource,/downloadBlob/);
   assert.doesNotMatch(exportSource,/queueSync|set\(|update\(|writeHave/);
+  assert.match(source,/else if\(action==='have'\)\{finalTab='have';switchTab\(finalTab,\{render:false\}\);\}/);
+  assert.match(source,/function openLegacyInventoryTool\(\)\{closeAccountMenu\(false\);switchTab\('have'\);\}/);
 });
 
 test('Events bypasses personal schedule, trade, reserved, and quota rendering',()=>{

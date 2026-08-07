@@ -100,12 +100,15 @@ test('auth loss clears transient UI before protected listeners and cache are sus
   assert.ok(transient>=0&&transient<listeners&&listeners<cache);
 });
 
-test('delayed removal, swipe, and conflict callbacks are invalidated at a session boundary',()=>{
+test('delayed removal and swipe callbacks are invalidated while conflict UI is removed at a session boundary',()=>{
   const callback=between('function sessionTransientCallback','function resetSessionTransientUi');
+  const cleanup=between("function resetSessionTransientUi(reason='session_boundary'){",'function resetTransientUiBeforeSessionActivation');
+  const conflict=between('function showConflictModal','// ── IMPORT FROM SEARCH STRING');
   assert.match(callback,/generation!==_sessionTransientGeneration/);
   assert.match(source,/setTimeout\(sessionTransientCallback\(\(\)=>\{\s*writeListItem/);
   assert.match(source,/setTimeout\(sessionTransientCallback\(\(\)=>\{const n=row\.dataset\.name/);
-  assert.match(source,/setTimeout\(sessionTransientCallback\(\(\)=>\{if\(el\.parentNode\)/);
+  assert.match(cleanup,/querySelectorAll\('\.conflict-notice'\).*el=>el\.remove\(\)/);
+  assert.doesNotMatch(conflict,/setTimeout|sessionTransientCallback/);
 });
 
 test('session cleanup resets modal, selection, filter, queue, and pending comparison state',()=>{
