@@ -76,6 +76,14 @@
   function formatRelativeTime(value,unit='minute',options={numeric:'auto'}){
     return new Intl.RelativeTimeFormat(translator.getLocale(),options).format(Number(value)||0,unit);
   }
+  function formatPlural(key,count,params={}){
+    const numeric=Number(count)||0;
+    const category=new Intl.PluralRules(translator.getLocale()).select(numeric);
+    const values={...params,count:formatNumber(numeric)};
+    const categoryKey=`${key}.${category}`;
+    const localized=translator.t(categoryKey,values);
+    return localized===categoryKey?translator.t(`${key}.other`,values):localized;
+  }
   function relativeTimeFromTimestamp(timestamp,now=Date.now()){
     const delta=Number(timestamp)-Number(now);if(!Number.isFinite(delta))return'';
     const abs=Math.abs(delta);
@@ -89,7 +97,7 @@
     SUPPORTED_LOCALES,LOCALE_STORAGE_KEY,normalizeLocale,supportedLocale,detectBrowserLocale,
     readStoredLocale,persistLocale,interpolate,createTranslator,t:translator.t,
     pokemonName:translator.pokemonName,setLocale,getLocale:translator.getLocale,
-    formatDate,formatNumber,formatRelativeTime,relativeTimeFromTimestamp,
+    formatDate,formatNumber,formatRelativeTime,formatPlural,relativeTimeFromTimestamp,
     missingKeys:()=>Object.freeze(missing.map(item=>Object.freeze({...item})))
   });
 })(window);

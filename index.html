@@ -305,12 +305,13 @@ input,select,textarea{font-family:var(--font);outline:none}
 /* STRINGS */
 .strbox{background:var(--bg);border:1px solid var(--border2);border-radius:var(--r);padding:12px 14px;font-family:var(--mono);font-size:12px;line-height:1.9;color:var(--text);white-space:pre-wrap;word-break:break-all;margin-bottom:9px;min-height:44px}
 .cpbtn{background:var(--accent);color:#fff;padding:8px 16px;border-radius:var(--r2);font-size:13px;font-weight:600;cursor:pointer;border:none;transition:.15s}
+#share-view .cpbtn{min-height:48px}
 .cpbtn:hover{background:var(--ac2);color:#000}
 .cpbtn:active{transform:scale(.97)}
 .cpbtn.copied{background:var(--ok);color:#06140f}
 .str-levels{display:flex;flex-direction:column;gap:10px}
 .str-level{background:var(--card);border:1px solid var(--border);border-radius:var(--r2);padding:11px 13px}
-.str-level-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
+.str-level-hdr{display:flex;align-items:center;justify-content:space-between;gap:7px;flex-wrap:wrap;margin-bottom:7px}
 .lucky-str{border-color:rgba(250,204,21,.32);background:linear-gradient(180deg,rgba(250,204,21,.08),var(--card))}
 .xxl-str{border-color:rgba(99,102,241,.32);background:linear-gradient(180deg,rgba(99,102,241,.08),var(--card))}
 .xxs-str{border-color:rgba(20,184,166,.32);background:linear-gradient(180deg,rgba(20,184,166,.08),var(--card))}
@@ -2515,7 +2516,7 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
 <div class="ptr-indicator" id="ptr-indicator" aria-hidden="true">↓</div>
 
 <script>
-window.__POGO_RELEASE_ID='2026-08-05.14';
+window.__POGO_RELEASE_ID='2026-08-05.15';
 window.__pogoBootWatch=setTimeout(function(){
   var visible=['config-pg','login-pg','app'].some(function(id){
     var el=document.getElementById(id);
@@ -2534,56 +2535,56 @@ window.__pogoBootWatch=setTimeout(function(){
   if(err)err.textContent='App scripts did not finish loading. Refresh once; if this stays, send this screenshot.';
 },4000);
 </script>
-<script src="data.js?v=2026-08-05.14"></script>
-<script src="js/domain/priorities.js?v=2026-08-05.14"></script>
-<script src="js/ui/badges.js?v=2026-08-05.14"></script>
-<script src="js/domain/username.js?v=2026-08-05.14"></script>
-<script src="js/domain/priorityValues.js?v=2026-08-05.14"></script>
-<script src="js/domain/scheduleDates.js?v=2026-08-05.14"></script>
-<script src="js/domain/pokemonSearchTerms.js?v=2026-08-05.14"></script>
-<script src="js/domain/pokemonEntryRules.js?v=2026-08-05.14"></script>
-<script src="js/domain/searchStrings.js?v=2026-08-05.14"></script>
-<script src="js/ui/stringHtml.js?v=2026-08-05.14"></script>
-<script src="js/domain/scheduleEventRules.js?v=2026-08-05.14"></script>
-<script src="js/domain/scheduleTradeRules.js?v=2026-08-05.14"></script>
-<script src="js/domain/pokemonKeys.js?v=2026-08-05.14"></script>
-<script src="js/domain/spriteSlugs.js?v=2026-08-05.14"></script>
-<script src="js/domain/fuzzyText.js?v=2026-08-05.14"></script>
-<script src="js/domain/autocompleteText.js?v=2026-08-05.14"></script>
-<script src="js/domain/autocompleteMatching.js?v=2026-08-05.14"></script>
-<script src="js/domain/autocompleteRanking.js?v=2026-08-05.14"></script>
-<script src="js/domain/relativeTime.js?v=2026-08-05.14"></script>
-<script src="js/domain/clientRelease.js?v=2026-08-05.14"></script>
-<script src="js/domain/trainerDiscovery.js?v=2026-08-05.14"></script>
-<script src="js/domain/eventPresentation.js?v=2026-08-05.14"></script>
-<script src="js/domain/publicSharePublication.js?v=2026-08-05.14"></script>
-<script src="js/domain/trainerPreferences.js?v=2026-08-05.14"></script>
-<script src="js/domain/trainerPreferenceSync.js?v=2026-08-05.14"></script>
-<script src="js/domain/loginDirectory.js?v=2026-08-05.14"></script>
-<script src="js/utils/textSafety.js?v=2026-08-05.14"></script>
-<script src="js/ui/stringPanels.js?v=2026-08-05.14"></script>
-<script src="js/ui/emptyState.js?v=2026-08-05.14"></script>
-<script src="js/i18n/locales/en.js?v=2026-08-05.14"></script>
-<script src="js/i18n/locales/ja.js?v=2026-08-05.14"></script>
-<script src="js/i18n/locales/es.js?v=2026-08-05.14"></script>
-<script src="js/i18n/locales/de.js?v=2026-08-05.14"></script>
-<script src="js/i18n/pokemonNames/catalog.js?v=2026-08-05.14"></script>
-<script src="js/i18n/pokemonNames/core.js?v=2026-08-05.14"></script>
-<script src="js/i18n/eventLabels/core.js?v=2026-08-05.14"></script>
-<script src="js/i18n/core.js?v=2026-08-05.14"></script>
-<script src="js/services/firebaseClient.js?v=2026-08-05.14"></script>
-<script src="js/data/subscriptionManager.js?v=2026-08-05.14"></script>
-<script src="js/data/listenerLifecycle.js?v=2026-08-05.14"></script>
-<script src="js/data/sessionCacheBoundary.js?v=2026-08-05.14"></script>
-<script src="js/data/firebaseReadRegistry.js?v=2026-08-05.14"></script>
-<script src="js/data/currentUserRepository.js?v=2026-08-05.14"></script>
-<script src="js/data/ownedDataCoordinator.js?v=2026-08-05.14"></script>
-<script src="js/data/publicShareRepository.js?v=2026-08-05.14"></script>
-<script src="js/data/trainerHistoryStore.js?v=2026-08-05.14"></script>
-<script src="js/data/trainerPreferencesRepository.js?v=2026-08-05.14"></script>
-<script src="js/data/trainerPreferenceSyncQueue.js?v=2026-08-05.14"></script>
-<script src="js/domain/cacheAdapters.js?v=2026-08-05.14"></script>
-<script src="js/ui/trainerTagPanel.js?v=2026-08-05.14"></script>
+<script src="data.js?v=2026-08-05.15"></script>
+<script src="js/domain/priorities.js?v=2026-08-05.15"></script>
+<script src="js/ui/badges.js?v=2026-08-05.15"></script>
+<script src="js/domain/username.js?v=2026-08-05.15"></script>
+<script src="js/domain/priorityValues.js?v=2026-08-05.15"></script>
+<script src="js/domain/scheduleDates.js?v=2026-08-05.15"></script>
+<script src="js/domain/pokemonSearchTerms.js?v=2026-08-05.15"></script>
+<script src="js/domain/pokemonEntryRules.js?v=2026-08-05.15"></script>
+<script src="js/domain/searchStrings.js?v=2026-08-05.15"></script>
+<script src="js/ui/stringHtml.js?v=2026-08-05.15"></script>
+<script src="js/domain/scheduleEventRules.js?v=2026-08-05.15"></script>
+<script src="js/domain/scheduleTradeRules.js?v=2026-08-05.15"></script>
+<script src="js/domain/pokemonKeys.js?v=2026-08-05.15"></script>
+<script src="js/domain/spriteSlugs.js?v=2026-08-05.15"></script>
+<script src="js/domain/fuzzyText.js?v=2026-08-05.15"></script>
+<script src="js/domain/autocompleteText.js?v=2026-08-05.15"></script>
+<script src="js/domain/autocompleteMatching.js?v=2026-08-05.15"></script>
+<script src="js/domain/autocompleteRanking.js?v=2026-08-05.15"></script>
+<script src="js/domain/relativeTime.js?v=2026-08-05.15"></script>
+<script src="js/domain/clientRelease.js?v=2026-08-05.15"></script>
+<script src="js/domain/trainerDiscovery.js?v=2026-08-05.15"></script>
+<script src="js/domain/eventPresentation.js?v=2026-08-05.15"></script>
+<script src="js/domain/publicSharePublication.js?v=2026-08-05.15"></script>
+<script src="js/domain/trainerPreferences.js?v=2026-08-05.15"></script>
+<script src="js/domain/trainerPreferenceSync.js?v=2026-08-05.15"></script>
+<script src="js/domain/loginDirectory.js?v=2026-08-05.15"></script>
+<script src="js/utils/textSafety.js?v=2026-08-05.15"></script>
+<script src="js/ui/stringPanels.js?v=2026-08-05.15"></script>
+<script src="js/ui/emptyState.js?v=2026-08-05.15"></script>
+<script src="js/i18n/locales/en.js?v=2026-08-05.15"></script>
+<script src="js/i18n/locales/ja.js?v=2026-08-05.15"></script>
+<script src="js/i18n/locales/es.js?v=2026-08-05.15"></script>
+<script src="js/i18n/locales/de.js?v=2026-08-05.15"></script>
+<script src="js/i18n/pokemonNames/catalog.js?v=2026-08-05.15"></script>
+<script src="js/i18n/pokemonNames/core.js?v=2026-08-05.15"></script>
+<script src="js/i18n/eventLabels/core.js?v=2026-08-05.15"></script>
+<script src="js/i18n/core.js?v=2026-08-05.15"></script>
+<script src="js/services/firebaseClient.js?v=2026-08-05.15"></script>
+<script src="js/data/subscriptionManager.js?v=2026-08-05.15"></script>
+<script src="js/data/listenerLifecycle.js?v=2026-08-05.15"></script>
+<script src="js/data/sessionCacheBoundary.js?v=2026-08-05.15"></script>
+<script src="js/data/firebaseReadRegistry.js?v=2026-08-05.15"></script>
+<script src="js/data/currentUserRepository.js?v=2026-08-05.15"></script>
+<script src="js/data/ownedDataCoordinator.js?v=2026-08-05.15"></script>
+<script src="js/data/publicShareRepository.js?v=2026-08-05.15"></script>
+<script src="js/data/trainerHistoryStore.js?v=2026-08-05.15"></script>
+<script src="js/data/trainerPreferencesRepository.js?v=2026-08-05.15"></script>
+<script src="js/data/trainerPreferenceSyncQueue.js?v=2026-08-05.15"></script>
+<script src="js/domain/cacheAdapters.js?v=2026-08-05.15"></script>
+<script src="js/ui/trainerTagPanel.js?v=2026-08-05.15"></script>
 <script>
 let initializeApp,getDatabase,ref,set,get,onValue,update,getAuth,signInWithEmailAndPassword,createUserWithEmailAndPassword,firebaseSignOut,updatePassword,deleteUser,onAuthStateChanged;
 let firebaseSdkPromise=null;
@@ -7902,18 +7903,19 @@ async function copyText(str){
   if(!ok)throw new Error('Copy command failed');
 }
 async function copyStr(str,btn){
+  const keyPrefix=btn?.dataset.copyScope==='share'?'share':'strings';
   try{
     await copyText(str);
     if(btn){
       const old=btn.textContent;
-      btn.textContent=i18nCore.t('strings.copied');
+      btn.textContent=i18nCore.t(`${keyPrefix}.copied`);
       btn.classList.add('copied');
       btn.disabled=true;
       setTimeout(()=>{btn.textContent=old;btn.classList.remove('copied');btn.disabled=false;},1200);
     }
-    toast(i18nCore.t('strings.copySuccess'));
+    toast(i18nCore.t(`${keyPrefix}.copySuccess`));
   }catch{
-    toast(i18nCore.t('strings.copyFailed'));
+    toast(i18nCore.t(`${keyPrefix}.copyFailed`));
   }
 }
 
@@ -11058,6 +11060,23 @@ function exitShareView(){
   if(s&&allData.users?.[s]){cur=s;showApp();}
   else showLogin();
 }
+const PUBLIC_SHARE_LIST_KEYS=Object.freeze({wishlist:'list.wishlist',dynamax:'list.dynamax',gmax:'list.gigantamax',costumes:'list.others'});
+const PUBLIC_SHARE_PRIORITY_KEYS=Object.freeze({H:'priority.high',M:'priority.medium',L:'priority.low'});
+function publicShareListLabel(type){
+  return i18nCore.t(PUBLIC_SHARE_LIST_KEYS[type]||'list.others');
+}
+function publicSharePriorityLabel(priority){
+  return i18nCore.t(PUBLIC_SHARE_PRIORITY_KEYS[priority]||'priority.low');
+}
+function publicSharePriorityBadge(priority){
+  const emoji=priority==='H'?'🔴':priority==='M'?'🟡':'🟢';
+  return`${emoji} ${escHtml(publicSharePriorityLabel(priority))}`;
+}
+function publicShareUpdatedLabel(timestamp){
+  const value=Number(timestamp);
+  if(!Number.isFinite(value)||value<=0)return i18nCore.t('share.updatedNever');
+  return i18nCore.t('share.updated',{time:i18nCore.relativeTimeFromTimestamp(value)});
+}
 function renderShareView(username,type){
   _activeShareView={username,type};
   const ud=allData.users?.[username]||{};
@@ -11067,11 +11086,11 @@ function renderShareView(username,type){
   const bioHtml=ud.bio?`<div class="share-hdr-bio">"${escHtml(ud.bio)}"</div>`:'';
   hdr.innerHTML=`${userAvatarHtml(username,64)}
     <div class="share-hdr-info">
-      <div class="share-hdr-name">${escHtml(username)}'s Trade List</div>
+      <div class="share-hdr-name">${escHtml(i18nCore.t('share.listTitle',{username}))}</div>
       <div class="share-hdr-meta">
         ${ud.friendCode?`<span class="meta-item">🎮 <code style="font-family:var(--mono);font-size:12px">${escHtml(ud.friendCode)}</code></span>`:''}
         ${ud.discord?`<span class="meta-item profile-discord">${escHtml(ud.discord)}</span>`:''}
-        <span class="meta-item">📅 Updated ${freshnessLabel(ud.lastUpdated)}</span>
+        <span class="meta-item">📅 ${escHtml(publicShareUpdatedLabel(ud.lastUpdated))}</span>
       </div>
       ${cur&&cur!==username?`<div class="share-profile-actions"><button class="bpri" onclick="openActiveShareComparison()">${escHtml(i18nCore.t('trainer.compareAction'))}</button><button class="bghost" onclick="toggleTrainerFavorite('${escAttr(username)}')" aria-pressed="${favorite}">${favorite?'★':'☆'} ${escHtml(i18nCore.t(favorite?'trainer.favoriteRemove':'trainer.favoriteAdd'))}</button></div>`:''}
       ${bioHtml}
@@ -11081,12 +11100,13 @@ function renderShareView(username,type){
   tabs.innerHTML=['wishlist','dynamax','gmax','costumes'].map(t=>{
     const count=Object.keys(allData[t]?.[username]||{}).length;
     if(!count)return'';
-    return `<button class="ltab ${t===type?'active':''}" onclick="renderShareView('${username}','${t}')">${LIST_LABELS[t]} (${count})</button>`;
+    const label=publicShareListLabel(t);
+    return `<button class="ltab ${t===type?'active':''}" onclick="renderShareView('${username}','${t}')">${escHtml(i18nCore.t('share.listTab',{label,count:i18nCore.formatNumber(count)}))}</button>`;
   }).join('');
   // Body — render in same style as user-str-block
   const out=document.getElementById('share-list-out');
   if(!Object.keys(list).length){
-    out.innerHTML=emptyHtml('No entries in this list','Try a different list tab above.','📋');
+    out.innerHTML=emptyHtml(i18nCore.t('share.emptyTitle'),i18nCore.t('share.emptyHelp'),'📋');
     return;
   }
   const strs=buildStrings(type,username);
@@ -11108,17 +11128,17 @@ function renderShareView(username,type){
     const sorted=[...grouped[p]].sort(_familySort);
     html+=`<div class="share-section">
       <div class="share-section-hdr">
-        <span class="badge ${p}"><span class="prio-mark">${p}</span>${priBadge(p)}</span>
-        <span class="share-section-count">${sorted.length} ${sorted.length===1?'entry':'entries'}</span>
+        <span class="badge ${p}"><span class="prio-mark">${p}</span>${publicSharePriorityBadge(p)}</span>
+        <span class="share-section-count">${escHtml(i18nCore.formatPlural('share.entryCount',sorted.length))}</span>
       </div>
       <div class="share-pgrid">${sorted.map(e=>{
         const flagsHtml=[
-          e.gender==='f'?'<span class="share-pcard-flag gender-f" title="Female">♀</span>':'',
-          e.gender==='m'?'<span class="share-pcard-flag gender-m" title="Male">♂</span>':'',
-          e.lucky?'<span class="share-pcard-flag lucky" title="Lucky">⚡</span>':'',
-          e.shiny?'<span class="share-pcard-flag shiny" title="Shiny only" style="color:#f472b6">✨</span>':'',
-          e.xxl?'<span class="share-pcard-flag xxl" title="Extra Large">XXL</span>':'',
-          e.xxs?'<span class="share-pcard-flag xxs" title="Extra Small">XXS</span>':''
+          e.gender==='f'?`<span class="share-pcard-flag gender-f" title="${escAttr(i18nCore.t('share.flagFemale'))}">♀</span>`:'',
+          e.gender==='m'?`<span class="share-pcard-flag gender-m" title="${escAttr(i18nCore.t('share.flagMale'))}">♂</span>`:'',
+          e.lucky?`<span class="share-pcard-flag lucky" title="${escAttr(i18nCore.t('share.flagLucky'))}">⚡</span>`:'',
+          e.shiny?`<span class="share-pcard-flag shiny" title="${escAttr(i18nCore.t('share.flagShiny'))}" style="color:#f472b6">✨</span>`:'',
+          e.xxl?`<span class="share-pcard-flag xxl" title="${escAttr(i18nCore.t('share.flagXxl'))}">XXL</span>`:'',
+          e.xxs?`<span class="share-pcard-flag xxs" title="${escAttr(i18nCore.t('share.flagXxs'))}">XXS</span>`:''
         ].filter(Boolean).join('');
         // Strip gender markers from mod display since we show ♂/♀ explicitly
         const modDisplay=String(e.mod||'').replace(/\b(female|male|f|m)\b/gi,'').replace(/\s+/g,' ').trim();
@@ -11137,7 +11157,7 @@ function renderShareView(username,type){
       }).join('')}</div>
     </div>`;
   });
-  if(strs)html+=strLevelsHtml(strs);
+  if(strs)html+=strLevelsHtml(strs,{t:i18nCore.t,formatNumber:i18nCore.formatNumber,priorityLabel:publicSharePriorityLabel});
   out.innerHTML=html;
 }
 
