@@ -227,6 +227,7 @@
     'settings.localToolsTitle':'Trainer preferences',
     'settings.localToolsDescription':'Favorites and recent trainers remain private to this device. Private tags and cross-device sync are not active yet.',
     'settings.syncComingLater':'Sync across devices — coming later',
+    'security.title':'Account & Security','security.description':'Your Firebase account ID remains the authority for this trainer profile.','security.methodsLabel':'Sign-in methods','security.google':'Google','security.email':'Email','security.discord':'Discord','security.legacyPin':'Legacy PIN','security.notLinked':'Not linked','security.active':'Active','security.futureUnavailable':'Provider linking is not available yet.','security.emailPlanned':'Verified email-link migration is planned for a later rollout.','security.legacyPinHelp':'This remains your active production sign-in method.','security.disabledNotice':'No provider linking, unlinking, or migration action is enabled in this release.',
     'locale.en':'English',
     'locale.ja':'日本語',
     'locale.es':'Español',

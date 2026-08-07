@@ -17,6 +17,7 @@
     "check:identity-review": "node --test tests/identity-conflict-diagnostics.test.cjs tests/identity-review-source-reader.test.cjs tests/private-identity-review.test.cjs",
     "check:admin-reset-safety": "node --test tests/admin-reset-safety.test.cjs",
     "check:existing-pin-reset": "node --test tests/existing-auth-pin-reset.test.cjs",
+    "check:durable-auth-readiness": "node --test tests/durable-auth-readiness.test.cjs functions/test/provider-link-readiness.test.cjs",
     "check:admin-security": "node --test tests/admin-security-panel.test.cjs",
     "check:read-boundary": "node --test tests/subscription-manager.test.cjs tests/listener-lifecycle.test.cjs tests/session-cache-boundary.test.cjs tests/session-transient-state.test.cjs tests/firebase-data-boundary.test.cjs tests/owned-data-coordinator.test.cjs tests/owned-data-read-mode.test.cjs tests/public-share-publication.test.cjs tests/login-directory-state.test.cjs tests/trainer-first-interim.test.cjs tests/trainer-first-product-journeys.test.cjs tests/trainer-discovery.test.cjs tests/trainer-autocomplete-layout.test.cjs tests/client-asset-versioning.test.cjs tests/i18n.test.cjs tests/domain-display-localization.test.cjs tests/ui-readiness.test.cjs",
     "check:ui-readiness": "node --test tests/i18n.test.cjs tests/domain-display-localization.test.cjs tests/public-share-localization.test.cjs tests/ui-readiness.test.cjs tests/trainer-autocomplete-layout.test.cjs tests/trainer-first-product-journeys.test.cjs tests/client-asset-versioning.test.cjs",

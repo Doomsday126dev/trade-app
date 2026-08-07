@@ -66,7 +66,7 @@ test('session ownership warnings use stable translation keys with English fallba
 test('English, Japanese, Spanish, and German expose the same UI key set',()=>{
   const {catalogs}=load();
   const expected=Object.keys(catalogs.en).sort();
-  assert.equal(expected.length,868);
+  assert.equal(expected.length,881);
   for(const locale of ['ja','es','de'])assert.deepEqual(Object.keys(catalogs[locale]).sort(),expected,locale);
 });
 
@@ -163,4 +163,19 @@ test('active Japanese, Spanish, and German labels are natural overrides rather t
   assert.equal(catalogs.es['account.signOut'],'Cerrar sesión');
   assert.equal(catalogs.de['account.languageSettings'],'Spracheinstellungen');
   for(const locale of ['en','ja','es','de'])assert.equal(Object.hasOwn(catalogs[locale],'pokemon.pikachu'),false);
+});
+
+test('Account & Security readiness copy is complete and localized',()=>{
+  const {catalogs}=load();
+  const keys=[
+    'security.title','security.description','security.methodsLabel','security.google','security.email',
+    'security.discord','security.legacyPin','security.notLinked','security.active','security.futureUnavailable',
+    'security.emailPlanned','security.legacyPinHelp','security.disabledNotice'
+  ];
+  for(const key of keys){
+    for(const locale of ['en','ja','es','de'])assert.ok(String(catalogs[locale][key]||'').trim(),`${locale}:${key}`);
+    for(const locale of ['ja','es','de']){
+      if(!['security.google','security.discord'].includes(key))assert.notEqual(catalogs[locale][key],catalogs.en[key],`${locale}:${key}`);
+    }
+  }
 });

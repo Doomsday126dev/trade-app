@@ -1716,10 +1716,11 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
 .language-field{display:flex;flex-direction:column;gap:5px;min-width:210px;font-size:11px;font-weight:700;color:var(--muted)}
 .language-field select{min-height:48px;width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:6px;color:var(--text);font:600 14px var(--font);padding:9px 34px 9px 11px}
 .language-settings-panel{display:block}.language-settings-intro{margin-bottom:14px}.language-settings-controls{display:grid;gap:10px;max-width:520px}.language-primary-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(180px,220px);align-items:center;gap:14px;min-width:0}.language-primary-row>span{font-size:13px;font-weight:800;color:var(--text);overflow-wrap:anywhere}.language-primary-row select,.language-override-row select{min-height:48px}.language-follow-copy{padding-left:0}.language-override-toggle{display:grid;grid-template-columns:48px minmax(0,1fr);align-items:center;min-height:48px;gap:8px;color:var(--text);font-size:12px;font-weight:700;cursor:pointer}.language-override-toggle input{width:20px;height:20px;margin:auto;accent-color:var(--accent)}.language-override-help{padding-left:56px}.language-override-row{padding:4px 0 0 56px}.language-override-row[hidden]{display:none}.language-override-row .language-field{max-width:360px}.language-settings-controls small{font-size:11px;line-height:1.45;color:var(--muted);font-weight:500;overflow-wrap:anywhere}
+.account-security-panel{display:block}.account-security-intro{margin-bottom:12px}.account-security-methods{display:grid;border-top:1px solid var(--border)}.account-security-method{display:grid;grid-template-columns:40px minmax(0,1fr) auto;align-items:center;gap:10px;min-height:56px;padding:7px 0;border-bottom:1px solid var(--border);min-width:0}.account-security-provider-icon{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border:1px solid var(--border2);border-radius:50%;font-size:13px;font-weight:900;color:var(--text)}.account-security-copy{display:grid;gap:2px;min-width:0}.account-security-copy strong{font-size:13px;overflow-wrap:anywhere}.account-security-copy span{font-size:11px;line-height:1.4;color:var(--muted);overflow-wrap:anywhere}.account-security-status{display:inline-flex;align-items:center;gap:5px;min-height:32px;color:var(--muted);font-size:11px;font-weight:800;text-align:right}.account-security-status.is-active{color:var(--ok)}.account-security-notice{margin-top:11px;font-size:11px;line-height:1.5;color:var(--muted)}
 .status-badge{display:inline-flex;align-items:center;min-height:32px;padding:5px 9px;border:1px solid var(--border2);border-radius:999px;color:var(--muted);font-size:11px;font-weight:700;text-align:center}
 .ui-state{display:flex;align-items:flex-start;gap:11px;padding:14px;border:1px solid var(--border);border-radius:6px;background:var(--card);min-width:0}.ui-state-icon{font-size:18px;line-height:1.3}.ui-state-copy{flex:1;min-width:0}.ui-state-title{font-weight:800;overflow-wrap:anywhere}.ui-state-detail{margin-top:3px;color:var(--muted);font-size:12px;line-height:1.5}.ui-state-action{min-height:44px;border:1px solid var(--border2);border-radius:6px;background:var(--bg);color:var(--text);font:700 12px var(--font);padding:8px 12px}
 .event-card:focus-visible,.trainer-quick-card:focus-within{border-color:var(--ac2)}
-@media(max-width:600px){.page{padding:12px}.settings-panel{align-items:stretch;flex-direction:column;padding:12px}.language-field{min-width:0}.language-primary-row{grid-template-columns:1fr;gap:6px}.language-override-help,.language-override-row{padding-left:0}.language-override-row .language-field{max-width:none}.status-badge{align-self:flex-start}.add-actions>button,.add-actions .image-btn{min-height:44px}.trainer-quick-name{white-space:normal;overflow-wrap:anywhere}}
+@media(max-width:600px){.page{padding:12px}.settings-panel{align-items:stretch;flex-direction:column;padding:12px}.language-field{min-width:0}.language-primary-row{grid-template-columns:1fr;gap:6px}.language-override-help,.language-override-row{padding-left:0}.language-override-row .language-field{max-width:none}.account-security-method{grid-template-columns:40px minmax(0,1fr)}.account-security-status{grid-column:2;text-align:left;min-height:24px}.status-badge{align-self:flex-start}.add-actions>button,.add-actions .image-btn{min-height:44px}.trainer-quick-name{white-space:normal;overflow-wrap:anywhere}}
 @media(max-width:600px){.settings-overlay{align-items:flex-end;padding:0}.settings-modal{max-width:none;width:100%;max-height:calc(100dvh - env(safe-area-inset-top));margin:auto 0 0;border-radius:14px 14px 0 0;border-bottom:0}.settings-modal-header{padding-top:16px}.settings-modal-body{padding-bottom:calc(20px + env(safe-area-inset-bottom));max-height:calc(100dvh - 88px - env(safe-area-inset-top))}.topbar{padding-inline:10px}.topbar-r{gap:6px}.account-trigger{max-width:150px}.account-trigger #top-un{max-width:84px}.account-popover{position:fixed;top:auto;right:8px;bottom:calc(8px + env(safe-area-inset-bottom));width:calc(100vw - 16px);max-height:calc(100dvh - 24px - env(safe-area-inset-top));overflow-y:auto}.local-settings-trigger span{display:none}}
 @media(max-width:390px){.account-trigger{padding-right:7px}.account-trigger #top-un{display:none}.account-trigger .account-chevron{display:block}.install-btn{display:none!important}}
 @media(max-width:360px){.page{padding-inline:10px}.add-form,.event-card,.trainer-quick-card{padding:10px}.trainer-search-row{grid-template-columns:minmax(0,1fr)}.trainer-search-row .bsave{width:100%}}
@@ -2469,6 +2470,16 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
         <div class="av" id="settings-account-av">?</div>
         <div><span data-i18n="account.signedInAs">Signed in as</span><strong id="settings-account-name">—</strong></div>
       </div>
+      <section class="settings-panel account-security-panel settings-account-only" id="settings-account-security" aria-labelledby="settings-account-security-heading" data-provider-actions="disabled">
+        <div class="account-security-intro"><h2 id="settings-account-security-heading" data-i18n="security.title">Account &amp; Security</h2><p data-i18n="security.description">Your Firebase account ID remains the authority for this trainer profile.</p></div>
+        <div class="account-security-methods" role="list" data-i18n-aria-label="security.methodsLabel" aria-label="Sign-in methods">
+          <div class="account-security-method" role="listitem" data-provider="google"><span class="account-security-provider-icon" aria-hidden="true">G</span><div class="account-security-copy"><strong data-i18n="security.google">Google</strong><span data-i18n="security.futureUnavailable">Provider linking is not available yet.</span></div><span class="account-security-status"><span aria-hidden="true">○</span><span data-i18n="security.notLinked">Not linked</span></span></div>
+          <div class="account-security-method" role="listitem" data-provider="email"><span class="account-security-provider-icon" aria-hidden="true">@</span><div class="account-security-copy"><strong data-i18n="security.email">Email</strong><span data-i18n="security.emailPlanned">Verified email-link migration is planned for a later rollout.</span></div><span class="account-security-status"><span aria-hidden="true">○</span><span data-i18n="security.notLinked">Not linked</span></span></div>
+          <div class="account-security-method" role="listitem" data-provider="discord"><span class="account-security-provider-icon" aria-hidden="true">D</span><div class="account-security-copy"><strong data-i18n="security.discord">Discord</strong><span data-i18n="security.futureUnavailable">Provider linking is not available yet.</span></div><span class="account-security-status"><span aria-hidden="true">○</span><span data-i18n="security.notLinked">Not linked</span></span></div>
+          <div class="account-security-method" role="listitem" data-provider="legacy-pin"><span class="account-security-provider-icon" aria-hidden="true">#</span><div class="account-security-copy"><strong data-i18n="security.legacyPin">Legacy PIN</strong><span data-i18n="security.legacyPinHelp">This remains your active production sign-in method.</span></div><span class="account-security-status is-active"><span aria-hidden="true">✓</span><span data-i18n="security.active">Active</span></span></div>
+        </div>
+        <p class="account-security-notice" role="status" aria-live="polite" data-i18n="security.disabledNotice">No provider linking, unlinking, or migration action is enabled in this release.</p>
+      </section>
       <section class="settings-panel language-settings-panel" aria-labelledby="settings-language-heading">
         <div class="language-settings-intro"><h2 id="settings-language-heading" data-i18n="settings.languageTitle">Language</h2><p data-i18n="settings.languageDescription">Interface language is saved privately on this device.</p></div>
         <div class="language-settings-controls">
@@ -2541,7 +2552,7 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
 <div class="ptr-indicator" id="ptr-indicator" aria-hidden="true">↓</div>
 
 <script>
-window.__POGO_RELEASE_ID='2026-08-05.19';
+window.__POGO_RELEASE_ID='2026-08-05.20';
 window.__pogoBootWatch=setTimeout(function(){
   var visible=['config-pg','login-pg','app'].some(function(id){
     var el=document.getElementById(id);
@@ -2560,59 +2571,60 @@ window.__pogoBootWatch=setTimeout(function(){
   if(err)err.textContent='App scripts did not finish loading. Refresh once; if this stays, send this screenshot.';
 },4000);
 </script>
-<script src="data.js?v=2026-08-05.19"></script>
-<script src="js/domain/priorities.js?v=2026-08-05.19"></script>
-<script src="js/ui/badges.js?v=2026-08-05.19"></script>
-<script src="js/domain/username.js?v=2026-08-05.19"></script>
-<script src="js/domain/priorityValues.js?v=2026-08-05.19"></script>
-<script src="js/domain/scheduleDates.js?v=2026-08-05.19"></script>
-<script src="js/domain/pokemonSearchTerms.js?v=2026-08-05.19"></script>
-<script src="js/domain/pokemonEntryRules.js?v=2026-08-05.19"></script>
-<script src="js/domain/pokemonGoSearchSyntax.js?v=2026-08-05.19"></script>
-<script src="js/domain/searchStrings.js?v=2026-08-05.19"></script>
-<script src="js/ui/stringHtml.js?v=2026-08-05.19"></script>
-<script src="js/domain/scheduleEventRules.js?v=2026-08-05.19"></script>
-<script src="js/domain/scheduleTradeRules.js?v=2026-08-05.19"></script>
-<script src="js/domain/pokemonKeys.js?v=2026-08-05.19"></script>
-<script src="js/domain/spriteSlugs.js?v=2026-08-05.19"></script>
-<script src="js/domain/fuzzyText.js?v=2026-08-05.19"></script>
-<script src="js/domain/autocompleteText.js?v=2026-08-05.19"></script>
-<script src="js/domain/autocompleteMatching.js?v=2026-08-05.19"></script>
-<script src="js/domain/autocompleteRanking.js?v=2026-08-05.19"></script>
-<script src="js/domain/relativeTime.js?v=2026-08-05.19"></script>
-<script src="js/domain/clientRelease.js?v=2026-08-05.19"></script>
-<script src="js/domain/trainerDiscovery.js?v=2026-08-05.19"></script>
-<script src="js/domain/eventPresentation.js?v=2026-08-05.19"></script>
-<script src="js/domain/publicSharePublication.js?v=2026-08-05.19"></script>
-<script src="js/domain/trainerPreferences.js?v=2026-08-05.19"></script>
-<script src="js/domain/trainerPreferenceSync.js?v=2026-08-05.19"></script>
-<script src="js/domain/loginDirectory.js?v=2026-08-05.19"></script>
-<script src="js/utils/textSafety.js?v=2026-08-05.19"></script>
-<script src="js/ui/stringPanels.js?v=2026-08-05.19"></script>
-<script src="js/ui/emptyState.js?v=2026-08-05.19"></script>
-<script src="js/i18n/locales/en.js?v=2026-08-05.19"></script>
-<script src="js/i18n/locales/ja.js?v=2026-08-05.19"></script>
-<script src="js/i18n/locales/es.js?v=2026-08-05.19"></script>
-<script src="js/i18n/locales/de.js?v=2026-08-05.19"></script>
-<script src="js/i18n/pokemonNames/catalog.js?v=2026-08-05.19"></script>
-<script src="js/i18n/pokemonNames/variants.js?v=2026-08-05.19"></script>
-<script src="js/i18n/pokemonNames/core.js?v=2026-08-05.19"></script>
-<script src="js/i18n/eventLabels/currentTitles.js?v=2026-08-05.19"></script>
-<script src="js/i18n/eventLabels/core.js?v=2026-08-05.19"></script>
-<script src="js/i18n/core.js?v=2026-08-05.19"></script>
-<script src="js/services/firebaseClient.js?v=2026-08-05.19"></script>
-<script src="js/data/subscriptionManager.js?v=2026-08-05.19"></script>
-<script src="js/data/listenerLifecycle.js?v=2026-08-05.19"></script>
-<script src="js/data/sessionCacheBoundary.js?v=2026-08-05.19"></script>
-<script src="js/data/firebaseReadRegistry.js?v=2026-08-05.19"></script>
-<script src="js/data/currentUserRepository.js?v=2026-08-05.19"></script>
-<script src="js/data/ownedDataCoordinator.js?v=2026-08-05.19"></script>
-<script src="js/data/publicShareRepository.js?v=2026-08-05.19"></script>
-<script src="js/data/trainerHistoryStore.js?v=2026-08-05.19"></script>
-<script src="js/data/trainerPreferencesRepository.js?v=2026-08-05.19"></script>
-<script src="js/data/trainerPreferenceSyncQueue.js?v=2026-08-05.19"></script>
-<script src="js/domain/cacheAdapters.js?v=2026-08-05.19"></script>
-<script src="js/ui/trainerTagPanel.js?v=2026-08-05.19"></script>
+<script src="data.js?v=2026-08-05.20"></script>
+<script src="js/domain/priorities.js?v=2026-08-05.20"></script>
+<script src="js/ui/badges.js?v=2026-08-05.20"></script>
+<script src="js/domain/username.js?v=2026-08-05.20"></script>
+<script src="js/domain/priorityValues.js?v=2026-08-05.20"></script>
+<script src="js/domain/scheduleDates.js?v=2026-08-05.20"></script>
+<script src="js/domain/pokemonSearchTerms.js?v=2026-08-05.20"></script>
+<script src="js/domain/pokemonEntryRules.js?v=2026-08-05.20"></script>
+<script src="js/domain/pokemonGoSearchSyntax.js?v=2026-08-05.20"></script>
+<script src="js/domain/searchStrings.js?v=2026-08-05.20"></script>
+<script src="js/ui/stringHtml.js?v=2026-08-05.20"></script>
+<script src="js/domain/scheduleEventRules.js?v=2026-08-05.20"></script>
+<script src="js/domain/scheduleTradeRules.js?v=2026-08-05.20"></script>
+<script src="js/domain/pokemonKeys.js?v=2026-08-05.20"></script>
+<script src="js/domain/spriteSlugs.js?v=2026-08-05.20"></script>
+<script src="js/domain/fuzzyText.js?v=2026-08-05.20"></script>
+<script src="js/domain/autocompleteText.js?v=2026-08-05.20"></script>
+<script src="js/domain/autocompleteMatching.js?v=2026-08-05.20"></script>
+<script src="js/domain/autocompleteRanking.js?v=2026-08-05.20"></script>
+<script src="js/domain/relativeTime.js?v=2026-08-05.20"></script>
+<script src="js/domain/clientRelease.js?v=2026-08-05.20"></script>
+<script src="js/domain/trainerDiscovery.js?v=2026-08-05.20"></script>
+<script src="js/domain/eventPresentation.js?v=2026-08-05.20"></script>
+<script src="js/domain/publicSharePublication.js?v=2026-08-05.20"></script>
+<script src="js/domain/trainerPreferences.js?v=2026-08-05.20"></script>
+<script src="js/domain/trainerPreferenceSync.js?v=2026-08-05.20"></script>
+<script src="js/domain/authenticationReadiness.js?v=2026-08-05.20"></script>
+<script src="js/domain/loginDirectory.js?v=2026-08-05.20"></script>
+<script src="js/utils/textSafety.js?v=2026-08-05.20"></script>
+<script src="js/ui/stringPanels.js?v=2026-08-05.20"></script>
+<script src="js/ui/emptyState.js?v=2026-08-05.20"></script>
+<script src="js/i18n/locales/en.js?v=2026-08-05.20"></script>
+<script src="js/i18n/locales/ja.js?v=2026-08-05.20"></script>
+<script src="js/i18n/locales/es.js?v=2026-08-05.20"></script>
+<script src="js/i18n/locales/de.js?v=2026-08-05.20"></script>
+<script src="js/i18n/pokemonNames/catalog.js?v=2026-08-05.20"></script>
+<script src="js/i18n/pokemonNames/variants.js?v=2026-08-05.20"></script>
+<script src="js/i18n/pokemonNames/core.js?v=2026-08-05.20"></script>
+<script src="js/i18n/eventLabels/currentTitles.js?v=2026-08-05.20"></script>
+<script src="js/i18n/eventLabels/core.js?v=2026-08-05.20"></script>
+<script src="js/i18n/core.js?v=2026-08-05.20"></script>
+<script src="js/services/firebaseClient.js?v=2026-08-05.20"></script>
+<script src="js/data/subscriptionManager.js?v=2026-08-05.20"></script>
+<script src="js/data/listenerLifecycle.js?v=2026-08-05.20"></script>
+<script src="js/data/sessionCacheBoundary.js?v=2026-08-05.20"></script>
+<script src="js/data/firebaseReadRegistry.js?v=2026-08-05.20"></script>
+<script src="js/data/currentUserRepository.js?v=2026-08-05.20"></script>
+<script src="js/data/ownedDataCoordinator.js?v=2026-08-05.20"></script>
+<script src="js/data/publicShareRepository.js?v=2026-08-05.20"></script>
+<script src="js/data/trainerHistoryStore.js?v=2026-08-05.20"></script>
+<script src="js/data/trainerPreferencesRepository.js?v=2026-08-05.20"></script>
+<script src="js/data/trainerPreferenceSyncQueue.js?v=2026-08-05.20"></script>
+<script src="js/domain/cacheAdapters.js?v=2026-08-05.20"></script>
+<script src="js/ui/trainerTagPanel.js?v=2026-08-05.20"></script>
 <script>
 let initializeApp,getDatabase,ref,set,get,onValue,update,getAuth,signInWithEmailAndPassword,createUserWithEmailAndPassword,firebaseSignOut,updatePassword,deleteUser,onAuthStateChanged;
 let firebaseSdkPromise=null;
@@ -2693,6 +2705,8 @@ const trainerPreferencesDomain=window.PogoDomain?.trainerPreferences;
 if(!trainerPreferencesDomain||trainerPreferencesDomain.SYNCED_TRAINER_PREFERENCES_ENABLED!==false)throw new Error('Disabled trainer-preference helpers failed to load safely');
 const trainerPreferenceSyncDomain=window.PogoDomain?.trainerPreferenceSync;
 if(!trainerPreferenceSyncDomain||trainerPreferenceSyncDomain.preferenceSyncPresentation({state:'synced'}).state!=='local-only')throw new Error('Disabled trainer-preference sync contract failed to load safely');
+const authenticationReadinessDomain=window.PogoDomain?.authenticationReadiness;
+if(!authenticationReadinessDomain||authenticationReadinessDomain.DURABLE_AUTH_PROVIDERS_ENABLED!==false)throw new Error('Disabled authentication readiness contract failed to load safely');
 const trainerPreferencesRepositoryData=window.PogoData?.trainerPreferencesRepository;
 if(!trainerPreferencesRepositoryData)throw new Error('Trainer-preference repository failed to load');
 const trainerPreferenceSyncQueueData=window.PogoData?.trainerPreferenceSyncQueue;
@@ -4589,6 +4603,8 @@ async function repairMemberAccount(username,opts={}){
   let pinForCopy='';
   if(resetPin){
     if(!isSixDigitPin(resetPin))throw Object.assign(new Error('PIN must be exactly 6 digits'),{code:'repair/bad-pin'});
+    const repairPolicy=authenticationReadinessDomain.legacyRepairDecision({currentUid:String(existing.authUid||''),replacementUid:'replacement-requested'});
+    if(!repairPolicy.allowed)throw Object.assign(new Error('Established Firebase UID cannot be replaced.'),{code:repairPolicy.code});
     const authProvision=await provisionFreshFirebaseAuthForTrainer(username,resetPin,authVersionForUser(existing)+1);
     const nextVersion=authProvision.version;
     const pinHash=await hashPin(resetPin);

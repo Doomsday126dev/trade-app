@@ -130,6 +130,21 @@ test('local preferences stay clearly device-local and expose no enabled sync con
   assert.doesNotMatch(html,/id="settings-(?:sync|save)-preferences"/);
 });
 
+test('Account & Security remains an informational account-only readiness surface',()=>{
+  const start=html.indexOf('id="settings-account-security-heading"');
+  const end=html.indexOf('</section>',start);
+  assert.ok(start>0&&end>start);
+  const panel=html.slice(start,end);
+  assert.match(html,/account-security-panel settings-account-only/);
+  assert.match(panel,/data-provider="google"/);
+  assert.match(panel,/data-provider="email"/);
+  assert.match(panel,/data-provider="discord"/);
+  assert.match(panel,/data-provider="legacy-pin"/);
+  assert.doesNotMatch(panel,/<button|onclick=|href=|data-action=/);
+  assert.match(html,/\.account-security-method\{[^}]*min-height:56px/);
+  assert.match(html,/DURABLE_AUTH_PROVIDERS_ENABLED!==false/);
+});
+
 test('favorite organizer protects dirty drafts and clears stale deleted-tag filters',()=>{
   const opener=html.slice(html.indexOf('function openTrainerOrganizer'),html.indexOf('function closeTrainerOrganizer'));
   const closer=html.slice(html.indexOf('function closeTrainerOrganizer'),html.indexOf('function createLocalTrainerTag'));
