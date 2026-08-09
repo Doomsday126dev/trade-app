@@ -363,6 +363,93 @@ test.describe('visual smoke', () => {
     await expect(page).not.toHaveURL(/#settings/);
   });
 
+  test('Settings section intent survives signed-in boot and refresh while anonymous routes stay bounded',async({page})=>{
+    await page.route('https://www.gstatic.com/firebasejs/**',route=>route.abort());
+    const sections=['profile','language','appearance','security','tools','data'];
+    const establishSignedInBoot=async(username='SettingsBootTrainer')=>{
+      await page.waitForFunction(()=>typeof syncSettingsRoute==='function'&&typeof syncPendingSettingsRouteAfterAuth==='function');
+      await page.evaluate(name=>{
+        cur=name;_authStateKnown=true;
+        document.getElementById('login-pg').style.display='none';
+        document.getElementById('app').style.display='flex';
+        syncPendingSettingsRouteAfterAuth();
+      },username);
+    };
+    const hardReload=async()=>{
+      const session=await page.context().newCDPSession(page);
+      await Promise.all([
+        page.waitForLoadState('domcontentloaded'),
+        session.send('Page.reload',{ignoreCache:true})
+      ]);
+      await session.detach();
+    };
+    for(const section of sections){
+      const route=`#settings/${section}`;
+      await page.setViewportSize({width:1024,height:800});
+      await page.goto(`./?settings-boot=${section}-${Date.now()}${route}`,{waitUntil:'domcontentloaded'});
+      await expect(page).toHaveURL(new RegExp(`${route}$`));
+      await establishSignedInBoot();
+      await expect(page.locator(`[data-settings-section="${section}"]`)).toBeVisible();
+      await expect(page).toHaveURL(new RegExp(`${route}$`));
+      if(section==='appearance'||section==='security'){
+        await hardReload();
+        await establishSignedInBoot();
+        await expect(page.locator(`[data-settings-section="${section}"]`)).toBeVisible();
+        await expect(page).toHaveURL(new RegExp(`${route}$`));
+      }
+
+      await page.reload({waitUntil:'domcontentloaded'});
+      await expect(page).toHaveURL(new RegExp(`${route}$`));
+      await establishSignedInBoot();
+      await expect(page.locator(`[data-settings-section="${section}"]`)).toBeVisible();
+      await expect(page).toHaveURL(new RegExp(`${route}$`));
+    }
+
+    for(const section of ['appearance','security']){
+      const route=`#settings/${section}`;
+      await page.setViewportSize({width:390,height:420});
+      await page.goto(`./?settings-mobile-boot=${section}-${Date.now()}${route}`,{waitUntil:'domcontentloaded'});
+      await establishSignedInBoot('MobileSettingsBootTrainer');
+      await expect(page.locator(`[data-settings-section="${section}"]`)).toBeVisible();
+      await expect(page.locator('#settings-layout')).not.toHaveClass(/mobile-list/);
+      await expect(page).toHaveURL(new RegExp(`${route}$`));
+      await page.reload({waitUntil:'domcontentloaded'});
+      await establishSignedInBoot('MobileSettingsBootTrainer');
+      await expect(page.locator(`[data-settings-section="${section}"]`)).toBeVisible();
+      await expect(page).toHaveURL(new RegExp(`${route}$`));
+      await hardReload();
+      await establishSignedInBoot('MobileSettingsBootTrainer');
+      await expect(page.locator(`[data-settings-section="${section}"]`)).toBeVisible();
+      await expect(page).toHaveURL(new RegExp(`${route}$`));
+    }
+
+    await page.setViewportSize({width:1024,height:800});
+    await page.goto(`./?settings-anonymous=${Date.now()}#settings/appearance`,{waitUntil:'domcontentloaded'});
+    await page.waitForFunction(()=>typeof syncSettingsRoute==='function');
+    await page.evaluate(()=>{cur=null;_authStateKnown=true;syncPendingSettingsRouteAfterAuth();});
+    await expect(page).toHaveURL(/#settings$/);
+    await expect(page.locator('[data-settings-section="language"]')).toBeVisible();
+    await expect(page.locator('.settings-account-only:visible')).toHaveCount(0);
+
+    await page.goto(`./?settings-root=${Date.now()}#settings`,{waitUntil:'domcontentloaded'});
+    await establishSignedInBoot('SettingsRootTrainer');
+    await expect(page).toHaveURL(/#settings(?:\/language)?$/);
+    await expect(page.locator('[data-settings-section="language"]')).toBeVisible();
+
+    await page.goto(`./?settings-invalid=${Date.now()}#settings/not-real`,{waitUntil:'domcontentloaded'});
+    await establishSignedInBoot('SettingsInvalidTrainer');
+    await expect(page).toHaveURL(/#settings(?:\/language)?$/);
+    await expect(page.locator('[data-settings-section="language"]')).toBeVisible();
+
+    await page.goto(`./?settings-logout=${Date.now()}#settings/security`,{waitUntil:'domcontentloaded'});
+    await establishSignedInBoot('SettingsLogoutTrainer');
+    await expect(page.locator('[data-settings-section="security"]')).toBeVisible();
+    await page.evaluate(()=>{auth=null;logout();});
+    await expect(page).not.toHaveURL(/#settings/);
+    await expect(page.locator('#settings-modal')).toBeHidden();
+    await expect(page.locator('#login-pg')).toBeVisible();
+  });
+
   test('Appearance preserves a dark background choice while light mode stays neutral',async({page})=>{
     await page.setViewportSize({width:1024,height:800});
     await page.goto(`./?settings-appearance=${Date.now()}`,{waitUntil:'domcontentloaded'});

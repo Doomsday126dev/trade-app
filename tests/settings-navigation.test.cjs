@@ -23,6 +23,16 @@ test('route parsing handles valid deep links and safely falls back to profile',(
   assert.match(html,/if\(_settingsContext==='account'&&!route\.valid\)\{\s*selectSettingsSection\('profile'/);
 });
 
+test('valid section deep links wait for auth readiness before public normalization',()=>{
+  assert.match(html,/let _pendingSettingsRouteSection=null/);
+  const sync=html.slice(html.indexOf('function syncSettingsRoute'),html.indexOf('function openSettingsTool'));
+  assert.match(sync,/route\.valid&&route\.section&&!_authStateKnown&&!cur/);
+  assert.match(sync,/_pendingSettingsRouteSection=route\.section;\s*return/);
+  assert.match(sync,/function syncPendingSettingsRouteAfterAuth\(\)/);
+  const observer=html.slice(html.indexOf('function bindAuthObserver'),html.indexOf('function waitForAuthState'));
+  assert.match(observer,/_authStateKnown=true;[\s\S]*syncPendingSettingsRouteAfterAuth\(\)/);
+});
+
 test('section changes replace the one Settings history entry and reset content scroll',()=>{
   const selection=html.slice(html.indexOf("function selectSettingsSection(section='profile'"),html.indexOf('function showSettingsSectionList'));
   assert.match(selection,/history\.replaceState\([^\n]+settingsSection:section/);
