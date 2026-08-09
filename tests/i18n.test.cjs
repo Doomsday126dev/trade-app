@@ -66,8 +66,21 @@ test('session ownership warnings use stable translation keys with English fallba
 test('English, Japanese, Spanish, and German expose the same UI key set',()=>{
   const {catalogs}=load();
   const expected=Object.keys(catalogs.en).sort();
-  assert.equal(expected.length,896);
+  assert.equal(expected.length,930);
   for(const locale of ['ja','es','de'])assert.deepEqual(Object.keys(catalogs[locale]).sort(),expected,locale);
+});
+
+test('My List category context is complete and localized',()=>{
+  const {catalogs}=load();
+  const required=[
+    'myList.categories','myList.categoryTabLabel','myList.categoryCount','myList.filteredCategoryCount',
+    'myList.empty.wishlistTitle','myList.empty.dynamaxTitle','myList.empty.gigantamaxTitle','myList.empty.othersTitle',
+    'myList.empty.othersHelp','myList.viewCategory','myList.viewCategoryLabel','strings.categoryTitle','strings.emptyCategoryTitle'
+  ];
+  for(const key of required){
+    for(const locale of ['en','ja','es','de'])assert.ok(String(catalogs[locale][key]||'').trim(),`${locale}:${key}`);
+  }
+  for(const locale of ['ja','es','de'])assert.notEqual(catalogs[locale]['myList.empty.othersHelp'],catalogs.en['myList.empty.othersHelp'],locale);
 });
 
 test('active setup, Admin, profile, import, export, and safety surfaces use catalog keys',()=>{

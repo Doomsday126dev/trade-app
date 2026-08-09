@@ -134,13 +134,20 @@ input,select,textarea{font-family:var(--font);outline:none}
 /* LIST TYPE TABS */
 .list-tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
 .ltab{background:var(--card);border:1px solid var(--border);color:var(--muted);padding:6px 14px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;transition:.15s}
-.ltab.active{background:var(--accent);color:#fff;border-color:transparent}
+.ltab.active{background:var(--accent);color:#fff;border-color:#fff;font-weight:700;box-shadow:0 0 0 2px var(--accent)}
+.mylist-type-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.mylist-type-tabs .ltab{display:flex;align-items:center;justify-content:center;gap:5px;min-width:0;min-height:48px;padding:7px 10px;border-radius:7px;white-space:nowrap}
+.mylist-type-tabs .ltab-marker{display:none;font-weight:800}
+.mylist-type-tabs .ltab.active .ltab-marker{display:inline}
+.mylist-type-tabs .ltab-count{font-variant-numeric:tabular-nums;font-weight:700}
 /* Show full Dynamax/Gigantamax labels by default; swap to Dmax/Gmax on narrow screens so all 4 sub-tabs fit in one row */
 .ltab .ltab-short{display:none}
 @media(max-width:480px){
   .ltab .ltab-full{display:none}
   .ltab .ltab-short{display:inline}
   .ltab{padding:6px 11px;font-size:12px}
+  .mylist-type-tabs{gap:5px}
+  .mylist-type-tabs .ltab{gap:3px;padding:6px 4px;font-size:11px}
   /* Compact community switcher on phone. iOS Safari's native <select>
      widget enforces a minimum width based on the longest <option>
      regardless of CSS max-width, so on phones we strip the native
@@ -326,6 +333,36 @@ input,select,textarea{font-family:var(--font);outline:none}
 .combo-body{display:none;padding:10px 12px;border-top:1px solid var(--border);background:var(--bg)}
 .combo-wrap.open .combo-body{display:flex;flex-direction:column;gap:10px}
 .combo-wrap.open .collapse-icon{transform:rotate(180deg)}
+.mylist-priority-sections{display:flex;flex-direction:column;gap:16px}
+.mylist-priority-section{border-top:2px solid var(--border);padding-top:10px}
+.mylist-priority-section.H{border-top-color:var(--H)}
+.mylist-priority-section.M{border-top-color:var(--M)}
+.mylist-priority-section.L{border-top-color:var(--L)}
+.mylist-priority-heading{display:flex;align-items:center;gap:8px;margin:0 0 9px;font-size:13px;letter-spacing:0;text-transform:none}
+.mylist-priority-heading .priority-count{color:var(--muted);font-weight:600}
+.mylist-search-footer{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px;padding:8px 0 0;border-top:1px solid var(--border)}
+.mylist-search-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.mylist-search-action{min-height:48px}
+.mylist-search-view{background:transparent;border:1px solid var(--border2);color:var(--text);padding:8px 12px;border-radius:var(--r2);font-weight:700;cursor:pointer}
+.mylist-search-view .collapse-icon{display:inline-block;margin-left:5px}
+.mylist-search-view[aria-expanded="true"] .collapse-icon{transform:rotate(180deg)}
+.mylist-search-raw{flex:1 0 100%;margin:0}
+.mylist-search-raw[hidden]{display:none}
+.mylist-search-groups{display:flex;flex-direction:column;gap:16px;margin-top:20px}
+.mylist-search-section{border-top:1px solid var(--border2);padding-top:12px}
+.mylist-search-section>h3{margin:0 0 10px;font-size:15px}
+.mylist-search-option{padding:10px 0;border-bottom:1px solid var(--border)}
+.mylist-search-option:last-child{border-bottom:0}
+.mylist-search-option-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.mylist-search-option-label{font-size:13px;font-weight:750}
+.mylist-search-option .str-meta{margin-left:auto}
+.mylist-search-limit{color:var(--danger);font-size:12px;font-weight:700;flex:1 0 100%}
+.mylist-search-more{margin-top:8px}
+.mylist-search-more-body{display:flex;flex-direction:column}
+.mylist-search-more-body[hidden]{display:none}
+.mylist-split{margin-top:10px;padding:10px;border-left:3px solid var(--M);background:var(--bg);border-radius:0 var(--r2) var(--r2) 0}
+.mylist-split-title{font-weight:750;margin-bottom:4px}
+@media(max-width:430px){.mylist-search-option-head{align-items:flex-start}.mylist-search-option .str-meta{margin-left:0}.mylist-search-actions{width:100%}.mylist-search-actions>*{flex:1 1 auto}}
 
 /* STRINGS PAGE — collapsible */
 .user-str-block{margin-bottom:8px;border:1px solid var(--border);border-radius:var(--r);overflow:hidden;content-visibility:auto;contain-intrinsic-size:0 78px}
@@ -1937,11 +1974,11 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
       <div><strong id="mylist-guidance-title" data-i18n="guidance.myListTitle">Build the list you want to share</strong><span data-i18n="guidance.myListBody">Add Pokémon and priorities here. Sharing is always explicit; Favorites and private tags live under Find Trainer and stay on this device.</span></div>
       <div class="journey-guidance-actions"><button type="button" class="bghost" onclick="switchTab('find')" data-i18n="guidance.findTrainer">Find a trainer</button><button type="button" class="bghost" onclick="switchTab('schedule')" data-i18n="guidance.exploreEvents">Explore Events</button></div>
     </aside>
-    <div class="list-tabs">
-      <button class="ltab active" onclick="setMyList('wishlist')" data-i18n="list.wishlist">Trades</button>
-      <button class="ltab" onclick="setMyList('dynamax')" data-i18n="list.dynamax">Dynamax</button>
-      <button class="ltab" onclick="setMyList('gmax')" data-i18n="list.gigantamax">Gigantamax</button>
-      <button class="ltab" onclick="setMyList('costumes')" data-i18n="list.others">Others</button>
+    <div class="list-tabs mylist-type-tabs" role="tablist" data-i18n-aria-label="myList.categories" aria-label="My List categories">
+      <button class="ltab active" type="button" role="tab" data-mylist-type="wishlist" onclick="setMyList('wishlist')" aria-selected="true"><span class="ltab-marker" aria-hidden="true">✓</span><span class="ltab-label" data-i18n="list.wishlist">Trades</span><span class="ltab-count" data-mylist-count="wishlist">0</span></button>
+      <button class="ltab" type="button" role="tab" data-mylist-type="dynamax" onclick="setMyList('dynamax')" aria-selected="false"><span class="ltab-marker" aria-hidden="true">✓</span><span class="ltab-label"><span class="ltab-full" data-i18n="list.dynamax">Dynamax</span><span class="ltab-short" data-i18n="list.dynamaxShort">Dmax</span></span><span class="ltab-count" data-mylist-count="dynamax">0</span></button>
+      <button class="ltab" type="button" role="tab" data-mylist-type="gmax" onclick="setMyList('gmax')" aria-selected="false"><span class="ltab-marker" aria-hidden="true">✓</span><span class="ltab-label"><span class="ltab-full" data-i18n="list.gigantamax">Gigantamax</span><span class="ltab-short" data-i18n="list.gigantamaxShort">Gmax</span></span><span class="ltab-count" data-mylist-count="gmax">0</span></button>
+      <button class="ltab" type="button" role="tab" data-mylist-type="costumes" onclick="setMyList('costumes')" aria-selected="false"><span class="ltab-marker" aria-hidden="true">✓</span><span class="ltab-label" data-i18n="list.others">Others</span><span class="ltab-count" data-mylist-count="costumes">0</span></button>
     </div>
     <div class="add-form">
       <div class="add-ttl" id="add-ttl" data-i18n="myList.addTitle">Add Pokémon</div>
@@ -2022,7 +2059,7 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
       <input class="app-search-input" type="text" data-i18n-placeholder="myList.filterPlaceholder" data-i18n-aria-label="myList.filterLabel" placeholder="Filter my list…" oninput="renderMyList(this.value)" id="mylist-filter" aria-label="Filter my list">
     </div>
     <div class="sec" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
-      <span><span data-i18n="myList.listTitle">My list</span> <span id="mylist-count" style="font-weight:400;text-transform:none;font-size:11px;margin-left:4px"></span></span>
+      <span id="mylist-category-heading"><span id="mylist-category-name">Trades</span> <span aria-hidden="true">·</span> <span id="mylist-count" style="font-weight:600;text-transform:none;font-size:11px;margin-left:2px"></span></span>
       <span style="font-size:10px;color:var(--muted);display:inline-flex;gap:6px;align-items:center;text-transform:none;letter-spacing:0;font-weight:500">
         <span data-i18n-title="myList.luckyHelp" title="Lucky entries generate a separate search string">⚡ <span data-i18n="myList.lucky">Lucky</span></span>
         <span style="color:var(--border2)">·</span>
@@ -2032,7 +2069,7 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
       </span>
     </div>
     <div id="mylist-out"></div>
-    <div class="sec my-string-heading" style="margin-top:22px"><strong id="my-string-title"></strong><span id="my-string-help"></span></div>
+    <div class="sec my-string-heading" style="margin-top:22px" hidden><strong id="my-string-title"></strong><span id="my-string-help"></span></div>
     <div id="my-strings-out"></div>
   </div>
 
@@ -2557,7 +2594,7 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
 <div class="ptr-indicator" id="ptr-indicator" aria-hidden="true">↓</div>
 
 <script>
-window.__POGO_RELEASE_ID='2026-08-05.24';
+window.__POGO_RELEASE_ID='2026-08-05.25';
 window.__pogoBootWatch=setTimeout(function(){
   var visible=['config-pg','login-pg','app'].some(function(id){
     var el=document.getElementById(id);
@@ -2576,61 +2613,61 @@ window.__pogoBootWatch=setTimeout(function(){
   if(err)err.textContent='App scripts did not finish loading. Refresh once; if this stays, send this screenshot.';
 },4000);
 </script>
-<script src="data.js?v=2026-08-05.24"></script>
-<script src="js/domain/priorities.js?v=2026-08-05.24"></script>
-<script src="js/ui/badges.js?v=2026-08-05.24"></script>
-<script src="js/domain/username.js?v=2026-08-05.24"></script>
-<script src="js/domain/priorityValues.js?v=2026-08-05.24"></script>
-<script src="js/domain/scheduleDates.js?v=2026-08-05.24"></script>
-<script src="js/domain/pokemonSearchTerms.js?v=2026-08-05.24"></script>
-<script src="js/domain/pokemonEntryRules.js?v=2026-08-05.24"></script>
-<script src="js/domain/pokemonGoSearchSyntax.js?v=2026-08-05.24"></script>
-<script src="js/domain/searchStrings.js?v=2026-08-05.24"></script>
-<script src="js/ui/stringHtml.js?v=2026-08-05.24"></script>
-<script src="js/domain/scheduleEventRules.js?v=2026-08-05.24"></script>
-<script src="js/domain/scheduleTradeRules.js?v=2026-08-05.24"></script>
-<script src="js/domain/pokemonKeys.js?v=2026-08-05.24"></script>
-<script src="js/domain/spriteSlugs.js?v=2026-08-05.24"></script>
-<script src="js/domain/fuzzyText.js?v=2026-08-05.24"></script>
-<script src="js/domain/autocompleteText.js?v=2026-08-05.24"></script>
-<script src="js/domain/autocompleteMatching.js?v=2026-08-05.24"></script>
-<script src="js/domain/autocompleteRanking.js?v=2026-08-05.24"></script>
-<script src="js/domain/relativeTime.js?v=2026-08-05.24"></script>
-<script src="js/domain/clientRelease.js?v=2026-08-05.24"></script>
-<script src="js/domain/favoriteCardInteractions.js?v=2026-08-05.24"></script>
-<script src="js/domain/trainerDiscovery.js?v=2026-08-05.24"></script>
-<script src="js/domain/eventPresentation.js?v=2026-08-05.24"></script>
-<script src="js/domain/publicSharePublication.js?v=2026-08-05.24"></script>
-<script src="js/domain/trainerPreferences.js?v=2026-08-05.24"></script>
-<script src="js/domain/trainerPreferenceSync.js?v=2026-08-05.24"></script>
-<script src="js/domain/authenticationReadiness.js?v=2026-08-05.24"></script>
-<script src="js/domain/loginDirectory.js?v=2026-08-05.24"></script>
-<script src="js/utils/textSafety.js?v=2026-08-05.24"></script>
-<script src="js/ui/stringPanels.js?v=2026-08-05.24"></script>
-<script src="js/ui/emptyState.js?v=2026-08-05.24"></script>
-<script src="js/i18n/locales/en.js?v=2026-08-05.24"></script>
-<script src="js/i18n/locales/ja.js?v=2026-08-05.24"></script>
-<script src="js/i18n/locales/es.js?v=2026-08-05.24"></script>
-<script src="js/i18n/locales/de.js?v=2026-08-05.24"></script>
-<script src="js/i18n/pokemonNames/catalog.js?v=2026-08-05.24"></script>
-<script src="js/i18n/pokemonNames/variants.js?v=2026-08-05.24"></script>
-<script src="js/i18n/pokemonNames/core.js?v=2026-08-05.24"></script>
-<script src="js/i18n/eventLabels/currentTitles.js?v=2026-08-05.24"></script>
-<script src="js/i18n/eventLabels/core.js?v=2026-08-05.24"></script>
-<script src="js/i18n/core.js?v=2026-08-05.24"></script>
-<script src="js/services/firebaseClient.js?v=2026-08-05.24"></script>
-<script src="js/data/subscriptionManager.js?v=2026-08-05.24"></script>
-<script src="js/data/listenerLifecycle.js?v=2026-08-05.24"></script>
-<script src="js/data/sessionCacheBoundary.js?v=2026-08-05.24"></script>
-<script src="js/data/firebaseReadRegistry.js?v=2026-08-05.24"></script>
-<script src="js/data/currentUserRepository.js?v=2026-08-05.24"></script>
-<script src="js/data/ownedDataCoordinator.js?v=2026-08-05.24"></script>
-<script src="js/data/publicShareRepository.js?v=2026-08-05.24"></script>
-<script src="js/data/trainerHistoryStore.js?v=2026-08-05.24"></script>
-<script src="js/data/trainerPreferencesRepository.js?v=2026-08-05.24"></script>
-<script src="js/data/trainerPreferenceSyncQueue.js?v=2026-08-05.24"></script>
-<script src="js/domain/cacheAdapters.js?v=2026-08-05.24"></script>
-<script src="js/ui/trainerTagPanel.js?v=2026-08-05.24"></script>
+<script src="data.js?v=2026-08-05.25"></script>
+<script src="js/domain/priorities.js?v=2026-08-05.25"></script>
+<script src="js/ui/badges.js?v=2026-08-05.25"></script>
+<script src="js/domain/username.js?v=2026-08-05.25"></script>
+<script src="js/domain/priorityValues.js?v=2026-08-05.25"></script>
+<script src="js/domain/scheduleDates.js?v=2026-08-05.25"></script>
+<script src="js/domain/pokemonSearchTerms.js?v=2026-08-05.25"></script>
+<script src="js/domain/pokemonEntryRules.js?v=2026-08-05.25"></script>
+<script src="js/domain/pokemonGoSearchSyntax.js?v=2026-08-05.25"></script>
+<script src="js/domain/searchStrings.js?v=2026-08-05.25"></script>
+<script src="js/ui/stringHtml.js?v=2026-08-05.25"></script>
+<script src="js/domain/scheduleEventRules.js?v=2026-08-05.25"></script>
+<script src="js/domain/scheduleTradeRules.js?v=2026-08-05.25"></script>
+<script src="js/domain/pokemonKeys.js?v=2026-08-05.25"></script>
+<script src="js/domain/spriteSlugs.js?v=2026-08-05.25"></script>
+<script src="js/domain/fuzzyText.js?v=2026-08-05.25"></script>
+<script src="js/domain/autocompleteText.js?v=2026-08-05.25"></script>
+<script src="js/domain/autocompleteMatching.js?v=2026-08-05.25"></script>
+<script src="js/domain/autocompleteRanking.js?v=2026-08-05.25"></script>
+<script src="js/domain/relativeTime.js?v=2026-08-05.25"></script>
+<script src="js/domain/clientRelease.js?v=2026-08-05.25"></script>
+<script src="js/domain/favoriteCardInteractions.js?v=2026-08-05.25"></script>
+<script src="js/domain/trainerDiscovery.js?v=2026-08-05.25"></script>
+<script src="js/domain/eventPresentation.js?v=2026-08-05.25"></script>
+<script src="js/domain/publicSharePublication.js?v=2026-08-05.25"></script>
+<script src="js/domain/trainerPreferences.js?v=2026-08-05.25"></script>
+<script src="js/domain/trainerPreferenceSync.js?v=2026-08-05.25"></script>
+<script src="js/domain/authenticationReadiness.js?v=2026-08-05.25"></script>
+<script src="js/domain/loginDirectory.js?v=2026-08-05.25"></script>
+<script src="js/utils/textSafety.js?v=2026-08-05.25"></script>
+<script src="js/ui/stringPanels.js?v=2026-08-05.25"></script>
+<script src="js/ui/emptyState.js?v=2026-08-05.25"></script>
+<script src="js/i18n/locales/en.js?v=2026-08-05.25"></script>
+<script src="js/i18n/locales/ja.js?v=2026-08-05.25"></script>
+<script src="js/i18n/locales/es.js?v=2026-08-05.25"></script>
+<script src="js/i18n/locales/de.js?v=2026-08-05.25"></script>
+<script src="js/i18n/pokemonNames/catalog.js?v=2026-08-05.25"></script>
+<script src="js/i18n/pokemonNames/variants.js?v=2026-08-05.25"></script>
+<script src="js/i18n/pokemonNames/core.js?v=2026-08-05.25"></script>
+<script src="js/i18n/eventLabels/currentTitles.js?v=2026-08-05.25"></script>
+<script src="js/i18n/eventLabels/core.js?v=2026-08-05.25"></script>
+<script src="js/i18n/core.js?v=2026-08-05.25"></script>
+<script src="js/services/firebaseClient.js?v=2026-08-05.25"></script>
+<script src="js/data/subscriptionManager.js?v=2026-08-05.25"></script>
+<script src="js/data/listenerLifecycle.js?v=2026-08-05.25"></script>
+<script src="js/data/sessionCacheBoundary.js?v=2026-08-05.25"></script>
+<script src="js/data/firebaseReadRegistry.js?v=2026-08-05.25"></script>
+<script src="js/data/currentUserRepository.js?v=2026-08-05.25"></script>
+<script src="js/data/ownedDataCoordinator.js?v=2026-08-05.25"></script>
+<script src="js/data/publicShareRepository.js?v=2026-08-05.25"></script>
+<script src="js/data/trainerHistoryStore.js?v=2026-08-05.25"></script>
+<script src="js/data/trainerPreferencesRepository.js?v=2026-08-05.25"></script>
+<script src="js/data/trainerPreferenceSyncQueue.js?v=2026-08-05.25"></script>
+<script src="js/domain/cacheAdapters.js?v=2026-08-05.25"></script>
+<script src="js/ui/trainerTagPanel.js?v=2026-08-05.25"></script>
 <script>
 let initializeApp,getDatabase,ref,set,get,onValue,update,getAuth,signInWithEmailAndPassword,createUserWithEmailAndPassword,firebaseSignOut,updatePassword,deleteUser,onAuthStateChanged;
 let firebaseSdkPromise=null;
@@ -2785,7 +2822,7 @@ const pokemonGoSearchSyntaxDomain=window.PogoDomain?.pokemonGoSearchSyntax;
 if(!pokemonGoSearchSyntaxDomain)throw new Error('Pokémon GO search syntax failed to load');
 const searchStringDomain=window.PogoDomain?.searchStrings;
 if(!searchStringDomain)throw new Error('Search string helpers failed to load');
-const {PREFILTER,POGO_STR_LIMIT,dexStringFromNumbers,stringFromSearchItems,stringParts,searchPartSort,combineStrings,combinedStringOptions,strLenInfo}=searchStringDomain;
+const {PREFILTER,POGO_STR_LIMIT,dexStringFromNumbers,stringFromSearchItems,stringParts,searchPartSort,combineStrings,combinedStringOptions,myListSearchPlan,strLenInfo}=searchStringDomain;
 const stringHtmlUi=window.PogoUi?.stringHtml;
 if(!stringHtmlUi)throw new Error('String HTML helpers failed to load');
 const {strLenHtml,strWarnHtml}=stringHtmlUi;
@@ -2841,6 +2878,7 @@ let selectedTrainerRuntime={username:'',publicData:null};
 let browseFilter='ALL',browseList='wishlist',staleFilter=0;
 let browseFlagFilters={lucky:false,xxl:false,xxs:false,shiny:false};
 let myListType='wishlist',strListType='wishlist';
+let _lastAuthenticatedIdentityUid='';
 let rpinTarget=null;
 let syncQueue={},syncFlushTimer=null;
 let undoStack=null,undoTimer=null;
@@ -3734,6 +3772,10 @@ function bindAuthObserver(){
   if(_authObserverBound||!auth||typeof onAuthStateChanged!=='function')return;
   _authObserverBound=true;
   onAuthStateChanged(auth,user=>{
+    if(user&&_lastAuthenticatedIdentityUid!==user.uid){
+      resetMyListCategoryForAccountBoundary();
+      _lastAuthenticatedIdentityUid=user.uid;
+    }
     _authStateKnown=true;
     _authStateWaiters.splice(0).forEach(fn=>fn(user||null));
     if(!user){
@@ -5955,6 +5997,7 @@ async function doLogin(){
         throw identityError;
       }
       activateOwnedSession(ident.uid,u);
+      if(cur&&cur!==u)resetMyListCategoryForAccountBoundary();
       cur=u;stampSession(u);
       const loginUpdate={...ud,lastSeen:Date.now()};
       if(ident){loginUpdate.authEmail=ident.email;loginUpdate.authUid=ident.uid;}
@@ -5994,6 +6037,7 @@ async function doLogin(){
 function logout(){
   closeAccountMenu(false);
   if(location.hash==='#settings')history.replaceState({},'',settingsRouteUrl(false));
+  resetMyListCategoryForAccountBoundary();
   resetSessionTransientUi('logout');
   resetTrainerOrganizerState();
   trainerHistoryStore=null;
@@ -7042,13 +7086,15 @@ function _renderBrowseInner(){
 }
 
 // ── MY LIST ───────────────────────────────────────────────────
+function resetMyListCategoryForAccountBoundary(){
+  myListType='wishlist';
+  addTray=[];
+}
 function setMyList(t){
   myListType=t;
   addTray=[];
   renderAddTray();
-  document.querySelectorAll('#tab-mylist .list-tabs .ltab').forEach((b,i)=>{
-    b.classList.toggle('active',['wishlist','dynamax','gmax','costumes'][i]===t);
-  });
+  updateMyListCategoryChrome();
   document.getElementById('add-ttl').textContent=i18nCore.t(
     t==='costumes'?'myList.addOther':t==='gmax'?'myList.addGigantamax':t==='dynamax'?'myList.addDynamax':'myList.addTitle'
   );
@@ -7061,6 +7107,24 @@ function setMyList(t){
   document.getElementById('mylist-filter').value='';
   ensureListSubscribed(t);
   buildAcItems();renderMyList();
+}
+
+const MY_LIST_TYPES=['wishlist','dynamax','gmax','costumes'];
+function myListCategoryKey(type){return type==='costumes'?'others':type==='gmax'?'gigantamax':type;}
+function myListCategoryLabel(type){return i18nCore.t(`list.${myListCategoryKey(type)}`);}
+function myListCategoryCount(type){return Object.keys(allData[type]?.[cur]||{}).length;}
+function updateMyListCategoryChrome(){
+  document.querySelectorAll('#tab-mylist .mylist-type-tabs .ltab').forEach(button=>{
+    const type=button.dataset.mylistType,count=myListCategoryCount(type),active=type===myListType;
+    button.classList.toggle('active',active);
+    button.setAttribute('aria-selected',active?'true':'false');
+    button.setAttribute('aria-label',i18nCore.t('myList.categoryTabLabel',{category:myListCategoryLabel(type),count:i18nCore.formatNumber(count)}));
+    const countEl=button.querySelector('[data-mylist-count]');if(countEl)countEl.textContent=i18nCore.formatNumber(count);
+  });
+}
+function populatedMyListAlternative(){
+  return MY_LIST_TYPES.filter(type=>type!==myListType&&myListCategoryCount(type)>0)
+    .sort((a,b)=>(a==='wishlist'?-1:b==='wishlist'?1:myListCategoryCount(b)-myListCategoryCount(a)))[0]||'';
 }
 
 function toggleAddAdvanced(){
@@ -7249,22 +7313,8 @@ function currentListEntries(type=myListType,filterVal=''){
     .sort(priorityFamilySort);
 }
 
-function renderMyList(filterVal){
-  const q=(filterVal??document.getElementById('mylist-filter')?.value??'').toLowerCase();
-  const list=allData[myListType]?.[cur]||{};
-  const el=document.getElementById('mylist-out');if(!el)return;
-  const entries=currentListEntries(myListType,q);
-
-  const count=Object.keys(list).length;
-  const countEl=document.getElementById('mylist-count');
-  if(countEl)countEl.textContent=i18nCore.t(q?'myList.filteredCount':'myList.count',q?{visible:i18nCore.formatNumber(entries.length),total:i18nCore.formatNumber(count)}:{count:i18nCore.formatNumber(count)});
-
-  if(!entries.length){
-    el.innerHTML=q?emptyHtml(i18nCore.t('myList.noMatches'),i18nCore.t('myList.clearFilter')):emptyHtml(i18nCore.t('myList.emptyTitle'),i18nCore.t('myList.emptyHelp'),'📋');
-    renderMyStrings();renderOwnerShareRepublishNotice();return;
-  }
-
-  el.innerHTML=`<div class="mygrid" id="mylist-grid">${entries.map((entry,idx)=>{
+function myListRowsHtml(entries){
+  return entries.map((entry,idx)=>{
     const{name,dn,p,mod,lucky,xxl,xxs,shiny,no}=entry;
     const jsName=escAttr(name.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r?\n/g,' '));
     const jsDn=escAttr(String(dn).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r?\n/g,' '));
@@ -7290,7 +7340,43 @@ function renderMyList(filterVal){
         <button class="rm" onclick="confirmRemove('${jsName}','${jsDn}')" aria-label="${escAttr(i18nCore.t('myList.removeEntry',{name:dn}))}">×</button>
       </div>
     </div>`;
-  }).join('')}</div>`;
+  }).join('');
+}
+function myListPrioritySectionHtml(priority,entries){
+  const label=publicSharePriorityLabel(priority),count=i18nCore.formatNumber(entries.length);
+  return`<section class="mylist-priority-section ${priority}" data-priority-section="${priority}" aria-labelledby="mylist-priority-${priority}">
+    <h3 class="mylist-priority-heading" id="mylist-priority-${priority}"><span class="badge ${priority}"><span class="prio-mark">${priority}</span>${escHtml(label)}</span><span class="priority-count">${escHtml(i18nCore.t('myList.priorityPokemonCount',{count}))}</span></h3>
+    <div class="mygrid">${myListRowsHtml(entries)}</div>
+    <div data-priority-search="${priority}"></div>
+  </section>`;
+}
+function renderMyList(filterVal){
+  const q=(filterVal??document.getElementById('mylist-filter')?.value??'').toLowerCase();
+  const list=allData[myListType]?.[cur]||{};
+  const el=document.getElementById('mylist-out');if(!el)return;
+  const entries=currentListEntries(myListType,q);
+
+  const count=Object.keys(list).length;
+  const category=myListCategoryLabel(myListType);
+  updateMyListCategoryChrome();
+  const categoryName=document.getElementById('mylist-category-name');if(categoryName)categoryName.textContent=category;
+  const countEl=document.getElementById('mylist-count');
+  if(countEl)countEl.textContent=i18nCore.t(q?'myList.filteredCategoryCount':'myList.categoryCount',q?{visible:i18nCore.formatNumber(entries.length),total:i18nCore.formatNumber(count)}:{count:i18nCore.formatNumber(count)});
+
+  if(!entries.length){
+    if(q)el.innerHTML=emptyHtml(i18nCore.t('myList.noMatchesInCategory',{category}),i18nCore.t('myList.clearFilter'));
+    else{
+      const alternative=populatedMyListAlternative(),alternativeCount=alternative?myListCategoryCount(alternative):0;
+      el.innerHTML=emptyHtml(i18nCore.t(`myList.empty.${myListCategoryKey(myListType)}Title`),i18nCore.t(`myList.empty.${myListCategoryKey(myListType)}Help`),'📋')+
+        (alternative?`<div style="display:flex;justify-content:center;margin-top:10px"><button type="button" class="bghost" onclick="setMyList('${alternative}')" aria-label="${escAttr(i18nCore.t('myList.viewCategoryLabel',{category:myListCategoryLabel(alternative),count:i18nCore.formatNumber(alternativeCount)}))}">${escHtml(i18nCore.t('myList.viewCategory',{category:myListCategoryLabel(alternative),count:i18nCore.formatNumber(alternativeCount)}))}</button></div>`:'');
+    }
+    renderMyStrings();renderOwnerShareRepublishNotice();return;
+  }
+
+  const prioritySections=['H','M','L'].filter(priority=>entries.some(entry=>entry.p===priority))
+    .map(priority=>myListPrioritySectionHtml(priority,entries.filter(entry=>entry.p===priority))).join('');
+  const unprioritized=entries.filter(entry=>!entry.p);
+  el.innerHTML=`<div class="mylist-priority-sections">${prioritySections}${unprioritized.length?`<section class="mylist-priority-section" aria-labelledby="mylist-special-entries"><h3 class="mylist-priority-heading" id="mylist-special-entries">${escHtml(i18nCore.t('myList.flaggedWithoutPriority'))}</h3><div class="mygrid">${myListRowsHtml(unprioritized)}</div></section>`:''}</div>`;
   renderMyStrings();
   renderOwnerShareRepublishNotice();
   applyTypeColors();
@@ -8042,11 +8128,64 @@ function buildStrings(type,username){
   return Object.keys(out).length?out:null;
 }
 
+function myListSearchLabel(levels){
+  if(levels.length===3)return i18nCore.t('strings.allPriorities');
+  if(levels.length===1)return publicSharePriorityLabel(levels[0]);
+  return i18nCore.t('share.priorityCombination',{first:publicSharePriorityLabel(levels[0]),second:publicSharePriorityLabel(levels[1])});
+}
+function toggleMyListSearchString(button){
+  const raw=document.getElementById(button.getAttribute('aria-controls'));
+  if(!raw)return;
+  const open=raw.hidden;
+  raw.hidden=!open;
+  button.setAttribute('aria-expanded',String(open));
+  const label=button.querySelector('[data-view-label]');if(label)label.textContent=i18nCore.t(open?'strings.hideString':'strings.viewString');
+}
+function toggleMyListMoreCombinations(button){
+  const body=document.getElementById(button.getAttribute('aria-controls'));
+  if(!body)return;
+  const open=body.hidden;
+  body.hidden=!open;
+  button.setAttribute('aria-expanded',String(open));
+}
+function myListSearchActionHtml(value,label,key,{tooLong=false}={}){
+  const id=`mylist-search-raw-${key}`;
+  return`<div class="mylist-search-actions">
+    ${tooLong?'':`<button class="cpbtn mylist-search-action" type="button" data-copy="${escAttr(value)}" onclick="copyStr(this.dataset.copy,this)" aria-label="${escAttr(i18nCore.t('strings.copyScoped',{label}))}">📋 ${escHtml(i18nCore.t('share.copy'))}</button>`}
+    <button class="mylist-search-view mylist-search-action" type="button" aria-expanded="false" aria-controls="${id}" onclick="toggleMyListSearchString(this)"><span data-view-label>${escHtml(i18nCore.t('strings.viewString'))}</span><span class="collapse-icon" aria-hidden="true">▼</span></button>
+  </div><div class="strbox mylist-search-raw" id="${id}" hidden>${escHtml(value)}</div>`;
+}
+function myListSearchOptionHtml(option,key,{label=myListSearchLabel(option.levels),showLimit=true}={}){
+  return`<div class="mylist-search-option" data-search-option="${key}"><div class="mylist-search-option-head"><span class="mylist-search-option-label">${escHtml(label)}</span>${showLimit?strLenHtml(option.value,{t:i18nCore.t,formatNumber:i18nCore.formatNumber}):''}${option.tooLong?`<div class="mylist-search-limit" role="status">${escHtml(i18nCore.t('strings.tooLongForPokemonGo'))}</div>`:''}${myListSearchActionHtml(option.value,label,key,{tooLong:option.tooLong})}</div></div>`;
+}
 function renderMyStrings(){
   const el=document.getElementById('my-strings-out');if(!el)return;
   const strs=buildStrings(myListType,cur);
-  if(!strs){el.innerHTML=emptyHtml(i18nCore.t('strings.emptyTitle'),i18nCore.t('strings.emptyHelp'),'📋');return;}
-  el.innerHTML=strLevelsHtml(strs,{t:i18nCore.t,formatNumber:i18nCore.formatNumber,priorityLabel:publicSharePriorityLabel,searchLocale:pokemonGoSearchLocale()});
+  document.querySelectorAll('[data-priority-search]').forEach(footer=>{footer.innerHTML='';});
+  if(!strs){el.innerHTML='';return;}
+  ['H','M','L'].forEach(priority=>{
+    const footer=document.querySelector(`[data-priority-search="${priority}"]`);
+    if(!footer||!strs[priority])return;
+    const label=i18nCore.t('strings.prioritySearch',{priority:publicSharePriorityLabel(priority)});
+    const tooLong=strLenInfo(strs[priority]).len>POGO_STR_LIMIT;
+    footer.innerHTML=`<div class="mylist-search-footer"><span class="sr-only">${escHtml(label)}</span>${strLenHtml(strs[priority],{t:i18nCore.t,formatNumber:i18nCore.formatNumber})}${tooLong?`<div class="mylist-search-limit" role="status">${escHtml(i18nCore.t('strings.tooLongForPokemonGo'))}</div>`:''}${myListSearchActionHtml(strs[priority],label,`priority-${priority}`,{tooLong})}</div>`;
+  });
+
+  const plan=myListSearchPlan(strs,{locale:pokemonGoSearchLocale()});
+  const combined=[];
+  if(plan.all){
+    combined.push(myListSearchOptionHtml(plan.all,'all-priorities'));
+    if(plan.all.tooLong&&plan.split.length){
+      combined.push(`<div class="mylist-split"><div class="mylist-split-title">${escHtml(i18nCore.t('strings.suggestedSplit'))}</div><div>${escHtml(i18nCore.t('strings.suggestedSplitHelp'))}</div>${plan.split.map((part,index)=>myListSearchOptionHtml(part,`split-${index}`,{label:myListSearchLabel(part.levels)})).join('')}</div>`);
+    }
+  }
+  if(plan.secondary&&plan.secondary.value!==plan.all?.value)combined.push(myListSearchOptionHtml(plan.secondary,'high-medium'));
+  if(plan.more.length){
+    combined.push(`<div class="mylist-search-more"><button class="combo-toggle" type="button" aria-expanded="false" aria-controls="mylist-more-combinations" onclick="toggleMyListMoreCombinations(this)"><span>${escHtml(i18nCore.t('strings.moreCombinations'))}</span><span class="collapse-icon" aria-hidden="true">▼</span></button><div class="mylist-search-more-body" id="mylist-more-combinations" hidden>${plan.more.map((option,index)=>myListSearchOptionHtml(option,`more-${index}`)).join('')}</div></div>`);
+  }
+  const specialLabels={LUCKY:i18nCore.t('share.luckyDex'),XXL:'XXL',XXS:'XXS'};
+  const specials=plan.specials.map(option=>myListSearchOptionHtml({...option,levels:[]},`special-${option.key}`,{label:specialLabels[option.key]})).join('');
+  el.innerHTML=`<div class="mylist-search-groups">${combined.length?`<section class="mylist-search-section" aria-labelledby="combined-search-title"><h3 id="combined-search-title">${escHtml(i18nCore.t('strings.combinedSearch'))}</h3>${combined.join('')}</section>`:''}${specials?`<section class="mylist-search-section" aria-labelledby="special-search-title"><h3 id="special-search-title">${escHtml(i18nCore.t('strings.specialSearches'))}</h3>${specials}</section>`:''}</div>`;
 }
 async function copyText(str){
   if(navigator.clipboard&&window.isSecureContext){

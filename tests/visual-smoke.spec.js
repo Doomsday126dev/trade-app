@@ -707,6 +707,111 @@ test.describe('visual smoke', () => {
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
   });
 
+  test('My List category counts and empty context remain unmistakable and state-safe',async({page})=>{
+    const viewports=[[320,640],[375,700],[390,420],[390,300],[430,760],[768,800],[1024,800],[1440,900]];
+    for(const [width,height] of viewports){
+      await page.setViewportSize({width,height});
+      await page.goto(`./?my-list-category=${width}-${height}-${Date.now()}`,{waitUntil:'domcontentloaded'});
+      await waitForStableLocalOrganizerStartup(page);
+      await page.evaluate(()=>{
+        cur='CategoryTester';auth={currentUser:{uid:'uid-category-tester'}};
+        allData={users:{CategoryTester:{}},wishlist:{CategoryTester:{}},dynamax:{CategoryTester:{}},gmax:{CategoryTester:{}},costumes:{CategoryTester:{}}};
+        for(let i=0;i<62;i++)allData.wishlist.CategoryTester[`Trade ${i}`]='H';
+        for(let i=0;i<8;i++)allData.dynamax.CategoryTester[`Dmax ${i}`]='M';
+        for(let i=0;i<3;i++)allData.gmax.CategoryTester[`Gmax ${i}`]='L';
+        document.getElementById('login-pg').style.display='none';document.getElementById('app').style.display='flex';
+        setMyList('costumes');
+      });
+      const tabs=page.locator('.mylist-type-tabs');
+      await expect(tabs.locator('[data-mylist-type="wishlist"]')).toHaveAttribute('aria-label',/62/);
+      await expect(tabs.locator('[data-mylist-type="dynamax"]')).toHaveAttribute('aria-label',/8/);
+      await expect(tabs.locator('[data-mylist-type="gmax"]')).toHaveAttribute('aria-label',/3/);
+      await expect(tabs.locator('[data-mylist-type="costumes"]')).toHaveAttribute('aria-selected','true');
+      await expect(tabs.locator('[data-mylist-type="costumes"] .ltab-marker')).toBeVisible();
+      await expect(page.locator('#mylist-category-heading')).toContainText('Others');
+      await expect(page.locator('#mylist-out')).toContainText('No Pokémon in Others');
+      await expect(page.locator('#mylist-out')).toContainText('View Trades (62)');
+      await expect(page.locator('#my-strings-out')).toBeEmpty();
+      await page.locator('#export-menu-btn').click();await page.keyboard.press('Escape');
+      expect(await page.evaluate(()=>myListType)).toBe('costumes');
+      await page.evaluate(()=>changeInterfaceLocale('de'));
+      expect(await page.evaluate(()=>myListType)).toBe('costumes');
+      await expect(tabs.locator('[data-mylist-type="costumes"]')).toHaveAttribute('aria-selected','true');
+      expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
+      await page.evaluate(()=>changeInterfaceLocale('en'));
+    }
+
+    await page.evaluate(()=>{
+      cur='CategoryTester';auth={currentUser:{uid:'uid-category-tester'}};
+      const [first,second]=DB.wishlist.slice(0,2);
+      allData.wishlist.CategoryTester={[first.name]:'H',[second.name]:'M'};
+      window.__categoryFixtureFirst=first.name;setMyList('wishlist');
+    });
+    await expect(page.locator('[data-mylist-count="wishlist"]')).toHaveText('2');
+    const exportState=await page.evaluate(()=>{
+      const before=myListType,create=URL.createObjectURL,revoke=URL.revokeObjectURL,click=HTMLAnchorElement.prototype.click;
+      let created=false;
+      try{
+        URL.createObjectURL=()=>{created=true;return"blob:fixture";};URL.revokeObjectURL=()=>{};HTMLAnchorElement.prototype.click=function(){};
+        exportMyListCSV();
+        return{before,after:myListType,created};
+      }finally{URL.createObjectURL=create;URL.revokeObjectURL=revoke;HTMLAnchorElement.prototype.click=click;}
+    });
+    expect(exportState).toEqual({before:'wishlist',after:'wishlist',created:true});
+    await page.evaluate(()=>{delete allData.wishlist.CategoryTester[window.__categoryFixtureFirst];renderMyList();});
+    await expect(page.locator('[data-mylist-count="wishlist"]')).toHaveText('1');
+  });
+
+  test('My List priority searches remain adjacent, collapsed, localized, and responsive',async({page})=>{
+    const viewports=[[320,640],[375,700],[390,420],[390,300],[430,760],[768,800],[1024,800],[1440,900]];
+    for(const [width,height] of viewports){
+      await page.setViewportSize({width,height});
+      await page.goto(`./?my-list-search-hierarchy=${width}-${height}-${Date.now()}`,{waitUntil:'domcontentloaded'});
+      await waitForStableLocalOrganizerStartup(page);
+      await page.waitForTimeout(350);
+      await page.evaluate(()=>{
+        cur='SearchHierarchyTester';auth={currentUser:{uid:'uid-search-hierarchy'}};
+        const entries=DB.wishlist.filter(entry=>entry.no).slice(0,9);
+        allData={users:{SearchHierarchyTester:{}},wishlist:{SearchHierarchyTester:{}},dynamax:{SearchHierarchyTester:{}},gmax:{SearchHierarchyTester:{}},costumes:{SearchHierarchyTester:{}}};
+        entries.forEach((entry,index)=>{allData.wishlist.SearchHierarchyTester[entry.name]=priValue(index<3?'H':index<6?'M':'L','',index===0,index===1,index===2,false);});
+        document.getElementById('login-pg').style.display='none';document.getElementById('app').style.display='flex';setMyList('wishlist');
+      });
+      for(const priority of ['H','M','L']){
+        const section=page.locator(`[data-priority-section="${priority}"]`);
+        await expect(section).toBeVisible();
+        const footer=section.locator(`[data-priority-search="${priority}"]`);
+        await expect(footer.locator('.cpbtn')).toBeVisible();
+        await expect(footer.locator('.mylist-search-raw')).toBeHidden();
+        const copyBox=await footer.locator('.cpbtn').boundingBox(),viewBox=await footer.locator('.mylist-search-view').boundingBox();
+        expect(copyBox?.height).toBeGreaterThanOrEqual(48);expect(viewBox?.height).toBeGreaterThanOrEqual(48);
+      }
+      await expect(page.locator('[data-search-option="all-priorities"]')).toBeVisible();
+      await expect(page.locator('[data-search-option="high-medium"]')).toBeVisible();
+      await expect(page.locator('#mylist-more-combinations')).toBeHidden();
+      const before=await page.evaluate(()=>({type:myListType,count:Object.keys(allData.wishlist.SearchHierarchyTester).length}));
+      const highView=page.locator('[data-priority-search="H"] .mylist-search-view');
+      await highView.click();await expect(page.locator('#mylist-search-raw-priority-H')).toBeVisible();
+      if(width===320){
+        const exact=await page.locator('#mylist-search-raw-priority-H').textContent();
+        await page.evaluate(()=>{window.__copiedSearch='';copyText=async value=>{window.__copiedSearch=value;};});
+        await page.locator('[data-priority-search="H"] .cpbtn').click();
+        expect(await page.evaluate(()=>window.__copiedSearch)).toBe(exact);
+        const membership=await page.evaluate(()=>Object.keys(allData.wishlist.SearchHierarchyTester).sort());
+        await page.evaluate(()=>changePokemonGoSearchLocale('ja'));
+        expect(await page.evaluate(()=>Object.keys(allData.wishlist.SearchHierarchyTester).sort())).toEqual(membership);
+        await expect(page.locator('[data-priority-search="H"] .mylist-search-raw')).toBeHidden();
+        await page.evaluate(()=>changePokemonGoSearchLocale('en'));
+      }else await highView.click();
+      await expect(page.locator('#mylist-search-raw-priority-H')).toBeHidden();
+      expect(await page.evaluate(()=>({type:myListType,count:Object.keys(allData.wishlist.SearchHierarchyTester).length}))).toEqual(before);
+      for(const locale of ['ja','de']){
+        await page.evaluate(value=>changeInterfaceLocale(value),locale);
+        await expect(page.locator('[data-priority-search="H"] .cpbtn')).toBeVisible();
+        expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
+      }
+    }
+  });
+
   test('translated active UI has no horizontal overflow at representative widths',async({page})=>{
     const viewports=[[320,640],[375,700],[390,700],[430,760],[768,800],[1024,800],[1440,900],[390,420],[390,300]];
     for(const [width,height] of viewports){

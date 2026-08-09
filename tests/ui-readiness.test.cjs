@@ -14,7 +14,7 @@ function emptyState(){
 }
 
 test('active login, navigation, My List, and Settings controls use translation hooks',()=>{
-  for(const key of ['login.subtitle','login.username','login.pin','login.signIn','login.trouble','login.requestAccess','app.mainSections','myList.addTitle','myList.searchPlaceholder','myList.listTitle','settings.languageTitle','settings.sectionTools','settings.sectionData']){
+  for(const key of ['login.subtitle','login.username','login.pin','login.signIn','login.trouble','login.requestAccess','app.mainSections','myList.addTitle','myList.searchPlaceholder','myList.categories','settings.languageTitle','settings.sectionTools','settings.sectionData']){
     assert.match(html,new RegExp(`data-i18n(?:-[a-z-]+)?="${key.replaceAll('.','\\.')}"`),key);
   }
   assert.match(html,/function applyTranslationAttributes\(root=document\)/);
