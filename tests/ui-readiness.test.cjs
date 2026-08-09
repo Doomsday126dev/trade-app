@@ -59,7 +59,8 @@ test('account and Settings controls expose 48px minimum touch targets',()=>{
 test('favorite organizer trigger and sheet controls expose 48px touch targets',()=>{
   assert.match(html,/\.trainer-icon-btn\{width:48px;height:48px/);
   assert.match(html,/\.organizer-close\{width:48px;height:48px;min-width:48px/);
-  assert.match(html,/\.organizer-tag-row button,\.organizer-add-tag button,\.organizer-new-tag-toggle\{min-height:48px/);
+  assert.match(html,/\.organizer-add-tag button,\.organizer-new-tag-toggle\{min-height:48px/);
+  assert.match(html,/\.favorite-card-add-tag,\.favorite-card-more\{width:48px;height:48px/);
   assert.match(html,/\.organizer-body\{[^}]*overflow-y:auto/);
   assert.match(html,/padding-bottom:calc\(20px \+ env\(safe-area-inset-bottom\)\)/);
 });

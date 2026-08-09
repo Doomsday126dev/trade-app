@@ -39,7 +39,8 @@ test('Favorite UI uses one compact tag organizer and makes removal destructive',
   assert.match(html,/openTrainerOrganizer\(username\)/);
   assert.doesNotMatch(html,/organizer-note|favorite-note-indicator|organizer\.hasPrivateNote/);
   assert.match(html,/function removeTrainerFavorite[\s\S]*organizer\.removeConfirm/);
-  assert.match(html,/class="favorite-card-action danger"/);
+  assert.match(html,/class="favorite-card-menu" role="menu" hidden/);
+  assert.match(html,/role="menuitem" class="danger" onclick="removeTrainerFavorite/);
 });
 
 test('inline tag creation selects new or normalized-existing tags and has scoped keyboard behavior',()=>{
@@ -78,7 +79,7 @@ test('responsive contracts retain 48px targets, wrapping, and no parallel organi
 });
 
 test('release and safety boundaries remain coherent',()=>{
-  assert.match(html,/2026-08-05\.22/);assert.doesNotMatch(html,/2026-08-05\.21/);
+  assert.match(html,/2026-08-05\.23/);assert.doesNotMatch(html,/2026-08-05\.22/);
   assert.match(readFileSync(path.join(root,'js/domain/shareVisibility.js'),'utf8'),/SHARE_VISIBILITY_MODEL_ENABLED\s*:\s*false/);assert.match(html,/SYNCED_TRAINER_PREFERENCES_ENABLED!==false/);
   assert.doesNotMatch(html,/managedTrainerPreferencesRepository\.(?:mutate|write|save)/);
 });

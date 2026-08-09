@@ -653,6 +653,37 @@ test.describe('visual smoke', () => {
     await expect(modal).toBeHidden();
   });
 
+  test('Favorite cards keep swipe optional and align with trainer search at compact widths',async({page})=>{
+    for(const width of [320,390,430]){
+      await page.setViewportSize({width,height:700});
+      await page.goto(`./?favorite-card-prototype=${width}-${Date.now()}`,{waitUntil:'domcontentloaded'});
+      await waitForStableLocalOrganizerStartup(page);
+      await installLocalOrganizerFixture(page);
+      await page.evaluate(async()=>{
+        document.querySelectorAll('.page').forEach(page=>page.classList.remove('active'));
+        document.getElementById('tab-find').classList.add('active');
+        managedPublicShareRepository=null;
+        await renderTrainerQuickLists();
+      });
+      const search=page.locator('.trainer-search-shell'),favoritesSearch=page.locator('.favorite-toolbar-search'),card=page.locator('.favorite-card-shell').first();
+      await expect(card).toBeVisible();
+      const searchBox=await search.boundingBox(),favoriteSearchBox=await favoritesSearch.boundingBox();
+      expect(Math.abs((searchBox?.width||0)-(favoriteSearchBox?.width||0))).toBeLessThanOrEqual(1);
+      await expect(card.locator('.favorite-card-add-tag')).toBeVisible();
+      await expect(card.locator('.favorite-card-more')).toBeVisible();
+      await expect(card).not.toContainText('Organize tags');
+      const addBox=await card.locator('.favorite-card-add-tag').boundingBox(),moreBox=await card.locator('.favorite-card-more').boundingBox();
+      expect(addBox?.width).toBeGreaterThanOrEqual(48);expect(addBox?.height).toBeGreaterThanOrEqual(48);
+      expect(moreBox?.width).toBeGreaterThanOrEqual(48);expect(moreBox?.height).toBeGreaterThanOrEqual(48);
+      await card.locator('.favorite-card-more').click();
+      await expect(card.locator('.favorite-card-menu')).toBeVisible();
+      await page.keyboard.press('Escape');
+      await expect(card.locator('.favorite-card-menu')).toBeHidden();
+      await expect(card.locator('.favorite-card-more')).toBeFocused();
+      expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
+    }
+  });
+
   test('translated active UI has no horizontal overflow at representative widths',async({page})=>{
     const viewports=[[320,640],[375,700],[390,700],[430,760],[768,800],[1024,800],[1440,900],[390,420],[390,300]];
     for(const [width,height] of viewports){

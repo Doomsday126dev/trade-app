@@ -1291,7 +1291,7 @@ html[data-theme="light"] .have-mirror-badge,html[data-theme="light"] .have-mirro
 .sched-event-chip-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:320px}
 .sched-event-bonus{display:inline-flex;align-items:center;background:rgba(16,185,129,.16);color:var(--ok);border:1px solid rgba(16,185,129,.32);padding:1px 6px;border-radius:999px;font-size:10px;font-weight:800}
 .sched-event-chip-link{color:var(--muted);font-size:11px}
-.trainer-search-shell{position:relative;max-width:520px;overflow:visible;margin-top:12px}
+.trainer-discovery-content{width:min(100%,760px);max-width:760px}.trainer-search-shell{position:relative;width:100%;max-width:none;overflow:visible;margin-top:12px}
 .trainer-search-row{display:block}
 .trainer-combobox{position:relative;flex:1;min-width:0}
 .trainer-combobox input{padding-right:48px}.trainer-search-clear{position:absolute;right:0;top:0;width:48px;height:48px;border:0;background:transparent;color:var(--muted);font-size:18px;cursor:pointer}.trainer-search-clear[hidden]{display:none}.trainer-search-status{min-height:18px;font-size:11px;color:var(--muted);margin-top:6px;padding-inline:2px}.trainer-search-guidance{font-size:12px;color:var(--muted);line-height:1.45;max-width:680px;margin-top:4px}
@@ -1301,11 +1301,12 @@ html[data-theme="light"] .have-mirror-badge,html[data-theme="light"] .have-mirro
 .trainer-suggestion{width:100%;border:0;border-bottom:1px solid var(--border);background:transparent;color:var(--text);padding:11px 13px;text-align:left;font:600 13px var(--font);cursor:pointer;min-height:44px;overflow-wrap:anywhere}
 .trainer-suggestion:last-child{border-bottom:0}.trainer-suggestion:hover,.trainer-suggestion.active{background:var(--bg2);outline:none}.trainer-suggestion mark{background:rgba(168,139,250,.22);color:var(--ac2);border-radius:2px;padding:0 1px}
 .trainer-quick-section{margin-top:18px}.trainer-quick-heading{font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;margin-bottom:8px}
-.trainer-quick-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:9px}
+.trainer-quick-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:9px}
 .trainer-quick-card{border:1px solid var(--border);background:var(--card);border-radius:6px;padding:11px;display:flex;gap:9px;align-items:center;min-width:0}
 .trainer-quick-main{flex:1;min-width:0}.trainer-quick-name{font-weight:750;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.trainer-quick-meta{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.4}.trainer-change-counts{font-size:11px;color:var(--ac2);margin-top:4px}.trainer-unread{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--accent);margin-right:5px}
 .trainer-quick-actions{display:flex;gap:5px}.trainer-icon-btn{width:48px;height:48px;min-width:48px;min-height:48px;border:1px solid var(--border2);border-radius:6px;background:var(--bg);color:var(--text);cursor:pointer;font-size:16px}.trainer-icon-btn:hover{border-color:var(--accent)}
-.favorite-toolbar{display:grid;grid-template-columns:minmax(180px,520px) auto;gap:8px;margin-bottom:10px}.favorite-toolbar-search{position:relative}.favorite-filter-tags,.favorite-card-tags,.organizer-tag-list{display:flex;flex-wrap:wrap;gap:6px}.favorite-filter-tags{grid-column:1/-1}.favorite-filter-chip,.favorite-card-tag{max-width:100%;border:1px solid var(--border2);border-radius:999px;background:var(--bg);color:var(--muted);font:700 11px var(--font);padding:6px 9px;overflow-wrap:anywhere}.favorite-filter-chip{cursor:pointer;min-height:40px}.favorite-filter-chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}.favorite-card-tags{margin-top:7px}.favorite-card-tag{padding:3px 7px;color:var(--ac2)}.favorite-empty{border:1px dashed var(--border2);border-radius:6px;padding:18px;color:var(--muted);font-size:12px}.favorite-card-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.favorite-card-action{min-height:44px;padding:8px 11px;border:1px solid var(--border2);border-radius:6px;background:var(--bg);color:var(--text);font:650 11px var(--font);cursor:pointer}.favorite-card-action.primary{background:var(--accent);border-color:var(--accent);color:#fff}.favorite-card-action.danger{color:var(--danger)}.favorite-saved-prompt{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:480;display:flex;align-items:center;gap:10px;max-width:calc(100vw - 24px);padding:10px 12px;border:1px solid var(--border2);border-radius:6px;background:var(--card);box-shadow:var(--shadow)}.favorite-saved-prompt[hidden]{display:none}.favorite-saved-prompt span{font-size:12px}.favorite-saved-prompt button{min-height:48px}.organizer-modal{max-width:460px;padding:0;overflow:hidden;display:flex;flex-direction:column}.organizer-header{display:flex;justify-content:space-between;gap:12px;padding:18px 20px 13px;border-bottom:1px solid var(--border)}.organizer-header h2{font-size:18px;margin:0}.organizer-header p{font-size:11px;color:var(--muted);margin-top:4px}.organizer-close{width:48px;height:48px;min-width:48px;flex:0 0 48px;border:1px solid var(--border2);border-radius:50%;background:transparent;color:var(--text);font-size:22px}.organizer-body{padding:16px 20px 20px;overflow-y:auto;overscroll-behavior:contain}.organizer-section{padding:14px 0;border-bottom:1px solid var(--border)}.organizer-section:last-child{border-bottom:0}.organizer-section h3{font-size:13px;margin:0 0 5px}.organizer-help{font-size:11px;color:var(--muted);line-height:1.45;margin-bottom:10px}.organizer-assignment{display:flex;flex-wrap:wrap;gap:7px}.organizer-check{display:inline-flex;align-items:center;gap:7px;min-height:48px;max-width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:999px;cursor:pointer}.organizer-check:has(input:checked){background:rgba(108,99,255,.16);border-color:var(--accent)}.organizer-check input{width:18px;height:18px}.organizer-check span{overflow-wrap:anywhere}.organizer-tag-row{display:grid;grid-template-columns:minmax(0,1fr) 48px 48px;gap:6px;width:100%}.organizer-tag-row input{min-width:0}.organizer-tag-row button,.organizer-add-tag button,.organizer-new-tag-toggle{min-height:48px}.organizer-add-tag{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;margin-top:9px}.organizer-add-tag[hidden]{display:none}.organizer-new-tag-toggle{margin-top:9px}.organizer-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;padding-top:14px}.organizer-actions button{min-width:88px;min-height:48px}.organizer-status{min-height:18px;font-size:11px;color:var(--muted);margin-top:8px}.organizer-manage-details summary{min-height:48px;display:flex;align-items:center;cursor:pointer;font-size:12px;font-weight:700}
+.favorite-toolbar{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;margin-bottom:10px}.favorite-toolbar:has(>.bghost){grid-template-columns:minmax(0,1fr) auto}.favorite-toolbar-search{position:relative}.favorite-filter-tags,.favorite-card-tags,.organizer-tag-list{display:flex;flex-wrap:wrap;gap:6px}.favorite-filter-tags{grid-column:1/-1}.favorite-filter-chip,.favorite-card-tag{max-width:100%;border:1px solid var(--border2);border-radius:999px;background:var(--bg);color:var(--muted);font:700 11px var(--font);padding:6px 9px;overflow-wrap:anywhere}.favorite-filter-chip{cursor:pointer;min-height:40px}.favorite-filter-chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}.favorite-card-shell{position:relative;overflow:hidden;border:1px solid var(--border);border-radius:6px;background:var(--bg2);min-width:0}.favorite-card-rail{position:absolute;inset:0 0 0 auto;width:116px;display:flex;align-items:stretch;justify-content:flex-end}.favorite-card-rail button{width:58px;min-width:58px;border:0;border-left:1px solid var(--border);background:var(--bg2);color:var(--text);font:800 11px var(--font);cursor:pointer}.favorite-card-rail button:hover,.favorite-card-rail button:focus-visible{background:var(--accent);color:#fff}.favorite-card-surface{position:relative;z-index:1;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;min-height:100%;padding:12px;background:var(--card);touch-action:pan-y;transform:translateX(0);transition:transform .18s ease}.favorite-card-shell.swipe-open .favorite-card-surface{transform:translateX(-116px)}.favorite-card-tags{margin-top:8px}.favorite-card-tag{display:inline-flex;align-items:center;min-height:48px;padding:7px 10px;color:var(--ac2);cursor:pointer}.favorite-card-tag[aria-pressed="true"]{background:rgba(108,99,255,.16);border-color:var(--accent)}.favorite-card-add-tag,.favorite-card-more{width:48px;height:48px;min-width:48px;border:1px solid var(--border2);border-radius:999px;background:var(--bg);color:var(--text);font:800 18px var(--font);cursor:pointer}.favorite-card-footer{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:3px}.favorite-card-open{min-height:48px;padding:8px 2px;border:0;background:transparent;color:var(--ac2);font:750 12px var(--font);cursor:pointer}.favorite-card-menu{position:absolute;z-index:5;right:10px;bottom:62px;display:grid;min-width:190px;padding:5px;border:1px solid var(--border2);border-radius:6px;background:var(--card);box-shadow:var(--shadow)}.favorite-card-menu[hidden]{display:none}.favorite-card-menu button{min-height:48px;padding:9px 11px;border:0;border-radius:4px;background:transparent;color:var(--text);font:700 12px var(--font);text-align:left;cursor:pointer}.favorite-card-menu button:hover,.favorite-card-menu button:focus-visible{background:var(--bg2)}.favorite-card-menu .danger{color:var(--danger)}.favorite-empty{border:1px dashed var(--border2);border-radius:6px;padding:18px;color:var(--muted);font-size:12px}.favorite-saved-prompt{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:480;display:flex;align-items:center;gap:10px;max-width:calc(100vw - 24px);padding:10px 12px;border:1px solid var(--border2);border-radius:6px;background:var(--card);box-shadow:var(--shadow)}.favorite-saved-prompt[hidden]{display:none}.favorite-saved-prompt span{font-size:12px}.favorite-saved-prompt button{min-height:48px}.organizer-modal{max-width:460px;padding:0;overflow:hidden;display:flex;flex-direction:column}.organizer-header{display:flex;justify-content:space-between;gap:12px;padding:18px 20px 13px;border-bottom:1px solid var(--border)}.organizer-header h2{font-size:18px;margin:0}.organizer-header p{font-size:11px;color:var(--muted);margin-top:4px}.organizer-close{width:48px;height:48px;min-width:48px;flex:0 0 48px;border:1px solid var(--border2);border-radius:50%;background:transparent;color:var(--text);font-size:22px}.organizer-body{padding:16px 20px 20px;overflow-y:auto;overscroll-behavior:contain}.organizer-section{padding:14px 0;border-bottom:1px solid var(--border)}.organizer-section:last-child{border-bottom:0}.organizer-section h3{font-size:13px;margin:0 0 5px}.organizer-help{font-size:11px;color:var(--muted);line-height:1.45;margin-bottom:10px}.organizer-assignment{display:flex;flex-wrap:wrap;gap:7px}.organizer-check{display:inline-flex;align-items:center;gap:7px;min-height:48px;max-width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:999px;cursor:pointer}.organizer-check:has(input:checked){background:rgba(108,99,255,.16);border-color:var(--accent)}.organizer-check input{width:18px;height:18px}.organizer-check span{overflow-wrap:anywhere}.organizer-add-tag{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;margin-top:9px}.organizer-add-tag[hidden]{display:none}.organizer-new-tag-toggle{margin-top:9px}.organizer-tag-row,.organizer-manage-details{display:none}.organizer-tag-row input{min-width:0}.organizer-add-tag button,.organizer-new-tag-toggle{min-height:48px}.organizer-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;padding-top:14px}.organizer-actions button{min-width:88px;min-height:48px}.organizer-status{min-height:18px;font-size:11px;color:var(--muted);margin-top:8px}
+@media(prefers-reduced-motion:reduce){.favorite-card-surface{transition:none}}
 .trainer-sync-status{display:flex;align-items:flex-start;gap:9px;min-width:0;margin-top:10px;padding:10px 11px;border:1px solid var(--border);border-radius:var(--r2);background:var(--bg)}.trainer-sync-status-icon{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;flex:0 0 24px;color:var(--ac2);font-weight:800}.trainer-sync-status-copy{min-width:0}.trainer-sync-status-copy strong{display:block;font-size:12px;line-height:1.35;overflow-wrap:anywhere}.trainer-sync-status-copy span{display:block;margin-top:2px;color:var(--muted);font-size:11px;line-height:1.45;overflow-wrap:anywhere}.trainer-sync-status-detail{max-width:100%;overflow-wrap:anywhere}
 .favorite-detail{grid-column:1/-1;border-top:1px solid var(--border);padding-top:8px;margin-top:4px;font-size:11px;color:var(--muted)}
 .favorite-detail summary{cursor:pointer;font-weight:700;color:var(--text)}
@@ -1317,7 +1318,7 @@ html[data-theme="light"] .have-mirror-badge,html[data-theme="light"] .have-mirro
 .event-group{margin-bottom:24px}.event-group-title{font-size:15px;font-weight:850;margin-bottom:10px}.event-group[data-group="now"] .event-group-title{color:var(--ok)}.event-card-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.event-card{border:1px solid var(--border);border-left:3px solid var(--accent);background:var(--card);border-radius:6px;padding:13px;display:flex;flex-direction:column;gap:8px;min-width:0}.event-card.is-active{border-left-color:var(--ok);background:color-mix(in srgb,var(--card) 94%,var(--ok))}.event-card-title{font-size:14px;font-weight:800;line-height:1.3;overflow-wrap:anywhere}.event-card-time{font-size:12px;color:var(--text);font-weight:750;line-height:1.45}.event-type-tag{align-self:flex-start;border-radius:999px;padding:3px 7px;background:var(--bg2);border:1px solid var(--border2);font-size:10px;font-weight:800;color:var(--ac2)}.event-card-bonuses{display:flex;flex-wrap:wrap;gap:5px}.event-card-bonuses span{max-width:100%;padding:3px 6px;border-radius:4px;background:var(--bg2);color:var(--muted);font-size:10px;overflow-wrap:anywhere}.event-card-details{display:inline-flex;align-items:center;min-height:48px;font-size:12px;font-weight:750;color:var(--ac2);text-decoration:none;margin-top:auto;align-self:flex-start}
 .conflict-notice{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:500;width:min(520px,calc(100vw - 24px));padding:15px;background:var(--card);border:1px solid var(--warn);border-radius:8px;box-shadow:var(--shadow)}.conflict-notice h2{font-size:15px;margin:0 0 5px}.conflict-notice p{font-size:12px;color:var(--muted);line-height:1.5;margin:0 0 9px}.conflict-preview{max-height:150px;overflow:auto;font-size:11px}.conflict-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:10px}.conflict-actions button{min-height:48px}
 @media(max-width:900px){.event-card-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:600px){#tab-find{overflow:visible}.journey-guidance{flex-direction:column}.journey-guidance-actions{width:100%}.journey-guidance-actions button{flex:1 1 140px}.trainer-search-shell,.favorite-toolbar-search{width:100%;max-width:none}.trainer-search-shell.suggestions-open{z-index:330}.trainer-suggestion{min-height:48px;font-size:14px}.trainer-quick-grid,.event-card-grid{grid-template-columns:1fr}.trainer-quick-card{padding:10px;align-items:flex-start;flex-direction:column}.trainer-quick-actions,.favorite-card-actions{width:100%;justify-content:flex-start}.favorite-card-action{flex:1 1 auto;min-height:48px}.event-card{padding:12px}.my-string-heading{align-items:flex-start}.favorite-toolbar{grid-template-columns:1fr auto}.favorite-filter-tags{grid-column:1/-1}.organizer-overlay{align-items:flex-end;padding:0}.organizer-modal{width:100%;max-width:none;max-height:calc(100dvh - env(safe-area-inset-top));margin:auto 0 0;border-radius:14px 14px 0 0;border-bottom:0}.organizer-body{max-height:calc(100dvh - 82px - env(safe-area-inset-top));padding-bottom:calc(20px + env(safe-area-inset-bottom))}.organizer-add-tag{grid-template-columns:minmax(0,1fr) auto}.organizer-add-tag button{min-width:72px}}
+@media(max-width:600px){#tab-find{overflow:visible}.journey-guidance{flex-direction:column}.journey-guidance-actions{width:100%}.journey-guidance-actions button{flex:1 1 140px}.trainer-discovery-content,.trainer-search-shell,.favorite-toolbar-search{width:100%;max-width:none}.trainer-search-shell.suggestions-open{z-index:330}.trainer-suggestion{min-height:48px;font-size:14px}.trainer-quick-grid,.event-card-grid{grid-template-columns:1fr}.trainer-quick-card{padding:10px;align-items:flex-start;flex-direction:column}.trainer-quick-actions{width:100%;justify-content:flex-start}.favorite-card-surface{grid-template-columns:minmax(0,1fr) auto}.event-card{padding:12px}.my-string-heading{align-items:flex-start}.favorite-toolbar{grid-template-columns:1fr}.favorite-toolbar:has(>.bghost){grid-template-columns:minmax(0,1fr) auto}.favorite-filter-tags{grid-column:1/-1}.organizer-overlay{align-items:flex-end;padding:0}.organizer-modal{width:100%;max-width:none;max-height:calc(100dvh - env(safe-area-inset-top));margin:auto 0 0;border-radius:14px 14px 0 0;border-bottom:0}.organizer-body{max-height:calc(100dvh - 82px - env(safe-area-inset-top));padding-bottom:calc(20px + env(safe-area-inset-bottom))}.organizer-add-tag{grid-template-columns:minmax(0,1fr) auto}.organizer-add-tag button{min-width:72px}}
 .owner-share-notice{display:none;margin:10px 0 2px;padding:12px;border:1px solid rgba(245,158,11,.38);border-radius:6px;background:rgba(245,158,11,.08)}
 .owner-share-notice.visible{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap}.owner-share-notice-copy{flex:1;min-width:210px}.owner-share-notice-title{font-weight:800;font-size:13px}.owner-share-notice-body{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.5}.owner-share-notice button{min-height:44px}
 .sched-manual-bonus{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--bg);border:1px dashed var(--border2);border-radius:var(--r2);margin-bottom:10px;font-size:12px;flex-wrap:wrap}
@@ -1892,6 +1893,7 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
       <div class="have-title" id="find-trainer-title"></div>
       <div class="have-subtitle" id="find-trainer-description"></div>
     </div>
+    <div class="trainer-discovery-content">
     <p class="trainer-search-guidance" id="find-guidance-title" data-i18n="guidance.findBody">Open a trainer's shared list, then Favorite them for quick return. Private tags stay on this device; sync is not active.</p>
     <div class="trainer-search-shell">
       <div class="trainer-search-row">
@@ -1914,6 +1916,7 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
     <div id="favorite-trainers" class="trainer-quick-section"></div>
     <div id="recent-trainers" class="trainer-quick-section"></div>
     <div id="trainer-history-note" style="display:none;font-size:11px;color:var(--muted);margin-top:12px"></div>
+    </div>
   </div>
 
   <div class="favorite-saved-prompt" id="favorite-saved-prompt" role="status" aria-live="polite" hidden><span id="favorite-saved-message"></span><button type="button" class="bpri" id="favorite-saved-organize" data-i18n="organizer.addTags">Add tags</button></div>
@@ -2443,7 +2446,6 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
         <h3 id="organizer-new-tag-heading" data-i18n="organizer.tags">Tags</h3>
         <button type="button" class="bghost organizer-new-tag-toggle" id="organizer-new-tag-toggle" onclick="showTrainerTagCreator()" data-i18n="organizer.newTagAction">+ New tag</button>
         <div class="organizer-add-tag" id="organizer-add-tag-row" hidden><input class="app-field" id="organizer-new-tag" maxlength="40" data-i18n-placeholder="organizer.addTagPlaceholder" data-i18n-aria-label="organizer.newTag" placeholder="New tag" aria-label="New tag" onkeydown="trainerTagInputKeydown(event)"><button class="bghost" onclick="createLocalTrainerTag()" data-i18n="organizer.addTag">Add</button></div>
-        <details class="organizer-manage-details"><summary data-i18n="organizer.manageTags">Manage tags</summary><p class="organizer-help" data-i18n="organizer.manageTagsHelp">Tag names are private and can be changed without changing trainer data.</p><div class="organizer-tag-list" id="organizer-tag-manager"></div></details>
       </section>
       <div class="organizer-status" id="organizer-status" role="status" aria-live="polite" aria-atomic="true"></div>
       <div class="organizer-actions"><button class="bpri" onclick="closeTrainerOrganizer()" data-i18n="common.done">Done</button></div>
@@ -2557,7 +2559,7 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
 <div class="ptr-indicator" id="ptr-indicator" aria-hidden="true">↓</div>
 
 <script>
-window.__POGO_RELEASE_ID='2026-08-05.22';
+window.__POGO_RELEASE_ID='2026-08-05.23';
 window.__pogoBootWatch=setTimeout(function(){
   var visible=['config-pg','login-pg','app'].some(function(id){
     var el=document.getElementById(id);
@@ -2576,60 +2578,61 @@ window.__pogoBootWatch=setTimeout(function(){
   if(err)err.textContent='App scripts did not finish loading. Refresh once; if this stays, send this screenshot.';
 },4000);
 </script>
-<script src="data.js?v=2026-08-05.22"></script>
-<script src="js/domain/priorities.js?v=2026-08-05.22"></script>
-<script src="js/ui/badges.js?v=2026-08-05.22"></script>
-<script src="js/domain/username.js?v=2026-08-05.22"></script>
-<script src="js/domain/priorityValues.js?v=2026-08-05.22"></script>
-<script src="js/domain/scheduleDates.js?v=2026-08-05.22"></script>
-<script src="js/domain/pokemonSearchTerms.js?v=2026-08-05.22"></script>
-<script src="js/domain/pokemonEntryRules.js?v=2026-08-05.22"></script>
-<script src="js/domain/pokemonGoSearchSyntax.js?v=2026-08-05.22"></script>
-<script src="js/domain/searchStrings.js?v=2026-08-05.22"></script>
-<script src="js/ui/stringHtml.js?v=2026-08-05.22"></script>
-<script src="js/domain/scheduleEventRules.js?v=2026-08-05.22"></script>
-<script src="js/domain/scheduleTradeRules.js?v=2026-08-05.22"></script>
-<script src="js/domain/pokemonKeys.js?v=2026-08-05.22"></script>
-<script src="js/domain/spriteSlugs.js?v=2026-08-05.22"></script>
-<script src="js/domain/fuzzyText.js?v=2026-08-05.22"></script>
-<script src="js/domain/autocompleteText.js?v=2026-08-05.22"></script>
-<script src="js/domain/autocompleteMatching.js?v=2026-08-05.22"></script>
-<script src="js/domain/autocompleteRanking.js?v=2026-08-05.22"></script>
-<script src="js/domain/relativeTime.js?v=2026-08-05.22"></script>
-<script src="js/domain/clientRelease.js?v=2026-08-05.22"></script>
-<script src="js/domain/trainerDiscovery.js?v=2026-08-05.22"></script>
-<script src="js/domain/eventPresentation.js?v=2026-08-05.22"></script>
-<script src="js/domain/publicSharePublication.js?v=2026-08-05.22"></script>
-<script src="js/domain/trainerPreferences.js?v=2026-08-05.22"></script>
-<script src="js/domain/trainerPreferenceSync.js?v=2026-08-05.22"></script>
-<script src="js/domain/authenticationReadiness.js?v=2026-08-05.22"></script>
-<script src="js/domain/loginDirectory.js?v=2026-08-05.22"></script>
-<script src="js/utils/textSafety.js?v=2026-08-05.22"></script>
-<script src="js/ui/stringPanels.js?v=2026-08-05.22"></script>
-<script src="js/ui/emptyState.js?v=2026-08-05.22"></script>
-<script src="js/i18n/locales/en.js?v=2026-08-05.22"></script>
-<script src="js/i18n/locales/ja.js?v=2026-08-05.22"></script>
-<script src="js/i18n/locales/es.js?v=2026-08-05.22"></script>
-<script src="js/i18n/locales/de.js?v=2026-08-05.22"></script>
-<script src="js/i18n/pokemonNames/catalog.js?v=2026-08-05.22"></script>
-<script src="js/i18n/pokemonNames/variants.js?v=2026-08-05.22"></script>
-<script src="js/i18n/pokemonNames/core.js?v=2026-08-05.22"></script>
-<script src="js/i18n/eventLabels/currentTitles.js?v=2026-08-05.22"></script>
-<script src="js/i18n/eventLabels/core.js?v=2026-08-05.22"></script>
-<script src="js/i18n/core.js?v=2026-08-05.22"></script>
-<script src="js/services/firebaseClient.js?v=2026-08-05.22"></script>
-<script src="js/data/subscriptionManager.js?v=2026-08-05.22"></script>
-<script src="js/data/listenerLifecycle.js?v=2026-08-05.22"></script>
-<script src="js/data/sessionCacheBoundary.js?v=2026-08-05.22"></script>
-<script src="js/data/firebaseReadRegistry.js?v=2026-08-05.22"></script>
-<script src="js/data/currentUserRepository.js?v=2026-08-05.22"></script>
-<script src="js/data/ownedDataCoordinator.js?v=2026-08-05.22"></script>
-<script src="js/data/publicShareRepository.js?v=2026-08-05.22"></script>
-<script src="js/data/trainerHistoryStore.js?v=2026-08-05.22"></script>
-<script src="js/data/trainerPreferencesRepository.js?v=2026-08-05.22"></script>
-<script src="js/data/trainerPreferenceSyncQueue.js?v=2026-08-05.22"></script>
-<script src="js/domain/cacheAdapters.js?v=2026-08-05.22"></script>
-<script src="js/ui/trainerTagPanel.js?v=2026-08-05.22"></script>
+<script src="data.js?v=2026-08-05.23"></script>
+<script src="js/domain/priorities.js?v=2026-08-05.23"></script>
+<script src="js/ui/badges.js?v=2026-08-05.23"></script>
+<script src="js/domain/username.js?v=2026-08-05.23"></script>
+<script src="js/domain/priorityValues.js?v=2026-08-05.23"></script>
+<script src="js/domain/scheduleDates.js?v=2026-08-05.23"></script>
+<script src="js/domain/pokemonSearchTerms.js?v=2026-08-05.23"></script>
+<script src="js/domain/pokemonEntryRules.js?v=2026-08-05.23"></script>
+<script src="js/domain/pokemonGoSearchSyntax.js?v=2026-08-05.23"></script>
+<script src="js/domain/searchStrings.js?v=2026-08-05.23"></script>
+<script src="js/ui/stringHtml.js?v=2026-08-05.23"></script>
+<script src="js/domain/scheduleEventRules.js?v=2026-08-05.23"></script>
+<script src="js/domain/scheduleTradeRules.js?v=2026-08-05.23"></script>
+<script src="js/domain/pokemonKeys.js?v=2026-08-05.23"></script>
+<script src="js/domain/spriteSlugs.js?v=2026-08-05.23"></script>
+<script src="js/domain/fuzzyText.js?v=2026-08-05.23"></script>
+<script src="js/domain/autocompleteText.js?v=2026-08-05.23"></script>
+<script src="js/domain/autocompleteMatching.js?v=2026-08-05.23"></script>
+<script src="js/domain/autocompleteRanking.js?v=2026-08-05.23"></script>
+<script src="js/domain/relativeTime.js?v=2026-08-05.23"></script>
+<script src="js/domain/clientRelease.js?v=2026-08-05.23"></script>
+<script src="js/domain/favoriteCardInteractions.js?v=2026-08-05.23"></script>
+<script src="js/domain/trainerDiscovery.js?v=2026-08-05.23"></script>
+<script src="js/domain/eventPresentation.js?v=2026-08-05.23"></script>
+<script src="js/domain/publicSharePublication.js?v=2026-08-05.23"></script>
+<script src="js/domain/trainerPreferences.js?v=2026-08-05.23"></script>
+<script src="js/domain/trainerPreferenceSync.js?v=2026-08-05.23"></script>
+<script src="js/domain/authenticationReadiness.js?v=2026-08-05.23"></script>
+<script src="js/domain/loginDirectory.js?v=2026-08-05.23"></script>
+<script src="js/utils/textSafety.js?v=2026-08-05.23"></script>
+<script src="js/ui/stringPanels.js?v=2026-08-05.23"></script>
+<script src="js/ui/emptyState.js?v=2026-08-05.23"></script>
+<script src="js/i18n/locales/en.js?v=2026-08-05.23"></script>
+<script src="js/i18n/locales/ja.js?v=2026-08-05.23"></script>
+<script src="js/i18n/locales/es.js?v=2026-08-05.23"></script>
+<script src="js/i18n/locales/de.js?v=2026-08-05.23"></script>
+<script src="js/i18n/pokemonNames/catalog.js?v=2026-08-05.23"></script>
+<script src="js/i18n/pokemonNames/variants.js?v=2026-08-05.23"></script>
+<script src="js/i18n/pokemonNames/core.js?v=2026-08-05.23"></script>
+<script src="js/i18n/eventLabels/currentTitles.js?v=2026-08-05.23"></script>
+<script src="js/i18n/eventLabels/core.js?v=2026-08-05.23"></script>
+<script src="js/i18n/core.js?v=2026-08-05.23"></script>
+<script src="js/services/firebaseClient.js?v=2026-08-05.23"></script>
+<script src="js/data/subscriptionManager.js?v=2026-08-05.23"></script>
+<script src="js/data/listenerLifecycle.js?v=2026-08-05.23"></script>
+<script src="js/data/sessionCacheBoundary.js?v=2026-08-05.23"></script>
+<script src="js/data/firebaseReadRegistry.js?v=2026-08-05.23"></script>
+<script src="js/data/currentUserRepository.js?v=2026-08-05.23"></script>
+<script src="js/data/ownedDataCoordinator.js?v=2026-08-05.23"></script>
+<script src="js/data/publicShareRepository.js?v=2026-08-05.23"></script>
+<script src="js/data/trainerHistoryStore.js?v=2026-08-05.23"></script>
+<script src="js/data/trainerPreferencesRepository.js?v=2026-08-05.23"></script>
+<script src="js/data/trainerPreferenceSyncQueue.js?v=2026-08-05.23"></script>
+<script src="js/domain/cacheAdapters.js?v=2026-08-05.23"></script>
+<script src="js/ui/trainerTagPanel.js?v=2026-08-05.23"></script>
 <script>
 let initializeApp,getDatabase,ref,set,get,onValue,update,getAuth,signInWithEmailAndPassword,createUserWithEmailAndPassword,firebaseSignOut,updatePassword,deleteUser,onAuthStateChanged;
 let firebaseSdkPromise=null;
@@ -2701,6 +2704,7 @@ const trainerHistoryStoreData=window.PogoData?.trainerHistoryStore;
 if(!trainerHistoryStoreData)throw new Error('Trainer history store failed to load');
 const clientReleaseDomain=window.PogoDomain?.clientRelease;
 const trainerDiscoveryDomain=window.PogoDomain?.trainerDiscovery;
+const favoriteCardInteractionsDomain=window.PogoDomain?.favoriteCardInteractions;
 if(!trainerDiscoveryDomain)throw new Error('Trainer discovery helpers failed to load');
 const eventPresentationDomain=window.PogoDomain?.eventPresentation;
 if(!eventPresentationDomain)throw new Error('Event presentation helpers failed to load');
@@ -6221,6 +6225,8 @@ let trainerSuggestionQuery='';
 let eventTypeFilter='all';
 let trainerOrganizerState={query:'',tagIds:[],username:''};
 let favoriteSavedPromptTimer=0;
+let favoriteSwipeGesture=null;
+let favoriteCardMenuTrigger=null;
 function resetTrainerOrganizerState(){
   trainerOrganizerState={query:'',tagIds:[],username:''};
   if(document.getElementById('trainer-organizer-modal')?.classList.contains('open'))closeTrainerOrganizer(true);
@@ -6392,8 +6398,40 @@ function canonicalTrainerName(username){
   return Object.keys(allData.loginDirectory||{}).find(name=>trainerDiscoveryDomain.fold(name)===folded)||username;
 }
 function favoriteTagChips(item,state){
-  return(item.tagIds||[]).map(id=>state.tags[id]).filter(Boolean).map(tag=>`<span class="favorite-card-tag">${escHtml(tag.label)}</span>`).join('');
+  return(item.tagIds||[]).map(id=>state.tags[id]).filter(Boolean).map(tag=>`<button type="button" class="favorite-card-tag" aria-pressed="true" onclick="openTrainerOrganizer('${escAttr(item.displayName)}')">${escHtml(tag.label)}</button>`).join('');
 }
+function closeFavoriteCardActions(except=null,restoreFocus=false){
+  document.querySelectorAll('.favorite-card-shell.swipe-open').forEach(card=>{if(card!==except)card.classList.remove('swipe-open');});
+  document.querySelectorAll('.favorite-card-menu:not([hidden])').forEach(menu=>{if(!except||!except.contains(menu))menu.hidden=true;});
+  if(restoreFocus&&favoriteCardMenuTrigger?.isConnected)favoriteCardMenuTrigger.focus();
+  if(!except)favoriteCardMenuTrigger=null;
+}
+function openFavoriteSwipeActions(button){const card=button?.closest('.favorite-card-shell');if(!card)return;closeFavoriteCardActions(card);card.classList.add('swipe-open');}
+function toggleFavoriteCardMenu(event,button){
+  event?.stopPropagation();const card=button?.closest('.favorite-card-shell'),menu=card?.querySelector('.favorite-card-menu');if(!card||!menu)return;
+  const opening=menu.hidden;closeFavoriteCardActions(card);card.classList.remove('swipe-open');menu.hidden=!opening;if(opening){favoriteCardMenuTrigger=button;menu.querySelector('button')?.focus();}
+}
+function openFavoriteTagsFromMenu(button,username){const trigger=button?.closest('.favorite-card-shell')?.querySelector('.favorite-card-more');openTrainerOrganizer(username,trigger);}
+function favoriteCardPointerDown(event){
+  if(event.pointerType==='mouse'&&event.button!==0)return;
+  const card=event.currentTarget.closest('.favorite-card-shell');favoriteSwipeGesture={card,pointerId:event.pointerId,startX:event.clientX,startY:event.clientY,horizontal:false};
+}
+function favoriteCardPointerMove(event){
+  const gesture=favoriteSwipeGesture;if(!gesture||gesture.pointerId!==event.pointerId)return;
+  const dx=event.clientX-gesture.startX,dy=event.clientY-gesture.startY,intent=favoriteCardInteractionsDomain.swipeIntent(dx,dy);
+  if(intent.intent==='vertical'){favoriteSwipeGesture=null;return;}
+  if(intent.intent!=='pending'){gesture.horizontal=true;event.preventDefault();}
+}
+function favoriteCardPointerUp(event){
+  const gesture=favoriteSwipeGesture;if(!gesture||gesture.pointerId!==event.pointerId)return;favoriteSwipeGesture=null;
+  const decision=favoriteCardInteractionsDomain.swipeIntent(event.clientX-gesture.startX,event.clientY-gesture.startY);
+  if(!gesture.horizontal)return;
+  if(decision.open){closeFavoriteCardActions(gesture.card);gesture.card.classList.add('swipe-open');}
+  else gesture.card.classList.remove('swipe-open');
+}
+function favoriteCardPointerCancel(){favoriteSwipeGesture=null;}
+document.addEventListener('pointerdown',event=>{if(!event.target.closest('.favorite-card-shell'))closeFavoriteCardActions();});
+document.addEventListener('keydown',event=>{if(event.key==='Escape'&&document.querySelector('.favorite-card-shell.swipe-open,.favorite-card-menu:not([hidden])')){closeFavoriteCardActions(null,true);event.stopPropagation();}});
 function setFavoriteSearch(value){trainerOrganizerState.query=String(value||'');renderTrainerQuickLists();}
 function toggleFavoriteTagFilter(id){
   const selected=new Set(trainerOrganizerState.tagIds);selected.has(id)?selected.delete(id):selected.add(id);trainerOrganizerState.tagIds=[...selected].sort();renderTrainerQuickLists();
@@ -6413,7 +6451,8 @@ async function renderTrainerQuickLists(){
   if(!document.getElementById('tab-find')?.classList.contains('active'))return;
   favoritesEl.innerHTML=`<div class="trainer-quick-heading">${escHtml(i18nCore.t('trainer.favoritesTitle'))}</div>${toolbar}${statuses.length?`<div class="trainer-quick-grid">${statuses.map(({item,available,diff,updatedAt})=>{
     const unread=!!(available&&diff&&!diff.firstView&&diff.total);
-    return`<div class="trainer-quick-card"><div class="trainer-quick-main"><div class="trainer-quick-name">${unread?'<span class="trainer-unread"></span>':''}${escHtml(item.displayName)}</div><div class="trainer-quick-meta">${available?(trainerDate(updatedAt)||''):`${escHtml(i18nCore.t('trainer.listUnavailable'))}`}</div>${item.tagIds?.length?`<div class="favorite-card-tags">${favoriteTagChips(item,state)}</div>`:''}${unread?`<div class="trainer-change-counts">${escHtml(changeCountsText(diff))}</div>`:''}${unread?`<details class="favorite-detail"><summary>${escHtml(i18nCore.t('trainer.changesTitle'))}</summary>${changeDetailsHtml(diff)}</details>`:''}</div><div class="favorite-card-actions"><button class="favorite-card-action primary" onclick="openTrainerByName('${escAttr(item.displayName)}')">${escHtml(i18nCore.t('trainer.openAction'))}</button><button class="favorite-card-action" onclick="openTrainerOrganizer('${escAttr(item.displayName)}')">${escHtml(i18nCore.t('organizer.organize'))}</button><button class="favorite-card-action danger" onclick="removeTrainerFavorite('${escAttr(item.displayName)}')" aria-label="${escAttr(i18nCore.t('trainer.favoriteRemove'))}">×</button></div></div>`;
+    const trainer=escAttr(item.displayName),hasTags=!!item.tagIds?.length,editLabel=i18nCore.t(hasTags?'organizer.editTagsFor':'organizer.addTagsFor',{trainer:item.displayName});
+    return`<article class="favorite-card-shell" data-trainer="${trainer}"><div class="favorite-card-rail" aria-hidden="true"><button type="button" tabindex="-1" onclick="openTrainerOrganizer('${trainer}')">+ ${escHtml(i18nCore.t('organizer.tags'))}</button><button type="button" tabindex="-1" onclick="toggleFavoriteCardMenu(event,this)">⋯</button></div><div class="favorite-card-surface" onpointerdown="favoriteCardPointerDown(event)" onpointermove="favoriteCardPointerMove(event)" onpointerup="favoriteCardPointerUp(event)" onpointercancel="favoriteCardPointerCancel()"><div class="trainer-quick-main"><div class="trainer-quick-name">${unread?'<span class="trainer-unread"></span>':''}${escHtml(item.displayName)}</div><div class="trainer-quick-meta">${available?(trainerDate(updatedAt)||''):`${escHtml(i18nCore.t('trainer.listUnavailable'))}`}</div><div class="favorite-card-tags">${hasTags?favoriteTagChips(item,state):''}<button type="button" class="favorite-card-add-tag" onclick="openTrainerOrganizer('${trainer}')" aria-label="${escAttr(editLabel)}">+</button></div>${unread?`<div class="trainer-change-counts">${escHtml(changeCountsText(diff))}</div>`:''}${unread?`<details class="favorite-detail"><summary>${escHtml(i18nCore.t('trainer.changesTitle'))}</summary>${changeDetailsHtml(diff)}</details>`:''}</div><div class="favorite-card-footer"><button type="button" class="favorite-card-open" onclick="openTrainerByName('${trainer}')">${escHtml(i18nCore.t('trainer.openAction'))}</button><button type="button" class="favorite-card-more" aria-haspopup="menu" aria-label="${escAttr(i18nCore.t('organizer.moreActionsFor',{trainer:item.displayName}))}" onclick="toggleFavoriteCardMenu(event,this)">⋯</button></div><div class="favorite-card-menu" role="menu" hidden><button type="button" role="menuitem" onclick="openFavoriteTagsFromMenu(this,'${trainer}')">${escHtml(i18nCore.t('organizer.editTags'))}</button><button type="button" role="menuitem" class="danger" onclick="removeTrainerFavorite('${trainer}')">${escHtml(i18nCore.t('organizer.removeFavorite'))}</button></div></div></article>`;
   }).join('')}</div>`:`<div class="favorite-empty">${escHtml(i18nCore.t(state.favorites.length?'organizer.noMatches':'organizer.noFavorites'))}</div>`}`;
   recentEl.innerHTML=state.recent.length?`<div class="trainer-quick-heading">${escHtml(i18nCore.t('trainer.recentTitle'))}</div><div class="trainer-quick-grid">${state.recent.map(item=>`<div class="trainer-quick-card"><div class="trainer-quick-main"><div class="trainer-quick-name">${escHtml(item.displayName)}</div><div class="trainer-quick-meta">${trainerDate(item.openedAt)}</div></div><button class="trainer-icon-btn" onclick="openTrainerByName('${escAttr(item.displayName)}')" aria-label="${escAttr(i18nCore.t('trainer.openAction'))}">↗</button></div>`).join('')}</div>`:'';
 }
@@ -6446,12 +6485,10 @@ function renderTrainerOrganizer(){
   document.getElementById('organizer-trainer-av').textContent=favorite.displayName.slice(0,2).toUpperCase();
   const assignment=document.getElementById('organizer-tag-assignment');
   assignment.innerHTML=tags.length?tags.map(tag=>`<label class="organizer-check"><input type="checkbox" data-tag-id="${tag.id}" ${favorite.tagIds.includes(tag.id)?'checked':''} onchange="trainerOrganizerChanged()"><span>${escHtml(tag.label)}</span></label>`).join(''):`<span class="organizer-help">${escHtml(i18nCore.t('organizer.noTags'))}</span>`;
-  const manager=document.getElementById('organizer-tag-manager');
-  manager.innerHTML=tags.map(tag=>`<div class="organizer-tag-row"><input class="app-field" id="organizer-tag-${tag.id}" value="${escAttr(tag.label)}" maxlength="40" aria-label="${escAttr(i18nCore.t('organizer.tagName',{tag:tag.label}))}"><button class="bghost" onclick="renameLocalTrainerTag('${tag.id}')" aria-label="${escAttr(i18nCore.t('organizer.renameTagNamed',{tag:tag.label}))}">✓</button><button class="bghost" onclick="deleteLocalTrainerTag('${tag.id}')" aria-label="${escAttr(i18nCore.t('organizer.deleteTagNamed',{tag:tag.label}))}">×</button></div>`).join('');
 }
-function openTrainerOrganizer(username){
+function openTrainerOrganizer(username,returnFocus=document.activeElement){
   const store=ensureTrainerHistoryStore();if(!store?.isFavorite(username))return;
-  trainerOrganizerState.username=username;renderInterimProductLabels();renderTrainerOrganizer();hideTrainerTagCreator();document.getElementById('organizer-status').textContent=i18nCore.t('organizer.savedLocal');openModal('trainer-organizer-modal',{returnFocus:document.activeElement});
+  closeFavoriteCardActions();trainerOrganizerState.username=username;renderInterimProductLabels();renderTrainerOrganizer();hideTrainerTagCreator();document.getElementById('organizer-status').textContent=i18nCore.t('organizer.savedLocal');openModal('trainer-organizer-modal',{returnFocus});
 }
 function closeTrainerOrganizer(){hideTrainerTagCreator();closeModal('trainer-organizer-modal');}
 function showTrainerTagCreator(){const row=document.getElementById('organizer-add-tag-row'),toggle=document.getElementById('organizer-new-tag-toggle');if(row)row.hidden=false;if(toggle)toggle.hidden=true;requestAnimationFrame(()=>document.getElementById('organizer-new-tag')?.focus());}
