@@ -52,12 +52,13 @@ test('Events expose Now Soon Later hierarchy accessible filters and one source a
   const source=block('function setEventTypeFilter','function renderSchedule');
   assert.match(source,/eventFilterKeydown/);
   assert.match(source,/ArrowLeft.*ArrowRight.*Home.*End/s);
-  assert.match(source,/role="tab".*aria-selected=.*tabindex=/s);
+  assert.match(source,/role="group".*aria-pressed=/s);
   assert.match(source,/data-group="\$\{section\.group\}"/);
   assert.match(source,/section\.group==='now'\?'is-active'/);
-  assert.match(source,/visibleBonuses=bonuses\.slice\(0,3\)/);
-  assert.match(source,/class="[^"]*event-card-details[^"]*"/);
-  assert.doesNotMatch(source,/article class="event-card"[^>]+onclick=/);
+  assert.match(source,/eventPresentationDomain\.eventTiming/);
+  assert.match(source,/const tag=link\?'a':'article'/);
+  assert.match(source,/aria-label=.*events\.openDetailsFor/s);
+  assert.doesNotMatch(source,/event-card-bonuses|visibleBonuses/);
   assert.match(html,/\.event-filter\{[^}]*min-height:48px/);
 });
 

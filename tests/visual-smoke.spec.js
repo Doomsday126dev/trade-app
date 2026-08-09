@@ -462,10 +462,12 @@ test.describe('visual smoke', () => {
     await expect(page.locator('[data-settings-section="appearance"]')).toBeVisible();
     await expect(page.locator('[data-settings-theme="dark"]')).toHaveAttribute('aria-pressed','true');
     await expect(page.locator('.wp-swatch.ocean')).toHaveAttribute('aria-pressed','true');
+    await expect(page.locator('.settings-mobile-back')).toBeHidden();
     expect(await page.evaluate(()=>document.body.classList.contains('wp-ocean'))).toBe(true);
     for(const key of ['mono','aurora','ocean','forest','sunset','mist']){
       await page.locator(`.wp-swatch.${key}`).click();
       await expect(page.locator(`.wp-swatch.${key}`)).toHaveAttribute('aria-pressed','true');
+      const swatchBox=await page.locator(`.wp-swatch.${key}`).boundingBox();expect(swatchBox?.height).toBeGreaterThanOrEqual(48);
       expect(await page.evaluate(selected=>document.body.classList.contains(`wp-${selected}`),key)).toBe(true);
     }
     await page.locator('.wp-swatch.ocean').click();
@@ -481,7 +483,9 @@ test.describe('visual smoke', () => {
     await expect.poll(()=>page.evaluate(()=>document.body.classList.contains('wp-mono'))).toBe(true);
 
     await page.locator('[data-settings-target="profile"]').click();
-    for(const id of ['prof-av-input','fc-inp','prof-bio','prof-discord','prof-discord-id'])await expect(page.locator(`#${id}`)).toBeVisible();
+    for(const id of ['prof-av-input','fc-inp','prof-bio','prof-discord'])await expect(page.locator(`#${id}`)).toBeVisible();
+    await expect(page.locator('#prof-discord-id,.discord-id-help,.discord-id-help-toggle')).toHaveCount(0);
+    for(const key of ['settings.profileGroupTrainer','settings.profileGroupPokemonGo','settings.profileGroupAbout'])await expect(page.locator(`[data-i18n="${key}"]`)).toBeVisible();
     await expect(page.locator('[data-settings-section="profile"] #np1')).toHaveCount(0);await expect(page.locator('[data-settings-section="profile"] #wp-picker')).toHaveCount(0);
     await page.locator('[data-settings-target="security"]').click();
     await expect(page.locator('#settings-security-name')).toHaveText('AppearanceTrainer');await expect(page.locator('#np1')).toBeVisible();await expect(page.locator('#np2')).toBeVisible();
@@ -490,6 +494,9 @@ test.describe('visual smoke', () => {
     await page.evaluate(()=>{configureSettingsPanel('account');showSettingsSectionList();});
     await page.locator('[data-settings-target="appearance"]').click();
     await expect(page.locator('[data-settings-section="appearance"]')).toBeVisible();
+    await expect(page.locator('.settings-mobile-back')).toBeVisible();
+    await page.locator('.settings-mobile-back').click();
+    await expect(page.locator('.settings-nav')).toBeVisible();
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
   });
 
@@ -904,6 +911,7 @@ test.describe('visual smoke', () => {
     await page.evaluate(()=>openTrainerOrganizer('TrainerAlpha'));
     await page.locator('#organizer-new-tag-toggle').click();
     await page.locator('#organizer-new-tag').fill('Inline draft');
+    await expect(page.locator('#organizer-new-tag')).toBeFocused();
     await page.keyboard.press('Escape');
     await expect(page.locator('#organizer-add-tag-row')).toBeHidden();
     await expect(modal).toBeVisible();
@@ -1012,6 +1020,13 @@ test.describe('visual smoke', () => {
       const firstCard=page.locator('.favorite-card-shell').first();
       const firstRecent=page.locator('.recent-trainer-row').first();
       await expect(firstCard).toBeVisible();await expect(firstRecent).toBeVisible();
+      const recentName=firstRecent.locator('.recent-trainer-name');
+      const recentRecency=firstRecent.locator('.recent-trainer-recency');
+      await expect(recentName).toBeVisible();await expect(recentRecency).toBeVisible();
+      await expect(recentRecency).toContainText(/.+/);
+      const nameBox=await recentName.boundingBox(),recencyTextBox=await recentRecency.boundingBox(),rowBox=await firstRecent.boundingBox();
+      expect(recencyTextBox?.y).toBeGreaterThan(nameBox?.y||0);
+      expect(rowBox?.height).toBeLessThan(84);
       const addBox=await firstCard.locator('.favorite-card-add-tag').boundingBox();
       const moreBox=await firstCard.locator('.favorite-card-more').boundingBox();
       const recentBox=await firstRecent.locator('.recent-trainer-chevron').boundingBox();
@@ -1049,7 +1064,7 @@ test.describe('visual smoke', () => {
       await expect(row).toBeVisible();
       await expectOpens(()=>row.click({position:{x:18,y:18}}));
       expect(await page.evaluate(()=>window.__openedTrainer)).toBe('RecentOne');
-      await expectOpens(()=>row.locator('.trainer-quick-name').click());
+      await expectOpens(()=>row.locator('.recent-trainer-name').click());
       await expectOpens(()=>row.locator('.recent-trainer-chevron').click());
       await row.focus();await expectOpens(()=>page.keyboard.press('Enter'));
       await row.focus();await expectOpens(()=>page.keyboard.press('Space'));
@@ -1366,6 +1381,35 @@ test.describe('visual smoke', () => {
     await expect(page.locator('.event-filter-row')).toBeVisible({ timeout: 20_000 });
     await expect(page.locator('.event-card, #events-out .empty').first()).toBeVisible({ timeout: 20_000 });
     await expectAppNotBlank(page);
+  });
+
+  test('Events timeline keeps chronology compact and distinguishes loading empty filter and error states',async({page})=>{
+    await page.goto(`./?events-timeline=${Date.now()}`,{waitUntil:'domcontentloaded'});
+    await isolateAuthenticatedMyListFixture(page,{username:'EventsFixtureTester',uid:'uid-events-fixture'});
+    await page.evaluate(()=>switchTab('schedule'));
+    await page.evaluate(()=>{
+      const now=Date.now(),hour=3600000,day=24*hour;
+      const base=[
+        {eventID:'active',name:'Raid Hour',eventType:'raid',start:new Date(now-hour).toISOString(),end:new Date(now+2*hour).toISOString(),link:'https://example.com/active'},
+        {eventID:'soon',name:'Community Day',eventType:'community-day',start:new Date(now+day).toISOString(),end:new Date(now+day+3*hour).toISOString(),link:'https://example.com/soon'},
+        {eventID:'later',name:'A deliberately long seasonal event title that must wrap without widening the timeline',eventType:'event',start:new Date(now+6*day).toISOString(),end:new Date(now+8*day).toISOString(),link:'https://example.com/later'}
+      ];
+      const extras=Array.from({length:25},(_,index)=>({eventID:`scale-${index}`,name:`Research Event ${index}`,eventType:'research',start:new Date(now+(index+9)*day).toISOString(),end:new Date(now+(index+9)*day+hour).toISOString()}));
+      window.__eventTimelineFixture={events:[...base,...extras],raids:[],fetchedAt:now};_eventData=window.__eventTimelineFixture;_eventLoadState='ready';eventTypeFilter='all';renderEventsOnly();
+    });
+    await expect(page.locator('.event-group[data-group="now"]')).toBeVisible();await expect(page.locator('.event-group[data-group="soon"]')).toBeVisible();await expect(page.locator('.event-group[data-group="later"]')).toBeVisible();
+    await expect(page.locator('.event-current-badge')).toBeVisible();await expect(page.locator('.event-card-relative').first()).toContainText(/.+/);
+    const sourceRow=page.locator('a.event-card').first();await expect(sourceRow).toHaveAttribute('href','https://example.com/active');await expect(sourceRow).toHaveAttribute('aria-label',/.+/);
+    expect(await sourceRow.locator('a,button,[role="button"]').count()).toBe(0);
+    await sourceRow.focus();await expect(sourceRow).toBeFocused();
+    for(const filter of await page.locator('.event-filter').all()){const box=await filter.boundingBox();expect(box?.height).toBeGreaterThanOrEqual(48);}
+    await page.locator('.event-filter[data-type="raids"]').click();await expect(page.locator('.event-filter[data-type="raids"]')).toHaveAttribute('aria-pressed','true');
+    await page.locator('.event-filter[data-type="gbl"]').click();await expect(page.locator('.events-state')).toContainText(/.+/);await expect(page.locator('.events-state-action')).toBeVisible();await page.locator('.events-state-action').click();await expect(page.locator('.event-filter[data-type="all"]')).toHaveAttribute('aria-pressed','true');
+    await page.evaluate(()=>{_eventData={events:[],raids:[],fetchedAt:Date.now()};_eventLoadState='ready';renderEventsOnly();});await expect(page.locator('.events-state')).toBeVisible();await expect(page.locator('.events-state-action')).toHaveCount(0);
+    await page.evaluate(()=>{_eventData=null;_eventLoadState='loading';renderEventsOnly();});await expect(page.locator('#events-out')).toHaveAttribute('aria-busy','true');await expect(page.locator('.ui-state-loading')).toBeVisible();
+    await page.evaluate(()=>{_eventData={events:[],raids:[],fetchedAt:0};_eventLoadState='error';renderEventsOnly();});await expect(page.locator('.ui-state-unavailable')).toBeVisible();await expect(page.locator('.events-state-action')).toBeVisible();
+    const viewports=[['en',320,640],['ja',375,700],['de',390,420],['es',430,760],['ja',390,300],['de',768,800],['es',1024,800],['en',1440,900]];
+    for(const [locale,width,height] of viewports){await page.setViewportSize({width,height});await page.evaluate(locale=>{changeInterfaceLocale(locale);_eventData=window.__eventTimelineFixture;_eventLoadState='ready';eventTypeFilter='all';renderEventsOnly();},locale);await expect(page.locator('.event-card').first()).toBeVisible();const rowBox=await page.locator('.event-card').first().boundingBox();expect(rowBox?.height).toBeLessThan(150);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);}
   });
 
   test('main tab switching keeps the app rendered', async ({ page }) => {

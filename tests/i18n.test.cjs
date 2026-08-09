@@ -66,8 +66,27 @@ test('session ownership warnings use stable translation keys with English fallba
 test('English, Japanese, Spanish, and German expose the same UI key set',()=>{
   const {catalogs}=load();
   const expected=Object.keys(catalogs.en).sort();
-  assert.equal(expected.length,957);
+  assert.equal(expected.length,980);
   for(const locale of ['ja','es','de'])assert.deepEqual(Object.keys(catalogs[locale]).sort(),expected,locale);
+});
+
+test('Recent Trainer recency uses natural Viewed copy in every supported locale',()=>{
+  const {core,catalogs}=load();
+  const expected={
+    en:['Viewed 12m ago','Viewed 3h ago','Viewed 2d ago','Viewed 3w ago'],
+    ja:['12分前に閲覧','3時間前に閲覧','2日前に閲覧','3週間前に閲覧'],
+    es:['Visto hace 12 min','Visto hace 3 h','Visto hace 2 d','Visto hace 3 sem'],
+    de:['Vor 12 Min. angesehen','Vor 3 Std. angesehen','Vor 2 T. angesehen','Vor 3 Wo. angesehen']
+  };
+  for(const [locale,values] of Object.entries(expected)){
+    const translator=core.createTranslator({catalogs,locale});
+    assert.deepEqual([
+      translator.t('trainer.viewedMinutes',{count:12}),
+      translator.t('trainer.viewedHours',{count:3}),
+      translator.t('trainer.viewedDays',{count:2}),
+      translator.t('trainer.viewedWeeks',{count:3})
+    ],values,locale);
+  }
 });
 
 test('My List category context is complete and localized',()=>{

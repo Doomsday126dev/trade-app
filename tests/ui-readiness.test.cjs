@@ -175,6 +175,7 @@ test('modal lifecycle reuses one handler and cancels stale focus restoration',()
   assert.match(lifecycle,/if\(_modalActiveId==='trainer-organizer-modal'\)closeTrainerOrganizer\(\);else closeModal\(_modalActiveId,\{route:false\}\)/);
   assert.match(lifecycle,/if\(active\?\.classList\.contains\('open'\)\)return;/);
   assert.match(lifecycle,/if\(_modalActiveId!==id\|\|!m\.classList\.contains\('open'\)\)return;/);
+  assert.match(lifecycle,/if\(m\.contains\(document\.activeElement\)\)return;/);
   assert.match(lifecycle,/if\(returnFocus\?\.isConnected&&!returnFocus\.disabled\)returnFocus\.focus\(/);
 });
 
@@ -191,7 +192,8 @@ test('responsive and accessibility safeguards cover compact screens, long labels
 
 test('localized Admin and dialog surfaces preserve bounded responsive geometry',()=>{
   for(const marker of [
-    'data-i18n="admin.pendingRequests"','data-i18n="profile.discordInstructions"',
+    'data-i18n="admin.pendingRequests"','data-i18n="settings.profileGroupTrainer"',
+    'data-i18n="settings.profileGroupPokemonGo"','data-i18n="settings.profileGroupAbout"',
     "i18nCore.t('safeTransfer.limitWarning'",'data-i18n="specialBoard.description"'
   ])assert.ok(html.includes(marker),marker);
   assert.match(html,/overflow-x:auto;border:1px solid var\(--border\)/);
@@ -202,9 +204,10 @@ test('localized Admin and dialog surfaces preserve bounded responsive geometry',
 });
 
 test('Events distinguish loading, offline, filtered-empty, and legitimate empty states',()=>{
-  assert.match(html,/stateModel\('loading',\{title:i18nCore\.t\('events\.loading'\)/);
-  assert.match(html,/stateModel\('offline',\{title:i18nCore\.t\('events\.offline'\)/);
-  assert.match(html,/eventTypeFilter==='all'\?'events\.empty':'events\.filteredEmpty'/);
+  assert.match(html,/eventStateHtml\('loading',i18nCore\.t\('events\.loading'\)\)/);
+  assert.match(html,/eventStateHtml\('offline',i18nCore\.t\('events\.offlineTitle'\),i18nCore\.t\('events\.offline'\)/);
+  assert.match(html,/filtered\?'events\.filteredEmptyTitle':'events\.emptyTitle'/);
+  assert.match(html,/filtered\?'events\.filteredEmpty':'events\.empty'/);
 });
 
 test('owner share recovery remains explicit and readiness gated',()=>{

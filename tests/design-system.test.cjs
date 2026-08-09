@@ -89,7 +89,7 @@ test('My List category navigation uses a dot and semantic selection, never a che
 test('cards, priority, status, and empty-state primitives preserve semantic structure',()=>{
   for(const role of ['content','interactive','row','status'])assert.match(css,new RegExp(`\\.card-${role}(?:,|\\{)`));
   assert.match(html,/favorite-card-shell card-interactive/);
-  assert.match(html,/event-card card-content/);
+  assert.match(html,/event-card card-row/);
   assert.match(html,/share-pcard card-row/);
   assert.match(css,/\.share-section\.card-content\{padding:0\}/);
   assert.match(css,/\.share-pcard\.card-row\{padding:7px 9px/);

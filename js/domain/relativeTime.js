@@ -25,6 +25,17 @@
     if(d<86400)return`${Math.floor(d/3600)}h ago`;
     return`${Math.floor(d/86400)}d ago`;
   }
+  function recentTrainerRecency(ts,now=Date.now()){
+    const timestamp=Number(ts),current=Number(now);
+    if(!Number.isFinite(timestamp)||!Number.isFinite(current))return Object.freeze({kind:'date',timestamp:0});
+    const age=Math.max(0,current-timestamp);
+    if(age<60000)return Object.freeze({kind:'just-now',value:0,unit:'second',timestamp});
+    if(age<3600000)return Object.freeze({kind:'relative',value:Math.max(1,Math.floor(age/60000)),unit:'minute',timestamp});
+    if(age<86400000)return Object.freeze({kind:'relative',value:Math.max(1,Math.floor(age/3600000)),unit:'hour',timestamp});
+    if(age<604800000)return Object.freeze({kind:'relative',value:Math.max(1,Math.floor(age/86400000)),unit:'day',timestamp});
+    if(age<3024000000)return Object.freeze({kind:'relative',value:Math.max(1,Math.floor(age/604800000)),unit:'week',timestamp});
+    return Object.freeze({kind:'date',timestamp});
+  }
 
   root.relativeTime=Object.freeze({
     STALE_WARN,
@@ -32,6 +43,7 @@
     freshnessClass,
     freshnessLabel,
     freshnessColor,
-    relativeTime
+    relativeTime,
+    recentTrainerRecency
   });
 })(window);

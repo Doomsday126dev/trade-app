@@ -67,8 +67,19 @@ test('profile, appearance, and PIN controls have separate routed ownership',()=>
   const profile=html.slice(html.indexOf('data-settings-section="profile"'),html.indexOf('data-settings-section="language"'));
   const appearance=html.slice(html.indexOf('data-settings-section="appearance"'),html.indexOf('data-settings-section="security"'));
   const security=html.slice(html.indexOf('data-settings-section="security"'),html.indexOf('data-settings-section="tools"'));
-  assert.match(profile,/id="prof-av-input"/);assert.match(profile,/id="fc-inp"/);assert.doesNotMatch(profile,/id="np1"|id="wp-picker"/);
+  assert.match(profile,/id="prof-av-input"/);assert.match(profile,/id="fc-inp"/);assert.match(profile,/id="prof-discord"/);assert.doesNotMatch(profile,/id="np1"|id="wp-picker"|id="prof-discord-id"|discord-id-help/);
   assert.match(appearance,/data-settings-theme="auto"/);assert.match(appearance,/id="wp-picker"/);assert.doesNotMatch(appearance,/id="np1"/);
   assert.match(security,/id="np1"/);assert.match(security,/savePinSettings/);
   assert.match(html,/function applyWallpaperForTheme/);assert.match(html,/if\(effectiveTheme\(\)!=='dark'\)return/);
+});
+
+test('Profile cleanup preserves stored Discord IDs while grouping active fields',()=>{
+  const profile=html.slice(html.indexOf('data-settings-section="profile"'),html.indexOf('data-settings-section="language"'));
+  for(const key of ['settings.profileGroupTrainer','settings.profileGroupPokemonGo','settings.profileGroupAbout'])assert.match(profile,new RegExp(key.replace('.','\\.')));
+  assert.doesNotMatch(profile,/Discord User ID|prof-discord-id|discord-id-help/);
+  const save=html.slice(html.indexOf('async function saveProfile'),html.indexOf('async function savePinSettings'));
+  assert.match(save,/const upd=\{friendCode:fc,bio,discord,avatarPokemon\}/);
+  assert.doesNotMatch(save,/discordId|delete|remove/);
+  assert.match(html,/@media\(min-width:768px\)\{\.settings-page-mode \.settings-mobile-back\{display:none!important\}\}/);
+  assert.match(html,/\.wp-swatch\{height:48px;min-height:48px/);
 });

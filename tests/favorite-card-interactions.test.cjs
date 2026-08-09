@@ -72,7 +72,7 @@ test('Favorites and Recents use one stacked hierarchy with distinct density and 
   assert.match(render,/class="recent-trainer-chevron"/);
   assert.doesNotMatch(render,/role="tab"|trainer-history-tabs/);
   assert.doesNotMatch(render,/trainerDate\(updatedAt\)/);
-  assert.match(render,/trainerDate\(item\.openedAt\)/);
+  assert.match(render,/trainerViewedText\(item\.openedAt\)/);
   assert.match(render,/organizer\.noFavoritesHelp/);
   assert.match(render,/organizer\.noMatchesHelp/);
   assert.match(render,/trainer\.noRecentsHelp/);
