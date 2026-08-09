@@ -10,7 +10,7 @@ const baselineBytes=fs.readFileSync(baselineFile),candidateBytes=fs.readFileSync
 const baseline=JSON.parse(baselineBytes).rules,candidate=JSON.parse(candidateBytes).rules;
 const sha=bytes=>crypto.createHash('sha256').update(bytes).digest('hex');
 const expectedBaseline='e0632a98ed106117f03e61da0446ef4b2c2e6ed02ea8c6f1c498a0e7edcb17bf';
-const expectedCandidate='ba7322a59a4c3cf6b503dc52b1394313ac9421106a6c05fc6835200d49e3e72d';
+const expectedCandidate='ba0816f465b4830a726881fc6a00c3805283b8d4c77d80ed8daebc026719b45a';
 const futureRoots=['accounts','groups','legacyShareOwners','shareAccess','shareDirectory','shareGroupAccess','shareVisibility','shareVisibilityConfig','trainerPreferencesConfig','trainerShares','userPreferences'];
 
 assert.equal(sha(baselineBytes),expectedBaseline);

@@ -96,7 +96,7 @@ Preferred narrow-read rollback:
 
 Additive visibility/preferences candidate:
 
-`ba7322a59a4c3cf6b503dc52b1394313ac9421106a6c05fc6835200d49e3e72d`
+`ba0816f465b4830a726881fc6a00c3805283b8d4c77d80ed8daebc026719b45a`
 
 These hashes are proposed values only. Future publication requires immediate
 hash recomputation, staging-target verification, confirmation that both write

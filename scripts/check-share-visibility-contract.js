@@ -8,6 +8,8 @@ const candidate=JSON.parse(fs.readFileSync(path.join(root,'tests/firebase/databa
 const map=JSON.parse(fs.readFileSync(path.join(root,'tests/firebase/share-visibility-surface-map.json'),'utf8'));
 const emulator=fs.readFileSync(path.join(root,'tests/firebase/share-visibility-rules.test.cjs'),'utf8');
 const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
+const releaseSource=fs.readFileSync(path.join(root,'js/domain/clientRelease.js'),'utf8');
+const releaseId=releaseSource.match(/RELEASE_ID='([^']+)'/)?.[1];
 const window={};vm.runInNewContext(fs.readFileSync(path.join(root,'js/data/firebaseReadRegistry.js'),'utf8'),{window});
 const registry=new Map(Array.from(window.PogoData.firebaseReadRegistry.READ_SURFACES,entry=>[entry.id,entry]));
 
@@ -31,6 +33,7 @@ assert.match(candidate.userPreferences.$viewerUid['.read'],/trainerPreferencesCo
 assert.equal(candidate.userPreferences.$viewerUid.favoriteTrainers['.write'],false);
 assert.equal(candidate.groups['.read'],false);assert.equal(candidate.groups['.write'],false);assert.equal(candidate.shareGroupAccess.$ownerUid['.write'],false);
 assert.doesNotMatch(html,/js\/domain\/shareVisibility\.js|SHARE_VISIBILITY_MODEL_ENABLED/);
-assert.match(html,/js\/domain\/trainerPreferences\.js\?v=2026-08-05\.12/);
+assert.ok(releaseId,'Missing client release ID');
+assert.match(html,new RegExp(`js/domain/trainerPreferences\\.js\\?v=${releaseId.replace(/[.*+?^${}()|[\\]\\]/g,'\\$&')}`));
 assert.match(html,/SYNCED_TRAINER_PREFERENCES_ENABLED!==false/);
 console.log(`Share visibility additive contract passed (${Object.keys(baseline).length} live rule roots preserved; ${map.surfaces.length} disabled future surfaces mapped).`);

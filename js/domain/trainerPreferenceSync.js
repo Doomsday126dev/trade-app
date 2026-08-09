@@ -1,7 +1,7 @@
 (function(global){
   const root=global.PogoDomain=global.PogoDomain||{};
   const SERVER_SCHEMA_VERSION=1;
-  const LOCAL_SCHEMA_VERSION=2;
+  const LOCAL_SCHEMA_VERSION=3;
   const MAX_QUEUE_OPERATIONS=128;
   const MAX_RETRY_ATTEMPTS=8;
   const TOMBSTONE_RETENTION_DAYS=90;
@@ -10,7 +10,6 @@
   const MAX_TAGS_PER_TRAINER=24;
   const MAX_RECENTS=30;
   const MAX_HISTORY=1500;
-  const MAX_NOTE_LENGTH=240;
   const MAX_OPERATION_ID_LENGTH=80;
   const MAX_OPERATION_JSON_LENGTH=8192;
   const MUTATION_KINDS=Object.freeze([
@@ -19,7 +18,7 @@
   ]);
   const SYNCABLE_PRIVATE_DATA=Object.freeze([
     'favorite-trainer-identities','private-tag-definitions','trainer-tag-assignments',
-    'private-trainer-notes','bounded-recents','bounded-trainer-history'
+    'bounded-recents','bounded-trainer-history'
   ]);
   const DEVICE_ONLY_DATA=Object.freeze([
     'open-dialogs','dirty-drafts','active-filters','scroll-position','temporary-search-text',
@@ -28,7 +27,6 @@
   const CONFLICT_MATRIX=Object.freeze({
     favoriteAddFavoriteAdd:'merge-earliest-timestamp-preserved',
     favoriteDeleteMetadataEdit:'tombstone-wins',
-    noteEditNoteEdit:'explicit-user-conflict',
     tagRenameTagRename:'explicit-user-conflict',
     tagDeleteAssignment:'tombstone-wins',
     offlineEditNewerRemoteEdit:'reject',
@@ -124,13 +122,12 @@
     const operation=normalized.value;
     if(!['metadata-upsert','metadata-delete'].includes(operation.kind))return failure('trainer-preference-sync/kind-invalid','Trainer metadata operation kind is invalid');
     if(exactReplay(current,operation))return Object.freeze({ok:true,status:'idempotent',value:current});
-    if(operation.baseRevision!==currentRevision(current))return failure('trainer-preference-sync/conflict','Private note or tag assignment changed on another device');
+    if(operation.baseRevision!==currentRevision(current))return failure('trainer-preference-sync/conflict','Tag assignment changed on another device');
     if(operation.kind==='metadata-delete')return current?Object.freeze({ok:true,status:'applied',value:tombstone(current,operation)}):Object.freeze({ok:true,status:'already-deleted',value:null});
-    const note=text(operation.payload.note),tagIds=normalizeTagIds(operation.payload.tagIds);
-    if(Array.from(note).length>MAX_NOTE_LENGTH)return failure('trainer-preference-sync/note-too-long','Private note is too long');
+    const tagIds=normalizeTagIds(operation.payload.tagIds);
     if(tagIds.length>MAX_TAGS_PER_TRAINER)return failure('trainer-preference-sync/tag-limit','Too many tags are assigned');
     if(tagIds.some(id=>!tags[id]||tags[id].active!==true||tags[id].deleted===true))return failure('trainer-preference-sync/tag-unavailable','A tag assignment references a deleted or unavailable tag');
-    return Object.freeze({ok:true,status:'applied',value:nextRecord(current,operation,{note,tagIds})});
+    return Object.freeze({ok:true,status:'applied',value:nextRecord(current,operation,{tagIds})});
   }
   function resolveTagMutation(current,rawOperation,{labelClaimAvailable=true}={}){
     const normalized=normalizeOperation(rawOperation);if(!normalized.ok)return normalized;
@@ -170,9 +167,9 @@
     const favoritesByKey=new Map();
     for(const raw of local.favorites||[]){
       const displayName=text(raw?.displayName||raw?.trainerName),key=text(raw?.key||displayName).toLocaleLowerCase('en-US');
-      const createdAt=integer(raw?.createdAt??raw?.addedAt??0),updatedAt=integer(raw?.updatedAt??createdAt??0),note=text(raw?.note),tagIds=normalizeTagIds(raw?.tagIds).filter(id=>tags[id]);
-      if(!displayName||!exactKey(key)||Array.from(displayName).length>64||createdAt===null||updatedAt===null||Array.from(note).length>MAX_NOTE_LENGTH)return migrationInvalid();
-      const item={key,displayName,tagIds:[...tagIds],createdAt,updatedAt};if(note)item.note=note;
+      const createdAt=integer(raw?.createdAt??raw?.addedAt??0),updatedAt=integer(raw?.updatedAt??createdAt??0),tagIds=normalizeTagIds(raw?.tagIds).filter(id=>tags[id]);
+      if(!displayName||!exactKey(key)||Array.from(displayName).length>64||createdAt===null||updatedAt===null)return migrationInvalid();
+      const item={key,displayName,tagIds:[...tagIds],createdAt,updatedAt};
       const current=favoritesByKey.get(key);
       if(!current||updatedAt>current.updatedAt||(updatedAt===current.updatedAt&&JSON.stringify(stable(item))<JSON.stringify(stable(current))))favoritesByKey.set(key,item);
     }
@@ -226,7 +223,7 @@
 
   root.trainerPreferenceSync=Object.freeze({
     SERVER_SCHEMA_VERSION,LOCAL_SCHEMA_VERSION,MAX_QUEUE_OPERATIONS,MAX_RETRY_ATTEMPTS,TOMBSTONE_RETENTION_DAYS,
-    MAX_FAVORITES,MAX_TAGS,MAX_TAGS_PER_TRAINER,MAX_RECENTS,MAX_HISTORY,MAX_NOTE_LENGTH,MAX_OPERATION_ID_LENGTH,MAX_OPERATION_JSON_LENGTH,MUTATION_KINDS,
+    MAX_FAVORITES,MAX_TAGS,MAX_TAGS_PER_TRAINER,MAX_RECENTS,MAX_HISTORY,MAX_OPERATION_ID_LENGTH,MAX_OPERATION_JSON_LENGTH,MUTATION_KINDS,
     SYNCABLE_PRIVATE_DATA,DEVICE_ONLY_DATA,CONFLICT_MATRIX,sameIdentity,fingerprint,normalizeOperation,favoriteCallableRequest,resolveFavoriteMutation,
     resolveMetadataMutation,resolveTagMutation,preferenceSyncPresentation,normalizeMigrationSource,buildMigrationPlan,migrationSourceMatches,verifyMigration,localeSyncRecommendation
   });

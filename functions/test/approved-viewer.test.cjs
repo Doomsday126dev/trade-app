@@ -42,8 +42,8 @@ test('unknown or incoherent target viewer is rejected', async () => {
   await rejectsCode(incoherent.operations.setApprovedViewer({ viewerUid: IDS.viewer, action: 'grant', requestId: requestId('incoherent') }, context(IDS.owner)), 'invalid_argument');
 });
 
-test('personal favorites, tags, recents, notes, and history remain unchanged', async () => {
-  const preferences = { favoriteTrainers: { x: { note: 'private' } }, trainerTags: { tag_x: { active: true } }, recentTrainerSlots: { '00': { ownerUid: IDS.other } }, trainerHistory: { x: { entryCount: 1 } } };
+test('personal favorites, tags, recents, and history remain unchanged', async () => {
+  const preferences = { favoriteTrainers: { x: { active: true } }, trainerTags: { tag_x: { active: true } }, recentTrainerSlots: { '00': { ownerUid: IDS.other } }, trainerHistory: { x: { entryCount: 1 } } };
   const { adapter, operations } = harness({ userPreferences: { [IDS.owner]: preferences } });
   await operations.setApprovedViewer({ viewerUid: IDS.viewer, action: 'grant', requestId: requestId('prefs') }, context(IDS.owner));
   assert.deepEqual(adapter.inspect().userPreferences[IDS.owner], preferences);

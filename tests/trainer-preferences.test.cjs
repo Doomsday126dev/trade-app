@@ -5,7 +5,7 @@ const path=require('node:path');
 const vm=require('node:vm');
 
 function domain(){const window={};vm.runInNewContext(readFileSync(path.join(__dirname,'..','js/domain/trainerPreferences.js'),'utf8'),{window});return window.PogoDomain.trainerPreferences;}
-function favorite(trainerName,addedAt=10,extra={}){return{trainerName,addedAt,note:'',tagIds:[],...extra};}
+function favorite(trainerName,addedAt=10,extra={}){return{trainerName,addedAt,tagIds:[],...extra};}
 
 test('synced preferences stay disabled and bounded',()=>{const value=domain();assert.equal(value.SYNCED_TRAINER_PREFERENCES_ENABLED,false);assert.equal(value.MAX_RECENT_TRAINERS,30);assert.equal(value.MAX_HISTORY_ENTRIES,1500);});
 
@@ -36,9 +36,9 @@ test('cross-device favorite merge preserves earliest addedAt, latest display met
   assert.equal(Object.keys(merged.favorites).length,2);assert.equal(merged.favorites.a.addedAt,20);assert.equal(merged.favorites.a.trainerName,'New Name');assert.deepEqual(Array.from(merged.favorites.a.tagIds),['tag_a','tag_b']);
 });
 
-test('private notes are bounded and affect only the viewer favorite',()=>{
-  const value=domain(),state={favorites:{a:favorite('Trainer A')}};
-  const updated=value.updateFavoriteNote(state,'a','  Meet at raid hour  ');assert.equal(updated.favorites.a.note,'Meet at raid hour');assert.equal(value.updateFavoriteNote(state,'a','x'.repeat(241)).error.code,'trainer-preferences/note-too-long');
+test('favorite records contain tags but no private-note API',()=>{
+  const value=domain(),result=value.favoriteTrainer({favorites:{}},'a',favorite('Trainer A'));
+  assert.deepEqual(Array.from(result.favorites.a.tagIds),[]);assert.equal('note' in result.favorites.a,false);assert.equal(typeof value.updateFavoriteNote,'undefined');assert.equal(typeof value.normalizeNote,'undefined');
 });
 
 test('tags create, rename, soft-delete, assign, unassign, and filter without duplicate normalized labels',()=>{

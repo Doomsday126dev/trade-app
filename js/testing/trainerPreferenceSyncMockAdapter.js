@@ -2,7 +2,6 @@
   const root=global.PogoTesting=global.PogoTesting||{};
   const TEST_NAMESPACE='pogo-sync-ux-test-v1';
   const FIXTURES=Object.freeze({
-    'note-edit':Object.freeze({source:'deterministic-mock',kind:'note-edit',localValue:'Meet after raid hour',remoteValue:'Available Saturday'}),
     'tag-rename':Object.freeze({source:'deterministic-mock',kind:'tag-rename',localValue:'Next meetup',remoteValue:'Weekend group'}),
     'favorite-stale':Object.freeze({source:'deterministic-mock',kind:'favorite-stale',localValue:true,remoteValue:false}),
     'offline-newer-remote':Object.freeze({source:'deterministic-mock',kind:'offline-newer-remote',localValue:'Offline device edit',remoteValue:'Newer cloud edit'}),
@@ -19,7 +18,7 @@
     function resolveFixture(kind,choice){
       const value=fixture(kind);if(!value)return Object.freeze({ok:false,code:'fixture-unavailable'});
       const allowed={
-        'note-edit':['keep-both','use-device','use-cloud'],'tag-rename':['keep-both','use-device','use-cloud'],
+        'tag-rename':['keep-both','use-device','use-cloud'],
         'favorite-stale':['keep-current','try-again'],'offline-newer-remote':['keep-both','use-device','use-cloud'],'stale-schema':['refresh']
       }[kind]||[];
       if(!allowed.includes(choice))return Object.freeze({ok:false,code:'choice-unavailable'});

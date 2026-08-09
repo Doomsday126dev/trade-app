@@ -218,7 +218,7 @@ rules, schemas, idempotency, and rate limits; it replaces none of them.
 Rules prerequisite:
 
 - Live narrow-read baseline: `e0632a98ed106117f03e61da0446ef4b2c2e6ed02ea8c6f1c498a0e7edcb17bf`
-- Additive disabled candidate: `ba7322a59a4c3cf6b503dc52b1394313ac9421106a6c05fc6835200d49e3e72d`
+- Additive disabled candidate: `ba0816f465b4830a726881fc6a00c3805283b8d4c77d80ed8daebc026719b45a`
 - Reconfirm the visibility emulator matrix: 45 passed, 0 failed.
 
 Deploy the additive rules to staging before Functions, with both write gates

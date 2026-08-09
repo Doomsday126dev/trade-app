@@ -148,7 +148,7 @@ test('disabled share controls remain hidden and expose no grant action',()=>{
   assert.equal(model.hidden,true);assert.equal(model.interactive,false);assert.equal(model.grantActionEnabled,false);assert.equal(model.revokeActionEnabled,false);assert.equal(model.layout.mode,'mobile_sheet');
 });
 
-test('translation catalog covers visibility, Approved Viewer, sync, migration, note, and unread states',()=>{
+test('translation catalog covers visibility, Approved Viewer, sync, migration, tags, and unread states',()=>{
   const locale=readFileSync(path.join(__dirname,'..','js/i18n/locales/en.js'),'utf8');
-  for(const key of ['share.mode.public','share.approvedViewersTitle','trainer.syncUnavailable','trainer.migrationReady','trainer.privateNoteAction','trainer.unreadChanges','share.visibilityRestricted'])assert.ok(locale.includes(`'${key}'`),key);
+  for(const key of ['share.mode.public','share.approvedViewersTitle','trainer.syncUnavailable','trainer.migrationReady','trainer.tagsAssign','trainer.unreadChanges','share.visibilityRestricted'])assert.ok(locale.includes(`'${key}'`),key);
 });

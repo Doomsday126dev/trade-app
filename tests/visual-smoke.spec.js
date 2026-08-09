@@ -275,18 +275,39 @@ test.describe('visual smoke', () => {
 
       const geometry=await page.evaluate(()=>{
         const panel=document.querySelector('.language-settings-panel');
+        const layout=document.getElementById('settings-layout');
+        const detail=document.getElementById('settings-detail');
+        const primaryLabel=document.querySelector('.language-primary-row>span');
+        const primarySelect=document.getElementById('settings-language');
         const checkbox=document.getElementById('settings-search-language-override');
         const label=checkbox.closest('label');
+        const detailRect=detail.getBoundingClientRect();
+        const panelRect=panel.getBoundingClientRect();
+        const labelRect=primaryLabel.getBoundingClientRect();
+        const selectRect=primarySelect.getBoundingClientRect();
         return{
           noOverflow:document.documentElement.scrollWidth<=document.documentElement.clientWidth&&panel.scrollWidth<=panel.clientWidth,
           touchHeight:label.getBoundingClientRect().height,
           panelRight:panel.getBoundingClientRect().right,
-          viewport:innerWidth
+          viewport:innerWidth,
+          publicMode:layout.classList.contains('settings-public'),
+          detailWidth:detailRect.width,
+          panelWidth:panelRect.width,
+          labelWidth:labelRect.width,
+          selectWidth:selectRect.width,
+          selectHeight:selectRect.height
         };
       });
       expect(geometry.noOverflow).toBe(true);
       expect(geometry.touchHeight).toBeGreaterThanOrEqual(48);
       expect(geometry.panelRight).toBeLessThanOrEqual(geometry.viewport+1);
+      expect(geometry.publicMode).toBe(true);
+      expect(geometry.panelWidth).toBeGreaterThanOrEqual(geometry.detailWidth-42);
+      expect(geometry.labelWidth).toBeGreaterThanOrEqual(Math.min(260,geometry.detailWidth-42));
+      expect(geometry.selectWidth).toBeGreaterThanOrEqual(Math.min(260,geometry.detailWidth-42));
+      expect(geometry.selectHeight).toBeGreaterThanOrEqual(48);
+      await expect(page.locator('.settings-nav')).toBeHidden();
+      await expect(page.locator('.settings-mobile-back')).toBeHidden();
       await page.keyboard.press('Escape');
     }
 
@@ -302,6 +323,69 @@ test.describe('visual smoke', () => {
     await page.evaluate(()=>openSettingsPanel('public'));
     await expect(page.locator('#settings-search-language-override')).not.toBeChecked();
     expect(await page.evaluate(()=>localStorage.getItem('pogoPokemonGoSearchLocale:v1'))).toBeNull();
+  });
+
+  test('anonymous share and signed-out Settings use the full-width local Language layout',async({page})=>{
+    const surfaces=['share','login'];
+    const locales=['en','ja','es','de'];
+    const viewports=[[320,640],[375,700],[390,700],[430,760],[768,800],[1024,800],[1440,900],[390,420],[390,300]];
+    for(const surface of surfaces){
+      for(const locale of locales){
+        for(const [width,height] of viewports){
+          await page.setViewportSize({width,height});
+          await page.goto(`./?public-settings=${surface}-${locale}-${width}-${height}-${Date.now()}`,{waitUntil:'domcontentloaded'});
+          await waitForSettingsStartupReady(page);
+          await page.evaluate(({surface,locale})=>{
+            cur='';
+            changeInterfaceLocale(locale);
+            document.getElementById('share-view').classList.toggle('active',surface==='share');
+            document.getElementById('login-pg').style.display=surface==='login'?'flex':'none';
+            openSettingsPanel('public');
+          },{surface,locale});
+          await expect(page.locator('#settings-modal')).toBeVisible();
+          await expect(page.locator('.settings-nav')).toBeHidden();
+          await expect(page.locator('[data-settings-section="profile"]')).toBeHidden();
+          await expect(page.locator('[data-settings-section="security"]')).toBeHidden();
+          await expect(page.locator('[data-settings-section="tools"]')).toBeHidden();
+          await expect(page.locator('[data-settings-section="data"]')).toBeHidden();
+          await expect(page.locator('[data-settings-section="language"]')).toBeVisible();
+          const off=await page.evaluate(()=>{
+            const modal=document.querySelector('.settings-modal');
+            const detail=document.getElementById('settings-detail');
+            const panel=document.querySelector('.language-settings-panel');
+            const label=document.querySelector('.language-primary-row>span');
+            const select=document.getElementById('settings-language');
+            const close=document.querySelector('.settings-modal-close');
+            return{
+              noOverflow:document.documentElement.scrollWidth<=document.documentElement.clientWidth&&modal.scrollWidth<=modal.clientWidth&&detail.scrollWidth<=detail.clientWidth&&panel.scrollWidth<=panel.clientWidth,
+              detailWidth:detail.getBoundingClientRect().width,
+              modalWidth:modal.getBoundingClientRect().width,
+              labelWidth:label.getBoundingClientRect().width,
+              selectWidth:select.getBoundingClientRect().width,
+              selectHeight:select.getBoundingClientRect().height,
+              closeWidth:close.getBoundingClientRect().width,
+              closeHeight:close.getBoundingClientRect().height
+            };
+          });
+          expect(off.noOverflow).toBe(true);
+          expect(off.detailWidth).toBeGreaterThanOrEqual(off.modalWidth-2);
+          expect(off.labelWidth).toBeGreaterThanOrEqual(Math.min(260,off.detailWidth-42));
+          expect(off.selectWidth).toBeGreaterThanOrEqual(Math.min(260,off.detailWidth-42));
+          expect(off.selectHeight).toBeGreaterThanOrEqual(48);
+          expect(off.closeWidth).toBeGreaterThanOrEqual(48);
+          expect(off.closeHeight).toBeGreaterThanOrEqual(48);
+          await page.locator('#settings-search-language-override').check();
+          await expect(page.locator('#settings-search-language-override-row')).toBeVisible();
+          expect(await page.evaluate(()=>{
+            const row=document.getElementById('settings-search-language-override-row');
+            const select=document.getElementById('settings-search-language');
+            return row.scrollWidth<=row.clientWidth&&select.getBoundingClientRect().width>=Math.min(260,document.getElementById('settings-detail').getBoundingClientRect().width-42)&&select.getBoundingClientRect().height>=48;
+          })).toBe(true);
+          await page.keyboard.press('Escape');
+          await expect(page.locator('#settings-modal')).toBeHidden();
+        }
+      }
+    }
   });
 
   test('Settings route restores the latest same-session scroll across close, Escape, Back, Forward, locale, and surfaces',async({page})=>{
@@ -394,9 +478,9 @@ test.describe('visual smoke', () => {
       const closeBox=await activeSettingsClose(page).boundingBox();
       expect(closeBox?.width).toBeGreaterThanOrEqual(48);expect(closeBox?.height).toBeGreaterThanOrEqual(48);
       expect(await page.evaluate(()=>{
-        const body=document.querySelector('.settings-modal-body'),modal=document.querySelector('.settings-modal');
+        const detail=document.getElementById('settings-detail'),modal=document.querySelector('.settings-modal');
         const rect=modal.getBoundingClientRect();
-        return document.documentElement.scrollWidth<=document.documentElement.clientWidth&&rect.left>=0&&rect.right<=innerWidth+1&&rect.bottom<=innerHeight+1&&getComputedStyle(body).overflowY==='auto';
+        return document.documentElement.scrollWidth<=document.documentElement.clientWidth&&rect.left>=0&&rect.right<=innerWidth+1&&rect.bottom<=innerHeight+1&&getComputedStyle(detail).overflowY==='auto';
       })).toBe(true);
       await activeSettingsClose(page).click();
       await expect(page.locator('#settings-modal')).toBeHidden();
@@ -467,15 +551,15 @@ test.describe('visual smoke', () => {
       expect((closeBox?.x||0)+(closeBox?.width||0)).toBeLessThanOrEqual(width);
       expect((closeBox?.y||0)+(closeBox?.height||0)).toBeLessThanOrEqual(height);
       expect(await page.evaluate(()=>{
-        const body=document.querySelector('.settings-modal-body');
+        const detail=document.getElementById('settings-detail');
         return document.documentElement.scrollWidth<=document.documentElement.clientWidth&&
-          getComputedStyle(body).overflowY==='auto'&&body.scrollHeight>=body.clientHeight;
+          getComputedStyle(detail).overflowY==='auto'&&detail.scrollHeight>=detail.clientHeight;
       })).toBe(true);
     }
   });
 
   test('local trainer organizer remains contained and reachable on compact viewports',async({page})=>{
-    for(const [width,height] of [[320,640],[375,700],[390,420],[390,300],[430,760],[1024,800]]){
+    for(const [width,height] of [[320,640],[375,700],[390,420],[390,300],[430,760],[768,800],[1024,800],[1440,900]]){
       await page.setViewportSize({width,height});
       await page.goto(`./?local-organizer=${width}-${height}-${Date.now()}`,{waitUntil:'domcontentloaded'});
       await waitForStableLocalOrganizerStartup(page);
@@ -492,8 +576,10 @@ test.describe('visual smoke', () => {
         const rect=panel.getBoundingClientRect();
         return document.documentElement.scrollWidth<=document.documentElement.clientWidth&&rect.left>=0&&rect.right<=innerWidth&&rect.bottom<=innerHeight+1&&getComputedStyle(body).overflowY==='auto';
       })).toBe(true);
-      await page.locator('#organizer-note').fill('A private note draft');
-      await handleOneDialogDuring(page,()=>page.keyboard.press('Escape'),true);
+      await page.locator('#organizer-new-tag-toggle').click();
+      await page.locator('#organizer-new-tag').fill('Compact tag draft');
+      await page.keyboard.press('Escape');
+      await page.keyboard.press('Escape');
       await expect(modal).toBeHidden();
     }
   });
@@ -502,7 +588,7 @@ test.describe('visual smoke', () => {
     await page.goto(`./?local-organizer-lifecycle=${Date.now()}`,{waitUntil:'domcontentloaded'});
     await waitForStableLocalOrganizerStartup(page);
     await installLocalOrganizerFixture(page);
-    const modal=page.locator('#trainer-organizer-modal'),note=page.locator('#organizer-note');
+    const modal=page.locator('#trainer-organizer-modal');
 
     for(let cycle=0;cycle<3;cycle++){
       await page.evaluate(()=>openTrainerOrganizer('TrainerAlpha'));
@@ -528,27 +614,20 @@ test.describe('visual smoke', () => {
     await page.evaluate(()=>closeTrainerOrganizer(true));
 
     await page.evaluate(()=>openTrainerOrganizer('TrainerAlpha'));
-    await note.fill('Keep this draft');
-    await handleOneDialogDuring(page,()=>page.keyboard.press('Escape'),false);
+    await page.locator('#organizer-new-tag-toggle').click();
+    await page.locator('#organizer-new-tag').fill('Inline draft');
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#organizer-add-tag-row')).toBeHidden();
     await expect(modal).toBeVisible();
     await page.locator('.organizer-actions .bpri').click();
-    expect(await page.evaluate(()=>trainerOrganizerState.dirty)).toBe(false);
-    await page.keyboard.press('Escape');
     await expect(modal).toBeHidden();
 
-    await page.evaluate(()=>openTrainerOrganizer('TrainerAlpha'));
-    await note.fill('Trainer switch draft');
-    await handleOneDialogDuring(page,()=>page.evaluate(()=>openTrainerOrganizer('TrainerBeta')),false);
-    await expect(page.locator('#organizer-trainer-name')).toHaveText('TrainerAlpha');
-    await handleOneDialogDuring(page,()=>page.evaluate(()=>openTrainerOrganizer('TrainerBeta')),true);
+    await page.evaluate(()=>{openTrainerOrganizer('TrainerAlpha');openTrainerOrganizer('TrainerBeta');});
     await expect(page.locator('#organizer-trainer-name')).toHaveText('TrainerBeta');
     await page.evaluate(()=>closeTrainerOrganizer(true));
 
     await page.evaluate(()=>openTrainerOrganizer('TrainerAlpha'));
-    await note.fill('Discard this draft');
-    await handleOneDialogDuring(page,()=>page.locator('#trainer-organizer-modal').click({position:{x:2,y:2}}),false);
-    await expect(modal).toBeVisible();
-    await handleOneDialogDuring(page,()=>page.locator('.organizer-actions .bghost').click(),true);
+    await page.locator('#trainer-organizer-modal').click({position:{x:2,y:2}});
     await expect(modal).toBeHidden();
 
     await page.evaluate(()=>openTrainerOrganizer('TrainerAlpha'));

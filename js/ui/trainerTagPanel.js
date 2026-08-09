@@ -9,20 +9,19 @@
     'sync-error':Object.freeze({icon:'retry',statusKey:'trainer.syncState.sync-error',detailKey:'trainer.syncStatus.errorDetail'})
   });
   const CONFLICTS=Object.freeze({
-    'note-edit':Object.freeze({titleKey:'trainer.syncConflict.note.title',localKey:'trainer.syncConflict.note.local',remoteKey:'trainer.syncConflict.note.remote',preserveKey:'trainer.syncConflict.note.preserve',discardKey:'trainer.syncConflict.note.discard',choices:Object.freeze(['keep-both','use-device','use-cloud'])}),
     'tag-rename':Object.freeze({titleKey:'trainer.syncConflict.tagRename.title',localKey:'trainer.syncConflict.tagRename.local',remoteKey:'trainer.syncConflict.tagRename.remote',preserveKey:'trainer.syncConflict.tagRename.preserve',discardKey:'trainer.syncConflict.tagRename.discard',choices:Object.freeze(['keep-both','use-device','use-cloud'])}),
     'favorite-stale':Object.freeze({titleKey:'trainer.syncConflict.favorite.title',localKey:'trainer.syncConflict.favorite.local',remoteKey:'trainer.syncConflict.favorite.remote',preserveKey:'trainer.syncConflict.favorite.preserve',discardKey:'trainer.syncConflict.favorite.discard',choices:Object.freeze(['keep-current','try-again'])}),
     'offline-newer-remote':Object.freeze({titleKey:'trainer.syncConflict.offline.title',localKey:'trainer.syncConflict.offline.local',remoteKey:'trainer.syncConflict.offline.remote',preserveKey:'trainer.syncConflict.offline.preserve',discardKey:'trainer.syncConflict.offline.discard',choices:Object.freeze(['keep-both','use-device','use-cloud'])}),
     'stale-schema':Object.freeze({titleKey:'trainer.syncConflict.version.title',localKey:'trainer.syncConflict.version.local',remoteKey:'trainer.syncConflict.version.remote',preserveKey:'trainer.syncConflict.version.preserve',discardKey:'trainer.syncConflict.version.discard',choices:Object.freeze(['refresh'])})
   });
-  const COUNT_KEYS=Object.freeze(['favorites','tags','notes','recents','history']);
+  const COUNT_KEYS=Object.freeze(['favorites','tags','recents','history']);
 
   function tagsById(tags){return Object.fromEntries(tags.map(tag=>[tag.tagId,tag]));}
   function layoutForWidth(width,height=800){
     const viewport=Math.max(0,Number(width)||0),mobile=viewport<=BREAKPOINT;
     return Object.freeze({mode:mobile?'mobile_sheet':'desktop_dialog',width:viewport,touchTargetPx:48,chipsWrap:true,horizontalOverflow:false,internalScroll:true,maxHeightPx:Math.max(220,Math.floor((Number(height)||800)*0.82)),focusTrap:true,keyboardNavigation:true,pointer:true,touch:true,hoverRequired:false});
   }
-  function accessibilityModel(){return Object.freeze({dialogRole:'dialog',listRole:'listbox',optionRole:'option',modal:true,focusTrap:true,escapeCloses:true,restoreFocus:true,visibleFocus:true,labelKeys:Object.freeze({dialog:'trainer.tagsDialogLabel',filters:'trainer.tagsFilterLabel',note:'trainer.privateNoteLabel',approvedViewers:'share.approvedViewersTitle'})});}
+  function accessibilityModel(){return Object.freeze({dialogRole:'dialog',listRole:'listbox',optionRole:'option',modal:true,focusTrap:true,escapeCloses:true,restoreFocus:true,visibleFocus:true,labelKeys:Object.freeze({dialog:'trainer.tagsDialogLabel',filters:'trainer.tagsFilterLabel',approvedViewers:'share.approvedViewersTitle'})});}
   function boundedCount(value){const number=Number(value);return Number.isSafeInteger(number)&&number>=0?number:0;}
   function countModel(value={}){return Object.freeze(Object.fromEntries(COUNT_KEYS.map(key=>[key,boundedCount(value[key])])));}
   function syncStatusViewModel({featureEnabled=false,writesEnabled=false,state='local-only',pendingCount=0,conflictCount=0,lastSuccessfulSyncAt=0,reducedMotion=false,previewSource='',syncDomain}={}){
@@ -77,7 +76,7 @@
     const activeTags=Object.values(preferences?.tags||{}).filter(tag=>tag.active!==false);
     const byId=tagsById(activeTags);
     const favorites=domain.filterFavorites(preferences,{query,tagIds,matchAllTags}).map(favorite=>Object.freeze({
-      ownerUid:favorite.ownerUid,trainerName:String(favorite.trainerName||''),note:String(favorite.note||''),unread:favorite.unread===true,
+      ownerUid:favorite.ownerUid,trainerName:String(favorite.trainerName||''),unread:favorite.unread===true,
       chips:Object.freeze((favorite.tagIds||[]).map(id=>byId[id]).filter(Boolean).map(tag=>Object.freeze({id:tag.tagId,label:tag.label||tag.displayLabel}))),
       presentation:compact?'compact_chip_row':'rich_tagged_card',wrapLongText:true
     }));
@@ -85,7 +84,7 @@
       status:'disabled_candidate',hidden:true,interactive:false,syncState:'disabled',syncStateKey:'trainer.syncUnavailable',
       presentation:compact?'compact_mobile':'rich_desktop',layout:layoutForWidth(width,height),accessibility:accessibilityModel(),
       tags:Object.freeze(activeTags.map(tag=>Object.freeze({id:tag.tagId,label:tag.label||tag.displayLabel,active:true}))),favorites:Object.freeze(favorites),
-      actions:Object.freeze(['trainer.tagsCreate','trainer.tagsRename','trainer.tagsDelete','trainer.tagsAssign','trainer.tagsRemove','trainer.tagsFilter','trainer.tagsSearch','trainer.privateNoteAction']),
+      actions:Object.freeze(['trainer.tagsCreate','trainer.tagsRename','trainer.tagsDelete','trainer.tagsAssign','trainer.tagsRemove','trainer.tagsFilter','trainer.tagsSearch']),
       controls:Object.freeze({keyboard:true,pointer:true,touch:true,multipleTags:true,saveDisabled:true})
     });
   }

@@ -59,7 +59,7 @@ test('account and Settings controls expose 48px minimum touch targets',()=>{
 test('favorite organizer trigger and sheet controls expose 48px touch targets',()=>{
   assert.match(html,/\.trainer-icon-btn\{width:48px;height:48px/);
   assert.match(html,/\.organizer-close\{width:48px;height:48px;min-width:48px/);
-  assert.match(html,/\.organizer-tag-row button,\.organizer-add-tag button\{min-height:48px/);
+  assert.match(html,/\.organizer-tag-row button,\.organizer-add-tag button,\.organizer-new-tag-toggle\{min-height:48px/);
   assert.match(html,/\.organizer-body\{[^}]*overflow-y:auto/);
   assert.match(html,/padding-bottom:calc\(20px \+ env\(safe-area-inset-bottom\)\)/);
 });
@@ -147,14 +147,14 @@ test('Account & Security remains an informational account-only readiness surface
   assert.match(html,/DURABLE_AUTH_PROVIDERS_ENABLED!==false/);
 });
 
-test('favorite organizer protects dirty drafts and clears stale deleted-tag filters',()=>{
+test('favorite organizer saves tag changes immediately and clears stale deleted-tag filters',()=>{
   const opener=html.slice(html.indexOf('function openTrainerOrganizer'),html.indexOf('function closeTrainerOrganizer'));
-  const closer=html.slice(html.indexOf('function closeTrainerOrganizer'),html.indexOf('function createLocalTrainerTag'));
-  const deletion=html.slice(html.indexOf('function deleteLocalTrainerTag'),html.indexOf('function saveTrainerOrganizer'));
-  assert.match(opener,/trainerOrganizerState\.dirty.*trainerOrganizerState\.username!==username.*confirm\(i18nCore\.t\('organizer\.discardChanges'\)\)/s);
-  assert.match(closer,/trainerOrganizerState\.dirty.*confirm\(i18nCore\.t\('organizer\.discardChanges'\)\)/s);
+  const changed=html.slice(html.indexOf('function trainerOrganizerChanged'),html.indexOf('function renderTrainerOrganizer'));
+  const deletion=html.slice(html.indexOf('function deleteLocalTrainerTag'),html.indexOf('function rememberTrainerOpened'));
+  assert.match(changed,/setFavoriteTags\(trainerOrganizerState\.username,tagIds\)/);
+  assert.doesNotMatch(opener,/discardChanges|draftNote|draftTagIds/);
   assert.match(deletion,/trainerOrganizerState\.tagIds=trainerOrganizerState\.tagIds\.filter/);
-  assert.match(deletion,/trainerOrganizerState\.draftTagIds=trainerOrganizerState\.draftTagIds\?\.filter/);
+  assert.doesNotMatch(deletion,/draftTagIds|saveTrainerOrganizer/);
   assert.match(html,/if\(el\.id==='trainer-organizer-modal'\)closeTrainerOrganizer\(\)/);
   const accountSwitch=html.slice(html.indexOf('function resetTransientUiBeforeSessionActivation'),html.indexOf('function activateOwnedSession'));
   const authLoss=html.slice(html.indexOf('function bindAuthObserver'),html.indexOf('function waitForAuthState'));

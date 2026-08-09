@@ -72,9 +72,9 @@ or payload exists.
 ## Privacy And Activation
 
 Logs contain only operation class, result class, mode, correlation hash,
-duration, App Check presence, and replay state. Labels, UIDs, notes, tags,
+duration, App Check presence, and replay state. Labels, UIDs, tags,
 payloads, paths, and preference contents are excluded. Favorite mutations never
-read or write public shares, Approved Viewer grants, private notes, tags,
+read or write public shares, Approved Viewer grants, tags,
 history, identities, or Auth users.
 
 This candidate does not authorize a rules or Functions deployment, either

@@ -193,7 +193,7 @@ test('flags gates hashes and private review state remain unchanged', () => {
   assert.equal(contract.SAFETY_STATE.trainerPreferencesServerWriteGate, false);
   assert.deepEqual(contract.SAFETY_STATE.privateReview, { confirmedValidIdentity: 3, unreviewed: 49, seedEligibleTrueCount: 0 });
   assert.equal(contract.RULE_HASHES.rollback, 'e0632a98ed106117f03e61da0446ef4b2c2e6ed02ea8c6f1c498a0e7edcb17bf');
-  assert.equal(contract.RULE_HASHES.additive, 'ba7322a59a4c3cf6b503dc52b1394313ac9421106a6c05fc6835200d49e3e72d');
+  assert.equal(contract.RULE_HASHES.additive, 'ba0816f465b4830a726881fc6a00c3805283b8d4c77d80ed8daebc026719b45a');
 });
 
 test('candidate source has no network cloud Firebase shell or credential capability', () => {

@@ -32,7 +32,7 @@ assert.doesNotMatch(text, /BEGIN (?:RSA )?PRIVATE KEY|"client_email"\s*:|"privat
 assert.doesNotMatch(text, /@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/);
 assert.equal(fs.readFileSync(path.join(repoRoot, '.gitignore'), 'utf8').includes('functions/.local/'), true);
 assert.equal(contract.RULE_HASHES.rollback, 'e0632a98ed106117f03e61da0446ef4b2c2e6ed02ea8c6f1c498a0e7edcb17bf');
-assert.equal(contract.RULE_HASHES.additive, 'ba7322a59a4c3cf6b503dc52b1394313ac9421106a6c05fc6835200d49e3e72d');
+assert.equal(contract.RULE_HASHES.additive, 'ba0816f465b4830a726881fc6a00c3805283b8d4c77d80ed8daebc026719b45a');
 assert.equal(contract.PROPOSED_STATE.randomSuffix, '<unresolved>');
 assert.equal(contract.PROPOSED_STATE.stagingProjectId, 'trainer-hub-staging-<RANDOM_SUFFIX>');
 assert.equal(contract.PROPOSED_STATE.privateRoleRelationship.concreteIdentitiesResolved, false);

@@ -270,11 +270,11 @@ test('generated Pokemon GO strings preserve canonical data while localizing only
   }
 });
 
-test('trainer organizer data remains locale-independent and untouched',()=>{
+test('trainer organizer v3 remains locale-independent and strips former note fields',()=>{
   const store=source('js/data/trainerHistoryStore.js');
-  assert.match(store,/const VERSION=2/);
+  assert.match(store,/const VERSION=3/);
   assert.doesNotMatch(store,/pokemonNames|eventLabels/);
   assert.match(html,/tag\.label/);
-  assert.match(html,/favorite\.note/);
+  assert.doesNotMatch(store,/MAX_NOTE_LENGTH|setFavoriteNote|item\.note/);
   assert.match(html,/createTrainerPreferencesRepository\(\{enabled:false\}\)/);
 });

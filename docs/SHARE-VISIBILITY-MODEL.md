@@ -122,7 +122,7 @@ this additive candidate. The long-term writer targets
 > rules, queue, migration, privacy, and direct-write/trusted-backend boundary now
 > live in `TRAINER-PREFERENCE-SYNC-READINESS.md`. The earlier foundation examples
 > below remain historical architecture context only and must not be copied into
-> rules or client wiring. In particular, private notes/tag assignments now use
+> rules or client wiring. In particular, tag assignments use
 > `trainerMetadata/{ownerUid}`, all remote entities use revisions and
 > tombstones, and private preferences are owner-only with no Admin read bypass.
 

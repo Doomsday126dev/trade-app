@@ -1,7 +1,6 @@
 (function(global){
   const root=global.PogoDomain=global.PogoDomain||{};
   const MAX_TAG_LABEL_LENGTH=40;
-  const MAX_NOTE_LENGTH=240;
   const MAX_RECENT_TRAINERS=30;
   const MAX_HISTORY_ENTRIES=1500;
   const PREFERENCE_SYNC_STATES=Object.freeze(['local-only','pending-sync','synced','conflict','sync-error']);
@@ -12,11 +11,6 @@
   function normalizeText(value){return String(value??'').normalize('NFKC').trim();}
   function preferenceSyncState(){
     return Object.freeze({state:'local-only',interactive:false,remoteWritesAllowed:false});
-  }
-  function normalizeNote(value){
-    const note=normalizeText(value);
-    if(Array.from(note).length>MAX_NOTE_LENGTH)return error('trainer-preferences/note-too-long','Private note exceeds the bounded length');
-    return Object.freeze({ok:true,value:note});
   }
   function normalizeTagLabel(value){
     const display=normalizeText(value).replace(/\s+/gu,' ');
@@ -34,14 +28,13 @@
     const uid=normalizeText(ownerUid||value.ownerUid);
     const trainerName=normalizeText(value.trainerName);
     const addedAt=Number(value.addedAt);
-    const note=normalizeNote(value.note);if(!note.ok)return note;
     if(!uid||!trainerName||!Number.isFinite(addedAt)||addedAt<0)return error('trainer-preferences/favorite-invalid','Favorite trainer record is invalid');
-    return Object.freeze({ok:true,value:Object.freeze({ownerUid:uid,trainerName,addedAt,note:note.value,tagIds:Object.freeze(tagIdList(value.tagIds))})});
+    return Object.freeze({ok:true,value:Object.freeze({ownerUid:uid,trainerName,addedAt,tagIds:Object.freeze(tagIdList(value.tagIds))})});
   }
-  function favoriteTrainer(state,ownerUid,{trainerName,addedAt=Date.now(),note='',tagIds=[]}={}){
+  function favoriteTrainer(state,ownerUid,{trainerName,addedAt=Date.now(),tagIds=[]}={}){
     const favorites={...(state?.favorites||{})};
     const existing=favorites[ownerUid];
-    const normalized=normalizeFavorite(ownerUid,{trainerName:trainerName||existing?.trainerName,addedAt:existing?.addedAt??addedAt,note:existing?.note??note,tagIds:existing?.tagIds??tagIds});
+    const normalized=normalizeFavorite(ownerUid,{trainerName:trainerName||existing?.trainerName,addedAt:existing?.addedAt??addedAt,tagIds:existing?.tagIds??tagIds});
     if(!normalized.ok)return normalized;
     favorites[normalized.value.ownerUid]=normalized.value;
     return Object.freeze({ok:true,changed:!existing,favorites:freezeMap(favorites)});
@@ -51,13 +44,6 @@
     const changed=Object.prototype.hasOwnProperty.call(favorites,ownerUid);
     delete favorites[ownerUid];
     return Object.freeze({ok:true,changed,favorites:freezeMap(favorites)});
-  }
-  function updateFavoriteNote(state,ownerUid,note){
-    const favorites={...(state?.favorites||{})},current=favorites[ownerUid];
-    if(!current)return error('trainer-preferences/favorite-missing','Favorite trainer does not exist');
-    const normalized=normalizeNote(note);if(!normalized.ok)return normalized;
-    favorites[ownerUid]={...current,note:normalized.value};
-    return Object.freeze({ok:true,favorites:freezeMap(favorites)});
   }
   function mergeFavorites(left={},right={}){
     const merged={};
@@ -213,8 +199,8 @@
 
   root.trainerPreferences=Object.freeze({
     SYNCED_TRAINER_PREFERENCES_ENABLED:false,
-    MAX_TAG_LABEL_LENGTH,MAX_NOTE_LENGTH,MAX_RECENT_TRAINERS,MAX_HISTORY_ENTRIES,PUBLIC_CATEGORIES,PREFERENCE_SYNC_STATES,preferenceSyncState,
-    normalizeNote,normalizeTagLabel,normalizeFavorite,favoriteTrainer,unfavoriteTrainer,updateFavoriteNote,mergeFavorites,
+    MAX_TAG_LABEL_LENGTH,MAX_RECENT_TRAINERS,MAX_HISTORY_ENTRIES,PUBLIC_CATEGORIES,PREFERENCE_SYNC_STATES,preferenceSyncState,
+    normalizeTagLabel,normalizeFavorite,favoriteTrainer,unfavoriteTrainer,mergeFavorites,
     normalizeTagRecord,createTag,renameTag,softDeleteTag,setFavoriteTags,filterFavorites,
     mergeRecentTrainerSlots,mergeRecentSlotSets,normalizeHistorySnapshot,advanceSeenState,mergeHistoryState,historyStatus,diffPublicSnapshots,
     preferenceMergePreview,planLocalImport,verifyLocalImport,importFingerprint

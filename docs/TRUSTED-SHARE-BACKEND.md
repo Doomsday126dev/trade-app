@@ -117,7 +117,7 @@ the trusted backend. The rules documentation must not claim otherwise.
 - Live narrow-read baseline:
   `e0632a98ed106117f03e61da0446ef4b2c2e6ed02ea8c6f1c498a0e7edcb17bf`
 - Additive candidate:
-  `ba7322a59a4c3cf6b503dc52b1394313ac9421106a6c05fc6835200d49e3e72d`
+  `ba0816f465b4830a726881fc6a00c3805283b8d4c77d80ed8daebc026719b45a`
 - Preferred rollback is the live narrow-read baseline above. The historical
   broad-read artifact is not the rollback target for this additive change.
 

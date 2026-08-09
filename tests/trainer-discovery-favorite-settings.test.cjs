@@ -20,12 +20,12 @@ test('Find Trainer uses one compact combobox with inline clear and no submit but
   assert.match(html,/event\.key==='Enter'/);
 });
 
-test('Favorite creation is idempotent and saves tags plus note in one store write',()=>{
+test('Favorite creation is idempotent and saves stable tag assignments',()=>{
   const value=store(),raid=value.ensureTag('Raid'),friend=value.ensureTag('Friend');
-  const first=value.saveFavoriteOrganization('ScoopskiPotat0',{tagIds:[raid.id,friend.id],note:'Meet at six'});
-  const second=value.saveFavoriteOrganization('scoopskipotat0',{tagIds:[raid.id],note:'Updated'});
+  const first=value.saveFavoriteOrganization('ScoopskiPotat0',{tagIds:[raid.id,friend.id]});
+  const second=value.saveFavoriteOrganization('scoopskipotat0',{tagIds:[raid.id]});
   assert.equal(first.ok,true);assert.equal(first.created,true);assert.equal(second.created,false);
-  const favorite=value.favoriteFor('ScoopskiPotat0');assert.equal(value.read().favorites.length,1);assert.deepEqual(Array.from(favorite.tagIds),[raid.id]);assert.equal(favorite.note,'Updated');
+  const favorite=value.favoriteFor('ScoopskiPotat0');assert.equal(value.read().favorites.length,1);assert.deepEqual(Array.from(favorite.tagIds),[raid.id]);assert.equal('note' in favorite,false);
 });
 
 test('Favorite creation supports no organization and normalized tag reuse',()=>{
@@ -34,18 +34,17 @@ test('Favorite creation supports no organization and normalized tag reuse',()=>{
   assert.equal(first.created,true);assert.equal(duplicate.created,false);assert.equal(duplicate.id,first.id);assert.equal(Object.keys(value.read().tags).length,1);
 });
 
-test('Favorite UI uses one organizer, hides note contents, and makes removal destructive',()=>{
+test('Favorite UI uses one compact tag organizer and makes removal destructive',()=>{
   assert.match(html,/showFavoriteSavedPrompt\(username\)/);
   assert.match(html,/openTrainerOrganizer\(username\)/);
-  assert.match(html,/organizer\.hasPrivateNote/);
-  assert.doesNotMatch(html,/favorite-note-preview/);
+  assert.doesNotMatch(html,/organizer-note|favorite-note-indicator|organizer\.hasPrivateNote/);
   assert.match(html,/function removeTrainerFavorite[\s\S]*organizer\.removeConfirm/);
   assert.match(html,/class="favorite-card-action danger"/);
 });
 
 test('inline tag creation selects new or normalized-existing tags and has scoped keyboard behavior',()=>{
   const create=html.slice(html.indexOf('function createLocalTrainerTag'),html.indexOf('function renameLocalTrainerTag'));
-  assert.match(create,/ensureTag/);assert.match(create,/draftTagIds/);assert.match(create,/organizer\.tagSelected/);
+  assert.match(create,/ensureTag/);assert.match(create,/setFavoriteTags/);assert.match(create,/organizer\.tagSelected/);
   assert.match(html,/function trainerTagInputKeydown[\s\S]*event\.key==='Enter'[\s\S]*event\.key==='Escape'/);
   assert.match(html,/onkeydown="trainerTagInputKeydown\(event\)"/);
 });
@@ -79,7 +78,7 @@ test('responsive contracts retain 48px targets, wrapping, and no parallel organi
 });
 
 test('release and safety boundaries remain coherent',()=>{
-  assert.match(html,/2026-08-05\.21/);assert.doesNotMatch(html,/2026-08-05\.20/);
+  assert.match(html,/2026-08-05\.22/);assert.doesNotMatch(html,/2026-08-05\.21/);
   assert.match(readFileSync(path.join(root,'js/domain/shareVisibility.js'),'utf8'),/SHARE_VISIBILITY_MODEL_ENABLED\s*:\s*false/);assert.match(html,/SYNCED_TRAINER_PREFERENCES_ENABLED!==false/);
   assert.doesNotMatch(html,/managedTrainerPreferencesRepository\.(?:mutate|write|save)/);
 });

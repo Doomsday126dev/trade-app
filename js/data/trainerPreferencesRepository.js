@@ -9,7 +9,7 @@
   function disabled(){return Object.freeze({ok:false,error:Object.freeze({code:'trainer-preferences/disabled'})});}
   function trainerMetadataPayload(value={}){
     const ids=Array.isArray(value.tagIds)?value.tagIds:Object.entries(value.tagIds||{}).filter(([,active])=>active===true).map(([id])=>id);
-    return{note:String(value.note||''),tagIds:Object.fromEntries([...new Set(ids.map(id=>key(id,'Tag ID')))].sort().map(id=>[id,true])),revision:Number(value.revision),updatedAt:Number(value.updatedAt),operationId:key(value.operationId,'Operation ID'),deleted:value.deleted===true,...(value.deleted===true?{deletedAt:Number(value.deletedAt)}:{})};
+    return{tagIds:Object.fromEntries([...new Set(ids.map(id=>key(id,'Tag ID')))].sort().map(id=>[id,true])),revision:Number(value.revision),updatedAt:Number(value.updatedAt),operationId:key(value.operationId,'Operation ID'),deleted:value.deleted===true,...(value.deleted===true?{deletedAt:Number(value.deletedAt)}:{})};
   }
   function metadataPayload(value={}){return{schemaVersion:Number(value.schemaVersion),revision:Number(value.revision),updatedAt:Number(value.updatedAt),favoriteCount:Number(value.favoriteCount),tagCount:Number(value.tagCount),lastSuccessfulSyncAt:Number(value.lastSuccessfulSyncAt||0),migrationState:String(value.migrationState||'not-started'),migrationFingerprint:String(value.migrationFingerprint||'')};}
   function createTrainerPreferencesRepository({enabled=false,writesEnabled=false,readExact,listenExact,transactionExact}={}){

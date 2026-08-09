@@ -1,11 +1,10 @@
 (function(global){
   const root=global.PogoData=global.PogoData||{};
-  const VERSION=2;
+  const VERSION=3;
   const PREFIX='pogoTrainerHistory_v1:';
   const MAX_TAGS=24;
   const MAX_TAGS_PER_FAVORITE=24;
   const MAX_TAG_LABEL_LENGTH=40;
-  const MAX_NOTE_LENGTH=240;
 
   function ownerKey(identity){
     const uid=String(identity?.uid||'').trim(),username=String(identity?.username||'').trim();
@@ -27,10 +26,7 @@
       const item=trainerRef(value?.displayName||value?.trainerName);
       if(!item.key)return null;
       const createdAt=Number(value?.createdAt||value?.addedAt||fallbackTime||0),updatedAt=Number(value?.updatedAt||createdAt||0);
-      const clean={...item,tagIds:[...new Set((Array.isArray(value?.tagIds)?value.tagIds:[]).map(String).filter(Boolean))].sort(),createdAt:Number.isFinite(createdAt)?createdAt:0,updatedAt:Number.isFinite(updatedAt)?updatedAt:0};
-      const note=String(value?.note||'').normalize('NFKC').trim();
-      if(note&&codePointLength(note)<=MAX_NOTE_LENGTH)clean.note=note;
-      return clean;
+      return{...item,tagIds:[...new Set((Array.isArray(value?.tagIds)?value.tagIds:[]).map(String).filter(Boolean))].sort(),createdAt:Number.isFinite(createdAt)?createdAt:0,updatedAt:Number.isFinite(updatedAt)?updatedAt:0};
     }
     function cleanRecent(value){
       const item=trainerRef(value?.displayName||value?.trainerName);
@@ -132,32 +128,23 @@
         if(ids.length>MAX_TAGS_PER_FAVORITE)return{ok:false,code:'tag-limit'};
         item.tagIds=ids;item.updatedAt=Number(now());write(state);return{ok:true,state:read()};
       },
-      setFavoriteNote(username,note){
-        const state=read(),item=state.favorites.find(value=>value.key===trainerRef(username).key),value=String(note??'').normalize('NFKC').trim();
-        if(!item)return{ok:false,code:'favorite-missing'};
-        if(codePointLength(value)>MAX_NOTE_LENGTH)return{ok:false,code:'note-too-long'};
-        if(value)item.note=value;else delete item.note;
-        item.updatedAt=Number(now());write(state);return{ok:true,state:read()};
-      },
-      updateFavoriteOrganization(username,{tagIds=[],note=''}={}){
-        const state=read(),item=state.favorites.find(value=>value.key===trainerRef(username).key),ids=[...new Set((tagIds||[]).map(String))].filter(id=>state.tags[id]).sort(),value=String(note??'').normalize('NFKC').trim();
+      updateFavoriteOrganization(username,{tagIds=[]}={}){
+        const state=read(),item=state.favorites.find(value=>value.key===trainerRef(username).key),ids=[...new Set((tagIds||[]).map(String))].filter(id=>state.tags[id]).sort();
         if(!item)return{ok:false,code:'favorite-missing'};
         if(ids.length>MAX_TAGS_PER_FAVORITE)return{ok:false,code:'tag-limit'};
-        if(codePointLength(value)>MAX_NOTE_LENGTH)return{ok:false,code:'note-too-long'};
-        item.tagIds=ids;if(value)item.note=value;else delete item.note;
+        item.tagIds=ids;
         item.updatedAt=Number(now());write(state);return{ok:true,state:read()};
       },
-      saveFavoriteOrganization(username,{tagIds=[],note=''}={}){
-        const state=read(),ref=trainerRef(username),ids=[...new Set((tagIds||[]).map(String))].filter(id=>state.tags[id]).sort(),value=String(note??'').normalize('NFKC').trim();
+      saveFavoriteOrganization(username,{tagIds=[]}={}){
+        const state=read(),ref=trainerRef(username),ids=[...new Set((tagIds||[]).map(String))].filter(id=>state.tags[id]).sort();
         if(!ref.key)return{ok:false,code:'favorite-missing'};
         if(ids.length>MAX_TAGS_PER_FAVORITE)return{ok:false,code:'tag-limit'};
-        if(codePointLength(value)>MAX_NOTE_LENGTH)return{ok:false,code:'note-too-long'};
         let item=state.favorites.find(entry=>entry.key===ref.key),created=false;
         if(!item){
           if(state.favorites.length>=maxFavorites)return{ok:false,code:'favorite-limit'};
           const timestamp=Number(now());item={...ref,tagIds:[],createdAt:timestamp,updatedAt:timestamp};state.favorites.push(item);created=true;
         }
-        item.displayName=ref.displayName;item.tagIds=ids;if(value)item.note=value;else delete item.note;
+        item.displayName=ref.displayName;item.tagIds=ids;
         item.updatedAt=Number(now());state.favorites.sort((a,b)=>a.displayName.localeCompare(b.displayName,'en',{sensitivity:'base'})||a.key.localeCompare(b.key));
         write(state);return{ok:true,created,state:read()};
       },
@@ -172,5 +159,5 @@
       clear(){storage.removeItem(key);}
     });
   }
-  root.trainerHistoryStore=Object.freeze({VERSION,PREFIX,MAX_TAGS,MAX_TAGS_PER_FAVORITE,MAX_TAG_LABEL_LENGTH,MAX_NOTE_LENGTH,createTrainerHistoryStore});
+  root.trainerHistoryStore=Object.freeze({VERSION,PREFIX,MAX_TAGS,MAX_TAGS_PER_FAVORITE,MAX_TAG_LABEL_LENGTH,createTrainerHistoryStore});
 })(window);

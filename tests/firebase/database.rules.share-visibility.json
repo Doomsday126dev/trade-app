@@ -280,14 +280,14 @@
         "trainerMetadata": {
           "$ownerUid": {
             ".write": "auth != null && auth.uid === $viewerUid && newData.exists() && root.child('trainerPreferencesConfig').child('writesEnabled').val() === true",
-            ".validate": "newData.hasChildren(['revision', 'updatedAt', 'operationId', 'deleted']) && newData.child('revision').isNumber() && newData.child('revision').val() >= 1 && (!data.exists() || newData.child('revision').val() === data.child('revision').val() + 1 || newData.val() === data.val()) && newData.child('updatedAt').isNumber() && (!data.exists() || newData.child('updatedAt').val() >= data.child('updatedAt').val()) && newData.child('operationId').isString() && newData.child('operationId').val().length >= 16 && newData.child('operationId').val().length <= 80 && newData.child('deleted').isBoolean() && ((newData.child('deleted').val() === true && newData.child('deletedAt').isNumber() && newData.child('deletedAt').val() === newData.child('updatedAt').val() && !newData.child('note').exists() && !newData.child('tagIds').exists()) || (newData.child('deleted').val() === false && newData.child('note').isString() && newData.child('note').val().length <= 240 && !newData.child('deletedAt').exists()))",
+            ".validate": "newData.hasChildren(['revision', 'updatedAt', 'operationId', 'deleted']) && newData.child('revision').isNumber() && newData.child('revision').val() >= 1 && (!data.exists() || newData.child('revision').val() === data.child('revision').val() + 1 || newData.val() === data.val()) && newData.child('updatedAt').isNumber() && (!data.exists() || newData.child('updatedAt').val() >= data.child('updatedAt').val()) && newData.child('operationId').isString() && newData.child('operationId').val().length >= 16 && newData.child('operationId').val().length <= 80 && newData.child('deleted').isBoolean() && ((newData.child('deleted').val() === true && newData.child('deletedAt').isNumber() && newData.child('deletedAt').val() === newData.child('updatedAt').val() && !newData.child('tagIds').exists()) || (newData.child('deleted').val() === false && !newData.child('deletedAt').exists()))",
             "tagIds": {
               "$tagId": {
                 ".validate": "newData.val() === true && root.child('userPreferences').child($viewerUid).child('trainerTags').child($tagId).child('active').val() === true && root.child('userPreferences').child($viewerUid).child('trainerTags').child($tagId).child('deleted').val() === false"
               }
             },
             "$other": {
-              ".validate": "$other === 'note' || $other === 'tagIds' || $other === 'revision' || $other === 'updatedAt' || $other === 'operationId' || $other === 'deleted' || $other === 'deletedAt'"
+              ".validate": "$other === 'tagIds' || $other === 'revision' || $other === 'updatedAt' || $other === 'operationId' || $other === 'deleted' || $other === 'deletedAt'"
             }
           }
         },

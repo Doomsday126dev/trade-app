@@ -126,7 +126,7 @@ test('teardown covers every resource and persistent-cost category', () => {
 
 test('rules prerequisites retain exact reviewed hashes and disabled gates', () => {
   assert.equal(contract.RULE_HASHES.narrowReadBaseline, 'e0632a98ed106117f03e61da0446ef4b2c2e6ed02ea8c6f1c498a0e7edcb17bf');
-  assert.equal(contract.RULE_HASHES.additiveCandidate, 'ba7322a59a4c3cf6b503dc52b1394313ac9421106a6c05fc6835200d49e3e72d');
+  assert.equal(contract.RULE_HASHES.additiveCandidate, 'ba0816f465b4830a726881fc6a00c3805283b8d4c77d80ed8daebc026719b45a');
   assert.equal(template.safety.bothWriteGatesFalse, true);
   assert.match(docs, /45 passed, 0 failed/);
 });

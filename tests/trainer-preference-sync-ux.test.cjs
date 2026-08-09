@@ -35,19 +35,19 @@ test('future status presentation uses icon and text with reduced-motion-safe ann
 
 test('all conflict components accept deterministic fixtures only and stay hidden while disabled',()=>{
   const window=load(),ui=window.PogoUI.trainerTagPanel,mock=adapter(window);
-  for(const kind of ['note-edit','tag-rename','favorite-stale','offline-newer-remote','stale-schema']){
+  for(const kind of ['tag-rename','favorite-stale','offline-newer-remote','stale-schema']){
     const fixture=mock.fixture(kind),disabled=ui.conflictViewModel({kind,fixture,width:390,height:300});
     assert.equal(disabled.fixtureAccepted,true);assert.equal(disabled.hidden,true);assert.equal(disabled.interactive,false);
     assert.ok(disabled.choices.every(choice=>choice.disabled));assert.equal(disabled.layout.horizontalOverflow,false);assert.equal(disabled.layout.touchTargetPx,48);
     const enabled=ui.conflictViewModel({kind,fixture,featureEnabled:true,writesEnabled:true,width:390,height:300});
     assert.equal(enabled.hidden,false);assert.equal(enabled.localValue,fixture.localValue);assert.equal(enabled.remoteValue,fixture.remoteValue);
   }
-  assert.equal(ui.conflictViewModel({kind:'note-edit',fixture:{kind:'note-edit',source:'production'}}).fixtureAccepted,false);
+  assert.equal(ui.conflictViewModel({kind:'unknown',fixture:{kind:'unknown',source:'production'}}).fixtureAccepted,false);
 });
 
 test('conflict choices preserve both fixture copies where promised',()=>{
   const window=load(),mock=adapter(window);
-  for(const kind of ['note-edit','tag-rename','offline-newer-remote']){
+  for(const kind of ['tag-rename','offline-newer-remote']){
     const fixture=mock.fixture(kind),result=mock.resolveFixture(kind,'keep-both');
     assert.equal(result.ok,true);assert.deepEqual(JSON.parse(JSON.stringify(result.preserved)),{device:fixture.localValue,cloud:fixture.remoteValue});assert.deepEqual(Array.from(result.discarded),[]);
   }
@@ -58,9 +58,9 @@ test('conflict choices preserve both fixture copies where promised',()=>{
 test('migration preview reports bounded categories but has no execution action',()=>{
   const window=load(),ui=window.PogoUI.trainerTagPanel;
   assert.equal(ui.migrationPreviewViewModel({featureEnabled:true,writesEnabled:true}).hidden,true);
-  const preview=ui.migrationPreviewViewModel({localCounts:{favorites:3,tags:2,notes:1,recents:4,history:5},cloudCounts:{favorites:1},conflictCount:2,width:390,height:420});
+  const preview=ui.migrationPreviewViewModel({localCounts:{favorites:3,tags:2,recents:4,history:5},cloudCounts:{favorites:1},conflictCount:2,width:390,height:420});
   assert.equal(preview.hidden,true);assert.equal(preview.previewOnly,true);assert.equal(preview.executionAvailable,false);assert.equal(preview.controls.confirmDisabled,true);assert.equal(preview.controls.executeAbsent,true);
-  assert.deepEqual(JSON.parse(JSON.stringify(preview.localCounts)),{favorites:3,tags:2,notes:1,recents:4,history:5});
+  assert.deepEqual(JSON.parse(JSON.stringify(preview.localCounts)),{favorites:3,tags:2,recents:4,history:5});
   assert.ok(preview.steps.includes('trainer.syncMigration.nothingDeleted'));assert.equal(preview.layout.internalScroll,true);
   const mock=adapter(window),mockPreview=mock.migrationPreview({localCounts:{favorites:3},cloudCounts:{favorites:1}});
   assert.equal(mockPreview.executable,false);assert.equal(mockPreview.localDeletionAllowed,false);assert.equal(typeof mock.executeMigration,'undefined');
@@ -78,7 +78,7 @@ test('cloud deletion choices explain consequences and remain nonfunctional',()=>
 test('future detail surfaces retain dialog, focus, Escape, touch, and mobile-sheet contracts',()=>{
   const window=load(),ui=window.PogoUI.trainerTagPanel,mock=adapter(window);
   for(const height of [420,300]){
-    const conflict=ui.conflictViewModel({kind:'note-edit',fixture:mock.fixture('note-edit'),featureEnabled:true,writesEnabled:true,width:390,height});
+    const conflict=ui.conflictViewModel({kind:'tag-rename',fixture:mock.fixture('tag-rename'),featureEnabled:true,writesEnabled:true,width:390,height});
     assert.equal(conflict.layout.mode,'mobile_sheet');assert.equal(conflict.layout.touchTargetPx,48);assert.equal(conflict.layout.internalScroll,true);
     assert.equal(conflict.accessibility.focusTrap,true);assert.equal(conflict.accessibility.escapeCloses,true);assert.equal(conflict.accessibility.restoreFocus,true);assert.equal(conflict.accessibility.visibleFocus,true);
   }
@@ -89,9 +89,9 @@ test('mock adapter is local, deterministic, test-gated, and capability-free',()=
   assert.doesNotMatch(source,/firebase|fetch\s*\(|XMLHttpRequest|WebSocket|sendBeacon|indexedDB|localStorage|sessionStorage|userPreferences|https?:\/\//i);
   const window=load(),factory=window.PogoTesting.trainerPreferenceSyncMockAdapter.createTrainerPreferenceSyncMockAdapter;
   assert.throws(()=>factory(),/test-only/);assert.throws(()=>factory({testMode:true,environment:'production'}),/test-only/);
-  const mock=factory({testMode:true,environment:'development'}),a=mock.fixture('note-edit'),b=mock.fixture('note-edit');
+  const mock=factory({testMode:true,environment:'development'}),a=mock.fixture('tag-rename'),b=mock.fixture('tag-rename');
   assert.deepEqual(JSON.parse(JSON.stringify(a)),JSON.parse(JSON.stringify(b)));
-  assert.deepEqual(JSON.parse(JSON.stringify(mock.snapshot())),{adapter:'deterministic-local-mock',namespace:'pogo-sync-ux-test-v1',fixtureCount:5,networkRequests:0,browserStorageWrites:0,remoteSdkImports:0,productionAvailable:false});
+  assert.deepEqual(JSON.parse(JSON.stringify(mock.snapshot())),{adapter:'deterministic-local-mock',namespace:'pogo-sync-ux-test-v1',fixtureCount:4,networkRequests:0,browserStorageWrites:0,remoteSdkImports:0,productionAvailable:false});
 });
 
 test('active UI exposes one local-only status surface and no sync or migration command',()=>{
@@ -111,11 +111,11 @@ test('long German and Japanese sync labels retain key parity and overflow-safe p
   for(const locale of files)vm.runInContext(readFileSync(path.join(root,`js/i18n/locales/${locale}.js`),'utf8'),context);
   Object.assign(catalogs,window.PogoLocales);
   const keys=Object.keys(catalogs.en).sort();for(const locale of files.slice(1))assert.deepEqual(Object.keys(catalogs[locale]).sort(),keys);
-  assert.ok(catalogs.de['trainer.syncConflict.note.title'].length>30);assert.ok(catalogs.ja['trainer.syncDelete.cloud-and-device.consequence']);
+  assert.ok(catalogs.de['trainer.syncConflict.tagRename.title'].length>20);assert.ok(catalogs.ja['trainer.syncDelete.cloud-and-device.consequence']);
   assert.match(readFileSync(path.join(root,'index.html'),'utf8'),/\.trainer-sync-status-detail\{[^}]*overflow-wrap:anywhere/);
 });
 
-test('user-created tags and notes remain raw fixture values rather than translation keys',()=>{
+test('user-created tags remain raw fixture values rather than translation keys',()=>{
   const window=load(),ui=window.PogoUI.trainerTagPanel,mock=adapter(window),fixture=mock.fixture('tag-rename');
   const model=ui.conflictViewModel({kind:'tag-rename',fixture,featureEnabled:true,writesEnabled:true});
   assert.equal(model.localValue,'Next meetup');assert.equal(model.remoteValue,'Weekend group');

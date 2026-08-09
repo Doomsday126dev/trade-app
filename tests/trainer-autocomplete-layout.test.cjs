@@ -6,7 +6,7 @@ const path=require('node:path');
 const html=readFileSync(path.join(__dirname,'..','index.html'),'utf8');
 
 test('trainer suggestions are anchored to the combobox above surrounding content',()=>{
-  assert.match(html,/class="trainer-combobox">[\s\S]*id="find-trainer-input"[\s\S]*id="find-trainer-suggestions"/);
+  assert.match(html,/class="[^"]*\btrainer-combobox\b[^"]*">[\s\S]*id="find-trainer-input"[\s\S]*id="find-trainer-suggestions"/);
   assert.match(html,/\.trainer-combobox\{position:relative;flex:1;min-width:0\}/);
   assert.match(html,/\.trainer-suggestions\{position:absolute;z-index:340/);
   assert.match(html,/\.trainer-search-shell\.suggestions-open\{z-index:330\}/);

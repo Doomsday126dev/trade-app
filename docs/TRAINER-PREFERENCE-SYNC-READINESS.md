@@ -20,10 +20,10 @@ Only `local-only` is reachable in the production client. The local
 
 Implemented and active locally:
 
-- Organizer schema v2, owner-bound by exact authenticated UID and canonical
+- Organizer schema v3, owner-bound by exact authenticated UID and canonical
   username.
 - One local implementation for Favorites, six Recents, snapshots, 24 private
-  tags, tag assignments, and 240-character private notes.
+  tags, and tag assignments.
 - Device-local account partitions, local migration, NFKC tag matching, stable
   tag IDs, organizer search/filtering, and logout/account-switch transient reset.
 - Explicit public-share publication that excludes organizer data.
@@ -56,7 +56,7 @@ Syncable private preferences:
 
 - Favorite trainer stable UIDs and display metadata.
 - Private tag definitions and normalized label claims.
-- Private trainer notes and trainer-tag assignments.
+- Private trainer-tag assignments.
 - Fixed-slot Recents and bounded public-only seen-history snapshots.
 - Preference schema, migration, count declarations, and sync timestamps.
 
@@ -74,7 +74,7 @@ Separate data domains:
   `trainerShares/{ownerUid}` visibility candidate later.
 - Identity remains under Firebase Auth, `users`, `authIndex`, and `accounts`.
 - Community records and the legacy offline write queue remain separate.
-- Approved Viewers remain under `shareAccess`; Favorites, tags, notes, Recents,
+- Approved Viewers remain under `shareAccess`; Favorites, tags, Recents,
   and history neither create nor imply access.
 - Signed-out data is never imported automatically into an account.
 
@@ -104,7 +104,6 @@ userPreferences/{viewerUid}/favoriteTrainers/{ownerUid}/
   deletedAt (tombstones only)
 
 userPreferences/{viewerUid}/trainerMetadata/{ownerUid}/
-  note
   tagIds/{tagId}: true
   revision
   updatedAt
@@ -159,7 +158,6 @@ shape and fixed Recents slots remain server-enforced.
 | --- | --- |
 | Favorite add + Favorite add | **Merge; earliest timestamp preserved.** Keep one UID entity, earliest `addedAt`, and newest display metadata. |
 | Favorite delete + metadata edit | **Tombstone wins** for Favorite visibility. Metadata is a separate revisioned entity and may be retained, but it is inert while the Favorite is deleted. |
-| Note edit + note edit | **Explicit user conflict.** Exact metadata base revision is required. |
 | Tag rename + tag rename | **Explicit user conflict.** Exact tag base revision and normalized-label claim are required. |
 | Tag delete + assignment | **Tombstone wins.** Inactive/deleted tag IDs are ignored and cannot be newly assigned. |
 | Offline edit + newer remote edit | **Reject.** A stale base revision never overwrites the higher remote revision. |
@@ -175,8 +173,8 @@ shape and fixed Recents slots remain server-enforced.
 Tombstones are retained for at least 90 days. Expiration is a later trusted,
 watermark-aware cleanup task, not a client clock decision. Removing a tag uses
 a tombstone and ignores prior assignments; it does not scan or rewrite an
-unbounded collection. User intervention is limited to true note, rename,
-delete/edit, same-version history, or migration conflicts.
+unbounded collection. User intervention is limited to true rename, delete/edit,
+same-version history, or migration conflicts.
 
 ## Offline Queue
 
@@ -197,7 +195,7 @@ fingerprint make replay non-destructive.
 
 The queue exposes no network or Firebase adapter. It cannot enqueue, select,
 retry, or acknowledge work unless both future client and server-gate options
-are true. Summaries expose counts only. Payloads, notes, labels, UIDs, and names
+are true. Summaries expose counts only. Payloads, labels, UIDs, and names
 are never logged. Logout/auth loss suspends draining; an exact identity match is
 required to resume. A different account cannot read or send another partition.
 
@@ -208,7 +206,7 @@ Future flow:
 1. **Sync this device's saved trainers** opens an owner-only preview.
 2. Complete exact reads of metadata, Favorites, trainer metadata, tags, claims,
    Recents, and history for the current hydration generation.
-3. Verify organizer schema v2 and exact UID plus canonical username ownership.
+3. Verify organizer schema v3 and exact UID plus canonical username ownership.
 4. Normalize the actual local records, deduplicate stable entities, enforce the
    100 Favorite, 24 active-tag, 30 Recent-slot, and 1,500-entry-per-history
    bounds, and show those derived counts rather than stored counters.
@@ -230,7 +228,7 @@ Least-privilege recommendation:
 
 - Owner-authenticated exact RTDB transactions: trainer metadata, fixed Recents,
   and migration metadata. Rules fully enforce exact UID ownership, allowlisted
-  fields, revisions, timestamps, operation IDs, tombstones, note/tag bounds,
+  fields, revisions, timestamps, operation IDs, tombstones, tag bounds,
   active tag references, fixed `00..29` Recents keys, and monotonic activity.
 - Favorite entity writes are now modeled only through the undeployed
   `mutateFavoriteTrainer` callable. Direct client writes remain denied because
@@ -304,15 +302,13 @@ synced, recoverable error, conflict, last-success time, retry, and two explicit
 cloud-removal choices. With the flag off it is hidden, non-interactive, and all
 write controls are disabled. Production continues to say organizer data is
 saved on this device. All future strings exist in English, Japanese, Spanish,
-and German. User-created labels and notes are never translated.
+and German. User-created labels are never translated.
 
 ## Privacy, Retention, And Deletion
 
-- Favorites, tags, notes, Recents, and history are visible only to their owner.
+- Favorites, tags, Recents, and history are visible only to their owner.
 - They are never visible to public users, other trainers, Approved Viewers,
   advertisers, or Admin UI.
-- Notes never enter public shares or existing exports. A future private backup
-  may include them only with an explicit warning and encrypted/private handling.
 - Delete-one-trainer creates Favorite and metadata tombstones.
 - Delete-one-tag releases its normalized claim through the trusted callable and
   stores a tag tombstone; old assignments become inert.
@@ -326,7 +322,7 @@ and German. User-created labels and notes are never translated.
   bounded and monotonic; no append-only event log is retained indefinitely.
 - A user may keep local data, remove local data after verified cloud deletion,
   or remove both through separate explicit choices. Existing exports remain
-  public-list/legacy features and do not export private notes or tags.
+  public-list/legacy features and do not export private tags.
 - Privacy and deletion controls cannot be paywalled.
 
 ## Existing Community Queue Audit

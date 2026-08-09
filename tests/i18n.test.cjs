@@ -66,7 +66,7 @@ test('session ownership warnings use stable translation keys with English fallba
 test('English, Japanese, Spanish, and German expose the same UI key set',()=>{
   const {catalogs}=load();
   const expected=Object.keys(catalogs.en).sort();
-  assert.equal(expected.length,902);
+  assert.equal(expected.length,887);
   for(const locale of ['ja','es','de'])assert.deepEqual(Object.keys(catalogs[locale]).sort(),expected,locale);
 });
 
@@ -123,7 +123,7 @@ test('canonical and private values remain outside interface translation',()=>{
   assert.match(html,/pokemonGoSearchSyntaxDomain\.safeTransferQuery\(safe\)/);
   assert.match(html,/pokemonGoSearchSyntaxDomain\.serializeQuery\(query,pokemonGoSearchLocale\(\)\)/);
   assert.match(html,/tag\.label/);
-  assert.match(html,/favorite\.note/);
+  assert.doesNotMatch(html,/favorite\.note|organizer-note/);
   const exportBlock=html.slice(html.indexOf('function exportMyListMarkdown'),html.indexOf('// ── SPECIAL TRADE BOARD'));
   assert.doesNotMatch(exportBlock,/trainerPreferences|trainerHistoryStore|favorite\.note|tag\.label|organizer/);
 });

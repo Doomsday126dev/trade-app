@@ -270,8 +270,8 @@ test('tag claims are trusted-only while owner metadata assignments remain privat
   await fails(db('PUT',`${root}/trainerTags/${tagId}`,tagRecord({key:firstKey}),TOKENS.owner),'client cannot create tag');
   await succeeds(db('PUT',`${root}/trainerTagLabels/${firstKey}`,tagId,'emulator-owner'),'trusted fixture claims tag label');
   await succeeds(db('PUT',`${root}/trainerTags/${tagId}`,tagRecord({key:firstKey}),'emulator-owner'),'trusted fixture creates tag');
-  const metadata={note:'Private note',tagIds:{[tagId]:true},revision:1,updatedAt:100,operationId:operationId('meta1'),deleted:false};
-  await succeeds(db('PUT',`${root}/trainerMetadata/${IDS.other}`,metadata,TOKENS.owner),'assign tag and note');
+  const metadata={tagIds:{[tagId]:true},revision:1,updatedAt:100,operationId:operationId('meta1'),deleted:false};
+  await succeeds(db('PUT',`${root}/trainerMetadata/${IDS.other}`,metadata,TOKENS.owner),'assign tag');
   await fails(db('DELETE',`${root}/trainerMetadata/${IDS.other}`,undefined,TOKENS.owner),'physical trainer metadata delete');
   await succeeds(db('PUT',`${root}/trainerMetadata/${IDS.other}`,{...metadata,tagIds:{},revision:2,updatedAt:200,operationId:operationId('meta2')},TOKENS.owner),'remove assignment');
   await fails(db('PUT',`${root}/trainerTags/${tagId}`,tagRecord({label:'Raid',key:nextKey,revision:2,updatedAt:200}),TOKENS.owner),'client cannot rename tag');
@@ -292,7 +292,8 @@ test('direct normalized tag claims and foreign-namespace assignments are denied'
   await fails(db('PUT',`userPreferences/${IDS.owner}/trainerTagLabels/${key}`,'tag-b',TOKENS.owner),'duplicate normalized claim');
   await succeeds(db('PUT',`userPreferences/${IDS.approved}/trainerTagLabels/${key}`,'tag-foreign','emulator-owner'),'trusted fixture foreign label claim');
   await succeeds(db('PUT',`userPreferences/${IDS.approved}/trainerTags/tag-foreign`,tagRecord({label:'Local',key}),'emulator-owner'),'trusted fixture foreign tag');
-  await fails(db('PUT',`userPreferences/${IDS.owner}/trainerMetadata/${IDS.other}`,{note:'',tagIds:{'tag-foreign':true},revision:1,updatedAt:100,operationId:operationId('foreign'),deleted:false},TOKENS.owner),'foreign namespace assignment');
+  await fails(db('PUT',`userPreferences/${IDS.owner}/trainerMetadata/${IDS.other}`,{tagIds:{'tag-foreign':true},revision:1,updatedAt:100,operationId:operationId('foreign'),deleted:false},TOKENS.owner),'foreign namespace assignment');
+  await fails(db('PUT',`userPreferences/${IDS.owner}/trainerMetadata/${IDS.other}`,{note:'removed',tagIds:{},revision:1,updatedAt:100,operationId:operationId('note-field'),deleted:false},TOKENS.owner),'removed note field');
 });
 
 test('recent trainer slots are structurally capped at thirty',async()=>{

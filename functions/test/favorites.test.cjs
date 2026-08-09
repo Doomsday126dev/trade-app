@@ -184,7 +184,7 @@ test('cross-UID calls remain in exact Auth-owned partitions', async () => {
 });
 
 test('Favorite mutation does not touch shares grants tags notes or history', async () => {
-  const seedPreferences = { trainerMetadata: { x: { note: 'private' } }, trainerTags: { tag_x: { active: true } }, trainerHistory: { x: { entryCount: 1 } } };
+  const seedPreferences = { trainerMetadata: { x: { tagIds: { tag_x: true } } }, trainerTags: { tag_x: { active: true } }, trainerHistory: { x: { entryCount: 1 } } };
   const { adapter, operations } = harness({ userPreferences: { [IDS.viewer]: seedPreferences }, shareAccess: { [IDS.viewer]: { [IDS.other]: true } } });
   const before = adapter.inspect();
   await operations.mutateFavoriteTrainer(favoriteRequest(), context());
