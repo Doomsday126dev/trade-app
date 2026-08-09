@@ -48,6 +48,24 @@ test('active fields use the shared theme and retain deliberate search variants',
   assert.doesNotMatch(css,/\.field-control[^}]*background:\s*(?:#fff|white)/i);
 });
 
+test('shared fields preserve theme, focus, and validation layers during browser autofill',()=>{
+  const start=css.indexOf('/* Browser autofill paints above normal background/color declarations.');
+  const end=css.indexOf('.favorite-card-tag',start);
+  assert.ok(start>0&&end>start);
+  const autofill=css.slice(start,end);
+  for(const state of ['',':hover',':focus',':active'])assert.match(autofill,new RegExp(`:-webkit-autofill${state.replace(':','\\:')}`));
+  assert.match(autofill,/@supports selector\(input:autofill\)/);
+  assert.match(autofill,/:autofill\{/);
+  assert.match(autofill,/-webkit-text-fill-color:var\(--text\)/);
+  assert.match(autofill,/caret-color:var\(--text\)/);
+  assert.match(autofill,/0 0 0 1000px var\(--bg\) inset/);
+  assert.match(autofill,/:focus\{[^}]*var\(--focus-ring\)/);
+  assert.match(autofill,/\[aria-invalid="true"\][^{]*\{[^}]*rgba\(239,68,68,\.14\)/);
+  assert.doesNotMatch(autofill,/animation|transition-delay|99999/i);
+  assert.match(html,/id="login-user"[^>]+autocomplete="off"/);
+  assert.match(html,/type="password"[^>]+id="login-pin"[^>]+autocomplete="current-password"/);
+});
+
 test('chip taxonomy keeps metadata, selection, filtering, status, removal, and navigation distinct',()=>{
   for(const role of ['metadata','selectable','filter','status','removable'])assert.match(css,new RegExp(`\\.chip-${role}\\{`));
   assert.match(css,/\.nav-pill\{/);

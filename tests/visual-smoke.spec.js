@@ -187,6 +187,73 @@ async function expectSettingsScrollNear(page, expected) {
 }
 
 test.describe('visual smoke', () => {
+  test('shared Login fields retain themed autofill, focus, and invalid layers',async({page,browserName})=>{
+    test.skip(browserName!=='chromium','Chromium CDP is required to force the autofill pseudo-state.');
+    await page.goto(`./?autofill-theme=${Date.now()}`,{waitUntil:'domcontentloaded'});
+    await expect(page.locator('#login-user')).toBeVisible();
+    expect(await page.evaluate(()=>CSS.supports('selector(input:-webkit-autofill)'))).toBe(true);
+    expect(await page.evaluate(()=>CSS.supports('selector(input:autofill)'))).toBe(true);
+    const session=await page.context().newCDPSession(page);
+    await session.send('DOM.enable');
+    await session.send('CSS.enable');
+    const {root}=await session.send('DOM.getDocument');
+    const {nodeId}=await session.send('DOM.querySelector',{nodeId:root.nodeId,selector:'#login-user'});
+    const force=forcedPseudoClasses=>session.send('CSS.forcePseudoState',{nodeId,forcedPseudoClasses});
+    const settle=()=>page.waitForTimeout(220);
+    const styles=(selector='#login-user')=>page.locator(selector).evaluate(node=>{
+      const style=getComputedStyle(node),body=getComputedStyle(document.body);
+      return{background:body.backgroundColor,border:style.borderColor,boxShadow:style.boxShadow,color:body.color,textFill:style.webkitTextFillColor,caret:style.caretColor,height:node.getBoundingClientRect().height};
+    });
+    for(const scenario of [
+      {theme:'dark',colorScheme:'light'},
+      {theme:'light',colorScheme:'dark'},
+      {theme:null,colorScheme:'light'}
+    ]){
+      await page.emulateMedia({colorScheme:scenario.colorScheme});
+      await page.evaluate(value=>{
+        if(value)document.documentElement.dataset.theme=value;
+        else document.documentElement.removeAttribute('data-theme');
+      },scenario.theme);
+      await page.locator('#login-user').focus();
+      await settle();
+      await force([]);
+      await settle();
+      const focused=await styles();
+      await force(['autofill','focus']);
+      await settle();
+      const autofilled=await styles();
+      expect(autofilled.textFill).toBe(autofilled.color);
+      expect(autofilled.caret).toBe(autofilled.color);
+      expect(autofilled.boxShadow).toContain('1000px');
+      expect(autofilled.boxShadow.split(',').length).toBeGreaterThan(1);
+      expect(autofilled.border).toBe(focused.border);
+      expect(autofilled.height).toBeGreaterThanOrEqual(48);
+      await force([]);
+      await page.locator('#login-user').evaluate(node=>node.setAttribute('aria-invalid','true'));
+      await settle();
+      const invalid=await styles();
+      await force(['autofill','focus']);
+      await settle();
+      const invalidAutofilled=await styles();
+      expect(invalidAutofilled.border).toBe(invalid.border);
+      expect(invalidAutofilled.boxShadow).toContain('1000px');
+      expect(invalidAutofilled.boxShadow).toContain(invalid.boxShadow);
+      await page.locator('#login-user').evaluate(node=>node.removeAttribute('aria-invalid'));
+    }
+    await page.locator('#login-user').evaluate(node=>node.disabled=true);
+    await force(['autofill']);
+    expect((await styles()).boxShadow).toContain('1000px');
+    await page.locator('#login-user').evaluate(node=>{node.disabled=false;node.readOnly=true;});
+    await force(['autofill']);
+    expect((await styles()).boxShadow).toContain('1000px');
+    await page.locator('#login-user').evaluate(node=>node.readOnly=false);
+    await force([]);
+    await session.detach();
+    await expect(page.locator('#login-pin')).toHaveAttribute('type','password');
+    await expect(page.locator('#login-pin')).toHaveAttribute('autocomplete','current-password');
+    expect(await page.locator('#login-pin').evaluate(node=>node.getBoundingClientRect().height)).toBeGreaterThanOrEqual(48);
+  });
+
   test('signed-out language control opens local Settings without a profile menu',async({page})=>{
     await page.goto(`./?signed-out-settings=${Date.now()}`,{waitUntil:'domcontentloaded'});
     await waitForSettingsStartupReady(page);
