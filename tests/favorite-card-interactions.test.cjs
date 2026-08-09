@@ -63,12 +63,29 @@ test('Find Trainer, autocomplete, Favorites, and cards share one deliberate cont
   assert.match(find,/class="[^"]*trainer-discovery-content[^"]*"[\s\S]*id="find-trainer-input"[\s\S]*id="favorite-trainers"/);
 });
 
+test('Favorites and Recents use one stacked hierarchy with distinct density and time semantics',()=>{
+  const render=html.slice(html.indexOf('async function renderTrainerQuickLists'),html.indexOf('function toggleTrainerFavorite'));
+  assert.match(render,/favoritesHeading[\s\S]*recentHeading/);
+  assert.match(render,/<h2 class="trainer-quick-heading">/);
+  assert.match(render,/class="recent-trainer-list"/);
+  assert.match(render,/type="button" class="recent-trainer-row card-row"/);
+  assert.match(render,/class="recent-trainer-chevron"/);
+  assert.doesNotMatch(render,/role="tab"|trainer-history-tabs/);
+  assert.doesNotMatch(render,/trainerDate\(updatedAt\)/);
+  assert.match(render,/trainerDate\(item\.openedAt\)/);
+  assert.match(render,/organizer\.noFavoritesHelp/);
+  assert.match(render,/organizer\.noMatchesHelp/);
+  assert.match(render,/trainer\.noRecentsHelp/);
+});
+
 test('touch, wrapping, reduced-motion, and local-only safety contracts remain explicit',()=>{
   assert.match(html,/\.favorite-card-add-tag,\.favorite-card-more\{width:48px;height:48px/);
   assert.match(html,/\.favorite-card-tag\{[^}]*min-height:26px/);
   assert.match(html,/touch-action:pan-y/);
   assert.match(html,/@media\(prefers-reduced-motion:reduce\)\{\.favorite-card-surface\{transition:none\}\}/);
   assert.match(html,/overflow-wrap:anywhere/);
+  assert.match(html,/\.favorite-filter-chip\{[^}]*min-height:48px/);
+  assert.match(html,/class="favorite-filter-check" aria-hidden="true"/);
   assert.match(html,/SYNCED_TRAINER_PREFERENCES_ENABLED!==false/);
   assert.doesNotMatch(html,/managedTrainerPreferencesRepository\.(?:mutate|write|save)/);
 });

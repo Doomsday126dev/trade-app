@@ -972,6 +972,111 @@ test.describe('visual smoke', () => {
     }
   });
 
+  test('Favorites and Recents stay compact, accessible, and responsive at representative scale',async({page})=>{
+    await page.setViewportSize({width:1024,height:800});
+    await page.goto(`./?trainer-collections-scale=${Date.now()}`,{waitUntil:'domcontentloaded'});
+    await waitForStableLocalOrganizerStartup(page);
+    await isolateAuthenticatedMyListFixture(page,{username:'ScaleTester',uid:'uid-scale-tester'});
+    const results=[];
+    for(const count of [0,25,100]){
+      const measurement=await page.evaluate(async count=>{
+        const favorites=Array.from({length:count},(_,index)=>({key:`trainer-${index}`,displayName:`Trainer ${String(index).padStart(3,'0')}`,tagIds:[],createdAt:index+1,updatedAt:index+1}));
+        const recent=Array.from({length:Math.min(count,12)},(_,index)=>({key:`recent-${index}`,displayName:`Recent ${String(index).padStart(2,'0')}`,openedAt:Date.now()-index*60000}));
+        const state={version:3,schemaVersion:3,migrationVersion:3,owner:{uid:'uid-scale-tester',username:'ScaleTester'},favorites,recent,snapshots:{},tags:{},syncState:'local-only',migration:{skippedFavorites:0,skippedRecents:0}};
+        const scaleStore={read:()=>state,filterFavorites:()=>favorites,snapshotFor:()=>null,updateCanonicalName:()=>false};
+        ensureTrainerHistoryStore=()=>scaleStore;
+        document.querySelectorAll('.page').forEach(node=>node.classList.remove('active'));
+        document.getElementById('tab-find').classList.add('active');
+        managedPublicShareRepository=null;
+        const started=performance.now();await renderTrainerQuickLists();
+        return{count,duration:performance.now()-started,cards:document.querySelectorAll('.favorite-card-shell').length,recents:document.querySelectorAll('.recent-trainer-row').length};
+      },count);
+      results.push(measurement);
+      expect(measurement.cards).toBe(count);
+      expect(measurement.recents).toBe(Math.min(count,12));
+      expect(measurement.duration).toBeLessThan(1500);
+      expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
+    }
+    expect(results.map(result=>result.count)).toEqual([0,25,100]);
+
+    const viewports=[
+      ['en',320,640],['ja',375,700],['de',390,700],['es',430,760],
+      ['ja',768,800],['de',1024,800],['es',1440,900],
+      ['ja',390,420],['de',390,300]
+    ];
+    for(const [locale,width,height] of viewports){
+      await page.setViewportSize({width,height});
+      await page.evaluate(async locale=>{changeInterfaceLocale(locale);await renderTrainerQuickLists();},locale);
+      await expect(page.locator('#favorite-trainers h2')).toBeVisible();
+      await expect(page.locator('#recent-trainers h2')).toBeVisible();
+      const firstCard=page.locator('.favorite-card-shell').first();
+      const firstRecent=page.locator('.recent-trainer-row').first();
+      await expect(firstCard).toBeVisible();await expect(firstRecent).toBeVisible();
+      const addBox=await firstCard.locator('.favorite-card-add-tag').boundingBox();
+      const moreBox=await firstCard.locator('.favorite-card-more').boundingBox();
+      const recentBox=await firstRecent.locator('.recent-trainer-chevron').boundingBox();
+      for(const box of [addBox,moreBox,recentBox]){expect(box?.width).toBeGreaterThanOrEqual(48);expect(box?.height).toBeGreaterThanOrEqual(48);}
+      expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
+    }
+  });
+
+  test('mobile Recent rows navigate from body, name, chevron, and keyboard without blocking Favorite actions',async({page})=>{
+    await page.setViewportSize({width:390,height:420});
+    await page.goto(`./?trainer-row-navigation=${Date.now()}`,{waitUntil:'domcontentloaded'});
+    await waitForStableLocalOrganizerStartup(page);
+    await isolateAuthenticatedMyListFixture(page,{username:'NavigationTester',uid:'uid-navigation-tester'});
+    await page.evaluate(async()=>{
+      const favorite={key:'favorite-one',displayName:'FavoriteOne',tagIds:[],createdAt:1,updatedAt:1};
+      const recent={key:'recent-one',displayName:'RecentOne',openedAt:Date.now()-720000};
+      const state={version:3,schemaVersion:3,migrationVersion:3,owner:{uid:'uid-navigation-tester',username:'NavigationTester'},favorites:[favorite],recent:[recent],snapshots:{},tags:{},syncState:'local-only',migration:{skippedFavorites:0,skippedRecents:0}};
+      const store={read:()=>state,filterFavorites:()=>state.favorites,snapshotFor:()=>null,updateCanonicalName:()=>false};
+      ensureTrainerHistoryStore=()=>store;managedPublicShareRepository=null;
+      document.querySelectorAll('.page').forEach(node=>node.classList.remove('active'));
+      document.getElementById('tab-find').classList.add('active');
+      window.__openedTrainer='';openTrainerPublicShare=async value=>{window.__openedTrainer=value;};
+      allData.loginDirectory={RecentOne:{},FavoriteOne:{}};
+      await renderTrainerQuickLists();
+    });
+
+    const expectOpens=async action=>{
+      await page.evaluate(()=>{window.__openedTrainer='';});
+      await action();
+      await expect.poll(()=>page.evaluate(()=>window.__openedTrainer)).not.toBe('');
+    };
+    for(const [width,height] of [[375,700],[390,420],[390,300]]){
+      await page.setViewportSize({width,height});
+      const row=page.locator('.recent-trainer-row').first();
+      await expect(row).toBeVisible();
+      await expectOpens(()=>row.click({position:{x:18,y:18}}));
+      expect(await page.evaluate(()=>window.__openedTrainer)).toBe('RecentOne');
+      await expectOpens(()=>row.locator('.trainer-quick-name').click());
+      await expectOpens(()=>row.locator('.recent-trainer-chevron').click());
+      await row.focus();await expectOpens(()=>page.keyboard.press('Enter'));
+      await row.focus();await expectOpens(()=>page.keyboard.press('Space'));
+      await expectOpens(()=>page.locator('.favorite-card-open').click());
+      expect(await page.evaluate(()=>window.__openedTrainer)).toBe('FavoriteOne');
+      expect(await row.locator('button,a,[role="button"]').count()).toBe(0);
+      expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
+    }
+
+    const density=await page.evaluate(async()=>{
+      const favoriteHeight=document.querySelector('.favorite-card-shell').getBoundingClientRect().height;
+      const recentHeight=document.querySelector('.recent-trainer-row').getBoundingClientRect().height;
+      const state=ensureTrainerHistoryStore().read();state.favorites=[];await renderTrainerQuickLists();
+      return{favoriteHeight,recentHeight,emptyHeight:document.querySelector('#favorite-trainers .favorite-empty').getBoundingClientRect().height};
+    });
+    expect(density.favoriteHeight).toBeLessThan(128);
+    expect(density.recentHeight).toBeLessThan(80);
+    expect(density.emptyHeight).toBeLessThan(90);
+
+    const status=page.locator('#find-trainer-status');
+    await page.evaluate(()=>{document.getElementById('find-trainer-input').value='';renderFindTrainer();});
+    await expect(status).toBeHidden();
+    await page.locator('#find-trainer-input').fill('Rec');
+    await expect(status).toContainText(/.+/);
+    await expect(status).toBeHidden({timeout:2000});
+  });
+
   test('My List compact add controls stay responsive and keyboard reachable',async({page})=>{
     await page.setViewportSize({width:390,height:420});
     await page.goto(`./?my-list-creation=${Date.now()}`,{waitUntil:'domcontentloaded'});
