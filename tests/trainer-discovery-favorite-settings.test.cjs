@@ -50,12 +50,14 @@ test('inline tag creation selects new or normalized-existing tags and has scoped
   assert.match(html,/onkeydown="trainerTagInputKeydown\(event\)"/);
 });
 
-test('Settings exposes five semantic sections with desktop and mobile navigation',()=>{
-  for(const section of ['profile','language','security','tools','data']){assert.match(html,new RegExp(`data-settings-target="${section}"`));assert.match(html,new RegExp(`data-settings-section="${section}"`));}
+test('Settings exposes six semantic sections with desktop and mobile navigation',()=>{
+  for(const section of ['profile','language','appearance','security','tools','data']){assert.match(html,new RegExp(`data-settings-target="${section}"`));assert.match(html,new RegExp(`data-settings-section="${section}"`));}
   assert.match(html,/function selectSettingsSection/);assert.match(html,/function showSettingsSectionList/);
   assert.match(html,/settings-layout\.mobile-list \.settings-detail\{display:none\}/);
   assert.match(html,/settingsDetailIsOpenOnMobile/);
-  assert.match(html,/location\.hash==='#settings'/);
+  assert.match(html,/const SETTINGS_SECTIONS=Object\.freeze\(\['profile','language','appearance','security','tools','data'\]\)/);
+  assert.match(html,/function parseSettingsRoute/);
+  assert.match(html,/settings-page-mode/);
   for(const tool of ['inventory','import','export','safe-transfer','shortcuts','health','backup','restore'])assert.match(html,new RegExp(`openSettingsTool\\('${tool}'\\)`));
   assert.match(html,/settings-admin-only[^>]+hidden/);
   assert.match(html,/\.settings-account-only\[hidden\],\.settings-admin-only\[hidden\]\{display:none!important\}/);
@@ -71,7 +73,7 @@ test('Settings keeps language behavior, provider rows inert, and local-only data
 });
 
 test('responsive contracts retain 48px targets, wrapping, and no parallel organizer store',()=>{
-  assert.match(html,/@media\(max-width:600px\)[\s\S]*settings-layout\.mobile-list/);
+  assert.match(html,/@media\(max-width:767px\)[\s\S]*settings-layout\.mobile-list/);
   assert.match(html,/\.organizer-selectable-chip\{[^}]*min-height:48px/);
   assert.match(html,/\.favorite-saved-prompt button\{min-height:48px/);
   assert.match(html,/overflow-wrap:anywhere/);
@@ -79,7 +81,7 @@ test('responsive contracts retain 48px targets, wrapping, and no parallel organi
 });
 
 test('release and safety boundaries remain coherent',()=>{
-  assert.match(html,/2026-08-05\.28/);assert.doesNotMatch(html,/2026-08-05\.27/);
+  assert.match(html,/2026-08-05\.29/);assert.doesNotMatch(html,/2026-08-05\.28/);
   assert.match(readFileSync(path.join(root,'js/domain/shareVisibility.js'),'utf8'),/SHARE_VISIBILITY_MODEL_ENABLED\s*:\s*false/);assert.match(html,/SYNCED_TRAINER_PREFERENCES_ENABLED!==false/);
   assert.doesNotMatch(html,/managedTrainerPreferencesRepository\.(?:mutate|write|save)/);
 });

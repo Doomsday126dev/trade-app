@@ -40,7 +40,7 @@ test('Settings presents one primary language with an accessible optional search-
   assert.match(html,/\.language-primary-row select,\.language-override-row select\{min-height:48px\}/);
 });
 
-test('Settings is removed from primary navigation and relocated to an account dialog',()=>{
+test('Settings is removed from primary navigation and uses routed desktop plus dialog presentation',()=>{
   const tabs=html.slice(html.indexOf('<div class="tabs" role="tablist"'),html.indexOf('</div>',html.indexOf('<div class="tabs" role="tablist"')));
   assert.doesNotMatch(tabs,/settings|nav-settings/);
   assert.match(html,/id="account-trigger"[^>]+aria-expanded="false"[^>]+aria-controls="account-popover"/);
@@ -48,6 +48,8 @@ test('Settings is removed from primary navigation and relocated to an account di
   assert.match(html,/id="account-settings-action" onclick="openSettingsPanel\('account'\)"/);
   assert.match(html,/id="account-signout-action" onclick="logout\(\)"/);
   assert.match(html,/id="settings-modal" role="dialog" aria-modal="true"/);
+  assert.match(html,/\.settings-overlay\.settings-page-mode\{/);
+  assert.match(html,/if\(pageMode\)\{overlay\.removeAttribute\('role'\);overlay\.removeAttribute\('aria-modal'\);\}/);
   assert.doesNotMatch(html,/id="tab-settings"/);
 });
 
@@ -72,12 +74,14 @@ test('signed-out and anonymous screens expose language settings without a profil
   assert.match(html,/el\.hidden=_settingsContext!=='account'/);
 });
 
-test('account menu and Settings dialog preserve keyboard focus and route compatibility',()=>{
+test('account menu and Settings surfaces preserve keyboard focus and route compatibility',()=>{
   assert.match(html,/popover\.querySelector\('button'\)\?\.focus\(\)/);
   assert.match(html,/if\(e\.key==='Escape'&&popover&&!popover\.hidden\)/);
   assert.match(html,/if\(ev\.key==='Escape'\)\{if\(id==='settings-modal'&&settingsDetailIsOpenOnMobile\(\)\)\{showSettingsSectionList\(\);return;\}if\(id==='trainer-organizer-modal'\)closeTrainerOrganizer\(\);else closeModal\(id\);return;\}/);
   assert.match(html,/if\(returnFocus\?\.isConnected&&!returnFocus\.disabled\)returnFocus\.focus\(/);
   assert.match(html,/history\.pushState\([^\n]+settingsPanel:true/);
+  assert.match(html,/history\.replaceState\([^\n]+settingsSection:section/);
+  assert.match(html,/settingsRouteHash\(section=null\)/);
   assert.match(html,/window\.addEventListener\('popstate',syncSettingsRoute\)/);
   assert.match(html,/window\.addEventListener\('hashchange',syncSettingsRoute\)/);
   assert.match(html,/action==='settings'/);

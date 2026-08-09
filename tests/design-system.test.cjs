@@ -35,7 +35,8 @@ test('button hierarchy exposes five distinct reusable roles with one primary in 
   assert.match(html,/class="lbtn btn btn-primary" id="login-btn"/);
   assert.match(html,/class="organizer-close btn btn-icon"/);
   assert.match(html,/class="organizer-actions"><button class="bpri btn btn-primary"/);
-  assert.doesNotMatch(html,/class="organizer-actions">[\s\S]*btn-primary[\s\S]*btn-primary[\s\S]*<\/div>/);
+  const organizerActions=html.match(/class="organizer-actions">([\s\S]*?)<\/div>/)?.[1]||'';
+  assert.equal((organizerActions.match(/btn-primary/g)||[]).length,1);
   assert.match(css,/\.btn\[aria-busy="true"\]\{[^}]*cursor:progress[^}]*pointer-events:none/);
 });
 

@@ -284,7 +284,7 @@ test.describe('visual smoke', () => {
     await expect(page.locator('#account-settings-action')).toBeFocused();
     await page.locator('#account-settings-action').click();
     await expect(page.locator('#settings-modal')).toBeVisible();
-    await expect(page).toHaveURL(/#settings$/);
+    await expect(page).toHaveURL((page.viewportSize()?.width||0)>=768?/#settings\/profile$/ : /#settings$/);
     await page.keyboard.press('Escape');
     await expect(page.locator('#settings-modal')).toBeHidden();
     await expect(page.locator('#account-trigger')).toBeFocused();
@@ -302,9 +302,12 @@ test.describe('visual smoke', () => {
     });
 
     await page.setViewportSize({width:1024,height:800});
+    await expect(page.locator('#settings-modal')).toHaveClass(/settings-page-mode/);
+    await expect(page.locator('#settings-modal')).not.toHaveAttribute('role','dialog');
     await expect(page.locator('.settings-nav')).toBeVisible();
     await expect(page.locator('[data-settings-section="profile"]')).toBeVisible();
     await page.locator('[data-settings-target="tools"]').click();
+    await expect(page).toHaveURL(/#settings\/tools$/);
     await expect(page.locator('[data-settings-section="tools"]')).toBeVisible();
     await expect(page.locator('[data-settings-section="profile"]')).toBeHidden();
     await expect(page.locator('[data-settings-target="tools"]')).toHaveAttribute('aria-current','page');
@@ -313,6 +316,7 @@ test.describe('visual smoke', () => {
 
     await page.setViewportSize({width:390,height:420});
     await page.evaluate(()=>{configureSettingsPanel('account');showSettingsSectionList();});
+    await expect(page.locator('#settings-modal')).toHaveAttribute('role','dialog');
     await expect(page.locator('.settings-nav')).toBeVisible();
     await expect(page.locator('.settings-detail')).toBeHidden();
     await page.locator('[data-settings-target="language"]').click();
@@ -326,6 +330,119 @@ test.describe('visual smoke', () => {
     await expect(page.locator('[data-settings-target="language"]')).toBeFocused();
     await page.keyboard.press('Escape');
     await expect(page.locator('#settings-modal')).toBeHidden();
+  });
+
+  test('Settings deep links, invalid fallback, history, and logout remain bounded',async({page})=>{
+    await page.setViewportSize({width:1024,height:800});
+    await page.goto(`./?settings-routing=${Date.now()}`,{waitUntil:'domcontentloaded'});
+    await waitForSettingsStartupReady(page);
+    await page.evaluate(()=>{
+      cur='SettingsRouteTrainer';
+      document.getElementById('login-pg').style.display='none';
+      document.getElementById('app').style.display='flex';
+      history.replaceState({},'',`${location.pathname}${location.search}#settings/tools`);
+      syncSettingsRoute({captureScroll:false});
+    });
+    await expect(page.locator('#settings-modal')).toHaveClass(/settings-page-mode/);
+    await expect(page.locator('[data-settings-section="tools"]')).toBeVisible();
+    await expect(page.locator('[data-settings-target="tools"]')).toHaveAttribute('aria-current','page');
+
+    await page.evaluate(()=>{history.replaceState({},'',`${location.pathname}${location.search}#settings/not-a-section`);syncSettingsRoute({captureScroll:false});});
+    await expect(page).toHaveURL(/#settings\/profile$/);
+    await expect(page.locator('[data-settings-section="profile"]')).toBeVisible();
+
+    await page.locator('[data-settings-target="language"]').click();
+    await expect(page).toHaveURL(/#settings\/language$/);
+    await page.goBack();
+    await expect(page.locator('#settings-modal')).toBeHidden();
+    await page.goForward();
+    await expect(page.locator('[data-settings-section="language"]')).toBeVisible();
+
+    await page.evaluate(()=>logout());
+    await expect(page.locator('#settings-modal')).toBeHidden();
+    await expect(page).not.toHaveURL(/#settings/);
+  });
+
+  test('Appearance preserves a dark background choice while light mode stays neutral',async({page})=>{
+    await page.setViewportSize({width:1024,height:800});
+    await page.goto(`./?settings-appearance=${Date.now()}`,{waitUntil:'domcontentloaded'});
+    await waitForSettingsStartupReady(page);
+    await page.evaluate(()=>{
+      cur='AppearanceTrainer';allData.users=allData.users||{};allData.users[cur]={...(allData.users[cur]||{}),wallpaper:'ocean'};
+      document.getElementById('login-pg').style.display='none';document.getElementById('app').style.display='flex';
+      history.replaceState({},'',`${location.pathname}${location.search}#settings/appearance`);syncSettingsRoute({captureScroll:false});setSettingsTheme('dark');
+    });
+    await expect(page.locator('[data-settings-section="appearance"]')).toBeVisible();
+    await expect(page.locator('[data-settings-theme="dark"]')).toHaveAttribute('aria-pressed','true');
+    await expect(page.locator('.wp-swatch.ocean')).toHaveAttribute('aria-pressed','true');
+    expect(await page.evaluate(()=>document.body.classList.contains('wp-ocean'))).toBe(true);
+    for(const key of ['mono','aurora','ocean','forest','sunset','mist']){
+      await page.locator(`.wp-swatch.${key}`).click();
+      await expect(page.locator(`.wp-swatch.${key}`)).toHaveAttribute('aria-pressed','true');
+      expect(await page.evaluate(selected=>document.body.classList.contains(`wp-${selected}`),key)).toBe(true);
+    }
+    await page.locator('.wp-swatch.ocean').click();
+
+    await page.locator('[data-settings-theme="light"]').click();
+    await expect(page.locator('#settings-background-group')).toHaveClass(/settings-background-inactive/);
+    await expect(page.locator('.wp-swatch.ocean')).toBeDisabled();
+    expect(await page.evaluate(()=>({stored:document.getElementById('prof-wallpaper').value,neutral:document.body.classList.contains('wp-mono')}))).toEqual({stored:'ocean',neutral:true});
+
+    await page.emulateMedia({colorScheme:'dark'});await page.locator('[data-settings-theme="auto"]').click();
+    expect(await page.evaluate(()=>document.body.classList.contains('wp-ocean'))).toBe(true);
+    await page.emulateMedia({colorScheme:'light'});
+    await expect.poll(()=>page.evaluate(()=>document.body.classList.contains('wp-mono'))).toBe(true);
+
+    await page.locator('[data-settings-target="profile"]').click();
+    for(const id of ['prof-av-input','fc-inp','prof-bio','prof-discord','prof-discord-id'])await expect(page.locator(`#${id}`)).toBeVisible();
+    await expect(page.locator('[data-settings-section="profile"] #np1')).toHaveCount(0);await expect(page.locator('[data-settings-section="profile"] #wp-picker')).toHaveCount(0);
+    await page.locator('[data-settings-target="security"]').click();
+    await expect(page.locator('#settings-security-name')).toHaveText('AppearanceTrainer');await expect(page.locator('#np1')).toBeVisible();await expect(page.locator('#np2')).toBeVisible();
+
+    await page.setViewportSize({width:390,height:420});
+    await page.evaluate(()=>{configureSettingsPanel('account');showSettingsSectionList();});
+    await page.locator('[data-settings-target="appearance"]').click();
+    await expect(page.locator('[data-settings-section="appearance"]')).toBeVisible();
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
+  });
+
+  test('signed-in Settings stays bounded across supported locales and viewports',async({page})=>{
+    const locales=['en','ja','es','de'];
+    const viewports=[[320,640],[375,700],[390,700],[430,760],[768,800],[1024,800],[1440,900],[390,420],[390,300]];
+    for(const locale of locales){
+      for(const [width,height] of viewports){
+        await page.setViewportSize({width,height});
+        await page.goto(`./?account-settings-geometry=${locale}-${width}-${height}-${Date.now()}`,{waitUntil:'domcontentloaded'});
+        await waitForSettingsStartupReady(page);
+        await page.evaluate(selectedLocale=>{
+          cur='SettingsGeometryTrainer';
+          document.getElementById('login-pg').style.display='none';
+          document.getElementById('app').style.display='flex';
+          changeInterfaceLocale(selectedLocale);
+          openSettingsPanel('account');
+          selectSettingsSection('security',{focus:false,updateHistory:false});
+        },locale);
+        const geometry=await page.evaluate(()=>{
+          const overlay=document.getElementById('settings-modal');
+          const nav=document.querySelector('.settings-nav');
+          const detail=document.getElementById('settings-detail');
+          const section=document.querySelector('[data-settings-section="security"]');
+          return{
+            pageMode:overlay.classList.contains('settings-page-mode'),
+            noDocumentOverflow:document.documentElement.scrollWidth<=document.documentElement.clientWidth,
+            noNavOverflow:nav.scrollWidth<=nav.clientWidth,
+            noDetailOverflow:detail.scrollWidth<=detail.clientWidth,
+            noSectionOverflow:section.scrollWidth<=section.clientWidth
+          };
+        });
+        expect(geometry.pageMode).toBe(width>=768);
+        expect(geometry.noDocumentOverflow).toBe(true);
+        expect(geometry.noNavOverflow).toBe(true);
+        expect(geometry.noDetailOverflow).toBe(true);
+        expect(geometry.noSectionOverflow).toBe(true);
+        await expect(page.locator('.settings-modal-close')).toHaveCSS('min-height','48px');
+      }
+    }
   });
 
   test('language Settings keeps the search-language override subordinate, responsive, and device-local',async({page})=>{
