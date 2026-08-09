@@ -45,6 +45,7 @@ html[data-theme="light"]{
 body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
 button{font-family:var(--font);cursor:pointer;border:none;outline:none}
 input,select,textarea{font-family:var(--font);outline:none}
+.sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
 
 /* SYNC */
 .sync-dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0;transition:.3s}
@@ -135,8 +136,8 @@ input,select,textarea{font-family:var(--font);outline:none}
 .list-tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
 .ltab{background:var(--card);border:1px solid var(--border);color:var(--muted);padding:6px 14px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;transition:.15s}
 .ltab.active{background:var(--accent);color:#fff;border-color:#fff;font-weight:700;box-shadow:0 0 0 2px var(--accent)}
-.mylist-type-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
-.mylist-type-tabs .ltab{display:flex;align-items:center;justify-content:center;gap:5px;min-width:0;min-height:48px;padding:7px 10px;border-radius:7px;white-space:nowrap}
+.mylist-type-tabs{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.mylist-type-tabs .ltab{display:inline-flex;align-items:center;justify-content:center;gap:5px;flex:0 0 auto;min-width:0;min-height:48px;padding:6px 13px;border-radius:20px;white-space:nowrap}
 .mylist-type-tabs .ltab-marker{display:none;font-weight:800}
 .mylist-type-tabs .ltab.active .ltab-marker{display:inline}
 .mylist-type-tabs .ltab-count{font-variant-numeric:tabular-nums;font-weight:700}
@@ -147,7 +148,7 @@ input,select,textarea{font-family:var(--font);outline:none}
   .ltab .ltab-short{display:inline}
   .ltab{padding:6px 11px;font-size:12px}
   .mylist-type-tabs{gap:5px}
-  .mylist-type-tabs .ltab{gap:3px;padding:6px 4px;font-size:11px}
+  .mylist-type-tabs .ltab{gap:3px;padding:6px 10px;font-size:11px}
   /* Compact community switcher on phone. iOS Safari's native <select>
      widget enforces a minimum width based on the longest <option>
      regardless of CSS max-width, so on phones we strip the native
@@ -333,12 +334,12 @@ input,select,textarea{font-family:var(--font);outline:none}
 .combo-body{display:none;padding:10px 12px;border-top:1px solid var(--border);background:var(--bg)}
 .combo-wrap.open .combo-body{display:flex;flex-direction:column;gap:10px}
 .combo-wrap.open .collapse-icon{transform:rotate(180deg)}
-.mylist-priority-sections{display:flex;flex-direction:column;gap:16px}
-.mylist-priority-section{border-top:2px solid var(--border);padding-top:10px}
-.mylist-priority-section.H{border-top-color:var(--H)}
-.mylist-priority-section.M{border-top-color:var(--M)}
-.mylist-priority-section.L{border-top-color:var(--L)}
-.mylist-priority-heading{display:flex;align-items:center;gap:8px;margin:0 0 9px;font-size:13px;letter-spacing:0;text-transform:none}
+.mylist-priority-sections{display:flex;flex-direction:column;gap:18px}
+.mylist-priority-section{padding-top:2px}
+.mylist-priority-heading{display:flex;align-items:center;gap:8px;margin:0 0 9px;padding:7px 9px;border-left:3px solid var(--border2);border-radius:0 var(--r2) var(--r2) 0;background:var(--bg2);font-size:13px;letter-spacing:0;text-transform:none}
+.mylist-priority-section.H .mylist-priority-heading{border-left-color:var(--H);background:var(--Hbg)}
+.mylist-priority-section.M .mylist-priority-heading{border-left-color:var(--M);background:var(--Mbg)}
+.mylist-priority-section.L .mylist-priority-heading{border-left-color:var(--L);background:var(--Lbg)}
 .mylist-priority-heading .priority-count{color:var(--muted);font-weight:600}
 .mylist-search-footer{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px;padding:8px 0 0;border-top:1px solid var(--border)}
 .mylist-search-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -2058,8 +2059,8 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
       <span class="mylist-srch-icon app-search-icon" aria-hidden="true">🔍</span>
       <input class="app-search-input" type="text" data-i18n-placeholder="myList.filterPlaceholder" data-i18n-aria-label="myList.filterLabel" placeholder="Filter my list…" oninput="renderMyList(this.value)" id="mylist-filter" aria-label="Filter my list">
     </div>
-    <div class="sec" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
-      <span id="mylist-category-heading"><span id="mylist-category-name">Trades</span> <span aria-hidden="true">·</span> <span id="mylist-count" style="font-weight:600;text-transform:none;font-size:11px;margin-left:2px"></span></span>
+    <div class="sec" style="display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap">
+      <h2 class="sr-only" id="mylist-category-heading"><span id="mylist-category-name">Trades</span> <span aria-hidden="true">·</span> <span id="mylist-count"></span></h2>
       <span style="font-size:10px;color:var(--muted);display:inline-flex;gap:6px;align-items:center;text-transform:none;letter-spacing:0;font-weight:500">
         <span data-i18n-title="myList.luckyHelp" title="Lucky entries generate a separate search string">⚡ <span data-i18n="myList.lucky">Lucky</span></span>
         <span style="color:var(--border2)">·</span>
@@ -2594,7 +2595,7 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
 <div class="ptr-indicator" id="ptr-indicator" aria-hidden="true">↓</div>
 
 <script>
-window.__POGO_RELEASE_ID='2026-08-05.25';
+window.__POGO_RELEASE_ID='2026-08-05.26';
 window.__pogoBootWatch=setTimeout(function(){
   var visible=['config-pg','login-pg','app'].some(function(id){
     var el=document.getElementById(id);
@@ -2613,61 +2614,61 @@ window.__pogoBootWatch=setTimeout(function(){
   if(err)err.textContent='App scripts did not finish loading. Refresh once; if this stays, send this screenshot.';
 },4000);
 </script>
-<script src="data.js?v=2026-08-05.25"></script>
-<script src="js/domain/priorities.js?v=2026-08-05.25"></script>
-<script src="js/ui/badges.js?v=2026-08-05.25"></script>
-<script src="js/domain/username.js?v=2026-08-05.25"></script>
-<script src="js/domain/priorityValues.js?v=2026-08-05.25"></script>
-<script src="js/domain/scheduleDates.js?v=2026-08-05.25"></script>
-<script src="js/domain/pokemonSearchTerms.js?v=2026-08-05.25"></script>
-<script src="js/domain/pokemonEntryRules.js?v=2026-08-05.25"></script>
-<script src="js/domain/pokemonGoSearchSyntax.js?v=2026-08-05.25"></script>
-<script src="js/domain/searchStrings.js?v=2026-08-05.25"></script>
-<script src="js/ui/stringHtml.js?v=2026-08-05.25"></script>
-<script src="js/domain/scheduleEventRules.js?v=2026-08-05.25"></script>
-<script src="js/domain/scheduleTradeRules.js?v=2026-08-05.25"></script>
-<script src="js/domain/pokemonKeys.js?v=2026-08-05.25"></script>
-<script src="js/domain/spriteSlugs.js?v=2026-08-05.25"></script>
-<script src="js/domain/fuzzyText.js?v=2026-08-05.25"></script>
-<script src="js/domain/autocompleteText.js?v=2026-08-05.25"></script>
-<script src="js/domain/autocompleteMatching.js?v=2026-08-05.25"></script>
-<script src="js/domain/autocompleteRanking.js?v=2026-08-05.25"></script>
-<script src="js/domain/relativeTime.js?v=2026-08-05.25"></script>
-<script src="js/domain/clientRelease.js?v=2026-08-05.25"></script>
-<script src="js/domain/favoriteCardInteractions.js?v=2026-08-05.25"></script>
-<script src="js/domain/trainerDiscovery.js?v=2026-08-05.25"></script>
-<script src="js/domain/eventPresentation.js?v=2026-08-05.25"></script>
-<script src="js/domain/publicSharePublication.js?v=2026-08-05.25"></script>
-<script src="js/domain/trainerPreferences.js?v=2026-08-05.25"></script>
-<script src="js/domain/trainerPreferenceSync.js?v=2026-08-05.25"></script>
-<script src="js/domain/authenticationReadiness.js?v=2026-08-05.25"></script>
-<script src="js/domain/loginDirectory.js?v=2026-08-05.25"></script>
-<script src="js/utils/textSafety.js?v=2026-08-05.25"></script>
-<script src="js/ui/stringPanels.js?v=2026-08-05.25"></script>
-<script src="js/ui/emptyState.js?v=2026-08-05.25"></script>
-<script src="js/i18n/locales/en.js?v=2026-08-05.25"></script>
-<script src="js/i18n/locales/ja.js?v=2026-08-05.25"></script>
-<script src="js/i18n/locales/es.js?v=2026-08-05.25"></script>
-<script src="js/i18n/locales/de.js?v=2026-08-05.25"></script>
-<script src="js/i18n/pokemonNames/catalog.js?v=2026-08-05.25"></script>
-<script src="js/i18n/pokemonNames/variants.js?v=2026-08-05.25"></script>
-<script src="js/i18n/pokemonNames/core.js?v=2026-08-05.25"></script>
-<script src="js/i18n/eventLabels/currentTitles.js?v=2026-08-05.25"></script>
-<script src="js/i18n/eventLabels/core.js?v=2026-08-05.25"></script>
-<script src="js/i18n/core.js?v=2026-08-05.25"></script>
-<script src="js/services/firebaseClient.js?v=2026-08-05.25"></script>
-<script src="js/data/subscriptionManager.js?v=2026-08-05.25"></script>
-<script src="js/data/listenerLifecycle.js?v=2026-08-05.25"></script>
-<script src="js/data/sessionCacheBoundary.js?v=2026-08-05.25"></script>
-<script src="js/data/firebaseReadRegistry.js?v=2026-08-05.25"></script>
-<script src="js/data/currentUserRepository.js?v=2026-08-05.25"></script>
-<script src="js/data/ownedDataCoordinator.js?v=2026-08-05.25"></script>
-<script src="js/data/publicShareRepository.js?v=2026-08-05.25"></script>
-<script src="js/data/trainerHistoryStore.js?v=2026-08-05.25"></script>
-<script src="js/data/trainerPreferencesRepository.js?v=2026-08-05.25"></script>
-<script src="js/data/trainerPreferenceSyncQueue.js?v=2026-08-05.25"></script>
-<script src="js/domain/cacheAdapters.js?v=2026-08-05.25"></script>
-<script src="js/ui/trainerTagPanel.js?v=2026-08-05.25"></script>
+<script src="data.js?v=2026-08-05.26"></script>
+<script src="js/domain/priorities.js?v=2026-08-05.26"></script>
+<script src="js/ui/badges.js?v=2026-08-05.26"></script>
+<script src="js/domain/username.js?v=2026-08-05.26"></script>
+<script src="js/domain/priorityValues.js?v=2026-08-05.26"></script>
+<script src="js/domain/scheduleDates.js?v=2026-08-05.26"></script>
+<script src="js/domain/pokemonSearchTerms.js?v=2026-08-05.26"></script>
+<script src="js/domain/pokemonEntryRules.js?v=2026-08-05.26"></script>
+<script src="js/domain/pokemonGoSearchSyntax.js?v=2026-08-05.26"></script>
+<script src="js/domain/searchStrings.js?v=2026-08-05.26"></script>
+<script src="js/ui/stringHtml.js?v=2026-08-05.26"></script>
+<script src="js/domain/scheduleEventRules.js?v=2026-08-05.26"></script>
+<script src="js/domain/scheduleTradeRules.js?v=2026-08-05.26"></script>
+<script src="js/domain/pokemonKeys.js?v=2026-08-05.26"></script>
+<script src="js/domain/spriteSlugs.js?v=2026-08-05.26"></script>
+<script src="js/domain/fuzzyText.js?v=2026-08-05.26"></script>
+<script src="js/domain/autocompleteText.js?v=2026-08-05.26"></script>
+<script src="js/domain/autocompleteMatching.js?v=2026-08-05.26"></script>
+<script src="js/domain/autocompleteRanking.js?v=2026-08-05.26"></script>
+<script src="js/domain/relativeTime.js?v=2026-08-05.26"></script>
+<script src="js/domain/clientRelease.js?v=2026-08-05.26"></script>
+<script src="js/domain/favoriteCardInteractions.js?v=2026-08-05.26"></script>
+<script src="js/domain/trainerDiscovery.js?v=2026-08-05.26"></script>
+<script src="js/domain/eventPresentation.js?v=2026-08-05.26"></script>
+<script src="js/domain/publicSharePublication.js?v=2026-08-05.26"></script>
+<script src="js/domain/trainerPreferences.js?v=2026-08-05.26"></script>
+<script src="js/domain/trainerPreferenceSync.js?v=2026-08-05.26"></script>
+<script src="js/domain/authenticationReadiness.js?v=2026-08-05.26"></script>
+<script src="js/domain/loginDirectory.js?v=2026-08-05.26"></script>
+<script src="js/utils/textSafety.js?v=2026-08-05.26"></script>
+<script src="js/ui/stringPanels.js?v=2026-08-05.26"></script>
+<script src="js/ui/emptyState.js?v=2026-08-05.26"></script>
+<script src="js/i18n/locales/en.js?v=2026-08-05.26"></script>
+<script src="js/i18n/locales/ja.js?v=2026-08-05.26"></script>
+<script src="js/i18n/locales/es.js?v=2026-08-05.26"></script>
+<script src="js/i18n/locales/de.js?v=2026-08-05.26"></script>
+<script src="js/i18n/pokemonNames/catalog.js?v=2026-08-05.26"></script>
+<script src="js/i18n/pokemonNames/variants.js?v=2026-08-05.26"></script>
+<script src="js/i18n/pokemonNames/core.js?v=2026-08-05.26"></script>
+<script src="js/i18n/eventLabels/currentTitles.js?v=2026-08-05.26"></script>
+<script src="js/i18n/eventLabels/core.js?v=2026-08-05.26"></script>
+<script src="js/i18n/core.js?v=2026-08-05.26"></script>
+<script src="js/services/firebaseClient.js?v=2026-08-05.26"></script>
+<script src="js/data/subscriptionManager.js?v=2026-08-05.26"></script>
+<script src="js/data/listenerLifecycle.js?v=2026-08-05.26"></script>
+<script src="js/data/sessionCacheBoundary.js?v=2026-08-05.26"></script>
+<script src="js/data/firebaseReadRegistry.js?v=2026-08-05.26"></script>
+<script src="js/data/currentUserRepository.js?v=2026-08-05.26"></script>
+<script src="js/data/ownedDataCoordinator.js?v=2026-08-05.26"></script>
+<script src="js/data/publicShareRepository.js?v=2026-08-05.26"></script>
+<script src="js/data/trainerHistoryStore.js?v=2026-08-05.26"></script>
+<script src="js/data/trainerPreferencesRepository.js?v=2026-08-05.26"></script>
+<script src="js/data/trainerPreferenceSyncQueue.js?v=2026-08-05.26"></script>
+<script src="js/domain/cacheAdapters.js?v=2026-08-05.26"></script>
+<script src="js/ui/trainerTagPanel.js?v=2026-08-05.26"></script>
 <script>
 let initializeApp,getDatabase,ref,set,get,onValue,update,getAuth,signInWithEmailAndPassword,createUserWithEmailAndPassword,firebaseSignOut,updatePassword,deleteUser,onAuthStateChanged;
 let firebaseSdkPromise=null;

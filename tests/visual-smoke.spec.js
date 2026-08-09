@@ -86,6 +86,23 @@ async function waitForStableLocalOrganizerStartup(page) {
   });
 }
 
+async function isolateAuthenticatedMyListFixture(page,{username,uid}) {
+  await page.waitForFunction(() => _authStateKnown === true && typeof managedSubscriptions?.unsubscribeByKey === 'function');
+  await page.evaluate(({username,uid}) => {
+    managedSubscriptions.unsubscribeByKey('public:loginDirectory');
+    managedListenerLifecycle.deactivateSession('playwright_fixture');
+    managedListenerLifecycle.clearSelectedTrainer('playwright_fixture');
+    managedOwnedDataCoordinator?.reset();
+    db=null;fbOn=false;managedFirebaseClient=null;
+    cur=username;auth={currentUser:{uid}};
+    document.getElementById('login-pg').style.display='none';
+    document.getElementById('app').style.display='flex';
+    document.querySelectorAll('.page').forEach(node=>node.classList.remove('active'));
+    document.getElementById('tab-mylist').classList.add('active');
+    window.__authenticatedMyListFixture={active:true,generation:(window.__authenticatedMyListFixture?.generation||0)+1,username,uid};
+  },{username,uid});
+}
+
 async function handleOneDialogDuring(page, action, accept) {
   let handled = 0;
   const handler = async dialog => {
@@ -103,8 +120,8 @@ async function handleOneDialogDuring(page, action, accept) {
 }
 
 async function installLocalOrganizerFixture(page) {
+  await isolateAuthenticatedMyListFixture(page,{username:'LocalTester',uid:'uid-local-tester'});
   await page.evaluate(() => {
-    cur='LocalTester';auth={currentUser:{uid:'uid-local-tester'}};
     const store=PogoData.trainerHistoryStore.createTrainerHistoryStore({storage:localStorage,identity:{uid:'uid-local-tester',username:'LocalTester'}});
     store.clear();
     for(const trainer of ['TrainerAlpha','TrainerBeta','TrainerNameThatIsDeliberatelyLongForCompactLayouts'])store.toggleFavorite(trainer);
@@ -713,8 +730,8 @@ test.describe('visual smoke', () => {
       await page.setViewportSize({width,height});
       await page.goto(`./?my-list-category=${width}-${height}-${Date.now()}`,{waitUntil:'domcontentloaded'});
       await waitForStableLocalOrganizerStartup(page);
+      await isolateAuthenticatedMyListFixture(page,{username:'CategoryTester',uid:'uid-category-tester'});
       await page.evaluate(()=>{
-        cur='CategoryTester';auth={currentUser:{uid:'uid-category-tester'}};
         allData={users:{CategoryTester:{}},wishlist:{CategoryTester:{}},dynamax:{CategoryTester:{}},gmax:{CategoryTester:{}},costumes:{CategoryTester:{}}};
         for(let i=0;i<62;i++)allData.wishlist.CategoryTester[`Trade ${i}`]='H';
         for(let i=0;i<8;i++)allData.dynamax.CategoryTester[`Dmax ${i}`]='M';
@@ -728,7 +745,12 @@ test.describe('visual smoke', () => {
       await expect(tabs.locator('[data-mylist-type="gmax"]')).toHaveAttribute('aria-label',/3/);
       await expect(tabs.locator('[data-mylist-type="costumes"]')).toHaveAttribute('aria-selected','true');
       await expect(tabs.locator('[data-mylist-type="costumes"] .ltab-marker')).toBeVisible();
+      expect(await tabs.evaluate(node=>getComputedStyle(node).display)).toBe('flex');
+      expect(await tabs.locator('.ltab').first().evaluate(node=>getComputedStyle(node).borderRadius)).toBe('20px');
       await expect(page.locator('#mylist-category-heading')).toContainText('Others');
+      await expect(page.locator('#mylist-category-heading')).toHaveClass(/sr-only/);
+      const semanticHeadingBox=await page.locator('#mylist-category-heading').boundingBox();
+      expect(semanticHeadingBox?.width).toBeLessThanOrEqual(1);expect(semanticHeadingBox?.height).toBeLessThanOrEqual(1);
       await expect(page.locator('#mylist-out')).toContainText('No Pokémon in Others');
       await expect(page.locator('#mylist-out')).toContainText('View Trades (62)');
       await expect(page.locator('#my-strings-out')).toBeEmpty();
@@ -742,7 +764,6 @@ test.describe('visual smoke', () => {
     }
 
     await page.evaluate(()=>{
-      cur='CategoryTester';auth={currentUser:{uid:'uid-category-tester'}};
       const [first,second]=DB.wishlist.slice(0,2);
       allData.wishlist.CategoryTester={[first.name]:'H',[second.name]:'M'};
       window.__categoryFixtureFirst=first.name;setMyList('wishlist');
@@ -762,15 +783,67 @@ test.describe('visual smoke', () => {
     await expect(page.locator('[data-mylist-count="wishlist"]')).toHaveText('1');
   });
 
+  test('authenticated My List fixture preserves every category through CSV export',async({page})=>{
+    await page.setViewportSize({width:1024,height:800});
+    await page.goto(`./?my-list-csv-lifecycle=${Date.now()}`,{waitUntil:'domcontentloaded'});
+    await waitForStableLocalOrganizerStartup(page);
+    await isolateAuthenticatedMyListFixture(page,{username:'CsvFixtureTester',uid:'uid-csv-fixture'});
+    const seeded=await page.evaluate(()=>{
+      const username='CsvFixtureTester';
+      allData={users:{[username]:{}},wishlist:{[username]:{}},dynamax:{[username]:{}},gmax:{[username]:{}},costumes:{[username]:{}}};
+      const sources={wishlist:listSource('wishlist'),dynamax:listSource('dynamax'),gmax:listSource('gmax'),costumes:listSource('costumes')};
+      for(const type of Object.keys(sources))sources[type].filter(entry=>entry?.name).slice(0,3).forEach((entry,index)=>{allData[type][username][entry.name]=priValue(['H','M','L'][index]);});
+      window.__csvLifecycle={
+        created:0,downloads:0,writes:[],toasts:[],
+        originalCreate:URL.createObjectURL,originalRevoke:URL.revokeObjectURL,
+        originalClick:HTMLAnchorElement.prototype.click,originalQueueSync:queueSync,originalToast:toast
+      };
+      URL.createObjectURL=()=>{window.__csvLifecycle.created++;return'blob:csv-fixture';};
+      URL.revokeObjectURL=()=>{};
+      HTMLAnchorElement.prototype.click=function(){window.__csvLifecycle.downloads++;};
+      queueSync=(...args)=>{window.__csvLifecycle.writes.push(args);return false;};
+      toast=message=>{window.__csvLifecycle.toasts.push(String(message));};
+      return Object.fromEntries(Object.keys(sources).map(type=>[type,Object.keys(allData[type][username]).length]));
+    });
+    expect(seeded).toEqual({wishlist:3,dynamax:3,gmax:3,costumes:3});
+
+    for(const type of ['wishlist','dynamax','gmax','costumes']){
+      await page.evaluate(type=>setMyList(type),type);
+      await page.locator('#mylist-filter').fill('fixture-filter');
+      const before=await page.evaluate(type=>{
+        const count=Object.keys(allData[type]?.CsvFixtureTester||{}).length;
+        if(count<=0)throw new Error('authenticated fixture lost seeded owner data before CSV export');
+        return{type:myListType,count,filter:document.getElementById('mylist-filter').value,fingerprint:JSON.stringify(allData),created:window.__csvLifecycle.created,writes:window.__csvLifecycle.writes.length,rendered:document.querySelector(`[data-mylist-count="${type}"]`)?.textContent};
+      },type);
+      await page.locator('#export-menu-btn').click();
+      await page.getByRole('menuitem',{name:/CSV spreadsheet/i}).click();
+      await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+      const after=await page.evaluate(type=>({type:myListType,count:Object.keys(allData[type]?.CsvFixtureTester||{}).length,filter:document.getElementById('mylist-filter').value,fingerprint:JSON.stringify(allData),created:window.__csvLifecycle.created,writes:window.__csvLifecycle.writes.length,rendered:document.querySelector(`[data-mylist-count="${type}"]`)?.textContent,menuOpen:document.getElementById('export-menu').classList.contains('open')}),type);
+      expect(after).toEqual({...before,created:before.created+1,menuOpen:false});
+    }
+
+    await page.evaluate(()=>{allData.costumes.CsvFixtureTester={};setMyList('costumes');});
+    const emptyBefore=await page.evaluate(()=>window.__csvLifecycle.created);
+    await page.locator('#export-menu-btn').click();
+    await page.getByRole('menuitem',{name:/CSV spreadsheet/i}).click();
+    expect(await page.evaluate(()=>({created:window.__csvLifecycle.created,writes:window.__csvLifecycle.writes.length,emptyToast:window.__csvLifecycle.toasts.some(message=>message.includes('Add entries'))}))).toEqual({created:emptyBefore,writes:0,emptyToast:true});
+    await page.evaluate(()=>{setMyList('costumes');resetMyListCategoryForAccountBoundary();});
+    expect(await page.evaluate(()=>myListType)).toBe('wishlist');
+    await page.evaluate(()=>{
+      URL.createObjectURL=window.__csvLifecycle.originalCreate;URL.revokeObjectURL=window.__csvLifecycle.originalRevoke;
+      HTMLAnchorElement.prototype.click=window.__csvLifecycle.originalClick;queueSync=window.__csvLifecycle.originalQueueSync;toast=window.__csvLifecycle.originalToast;
+    });
+  });
+
   test('My List priority searches remain adjacent, collapsed, localized, and responsive',async({page})=>{
     const viewports=[[320,640],[375,700],[390,420],[390,300],[430,760],[768,800],[1024,800],[1440,900]];
     for(const [width,height] of viewports){
       await page.setViewportSize({width,height});
       await page.goto(`./?my-list-search-hierarchy=${width}-${height}-${Date.now()}`,{waitUntil:'domcontentloaded'});
       await waitForStableLocalOrganizerStartup(page);
+      await isolateAuthenticatedMyListFixture(page,{username:'SearchHierarchyTester',uid:'uid-search-hierarchy'});
       await page.waitForTimeout(350);
       await page.evaluate(()=>{
-        cur='SearchHierarchyTester';auth={currentUser:{uid:'uid-search-hierarchy'}};
         const entries=DB.wishlist.filter(entry=>entry.no).slice(0,9);
         allData={users:{SearchHierarchyTester:{}},wishlist:{SearchHierarchyTester:{}},dynamax:{SearchHierarchyTester:{}},gmax:{SearchHierarchyTester:{}},costumes:{SearchHierarchyTester:{}}};
         entries.forEach((entry,index)=>{allData.wishlist.SearchHierarchyTester[entry.name]=priValue(index<3?'H':index<6?'M':'L','',index===0,index===1,index===2,false);});
@@ -779,6 +852,8 @@ test.describe('visual smoke', () => {
       for(const priority of ['H','M','L']){
         const section=page.locator(`[data-priority-section="${priority}"]`);
         await expect(section).toBeVisible();
+        expect(await section.evaluate(node=>getComputedStyle(node).borderTopWidth)).toBe('0px');
+        expect(await section.locator('.mylist-priority-heading').evaluate(node=>getComputedStyle(node).borderLeftWidth)).toBe('3px');
         const footer=section.locator(`[data-priority-search="${priority}"]`);
         await expect(footer.locator('.cpbtn')).toBeVisible();
         await expect(footer.locator('.mylist-search-raw')).toBeHidden();

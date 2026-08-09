@@ -27,7 +27,14 @@ test('selected category is visually unmistakable without relying on color alone'
   assert.match(html,/\.ltab\.active\{[^}]*border-color:#fff[^}]*font-weight:700[^}]*box-shadow/);
 });
 
+test('category navigation uses compact intrinsic pills instead of equal-width segments',()=>{
+  assert.match(html,/\.mylist-type-tabs\{[^}]*display:flex[^}]*flex-wrap:wrap/);
+  assert.match(html,/\.mylist-type-tabs \.ltab\{[^}]*inline-flex[^}]*flex:0 0 auto[^}]*border-radius:20px/);
+  assert.doesNotMatch(html,/\.mylist-type-tabs\{[^}]*grid-template-columns/);
+});
+
 test('heading and empty state always identify the active category',()=>{
+  assert.match(myList,/class="sr-only" id="mylist-category-heading"/);
   assert.match(myList,/id="mylist-category-name"/);
   assert.match(renderMyList,/myListCategoryLabel\(myListType\)/);
   assert.match(renderMyList,/`myList\.empty\.\$\{myListCategoryKey\(myListType\)\}Title`/);
@@ -50,8 +57,16 @@ test('counts derive from current hydrated data and refresh with list rendering',
 test('CSV export and Tools lifecycle preserve myListType',()=>{
   assert.match(exportCsv,/currentListEntries\(myListType\)/);
   assert.doesNotMatch(exportCsv,/myListType\s*=|setMyList\(/);
+  assert.doesNotMatch(exportCsv,/allData\s*=|queueSync\(|writeList|writeListItem|set\s*\(\s*ref|update\s*\(\s*ref/);
+  assert.doesNotMatch(exportCsv,/\.value\s*=|mylist-filter|\bcur\s*=/);
   assert.doesNotMatch(tools,/myListType\s*=|setMyList\(/);
   assert.match(tools,/closeExportMenu\(\)/);
+});
+
+test('priority headings use restrained tinted accents instead of saturated full-width rules',()=>{
+  assert.match(html,/\.mylist-priority-heading\{[^}]*border-left:3px solid[^}]*background:var\(--bg2\)/);
+  for(const priority of ['H','M','L'])assert.match(html,new RegExp(`\\.mylist-priority-section\\.${priority} \\.mylist-priority-heading\\{[^}]*border-left-color:var\\(--${priority}\\)[^}]*background:var\\(--${priority}bg\\)`));
+  assert.doesNotMatch(html,/\.mylist-priority-section\.[HML]\{[^}]*border-top-color/);
 });
 
 test('category selection remains in-memory and fresh page load defaults to Trades',()=>{
