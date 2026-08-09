@@ -105,6 +105,15 @@
         if(Object.values(state.tags).some(tag=>tag.normalizedLabel===normalizedLabel))return{ok:false,code:'tag-duplicate'};
         const timestamp=Number(now()),id=uniqueTagId(state);state.tags[id]={id,label:display,normalizedLabel,createdAt:timestamp,updatedAt:timestamp};write(state);return{ok:true,id,state:read()};
       },
+      ensureTag(label){
+        const state=read(),display=normalizeLabel(label),normalizedLabel=labelIdentity(display);
+        if(!display)return{ok:false,code:'tag-empty'};
+        if(codePointLength(display)>MAX_TAG_LABEL_LENGTH)return{ok:false,code:'tag-too-long'};
+        const existing=Object.values(state.tags).find(tag=>tag.normalizedLabel===normalizedLabel);
+        if(existing)return{ok:true,id:existing.id,created:false,state};
+        if(Object.keys(state.tags).length>=maxTags)return{ok:false,code:'tag-limit'};
+        const timestamp=Number(now()),id=uniqueTagId(state);state.tags[id]={id,label:display,normalizedLabel,createdAt:timestamp,updatedAt:timestamp};write(state);return{ok:true,id,created:true,state:read()};
+      },
       renameTag(id,label){
         const state=read(),tag=state.tags[id],display=normalizeLabel(label),normalizedLabel=labelIdentity(display);
         if(!tag)return{ok:false,code:'tag-missing'};
@@ -137,6 +146,20 @@
         if(codePointLength(value)>MAX_NOTE_LENGTH)return{ok:false,code:'note-too-long'};
         item.tagIds=ids;if(value)item.note=value;else delete item.note;
         item.updatedAt=Number(now());write(state);return{ok:true,state:read()};
+      },
+      saveFavoriteOrganization(username,{tagIds=[],note=''}={}){
+        const state=read(),ref=trainerRef(username),ids=[...new Set((tagIds||[]).map(String))].filter(id=>state.tags[id]).sort(),value=String(note??'').normalize('NFKC').trim();
+        if(!ref.key)return{ok:false,code:'favorite-missing'};
+        if(ids.length>MAX_TAGS_PER_FAVORITE)return{ok:false,code:'tag-limit'};
+        if(codePointLength(value)>MAX_NOTE_LENGTH)return{ok:false,code:'note-too-long'};
+        let item=state.favorites.find(entry=>entry.key===ref.key),created=false;
+        if(!item){
+          if(state.favorites.length>=maxFavorites)return{ok:false,code:'favorite-limit'};
+          const timestamp=Number(now());item={...ref,tagIds:[],createdAt:timestamp,updatedAt:timestamp};state.favorites.push(item);created=true;
+        }
+        item.displayName=ref.displayName;item.tagIds=ids;if(value)item.note=value;else delete item.note;
+        item.updatedAt=Number(now());state.favorites.sort((a,b)=>a.displayName.localeCompare(b.displayName,'en',{sensitivity:'base'})||a.key.localeCompare(b.key));
+        write(state);return{ok:true,created,state:read()};
       },
       filterFavorites({query='',tagIds=[]}={}){
         const state=read(),needle=labelIdentity(query),selected=[...new Set(tagIds.map(String))];

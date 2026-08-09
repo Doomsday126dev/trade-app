@@ -206,6 +206,44 @@ test.describe('visual smoke', () => {
     await expect(page.locator('#account-trigger')).toBeFocused();
   });
 
+  test('Settings hierarchy uses desktop navigation and a mobile section drill-in',async({page})=>{
+    await page.goto(`./?settings-hierarchy=${Date.now()}`,{waitUntil:'domcontentloaded'});
+    await waitForSettingsStartupReady(page);
+    await page.evaluate(()=>{
+      cur='TrainerNameThatIsDeliberatelyLongForSettings';
+      document.getElementById('login-pg').style.display='none';
+      document.getElementById('app').style.display='flex';
+      document.getElementById('top-un').textContent=cur;
+      openSettingsPanel('account');
+    });
+
+    await page.setViewportSize({width:1024,height:800});
+    await expect(page.locator('.settings-nav')).toBeVisible();
+    await expect(page.locator('[data-settings-section="profile"]')).toBeVisible();
+    await page.locator('[data-settings-target="tools"]').click();
+    await expect(page.locator('[data-settings-section="tools"]')).toBeVisible();
+    await expect(page.locator('[data-settings-section="profile"]')).toBeHidden();
+    await expect(page.locator('[data-settings-target="tools"]')).toHaveAttribute('aria-current','page');
+    await expect(page.getByRole('button',{name:'Export backup'})).toBeHidden();
+    await expect(page.getByRole('button',{name:'Restore backup'})).toBeHidden();
+
+    await page.setViewportSize({width:390,height:420});
+    await page.evaluate(()=>{configureSettingsPanel('account');showSettingsSectionList();});
+    await expect(page.locator('.settings-nav')).toBeVisible();
+    await expect(page.locator('.settings-detail')).toBeHidden();
+    await page.locator('[data-settings-target="language"]').click();
+    await expect(page.locator('.settings-nav')).toBeHidden();
+    await expect(page.locator('[data-settings-section="language"]')).toBeVisible();
+    await page.locator('#settings-language').selectOption('de');
+    await expect(page.locator('[data-settings-section="language"]')).toBeVisible();
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
+    await page.keyboard.press('Escape');
+    await expect(page.locator('.settings-nav')).toBeVisible();
+    await expect(page.locator('[data-settings-target="language"]')).toBeFocused();
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#settings-modal')).toBeHidden();
+  });
+
   test('language Settings keeps the search-language override subordinate, responsive, and device-local',async({page})=>{
     const viewports=[[320,640],[375,700],[390,700],[430,760],[768,800],[1024,800],[1440,900]];
     for(const [width,height] of viewports){

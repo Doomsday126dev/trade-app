@@ -14,7 +14,7 @@ function emptyState(){
 }
 
 test('active login, navigation, My List, and Settings controls use translation hooks',()=>{
-  for(const key of ['login.subtitle','login.username','login.pin','login.signIn','login.trouble','login.requestAccess','app.mainSections','myList.addTitle','myList.searchPlaceholder','myList.listTitle','settings.languageTitle','settings.localToolsTitle']){
+  for(const key of ['login.subtitle','login.username','login.pin','login.signIn','login.trouble','login.requestAccess','app.mainSections','myList.addTitle','myList.searchPlaceholder','myList.listTitle','settings.languageTitle','settings.sectionTools','settings.sectionData']){
     assert.match(html,new RegExp(`data-i18n(?:-[a-z-]+)?="${key.replaceAll('.','\\.')}"`),key);
   }
   assert.match(html,/function applyTranslationAttributes\(root=document\)/);
@@ -30,7 +30,7 @@ test('manual language selection is device-local and exposes all four supported l
 });
 
 test('Settings presents one primary language with an accessible optional search-language override',()=>{
-  assert.match(html,/class="settings-panel language-settings-panel"/);
+  assert.match(html,/class="settings-section language-settings-panel"/);
   assert.match(html,/id="settings-search-language-automatic"[^>]+data-i18n="settings\.searchLanguageAutomatic"/);
   assert.match(html,/id="settings-search-language-override"[^>]+aria-controls="settings-search-language-override-row"[^>]+aria-describedby="settings-search-language-override-help"/);
   assert.match(html,/id="settings-search-language-override-row" hidden/);
@@ -59,7 +59,7 @@ test('account and Settings controls expose 48px minimum touch targets',()=>{
 test('favorite organizer trigger and sheet controls expose 48px touch targets',()=>{
   assert.match(html,/\.trainer-icon-btn\{width:48px;height:48px/);
   assert.match(html,/\.organizer-close\{width:48px;height:48px;min-width:48px/);
-  assert.match(html,/\.organizer-tag-row button,\.organizer-add-tag button\{width:48px;height:48px;min-width:48px/);
+  assert.match(html,/\.organizer-tag-row button,\.organizer-add-tag button\{min-height:48px/);
   assert.match(html,/\.organizer-body\{[^}]*overflow-y:auto/);
   assert.match(html,/padding-bottom:calc\(20px \+ env\(safe-area-inset-bottom\)\)/);
 });
@@ -74,7 +74,7 @@ test('signed-out and anonymous screens expose language settings without a profil
 test('account menu and Settings dialog preserve keyboard focus and route compatibility',()=>{
   assert.match(html,/popover\.querySelector\('button'\)\?\.focus\(\)/);
   assert.match(html,/if\(e\.key==='Escape'&&popover&&!popover\.hidden\)/);
-  assert.match(html,/if\(ev\.key==='Escape'\)\{if\(id==='trainer-organizer-modal'\)closeTrainerOrganizer\(\);else closeModal\(id\);return;\}/);
+  assert.match(html,/if\(ev\.key==='Escape'\)\{if\(id==='settings-modal'&&settingsDetailIsOpenOnMobile\(\)\)\{showSettingsSectionList\(\);return;\}if\(id==='trainer-organizer-modal'\)closeTrainerOrganizer\(\);else closeModal\(id\);return;\}/);
   assert.match(html,/if\(returnFocus\?\.isConnected&&!returnFocus\.disabled\)returnFocus\.focus\(/);
   assert.match(html,/history\.pushState\([^\n]+settingsPanel:true/);
   assert.match(html,/window\.addEventListener\('popstate',syncSettingsRoute\)/);
@@ -101,7 +101,7 @@ test('Settings routing owns one transient route-scoped scroll snapshot',()=>{
 
 test('relocated Settings retains local locale controls and exposes no preference writes',()=>{
   assert.match(html,/id="settings-language" onchange="changeInterfaceLocale\(this\.value\)"/);
-  assert.match(html,/class="settings-panel local-preferences-panel settings-account-only"/);
+  assert.match(html,/class="settings-section local-preferences-panel settings-account-only"/);
   assert.doesNotMatch(html,/function (?:openSettingsPanel|changeInterfaceLocale)[\s\S]{0,800}(?:firebaseSet|firebaseUpdate|managedTrainerPreferencesRepository\.write)/);
 });
 
@@ -122,7 +122,7 @@ test('Find Trainer preserves public-only reads and distinct projection states',(
 });
 
 test('local preferences stay clearly device-local and expose no enabled sync control',()=>{
-  assert.match(html,/class="settings-panel local-preferences-panel settings-account-only"/);
+  assert.match(html,/class="settings-section local-preferences-panel settings-account-only"/);
   assert.match(html,/id="trainer-sync-local-status"[^>]*role="status"[^>]*aria-live="polite"/);
   assert.match(html,/data-i18n="trainer\.syncState\.local-only"/);
   assert.match(html,/data-i18n="trainer\.syncStatus\.localOnlyDetail"/);
@@ -135,12 +135,14 @@ test('Account & Security remains an informational account-only readiness surface
   const end=html.indexOf('</section>',start);
   assert.ok(start>0&&end>start);
   const panel=html.slice(start,end);
+  const methods=panel.slice(panel.indexOf('class="account-security-methods"'),panel.indexOf('class="account-security-notice"'));
   assert.match(html,/account-security-panel settings-account-only/);
   assert.match(panel,/data-provider="google"/);
   assert.match(panel,/data-provider="email"/);
   assert.match(panel,/data-provider="discord"/);
   assert.match(panel,/data-provider="legacy-pin"/);
-  assert.doesNotMatch(panel,/<button|onclick=|href=|data-action=/);
+  assert.doesNotMatch(methods,/<button|onclick=|href=|data-action=/);
+  assert.match(panel,/id="settings-logout" onclick="logout\(\)"/);
   assert.match(html,/\.account-security-method\{[^}]*min-height:56px/);
   assert.match(html,/DURABLE_AUTH_PROVIDERS_ENABLED!==false/);
 });
@@ -179,7 +181,7 @@ test('responsive and accessibility safeguards cover compact screens, long labels
   assert.match(html,/min-height:48px/);
   assert.match(html,/window\.visualViewport/);
   assert.match(html,/role="combobox" aria-autocomplete="list"/);
-  assert.match(html,/if\(ev\.key==='Escape'\)\{if\(id==='trainer-organizer-modal'\)closeTrainerOrganizer\(\);else closeModal\(id\);return;\}/);
+  assert.match(html,/if\(ev\.key==='Escape'\)\{if\(id==='settings-modal'&&settingsDetailIsOpenOnMobile\(\)\)\{showSettingsSectionList\(\);return;\}if\(id==='trainer-organizer-modal'\)closeTrainerOrganizer\(\);else closeModal\(id\);return;\}/);
 });
 
 test('localized Admin and dialog surfaces preserve bounded responsive geometry',()=>{

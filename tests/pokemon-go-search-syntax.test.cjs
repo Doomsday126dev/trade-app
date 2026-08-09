@@ -123,7 +123,7 @@ test('search-language override is device-local and regenerates every visible str
 });
 
 test('language panel makes app language primary and the search override subordinate',()=>{
-  const panel=html.slice(html.indexOf('<section class="settings-panel language-settings-panel"'),html.indexOf('</section>',html.indexOf('<section class="settings-panel language-settings-panel"')));
+  const panel=html.slice(html.indexOf('<section class="settings-section language-settings-panel"'),html.indexOf('</section>',html.indexOf('<section class="settings-section language-settings-panel"')));
   assert.match(panel,/class="language-primary-row"/);
   assert.match(panel,/settings\.searchLanguageAutomatic/);
   assert.match(panel,/settings\.searchLanguageOverride/);

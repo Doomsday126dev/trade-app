@@ -503,13 +503,14 @@ input,select,textarea{font-family:var(--font);outline:none}
 .ov.open{display:flex}
 .modal{background:var(--card);border:1px solid var(--border2);border-radius:16px;padding:22px;width:100%;max-width:350px;max-height:calc(100vh - 32px);overflow-y:auto;margin:auto}
 .modal h3{font-size:16px;font-weight:700;margin-bottom:14px}
-.settings-modal{max-width:720px;padding:0;overflow:hidden;display:flex;flex-direction:column}
+.settings-modal{max-width:920px;padding:0;overflow:hidden;display:flex;flex-direction:column}
 .settings-modal-header{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:20px 20px 14px;border-bottom:1px solid var(--border)}
 .settings-modal-header h2{font-size:19px;margin:0 0 4px}.settings-modal-header p{font-size:12px;color:var(--muted);line-height:1.45}
 .settings-modal-close{width:48px;height:48px;min-width:48px;min-height:48px;flex:0 0 48px;border:1px solid var(--border2);border-radius:50%;background:transparent;color:var(--text);font-size:22px;line-height:1}
-.settings-modal-body{padding:0 20px 20px;overflow-y:auto;overscroll-behavior:contain}
+.settings-modal-body{padding:0;overflow:hidden;overscroll-behavior:contain;min-height:min(620px,calc(100vh - 150px))}
 .settings-account-summary{display:flex;align-items:center;gap:11px;padding:14px 0 0}.settings-account-summary strong{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.settings-account-summary span{display:block;color:var(--muted);font-size:11px}
-.settings-account-only[hidden]{display:none!important}
+.settings-account-only[hidden],.settings-admin-only[hidden]{display:none!important}
+.settings-layout{display:grid;grid-template-columns:220px minmax(0,1fr);height:100%;min-height:0}.settings-nav{padding:14px;border-right:1px solid var(--border);overflow-y:auto}.settings-nav-list{display:flex;flex-direction:column;gap:4px}.settings-nav-button{display:flex;align-items:center;gap:10px;width:100%;min-height:48px;padding:10px 12px;border:0;border-radius:6px;background:transparent;color:var(--text);font:650 13px var(--font);text-align:left;cursor:pointer}.settings-nav-button:hover,.settings-nav-button[aria-current="page"]{background:var(--bg2);color:var(--ac2)}.settings-nav-icon{width:22px;text-align:center}.settings-detail{overflow-y:auto;overscroll-behavior:contain;padding:18px 20px 24px}.settings-section[hidden]{display:none!important}.settings-section-heading{margin:0 0 14px}.settings-section-heading h2{font-size:18px;margin:0 0 4px}.settings-section-heading p{font-size:12px;line-height:1.5;color:var(--muted)}.settings-mobile-back{display:none;min-height:48px;margin-bottom:10px}.settings-tool-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.settings-tool{display:flex;align-items:center;gap:10px;min-height:52px;padding:10px 12px;border:1px solid var(--border2);border-radius:6px;background:var(--bg);color:var(--text);font:650 12px var(--font);text-align:left;cursor:pointer}.settings-tool:hover{border-color:var(--accent);color:var(--ac2)}.settings-profile-card{display:flex;align-items:center;gap:12px;padding:14px;border:1px solid var(--border);border-radius:6px;background:var(--card);margin-bottom:12px}.settings-profile-copy{min-width:0;flex:1}.settings-profile-copy strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.settings-profile-copy span{display:block;color:var(--muted);font-size:11px;margin-top:3px}.settings-release{font:600 11px var(--mono);color:var(--muted)}
 .mact{display:flex;gap:7px;margin-top:18px;justify-content:flex-end}
 .bghost{background:transparent;border:1px solid var(--border2);color:var(--text);padding:7px 14px;border-radius:var(--r2);font-size:13px;font-weight:500;cursor:pointer}
 .bpri{background:var(--accent);color:#fff;padding:7px 14px;border-radius:var(--r2);font-size:13px;font-weight:600;cursor:pointer;border:none}
@@ -1292,10 +1293,10 @@ html[data-theme="light"] .have-mirror-badge,html[data-theme="light"] .have-mirro
 .sched-event-chip-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:320px}
 .sched-event-bonus{display:inline-flex;align-items:center;background:rgba(16,185,129,.16);color:var(--ok);border:1px solid rgba(16,185,129,.32);padding:1px 6px;border-radius:999px;font-size:10px;font-weight:800}
 .sched-event-chip-link{color:var(--muted);font-size:11px}
-.trainer-search-shell{position:relative;max-width:760px;overflow:visible}
-.trainer-search-row{display:flex;gap:8px;align-items:stretch}
+.trainer-search-shell{position:relative;max-width:680px;overflow:visible;margin-top:12px}
+.trainer-search-row{display:block}
 .trainer-combobox{position:relative;flex:1;min-width:0}
-.trainer-combobox input{width:100%;min-width:0}
+.trainer-combobox input{width:100%;min-width:0;height:48px;padding:10px 48px 10px 42px;border-radius:6px}.trainer-search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}.trainer-search-clear{position:absolute;right:2px;top:0;width:48px;height:48px;border:0;background:transparent;color:var(--muted);font-size:18px;cursor:pointer}.trainer-search-clear[hidden]{display:none}.trainer-search-status{min-height:18px;font-size:11px;color:var(--muted);margin-top:6px;padding-inline:2px}.trainer-search-guidance{font-size:12px;color:var(--muted);line-height:1.45;max-width:680px;margin-top:4px}
 .trainer-suggestions{position:absolute;z-index:340;top:calc(100% + 5px);left:0;right:0;display:none;background:var(--card);border:1px solid var(--border2);border-radius:6px;box-shadow:var(--shadow);max-height:var(--trainer-suggestion-max-height,min(320px,45vh));overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 .trainer-suggestions[data-placement="above"]{top:auto;bottom:calc(100% + 5px)}
 .trainer-suggestions.open{display:block}
@@ -1306,7 +1307,7 @@ html[data-theme="light"] .have-mirror-badge,html[data-theme="light"] .have-mirro
 .trainer-quick-card{border:1px solid var(--border);background:var(--card);border-radius:6px;padding:11px;display:flex;gap:9px;align-items:center;min-width:0}
 .trainer-quick-main{flex:1;min-width:0}.trainer-quick-name{font-weight:750;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.trainer-quick-meta{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.4}.trainer-change-counts{font-size:11px;color:var(--ac2);margin-top:4px}.trainer-unread{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--accent);margin-right:5px}
 .trainer-quick-actions{display:flex;gap:5px}.trainer-icon-btn{width:48px;height:48px;min-width:48px;min-height:48px;border:1px solid var(--border2);border-radius:6px;background:var(--bg);color:var(--text);cursor:pointer;font-size:16px}.trainer-icon-btn:hover{border-color:var(--accent)}
-.favorite-toolbar{display:grid;grid-template-columns:minmax(180px,1fr) auto;gap:8px;margin-bottom:10px}.favorite-toolbar input{min-width:0}.favorite-filter-tags,.favorite-card-tags,.organizer-tag-list{display:flex;flex-wrap:wrap;gap:6px}.favorite-filter-tags{grid-column:1/-1}.favorite-filter-chip,.favorite-card-tag{max-width:100%;border:1px solid var(--border2);border-radius:999px;background:var(--bg);color:var(--muted);font:700 11px var(--font);padding:6px 9px;overflow-wrap:anywhere}.favorite-filter-chip{cursor:pointer;min-height:40px}.favorite-filter-chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}.favorite-card-tags{margin-top:7px}.favorite-card-tag{padding:3px 7px;color:var(--ac2)}.favorite-note-preview{font-size:11px;color:var(--muted);margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.favorite-empty{border:1px dashed var(--border2);border-radius:6px;padding:18px;color:var(--muted);font-size:12px}.organizer-modal{max-width:680px;padding:0;overflow:hidden;display:flex;flex-direction:column}.organizer-header{display:flex;justify-content:space-between;gap:12px;padding:18px 20px 13px;border-bottom:1px solid var(--border)}.organizer-header h2{font-size:18px;margin:0}.organizer-header p{font-size:11px;color:var(--muted);margin-top:4px}.organizer-close{width:48px;height:48px;min-width:48px;flex:0 0 48px;border:1px solid var(--border2);border-radius:50%;background:transparent;color:var(--text);font-size:22px}.organizer-body{padding:16px 20px 20px;overflow-y:auto;overscroll-behavior:contain}.organizer-section{padding:14px 0;border-bottom:1px solid var(--border)}.organizer-section:last-child{border-bottom:0}.organizer-section h3{font-size:13px;margin:0 0 5px}.organizer-help{font-size:11px;color:var(--muted);line-height:1.45;margin-bottom:10px}.organizer-assignment{display:flex;flex-wrap:wrap;gap:7px}.organizer-check{display:inline-flex;align-items:center;gap:7px;min-height:48px;max-width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:6px;cursor:pointer}.organizer-check input{width:18px;height:18px}.organizer-check span{overflow-wrap:anywhere}.organizer-note{width:100%;min-height:110px;resize:vertical}.organizer-note-meta{display:flex;justify-content:space-between;gap:8px;font-size:10px;color:var(--muted);margin-top:5px}.organizer-tag-row{display:grid;grid-template-columns:minmax(0,1fr) 48px 48px;gap:6px;width:100%}.organizer-tag-row input{min-width:0}.organizer-tag-row button,.organizer-add-tag button{width:48px;height:48px;min-width:48px}.organizer-add-tag{display:grid;grid-template-columns:minmax(0,1fr) 48px;gap:6px;margin-top:9px}.organizer-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;padding-top:14px}.organizer-actions button{min-height:48px}.organizer-status{min-height:18px;font-size:11px;color:var(--muted);margin-top:8px}
+.favorite-toolbar{display:grid;grid-template-columns:minmax(180px,1fr) auto;gap:8px;margin-bottom:10px}.favorite-toolbar-search{position:relative}.favorite-toolbar-search input{width:100%;min-width:0;height:44px;padding-left:38px}.favorite-toolbar-search>span{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--muted)}.favorite-filter-tags,.favorite-card-tags,.organizer-tag-list{display:flex;flex-wrap:wrap;gap:6px}.favorite-filter-tags{grid-column:1/-1}.favorite-filter-chip,.favorite-card-tag{max-width:100%;border:1px solid var(--border2);border-radius:999px;background:var(--bg);color:var(--muted);font:700 11px var(--font);padding:6px 9px;overflow-wrap:anywhere}.favorite-filter-chip{cursor:pointer;min-height:40px}.favorite-filter-chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}.favorite-card-tags{margin-top:7px}.favorite-card-tag{padding:3px 7px;color:var(--ac2)}.favorite-note-indicator{font-size:11px;color:var(--muted);margin-top:6px}.favorite-empty{border:1px dashed var(--border2);border-radius:6px;padding:18px;color:var(--muted);font-size:12px}.favorite-card-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.favorite-card-action{min-height:44px;padding:8px 11px;border:1px solid var(--border2);border-radius:6px;background:var(--bg);color:var(--text);font:650 11px var(--font);cursor:pointer}.favorite-card-action.primary{background:var(--accent);border-color:var(--accent);color:#fff}.favorite-card-action.danger{color:var(--danger)}.favorite-saved-prompt{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:480;display:flex;align-items:center;gap:10px;max-width:calc(100vw - 24px);padding:10px 12px;border:1px solid var(--border2);border-radius:6px;background:var(--card);box-shadow:var(--shadow)}.favorite-saved-prompt[hidden]{display:none}.favorite-saved-prompt span{font-size:12px}.favorite-saved-prompt button{min-height:48px}.organizer-modal{max-width:600px;padding:0;overflow:hidden;display:flex;flex-direction:column}.organizer-header{display:flex;justify-content:space-between;gap:12px;padding:18px 20px 13px;border-bottom:1px solid var(--border)}.organizer-header h2{font-size:18px;margin:0}.organizer-header p{font-size:11px;color:var(--muted);margin-top:4px}.organizer-close{width:48px;height:48px;min-width:48px;flex:0 0 48px;border:1px solid var(--border2);border-radius:50%;background:transparent;color:var(--text);font-size:22px}.organizer-body{padding:16px 20px 20px;overflow-y:auto;overscroll-behavior:contain}.organizer-section{padding:14px 0;border-bottom:1px solid var(--border)}.organizer-section:last-child{border-bottom:0}.organizer-section h3{font-size:13px;margin:0 0 5px}.organizer-help{font-size:11px;color:var(--muted);line-height:1.45;margin-bottom:10px}.organizer-assignment{display:flex;flex-wrap:wrap;gap:7px}.organizer-check{display:inline-flex;align-items:center;gap:7px;min-height:48px;max-width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:999px;cursor:pointer}.organizer-check:has(input:checked){background:rgba(108,99,255,.16);border-color:var(--accent)}.organizer-check input{width:18px;height:18px}.organizer-check span{overflow-wrap:anywhere}.organizer-note{width:100%;min-height:96px;resize:vertical}.organizer-note-meta{display:flex;justify-content:space-between;gap:8px;font-size:10px;color:var(--muted);margin-top:5px}.organizer-tag-row{display:grid;grid-template-columns:minmax(0,1fr) 48px 48px;gap:6px;width:100%}.organizer-tag-row input{min-width:0}.organizer-tag-row button,.organizer-add-tag button{min-height:48px}.organizer-add-tag{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;margin-top:9px}.organizer-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;padding-top:14px}.organizer-actions button{min-height:48px}.organizer-status{min-height:18px;font-size:11px;color:var(--muted);margin-top:8px}.organizer-manage-details summary{min-height:48px;display:flex;align-items:center;cursor:pointer;font-size:12px;font-weight:700}
 .trainer-sync-status{display:flex;align-items:flex-start;gap:9px;min-width:0;margin-top:10px;padding:10px 11px;border:1px solid var(--border);border-radius:var(--r2);background:var(--bg)}.trainer-sync-status-icon{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;flex:0 0 24px;color:var(--ac2);font-weight:800}.trainer-sync-status-copy{min-width:0}.trainer-sync-status-copy strong{display:block;font-size:12px;line-height:1.35;overflow-wrap:anywhere}.trainer-sync-status-copy span{display:block;margin-top:2px;color:var(--muted);font-size:11px;line-height:1.45;overflow-wrap:anywhere}.trainer-sync-status-detail{max-width:100%;overflow-wrap:anywhere}
 .favorite-detail{grid-column:1/-1;border-top:1px solid var(--border);padding-top:8px;margin-top:4px;font-size:11px;color:var(--muted)}
 .favorite-detail summary{cursor:pointer;font-weight:700;color:var(--text)}
@@ -1318,7 +1319,7 @@ html[data-theme="light"] .have-mirror-badge,html[data-theme="light"] .have-mirro
 .event-group{margin-bottom:24px}.event-group-title{font-size:15px;font-weight:850;margin-bottom:10px}.event-group[data-group="now"] .event-group-title{color:var(--ok)}.event-card-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.event-card{border:1px solid var(--border);border-left:3px solid var(--accent);background:var(--card);border-radius:6px;padding:13px;display:flex;flex-direction:column;gap:8px;min-width:0}.event-card.is-active{border-left-color:var(--ok);background:color-mix(in srgb,var(--card) 94%,var(--ok))}.event-card-title{font-size:14px;font-weight:800;line-height:1.3;overflow-wrap:anywhere}.event-card-time{font-size:12px;color:var(--text);font-weight:750;line-height:1.45}.event-type-tag{align-self:flex-start;border-radius:999px;padding:3px 7px;background:var(--bg2);border:1px solid var(--border2);font-size:10px;font-weight:800;color:var(--ac2)}.event-card-bonuses{display:flex;flex-wrap:wrap;gap:5px}.event-card-bonuses span{max-width:100%;padding:3px 6px;border-radius:4px;background:var(--bg2);color:var(--muted);font-size:10px;overflow-wrap:anywhere}.event-card-details{display:inline-flex;align-items:center;min-height:48px;font-size:12px;font-weight:750;color:var(--ac2);text-decoration:none;margin-top:auto;align-self:flex-start}
 .conflict-notice{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:500;width:min(520px,calc(100vw - 24px));padding:15px;background:var(--card);border:1px solid var(--warn);border-radius:8px;box-shadow:var(--shadow)}.conflict-notice h2{font-size:15px;margin:0 0 5px}.conflict-notice p{font-size:12px;color:var(--muted);line-height:1.5;margin:0 0 9px}.conflict-preview{max-height:150px;overflow:auto;font-size:11px}.conflict-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:10px}.conflict-actions button{min-height:48px}
 @media(max-width:900px){.event-card-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:600px){#tab-find{overflow:visible}.journey-guidance{flex-direction:column}.journey-guidance-actions{width:100%}.journey-guidance-actions button{flex:1 1 140px}.trainer-search-shell.suggestions-open{z-index:330}.trainer-search-row{display:grid;grid-template-columns:minmax(0,1fr) auto}.trainer-search-row .bsave{min-width:48px;padding-inline:12px}.trainer-suggestion{min-height:48px;font-size:14px}.trainer-quick-grid,.event-card-grid{grid-template-columns:1fr}.trainer-quick-card{padding:10px;align-items:flex-start}.trainer-quick-actions{flex-wrap:wrap;justify-content:flex-end}.event-card{padding:12px}.my-string-heading{align-items:flex-start}.favorite-toolbar{grid-template-columns:1fr}.favorite-toolbar .bghost{width:100%;min-height:48px}.favorite-filter-tags{grid-column:1}.organizer-overlay{align-items:flex-end;padding:0}.organizer-modal{width:100%;max-width:none;max-height:calc(100dvh - env(safe-area-inset-top));margin:auto 0 0;border-radius:14px 14px 0 0;border-bottom:0}.organizer-body{max-height:calc(100dvh - 82px - env(safe-area-inset-top));padding-bottom:calc(20px + env(safe-area-inset-bottom))}}
+@media(max-width:600px){#tab-find{overflow:visible}.journey-guidance{flex-direction:column}.journey-guidance-actions{width:100%}.journey-guidance-actions button{flex:1 1 140px}.trainer-search-shell.suggestions-open{z-index:330}.trainer-suggestion{min-height:48px;font-size:14px}.trainer-quick-grid,.event-card-grid{grid-template-columns:1fr}.trainer-quick-card{padding:10px;align-items:flex-start;flex-direction:column}.trainer-quick-actions,.favorite-card-actions{width:100%;justify-content:flex-start}.favorite-card-action{flex:1 1 auto;min-height:48px}.event-card{padding:12px}.my-string-heading{align-items:flex-start}.favorite-toolbar{grid-template-columns:1fr auto}.favorite-filter-tags{grid-column:1/-1}.organizer-overlay{align-items:flex-end;padding:0}.organizer-modal{width:100%;max-width:none;max-height:calc(100dvh - env(safe-area-inset-top));margin:auto 0 0;border-radius:14px 14px 0 0;border-bottom:0}.organizer-body{max-height:calc(100dvh - 82px - env(safe-area-inset-top));padding-bottom:calc(20px + env(safe-area-inset-bottom))}.organizer-add-tag{grid-template-columns:minmax(0,1fr) auto}.organizer-add-tag button{min-width:72px}}
 .owner-share-notice{display:none;margin:10px 0 2px;padding:12px;border:1px solid rgba(245,158,11,.38);border-radius:6px;background:rgba(245,158,11,.08)}
 .owner-share-notice.visible{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap}.owner-share-notice-copy{flex:1;min-width:210px}.owner-share-notice-title{font-weight:800;font-size:13px}.owner-share-notice-body{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.5}.owner-share-notice button{min-height:44px}
 .sched-manual-bonus{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--bg);border:1px dashed var(--border2);border-radius:var(--r2);margin-bottom:10px;font-size:12px;flex-wrap:wrap}
@@ -1721,9 +1722,9 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
 .ui-state{display:flex;align-items:flex-start;gap:11px;padding:14px;border:1px solid var(--border);border-radius:6px;background:var(--card);min-width:0}.ui-state-icon{font-size:18px;line-height:1.3}.ui-state-copy{flex:1;min-width:0}.ui-state-title{font-weight:800;overflow-wrap:anywhere}.ui-state-detail{margin-top:3px;color:var(--muted);font-size:12px;line-height:1.5}.ui-state-action{min-height:44px;border:1px solid var(--border2);border-radius:6px;background:var(--bg);color:var(--text);font:700 12px var(--font);padding:8px 12px}
 .event-card:focus-visible,.trainer-quick-card:focus-within{border-color:var(--ac2)}
 @media(max-width:600px){.page{padding:12px}.settings-panel{align-items:stretch;flex-direction:column;padding:12px}.language-field{min-width:0}.language-primary-row{grid-template-columns:1fr;gap:6px}.language-override-help,.language-override-row{padding-left:0}.language-override-row .language-field{max-width:none}.account-security-method{grid-template-columns:40px minmax(0,1fr)}.account-security-status{grid-column:2;text-align:left;min-height:24px}.status-badge{align-self:flex-start}.add-actions>button,.add-actions .image-btn{min-height:44px}.trainer-quick-name{white-space:normal;overflow-wrap:anywhere}}
-@media(max-width:600px){.settings-overlay{align-items:flex-end;padding:0}.settings-modal{max-width:none;width:100%;max-height:calc(100dvh - env(safe-area-inset-top));margin:auto 0 0;border-radius:14px 14px 0 0;border-bottom:0}.settings-modal-header{padding-top:16px}.settings-modal-body{padding-bottom:calc(20px + env(safe-area-inset-bottom));max-height:calc(100dvh - 88px - env(safe-area-inset-top))}.topbar{padding-inline:10px}.topbar-r{gap:6px}.account-trigger{max-width:150px}.account-trigger #top-un{max-width:84px}.account-popover{position:fixed;top:auto;right:8px;bottom:calc(8px + env(safe-area-inset-bottom));width:calc(100vw - 16px);max-height:calc(100dvh - 24px - env(safe-area-inset-top));overflow-y:auto}.local-settings-trigger span{display:none}}
+@media(max-width:600px){.settings-overlay{align-items:flex-end;padding:0}.settings-modal{max-width:none;width:100%;max-height:calc(100dvh - env(safe-area-inset-top));margin:auto 0 0;border-radius:14px 14px 0 0;border-bottom:0}.settings-modal-header{padding-top:16px}.settings-modal-body{padding-bottom:env(safe-area-inset-bottom);max-height:calc(100dvh - 88px - env(safe-area-inset-top));min-height:min(560px,calc(100dvh - 88px - env(safe-area-inset-top)))}.settings-layout{display:block;height:100%}.settings-nav{border:0;padding:12px 14px}.settings-nav-list{gap:6px}.settings-nav-button{border:1px solid var(--border);background:var(--card)}.settings-detail{height:100%;padding:12px 14px calc(20px + env(safe-area-inset-bottom))}.settings-mobile-back{display:inline-flex;align-items:center}.settings-layout.mobile-list .settings-detail{display:none}.settings-layout:not(.mobile-list) .settings-nav{display:none}.settings-tool-list{grid-template-columns:1fr}.settings-panel{margin:10px 0}.topbar{padding-inline:10px}.topbar-r{gap:6px}.account-trigger{max-width:150px}.account-trigger #top-un{max-width:84px}.account-popover{position:fixed;top:auto;right:8px;bottom:calc(8px + env(safe-area-inset-bottom));width:calc(100vw - 16px);max-height:calc(100dvh - 24px - env(safe-area-inset-top));overflow-y:auto}.local-settings-trigger span{display:none}}
 @media(max-width:390px){.account-trigger{padding-right:7px}.account-trigger #top-un{display:none}.account-trigger .account-chevron{display:block}.install-btn{display:none!important}}
-@media(max-width:360px){.page{padding-inline:10px}.add-form,.event-card,.trainer-quick-card{padding:10px}.trainer-search-row{grid-template-columns:minmax(0,1fr)}.trainer-search-row .bsave{width:100%}}
+@media(max-width:360px){.page{padding-inline:10px}.add-form,.event-card,.trainer-quick-card{padding:10px}.favorite-toolbar{grid-template-columns:1fr}.favorite-toolbar .bghost{width:100%;min-height:48px}.favorite-filter-tags{grid-column:1}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
 </style>
 </head>
@@ -1893,21 +1894,19 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
       <div class="have-title" id="find-trainer-title"></div>
       <div class="have-subtitle" id="find-trainer-description"></div>
     </div>
-    <aside class="journey-guidance" aria-labelledby="find-guidance-title">
-      <div><strong id="find-guidance-title" data-i18n="guidance.findTitle">Find a trainer and compare</strong><span data-i18n="guidance.findBody">Open a trainer's shared list, then Favorite them for quick return. Private tags and notes stay on this device; sync is not active.</span></div>
-      <div class="journey-guidance-actions"><button type="button" class="bghost" onclick="switchTab('schedule')" data-i18n="guidance.exploreEvents">Explore Events</button></div>
-    </aside>
-    <div class="add-form trainer-search-shell">
+    <p class="trainer-search-guidance" id="find-guidance-title" data-i18n="guidance.findBody">Open a trainer's shared list, then Favorite them for quick return. Private tags and notes stay on this device; sync is not active.</p>
+    <div class="trainer-search-shell">
       <div class="trainer-search-row">
         <div class="trainer-combobox">
+          <span class="trainer-search-icon" aria-hidden="true">⌕</span>
           <input type="text" id="find-trainer-input" autocomplete="off" autocapitalize="none" spellcheck="false"
             role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="find-trainer-suggestions"
             oninput="queueTrainerSuggestions(this.value)" onfocus="trainerSearchFocused(this)" onblur="setTimeout(closeTrainerSuggestions,120)" onkeydown="trainerSearchKeydown(event)">
+          <button type="button" class="trainer-search-clear" id="find-trainer-clear" onclick="clearTrainerSearch()" data-i18n-aria-label="trainer.clearSearch" aria-label="Clear search" hidden>×</button>
           <div class="trainer-suggestions" id="find-trainer-suggestions" role="listbox"></div>
         </div>
-        <button class="bsave" id="find-trainer-button" onclick="openTrainerPublicShare()"></button>
       </div>
-      <div id="find-trainer-status" role="status" aria-live="polite" aria-atomic="true" style="font-size:12px;color:var(--muted);margin-top:8px"></div>
+      <div class="trainer-search-status" id="find-trainer-status" role="status" aria-live="polite" aria-atomic="true"></div>
       <div class="trainer-no-result-actions" id="find-trainer-recovery" hidden>
         <button type="button" class="bghost" onclick="clearTrainerSearch()" data-i18n="trainer.clearSearch">Clear search</button>
         <button type="button" class="bghost" onclick="focusTrainerSearch()" data-i18n="trainer.searchAnother">Search another trainer</button>
@@ -1918,6 +1917,8 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
     <div id="recent-trainers" class="trainer-quick-section"></div>
     <div id="trainer-history-note" style="display:none;font-size:11px;color:var(--muted);margin-top:12px"></div>
   </div>
+
+  <div class="favorite-saved-prompt" id="favorite-saved-prompt" role="status" aria-live="polite" hidden><span id="favorite-saved-message"></span><button type="button" class="bpri" id="favorite-saved-organize" data-i18n="organizer.addTags">Add tags</button></div>
 
   <!-- MY LIST -->
   <div class="page active" id="tab-mylist">
@@ -2446,14 +2447,13 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
         <textarea class="organizer-note" id="organizer-note" maxlength="240" oninput="trainerOrganizerChanged()" data-i18n-placeholder="organizer.notePlaceholder" placeholder="Add a private note…"></textarea>
         <div class="organizer-note-meta"><span data-i18n="organizer.noteLimit">Maximum 240 characters</span><span id="organizer-note-count">0/240</span></div>
       </section>
-      <section class="organizer-section" aria-labelledby="organizer-manage-tags-heading">
-        <h3 id="organizer-manage-tags-heading" data-i18n="organizer.manageTags">Manage tags</h3>
-        <p class="organizer-help" data-i18n="organizer.manageTagsHelp">Tag names are private and can be changed without changing trainer data.</p>
-        <div class="organizer-tag-list" id="organizer-tag-manager"></div>
-        <div class="organizer-add-tag"><input id="organizer-new-tag" maxlength="40" data-i18n-placeholder="organizer.addTagPlaceholder" placeholder="New tag"><button class="bghost" onclick="createLocalTrainerTag()" data-i18n-aria-label="organizer.addTag" aria-label="Add tag">＋</button></div>
+      <section class="organizer-section" aria-labelledby="organizer-new-tag-heading">
+        <h3 id="organizer-new-tag-heading" data-i18n="organizer.newTag">New tag</h3>
+        <div class="organizer-add-tag"><input id="organizer-new-tag" maxlength="40" data-i18n-placeholder="organizer.addTagPlaceholder" placeholder="New tag" onkeydown="trainerTagInputKeydown(event)"><button class="bghost" onclick="createLocalTrainerTag()" data-i18n="organizer.addTag">Add</button></div>
+        <details class="organizer-manage-details"><summary data-i18n="organizer.manageTags">Manage tags</summary><p class="organizer-help" data-i18n="organizer.manageTagsHelp">Tag names are private and can be changed without changing trainer data.</p><div class="organizer-tag-list" id="organizer-tag-manager"></div></details>
       </section>
       <div class="organizer-status" id="organizer-status" role="status" aria-live="polite" aria-atomic="true"></div>
-      <div class="organizer-actions"><button class="bghost" onclick="closeTrainerOrganizer()" data-i18n="common.cancel">Cancel</button><button class="bpri" onclick="saveTrainerOrganizer()" data-i18n="common.save">Save</button></div>
+      <div class="organizer-actions"><button class="bghost" onclick="closeTrainerOrganizer()" data-i18n="common.cancel">Cancel</button><button class="bpri" onclick="saveTrainerOrganizer()" data-i18n="organizer.saveFavorite">Save Favorite</button></div>
     </div>
   </div>
 </div>
@@ -2466,12 +2466,33 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
       <button type="button" class="settings-modal-close" onclick="closeModal('settings-modal')" data-i18n-aria-label="account.closeSettings" aria-label="Close settings">×</button>
     </div>
     <div class="settings-modal-body">
-      <div class="settings-account-summary settings-account-only" id="settings-account-summary">
-        <div class="av" id="settings-account-av">?</div>
-        <div><span data-i18n="account.signedInAs">Signed in as</span><strong id="settings-account-name">—</strong></div>
-      </div>
-      <section class="settings-panel account-security-panel settings-account-only" id="settings-account-security" aria-labelledby="settings-account-security-heading" data-provider-actions="disabled">
-        <div class="account-security-intro"><h2 id="settings-account-security-heading" data-i18n="security.title">Account &amp; Security</h2><p data-i18n="security.description">Your Firebase account ID remains the authority for this trainer profile.</p></div>
+      <div class="settings-layout" id="settings-layout">
+        <nav class="settings-nav settings-account-only" aria-label="Settings sections" data-i18n-aria-label="settings.sectionsLabel"><div class="settings-nav-list">
+          <button type="button" class="settings-nav-button" data-settings-target="profile" onclick="selectSettingsSection('profile')"><span class="settings-nav-icon" aria-hidden="true">◉</span><span data-i18n="settings.sectionProfile">Profile</span></button>
+          <button type="button" class="settings-nav-button" data-settings-target="language" onclick="selectSettingsSection('language')"><span class="settings-nav-icon" aria-hidden="true">文</span><span data-i18n="settings.sectionLanguage">Language</span></button>
+          <button type="button" class="settings-nav-button" data-settings-target="security" onclick="selectSettingsSection('security')"><span class="settings-nav-icon" aria-hidden="true">◇</span><span data-i18n="settings.sectionSecurity">Account &amp; Security</span></button>
+          <button type="button" class="settings-nav-button" data-settings-target="tools" onclick="selectSettingsSection('tools')"><span class="settings-nav-icon" aria-hidden="true">⌘</span><span data-i18n="settings.sectionTools">Tools</span></button>
+          <button type="button" class="settings-nav-button" data-settings-target="data" onclick="selectSettingsSection('data')"><span class="settings-nav-icon" aria-hidden="true">▣</span><span data-i18n="settings.sectionData">App &amp; Data</span></button>
+        </div></nav>
+        <div class="settings-detail" id="settings-detail">
+          <button type="button" class="bghost settings-mobile-back" onclick="showSettingsSectionList()" data-i18n="settings.backToSections">Back to Settings</button>
+          <section class="settings-section settings-account-only" data-settings-section="profile" aria-labelledby="settings-profile-heading">
+            <div class="settings-section-heading"><h2 id="settings-profile-heading" data-i18n="settings.sectionProfile">Profile</h2><p data-i18n="settings.profileSummary">Your trainer identity and public profile.</p></div>
+            <div class="settings-profile-card"><div class="av" id="settings-account-av">?</div><div class="settings-profile-copy"><strong id="settings-account-name">—</strong><span data-i18n="settings.profileIdentityHelp">This is the trainer name other people see.</span></div></div>
+            <button class="settings-tool" id="settings-profile" onclick="openSettingsTool('profile')"><span aria-hidden="true">✎</span><span data-i18n="settings.profileAction">Edit profile</span></button>
+          </section>
+          <section class="settings-section language-settings-panel" data-settings-section="language" aria-labelledby="settings-language-heading">
+            <div class="settings-section-heading"><h2 id="settings-language-heading" data-i18n="settings.languageTitle">Language</h2><p data-i18n="settings.languageDescription">Interface language is saved privately on this device.</p></div>
+            <div class="language-settings-controls">
+              <label class="language-primary-row" for="settings-language"><span data-i18n="settings.languageLabel">Interface language</span><select id="settings-language" onchange="changeInterfaceLocale(this.value)"><option value="en" data-i18n="locale.en">English</option><option value="ja" data-i18n="locale.ja">日本語</option><option value="es" data-i18n="locale.es">Español</option><option value="de" data-i18n="locale.de">Deutsch</option></select></label>
+              <p class="language-follow-copy" id="settings-search-language-automatic" data-i18n="settings.searchLanguageAutomatic">Pokémon GO search commands automatically use this language.</p>
+              <label class="language-override-toggle" for="settings-search-language-override"><input type="checkbox" id="settings-search-language-override" onchange="togglePokemonGoSearchLocaleOverride(this.checked)" aria-controls="settings-search-language-override-row" aria-describedby="settings-search-language-override-help"><span data-i18n="settings.searchLanguageOverride">Use a different Pokémon GO search language</span></label>
+              <small class="language-override-help" id="settings-search-language-override-help" data-i18n="settings.searchLanguageOverrideHelp">Turn this on only when Pokémon GO uses a different language from this app.</small>
+              <div class="language-override-row" id="settings-search-language-override-row" hidden><label class="language-field" for="settings-search-language"><span data-i18n="settings.searchLanguageLabel">Pokémon GO search language</span><select id="settings-search-language" onchange="changePokemonGoSearchLocale(this.value)" disabled aria-describedby="settings-search-language-override-help"><option value="en" data-i18n="locale.en">English</option><option value="ja" data-i18n="locale.ja">日本語</option><option value="es" data-i18n="locale.es">Español</option><option value="de" data-i18n="locale.de">Deutsch</option></select></label></div>
+            </div>
+          </section>
+          <section class="settings-section account-security-panel settings-account-only" data-settings-section="security" id="settings-account-security" aria-labelledby="settings-account-security-heading" data-provider-actions="disabled">
+        <div class="account-security-intro"><h2 id="settings-account-security-heading" data-i18n="security.title">Account &amp; Security</h2><p data-i18n="security.description">Manage how you sign in to this trainer account.</p></div>
         <div class="account-security-methods" role="list" data-i18n-aria-label="security.methodsLabel" aria-label="Sign-in methods">
           <div class="account-security-method" role="listitem" data-provider="google"><span class="account-security-provider-icon" aria-hidden="true">G</span><div class="account-security-copy"><strong data-i18n="security.google">Google</strong><span data-i18n="security.futureUnavailable">Provider linking is not available yet.</span></div><span class="account-security-status"><span aria-hidden="true">○</span><span data-i18n="security.notLinked">Not linked</span></span></div>
           <div class="account-security-method" role="listitem" data-provider="email"><span class="account-security-provider-icon" aria-hidden="true">@</span><div class="account-security-copy"><strong data-i18n="security.email">Email</strong><span data-i18n="security.emailPlanned">Verified email-link migration is planned for a later rollout.</span></div><span class="account-security-status"><span aria-hidden="true">○</span><span data-i18n="security.notLinked">Not linked</span></span></div>
@@ -2479,29 +2500,20 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
           <div class="account-security-method" role="listitem" data-provider="legacy-pin"><span class="account-security-provider-icon" aria-hidden="true">#</span><div class="account-security-copy"><strong data-i18n="security.legacyPin">Legacy PIN</strong><span data-i18n="security.legacyPinHelp">This remains your active production sign-in method.</span></div><span class="account-security-status is-active"><span aria-hidden="true">✓</span><span data-i18n="security.active">Active</span></span></div>
         </div>
         <p class="account-security-notice" role="status" aria-live="polite" data-i18n="security.disabledNotice">No provider linking, unlinking, or migration action is enabled in this release.</p>
-      </section>
-      <section class="settings-panel language-settings-panel" aria-labelledby="settings-language-heading">
-        <div class="language-settings-intro"><h2 id="settings-language-heading" data-i18n="settings.languageTitle">Language</h2><p data-i18n="settings.languageDescription">Interface language is saved privately on this device.</p></div>
-        <div class="language-settings-controls">
-          <label class="language-primary-row" for="settings-language"><span data-i18n="settings.languageLabel">Interface language</span><select id="settings-language" onchange="changeInterfaceLocale(this.value)"><option value="en" data-i18n="locale.en">English</option><option value="ja" data-i18n="locale.ja">日本語</option><option value="es" data-i18n="locale.es">Español</option><option value="de" data-i18n="locale.de">Deutsch</option></select></label>
-          <p class="language-follow-copy" id="settings-search-language-automatic" data-i18n="settings.searchLanguageAutomatic">Pokémon GO search commands automatically use this language.</p>
-          <label class="language-override-toggle" for="settings-search-language-override"><input type="checkbox" id="settings-search-language-override" onchange="togglePokemonGoSearchLocaleOverride(this.checked)" aria-controls="settings-search-language-override-row" aria-describedby="settings-search-language-override-help"><span data-i18n="settings.searchLanguageOverride">Use a different Pokémon GO search language</span></label>
-          <small class="language-override-help" id="settings-search-language-override-help" data-i18n="settings.searchLanguageOverrideHelp">Turn this on only when Pokémon GO uses a different language from this app.</small>
-          <div class="language-override-row" id="settings-search-language-override-row" hidden><label class="language-field" for="settings-search-language"><span data-i18n="settings.searchLanguageLabel">Pokémon GO search language</span><select id="settings-search-language" onchange="changePokemonGoSearchLocale(this.value)" disabled aria-describedby="settings-search-language-override-help"><option value="en" data-i18n="locale.en">English</option><option value="ja" data-i18n="locale.ja">日本語</option><option value="es" data-i18n="locale.es">Español</option><option value="de" data-i18n="locale.de">Deutsch</option></select></label></div>
+        <button class="settings-tool" id="settings-logout" onclick="logout()"><span aria-hidden="true">↪</span><span data-i18n="settings.logoutAction">Sign out</span></button>
+          </section>
+          <section class="settings-section settings-account-only" data-settings-section="tools" aria-labelledby="settings-tools-heading"><div class="settings-section-heading"><h2 id="settings-tools-heading" data-i18n="settings.sectionTools">Tools</h2><p data-i18n="settings.toolsSummary">Open occasional list and app utilities.</p></div><div class="settings-tool-list">
+            <button class="settings-tool" onclick="openSettingsTool('inventory')"><span aria-hidden="true">▤</span><span data-i18n="nav.legacyInventory">Legacy Inventory</span></button>
+            <button class="settings-tool" onclick="openSettingsTool('import')"><span aria-hidden="true">⇩</span><span data-i18n="import.title">Import from search string</span></button>
+            <button class="settings-tool" onclick="openSettingsTool('export')"><span aria-hidden="true">⇧</span><span data-i18n="settings.exportList">Export My List</span></button>
+            <button class="settings-tool" onclick="openSettingsTool('safe-transfer')"><span aria-hidden="true">⌁</span><span data-i18n="safeTransfer.title">Safe-to-transfer search string</span></button>
+            <button class="settings-tool" id="settings-shortcuts" onclick="openSettingsTool('shortcuts')"><span aria-hidden="true">⌨</span><span data-i18n="settings.shortcutsAction">Keyboard shortcuts</span></button>
+            <button class="settings-tool" id="settings-health" onclick="openSettingsTool('health')"><span aria-hidden="true">●</span><span data-i18n="settings.healthAction">App status</span></button>
+            <button class="settings-tool settings-admin-only" onclick="openSettingsTool('backup')" hidden><span aria-hidden="true">⬇</span><span data-i18n="admin.exportBackup">Export backup</span></button>
+            <button class="settings-tool settings-admin-only" onclick="openSettingsTool('restore')" hidden><span aria-hidden="true">⬆</span><span data-i18n="admin.restoreBackup">Restore backup</span></button>
+          </div></section>
+          <section class="settings-section local-preferences-panel settings-account-only" data-settings-section="data" aria-labelledby="settings-local-tools-heading"><div class="settings-section-heading"><h2 id="settings-local-tools-heading" data-i18n="settings.sectionData">App &amp; Data</h2><p data-i18n="settings.dataSummary">Favorites, tags, and notes are saved on this device. Cross-device sync isn't available yet.</p></div><div class="trainer-sync-status" id="trainer-sync-local-status" role="status" aria-live="polite" aria-atomic="true"><span class="trainer-sync-status-icon" aria-hidden="true">▣</span><div class="trainer-sync-status-copy"><strong data-i18n="trainer.syncState.local-only">Saved on this device</strong><span class="trainer-sync-status-detail" data-i18n="trainer.syncStatus.localOnlyDetail">Cross-device sync is not active. Your saved trainers remain on this device.</span></div></div><button class="settings-tool" id="settings-install" onclick="triggerInstall()"><span aria-hidden="true">⬇</span><span data-i18n="app.install">Install</span></button><p class="settings-release" id="settings-release-id"></p></section>
         </div>
-      </section>
-      <section class="settings-panel local-preferences-panel settings-account-only" aria-labelledby="settings-local-tools-heading">
-        <div><h2 id="settings-local-tools-heading" data-i18n="settings.localToolsTitle">Trainer preferences</h2><p data-i18n="settings.localToolsDescription">Favorites and recent trainers remain private to this device.</p></div>
-        <div class="trainer-sync-status" id="trainer-sync-local-status" role="status" aria-live="polite" aria-atomic="true">
-          <span class="trainer-sync-status-icon" aria-hidden="true">▣</span>
-          <div class="trainer-sync-status-copy"><strong data-i18n="trainer.syncState.local-only">Saved on this device</strong><span class="trainer-sync-status-detail" data-i18n="trainer.syncStatus.localOnlyDetail">Cross-device sync is not active. Your saved trainers remain on this device.</span></div>
-        </div>
-      </section>
-      <div class="admin-actions settings-account-only" id="settings-account-actions" style="justify-content:flex-start;flex-wrap:wrap">
-        <button class="btn-export" id="settings-profile" onclick="openSettingsTool('profile')"></button>
-        <button class="btn-export" id="settings-health" onclick="openSettingsTool('health')"></button>
-        <button class="btn-export" id="settings-shortcuts" onclick="openSettingsTool('shortcuts')"></button>
-        <button class="btn-export" id="settings-logout" onclick="logout()"></button>
       </div>
     </div>
   </div>
@@ -2552,7 +2564,7 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
 <div class="ptr-indicator" id="ptr-indicator" aria-hidden="true">↓</div>
 
 <script>
-window.__POGO_RELEASE_ID='2026-08-05.20';
+window.__POGO_RELEASE_ID='2026-08-05.21';
 window.__pogoBootWatch=setTimeout(function(){
   var visible=['config-pg','login-pg','app'].some(function(id){
     var el=document.getElementById(id);
@@ -2571,60 +2583,60 @@ window.__pogoBootWatch=setTimeout(function(){
   if(err)err.textContent='App scripts did not finish loading. Refresh once; if this stays, send this screenshot.';
 },4000);
 </script>
-<script src="data.js?v=2026-08-05.20"></script>
-<script src="js/domain/priorities.js?v=2026-08-05.20"></script>
-<script src="js/ui/badges.js?v=2026-08-05.20"></script>
-<script src="js/domain/username.js?v=2026-08-05.20"></script>
-<script src="js/domain/priorityValues.js?v=2026-08-05.20"></script>
-<script src="js/domain/scheduleDates.js?v=2026-08-05.20"></script>
-<script src="js/domain/pokemonSearchTerms.js?v=2026-08-05.20"></script>
-<script src="js/domain/pokemonEntryRules.js?v=2026-08-05.20"></script>
-<script src="js/domain/pokemonGoSearchSyntax.js?v=2026-08-05.20"></script>
-<script src="js/domain/searchStrings.js?v=2026-08-05.20"></script>
-<script src="js/ui/stringHtml.js?v=2026-08-05.20"></script>
-<script src="js/domain/scheduleEventRules.js?v=2026-08-05.20"></script>
-<script src="js/domain/scheduleTradeRules.js?v=2026-08-05.20"></script>
-<script src="js/domain/pokemonKeys.js?v=2026-08-05.20"></script>
-<script src="js/domain/spriteSlugs.js?v=2026-08-05.20"></script>
-<script src="js/domain/fuzzyText.js?v=2026-08-05.20"></script>
-<script src="js/domain/autocompleteText.js?v=2026-08-05.20"></script>
-<script src="js/domain/autocompleteMatching.js?v=2026-08-05.20"></script>
-<script src="js/domain/autocompleteRanking.js?v=2026-08-05.20"></script>
-<script src="js/domain/relativeTime.js?v=2026-08-05.20"></script>
-<script src="js/domain/clientRelease.js?v=2026-08-05.20"></script>
-<script src="js/domain/trainerDiscovery.js?v=2026-08-05.20"></script>
-<script src="js/domain/eventPresentation.js?v=2026-08-05.20"></script>
-<script src="js/domain/publicSharePublication.js?v=2026-08-05.20"></script>
-<script src="js/domain/trainerPreferences.js?v=2026-08-05.20"></script>
-<script src="js/domain/trainerPreferenceSync.js?v=2026-08-05.20"></script>
-<script src="js/domain/authenticationReadiness.js?v=2026-08-05.20"></script>
-<script src="js/domain/loginDirectory.js?v=2026-08-05.20"></script>
-<script src="js/utils/textSafety.js?v=2026-08-05.20"></script>
-<script src="js/ui/stringPanels.js?v=2026-08-05.20"></script>
-<script src="js/ui/emptyState.js?v=2026-08-05.20"></script>
-<script src="js/i18n/locales/en.js?v=2026-08-05.20"></script>
-<script src="js/i18n/locales/ja.js?v=2026-08-05.20"></script>
-<script src="js/i18n/locales/es.js?v=2026-08-05.20"></script>
-<script src="js/i18n/locales/de.js?v=2026-08-05.20"></script>
-<script src="js/i18n/pokemonNames/catalog.js?v=2026-08-05.20"></script>
-<script src="js/i18n/pokemonNames/variants.js?v=2026-08-05.20"></script>
-<script src="js/i18n/pokemonNames/core.js?v=2026-08-05.20"></script>
-<script src="js/i18n/eventLabels/currentTitles.js?v=2026-08-05.20"></script>
-<script src="js/i18n/eventLabels/core.js?v=2026-08-05.20"></script>
-<script src="js/i18n/core.js?v=2026-08-05.20"></script>
-<script src="js/services/firebaseClient.js?v=2026-08-05.20"></script>
-<script src="js/data/subscriptionManager.js?v=2026-08-05.20"></script>
-<script src="js/data/listenerLifecycle.js?v=2026-08-05.20"></script>
-<script src="js/data/sessionCacheBoundary.js?v=2026-08-05.20"></script>
-<script src="js/data/firebaseReadRegistry.js?v=2026-08-05.20"></script>
-<script src="js/data/currentUserRepository.js?v=2026-08-05.20"></script>
-<script src="js/data/ownedDataCoordinator.js?v=2026-08-05.20"></script>
-<script src="js/data/publicShareRepository.js?v=2026-08-05.20"></script>
-<script src="js/data/trainerHistoryStore.js?v=2026-08-05.20"></script>
-<script src="js/data/trainerPreferencesRepository.js?v=2026-08-05.20"></script>
-<script src="js/data/trainerPreferenceSyncQueue.js?v=2026-08-05.20"></script>
-<script src="js/domain/cacheAdapters.js?v=2026-08-05.20"></script>
-<script src="js/ui/trainerTagPanel.js?v=2026-08-05.20"></script>
+<script src="data.js?v=2026-08-05.21"></script>
+<script src="js/domain/priorities.js?v=2026-08-05.21"></script>
+<script src="js/ui/badges.js?v=2026-08-05.21"></script>
+<script src="js/domain/username.js?v=2026-08-05.21"></script>
+<script src="js/domain/priorityValues.js?v=2026-08-05.21"></script>
+<script src="js/domain/scheduleDates.js?v=2026-08-05.21"></script>
+<script src="js/domain/pokemonSearchTerms.js?v=2026-08-05.21"></script>
+<script src="js/domain/pokemonEntryRules.js?v=2026-08-05.21"></script>
+<script src="js/domain/pokemonGoSearchSyntax.js?v=2026-08-05.21"></script>
+<script src="js/domain/searchStrings.js?v=2026-08-05.21"></script>
+<script src="js/ui/stringHtml.js?v=2026-08-05.21"></script>
+<script src="js/domain/scheduleEventRules.js?v=2026-08-05.21"></script>
+<script src="js/domain/scheduleTradeRules.js?v=2026-08-05.21"></script>
+<script src="js/domain/pokemonKeys.js?v=2026-08-05.21"></script>
+<script src="js/domain/spriteSlugs.js?v=2026-08-05.21"></script>
+<script src="js/domain/fuzzyText.js?v=2026-08-05.21"></script>
+<script src="js/domain/autocompleteText.js?v=2026-08-05.21"></script>
+<script src="js/domain/autocompleteMatching.js?v=2026-08-05.21"></script>
+<script src="js/domain/autocompleteRanking.js?v=2026-08-05.21"></script>
+<script src="js/domain/relativeTime.js?v=2026-08-05.21"></script>
+<script src="js/domain/clientRelease.js?v=2026-08-05.21"></script>
+<script src="js/domain/trainerDiscovery.js?v=2026-08-05.21"></script>
+<script src="js/domain/eventPresentation.js?v=2026-08-05.21"></script>
+<script src="js/domain/publicSharePublication.js?v=2026-08-05.21"></script>
+<script src="js/domain/trainerPreferences.js?v=2026-08-05.21"></script>
+<script src="js/domain/trainerPreferenceSync.js?v=2026-08-05.21"></script>
+<script src="js/domain/authenticationReadiness.js?v=2026-08-05.21"></script>
+<script src="js/domain/loginDirectory.js?v=2026-08-05.21"></script>
+<script src="js/utils/textSafety.js?v=2026-08-05.21"></script>
+<script src="js/ui/stringPanels.js?v=2026-08-05.21"></script>
+<script src="js/ui/emptyState.js?v=2026-08-05.21"></script>
+<script src="js/i18n/locales/en.js?v=2026-08-05.21"></script>
+<script src="js/i18n/locales/ja.js?v=2026-08-05.21"></script>
+<script src="js/i18n/locales/es.js?v=2026-08-05.21"></script>
+<script src="js/i18n/locales/de.js?v=2026-08-05.21"></script>
+<script src="js/i18n/pokemonNames/catalog.js?v=2026-08-05.21"></script>
+<script src="js/i18n/pokemonNames/variants.js?v=2026-08-05.21"></script>
+<script src="js/i18n/pokemonNames/core.js?v=2026-08-05.21"></script>
+<script src="js/i18n/eventLabels/currentTitles.js?v=2026-08-05.21"></script>
+<script src="js/i18n/eventLabels/core.js?v=2026-08-05.21"></script>
+<script src="js/i18n/core.js?v=2026-08-05.21"></script>
+<script src="js/services/firebaseClient.js?v=2026-08-05.21"></script>
+<script src="js/data/subscriptionManager.js?v=2026-08-05.21"></script>
+<script src="js/data/listenerLifecycle.js?v=2026-08-05.21"></script>
+<script src="js/data/sessionCacheBoundary.js?v=2026-08-05.21"></script>
+<script src="js/data/firebaseReadRegistry.js?v=2026-08-05.21"></script>
+<script src="js/data/currentUserRepository.js?v=2026-08-05.21"></script>
+<script src="js/data/ownedDataCoordinator.js?v=2026-08-05.21"></script>
+<script src="js/data/publicShareRepository.js?v=2026-08-05.21"></script>
+<script src="js/data/trainerHistoryStore.js?v=2026-08-05.21"></script>
+<script src="js/data/trainerPreferencesRepository.js?v=2026-08-05.21"></script>
+<script src="js/data/trainerPreferenceSyncQueue.js?v=2026-08-05.21"></script>
+<script src="js/domain/cacheAdapters.js?v=2026-08-05.21"></script>
+<script src="js/ui/trainerTagPanel.js?v=2026-08-05.21"></script>
 <script>
 let initializeApp,getDatabase,ref,set,get,onValue,update,getAuth,signInWithEmailAndPassword,createUserWithEmailAndPassword,firebaseSignOut,updatePassword,deleteUser,onAuthStateChanged;
 let firebaseSdkPromise=null;
@@ -6175,10 +6187,6 @@ function renderInterimProductLabels(){
   setText('events-description','events.description');
   setText('settings-title','settings.title');
   setText('settings-description','settings.description');
-  setText('settings-profile','settings.profileAction');
-  setText('settings-health','settings.healthAction');
-  setText('settings-shortcuts','settings.shortcutsAction');
-  setText('settings-logout','settings.logoutAction');
   setText('account-menu-name',cur||'');
   setText('settings-account-name',cur||'');
   setText('sync-banner-title','status.localOnlyTitle');
@@ -6219,6 +6227,7 @@ let trainerSuggestionIndex=-1;
 let trainerSuggestionQuery='';
 let eventTypeFilter='all';
 let trainerOrganizerState={query:'',tagIds:[],username:'',dirty:false,draftNote:null,draftTagIds:null};
+let favoriteSavedPromptTimer=0;
 function resetTrainerOrganizerState(){
   trainerOrganizerState={query:'',tagIds:[],username:'',dirty:false,draftNote:null,draftTagIds:null};
   if(document.getElementById('trainer-organizer-modal')?.classList.contains('open'))closeTrainerOrganizer(true);
@@ -6316,7 +6325,7 @@ function renderTrainerSuggestions(value){
   if(!requireCompatibleTrainerSearch())return;
   const input=document.getElementById('find-trainer-input'),box=document.getElementById('find-trainer-suggestions'),status=document.getElementById('find-trainer-status');
   if(!input||!box)return;
-  const query=String(value||'').trim();
+  const query=String(value||'').trim();syncTrainerSearchClear(query);
   if(query.length<2){closeTrainerSuggestions();setTrainerRecovery(false);if(status)status.textContent=i18nCore.t('trainer.searchStart');return;}
   trainerSuggestionItems=rankedTrainerSuggestions(query);trainerSuggestionQuery=trainerDiscoveryDomain.fold(query);
   trainerSuggestionIndex=trainerSuggestionItems.length?0:-1;
@@ -6326,10 +6335,12 @@ function renderTrainerSuggestions(value){
   input.setAttribute('aria-activedescendant','trainer-suggestion-0');if(status)status.textContent='';
 }
 function setTrainerRecovery(visible){const el=document.getElementById('find-trainer-recovery');if(el)el.hidden=!visible;}
-function clearTrainerSearch(){const input=document.getElementById('find-trainer-input');if(input)input.value='';closeTrainerSuggestions();setTrainerRecovery(false);renderFindTrainer();input?.focus();}
+function syncTrainerSearchClear(value=document.getElementById('find-trainer-input')?.value){const clear=document.getElementById('find-trainer-clear');if(clear)clear.hidden=!String(value||'').length;}
+function clearTrainerSearch(){const input=document.getElementById('find-trainer-input');if(input)input.value='';syncTrainerSearchClear('');closeTrainerSuggestions();setTrainerRecovery(false);renderFindTrainer();input?.focus();}
 function focusTrainerSearch(){const input=document.getElementById('find-trainer-input');input?.focus();input?.select();}
 function queueTrainerSuggestions(value,immediate=false){
   if(!requireCompatibleTrainerSearch())return;
+  syncTrainerSearchClear(value);
   clearTimeout(trainerSuggestionTimer);
   const status=document.getElementById('find-trainer-status');
   if(String(value||'').trim().length>=2&&status)status.textContent=i18nCore.t('trainer.searching');
@@ -6338,7 +6349,7 @@ function queueTrainerSuggestions(value,immediate=false){
 function selectTrainerSuggestion(index){
   if(!requireCompatibleTrainerSearch())return;
   const item=trainerSuggestionItems[index];if(!item)return;
-  const input=document.getElementById('find-trainer-input');if(input)input.value=item.name;
+  const input=document.getElementById('find-trainer-input');if(input)input.value=item.name;syncTrainerSearchClear(item.name);
   closeTrainerSuggestions();openTrainerPublicShare(item.name);
 }
 function trainerSearchKeydown(event){
@@ -6403,21 +6414,31 @@ async function renderTrainerQuickLists(){
   const activeTags=Object.values(state.tags||{}).sort((a,b)=>a.label.localeCompare(b.label,i18nCore.getLocale(),{sensitivity:'base'}));
   const filtered=store.filterFavorites({query:trainerOrganizerState.query,tagIds:trainerOrganizerState.tagIds});
   const filtersActive=!!(trainerOrganizerState.query||trainerOrganizerState.tagIds.length);
-  const toolbar=state.favorites.length?`<div class="favorite-toolbar"><input value="${escAttr(trainerOrganizerState.query)}" oninput="setFavoriteSearch(this.value)" data-i18n-placeholder="organizer.searchFavorites" placeholder="Search favorites" aria-label="${escAttr(i18nCore.t('organizer.searchFavorites'))}"><button class="bghost" onclick="clearFavoriteFilters()" ${filtersActive?'':'disabled'}>${escHtml(i18nCore.t('organizer.clearFilters'))}</button>${activeTags.length?`<div class="favorite-filter-tags" aria-label="${escAttr(i18nCore.t('organizer.filterTags'))}">${activeTags.map(tag=>`<button class="favorite-filter-chip" aria-pressed="${trainerOrganizerState.tagIds.includes(tag.id)}" onclick="toggleFavoriteTagFilter('${tag.id}')">${escHtml(tag.label)}</button>`).join('')}</div>`:''}</div>`:'';
+  const toolbar=state.favorites.length?`<div class="favorite-toolbar"><div class="favorite-toolbar-search"><span aria-hidden="true">⌕</span><input value="${escAttr(trainerOrganizerState.query)}" oninput="setFavoriteSearch(this.value)" data-i18n-placeholder="organizer.searchFavorites" placeholder="Search favorites" aria-label="${escAttr(i18nCore.t('organizer.searchFavorites'))}"></div>${filtersActive?`<button class="bghost" onclick="clearFavoriteFilters()">${escHtml(i18nCore.t('organizer.clearFilters'))}</button>`:''}${activeTags.length?`<div class="favorite-filter-tags" aria-label="${escAttr(i18nCore.t('organizer.filterTags'))}">${activeTags.map(tag=>`<button class="favorite-filter-chip" aria-pressed="${trainerOrganizerState.tagIds.includes(tag.id)}" onclick="toggleFavoriteTagFilter('${tag.id}')">${escHtml(tag.label)}</button>`).join('')}</div>`:''}</div>`:'';
   favoritesEl.innerHTML=`<div class="trainer-quick-heading">${escHtml(i18nCore.t('trainer.favoritesTitle'))}</div>${toolbar}${state.favorites.length?`<div class="trainer-quick-grid"><div class="trainer-quick-card"><div class="trainer-quick-main">${escHtml(i18nCore.t('trainer.searching'))}</div></div></div>`:`<div class="favorite-empty">${escHtml(i18nCore.t('organizer.noFavorites'))}</div>`}`;
   const statuses=await Promise.all(filtered.map(item=>{const canonical=canonicalTrainerName(item.displayName);if(canonical!==item.displayName)store.updateCanonicalName(canonical);return favoriteStatus({...item,displayName:canonical},store);}));
   if(!document.getElementById('tab-find')?.classList.contains('active'))return;
   favoritesEl.innerHTML=`<div class="trainer-quick-heading">${escHtml(i18nCore.t('trainer.favoritesTitle'))}</div>${toolbar}${statuses.length?`<div class="trainer-quick-grid">${statuses.map(({item,available,diff,updatedAt})=>{
     const unread=!!(available&&diff&&!diff.firstView&&diff.total);
-    const note=String(item.note||''),preview=Array.from(note).slice(0,60).join('');
-    return`<div class="trainer-quick-card"><div class="trainer-quick-main"><div class="trainer-quick-name">${unread?'<span class="trainer-unread"></span>':''}${escHtml(item.displayName)}</div><div class="trainer-quick-meta">${available?(trainerDate(updatedAt)||''):`${escHtml(i18nCore.t('trainer.listUnavailable'))}`}</div>${item.tagIds?.length?`<div class="favorite-card-tags">${favoriteTagChips(item,state)}</div>`:''}${preview?`<div class="favorite-note-preview" title="${escAttr(i18nCore.t('organizer.privateNote'))}">📝 ${escHtml(preview)}${Array.from(note).length>60?'…':''}</div>`:''}${unread?`<div class="trainer-change-counts">${escHtml(changeCountsText(diff))}</div>`:''}${unread?`<details class="favorite-detail"><summary>${escHtml(i18nCore.t('trainer.changesTitle'))}</summary>${changeDetailsHtml(diff)}</details>`:''}</div><div class="trainer-quick-actions"><button class="trainer-icon-btn" onclick="toggleTrainerFavorite('${escAttr(item.displayName)}')" aria-label="${escAttr(i18nCore.t('trainer.favoriteRemove'))}" aria-pressed="true">★</button><button class="trainer-icon-btn" onclick="openTrainerOrganizer('${escAttr(item.displayName)}')" aria-label="${escAttr(i18nCore.t('organizer.organize'))}">⚙</button><button class="trainer-icon-btn" onclick="openTrainerByName('${escAttr(item.displayName)}')" aria-label="${escAttr(i18nCore.t('trainer.openAction'))}">↗</button></div></div>`;
+    const hasNote=!!String(item.note||'');
+    return`<div class="trainer-quick-card"><div class="trainer-quick-main"><div class="trainer-quick-name">${unread?'<span class="trainer-unread"></span>':''}${escHtml(item.displayName)}</div><div class="trainer-quick-meta">${available?(trainerDate(updatedAt)||''):`${escHtml(i18nCore.t('trainer.listUnavailable'))}`}</div>${item.tagIds?.length?`<div class="favorite-card-tags">${favoriteTagChips(item,state)}</div>`:''}${hasNote?`<div class="favorite-note-indicator"><span aria-hidden="true">📝</span> ${escHtml(i18nCore.t('organizer.hasPrivateNote'))}</div>`:''}${unread?`<div class="trainer-change-counts">${escHtml(changeCountsText(diff))}</div>`:''}${unread?`<details class="favorite-detail"><summary>${escHtml(i18nCore.t('trainer.changesTitle'))}</summary>${changeDetailsHtml(diff)}</details>`:''}</div><div class="favorite-card-actions"><button class="favorite-card-action primary" onclick="openTrainerByName('${escAttr(item.displayName)}')">${escHtml(i18nCore.t('trainer.openAction'))}</button><button class="favorite-card-action" onclick="openTrainerOrganizer('${escAttr(item.displayName)}')">${escHtml(i18nCore.t('organizer.organize'))}</button><button class="favorite-card-action danger" onclick="removeTrainerFavorite('${escAttr(item.displayName)}')" aria-label="${escAttr(i18nCore.t('trainer.favoriteRemove'))}">×</button></div></div>`;
   }).join('')}</div>`:`<div class="favorite-empty">${escHtml(i18nCore.t(state.favorites.length?'organizer.noMatches':'organizer.noFavorites'))}</div>`}`;
   recentEl.innerHTML=state.recent.length?`<div class="trainer-quick-heading">${escHtml(i18nCore.t('trainer.recentTitle'))}</div><div class="trainer-quick-grid">${state.recent.map(item=>`<div class="trainer-quick-card"><div class="trainer-quick-main"><div class="trainer-quick-name">${escHtml(item.displayName)}</div><div class="trainer-quick-meta">${trainerDate(item.openedAt)}</div></div><button class="trainer-icon-btn" onclick="openTrainerByName('${escAttr(item.displayName)}')" aria-label="${escAttr(i18nCore.t('trainer.openAction'))}">↗</button></div>`).join('')}</div>`:'';
 }
 function toggleTrainerFavorite(username){
   const store=ensureTrainerHistoryStore();if(!store)return;
-  const result=store.toggleFavorite(username);toast(i18nCore.t(result.favorite?'trainer.favoriteAdded':'trainer.favoriteRemoved'));renderTrainerQuickLists();
+  if(store.isFavorite(username)){removeTrainerFavorite(username);return;}
+  const result=store.saveFavoriteOrganization(username);if(!result.ok){toast(organizerMessage(result.code));return;}
+  showFavoriteSavedPrompt(username);renderTrainerQuickLists();
   if(_activeShareView?.username===username)renderShareView(username,_activeShareView.type);
+}
+function showFavoriteSavedPrompt(username){
+  const prompt=document.getElementById('favorite-saved-prompt'),message=document.getElementById('favorite-saved-message'),button=document.getElementById('favorite-saved-organize');if(!prompt||!message||!button)return;
+  clearTimeout(favoriteSavedPromptTimer);message.textContent=i18nCore.t('organizer.favoriteSaved',{trainer:username});button.onclick=()=>{prompt.hidden=true;openTrainerOrganizer(username);};prompt.hidden=false;favoriteSavedPromptTimer=setTimeout(()=>{prompt.hidden=true;},5000);
+}
+function removeTrainerFavorite(username){
+  const store=ensureTrainerHistoryStore();if(!store?.isFavorite(username)||!confirm(i18nCore.t('organizer.removeConfirm',{trainer:username})))return;
+  store.toggleFavorite(username);toast(i18nCore.t('trainer.favoriteRemoved'));renderTrainerQuickLists();if(_activeShareView?.username===username)renderShareView(username,_activeShareView.type);
 }
 function organizerMessage(code){return i18nCore.t(`organizer.${code}`);}
 function trainerOrganizerChanged(){
@@ -6451,10 +6472,11 @@ function closeTrainerOrganizer(force=false){
   trainerOrganizerState.dirty=false;trainerOrganizerState.draftNote=null;trainerOrganizerState.draftTagIds=null;closeModal('trainer-organizer-modal');
 }
 function createLocalTrainerTag(){
-  const input=document.getElementById('organizer-new-tag'),store=ensureTrainerHistoryStore(),result=store?.createTag(input?.value||'');
+  const input=document.getElementById('organizer-new-tag'),store=ensureTrainerHistoryStore(),result=store?.ensureTag(input?.value||'');
   const status=document.getElementById('organizer-status');if(!result?.ok){if(status)status.textContent=organizerMessage(result?.code||'saveFailed');return;}
-  if(input)input.value='';if(status)status.textContent=i18nCore.t('organizer.tagCreated');renderTrainerOrganizer();renderTrainerQuickLists();
+  trainerOrganizerState.dirty=true;trainerOrganizerState.draftTagIds=[...new Set([...(trainerOrganizerState.draftTagIds||[]),result.id])];if(input)input.value='';if(status)status.textContent=i18nCore.t(result.created?'organizer.tagCreated':'organizer.tagSelected');renderTrainerOrganizer();renderTrainerQuickLists();
 }
+function trainerTagInputKeydown(event){if(event.key==='Enter'){event.preventDefault();createLocalTrainerTag();}else if(event.key==='Escape'){event.preventDefault();event.stopPropagation();event.currentTarget.value='';document.getElementById('organizer-status').textContent='';}}
 function renameLocalTrainerTag(id){
   const input=document.getElementById(`organizer-tag-${id}`),result=ensureTrainerHistoryStore()?.renameTag(id,input?.value||''),status=document.getElementById('organizer-status');
   if(!result?.ok){if(status)status.textContent=organizerMessage(result?.code||'saveFailed');return;}
@@ -9282,6 +9304,7 @@ let _modalActiveId='';
 let _toastTimer=null;
 let _settingsContext='public';
 let _settingsScrollSnapshot=null;
+let _settingsSection='profile';
 function accountMenuElements(){return{trigger:document.getElementById('account-trigger'),popover:document.getElementById('account-popover')};}
 function closeAccountMenu(restoreFocus=true){
   const{trigger,popover}=accountMenuElements();if(!trigger||!popover)return;
@@ -9337,12 +9360,30 @@ function restoreAndClearSettingsScrollSnapshot(){
 function configureSettingsPanel(context='public'){
   _settingsContext=context==='account'&&cur?'account':'public';
   document.querySelectorAll('.settings-account-only').forEach(el=>{el.hidden=_settingsContext!=='account';});
+  document.querySelectorAll('.settings-admin-only').forEach(el=>{el.hidden=_settingsContext!=='account'||!protectedOwnerSession();});
   const description=document.getElementById('settings-description');
   if(description)description.textContent=i18nCore.t(_settingsContext==='account'?'settings.description':'settings.publicDescription');
   const name=document.getElementById('settings-account-name');if(name)name.textContent=cur||'';
   const language=document.getElementById('settings-language');if(language)language.value=i18nCore.getLocale();
+  const release=document.getElementById('settings-release-id');if(release)release.textContent=i18nCore.t('settings.release',{release:clientReleaseDomain.RELEASE_ID});
   syncPokemonGoSearchLanguageControl();
+  const layout=document.getElementById('settings-layout');
+  const preserveMobileDetail=_settingsContext==='account'&&document.getElementById('settings-modal')?.classList.contains('open')&&matchMedia('(max-width:600px)').matches&&!layout?.classList.contains('mobile-list');
+  if(_settingsContext==='public'){layout?.classList.remove('mobile-list');selectSettingsSection('language',{focus:false});}
+  else if(matchMedia('(max-width:600px)').matches){if(!preserveMobileDetail)layout?.classList.add('mobile-list');selectSettingsSection(_settingsSection,{focus:false,keepList:!preserveMobileDetail});}
+  else{layout?.classList.remove('mobile-list');selectSettingsSection(_settingsSection,{focus:false});}
 }
+function selectSettingsSection(section='profile',options={}){
+  const allowed=['profile','language','security','tools','data'];if(!allowed.includes(section))section='profile';if(_settingsContext!=='account')section='language';_settingsSection=section;
+  document.querySelectorAll('[data-settings-section]').forEach(panel=>{panel.hidden=panel.dataset.settingsSection!==section;const heading=panel.querySelector('h2');if(heading)heading.tabIndex=-1;});
+  document.querySelectorAll('[data-settings-target]').forEach(button=>{const active=button.dataset.settingsTarget===section;button.setAttribute('aria-current',active?'page':'false');});
+  const layout=document.getElementById('settings-layout');if(!options.keepList)layout?.classList.remove('mobile-list');
+  if(options.focus!==false)requestAnimationFrame(()=>document.querySelector(`[data-settings-section="${section}"] h2`)?.focus({preventScroll:true}));
+}
+function showSettingsSectionList(){
+  if(!matchMedia('(max-width:600px)').matches)return;document.getElementById('settings-layout')?.classList.add('mobile-list');requestAnimationFrame(()=>document.querySelector(`[data-settings-target="${_settingsSection}"]`)?.focus({preventScroll:true}));
+}
+function settingsDetailIsOpenOnMobile(){return matchMedia('(max-width:600px)').matches&&!document.getElementById('settings-layout')?.classList.contains('mobile-list')&&_settingsContext==='account';}
 function openSettingsPanel(context='public',options={}){
   const accountContext=context==='account'&&!!cur;
   const returnFocus=accountContext?document.getElementById('account-trigger'):(document.activeElement instanceof HTMLElement?document.activeElement:null);
@@ -9351,7 +9392,8 @@ function openSettingsPanel(context='public',options={}){
   if(!modal?.classList.contains('open')&&options.captureScroll!==false)captureSettingsScrollSnapshot();
   if(options.updateHistory!==false&&location.hash!=='#settings')history.pushState({...history.state,settingsPanel:true},'',settingsRouteUrl(true));
   preserveSettingsScrollSnapshot();
-  openModal('settings-modal',{returnFocus});
+  const initialFocus=_settingsContext==='account'?`[data-settings-target="${_settingsSection}"]`:'#settings-language';
+  openModal('settings-modal',{returnFocus,initialFocus});
 }
 function closeSettingsRoute(){
   if(location.hash!=='#settings')return false;
@@ -9374,6 +9416,12 @@ function openSettingsTool(tool){
     if(tool==='profile')openModal('prof-modal',{returnFocus:document.getElementById('account-trigger')});
     else if(tool==='health')openLoginHealthCheck();
     else if(tool==='shortcuts')openModal('shortcuts-modal',{returnFocus:document.getElementById('account-trigger')});
+    else if(tool==='inventory')openLegacyInventoryTool();
+    else if(tool==='import')openImport();
+    else if(tool==='export'){switchTab('mylist');requestAnimationFrame(()=>document.getElementById('export-menu-btn')?.click());}
+    else if(tool==='safe-transfer')openSafeTransferModal();
+    else if(tool==='backup'&&protectedOwnerSession())exportData();
+    else if(tool==='restore'&&protectedOwnerSession())document.getElementById('restore-file')?.click();
   },0);
 }
 function openModal(id,options={}){
@@ -9395,11 +9443,12 @@ function openModal(id,options={}){
     _modalFocusTimer=null;
     if(_modalActiveId!==id||!m.classList.contains('open'))return;
     const focusables=m.querySelectorAll('input:not([type=hidden]),select,textarea,button,[tabindex]:not([tabindex="-1"])');
-    if(focusables[0])focusables[0].focus(id==='settings-modal'?{preventScroll:true}:undefined);
+    const preferred=options.initialFocus?m.querySelector(options.initialFocus):null;
+    if(preferred||focusables[0])(preferred||focusables[0]).focus(id==='settings-modal'?{preventScroll:true}:undefined);
   },50);
   _modalKeyHandler=ev=>{
     if(_modalActiveId!==id||!m.classList.contains('open'))return;
-    if(ev.key==='Escape'){if(id==='trainer-organizer-modal')closeTrainerOrganizer();else closeModal(id);return;}
+    if(ev.key==='Escape'){if(id==='settings-modal'&&settingsDetailIsOpenOnMobile()){showSettingsSectionList();return;}if(id==='trainer-organizer-modal')closeTrainerOrganizer();else closeModal(id);return;}
     if(ev.key!=='Tab')return;
     const focusables=[...m.querySelectorAll('input:not([type=hidden]),select,textarea,button,[tabindex]:not([tabindex="-1"])')].filter(el=>!el.disabled&&el.offsetParent!==null);
     if(!focusables.length)return;
