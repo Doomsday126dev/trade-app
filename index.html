@@ -598,7 +598,7 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
 .bulk-toggle:hover{color:var(--ac2);border-color:var(--ac2)}
 
 /* VOICE INPUT */
-.voice-btn{background:transparent;border:1px solid var(--border2);color:var(--muted);width:32px;height:32px;border-radius:var(--r2);font-size:14px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;transition:.15s}
+.voice-btn{position:absolute;right:0;top:0;background:transparent;border:0;color:var(--muted);width:48px;height:48px;border-radius:var(--r2);font-size:14px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:.15s}
 .voice-btn:hover{color:var(--accent);border-color:var(--accent)}
 .voice-btn.listening{background:rgba(239,68,68,.15);color:var(--danger);border-color:var(--danger);animation:pulse 1.2s infinite}
 @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.4)}50%{box-shadow:0 0 0 6px rgba(239,68,68,0)}}
@@ -782,19 +782,18 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
 
 /* BETTER MOBILE ADD FORM */
 @media(max-width:600px){
-  .add-form .frow{display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center}
-  .add-form .ac-wrap{grid-column:1/2;min-width:0}
-  .add-form .voice-btn{grid-column:2/3;width:44px;height:38px;align-self:stretch}
-  .add-form .add-pri-group{grid-column:1/3;width:100%;justify-content:center;padding:6px 12px}
-  .add-form .add-advanced-toggle{grid-column:1/3;width:100%;justify-content:center;padding:8px}
+  .add-form .frow{display:grid;grid-template-columns:1fr;gap:8px;align-items:center}
+  .add-form .ac-wrap{min-width:0}
+  .add-form .add-pri-group{width:100%;justify-content:center;padding:6px 12px}
+  .add-form .add-advanced-toggle{width:100%;justify-content:center;padding:8px}
   .add-advanced{flex-direction:column;align-items:stretch}
   .add-advanced .add-adv-label{display:none}
   .add-advanced .lucky-add{justify-content:center;min-height:38px;width:100%}
   .add-advanced input#add-pmon-notes{width:100%;flex:none !important;min-width:0 !important}
   .add-actions{flex-wrap:wrap;align-items:stretch;gap:6px}
-  .add-actions .bsave{flex:1 1 100%;justify-content:center;padding:10px;font-size:14px}
-  .add-actions .import-btn,.add-actions .export-menu-wrap,.add-actions .bulk-toggle,.add-actions .speed-add-toggle{flex:1 1 calc(50% - 4px);text-align:center;justify-content:center}
-  .add-actions .image-btn{width:100%;justify-content:center}
+  .add-actions .bsave{flex:1 1 auto;justify-content:center;padding:10px;font-size:14px}
+  .add-actions .export-menu-wrap{flex:0 0 auto}
+  .add-actions .image-btn{min-height:48px;justify-content:center}
   .add-tray{position:sticky;bottom:calc(8px + env(safe-area-inset-bottom));z-index:90;box-shadow:0 10px 28px rgba(0,0,0,.4);background:rgba(31,29,59,.97)}
   .add-tray-head{margin-bottom:6px}
   .add-tray-chips{max-height:76px}
@@ -829,6 +828,8 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
 .add-pri-group{display:inline-flex;align-items:center;gap:4px;background:var(--bg);border:1px solid var(--border2);border-radius:var(--r2);padding:4px 8px 4px 10px;flex-shrink:0}
 .add-pri-label{font-size:11px;color:var(--muted);font-weight:500;margin-right:2px;user-select:none}
 .add-pri-btn{width:26px;height:24px}
+.search-lookup,.search-filter{position:relative}.search-lookup{--search-accent:var(--ac2)}.search-filter{--search-accent:var(--muted)}
+.add-form .search-lookup .ac-input{padding-right:48px;min-height:48px}
 .add-advanced-toggle{background:transparent;border:1px solid var(--border2);color:var(--muted);padding:6px 11px;border-radius:var(--r2);font-size:12px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:5px;flex-shrink:0;font-family:var(--font)}
 .add-advanced-toggle:hover{color:var(--ac2);border-color:var(--ac2)}
 .add-advanced-toggle .caret{transition:transform .2s;font-size:10px}
@@ -938,6 +939,7 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
 .export-menu.open{display:block}
 .export-menu-item{display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:13px;cursor:pointer;border-radius:4px;color:var(--text);background:none;border:none;width:100%;text-align:left;font-family:var(--font);white-space:normal;overflow-wrap:anywhere}
 .export-menu-item:hover{background:var(--bg2)}
+.export-menu-item[aria-checked="true"]{background:rgba(108,99,255,.14);color:var(--ac2)}
 .export-menu-item .icon{width:18px;text-align:center}
 .export-menu-sep{height:1px;background:var(--border);margin:4px 0}
 
@@ -1305,7 +1307,9 @@ html[data-theme="light"] .have-mirror-badge,html[data-theme="light"] .have-mirro
 .trainer-quick-card{border:1px solid var(--border);background:var(--card);border-radius:6px;padding:11px;display:flex;gap:9px;align-items:center;min-width:0}
 .trainer-quick-main{flex:1;min-width:0}.trainer-quick-name{font-weight:750;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.trainer-quick-meta{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.4}.trainer-change-counts{font-size:11px;color:var(--ac2);margin-top:4px}.trainer-unread{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--accent);margin-right:5px}
 .trainer-quick-actions{display:flex;gap:5px}.trainer-icon-btn{width:48px;height:48px;min-width:48px;min-height:48px;border:1px solid var(--border2);border-radius:6px;background:var(--bg);color:var(--text);cursor:pointer;font-size:16px}.trainer-icon-btn:hover{border-color:var(--accent)}
-.favorite-toolbar{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;margin-bottom:10px}.favorite-toolbar:has(>.bghost){grid-template-columns:minmax(0,1fr) auto}.favorite-toolbar-search{position:relative}.favorite-filter-tags,.favorite-card-tags,.organizer-tag-list{display:flex;flex-wrap:wrap;gap:6px}.favorite-filter-tags{grid-column:1/-1}.favorite-filter-chip,.favorite-card-tag{max-width:100%;border:1px solid var(--border2);border-radius:999px;background:var(--bg);color:var(--muted);font:700 11px var(--font);padding:6px 9px;overflow-wrap:anywhere}.favorite-filter-chip{cursor:pointer;min-height:40px}.favorite-filter-chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}.favorite-card-shell{position:relative;overflow:hidden;border:1px solid var(--border);border-radius:6px;background:var(--bg2);min-width:0}.favorite-card-rail{position:absolute;inset:0 0 0 auto;width:116px;display:flex;align-items:stretch;justify-content:flex-end}.favorite-card-rail button{width:58px;min-width:58px;border:0;border-left:1px solid var(--border);background:var(--bg2);color:var(--text);font:800 11px var(--font);cursor:pointer}.favorite-card-rail button:hover,.favorite-card-rail button:focus-visible{background:var(--accent);color:#fff}.favorite-card-surface{position:relative;z-index:1;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;min-height:100%;padding:12px;background:var(--card);touch-action:pan-y;transform:translateX(0);transition:transform .18s ease}.favorite-card-shell.swipe-open .favorite-card-surface{transform:translateX(-116px)}.favorite-card-tags{margin-top:8px}.favorite-card-tag{display:inline-flex;align-items:center;min-height:48px;padding:7px 10px;color:var(--ac2);cursor:pointer}.favorite-card-tag[aria-pressed="true"]{background:rgba(108,99,255,.16);border-color:var(--accent)}.favorite-card-add-tag,.favorite-card-more{width:48px;height:48px;min-width:48px;border:1px solid var(--border2);border-radius:999px;background:var(--bg);color:var(--text);font:800 18px var(--font);cursor:pointer}.favorite-card-footer{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:3px}.favorite-card-open{min-height:48px;padding:8px 2px;border:0;background:transparent;color:var(--ac2);font:750 12px var(--font);cursor:pointer}.favorite-card-menu{position:absolute;z-index:5;right:10px;bottom:62px;display:grid;min-width:190px;padding:5px;border:1px solid var(--border2);border-radius:6px;background:var(--card);box-shadow:var(--shadow)}.favorite-card-menu[hidden]{display:none}.favorite-card-menu button{min-height:48px;padding:9px 11px;border:0;border-radius:4px;background:transparent;color:var(--text);font:700 12px var(--font);text-align:left;cursor:pointer}.favorite-card-menu button:hover,.favorite-card-menu button:focus-visible{background:var(--bg2)}.favorite-card-menu .danger{color:var(--danger)}.favorite-empty{border:1px dashed var(--border2);border-radius:6px;padding:18px;color:var(--muted);font-size:12px}.favorite-saved-prompt{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:480;display:flex;align-items:center;gap:10px;max-width:calc(100vw - 24px);padding:10px 12px;border:1px solid var(--border2);border-radius:6px;background:var(--card);box-shadow:var(--shadow)}.favorite-saved-prompt[hidden]{display:none}.favorite-saved-prompt span{font-size:12px}.favorite-saved-prompt button{min-height:48px}.organizer-modal{max-width:460px;padding:0;overflow:hidden;display:flex;flex-direction:column}.organizer-header{display:flex;justify-content:space-between;gap:12px;padding:18px 20px 13px;border-bottom:1px solid var(--border)}.organizer-header h2{font-size:18px;margin:0}.organizer-header p{font-size:11px;color:var(--muted);margin-top:4px}.organizer-close{width:48px;height:48px;min-width:48px;flex:0 0 48px;border:1px solid var(--border2);border-radius:50%;background:transparent;color:var(--text);font-size:22px}.organizer-body{padding:16px 20px 20px;overflow-y:auto;overscroll-behavior:contain}.organizer-section{padding:14px 0;border-bottom:1px solid var(--border)}.organizer-section:last-child{border-bottom:0}.organizer-section h3{font-size:13px;margin:0 0 5px}.organizer-help{font-size:11px;color:var(--muted);line-height:1.45;margin-bottom:10px}.organizer-assignment{display:flex;flex-wrap:wrap;gap:7px}.organizer-check{display:inline-flex;align-items:center;gap:7px;min-height:48px;max-width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:999px;cursor:pointer}.organizer-check:has(input:checked){background:rgba(108,99,255,.16);border-color:var(--accent)}.organizer-check input{width:18px;height:18px}.organizer-check span{overflow-wrap:anywhere}.organizer-add-tag{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;margin-top:9px}.organizer-add-tag[hidden]{display:none}.organizer-new-tag-toggle{margin-top:9px}.organizer-tag-row,.organizer-manage-details{display:none}.organizer-tag-row input{min-width:0}.organizer-add-tag button,.organizer-new-tag-toggle{min-height:48px}.organizer-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;padding-top:14px}.organizer-actions button{min-width:88px;min-height:48px}.organizer-status{min-height:18px;font-size:11px;color:var(--muted);margin-top:8px}
+.favorite-toolbar{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;margin-bottom:10px}.favorite-toolbar:has(>.bghost){grid-template-columns:minmax(0,1fr) auto}.favorite-toolbar-search{position:relative}.favorite-filter-tags,.favorite-card-tags,.organizer-tag-list{display:flex;flex-wrap:wrap;gap:6px}.favorite-filter-tags{grid-column:1/-1}.favorite-filter-chip,.favorite-card-tag{max-width:100%;border:1px solid var(--border2);border-radius:999px;background:var(--bg);color:var(--muted);font:700 11px var(--font);padding:6px 9px;overflow-wrap:anywhere}.favorite-filter-chip{cursor:pointer;min-height:40px}.favorite-filter-chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}.favorite-card-shell{position:relative;overflow:hidden;border:1px solid var(--border);border-radius:6px;background:var(--bg2);min-width:0}.favorite-card-rail{position:absolute;inset:0 0 0 auto;width:116px;display:flex;align-items:stretch;justify-content:flex-end}.favorite-card-rail button{width:58px;min-width:58px;border:0;border-left:1px solid var(--border);background:var(--bg2);color:var(--text);font:800 11px var(--font);cursor:pointer}.favorite-card-rail button:hover,.favorite-card-rail button:focus-visible{background:var(--accent);color:#fff}.favorite-card-surface{position:relative;z-index:1;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;min-height:100%;padding:12px;background:var(--card);touch-action:pan-y;transform:translateX(0);transition:transform .18s ease}.favorite-card-shell.swipe-open .favorite-card-surface{transform:translateX(-116px)}.favorite-card-tags{margin-top:8px}
+.favorite-card-tag{display:inline-flex;align-items:center;min-height:26px;padding:4px 8px;color:var(--ac2);background:rgba(108,99,255,.10);border-color:rgba(108,99,255,.32)}.favorite-card-add-tag,.favorite-card-more{width:48px;height:48px;min-width:48px;border:1px solid var(--border2);border-radius:999px;background:var(--bg);color:var(--text);font:800 18px var(--font);cursor:pointer}.favorite-card-footer{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:3px}.favorite-card-open{min-height:48px;padding:8px 2px;border:0;background:transparent;color:var(--ac2);font:750 12px var(--font);cursor:pointer}.favorite-card-menu{position:absolute;z-index:5;right:10px;bottom:62px;display:grid;min-width:190px;padding:5px;border:1px solid var(--border2);border-radius:6px;background:var(--card);box-shadow:var(--shadow)}.favorite-card-menu[hidden]{display:none}.favorite-card-menu button{min-height:48px;padding:9px 11px;border:0;border-radius:4px;background:transparent;color:var(--text);font:700 12px var(--font);text-align:left;cursor:pointer}.favorite-card-menu button:hover,.favorite-card-menu button:focus-visible{background:var(--bg2)}.favorite-card-menu .danger{color:var(--danger)}.favorite-empty{border:1px dashed var(--border2);border-radius:6px;padding:18px;color:var(--muted);font-size:12px}.favorite-saved-prompt{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:480;display:flex;align-items:center;gap:10px;max-width:calc(100vw - 24px);padding:10px 12px;border:1px solid var(--border2);border-radius:6px;background:var(--card);box-shadow:var(--shadow)}.favorite-saved-prompt[hidden]{display:none}.favorite-saved-prompt span{font-size:12px}.favorite-saved-prompt button{min-height:48px}.organizer-modal{max-width:460px;padding:0;overflow:hidden;display:flex;flex-direction:column}.organizer-header{display:flex;justify-content:space-between;gap:12px;padding:16px 20px 12px;border-bottom:1px solid var(--border)}.organizer-header h2{font-size:18px;margin:0}.organizer-header p{font-size:11px;color:var(--muted);margin-top:3px}.organizer-close{width:48px;height:48px;min-width:48px;flex:0 0 48px;border:1px solid var(--border2);border-radius:50%;background:transparent;color:var(--text);font-size:22px}
+.organizer-body{padding:12px 20px 16px;overflow-y:auto;overscroll-behavior:contain}.organizer-section{padding:10px 0}.organizer-help{font-size:11px;color:var(--muted);line-height:1.45;margin-bottom:8px}.organizer-assignment{display:flex;flex-wrap:wrap;gap:8px;max-height:180px;overflow-y:auto;overscroll-behavior:contain;padding:2px}.organizer-selectable-chip{display:inline-flex;align-items:center;gap:6px;min-height:48px;max-width:100%;padding:8px 12px;border:1px solid var(--border2);border-radius:999px;background:var(--bg);color:var(--muted);font:700 12px var(--font);cursor:pointer}.organizer-selectable-chip[aria-pressed="true"]{background:rgba(108,99,255,.18);border-color:var(--accent);color:var(--ac2)}.organizer-selectable-chip span{overflow-wrap:anywhere}.organizer-chip-check{font-weight:900}.organizer-add-tag{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-top:8px}.organizer-add-tag[hidden]{display:none}.organizer-new-tag-toggle{margin-top:8px}.organizer-tag-row,.organizer-manage-details{display:none}.organizer-tag-row input{min-width:0}.organizer-add-tag button,.organizer-new-tag-toggle{min-height:48px}.organizer-actions{position:sticky;bottom:-16px;display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;padding:12px 0 0;background:var(--card)}.organizer-actions button{min-width:88px;min-height:48px}.organizer-status{min-height:18px;font-size:11px;color:var(--muted);margin-top:6px}
 @media(prefers-reduced-motion:reduce){.favorite-card-surface{transition:none}}
 .trainer-sync-status{display:flex;align-items:flex-start;gap:9px;min-width:0;margin-top:10px;padding:10px 11px;border:1px solid var(--border);border-radius:var(--r2);background:var(--bg)}.trainer-sync-status-icon{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;flex:0 0 24px;color:var(--ac2);font-weight:800}.trainer-sync-status-copy{min-width:0}.trainer-sync-status-copy strong{display:block;font-size:12px;line-height:1.35;overflow-wrap:anywhere}.trainer-sync-status-copy span{display:block;margin-top:2px;color:var(--muted);font-size:11px;line-height:1.45;overflow-wrap:anywhere}.trainer-sync-status-detail{max-width:100%;overflow-wrap:anywhere}
 .favorite-detail{grid-column:1/-1;border-top:1px solid var(--border);padding-top:8px;margin-top:4px;font-size:11px;color:var(--muted)}
@@ -1894,8 +1898,7 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
       <div class="have-subtitle" id="find-trainer-description"></div>
     </div>
     <div class="trainer-discovery-content">
-    <p class="trainer-search-guidance" id="find-guidance-title" data-i18n="guidance.findBody">Open a trainer's shared list, then Favorite them for quick return. Private tags stay on this device; sync is not active.</p>
-    <div class="trainer-search-shell">
+    <div class="trainer-search-shell search-lookup">
       <div class="trainer-search-row">
         <div class="trainer-combobox app-search-shell">
           <span class="app-search-icon" aria-hidden="true">⌕</span>
@@ -1942,15 +1945,14 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
     </div>
     <div class="add-form">
       <div class="add-ttl" id="add-ttl" data-i18n="myList.addTitle">Add Pokémon</div>
-      <div class="add-subhelp" data-i18n="myList.addHelp">For long sessions, Speed add keeps priority and flags selected.</div>
       <div class="frow">
-        <div class="ac-wrap">
+        <div class="ac-wrap search-lookup">
           <input type="text" class="ac-input" id="ac-input" data-i18n-placeholder="myList.searchPlaceholder" placeholder="Search Pokémon…" autocomplete="off"
             oninput="acSearch(this.value)" onkeydown="acKeydown(event)" onfocus="acSearch(this.value)">
           <input type="hidden" id="add-pmon-sel">
+          <button type="button" class="voice-btn" id="voice-btn" onclick="startVoiceInput()" data-i18n-aria-label="myList.voiceInput" data-i18n-title="myList.speakToSearch" aria-label="Voice input" title="Speak to search">🎤</button>
           <div class="ac-dropdown" id="ac-dropdown"></div>
         </div>
-        <button type="button" class="voice-btn" id="voice-btn" onclick="startVoiceInput()" data-i18n-aria-label="myList.voiceInput" data-i18n-title="myList.speakToSearch" aria-label="Voice input" title="Speak to search">🎤</button>
         <div class="add-pri-group" role="group" data-i18n-aria-label="myList.priority" aria-label="Priority">
           <span class="add-pri-label" data-i18n="myList.priority">Priority</span>
           <button type="button" class="pb add-pri-btn" data-pri="H" onclick="setAddPri('H')" aria-pressed="false" data-i18n-title="priority.high">H</button>
@@ -1958,7 +1960,7 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
           <button type="button" class="pb add-pri-btn" data-pri="L" onclick="setAddPri('L')" aria-pressed="false" data-i18n-title="priority.low">L</button>
         </div>
         <input type="hidden" id="add-pmon-pri" value="">
-        <button type="button" class="add-advanced-toggle" id="add-adv-toggle" onclick="toggleAddAdvanced()" aria-expanded="false" aria-controls="add-advanced"><span data-i18n="myList.advanced">Advanced</span> <span class="caret">▾</span></button>
+        <button type="button" class="add-advanced-toggle" id="add-adv-toggle" onclick="toggleAddAdvanced()" aria-expanded="false" aria-controls="add-advanced"><span data-i18n="myList.moreOptions">More options</span> <span class="caret">▾</span></button>
       </div>
       <div class="add-tray" id="add-tray" hidden></div>
       <div class="add-advanced" id="add-advanced">
@@ -1975,15 +1977,17 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
         <label class="lucky-add" title="XXS — mark as extra-small; generates a separate XXS search string">
           <input type="checkbox" id="add-pmon-xxs" onchange="if(this.checked)document.getElementById('add-pmon-xxl').checked=false;renderAddTray()"> XXS
         </label>
-        <input type="text" id="add-pmon-notes" data-i18n-placeholder="myList.notesPlaceholder" data-i18n-aria-label="myList.notes" placeholder="Notes: f, m, shadow…" aria-label="Notes" style="flex:1;min-width:120px" oninput="renderAddTray()">
+        <input type="text" id="add-pmon-notes" data-i18n-placeholder="myList.variantDetailsPlaceholder" data-i18n-aria-label="myList.variantDetails" placeholder="Variant details: female, male, shadow…" aria-label="Variant details" style="flex:1;min-width:120px" oninput="renderAddTray()">
       </div>
       <div class="add-actions">
         <button class="bsave" onclick="addEntry()" data-i18n="myList.addAction">Add</button>
-        <button class="import-btn" onclick="openImport()" data-i18n="myList.importAction">Import string</button>
-        <button type="button" class="speed-add-toggle" id="speed-add-toggle" onclick="toggleSpeedAddMode()" aria-pressed="false" data-i18n="myList.speedAdd">Speed add</button>
         <div class="export-menu-wrap">
-          <button class="image-btn" onclick="toggleExportMenu(event)" aria-haspopup="true" aria-expanded="false" id="export-menu-btn" data-i18n="myList.exportAction">Export</button>
-          <div class="export-menu" id="export-menu" role="menu">
+          <button class="image-btn" onclick="toggleExportMenu(event)" aria-haspopup="menu" aria-expanded="false" aria-controls="export-menu" id="export-menu-btn"><span data-i18n="account.tools">Tools</span> <span aria-hidden="true">▾</span></button>
+          <div class="export-menu" id="export-menu" role="menu" aria-label="Tools" data-i18n-aria-label="account.tools" onkeydown="toolsMenuKeydown(event)">
+            <button class="export-menu-item" role="menuitem" onclick="openImport();closeExportMenu()"><span class="icon">↥</span> <span data-i18n="myList.importAction">Import string</span></button>
+            <button class="export-menu-item" role="menuitemcheckbox" id="speed-add-toggle" aria-checked="false" onclick="toggleSpeedAddMode()"><span class="icon">⚡</span> <span data-i18n="myList.speedAdd">Speed add</span></button>
+            <button class="export-menu-item" role="menuitemcheckbox" id="bulk-toggle-btn" aria-checked="false" onclick="toggleBulkMode();closeExportMenu()"><span class="icon">☑</span> <span data-i18n="myList.bulkEdit">Bulk edit</span></button>
+            <div class="export-menu-sep"></div>
             <button class="export-menu-item" role="menuitem" onclick="exportMyListImage('classic');closeExportMenu()"><span class="icon">🖼️</span> <span data-i18n="export.classicImage">Classic image (light)</span></button>
             <button class="export-menu-item" role="menuitem" onclick="exportMyListImage('cards');closeExportMenu()"><span class="icon">🌙</span> <span data-i18n="export.darkImage">Dark card image</span></button>
             <button class="export-menu-item" role="menuitem" onclick="openSpecialTradeBoard();closeExportMenu()"><span class="icon">🎯</span> <span data-i18n="export.specialBoard">Special Trade Board (LF/FT)</span></button>
@@ -1993,7 +1997,6 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
             <button class="export-menu-item" role="menuitem" onclick="copyShareLink();closeExportMenu()"><span class="icon">🔗</span> <span data-i18n="export.copyShareLink">Copy share link</span></button>
           </div>
         </div>
-        <button class="bulk-toggle" onclick="toggleBulkMode()" aria-pressed="false" id="bulk-toggle-btn" data-i18n="myList.bulkEdit">Bulk edit</button>
       </div>
       <div class="speed-add-hint" id="speed-add-hint" data-i18n="myList.speedAddHint">Speed add is on. Priority and flags stay selected after each addition.</div>
     </div>
@@ -2014,7 +2017,7 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
       <button class="bulk-btn bulk-del" onclick="bulkDelete()">🗑 <span data-i18n="common.delete">Delete</span></button>
       <button class="bulk-btn bulk-cancel" onclick="toggleBulkMode()" data-i18n="common.done">Done</button>
     </div>
-    <div class="mylist-search app-search-shell">
+    <div class="mylist-search app-search-shell search-filter">
       <span class="mylist-srch-icon app-search-icon" aria-hidden="true">🔍</span>
       <input class="app-search-input" type="text" data-i18n-placeholder="myList.filterPlaceholder" data-i18n-aria-label="myList.filterLabel" placeholder="Filter my list…" oninput="renderMyList(this.value)" id="mylist-filter" aria-label="Filter my list">
     </div>
@@ -2432,18 +2435,13 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
 <div class="ov organizer-overlay" id="trainer-organizer-modal" role="dialog" aria-modal="true" aria-labelledby="trainer-organizer-title" aria-describedby="trainer-organizer-description">
   <div class="modal organizer-modal">
     <div class="organizer-header">
-      <div><h2 id="trainer-organizer-title" data-i18n="organizer.title">Organize tags</h2><p id="trainer-organizer-description" data-i18n="organizer.localOnly">Favorites and tags are currently saved on this device.</p></div>
+      <div><h2 id="trainer-organizer-title" data-i18n="organizer.title">Organize tags</h2><p id="trainer-organizer-description" data-i18n="organizer.savedOnDevice">Saved on this device</p></div>
       <button type="button" class="organizer-close" onclick="closeTrainerOrganizer()" data-i18n-aria-label="organizer.close" aria-label="Close organizer">×</button>
     </div>
     <div class="organizer-body">
-      <div class="settings-account-summary"><div class="av" id="organizer-trainer-av">?</div><div><span data-i18n="organizer.favoriteTrainer">Favorite trainer</span><strong id="organizer-trainer-name">—</strong></div></div>
-      <section class="organizer-section" aria-labelledby="organizer-tags-heading">
-        <h3 id="organizer-tags-heading" data-i18n="organizer.tags">Tags</h3>
-        <p class="organizer-help" data-i18n="organizer.tagsHelp">Select one or more private tags for this trainer.</p>
+      <div class="settings-account-summary"><div class="av" id="organizer-trainer-av">?</div><div><strong id="organizer-trainer-name">—</strong></div></div>
+      <section class="organizer-section" aria-label="Tags" data-i18n-aria-label="organizer.tags">
         <div class="organizer-assignment" id="organizer-tag-assignment"></div>
-      </section>
-      <section class="organizer-section" aria-labelledby="organizer-new-tag-heading">
-        <h3 id="organizer-new-tag-heading" data-i18n="organizer.tags">Tags</h3>
         <button type="button" class="bghost organizer-new-tag-toggle" id="organizer-new-tag-toggle" onclick="showTrainerTagCreator()" data-i18n="organizer.newTagAction">+ New tag</button>
         <div class="organizer-add-tag" id="organizer-add-tag-row" hidden><input class="app-field" id="organizer-new-tag" maxlength="40" data-i18n-placeholder="organizer.addTagPlaceholder" data-i18n-aria-label="organizer.newTag" placeholder="New tag" aria-label="New tag" onkeydown="trainerTagInputKeydown(event)"><button class="bghost" onclick="createLocalTrainerTag()" data-i18n="organizer.addTag">Add</button></div>
       </section>
@@ -2559,7 +2557,7 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
 <div class="ptr-indicator" id="ptr-indicator" aria-hidden="true">↓</div>
 
 <script>
-window.__POGO_RELEASE_ID='2026-08-05.23';
+window.__POGO_RELEASE_ID='2026-08-05.24';
 window.__pogoBootWatch=setTimeout(function(){
   var visible=['config-pg','login-pg','app'].some(function(id){
     var el=document.getElementById(id);
@@ -2578,61 +2576,61 @@ window.__pogoBootWatch=setTimeout(function(){
   if(err)err.textContent='App scripts did not finish loading. Refresh once; if this stays, send this screenshot.';
 },4000);
 </script>
-<script src="data.js?v=2026-08-05.23"></script>
-<script src="js/domain/priorities.js?v=2026-08-05.23"></script>
-<script src="js/ui/badges.js?v=2026-08-05.23"></script>
-<script src="js/domain/username.js?v=2026-08-05.23"></script>
-<script src="js/domain/priorityValues.js?v=2026-08-05.23"></script>
-<script src="js/domain/scheduleDates.js?v=2026-08-05.23"></script>
-<script src="js/domain/pokemonSearchTerms.js?v=2026-08-05.23"></script>
-<script src="js/domain/pokemonEntryRules.js?v=2026-08-05.23"></script>
-<script src="js/domain/pokemonGoSearchSyntax.js?v=2026-08-05.23"></script>
-<script src="js/domain/searchStrings.js?v=2026-08-05.23"></script>
-<script src="js/ui/stringHtml.js?v=2026-08-05.23"></script>
-<script src="js/domain/scheduleEventRules.js?v=2026-08-05.23"></script>
-<script src="js/domain/scheduleTradeRules.js?v=2026-08-05.23"></script>
-<script src="js/domain/pokemonKeys.js?v=2026-08-05.23"></script>
-<script src="js/domain/spriteSlugs.js?v=2026-08-05.23"></script>
-<script src="js/domain/fuzzyText.js?v=2026-08-05.23"></script>
-<script src="js/domain/autocompleteText.js?v=2026-08-05.23"></script>
-<script src="js/domain/autocompleteMatching.js?v=2026-08-05.23"></script>
-<script src="js/domain/autocompleteRanking.js?v=2026-08-05.23"></script>
-<script src="js/domain/relativeTime.js?v=2026-08-05.23"></script>
-<script src="js/domain/clientRelease.js?v=2026-08-05.23"></script>
-<script src="js/domain/favoriteCardInteractions.js?v=2026-08-05.23"></script>
-<script src="js/domain/trainerDiscovery.js?v=2026-08-05.23"></script>
-<script src="js/domain/eventPresentation.js?v=2026-08-05.23"></script>
-<script src="js/domain/publicSharePublication.js?v=2026-08-05.23"></script>
-<script src="js/domain/trainerPreferences.js?v=2026-08-05.23"></script>
-<script src="js/domain/trainerPreferenceSync.js?v=2026-08-05.23"></script>
-<script src="js/domain/authenticationReadiness.js?v=2026-08-05.23"></script>
-<script src="js/domain/loginDirectory.js?v=2026-08-05.23"></script>
-<script src="js/utils/textSafety.js?v=2026-08-05.23"></script>
-<script src="js/ui/stringPanels.js?v=2026-08-05.23"></script>
-<script src="js/ui/emptyState.js?v=2026-08-05.23"></script>
-<script src="js/i18n/locales/en.js?v=2026-08-05.23"></script>
-<script src="js/i18n/locales/ja.js?v=2026-08-05.23"></script>
-<script src="js/i18n/locales/es.js?v=2026-08-05.23"></script>
-<script src="js/i18n/locales/de.js?v=2026-08-05.23"></script>
-<script src="js/i18n/pokemonNames/catalog.js?v=2026-08-05.23"></script>
-<script src="js/i18n/pokemonNames/variants.js?v=2026-08-05.23"></script>
-<script src="js/i18n/pokemonNames/core.js?v=2026-08-05.23"></script>
-<script src="js/i18n/eventLabels/currentTitles.js?v=2026-08-05.23"></script>
-<script src="js/i18n/eventLabels/core.js?v=2026-08-05.23"></script>
-<script src="js/i18n/core.js?v=2026-08-05.23"></script>
-<script src="js/services/firebaseClient.js?v=2026-08-05.23"></script>
-<script src="js/data/subscriptionManager.js?v=2026-08-05.23"></script>
-<script src="js/data/listenerLifecycle.js?v=2026-08-05.23"></script>
-<script src="js/data/sessionCacheBoundary.js?v=2026-08-05.23"></script>
-<script src="js/data/firebaseReadRegistry.js?v=2026-08-05.23"></script>
-<script src="js/data/currentUserRepository.js?v=2026-08-05.23"></script>
-<script src="js/data/ownedDataCoordinator.js?v=2026-08-05.23"></script>
-<script src="js/data/publicShareRepository.js?v=2026-08-05.23"></script>
-<script src="js/data/trainerHistoryStore.js?v=2026-08-05.23"></script>
-<script src="js/data/trainerPreferencesRepository.js?v=2026-08-05.23"></script>
-<script src="js/data/trainerPreferenceSyncQueue.js?v=2026-08-05.23"></script>
-<script src="js/domain/cacheAdapters.js?v=2026-08-05.23"></script>
-<script src="js/ui/trainerTagPanel.js?v=2026-08-05.23"></script>
+<script src="data.js?v=2026-08-05.24"></script>
+<script src="js/domain/priorities.js?v=2026-08-05.24"></script>
+<script src="js/ui/badges.js?v=2026-08-05.24"></script>
+<script src="js/domain/username.js?v=2026-08-05.24"></script>
+<script src="js/domain/priorityValues.js?v=2026-08-05.24"></script>
+<script src="js/domain/scheduleDates.js?v=2026-08-05.24"></script>
+<script src="js/domain/pokemonSearchTerms.js?v=2026-08-05.24"></script>
+<script src="js/domain/pokemonEntryRules.js?v=2026-08-05.24"></script>
+<script src="js/domain/pokemonGoSearchSyntax.js?v=2026-08-05.24"></script>
+<script src="js/domain/searchStrings.js?v=2026-08-05.24"></script>
+<script src="js/ui/stringHtml.js?v=2026-08-05.24"></script>
+<script src="js/domain/scheduleEventRules.js?v=2026-08-05.24"></script>
+<script src="js/domain/scheduleTradeRules.js?v=2026-08-05.24"></script>
+<script src="js/domain/pokemonKeys.js?v=2026-08-05.24"></script>
+<script src="js/domain/spriteSlugs.js?v=2026-08-05.24"></script>
+<script src="js/domain/fuzzyText.js?v=2026-08-05.24"></script>
+<script src="js/domain/autocompleteText.js?v=2026-08-05.24"></script>
+<script src="js/domain/autocompleteMatching.js?v=2026-08-05.24"></script>
+<script src="js/domain/autocompleteRanking.js?v=2026-08-05.24"></script>
+<script src="js/domain/relativeTime.js?v=2026-08-05.24"></script>
+<script src="js/domain/clientRelease.js?v=2026-08-05.24"></script>
+<script src="js/domain/favoriteCardInteractions.js?v=2026-08-05.24"></script>
+<script src="js/domain/trainerDiscovery.js?v=2026-08-05.24"></script>
+<script src="js/domain/eventPresentation.js?v=2026-08-05.24"></script>
+<script src="js/domain/publicSharePublication.js?v=2026-08-05.24"></script>
+<script src="js/domain/trainerPreferences.js?v=2026-08-05.24"></script>
+<script src="js/domain/trainerPreferenceSync.js?v=2026-08-05.24"></script>
+<script src="js/domain/authenticationReadiness.js?v=2026-08-05.24"></script>
+<script src="js/domain/loginDirectory.js?v=2026-08-05.24"></script>
+<script src="js/utils/textSafety.js?v=2026-08-05.24"></script>
+<script src="js/ui/stringPanels.js?v=2026-08-05.24"></script>
+<script src="js/ui/emptyState.js?v=2026-08-05.24"></script>
+<script src="js/i18n/locales/en.js?v=2026-08-05.24"></script>
+<script src="js/i18n/locales/ja.js?v=2026-08-05.24"></script>
+<script src="js/i18n/locales/es.js?v=2026-08-05.24"></script>
+<script src="js/i18n/locales/de.js?v=2026-08-05.24"></script>
+<script src="js/i18n/pokemonNames/catalog.js?v=2026-08-05.24"></script>
+<script src="js/i18n/pokemonNames/variants.js?v=2026-08-05.24"></script>
+<script src="js/i18n/pokemonNames/core.js?v=2026-08-05.24"></script>
+<script src="js/i18n/eventLabels/currentTitles.js?v=2026-08-05.24"></script>
+<script src="js/i18n/eventLabels/core.js?v=2026-08-05.24"></script>
+<script src="js/i18n/core.js?v=2026-08-05.24"></script>
+<script src="js/services/firebaseClient.js?v=2026-08-05.24"></script>
+<script src="js/data/subscriptionManager.js?v=2026-08-05.24"></script>
+<script src="js/data/listenerLifecycle.js?v=2026-08-05.24"></script>
+<script src="js/data/sessionCacheBoundary.js?v=2026-08-05.24"></script>
+<script src="js/data/firebaseReadRegistry.js?v=2026-08-05.24"></script>
+<script src="js/data/currentUserRepository.js?v=2026-08-05.24"></script>
+<script src="js/data/ownedDataCoordinator.js?v=2026-08-05.24"></script>
+<script src="js/data/publicShareRepository.js?v=2026-08-05.24"></script>
+<script src="js/data/trainerHistoryStore.js?v=2026-08-05.24"></script>
+<script src="js/data/trainerPreferencesRepository.js?v=2026-08-05.24"></script>
+<script src="js/data/trainerPreferenceSyncQueue.js?v=2026-08-05.24"></script>
+<script src="js/domain/cacheAdapters.js?v=2026-08-05.24"></script>
+<script src="js/ui/trainerTagPanel.js?v=2026-08-05.24"></script>
 <script>
 let initializeApp,getDatabase,ref,set,get,onValue,update,getAuth,signInWithEmailAndPassword,createUserWithEmailAndPassword,firebaseSignOut,updatePassword,deleteUser,onAuthStateChanged;
 let firebaseSdkPromise=null;
@@ -6398,7 +6396,7 @@ function canonicalTrainerName(username){
   return Object.keys(allData.loginDirectory||{}).find(name=>trainerDiscoveryDomain.fold(name)===folded)||username;
 }
 function favoriteTagChips(item,state){
-  return(item.tagIds||[]).map(id=>state.tags[id]).filter(Boolean).map(tag=>`<button type="button" class="favorite-card-tag" aria-pressed="true" onclick="openTrainerOrganizer('${escAttr(item.displayName)}')">${escHtml(tag.label)}</button>`).join('');
+  return(item.tagIds||[]).map(id=>state.tags[id]).filter(Boolean).map(tag=>`<span class="favorite-card-tag">${escHtml(tag.label)}</span>`).join('');
 }
 function closeFavoriteCardActions(except=null,restoreFocus=false){
   document.querySelectorAll('.favorite-card-shell.swipe-open').forEach(card=>{if(card!==except)card.classList.remove('swipe-open');});
@@ -6484,11 +6482,18 @@ function renderTrainerOrganizer(){
   document.getElementById('organizer-trainer-name').textContent=favorite.displayName;
   document.getElementById('organizer-trainer-av').textContent=favorite.displayName.slice(0,2).toUpperCase();
   const assignment=document.getElementById('organizer-tag-assignment');
-  assignment.innerHTML=tags.length?tags.map(tag=>`<label class="organizer-check"><input type="checkbox" data-tag-id="${tag.id}" ${favorite.tagIds.includes(tag.id)?'checked':''} onchange="trainerOrganizerChanged()"><span>${escHtml(tag.label)}</span></label>`).join(''):`<span class="organizer-help">${escHtml(i18nCore.t('organizer.noTags'))}</span>`;
+  assignment.innerHTML=tags.length?tags.map(tag=>{const selected=favorite.tagIds.includes(tag.id);return`<button type="button" class="organizer-selectable-chip" data-tag-id="${tag.id}" aria-pressed="${selected}" onclick="toggleTrainerOrganizerTag('${tag.id}')"><span>${escHtml(tag.label)}</span>${selected?'<span class="organizer-chip-check" aria-hidden="true">✓</span>':''}</button>`;}).join(''):`<span class="organizer-help">${escHtml(i18nCore.t('organizer.noTags'))}</span>`;
+}
+function toggleTrainerOrganizerTag(id){
+  const store=ensureTrainerHistoryStore(),favorite=store?.favoriteFor(trainerOrganizerState.username);if(!store||!favorite)return;
+  const selected=new Set(favorite.tagIds||[]);selected.has(id)?selected.delete(id):selected.add(id);
+  const result=store.setFavoriteTags(trainerOrganizerState.username,[...selected]),status=document.getElementById('organizer-status');
+  if(status)status.textContent=i18nCore.t(result?.ok?'organizer.savedLocal':'organizer.saveFailed');
+  if(result?.ok){renderTrainerOrganizer();renderTrainerQuickLists();}
 }
 function openTrainerOrganizer(username,returnFocus=document.activeElement){
   const store=ensureTrainerHistoryStore();if(!store?.isFavorite(username))return;
-  closeFavoriteCardActions();trainerOrganizerState.username=username;renderInterimProductLabels();renderTrainerOrganizer();hideTrainerTagCreator();document.getElementById('organizer-status').textContent=i18nCore.t('organizer.savedLocal');openModal('trainer-organizer-modal',{returnFocus});
+  closeFavoriteCardActions();trainerOrganizerState.username=username;renderInterimProductLabels();renderTrainerOrganizer();hideTrainerTagCreator();document.getElementById('organizer-status').textContent='';openModal('trainer-organizer-modal',{returnFocus});
 }
 function closeTrainerOrganizer(){hideTrainerTagCreator();closeModal('trainer-organizer-modal');}
 function showTrainerTagCreator(){const row=document.getElementById('organizer-add-tag-row'),toggle=document.getElementById('organizer-new-tag-toggle');if(row)row.hidden=false;if(toggle)toggle.hidden=true;requestAnimationFrame(()=>document.getElementById('organizer-new-tag')?.focus());}
@@ -7068,10 +7073,9 @@ function toggleAddAdvanced(){
   lsSet('pogoAdvancedOpen',open);
 }
 function initAddAdvanced(){
-  // On desktop default to open, on mobile default to closed; respect saved pref
+  // Keep the normal add flow compact; respect an explicit device-local preference.
   const saved=lsGet('pogoAdvancedOpen',null);
-  const isMobile=matchMedia('(max-width:600px)').matches;
-  const open=saved===null?!isMobile:!!saved;
+  const open=saved===null?false:!!saved;
   const adv=document.getElementById('add-advanced');
   const btn=document.getElementById('add-adv-toggle');
   if(!adv||!btn)return;
@@ -7084,7 +7088,7 @@ function syncSpeedAddMode(){
   const hint=document.getElementById('speed-add-hint');
   if(btn){
     btn.classList.toggle('on',on);
-    btn.setAttribute('aria-pressed',on?'true':'false');
+    btn.setAttribute('aria-checked',on?'true':'false');
   }
   if(hint)hint.classList.toggle('on',on);
   return on;
@@ -10647,7 +10651,14 @@ function toggleExportMenu(ev){
   btn.setAttribute('aria-expanded',open?'true':'false');
   if(open){
     setTimeout(()=>document.addEventListener('click',_closeExportOnOutside),0);
+    requestAnimationFrame(()=>menu.querySelector('[role^="menuitem"]')?.focus());
   }
+}
+function toolsMenuKeydown(event){
+  const items=[...event.currentTarget.querySelectorAll('[role^="menuitem"]')],index=items.indexOf(document.activeElement);
+  if(event.key==='Escape'){event.preventDefault();closeExportMenu();document.getElementById('export-menu-btn')?.focus();return;}
+  if(event.key!=='ArrowDown'&&event.key!=='ArrowUp')return;
+  event.preventDefault();const step=event.key==='ArrowDown'?1:-1;items[(index+step+items.length)%items.length]?.focus();
 }
 function _closeExportOnOutside(e){
   const wrap=document.querySelector('.export-menu-wrap');
@@ -13581,7 +13592,7 @@ function toggleBulkMode(){
   document.body.classList.toggle('bulk-mode',bulkMode);
   document.getElementById('bulk-bar')?.classList.toggle('active',bulkMode);
   const btn=document.getElementById('bulk-toggle-btn');
-  if(btn)btn.setAttribute('aria-pressed',bulkMode?'true':'false');
+  if(btn)btn.setAttribute('aria-checked',bulkMode?'true':'false');
   if(bulkMode){
     const sel=document.getElementById('bulk-pri-sel');
     if(sel){sel.value='';sel.onchange=bulkSetPri;}
@@ -14062,12 +14073,12 @@ function _handleGlobalShortcut(ev){
 // ── FIRST-RUN TOUR (#25) ──────────────────────────────────────
 const TOUR_STEPS=[
   {title:'👋 Welcome to PoGo Trades',body:`<p>Build your trade list, find a trainer, and compare your published lists. Let's take a quick look around.</p>`},
-  {title:'📋 My List',body:`<p>This is your wishlist. Tap <strong>+ Add</strong>, type a Pokémon, set priority and flags.</p><ul><li>Add a quick note for gender or costume — it gets tagged onto your in-game search string</li><li>Drag rows to reorder, or bulk-select to update many at once</li><li>Hit ✨ for shiny-only, ⚡ for Lucky Dex, XXL/XXS for size hunting</li></ul><p>Your list powers search strings and comparisons with trainers whose published lists you open.</p>`,tab:'mylist'},
+  {title:'📋 My List',body:`<p>This is your wishlist. Tap <strong>+ Add</strong>, type a Pokémon, set priority and flags.</p><ul><li>Add variant details for gender or costume when needed</li><li>Drag rows to reorder, or bulk-select to update many at once</li><li>Hit ✨ for shiny-only, ⚡ for Lucky Dex, XXL/XXS for size hunting</li></ul><p>Your list powers search strings and comparisons with trainers whose published lists you open.</p>`,tab:'mylist'},
   {title:'📤 Search strings',body:`<p>Auto-generated Pokémon GO search strings live at the bottom of My List, split by priority and flag. Copy → paste into the in-game search bar.</p><p>They update automatically whenever you change My List — no manual maintenance needed.</p>`,tab:'mylist'},
   {title:'🔍 Find Trainer',body:`<p>Search by trainer name, open a published list, and compare it with your own list. Favorites and recent trainers make repeat visits faster.</p><p>Only the selected trainer's published share is loaded; private trainer records are never used as fallback.</p>`,tab:'find'},
   {title:'📅 Events',body:`<p>Browse upcoming Pokémon GO events by type and timing. Event details open from their source page.</p>`,tab:'schedule'},
   {title:'🎒 Legacy Inventory',body:`<p>Your existing Inventory is preserved as a private, read-only archive. You can review it and export a CSV, but new Inventory editing is retired.</p>`,tab:'have'},
-  {title:'🚀 First steps',body:`<p>Recommended order for a new account:</p><ol style="padding-left:22px;margin:6px 0 10px"><li>Build <strong>My List</strong> with priorities, flags, and notes</li><li>Copy your Pokémon GO <strong>search strings</strong></li><li>Use <strong>Find Trainer</strong> to open and compare a published list</li><li>Review profile and sharing choices in <strong>Settings</strong></li></ol><p>Press <kbd>?</kbd> any time for keyboard shortcuts, or <kbd>n</kbd> to jump straight to adding a Pokémon.</p>`}
+  {title:'🚀 First steps',body:`<p>Recommended order for a new account:</p><ol style="padding-left:22px;margin:6px 0 10px"><li>Build <strong>My List</strong> with priorities and flags</li><li>Copy your Pokémon GO <strong>search strings</strong></li><li>Use <strong>Find Trainer</strong> to open and compare a published list</li><li>Review profile and sharing choices in <strong>Settings</strong></li></ol><p>Press <kbd>?</kbd> any time for keyboard shortcuts, or <kbd>n</kbd> to jump straight to adding a Pokémon.</p>`}
 ];
 let _tourIdx=0;
 function startTour(){

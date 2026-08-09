@@ -31,8 +31,9 @@ test('conflict safety requires an explicit choice and inaction never selects sav
 
 test('contextual trainer-first guidance is visible without enabling the retired forced tour',()=>{
   assert.match(html,/id="mylist-guidance-title"/);
-  assert.match(html,/id="find-guidance-title"/);
-  for(const key of ['guidance.myListBody','guidance.findBody','guidance.findTrainer','guidance.exploreEvents'])assert.match(html,new RegExp(key.replace('.','\\.')));
+  assert.doesNotMatch(html,/id="find-guidance-title"/);
+  assert.match(html,/data-i18n="trainer\.findDescription"|id="find-trainer-description"/);
+  for(const key of ['guidance.myListBody','guidance.findTrainer','guidance.exploreEvents'])assert.match(html,new RegExp(key.replace('.','\\.')));
   const tour=block('function maybeStartTour','// ── EXPOSE');
   assert.match(tour,/if\(TRAINER_FIRST_INTERIM_ENABLED\)return/);
 });

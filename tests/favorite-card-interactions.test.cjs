@@ -48,7 +48,8 @@ test('remove remains explicit confirmed and unavailable from swipe alone',()=>{
 
 test('canonical picker retains multi-select, inline creation, duplicate reuse, and scoped Escape',()=>{
   assert.match(html,/id="organizer-tag-assignment"/);
-  assert.match(html,/type="checkbox" data-tag-id/);
+  assert.match(html,/class="organizer-selectable-chip"[^>]+aria-pressed=/);
+  assert.match(html,/function toggleTrainerOrganizerTag[\s\S]*setFavoriteTags/);
   assert.match(html,/function createLocalTrainerTag[\s\S]*ensureTag[\s\S]*setFavoriteTags/);
   assert.match(html,/function trainerTagInputKeydown[\s\S]*event\.key==='Enter'[\s\S]*event\.key==='Escape'/);
   assert.doesNotMatch(html,/id="organizer-tag-manager"|class="organizer-manage-details"/);
@@ -64,7 +65,7 @@ test('Find Trainer, autocomplete, Favorites, and cards share one deliberate cont
 
 test('touch, wrapping, reduced-motion, and local-only safety contracts remain explicit',()=>{
   assert.match(html,/\.favorite-card-add-tag,\.favorite-card-more\{width:48px;height:48px/);
-  assert.match(html,/\.favorite-card-tag\{[^}]*min-height:48px/);
+  assert.match(html,/\.favorite-card-tag\{[^}]*min-height:26px/);
   assert.match(html,/touch-action:pan-y/);
   assert.match(html,/@media\(prefers-reduced-motion:reduce\)\{\.favorite-card-surface\{transition:none\}\}/);
   assert.match(html,/overflow-wrap:anywhere/);

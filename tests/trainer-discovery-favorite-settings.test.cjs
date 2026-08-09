@@ -12,7 +12,7 @@ function store(){const window={};vm.runInNewContext(readFileSync(path.join(root,
 
 test('Find Trainer uses one compact combobox with inline clear and no submit button',()=>{
   const block=html.slice(html.indexOf('<!-- FIND TRAINER'),html.indexOf('<!-- MY LIST'));
-  assert.match(block,/class="trainer-search-shell"/);
+  assert.match(block,/class="trainer-search-shell search-lookup"/);
   assert.match(block,/role="combobox" aria-autocomplete="list"/);
   assert.match(block,/id="find-trainer-clear"/);
   assert.doesNotMatch(block,/id="find-trainer-button"/);
@@ -72,14 +72,14 @@ test('Settings keeps language behavior, provider rows inert, and local-only data
 
 test('responsive contracts retain 48px targets, wrapping, and no parallel organizer store',()=>{
   assert.match(html,/@media\(max-width:600px\)[\s\S]*settings-layout\.mobile-list/);
-  assert.match(html,/\.organizer-check\{[^}]*min-height:48px/);
+  assert.match(html,/\.organizer-selectable-chip\{[^}]*min-height:48px/);
   assert.match(html,/\.favorite-saved-prompt button\{min-height:48px/);
   assert.match(html,/overflow-wrap:anywhere/);
   assert.equal((html.match(/createTrainerHistoryStore\(/g)||[]).length,1);
 });
 
 test('release and safety boundaries remain coherent',()=>{
-  assert.match(html,/2026-08-05\.23/);assert.doesNotMatch(html,/2026-08-05\.22/);
+  assert.match(html,/2026-08-05\.24/);assert.doesNotMatch(html,/2026-08-05\.23/);
   assert.match(readFileSync(path.join(root,'js/domain/shareVisibility.js'),'utf8'),/SHARE_VISIBILITY_MODEL_ENABLED\s*:\s*false/);assert.match(html,/SYNCED_TRAINER_PREFERENCES_ENABLED!==false/);
   assert.doesNotMatch(html,/managedTrainerPreferencesRepository\.(?:mutate|write|save)/);
 });

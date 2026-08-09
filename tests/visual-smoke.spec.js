@@ -684,6 +684,29 @@ test.describe('visual smoke', () => {
     }
   });
 
+  test('My List compact add controls stay responsive and keyboard reachable',async({page})=>{
+    await page.setViewportSize({width:390,height:420});
+    await page.goto(`./?my-list-creation=${Date.now()}`,{waitUntil:'domcontentloaded'});
+    await waitForStableLocalOrganizerStartup(page);
+    await page.evaluate(()=>{cur='LocalTester';auth={currentUser:{uid:'uid-local-tester'}};document.getElementById('login-pg').style.display='none';document.getElementById('app').style.display='flex';});
+    const measurement=await page.evaluate(()=>{
+      const started=performance.now();toggleAddAdvanced();toggleAddAdvanced();
+      document.getElementById('export-menu-btn').click();closeExportMenu();
+      return performance.now()-started;
+    });
+    expect(measurement).toBeLessThan(100);
+    await expect(page.locator('#ac-input')).toBeVisible();
+    await expect(page.locator('#voice-btn')).toHaveAttribute('aria-label',/.+/);
+    await expect(page.locator('#export-menu-btn')).toHaveAttribute('aria-haspopup','menu');
+    await page.locator('#export-menu-btn').click();
+    await expect(page.locator('#export-menu')).toBeVisible();
+    await expect(page.locator('#export-menu [role^="menuitem"]').first()).toBeFocused();
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#export-menu')).toBeHidden();
+    await expect(page.locator('#export-menu-btn')).toBeFocused();
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
+  });
+
   test('translated active UI has no horizontal overflow at representative widths',async({page})=>{
     const viewports=[[320,640],[375,700],[390,700],[430,760],[768,800],[1024,800],[1440,900],[390,420],[390,300]];
     for(const [width,height] of viewports){
