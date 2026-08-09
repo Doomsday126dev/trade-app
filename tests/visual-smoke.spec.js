@@ -746,7 +746,7 @@ test.describe('visual smoke', () => {
       await expect(tabs.locator('[data-mylist-type="costumes"]')).toHaveAttribute('aria-selected','true');
       await expect(tabs.locator('[data-mylist-type="costumes"] .ltab-marker')).toBeVisible();
       expect(await tabs.evaluate(node=>getComputedStyle(node).display)).toBe('flex');
-      expect(await tabs.locator('.ltab').first().evaluate(node=>getComputedStyle(node).borderRadius)).toBe('20px');
+      expect(await tabs.locator('.ltab').first().evaluate(node=>getComputedStyle(node).borderRadius)).toBe('999px');
       await expect(page.locator('#mylist-category-heading')).toContainText('Others');
       await expect(page.locator('#mylist-category-heading')).toHaveClass(/sr-only/);
       const semanticHeadingBox=await page.locator('#mylist-category-heading').boundingBox();

@@ -22,14 +22,15 @@ test('all four My List categories expose hydrated counts and semantic selection'
 });
 
 test('selected category is visually unmistakable without relying on color alone',()=>{
-  assert.match(html,/\.mylist-type-tabs \.ltab\.active \.ltab-marker\{display:inline\}/);
-  assert.match(myList,/class="ltab-marker" aria-hidden="true">✓<\/span>/);
-  assert.match(html,/\.ltab\.active\{[^}]*border-color:#fff[^}]*font-weight:700[^}]*box-shadow/);
+  assert.match(html,/\.mylist-type-tabs \.ltab\.active \.ltab-marker\{display:inline-block\}/);
+  assert.match(myList,/class="ltab-marker" aria-hidden="true"><\/span>/);
+  assert.doesNotMatch(myList,/class="ltab-marker"[^>]*>✓/);
+  assert.match(html,/\.ltab\.active\{[^}]*background:rgba\(108,99,255,.18\)[^}]*border-color:var\(--accent\)[^}]*font-weight:700/);
 });
 
 test('category navigation uses compact intrinsic pills instead of equal-width segments',()=>{
   assert.match(html,/\.mylist-type-tabs\{[^}]*display:flex[^}]*flex-wrap:wrap/);
-  assert.match(html,/\.mylist-type-tabs \.ltab\{[^}]*inline-flex[^}]*flex:0 0 auto[^}]*border-radius:20px/);
+  assert.match(html,/\.mylist-type-tabs \.ltab\{[^}]*inline-flex[^}]*flex:0 0 auto[^}]*border-radius:var\(--radius-pill\)/);
   assert.doesNotMatch(html,/\.mylist-type-tabs\{[^}]*grid-template-columns/);
 });
 

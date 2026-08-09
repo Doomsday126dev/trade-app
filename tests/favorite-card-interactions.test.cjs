@@ -32,8 +32,8 @@ test('only one card opens and tap-outside or Escape closes presentation state',(
 });
 
 test('cards use lightweight tag and overflow actions with keyboard parity',()=>{
-  assert.match(html,/class="favorite-card-add-tag"/);
-  assert.match(html,/class="favorite-card-more" aria-haspopup="menu"/);
+  assert.match(html,/class="[^"]*favorite-card-add-tag[^"]*"/);
+  assert.match(html,/class="[^"]*favorite-card-more[^"]*" aria-haspopup="menu"/);
   assert.match(html,/class="favorite-card-menu" role="menu"/);
   assert.match(html,/organizer\.editTagsFor/);
   assert.match(html,/organizer\.addTagsFor/);
@@ -48,7 +48,7 @@ test('remove remains explicit confirmed and unavailable from swipe alone',()=>{
 
 test('canonical picker retains multi-select, inline creation, duplicate reuse, and scoped Escape',()=>{
   assert.match(html,/id="organizer-tag-assignment"/);
-  assert.match(html,/class="organizer-selectable-chip"[^>]+aria-pressed=/);
+  assert.match(html,/class="[^"]*organizer-selectable-chip[^"]*"[^>]+aria-pressed=/);
   assert.match(html,/function toggleTrainerOrganizerTag[\s\S]*setFavoriteTags/);
   assert.match(html,/function createLocalTrainerTag[\s\S]*ensureTag[\s\S]*setFavoriteTags/);
   assert.match(html,/function trainerTagInputKeydown[\s\S]*event\.key==='Enter'[\s\S]*event\.key==='Escape'/);
@@ -56,11 +56,11 @@ test('canonical picker retains multi-select, inline creation, duplicate reuse, a
 });
 
 test('Find Trainer, autocomplete, Favorites, and cards share one deliberate container',()=>{
-  assert.match(html,/\.trainer-discovery-content\{width:min\(100%,760px\);max-width:760px\}/);
+  assert.match(html,/\.trainer-discovery-content\{width:min\(100%,760px\);max-width:var\(--container-standard\)\}/);
   assert.match(html,/\.trainer-search-shell\{[^}]*width:100%;max-width:none/);
   assert.match(html,/\.trainer-suggestions\{[^}]*left:0;right:0/);
   const find=html.slice(html.indexOf('<!-- FIND TRAINER'),html.indexOf('<!-- MY LIST'));
-  assert.match(find,/class="trainer-discovery-content"[\s\S]*id="find-trainer-input"[\s\S]*id="favorite-trainers"/);
+  assert.match(find,/class="[^"]*trainer-discovery-content[^"]*"[\s\S]*id="find-trainer-input"[\s\S]*id="favorite-trainers"/);
 });
 
 test('touch, wrapping, reduced-motion, and local-only safety contracts remain explicit',()=>{

@@ -8,7 +8,7 @@ const EMPTY_SVGS={
 };
 function emptyHtml(t,s='',icon='🔍'){
   const svg=(typeof EMPTY_SVGS!=='undefined'&&EMPTY_SVGS[icon])||null;
-  return`<div class="empty">${svg||`<div class="empty-i">${icon}</div>`}<div class="empty-t">${t}</div>${s?`<div class="empty-s">${s}</div>`:''}</div>`;
+  return`<div class="empty empty-state">${svg||`<div class="empty-i" aria-hidden="true">${icon}</div>`}<div class="empty-t empty-state-title">${t}</div>${s?`<div class="empty-s empty-state-detail">${s}</div>`:''}</div>`;
 }
 
 const STATE_CONFIG=Object.freeze({
@@ -24,8 +24,8 @@ function stateModel(kind,{title='',detail='',actionLabel='',action='' }={}){
 }
 function stateHtml(model){
   const m=stateModel(model?.kind||'unavailable',model||{}),esc=value=>String(value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
-  const action=m.actionLabel&&m.action?`<button type="button" class="ui-state-action" data-state-action="${esc(m.action)}">${esc(m.actionLabel)}</button>`:'';
-  return`<div class="ui-state ui-state-${m.kind}" role="status" aria-live="${m.live}"${m.busy?' aria-busy="true"':''}><div class="ui-state-icon" aria-hidden="true">${m.icon}</div><div class="ui-state-copy"><div class="ui-state-title">${esc(m.title)}</div>${m.detail?`<div class="ui-state-detail">${esc(m.detail)}</div>`:''}</div>${action}</div>`;
+  const action=m.actionLabel&&m.action?`<button type="button" class="ui-state-action btn btn-secondary" data-state-action="${esc(m.action)}">${esc(m.actionLabel)}</button>`:'';
+  return`<div class="ui-state card-status ui-state-${m.kind}" role="status" aria-live="${m.live}"${m.busy?' aria-busy="true"':''}><div class="ui-state-icon" aria-hidden="true">${m.icon}</div><div class="ui-state-copy"><div class="ui-state-title type-card">${esc(m.title)}</div>${m.detail?`<div class="ui-state-detail type-meta">${esc(m.detail)}</div>`:''}</div>${action}</div>`;
 }
 
   root.emptyState=Object.freeze({

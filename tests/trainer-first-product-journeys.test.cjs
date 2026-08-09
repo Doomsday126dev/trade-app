@@ -56,7 +56,7 @@ test('Events expose Now Soon Later hierarchy accessible filters and one source a
   assert.match(source,/data-group="\$\{section\.group\}"/);
   assert.match(source,/section\.group==='now'\?'is-active'/);
   assert.match(source,/visibleBonuses=bonuses\.slice\(0,3\)/);
-  assert.match(source,/class="event-card-details"/);
+  assert.match(source,/class="[^"]*event-card-details[^"]*"/);
   assert.doesNotMatch(source,/article class="event-card"[^>]+onclick=/);
   assert.match(html,/\.event-filter\{[^}]*min-height:48px/);
 });
