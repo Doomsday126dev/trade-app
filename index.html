@@ -100,14 +100,12 @@ input,select,textarea{font-family:var(--font);outline:none}
 .account-trigger .account-chevron{font-size:11px;color:var(--muted);overflow:visible}
 .account-popover{position:absolute;top:calc(100% + 8px);right:0;width:min(290px,calc(100vw - 24px));padding:8px;background:var(--card);border:1px solid var(--border2);border-radius:var(--radius-lg);box-shadow:0 16px 38px rgba(0,0,0,.42);z-index:180}
 .account-popover[hidden]{display:none}
-.account-section-label{padding:8px 10px 4px;color:var(--muted);font-size:10px;font-weight:800;text-transform:uppercase}
-.account-action-copy{display:flex;min-width:0;flex:1;align-items:center;justify-content:space-between;gap:8px}.account-action-meta{color:var(--muted);font-size:10px;font-weight:700}
 .account-summary{display:flex;align-items:center;gap:10px;padding:8px;min-width:0}
 .account-summary-copy{min-width:0;flex:1}.account-summary-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase}.account-summary-name{font-size:14px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .account-divider{height:1px;background:var(--border);margin:5px 0}
-.account-action{width:100%;min-height:44px;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--radius-md);background:transparent;color:var(--text);font-size:13px;font-weight:650;text-align:left}
+.account-action{width:100%;min-height:48px;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--radius-md);background:transparent;color:var(--text);font-size:13px;font-weight:650;text-align:left}
 .account-action:hover{background:var(--bg2)}.account-action.signout{color:var(--danger);font-weight:800}
-.local-settings-trigger{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:44px;padding:7px 11px;border:1px solid var(--border2);border-radius:var(--radius-pill);background:var(--card);color:var(--text);font-size:12px;font-weight:700}
+.local-settings-trigger{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:48px;padding:7px 11px;border:1px solid var(--border2);border-radius:var(--radius-pill);background:var(--card);color:var(--text);font-size:12px;font-weight:700}
 .login-local-settings{position:absolute;top:calc(12px + env(safe-area-inset-top));right:12px;z-index:5}
 
 /* TABS */
@@ -430,26 +428,35 @@ input,select,textarea{font-family:var(--font);outline:none}
 .stb-prefilter-desc{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.45;font-family:var(--mono);word-break:break-all}
 
 /* ADMIN */
-.utbl{width:100%;border-collapse:collapse;font-size:13px}
-.utbl th{background:var(--bg2);padding:8px 11px;text-align:left;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border)}
-.utbl td{padding:8px 11px;border-bottom:1px solid var(--border);vertical-align:middle}
-.utbl tr:last-child td{border-bottom:none}
-.utbl tr:hover td{background:rgba(255,255,255,.02)}
 .ab{background:rgba(239,68,68,.15);color:var(--danger);border:1px solid rgba(239,68,68,.3);border-radius:var(--radius-sm);padding:2px 6px;font-size:11px;font-weight:700}
 .cb{background:var(--bg2);color:var(--muted);border-radius:var(--radius-sm);padding:2px 6px;font-size:11px;font-family:var(--mono)}
-.rpin{background:transparent;border:1px solid var(--border2);color:var(--muted);padding:3px 9px;border-radius:var(--radius-sm);font-size:11px;cursor:pointer}
+.rpin{min-height:48px;background:transparent;border:1px solid var(--border2);color:var(--muted);padding:8px 12px;border-radius:var(--radius-md);font-size:12px;font-weight:700;cursor:pointer}
 .rpin:hover{border-color:var(--warn);color:var(--warn)}
 .rpin:disabled{opacity:.3;cursor:not-allowed}
 .new-user-form{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:var(--space-4);margin-bottom:14px}
 .new-user-form h3{font-size:13px;font-weight:600;color:var(--ac2);margin-bottom:10px}
 .new-user-form .frow{align-items:center}
-.admin-role-toggle{display:inline-flex;align-items:center;justify-content:center;gap:7px;flex:0 0 auto;min-width:0;background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius-md);padding:8px 12px;color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;min-height:38px}
+.admin-role-toggle{display:inline-flex;align-items:center;justify-content:center;gap:7px;flex:0 0 auto;min-width:0;background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius-md);padding:8px 12px;color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;min-height:48px}
 .admin-role-toggle:hover{border-color:var(--accent);color:var(--ac2)}
 .admin-role-toggle input{flex:0 0 auto;min-width:0;width:16px;height:16px;margin:0;padding:0;accent-color:var(--accent)}
 .btn-export{background:transparent;border:1px solid var(--border2);color:var(--muted);padding:7px 14px;border-radius:var(--radius-md);font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px}
 .btn-export:hover{border-color:var(--ac2);color:var(--ac2)}
 .admin-actions{display:flex;justify-content:flex-end;gap:8px;margin-bottom:14px;flex-wrap:wrap}
 .security-box{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:var(--space-3);margin-bottom:14px}
+.admin-shell{display:grid;gap:var(--space-4)}
+.admin-header{display:flex;align-items:flex-end;justify-content:space-between;gap:var(--space-4);flex-wrap:wrap}
+.admin-title{font:700 var(--type-page);margin:0}.admin-subtitle{font:var(--type-meta);color:var(--muted);margin:4px 0 0;max-width:680px}
+.admin-nav{display:flex;gap:6px;overflow-x:auto;padding:2px 0 5px;scrollbar-width:thin}
+.admin-nav-button{flex:0 0 auto;min-height:48px;padding:9px 13px;border:1px solid var(--border);border-radius:var(--radius-pill);background:var(--card);color:var(--muted);font:700 var(--type-meta);cursor:pointer}
+.admin-nav-button:hover{border-color:var(--border2);color:var(--text)}.admin-nav-button[aria-current="page"]{border-color:var(--accent);background:rgba(108,99,255,.14);color:var(--text)}
+.admin-section[hidden]{display:none!important}.admin-section{min-width:0}.admin-section-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-3);margin-bottom:12px;flex-wrap:wrap}.admin-section-heading h2{font:700 var(--type-section);margin:0}.admin-section-heading p{font:var(--type-meta);color:var(--muted);margin:4px 0 0;max-width:680px}
+.admin-summary-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.admin-summary-card{padding:var(--space-4);border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--card)}.admin-summary-value{display:block;font:800 24px/1 var(--font);color:var(--text)}.admin-summary-label{display:block;margin-top:7px;font:700 var(--type-meta);color:var(--muted)}
+.admin-member-list,.admin-role-list,.admin-maintenance-list{display:grid;gap:8px}.admin-member-row{display:grid;grid-template-columns:minmax(180px,1.25fr) minmax(160px,1fr) minmax(150px,1fr) auto;align-items:center;gap:var(--space-3);padding:var(--space-3);border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--card);min-width:0}.admin-member-identity{display:flex;align-items:center;gap:10px;min-width:0}.admin-member-copy{min-width:0}.admin-member-name{font:700 var(--type-body);overflow-wrap:anywhere}.admin-member-friend{margin-top:3px;font:var(--type-meta);color:var(--muted);font-family:var(--mono);overflow-wrap:anywhere}.admin-member-status{display:grid;gap:5px;justify-items:start}.admin-member-meta{display:grid;gap:4px;font:var(--type-meta);color:var(--muted)}.admin-member-meta strong{color:var(--text)}
+.admin-role-row,.admin-maintenance-row{display:grid;grid-template-columns:minmax(150px,1fr) minmax(180px,1.4fr) auto;align-items:center;gap:var(--space-3);padding:var(--space-3);border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--card);min-width:0}.admin-role-copy,.admin-maintenance-copy{min-width:0}.admin-role-copy strong,.admin-maintenance-copy strong{display:block;overflow-wrap:anywhere}.admin-role-copy span,.admin-maintenance-copy span{display:block;margin-top:3px;font:var(--type-meta);color:var(--muted);overflow-wrap:anywhere}.admin-role-actions,.admin-maintenance-actions{display:flex;gap:7px;justify-content:flex-end;flex-wrap:wrap}.admin-role-badge{display:inline-flex;align-items:center;min-height:30px;padding:5px 9px;border:1px solid var(--border2);border-radius:var(--radius-pill);font:700 var(--type-meta);color:var(--muted)}.admin-role-badge.admin{color:var(--danger);border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.1)}.admin-role-badge.owner{color:var(--ac2);border-color:rgba(168,139,250,.3);background:rgba(168,139,250,.1)}
+.admin-maintenance-note{margin:0 0 10px}.admin-empty{padding:var(--space-5);border:1px dashed var(--border2);border-radius:var(--radius-lg);text-align:center;color:var(--muted);font:var(--type-meta)}
+.legacy-archive-notice{display:flex;align-items:flex-start;gap:10px;margin:0 0 14px;padding:var(--space-3);border:1px solid var(--border);border-radius:var(--radius-md);background:var(--card);color:var(--muted);font:var(--type-meta)}.legacy-archive-notice strong{display:block;color:var(--text);margin-bottom:3px}
+@media(max-width:900px){.admin-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.admin-member-row{grid-template-columns:minmax(160px,1.2fr) 1fr auto}.admin-member-status{grid-column:2}.admin-member-meta{grid-column:2}.admin-member-role{grid-column:3;grid-row:1/3}.admin-role-row,.admin-maintenance-row{grid-template-columns:minmax(140px,1fr) minmax(180px,1fr)}.admin-role-actions,.admin-maintenance-actions{grid-column:1/-1;justify-content:flex-start}}
+@media(max-width:600px){.admin-header{align-items:flex-start}.admin-nav{margin-inline:-2px}.admin-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.admin-summary-card{padding:var(--space-3)}.admin-member-row,.admin-role-row,.admin-maintenance-row{grid-template-columns:1fr;gap:8px}.admin-member-status,.admin-member-meta,.admin-member-role{grid-column:1;grid-row:auto}.admin-member-role{justify-self:start}.admin-role-actions,.admin-maintenance-actions{grid-column:1;justify-content:stretch}.admin-role-actions .rpin,.admin-maintenance-actions .rpin{flex:1 1 150px}.new-user-form .frow{align-items:stretch}.new-user-form .frow>*{max-width:none!important;width:100%}.admin-actions{justify-content:stretch}.admin-actions .btn-export{flex:1 1 150px}}
 
 /* REQUEST ACCESS */
 .req-link{display:block;text-align:center;margin-top:14px;font-size:13px;color:var(--ac2);cursor:pointer;font-weight:500}
@@ -646,7 +653,7 @@ body.bulk-mode .drag-handle{display:none}
 body.bulk-mode .myrow{cursor:pointer}
 body.bulk-mode .myrow.bulk-selected{border-color:var(--accent);background:rgba(108,99,255,.08)}
 body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
-.bulk-toggle{background:transparent;border:1px solid var(--border2);color:var(--muted);padding:5px 10px;border-radius:var(--radius-md);font-size:12px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+.bulk-toggle{min-height:48px;background:transparent;border:1px solid var(--border2);color:var(--muted);padding:5px 10px;border-radius:var(--radius-md);font-size:12px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
 .bulk-toggle:hover{color:var(--ac2);border-color:var(--ac2)}
 
 /* VOICE INPUT */
@@ -1807,7 +1814,7 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
 .language-settings-panel{display:block;min-width:0}.language-settings-intro{margin-bottom:14px}.language-settings-controls{display:grid;gap:10px;max-width:520px;min-width:0}.language-primary-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(180px,220px);align-items:center;gap:14px;min-width:0}.language-primary-row>span{font-size:13px;font-weight:800;color:var(--text);overflow-wrap:anywhere}.language-primary-row select,.language-override-row select{min-height:48px}.language-follow-copy{padding-left:0}.language-override-toggle{display:grid;grid-template-columns:48px minmax(0,1fr);align-items:center;min-height:48px;gap:8px;color:var(--text);font-size:12px;font-weight:700;cursor:pointer}.language-override-toggle input{width:20px;height:20px;margin:auto;accent-color:var(--accent)}.language-override-help{padding-left:56px}.language-override-row{padding:4px 0 0 56px}.language-override-row[hidden]{display:none}.language-override-row .language-field{max-width:360px}.language-settings-controls small{font-size:11px;line-height:1.45;color:var(--muted);font-weight:500;overflow-wrap:anywhere}.settings-layout.settings-public .language-settings-controls{max-width:680px}.settings-layout.settings-public .language-primary-row{grid-template-columns:minmax(0,520px);gap:6px}.settings-layout.settings-public .language-primary-row select{width:100%}.settings-layout.settings-public .language-override-row .language-field{max-width:520px}
 .account-security-panel{display:block}.account-security-intro{margin-bottom:12px}.account-security-methods{display:grid;border-top:1px solid var(--border)}.account-security-method{display:grid;grid-template-columns:40px minmax(0,1fr) auto;align-items:center;gap:10px;min-height:56px;padding:7px 0;border-bottom:1px solid var(--border);min-width:0}.account-security-provider-icon{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border:1px solid var(--border2);border-radius:50%;font-size:13px;font-weight:900;color:var(--text)}.account-security-copy{display:grid;gap:2px;min-width:0}.account-security-copy strong{font-size:13px;overflow-wrap:anywhere}.account-security-copy span{font-size:11px;line-height:1.4;color:var(--muted);overflow-wrap:anywhere}.account-security-status{display:inline-flex;align-items:center;gap:5px;min-height:32px;color:var(--muted);font-size:11px;font-weight:800;text-align:right}.account-security-status.is-active{color:var(--ok)}.account-security-notice{margin-top:11px;font-size:11px;line-height:1.5;color:var(--muted)}
 .status-badge{display:inline-flex;align-items:center;min-height:32px;padding:5px 9px;border:1px solid var(--border2);border-radius:var(--radius-pill);color:var(--muted);font-size:11px;font-weight:700;text-align:center}
-.ui-state{display:flex;align-items:flex-start;gap:11px;padding:var(--space-4);border:1px solid var(--border);border-radius:var(--radius-md);background:var(--card);min-width:0}.ui-state-icon{font-size:18px;line-height:1.3}.ui-state-copy{flex:1;min-width:0}.ui-state-title{font-weight:800;overflow-wrap:anywhere}.ui-state-detail{margin-top:3px;color:var(--muted);font-size:12px;line-height:1.5}.ui-state-action{min-height:44px;border:1px solid var(--border2);border-radius:var(--radius-md);background:var(--bg);color:var(--text);font:700 12px var(--font);padding:8px 12px}
+.ui-state{display:flex;align-items:flex-start;gap:11px;padding:var(--space-4);border:1px solid var(--border);border-radius:var(--radius-md);background:var(--card);min-width:0}.ui-state-icon{font-size:18px;line-height:1.3}.ui-state-copy{flex:1;min-width:0}.ui-state-title{font-weight:800;overflow-wrap:anywhere}.ui-state-detail{margin-top:3px;color:var(--muted);font-size:12px;line-height:1.5}.ui-state-action{min-height:48px;border:1px solid var(--border2);border-radius:var(--radius-md);background:var(--bg);color:var(--text);font:700 12px var(--font);padding:8px 12px}
 .event-card:focus-visible,.trainer-quick-card:focus-within{border-color:var(--ac2)}
 @media(max-width:600px){.page{padding:var(--space-3)}.settings-panel{align-items:stretch;flex-direction:column;padding:var(--space-3)}.language-field{min-width:0}.language-primary-row{grid-template-columns:1fr;gap:6px}.language-override-help,.language-override-row{padding-left:0}.language-override-row .language-field{max-width:none}.account-security-method{grid-template-columns:40px minmax(0,1fr)}.account-security-status{grid-column:2;text-align:left;min-height:24px}.status-badge{align-self:flex-start}.add-actions>button,.add-actions .image-btn{min-height:44px}.trainer-quick-name{white-space:normal;overflow-wrap:anywhere}}
 @media(max-width:600px){.share-pcard.card-row{padding:6px 8px}}
@@ -1907,8 +1914,6 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
           </div>
           <div class="account-divider"></div>
           <button type="button" class="account-action" id="account-settings-action" onclick="openSettingsPanel('account')">⚙️ <span data-i18n="account.settings">Settings</span></button>
-          <div class="account-section-label" data-i18n="account.tools">Tools</div>
-          <button type="button" class="account-action" id="account-legacy-inventory-action" onclick="openLegacyInventoryTool()">🗄️ <span class="account-action-copy"><span data-i18n="inventory.legacyTitle">Legacy Inventory</span><span class="account-action-meta" data-i18n="inventory.readOnlyBadge">Read-only</span></span></button>
           <div class="account-divider"></div>
           <button type="button" class="account-action signout" id="account-signout-action" onclick="logout()">↪ <span data-i18n="account.signOut">Sign out</span></button>
         </div>
@@ -2128,49 +2133,11 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
       <div class="have-title" id="legacy-inventory-title"></div>
       <div class="have-subtitle" id="legacy-inventory-description"></div>
     </div>
-    <div class="have-toggle-row" style="display:none">
-      <button class="have-toggle-btn active" data-view="mine" onclick="setHaveView('mine')">📦 My inventory</button>
-      <button class="have-toggle-btn" data-view="browse" onclick="setHaveView('browse')">👀 Browse community</button>
+    <div class="legacy-archive-notice" role="note">
+      <span aria-hidden="true">▤</span>
+      <div><strong data-i18n="inventory.archiveTitle">Read-only archive</strong><span data-i18n="inventory.archiveHelp">Existing inventory data remains available to view and export. Adding and editing inventory has retired.</span></div>
     </div>
     <div id="have-mine-view" class="have-view active">
-      <div class="add-form" style="display:none">
-        <div class="add-ttl">+ Add to inventory</div>
-        <div class="frow have-add-row">
-          <div class="ac-wrap">
-            <input type="text" class="ac-input" id="have-ac-input" placeholder="Search Pokémon…" autocomplete="off"
-              oninput="haveAcSearch(this.value)" onkeydown="haveAcKeydown(event)" onfocus="haveAcSearch(this.value)">
-            <input type="hidden" id="have-pmon-sel">
-            <div class="ac-dropdown" id="have-ac-dropdown"></div>
-          </div>
-          <!-- Qty + gender live in one flex pair so they don't render as
-               isolated full-width controls (the old layout made the qty box
-               look like an empty search field). -->
-          <div class="have-add-qty-gender">
-            <label class="have-qty-wrap" title="How many to add">
-              <span class="have-qty-label">Qty</span>
-              <button type="button" class="have-qty-step" onclick="(()=>{const i=document.getElementById('have-qty');i.value=Math.max(1,(parseInt(i.value)||1)-1)})()" aria-label="Decrease quantity">−</button>
-              <input type="number" id="have-qty" min="1" max="999" value="1" aria-label="Quantity" class="have-qty-input">
-              <button type="button" class="have-qty-step" onclick="(()=>{const i=document.getElementById('have-qty');i.value=Math.min(999,(parseInt(i.value)||1)+1)})()" aria-label="Increase quantity">+</button>
-            </label>
-            <div class="have-add-gender-picker" role="group" aria-label="Gender (optional)">
-              <button type="button" class="have-add-gender-btn on" data-gender="" onclick="setHaveAddGender('')" aria-pressed="true" title="Genderless / unspecified (default)">⚥</button>
-              <button type="button" class="have-add-gender-btn" data-gender="m" onclick="setHaveAddGender('m')" aria-pressed="false" title="Male — adds as a separate ♂ entry">♂</button>
-              <button type="button" class="have-add-gender-btn" data-gender="f" onclick="setHaveAddGender('f')" aria-pressed="false" title="Female — adds as a separate ♀ entry">♀</button>
-            </div>
-          </div>
-          <div class="have-return-picker" role="group" aria-label="Return preference">
-            <button type="button" class="hrp-btn any selected" data-mode="any" onclick="setHaveAddMode('any')" title="Open — mirror preferred, but anything from my want list is okay"><span class="hrp-ico">🤲</span><span class="hrp-lbl">Open</span></button>
-            <button type="button" class="hrp-btn mirror" data-mode="mirror" onclick="setHaveAddMode('mirror')" title="Mirror only — strictly same Pokémon/form back"><span class="hrp-ico">🪞</span><span class="hrp-lbl">Mirror</span></button>
-            <button type="button" class="hrp-btn dnb" data-mode="dontNeedBack" onclick="setHaveAddMode('dontNeedBack')" title="Fair trade — comparable rarity from my want list"><span class="hrp-ico">🤝</span><span class="hrp-lbl">Fair trade</span></button>
-            <button type="button" class="hrp-btn giveaway" data-mode="giveaway" onclick="setHaveAddMode('giveaway')" title="Giveaway — bag-space pressure; wishlist/lucky/size offers preferred, but anything is okay"><span class="hrp-ico">📤</span><span class="hrp-lbl">Giveaway</span></button>
-          </div>
-          <input type="hidden" id="have-return-mode" value="any">
-          <button class="bsave" onclick="addInventoryEntry()">Add</button>
-        </div>
-        <div class="have-giveaway-note-row" id="have-giveaway-note-row" style="display:none">
-          <input type="text" id="have-giveaway-note" maxlength="140" placeholder="Optional: what would you ideally take for this? e.g., 'any common Kanto starter'" class="have-giveaway-note-input">
-        </div>
-      </div>
       <div class="mylist-search">
         <span class="mylist-srch-icon" aria-hidden="true">🔍</span>
         <input type="text" data-i18n-placeholder="inventory.filterPlaceholder" data-i18n-aria-label="inventory.filterLabel" placeholder="Filter my inventory…" oninput="renderMyHave(this.value)" id="have-filter" aria-label="Filter inventory">
@@ -2182,41 +2149,7 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
           <button class="bulk-toggle" onclick="exportLegacyInventoryCsv()" id="legacy-inventory-export"></button>
         </span>
       </div>
-      <div class="bulk-bar" id="have-bulk-bar" role="toolbar" data-i18n-aria-label="inventory.bulkActions" aria-label="Bulk inventory actions" style="display:none">
-        <span class="bulk-count" id="have-bulk-count">0 selected</span>
-        <select id="have-bulk-mode-sel" class="bulk-btn" aria-label="Set mode for selected">
-          <option value="">Set mode…</option>
-          <option value="any">🤲 Open</option>
-          <option value="mirror">🪞 Mirror only</option>
-          <option value="dontNeedBack">🤝 Fair trade</option>
-          <option value="giveaway">📤 Giveaway</option>
-        </select>
-        <button class="bulk-btn" onclick="bulkHaveAdjustQty(1)" title="Add 1 to qty of each selected">+1 qty</button>
-        <button class="bulk-btn" onclick="bulkHaveAdjustQty(-1)" title="Subtract 1 from qty of each selected">−1 qty</button>
-        <button class="bulk-btn bulk-del" onclick="bulkHaveDelete()">🗑 <span data-i18n="common.delete">Delete</span></button>
-        <button class="bulk-btn bulk-cancel" onclick="toggleHaveBulkMode()" data-i18n="common.done">Done</button>
-      </div>
       <div id="have-mine-out"></div>
-    </div>
-    <div id="have-browse-view" class="have-view">
-      <div id="owner-inventory-preview-banner" class="owner-preview-banner" style="display:none"></div>
-      <div class="srch"><span class="srch-icon">🔍</span><input type="text" id="have-browse-q" data-i18n-placeholder="inventory.communitySearchPlaceholder" data-i18n-aria-label="inventory.communitySearchLabel" placeholder="Find a Pokémon or trainer…" oninput="queueRenderHaveBrowse()" aria-label="Search community inventory"></div>
-      <div class="filter-bar" style="margin-bottom:10px">
-        <button class="fbtn have-sub-tab on" data-sub="trainer" onclick="setHaveSubTab('trainer')">By Trainer</button>
-        <button class="fbtn have-sub-tab" data-sub="pokemon" onclick="setHaveSubTab('pokemon')">By Pokémon</button>
-        <span class="filter-divider"></span>
-        <span class="filter-label">Match my wants:</span>
-        <button class="fbtn have-match-tgl" onclick="toggleHaveMatchOnly()" aria-pressed="false" id="have-match-btn" title="Only show trainers or Pokémon that match your want list">⭐ Only matches</button>
-      </div>
-      <div class="have-browse-legend" aria-label="Inventory icon legend">
-        <span class="have-browse-legend-label">Icons</span>
-        <span class="have-browse-legend-chip match" title="Matches your wishlist">⭐ Wishlist match</span>
-        <span class="have-browse-legend-chip total" title="Distinct Pokémon/form entries this trainer posted">🎒 Entries</span>
-        <span class="have-browse-legend-chip mirror" title="Same Pokemon/form only">🪞 Mirror</span>
-        <span class="have-browse-legend-chip dnb" title="Comparable rarity from their want list">🤝 Fair trade</span>
-        <span class="have-browse-legend-chip giveaway" title="Bag-space giveaway">📤 Giveaway</span>
-      </div>
-      <div id="have-browse-out"></div>
     </div>
   </div>
 
@@ -2231,33 +2164,25 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
 
   <!-- ADMIN -->
   <div class="page ui-container ui-container-wide" id="tab-admin">
-    <div id="backup-reminder-slot"></div>
-    <div class="admin-actions">
-      <button class="btn-export btn btn-secondary" onclick="exportData()" data-i18n-aria-label="admin.exportBackup" aria-label="Export backup">⬇️ <span data-i18n="admin.exportBackup">Export backup</span></button>
-      <button class="btn-export btn btn-secondary" onclick="triggerRestore()" data-i18n-aria-label="admin.restoreBackup" aria-label="Restore backup">⬆️ <span data-i18n="admin.restoreBackup">Restore backup</span></button>
-      <input type="file" id="restore-file" accept="application/json,.json" style="display:none" onchange="restoreData(this.files?.[0])">
-    </div>
-    <div class="security-box" id="security-panel"></div>
-    <div class="login-audit" id="login-audit-panel" style="display:none"></div>
-    <div class="login-audit" id="community-migration-panel" style="display:none"></div>
-    <div id="pending-requests-section" style="display:none;margin-bottom:16px">
-      <div class="sec" style="margin-top:0;display:flex;align-items:center;gap:6px"><span data-i18n="admin.pendingRequests">Pending requests</span> <span class="notif-badge" id="req-count-badge">0</span></div>
-      <div id="pending-requests-list"></div>
-    </div>
-    <div class="new-user-form">
-      <h3>➕ <span data-i18n="admin.addMember">Add member</span></h3>
-      <div class="frow">
-        <input type="text" id="nu-name" data-i18n-placeholder="login.username" placeholder="Username" style="max-width:180px">
-        <input type="text" id="nu-pin" data-i18n-placeholder="admin.pinPlaceholder" placeholder="Auto-generate or enter PIN" maxlength="6" inputmode="numeric" style="max-width:180px">
-        <label id="nu-admin-wrap" class="admin-role-toggle"><input type="checkbox" id="nu-admin"><span>Admin</span></label>
-      </div>
-      <button class="bsave" onclick="addUser()" style="margin-top:10px" data-i18n="admin.addMember">Add member</button>
-    </div>
-    <div class="login-audit" id="admin-reset-safety-note"></div>
-    <div class="sec" style="margin-top:0" data-i18n="admin.allMembers">All members</div>
-    <div style="overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius-lg)">
-      <table class="utbl"><thead><tr><th data-i18n="admin.trainer">Trainer</th><th data-i18n="admin.activity">Activity</th><th data-i18n="admin.listed">Listed</th><th data-i18n="admin.role">Role</th><th>PIN</th></tr></thead>
-      <tbody id="admin-tbody"></tbody></table>
+    <div class="admin-shell">
+      <header class="admin-header"><div><h1 class="admin-title" data-i18n="admin.title">Admin</h1><p class="admin-subtitle" data-i18n="admin.subtitle">Review members, access, maintenance, and diagnostics without mixing routine scanning with sensitive actions.</p></div></header>
+      <nav class="admin-nav" aria-label="Admin sections" data-i18n-aria-label="admin.sectionsLabel">
+        <button class="admin-nav-button" type="button" data-admin-target="overview" aria-current="page" onclick="setAdminSection('overview')" data-i18n="admin.overview">Overview</button>
+        <button class="admin-nav-button" type="button" data-admin-target="members" onclick="setAdminSection('members')" data-i18n="admin.members">Members</button>
+        <button class="admin-nav-button" type="button" data-admin-target="access" onclick="setAdminSection('access')" data-i18n="admin.accessRoles">Access &amp; Roles</button>
+        <button class="admin-nav-button" type="button" data-admin-target="maintenance" onclick="setAdminSection('maintenance')" data-i18n="admin.maintenance">Maintenance</button>
+        <button class="admin-nav-button" type="button" data-admin-target="diagnostics" onclick="setAdminSection('diagnostics')" data-i18n="admin.diagnostics">Diagnostics</button>
+      </nav>
+      <section class="admin-section" data-admin-section="overview" aria-labelledby="admin-overview-heading"><div class="admin-section-heading"><div><h2 id="admin-overview-heading" data-i18n="admin.overview">Overview</h2><p data-i18n="admin.overviewHelp">A compact view of the member data already loaded for this session.</p></div></div><div class="admin-summary-grid" id="admin-summary-grid"></div></section>
+      <section class="admin-section" data-admin-section="members" aria-labelledby="admin-members-heading" hidden><div class="admin-section-heading"><div><h2 id="admin-members-heading" data-i18n="admin.members">Members</h2><p data-i18n="admin.membersHelp">Scan account readiness, list activity, and current roles. Sensitive actions live in their own sections.</p></div></div><div class="admin-member-list" id="admin-member-list"></div></section>
+      <section class="admin-section" data-admin-section="access" aria-labelledby="admin-access-heading" hidden>
+        <div class="admin-section-heading"><div><h2 id="admin-access-heading" data-i18n="admin.accessRoles">Access &amp; Roles</h2><p data-i18n="admin.accessHelp">Approve access, add members, and change roles deliberately.</p></div></div>
+        <div id="pending-requests-section" style="display:none;margin-bottom:16px"><div class="sec" style="margin-top:0;display:flex;align-items:center;gap:6px"><span data-i18n="admin.pendingRequests">Pending requests</span> <span class="notif-badge" id="req-count-badge">0</span></div><div id="pending-requests-list"></div></div>
+        <div class="new-user-form"><h3>＋ <span data-i18n="admin.addMember">Add member</span></h3><div class="frow"><input type="text" id="nu-name" data-i18n-placeholder="login.username" placeholder="Username" style="max-width:180px"><input type="text" id="nu-pin" data-i18n-placeholder="admin.pinPlaceholder" placeholder="Auto-generate or enter PIN" maxlength="6" inputmode="numeric" style="max-width:180px"><label id="nu-admin-wrap" class="admin-role-toggle"><input type="checkbox" id="nu-admin"><span data-i18n="admin.adminRole">Admin</span></label></div><button class="bsave" onclick="addUser()" style="margin-top:10px" data-i18n="admin.addMember">Add member</button></div>
+        <div class="admin-role-list" id="admin-role-list"></div>
+      </section>
+      <section class="admin-section" data-admin-section="maintenance" aria-labelledby="admin-maintenance-heading" hidden><div class="admin-section-heading"><div><h2 id="admin-maintenance-heading" data-i18n="admin.maintenance">Maintenance</h2><p data-i18n="admin.maintenanceHelp">Account repair and backup tools are separated from routine member review.</p></div></div><div id="backup-reminder-slot"></div><div class="admin-actions"><button class="btn-export btn btn-secondary" onclick="exportData()" data-i18n-aria-label="admin.exportBackup" aria-label="Export backup">⬇ <span data-i18n="admin.exportBackup">Export backup</span></button><button class="btn-export btn btn-secondary" onclick="triggerRestore()" data-i18n-aria-label="admin.restoreBackup" aria-label="Restore backup">⬆ <span data-i18n="admin.restoreBackup">Restore backup</span></button><input type="file" id="restore-file" accept="application/json,.json" style="display:none" onchange="restoreData(this.files?.[0])"></div><div class="login-audit admin-maintenance-note" id="admin-reset-safety-note"></div><div class="admin-maintenance-list" id="admin-maintenance-list"></div></section>
+      <section class="admin-section" data-admin-section="diagnostics" aria-labelledby="admin-diagnostics-heading" hidden><div class="admin-section-heading"><div><h2 id="admin-diagnostics-heading" data-i18n="admin.diagnostics">Diagnostics</h2><p data-i18n="admin.diagnosticsHelp">Reviewed security metadata and owner maintenance diagnostics.</p></div></div><div class="security-box" id="security-panel"></div><div class="login-audit" id="login-audit-panel" style="display:none"></div><div class="login-audit" id="community-migration-panel" style="display:none"></div></section>
     </div>
   </div>
 </div>
@@ -2604,7 +2529,7 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
 <div class="ptr-indicator" id="ptr-indicator" aria-hidden="true">↓</div>
 
 <script>
-window.__POGO_RELEASE_ID='2026-08-05.32';
+window.__POGO_RELEASE_ID='2026-08-05.33';
 window.__pogoBootWatch=setTimeout(function(){
   var visible=['config-pg','login-pg','app'].some(function(id){
     var el=document.getElementById(id);
@@ -2623,61 +2548,61 @@ window.__pogoBootWatch=setTimeout(function(){
   if(err)err.textContent='App scripts did not finish loading. Refresh once; if this stays, send this screenshot.';
 },4000);
 </script>
-<script src="data.js?v=2026-08-05.32"></script>
-<script src="js/domain/priorities.js?v=2026-08-05.32"></script>
-<script src="js/ui/badges.js?v=2026-08-05.32"></script>
-<script src="js/domain/username.js?v=2026-08-05.32"></script>
-<script src="js/domain/priorityValues.js?v=2026-08-05.32"></script>
-<script src="js/domain/scheduleDates.js?v=2026-08-05.32"></script>
-<script src="js/domain/pokemonSearchTerms.js?v=2026-08-05.32"></script>
-<script src="js/domain/pokemonEntryRules.js?v=2026-08-05.32"></script>
-<script src="js/domain/pokemonGoSearchSyntax.js?v=2026-08-05.32"></script>
-<script src="js/domain/searchStrings.js?v=2026-08-05.32"></script>
-<script src="js/ui/stringHtml.js?v=2026-08-05.32"></script>
-<script src="js/domain/scheduleEventRules.js?v=2026-08-05.32"></script>
-<script src="js/domain/scheduleTradeRules.js?v=2026-08-05.32"></script>
-<script src="js/domain/pokemonKeys.js?v=2026-08-05.32"></script>
-<script src="js/domain/spriteSlugs.js?v=2026-08-05.32"></script>
-<script src="js/domain/fuzzyText.js?v=2026-08-05.32"></script>
-<script src="js/domain/autocompleteText.js?v=2026-08-05.32"></script>
-<script src="js/domain/autocompleteMatching.js?v=2026-08-05.32"></script>
-<script src="js/domain/autocompleteRanking.js?v=2026-08-05.32"></script>
-<script src="js/domain/relativeTime.js?v=2026-08-05.32"></script>
-<script src="js/domain/clientRelease.js?v=2026-08-05.32"></script>
-<script src="js/domain/favoriteCardInteractions.js?v=2026-08-05.32"></script>
-<script src="js/domain/trainerDiscovery.js?v=2026-08-05.32"></script>
-<script src="js/domain/eventPresentation.js?v=2026-08-05.32"></script>
-<script src="js/domain/publicSharePublication.js?v=2026-08-05.32"></script>
-<script src="js/domain/trainerPreferences.js?v=2026-08-05.32"></script>
-<script src="js/domain/trainerPreferenceSync.js?v=2026-08-05.32"></script>
-<script src="js/domain/authenticationReadiness.js?v=2026-08-05.32"></script>
-<script src="js/domain/loginDirectory.js?v=2026-08-05.32"></script>
-<script src="js/utils/textSafety.js?v=2026-08-05.32"></script>
-<script src="js/ui/stringPanels.js?v=2026-08-05.32"></script>
-<script src="js/ui/emptyState.js?v=2026-08-05.32"></script>
-<script src="js/i18n/locales/en.js?v=2026-08-05.32"></script>
-<script src="js/i18n/locales/ja.js?v=2026-08-05.32"></script>
-<script src="js/i18n/locales/es.js?v=2026-08-05.32"></script>
-<script src="js/i18n/locales/de.js?v=2026-08-05.32"></script>
-<script src="js/i18n/pokemonNames/catalog.js?v=2026-08-05.32"></script>
-<script src="js/i18n/pokemonNames/variants.js?v=2026-08-05.32"></script>
-<script src="js/i18n/pokemonNames/core.js?v=2026-08-05.32"></script>
-<script src="js/i18n/eventLabels/currentTitles.js?v=2026-08-05.32"></script>
-<script src="js/i18n/eventLabels/core.js?v=2026-08-05.32"></script>
-<script src="js/i18n/core.js?v=2026-08-05.32"></script>
-<script src="js/services/firebaseClient.js?v=2026-08-05.32"></script>
-<script src="js/data/subscriptionManager.js?v=2026-08-05.32"></script>
-<script src="js/data/listenerLifecycle.js?v=2026-08-05.32"></script>
-<script src="js/data/sessionCacheBoundary.js?v=2026-08-05.32"></script>
-<script src="js/data/firebaseReadRegistry.js?v=2026-08-05.32"></script>
-<script src="js/data/currentUserRepository.js?v=2026-08-05.32"></script>
-<script src="js/data/ownedDataCoordinator.js?v=2026-08-05.32"></script>
-<script src="js/data/publicShareRepository.js?v=2026-08-05.32"></script>
-<script src="js/data/trainerHistoryStore.js?v=2026-08-05.32"></script>
-<script src="js/data/trainerPreferencesRepository.js?v=2026-08-05.32"></script>
-<script src="js/data/trainerPreferenceSyncQueue.js?v=2026-08-05.32"></script>
-<script src="js/domain/cacheAdapters.js?v=2026-08-05.32"></script>
-<script src="js/ui/trainerTagPanel.js?v=2026-08-05.32"></script>
+<script src="data.js?v=2026-08-05.33"></script>
+<script src="js/domain/priorities.js?v=2026-08-05.33"></script>
+<script src="js/ui/badges.js?v=2026-08-05.33"></script>
+<script src="js/domain/username.js?v=2026-08-05.33"></script>
+<script src="js/domain/priorityValues.js?v=2026-08-05.33"></script>
+<script src="js/domain/scheduleDates.js?v=2026-08-05.33"></script>
+<script src="js/domain/pokemonSearchTerms.js?v=2026-08-05.33"></script>
+<script src="js/domain/pokemonEntryRules.js?v=2026-08-05.33"></script>
+<script src="js/domain/pokemonGoSearchSyntax.js?v=2026-08-05.33"></script>
+<script src="js/domain/searchStrings.js?v=2026-08-05.33"></script>
+<script src="js/ui/stringHtml.js?v=2026-08-05.33"></script>
+<script src="js/domain/scheduleEventRules.js?v=2026-08-05.33"></script>
+<script src="js/domain/scheduleTradeRules.js?v=2026-08-05.33"></script>
+<script src="js/domain/pokemonKeys.js?v=2026-08-05.33"></script>
+<script src="js/domain/spriteSlugs.js?v=2026-08-05.33"></script>
+<script src="js/domain/fuzzyText.js?v=2026-08-05.33"></script>
+<script src="js/domain/autocompleteText.js?v=2026-08-05.33"></script>
+<script src="js/domain/autocompleteMatching.js?v=2026-08-05.33"></script>
+<script src="js/domain/autocompleteRanking.js?v=2026-08-05.33"></script>
+<script src="js/domain/relativeTime.js?v=2026-08-05.33"></script>
+<script src="js/domain/clientRelease.js?v=2026-08-05.33"></script>
+<script src="js/domain/favoriteCardInteractions.js?v=2026-08-05.33"></script>
+<script src="js/domain/trainerDiscovery.js?v=2026-08-05.33"></script>
+<script src="js/domain/eventPresentation.js?v=2026-08-05.33"></script>
+<script src="js/domain/publicSharePublication.js?v=2026-08-05.33"></script>
+<script src="js/domain/trainerPreferences.js?v=2026-08-05.33"></script>
+<script src="js/domain/trainerPreferenceSync.js?v=2026-08-05.33"></script>
+<script src="js/domain/authenticationReadiness.js?v=2026-08-05.33"></script>
+<script src="js/domain/loginDirectory.js?v=2026-08-05.33"></script>
+<script src="js/utils/textSafety.js?v=2026-08-05.33"></script>
+<script src="js/ui/stringPanels.js?v=2026-08-05.33"></script>
+<script src="js/ui/emptyState.js?v=2026-08-05.33"></script>
+<script src="js/i18n/locales/en.js?v=2026-08-05.33"></script>
+<script src="js/i18n/locales/ja.js?v=2026-08-05.33"></script>
+<script src="js/i18n/locales/es.js?v=2026-08-05.33"></script>
+<script src="js/i18n/locales/de.js?v=2026-08-05.33"></script>
+<script src="js/i18n/pokemonNames/catalog.js?v=2026-08-05.33"></script>
+<script src="js/i18n/pokemonNames/variants.js?v=2026-08-05.33"></script>
+<script src="js/i18n/pokemonNames/core.js?v=2026-08-05.33"></script>
+<script src="js/i18n/eventLabels/currentTitles.js?v=2026-08-05.33"></script>
+<script src="js/i18n/eventLabels/core.js?v=2026-08-05.33"></script>
+<script src="js/i18n/core.js?v=2026-08-05.33"></script>
+<script src="js/services/firebaseClient.js?v=2026-08-05.33"></script>
+<script src="js/data/subscriptionManager.js?v=2026-08-05.33"></script>
+<script src="js/data/listenerLifecycle.js?v=2026-08-05.33"></script>
+<script src="js/data/sessionCacheBoundary.js?v=2026-08-05.33"></script>
+<script src="js/data/firebaseReadRegistry.js?v=2026-08-05.33"></script>
+<script src="js/data/currentUserRepository.js?v=2026-08-05.33"></script>
+<script src="js/data/ownedDataCoordinator.js?v=2026-08-05.33"></script>
+<script src="js/data/publicShareRepository.js?v=2026-08-05.33"></script>
+<script src="js/data/trainerHistoryStore.js?v=2026-08-05.33"></script>
+<script src="js/data/trainerPreferencesRepository.js?v=2026-08-05.33"></script>
+<script src="js/data/trainerPreferenceSyncQueue.js?v=2026-08-05.33"></script>
+<script src="js/domain/cacheAdapters.js?v=2026-08-05.33"></script>
+<script src="js/ui/trainerTagPanel.js?v=2026-08-05.33"></script>
 <script>
 let initializeApp,getDatabase,ref,set,get,onValue,update,getAuth,signInWithEmailAndPassword,createUserWithEmailAndPassword,firebaseSignOut,updatePassword,deleteUser,onAuthStateChanged;
 let firebaseSdkPromise=null;
@@ -8402,14 +8327,14 @@ function loginAuditRows(){
     const expectedVersion=authVersionForUser(d);
     const expectedEmail=authEmail(u,expectedVersion);
     const issues=[];
-    if(!d.authUid)issues.push('missing auth UID');
-    if(!d.authEmail)issues.push('missing auth email');
-    if(d.authEmail&&d.authEmail!==expectedEmail)issues.push('email mismatch');
-    if(!dir)issues.push('missing login directory');
+    if(!d.authUid)issues.push(i18nCore.t('admin.missingAuthUid'));
+    if(!d.authEmail)issues.push(i18nCore.t('admin.missingEmail'));
+    if(d.authEmail&&d.authEmail!==expectedEmail)issues.push(i18nCore.t('admin.emailMismatch'));
+    if(!dir)issues.push(i18nCore.t('admin.missingDirectory'));
     else{
-      if(!dir.authReady)issues.push('directory not ready');
-      if(dir.authEmail&&d.authEmail&&dir.authEmail!==d.authEmail)issues.push('directory email mismatch');
-      if(parseInt(dir.authVersion||1)!==expectedVersion)issues.push('directory version mismatch');
+      if(!dir.authReady)issues.push(i18nCore.t('admin.directoryNotReady'));
+      if(dir.authEmail&&d.authEmail&&dir.authEmail!==d.authEmail)issues.push(i18nCore.t('admin.directoryEmailMismatch'));
+      if(parseInt(dir.authVersion||1)!==expectedVersion)issues.push(i18nCore.t('admin.directoryVersionMismatch'));
     }
     const needsPin=!d.authUid||!d.authEmail;
     return{u,d,dir,issues,needsPin};
@@ -8427,11 +8352,11 @@ function renderLoginAudit(){
   el.innerHTML=`
     <div class="login-audit-head">
       <div>
-        <div class="login-audit-title">Login repair audit · ${rows.length}</div>
-        <div class="login-audit-sub">Finds members whose Firebase Auth metadata or public login directory is incomplete, which can hide names from sign-in or break PIN changes.</div>
+        <div class="login-audit-title">${escHtml(i18nCore.t('admin.loginAuditTitle',{count:i18nCore.formatNumber(rows.length)}))}</div>
+        <div class="login-audit-sub">${escHtml(i18nCore.t('admin.loginAuditHelp'))}</div>
       </div>
       <div class="login-audit-actions">
-        ${dirOnly?`<button class="rpin" onclick="repairLoginDirectories()">Repair ${dirOnly} directory-only</button>`:''}
+        ${dirOnly?`<button class="rpin" onclick="repairLoginDirectories()">${escHtml(i18nCore.t('admin.repairDirectoryOnly',{count:i18nCore.formatNumber(dirOnly)}))}</button>`:''}
       </div>
     </div>
     <div class="login-audit-list">
@@ -8440,7 +8365,7 @@ function renderLoginAudit(){
         return`<div class="login-audit-row">
           <div class="login-audit-user">${escHtml(r.u)}</div>
           <div class="login-audit-issues">${r.issues.map(x=>`<span class="login-audit-chip">${escHtml(x)}</span>`).join('')}</div>
-          <button class="rpin" onclick="${r.needsPin?`repairAccount('${su}')`:`repairLoginDirectory('${su}')`}">${r.needsPin?'Repair + PIN':'Repair directory'}</button>
+          <button class="rpin" onclick="${r.needsPin?`repairAccount('${su}')`:`repairLoginDirectory('${su}')`}">${escHtml(i18nCore.t(r.needsPin?'admin.repairWithPin':'admin.repairDirectory'))}</button>
         </div>`;
       }).join('')}
     </div>`;
@@ -9025,8 +8950,41 @@ async function repairLoginDirectories(){
 }
 
 // ── ADMIN ─────────────────────────────────────────────────────
+let adminSection='overview';
+const ADMIN_SECTIONS=Object.freeze(['overview','members','access','maintenance','diagnostics']);
+function setAdminSection(section,{focus=false}={}){
+  adminSection=ADMIN_SECTIONS.includes(section)?section:'overview';
+  document.querySelectorAll('[data-admin-target]').forEach(button=>{
+    const active=button.dataset.adminTarget===adminSection;
+    if(active)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current');
+  });
+  document.querySelectorAll('[data-admin-section]').forEach(panel=>{panel.hidden=panel.dataset.adminSection!==adminSection;});
+  if(focus)document.querySelector(`[data-admin-section="${adminSection}"] h2`)?.focus?.({preventScroll:true});
+}
+function adminRelativeTime(timestamp){
+  return timestamp?i18nCore.relativeTimeFromTimestamp(timestamp):i18nCore.t('admin.never');
+}
+function adminUserRows(){
+  const iAmOwner=allData.users?.[cur]?.isOwner||cur===OWNER;
+  return Object.entries(allData.users||{}).sort((a,b)=>
+    lastLoginTime(b[0],b[1])-lastLoginTime(a[0],a[1])||alphaCompare(a[0],b[0])
+  ).map(([u,d])=>{
+    const listed=Object.keys(allData.wishlist?.[u]||{}).length;
+    const updated=d.lastUpdated,viewed=d.lastSeen||(d.authUid&&allData.authIndex?.[d.authUid]?.lastSeen);
+    const dir=allData.loginDirectory?.[u]||{};
+    const authOk=!!(d.authUid&&d.authEmail&&dir.authReady);
+    const authIssues=[
+      !d.authUid?i18nCore.t('admin.missingAuthUid'):'',
+      !d.authEmail?i18nCore.t('admin.missingEmail'):'',
+      !dir.authReady?i18nCore.t('admin.directoryNotReady'):''
+    ].filter(Boolean);
+    const owner=u===OWNER||d.isOwner;
+    const admin=d.isAdmin&&!owner;
+    return{u,d,listed,updated,viewed,authOk,authIssues,owner,admin,canChangeRole:iAmOwner&&u!==cur&&u!==OWNER,canMaintain:iAmOwner||(cur!==OWNER&&!admin&&!owner),established:!!d.authUid};
+  });
+}
 function renderAdmin(){
-  const el=document.getElementById('admin-tbody');if(!el)return;
+  const memberList=document.getElementById('admin-member-list');if(!memberList)return;
   renderSecurityPanel();
   renderLoginAudit();
   renderCommunityMigrationPanel();
@@ -9037,59 +8995,43 @@ function renderAdmin(){
   if(adminInput&&!iAmOwner)adminInput.checked=false;
   const resetSafetyNote=document.getElementById('admin-reset-safety-note');
   if(resetSafetyNote)resetSafetyNote.textContent=i18nCore.t('admin.establishedResetUnavailable');
-  const users=Object.entries(allData.users||{}).sort((a,b)=>
-    lastLoginTime(b[0],b[1])-lastLoginTime(a[0],a[1])||alphaCompare(a[0],b[0])
-  );
-  el.innerHTML=users.map(([u,d])=>{
-    const wc=Object.keys(allData.wishlist?.[u]||{}).length;
-    const lu=d.lastUpdated,ls=d.lastSeen||(d.authUid&&allData.authIndex?.[d.authUid]?.lastSeen);
-    const luColor=freshnessColor(freshnessClass(lu));
-    const dir=allData.loginDirectory?.[u]||{};
-    const authOk=!!(d.authUid&&d.authEmail&&dir.authReady);
-    const authIssues=[
-      !d.authUid?i18nCore.t('admin.missingAuthUid'):'',
-      !d.authEmail?i18nCore.t('admin.missingEmail'):'',
-      !dir.authReady?i18nCore.t('admin.directoryNotReady'):''
-    ].filter(Boolean);
-    const canPromote=iAmOwner&&u!==cur&&u!==OWNER;
-    const isOwnerRow=u===OWNER||d.isOwner;
-    const isAdmin=d.isAdmin&&!isOwnerRow;
-    const establishedResetBlocked=!!d.authUid;
-    // Only owner can reset admin PINs (fix: admin reset restriction)
-    const canReset=iAmOwner||(cur!==OWNER&&!isAdmin&&!isOwnerRow);
-    const repairTitle=canReset
-      ?i18nCore.t(authOk?'admin.repairLogin':'admin.repairOrReset')
-      :i18nCore.t('admin.ownerRepairOnly');
-    return`<tr>
-      <td>
-        <div style="display:flex;align-items:center;gap:7px">
-          <div class="av" style="width:24px;height:24px;font-size:9px;border:2px solid ${luColor}">${u.slice(0,2).toUpperCase()}</div>
-          <div>
-            <div style="font-weight:500">${u}</div>
-            ${d.friendCode?`<div style="font-family:var(--mono);font-size:10px;color:var(--muted)">${d.friendCode}</div>`:''}
-            <div class="acct-mini">
-              <span class="acct-pill ${authOk?'ok':'warn'}">${escHtml(i18nCore.t(authOk?'admin.loginReady':'admin.needsRepair'))}</span>
-              ${authIssues.length?`<span>${escHtml(authIssues.join(' · '))}</span>`:''}
-            </div>
-          </div>
-        </div>
-      </td>
-      <td>
-        <div style="font-size:11px;color:${luColor}">✏️ ${freshnessLabel(lu)}</div>
-        <div style="font-size:10px;color:var(--muted)">👁 ${freshnessLabel(ls)}</div>
-      </td>
-      <td><span class="cb">${wc}</span></td>
-      <td>
-        ${isOwnerRow?`<span class="ab" style="background:rgba(168,139,250,.15);color:var(--ac2);border-color:rgba(168,139,250,.3)">${escHtml(i18nCore.t('admin.owner'))}</span>`
-          :isAdmin?`<span class="ab">Admin</span>${canPromote?`<button class="rpin" style="margin-left:6px" onclick="toggleAdmin('${u}',false)">${escHtml(i18nCore.t('admin.demote'))}</button>`:''}`
-          :`<span style="color:var(--muted);font-size:12px">${escHtml(i18nCore.t('admin.member'))}</span>${canPromote?`<button class="rpin" style="margin-left:6px" onclick="toggleAdmin('${u}',true)">→ Admin</button>`:''}`}
-      </td>
-      <td>
-        <button class="rpin" onclick="openReset('${u}')" ${canReset&&!establishedResetBlocked?'':` disabled title="${escAttr(establishedResetBlocked?i18nCore.t('admin.establishedResetUnavailable'):i18nCore.t('admin.ownerResetOnly'))}"`}>${escHtml(i18nCore.t('admin.resetAction'))}</button>
-        <button class="rpin" onclick="repairAccount('${u}')" ${canReset?'':'disabled'} title="${escAttr(repairTitle)}">${escHtml(i18nCore.t('admin.repair'))}</button>
-      </td>
-    </tr>`;
+  const users=adminUserRows();
+  const summary=document.getElementById('admin-summary-grid');
+  const admins=users.filter(user=>user.owner||user.admin).length;
+  const ready=users.filter(user=>user.authOk).length;
+  const activeLists=users.filter(user=>user.listed>0).length;
+  if(summary)summary.innerHTML=[
+    ['admin.members',users.length],['admin.admins',admins],['admin.loginReadyAccounts',ready],['admin.activeLists',activeLists]
+  ].map(([key,value])=>`<div class="admin-summary-card"><span class="admin-summary-value">${escHtml(i18nCore.formatNumber(value))}</span><span class="admin-summary-label">${escHtml(i18nCore.t(key))}</span></div>`).join('');
+  memberList.innerHTML=users.length?users.map(user=>{
+    const roleKey=user.owner?'admin.owner':user.admin?'admin.adminRole':'admin.member';
+    const roleClass=user.owner?' owner':user.admin?' admin':'';
+    const activityColor=freshnessColor(freshnessClass(user.updated));
+    return`<article class="admin-member-row">
+      <div class="admin-member-identity"><div class="av" style="width:36px;height:36px;font-size:11px;border:2px solid ${activityColor}">${escHtml(user.u.slice(0,2).toUpperCase())}</div><div class="admin-member-copy"><div class="admin-member-name">${escHtml(user.u)}</div>${user.d.friendCode?`<div class="admin-member-friend">${escHtml(user.d.friendCode)}</div>`:''}</div></div>
+      <div class="admin-member-status"><span class="acct-pill ${user.authOk?'ok':'warn'}">${escHtml(i18nCore.t(user.authOk?'admin.loginReady':'admin.needsRepair'))}</span>${user.authIssues.length?`<span class="type-meta">${escHtml(user.authIssues.join(' · '))}</span>`:''}</div>
+      <div class="admin-member-meta"><span>${escHtml(i18nCore.t('admin.listEntries',{count:i18nCore.formatNumber(user.listed)}))}</span><span>${escHtml(i18nCore.t('admin.updated',{time:adminRelativeTime(user.updated)}))}</span><span>${escHtml(i18nCore.t('admin.viewed',{time:adminRelativeTime(user.viewed)}))}</span></div>
+      <span class="admin-role-badge${roleClass}">${escHtml(i18nCore.t(roleKey))}</span>
+    </article>`;
+  }).join(''):`<div class="admin-empty">${escHtml(i18nCore.t('admin.noMembers'))}</div>`;
+  const roleList=document.getElementById('admin-role-list');
+  if(roleList)roleList.innerHTML=users.map(user=>{
+    const su=user.u.replace(/'/g,"\\'").replace(/"/g,'&quot;');
+    const roleKey=user.owner?'admin.owner':user.admin?'admin.adminRole':'admin.member';
+    const roleClass=user.owner?' owner':user.admin?' admin':'';
+    const action=user.canChangeRole?`<button class="rpin ${user.admin?'btn-destructive':''}" type="button" onclick="toggleAdmin('${su}',${user.admin?'false':'true'})">${escHtml(i18nCore.t(user.admin?'admin.removeAdmin':'admin.makeAdmin'))}</button>`:'';
+    return`<article class="admin-role-row"><div class="admin-role-copy"><strong>${escHtml(user.u)}</strong><span>${escHtml(i18nCore.t(user.owner?'admin.ownerProtected':'admin.roleHelp'))}</span></div><span class="admin-role-badge${roleClass}">${escHtml(i18nCore.t(roleKey))}</span><div class="admin-role-actions">${action}</div></article>`;
   }).join('');
+  const maintenanceList=document.getElementById('admin-maintenance-list');
+  if(maintenanceList)maintenanceList.innerHTML=users.map(user=>{
+    const su=user.u.replace(/'/g,"\\'").replace(/"/g,'&quot;');
+    const repairTitle=user.canMaintain?i18nCore.t(user.authOk?'admin.repairLogin':'admin.repairOrReset'):i18nCore.t('admin.ownerRepairOnly');
+    const resetAction=user.canMaintain&&!user.established?`<button class="rpin" type="button" onclick="openReset('${su}')">${escHtml(i18nCore.t('admin.resetPin'))}</button>`:'';
+    const repairAction=user.canMaintain?`<button class="rpin" type="button" onclick="repairAccount('${su}')" title="${escAttr(repairTitle)}">${escHtml(i18nCore.t('admin.repairAccount'))}</button>`:'';
+    const explanation=user.established?i18nCore.t('admin.secureRepairRequired'):i18nCore.t('admin.firstUseResetAvailable');
+    return`<article class="admin-maintenance-row"><div class="admin-maintenance-copy"><strong>${escHtml(user.u)}</strong><span>${escHtml(explanation)}</span></div><span class="acct-pill ${user.authOk?'ok':'warn'}">${escHtml(i18nCore.t(user.authOk?'admin.loginReady':'admin.needsRepair'))}</span><div class="admin-maintenance-actions">${resetAction}${repairAction}</div></article>`;
+  }).join('');
+  setAdminSection(adminSection);
 }
 
 async function repairAccount(u){
@@ -9103,7 +9045,7 @@ async function repairAccount(u){
   const needsPin=!target.authUid;
   let pin='';
   if(needsPin){
-    pin=prompt(`${u} is missing a Firebase Auth link.\n\nEnter a new 6-digit PIN to repair the account and give them a fresh login:`,generatedFirstTimePin())||'';
+    pin=prompt(i18nCore.t('admin.repairPrompt',{trainer:u}),generatedFirstTimePin())||'';
     if(!pin)return;
     pin=pin.trim();
     if(!isSixDigitPin(pin)){toast(i18nCore.t('validation.pinSixDigits'));return;}
@@ -9126,8 +9068,9 @@ function toggleAdmin(u,makeAdmin){
   const iAmOwner=allData.users?.[cur]?.isOwner||cur===OWNER;
   if(!iAmOwner){toast(i18nCore.t('admin.ownerRoleOnly'));return;}
   if(u===OWNER){toast(i18nCore.t('admin.cannotChangeOwner'));return;}
+  if(!confirm(i18nCore.t('admin.roleChangeConfirm',{trainer:u,role:i18nCore.t(makeAdmin?'admin.adminRole':'admin.member')})))return;
   writeUser(u,{isAdmin:makeAdmin});
-  toast(i18nCore.t('admin.roleChanged',{trainer:u,role:i18nCore.t(makeAdmin?'admin.admin':'admin.member')}));renderAdmin();
+  toast(i18nCore.t('admin.roleChanged',{trainer:u,role:i18nCore.t(makeAdmin?'admin.adminRole':'admin.member')}));renderAdmin();
 }
 async function addUser(){
   const rawName=document.getElementById('nu-name').value.trim();
@@ -14356,7 +14299,7 @@ Object.assign(window,{
   addEntry,addToTrayFromAc,removeFromAddTray,clearAddTray,confirmAddTray,renderAddTray,setPri,setNotes,setLucky,setXxl,setXxs,removeEntry,doUndo,copyStr,
   exportMyListImage,
   dragStart,dragOver,dragDrop,dragEnd,
-  addUser,openReset,confirmReset,repairAccount,repairLoginDirectory,repairLoginDirectories,toggleAdmin,exportData,triggerRestore,restoreData,
+  addUser,openReset,confirmReset,repairAccount,repairLoginDirectory,repairLoginDirectories,toggleAdmin,setAdminSection,exportData,triggerRestore,restoreData,
   saveProfile,openModal,closeModal,renderStrings,renderBrowse,setStrList,
   showRequestForm,hideRequestForm,submitRequest,approveRequest,copyApprovedLogin,denyRequest,
   acSearch,acSelect,acKeydown,formatFc,toggleStrUser,toggleComboStrings,renderMyList,

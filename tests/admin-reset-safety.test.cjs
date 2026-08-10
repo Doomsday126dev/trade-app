@@ -56,11 +56,13 @@ test('direct confirmReset invocation cannot provision or rewrite an established 
   assert.equal(context.rpinTarget,null);
 });
 
-test('Admin rendering disables established Reset and uses the translated explanation',()=>{
+test('Admin maintenance omits legacy Reset for established accounts and explains secure repair',()=>{
+  const rows=source.slice(source.indexOf('function adminUserRows('),source.indexOf('function renderAdmin('));
   const render=source.slice(source.indexOf('function renderAdmin('),source.indexOf('async function repairAccount('));
-  assert.match(render,/const establishedResetBlocked=!!d\.authUid/);
-  assert.match(render,/canReset&&!establishedResetBlocked/);
-  assert.match(render,/admin\.establishedResetUnavailable/);
+  assert.match(rows,/established:!!d\.authUid/);
+  assert.match(render,/user\.canMaintain&&!user\.established/);
+  assert.match(render,/admin\.secureRepairRequired/);
+  assert.doesNotMatch(render,/disabled[^>]*admin\.establishedResetUnavailable/);
   assert.match(source,/id="admin-reset-safety-note"/);
 });
 

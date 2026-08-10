@@ -38,11 +38,11 @@ test('contextual trainer-first guidance is visible without enabling the retired 
   assert.match(tour,/if\(TRAINER_FIRST_INTERIM_ENABLED\)return/);
 });
 
-test('Legacy Inventory is an Account Tools read-only route and no longer a tab or shortcut',()=>{
+test('Legacy Inventory is a Settings App & Data read-only route and no longer a tab or shortcut',()=>{
   const tabs=block('<div class="tabs" role="tablist"','<!-- BROWSE -->');
   assert.doesNotMatch(tabs,/data-tab="have"|Legacy Inventory/);
-  assert.match(html,/id="account-legacy-inventory-action"/);
-  assert.match(html,/data-i18n="inventory\.readOnlyBadge"/);
+  assert.doesNotMatch(html,/id="account-legacy-inventory-action"/);
+  assert.match(html,/onclick="openSettingsTool\('inventory'\)"/);
   assert.match(html,/function openLegacyInventoryTool\(\)\{closeAccountMenu\(false\);switchTab\('have'\);\}/);
   assert.match(html,/else if\(action==='have'\)/);
   assert.equal(manifest.shortcuts.some(item=>item.url.includes('action=have')),false);

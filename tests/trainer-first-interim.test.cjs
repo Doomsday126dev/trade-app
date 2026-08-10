@@ -25,9 +25,10 @@ test('interim navigation exposes trainer-first retained surfaces only',()=>{
   assert.match(tabs,/Events/);
   assert.deepEqual(manifest.shortcuts.slice(2).map(item=>item.name),['Find Trainer','Pokémon GO Events']);
   const account=between('<div class="account-popover"','</div>\n      </div>');
-  assert.match(account,/account-legacy-inventory-action/);
-  assert.match(account,/openLegacyInventoryTool\(\)/);
-  assert.match(account,/inventory\.readOnlyBadge/);
+  assert.doesNotMatch(account,/account-legacy-inventory-action|openLegacyInventoryTool\(\)|Legacy Inventory/);
+  const settings=between('data-settings-section="tools"','data-settings-section="data"');
+  assert.match(settings,/openSettingsTool\('inventory'\)/);
+  assert.match(settings,/nav\.legacyInventory/);
 });
 
 test('exact owned mode is active and startup has no broad private listeners',()=>{
@@ -96,6 +97,10 @@ test('Legacy Inventory is read-only and export does not write Firebase',()=>{
   assert.doesNotMatch(exportSource,/queueSync|set\(|update\(|writeHave/);
   assert.match(source,/else if\(action==='have'\)\{finalTab='have';switchTab\(finalTab,\{render:false\}\);\}/);
   assert.match(source,/function openLegacyInventoryTool\(\)\{closeAccountMenu\(false\);switchTab\('have'\);\}/);
+  const archive=between('<!-- HAVE (Inventory) -->','<!-- SCHEDULE -->');
+  assert.match(archive,/inventory\.archiveTitle/);
+  assert.match(archive,/legacy-inventory-export/);
+  assert.doesNotMatch(archive,/have-ac-input|have-toggle-row|have-bulk-bar|have-browse-view|addInventoryEntry/);
 });
 
 test('Events bypasses personal schedule, trade, reserved, and quota rendering',()=>{

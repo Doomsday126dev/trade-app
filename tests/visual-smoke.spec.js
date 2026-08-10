@@ -47,13 +47,6 @@ async function signIn(page) {
   }
 }
 
-async function openInventoryBrowse(page) {
-  await page.getByText('Inventory', { exact: false }).first().click();
-  await expect(page.locator('#have-mine-view')).toBeVisible();
-  await page.locator('.have-toggle-btn[data-view="browse"]').click();
-  await expect(page.locator('#have-browse-out')).toBeVisible();
-}
-
 async function openMainTab(page, tab) {
   await page.locator(`.tab[data-tab="${tab}"]`).click();
   await expect(page.locator(`#tab-${tab}`)).toBeVisible();
@@ -1365,14 +1358,81 @@ test.describe('visual smoke', () => {
     await expect(page.locator('#have-mine-view')).toBeVisible();
     await expect(page.locator('#have-mine-out')).toBeVisible();
     await expect(page.locator('#legacy-inventory-export')).toBeVisible();
-    await expect(page.locator('.have-toggle-row')).toBeHidden();
+    await expect(page.locator('.legacy-archive-notice')).toBeVisible();
+    await expect(page.locator('.have-toggle-row')).toHaveCount(0);
   });
 
   test('legacy inventory editing controls stay retired', async ({ page }) => {
     await signIn(page);
     await openMainTab(page, 'have');
-    await expect(page.locator('#have-ac-input')).toBeHidden();
+    await expect(page.locator('#have-ac-input, #have-bulk-bar, #have-browse-view')).toHaveCount(0);
     await expect(page.locator('#legacy-inventory-export')).toBeVisible();
+  });
+
+  test('Admin IA remains scannable across responsive widths and locales',async({page})=>{
+    await page.goto(`./?admin-ia=${Date.now()}`,{waitUntil:'domcontentloaded'});
+    await isolateAuthenticatedMyListFixture(page,{username:'Doomsday126',uid:'uid-admin-fixture'});
+    await page.evaluate(()=>{
+      const longName='TrainerNameThatIsDeliberatelyLongForAdministrativeScanning';
+      allData=normalizeData({
+        users:{
+          Doomsday126:{isOwner:true,isAdmin:true,authUid:'uid-admin-fixture',authEmail:'owner@example.invalid',friendCode:'1111 2222 3333',lastUpdated:Date.now()-3600000,lastSeen:Date.now()-1800000},
+          AdminFixture:{isAdmin:true,authUid:'uid-admin',authEmail:'admin@example.invalid',friendCode:'4444 5555 6666',lastUpdated:Date.now()-86400000,lastSeen:Date.now()-7200000},
+          [longName]:{authUid:'uid-member',authEmail:'member@example.invalid',friendCode:'7777 8888 9999',lastUpdated:Date.now()-604800000,lastSeen:Date.now()-172800000},
+          FirstUseFixture:{friendCode:'0000 1111 2222'}
+        },
+        loginDirectory:{
+          Doomsday126:{authReady:true},AdminFixture:{authReady:true},[longName]:{authReady:true},FirstUseFixture:{authReady:false}
+        },
+        authIndex:{'uid-admin-fixture':{lastSeen:Date.now()-1800000},'uid-admin':{lastSeen:Date.now()-7200000},'uid-member':{lastSeen:Date.now()-172800000}},
+        wishlist:{Doomsday126:{Pikachu:'H'},AdminFixture:{Eevee:'M'},[longName]:{Bulbasaur:'L',Charmander:'H'}},
+        dynamax:{},gmax:{},costumes:{},requests:{},communities:{},memberships:{},healthChecks:{},securityEvents:{}
+      });
+      cur='Doomsday126';auth={currentUser:{uid:'uid-admin-fixture'}};
+      document.querySelectorAll('.page').forEach(node=>node.classList.remove('active'));
+      document.getElementById('tab-admin').classList.add('active');
+      renderAdmin();
+    });
+    const widths=[320,375,390,430,768,1024,1440];
+    const locales=['ja','de','es','en','de','ja','en'];
+    for(let index=0;index<widths.length;index++){
+      await page.setViewportSize({width:widths[index],height:Math.min(800,Math.max(420,widths[index]))});
+      await page.evaluate(locale=>{changeInterfaceLocale(locale);renderAdmin();},locales[index]);
+      for(const section of ['overview','members','access','maintenance','diagnostics']){
+        await page.evaluate(section=>setAdminSection(section),section);
+        await expect(page.locator(`[data-admin-section="${section}"]`)).toBeVisible();
+        expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
+      }
+      const heights=await page.evaluate(()=>[...document.querySelectorAll('.admin-nav-button,.admin-role-actions button,.admin-maintenance-actions button,.admin-actions button')]
+        .filter(control=>control.getClientRects().length)
+        .map(control=>control.getBoundingClientRect().height));
+      for(const height of heights)expect(height).toBeGreaterThanOrEqual(48);
+    }
+    await page.evaluate(()=>setAdminSection('members'));
+    await expect(page.locator('.admin-member-row')).toHaveCount(4);
+    await expect(page.locator('.admin-member-row').nth(2)).toContainText(/Updated|Aktualisiert|更新|Actualizado/);
+    await page.evaluate(()=>setAdminSection('maintenance'));
+    await expect(page.locator('.admin-maintenance-row').filter({hasText:'FirstUseFixture'}).getByRole('button')).toHaveCount(2);
+    await expect(page.locator('.admin-maintenance-row').filter({hasText:'AdminFixture'}).getByRole('button')).toHaveCount(1);
+  });
+
+  test('Legacy Inventory fixture exposes only archive filtering and export',async({page})=>{
+    await page.goto(`./?legacy-archive=${Date.now()}`,{waitUntil:'domcontentloaded'});
+    await isolateAuthenticatedMyListFixture(page,{username:'ArchiveFixture',uid:'uid-archive-fixture'});
+    await page.evaluate(()=>{
+      allData=normalizeData({users:{ArchiveFixture:{}},have:{ArchiveFixture:{Pikachu:{qty:2}}},wishlist:{ArchiveFixture:{}},dynamax:{},gmax:{},costumes:{}});
+      document.querySelectorAll('.page').forEach(node=>node.classList.remove('active'));
+      document.getElementById('tab-have').classList.add('active');
+      renderInterimProductLabels();renderMyHave('');
+    });
+    await expect(page.locator('.legacy-archive-notice')).toBeVisible();
+    await expect(page.locator('#have-filter')).toBeVisible();
+    await expect(page.locator('#legacy-inventory-export')).toBeVisible();
+    await expect(page.locator('#have-ac-input, #have-bulk-bar, #have-browse-view, .have-toggle-row')).toHaveCount(0);
+    for(const viewport of [{width:390,height:420},{width:390,height:300}]){
+      await page.setViewportSize(viewport);
+      expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
+    }
   });
 
   test('events renders responsive grouped cards', async ({ page }) => {

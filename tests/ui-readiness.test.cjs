@@ -55,6 +55,8 @@ test('Settings is removed from primary navigation and uses routed desktop plus d
 
 test('account and Settings controls expose 48px minimum touch targets',()=>{
   assert.match(html,/\.account-trigger\{[^}]*min-width:48px;min-height:48px/);
+  assert.match(html,/\.account-action\{[^}]*min-height:48px/);
+  assert.match(html,/\.local-settings-trigger\{[^}]*min-height:48px/);
   assert.match(html,/\.settings-modal-close\{[^}]*width:48px;height:48px;min-width:48px;min-height:48px/);
 });
 
@@ -196,7 +198,9 @@ test('localized Admin and dialog surfaces preserve bounded responsive geometry',
     'data-i18n="settings.profileGroupPokemonGo"','data-i18n="settings.profileGroupAbout"',
     "i18nCore.t('safeTransfer.limitWarning'",'data-i18n="specialBoard.description"'
   ])assert.ok(html.includes(marker),marker);
-  assert.match(html,/overflow-x:auto;border:1px solid var\(--border\)/);
+  assert.match(html,/\.admin-member-row\{display:grid/);
+  assert.match(html,/@media\(max-width:600px\)\{\.admin-header/);
+  assert.match(html,/\.admin-nav-button\{[^}]*min-height:48px/);
   assert.match(html,/\.modal\{[^}]*overflow-y:auto/);
   assert.match(html,/\.health-actions\{[^}]*flex-wrap:wrap/);
   assert.match(html,/\.export-menu-item\{[^}]*white-space:normal/);
