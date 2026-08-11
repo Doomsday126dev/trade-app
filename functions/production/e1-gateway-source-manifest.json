@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "environment": "production",
+  "projectId": "trade-list-a4297",
+  "region": "us-central1",
+  "sourceRoot": "functions/e1-gateway",
+  "sourceCommitSha": "2effb61b706769768952d5f979c4df7e0dfd4646",
+  "sourceFingerprint": "09f05caf0624da66f69e37bf34e75e4594a7ef225594f10954b8523400a3729d",
+  "sourceFiles": [
+    {
+      "path": "gatewayCore.js",
+      "sha256": "507edba953b776248bd9e58ab1781567da1c70842cb5d006afadfa6014b6b343"
+    },
+    {
+      "path": "index.js",
+      "sha256": "2a293e4ec7456712522e9512079e9c22224b9cfcbff505846a401fadfc091f11"
+    },
+    {
+      "path": "package-lock.json",
+      "sha256": "ac299673b01d60351195bbea2cc936f1c9f889e2390bc400957f3beb2d7b48b5"
+    },
+    {
+      "path": "package.json",
+      "sha256": "2a4284bbaa9d9292920a222f976f1e1bc44823cf503cded8a4a676d21e6a85d0"
+    }
+  ],
+  "entrypointFile": "index.js",
+  "expectedExports": [
+    "readE1AccountFoundation",
+    "reserveE1TrainerHandle"
+  ],
+  "runtime": "nodejs22",
+  "runtimeServiceAccount": "e1-authority-gateway@trade-list-a4297.iam.gserviceaccount.com",
+  "authorityUrl": "https://e1-identity-authority-production-uc.a.run.app/",
+  "authorityAudience": "https://e1-identity-authority-production-uc.a.run.app",
+  "appCheckMode": "monitor",
+  "rateLimitPolicy": "firestore-rolling-v1",
+  "memory": "256Mi",
+  "timeoutSeconds": 30,
+  "maxInstances": 2,
+  "concurrency": 1
+}
