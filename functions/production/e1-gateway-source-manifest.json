@@ -31,8 +31,6 @@
   ],
   "runtime": "nodejs22",
   "runtimeServiceAccount": "e1-authority-gateway@trade-list-a4297.iam.gserviceaccount.com",
-  "authorityUrl": "https://e1-identity-authority-production-uc.a.run.app/",
-  "authorityAudience": "https://e1-identity-authority-production-uc.a.run.app",
   "appCheckMode": "monitor",
   "rateLimitPolicy": "firestore-rolling-v1",
   "memory": "256Mi",

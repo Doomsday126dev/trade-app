@@ -16,8 +16,8 @@ function productionEnvironment(overrides = {}) {
     APP_ENVIRONMENT: 'production',
     FIREBASE_PROJECT_ID: 'trade-list-a4297',
     SERVICE_REGION: 'us-central1',
-    E1_AUTHORITY_URL: 'https://e1-identity-authority-production-uc.a.run.app/',
-    E1_AUTHORITY_AUDIENCE: 'https://e1-identity-authority-production-uc.a.run.app',
+    E1_AUTHORITY_URL: 'https://e1-identity-authority-wrywkbfzya-uc.a.run.app/',
+    E1_AUTHORITY_AUDIENCE: 'https://e1-identity-authority-wrywkbfzya-uc.a.run.app',
     E1_GATEWAY_SERVICE_ACCOUNT: 'e1-authority-gateway@trade-list-a4297.iam.gserviceaccount.com',
     GATEWAY_INVOCATION_ENABLED: 'false',
     APP_CHECK_ENFORCEMENT_MODE: 'monitor',
@@ -73,6 +73,8 @@ test('gateway uses Google OIDC serverless authorization and forwards the subject
   });
   const handler = createGatewayOperation('readAccountFoundation', configuration, { invokeAuthority: invoke });
   assert.deepEqual(await handler(request()), { code: 'FOUNDATION_NOT_INITIALIZED' });
+  assert.deepEqual(calls[0], ['audience', 'https://e1-identity-authority-wrywkbfzya-uc.a.run.app']);
+  assert.equal(calls[1][1], 'https://e1-identity-authority-wrywkbfzya-uc.a.run.app/v1/read-account-foundation');
   const options = calls[1][2];
   assert.equal(options.headers['X-Serverless-Authorization'], 'Bearer google-oidc-token');
   assert.equal(options.headers['X-Firebase-ID-Token'], 'firebase-id-token');

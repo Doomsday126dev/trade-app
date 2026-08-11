@@ -7,6 +7,13 @@ const path = require('node:path');
 const { execFileSync } = require('node:child_process');
 
 const MANIFEST_PATH = path.resolve(__dirname, 'e1-gateway-source-manifest.json');
+const RESOURCE_MANIFEST_PATH = path.resolve(__dirname, 'e1-production-resource-manifest.json');
+const EXPECTED_AUTHORITY = Object.freeze({
+  projectId: 'trade-list-a4297',
+  region: 'us-central1',
+  service: 'e1-identity-authority',
+  origin: 'https://e1-identity-authority-wrywkbfzya-uc.a.run.app'
+});
 const ACTIONS = Object.freeze({
   'enable-group-c': true,
   restore: false
@@ -49,6 +56,33 @@ function loadManifest(manifestPath = MANIFEST_PATH) {
   return JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
 }
 
+function loadResourceManifest(manifestPath = RESOURCE_MANIFEST_PATH) {
+  return JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+}
+
+function normalizeAuthorityOrigin(value) {
+  let parsed;
+  try { parsed = new URL(value); } catch { throw new Error('e1/gateway-authority-origin-invalid'); }
+  if (parsed.protocol !== 'https:' || parsed.username || parsed.password || parsed.port ||
+      (parsed.pathname !== '/' && parsed.pathname !== '') || parsed.search || parsed.hash ||
+      !/^e1-identity-authority-[a-z0-9]{10}-uc\.a\.run\.app$/u.test(parsed.hostname)) {
+    throw new Error('e1/gateway-authority-origin-invalid');
+  }
+  return parsed.origin;
+}
+
+function authorityTarget(resourceManifest) {
+  const project = resourceManifest?.project || {};
+  const authority = resourceManifest?.authority || {};
+  const origin = normalizeAuthorityOrigin(authority.origin);
+  if (resourceManifest?.environment !== 'production' || project.id !== EXPECTED_AUTHORITY.projectId ||
+      project.region !== EXPECTED_AUTHORITY.region || authority.service !== EXPECTED_AUTHORITY.service ||
+      authority.region !== EXPECTED_AUTHORITY.region || origin !== EXPECTED_AUTHORITY.origin) {
+    throw new Error('e1/gateway-authority-target-mismatch');
+  }
+  return Object.freeze({ origin, url: `${origin}/`, audience: origin });
+}
+
 function verifyManifestShape(manifest) {
   if (manifest?.schemaVersion !== 1 || manifest.environment !== 'production' ||
       manifest.projectId !== 'trade-list-a4297' || manifest.region !== 'us-central1' ||
@@ -58,6 +92,7 @@ function verifyManifestShape(manifest) {
       !sameValues(manifest.expectedExports, ['readE1AccountFoundation', 'reserveE1TrainerHandle']) ||
       manifest.runtime !== 'nodejs22' || manifest.runtimeServiceAccount !==
         'e1-authority-gateway@trade-list-a4297.iam.gserviceaccount.com' ||
+      Object.hasOwn(manifest, 'authorityUrl') || Object.hasOwn(manifest, 'authorityAudience') ||
       manifest.appCheckMode !== 'monitor' || manifest.rateLimitPolicy !== 'firestore-rolling-v1') {
     throw new Error('e1/gateway-source-manifest-invalid');
   }
@@ -120,6 +155,7 @@ function verifyPinnedSource(manifest, repository) {
 
 function createDeploymentPlan(options = {}) {
   const manifest = verifyManifestShape(options.manifest || loadManifest(options.manifestPath));
+  const target = authorityTarget(options.resourceManifest || loadResourceManifest(options.resourceManifestPath));
   const repoRoot = options.repoRoot || resolveRepositoryRoot();
   const explicitSource = options.explicitSource;
   if (!explicitSource) throw new Error('e1/gateway-explicit-source-required');
@@ -147,6 +183,9 @@ function createDeploymentPlan(options = {}) {
     functions: Object.freeze([...manifest.expectedExports]),
     runtime: manifest.runtime,
     runtimeServiceAccount: manifest.runtimeServiceAccount,
+    authorityOrigin: target.origin,
+    authorityUrl: target.url,
+    authorityAudience: target.audience,
     sourceRoot: manifest.sourceRoot,
     sourcePath: expectedSource,
     sourceCommitSha: manifest.sourceCommitSha,
@@ -182,8 +221,8 @@ function deploymentArguments(plan, functionName, stagedSource) {
     'APP_ENVIRONMENT=production',
     `FIREBASE_PROJECT_ID=${manifest.projectId}`,
     `SERVICE_REGION=${manifest.region}`,
-    `E1_AUTHORITY_URL=${manifest.authorityUrl}`,
-    `E1_AUTHORITY_AUDIENCE=${manifest.authorityAudience}`,
+    `E1_AUTHORITY_URL=${plan.authorityUrl}`,
+    `E1_AUTHORITY_AUDIENCE=${plan.authorityAudience}`,
     `E1_GATEWAY_SERVICE_ACCOUNT=${manifest.runtimeServiceAccount}`,
     `GATEWAY_INVOCATION_ENABLED=${plan.gateEnabled}`,
     `APP_CHECK_ENFORCEMENT_MODE=${manifest.appCheckMode}`,
@@ -209,6 +248,9 @@ function publicPlan(plan) {
     functions: plan.functions,
     runtime: plan.runtime,
     runtimeServiceAccount: plan.runtimeServiceAccount,
+    authorityOrigin: plan.authorityOrigin,
+    authorityUrl: plan.authorityUrl,
+    authorityAudience: plan.authorityAudience,
     sourceRoot: plan.sourceRoot,
     sourceCommitSha: plan.sourceCommitSha,
     sourceFingerprint: plan.sourceFingerprint,
@@ -221,13 +263,18 @@ function publicPlan(plan) {
 
 module.exports = Object.freeze({
   ACTIONS,
+  EXPECTED_AUTHORITY,
   MANIFEST_PATH,
   PRIVATE_PATH_PATTERNS,
+  RESOURCE_MANIFEST_PATH,
+  authorityTarget,
   createDeploymentPlan,
   createGitRepository,
   deploymentArguments,
   exportsFromSource,
   loadManifest,
+  loadResourceManifest,
+  normalizeAuthorityOrigin,
   publicPlan,
   resolveRepositoryRoot,
   sha256,

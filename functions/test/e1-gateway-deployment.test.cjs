@@ -7,9 +7,13 @@ const os = require('node:os');
 const path = require('node:path');
 const { execFileSync, spawnSync } = require('node:child_process');
 const {
+  EXPECTED_AUTHORITY,
+  authorityTarget,
   createDeploymentPlan,
   deploymentArguments,
   loadManifest,
+  loadResourceManifest,
+  normalizeAuthorityOrigin,
   sourceFingerprint,
   stagePinnedSource,
   verifyManifestShape,
@@ -83,6 +87,49 @@ test('manifest fingerprint and pinned source hashes fail closed', () => {
   assert.throws(() => verifyPinnedSource(manifest, repository), /pinned-source-hash-mismatch/u);
 });
 
+test('production target derives URL and OIDC audience from the reviewed Cloud Run origin', () => {
+  const manifest = loadManifest();
+  const resourceManifest = loadResourceManifest();
+  const target = authorityTarget(resourceManifest);
+  assert.equal(resourceManifest.authority.origin, EXPECTED_AUTHORITY.origin);
+  assert.equal(target.origin, 'https://e1-identity-authority-wrywkbfzya-uc.a.run.app');
+  assert.equal(target.url, 'https://e1-identity-authority-wrywkbfzya-uc.a.run.app/');
+  assert.equal(target.audience, target.origin);
+  assert.equal(Object.hasOwn(manifest, 'authorityUrl'), false);
+  assert.equal(Object.hasOwn(manifest, 'authorityAudience'), false);
+
+  const plan = createDeploymentPlan({
+    action: 'restore', expectedSha: HEAD, explicitSource: manifest.sourceRoot, mode: 'plan', repoRoot: REPO_ROOT,
+    manifest, resourceManifest, repository: repositoryFixture(manifest)
+  });
+  const environment = deploymentArguments(plan, plan.functions[0], '/tmp/pinned-source')
+    .find((value) => value.startsWith('--set-env-vars='));
+  assert.match(environment, /E1_AUTHORITY_URL=https:\/\/e1-identity-authority-wrywkbfzya-uc\.a\.run\.app\//u);
+  assert.match(environment, /E1_AUTHORITY_AUDIENCE=https:\/\/e1-identity-authority-wrywkbfzya-uc\.a\.run\.app(?:,|$)/u);
+  assert.doesNotMatch(environment, /e1-identity-authority-production-uc/u);
+});
+
+test('authority origin normalization is deterministic and stale or unrelated targets fail closed', () => {
+  const resourceManifest = loadResourceManifest();
+  assert.equal(normalizeAuthorityOrigin(`${EXPECTED_AUTHORITY.origin}/`), EXPECTED_AUTHORITY.origin);
+  assert.throws(() => authorityTarget({
+    ...resourceManifest, authority: { ...resourceManifest.authority, origin: 'https://e1-identity-authority-production-uc.a.run.app/' }
+  }), /authority-target-mismatch/u);
+  assert.throws(() => authorityTarget({
+    ...resourceManifest, authority: { ...resourceManifest.authority, origin: 'https://example.com' }
+  }), /authority-origin-invalid/u);
+  assert.throws(() => authorityTarget({
+    ...resourceManifest, authority: { ...resourceManifest.authority, origin: `${EXPECTED_AUTHORITY.origin}/health` }
+  }), /authority-origin-invalid/u);
+  assert.throws(() => authorityTarget({ ...resourceManifest, project: { ...resourceManifest.project, id: 'wrong-project' } }),
+    /authority-target-mismatch/u);
+  assert.throws(() => authorityTarget({ ...resourceManifest, project: { ...resourceManifest.project, region: 'us-east1' } }),
+    /authority-target-mismatch/u);
+  assert.throws(() => authorityTarget({
+    ...resourceManifest, authority: { ...resourceManifest.authority, service: 'wrong-service' }
+  }), /authority-target-mismatch/u);
+});
+
 test('dirty tracked gateway source and unexpected tracked gateway files fail closed', () => {
   const manifest = loadManifest();
   assert.throws(() => createDeploymentPlan({
@@ -133,6 +180,10 @@ test('Group C enable and restoration use one fingerprint source and differ only 
   const restored = createDeploymentPlan({ ...common, action: 'restore' });
   assert.equal(enabled.sourceCommitSha, restored.sourceCommitSha);
   assert.equal(enabled.sourceFingerprint, restored.sourceFingerprint);
+  assert.equal(enabled.authorityOrigin, restored.authorityOrigin);
+  assert.equal(enabled.authorityUrl, restored.authorityUrl);
+  assert.equal(enabled.authorityAudience, restored.authorityAudience);
+  assert.equal(enabled.authorityAudience, EXPECTED_AUTHORITY.origin);
   assert.equal(enabled.gateEnabled, true);
   assert.equal(restored.gateEnabled, false);
   const enableArgs = deploymentArguments(enabled, enabled.functions[0], '/tmp/pinned-source');

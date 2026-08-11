@@ -30,6 +30,7 @@
   },
   "authority": {
     "service": "e1-identity-authority",
+    "origin": "https://e1-identity-authority-wrywkbfzya-uc.a.run.app",
     "runtimeServiceAccount": "e1-identity-authority-runtime@trade-list-a4297.iam.gserviceaccount.com",
     "customRoleId": "e1IdentityAuthorityRuntime",
     "customRolePermissions": [
