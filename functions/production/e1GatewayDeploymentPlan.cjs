@@ -193,6 +193,7 @@ function createDeploymentPlan(options = {}) {
     sourceFiles: Object.freeze(pinnedFiles),
     expectedExports: Object.freeze([...manifest.expectedExports]),
     gateEnabled: ACTIONS[options.action],
+    readProofMode: ACTIONS[options.action],
     trackedWorkingTreeClean,
     deploymentAllowed,
     manifest: Object.freeze(manifest)
@@ -225,6 +226,7 @@ function deploymentArguments(plan, functionName, stagedSource) {
     `E1_AUTHORITY_AUDIENCE=${plan.authorityAudience}`,
     `E1_GATEWAY_SERVICE_ACCOUNT=${manifest.runtimeServiceAccount}`,
     `GATEWAY_INVOCATION_ENABLED=${plan.gateEnabled}`,
+    `READ_PROOF_MODE=${plan.readProofMode}`,
     `APP_CHECK_ENFORCEMENT_MODE=${manifest.appCheckMode}`,
     'APP_CHECK_DEBUG_TOKENS_ALLOWED=false',
     `E1_RATE_LIMIT_POLICY=${manifest.rateLimitPolicy}`
@@ -256,6 +258,7 @@ function publicPlan(plan) {
     sourceFingerprint: plan.sourceFingerprint,
     expectedExports: plan.expectedExports,
     gateEnabled: plan.gateEnabled,
+    readProofMode: plan.readProofMode,
     trackedWorkingTreeClean: plan.trackedWorkingTreeClean,
     deploymentAllowed: plan.deploymentAllowed
   });

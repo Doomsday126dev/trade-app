@@ -8,6 +8,7 @@ const {
   createAuthorityInvoker,
   createGatewayOperation,
   loadGatewayConfiguration,
+  proofAttemptHash,
   verifyCallableBoundary
 } = require('../e1-gateway/gatewayCore');
 
@@ -23,6 +24,7 @@ function productionEnvironment(overrides = {}) {
     APP_CHECK_ENFORCEMENT_MODE: 'monitor',
     APP_CHECK_DEBUG_TOKENS_ALLOWED: 'false',
     E1_RATE_LIMIT_POLICY: 'firestore-rolling-v1',
+    READ_PROOF_MODE: 'false',
     ...overrides
   };
 }
@@ -94,6 +96,51 @@ test('gateway forwards only the original callable bearer token and never substit
   assert.throws(() => verifyCallableBoundary('readAccountFoundation', request(undefined, {
     rawRequest: { headers: { 'x-firebase-appcheck': 'app-check-token' } }
   })), /AUTH_REQUIRED/);
+});
+
+test('Group C proof attempt is exact bounded propagated and safely logged without affecting authentication', async () => {
+  const proofAttemptId = '123e4567-e89b-42d3-a456-426614174000';
+  const logs = [];
+  let forwarded;
+  const configuration = loadGatewayConfiguration(productionEnvironment({
+    GATEWAY_INVOCATION_ENABLED: 'true',
+    READ_PROOF_MODE: 'true'
+  }));
+  const handler = createGatewayOperation('readAccountFoundation', configuration, {
+    structuredLog: (entry) => logs.push(entry),
+    invokeAuthority: async (_operation, boundary) => {
+      forwarded = boundary;
+      return { status: 200, payload: { code: 'FOUNDATION_NOT_INITIALIZED' } };
+    }
+  });
+  assert.deepEqual(await handler(request({ schemaVersion: 1, proofAttemptId })), { code: 'FOUNDATION_NOT_INITIALIZED' });
+  assert.deepEqual(forwarded.body, { schemaVersion: 1, proofAttemptId });
+  assert.equal(forwarded.uid, 'firebase_uid_gateway');
+  assert.equal(forwarded.proofAttemptHash, proofAttemptHash(proofAttemptId));
+  assert.deepEqual(logs, [{
+    schemaVersion: 1,
+    operation: 'readAccountFoundation',
+    outcome: 'proof_attempt',
+    proofAttemptHash: proofAttemptHash(proofAttemptId)
+  }]);
+  assert.equal(JSON.stringify(logs).includes(proofAttemptId), false);
+  await assert.rejects(handler(request({ schemaVersion: 1, proofAttemptId }, { auth: null })), /AUTH_REQUIRED/);
+});
+
+test('proof attempt schema fails closed outside Group C and for malformed IDs or mutation operations', () => {
+  const proofAttemptId = '123e4567-e89b-42d3-a456-426614174000';
+  assert.throws(() => verifyCallableBoundary('readAccountFoundation', request({ schemaVersion: 1, proofAttemptId }), false), /REQUEST_INVALID/);
+  for (const invalid of ['', 'not-a-uuid', '123e4567-e89b-12d3-a456-426614174000', `${'a'.repeat(128)}`]) {
+    assert.throws(() => verifyCallableBoundary('readAccountFoundation', request({ schemaVersion: 1, proofAttemptId: invalid }), true), /REQUEST_INVALID/);
+  }
+  assert.throws(() => verifyCallableBoundary('readAccountFoundation', request({ schemaVersion: 1 }), true), /REQUEST_INVALID/);
+  assert.throws(() => verifyCallableBoundary('reserveTrainerHandle', request({
+    schemaVersion: 1,
+    requestId: 'request-gateway-1',
+    requestedHandle: 'Trainer',
+    proofAttemptId
+  }), true), /REQUEST_INVALID/);
+  assert.throws(() => loadGatewayConfiguration(productionEnvironment({ READ_PROOF_MODE: 'true' })), /GATEWAY_CONFIGURATION_INVALID/);
 });
 
 test('gateway exports only the two reviewed public operations and delegates durable quota to authority', () => {

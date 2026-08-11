@@ -5,7 +5,8 @@ const assert = require('node:assert/strict');
 const { EventEmitter } = require('node:events');
 const fs = require('node:fs');
 const path = require('node:path');
-const { GATES, createHandler, loadConfiguration } = require('../e1-authority-service/server');
+const { GATES, createHandler, loadConfiguration, proofAttemptHash } = require('../e1-authority-service/server');
+const { proofAttemptHash: gatewayProofAttemptHash } = require('../e1-gateway/gatewayCore');
 const {
   DURABLE_MODE,
   GROUP_C_PROOF_MODE,
@@ -19,6 +20,7 @@ const UID = 'reviewedOwnerUid123';
 const TRAINER = 'ReviewedOwner';
 const OTHER_UID = 'differentOwnerUid456';
 const NOW = Date.parse('2030-01-01T12:00:00.000Z');
+const PROOF_ATTEMPT_ID = '123e4567-e89b-42d3-a456-426614174000';
 
 function environment(overrides = {}) {
   return {
@@ -50,8 +52,8 @@ function proofEnvironment(overrides = {}) {
   });
 }
 
-function request(path = '/v1/read-account-foundation') {
-  const raw = JSON.stringify({ schemaVersion: 1 });
+function request(path = '/v1/read-account-foundation', body = { schemaVersion: 1, proofAttemptId: PROOF_ATTEMPT_ID }) {
+  const raw = JSON.stringify(body);
   const input = new EventEmitter();
   input.method = 'POST';
   input.url = path;
@@ -60,17 +62,18 @@ function request(path = '/v1/read-account-foundation') {
   return input;
 }
 
-function invoke(handler, path) {
+function invoke(handler, path, body) {
   return new Promise((resolve) => {
     const output = new EventEmitter();
     output.writeHead = (status, headers) => { output.status = status; output.headers = headers; };
     output.end = (payload) => resolve({ status: output.status, body: JSON.parse(payload) });
-    handler(request(path), output);
+    handler(request(path, body), output);
   });
 }
 
 function proofHandler(overrides = {}) {
   const calls = { durableLimits: 0, legacyReads: 0, accountReads: 0, writes: 0 };
+  const logs = [];
   const configuration = loadConfiguration(proofEnvironment(overrides.environment), () => NOW);
   const handler = createHandler(configuration, {
     now: overrides.now || (() => NOW),
@@ -88,9 +91,9 @@ function proofHandler(overrides = {}) {
       calls.writes += 1;
       return { allowed: true };
     },
-    structuredLog() {}
+    structuredLog(_configuration, operation, outcome, _startedAt, extra) { logs.push({ operation, outcome, extra }); }
   });
-  return { calls, configuration, handler };
+  return { calls, configuration, handler, logs };
 }
 
 test('Group C proof mode is production-only exact bounded and mutation-gate fail closed', () => {
@@ -133,7 +136,7 @@ test('absent or false proof mode keeps normal production reads on the durable li
       readAccountDocument: async () => null,
       structuredLog() {}
     });
-    assert.deepEqual(await invoke(handler), { status: 200, body: { code: 'FOUNDATION_NOT_INITIALIZED' } });
+    assert.deepEqual(await invoke(handler, undefined, { schemaVersion: 1 }), { status: 200, body: { code: 'FOUNDATION_NOT_INITIALIZED' } });
     assert.equal(durableLimits, 1);
   }
   assert.throws(() => loadConfiguration(environment({ READ_PROOF_MODE: 'sometimes' }), () => NOW),
@@ -145,9 +148,37 @@ test('absent or false proof mode keeps normal production reads on the durable li
 });
 
 test('reviewed proof subject receives absent-foundation response with reciprocal read and zero persistent writes', async () => {
-  const { calls, handler } = proofHandler();
+  const { calls, handler, logs } = proofHandler();
   assert.deepEqual(await invoke(handler), { status: 200, body: { code: 'FOUNDATION_NOT_INITIALIZED' } });
   assert.deepEqual(calls, { durableLimits: 0, legacyReads: 1, accountReads: 1, writes: 0 });
+  assert.equal(logs[0].extra.proofAttemptHash, proofAttemptHash(PROOF_ATTEMPT_ID));
+  assert.equal(logs[0].extra.proofAttemptHash, gatewayProofAttemptHash(PROOF_ATTEMPT_ID));
+  assert.equal(JSON.stringify(logs).includes(PROOF_ATTEMPT_ID), false);
+});
+
+test('proof attempt schema is Group C only exact and bounded without authorization or persistence effects', async () => {
+  const proof = proofHandler();
+  for (const invalid of ['', 'not-a-uuid', '123e4567-e89b-12d3-a456-426614174000', 'a'.repeat(128)]) {
+    assert.deepEqual(await invoke(proof.handler, undefined, { schemaVersion: 1, proofAttemptId: invalid }), {
+      status: 400,
+      body: { code: 'REQUEST_INVALID' }
+    });
+  }
+  assert.deepEqual(await invoke(proof.handler, undefined, { schemaVersion: 1 }), { status: 400, body: { code: 'REQUEST_INVALID' } });
+  assert.deepEqual(proof.calls, { durableLimits: 0, legacyReads: 0, accountReads: 0, writes: 0 });
+
+  let durableLimits = 0;
+  const normal = createHandler(loadConfiguration(environment({ READ_ACCOUNT_FOUNDATION_ENABLED: 'true' }), () => NOW), {
+    verifyFirebaseIdToken: async () => ({ uid: UID }),
+    consumeRateLimit: async () => { durableLimits += 1; return { allowed: true, consumed: true }; },
+    readAccountDocument: async () => null,
+    structuredLog() {}
+  });
+  assert.deepEqual(await invoke(normal, undefined, { schemaVersion: 1, proofAttemptId: PROOF_ATTEMPT_ID }), {
+    status: 400,
+    body: { code: 'REQUEST_INVALID' }
+  });
+  assert.equal(durableLimits, 0);
 });
 
 test('proof mode rejects a different UID before RTDB and a different reciprocal trainer before Firestore', async () => {

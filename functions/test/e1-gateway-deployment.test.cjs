@@ -34,7 +34,7 @@ function runPlan(cwd, source = 'functions/e1-gateway', expectedSha = HEAD) {
 function repositoryFixture(manifest, overrides = {}) {
   const contents = Object.fromEntries(manifest.sourceFiles.map((file) => [
     `${manifest.sourceRoot}/${file.path}`,
-    fs.readFileSync(path.join(REPO_ROOT, manifest.sourceRoot, file.path))
+    execFileSync('git', ['-C', REPO_ROOT, 'show', `${manifest.sourceCommitSha}:${manifest.sourceRoot}/${file.path}`])
   ]));
   return {
     head: () => HEAD,
@@ -57,7 +57,7 @@ test('plan chooses the exact pinned gateway source independently of cwd and crea
   const rootPlan = JSON.parse(root.stdout);
   const otherPlan = JSON.parse(other.stdout);
   assert.equal(rootPlan.sourceRoot, 'functions/e1-gateway');
-  assert.equal(rootPlan.sourceFingerprint, '09f05caf0624da66f69e37bf34e75e4594a7ef225594f10954b8523400a3729d');
+  assert.equal(rootPlan.sourceFingerprint, 'd3b999dee62d7498493bc780cff2d2e1f56bf7921826248d9abc4a5a6c9a7713');
   assert.deepEqual(otherPlan, rootPlan);
   assert.equal(fs.existsSync(rootIgnore), false);
 });
@@ -151,7 +151,8 @@ test('unexpected gateway exports fail even when a candidate manifest is self-con
   manifest.sourceFingerprint = sourceFingerprint(manifest.sourceFiles);
   verifyManifestShape(manifest);
   const repository = repositoryFixture(manifest, {
-    readSourceFile: (_commit, file) => file.endsWith('/index.js') ? modified : fs.readFileSync(path.join(REPO_ROOT, file))
+    readSourceFile: (_commit, file) => file.endsWith('/index.js') ? modified :
+      execFileSync('git', ['-C', REPO_ROOT, 'show', `${original.sourceCommitSha}:${file}`])
   });
   assert.throws(() => verifyPinnedSource(manifest, repository), /export-inventory-mismatch/u);
 });
@@ -186,12 +187,16 @@ test('Group C enable and restoration use one fingerprint source and differ only 
   assert.equal(enabled.authorityAudience, EXPECTED_AUTHORITY.origin);
   assert.equal(enabled.gateEnabled, true);
   assert.equal(restored.gateEnabled, false);
+  assert.equal(enabled.readProofMode, true);
+  assert.equal(restored.readProofMode, false);
   const enableArgs = deploymentArguments(enabled, enabled.functions[0], '/tmp/pinned-source');
   const restoreArgs = deploymentArguments(restored, restored.functions[0], '/tmp/pinned-source');
   assert.deepEqual(enableArgs.filter((value) => !value.startsWith('--set-env-vars=')),
     restoreArgs.filter((value) => !value.startsWith('--set-env-vars=')));
   assert.match(enableArgs.find((value) => value.startsWith('--set-env-vars=')), /GATEWAY_INVOCATION_ENABLED=true/u);
   assert.match(restoreArgs.find((value) => value.startsWith('--set-env-vars=')), /GATEWAY_INVOCATION_ENABLED=false/u);
+  assert.match(enableArgs.find((value) => value.startsWith('--set-env-vars=')), /READ_PROOF_MODE=true/u);
+  assert.match(restoreArgs.find((value) => value.startsWith('--set-env-vars=')), /READ_PROOF_MODE=false/u);
   assert.ok(enableArgs.includes('--source=/tmp/pinned-source'));
 });
 

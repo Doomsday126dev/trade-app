@@ -26,6 +26,7 @@ const RATE_LIMITS = Object.freeze({
   freezeIdentityConflict: Object.freeze({ limit: 10, windowMs: 60 * 1000 })
 });
 const UID = /^[A-Za-z0-9_-]{6,128}$/;
+const PROOF_ATTEMPT_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u;
 const HANDLE_KEY = /^v1_[a-f0-9]{2,512}$/;
 const REQUEST_ID = /^[A-Za-z0-9][A-Za-z0-9._:-]{7,127}$/;
 const SHA256 = /^[a-f0-9]{64}$/;
@@ -515,11 +516,15 @@ async function readAccountDocument(configuration, uid, fetchImpl = fetch) {
   return response.json();
 }
 
-function exactReadRequest(body) {
-  if (!body || typeof body !== 'object' || Array.isArray(body) || Object.keys(body).length !== 1 || body.schemaVersion !== 1) {
+function exactReadRequest(body, readProofMode) {
+  const expectedFields = readProofMode ? ['proofAttemptId', 'schemaVersion'] : ['schemaVersion'];
+  const fields = body && typeof body === 'object' && !Array.isArray(body) ? Object.keys(body).sort() : [];
+  if (!body || typeof body !== 'object' || Array.isArray(body) || fields.length !== expectedFields.length ||
+      fields.some((field, index) => field !== expectedFields[index]) || body.schemaVersion !== 1 ||
+      (readProofMode && !PROOF_ATTEMPT_ID.test(body.proofAttemptId || ''))) {
     fail('REQUEST_INVALID');
   }
-  return body;
+  return Object.freeze({ ...body });
 }
 
 async function readJsonRequest(request) {
@@ -556,6 +561,11 @@ function uidHash(configuration, uid) {
 function handleCorrelationHash(configuration, handleKey) {
   return crypto.createHmac('sha256', configuration.operatorSubjectHash)
     .update(`${configuration.projectId}\0handle\0${handleKey}`, 'utf8').digest('hex').slice(0, 16);
+}
+
+function proofAttemptHash(proofAttemptId) {
+  return crypto.createHash('sha256').update(JSON.stringify([1, 'group-c-proof-attempt', proofAttemptId]), 'utf8')
+    .digest('hex').slice(0, 16);
 }
 
 function rateAttemptHash(operation, subjectHash, parts) {
@@ -637,10 +647,12 @@ function createHandler(configuration, dependencies = {}) {
     const url = new URL(request.url, 'http://localhost');
     if (url.pathname === '/v1/read-account-foundation') {
       let callerHash;
+      let attemptHash;
       try {
         if (request.method !== 'POST') fail('METHOD_NOT_ALLOWED');
         if (!configuration.readAccountFoundationEnabled) fail('E1_NOT_ENABLED');
-        exactReadRequest(await parseBody(request));
+        const readRequest = exactReadRequest(await parseBody(request), configuration.readProofMode);
+        attemptHash = readRequest.proofAttemptId ? proofAttemptHash(readRequest.proofAttemptId) : undefined;
         const firebaseIdToken = firebaseTokenHeader(request);
         const { uid } = await verifyToken(configuration, firebaseIdToken);
         callerHash = uidHash(configuration, uid);
@@ -656,16 +668,16 @@ function createHandler(configuration, dependencies = {}) {
         }
         const document = await readAccount(configuration, uid);
         if (!document) {
-          log(configuration, 'readAccountFoundation', 'not_initialized', startedAt, { uidHash: callerHash });
+          log(configuration, 'readAccountFoundation', 'not_initialized', startedAt, { uidHash: callerHash, proofAttemptHash: attemptHash });
           return json(response, 200, { code: 'FOUNDATION_NOT_INITIALIZED' });
         }
         const foundation = redactFoundationDocument(document);
         if (FROZEN_STATUSES.has(foundation.status)) {
-          log(configuration, 'readAccountFoundation', 'frozen', startedAt, { uidHash: callerHash });
+          log(configuration, 'readAccountFoundation', 'frozen', startedAt, { uidHash: callerHash, proofAttemptHash: attemptHash });
           return json(response, 423, { code: 'ACCOUNT_FROZEN', foundation });
         }
         if (foundation.status !== 'active') fail('INTERNAL_ERROR');
-        log(configuration, 'readAccountFoundation', 'success', startedAt, { uidHash: callerHash });
+        log(configuration, 'readAccountFoundation', 'success', startedAt, { uidHash: callerHash, proofAttemptHash: attemptHash });
         return json(response, 200, { code: 'SUCCESS', foundation });
       } catch (error) {
         const code = ['E1_NOT_ENABLED', 'AUTH_REQUIRED', 'AUTH_INVALID', 'REQUEST_INVALID', 'REQUEST_TOO_LARGE', 'METHOD_NOT_ALLOWED',
@@ -679,7 +691,10 @@ function createHandler(configuration, dependencies = {}) {
                 code === 'E1_READ_PROOF_EXPIRED' || code === 'E1_READ_PROOF_MAPPING_UNAVAILABLE' ? 503 :
             error?.code === 'e1/rate-limit-exceeded' ? 429 : 500;
         const responseCode = error?.code === 'e1/rate-limit-exceeded' ? 'RATE_LIMITED' : code;
-        log(configuration, 'readAccountFoundation', responseCode.toLowerCase(), startedAt, callerHash ? { uidHash: callerHash } : {});
+        log(configuration, 'readAccountFoundation', responseCode.toLowerCase(), startedAt, {
+          ...(callerHash ? { uidHash: callerHash } : {}),
+          ...(attemptHash ? { proofAttemptHash: attemptHash } : {})
+        });
         return json(response, status, { code: responseCode === 'REQUEST_TOO_LARGE' ? 'REQUEST_INVALID' : responseCode });
       }
     }
@@ -988,6 +1003,7 @@ module.exports = Object.freeze({
   migrationManifestFingerprint,
   observedLegacyFingerprint,
   readAccountDocument,
+  proofAttemptHash,
   repairReviewFingerprint,
   reserveFingerprint,
   redactFoundationDocument,
