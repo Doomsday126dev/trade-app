@@ -4,7 +4,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { createCallableHandler } = require('../src/callable/common');
 const { createRedactedLogger } = require('../src/domain/redactedLogging');
-const { emulatorBypassAllowed, firebaseAdminOptions } = require('../src/domain/runtimePolicy');
+const { emulatorBypassAllowed, firebaseAdminOptions, functionsRegion, runtimeConfiguration } = require('../src/domain/runtimePolicy');
 const { favoriteRequest, harness, requestId } = require('./helpers.cjs');
 
 function wrapped(env = {}, sink = { values: [], info(value) { this.values.push(value); } }) {
@@ -32,7 +32,19 @@ test('explicit App Check bypass works only for a demo emulator project', async (
 });
 
 test('Firebase Admin uses an explicit default namespace only in a demo emulator', () => {
-  assert.deepEqual(firebaseAdminOptions({ GCLOUD_PROJECT: 'production-project' }), {});
+  assert.throws(() => firebaseAdminOptions({ GCLOUD_PROJECT: 'production-project' }), /environment-required/);
+  assert.deepEqual(runtimeConfiguration({
+    APP_ENVIRONMENT: 'staging',
+    FIREBASE_PROJECT_ID: 'trainer-hub-staging-example1',
+    FUNCTIONS_REGION: 'us-central1',
+    DATABASE_URL: 'https://trainer-hub-staging-example1-e1.firebaseio.com'
+  }), {
+    environment: 'staging',
+    projectId: 'trainer-hub-staging-example1',
+    region: 'us-central1',
+    databaseURL: 'https://trainer-hub-staging-example1-e1.firebaseio.com'
+  });
+  assert.equal(functionsRegion({ FUNCTIONS_EMULATOR: 'true', GCLOUD_PROJECT: 'demo-pogo-functions', FIREBASE_DATABASE_EMULATOR_HOST: '127.0.0.1:9400' }), 'us-east1');
   assert.deepEqual(firebaseAdminOptions({
     FUNCTIONS_EMULATOR: 'true',
     GCLOUD_PROJECT: 'demo-pogo-functions',

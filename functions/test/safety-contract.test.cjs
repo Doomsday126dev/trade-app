@@ -219,6 +219,12 @@ test('emulator integration seeds the same default RTDB namespace used by Functio
   assert.match(source, /databaseNamespace = `\$\{projectId\}-default-rtdb`/);
   assert.match(source, /databaseURL: `http:\/\/\$\{databaseHost\}\?ns=\$\{databaseNamespace\}`/);
   assert.doesNotMatch(source, /\?ns=\$\{projectId\}`/);
-  assert.match(runtime, /databaseURL: `http:\/\/\$\{databaseHost\}\?ns=\$\{projectId\}-default-rtdb`/);
+  assert.match(runtime, /FIREBASE_DATABASE_NAMESPACE/);
+  assert.match(runtime, /`\$\{projectId\}-default-rtdb`/);
+  assert.match(runtime, /databaseURL \|\|= `http:\/\/\$\{databaseHost\}\?ns=\$\{namespace\}`/);
+  assert.match(runtime, /APP_ENVIRONMENT/);
+  assert.match(runtime, /FUNCTIONS_REGION/);
+  assert.match(runtime, /FIREBASE_PROJECT_ID/);
+  assert.match(runtime, /DATABASE_URL/);
   assert.match(runtime, /127\\\.0\\\.0\\\.1\|localhost/);
 });

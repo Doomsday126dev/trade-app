@@ -1,0 +1,9 @@
+{
+  "database": { "rules": "database.rules.e1-rtdb-staging.json" },
+  "emulators": {
+    "auth": { "port": 9499 },
+    "database": { "port": 9400 },
+    "ui": { "enabled": false },
+    "singleProjectMode": true
+  }
+}

@@ -5,7 +5,7 @@ const { getDatabase } = require('firebase-admin/database');
 const { HttpsError, onCall } = require('firebase-functions/v2/https');
 const { createFirebaseTrustedAdapter } = require('./adapters/firebaseTrustedAdapter');
 const { createRedactedLogger } = require('./domain/redactedLogging');
-const { appCheckRequired, firebaseAdminOptions } = require('./domain/runtimePolicy');
+const { appCheckRequired, firebaseAdminOptions, functionsRegion } = require('./domain/runtimePolicy');
 const { createTrustedOperations } = require('./domain/trustedOperations');
 
 const createReserveTrainerHandle = require('./callable/reserveTrainerHandle');
@@ -31,7 +31,7 @@ const HTTPS_CODES = Object.freeze({
   internal: 'internal'
 });
 const makePublicError = ({ code, reason }) => new HttpsError(HTTPS_CODES[code] || 'internal', reason);
-const options = Object.freeze({ region: 'us-east1', enforceAppCheck: appCheckRequired(process.env), consumeAppCheckToken: true, timeoutSeconds: 30, memory: '256MiB', maxInstances: 5 });
+const options = Object.freeze({ region: functionsRegion(process.env), enforceAppCheck: appCheckRequired(process.env), consumeAppCheckToken: true, timeoutSeconds: 30, memory: '256MiB', maxInstances: 5 });
 
 exports.reserveTrainerHandle = onCall(options, createReserveTrainerHandle({ operations, logger, makePublicError }));
 exports.claimTrainerTagLabel = onCall(options, createClaimTrainerTagLabel({ operations, logger, makePublicError }));

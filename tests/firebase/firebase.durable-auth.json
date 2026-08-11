@@ -1,0 +1,9 @@
+{
+  "database": { "rules": "database.rules.durable-auth.json" },
+  "emulators": {
+    "auth": { "port": 9899 },
+    "database": { "port": 9800 },
+    "ui": { "enabled": false },
+    "singleProjectMode": true
+  }
+}

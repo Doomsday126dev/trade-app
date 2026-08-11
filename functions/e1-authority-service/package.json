@@ -1,0 +1,14 @@
+{
+  "name": "trainer-hub-e1-identity-authority-shell",
+  "version": "0.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@google-cloud/firestore": "7.11.6"
+  }
+}
