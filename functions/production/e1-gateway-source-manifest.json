@@ -4,12 +4,12 @@
   "projectId": "trade-list-a4297",
   "region": "us-central1",
   "sourceRoot": "functions/e1-gateway",
-  "sourceCommitSha": "2effb61b706769768952d5f979c4df7e0dfd4646",
-  "sourceFingerprint": "09f05caf0624da66f69e37bf34e75e4594a7ef225594f10954b8523400a3729d",
+  "sourceCommitSha": "c74d5cb291310f83ff1ec08d032de5bcde3467ba",
+  "sourceFingerprint": "d3b999dee62d7498493bc780cff2d2e1f56bf7921826248d9abc4a5a6c9a7713",
   "sourceFiles": [
     {
       "path": "gatewayCore.js",
-      "sha256": "507edba953b776248bd9e58ab1781567da1c70842cb5d006afadfa6014b6b343"
+      "sha256": "4aa877e8ec20b93dc3730b4d7683b9906f86f53c7ed6e5e4f5497a7cf4ed12b5"
     },
     {
       "path": "index.js",
