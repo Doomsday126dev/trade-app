@@ -133,10 +133,18 @@ async function metadata(fetchImpl, path) {
   return response;
 }
 
+async function projectMetadata(fetchImpl, path) {
+  const response = await fetchImpl(`http://metadata.google.internal/computeMetadata/v1/project/${path}`, {
+    headers: { 'Metadata-Flavor': 'Google' }
+  });
+  if (!response.ok) fail('E1_METADATA_UNAVAILABLE');
+  return response;
+}
+
 async function runtimeProbe(configuration, fetchImpl = fetch) {
   const email = (await (await metadata(fetchImpl, 'email')).text()).trim();
   if (email !== configuration.runtimeServiceAccount) fail('E1_RUNTIME_IDENTITY_MISMATCH');
-  const projectNumber = (await (await metadata(fetchImpl, 'numeric-project-id')).text()).trim();
+  const projectNumber = (await (await projectMetadata(fetchImpl, 'numeric-project-id')).text()).trim();
   if (projectNumber !== configuration.projectNumber) fail('E1_RUNTIME_PROJECT_MISMATCH');
   const tokenPayload = await (await metadata(fetchImpl, 'token')).json();
   if (typeof tokenPayload.access_token !== 'string' || !tokenPayload.access_token) fail('E1_RUNTIME_TOKEN_UNAVAILABLE');

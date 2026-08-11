@@ -106,6 +106,8 @@ test('runtime probe verifies identity named-database access and forbidden permis
     requiredPermissionsVerified: true,
     forbiddenPermissionsGranted: false
   });
+  assert.match(calls[0].url, /service-accounts\/default\/email$/u);
+  assert.match(calls[1].url, /\/project\/numeric-project-id$/u);
   assert.match(calls[3].url, /databases\/phase-e-identity$/);
   assert.equal(calls[3].options.method, 'GET');
   assert.match(calls[4].url, /documents\/runtimeReadiness\/e1-authority-sentinel$/);
