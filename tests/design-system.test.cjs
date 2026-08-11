@@ -8,6 +8,7 @@ const html=readFileSync(path.join(root,'index.html'),'utf8');
 const emptyState=readFileSync(path.join(root,'js/ui/emptyState.js'),'utf8');
 const shareVisibility=readFileSync(path.join(root,'js/domain/shareVisibility.js'),'utf8');
 const trainerPreferences=readFileSync(path.join(root,'js/domain/trainerPreferences.js'),'utf8');
+const locales=['en','ja','es','de'].map(locale=>readFileSync(path.join(root,`js/i18n/locales/${locale}.js`),'utf8'));
 const css=html.match(/<style>([\s\S]*?)<\/style>/)?.[1]||'';
 
 test('design tokens define the bounded spacing, container, radius, type, control, and focus systems',()=>{
@@ -26,8 +27,14 @@ test('consumer shell uses shared surface, motion, gutter, and navigation primiti
   assert.match(css,/\.topbar\{[\s\S]*?padding-inline:max\(var\(--page-gutter\),calc\(\(100vw - var\(--container-wide\)\)\/2\)\)/);
   assert.match(css,/\.tabs\{[\s\S]*?padding-inline:max\(var\(--page-gutter\),calc\(\(100vw - var\(--container-wide\)\)\/2\)\)/);
   assert.match(css,/\.tab\.active\{[^}]*box-shadow:inset 0 -3px var\(--accent\)/);
-  assert.match(css,/\.tab\[data-tab="mylist"\]::before\{content:"≡"\}/);
-  assert.doesNotMatch(html,/id="nav-(?:mylist|find|events)"[^>]*>[^<]*[📋🔍📅]/u);
+  for(const id of ['nav-mylist','nav-find','nav-events','admin-tab']){
+    const button=html.match(new RegExp(`<button[^>]+id="${id}"[\\s\\S]*?<\\/button>`))?.[0]||'';
+    assert.equal((button.match(/class="ui-icon tab-icon"/g)||[]).length,1,id);
+    assert.equal((button.match(/class="tab-label"/g)||[]).length,1,id);
+  }
+  assert.doesNotMatch(css,/\.tab\[data-tab=[^\]]+\]::before\{content:/);
+  for(const locale of locales)assert.doesNotMatch(locale,/'nav\.(?:myList|findTrainer|events|admin)(?:Short)?':'[^']*[📋🔍📅⚙️]/u);
+  for(const icon of ['list','search','calendar','shield','settings','copy','sliders','chevron-right'])assert.match(html,new RegExp(`id="ui-icon-${icon}"`));
 });
 
 test('consumer composition reduces nested chrome while preserving interactive boundaries',()=>{
@@ -64,6 +71,7 @@ test('active fields use the shared theme and retain deliberate search variants',
   assert.match(css,/\.field-control,#tab-admin/);
   assert.match(css,/\.search-lookup\{max-width:var\(--container-standard\)\}/);
   assert.match(css,/\.search-filter\{max-width:var\(--container-standard\)\}/);
+  assert.match(css,/\.field-control\.app-search-input\{padding-left:42px\}/);
   assert.match(css,/\.command-input\{font-family:var\(--mono\)/);
   assert.doesNotMatch(css,/\.field-control[^}]*background:\s*(?:#fff|white)/i);
 });
@@ -103,6 +111,21 @@ test('My List category navigation uses a dot and semantic selection, never a che
   assert.match(myList,/class="ltab-marker" aria-hidden="true"><\/span>/);
   assert.doesNotMatch(myList,/class="ltab-marker"[^>]*>✓/);
   assert.match(css,/\.mylist-type-tabs \.ltab-marker\{[^}]*width:6px[^}]*border-radius:50%[^}]*background:var\(--ac2\)/);
+});
+
+test('obvious application chrome uses the shared icon system and dense rows disclose rare controls',()=>{
+  assert.match(html,/id="find-trainer-input"[\s\S]*?ui-icon-search/);
+  assert.match(html,/function myListSearchActionHtml[\s\S]*?uiIconMarkup\('copy'/);
+  assert.match(html,/id="account-settings-action"[\s\S]*?ui-icon-settings/);
+  assert.match(html,/function applyTheme[\s\S]*?uiIconMarkup\(effective==='dark'\?'moon':'sun'/);
+  const rows=html.slice(html.indexOf('function myListRowsHtml'),html.indexOf('function myListPrioritySectionHtml'));
+  assert.match(rows,/class="myrow-priority" role="group"/);
+  assert.match(rows,/class="myrow-active-traits"/);
+  assert.match(rows,/details class="myrow-editor"/);
+  assert.match(rows,/summary class="myrow-edit"/);
+  for(const handler of ['setLucky','setShiny','setXxl','setXxs','setNotes','confirmRemove'])assert.match(rows,new RegExp(`${handler}\\(`));
+  assert.match(css,/\.myrow-edit\{[^}]*min-width:48px/);
+  assert.match(css,/\.myrow-editor-popover\{[^}]*position:absolute/);
 });
 
 test('cards, priority, status, and empty-state primitives preserve semantic structure',()=>{

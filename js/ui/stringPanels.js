@@ -28,7 +28,7 @@ function strLevelsHtml(strs,options={}){
   const priorityLabel=typeof options.priorityLabel==='function'?options.priorityLabel:priLabel;
   const panelOptions=localized?{t,formatNumber}:{};
   const copyScope=localized?' data-copy-scope="share"':'';
-  const copyButton=(value,label)=>`<button class="cpbtn" type="button" data-copy="${escAttr(value)}"${copyScope} onclick="copyStr(this.dataset.copy,this)" aria-label="${escAttr(t('share.copySearchAria',{label}))}" style="margin-left:auto">📋 ${escHtml(t('share.copy'))}</button>`;
+  const copyButton=(value,label)=>`<button class="cpbtn" type="button" data-copy="${escAttr(value)}"${copyScope} onclick="copyStr(this.dataset.copy,this)" aria-label="${escAttr(t('share.copySearchAria',{label}))}" style="margin-left:auto"><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-copy"></use></svg><span>${escHtml(t('share.copy'))}</span></button>`;
   const searchDisclosure=(value,label)=>`<details class="share-search-disclosure"><summary><span class="share-search-view-label">${escHtml(t('share.viewSearch'))}</span><span class="share-search-hide-label">${escHtml(t('share.hideSearch'))}</span><span class="collapse-icon" aria-hidden="true">▼</span><span class="sr-only">: ${escHtml(label)}</span></summary><div class="strbox">${escHtml(value)}</div></details>`;
   const priorityBadge=p=>localized?`${p==='H'?'🔴':p==='M'?'🟡':'🟢'} ${escHtml(priorityLabel(p))}`:priBadge(p);
   const comboLabel=option=>option.levels.length===3

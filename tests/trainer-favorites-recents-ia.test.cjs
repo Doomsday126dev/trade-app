@@ -52,8 +52,11 @@ test('favorite filters remain scoped, multi-tag, keyboard-native buttons with no
   assert.match(render,/class="favorite-toolbar-search app-search-shell search-filter"/);
   assert.match(render,/aria-pressed="\$\{selected\}"/);
   assert.match(render,/favorite-filter-check/);
+  assert.match(render,/favorite-filter-group/);
+  assert.match(render,/favorite-filter-chip-surface/);
   assert.match(html,/function toggleFavoriteTagFilter[\s\S]*new Set\(trainerOrganizerState\.tagIds\)/);
   assert.match(html,/\.favorite-filter-chip\{[^}]*min-height:48px/);
+  assert.match(html,/\.favorite-filter-chip-surface\{[^}]*min-height:30px/);
 });
 
 test('compact favorite rows preserve tags, Open Trainer, overflow, and optional swipe parity',()=>{

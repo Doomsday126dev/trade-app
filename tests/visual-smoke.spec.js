@@ -1159,6 +1159,15 @@ test.describe('visual smoke', () => {
     await expect(page.locator('#export-menu-btn')).toHaveAttribute('aria-haspopup','menu');
     await expect(page.locator('#tab-mylist')).toHaveClass(/has-list-content/);
     await expect(page.locator('.journey-guidance')).toBeHidden();
+    await expect(page.locator('.myrow').first().locator(':scope > .mctrl > .flag-btn')).toHaveCount(0);
+    await expect(page.locator('.myrow-editor').first()).toBeVisible();
+    await page.locator('.myrow-edit').first().click();
+    await expect(page.locator('.myrow-editor-popover').first()).toBeVisible();
+    await expect(page.locator('.myrow-editor-popover .flag-btn').first()).toBeVisible();
+    await expect(page.locator('.myrow-editor-popover .ni').first()).toBeVisible();
+    await expect(page.locator('.myrow-editor-popover .rm').first()).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.locator('.myrow-editor-popover').first()).toBeHidden();
     const searchBox=await page.locator('#ac-input').boundingBox(),addBox=await page.locator('.add-actions .bsave').boundingBox(),firstRow=await page.locator('.myrow').first().boundingBox();
     expect(Math.abs((searchBox?.y||0)-(addBox?.y||0))).toBeLessThanOrEqual(2);
     expect(firstRow?.y).toBeLessThan(760);
@@ -1534,6 +1543,7 @@ test.describe('visual smoke', () => {
       const now=Date.now(),hour=3600000,day=24*hour;
       const base=[
         {eventID:'active',name:'Raid Hour',eventType:'raid',start:new Date(now-hour).toISOString(),end:new Date(now+2*hour).toISOString(),link:'https://example.com/active'},
+        {eventID:'spotlight',name:'Structured Spotlight',eventType:'pokemon-spotlight-hour',start:new Date(now+2*hour).toISOString(),end:new Date(now+3*hour).toISOString(),link:'https://example.com/spotlight'},
         {eventID:'soon',name:'Community Day',eventType:'community-day',start:new Date(now+day).toISOString(),end:new Date(now+day+3*hour).toISOString(),link:'https://example.com/soon'},
         {eventID:'later',name:'A deliberately long seasonal event title that must wrap without widening the timeline',eventType:'event',start:new Date(now+6*day).toISOString(),end:new Date(now+8*day).toISOString(),link:'https://example.com/later'}
       ];
@@ -1542,6 +1552,11 @@ test.describe('visual smoke', () => {
     });
     await expect(page.locator('.event-group[data-group="now"]')).toBeVisible();await expect(page.locator('.event-group[data-group="soon"]')).toBeVisible();await expect(page.locator('.event-group[data-group="later"]')).toBeVisible();
     await expect(page.locator('.event-current-badge')).toBeVisible();await expect(page.locator('.event-card-relative').first()).toContainText(/.+/);
+    await expect(page.locator('.event-current-badge')).not.toContainText('●');
+    await expect(page.locator('.event-filter[data-type="spotlight"]')).toBeVisible();
+    const cueRightEdges=await page.locator('a.event-card .event-card-cue').evaluateAll(nodes=>nodes.map(node=>Math.round(node.getBoundingClientRect().right)));
+    expect(Math.max(...cueRightEdges)-Math.min(...cueRightEdges)).toBeLessThanOrEqual(2);
+    await expect(page.locator('article.event-card .event-card-cue')).toHaveCount(0);
     await page.setViewportSize({width:390,height:420});
     const filterGeometry=await page.locator('.event-filter-row').evaluate(node=>({clientWidth:node.clientWidth,scrollWidth:node.scrollWidth,tabIndex:node.tabIndex,edge:getComputedStyle(node.parentElement,'::after').display}));
     expect(filterGeometry.scrollWidth).toBeGreaterThan(filterGeometry.clientWidth);
@@ -1553,6 +1568,7 @@ test.describe('visual smoke', () => {
     expect(await sourceRow.locator('a,button,[role="button"]').count()).toBe(0);
     await sourceRow.focus();await expect(sourceRow).toBeFocused();
     for(const filter of await page.locator('.event-filter').all()){const box=await filter.boundingBox();expect(box?.height).toBeGreaterThanOrEqual(48);}
+    await page.locator('.event-filter[data-type="spotlight"]').click();await expect(page.locator('.event-card')).toHaveCount(1);await expect(page.locator('.event-card')).toContainText('Structured Spotlight');
     await page.locator('.event-filter[data-type="raids"]').click();await expect(page.locator('.event-filter[data-type="raids"]')).toHaveAttribute('aria-pressed','true');
     await page.locator('.event-filter[data-type="gbl"]').click();await expect(page.locator('.events-state')).toContainText(/.+/);await expect(page.locator('.events-state-action')).toBeVisible();await page.locator('.events-state-action').click();await expect(page.locator('.event-filter[data-type="all"]')).toHaveAttribute('aria-pressed','true');
     await page.evaluate(()=>{_eventData={events:[],raids:[],fetchedAt:Date.now()};_eventLoadState='ready';renderEventsOnly();});await expect(page.locator('.events-state')).toBeVisible();await expect(page.locator('.events-state-action')).toHaveCount(0);
@@ -1564,6 +1580,11 @@ test.describe('visual smoke', () => {
 
   test('main tab switching keeps the app rendered', async ({ page }) => {
     await signIn(page);
+    for(const id of ['nav-mylist','nav-find','nav-events']){
+      await expect(page.locator(`#${id} .tab-icon`)).toHaveCount(1);
+      await expect(page.locator(`#${id} .tab-label`)).toHaveCount(1);
+      await expect(page.locator(`#${id}`)).not.toContainText(/[📋🔍📅⚙️]/u);
+    }
     for (const tab of ['mylist', 'find', 'have', 'schedule']) {
       await openMainTab(page, tab);
       await expectAppNotBlank(page);

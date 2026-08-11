@@ -49,27 +49,42 @@ test('timeline uses one chronological column, native source rows, and shared pri
   assert.match(render,/const tag=link\?'a':'article'/);
   assert.match(render,/class="event-card card-row/);
   assert.match(render,/target="_blank" rel="noopener" aria-label=/);
+  assert.match(render,/link\?`<span class="event-card-cue"/);
+  assert.match(render,/uiIconMarkup\('chevron-right'/);
   assert.doesNotMatch(render,/event-card-bonuses|event-card-details btn/);
   assert.match(html,/\.event-card-grid\{display:grid;grid-template-columns:minmax\(0,1fr\)/);
+  assert.match(html,/\.event-card\{[^}]*display:grid[^}]*grid-template-columns:minmax\(0,1fr\) 86px/);
+  assert.match(html,/\.event-card-cue\{[^}]*width:86px/);
   assert.match(html,/\.event-card\{[^}]*min-height:92px/);
 });
 
 test('filters and loading empty filtered error offline states remain distinct',()=>{
   const render=html.slice(html.indexOf('function setEventTypeFilter'),html.indexOf('function renderSchedule'));
   assert.match(render,/role="group"[^>]+events\.filtersLabel/);
+  assert.match(render,/\['spotlight','events\.filterSpotlight'\]/);
   assert.match(render,/aria-pressed="\$\{eventTypeFilter===type\}"/);
   for(const value of ['events.loading','events.emptyTitle','events.filteredEmptyTitle','events.errorTitle','events.offlineTitle','events.clearFilters','events.retry'])assert.match(render,new RegExp(value.replace('.','\\.')));
   assert.match(render,/out\.setAttribute\('aria-busy'/);
   assert.match(render,/setEventTypeFilter\('all'\)/);
 });
 
-test('event source, type taxonomy, and localization pipeline remain unchanged',()=>{
+test('event source and localization remain unchanged while Spotlight uses structured identity only',()=>{
   assert.match(html,/const SCRAPEDDUCK_BASE='https:\/\/raw\.githubusercontent\.com\/bigfoott\/ScrapedDuck\/data\/'/);
   assert.match(html,/eventLabelsI18n\.localizeEvent\(event,locale\)/);
   const events=loadDomain();
-  assert.deepEqual(Array.from(events.TYPES),['all','raids','max','gbl','research','general']);
+  assert.deepEqual(Array.from(events.TYPES),['all','spotlight','raids','max','gbl','research','general']);
+  assert.equal(events.eventType({eventType:'pokemon-spotlight-hour',name:'Any stable title'}),'spotlight');
+  assert.equal(events.eventType({eventType:'event',name:'A title containing Spotlight Hour'}),'general');
   assert.equal(events.safeHttpsUrl('https://example.com/event'),'https://example.com/event');
   assert.equal(events.safeHttpsUrl('javascript:alert(1)'),'');
+});
+
+test('Now and event type chrome uses localized text without decorative glyph duplication',()=>{
+  const render=html.slice(html.indexOf('function setEventTypeFilter'),html.indexOf('function renderSchedule'));
+  assert.match(render,/class="event-current-badge">\$\{escHtml\(i18nCore\.t\('events\.nowBadge'\)\)\}/);
+  assert.doesNotMatch(render,/event-current-badge[^`]+●/);
+  assert.doesNotMatch(render,/eventTypeIcon/);
+  assert.match(html,/\.event-current-badge\{[^}]*text-transform:none/);
 });
 
 test('zero one and event-heavy fixtures stay bounded and sorted without per-card listeners',()=>{

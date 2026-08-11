@@ -1,7 +1,7 @@
 (function(global){
   const root=global.PogoDomain=global.PogoDomain||{};
   const GROUPS=Object.freeze(['now','soon','later']);
-  const TYPES=Object.freeze(['all','raids','max','gbl','research','general']);
+  const TYPES=Object.freeze(['all','spotlight','raids','max','gbl','research','general']);
   function dateOnly(value){return /^\d{4}-\d{2}-\d{2}$/.test(String(value||''));}
   function eventDate(value,endOfDay=false){
     if(dateOnly(value)){
@@ -11,6 +11,8 @@
     return new Date(value||0);
   }
   function eventType(event){
+    const sourceType=String(event?.eventType||'').trim().toLowerCase();
+    if(sourceType==='pokemon-spotlight-hour')return'spotlight';
     const text=`${event?.eventType||''} ${event?.name||''} ${event?.heading||''}`.toLowerCase();
     if(/max battle|dynamax|gigantamax/.test(text))return'max';
     if(/raid/.test(text))return'raids';

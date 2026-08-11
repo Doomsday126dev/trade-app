@@ -91,8 +91,9 @@ test('touch, wrapping, reduced-motion, and local-only safety contracts remain ex
   assert.match(html,/@media\(max-width:600px\)\{[^}]*[\s\S]*?\.favorite-card-surface\{grid-template-columns:minmax\(0,1fr\)/);
   assert.match(html,/-webkit-line-clamp:2/);
   assert.match(html,/\.favorite-card-footer\{justify-content:flex-end;padding-top:4px;border-top:1px solid var\(--border\)\}/);
-  assert.match(html,/\.favorite-filter-chip\{[^}]*min-height:48px/);
-  assert.match(html,/class="favorite-filter-check" aria-hidden="true"/);
+  assert.match(html,/\.favorite-filter-chip\{[^}]*min-height:48px[^}]*background:transparent/);
+  assert.match(html,/\.favorite-filter-chip-surface\{[^}]*min-height:30px[^}]*padding:4px 9px/);
+  assert.match(html,/class="favorite-filter-chip-surface"><span class="favorite-filter-check" aria-hidden="true"/);
   assert.match(html,/SYNCED_TRAINER_PREFERENCES_ENABLED!==false/);
   assert.doesNotMatch(html,/managedTrainerPreferencesRepository\.(?:mutate|write|save)/);
 });
