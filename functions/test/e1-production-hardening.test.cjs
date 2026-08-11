@@ -35,6 +35,25 @@ test('production custom role contains only the permissions proven necessary by o
   assert.throws(() => verifyPermissionInventory(PERMISSIONS.filter((permission) => permission !== 'datastore.entities.update')), /permission-drift/);
 });
 
+test('reserve replay protection grants the gateway only App Check token verification', () => {
+  const manifest = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../production/e1-production-resource-manifest.json'), 'utf8'));
+  const gatewaySource = fs.readFileSync(path.resolve(__dirname, '../e1-gateway/index.js'), 'utf8');
+
+  assert.match(gatewaySource, /exports\.readE1AccountFoundation = callable\('readAccountFoundation', false\)/);
+  assert.match(gatewaySource, /exports\.reserveE1TrainerHandle = callable\('reserveTrainerHandle', true\)/);
+  assert.deepEqual(manifest.appCheck.tokenVerifier, {
+    principal: manifest.gateway.serviceAccount,
+    role: 'roles/firebaseappcheck.tokenVerifier',
+    permissions: ['firebaseappcheck.appCheckTokens.verify'],
+    scope: 'project'
+  });
+  assert.deepEqual(manifest.gateway.firestoreRoles, []);
+  assert.deepEqual(manifest.gateway.rtdbRoles, []);
+  assert.deepEqual(manifest.gateway.authRoles, []);
+  assert.deepEqual(manifest.gateway.impersonationRoles, []);
+  assert.notEqual(manifest.appCheck.tokenVerifier.role, 'roles/firebaseappcheck.admin');
+});
+
 function guardedFixture() {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'e1-production-guard-'));
   const base = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../production/e1-production-resource-manifest.json'), 'utf8'));

@@ -58,6 +58,7 @@
     "authorityRole": "roles/run.invoker",
     "firestoreRoles": [],
     "rtdbRoles": [],
+    "authRoles": [],
     "impersonationRoles": []
   },
   "gatewayDeployment": {
@@ -71,6 +72,12 @@
   "appCheck": {
     "reads": "standard-token",
     "reserve": "limited-use-consumed-token",
+    "tokenVerifier": {
+      "principal": "e1-authority-gateway@trade-list-a4297.iam.gserviceaccount.com",
+      "role": "roles/firebaseappcheck.tokenVerifier",
+      "permissions": ["firebaseappcheck.appCheckTokens.verify"],
+      "scope": "project"
+    },
     "initialEnforcement": "monitor",
     "productionDebugTokens": false
   },
