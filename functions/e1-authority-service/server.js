@@ -3,6 +3,7 @@
 const crypto = require('node:crypto');
 const http = require('node:http');
 const { createFirestoreE1AuthorityAdapter } = require('./firestoreE1AuthorityAdapter');
+const { DURABLE_MODE, GROUP_C_PROOF_MODE, createReadLimiter } = require('./readRateLimiters');
 const { validateTarget } = require('./e1TargetContracts');
 const { HandleValidationError, normalizeHandle } = require('./handleNormalization');
 const { createVerifiedLegacyMappingReader, validatedTarget } = require('./rtdbVerifiedLegacyMappingReader');
@@ -72,7 +73,38 @@ function approvedManifestIds(value, enabled) {
   return Object.freeze(ids);
 }
 
-function loadConfiguration(env = process.env) {
+function readProofConfiguration(env, configuration, gates, now) {
+  const enabledValue = env.READ_PROOF_MODE;
+  if (enabledValue !== undefined && !['true', 'false'].includes(enabledValue)) fail('E1_READ_PROOF_CONFIGURATION_INVALID');
+  const enabled = enabledValue === 'true';
+  const proofValues = [env.READ_PROOF_SUBJECT_UID_HASH, env.READ_PROOF_SUBJECT_TRAINER_HASH,
+    env.READ_PROOF_WINDOW_START, env.READ_PROOF_WINDOW_END];
+  if (!enabled) {
+    if (proofValues.some((value) => value !== undefined && value !== '')) fail('E1_READ_PROOF_CONFIGURATION_INVALID');
+    return Object.freeze({ enabled: false, limiterMode: DURABLE_MODE, proof: null });
+  }
+  const start = Date.parse(env.READ_PROOF_WINDOW_START);
+  const end = Date.parse(env.READ_PROOF_WINDOW_END);
+  const at = now();
+  if (configuration.environment !== 'production' || gates.READ_ACCOUNT_FOUNDATION_ENABLED !== 'true' ||
+      MUTATION_GATES.some((gate) => gates[gate] !== 'false') || !SHA256.test(env.READ_PROOF_SUBJECT_UID_HASH || '') ||
+      !SHA256.test(env.READ_PROOF_SUBJECT_TRAINER_HASH || '') || !Number.isFinite(start) || !Number.isFinite(end) ||
+      start >= end || end - start > 8 * 60 * 60 * 1000 || !Number.isSafeInteger(at) || at < start || at >= end) {
+    fail('E1_READ_PROOF_CONFIGURATION_INVALID');
+  }
+  return Object.freeze({
+    enabled: true,
+    limiterMode: GROUP_C_PROOF_MODE,
+    proof: Object.freeze({
+      uidHash: env.READ_PROOF_SUBJECT_UID_HASH,
+      trainerHash: env.READ_PROOF_SUBJECT_TRAINER_HASH,
+      start,
+      end
+    })
+  });
+}
+
+function loadConfiguration(env = process.env, now = () => Date.now()) {
   const configuration = {
     environment: env.APP_ENVIRONMENT,
     projectId: env.FIREBASE_PROJECT_ID,
@@ -100,6 +132,7 @@ function loadConfiguration(env = process.env) {
   }
   const repairAccountFoundationEnabled = env.REPAIR_FOUNDATION_ENABLED === 'true';
   const applyMigrationManifestEnabled = env.APPLY_MIGRATION_ENABLED === 'true';
+  const readProof = readProofConfiguration(env, configuration, env, now);
   return Object.freeze({
     ...configuration,
     readAccountFoundationEnabled: env.READ_ACCOUNT_FOUNDATION_ENABLED === 'true',
@@ -107,6 +140,9 @@ function loadConfiguration(env = process.env) {
     repairAccountFoundationEnabled,
     applyMigrationManifestEnabled,
     freezeIdentityConflictEnabled: env.FREEZE_CONFLICT_ENABLED === 'true',
+    readProofMode: readProof.enabled,
+    readLimiterMode: readProof.limiterMode,
+    readProof: readProof.proof,
     repairApprovalWindow: approvalWindow(env, repairAccountFoundationEnabled),
     approvedMigrationManifestIds: approvedManifestIds(env.APPROVED_MIGRATION_MANIFEST_IDS, applyMigrationManifestEnabled)
   });
@@ -584,6 +620,15 @@ function createHandler(configuration, dependencies = {}) {
     ...RATE_LIMITS[operation],
     at: now()
   });
+  const readLimiter = dependencies.readLimiter || createReadLimiter({
+    mode: configuration.readLimiterMode,
+    proof: configuration.readProof,
+    consumeRateLimit: applyRateLimit,
+    rateLimit: RATE_LIMITS.readAccountFoundation,
+    now,
+    randomId,
+    rateAttemptHash
+  });
   return async function handler(request, response) {
     const startedAt = Date.now();
     const url = new URL(request.url, 'http://localhost');
@@ -593,9 +638,19 @@ function createHandler(configuration, dependencies = {}) {
         if (request.method !== 'POST') fail('METHOD_NOT_ALLOWED');
         if (!configuration.readAccountFoundationEnabled) fail('E1_NOT_ENABLED');
         exactReadRequest(await parseBody(request));
-        const { uid } = await verifyToken(configuration, firebaseTokenHeader(request));
+        const firebaseIdToken = firebaseTokenHeader(request);
+        const { uid } = await verifyToken(configuration, firebaseIdToken);
         callerHash = uidHash(configuration, uid);
-        await limitOperation('readAccountFoundation', callerHash, rateAttemptHash('readAccountFoundation', callerHash, [randomId()]));
+        readLimiter.assertUid(uid);
+        if (configuration.readProofMode) {
+          const legacy = await readLegacyBinding({ verifiedUid: uid, firebaseIdToken });
+          if (legacy?.status === 'mapping-incomplete' || legacy?.status === 'mapping-conflict') fail('E1_READ_PROOF_MAPPING_NOT_READY');
+          if (legacy?.status === 'permission-denied') fail('E1_READ_PROOF_MAPPING_DENIED');
+          if (legacy?.status !== 'ready') fail('E1_READ_PROOF_MAPPING_UNAVAILABLE');
+          await readLimiter.consume({ uid, trainerUsername: legacy.username });
+        } else {
+          await readLimiter.consume({ uid, subjectHash: callerHash });
+        }
         const document = await readAccount(configuration, uid);
         if (!document) {
           log(configuration, 'readAccountFoundation', 'not_initialized', startedAt, { uidHash: callerHash });
@@ -610,10 +665,15 @@ function createHandler(configuration, dependencies = {}) {
         log(configuration, 'readAccountFoundation', 'success', startedAt, { uidHash: callerHash });
         return json(response, 200, { code: 'SUCCESS', foundation });
       } catch (error) {
-        const code = ['E1_NOT_ENABLED', 'AUTH_REQUIRED', 'AUTH_INVALID', 'REQUEST_INVALID', 'REQUEST_TOO_LARGE', 'METHOD_NOT_ALLOWED'].includes(error?.code)
+        const code = ['E1_NOT_ENABLED', 'AUTH_REQUIRED', 'AUTH_INVALID', 'REQUEST_INVALID', 'REQUEST_TOO_LARGE', 'METHOD_NOT_ALLOWED',
+          'E1_READ_PROOF_SUBJECT_DENIED', 'E1_READ_PROOF_EXPIRED', 'E1_READ_PROOF_MAPPING_NOT_READY',
+          'E1_READ_PROOF_MAPPING_DENIED', 'E1_READ_PROOF_MAPPING_UNAVAILABLE'].includes(error?.code)
           ? error.code : 'INTERNAL_ERROR';
         const status = code === 'E1_NOT_ENABLED' ? 503 : code === 'AUTH_REQUIRED' || code === 'AUTH_INVALID' ? 401 :
           code === 'REQUEST_TOO_LARGE' ? 413 : code === 'METHOD_NOT_ALLOWED' ? 405 : code === 'REQUEST_INVALID' ? 400 :
+            code === 'E1_READ_PROOF_SUBJECT_DENIED' || code === 'E1_READ_PROOF_MAPPING_DENIED' ? 403 :
+              code === 'E1_READ_PROOF_MAPPING_NOT_READY' ? 409 :
+                code === 'E1_READ_PROOF_EXPIRED' || code === 'E1_READ_PROOF_MAPPING_UNAVAILABLE' ? 503 :
             error?.code === 'e1/rate-limit-exceeded' ? 429 : 500;
         const responseCode = error?.code === 'e1/rate-limit-exceeded' ? 'RATE_LIMITED' : code;
         log(configuration, 'readAccountFoundation', responseCode.toLowerCase(), startedAt, callerHash ? { uidHash: callerHash } : {});

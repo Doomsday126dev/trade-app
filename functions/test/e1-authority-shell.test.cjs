@@ -50,6 +50,9 @@ test('shell configuration is explicit and all authority gates fail closed', () =
     repairAccountFoundationEnabled: false,
     applyMigrationManifestEnabled: false,
     freezeIdentityConflictEnabled: false,
+    readProofMode: false,
+    readLimiterMode: 'firestore-rolling-v1',
+    readProof: null,
     repairApprovalWindow: null,
     approvedMigrationManifestIds: []
   });

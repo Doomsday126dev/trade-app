@@ -9,6 +9,7 @@ const { ALLOWED_OPERATIONS, AUTHORITY_GATES, guardProductionReadProof } =
   require('../production/e1ProductionReadProofGuard.cjs');
 const { guardProductionInfrastructure } = require('../production/e1ProductionInfrastructureGuard.cjs');
 const { guardProductionTarget } = require('../production/e1ProductionDeploymentGuard.cjs');
+const { GROUP_C_PROOF_MODE, readProofSubjectHash } = require('../e1-authority-service/readRateLimiters');
 
 const NOW = Date.parse('2030-01-01T12:00:00.000Z');
 const SUBJECT = Object.freeze({ firebaseUid: 'reviewed-owner-uid', trainerUsername: 'ReviewedOwner' });
@@ -70,7 +71,16 @@ function fixture(readinessOverrides = {}, inputOverrides = {}) {
     productionRtdbWriteCount: 0,
     productionAuthMutationCount: 0,
     productionPublicShareWriteCount: 0,
-    readPathRateLimitPersistence: 'none',
+    readProofMode: true,
+    readProofSubjectHashes: {
+      uidHash: readProofSubjectHash('uid', SUBJECT.firebaseUid),
+      trainerHash: readProofSubjectHash('trainer', SUBJECT.trainerUsername)
+    },
+    readProofExpiresAt: '2030-01-01T13:30:00.000Z',
+    mutationFreeReadLimiter: true,
+    durableLimiterBypassScope: 'group-c-reviewed-subject-only',
+    postProofReadProofMode: false,
+    readPathRateLimitPersistence: GROUP_C_PROOF_MODE,
     ...inputOverrides
   };
   return { input, manifestPath, readinessPath };
@@ -97,6 +107,7 @@ test('valid Group C pre-proof state is subject-bound mutation-free and restores 
     reviewedSubjectVerified: true,
     preProofStateVerified: true,
     readPathMutationFree: true,
+    readLimiterMode: GROUP_C_PROOF_MODE,
     leaveReadPathEnabledAfterProof: false,
     laterGroupsAuthorized: false,
     cloudOperations: 0
@@ -106,6 +117,8 @@ test('valid Group C pre-proof state is subject-bound mutation-free and restores 
 test('Group A and Group B readiness cannot satisfy Group C and Group C cannot satisfy A or B', () => {
   reason(fixture({ approvalGroup: 'A' }), 'group_c_approval_invalid');
   reason(fixture({ approvalGroup: 'B' }), 'group_c_approval_invalid');
+  reason(fixture({ approvalGroup: 'D' }), 'group_c_approval_invalid');
+  reason(fixture({ approvalGroup: 'E' }), 'group_c_approval_invalid');
   const groupC = fixture();
   assert.throws(() => guardProductionInfrastructure({}, {
     manifestPath: groupC.manifestPath,
@@ -152,6 +165,15 @@ test('Group C rejects gate IAM App Check and authority-store drift', () => {
 test('Group C fails closed when a read would persist durable rate-limit state', () => {
   reason(fixture({}, { readPathRateLimitPersistence: 'firestore-rolling-v1' }), 'group_c_read_path_would_mutate');
   reason(fixture({}, { readPathRateLimitPersistence: 'unknown' }), 'group_c_read_path_would_mutate');
+  reason(fixture({}, { readProofMode: false }), 'group_c_read_path_would_mutate');
+  reason(fixture({}, { mutationFreeReadLimiter: false }), 'group_c_read_path_would_mutate');
+  reason(fixture({}, { durableLimiterBypassScope: 'all-production-users' }), 'group_c_read_path_would_mutate');
+  reason(fixture({}, { postProofReadProofMode: true }), 'group_c_read_path_would_mutate');
+  reason(fixture({}, { readProofExpiresAt: '2030-01-01T13:31:00.000Z' }), 'group_c_read_path_would_mutate');
+  reason(fixture({}, { readProofSubjectHashes: {
+    uidHash: readProofSubjectHash('uid', 'another-owner-uid'),
+    trainerHash: readProofSubjectHash('trainer', SUBJECT.trainerUsername)
+  } }), 'group_c_proof_subject_hash_mismatch');
 });
 
 test('Group C rejects any pre-proof production application write', () => {

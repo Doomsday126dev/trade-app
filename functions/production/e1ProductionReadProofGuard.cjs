@@ -2,6 +2,7 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
+const { GROUP_C_PROOF_MODE, readProofSubjectHash } = require('../e1-authority-service/readRateLimiters');
 
 const MANIFEST_PATH = path.resolve(__dirname, 'e1-production-resource-manifest.json');
 const PRIVATE_READINESS_PATH = path.resolve(__dirname, '../.local/e1-production-read-proof-activation.json');
@@ -16,11 +17,11 @@ const AUTHORITY_GATES = Object.freeze([
 const ALLOWED_OPERATIONS = Object.freeze([
   'read-production-control-plane-inventory',
   'read-reviewed-subject-reciprocal-legacy-paths',
-  'enable-authority-read-gate',
-  'enable-gateway-invocation-gate',
+  'deploy-bounded-authority-read-proof-revision',
+  'deploy-bounded-gateway-read-proof-revision',
   'invoke-read-account-foundation',
   'exercise-reviewed-negative-read-paths',
-  'restore-read-gates-disabled',
+  'restore-authority-and-gateway-proof-state-disabled',
   'read-post-proof-integrity-inventory'
 ]);
 const READINESS_FIELDS = Object.freeze([
@@ -73,6 +74,12 @@ const INPUT_FIELDS = Object.freeze([
   'productionRtdbWriteCount',
   'productionAuthMutationCount',
   'productionPublicShareWriteCount',
+  'readProofMode',
+  'readProofSubjectHashes',
+  'readProofExpiresAt',
+  'mutationFreeReadLimiter',
+  'durableLimiterBypassScope',
+  'postProofReadProofMode',
   'readPathRateLimitPersistence'
 ]);
 
@@ -153,6 +160,13 @@ function guardProductionReadProof(input, options = {}) {
 
   if (!sameValues(input?.requestedOperations, ALLOWED_OPERATIONS)) errors.push('group_c_operation_not_authorized');
   if (!sameSubject(input?.reviewedSubject, readiness?.reviewedSubject)) errors.push('group_c_subject_mismatch');
+  const hashes = input?.readProofSubjectHashes;
+  if (!validSubject(readiness?.reviewedSubject) || !exactFields(hashes, ['uidHash', 'trainerHash'])) {
+    errors.push('group_c_proof_subject_hash_mismatch');
+  } else if (hashes.uidHash !== readProofSubjectHash('uid', readiness.reviewedSubject.firebaseUid) ||
+      hashes.trainerHash !== readProofSubjectHash('trainer', readiness.reviewedSubject.trainerUsername)) {
+    errors.push('group_c_proof_subject_hash_mismatch');
+  }
   if (input?.reciprocalLegacyOwnershipVerified !== true) errors.push('group_c_reciprocal_ownership_unverified');
   if (input?.groupAInfrastructureHealthy !== true || input?.authorityHealthy !== true || input?.gatewayDeployed !== true ||
       input?.gatewayRuntimeSoleAuthorityInvoker !== true || input?.publicAuthorityInvoker !== false ||
@@ -170,7 +184,11 @@ function guardProductionReadProof(input, options = {}) {
   if (input?.phaseEIdentityDocumentCount !== 0) errors.push('group_c_authority_store_not_empty');
   if (input?.productionRtdbWriteCount !== 0 || input?.productionAuthMutationCount !== 0 ||
       input?.productionPublicShareWriteCount !== 0) errors.push('group_c_preproof_write_detected');
-  if (input?.readPathRateLimitPersistence !== 'none') errors.push('group_c_read_path_would_mutate');
+  if (input?.readProofMode !== true || input?.readProofExpiresAt !== readiness?.proofWindow?.endAt ||
+      input?.mutationFreeReadLimiter !== true || input?.durableLimiterBypassScope !== 'group-c-reviewed-subject-only' ||
+      input?.postProofReadProofMode !== false || input?.readPathRateLimitPersistence !== GROUP_C_PROOF_MODE) {
+    errors.push('group_c_read_path_would_mutate');
+  }
 
   if (errors.length) {
     const error = new Error('e1/production-read-proof-guard-failed');
@@ -185,6 +203,7 @@ function guardProductionReadProof(input, options = {}) {
     reviewedSubjectVerified: true,
     preProofStateVerified: true,
     readPathMutationFree: true,
+    readLimiterMode: GROUP_C_PROOF_MODE,
     leaveReadPathEnabledAfterProof: false,
     laterGroupsAuthorized: false,
     cloudOperations: 0
