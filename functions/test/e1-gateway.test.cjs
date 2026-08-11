@@ -80,7 +80,20 @@ test('gateway uses Google OIDC serverless authorization and forwards the subject
   assert.equal(options.headers['X-Firebase-ID-Token'], 'firebase-id-token');
   assert.equal(options.headers['X-E1-Rate-Limit-Policy'], 'firestore-rolling-v1');
   assert.equal(Object.hasOwn(options.headers, 'Authorization'), false);
+  assert.equal(JSON.stringify(options).includes('app-check-token'), false);
   assert.equal(JSON.stringify(calls).includes('service-account-key'), false);
+});
+
+test('gateway forwards only the original callable bearer token and never substitutes decoded Auth or App Check context', () => {
+  const boundary = verifyCallableBoundary('readAccountFoundation', request(undefined, {
+    auth: { uid: 'firebase_uid_gateway', token: { uid: 'decoded-context-must-not-be-forwarded' } },
+    app: { appId: 'app-check-context-must-not-be-forwarded', token: 'app-check-token-must-not-be-forwarded' }
+  }));
+  assert.equal(boundary.firebaseIdToken, 'firebase-id-token');
+  assert.notEqual(boundary.firebaseIdToken, boundary.uid);
+  assert.throws(() => verifyCallableBoundary('readAccountFoundation', request(undefined, {
+    rawRequest: { headers: { 'x-firebase-appcheck': 'app-check-token' } }
+  })), /AUTH_REQUIRED/);
 });
 
 test('gateway exports only the two reviewed public operations and delegates durable quota to authority', () => {

@@ -46,11 +46,15 @@ function firebaseToken(claimOverrides = {}) {
   return `${Buffer.from('{"alg":"RS256","typ":"JWT"}').toString('base64url')}.${Buffer.from(JSON.stringify(claims)).toString('base64url')}.test-signature`;
 }
 
-function response(status, body) {
+function verifier(claimOverrides = {}, error = null, calls = []) {
   return {
-    ok: status >= 200 && status < 300,
-    status,
-    async json() { return body; }
+    async verifyIdToken(token, checkRevoked) {
+      calls.push({ token, checkRevoked });
+      assert.equal(token, firebaseToken(claimOverrides));
+      assert.equal(checkRevoked, false);
+      if (error) throw error;
+      return { ...JSON.parse(Buffer.from(token.split('.')[1], 'base64url').toString('utf8')), uid: claimOverrides.sub || UID };
+    }
   };
 }
 
@@ -124,16 +128,32 @@ test('read operation is unavailable while its gate is false and no authenticatio
   assert.equal(touched, false);
 });
 
-test('missing malformed wrong-project expired disabled and revoked Firebase identities are rejected safely', async () => {
-  const lookup = (user, status = 200) => async () => response(status, status === 200 ? { users: [user] } : { error: { message: 'private-auth-detail' } });
+test('Firebase Admin verification accepts a valid token and rejects missing malformed wrong-project expired and unverifiable identities', async () => {
   const configuration = loadConfiguration(environment({ READ_ACCOUNT_FOUNDATION_ENABLED: 'true' }));
-  await assert.rejects(() => verifyFirebaseIdToken(configuration, '', lookup({})), /AUTH_REQUIRED/);
-  await assert.rejects(() => verifyFirebaseIdToken(configuration, 'not-a-jwt', lookup({ localId: UID })), /AUTH_INVALID/);
-  await assert.rejects(() => verifyFirebaseIdToken(configuration, firebaseToken({ aud: 'wrong-project' }), lookup({ localId: UID })), /AUTH_INVALID/);
-  await assert.rejects(() => verifyFirebaseIdToken(configuration, firebaseToken({ exp: NOW_SECONDS - 1 }), lookup({ localId: UID }), () => NOW_SECONDS * 1000), /AUTH_INVALID/);
-  await assert.rejects(() => verifyFirebaseIdToken(configuration, firebaseToken(), lookup({ localId: UID, disabled: true })), /AUTH_INVALID/);
-  await assert.rejects(() => verifyFirebaseIdToken(configuration, firebaseToken(), lookup({ localId: UID, validSince: String(NOW_SECONDS) })), /AUTH_INVALID/);
-  await assert.rejects(() => verifyFirebaseIdToken(configuration, firebaseToken(), lookup({}, 400)), /AUTH_INVALID/);
+  const calls = [];
+  await assert.rejects(() => verifyFirebaseIdToken(configuration, '', verifier()), /AUTH_REQUIRED/);
+  await assert.rejects(() => verifyFirebaseIdToken(configuration, 'not-a-jwt', { verifyIdToken: async () => ({ uid: UID }) }), /AUTH_INVALID/);
+  await assert.rejects(() => verifyFirebaseIdToken(configuration, firebaseToken({ aud: 'wrong-project' }), verifier({ aud: 'wrong-project' })), /AUTH_INVALID/);
+  await assert.rejects(() => verifyFirebaseIdToken(configuration, firebaseToken({ exp: NOW_SECONDS - 1 }), verifier({ exp: NOW_SECONDS - 1 }), () => NOW_SECONDS * 1000), /AUTH_INVALID/);
+  await assert.rejects(() => verifyFirebaseIdToken(configuration, firebaseToken(), verifier({}, new Error('signature rejected'))), /AUTH_INVALID/);
+  assert.deepEqual(await verifyFirebaseIdToken(configuration, firebaseToken(), verifier({}, null, calls), () => NOW_SECONDS * 1000), { uid: UID });
+  assert.deepEqual(calls, [{ token: firebaseToken(), checkRevoked: false }]);
+  assert.doesNotMatch(verifyFirebaseIdToken.toString(), /accounts:lookup|firebaseWebApiKey|user_id/u);
+});
+
+test('default handler verifier uses the Firebase token-verifier seam rather than the HTTP fetch seam', async () => {
+  const calls = [];
+  const configuration = loadConfiguration(environment({ READ_ACCOUNT_FOUNDATION_ENABLED: 'true' }));
+  const handler = createHandler(configuration, {
+    firebaseTokenVerifier: verifier({}, null, calls),
+    fetchImpl: async () => { throw new Error('Firebase token verification must not use fetch'); },
+    readAccountDocument: async () => null,
+    consumeRateLimit: async () => ({ allowed: true, consumed: true }),
+    structuredLog: () => {}
+  });
+  const result = await invoke(handler);
+  assert.deepEqual(result.body, { code: 'FOUNDATION_NOT_INITIALIZED' });
+  assert.deepEqual(calls, [{ token: firebaseToken(), checkRevoked: false }]);
 });
 
 test('valid caller with no account receives FOUNDATION_NOT_INITIALIZED and performs one exact read with no writes', async () => {
@@ -144,6 +164,7 @@ test('valid caller with no account receives FOUNDATION_NOT_INITIALIZED and perfo
   assert.deepEqual(calls.reads, [UID]);
   assert.deepEqual(calls.writes, []);
   assert.equal(JSON.stringify(calls.logs).includes(UID), false);
+  assert.equal(JSON.stringify(calls.logs).includes(firebaseToken()), false);
   assert.match(calls.logs[0].extra.uidHash, /^[a-f0-9]{16}$/);
 });
 

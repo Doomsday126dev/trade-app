@@ -88,7 +88,7 @@ try {
       process.stdout.write(JSON.stringify({
         packageInstall: 'npm-ci-lockfile',
         nativeHttpDependency: typeof fetch === 'function',
-        firebaseAuthVerificationDependency: 'native-fetch',
+        firebaseAuthVerificationDependency: require('./package.json').dependencies['firebase-admin'],
         firestoreTransactionDependency: require('@google-cloud/firestore/package.json').version,
         firestoreClientConstructedAtStartup: true,
         implementedTestGates: {

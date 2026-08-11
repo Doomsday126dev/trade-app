@@ -2,6 +2,8 @@
 
 const crypto = require('node:crypto');
 const http = require('node:http');
+const { getApps, initializeApp } = require('firebase-admin/app');
+const { getAuth: getAdminAuth } = require('firebase-admin/auth');
 const { createFirestoreE1AuthorityAdapter } = require('./firestoreE1AuthorityAdapter');
 const { DURABLE_MODE, GROUP_C_PROOF_MODE, createReadLimiter } = require('./readRateLimiters');
 const { validateTarget } = require('./e1TargetContracts');
@@ -227,36 +229,36 @@ function decodeFirebaseClaims(firebaseIdToken) {
   }
 }
 
-async function verifyFirebaseIdToken(configuration, firebaseIdToken, fetchImpl = fetch, now = () => Date.now()) {
+let firebaseTokenVerifier;
+
+function defaultFirebaseTokenVerifier(configuration) {
+  if (!firebaseTokenVerifier) {
+    const appName = 'e1-identity-authority-token-verifier';
+    const app = getApps().find((candidate) => candidate.name === appName) ||
+      initializeApp({ projectId: configuration.projectId }, appName);
+    firebaseTokenVerifier = getAdminAuth(app);
+  }
+  return firebaseTokenVerifier;
+}
+
+async function verifyFirebaseIdToken(configuration, firebaseIdToken, verifier, now = () => Date.now()) {
   if (typeof firebaseIdToken !== 'string' || !firebaseIdToken) fail('AUTH_REQUIRED');
   if (Buffer.byteLength(firebaseIdToken) > 8192) fail('AUTH_INVALID');
-  let response;
+  const tokenVerifier = verifier || defaultFirebaseTokenVerifier(configuration);
+  let claims;
   try {
-    response = await fetchImpl(
-      `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${encodeURIComponent(configuration.firebaseWebApiKey)}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ idToken: firebaseIdToken })
-      }
-    );
+    claims = await tokenVerifier.verifyIdToken(firebaseIdToken, false);
   } catch {
-    fail('INTERNAL_ERROR');
-  }
-  if (!response.ok) {
-    if (response.status >= 500) fail('INTERNAL_ERROR');
     fail('AUTH_INVALID');
   }
-  const payload = await response.json();
-  const user = Array.isArray(payload.users) && payload.users.length === 1 ? payload.users[0] : null;
-  const claims = decodeFirebaseClaims(firebaseIdToken);
-  const uid = user?.localId;
+  const decodedClaims = decodeFirebaseClaims(firebaseIdToken);
+  const uid = claims?.uid || claims?.sub;
   const nowSeconds = Math.floor(now() / 1000);
-  const validSince = Number(user?.validSince || 0);
-  if (!UID.test(uid || '') || user.disabled === true || claims.sub !== uid || claims.user_id !== uid ||
-      claims.aud !== configuration.projectId || claims.iss !== `https://securetoken.google.com/${configuration.projectId}` ||
-      !Number.isFinite(claims.exp) || claims.exp <= nowSeconds || !Number.isFinite(claims.auth_time) ||
-      (Number.isFinite(validSince) && validSince > 0 && claims.auth_time < validSince)) fail('AUTH_INVALID');
+  if (!UID.test(uid || '') || claims.sub !== uid || decodedClaims.sub !== uid ||
+      claims.aud !== configuration.projectId || decodedClaims.aud !== configuration.projectId ||
+      claims.iss !== `https://securetoken.google.com/${configuration.projectId}` || decodedClaims.iss !== claims.iss ||
+      !Number.isFinite(claims.exp) || claims.exp <= nowSeconds || decodedClaims.exp !== claims.exp ||
+      !Number.isFinite(claims.auth_time) || decodedClaims.auth_time !== claims.auth_time) fail('AUTH_INVALID');
   return Object.freeze({ uid });
 }
 
@@ -577,7 +579,8 @@ function json(response, status, body) {
 function createHandler(configuration, dependencies = {}) {
   const fetchImpl = dependencies.fetchImpl || fetch;
   const probe = dependencies.runtimeProbe || ((config) => runtimeProbe(config, fetchImpl));
-  const verifyToken = dependencies.verifyFirebaseIdToken || ((config, token) => verifyFirebaseIdToken(config, token, fetchImpl));
+  const verifyToken = dependencies.verifyFirebaseIdToken ||
+    ((config, token) => verifyFirebaseIdToken(config, token, dependencies.firebaseTokenVerifier));
   const verifyOperator = dependencies.verifyOperatorAccessToken || ((config, token) => verifyOperatorAccessToken(config, token, fetchImpl));
   const readAccount = dependencies.readAccountDocument || ((config, uid) => readAccountDocument(config, uid, fetchImpl));
   const legacyReader = dependencies.legacyReader || createVerifiedLegacyMappingReader({
