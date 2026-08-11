@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
-  "status": "project-number-review-required",
+  "status": "project-number-reviewed",
   "environment": "production",
   "project": {
     "id": "trade-list-a4297",
-    "number": null,
-    "numberReviewed": false,
+    "number": "1053781218847",
+    "numberReviewed": true,
     "region": "us-central1"
   },
   "apis": [
@@ -92,6 +92,13 @@
   ],
   "mandatoryRemediation": [
     "remove roles/editor from the default Compute service account if automatically granted and unused"
+  ],
+  "approvalGroups": [
+    { "group": "A", "scope": "production-infrastructure" },
+    { "group": "B", "scope": "private-authority-and-gateway-deployment" },
+    { "group": "C", "scope": "read-only-production-proof" },
+    { "group": "D", "scope": "first-mutation-cohort" },
+    { "group": "E", "scope": "client-foundation-activation" }
   ],
   "rolloutCohorts": [
     { "name": "owner", "size": 1, "observeHours": 24 },

@@ -84,11 +84,13 @@ test('production guard requires reviewed project number private readiness narrow
     (error) => error.reasons.includes('activation_gate_not_false'));
 });
 
-test('tracked production manifest deliberately blocks deployment until project number review is recorded', () => {
-  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'e1-production-readiness-'));
-  const readinessPath = path.join(directory, 'readiness.json');
-  fs.writeFileSync(readinessPath, JSON.stringify({ environment: 'production', approved: true }));
-  assert.throws(() => guardProductionTarget({}, { readinessPath }), (error) => error.reasons.includes('project_number_not_reviewed'));
+test('reviewed production project number still leaves Group B deployment blocked without its private readiness', () => {
+  const manifest = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../production/e1-production-resource-manifest.json'), 'utf8'));
+  assert.equal(manifest.project.number, '1053781218847');
+  assert.equal(manifest.project.numberReviewed, true);
+  const missingReadiness = path.join(os.tmpdir(), `e1-production-readiness-missing-${process.pid}.json`);
+  assert.throws(() => guardProductionTarget({}, { readinessPath: missingReadiness }),
+    (error) => error.reasons.includes('private_readiness_file_missing_or_invalid'));
 });
 
 test('rollback disables every activation path while preserving legacy username PIN compatibility and authority records', () => {
