@@ -64,7 +64,8 @@ test('favorite organizer trigger and sheet controls expose 48px touch targets',(
   assert.match(html,/\.trainer-icon-btn\{width:48px;height:48px/);
   assert.match(html,/\.organizer-close\{width:48px;height:48px;min-width:48px/);
   assert.match(html,/\.organizer-add-tag button,\.organizer-new-tag-toggle\{min-height:48px/);
-  assert.match(html,/\.favorite-card-add-tag,\.favorite-card-more\{width:48px;height:48px/);
+  assert.match(html,/\.favorite-card-add-tag\{width:auto;height:48px;min-width:64px/);
+  assert.match(html,/\.favorite-card-more\{width:48px;height:48px;min-width:48px/);
   assert.match(html,/\.organizer-body\{[^}]*overflow-y:auto/);
   assert.match(html,/padding-bottom:calc\(20px \+ env\(safe-area-inset-bottom\)\)/);
 });
@@ -77,7 +78,7 @@ test('signed-out and anonymous screens expose language settings without a profil
 });
 
 test('account menu and Settings surfaces preserve keyboard focus and route compatibility',()=>{
-  assert.match(html,/popover\.querySelector\('button'\)\?\.focus\(\)/);
+  assert.match(html,/popover\.querySelector\('button'\)\?\.focus\(\{preventScroll:true\}\)/);
   assert.match(html,/if\(e\.key==='Escape'&&popover&&!popover\.hidden\)/);
   assert.match(html,/if\(ev\.key==='Escape'\)\{if\(id==='settings-modal'&&settingsDetailIsOpenOnMobile\(\)\)\{showSettingsSectionList\(\);return;\}if\(id==='trainer-organizer-modal'\)closeTrainerOrganizer\(\);else closeModal\(id\);return;\}/);
   assert.match(html,/if\(returnFocus\?\.isConnected&&!returnFocus\.disabled\)returnFocus\.focus\(/);

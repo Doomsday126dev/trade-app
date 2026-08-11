@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#0f0f1a">
+<meta name="theme-color" content="#111316">
 <title>PoGo Trade List</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="assets/tradeloop-icon.svg" type="image/svg+xml">
@@ -12,39 +12,44 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
 :root,html[data-theme="dark"]{
-  --bg:#0f0f1a;--bg2:#1a1a2e;--card:#1e1e35;
-  --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.18);
-  --text:#e8e8f0;--muted:#a8a8c8;--accent:#6c63ff;--ac2:#a78bfa;
+  --bg:#111316;--bg2:#171a1f;--card:#1d2127;
+  --border:rgba(255,255,255,0.075);--border2:rgba(255,255,255,0.16);
+  --text:#f3f4f6;--muted:#a7adb8;--accent:#7167f5;--ac2:#b2abff;
   --H:#ef4444;--M:#f59e0b;--L:#10b981;
   --Hbg:rgba(239,68,68,.16);--Mbg:rgba(245,158,11,.16);--Lbg:rgba(16,185,129,.16);
   --danger:#ef4444;--warn:#f59e0b;--ok:#10b981;
-  --shadow:0 4px 12px rgba(0,0,0,.3);
+  --shadow:0 14px 36px rgba(0,0,0,.24);
+  --surface-canvas:var(--bg);--surface-raised:var(--card);--surface-subtle:var(--bg2);--surface-hover:rgba(255,255,255,.035);
+  --border-strong:rgba(255,255,255,.22);--shadow-low:0 1px 2px rgba(0,0,0,.18);--shadow-high:0 18px 48px rgba(0,0,0,.32);
   --space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:24px;--space-6:32px;
-  --container-narrow:480px;--container-standard:760px;--container-wide:960px;
+  --container-narrow:480px;--container-standard:760px;--container-wide:1120px;
   --radius-sm:4px;--radius-md:6px;--radius-lg:8px;--radius-pill:999px;
-  --type-page:22px/28px var(--font);--type-section:17px/24px var(--font);--type-card:15px/21px var(--font);
+  --type-page:24px/30px var(--font);--type-section:18px/25px var(--font);--type-card:15px/21px var(--font);
   --type-body:14px/21px var(--font);--type-meta:12px/18px var(--font);--type-utility:11px/16px var(--font);
-  --control-min:48px;--focus-ring:0 0 0 3px rgba(108,99,255,.2);
-  --topbar-h:56px;--font:'Space Grotesk',sans-serif;--mono:'JetBrains Mono',monospace;
+  --control-min:48px;--focus-ring:0 0 0 3px rgba(113,103,245,.24);
+  --page-gutter:clamp(16px,3vw,32px);--transition-fast:140ms ease;--transition-base:200ms ease;
+  --topbar-h:64px;--font:'Space Grotesk',sans-serif;--mono:'JetBrains Mono',monospace;
 }
 html[data-theme="light"]{
-  --bg:#f5f7fa;--bg2:#ffffff;--card:#ffffff;
-  --border:rgba(15,23,42,0.08);--border2:rgba(15,23,42,0.18);
-  --text:#1e293b;--muted:#64748b;--accent:#6366f1;--ac2:#7c3aed;
+  --bg:#f4f5f7;--bg2:#eef0f3;--card:#ffffff;
+  --border:rgba(17,24,39,0.08);--border2:rgba(17,24,39,0.16);
+  --text:#1b1f27;--muted:#626b78;--accent:#6258df;--ac2:#5147ce;
   --H:#dc2626;--M:#d97706;--L:#059669;
   --Hbg:rgba(220,38,38,.1);--Mbg:rgba(217,119,6,.1);--Lbg:rgba(5,150,105,.1);
   --danger:#dc2626;--warn:#d97706;--ok:#059669;
-  --shadow:0 2px 8px rgba(15,23,42,.06);
+  --shadow:0 14px 34px rgba(17,24,39,.10);
+  --surface-hover:rgba(17,24,39,.035);--border-strong:rgba(17,24,39,.22);--shadow-low:0 1px 2px rgba(17,24,39,.08);--shadow-high:0 20px 52px rgba(17,24,39,.14);
 }
 @media(prefers-color-scheme:light){
   :root:not([data-theme]){
-    --bg:#f5f7fa;--bg2:#ffffff;--card:#ffffff;
-    --border:rgba(15,23,42,0.08);--border2:rgba(15,23,42,0.18);
-    --text:#1e293b;--muted:#64748b;--accent:#6366f1;--ac2:#7c3aed;
+    --bg:#f4f5f7;--bg2:#eef0f3;--card:#ffffff;
+    --border:rgba(17,24,39,0.08);--border2:rgba(17,24,39,0.16);
+    --text:#1b1f27;--muted:#626b78;--accent:#6258df;--ac2:#5147ce;
     --H:#dc2626;--M:#d97706;--L:#059669;
     --Hbg:rgba(220,38,38,.1);--Mbg:rgba(217,119,6,.1);--Lbg:rgba(5,150,105,.1);
     --danger:#dc2626;--warn:#d97706;--ok:#059669;
-    --shadow:0 2px 8px rgba(15,23,42,.06);
+    --shadow:0 14px 34px rgba(17,24,39,.10);
+    --surface-hover:rgba(17,24,39,.035);--border-strong:rgba(17,24,39,.22);--shadow-low:0 1px 2px rgba(17,24,39,.08);--shadow-high:0 20px 52px rgba(17,24,39,.14);
   }
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -80,7 +85,7 @@ input,select,textarea{font-family:var(--font);outline:none}
 
 /* TOPBAR */
 .topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 16px;height:var(--topbar-h);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
-.logo{font-weight:700;font-size:17px;letter-spacing:-.3px;display:flex;align-items:center;gap:8px}
+.logo{font-weight:700;font-size:17px;letter-spacing:0;display:flex;align-items:center;gap:8px}
 .logo span{background:linear-gradient(135deg,var(--accent),var(--ac2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .brand-mark{width:26px;height:26px;display:block;flex:0 0 auto;border-radius:7px;box-shadow:0 0 0 1px rgba(255,255,255,.08),0 6px 16px rgba(108,99,255,.22)}
 .brand-mark.lg{width:32px;height:32px;border-radius:9px}
@@ -1660,8 +1665,8 @@ body.wp-forest{background:linear-gradient(145deg,#0f0f1a 0%,#17251c 50%,#17162a 
 body.wp-sunset{background:linear-gradient(145deg,#0f0f1a 0%,#262034 46%,#24171f 100%)}
 body.wp-mono{background:#0f0f1a}
 body.wp-mist{background:linear-gradient(145deg,#0f0f1a 0%,#1b1d29 48%,#111827 100%)}
-html[data-theme="light"] body[class*="wp-"]{background:#f5f7fa}
-@media(prefers-color-scheme:light){html:not([data-theme]) body[class*="wp-"]{background:#f5f7fa}}
+html[data-theme="light"] body[class*="wp-"]{background:var(--surface-canvas)}
+@media(prefers-color-scheme:light){html:not([data-theme]) body[class*="wp-"]{background:var(--surface-canvas)}}
 .wp-picker{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px}
 .wp-swatch{height:48px;min-height:48px;border-radius:var(--radius-md);border:2px solid var(--border);cursor:pointer;position:relative;transition:.15s;display:flex;align-items:center;justify-content:center;font-size:10px;color:#f8fafc;font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,.75);overflow:hidden;isolation:isolate}
 .wp-swatch::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.12),rgba(0,0,0,.34));z-index:-1}
@@ -1821,6 +1826,56 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
 @media(max-width:767px){.settings-overlay{align-items:flex-end;padding:0}.settings-modal{max-width:none;width:100%;max-height:calc(100dvh - env(safe-area-inset-top));margin:auto 0 0;border-radius:14px 14px 0 0;border-bottom:0}.settings-modal-header{padding-top:16px}.settings-modal-body{padding-bottom:env(safe-area-inset-bottom);max-height:calc(100dvh - 88px - env(safe-area-inset-top));min-height:min(560px,calc(100dvh - 88px - env(safe-area-inset-top)))}.settings-layout{display:block;height:100%}.settings-nav{border:0;padding:12px 14px}.settings-nav-list{gap:6px}.settings-nav-button{border:1px solid var(--border);background:var(--card)}.settings-detail{height:100%;padding:12px 14px calc(20px + env(safe-area-inset-bottom))}.settings-mobile-back{display:inline-flex;align-items:center}.settings-layout.mobile-list .settings-detail{display:none}.settings-layout:not(.mobile-list) .settings-nav{display:none}.settings-tool-list{grid-template-columns:1fr}.settings-panel{margin:10px 0}.topbar{padding-inline:10px}.topbar-r{gap:6px}.account-trigger{max-width:150px}.account-trigger #top-un{max-width:84px}.account-popover{position:fixed;top:auto;right:8px;bottom:calc(8px + env(safe-area-inset-bottom));width:calc(100vw - 16px);max-height:calc(100dvh - 24px - env(safe-area-inset-top));overflow-y:auto}.local-settings-trigger span{display:none}}
 @media(max-width:390px){.account-trigger{padding-right:7px}.account-trigger #top-un{display:none}.account-trigger .account-chevron{display:block}.install-btn{display:none!important}}
 @media(max-width:360px){.page{padding-inline:10px}.add-form,.event-card,.trainer-quick-card{padding:var(--space-3)}.favorite-toolbar{grid-template-columns:1fr}.favorite-toolbar .bghost{width:100%;min-height:48px}.favorite-filter-tags{grid-column:1}}
+
+/* Consumer product finish: one calm shell, one surface hierarchy, fewer boxes. */
+body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
+.topbar{
+  padding-inline:max(var(--page-gutter),calc((100vw - var(--container-wide))/2));
+  background:var(--surface-canvas);border-bottom-color:var(--border);
+  box-shadow:0 1px 0 var(--border)
+}
+.logo{gap:10px;font-size:18px;letter-spacing:0}.logo span,.llogo span{background:none;color:var(--text);-webkit-text-fill-color:currentColor}.brand-mark{box-shadow:var(--shadow-low)}
+.topbar-r{gap:6px}.sync-row{padding:6px 8px}.sync-lbl{font-size:12px}.bell-btn,.theme-toggle{width:40px;height:40px;border-color:transparent;background:transparent}.bell-btn:hover,.theme-toggle:hover{background:var(--surface-subtle);border-color:var(--border)}
+.user-chip{background:transparent;border-color:transparent;padding-right:8px;font-weight:650}.user-chip:hover,.user-chip[aria-expanded="true"]{background:var(--surface-subtle);border-color:var(--border)}
+.account-popover{border-color:var(--border);box-shadow:var(--shadow-high)}
+.tabs{
+  justify-content:flex-start;gap:4px;padding-inline:max(var(--page-gutter),calc((100vw - var(--container-wide))/2));
+  background:color-mix(in srgb,var(--surface-canvas) 94%,transparent);border-bottom-color:var(--border)
+}
+.tab{display:inline-flex;align-items:center;gap:8px;min-height:52px;padding:0 14px;border-bottom:0;color:var(--muted);font-size:13px;font-weight:650;transition:color var(--transition-fast),box-shadow var(--transition-fast),background var(--transition-fast)}
+.tab::before{display:inline-flex;align-items:center;justify-content:center;width:18px;color:currentColor;font-size:18px;font-weight:500;line-height:1}
+.tab[data-tab="mylist"]::before{content:"≡"}.tab[data-tab="find"]::before{content:"⌕"}.tab[data-tab="schedule"]::before{content:"◷"}.tab[data-tab="admin"]::before{content:"⚙"}
+.tab:hover{color:var(--text);background:var(--surface-hover)}.tab.active{color:var(--text);border-bottom-color:transparent;box-shadow:inset 0 -3px var(--accent)}
+.page{max-width:var(--container-wide);padding:28px var(--page-gutter) 72px}.have-hdr,.sched-hdr{margin-bottom:22px}.have-title,.sched-title{font-weight:700;color:var(--text)}.have-subtitle,.sched-subtitle{max-width:640px;margin-top:4px;color:var(--muted)}
+#tab-find .have-hdr,.trainer-discovery-content{width:min(100%,var(--container-standard));margin-inline:auto}#tab-schedule .sched-hdr,#events-out{width:min(100%,900px);margin-inline:auto}
+.my-hdr{gap:12px;margin-bottom:14px;padding-top:2px}.my-hdr .av.lg{width:44px;height:44px}.my-uname{font-size:24px;line-height:30px}.fc-chip{background:transparent;border-color:transparent;padding-left:0}
+.journey-guidance{margin-bottom:18px;padding:12px 14px;border:0;border-left:3px solid var(--accent);border-radius:0 var(--radius-md) var(--radius-md) 0;background:var(--surface-subtle)}
+.journey-guidance strong{font-size:14px}.journey-guidance-actions .bghost{border-color:transparent;background:transparent}.journey-guidance-actions .bghost:hover{background:var(--surface-raised)}
+.mylist-type-tabs{margin-bottom:14px}.mylist-type-tabs .ltab{background:transparent;border-color:transparent}.mylist-type-tabs .ltab:hover{background:var(--surface-subtle);color:var(--text)}.mylist-type-tabs .ltab.active{background:var(--surface-raised);border-color:var(--border-strong);box-shadow:var(--shadow-low)}
+.add-form{padding:18px;border-color:var(--border);background:var(--surface-raised);box-shadow:var(--shadow-low)}.add-ttl{font-size:16px;margin-bottom:10px}.add-actions{margin-top:12px}.add-actions .bsave{min-width:92px;box-shadow:0 5px 14px color-mix(in srgb,var(--accent) 24%,transparent)}
+.mylist-search{margin-top:18px}.mylist-priority-sections{gap:26px}.mylist-priority-heading{margin-bottom:10px;padding:6px 0 6px 10px;background:transparent!important}.mygrid{gap:8px}.myrow{border-color:var(--border);background:var(--surface-raised);box-shadow:var(--shadow-low)}.myrow:hover{border-color:var(--border-strong);background:color-mix(in srgb,var(--surface-raised) 96%,var(--accent))}
+.trainer-quick-section{margin-top:28px;padding-top:22px}.trainer-section-heading{margin-bottom:12px}.trainer-quick-heading{font-size:17px}.trainer-section-count{border:0;background:var(--surface-subtle)}
+.favorite-toolbar{margin-bottom:12px}.favorite-card-shell{border-color:var(--border);background:var(--surface-subtle);box-shadow:var(--shadow-low)}.favorite-card-surface{padding:10px 10px 10px 14px;background:var(--surface-raised)}.favorite-card-tags{margin-top:6px}.favorite-card-footer{gap:2px;justify-content:flex-end}.favorite-card-open{padding-inline:10px}.favorite-card-add-tag{width:auto;height:48px;min-width:64px;padding:8px 11px;border-radius:var(--radius-md);font:750 12px var(--font);white-space:nowrap}.favorite-card-more{width:48px;height:48px;min-width:48px;border-radius:var(--radius-md);font-size:18px}.favorite-card-menu{box-shadow:var(--shadow-high)}
+.recent-trainer-list{overflow:hidden;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--surface-raised)}.recent-trainer-row{border:0;border-bottom:1px solid var(--border);border-radius:0;background:transparent;padding-inline:12px}.recent-trainer-row:last-child{border-bottom:0}.recent-trainer-row:hover,.recent-trainer-row:focus-visible{border-color:var(--border);background:var(--surface-hover)}
+.trainer-quick-section .favorite-empty,.events-state .empty-state{justify-items:start;padding:14px 2px;border:0;background:transparent;text-align:left}.trainer-quick-section .empty-state-body{max-width:480px}
+.event-filter-row{padding-bottom:18px}.event-filter{background:transparent;border-color:transparent}.event-filter:hover{background:var(--surface-subtle);color:var(--text)}.event-filter[aria-pressed="true"]{background:var(--surface-raised);border-color:var(--border-strong);color:var(--text);box-shadow:var(--shadow-low)}
+.event-group{margin-bottom:28px}.event-group-heading{margin-bottom:10px}.event-card-grid{gap:8px}.event-card{min-height:88px;border-color:var(--border);border-left-width:2px;background:var(--surface-raised);box-shadow:var(--shadow-low)}.event-card:hover{background:color-mix(in srgb,var(--surface-raised) 96%,var(--accent));border-color:var(--border-strong)}.event-card-title{font-size:15px}.event-card-summary{color:var(--muted)}
+.settings-page-mode .settings-modal-header{padding-top:30px}.settings-page-mode .settings-layout{grid-template-columns:232px minmax(0,1fr);gap:28px;border-top:0}.settings-page-mode .settings-nav{padding:22px 0 32px var(--page-gutter);border-right:0;background:transparent}.settings-page-mode .settings-detail{padding:24px var(--page-gutter) 56px 0}.settings-nav-button{position:relative;border-radius:var(--radius-md);color:var(--muted)}.settings-nav-button:hover{background:var(--surface-subtle);color:var(--text)}.settings-nav-button[aria-current="page"]{background:var(--surface-raised);color:var(--text);box-shadow:var(--shadow-low)}.settings-nav-button[aria-current="page"]::before{content:"";position:absolute;left:0;top:12px;bottom:12px;width:3px;border-radius:2px;background:var(--accent)}
+.settings-section-heading{margin-bottom:22px}.settings-section-heading h2{font-size:20px}.settings-panel{margin:0;padding:16px 0;border:0;border-bottom:1px solid var(--border);border-radius:0;background:transparent}.settings-profile-card{border-color:var(--border);box-shadow:var(--shadow-low)}
+#login-pg,#config-pg{background:var(--surface-canvas)}.lcard{border-color:var(--border);padding:32px;background:var(--surface-raised);box-shadow:var(--shadow-high)}.llogo{font-size:24px;margin-bottom:6px}.lsub{margin-bottom:22px}.brand-disclaimer{border-color:var(--border);background:var(--surface-subtle)}
+.ov{background:rgba(5,7,10,.72)}.modal{border-color:var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-high)}.organizer-header,.settings-modal-header{border-bottom-color:var(--border)}
+.btn,.bghost,.bsave,.image-btn,.field-control,.app-search-input{transition:background var(--transition-fast),border-color var(--transition-fast),color var(--transition-fast),box-shadow var(--transition-fast),transform var(--transition-fast)}.btn:active:not(:disabled),.bsave:active:not(:disabled),.bghost:active:not(:disabled){transform:translateY(1px)}
+.toast,.undo-toast,.favorite-saved-prompt{border-color:var(--border);box-shadow:var(--shadow-high)}
+.share-search-disclosure{margin-top:6px}.share-search-disclosure summary{display:inline-flex;align-items:center;gap:7px;min-height:48px;padding:8px 2px;color:var(--ac2);font:700 var(--type-meta);cursor:pointer;list-style:none}.share-search-disclosure summary::-webkit-details-marker{display:none}.share-search-disclosure .collapse-icon{font-size:10px;transition:transform var(--transition-fast)}.share-search-disclosure[open] .collapse-icon{transform:rotate(180deg)}.share-search-hide-label,.share-search-disclosure[open] .share-search-view-label{display:none}.share-search-disclosure[open] .share-search-hide-label{display:inline}.share-search-disclosure .strbox{margin:2px 0 8px}.str-level-hdr{margin-bottom:0}
+.organizer-close{border-color:transparent;background:transparent}.organizer-close:hover{border-color:var(--border);background:var(--surface-hover)}.organizer-section{padding-top:6px}.organizer-assignment{gap:6px}.organizer-new-tag-toggle{border-color:transparent;background:transparent;color:var(--ac2)}.organizer-actions{padding-top:10px;border-top:1px solid var(--border)}
+@media(min-width:900px){#tab-find .have-hdr,.trainer-discovery-content{width:min(100%,var(--container-wide));max-width:var(--container-wide)}.trainer-discovery-content{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(300px,.85fr);column-gap:28px;align-items:start}.trainer-search-shell{grid-column:1/-1;width:min(100%,760px)}#favorite-trainers{grid-column:1}#recent-trainers{grid-column:2}.trainer-quick-section{margin-top:28px}}
+.event-filter-scroll{position:relative}.event-filter-scroll::after{content:"";position:absolute;z-index:2;top:0;right:-1px;width:34px;height:50px;pointer-events:none;background:linear-gradient(90deg,transparent,var(--surface-canvas))}.event-filter-scroll.is-at-end::after{display:none}.event-filter-row{scroll-snap-type:x proximity;overscroll-behavior-inline:contain}.event-filter{scroll-snap-align:start}.event-group:not([data-group="now"]) .event-card-grid{gap:0;overflow:hidden;border-block:1px solid var(--border)}.event-group:not([data-group="now"]) .event-card{min-height:82px;border:0;border-bottom:1px solid var(--border);border-radius:0;background:transparent;box-shadow:none}.event-group:not([data-group="now"]) .event-card:last-child{border-bottom:0}.event-group:not([data-group="now"]) .event-card:hover{background:var(--surface-hover)}
+@media(max-width:767px){
+  :root{--topbar-h:58px}.topbar{padding-inline:12px}.logo{font-size:16px}.brand-mark{width:28px;height:28px}.bell-btn,.theme-toggle{width:48px;height:48px}.tabs{justify-content:space-around;padding-inline:0}.tab{flex:1;flex-direction:column;gap:1px;min-height:58px;padding:6px 2px;font-size:0}.tab::before{font-size:19px}.tab::after{font-size:10px}.page{padding:20px 14px 56px}.my-hdr{margin-bottom:12px}.journey-guidance{padding:11px 12px}.journey-guidance-actions{gap:4px}.journey-guidance-actions .bghost{padding-inline:8px}.add-form{padding:14px}.settings-nav-button{background:transparent;border-color:transparent}.settings-nav-button[aria-current="page"]{background:var(--surface-raised)}
+}
+@media(max-width:600px){#tab-mylist.has-list-content .journey-guidance{display:none}#tab-mylist .my-hdr{gap:9px;margin-bottom:8px}#tab-mylist .my-hdr .av.lg{width:38px;height:38px}#tab-mylist .my-uname{font-size:20px;line-height:24px}#tab-mylist #my-fc-wrap{margin-top:0!important}#tab-mylist .fc-chip{padding-block:2px}#tab-mylist .mylist-type-tabs{margin-bottom:8px}#tab-mylist .add-form{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 68px;gap:7px 6px;margin-bottom:10px;padding:11px 10px}#tab-mylist .add-ttl{grid-column:1/-1;margin:0;padding-right:76px;font-size:13px;line-height:20px}#tab-mylist .add-form .frow,#tab-mylist .add-actions{display:contents}#tab-mylist .add-form .ac-wrap{grid-column:1;grid-row:2;width:100%}#tab-mylist .add-form .add-pri-group{grid-column:1;grid-row:3;width:max-content;max-width:100%;justify-content:flex-start;padding:4px 7px}#tab-mylist .add-advanced-toggle{grid-column:2;grid-row:3;width:100%;min-height:48px;justify-content:center;padding:6px;font-size:11px}#tab-mylist .add-actions .bsave{grid-column:2;grid-row:2;width:68px;min-width:68px;margin:0;padding:8px;box-shadow:none}#tab-mylist .add-actions .export-menu-wrap{position:absolute;top:5px;right:6px}#tab-mylist .add-actions .image-btn{min-height:40px;padding:6px 8px;border-color:transparent;background:transparent;color:var(--muted)}#tab-mylist .add-advanced,#tab-mylist .add-tray,#tab-mylist .speed-add-hint{grid-column:1/-1}#tab-mylist .mylist-search{margin-top:10px;margin-bottom:6px}#tab-mylist .sec{margin-block:4px!important}.favorite-card-surface{grid-template-columns:minmax(0,1fr);gap:4px}.favorite-card-surface .trainer-quick-name{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;white-space:normal;overflow:hidden;overflow-wrap:anywhere;line-height:1.35}.favorite-card-footer{justify-content:flex-end;padding-top:4px;border-top:1px solid var(--border)}.favorite-card-open{margin-right:auto}.event-filter-scroll{margin-inline:-14px}.event-filter-row{margin:0;padding:2px 32px 10px 14px}.event-filter-scroll::after{right:0;width:42px}.event-group:not([data-group="now"]) .event-card{min-height:88px}.organizer-header{padding:14px 14px 10px}.organizer-body{padding-inline:14px}.organizer-actions{bottom:calc(-16px - env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom)}}
+@media(max-width:430px){.my-uname{font-size:21px}.mylist-type-tabs{flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}.mylist-type-tabs::-webkit-scrollbar{display:none}.event-card{grid-template-columns:minmax(0,1fr) 42px}.favorite-card-open{padding-inline:7px}.favorite-card-add-tag{padding-inline:9px;min-width:60px}}
+@media(max-width:360px){.logo span{display:none}.favorite-card-surface{grid-template-columns:1fr;gap:2px}.favorite-card-footer{justify-content:flex-end}.favorite-card-tags{margin-bottom:2px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
 </style>
 </head>
@@ -1934,10 +1989,10 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
   </div>
 
   <div class="tabs" role="tablist" aria-label="Main sections" data-i18n-aria-label="app.mainSections">
-    <button class="tab active" id="nav-mylist" data-tab="mylist" data-short="📋 List" onclick="switchTab('mylist')" role="tab" aria-selected="true">📋 My List</button>
-    <button class="tab" id="nav-find" data-tab="find" data-short="🔍 Find" onclick="switchTab('find')" role="tab" aria-selected="false">🔍 Find Trainer</button>
-    <button class="tab" id="nav-events" data-tab="schedule" data-short="📅 Events" onclick="switchTab('schedule')" role="tab" aria-selected="false">📅 Events</button>
-    <button class="tab" data-tab="admin" data-short="⚙️ Admin" onclick="switchTab('admin')" id="admin-tab" style="display:none" role="tab" aria-selected="false">⚙️ Admin<span class="notif-badge" id="admin-notif" style="display:none">!</span></button>
+    <button class="tab active" id="nav-mylist" data-tab="mylist" data-short="List" onclick="switchTab('mylist')" role="tab" aria-selected="true">My List</button>
+    <button class="tab" id="nav-find" data-tab="find" data-short="Find" onclick="switchTab('find')" role="tab" aria-selected="false">Find Trainer</button>
+    <button class="tab" id="nav-events" data-tab="schedule" data-short="Events" onclick="switchTab('schedule')" role="tab" aria-selected="false">Events</button>
+    <button class="tab" data-tab="admin" data-short="Admin" onclick="switchTab('admin')" id="admin-tab" style="display:none" role="tab" aria-selected="false">Admin<span class="notif-badge" id="admin-notif" style="display:none">!</span></button>
   </div>
 
   <!-- BROWSE -->
@@ -2529,7 +2584,7 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
 <div class="ptr-indicator" id="ptr-indicator" aria-hidden="true">↓</div>
 
 <script>
-window.__POGO_RELEASE_ID='2026-08-05.34';
+window.__POGO_RELEASE_ID='2026-08-05.35';
 window.__pogoBootWatch=setTimeout(function(){
   var visible=['config-pg','login-pg','app'].some(function(id){
     var el=document.getElementById(id);
@@ -2548,62 +2603,62 @@ window.__pogoBootWatch=setTimeout(function(){
   if(err)err.textContent='App scripts did not finish loading. Refresh once; if this stays, send this screenshot.';
 },4000);
 </script>
-<script src="data.js?v=2026-08-05.34"></script>
-<script src="js/domain/priorities.js?v=2026-08-05.34"></script>
-<script src="js/ui/badges.js?v=2026-08-05.34"></script>
-<script src="js/domain/username.js?v=2026-08-05.34"></script>
-<script src="js/domain/priorityValues.js?v=2026-08-05.34"></script>
-<script src="js/domain/scheduleDates.js?v=2026-08-05.34"></script>
-<script src="js/domain/pokemonSearchTerms.js?v=2026-08-05.34"></script>
-<script src="js/domain/pokemonEntryRules.js?v=2026-08-05.34"></script>
-<script src="js/domain/pokemonGoSearchSyntax.js?v=2026-08-05.34"></script>
-<script src="js/domain/searchStrings.js?v=2026-08-05.34"></script>
-<script src="js/ui/stringHtml.js?v=2026-08-05.34"></script>
-<script src="js/domain/scheduleEventRules.js?v=2026-08-05.34"></script>
-<script src="js/domain/scheduleTradeRules.js?v=2026-08-05.34"></script>
-<script src="js/domain/pokemonKeys.js?v=2026-08-05.34"></script>
-<script src="js/domain/spriteSlugs.js?v=2026-08-05.34"></script>
-<script src="js/domain/fuzzyText.js?v=2026-08-05.34"></script>
-<script src="js/domain/autocompleteText.js?v=2026-08-05.34"></script>
-<script src="js/domain/autocompleteMatching.js?v=2026-08-05.34"></script>
-<script src="js/domain/autocompleteRanking.js?v=2026-08-05.34"></script>
-<script src="js/domain/relativeTime.js?v=2026-08-05.34"></script>
-<script src="js/domain/clientRelease.js?v=2026-08-05.34"></script>
-<script src="js/domain/favoriteCardInteractions.js?v=2026-08-05.34"></script>
-<script src="js/domain/trainerDiscovery.js?v=2026-08-05.34"></script>
-<script src="js/domain/eventPresentation.js?v=2026-08-05.34"></script>
-<script src="js/domain/publicSharePublication.js?v=2026-08-05.34"></script>
-<script src="js/domain/trainerPreferences.js?v=2026-08-05.34"></script>
-<script src="js/domain/trainerPreferenceSync.js?v=2026-08-05.34"></script>
-<script src="js/domain/authenticationReadiness.js?v=2026-08-05.34"></script>
-<script src="js/domain/loginDirectory.js?v=2026-08-05.34"></script>
-<script src="js/utils/textSafety.js?v=2026-08-05.34"></script>
-<script src="js/ui/stringPanels.js?v=2026-08-05.34"></script>
-<script src="js/ui/emptyState.js?v=2026-08-05.34"></script>
-<script src="js/i18n/locales/en.js?v=2026-08-05.34"></script>
-<script src="js/i18n/locales/ja.js?v=2026-08-05.34"></script>
-<script src="js/i18n/locales/es.js?v=2026-08-05.34"></script>
-<script src="js/i18n/locales/de.js?v=2026-08-05.34"></script>
-<script src="js/i18n/pokemonNames/catalog.js?v=2026-08-05.34"></script>
-<script src="js/i18n/pokemonNames/variants.js?v=2026-08-05.34"></script>
-<script src="js/i18n/pokemonNames/core.js?v=2026-08-05.34"></script>
-<script src="js/i18n/eventLabels/currentTitles.js?v=2026-08-05.34"></script>
-<script src="js/i18n/eventLabels/core.js?v=2026-08-05.34"></script>
-<script src="js/i18n/core.js?v=2026-08-05.34"></script>
-<script src="js/services/firebaseClient.js?v=2026-08-05.34"></script>
-<script src="js/services/firebaseAppCheck.js?v=2026-08-05.34"></script>
-<script src="js/data/subscriptionManager.js?v=2026-08-05.34"></script>
-<script src="js/data/listenerLifecycle.js?v=2026-08-05.34"></script>
-<script src="js/data/sessionCacheBoundary.js?v=2026-08-05.34"></script>
-<script src="js/data/firebaseReadRegistry.js?v=2026-08-05.34"></script>
-<script src="js/data/currentUserRepository.js?v=2026-08-05.34"></script>
-<script src="js/data/ownedDataCoordinator.js?v=2026-08-05.34"></script>
-<script src="js/data/publicShareRepository.js?v=2026-08-05.34"></script>
-<script src="js/data/trainerHistoryStore.js?v=2026-08-05.34"></script>
-<script src="js/data/trainerPreferencesRepository.js?v=2026-08-05.34"></script>
-<script src="js/data/trainerPreferenceSyncQueue.js?v=2026-08-05.34"></script>
-<script src="js/domain/cacheAdapters.js?v=2026-08-05.34"></script>
-<script src="js/ui/trainerTagPanel.js?v=2026-08-05.34"></script>
+<script src="data.js?v=2026-08-05.35"></script>
+<script src="js/domain/priorities.js?v=2026-08-05.35"></script>
+<script src="js/ui/badges.js?v=2026-08-05.35"></script>
+<script src="js/domain/username.js?v=2026-08-05.35"></script>
+<script src="js/domain/priorityValues.js?v=2026-08-05.35"></script>
+<script src="js/domain/scheduleDates.js?v=2026-08-05.35"></script>
+<script src="js/domain/pokemonSearchTerms.js?v=2026-08-05.35"></script>
+<script src="js/domain/pokemonEntryRules.js?v=2026-08-05.35"></script>
+<script src="js/domain/pokemonGoSearchSyntax.js?v=2026-08-05.35"></script>
+<script src="js/domain/searchStrings.js?v=2026-08-05.35"></script>
+<script src="js/ui/stringHtml.js?v=2026-08-05.35"></script>
+<script src="js/domain/scheduleEventRules.js?v=2026-08-05.35"></script>
+<script src="js/domain/scheduleTradeRules.js?v=2026-08-05.35"></script>
+<script src="js/domain/pokemonKeys.js?v=2026-08-05.35"></script>
+<script src="js/domain/spriteSlugs.js?v=2026-08-05.35"></script>
+<script src="js/domain/fuzzyText.js?v=2026-08-05.35"></script>
+<script src="js/domain/autocompleteText.js?v=2026-08-05.35"></script>
+<script src="js/domain/autocompleteMatching.js?v=2026-08-05.35"></script>
+<script src="js/domain/autocompleteRanking.js?v=2026-08-05.35"></script>
+<script src="js/domain/relativeTime.js?v=2026-08-05.35"></script>
+<script src="js/domain/clientRelease.js?v=2026-08-05.35"></script>
+<script src="js/domain/favoriteCardInteractions.js?v=2026-08-05.35"></script>
+<script src="js/domain/trainerDiscovery.js?v=2026-08-05.35"></script>
+<script src="js/domain/eventPresentation.js?v=2026-08-05.35"></script>
+<script src="js/domain/publicSharePublication.js?v=2026-08-05.35"></script>
+<script src="js/domain/trainerPreferences.js?v=2026-08-05.35"></script>
+<script src="js/domain/trainerPreferenceSync.js?v=2026-08-05.35"></script>
+<script src="js/domain/authenticationReadiness.js?v=2026-08-05.35"></script>
+<script src="js/domain/loginDirectory.js?v=2026-08-05.35"></script>
+<script src="js/utils/textSafety.js?v=2026-08-05.35"></script>
+<script src="js/ui/stringPanels.js?v=2026-08-05.35"></script>
+<script src="js/ui/emptyState.js?v=2026-08-05.35"></script>
+<script src="js/i18n/locales/en.js?v=2026-08-05.35"></script>
+<script src="js/i18n/locales/ja.js?v=2026-08-05.35"></script>
+<script src="js/i18n/locales/es.js?v=2026-08-05.35"></script>
+<script src="js/i18n/locales/de.js?v=2026-08-05.35"></script>
+<script src="js/i18n/pokemonNames/catalog.js?v=2026-08-05.35"></script>
+<script src="js/i18n/pokemonNames/variants.js?v=2026-08-05.35"></script>
+<script src="js/i18n/pokemonNames/core.js?v=2026-08-05.35"></script>
+<script src="js/i18n/eventLabels/currentTitles.js?v=2026-08-05.35"></script>
+<script src="js/i18n/eventLabels/core.js?v=2026-08-05.35"></script>
+<script src="js/i18n/core.js?v=2026-08-05.35"></script>
+<script src="js/services/firebaseClient.js?v=2026-08-05.35"></script>
+<script src="js/services/firebaseAppCheck.js?v=2026-08-05.35"></script>
+<script src="js/data/subscriptionManager.js?v=2026-08-05.35"></script>
+<script src="js/data/listenerLifecycle.js?v=2026-08-05.35"></script>
+<script src="js/data/sessionCacheBoundary.js?v=2026-08-05.35"></script>
+<script src="js/data/firebaseReadRegistry.js?v=2026-08-05.35"></script>
+<script src="js/data/currentUserRepository.js?v=2026-08-05.35"></script>
+<script src="js/data/ownedDataCoordinator.js?v=2026-08-05.35"></script>
+<script src="js/data/publicShareRepository.js?v=2026-08-05.35"></script>
+<script src="js/data/trainerHistoryStore.js?v=2026-08-05.35"></script>
+<script src="js/data/trainerPreferencesRepository.js?v=2026-08-05.35"></script>
+<script src="js/data/trainerPreferenceSyncQueue.js?v=2026-08-05.35"></script>
+<script src="js/domain/cacheAdapters.js?v=2026-08-05.35"></script>
+<script src="js/ui/trainerTagPanel.js?v=2026-08-05.35"></script>
 <script>
 let initializeApp,getDatabase,ref,set,get,onValue,update,getAuth,signInWithEmailAndPassword,createUserWithEmailAndPassword,firebaseSignOut,updatePassword,deleteUser,onAuthStateChanged;
 let firebaseSdkPromise=null;
@@ -6466,7 +6521,7 @@ async function renderTrainerQuickLists(){
   favoritesEl.innerHTML=`${favoritesHeading}${toolbar}${statuses.length?`<div class="trainer-quick-grid">${statuses.map(({item,available,diff})=>{
     const unread=!!(available&&diff&&!diff.firstView&&diff.total);
     const trainer=escAttr(item.displayName),hasTags=!!item.tagIds?.length,editLabel=i18nCore.t(hasTags?'organizer.editTagsFor':'organizer.addTagsFor',{trainer:item.displayName});
-    return`<article class="favorite-card-shell card-interactive" data-trainer="${trainer}"><div class="favorite-card-rail" aria-hidden="true"><button type="button" tabindex="-1" onclick="openTrainerOrganizer('${trainer}')">+ ${escHtml(i18nCore.t('organizer.tags'))}</button><button type="button" tabindex="-1" onclick="toggleFavoriteCardMenu(event,this)">⋯</button></div><div class="favorite-card-surface" onpointerdown="favoriteCardPointerDown(event)" onpointermove="favoriteCardPointerMove(event)" onpointerup="favoriteCardPointerUp(event)" onpointercancel="favoriteCardPointerCancel()"><div class="trainer-quick-main"><div class="trainer-quick-name type-card">${unread?'<span class="trainer-unread"></span>':''}${escHtml(item.displayName)}</div>${available?'':`<div class="trainer-quick-meta type-meta">${escHtml(i18nCore.t('trainer.listUnavailable'))}</div>`}<div class="favorite-card-tags">${hasTags?favoriteTagChips(item,state):''}<button type="button" class="favorite-card-add-tag btn btn-icon" onclick="openTrainerOrganizer('${trainer}')" aria-label="${escAttr(editLabel)}">+</button></div>${unread?`<div class="trainer-change-counts">${escHtml(changeCountsText(diff))}</div>`:''}${unread?`<details class="favorite-detail"><summary>${escHtml(i18nCore.t('trainer.changesTitle'))}</summary>${changeDetailsHtml(diff)}</details>`:''}</div><div class="favorite-card-footer"><button type="button" class="favorite-card-open btn btn-ghost" onclick="openTrainerByName('${trainer}')">${escHtml(i18nCore.t('trainer.openAction'))}</button><button type="button" class="favorite-card-more btn btn-icon" aria-haspopup="menu" aria-label="${escAttr(i18nCore.t('organizer.moreActionsFor',{trainer:item.displayName}))}" onclick="toggleFavoriteCardMenu(event,this)">⋯</button></div><div class="favorite-card-menu" role="menu" hidden><button type="button" role="menuitem" onclick="openFavoriteTagsFromMenu(this,'${trainer}')">${escHtml(i18nCore.t('organizer.editTags'))}</button><button type="button" role="menuitem" class="danger" onclick="removeTrainerFavorite('${trainer}')">${escHtml(i18nCore.t('organizer.removeFavorite'))}</button></div></div></article>`;
+    return`<article class="favorite-card-shell card-interactive" data-trainer="${trainer}"><div class="favorite-card-rail" aria-hidden="true"><button type="button" tabindex="-1" onclick="openTrainerOrganizer('${trainer}')">+ ${escHtml(i18nCore.t('organizer.tags'))}</button><button type="button" tabindex="-1" onclick="toggleFavoriteCardMenu(event,this)">⋯</button></div><div class="favorite-card-surface" onpointerdown="favoriteCardPointerDown(event)" onpointermove="favoriteCardPointerMove(event)" onpointerup="favoriteCardPointerUp(event)" onpointercancel="favoriteCardPointerCancel()"><div class="trainer-quick-main"><div class="trainer-quick-name type-card">${unread?'<span class="trainer-unread"></span>':''}${escHtml(item.displayName)}</div>${available?'':`<div class="trainer-quick-meta type-meta">${escHtml(i18nCore.t('trainer.listUnavailable'))}</div>`}${hasTags?`<div class="favorite-card-tags">${favoriteTagChips(item,state)}</div>`:''}${unread?`<div class="trainer-change-counts">${escHtml(changeCountsText(diff))}</div>`:''}${unread?`<details class="favorite-detail"><summary>${escHtml(i18nCore.t('trainer.changesTitle'))}</summary>${changeDetailsHtml(diff)}</details>`:''}</div><div class="favorite-card-footer"><button type="button" class="favorite-card-open btn btn-ghost" onclick="openTrainerByName('${trainer}')">${escHtml(i18nCore.t('trainer.openAction'))}</button><button type="button" class="favorite-card-add-tag btn btn-secondary" onclick="openTrainerOrganizer('${trainer}')" aria-label="${escAttr(editLabel)}"><span aria-hidden="true">+</span> ${escHtml(i18nCore.t('organizer.tagAction'))}</button><button type="button" class="favorite-card-more btn btn-icon" aria-haspopup="menu" aria-label="${escAttr(i18nCore.t('organizer.moreActionsFor',{trainer:item.displayName}))}" onclick="toggleFavoriteCardMenu(event,this)">⋯</button></div><div class="favorite-card-menu" role="menu" hidden><button type="button" role="menuitem" onclick="openFavoriteTagsFromMenu(this,'${trainer}')">${escHtml(i18nCore.t('organizer.editTags'))}</button><button type="button" role="menuitem" class="danger" onclick="removeTrainerFavorite('${trainer}')">${escHtml(i18nCore.t('organizer.removeFavorite'))}</button></div></div></article>`;
   }).join('')}</div>`:`<div class="favorite-empty empty-state"><span class="empty-state-title">${escHtml(i18nCore.t(state.favorites.length?'organizer.noMatches':'organizer.noFavorites'))}</span><span class="empty-state-body">${escHtml(i18nCore.t(state.favorites.length?'organizer.noMatchesHelp':'organizer.noFavoritesHelp'))}</span></div>`}`;
   const recentHeading=`<div class="trainer-section-heading"><h2 class="trainer-quick-heading">${escHtml(i18nCore.t('trainer.recentTitle'))}</h2>${state.recent.length?`<span class="trainer-section-count">${state.recent.length}</span>`:''}</div>`;
   recentEl.innerHTML=`${recentHeading}${state.recent.length?`<div class="recent-trainer-list">${state.recent.map(item=>`<button type="button" class="recent-trainer-row card-row" onclick="openTrainerByName('${escAttr(item.displayName)}')" aria-label="${escAttr(i18nCore.t('trainer.openTrainerNamed',{trainer:item.displayName}))}"><span class="trainer-quick-main"><span class="trainer-quick-name recent-trainer-name type-card">${escHtml(item.displayName)}</span><span class="trainer-quick-meta recent-trainer-recency type-meta">${escHtml(trainerViewedText(item.openedAt))}</span></span><span class="recent-trainer-chevron" aria-hidden="true">›</span></button>`).join('')}</div>`:`<div class="favorite-empty empty-state"><span class="empty-state-title">${escHtml(i18nCore.t('trainer.noRecents'))}</span><span class="empty-state-body">${escHtml(i18nCore.t('trainer.noRecentsHelp'))}</span></div>`}`;
@@ -7330,6 +7385,7 @@ function renderMyList(filterVal){
   const entries=currentListEntries(myListType,q);
 
   const count=Object.keys(list).length;
+  document.getElementById('tab-mylist')?.classList.toggle('has-list-content',count>0);
   const category=myListCategoryLabel(myListType);
   updateMyListCategoryChrome();
   const categoryName=document.getElementById('mylist-category-name');if(categoryName)categoryName.textContent=category;
@@ -9453,7 +9509,7 @@ function openAccountMenu(){
   if(!cur)return;
   const{trigger,popover}=accountMenuElements();if(!trigger||!popover)return;
   popover.hidden=false;trigger.setAttribute('aria-expanded','true');trigger.setAttribute('aria-label',i18nCore.t('account.closeMenu'));
-  popover.querySelector('button')?.focus();
+  popover.querySelector('button')?.focus({preventScroll:true});
 }
 function toggleAccountMenu(event){
   event?.stopPropagation?.();
@@ -11892,7 +11948,7 @@ function renderEventsOnly(){
   if(_eventLoadState==='error'||!_eventData.fetchedAt&&!(_eventData.events||[]).length){out.innerHTML=eventStateHtml('unavailable',i18nCore.t('events.errorTitle'),i18nCore.t('events.error'),i18nCore.t('events.retry'),'retryEvents()');return;}
   const sections=eventPresentationDomain.prepareEvents(_eventData.events||[],{filter:eventTypeFilter});
   const filters=[['all','events.filterAll'],['raids','events.filterRaids'],['max','events.filterMax'],['gbl','events.filterGbl'],['research','events.filterResearch'],['general','events.filterGeneral']];
-  const filterHtml=`<div class="event-filter-row" role="group" aria-label="${escAttr(i18nCore.t('events.filtersLabel'))}">${filters.map(([type,key])=>`<button class="event-filter chip chip-filter" data-type="${type}" aria-pressed="${eventTypeFilter===type}" onclick="setEventTypeFilter('${type}')" onkeydown="eventFilterKeydown(event,'${type}')">${escHtml(i18nCore.t(key))}</button>`).join('')}</div>`;
+  const filterHtml=`<div class="event-filter-scroll"><div class="event-filter-row" role="group" aria-label="${escAttr(i18nCore.t('events.filtersLabel'))}" tabindex="0" onscroll="this.parentElement.classList.toggle('is-at-end',this.scrollLeft+this.clientWidth>=this.scrollWidth-2)">${filters.map(([type,key])=>`<button class="event-filter chip chip-filter" data-type="${type}" aria-pressed="${eventTypeFilter===type}" onclick="setEventTypeFilter('${type}')" onkeydown="eventFilterKeydown(event,'${type}')">${escHtml(i18nCore.t(key))}</button>`).join('')}</div></div>`;
   if(!sections.length){const filtered=eventTypeFilter!=='all';out.innerHTML=`<div class="events-timeline">${filterHtml}${eventStateHtml('empty',i18nCore.t(filtered?'events.filteredEmptyTitle':'events.emptyTitle'),i18nCore.t(filtered?'events.filteredEmpty':'events.empty'),filtered?i18nCore.t('events.clearFilters'):'',filtered?"setEventTypeFilter('all')":'')}</div>`;return;}
   out.innerHTML=`<div class="events-timeline">${filterHtml}${sections.map(section=>`<section class="event-group" data-group="${section.group}" aria-labelledby="event-group-${section.group}"><div class="event-group-heading"><h2 class="event-group-title" id="event-group-${section.group}">${escHtml(eventGroupLabel(section.group))}</h2><span class="event-group-count" aria-label="${escAttr(i18nCore.t('events.eventCount',{count:i18nCore.formatNumber(section.events.length)}))}">${escHtml(i18nCore.formatNumber(section.events.length))}</span></div><div class="event-card-grid">${section.events.map(event=>{
     const locale=i18nCore.getLocale(),timing=eventPresentationDomain.eventTiming(event,{locale}),relative=eventRelativeLabel(timing);

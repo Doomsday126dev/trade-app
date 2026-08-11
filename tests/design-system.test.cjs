@@ -13,12 +13,31 @@ const css=html.match(/<style>([\s\S]*?)<\/style>/)?.[1]||'';
 test('design tokens define the bounded spacing, container, radius, type, control, and focus systems',()=>{
   for(const [name,value] of Object.entries({
     'space-1':'4px','space-2':'8px','space-3':'12px','space-4':'16px','space-5':'24px','space-6':'32px',
-    'container-narrow':'480px','container-standard':'760px','container-wide':'960px',
+    'container-narrow':'480px','container-standard':'760px','container-wide':'1120px',
     'radius-sm':'4px','radius-md':'6px','radius-lg':'8px','radius-pill':'999px',
     'control-min':'48px'
   }))assert.match(css,new RegExp(`--${name}:${value.replace(/[()]/g,'\\$&')}`));
   for(const role of ['page','section','card','body','meta','utility'])assert.match(css,new RegExp(`--type-${role}:`));
   assert.match(css,/--type-meta:12px\/18px/);
+});
+
+test('consumer shell uses shared surface, motion, gutter, and navigation primitives',()=>{
+  for(const token of ['surface-canvas','surface-raised','surface-subtle','surface-hover','border-strong','shadow-low','shadow-high','page-gutter','transition-fast','transition-base'])assert.match(css,new RegExp(`--${token}:`));
+  assert.match(css,/\.topbar\{[\s\S]*?padding-inline:max\(var\(--page-gutter\),calc\(\(100vw - var\(--container-wide\)\)\/2\)\)/);
+  assert.match(css,/\.tabs\{[\s\S]*?padding-inline:max\(var\(--page-gutter\),calc\(\(100vw - var\(--container-wide\)\)\/2\)\)/);
+  assert.match(css,/\.tab\.active\{[^}]*box-shadow:inset 0 -3px var\(--accent\)/);
+  assert.match(css,/\.tab\[data-tab="mylist"\]::before\{content:"≡"\}/);
+  assert.doesNotMatch(html,/id="nav-(?:mylist|find|events)"[^>]*>[^<]*[📋🔍📅]/u);
+});
+
+test('consumer composition reduces nested chrome while preserving interactive boundaries',()=>{
+  assert.match(css,/\.journey-guidance\{[^}]*border:0[^}]*border-left:3px solid var\(--accent\)/);
+  assert.match(css,/\.trainer-quick-section \.favorite-empty,\.events-state \.empty-state\{[^}]*border:0[^}]*background:transparent/);
+  assert.match(css,/\.recent-trainer-list\{[^}]*border:1px solid var\(--border\)/);
+  assert.match(css,/\.recent-trainer-row\{[^}]*border:0[^}]*border-bottom:1px solid var\(--border\)/);
+  assert.match(css,/\.settings-panel\{[^}]*border:0[^}]*border-bottom:1px solid var\(--border\)/);
+  assert.match(css,/\.event-group:not\(\[data-group="now"\]\) \.event-card-grid\{[^}]*gap:0/);
+  assert.match(css,/\.share-search-disclosure summary\{[^}]*min-height:48px/);
 });
 
 test('container and typography primitives cover the active hierarchy',()=>{

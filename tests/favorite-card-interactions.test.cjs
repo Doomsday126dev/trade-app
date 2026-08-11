@@ -32,7 +32,10 @@ test('only one card opens and tap-outside or Escape closes presentation state',(
 });
 
 test('cards use lightweight tag and overflow actions with keyboard parity',()=>{
+  const render=html.slice(html.indexOf('async function renderTrainerQuickLists'),html.indexOf('function toggleTrainerFavorite'));
   assert.match(html,/class="[^"]*favorite-card-add-tag[^"]*"/);
+  assert.match(render,/favorite-card-footer[\s\S]*favorite-card-open[\s\S]*favorite-card-add-tag[\s\S]*organizer\.tagAction[\s\S]*favorite-card-more/);
+  assert.doesNotMatch(render,/favorite-card-tags">\$\{hasTags[\s\S]*favorite-card-add-tag/);
   assert.match(html,/class="[^"]*favorite-card-more[^"]*" aria-haspopup="menu"/);
   assert.match(html,/class="favorite-card-menu" role="menu"/);
   assert.match(html,/organizer\.editTagsFor/);
@@ -79,11 +82,15 @@ test('Favorites and Recents use one stacked hierarchy with distinct density and 
 });
 
 test('touch, wrapping, reduced-motion, and local-only safety contracts remain explicit',()=>{
-  assert.match(html,/\.favorite-card-add-tag,\.favorite-card-more\{width:48px;height:48px/);
+  assert.match(html,/\.favorite-card-add-tag\{width:auto;height:48px;min-width:64px/);
+  assert.match(html,/\.favorite-card-more\{width:48px;height:48px;min-width:48px/);
   assert.match(html,/\.favorite-card-tag\{[^}]*min-height:26px/);
   assert.match(html,/touch-action:pan-y/);
   assert.match(html,/@media\(prefers-reduced-motion:reduce\)\{\.favorite-card-surface\{transition:none\}\}/);
   assert.match(html,/overflow-wrap:anywhere/);
+  assert.match(html,/@media\(max-width:600px\)\{[^}]*[\s\S]*?\.favorite-card-surface\{grid-template-columns:minmax\(0,1fr\)/);
+  assert.match(html,/-webkit-line-clamp:2/);
+  assert.match(html,/\.favorite-card-footer\{justify-content:flex-end;padding-top:4px;border-top:1px solid var\(--border\)\}/);
   assert.match(html,/\.favorite-filter-chip\{[^}]*min-height:48px/);
   assert.match(html,/class="favorite-filter-check" aria-hidden="true"/);
   assert.match(html,/SYNCED_TRAINER_PREFERENCES_ENABLED!==false/);

@@ -33,7 +33,7 @@ function block(start,end){
 test('anonymous share catalogs have exact parity and natural share chrome',()=>{
   const window=load(),catalogs=window.PogoLocales;
   const keys=Object.keys(catalogs.en).sort();
-  assert.equal(keys.length,1022);
+  assert.equal(keys.length,1025);
   for(const locale of ['ja','es','de'])assert.deepEqual(Object.keys(catalogs[locale]).sort(),keys,locale);
   assert.equal(catalogs.ja['share.listTitle'],'{username} の交換リスト');
   assert.equal(catalogs.es['share.listTitle'],'Lista de intercambios de {username}');
@@ -41,7 +41,7 @@ test('anonymous share catalogs have exact parity and natural share chrome',()=>{
   for(const locale of ['en','ja','es','de'])assert.ok(catalogs[locale]['share.listTab']);
   for(const key of [
     'share.updated','share.entryCount.one','share.entryCount.other','share.copy',
-    'share.copied','share.copyFailed','share.combinedOptions','share.emptyTitle','share.flagShiny'
+    'share.copied','share.viewSearch','share.hideSearch','share.copyFailed','share.combinedOptions','share.emptyTitle','share.flagShiny'
   ])for(const locale of ['ja','es','de'])assert.notEqual(catalogs[locale][key],catalogs.en[key],`${locale}:${key}`);
 });
 
@@ -88,6 +88,10 @@ test('public search panels localize controls while preserving canonical clipboar
   assert.match(de,/Hoch/);
   assert.match(de,/Kopieren/);
   assert.match(de,/Kombinierte Optionen/);
+  assert.match(de,/Suche anzeigen/);
+  assert.match(de,/Suche ausblenden/);
+  assert.ok((de.match(/<details class="share-search-disclosure">/g)||[]).length>=3);
+  assert.doesNotMatch(de,/<details class="share-search-disclosure" open/);
   assert.match(de,/data-copy-scope="share"/);
   assert.match(de,/data-copy="!4\*&amp;!traded&amp;25,150"/);
   core.setLocale('ja',{persist:false});
@@ -96,6 +100,7 @@ test('public search panels localize controls while preserving canonical clipboar
   });
   assert.match(ja,/高/);
   assert.match(ja,/コピー/);
+  assert.match(ja,/検索を表示/);
   assert.match(ja,/data-copy="!4\*&amp;!traded&amp;25,150"/);
 });
 
@@ -131,15 +136,16 @@ test('Japanese and German share chrome retains bounded responsive wrapping',()=>
   assert.match(html,/\.str-level-hdr\{[^}]*flex-wrap:wrap/);
   assert.match(html,/\.strbox\{[^}]*word-break:break-all/);
   assert.match(html,/#share-view\s+\.cpbtn\{[^}]*min-height:48px/);
+  assert.match(html,/\.share-search-disclosure summary\{[^}]*min-height:48px/);
 });
 
-test('release 2026-08-05.34 is coherent and contains no active .33 assets',()=>{
+test('release 2026-08-05.35 is coherent and contains no active .34 assets',()=>{
   const worker=source('sw.js'),release=source('js/domain/clientRelease.js');
-  assert.match(html,/window\.__POGO_RELEASE_ID='2026-08-05\.34'/);
-  assert.match(worker,/const RELEASE='2026-08-05\.34'/);
-  assert.match(release,/RELEASE_ID='2026-08-05\.34'/);
+  assert.match(html,/window\.__POGO_RELEASE_ID='2026-08-05\.35'/);
+  assert.match(worker,/const RELEASE='2026-08-05\.35'/);
+  assert.match(release,/RELEASE_ID='2026-08-05\.35'/);
   const firstParty=[...html.matchAll(/<script\s+src="([^"]+)"/g)].map(match=>match[1]).filter(src=>!/^https?:/.test(src));
   assert.equal(firstParty.length,56);
-  for(const src of firstParty)assert.equal(new URL(src,'https://example.test').searchParams.get('v'),'2026-08-05.34');
-  assert.doesNotMatch(`${html}\n${worker}\n${release}`,/2026-08-05\.33/);
+  for(const src of firstParty)assert.equal(new URL(src,'https://example.test').searchParams.get('v'),'2026-08-05.35');
+  assert.doesNotMatch(`${html}\n${worker}\n${release}`,/2026-08-05\.34/);
 });

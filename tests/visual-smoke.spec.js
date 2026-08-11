@@ -180,6 +180,45 @@ async function expectSettingsScrollNear(page, expected) {
 }
 
 test.describe('visual smoke', () => {
+  test.beforeEach(async({page})=>{
+    await page.route(url=>{
+      const host=url.hostname;
+      return host.endsWith('.firebaseio.com')||host.endsWith('.firebasedatabase.app')||
+        ['identitytoolkit.googleapis.com','securetoken.googleapis.com','firebaseappcheck.googleapis.com'].includes(host)||
+        host.endsWith('.cloudfunctions.net');
+    },route=>route.abort());
+  });
+
+  test('consumer shell remains composed across themes and responsive widths',async({page})=>{
+    await page.goto(`./?consumer-shell=${Date.now()}`,{waitUntil:'domcontentloaded'});
+    await waitForStableLocalOrganizerStartup(page);
+    await isolateAuthenticatedMyListFixture(page,{username:'FinishTester',uid:'uid-finish-tester'});
+    await page.evaluate(()=>{
+      document.getElementById('top-un').textContent=cur;
+    });
+    for(const theme of ['dark','light']){
+      await page.evaluate(value=>{document.documentElement.dataset.theme=value;},theme);
+      for(const [width,height] of [[375,700],[768,800],[1280,900]]){
+        await page.setViewportSize({width,height});
+        await expect(page.locator('.topbar')).toBeVisible();
+        await expect(page.locator('.tabs')).toBeVisible();
+        await expect(page.locator('.tab.active')).toBeVisible();
+        const geometry=await page.evaluate(()=>({
+          overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth,
+          pageMax:getComputedStyle(document.querySelector('.page.active')).maxWidth,
+          activeTreatment:getComputedStyle(document.querySelector('.tab.active')).boxShadow,
+          canvas:getComputedStyle(document.body).backgroundColor,
+          surface:getComputedStyle(document.querySelector('.topbar')).backgroundColor
+        }));
+        expect(geometry.overflow).toBe(false);
+        expect(geometry.pageMax).toBe('1120px');
+        expect(geometry.activeTreatment).not.toBe('none');
+        expect(geometry.canvas).not.toBe('rgba(0, 0, 0, 0)');
+        expect(geometry.surface).not.toBe('rgba(0, 0, 0, 0)');
+      }
+    }
+  });
+
   test('shared Login fields retain themed autofill, focus, and invalid layers',async({page,browserName})=>{
     test.skip(browserName!=='chromium','Chromium CDP is required to force the autofill pseudo-state.');
     await page.goto(`./?autofill-theme=${Date.now()}`,{waitUntil:'domcontentloaded'});
@@ -969,6 +1008,12 @@ test.describe('visual smoke', () => {
       await page.keyboard.press('Escape');
       await expect(card.locator('.favorite-card-menu')).toBeHidden();
       await expect(card.locator('.favorite-card-more')).toBeFocused();
+      const longCard=page.locator('.favorite-card-shell[data-trainer="TrainerNameThatIsDeliberatelyLongForCompactLayouts"]');
+      await expect(longCard).toBeVisible();
+      const longNameBox=await longCard.locator('.trainer-quick-name').boundingBox();
+      const longFooterBox=await longCard.locator('.favorite-card-footer').boundingBox();
+      expect((longNameBox?.y||0)+(longNameBox?.height||0)).toBeLessThanOrEqual((longFooterBox?.y||0)+1);
+      expect(longNameBox?.height).toBeLessThanOrEqual(44);
       expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
     }
   });
@@ -1024,7 +1069,15 @@ test.describe('visual smoke', () => {
       const moreBox=await firstCard.locator('.favorite-card-more').boundingBox();
       const recentBox=await firstRecent.locator('.recent-trainer-chevron').boundingBox();
       for(const box of [addBox,moreBox,recentBox]){expect(box?.width).toBeGreaterThanOrEqual(48);expect(box?.height).toBeGreaterThanOrEqual(48);}
+      await expect(firstCard.locator('.favorite-card-add-tag')).toContainText(/\+/);
+      expect(await firstCard.locator('.favorite-card-add-tag').evaluate(node=>node.parentElement?.classList.contains('favorite-card-footer'))).toBe(true);
+      expect(await firstCard.locator('.favorite-card-tags .favorite-card-add-tag').count()).toBe(0);
       expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
+      if(width>=900){
+        const favoritesBox=await page.locator('#favorite-trainers').boundingBox(),recentsBox=await page.locator('#recent-trainers').boundingBox();
+        expect(recentsBox?.x).toBeGreaterThan((favoritesBox?.x||0)+(favoritesBox?.width||0));
+        expect(Math.abs((favoritesBox?.y||0)-(recentsBox?.y||0))).toBeLessThanOrEqual(2);
+      }
     }
   });
 
@@ -1086,10 +1139,15 @@ test.describe('visual smoke', () => {
   });
 
   test('My List compact add controls stay responsive and keyboard reachable',async({page})=>{
-    await page.setViewportSize({width:390,height:420});
+    await page.setViewportSize({width:390,height:844});
     await page.goto(`./?my-list-creation=${Date.now()}`,{waitUntil:'domcontentloaded'});
     await waitForStableLocalOrganizerStartup(page);
-    await page.evaluate(()=>{cur='LocalTester';auth={currentUser:{uid:'uid-local-tester'}};document.getElementById('login-pg').style.display='none';document.getElementById('app').style.display='flex';});
+    await isolateAuthenticatedMyListFixture(page,{username:'LocalTester',uid:'uid-local-tester'});
+    await page.evaluate(()=>{
+      allData=normalizeData({users:{LocalTester:{}},wishlist:{},dynamax:{},gmax:{},costumes:{}});
+      allData.wishlist.LocalTester={Pikachu:'H',Eevee:'M',Bulbasaur:'L'};
+      renderMyList();
+    });
     const measurement=await page.evaluate(()=>{
       const started=performance.now();toggleAddAdvanced();toggleAddAdvanced();
       document.getElementById('export-menu-btn').click();closeExportMenu();
@@ -1099,6 +1157,11 @@ test.describe('visual smoke', () => {
     await expect(page.locator('#ac-input')).toBeVisible();
     await expect(page.locator('#voice-btn')).toHaveAttribute('aria-label',/.+/);
     await expect(page.locator('#export-menu-btn')).toHaveAttribute('aria-haspopup','menu');
+    await expect(page.locator('#tab-mylist')).toHaveClass(/has-list-content/);
+    await expect(page.locator('.journey-guidance')).toBeHidden();
+    const searchBox=await page.locator('#ac-input').boundingBox(),addBox=await page.locator('.add-actions .bsave').boundingBox(),firstRow=await page.locator('.myrow').first().boundingBox();
+    expect(Math.abs((searchBox?.y||0)-(addBox?.y||0))).toBeLessThanOrEqual(2);
+    expect(firstRow?.y).toBeLessThan(760);
     await page.locator('#export-menu-btn').click();
     await expect(page.locator('#export-menu')).toBeVisible();
     await expect(page.locator('#export-menu [role^="menuitem"]').first()).toBeFocused();
@@ -1338,6 +1401,26 @@ test.describe('visual smoke', () => {
     await expect(page.locator('#my-strings-out .str-level').first()).toBeVisible({ timeout: 20_000 });
   });
 
+  test('public trainer search commands stay collapsed until explicitly requested',async({page})=>{
+    await page.goto(`./?public-search-disclosure=${Date.now()}`,{waitUntil:'domcontentloaded'});
+    await waitForStableLocalOrganizerStartup(page);
+    await isolateAuthenticatedMyListFixture(page,{username:'ViewerFixture',uid:'uid-viewer-fixture'});
+    await page.evaluate(()=>{
+      allData=normalizeData({users:{PublicFixture:{lastUpdated:Date.now()}},wishlist:{PublicFixture:{Pikachu:'H',Eevee:'M',Bulbasaur:'L'}},dynamax:{},gmax:{},costumes:{}});
+      document.getElementById('app').style.display='none';document.getElementById('share-view').classList.add('active');
+      renderShareView('PublicFixture','wishlist');
+    });
+    const disclosures=page.locator('#share-list-out .share-search-disclosure');
+    expect(await disclosures.count()).toBeGreaterThanOrEqual(3);
+    for(const disclosure of await disclosures.all())await expect(disclosure).not.toHaveAttribute('open','');
+    await expect(disclosures.first().locator('.strbox')).toBeHidden();
+    await expect(page.locator('#share-list-out .cpbtn').first()).toBeVisible();
+    await disclosures.first().locator('summary').click();
+    await expect(disclosures.first().locator('.strbox')).toBeVisible();
+    await expect(disclosures.first().locator('.share-search-hide-label')).toBeVisible();
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
+  });
+
   test('my list add pokemon autocomplete shows normalized and dex results', async ({ page }) => {
     await signIn(page);
     await openMainTab(page, 'mylist');
@@ -1459,6 +1542,13 @@ test.describe('visual smoke', () => {
     });
     await expect(page.locator('.event-group[data-group="now"]')).toBeVisible();await expect(page.locator('.event-group[data-group="soon"]')).toBeVisible();await expect(page.locator('.event-group[data-group="later"]')).toBeVisible();
     await expect(page.locator('.event-current-badge')).toBeVisible();await expect(page.locator('.event-card-relative').first()).toContainText(/.+/);
+    await page.setViewportSize({width:390,height:420});
+    const filterGeometry=await page.locator('.event-filter-row').evaluate(node=>({clientWidth:node.clientWidth,scrollWidth:node.scrollWidth,tabIndex:node.tabIndex,edge:getComputedStyle(node.parentElement,'::after').display}));
+    expect(filterGeometry.scrollWidth).toBeGreaterThan(filterGeometry.clientWidth);
+    expect(filterGeometry.tabIndex).toBe(0);
+    expect(filterGeometry.edge).not.toBe('none');
+    await page.locator('.event-filter-row').evaluate(node=>{node.scrollLeft=node.scrollWidth;node.dispatchEvent(new Event('scroll'));});
+    await expect(page.locator('.event-filter-scroll')).toHaveClass(/is-at-end/);
     const sourceRow=page.locator('a.event-card').first();await expect(sourceRow).toHaveAttribute('href','https://example.com/active');await expect(sourceRow).toHaveAttribute('aria-label',/.+/);
     expect(await sourceRow.locator('a,button,[role="button"]').count()).toBe(0);
     await sourceRow.focus();await expect(sourceRow).toBeFocused();
