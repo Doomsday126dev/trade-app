@@ -18,7 +18,9 @@ function productionEnvironment(overrides = {}) {
     SERVICE_REGION: 'us-central1',
     E1_AUTHORITY_URL: 'https://e1-identity-authority-production-uc.a.run.app/',
     E1_AUTHORITY_AUDIENCE: 'https://e1-identity-authority-production-uc.a.run.app',
+    E1_GATEWAY_SERVICE_ACCOUNT: 'e1-authority-gateway@trade-list-a4297.iam.gserviceaccount.com',
     GATEWAY_INVOCATION_ENABLED: 'false',
+    APP_CHECK_ENFORCEMENT_MODE: 'monitor',
     APP_CHECK_DEBUG_TOKENS_ALLOWED: 'false',
     E1_RATE_LIMIT_POLICY: 'firestore-rolling-v1',
     ...overrides
@@ -45,6 +47,9 @@ test('production gateway requires Auth App Check exact request shape and rejects
     app: { appId: 'production-app-id', alreadyConsumed: true }
   })), /APP_CHECK_REPLAYED/);
   assert.throws(() => loadGatewayConfiguration(productionEnvironment({ APP_CHECK_DEBUG_TOKENS_ALLOWED: 'true' })), /GATEWAY_CONFIGURATION_INVALID/);
+  assert.throws(() => loadGatewayConfiguration(productionEnvironment({ APP_CHECK_ENFORCEMENT_MODE: 'enforced' })), /GATEWAY_CONFIGURATION_INVALID/);
+  assert.throws(() => loadGatewayConfiguration(productionEnvironment({ E1_GATEWAY_SERVICE_ACCOUNT: 'default@developer.gserviceaccount.com' })),
+    /GATEWAY_CONFIGURATION_INVALID/);
 });
 
 test('gateway is disabled before authentication or authority invocation', async () => {
@@ -80,7 +85,8 @@ test('gateway exports only the two reviewed public operations and delegates dura
   const source = fs.readFileSync(path.resolve(__dirname, '../e1-gateway/index.js'), 'utf8');
   const exported = [...source.matchAll(/exports\.([A-Za-z0-9_]+)\s*=/gu)].map((match) => match[1]);
   assert.deepEqual(exported, ['readE1AccountFoundation', 'reserveE1TrainerHandle']);
-  assert.match(source, /enforceAppCheck:\s*true/u);
+  assert.match(source, /enforceAppCheck:\s*configuration\.appCheckEnforcementMode === 'enforced'/u);
+  assert.match(source, /serviceAccount:\s*configuration\.gatewayServiceAccount/u);
   assert.match(source, /callable\('reserveTrainerHandle', true\)/u);
   assert.doesNotMatch(source, /firebase-admin|Firestore|Database|serviceAccountTokenCreator|private_key/u);
 });

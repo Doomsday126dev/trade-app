@@ -8,7 +8,7 @@ const path = require('node:path');
 const { PRODUCTION, STAGING, validateRtdbTarget, validateTarget } = require('../e1-authority-service/e1TargetContracts');
 const { EXCLUDED_PERMISSIONS, OPERATION_PERMISSIONS, PERMISSIONS, verifyPermissionInventory } = require('../production/e1CustomRole.cjs');
 const { DISABLED_GATES, rollbackState } = require('../production/e1RollbackPlan.cjs');
-const { guardProductionTarget } = require('../production/e1ProductionDeploymentGuard.cjs');
+const { ALLOWED_OPERATIONS, guardProductionTarget } = require('../production/e1ProductionDeploymentGuard.cjs');
 
 test('authority targets are explicit for staging production and emulator with no cross-environment fallback', () => {
   assert.equal(validateTarget(STAGING).projectNumber, '391359988648');
@@ -46,14 +46,21 @@ function guardedFixture() {
   fs.writeFileSync(manifestPath, JSON.stringify(base));
   fs.writeFileSync(readinessPath, JSON.stringify({
     environment: 'production', projectId: base.project.id, projectNumber: base.project.number,
-    approvalGroup: 'B', approved: true, approvedBy: 'reviewed-operator', approvedAt: '2030-01-01T00:00:00.000Z'
+    region: base.project.region, databaseId: base.firestore.databaseId, rtdbDatabaseUrl: base.legacyRtdb.url,
+    approvalGroup: 'B', approved: true, approvalAcknowledged: true, approvedBy: 'reviewed-operator',
+    operator: 'reviewed-operator', teardownOwner: 'reviewed-operator', teardownOwnerAcknowledged: true,
+    approvedAt: '2030-01-01T00:00:00.000Z',
+    deploymentWindow: { startAt: '2030-01-01T00:00:00.000Z', endAt: '2030-01-01T04:00:00.000Z' },
+    authorizedOperations: [...ALLOWED_OPERATIONS], laterGroupsAuthorized: false,
+    groupCAuthorized: false, groupDAuthorized: false, groupEAuthorized: false
   }));
   const input = {
+    deploymentPhase: 'postdeploy',
     environment: 'production', projectId: base.project.id, projectNumber: base.project.number,
     expectedProjectNumber: base.project.number, region: base.project.region, databaseId: base.firestore.databaseId,
     rtdbDatabaseUrl: base.legacyRtdb.url, serviceName: base.authority.service,
     runtimeServiceAccount: base.authority.runtimeServiceAccount, publicInvoker: false, gatewayInvokerOnly: true,
-    gatewayAppCheckEnforced: true, reserveConsumesLimitedUseAppCheck: true, productionDebugTokensRegistered: false,
+    gatewayAppCheckMode: 'monitor', reserveConsumesLimitedUseAppCheck: true, productionDebugTokensRegistered: false,
     defaultComputeEditorPresent: false, credentialSource: 'production-workload-identity', staticCredentialFilePresent: false,
     gates: { ...DISABLED_GATES }, customRolePermissions: [...PERMISSIONS],
     authorityIamBindings: [{
@@ -61,15 +68,24 @@ function guardedFixture() {
       databaseId: base.firestore.databaseId,
       conditionExpression: base.authority.conditionalIamExpression
     }],
-    gatewayIamBindings: [{ role: 'roles/run.invoker', service: base.authority.service }]
+    groupAInfrastructure: {
+      databaseExists: true, location: 'us-central1', type: 'FIRESTORE_NATIVE', edition: 'STANDARD', pitrEnabled: true,
+      deletionProtectionEnabled: true, applicationDocumentCount: 0, denyAllRulesActive: true, defaultDatabaseExists: false,
+      builderKeyless: true, deployerKeyless: true
+    },
+    authorityServiceExists: true,
+    gatewayDeployed: true,
+    gatewayIamBindings: [{ role: 'roles/run.invoker', service: base.authority.service, scope: 'service' }]
   };
   return { input, manifestPath, readinessPath };
 }
 
 test('production guard requires reviewed project number private readiness narrow IAM private Run and disabled gates', () => {
   const fixture = guardedFixture();
-  assert.deepEqual(guardProductionTarget(fixture.input, fixture), {
-    ok: true, environment: 'production', targetVerified: true, allGatesDisabled: true, cloudOperations: 0
+  const options = { ...fixture, now: Date.parse('2030-01-01T01:00:00.000Z') };
+  assert.deepEqual(guardProductionTarget(fixture.input, options), {
+    ok: true, approvalGroup: 'B', environment: 'production', targetVerified: true, groupAInfrastructureVerified: true,
+    deploymentPhase: 'postdeploy', allGatesDisabled: true, laterGroupsAuthorized: false, cloudOperations: 0
   });
   for (const [override, reason] of [
     [{ projectId: STAGING.projectId }, 'project_id_mismatch'],
@@ -78,10 +94,40 @@ test('production guard requires reviewed project number private readiness narrow
     [{ defaultComputeEditorPresent: true }, 'default_compute_editor_present'],
     [{ staticCredentialFilePresent: true }, 'credential_boundary_invalid']
   ]) {
-    assert.throws(() => guardProductionTarget({ ...fixture.input, ...override }, fixture), (error) => error.reasons.includes(reason));
+    assert.throws(() => guardProductionTarget({ ...fixture.input, ...override }, options), (error) => error.reasons.includes(reason));
   }
-  assert.throws(() => guardProductionTarget({ ...fixture.input, gates: { ...fixture.input.gates, GATEWAY_INVOCATION_ENABLED: true } }, fixture),
+  assert.throws(() => guardProductionTarget({ ...fixture.input, gates: { ...fixture.input.gates, GATEWAY_INVOCATION_ENABLED: true } }, options),
     (error) => error.reasons.includes('activation_gate_not_false'));
+});
+
+test('Group B predeploy guard accepts completed Group A state but no future runtime resources', () => {
+  const fixture = guardedFixture();
+  const input = {
+    ...fixture.input,
+    deploymentPhase: 'predeploy',
+    authorityServiceExists: false,
+    gatewayDeployed: false,
+    gatewayIamBindings: []
+  };
+  const result = guardProductionTarget(input, { ...fixture, now: Date.parse('2030-01-01T01:00:00.000Z') });
+  assert.equal(result.groupAInfrastructureVerified, true);
+  assert.equal(result.deploymentPhase, 'predeploy');
+  assert.equal(result.laterGroupsAuthorized, false);
+});
+
+test('Group B guard rejects an expired window altered operations and later-group authorization', () => {
+  const fixture = guardedFixture();
+  const readiness = JSON.parse(fs.readFileSync(fixture.readinessPath, 'utf8'));
+  for (const override of [
+    { deploymentWindow: { startAt: '2030-01-01T00:00:00.000Z', endAt: '2030-01-01T09:00:00.000Z' } },
+    { authorizedOperations: [...ALLOWED_OPERATIONS, 'migrate-user'] },
+    { laterGroupsAuthorized: true, groupCAuthorized: true }
+  ]) {
+    fs.writeFileSync(fixture.readinessPath, JSON.stringify({ ...readiness, ...override }));
+    assert.throws(() => guardProductionTarget(fixture.input, {
+      ...fixture, now: Date.parse('2030-01-01T01:00:00.000Z')
+    }), (error) => error.reasons.includes('private_readiness_mismatch'));
+  }
 });
 
 test('reviewed production project number still leaves Group B deployment blocked without its private readiness', () => {

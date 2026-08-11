@@ -48,6 +48,8 @@ The separate `functions/e1-gateway` codebase exports only `readE1AccountFoundati
 
 The gateway obtains a Google OIDC ID token from attached workload identity and sends it as `X-Serverless-Authorization` to private Cloud Run. The subject Firebase token is forwarded separately for re-verification. The future gateway identity receives only `roles/run.invoker` on the authority service: no Firestore, RTDB, token-creator, service-account-user, static-key, or authority-runtime impersonation permission. Persistent rate limiting remains enforced by the authority transaction boundary and a 429 is mapped to the callable resource-exhausted response.
 
+Group B deploys App Check in monitor mode while `GATEWAY_INVOCATION_ENABLED=false`. The callable runtime can observe valid App Check context without platform enforcement affecting the existing client. The gateway boundary still requires App Check before any enabled operation can invoke authority, reserve still consumes a limited-use token, production debug-token mode remains rejected, and hard enforcement requires a later reviewed activation group.
+
 ## Production resources and PITR
 
 The machine-readable manifest describes the APIs, named Firestore database, deny-all Rules, identities, custom role, conditional binding, private authority, gateway, Invoker, App Check, metrics, alerts, budget, gates, expected Google-managed service agents, and automatic default-Compute-Editor remediation. It creates nothing.

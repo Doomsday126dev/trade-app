@@ -17,8 +17,10 @@ function callable(operation, consumeAppCheckToken) {
   const handler = createGatewayOperation(operation, configuration, { invokeAuthority });
   return onCall({
     region: configuration.region,
-    enforceAppCheck: true,
+    enforceAppCheck: configuration.appCheckEnforcementMode === 'enforced',
     consumeAppCheckToken,
+    serviceAccount: configuration.gatewayServiceAccount,
+    maxInstances: 2,
     invoker: 'public'
   }, async (request) => {
     try { return await handler(request); }

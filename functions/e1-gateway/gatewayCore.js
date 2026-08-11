@@ -20,7 +20,9 @@ function loadGatewayConfiguration(env = process.env) {
     region: env.SERVICE_REGION,
     authorityUrl: env.E1_AUTHORITY_URL,
     authorityAudience: env.E1_AUTHORITY_AUDIENCE,
+    gatewayServiceAccount: env.E1_GATEWAY_SERVICE_ACCOUNT,
     gatewayEnabled: env.GATEWAY_INVOCATION_ENABLED === 'true',
+    appCheckEnforcementMode: env.APP_CHECK_ENFORCEMENT_MODE,
     debugTokensAllowed: env.APP_CHECK_DEBUG_TOKENS_ALLOWED === 'true',
     rateLimitPolicy: env.E1_RATE_LIMIT_POLICY
   };
@@ -31,12 +33,16 @@ function loadGatewayConfiguration(env = process.env) {
       !['us-central1', 'local'].includes(configuration.region) || authority.protocol !== 'https:' ||
       authority.pathname !== '/' || authority.search || authority.hash ||
       configuration.authorityAudience !== authority.origin || configuration.rateLimitPolicy !== 'firestore-rolling-v1' ||
+      !['monitor', 'enforced'].includes(configuration.appCheckEnforcementMode) ||
       !['true', 'false'].includes(env.GATEWAY_INVOCATION_ENABLED) || !['true', 'false'].includes(env.APP_CHECK_DEBUG_TOKENS_ALLOWED)) {
     fail('GATEWAY_CONFIGURATION_INVALID');
   }
   if (configuration.environment === 'production' &&
       (configuration.projectId !== 'trade-list-a4297' || configuration.region !== 'us-central1' ||
-       configuration.debugTokensAllowed || authority.hostname.includes('staging'))) fail('GATEWAY_CONFIGURATION_INVALID');
+       configuration.gatewayServiceAccount !== 'e1-authority-gateway@trade-list-a4297.iam.gserviceaccount.com' ||
+       configuration.appCheckEnforcementMode !== 'monitor' || configuration.debugTokensAllowed || authority.hostname.includes('staging'))) {
+    fail('GATEWAY_CONFIGURATION_INVALID');
+  }
   if (configuration.environment === 'staging' &&
       (configuration.projectId !== 'trainer-hub-staging-37ib4wct' || !authority.hostname.includes('staging'))) fail('GATEWAY_CONFIGURATION_INVALID');
   return Object.freeze(configuration);

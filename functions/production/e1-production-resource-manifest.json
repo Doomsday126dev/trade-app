@@ -40,13 +40,16 @@
       "datastore.entities.update"
     ],
     "conditionalDatabase": "phase-e-identity",
-    "conditionalIamExpression": "resource.name.startsWith('projects/trade-list-a4297/databases/phase-e-identity')",
+    "conditionalIamExpression": "resource.type == \"firestore.googleapis.com/Database\" && resource.name == \"projects/trade-list-a4297/databases/phase-e-identity\"",
     "private": true,
     "region": "us-central1"
   },
   "build": {
     "builderServiceAccount": "e1-authority-builder@trade-list-a4297.iam.gserviceaccount.com",
-    "deployerServiceAccount": "e1-authority-deployer@trade-list-a4297.iam.gserviceaccount.com"
+    "deployerServiceAccount": "e1-authority-deployer@trade-list-a4297.iam.gserviceaccount.com",
+    "artifactRepository": "e1-authority",
+    "builderProjectRole": "roles/run.builder",
+    "deployerProjectRole": "roles/run.developer"
   },
   "gateway": {
     "serviceAccount": "e1-authority-gateway@trade-list-a4297.iam.gserviceaccount.com",
@@ -67,6 +70,7 @@
   "appCheck": {
     "reads": "standard-token",
     "reserve": "limited-use-consumed-token",
+    "initialEnforcement": "monitor",
     "productionDebugTokens": false
   },
   "observability": {
