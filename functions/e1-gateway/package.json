@@ -1,0 +1,13 @@
+{
+  "name": "trainer-hub-e1-authority-gateway",
+  "version": "0.0.0",
+  "private": true,
+  "main": "index.js",
+  "engines": {
+    "node": "22"
+  },
+  "dependencies": {
+    "firebase-functions": "6.4.0",
+    "google-auth-library": "10.9.1"
+  }
+}

@@ -1,5 +1,14 @@
 'use strict';
 
+const RATE_LIMIT_OPERATIONS = new Set([
+  'readAccountFoundation',
+  'reserveTrainerHandle',
+  'repairAccountFoundation',
+  'applyMigrationManifest',
+  'freezeIdentityConflict'
+]);
+const HASH = /^[a-f0-9]{16,64}$/;
+
 function fail(code) {
   const error = new Error(code);
   error.code = code;
@@ -16,6 +25,45 @@ function createFirestoreE1AuthorityAdapter({ firestore, now = () => Date.now() }
   const operationRef = (uid, requestId) => firestore.doc(`operationRequests/${uid}/requests/${requestId}`);
   const migrationRef = (uid, requestId) => firestore.doc(`identityMigrations/${uid}/operations/${requestId}`);
   const conflictRef = (uid, requestId) => firestore.doc(`identityConflicts/${uid}/events/${requestId}`);
+  const rateLimitRef = (operation, subjectHash) => firestore.doc(`rateLimits/${operation}_${subjectHash}`);
+
+  async function consumeRateLimit({ operation, subjectHash, attemptHash, limit, windowMs, at = now() }) {
+    if (!RATE_LIMIT_OPERATIONS.has(operation) || !HASH.test(subjectHash || '') || !HASH.test(attemptHash || '') ||
+        !Number.isSafeInteger(limit) || limit < 1 || limit > 100 || !Number.isSafeInteger(windowMs) || windowMs < 60_000 ||
+        !Number.isSafeInteger(at) || at < 0) fail('e1/rate-limit-input-invalid');
+    return firestore.runTransaction(async (transaction) => {
+      const ref = rateLimitRef(operation, subjectHash);
+      const snapshot = await transaction.get(ref);
+      const windowStart = Math.floor(at / windowMs) * windowMs;
+      const current = snapshot.exists ? snapshot.data() : null;
+      const validState = current?.schemaVersion === 1 && current.operation === operation && current.subjectHash === subjectHash &&
+        Number.isSafeInteger(current.windowStart) && Number.isSafeInteger(current.windowEnd) && current.windowStart < current.windowEnd &&
+        Array.isArray(current.attemptHashes) && current.attemptHashes.every((hash) => HASH.test(hash)) &&
+        Number.isSafeInteger(current.count) && current.count === current.attemptHashes.length && current.count <= limit;
+      if (snapshot.exists && !validState) fail('e1/rate-limit-state-invalid');
+      const sameWindow = validState && current.windowStart === windowStart && current.windowEnd === windowStart + windowMs;
+      const attemptHashes = sameWindow ? current.attemptHashes : [];
+      if (attemptHashes.includes(attemptHash)) {
+        return Object.freeze({ allowed: true, consumed: false, remaining: Math.max(0, limit - attemptHashes.length), windowEnd: windowStart + windowMs });
+      }
+      if (attemptHashes.length >= limit) fail('e1/rate-limit-exceeded');
+      const nextAttempts = [...attemptHashes, attemptHash];
+      const document = {
+        schemaVersion: 1,
+        operation,
+        subjectHash,
+        windowStart,
+        windowEnd: windowStart + windowMs,
+        expiresAt: windowStart + (windowMs * 2),
+        count: nextAttempts.length,
+        attemptHashes: nextAttempts,
+        updatedAt: at
+      };
+      if (snapshot.exists) transaction.update(ref, document);
+      else transaction.create(ref, document);
+      return Object.freeze({ allowed: true, consumed: true, remaining: limit - nextAttempts.length, windowEnd: document.windowEnd });
+    });
+  }
 
   function replay(snapshot, fingerprint) {
     if (!snapshot.exists) return null;
@@ -206,7 +254,14 @@ function createFirestoreE1AuthorityAdapter({ firestore, now = () => Date.now() }
     });
   }
 
-  return Object.freeze({ readAccountFoundation, reserveTrainerHandle, repairAccountFoundation, applyMigrationManifest, freezeIdentityConflict });
+  return Object.freeze({
+    applyMigrationManifest,
+    consumeRateLimit,
+    freezeIdentityConflict,
+    readAccountFoundation,
+    repairAccountFoundation,
+    reserveTrainerHandle
+  });
 }
 
-module.exports = { createFirestoreE1AuthorityAdapter };
+module.exports = { RATE_LIMIT_OPERATIONS, createFirestoreE1AuthorityAdapter };

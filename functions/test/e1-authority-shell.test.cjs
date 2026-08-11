@@ -3,12 +3,14 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { EventEmitter } = require('node:events');
-const { EXPECTED, FORBIDDEN_PROJECT_PERMISSIONS, GATES, assertRuntimeDependencies, createHandler, loadConfiguration, runtimeProbe } = require('../e1-authority-service/server');
+const { STAGING: EXPECTED } = require('../e1-authority-service/e1TargetContracts');
+const { FORBIDDEN_PROJECT_PERMISSIONS, GATES, assertRuntimeDependencies, createHandler, loadConfiguration, runtimeProbe } = require('../e1-authority-service/server');
 
 function environment(overrides = {}) {
   return {
     APP_ENVIRONMENT: EXPECTED.environment,
     FIREBASE_PROJECT_ID: EXPECTED.projectId,
+    EXPECTED_PROJECT_NUMBER: EXPECTED.projectNumber,
     FIRESTORE_DATABASE_ID: EXPECTED.databaseId,
     SERVICE_REGION: EXPECTED.region,
     AUTHORITY_SERVICE_NAME: EXPECTED.serviceName,
@@ -47,11 +49,17 @@ test('shell configuration is explicit and all authority gates fail closed', () =
     reserveTrainerHandleEnabled: false,
     repairAccountFoundationEnabled: false,
     applyMigrationManifestEnabled: false,
-    freezeIdentityConflictEnabled: false
+    freezeIdentityConflictEnabled: false,
+    repairApprovalWindow: null,
+    approvedMigrationManifestIds: []
   });
   assert.throws(() => loadConfiguration(environment({ FIRESTORE_DATABASE_ID: '(default)' })), /E1_CONFIGURATION_MISMATCH/);
   assert.equal(loadConfiguration(environment({ RESERVE_HANDLE_ENABLED: 'true' })).reserveTrainerHandleEnabled, true);
-  assert.equal(loadConfiguration(environment({ REPAIR_FOUNDATION_ENABLED: 'true' })).repairAccountFoundationEnabled, true);
+  assert.equal(loadConfiguration(environment({
+    REPAIR_FOUNDATION_ENABLED: 'true',
+    REPAIR_APPROVAL_WINDOW_START: '2030-01-01T00:00:00.000Z',
+    REPAIR_APPROVAL_WINDOW_END: '2030-01-02T00:00:00.000Z'
+  })).repairAccountFoundationEnabled, true);
   assert.throws(() => loadConfiguration(environment({
     REPAIR_FOUNDATION_ENABLED: 'true', APPLY_MIGRATION_ENABLED: 'true'
   })), /E1_OPERATION_GATE_INVALID/);
@@ -84,8 +92,10 @@ test('runtime probe verifies identity named-database access and forbidden permis
   const fetchImpl = async (url, options = {}) => {
     calls.push({ url, options });
     if (url.endsWith('/email')) return response(200, EXPECTED.runtimeServiceAccount);
+    if (url.endsWith('/numeric-project-id')) return response(200, EXPECTED.projectNumber);
     if (url.endsWith('/token')) return response(200, { access_token: 'never-log-this-token', expires_in: 3599 });
-    if (url.includes('documents:listCollectionIds')) return response(200, { collectionIds: ['accounts', 'trainerHandles'] });
+    if (url.endsWith(`/databases/${EXPECTED.databaseId}`)) return response(200, { name: 'database' });
+    if (url.includes('/documents/runtimeReadiness/e1-authority-sentinel')) return response(404, {});
     if (url.includes(':testIamPermissions')) return response(200, {});
     throw new Error(`unexpected URL ${url}`);
   };
@@ -96,23 +106,29 @@ test('runtime probe verifies identity named-database access and forbidden permis
     requiredPermissionsVerified: true,
     forbiddenPermissionsGranted: false
   });
-  assert.match(calls[2].url, /databases\/phase-e-identity\/documents:listCollectionIds$/);
-  assert.equal(calls[2].options.method, 'POST');
-  assert.deepEqual(JSON.parse(calls[3].options.body).permissions, FORBIDDEN_PROJECT_PERMISSIONS);
+  assert.match(calls[3].url, /databases\/phase-e-identity$/);
+  assert.equal(calls[3].options.method, 'GET');
+  assert.match(calls[4].url, /documents\/runtimeReadiness\/e1-authority-sentinel$/);
+  assert.equal(calls[4].options.method, 'GET');
+  assert.deepEqual(JSON.parse(calls[5].options.body).permissions, FORBIDDEN_PROJECT_PERMISSIONS);
+  assert.equal(calls.some((call) => call.url.includes('listCollectionIds')), false);
   assert.equal(calls.some((call) => /firebaseio|firebasedatabase\.app/.test(call.url)), false);
-  assert.equal(calls.some((call) => /documents\/[^:]+$/.test(call.url)), false);
+  assert.equal(calls.filter((call) => /documents\/[^:]+$/u.test(call.url)).length, 1);
 });
 
 test('runtime probe fails closed for wrong identity missing database access and forbidden capability', async () => {
   const configuration = loadConfiguration(environment());
   const probe = (overrides = {}) => runtimeProbe(configuration, async (url) => {
     if (url.endsWith('/email')) return response(200, overrides.email || EXPECTED.runtimeServiceAccount);
+    if (url.endsWith('/numeric-project-id')) return response(200, overrides.projectNumber || EXPECTED.projectNumber);
     if (url.endsWith('/token')) return response(200, { access_token: 'never-log-this-token' });
-    if (url.includes('documents:listCollectionIds')) return response(overrides.firestoreStatus || 200, {});
+    if (url.endsWith(`/databases/${EXPECTED.databaseId}`)) return response(overrides.firestoreStatus || 200, {});
+    if (url.includes('/documents/runtimeReadiness/e1-authority-sentinel')) return response(overrides.sentinelStatus || 404, {});
     if (url.includes(':testIamPermissions')) return response(200, { permissions: overrides.permissions || [] });
     throw new Error(`unexpected URL ${url}`);
   });
   await assert.rejects(probe({ email: 'wrong-runtime@example.test' }), /E1_RUNTIME_IDENTITY_MISMATCH/);
+  await assert.rejects(probe({ projectNumber: '999999999999' }), /E1_RUNTIME_PROJECT_MISMATCH/);
   await assert.rejects(probe({ firestoreStatus: 403 }), /E1_FIRESTORE_UNAVAILABLE/);
   await assert.rejects(probe({ permissions: ['run.routes.invoke'] }), /E1_FORBIDDEN_PERMISSION_PRESENT/);
 });

@@ -1,8 +1,9 @@
 'use strict';
 
 const { HandleValidationError, normalizeHandle } = require('./handleNormalization');
+const { STAGING, validateRtdbTarget } = require('./e1TargetContracts');
 
-const EXPECTED_STAGING_URL = 'https://trainer-hub-staging-37ib4wct-e1.firebaseio.com';
+const EXPECTED_STAGING_URL = STAGING.rtdbDatabaseUrl;
 const UID = /^[A-Za-z0-9_-]{6,128}$/;
 const MAX_RESPONSE_BYTES = 16 * 1024;
 
@@ -13,22 +14,8 @@ function fail(code) {
 }
 
 function validatedTarget({ environment, projectId, databaseUrl }) {
-  let parsed;
-  try { parsed = new URL(databaseUrl); } catch { fail('E1_RTDB_CONFIGURATION_INVALID'); }
-  if (environment === 'staging') {
-    if (projectId !== 'trainer-hub-staging-37ib4wct' || parsed.origin !== EXPECTED_STAGING_URL ||
-        parsed.pathname !== '/' || parsed.search || parsed.hash || !parsed.hostname.includes('-staging-')) {
-      fail('E1_RTDB_CONFIGURATION_INVALID');
-    }
-  } else if (environment === 'emulator') {
-    if (!String(projectId || '').startsWith('demo-') || parsed.protocol !== 'http:' ||
-        !['127.0.0.1', 'localhost'].includes(parsed.hostname) || parsed.hash) {
-      fail('E1_RTDB_CONFIGURATION_INVALID');
-    }
-  } else {
-    fail('E1_RTDB_CONFIGURATION_INVALID');
-  }
-  return parsed;
+  try { return validateRtdbTarget({ environment, projectId, databaseUrl }); }
+  catch { fail('E1_RTDB_CONFIGURATION_INVALID'); }
 }
 
 function result(status, reason, extra = {}) {

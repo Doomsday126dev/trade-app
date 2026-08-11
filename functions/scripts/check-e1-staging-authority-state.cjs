@@ -6,7 +6,7 @@ const crypto = require('node:crypto');
 const PROJECT = 'trainer-hub-staging-37ib4wct';
 const DATABASE = 'phase-e-identity';
 const TOKEN = process.env.GCLOUD_ACCESS_TOKEN;
-const EXPECTED_ROOTS = new Set(['accounts', 'identityConflicts', 'identityMigrations', 'operationRequests', 'trainerHandles']);
+const EXPECTED_ROOTS = new Set(['accounts', 'identityConflicts', 'identityMigrations', 'operationRequests', 'rateLimits', 'trainerHandles']);
 const BASE = `https://firestore.googleapis.com/v1/projects/${PROJECT}/databases/${DATABASE}/documents`;
 
 if (typeof TOKEN !== 'string' || !TOKEN) throw new Error('GCLOUD_ACCESS_TOKEN required');

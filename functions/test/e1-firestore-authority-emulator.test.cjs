@@ -158,6 +158,24 @@ test('reserve writes only account handle and operation evidence roots', async ()
   assert.deepEqual(roots, ['accounts', 'operationRequests', 'trainerHandles']);
 });
 
+test('durable rate limiter exercises real Firestore create and update transactions through exact documents', async () => {
+  const input = {
+    operation: 'reserveTrainerHandle',
+    subjectHash: 'a'.repeat(16),
+    limit: 5,
+    windowMs: 900_000,
+    at: 1_000,
+    attemptHash: '1'.repeat(64)
+  };
+  assert.equal((await adapter.consumeRateLimit(input)).consumed, true);
+  assert.equal((await adapter.consumeRateLimit(input)).consumed, false);
+  const nextWindow = await adapter.consumeRateLimit({ ...input, at: 901_000, attemptHash: '2'.repeat(64) });
+  assert.equal(nextWindow.consumed, true);
+  const document = (await firestore.doc(`rateLimits/${input.operation}_${input.subjectHash}`).get()).data();
+  assert.equal(document.count, 1);
+  assert.deepEqual(document.attemptHashes, ['2'.repeat(64)]);
+});
+
 test('repair restores an account-only partial while preserving its original timestamps', async () => {
   const request = reviewed(input('firebase_uid_a', 'RepairTrainer', 'request-repair-0001'), 'repair', 'repair-approved');
   await firestore.doc(`accounts/${request.uid}`).set(accountDocument(request, 55));

@@ -33,6 +33,7 @@ try {
     const environment = {
       APP_ENVIRONMENT: 'staging',
       FIREBASE_PROJECT_ID: 'trainer-hub-staging-37ib4wct',
+      EXPECTED_PROJECT_NUMBER: '391359988648',
       FIRESTORE_DATABASE_ID: 'phase-e-identity',
       RTDB_DATABASE_URL: 'https://trainer-hub-staging-37ib4wct-e1.firebaseio.com',
       SERVICE_REGION: 'us-central1',
@@ -68,7 +69,10 @@ try {
         verifyFirebaseIdToken: async () => ({ uid: 'synthetic_package_uid' }),
         readAccountDocument: async () => null,
         readLegacyBinding: async () => ({ status: 'ready', username: 'PackageTrainer', legacyAuthVersion: 1 }),
-        authorityStore: { reserveTrainerHandle: async (input) => { writes.push(input); return { status: 'reserved', revision: 1 }; } },
+        authorityStore: {
+          consumeRateLimit: async () => ({ allowed: true, consumed: true }),
+          reserveTrainerHandle: async (input) => { writes.push(input); return { status: 'reserved', revision: 1 }; }
+        },
         structuredLog: () => {}
       });
       const read = await invoke(handler, '/v1/read-account-foundation', { schemaVersion: 1 });

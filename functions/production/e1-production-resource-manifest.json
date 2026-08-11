@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "status": "project-number-review-required",
+  "environment": "production",
+  "project": {
+    "id": "trade-list-a4297",
+    "number": null,
+    "numberReviewed": false,
+    "region": "us-central1"
+  },
+  "apis": [
+    "artifactregistry.googleapis.com",
+    "cloudbuild.googleapis.com",
+    "firestore.googleapis.com",
+    "run.googleapis.com"
+  ],
+  "firestore": {
+    "databaseId": "phase-e-identity",
+    "type": "FIRESTORE_NATIVE",
+    "edition": "STANDARD",
+    "location": "us-central1",
+    "deletionProtection": true,
+    "pitr": "ENABLED",
+    "rules": "deny-all",
+    "initialApplicationDocuments": 0
+  },
+  "legacyRtdb": {
+    "url": "https://trade-list-a4297-default-rtdb.firebaseio.com",
+    "access": "firebase-subject-token-exact-paths-only"
+  },
+  "authority": {
+    "service": "e1-identity-authority",
+    "runtimeServiceAccount": "e1-identity-authority-runtime@trade-list-a4297.iam.gserviceaccount.com",
+    "customRoleId": "e1IdentityAuthorityRuntime",
+    "customRolePermissions": [
+      "datastore.databases.get",
+      "datastore.databases.getMetadata",
+      "datastore.entities.create",
+      "datastore.entities.get",
+      "datastore.entities.update"
+    ],
+    "conditionalDatabase": "phase-e-identity",
+    "conditionalIamExpression": "resource.name.startsWith('projects/trade-list-a4297/databases/phase-e-identity')",
+    "private": true,
+    "region": "us-central1"
+  },
+  "build": {
+    "builderServiceAccount": "e1-authority-builder@trade-list-a4297.iam.gserviceaccount.com",
+    "deployerServiceAccount": "e1-authority-deployer@trade-list-a4297.iam.gserviceaccount.com"
+  },
+  "gateway": {
+    "serviceAccount": "e1-authority-gateway@trade-list-a4297.iam.gserviceaccount.com",
+    "exports": ["readE1AccountFoundation", "reserveE1TrainerHandle"],
+    "authorityRole": "roles/run.invoker",
+    "firestoreRoles": [],
+    "rtdbRoles": [],
+    "impersonationRoles": []
+  },
+  "gatewayDeployment": {
+    "codebase": "e1-gateway",
+    "region": "us-central1",
+    "publicCallableBoundary": true,
+    "firebaseAuthRequired": true,
+    "appCheckRequired": true,
+    "gatewayGateInitiallyEnabled": false
+  },
+  "appCheck": {
+    "reads": "standard-token",
+    "reserve": "limited-use-consumed-token",
+    "productionDebugTokens": false
+  },
+  "observability": {
+    "metrics": ["operation-count", "outcome", "latency", "conflict-rate", "app-check-rejection", "oidc-failure", "migration-attempt", "handle-collision", "rate-limit", "authority-5xx"],
+    "rawIdentityLogging": false,
+    "alerts": ["authority-5xx", "authentication-failure", "app-check-rejection", "conflict-spike", "budget-threshold"],
+    "budgetRequired": true
+  },
+  "gates": {
+    "CLIENT_FOUNDATION_USE_ENABLED": false,
+    "GATEWAY_INVOCATION_ENABLED": false,
+    "READ_ACCOUNT_FOUNDATION_ENABLED": false,
+    "RESERVE_HANDLE_ENABLED": false,
+    "REPAIR_FOUNDATION_ENABLED": false,
+    "APPLY_MIGRATION_ENABLED": false,
+    "FREEZE_CONFLICT_ENABLED": false
+  },
+  "expectedAutomaticSideEffects": [
+    "Google-managed Firestore service agent",
+    "Google-managed Firebase Rules service agent",
+    "Google-managed Cloud Run service agent",
+    "Google-managed Artifact Registry service agent"
+  ],
+  "mandatoryRemediation": [
+    "remove roles/editor from the default Compute service account if automatically granted and unused"
+  ],
+  "rolloutCohorts": [
+    { "name": "owner", "size": 1, "observeHours": 24 },
+    { "name": "known-clean", "size": 2, "observeHours": 48 },
+    { "name": "small-eligible", "maximumSize": 5 }
+  ]
+}

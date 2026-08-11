@@ -3,17 +3,10 @@
 const crypto = require('node:crypto');
 const http = require('node:http');
 const { createFirestoreE1AuthorityAdapter } = require('./firestoreE1AuthorityAdapter');
+const { validateTarget } = require('./e1TargetContracts');
 const { HandleValidationError, normalizeHandle } = require('./handleNormalization');
 const { createVerifiedLegacyMappingReader, validatedTarget } = require('./rtdbVerifiedLegacyMappingReader');
 
-const EXPECTED = Object.freeze({
-  environment: 'staging',
-  projectId: 'trainer-hub-staging-37ib4wct',
-  databaseId: 'phase-e-identity',
-  region: 'us-central1',
-  serviceName: 'e1-identity-authority',
-  runtimeServiceAccount: 'e1-identity-authority-runtime@trainer-hub-staging-37ib4wct.iam.gserviceaccount.com'
-});
 const GATES = Object.freeze([
   'READ_ACCOUNT_FOUNDATION_ENABLED',
   'RESERVE_HANDLE_ENABLED',
@@ -22,6 +15,13 @@ const GATES = Object.freeze([
   'FREEZE_CONFLICT_ENABLED'
 ]);
 const MUTATION_GATES = Object.freeze(GATES.slice(1));
+const RATE_LIMITS = Object.freeze({
+  readAccountFoundation: Object.freeze({ limit: 60, windowMs: 15 * 60 * 1000 }),
+  reserveTrainerHandle: Object.freeze({ limit: 5, windowMs: 15 * 60 * 1000 }),
+  repairAccountFoundation: Object.freeze({ limit: 3, windowMs: 24 * 60 * 60 * 1000 }),
+  applyMigrationManifest: Object.freeze({ limit: 10, windowMs: 60 * 1000 }),
+  freezeIdentityConflict: Object.freeze({ limit: 10, windowMs: 60 * 1000 })
+});
 const UID = /^[A-Za-z0-9_-]{6,128}$/;
 const HANDLE_KEY = /^v1_[a-f0-9]{2,512}$/;
 const REQUEST_ID = /^[A-Za-z0-9][A-Za-z0-9._:-]{7,127}$/;
@@ -39,6 +39,8 @@ const FORBIDDEN_PROJECT_PERMISSIONS = Object.freeze([
   'datastore.databases.create',
   'datastore.databases.delete',
   'datastore.databases.update',
+  'datastore.entities.delete',
+  'datastore.entities.list',
   'firebasedatabase.instances.get',
   'firebasedatabase.instances.list',
   'firebasedatabase.instances.update'
@@ -50,10 +52,31 @@ function fail(code) {
   throw error;
 }
 
+function approvalWindow(env, enabled) {
+  const startAt = env.REPAIR_APPROVAL_WINDOW_START;
+  const expiresAt = env.REPAIR_APPROVAL_WINDOW_END;
+  if (!startAt && !expiresAt && !enabled) return null;
+  const start = Date.parse(startAt);
+  const end = Date.parse(expiresAt);
+  if (!Number.isFinite(start) || !Number.isFinite(end) || start >= end || end - start > 7 * 24 * 60 * 60 * 1000) {
+    fail('E1_CONFIGURATION_MISMATCH');
+  }
+  return Object.freeze({ startAt, expiresAt, start, end });
+}
+
+function approvedManifestIds(value, enabled) {
+  const ids = typeof value === 'string' && value ? value.split(',') : [];
+  if (ids.length > 100 || ids.some((id) => !REQUEST_ID.test(id)) || new Set(ids).size !== ids.length || (enabled && !ids.length)) {
+    fail('E1_CONFIGURATION_MISMATCH');
+  }
+  return Object.freeze(ids);
+}
+
 function loadConfiguration(env = process.env) {
   const configuration = {
     environment: env.APP_ENVIRONMENT,
     projectId: env.FIREBASE_PROJECT_ID,
+    projectNumber: env.EXPECTED_PROJECT_NUMBER,
     databaseId: env.FIRESTORE_DATABASE_ID,
     region: env.SERVICE_REGION,
     serviceName: env.AUTHORITY_SERVICE_NAME,
@@ -64,7 +87,7 @@ function loadConfiguration(env = process.env) {
     operatorSubjectHash: env.EXPECTED_OPERATOR_SUBJECT_HASH,
     revision: env.K_REVISION || 'local'
   };
-  for (const [key, value] of Object.entries(EXPECTED)) if (configuration[key] !== value) fail('E1_CONFIGURATION_MISMATCH');
+  try { validateTarget(configuration); } catch { fail('E1_CONFIGURATION_MISMATCH'); }
   if (!/^[A-Za-z0-9_-]{20,128}$/.test(configuration.firebaseWebApiKey || '')) fail('E1_CONFIGURATION_MISMATCH');
   if (!SHA256.test(configuration.operatorEmailHash || '') || !SHA256.test(configuration.operatorSubjectHash || '')) {
     fail('E1_CONFIGURATION_MISMATCH');
@@ -75,13 +98,17 @@ function loadConfiguration(env = process.env) {
       MUTATION_GATES.filter((gate) => env[gate] === 'true').length > 1) {
     fail('E1_OPERATION_GATE_INVALID');
   }
+  const repairAccountFoundationEnabled = env.REPAIR_FOUNDATION_ENABLED === 'true';
+  const applyMigrationManifestEnabled = env.APPLY_MIGRATION_ENABLED === 'true';
   return Object.freeze({
     ...configuration,
     readAccountFoundationEnabled: env.READ_ACCOUNT_FOUNDATION_ENABLED === 'true',
     reserveTrainerHandleEnabled: env.RESERVE_HANDLE_ENABLED === 'true',
-    repairAccountFoundationEnabled: env.REPAIR_FOUNDATION_ENABLED === 'true',
-    applyMigrationManifestEnabled: env.APPLY_MIGRATION_ENABLED === 'true',
-    freezeIdentityConflictEnabled: env.FREEZE_CONFLICT_ENABLED === 'true'
+    repairAccountFoundationEnabled,
+    applyMigrationManifestEnabled,
+    freezeIdentityConflictEnabled: env.FREEZE_CONFLICT_ENABLED === 'true',
+    repairApprovalWindow: approvalWindow(env, repairAccountFoundationEnabled),
+    approvedMigrationManifestIds: approvedManifestIds(env.APPROVED_MIGRATION_MANIFEST_IDS, applyMigrationManifestEnabled)
   });
 }
 
@@ -109,6 +136,8 @@ async function metadata(fetchImpl, path) {
 async function runtimeProbe(configuration, fetchImpl = fetch) {
   const email = (await (await metadata(fetchImpl, 'email')).text()).trim();
   if (email !== configuration.runtimeServiceAccount) fail('E1_RUNTIME_IDENTITY_MISMATCH');
+  const projectNumber = (await (await metadata(fetchImpl, 'numeric-project-id')).text()).trim();
+  if (projectNumber !== configuration.projectNumber) fail('E1_RUNTIME_PROJECT_MISMATCH');
   const tokenPayload = await (await metadata(fetchImpl, 'token')).json();
   if (typeof tokenPayload.access_token !== 'string' || !tokenPayload.access_token) fail('E1_RUNTIME_TOKEN_UNAVAILABLE');
   const headers = {
@@ -116,11 +145,16 @@ async function runtimeProbe(configuration, fetchImpl = fetch) {
     'Content-Type': 'application/json',
     'X-Goog-User-Project': configuration.projectId
   };
-  const firestoreAccessResponse = await fetchImpl(
-    `https://firestore.googleapis.com/v1/projects/${configuration.projectId}/databases/${configuration.databaseId}/documents:listCollectionIds`,
-    { method: 'POST', headers, body: JSON.stringify({ pageSize: 100 }) }
+  const databaseResponse = await fetchImpl(
+    `https://firestore.googleapis.com/v1/projects/${configuration.projectId}/databases/${configuration.databaseId}`,
+    { method: 'GET', headers }
   );
-  if (!firestoreAccessResponse.ok) fail('E1_FIRESTORE_UNAVAILABLE');
+  if (!databaseResponse.ok) fail('E1_FIRESTORE_UNAVAILABLE');
+  const sentinelResponse = await fetchImpl(
+    `https://firestore.googleapis.com/v1/projects/${configuration.projectId}/databases/${configuration.databaseId}/documents/runtimeReadiness/e1-authority-sentinel`,
+    { method: 'GET', headers }
+  );
+  if (!sentinelResponse.ok && sentinelResponse.status !== 404) fail('E1_FIRESTORE_UNAVAILABLE');
   const permissionsResponse = await fetchImpl(
     `https://cloudresourcemanager.googleapis.com/v1/projects/${configuration.projectId}:testIamPermissions`,
     { method: 'POST', headers, body: JSON.stringify({ permissions: FORBIDDEN_PROJECT_PERMISSIONS }) }
@@ -469,7 +503,21 @@ function operatorAccessTokenHeader(request) {
 }
 
 function uidHash(configuration, uid) {
-  return crypto.createHash('sha256').update(`${configuration.projectId}\0${uid}`, 'utf8').digest('hex').slice(0, 16);
+  return crypto.createHmac('sha256', configuration.operatorSubjectHash)
+    .update(`${configuration.projectId}\0uid\0${uid}`, 'utf8').digest('hex').slice(0, 16);
+}
+
+function handleCorrelationHash(configuration, handleKey) {
+  return crypto.createHmac('sha256', configuration.operatorSubjectHash)
+    .update(`${configuration.projectId}\0handle\0${handleKey}`, 'utf8').digest('hex').slice(0, 16);
+}
+
+function rateAttemptHash(operation, subjectHash, parts) {
+  return hashParts([1, 'rate-limit', operation, subjectHash, ...parts]);
+}
+
+function assertApprovalWindow(window, now) {
+  if (!window || now < window.start || now >= window.end) fail('APPROVAL_WINDOW_CLOSED');
 }
 
 function json(response, status, body) {
@@ -515,6 +563,19 @@ function createHandler(configuration, dependencies = {}) {
   });
   const parseBody = dependencies.readJsonRequest || readJsonRequest;
   const log = dependencies.structuredLog || structuredLog;
+  const now = dependencies.now || (() => Date.now());
+  const randomId = dependencies.randomId || (() => crypto.randomUUID());
+  const applyRateLimit = dependencies.consumeRateLimit || (async (input) => {
+    authorityStore ||= createDefaultAuthorityStore(configuration);
+    return authorityStore.consumeRateLimit(input);
+  });
+  const limitOperation = (operation, subjectHash, attemptHash) => applyRateLimit({
+    operation,
+    subjectHash,
+    attemptHash,
+    ...RATE_LIMITS[operation],
+    at: now()
+  });
   return async function handler(request, response) {
     const startedAt = Date.now();
     const url = new URL(request.url, 'http://localhost');
@@ -526,6 +587,7 @@ function createHandler(configuration, dependencies = {}) {
         exactReadRequest(await parseBody(request));
         const { uid } = await verifyToken(configuration, firebaseTokenHeader(request));
         callerHash = uidHash(configuration, uid);
+        await limitOperation('readAccountFoundation', callerHash, rateAttemptHash('readAccountFoundation', callerHash, [randomId()]));
         const document = await readAccount(configuration, uid);
         if (!document) {
           log(configuration, 'readAccountFoundation', 'not_initialized', startedAt, { uidHash: callerHash });
@@ -543,9 +605,11 @@ function createHandler(configuration, dependencies = {}) {
         const code = ['E1_NOT_ENABLED', 'AUTH_REQUIRED', 'AUTH_INVALID', 'REQUEST_INVALID', 'REQUEST_TOO_LARGE', 'METHOD_NOT_ALLOWED'].includes(error?.code)
           ? error.code : 'INTERNAL_ERROR';
         const status = code === 'E1_NOT_ENABLED' ? 503 : code === 'AUTH_REQUIRED' || code === 'AUTH_INVALID' ? 401 :
-          code === 'REQUEST_TOO_LARGE' ? 413 : code === 'METHOD_NOT_ALLOWED' ? 405 : code === 'REQUEST_INVALID' ? 400 : 500;
-        log(configuration, 'readAccountFoundation', code.toLowerCase(), startedAt, callerHash ? { uidHash: callerHash } : {});
-        return json(response, status, { code: code === 'REQUEST_TOO_LARGE' ? 'REQUEST_INVALID' : code });
+          code === 'REQUEST_TOO_LARGE' ? 413 : code === 'METHOD_NOT_ALLOWED' ? 405 : code === 'REQUEST_INVALID' ? 400 :
+            error?.code === 'e1/rate-limit-exceeded' ? 429 : 500;
+        const responseCode = error?.code === 'e1/rate-limit-exceeded' ? 'RATE_LIMITED' : code;
+        log(configuration, 'readAccountFoundation', responseCode.toLowerCase(), startedAt, callerHash ? { uidHash: callerHash } : {});
+        return json(response, status, { code: responseCode === 'REQUEST_TOO_LARGE' ? 'REQUEST_INVALID' : responseCode });
       }
     }
     if (url.pathname === '/v1/read-legacy-mapping-readiness') {
@@ -588,7 +652,9 @@ function createHandler(configuration, dependencies = {}) {
         const firebaseIdToken = firebaseTokenHeader(request);
         const { uid } = await verifyToken(configuration, firebaseIdToken);
         callerHash = uidHash(configuration, uid);
-        handleHash = crypto.createHash('sha256').update(`${configuration.projectId}\0${handle.handleKey}`, 'utf8').digest('hex').slice(0, 16);
+        handleHash = handleCorrelationHash(configuration, handle.handleKey);
+        await limitOperation('reserveTrainerHandle', callerHash,
+          rateAttemptHash('reserveTrainerHandle', callerHash, [requestId, handle.handleKey]));
         const legacy = await readLegacyBinding({ verifiedUid: uid, firebaseIdToken });
         const foundation = verifiedLegacyFoundation(uid, handle, legacy);
         const input = Object.freeze({ uid, requestId, ...foundation });
@@ -608,7 +674,7 @@ function createHandler(configuration, dependencies = {}) {
           MAPPING_INCOMPLETE: [409, 'MAPPING_INCOMPLETE'], MAPPING_CONFLICT: [409, 'MAPPING_CONFLICT'],
           MAPPING_PERMISSION_DENIED: [403, 'MAPPING_PERMISSION_DENIED'], MAPPING_UNAVAILABLE: [503, 'MAPPING_UNAVAILABLE'],
           'e1/handle-conflict': [409, 'HANDLE_CONFLICT'], 'e1/foundation-conflict': [409, 'FOUNDATION_CONFLICT'],
-          'e1/replay-mismatch': [409, 'REQUEST_INVALID']
+          'e1/replay-mismatch': [409, 'REQUEST_INVALID'], 'e1/rate-limit-exceeded': [429, 'RATE_LIMITED']
         };
         const [status, code] = mapping[error?.code] || [500, 'INTERNAL_ERROR'];
         log(configuration, 'reserveTrainerHandle', code.toLowerCase(), startedAt, {
@@ -621,13 +687,18 @@ function createHandler(configuration, dependencies = {}) {
     if (url.pathname === '/v1/repair-account-foundation') {
       let callerHash;
       let handleHash;
+      let operatorHash;
       try {
         if (request.method !== 'POST') fail('METHOD_NOT_ALLOWED');
         if (!configuration.repairAccountFoundationEnabled) fail('E1_NOT_ENABLED');
         const reviewed = exactRepairRequest(await parseBody(request));
-        const firebaseIdToken = firebaseTokenHeader(request);
+        ({ operatorHash } = await verifyOperator(configuration, operatorAccessTokenHeader(request)));
+        assertApprovalWindow(configuration.repairApprovalWindow, now());
+        const firebaseIdToken = subjectFirebaseTokenHeader(request);
         const { uid } = await verifyToken(configuration, firebaseIdToken);
         callerHash = uidHash(configuration, uid);
+        await limitOperation('repairAccountFoundation', callerHash,
+          rateAttemptHash('repairAccountFoundation', callerHash, [reviewed.operationId, reviewed.manifestFingerprint]));
         const legacy = await readLegacyBinding({ verifiedUid: uid, firebaseIdToken });
         if (legacy?.status === 'mapping-incomplete') fail('MAPPING_INCOMPLETE');
         if (legacy?.status === 'mapping-conflict') fail('MAPPING_CONFLICT');
@@ -639,7 +710,7 @@ function createHandler(configuration, dependencies = {}) {
         const sourceFingerprint = sourceMappingFingerprint({ uid, ...foundation });
         if (reviewed.sourceMappingFingerprint !== sourceFingerprint ||
             reviewed.manifestFingerprint !== repairReviewFingerprint({ uid, ...reviewed })) fail('REVIEW_REQUIRED');
-        handleHash = crypto.createHash('sha256').update(`${configuration.projectId}\0${foundation.handleKey}`, 'utf8').digest('hex').slice(0, 16);
+        handleHash = handleCorrelationHash(configuration, foundation.handleKey);
         const input = Object.freeze({
           uid,
           requestId: reviewed.operationId,
@@ -652,6 +723,7 @@ function createHandler(configuration, dependencies = {}) {
         const code = result.replay === true ? 'IDEMPOTENT' : 'SUCCESS';
         log(configuration, 'repairAccountFoundation', code.toLowerCase(), startedAt, {
           uidHash: callerHash,
+          operatorHash,
           handleHash,
           replayClass: result.replay === true ? 'exact-replay' : 'first-write',
           repairClass: result.repairClass
@@ -659,16 +731,19 @@ function createHandler(configuration, dependencies = {}) {
         return json(response, 200, { code, repairClass: result.repairClass, revision: result.revision || 1 });
       } catch (error) {
         const mapping = {
-          E1_NOT_ENABLED: [503, 'E1_NOT_ENABLED'], AUTH_REQUIRED: [401, 'AUTH_REQUIRED'], AUTH_INVALID: [401, 'AUTH_INVALID'],
+          E1_NOT_ENABLED: [503, 'E1_NOT_ENABLED'], OPERATOR_AUTH_REQUIRED: [401, 'OPERATOR_AUTH_REQUIRED'],
+          OPERATOR_AUTH_INVALID: [403, 'OPERATOR_AUTH_INVALID'], AUTH_REQUIRED: [401, 'AUTH_REQUIRED'], AUTH_INVALID: [401, 'AUTH_INVALID'],
           REQUEST_INVALID: [400, 'REQUEST_INVALID'], REQUEST_TOO_LARGE: [413, 'REQUEST_INVALID'], METHOD_NOT_ALLOWED: [405, 'METHOD_NOT_ALLOWED'],
           MAPPING_INCOMPLETE: [409, 'REVIEW_REQUIRED'], MAPPING_CONFLICT: [409, 'FOUNDATION_CONFLICT'],
           MAPPING_PERMISSION_DENIED: [403, 'REVIEW_REQUIRED'], MAPPING_UNAVAILABLE: [503, 'MAPPING_UNAVAILABLE'], REVIEW_REQUIRED: [409, 'REVIEW_REQUIRED'],
           'e1/handle-conflict': [409, 'FOUNDATION_CONFLICT'], 'e1/foundation-conflict': [409, 'FOUNDATION_CONFLICT'],
+          APPROVAL_WINDOW_CLOSED: [403, 'APPROVAL_WINDOW_CLOSED'], 'e1/rate-limit-exceeded': [429, 'RATE_LIMITED'],
           'e1/repair-review-required': [409, 'REVIEW_REQUIRED'], 'e1/replay-mismatch': [409, 'REQUEST_INVALID']
         };
         const [status, code] = mapping[error?.code] || [500, 'INTERNAL_ERROR'];
         log(configuration, 'repairAccountFoundation', code.toLowerCase(), startedAt, {
-          ...(callerHash ? { uidHash: callerHash } : {}), ...(handleHash ? { handleHash } : {})
+          ...(callerHash ? { uidHash: callerHash } : {}), ...(handleHash ? { handleHash } : {}),
+          ...(operatorHash ? { operatorHash } : {})
         });
         return json(response, status, { code });
       }
@@ -681,10 +756,13 @@ function createHandler(configuration, dependencies = {}) {
         if (!configuration.applyMigrationManifestEnabled) fail('E1_NOT_ENABLED');
         const manifest = exactMigrationRequest(await parseBody(request));
         ({ operatorHash } = await verifyOperator(configuration, operatorAccessTokenHeader(request)));
+        if (!configuration.approvedMigrationManifestIds.includes(manifest.manifestId)) fail('REVIEW_REQUIRED');
         const firebaseIdToken = subjectFirebaseTokenHeader(request);
         const { uid } = await verifyToken(configuration, firebaseIdToken);
         if (uid !== manifest.uid) fail('REQUEST_INVALID');
         callerHash = uidHash(configuration, uid);
+        await limitOperation('applyMigrationManifest', operatorHash,
+          rateAttemptHash('applyMigrationManifest', operatorHash, [manifest.operationId, manifest.manifestFingerprint]));
         const legacy = await readLegacyBinding({ verifiedUid: uid, firebaseIdToken });
         const requestedHandle = Object.freeze({
           display: manifest.canonicalTrainerName,
@@ -718,7 +796,7 @@ function createHandler(configuration, dependencies = {}) {
           MAPPING_PERMISSION_DENIED: [403, 'REVIEW_REQUIRED'], MAPPING_UNAVAILABLE: [503, 'MAPPING_UNAVAILABLE'], REVIEW_REQUIRED: [409, 'REVIEW_REQUIRED'],
           'e1/handle-conflict': [409, 'FOUNDATION_CONFLICT'], 'e1/foundation-conflict': [409, 'FOUNDATION_CONFLICT'],
           'e1/migration-conflict': [409, 'FOUNDATION_CONFLICT'], 'e1/migration-review-required': [409, 'REVIEW_REQUIRED'],
-          'e1/replay-mismatch': [409, 'REQUEST_INVALID']
+          'e1/replay-mismatch': [409, 'REQUEST_INVALID'], 'e1/rate-limit-exceeded': [429, 'RATE_LIMITED']
         };
         const [status, code] = mapping[error?.code] || [500, 'INTERNAL_ERROR'];
         log(configuration, 'applyMigrationManifest', code.toLowerCase(), startedAt, {
@@ -739,6 +817,8 @@ function createHandler(configuration, dependencies = {}) {
         const { uid } = await verifyToken(configuration, firebaseIdToken);
         if (uid !== reviewed.uid) fail('REQUEST_INVALID');
         callerHash = uidHash(configuration, uid);
+        await limitOperation('freezeIdentityConflict', operatorHash,
+          rateAttemptHash('freezeIdentityConflict', operatorHash, [reviewed.operationId, reviewed.manifestFingerprint]));
         const legacy = await readLegacyBinding({ verifiedUid: uid, firebaseIdToken });
         let foundation;
         if (legacy?.status === 'ready') {
@@ -773,7 +853,7 @@ function createHandler(configuration, dependencies = {}) {
           REQUEST_INVALID: [400, 'REQUEST_INVALID'], REQUEST_TOO_LARGE: [413, 'REQUEST_INVALID'], METHOD_NOT_ALLOWED: [405, 'METHOD_NOT_ALLOWED'],
           REVIEW_REQUIRED: [409, 'REVIEW_REQUIRED'], MAPPING_UNAVAILABLE: [503, 'MAPPING_UNAVAILABLE'],
           'e1/conflict-record-mismatch': [409, 'REVIEW_REQUIRED'], 'e1/conflict-not-observed': [409, 'REVIEW_REQUIRED'],
-          'e1/replay-mismatch': [409, 'REQUEST_INVALID']
+          'e1/replay-mismatch': [409, 'REQUEST_INVALID'], 'e1/rate-limit-exceeded': [429, 'RATE_LIMITED']
         };
         const [status, code] = mapping[error?.code] || [500, 'INTERNAL_ERROR'];
         log(configuration, 'freezeIdentityConflict', code.toLowerCase(), startedAt, {
@@ -827,9 +907,9 @@ function start(env = process.env) {
 if (require.main === module) start();
 
 module.exports = Object.freeze({
-  EXPECTED,
   FORBIDDEN_PROJECT_PERMISSIONS,
   GATES,
+  RATE_LIMITS,
   assertRuntimeDependencies,
   createHandler,
   conflictManifestFingerprint,

@@ -4,12 +4,12 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { EventEmitter } = require('node:events');
 const {
-  EXPECTED,
   GATES,
   createHandler,
   loadConfiguration,
   verifyFirebaseIdToken
 } = require('../e1-authority-service/server');
+const { STAGING: EXPECTED } = require('../e1-authority-service/e1TargetContracts');
 
 const UID = 'syntheticE1Uid123';
 const API_KEY = 'synthetic-firebase-web-api-key-for-tests';
@@ -19,6 +19,7 @@ function environment(overrides = {}) {
   return {
     APP_ENVIRONMENT: EXPECTED.environment,
     FIREBASE_PROJECT_ID: EXPECTED.projectId,
+    EXPECTED_PROJECT_NUMBER: EXPECTED.projectNumber,
     FIRESTORE_DATABASE_ID: EXPECTED.databaseId,
     SERVICE_REGION: EXPECTED.region,
     AUTHORITY_SERVICE_NAME: EXPECTED.serviceName,
@@ -104,6 +105,7 @@ function enabledHandler(overrides = {}) {
       calls.reads.push(uid);
       return overrides.document === undefined ? null : overrides.document;
     }),
+    consumeRateLimit: overrides.consumeRateLimit || (async () => ({ allowed: true, consumed: true })),
     structuredLog: (_configuration, operation, outcome, _startedAt, extra) => calls.logs.push({ operation, outcome, extra })
   });
   return { handler, calls };
@@ -143,6 +145,16 @@ test('valid caller with no account receives FOUNDATION_NOT_INITIALIZED and perfo
   assert.deepEqual(calls.writes, []);
   assert.equal(JSON.stringify(calls.logs).includes(UID), false);
   assert.match(calls.logs[0].extra.uidHash, /^[a-f0-9]{16}$/);
+});
+
+test('durable read quota rejects before the authority document read', async () => {
+  const error = new Error('e1/rate-limit-exceeded');
+  error.code = 'e1/rate-limit-exceeded';
+  const { handler, calls } = enabledHandler({ consumeRateLimit: async () => { throw error; } });
+  const result = await invoke(handler);
+  assert.deepEqual(result.body, { code: 'RATE_LIMITED' });
+  assert.equal(result.status, 429);
+  assert.deepEqual(calls.reads, []);
 });
 
 test('existing active foundation returns only the approved redacted fields', async () => {

@@ -4,19 +4,20 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { Readable } = require('node:stream');
 const {
-  EXPECTED,
   GATES,
   createHandler,
   loadConfiguration,
   reserveFingerprint,
   verifiedLegacyFoundation
 } = require('../e1-authority-service/server');
+const { STAGING: EXPECTED } = require('../e1-authority-service/e1TargetContracts');
 const { normalizeHandle } = require('../e1-authority-service/handleNormalization');
 
 function environment(overrides = {}) {
   return {
     APP_ENVIRONMENT: EXPECTED.environment,
     FIREBASE_PROJECT_ID: EXPECTED.projectId,
+    EXPECTED_PROJECT_NUMBER: EXPECTED.projectNumber,
     FIRESTORE_DATABASE_ID: EXPECTED.databaseId,
     SERVICE_REGION: EXPECTED.region,
     AUTHORITY_SERVICE_NAME: EXPECTED.serviceName,
@@ -72,6 +73,7 @@ function enabledHarness(overrides = {}) {
       calls.reserve.push(input);
       return { status: 'reserved', handleKey: input.handleKey, revision: 1 };
     },
+    async consumeRateLimit() { return { allowed: true, consumed: true }; },
     structuredLog(config, operation, outcome, startedAt, extra) {
       calls.logs.push({ config, operation, outcome, startedAt, extra });
     },

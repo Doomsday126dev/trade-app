@@ -3,7 +3,8 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { createVerifiedLegacyMappingReader, validatedTarget } = require('../e1-authority-service/rtdbVerifiedLegacyMappingReader');
-const { EXPECTED, GATES, createHandler, loadConfiguration } = require('../e1-authority-service/server');
+const { STAGING: EXPECTED } = require('../e1-authority-service/e1TargetContracts');
+const { GATES, createHandler, loadConfiguration } = require('../e1-authority-service/server');
 const { EventEmitter } = require('node:events');
 
 const TOKEN = 'recognizable.fake.firebase.token-never-log';
@@ -35,6 +36,7 @@ function environment(overrides = {}) {
   return {
     APP_ENVIRONMENT: EXPECTED.environment,
     FIREBASE_PROJECT_ID: EXPECTED.projectId,
+    EXPECTED_PROJECT_NUMBER: EXPECTED.projectNumber,
     FIRESTORE_DATABASE_ID: EXPECTED.databaseId,
     SERVICE_REGION: EXPECTED.region,
     AUTHORITY_SERVICE_NAME: EXPECTED.serviceName,

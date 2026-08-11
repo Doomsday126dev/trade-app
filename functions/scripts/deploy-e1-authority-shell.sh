@@ -24,6 +24,7 @@ SOURCE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../e1-authority-service" && pwd
 
 export APP_ENVIRONMENT="staging"
 export FIREBASE_PROJECT_ID="$PROJECT"
+export EXPECTED_PROJECT_NUMBER="$PROJECT_NUMBER"
 export FIREBASE_PROJECT_NUMBER="$PROJECT_NUMBER"
 export EXPECTED_STAGING_PROJECT_NUMBER="$PROJECT_NUMBER"
 export SERVICE_REGION="$REGION"
@@ -123,6 +124,7 @@ gcloud run services describe "$SERVICE" \
     delete containers[0].args;
     const environment = containers[0].env || (containers[0].env = []);
     for (const [name, value] of [
+      ["EXPECTED_PROJECT_NUMBER", "391359988648"],
       ["EXPECTED_OPERATOR_EMAIL_HASH", operatorEmailHash],
       ["EXPECTED_OPERATOR_SUBJECT_HASH", operatorSubjectHash]
     ]) {

@@ -17,6 +17,7 @@ MODE="$1"
 
 export APP_ENVIRONMENT="staging"
 export FIREBASE_PROJECT_ID="$PROJECT"
+export EXPECTED_PROJECT_NUMBER="$PROJECT_NUMBER"
 export FIREBASE_PROJECT_NUMBER="$PROJECT_NUMBER"
 export EXPECTED_STAGING_PROJECT_NUMBER="$PROJECT_NUMBER"
 export SERVICE_REGION="$REGION"
@@ -33,10 +34,13 @@ unset E1_ALLOWED_MUTATION_GATE || true
 
 case "$MODE" in
   repair)
+    : "${REPAIR_APPROVAL_WINDOW_START:?REPAIR_APPROVAL_WINDOW_START is required}"
+    : "${REPAIR_APPROVAL_WINDOW_END:?REPAIR_APPROVAL_WINDOW_END is required}"
     export REPAIR_FOUNDATION_ENABLED="true"
     export E1_ALLOWED_MUTATION_GATE="REPAIR_FOUNDATION_ENABLED"
     ;;
   migration)
+    : "${APPROVED_MIGRATION_MANIFEST_IDS:?APPROVED_MIGRATION_MANIFEST_IDS is required}"
     export APPLY_MIGRATION_ENABLED="true"
     export E1_ALLOWED_MUTATION_GATE="APPLY_MIGRATION_ENABLED"
     ;;
@@ -58,9 +62,12 @@ SPEC="$TEMP_DIR/service.json"
 gcloud run services describe "$SERVICE" --project="$PROJECT" --region="$REGION" --format=json >"$BEFORE"
 node - "$BEFORE" "$SPEC" "$RUNTIME_SA" \
   "$READ_ACCOUNT_FOUNDATION_ENABLED" "$RESERVE_HANDLE_ENABLED" "$REPAIR_FOUNDATION_ENABLED" \
-  "$APPLY_MIGRATION_ENABLED" "$FREEZE_CONFLICT_ENABLED" <<'NODE'
+  "$APPLY_MIGRATION_ENABLED" "$FREEZE_CONFLICT_ENABLED" \
+  "${REPAIR_APPROVAL_WINDOW_START:-}" "${REPAIR_APPROVAL_WINDOW_END:-}" "${APPROVED_MIGRATION_MANIFEST_IDS:-}" <<'NODE'
 const fs = require('node:fs');
-const [input, output, runtimeServiceAccount, ...gateValues] = process.argv.slice(2);
+const [input, output, runtimeServiceAccount, ...values] = process.argv.slice(2);
+const gateValues = values.slice(0, 5);
+const [repairWindowStart, repairWindowEnd, approvedMigrationManifestIds] = values.slice(5);
 const service = JSON.parse(fs.readFileSync(input, 'utf8'));
 if (service?.spec?.template?.spec?.serviceAccountName !== runtimeServiceAccount) throw new Error('runtime identity mismatch');
 if (service?.metadata?.name !== 'e1-identity-authority') throw new Error('service mismatch');
@@ -74,6 +81,15 @@ for (const [index, name] of gates.entries()) {
   const entry = environment.find((candidate) => candidate.name === name);
   if (!entry) throw new Error(`missing gate ${name}`);
   entry.value = gateValues[index];
+}
+for (const [name, value] of [
+  ["REPAIR_APPROVAL_WINDOW_START", repairWindowStart],
+  ["REPAIR_APPROVAL_WINDOW_END", repairWindowEnd],
+  ["APPROVED_MIGRATION_MANIFEST_IDS", approvedMigrationManifestIds]
+]) {
+  const entry = environment.find((candidate) => candidate.name === name);
+  if (entry) entry.value = value;
+  else if (value) environment.push({ name, value });
 }
 fs.writeFileSync(output, JSON.stringify(service, null, 2));
 NODE

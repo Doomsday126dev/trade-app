@@ -5,7 +5,6 @@ const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
 const { EventEmitter } = require('node:events');
 const {
-  EXPECTED,
   GATES,
   conflictManifestFingerprint,
   createHandler,
@@ -16,6 +15,7 @@ const {
   sourceMappingFingerprint,
   verifyOperatorAccessToken
 } = require('../e1-authority-service/server');
+const { STAGING: EXPECTED } = require('../e1-authority-service/e1TargetContracts');
 const { normalizeHandle } = require('../e1-authority-service/handleNormalization');
 
 const UID = 'firebase_uid_repair_a';
@@ -26,6 +26,7 @@ function environment(overrides = {}) {
   return {
     APP_ENVIRONMENT: EXPECTED.environment,
     FIREBASE_PROJECT_ID: EXPECTED.projectId,
+    EXPECTED_PROJECT_NUMBER: EXPECTED.projectNumber,
     FIRESTORE_DATABASE_ID: EXPECTED.databaseId,
     SERVICE_REGION: EXPECTED.region,
     AUTHORITY_SERVICE_NAME: EXPECTED.serviceName,
@@ -34,6 +35,9 @@ function environment(overrides = {}) {
     FIREBASE_WEB_API_KEY: 'synthetic-firebase-web-api-key-for-tests',
     EXPECTED_OPERATOR_EMAIL_HASH: crypto.createHash('sha256').update('operator@example.test').digest('hex'),
     EXPECTED_OPERATOR_SUBJECT_HASH: crypto.createHash('sha256').update('operator-subject').digest('hex'),
+    REPAIR_APPROVAL_WINDOW_START: '2026-08-10T00:00:00.000Z',
+    REPAIR_APPROVAL_WINDOW_END: '2026-08-11T00:00:00.000Z',
+    APPROVED_MIGRATION_MANIFEST_IDS: 'manifest-migration-0001',
     ...Object.fromEntries(GATES.map((gate) => [gate, 'false'])),
     ...overrides
   };
@@ -128,18 +132,28 @@ test('all new mutation gates fail before parsing authentication legacy reads or 
   }
 });
 
-test('self-repair derives UID from Firebase Auth and requires exact reviewed live mapping evidence', async () => {
+test('repair requires pinned operator plus subject auth and exact reviewed live mapping evidence', async () => {
   let stored;
   const handler = createHandler(loadConfiguration(environment({ REPAIR_FOUNDATION_ENABLED: 'true' })), {
+    verifyOperatorAccessToken: async (_configuration, token) => {
+      assert.equal(token, 'operator-oauth-token');
+      return { operatorHash: 'operator-hash' };
+    },
     verifyFirebaseIdToken: async (_configuration, token) => {
       assert.equal(token, 'subject-firebase-token');
       return { uid: UID };
     },
     readLegacyBinding: async () => LEGACY,
+    consumeRateLimit: async () => ({ allowed: true, consumed: true }),
     repairAccountFoundation: async (input) => { stored = input; return { status: 'repaired', revision: 1, repairClass: 'handle-restored' }; },
+    now: () => Date.parse('2026-08-10T20:30:00.000Z'),
     structuredLog: () => {}
   });
-  const result = await invoke(handler, '/v1/repair-account-foundation', repairBody(), { 'x-firebase-id-token': 'subject-firebase-token' });
+  const authHeaders = {
+    'x-e1-operator-access-token': 'operator-oauth-token',
+    'x-e1-subject-firebase-id-token': 'subject-firebase-token'
+  };
+  const result = await invoke(handler, '/v1/repair-account-foundation', repairBody(), authHeaders);
   assert.deepEqual(result, { status: 200, body: { code: 'SUCCESS', revision: 1, repairClass: 'handle-restored' } });
   assert.equal(stored.uid, UID);
   assert.equal(stored.handleKey, foundation().handleKey);
@@ -147,8 +161,55 @@ test('self-repair derives UID from Firebase Auth and requires exact reviewed liv
 
   const changed = repairBody();
   changed.expectedSourceFingerprint = 'f'.repeat(64);
-  assert.deepEqual(await invoke(handler, '/v1/repair-account-foundation', changed, { 'x-firebase-id-token': 'subject-firebase-token' }), {
+  assert.deepEqual(await invoke(handler, '/v1/repair-account-foundation', changed, authHeaders), {
     status: 400, body: { code: 'REQUEST_INVALID' }
+  });
+});
+
+test('repair denies subject-only wrong-operator operator-only and closed-window requests while exact replay is safe', async () => {
+  const configuration = loadConfiguration(environment({ REPAIR_FOUNDATION_ENABLED: 'true' }));
+  let writes = 0;
+  let replay = false;
+  const dependencies = {
+    verifyOperatorAccessToken: async (_configuration, token) => {
+      if (!token) { const error = new Error('OPERATOR_AUTH_REQUIRED'); error.code = 'OPERATOR_AUTH_REQUIRED'; throw error; }
+      if (token !== 'operator-oauth-token') { const error = new Error('OPERATOR_AUTH_INVALID'); error.code = 'OPERATOR_AUTH_INVALID'; throw error; }
+      return { operatorHash: 'operator-hash' };
+    },
+    verifyFirebaseIdToken: async (_configuration, token) => {
+      if (!token) { const error = new Error('AUTH_REQUIRED'); error.code = 'AUTH_REQUIRED'; throw error; }
+      return { uid: UID };
+    },
+    readLegacyBinding: async () => LEGACY,
+    consumeRateLimit: async () => ({ allowed: true, consumed: !replay }),
+    repairAccountFoundation: async () => {
+      writes += replay ? 0 : 1;
+      return { status: 'repaired', revision: 1, repairClass: 'handle-restored', replay };
+    },
+    structuredLog: () => {},
+    now: () => Date.parse('2026-08-10T20:30:00.000Z')
+  };
+  const handler = createHandler(configuration, dependencies);
+  const subjectOnly = { 'x-e1-subject-firebase-id-token': 'subject-firebase-token' };
+  const operatorOnly = { 'x-e1-operator-access-token': 'operator-oauth-token' };
+  const valid = { ...subjectOnly, ...operatorOnly };
+  assert.deepEqual(await invoke(handler, '/v1/repair-account-foundation', repairBody(), subjectOnly), {
+    status: 401, body: { code: 'OPERATOR_AUTH_REQUIRED' }
+  });
+  assert.deepEqual(await invoke(handler, '/v1/repair-account-foundation', repairBody(), { ...subjectOnly, 'x-e1-operator-access-token': 'wrong' }), {
+    status: 403, body: { code: 'OPERATOR_AUTH_INVALID' }
+  });
+  assert.deepEqual(await invoke(handler, '/v1/repair-account-foundation', repairBody(), operatorOnly), {
+    status: 401, body: { code: 'AUTH_REQUIRED' }
+  });
+  assert.equal((await invoke(handler, '/v1/repair-account-foundation', repairBody(), valid)).body.code, 'SUCCESS');
+  replay = true;
+  assert.equal((await invoke(handler, '/v1/repair-account-foundation', repairBody(), valid)).body.code, 'IDEMPOTENT');
+  assert.equal(writes, 1);
+
+  const closed = createHandler(configuration, { ...dependencies, now: () => Date.parse('2026-08-12T00:00:00.000Z') });
+  assert.deepEqual(await invoke(closed, '/v1/repair-account-foundation', repairBody(), valid), {
+    status: 403, body: { code: 'APPROVAL_WINDOW_CLOSED' }
   });
 });
 
@@ -164,6 +225,7 @@ test('migration requires separate operator and subject authentication plus an ex
       return { uid: UID };
     },
     readLegacyBinding: async () => LEGACY,
+    consumeRateLimit: async () => ({ allowed: true, consumed: true }),
     applyMigrationManifest: async (input) => {
       calls.push(['store', input]);
       return { status: 'migrated', revision: 1 };
@@ -181,6 +243,7 @@ test('migration requires separate operator and subject authentication plus an ex
   const foreignHandler = createHandler(loadConfiguration(environment({ APPLY_MIGRATION_ENABLED: 'true' })), {
     verifyOperatorAccessToken: async () => ({ operatorHash: 'operator-hash' }),
     verifyFirebaseIdToken: async () => ({ uid: 'firebase_uid_foreign' }),
+    consumeRateLimit: async () => ({ allowed: true, consumed: true }),
     readLegacyBinding: async () => { throw new Error('must not read'); },
     structuredLog: () => {}
   });
@@ -197,6 +260,7 @@ test('conflict freeze is review-bound to the currently observed legacy conflict 
     verifyOperatorAccessToken: async () => ({ operatorHash: 'operator-hash' }),
     verifyFirebaseIdToken: async () => ({ uid: UID }),
     readLegacyBinding: async () => legacy,
+    consumeRateLimit: async () => ({ allowed: true, consumed: true }),
     freezeIdentityConflict: async (input) => { stored = input; return { status: 'frozen' }; },
     structuredLog: () => {}
   });
