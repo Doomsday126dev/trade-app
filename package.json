@@ -59,6 +59,7 @@
     "check:e1-authority-package": "node functions/scripts/check-e1-authority-package.cjs",
     "check:e1-production-hardening": "npm --prefix functions run test:e1-production-hardening",
     "check:e1-production-infrastructure-guard": "npm --prefix functions run test:e1-production-infrastructure-guard",
+    "check:e1-production-read-proof-guard": "npm --prefix functions run test:e1-production-read-proof-guard",
     "audit:trainer-names": "node scripts/audit-trainer-names.js",
     "audit:uid-handles": "node scripts/audit-uid-handle-mappings.js",
     "audit:share-visibility": "node scripts/audit-share-visibility-migration.js",
