@@ -66,8 +66,23 @@ test('session ownership warnings use stable translation keys with English fallba
 test('English, Japanese, Spanish, and German expose the same UI key set',()=>{
   const {catalogs}=load();
   const expected=Object.keys(catalogs.en).sort();
-  assert.equal(expected.length,1027);
+  assert.equal(expected.length,1052);
   for(const locale of ['ja','es','de'])assert.deepEqual(Object.keys(catalogs[locale]).sort(),expected,locale);
+});
+
+test('Browse Favorites states are complete and localized',()=>{
+  const {catalogs}=load();
+  const required=[
+    'favoriteBrowse.title','favoriteBrowse.description','favoriteBrowse.placeholder','favoriteBrowse.loading',
+    'favoriteBrowse.results.one','favoriteBrowse.results.other','favoriteBrowse.noFavoritesTitle',
+    'favoriteBrowse.noSharedTitle','favoriteBrowse.noMatchBody','favoriteBrowse.refresh',
+    'favoriteBrowse.retry','favoriteBrowse.partial','favoriteBrowse.priority.H','favoriteBrowse.priority.none',
+    'favoriteBrowse.category.dynamax','favoriteBrowse.category.gmax','favoriteBrowse.category.costumes'
+  ];
+  for(const key of required){
+    for(const locale of ['en','ja','es','de'])assert.ok(String(catalogs[locale][key]||'').trim(),`${locale}:${key}`);
+    if(!key.startsWith('favoriteBrowse.category.'))for(const locale of ['ja','es','de'])assert.notEqual(catalogs[locale][key],catalogs.en[key],`${locale}:${key}`);
+  }
 });
 
 test('Recent Trainer recency uses natural Viewed copy in every supported locale',()=>{

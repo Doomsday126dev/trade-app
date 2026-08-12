@@ -136,11 +136,27 @@ test('loading and feedback primitives preserve stable layout and reduced motion'
 });
 
 test('Find Trainer preserves public-only reads and distinct projection states',()=>{
-  assert.match(html,/managedPublicShareRepository\.read/);
+  const repository=readFileSync(path.join(root,'js/data/publicShareRepository.js'),'utf8');
+  const cache=readFileSync(path.join(root,'js/data/favoriteShareSessionCache.js'),'utf8');
+  assert.match(repository,/read:username=>client\.read\(`publicShares\/\$\{shareUsername\(username\)\}`\)/);
+  assert.match(cache,/repository\.read\(favorite\.displayName\)/);
   assert.match(html,/publicShares\/\$\{username\}/);
   assert.match(html,/projection_incomplete.*trainer\.shareNeedsRepublishing/);
   assert.match(html,/projection_unsupported.*trainer\.sharedMalformed/);
   assert.doesNotMatch(html,/loadPublicShareData[\s\S]{0,900}(wishlist\/\$\{username\}|users\/\$\{username\})/);
+});
+
+test('Browse Favorites is Favorite-scoped, memory-only, and free of broad remote capabilities',()=>{
+  const cache=readFileSync(path.join(root,'js/data/favoriteShareSessionCache.js'),'utf8');
+  const domain=readFileSync(path.join(root,'js/domain/favoritePokemonBrowse.js'),'utf8');
+  const setup=html.slice(html.indexOf('function ensureFavoriteShareSessionCache'),html.indexOf('function trainerSearchCompatibility'));
+  const browse=html.slice(html.indexOf('function favoriteBrowseCatalog'),html.indexOf('function closeFavoriteCardActions'));
+  assert.match(browse,/store\.read\(\)[\s\S]*\.favorites/);
+  assert.match(setup,/concurrency:4,maxFavorites:20/);
+  assert.match(cache,/let records=new Map\(\),inflight=new Map\(\),candidateKeys=new Set\(\),queue=\[\]/);
+  assert.match(cache,/validateProjection\(result\.value,\{username:favorite\.displayName\}\)/);
+  assert.doesNotMatch(`${cache}\n${domain}`,/localStorage|sessionStorage|indexedDB|onValue|\.listen\(|publicShares\/|loginDirectory|private.?note|set\s*\(\s*ref|update\s*\(\s*ref/i);
+  assert.doesNotMatch(`${setup}\n${browse}`,/Object\.keys\(allData\.loginDirectory|managedPublicShareRepository\.listen|publicShares\/|queueSync|publishPublicShare/);
 });
 
 test('local preferences stay clearly device-local and expose no enabled sync control',()=>{

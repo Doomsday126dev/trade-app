@@ -71,10 +71,15 @@ test('My List owns current-user strings and Trade Match is not in retained navig
   assert.match(source,/id="my-strings-out"/);
 });
 
-test('Find Trainer autocomplete uses the public directory and selected trainer uses public shares only',()=>{
+test('Find Trainer autocomplete uses the public directory while selected and Favorite reads use exact public shares only',()=>{
   const find=between('function renderFindTrainer(){','function publicShareRequestFromInput');
   assert.match(find,/Object\.keys\(allData\.loginDirectory\|\|\{\}\)/);
-  assert.match(find,/managedPublicShareRepository\.read/);
+  const repository=readFileSync(path.join(root,'js/data/publicShareRepository.js'),'utf8');
+  const cache=readFileSync(path.join(root,'js/data/favoriteShareSessionCache.js'),'utf8');
+  assert.match(repository,/client\.read\(`publicShares\/\$\{shareUsername\(username\)\}`\)/);
+  assert.match(cache,/repository\.read\(favorite\.displayName\)/);
+  const browse=between('function favoriteBrowseCatalog(){','function closeFavoriteCardActions');
+  assert.doesNotMatch(browse,/allData\.loginDirectory|Object\.keys\(allData\.users|publicShares\/|\.listen\(/);
   assert.match(source,/trainerDiscoveryDomain\.fold\(name\)===trainerDiscoveryDomain\.fold\(value\)/);
   assert.match(source,/bestTrainerSuggestion\(Object\.keys\(allData\.loginDirectory\|\|\{\}\)/);
   assert.match(source,/const resolved=resolvedTrainerSearchValue\(requested\)/);

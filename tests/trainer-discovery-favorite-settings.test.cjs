@@ -20,6 +20,18 @@ test('Find Trainer uses one compact combobox with inline clear and no submit but
   assert.match(html,/event\.key==='Enter'/);
 });
 
+test('Browse Favorites sits below trainer lookup and uses a canonical Pokémon combobox',()=>{
+  const block=html.slice(html.indexOf('<!-- FIND TRAINER'),html.indexOf('<!-- MY LIST'));
+  const trainer=block.indexOf('class="trainer-search-shell search-lookup"');
+  const browse=block.indexOf('id="favorite-pokemon-browse"');
+  const favorites=block.indexOf('id="favorite-trainers"');
+  assert.ok(trainer>=0&&browse>trainer&&favorites>browse);
+  assert.match(block,/id="favorite-browse-input"[^>]*role="combobox" aria-autocomplete="list"/);
+  assert.match(block,/id="favorite-browse-results" role="region" aria-live="polite"/);
+  assert.match(html,/favoriteBrowseCatalog\(\)[\s\S]*rankAutocompleteItems/);
+  assert.match(html,/favoriteBrowseState\.selected=\{name:item\.name,dn:item\.dn,no:item\.no\}/);
+});
+
 test('Favorite creation is idempotent and saves stable tag assignments',()=>{
   const value=store(),raid=value.ensureTag('Raid'),friend=value.ensureTag('Friend');
   const first=value.saveFavoriteOrganization('ScoopskiPotat0',{tagIds:[raid.id,friend.id]});
@@ -81,7 +93,7 @@ test('responsive contracts retain 48px targets, wrapping, and no parallel organi
 });
 
 test('release and safety boundaries remain coherent',()=>{
-  assert.match(html,/2026-08-05\.37/);assert.doesNotMatch(html,/2026-08-05\.36/);
+  assert.match(html,/2026-08-05\.38/);assert.doesNotMatch(html,/2026-08-05\.37/);
   assert.match(readFileSync(path.join(root,'js/domain/shareVisibility.js'),'utf8'),/SHARE_VISIBILITY_MODEL_ENABLED\s*:\s*false/);assert.match(html,/SYNCED_TRAINER_PREFERENCES_ENABLED!==false/);
   assert.doesNotMatch(html,/managedTrainerPreferencesRepository\.(?:mutate|write|save)/);
 });

@@ -3,10 +3,17 @@ const { mkdirSync } = require('node:fs');
 const path = require('node:path');
 
 const pass3ScreenshotDir=process.env.PASS3_SCREENSHOT_DIR||'';
+const favoriteBrowseScreenshotDir=process.env.FAVORITE_BROWSE_SCREENSHOT_DIR||'';
 async function capturePass3(page,name){
   if(!pass3ScreenshotDir)return;
   mkdirSync(pass3ScreenshotDir,{recursive:true});
   await page.screenshot({path:path.join(pass3ScreenshotDir,`${name}.png`),fullPage:false});
+}
+async function captureFavoriteBrowse(page,name){
+  if(!favoriteBrowseScreenshotDir)return;
+  mkdirSync(favoriteBrowseScreenshotDir,{recursive:true});
+  await page.evaluate(()=>{for(const id of ['toast','undo-toast','favorite-saved-prompt']){const node=document.getElementById(id);if(node){node.classList.remove('show');node.hidden=true;node.style.setProperty('display','none','important');}}});
+  await page.screenshot({path:path.join(favoriteBrowseScreenshotDir,`${name}.png`),fullPage:true});
 }
 
 function isLocalAuthBaseURL() {
@@ -1025,6 +1032,120 @@ test.describe('visual smoke', () => {
       expect(longNameBox?.height).toBeLessThanOrEqual(44);
       expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
     }
+  });
+
+  test('Browse Favorites stays Favorite-only across canonical search, bounded hydration, retry, refresh, and responsive states',async({page})=>{
+    await page.setViewportSize({width:1440,height:900});
+    await page.goto(`./?favorite-pokemon-browse=${Date.now()}`,{waitUntil:'domcontentloaded'});
+    await waitForStableLocalOrganizerStartup(page);
+    await isolateAuthenticatedMyListFixture(page,{username:'BrowseTester',uid:'uid-browse-tester'});
+    await page.evaluate(async()=>{
+      const now=Date.now();
+      const state={
+        version:3,schemaVersion:3,migrationVersion:3,owner:{uid:'uid-browse-tester',username:'BrowseTester'},
+        favorites:[
+          {key:'traineralpha',displayName:'TrainerAlpha',tagIds:['nyc'],createdAt:1,updatedAt:1},
+          {key:'trainerbeta',displayName:'TrainerBeta',tagIds:['soon'],createdAt:2,updatedAt:2},
+          {key:'trainergamma',displayName:'TrainerGamma',tagIds:[],createdAt:3,updatedAt:3}
+        ],
+        recent:[{key:'trainerbeta',displayName:'TrainerBeta',openedAt:now},{key:'traineralpha',displayName:'TrainerAlpha',openedAt:now-1000}],
+        snapshots:{},tags:{nyc:{id:'nyc',label:'NYC'},soon:{id:'soon',label:'Trade soon'}},syncState:'local-only',migration:{skippedFavorites:0,skippedRecents:0}
+      };
+      const store={
+        read:()=>state,filterFavorites:()=>state.favorites,snapshotFor:()=>null,updateCanonicalName:()=>false,
+        favoriteFor:value=>state.favorites.find(item=>item.displayName.toLowerCase()===String(value).toLowerCase())||null
+      };
+      ensureTrainerHistoryStore=()=>store;
+      window.__favoriteBrowseFixture={state,reads:{},opened:'',unpublished:false};
+      const share=(username,lists)=>({version:1,username,profile:{friendCode:'',bio:'',discord:'',avatarPokemon:'',lastUpdated:now},lists,publishedListTypes:['wishlist','dynamax','gmax','costumes'],updatedAt:now});
+      managedPublicShareRepository={read:async username=>{
+        const reads=window.__favoriteBrowseFixture.reads;
+        reads[username]=(reads[username]||0)+1;
+        await new Promise(resolve=>setTimeout(resolve,250));
+        if(window.__favoriteBrowseFixture.unpublished)return{ok:true,value:null};
+        if(username==='TrainerGamma'&&reads[username]<=2)return{ok:false,error:{code:'offline'}};
+        const lists=username==='TrainerAlpha'
+          ?{wishlist:{Palkia:'L'},dynamax:{Palkia:'H'},gmax:{},costumes:{}}
+          :username==='TrainerBeta'
+            ?{wishlist:{Palkia:'M'},dynamax:{},gmax:{},costumes:{}}
+            :{wishlist:{Palkia:'L'},dynamax:{},gmax:{},costumes:{}};
+        return{ok:true,value:share(username,lists)};
+      }};
+      favoriteShareSessionCache=null;favoriteBrowseState={selected:null,suggestions:[],focusIndex:-1,busy:false,error:false,generation:0};
+      allData.loginDirectory={};
+      switchTab('find',{render:false});
+      openTrainerPublicShare=async username=>{window.__favoriteBrowseFixture.opened=username;};
+      renderInterimProductLabels();renderFavoriteBrowseResults();await renderTrainerQuickLists();resetSessionTransientUi('fixture_ready');
+    });
+
+    await expect(page.locator('#favorite-pokemon-browse')).toBeVisible();
+    expect(await page.evaluate(()=>document.getElementById('favorite-pokemon-browse').getBoundingClientRect().top<document.getElementById('favorite-trainers').getBoundingClientRect().top)).toBe(true);
+    await captureFavoriteBrowse(page,'find-trainer-desktop-before-selection');
+    await page.evaluate(()=>ensureFavoriteShareSessionCache().invalidate());
+    await page.locator('#favorite-browse-input').fill('Palkia');
+    await expect(page.locator('#favorite-browse-suggestions.open .ac-item').first()).toBeVisible();
+    await page.locator('#favorite-browse-suggestions.open .ac-item').first().click();
+    expect(await page.evaluate(()=>favoriteBrowseState.selected?.name)).toBe('Palkia');
+    await expect(page.locator('#favorite-browse-results')).toHaveAttribute('aria-busy','true');
+    await expect(page.locator('.favorite-browse-progress')).toContainText(/3/);
+    await expect(page.locator('.favorite-browse-row')).toHaveCount(2);
+    await expect(page.locator('.favorite-browse-row').first()).toContainText('High');
+    await expect(page.locator('.favorite-browse-row').first()).toContainText('Dynamax');
+    await expect(page.locator('.favorite-browse-row').first()).toContainText('NYC');
+    await expect(page.locator('.favorite-browse-partial')).toBeVisible();
+    await captureFavoriteBrowse(page,'find-trainer-partial-failure');
+
+    const beforeRetry=await page.evaluate(()=>({...window.__favoriteBrowseFixture.reads}));
+    await page.getByRole('button',{name:/Retry unavailable/i}).click();
+    await expect(page.locator('.favorite-browse-row')).toHaveCount(3);
+    const afterRetry=await page.evaluate(()=>({...window.__favoriteBrowseFixture.reads}));
+    expect(afterRetry.TrainerAlpha).toBe(beforeRetry.TrainerAlpha);
+    expect(afterRetry.TrainerBeta).toBe(beforeRetry.TrainerBeta);
+    expect(afterRetry.TrainerGamma).toBe(beforeRetry.TrainerGamma+1);
+    await expect(page.locator('.favorite-browse-partial')).toHaveCount(0);
+    await captureFavoriteBrowse(page,'find-trainer-desktop-results');
+
+    const readsBeforeTag=await page.evaluate(()=>JSON.stringify(window.__favoriteBrowseFixture.reads));
+    await page.evaluate(()=>{window.__favoriteBrowseFixture.state.favorites[0].tagIds=['soon'];renderFavoriteBrowseResults();});
+    await expect(page.locator('.favorite-browse-row').filter({hasText:'TrainerAlpha'})).toContainText('Trade soon');
+    expect(await page.evaluate(()=>JSON.stringify(window.__favoriteBrowseFixture.reads))).toBe(readsBeforeTag);
+    await page.locator('.favorite-browse-open').first().click();
+    await expect.poll(()=>page.evaluate(()=>window.__favoriteBrowseFixture.opened)).not.toBe('');
+
+    const readsBeforeKeystrokes=await page.evaluate(()=>JSON.stringify(window.__favoriteBrowseFixture.reads));
+    await page.locator('#favorite-browse-input').fill('Eevee');
+    expect(await page.evaluate(()=>JSON.stringify(window.__favoriteBrowseFixture.reads))).toBe(readsBeforeKeystrokes);
+    await page.locator('#favorite-browse-suggestions.open .ac-item').first().click();
+    await expect(page.locator('#favorite-browse-results')).toContainText(/None|Keine|Ninguno|いません/);
+    expect(await page.evaluate(()=>JSON.stringify(window.__favoriteBrowseFixture.reads))).toBe(readsBeforeKeystrokes);
+    await page.evaluate(()=>{const input=document.getElementById('find-trainer-input');if(input)input.value='';});
+    await captureFavoriteBrowse(page,'find-trainer-no-match');
+
+    await page.evaluate(()=>{favoriteBrowseState.selected=null;document.getElementById('favorite-browse-input').value='';const trainerInput=document.getElementById('find-trainer-input');if(trainerInput)trainerInput.value='';resetSessionTransientUi('fixture_capture');renderFavoriteBrowseResults();});
+    await page.setViewportSize({width:390,height:844});
+    await captureFavoriteBrowse(page,'find-trainer-mobile-before-selection');
+    await page.evaluate(()=>{favoriteBrowseState.selected={name:'Palkia',dn:'Palkia',no:484};document.getElementById('favorite-browse-input').value='Palkia';renderFavoriteBrowseResults();});
+    await expect(page.locator('.favorite-browse-row')).toHaveCount(3);
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
+    await captureFavoriteBrowse(page,'find-trainer-mobile-results');
+
+    const beforeRefresh=await page.evaluate(()=>({...window.__favoriteBrowseFixture.reads}));
+    await page.getByRole('button',{name:/Refresh/i}).click();
+    await expect.poll(()=>page.evaluate(()=>Object.values(window.__favoriteBrowseFixture.reads).reduce((sum,value)=>sum+value,0))).toBe(Object.values(beforeRefresh).reduce((sum,value)=>sum+value,0)+3);
+    await expect(page.locator('.favorite-browse-row')).toHaveCount(3);
+    for(const {locale,width} of [{locale:'ja',width:320},{locale:'de',width:390},{locale:'es',width:430},{locale:'en',width:1440}]){
+      await page.setViewportSize({width,height:844});
+      await page.evaluate(locale=>changeInterfaceLocale(locale),locale);
+      await expect(page.locator('#favorite-browse-title')).toBeVisible();
+      await expect(page.locator('.favorite-browse-row')).toHaveCount(3);
+      expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
+      const openBox=await page.locator('.favorite-browse-open').first().boundingBox();
+      expect(openBox?.height).toBeGreaterThanOrEqual(48);
+    }
+    await page.evaluate(async()=>{window.__favoriteBrowseFixture.unpublished=true;ensureFavoriteShareSessionCache().invalidate();await hydrateFavoriteBrowse({force:true});});
+    await expect(page.locator('#favorite-browse-results')).toContainText('None of your Favorites currently have a shared list.');
+    await page.evaluate(()=>{window.__favoriteBrowseFixture.state.favorites=[];renderFavoriteBrowseResults();});
+    await expect(page.locator('#favorite-browse-results')).toContainText(/No Favorites|Keine Favoriten|Sin favoritos|お気に入り/);
   });
 
   test('Favorites and Recents stay compact, accessible, and responsive at representative scale',async({page})=>{
