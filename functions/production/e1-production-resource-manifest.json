@@ -96,6 +96,34 @@
     "observationChecks": ["authority-gateway-5xx", "app-check-failures", "replay-duplicate-anomalies", "collision-conflict-metrics", "exact-firestore-state", "iam-drift", "rtdb-auth-public-share-isolation", "cost-anomalies"],
     "groupEAuthorized": false
   },
+  "secondMutation": {
+    "approvalGroup": "D",
+    "cohortStage": "D2",
+    "cohortSize": 2,
+    "maxWindowHours": 2,
+    "rateLimiterMode": "firestore-rolling-v1",
+    "baselineDocuments": 4,
+    "documentProgression": [
+      4,
+      8,
+      8,
+      12,
+      12
+    ],
+    "executionSequence": [
+      "candidate-a-first",
+      "candidate-a-verify",
+      "candidate-a-replay",
+      "candidate-a-replay-verify",
+      "candidate-b-first",
+      "candidate-b-verify",
+      "candidate-b-replay",
+      "candidate-b-replay-verify"
+    ],
+    "observationHours": 48,
+    "laterGroupsAuthorized": false,
+    "groupEAuthorized": false
+  },
   "observability": {
     "metrics": ["operation-count", "outcome", "latency", "conflict-rate", "app-check-rejection", "oidc-failure", "migration-attempt", "handle-collision", "rate-limit", "authority-5xx"],
     "rawIdentityLogging": false,
