@@ -1,4 +1,13 @@
 const { test, expect } = require('@playwright/test');
+const { mkdirSync } = require('node:fs');
+const path = require('node:path');
+
+const pass3ScreenshotDir=process.env.PASS3_SCREENSHOT_DIR||'';
+async function capturePass3(page,name){
+  if(!pass3ScreenshotDir)return;
+  mkdirSync(pass3ScreenshotDir,{recursive:true});
+  await page.screenshot({path:path.join(pass3ScreenshotDir,`${name}.png`),fullPage:false});
+}
 
 function isLocalAuthBaseURL() {
   const raw = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:4174';
@@ -1124,7 +1133,7 @@ test.describe('visual smoke', () => {
       const favoriteHeight=document.querySelector('.favorite-card-shell').getBoundingClientRect().height;
       const recentHeight=document.querySelector('.recent-trainer-row').getBoundingClientRect().height;
       const state=ensureTrainerHistoryStore().read();state.favorites=[];await renderTrainerQuickLists();
-      return{favoriteHeight,recentHeight,emptyHeight:document.querySelector('#favorite-trainers .favorite-empty').getBoundingClientRect().height};
+      return{favoriteHeight,recentHeight,emptyHeight:document.querySelector('#favorite-trainers .empty-state').getBoundingClientRect().height};
     });
     expect(density.favoriteHeight).toBeLessThan(128);
     expect(density.recentHeight).toBeLessThan(80);
@@ -1304,6 +1313,8 @@ test.describe('visual smoke', () => {
         allData={users:{SearchHierarchyTester:{}},wishlist:{SearchHierarchyTester:{}},dynamax:{SearchHierarchyTester:{}},gmax:{SearchHierarchyTester:{}},costumes:{SearchHierarchyTester:{}}};
         entries.forEach((entry,index)=>{allData.wishlist.SearchHierarchyTester[entry.name]=priValue(index<3?'H':index<6?'M':'L','',index===0,index===1,index===2,false);});
         document.getElementById('login-pg').style.display='none';document.getElementById('app').style.display='flex';setMyList('wishlist');
+        document.getElementById('top-un').textContent='SearchHierarchyTester';document.getElementById('top-av').textContent='ST';
+        document.getElementById('my-un').textContent='SearchHierarchyTester';document.getElementById('my-av').textContent='ST';
       });
       for(const priority of ['H','M','L']){
         const section=page.locator(`[data-priority-section="${priority}"]`);
@@ -1319,6 +1330,16 @@ test.describe('visual smoke', () => {
       await expect(page.locator('[data-search-option="all-priorities"]')).toBeVisible();
       await expect(page.locator('[data-search-option="high-medium"]')).toBeVisible();
       await expect(page.locator('#mylist-more-combinations')).toBeHidden();
+      const searchGridColumns=await page.locator('.mylist-search-groups').evaluate(node=>getComputedStyle(node).gridTemplateColumns);
+      if(width>900)expect(searchGridColumns.split(' ').length).toBeGreaterThanOrEqual(2);else expect(searchGridColumns.split(' ').length).toBe(1);
+      await expect(page.locator('.mylist-search-raw:visible')).toHaveCount(0);
+      if((width===390&&height===420)||(width===1440&&height===900)){
+        const suffix=width===390?'mobile':'desktop';
+        await page.locator('[data-priority-section="H"]').scrollIntoViewIfNeeded();
+        await capturePass3(page,`my-list-populated-rows-${suffix}`);
+        await page.locator('.my-string-heading').scrollIntoViewIfNeeded();
+        await capturePass3(page,`my-list-advanced-tools-${suffix}`);
+      }
       const before=await page.evaluate(()=>({type:myListType,count:Object.keys(allData.wishlist.SearchHierarchyTester).length}));
       const highView=page.locator('[data-priority-search="H"] .mylist-search-view');
       await highView.click();await expect(page.locator('#mylist-search-raw-priority-H')).toBeVisible();
@@ -1485,6 +1506,11 @@ test.describe('visual smoke', () => {
       document.getElementById('tab-admin').classList.add('active');
       renderAdmin();
     });
+    await page.setViewportSize({width:1440,height:900});
+    await page.evaluate(()=>setAdminSection('overview'));
+    await capturePass3(page,'admin-overview-desktop');
+    await page.evaluate(()=>setAdminSection('members'));
+    await capturePass3(page,'admin-members-desktop');
     const widths=[320,375,390,430,768,1024,1440];
     const locales=['ja','de','es','en','de','ja','en'];
     for(let index=0;index<widths.length;index++){
@@ -1499,6 +1525,7 @@ test.describe('visual smoke', () => {
         .filter(control=>control.getClientRects().length)
         .map(control=>control.getBoundingClientRect().height));
       for(const height of heights)expect(height).toBeGreaterThanOrEqual(48);
+      if(widths[index]===390){await page.evaluate(()=>{setAdminSection('members');document.getElementById('toast')?.classList.remove('show');});await capturePass3(page,'admin-members-mobile');}
     }
     await page.evaluate(()=>setAdminSection('members'));
     await expect(page.locator('.admin-member-row')).toHaveCount(4);
@@ -1509,6 +1536,7 @@ test.describe('visual smoke', () => {
   });
 
   test('Legacy Inventory fixture exposes only archive filtering and export',async({page})=>{
+    await page.setViewportSize({width:1440,height:900});
     await page.goto(`./?legacy-archive=${Date.now()}`,{waitUntil:'domcontentloaded'});
     await isolateAuthenticatedMyListFixture(page,{username:'ArchiveFixture',uid:'uid-archive-fixture'});
     await page.evaluate(()=>{
@@ -1521,6 +1549,11 @@ test.describe('visual smoke', () => {
     await expect(page.locator('#have-filter')).toBeVisible();
     await expect(page.locator('#legacy-inventory-export')).toBeVisible();
     await expect(page.locator('#have-ac-input, #have-bulk-bar, #have-browse-view, .have-toggle-row')).toHaveCount(0);
+    await expect(page.locator('#legacy-inventory-export .ui-icon')).toBeVisible();
+    await capturePass3(page,'legacy-archive-desktop');
+    await page.evaluate(()=>{allData.have.ArchiveFixture={};renderMyHave('');});
+    await expect(page.locator('#have-mine-out .empty-state')).toBeVisible();
+    await capturePass3(page,'legacy-archive-empty-desktop');
     for(const viewport of [{width:390,height:420},{width:390,height:300}]){
       await page.setViewportSize(viewport);
       expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
@@ -1572,8 +1605,8 @@ test.describe('visual smoke', () => {
     await page.locator('.event-filter[data-type="raids"]').click();await expect(page.locator('.event-filter[data-type="raids"]')).toHaveAttribute('aria-pressed','true');
     await page.locator('.event-filter[data-type="gbl"]').click();await expect(page.locator('.events-state')).toContainText(/.+/);await expect(page.locator('.events-state-action')).toBeVisible();await page.locator('.events-state-action').click();await expect(page.locator('.event-filter[data-type="all"]')).toHaveAttribute('aria-pressed','true');
     await page.evaluate(()=>{_eventData={events:[],raids:[],fetchedAt:Date.now()};_eventLoadState='ready';renderEventsOnly();});await expect(page.locator('.events-state')).toBeVisible();await expect(page.locator('.events-state-action')).toHaveCount(0);
-    await page.evaluate(()=>{_eventData=null;_eventLoadState='loading';renderEventsOnly();});await expect(page.locator('#events-out')).toHaveAttribute('aria-busy','true');await expect(page.locator('.ui-state-loading')).toBeVisible();
-    await page.evaluate(()=>{_eventData={events:[],raids:[],fetchedAt:0};_eventLoadState='error';renderEventsOnly();});await expect(page.locator('.ui-state-unavailable')).toBeVisible();await expect(page.locator('.events-state-action')).toBeVisible();
+    await page.evaluate(()=>{_eventData=null;_eventLoadState='loading';renderEventsOnly();});await expect(page.locator('#events-out')).toHaveAttribute('aria-busy','true');await expect(page.locator('.ui-state-loading')).toBeVisible();await capturePass3(page,'events-loading-mobile');
+    await page.evaluate(()=>{_eventData={events:[],raids:[],fetchedAt:0};_eventLoadState='error';renderEventsOnly();});await expect(page.locator('.ui-state-unavailable')).toBeVisible();await expect(page.locator('.events-state-action')).toBeVisible();await capturePass3(page,'events-error-mobile');
     const viewports=[['en',320,640],['ja',375,700],['de',390,420],['es',430,760],['ja',390,300],['de',768,800],['es',1024,800],['en',1440,900]];
     for(const [locale,width,height] of viewports){await page.setViewportSize({width,height});await page.evaluate(locale=>{changeInterfaceLocale(locale);_eventData=window.__eventTimelineFixture;_eventLoadState='ready';eventTypeFilter='all';renderEventsOnly();},locale);await expect(page.locator('.event-card').first()).toBeVisible();const rowBox=await page.locator('.event-card').first().boundingBox();expect(rowBox?.height).toBeLessThan(150);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);}
   });

@@ -34,7 +34,7 @@ test('consumer shell uses shared surface, motion, gutter, and navigation primiti
   }
   assert.doesNotMatch(css,/\.tab\[data-tab=[^\]]+\]::before\{content:/);
   for(const locale of locales)assert.doesNotMatch(locale,/'nav\.(?:myList|findTrainer|events|admin)(?:Short)?':'[^']*[📋🔍📅⚙️]/u);
-  for(const icon of ['list','search','calendar','shield','settings','copy','sliders','chevron-right'])assert.match(html,new RegExp(`id="ui-icon-${icon}"`));
+  for(const icon of ['list','search','calendar','shield','settings','copy','sliders','chevron-right','chevron-down','upload','users','user-plus','key','wrench','activity','archive','grip'])assert.match(html,new RegExp(`id="ui-icon-${icon}"`));
 });
 
 test('consumer composition reduces nested chrome while preserving interactive boundaries',()=>{
@@ -128,6 +128,19 @@ test('obvious application chrome uses the shared icon system and dense rows disc
   assert.match(css,/\.myrow-editor-popover\{[^}]*position:absolute/);
 });
 
+test('My List rows foreground collection identity while retaining fast editing',()=>{
+  const rows=html.slice(html.indexOf('function myListRowsHtml'),html.indexOf('function myListPrioritySectionHtml'));
+  assert.match(rows,/uiIconMarkup\('grip','ui-icon'\)/);
+  assert.match(rows,/myrow-sprite-wrap/);
+  assert.match(rows,/class="myrow-name"/);
+  assert.match(rows,/class="myrow-priority" role="group"/);
+  assert.match(rows,/details class="myrow-editor"/);
+  assert.match(css,/\.myrow\{[^}]*min-height:62px[^}]*gap:9px/);
+  assert.match(css,/\.myrow-sprite-wrap\{width:38px;height:38px\}/);
+  assert.match(css,/\.myrow-name\{font-size:14px;font-weight:700/);
+  assert.match(css,/\.drag-handle\{[^}]*width:28px;height:40px/);
+});
+
 test('cards, priority, status, and empty-state primitives preserve semantic structure',()=>{
   for(const role of ['content','interactive','row','status'])assert.match(css,new RegExp(`\\.card-${role}(?:,|\\{)`));
   assert.match(html,/favorite-card-shell card-interactive/);
@@ -140,6 +153,9 @@ test('cards, priority, status, and empty-state primitives preserve semantic stru
   assert.match(emptyState,/class="empty empty-state"/);
   assert.match(emptyState,/class="ui-state card-status/);
   assert.match(emptyState,/role="status" aria-live=/);
+  for(const icon of ['list','search','users','activity','archive','alert','offline'])assert.match(emptyState,new RegExp(`${icon}:`));
+  assert.match(emptyState,/class="ui-state-skeleton"/);
+  assert.doesNotMatch(emptyState,/class="ui-state-icon"[^\n]*>\$\{m\.icon\}/);
 });
 
 test('accessibility and disabled product boundaries remain explicit',()=>{

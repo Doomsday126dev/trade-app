@@ -73,7 +73,7 @@ test('compact favorite rows preserve tags, Open Trainer, overflow, and optional 
 test('Recent Trainers render as one native row action without nested competing controls',()=>{
   const render=html.slice(html.indexOf('async function renderTrainerQuickLists'),html.indexOf('function toggleTrainerFavorite'));
   assert.match(render,/<button type="button" class="recent-trainer-row card-row"[^>]+onclick="openTrainerByName/);
-  assert.match(render,/class="recent-trainer-chevron" aria-hidden="true">›<\/span><\/button>/);
+  assert.match(render,/class="recent-trainer-chevron" aria-hidden="true">\$\{uiIconMarkup\('chevron-right','ui-icon ui-icon-sm'\)\}<\/span><\/button>/);
   assert.match(render,/class="trainer-quick-name recent-trainer-name type-card"/);
   assert.match(render,/class="trainer-quick-meta recent-trainer-recency type-meta"/);
   assert.doesNotMatch(render,/recent-trainer-row[\s\S]{0,500}<button class="trainer-icon-btn/);

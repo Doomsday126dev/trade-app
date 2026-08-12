@@ -82,3 +82,23 @@ test('search-language locale is supplied to every generated combined search',()=
   assert.notEqual(en,ja);
   assert.match(html,/myListSearchPlan\(strs,\{locale:pokemonGoSearchLocale\(\)\}\)/);
 });
+
+test('advanced searches use grouped summary rows with predictable Copy and View placement',()=>{
+  assert.match(html,/class="mylist-search-groups"/);
+  assert.match(html,/class="mylist-search-section" aria-labelledby="combined-search-title"/);
+  assert.match(html,/class="mylist-search-section" aria-labelledby="special-search-title"/);
+  assert.match(html,/class="mylist-search-option-summary"/);
+  assert.match(html,/class="mylist-search-actions"/);
+  assert.match(html,/class="cpbtn mylist-search-action"/);
+  assert.match(html,/class="mylist-search-view mylist-search-action"/);
+  assert.match(html,/uiIconMarkup\('chevron-down'/);
+  assert.match(html,/\.mylist-search-option-head\{[^}]*grid-template-columns:minmax\(0,1fr\) auto/);
+  assert.match(html,/\.mylist-search-groups\{[^}]*grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+});
+
+test('advanced search presentation never exposes raw syntax before explicit disclosure',()=>{
+  assert.match(html,/class="strbox mylist-search-raw"[^>]+hidden/);
+  assert.match(html,/\.mylist-search-raw\{[^}]*grid-column:1\/-1/);
+  assert.match(html,/\.cpbtn\.mylist-search-action\{[^}]*background:var\(--surface-raised\)[^}]*box-shadow:none/);
+  assert.doesNotMatch(html,/class="strbox mylist-search-raw"(?![^>]*hidden)/);
+});

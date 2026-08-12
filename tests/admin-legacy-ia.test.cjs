@@ -64,6 +64,15 @@ test('Admin responsive layout uses grouped rows and 48px controls',()=>{
   assert.doesNotMatch(html,/\.utbl\{/);
 });
 
+test('Admin navigation and data rows use the shared product icon and list language',()=>{
+  const admin=between('<div class="page ui-container ui-container-wide" id="tab-admin">','<!-- SAFE-TO-TRANSFER MODAL');
+  for(const icon of ['activity','users','key','wrench','shield'])assert.match(admin,new RegExp(`ui-icon-${icon}`));
+  assert.match(html,/\.admin-nav-button\{[^}]*border-bottom:2px solid transparent/);
+  assert.match(html,/\.admin-nav-button\[aria-current="page"\]\{[^}]*border-color:var\(--accent\)[^}]*background:transparent/);
+  assert.match(html,/\.admin-member-list,\.admin-role-list,\.admin-maintenance-list\{[^}]*overflow:hidden[^}]*border:1px solid var\(--border\)/);
+  assert.match(html,/\.admin-member-row,\.admin-role-row,\.admin-maintenance-row\{[^}]*border-bottom:1px solid var\(--border\)[^}]*border-radius:0/);
+});
+
 test('Legacy Inventory is a secondary read-only archive with compatibility intact',()=>{
   const account=between('<div class="account-popover" id="account-popover"','<!-- Sync recovery banner');
   const archive=between('<div class="page ui-container ui-container-wide" id="tab-have">','<!-- SCHEDULE -->');
@@ -76,6 +85,17 @@ test('Legacy Inventory is a secondary read-only archive with compatibility intac
   assert.match(html,/action==='have'/);
   assert.match(html,/function exportLegacyInventoryCsv\(/);
   assert.match(html,/function renderMyHave\(/);
+});
+
+test('Legacy Inventory uses shared archive framing without restoring edit controls',()=>{
+  const archive=between('<div class="page ui-container ui-container-wide" id="tab-have">','<!-- SCHEDULE -->');
+  assert.match(archive,/class="status-badge archive-read-only"/);
+  assert.match(archive,/ui-icon-archive/);
+  assert.match(archive,/class="mylist-search app-search-shell search-filter archive-filter"/);
+  assert.match(archive,/id="legacy-inventory-export"[\s\S]*ui-icon-download/);
+  assert.match(archive,/id="have-mine-out" class="legacy-archive-list"/);
+  assert.doesNotMatch(archive,/onclick="(?:addInventoryEntry|updateInventoryQty|removeInventoryEntry)/);
+  assert.match(html,/emptyHtml\(i18nCore\.t\('inventory\.legacyEmpty'\),i18nCore\.t\('inventory\.archiveHelp'\),'archive'\)/);
 });
 
 test('future trainer-change summaries remain documented and unimplemented',()=>{

@@ -119,6 +119,20 @@ test('standard states distinguish loading, offline, authorization, stale, and up
   assert.match(ui.stateHtml(ui.stateModel('loading',{title:'Loading'})),/aria-live="polite" aria-busy="true"/);
   assert.match(ui.stateHtml(ui.stateModel('permission_denied',{title:'Private'})),/aria-live="assertive"/);
   assert.doesNotMatch(ui.stateHtml(ui.stateModel('unavailable',{title:'Unavailable'})),/Firebase|PERMISSION_DENIED/);
+  assert.match(ui.stateHtml(ui.stateModel('loading',{title:'Loading'})),/class="ui-state-skeleton"/);
+  assert.match(ui.stateHtml(ui.stateModel('offline',{title:'Offline'})),/class="empty-svg state-svg"/);
+  assert.doesNotMatch(ui.stateHtml(ui.stateModel('offline',{title:'Offline'})),/⚠️|📋|🔍/u);
+});
+
+test('loading and feedback primitives preserve stable layout and reduced motion',()=>{
+  const loader=html.slice(html.indexOf("function pokeballLoader(text='')"),html.indexOf('// ── WALLPAPER'));
+  assert.match(loader,/class="loader-wrap" role="status"/);
+  assert.equal((loader.match(/class="skel skel-row"/g)||[]).length,3);
+  assert.doesNotMatch(loader,/POKEBALL_SVG|pokeball-loader/);
+  assert.match(html,/\.toast,\.undo-toast\{[^}]*border-left:3px solid var\(--accent\)[^}]*pointer-events:auto/);
+  assert.match(html,/\.toast::before,\.undo-toast::before\{/);
+  assert.match(html,/\.undo-btn\{[^}]*margin-left:auto/);
+  assert.match(html,/@media\(prefers-reduced-motion:reduce\)/);
 });
 
 test('Find Trainer preserves public-only reads and distinct projection states',()=>{
