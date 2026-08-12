@@ -4,6 +4,7 @@ const path = require('node:path');
 
 const pass3ScreenshotDir=process.env.PASS3_SCREENSHOT_DIR||'';
 const favoriteBrowseScreenshotDir=process.env.FAVORITE_BROWSE_SCREENSHOT_DIR||'';
+const navScreenshotDir=process.env.NAV_SCREENSHOT_DIR||'';
 async function capturePass3(page,name){
   if(!pass3ScreenshotDir)return;
   mkdirSync(pass3ScreenshotDir,{recursive:true});
@@ -17,6 +18,11 @@ async function captureFavoriteBrowse(page,name){
   await page.evaluate(()=>{window.scrollTo(0,0);for(const id of ['toast','undo-toast','favorite-saved-prompt']){const node=document.getElementById(id);if(node){node.classList.remove('show');node.hidden=true;node.style.setProperty('display','none','important');}}});
   await page.waitForTimeout(50);
   await page.screenshot({path:path.join(favoriteBrowseScreenshotDir,`${name}.png`),fullPage:true});
+}
+async function capturePrimaryNav(page,name){
+  if(!navScreenshotDir)return;
+  mkdirSync(navScreenshotDir,{recursive:true});
+  await page.locator('.tabs').screenshot({path:path.join(navScreenshotDir,`${name}.png`)});
 }
 
 function isLocalAuthBaseURL() {
@@ -235,6 +241,80 @@ test.describe('visual smoke', () => {
         expect(geometry.canvas).not.toBe('rgba(0, 0, 0, 0)');
         expect(geometry.surface).not.toBe('rgba(0, 0, 0, 0)');
       }
+    }
+  });
+
+  test('owner primary navigation keeps shared optical geometry in every selected state',async({page})=>{
+    await page.goto(`./?primary-nav-geometry=${Date.now()}`,{waitUntil:'domcontentloaded'});
+    await waitForStableLocalOrganizerStartup(page);
+    await isolateAuthenticatedMyListFixture(page,{username:'OwnerNavFixture',uid:'uid-owner-nav-fixture'});
+    await page.evaluate(()=>{
+      const admin=document.getElementById('admin-tab');
+      admin.style.display='inline-flex';
+      const badge=document.getElementById('admin-notif');
+      badge.style.display='inline-flex';
+      badge.textContent='2';
+    });
+    const ids=['nav-mylist','nav-find','nav-events','admin-tab'];
+    for(const [width,height] of [[375,700],[390,700],[430,760],[768,800],[1440,900]]){
+      await page.setViewportSize({width,height});
+      const selectedMeasurements=[];
+      for(const selectedId of ids){
+        const measurements=await page.evaluate(({ids,selectedId})=>{
+          const rounded=value=>Math.round(value*100)/100;
+          for(const id of ids){
+            const tab=document.getElementById(id);
+            const selected=id===selectedId;
+            tab.classList.toggle('active',selected);
+            tab.setAttribute('aria-selected',String(selected));
+          }
+          return ids.map(id=>{
+            const item=document.getElementById(id);
+            const slot=item.querySelector('.tab-icon-slot');
+            const svg=item.querySelector('.tab-icon');
+            const use=svg.querySelector('use');
+            const shortLabel=item.querySelector('.tab-short-label');
+            const fullLabel=item.querySelector('.tab-label');
+            const label=getComputedStyle(shortLabel).display==='none'?fullLabel:shortLabel;
+            const itemBox=item.getBoundingClientRect();
+            const slotBox=slot.getBoundingClientRect();
+            const svgBox=svg.getBoundingClientRect();
+            const labelBox=label.getBoundingClientRect();
+            const art=use.getBBox();
+            return{
+              id,selected:id===selectedId,
+              item:{x:rounded(itemBox.x),y:rounded(itemBox.y),width:rounded(itemBox.width),height:rounded(itemBox.height),bottom:rounded(itemBox.bottom)},
+              slot:{x:rounded(slotBox.x),y:rounded(slotBox.y),width:rounded(slotBox.width),height:rounded(slotBox.height),centerY:rounded(slotBox.y+slotBox.height/2)},
+              svg:{x:rounded(svgBox.x),y:rounded(svgBox.y),width:rounded(svgBox.width),height:rounded(svgBox.height)},
+              label:{x:rounded(labelBox.x),y:rounded(labelBox.y),width:rounded(labelBox.width),height:rounded(labelBox.height),centerY:rounded(labelBox.y+labelBox.height/2)},
+              artwork:{width:rounded(art.width),height:rounded(art.height),centerY:rounded(svgBox.y+art.y+art.height/2)},
+              verticalGap:rounded(labelBox.y-slotBox.bottom),
+              activeTreatment:getComputedStyle(item).boxShadow
+            };
+          });
+        },{ids,selectedId});
+        const spread=(values)=>Math.max(...values)-Math.min(...values);
+        expect(spread(measurements.map(item=>item.slot.width))).toBeLessThanOrEqual(.5);
+        expect(spread(measurements.map(item=>item.slot.height))).toBeLessThanOrEqual(.5);
+        expect(spread(measurements.map(item=>item.slot.centerY))).toBeLessThanOrEqual(1);
+        expect(spread(measurements.map(item=>item.artwork.width))).toBeLessThanOrEqual(.5);
+        expect(spread(measurements.map(item=>item.artwork.height))).toBeLessThanOrEqual(.5);
+        expect(spread(measurements.map(item=>item.artwork.centerY))).toBeLessThanOrEqual(1);
+        expect(spread(measurements.map(item=>item.item.height))).toBeLessThanOrEqual(1);
+        expect(spread(measurements.map(item=>item.item.bottom))).toBeLessThanOrEqual(1);
+        if(width<768){
+          expect(spread(measurements.map(item=>item.verticalGap))).toBeLessThanOrEqual(1);
+          expect(spread(measurements.map(item=>item.label.y))).toBeLessThanOrEqual(1);
+          expect(spread(measurements.map(item=>item.label.height))).toBeLessThanOrEqual(1);
+        }else{
+          expect(spread(measurements.map(item=>item.label.centerY))).toBeLessThanOrEqual(1);
+        }
+        expect(measurements.find(item=>item.selected).activeTreatment).not.toBe('none');
+        selectedMeasurements.push(measurements);
+      }
+      expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
+      if([375,390,430,1440].includes(width))await capturePrimaryNav(page,`after-${width}-admin`);
+      test.info().attach(`primary-nav-${width}-geometry`,{body:Buffer.from(JSON.stringify(selectedMeasurements[0],null,2)),contentType:'application/json'});
     }
   });
 
@@ -1772,7 +1852,7 @@ test.describe('visual smoke', () => {
     await page.evaluate(()=>{_eventData=null;_eventLoadState='loading';renderEventsOnly();});await expect(page.locator('#events-out')).toHaveAttribute('aria-busy','true');await expect(page.locator('.ui-state-loading')).toBeVisible();await capturePass3(page,'events-loading-mobile');
     await page.evaluate(()=>{_eventData={events:[],raids:[],fetchedAt:0};_eventLoadState='error';renderEventsOnly();});await expect(page.locator('.ui-state-unavailable')).toBeVisible();await expect(page.locator('.events-state-action')).toBeVisible();await capturePass3(page,'events-error-mobile');
     const viewports=[['en',320,640],['ja',375,700],['de',390,420],['es',430,760],['ja',390,300],['de',768,800],['es',1024,800],['en',1440,900]];
-    for(const [locale,width,height] of viewports){await page.setViewportSize({width,height});await page.evaluate(locale=>{changeInterfaceLocale(locale);_eventData=window.__eventTimelineFixture;_eventLoadState='ready';eventTypeFilter='all';renderEventsOnly();},locale);await expect(page.locator('.event-card').first()).toBeVisible();const rowBox=await page.locator('.event-card').first().boundingBox();expect(rowBox?.height).toBeLessThan(150);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);}
+    for(const [locale,width,height] of viewports){await page.setViewportSize({width,height});await page.evaluate(locale=>{changeInterfaceLocale(locale);_eventData=window.__eventTimelineFixture;_eventLoadState='ready';eventTypeFilter='all';renderEventsOnly();},locale);await expect(page.locator('.event-card').first()).toBeVisible();const rowBox=await page.locator('.event-card').first().boundingBox();expect(rowBox?.height).toBeLessThan(width<=430?172:150);const summaryClamps=await page.locator('.event-card-summary').evaluateAll(nodes=>nodes.map(node=>getComputedStyle(node).webkitLineClamp));expect(summaryClamps.every(value=>value==='1')).toBe(true);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);}
   });
 
   test('main tab switching keeps the app rendered', async ({ page }) => {

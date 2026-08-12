@@ -27,14 +27,26 @@ test('consumer shell uses shared surface, motion, gutter, and navigation primiti
   assert.match(css,/\.topbar\{[\s\S]*?padding-inline:max\(var\(--page-gutter\),calc\(\(100vw - var\(--container-wide\)\)\/2\)\)/);
   assert.match(css,/\.tabs\{[\s\S]*?padding-inline:max\(var\(--page-gutter\),calc\(\(100vw - var\(--container-wide\)\)\/2\)\)/);
   assert.match(css,/\.tab\.active\{[^}]*box-shadow:inset 0 -3px var\(--accent\)/);
+  assert.match(css,/\.tab-icon-slot\{[^}]*display:flex[^}]*align-items:center[^}]*justify-content:center[^}]*width:22px[^}]*height:22px[^}]*flex:0 0 22px/);
+  assert.match(css,/\.tab-icon-slot \.tab-icon\{[^}]*width:20px[^}]*height:20px[^}]*flex:none/);
+  assert.match(css,/\.tab \.notif-badge\{[^}]*position:absolute/);
   for(const id of ['nav-mylist','nav-find','nav-events','admin-tab']){
     const button=html.match(new RegExp(`<button[^>]+id="${id}"[\\s\\S]*?<\\/button>`))?.[0]||'';
     assert.equal((button.match(/class="ui-icon tab-icon"/g)||[]).length,1,id);
+    assert.equal((button.match(/class="tab-icon-slot"/g)||[]).length,1,id);
     assert.equal((button.match(/class="tab-label"/g)||[]).length,1,id);
+    assert.equal((button.match(/class="tab-short-label"/g)||[]).length,1,id);
   }
   assert.doesNotMatch(css,/\.tab\[data-tab=[^\]]+\]::before\{content:/);
   for(const locale of locales)assert.doesNotMatch(locale,/'nav\.(?:myList|findTrainer|events|admin)(?:Short)?':'[^']*[📋🔍📅⚙️]/u);
   for(const icon of ['list','search','calendar','shield','settings','copy','sliders','chevron-right','chevron-down','upload','users','user-plus','key','wrench','activity','archive','grip'])assert.match(html,new RegExp(`id="ui-icon-${icon}"`));
+  for(const icon of ['list','search','calendar','shield']){
+    const symbol=html.match(new RegExp(`<symbol id="ui-icon-${icon}"[^>]+>[\\s\\S]*?<\\/symbol>`))?.[0]||'';
+    assert.match(symbol,/viewBox="0 0 24 24"/,icon);
+  }
+  assert.match(html,/id="ui-icon-list"[^>]*>[\s\S]*?M8 4h12M8 12h12M8 20h12/);
+  assert.match(html,/id="ui-icon-calendar"[^>]*>[\s\S]*?x="4" y="5" width="16" height="15"/);
+  assert.match(html,/id="ui-icon-shield"[^>]*>[\s\S]*?M12 20s8-3\.2 8-8V6l-8-2-8 2v6c0 4\.8 8 8 8 8Z/);
 });
 
 test('consumer composition reduces nested chrome while preserving interactive boundaries',()=>{
