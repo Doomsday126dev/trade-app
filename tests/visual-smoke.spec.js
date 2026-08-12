@@ -12,7 +12,10 @@ async function capturePass3(page,name){
 async function captureFavoriteBrowse(page,name){
   if(!favoriteBrowseScreenshotDir)return;
   mkdirSync(favoriteBrowseScreenshotDir,{recursive:true});
-  await page.evaluate(()=>{for(const id of ['toast','undo-toast','favorite-saved-prompt']){const node=document.getElementById(id);if(node){node.classList.remove('show');node.hidden=true;node.style.setProperty('display','none','important');}}});
+  const autocomplete=name.includes('autocomplete');
+  if(autocomplete){await page.screenshot({path:path.join(favoriteBrowseScreenshotDir,`${name}.png`),fullPage:false});return;}
+  await page.evaluate(()=>{window.scrollTo(0,0);for(const id of ['toast','undo-toast','favorite-saved-prompt']){const node=document.getElementById(id);if(node){node.classList.remove('show');node.hidden=true;node.style.setProperty('display','none','important');}}});
+  await page.waitForTimeout(50);
   await page.screenshot({path:path.join(favoriteBrowseScreenshotDir,`${name}.png`),fullPage:true});
 }
 
@@ -1071,21 +1074,38 @@ test.describe('visual smoke', () => {
             :{wishlist:{Palkia:'L'},dynamax:{},gmax:{},costumes:{}};
         return{ok:true,value:share(username,lists)};
       }};
-      favoriteShareSessionCache=null;favoriteBrowseState={selected:null,suggestions:[],focusIndex:-1,busy:false,error:false,generation:0};
+      favoriteShareSessionCache=null;favoriteBrowseState={selected:null,suggestions:[],focusIndex:-1,busy:false,error:false,generation:0,expanded:false};
       allData.loginDirectory={};
       switchTab('find',{render:false});
       openTrainerPublicShare=async username=>{window.__favoriteBrowseFixture.opened=username;};
       renderInterimProductLabels();renderFavoriteBrowseResults();await renderTrainerQuickLists();resetSessionTransientUi('fixture_ready');
     });
 
+    await page.evaluate(()=>applyTheme('dark'));
     await expect(page.locator('#favorite-pokemon-browse')).toBeVisible();
-    expect(await page.evaluate(()=>document.getElementById('favorite-pokemon-browse').getBoundingClientRect().top<document.getElementById('favorite-trainers').getBoundingClientRect().top)).toBe(true);
-    await captureFavoriteBrowse(page,'find-trainer-desktop-before-selection');
+    expect(await page.evaluate(()=>document.getElementById('favorite-trainers').contains(document.getElementById('favorite-pokemon-browse')))).toBe(true);
+    await expect(page.locator('#favorite-browse-toggle')).toHaveAttribute('aria-expanded','false');
+    await expect(page.locator('#favorite-browse-panel')).toBeHidden();
+    await captureFavoriteBrowse(page,'01-desktop-idle-collapsed');
+    await page.locator('#favorite-browse-toggle').click();
+    await expect(page.locator('#favorite-browse-panel')).toBeVisible();
     await page.evaluate(()=>ensureFavoriteShareSessionCache().invalidate());
     await page.locator('#favorite-browse-input').fill('Palkia');
     await expect(page.locator('#favorite-browse-suggestions.open .ac-item').first()).toBeVisible();
-    await page.locator('#favorite-browse-suggestions.open .ac-item').first().click();
+    const darkAutocomplete=await page.evaluate(()=>{
+      const dropdown=document.getElementById('favorite-browse-suggestions'),active=dropdown.querySelector('.ac-item[aria-selected="true"]');
+      const probe=document.createElement('span');document.body.appendChild(probe);
+      const token=property=>{probe.style.backgroundColor=`var(${property})`;const value=getComputedStyle(probe).backgroundColor;probe.style.backgroundColor='';return value;};
+      const result={dropdown:getComputedStyle(dropdown).backgroundColor,active:getComputedStyle(active).backgroundColor,raised:token('--surface-raised'),hover:token('--surface-hover'),text:getComputedStyle(active).color};
+      probe.remove();return result;
+    });
+    expect(darkAutocomplete.dropdown).toBe(darkAutocomplete.raised);
+    expect(darkAutocomplete.active).toBe(darkAutocomplete.hover);
+    expect(darkAutocomplete.dropdown).not.toBe('rgb(255, 255, 255)');
+    await captureFavoriteBrowse(page,'06-dark-autocomplete-open');
+    await page.keyboard.press('Enter');
     expect(await page.evaluate(()=>favoriteBrowseState.selected?.name)).toBe('Palkia');
+    await expect(page.locator('#favorite-browse-toggle')).toHaveAttribute('aria-expanded','true');
     await expect(page.locator('#favorite-browse-results')).toHaveAttribute('aria-busy','true');
     await expect(page.locator('.favorite-browse-progress')).toContainText(/3/);
     await expect(page.locator('.favorite-browse-row')).toHaveCount(2);
@@ -1093,8 +1113,6 @@ test.describe('visual smoke', () => {
     await expect(page.locator('.favorite-browse-row').first()).toContainText('Dynamax');
     await expect(page.locator('.favorite-browse-row').first()).toContainText('NYC');
     await expect(page.locator('.favorite-browse-partial')).toBeVisible();
-    await captureFavoriteBrowse(page,'find-trainer-partial-failure');
-
     const beforeRetry=await page.evaluate(()=>({...window.__favoriteBrowseFixture.reads}));
     await page.getByRole('button',{name:/Retry unavailable/i}).click();
     await expect(page.locator('.favorite-browse-row')).toHaveCount(3);
@@ -1103,7 +1121,14 @@ test.describe('visual smoke', () => {
     expect(afterRetry.TrainerBeta).toBe(beforeRetry.TrainerBeta);
     expect(afterRetry.TrainerGamma).toBe(beforeRetry.TrainerGamma+1);
     await expect(page.locator('.favorite-browse-partial')).toHaveCount(0);
-    await captureFavoriteBrowse(page,'find-trainer-desktop-results');
+    await captureFavoriteBrowse(page,'05-desktop-expanded-results');
+
+    const readsBeforeCollapse=await page.evaluate(()=>JSON.stringify(window.__favoriteBrowseFixture.reads));
+    await page.locator('#favorite-browse-toggle').click();
+    await expect(page.locator('#favorite-browse-panel')).toBeHidden();
+    await page.locator('#favorite-browse-toggle').click();
+    await expect(page.locator('.favorite-browse-row')).toHaveCount(3);
+    expect(await page.evaluate(()=>JSON.stringify(window.__favoriteBrowseFixture.reads))).toBe(readsBeforeCollapse);
 
     const readsBeforeTag=await page.evaluate(()=>JSON.stringify(window.__favoriteBrowseFixture.reads));
     await page.evaluate(()=>{window.__favoriteBrowseFixture.state.favorites[0].tagIds=['soon'];renderFavoriteBrowseResults();});
@@ -1119,15 +1144,33 @@ test.describe('visual smoke', () => {
     await expect(page.locator('#favorite-browse-results')).toContainText(/None|Keine|Ninguno|いません/);
     expect(await page.evaluate(()=>JSON.stringify(window.__favoriteBrowseFixture.reads))).toBe(readsBeforeKeystrokes);
     await page.evaluate(()=>{const input=document.getElementById('find-trainer-input');if(input)input.value='';});
-    await captureFavoriteBrowse(page,'find-trainer-no-match');
 
-    await page.evaluate(()=>{favoriteBrowseState.selected=null;document.getElementById('favorite-browse-input').value='';const trainerInput=document.getElementById('find-trainer-input');if(trainerInput)trainerInput.value='';resetSessionTransientUi('fixture_capture');renderFavoriteBrowseResults();});
+    await page.evaluate(()=>applyTheme('light'));
+    await page.waitForTimeout(240);
+    await page.locator('#favorite-browse-input').fill('Palkia');
+    await expect(page.locator('#favorite-browse-suggestions.open .ac-item').first()).toBeVisible();
+    const lightAutocomplete=await page.evaluate(()=>{
+      const dropdown=document.getElementById('favorite-browse-suggestions'),active=dropdown.querySelector('.ac-item[aria-selected="true"]');
+      const probe=document.createElement('span');document.body.appendChild(probe);
+      const token=property=>{probe.style.backgroundColor=`var(${property})`;const value=getComputedStyle(probe).backgroundColor;probe.style.backgroundColor='';return value;};
+      const result={dropdown:getComputedStyle(dropdown).backgroundColor,active:getComputedStyle(active).backgroundColor,raised:token('--surface-raised'),hover:token('--surface-hover')};
+      probe.remove();return result;
+    });
+    expect(lightAutocomplete.dropdown).toBe(lightAutocomplete.raised);
+    expect(lightAutocomplete.active).toBe(lightAutocomplete.hover);
+    await captureFavoriteBrowse(page,'07-light-autocomplete-open');
+    await page.keyboard.press('Escape');
+    await page.evaluate(()=>applyTheme('dark'));
+
+    await page.evaluate(()=>{favoriteBrowseState.selected=null;favoriteBrowseState.expanded=false;document.getElementById('favorite-browse-input').value='';const trainerInput=document.getElementById('find-trainer-input');if(trainerInput)trainerInput.value='';resetSessionTransientUi('fixture_capture');renderFavoriteBrowseResults();});
     await page.setViewportSize({width:390,height:844});
-    await captureFavoriteBrowse(page,'find-trainer-mobile-before-selection');
-    await page.evaluate(()=>{favoriteBrowseState.selected={name:'Palkia',dn:'Palkia',no:484};document.getElementById('favorite-browse-input').value='Palkia';renderFavoriteBrowseResults();});
+    await captureFavoriteBrowse(page,'02-mobile-idle-collapsed');
+    await page.locator('#favorite-browse-toggle').click();
+    await captureFavoriteBrowse(page,'03-mobile-expanded-before-selection');
+    await page.evaluate(()=>{favoriteBrowseState.selected={name:'Palkia',dn:'Palkia',no:484};favoriteBrowseState.expanded=true;document.getElementById('favorite-browse-input').value='Palkia';renderFavoriteBrowseResults();});
     await expect(page.locator('.favorite-browse-row')).toHaveCount(3);
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
-    await captureFavoriteBrowse(page,'find-trainer-mobile-results');
+    await captureFavoriteBrowse(page,'04-mobile-populated-results');
 
     const beforeRefresh=await page.evaluate(()=>({...window.__favoriteBrowseFixture.reads}));
     await page.getByRole('button',{name:/Refresh/i}).click();

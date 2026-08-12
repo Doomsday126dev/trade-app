@@ -20,16 +20,23 @@ test('Find Trainer uses one compact combobox with inline clear and no submit but
   assert.match(html,/event\.key==='Enter'/);
 });
 
-test('Browse Favorites sits below trainer lookup and uses a canonical Pokémon combobox',()=>{
+test('Find by Pokémon is a collapsed Favorite-scoped disclosure with a canonical combobox',()=>{
   const block=html.slice(html.indexOf('<!-- FIND TRAINER'),html.indexOf('<!-- MY LIST'));
   const trainer=block.indexOf('class="trainer-search-shell search-lookup"');
-  const browse=block.indexOf('id="favorite-pokemon-browse"');
   const favorites=block.indexOf('id="favorite-trainers"');
-  assert.ok(trainer>=0&&browse>trainer&&favorites>browse);
+  const browse=block.indexOf('id="favorite-pokemon-browse"');
+  const favoriteList=block.indexOf('id="favorite-trainers-list"');
+  const recents=block.indexOf('id="recent-trainers"');
+  assert.ok(trainer>=0&&favorites>trainer&&browse>favorites&&favoriteList>browse&&recents>favoriteList);
+  assert.match(block,/id="favorite-browse-toggle" aria-expanded="false" aria-controls="favorite-browse-panel"/);
+  assert.match(block,/id="favorite-browse-panel" hidden/);
   assert.match(block,/id="favorite-browse-input"[^>]*role="combobox" aria-autocomplete="list"/);
   assert.match(block,/id="favorite-browse-results" role="region" aria-live="polite"/);
   assert.match(html,/favoriteBrowseCatalog\(\)[\s\S]*rankAutocompleteItems/);
-  assert.match(html,/favoriteBrowseState\.selected=\{name:item\.name,dn:item\.dn,no:item\.no\}/);
+  assert.match(html,/favoriteBrowseState\.selected=\{name:item\.name,dn:item\.dn,no:item\.no\};favoriteBrowseState\.error=false;favoriteBrowseState\.expanded=true/);
+  const toggle=html.slice(html.indexOf('function toggleFavoriteBrowse()'),html.indexOf('function syncFavoriteBrowseClear'));
+  assert.match(toggle,/favoriteBrowseState\.expanded=!favoriteBrowseState\.expanded/);
+  assert.doesNotMatch(toggle,/invalidate|reset\(/);
 });
 
 test('Favorite creation is idempotent and saves stable tag assignments',()=>{
@@ -93,7 +100,7 @@ test('responsive contracts retain 48px targets, wrapping, and no parallel organi
 });
 
 test('release and safety boundaries remain coherent',()=>{
-  assert.match(html,/2026-08-05\.38/);assert.doesNotMatch(html,/2026-08-05\.37/);
+  assert.match(html,/2026-08-05\.39/);assert.doesNotMatch(html,/2026-08-05\.38/);
   assert.match(readFileSync(path.join(root,'js/domain/shareVisibility.js'),'utf8'),/SHARE_VISIBILITY_MODEL_ENABLED\s*:\s*false/);assert.match(html,/SYNCED_TRAINER_PREFERENCES_ENABLED!==false/);
   assert.doesNotMatch(html,/managedTrainerPreferencesRepository\.(?:mutate|write|save)/);
 });

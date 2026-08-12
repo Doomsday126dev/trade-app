@@ -30,6 +30,8 @@ function createStore(maxFavorites=100){
 test('Find Trainer presents lookup, Favorites, then Recents without space-saving tabs',()=>{
   const markup=html.slice(html.indexOf('<!-- FIND TRAINER'),html.indexOf('<!-- MY LIST'));
   assert.ok(markup.indexOf('id="find-trainer-input"')<markup.indexOf('id="favorite-trainers"'));
+  assert.ok(markup.indexOf('id="favorite-trainers"')<markup.indexOf('id="favorite-pokemon-browse"'));
+  assert.ok(markup.indexOf('id="favorite-pokemon-browse"')<markup.indexOf('id="favorite-trainers-list"'));
   assert.ok(markup.indexOf('id="favorite-trainers"')<markup.indexOf('id="recent-trainers"'));
   assert.doesNotMatch(markup,/role="tablist"|trainer-history-tabs/);
   assert.match(html,/\.trainer-quick-grid,\.recent-trainer-list\{display:grid;grid-template-columns:minmax\(0,1fr\)/);

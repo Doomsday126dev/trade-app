@@ -76,6 +76,17 @@ test('active fields use the shared theme and retain deliberate search variants',
   assert.doesNotMatch(css,/\.field-control[^}]*background:\s*(?:#fff|white)/i);
 });
 
+test('shared Pokémon autocomplete rows reset native controls onto themed surfaces',()=>{
+  assert.match(css,/\.ac-dropdown\{[^}]*background:var\(--surface-raised\)[^}]*color:var\(--text\)[^}]*box-shadow:var\(--shadow-high\)/);
+  assert.match(css,/\.ac-item\{[^}]*appearance:none[^}]*background:var\(--surface-raised\)[^}]*color:var\(--text\)/);
+  assert.match(css,/\.ac-item:hover,\.ac-item\.focused,\.ac-item\[aria-selected="true"\]\{[^}]*background:var\(--surface-hover\)/);
+  assert.match(css,/\.ac-item-no\{[^}]*color:var\(--muted\)/);
+  assert.match(css,/\.ac-item-variant\{[^}]*color:var\(--muted\)/);
+  assert.doesNotMatch(css,/\.ac-(?:dropdown|item)[^}]*background:\s*(?:#fff|white)/i);
+  assert.match(html,/class="ac-dropdown" id="ac-dropdown"/);
+  assert.match(html,/id="favorite-browse-suggestions" role="listbox"/);
+});
+
 test('shared fields preserve theme, focus, and validation layers during browser autofill',()=>{
   const start=css.indexOf('/* Browser autofill paints above normal background/color declarations.');
   const end=css.indexOf('.favorite-card-tag',start);

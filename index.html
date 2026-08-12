@@ -257,16 +257,16 @@ input,select,textarea{font-family:var(--font);outline:none}
 .ac-input{width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--text);padding:8px 11px;border-radius:var(--radius-md);font-size:14px}
 .ac-input:focus{border-color:var(--accent);outline:none}
 .ac-input::placeholder{color:var(--muted)}
-.ac-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--card);border:1px solid var(--border2);border-radius:var(--radius-md);z-index:200;max-height:min(420px,52vh);overflow-y:auto;display:none;box-shadow:0 8px 24px rgba(0,0,0,.5);scrollbar-color:var(--border2) transparent}
+.ac-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--surface-raised);color:var(--text);border:1px solid var(--border2);border-radius:var(--radius-md);z-index:200;max-height:min(420px,52vh);overflow-y:auto;display:none;box-shadow:var(--shadow-high);scrollbar-color:var(--border2) var(--surface-raised)}
 .ac-dropdown.open{display:block}
-.ac-item{padding:7px 11px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:.1s}
-.ac-item:hover,.ac-item.focused{background:var(--bg2)}
+.ac-item{appearance:none;width:100%;padding:7px 11px;border:0;border-bottom:1px solid var(--border);background:var(--surface-raised);color:var(--text);font:500 13px/1.4 var(--font);text-align:left;cursor:pointer;display:flex;align-items:center;gap:8px;transition:background var(--transition-fast),color var(--transition-fast)}
+.ac-item:last-child{border-bottom:0}.ac-item:hover,.ac-item.focused,.ac-item[aria-selected="true"]{background:var(--surface-hover);color:var(--text)}.ac-item.focused,.ac-item[aria-selected="true"]{box-shadow:inset 3px 0 0 var(--accent)}
 .ac-item-sprite{width:28px;height:28px;object-fit:contain;flex-shrink:0;image-rendering:pixelated}
 .ac-item-no{font-family:var(--mono);font-size:10px;color:var(--muted);min-width:30px}
-.ac-item-name{flex:1}
+.ac-item-name{flex:1;color:inherit}.ac-item-variant{color:var(--muted);font-size:11px}
 .ac-tray-btn{width:26px;height:26px;border-radius:7px;border:1px solid var(--border2);background:var(--bg);color:var(--ac2);font-size:14px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
 .ac-tray-btn:hover,.ac-tray-btn.on{background:rgba(168,139,250,.16);border-color:var(--accent);color:var(--text)}
-.ac-empty{padding:10px 12px;font-size:13px;color:var(--muted)}
+.ac-empty{padding:10px 12px;background:var(--surface-raised);font-size:13px;color:var(--muted)}
 .ac-section-label{padding:7px 12px 5px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .ac-item-muted{padding:7px 11px;font-size:13px;display:flex;align-items:center;gap:8px;opacity:.72;border-top:1px solid rgba(255,255,255,.04)}
 .ac-item-muted .ac-item-name{flex:1}
@@ -1360,9 +1360,7 @@ html[data-theme="light"] .have-mirror-badge,html[data-theme="light"] .have-mirro
 .trainer-suggestions.open{display:block}
 .trainer-suggestion{width:100%;border:0;border-bottom:1px solid var(--border);background:transparent;color:var(--text);padding:11px 13px;text-align:left;font:600 13px var(--font);cursor:pointer;min-height:44px;overflow-wrap:anywhere}
 .trainer-suggestion:last-child{border-bottom:0}.trainer-suggestion:hover,.trainer-suggestion.active{background:var(--bg2);outline:none}.trainer-suggestion mark{background:rgba(168,139,250,.22);color:var(--ac2);border-radius:2px;padding:0 1px}
-.favorite-browse{grid-column:1/-1;margin-top:22px;padding:16px 0 18px;border-block:1px solid var(--border)}
-.favorite-browse-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:10px}.favorite-browse-title{font-size:15px;font-weight:850;margin:0}.favorite-browse-description{max-width:620px;margin-top:3px;color:var(--muted);font-size:12px;line-height:1.45}.favorite-browse-search{position:relative;width:min(100%,620px)}.favorite-browse-search .trainer-search-clear{z-index:2}.favorite-browse-search .ac-dropdown{z-index:350}.favorite-browse-search .ac-item{min-height:48px}.favorite-browse-result-region{min-height:0}.favorite-browse-result-region[aria-busy="true"]{min-height:72px}.favorite-browse-progress{display:flex;align-items:center;gap:10px;min-height:64px;color:var(--muted);font-size:12px}.favorite-browse-progress .skel{width:34%;min-width:120px}.favorite-browse-summary{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin:15px 0 8px}.favorite-browse-pokemon{font-size:16px;font-weight:850}.favorite-browse-count{color:var(--muted);font-size:12px}.favorite-browse-results{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.favorite-browse-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px;min-width:0;padding:9px 10px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--card)}.favorite-browse-main{min-width:0}.favorite-browse-name{font-size:13px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.favorite-browse-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:4px;color:var(--muted);font-size:11px}.favorite-browse-priority{display:inline-flex;align-items:center;min-height:24px;padding:2px 7px;border:1px solid var(--border2);border-radius:var(--radius-pill);font-weight:850}.favorite-browse-priority.H{color:var(--danger);border-color:color-mix(in srgb,var(--danger) 45%,var(--border))}.favorite-browse-priority.M{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 45%,var(--border))}.favorite-browse-priority.L{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 45%,var(--border))}.favorite-browse-tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}.favorite-browse-tags .favorite-card-tag{min-height:24px}.favorite-browse-open{min-width:48px;min-height:48px;padding:8px 10px}.favorite-browse-footer{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:10px;color:var(--muted);font-size:11px}.favorite-browse-footer button{min-height:48px}.favorite-browse-partial{flex-basis:100%;color:var(--warn);line-height:1.4}.favorite-browse .empty-state{margin-top:10px;padding:12px 0;text-align:left}.favorite-browse .empty-svg,.favorite-browse .empty-i{display:none}
-.favorite-browse:has(.favorite-browse-result-region:empty){padding-block:11px 13px}.favorite-browse:has(.favorite-browse-result-region:empty) .favorite-browse-heading{margin-bottom:6px}.favorite-browse:has(.favorite-browse-result-region:empty) .favorite-browse-search{width:min(100%,560px)}
+.favorite-browse{margin:12px 0;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--surface-subtle)}.favorite-browse-heading{margin:0}.favorite-browse-disclosure{appearance:none;width:100%;min-height:58px;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;padding:9px 11px;border:0;border-radius:var(--radius-md);background:transparent;color:var(--text);text-align:left}.favorite-browse-disclosure:hover{background:var(--surface-hover)}.favorite-browse-disclosure-copy{display:grid;gap:2px;min-width:0}.favorite-browse-title{font-size:13px;font-weight:800}.favorite-browse-hint{color:var(--muted);font-size:11px;line-height:1.4}.favorite-browse-chevron{color:var(--muted);transition:transform var(--transition-base)}.favorite-browse[data-expanded="true"] .favorite-browse-chevron{transform:rotate(180deg)}.favorite-browse-panel{padding:12px;border-top:1px solid var(--border)}.favorite-browse-panel[hidden]{display:none}.favorite-browse-description{max-width:560px;margin:0 0 8px;color:var(--muted);font-size:12px;line-height:1.45}.favorite-browse-search{position:relative;width:min(100%,560px)}.favorite-browse-search .trainer-search-clear{z-index:2}.favorite-browse-search .ac-dropdown{z-index:350}.favorite-browse-search .ac-item{min-height:48px}.favorite-browse-result-region{min-height:0}.favorite-browse-result-region[aria-busy="true"]{min-height:72px}.favorite-browse-progress{display:flex;align-items:center;gap:10px;min-height:64px;color:var(--muted);font-size:12px}.favorite-browse-progress .skel{width:34%;min-width:120px}.favorite-browse-summary{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin:15px 0 8px}.favorite-browse-pokemon{font-size:16px;font-weight:850}.favorite-browse-count{color:var(--muted);font-size:12px}.favorite-browse-results{display:grid;grid-template-columns:minmax(0,1fr);gap:7px}.favorite-browse-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px;min-width:0;padding:9px 10px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--surface-raised)}.favorite-browse-main{min-width:0}.favorite-browse-name{font-size:13px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.favorite-browse-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:4px;color:var(--muted);font-size:11px}.favorite-browse-priority{display:inline-flex;align-items:center;min-height:24px;padding:2px 7px;border:1px solid var(--border2);border-radius:var(--radius-pill);font-weight:850}.favorite-browse-priority.H{color:var(--danger);border-color:color-mix(in srgb,var(--danger) 45%,var(--border))}.favorite-browse-priority.M{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 45%,var(--border))}.favorite-browse-priority.L{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 45%,var(--border))}.favorite-browse-tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}.favorite-browse-tags .favorite-card-tag{min-height:24px}.favorite-browse-open{min-width:48px;min-height:48px;padding:8px 10px}.favorite-browse-footer{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:10px;color:var(--muted);font-size:11px}.favorite-browse-footer button{min-height:48px}.favorite-browse-partial{flex-basis:100%;color:var(--warn);line-height:1.4}.favorite-browse .empty-state{margin-top:10px;padding:12px 0;text-align:left}.favorite-browse .empty-svg,.favorite-browse .empty-i{display:none}
 .trainer-quick-section{margin-top:22px;padding-top:18px;border-top:1px solid var(--border)}.trainer-section-heading{display:flex;align-items:center;gap:8px;margin:0 0 9px}.trainer-quick-heading{font-size:15px;font-weight:800;color:var(--text);margin:0}.trainer-section-count{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:24px;padding:0 7px;border:1px solid var(--border2);border-radius:var(--radius-pill);background:var(--bg2);color:var(--muted);font-size:11px;font-weight:800}
 .trainer-quick-grid,.recent-trainer-list{display:grid;grid-template-columns:minmax(0,1fr);gap:7px}
 .trainer-quick-card,.recent-trainer-row{border:1px solid var(--border);background:var(--card);border-radius:var(--radius-md);padding:8px 10px;display:flex;gap:9px;align-items:center;min-width:0}
@@ -1381,7 +1379,7 @@ html[data-theme="light"] .have-mirror-badge,html[data-theme="light"] .have-mirro
 .trainer-no-result-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}.trainer-no-result-actions[hidden]{display:none}.trainer-no-result-actions button{min-height:48px}
 .events-timeline{width:min(100%,860px)}.event-filter-row{display:flex;gap:6px;overflow-x:auto;padding:2px 0 14px;scrollbar-width:thin}.event-filter{flex:0 0 auto;white-space:nowrap;border:1px solid var(--border2);background:var(--card);color:var(--muted);padding:8px 12px;min-height:48px;font:700 11px var(--font);cursor:pointer}.event-filter[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}.event-group{margin-bottom:22px}.event-group-heading{display:flex;align-items:center;gap:8px;margin-bottom:8px}.event-group-title{font-size:15px;font-weight:850;margin:0}.event-group-count{display:inline-flex;align-items:center;justify-content:center;min-width:26px;min-height:26px;padding:2px 7px;border:1px solid var(--border2);border-radius:var(--radius-pill);background:var(--bg2);color:var(--muted);font-size:10px;font-weight:800}.event-group[data-group="now"] .event-group-title{color:var(--ok)}.event-card-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:7px}.event-card{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px;min-height:92px;border:1px solid var(--border);border-left:3px solid var(--accent);background:var(--card);border-radius:var(--radius-md);padding:10px 12px;min-width:0;color:var(--text);text-decoration:none}.event-card:hover{border-color:var(--ac2);background:var(--bg2)}.event-card.is-active{border-left-color:var(--ok);background:color-mix(in srgb,var(--card) 95%,var(--ok))}.event-card-main{display:grid;gap:4px;min-width:0}.event-card-kicker{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.event-current-badge{display:inline-flex;align-items:center;min-height:26px;padding:3px 7px;border:1px solid color-mix(in srgb,var(--ok) 55%,var(--border));border-radius:var(--radius-pill);background:color-mix(in srgb,var(--ok) 12%,var(--card));color:var(--ok);font-size:10px;font-weight:900;text-transform:uppercase}.event-type-tag{display:inline-flex;align-items:center;gap:4px;max-width:100%;border-radius:var(--radius-pill);padding:3px 7px;background:var(--bg2);border:1px solid var(--border2);font-size:10px;font-weight:800;color:var(--ac2);overflow-wrap:anywhere}.event-card-title{font-size:14px;font-weight:800;line-height:1.3;overflow-wrap:anywhere}.event-card-time{display:flex;align-items:baseline;gap:5px;flex-wrap:wrap;font-size:12px;color:var(--text);font-weight:700;line-height:1.4}.event-card-date{font-weight:800}.event-card-time-separator{color:var(--muted)}.event-card-relative{color:var(--ac2);font-size:11px;font-weight:800}.event-card.is-active .event-card-relative{color:var(--ok)}.event-card-summary{color:var(--muted);font-size:11px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}.event-card-cue{display:flex;align-items:center;gap:4px;min-width:48px;min-height:48px;justify-content:flex-end;color:var(--ac2);font-size:11px;font-weight:750}.event-card-cue-icon{font-size:20px}.event-card:not(a) .event-card-cue{display:none}.events-state{width:min(100%,860px)}.events-state .ui-state{align-items:center;padding:12px 14px}.events-state-action{margin-top:8px;min-height:48px}.events-state .empty-state{padding:14px;text-align:left}.events-state .empty-svg,.events-state .empty-i{display:none}
 .conflict-notice{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:500;width:min(520px,calc(100vw - 24px));padding:var(--space-4);background:var(--card);border:1px solid var(--warn);border-radius:var(--radius-lg);box-shadow:var(--shadow)}.conflict-notice h2{font-size:15px;margin:0 0 5px}.conflict-notice p{font-size:12px;color:var(--muted);line-height:1.5;margin:0 0 9px}.conflict-preview{max-height:150px;overflow:auto;font-size:11px}.conflict-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:10px}.conflict-actions button{min-height:48px}
-@media(max-width:600px){#tab-find{overflow:visible}.journey-guidance{flex-direction:column}.journey-guidance-actions{width:100%}.journey-guidance-actions button{flex:1 1 140px}.trainer-discovery-content,.trainer-search-shell,.favorite-toolbar-search{width:100%;max-width:none}.trainer-search-shell.suggestions-open{z-index:330}.trainer-suggestion{min-height:48px;font-size:14px}.trainer-quick-grid,.event-card-grid,.favorite-browse-results{grid-template-columns:1fr}.trainer-quick-section{margin-top:18px;padding-top:14px}.trainer-quick-card{padding:8px 10px}.trainer-quick-actions{width:100%;justify-content:flex-start}.favorite-card-surface{grid-template-columns:minmax(0,1fr) auto}.favorite-card-open{padding-inline:6px}.favorite-browse{margin-top:16px;padding-block:13px}.favorite-browse:has(.favorite-browse-result-region:empty){padding-block:9px 10px}.favorite-browse-description{font-size:11px}.favorite-browse-result-region:not(:empty){margin-top:2px}.favorite-browse-row{padding-block:8px}.event-filter-row{margin-inline:-2px;padding-bottom:10px}.event-group{margin-bottom:18px}.event-card{min-height:96px;padding:9px 10px}.event-card-cue{min-width:42px}.event-card-cue-label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}.my-string-heading{align-items:flex-start}.favorite-toolbar{grid-template-columns:minmax(0,1fr)}.favorite-filter-tags{grid-column:1/-1}.organizer-overlay{align-items:flex-end;padding:0}.organizer-modal{width:100%;max-width:none;max-height:calc(100dvh - env(safe-area-inset-top));margin:auto 0 0;border-radius:14px 14px 0 0;border-bottom:0}.organizer-body{max-height:calc(100dvh - 82px - env(safe-area-inset-top));padding-bottom:calc(20px + env(safe-area-inset-bottom))}.organizer-add-tag{grid-template-columns:minmax(0,1fr) auto}.organizer-add-tag button{min-width:72px}}
+@media(max-width:600px){#tab-find{overflow:visible}.journey-guidance{flex-direction:column}.journey-guidance-actions{width:100%}.journey-guidance-actions button{flex:1 1 140px}.trainer-discovery-content,.trainer-search-shell,.favorite-toolbar-search{width:100%;max-width:none}.trainer-search-shell.suggestions-open{z-index:330}.trainer-suggestion{min-height:48px;font-size:14px}.trainer-quick-grid,.event-card-grid,.favorite-browse-results{grid-template-columns:1fr}.trainer-quick-section{margin-top:18px;padding-top:14px}.trainer-quick-card{padding:8px 10px}.trainer-quick-actions{width:100%;justify-content:flex-start}.favorite-card-surface{grid-template-columns:minmax(0,1fr) auto}.favorite-card-open{padding-inline:6px}.favorite-browse{margin-block:10px}.favorite-browse-disclosure{min-height:56px}.favorite-browse-panel{padding:10px}.favorite-browse-description{font-size:11px}.favorite-browse-result-region:not(:empty){margin-top:2px}.favorite-browse-row{padding-block:8px}.event-filter-row{margin-inline:-2px;padding-bottom:10px}.event-group{margin-bottom:18px}.event-card{min-height:96px;padding:9px 10px}.event-card-cue{min-width:42px}.event-card-cue-label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}.my-string-heading{align-items:flex-start}.favorite-toolbar{grid-template-columns:minmax(0,1fr)}.favorite-filter-tags{grid-column:1/-1}.organizer-overlay{align-items:flex-end;padding:0}.organizer-modal{width:100%;max-width:none;max-height:calc(100dvh - env(safe-area-inset-top));margin:auto 0 0;border-radius:14px 14px 0 0;border-bottom:0}.organizer-body{max-height:calc(100dvh - 82px - env(safe-area-inset-top));padding-bottom:calc(20px + env(safe-area-inset-bottom))}.organizer-add-tag{grid-template-columns:minmax(0,1fr) auto}.organizer-add-tag button{min-width:72px}}
 .owner-share-notice{display:none;margin:10px 0 2px;padding:var(--space-3);border:1px solid rgba(245,158,11,.38);border-radius:var(--radius-md);background:rgba(245,158,11,.08)}
 .owner-share-notice.visible{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap}.owner-share-notice-copy{flex:1;min-width:210px}.owner-share-notice-title{font-weight:800;font-size:13px}.owner-share-notice-body{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.5}.owner-share-notice button{min-height:44px}
 .sched-manual-bonus{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--bg);border:1px dashed var(--border2);border-radius:var(--radius-md);margin-bottom:10px;font-size:12px;flex-wrap:wrap}
@@ -1873,7 +1871,7 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
 .toast,.undo-toast,.favorite-saved-prompt{border-color:var(--border);box-shadow:var(--shadow-high)}
 .share-search-disclosure{margin-top:6px}.share-search-disclosure summary{display:inline-flex;align-items:center;gap:7px;min-height:48px;padding:8px 2px;color:var(--ac2);font:700 var(--type-meta);cursor:pointer;list-style:none}.share-search-disclosure summary::-webkit-details-marker{display:none}.share-search-disclosure .collapse-icon{font-size:10px;transition:transform var(--transition-fast)}.share-search-disclosure[open] .collapse-icon{transform:rotate(180deg)}.share-search-hide-label,.share-search-disclosure[open] .share-search-view-label{display:none}.share-search-disclosure[open] .share-search-hide-label{display:inline}.share-search-disclosure .strbox{margin:2px 0 8px}.str-level-hdr{margin-bottom:0}
 .organizer-close{border-color:transparent;background:transparent}.organizer-close:hover{border-color:var(--border);background:var(--surface-hover)}.organizer-section{padding-top:6px}.organizer-assignment{gap:6px}.organizer-new-tag-toggle{border-color:transparent;background:transparent;color:var(--ac2)}.organizer-actions{padding-top:10px;border-top:1px solid var(--border)}
-@media(min-width:900px){#tab-find .have-hdr,.trainer-discovery-content{width:min(100%,var(--container-wide));max-width:var(--container-wide)}.trainer-discovery-content{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(300px,.85fr);column-gap:28px;align-items:start}.trainer-search-shell{grid-column:1/-1;width:min(100%,760px)}#favorite-pokemon-browse{grid-column:1/-1}#favorite-trainers{grid-column:1}#recent-trainers{grid-column:2}.trainer-quick-section{margin-top:28px}}
+@media(min-width:900px){#tab-find .have-hdr,.trainer-discovery-content{width:min(100%,var(--container-wide));max-width:var(--container-wide)}.trainer-discovery-content{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(300px,.85fr);column-gap:28px;align-items:start}.trainer-search-shell{grid-column:1/-1;width:min(100%,760px)}#favorite-trainers{grid-column:1}#recent-trainers{grid-column:2}.trainer-quick-section{margin-top:28px}}
 .event-filter-scroll{position:relative}.event-filter-scroll::after{content:"";position:absolute;z-index:2;top:0;right:-1px;width:34px;height:50px;pointer-events:none;background:linear-gradient(90deg,transparent,var(--surface-canvas))}.event-filter-scroll.is-at-end::after{display:none}.event-filter-row{scroll-snap-type:x proximity;overscroll-behavior-inline:contain}.event-filter{scroll-snap-align:start}.event-group:not([data-group="now"]) .event-card-grid{gap:0;overflow:hidden;border-block:1px solid var(--border)}.event-group:not([data-group="now"]) .event-card{min-height:82px;border:0;border-bottom:1px solid var(--border);border-radius:0;background:transparent;box-shadow:none}.event-group:not([data-group="now"]) .event-card:last-child{border-bottom:0}.event-group:not([data-group="now"]) .event-card:hover{background:var(--surface-hover)}
 @media(max-width:767px){
   :root{--topbar-h:58px}.topbar{padding-inline:12px}.logo{font-size:16px}.brand-mark{width:28px;height:28px}.bell-btn,.theme-toggle{width:48px;height:48px}.tabs{justify-content:space-around;padding-inline:0}.tab{flex:1;flex-direction:column;gap:2px;min-height:58px;padding:6px 2px;font-size:0}.tab-icon{width:20px;height:20px;flex-basis:20px}.tab::after{font-size:10px}.page{padding:20px 14px 56px}.my-hdr{margin-bottom:12px}.journey-guidance{padding:11px 12px}.journey-guidance-actions{gap:4px}.journey-guidance-actions .bghost{padding-inline:8px}.add-form{padding:14px}.settings-nav-button{background:transparent;border-color:transparent}.settings-nav-button[aria-current="page"]{background:var(--surface-raised)}
@@ -2111,20 +2109,26 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
       </div>
       <button class="bghost" id="find-trainer-reload" style="display:none;margin-top:8px" onclick="reloadCompatibleClient()"></button>
     </div>
-    <section class="favorite-browse" id="favorite-pokemon-browse" aria-labelledby="favorite-browse-title">
-      <div class="favorite-browse-heading"><div><h2 class="favorite-browse-title" id="favorite-browse-title" data-i18n="favoriteBrowse.title">Browse Favorites</h2><p class="favorite-browse-description" data-i18n="favoriteBrowse.description">Find who in your trading circle is looking for a Pokémon.</p></div></div>
-      <div class="favorite-browse-search app-search-shell search-lookup">
-        <span class="app-search-icon" aria-hidden="true"><svg class="ui-icon ui-icon-sm"><use href="#ui-icon-search"></use></svg></span>
-        <input class="app-search-input field-control" type="text" id="favorite-browse-input" autocomplete="off" spellcheck="false"
-          role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="favorite-browse-suggestions"
-          data-i18n-placeholder="favoriteBrowse.placeholder" placeholder="Search Pokémon…"
-          oninput="favoriteBrowseInput(this.value)" onfocus="favoriteBrowseInput(this.value)" onblur="setTimeout(closeFavoriteBrowseSuggestions,120)" onkeydown="favoriteBrowseKeydown(event)">
-        <button type="button" class="trainer-search-clear" id="favorite-browse-clear" onclick="clearFavoriteBrowse()" data-i18n-aria-label="favoriteBrowse.clear" aria-label="Clear Pokémon search" hidden>×</button>
-        <div class="ac-dropdown" id="favorite-browse-suggestions" role="listbox" data-i18n-aria-label="favoriteBrowse.suggestionsLabel" aria-label="Pokémon suggestions"></div>
-      </div>
-      <div class="favorite-browse-result-region" id="favorite-browse-results" role="region" aria-live="polite" aria-atomic="false"></div>
+    <section id="favorite-trainers" class="trainer-quick-section">
+      <div id="favorite-trainers-controls"></div>
+      <section class="favorite-browse" id="favorite-pokemon-browse" data-expanded="false" aria-labelledby="favorite-browse-title">
+        <h3 class="favorite-browse-heading"><button type="button" class="favorite-browse-disclosure" id="favorite-browse-toggle" aria-expanded="false" aria-controls="favorite-browse-panel" onclick="toggleFavoriteBrowse()"><span class="favorite-browse-disclosure-copy"><span class="favorite-browse-title" id="favorite-browse-title" data-i18n="favoriteBrowse.title">Find by Pokémon</span><span class="favorite-browse-hint" data-i18n="favoriteBrowse.disclosureHint">Search your Favorites by Pokémon</span></span><span class="favorite-browse-chevron" aria-hidden="true"><svg class="ui-icon ui-icon-sm"><use href="#ui-icon-chevron-down"></use></svg></span></button></h3>
+        <div class="favorite-browse-panel" id="favorite-browse-panel" hidden>
+          <p class="favorite-browse-description" data-i18n="favoriteBrowse.description">See which Favorites are looking for a Pokémon.</p>
+          <div class="favorite-browse-search app-search-shell search-lookup">
+            <span class="app-search-icon" aria-hidden="true"><svg class="ui-icon ui-icon-sm"><use href="#ui-icon-search"></use></svg></span>
+            <input class="app-search-input field-control" type="text" id="favorite-browse-input" autocomplete="off" spellcheck="false"
+              role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="favorite-browse-suggestions"
+              data-i18n-placeholder="favoriteBrowse.placeholder" placeholder="Search Pokémon…"
+              oninput="favoriteBrowseInput(this.value)" onfocus="favoriteBrowseInput(this.value)" onblur="setTimeout(closeFavoriteBrowseSuggestions,120)" onkeydown="favoriteBrowseKeydown(event)">
+            <button type="button" class="trainer-search-clear" id="favorite-browse-clear" onclick="clearFavoriteBrowse()" data-i18n-aria-label="favoriteBrowse.clear" aria-label="Clear Pokémon search" hidden>×</button>
+            <div class="ac-dropdown" id="favorite-browse-suggestions" role="listbox" data-i18n-aria-label="favoriteBrowse.suggestionsLabel" aria-label="Pokémon suggestions"></div>
+          </div>
+          <div class="favorite-browse-result-region" id="favorite-browse-results" role="region" aria-live="polite" aria-atomic="false"></div>
+        </div>
+      </section>
+      <div id="favorite-trainers-list"></div>
     </section>
-    <div id="favorite-trainers" class="trainer-quick-section"></div>
     <div id="recent-trainers" class="trainer-quick-section"></div>
     <div id="trainer-history-note" style="display:none;font-size:11px;color:var(--muted);margin-top:12px"></div>
     </div>
@@ -2646,7 +2650,7 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
 <div class="ptr-indicator" id="ptr-indicator" aria-hidden="true">↓</div>
 
 <script>
-window.__POGO_RELEASE_ID='2026-08-05.38';
+window.__POGO_RELEASE_ID='2026-08-05.39';
 window.__pogoBootWatch=setTimeout(function(){
   var visible=['config-pg','login-pg','app'].some(function(id){
     var el=document.getElementById(id);
@@ -2665,64 +2669,64 @@ window.__pogoBootWatch=setTimeout(function(){
   if(err)err.textContent='App scripts did not finish loading. Refresh once; if this stays, send this screenshot.';
 },4000);
 </script>
-<script src="data.js?v=2026-08-05.38"></script>
-<script src="js/domain/priorities.js?v=2026-08-05.38"></script>
-<script src="js/ui/badges.js?v=2026-08-05.38"></script>
-<script src="js/domain/username.js?v=2026-08-05.38"></script>
-<script src="js/domain/priorityValues.js?v=2026-08-05.38"></script>
-<script src="js/domain/scheduleDates.js?v=2026-08-05.38"></script>
-<script src="js/domain/pokemonSearchTerms.js?v=2026-08-05.38"></script>
-<script src="js/domain/pokemonEntryRules.js?v=2026-08-05.38"></script>
-<script src="js/domain/pokemonGoSearchSyntax.js?v=2026-08-05.38"></script>
-<script src="js/domain/searchStrings.js?v=2026-08-05.38"></script>
-<script src="js/ui/stringHtml.js?v=2026-08-05.38"></script>
-<script src="js/domain/scheduleEventRules.js?v=2026-08-05.38"></script>
-<script src="js/domain/scheduleTradeRules.js?v=2026-08-05.38"></script>
-<script src="js/domain/pokemonKeys.js?v=2026-08-05.38"></script>
-<script src="js/domain/spriteSlugs.js?v=2026-08-05.38"></script>
-<script src="js/domain/fuzzyText.js?v=2026-08-05.38"></script>
-<script src="js/domain/autocompleteText.js?v=2026-08-05.38"></script>
-<script src="js/domain/autocompleteMatching.js?v=2026-08-05.38"></script>
-<script src="js/domain/autocompleteRanking.js?v=2026-08-05.38"></script>
-<script src="js/domain/relativeTime.js?v=2026-08-05.38"></script>
-<script src="js/domain/clientRelease.js?v=2026-08-05.38"></script>
-<script src="js/domain/favoriteCardInteractions.js?v=2026-08-05.38"></script>
-<script src="js/domain/favoritePokemonBrowse.js?v=2026-08-05.38"></script>
-<script src="js/domain/trainerDiscovery.js?v=2026-08-05.38"></script>
-<script src="js/domain/eventPresentation.js?v=2026-08-05.38"></script>
-<script src="js/domain/publicSharePublication.js?v=2026-08-05.38"></script>
-<script src="js/domain/trainerPreferences.js?v=2026-08-05.38"></script>
-<script src="js/domain/trainerPreferenceSync.js?v=2026-08-05.38"></script>
-<script src="js/domain/authenticationReadiness.js?v=2026-08-05.38"></script>
-<script src="js/domain/loginDirectory.js?v=2026-08-05.38"></script>
-<script src="js/utils/textSafety.js?v=2026-08-05.38"></script>
-<script src="js/ui/stringPanels.js?v=2026-08-05.38"></script>
-<script src="js/ui/emptyState.js?v=2026-08-05.38"></script>
-<script src="js/i18n/locales/en.js?v=2026-08-05.38"></script>
-<script src="js/i18n/locales/ja.js?v=2026-08-05.38"></script>
-<script src="js/i18n/locales/es.js?v=2026-08-05.38"></script>
-<script src="js/i18n/locales/de.js?v=2026-08-05.38"></script>
-<script src="js/i18n/pokemonNames/catalog.js?v=2026-08-05.38"></script>
-<script src="js/i18n/pokemonNames/variants.js?v=2026-08-05.38"></script>
-<script src="js/i18n/pokemonNames/core.js?v=2026-08-05.38"></script>
-<script src="js/i18n/eventLabels/currentTitles.js?v=2026-08-05.38"></script>
-<script src="js/i18n/eventLabels/core.js?v=2026-08-05.38"></script>
-<script src="js/i18n/core.js?v=2026-08-05.38"></script>
-<script src="js/services/firebaseClient.js?v=2026-08-05.38"></script>
-<script src="js/services/firebaseAppCheck.js?v=2026-08-05.38"></script>
-<script src="js/data/subscriptionManager.js?v=2026-08-05.38"></script>
-<script src="js/data/listenerLifecycle.js?v=2026-08-05.38"></script>
-<script src="js/data/sessionCacheBoundary.js?v=2026-08-05.38"></script>
-<script src="js/data/firebaseReadRegistry.js?v=2026-08-05.38"></script>
-<script src="js/data/currentUserRepository.js?v=2026-08-05.38"></script>
-<script src="js/data/ownedDataCoordinator.js?v=2026-08-05.38"></script>
-<script src="js/data/publicShareRepository.js?v=2026-08-05.38"></script>
-<script src="js/data/trainerHistoryStore.js?v=2026-08-05.38"></script>
-<script src="js/data/favoriteShareSessionCache.js?v=2026-08-05.38"></script>
-<script src="js/data/trainerPreferencesRepository.js?v=2026-08-05.38"></script>
-<script src="js/data/trainerPreferenceSyncQueue.js?v=2026-08-05.38"></script>
-<script src="js/domain/cacheAdapters.js?v=2026-08-05.38"></script>
-<script src="js/ui/trainerTagPanel.js?v=2026-08-05.38"></script>
+<script src="data.js?v=2026-08-05.39"></script>
+<script src="js/domain/priorities.js?v=2026-08-05.39"></script>
+<script src="js/ui/badges.js?v=2026-08-05.39"></script>
+<script src="js/domain/username.js?v=2026-08-05.39"></script>
+<script src="js/domain/priorityValues.js?v=2026-08-05.39"></script>
+<script src="js/domain/scheduleDates.js?v=2026-08-05.39"></script>
+<script src="js/domain/pokemonSearchTerms.js?v=2026-08-05.39"></script>
+<script src="js/domain/pokemonEntryRules.js?v=2026-08-05.39"></script>
+<script src="js/domain/pokemonGoSearchSyntax.js?v=2026-08-05.39"></script>
+<script src="js/domain/searchStrings.js?v=2026-08-05.39"></script>
+<script src="js/ui/stringHtml.js?v=2026-08-05.39"></script>
+<script src="js/domain/scheduleEventRules.js?v=2026-08-05.39"></script>
+<script src="js/domain/scheduleTradeRules.js?v=2026-08-05.39"></script>
+<script src="js/domain/pokemonKeys.js?v=2026-08-05.39"></script>
+<script src="js/domain/spriteSlugs.js?v=2026-08-05.39"></script>
+<script src="js/domain/fuzzyText.js?v=2026-08-05.39"></script>
+<script src="js/domain/autocompleteText.js?v=2026-08-05.39"></script>
+<script src="js/domain/autocompleteMatching.js?v=2026-08-05.39"></script>
+<script src="js/domain/autocompleteRanking.js?v=2026-08-05.39"></script>
+<script src="js/domain/relativeTime.js?v=2026-08-05.39"></script>
+<script src="js/domain/clientRelease.js?v=2026-08-05.39"></script>
+<script src="js/domain/favoriteCardInteractions.js?v=2026-08-05.39"></script>
+<script src="js/domain/favoritePokemonBrowse.js?v=2026-08-05.39"></script>
+<script src="js/domain/trainerDiscovery.js?v=2026-08-05.39"></script>
+<script src="js/domain/eventPresentation.js?v=2026-08-05.39"></script>
+<script src="js/domain/publicSharePublication.js?v=2026-08-05.39"></script>
+<script src="js/domain/trainerPreferences.js?v=2026-08-05.39"></script>
+<script src="js/domain/trainerPreferenceSync.js?v=2026-08-05.39"></script>
+<script src="js/domain/authenticationReadiness.js?v=2026-08-05.39"></script>
+<script src="js/domain/loginDirectory.js?v=2026-08-05.39"></script>
+<script src="js/utils/textSafety.js?v=2026-08-05.39"></script>
+<script src="js/ui/stringPanels.js?v=2026-08-05.39"></script>
+<script src="js/ui/emptyState.js?v=2026-08-05.39"></script>
+<script src="js/i18n/locales/en.js?v=2026-08-05.39"></script>
+<script src="js/i18n/locales/ja.js?v=2026-08-05.39"></script>
+<script src="js/i18n/locales/es.js?v=2026-08-05.39"></script>
+<script src="js/i18n/locales/de.js?v=2026-08-05.39"></script>
+<script src="js/i18n/pokemonNames/catalog.js?v=2026-08-05.39"></script>
+<script src="js/i18n/pokemonNames/variants.js?v=2026-08-05.39"></script>
+<script src="js/i18n/pokemonNames/core.js?v=2026-08-05.39"></script>
+<script src="js/i18n/eventLabels/currentTitles.js?v=2026-08-05.39"></script>
+<script src="js/i18n/eventLabels/core.js?v=2026-08-05.39"></script>
+<script src="js/i18n/core.js?v=2026-08-05.39"></script>
+<script src="js/services/firebaseClient.js?v=2026-08-05.39"></script>
+<script src="js/services/firebaseAppCheck.js?v=2026-08-05.39"></script>
+<script src="js/data/subscriptionManager.js?v=2026-08-05.39"></script>
+<script src="js/data/listenerLifecycle.js?v=2026-08-05.39"></script>
+<script src="js/data/sessionCacheBoundary.js?v=2026-08-05.39"></script>
+<script src="js/data/firebaseReadRegistry.js?v=2026-08-05.39"></script>
+<script src="js/data/currentUserRepository.js?v=2026-08-05.39"></script>
+<script src="js/data/ownedDataCoordinator.js?v=2026-08-05.39"></script>
+<script src="js/data/publicShareRepository.js?v=2026-08-05.39"></script>
+<script src="js/data/trainerHistoryStore.js?v=2026-08-05.39"></script>
+<script src="js/data/favoriteShareSessionCache.js?v=2026-08-05.39"></script>
+<script src="js/data/trainerPreferencesRepository.js?v=2026-08-05.39"></script>
+<script src="js/data/trainerPreferenceSyncQueue.js?v=2026-08-05.39"></script>
+<script src="js/domain/cacheAdapters.js?v=2026-08-05.39"></script>
+<script src="js/ui/trainerTagPanel.js?v=2026-08-05.39"></script>
 <script>
 let initializeApp,getDatabase,ref,set,get,onValue,update,getAuth,signInWithEmailAndPassword,createUserWithEmailAndPassword,firebaseSignOut,updatePassword,deleteUser,onAuthStateChanged;
 let firebaseSdkPromise=null;
@@ -6366,7 +6370,7 @@ let trainerOrganizerState={query:'',tagIds:[],username:''};
 let favoriteSavedPromptTimer=0;
 let favoriteSwipeGesture=null;
 let favoriteCardMenuTrigger=null;
-let favoriteBrowseState={selected:null,suggestions:[],focusIndex:-1,busy:false,error:false,generation:0};
+let favoriteBrowseState={selected:null,suggestions:[],focusIndex:-1,busy:false,error:false,generation:0,expanded:false};
 let favoriteBrowseCatalogCache={locale:'',items:[]};
 function resetTrainerOrganizerState(){
   trainerOrganizerState={query:'',tagIds:[],username:''};
@@ -6394,10 +6398,11 @@ function ensureFavoriteShareSessionCache(){
 }
 function resetFavoriteBrowseSession(){
   favoriteShareSessionCache?.reset();favoriteShareSessionCache=null;
-  favoriteBrowseState={selected:null,suggestions:[],focusIndex:-1,busy:false,error:false,generation:favoriteBrowseState.generation+1};
+  favoriteBrowseState={selected:null,suggestions:[],focusIndex:-1,busy:false,error:false,generation:favoriteBrowseState.generation+1,expanded:false};
   favoriteBrowseCatalogCache={locale:'',items:[]};
   const input=document.getElementById('favorite-browse-input');if(input)input.value='';
   closeFavoriteBrowseSuggestions();
+  syncFavoriteBrowseDisclosure();
 }
 function trainerSearchCompatibility(){
   const state=clientReleaseDomain?.trainerSearchControlState?.(trainerDiscoveryDomain);
@@ -6448,6 +6453,7 @@ function renderFindTrainer(){
   if(!document.getElementById('find-trainer-input')?.value.trim()){setTrainerRecovery(false);if(status)status.textContent='';}
   renderFavoriteBrowseResults();
   renderTrainerQuickLists();
+  syncFavoriteBrowseDisclosure();
 }
 function closeTrainerSuggestions(){
   const box=document.getElementById('find-trainer-suggestions'),input=document.getElementById('find-trainer-input'),shell=document.querySelector('.trainer-search-shell');
@@ -6593,6 +6599,18 @@ function closeFavoriteBrowseSuggestions(){
   if(input){input.setAttribute('aria-expanded','false');input.removeAttribute('aria-activedescendant');}
   favoriteBrowseState.suggestions=[];favoriteBrowseState.focusIndex=-1;
 }
+function syncFavoriteBrowseDisclosure(){
+  const section=document.getElementById('favorite-pokemon-browse'),button=document.getElementById('favorite-browse-toggle'),panel=document.getElementById('favorite-browse-panel'),expanded=!!favoriteBrowseState.expanded;
+  if(section)section.dataset.expanded=String(expanded);
+  if(button)button.setAttribute('aria-expanded',String(expanded));
+  if(panel)panel.hidden=!expanded;
+}
+function toggleFavoriteBrowse(){
+  favoriteBrowseState.expanded=!favoriteBrowseState.expanded;
+  if(!favoriteBrowseState.expanded)closeFavoriteBrowseSuggestions();
+  syncFavoriteBrowseDisclosure();
+  if(favoriteBrowseState.expanded)document.getElementById('favorite-browse-input')?.focus({preventScroll:true});
+}
 function syncFavoriteBrowseClear(){const button=document.getElementById('favorite-browse-clear'),input=document.getElementById('favorite-browse-input');if(button)button.hidden=!input?.value;}
 function favoriteBrowseSuggestionHtml(item,index){
   return`<button type="button" class="ac-item${index===favoriteBrowseState.focusIndex?' focused':''}" role="option" id="favorite-browse-option-${index}" aria-selected="${index===favoriteBrowseState.focusIndex}" onmousedown="event.preventDefault()" onclick="selectFavoriteBrowsePokemon(${index})">${item.no||item.spriteUrl?spriteImg(item.no,28,'ac-item-sprite',item.name,'',item.dn,{urlOverride:item.spriteUrl}):''}${item.no?`<span class="ac-item-no">#${item.no}</span>`:''}<span class="ac-item-name">${escHtml(item.dn)}</span></button>`;
@@ -6625,9 +6643,9 @@ function clearFavoriteBrowse(){
 }
 function selectFavoriteBrowsePokemon(index){
   const item=favoriteBrowseState.suggestions[index];if(!item)return;
-  favoriteBrowseState.selected={name:item.name,dn:item.dn,no:item.no};favoriteBrowseState.error=false;
+  favoriteBrowseState.selected={name:item.name,dn:item.dn,no:item.no};favoriteBrowseState.error=false;favoriteBrowseState.expanded=true;
   const input=document.getElementById('favorite-browse-input');if(input)input.value=item.dn;
-  syncFavoriteBrowseClear();closeFavoriteBrowseSuggestions();hydrateFavoriteBrowse();
+  syncFavoriteBrowseClear();closeFavoriteBrowseSuggestions();syncFavoriteBrowseDisclosure();hydrateFavoriteBrowse();
 }
 function favoriteBrowseEmpty(titleKey,bodyKey,params={}){return emptyHtml(i18nCore.t(titleKey,params),i18nCore.t(bodyKey,params),'search');}
 function favoriteBrowseCategoryText(categories){
@@ -6637,6 +6655,7 @@ function favoriteBrowseCategoryText(categories){
 function favoriteBrowsePriorityText(priority){return i18nCore.t(`favoriteBrowse.priority.${priority||'none'}`);}
 function renderFavoriteBrowseResults(){
   const output=document.getElementById('favorite-browse-results'),store=ensureTrainerHistoryStore();if(!output||!store)return;
+  syncFavoriteBrowseDisclosure();
   const state=store.read(),favorites=state.favorites||[],selected=favoriteBrowseState.selected;
   if(!favorites.length){output.removeAttribute('aria-busy');output.innerHTML=favoriteBrowseEmpty('favoriteBrowse.noFavoritesTitle','favoriteBrowse.noFavoritesBody');return;}
   if(!selected){output.removeAttribute('aria-busy');output.innerHTML='';return;}
@@ -6650,7 +6669,7 @@ function renderFavoriteBrowseResults(){
   let body='';
   if(!hasPublished&&!incomplete)body=favoriteBrowseEmpty('favoriteBrowse.noSharedTitle','favoriteBrowse.noSharedBody');
   else if(!matches.length)body=favoriteBrowseEmpty('favoriteBrowse.noMatchTitle','favoriteBrowse.noMatchBody',{pokemon:selected.dn});
-  else body=`<div class="favorite-browse-summary"><span class="favorite-browse-pokemon">${escHtml(selected.dn)}</span><span class="favorite-browse-count">${escHtml(i18nCore.formatPlural('favoriteBrowse.results',matches.length))}</span></div><div class="favorite-browse-results">${matches.map(match=>{
+  else body=`<div class="favorite-browse-summary"><span class="favorite-browse-pokemon">${escHtml(selected.dn)}</span><span class="favorite-browse-count">${escHtml(i18nCore.formatPlural('favoriteBrowse.results',matches.length,{pokemon:selected.dn}))}</span></div><div class="favorite-browse-results">${matches.map(match=>{
     const category=favoriteBrowseCategoryText(match.categories),trainer=escAttr(match.displayName);
     return`<article class="favorite-browse-row"><div class="favorite-browse-main"><div class="favorite-browse-name">${escHtml(match.displayName)}</div><div class="favorite-browse-meta"><span class="favorite-browse-priority ${escAttr(match.priority)}">${escHtml(favoriteBrowsePriorityText(match.priority))}</span>${category?`<span>${escHtml(category)}</span>`:''}</div>${match.tags.length?`<div class="favorite-browse-tags">${match.tags.map(label=>`<span class="favorite-card-tag chip chip-metadata">${escHtml(label)}</span>`).join('')}</div>`:''}</div><button type="button" class="favorite-browse-open btn btn-ghost" data-trainer="${trainer}" onclick="openTrainerByName(this.dataset.trainer)" aria-label="${escAttr(i18nCore.t('trainer.openTrainerNamed',{trainer:match.displayName}))}">${escHtml(i18nCore.t('trainer.openAction'))} ${uiIconMarkup('chevron-right','ui-icon ui-icon-sm')}</button></article>`;
   }).join('')}</div>`;
@@ -6716,8 +6735,8 @@ function toggleFavoriteTagFilter(id){
 }
 function clearFavoriteFilters(){trainerOrganizerState.query='';trainerOrganizerState.tagIds=[];renderTrainerQuickLists();}
 async function renderTrainerQuickLists(){
-  const store=ensureTrainerHistoryStore(),favoritesEl=document.getElementById('favorite-trainers'),recentEl=document.getElementById('recent-trainers'),noteEl=document.getElementById('trainer-history-note');
-  if(!store||!favoritesEl||!recentEl)return;
+  const store=ensureTrainerHistoryStore(),favoritesEl=document.getElementById('favorite-trainers'),favoritesControlsEl=document.getElementById('favorite-trainers-controls'),favoritesListEl=document.getElementById('favorite-trainers-list'),recentEl=document.getElementById('recent-trainers'),noteEl=document.getElementById('trainer-history-note');
+  if(!store||!favoritesEl||!favoritesControlsEl||!favoritesListEl||!recentEl)return;
   const state=store.read();
   if(state.favorites.length<=favoriteShareSessionCacheData.DEFAULT_MAX_FAVORITES)ensureFavoriteShareSessionCache()?.syncFavorites(state.favorites);
   if(noteEl){noteEl.style.display='none';noteEl.textContent='';}
@@ -6726,14 +6745,16 @@ async function renderTrainerQuickLists(){
   const filtersActive=!!(trainerOrganizerState.query||trainerOrganizerState.tagIds.length);
   const toolbar=state.favorites.length?`<div class="favorite-toolbar"><div class="favorite-toolbar-search app-search-shell search-filter">${uiIconMarkup('search','ui-icon ui-icon-sm app-search-icon')}<input class="app-search-input field-control" value="${escAttr(trainerOrganizerState.query)}" oninput="setFavoriteSearch(this.value)" data-i18n-placeholder="organizer.searchFavorites" placeholder="Search favorites" aria-label="${escAttr(i18nCore.t('organizer.searchFavorites'))}"></div>${filtersActive?`<button class="bghost btn btn-secondary" onclick="clearFavoriteFilters()">${escHtml(i18nCore.t('organizer.clearFilters'))}</button>`:''}${activeTags.length?`<div class="favorite-filter-group"><span class="favorite-filter-label">${escHtml(i18nCore.t('organizer.tags'))}</span><div class="favorite-filter-tags" aria-label="${escAttr(i18nCore.t('organizer.filterTags'))}">${activeTags.map(tag=>{const selected=trainerOrganizerState.tagIds.includes(tag.id);return`<button class="favorite-filter-chip chip chip-filter" aria-pressed="${selected}" onclick="toggleFavoriteTagFilter('${tag.id}')"><span class="favorite-filter-chip-surface"><span class="favorite-filter-check" aria-hidden="true">${selected?'✓':''}</span>${escHtml(tag.label)}</span></button>`;}).join('')}</div></div>`:''}</div>`:'';
   const favoritesHeading=`<div class="trainer-section-heading"><h2 class="trainer-quick-heading">${escHtml(i18nCore.t('trainer.favoritesTitle'))}</h2><span class="trainer-section-count">${state.favorites.length}</span></div>`;
-  favoritesEl.innerHTML=`${favoritesHeading}${toolbar}${state.favorites.length?`<div class="trainer-quick-grid trainer-quick-skeleton" aria-busy="true" aria-label="${escAttr(i18nCore.t('trainer.searching'))}"><div class="trainer-quick-card card-row" aria-hidden="true"><div class="trainer-quick-main"><span class="skel skel-line lg"></span><span class="skel skel-line sm"></span></div></div></div>`:`${emptyHtml(i18nCore.t('organizer.noFavorites'),i18nCore.t('organizer.noFavoritesHelp'),'users')}`}`;
+  favoritesControlsEl.innerHTML=`${favoritesHeading}${toolbar}`;
+  favoritesListEl.innerHTML=state.favorites.length?`<div class="trainer-quick-grid trainer-quick-skeleton" aria-busy="true" aria-label="${escAttr(i18nCore.t('trainer.searching'))}"><div class="trainer-quick-card card-row" aria-hidden="true"><div class="trainer-quick-main"><span class="skel skel-line lg"></span><span class="skel skel-line sm"></span></div></div></div>`:`${emptyHtml(i18nCore.t('organizer.noFavorites'),i18nCore.t('organizer.noFavoritesHelp'),'users')}`;
   const statuses=await Promise.all(filtered.map(item=>{const canonical=canonicalTrainerName(item.displayName);if(canonical!==item.displayName)store.updateCanonicalName(canonical);return favoriteStatus({...item,displayName:canonical},store);}));
   if(!document.getElementById('tab-find')?.classList.contains('active'))return;
-  favoritesEl.innerHTML=`${favoritesHeading}${toolbar}${statuses.length?`<div class="trainer-quick-grid">${statuses.map(({item,available,diff})=>{
+  favoritesControlsEl.innerHTML=`${favoritesHeading}${toolbar}`;
+  favoritesListEl.innerHTML=statuses.length?`<div class="trainer-quick-grid">${statuses.map(({item,available,diff})=>{
     const unread=!!(available&&diff&&!diff.firstView&&diff.total);
     const trainer=escAttr(item.displayName),hasTags=!!item.tagIds?.length,editLabel=i18nCore.t(hasTags?'organizer.editTagsFor':'organizer.addTagsFor',{trainer:item.displayName});
     return`<article class="favorite-card-shell card-interactive" data-trainer="${trainer}"><div class="favorite-card-rail" aria-hidden="true"><button type="button" tabindex="-1" onclick="openTrainerOrganizer('${trainer}')">+ ${escHtml(i18nCore.t('organizer.tags'))}</button><button type="button" tabindex="-1" onclick="toggleFavoriteCardMenu(event,this)">⋯</button></div><div class="favorite-card-surface" onpointerdown="favoriteCardPointerDown(event)" onpointermove="favoriteCardPointerMove(event)" onpointerup="favoriteCardPointerUp(event)" onpointercancel="favoriteCardPointerCancel()"><div class="trainer-quick-main"><div class="trainer-quick-name type-card">${unread?'<span class="trainer-unread"></span>':''}${escHtml(item.displayName)}</div>${available?'':`<div class="trainer-quick-meta type-meta">${escHtml(i18nCore.t('trainer.listUnavailable'))}</div>`}${hasTags?`<div class="favorite-card-tags">${favoriteTagChips(item,state)}</div>`:''}${unread?`<div class="trainer-change-counts">${escHtml(changeCountsText(diff))}</div>`:''}${unread?`<details class="favorite-detail"><summary>${escHtml(i18nCore.t('trainer.changesTitle'))}</summary>${changeDetailsHtml(diff)}</details>`:''}</div><div class="favorite-card-footer"><button type="button" class="favorite-card-open btn btn-ghost" onclick="openTrainerByName('${trainer}')">${escHtml(i18nCore.t('trainer.openAction'))}</button><button type="button" class="favorite-card-add-tag btn btn-secondary" onclick="openTrainerOrganizer('${trainer}')" aria-label="${escAttr(editLabel)}"><span aria-hidden="true">+</span> ${escHtml(i18nCore.t('organizer.tagAction'))}</button><button type="button" class="favorite-card-more btn btn-icon" aria-haspopup="menu" aria-label="${escAttr(i18nCore.t('organizer.moreActionsFor',{trainer:item.displayName}))}" onclick="toggleFavoriteCardMenu(event,this)">⋯</button></div><div class="favorite-card-menu" role="menu" hidden><button type="button" role="menuitem" onclick="openFavoriteTagsFromMenu(this,'${trainer}')">${escHtml(i18nCore.t('organizer.editTags'))}</button><button type="button" role="menuitem" class="danger" onclick="removeTrainerFavorite('${trainer}')">${escHtml(i18nCore.t('organizer.removeFavorite'))}</button></div></div></article>`;
-  }).join('')}</div>`:emptyHtml(i18nCore.t(state.favorites.length?'organizer.noMatches':'organizer.noFavorites'),i18nCore.t(state.favorites.length?'organizer.noMatchesHelp':'organizer.noFavoritesHelp'),state.favorites.length?'search':'users')}`;
+  }).join('')}</div>`:emptyHtml(i18nCore.t(state.favorites.length?'organizer.noMatches':'organizer.noFavorites'),i18nCore.t(state.favorites.length?'organizer.noMatchesHelp':'organizer.noFavoritesHelp'),state.favorites.length?'search':'users');
   const recentHeading=`<div class="trainer-section-heading"><h2 class="trainer-quick-heading">${escHtml(i18nCore.t('trainer.recentTitle'))}</h2>${state.recent.length?`<span class="trainer-section-count">${state.recent.length}</span>`:''}</div>`;
   recentEl.innerHTML=`${recentHeading}${state.recent.length?`<div class="recent-trainer-list">${state.recent.map(item=>`<button type="button" class="recent-trainer-row card-row" onclick="openTrainerByName('${escAttr(item.displayName)}')" aria-label="${escAttr(i18nCore.t('trainer.openTrainerNamed',{trainer:item.displayName}))}"><span class="trainer-quick-main"><span class="trainer-quick-name recent-trainer-name type-card">${escHtml(item.displayName)}</span><span class="trainer-quick-meta recent-trainer-recency type-meta">${escHtml(trainerViewedText(item.openedAt))}</span></span><span class="recent-trainer-chevron" aria-hidden="true">${uiIconMarkup('chevron-right','ui-icon ui-icon-sm')}</span></button>`).join('')}</div>`:`${emptyHtml(i18nCore.t('trainer.noRecents'),i18nCore.t('trainer.noRecentsHelp'),'activity')}`}`;
   renderFavoriteBrowseResults();
