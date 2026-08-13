@@ -4,7 +4,9 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
+const { guardProductionFirstMutation } = require('../production/e1ProductionFirstMutationGuard.cjs');
 const { guardProductionReadProof } = require('../production/e1ProductionReadProofGuard.cjs');
+const { guardProductionSecondMutation } = require('../production/e1ProductionSecondMutationGuard.cjs');
 const {
   createDeploymentPlan,
   deploymentArguments,
@@ -21,16 +23,35 @@ function argumentsMap(argv) {
   }));
 }
 
-function verifyGroupCGuard() {
-  const inputPath = process.env.E1_PRODUCTION_READ_PROOF_GUARD_INPUT;
-  if (!inputPath) throw new Error('e1/group-c-guard-input-required');
-  const resolved = path.resolve(inputPath);
+const GUARDS = Object.freeze({
+  'group-c': Object.freeze({ input: 'E1_PRODUCTION_READ_PROOF_GUARD_INPUT', run: guardProductionReadProof }),
+  'group-d1': Object.freeze({ input: 'E1_PRODUCTION_FIRST_MUTATION_GUARD_INPUT', run: guardProductionFirstMutation }),
+  'group-d2': Object.freeze({ input: 'E1_PRODUCTION_SECOND_MUTATION_GUARD_INPUT', run: guardProductionSecondMutation })
+});
+
+function privateJsonPath(value, label) {
+  if (!value) throw new Error(`e1/${label}-input-required`);
+  const resolved = path.resolve(value);
   const localRoot = path.resolve(__dirname, '../.local');
-  if (!resolved.startsWith(`${localRoot}${path.sep}`)) throw new Error('e1/group-c-guard-input-not-private');
-  const result = guardProductionReadProof(JSON.parse(fs.readFileSync(resolved, 'utf8')));
-  if (result.ok !== true || result.approvalGroup !== 'C' || result.laterGroupsAuthorized !== false) {
-    throw new Error('e1/group-c-guard-failed');
+  if (!resolved.startsWith(`${localRoot}${path.sep}`)) throw new Error(`e1/${label}-input-not-private`);
+  if ((fs.statSync(resolved).mode & 0o777) !== 0o600) throw new Error(`e1/${label}-input-permissions-invalid`);
+  return resolved;
+}
+
+function verifiedGuardResult(action, mode) {
+  if (action.startsWith('restore-')) return null;
+  const cohort = action.replace(/^(?:enable|restore)-/u, '');
+  const contract = GUARDS[cohort];
+  if (!contract) throw new Error('e1/gateway-action-guard-contract-missing');
+  const inputValue = process.env[contract.input];
+  if (!inputValue && mode === 'plan') return null;
+  const inputPath = privateJsonPath(inputValue, action);
+  const input = JSON.parse(fs.readFileSync(inputPath, 'utf8'));
+  const options = { inputPath };
+  if (action === 'enable-group-d2' && process.env.E1_PRODUCTION_SECOND_MUTATION_READINESS) {
+    options.readinessPath = privateJsonPath(process.env.E1_PRODUCTION_SECOND_MUTATION_READINESS, 'group-d2-readiness');
   }
+  return contract.run(input, options);
 }
 
 function run() {
@@ -39,19 +60,21 @@ function run() {
   if (!['plan', 'deploy'].includes(mode)) throw new Error('e1/gateway-deployment-mode-invalid');
   const repoRoot = resolveRepositoryRoot(__dirname);
   const rootIgnore = path.join(repoRoot, '.gcloudignore');
-  const rootIgnoreExisted = fs.existsSync(rootIgnore);
+  if (fs.existsSync(rootIgnore)) throw new Error('e1/repository-root-gcloudignore-present');
+  const guardResult = verifiedGuardResult(args.action, mode);
   const plan = createDeploymentPlan({
     action: args.action,
     expectedSha: args['expected-sha'],
     explicitSource: args.source,
     mode,
-    repoRoot
+    repoRoot,
+    guardResult
   });
   if (mode === 'plan') {
     process.stdout.write(`${JSON.stringify(publicPlan(plan), null, 2)}\n`);
+    if (fs.existsSync(rootIgnore)) throw new Error('e1/repository-root-gcloudignore-created');
     return;
   }
-  if (plan.action === 'enable-group-c') verifyGroupCGuard();
   let stagedSource;
   try {
     stagedSource = stagePinnedSource(plan);
@@ -62,7 +85,7 @@ function run() {
   } finally {
     if (stagedSource) fs.rmSync(stagedSource, { recursive: true, force: true });
   }
-  if (fs.existsSync(rootIgnore) !== rootIgnoreExisted) throw new Error('e1/repository-root-gcloudignore-created');
+  if (fs.existsSync(rootIgnore)) throw new Error('e1/repository-root-gcloudignore-created');
 }
 
 try { run(); }

@@ -15,8 +15,12 @@ const EXPECTED_AUTHORITY = Object.freeze({
   origin: 'https://e1-identity-authority-wrywkbfzya-uc.a.run.app'
 });
 const ACTIONS = Object.freeze({
-  'enable-group-c': true,
-  restore: false
+  'enable-group-c': Object.freeze({ approvalGroup: 'C', cohortStage: 'read-proof', gateEnabled: true, readProofMode: true }),
+  'restore-group-c': Object.freeze({ approvalGroup: 'C', cohortStage: 'read-proof', gateEnabled: false, readProofMode: false }),
+  'enable-group-d1': Object.freeze({ approvalGroup: 'D', cohortStage: 'D1', gateEnabled: true, readProofMode: false }),
+  'restore-group-d1': Object.freeze({ approvalGroup: 'D', cohortStage: 'D1', gateEnabled: false, readProofMode: false }),
+  'enable-group-d2': Object.freeze({ approvalGroup: 'D', cohortStage: 'D2', gateEnabled: true, readProofMode: false }),
+  'restore-group-d2': Object.freeze({ approvalGroup: 'D', cohortStage: 'D2', gateEnabled: false, readProofMode: false })
 });
 const PRIVATE_PATH_PATTERNS = Object.freeze([
   /(^|\/)\.local(\/|$)/u,
@@ -153,10 +157,28 @@ function verifyPinnedSource(manifest, repository) {
   return observed;
 }
 
+function verifyActionGuard(actionName, guardResult) {
+  const action = ACTIONS[actionName];
+  if (!action) throw new Error('e1/gateway-action-invalid');
+  if (!guardResult) return false;
+  const commonValid = guardResult.ok === true && guardResult.environment === 'production' &&
+    guardResult.targetVerified === true && guardResult.laterGroupsAuthorized === false &&
+    guardResult.cloudOperations === 0 && guardResult.approvalGroup === action.approvalGroup;
+  const stageValid = action.cohortStage === 'read-proof' || action.cohortStage === 'D1'
+    ? !Object.hasOwn(guardResult, 'cohortStage')
+    : guardResult.cohortStage === action.cohortStage && guardResult.groupEAuthorized === false &&
+      guardResult.candidateCount === 2 && guardResult.sequentialExecutionRequired === true;
+  if (!commonValid || !stageValid) throw new Error('e1/gateway-action-guard-mismatch');
+  return true;
+}
+
 function createDeploymentPlan(options = {}) {
   const manifest = verifyManifestShape(options.manifest || loadManifest(options.manifestPath));
   const target = authorityTarget(options.resourceManifest || loadResourceManifest(options.resourceManifestPath));
   const repoRoot = options.repoRoot || resolveRepositoryRoot();
+  if (fs.existsSync(path.join(repoRoot, '.gcloudignore'))) {
+    throw new Error('e1/repository-root-gcloudignore-present');
+  }
   const explicitSource = options.explicitSource;
   if (!explicitSource) throw new Error('e1/gateway-explicit-source-required');
   const resolvedSource = path.resolve(repoRoot, explicitSource);
@@ -164,6 +186,8 @@ function createDeploymentPlan(options = {}) {
   if (resolvedSource !== expectedSource) throw new Error('e1/gateway-explicit-source-mismatch');
   if (!fs.existsSync(resolvedSource)) throw new Error('e1/gateway-source-missing');
   if (!Object.hasOwn(ACTIONS, options.action)) throw new Error('e1/gateway-action-invalid');
+  const action = ACTIONS[options.action];
+  const guardVerified = verifyActionGuard(options.action, options.guardResult);
   if (!/^[0-9a-f]{40}$/u.test(options.expectedSha || '')) throw new Error('e1/gateway-expected-sha-invalid');
 
   const repository = options.repository || createGitRepository(repoRoot);
@@ -173,8 +197,11 @@ function createDeploymentPlan(options = {}) {
   if (repository.sourceStatus(manifest.sourceRoot)) throw new Error('e1/gateway-source-dirty');
   const pinnedFiles = verifyPinnedSource(manifest, repository);
   const trackedWorkingTreeClean = repository.trackedStatus() === '';
-  const deploymentAllowed = trackedWorkingTreeClean;
-  if (options.mode === 'deploy' && !deploymentAllowed) throw new Error('e1/gateway-working-tree-dirty');
+  const deploymentAllowed = trackedWorkingTreeClean && (!action.gateEnabled || guardVerified);
+  if (options.mode === 'deploy' && !trackedWorkingTreeClean) throw new Error('e1/gateway-working-tree-dirty');
+  if (options.mode === 'deploy' && action.gateEnabled && !guardVerified) {
+    throw new Error('e1/gateway-action-guard-required');
+  }
 
   return Object.freeze({
     action: options.action,
@@ -192,8 +219,12 @@ function createDeploymentPlan(options = {}) {
     sourceFingerprint: manifest.sourceFingerprint,
     sourceFiles: Object.freeze(pinnedFiles),
     expectedExports: Object.freeze([...manifest.expectedExports]),
-    gateEnabled: ACTIONS[options.action],
-    readProofMode: ACTIONS[options.action],
+    approvalGroup: action.approvalGroup,
+    cohortStage: action.cohortStage,
+    guardVerified,
+    containmentRestore: !action.gateEnabled && !guardVerified,
+    gateEnabled: action.gateEnabled,
+    readProofMode: action.readProofMode,
     trackedWorkingTreeClean,
     deploymentAllowed,
     manifest: Object.freeze(manifest)
@@ -216,7 +247,27 @@ function stagePinnedSource(plan, options = {}) {
   return temporaryRoot;
 }
 
+function verifyStagedSource(plan, stagedSource) {
+  const resolved = path.resolve(stagedSource || '');
+  const repositoryFunctionsRoot = path.dirname(plan.sourcePath);
+  const repositoryRoot = path.dirname(repositoryFunctionsRoot);
+  if (!path.isAbsolute(stagedSource || '') || resolved === repositoryRoot || resolved === repositoryFunctionsRoot ||
+      resolved.startsWith(`${repositoryFunctionsRoot}${path.sep}`)) {
+    throw new Error('e1/gateway-staged-source-path-invalid');
+  }
+  const observed = fs.readdirSync(resolved).sort();
+  const expected = plan.manifest.sourceFiles.map((file) => file.path).sort();
+  if (!sameValues(observed, expected)) throw new Error('e1/gateway-staged-source-inventory-mismatch');
+  for (const file of plan.manifest.sourceFiles) {
+    if (sha256(fs.readFileSync(path.join(resolved, file.path))) !== file.sha256) {
+      throw new Error('e1/gateway-staged-source-hash-mismatch');
+    }
+  }
+  return resolved;
+}
+
 function deploymentArguments(plan, functionName, stagedSource) {
+  const verifiedSource = verifyStagedSource(plan, stagedSource);
   const manifest = plan.manifest;
   const environment = [
     'APP_ENVIRONMENT=production',
@@ -233,7 +284,7 @@ function deploymentArguments(plan, functionName, stagedSource) {
   ].join(',');
   return [
     'functions', 'deploy', functionName, '--gen2', `--project=${manifest.projectId}`,
-    `--region=${manifest.region}`, `--runtime=${manifest.runtime}`, `--source=${stagedSource}`,
+    `--region=${manifest.region}`, `--runtime=${manifest.runtime}`, `--source=${verifiedSource}`,
     `--entry-point=${functionName}`, '--trigger-http', '--allow-unauthenticated',
     `--service-account=${manifest.runtimeServiceAccount}`, `--memory=${manifest.memory}`,
     `--timeout=${manifest.timeoutSeconds}s`, `--max-instances=${manifest.maxInstances}`,
@@ -254,9 +305,17 @@ function publicPlan(plan) {
     authorityUrl: plan.authorityUrl,
     authorityAudience: plan.authorityAudience,
     sourceRoot: plan.sourceRoot,
+    sourcePackaging: 'immutable-git-object-staging',
+    stagingSourceRoot: '<isolated-temporary-directory>',
+    explicitSourceRequired: true,
+    repositoryRootGcloudignoreAllowed: false,
     sourceCommitSha: plan.sourceCommitSha,
     sourceFingerprint: plan.sourceFingerprint,
     expectedExports: plan.expectedExports,
+    approvalGroup: plan.approvalGroup,
+    cohortStage: plan.cohortStage,
+    guardVerified: plan.guardVerified,
+    containmentRestore: plan.containmentRestore,
     gateEnabled: plan.gateEnabled,
     readProofMode: plan.readProofMode,
     trackedWorkingTreeClean: plan.trackedWorkingTreeClean,
@@ -284,5 +343,7 @@ module.exports = Object.freeze({
   sourceFingerprint,
   stagePinnedSource,
   verifyManifestShape,
-  verifyPinnedSource
+  verifyPinnedSource,
+  verifyActionGuard,
+  verifyStagedSource
 });
