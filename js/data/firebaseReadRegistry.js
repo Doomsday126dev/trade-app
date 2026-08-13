@@ -41,12 +41,11 @@
     {id:'login_identity_reads',path:'users/{username} + authIndex/{uid}',method:'get',breadth:'exact',ownerScope:'session',audience:'owner_or_admin',consumers:['login','account_binding'],status:'retained'},
     {id:'admin_verification_reads',path:'users/{username} + loginDirectory/{username}',method:'get',breadth:'exact',ownerScope:'legacyAdmin',audience:'admin',consumers:['account_repair','member_creation'],status:'transitional'},
     {id:'community_verification_reads',path:'communities/{communityId}',method:'get',breadth:'exact',ownerScope:'legacyAdmin',audience:'admin',consumers:['community_admin'],status:'planned_retirement'},
-    {id:'health_check_read',path:'users or loginDirectory',method:'get',breadth:'dynamic',ownerScope:'legacyAdmin',audience:'anonymous_or_authenticated',consumers:['health_check'],status:'transitional'},
-    {id:'legacy_seed_probe',path:'users',method:'get',breadth:'broad',ownerScope:'legacyAdmin',audience:'admin',consumers:['legacy_setup'],status:'planned_retirement'}
+    {id:'health_check_read',path:'users or loginDirectory',method:'get',breadth:'dynamic',ownerScope:'legacyAdmin',audience:'anonymous_or_authenticated',consumers:['health_check'],status:'transitional'}
   ].map(freezeEntry));
 
   const SOURCE_CALL_CONTRACT=Object.freeze({
-    directGetCount:14,
+    directGetCount:13,
     directOnValueCount:0,
     managedListenCount:1,
     repositoryFiles:Object.freeze([
@@ -72,7 +71,6 @@
       Object.freeze({text:'get(ref(db,`communities/${id}/memberUsernames/${username}`))',count:1}),
       Object.freeze({text:'get(indexRef)',count:1}),
       Object.freeze({text:'get(ref(db,`users/${username}/authUid`))',count:1}),
-      Object.freeze({text:"get(ref(db,'users'))",count:1}),
       Object.freeze({text:'get(ref(db,`publicShares/${username}`))',count:1}),
       Object.freeze({text:'get(ref(db,path))',count:1}),
       Object.freeze({text:'get(ref(db,`users/${u}`))',count:2}),

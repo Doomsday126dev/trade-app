@@ -157,10 +157,11 @@ test('covered active runtime surfaces use locale keys instead of English-only fe
   ])assert.ok(!html.includes(literal),literal);
   for(const key of [
     'common.noResults','myList.queueAdded','browse.noMatches','strings.noSearchStrings',
-    'backup.restoreConfirm','inventory.bulkDeleteConfirm','health.clearCacheConfirm',
+    'backup.downloaded','inventory.bulkDeleteConfirm','health.clearCacheConfirm',
     'specialBoard.clearConfirm','install.unavailable','myList.addAllVariantsTitle',
     'compare.pickAnother','voice.requiresHttps'
   ])assert.ok(html.includes(`i18nCore.t('${key}'`)||html.includes(`i18nCore.t(\`${key}\``),key);
+  assert.doesNotMatch(html,/i18nCore\.t\(['"`]backup\.restore/);
   assert.match(html,/i18nCore\.t\(`saveStatus\.\$\{s\}Help`\)/);
 });
 

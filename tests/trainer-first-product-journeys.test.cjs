@@ -62,11 +62,11 @@ test('Events expose Now Soon Later hierarchy accessible filters and one source a
   assert.match(html,/\.event-filter\{[^}]*min-height:48px/);
 });
 
-test('backup size is rejected before file text is read',()=>{
-  const source=block('const MAX_BACKUP_FILE_BYTES','function renderSecurityPanel');
-  assert.match(source,/MAX_BACKUP_FILE_BYTES=5\*1024\*1024/);
-  assert.ok(source.indexOf('file.size')<source.indexOf('file.text()'));
-  assert.match(source,/backup\.fileTooLarge/);
+test('backup export remains while production root restore is fail-closed',()=>{
+  const source=block('function exportData','function renderSecurityPanel');
+  assert.match(source,/new Blob\(\[JSON\.stringify\(s,null,2\)\]/);
+  assert.match(source,/PRODUCTION_ROOT_RESTORE_ENABLED=false/);
+  assert.doesNotMatch(html,/restore-file|function restoreData|function triggerRestore|set\(ref\(db,'\/'\)/);
 });
 
 test('locale changes rerender only the active heavy surface',()=>{

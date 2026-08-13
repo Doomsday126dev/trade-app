@@ -75,7 +75,13 @@
     return Object.freeze({dateLabel,timeLabel,relative,multiDay,dayOffset});
   }
   function safeHttpsUrl(value){
-    try{const url=new URL(String(value||''));return url.protocol==='https:'?url.href:'';}catch{return'';}
+    const raw=String(value||'');
+    if(!/^https:\/\/[^\s\\]+$/i.test(raw)||/[\u0000-\u001f\u007f]/.test(raw))return'';
+    try{
+      const url=new URL(raw);
+      if(url.protocol!=='https:'||!url.hostname||url.username||url.password)return'';
+      return url.href;
+    }catch{return'';}
   }
   root.eventPresentation=Object.freeze({GROUPS,TYPES,dateOnly,eventDate,eventType,eventGroup,prepareEvents,eventTimeLabel,eventTiming,relativeDuration,safeHttpsUrl});
 })(window);

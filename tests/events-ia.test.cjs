@@ -48,7 +48,7 @@ test('timeline uses one chronological column, native source rows, and shared pri
   assert.match(render,/class="events-timeline"/);
   assert.match(render,/const tag=link\?'a':'article'/);
   assert.match(render,/class="event-card card-row/);
-  assert.match(render,/target="_blank" rel="noopener" aria-label=/);
+  assert.match(render,/target="_blank" rel="noopener noreferrer" aria-label=/);
   assert.match(render,/link\?`<span class="event-card-cue"/);
   assert.match(render,/uiIconMarkup\('chevron-right'/);
   assert.doesNotMatch(render,/event-card-bonuses|event-card-details btn/);
@@ -76,7 +76,18 @@ test('event source and localization remain unchanged while Spotlight uses struct
   assert.equal(events.eventType({eventType:'pokemon-spotlight-hour',name:'Any stable title'}),'spotlight');
   assert.equal(events.eventType({eventType:'event',name:'A title containing Spotlight Hour'}),'general');
   assert.equal(events.safeHttpsUrl('https://example.com/event'),'https://example.com/event');
-  assert.equal(events.safeHttpsUrl('javascript:alert(1)'),'');
+  assert.equal(events.safeHttpsUrl('https://sub.example.com/?q=x'),'https://sub.example.com/?q=x');
+  for(const unsafe of ['javascript:alert(1)','data:text/html,x','vbscript:msgbox(1)','http://example.com','//example.com/event','/event',' javascript:alert(1)','https://example.com/event ','https://user@example.com/event','https:\\example.com','https://example.com/\njavascript:alert(1)','https://example.com/\u0000x','not a url'])assert.equal(events.safeHttpsUrl(unsafe),'',unsafe);
+});
+
+test('SEC-04 every active Events destination uses the canonical HTTPS-only policy',()=>{
+  const banner=html.slice(html.indexOf('function renderEventBanner()'),html.indexOf('// Stable loading skeletons'));
+  const timeline=html.slice(html.indexOf('function openEventDetails('),html.indexOf('function renderSchedule'));
+  const schedule=html.slice(html.indexOf('const eventsHtml=evt.events.length'),html.indexOf('// Manual override row'));
+  for(const source of [banner,timeline,schedule])assert.match(source,/eventPresentationDomain\.safeHttpsUrl/);
+  assert.doesNotMatch(banner,/href="\$\{featured\.link\}/);
+  assert.doesNotMatch(schedule,/href="\$\{ev\.link\}/);
+  assert.match(timeline,/link=eventPresentationDomain\.safeHttpsUrl\(event\.link\)/);
 });
 
 test('Now and event type chrome uses localized text without decorative glyph duplication',()=>{

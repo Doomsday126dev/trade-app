@@ -2302,7 +2302,7 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
         <div class="new-user-form"><h3><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-user-plus"></use></svg><span data-i18n="admin.addMember">Add member</span></h3><div class="frow"><input type="text" id="nu-name" data-i18n-placeholder="login.username" placeholder="Username" style="max-width:180px"><input type="text" id="nu-pin" data-i18n-placeholder="admin.pinPlaceholder" placeholder="Auto-generate or enter PIN" maxlength="6" inputmode="numeric" style="max-width:180px"><label id="nu-admin-wrap" class="admin-role-toggle"><input type="checkbox" id="nu-admin"><span data-i18n="admin.adminRole">Admin</span></label></div><button class="bsave" onclick="addUser()" style="margin-top:10px" data-i18n="admin.addMember">Add member</button></div>
         <div class="admin-role-list" id="admin-role-list"></div>
       </section>
-      <section class="admin-section" data-admin-section="maintenance" aria-labelledby="admin-maintenance-heading" hidden><div class="admin-section-heading"><div><h2 id="admin-maintenance-heading" data-i18n="admin.maintenance">Maintenance</h2><p data-i18n="admin.maintenanceHelp">Account repair and backup tools are separated from routine member review.</p></div></div><div id="backup-reminder-slot"></div><div class="admin-actions"><button class="btn-export btn btn-secondary" onclick="exportData()" data-i18n-aria-label="admin.exportBackup" aria-label="Export backup"><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-download"></use></svg><span data-i18n="admin.exportBackup">Export backup</span></button><button class="btn-export btn btn-secondary" onclick="triggerRestore()" data-i18n-aria-label="admin.restoreBackup" aria-label="Restore backup"><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-upload"></use></svg><span data-i18n="admin.restoreBackup">Restore backup</span></button><input type="file" id="restore-file" accept="application/json,.json" style="display:none" onchange="restoreData(this.files?.[0])"></div><div class="login-audit admin-maintenance-note" id="admin-reset-safety-note"></div><div class="admin-maintenance-list" id="admin-maintenance-list"></div></section>
+      <section class="admin-section" data-admin-section="maintenance" aria-labelledby="admin-maintenance-heading" hidden><div class="admin-section-heading"><div><h2 id="admin-maintenance-heading" data-i18n="admin.maintenance">Maintenance</h2><p data-i18n="admin.maintenanceHelp">Account repair and backup tools are separated from routine member review.</p></div></div><div id="backup-reminder-slot"></div><div class="admin-actions"><button class="btn-export btn btn-secondary" onclick="exportData()" data-i18n-aria-label="admin.exportBackup" aria-label="Export backup"><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-download"></use></svg><span data-i18n="admin.exportBackup">Export backup</span></button></div><div class="login-audit admin-maintenance-note" id="admin-reset-safety-note"></div><div class="admin-maintenance-list" id="admin-maintenance-list"></div></section>
       <section class="admin-section" data-admin-section="diagnostics" aria-labelledby="admin-diagnostics-heading" hidden><div class="admin-section-heading"><div><h2 id="admin-diagnostics-heading" data-i18n="admin.diagnostics">Diagnostics</h2><p data-i18n="admin.diagnosticsHelp">Reviewed security metadata and owner maintenance diagnostics.</p></div></div><div class="security-box" id="security-panel"></div><div class="login-audit" id="login-audit-panel" style="display:none"></div><div class="login-audit" id="community-migration-panel" style="display:none"></div></section>
     </div>
   </div>
@@ -2596,7 +2596,6 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
             <button class="settings-tool" id="settings-shortcuts" onclick="openSettingsTool('shortcuts')"><span aria-hidden="true">⌨</span><span data-i18n="settings.shortcutsAction">Keyboard shortcuts</span></button>
             <button class="settings-tool" id="settings-health" onclick="openSettingsTool('health')"><span aria-hidden="true">●</span><span data-i18n="settings.healthAction">App status</span></button>
             <button class="settings-tool settings-admin-only" onclick="openSettingsTool('backup')" hidden><span aria-hidden="true">⬇</span><span data-i18n="admin.exportBackup">Export backup</span></button>
-            <button class="settings-tool settings-admin-only" onclick="openSettingsTool('restore')" hidden><span aria-hidden="true">⬆</span><span data-i18n="admin.restoreBackup">Restore backup</span></button>
           </div></section>
           <section class="settings-section local-preferences-panel settings-account-only" data-settings-section="data" aria-labelledby="settings-local-tools-heading"><div class="settings-section-heading"><h2 id="settings-local-tools-heading" data-i18n="settings.sectionData">App &amp; Data</h2></div><div class="trainer-sync-status" id="trainer-sync-local-status" role="status" aria-live="polite" aria-atomic="true"><span class="trainer-sync-status-icon" aria-hidden="true">▣</span><div class="trainer-sync-status-copy"><strong data-i18n="trainer.syncState.local-only">Saved on this device</strong><span class="trainer-sync-status-detail" data-i18n="trainer.syncStatus.localOnlyDetail">Cross-device sync is not active. Your saved trainers remain on this device.</span></div></div><button class="settings-tool" id="settings-install" onclick="triggerInstall()"><span aria-hidden="true">⬇</span><span data-i18n="app.install">Install</span></button><p class="settings-release" id="settings-release-id"></p></section>
         </div>
@@ -2798,6 +2797,9 @@ const TRAINER_FIRST_INTERIM_ENABLED=true;
 const NARROW_READ_CLIENT_ENABLED=true;
 const LEGACY_BROAD_READS_ENABLED=false;
 const LEGACY_INVENTORY_READ_ONLY=true;
+// SEC-03 dead-code backlog: remove the retired Inventory edit/browse/Offers
+// renderers and their window exports after archive compatibility is retired.
+// No current product route or rendered control reaches those legacy templates.
 const i18nCore=window.PogoI18n?.core;
 if(!i18nCore)throw new Error('Locale foundation failed to load');
 const pokemonNamesI18n=window.PogoI18n?.pokemonNames;
@@ -2953,6 +2955,10 @@ const {safeFilePart,escHtml,escAttr}=textSafety;
 function uiIconMarkup(name,className='ui-icon'){
   const safeName=String(name||'').replace(/[^a-z0-9-]/g,'');
   return`<svg class="${escAttr(className)}" aria-hidden="true"><use href="#ui-icon-${safeName}"></use></svg>`;
+}
+function uiIconNode(name,className='ui-icon'){
+  const svg=document.createElementNS('http://www.w3.org/2000/svg','svg'),use=document.createElementNS('http://www.w3.org/2000/svg','use');
+  svg.setAttribute('class',className);svg.setAttribute('aria-hidden','true');use.setAttribute('href',`#ui-icon-${String(name||'').replace(/[^a-z0-9-]/g,'')}`);svg.append(use);return svg;
 }
 const stringPanelsUi=window.PogoUi?.stringPanels;
 if(!stringPanelsUi)throw new Error('String panel HTML helpers failed to load');
@@ -5304,16 +5310,10 @@ async function connectFirebase(){
     setupFirebase(url);
     await set(ref(db,'_ping'),Date.now()).catch(()=>{});
     lsSet('fbUrl',url);err.textContent='';
-    await seedFirebase();
     startListener();
     toast(i18nCore.t('setup.connected'));
     showLogin();
   }catch(e){console.warn('Firebase setup failed',e);err.textContent=i18nCore.t('setup.failed');setSyncStatus('offline');}
-}
-
-async function seedFirebase(){
-  const snap=await get(ref(db,'users'));
-  if(!snap.exists()){const s=getLocal();await set(ref(db,'/'),s);toast(i18nCore.t('setup.seeded'));}
 }
 
 function applyDataPath(root,path,data){
@@ -6730,6 +6730,16 @@ document.addEventListener('keydown',event=>{
   event.preventDefault();editor.removeAttribute('open');editor.querySelector('summary')?.focus();
 });
 function setFavoriteSearch(value){trainerOrganizerState.query=String(value||'');renderTrainerQuickLists();}
+function favoriteTrainerAction(event){
+  const control=event.target.closest('[data-trainer-action]');if(!control)return;
+  const action=control.dataset.trainerAction,username=control.closest('[data-trainer]')?.dataset.trainer||control.dataset.trainer||'';
+  if(action==='open')openTrainerByName(username);
+  else if(action==='organize')openTrainerOrganizer(username,control);
+  else if(action==='organize-menu')openFavoriteTagsFromMenu(control,username);
+  else if(action==='remove')removeTrainerFavorite(username);
+}
+document.getElementById('favorite-trainers-list')?.addEventListener('click',favoriteTrainerAction);
+document.getElementById('recent-trainers')?.addEventListener('click',favoriteTrainerAction);
 function toggleFavoriteTagFilter(id){
   const selected=new Set(trainerOrganizerState.tagIds);selected.has(id)?selected.delete(id):selected.add(id);trainerOrganizerState.tagIds=[...selected].sort();renderTrainerQuickLists();
 }
@@ -6753,10 +6763,10 @@ async function renderTrainerQuickLists(){
   favoritesListEl.innerHTML=statuses.length?`<div class="trainer-quick-grid">${statuses.map(({item,available,diff})=>{
     const unread=!!(available&&diff&&!diff.firstView&&diff.total);
     const trainer=escAttr(item.displayName),hasTags=!!item.tagIds?.length,editLabel=i18nCore.t(hasTags?'organizer.editTagsFor':'organizer.addTagsFor',{trainer:item.displayName});
-    return`<article class="favorite-card-shell card-interactive" data-trainer="${trainer}"><div class="favorite-card-rail" aria-hidden="true"><button type="button" tabindex="-1" onclick="openTrainerOrganizer('${trainer}')">+ ${escHtml(i18nCore.t('organizer.tags'))}</button><button type="button" tabindex="-1" onclick="toggleFavoriteCardMenu(event,this)">⋯</button></div><div class="favorite-card-surface" onpointerdown="favoriteCardPointerDown(event)" onpointermove="favoriteCardPointerMove(event)" onpointerup="favoriteCardPointerUp(event)" onpointercancel="favoriteCardPointerCancel()"><div class="trainer-quick-main"><div class="trainer-quick-name type-card">${unread?'<span class="trainer-unread"></span>':''}${escHtml(item.displayName)}</div>${available?'':`<div class="trainer-quick-meta type-meta">${escHtml(i18nCore.t('trainer.listUnavailable'))}</div>`}${hasTags?`<div class="favorite-card-tags">${favoriteTagChips(item,state)}</div>`:''}${unread?`<div class="trainer-change-counts">${escHtml(changeCountsText(diff))}</div>`:''}${unread?`<details class="favorite-detail"><summary>${escHtml(i18nCore.t('trainer.changesTitle'))}</summary>${changeDetailsHtml(diff)}</details>`:''}</div><div class="favorite-card-footer"><button type="button" class="favorite-card-open btn btn-ghost" onclick="openTrainerByName('${trainer}')">${escHtml(i18nCore.t('trainer.openAction'))}</button><button type="button" class="favorite-card-add-tag btn btn-secondary" onclick="openTrainerOrganizer('${trainer}')" aria-label="${escAttr(editLabel)}"><span aria-hidden="true">+</span> ${escHtml(i18nCore.t('organizer.tagAction'))}</button><button type="button" class="favorite-card-more btn btn-icon" aria-haspopup="menu" aria-label="${escAttr(i18nCore.t('organizer.moreActionsFor',{trainer:item.displayName}))}" onclick="toggleFavoriteCardMenu(event,this)">⋯</button></div><div class="favorite-card-menu" role="menu" hidden><button type="button" role="menuitem" onclick="openFavoriteTagsFromMenu(this,'${trainer}')">${escHtml(i18nCore.t('organizer.editTags'))}</button><button type="button" role="menuitem" class="danger" onclick="removeTrainerFavorite('${trainer}')">${escHtml(i18nCore.t('organizer.removeFavorite'))}</button></div></div></article>`;
+    return`<article class="favorite-card-shell card-interactive" data-trainer="${trainer}"><div class="favorite-card-rail" aria-hidden="true"><button type="button" tabindex="-1" data-trainer-action="organize">+ ${escHtml(i18nCore.t('organizer.tags'))}</button><button type="button" tabindex="-1" onclick="toggleFavoriteCardMenu(event,this)">⋯</button></div><div class="favorite-card-surface" onpointerdown="favoriteCardPointerDown(event)" onpointermove="favoriteCardPointerMove(event)" onpointerup="favoriteCardPointerUp(event)" onpointercancel="favoriteCardPointerCancel()"><div class="trainer-quick-main"><div class="trainer-quick-name type-card">${unread?'<span class="trainer-unread"></span>':''}${escHtml(item.displayName)}</div>${available?'':`<div class="trainer-quick-meta type-meta">${escHtml(i18nCore.t('trainer.listUnavailable'))}</div>`}${hasTags?`<div class="favorite-card-tags">${favoriteTagChips(item,state)}</div>`:''}${unread?`<div class="trainer-change-counts">${escHtml(changeCountsText(diff))}</div>`:''}${unread?`<details class="favorite-detail"><summary>${escHtml(i18nCore.t('trainer.changesTitle'))}</summary>${changeDetailsHtml(diff)}</details>`:''}</div><div class="favorite-card-footer"><button type="button" class="favorite-card-open btn btn-ghost" data-trainer-action="open">${escHtml(i18nCore.t('trainer.openAction'))}</button><button type="button" class="favorite-card-add-tag btn btn-secondary" data-trainer-action="organize" aria-label="${escAttr(editLabel)}"><span aria-hidden="true">+</span> ${escHtml(i18nCore.t('organizer.tagAction'))}</button><button type="button" class="favorite-card-more btn btn-icon" aria-haspopup="menu" aria-label="${escAttr(i18nCore.t('organizer.moreActionsFor',{trainer:item.displayName}))}" onclick="toggleFavoriteCardMenu(event,this)">⋯</button></div><div class="favorite-card-menu" role="menu" hidden><button type="button" role="menuitem" data-trainer-action="organize-menu">${escHtml(i18nCore.t('organizer.editTags'))}</button><button type="button" role="menuitem" class="danger" data-trainer-action="remove">${escHtml(i18nCore.t('organizer.removeFavorite'))}</button></div></div></article>`;
   }).join('')}</div>`:emptyHtml(i18nCore.t(state.favorites.length?'organizer.noMatches':'organizer.noFavorites'),i18nCore.t(state.favorites.length?'organizer.noMatchesHelp':'organizer.noFavoritesHelp'),state.favorites.length?'search':'users');
   const recentHeading=`<div class="trainer-section-heading"><h2 class="trainer-quick-heading">${escHtml(i18nCore.t('trainer.recentTitle'))}</h2>${state.recent.length?`<span class="trainer-section-count">${state.recent.length}</span>`:''}</div>`;
-  recentEl.innerHTML=`${recentHeading}${state.recent.length?`<div class="recent-trainer-list">${state.recent.map(item=>`<button type="button" class="recent-trainer-row card-row" onclick="openTrainerByName('${escAttr(item.displayName)}')" aria-label="${escAttr(i18nCore.t('trainer.openTrainerNamed',{trainer:item.displayName}))}"><span class="trainer-quick-main"><span class="trainer-quick-name recent-trainer-name type-card">${escHtml(item.displayName)}</span><span class="trainer-quick-meta recent-trainer-recency type-meta">${escHtml(trainerViewedText(item.openedAt))}</span></span><span class="recent-trainer-chevron" aria-hidden="true">${uiIconMarkup('chevron-right','ui-icon ui-icon-sm')}</span></button>`).join('')}</div>`:`${emptyHtml(i18nCore.t('trainer.noRecents'),i18nCore.t('trainer.noRecentsHelp'),'activity')}`}`;
+  recentEl.innerHTML=`${recentHeading}${state.recent.length?`<div class="recent-trainer-list">${state.recent.map(item=>`<button type="button" class="recent-trainer-row card-row" data-trainer="${escAttr(item.displayName)}" data-trainer-action="open" aria-label="${escAttr(i18nCore.t('trainer.openTrainerNamed',{trainer:item.displayName}))}"><span class="trainer-quick-main"><span class="trainer-quick-name recent-trainer-name type-card">${escHtml(item.displayName)}</span><span class="trainer-quick-meta recent-trainer-recency type-meta">${escHtml(trainerViewedText(item.openedAt))}</span></span><span class="recent-trainer-chevron" aria-hidden="true">${uiIconMarkup('chevron-right','ui-icon ui-icon-sm')}</span></button>`).join('')}</div>`:`${emptyHtml(i18nCore.t('trainer.noRecents'),i18nCore.t('trainer.noRecentsHelp'),'activity')}`}`;
   renderFavoriteBrowseResults();
 }
 function toggleTrainerFavorite(username){
@@ -8587,19 +8597,6 @@ function guardBackupTool(){
   toast(i18nCore.t('admin.only'));
   return false;
 }
-function resetRestoreInput(){
-  const inp=document.getElementById('restore-file');if(inp)inp.value='';
-}
-function validatedBackupPayload(raw){
-  if(!raw||typeof raw!=='object'||Array.isArray(raw))throw new Error('Backup must be a JSON object');
-  const required=['users','wishlist','dynamax','costumes'];
-  const missing=required.filter(k=>!raw[k]||typeof raw[k]!=='object'||Array.isArray(raw[k]));
-  if(missing.length)throw new Error('Missing required backup sections: '+missing.join(', '));
-  const data=normalizeData(raw);
-  const userCount=Object.keys(data.users||{}).length;
-  if(!userCount)throw new Error('Backup has no users');
-  return{data,userCount};
-}
 function exportData(){
   if(!guardBackupTool())return false;
   const s=getLocal();
@@ -8613,32 +8610,9 @@ function exportData(){
   toast(i18nCore.t('backup.downloaded'));
   return true;
 }
-function triggerRestore(){
-  if(!guardBackupTool()){resetRestoreInput();return;}
-  resetRestoreInput();
-  document.getElementById('restore-file')?.click();
-}
-const MAX_BACKUP_FILE_BYTES=5*1024*1024;
-async function restoreData(file){
-  if(!guardBackupTool()){resetRestoreInput();return;}
-  if(!file){resetRestoreInput();return;}
-  if(Number(file.size)>MAX_BACKUP_FILE_BYTES){toast(i18nCore.t('backup.fileTooLarge',{size:'5 MB'}));resetRestoreInput();return;}
-  try{
-    const text=await file.text();
-    const {data,userCount}=validatedBackupPayload(JSON.parse(text));
-    const consequence=i18nCore.t(fbOn&&db?'backup.restoreSyncConsequence':'backup.restoreLocalConsequence');
-    if(!confirm(i18nCore.t('backup.restoreConfirm',{count:i18nCore.formatNumber(userCount),consequence})))return;
-    saveLocal(data);allData=data;
-    let synced=true;
-    if(fbOn&&db)await set(ref(db,'/'),data).catch(()=>{synced=false;});
-    refreshAll();renderAdmin();toast(i18nCore.t(synced?'backup.restored':'backup.restoredLocal'));
-  }catch(e){
-    console.warn('Backup restore failed',e);
-    toast(i18nCore.t('backup.restoreFailed'));
-  }finally{
-    resetRestoreInput();
-  }
-}
+// DATA-01 containment: whole-root restore is intentionally absent from the
+// production runtime until a versioned, transactional import exists.
+const PRODUCTION_ROOT_RESTORE_ENABLED=false;
 function renderSecurityPanel(){
   const el=document.getElementById('security-panel');if(!el)return;
   const meta=FIREBASE_RULES_STATUS;
@@ -8699,11 +8673,10 @@ function renderLoginAudit(){
     </div>
     <div class="login-audit-list">
       ${rows.map(r=>{
-        const su=r.u.replace(/'/g,"\\'").replace(/"/g,'&quot;');
         return`<div class="login-audit-row">
           <div class="login-audit-user">${escHtml(r.u)}</div>
           <div class="login-audit-issues">${r.issues.map(x=>`<span class="login-audit-chip">${escHtml(x)}</span>`).join('')}</div>
-          <button class="rpin" onclick="${r.needsPin?`repairAccount('${su}')`:`repairLoginDirectory('${su}')`}">${escHtml(i18nCore.t(r.needsPin?'admin.repairWithPin':'admin.repairDirectory'))}</button>
+          <button class="rpin" type="button" data-admin-user-action="${r.needsPin?'repair':'repair-directory'}" data-username="${escAttr(r.u)}">${escHtml(i18nCore.t(r.needsPin?'admin.repairWithPin':'admin.repairDirectory'))}</button>
         </div>`;
       }).join('')}
     </div>`;
@@ -9321,6 +9294,15 @@ function adminUserRows(){
     return{u,d,listed,updated,viewed,authOk,authIssues,owner,admin,canChangeRole:iAmOwner&&u!==cur&&u!==OWNER,canMaintain:iAmOwner||(cur!==OWNER&&!admin&&!owner),established:!!d.authUid};
   });
 }
+function adminUserAction(event){
+  const control=event.target.closest('[data-admin-user-action]');if(!control)return;
+  const username=control.dataset.username||'',action=control.dataset.adminUserAction;
+  if(action==='toggle-role')toggleAdmin(username,control.dataset.makeAdmin==='true');
+  else if(action==='reset')openReset(username);
+  else if(action==='repair')repairAccount(username);
+  else if(action==='repair-directory')repairLoginDirectory(username);
+}
+document.getElementById('tab-admin')?.addEventListener('click',adminUserAction);
 function renderAdmin(){
   const memberList=document.getElementById('admin-member-list');if(!memberList)return;
   renderSecurityPanel();
@@ -9354,18 +9336,16 @@ function renderAdmin(){
   }).join(''):emptyHtml(i18nCore.t('admin.noMembers'),i18nCore.t('admin.membersHelp'),'users');
   const roleList=document.getElementById('admin-role-list');
   if(roleList)roleList.innerHTML=users.map(user=>{
-    const su=user.u.replace(/'/g,"\\'").replace(/"/g,'&quot;');
     const roleKey=user.owner?'admin.owner':user.admin?'admin.adminRole':'admin.member';
     const roleClass=user.owner?' owner':user.admin?' admin':'';
-    const action=user.canChangeRole?`<button class="rpin ${user.admin?'btn-destructive':''}" type="button" onclick="toggleAdmin('${su}',${user.admin?'false':'true'})">${escHtml(i18nCore.t(user.admin?'admin.removeAdmin':'admin.makeAdmin'))}</button>`:'';
+    const action=user.canChangeRole?`<button class="rpin ${user.admin?'btn-destructive':''}" type="button" data-admin-user-action="toggle-role" data-username="${escAttr(user.u)}" data-make-admin="${!user.admin}">${escHtml(i18nCore.t(user.admin?'admin.removeAdmin':'admin.makeAdmin'))}</button>`:'';
     return`<article class="admin-role-row"><div class="admin-role-copy"><strong>${escHtml(user.u)}</strong><span>${escHtml(i18nCore.t(user.owner?'admin.ownerProtected':'admin.roleHelp'))}</span></div><span class="admin-role-badge${roleClass}">${escHtml(i18nCore.t(roleKey))}</span><div class="admin-role-actions">${action}</div></article>`;
   }).join('');
   const maintenanceList=document.getElementById('admin-maintenance-list');
   if(maintenanceList)maintenanceList.innerHTML=users.map(user=>{
-    const su=user.u.replace(/'/g,"\\'").replace(/"/g,'&quot;');
     const repairTitle=user.canMaintain?i18nCore.t(user.authOk?'admin.repairLogin':'admin.repairOrReset'):i18nCore.t('admin.ownerRepairOnly');
-    const resetAction=user.canMaintain&&!user.established?`<button class="rpin" type="button" onclick="openReset('${su}')">${escHtml(i18nCore.t('admin.resetPin'))}</button>`:'';
-    const repairAction=user.canMaintain?`<button class="rpin" type="button" onclick="repairAccount('${su}')" title="${escAttr(repairTitle)}">${escHtml(i18nCore.t('admin.repairAccount'))}</button>`:'';
+    const resetAction=user.canMaintain&&!user.established?`<button class="rpin" type="button" data-admin-user-action="reset" data-username="${escAttr(user.u)}">${escHtml(i18nCore.t('admin.resetPin'))}</button>`:'';
+    const repairAction=user.canMaintain?`<button class="rpin" type="button" data-admin-user-action="repair" data-username="${escAttr(user.u)}" title="${escAttr(repairTitle)}">${escHtml(i18nCore.t('admin.repairAccount'))}</button>`:'';
     const explanation=user.established?i18nCore.t('admin.secureRepairRequired'):i18nCore.t('admin.firstUseResetAvailable');
     return`<article class="admin-maintenance-row"><div class="admin-maintenance-copy"><strong>${escHtml(user.u)}</strong><span>${escHtml(explanation)}</span></div><span class="acct-pill ${user.authOk?'ok':'warn'}">${escHtml(i18nCore.t(user.authOk?'admin.loginReady':'admin.needsRepair'))}</span><div class="admin-maintenance-actions">${resetAction}${repairAction}</div></article>`;
   }).join('');
@@ -9519,33 +9499,31 @@ function renderPendingRequests(){
   // that the single-click approval rhythm matches today's behavior.
   const showCommunityPicker=ownerCanUseCommunityTools();
   const preparedNonDefault=showCommunityPicker?preparedNonDefaultCommunities():[];
-  listEl.innerHTML=pending.map(([id,r])=>{
-    const needsRepair=r.status==='approved'&&!allData.users?.[r.username];
-    const communityPickerHtml=(showCommunityPicker&&preparedNonDefault.length&&!needsRepair)?`
-      <div class="req-card-community">
-        <label for="approve-community-${id}">${escHtml(i18nCore.t('admin.enrollInto'))}</label>
-        <select id="approve-community-${id}" class="approve-community-select">
-          <option value="${escAttr(DEFAULT_COMMUNITY_ID)}" selected>${escHtml(DEFAULT_COMMUNITY_NAME)} only</option>
-          ${preparedNonDefault.map(([cid,c])=>{
-            const name=escHtml(c?.name||cid);
-            const v=escAttr(cid);
-            return`<option value="${v}">${name} only</option><option value="${escAttr(DEFAULT_COMMUNITY_ID)},${v}">${escHtml(DEFAULT_COMMUNITY_NAME)} + ${name}</option>`;
-          }).join('')}
-        </select>
-      </div>`:'';
-    return`
-    <div class="req-card" id="reqcard-${id}">
-      <div class="req-card-hdr">
-        <div class="req-card-name">🎮 ${r.username}${needsRepair?` <span class="notif-badge">${escHtml(i18nCore.t('admin.repair'))}</span>`:''}</div>
-        <div class="req-card-time">${needsRepair?escHtml(i18nCore.t('admin.approvedNoLogin')):freshnessLabel(r.requestedAt)}</div>
-      </div>
-      ${r.note?`<div class="req-card-note">"${escHtml(r.note)}"</div>`:`<div class="req-card-note" style="color:var(--border2)">${escHtml(i18nCore.t('admin.noNote'))}</div>`}
-      ${communityPickerHtml}
-      <div class="req-actions">
-        <button class="btn-approve" onclick="approveRequest('${id}','${r.username.replace(/'/g,"\\'")}')">${needsRepair?'🔧 '+escHtml(i18nCore.t('admin.createLogin')):'✅ '+escHtml(i18nCore.t('admin.approve'))}</button>
-        <button class="btn-deny" onclick="denyRequest('${id}')">✗ ${escHtml(i18nCore.t('admin.deny'))}</button>
-      </div>
-    </div>`}).join('');
+  // SEC-01: requests are anonymous persisted input. Build this surface with DOM
+  // text nodes and listeners so no request field can become markup or code.
+  listEl.replaceChildren(...pending.map(([id,r])=>{
+    const username=String(r?.username||''),needsRepair=r.status==='approved'&&!allData.users?.[username];
+    const card=document.createElement('div');card.className='req-card';card.id=`reqcard-${id}`;
+    const header=document.createElement('div');header.className='req-card-hdr';
+    const name=document.createElement('div');name.className='req-card-name';name.append('🎮 ',username);
+    if(needsRepair){const repair=document.createElement('span');repair.className='notif-badge';repair.textContent=i18nCore.t('admin.repair');name.append(' ',repair);}
+    const time=document.createElement('div');time.className='req-card-time';time.textContent=needsRepair?i18nCore.t('admin.approvedNoLogin'):freshnessLabel(r.requestedAt);
+    header.append(name,time);card.append(header);
+    const note=document.createElement('div');note.className='req-card-note';note.textContent=r.note?`"${String(r.note)}"`:i18nCore.t('admin.noNote');
+    if(!r.note)note.style.color='var(--border2)';card.append(note);
+    if(showCommunityPicker&&preparedNonDefault.length&&!needsRepair){
+      const picker=document.createElement('div');picker.className='req-card-community';
+      const label=document.createElement('label'),select=document.createElement('select');select.id=`approve-community-${id}`;select.className='approve-community-select';label.htmlFor=select.id;label.textContent=i18nCore.t('admin.enrollInto');
+      const option=(value,text,selected=false)=>{const node=document.createElement('option');node.value=value;node.textContent=text;node.selected=selected;return node;};
+      select.append(option(DEFAULT_COMMUNITY_ID,`${DEFAULT_COMMUNITY_NAME} only`,true));
+      preparedNonDefault.forEach(([cid,c])=>{const labelText=String(c?.name||cid);select.append(option(cid,`${labelText} only`),option(`${DEFAULT_COMMUNITY_ID},${cid}`,`${DEFAULT_COMMUNITY_NAME} + ${labelText}`));});
+      picker.append(label,select);card.append(picker);
+    }
+    const actions=document.createElement('div');actions.className='req-actions';
+    const approve=document.createElement('button');approve.type='button';approve.className='btn-approve';approve.textContent=needsRepair?`🔧 ${i18nCore.t('admin.createLogin')}`:`✅ ${i18nCore.t('admin.approve')}`;approve.addEventListener('click',()=>approveRequest(id,username));
+    const deny=document.createElement('button');deny.type='button';deny.className='btn-deny';deny.textContent=`✗ ${i18nCore.t('admin.deny')}`;deny.addEventListener('click',()=>denyRequest(id));
+    actions.append(approve,deny);card.append(actions);return card;
+  }));
 }
 async function approveRequest(reqId,username){
   if(allData.users?.[username]){toast(i18nCore.t('admin.usernameExists'));return;}
@@ -9574,13 +9552,18 @@ async function approveRequest(reqId,username){
     copied=false;
   }
   const card=document.getElementById(`reqcard-${reqId}`);
-  if(card)card.innerHTML=`
-    <div style="font-size:14px;font-weight:700;color:var(--ok);margin-bottom:8px">✅ ${escHtml(i18nCore.t('admin.approvedTrainer',{trainer:username}))}</div>
-    <div style="font-size:13px;color:var(--muted);margin-bottom:6px">${escHtml(i18nCore.t(copied?'admin.loginCopiedHelp':'admin.loginSendHelp'))}</div>
-    <div style="font-size:13px">${escHtml(i18nCore.t('admin.trainer'))}: <strong>${escHtml(username)}</strong></div>
-    <div style="font-size:13px;margin-top:4px">PIN: <span class="pin-reveal">${pin}</span></div>
-    <div style="font-size:11px;color:var(--muted);margin-top:8px">${escHtml(i18nCore.t('admin.changePinHelp'))}</div>
-    <button class="btn-copy-login" style="margin-top:10px" onclick="copyApprovedLogin('${username.replace(/'/g,"\\'")}','${pin}')">${uiIconMarkup('copy','ui-icon ui-icon-sm')}<span>${escHtml(i18nCore.t(copied?'admin.copyAgain':'admin.copyLogin'))}</span></button>`;
+  if(card){
+    card.replaceChildren();
+    const line=(text,style)=>{const node=document.createElement('div');node.textContent=text;Object.assign(node.style,style);return node;};
+    card.append(
+      line(`✅ ${i18nCore.t('admin.approvedTrainer',{trainer:username})}`,{fontSize:'14px',fontWeight:'700',color:'var(--ok)',marginBottom:'8px'}),
+      line(i18nCore.t(copied?'admin.loginCopiedHelp':'admin.loginSendHelp'),{fontSize:'13px',color:'var(--muted)',marginBottom:'6px'})
+    );
+    const trainerLine=line(`${i18nCore.t('admin.trainer')}: `,{fontSize:'13px'}),strong=document.createElement('strong');strong.textContent=username;trainerLine.append(strong);card.append(trainerLine);
+    const pinLine=line('PIN: ',{fontSize:'13px',marginTop:'4px'}),pinValue=document.createElement('span');pinValue.className='pin-reveal';pinValue.textContent=pin;pinLine.append(pinValue);card.append(pinLine);
+    card.append(line(i18nCore.t('admin.changePinHelp'),{fontSize:'11px',color:'var(--muted)',marginTop:'8px'}));
+    const copy=document.createElement('button');copy.type='button';copy.className='btn-copy-login';copy.style.marginTop='10px';copy.append(uiIconNode('copy','ui-icon ui-icon-sm'));const copyTextNode=document.createElement('span');copyTextNode.textContent=i18nCore.t(copied?'admin.copyAgain':'admin.copyLogin');copy.append(copyTextNode);copy.addEventListener('click',()=>copyApprovedLogin(username,pin));card.append(copy);
+  }
   renderAdmin();populateLoginUsers();toast(i18nCore.t(copied?'admin.approvedCopied':'admin.approved',{trainer:username}),5000);
   setTimeout(()=>renderPendingRequests(),4000);
 }
@@ -9917,7 +9900,6 @@ function openSettingsTool(tool){
     else if(tool==='export'){switchTab('mylist');requestAnimationFrame(()=>document.getElementById('export-menu-btn')?.click());}
     else if(tool==='safe-transfer')openSafeTransferModal();
     else if(tool==='backup'&&protectedOwnerSession())exportData();
-    else if(tool==='restore'&&protectedOwnerSession())document.getElementById('restore-file')?.click();
   },0);
 }
 function openModal(id,options={}){
@@ -10197,11 +10179,13 @@ function renderSafeTransferTrainers(){
     const on=_safeTransferSelected.has(u);
     const cls=`stb-trainer-chip${on?' on':''}${isMe?' is-me':''}`;
     const label=isMe?`${escHtml(u)} (${escHtml(i18nCore.t('common.you'))})`:escHtml(u);
-    const click=isMe?'':`onclick="toggleSafeTransferTrainer('${escAttr(u)}')"`;
     const title=isMe?i18nCore.t('safeTransfer.selfExcluded'):i18nCore.t('safeTransfer.toggleTrainer',{trainer:u});
-    return`<span class="${cls}" ${click} title="${title}">${label}</span>`;
+    return`<button type="button" class="${cls}" data-safe-transfer-trainer="${escAttr(u)}" ${isMe?'disabled':''} title="${escAttr(title)}">${label}</button>`;
   }).join('');
 }
+document.getElementById('stb-trainer-grid')?.addEventListener('click',event=>{
+  const control=event.target.closest('[data-safe-transfer-trainer]');if(control&&!control.disabled)toggleSafeTransferTrainer(control.dataset.safeTransferTrainer);
+});
 function toggleSafeTransferTrainer(name){
   if(!_safeTransferSelected)return;
   if(_safeTransferSelected.has(name))_safeTransferSelected.delete(name);
@@ -10531,11 +10515,12 @@ function renderEventBanner(){
   const endDate=new Date(featured.end);
   const daysLeft=Math.ceil((endDate-Date.now())/86400000);
   const localized=eventLabelsI18n.localizeEvent(featured,i18nCore.getLocale());
+  const link=eventPresentationDomain.safeHttpsUrl(featured.link);
   slot.innerHTML=`<div class="event-banner">
     <span class="event-banner-icon">🎉</span>
     <div class="event-banner-content">
       <div class="event-banner-title">${escHtml(localized.localizedTitle||i18nCore.t('events.title'))}</div>
-      <div class="event-banner-meta">${daysLeft>0?`${escHtml(i18nCore.formatRelativeTime(daysLeft,'day'))} · `:''}${escHtml(localized.localizedSummary)} · <a href="${featured.link}" target="_blank" rel="noopener" style="color:var(--ac2)">${escHtml(i18nCore.t('events.details'))} ↗</a></div>
+      <div class="event-banner-meta">${daysLeft>0?`${escHtml(i18nCore.formatRelativeTime(daysLeft,'day'))} · `:''}${escHtml(localized.localizedSummary)}${link?` · <a href="${escAttr(link)}" target="_blank" rel="noopener noreferrer" style="color:var(--ac2)">${escHtml(i18nCore.t('events.details'))} ↗</a>`:''}</div>
     </div>
   </div>`;
 }
@@ -11787,6 +11772,14 @@ function publicShareUpdatedLabel(timestamp){
   if(!Number.isFinite(value)||value<=0)return i18nCore.t('share.updatedNever');
   return i18nCore.t('share.updated',{time:i18nCore.relativeTimeFromTimestamp(value)});
 }
+function publicShareAction(event){
+  const control=event.target.closest('[data-share-action]');if(!control)return;
+  const username=control.dataset.username||_activeShareView?.username||'';
+  if(control.dataset.shareAction==='favorite')toggleTrainerFavorite(username);
+  else if(control.dataset.shareAction==='list')renderShareView(username,control.dataset.listType||'wishlist');
+}
+document.getElementById('share-hdr')?.addEventListener('click',publicShareAction);
+document.getElementById('share-list-tabs')?.addEventListener('click',publicShareAction);
 function renderShareView(username,type){
   _activeShareView={username,type};
   const ud=allData.users?.[username]||{};
@@ -11802,7 +11795,7 @@ function renderShareView(username,type){
         ${ud.discord?`<span class="meta-item profile-discord">${escHtml(ud.discord)}</span>`:''}
         <span class="meta-item">📅 ${escHtml(publicShareUpdatedLabel(ud.lastUpdated))}</span>
       </div>
-      ${cur&&cur!==username?`<div class="share-profile-actions"><button class="bpri" onclick="openActiveShareComparison()">${escHtml(i18nCore.t('trainer.compareAction'))}</button><button class="bghost" onclick="toggleTrainerFavorite('${escAttr(username)}')" aria-pressed="${favorite}">${favorite?'★':'☆'} ${escHtml(i18nCore.t(favorite?'trainer.favoriteRemove':'trainer.favoriteAdd'))}</button></div>`:''}
+      ${cur&&cur!==username?`<div class="share-profile-actions"><button class="bpri" onclick="openActiveShareComparison()">${escHtml(i18nCore.t('trainer.compareAction'))}</button><button class="bghost" data-share-action="favorite" data-username="${escAttr(username)}" aria-pressed="${favorite}">${favorite?'★':'☆'} ${escHtml(i18nCore.t(favorite?'trainer.favoriteRemove':'trainer.favoriteAdd'))}</button></div>`:''}
       ${bioHtml}
     </div>`;
   // Tabs
@@ -11811,7 +11804,7 @@ function renderShareView(username,type){
     const count=Object.keys(allData[t]?.[username]||{}).length;
     if(!count)return'';
     const label=publicShareListLabel(t);
-    return `<button class="ltab ${t===type?'active':''}" onclick="renderShareView('${username}','${t}')">${escHtml(i18nCore.t('share.listTab',{label,count:i18nCore.formatNumber(count)}))}</button>`;
+    return `<button class="ltab ${t===type?'active':''}" data-share-action="list" data-username="${escAttr(username)}" data-list-type="${t}">${escHtml(i18nCore.t('share.listTab',{label,count:i18nCore.formatNumber(count)}))}</button>`;
   }).join('');
   // Body — render in same style as user-str-block
   const out=document.getElementById('share-list-out');
@@ -12152,8 +12145,8 @@ function eventFilterKeydown(event,type){
   buttons[next]?.focus();buttons[next]?.click();
 }
 function openEventDetails(link){
-  const safe=String(link||'');
-  if(/^https:\/\//i.test(safe))window.open(safe,'_blank','noopener');
+  const safe=eventPresentationDomain.safeHttpsUrl(link);
+  if(safe)window.open(safe,'_blank','noopener,noreferrer');
 }
 function eventTypeLabel(type){
   return i18nCore.t({spotlight:'events.filterSpotlight',raids:'events.filterRaids',max:'events.filterMax',gbl:'events.filterGbl',research:'events.filterResearch',general:'events.filterGeneral'}[type]||'events.filterGeneral');
@@ -12202,7 +12195,7 @@ function renderEventsOnly(){
     const locale=i18nCore.getLocale(),timing=eventPresentationDomain.eventTiming(event,{locale}),relative=eventRelativeLabel(timing);
     const localized=eventLabelsI18n.localizeEvent(event,locale),title=localized.localizedTitle||i18nCore.t('events.title'),link=eventPresentationDomain.safeHttpsUrl(event.link);
     const bonuses=localizedEventBonuses(event),summary=localized.localizedSummary||bonuses[0]||'';
-    const tag=link?'a':'article',linkAttrs=link?` href="${escAttr(link)}" target="_blank" rel="noopener" aria-label="${escAttr(i18nCore.t('events.openDetailsFor',{event:title}))}"`:'';
+    const tag=link?'a':'article',linkAttrs=link?` href="${escAttr(link)}" target="_blank" rel="noopener noreferrer" aria-label="${escAttr(i18nCore.t('events.openDetailsFor',{event:title}))}"`:'';
     return`<${tag} class="event-card card-row ${section.group==='now'?'is-active':''}" data-event-id="${escAttr(localized.stableId)}"${linkAttrs}><div class="event-card-main"><div class="event-card-kicker">${section.group==='now'?`<span class="event-current-badge">${escHtml(i18nCore.t('events.nowBadge'))}</span>`:''}<span class="event-type-tag chip chip-status">${escHtml(localizedEventTypeLabel(event))}</span></div><h3 class="event-card-title type-card">${escHtml(title)}</h3><div class="event-card-time type-meta"><span class="event-card-date">${escHtml(timing.dateLabel)}</span>${timing.timeLabel?`<span class="event-card-time-separator" aria-hidden="true">·</span><span>${escHtml(timing.timeLabel)}</span>`:''}${relative?`<span class="event-card-time-separator" aria-hidden="true">·</span><span class="event-card-relative">${escHtml(relative)}</span>`:''}</div>${summary?`<div class="event-card-summary type-meta">${escHtml(summary)}</div>`:''}</div>${link?`<span class="event-card-cue"><span class="event-card-cue-label">${escHtml(i18nCore.t('events.details'))}</span>${uiIconMarkup('chevron-right','ui-icon event-card-cue-icon')}</span>`:''}</${tag}>`;
   }).join('')}</div></section>`).join('')}</div>`;
 }
@@ -12370,10 +12363,11 @@ function renderSchedDayDetail(){
       </summary>
       <div class="sched-event-chip-list">
         ${evt.events.map(ev=>{
+          const link=eventPresentationDomain.safeHttpsUrl(ev.link);
           const badge=ev.bonus?`<span class="sched-event-bonus" title="${escAttr(ev.bonusText||'Confirmed in event details')}">+${ev.bonus} ${escHtml(ev.bonusType||'special')}</span>`:'';
-          const body=`<span class="sched-event-chip-name">${escHtml(ev.name||ev.heading||'Event')}</span>${badge}${ev.link?'<span class="sched-event-chip-link">↗</span>':''}`;
-          return ev.link
-            ?`<a class="sched-event-chip" href="${ev.link}" target="_blank" rel="noopener">${body}</a>`
+          const body=`<span class="sched-event-chip-name">${escHtml(ev.name||ev.heading||'Event')}</span>${badge}${link?'<span class="sched-event-chip-link">↗</span>':''}`;
+          return link
+            ?`<a class="sched-event-chip" href="${escAttr(link)}" target="_blank" rel="noopener noreferrer">${body}</a>`
             :`<div class="sched-event-chip">${body}</div>`;
         }).join('')}
       </div>
@@ -14635,7 +14629,7 @@ Object.assign(window,{
   addEntry,addToTrayFromAc,removeFromAddTray,clearAddTray,confirmAddTray,renderAddTray,setPri,setNotes,setLucky,setXxl,setXxs,removeEntry,doUndo,copyStr,
   exportMyListImage,
   dragStart,dragOver,dragDrop,dragEnd,
-  addUser,openReset,confirmReset,repairAccount,repairLoginDirectory,repairLoginDirectories,toggleAdmin,setAdminSection,exportData,triggerRestore,restoreData,
+  addUser,openReset,confirmReset,repairAccount,repairLoginDirectory,repairLoginDirectories,toggleAdmin,setAdminSection,exportData,
   saveProfile,openModal,closeModal,renderStrings,renderBrowse,setStrList,
   showRequestForm,hideRequestForm,submitRequest,approveRequest,copyApprovedLogin,denyRequest,
   acSearch,acSelect,acKeydown,formatFc,toggleStrUser,toggleComboStrings,renderMyList,

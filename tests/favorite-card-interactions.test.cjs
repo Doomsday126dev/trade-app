@@ -45,8 +45,17 @@ test('cards use lightweight tag and overflow actions with keyboard parity',()=>{
 });
 
 test('remove remains explicit confirmed and unavailable from swipe alone',()=>{
-  assert.match(html,/role="menuitem" class="danger" onclick="removeTrainerFavorite/);
+  assert.match(html,/role="menuitem" class="danger" data-trainer-action="remove"/);
   assert.match(html,/function removeTrainerFavorite[\s\S]*organizer\.removeConfirm/);
+});
+
+test('SEC-03 trainer names are data, never inline JavaScript source',()=>{
+  const render=html.slice(html.indexOf('async function renderTrainerQuickLists'),html.indexOf('function toggleTrainerFavorite'));
+  assert.match(render,/data-trainer-action="open"/);
+  assert.match(render,/data-trainer-action="organize"/);
+  assert.match(render,/data-trainer-action="remove"/);
+  assert.match(html,/function favoriteTrainerAction\(event\)/);
+  assert.doesNotMatch(render,/onclick="(?:openTrainerByName|openTrainerOrganizer|openFavoriteTagsFromMenu|removeTrainerFavorite)\('/);
 });
 
 test('canonical picker retains multi-select, inline creation, duplicate reuse, and scoped Escape',()=>{

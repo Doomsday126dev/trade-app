@@ -5,6 +5,7 @@ const path = require('node:path');
 const pass3ScreenshotDir=process.env.PASS3_SCREENSHOT_DIR||'';
 const favoriteBrowseScreenshotDir=process.env.FAVORITE_BROWSE_SCREENSHOT_DIR||'';
 const navScreenshotDir=process.env.NAV_SCREENSHOT_DIR||'';
+const securityScreenshotDir=process.env.SECURITY_SCREENSHOT_DIR||'';
 async function capturePass3(page,name){
   if(!pass3ScreenshotDir)return;
   mkdirSync(pass3ScreenshotDir,{recursive:true});
@@ -23,6 +24,11 @@ async function capturePrimaryNav(page,name){
   if(!navScreenshotDir)return;
   mkdirSync(navScreenshotDir,{recursive:true});
   await page.locator('.tabs').screenshot({path:path.join(navScreenshotDir,`${name}.png`)});
+}
+async function captureSecurity(page,name){
+  if(!securityScreenshotDir)return;
+  mkdirSync(securityScreenshotDir,{recursive:true});
+  await page.screenshot({path:path.join(securityScreenshotDir,`${name}.png`),fullPage:true});
 }
 
 function isLocalAuthBaseURL() {
@@ -1777,6 +1783,131 @@ test.describe('visual smoke', () => {
     await page.evaluate(()=>setAdminSection('maintenance'));
     await expect(page.locator('.admin-maintenance-row').filter({hasText:'FirstUseFixture'}).getByRole('button')).toHaveCount(2);
     await expect(page.locator('.admin-maintenance-row').filter({hasText:'AdminFixture'}).getByRole('button')).toHaveCount(1);
+  });
+
+  test('SEC-01 hostile anonymous requests remain inert in the Admin DOM',async({page})=>{
+    await page.goto(`./?security-request-render=${Date.now()}`,{waitUntil:'domcontentloaded'});
+    await isolateAuthenticatedMyListFixture(page,{username:'SecurityAdmin',uid:'uid-security-admin'});
+    const payloads=[
+      '<img src=x onerror="window.__securityExecuted++">',
+      '<svg onload="window.__securityExecuted++"></svg>',
+      '</script><script>window.__securityExecuted++</script>',
+      'O\'Brien',
+      'D\'Angelo "quoted" back\\slash `template`',
+      '&lt;img src=x onerror=alert(1)&gt;',
+      'ユニコード訓練家é',
+      `Long${'x'.repeat(4096)}`
+    ];
+    await page.evaluate(payloads=>{
+      window.__securityExecuted=0;
+      allData=normalizeData({
+        users:{SecurityAdmin:{isAdmin:true,authUid:'uid-security-admin'}},
+        requests:Object.fromEntries(payloads.map((value,index)=>[`req_${index}`,{username:value,note:value,requestedAt:Date.now(),status:'pending'}])),
+        communities:{},memberships:{},wishlist:{},dynamax:{},gmax:{},costumes:{}
+      });
+      cur='SecurityAdmin';auth={currentUser:{uid:'uid-security-admin'}};
+      document.querySelectorAll('.page').forEach(node=>node.classList.remove('active'));
+      document.getElementById('tab-admin').classList.add('active');
+      renderPendingRequests();
+    },payloads);
+    await expect(page.locator('#pending-requests-list .req-card')).toHaveCount(payloads.length);
+    expect(await page.locator('#pending-requests-list .req-card-name').allTextContents()).toEqual(payloads.map(value=>`🎮 ${value}`));
+    expect(await page.locator('#pending-requests-list img, #pending-requests-list svg, #pending-requests-list script').count()).toBe(0);
+    expect(await page.evaluate(()=>window.__securityExecuted)).toBe(0);
+  });
+
+  test('SEC-03 hostile trainer names survive rendered Favorite and Recent actions',async({page})=>{
+    await page.goto(`./?security-trainer-actions=${Date.now()}`,{waitUntil:'domcontentloaded'});
+    await isolateAuthenticatedMyListFixture(page,{username:'SecurityViewer',uid:'uid-security-viewer'});
+    const names=["O'Brien",'D\'Angelo','"quoted"','back\\slash','`template`','<script>window.__securityExecuted++</script>','ユニコード訓練家'];
+    await page.evaluate(async names=>{
+      window.__securityExecuted=0;window.__openedTrainer='';
+      const entries=names.map((displayName,index)=>({key:`trainer-${index}`,displayName,tagIds:[],createdAt:index+1,updatedAt:index+1}));
+      const state={version:3,schemaVersion:3,migrationVersion:3,owner:{uid:'uid-security-viewer',username:'SecurityViewer'},favorites:entries,recent:entries.map((item,index)=>({key:item.key,displayName:item.displayName,openedAt:Date.now()-index*1000})),snapshots:{},tags:{},syncState:'local-only',migration:{skippedFavorites:0,skippedRecents:0}};
+      const store={read:()=>state,filterFavorites:()=>state.favorites,favoriteFor:value=>state.favorites.find(item=>item.displayName===value)||null,updateCanonicalName:()=>false,snapshotFor:()=>null};
+      ensureTrainerHistoryStore=()=>store;
+      ensureFavoriteShareSessionCache=()=>({syncFavorites(){},readFavorite:async()=>({status:'missing'})});
+      openTrainerByName=username=>{window.__openedTrainer=username;};
+      document.querySelectorAll('.page').forEach(node=>node.classList.remove('active'));
+      document.getElementById('tab-find').classList.add('active');
+      await renderTrainerQuickLists();
+    },names);
+    await expect(page.locator('.favorite-card-shell')).toHaveCount(names.length);
+    await expect(page.locator('.recent-trainer-row')).toHaveCount(names.length);
+    expect(await page.locator('.favorite-card-shell .trainer-quick-name').allTextContents()).toEqual(names);
+    expect(await page.locator('.favorite-card-shell script, .recent-trainer-row script').count()).toBe(0);
+    for(let index=0;index<names.length;index++){
+      await page.locator('.favorite-card-open').nth(index).click();
+      expect(await page.evaluate(()=>window.__openedTrainer)).toBe(names[index]);
+      await page.locator('.recent-trainer-row').nth(index).click();
+      expect(await page.evaluate(()=>window.__openedTrainer)).toBe(names[index]);
+    }
+    expect(await page.evaluate(()=>window.__securityExecuted)).toBe(0);
+  });
+
+  test('SEC-04 unsafe Event destinations render as non-clickable rows',async({page})=>{
+    await page.goto(`./?security-event-links=${Date.now()}`,{waitUntil:'domcontentloaded'});
+    await isolateAuthenticatedMyListFixture(page,{username:'SecurityEvents',uid:'uid-security-events'});
+    await page.evaluate(()=>{
+      const now=Date.now(),hour=3600000;
+      _eventData={fetchedAt:now,events:[
+        {eventID:'safe',name:'Safe',eventType:'event',start:new Date(now-hour).toISOString(),end:new Date(now+hour).toISOString(),link:'https://example.com/details'},
+        {eventID:'javascript',name:'JavaScript',eventType:'event',start:new Date(now+2*hour).toISOString(),end:new Date(now+3*hour).toISOString(),link:'javascript:window.__securityExecuted=1'},
+        {eventID:'data',name:'Data',eventType:'event',start:new Date(now+4*hour).toISOString(),end:new Date(now+5*hour).toISOString(),link:'data:text/html,x'},
+        {eventID:'http',name:'HTTP',eventType:'event',start:new Date(now+6*hour).toISOString(),end:new Date(now+7*hour).toISOString(),link:'http://example.com/details'},
+        {eventID:'obfuscated',name:'Obfuscated',eventType:'event',start:new Date(now+8*hour).toISOString(),end:new Date(now+9*hour).toISOString(),link:' https://example.com/details'}
+      ]};
+      _eventLoadState='ready';eventTypeFilter='all';window.__securityExecuted=0;
+      document.querySelectorAll('.page').forEach(node=>node.classList.remove('active'));
+      document.getElementById('tab-schedule').classList.add('active');renderEventsOnly();
+    });
+    await expect(page.locator('.event-card')).toHaveCount(5);
+    await expect(page.locator('a.event-card')).toHaveCount(1);
+    await expect(page.locator('a.event-card')).toHaveAttribute('href','https://example.com/details');
+    await expect(page.locator('article.event-card')).toHaveCount(4);
+    const opened=await page.evaluate(()=>{
+      window.__openedEventDestinations=[];
+      window.open=(...args)=>{window.__openedEventDestinations.push(args);return null;};
+      openEventDetails('https://sub.example.com/?q=x');
+      for(const unsafe of ['javascript:window.__securityExecuted=1','data:text/html,x','http://example.com','//example.com','/relative','https://user@example.com','https://example.com/path ','https:\\example.com','https://example.com/\nnext'])openEventDetails(unsafe);
+      return window.__openedEventDestinations;
+    });
+    expect(opened).toEqual([['https://sub.example.com/?q=x','_blank','noopener,noreferrer']]);
+    expect(await page.evaluate(()=>window.__securityExecuted)).toBe(0);
+  });
+
+  test('DATA-01 Admin maintenance keeps export and exposes no restore affordance',async({page})=>{
+    await page.goto(`./?security-restore-containment=${Date.now()}`,{waitUntil:'domcontentloaded'});
+    await isolateAuthenticatedMyListFixture(page,{username:'SecurityOwner',uid:'uid-security-owner'});
+    await page.evaluate(()=>{
+      allData=normalizeData({users:{SecurityOwner:{isOwner:true,isAdmin:true,authUid:'uid-security-owner'}},wishlist:{},dynamax:{},gmax:{},costumes:{},requests:{}});
+      cur='SecurityOwner';auth={currentUser:{uid:'uid-security-owner'}};
+      document.querySelectorAll('.page').forEach(node=>node.classList.remove('active'));
+      document.getElementById('tab-admin').classList.add('active');renderAdmin();setAdminSection('maintenance');
+    });
+    await page.setViewportSize({width:1440,height:900});
+    await expect(page.locator('[data-admin-section="maintenance"]')).toBeVisible();
+    const exportButton=page.locator('[data-admin-section="maintenance"] button').filter({hasText:/Export|Exportieren|Exportar|書き出す/});
+    await expect(exportButton).toBeVisible();
+    await expect(page.locator('#restore-file, [onclick*="triggerRestore"], [onclick*="restoreData"]')).toHaveCount(0);
+    const runtimeBoundary=await page.evaluate(()=>{
+      window.__securitySetCalls=[];
+      set=async(target,data)=>{window.__securitySetCalls.push({target:String(target),data});};
+      document.getElementById('toast')?.classList.remove('show');
+      return{
+        restoreData:typeof restoreData,
+        triggerRestore:typeof triggerRestore,
+        rootRestoreEnabled:PRODUCTION_ROOT_RESTORE_ENABLED
+      };
+    });
+    expect(runtimeBoundary).toEqual({restoreData:'undefined',triggerRestore:'undefined',rootRestoreEnabled:false});
+    await captureSecurity(page,'data-01-maintenance-desktop');
+    await page.setViewportSize({width:390,height:420});
+    await captureSecurity(page,'data-01-maintenance-mobile');
+    const downloadPromise=page.waitForEvent('download');
+    await exportButton.click();
+    await expect.poll(async()=>(await downloadPromise).suggestedFilename()).toMatch(/^pogo-backup-\d{4}-\d{2}-\d{2}\.json$/);
+    expect(await page.evaluate(()=>window.__securitySetCalls)).toEqual([]);
   });
 
   test('Legacy Inventory fixture exposes only archive filtering and export',async({page})=>{

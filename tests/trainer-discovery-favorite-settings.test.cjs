@@ -59,7 +59,7 @@ test('Favorite UI uses one compact tag organizer and makes removal destructive',
   assert.doesNotMatch(html,/organizer-note|favorite-note-indicator|organizer\.hasPrivateNote/);
   assert.match(html,/function removeTrainerFavorite[\s\S]*organizer\.removeConfirm/);
   assert.match(html,/class="favorite-card-menu" role="menu" hidden/);
-  assert.match(html,/role="menuitem" class="danger" onclick="removeTrainerFavorite/);
+  assert.match(html,/role="menuitem" class="danger" data-trainer-action="remove"/);
 });
 
 test('inline tag creation selects new or normalized-existing tags and has scoped keyboard behavior',()=>{
@@ -77,7 +77,8 @@ test('Settings exposes six semantic sections with desktop and mobile navigation'
   assert.match(html,/const SETTINGS_SECTIONS=Object\.freeze\(\['profile','language','appearance','security','tools','data'\]\)/);
   assert.match(html,/function parseSettingsRoute/);
   assert.match(html,/settings-page-mode/);
-  for(const tool of ['inventory','import','export','safe-transfer','shortcuts','health','backup','restore'])assert.match(html,new RegExp(`openSettingsTool\\('${tool}'\\)`));
+  for(const tool of ['inventory','import','export','safe-transfer','shortcuts','health','backup'])assert.match(html,new RegExp(`openSettingsTool\\('${tool}'\\)`));
+  assert.doesNotMatch(html,/openSettingsTool\('restore'\)/);
   assert.match(html,/settings-admin-only[^>]+hidden/);
   assert.match(html,/\.settings-account-only\[hidden\],\.settings-admin-only\[hidden\]\{display:none!important\}/);
 });
