@@ -1,7 +1,7 @@
 # Client State and Storage Inventory
 
 This inventory describes active production client state for release candidate
-`2026-08-05.44`. Browser storage is device-local. It is not cross-device sync and
+`2026-08-05.45`. Browser storage is device-local. It is not cross-device sync and
 does not establish account ownership; Firebase Auth plus the reciprocal legacy
 identity mapping remain authoritative.
 

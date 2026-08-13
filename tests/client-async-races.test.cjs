@@ -13,7 +13,8 @@ test('TEST-02 Events deduplicates ordinary loads and a forced newer response win
   const requests=[];const storage=new Map();
   const context=vm.createContext({
     localStorage:{getItem:key=>storage.get(key)||null,setItem:(key,value)=>storage.set(key,String(value))},
-    navigator:{onLine:true},Date,Promise,JSON,Error,
+    navigator:{onLine:true},Date,Promise,JSON,Error,SyntaxError,AbortController,
+    setTimeout:()=>1,clearTimeout:()=>{},
     fetch:url=>{const item=deferred();requests.push({url,item});return item.promise;}
   });
   vm.runInContext(between("const SCRAPEDDUCK_BASE='",'function currentEvents'),context);

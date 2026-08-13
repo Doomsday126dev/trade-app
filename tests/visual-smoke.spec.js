@@ -1982,6 +1982,47 @@ test.describe('visual smoke', () => {
     await expect(page.locator('.admin-maintenance-row').filter({hasText:'AdminFixture'}).getByRole('button')).toHaveCount(1);
   });
 
+  test('EVENT-01 and ADMIN-01 states render from the corrected runtime contracts',async({page})=>{
+    await page.goto(`./?event-admin-corrections=${Date.now()}`,{waitUntil:'domcontentloaded'});
+    await isolateAuthenticatedMyListFixture(page,{username:'Doomsday126',uid:'uid-event-admin-fixture'});
+    await page.evaluate(()=>{
+      const now=Date.now();
+      allData=normalizeData({
+        users:{Doomsday126:{isOwner:true,isAdmin:true,authUid:'uid-event-admin-fixture',authEmail:'owner@example.invalid'}},
+        loginDirectory:{Doomsday126:{authReady:true}},authIndex:{},wishlist:{},dynamax:{},gmax:{},costumes:{},requests:{},
+        communities:{nyc:{name:'NYC',preparedAt:now,memberUsernames:{Doomsday126:true},members:{'uid-event-admin-fixture':true},admins:{'uid-event-admin-fixture':true}}},
+        userCommunities:{'uid-event-admin-fixture':{nyc:{role:'owner',username:'Doomsday126'}}}
+      });
+      cur='Doomsday126';auth={currentUser:{uid:'uid-event-admin-fixture'}};
+      document.querySelectorAll('.page').forEach(node=>node.classList.remove('active'));
+      document.getElementById('tab-admin').classList.add('active');
+      renderAdmin();setAdminSection('diagnostics');
+    });
+    const diagnostic=page.locator('[data-community-diagnostic-state]');
+    await expect(diagnostic).toHaveAttribute('data-community-diagnostic-state','enabled-interim');
+    await expect(diagnostic).toContainText('Community filtering is enabled');
+    await diagnostic.scrollIntoViewIfNeeded();
+    await captureP1(page,'45-admin-diagnostic');
+
+    await page.evaluate(()=>{
+      document.querySelectorAll('.page').forEach(node=>node.classList.remove('active'));
+      document.getElementById('tab-schedule').classList.add('active');
+      _eventData={events:[],raids:[],fetchedAt:0};_eventLoadState='error';renderEventsOnly();
+    });
+    await expect(page.locator('.ui-state-unavailable')).toBeVisible();
+    await expect(page.locator('.events-state-action')).toBeVisible();
+    await captureP1(page,'45-events-timeout-error');
+
+    await page.evaluate(()=>{
+      const now=Date.now(),hour=3600000;
+      _eventData={events:[{eventID:'retry-success',name:'Recovered Event',eventType:'event',start:new Date(now-hour).toISOString(),end:new Date(now+hour).toISOString()}],raids:[],fetchedAt:now};
+      _eventLoadState='ready';eventTypeFilter='all';renderEventsOnly();
+    });
+    await expect(page.locator('.event-card')).toHaveCount(1);
+    await expect(page.locator('.event-card')).toContainText('Recovered Event');
+    await captureP1(page,'45-events-retry-success');
+  });
+
   test('SEC-01 hostile anonymous requests remain inert in the Admin DOM',async({page})=>{
     await page.goto(`./?security-request-render=${Date.now()}`,{waitUntil:'domcontentloaded'});
     await isolateAuthenticatedMyListFixture(page,{username:'SecurityAdmin',uid:'uid-security-admin'});
