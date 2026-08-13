@@ -1,0 +1,11 @@
+{
+  "database": {
+    "rules": "database.rules.request-access-candidate.json"
+  },
+  "emulators": {
+    "auth": { "port": 9699 },
+    "database": { "port": 9600 },
+    "ui": { "enabled": false },
+    "singleProjectMode": true
+  }
+}

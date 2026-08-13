@@ -28,6 +28,7 @@
     "check:client-assets": "node --test tests/client-asset-versioning.test.cjs tests/domain-display-localization.test.cjs tests/trainer-discovery.test.cjs tests/trainer-first-interim.test.cjs tests/trainer-first-product-journeys.test.cjs",
     "check:firebase-reads": "node scripts/check-firebase-reads.js",
     "check:rules": "bash scripts/check-firebase-rules.sh",
+    "check:request-access-candidate-rules": "bash scripts/check-request-access-candidate-rules.sh",
     "check:global-contract": "node scripts/check-global-identity-contract.js",
     "check:global-rules": "bash scripts/check-global-identity-rules.sh",
     "check:share-visibility": "node --test tests/share-visibility-client.test.cjs tests/trainer-preferences.test.cjs tests/trainer-preference-sync.test.cjs tests/trainer-preference-sync-ux.test.cjs",

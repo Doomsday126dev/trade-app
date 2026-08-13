@@ -5,7 +5,7 @@
 //     trimmed by max entry count to keep storage bounded
 //   - Firebase realtime endpoints: never cached (always network)
 
-const RELEASE='2026-08-05.45';
+const RELEASE='2026-08-05.46';
 const VERSION=`pogo-trades-${RELEASE}`;
 const SHELL_CACHE=`shell-${VERSION}`;
 const INSTALL_CACHE=`${SHELL_CACHE}-installing`;
@@ -25,6 +25,7 @@ const RELEASE_ASSETS=[
   'js/domain/priorities.js',
   'js/ui/badges.js',
   'js/domain/username.js',
+  'js/domain/requestAccess.js',
   'js/domain/priorityValues.js',
   'js/domain/scheduleDates.js',
   'js/domain/pokemonSearchTerms.js',

@@ -1,0 +1,34 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "admins": {
+      "$uid": {
+        ".read": false,
+        ".write": false
+      }
+    },
+    "requests": {
+      ".read": "auth != null && root.child('admins').child(auth.uid).val() === true",
+      "$id": {
+        ".write": "(!data.exists() && auth == null && newData.exists()) || (data.exists() && auth != null && root.child('admins').child(auth.uid).val() === true)",
+        ".validate": "$id.matches(/^req_[0-9]+_[a-z0-9]{1,5}$/) && newData.hasChildren(['username','note','requestedAt','status']) && ((!data.exists() && newData.child('status').val() === 'pending') || (data.exists() && newData.child('username').val() === data.child('username').val() && newData.child('note').val() === data.child('note').val() && newData.child('requestedAt').val() === data.child('requestedAt').val() && data.child('status').val() === 'pending' && (newData.child('status').val() === 'approved' || newData.child('status').val() === 'denied')))",
+        "username": {
+          ".validate": "newData.isString() && newData.val().length >= 2 && newData.val().matches(/^[^ ].*[^ ]$/) && !newData.val().contains('\\n') && !newData.val().contains('\\r') && !newData.val().contains('\\t') && !newData.val().contains('\\u0000')"
+        },
+        "note": {
+          ".validate": "newData.isString() && (newData.val() === '' || newData.val().matches(/^[^ ]$/) || newData.val().matches(/^[^ ].*[^ ]$/)) && !newData.val().contains('\\n') && !newData.val().contains('\\r') && !newData.val().contains('\\t') && !newData.val().contains('\\u0000')"
+        },
+        "requestedAt": {
+          ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() % 1 === 0"
+        },
+        "status": {
+          ".validate": "newData.isString()"
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    }
+  }
+}
