@@ -53,9 +53,18 @@ function candidate(slot, uid, trainer, requestId, rateHash) {
     handle,
     request,
     review: { humanReviewed: true, reviewedAt: '2030-01-01T11:40:00.000Z', selectionSource: 'explicit-private-candidate' },
+    authEligibility: {
+      mode: 'exact-auth-metadata',
+      verifiedAt: '2030-01-01T11:55:00.000Z',
+      exactAuthMetadata: {
+        userExists: true,
+        firebaseAuthDisabled: false,
+        lookupMethod: 'exact-uid',
+        observedAt: '2030-01-01T11:55:00.000Z'
+      },
+      browserLogin: null
+    },
     eligibility: {
-      firebaseAuthUserExists: true,
-      firebaseAuthDisabled: false,
       reciprocalLegacyOwnershipVerified: true,
       loginDirectoryReady: true,
       identityAmbiguityAbsent: true,
@@ -176,9 +185,12 @@ function fixture(readinessOverrides = {}, inputOverrides = {}) {
     projectWideRunInvoker: false,
     gatewayForbiddenRolesPresent: false,
     productionDebugTokensRegistered: false,
-    productionRtdbWriteCount: 0,
-    productionAuthMutationCount: 0,
-    productionPublicShareWriteCount: 0,
+    writeBoundary: {
+      legacyLoginWrites: [],
+      e1AuthorityWrites: [],
+      controlPlaneWrites: [],
+      unexpectedWrites: []
+    },
     observationHours: OBSERVATION_HOURS,
     laterGroupsAuthorized: false,
     groupEAuthorized: false,
@@ -196,6 +208,67 @@ function reasons(call) {
   });
 }
 
+function syncCandidates(value) {
+  value.input.candidates = JSON.parse(JSON.stringify(value.readiness.candidates));
+  fs.writeFileSync(value.readinessPath, JSON.stringify(value.readiness), { mode: 0o600 });
+}
+
+function browserLoginEvidence(candidate, overrides = {}) {
+  return {
+    mode: 'verified-browser-login',
+    verifiedAt: '2030-01-01T11:55:00.000Z',
+    exactAuthMetadata: null,
+    browserLogin: {
+      loginSucceeded: true,
+      currentUserPresent: true,
+      reviewedUidHash: candidate.subjectHashes.uidHash,
+      reviewedTrainerHash: candidate.subjectHashes.trainerHash,
+      browserUidHash: candidate.subjectHashes.uidHash,
+      browserTrainerHash: candidate.subjectHashes.trainerHash,
+      appId: EXPECTED_APP_ID,
+      appCheckObtainable: true,
+      authIndexUsernameMatches: true,
+      userAuthUidMatches: true,
+      loginDirectoryReady: true,
+      mappingVerifiedAt: '2030-01-01T11:55:00.000Z',
+      firebaseAuthDisabledMetadata: 'not-independently-observed',
+      writeAuditComplete: true,
+      ...overrides
+    }
+  };
+}
+
+function loginWrite(candidate, service, path, operation, purpose, changedFields, overrides = {}) {
+  return {
+    candidateSlot: candidate.slot,
+    service,
+    path,
+    operation,
+    purpose,
+    recordCreated: false,
+    changedFields,
+    ownershipMappingChanged: false,
+    privilegeStateChanged: false,
+    e1AuthorityDataTouched: false,
+    credentialUpgradeOnly: false,
+    ...overrides
+  };
+}
+
+function useBrowserLogin(value, index, overrides = {}) {
+  const candidateValue = value.readiness.candidates[index];
+  candidateValue.authEligibility = browserLoginEvidence(candidateValue, overrides);
+  value.input.writeBoundary.legacyLoginWrites.push(loginWrite(
+    candidateValue,
+    'firebase-auth',
+    `users/${candidateValue.reviewedSubject.firebaseUid}/metadata/lastSignInTime`,
+    'platform-sign-in',
+    'authentication-session-metadata',
+    ['lastSignInTime']
+  ));
+  syncCandidates(value);
+}
+
 test('D2 guard accepts exactly two reviewed distinct candidates on the known healthy D1 baseline', () => {
   const value = fixture();
   const result = guardProductionSecondMutation(value.input, { now: () => NOW, ...value });
@@ -204,6 +277,103 @@ test('D2 guard accepts exactly two reviewed distinct candidates on the known hea
   assert.equal(result.candidateCount, 2);
   assert.equal(result.observationHours, 48);
   assert.equal(result.groupEAuthorized, false);
+});
+
+test('exact Auth metadata mode requires a fresh exact lookup of an enabled user', () => {
+  const value = fixture();
+  assert.equal(guardProductionSecondMutation(value.input, { now: () => NOW, ...value }).authEligibilityVerified, true);
+  value.readiness.candidates[0].authEligibility.exactAuthMetadata.firebaseAuthDisabled = true;
+  syncCandidates(value);
+  reasons(() => guardProductionSecondMutation(value.input, { now: () => NOW, ...value }));
+
+  const stale = fixture();
+  stale.readiness.candidates[0].authEligibility.verifiedAt = '2030-01-01T11:30:00.000Z';
+  stale.readiness.candidates[0].authEligibility.exactAuthMetadata.observedAt = '2030-01-01T11:30:00.000Z';
+  syncCandidates(stale);
+  reasons(() => guardProductionSecondMutation(stale.input, { now: () => NOW, ...stale }));
+});
+
+test('browser-login mode accepts matching fresh Auth App Check and reciprocal evidence without disabled metadata', () => {
+  const value = fixture();
+  useBrowserLogin(value, 0);
+  const proof = value.readiness.candidates[0].authEligibility;
+  assert.equal(proof.exactAuthMetadata, null);
+  assert.equal(proof.browserLogin.firebaseAuthDisabledMetadata, 'not-independently-observed');
+  assert.equal(guardProductionSecondMutation(value.input, { now: () => NOW, ...value }).writeBoundaryVerified, true);
+});
+
+test('browser-login mode fails on wrong UID trainer missing App Check or stale proof', () => {
+  for (const override of [
+    { browserUidHash: '0'.repeat(64) },
+    { browserTrainerHash: '1'.repeat(64) },
+    { appCheckObtainable: false },
+    { mappingVerifiedAt: '2030-01-01T11:30:00.000Z' }
+  ]) {
+    const value = fixture();
+    useBrowserLogin(value, 0, override);
+    if (override.mappingVerifiedAt) value.readiness.candidates[0].authEligibility.verifiedAt = override.mappingVerifiedAt;
+    syncCandidates(value);
+    reasons(() => guardProductionSecondMutation(value.input, { now: () => NOW, ...value }));
+  }
+});
+
+test('unknown missing or contradictory Auth evidence fails closed', () => {
+  for (const mutate of [
+    (candidateValue) => { candidateValue.authEligibility.mode = 'unknown'; },
+    (candidateValue) => { delete candidateValue.authEligibility; },
+    (candidateValue) => { candidateValue.authEligibility.browserLogin = browserLoginEvidence(candidateValue).browserLogin; }
+  ]) {
+    const value = fixture();
+    mutate(value.readiness.candidates[0]);
+    syncCandidates(value);
+    reasons(() => guardProductionSecondMutation(value.input, { now: () => NOW, ...value }));
+  }
+});
+
+test('one candidate browser proof cannot satisfy the other candidate', () => {
+  const value = fixture();
+  const candidateA = value.readiness.candidates[0];
+  const candidateB = value.readiness.candidates[1];
+  candidateB.authEligibility = browserLoginEvidence(candidateA);
+  value.input.writeBoundary.legacyLoginWrites.push(loginWrite(
+    candidateB, 'firebase-auth', `users/${candidateB.reviewedSubject.firebaseUid}/metadata/lastSignInTime`,
+    'platform-sign-in', 'authentication-session-metadata', ['lastSignInTime']
+  ));
+  syncCandidates(value);
+  reasons(() => guardProductionSecondMutation(value.input, { now: () => NOW, ...value }));
+});
+
+test('only exact committed legacy login-session writes are allowed during browser proof', () => {
+  const value = fixture();
+  useBrowserLogin(value, 0);
+  const candidateA = value.readiness.candidates[0];
+  value.input.writeBoundary.legacyLoginWrites.push(
+    loginWrite(candidateA, 'rtdb', `authIndex/${candidateA.reviewedSubject.firebaseUid}/lastSeen`, 'update',
+      'login-session-refresh', ['lastSeen']),
+    loginWrite(candidateA, 'rtdb', `users/${candidateA.reviewedSubject.trainerUsername}`, 'set',
+      'login-user-refresh', ['lastSeen', 'authEmail', 'authVersion'])
+  );
+  assert.equal(guardProductionSecondMutation(value.input, { now: () => NOW, ...value }).writeBoundaryVerified, true);
+});
+
+test('unexpected legacy E1 authority or control-plane writes fail closed', () => {
+  for (const mutate of [
+    (value) => value.input.writeBoundary.legacyLoginWrites.push(loginWrite(
+      value.readiness.candidates[0], 'rtdb', 'loginDirectory/KnownCleanAlpha', 'set', 'login-user-refresh', ['lastSeen'])),
+    (value) => value.input.writeBoundary.legacyLoginWrites.push(loginWrite(
+      value.readiness.candidates[0], 'rtdb', `authIndex/${value.readiness.candidates[0].reviewedSubject.firebaseUid}/lastSeen`,
+      'update', 'login-session-refresh', ['lastSeen'], { recordCreated: true })),
+    (value) => value.input.writeBoundary.legacyLoginWrites.push(loginWrite(
+      value.readiness.candidates[0], 'rtdb', `users/${value.readiness.candidates[0].reviewedSubject.trainerUsername}`,
+      'set', 'login-user-refresh', ['lastSeen', 'authUid'], { ownershipMappingChanged: true })),
+    (value) => value.input.writeBoundary.e1AuthorityWrites.push('accounts/candidate-a-uid'),
+    (value) => value.input.writeBoundary.controlPlaneWrites.push('run-service-update'),
+    (value) => value.input.writeBoundary.unexpectedWrites.push('publicShares/KnownCleanAlpha')
+  ]) {
+    const value = fixture();
+    mutate(value);
+    reasons(() => guardProductionSecondMutation(value.input, { now: () => NOW, ...value }));
+  }
 });
 
 test('D1 authorization and a one-user cohort cannot satisfy D2', () => {
@@ -235,7 +405,7 @@ test('stale targeted absence evidence fails closed', () => {
   reasons(() => guardProductionSecondMutation(value.input, { now: () => NOW, ...value }));
 });
 
-test('ownership ambiguity migration evidence or a disabled Auth user fails closed', () => {
+test('ownership ambiguity or migration evidence fails closed independently of Auth evidence mode', () => {
   const value = fixture();
   value.input.candidates[1].eligibility.identityAmbiguityAbsent = false;
   value.readiness.candidates = JSON.parse(JSON.stringify(value.input.candidates));

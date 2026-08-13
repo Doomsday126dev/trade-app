@@ -22,6 +22,7 @@ const PRIVATE_HARNESS_PATHS = Object.freeze({
 });
 const MAX_WINDOW_MS = 2 * 60 * 60 * 1000;
 const MAX_TARGETED_STATE_AGE_MS = 15 * 60 * 1000;
+const MAX_AUTH_EVIDENCE_AGE_MS = 15 * 60 * 1000;
 const OBSERVATION_HOURS = 48;
 const D1_OBSERVATION_END = '2026-08-12T19:24:02.510Z';
 const D1_STATE_DIGEST = 'f3e8bb34e8ae0eb95eeb603065f2852bd927bcc3dba3e9fcad2789cced6505e4';
@@ -102,12 +103,11 @@ const INPUT_FIELDS = Object.freeze([
   'expectedAppId', 'genuineAppCheckAvailable', 'preActivationGates', 'activationGatePlan', 'restorationGatePlan',
   'rateLimiterMode', 'readProofModePresent', 'reserveConsumesLimitedUseAppCheck', 'expectedProgression',
   'executionSequence', 'stopPolicy', 'gatewayRuntimeSoleAuthorityInvoker', 'publicAuthorityInvoker',
-  'projectWideRunInvoker', 'gatewayForbiddenRolesPresent', 'productionDebugTokensRegistered',
-  'productionRtdbWriteCount', 'productionAuthMutationCount', 'productionPublicShareWriteCount',
+  'projectWideRunInvoker', 'gatewayForbiddenRolesPresent', 'productionDebugTokensRegistered', 'writeBoundary',
   'observationHours', 'laterGroupsAuthorized', 'groupEAuthorized'
 ]);
 const CANDIDATE_FIELDS = Object.freeze([
-  'slot', 'reviewedSubject', 'subjectHashes', 'handle', 'request', 'review', 'eligibility', 'targetedAuthorityState',
+  'slot', 'reviewedSubject', 'subjectHashes', 'handle', 'request', 'review', 'authEligibility', 'eligibility', 'targetedAuthorityState',
   'expectedState'
 ]);
 const SUBJECT_FIELDS = Object.freeze(['firebaseUid', 'trainerUsername']);
@@ -119,8 +119,15 @@ const REQUEST_FIELDS = Object.freeze([
 ]);
 const REVIEW_FIELDS = Object.freeze(['humanReviewed', 'reviewedAt', 'selectionSource']);
 const ELIGIBILITY_FIELDS = Object.freeze([
-  'firebaseAuthUserExists', 'firebaseAuthDisabled', 'reciprocalLegacyOwnershipVerified', 'loginDirectoryReady',
-  'identityAmbiguityAbsent', 'migrationEvidenceAbsent', 'conflictEvidenceAbsent'
+  'reciprocalLegacyOwnershipVerified', 'loginDirectoryReady', 'identityAmbiguityAbsent', 'migrationEvidenceAbsent',
+  'conflictEvidenceAbsent'
+]);
+const AUTH_ELIGIBILITY_FIELDS = Object.freeze(['mode', 'verifiedAt', 'exactAuthMetadata', 'browserLogin']);
+const EXACT_AUTH_METADATA_FIELDS = Object.freeze(['userExists', 'firebaseAuthDisabled', 'lookupMethod', 'observedAt']);
+const BROWSER_LOGIN_FIELDS = Object.freeze([
+  'loginSucceeded', 'currentUserPresent', 'reviewedUidHash', 'reviewedTrainerHash', 'browserUidHash',
+  'browserTrainerHash', 'appId', 'appCheckObtainable', 'authIndexUsernameMatches', 'userAuthUidMatches',
+  'loginDirectoryReady', 'mappingVerifiedAt', 'firebaseAuthDisabledMetadata', 'writeAuditComplete'
 ]);
 const TARGETED_STATE_FIELDS = Object.freeze([
   'verifiedAt', 'accountAbsent', 'handleAbsent', 'operationRequestAbsent', 'reserveRateLimitAbsent',
@@ -141,6 +148,14 @@ const D1_OBSERVATION_FIELDS = Object.freeze([
   'laterGroupsAuthorized', 'groupEAuthorized'
 ]);
 const TOKEN_FIELDS = Object.freeze(['principal', 'role', 'permissions', 'scope', 'present']);
+const WRITE_BOUNDARY_FIELDS = Object.freeze([
+  'legacyLoginWrites', 'e1AuthorityWrites', 'controlPlaneWrites', 'unexpectedWrites'
+]);
+const LEGACY_LOGIN_WRITE_FIELDS = Object.freeze([
+  'candidateSlot', 'service', 'path', 'operation', 'purpose', 'recordCreated', 'changedFields',
+  'ownershipMappingChanged', 'privilegeStateChanged', 'e1AuthorityDataTouched', 'credentialUpgradeOnly'
+]);
+const USER_LOGIN_REFRESH_FIELDS = Object.freeze(['lastSeen', 'authEmail', 'authVersion', 'pin', 'pinHashed']);
 const REQUEST_ID = /^group-d2-([ab])-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u;
 const RATE_LIMIT_PATH = /^rateLimits\/reserveTrainerHandle_[a-f0-9]{16}$/u;
 
@@ -244,6 +259,67 @@ function validD1Observation(value, now) {
     sameJson(value.gatesRestored, disabledGatePlan()) && value.laterGroupsAuthorized === false && value.groupEAuthorized === false;
 }
 
+function freshEvidence(value, now, windowStart, maxAge = MAX_AUTH_EVIDENCE_AGE_MS) {
+  const at = Date.parse(value);
+  return Number.isFinite(at) && at >= windowStart && at <= now && now - at <= maxAge;
+}
+
+function validAuthEligibility(value, candidate, now, windowStart) {
+  if (!exactFields(value, AUTH_ELIGIBILITY_FIELDS) || !freshEvidence(value.verifiedAt, now, windowStart)) return false;
+  if (value.mode === 'exact-auth-metadata') {
+    return value.browserLogin === null && exactFields(value.exactAuthMetadata, EXACT_AUTH_METADATA_FIELDS) &&
+      value.exactAuthMetadata.userExists === true && value.exactAuthMetadata.firebaseAuthDisabled === false &&
+      value.exactAuthMetadata.lookupMethod === 'exact-uid' && value.exactAuthMetadata.observedAt === value.verifiedAt;
+  }
+  if (value.mode !== 'verified-browser-login' || value.exactAuthMetadata !== null ||
+      !exactFields(value.browserLogin, BROWSER_LOGIN_FIELDS)) return false;
+  const proof = value.browserLogin;
+  return proof.loginSucceeded === true && proof.currentUserPresent === true &&
+    proof.reviewedUidHash === candidate.subjectHashes.uidHash && proof.reviewedTrainerHash === candidate.subjectHashes.trainerHash &&
+    proof.browserUidHash === candidate.subjectHashes.uidHash && proof.browserTrainerHash === candidate.subjectHashes.trainerHash &&
+    proof.appId === EXPECTED_APP_ID && proof.appCheckObtainable === true && proof.authIndexUsernameMatches === true &&
+    proof.userAuthUidMatches === true && proof.loginDirectoryReady === true && proof.mappingVerifiedAt === value.verifiedAt &&
+    proof.firebaseAuthDisabledMetadata === 'not-independently-observed' && proof.writeAuditComplete === true;
+}
+
+function validLegacyLoginWrite(value, candidates) {
+  if (!exactFields(value, LEGACY_LOGIN_WRITE_FIELDS) || !['A', 'B'].includes(value.candidateSlot) ||
+      value.recordCreated !== false || value.ownershipMappingChanged !== false || value.privilegeStateChanged !== false ||
+      value.e1AuthorityDataTouched !== false || !Array.isArray(value.changedFields) || !value.changedFields.length ||
+      new Set(value.changedFields).size !== value.changedFields.length) return false;
+  const candidate = candidates.find((item) => item.slot === value.candidateSlot);
+  if (!candidate) return false;
+  const uid = candidate.reviewedSubject.firebaseUid;
+  const trainer = candidate.reviewedSubject.trainerUsername;
+  if (value.service === 'firebase-auth') {
+    return value.path === `users/${uid}/metadata/lastSignInTime` && value.operation === 'platform-sign-in' &&
+      value.purpose === 'authentication-session-metadata' && sameValues(value.changedFields, ['lastSignInTime']) &&
+      value.credentialUpgradeOnly === false;
+  }
+  if (value.service !== 'rtdb') return false;
+  if (value.path === `authIndex/${uid}/lastSeen`) {
+    return value.operation === 'update' && value.purpose === 'login-session-refresh' &&
+      sameValues(value.changedFields, ['lastSeen']) && value.credentialUpgradeOnly === false;
+  }
+  if (value.path !== `users/${trainer}` || value.operation !== 'set' || value.purpose !== 'login-user-refresh' ||
+      !value.changedFields.includes('lastSeen') || value.changedFields.some((field) => !USER_LOGIN_REFRESH_FIELDS.includes(field))) {
+    return false;
+  }
+  const credentialFields = value.changedFields.filter((field) => field === 'pin' || field === 'pinHashed');
+  return credentialFields.length ? value.credentialUpgradeOnly === true && sameValues(credentialFields, ['pin', 'pinHashed']) :
+    value.credentialUpgradeOnly === false;
+}
+
+function validWriteBoundary(value, candidates) {
+  if (!exactFields(value, WRITE_BOUNDARY_FIELDS) || !Array.isArray(value.legacyLoginWrites) ||
+      !Array.isArray(value.e1AuthorityWrites) || !Array.isArray(value.controlPlaneWrites) ||
+      !Array.isArray(value.unexpectedWrites) || value.e1AuthorityWrites.length || value.controlPlaneWrites.length ||
+      value.unexpectedWrites.length || !value.legacyLoginWrites.every((write) => validLegacyLoginWrite(write, candidates))) return false;
+  return candidates.filter((candidate) => candidate.authEligibility?.mode === 'verified-browser-login').every((candidate) =>
+    value.legacyLoginWrites.some((write) => write.candidateSlot === candidate.slot && write.service === 'firebase-auth' &&
+      write.operation === 'platform-sign-in'));
+}
+
 function privateMode(file) {
   try { return (fs.statSync(file).mode & 0o777) === 0o600; } catch { return false; }
 }
@@ -282,9 +358,11 @@ function validateCandidate(candidate, slot, now, windowStart, errors) {
       candidate.review.selectionSource !== 'explicit-private-candidate' || !Number.isFinite(reviewedAt) || reviewedAt > now) {
     errors.push(`group_d2_candidate_${slot.toLowerCase()}_review_invalid`);
   }
-  if (!exactFields(candidate.eligibility, ELIGIBILITY_FIELDS) || candidate.eligibility.firebaseAuthUserExists !== true ||
-      candidate.eligibility.firebaseAuthDisabled !== false ||
-      ELIGIBILITY_FIELDS.slice(2).some((field) => candidate.eligibility[field] !== true)) {
+  if (!validAuthEligibility(candidate.authEligibility, candidate, now, windowStart)) {
+    errors.push(`group_d2_candidate_${slot.toLowerCase()}_auth_eligibility_invalid`);
+  }
+  if (!exactFields(candidate.eligibility, ELIGIBILITY_FIELDS) ||
+      ELIGIBILITY_FIELDS.some((field) => candidate.eligibility[field] !== true)) {
     errors.push(`group_d2_candidate_${slot.toLowerCase()}_ineligible`);
   }
   const verifiedAt = Date.parse(candidate.targetedAuthorityState?.verifiedAt);
@@ -398,8 +476,7 @@ function guardProductionSecondMutation(input, options = {}) {
   if (input?.gatewayRuntimeSoleAuthorityInvoker !== true || input?.publicAuthorityInvoker !== false ||
       input?.projectWideRunInvoker !== false || input?.gatewayForbiddenRolesPresent !== false ||
       input?.productionDebugTokensRegistered !== false) errors.push('group_d2_security_boundary_invalid');
-  if (input?.productionRtdbWriteCount !== 0 || input?.productionAuthMutationCount !== 0 ||
-      input?.productionPublicShareWriteCount !== 0) errors.push('group_d2_pre_activation_write_detected');
+  if (!validWriteBoundary(input?.writeBoundary, candidates)) errors.push('group_d2_write_boundary_invalid');
 
   if (errors.length) {
     const error = new Error('e1/production-second-mutation-guard-failed');
@@ -417,6 +494,8 @@ function guardProductionSecondMutation(input, options = {}) {
     candidateCount: 2,
     candidatesDistinct: true,
     targetedAbsenceVerified: true,
+    authEligibilityVerified: true,
+    writeBoundaryVerified: true,
     sequentialExecutionRequired: true,
     expectedProgression: EXPECTED_PROGRESSION,
     rateLimiterMode: DURABLE_MODE,
@@ -487,6 +566,7 @@ module.exports = Object.freeze({
   EXPECTED_SECOND_MUTATION_MANIFEST,
   INPUT_FIELDS,
   MANIFEST_PATH,
+  MAX_AUTH_EVIDENCE_AGE_MS,
   MAX_TARGETED_STATE_AGE_MS,
   MAX_WINDOW_MS,
   OBSERVATION_HOURS,
