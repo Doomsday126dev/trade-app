@@ -128,9 +128,12 @@ test('loading and feedback primitives preserve stable layout and reduced motion'
   assert.match(loader,/class="loader-wrap" role="status"/);
   assert.equal((loader.match(/class="skel skel-row"/g)||[]).length,3);
   assert.doesNotMatch(loader,/POKEBALL_SVG|pokeball-loader/);
-  assert.match(html,/\.toast,\.undo-toast\{[^}]*border-left:3px solid var\(--accent\)[^}]*pointer-events:auto/);
+  assert.match(html,/\.toast,\.undo-toast\{[^}]*border-left:3px solid var\(--accent\)/);
+  assert.match(html,/\.toast,\.undo-toast\{[^}]*max-width:min\(480px,calc\(100vw - 24px\)\)[^}]*pointer-events:none/);
   assert.match(html,/\.toast::before,\.undo-toast::before\{/);
-  assert.match(html,/\.undo-btn\{[^}]*margin-left:auto/);
+  assert.match(html,/\.undo-btn\{[^}]*min-width:48px[^}]*min-height:48px[^}]*pointer-events:auto/);
+  assert.match(html,/id="feedback-status" role="status" aria-live="polite"/);
+  assert.match(html,/\[hidden\]\{display:none!important\}/);
   assert.match(html,/@media\(prefers-reduced-motion:reduce\)/);
 });
 

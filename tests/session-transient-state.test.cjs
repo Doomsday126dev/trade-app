@@ -18,10 +18,13 @@ function classList(seed=[]){
   return{add:(...items)=>items.forEach(item=>values.add(item)),remove:(...items)=>items.forEach(item=>values.delete(item)),contains:item=>values.has(item)};
 }
 function transientHarness(){
+  let favoriteBrowseResets=0;
   const elements={
     'undo-toast':{id:'undo-toast',hidden:false,textContent:'',classList:classList(['show']),setAttribute(){}},
     'undo-msg':{textContent:'Removed Pidgey'},
     toast:{hidden:false,textContent:'Trainer A message',classList:classList(['show']),setAttribute(){}},
+    'feedback-status':{textContent:'Removed Pidgey Undo'},
+    'favorite-saved-prompt':{hidden:false,querySelector:()=>({onclick:()=>{}})},
     'shortcuts-modal':{id:'shortcuts-modal',classList:classList(['ov','open'])},
     'mylist-filter':{value:'private search'},
     'have-filter':{value:'private inventory search'},
@@ -33,7 +36,9 @@ function transientHarness(){
   const checked={checked:true};
   const cleared=[];
   const context=vm.createContext({
-    _sessionTransientGeneration:0,undoTimer:11,undoStack:{name:'Pidgey'},_toastTimer:12,
+    _sessionTransientGeneration:0,undoTimer:11,undoStack:{name:'Pidgey'},undoReturnFocus:{},_toastTimer:12,
+    _feedbackAnnouncementTimer:13,_lastFeedbackAnnouncement:{message:'Removed Pidgey Undo',at:1},
+    trainerSuggestionTimer:14,favoriteSavedPromptTimer:15,_modalFocusTimer:16,_myHaveRenderTimer:17,_haveBrowseRenderTimer:18,
     clearTimeout:id=>cleared.push(id),
     document:{
       getElementById:id=>elements[id]||null,
@@ -51,10 +56,12 @@ function transientHarness(){
     _safeTransferSelected:new Set(['TrainerB']),_qaSelected:{lf:new Set(['Pidgey']),ft:new Set()},
     _activeDiff:{username:'TrainerB'},_activeTradeMatch:{username:'TrainerB'},_swipeState:{},_ptrState:{},
     voiceRecognition:{aborted:false,abort(){this.aborted=true;}},resetTrainerOrganizerState(){},
+    resetFavoriteBrowseSession(){favoriteBrowseResets++;},trainerHistoryStore:{owner:'uid-a'},
+    closeAddAutocomplete(){},
     managedSessionCache:{snapshot:()=>({activeOwner:{uid:'uid-a',username:'TrainerA'}})}
   });
   vm.runInContext(between('function sessionTransientCallback','function activateOwnedSession'),context);
-  return{context,elements,conflictToast,selected,checked,cleared};
+  return{context,elements,conflictToast,selected,checked,cleared,favoriteBrowseResets:()=>favoriteBrowseResets};
 }
 
 test('logout clears session transient state before listeners, cache, identity, and Firebase sign-out',()=>{
@@ -81,6 +88,8 @@ test('User A to User B clears account-owned transient UI before activating the n
   assert.match(activation,/activeOwner/);
   assert.match(activation,/owner\.uid===uid&&owner\.username===username/);
   assert.match(activation,/resetSessionTransientUi\('identity_switch'\)/);
+  assert.match(activation,/resetFavoriteBrowseSession\(\)/);
+  assert.match(activation,/trainerHistoryStore=null/);
   const activate=between('function activateOwnedSession','function storedSessionMatches');
   assert.ok(activate.indexOf('resetTransientUiBeforeSessionActivation(uid,username);')<activate.indexOf('managedSessionCache.activate'));
 });
@@ -131,11 +140,13 @@ test('runtime cleanup removes User A undo, toast, modal, selection, and queued U
   const h=transientHarness();
   const result=vm.runInContext("resetSessionTransientUi('logout')",h.context);
   assert.equal(result.ok,true);
-  assert.deepEqual(h.cleared,[11,12]);
+  assert.deepEqual(h.cleared,[14,15,16,17,18,11,12,13]);
   assert.equal(h.elements['undo-msg'].textContent,'');
   assert.equal(h.elements['undo-toast'].hidden,true);
   assert.equal(h.elements.toast.textContent,'');
   assert.equal(h.elements.toast.hidden,true);
+  assert.equal(h.elements['feedback-status'].textContent,'');
+  assert.equal(h.elements['favorite-saved-prompt'].hidden,true);
   assert.equal(h.elements['shortcuts-modal'].classList.contains('open'),false);
   assert.equal(h.conflictToast.removed,true);
   assert.equal(h.selected.classList.contains('bulk-selected'),false);
@@ -152,6 +163,16 @@ test('runtime generation guard suppresses callbacks captured before cleanup',()=
   assert.equal(vm.runInContext('callbackRan',h.context),false);
 });
 
+test('listener and timer lifecycle stays centralized across rerenders and account boundaries',()=>{
+  const cleanup=between("function resetSessionTransientUi(reason='session_boundary'){",'function resetTransientUiBeforeSessionActivation');
+  for(const timer of ['trainerSuggestionTimer','favoriteSavedPromptTimer','_modalFocusTimer','_myHaveRenderTimer','_haveBrowseRenderTimer'])assert.match(cleanup,new RegExp(`clearTimeout\\(${timer}\\)`));
+  const favoritesRender=between('async function renderTrainerQuickLists','function toggleTrainerFavorite');
+  assert.doesNotMatch(favoritesRender,/addEventListener\(/);
+  assert.equal((source.match(/getElementById\('favorite-trainers-list'\)\?\.addEventListener\('click'/g)||[]).length,1);
+  assert.equal((source.match(/window\.addEventListener\('popstate',syncSettingsRoute\)/g)||[]).length,1);
+  assert.match(source,/setTimeout\(sessionTransientCallback\(\(\)=>renderPendingRequests\(\)\),4000\)/);
+});
+
 test('runtime activation guard preserves same-user state and clears different-user state',()=>{
   const same=transientHarness();
   assert.equal(vm.runInContext("resetTransientUiBeforeSessionActivation('uid-a','TrainerA')",same.context),false);
@@ -161,4 +182,6 @@ test('runtime activation guard preserves same-user state and clears different-us
   assert.equal(vm.runInContext("resetTransientUiBeforeSessionActivation('uid-b','TrainerB')",switched.context),true);
   assert.equal(switched.elements['undo-msg'].textContent,'');
   assert.equal(switched.elements.toast.textContent,'');
+  assert.equal(switched.favoriteBrowseResets(),1);
+  assert.equal(vm.runInContext('trainerHistoryStore',switched.context),null);
 });

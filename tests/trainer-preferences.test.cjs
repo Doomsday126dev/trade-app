@@ -151,8 +151,9 @@ test('private organizer data is absent from public-share publication code',()=>{
 test('local organizer storage has no network, logging, URL, clipboard, or export capability',()=>{
   const store=readFileSync(path.join(__dirname,'..','js/data/trainerHistoryStore.js'),'utf8'),html=readFileSync(path.join(__dirname,'..','index.html'),'utf8');
   assert.doesNotMatch(store,/Firebase|firebase|fetch\(|XMLHttpRequest|writeDataPath|queueSync|console\.|location\.|URLSearchParams|copyText|clipboard|export/);
-  const references=[...html.matchAll(/trainerHistoryStore/g)].length;
-  assert.equal(references,10);
+  assert.match(html,/let trainerHistoryStore=null/);
+  assert.match(html,/function ensureTrainerHistoryStore\(\)/);
+  assert.match(html,/resetTransientUiBeforeSessionActivation[\s\S]*trainerHistoryStore=null/);
   for(const boundary of [
     ['function publicShareSnapshotForUser','function requestPublicSharePublication'],
     ['function renderStrings','function renderBrowse'],

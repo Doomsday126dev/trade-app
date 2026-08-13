@@ -5,6 +5,7 @@
   const MAX_TAGS=24;
   const MAX_TAGS_PER_FAVORITE=24;
   const MAX_TAG_LABEL_LENGTH=40;
+  const MAX_SNAPSHOT_BYTES=512*1024;
   const MAX_FAVORITES=global.PogoDomain?.productLimits?.MAX_FAVORITES;
   if(!Number.isInteger(MAX_FAVORITES)||MAX_FAVORITES<1)throw new Error('Product Favorite limit is unavailable');
 
@@ -20,6 +21,16 @@
   function normalizeLabel(value){return String(value??'').normalize('NFKC').trim().replace(/\s+/gu,' ');}
   function labelIdentity(value){return normalizeLabel(value).toLocaleLowerCase('en-US');}
   function codePointLength(value){return Array.from(String(value||'')).length;}
+  function utf8ByteLength(value){
+    let length=0;
+    for(const character of String(value)){
+      const point=character.codePointAt(0);
+      length+=point<=0x7f?1:point<=0x7ff?2:point<=0xffff?3:4;
+    }
+    return length;
+  }
+  function timestamp(value,fallback=0){const parsed=Number(value);return Number.isFinite(parsed)&&parsed>=0?parsed:fallback;}
+  function plainObject(value){return value&&typeof value==='object'&&!Array.isArray(value)?value:{};}
   function empty(identity){return{version:VERSION,schemaVersion:VERSION,migrationVersion:VERSION,owner:{uid:String(identity.uid),username:String(identity.username)},favorites:[],recent:[],snapshots:{},tags:{},syncState:'local-only',migration:{skippedFavorites:0,skippedRecents:0}};}
   function createTrainerHistoryStore({storage,identity,maxFavorites=MAX_FAVORITES,maxRecent=6,maxTags=MAX_TAGS,now=()=>Date.now()}={}){
     if(!storage)throw new TypeError('trainer history requires storage');
@@ -27,18 +38,24 @@
     function cleanFavorite(value,fallbackTime=0){
       const item=trainerRef(value?.displayName||value?.trainerName);
       if(!item.key)return null;
-      const createdAt=Number(value?.createdAt||value?.addedAt||fallbackTime||0),updatedAt=Number(value?.updatedAt||createdAt||0);
-      return{...item,tagIds:[...new Set((Array.isArray(value?.tagIds)?value.tagIds:[]).map(String).filter(Boolean))].sort(),createdAt:Number.isFinite(createdAt)?createdAt:0,updatedAt:Number.isFinite(updatedAt)?updatedAt:0};
+      const createdAt=timestamp(value?.createdAt||value?.addedAt||fallbackTime),updatedAt=timestamp(value?.updatedAt,createdAt);
+      return{...item,tagIds:[...new Set((Array.isArray(value?.tagIds)?value.tagIds:[]).map(String).filter(Boolean))].sort().slice(0,MAX_TAGS_PER_FAVORITE),createdAt,updatedAt};
     }
     function cleanRecent(value){
       const item=trainerRef(value?.displayName||value?.trainerName);
-      const openedAt=Number(value?.openedAt||value?.lastOpenedAt);
-      return item.key&&Number.isFinite(openedAt)?{...item,openedAt}:null;
+      const openedAt=timestamp(value?.openedAt||value?.lastOpenedAt,-1);
+      return item.key&&openedAt>=0?{...item,openedAt}:null;
     }
     function cleanTag(id,value){
       const label=normalizeLabel(value?.label||value?.displayLabel),normalizedLabel=labelIdentity(label);
       if(!/^tag_[a-z0-9_-]{1,80}$/.test(String(id))||!label||codePointLength(label)>MAX_TAG_LABEL_LENGTH)return null;
-      return{id:String(id),label,normalizedLabel,createdAt:Number(value?.createdAt||0),updatedAt:Number(value?.updatedAt||0)};
+      return{id:String(id),label,normalizedLabel,createdAt:timestamp(value?.createdAt),updatedAt:timestamp(value?.updatedAt)};
+    }
+    function cleanSnapshot(value){
+      const seenAt=timestamp(value?.seenAt,-1),snapshot=plainObject(value?.snapshot);
+      if(seenAt<0||!Object.keys(snapshot).length)return null;
+      try{if(utf8ByteLength(JSON.stringify(snapshot))>MAX_SNAPSHOT_BYTES)return null;}catch{return null;}
+      return{seenAt,snapshot};
     }
     function normalize(value){
       const state=empty(identity),source=value&&typeof value==='object'?value:{};
@@ -56,16 +73,24 @@
         const item=cleanRecent(raw);if(!item||recentSeen.has(item.key)){state.migration.skippedRecents++;continue;}recentSeen.add(item.key);state.recent.push(item);
       }
       state.recent=state.recent.sort((a,b)=>b.openedAt-a.openedAt||a.key.localeCompare(b.key)).slice(0,maxRecent);
-      state.snapshots=source.snapshots&&typeof source.snapshots==='object'&&!Array.isArray(source.snapshots)?source.snapshots:{};
-      for(const [id,raw] of Object.entries(source.tags||{})){const tag=cleanTag(id,raw);if(tag)state.tags[id]=tag;}
+      for(const [id,raw] of Object.entries(plainObject(source.tags))){
+        if(Object.keys(state.tags).length>=maxTags)break;
+        const tag=cleanTag(id,raw);if(tag)state.tags[id]=tag;
+      }
       const activeIds=new Set(Object.keys(state.tags));
       state.favorites=state.favorites.map(item=>({...item,tagIds:item.tagIds.filter(id=>activeIds.has(id))}));
+      for(const item of state.recent){
+        const snapshot=cleanSnapshot(plainObject(source.snapshots)[item.key]);
+        if(snapshot)state.snapshots[item.key]=snapshot;
+      }
       return state;
     }
     function write(value){const clean=normalize({...value,version:VERSION,owner:{uid:identity.uid,username:identity.username}});storage.setItem(key,JSON.stringify(clean));return clean;}
     function read(){
       try{
         const raw=JSON.parse(storage.getItem(key)||'null');
+        const versions=[raw?.version,raw?.schemaVersion,raw?.migrationVersion].filter(value=>Number.isFinite(Number(value))).map(Number);
+        if(versions.some(version=>version>VERSION))return empty(identity);
         const state=normalize(raw);
         const migrationNeeded=raw&&raw.owner?.uid===identity.uid&&raw.owner?.username===identity.username&&(raw.version!==VERSION||raw.schemaVersion!==VERSION||raw.migrationVersion!==VERSION);
         if(migrationNeeded){try{storage.setItem(key,JSON.stringify(state));}catch{} }
@@ -161,5 +186,5 @@
       clear(){storage.removeItem(key);}
     });
   }
-  root.trainerHistoryStore=Object.freeze({VERSION,PREFIX,MAX_FAVORITES,MAX_TAGS,MAX_TAGS_PER_FAVORITE,MAX_TAG_LABEL_LENGTH,createTrainerHistoryStore});
+  root.trainerHistoryStore=Object.freeze({VERSION,PREFIX,MAX_FAVORITES,MAX_TAGS,MAX_TAGS_PER_FAVORITE,MAX_TAG_LABEL_LENGTH,MAX_SNAPSHOT_BYTES,createTrainerHistoryStore});
 })(window);

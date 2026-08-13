@@ -108,7 +108,7 @@ test('Favorite cards stay local while current share state remains behind explici
   assert.match(render,/favoriteTagChips\(item,state\)/);
   assert.match(render,/trainerViewedText\(item\.openedAt\)/);
   assert.match(html,/function openTrainerByName\(username\)[\s\S]*openTrainerPublicShare\(username\)/);
-  assert.match(html,/async function openTrainerPublicShare[\s\S]*loadPublicShareData\(req\.username\)/);
+  assert.match(html,/async function openTrainerPublicShare[\s\S]*loadPublicShareData\(req\.username,\{requestGeneration\}\)/);
   assert.match(html,/trainer\.viewedJustNow/);
   assert.match(html,/trainer\.viewedDate/);
 });

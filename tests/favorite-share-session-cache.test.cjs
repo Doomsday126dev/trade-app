@@ -114,6 +114,21 @@ test('in-flight results from an old account are rejected and never enter the nex
   await assert.rejects(pending,error=>error.code==='favorite-cache/session-changed');assert.equal(cache.snapshot().size,0);
 });
 
+test('A hydrates 100 then logout and B activation begin with no reachable A payloads',async()=>{
+  const cache=loadCache({read:async name=>({ok:true,value:share(name)})});
+  cache.activate({uid:'uid-a',username:'OwnerA'});await cache.hydrate(favorites(100));assert.equal(cache.snapshot().size,100);
+  cache.reset();assert.equal(cache.snapshot().active,false);assert.equal(cache.snapshot().size,0);
+  cache.activate({uid:'uid-b',username:'OwnerB'});assert.equal(cache.snapshot().size,0);assert.equal(cache.peek({displayName:'Trainer-0'}),null);
+});
+
+test('removal during hydration cannot reinsert the removed Favorite',async()=>{
+  let release;const cache=loadCache({read:()=>new Promise(resolve=>{release=resolve;})});
+  const favorite=favorites(1)[0];cache.activate({uid:'uid-a',username:'Owner'});cache.syncFavorites([favorite]);
+  const pending=cache.readFavorite(favorite);await new Promise(resolve=>setImmediate(resolve));
+  cache.syncFavorites([]);release({ok:true,value:share(favorite.displayName)});await pending;
+  assert.equal(cache.snapshot().size,0);assert.equal(cache.peek(favorite),null);
+});
+
 test('supported large fixture simulations remain linear',async()=>{
   for(const count of [50,100]){
     let reads=0;const cache=loadCache({maxFavorites:count,read:async name=>{reads++;return{ok:true,value:share(name)};}});cache.activate({uid:`u${count}`,username:'Owner'});

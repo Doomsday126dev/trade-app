@@ -142,11 +142,14 @@ test('obvious application chrome uses the shared icon system and dense rows disc
   assert.match(html,/id="account-settings-action"[\s\S]*?ui-icon-settings/);
   assert.match(html,/function applyTheme[\s\S]*?uiIconMarkup\(effective==='dark'\?'moon':'sun'/);
   const rows=html.slice(html.indexOf('function myListRowsHtml'),html.indexOf('function myListPrioritySectionHtml'));
+  const editor=html.slice(html.indexOf('function myListEditorHtml'),html.indexOf('function myListRowsHtml'));
   assert.match(rows,/class="myrow-priority" role="group"/);
   assert.match(rows,/class="myrow-active-traits"/);
   assert.match(rows,/details class="myrow-editor"/);
   assert.match(rows,/summary class="myrow-edit"/);
-  for(const handler of ['setLucky','setShiny','setXxl','setXxs','setNotes','confirmRemove'])assert.match(rows,new RegExp(`${handler}\\(`));
+  for(const handler of ['setLucky','setShiny','setXxl','setXxs','setNotes','confirmRemove'])assert.match(editor,new RegExp(`${handler}\\(`));
+  assert.match(rows,/ontoggle="hydrateMyRowEditor\(this\)"/);
+  assert.match(editor,/insertAdjacentHTML\('beforeend',myListEditorHtml\(entry\)\)/);
   assert.match(css,/\.myrow-edit\{[^}]*min-width:48px/);
   assert.match(css,/\.myrow-editor-popover\{[^}]*position:absolute/);
 });

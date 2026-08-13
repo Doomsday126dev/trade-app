@@ -18,6 +18,7 @@
   --H:#ef4444;--M:#f59e0b;--L:#10b981;
   --Hbg:rgba(239,68,68,.16);--Mbg:rgba(245,158,11,.16);--Lbg:rgba(16,185,129,.16);
   --danger:#ef4444;--warn:#f59e0b;--ok:#10b981;
+  --trait-xxl:#818cf8;--trait-xxs:#2dd4bf;
   --shadow:0 14px 36px rgba(0,0,0,.24);
   --surface-canvas:var(--bg);--surface-raised:var(--card);--surface-subtle:var(--bg2);--surface-hover:rgba(255,255,255,.035);
   --border-strong:rgba(255,255,255,.22);--shadow-low:0 1px 2px rgba(0,0,0,.18);--shadow-high:0 18px 48px rgba(0,0,0,.32);
@@ -37,6 +38,7 @@ html[data-theme="light"]{
   --H:#dc2626;--M:#d97706;--L:#059669;
   --Hbg:rgba(220,38,38,.1);--Mbg:rgba(217,119,6,.1);--Lbg:rgba(5,150,105,.1);
   --danger:#dc2626;--warn:#d97706;--ok:#059669;
+  --trait-xxl:#4f46c8;--trait-xxs:#0f766e;
   --shadow:0 14px 34px rgba(17,24,39,.10);
   --surface-hover:rgba(17,24,39,.035);--border-strong:rgba(17,24,39,.22);--shadow-low:0 1px 2px rgba(17,24,39,.08);--shadow-high:0 20px 52px rgba(17,24,39,.14);
 }
@@ -48,15 +50,19 @@ html[data-theme="light"]{
     --H:#dc2626;--M:#d97706;--L:#059669;
     --Hbg:rgba(220,38,38,.1);--Mbg:rgba(217,119,6,.1);--Lbg:rgba(5,150,105,.1);
     --danger:#dc2626;--warn:#d97706;--ok:#059669;
+    --trait-xxl:#4f46c8;--trait-xxs:#0f766e;
     --shadow:0 14px 34px rgba(17,24,39,.10);
     --surface-hover:rgba(17,24,39,.035);--border-strong:rgba(17,24,39,.22);--shadow-low:0 1px 2px rgba(17,24,39,.08);--shadow-high:0 20px 52px rgba(17,24,39,.14);
   }
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
 body{font:var(--type-body);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
 button{font-family:var(--font);cursor:pointer;border:none;outline:none}
 input,select,textarea{font-family:var(--font);outline:none}
 .sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+.skip-link{position:fixed;z-index:20000;top:8px;left:8px;min-height:48px;padding:12px 16px;border-radius:var(--radius-md);background:var(--text);color:var(--bg);font-weight:800;transform:translateY(calc(-100% - 16px));transition:transform var(--transition-fast)}
+.skip-link:focus{transform:translateY(0)}
 
 /* SYNC */
 .sync-dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0;transition:.3s}
@@ -77,9 +83,9 @@ input,select,textarea{font-family:var(--font);outline:none}
 .sync-banner-text{flex:1;min-width:0;font-size:12px;line-height:1.4}
 .sync-banner-title{font-weight:700;color:#fb923c;margin-bottom:2px}
 .sync-banner-sub{color:var(--muted);font-size:11px}
-.sync-banner-btn{background:#fb923c;color:#1a1a2e;border:none;padding:6px 14px;border-radius:var(--radius-md);font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;font-family:var(--font)}
+.sync-banner-btn{min-height:48px;background:#fb923c;color:#1a1a2e;border:none;padding:6px 14px;border-radius:var(--radius-md);font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;font-family:var(--font)}
 .sync-banner-btn:hover{opacity:.9}
-.sync-banner-dismiss{background:none;border:none;color:#fb923c;cursor:pointer;font-size:16px;opacity:.7;padding:0 4px;flex-shrink:0}
+.sync-banner-dismiss{display:inline-flex;align-items:center;justify-content:center;width:48px;height:48px;min-width:48px;background:none;border:none;color:#fb923c;cursor:pointer;font-size:16px;opacity:.7;padding:0;flex-shrink:0}
 .sync-banner-dismiss:hover{opacity:1}
 @media(max-width:480px){.sync-banner{flex-wrap:wrap;margin:8px 10px}.sync-banner-text{flex:1 1 calc(100% - 30px)}.sync-banner-btn{flex:1 1 auto}}
 
@@ -308,14 +314,14 @@ input,select,textarea{font-family:var(--font);outline:none}
 .pb.on.L{background:var(--Lbg);color:var(--L);border-color:rgba(16,185,129,.4)}
 .flag-btn{height:24px;border-radius:var(--radius-sm);border:1px solid var(--border);background:transparent;color:var(--muted);font-size:10px;font-weight:800;cursor:pointer;transition:.15s;padding:0 4px;flex-shrink:0}
 .flag-btn.lucky-flag.on{background:rgba(250,204,21,.15);color:#facc15;border-color:rgba(250,204,21,.5)}
-.flag-btn.xxl-flag.on{background:rgba(99,102,241,.15);color:#818cf8;border-color:rgba(99,102,241,.5)}
-.flag-btn.xxs-flag.on{background:rgba(20,184,166,.15);color:#2dd4bf;border-color:rgba(20,184,166,.5)}
+.flag-btn.xxl-flag.on{background:rgba(99,102,241,.15);color:var(--trait-xxl);border-color:rgba(99,102,241,.5)}
+.flag-btn.xxs-flag.on{background:rgba(20,184,166,.15);color:var(--trait-xxs);border-color:rgba(20,184,166,.5)}
 .lucky-add{display:inline-flex;align-items:center;justify-content:center;gap:6px;flex:0 0 auto;background:var(--bg);border:1px solid var(--border2);color:var(--muted);padding:6px 9px;border-radius:var(--radius-md);font-size:13px;font-weight:700;cursor:pointer;user-select:none}
 .lucky-add input{appearance:auto;flex:0 0 auto;width:14px;height:14px;min-width:0;margin:0;padding:0;background:initial;border:initial;border-radius:0;accent-color:var(--M)}
 .lucky-mark,.flag-mark{display:inline-flex;align-items:center;margin-left:3px;padding:1px 4px;border-radius:var(--radius-sm);font-size:9px;font-weight:800;line-height:1.1}
 .lucky-mark{background:rgba(250,204,21,.16);border:1px solid rgba(250,204,21,.36);color:#facc15}
-.flag-mark.xxl-mark{background:rgba(99,102,241,.16);border:1px solid rgba(99,102,241,.36);color:#818cf8}
-.flag-mark.xxs-mark{background:rgba(20,184,166,.16);border:1px solid rgba(20,184,166,.36);color:#2dd4bf}
+.flag-mark.xxl-mark{background:rgba(99,102,241,.16);border:1px solid rgba(99,102,241,.36);color:var(--trait-xxl)}
+.flag-mark.xxs-mark{background:rgba(20,184,166,.16);border:1px solid rgba(20,184,166,.36);color:var(--trait-xxs)}
 .ni{background:var(--bg);border:1px solid var(--border);color:var(--text);padding:2px 5px;border-radius:var(--radius-sm);font-size:10px;width:40px;max-width:40px;flex-shrink:0;font-family:var(--mono)}
 .rm{width:20px;height:20px;border-radius:var(--radius-sm);background:rgba(239,68,68,.1);color:var(--danger);border:1px solid rgba(239,68,68,.2);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center}
 
@@ -334,8 +340,8 @@ input,select,textarea{font-family:var(--font);outline:none}
 .xxs-str{border-color:rgba(20,184,166,.32);background:linear-gradient(180deg,rgba(20,184,166,.08),var(--card))}
 .combo-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 7px;border-radius:var(--radius-sm);background:rgba(168,139,250,.13);border:1px solid rgba(168,139,250,.28);color:var(--ac2);font-size:11px;font-weight:700}
 .lucky-str .combo-badge{background:rgba(250,204,21,.16);border-color:rgba(250,204,21,.36);color:#facc15}
-.xxl-str .combo-badge{background:rgba(99,102,241,.16);border-color:rgba(99,102,241,.36);color:#818cf8}
-.xxs-str .combo-badge{background:rgba(20,184,166,.16);border-color:rgba(20,184,166,.36);color:#2dd4bf}
+.xxl-str .combo-badge{background:rgba(99,102,241,.16);border-color:rgba(99,102,241,.36);color:var(--trait-xxl)}
+.xxs-str .combo-badge{background:rgba(20,184,166,.16);border-color:rgba(20,184,166,.36);color:var(--trait-xxs)}
 .combo-wrap{border:1px solid var(--border);border-radius:var(--radius-md);background:var(--card);overflow:hidden}
 .combo-toggle{width:100%;background:transparent;border:none;color:var(--text);padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;font-family:var(--font);font-size:13px;font-weight:700}
 .combo-toggle:hover{background:var(--bg2)}
@@ -376,8 +382,10 @@ input,select,textarea{font-family:var(--font);outline:none}
 
 /* STRINGS PAGE — collapsible */
 .user-str-block{margin-bottom:8px;border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;content-visibility:auto;contain-intrinsic-size:0 78px}
-.user-str-hdr{display:flex;align-items:center;justify-content:space-between;padding:11px 13px;cursor:pointer;background:var(--card);transition:.15s;user-select:none}
+.user-str-hdr{display:flex;align-items:center;justify-content:space-between;background:var(--card);transition:.15s;user-select:none}
 .user-str-hdr:hover{background:var(--bg2)}
+.user-str-toggle{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0;min-height:48px;flex:1;padding:11px 13px;border:0;background:transparent;color:var(--text);text-align:left;cursor:pointer}
+.user-str-actions{padding-right:8px}
 .user-str-info{display:flex;align-items:center;gap:8px}
 .user-str-body{display:none;padding:12px 13px;border-top:1px solid var(--border);background:var(--bg)}
 .user-str-body.open{display:block}
@@ -464,7 +472,7 @@ input,select,textarea{font-family:var(--font);outline:none}
 @media(max-width:600px){.admin-header{align-items:flex-start}.admin-nav{margin-inline:-2px}.admin-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.admin-summary-card{padding:var(--space-3)}.admin-member-row,.admin-role-row,.admin-maintenance-row{grid-template-columns:1fr;gap:8px}.admin-member-status,.admin-member-meta,.admin-member-role{grid-column:1;grid-row:auto}.admin-member-role{justify-self:start}.admin-role-actions,.admin-maintenance-actions{grid-column:1;justify-content:stretch}.admin-role-actions .rpin,.admin-maintenance-actions .rpin{flex:1 1 150px}.new-user-form .frow{align-items:stretch}.new-user-form .frow>*{max-width:none!important;width:100%}.admin-actions{justify-content:stretch}.admin-actions .btn-export{flex:1 1 150px}}
 
 /* REQUEST ACCESS */
-.req-link{display:block;text-align:center;margin-top:14px;font-size:13px;color:var(--ac2);cursor:pointer;font-weight:500}
+.req-link{display:flex;align-items:center;justify-content:center;width:100%;min-height:48px;border:0;background:transparent;text-align:center;margin-top:14px;font-size:13px;color:var(--ac2);cursor:pointer;font-weight:500}
 .req-link:hover{color:var(--text)}
 .req-back{background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;padding:0;margin-bottom:16px;display:flex;align-items:center;gap:4px}
 .req-back:hover{color:var(--text)}
@@ -495,7 +503,7 @@ input,select,textarea{font-family:var(--font);outline:none}
 .llogo{font-size:22px;font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:9px;line-height:1.1}
 .llogo span{background:linear-gradient(135deg,var(--accent),var(--ac2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .lsub{color:var(--muted);font-size:14px;margin-bottom:26px}
-.brand-disclaimer{color:var(--muted);font-size:10px;line-height:1.35;opacity:.72;margin-top:-16px;margin-bottom:20px}
+.brand-disclaimer{color:var(--muted);font-size:10px;line-height:1.35;opacity:1;margin-top:-16px;margin-bottom:20px}
 .brand-disclaimer.compact{margin:10px 0 0;text-align:center;font-size:10px}
 .field{margin-bottom:13px}
 .field label{display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:5px}
@@ -583,11 +591,11 @@ input,select,textarea{font-family:var(--font);outline:none}
 .fc-hint{font-size:11px;color:var(--muted);margin-top:4px}
 
 /* TOASTS */
-.toast{position:fixed;bottom:calc(24px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(100px);background:var(--card);border:1px solid var(--border2);border-radius:var(--radius-md);padding:9px 18px;font-size:13px;font-weight:500;z-index:9999;transition:transform .3s;white-space:normal;max-width:min(520px,calc(100vw - 28px));overflow-wrap:anywhere;line-height:1.35;text-align:center;pointer-events:none}
+.toast{position:fixed;bottom:calc(18px + env(safe-area-inset-bottom));left:50%;width:max-content;transform:translateX(-50%) translateY(100px);background:var(--card);border:1px solid var(--border2);border-radius:var(--radius-md);padding:9px 18px;font-size:13px;font-weight:500;z-index:9999;transition:transform .3s;white-space:normal;max-width:min(480px,calc(100vw - 24px));overflow-wrap:anywhere;line-height:1.35;text-align:center;pointer-events:none}
 .toast.show{transform:translateX(-50%) translateY(0)}
-.undo-toast{position:fixed;bottom:calc(24px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(100px);background:var(--card);border:1px solid var(--border2);border-radius:var(--radius-md);padding:10px 16px;font-size:13px;font-weight:500;z-index:9998;transition:transform .3s;display:flex;align-items:center;justify-content:center;gap:12px;white-space:normal;flex-wrap:wrap;max-width:min(520px,calc(100vw - 28px));line-height:1.35;text-align:center}
+.undo-toast{position:fixed;bottom:calc(18px + env(safe-area-inset-bottom));left:50%;width:max-content;transform:translateX(-50%) translateY(100px);background:var(--card);border:1px solid var(--border2);border-radius:var(--radius-md);padding:8px 10px 8px 14px;font-size:13px;font-weight:500;z-index:9998;transition:transform .3s;display:flex;align-items:center;justify-content:center;gap:10px;white-space:normal;flex-wrap:wrap;max-width:min(480px,calc(100vw - 24px));line-height:1.35;text-align:center;pointer-events:none}
 .undo-toast.show{transform:translateX(-50%) translateY(0)}
-.undo-btn{background:var(--accent);color:#fff;border:none;padding:4px 12px;border-radius:var(--radius-sm);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font)}
+.undo-btn{min-width:48px;min-height:48px;background:var(--accent);color:#fff;border:none;padding:8px 12px;border-radius:var(--radius-sm);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font);pointer-events:auto}
 
 .bsave{background:var(--accent);color:#fff;padding:9px 18px;border-radius:var(--radius-md);font-size:13px;font-weight:600;border:none;cursor:pointer}
 .bsave:active{transform:scale(.98)}
@@ -967,8 +975,8 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
 .share-pcard-mod{color:var(--muted);font-family:var(--mono)}
 .share-pcard-flag{padding:1px 4px;border-radius:3px;font-weight:700;font-size:9px}
 .share-pcard-flag.lucky{background:rgba(250,204,21,.18);color:#facc15}
-.share-pcard-flag.xxl{background:rgba(99,102,241,.18);color:#818cf8}
-.share-pcard-flag.xxs{background:rgba(20,184,166,.18);color:#2dd4bf}
+.share-pcard-flag.xxl{background:rgba(99,102,241,.18);color:var(--trait-xxl)}
+.share-pcard-flag.xxs{background:rgba(20,184,166,.18);color:var(--trait-xxs)}
 .share-pcard-flag.gender-f{background:rgba(236,72,153,.2);color:#ec4899}
 .share-pcard-flag.gender-m{background:rgba(59,130,246,.2);color:#3b82f6}
 .share-pcard-sprite-wrap{position:relative;flex-shrink:0;width:26px;height:26px}
@@ -1464,18 +1472,18 @@ html[data-theme="light"] .have-mirror-badge,html[data-theme="light"] .have-mirro
 }
 
 /* UPDATE BANNER */
-.update-banner{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--accent),var(--ac2));color:#fff;padding:11px 16px;border-radius:var(--radius-lg);box-shadow:0 10px 30px rgba(0,0,0,.35),0 0 0 1px rgba(255,255,255,.08);display:flex;align-items:center;gap:11px;z-index:9999;font-size:13px;font-weight:600;animation:slideUpBanner .3s cubic-bezier(.16,1,.3,1);max-width:calc(100vw - 24px)}
+.update-banner{position:fixed;bottom:calc(18px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--accent),var(--ac2));color:#fff;padding:11px 16px;border-radius:var(--radius-lg);box-shadow:0 10px 30px rgba(0,0,0,.35),0 0 0 1px rgba(255,255,255,.08);display:flex;align-items:center;gap:11px;z-index:9999;font-size:13px;font-weight:600;animation:slideUpBanner .3s cubic-bezier(.16,1,.3,1);max-width:calc(100vw - 24px)}
 @keyframes slideUpBanner{from{transform:translateX(-50%) translateY(80px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
 .update-banner-icon{font-size:20px;flex-shrink:0;line-height:1}
 .update-banner-text{flex:1;min-width:0;line-height:1.25}
 .update-banner-text strong{display:block;font-size:13px}
 .update-banner-sub{font-size:11px;opacity:.8;font-weight:500;margin-top:1px}
-.update-banner-btn{background:rgba(255,255,255,.22);color:#fff;border:1px solid rgba(255,255,255,.35);padding:6px 14px;border-radius:var(--radius-md);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);transition:.15s;flex-shrink:0}
+.update-banner-btn{min-height:48px;background:rgba(255,255,255,.22);color:#fff;border:1px solid rgba(255,255,255,.35);padding:6px 14px;border-radius:var(--radius-md);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);transition:.15s;flex-shrink:0}
 .update-banner-btn:hover{background:rgba(255,255,255,.32);border-color:rgba(255,255,255,.55)}
-.update-banner-dismiss{background:transparent;border:none;color:rgba(255,255,255,.7);font-size:20px;cursor:pointer;padding:0 4px;margin-left:-2px;line-height:1;flex-shrink:0}
+.update-banner-dismiss{display:inline-flex;align-items:center;justify-content:center;width:48px;height:48px;min-width:48px;background:transparent;border:none;color:rgba(255,255,255,.7);font-size:20px;cursor:pointer;padding:0;margin-left:-2px;line-height:1;flex-shrink:0}
 .update-banner-dismiss:hover{color:#fff}
 @media(max-width:600px){
-  .update-banner{bottom:12px;padding:10px 12px;font-size:12px;gap:9px}
+  .update-banner{bottom:calc(12px + env(safe-area-inset-bottom));padding:10px 12px;font-size:12px;gap:9px}
   .update-banner-icon{font-size:18px}
   .update-banner-text strong{font-size:12px}
   .update-banner-sub{font-size:10px}
@@ -1896,6 +1904,12 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
 @media(max-width:900px){.mylist-search-groups{grid-template-columns:1fr}.mylist-search-section:only-child{grid-column:auto}}
 @media(max-width:600px){.my-string-heading{align-items:flex-start}.my-string-heading span{text-align:left}.mylist-search-footer,.mylist-search-option-head{grid-template-columns:1fr;gap:8px}.mylist-search-actions{grid-column:1;grid-row:auto;width:100%;justify-content:stretch}.mylist-search-actions>*{flex:1 1 0}.mylist-search-limit{margin-left:37px}.myrow{min-height:60px;padding:8px;gap:6px}.myrow-sprite-wrap{width:34px;height:34px}.myrow-sprite{width:34px;height:34px}.drag-handle{width:22px}.mctrl{gap:4px}.myrow-active-traits{max-width:92px}.admin-nav{margin-inline:-14px;padding-inline:14px}.admin-nav-button{padding-inline:10px}.admin-nav-button .ui-icon{display:none}.archive-list-heading{align-items:flex-start}.archive-list-actions{align-items:flex-end;flex-direction:column}.archive-list-actions .bulk-toggle{min-width:48px}.archive-list-actions .bulk-toggle span{display:none}.toast,.undo-toast{left:14px;right:14px;max-width:none;transform:translateY(100px)}.toast.show,.undo-toast.show{transform:translateY(0)}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+.myrow-trait.xxl{color:var(--trait-xxl)}
+.myrow-trait.xxs{color:var(--trait-xxs)}
+.toast,.undo-toast{width:max-content;max-width:min(480px,calc(100vw - 24px));padding:8px 12px;pointer-events:none}
+.undo-btn{min-width:48px;min-height:48px;padding:8px 12px;pointer-events:auto}
+@media(max-width:600px){.toast,.undo-toast{left:50%;right:auto;width:max-content;max-width:calc(100vw - 24px);transform:translateX(-50%) translateY(100px)}.toast.show,.undo-toast.show{transform:translateX(-50%) translateY(0)}}
+@media(max-height:600px){.toast,.undo-toast{bottom:calc(8px + env(safe-area-inset-bottom));max-height:calc(100dvh - 16px - env(safe-area-inset-top) - env(safe-area-inset-bottom));overflow:auto}}
 </style>
 </head>
 <body>
@@ -1927,6 +1941,9 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
   </defs>
 </svg>
 
+<a class="skip-link" href="#main-content" data-i18n="common.skipToContent">Skip to main content</a>
+<main id="main-content" tabindex="-1">
+
 <!-- CONFIG -->
 <div id="config-pg" style="display:none">
   <div class="lcard ui-container ui-container-narrow card-content">
@@ -1954,20 +1971,20 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
     <div class="lsub" data-i18n="login.subtitle">NYC Community Trade List</div>
     <div class="brand-disclaimer" data-i18n="login.disclaimer">Unofficial community tool. Not affiliated with Niantic, Nintendo, or The Pokémon Company.</div>
     <div class="field login-user-field">
-      <label data-i18n="login.username">Username</label>
-      <input class="field-control" type="text" id="login-user" data-i18n-placeholder="login.usernamePlaceholder" placeholder="Type or pick your username…" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" aria-autocomplete="list" aria-controls="login-user-suggestions">
+      <label for="login-user" data-i18n="login.username">Username</label>
+      <input class="field-control" type="text" id="login-user" data-i18n-placeholder="login.usernamePlaceholder" placeholder="Type or pick your username…" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="login-user-suggestions">
       <div class="login-user-suggestions" id="login-user-suggestions" role="listbox" data-i18n-aria-label="login.usernameSuggestions" aria-label="Username suggestions"></div>
       <datalist id="login-user-list"></datalist>
     </div>
     <div class="field">
-      <label data-i18n="login.pin">PIN</label>
+      <label for="login-pin" data-i18n="login.pin">PIN</label>
       <input class="field-control" type="password" id="login-pin" data-i18n-placeholder="login.pinPlaceholder" placeholder="6-digit PIN" maxlength="6" inputmode="numeric" autocomplete="current-password">
     </div>
-    <button class="lbtn btn btn-primary" id="login-btn" onclick="doLogin()" data-i18n="login.signIn">Sign in</button>
-    <div class="err" id="login-err"></div>
+    <button type="button" class="lbtn btn btn-primary" id="login-btn" onclick="doLogin()" data-i18n="login.signIn">Sign in</button>
+    <div class="err" id="login-err" role="alert" aria-live="assertive" aria-atomic="true"></div>
     <div class="lnote"><span data-i18n="login.newUserHelp"></span><br><span data-i18n="login.existingUserHelp"></span></div>
     <button type="button" class="login-help-link" onclick="openLoginHealthCheck()" data-i18n="login.trouble">Having trouble signing in?</button>
-    <div class="req-link" onclick="showRequestForm()" data-i18n="login.requestAccess">Request access to join</div>
+    <button type="button" class="req-link" onclick="showRequestForm()" data-i18n="login.requestAccess">Request access to join</button>
   </div>
 
   <!-- REQUEST FORM -->
@@ -1976,12 +1993,12 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
     <div id="req-form-inner">
       <div class="llogo">🙋 <span data-i18n="request.title">Request access</span></div>
       <div class="lsub" data-i18n="request.subtitle">An admin will review your request.</div>
-      <div class="field"><label data-i18n="request.trainerName">Your Pokémon GO trainer name</label><input class="field-control" type="text" id="req-username" data-i18n-placeholder="request.trainerPlaceholder" placeholder="Exact trainer name" autocomplete="off"></div>
-      <div class="field"><label><span data-i18n="request.note">Note for admin</span> <span style="color:var(--muted);font-weight:400" data-i18n="common.optional">(optional)</span></label><input class="field-control" type="text" id="req-note" data-i18n-placeholder="request.notePlaceholder" placeholder="For example, your local group"></div>
-      <button class="lbtn btn btn-primary" onclick="submitRequest()" data-i18n="request.send">Send request →</button>
-      <div class="err" id="req-err"></div>
+      <div class="field"><label for="req-username" data-i18n="request.trainerName">Your Pokémon GO trainer name</label><input class="field-control" type="text" id="req-username" data-i18n-placeholder="request.trainerPlaceholder" placeholder="Exact trainer name" autocomplete="off"></div>
+      <div class="field"><label for="req-note"><span data-i18n="request.note">Note for admin</span> <span style="color:var(--muted);font-weight:400" data-i18n="common.optional">(optional)</span></label><input class="field-control" type="text" id="req-note" data-i18n-placeholder="request.notePlaceholder" placeholder="For example, your local group"></div>
+      <button type="button" class="lbtn btn btn-primary" onclick="submitRequest()" data-i18n="request.send">Send request →</button>
+      <div class="err" id="req-err" role="alert" aria-live="assertive" aria-atomic="true"></div>
     </div>
-    <div id="req-sent-status" style="display:none" class="req-status">
+    <div id="req-sent-status" style="display:none" class="req-status" role="status" aria-live="polite" aria-atomic="true">
       <div class="req-status-icon">✅</div>
       <div class="req-status-text" data-i18n="request.sent">Request sent</div>
       <div class="req-status-sub" data-i18n="request.sentHelp">An admin will review it and send you a unique first-time PIN.</div>
@@ -2133,7 +2150,7 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
     </div>
   </div>
 
-  <div class="favorite-saved-prompt" id="favorite-saved-prompt" role="status" aria-live="polite" hidden><span id="favorite-saved-message"></span><button type="button" class="bpri" id="favorite-saved-organize" data-i18n="organizer.addTags">Add tags</button></div>
+  <div class="favorite-saved-prompt" id="favorite-saved-prompt" hidden><span id="favorite-saved-message"></span><button type="button" class="bpri" id="favorite-saved-organize" data-i18n="organizer.addTags">Add tags</button></div>
 
   <!-- MY LIST -->
   <div class="page active ui-container ui-container-wide" id="tab-mylist">
@@ -2158,11 +2175,11 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
       <div class="add-ttl" id="add-ttl" data-i18n="myList.addTitle">Add Pokémon</div>
       <div class="frow">
         <div class="ac-wrap search-lookup">
-          <input type="text" class="ac-input field-control" id="ac-input" data-i18n-placeholder="myList.searchPlaceholder" placeholder="Search Pokémon…" autocomplete="off"
+          <input type="text" class="ac-input field-control" id="ac-input" data-i18n-placeholder="myList.searchPlaceholder" data-i18n-aria-label="myList.searchPlaceholder" placeholder="Search Pokémon…" aria-label="Search Pokémon" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="ac-dropdown"
             oninput="acSearch(this.value)" onkeydown="acKeydown(event)" onfocus="acSearch(this.value)">
           <input type="hidden" id="add-pmon-sel">
           <button type="button" class="voice-btn" id="voice-btn" onclick="startVoiceInput()" data-i18n-aria-label="myList.voiceInput" data-i18n-title="myList.speakToSearch" aria-label="Voice input" title="Speak to search">🎤</button>
-          <div class="ac-dropdown" id="ac-dropdown"></div>
+          <div class="ac-dropdown" id="ac-dropdown" role="listbox" data-i18n-aria-label="myList.suggestionsLabel" aria-label="Pokémon suggestions"></div>
         </div>
         <div class="add-pri-group" role="group" data-i18n-aria-label="myList.priority" aria-label="Priority">
           <span class="add-pri-label" data-i18n="myList.priority">Priority</span>
@@ -2350,8 +2367,9 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
 </div>
 
 <!-- TOASTS -->
-<div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true" aria-hidden="true" hidden></div>
-<div class="undo-toast" id="undo-toast" aria-hidden="true" hidden><span id="undo-msg"></span><button class="undo-btn" onclick="doUndo()" data-i18n="common.undo">Undo</button></div>
+<div class="sr-only" id="feedback-status" role="status" aria-live="polite" aria-atomic="true"></div>
+<div class="toast" id="toast" aria-hidden="true" hidden></div>
+<div class="undo-toast" id="undo-toast" aria-hidden="true" hidden><span id="undo-msg"></span><button type="button" class="undo-btn" onclick="doUndo()" data-i18n="common.undo">Undo</button></div>
 
 <!-- WHAT'S NEW MODAL -->
 <div class="ov" id="whatsnew-modal" role="dialog" aria-modal="true" aria-labelledby="whatsnew-title">
@@ -2644,11 +2662,13 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
   </div>
 </div>
 
+ </main>
+
 <!-- PTR Indicator -->
 <div class="ptr-indicator" id="ptr-indicator" aria-hidden="true">↓</div>
 
 <script>
-window.__POGO_RELEASE_ID='2026-08-05.42';
+window.__POGO_RELEASE_ID='2026-08-05.43';
 window.__pogoBootWatch=setTimeout(function(){
   var visible=['config-pg','login-pg','app'].some(function(id){
     var el=document.getElementById(id);
@@ -2667,65 +2687,65 @@ window.__pogoBootWatch=setTimeout(function(){
   if(err)err.textContent='App scripts did not finish loading. Refresh once; if this stays, send this screenshot.';
 },4000);
 </script>
-<script src="data.js?v=2026-08-05.42"></script>
-<script src="js/domain/productLimits.js?v=2026-08-05.42"></script>
-<script src="js/domain/priorities.js?v=2026-08-05.42"></script>
-<script src="js/ui/badges.js?v=2026-08-05.42"></script>
-<script src="js/domain/username.js?v=2026-08-05.42"></script>
-<script src="js/domain/priorityValues.js?v=2026-08-05.42"></script>
-<script src="js/domain/scheduleDates.js?v=2026-08-05.42"></script>
-<script src="js/domain/pokemonSearchTerms.js?v=2026-08-05.42"></script>
-<script src="js/domain/pokemonEntryRules.js?v=2026-08-05.42"></script>
-<script src="js/domain/pokemonGoSearchSyntax.js?v=2026-08-05.42"></script>
-<script src="js/domain/searchStrings.js?v=2026-08-05.42"></script>
-<script src="js/ui/stringHtml.js?v=2026-08-05.42"></script>
-<script src="js/domain/scheduleEventRules.js?v=2026-08-05.42"></script>
-<script src="js/domain/scheduleTradeRules.js?v=2026-08-05.42"></script>
-<script src="js/domain/pokemonKeys.js?v=2026-08-05.42"></script>
-<script src="js/domain/spriteSlugs.js?v=2026-08-05.42"></script>
-<script src="js/domain/fuzzyText.js?v=2026-08-05.42"></script>
-<script src="js/domain/autocompleteText.js?v=2026-08-05.42"></script>
-<script src="js/domain/autocompleteMatching.js?v=2026-08-05.42"></script>
-<script src="js/domain/autocompleteRanking.js?v=2026-08-05.42"></script>
-<script src="js/domain/relativeTime.js?v=2026-08-05.42"></script>
-<script src="js/domain/clientRelease.js?v=2026-08-05.42"></script>
-<script src="js/domain/favoriteCardInteractions.js?v=2026-08-05.42"></script>
-<script src="js/domain/favoritePokemonBrowse.js?v=2026-08-05.42"></script>
-<script src="js/domain/trainerDiscovery.js?v=2026-08-05.42"></script>
-<script src="js/domain/eventPresentation.js?v=2026-08-05.42"></script>
-<script src="js/domain/publicSharePublication.js?v=2026-08-05.42"></script>
-<script src="js/domain/trainerPreferences.js?v=2026-08-05.42"></script>
-<script src="js/domain/trainerPreferenceSync.js?v=2026-08-05.42"></script>
-<script src="js/domain/authenticationReadiness.js?v=2026-08-05.42"></script>
-<script src="js/domain/loginDirectory.js?v=2026-08-05.42"></script>
-<script src="js/utils/textSafety.js?v=2026-08-05.42"></script>
-<script src="js/ui/stringPanels.js?v=2026-08-05.42"></script>
-<script src="js/ui/emptyState.js?v=2026-08-05.42"></script>
-<script src="js/i18n/locales/en.js?v=2026-08-05.42"></script>
-<script src="js/i18n/locales/ja.js?v=2026-08-05.42"></script>
-<script src="js/i18n/locales/es.js?v=2026-08-05.42"></script>
-<script src="js/i18n/locales/de.js?v=2026-08-05.42"></script>
-<script src="js/i18n/pokemonNames/catalog.js?v=2026-08-05.42"></script>
-<script src="js/i18n/pokemonNames/variants.js?v=2026-08-05.42"></script>
-<script src="js/i18n/pokemonNames/core.js?v=2026-08-05.42"></script>
-<script src="js/i18n/eventLabels/currentTitles.js?v=2026-08-05.42"></script>
-<script src="js/i18n/eventLabels/core.js?v=2026-08-05.42"></script>
-<script src="js/i18n/core.js?v=2026-08-05.42"></script>
-<script src="js/services/firebaseClient.js?v=2026-08-05.42"></script>
-<script src="js/services/firebaseAppCheck.js?v=2026-08-05.42"></script>
-<script src="js/data/subscriptionManager.js?v=2026-08-05.42"></script>
-<script src="js/data/listenerLifecycle.js?v=2026-08-05.42"></script>
-<script src="js/data/sessionCacheBoundary.js?v=2026-08-05.42"></script>
-<script src="js/data/firebaseReadRegistry.js?v=2026-08-05.42"></script>
-<script src="js/data/currentUserRepository.js?v=2026-08-05.42"></script>
-<script src="js/data/ownedDataCoordinator.js?v=2026-08-05.42"></script>
-<script src="js/data/publicShareRepository.js?v=2026-08-05.42"></script>
-<script src="js/data/trainerHistoryStore.js?v=2026-08-05.42"></script>
-<script src="js/data/favoriteShareSessionCache.js?v=2026-08-05.42"></script>
-<script src="js/data/trainerPreferencesRepository.js?v=2026-08-05.42"></script>
-<script src="js/data/trainerPreferenceSyncQueue.js?v=2026-08-05.42"></script>
-<script src="js/domain/cacheAdapters.js?v=2026-08-05.42"></script>
-<script src="js/ui/trainerTagPanel.js?v=2026-08-05.42"></script>
+<script src="data.js?v=2026-08-05.43"></script>
+<script src="js/domain/productLimits.js?v=2026-08-05.43"></script>
+<script src="js/domain/priorities.js?v=2026-08-05.43"></script>
+<script src="js/ui/badges.js?v=2026-08-05.43"></script>
+<script src="js/domain/username.js?v=2026-08-05.43"></script>
+<script src="js/domain/priorityValues.js?v=2026-08-05.43"></script>
+<script src="js/domain/scheduleDates.js?v=2026-08-05.43"></script>
+<script src="js/domain/pokemonSearchTerms.js?v=2026-08-05.43"></script>
+<script src="js/domain/pokemonEntryRules.js?v=2026-08-05.43"></script>
+<script src="js/domain/pokemonGoSearchSyntax.js?v=2026-08-05.43"></script>
+<script src="js/domain/searchStrings.js?v=2026-08-05.43"></script>
+<script src="js/ui/stringHtml.js?v=2026-08-05.43"></script>
+<script src="js/domain/scheduleEventRules.js?v=2026-08-05.43"></script>
+<script src="js/domain/scheduleTradeRules.js?v=2026-08-05.43"></script>
+<script src="js/domain/pokemonKeys.js?v=2026-08-05.43"></script>
+<script src="js/domain/spriteSlugs.js?v=2026-08-05.43"></script>
+<script src="js/domain/fuzzyText.js?v=2026-08-05.43"></script>
+<script src="js/domain/autocompleteText.js?v=2026-08-05.43"></script>
+<script src="js/domain/autocompleteMatching.js?v=2026-08-05.43"></script>
+<script src="js/domain/autocompleteRanking.js?v=2026-08-05.43"></script>
+<script src="js/domain/relativeTime.js?v=2026-08-05.43"></script>
+<script src="js/domain/clientRelease.js?v=2026-08-05.43"></script>
+<script src="js/domain/favoriteCardInteractions.js?v=2026-08-05.43"></script>
+<script src="js/domain/favoritePokemonBrowse.js?v=2026-08-05.43"></script>
+<script src="js/domain/trainerDiscovery.js?v=2026-08-05.43"></script>
+<script src="js/domain/eventPresentation.js?v=2026-08-05.43"></script>
+<script src="js/domain/publicSharePublication.js?v=2026-08-05.43"></script>
+<script src="js/domain/trainerPreferences.js?v=2026-08-05.43"></script>
+<script src="js/domain/trainerPreferenceSync.js?v=2026-08-05.43"></script>
+<script src="js/domain/authenticationReadiness.js?v=2026-08-05.43"></script>
+<script src="js/domain/loginDirectory.js?v=2026-08-05.43"></script>
+<script src="js/utils/textSafety.js?v=2026-08-05.43"></script>
+<script src="js/ui/stringPanels.js?v=2026-08-05.43"></script>
+<script src="js/ui/emptyState.js?v=2026-08-05.43"></script>
+<script src="js/i18n/locales/en.js?v=2026-08-05.43"></script>
+<script src="js/i18n/locales/ja.js?v=2026-08-05.43"></script>
+<script src="js/i18n/locales/es.js?v=2026-08-05.43"></script>
+<script src="js/i18n/locales/de.js?v=2026-08-05.43"></script>
+<script src="js/i18n/pokemonNames/catalog.js?v=2026-08-05.43"></script>
+<script src="js/i18n/pokemonNames/variants.js?v=2026-08-05.43"></script>
+<script src="js/i18n/pokemonNames/core.js?v=2026-08-05.43"></script>
+<script src="js/i18n/eventLabels/currentTitles.js?v=2026-08-05.43"></script>
+<script src="js/i18n/eventLabels/core.js?v=2026-08-05.43"></script>
+<script src="js/i18n/core.js?v=2026-08-05.43"></script>
+<script src="js/services/firebaseClient.js?v=2026-08-05.43"></script>
+<script src="js/services/firebaseAppCheck.js?v=2026-08-05.43"></script>
+<script src="js/data/subscriptionManager.js?v=2026-08-05.43"></script>
+<script src="js/data/listenerLifecycle.js?v=2026-08-05.43"></script>
+<script src="js/data/sessionCacheBoundary.js?v=2026-08-05.43"></script>
+<script src="js/data/firebaseReadRegistry.js?v=2026-08-05.43"></script>
+<script src="js/data/currentUserRepository.js?v=2026-08-05.43"></script>
+<script src="js/data/ownedDataCoordinator.js?v=2026-08-05.43"></script>
+<script src="js/data/publicShareRepository.js?v=2026-08-05.43"></script>
+<script src="js/data/trainerHistoryStore.js?v=2026-08-05.43"></script>
+<script src="js/data/favoriteShareSessionCache.js?v=2026-08-05.43"></script>
+<script src="js/data/trainerPreferencesRepository.js?v=2026-08-05.43"></script>
+<script src="js/data/trainerPreferenceSyncQueue.js?v=2026-08-05.43"></script>
+<script src="js/domain/cacheAdapters.js?v=2026-08-05.43"></script>
+<script src="js/ui/trainerTagPanel.js?v=2026-08-05.43"></script>
 <script>
 let initializeApp,getDatabase,ref,set,get,onValue,update,getAuth,signInWithEmailAndPassword,createUserWithEmailAndPassword,firebaseSignOut,updatePassword,deleteUser,onAuthStateChanged;
 let firebaseSdkPromise=null;
@@ -2985,7 +3005,7 @@ let myListType='wishlist',strListType='wishlist';
 let _lastAuthenticatedIdentityUid='';
 let rpinTarget=null;
 let syncQueue={},syncFlushTimer=null;
-let undoStack=null,undoTimer=null;
+let undoStack=null,undoTimer=null,undoReturnFocus=null;
 let acItems=[],acFiltered=[],acFocusIdx=-1;
 let addTray=[];
 let dragSrc=null;
@@ -3927,14 +3947,7 @@ function bindAuthObserver(){
       setSyncStatus(Object.keys(syncQueue).length?'syncing':'online');
       ensureProtectedSubscriptions();
       if(_activeShareView?.username)ensureShareViewSubscriptions(_activeShareView.username);
-      if(_pendingShareRequest){
-        ensureShareViewSubscriptions(_pendingShareRequest.username);
-        loadShareViewData(_pendingShareRequest.username).then(result=>{
-          if(result.ok&&_pendingShareRequest&&allData.users?.[_pendingShareRequest.username]){
-            enterShareView(_pendingShareRequest.username,_pendingShareRequest.type);
-          }
-        });
-      }
+      if(_pendingShareRequest)openShareViewFromRequest(_pendingShareRequest);
       if(cur&&document.getElementById('app')?.style.display==='none'&&!document.getElementById('share-view')?.classList.contains('active'))showApp();
       if(Object.keys(syncQueue).length)flushSyncQueue();
       return;
@@ -4054,11 +4067,24 @@ function sessionTransientCallback(callback){
 function resetSessionTransientUi(reason='session_boundary'){
   _sessionTransientGeneration++;
 
+  if(typeof trainerSuggestionTimer!=='undefined')clearTimeout(trainerSuggestionTimer);
+  if(typeof favoriteSavedPromptTimer!=='undefined')clearTimeout(favoriteSavedPromptTimer);
+  if(typeof _modalFocusTimer!=='undefined')clearTimeout(_modalFocusTimer);
+  if(typeof _myHaveRenderTimer!=='undefined')clearTimeout(_myHaveRenderTimer);
+  if(typeof _haveBrowseRenderTimer!=='undefined')clearTimeout(_haveBrowseRenderTimer);
+  if(typeof trainerSuggestionTimer!=='undefined')trainerSuggestionTimer=0;
+  if(typeof favoriteSavedPromptTimer!=='undefined')favoriteSavedPromptTimer=0;
+  if(typeof _modalFocusTimer!=='undefined')_modalFocusTimer=null;
+  if(typeof _myHaveRenderTimer!=='undefined')_myHaveRenderTimer=0;
+  if(typeof _haveBrowseRenderTimer!=='undefined')_haveBrowseRenderTimer=0;
   if(undoTimer)clearTimeout(undoTimer);
   undoTimer=null;
   undoStack=null;
   if(_toastTimer)clearTimeout(_toastTimer);
   _toastTimer=null;
+  if(_feedbackAnnouncementTimer)clearTimeout(_feedbackAnnouncementTimer);
+  _feedbackAnnouncementTimer=null;
+  _lastFeedbackAnnouncement={message:'',at:0};
 
   const undoToast=document.getElementById('undo-toast');
   if(undoToast){
@@ -4068,6 +4094,7 @@ function resetSessionTransientUi(reason='session_boundary'){
   }
   const undoMessage=document.getElementById('undo-msg');
   if(undoMessage)undoMessage.textContent='';
+  undoReturnFocus=null;
   const toastEl=document.getElementById('toast');
   if(toastEl){
     toastEl.classList.remove('show');
@@ -4075,6 +4102,10 @@ function resetSessionTransientUi(reason='session_boundary'){
     toastEl.hidden=true;
     toastEl.textContent='';
   }
+  const feedbackStatus=document.getElementById('feedback-status');
+  if(feedbackStatus)feedbackStatus.textContent='';
+  const favoriteSavedPrompt=document.getElementById('favorite-saved-prompt');
+  if(favoriteSavedPrompt){favoriteSavedPrompt.hidden=true;const button=favoriteSavedPrompt.querySelector('button');if(button)button.onclick=null;}
 
   document.querySelectorAll('.ov.open').forEach(el=>el.classList.remove('open'));
   document.querySelectorAll('.conflict-notice').forEach(el=>el.remove());
@@ -4087,7 +4118,7 @@ function resetSessionTransientUi(reason='session_boundary'){
   ['mylist-filter','have-filter','ac-input','add-pmon-sel','add-pmon-notes'].forEach(id=>{
     const el=document.getElementById(id);if(el)el.value='';
   });
-  document.getElementById('ac-dropdown')?.classList.remove('open');
+  closeAddAutocomplete();
   document.getElementById('have-ac-dropdown')?.classList.remove('open');
   const tray=document.getElementById('add-tray');
   if(tray){tray.hidden=true;tray.innerHTML='';}
@@ -4120,6 +4151,8 @@ function resetTransientUiBeforeSessionActivation(uid,username){
   if(!owner||owner.uid===uid&&owner.username===username)return false;
   resetSessionTransientUi('identity_switch');
   resetTrainerOrganizerState();
+  resetFavoriteBrowseSession();
+  trainerHistoryStore=null;
   return true;
 }
 function activateOwnedSession(uid,username){
@@ -5453,6 +5486,7 @@ function _onSubSnapshot(path,snap,meta={}){
 const _snapshotFirstSeen=new Set();
 let _activeShareView=null;
 let _pendingShareRequest=null;
+let _publicShareRequestGeneration=0;
 function startManagedSnapshotListener(path,{next,error}){
   if(!managedFirebaseClient){
     const unavailable=new Error('Firebase listener client is not ready');
@@ -5654,10 +5688,11 @@ function runtimeDataWithSelectedTrainer(source){
   });
   return base;
 }
-async function loadPublicShareData(username){
+async function loadPublicShareData(username,{requestGeneration=null}={}){
   if(!db||!username)return{ok:false,status:'transport_error'};
   try{
     const snap=await get(ref(db,`publicShares/${username}`));
+    if(requestGeneration!==null&&requestGeneration!==_publicShareRequestGeneration)return{ok:false,status:'stale'};
     if(!snap.exists())return{ok:false,status:'not_published'};
     const projection=publicSharePublicationDomain.publicShareProjectionStatus(snap.val(),{username});
     if(!projection.ok)return projection;
@@ -5739,7 +5774,9 @@ function ensureShareViewSubscriptions(username){
 async function openShareViewFromRequest(shareReq){
   if(!shareReq)return;
   _pendingShareRequest=shareReq;
-  const publicLoaded=await loadPublicShareData(shareReq.username);
+  const requestGeneration=++_publicShareRequestGeneration;
+  const publicLoaded=await loadPublicShareData(shareReq.username,{requestGeneration});
+  if(requestGeneration!==_publicShareRequestGeneration||publicLoaded.status==='stale')return;
   ensureShareViewSubscriptions(shareReq.username);
   if(publicLoaded.ok&&allData.users?.[shareReq.username]){
     if(cur)rememberTrainerOpened(shareReq.username);
@@ -5796,7 +5833,7 @@ function safeVisibleLoginError(){
 }
 function loginLocalCacheSummary(){
   try{
-    const offlineBytes=localStorage.getItem(LS_OFFLINE)?.length||0;
+    const offlineBytes=localStorage.getItem(sessionCacheBoundaryData.DEFAULT_CACHE_KEY)?.length||0;
     let spriteEntries=0;
     try{ spriteEntries=Object.keys(JSON.parse(localStorage.getItem(SPRITE_SCALE_CACHE_KEY)||'{}')).length; }catch(_e){ spriteEntries=0; }
     return`Offline cache ${Math.round(offlineBytes/1024)} KB; sprite scale cache ${spriteEntries} entries`;
@@ -6229,7 +6266,7 @@ function renderLoginUserSuggestions(open=true){
     :[];
   loginUserFiltered=scored.map(item=>item.name);
   loginUserFocusIdx=Math.min(loginUserFocusIdx,loginUserFiltered.length-1);
-  if(!open){box.classList.remove('open');return;}
+  if(!open){hideLoginUserSuggestions();return;}
   if(directoryState.status===loginDirectoryDomain.STATES.LOADING||directoryState.status===loginDirectoryDomain.STATES.IDLE){
     box.innerHTML=`<div class="login-user-empty">${escHtml(i18nCore.t('login.directoryLoading'))}</div>`;
   }else if(directoryState.status===loginDirectoryDomain.STATES.ERROR){
@@ -6240,16 +6277,23 @@ function renderLoginUserSuggestions(open=true){
     box.innerHTML=scored.map((item,i)=>{
       const name=item.name;
       const status=i18nCore.t(item.ready?'login.directoryReady':'login.directoryPending');
-      return`<button type="button" class="login-user-option${i===loginUserFocusIdx?' focused':''}" role="option" aria-selected="${i===loginUserFocusIdx?'true':'false'}" onpointerdown="event.preventDefault();selectLoginUserByIndex(${i})">
+      return`<button type="button" class="login-user-option${i===loginUserFocusIdx?' focused':''}" id="login-user-option-${i}" role="option" aria-selected="${i===loginUserFocusIdx?'true':'false'}" onpointerdown="event.preventDefault();selectLoginUserByIndex(${i})">
         <span class="login-user-option-name">${escHtml(name)}</span>
         <span class="login-user-option-status">${escHtml(status)}</span>
       </button>`;
     }).join('');
   }
-  box.classList.toggle('open',!!box.innerHTML);
+  const isOpen=!!box.innerHTML;
+  box.classList.toggle('open',isOpen);
+  input.setAttribute('aria-expanded',String(isOpen));
+  if(isOpen&&loginUserFocusIdx>=0)input.setAttribute('aria-activedescendant',`login-user-option-${loginUserFocusIdx}`);
+  else input.removeAttribute('aria-activedescendant');
 }
 function hideLoginUserSuggestions(){
   document.getElementById('login-user-suggestions')?.classList.remove('open');
+  const input=document.getElementById('login-user');
+  input?.setAttribute('aria-expanded','false');
+  input?.removeAttribute('aria-activedescendant');
 }
 function selectLoginUser(name){
   const input=document.getElementById('login-user');
@@ -6758,7 +6802,7 @@ async function toggleTrainerFavorite(username){
 }
 function showFavoriteSavedPrompt(username){
   const prompt=document.getElementById('favorite-saved-prompt'),message=document.getElementById('favorite-saved-message'),button=document.getElementById('favorite-saved-organize');if(!prompt||!message||!button)return;
-  clearTimeout(favoriteSavedPromptTimer);message.textContent=i18nCore.t('organizer.favoriteSaved',{trainer:username});button.onclick=()=>{prompt.hidden=true;openTrainerOrganizer(username);};prompt.hidden=false;favoriteSavedPromptTimer=setTimeout(()=>{prompt.hidden=true;},5000);
+  clearTimeout(favoriteSavedPromptTimer);message.textContent=i18nCore.t('organizer.favoriteSaved',{trainer:username});button.onclick=()=>{prompt.hidden=true;openTrainerOrganizer(username);};prompt.hidden=false;announceFeedback(message.textContent);favoriteSavedPromptTimer=setTimeout(()=>{prompt.hidden=true;},5000);
 }
 function removeTrainerFavorite(username){
   const store=ensureTrainerHistoryStore();if(!store?.isFavorite(username)||!confirm(i18nCore.t('organizer.removeConfirm',{trainer:username})))return;
@@ -6856,7 +6900,9 @@ async function openTrainerPublicShare(value){
   const status=document.getElementById('find-trainer-status');
   if(!req?.username){setTrainerRecovery(true);if(status)status.textContent=i18nCore.t('trainer.publicInvalid');return;}
   if(status)status.textContent=i18nCore.t('data.loading',{resource:i18nCore.t('trainer.findTitle')});
-  const loaded=await loadPublicShareData(req.username);
+  const requestGeneration=++_publicShareRequestGeneration;
+  const loaded=await loadPublicShareData(req.username,{requestGeneration});
+  if(requestGeneration!==_publicShareRequestGeneration||loaded.status==='stale')return;
   ensureShareViewSubscriptions(req.username);
   if(loaded.ok&&allData.users?.[req.username]){setTrainerRecovery(false);rememberTrainerOpened(req.username);enterShareView(req.username,req.type);return;}
   setTrainerRecovery(true);if(status)status.textContent=i18nCore.t(publicShareStatusMessageKey(loaded.status));
@@ -7027,10 +7073,17 @@ function buildAcItems(){
     acItems.push(item);
   });
 }
+function closeAddAutocomplete(){
+  const input=document.getElementById('ac-input'),dd=document.getElementById('ac-dropdown');
+  dd?.classList.remove('open');
+  if(input){input.setAttribute('aria-expanded','false');input.removeAttribute('aria-activedescendant');}
+  acFocusIdx=-1;
+}
 function acSearch(q){
+  const input=document.getElementById('ac-input');
   document.getElementById('add-pmon-sel').value='';
   const dd=document.getElementById('ac-dropdown');
-  if(!q||q.length<1){dd.classList.remove('open');return;}
+  if(!q||q.length<1){closeAddAutocomplete();return;}
   const arr=listSource(myListType);
   const existing=new Set(Object.keys(allData[myListType]?.[cur]||{}));
   acFiltered=rankAutocompleteItems(acItems,q);
@@ -7071,7 +7124,7 @@ function acSearch(q){
     dd.innerHTML=`<div class="ac-empty">${escHtml(i18nCore.t('common.noResults'))}</div>`;
   }else{
     dd.innerHTML=familyBanner+shownBanner+acFiltered.map((e,i)=>`
-      <div class="ac-item" data-idx="${i}" onmousedown="acSelect(${i})">
+      <div class="ac-item" id="add-pokemon-option-${i}" role="option" aria-selected="false" data-idx="${i}" onmousedown="acSelect(${i})">
         ${e.no||e.spriteUrl?spriteImg(e.no,28,'ac-item-sprite',e.name,'',e.dn,{urlOverride:e.spriteUrl}):''}
         ${e.no?`<span class="ac-item-no">#${e.no}</span>`:''}
         <span class="ac-item-name">${e.dn}</span>
@@ -7079,12 +7132,14 @@ function acSearch(q){
       </div>`).join('')+existingSection;
   }
   dd.classList.add('open');
+  input?.setAttribute('aria-expanded','true');
+  input?.removeAttribute('aria-activedescendant');
 }
 function acSelect(idx){
   const e=acFiltered[idx];if(!e)return;
   document.getElementById('ac-input').value=e.dn;
   document.getElementById('add-pmon-sel').value=e.name;
-  document.getElementById('ac-dropdown').classList.remove('open');
+  closeAddAutocomplete();
 }
 function acKeydown(ev){
   const dd=document.getElementById('ac-dropdown');
@@ -7092,10 +7147,16 @@ function acKeydown(ev){
   if(ev.key==='ArrowDown'){ev.preventDefault();acFocusIdx=Math.min(acFocusIdx+1,acFiltered.length-1);acUpdateFocus();}
   else if(ev.key==='ArrowUp'){ev.preventDefault();acFocusIdx=Math.max(acFocusIdx-1,0);acUpdateFocus();}
   else if(ev.key==='Enter'){ev.preventDefault();if(acFocusIdx>=0)acSelect(acFocusIdx);else if(acFiltered.length===1)acSelect(0);}
-  else if(ev.key==='Escape')dd.classList.remove('open');
+  else if(ev.key==='Escape'){ev.preventDefault();closeAddAutocomplete();}
 }
 function acUpdateFocus(){
-  document.querySelectorAll('.ac-item').forEach((el,i)=>el.classList.toggle('focused',i===acFocusIdx));
+  const input=document.getElementById('ac-input');
+  document.querySelectorAll('#ac-dropdown .ac-item[role="option"]').forEach((el,i)=>{
+    const active=i===acFocusIdx;
+    el.classList.toggle('focused',active);
+    el.setAttribute('aria-selected',String(active));
+    if(active){input?.setAttribute('aria-activedescendant',el.id);el.scrollIntoView({block:'nearest'});}
+  });
 }
 function isInAddTray(name){return addTray.some(x=>x.name===name);}
 function addToTrayFromAc(idx){
@@ -7169,14 +7230,14 @@ function confirmAddTray(){
   addTray=[];
   renderAddTray();
   document.getElementById('add-pmon-sel').value='';
-  document.getElementById('ac-dropdown')?.classList.remove('open');
+  closeAddAutocomplete();
   buildAcItems();
   renderMyList();
   toast(i18nCore.t('myList.queueAdded',{count:i18nCore.formatNumber(added)}));
 }
 document.addEventListener('click',e=>{
   if(!e.target.closest('.ac-wrap')){
-    document.getElementById('ac-dropdown')?.classList.remove('open');
+    closeAddAutocomplete();
     // Also close the special-board LF/FT autocompletes
     document.getElementById('special-lf-dd')?.classList.remove('open');
     document.getElementById('special-ft-dd')?.classList.remove('open');
@@ -7187,26 +7248,35 @@ document.addEventListener('click',e=>{
 function showUndo(name){
   clearTimeout(undoTimer);
   const toastEl=document.getElementById('undo-toast');
-  document.getElementById('undo-msg').textContent=i18nCore.t('myList.removed',{name});
+  const message=i18nCore.t('myList.removed',{name});
+  document.getElementById('undo-msg').textContent=message;
+  undoReturnFocus=document.activeElement instanceof HTMLElement&&!toastEl.contains(document.activeElement)?document.activeElement:null;
   toastEl.hidden=false;
   toastEl.setAttribute('aria-hidden','false');
   toastEl.classList.add('show');
+  announceFeedback(`${message} ${i18nCore.t('common.undo')}`);
   undoTimer=setTimeout(()=>{
-    toastEl.classList.remove('show');
-    toastEl.setAttribute('aria-hidden','true');
-    toastEl.hidden=true;
+    hideUndo({restoreFocus:true});
     undoStack=null;
   },4000);
+}
+function hideUndo({restoreFocus=false}={}){
+  const toastEl=document.getElementById('undo-toast');
+  const focusWasInside=!!toastEl?.contains(document.activeElement);
+  toastEl?.classList.remove('show');
+  toastEl?.setAttribute('aria-hidden','true');
+  if(toastEl)toastEl.hidden=true;
+  const fallback=undoReturnFocus?.isConnected&&!undoReturnFocus.disabled?undoReturnFocus:document.getElementById('mylist-filter')||document.getElementById('ac-input');
+  undoReturnFocus=null;
+  if(restoreFocus&&focusWasInside)requestAnimationFrame(()=>fallback?.focus({preventScroll:true}));
 }
 function doUndo(){
   if(!undoStack)return;
   clearTimeout(undoTimer);
-  const toastEl=document.getElementById('undo-toast');
-  toastEl.classList.remove('show');
-  toastEl.setAttribute('aria-hidden','true');
-  toastEl.hidden=true;
-  writeList(undoStack.type,undoStack.username,undoStack.list);
-  toast(i18nCore.t('myList.restored',{name:undoStack.name}));
+  const restored=undoStack;
+  hideUndo({restoreFocus:true});
+  writeList(restored.type,restored.username,restored.list);
+  toast(i18nCore.t('myList.restored',{name:restored.name}));
   undoStack=null;
 }
 
@@ -7354,7 +7424,7 @@ function setMyList(t){
   ['add-pmon-lucky','add-pmon-xxl','add-pmon-xxs','add-pmon-shiny'].forEach(id=>{const el=document.getElementById(id);if(el)el.checked=false;});
   document.getElementById('add-pmon-pri').value='';
   document.querySelectorAll('.add-pri-btn').forEach(b=>{b.classList.remove('on','H','M','L');b.setAttribute('aria-pressed','false');});
-  document.getElementById('ac-dropdown').classList.remove('open');
+  closeAddAutocomplete();
   document.getElementById('mylist-filter').value='';
   ensureListSubscribed(t);
   buildAcItems();renderMyList();
@@ -7452,7 +7522,7 @@ function addEntry(){
     document.querySelectorAll('.add-pri-btn').forEach(b=>{b.classList.remove('on','H','M','L');b.setAttribute('aria-pressed','false');});
     ['add-pmon-lucky','add-pmon-xxl','add-pmon-xxs','add-pmon-shiny'].forEach(id=>{const el=document.getElementById(id);if(el)el.checked=false;});
   }
-  document.getElementById('ac-dropdown').classList.remove('open');
+  closeAddAutocomplete();
   buildAcItems();
   toast(i18nCore.t('myList.added',{name:dn}));
   const input=document.getElementById('ac-input');
@@ -7564,11 +7634,35 @@ function currentListEntries(type=myListType,filterVal=''){
     .sort(priorityFamilySort);
 }
 
+function myListEditorHtml(entry){
+  const{name,dn,mod,lucky,xxl,xxs,shiny}=entry;
+  const jsName=escAttr(name.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r?\n/g,' '));
+  const jsDn=escAttr(String(dn).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r?\n/g,' '));
+  return`<div class="myrow-editor-popover" onkeydown="if(event.key==='Escape'){event.preventDefault();const d=this.closest('details');d.removeAttribute('open');d.querySelector('summary').focus()}">
+    <div class="myrow-trait-controls">
+      <button class="flag-btn lucky-flag ${lucky?'on':''}" onclick="setLucky('${jsName}')" title="${escAttr(i18nCore.t('myList.lucky'))}" aria-pressed="${lucky}" aria-label="${escAttr(i18nCore.t('myList.toggleLuckyFor',{name:dn}))}">⚡</button>
+      <button class="flag-btn shiny-flag ${shiny?'on':''}" onclick="setShiny('${jsName}')" title="${escAttr(i18nCore.t('myList.shiny'))}" aria-pressed="${shiny}" aria-label="${escAttr(i18nCore.t('myList.toggleShinyFor',{name:dn}))}">✨</button>
+      <button class="flag-btn xxl-flag ${xxl?'on':''}" onclick="setXxl('${jsName}')" title="XXL" aria-pressed="${xxl}" aria-label="${escAttr(i18nCore.t('myList.toggleXxlFor',{name:dn}))}">XXL</button>
+      <button class="flag-btn xxs-flag ${xxs?'on':''}" onclick="setXxs('${jsName}')" title="XXS" aria-pressed="${xxs}" aria-label="${escAttr(i18nCore.t('myList.toggleXxsFor',{name:dn}))}">XXS</button>
+    </div>
+    <div class="myrow-editor-fields">
+      <input class="ni" type="text" value="${escAttr(mod)}" placeholder="${escAttr(i18nCore.t('myList.variantDetails'))}" onchange="setNotes('${jsName}',this.value)" aria-label="${escAttr(i18nCore.t('myList.notesFor',{name:dn}))}">
+      <button class="rm" onclick="confirmRemove('${jsName}','${jsDn}')" aria-label="${escAttr(i18nCore.t('myList.removeEntry',{name:dn}))}">×</button>
+    </div>
+  </div>`;
+}
+function hydrateMyRowEditor(details){
+  if(!details?.open||details.dataset.hydrated==='true')return;
+  const name=details.closest('.myrow')?.dataset.name;
+  const entry=currentListEntries(myListType).find(item=>item.name===name);
+  if(!entry)return;
+  details.insertAdjacentHTML('beforeend',myListEditorHtml(entry));
+  details.dataset.hydrated='true';
+}
 function myListRowsHtml(entries){
   return entries.map((entry,idx)=>{
     const{name,dn,p,mod,lucky,xxl,xxs,shiny,no}=entry;
     const jsName=escAttr(name.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r?\n/g,' '));
-    const jsDn=escAttr(String(dn).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r?\n/g,' '));
     const attrName=escAttr(name);
     const hasSprite=no||entry.spriteUrl||COSTUME_FORM_SPRITE_IDS[name]||GO_COSTUME_SPRITE_SLUGS[name];
     const crownHtml=maxCrownSvg(entry.maxType);
@@ -7590,20 +7684,8 @@ function myListRowsHtml(entries){
       <div class="mctrl">
         <div class="myrow-priority" role="group" aria-label="${escAttr(i18nCore.t('myList.priority'))}">${['H','M','L'].map(b=>`<button class="pb ${p===b?'on '+b:''}" onclick="setPri('${jsName}','${b}')" title="${escAttr(i18nCore.t({'H':'priority.high','M':'priority.medium','L':'priority.low'}[b]))}" aria-pressed="${p===b}" aria-label="${escAttr(i18nCore.t({'H':'myList.setHighPriority','M':'myList.setMediumPriority','L':'myList.setLowPriority'}[b],{name:dn}))}">${b}</button>`).join('')}</div>
         ${activeTraits?`<div class="myrow-active-traits" aria-label="${escAttr(i18nCore.t('myList.currentFlags',{flags:[lucky&&i18nCore.t('myList.lucky'),shiny&&i18nCore.t('myList.shiny'),xxl&&'XXL',xxs&&'XXS',mod].filter(Boolean).join(', ')}))}">${activeTraits}</div>`:''}
-        <details class="myrow-editor" onclick="event.stopPropagation()">
+        <details class="myrow-editor" onclick="event.stopPropagation()" ontoggle="hydrateMyRowEditor(this)">
           <summary class="myrow-edit" aria-label="${escAttr(i18nCore.t('myList.openMoreFor',{name:dn}))}" title="${escAttr(i18nCore.t('myList.openMoreFor',{name:dn}))}">${uiIconMarkup('sliders','ui-icon ui-icon-sm')}<span>${escHtml(i18nCore.t('myList.editEntry'))}</span></summary>
-          <div class="myrow-editor-popover" onkeydown="if(event.key==='Escape'){event.preventDefault();const d=this.closest('details');d.removeAttribute('open');d.querySelector('summary').focus()}">
-            <div class="myrow-trait-controls">
-              <button class="flag-btn lucky-flag ${lucky?'on':''}" onclick="setLucky('${jsName}')" title="${escAttr(i18nCore.t('myList.lucky'))}" aria-pressed="${lucky}" aria-label="${escAttr(i18nCore.t('myList.toggleLuckyFor',{name:dn}))}">⚡</button>
-              <button class="flag-btn shiny-flag ${shiny?'on':''}" onclick="setShiny('${jsName}')" title="${escAttr(i18nCore.t('myList.shiny'))}" aria-pressed="${shiny}" aria-label="${escAttr(i18nCore.t('myList.toggleShinyFor',{name:dn}))}">✨</button>
-              <button class="flag-btn xxl-flag ${xxl?'on':''}" onclick="setXxl('${jsName}')" title="XXL" aria-pressed="${xxl}" aria-label="${escAttr(i18nCore.t('myList.toggleXxlFor',{name:dn}))}">XXL</button>
-              <button class="flag-btn xxs-flag ${xxs?'on':''}" onclick="setXxs('${jsName}')" title="XXS" aria-pressed="${xxs}" aria-label="${escAttr(i18nCore.t('myList.toggleXxsFor',{name:dn}))}">XXS</button>
-            </div>
-            <div class="myrow-editor-fields">
-              <input class="ni" type="text" value="${escAttr(mod)}" placeholder="${escAttr(i18nCore.t('myList.variantDetails'))}" onchange="setNotes('${jsName}',this.value)" aria-label="${escAttr(i18nCore.t('myList.notesFor',{name:dn}))}">
-              <button class="rm" onclick="confirmRemove('${jsName}','${jsDn}')" aria-label="${escAttr(i18nCore.t('myList.removeEntry',{name:dn}))}">×</button>
-            </div>
-          </div>
         </details>
       </div>
     </div>`;
@@ -8472,14 +8554,18 @@ async function copyText(str){
 }
 async function copyStr(str,btn){
   const keyPrefix=btn?.dataset.copyScope==='share'?'share':'strings';
+  if(btn?.dataset.copyState==='copied')return;
   try{
     await copyText(str);
     if(btn){
       const old=btn.innerHTML;
+      const hadLabel=btn.hasAttribute('aria-label');
+      const stableLabel=btn.getAttribute('aria-label')||btn.textContent.trim();
+      if(stableLabel)btn.setAttribute('aria-label',stableLabel);
       btn.innerHTML=`${uiIconMarkup('check','ui-icon ui-icon-sm')}<span>${escHtml(i18nCore.t(`${keyPrefix}.copied`))}</span>`;
       btn.classList.add('copied');
-      btn.disabled=true;
-      setTimeout(()=>{btn.innerHTML=old;btn.classList.remove('copied');btn.disabled=false;},1200);
+      btn.dataset.copyState='copied';
+      setTimeout(()=>{if(!btn.isConnected)return;btn.innerHTML=old;btn.classList.remove('copied');delete btn.dataset.copyState;if(!hadLabel)btn.removeAttribute('aria-label');},1200);
     }
     toast(i18nCore.t(`${keyPrefix}.copySuccess`));
   }catch{
@@ -8502,6 +8588,7 @@ function toggleStrUser(el){
   const isOpen=body.classList.contains('open');
   body.classList.toggle('open',!isOpen);
   block.classList.toggle('expanded',!isOpen);
+  el.setAttribute('aria-expanded',String(!isOpen));
   // Snapshot for diff view when opening
   if(!isOpen){
     const username=block.dataset.username;
@@ -8539,9 +8626,11 @@ function _renderStringsInner(){
     const bioHtml=ud.bio?`<div class="profile-bio-display">"${escHtml(ud.bio)}"</div>`:'';
     const discordHtml=ud.discord?`<div class="profile-discord">${escHtml(ud.discord)}</div>`:'';
     const avInner=userAvatarHtml(u,26).replace('<div class="av"',`<div class="av" style="border:2px solid ${luColor}"`);
+    const disclosureId=`user-str-body-${String(u).replace(/[^a-z0-9_-]+/gi,'-').toLowerCase()}`;
     return`<div class="user-str-block" data-username="${escAttr(u)}">
-      <div class="user-str-hdr" onclick="toggleStrUser(this)">
-        <div class="user-str-info">
+      <div class="user-str-hdr">
+        <button type="button" class="user-str-toggle" onclick="toggleStrUser(this)" aria-expanded="false" aria-controls="${escAttr(disclosureId)}">
+          <div class="user-str-info">
           ${avInner}
           <div>
             <span style="font-weight:600;font-size:14px">${escHtml(u)}${isMe?` (${escHtml(i18nCore.t('common.you'))})`:''}</span>${diffBadge}
@@ -8553,13 +8642,14 @@ function _renderStringsInner(){
             </div>
             ${bioHtml}
           </div>
-        </div>
+          </div>
+          <span class="collapse-icon" aria-hidden="true">▼</span>
+        </button>
         ${isMe?'':`<div class="user-str-actions">
           <button class="diff-fab" onclick="event.stopPropagation();openDiffModal(this.closest('.user-str-block').dataset.username)" aria-label="Compare lists with ${escAttr(u)}" title="Compare your list vs ${escAttr(u)}'s">⚖</button>
         </div>`}
-        <span class="collapse-icon">▼</span>
       </div>
-      <div class="user-str-body">
+      <div class="user-str-body" id="${escAttr(disclosureId)}">
         ${diffDetails}
         ${strs?strLevelsHtml(strs,{t:i18nCore.t,formatNumber:i18nCore.formatNumber,priorityLabel:publicSharePriorityLabel,searchLocale:pokemonGoSearchLocale()}):`<div style="color:var(--muted);font-size:12px;padding:4px 0">${escHtml(i18nCore.t('strings.emptyList'))}</div>`}
       </div>
@@ -9545,7 +9635,7 @@ async function approveRequest(reqId,username){
     const copy=document.createElement('button');copy.type='button';copy.className='btn-copy-login';copy.style.marginTop='10px';copy.append(uiIconNode('copy','ui-icon ui-icon-sm'));const copyTextNode=document.createElement('span');copyTextNode.textContent=i18nCore.t(copied?'admin.copyAgain':'admin.copyLogin');copy.append(copyTextNode);copy.addEventListener('click',()=>copyApprovedLogin(username,pin));card.append(copy);
   }
   renderAdmin();populateLoginUsers();toast(i18nCore.t(copied?'admin.approvedCopied':'admin.approved',{trainer:username}),5000);
-  setTimeout(()=>renderPendingRequests(),4000);
+  setTimeout(sessionTransientCallback(()=>renderPendingRequests()),4000);
 }
 async function copyApprovedLogin(username,pin){
   try{
@@ -9705,6 +9795,8 @@ let _modalKeyHandler=null;
 let _modalFocusTimer=null;
 let _modalActiveId='';
 let _toastTimer=null;
+let _feedbackAnnouncementTimer=null;
+let _lastFeedbackAnnouncement={message:'',at:0};
 let _settingsContext='public';
 let _settingsScrollSnapshot=null;
 let _settingsSection='profile';
@@ -9948,6 +10040,21 @@ function closeModal(id){
   if(returnFocus?.isConnected&&!returnFocus.disabled)returnFocus.focus(id==='settings-modal'?{preventScroll:true}:undefined);
   if(id==='settings-modal')restoreAndClearSettingsScrollSnapshot();
 }
+function announceFeedback(message){
+  const text=String(message||'').replace(/\s+/g,' ').trim();
+  const status=document.getElementById('feedback-status');
+  if(!text||!status)return false;
+  const now=Date.now();
+  if(_lastFeedbackAnnouncement.message===text&&now-_lastFeedbackAnnouncement.at<800)return false;
+  _lastFeedbackAnnouncement={message:text,at:now};
+  if(_feedbackAnnouncementTimer)clearTimeout(_feedbackAnnouncementTimer);
+  status.textContent='';
+  _feedbackAnnouncementTimer=setTimeout(()=>{
+    _feedbackAnnouncementTimer=null;
+    status.textContent=text;
+  },20);
+  return true;
+}
 function toast(msg,dur=2500){
   const t=document.getElementById('toast');
   if(!t)return;
@@ -9956,10 +10063,12 @@ function toast(msg,dur=2500){
   t.setAttribute('aria-hidden','false');
   t.textContent=msg;
   t.classList.add('show');
+  announceFeedback(msg);
   _toastTimer=setTimeout(()=>{
     t.classList.remove('show');
     t.setAttribute('aria-hidden','true');
     t.hidden=true;
+    t.textContent='';
   },dur);
 }
 
@@ -10118,6 +10227,10 @@ function toggleTradeMatchSection(btn){
 // paste the result into PoGo's bag search to see safe-to-transfer mons.
 const SAFE_TRANSFER_DEFAULT_KEY='pogoSafeTransferDefault';
 const SAFE_TRANSFER_PREFILTER_KEY='pogoSafeTransferPrefilter';
+function safeTransferPreferenceKey(base){
+  const uid=String(auth?.currentUser?.uid||'').trim();
+  return uid?`${base}:${encodeURIComponent(uid)}`:null;
+}
 // Standard "you almost certainly don't want to transfer this" guards,
 // applied in PoGo's bag search BEFORE the dex-number filter. Order of clauses
 // doesn't matter — PoGo AND-combines them.
@@ -10138,7 +10251,9 @@ function _safeTransferAllTrainers(){
     .sort((a,b)=>(a===cur?-1:b===cur?1:0)||a.localeCompare(b,undefined,{sensitivity:'base'}));
 }
 function _loadSafeTransferDefault(){
-  const saved=lsGet(SAFE_TRANSFER_DEFAULT_KEY,null);
+  const key=safeTransferPreferenceKey(SAFE_TRANSFER_DEFAULT_KEY);
+  if(!key)return null;
+  const saved=lsGet(key,null);
   if(Array.isArray(saved))return new Set(saved.filter(u=>typeof u==='string'));
   return null;
 }
@@ -10160,7 +10275,8 @@ function openSafeTransferModal(){
   // Seed prefilter checkbox from saved pref (default ON — safer for new users).
   const chk=document.getElementById('stb-prefilter-chk');
   if(chk){
-    const saved=lsGet(SAFE_TRANSFER_PREFILTER_KEY,true);
+    const key=safeTransferPreferenceKey(SAFE_TRANSFER_PREFILTER_KEY);
+    const saved=key?lsGet(key,true):true;
     chk.checked=saved!==false;
   }
   renderSafeTransferTrainers();
@@ -10205,16 +10321,18 @@ function setAllSafeTransferTrainers(all){
 }
 function saveSafeTransferAsDefault(){
   if(!_safeTransferSelected){toast(i18nCore.t('safeTransfer.nothingToSave'));return;}
-  lsSet(SAFE_TRANSFER_DEFAULT_KEY,[..._safeTransferSelected]);
+  const key=safeTransferPreferenceKey(SAFE_TRANSFER_DEFAULT_KEY);if(!key)return;
+  lsSet(key,[..._safeTransferSelected]);
   toast(i18nCore.t('safeTransfer.defaultSaved',{count:i18nCore.formatNumber(_safeTransferSelected.size)}));
 }
 function toggleSafeTransferPrefilter(on){
-  lsSet(SAFE_TRANSFER_PREFILTER_KEY,!!on);
+  const key=safeTransferPreferenceKey(SAFE_TRANSFER_PREFILTER_KEY);if(key)lsSet(key,!!on);
   renderSafeTransferOutput();
 }
 function _safeTransferPrefilterEnabled(){
   const chk=document.getElementById('stb-prefilter-chk');
-  return chk?chk.checked:(lsGet(SAFE_TRANSFER_PREFILTER_KEY,true)!==false);
+  const key=safeTransferPreferenceKey(SAFE_TRANSFER_PREFILTER_KEY);
+  return chk?chk.checked:(!key||lsGet(key,true)!==false);
 }
 // Map every species the app knows about to its base dex number. We dedupe
 // by dex so costume variants (which share dex with their base) only count
@@ -10395,20 +10513,34 @@ function renderDiffModal(){
 // Uses lightweight activity log tracked per user. Built on top of writeList by
 // recording add/remove events. Stored in localStorage (per device).
 const ACTIVITY_LOG_KEY='pogoActivityLog_v1';
-function loadActivityLog(){try{return JSON.parse(localStorage.getItem(ACTIVITY_LOG_KEY)||'{}');}catch{return{};}}
+const ACTIVITY_LOG_MAX_USERS=200;
+const ACTIVITY_LOG_MAX_EVENTS_PER_USER=500;
+function loadActivityLog(){
+  try{
+    const value=JSON.parse(localStorage.getItem(ACTIVITY_LOG_KEY)||'{}');
+    return value&&typeof value==='object'&&!Array.isArray(value)?value:{};
+  }catch{return{};}
+}
 function recordActivityEvent(username,delta){
   if(!username||!delta)return;
   const log=loadActivityLog();
   if(!log[username])log[username]=[];
   log[username].push({t:Date.now(),d:delta});
-  // Keep only last 60 days
   const cutoff=Date.now()-60*86400000;
-  log[username]=log[username].filter(e=>e.t>=cutoff);
+  log[username]=log[username]
+    .filter(e=>Number.isFinite(Number(e?.t))&&Number(e.t)>=cutoff&&Number.isFinite(Number(e?.d)))
+    .slice(-ACTIVITY_LOG_MAX_EVENTS_PER_USER);
+  const retainedUsers=Object.entries(log)
+    .filter(([,events])=>Array.isArray(events)&&events.length)
+    .sort((a,b)=>Number(b[1].at(-1)?.t||0)-Number(a[1].at(-1)?.t||0))
+    .slice(0,ACTIVITY_LOG_MAX_USERS);
+  Object.keys(log).forEach(key=>delete log[key]);
+  retainedUsers.forEach(([key,events])=>{log[key]=events;});
   try{localStorage.setItem(ACTIVITY_LOG_KEY,JSON.stringify(log));}catch{}
 }
 function buildSparkline(username,days=30){
   // Returns array of activity counts per day, oldest → newest
-  const log=loadActivityLog()[username]||[];
+  const value=loadActivityLog()[username],log=Array.isArray(value)?value:[];
   const buckets=new Array(days).fill(0);
   const dayMs=86400000;
   const now=Date.now();
@@ -10442,8 +10574,12 @@ const EVENT_CACHE_KEY='pogoEventCache_v1';
 const EVENT_CACHE_TTL=2*60*60*1000; // 2 hours
 let _eventData=null;
 let _eventLoadState='idle';
+let _eventRequestGeneration=0;
+let _eventInflight=null;
 async function fetchPogoEvents(force=false){
   if(_eventData&&!force)return _eventData;
+  if(_eventInflight&&!force)return _eventInflight;
+  const generation=++_eventRequestGeneration;
   // Check localStorage cache
   if(!force){
     try{
@@ -10452,7 +10588,7 @@ async function fetchPogoEvents(force=false){
     }catch{}
   }
   _eventLoadState='loading';
-  try{
+  const pending=(async()=>{try{
     const[eventsResp,raidsResp]=await Promise.all([
       fetch(`${SCRAPEDDUCK_BASE}events.min.json`),
       fetch(`${SCRAPEDDUCK_BASE}raids.min.json`)
@@ -10460,14 +10596,19 @@ async function fetchPogoEvents(force=false){
     if(!eventsResp.ok)throw new Error(`events source returned ${eventsResp.status}`);
     const events=await eventsResp.json();
     const raids=raidsResp.ok?await raidsResp.json():[];
-    _eventData={events,raids,fetchedAt:Date.now()};
+    const next={events,raids,fetchedAt:Date.now()};
+    if(generation!==_eventRequestGeneration)return _eventData||next;
+    _eventData=next;
     _eventLoadState='ready';
     try{localStorage.setItem(EVENT_CACHE_KEY,JSON.stringify({t:Date.now(),data:_eventData}));}catch{}
     return _eventData;
   }catch(e){
+    if(generation!==_eventRequestGeneration)return _eventData||{events:[],raids:[],fetchedAt:0};
     _eventLoadState=navigator.onLine===false?'offline':'error';
     _eventData={events:[],raids:[],fetchedAt:0};return _eventData;
-  }
+  }})();
+  _eventInflight=pending;
+  try{return await pending;}finally{if(_eventInflight===pending)_eventInflight=null;}
 }
 function currentEvents(eventData){
   const now=Date.now();
@@ -10728,7 +10869,7 @@ function confirmAddShownResults(){
   });
   writeList(myListType,cur,list);
   closeAddShownResults();
-  document.getElementById('ac-dropdown')?.classList.remove('open');
+  closeAddAutocomplete();
   document.getElementById('ac-input').value='';
   document.getElementById('add-pmon-sel').value='';
   renderMyList();
@@ -10786,6 +10927,7 @@ function showUpdateBanner(){
     <button class="update-banner-dismiss" onclick="document.getElementById('update-banner')?.remove()" aria-label="Dismiss">×</button>
   `;
   document.body.appendChild(banner);
+  announceFeedback(banner.querySelector('strong')?.textContent);
 }
 function reloadForUpdate(){
   // Clear any localStorage-based image caches that might cause stale rendering
@@ -10982,28 +11124,47 @@ function userAvatarHtml(username,size=28){
 
 // ── DIFF VIEW (#17) ──────────────────────────────────────────
 const DIFF_SNAPSHOT_KEY='pogoListSnapshots_v1';
-function loadSnapshots(){try{return JSON.parse(localStorage.getItem(DIFF_SNAPSHOT_KEY)||'{}');}catch{return{};}}
-function snapshotViewerKey(){return cur||'_anonymous';}
+const DIFF_SNAPSHOT_MAX_TRAINERS_PER_TYPE=100;
+const DIFF_SNAPSHOT_MAX_LIST_ENTRIES=2000;
+function loadSnapshots(){
+  try{
+    const value=JSON.parse(localStorage.getItem(DIFF_SNAPSHOT_KEY)||'{}');
+    return value&&typeof value==='object'&&!Array.isArray(value)?value:{};
+  }catch{return{};}
+}
+function snapshotViewerKey(){
+  const uid=String(auth?.currentUser?.uid||'').trim(),username=String(cur||'').trim();
+  return uid&&username?`${encodeURIComponent(uid)}:${encodeURIComponent(username)}`:null;
+}
 function viewerSnapshotBucket(snaps,create=false){
   const viewer=snapshotViewerKey();
+  if(!viewer)return null;
   if(create){
-    snaps.viewers=snaps.viewers||{};
-    snaps.viewers[viewer]=snaps.viewers[viewer]||{};
+    if(!snaps.viewers||typeof snaps.viewers!=='object'||Array.isArray(snaps.viewers))snaps.viewers={};
+    if(!snaps.viewers[viewer]||typeof snaps.viewers[viewer]!=='object'||Array.isArray(snaps.viewers[viewer]))snaps.viewers[viewer]={};
     return snaps.viewers[viewer];
   }
   return snaps.viewers?.[viewer]||null;
 }
 function saveSnapshot(type,username,list){
+  const entries=Object.entries(list||{});
+  if(!username||entries.length>DIFF_SNAPSHOT_MAX_LIST_ENTRIES)return false;
   const snaps=loadSnapshots();
   const bucket=viewerSnapshotBucket(snaps,true);
+  if(!bucket)return false;
   if(!bucket[type])bucket[type]={};
-  bucket[type][username]={keys:Object.keys(list||{}),values:Object.assign({},list||{}),savedAt:Date.now()};
+  bucket[type][username]={keys:entries.map(([key])=>key),values:Object.fromEntries(entries),savedAt:Date.now()};
+  const retained=Object.entries(bucket[type])
+    .sort((a,b)=>Number(b[1]?.savedAt||0)-Number(a[1]?.savedAt||0))
+    .slice(0,DIFF_SNAPSHOT_MAX_TRAINERS_PER_TYPE);
+  bucket[type]=Object.fromEntries(retained);
   try{localStorage.setItem(DIFF_SNAPSHOT_KEY,JSON.stringify(snaps));}catch{}
+  return true;
 }
 function computeSnapshotDiff(type,username){
   const snaps=loadSnapshots();
   const bucket=viewerSnapshotBucket(snaps,false);
-  const prev=bucket?.[type]?.[username]||snaps[type]?.[username];
+  const prev=bucket?.[type]?.[username];
   const cur=allData[type]?.[username]||{};
   if(!prev)return{firstVisit:true,added:[],removed:[],changed:[]};
   const prevSet=new Set(prev.keys||[]);
@@ -11745,6 +11906,7 @@ function enterShareView(username,type){
   renderShareView(username,type);
 }
 function exitShareView(){
+  _publicShareRequestGeneration++;
   _pendingShareRequest=null;
   _activeShareView=null;
   clearShareViewSubscriptions();
@@ -14254,7 +14416,7 @@ function startVoiceInput(){
               const sel=document.getElementById('add-pmon-sel');
               if(sel&&!sel.value){
                 sel.value=bestMatch.match.name;
-                document.getElementById('ac-dropdown')?.classList.remove('open');
+                closeAddAutocomplete();
               }
             },100);
           }

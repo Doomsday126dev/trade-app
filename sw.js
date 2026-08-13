@@ -5,7 +5,7 @@
 //     trimmed by max entry count to keep storage bounded
 //   - Firebase realtime endpoints: never cached (always network)
 
-const RELEASE='2026-08-05.42';
+const RELEASE='2026-08-05.43';
 const VERSION=`pogo-trades-${RELEASE}`;
 const SHELL_CACHE=`shell-${VERSION}`;
 const INSTALL_CACHE=`${SHELL_CACHE}-installing`;
@@ -88,6 +88,7 @@ const OPTIONAL_SHELL_URLS=[
   './assets/tradeloop-icon-192.png',
   './assets/tradeloop-icon-512.png'
 ];
+const OPTIONAL_RUNTIME_PATHS=new Set(OPTIONAL_SHELL_URLS.filter(path=>!path.startsWith('./?')).map(path=>new URL(path,self.location.href).pathname));
 
 const SPRITE_CACHE_LIMIT=400;
 const SPRITE_HOSTS=[
@@ -192,7 +193,8 @@ async function networkFirst(req){
   const cache=await caches.open(SHELL_CACHE);
   try{
     const fresh=await fetch(req);
-    if(fresh&&fresh.ok&&req.method==='GET')cache.put(req,fresh.clone());
+    const cacheKey=runtimeShellCacheKey(req);
+    if(fresh&&fresh.ok&&cacheKey)cache.put(cacheKey,fresh.clone());
     return fresh;
   }catch(e){
     const cached=await cache.match(req);
@@ -204,6 +206,14 @@ async function networkFirst(req){
     }
     throw e;
   }
+}
+
+function runtimeShellCacheKey(req){
+  const url=new URL(req.url);
+  if(url.origin!==self.location.origin||req.mode==='navigate')return null;
+  if(!OPTIONAL_RUNTIME_PATHS.has(url.pathname))return null;
+  url.search='';url.hash='';
+  return url.href;
 }
 
 async function releaseAsset(req){

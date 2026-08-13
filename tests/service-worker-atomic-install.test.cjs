@@ -27,7 +27,7 @@ function harness({failUrl='',timeoutUrl='',pendingUrl='',seedOld=true,seedCurren
     async delete(name){return stores.delete(name);},async keys(){return[...stores.keys()];}
   };
   let skipWaiting=0,claims=0;
-  const self={location:{origin:'https://example.test'},clients:{async claim(){claims++;}},
+  const self={location:{origin:'https://example.test',href:'https://example.test/trade-app/sw.js'},clients:{async claim(){claims++;}},
     async skipWaiting(){skipWaiting++;},addEventListener(type,listener){listeners.set(type,listener);}};
   let rejectPending;
   const context=vm.createContext({self,caches,URL,Promise,Map,Set,Error,Response:class{},Blob:class{},Uint8Array,atob:()=>'',
@@ -120,4 +120,23 @@ test('navigation fallback keeps the cached versioned index for offline deep link
   assert.match(source,/req\.mode==='navigate'/);
   assert.match(source,/cache\.match\(`\.\/index\.html\?v=\$\{RELEASE\}`\)/);
   assert.match(source,/if\(isFirebase\(url\)\)return/);
+});
+
+test('runtime shell writes are limited to canonical optional assets, never arbitrary navigation/query URLs',()=>{
+  const run=harness();
+  const canonical=vm.runInContext("runtimeShellCacheKey({url:'https://example.test/trade-app/manifest.json?cachebust=1',mode:'cors'})",run.context);
+  assert.equal(canonical,'https://example.test/trade-app/manifest.json');
+  for(const expression of [
+    "runtimeShellCacheKey({url:'https://example.test/trade-app/?search=private',mode:'navigate'})",
+    "runtimeShellCacheKey({url:'https://example.test/trade-app/arbitrary.json?x=1',mode:'cors'})",
+    "runtimeShellCacheKey({url:'https://other.test/trade-app/manifest.json',mode:'cors'})"
+  ])assert.equal(vm.runInContext(expression,run.context),null);
+});
+
+test('activation removes multiple obsolete and failed staging caches while preserving only current bounded caches',async()=>{
+  const run=harness();await run.dispatch('install');
+  run.stores.set('shell-pogo-trades-2026-08-05.38',new MemoryCache());
+  run.stores.set('shell-pogo-trades-2026-08-05.42-installing',new MemoryCache());
+  await run.dispatch('activate');
+  assert.deepEqual([...run.stores.keys()].sort(),[run.shellName].sort());
 });

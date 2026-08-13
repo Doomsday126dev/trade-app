@@ -45,6 +45,39 @@ async function establishAccountDuringBoot(page,name='CrossBrowserTrainer'){
   },name);
 }
 
+async function installOrganizerFixture(page){
+  await establishAccount(page,'CrossBrowserTrainer');
+  await page.evaluate(()=>{
+    localStorage.clear();
+    auth={currentUser:{uid:'uid-cross-browser'}};
+    trainerHistoryStore=PogoData.trainerHistoryStore.createTrainerHistoryStore({storage:localStorage,identity:{uid:'uid-cross-browser',username:'CrossBrowserTrainer'}});
+    trainerHistoryStore.toggleFavorite('FavoriteTrainer');
+    const trigger=document.createElement('button');
+    trigger.id='cross-browser-organizer-trigger';
+    trigger.type='button';
+    trigger.textContent='Organize tags';
+    document.body.appendChild(trigger);
+    trigger.focus();
+  });
+}
+
+async function expectContrastAtLeast(page,selector,minimum=4.5){
+  const ratio=await page.locator(selector).evaluate(node=>{
+    const parse=value=>{
+      const parts=String(value).match(/[\d.]+/g)?.map(Number)||[];
+      return parts.slice(0,3).map(channel=>channel/255);
+    };
+    const luminance=rgb=>rgb.map(value=>value<=.03928?value/12.92:((value+.055)/1.055)**2.4)
+      .reduce((sum,value,index)=>sum+value*[.2126,.7152,.0722][index],0);
+    const foreground=luminance(parse(getComputedStyle(node).color));
+    let background=node;
+    while(background&&getComputedStyle(background).backgroundColor==='rgba(0, 0, 0, 0)')background=background.parentElement;
+    const backdrop=luminance(parse(getComputedStyle(background||document.body).backgroundColor));
+    return(Math.max(foreground,backdrop)+.05)/(Math.min(foreground,backdrop)+.05);
+  });
+  expect(ratio,selector).toBeGreaterThanOrEqual(minimum);
+}
+
 test.describe('audit cross-browser contracts',()=>{
   test('BROWSER-01 Settings history traverses sections and closes consistently',async({page})=>{
     await page.setViewportSize({width:1024,height:800});
@@ -296,6 +329,159 @@ test.describe('audit cross-browser contracts',()=>{
     await expect(page.locator('[data-admin-section="members"]')).toBeVisible();
   });
 
+  test('A11Y-03 feedback stays bounded, polite, focus-safe, and operable',async({page},testInfo)=>{
+    const sizes=testInfo.project.name==='cross-chromium'
+      ?[[320,568],[360,640],[375,667],[390,844],[430,932]]
+      :[[390,844]];
+    for(const [width,height] of sizes){
+      await page.setViewportSize({width,height});
+      await page.goto(`./?feedback=${width}-${height}-${Date.now()}`,{waitUntil:'domcontentloaded'});
+      await waitForApp(page);
+      await establishAccount(page);
+      const hiddenState=await page.locator('#undo-toast').evaluate(node=>({display:getComputedStyle(node).display,buttonTabIndex:node.querySelector('button').tabIndex}));
+      expect(hiddenState.display).toBe('none');
+      expect(hiddenState.buttonTabIndex).toBe(0);
+      const filter=page.locator('#mylist-filter');
+      await filter.focus();
+      await page.evaluate(()=>showUndo('Pikachu'));
+      await expect(filter).toBeFocused();
+      const undo=page.locator('.undo-btn');
+      const undoBox=await undo.boundingBox();
+      expect(undoBox?.width).toBeGreaterThanOrEqual(47.5);
+      expect(undoBox?.height).toBeGreaterThanOrEqual(47.5);
+      const geometry=await page.locator('#undo-toast').evaluate(node=>{
+        const rect=node.getBoundingClientRect(),style=getComputedStyle(node);
+        return{left:rect.left,right:rect.right,top:rect.top,bottom:rect.bottom,pointerEvents:style.pointerEvents};
+      });
+      expect(geometry.left).toBeGreaterThanOrEqual(11.5);
+      expect(geometry.right).toBeLessThanOrEqual(width-11.5);
+      expect(geometry.top).toBeGreaterThanOrEqual(-.5);
+      expect(geometry.bottom).toBeLessThanOrEqual(height+.5);
+      expect(geometry.pointerEvents).toBe('none');
+      expect(await undo.evaluate(node=>getComputedStyle(node).pointerEvents)).toBe('auto');
+      await undo.focus();
+      await page.evaluate(()=>hideUndo({restoreFocus:true}));
+      await page.waitForTimeout(40);
+      await expect(filter).toBeFocused();
+      await expect(page.locator('#undo-toast')).toBeHidden();
+
+      await page.evaluate(async()=>{
+        const button=document.createElement('button');
+        button.id='copy-feedback-fixture';button.type='button';button.textContent='Copy';button.setAttribute('aria-label','Copy search');
+        document.body.appendChild(button);button.focus();
+        copyText=async()=>{};
+        await copyStr('1,2,3',button);
+        await copyStr('1,2,3',button);
+      });
+      await expect(page.locator('#copy-feedback-fixture')).toBeFocused();
+      await expect(page.locator('#feedback-status')).not.toBeEmpty();
+      await expect(page.locator('#toast')).toBeVisible();
+      expect(await page.locator('#toast').getAttribute('role')).toBeNull();
+      expect(await page.locator('#copy-feedback-fixture').getAttribute('aria-label')).toBe('Copy search');
+      await page.evaluate(()=>{showUpdateBanner();document.getElementById('sync-banner').hidden=false;});
+      for(const selector of ['.update-banner-btn','.update-banner-dismiss','.sync-banner-btn','.sync-banner-dismiss']){
+        const box=await page.locator(selector).boundingBox();
+        expect(box?.width,selector).toBeGreaterThanOrEqual(47.5);
+        expect(box?.height,selector).toBeGreaterThanOrEqual(47.5);
+      }
+    }
+  });
+
+  test('A11Y-04 and A11Y-06 Login, skip navigation, and request access are keyboard semantic',async({page})=>{
+    await page.goto(`./?login-semantics=${Date.now()}`,{waitUntil:'domcontentloaded'});
+    await waitForApp(page);
+    const username=page.getByRole('combobox',{name:'Username',exact:true});
+    await expect(username).toHaveAttribute('id','login-user');
+    await username.fill('Cross');
+    await expect(username).toHaveAttribute('aria-expanded','true');
+    await username.press('Escape');
+    await expect(username).toHaveAttribute('aria-expanded','false');
+    await expect(page.getByLabel('PIN',{exact:true})).toHaveAttribute('autocomplete','current-password');
+    const request=page.getByRole('button',{name:'Request access to join'});
+    const requestBox=await request.boundingBox();
+    expect(requestBox?.height).toBeGreaterThanOrEqual(47.5);
+    await request.focus();
+    await request.press('Enter');
+    await expect(page.locator('#req-form-card')).toBeVisible();
+    await expect(page.getByLabel('Your Pok\u00e9mon GO trainer name')).toBeVisible();
+    await expect(page.locator('#login-err')).toHaveAttribute('role','alert');
+    await expect(page.locator('#req-err')).toHaveAttribute('role','alert');
+    await page.locator('.req-back').click();
+    const skip=page.locator('.skip-link');
+    await skip.focus();
+    await skip.press('Enter');
+    await expect(page.locator('#main-content')).toBeFocused();
+  });
+
+  test('A11Y-05 confirmed light-theme metadata meets text contrast',async({page})=>{
+    await page.goto(`./?contrast=${Date.now()}`,{waitUntil:'domcontentloaded'});
+    await waitForApp(page);
+    await page.evaluate(()=>{
+      document.documentElement.dataset.theme='light';
+      for(const trait of ['xxl','xxs']){
+        const node=document.createElement('span');node.id=`contrast-${trait}`;node.className=`myrow-trait ${trait}`;node.textContent=trait.toUpperCase();
+        node.style.cssText='display:inline-block;background:var(--card);font-size:10px;padding:4px';document.body.appendChild(node);
+      }
+    });
+    await expectContrastAtLeast(page,'#login-pg .brand-disclaimer');
+    await expectContrastAtLeast(page,'#contrast-xxl');
+    await expectContrastAtLeast(page,'#contrast-xxs');
+  });
+
+  test('A11Y-06 both Pok\u00e9mon comboboxes expose and clear active options with keyboard input',async({page})=>{
+    await page.setViewportSize({width:390,height:844});
+    await page.goto(`./?autocomplete-a11y=${Date.now()}`,{waitUntil:'domcontentloaded'});
+    await waitForApp(page);
+    await establishAccount(page);
+    await page.evaluate(()=>{allData.wishlist.CrossBrowserTrainer={};myListType='wishlist';buildAcItems();switchTab('mylist');});
+    const add=page.locator('#ac-input');
+    await add.fill('pika');
+    await expect(add).toHaveAttribute('aria-expanded','true');
+    await add.press('ArrowDown');
+    const activeId=await add.getAttribute('aria-activedescendant');
+    expect(activeId).toMatch(/^add-pokemon-option-\d+$/);
+    await expect(page.locator(`#${activeId}`)).toHaveAttribute('aria-selected','true');
+    await add.press('Enter');
+    await expect(add).toHaveAttribute('aria-expanded','false');
+    await expect(add).not.toHaveAttribute('aria-activedescendant',/.+/);
+    await expect(page.locator('#add-pmon-sel')).not.toHaveValue('');
+    await expect(add).toBeFocused();
+
+    await page.evaluate(()=>{switchTab('find');toggleFavoriteBrowse();});
+    const browse=page.locator('#favorite-browse-input');
+    await browse.fill('pika');
+    await expect(browse).toHaveAttribute('aria-expanded','true');
+    await browse.press('ArrowDown');
+    await expect(browse).toHaveAttribute('aria-activedescendant',/^favorite-browse-option-\d+$/);
+    await browse.press('Enter');
+    await expect(browse).toHaveAttribute('aria-expanded','false');
+    await expect(page.locator('#favorite-browse-clear')).toBeVisible();
+    const clearBox=await page.locator('#favorite-browse-clear').boundingBox();
+    expect(clearBox?.width).toBeGreaterThanOrEqual(47.5);
+    expect(clearBox?.height).toBeGreaterThanOrEqual(47.5);
+    await browse.press('Escape');
+    await expect(browse).toBeFocused();
+  });
+
+  test('dialog and account surfaces contain focus and restore their concrete opener',async({page})=>{
+    await page.setViewportSize({width:390,height:700});
+    await page.goto(`./?dialog-focus=${Date.now()}`,{waitUntil:'domcontentloaded'});
+    await waitForApp(page);
+    await installOrganizerFixture(page);
+    await page.evaluate(()=>openTrainerOrganizer('FavoriteTrainer',document.getElementById('cross-browser-organizer-trigger')));
+    await expect(page.locator('#trainer-organizer-modal')).toBeVisible();
+    await expect(page.locator('.organizer-close')).toBeFocused();
+    await page.keyboard.press('Shift+Tab');
+    await expect(page.locator('.organizer-actions .bpri')).toBeFocused();
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#trainer-organizer-modal')).toBeHidden();
+    await expect(page.locator('#cross-browser-organizer-trigger')).toBeFocused();
+    await page.locator('#account-trigger').click();
+    await expect(page.locator('#account-settings-action')).toBeFocused();
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#account-trigger')).toBeFocused();
+  });
+
   test('review screenshots capture only the high-value corrected states',async({page},testInfo)=>{
     test.skip(!reviewDir,'Set CROSS_BROWSER_REVIEW_DIR to capture review evidence.');
     if(testInfo.project.name==='cross-chromium'){
@@ -318,6 +504,19 @@ test.describe('audit cross-browser contracts',()=>{
         },{theme,username});
         await captureReview(page,name);
       }
+      await page.setViewportSize({width:390,height:844});
+      await page.goto(`./?review=feedback-${Date.now()}`,{waitUntil:'domcontentloaded'});
+      await waitForApp(page);await establishAccount(page);
+      await page.evaluate(()=>toast('Search copied'));
+      await captureReview(page,'chromium-390-mobile-copy-toast');
+      await page.evaluate(()=>{document.getElementById('toast').hidden=true;document.getElementById('toast').classList.remove('show');showUndo('Pikachu');});
+      await captureReview(page,'chromium-390-mobile-undo-toast');
+      await page.setViewportSize({width:320,height:568});
+      await page.evaluate(()=>{hideUndo();toast('Your changes were saved on this device.');});
+      await captureReview(page,'chromium-320-short-viewport-toast');
+      await page.setViewportSize({width:390,height:844});
+      await page.evaluate(()=>{document.documentElement.dataset.theme='dark';toast('Search copied');});
+      await captureReview(page,'chromium-390-dark-theme-toast');
       return;
     }
     if(testInfo.project.name==='cross-firefox'){
