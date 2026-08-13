@@ -71,8 +71,8 @@ test('favorite organizer trigger and sheet controls expose 48px touch targets',(
 });
 
 test('signed-out and anonymous screens expose language settings without a profile menu',()=>{
-  assert.match(html,/id="login-language-trigger"[^>]+openSettingsPanel\('public'\)/);
-  assert.match(html,/id="share-language-trigger"[^>]+openSettingsPanel\('public'\)/);
+  assert.match(html,/id="login-language-trigger"[^>]+openSettingsPanel\('public',\{returnFocus:this\}\)/);
+  assert.match(html,/id="share-language-trigger"[^>]+openSettingsPanel\('public',\{returnFocus:this\}\)/);
   assert.match(html,/function configureSettingsPanel\(context='public'\)/);
   assert.match(html,/el\.hidden=_settingsContext!=='account'/);
 });
@@ -82,8 +82,7 @@ test('account menu and Settings surfaces preserve keyboard focus and route compa
   assert.match(html,/if\(e\.key==='Escape'&&popover&&!popover\.hidden\)/);
   assert.match(html,/if\(ev\.key==='Escape'\)\{if\(id==='settings-modal'&&settingsDetailIsOpenOnMobile\(\)\)\{showSettingsSectionList\(\);return;\}if\(id==='trainer-organizer-modal'\)closeTrainerOrganizer\(\);else closeModal\(id\);return;\}/);
   assert.match(html,/if\(returnFocus\?\.isConnected&&!returnFocus\.disabled\)returnFocus\.focus\(/);
-  assert.match(html,/history\.pushState\([^\n]+settingsPanel:true/);
-  assert.match(html,/history\.replaceState\([^\n]+settingsSection:section/);
+  assert.match(html,/function writeSettingsRoute[\s\S]*history\.pushState\(state,'',target\)/);
   assert.match(html,/settingsRouteHash\(section=null\)/);
   assert.match(html,/window\.addEventListener\('popstate',syncSettingsRoute\)/);
   assert.match(html,/window\.addEventListener\('hashchange',syncSettingsRoute\)/);

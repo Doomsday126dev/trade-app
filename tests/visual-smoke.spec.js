@@ -555,7 +555,12 @@ test.describe('visual smoke', () => {
     await page.locator('[data-settings-target="language"]').click();
     await expect(page).toHaveURL(/#settings\/language$/);
     await page.goBack();
+    await expect(page).toHaveURL(/#settings\/profile$/);
+    await expect(page.locator('[data-settings-section="profile"]')).toBeVisible();
+    await page.goBack();
     await expect(page.locator('#settings-modal')).toBeHidden();
+    await page.goForward();
+    await expect(page.locator('[data-settings-section="profile"]')).toBeVisible();
     await page.goForward();
     await expect(page.locator('[data-settings-section="language"]')).toBeVisible();
 

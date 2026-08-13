@@ -33,12 +33,20 @@ test('valid section deep links wait for auth readiness before public normalizati
   assert.match(observer,/_authStateKnown=true;[\s\S]*syncPendingSettingsRouteAfterAuth\(\)/);
 });
 
-test('section changes replace the one Settings history entry and reset content scroll',()=>{
+test('BROWSER-01 section changes use the shared route writer and reset content scroll',()=>{
   const selection=html.slice(html.indexOf("function selectSettingsSection(section='profile'"),html.indexOf('function showSettingsSectionList'));
-  assert.match(selection,/history\.replaceState\([^\n]+settingsSection:section/);
+  assert.match(selection,/writeSettingsRoute\(section,\{mode:options\.historyMode\|\|'push'\}\)/);
   assert.match(selection,/detail\.scrollTop=0/);
-  assert.match(html,/showSettingsSectionList[\s\S]*history\.replaceState\([^\n]+settingsRouteUrl\(true\)/);
-  assert.match(html,/if\(history\.state\?\.settingsPanel\)\{history\.back\(\);return true;\}/);
+  assert.match(html,/function writeSettingsRoute[\s\S]*history\.pushState\(state,'',target\)/);
+  assert.match(html,/function adoptDirectSettingsRoute[\s\S]*settingsDirectRoot:true/);
+  assert.match(html,/showSettingsSectionList[\s\S]*history\.back\(\);return/);
+  assert.match(html,/if\(history\.state\?\.settingsPanel\)\{history\.go\(-Math\.max\(1,Number\(history\.state\.settingsDepth\)\|\|1\)\);return true;\}/);
+});
+
+test('BROWSER-02 public Settings preserves its concrete opener',()=>{
+  assert.match(html,/id="login-language-trigger" onclick="openSettingsPanel\('public',\{returnFocus:this\}\)"/);
+  assert.match(html,/id="share-language-trigger" onclick="openSettingsPanel\('public',\{returnFocus:this\}\)"/);
+  assert.match(html,/const returnFocus=options\.returnFocus\|\|/);
 });
 
 test('mobile and public Settings retain their constrained dialog boundaries',()=>{

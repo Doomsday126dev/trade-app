@@ -85,11 +85,11 @@ input,select,textarea{font-family:var(--font);outline:none}
 
 /* TOPBAR */
 .topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 16px;height:var(--topbar-h);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
-.logo{font-weight:700;font-size:17px;letter-spacing:0;display:flex;align-items:center;gap:8px}
-.logo span{background:linear-gradient(135deg,var(--accent),var(--ac2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.logo{font-weight:700;font-size:17px;letter-spacing:0;display:flex;align-items:center;gap:8px;min-width:0;flex:0 1 auto}
+.logo span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:linear-gradient(135deg,var(--accent),var(--ac2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .brand-mark{width:26px;height:26px;display:block;flex:0 0 auto;border-radius:7px;box-shadow:0 0 0 1px rgba(255,255,255,.08),0 6px 16px rgba(108,99,255,.22)}
 .brand-mark.lg{width:32px;height:32px;border-radius:9px}
-.topbar-r{display:flex;align-items:center;gap:10px;min-width:0}
+.topbar-r{display:flex;align-items:center;gap:10px;min-width:0;flex:0 1 auto}
 .member-community-switcher{display:none;align-items:center;gap:6px;background:var(--card);border:1px solid var(--border2);border-radius:var(--radius-pill);padding:4px 8px;color:var(--muted);font-size:12px;font-weight:700;white-space:nowrap;min-width:0}
 .member-community-switcher.show{display:inline-flex}
 .member-community-switcher label{display:flex;align-items:center;gap:6px;min-width:0}
@@ -100,7 +100,7 @@ input,select,textarea{font-family:var(--font);outline:none}
 .user-chip span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .av{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--ac2));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
 .av.lg{width:48px;height:48px;font-size:18px}
-.account-control{position:relative;min-width:0}
+.account-control{position:relative;min-width:0;flex:0 1 auto}
 .account-trigger{min-width:48px;min-height:48px;max-width:220px;color:var(--text)}
 .account-trigger .account-chevron{font-size:11px;color:var(--muted);overflow:visible}
 .account-popover{position:absolute;top:calc(100% + 8px);right:0;width:min(290px,calc(100vw - 24px));padding:8px;background:var(--card);border:1px solid var(--border2);border-radius:var(--radius-lg);box-shadow:0 16px 38px rgba(0,0,0,.42);z-index:180}
@@ -1811,6 +1811,7 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
 .have-title,.sched-title{font:700 var(--type-page)}.settings-section-heading h2,.organizer-header h2{font:700 var(--type-section)}.event-group-title,.event-card-title,.req-card-name{font:700 var(--type-card)}.have-subtitle,.sched-subtitle,.trainer-search-guidance,.settings-section-heading p,.share-hdr-meta,.share-hdr-bio{font:var(--type-meta)}
 .lcard{max-width:var(--container-narrow);border-radius:var(--radius-lg)}.trainer-discovery-content,.share-hdr,.share-body,.share-meta-banner,.share-list-tabs{max-width:var(--container-standard)}.settings-modal{max-width:var(--container-wide)}
 :where(button,a,input,select,textarea,[role="button"],[tabindex]):focus-visible{outline:3px solid var(--ac2);outline-offset:2px}
+select.field-control{height:var(--control-min);min-height:var(--control-min);box-sizing:border-box}
 .settings-panel{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:14px 0;padding:14px 16px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--card)}
 .settings-panel h2{font-size:14px;line-height:1.3;margin:0 0 4px}.settings-panel p{font-size:12px;line-height:1.5;color:var(--muted);margin:0;max-width:620px}
 .language-field{display:flex;flex-direction:column;gap:5px;min-width:210px;font-size:11px;font-weight:700;color:var(--muted)}
@@ -1823,7 +1824,7 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
 @media(max-width:600px){.page{padding:var(--space-3)}.settings-panel{align-items:stretch;flex-direction:column;padding:var(--space-3)}.language-field{min-width:0}.language-primary-row{grid-template-columns:1fr;gap:6px}.language-override-help,.language-override-row{padding-left:0}.language-override-row .language-field{max-width:none}.account-security-method{grid-template-columns:40px minmax(0,1fr)}.account-security-status{grid-column:2;text-align:left;min-height:24px}.status-badge{align-self:flex-start}.add-actions>button,.add-actions .image-btn{min-height:44px}.trainer-quick-name{white-space:normal;overflow-wrap:anywhere}}
 @media(max-width:600px){.share-pcard.card-row{padding:6px 8px}}
 @media(max-width:767px){.settings-overlay{align-items:flex-end;padding:0}.settings-modal{max-width:none;width:100%;max-height:calc(100dvh - env(safe-area-inset-top));margin:auto 0 0;border-radius:14px 14px 0 0;border-bottom:0}.settings-modal-header{padding-top:16px}.settings-modal-body{padding-bottom:env(safe-area-inset-bottom);max-height:calc(100dvh - 88px - env(safe-area-inset-top));min-height:min(560px,calc(100dvh - 88px - env(safe-area-inset-top)))}.settings-layout{display:block;height:100%}.settings-nav{border:0;padding:12px 14px}.settings-nav-list{gap:6px}.settings-nav-button{border:1px solid var(--border);background:var(--card)}.settings-detail{height:100%;padding:12px 14px calc(20px + env(safe-area-inset-bottom))}.settings-mobile-back{display:inline-flex;align-items:center}.settings-layout.mobile-list .settings-detail{display:none}.settings-layout:not(.mobile-list) .settings-nav{display:none}.settings-tool-list{grid-template-columns:1fr}.settings-panel{margin:10px 0}.topbar{padding-inline:10px}.topbar-r{gap:6px}.account-trigger{max-width:150px}.account-trigger #top-un{max-width:84px}.account-popover{position:fixed;top:auto;right:8px;bottom:calc(8px + env(safe-area-inset-bottom));width:calc(100vw - 16px);max-height:calc(100dvh - 24px - env(safe-area-inset-top));overflow-y:auto}.local-settings-trigger span{display:none}}
-@media(max-width:390px){.account-trigger{padding-right:7px}.account-trigger #top-un{display:none}.account-trigger .account-chevron{display:block}.install-btn{display:none!important}}
+@media(max-width:430px){.account-trigger{max-width:56px;padding-right:7px}.account-trigger #top-un{display:none}.account-trigger .account-chevron{display:block}}
 @media(max-width:360px){.page{padding-inline:10px}.add-form,.event-card,.trainer-quick-card{padding:var(--space-3)}.favorite-toolbar{grid-template-columns:1fr}.favorite-toolbar .bghost{width:100%;min-height:48px}.favorite-filter-tags{grid-column:1}}
 
 /* Consumer product finish: one calm shell, one surface hierarchy, fewer boxes. */
@@ -1872,7 +1873,7 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
 @media(min-width:900px){#tab-find .have-hdr,.trainer-discovery-content{width:min(100%,var(--container-wide));max-width:var(--container-wide)}.trainer-discovery-content{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(300px,.85fr);column-gap:28px;align-items:start}.trainer-search-shell{grid-column:1/-1;width:min(100%,760px)}#favorite-trainers{grid-column:1}#recent-trainers{grid-column:2}.trainer-quick-section{margin-top:28px}}
 .event-filter-scroll{position:relative}.event-filter-scroll::after{content:"";position:absolute;z-index:2;top:0;right:-1px;width:34px;height:50px;pointer-events:none;background:linear-gradient(90deg,transparent,var(--surface-canvas))}.event-filter-scroll.is-at-end::after{display:none}.event-filter-row{scroll-snap-type:x proximity;overscroll-behavior-inline:contain}.event-filter{scroll-snap-align:start}.event-group:not([data-group="now"]) .event-card-grid{gap:0;overflow:hidden;border-block:1px solid var(--border)}.event-group:not([data-group="now"]) .event-card{min-height:82px;border:0;border-bottom:1px solid var(--border);border-radius:0;background:transparent;box-shadow:none}.event-group:not([data-group="now"]) .event-card:last-child{border-bottom:0}.event-group:not([data-group="now"]) .event-card:hover{background:var(--surface-hover)}
 @media(max-width:767px){
-  :root{--topbar-h:58px}.topbar{padding-inline:12px}.logo{font-size:16px}.brand-mark{width:28px;height:28px}.bell-btn,.theme-toggle{width:48px;height:48px}.tabs{justify-content:space-around;padding-inline:0}.tab{flex:1;flex-direction:column;gap:2px;min-height:58px;padding:6px 2px;font-size:0}.tab-label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}.tab-short-label{display:block;font-size:10px;line-height:12px;white-space:nowrap}.page{padding:20px 14px 56px}.my-hdr{margin-bottom:12px}.journey-guidance{padding:11px 12px}.journey-guidance-actions{gap:4px}.journey-guidance-actions .bghost{padding-inline:8px}.add-form{padding:14px}.settings-nav-button{background:transparent;border-color:transparent}.settings-nav-button[aria-current="page"]{background:var(--surface-raised)}
+  :root{--topbar-h:58px}.topbar{padding-inline:12px}.logo{font-size:16px}.brand-mark{width:28px;height:28px}.sync-row,.bell-btn,.theme-toggle{width:48px;height:48px;min-width:48px;min-height:48px;justify-content:center}.tabs{justify-content:space-around;padding-inline:0}.tab{flex:1;flex-direction:column;gap:2px;min-height:58px;padding:6px 2px;font-size:0}.tab-label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}.tab-short-label{display:block;font-size:10px;line-height:12px;white-space:nowrap}.page{padding:20px 14px 56px}.my-hdr{margin-bottom:12px}.journey-guidance{padding:11px 12px}.journey-guidance-actions{gap:4px}.journey-guidance-actions .bghost{padding-inline:8px}.add-form{padding:14px}.settings-nav-button{background:transparent;border-color:transparent}.settings-nav-button[aria-current="page"]{background:var(--surface-raised)}
 }
 @media(max-width:600px){#tab-mylist.has-list-content .journey-guidance{display:none}#tab-mylist .my-hdr{gap:9px;margin-bottom:8px}#tab-mylist .my-hdr .av.lg{width:38px;height:38px}#tab-mylist .my-uname{font-size:20px;line-height:24px}#tab-mylist #my-fc-wrap{margin-top:0!important}#tab-mylist .fc-chip{padding-block:2px}#tab-mylist .mylist-type-tabs{margin-bottom:8px}#tab-mylist .add-form{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 68px;gap:7px 6px;margin-bottom:10px;padding:11px 10px}#tab-mylist .add-ttl{grid-column:1/-1;margin:0;padding-right:76px;font-size:13px;line-height:20px}#tab-mylist .add-form .frow,#tab-mylist .add-actions{display:contents}#tab-mylist .add-form .ac-wrap{grid-column:1;grid-row:2;width:100%}#tab-mylist .add-form .add-pri-group{grid-column:1;grid-row:3;width:max-content;max-width:100%;justify-content:flex-start;padding:4px 7px}#tab-mylist .add-advanced-toggle{grid-column:2;grid-row:3;width:100%;min-height:48px;justify-content:center;padding:6px;font-size:11px}#tab-mylist .add-actions .bsave{grid-column:2;grid-row:2;width:68px;min-width:68px;margin:0;padding:8px;box-shadow:none}#tab-mylist .add-actions .export-menu-wrap{position:absolute;top:5px;right:6px}#tab-mylist .add-actions .image-btn{min-height:40px;padding:6px 8px;border-color:transparent;background:transparent;color:var(--muted)}#tab-mylist .add-advanced,#tab-mylist .add-tray,#tab-mylist .speed-add-hint{grid-column:1/-1}#tab-mylist .mylist-search{margin-top:10px;margin-bottom:6px}#tab-mylist .sec{margin-block:4px!important}.favorite-card-surface{grid-template-columns:minmax(0,1fr);gap:4px}.favorite-card-surface .trainer-quick-name{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;white-space:normal;overflow:hidden;overflow-wrap:anywhere;line-height:1.35}.favorite-card-footer{justify-content:flex-end;padding-top:4px;border-top:1px solid var(--border)}.favorite-card-open{margin-right:auto}.event-filter-scroll{margin-inline:-14px}.event-filter-row{margin:0;padding:2px 32px 10px 14px}.event-filter-scroll::after{right:0;width:42px}.event-group:not([data-group="now"]) .event-card{min-height:88px}.organizer-header{padding:14px 14px 10px}.organizer-body{padding-inline:14px}.organizer-actions{bottom:calc(-16px - env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom)}}
 @media(max-width:430px){.my-uname{font-size:21px}.mylist-type-tabs{flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}.mylist-type-tabs::-webkit-scrollbar{display:none}.event-card{grid-template-columns:minmax(0,1fr) 48px}.event-card-cue{width:48px;min-width:48px}.favorite-card-open{padding-inline:7px}.favorite-card-add-tag{padding-inline:9px;min-width:60px}.myrow-active-traits{overflow:hidden}.myrow-trait.detail{display:none}.myrow-edit span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}}
@@ -1947,7 +1948,7 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
 
 <!-- LOGIN -->
 <div id="login-pg" style="display:none">
-  <button type="button" class="local-settings-trigger login-local-settings" id="login-language-trigger" onclick="openSettingsPanel('public')" data-i18n-aria-label="account.languageSettings" aria-label="Language settings"><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-globe"></use></svg><span data-i18n="account.language">Language</span></button>
+  <button type="button" class="local-settings-trigger login-local-settings" id="login-language-trigger" onclick="openSettingsPanel('public',{returnFocus:this})" data-i18n-aria-label="account.languageSettings" aria-label="Language settings"><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-globe"></use></svg><span data-i18n="account.language">Language</span></button>
   <div class="lcard ui-container ui-container-narrow card-content">
     <div class="llogo"><img class="brand-mark lg" src="assets/tradeloop-icon.svg" alt="" aria-hidden="true"> <span>PoGo Trades</span></div>
     <div class="lsub" data-i18n="login.subtitle">NYC Community Trade List</div>
@@ -2500,7 +2501,7 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
 
 <!-- READ-ONLY SHARE VIEW (#9) -->
 <div id="share-view">
-  <div class="share-meta-banner ui-container ui-container-standard status-inline"><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-list"></use></svg><span data-i18n="share.readOnlyBanner">Read-only shared trade list. Anyone with this link can view it.</span> <button type="button" class="local-settings-trigger btn btn-secondary" id="share-language-trigger" onclick="openSettingsPanel('public')" data-i18n-aria-label="account.languageSettings" aria-label="Language settings"><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-globe"></use></svg><span data-i18n="account.language">Language</span></button></div>
+  <div class="share-meta-banner ui-container ui-container-standard status-inline"><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-list"></use></svg><span data-i18n="share.readOnlyBanner">Read-only shared trade list. Anyone with this link can view it.</span> <button type="button" class="local-settings-trigger btn btn-secondary" id="share-language-trigger" onclick="openSettingsPanel('public',{returnFocus:this})" data-i18n-aria-label="account.languageSettings" aria-label="Language settings"><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-globe"></use></svg><span data-i18n="account.language">Language</span></button></div>
   <div class="share-hdr ui-container ui-container-standard card-content" id="share-hdr"></div>
   <div class="share-body ui-container ui-container-standard">
     <a class="share-back-link" onclick="exitShareView()" data-i18n="share.backToApp">← Back to app</a>
@@ -2647,7 +2648,7 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
 <div class="ptr-indicator" id="ptr-indicator" aria-hidden="true">↓</div>
 
 <script>
-window.__POGO_RELEASE_ID='2026-08-05.41';
+window.__POGO_RELEASE_ID='2026-08-05.42';
 window.__pogoBootWatch=setTimeout(function(){
   var visible=['config-pg','login-pg','app'].some(function(id){
     var el=document.getElementById(id);
@@ -2666,65 +2667,65 @@ window.__pogoBootWatch=setTimeout(function(){
   if(err)err.textContent='App scripts did not finish loading. Refresh once; if this stays, send this screenshot.';
 },4000);
 </script>
-<script src="data.js?v=2026-08-05.41"></script>
-<script src="js/domain/productLimits.js?v=2026-08-05.41"></script>
-<script src="js/domain/priorities.js?v=2026-08-05.41"></script>
-<script src="js/ui/badges.js?v=2026-08-05.41"></script>
-<script src="js/domain/username.js?v=2026-08-05.41"></script>
-<script src="js/domain/priorityValues.js?v=2026-08-05.41"></script>
-<script src="js/domain/scheduleDates.js?v=2026-08-05.41"></script>
-<script src="js/domain/pokemonSearchTerms.js?v=2026-08-05.41"></script>
-<script src="js/domain/pokemonEntryRules.js?v=2026-08-05.41"></script>
-<script src="js/domain/pokemonGoSearchSyntax.js?v=2026-08-05.41"></script>
-<script src="js/domain/searchStrings.js?v=2026-08-05.41"></script>
-<script src="js/ui/stringHtml.js?v=2026-08-05.41"></script>
-<script src="js/domain/scheduleEventRules.js?v=2026-08-05.41"></script>
-<script src="js/domain/scheduleTradeRules.js?v=2026-08-05.41"></script>
-<script src="js/domain/pokemonKeys.js?v=2026-08-05.41"></script>
-<script src="js/domain/spriteSlugs.js?v=2026-08-05.41"></script>
-<script src="js/domain/fuzzyText.js?v=2026-08-05.41"></script>
-<script src="js/domain/autocompleteText.js?v=2026-08-05.41"></script>
-<script src="js/domain/autocompleteMatching.js?v=2026-08-05.41"></script>
-<script src="js/domain/autocompleteRanking.js?v=2026-08-05.41"></script>
-<script src="js/domain/relativeTime.js?v=2026-08-05.41"></script>
-<script src="js/domain/clientRelease.js?v=2026-08-05.41"></script>
-<script src="js/domain/favoriteCardInteractions.js?v=2026-08-05.41"></script>
-<script src="js/domain/favoritePokemonBrowse.js?v=2026-08-05.41"></script>
-<script src="js/domain/trainerDiscovery.js?v=2026-08-05.41"></script>
-<script src="js/domain/eventPresentation.js?v=2026-08-05.41"></script>
-<script src="js/domain/publicSharePublication.js?v=2026-08-05.41"></script>
-<script src="js/domain/trainerPreferences.js?v=2026-08-05.41"></script>
-<script src="js/domain/trainerPreferenceSync.js?v=2026-08-05.41"></script>
-<script src="js/domain/authenticationReadiness.js?v=2026-08-05.41"></script>
-<script src="js/domain/loginDirectory.js?v=2026-08-05.41"></script>
-<script src="js/utils/textSafety.js?v=2026-08-05.41"></script>
-<script src="js/ui/stringPanels.js?v=2026-08-05.41"></script>
-<script src="js/ui/emptyState.js?v=2026-08-05.41"></script>
-<script src="js/i18n/locales/en.js?v=2026-08-05.41"></script>
-<script src="js/i18n/locales/ja.js?v=2026-08-05.41"></script>
-<script src="js/i18n/locales/es.js?v=2026-08-05.41"></script>
-<script src="js/i18n/locales/de.js?v=2026-08-05.41"></script>
-<script src="js/i18n/pokemonNames/catalog.js?v=2026-08-05.41"></script>
-<script src="js/i18n/pokemonNames/variants.js?v=2026-08-05.41"></script>
-<script src="js/i18n/pokemonNames/core.js?v=2026-08-05.41"></script>
-<script src="js/i18n/eventLabels/currentTitles.js?v=2026-08-05.41"></script>
-<script src="js/i18n/eventLabels/core.js?v=2026-08-05.41"></script>
-<script src="js/i18n/core.js?v=2026-08-05.41"></script>
-<script src="js/services/firebaseClient.js?v=2026-08-05.41"></script>
-<script src="js/services/firebaseAppCheck.js?v=2026-08-05.41"></script>
-<script src="js/data/subscriptionManager.js?v=2026-08-05.41"></script>
-<script src="js/data/listenerLifecycle.js?v=2026-08-05.41"></script>
-<script src="js/data/sessionCacheBoundary.js?v=2026-08-05.41"></script>
-<script src="js/data/firebaseReadRegistry.js?v=2026-08-05.41"></script>
-<script src="js/data/currentUserRepository.js?v=2026-08-05.41"></script>
-<script src="js/data/ownedDataCoordinator.js?v=2026-08-05.41"></script>
-<script src="js/data/publicShareRepository.js?v=2026-08-05.41"></script>
-<script src="js/data/trainerHistoryStore.js?v=2026-08-05.41"></script>
-<script src="js/data/favoriteShareSessionCache.js?v=2026-08-05.41"></script>
-<script src="js/data/trainerPreferencesRepository.js?v=2026-08-05.41"></script>
-<script src="js/data/trainerPreferenceSyncQueue.js?v=2026-08-05.41"></script>
-<script src="js/domain/cacheAdapters.js?v=2026-08-05.41"></script>
-<script src="js/ui/trainerTagPanel.js?v=2026-08-05.41"></script>
+<script src="data.js?v=2026-08-05.42"></script>
+<script src="js/domain/productLimits.js?v=2026-08-05.42"></script>
+<script src="js/domain/priorities.js?v=2026-08-05.42"></script>
+<script src="js/ui/badges.js?v=2026-08-05.42"></script>
+<script src="js/domain/username.js?v=2026-08-05.42"></script>
+<script src="js/domain/priorityValues.js?v=2026-08-05.42"></script>
+<script src="js/domain/scheduleDates.js?v=2026-08-05.42"></script>
+<script src="js/domain/pokemonSearchTerms.js?v=2026-08-05.42"></script>
+<script src="js/domain/pokemonEntryRules.js?v=2026-08-05.42"></script>
+<script src="js/domain/pokemonGoSearchSyntax.js?v=2026-08-05.42"></script>
+<script src="js/domain/searchStrings.js?v=2026-08-05.42"></script>
+<script src="js/ui/stringHtml.js?v=2026-08-05.42"></script>
+<script src="js/domain/scheduleEventRules.js?v=2026-08-05.42"></script>
+<script src="js/domain/scheduleTradeRules.js?v=2026-08-05.42"></script>
+<script src="js/domain/pokemonKeys.js?v=2026-08-05.42"></script>
+<script src="js/domain/spriteSlugs.js?v=2026-08-05.42"></script>
+<script src="js/domain/fuzzyText.js?v=2026-08-05.42"></script>
+<script src="js/domain/autocompleteText.js?v=2026-08-05.42"></script>
+<script src="js/domain/autocompleteMatching.js?v=2026-08-05.42"></script>
+<script src="js/domain/autocompleteRanking.js?v=2026-08-05.42"></script>
+<script src="js/domain/relativeTime.js?v=2026-08-05.42"></script>
+<script src="js/domain/clientRelease.js?v=2026-08-05.42"></script>
+<script src="js/domain/favoriteCardInteractions.js?v=2026-08-05.42"></script>
+<script src="js/domain/favoritePokemonBrowse.js?v=2026-08-05.42"></script>
+<script src="js/domain/trainerDiscovery.js?v=2026-08-05.42"></script>
+<script src="js/domain/eventPresentation.js?v=2026-08-05.42"></script>
+<script src="js/domain/publicSharePublication.js?v=2026-08-05.42"></script>
+<script src="js/domain/trainerPreferences.js?v=2026-08-05.42"></script>
+<script src="js/domain/trainerPreferenceSync.js?v=2026-08-05.42"></script>
+<script src="js/domain/authenticationReadiness.js?v=2026-08-05.42"></script>
+<script src="js/domain/loginDirectory.js?v=2026-08-05.42"></script>
+<script src="js/utils/textSafety.js?v=2026-08-05.42"></script>
+<script src="js/ui/stringPanels.js?v=2026-08-05.42"></script>
+<script src="js/ui/emptyState.js?v=2026-08-05.42"></script>
+<script src="js/i18n/locales/en.js?v=2026-08-05.42"></script>
+<script src="js/i18n/locales/ja.js?v=2026-08-05.42"></script>
+<script src="js/i18n/locales/es.js?v=2026-08-05.42"></script>
+<script src="js/i18n/locales/de.js?v=2026-08-05.42"></script>
+<script src="js/i18n/pokemonNames/catalog.js?v=2026-08-05.42"></script>
+<script src="js/i18n/pokemonNames/variants.js?v=2026-08-05.42"></script>
+<script src="js/i18n/pokemonNames/core.js?v=2026-08-05.42"></script>
+<script src="js/i18n/eventLabels/currentTitles.js?v=2026-08-05.42"></script>
+<script src="js/i18n/eventLabels/core.js?v=2026-08-05.42"></script>
+<script src="js/i18n/core.js?v=2026-08-05.42"></script>
+<script src="js/services/firebaseClient.js?v=2026-08-05.42"></script>
+<script src="js/services/firebaseAppCheck.js?v=2026-08-05.42"></script>
+<script src="js/data/subscriptionManager.js?v=2026-08-05.42"></script>
+<script src="js/data/listenerLifecycle.js?v=2026-08-05.42"></script>
+<script src="js/data/sessionCacheBoundary.js?v=2026-08-05.42"></script>
+<script src="js/data/firebaseReadRegistry.js?v=2026-08-05.42"></script>
+<script src="js/data/currentUserRepository.js?v=2026-08-05.42"></script>
+<script src="js/data/ownedDataCoordinator.js?v=2026-08-05.42"></script>
+<script src="js/data/publicShareRepository.js?v=2026-08-05.42"></script>
+<script src="js/data/trainerHistoryStore.js?v=2026-08-05.42"></script>
+<script src="js/data/favoriteShareSessionCache.js?v=2026-08-05.42"></script>
+<script src="js/data/trainerPreferencesRepository.js?v=2026-08-05.42"></script>
+<script src="js/data/trainerPreferenceSyncQueue.js?v=2026-08-05.42"></script>
+<script src="js/domain/cacheAdapters.js?v=2026-08-05.42"></script>
+<script src="js/ui/trainerTagPanel.js?v=2026-08-05.42"></script>
 <script>
 let initializeApp,getDatabase,ref,set,get,onValue,update,getAuth,signInWithEmailAndPassword,createUserWithEmailAndPassword,firebaseSignOut,updatePassword,deleteUser,onAuthStateChanged;
 let firebaseSdkPromise=null;
@@ -9740,6 +9741,26 @@ function settingsRouteUrl(includeHash=true,section=null){
   url.hash=includeHash?settingsRouteHash(section):'';
   return`${url.pathname}${url.search}${url.hash}`;
 }
+function writeSettingsRoute(section,{mode='push'}={}){
+  const normalized=_settingsContext==='account'&&SETTINGS_SECTIONS.includes(section)?section:null;
+  const target=settingsRouteUrl(true,normalized);
+  if(`${location.pathname}${location.search}${location.hash}`===target)return false;
+  const previousDepth=history.state?.settingsPanel?Math.max(1,Number(history.state.settingsDepth)||1):0;
+  const state={...history.state,settingsPanel:true,settingsSection:normalized,settingsDepth:mode==='replace'?Math.max(1,previousDepth):previousDepth+1,settingsParentSection:mode==='replace'?history.state?.settingsParentSection??null:history.state?.settingsSection??null};
+  if(mode==='replace')history.replaceState(state,'',target);
+  else history.pushState(state,'',target);
+  return true;
+}
+function adoptDirectSettingsRoute(route=parseSettingsRoute()){
+  if(!route.matches||history.state?.settingsPanel)return false;
+  const baseState={...history.state,settingsPanel:false,settingsSection:null,settingsDepth:0,settingsDirectRoot:true,settingsParentSection:null};
+  history.replaceState(baseState,'',settingsRouteUrl(false));
+  if(cur&&route.section&&!matchMedia(SETTINGS_DESKTOP_QUERY).matches){
+    history.pushState({...baseState,settingsPanel:true,settingsDepth:1},'',settingsRouteUrl(true));
+    history.pushState({...baseState,settingsPanel:true,settingsSection:route.section,settingsDepth:2},'',settingsRouteUrl(true,route.section));
+  }else history.pushState({...baseState,settingsPanel:true,settingsSection:route.section,settingsDepth:1},'',settingsRouteUrl(true,route.section));
+  return true;
+}
 function settingsRouteKey(){
   const url=new URL(location.href);if(url.searchParams.get('action')==='settings')url.searchParams.delete('action');
   url.hash='';
@@ -9795,7 +9816,7 @@ function configureSettingsPanel(context='public'){
   const preserveMobileDetail=_settingsContext==='account'&&document.getElementById('settings-modal')?.classList.contains('open')&&mobile&&!layout?.classList.contains('mobile-list');
   if(_settingsContext==='public'){layout?.classList.remove('mobile-list');selectSettingsSection('language',{focus:false});}
   else if(mobile){if(!preserveMobileDetail)layout?.classList.add('mobile-list');selectSettingsSection(_settingsSection,{focus:false,keepList:!preserveMobileDetail,updateHistory:false});}
-  else{layout?.classList.remove('mobile-list');selectSettingsSection(_settingsSection,{focus:false});}
+  else{layout?.classList.remove('mobile-list');selectSettingsSection(_settingsSection,{focus:false,updateHistory:false});}
 }
 function selectSettingsSection(section='profile',options={}){
   if(!SETTINGS_SECTIONS.includes(section))section='profile';if(_settingsContext!=='account')section='language';const previous=_settingsSection;_settingsSection=section;
@@ -9803,17 +9824,15 @@ function selectSettingsSection(section='profile',options={}){
   document.querySelectorAll('[data-settings-target]').forEach(button=>{const active=button.dataset.settingsTarget===section;button.setAttribute('aria-current',active?'page':'false');});
   const layout=document.getElementById('settings-layout');if(!options.keepList)layout?.classList.remove('mobile-list');
   const detail=document.getElementById('settings-detail');if(detail&&previous!==section&&options.resetScroll!==false)detail.scrollTop=0;
-  if(_settingsContext==='account'&&options.updateHistory!==false&&document.getElementById('settings-modal')?.classList.contains('open')){
-    const target=settingsRouteUrl(true,section);
-    if(`${location.pathname}${location.search}${location.hash}`!==target){
-      history.replaceState({...history.state,settingsPanel:true,settingsSection:section},'',target);
-    }
-  }
+  if(_settingsContext==='account'&&options.updateHistory!==false&&document.getElementById('settings-modal')?.classList.contains('open'))writeSettingsRoute(section,{mode:options.historyMode||'push'});
   if(options.focus!==false)requestAnimationFrame(()=>document.querySelector(`[data-settings-section="${section}"] h2`)?.focus({preventScroll:true}));
 }
-function showSettingsSectionList(){
-  if(matchMedia(SETTINGS_DESKTOP_QUERY).matches)return;document.getElementById('settings-layout')?.classList.add('mobile-list');
-  if(parseSettingsRoute().section)history.replaceState({...history.state,settingsPanel:true,settingsSection:null},'',settingsRouteUrl(true));
+function showSettingsSectionList(options={}){
+  if(matchMedia(SETTINGS_DESKTOP_QUERY).matches)return;
+  const route=parseSettingsRoute();
+  document.getElementById('settings-layout')?.classList.add('mobile-list');
+  if(route.section&&options.updateHistory!==false&&history.state?.settingsPanel&&history.state?.settingsSection===route.section&&history.state?.settingsParentSection==null){history.back();return;}
+  if(route.section&&options.updateHistory!==false)writeSettingsRoute(null,{mode:'replace'});
   requestAnimationFrame(()=>document.querySelector(`[data-settings-target="${_settingsSection}"]`)?.focus({preventScroll:true}));
 }
 function settingsDetailIsOpenOnMobile(){return!matchMedia(SETTINGS_DESKTOP_QUERY).matches&&!document.getElementById('settings-layout')?.classList.contains('mobile-list')&&_settingsContext==='account';}
@@ -9821,15 +9840,15 @@ function openSettingsPanel(context='public',options={}){
   const accountContext=context==='account'&&!!cur;
   const route=parseSettingsRoute();
   if(accountContext&&route.section)_settingsSection=route.section;
-  const returnFocus=accountContext?document.getElementById('account-trigger'):(document.activeElement instanceof HTMLElement?document.activeElement:null);
+  const returnFocus=options.returnFocus||(accountContext?document.getElementById('account-trigger'):(document.activeElement instanceof HTMLElement?document.activeElement:null));
   closeAccountMenu(false);renderInterimProductLabels();configureSettingsPanel(accountContext?'account':'public');
   if(accountContext&&route.valid&&route.section&&!settingsUsesPageMode())selectSettingsSection(route.section,{focus:false,updateHistory:false});
   const modal=document.getElementById('settings-modal');
   if(!modal?.classList.contains('open')&&options.captureScroll!==false)captureSettingsScrollSnapshot();
   const section=accountContext&&(settingsUsesPageMode()||route.valid&&route.section)?_settingsSection:null;
   const target=settingsRouteUrl(true,section);
-  if(options.updateHistory!==false&&`${location.pathname}${location.search}${location.hash}`!==target)history.pushState({...history.state,settingsPanel:true,settingsSection:section},'',target);
-  else if(options.updateHistory===false&&route.matches&&(!route.valid||!accountContext&&route.section||accountContext&&settingsUsesPageMode()&&!route.section))history.replaceState({...history.state,settingsPanel:true,settingsSection:section},'',target);
+  if(options.updateHistory!==false)writeSettingsRoute(section);
+  else if(route.matches&&(!route.valid||!accountContext&&route.section||accountContext&&settingsUsesPageMode()&&!route.section))writeSettingsRoute(section,{mode:'replace'});
   preserveSettingsScrollSnapshot();
   const initialFocus=_settingsContext==='account'&&settingsUsesPageMode()?`[data-settings-section="${_settingsSection}"] h2`:_settingsContext==='account'?`[data-settings-target="${_settingsSection}"]`:'#settings-language';
   openModal('settings-modal',{returnFocus,initialFocus});
@@ -9839,7 +9858,7 @@ function openAccountSettingsSection(section='profile'){
 }
 function closeSettingsRoute(){
   if(!parseSettingsRoute().matches)return false;
-  if(history.state?.settingsPanel){history.back();return true;}
+  if(history.state?.settingsPanel){history.go(-Math.max(1,Number(history.state.settingsDepth)||1));return true;}
   history.replaceState({...history.state,settingsPanel:false},'',settingsRouteUrl(false));
   return false;
 }
@@ -9851,6 +9870,7 @@ function syncSettingsRoute(options={}){
     return;
   }
   if(_authStateKnown||cur)_pendingSettingsRouteSection=null;
+  adoptDirectSettingsRoute(route);
   if(route.matches&&!modal.classList.contains('open')){
     const publicContext=document.getElementById('share-view')?.classList.contains('active')||!cur;
     openSettingsPanel(publicContext?'public':'account',{updateHistory:false,captureScroll:options.captureScroll!==false});
@@ -9859,7 +9879,8 @@ function syncSettingsRoute(options={}){
       selectSettingsSection('profile',{updateHistory:false});
       history.replaceState({...history.state,settingsPanel:true,settingsSection:settingsUsesPageMode()?'profile':null},'',settingsRouteUrl(true,settingsUsesPageMode()?'profile':null));
     }else if(_settingsContext==='account'&&route.section&&route.section!==_settingsSection)selectSettingsSection(route.section,{updateHistory:false});
-    else if(_settingsContext==='account'&&!route.section&&!settingsUsesPageMode())showSettingsSectionList();
+    else if(_settingsContext==='account'&&route.section&&!settingsUsesPageMode()&&document.getElementById('settings-layout')?.classList.contains('mobile-list'))selectSettingsSection(route.section,{updateHistory:false});
+    else if(_settingsContext==='account'&&!route.section&&!settingsUsesPageMode())showSettingsSectionList({updateHistory:false});
     else if(_settingsContext==='public'&&route.section)history.replaceState({...history.state,settingsPanel:true,settingsSection:null},'',settingsRouteUrl(true));
   }else if(!route.matches&&modal.classList.contains('open'))closeModal('settings-modal',{route:false});
 }
