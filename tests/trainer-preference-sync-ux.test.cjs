@@ -7,7 +7,7 @@ const vm=require('node:vm');
 const root=path.join(__dirname,'..');
 function load(){
   const window={};const context=vm.createContext({window});
-  for(const file of ['js/domain/trainerPreferenceSync.js','js/ui/trainerTagPanel.js','js/testing/trainerPreferenceSyncMockAdapter.js']){
+  for(const file of ['js/domain/productLimits.js','js/domain/trainerPreferenceSync.js','js/ui/trainerTagPanel.js','js/testing/trainerPreferenceSyncMockAdapter.js']){
     vm.runInContext(readFileSync(path.join(root,file),'utf8'),context,{filename:file});
   }
   return window;

@@ -7,7 +7,7 @@ const vm=require('node:vm');
 const root=path.join(__dirname,'..');
 const window={};
 const context=vm.createContext({window,URL});
-for(const file of ['js/domain/priorityValues.js','js/domain/trainerDiscovery.js','js/data/trainerHistoryStore.js','js/domain/eventPresentation.js']){
+for(const file of ['js/domain/productLimits.js','js/domain/priorityValues.js','js/domain/trainerDiscovery.js','js/data/trainerHistoryStore.js','js/domain/eventPresentation.js']){
   vm.runInContext(readFileSync(path.join(root,file),'utf8'),context,{filename:file});
 }
 const discovery=window.PogoDomain.trainerDiscovery;

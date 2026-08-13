@@ -48,9 +48,26 @@ test('new HTML never requests an unversioned trainer-discovery module',()=>{
 test('service worker keeps exact release keys and retires old app-shell caches',()=>{
   assert.doesNotMatch(worker,/ignoreSearch\s*:\s*true/);
   assert.match(worker,/url\.searchParams\.get\('v'\)===RELEASE\?releaseAsset\(req\):networkFirst\(req\)/);
-  assert.match(worker,/self\.skipWaiting\(\)/);
+  assert.match(worker,/await cacheRequiredShell\(\);\s*await self\.skipWaiting\(\)/);
   assert.match(worker,/self\.clients\.claim\(\)/);
   assert.match(worker,/caches\.delete\(n\)/);
+});
+
+test('service worker separates required release assets from optional runtime shell assets',()=>{
+  assert.match(worker,/const REQUIRED_SHELL_URLS=\[/);
+  assert.match(worker,/const OPTIONAL_SHELL_URLS=\[/);
+  assert.match(worker,/const INSTALL_CACHE=`\$\{SHELL_CACHE\}-installing`/);
+  assert.match(worker,/if\(!response\?\.ok\)throw new Error/);
+  assert.match(worker,/if\(complete\.some\(response=>!response\)\).*Refusing to activate/s);
+  assert.doesNotMatch(worker,/catch\(e\)\{\/\* offline at install time; ok \*\//);
+});
+
+test('viewport permits user zoom and does not impose a maximum scale',()=>{
+  const viewport=html.match(/<meta name="viewport" content="([^"]+)"/)?.[1]||'';
+  assert.match(viewport,/width=device-width/);
+  assert.match(viewport,/initial-scale=1/);
+  assert.doesNotMatch(viewport,/user-scalable\s*=\s*no/i);
+  assert.doesNotMatch(viewport,/maximum-scale/i);
 });
 
 test('a cached old discovery API produces a controlled reload-required state',()=>{

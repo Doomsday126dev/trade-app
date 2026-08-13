@@ -4,13 +4,14 @@ const {readFileSync}=require('node:fs');
 const path=require('node:path');
 const vm=require('node:vm');
 
-function loadCache({read,now=()=>100,maxFavorites=20}={}){
-  const window={};vm.runInContext(readFileSync(path.join(__dirname,'..','js/data/favoriteShareSessionCache.js'),'utf8'),vm.createContext({window,Map,Set,Promise,Object,Number,String,Math,RangeError,TypeError,Error}));
+function loadCache({read,now=()=>100,maxFavorites}={}){
+  const window={};const context=vm.createContext({window,Map,Set,Promise,Object,Number,String,Math,RangeError,TypeError,Error});
+  for(const file of ['js/domain/productLimits.js','js/data/favoriteShareSessionCache.js'])vm.runInContext(readFileSync(path.join(__dirname,'..',file),'utf8'),context);
   return window.PogoData.favoriteShareSessionCache.createFavoriteShareSessionCache({repository:{read},validateProjection(value,{username}){
     if(value===null)return{ok:false,status:'not_published'};
     if(value?.malformed)return{ok:false,status:'projection_unsupported'};
     return{ok:true,status:Object.values(value.lists||{}).some(list=>Object.keys(list).length)?'published':'published_empty',snapshot:{username,lists:value.lists||{},updatedAt:value.updatedAt||1}};
-  },projectSnapshot(snapshot){return Object.entries(snapshot.lists.wishlist||{}).map(([pokemonName,priority])=>({pokemonKey:pokemonName.toLowerCase(),pokemonName,priority,categories:['wishlist']}));},now,maxFavorites});
+  },projectSnapshot(snapshot){return Object.entries(snapshot.lists.wishlist||{}).map(([pokemonName,priority])=>({pokemonKey:pokemonName.toLowerCase(),pokemonName,priority,categories:['wishlist']}));},now,...(maxFavorites===undefined?{}:{maxFavorites})});
 }
 const favorites=count=>Array.from({length:count},(_,i)=>({key:`trainer-${i}`,displayName:`Trainer-${i}`}));
 const share=name=>({lists:{wishlist:{Pikachu:'H'},dynamax:{},gmax:{},costumes:{}},updatedAt:1,username:name});
@@ -40,12 +41,14 @@ test('one newly added Favorite requires at most one additional exact read',async
   await cache.hydrate(added);assert.equal(reads,5);
 });
 
-test('20 Favorites stay within the product read ceiling and concurrency never exceeds four',async()=>{
+test('20, 21, 50, and 100 Favorites stay within the product limit and concurrency never exceeds four',async()=>{
+  for(const count of [20,21,50,100]){
   let active=0,maxActive=0,reads=0;const releases=[];
   const cache=loadCache({read:name=>new Promise(resolve=>{reads++;active++;maxActive=Math.max(maxActive,active);releases.push(()=>{active--;resolve({ok:true,value:share(name)});});})});cache.activate({uid:'u',username:'Owner'});
-  const pending=cache.hydrate(favorites(20));
-  while(reads<20||active){await new Promise(resolve=>setTimeout(resolve,0));while(releases.length)releases.shift()();}
-  await pending;assert.equal(reads,20);assert.ok(maxActive<=4);
+  const pending=cache.hydrate(favorites(count));
+  while(reads<count||active){await new Promise(resolve=>setTimeout(resolve,0));while(releases.length)releases.shift()();}
+  await pending;assert.equal(reads,count);assert.ok(maxActive<=4);
+  }
 });
 
 test('explicit refresh rereads at most N while retry rereads only transient failures',async()=>{
@@ -67,11 +70,41 @@ test('retry excludes permission and validation failures',async()=>{
   assert.deepEqual([...counts.values()],[1,1]);assert.equal(cache.summary(list).failed,0);assert.equal(cache.summary(list).invalid,2);
 });
 
-test('account changes clear cached records and the product ceiling fails closed',async()=>{
+test('partial hydration at 100 keeps successes searchable and retries only 25 or 50 transient failures',async()=>{
+  for(const unavailable of [25,50]){
+    const counts=new Map();
+    const cache=loadCache({read:async name=>{
+      const index=Number(name.split('-')[1]),count=(counts.get(name)||0)+1;counts.set(name,count);
+      if(index<unavailable&&count===1)return{ok:false,error:{code:'network/unavailable'}};
+      return{ok:true,value:share(name)};
+    }});
+    const list=favorites(100);cache.activate({uid:`u-${unavailable}`,username:'Owner'});
+    await cache.hydrate(list);
+    assert.equal(cache.summary(list).checked,100);assert.equal(cache.summary(list).failed,unavailable);
+    assert.equal(cache.snapshot().records.size,100);
+    await cache.retryUnavailable(list);
+    assert.equal([...counts.values()].reduce((sum,value)=>sum+value,0),100+unavailable);
+    assert.equal(cache.summary(list).failed,0);
+    assert.equal([...counts.entries()].filter(([,count])=>count===2).length,unavailable);
+  }
+});
+
+test('100-record cache retains projections only and remains compact for realistic list sizes',async()=>{
+  const largerShare=name=>({username:name,profile:{bio:'must not be retained',discord:'private-noise'},lists:{wishlist:Object.fromEntries(Array.from({length:120},(_,i)=>[`Pokemon-${i}`,i%3===0?'H':i%3===1?'M':'L'])),dynamax:{},gmax:{},costumes:{}},updatedAt:1});
+  const cache=loadCache({read:async name=>({ok:true,value:largerShare(name)})});cache.activate({uid:'u-memory',username:'Owner'});
+  const started=process.hrtime.bigint();await cache.hydrate(favorites(100));const elapsedMs=Number(process.hrtime.bigint()-started)/1e6;
+  const records=[...cache.snapshot().records.values()];
+  assert.equal(records.length,100);assert.ok(elapsedMs<1500,`hydration took ${elapsedMs.toFixed(1)}ms`);
+  assert.equal(records.some(record=>Object.hasOwn(record,'profile')),false);
+  assert.ok(JSON.stringify(records).length<2_500_000);
+});
+
+test('account changes clear cached records and the 100-Favorite product ceiling fails closed at 101',async()=>{
   let reads=0;const cache=loadCache({read:async name=>{reads++;return{ok:true,value:share(name)};}});cache.activate({uid:'u1',username:'Owner'});
   await cache.hydrate(favorites(1));cache.activate({uid:'u2',username:'Other'});assert.equal(cache.snapshot().size,0);
   await cache.hydrate(favorites(1));assert.equal(reads,2);
-  assert.throws(()=>cache.syncFavorites(favorites(21)),/at most 20/);
+  assert.doesNotThrow(()=>cache.syncFavorites(favorites(100)));
+  assert.throws(()=>cache.syncFavorites(favorites(101)),/at most 100/);
 });
 
 test('in-flight results from an old account are rejected and never enter the next session',async()=>{
@@ -81,15 +114,16 @@ test('in-flight results from an old account are rejected and never enter the nex
   await assert.rejects(pending,error=>error.code==='favorite-cache/session-changed');assert.equal(cache.snapshot().size,0);
 });
 
-test('large fixture simulations remain linear without approving larger production fan-out',async()=>{
-  for(const count of [50,100,250]){
+test('supported large fixture simulations remain linear',async()=>{
+  for(const count of [50,100]){
     let reads=0;const cache=loadCache({maxFavorites:count,read:async name=>{reads++;return{ok:true,value:share(name)};}});cache.activate({uid:`u${count}`,username:'Owner'});
     await cache.hydrate(favorites(count));assert.equal(reads,count);
     await cache.hydrate(favorites(count));assert.equal(reads,count);
   }
 });
 
-test('production defaults reject fan-out beyond the current 20-Favorite product cap',()=>{
+test('production defaults reject fan-out only beyond the 100-Favorite product cap',()=>{
   const cache=loadCache({read:async name=>({ok:true,value:share(name)})});cache.activate({uid:'u',username:'Owner'});
-  assert.throws(()=>cache.syncFavorites(favorites(21)),/at most 20/);
+  assert.doesNotThrow(()=>cache.syncFavorites(favorites(100)));
+  assert.throws(()=>cache.syncFavorites(favorites(101)),/at most 100/);
 });

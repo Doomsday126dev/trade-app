@@ -5,9 +5,10 @@
 //     trimmed by max entry count to keep storage bounded
 //   - Firebase realtime endpoints: never cached (always network)
 
-const RELEASE='2026-08-05.40';
+const RELEASE='2026-08-05.41';
 const VERSION=`pogo-trades-${RELEASE}`;
 const SHELL_CACHE=`shell-${VERSION}`;
+const INSTALL_CACHE=`${SHELL_CACHE}-installing`;
 const SPRITE_CACHE=`sprites-${VERSION}`;
 
 // Files we explicitly precache on install. The actual HTML/JS bytes vary by
@@ -15,6 +16,7 @@ const SPRITE_CACHE=`sprites-${VERSION}`;
 // them in the cache before the user first goes offline.
 const RELEASE_ASSETS=[
   'data.js',
+  'js/domain/productLimits.js',
   'js/domain/priorities.js',
   'js/ui/badges.js',
   'js/domain/username.js',
@@ -73,10 +75,12 @@ const RELEASE_ASSETS=[
   'js/domain/cacheAdapters.js',
   'js/ui/trainerTagPanel.js'
 ];
-const SHELL_URLS=[
-  `./?v=${RELEASE}`,
+const REQUIRED_SHELL_URLS=[
   `./index.html?v=${RELEASE}`,
-  ...RELEASE_ASSETS.map(path=>`./${path}?v=${RELEASE}`),
+  ...RELEASE_ASSETS.map(path=>`./${path}?v=${RELEASE}`)
+];
+const OPTIONAL_SHELL_URLS=[
+  `./?v=${RELEASE}`,
   './manifest.json',
   './assets/tradeloop-icon.svg',
   './assets/tradeloop-icon-96.png',
@@ -96,24 +100,69 @@ const SPRITE_HOSTS=[
   'static.pokemongohub.net'
 ];
 
+async function cacheRequiredShell(){
+  const existing=await caches.open(SHELL_CACHE);
+  const existingRequired=await Promise.all(REQUIRED_SHELL_URLS.map(url=>existing.match(url)));
+  const hadCompleteShell=existingRequired.every(Boolean);
+  await caches.delete(INSTALL_CACHE);
+  if(hadCompleteShell)return;
+  await caches.delete(SHELL_CACHE);
+  const staging=await caches.open(INSTALL_CACHE);
+  try{
+    const responses=await Promise.all(REQUIRED_SHELL_URLS.map(async url=>{
+      const response=await fetch(url,{cache:'reload'});
+      if(!response?.ok)throw new Error(`Required shell asset failed: ${url} (${response?.status||'network'})`);
+      return[url,response];
+    }));
+    await Promise.all(responses.map(([url,response])=>staging.put(url,response.clone())));
+    const staged=await Promise.all(REQUIRED_SHELL_URLS.map(url=>staging.match(url)));
+    if(staged.some(response=>!response))throw new Error('Required shell staging cache is incomplete');
+    const shell=await caches.open(SHELL_CACHE);
+    await Promise.all(REQUIRED_SHELL_URLS.map(async url=>{
+      const response=await staging.match(url);
+      if(!response)throw new Error(`Required shell asset disappeared: ${url}`);
+      await shell.put(url,response);
+    }));
+    const complete=await Promise.all(REQUIRED_SHELL_URLS.map(url=>shell.match(url)));
+    if(complete.some(response=>!response))throw new Error('Required shell cache is incomplete');
+  }catch(error){
+    await caches.delete(INSTALL_CACHE);
+    await caches.delete(SHELL_CACHE);
+    throw error;
+  }
+  await caches.delete(INSTALL_CACHE);
+}
+
 self.addEventListener('install',ev=>{
   ev.waitUntil((async()=>{
-    const cache=await caches.open(SHELL_CACHE);
-    try{await cache.addAll(SHELL_URLS);}catch(e){/* offline at install time; ok */}
-    self.skipWaiting();
+    await cacheRequiredShell();
+    await self.skipWaiting();
   })());
 });
 
 self.addEventListener('activate',ev=>{
   ev.waitUntil((async()=>{
+    const shell=await caches.open(SHELL_CACHE);
+    const complete=await Promise.all(REQUIRED_SHELL_URLS.map(url=>shell.match(url)));
+    if(complete.some(response=>!response)){
+      await Promise.all([caches.delete(INSTALL_CACHE),caches.delete(SHELL_CACHE)]);
+      throw new Error('Refusing to activate without a complete required shell');
+    }
     const names=await caches.keys();
-    await Promise.all(names.filter(n=>n!==SHELL_CACHE&&n!==SPRITE_CACHE).map(n=>caches.delete(n)));
+    await Promise.all(names.filter(n=>n!==SHELL_CACHE&&n!==SPRITE_CACHE&&n!==INSTALL_CACHE).map(n=>caches.delete(n)));
+    await caches.delete(INSTALL_CACHE);
     await self.clients.claim();
   })());
 });
 
 self.addEventListener('message',ev=>{
-  if(ev.data==='SKIP_WAITING')self.skipWaiting();
+  if(ev.data!=='SKIP_WAITING')return;
+  ev.waitUntil((async()=>{
+    const shell=await caches.open(SHELL_CACHE);
+    const complete=await Promise.all(REQUIRED_SHELL_URLS.map(url=>shell.match(url)));
+    if(complete.every(Boolean))await self.skipWaiting();
+    else await caches.delete(SHELL_CACHE);
+  })());
 });
 
 function isSpriteRequest(url){

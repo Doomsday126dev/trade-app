@@ -5,6 +5,8 @@
   const MAX_TAGS=24;
   const MAX_TAGS_PER_FAVORITE=24;
   const MAX_TAG_LABEL_LENGTH=40;
+  const MAX_FAVORITES=global.PogoDomain?.productLimits?.MAX_FAVORITES;
+  if(!Number.isInteger(MAX_FAVORITES)||MAX_FAVORITES<1)throw new Error('Product Favorite limit is unavailable');
 
   function ownerKey(identity){
     const uid=String(identity?.uid||'').trim(),username=String(identity?.username||'').trim();
@@ -19,7 +21,7 @@
   function labelIdentity(value){return normalizeLabel(value).toLocaleLowerCase('en-US');}
   function codePointLength(value){return Array.from(String(value||'')).length;}
   function empty(identity){return{version:VERSION,schemaVersion:VERSION,migrationVersion:VERSION,owner:{uid:String(identity.uid),username:String(identity.username)},favorites:[],recent:[],snapshots:{},tags:{},syncState:'local-only',migration:{skippedFavorites:0,skippedRecents:0}};}
-  function createTrainerHistoryStore({storage,identity,maxFavorites=20,maxRecent=6,maxTags=MAX_TAGS,now=()=>Date.now()}={}){
+  function createTrainerHistoryStore({storage,identity,maxFavorites=MAX_FAVORITES,maxRecent=6,maxTags=MAX_TAGS,now=()=>Date.now()}={}){
     if(!storage)throw new TypeError('trainer history requires storage');
     const key=ownerKey(identity);
     function cleanFavorite(value,fallbackTime=0){
@@ -159,5 +161,5 @@
       clear(){storage.removeItem(key);}
     });
   }
-  root.trainerHistoryStore=Object.freeze({VERSION,PREFIX,MAX_TAGS,MAX_TAGS_PER_FAVORITE,MAX_TAG_LABEL_LENGTH,createTrainerHistoryStore});
+  root.trainerHistoryStore=Object.freeze({VERSION,PREFIX,MAX_FAVORITES,MAX_TAGS,MAX_TAGS_PER_FAVORITE,MAX_TAG_LABEL_LENGTH,createTrainerHistoryStore});
 })(window);

@@ -8,7 +8,7 @@ const root=path.join(__dirname,'..');
 const html=readFileSync(path.join(root,'index.html'),'utf8');
 
 function memoryStorage(){const values=new Map();return{getItem:key=>values.get(key)||null,setItem:(key,value)=>values.set(key,String(value)),removeItem:key=>values.delete(key)};}
-function store(){const window={};vm.runInNewContext(readFileSync(path.join(root,'js/data/trainerHistoryStore.js'),'utf8'),{window});return window.PogoData.trainerHistoryStore.createTrainerHistoryStore({storage:memoryStorage(),identity:{uid:'uid-a',username:'TrainerA'},now:(()=>{let n=100;return()=>++n;})()});}
+function store(){const window={};for(const file of ['js/domain/productLimits.js','js/data/trainerHistoryStore.js'])vm.runInNewContext(readFileSync(path.join(root,file),'utf8'),{window});return window.PogoData.trainerHistoryStore.createTrainerHistoryStore({storage:memoryStorage(),identity:{uid:'uid-a',username:'TrainerA'},now:(()=>{let n=100;return()=>++n;})()});}
 
 test('Find Trainer uses one compact combobox with inline clear and no submit button',()=>{
   const block=html.slice(html.indexOf('<!-- FIND TRAINER'),html.indexOf('<!-- MY LIST'));
@@ -101,7 +101,7 @@ test('responsive contracts retain 48px targets, wrapping, and no parallel organi
 });
 
 test('release and safety boundaries remain coherent',()=>{
-  assert.match(html,/2026-08-05\.40/);assert.doesNotMatch(html,/2026-08-05\.39/);
+  assert.match(html,/2026-08-05\.41/);assert.doesNotMatch(html,/2026-08-05\.40/);
   assert.match(readFileSync(path.join(root,'js/domain/shareVisibility.js'),'utf8'),/SHARE_VISIBILITY_MODEL_ENABLED\s*:\s*false/);assert.match(html,/SYNCED_TRAINER_PREFERENCES_ENABLED!==false/);
   assert.doesNotMatch(html,/managedTrainerPreferencesRepository\.(?:mutate|write|save)/);
 });

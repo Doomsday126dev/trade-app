@@ -6,6 +6,7 @@ const pass3ScreenshotDir=process.env.PASS3_SCREENSHOT_DIR||'';
 const favoriteBrowseScreenshotDir=process.env.FAVORITE_BROWSE_SCREENSHOT_DIR||'';
 const navScreenshotDir=process.env.NAV_SCREENSHOT_DIR||'';
 const securityScreenshotDir=process.env.SECURITY_SCREENSHOT_DIR||'';
+const p1ScreenshotDir=process.env.P1_SCREENSHOT_DIR||'';
 async function capturePass3(page,name){
   if(!pass3ScreenshotDir)return;
   mkdirSync(pass3ScreenshotDir,{recursive:true});
@@ -29,6 +30,11 @@ async function captureSecurity(page,name){
   if(!securityScreenshotDir)return;
   mkdirSync(securityScreenshotDir,{recursive:true});
   await page.screenshot({path:path.join(securityScreenshotDir,`${name}.png`),fullPage:true});
+}
+async function captureP1(page,name){
+  if(!p1ScreenshotDir)return;
+  mkdirSync(p1ScreenshotDir,{recursive:true});
+  await page.screenshot({path:path.join(p1ScreenshotDir,`${name}.png`),fullPage:false});
 }
 
 function isLocalAuthBaseURL() {
@@ -247,6 +253,64 @@ test.describe('visual smoke', () => {
         expect(geometry.canvas).not.toBe('rgba(0, 0, 0, 0)');
         expect(geometry.surface).not.toBe('rgba(0, 0, 0, 0)');
       }
+    }
+  });
+
+  test('200% zoom keeps representative primary workflows operable',async({page,browserName})=>{
+    await page.setViewportSize({width:720,height:900});
+    await page.goto(`./?a11y-zoom=${Date.now()}`,{waitUntil:'domcontentloaded'});
+    await waitForStableLocalOrganizerStartup(page);
+    await isolateAuthenticatedMyListFixture(page,{username:'ZoomTester',uid:'uid-zoom-tester'});
+    await page.evaluate(()=>{
+      document.documentElement.style.zoom='2';
+      document.getElementById('admin-tab').style.display='flex';
+      document.getElementById('top-un').textContent=cur;
+      allData.users.ZoomTester={role:'admin',friendCode:'',bio:'',discord:'',wishlist:{Pikachu:'H'},dynamax:{},gmax:{},costumes:{}};
+      const now=Date.now();
+      _eventData={fetchedAt:now,raids:[],events:[{eventID:'zoom-event',name:'Zoom Event',eventType:'event',start:new Date(now-3600000).toISOString(),end:new Date(now+3600000).toISOString()}]};
+      _eventLoadState='ready';
+      eventTypeFilter='all';
+      renderMyList('');
+    });
+    const assertOperable=async selector=>{
+      await expect(page.locator(selector)).toBeVisible();
+      const box=await page.locator(selector).boundingBox();expect(box?.width).toBeGreaterThan(0);expect(box?.height).toBeGreaterThan(0);
+    };
+    await assertOperable('#ac-input');
+    await openMainTab(page,'find');await assertOperable('#find-trainer-input');
+    await page.locator('#favorite-browse-toggle').click();await assertOperable('#favorite-browse-input');
+    await openMainTab(page,'schedule');await assertOperable('.event-filter-row');
+    await page.evaluate(()=>openSettingsPanel('language',{route:false}));await assertOperable('#settings-modal .settings-modal-close');
+    await page.evaluate(()=>closeModal('settings-modal',{route:false}));
+    await page.evaluate(()=>{document.querySelectorAll('.page').forEach(node=>node.classList.remove('active'));document.getElementById('share-view').classList.add('active');document.getElementById('share-view').style.display='block';document.getElementById('share-hdr').textContent='PublicTrainer';});
+    await assertOperable('#share-view');
+    await page.evaluate(()=>{document.getElementById('share-view').classList.remove('active');document.getElementById('share-view').style.display='none';document.querySelectorAll('.page').forEach(node=>node.classList.remove('active'));document.getElementById('tab-admin').classList.add('active');});
+    await assertOperable('#tab-admin .admin-nav');
+    const adminButtons=page.locator('#tab-admin .admin-nav-button');
+    await expect(adminButtons).toHaveCount(5);
+    await adminButtons.last().scrollIntoViewIfNeeded();
+    await adminButtons.last().focus();
+    await expect(adminButtons.last()).toBeFocused();
+    const lastAdminBox=await adminButtons.last().boundingBox();
+    expect(lastAdminBox?.width).toBeGreaterThan(0);
+    expect(lastAdminBox?.height).toBeGreaterThan(0);
+    await captureP1(page,`200-percent-${browserName}`);
+  });
+
+  test('installed shell serves Settings and public-profile deep links offline',async({page,context,browserName})=>{
+    test.skip(browserName!=='chromium','This local offline-control proof is Chromium-only; worker logic is covered by the engine-neutral harness.');
+    await page.goto(`./?pwa-offline-prime=${Date.now()}`,{waitUntil:'networkidle'});
+    await page.evaluate(()=>navigator.serviceWorker.ready.then(()=>true));
+    if(!await page.evaluate(()=>!!navigator.serviceWorker.controller))await page.reload({waitUntil:'domcontentloaded'});
+    await page.waitForFunction(()=>!!navigator.serviceWorker.controller);
+    await context.setOffline(true);
+    try{
+      await page.goto('./#settings/language',{waitUntil:'domcontentloaded'});
+      await expect(page.locator('#login-pg')).toBeVisible();
+      await page.goto('./?share=OfflineTrainer',{waitUntil:'domcontentloaded'});
+      expect(await page.locator('#share-view, #login-pg').evaluateAll(nodes=>nodes.some(node=>getComputedStyle(node).display!=='none'))).toBe(true);
+    }finally{
+      await context.setOffline(false);
     }
   });
 
@@ -1152,7 +1216,7 @@ test.describe('visual smoke', () => {
         reads[username]=(reads[username]||0)+1;
         await new Promise(resolve=>setTimeout(resolve,250));
         if(window.__favoriteBrowseFixture.unpublished)return{ok:true,value:null};
-        if(username==='TrainerGamma'&&reads[username]<=2)return{ok:false,error:{code:'offline'}};
+        if(username==='TrainerGamma'&&reads[username]===1)return{ok:false,error:{code:'offline'}};
         const lists=username==='TrainerAlpha'
           ?{wishlist:{Palkia:'L'},dynamax:{Palkia:'H'},gmax:{},costumes:{}}
           :username==='TrainerBeta'
@@ -1226,7 +1290,8 @@ test.describe('visual smoke', () => {
     const readsBeforeKeystrokes=await page.evaluate(()=>JSON.stringify(window.__favoriteBrowseFixture.reads));
     await page.locator('#favorite-browse-input').fill('Eevee');
     expect(await page.evaluate(()=>JSON.stringify(window.__favoriteBrowseFixture.reads))).toBe(readsBeforeKeystrokes);
-    await page.locator('#favorite-browse-suggestions.open .ac-item').first().click();
+    await expect(page.locator('#favorite-browse-suggestions.open .ac-item').first()).toBeVisible();
+    await page.locator('#favorite-browse-input').press('Enter');
     await expect(page.locator('#favorite-browse-results')).toContainText(/None|Keine|Ninguno|いません/);
     expect(await page.evaluate(()=>JSON.stringify(window.__favoriteBrowseFixture.reads))).toBe(readsBeforeKeystrokes);
     await page.evaluate(()=>{const input=document.getElementById('find-trainer-input');if(input)input.value='';});
@@ -1275,6 +1340,133 @@ test.describe('visual smoke', () => {
     await expect(page.locator('#favorite-browse-results')).toContainText('None of your Favorites currently have a shared list.');
     await page.evaluate(()=>{window.__favoriteBrowseFixture.state.favorites=[];renderFavoriteBrowseResults();});
     await expect(page.locator('#favorite-browse-results')).toContainText(/No Favorites|Keine Favoriten|Sin favoritos|お気に入り/);
+  });
+
+  test('Browse explicitly hydrates 21 and 100 Favorites with four-way bounded exact reads',async({page,browserName})=>{
+    await page.setViewportSize({width:390,height:844});
+    await page.goto(`./?favorite-browse-scale=${browserName}-${Date.now()}`,{waitUntil:'domcontentloaded'});
+    await waitForStableLocalOrganizerStartup(page);
+    await isolateAuthenticatedMyListFixture(page,{username:'BrowseScale',uid:'uid-browse-scale'});
+    await page.evaluate(()=>switchTab('find',{render:false}));
+    await expect(page.locator('#tab-find')).toBeVisible();
+    for(const count of [21,100]){
+      const result=await page.evaluate(async count=>{
+        const favorites=Array.from({length:count},(_,index)=>({key:`trainer-${index}`,displayName:`Trainer-${index}`,tagIds:[],createdAt:index,updatedAt:index}));
+        const state={version:3,schemaVersion:3,migrationVersion:3,owner:{uid:'uid-browse-scale',username:'BrowseScale'},favorites,recent:[],snapshots:{},tags:{},syncState:'local-only',migration:{skippedFavorites:0,skippedRecents:0}};
+        ensureTrainerHistoryStore=()=>({read:()=>state,filterFavorites:()=>favorites,snapshotFor:()=>null,updateCanonicalName:()=>false,favoriteFor:name=>favorites.find(item=>item.displayName===name)||null});
+        let reads=0,active=0,maxActive=0;
+        managedPublicShareRepository={read:async username=>{reads++;active++;maxActive=Math.max(maxActive,active);await new Promise(resolve=>setTimeout(resolve,count===100?20:1));active--;return{ok:true,value:{version:1,username,profile:{},lists:{wishlist:{Pikachu:'H'},dynamax:{},gmax:{},costumes:{}},publishedListTypes:['wishlist','dynamax','gmax','costumes'],updatedAt:1}};}};
+        favoriteShareSessionCache=null;favoriteBrowseState.selected={name:'Pikachu',dn:'Pikachu',no:25};favoriteBrowseState.expanded=true;
+        document.getElementById('favorite-browse-input').value='Pikachu';document.getElementById('favorite-browse-panel').hidden=false;
+        closeFavoriteBrowseSuggestions();
+        const started=performance.now();await hydrateFavoriteBrowse();const firstDuration=performance.now()-started;
+        const afterHydrate=reads;
+        favoriteBrowseInput('Pika');favoriteBrowseInput('Pikachu');renderFavoriteBrowseResults();
+        return{count,reads,afterHydrate,maxActive,firstDuration,results:document.querySelectorAll('.favorite-browse-row').length,overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth};
+      },count);
+      expect(result.reads).toBe(count);expect(result.afterHydrate).toBe(count);expect(result.maxActive).toBeLessThanOrEqual(4);expect(result.results).toBe(count);expect(result.overflow).toBe(false);expect(result.firstDuration).toBeLessThan(2500);
+      if(count===100){
+        await page.evaluate(()=>{ensureFavoriteShareSessionCache().invalidate();window.__p1BrowseHydration=hydrateFavoriteBrowse({force:true});closeFavoriteBrowseSuggestions();});
+        await expect(page.locator('#favorite-browse-results')).toHaveAttribute('aria-busy','true');
+        await expect(page.locator('.favorite-browse-progress')).toContainText(/100/);
+        await captureP1(page,`browse-100-loading-${browserName}`);
+        await page.evaluate(()=>window.__p1BrowseHydration);
+        await captureP1(page,`browse-100-complete-${browserName}`);
+      }
+    }
+  });
+
+  test('Favorite cards remain local until an explicit Browse selection or trainer open',async({page,browserName})=>{
+    await page.setViewportSize({width:1440,height:900});
+    await page.goto(`./?favorite-read-boundary=${browserName}-${Date.now()}`,{waitUntil:'domcontentloaded'});
+    await waitForStableLocalOrganizerStartup(page);
+    await isolateAuthenticatedMyListFixture(page,{username:'ReadBoundary',uid:'uid-read-boundary'});
+    const initial=await page.evaluate(async()=>{
+      const allFavorites=Array.from({length:100},(_,index)=>({
+        key:`trainer-${index}`,displayName:`Trainer ${String(index).padStart(3,'0')}`,
+        tagIds:index%2===0?['even']:[],createdAt:index+1,updatedAt:index+1
+      }));
+      const state={version:3,schemaVersion:3,migrationVersion:3,owner:{uid:'uid-read-boundary',username:'ReadBoundary'},favorites:[],recent:[],snapshots:{},tags:{even:{id:'even',label:'Even'}},syncState:'local-only',migration:{skippedFavorites:0,skippedRecents:0}};
+      const key=value=>String(value||'').normalize('NFKC').trim().toLowerCase();
+      const store={
+        read:()=>state,
+        filterFavorites:({query='',tagIds=[]}={})=>state.favorites.filter(item=>(!query||key(item.displayName).includes(key(query)))&&tagIds.every(id=>item.tagIds.includes(id))),
+        favoriteFor:value=>state.favorites.find(item=>key(item.displayName)===key(value))||null,
+        isFavorite:value=>!!store.favoriteFor(value),
+        updateCanonicalName:()=>false,
+        saveFavoriteOrganization:value=>{
+          if(store.isFavorite(value))return{ok:true,created:false,state};
+          if(state.favorites.length>=100)return{ok:false,code:'favorite-limit'};
+          const item={key:key(value),displayName:String(value),tagIds:[],createdAt:Date.now(),updatedAt:Date.now()};state.favorites.push(item);return{ok:true,created:true,state};
+        },
+        toggleFavorite:value=>{const index=state.favorites.findIndex(item=>key(item.displayName)===key(value));if(index>=0)state.favorites.splice(index,1);else store.saveFavoriteOrganization(value);return state;}
+      };
+      ensureTrainerHistoryStore=()=>store;
+      let reads=0,active=0,maxActive=0;
+      const perTrainer={};
+      managedPublicShareRepository={read:async username=>{
+        reads++;active++;maxActive=Math.max(maxActive,active);perTrainer[username]=(perTrainer[username]||0)+1;
+        await new Promise(resolve=>setTimeout(resolve,5));active--;
+        if(username==='Trainer 000'&&perTrainer[username]===1)return{ok:false,error:{code:'offline'}};
+        if(username==='Trainer 001')return{ok:false,error:{code:'permission-denied'}};
+        return{ok:true,value:{version:1,username,profile:{},lists:{wishlist:{Pikachu:'H'},dynamax:{},gmax:{},costumes:{}},publishedListTypes:['wishlist','dynamax','gmax','costumes'],updatedAt:1}};
+      }};
+      favoriteShareSessionCache=null;favoriteBrowseState={selected:null,suggestions:[],focusIndex:-1,busy:false,error:false,generation:0,expanded:false};
+      window.__favoriteReadBoundary={state,store,allFavorites,metrics:()=>({reads,active,maxActive,perTrainer:{...perTrainer}}),profileReads:[]};
+      switchTab('find',{render:false});
+      const counts={};
+      for(const count of [0,1,20,21,100]){
+        state.favorites=allFavorites.slice(0,count);favoriteShareSessionCache=null;
+        const before=reads,started=performance.now();await renderTrainerQuickLists();
+        counts[count]={reads:reads-before,duration:performance.now()-started,cards:document.querySelectorAll('.favorite-card-shell').length};
+      }
+      return counts;
+    });
+    for(const count of [0,1,20,21,100]){expect(initial[count].reads).toBe(0);expect(initial[count].cards).toBe(count);}
+    await captureP1(page,`favorites-100-desktop-idle-${browserName}`);
+    await page.setViewportSize({width:390,height:844});
+    await captureP1(page,`favorites-100-mobile-idle-${browserName}`);
+
+    const localInteractions=await page.evaluate(async()=>{
+      const fixture=window.__favoriteReadBoundary,before=fixture.metrics().reads;
+      trainerOrganizerState.query='trainer 09';await renderTrainerQuickLists();
+      trainerOrganizerState.query='';trainerOrganizerState.tagIds=['even'];await renderTrainerQuickLists();
+      trainerOrganizerState.tagIds=[];await renderTrainerQuickLists();
+      toggleFavoriteBrowse();favoriteBrowseInput('Pika');favoriteBrowseInput('Pikachu');
+      queueTrainerSuggestions('Tra',true);await new Promise(resolve=>setTimeout(resolve,20));
+      return{reads:fixture.metrics().reads-before,cards:document.querySelectorAll('.favorite-card-shell').length};
+    });
+    expect(localInteractions).toEqual({reads:0,cards:100});
+
+    const browse=await page.evaluate(async()=>{
+      const fixture=window.__favoriteReadBoundary;
+      favoriteBrowseState.suggestions=[{name:'Pikachu',dn:'Pikachu',no:25}];favoriteBrowseState.focusIndex=0;
+      const before=fixture.metrics().reads;selectFavoriteBrowsePokemon(0);
+      while(favoriteBrowseState.busy)await new Promise(resolve=>setTimeout(resolve,5));
+      const selectedReads=fixture.metrics().reads-before;
+      const beforeRepeated=fixture.metrics().reads;await hydrateFavoriteBrowse();const repeatedReads=fixture.metrics().reads-beforeRepeated;
+      const beforeRetry=fixture.metrics().reads;await hydrateFavoriteBrowse({retry:true});const retryReads=fixture.metrics().reads-beforeRetry;
+      const beforeRefresh=fixture.metrics().reads;ensureFavoriteShareSessionCache().invalidate();await hydrateFavoriteBrowse({force:true});const refreshReads=fixture.metrics().reads-beforeRefresh;
+      const beforeSecondRetry=fixture.metrics().reads;await hydrateFavoriteBrowse({retry:true});const secondRetryReads=fixture.metrics().reads-beforeSecondRetry;
+      return{selectedReads,repeatedReads,retryReads,refreshReads,secondRetryReads,...fixture.metrics(),rows:document.querySelectorAll('.favorite-browse-row').length};
+    });
+    expect(browse.selectedReads).toBe(100);expect(browse.repeatedReads).toBe(0);expect(browse.retryReads).toBe(1);expect(browse.refreshReads).toBe(100);expect(browse.secondRetryReads).toBe(0);expect(browse.maxActive).toBeLessThanOrEqual(4);expect(browse.rows).toBeGreaterThan(0);
+
+    const mutations=await page.evaluate(async()=>{
+      const fixture=window.__favoriteReadBoundary;
+      fixture.state.favorites=fixture.allFavorites.slice(0,2);favoriteShareSessionCache.syncFavorites(fixture.state.favorites);
+      const beforeActiveAdd=fixture.metrics().reads;await toggleTrainerFavorite('Trainer Added Active');const activeAdd=fixture.metrics().reads-beforeActiveAdd;
+      favoriteBrowseState.selected=null;
+      const beforeInactiveAdd=fixture.metrics().reads;await toggleTrainerFavorite('Trainer Added Inactive');const inactiveAdd=fixture.metrics().reads-beforeInactiveAdd;
+      window.confirm=()=>true;
+      const beforeRemove=fixture.metrics().reads;removeTrainerFavorite('Trainer Added Active');const remove=fixture.metrics().reads-beforeRemove;
+      let profileReads=0;
+      loadPublicShareData=async username=>{profileReads++;fixture.profileReads.push(username);allData.users[username]={username};return{ok:true};};
+      ensureShareViewSubscriptions=()=>{};rememberTrainerOpened=()=>{};enterShareView=()=>{};
+      const beforeOpen=fixture.metrics().reads;openTrainerByName('Trainer 000');while(!profileReads)await new Promise(resolve=>setTimeout(resolve,0));
+      return{activeAdd,inactiveAdd,remove,profileReads,browseReadsOnOpen:fixture.metrics().reads-beforeOpen,opened:fixture.profileReads};
+    });
+    expect(mutations).toEqual({activeAdd:1,inactiveAdd:0,remove:0,profileReads:1,browseReadsOnOpen:0,opened:['Trainer 000']});
   });
 
   test('Favorites and Recents stay compact, accessible, and responsive at representative scale',async({page})=>{

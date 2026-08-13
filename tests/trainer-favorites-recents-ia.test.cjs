@@ -20,7 +20,7 @@ function memoryStorage(){
 
 function createStore(maxFavorites=100){
   const window={};
-  vm.runInNewContext(readFileSync(path.join(root,'js/data/trainerHistoryStore.js'),'utf8'),{window});
+  for(const file of ['js/domain/productLimits.js','js/data/trainerHistoryStore.js'])vm.runInNewContext(readFileSync(path.join(root,file),'utf8'),{window});
   return window.PogoData.trainerHistoryStore.createTrainerHistoryStore({
     storage:memoryStorage(),identity:{uid:'uid-local',username:'LocalTrainer'},maxFavorites,maxRecent:30,
     now:(()=>{let value=1000;return()=>++value;})()
@@ -47,6 +47,13 @@ test('Favorites retain exact local schema-v3 behavior through 0, 25, and 100 rec
     assert.equal(state.favorites.length,count);
     assert.equal(store.filterFavorites({query:'trainer',tagIds:[]}).length,count);
   }
+});
+
+test('default local organizer accepts 100 Favorites and rejects the 101st organized Favorite',()=>{
+  const store=createStore();
+  for(let index=0;index<100;index++)assert.equal(store.saveFavoriteOrganization(`Trainer ${index}`).ok,true);
+  assert.equal(store.read().favorites.length,100);
+  assert.deepEqual(JSON.parse(JSON.stringify(store.saveFavoriteOrganization('Trainer 100'))),{ok:false,code:'favorite-limit'});
 });
 
 test('favorite filters remain scoped, multi-tag, keyboard-native buttons with non-color state',()=>{
@@ -94,12 +101,14 @@ test('Recent Trainer recency uses coarse deterministic thresholds without a time
   assert.equal(/setInterval|setTimeout/.test(recentTrainerRecency.toString()),false);
 });
 
-test('favorite timestamps are omitted while unavailable/change state and recent recency remain',()=>{
+test('Favorite cards stay local while current share state remains behind explicit Open trainer',()=>{
   const render=html.slice(html.indexOf('async function renderTrainerQuickLists'),html.indexOf('function toggleTrainerFavorite'));
   assert.doesNotMatch(render,/trainerDate\(updatedAt\)/);
-  assert.match(render,/trainer\.listUnavailable/);
-  assert.match(render,/trainer-change-counts/);
+  assert.doesNotMatch(render,/trainer\.listUnavailable|trainer-change-counts|favoriteStatus|readFavorite|managedPublicShareRepository/);
+  assert.match(render,/favoriteTagChips\(item,state\)/);
   assert.match(render,/trainerViewedText\(item\.openedAt\)/);
+  assert.match(html,/function openTrainerByName\(username\)[\s\S]*openTrainerPublicShare\(username\)/);
+  assert.match(html,/async function openTrainerPublicShare[\s\S]*loadPublicShareData\(req\.username\)/);
   assert.match(html,/trainer\.viewedJustNow/);
   assert.match(html,/trainer\.viewedDate/);
 });

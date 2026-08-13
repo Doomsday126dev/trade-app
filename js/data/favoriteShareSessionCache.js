@@ -1,7 +1,8 @@
 (function(global){
   const root=global.PogoData=global.PogoData||{};
   const DEFAULT_CONCURRENCY=4;
-  const DEFAULT_MAX_FAVORITES=20;
+  const DEFAULT_MAX_FAVORITES=global.PogoDomain?.productLimits?.MAX_FAVORITES;
+  if(!Number.isInteger(DEFAULT_MAX_FAVORITES)||DEFAULT_MAX_FAVORITES<1)throw new Error('Product Favorite limit is unavailable');
 
   function normalizedText(value){return String(value||'').normalize('NFKC').trim();}
   function trainerKey(value){return normalizedText(value).toLocaleLowerCase('en-US');}

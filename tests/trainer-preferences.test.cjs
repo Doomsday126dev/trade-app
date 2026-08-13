@@ -136,7 +136,7 @@ test('local organizer model is interactive without enabling remote preference sy
 });
 
 test('future sync UI remains hidden and exposes no functional action while disabled',()=>{
-  const window={};for(const file of ['js/domain/trainerPreferenceSync.js','js/ui/trainerTagPanel.js'])vm.runInNewContext(readFileSync(path.join(__dirname,'..',file),'utf8'),{window});
+  const window={};for(const file of ['js/domain/productLimits.js','js/domain/trainerPreferenceSync.js','js/ui/trainerTagPanel.js'])vm.runInNewContext(readFileSync(path.join(__dirname,'..',file),'utf8'),{window});
   const model=window.PogoUI.trainerTagPanel.syncReadinessViewModel({featureEnabled:false,writesEnabled:false,state:'synced',localCounts:{favorites:2},cloudCounts:{favorites:1},width:390,height:300,syncDomain:window.PogoDomain.trainerPreferenceSync});
   assert.equal(model.hidden,true);assert.equal(model.interactive,false);assert.equal(model.state,'local-only');assert.equal(model.controls.startSyncDisabled,true);assert.equal(model.migration.automaticOnLogin,false);assert.equal(model.migration.rereadVerificationRequired,true);assert.equal(model.layout.touchTargetPx,48);
 });

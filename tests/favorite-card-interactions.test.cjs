@@ -44,6 +44,15 @@ test('cards use lightweight tag and overflow actions with keyboard parity',()=>{
   assert.doesNotMatch(html,/class="favorite-card-action" onclick="openTrainerOrganizer/);
 });
 
+test('ordinary Favorite cards are local bookmarks and cannot hydrate public shares',()=>{
+  const render=html.slice(html.indexOf('async function renderTrainerQuickLists'),html.indexOf('async function toggleTrainerFavorite'));
+  assert.doesNotMatch(render,/ensureFavoriteShareSessionCache|favoriteShareSessionCache|managedPublicShareRepository|readFavorite|hydrate|trainer\.listUnavailable|trainer-change-counts|trainer-unread/);
+  assert.match(render,/store\.read\(\)/);
+  assert.match(render,/store\.filterFavorites/);
+  assert.match(render,/favoriteTagChips\(item,state\)/);
+  assert.match(render,/data-trainer-action="open"/);
+});
+
 test('remove remains explicit confirmed and unavailable from swipe alone',()=>{
   assert.match(html,/role="menuitem" class="danger" data-trainer-action="remove"/);
   assert.match(html,/function removeTrainerFavorite[\s\S]*organizer\.removeConfirm/);

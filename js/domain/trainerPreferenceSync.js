@@ -5,7 +5,8 @@
   const MAX_QUEUE_OPERATIONS=128;
   const MAX_RETRY_ATTEMPTS=8;
   const TOMBSTONE_RETENTION_DAYS=90;
-  const MAX_FAVORITES=100;
+  const MAX_FAVORITES=root.productLimits?.MAX_FAVORITES;
+  if(!Number.isInteger(MAX_FAVORITES)||MAX_FAVORITES<1)throw new Error('Product Favorite limit is unavailable');
   const MAX_TAGS=24;
   const MAX_TAGS_PER_TRAINER=24;
   const MAX_RECENTS=30;

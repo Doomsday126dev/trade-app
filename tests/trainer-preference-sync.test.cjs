@@ -7,7 +7,7 @@ const vm=require('node:vm');
 const root=path.join(__dirname,'..');
 function load(){
   const window={};const context=vm.createContext({window});
-  for(const file of ['js/domain/trainerPreferenceSync.js','js/data/trainerPreferenceSyncQueue.js'])vm.runInContext(readFileSync(path.join(root,file),'utf8'),context,{filename:file});
+  for(const file of ['js/domain/productLimits.js','js/domain/trainerPreferenceSync.js','js/data/trainerPreferenceSyncQueue.js'])vm.runInContext(readFileSync(path.join(root,file),'utf8'),context,{filename:file});
   return window;
 }
 function storage(){const values=new Map();return{getItem:key=>values.has(key)?values.get(key):null,setItem:(key,value)=>values.set(key,String(value)),removeItem:key=>values.delete(key),values};}
@@ -188,7 +188,7 @@ test('production activation routes cannot reach preference sync while disabled',
 });
 
 test('sync modules have no Firebase, network, logging, public-share, or access-grant capability',()=>{
-  const files=['js/domain/trainerPreferenceSync.js','js/data/trainerPreferenceSyncQueue.js'].map(file=>readFileSync(path.join(root,file),'utf8')).join('\n');
+  const files=['js/domain/productLimits.js','js/domain/trainerPreferenceSync.js','js/data/trainerPreferenceSyncQueue.js'].map(file=>readFileSync(path.join(root,file),'utf8')).join('\n');
   assert.doesNotMatch(files,/firebase|fetch\(|XMLHttpRequest|console\.|publicShares|shareAccess|Approved Viewer|writeDataPath|queueSync/);
 });
 
