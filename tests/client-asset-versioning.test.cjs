@@ -47,10 +47,12 @@ test('new HTML never requests an unversioned trainer-discovery module',()=>{
 
 test('service worker keeps exact release keys and retires old app-shell caches',()=>{
   assert.doesNotMatch(worker,/ignoreSearch\s*:\s*true/);
-  assert.match(worker,/url\.searchParams\.get\('v'\)===RELEASE\?releaseAsset\(req\):networkFirst\(req\)/);
+  assert.match(worker,/url\.searchParams\.get\('v'\)===RELEASE\?releaseAsset\(req,ev\):networkFirst\(req,ev\)/);
   assert.match(worker,/await cacheRequiredShell\(\);\s*await self\.skipWaiting\(\)/);
   assert.match(worker,/self\.clients\.claim\(\)/);
-  assert.match(worker,/caches\.delete\(n\)/);
+  assert.match(worker,/names\.filter\(isObsoleteTradeAppCache\)\.map\(n=>caches\.delete\(n\)\)/);
+  assert.match(worker,/CURRENT_CACHE_NAMES=new Set\(\[SHELL_CACHE,SPRITE_CACHE\]\)/);
+  assert.match(worker,/isTradeAppCacheName\(name\)&&!CURRENT_CACHE_NAMES\.has\(name\)/);
 });
 
 test('service worker separates required release assets from optional runtime shell assets',()=>{

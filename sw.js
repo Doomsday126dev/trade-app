@@ -5,11 +5,16 @@
 //     trimmed by max entry count to keep storage bounded
 //   - Firebase realtime endpoints: never cached (always network)
 
-const RELEASE='2026-08-05.43';
+const RELEASE='2026-08-05.44';
 const VERSION=`pogo-trades-${RELEASE}`;
 const SHELL_CACHE=`shell-${VERSION}`;
 const INSTALL_CACHE=`${SHELL_CACHE}-installing`;
 const SPRITE_CACHE=`sprites-${VERSION}`;
+const CURRENT_CACHE_NAMES=new Set([SHELL_CACHE,SPRITE_CACHE]);
+const OWNED_CACHE_PATTERNS=[
+  /^shell-pogo-trades-(?:v\d+|\d{4}-\d{2}-\d{2}\.\d+)(?:-installing)?$/,
+  /^sprites-pogo-trades-(?:v\d+|\d{4}-\d{2}-\d{2}\.\d+)$/
+];
 
 // Files we explicitly precache on install. The actual HTML/JS bytes vary by
 // commit, so we revalidate them with a network-first fetch — but we still want
@@ -150,8 +155,7 @@ self.addEventListener('activate',ev=>{
       throw new Error('Refusing to activate without a complete required shell');
     }
     const names=await caches.keys();
-    await Promise.all(names.filter(n=>n!==SHELL_CACHE&&n!==SPRITE_CACHE&&n!==INSTALL_CACHE).map(n=>caches.delete(n)));
-    await caches.delete(INSTALL_CACHE);
+    await Promise.all(names.filter(isObsoleteTradeAppCache).map(n=>caches.delete(n)));
     await self.clients.claim();
   })());
 });
@@ -180,6 +184,22 @@ function isFirebase(url){
     url.hostname.includes('googleusercontent.com');
 }
 
+function isTradeAppCacheName(name){
+  return OWNED_CACHE_PATTERNS.some(pattern=>pattern.test(name));
+}
+
+function isObsoleteTradeAppCache(name){
+  return isTradeAppCacheName(name)&&!CURRENT_CACHE_NAMES.has(name);
+}
+
+function keepCacheWorkAlive(event,work){
+  const handled=Promise.resolve(work).catch(error=>{
+    console.warn('Service-worker cache maintenance failed',error);
+  });
+  event.waitUntil(handled);
+  return handled;
+}
+
 async function trimCache(cacheName,limit){
   const cache=await caches.open(cacheName);
   const keys=await cache.keys();
@@ -189,14 +209,15 @@ async function trimCache(cacheName,limit){
   for(let i=0;i<drop;i++)await cache.delete(keys[i]);
 }
 
-async function networkFirst(req){
-  const cache=await caches.open(SHELL_CACHE);
-  try{
-    const fresh=await fetch(req);
-    const cacheKey=runtimeShellCacheKey(req);
-    if(fresh&&fresh.ok&&cacheKey)cache.put(cacheKey,fresh.clone());
-    return fresh;
-  }catch(e){
+function networkFirst(req,event){
+  const cachePromise=caches.open(SHELL_CACHE);
+  const freshPromise=fetch(req);
+  const cacheKey=runtimeShellCacheKey(req);
+  if(cacheKey)keepCacheWorkAlive(event,Promise.all([cachePromise,freshPromise]).then(async([cache,fresh])=>{
+    if(fresh&&fresh.ok&&cacheKey)await cache.put(cacheKey,fresh.clone());
+  }));
+  return freshPromise.catch(async e=>{
+    const cache=await cachePromise;
     const cached=await cache.match(req);
     if(cached)return cached;
     // Last resort: serve cached index.html for navigations
@@ -205,7 +226,7 @@ async function networkFirst(req){
       if(root)return root;
     }
     throw e;
-  }
+  });
 }
 
 function runtimeShellCacheKey(req){
@@ -216,30 +237,44 @@ function runtimeShellCacheKey(req){
   return url.href;
 }
 
-async function releaseAsset(req){
-  const cache=await caches.open(SHELL_CACHE);
-  const hit=await cache.match(req);
-  if(hit)return hit;
-  const fresh=await fetch(req,{cache:'reload'});
-  if(fresh&&fresh.ok)cache.put(req,fresh.clone());
-  return fresh;
+function releaseAsset(req,event){
+  const result=caches.open(SHELL_CACHE).then(async cache=>{
+    const hit=await cache.match(req);
+    if(hit)return{cache,response:hit,cacheable:false};
+    const fresh=await fetch(req,{cache:'reload'});
+    return{cache,response:fresh,cacheable:Boolean(fresh&&fresh.ok)};
+  });
+  keepCacheWorkAlive(event,result.then(async({cache,response,cacheable})=>{
+    if(cacheable)await cache.put(req,response.clone());
+  }));
+  return result.then(({response})=>response);
 }
 
-async function cacheFirst(req){
-  const cache=await caches.open(SPRITE_CACHE);
-  const hit=await cache.match(req);
-  if(hit)return hit;
-  try{
+let spriteCacheMutation=Promise.resolve();
+function queueSpriteCacheMutation(task){
+  const run=spriteCacheMutation.then(task,task);
+  spriteCacheMutation=run.catch(()=>{});
+  return run;
+}
+
+function cacheFirst(req,event){
+  const result=caches.open(SPRITE_CACHE).then(async cache=>{
+    const hit=await cache.match(req);
+    if(hit)return{cache,response:hit,cacheable:false};
     const fresh=await fetch(req);
-    if(fresh&&fresh.ok){
-      cache.put(req,fresh.clone());
-      trimCache(SPRITE_CACHE,SPRITE_CACHE_LIMIT);
-    }
-    return fresh;
-  }catch(e){
+    return{cache,response:fresh,cacheable:Boolean(fresh&&fresh.ok)};
+  });
+  keepCacheWorkAlive(event,result.then(({cache,response,cacheable})=>{
+    if(!cacheable)return;
+    return queueSpriteCacheMutation(async()=>{
+      await cache.put(req,response.clone());
+      await trimCache(SPRITE_CACHE,SPRITE_CACHE_LIMIT);
+    });
+  }));
+  return result.then(({response})=>response).catch(e=>{
     // Return a 1×1 transparent png so the UI doesn't break
     return new Response(new Blob([Uint8Array.from(atob('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='),c=>c.charCodeAt(0))],{type:'image/png'}));
-  }
+  });
 }
 
 self.addEventListener('fetch',ev=>{
@@ -251,12 +286,12 @@ self.addEventListener('fetch',ev=>{
   if(isFirebase(url))return;
   // Sprites
   if(isSpriteRequest(url)){
-    ev.respondWith(cacheFirst(req));
+    ev.respondWith(cacheFirst(req,ev));
     return;
   }
   // Same-origin app shell
   if(url.origin===self.location.origin){
-    ev.respondWith(url.searchParams.get('v')===RELEASE?releaseAsset(req):networkFirst(req));
+    ev.respondWith(url.searchParams.get('v')===RELEASE?releaseAsset(req,ev):networkFirst(req,ev));
     return;
   }
 });
