@@ -1,0 +1,47 @@
+name: Deploy approved Pages release
+
+on:
+  workflow_dispatch:
+    inputs:
+      approved_sha:
+        description: Full lowercase 40-character SHA selected by the release tag
+        required: true
+        type: string
+      release_id:
+        description: Release ID without the release- prefix
+        required: true
+        type: string
+      expected_live_sha:
+        description: Exact SHA of the currently successful github-pages deployment
+        required: true
+        type: string
+      mode:
+        description: Explicit release or rollback operation
+        required: true
+        type: choice
+        options:
+          - release
+          - rollback
+      confirmation:
+        description: Exact DEPLOY/ROLLBACK confirmation required by the runbook
+        required: true
+        type: string
+
+permissions: {}
+
+jobs:
+  deploy:
+    permissions:
+      contents: read
+      deployments: read
+      pages: write
+      id-token: write
+    # FAIL-CLOSED LOCAL PLACEHOLDER: replace only in Commit 2 with Commit 1's full SHA.
+    uses: Doomsday126dev/trade-app/.github/workflows/pages-release-control.yml@aa544f230747fff8f97aebb97d238b5b0a180c64
+    with:
+      approved_sha: ${{ inputs.approved_sha }}
+      release_id: ${{ inputs.release_id }}
+      expected_live_sha: ${{ inputs.expected_live_sha }}
+      mode: ${{ inputs.mode }}
+      confirmation: ${{ inputs.confirmation }}
+      control_workflow_sha: "aa544f230747fff8f97aebb97d238b5b0a180c64"
