@@ -1,0 +1,183 @@
+name: Pages release control
+
+on:
+  workflow_call:
+    inputs:
+      approved_sha:
+        required: true
+        type: string
+      release_id:
+        required: true
+        type: string
+      expected_live_sha:
+        required: true
+        type: string
+      mode:
+        required: true
+        type: string
+      confirmation:
+        required: true
+        type: string
+      control_workflow_sha:
+        required: true
+        type: string
+
+permissions: {}
+
+concurrency:
+  group: pages-production
+  cancel-in-progress: false
+
+jobs:
+  validate-build:
+    name: Validate and build exact frontend
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      artifact_name: ${{ steps.names.outputs.artifact_name }}
+      artifact_digest: ${{ steps.build.outputs.artifact_digest }}
+    steps:
+      # actions/checkout v6
+      - name: Check out approved release source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: ${{ inputs.approved_sha }}
+          fetch-depth: 0
+          persist-credentials: false
+          path: target
+      - name: Check out immutable deployment control
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: ${{ job.workflow_sha }}
+          fetch-depth: 1
+          persist-credentials: false
+          path: control
+      - name: Install reviewed validation dependencies
+        run: npm ci --ignore-scripts --prefix control
+      - name: Validate tag, SHA, release, and trusted control
+        env:
+          APPROVED_SHA: ${{ inputs.approved_sha }}
+          EXPECTED_LIVE_SHA: ${{ inputs.expected_live_sha }}
+          GITHUB_SHA: ${{ github.sha }}
+          CHECKED_OUT_SHA: ${{ inputs.approved_sha }}
+          GITHUB_REF_TYPE: ${{ github.ref_type }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+          RELEASE_ID: ${{ inputs.release_id }}
+          DEPLOY_MODE: ${{ inputs.mode }}
+          DEPLOY_CONFIRMATION: ${{ inputs.confirmation }}
+          CONTROL_WORKFLOW_SHA: ${{ inputs.control_workflow_sha }}
+          JOB_WORKFLOW_SHA: ${{ job.workflow_sha }}
+          SOURCE_DIR: target
+          VALIDATE_GIT_HISTORY: "true"
+        run: node control/scripts/pages/validate-release.cjs
+      - name: Run mandatory frontend release suite
+        run: |
+          npm ci --ignore-scripts --prefix target
+          node --test \
+            target/tests/pages-deployment-control.test.cjs \
+            target/tests/service-worker-deployment-rollback.test.cjs \
+            target/tests/service-worker-atomic-install.test.cjs \
+            target/tests/service-worker-cache-lifecycle.test.cjs \
+            target/tests/service-worker-release.test.cjs \
+            target/tests/client-asset-versioning.test.cjs \
+            target/tests/ui-readiness.test.cjs \
+            target/tests/firebase-data-boundary.test.cjs \
+            target/tests/public-share-localization.test.cjs \
+            target/tests/share-visibility-client.test.cjs \
+            target/tests/trainer-preferences.test.cjs
+          node target/scripts/check-domain-helpers.js
+          node target/scripts/check-community-membership.js
+          node target/scripts/check-firebase-reads.js
+          node target/scripts/check-global-identity-contract.js
+          node --check target/data.js
+          node --check target/sw.js
+          find target/js -type f -name '*.js' -print0 | xargs -0 -n1 node --check
+          node -e "for (const file of process.argv.slice(1)) JSON.parse(require('node:fs').readFileSync(file))" target/package.json target/package-lock.json target/manifest.json target/scripts/pages/frontend-files.json
+      - name: Run immutable control regression suite
+        env:
+          PAGES_SOURCE_DIR: ${{ github.workspace }}/control
+        run: node --test control/tests/pages-deployment-control.test.cjs control/tests/service-worker-deployment-rollback.test.cjs
+      - name: Define unique artifact name
+        id: names
+        run: echo "artifact_name=github-pages-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_OUTPUT"
+      - name: Build deterministic reviewed artifact
+        id: build
+        env:
+          SOURCE_DIR: target
+          ARTIFACT_DIR: artifact
+          APPROVED_SHA: ${{ inputs.approved_sha }}
+          RELEASE_ID: ${{ inputs.release_id }}
+          RELEASE_TAG: release-${{ inputs.release_id }}
+          CONTROL_WORKFLOW_SHA: ${{ job.workflow_sha }}
+        run: |
+          result="$(node control/scripts/pages/build-artifact.cjs)"
+          echo "$result"
+          digest="$(node -e 'const value=JSON.parse(process.argv[1]); process.stdout.write(value.artifact_digest)' "$result")"
+          echo "artifact_digest=$digest" >> "$GITHUB_OUTPUT"
+      # actions/upload-pages-artifact v4
+      - name: Upload exact Pages artifact
+        uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b
+        with:
+          name: ${{ steps.names.outputs.artifact_name }}
+          path: artifact
+      - name: Write approval provenance summary
+        env:
+          APPROVED_SHA: ${{ inputs.approved_sha }}
+          RELEASE_ID: ${{ inputs.release_id }}
+          RELEASE_TAG: release-${{ inputs.release_id }}
+          CONTROL_SHA: ${{ job.workflow_sha }}
+          ARTIFACT_DIGEST: ${{ steps.build.outputs.artifact_digest }}
+          DEPLOY_MODE: ${{ inputs.mode }}
+        run: |
+          {
+            echo "## Pages production candidate"
+            echo "- Mode: \`$DEPLOY_MODE\`"
+            echo "- SHA: \`$APPROVED_SHA\`"
+            echo "- Release: \`$RELEASE_ID\`"
+            echo "- Tag: \`$RELEASE_TAG\`"
+            echo "- Artifact digest: \`$ARTIFACT_DIGEST\`"
+            echo "- Trusted control SHA: \`$CONTROL_SHA\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  deploy:
+    name: Approve and deploy production Pages
+    needs: validate-build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      contents: read
+      deployments: read
+      pages: write
+      id-token: write
+    steps:
+      - name: Check out immutable verification control
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: ${{ job.workflow_sha }}
+          fetch-depth: 1
+          persist-credentials: false
+          path: control
+      - name: Verify expected current production deployment
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          EXPECTED_LIVE_SHA: ${{ inputs.expected_live_sha }}
+        run: node control/scripts/pages/verify-deployment.cjs predeploy
+      # actions/deploy-pages v4
+      - name: Deploy previously validated artifact
+        id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e
+        with:
+          artifact_name: ${{ needs.validate-build.outputs.artifact_name }}
+      - name: Verify deployed provenance and served release
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          EXPECTED_LIVE_SHA: ${{ inputs.approved_sha }}
+          APPROVED_SHA: ${{ inputs.approved_sha }}
+          RELEASE_ID: ${{ inputs.release_id }}
+          RELEASE_TAG: release-${{ inputs.release_id }}
+          CONTROL_WORKFLOW_SHA: ${{ job.workflow_sha }}
+          SITE_ORIGIN: ${{ steps.deployment.outputs.page_url }}
+        run: node control/scripts/pages/verify-deployment.cjs postdeploy

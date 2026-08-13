@@ -7,6 +7,8 @@
     "doc": "docs"
   },
   "scripts": {
+    "test:pages-release": "node --test tests/pages-deployment-control.test.cjs tests/service-worker-deployment-rollback.test.cjs tests/service-worker-atomic-install.test.cjs tests/service-worker-cache-lifecycle.test.cjs tests/service-worker-release.test.cjs tests/client-asset-versioning.test.cjs tests/ui-readiness.test.cjs",
+    "check:pages-release": "node scripts/pages/validate-release.cjs --local && npm run test:pages-release && node scripts/check-domain-helpers.js && node scripts/check-community-membership.js && node scripts/check-global-identity-contract.js",
     "generate:pokemon-names": "node scripts/generate-pokemon-name-catalog.cjs",
     "check:trainer-first-product-journeys": "node --test tests/trainer-first-product-journeys.test.cjs tests/domain-display-localization.test.cjs tests/trainer-first-interim.test.cjs",
     "check:domain": "node scripts/check-domain-helpers.js",
@@ -87,6 +89,7 @@
   },
   "homepage": "https://github.com/Doomsday126dev/trade-app#readme",
   "devDependencies": {
-    "@playwright/test": "^1.60.0"
+    "@playwright/test": "^1.60.0",
+    "yaml": "^2.8.3"
   }
 }
