@@ -1,6 +1,8 @@
 # SEC-02 Historical Inventory Review
 
-Status: **NOT YET RUN AGAINST PRODUCTION**
+Status: **NO SUCCESSFUL PRODUCTION INVENTORY**
+
+One approved attempt returned HTTP `401` before any request records were accepted. It created no report and cannot establish whether the Firebase ID token was invalid or the operator lacked Rules authorization. Firebase documents both conditions under `401`; no compatibility evidence was produced.
 
 This worksheet is for the separately approved, post-D2 aggregate-only inventory of `requests`. It must cite the deterministic report digest and must not contain raw usernames, notes, request IDs, credentials, or request-level rows.
 

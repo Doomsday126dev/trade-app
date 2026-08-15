@@ -13,6 +13,12 @@ const fixturePath=path.join(root,'scripts/sec02/fixtures/request-inventory.json'
 const fixture=JSON.parse(fs.readFileSync(fixturePath,'utf8'));
 const now=Date.parse('2026-01-01T00:00:00Z');
 
+function tokenPart(value){return Buffer.from(JSON.stringify(value)).toString('base64url');}
+function syntheticIdToken(overrides={}){
+  const claims={aud:cli.FIREBASE_PROJECT_ID,iss:cli.FIREBASE_TOKEN_ISSUER,sub:'synthetic-operator',exp:Math.floor(now/1000)+3600,...overrides};
+  return`${tokenPart({alg:'RS256',typ:'JWT'})}.${tokenPart(claims)}.synthetic-signature`;
+}
+
 test('fixture matrix produces aggregate-only deterministic output and digest',()=>{
   const first=inventory.aggregateRequests(fixture,{executionTimeMs:now});
   const second=inventory.aggregateRequests(JSON.parse(JSON.stringify(fixture)),{executionTimeMs:now});
@@ -101,11 +107,15 @@ test('programmatic stress fixtures cover very long username and note buckets wit
 });
 
 test('production mode refuses before D2, missing/wrong confirmation and unsafe configuration',()=>{
-  const valid={now:Date.parse('2026-08-15T20:17:40Z'),confirmation:inventory.PRODUCTION_CONFIRMATION,origin:inventory.PRODUCTION_ORIGIN,token:'x'.repeat(40),commitSha:'a'.repeat(40)};
+  const gateNow=Date.parse('2026-08-16T00:00:00Z');
+  const valid={now:gateNow,confirmation:inventory.PRODUCTION_CONFIRMATION,origin:inventory.PRODUCTION_ORIGIN,token:syntheticIdToken({exp:Math.floor(gateNow/1000)+3600}),commitSha:'a'.repeat(40)};
   assert.throws(()=>cli.assertProductionGate({...valid,now:Date.parse('2026-08-15T20:17:39.999Z')}),/SEC02_D2_BOUNDARY_NOT_COMPLETE/u);
   assert.throws(()=>cli.assertProductionGate({...valid,confirmation:''}),/SEC02_CONFIRMATION_INVALID/u);
   assert.throws(()=>cli.assertProductionGate({...valid,confirmation:'READ SEC02'}),/SEC02_CONFIRMATION_INVALID/u);
   assert.throws(()=>cli.assertProductionGate({...valid,origin:'http://localhost:9000'}),/SEC02_PRODUCTION_ORIGIN_INVALID/u);
+  assert.throws(()=>cli.assertProductionGate({...valid,token:'not-a-token'}),/SEC02_ID_TOKEN/u);
+  assert.throws(()=>cli.assertProductionGate({...valid,token:syntheticIdToken({aud:'another-project',exp:Math.floor(gateNow/1000)+3600})}),/SEC02_ID_TOKEN_CLAIMS_INVALID/u);
+  assert.throws(()=>cli.assertProductionGate({...valid,token:syntheticIdToken({exp:Math.floor(gateNow/1000)})}),/SEC02_ID_TOKEN_CLAIMS_INVALID/u);
   assert.equal(cli.assertProductionGate(valid),true);
 });
 
@@ -118,22 +128,87 @@ test('fixture mode remains available before D2 and emits no production report',(
   assert.equal(fs.existsSync(path.join(root,inventory.REPORT_PATH)),false);
 });
 
-test('production reader issues one bounded GET to the exact requests subtree',async()=>{
+test('production reader sends a Firebase ID token as one encoded auth query on a bounded GET',async()=>{
   let call;
   const fetchImpl=async(url,options)=>{call={url,options};return new Response(JSON.stringify({req_1_a:{username:'AB',note:'',requestedAt:1,status:'pending'}}),{status:200,headers:{'content-type':'application/json'}});};
-  const records=await cli.readProductionRequests({origin:inventory.PRODUCTION_ORIGIN,token:'secret-token-value-for-test',fetchImpl});
-  assert.equal(call.url,`${inventory.PRODUCTION_ORIGIN}/requests.json`);
+  const token='TEST_TOKEN_DO_NOT_USE+/=?& value';
+  const records=await cli.readProductionRequests({origin:inventory.PRODUCTION_ORIGIN,token,fetchImpl});
+  const requestUrl=new URL(String(call.url));
+  assert.equal(requestUrl.origin,inventory.PRODUCTION_ORIGIN);
+  assert.equal(requestUrl.pathname,'/requests.json');
+  assert.equal(requestUrl.searchParams.get('auth'),token);
+  assert.equal(requestUrl.searchParams.has('access_token'),false);
+  assert.equal(requestUrl.searchParams.size,1);
   assert.equal(call.options.method,'GET');
   assert.equal(call.options.redirect,'error');
+  assert.equal(call.options.body,undefined);
+  assert.equal(Object.keys(call.options.headers).some(name=>name.toLowerCase()==='authorization'),false);
   assert.deepEqual(Object.keys(records),['req_1_a']);
 });
 
-test('oversized, denied, malformed and network responses fail closed with sanitized errors',async()=>{
-  const base={origin:inventory.PRODUCTION_ORIGIN,token:'secret-token-value-for-test'};
+test('HTTP failures use conservative sanitized taxonomy without reading denied bodies',async()=>{
+  const token='TEST_TOKEN_DO_NOT_USE';
+  const base={origin:inventory.PRODUCTION_ORIGIN,token};
+  for(const [status,code] of [[401,'SEC02_AUTH_OR_RULES_REJECTED'],[403,'SEC02_AUTH_OR_RULES_REJECTED'],[404,'SEC02_DATABASE_NOT_FOUND'],[500,'SEC02_SERVER_READ_FAILED'],[503,'SEC02_SERVER_READ_FAILED']]){
+    let bodyRead=false;
+    const response={ok:false,status,body:{getReader(){bodyRead=true;throw new Error(token);}}};
+    await assert.rejects(cli.readProductionRequests({...base,fetchImpl:async()=>response}),error=>{
+      assert.equal(error.message,code);
+      assert.doesNotMatch(JSON.stringify(error),new RegExp(token,'u'));
+      return true;
+    });
+    assert.equal(bodyRead,false,`status ${status} body must remain unread`);
+  }
+});
+
+test('oversized, malformed, network and timeout responses fail closed without token or URL leakage',async()=>{
+  const token='TEST_TOKEN_DO_NOT_USE';
+  const base={origin:inventory.PRODUCTION_ORIGIN,token};
   await assert.rejects(cli.readProductionRequests({...base,maxBytes:2,fetchImpl:async()=>new Response('123',{status:200,headers:{'content-type':'application/json'}})}),/SEC02_RESPONSE_TOO_LARGE/u);
-  await assert.rejects(cli.readProductionRequests({...base,fetchImpl:async()=>new Response('private payload',{status:403})}),error=>error.message==='SEC02_PERMISSION_DENIED');
   await assert.rejects(cli.readProductionRequests({...base,fetchImpl:async()=>new Response('{private',{status:200,headers:{'content-type':'application/json'}})}),error=>error.message==='SEC02_RESPONSE_JSON_INVALID');
-  await assert.rejects(cli.readProductionRequests({...base,fetchImpl:async()=>{throw new Error('token and payload');}}),error=>error.message==='SEC02_NETWORK_READ_FAILED');
+  await assert.rejects(cli.readProductionRequests({...base,fetchImpl:async(url)=>{throw new Error(`failure ${url}`);}}),error=>{
+    assert.equal(error.message,'SEC02_NETWORK_READ_FAILED');
+    assert.doesNotMatch(JSON.stringify(error),new RegExp(token,'u'));
+    assert.doesNotMatch(JSON.stringify(error),/auth=/u);
+    return true;
+  });
+  await assert.rejects(cli.readProductionRequests({...base,timeoutMs:5,fetchImpl:async(url,{signal})=>new Promise((resolve,reject)=>{
+    signal.addEventListener('abort',()=>reject(new Error(`timeout ${url}`)),{once:true});
+  })}),error=>{
+    assert.equal(error.message,'SEC02_REQUEST_TIMEOUT');
+    assert.doesNotMatch(JSON.stringify(error),new RegExp(token,'u'));
+    assert.doesNotMatch(JSON.stringify(error),/auth=/u);
+    return true;
+  });
+});
+
+test('production main failure emits no token, diagnostic URL, report, or stdout candidate',async()=>{
+  const executionNow=Date.now();
+  const token=syntheticIdToken({exp:Math.floor(executionNow/1000)+3600});
+  const reportPath=path.join(root,inventory.REPORT_PATH);
+  const reportBefore=fs.existsSync(reportPath)?fs.readFileSync(reportPath):null;
+  const originalFetch=globalThis.fetch;
+  const originalWrite=process.stdout.write;
+  let stdout='';
+  globalThis.fetch=async()=>({ok:false,status:401,body:{getReader(){throw new Error(token);}}});
+  process.stdout.write=(chunk)=>{stdout+=String(chunk);return true;};
+  try{
+    await assert.rejects(cli.main(
+      ['--production-aggregate-inventory','--confirmation',inventory.PRODUCTION_CONFIRMATION],
+      {SEC02_RTDB_ORIGIN:inventory.PRODUCTION_ORIGIN,SEC02_RTDB_ID_TOKEN:token,SEC02_TOOL_COMMIT_SHA:'a'.repeat(40)}
+    ),error=>{
+      assert.equal(error.message,'SEC02_AUTH_OR_RULES_REJECTED');
+      assert.doesNotMatch(JSON.stringify(error),new RegExp(token,'u'));
+      assert.doesNotMatch(JSON.stringify(error),/auth=/u);
+      return true;
+    });
+  }finally{
+    globalThis.fetch=originalFetch;
+    process.stdout.write=originalWrite;
+  }
+  const reportAfter=fs.existsSync(reportPath)?fs.readFileSync(reportPath):null;
+  assert.equal(stdout,'');
+  assert.deepEqual(reportAfter,reportBefore);
 });
 
 test('fixed production report path is ignored and rejects arbitrary output locations',()=>{
@@ -151,6 +226,9 @@ test('inventory source has no Firebase mutation capability or broad data path',(
   assert.doesNotMatch(sources,/firebase-admin|firebase\/database|@firebase|users\.json|authIndex\.json|publicShares\.json/u);
   assert.match(sources,/method:'GET'/u);
   assert.match(sources,/\/requests\.json/u);
+  assert.doesNotMatch(sources,/Authorization:\s*`Bearer|access_token/u);
+  assert.doesNotMatch(sources,/SEC02_RTDB_BEARER_TOKEN/u);
+  assert.match(sources,/searchParams\.append\('auth',token\)/u);
 });
 
 test('fixture report refuses unexpectedly large record collections',()=>{
@@ -160,7 +238,7 @@ test('fixture report refuses unexpectedly large record collections',()=>{
 
 test('review worksheet stays blank, local-only and explicitly not production evidence',()=>{
   const source=fs.readFileSync(path.join(root,'docs/SEC-02-HISTORICAL-INVENTORY-REVIEW.md'),'utf8');
-  assert.match(source,/NOT YET RUN AGAINST PRODUCTION/u);
+  assert.match(source,/NO SUCCESSFUL PRODUCTION INVENTORY/u);
   assert.match(source,/Legacy `\.40` writer implications/u);
   assert.match(source,/Live `\.46` writer implications/u);
   assert.doesNotMatch(source,/Alpha Trainer|Unicode ポケモン/u);

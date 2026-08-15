@@ -8,17 +8,46 @@ const inventory=require('./request-inventory.cjs');
 const TOOL_VERSION='sec02-request-inventory-v1';
 const FIXTURE_MODE='--fixture';
 const PRODUCTION_MODE='--production-aggregate-inventory';
+const ID_TOKEN_ENV='SEC02_RTDB_ID_TOKEN';
+const FIREBASE_PROJECT_ID='trade-list-a4297';
+const FIREBASE_TOKEN_ISSUER=`https://securetoken.google.com/${FIREBASE_PROJECT_ID}`;
 
 function safeError(code){const error=new Error(code);error.code=code;return error;}
 function normalizeConfirmation(value){return String(value||'').trim().replace(/\s+/gu,' ');}
+
+function decodeTokenPart(value){
+  try{return JSON.parse(Buffer.from(value,'base64url').toString('utf8'));}catch{return null;}
+}
+
+function assertFirebaseIdTokenClaims(token,{now=Date.now()}={}){
+  const parts=typeof token==='string'?token.split('.'):[];
+  const header=parts.length===3?decodeTokenPart(parts[0]):null;
+  const claims=parts.length===3?decodeTokenPart(parts[1]):null;
+  const nowSeconds=Math.floor(now/1000);
+  if(
+    !header||!claims||header.alg!=='RS256'||
+    claims.aud!==FIREBASE_PROJECT_ID||claims.iss!==FIREBASE_TOKEN_ISSUER||
+    typeof claims.sub!=='string'||claims.sub.length===0||claims.sub.length>128||
+    !Number.isInteger(claims.exp)||claims.exp<=nowSeconds
+  )throw safeError('SEC02_ID_TOKEN_CLAIMS_INVALID');
+  return true;
+}
 
 function assertProductionGate({now=Date.now(),confirmation,origin,token,commitSha}={}){
   if(!Number.isFinite(now)||now<Date.parse(inventory.D2_FINAL_BOUNDARY))throw safeError('SEC02_D2_BOUNDARY_NOT_COMPLETE');
   if(normalizeConfirmation(confirmation)!==inventory.PRODUCTION_CONFIRMATION)throw safeError('SEC02_CONFIRMATION_INVALID');
   if(origin!==inventory.PRODUCTION_ORIGIN)throw safeError('SEC02_PRODUCTION_ORIGIN_INVALID');
-  if(typeof token!=='string'||token.length<20)throw safeError('SEC02_READ_TOKEN_MISSING');
+  if(typeof token!=='string'||token.length<20)throw safeError('SEC02_ID_TOKEN_MISSING');
+  assertFirebaseIdTokenClaims(token,{now});
   if(!/^[0-9a-f]{40}$/u.test(String(commitSha||'')))throw safeError('SEC02_TOOL_COMMIT_INVALID');
   return true;
+}
+
+function httpFailureCode(status){
+  if(status===401||status===403)return'SEC02_AUTH_OR_RULES_REJECTED';
+  if(status===404)return'SEC02_DATABASE_NOT_FOUND';
+  if(Number.isInteger(status)&&status>=500)return'SEC02_SERVER_READ_FAILED';
+  return'SEC02_NETWORK_READ_FAILED';
 }
 
 async function readProductionRequests({origin,token,fetchImpl=globalThis.fetch,timeoutMs=15000,maxBytes=inventory.MAX_RESPONSE_BYTES}={}){
@@ -28,13 +57,15 @@ async function readProductionRequests({origin,token,fetchImpl=globalThis.fetch,t
   const timer=setTimeout(()=>controller.abort(),timeoutMs);
   let response;
   try{
-    response=await fetchImpl(`${inventory.PRODUCTION_ORIGIN}${inventory.PRODUCTION_PATH}`,{
-      method:'GET',headers:{Authorization:`Bearer ${token}`,Accept:'application/json'},signal:controller.signal,redirect:'error'
+    const requestUrl=new URL(inventory.PRODUCTION_PATH,inventory.PRODUCTION_ORIGIN);
+    requestUrl.searchParams.append('auth',token);
+    response=await fetchImpl(requestUrl,{
+      method:'GET',headers:{Accept:'application/json'},signal:controller.signal,redirect:'error'
     });
   }catch{
-    throw safeError('SEC02_NETWORK_READ_FAILED');
+    throw safeError(controller.signal.aborted?'SEC02_REQUEST_TIMEOUT':'SEC02_NETWORK_READ_FAILED');
   }finally{clearTimeout(timer);}
-  if(!response||!response.ok)throw safeError(response?.status===401?'SEC02_AUTHENTICATION_FAILED':response?.status===403?'SEC02_PERMISSION_DENIED':'SEC02_NETWORK_READ_FAILED');
+  if(!response||!response.ok)throw safeError(httpFailureCode(response?.status));
   const contentLength=Number(response.headers?.get?.('content-length'));
   if(Number.isFinite(contentLength)&&contentLength>maxBytes)throw safeError('SEC02_RESPONSE_TOO_LARGE');
   if(!String(response.headers?.get?.('content-type')||'').toLowerCase().includes('application/json'))throw safeError('SEC02_RESPONSE_CONTENT_TYPE_INVALID');
@@ -112,7 +143,7 @@ async function main(argv=process.argv.slice(2),environment=process.env){
   const now=Date.now();
   const config={
     now,confirmation:command.confirmation,origin:environment.SEC02_RTDB_ORIGIN,
-    token:environment.SEC02_RTDB_BEARER_TOKEN,commitSha:environment.SEC02_TOOL_COMMIT_SHA
+    token:environment[ID_TOKEN_ENV],commitSha:environment.SEC02_TOOL_COMMIT_SHA
   };
   assertProductionGate(config);
   const records=await readProductionRequests(config);
@@ -127,6 +158,7 @@ if(require.main===module){
 }
 
 module.exports=Object.freeze({
-  TOOL_VERSION,FIXTURE_MODE,PRODUCTION_MODE,normalizeConfirmation,assertProductionGate,
+  TOOL_VERSION,FIXTURE_MODE,PRODUCTION_MODE,ID_TOKEN_ENV,FIREBASE_PROJECT_ID,FIREBASE_TOKEN_ISSUER,
+  normalizeConfirmation,assertFirebaseIdTokenClaims,assertProductionGate,httpFailureCode,
   readProductionRequests,productionEnvelope,writeEnvelopeAtomically,parseArgs,main
 });
