@@ -103,8 +103,7 @@ const SPRITE_HOSTS=[
   'www.serebii.net',
   'serebii.net',
   'img.pokemondb.net',
-  'cdn08.pokemongohub.net',
-  'static.pokemongohub.net'
+  'cdn08.net'
 ];
 
 async function cacheRequiredShell(){
@@ -272,10 +271,9 @@ function cacheFirst(req,event){
       await trimCache(SPRITE_CACHE,SPRITE_CACHE_LIMIT);
     });
   }));
-  return result.then(({response})=>response).catch(e=>{
-    // Return a 1×1 transparent png so the UI doesn't break
-    return new Response(new Blob([Uint8Array.from(atob('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='),c=>c.charCodeAt(0))],{type:'image/png'}));
-  });
+  // Propagate failures so the element's bounded onerror fallback chain runs.
+  // A successful transparent placeholder would suppress that fallback.
+  return result.then(({response})=>response);
 }
 
 self.addEventListener('fetch',ev=>{

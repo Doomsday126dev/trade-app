@@ -689,7 +689,8 @@ test.describe('visual smoke', () => {
     await expect.poll(()=>page.evaluate(()=>document.body.classList.contains('wp-mono'))).toBe(true);
 
     await page.locator('[data-settings-target="profile"]').click();
-    for(const id of ['prof-av-input','fc-inp','prof-bio','prof-discord'])await expect(page.locator(`#${id}`)).toBeVisible();
+    await expect(page.locator('#prof-av-input')).toBeHidden();
+    for(const id of ['prof-av-open','prof-av-preview','fc-inp','prof-bio','prof-discord'])await expect(page.locator(`#${id}`)).toBeVisible();
     await expect(page.locator('#prof-discord-id,.discord-id-help,.discord-id-help-toggle')).toHaveCount(0);
     for(const key of ['settings.profileGroupTrainer','settings.profileGroupPokemonGo','settings.profileGroupAbout'])await expect(page.locator(`[data-i18n="${key}"]`)).toBeVisible();
     await expect(page.locator('[data-settings-section="profile"] #np1')).toHaveCount(0);await expect(page.locator('[data-settings-section="profile"] #wp-picker')).toHaveCount(0);

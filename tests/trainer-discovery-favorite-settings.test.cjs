@@ -69,12 +69,12 @@ test('inline tag creation selects new or normalized-existing tags and has scoped
   assert.match(html,/onkeydown="trainerTagInputKeydown\(event\)"/);
 });
 
-test('Settings exposes six semantic sections with desktop and mobile navigation',()=>{
-  for(const section of ['profile','language','appearance','security','tools','data']){assert.match(html,new RegExp(`data-settings-target="${section}"`));assert.match(html,new RegExp(`data-settings-section="${section}"`));}
+test('Settings exposes seven semantic sections with desktop and mobile navigation',()=>{
+  for(const section of ['profile','language','appearance','security','tools','data','legal']){assert.match(html,new RegExp(`data-settings-target="${section}"`));assert.match(html,new RegExp(`data-settings-section="${section}"`));}
   assert.match(html,/function selectSettingsSection/);assert.match(html,/function showSettingsSectionList/);
   assert.match(html,/settings-layout\.mobile-list \.settings-detail\{display:none\}/);
   assert.match(html,/settingsDetailIsOpenOnMobile/);
-  assert.match(html,/const SETTINGS_SECTIONS=Object\.freeze\(\['profile','language','appearance','security','tools','data'\]\)/);
+  assert.match(html,/const SETTINGS_SECTIONS=Object\.freeze\(\['profile','language','appearance','security','tools','data','legal'\]\)/);
   assert.match(html,/function parseSettingsRoute/);
   assert.match(html,/settings-page-mode/);
   for(const tool of ['inventory','import','export','safe-transfer','shortcuts','health','backup'])assert.match(html,new RegExp(`openSettingsTool\\('${tool}'\\)`));

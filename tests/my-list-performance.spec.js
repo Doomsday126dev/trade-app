@@ -55,7 +55,9 @@ test.describe('isolated My List scale profile',()=>{
       expect(update.rows).toBe(count);expect(update.ms).toBeLessThan(5000);
       await page.locator('#mylist-out .myrow-editor summary').first().click();
       await expect(page.locator('#mylist-out .myrow-editor-popover')).toHaveCount(1);
-      expect(await page.locator('#mylist-out .myrow-editor-popover button').count()).toBe(5);
+      await expect(page.locator('#mylist-out .myrow-editor-popover .priority-choice')).toHaveCount(3);
+      await expect(page.locator('#mylist-out .myrow-editor-popover .flag-btn')).toHaveCount(4);
+      await expect(page.locator('#mylist-out .myrow-editor-popover .rm')).toHaveCount(1);
       measurements.push({...measurement,filterMs:filter.ms,rowUpdateMs:update.ms});
     }
     console.log(`MY_LIST_PERF ${JSON.stringify(measurements)}`);

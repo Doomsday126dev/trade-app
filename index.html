@@ -1894,7 +1894,10 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
 .mylist-search-actions{grid-column:2;grid-row:1;justify-content:flex-end;flex-wrap:nowrap}.mylist-search-action{min-height:48px}.cpbtn.mylist-search-action{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 11px;border:1px solid var(--border-strong);background:var(--surface-raised);color:var(--text);box-shadow:none}.cpbtn.mylist-search-action:hover{border-color:var(--accent);background:var(--surface-hover);color:var(--text)}.cpbtn.mylist-search-action.copied{border-color:color-mix(in srgb,var(--ok) 55%,var(--border));background:color-mix(in srgb,var(--ok) 12%,var(--surface-raised));color:var(--ok)}
 .mylist-search-view{display:inline-flex;align-items:center;justify-content:center;gap:5px;min-width:48px;min-height:48px;padding:8px 10px;border-color:transparent;color:var(--muted)}.mylist-search-view:hover,.mylist-search-view[aria-expanded="true"]{border-color:var(--border);background:var(--surface-hover);color:var(--text)}.mylist-search-view .collapse-icon{display:inline-flex;margin:0;transition:transform var(--transition-fast)}.mylist-search-view[aria-expanded="true"] .collapse-icon{transform:rotate(180deg)}
 .mylist-search-raw{grid-column:1/-1;margin:2px 0 0;padding:10px 12px;border:0;border-top:1px solid var(--border);border-radius:0;background:var(--bg);font-size:11px;line-height:1.65}.mylist-search-limit{grid-column:1/-1;margin-left:37px;color:var(--danger);font-size:11px}.mylist-search-groups{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:12px}.mylist-search-section{overflow:hidden;padding:0;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--surface-raised);box-shadow:var(--shadow-low)}.mylist-search-section:only-child{grid-column:1/-1}.mylist-search-section>h3{display:flex;align-items:center;gap:8px;margin:0;padding:12px;border-bottom:1px solid var(--border);font:750 var(--type-card)}.mylist-search-section>h3 .ui-icon{color:var(--muted)}.mylist-search-more{margin:0}.mylist-search-more .combo-toggle{min-height:48px;padding:10px 12px;border-radius:0}.mylist-search-more-body{border-top:1px solid var(--border)}.mylist-split{margin:0;padding:12px;border:0;border-top:1px solid var(--border);border-left:3px solid var(--M);border-radius:0;background:var(--surface-subtle)}.mylist-split .mylist-search-option{margin-top:8px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--surface-raised)}
-.myrow{min-height:62px;padding:9px 11px;gap:9px;border-radius:var(--radius-lg)}.myrow-sprite-wrap{width:38px;height:38px}.myrow-sprite{width:38px;height:38px}.myrow-name{font-size:14px;font-weight:700;line-height:1.25}.drag-handle{display:inline-flex;align-items:center;justify-content:center;width:28px;height:40px;padding:0;color:var(--muted)}.drag-handle .ui-icon{width:17px;height:17px}.pb{width:26px;height:28px}.myrow-trait{min-height:26px;padding-inline:7px}.myrow-edit{min-height:44px}.myrow:hover .drag-handle{color:var(--text)}
+:root{--sprite-slot-compact:24px;--sprite-slot-autocomplete:28px;--sprite-slot-list:34px;--sprite-slot-card:40px;--sprite-slot-avatar:48px}
+.sprite-slot-compact{width:var(--sprite-slot-compact);height:var(--sprite-slot-compact)}.sprite-slot-autocomplete{width:var(--sprite-slot-autocomplete);height:var(--sprite-slot-autocomplete)}.sprite-slot-list{width:var(--sprite-slot-list);height:var(--sprite-slot-list)}.sprite-slot-card{width:var(--sprite-slot-card);height:var(--sprite-slot-card)}.sprite-slot-profile,.sprite-slot-avatar{width:var(--sprite-slot-avatar);height:var(--sprite-slot-avatar)}
+.mygrid{gap:0;overflow:visible;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--surface-raised)}.myrow{min-height:58px;padding:7px 10px;gap:9px;border:0;border-bottom:1px solid var(--border);border-radius:0;background:transparent;cursor:default}.myrow:last-child{border-bottom:0}.myrow:hover{background:var(--surface-hover)}.myrow-sprite-wrap{width:34px;height:34px;flex:0 0 34px}.myrow-sprite{width:34px;height:34px}.myrow-name{font-size:14px;font-weight:700;line-height:1.25}.drag-handle{display:inline-flex;align-items:center;justify-content:center;width:28px;height:40px;padding:0;color:var(--muted)}.drag-handle .ui-icon{width:17px;height:17px}.reorder-mode .myrow{cursor:grab}.pb{width:28px;height:30px}.myrow-trait{min-height:24px;padding-inline:7px}.myrow-edit{min-height:44px}.myrow:hover .drag-handle{color:var(--text)}
+.mylist-list-toolbar{margin-bottom:8px}.mylist-reorder-toggle{margin-right:auto;min-height:44px}.myrow-priority-quick{position:relative}.myrow-priority-quick>summary{list-style:none}.myrow-priority-quick>summary::-webkit-details-marker{display:none}.myrow-priority-chip{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border:1px solid var(--border);border-radius:var(--radius-md);font-weight:800;cursor:pointer}.myrow-priority-chip.H{color:var(--H);background:var(--Hbg)}.myrow-priority-chip.M{color:var(--M);background:var(--Mbg)}.myrow-priority-chip.L{color:var(--L);background:var(--Lbg)}.myrow-priority-menu{position:absolute;z-index:25;right:0;top:calc(100% + 5px);display:flex;gap:5px;padding:7px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--surface-raised);box-shadow:var(--shadow-high)}.myrow-priority-editor{margin:0 0 10px;padding:0;border:0}.myrow-priority-editor legend{margin-bottom:6px;color:var(--muted);font:var(--type-meta)}.myrow-priority-editor>div{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.myrow-priority-editor .priority-choice{width:auto;min-height:44px}.profile-avatar-control{display:flex;flex:1;min-width:0;align-items:center;gap:8px;flex-wrap:wrap}.profile-avatar-label{flex-basis:100%;font-weight:700}.profile-avatar-open{max-width:min(100%,320px);justify-content:flex-start;overflow:hidden}.profile-avatar-open span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.profile-avatar-clear[hidden]{display:none}.profile-avatar-dialog{margin-top:12px;padding:12px;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--surface-subtle)}.profile-avatar-dialog-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}.profile-avatar-results{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:7px;max-height:360px;margin-top:10px;overflow:auto}.profile-avatar-option{display:grid;grid-template-columns:48px minmax(0,1fr);align-items:center;gap:8px;min-height:58px;padding:6px 8px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--surface-raised);color:var(--text);text-align:left;cursor:pointer}.profile-avatar-option:hover,.profile-avatar-option:focus-visible{border-color:var(--accent);background:var(--surface-hover)}.profile-avatar-option.selected{box-shadow:inset 0 0 0 2px var(--accent)}.profile-avatar-option-sprite{display:inline-flex;align-items:center;justify-content:center}.avatar-picker-sprite,.avatar-sprite{width:100%;height:100%;object-fit:contain}.profile-avatar-help,.profile-avatar-empty{margin:9px 0 0;color:var(--muted);font:var(--type-meta)}.legal-copy{max-width:760px}.legal-copy h3{margin:24px 0 8px}.legal-source-list{display:grid;gap:8px;margin:12px 0;padding:0;list-style:none}.legal-source-list li{display:grid;gap:2px;padding:10px 0;border-bottom:1px solid var(--border)}.legal-source-list a{width:max-content;max-width:100%;font-weight:750}.legal-source-list span{color:var(--muted);font:var(--type-meta)}
 .admin-shell{gap:22px}.admin-title,.have-title{font-size:26px;line-height:32px}.admin-subtitle,.have-subtitle{font-size:13px;line-height:1.55}.admin-nav{gap:2px;padding:0;border-bottom:1px solid var(--border)}.admin-nav-button{display:inline-flex;align-items:center;gap:7px;min-height:50px;padding:9px 12px;border:0;border-bottom:2px solid transparent;border-radius:0;background:transparent;color:var(--muted)}.admin-nav-button:hover{background:var(--surface-hover);color:var(--text)}.admin-nav-button[aria-current="page"]{border-color:var(--accent);background:transparent;color:var(--text);box-shadow:none}.admin-nav-button[aria-current="page"] .ui-icon{color:var(--accent)}
 .admin-section-heading{margin-bottom:14px}.admin-section-heading h2{font-size:19px}.admin-summary-card{border-color:var(--border);background:var(--surface-raised);box-shadow:var(--shadow-low)}.admin-summary-value{font-size:26px}.admin-member-list,.admin-role-list,.admin-maintenance-list{overflow:hidden;gap:0;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--surface-raised)}.admin-member-row,.admin-role-row,.admin-maintenance-row{border:0;border-bottom:1px solid var(--border);border-radius:0;background:transparent}.admin-member-row:last-child,.admin-role-row:last-child,.admin-maintenance-row:last-child{border-bottom:0}.admin-member-row:hover,.admin-role-row:hover,.admin-maintenance-row:hover{background:var(--surface-hover)}.new-user-form{border-color:var(--border);background:var(--surface-subtle)}.new-user-form h3{display:flex;align-items:center;gap:7px;color:var(--text)}.admin-empty{border:0;background:transparent}.admin-actions .btn-export{display:inline-flex;align-items:center;justify-content:center;gap:7px}
 .archive-title-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.archive-read-only{min-height:28px}.legacy-archive-notice{padding:10px 12px;border:0;border-left:3px solid var(--muted);border-radius:0 var(--radius-md) var(--radius-md) 0;background:var(--surface-subtle)}.legacy-archive-icon{color:var(--muted)}.archive-filter{width:min(100%,620px);margin:0 0 14px}.archive-list-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 8px}.archive-list-actions{display:inline-flex;align-items:center;gap:9px;font-weight:500;text-transform:none}.archive-list-actions .bulk-toggle{display:inline-flex;align-items:center;gap:6px;min-height:44px}.legacy-archive-list{overflow:hidden;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--surface-raised)}#tab-have .have-row{margin:0;padding:9px 12px;border:0;border-bottom:1px solid var(--border);border-radius:0;background:transparent}#tab-have .have-row:last-child{border-bottom:0}#tab-have .have-row:hover{background:var(--surface-hover)}#tab-have .have-row-name{font-weight:700}#tab-have .have-row-meta{color:var(--muted);font-size:11px}.legacy-archive-list>.empty{border:0;background:transparent}
@@ -1902,7 +1905,7 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
 .loader-wrap{align-items:stretch;padding:24px 4px;gap:12px}.loader-skeleton{display:grid;gap:8px}.loader-skeleton .skel-row{height:54px;margin:0}.loader-text{text-align:center;color:var(--muted);font:var(--type-meta)}.toast,.undo-toast{bottom:calc(18px + env(safe-area-inset-bottom));justify-content:flex-start;min-height:48px;padding:10px 14px;border-left:3px solid var(--accent);text-align:left;pointer-events:auto}.toast::before,.undo-toast::before{content:"";width:8px;height:8px;flex:0 0 8px;border-radius:50%;background:var(--accent)}.undo-toast{z-index:10000}.undo-btn{min-height:36px;margin-left:auto;padding:6px 12px;background:transparent;border:1px solid var(--border-strong);color:var(--text)}
 @media(min-width:1280px){.page{padding-top:34px}.admin-shell{gap:26px}.mylist-priority-sections{gap:30px}.mylist-search-groups{gap:18px}.admin-section-heading p{max-width:720px}}
 @media(max-width:900px){.mylist-search-groups{grid-template-columns:1fr}.mylist-search-section:only-child{grid-column:auto}}
-@media(max-width:600px){.my-string-heading{align-items:flex-start}.my-string-heading span{text-align:left}.mylist-search-footer,.mylist-search-option-head{grid-template-columns:1fr;gap:8px}.mylist-search-actions{grid-column:1;grid-row:auto;width:100%;justify-content:stretch}.mylist-search-actions>*{flex:1 1 0}.mylist-search-limit{margin-left:37px}.myrow{min-height:60px;padding:8px;gap:6px}.myrow-sprite-wrap{width:34px;height:34px}.myrow-sprite{width:34px;height:34px}.drag-handle{width:22px}.mctrl{gap:4px}.myrow-active-traits{max-width:92px}.admin-nav{margin-inline:-14px;padding-inline:14px}.admin-nav-button{padding-inline:10px}.admin-nav-button .ui-icon{display:none}.archive-list-heading{align-items:flex-start}.archive-list-actions{align-items:flex-end;flex-direction:column}.archive-list-actions .bulk-toggle{min-width:48px}.archive-list-actions .bulk-toggle span{display:none}.toast,.undo-toast{left:14px;right:14px;max-width:none;transform:translateY(100px)}.toast.show,.undo-toast.show{transform:translateY(0)}}
+@media(max-width:600px){.my-string-heading{align-items:flex-start}.my-string-heading span{text-align:left}.mylist-search-footer,.mylist-search-option-head{grid-template-columns:1fr;gap:8px}.mylist-search-actions{grid-column:1;grid-row:auto;width:100%;justify-content:stretch}.mylist-search-actions>*{flex:1 1 0}.mylist-search-limit{margin-left:37px}.myrow{display:flex;min-height:58px;padding:7px 8px;gap:7px;overflow:visible}.myrow .bulk-chk,.myrow .drag-handle,.myrow .myrow-sprite-wrap,.myrow .myrow-name,.myrow .mctrl{grid-area:auto}.myrow .myrow-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.myrow .mctrl{width:auto;margin-left:auto;justify-content:flex-end;flex-wrap:nowrap;overflow:visible}.myrow-sprite-wrap{width:34px;height:34px}.myrow-sprite{width:34px;height:34px}.drag-handle{width:22px}.myrow-priority-quick{display:none}.mctrl{gap:4px}.myrow-active-traits{max-width:92px}.myrow-edit span{display:none}.profile-avatar-results{grid-template-columns:1fr}.admin-nav{margin-inline:-14px;padding-inline:14px}.admin-nav-button{padding-inline:10px}.admin-nav-button .ui-icon{display:none}.archive-list-heading{align-items:flex-start}.archive-list-actions{align-items:flex-end;flex-direction:column}.archive-list-actions .bulk-toggle{min-width:48px}.archive-list-actions .bulk-toggle span{display:none}.toast,.undo-toast{left:14px;right:14px;max-width:none;transform:translateY(100px)}.toast.show,.undo-toast.show{transform:translateY(0)}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
 .myrow-trait.xxl{color:var(--trait-xxl)}
 .myrow-trait.xxs{color:var(--trait-xxs)}
@@ -2249,8 +2252,9 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
       <span class="mylist-srch-icon app-search-icon" aria-hidden="true"><svg class="ui-icon ui-icon-sm"><use href="#ui-icon-search"></use></svg></span>
       <input class="app-search-input" type="text" data-i18n-placeholder="myList.filterPlaceholder" data-i18n-aria-label="myList.filterLabel" placeholder="Filter my list…" oninput="renderMyList(this.value)" id="mylist-filter" aria-label="Filter my list">
     </div>
-    <div class="sec" style="display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap">
+    <div class="sec mylist-list-toolbar" style="display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap">
       <h2 class="sr-only" id="mylist-category-heading"><span id="mylist-category-name">Trades</span> <span aria-hidden="true">·</span> <span id="mylist-count"></span></h2>
+      <button type="button" class="mylist-reorder-toggle btn btn-secondary" id="mylist-reorder-toggle" onclick="toggleReorderMode()" aria-pressed="false"><span data-i18n="myList.reorder">Reorder</span></button>
       <span style="font-size:10px;color:var(--muted);display:inline-flex;gap:6px;align-items:center;text-transform:none;letter-spacing:0;font-weight:500">
         <span data-i18n-title="myList.luckyHelp" title="Lucky entries generate a separate search string">⚡ <span data-i18n="myList.lucky">Lucky</span></span>
         <span style="color:var(--border2)">·</span>
@@ -2258,6 +2262,7 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
         <span style="color:var(--border2)">·</span>
         <span style="color:#2dd4bf" data-i18n-title="myList.xxsHelp" title="XXS entries generate a separate search string">XXS</span>
       </span>
+      <span class="sr-only" id="mylist-action-status" role="status" aria-live="polite" aria-atomic="true"></span>
     </div>
     <div id="mylist-out"></div>
     <div class="sec my-string-heading" style="margin-top:22px" hidden><strong id="my-string-title"></strong><span id="my-string-help"></span></div>
@@ -2564,13 +2569,14 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
           <button type="button" class="settings-nav-button" data-settings-target="security" onclick="selectSettingsSection('security')"><span class="settings-nav-icon" aria-hidden="true">◇</span><span data-i18n="settings.sectionSecurity">Account &amp; Security</span></button>
           <button type="button" class="settings-nav-button" data-settings-target="tools" onclick="selectSettingsSection('tools')"><span class="settings-nav-icon" aria-hidden="true">⌘</span><span data-i18n="settings.sectionTools">Tools</span></button>
           <button type="button" class="settings-nav-button" data-settings-target="data" onclick="selectSettingsSection('data')"><span class="settings-nav-icon" aria-hidden="true">▣</span><span data-i18n="settings.sectionData">App &amp; Data</span></button>
+          <button type="button" class="settings-nav-button" data-settings-target="legal" onclick="selectSettingsSection('legal')"><span class="settings-nav-icon" aria-hidden="true">ⓘ</span><span data-i18n="settings.sectionLegal">Legal &amp; Attribution</span></button>
         </div></nav>
         <div class="settings-detail" id="settings-detail">
           <button type="button" class="bghost btn btn-secondary settings-mobile-back" onclick="showSettingsSectionList()" data-i18n="settings.backToSections">Back to Settings</button>
           <section class="settings-section settings-account-only" data-settings-section="profile" aria-labelledby="settings-profile-heading">
             <div class="settings-section-heading"><h2 id="settings-profile-heading" data-i18n="settings.sectionProfile">Profile</h2></div>
             <div class="settings-form" id="settings-profile-form">
-              <section class="settings-profile-group" aria-labelledby="settings-profile-trainer-heading"><h3 id="settings-profile-trainer-heading" data-i18n="settings.profileGroupTrainer">Trainer</h3><div class="settings-profile-card card-row"><div class="av" id="settings-account-av">?</div><div class="settings-profile-copy"><strong id="settings-account-name">—</strong><span data-i18n="settings.profileTrainerName">Trainer name</span></div></div><div class="profile-avatar-picker"><div class="profile-avatar-preview" id="prof-av-preview">?</div><div style="flex:1;min-width:0"><label for="prof-av-input" data-i18n="profile.avatar">Avatar Pokémon (optional)</label><input class="field-control" type="text" id="prof-av-input" list="prof-av-list" data-i18n-placeholder="profile.avatarPlaceholder" placeholder="Search or pick a Pokémon…" oninput="updateAvatarPreview(this.value)"><datalist id="prof-av-list"></datalist></div></div></section>
+              <section class="settings-profile-group" aria-labelledby="settings-profile-trainer-heading"><h3 id="settings-profile-trainer-heading" data-i18n="settings.profileGroupTrainer">Trainer</h3><div class="settings-profile-card card-row"><div class="av" id="settings-account-av">?</div><div class="settings-profile-copy"><strong id="settings-account-name">—</strong><span data-i18n="settings.profileTrainerName">Trainer name</span></div></div><div class="profile-avatar-picker"><div class="profile-avatar-preview sprite-slot-avatar" id="prof-av-preview">?</div><div class="profile-avatar-control"><span class="profile-avatar-label" data-i18n="profile.avatar">Avatar Pokémon (optional)</span><input type="hidden" id="prof-av-input"><button type="button" class="profile-avatar-open btn btn-secondary" id="prof-av-open" onclick="openAvatarPicker()" aria-haspopup="dialog"><span id="prof-av-name" data-i18n="avatar.choose">Choose Pokémon</span></button><button type="button" class="profile-avatar-clear btn btn-ghost" id="prof-av-clear" onclick="clearAvatarSelection()" data-i18n="avatar.clear">Remove avatar</button></div></div><div class="profile-avatar-dialog" id="prof-av-dialog" role="dialog" aria-modal="false" aria-labelledby="prof-av-dialog-title" hidden><div class="profile-avatar-dialog-head"><strong id="prof-av-dialog-title" data-i18n="avatar.title">Choose an avatar Pokémon</strong><button type="button" class="btn btn-icon" onclick="closeAvatarPicker()" data-i18n-aria-label="common.close" aria-label="Close">×</button></div><div class="app-search-shell"><svg class="ui-icon ui-icon-sm app-search-icon" aria-hidden="true"><use href="#ui-icon-search"></use></svg><input class="app-search-input" id="prof-av-search" type="search" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="true" aria-controls="prof-av-results" data-i18n-placeholder="avatar.search" placeholder="Search Pokémon" oninput="renderAvatarPicker(this.value)" onkeydown="avatarPickerKeydown(event)"></div><div class="profile-avatar-results" id="prof-av-results" role="listbox" data-i18n-aria-label="avatar.results" aria-label="Avatar Pokémon results"></div><p class="profile-avatar-help" data-i18n="avatar.help">Verified sprites are shown. More results appear as you search.</p></div></section>
               <section class="settings-profile-group" aria-labelledby="settings-profile-pogo-heading"><h3 id="settings-profile-pogo-heading" data-i18n="settings.profileGroupPokemonGo">Pokémon GO</h3><div class="field"><label data-i18n="profile.friendCode">Friend Code</label><div class="settings-identity-value" id="pfc-disp">—</div></div><div class="field"><label for="fc-inp" data-i18n="profile.updateFriendCode">Update Friend Code</label><input class="field-control" type="text" id="fc-inp" placeholder="0000 0000 0000" maxlength="14" inputmode="numeric" oninput="formatFc(this)"><div class="fc-hint" id="fc-hint"></div></div></section>
               <section class="settings-profile-group" aria-labelledby="settings-profile-about-heading"><h3 id="settings-profile-about-heading" data-i18n="settings.profileGroupAbout">About</h3><div class="field profile-bio-field"><label for="prof-bio"><span data-i18n="profile.bio">Bio</span> <span data-i18n="profile.bioVisibility">(optional, shown to other trainers)</span></label><textarea class="field-control" id="prof-bio" data-i18n-placeholder="profile.bioPlaceholder" placeholder="For example, your area and trade preferences" maxlength="120" rows="3"></textarea></div><div class="field"><label for="prof-discord"><span data-i18n="profile.discordHandle">Discord handle</span> <span data-i18n="common.optional">(optional)</span></label><input class="field-control" type="text" id="prof-discord" placeholder="username#1234 or username" maxlength="40"></div></section>
               <div class="settings-form-status" id="profile-err" role="status" aria-live="polite"></div><div class="settings-form-actions"><button class="bpri btn btn-primary" onclick="saveProfile()" data-i18n="common.save">Save</button></div>
@@ -2615,6 +2621,7 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
             <button class="settings-tool settings-admin-only" onclick="openSettingsTool('backup')" hidden><span aria-hidden="true">⬇</span><span data-i18n="admin.exportBackup">Export backup</span></button>
           </div></section>
           <section class="settings-section local-preferences-panel settings-account-only" data-settings-section="data" aria-labelledby="settings-local-tools-heading"><div class="settings-section-heading"><h2 id="settings-local-tools-heading" data-i18n="settings.sectionData">App &amp; Data</h2></div><div class="trainer-sync-status" id="trainer-sync-local-status" role="status" aria-live="polite" aria-atomic="true"><span class="trainer-sync-status-icon" aria-hidden="true">▣</span><div class="trainer-sync-status-copy"><strong data-i18n="trainer.syncState.local-only">Saved on this device</strong><span class="trainer-sync-status-detail" data-i18n="trainer.syncStatus.localOnlyDetail">Cross-device sync is not active. Your saved trainers remain on this device.</span></div></div><button class="settings-tool" id="settings-install" onclick="triggerInstall()"><span aria-hidden="true">⬇</span><span data-i18n="app.install">Install</span></button><p class="settings-release" id="settings-release-id"></p></section>
+          <section class="settings-section settings-legal" data-settings-section="legal" aria-labelledby="settings-legal-heading"><div class="settings-section-heading"><h2 id="settings-legal-heading" data-i18n="legal.title">Legal &amp; Attribution</h2><p data-i18n="legal.unofficial">PoGo Trades is an unofficial fan-made tool and is not affiliated with, endorsed by, or sponsored by Scopely Explore or the owners/licensors of Pokémon and Pokémon GO.</p></div><div class="legal-copy"><p data-i18n="legal.rights">Pokémon, Pokémon GO, character names, images, and related marks are the property of their respective rights holders.</p><p data-i18n="legal.imageUse">Pokémon imagery is used functionally to help identify Pokémon, forms, and costumes in the trading and list-management interface.</p><h3 data-i18n="legal.sourcesTitle">Sprite and data sources</h3><p data-i18n="legal.sourcesHelp">These third-party sources provide technical sprite or data inputs. They do not sponsor or endorse PoGo Trades.</p><ul class="legal-source-list" id="legal-source-list"></ul><h3 data-i18n="legal.contactTitle">Rights-holder contact</h3><p><span data-i18n="legal.contactHelp">For a rights or takedown request, use the public project support tracker.</span> <a href="https://github.com/Doomsday126dev/trade-app/issues" target="_blank" rel="noopener noreferrer" data-i18n="legal.contactLink">Open support tracker</a></p></div></section>
         </div>
       </div>
     </div>
@@ -2954,7 +2961,7 @@ if(!pokemonKeysDomain)throw new Error('Pokemon key helpers failed to load');
 const {_normGender,HAVE_KEY_SEP,splitHaveKey,joinHaveKey,totalQtyForName,haveEntryInfo,haveEntryValue}=pokemonKeysDomain;
 const spriteSlugsDomain=window.PogoDomain?.spriteSlugs;
 if(!spriteSlugsDomain)throw new Error('Sprite slug helpers failed to load');
-const {padDex,normalizeCostumeLookupKey,pokemondbGoSpeciesSlug,normalizeSpriteKey,REGIONAL_SLUG_MAP,pokemondbSlug}=spriteSlugsDomain;
+const {padDex,normalizeCostumeLookupKey,pokemondbGoSpeciesSlug,normalizeSpriteKey,SPRITE_SOURCE_REGISTRY,CANONICAL_SPRITE_OVERRIDES,UNRESOLVED_SPRITE_KEYS,canonicalSpriteOverride,isUnresolvedSpriteKey,spriteSourceForUrl,REGIONAL_SLUG_MAP,pokemondbSlug}=spriteSlugsDomain;
 const fuzzyTextDomain=window.PogoDomain?.fuzzyText;
 if(!fuzzyTextDomain)throw new Error('Fuzzy text helpers failed to load');
 const {_phoneticCode,_levenshtein}=fuzzyTextDomain;
@@ -3013,7 +3020,7 @@ let acItems=[],acFiltered=[],acFocusIdx=-1;
 let addTray=[];
 let dragSrc=null;
 let authRepairStarted=false;
-let bulkMode=false,bulkSelected=new Set();
+let bulkMode=false,bulkSelected=new Set(),reorderMode=false;
 let haveView='mine',haveSubTab='trainer',haveMatchOnly=false;
 let haveAcItems=[],haveAcFiltered=[],haveAcFocusIdx=-1;
 let haveBulkMode=false,haveBulkSelected=new Set();
@@ -3139,7 +3146,7 @@ const GO_COSTUME_SPRITE_SLUGS={
   "Pikachu (Straw)":"strawhat","Pikachu (Mimikyu)":"halloween2019","Pikachu (Winter 2019)":"beanie","Pikachu (Red Party)":"partyhat2020",
   "Pikachu (Clone)":"clone","Pikachu (Safari)":"safari","Pikachu (Spring)":"flowerhat","Pikachu (Charizard)":"charizard","Pikachu (Umbreon)":"umbreon",
   "Pikachu (Rayquaza)":"rayquaza","Pikachu (Lucario)":"lucario","Pikachu (Flying)":"flying","Pikachu (World)":"worldcap",
-  "Pikachu (Explorer)":"explorer","Pikachu (Holiday 2020)":"holiday2020","Pikachu (New Year)":"newyear","Pikachu (5th Anniversary)":"gofest2021",
+  "Pikachu (Explorer)":"explorer","Pikachu (Holiday 2020)":"holiday2020","Pikachu (New Year)":"newyear",
   "Pikachu (Meloetta Hat)":"gofest2021","Pikachu (Halloween 2021)":"halloween2021","Pikachu (Kariyushi Shirt)":"kariyushi",
   "Pikachu (Fly Okinawa)":"okinawaballoons","Pikachu (Shaymin Flower)":"gracidea","Pikachu (TCG)":"tcg","Pikachu (Cake Hat)":"cake",
   "Pikachu (Worlds 2022)":"worlds2022","Pikachu (Shaymin Scarf)":"shayminscarf","Pikachu (Top Hat)":"newyear2023",
@@ -3150,9 +3157,9 @@ const GO_COSTUME_SPRITE_SLUGS={
   "Pikachu (Aquamarine)":"aquamarine","Pikachu (Pyrite)":"pyrite","Pikachu (Dawn)":"dawn","Pikachu (Lucas)":"lucas",
   "Pikachu (Akari)":"akari","Pikachu (Rei)":"rei","Pikachu (Sun)":"sun","Pikachu (Moon)":"moon",
   "Pikachu (Saree)":"saree","Pikachu (Hilbert)":"hilbert","Pikachu (Hilda)":"hilda","Pikachu (Nate)":"nate","Pikachu (Rosa)":"rosa",
-  "Pikachu (Kurta)":"kurta","Pikachu (Sari)":"indshirt","Pikachu (Worlds 2024)":"worlds24","Pikachu (Spring 2023)":"cherryblossoms",
-  "Pikachu (GO Fest 2022)":"shayminscarf","Pikachu (GO Fest 2023)":"jeju","Pikachu (Calem)":"calem","Pikachu (Serena)":"serena",
-  "Pikachu (Scuba)":"worlds24","Pikachu (Halloween 2022)":"halloween2021","Pikachu (Halloween 2024)":"halloween","Pikachu (GO Fest 2024)":"sun",
+  "Pikachu (Kurta)":"kurta","Pikachu (Worlds 2024)":"worlds24","Pikachu (Spring 2023)":"cherryblossoms",
+  "Pikachu (GO Fest 2022)":"shayminscarf","Pikachu (Calem)":"calem","Pikachu (Serena)":"serena",
+  "Pikachu (Scuba)":"worlds24",
   "Pikachu (Worlds 2025)":"worlds25","Pikachu (Timnas Indonesia)":"timnasindonesia","Pikachu (Red)":"red","Pikachu (Leaf)":"leaf",
   "Pikachu (Ethan)":"ethan","Pikachu (Lyra)":"lyra","Pikachu (Baseball)":"baseball","Pikachu (Instinct)":"instinct",
   "Pikachu (Mystic)":"mystic","Pikachu (Valor)":"valor","Pikachu (Marathon)":"marathon","Pikachu (Fossil)":"fossil",
@@ -3381,12 +3388,27 @@ function canvasSafeSpriteUrl(url){
   }
   return url;
 }
+function spriteCatalogContext(no,name='',dn='',catalogId=''){
+  const rawName=String(name||dn||'').trim();
+  const resolved=pokemonCatalogDomain.resolveLegacyKey(rawName)||pokemonCatalogDomain.resolveLegacyKey(dn);
+  const decorated=pokemonCatalogDomain.decorateCatalogEntry({no:Number(no)||null,name:resolved?.canonicalKey||rawName,displayName:dn||rawName,catalogId:catalogId||resolved?.catalogId});
+  const canonicalId=catalogId||resolved?.catalogId||decorated?.catalogId||'';
+  const lookupKeys=[decorated?.name,...(decorated?.spriteLookupKeys||[]),rawName,dn].filter(Boolean);
+  const unresolved=lookupKeys.some(isUnresolvedSpriteKey);
+  return Object.freeze({catalogId:canonicalId,canonicalName:decorated?.name||rawName,lookupKeys:Object.freeze([...new Set(lookupKeys)]),unresolved,override:canonicalSpriteOverride(canonicalId)});
+}
 function entrySpriteUrl(entry,nameOverride='',gender=''){
   const resolvedName=nameOverride||entry?.name||entry?.displayName||'';
+  const context=spriteCatalogContext(entry?.no,resolvedName,entry?.displayName||resolvedName,entry?.catalogId);
+  if(context.override?.url)return context.override.url;
   if(entry?.spriteUrl||entry?.sprite)return entry.spriteUrl||entry.sprite;
-  const pdbGoCostume=resolvedName?pokemondbGoCostumeUrl(resolvedName,{allowPattern:false}):'';
-  if(pdbGoCostume)return pdbGoCostume;
-  return spriteUrl(entry?.no,resolvedName,gender,entry?.displayName||resolvedName);
+  if(!context.unresolved){
+    for(const key of context.lookupKeys){
+      const pdbGoCostume=pokemondbGoCostumeUrl(key,{allowPattern:false});
+      if(pdbGoCostume)return pdbGoCostume;
+    }
+  }
+  return spriteUrl(entry?.no,resolvedName,gender,entry?.displayName||resolvedName,context.catalogId);
 }
 // Resolves the BEST QUALITY sprite URL.
 // Priority: hand-curated costume URLs (cdn08 wiki) → PokemonDB HOME 3D renders →
@@ -3415,31 +3437,44 @@ function unownSpriteUrl(name){
   return`${POKEMINERS_BASE}pokemon_icon_201_${formId}.png`;
 }
 
-function spriteUrl(no,name,gender='',dn=''){
+function spriteUrl(no,name,gender='',dn='',catalogId=''){
+  const context=spriteCatalogContext(no,name,dn,catalogId);
+  if(context.override?.url)return context.override.url;
+  const lookupName=context.canonicalName||name;
+  const compatibilityKeys=context.lookupKeys;
+  if(context.unresolved){
+    const plainName=String(lookupName||'').split(/\s*\(/)[0]||'Pikachu';
+    if(pokeminersHasDex(no))return pokeminersSpriteUrl(no,'00');
+    return pokemondbSpriteUrl(plainName,plainName,gender)||`${SPRITE_BASE}${parseInt(no)}.png`;
+  }
   // 1. Prefer PokémonDB's GO-specific costume art when we can infer a reliable costume URL.
   //    It is clearer than many legacy wiki assets and fixes several Eeveelution costume mismatches.
   //    Keep this to exact mappings only; broad suffix guesses belong in the fallback chain.
-  const pdbGoCostume=name?pokemondbGoCostumeUrl(name,{allowPattern:false}):'';
-  if(pdbGoCostume)return pdbGoCostume;
+  for(const key of compatibilityKeys){
+    const pdbGoCostume=pokemondbGoCostumeUrl(key,{allowPattern:false});
+    if(pdbGoCostume)return pdbGoCostume;
+  }
   // 2. Hand-curated costume sprite URLs (legacy fallback for oddball costumes not covered above)
-  if(name&&EXTRA_COSTUME_SPRITES[name])return EXTRA_COSTUME_SPRITES[name];
+  for(const key of compatibilityKeys)if(EXTRA_COSTUME_SPRITES[key])return EXTRA_COSTUME_SPRITES[key];
   // 3. Unown letters — PokeAPI's per-letter pixel sprites are inconsistently sized
   //     (some are tiny, some span the full tile). PokemonDB hosts the Pokémon HOME
   //     3D renders for all 28 forms at a consistent 128×128, so use those instead.
-  const unownUrl=unownSpriteUrl(name);
+  const unownUrl=compatibilityKeys.map(unownSpriteUrl).find(Boolean);
   if(unownUrl)return unownUrl;
   // 4. Serebii GO costume sprites (curated slug map → known-existing Serebii URL).
   //    Must come BEFORE PokemonDB because PokemonDB doesn't have costume variants
   //    (their HOME 3D sprites only cover base Pokémon and game forms, not GO costumes).
-  const goUrl=goCostumeSpriteUrl(no,name);
+  const goUrl=compatibilityKeys.map(key=>goCostumeSpriteUrl(no,key)).find(Boolean);
   if(goUrl)return goUrl;
   // 5. PokeAPI costume form variants (Vivillon, Furfrou — non-Pokemon-GO forms)
-  if(name&&COSTUME_FORM_SPRITE_IDS[name])return`${SPRITE_BASE}${COSTUME_FORM_SPRITE_IDS[name]}.png`;
+  const formKey=compatibilityKeys.find(key=>COSTUME_FORM_SPRITE_IDS[key]);
+  if(formKey)return`${SPRITE_BASE}${COSTUME_FORM_SPRITE_IDS[formKey]}.png`;
   // 6. PokeAPI regional form (Alolan, Galarian, Hisuian, Paldean) — but
   //    a few form IDs map to PokeAPI placeholder PNGs (200 OK, ~400 bytes,
   //    no real character art). For those we skip ahead so PokemonDB HOME wins.
-  if(name&&REGIONAL_FORM_IDS[name]&&!POKEAPI_PLACEHOLDER_FORM_IDS.has(REGIONAL_FORM_IDS[name])){
-    return`${SPRITE_BASE}${REGIONAL_FORM_IDS[name]}.png`;
+  const regionalKey=compatibilityKeys.find(key=>REGIONAL_FORM_IDS[key]);
+  if(regionalKey&&!POKEAPI_PLACEHOLDER_FORM_IDS.has(REGIONAL_FORM_IDS[regionalKey])){
+    return`${SPRITE_BASE}${REGIONAL_FORM_IDS[regionalKey]}.png`;
   }
   // 7. PokeAPI female sprite (Pyroar ♀, Pikachu ♀ tail, etc.) should outrank plain base art.
   if(gender==='f'){
@@ -3449,11 +3484,12 @@ function spriteUrl(no,name,gender='',dn=''){
   // 8. PokeMiners GO asset — preferred for plain Pokémon because it matches in-game art.
   //    Skip for regional-prefix names (A-/G-/H-/P-) since their `no` points at
   //    the BASE species and PokeMiners would return the wrong regional variant.
-  const isRegional=name&&/^[AGHP]-/.test(name);
-  const pmBase=(!name||!EXTRA_COSTUME_SPRITES[name])&&pokeminersHasDex(no)&&!isRegional?pokeminersSpriteUrl(no,'00'):'';
+  const isRegional=lookupName&&/^[AGHP]-/.test(lookupName);
+  const hasCuratedCostume=compatibilityKeys.some(key=>EXTRA_COSTUME_SPRITES[key]);
+  const pmBase=(!lookupName||!hasCuratedCostume)&&pokeminersHasDex(no)&&!isRegional?pokeminersSpriteUrl(no,'00'):'';
   if(pmBase)return pmBase;
   // 9. PokemonDB HOME 3D — fallback for game forms and anything PokeMiners doesn't expose cleanly
-  const pdb=pokemondbSpriteUrl(name,dn||name,gender);
+  const pdb=pokemondbSpriteUrl(lookupName,dn||lookupName,gender);
   if(pdb)return pdb;
   if(!no)return null;
   const n=parseInt(no);
@@ -3516,30 +3552,35 @@ function pokeminersSpriteUrl(no,formCode='00'){
 //   3. PokemonDB HOME 3D (best for form variants + gender, e.g. vivillon-garden, indeedee-female)
 //   4. PokeMiners (actual PoGo game art — exact Pokémon GO accuracy)
 //   5. Serebii GO sprite (final visual fallback, always exists for in-game Pokémon)
-function spriteFallbackChain(no,name,gender='',dn=''){
+function spriteFallbackChain(no,name,gender='',dn='',catalogId=''){
   const urls=[];
   const push=u=>{if(u&&!urls.includes(u))urls.push(u);};
+  const context=spriteCatalogContext(no,name,dn,catalogId);
+  push(context.override?.url);
   // Primary URL (from spriteUrl — uses GO costume slugs first now)
-  const primary=spriteUrl(no,name,gender,dn);
+  const primary=spriteUrl(no,name,gender,dn,context.catalogId);
   push(primary);
+  const compatibilityKeys=context.lookupKeys;
+  const safeName=context.unresolved?(String(context.canonicalName||name||'').split(/\s*\(/)[0]||'Pikachu'):(context.canonicalName||name);
   // Exact GO costume aliases first, then legacy hand-curated URLs for edge cases.
-  for(const u of pokemondbGoCostumeUrls(name,{allowPattern:false}))push(u);
-  if(name&&EXTRA_COSTUME_SPRITES[name])push(EXTRA_COSTUME_SPRITES[name]);
+  if(!context.unresolved)for(const key of compatibilityKeys)for(const u of pokemondbGoCostumeUrls(key,{allowPattern:false}))push(u);
+  if(!context.unresolved)for(const key of compatibilityKeys)push(EXTRA_COSTUME_SPRITES[key]);
   // If this is a known GO costume, the Serebii URL is canonical — make sure it's tried explicitly
-  const goUrl=goCostumeSpriteUrl(no,name);
-  push(goUrl);
+  if(!context.unresolved)for(const key of compatibilityKeys)push(goCostumeSpriteUrl(no,key));
   // Pattern-guessed PokemonDB GO filenames are helpful, but should not outrank known-good sources.
-  for(const u of pokemondbGoCostumeUrls(name,{allowPattern:true}))push(u);
+  if(!context.unresolved)for(const key of compatibilityKeys)for(const u of pokemondbGoCostumeUrls(key,{allowPattern:true}))push(u);
   // PokeAPI specific form variants
-  if(name&&REGIONAL_FORM_IDS[name])push(`${SPRITE_BASE}${REGIONAL_FORM_IDS[name]}.png`);
-  if(name&&COSTUME_FORM_SPRITE_IDS[name])push(`${SPRITE_BASE}${COSTUME_FORM_SPRITE_IDS[name]}.png`);
+  if(!context.unresolved)for(const key of compatibilityKeys){
+    if(REGIONAL_FORM_IDS[key])push(`${SPRITE_BASE}${REGIONAL_FORM_IDS[key]}.png`);
+    if(COSTUME_FORM_SPRITE_IDS[key])push(`${SPRITE_BASE}${COSTUME_FORM_SPRITE_IDS[key]}.png`);
+  }
   if(gender==='f')push(femaleSpriteUrl(no));
   // PokeMiners GO art before HOME renders for plain Pokémon
   if(pokeminersHasDex(no))push(pokeminersSpriteUrl(no,'00'));
   // PokemonDB HOME for any non-costume Pokémon (form/regional/gender variants)
-  push(pokemondbSpriteUrl(name,dn||name,gender));
+  push(pokemondbSpriteUrl(safeName,context.unresolved?safeName:(dn||safeName),gender));
   if(gender==='f'){
-    push(pokemondbSpriteUrl(name,dn||name,''));   // PokemonDB without -female suffix
+    push(pokemondbSpriteUrl(safeName,context.unresolved?safeName:(dn||safeName),''));   // PokemonDB without -female suffix
     if(primary&&primary.includes('/female/')&&no){
       push(`${SPRITE_BASE}${parseInt(no)}.png`); // PokeAPI base when /female/ 404s
     }
@@ -3694,11 +3735,11 @@ function detectSpriteScale(url){
 // Builds the per-image transform: anchors scaling at the character centroid
 // (transform-origin in %) so the character stays put as it grows, instead of
 // drifting outward by (offset × (scale-1)) when the source isn't centered.
-function _spriteTransform(scale,cx,cy){
+function _spriteTransform(scale,cx,cy,offsetX=0,offsetY=0){
   const ox=Math.round((cx??0.5)*1000)/10; // % of element
   const oy=Math.round((cy??0.5)*1000)/10;
   return{
-    transform:`scale(${scale})`,
+    transform:`translate(${Number(offsetX)||0}px,${Number(offsetY)||0}px) scale(${scale})`,
     transformOrigin:`${ox}% ${oy}%`
   };
 }
@@ -3707,8 +3748,10 @@ function _updateRenderedScale(url,entry){
     if(img.dataset.srcKey===url){
       const cap=parseFloat(img.dataset.scaleCap||'');
       const rawScale=entry?.scale||1;
-      const scale=Number.isFinite(cap)&&cap>0?Math.min(rawScale,cap):rawScale;
-      const{transform,transformOrigin}=_spriteTransform(scale,entry?.cx,entry?.cy);
+      const opticalScale=parseFloat(img.dataset.opticalScale||'1')||1;
+      const adjustedScale=rawScale*opticalScale;
+      const scale=Number.isFinite(cap)&&cap>0?Math.min(adjustedScale,cap):adjustedScale;
+      const{transform,transformOrigin}=_spriteTransform(scale,entry?.cx,entry?.cy,img.dataset.opticalX,img.dataset.opticalY);
       img.style.transform=transform;
       img.style.transformOrigin=transformOrigin;
     }
@@ -3730,25 +3773,34 @@ function effectiveSpriteOrigin(url){
   return{cx:(c&&typeof c.cx==='number'?c.cx:0.5),cy:(c&&typeof c.cy==='number'?c.cy:0.5)};
 }
 function spriteImg(no,size=40,cls='',name='',gender='',dn='',opts={}){
+  const context=spriteCatalogContext(no,name,dn,opts?.catalogId);
   const urls=[
+    ...(context.override?.url?[context.override.url]:[]),
     ...(opts?.urlOverride?[opts.urlOverride]:[]),
-    ...spriteFallbackChain(no,name,gender,dn)
+    ...spriteFallbackChain(no,name,gender,dn,context.catalogId)
   ].filter((u,i,arr)=>u&&arr.indexOf(u)===i);
   if(!urls.length)return`<div class="pc-sprite-placeholder" style="width:${size}px;height:${size}px">🎮</div>`;
   const url=urls[0];
   const isGo=url.includes('serebii.net')||url.includes('weserv.nl')||url.includes('/sprites/go/')||url.includes('PokeMiners')||url.includes('pogo_assets');
   const rendering=isGo?'auto':'pixelated';
-  const rawScale=effectiveSpriteScale(url);
+  const optical=context.override||{};
+  const rawScale=effectiveSpriteScale(url)*(Number(optical.opticalScale)||1);
   const scaleCap=Number.isFinite(opts?.scaleCap)?opts.scaleCap:null;
   const scale=scaleCap?Math.min(rawScale,scaleCap):rawScale;
   const{cx,cy}=effectiveSpriteOrigin(url);
-  const{transform,transformOrigin}=_spriteTransform(scale,cx,cy);
+  const{transform,transformOrigin}=_spriteTransform(scale,cx,cy,optical.opticalOffsetX,optical.opticalOffsetY);
   // Trigger async per-image trim detection (no-op if already cached)
   if(spriteScaleCache[url]===undefined)detectSpriteScale(url);
   const fallbacks=urls.slice(1).map(u=>u.replace(/"/g,'&quot;')).join('|');
   return`<img src="${url}" data-src-key="${escAttr(url)}" class="${cls||'pc-sprite'}" width="${size}" height="${size}" alt="" title="${escAttr(name||'Pokémon')}"
     style="image-rendering:${rendering};object-fit:contain;transform:${transform};transform-origin:${transformOrigin};clip-path:inset(0)"
-    data-scale-cap="${scaleCap||''}" data-fallbacks="${fallbacks}" onerror="trySpriteFallback(this)" loading="lazy">`;
+    data-catalog-id="${escAttr(context.catalogId)}" data-optical-scale="${Number(optical.opticalScale)||1}" data-optical-x="${Number(optical.opticalOffsetX)||0}" data-optical-y="${Number(optical.opticalOffsetY)||0}"
+    data-scale-cap="${scaleCap||''}" data-fallbacks="${fallbacks}" onload="validateSpriteLoad(this)" onerror="trySpriteFallback(this)" loading="lazy" decoding="async">`;
+}
+function validateSpriteLoad(img){
+  if(!img||img.dataset.spriteValidated===img.currentSrc)return;
+  img.dataset.spriteValidated=img.currentSrc;
+  if((img.naturalWidth||0)<=1||(img.naturalHeight||0)<=1)trySpriteFallback(img);
 }
 function trySpriteFallback(img){
   const fbs=(img.dataset.fallbacks||'').split('|').filter(Boolean);
@@ -3756,12 +3808,14 @@ function trySpriteFallback(img){
   const next=fbs.shift();
   img.dataset.fallbacks=fbs.join('|');
   img.dataset.srcKey=next;
+  img.dataset.spriteValidated='';
   if(next.includes('serebii.net'))img.style.imageRendering='auto';
   const cap=parseFloat(img.dataset.scaleCap||'');
-  const rawScale=effectiveSpriteScale(next);
+  const opticalScale=parseFloat(img.dataset.opticalScale||'1')||1;
+  const rawScale=effectiveSpriteScale(next)*opticalScale;
   const scale=Number.isFinite(cap)&&cap>0?Math.min(rawScale,cap):rawScale;
   const{cx,cy}=effectiveSpriteOrigin(next);
-  const{transform,transformOrigin}=_spriteTransform(scale,cx,cy);
+  const{transform,transformOrigin}=_spriteTransform(scale,cx,cy,img.dataset.opticalX,img.dataset.opticalY);
   img.style.transform=transform;
   img.style.transformOrigin=transformOrigin;
   if(spriteScaleCache[next]===undefined)detectSpriteScale(next);
@@ -6924,7 +6978,7 @@ function showApp(){
     if(ud.avatarPokemon){
       const found=avatarEntryForName(ud.avatarPokemon);
       if(found?.no){
-        const img=_avatarImgHtml(found.no,found.name);
+        const img=_avatarImgHtml(found.no,found.name,found.catalogId);
         if(img){el.innerHTML=img;el.style.overflow='hidden';return;}
       }
     }
@@ -7636,6 +7690,7 @@ function currentListEntries(type=myListType,filterVal=''){
       shiny,
       gender,
       no:spriteEntry.no||entry.no||null,
+      catalogId:sourceEntry.catalogId||spriteEntry.catalogId||entry.catalogId||'',
       maxType:maxTypeForEntry(entry,type),
       spriteName:(COSTUME_FORM_SPRITE_IDS[name]||REGIONAL_FORM_IDS[name])?name:(spriteEntry.name||entry.name||name),
       spriteUrl:entrySpriteUrl(spriteEntry.no?spriteEntry:entry,name,gender),
@@ -7646,10 +7701,11 @@ function currentListEntries(type=myListType,filterVal=''){
 }
 
 function myListEditorHtml(entry){
-  const{name,dn,mod,lucky,xxl,xxs,shiny}=entry;
+  const{name,dn,p,mod,lucky,xxl,xxs,shiny}=entry;
   const jsName=escAttr(name.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r?\n/g,' '));
   const jsDn=escAttr(String(dn).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r?\n/g,' '));
   return`<div class="myrow-editor-popover" onkeydown="if(event.key==='Escape'){event.preventDefault();const d=this.closest('details');d.removeAttribute('open');d.querySelector('summary').focus()}">
+    <fieldset class="myrow-priority-editor"><legend>${escHtml(i18nCore.t('myList.priority'))}</legend><div role="group" aria-label="${escAttr(i18nCore.t('myList.priorityFor',{name:dn}))}">${['H','M','L'].map(value=>`<button type="button" class="pb priority-choice ${p===value?'on '+value:''}" aria-pressed="${p===value}" onclick="movePriority('${jsName}','${value}')">${escHtml(i18nCore.t({'H':'priority.high','M':'priority.medium','L':'priority.low'}[value]))}</button>`).join('')}</div></fieldset>
     <div class="myrow-trait-controls">
       <button class="flag-btn lucky-flag ${lucky?'on':''}" onclick="setLucky('${jsName}')" title="${escAttr(i18nCore.t('myList.lucky'))}" aria-pressed="${lucky}" aria-label="${escAttr(i18nCore.t('myList.toggleLuckyFor',{name:dn}))}">⚡</button>
       <button class="flag-btn shiny-flag ${shiny?'on':''}" onclick="setShiny('${jsName}')" title="${escAttr(i18nCore.t('myList.shiny'))}" aria-pressed="${shiny}" aria-label="${escAttr(i18nCore.t('myList.toggleShinyFor',{name:dn}))}">✨</button>
@@ -7686,14 +7742,14 @@ function myListRowsHtml(entries){
       xxs?'<span class="myrow-trait xxs">XXS</span>':'',
       mod?`<span class="myrow-trait detail" title="${escAttr(mod)}">${escHtml(mod)}</span>`:''
     ].join('');
-    return`<div class="myrow${isSel?' bulk-selected':''}" ${bulkMode?'':'draggable="true"'} data-name="${attrName}" data-dex="${no||''}" data-idx="${idx}" data-full="${escAttr(dn)}" aria-label="${escAttr(dn)}" ${clickHandler}
+    return`<div class="myrow${isSel?' bulk-selected':''}" ${reorderMode&&!bulkMode?'draggable="true"':''} data-name="${attrName}" data-priority="${escAttr(p||'')}" data-dex="${no||''}" data-idx="${idx}" data-full="${escAttr(dn)}" aria-label="${escAttr(dn)}" ${clickHandler}
       ondragstart="dragStart(event)" ondragover="dragOver(event)" ondrop="dragDrop(event)" ondragend="dragEnd(event)">
       <input type="checkbox" class="bulk-chk" data-name="${attrName}" ${isSel?'checked':''} onclick="event.stopPropagation();toggleBulkSelection('${jsName}')" aria-label="${escAttr(i18nCore.t('myList.selectEntry',{name:dn}))}">
-      <span class="drag-handle" title="${escAttr(i18nCore.t('myList.reorderEntry',{name:dn}))}" aria-hidden="true">${uiIconMarkup('grip','ui-icon')}</span>
-      ${hasSprite?`<span class="myrow-sprite-wrap">${spriteImg(no,28,'myrow-sprite',name,'',dn,{urlOverride:entry.spriteUrl})}${crownHtml}</span>`:crownHtml}
+      ${reorderMode?`<span class="drag-handle" title="${escAttr(i18nCore.t('myList.reorderEntry',{name:dn}))}" aria-hidden="true">${uiIconMarkup('grip','ui-icon')}</span>`:''}
+      ${hasSprite?`<span class="myrow-sprite-wrap sprite-slot-list">${spriteImg(no,34,'myrow-sprite',name,'',dn,{urlOverride:entry.spriteUrl,catalogId:entry.catalogId})}${crownHtml}</span>`:crownHtml}
       <div class="myrow-name">${escHtml(dn)}</div>
       <div class="mctrl">
-        <div class="myrow-priority" role="group" aria-label="${escAttr(i18nCore.t('myList.priority'))}">${['H','M','L'].map(b=>`<button class="pb ${p===b?'on '+b:''}" onclick="setPri('${jsName}','${b}')" title="${escAttr(i18nCore.t({'H':'priority.high','M':'priority.medium','L':'priority.low'}[b]))}" aria-pressed="${p===b}" aria-label="${escAttr(i18nCore.t({'H':'myList.setHighPriority','M':'myList.setMediumPriority','L':'myList.setLowPriority'}[b],{name:dn}))}">${b}</button>`).join('')}</div>
+        ${p?`<details class="myrow-priority-quick" onclick="event.stopPropagation()"><summary class="myrow-priority-chip ${p}" aria-label="${escAttr(i18nCore.t('myList.changePriorityFor',{name:dn,priority:i18nCore.t({'H':'priority.high','M':'priority.medium','L':'priority.low'}[p])}))}">${p}</summary><div class="myrow-priority-menu" role="group" aria-label="${escAttr(i18nCore.t('myList.priorityFor',{name:dn}))}">${['H','M','L'].map(value=>`<button type="button" class="pb ${p===value?'on '+value:''}" aria-pressed="${p===value}" onclick="movePriority('${jsName}','${value}')">${value}</button>`).join('')}</div></details>`:''}
         ${activeTraits?`<div class="myrow-active-traits" aria-label="${escAttr(i18nCore.t('myList.currentFlags',{flags:[lucky&&i18nCore.t('myList.lucky'),shiny&&i18nCore.t('myList.shiny'),xxl&&'XXL',xxs&&'XXS',mod].filter(Boolean).join(', ')}))}">${activeTraits}</div>`:''}
         <details class="myrow-editor" onclick="event.stopPropagation()" ontoggle="hydrateMyRowEditor(this)">
           <summary class="myrow-edit" aria-label="${escAttr(i18nCore.t('myList.openMoreFor',{name:dn}))}" title="${escAttr(i18nCore.t('myList.openMoreFor',{name:dn}))}">${uiIconMarkup('sliders','ui-icon ui-icon-sm')}<span>${escHtml(i18nCore.t('myList.editEntry'))}</span></summary>
@@ -8341,22 +8397,27 @@ async function exportMyListImage(style='classic'){
 
 // ── DRAG TO REORDER ───────────────────────────────────────────
 function dragStart(e){
+  if(!reorderMode){e.preventDefault();return;}
   dragSrc=e.currentTarget;
   e.currentTarget.classList.add('dragging');
   e.dataTransfer.effectAllowed='move';
   e.dataTransfer.setData('text/plain',e.currentTarget.dataset.name);
 }
 function dragOver(e){
+  if(!reorderMode)return;
   e.preventDefault();e.dataTransfer.dropEffect='move';
   document.querySelectorAll('.myrow').forEach(r=>r.classList.remove('drag-over'));
   e.currentTarget.classList.add('drag-over');
 }
 function dragDrop(e){
   e.preventDefault();
+  if(!reorderMode)return;
   const targetName=e.currentTarget.dataset.name;
   const srcName=e.dataTransfer.getData('text/plain');
   if(srcName===targetName)return;
   const list={...(allData[myListType]?.[cur]||{})};
+  const sourcePriority=parsePri(list[srcName]||'').p,targetPriority=parsePri(list[targetName]||'').p;
+  if(sourcePriority!==targetPriority){announceMyListAction(i18nCore.t('myList.reorderWithinPriority'));return;}
   const keys=Object.keys(list);
   const si=keys.indexOf(srcName);const ti=keys.indexOf(targetName);
   if(si<0||ti<0)return;
@@ -8364,6 +8425,26 @@ function dragDrop(e){
   keys.splice(si,1);keys.splice(ti,0,srcName);
   const reordered={};keys.forEach(k=>{reordered[k]=list[k];});
   writeList(myListType,cur,reordered);
+}
+function announceMyListAction(message){
+  const status=document.getElementById('mylist-action-status');if(status){status.textContent='';requestAnimationFrame(()=>{status.textContent=message;});}
+  toast(message);
+}
+function toggleReorderMode(force){
+  reorderMode=typeof force==='boolean'?force:!reorderMode;
+  document.body.classList.toggle('reorder-mode',reorderMode);
+  const button=document.getElementById('mylist-reorder-toggle');if(button){button.setAttribute('aria-pressed',String(reorderMode));button.querySelector('span').textContent=i18nCore.t(reorderMode?'common.done':'myList.reorder');}
+  renderMyList();
+  announceMyListAction(i18nCore.t(reorderMode?'myList.reorderOn':'myList.reorderOff'));
+}
+function movePriority(name,p){
+  if(!['H','M','L'].includes(p))return;
+  const list={...(allData[myListType]?.[cur]||{})};if(!Object.prototype.hasOwnProperty.call(list,name))return;
+  const current=parsePri(list[name]||'');if(current.p===p)return;
+  list[name]=priValue(p,current.mod,current.lucky,current.xxl,current.xxs,current.shiny);
+  writeList(myListType,cur,list);
+  announceMyListAction(i18nCore.t('myList.priorityChanged',{name,priority:i18nCore.t({'H':'priority.high','M':'priority.medium','L':'priority.low'}[p])}));
+  requestAnimationFrame(()=>[...document.querySelectorAll('.myrow')].find(row=>row.dataset.name===name)?.querySelector('.myrow-edit')?.focus({preventScroll:true}));
 }
 function dragEnd(e){
   e.currentTarget.classList.remove('dragging');
@@ -9686,7 +9767,6 @@ function updateFcDisplay(){
   const bio=document.getElementById('prof-bio');if(bio)bio.value=ud.bio||'';
   const dis=document.getElementById('prof-discord');if(dis)dis.value=ud.discord||'';
   const avi=document.getElementById('prof-av-input');if(avi)avi.value=ud.avatarPokemon||'';
-  renderAvatarOptions();
   const wp=document.getElementById('prof-wallpaper');if(wp)wp.value=ud.wallpaper||'mono';
   const picker=document.getElementById('wp-picker');
   if(picker)picker.innerHTML=wallpaperPickerHtml(ud.wallpaper||'mono');
@@ -9708,7 +9788,7 @@ async function saveProfile(){
   if(topAv&&avatarPokemon){
     const found=avatarEntryForName(avatarPokemon);
     if(found?.no){
-      const img=_avatarImgHtml(found.no,found.name);
+      const img=_avatarImgHtml(found.no,found.name,found.catalogId);
       if(img){topAv.innerHTML=img;topAv.style.overflow='hidden';}
     }
   }
@@ -9823,7 +9903,7 @@ let _settingsContext='public';
 let _settingsScrollSnapshot=null;
 let _settingsSection='profile';
 let _pendingSettingsRouteSection=null;
-const SETTINGS_SECTIONS=Object.freeze(['profile','language','appearance','security','tools','data']);
+const SETTINGS_SECTIONS=Object.freeze(['profile','language','appearance','security','tools','data','legal']);
 const SETTINGS_DESKTOP_QUERY='(min-width:768px)';
 function accountMenuElements(){return{trigger:document.getElementById('account-trigger'),popover:document.getElementById('account-popover')};}
 function closeAccountMenu(restoreFocus=true){
@@ -9934,12 +10014,18 @@ function configureSettingsPanel(context='public'){
 }
 function selectSettingsSection(section='profile',options={}){
   if(!SETTINGS_SECTIONS.includes(section))section='profile';if(_settingsContext!=='account')section='language';const previous=_settingsSection;_settingsSection=section;
+  if(section==='legal')renderLegalSources();
   document.querySelectorAll('[data-settings-section]').forEach(panel=>{panel.hidden=panel.dataset.settingsSection!==section;const heading=panel.querySelector('h2');if(heading)heading.tabIndex=-1;});
   document.querySelectorAll('[data-settings-target]').forEach(button=>{const active=button.dataset.settingsTarget===section;button.setAttribute('aria-current',active?'page':'false');});
   const layout=document.getElementById('settings-layout');if(!options.keepList)layout?.classList.remove('mobile-list');
   const detail=document.getElementById('settings-detail');if(detail&&previous!==section&&options.resetScroll!==false)detail.scrollTop=0;
   if(_settingsContext==='account'&&options.updateHistory!==false&&document.getElementById('settings-modal')?.classList.contains('open'))writeSettingsRoute(section,{mode:options.historyMode||'push'});
   if(options.focus!==false)requestAnimationFrame(()=>document.querySelector(`[data-settings-section="${section}"] h2`)?.focus({preventScroll:true}));
+}
+function renderLegalSources(){
+  const list=document.getElementById('legal-source-list');if(!list||list.dataset.ready===i18nCore.getLocale())return;
+  list.innerHTML=SPRITE_SOURCE_REGISTRY.map(source=>`<li><a href="${escAttr(source.homepage)}" target="_blank" rel="noopener noreferrer">${escHtml(source.name)}</a><span>${escHtml(i18nCore.t(`legal.source.${source.id}`,{},source.role))}</span></li>`).join('');
+  list.dataset.ready=i18nCore.getLocale();
 }
 function showSettingsSectionList(options={}){
   if(matchMedia(SETTINGS_DESKTOP_QUERY).matches)return;
@@ -11103,60 +11189,82 @@ function openWhatsNew(){
 function closeWhatsNew(){closeModal('whatsnew-modal');}
 
 // ── PROFILE CUSTOMIZATION (#8) ───────────────────────────────
+let avatarPickerEntriesCache=null,avatarPickerFocusIndex=-1,avatarPickerReturnFocus=null;
 function avatarOptionEntries(){
-  const seen=new Set(),out=[];
-  const add=e=>{
-    if(!e?.no)return;
-    const label=e.displayName||e.name;
-    const key=normalizeSpriteKey(label);
-    if(!key||seen.has(key))return;
-    seen.add(key);
-    out.push({...e,displayName:label});
-  };
-  LEGENDARY_AVATAR_ENTRIES.forEach(add);
-  [...DB.wishlist,...DB.dynamax,...DB.gmax].forEach(add);
-  return out.sort((a,b)=>(parseInt(a.no)||9999)-(parseInt(b.no)||9999)||alphaCompare(a.displayName,b.displayName));
+  if(avatarPickerEntriesCache)return avatarPickerEntriesCache;
+  avatarPickerEntriesCache=pokemonCatalogDomain.canonicalizeEntries(uniqueEntries(DB.wishlist,DB.dynamax,DB.gmax,allCostumeEntries(),LEGENDARY_AVATAR_ENTRIES))
+    .filter(entry=>entry?.no&&!entry.spriteLookupKeys?.some(isUnresolvedSpriteKey)&&spriteFallbackChain(entry.no,entry.name,'',entry.displayName||entry.name,entry.catalogId).length)
+    .map(entry=>({...entry,displayName:pokemonDisplayName(entry),search:normalizeAcText(pokemonSearchLabels(entry).join(' '))}))
+    .sort((a,b)=>(parseInt(a.no)||9999)-(parseInt(b.no)||9999)||pokemonNamesI18n.compareDisplay(a,b,{locale:i18nCore.getLocale()}));
+  return avatarPickerEntriesCache;
 }
-function renderAvatarOptions(){
-  const list=document.getElementById('prof-av-list');
-  if(!list||list.dataset.ready==='1')return;
-  list.innerHTML=avatarOptionEntries().map(e=>`<option value="${escAttr(e.displayName||e.name)}" label="#${e.no}"></option>`).join('');
-  list.dataset.ready='1';
-}
+function avatarEntryForCatalogId(catalogId){return avatarOptionEntries().find(entry=>entry.catalogId===catalogId)||null;}
 function avatarEntryForName(name){
   const norm=normalizeSpriteKey(name);
   if(!norm)return null;
-  const direct=avatarOptionEntries().find(e=>normalizeSpriteKey(e.displayName)===norm||normalizeSpriteKey(e.name)===norm);
+  const resolved=pokemonCatalogDomain.resolveLegacyKey(name);
+  const direct=avatarOptionEntries().find(e=>(resolved&&e.catalogId===resolved.catalogId)||normalizeSpriteKey(e.displayName)===norm||normalizeSpriteKey(e.name)===norm||(e.legacyAliases||[]).some(alias=>normalizeSpriteKey(alias)===norm));
   if(direct)return direct;
-  return spriteSourceIndex().get(norm)||null;
+  const legacy=spriteSourceIndex().get(norm)||null;
+  return legacy?pokemonCatalogDomain.decorateCatalogEntry(legacy):null;
 }
 function updateAvatarPreview(name){
   const prev=document.getElementById('prof-av-preview');
+  const label=document.getElementById('prof-av-name'),clear=document.getElementById('prof-av-clear');
   if(!prev)return;
   if(!name||!name.trim()){
     prev.innerHTML=(cur||'?').slice(0,2).toUpperCase();
+    if(label)label.textContent=i18nCore.t('avatar.choose');if(clear)clear.hidden=true;
     return;
   }
   // Look up Pokemon by name (case-insensitive)
   const found=avatarEntryForName(name);
   if(found?.no){
-    const img=_avatarImgHtml(found.no,found.name);
-    if(img){prev.innerHTML=img;return;}
+    const img=_avatarImgHtml(found.no,found.name,found.catalogId);
+    if(img){prev.innerHTML=img;if(label)label.textContent=found.displayName||found.name;if(clear)clear.hidden=false;return;}
   }
   prev.innerHTML=(cur||'?').slice(0,2).toUpperCase();
+  if(label)label.textContent=name;if(clear)clear.hidden=false;
+}
+function openAvatarPicker(){
+  const dialog=document.getElementById('prof-av-dialog'),search=document.getElementById('prof-av-search');if(!dialog)return;
+  avatarPickerReturnFocus=document.activeElement;dialog.hidden=false;renderAvatarPicker('');requestAnimationFrame(()=>search?.focus());
+}
+function closeAvatarPicker(){
+  const dialog=document.getElementById('prof-av-dialog');if(dialog)dialog.hidden=true;
+  avatarPickerReturnFocus?.focus?.();avatarPickerReturnFocus=null;avatarPickerFocusIndex=-1;
+}
+function renderAvatarPicker(query=''){
+  const out=document.getElementById('prof-av-results');if(!out)return;
+  const q=normalizeAcText(query),selected=document.getElementById('prof-av-input')?.value||'';
+  const matches=avatarOptionEntries().filter(entry=>!q||entry.search.includes(q)).slice(0,q?48:24);
+  avatarPickerFocusIndex=Math.min(Math.max(avatarPickerFocusIndex,0),Math.max(0,matches.length-1));
+  out.innerHTML=matches.length?matches.map((entry,index)=>`<button type="button" class="profile-avatar-option${entry.name===selected?' selected':''}" role="option" aria-selected="${entry.name===selected}" data-catalog-id="${escAttr(entry.catalogId)}" onclick="selectAvatarOption(this.dataset.catalogId)" tabindex="${index===avatarPickerFocusIndex?'0':'-1'}"><span class="profile-avatar-option-sprite sprite-slot-profile">${spriteImg(entry.no,48,'avatar-picker-sprite',entry.name,'',entry.displayName,{catalogId:entry.catalogId,scaleCap:1.8})}</span><span>${escHtml(entry.displayName)}</span></button>`).join(''):`<p class="profile-avatar-empty">${escHtml(i18nCore.t('common.noResults'))}</p>`;
+}
+function avatarPickerKeydown(event){
+  const options=[...document.querySelectorAll('#prof-av-results .profile-avatar-option')];if(!options.length)return;
+  if(event.key==='Escape'){event.preventDefault();closeAvatarPicker();return;}
+  if(!['ArrowDown','ArrowUp','Home','End','Enter'].includes(event.key))return;
+  event.preventDefault();
+  if(event.key==='Enter'){options[avatarPickerFocusIndex]?.click();return;}
+  if(event.key==='Home')avatarPickerFocusIndex=0;else if(event.key==='End')avatarPickerFocusIndex=options.length-1;else avatarPickerFocusIndex=(avatarPickerFocusIndex+(event.key==='ArrowDown'?1:-1)+options.length)%options.length;
+  options.forEach((option,index)=>option.tabIndex=index===avatarPickerFocusIndex?0:-1);options[avatarPickerFocusIndex]?.focus();
+}
+function selectAvatarOption(catalogId){
+  const entry=avatarEntryForCatalogId(catalogId),input=document.getElementById('prof-av-input');if(!entry||!input)return;
+  input.value=entry.name;updateAvatarPreview(entry.name);closeAvatarPicker();
+}
+function clearAvatarSelection(){
+  const input=document.getElementById('prof-av-input');if(input)input.value='';updateAvatarPreview('');
 }
 // Build a <img> that uses the full sprite fallback chain — same cascade
 // logic spriteImg() uses, but with avatar styling (no transform-scale, just
 // object-fit:contain in a fixed box). Avatars previously hardcoded a single
 // URL with no onerror handler, so any 404 (e.g. Wooloo / Sprigatito before
 // v4.6.17 routed them to PokemonDB HOME) showed a broken-image icon.
-function _avatarImgHtml(no,name,extraStyle=''){
+function _avatarImgHtml(no,name,catalogId='',extraStyle=''){
   if(!no||!name)return'';
-  const urls=spriteFallbackChain(no,name,'',name).filter(Boolean);
-  if(!urls.length)return'';
-  const primary=urls[0];
-  const fallbacks=urls.slice(1).map(u=>u.replace(/"/g,'&quot;')).join('|');
-  return`<img src="${primary}" alt="" data-src-key="${escAttr(primary)}" data-fallbacks="${fallbacks}" onerror="trySpriteFallback(this)" style="width:100%;height:100%;object-fit:contain;image-rendering:pixelated;${extraStyle}">`;
+  return spriteImg(no,48,'avatar-sprite',name,'',name,{catalogId,scaleCap:1.8}).replace('style="','style="width:100%;height:100%;'+extraStyle);
 }
 function userAvatarHtml(username,size=28){
   const ud=allData.users?.[username]||{};
@@ -11164,7 +11272,7 @@ function userAvatarHtml(username,size=28){
   if(avPok){
     const found=avatarEntryForName(avPok);
     if(found?.no){
-      const img=_avatarImgHtml(found.no,found.name);
+      const img=_avatarImgHtml(found.no,found.name,found.catalogId);
       if(img)return `<div class="av" style="width:${size}px;height:${size}px;overflow:hidden;font-size:0">${img}</div>`;
     }
   }
@@ -14300,6 +14408,7 @@ function copyOfferMessage(otherUser){return submitOfferAction(otherUser,'');}
 // ── BULK OPERATIONS (#2) ──────────────────────────────────────
 function toggleBulkMode(){
   bulkMode=!bulkMode;
+  if(bulkMode&&reorderMode){reorderMode=false;document.body.classList.remove('reorder-mode');const reorderButton=document.getElementById('mylist-reorder-toggle');if(reorderButton){reorderButton.setAttribute('aria-pressed','false');reorderButton.querySelector('span').textContent=i18nCore.t('myList.reorder');}}
   bulkSelected.clear();
   document.body.classList.toggle('bulk-mode',bulkMode);
   document.getElementById('bulk-bar')?.classList.toggle('active',bulkMode);
@@ -14855,7 +14964,9 @@ Object.assign(window,{
   // Latest batch
   triggerInstall,openWhatsNew,closeWhatsNew,updateAvatarPreview,changeInterfaceLocale,
   toggleExportMenu,closeExportMenu,exportMyListMarkdown,exportMyListCSV,copyShareLink,
-  exitShareView,renderShareView,setAddPri,toggleAddAdvanced,trySpriteFallback,
+  exitShareView,renderShareView,setAddPri,toggleAddAdvanced,trySpriteFallback,validateSpriteLoad,
+  openAvatarPicker,closeAvatarPicker,renderAvatarPicker,avatarPickerKeydown,selectAvatarOption,clearAvatarSelection,
+  toggleReorderMode,movePriority,
   // Latest batch
   openDiffModal,closeDiffModal,setDiffListType,copyDiffSearch,openTradeMatchModal,closeTradeMatchModal,toggleTradeMatchSection,
   openSafeTransferModal,toggleSafeTransferTrainer,setAllSafeTransferTrainers,saveSafeTransferAsDefault,copySafeTransferString,toggleSafeTransferPrefilter,

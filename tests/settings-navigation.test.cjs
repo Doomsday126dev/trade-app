@@ -6,9 +6,9 @@ const {join}=require('node:path');
 const root=join(__dirname,'..');
 const html=readFileSync(join(root,'index.html'),'utf8');
 
-test('signed-in desktop Settings is a routed page with six semantic destinations',()=>{
+test('signed-in desktop Settings is a routed page with seven semantic destinations',()=>{
   assert.match(html,/const SETTINGS_DESKTOP_QUERY='\(min-width:768px\)'/);
-  assert.match(html,/const SETTINGS_SECTIONS=Object\.freeze\(\['profile','language','appearance','security','tools','data'\]\)/);
+  assert.match(html,/const SETTINGS_SECTIONS=Object\.freeze\(\['profile','language','appearance','security','tools','data','legal'\]\)/);
   assert.match(html,/function settingsRouteHash\(section=null\)\{return section&&SETTINGS_SECTIONS\.includes\(section\)\?`#settings\/\$\{section\}`:'#settings';\}/);
   assert.match(html,/\.settings-overlay\.settings-page-mode\{[^}]*background:var\(--bg\)/);
   assert.match(html,/\.settings-page-mode \.settings-layout\{[^}]*grid-template-columns:240px minmax\(0,1fr\)/);

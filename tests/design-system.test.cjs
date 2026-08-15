@@ -143,7 +143,7 @@ test('obvious application chrome uses the shared icon system and dense rows disc
   assert.match(html,/function applyTheme[\s\S]*?uiIconMarkup\(effective==='dark'\?'moon':'sun'/);
   const rows=html.slice(html.indexOf('function myListRowsHtml'),html.indexOf('function myListPrioritySectionHtml'));
   const editor=html.slice(html.indexOf('function myListEditorHtml'),html.indexOf('function myListRowsHtml'));
-  assert.match(rows,/class="myrow-priority" role="group"/);
+  assert.match(rows,/class="myrow-priority-quick"/);
   assert.match(rows,/class="myrow-active-traits"/);
   assert.match(rows,/details class="myrow-editor"/);
   assert.match(rows,/summary class="myrow-edit"/);
@@ -159,10 +159,11 @@ test('My List rows foreground collection identity while retaining fast editing',
   assert.match(rows,/uiIconMarkup\('grip','ui-icon'\)/);
   assert.match(rows,/myrow-sprite-wrap/);
   assert.match(rows,/class="myrow-name"/);
-  assert.match(rows,/class="myrow-priority" role="group"/);
+  assert.match(rows,/class="myrow-priority-quick"/);
+  assert.doesNotMatch(rows,/class="myrow-priority" role="group"/);
   assert.match(rows,/details class="myrow-editor"/);
-  assert.match(css,/\.myrow\{[^}]*min-height:62px[^}]*gap:9px/);
-  assert.match(css,/\.myrow-sprite-wrap\{width:38px;height:38px\}/);
+  assert.match(css,/\.myrow\{[^}]*min-height:58px[^}]*gap:9px/);
+  assert.match(css,/\.myrow-sprite-wrap\{width:34px;height:34px/);
   assert.match(css,/\.myrow-name\{font-size:14px;font-weight:700/);
   assert.match(css,/\.drag-handle\{[^}]*width:28px;height:40px/);
 });

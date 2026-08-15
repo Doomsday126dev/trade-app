@@ -2,7 +2,7 @@ const {defineConfig,devices}=require('@playwright/test');
 
 module.exports=defineConfig({
   testDir:'./tests',
-  testMatch:'cross-browser-accessibility.spec.js',
+  testMatch:['cross-browser-accessibility.spec.js','batch-b-product.spec.js'],
   timeout:60_000,
   expect:{timeout:10_000},
   fullyParallel:false,

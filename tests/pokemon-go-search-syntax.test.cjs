@@ -147,7 +147,7 @@ test('visible and copied query bytes share one selected-locale value',()=>{
 
 test('My List ARIA labels use complete locale templates around localized names',()=>{
   const render=html.slice(html.indexOf('function renderMyList(filterVal)'),html.indexOf('function confirmRemove'));
-  for(const key of ['myList.setHighPriority','myList.setMediumPriority','myList.setLowPriority','myList.toggleLuckyFor','myList.toggleShinyFor','myList.toggleXxlFor','myList.toggleXxsFor','myList.removeEntry','myList.reorderEntry'])assert.ok(html.includes(`i18nCore.t('${key}'`)||html.includes(`'${key}'`),key);
+  for(const key of ['myList.priorityFor','myList.changePriorityFor','myList.priorityChanged','myList.toggleLuckyFor','myList.toggleShinyFor','myList.toggleXxlFor','myList.toggleXxsFor','myList.removeEntry','myList.reorderEntry'])assert.ok(html.includes(`i18nCore.t('${key}'`)||html.includes(`'${key}'`),key);
   assert.doesNotMatch(render,/aria-label="Set \$\{|aria-label="Toggle (?:Lucky|Shiny|XXL|XXS)|aria-label="Remove"/);
 });
 
