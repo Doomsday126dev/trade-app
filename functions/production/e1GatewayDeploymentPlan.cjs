@@ -5,6 +5,10 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { execFileSync } = require('node:child_process');
+const {
+  ENABLE_CONFIRMATION: D3_ENABLE_CONFIRMATION,
+  RESTORE_CONFIRMATION: D3_RESTORE_CONFIRMATION
+} = require('./e1ProductionThirdMutationGuard.cjs');
 
 const MANIFEST_PATH = path.resolve(__dirname, 'e1-gateway-source-manifest.json');
 const RESOURCE_MANIFEST_PATH = path.resolve(__dirname, 'e1-production-resource-manifest.json');
@@ -20,7 +24,13 @@ const ACTIONS = Object.freeze({
   'enable-group-d1': Object.freeze({ approvalGroup: 'D', cohortStage: 'D1', gateEnabled: true, readProofMode: false }),
   'restore-group-d1': Object.freeze({ approvalGroup: 'D', cohortStage: 'D1', gateEnabled: false, readProofMode: false }),
   'enable-group-d2': Object.freeze({ approvalGroup: 'D', cohortStage: 'D2', gateEnabled: true, readProofMode: false }),
-  'restore-group-d2': Object.freeze({ approvalGroup: 'D', cohortStage: 'D2', gateEnabled: false, readProofMode: false })
+  'restore-group-d2': Object.freeze({ approvalGroup: 'D', cohortStage: 'D2', gateEnabled: false, readProofMode: false }),
+  'enable-group-d3': Object.freeze({ approvalGroup: 'D', cohortStage: 'D3', gateEnabled: true, readProofMode: false }),
+  'restore-group-d3': Object.freeze({ approvalGroup: 'D', cohortStage: 'D3', gateEnabled: false, readProofMode: false })
+});
+const D3_CONFIRMATIONS = Object.freeze({
+  'enable-group-d3': D3_ENABLE_CONFIRMATION,
+  'restore-group-d3': D3_RESTORE_CONFIRMATION
 });
 const PRIVATE_PATH_PATTERNS = Object.freeze([
   /(^|\/)\.local(\/|$)/u,
@@ -167,7 +177,9 @@ function verifyActionGuard(actionName, guardResult) {
   const stageValid = action.cohortStage === 'read-proof' || action.cohortStage === 'D1'
     ? !Object.hasOwn(guardResult, 'cohortStage')
     : guardResult.cohortStage === action.cohortStage && guardResult.groupEAuthorized === false &&
-      guardResult.candidateCount === 2 && guardResult.sequentialExecutionRequired === true;
+      guardResult.candidateCount === (action.cohortStage === 'D3' ? 5 : 2) &&
+      guardResult.sequentialExecutionRequired === true &&
+      (action.cohortStage !== 'D3' || (guardResult.subjectsBound === true && guardResult.executionAuthorized === true));
   if (!commonValid || !stageValid) throw new Error('e1/gateway-action-guard-mismatch');
   return true;
 }
@@ -187,6 +199,9 @@ function createDeploymentPlan(options = {}) {
   if (!fs.existsSync(resolvedSource)) throw new Error('e1/gateway-source-missing');
   if (!Object.hasOwn(ACTIONS, options.action)) throw new Error('e1/gateway-action-invalid');
   const action = ACTIONS[options.action];
+  if (Object.hasOwn(D3_CONFIRMATIONS, options.action) && options.confirmation !== D3_CONFIRMATIONS[options.action]) {
+    throw new Error('e1/gateway-d3-confirmation-invalid');
+  }
   const guardVerified = verifyActionGuard(options.action, options.guardResult);
   if (!/^[0-9a-f]{40}$/u.test(options.expectedSha || '')) throw new Error('e1/gateway-expected-sha-invalid');
 
@@ -225,6 +240,7 @@ function createDeploymentPlan(options = {}) {
     containmentRestore: !action.gateEnabled && !guardVerified,
     gateEnabled: action.gateEnabled,
     readProofMode: action.readProofMode,
+    confirmationValidated: Object.hasOwn(D3_CONFIRMATIONS, options.action),
     trackedWorkingTreeClean,
     deploymentAllowed,
     manifest: Object.freeze(manifest)
@@ -318,6 +334,7 @@ function publicPlan(plan) {
     containmentRestore: plan.containmentRestore,
     gateEnabled: plan.gateEnabled,
     readProofMode: plan.readProofMode,
+    confirmationValidated: plan.confirmationValidated,
     trackedWorkingTreeClean: plan.trackedWorkingTreeClean,
     deploymentAllowed: plan.deploymentAllowed
   });
@@ -325,6 +342,7 @@ function publicPlan(plan) {
 
 module.exports = Object.freeze({
   ACTIONS,
+  D3_CONFIRMATIONS,
   EXPECTED_AUTHORITY,
   MANIFEST_PATH,
   PRIVATE_PATH_PATTERNS,

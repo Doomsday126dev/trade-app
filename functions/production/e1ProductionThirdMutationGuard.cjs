@@ -1,0 +1,503 @@
+'use strict';
+
+const fs = require('node:fs');
+const path = require('node:path');
+const { normalizeHandle } = require('../e1-authority-service/handleNormalization');
+const { DURABLE_MODE, readProofSubjectHash } = require('../e1-authority-service/readRateLimiters');
+const {
+  ALL_GATES,
+  EXPECTED_APP_ID,
+  EXPECTED_TOKEN_VERIFIER,
+  activationGatePlan,
+  disabledGatePlan
+} = require('./e1ProductionFirstMutationGuard.cjs');
+const {
+  ALLOWED_OPERATIONS,
+  COHORT_SIZE,
+  D2_BASELINE,
+  ELIGIBILITY_FIELDS,
+  EXECUTION_SEQUENCE,
+  EXPECTED_COUNT_SEQUENCE,
+  EXPECTED_D3_MANIFEST,
+  FINAL_COUNTS,
+  OBSERVATION_CHECKS,
+  OBSERVATION_HOURS,
+  OPERATION_BUDGET,
+  STOP_POLICY,
+  sha256,
+  subjectBindingDigest
+} = require('./e1ProductionThirdMutationContract.cjs');
+
+const MANIFEST_PATH = path.resolve(__dirname, 'e1-production-resource-manifest.json');
+const PRIVATE_BINDING_PATH = path.resolve(__dirname, '../.local/e1-production-third-mutation-subjects.json');
+const PRIVATE_READINESS_PATH = path.resolve(__dirname, '../.local/e1-production-third-mutation-activation.json');
+const PRIVATE_INPUT_PATH = path.resolve(__dirname, '../.local/e1-production-third-mutation-guard-input.json');
+const MAX_WINDOW_MS = 2 * 60 * 60 * 1000;
+const MAX_EVIDENCE_AGE_MS = 15 * 60 * 1000;
+const SLOTS = Object.freeze(['A', 'B', 'C', 'D', 'E']);
+const ENABLE_CONFIRMATION = 'ENABLE E1 GROUP D3 RESERVE COHORT';
+const RESTORE_CONFIRMATION = 'RESTORE E1 GROUP D3 GATES';
+const REQUEST_ID = /^group-d3-[a-e]-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u;
+const HASH = /^[a-f0-9]{64}$/u;
+const SAFE_HASH = /^[a-f0-9]{16}$/u;
+const RATE_LIMIT_PATH = /^rateLimits\/reserveTrainerHandle_[a-f0-9]{16}$/u;
+const REVISION = /^e1-identity-authority-[0-9]{5}-[a-z0-9]{3}$/u;
+const IMAGE_DIGEST = /^sha256:[a-f0-9]{64}$/u;
+const BINDING_FIELDS = Object.freeze([
+  'schemaVersion', 'environment', 'projectId', 'cohortStage', 'cohortSize', 'state', 'subjectsBound',
+  'executionAuthorized', 'boundAt', 'humanReviewed', 'priorCohort', 'candidates', 'bindingDigest'
+]);
+const PRIOR_COHORT_FIELDS = Object.freeze(['d2StateDigest', 'members', 'humanReviewed', 'evidenceDigest']);
+const PRIOR_MEMBER_FIELDS = Object.freeze(['uidHash', 'trainerHash', 'handleKey']);
+const CANDIDATE_FIELDS = Object.freeze([
+  'slot', 'reviewedSubject', 'subjectHashes', 'handle', 'request', 'authEligibility', 'eligibility',
+  'targetedAuthorityState', 'review'
+]);
+const SUBJECT_FIELDS = Object.freeze(['firebaseUid', 'trainerUsername']);
+const SUBJECT_HASH_FIELDS = Object.freeze(['uidHash', 'trainerHash']);
+const HANDLE_FIELDS = Object.freeze(['canonical', 'normalized', 'handleKey']);
+const REQUEST_FIELDS = Object.freeze([
+  'requestId', 'requestIdHash', 'requestBodyHash', 'foundationFingerprint', 'rateLimitDocumentPath',
+  'rateLimitPathDerivationVerified'
+]);
+const AUTH_FIELDS = Object.freeze([
+  'mode', 'verifiedAt', 'userExists', 'disabledState', 'appId', 'appCheckObtainable',
+  'currentUidHash', 'currentTrainerHash'
+]);
+const TARGETED_FIELDS = Object.freeze([
+  'verifiedAt', 'accountAbsent', 'handleAbsent', 'operationRequestAbsent', 'reserveRateLimitAbsent',
+  'migrationAbsent', 'conflictAbsent', 'competingHandleAbsent'
+]);
+const REVIEW_FIELDS = Object.freeze(['humanReviewed', 'reviewedAt', 'selectionSource']);
+const READINESS_FIELDS = Object.freeze([
+  'schemaVersion', 'environment', 'projectId', 'projectNumber', 'region', 'firestoreDatabaseId', 'rtdbDatabaseUrl',
+  'approvalGroup', 'cohortStage', 'contractDefined', 'subjectsBindingDigest', 'subjectsBound', 'executionAuthorized',
+  'approvedAt', 'humanOperator', 'teardownOwner', 'approvalAcknowledged', 'teardownOwnerAcknowledged',
+  'mutationWindow', 'authorizedOperations', 'd2Baseline', 'runtimeProvenance', 'activationGatePlan',
+  'restorationGatePlan', 'operationBudget', 'executionSequence', 'observationHours', 'observationChecks',
+  'stopPolicy', 'laterGroupsAuthorized', 'groupEAuthorized'
+]);
+const INPUT_FIELDS = Object.freeze([
+  'environment', 'projectId', 'projectNumber', 'expectedProjectNumber', 'region', 'databaseId', 'rtdbDatabaseUrl',
+  'approvalGroup', 'cohortStage', 'subjectsBindingDigest', 'subjectsBound', 'executionAuthorized', 'requestedOperations',
+  'd2Baseline', 'currentGates', 'activationGatePlan', 'restorationGatePlan', 'runtimeProvenance', 'securityBoundary',
+  'tokenVerifier', 'rateLimiterMode', 'readProofModePresent', 'reserveConsumesLimitedUseAppCheck', 'operationBudget',
+  'expectedCountSequence', 'executionSequence', 'observationHours', 'observationChecks', 'stopPolicy',
+  'writeBoundary', 'finalAcceptanceTemplate', 'laterGroupsAuthorized', 'groupEAuthorized'
+]);
+const RUNTIME_FIELDS = Object.freeze([
+  'authorityService', 'authorityOrigin', 'authorityRevision', 'authorityImageDigest', 'runtimeServiceAccount',
+  'gatewayServiceAccount', 'reviewed'
+]);
+const SECURITY_FIELDS = Object.freeze([
+  'authorityPrivate', 'gatewayRuntimeSoleAuthorityInvoker', 'publicAuthorityInvoker', 'projectWideRunInvoker',
+  'gatewayForbiddenRolesPresent', 'runtimeIamDrift', 'productionDebugTokensRegistered'
+]);
+const WRITE_BOUNDARY_FIELDS = Object.freeze([
+  'legacyLoginWrites', 'e1AuthorityWrites', 'controlPlaneWrites', 'unexpectedWrites'
+]);
+const ACCEPTANCE_FIELDS = Object.freeze([
+  'executedSubjects', 'reserveSuccesses', 'replaySuccesses', 'finalCounts', 'finalStateDigest',
+  'sequenceMatched', 'ownershipReciprocal', 'anomaliesAbsent', 'gatesRestored', 'observationCompleted',
+  'observationHealthy', 'groupEAuthorized', 'accepted'
+]);
+const ACCEPTANCE_EVIDENCE_FIELDS = Object.freeze([
+  'schemaVersion', 'cohortStage', 'subjectsBindingDigest', 'executedSubjects', 'reserveSuccesses', 'replaySuccesses',
+  'steps', 'finalCounts', 'finalStateDigest', 'ownershipReciprocal', 'anomaliesAbsent', 'gatesRestored',
+  'observation', 'unexpectedCostOrLogAnomaly', 'groupEAuthorized', 'accepted'
+]);
+const STEP_FIELDS = Object.freeze([
+  'sequence', 'slot', 'operation', 'resultCode', 'documentCount', 'stateDigest', 'committedWrites',
+  'requestFingerprintCoherent', 'ownershipReciprocal', 'rateLimitValid', 'migrationConflictAbsent', 'anomaliesAbsent'
+]);
+const OBSERVATION_FIELDS = Object.freeze([
+  'startAt', 'endAt', 'durationHours', 'completed', 'healthy', 'stateDigestAccepted', 'familyCountsVerified',
+  'migrationConflictAbsent', 'serviceAuthAnomaliesAbsent', 'privacyIamDriftAbsent', 'costLogAnomaliesAbsent'
+]);
+
+function sameValues(actual, expected) {
+  return Array.isArray(actual) && actual.length === expected.length &&
+    [...actual].sort().every((value, index) => value === [...expected].sort()[index]);
+}
+
+function sameJson(actual, expected) {
+  return JSON.stringify(actual) === JSON.stringify(expected);
+}
+
+function exactFields(value, fields) {
+  return value && typeof value === 'object' && !Array.isArray(value) && sameValues(Object.keys(value), fields);
+}
+
+function privateMode(file) {
+  try { return (fs.statSync(file).mode & 0o777) === 0o600; } catch { return false; }
+}
+
+function readJson(file) {
+  return JSON.parse(fs.readFileSync(file, 'utf8'));
+}
+
+function validIdentity(value) {
+  return typeof value === 'string' && value.length >= 3 && value.length <= 254 && !/[\r\n\/#$\[\]]/u.test(value);
+}
+
+function subjectHashesFor(subject) {
+  return Object.freeze({
+    uidHash: readProofSubjectHash('uid', subject.firebaseUid),
+    trainerHash: readProofSubjectHash('trainer', subject.trainerUsername)
+  });
+}
+
+function requestIdHash(requestId) {
+  return sha256(JSON.stringify([1, 'group-d3-request-id', requestId]));
+}
+
+function requestBodyHash(requestId, canonicalHandle) {
+  return sha256(JSON.stringify([1, 'group-d3-reserve-body', 1, requestId, canonicalHandle]));
+}
+
+function foundationFingerprint(subject, handle) {
+  return sha256(JSON.stringify([
+    1,
+    subject.firebaseUid,
+    subject.trainerUsername,
+    handle.normalized,
+    handle.handleKey
+  ]));
+}
+
+function validD2Baseline(value) {
+  return exactFields(value, Object.keys(D2_BASELINE)) && sameJson(value, D2_BASELINE);
+}
+
+function fresh(value, now, start) {
+  const at = Date.parse(value);
+  return Number.isFinite(at) && at >= start && at <= now && now - at <= MAX_EVIDENCE_AGE_MS;
+}
+
+function validatePriorCohort(prior, errors) {
+  if (!exactFields(prior, PRIOR_COHORT_FIELDS) || prior.d2StateDigest !== D2_BASELINE.stateDigest ||
+      prior.humanReviewed !== true || !HASH.test(prior.evidenceDigest || '') || !Array.isArray(prior.members) ||
+      prior.members.length !== 3 || prior.members.some((member) => !exactFields(member, PRIOR_MEMBER_FIELDS) ||
+        !HASH.test(member.uidHash || '') || !HASH.test(member.trainerHash || '') || !/^v1_[a-f0-9]+$/u.test(member.handleKey || ''))) {
+    errors.push('group_d3_prior_cohort_invalid');
+    return;
+  }
+  const values = prior.members.flatMap((member) => [member.uidHash, member.trainerHash, member.handleKey]);
+  if (new Set(values).size !== values.length) errors.push('group_d3_prior_cohort_not_distinct');
+}
+
+function validateCandidate(candidate, slot, prior, now, windowStart, errors) {
+  if (!exactFields(candidate, CANDIDATE_FIELDS) || candidate.slot !== slot) {
+    errors.push(`group_d3_candidate_${slot.toLowerCase()}_schema_invalid`);
+    return;
+  }
+  const subject = candidate.reviewedSubject;
+  if (!exactFields(subject, SUBJECT_FIELDS) || !validIdentity(subject.firebaseUid) || !validIdentity(subject.trainerUsername) ||
+      !exactFields(candidate.subjectHashes, SUBJECT_HASH_FIELDS) || !sameJson(candidate.subjectHashes, subjectHashesFor(subject))) {
+    errors.push(`group_d3_candidate_${slot.toLowerCase()}_subject_invalid`);
+  }
+  let normalized;
+  try { normalized = normalizeHandle(candidate.handle?.canonical); } catch { normalized = null; }
+  if (!exactFields(candidate.handle, HANDLE_FIELDS) || !normalized || normalized.display !== candidate.handle.canonical ||
+      normalized.normalized !== candidate.handle.normalized || normalized.handleKey !== candidate.handle.handleKey) {
+    errors.push(`group_d3_candidate_${slot.toLowerCase()}_handle_invalid`);
+  }
+  const request = candidate.request;
+  if (!exactFields(request, REQUEST_FIELDS) || !REQUEST_ID.test(request.requestId || '') ||
+      !request.requestId.startsWith(`group-d3-${slot.toLowerCase()}-`) ||
+      request.requestIdHash !== requestIdHash(request.requestId) ||
+      request.requestBodyHash !== requestBodyHash(request.requestId, candidate.handle?.canonical) ||
+      request.foundationFingerprint !== foundationFingerprint(subject, candidate.handle) ||
+      !RATE_LIMIT_PATH.test(request.rateLimitDocumentPath || '') || request.rateLimitPathDerivationVerified !== true) {
+    errors.push(`group_d3_candidate_${slot.toLowerCase()}_request_invalid`);
+  }
+  if (!exactFields(candidate.authEligibility, AUTH_FIELDS) ||
+      !['exact-auth-metadata', 'verified-browser-login'].includes(candidate.authEligibility.mode) ||
+      !fresh(candidate.authEligibility.verifiedAt, now, windowStart) || candidate.authEligibility.userExists !== true ||
+      !['false', 'not-independently-observed'].includes(candidate.authEligibility.disabledState) ||
+      candidate.authEligibility.appId !== EXPECTED_APP_ID || candidate.authEligibility.appCheckObtainable !== true ||
+      candidate.authEligibility.currentUidHash !== candidate.subjectHashes.uidHash ||
+      candidate.authEligibility.currentTrainerHash !== candidate.subjectHashes.trainerHash ||
+      (candidate.authEligibility.mode === 'exact-auth-metadata' && candidate.authEligibility.disabledState !== 'false') ||
+      (candidate.authEligibility.mode === 'verified-browser-login' &&
+        candidate.authEligibility.disabledState !== 'not-independently-observed')) {
+    errors.push(`group_d3_candidate_${slot.toLowerCase()}_auth_invalid`);
+  }
+  if (!exactFields(candidate.eligibility, ELIGIBILITY_FIELDS) ||
+      ELIGIBILITY_FIELDS.some((field) => candidate.eligibility[field] !== true)) {
+    errors.push(`group_d3_candidate_${slot.toLowerCase()}_ineligible`);
+  }
+  if (!exactFields(candidate.targetedAuthorityState, TARGETED_FIELDS) ||
+      !fresh(candidate.targetedAuthorityState.verifiedAt, now, windowStart) ||
+      TARGETED_FIELDS.slice(1).some((field) => candidate.targetedAuthorityState[field] !== true)) {
+    errors.push(`group_d3_candidate_${slot.toLowerCase()}_targeted_state_invalid`);
+  }
+  if (!exactFields(candidate.review, REVIEW_FIELDS) || candidate.review.humanReviewed !== true ||
+      candidate.review.selectionSource !== 'explicit-private-d3-candidate' ||
+      !Number.isFinite(Date.parse(candidate.review.reviewedAt)) || Date.parse(candidate.review.reviewedAt) > now) {
+    errors.push(`group_d3_candidate_${slot.toLowerCase()}_review_invalid`);
+  }
+  if (prior?.members?.some((member) => member.uidHash === candidate.subjectHashes?.uidHash ||
+      member.trainerHash === candidate.subjectHashes?.trainerHash || member.handleKey === candidate.handle?.handleKey)) {
+    errors.push(`group_d3_candidate_${slot.toLowerCase()}_prior_cohort_overlap`);
+  }
+}
+
+function validateBinding(binding, now, windowStart, errors) {
+  if (!exactFields(binding, BINDING_FIELDS) || binding.schemaVersion !== 1 || binding.environment !== 'production' ||
+      binding.projectId !== 'trade-list-a4297' || binding.cohortStage !== 'D3' || binding.cohortSize !== COHORT_SIZE ||
+      binding.state !== 'bound-reviewed' || binding.subjectsBound !== true || binding.executionAuthorized !== false ||
+      binding.humanReviewed !== true || !Number.isFinite(Date.parse(binding.boundAt)) || Date.parse(binding.boundAt) > now ||
+      !Array.isArray(binding.candidates) || binding.candidates.length !== COHORT_SIZE || !HASH.test(binding.bindingDigest || '')) {
+    errors.push('group_d3_subject_binding_invalid');
+    return;
+  }
+  validatePriorCohort(binding.priorCohort, errors);
+  binding.candidates.forEach((candidate, index) =>
+    validateCandidate(candidate, SLOTS[index], binding.priorCohort, now, windowStart, errors));
+  const uniqueness = binding.candidates.flatMap((candidate) => [
+    candidate.reviewedSubject?.firebaseUid,
+    candidate.reviewedSubject?.trainerUsername,
+    candidate.subjectHashes?.uidHash,
+    candidate.subjectHashes?.trainerHash,
+    candidate.handle?.handleKey,
+    candidate.request?.requestId,
+    candidate.request?.rateLimitDocumentPath
+  ]);
+  if (new Set(uniqueness).size !== uniqueness.length) errors.push('group_d3_candidates_not_distinct');
+  if (binding.bindingDigest !== subjectBindingDigest(binding.priorCohort, binding.candidates)) {
+    errors.push('group_d3_binding_digest_mismatch');
+  }
+}
+
+function validRuntimeProvenance(value, manifest) {
+  return exactFields(value, RUNTIME_FIELDS) && value.authorityService === manifest?.authority?.service &&
+    value.authorityOrigin === manifest?.authority?.origin && REVISION.test(value.authorityRevision || '') &&
+    IMAGE_DIGEST.test(value.authorityImageDigest || '') &&
+    value.runtimeServiceAccount === manifest?.authority?.runtimeServiceAccount &&
+    value.gatewayServiceAccount === manifest?.gateway?.serviceAccount && value.reviewed === true;
+}
+
+function validSecurityBoundary(value) {
+  return exactFields(value, SECURITY_FIELDS) && value.authorityPrivate === true &&
+    value.gatewayRuntimeSoleAuthorityInvoker === true && value.publicAuthorityInvoker === false &&
+    value.projectWideRunInvoker === false && value.gatewayForbiddenRolesPresent === false &&
+    value.runtimeIamDrift === false && value.productionDebugTokensRegistered === false;
+}
+
+function validWriteBoundary(value) {
+  return exactFields(value, WRITE_BOUNDARY_FIELDS) && WRITE_BOUNDARY_FIELDS.every((field) =>
+    Array.isArray(value[field]) && value[field].length === 0);
+}
+
+function validAcceptanceTemplate(value) {
+  return exactFields(value, ACCEPTANCE_FIELDS) && value.executedSubjects === 0 && value.reserveSuccesses === 0 &&
+    value.replaySuccesses === 0 && sameJson(value.finalCounts, FINAL_COUNTS) && value.finalStateDigest === null &&
+    value.sequenceMatched === false && value.ownershipReciprocal === false && value.anomaliesAbsent === false &&
+    value.gatesRestored === false && value.observationCompleted === false && value.observationHealthy === false &&
+    value.groupEAuthorized === false && value.accepted === false;
+}
+
+function validateThirdMutationAcceptance(value, options = {}) {
+  const errors = [];
+  const now = options.now ? options.now() : Date.now();
+  if (!exactFields(value, ACCEPTANCE_EVIDENCE_FIELDS) || value.schemaVersion !== 1 || value.cohortStage !== 'D3' ||
+      !HASH.test(value.subjectsBindingDigest || '') || value.executedSubjects !== COHORT_SIZE ||
+      value.reserveSuccesses !== COHORT_SIZE || value.replaySuccesses !== COHORT_SIZE ||
+      !Array.isArray(value.steps) || value.steps.length !== COHORT_SIZE * 2 || !sameJson(value.finalCounts, FINAL_COUNTS) ||
+      !HASH.test(value.finalStateDigest || '') || value.ownershipReciprocal !== true || value.anomaliesAbsent !== true ||
+      !sameJson(value.gatesRestored, disabledGatePlan()) || value.unexpectedCostOrLogAnomaly !== false ||
+      value.groupEAuthorized !== false || value.accepted !== true) errors.push('group_d3_acceptance_schema_or_summary_invalid');
+  if (Array.isArray(value?.steps)) {
+    value.steps.forEach((step, index) => {
+      const reserve = index % 2 === 0;
+      const expectedSlot = SLOTS[Math.floor(index / 2)];
+      const expectedCount = EXPECTED_COUNT_SEQUENCE[index + 1];
+      if (!exactFields(step, STEP_FIELDS) || step.sequence !== index + 1 || step.slot !== expectedSlot ||
+          step.operation !== (reserve ? 'reserve' : 'exact-replay') ||
+          step.resultCode !== (reserve ? 'SUCCESS' : 'IDEMPOTENT') || step.documentCount !== expectedCount ||
+          !HASH.test(step.stateDigest || '') || step.committedWrites !== (reserve ? 4 : 0) ||
+          step.requestFingerprintCoherent !== true || step.ownershipReciprocal !== true || step.rateLimitValid !== true ||
+          step.migrationConflictAbsent !== true || step.anomaliesAbsent !== true ||
+          (!reserve && index > 0 && step.stateDigest !== value.steps[index - 1]?.stateDigest)) {
+        errors.push(`group_d3_acceptance_step_${index + 1}_invalid`);
+      }
+    });
+  }
+  const observation = value?.observation;
+  const start = Date.parse(observation?.startAt);
+  const end = Date.parse(observation?.endAt);
+  if (!exactFields(observation, OBSERVATION_FIELDS) || !Number.isFinite(start) || !Number.isFinite(end) ||
+      start >= end || end - start !== OBSERVATION_HOURS * 60 * 60 * 1000 || end > now ||
+      observation.durationHours !== OBSERVATION_HOURS || observation.completed !== true || observation.healthy !== true ||
+      observation.stateDigestAccepted !== true || observation.familyCountsVerified !== true ||
+      observation.migrationConflictAbsent !== true || observation.serviceAuthAnomaliesAbsent !== true ||
+      observation.privacyIamDriftAbsent !== true || observation.costLogAnomaliesAbsent !== true) {
+    errors.push('group_d3_acceptance_observation_invalid');
+  }
+  if (errors.length) {
+    const error = new Error('e1/production-third-mutation-acceptance-failed');
+    error.reasons = Object.freeze([...new Set(errors)].sort());
+    throw error;
+  }
+  return Object.freeze({
+    ok: true,
+    cohortStage: 'D3',
+    executedSubjects: COHORT_SIZE,
+    finalDocumentCount: FINAL_COUNTS.totalDocuments,
+    finalStateDigest: value.finalStateDigest,
+    gatesRestored: true,
+    observationHours: OBSERVATION_HOURS,
+    observationCompleted: true,
+    groupEAuthorized: false,
+    accepted: true
+  });
+}
+
+function guardProductionThirdMutation(input, options = {}) {
+  const errors = [];
+  const now = options.now ? options.now() : Date.now();
+  const manifestPath = options.manifestPath || MANIFEST_PATH;
+  const bindingPath = options.bindingPath || PRIVATE_BINDING_PATH;
+  const readinessPath = options.readinessPath || PRIVATE_READINESS_PATH;
+  const inputPath = options.inputPath || PRIVATE_INPUT_PATH;
+  let manifest;
+  let binding;
+  let readiness;
+  try { manifest = readJson(manifestPath); } catch { errors.push('production_manifest_missing_or_invalid'); }
+  try { binding = readJson(bindingPath); } catch { errors.push('group_d3_subject_binding_missing_or_invalid'); }
+  try { readiness = readJson(readinessPath); } catch { errors.push('group_d3_readiness_missing_or_invalid'); }
+
+  if (!exactFields(input, INPUT_FIELDS)) errors.push('group_d3_input_schema_invalid');
+  if (readiness && !exactFields(readiness, READINESS_FIELDS)) errors.push('group_d3_readiness_schema_invalid');
+  if (!privateMode(bindingPath)) errors.push('group_d3_subject_binding_permissions_invalid');
+  if (!privateMode(readinessPath)) errors.push('group_d3_readiness_permissions_invalid');
+  if (!privateMode(inputPath)) errors.push('group_d3_input_permissions_invalid');
+  const project = manifest?.project || {};
+  if (manifest?.environment !== 'production' || input?.environment !== 'production') errors.push('environment_not_production');
+  if (project.id !== 'trade-list-a4297' || input?.projectId !== project.id) errors.push('project_id_mismatch');
+  if (project.number !== '1053781218847' || project.numberReviewed !== true || input?.projectNumber !== project.number ||
+      input?.expectedProjectNumber !== project.number) errors.push('project_number_mismatch');
+  if (project.region !== 'us-central1' || input?.region !== project.region) errors.push('region_mismatch');
+  if (manifest?.firestore?.databaseId !== 'phase-e-identity' || input?.databaseId !== manifest?.firestore?.databaseId) {
+    errors.push('firestore_database_mismatch');
+  }
+  if (manifest?.legacyRtdb?.url !== 'https://trade-list-a4297-default-rtdb.firebaseio.com' ||
+      input?.rtdbDatabaseUrl !== manifest?.legacyRtdb?.url) errors.push('rtdb_mismatch');
+  if (!sameJson(manifest?.thirdMutation, EXPECTED_D3_MANIFEST)) errors.push('group_d3_manifest_contract_invalid');
+  if (JSON.stringify({ manifest, input, binding, readiness }).includes('trainer-hub-staging-37ib4wct')) {
+    errors.push('staging_target_present');
+  }
+
+  let windowStart = NaN;
+  if (readiness) {
+    if (readiness.schemaVersion !== 1 || readiness.environment !== 'production' || readiness.projectId !== project.id ||
+        readiness.projectNumber !== project.number || readiness.region !== project.region ||
+        readiness.firestoreDatabaseId !== manifest?.firestore?.databaseId ||
+        readiness.rtdbDatabaseUrl !== manifest?.legacyRtdb?.url) errors.push('group_d3_readiness_target_mismatch');
+    if (readiness.approvalGroup !== 'D' || readiness.cohortStage !== 'D3' || readiness.contractDefined !== true ||
+        readiness.subjectsBound !== true || readiness.executionAuthorized !== true ||
+        readiness.approvalAcknowledged !== true || readiness.teardownOwnerAcknowledged !== true ||
+        readiness.humanOperator !== readiness.teardownOwner || !validIdentity(readiness.humanOperator) ||
+        readiness.laterGroupsAuthorized !== false || readiness.groupEAuthorized !== false) errors.push('group_d3_approval_invalid');
+    windowStart = Date.parse(readiness.mutationWindow?.startAt);
+    const windowEnd = Date.parse(readiness.mutationWindow?.endAt);
+    const approvedAt = Date.parse(readiness.approvedAt);
+    if (!Number.isFinite(windowStart) || !Number.isFinite(windowEnd) || !Number.isFinite(approvedAt) ||
+        windowStart >= windowEnd || windowEnd - windowStart > MAX_WINDOW_MS || now < windowStart || now >= windowEnd ||
+        approvedAt > now) errors.push('group_d3_window_invalid');
+  }
+
+  validateBinding(binding, now, windowStart, errors);
+  if (readiness?.subjectsBindingDigest !== binding?.bindingDigest || input?.subjectsBindingDigest !== binding?.bindingDigest ||
+      input?.subjectsBound !== true || input?.executionAuthorized !== true || input?.approvalGroup !== 'D' ||
+      input?.cohortStage !== 'D3') errors.push('group_d3_binding_or_authorization_invalid');
+  if (!sameValues(readiness?.authorizedOperations, ALLOWED_OPERATIONS) ||
+      !sameValues(input?.requestedOperations, ALLOWED_OPERATIONS)) errors.push('group_d3_operations_invalid');
+  if (!validD2Baseline(readiness?.d2Baseline) || !validD2Baseline(input?.d2Baseline) ||
+      !sameJson(readiness?.d2Baseline, input?.d2Baseline)) errors.push('group_d3_d2_baseline_invalid');
+  if (!sameJson(input?.currentGates, disabledGatePlan()) || !sameJson(readiness?.activationGatePlan, activationGatePlan()) ||
+      !sameJson(input?.activationGatePlan, activationGatePlan()) || !sameJson(readiness?.restorationGatePlan, disabledGatePlan()) ||
+      !sameJson(input?.restorationGatePlan, disabledGatePlan())) errors.push('group_d3_gate_plan_invalid');
+  if (!validRuntimeProvenance(readiness?.runtimeProvenance, manifest) ||
+      !sameJson(readiness?.runtimeProvenance, input?.runtimeProvenance)) errors.push('group_d3_runtime_provenance_invalid');
+  if (!validSecurityBoundary(input?.securityBoundary)) errors.push('group_d3_security_boundary_invalid');
+  if (!sameJson(input?.tokenVerifier, EXPECTED_TOKEN_VERIFIER) ||
+      !sameJson(manifest?.appCheck?.tokenVerifier, {
+        principal: EXPECTED_TOKEN_VERIFIER.principal,
+        role: EXPECTED_TOKEN_VERIFIER.role,
+        permissions: EXPECTED_TOKEN_VERIFIER.permissions,
+        scope: EXPECTED_TOKEN_VERIFIER.scope
+      })) errors.push('group_d3_token_verifier_invalid');
+  if (input?.rateLimiterMode !== DURABLE_MODE || input?.readProofModePresent !== false ||
+      input?.reserveConsumesLimitedUseAppCheck !== true) errors.push('group_d3_limiter_or_app_check_invalid');
+  if (!sameJson(readiness?.operationBudget, OPERATION_BUDGET) || !sameJson(input?.operationBudget, OPERATION_BUDGET)) {
+    errors.push('group_d3_budget_invalid');
+  }
+  if (!sameJson(input?.expectedCountSequence, EXPECTED_COUNT_SEQUENCE) ||
+      !sameJson(readiness?.executionSequence, EXECUTION_SEQUENCE) || !sameJson(input?.executionSequence, EXECUTION_SEQUENCE) ||
+      !sameJson(readiness?.stopPolicy, STOP_POLICY) || !sameJson(input?.stopPolicy, STOP_POLICY)) {
+    errors.push('group_d3_sequence_invalid');
+  }
+  if (readiness?.observationHours !== OBSERVATION_HOURS || input?.observationHours !== OBSERVATION_HOURS ||
+      !sameJson(readiness?.observationChecks, OBSERVATION_CHECKS) ||
+      !sameJson(input?.observationChecks, OBSERVATION_CHECKS)) errors.push('group_d3_observation_invalid');
+  if (!validWriteBoundary(input?.writeBoundary)) errors.push('group_d3_write_boundary_invalid');
+  if (!validAcceptanceTemplate(input?.finalAcceptanceTemplate)) errors.push('group_d3_acceptance_template_invalid');
+  if (input?.laterGroupsAuthorized !== false || input?.groupEAuthorized !== false) errors.push('group_d3_later_group_forbidden');
+
+  if (errors.length) {
+    const error = new Error('e1/production-third-mutation-guard-failed');
+    error.reasons = Object.freeze([...new Set(errors)].sort());
+    throw error;
+  }
+  return Object.freeze({
+    ok: true,
+    approvalGroup: 'D',
+    cohortStage: 'D3',
+    environment: 'production',
+    targetVerified: true,
+    contractDefined: true,
+    d2BaselineVerified: true,
+    subjectsBound: true,
+    executionAuthorized: true,
+    candidateCount: COHORT_SIZE,
+    candidatesDistinct: true,
+    targetedAbsenceVerified: true,
+    runtimeProvenanceVerified: true,
+    securityBoundaryVerified: true,
+    budgetVerified: true,
+    sequentialExecutionRequired: true,
+    expectedCountSequence: EXPECTED_COUNT_SEQUENCE,
+    rateLimiterMode: DURABLE_MODE,
+    observationHours: OBSERVATION_HOURS,
+    laterGroupsAuthorized: false,
+    groupEAuthorized: false,
+    cloudOperations: 0
+  });
+}
+
+module.exports = Object.freeze({
+  ACCEPTANCE_FIELDS,
+  ACCEPTANCE_EVIDENCE_FIELDS,
+  ALLOWED_OPERATIONS,
+  BINDING_FIELDS,
+  CANDIDATE_FIELDS,
+  ENABLE_CONFIRMATION,
+  INPUT_FIELDS,
+  MANIFEST_PATH,
+  MAX_EVIDENCE_AGE_MS,
+  MAX_WINDOW_MS,
+  PRIVATE_BINDING_PATH,
+  PRIVATE_INPUT_PATH,
+  PRIVATE_READINESS_PATH,
+  READINESS_FIELDS,
+  RESTORE_CONFIRMATION,
+  SLOTS,
+  foundationFingerprint,
+  guardProductionThirdMutation,
+  requestBodyHash,
+  requestIdHash,
+  subjectHashesFor,
+  validateThirdMutationAcceptance
+});

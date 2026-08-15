@@ -124,6 +124,101 @@
     "laterGroupsAuthorized": false,
     "groupEAuthorized": false
   },
+  "thirdMutation": {
+    "approvalGroup": "D",
+    "cohortStage": "D3",
+    "purpose": "final-pre-group-e-reserve-cohort-validation",
+    "operation": "reserve-plus-exact-replay",
+    "cohortSize": 5,
+    "subjectBinding": {
+      "state": "unbound",
+      "cohortSize": 0,
+      "bindingDigest": null,
+      "subjectsBound": false,
+      "executionAuthorized": false
+    },
+    "maxWindowHours": 2,
+    "rateLimiterMode": "firestore-rolling-v1",
+    "d2Baseline": {
+      "totalDocuments": 12,
+      "accounts": 3,
+      "trainerHandles": 3,
+      "rateLimits": 3,
+      "operationRequests": 3,
+      "identityMigrations": 0,
+      "identityConflicts": 0,
+      "stateDigest": "2923aafa890de58cb04fb5941528f7a425c22d0a131dd9fc0fcf71013468bf0b"
+    },
+    "documentProgression": [12, 16, 16, 20, 20, 24, 24, 28, 28, 32, 32],
+    "perSubjectDelta": {
+      "reserveCommittedDocuments": 4,
+      "replayCommittedDocuments": 0,
+      "reserveFamilies": ["accounts", "trainerHandles", "rateLimits", "operationRequests"],
+      "replayMustRemainInSameRateLimitWindow": true
+    },
+    "finalCounts": {
+      "totalDocuments": 32,
+      "accounts": 8,
+      "trainerHandles": 8,
+      "rateLimits": 8,
+      "operationRequests": 8,
+      "identityMigrations": 0,
+      "identityConflicts": 0
+    },
+    "operationBudget": {
+      "gatewayCalls": 10,
+      "authorityCalls": 10,
+      "limitedUseAppCheckTokens": 10,
+      "logicalFirestoreTransactions": 20,
+      "firestoreTransactionMaxAttempts": 5,
+      "firestoreTransactionAttemptsExpected": 20,
+      "firestoreTransactionAttemptsMaximum": 100,
+      "firestoreOperationReadsExpected": 40,
+      "firestoreOperationReadsMaximum": 200,
+      "firestoreCommittedWrites": 20,
+      "operationRequestCreates": 5,
+      "rateLimitCreates": 5,
+      "rateLimitReplayWrites": 0,
+      "rtdbExactReads": 30,
+      "rtdbWrites": 0,
+      "verificationReadsImmediateMaximum": 468,
+      "verificationReadsObservationMaximum": 42,
+      "verificationReadsTotalMaximum": 510,
+      "firestoreReadsExpectedMaximum": 550,
+      "firestoreReadsRetryCeiling": 710
+    },
+    "executionSequence": [
+      "subject-1-reserve", "subject-1-verify", "subject-1-replay", "subject-1-replay-verify",
+      "subject-2-reserve", "subject-2-verify", "subject-2-replay", "subject-2-replay-verify",
+      "subject-3-reserve", "subject-3-verify", "subject-3-replay", "subject-3-replay-verify",
+      "subject-4-reserve", "subject-4-verify", "subject-4-replay", "subject-4-replay-verify",
+      "subject-5-reserve", "subject-5-verify", "subject-5-replay", "subject-5-replay-verify"
+    ],
+    "stopPolicy": {
+      "sequentialOnly": true,
+      "stopBeforeNextSubjectOnAnyFailure": true,
+      "restoreTemporaryGatesAfterAnyOutcome": true,
+      "preserveDurableEvidence": true,
+      "deleteSuccessfulIdentityState": false,
+      "groupEActivationAllowed": false
+    },
+    "observationHours": 24,
+    "observationChecks": [
+      "exact-firestore-count-and-canonical-digest",
+      "family-counts",
+      "migration-conflict-absence",
+      "replay-collision-anomalies",
+      "authority-gateway-5xx",
+      "oidc-app-check-anomalies",
+      "authority-privacy-public-exposure",
+      "iam-drift",
+      "reciprocal-rtdb-ownership",
+      "cost-log-anomalies",
+      "temporary-gates-restored"
+    ],
+    "laterGroupsAuthorized": false,
+    "groupEAuthorized": false
+  },
   "observability": {
     "metrics": ["operation-count", "outcome", "latency", "conflict-rate", "app-check-rejection", "oidc-failure", "migration-attempt", "handle-collision", "rate-limit", "authority-5xx"],
     "rawIdentityLogging": false,
@@ -158,6 +253,14 @@
   "rolloutCohorts": [
     { "name": "owner", "size": 1, "observeHours": 24 },
     { "name": "known-clean", "size": 2, "observeHours": 48 },
-    { "name": "small-eligible", "maximumSize": 5 }
+    {
+      "name": "small-eligible",
+      "stage": "D3",
+      "targetSize": 5,
+      "observeHours": 24,
+      "contract": "thirdMutation",
+      "subjectsBound": false,
+      "executionAuthorized": false
+    }
   ]
 }

@@ -7,6 +7,7 @@ const { spawnSync } = require('node:child_process');
 const { guardProductionFirstMutation } = require('../production/e1ProductionFirstMutationGuard.cjs');
 const { guardProductionReadProof } = require('../production/e1ProductionReadProofGuard.cjs');
 const { guardProductionSecondMutation } = require('../production/e1ProductionSecondMutationGuard.cjs');
+const { guardProductionThirdMutation } = require('../production/e1ProductionThirdMutationGuard.cjs');
 const {
   createDeploymentPlan,
   deploymentArguments,
@@ -26,7 +27,8 @@ function argumentsMap(argv) {
 const GUARDS = Object.freeze({
   'group-c': Object.freeze({ input: 'E1_PRODUCTION_READ_PROOF_GUARD_INPUT', run: guardProductionReadProof }),
   'group-d1': Object.freeze({ input: 'E1_PRODUCTION_FIRST_MUTATION_GUARD_INPUT', run: guardProductionFirstMutation }),
-  'group-d2': Object.freeze({ input: 'E1_PRODUCTION_SECOND_MUTATION_GUARD_INPUT', run: guardProductionSecondMutation })
+  'group-d2': Object.freeze({ input: 'E1_PRODUCTION_SECOND_MUTATION_GUARD_INPUT', run: guardProductionSecondMutation }),
+  'group-d3': Object.freeze({ input: 'E1_PRODUCTION_THIRD_MUTATION_GUARD_INPUT', run: guardProductionThirdMutation })
 });
 
 function privateJsonPath(value, label) {
@@ -51,6 +53,14 @@ function verifiedGuardResult(action, mode) {
   if (action === 'enable-group-d2' && process.env.E1_PRODUCTION_SECOND_MUTATION_READINESS) {
     options.readinessPath = privateJsonPath(process.env.E1_PRODUCTION_SECOND_MUTATION_READINESS, 'group-d2-readiness');
   }
+  if (action === 'enable-group-d3') {
+    if (process.env.E1_PRODUCTION_THIRD_MUTATION_READINESS) {
+      options.readinessPath = privateJsonPath(process.env.E1_PRODUCTION_THIRD_MUTATION_READINESS, 'group-d3-readiness');
+    }
+    if (process.env.E1_PRODUCTION_THIRD_MUTATION_SUBJECTS) {
+      options.bindingPath = privateJsonPath(process.env.E1_PRODUCTION_THIRD_MUTATION_SUBJECTS, 'group-d3-subjects');
+    }
+  }
   return contract.run(input, options);
 }
 
@@ -68,7 +78,8 @@ function run() {
     explicitSource: args.source,
     mode,
     repoRoot,
-    guardResult
+    guardResult,
+    confirmation: args.confirmation
   });
   if (mode === 'plan') {
     process.stdout.write(`${JSON.stringify(publicPlan(plan), null, 2)}\n`);

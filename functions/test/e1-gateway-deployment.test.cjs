@@ -7,6 +7,7 @@ const os = require('node:os');
 const path = require('node:path');
 const { execFileSync, spawnSync } = require('node:child_process');
 const {
+  D3_CONFIRMATIONS,
   EXPECTED_AUTHORITY,
   authorityTarget,
   createDeploymentPlan,
@@ -29,6 +30,12 @@ function runPlan(cwd, source = 'functions/e1-gateway', expectedSha = HEAD, actio
     cwd,
     encoding: 'utf8'
   });
+}
+
+function runD3Plan(cwd, action, confirmation) {
+  const args = [CLI, '--mode=plan', `--action=${action}`, '--source=functions/e1-gateway', `--expected-sha=${HEAD}`];
+  if (confirmation !== undefined) args.push(`--confirmation=${confirmation}`);
+  return spawnSync(process.execPath, args, { cwd, encoding: 'utf8' });
 }
 
 function repositoryFixture(manifest, overrides = {}) {
@@ -233,6 +240,24 @@ function d2GuardResult(overrides = {}) {
   };
 }
 
+function d3GuardResult(overrides = {}) {
+  return {
+    ok: true,
+    approvalGroup: 'D',
+    cohortStage: 'D3',
+    environment: 'production',
+    targetVerified: true,
+    subjectsBound: true,
+    executionAuthorized: true,
+    candidateCount: 5,
+    sequentialExecutionRequired: true,
+    laterGroupsAuthorized: false,
+    groupEAuthorized: false,
+    cloudOperations: 0,
+    ...overrides
+  };
+}
+
 test('D2 enable and restoration use the canonical immutable source and only approved gates differ', () => {
   const manifest = loadManifest();
   const repository = repositoryFixture(manifest);
@@ -350,6 +375,83 @@ test('D2 blocked enable previews are also cwd-independent and expose no private 
   assert.equal(plan.gateEnabled, true);
   assert.equal(plan.readProofMode, false);
   assert.doesNotMatch(root.stdout, /candidate|firebaseUid|trainerUsername|requestId|token/iu);
+});
+
+test('D3 enable uses the canonical source only with five-subject guard and exact confirmation', () => {
+  const manifest = loadManifest();
+  const common = {
+    action: 'enable-group-d3', expectedSha: HEAD, explicitSource: manifest.sourceRoot, mode: 'plan',
+    repoRoot: REPO_ROOT, manifest, repository: repositoryFixture(manifest),
+    confirmation: D3_CONFIRMATIONS['enable-group-d3']
+  };
+  const enabled = createDeploymentPlan({ ...common, guardResult: d3GuardResult() });
+  assert.equal(enabled.cohortStage, 'D3');
+  assert.equal(enabled.guardVerified, true);
+  assert.equal(enabled.confirmationValidated, true);
+  assert.equal(enabled.gateEnabled, true);
+  assert.equal(enabled.readProofMode, false);
+  assert.equal(enabled.sourceCommitSha, 'c74d5cb291310f83ff1ec08d032de5bcde3467ba');
+  assert.equal(enabled.sourceFingerprint, 'd3b999dee62d7498493bc780cff2d2e1f56bf7921826248d9abc4a5a6c9a7713');
+  assert.throws(() => createDeploymentPlan({ ...common, confirmation: 'ENABLE E1 GROUP D2 RESERVE COHORT',
+    guardResult: d3GuardResult() }), /d3-confirmation-invalid/u);
+  assert.throws(() => createDeploymentPlan({ ...common, guardResult: d3GuardResult({ candidateCount: 4 }) }),
+    /action-guard-mismatch/u);
+  assert.throws(() => createDeploymentPlan({ ...common, guardResult: d3GuardResult({ subjectsBound: false }) }),
+    /action-guard-mismatch/u);
+  assert.throws(() => createDeploymentPlan({ ...common, guardResult: d3GuardResult({ groupEAuthorized: true }) }),
+    /action-guard-mismatch/u);
+});
+
+test('D3 restoration remains available after readiness expiry and preserves immutable source', () => {
+  const manifest = loadManifest();
+  const restored = createDeploymentPlan({
+    action: 'restore-group-d3', expectedSha: HEAD, explicitSource: manifest.sourceRoot, mode: 'plan',
+    repoRoot: REPO_ROOT, manifest, repository: repositoryFixture(manifest),
+    confirmation: D3_CONFIRMATIONS['restore-group-d3']
+  });
+  assert.equal(restored.guardVerified, false);
+  assert.equal(restored.containmentRestore, true);
+  assert.equal(restored.gateEnabled, false);
+  assert.equal(restored.readProofMode, false);
+  assert.equal(restored.confirmationValidated, true);
+  assert.equal(restored.deploymentAllowed, true);
+  assert.equal(restored.sourceCommitSha, manifest.sourceCommitSha);
+  assert.equal(restored.sourceFingerprint, manifest.sourceFingerprint);
+  assert.throws(() => createDeploymentPlan({
+    action: 'restore-group-d3', expectedSha: HEAD, explicitSource: manifest.sourceRoot, mode: 'plan',
+    repoRoot: REPO_ROOT, manifest, repository: repositoryFixture(manifest)
+  }), /d3-confirmation-invalid/u);
+});
+
+test('D3 deployment CLI requires exact confirmation and keeps enable fail-closed without private readiness', () => {
+  const restore = runD3Plan(os.tmpdir(), 'restore-group-d3', D3_CONFIRMATIONS['restore-group-d3']);
+  assert.equal(restore.status, 0, restore.stderr);
+  const restorePlan = JSON.parse(restore.stdout);
+  assert.equal(restorePlan.cohortStage, 'D3');
+  assert.equal(restorePlan.containmentRestore, true);
+  assert.equal(restorePlan.confirmationValidated, true);
+  const enable = runD3Plan(REPO_ROOT, 'enable-group-d3', D3_CONFIRMATIONS['enable-group-d3']);
+  assert.equal(enable.status, 0, enable.stderr);
+  assert.equal(JSON.parse(enable.stdout).guardVerified, false);
+  assert.equal(JSON.parse(enable.stdout).deploymentAllowed, false);
+  const missing = runD3Plan(REPO_ROOT, 'restore-group-d3');
+  assert.equal(missing.status, 1);
+  assert.match(missing.stderr, /d3-confirmation-invalid/u);
+  const wrong = runD3Plan(REPO_ROOT, 'enable-group-d3', D3_CONFIRMATIONS['restore-group-d3']);
+  assert.equal(wrong.status, 1);
+  assert.match(wrong.stderr, /d3-confirmation-invalid/u);
+});
+
+test('D1, D2, and D3 guards cannot authorize another cohort', () => {
+  const manifest = loadManifest();
+  const common = {
+    expectedSha: HEAD, explicitSource: manifest.sourceRoot, mode: 'plan', repoRoot: REPO_ROOT,
+    manifest, repository: repositoryFixture(manifest)
+  };
+  assert.throws(() => createDeploymentPlan({ ...common, action: 'enable-group-d2', guardResult: d3GuardResult() }),
+    /action-guard-mismatch/u);
+  assert.throws(() => createDeploymentPlan({ ...common, action: 'enable-group-d3',
+    confirmation: D3_CONFIRMATIONS['enable-group-d3'], guardResult: d2GuardResult() }), /action-guard-mismatch/u);
 });
 
 test('tracked scripts expose only the canonical gateway deploy entrypoint', () => {
