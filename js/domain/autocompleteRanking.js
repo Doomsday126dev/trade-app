@@ -16,11 +16,17 @@
 
   function rankAutocompleteItems(items,rawQuery,opts={}){
     const limit=opts.limit??AC_RESULT_LIMIT;
-    return items.map(e=>({e,score:acMatchScore(e,rawQuery)}))
+    const ranked=items.map(e=>({e,score:acMatchScore(e,rawQuery)}))
       .filter(x=>x.score>=0)
-      .sort((a,b)=>compareAutocompleteMatches(a,b,opts))
-      .slice(0,limit)
-      .map(x=>x.e);
+      .sort((a,b)=>compareAutocompleteMatches(a,b,opts));
+    const seen=new Set(),out=[];
+    for(const match of ranked){
+      const key=match.e.catalogId||match.e.name;
+      if(seen.has(key))continue;
+      seen.add(key);out.push(match.e);
+      if(out.length>=limit)break;
+    }
+    return out;
   }
 
   root.autocompleteRanking=Object.freeze({

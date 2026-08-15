@@ -2967,6 +2967,8 @@ const {AC_RESULT_LIMIT,acItemSearchText,acMatchScore}=autocompleteMatchingDomain
 const autocompleteRankingDomain=window.PogoDomain?.autocompleteRanking;
 if(!autocompleteRankingDomain)throw new Error('Autocomplete ranking helpers failed to load');
 const {autocompleteDexSortValue,compareAutocompleteMatches,rankAutocompleteItems}=autocompleteRankingDomain;
+const pokemonCatalogDomain=window.PogoDomain?.pokemonCatalog;
+if(!pokemonCatalogDomain)throw new Error('Pokemon catalog helpers failed to load');
 const relativeTimeDomain=window.PogoDomain?.relativeTime;
 if(!relativeTimeDomain)throw new Error('Relative time helpers failed to load');
 const {STALE_WARN,STALE_OLD,freshnessClass,freshnessLabel,freshnessColor,relativeTime,recentTrainerRecency}=relativeTimeDomain;
@@ -6606,12 +6608,11 @@ function favoriteTagChips(item,state){
 function favoriteBrowseCatalog(){
   const locale=i18nCore.getLocale();
   if(favoriteBrowseCatalogCache.locale===locale&&favoriteBrowseCatalogCache.items.length)return favoriteBrowseCatalogCache.items;
-  const seen=new Set();
-  const canonicalEntries=uniqueEntries(DB.wishlist,DB.dynamax,DB.gmax,allCostumeEntries(),LEGENDARY_AVATAR_ENTRIES);
-  const items=canonicalEntries.filter(entry=>isTradeableForWishlist(entry)).filter(entry=>{
-    const key=favoritePokemonBrowseDomain.pokemonKey(entry.name);if(!key||seen.has(key))return false;seen.add(key);return true;
-  }).map(entry=>{
-    const item={name:entry.name,dn:pokemonDisplayName(entry),no:entry.no||null,spriteUrl:entrySpriteUrl(entry,entry.name)};
+  const canonicalEntries=pokemonCatalogDomain.canonicalizeEntries(
+    uniqueEntries(DB.wishlist,DB.dynamax,DB.gmax,allCostumeEntries(),LEGENDARY_AVATAR_ENTRIES)
+  );
+  const items=canonicalEntries.filter(entry=>isTradeableForWishlist(entry)).map(entry=>{
+    const item={name:entry.name,dn:pokemonDisplayName(entry),no:entry.no||null,spriteUrl:entrySpriteUrl(entry,entry.name),catalogId:entry.catalogId,legacyAliases:entry.legacyAliases,searchAliases:entry.searchAliases};
     item.search=normalizeAcText(pokemonSearchLabels(entry).join(' '));return item;
   });
   favoriteBrowseCatalogCache={locale,items};return items;
@@ -6643,7 +6644,7 @@ function favoriteBrowseInput(value){
   syncFavoriteBrowseClear();
   if(favoriteBrowseState.selected&&input?.value!==favoriteBrowseState.selected.dn){favoriteBrowseState.selected=null;renderFavoriteBrowseResults();}
   if(!query){closeFavoriteBrowseSuggestions();return;}
-  favoriteBrowseState.suggestions=rankAutocompleteItems(favoriteBrowseCatalog(),query,{limit:8});favoriteBrowseState.focusIndex=favoriteBrowseState.suggestions.length?0:-1;
+  favoriteBrowseState.suggestions=rankAutocompleteItems(favoriteBrowseCatalog(),query);favoriteBrowseState.focusIndex=favoriteBrowseState.suggestions.length?0:-1;
   if(!box)return;
   box.innerHTML=favoriteBrowseState.suggestions.length?favoriteBrowseState.suggestions.map(favoriteBrowseSuggestionHtml).join(''):`<div class="ac-empty">${escHtml(i18nCore.t('common.noResults'))}</div>`;
   box.classList.add('open');input?.setAttribute('aria-expanded','true');
@@ -6655,7 +6656,9 @@ function favoriteBrowseKeydown(event){
     event.preventDefault();const delta=event.key==='ArrowDown'?1:-1;
     favoriteBrowseState.focusIndex=(favoriteBrowseState.focusIndex+delta+favoriteBrowseState.suggestions.length)%favoriteBrowseState.suggestions.length;
     document.getElementById('favorite-browse-suggestions').innerHTML=favoriteBrowseState.suggestions.map(favoriteBrowseSuggestionHtml).join('');
-    event.currentTarget.setAttribute('aria-activedescendant',`favorite-browse-option-${favoriteBrowseState.focusIndex}`);return;
+    const activeId=`favorite-browse-option-${favoriteBrowseState.focusIndex}`;
+    event.currentTarget.setAttribute('aria-activedescendant',activeId);
+    document.getElementById(activeId)?.scrollIntoView({block:'nearest'});return;
   }
   if(event.key==='Enter'&&favoriteBrowseState.suggestions.length){event.preventDefault();selectFavoriteBrowsePokemon(Math.max(0,favoriteBrowseState.focusIndex));}
   else if(event.key==='Escape'){event.preventDefault();closeFavoriteBrowseSuggestions();}
@@ -7056,6 +7059,18 @@ function pokemonDisplayName(entry){
 function pokemonSearchLabels(entry){
   return pokemonNamesI18n.searchLabels(entry,{locale:i18nCore.getLocale()});
 }
+function pokemonEntryForLegacyKey(entries,name){
+  return pokemonCatalogDomain.entryForLegacyKey(entries,name);
+}
+function pokemonListValueForCanonicalName(list,name){
+  const target=pokemonCatalogDomain.catalogKey(name);
+  for(const [key,value] of Object.entries(list||{}))if(pokemonCatalogDomain.catalogKey(key)===target)return value;
+  return undefined;
+}
+function addPokemonEntryAliases(entry,dispMap,noMap){
+  const label=pokemonDisplayName(entry);
+  (entry.legacyAliases||[entry.name]).forEach(alias=>{dispMap[alias]=label;if(entry.no)noMap[alias]=entry.no;});
+}
 function localizedPokemonEntry(entry){
   return{...entry,dn:pokemonDisplayName(entry)};
 }
@@ -7064,12 +7079,13 @@ function comparePokemonLabels(a,b){
 }
 function buildAcItems(){
   const arr=listSource(myListType);
-  const existing=new Set(Object.keys(allData[myListType]?.[cur]||{}));
+  const existing=new Set(Object.keys(allData[myListType]?.[cur]||{}).map(pokemonCatalogDomain.catalogKey));
   const seen=new Set();acItems=[];
   arr.forEach(e=>{
-    if(existing.has(e.name)||seen.has(e.name))return;
-    seen.add(e.name);
-    const item={name:e.name,dn:pokemonDisplayName(e),no:e.no||null,spriteUrl:entrySpriteUrl(e,e.name)};
+    const key=e.catalogId||pokemonCatalogDomain.catalogKey(e.name);
+    if(existing.has(key)||seen.has(key))return;
+    seen.add(key);
+    const item={name:e.name,dn:pokemonDisplayName(e),no:e.no||null,spriteUrl:entrySpriteUrl(e,e.name),catalogId:key,legacyAliases:e.legacyAliases,searchAliases:e.searchAliases};
     item.search=normalizeAcText(pokemonSearchLabels(e).join(' '));
     acItems.push(item);
   });
@@ -7086,12 +7102,12 @@ function acSearch(q){
   const dd=document.getElementById('ac-dropdown');
   if(!q||q.length<1){closeAddAutocomplete();return;}
   const arr=listSource(myListType);
-  const existing=new Set(Object.keys(allData[myListType]?.[cur]||{}));
+  const existing=new Set(Object.keys(allData[myListType]?.[cur]||{}).map(pokemonCatalogDomain.catalogKey));
   acFiltered=rankAutocompleteItems(acItems,q);
   const existingItems=arr
-    .filter(e=>existing.has(e.name))
+    .filter(e=>existing.has(e.catalogId||pokemonCatalogDomain.catalogKey(e.name)))
     .map(e=>{
-      const item={name:e.name,dn:pokemonDisplayName(e),no:e.no||null,spriteUrl:entrySpriteUrl(e,e.name)};
+      const item={name:e.name,dn:pokemonDisplayName(e),no:e.no||null,spriteUrl:entrySpriteUrl(e,e.name),catalogId:e.catalogId,legacyAliases:e.legacyAliases,searchAliases:e.searchAliases};
       item.search=normalizeAcText(pokemonSearchLabels(e).join(' '));
       return item;
     });
@@ -7531,12 +7547,7 @@ function addEntry(){
 }
 
 function allCostumeEntries(){
-  const seen=new Set(),out=[];
-  [...DB.costumes,...EXTRA_COSTUME_ENTRIES,...EXTRA_FORM_ENTRIES].forEach(e=>{
-    const key=costumeDedupeKey(e);
-    if(seen.has(key))return;
-    seen.add(key);out.push(e);
-  });
+  const out=pokemonCatalogDomain.canonicalizeEntries([...DB.costumes,...EXTRA_COSTUME_ENTRIES,...EXTRA_FORM_ENTRIES,...pokemonCatalogDomain.verifiedMissingEntries]);
   return out.sort((a,b)=>(parseInt(a.no)||9999)-(parseInt(b.no)||9999)||pokemonNamesI18n.compareDisplay(a,b,{locale:i18nCore.getLocale()}));
 }
 function maxTradeEntries(type){
@@ -7550,8 +7561,8 @@ function maxTradeEntries(type){
 }
 function listSource(type){
   if(type==='costumes')return allCostumeEntries();
-  if(type==='dynamax')return DB.dynamax;
-  if(type==='gmax')return DB.gmax;
+  if(type==='dynamax')return pokemonCatalogDomain.canonicalizeEntries(DB.dynamax.map(e=>({...e,maxType:'dynamax'})));
+  if(type==='gmax')return pokemonCatalogDomain.canonicalizeEntries(DB.gmax.map(e=>({...e,maxType:'gmax'})));
   // Wishlist autocomplete needs to surface every tradeable species — including
   // legendaries, Ultra Beasts and Paradoxes that the community list hasn't
   // touched yet. Mythicals (except Meltan/Melmetal/Gimmighoul) are filtered out
@@ -7559,7 +7570,7 @@ function listSource(type){
   // existing rows win.
   const wishlistOnly=DB.wishlist.filter(isTradeableForWishlist);
   const legendariesOnly=LEGENDARY_AVATAR_ENTRIES.filter(isTradeableForWishlist);
-  return uniqueEntries(wishlistOnly,maxTradeEntries('dynamax'),maxTradeEntries('gmax'),allCostumeEntries(),legendariesOnly);
+  return pokemonCatalogDomain.canonicalizeEntries(uniqueEntries(wishlistOnly,maxTradeEntries('dynamax'),maxTradeEntries('gmax'),allCostumeEntries(),legendariesOnly));
 }
 let spriteIndex=null;
 function spriteSourceIndex(){
@@ -7571,7 +7582,7 @@ function spriteSourceIndex(){
   };
   [...DB.wishlist,...DB.dynamax,...DB.gmax,...allCostumeEntries(),...LEGENDARY_AVATAR_ENTRIES].forEach(e=>{
     if(!e.no)return;
-    add(e.name,e);add(e.displayName,e);
+    add(e.name,e);add(e.displayName,e);(e.legacyAliases||[]).forEach(alias=>add(alias,e));
   });
   add('Vivillon',{no:666,name:'Vivillon',displayName:'Vivillon'});
   add('Scatterbug',{no:664,name:'Scatterbug',displayName:'Scatterbug'});
@@ -7605,11 +7616,10 @@ function priorityFamilySort(a,b){
 function currentListEntries(type=myListType,filterVal=''){
   const list=allData[type]?.[cur]||{};
   const src=listSource(type);
-  const srcMap={};
-  src.forEach(e=>{if(!srcMap[e.name])srcMap[e.name]=e;});
+  const srcMap=pokemonCatalogDomain.entryMap(src);
   const q=normalizeAcText(filterVal||'');
   return Object.entries(list).map(([name,val])=>{
-    const entry=srcMap[name]||{};
+    const entry=srcMap.get(pokemonCatalogDomain.normalizeCatalogKey(name))||{};
     const spriteEntry=spriteEntryForListItem(type,name,entry)||{};
     const{p,mod,lucky,xxl,xxs,shiny}=parsePri(val);
     const sourceEntry={...entry,name:entry.name||name,displayName:entry.displayName||name};
@@ -8426,12 +8436,12 @@ function buildStrings(type,username){
   const searchOptions={locale:pokemonGoSearchLocale()};
   if(type==='costumes'){
     const costumeNoMap={};
-    allCostumeEntries().forEach(e=>{if(e.no)costumeNoMap[e.name]=e.no;});
+    allCostumeEntries().forEach(e=>(e.legacyAliases||[e.name]).forEach(alias=>{if(e.no)costumeNoMap[alias]=e.no;}));
     const byP={H:[],M:[],L:[]},luckyDex=[],xxlDex=[],xxsDex=[];
     Object.entries(list).forEach(([name,val])=>{
       const{p,lucky,xxl,xxs}=parsePri(val);
       let no=costumeNoMap[name];
-      if(!no){const sp=spriteEntryForListItem('costumes',name,allCostumeEntries().find(e=>e.name===name)||{});no=sp?.no||null;}
+      if(!no){const sp=spriteEntryForListItem('costumes',name,pokemonEntryForLegacyKey(allCostumeEntries(),name)||{});no=sp?.no||null;}
       const dex=parseInt(no);
       if(!Number.isFinite(dex))return;
       if(p&&byP[p])byP[p].push(dex);
@@ -8453,7 +8463,7 @@ function buildStrings(type,username){
   const nameToEntry={},dexHasRegional={};
   srcArr.forEach(e=>{
     if(!e.no)return;
-    if(!nameToEntry[e.name])nameToEntry[e.name]=e;
+    (e.legacyAliases||[e.name]).forEach(alias=>{if(!nameToEntry[alias])nameToEntry[alias]=e;});
     if(regionalFormTerm(e.name))dexHasRegional[e.no]=true;
   });
   const byP={H:[],M:[],L:[]},luckyItems=[],xxlItems=[],xxsItems=[];
@@ -10114,17 +10124,20 @@ function computeTrainerDiff(typ,me,them){
   const theirList=allData[typ]?.[them]||{};
   const srcArr=listSource(typ);
   const dispMap={},noMap={};
-  srcArr.forEach(e=>{dispMap[e.name]=pokemonDisplayName(e);if(e.no)noMap[e.name]=e.no;});
-  const myKeys=new Set(Object.keys(myList));
-  const theirKeys=new Set(Object.keys(theirList));
+  srcArr.forEach(e=>addPokemonEntryAliases(e,dispMap,noMap));
+  const project=list=>new Map(Object.entries(list).map(([name,value])=>[pokemonCatalogDomain.catalogKey(name),{name,value}]));
+  const mine=project(myList),theirs=project(theirList);
+  const myKeys=new Set(mine.keys());
+  const theirKeys=new Set(theirs.keys());
   const bothKeys=[...myKeys].filter(k=>theirKeys.has(k));
   const onlyMine=[...myKeys].filter(k=>!theirKeys.has(k));
   const onlyTheirs=[...theirKeys].filter(k=>!myKeys.has(k));
-  const entryFor=(name,val)=>{
-    const {p,mod,lucky,xxl,xxs,shiny}=parsePri(val);
+  const entryFor=record=>{
+    const {name,value}=record;
+    const {p,mod,lucky,xxl,xxs,shiny}=parsePri(value);
     return {name,dn:dispMap[name]||name,no:noMap[name]||'',p,mod,lucky,xxl,xxs,shiny,gender:entryGender(mod)};
   };
-  const both=bothKeys.map(k=>({mine:entryFor(k,myList[k]),theirs:entryFor(k,theirList[k])}));
+  const both=bothKeys.map(k=>({mine:entryFor(mine.get(k)),theirs:entryFor(theirs.get(k))}));
   // Sort: priority match first, then dex
   both.sort((a,b)=>{
     const matchA=a.mine.p===a.theirs.p?0:1;
@@ -10133,8 +10146,8 @@ function computeTrainerDiff(typ,me,them){
   });
   return{
     both,
-    onlyMine:onlyMine.map(k=>entryFor(k,myList[k])).sort(_familySort),
-    onlyTheirs:onlyTheirs.map(k=>entryFor(k,theirList[k])).sort(_familySort)
+    onlyMine:onlyMine.map(k=>entryFor(mine.get(k))).sort(_familySort),
+    onlyTheirs:onlyTheirs.map(k=>entryFor(theirs.get(k))).sort(_familySort)
   };
 }
 function diffSectionEntries(diff,section){
@@ -11409,9 +11422,10 @@ function _specialAllItems(){
   const seen=new Set();const out=[];
   ['wishlist','dynamax','gmax','costumes'].forEach(t=>{
     listSource(t).forEach(e=>{
-      if(!e?.name||seen.has(e.name))return;
-      seen.add(e.name);
-      const item={name:e.name,dn:pokemonDisplayName(e),canonicalDn:e.displayName||e.name,no:e.no||null,spriteUrl:entrySpriteUrl(e,e.name)};
+      const key=e?.catalogId||pokemonCatalogDomain.catalogKey(e?.name);
+      if(!e?.name||seen.has(key))return;
+      seen.add(key);
+      const item={name:e.name,dn:pokemonDisplayName(e),canonicalDn:e.displayName||e.name,no:e.no||null,spriteUrl:entrySpriteUrl(e,e.name),catalogId:key,legacyAliases:e.legacyAliases,searchAliases:e.searchAliases};
       item.search=normalizeAcText(pokemonSearchLabels(e).join(' '));
       out.push(item);
     });
@@ -12014,7 +12028,7 @@ function renderShareView(username,type){
   // Build grouped visual + strings
   const srcArr=listSource(type);
   const dispMap={},noMap={};
-  srcArr.forEach(e=>{dispMap[e.name]=pokemonDisplayName(e);if(e.no)noMap[e.name]=e.no;});
+  srcArr.forEach(e=>addPokemonEntryAliases(e,dispMap,noMap));
   const grouped={H:[],M:[],L:[],Other:[]};
   Object.entries(list).forEach(([name,val])=>{
     const{p,mod,lucky,xxl,xxs,shiny}=parsePri(val);
@@ -12988,9 +13002,10 @@ function buildHaveAcItems(){
   const seen=new Set();
   ['wishlist','dynamax','gmax','costumes'].forEach(type=>{
     listSource(type).forEach(e=>{
-      if(seen.has(e.name)||!e.name)return;
-      seen.add(e.name);
-      const item={name:e.name,dn:pokemonDisplayName(e),no:e.no||null};
+      const key=e.catalogId||pokemonCatalogDomain.catalogKey(e.name);
+      if(seen.has(key)||!e.name)return;
+      seen.add(key);
+      const item={name:e.name,dn:pokemonDisplayName(e),no:e.no||null,catalogId:key,legacyAliases:e.legacyAliases,searchAliases:e.searchAliases};
       item.search=normalizeAcText(pokemonSearchLabels(e).join(' '));
       haveAcItems.push(item);
     });
@@ -13202,7 +13217,7 @@ function _nameToSpriteEntry(name){
   // Lookup sprite metadata for a Pokemon name across all sources
   const srcs=['wishlist','dynamax','gmax','costumes'];
   for(const t of srcs){
-    const e=listSource(t).find(x=>x.name===name);
+    const e=pokemonEntryForLegacyKey(listSource(t),name);
     if(e)return e;
   }
   return{name,displayName:name,no:null};
@@ -13362,7 +13377,7 @@ function closeIncomingOffersModal(){document.getElementById('incoming-modal')?.r
 function entryWantedByCur(name){
   // Check if current user wants this Pokemon (any list, any priority/flag)
   for(const t of['wishlist','dynamax','gmax','costumes']){
-    const val=allData[t]?.[cur]?.[name];
+    const val=pokemonListValueForCanonicalName(allData[t]?.[cur],name);
     if(val){
       const{p,lucky,xxl,xxs,shiny}=parsePri(val);
       if(p||lucky||xxl||xxs||shiny)return{type:t,p,lucky,xxl,xxs,shiny};
@@ -13373,7 +13388,7 @@ function entryWantedByCur(name){
 // Check what the OTHER user wants for this Pokémon — used by offer message
 function entryWantedByOther(otherUser,name){
   for(const t of['wishlist','dynamax','gmax','costumes']){
-    const val=allData[t]?.[otherUser]?.[name];
+    const val=pokemonListValueForCanonicalName(allData[t]?.[otherUser],name);
     if(val){
       const{p,lucky,xxl,xxs,shiny,mod}=parsePri(val);
       if(p||lucky||xxl||xxs||shiny)return{type:t,p,lucky,xxl,xxs,shiny,mod};

@@ -609,7 +609,7 @@ eq(normalizeAcText(['Pika', 'Gmax']), 'pikachu gigantamax', 'normalizeAcText sho
 
 // --- autocompleteMatching ---
 const { AC_RESULT_LIMIT, acItemSearchText, acMatchScore } = domain.autocompleteMatching;
-eq(AC_RESULT_LIMIT, 50, 'AC_RESULT_LIMIT should preserve current result cap');
+eq(AC_RESULT_LIMIT, 200, 'AC_RESULT_LIMIT should preserve the reviewed generous safety bound');
 eq(
   acItemSearchText({ name: 'Pikachu', dn: 'Pikachu', no: 25 }),
   'pikachu pikachu 25 25',
@@ -634,9 +634,10 @@ assert(
 );
 eq(acMatchScore({ name: 'Pikachu', dn: 'Pikachu', no: 25 }, ''), -1, 'acMatchScore should reject blank queries');
 eq(acMatchScore({ search: 'pikachu libre', no: 25 }, 'Pika Libre'), 1, 'acMatchScore should score exact normalized matches');
-eq(acMatchScore({ search: 'pikachu libre', no: 25 }, 'pika'), 2, 'acMatchScore should score prefix matches');
-eq(acMatchScore({ search: 'pikachu libre', no: 25 }, 'libre'), 3, 'acMatchScore should score contains matches');
-eq(acMatchScore({ search: 'pikachu libre costume', no: 25 }, 'libre pika'), 10, 'acMatchScore should score token matches after exact/prefix/includes');
+eq(acMatchScore({ search: 'pikachu libre', no: 25 }, 'pika'), 3, 'acMatchScore should score display-prefix matches after exact aliases');
+eq(acMatchScore({ search: 'pikachu libre', no: 25 }, 'libre'), 5, 'acMatchScore should score word-prefix matches before substrings');
+eq(acMatchScore({ search: 'pikachu libre costume', no: 25 }, 'libre pika'), 12, 'acMatchScore should score token matches after exact/prefix/includes');
+eq(acMatchScore({ name: 'Worlds Pikachu', dn: 'Worlds Pikachu', searchAliases: ['Varsity Jacket'] }, 'Varsity Jacket'), 2, 'acMatchScore should rank an exact alias after an exact display match');
 eq(acMatchScore({ search: 'pikachu 25', no: 25 }, '25'), 0, 'acMatchScore should score exact pure dex queries first');
 eq(acMatchScore({ search: 'pikachu 25', no: 25 }, '2'), 1, 'acMatchScore should score pure dex prefixes');
 eq(acMatchScore({ search: 'pikachu 25', no: 25 }, '999'), -1, 'acMatchScore should reject unmatched pure dex queries');

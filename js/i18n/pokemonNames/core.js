@@ -17,7 +17,7 @@
   }
   function originalLabel(entry){return String(entry?.displayName||entry?.dn||entry?.name||'').trim();}
   function identity(entry){
-    return Object.freeze({speciesId:Number(entry?.no)||null,variantId:String(entry?.name||'').trim()||null});
+    return Object.freeze({speciesId:Number(entry?.no)||null,variantId:String(entry?.catalogId||entry?.name||'').trim()||null});
   }
   function speciesName(entry,locale){
     const id=String(Number(entry?.no)||'');
@@ -95,7 +95,8 @@
   }
   function searchLabels(entry,{locale='en'}={}){
     return Object.freeze([...new Set([
-      displayName(entry,{locale}),speciesName(entry,locale),originalLabel(entry),String(entry?.name||'').replaceAll('_',' '),String(entry?.no||'')
+      displayName(entry,{locale}),speciesName(entry,locale),originalLabel(entry),String(entry?.name||'').replaceAll('_',' '),
+      ...(entry?.legacyAliases||[]),...(entry?.searchAliases||[]),String(entry?.no||'')
     ].map(value=>String(value||'').trim()).filter(Boolean))]);
   }
   function compareDisplay(a,b,{locale='en'}={}){

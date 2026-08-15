@@ -5,7 +5,7 @@
 
   function normalizedText(value){return String(value||'').normalize('NFKC').trim();}
   function trainerKey(value){return normalizedText(value).toLocaleLowerCase('en-US');}
-  function pokemonKey(value){return normalizedText(value).toLocaleLowerCase('en-US');}
+  function pokemonKey(value){return root.pokemonCatalog?.catalogKey?.(value)||normalizedText(value).toLocaleLowerCase('en-US');}
   function priorityFor(value){
     if(value&&typeof value==='object'&&!Array.isArray(value)){
       const direct=String(value.p||value.priority||'').toUpperCase();

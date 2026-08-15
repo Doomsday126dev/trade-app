@@ -447,12 +447,43 @@ test.describe('audit cross-browser contracts',()=>{
     await expect(page.locator('#add-pmon-sel')).not.toHaveValue('');
     await expect(add).toBeFocused();
 
+    const legacyRoundTrip=await page.evaluate(()=>{
+      allData.costumes.CrossBrowserTrainer={'Pikachu Varsity Jacket':'H'};
+      myListType='costumes';buildAcItems();
+      const entry=currentListEntries('costumes')[0];
+      return{
+        displayName:entry?.dn,
+        duplicateSelectable:acItems.filter(item=>item.catalogId==='pokemon:25:costume:PIKACHU_WCS_2025').length,
+        storedKeys:Object.keys(allData.costumes.CrossBrowserTrainer)
+      };
+    });
+    expect(legacyRoundTrip).toEqual({displayName:'Pikachu (Worlds 2025)',duplicateSelectable:0,storedKeys:['Pikachu Varsity Jacket']});
+
     await page.evaluate(()=>{switchTab('find');toggleFavoriteBrowse();});
     const browse=page.locator('#favorite-browse-input');
+    const catalogContract=await page.evaluate(()=>{
+      const items=favoriteBrowseCatalog(),byId=id=>items.filter(item=>item.catalogId===id);
+      const flying=['PIKACHU_COSTUME_2020','PIKACHU_FLYING_5TH_ANNIV','PIKACHU_FLYING_OKINAWA','PIKACHU_FLYING_01','PIKACHU_FLYING_02','PIKACHU_FLYING_03','PIKACHU_FLYING_04'];
+      return{
+        wcs2025:byId('pokemon:25:costume:PIKACHU_WCS_2025').length,
+        willow:byId('pokemon:25:costume:PIKACHU_ANNIVERSARY_2026').length,
+        flying:flying.map(id=>byId(`pokemon:25:costume:${id}`).length)
+      };
+    });
+    expect(catalogContract).toEqual({wcs2025:1,willow:1,flying:[1,1,1,1,1,1,1]});
+    await browse.fill('Varsity Jacket');
+    await expect(page.locator('#favorite-browse-suggestions .ac-item')).toHaveCount(1);
+    await expect(page.locator('#favorite-browse-suggestions .ac-item')).toContainText('Worlds 2025');
     await browse.fill('pika');
     await expect(browse).toHaveAttribute('aria-expanded','true');
-    await browse.press('ArrowDown');
-    await expect(browse).toHaveAttribute('aria-activedescendant',/^favorite-browse-option-\d+$/);
+    const browseOptions=page.locator('#favorite-browse-suggestions .ac-item');
+    expect(await browseOptions.count()).toBeGreaterThan(8);
+    for(let index=0;index<9;index++)await browse.press('ArrowDown');
+    await expect(browse).toHaveAttribute('aria-activedescendant','favorite-browse-option-9');
+    const activeBox=await page.locator('#favorite-browse-option-9').boundingBox();
+    const listBox=await page.locator('#favorite-browse-suggestions').boundingBox();
+    expect(activeBox.y).toBeGreaterThanOrEqual(listBox.y-1);
+    expect(activeBox.y+activeBox.height).toBeLessThanOrEqual(listBox.y+listBox.height+1);
     await browse.press('Enter');
     await expect(browse).toHaveAttribute('aria-expanded','false');
     await expect(page.locator('#favorite-browse-clear')).toBeVisible();

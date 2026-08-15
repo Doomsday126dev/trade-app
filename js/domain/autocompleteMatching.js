@@ -3,17 +3,24 @@
   const {normalizeAcText}=root.autocompleteText||{};
   if(!normalizeAcText)throw new Error('Autocomplete text helpers failed to load');
 
-  const AC_RESULT_LIMIT=50; // Humans rarely scroll past ~20; capping at 50 keeps single-char queries from injecting 250 list items
+  const AC_RESULT_LIMIT=200;
   function acItemSearchText(e){
     let aliases='';
     if(/\(\?\)/.test(e.name))aliases+=' question questionmark question-mark';
     if(/\(!\)/.test(e.name))aliases+=' exclamation exclamationmark exclamation-mark';
-    return normalizeAcText(`${e.name} ${e.dn} ${e.no||''} #${e.no||''}${aliases}`);
+    const catalogAliases=[...(e.legacyAliases||[]),...(e.searchAliases||[]),...(e.aliases||[])].join(' ');
+    return normalizeAcText(`${e.name} ${e.dn} ${e.no||''} #${e.no||''} ${catalogAliases}${aliases}`);
+  }
+  function wordPrefix(text,query){
+    return text.split(' ').some(word=>word.startsWith(query));
   }
   function acMatchScore(e,rawQuery){
     const q=normalizeAcText(rawQuery);
     if(!q)return-1;
     const text=e.search||acItemSearchText(e);
+    const display=normalizeAcText(e.dn||e.displayName||e.name)||text;
+    const aliases=[...(e.legacyAliases||[]),...(e.searchAliases||[]),...(e.aliases||[])]
+      .map(normalizeAcText).filter(Boolean);
     const no=String(e.no||'');
     // Pure-digit query: prioritize dex number matches (lower score = better)
     const isPureDigits=/^\d+$/.test(q);
@@ -25,13 +32,16 @@
       return -1;
     }
     if(no&&q===no)return 0;
-    if(text===q)return 1;
-    if(text.startsWith(q))return 2;
-    if(text.includes(q))return 3;
+    if(display===q)return 1;
+    if(aliases.includes(q))return 2;
+    if(display.startsWith(q))return 3;
+    if(aliases.some(alias=>alias.startsWith(q)))return 4;
+    if(wordPrefix(display,q)||aliases.some(alias=>wordPrefix(alias,q)))return 5;
+    if(display.includes(q)||aliases.some(alias=>alias.includes(q)))return 6;
     const tokens=q.split(' ').filter(Boolean);
-    if(tokens.length&&tokens.every(t=>text.includes(t)))return 8+tokens.length;
+    if(tokens.length&&tokens.every(t=>text.includes(t)))return 10+tokens.length;
     const digits=q.replace(/[^0-9]/g,'');
-    if(no&&digits&&no.startsWith(digits))return 12;
+    if(no&&digits&&no.startsWith(digits))return 20;
     return -1;
   }
 

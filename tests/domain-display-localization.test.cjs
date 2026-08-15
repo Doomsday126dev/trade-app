@@ -218,7 +218,8 @@ test('locale switching rerenders active shares and never publishes or mutates st
   assert.match(change,/trainer-organizer-modal[\s\S]*renderTrainerOrganizer\(\)/);
   assert.doesNotMatch(change,/resetTrainerOrganizerState\(\)/);
   assert.doesNotMatch(change,/requestPublicSharePublication|publishPublicShareNow|writeList|queueSync|set\(ref/);
-  assert.match(html,/dispMap\[e\.name\]=pokemonDisplayName\(e\)/);
+  assert.match(html,/function addPokemonEntryAliases[\s\S]*entry\.legacyAliases/);
+  assert.match(html,/srcArr\.forEach\(e=>addPokemonEntryAliases\(e,dispMap,noMap\)\)/);
 });
 
 test('event cache stays source-faithful and locale changes neither refetch nor rewrite it',()=>{
@@ -244,7 +245,7 @@ test('all Pokemon render surfaces route displayed labels through the resolver',(
     /renderBrowse[\s\S]*pokemonDisplayName/,
     /renderShareView[\s\S]*pokemonDisplayName/,
     /renderMyHave[\s\S]*pokemonDisplayName/,
-    /dispMap\[e\.name\]=pokemonDisplayName\(e\)/
+    /function addPokemonEntryAliases[\s\S]*pokemonDisplayName\(entry\)/
   ])assert.match(html,pattern);
 });
 
