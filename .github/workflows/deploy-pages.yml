@@ -37,11 +37,11 @@ jobs:
       pages: write
       id-token: write
     # FAIL-CLOSED LOCAL PLACEHOLDER: replace only in Commit 2 with Commit 1's full SHA.
-    uses: Doomsday126dev/trade-app/.github/workflows/pages-release-control.yml@aa544f230747fff8f97aebb97d238b5b0a180c64
+    uses: Doomsday126dev/trade-app/.github/workflows/pages-release-control.yml@f26986786d9c8fe70857f78b777bf35c311fd8de
     with:
       approved_sha: ${{ inputs.approved_sha }}
       release_id: ${{ inputs.release_id }}
       expected_live_sha: ${{ inputs.expected_live_sha }}
       mode: ${{ inputs.mode }}
       confirmation: ${{ inputs.confirmation }}
-      control_workflow_sha: "aa544f230747fff8f97aebb97d238b5b0a180c64"
+      control_workflow_sha: "f26986786d9c8fe70857f78b777bf35c311fd8de"
