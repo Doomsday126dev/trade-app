@@ -119,6 +119,9 @@ jobs:
           PAGES_CALLER_ROOT: ${{ github.workspace }}/caller
           PAGES_RUNTIME_ROOT: ${{ github.workspace }}/target
           PAGES_EXPECTED_CONTROL_SHA: ${{ job.workflow_sha }}
+          PAGES_RUNTIME_SOURCE_SHA: ${{ inputs.runtime_source_sha }}
+          PAGES_RUNTIME_RELEASE_ID: ${{ inputs.runtime_release_id }}
+          PAGES_RUNTIME_RELEASE_TAG: ${{ inputs.runtime_release_tag }}
           PAGES_SOURCE_DIR: ${{ github.workspace }}/control
         run: node --test control/tests/pages-deployment-control.test.cjs control/tests/service-worker-deployment-rollback.test.cjs
       - name: Define unique artifact name

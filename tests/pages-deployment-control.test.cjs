@@ -20,12 +20,14 @@ const validator=require(path.join(controlRoot,'scripts/pages/validate-release.cj
 const builder=require(path.join(controlRoot,'scripts/pages/build-artifact.cjs'));
 const verifier=require(path.join(controlRoot,'scripts/pages/verify-deployment.cjs'));
 
-const RUNTIME_SHA='d7491e83a917bdbbf341bfb68fc947549557a54e';
 const PREVIOUS_SHA='4505828ca7fc8f48ca1b23dfcadf860691e6e588';
 const DISPATCHER_SHA='b'.repeat(40),OTHER_DISPATCHER='e'.repeat(40),CONTROL_SHA='c'.repeat(40);
-const RELEASE_ID='2026-08-05.47',RUNTIME_TAG=`release-${RELEASE_ID}`;
+const runtimeRelease=validator.validateReleaseCoherence(root);
+const RUNTIME_SHA=process.env.PAGES_RUNTIME_SOURCE_SHA||git(root,['rev-parse','HEAD']);
+const RELEASE_ID=process.env.PAGES_RUNTIME_RELEASE_ID||runtimeRelease.releaseId;
+const RUNTIME_TAG=process.env.PAGES_RUNTIME_RELEASE_TAG||`release-${RELEASE_ID}`;
 const SELECTOR=`release-pages-control-${DISPATCHER_SHA}`;
-const RUN_ID='31861434906',ARTIFACT_DIGEST='bb24c2e217e5f8e153447bfab4c7ae3994872d949b95f2c5a6edb230c8736bc9';
+const RUN_ID='31861434906',ARTIFACT_DIGEST=builder.artifactDigest(root,runtimeRelease.files);
 const DEPLOYMENT_ID=5916645350;
 
 function validContext(overrides={}){
@@ -74,6 +76,12 @@ function pagesFetch(files,{manifestSequence=[]}={}){
   };
 }
 function git(rootDir,args){const result=spawnSync('git',args,{cwd:rootDir,encoding:'utf8'});assert.equal(result.status,0,result.stderr);return result.stdout.trim();}
+function copyRuntime(source,target){
+  const reviewed=validator.validateReleaseCoherence(source);
+  for(const file of reviewed.files){const output=path.join(target,file);fs.mkdirSync(path.dirname(output),{recursive:true});fs.copyFileSync(path.join(source,file),output);}
+  const manifest='scripts/pages/frontend-files.json',output=path.join(target,manifest);fs.mkdirSync(path.dirname(output),{recursive:true});fs.copyFileSync(path.join(controlRoot,manifest),output);
+  return reviewed;
+}
 function readDispatcher(rootDir){return YAML.parse(fs.readFileSync(path.join(rootDir,'.github/workflows/deploy-pages.yml'),'utf8'));}
 function dispatcherContract(rootDir,{expectedControlSha}={}){
   const value=readDispatcher(rootDir),job=value.jobs.deploy,match=job.uses.match(/@([0-9a-f]{40})$/);
@@ -169,6 +177,9 @@ test('workflow checks out runtime_source_sha, never github.sha, and preserves im
   assert.equal(regression.env.PAGES_CALLER_ROOT,'${{ github.workspace }}/caller');
   assert.equal(regression.env.PAGES_RUNTIME_ROOT,'${{ github.workspace }}/target');
   assert.equal(regression.env.PAGES_EXPECTED_CONTROL_SHA,'${{ job.workflow_sha }}');
+  assert.equal(regression.env.PAGES_RUNTIME_SOURCE_SHA,'${{ inputs.runtime_source_sha }}');
+  assert.equal(regression.env.PAGES_RUNTIME_RELEASE_ID,'${{ inputs.runtime_release_id }}');
+  assert.equal(regression.env.PAGES_RUNTIME_RELEASE_TAG,'${{ inputs.runtime_release_tag }}');
   const uses=[...reusableText.matchAll(/^\s*uses:\s*([^\s]+)$/gm)].map(match=>match[1]);
   for(const value of uses)assert.match(value,/@[0-9a-f]{40}$/);
   assert.match(reusableText,/actions\/checkout@d23441a48e516b6c34aea4fa41551a30e30af803/);
@@ -189,10 +200,36 @@ test('reviewed frontend allowlist stays at 68 files and excludes control/private
   for(const file of result.files)assert.doesNotMatch(file,/^(?:functions|tests|docs|\.github|\.local|node_modules|screenshots|logs)\//);
 });
 
+test('runtime identity and digest come from the selected runtime rather than the control revision',()=>{
+  assert.equal(runtimeRelease.releaseId,RELEASE_ID);
+  assert.equal(RUNTIME_TAG,`release-${RELEASE_ID}`);
+  assert.equal(git(root,['rev-parse','HEAD']),RUNTIME_SHA);
+  assert.match(ARTIFACT_DIGEST,/^[0-9a-f]{64}$/);
+  if(process.env.PAGES_EXPECTED_RUNTIME_DIGEST)assert.equal(ARTIFACT_DIGEST,process.env.PAGES_EXPECTED_RUNTIME_DIGEST);
+});
+
+test('synthetic future runtime release validates and builds without changing trusted control',()=>{
+  const fixture=tempDir(),output=tempDir(),futureId='2099-12-31.999',futureTag=`release-${futureId}`,futureSha='9'.repeat(40);
+  const reviewed=copyRuntime(root,fixture);
+  for(const file of reviewed.files){
+    const target=path.join(fixture,file),content=fs.readFileSync(target);
+    if(content.includes(Buffer.from(RELEASE_ID)))fs.writeFileSync(target,content.toString('utf8').replaceAll(RELEASE_ID,futureId));
+  }
+  const future=validator.validateReleaseCoherence(fixture,{expectedReleaseId:futureId});
+  const first=builder.buildArtifact({source:fixture,output,runtimeSourceSha:futureSha,runtimeReleaseId:futureId,runtimeReleaseTag:futureTag,controlSelectorTag:SELECTOR,dispatcherSha:DISPATCHER_SHA,githubRunId:RUN_ID,controlWorkflowSha:CONTROL_SHA});
+  const secondOutput=tempDir(),second=builder.buildArtifact({source:fixture,output:secondOutput,runtimeSourceSha:futureSha,runtimeReleaseId:futureId,runtimeReleaseTag:futureTag,controlSelectorTag:SELECTOR,dispatcherSha:DISPATCHER_SHA,githubRunId:RUN_ID,controlWorkflowSha:CONTROL_SHA});
+  assert.equal(future.releaseId,futureId);assert.equal(first.release_id,futureId);assert.equal(first.artifact_digest,second.artifact_digest);
+  fs.rmSync(fixture,{recursive:true,force:true});fs.rmSync(output,{recursive:true,force:true});fs.rmSync(secondOutput,{recursive:true,force:true});
+});
+
+test('artifact digest algorithm has an independent stable fixture',()=>{
+  const fixture=tempDir();fs.writeFileSync(path.join(fixture,'a.txt'),'alpha\n');fs.mkdirSync(path.join(fixture,'nested'));fs.writeFileSync(path.join(fixture,'nested/b.txt'),'beta\n');
+  assert.equal(builder.artifactDigest(fixture,['nested/b.txt','a.txt']),'15db8ea5ae2ce6f2d10b22e327a2ebc8400c23232aece5400058519012c60606');
+  fs.rmSync(fixture,{recursive:true,force:true});
+});
+
 test('runtime release coherence rejects mixed runtime assets',()=>{
-  const fixture=tempDir(),reviewed=validator.validateReleaseCoherence(root);
-  for(const file of reviewed.files){const target=path.join(fixture,file);fs.mkdirSync(path.dirname(target),{recursive:true});fs.copyFileSync(path.join(root,file),target);}
-  const manifestTarget=path.join(fixture,'scripts/pages/frontend-files.json');fs.mkdirSync(path.dirname(manifestTarget),{recursive:true});fs.copyFileSync(path.join(root,'scripts/pages/frontend-files.json'),manifestTarget);
+  const fixture=tempDir();copyRuntime(root,fixture);
   const client=path.join(fixture,'js/domain/clientRelease.js');fs.writeFileSync(client,fs.readFileSync(client,'utf8').replace(RELEASE_ID,'2026-08-05.45'));
   assert.throws(()=>validator.validateReleaseCoherence(fixture),/Mixed release/);fs.rmSync(fixture,{recursive:true,force:true});
 });
@@ -228,7 +265,7 @@ test('manifest parsing is strict and rejects malformed, extra, or contradictory 
   assert.throws(()=>verifier.parseDeploymentManifest(JSON.stringify(currentManifest({artifact_digest:'0'.repeat(64)})),{expected:{artifact_digest:ARTIFACT_DIGEST}}),/artifact_digest mismatch/);
 });
 
-test('predeploy trusts served d749 manifest even when latest successful GitHub metadata remains 450',async()=>{
+test('predeploy trusts the served manifest even when latest successful GitHub metadata remains stale',async()=>{
   const files=runtimeFiles(legacyManifest()),fetchPages=pagesFetch(files);
   const fetchImpl=async url=>{
     const parsed=new URL(url);
