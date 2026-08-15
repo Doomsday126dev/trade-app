@@ -38,7 +38,7 @@ test('Legal and Attribution is user reachable, conservative, localized, and regi
 
 test('normal My List rows are dense and progressive while reorder remains explicit',()=>{
   const rows=html.slice(html.indexOf('function myListRowsHtml'),html.indexOf('function myListPrioritySectionHtml'));
-  assert.match(rows,/reorderMode&&!bulkMode\?'draggable="true"'/);assert.match(rows,/reorderMode\?`<span class="drag-handle"/);
+  assert.match(rows,/reorderMode&&!bulkMode\?'draggable="true"'/);assert.match(rows,/reorderMode\?`<button type="button" class="drag-handle"/);
   assert.match(rows,/class="myrow-priority-quick"/);assert.doesNotMatch(rows,/class="myrow-priority" role="group"/);
   assert.match(rows,/details class="myrow-editor"/);assert.match(html,/@media\(max-width:600px\)[^{]*\{[\s\S]*?\.myrow-priority-quick\{display:none\}/);
   assert.match(html,/\.myrow\{min-height:58px/);assert.match(html,/id="mylist-reorder-toggle"/);
@@ -52,9 +52,9 @@ test('priority moves are exact, announced, and do not reuse toggle-delete behavi
   assert.match(editor,/myrow-priority-editor/);assert.match(editor,/movePriority/);
 });
 
-test('reorder preserves the existing effective within-priority ordering boundary',()=>{
-  const drop=html.slice(html.indexOf('function dragDrop'),html.indexOf('function dragEnd'));
-  assert.match(drop,/sourcePriority!==targetPriority/);assert.match(drop,/myList\.reorderWithinPriority/);assert.match(drop,/keys\.splice\(si,1\);keys\.splice\(ti,0,srcName\)/);assert.match(drop,/writeList\(myListType,cur,reordered\)/);
+test('reorder persists explicit within-priority order without rewriting Firebase list data',()=>{
+  const drop=html.slice(html.indexOf('function dragDrop'),html.indexOf('function announceMyListAction'));
+  assert.match(drop,/sourcePriority!==targetPriority/);assert.match(drop,/myList\.reorderWithinPriority/);assert.match(drop,/names\.splice\(si,1\);names\.splice\(ti,0,srcName\)/);assert.match(drop,/persistMyListOrder\(model,myListType,cur\)/);assert.doesNotMatch(drop,/writeList\(myListType,cur/);
 });
 
 test('Batch B adds no Firebase surface or new profile schema',()=>{
