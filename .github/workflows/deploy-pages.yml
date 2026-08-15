@@ -3,16 +3,20 @@ name: Deploy approved Pages release
 on:
   workflow_dispatch:
     inputs:
-      approved_sha:
-        description: Full lowercase 40-character SHA selected by the release tag
+      runtime_source_sha:
+        description: Full lowercase 40-character SHA resolved by the immutable runtime tag
         required: true
         type: string
-      release_id:
-        description: Release ID without the release- prefix
+      runtime_release_id:
+        description: Runtime release ID without the release- prefix
+        required: true
+        type: string
+      runtime_release_tag:
+        description: Immutable runtime tag that resolves to runtime_source_sha
         required: true
         type: string
       expected_live_sha:
-        description: Exact SHA of the currently successful github-pages deployment
+        description: Exact runtime SHA reported by the currently served deployment manifest
         required: true
         type: string
       mode:
@@ -36,12 +40,15 @@ jobs:
       deployments: read
       pages: write
       id-token: write
-    # FAIL-CLOSED LOCAL PLACEHOLDER: replace only in Commit 2 with Commit 1's full SHA.
-    uses: Doomsday126dev/trade-app/.github/workflows/pages-release-control.yml@f26986786d9c8fe70857f78b777bf35c311fd8de
+    # Pin the reusable control workflow to Commit A's full immutable SHA.
+    uses: Doomsday126dev/trade-app/.github/workflows/pages-release-control.yml@c20529d3dae30b3c5a935647a87d338d939b2d72
     with:
-      approved_sha: ${{ inputs.approved_sha }}
-      release_id: ${{ inputs.release_id }}
+      runtime_source_sha: ${{ inputs.runtime_source_sha }}
+      runtime_release_id: ${{ inputs.runtime_release_id }}
+      runtime_release_tag: ${{ inputs.runtime_release_tag }}
       expected_live_sha: ${{ inputs.expected_live_sha }}
       mode: ${{ inputs.mode }}
       confirmation: ${{ inputs.confirmation }}
-      control_workflow_sha: "f26986786d9c8fe70857f78b777bf35c311fd8de"
+      control_selector_tag: ${{ github.ref_name }}
+      dispatcher_sha: ${{ github.sha }}
+      control_workflow_sha: "c20529d3dae30b3c5a935647a87d338d939b2d72"
