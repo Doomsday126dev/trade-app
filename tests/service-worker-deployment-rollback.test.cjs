@@ -6,7 +6,7 @@ const vm=require('node:vm');
 
 const currentSource=fs.readFileSync(path.join(__dirname,'..','sw.js'),'utf8');
 const targetRelease='2026-08-05.45';
-const rollbackSource=currentSource.replace("const RELEASE='2026-08-05.47';",`const RELEASE='${targetRelease}';`);
+const rollbackSource=currentSource.replace("const RELEASE='2026-08-05.48';",`const RELEASE='${targetRelease}';`);
 function key(value){return typeof value==='string'?value:String(value?.url||value);}
 function response(status=200,body='ok'){return{ok:status>=200&&status<300,status,body,clone(){return response(status,body);}};}
 class MemoryCache{
@@ -18,8 +18,8 @@ class MemoryCache{
 }
 function harness({failUrl=''}={}){
   const stores=new Map(),listeners=new Map();let offline=false,claims=0;
-  const newer='shell-pogo-trades-2026-08-05.47',newerSprites='sprites-pogo-trades-2026-08-05.47';
-  const newerCache=new MemoryCache();newerCache.values.set('./index.html?v=2026-08-05.47',response(200,'newer-shell'));
+  const newer='shell-pogo-trades-2026-08-05.48',newerSprites='sprites-pogo-trades-2026-08-05.48';
+  const newerCache=new MemoryCache();newerCache.values.set('./index.html?v=2026-08-05.48',response(200,'newer-shell'));
   stores.set(newer,newerCache);stores.set(newerSprites,new MemoryCache());stores.set('same-origin-unrelated-cache',new MemoryCache());
   const caches={async open(name){if(!stores.has(name))stores.set(name,new MemoryCache());return stores.get(name);},async delete(name){return stores.delete(name);},async keys(){return[...stores.keys()];}};
   const self={location:{origin:'https://example.test',href:'https://example.test/trade-app/sw.js'},clients:{async claim(){claims++;}},async skipWaiting(){},addEventListener(type,listener){listeners.set(type,listener);}};
