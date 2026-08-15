@@ -4,7 +4,7 @@
 const fs=require('node:fs');
 const path=require('node:path');
 const crypto=require('node:crypto');
-const {validateReleaseCoherence,SHA_RE}=require('./validate-release.cjs');
+const {validateReleaseCoherence,SHA_RE,runtimeReleaseTag,controlSelectorTag}=require('./validate-release.cjs');
 
 const DIGEST_ALGORITHM='sha256-path-null-content-sha256-v1';
 function fail(message){throw new Error(message);}
@@ -45,18 +45,21 @@ function walk(root,relative=''){
 }
 function buildArtifact(options){
   const source=path.resolve(options.source),output=path.resolve(options.output);
-  const release=validateReleaseCoherence(source,{expectedReleaseId:options.releaseId});
-  for(const[label,value]of [['source_sha',options.sourceSha],['control_workflow_sha',options.controlWorkflowSha]])if(!SHA_RE.test(value||''))fail(`${label} must be a full lowercase SHA`);
-  if(options.releaseTag!==`release-${release.releaseId}`)fail('release_tag does not match release_id');
+  const release=validateReleaseCoherence(source,{expectedReleaseId:options.runtimeReleaseId});
+  for(const[label,value]of [['runtime_source_sha',options.runtimeSourceSha],['dispatcher_sha',options.dispatcherSha],['control_workflow_sha',options.controlWorkflowSha]])if(!SHA_RE.test(value||''))fail(`${label} must be a full lowercase SHA`);
+  if(options.runtimeReleaseTag!==runtimeReleaseTag(release.releaseId))fail('runtime_release_tag does not match runtime_release_id');
+  if(options.controlSelectorTag!==controlSelectorTag(options.dispatcherSha))fail('deployment selector does not match dispatcher SHA');
   if(!/^\d+$/.test(options.githubRunId||''))fail('github_run_id must be numeric');
   assertEmptyOutput(output);
   copyReviewedFiles(source,output,release.files);
   const digest=artifactDigest(output,release.files);
   const deploymentManifest={
-    schema_version:1,
-    source_sha:options.sourceSha,
+    schema_version:2,
+    source_sha:options.runtimeSourceSha,
     release_id:release.releaseId,
-    release_tag:options.releaseTag,
+    release_tag:options.runtimeReleaseTag,
+    deployment_selector:options.controlSelectorTag,
+    dispatcher_sha:options.dispatcherSha,
     github_run_id:options.githubRunId,
     control_workflow_sha:options.controlWorkflowSha,
     artifact_digest:digest,
@@ -71,8 +74,9 @@ function buildArtifact(options){
 function main(){
   const result=buildArtifact({
     source:process.env.SOURCE_DIR||process.cwd(),output:process.env.ARTIFACT_DIR,
-    sourceSha:process.env.APPROVED_SHA,releaseId:process.env.RELEASE_ID,
-    releaseTag:process.env.RELEASE_TAG,githubRunId:process.env.GITHUB_RUN_ID,
+    runtimeSourceSha:process.env.RUNTIME_SOURCE_SHA,runtimeReleaseId:process.env.RUNTIME_RELEASE_ID,
+    runtimeReleaseTag:process.env.RUNTIME_RELEASE_TAG,controlSelectorTag:process.env.CONTROL_SELECTOR_TAG,
+    dispatcherSha:process.env.DISPATCHER_SHA,githubRunId:process.env.GITHUB_RUN_ID,
     controlWorkflowSha:process.env.CONTROL_WORKFLOW_SHA
   });
   process.stdout.write(`${JSON.stringify(result)}\n`);

@@ -3,10 +3,13 @@ name: Pages release control
 on:
   workflow_call:
     inputs:
-      approved_sha:
+      runtime_source_sha:
         required: true
         type: string
-      release_id:
+      runtime_release_id:
+        required: true
+        type: string
+      runtime_release_tag:
         required: true
         type: string
       expected_live_sha:
@@ -16,6 +19,12 @@ on:
         required: true
         type: string
       confirmation:
+        required: true
+        type: string
+      control_selector_tag:
+        required: true
+        type: string
+      dispatcher_sha:
         required: true
         type: string
       control_workflow_sha:
@@ -42,7 +51,7 @@ jobs:
       - name: Check out approved release source
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
-          ref: ${{ inputs.approved_sha }}
+          ref: ${{ inputs.runtime_source_sha }}
           fetch-depth: 0
           persist-credentials: false
           path: target
@@ -57,13 +66,16 @@ jobs:
         run: npm ci --ignore-scripts --prefix control
       - name: Validate tag, SHA, release, and trusted control
         env:
-          APPROVED_SHA: ${{ inputs.approved_sha }}
+          RUNTIME_SOURCE_SHA: ${{ inputs.runtime_source_sha }}
+          RUNTIME_RELEASE_ID: ${{ inputs.runtime_release_id }}
+          RUNTIME_RELEASE_TAG: ${{ inputs.runtime_release_tag }}
           EXPECTED_LIVE_SHA: ${{ inputs.expected_live_sha }}
           GITHUB_SHA: ${{ github.sha }}
-          CHECKED_OUT_SHA: ${{ inputs.approved_sha }}
+          CHECKED_OUT_SHA: ${{ inputs.runtime_source_sha }}
           GITHUB_REF_TYPE: ${{ github.ref_type }}
           GITHUB_REF_NAME: ${{ github.ref_name }}
-          RELEASE_ID: ${{ inputs.release_id }}
+          CONTROL_SELECTOR_TAG: ${{ inputs.control_selector_tag }}
+          DISPATCHER_SHA: ${{ inputs.dispatcher_sha }}
           DEPLOY_MODE: ${{ inputs.mode }}
           DEPLOY_CONFIRMATION: ${{ inputs.confirmation }}
           CONTROL_WORKFLOW_SHA: ${{ inputs.control_workflow_sha }}
@@ -106,9 +118,11 @@ jobs:
         env:
           SOURCE_DIR: target
           ARTIFACT_DIR: artifact
-          APPROVED_SHA: ${{ inputs.approved_sha }}
-          RELEASE_ID: ${{ inputs.release_id }}
-          RELEASE_TAG: release-${{ inputs.release_id }}
+          RUNTIME_SOURCE_SHA: ${{ inputs.runtime_source_sha }}
+          RUNTIME_RELEASE_ID: ${{ inputs.runtime_release_id }}
+          RUNTIME_RELEASE_TAG: ${{ inputs.runtime_release_tag }}
+          CONTROL_SELECTOR_TAG: ${{ inputs.control_selector_tag }}
+          DISPATCHER_SHA: ${{ inputs.dispatcher_sha }}
           CONTROL_WORKFLOW_SHA: ${{ job.workflow_sha }}
         run: |
           result="$(node control/scripts/pages/build-artifact.cjs)"
@@ -123,9 +137,11 @@ jobs:
           path: artifact
       - name: Write approval provenance summary
         env:
-          APPROVED_SHA: ${{ inputs.approved_sha }}
-          RELEASE_ID: ${{ inputs.release_id }}
-          RELEASE_TAG: release-${{ inputs.release_id }}
+          RUNTIME_SOURCE_SHA: ${{ inputs.runtime_source_sha }}
+          RUNTIME_RELEASE_ID: ${{ inputs.runtime_release_id }}
+          RUNTIME_RELEASE_TAG: ${{ inputs.runtime_release_tag }}
+          CONTROL_SELECTOR_TAG: ${{ inputs.control_selector_tag }}
+          DISPATCHER_SHA: ${{ inputs.dispatcher_sha }}
           CONTROL_SHA: ${{ job.workflow_sha }}
           ARTIFACT_DIGEST: ${{ steps.build.outputs.artifact_digest }}
           DEPLOY_MODE: ${{ inputs.mode }}
@@ -133,9 +149,11 @@ jobs:
           {
             echo "## Pages production candidate"
             echo "- Mode: \`$DEPLOY_MODE\`"
-            echo "- SHA: \`$APPROVED_SHA\`"
-            echo "- Release: \`$RELEASE_ID\`"
-            echo "- Tag: \`$RELEASE_TAG\`"
+            echo "- Runtime SHA: \`$RUNTIME_SOURCE_SHA\`"
+            echo "- Runtime release: \`$RUNTIME_RELEASE_ID\`"
+            echo "- Runtime tag: \`$RUNTIME_RELEASE_TAG\`"
+            echo "- Control selector: \`$CONTROL_SELECTOR_TAG\`"
+            echo "- Dispatcher SHA: \`$DISPATCHER_SHA\`"
             echo "- Artifact digest: \`$ARTIFACT_DIGEST\`"
             echo "- Trusted control SHA: \`$CONTROL_SHA\`"
           } >> "$GITHUB_STEP_SUMMARY"
@@ -163,6 +181,7 @@ jobs:
       - name: Verify expected current production deployment
         env:
           GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
           EXPECTED_LIVE_SHA: ${{ inputs.expected_live_sha }}
         run: node control/scripts/pages/verify-deployment.cjs predeploy
       # actions/deploy-pages v4
@@ -175,9 +194,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
           GITHUB_RUN_ID: ${{ github.run_id }}
-          APPROVED_SHA: ${{ inputs.approved_sha }}
-          RELEASE_ID: ${{ inputs.release_id }}
-          RELEASE_TAG: release-${{ inputs.release_id }}
+          RUNTIME_SOURCE_SHA: ${{ inputs.runtime_source_sha }}
+          RUNTIME_RELEASE_ID: ${{ inputs.runtime_release_id }}
+          RUNTIME_RELEASE_TAG: ${{ inputs.runtime_release_tag }}
+          CONTROL_SELECTOR_TAG: ${{ inputs.control_selector_tag }}
+          DISPATCHER_SHA: ${{ inputs.dispatcher_sha }}
           CONTROL_WORKFLOW_SHA: ${{ job.workflow_sha }}
           EXPECTED_ARTIFACT_DIGEST: ${{ needs.validate-build.outputs.artifact_digest }}
           DEPLOY_STEP_CONCLUSION: ${{ steps.deployment.conclusion }}

@@ -7,6 +7,7 @@ const {spawnSync}=require('node:child_process');
 
 const SHA_RE=/^[0-9a-f]{40}$/;
 const RELEASE_RE=/^\d{4}-\d{2}-\d{2}\.\d+$/;
+const CONTROL_SELECTOR_PREFIX='release-pages-control-';
 const FORBIDDEN_PREFIXES=['functions/','tests/','docs/','.github/','.local/','logs/','screenshots/','node_modules/','test-results/','playwright-report/'];
 const CONTROL_ROOT=path.resolve(__dirname,'../..');
 
@@ -21,6 +22,8 @@ function normalizeReleaseId(value){
   if(!RELEASE_RE.test(value||''))fail('release_id must use YYYY-MM-DD.N format');
   return value;
 }
+function runtimeReleaseTag(releaseId){return`release-${normalizeReleaseId(releaseId)}`;}
+function controlSelectorTag(dispatcherSha){return`${CONTROL_SELECTOR_PREFIX}${normalizeSha(dispatcherSha,'dispatcher_sha')}`;}
 function loadFrontendManifest(root,{manifestRoot=CONTROL_ROOT}={}){
   const file=path.join(manifestRoot,'scripts/pages/frontend-files.json');
   const manifest=JSON.parse(fs.readFileSync(file,'utf8'));
@@ -91,46 +94,55 @@ function validateReleaseCoherence(root,{expectedReleaseId}={}){
   for(const required of ['index.html','manifest.json','sw.js','js/domain/clientRelease.js'])if(!allowlist.files.includes(required))fail(`Required runtime file omitted: ${required}`);
   return{releaseId:releases.index,scriptCount:scriptPaths.length,files:allowlist.files,allowlist};
 }
-function expectedConfirmation({mode,releaseId,approvedSha,expectedLiveSha}){
-  if(mode==='release')return`DEPLOY release-${releaseId} ${approvedSha}`;
-  if(mode==='rollback')return`ROLLBACK release-${releaseId} ${approvedSha} FROM ${expectedLiveSha}`;
+function expectedConfirmation({mode,runtimeReleaseTag:tag,runtimeSourceSha,expectedLiveSha,controlSelectorTag:selector}){
+  if(mode==='release')return`DEPLOY ${tag} ${runtimeSourceSha} VIA ${selector}`;
+  if(mode==='rollback')return`ROLLBACK ${tag} ${runtimeSourceSha} FROM ${expectedLiveSha} VIA ${selector}`;
   fail('mode must be release or rollback');
 }
 function validateDispatchContext(input){
-  const releaseId=normalizeReleaseId(input.releaseId);
-  const approvedSha=normalizeSha(input.approvedSha,'approved_sha');
+  const runtimeReleaseId=normalizeReleaseId(input.runtimeReleaseId);
+  const runtimeSourceSha=normalizeSha(input.runtimeSourceSha,'runtime_source_sha');
   const expectedLiveSha=normalizeSha(input.expectedLiveSha,'expected_live_sha');
   const githubSha=normalizeSha(input.githubSha,'github.sha');
   const checkedOutSha=normalizeSha(input.checkedOutSha,'checked-out SHA');
+  const dispatcherSha=normalizeSha(input.dispatcherSha,'dispatcher_sha');
   const controlWorkflowSha=normalizeSha(input.controlWorkflowSha,'control workflow SHA');
   const jobWorkflowSha=normalizeSha(input.jobWorkflowSha,'job.workflow_sha');
+  const expectedRuntimeTag=runtimeReleaseTag(runtimeReleaseId);
+  const expectedSelector=controlSelectorTag(dispatcherSha);
   if(input.refType!=='tag')fail('Production deployment requires a tag ref');
-  if(input.refName!==`release-${releaseId}`)fail('Tag name does not match release_id');
-  if(approvedSha!==githubSha||approvedSha!==checkedOutSha)fail('approved_sha, tag target, github.sha, and checked-out SHA must match');
+  if(input.runtimeReleaseTag!==expectedRuntimeTag)fail('Runtime tag does not match runtime_release_id');
+  if(input.controlSelectorTag!==expectedSelector||input.refName!==expectedSelector)fail('Control selector must contain the full dispatcher SHA');
+  if(dispatcherSha!==githubSha)fail('dispatcher_sha must equal github.sha');
+  if(runtimeSourceSha!==checkedOutSha)fail('runtime_source_sha must equal checked-out SHA');
   if(controlWorkflowSha!==jobWorkflowSha)fail('Dispatcher control SHA does not match executing reusable workflow SHA');
-  const expected=expectedConfirmation({mode:input.mode,releaseId,approvedSha,expectedLiveSha});
+  const expected=expectedConfirmation({mode:input.mode,runtimeReleaseTag:expectedRuntimeTag,runtimeSourceSha,expectedLiveSha,controlSelectorTag:expectedSelector});
   if(input.confirmation!==expected)fail(`Confirmation must exactly equal: ${expected}`);
-  return{releaseId,releaseTag:`release-${releaseId}`,approvedSha,expectedLiveSha,mode:input.mode,controlWorkflowSha};
+  return{runtimeReleaseId,runtimeReleaseTag:expectedRuntimeTag,runtimeSourceSha,expectedLiveSha,controlSelectorTag:expectedSelector,dispatcherSha,mode:input.mode,controlWorkflowSha};
 }
 function git(root,args){
   const result=spawnSync('git',args,{cwd:root,encoding:'utf8'});
   if(result.status!==0)fail(`Git validation failed: git ${args.join(' ')}`);
   return result.stdout.trim();
 }
-function validateGitHistory(root,sha){
-  normalizeSha(sha,'approved_sha');
-  git(root,['cat-file','-e',`${sha}^{commit}`]);
+function validateGitHistory(root,runtimeSourceSha,runtimeTag){
+  normalizeSha(runtimeSourceSha,'runtime_source_sha');
+  if(runtimeTag!==runtimeReleaseTag(runtimeTag?.slice('release-'.length)))fail('Invalid runtime release tag');
+  git(root,['cat-file','-e',`${runtimeSourceSha}^{commit}`]);
   git(root,['show-ref','--verify','refs/remotes/origin/main']);
-  git(root,['merge-base','--is-ancestor',sha,'refs/remotes/origin/main']);
-  if(git(root,['rev-parse','HEAD'])!==sha)fail('Checked-out HEAD differs from approved SHA');
+  git(root,['merge-base','--is-ancestor',runtimeSourceSha,'refs/remotes/origin/main']);
+  if(git(root,['rev-parse','HEAD'])!==runtimeSourceSha)fail('Checked-out HEAD differs from runtime source SHA');
+  if(git(root,['rev-parse',`${runtimeTag}^{commit}`])!==runtimeSourceSha)fail('Runtime release tag does not resolve to runtime source SHA');
   return true;
 }
 function envInput(){
   return{
-    approvedSha:process.env.APPROVED_SHA,expectedLiveSha:process.env.EXPECTED_LIVE_SHA,
+    runtimeSourceSha:process.env.RUNTIME_SOURCE_SHA,runtimeReleaseId:process.env.RUNTIME_RELEASE_ID,
+    runtimeReleaseTag:process.env.RUNTIME_RELEASE_TAG,expectedLiveSha:process.env.EXPECTED_LIVE_SHA,
     githubSha:process.env.GITHUB_SHA,checkedOutSha:process.env.CHECKED_OUT_SHA,
     refType:process.env.GITHUB_REF_TYPE,refName:process.env.GITHUB_REF_NAME,
-    releaseId:process.env.RELEASE_ID,mode:process.env.DEPLOY_MODE,
+    controlSelectorTag:process.env.CONTROL_SELECTOR_TAG,dispatcherSha:process.env.DISPATCHER_SHA,
+    mode:process.env.DEPLOY_MODE,
     confirmation:process.env.DEPLOY_CONFIRMATION,
     controlWorkflowSha:process.env.CONTROL_WORKFLOW_SHA,jobWorkflowSha:process.env.JOB_WORKFLOW_SHA
   };
@@ -143,10 +155,10 @@ function main(){
     return;
   }
   const context=validateDispatchContext(envInput());
-  const release=validateReleaseCoherence(root,{expectedReleaseId:context.releaseId});
-  if(process.env.VALIDATE_GIT_HISTORY==='true')validateGitHistory(root,context.approvedSha);
+  const release=validateReleaseCoherence(root,{expectedReleaseId:context.runtimeReleaseId});
+  if(process.env.VALIDATE_GIT_HISTORY==='true')validateGitHistory(root,context.runtimeSourceSha,context.runtimeReleaseTag);
   process.stdout.write(`${JSON.stringify({...context,scriptCount:release.scriptCount,fileCount:release.files.length})}\n`);
 }
 if(require.main===module){try{main();}catch(error){console.error(error.message);process.exitCode=1;}}
 
-module.exports={SHA_RE,RELEASE_RE,FORBIDDEN_PREFIXES,CONTROL_ROOT,loadFrontendManifest,validateReleaseCoherence,validateDispatchContext,validateGitHistory,expectedConfirmation};
+module.exports={SHA_RE,RELEASE_RE,CONTROL_SELECTOR_PREFIX,FORBIDDEN_PREFIXES,CONTROL_ROOT,normalizeSha,normalizeReleaseId,runtimeReleaseTag,controlSelectorTag,loadFrontendManifest,validateReleaseCoherence,validateDispatchContext,validateGitHistory,expectedConfirmation};
