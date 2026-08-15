@@ -5,8 +5,10 @@ const fs = require('node:fs');
 const path = require('node:path');
 const {
   PRIVATE_BINDING_PATH,
+  PRIVATE_CANDIDATE_POOL_PATH,
   PRIVATE_READINESS_PATH,
-  guardProductionThirdMutation
+  guardProductionThirdMutation,
+  validateCandidatePoolArtifact
 } = require('../production/e1ProductionThirdMutationGuard.cjs');
 
 const localRoot = path.resolve(__dirname, '../.local');
@@ -18,17 +20,42 @@ function privatePath(value, label) {
   return resolved;
 }
 
-const inputValue = process.env.E1_PRODUCTION_THIRD_MUTATION_GUARD_INPUT;
-if (!inputValue) throw new Error('E1_PRODUCTION_THIRD_MUTATION_GUARD_INPUT is required');
-const inputPath = privatePath(inputValue, 'Group D3 guard input');
-const bindingPath = privatePath(
-  process.env.E1_PRODUCTION_THIRD_MUTATION_SUBJECTS || PRIVATE_BINDING_PATH,
-  'Group D3 subject binding'
+function mode() {
+  const values = process.argv.slice(2).filter((value) => value.startsWith('--mode='));
+  if (values.length > 1) throw new Error('exactly one --mode is permitted');
+  const selected = values.length ? values[0].slice('--mode='.length) : 'readiness';
+  if (!['candidate-pool', 'readiness'].includes(selected)) throw new Error('unsupported Group D3 checker mode');
+  return selected;
+}
+
+const selectedMode = mode();
+const candidatePoolPath = privatePath(
+  process.env.E1_PRODUCTION_THIRD_MUTATION_CANDIDATE_POOL || PRIVATE_CANDIDATE_POOL_PATH,
+  'Group D3 candidate pool'
 );
-const readinessPath = privatePath(
-  process.env.E1_PRODUCTION_THIRD_MUTATION_READINESS || PRIVATE_READINESS_PATH,
-  'Group D3 readiness'
-);
-const input = JSON.parse(fs.readFileSync(inputPath, 'utf8'));
-const result = guardProductionThirdMutation(input, { inputPath, bindingPath, readinessPath });
-process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
+const candidatePool = JSON.parse(fs.readFileSync(candidatePoolPath, 'utf8'));
+
+if (selectedMode === 'candidate-pool') {
+  const result = validateCandidatePoolArtifact(candidatePool, { candidatePoolPath });
+  process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
+} else {
+  const inputValue = process.env.E1_PRODUCTION_THIRD_MUTATION_GUARD_INPUT;
+  if (!inputValue) throw new Error('E1_PRODUCTION_THIRD_MUTATION_GUARD_INPUT is required');
+  const inputPath = privatePath(inputValue, 'Group D3 guard input');
+  const bindingPath = privatePath(
+    process.env.E1_PRODUCTION_THIRD_MUTATION_SUBJECTS || PRIVATE_BINDING_PATH,
+    'Group D3 subject binding'
+  );
+  const readinessPath = privatePath(
+    process.env.E1_PRODUCTION_THIRD_MUTATION_READINESS || PRIVATE_READINESS_PATH,
+    'Group D3 readiness'
+  );
+  const input = JSON.parse(fs.readFileSync(inputPath, 'utf8'));
+  const result = guardProductionThirdMutation(input, {
+    inputPath,
+    candidatePoolPath,
+    bindingPath,
+    readinessPath
+  });
+  process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
+}

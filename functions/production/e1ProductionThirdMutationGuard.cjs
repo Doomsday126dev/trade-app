@@ -13,6 +13,7 @@ const {
 } = require('./e1ProductionFirstMutationGuard.cjs');
 const {
   ALLOWED_OPERATIONS,
+  CANDIDATE_POOL_POLICY,
   COHORT_SIZE,
   D2_BASELINE,
   ELIGIBILITY_FIELDS,
@@ -24,11 +25,14 @@ const {
   OBSERVATION_HOURS,
   OPERATION_BUDGET,
   STOP_POLICY,
+  candidatePoolDigest,
+  canonicalCandidateOrder,
   sha256,
   subjectBindingDigest
 } = require('./e1ProductionThirdMutationContract.cjs');
 
 const MANIFEST_PATH = path.resolve(__dirname, 'e1-production-resource-manifest.json');
+const PRIVATE_CANDIDATE_POOL_PATH = path.resolve(__dirname, '../.local/e1-production-third-mutation-candidate-pool.json');
 const PRIVATE_BINDING_PATH = path.resolve(__dirname, '../.local/e1-production-third-mutation-subjects.json');
 const PRIVATE_READINESS_PATH = path.resolve(__dirname, '../.local/e1-production-third-mutation-activation.json');
 const PRIVATE_INPUT_PATH = path.resolve(__dirname, '../.local/e1-production-third-mutation-guard-input.json');
@@ -45,8 +49,15 @@ const REVISION = /^e1-identity-authority-[0-9]{5}-[a-z0-9]{3}$/u;
 const IMAGE_DIGEST = /^sha256:[a-f0-9]{64}$/u;
 const BINDING_FIELDS = Object.freeze([
   'schemaVersion', 'environment', 'projectId', 'cohortStage', 'cohortSize', 'state', 'subjectsBound',
-  'executionAuthorized', 'boundAt', 'humanReviewed', 'priorCohort', 'candidates', 'bindingDigest'
+  'executionAuthorized', 'acquisitionMode', 'candidatePoolDigest', 'boundAt', 'humanReviewed', 'priorCohort',
+  'candidates', 'bindingDigest'
 ]);
+const CANDIDATE_POOL_FIELDS = Object.freeze([
+  'schemaVersion', 'environment', 'projectId', 'cohortStage', 'acquisitionMode', 'candidateCount',
+  'humanSupplied', 'suppliedAt', 'candidates', 'candidatePoolDigest', 'executionAuthorized',
+  'laterGroupsAuthorized', 'groupEAuthorized'
+]);
+const CANDIDATE_POOL_SUBJECT_FIELDS = Object.freeze(['firebaseUid', 'trainerUsername']);
 const PRIOR_COHORT_FIELDS = Object.freeze(['d2StateDigest', 'members', 'humanReviewed', 'evidenceDigest']);
 const PRIOR_MEMBER_FIELDS = Object.freeze(['uidHash', 'trainerHash', 'handleKey']);
 const CANDIDATE_FIELDS = Object.freeze([
@@ -140,11 +151,94 @@ function validIdentity(value) {
   return typeof value === 'string' && value.length >= 3 && value.length <= 254 && !/[\r\n\/#$\[\]]/u.test(value);
 }
 
+function validFirebaseUid(value) {
+  return validIdentity(value) && value.length <= 128 && value === value.trim() && value === value.normalize('NFKC');
+}
+
 function subjectHashesFor(subject) {
   return Object.freeze({
     uidHash: readProofSubjectHash('uid', subject.firebaseUid),
     trainerHash: readProofSubjectHash('trainer', subject.trainerUsername)
   });
+}
+
+function canonicalPoolCandidate(subject) {
+  if (!exactFields(subject, CANDIDATE_POOL_SUBJECT_FIELDS) || !validFirebaseUid(subject.firebaseUid) ||
+      !validIdentity(subject.trainerUsername)) throw new Error('group_d3_candidate_pool_subject_invalid');
+  const normalized = normalizeHandle(subject.trainerUsername);
+  const reviewedSubject = Object.freeze({
+    firebaseUid: subject.firebaseUid,
+    trainerUsername: normalized.display
+  });
+  return Object.freeze({
+    reviewedSubject,
+    subjectHashes: subjectHashesFor(reviewedSubject),
+    handle: Object.freeze({
+      canonical: normalized.display,
+      normalized: normalized.normalized,
+      handleKey: normalized.handleKey
+    })
+  });
+}
+
+function validateCandidatePoolArtifact(pool, options = {}) {
+  const errors = [];
+  const now = options.now ? options.now() : Date.now();
+  const poolPath = options.candidatePoolPath || PRIVATE_CANDIDATE_POOL_PATH;
+  if (!privateMode(poolPath)) errors.push('group_d3_candidate_pool_permissions_invalid');
+  if (!exactFields(pool, CANDIDATE_POOL_FIELDS) || pool.schemaVersion !== 1 || pool.environment !== 'production' ||
+      pool.projectId !== 'trade-list-a4297' || pool.cohortStage !== 'D3' ||
+      pool.acquisitionMode !== CANDIDATE_POOL_POLICY.acquisitionMode || pool.candidateCount !== COHORT_SIZE ||
+      pool.humanSupplied !== true || !Number.isFinite(Date.parse(pool.suppliedAt)) || Date.parse(pool.suppliedAt) > now ||
+      !Array.isArray(pool.candidates) || pool.candidates.length !== COHORT_SIZE || !HASH.test(pool.candidatePoolDigest || '') ||
+      pool.executionAuthorized !== false || pool.laterGroupsAuthorized !== false || pool.groupEAuthorized !== false) {
+    errors.push('group_d3_candidate_pool_schema_invalid');
+  }
+  const canonicalCandidates = [];
+  if (Array.isArray(pool?.candidates)) {
+    for (const subject of pool.candidates) {
+      try { canonicalCandidates.push(canonicalPoolCandidate(subject)); }
+      catch { errors.push('group_d3_candidate_pool_subject_invalid'); }
+    }
+  }
+  if (canonicalCandidates.length === COHORT_SIZE) {
+    const rawSubjects = pool.candidates.map((subject) => `${subject.firebaseUid}\u0000${subject.trainerUsername}`);
+    if (new Set(rawSubjects).size !== rawSubjects.length) errors.push('group_d3_candidate_pool_raw_duplicate');
+    for (const field of ['uidHash', 'trainerHash']) {
+      const values = canonicalCandidates.map((candidate) => candidate.subjectHashes[field]);
+      if (new Set(values).size !== values.length) errors.push('group_d3_candidate_pool_normalized_duplicate');
+    }
+    const handles = canonicalCandidates.map((candidate) => candidate.handle.handleKey);
+    if (new Set(handles).size !== handles.length) errors.push('group_d3_candidate_pool_normalized_duplicate');
+    const ordered = canonicalCandidateOrder(canonicalCandidates);
+    if (pool.candidatePoolDigest !== candidatePoolDigest(ordered)) errors.push('group_d3_candidate_pool_digest_mismatch');
+    canonicalCandidates.splice(0, canonicalCandidates.length, ...ordered);
+  }
+  if (errors.length) {
+    const error = new Error('e1/production-third-mutation-candidate-pool-failed');
+    error.reasons = Object.freeze([...new Set(errors)].sort());
+    throw error;
+  }
+  const result = {
+    ok: true,
+    mode: 'candidate-pool-schema-validation',
+    acquisitionMode: CANDIDATE_POOL_POLICY.acquisitionMode,
+    candidateCount: COHORT_SIZE,
+    candidatePoolDigest: pool.candidatePoolDigest,
+    canonicalOrderVerified: true,
+    subjectsBound: false,
+    executionAuthorized: false,
+    automatedProductionDiscovery: false,
+    fallbackCandidateSubstitution: false,
+    laterGroupsAuthorized: false,
+    groupEAuthorized: false,
+    cloudOperations: 0
+  };
+  Object.defineProperty(result, 'canonicalCandidates', {
+    value: Object.freeze([...canonicalCandidates]),
+    enumerable: false
+  });
+  return Object.freeze(result);
 }
 
 function requestIdHash(requestId) {
@@ -243,10 +337,12 @@ function validateCandidate(candidate, slot, prior, now, windowStart, errors) {
   }
 }
 
-function validateBinding(binding, now, windowStart, errors) {
+function validateBinding(binding, poolResult, now, windowStart, errors) {
   if (!exactFields(binding, BINDING_FIELDS) || binding.schemaVersion !== 1 || binding.environment !== 'production' ||
       binding.projectId !== 'trade-list-a4297' || binding.cohortStage !== 'D3' || binding.cohortSize !== COHORT_SIZE ||
       binding.state !== 'bound-reviewed' || binding.subjectsBound !== true || binding.executionAuthorized !== false ||
+      binding.acquisitionMode !== CANDIDATE_POOL_POLICY.acquisitionMode ||
+      binding.candidatePoolDigest !== poolResult?.candidatePoolDigest ||
       binding.humanReviewed !== true || !Number.isFinite(Date.parse(binding.boundAt)) || Date.parse(binding.boundAt) > now ||
       !Array.isArray(binding.candidates) || binding.candidates.length !== COHORT_SIZE || !HASH.test(binding.bindingDigest || '')) {
     errors.push('group_d3_subject_binding_invalid');
@@ -255,6 +351,10 @@ function validateBinding(binding, now, windowStart, errors) {
   validatePriorCohort(binding.priorCohort, errors);
   binding.candidates.forEach((candidate, index) =>
     validateCandidate(candidate, SLOTS[index], binding.priorCohort, now, windowStart, errors));
+  if (!sameJson(binding.candidates.map((candidate) => candidate.reviewedSubject),
+    poolResult?.canonicalCandidates?.map((candidate) => candidate.reviewedSubject))) {
+    errors.push('group_d3_binding_candidate_pool_mismatch');
+  }
   const uniqueness = binding.candidates.flatMap((candidate) => [
     candidate.reviewedSubject?.firebaseUid,
     candidate.reviewedSubject?.trainerUsername,
@@ -265,7 +365,11 @@ function validateBinding(binding, now, windowStart, errors) {
     candidate.request?.rateLimitDocumentPath
   ]);
   if (new Set(uniqueness).size !== uniqueness.length) errors.push('group_d3_candidates_not_distinct');
-  if (binding.bindingDigest !== subjectBindingDigest(binding.priorCohort, binding.candidates)) {
+  if (binding.bindingDigest !== subjectBindingDigest(
+    binding.priorCohort,
+    binding.candidates,
+    binding.candidatePoolDigest
+  )) {
     errors.push('group_d3_binding_digest_mismatch');
   }
 }
@@ -358,18 +462,24 @@ function guardProductionThirdMutation(input, options = {}) {
   const errors = [];
   const now = options.now ? options.now() : Date.now();
   const manifestPath = options.manifestPath || MANIFEST_PATH;
+  const candidatePoolPath = options.candidatePoolPath || PRIVATE_CANDIDATE_POOL_PATH;
   const bindingPath = options.bindingPath || PRIVATE_BINDING_PATH;
   const readinessPath = options.readinessPath || PRIVATE_READINESS_PATH;
   const inputPath = options.inputPath || PRIVATE_INPUT_PATH;
   let manifest;
+  let candidatePool;
+  let candidatePoolResult;
   let binding;
   let readiness;
   try { manifest = readJson(manifestPath); } catch { errors.push('production_manifest_missing_or_invalid'); }
+  try { candidatePool = readJson(candidatePoolPath); } catch { errors.push('group_d3_candidate_pool_missing_or_invalid'); }
   try { binding = readJson(bindingPath); } catch { errors.push('group_d3_subject_binding_missing_or_invalid'); }
   try { readiness = readJson(readinessPath); } catch { errors.push('group_d3_readiness_missing_or_invalid'); }
 
   if (!exactFields(input, INPUT_FIELDS)) errors.push('group_d3_input_schema_invalid');
   if (readiness && !exactFields(readiness, READINESS_FIELDS)) errors.push('group_d3_readiness_schema_invalid');
+  try { candidatePoolResult = validateCandidatePoolArtifact(candidatePool, { now: () => now, candidatePoolPath }); }
+  catch (error) { errors.push(...(error.reasons || ['group_d3_candidate_pool_invalid'])); }
   if (!privateMode(bindingPath)) errors.push('group_d3_subject_binding_permissions_invalid');
   if (!privateMode(readinessPath)) errors.push('group_d3_readiness_permissions_invalid');
   if (!privateMode(inputPath)) errors.push('group_d3_input_permissions_invalid');
@@ -385,7 +495,7 @@ function guardProductionThirdMutation(input, options = {}) {
   if (manifest?.legacyRtdb?.url !== 'https://trade-list-a4297-default-rtdb.firebaseio.com' ||
       input?.rtdbDatabaseUrl !== manifest?.legacyRtdb?.url) errors.push('rtdb_mismatch');
   if (!sameJson(manifest?.thirdMutation, EXPECTED_D3_MANIFEST)) errors.push('group_d3_manifest_contract_invalid');
-  if (JSON.stringify({ manifest, input, binding, readiness }).includes('trainer-hub-staging-37ib4wct')) {
+  if (JSON.stringify({ manifest, input, candidatePool, binding, readiness }).includes('trainer-hub-staging-37ib4wct')) {
     errors.push('staging_target_present');
   }
 
@@ -408,7 +518,7 @@ function guardProductionThirdMutation(input, options = {}) {
         approvedAt > now) errors.push('group_d3_window_invalid');
   }
 
-  validateBinding(binding, now, windowStart, errors);
+  validateBinding(binding, candidatePoolResult, now, windowStart, errors);
   if (readiness?.subjectsBindingDigest !== binding?.bindingDigest || input?.subjectsBindingDigest !== binding?.bindingDigest ||
       input?.subjectsBound !== true || input?.executionAuthorized !== true || input?.approvalGroup !== 'D' ||
       input?.cohortStage !== 'D3') errors.push('group_d3_binding_or_authorization_invalid');
@@ -459,6 +569,8 @@ function guardProductionThirdMutation(input, options = {}) {
     targetVerified: true,
     contractDefined: true,
     d2BaselineVerified: true,
+    candidatePoolValidated: true,
+    candidatePoolDigest: candidatePoolResult.candidatePoolDigest,
     subjectsBound: true,
     executionAuthorized: true,
     candidateCount: COHORT_SIZE,
@@ -482,6 +594,8 @@ module.exports = Object.freeze({
   ACCEPTANCE_EVIDENCE_FIELDS,
   ALLOWED_OPERATIONS,
   BINDING_FIELDS,
+  CANDIDATE_POOL_FIELDS,
+  CANDIDATE_POOL_SUBJECT_FIELDS,
   CANDIDATE_FIELDS,
   ENABLE_CONFIRMATION,
   INPUT_FIELDS,
@@ -489,15 +603,18 @@ module.exports = Object.freeze({
   MAX_EVIDENCE_AGE_MS,
   MAX_WINDOW_MS,
   PRIVATE_BINDING_PATH,
+  PRIVATE_CANDIDATE_POOL_PATH,
   PRIVATE_INPUT_PATH,
   PRIVATE_READINESS_PATH,
   READINESS_FIELDS,
   RESTORE_CONFIRMATION,
   SLOTS,
+  canonicalPoolCandidate,
   foundationFingerprint,
   guardProductionThirdMutation,
   requestBodyHash,
   requestIdHash,
   subjectHashesFor,
+  validateCandidatePoolArtifact,
   validateThirdMutationAcceptance
 });

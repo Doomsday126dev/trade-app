@@ -124,12 +124,22 @@ const DEFAULT_SUBJECT_BINDING = Object.freeze({
   subjectsBound: false,
   executionAuthorized: false
 });
+const CANDIDATE_POOL_POLICY = Object.freeze({
+  acquisitionMode: 'operator-supplied-exact-five',
+  candidatePoolSize: COHORT_SIZE,
+  automatedProductionDiscovery: false,
+  toolingSelectsSubjects: false,
+  fallbackCandidateSubstitution: false,
+  canonicalOrder: 'privacy-safe-subject-fingerprint',
+  poolValidationAuthorizesExecution: false
+});
 const EXPECTED_D3_MANIFEST = Object.freeze({
   approvalGroup: 'D',
   cohortStage: 'D3',
   purpose: 'final-pre-group-e-reserve-cohort-validation',
   operation: 'reserve-plus-exact-replay',
   cohortSize: COHORT_SIZE,
+  candidatePool: CANDIDATE_POOL_POLICY,
   subjectBinding: DEFAULT_SUBJECT_BINDING,
   maxWindowHours: MAX_WINDOW_HOURS,
   rateLimiterMode: DURABLE_MODE,
@@ -150,11 +160,37 @@ function sha256(value) {
   return crypto.createHash('sha256').update(value, 'utf8').digest('hex');
 }
 
-function subjectBindingDigest(priorCohort, candidates) {
+function canonicalCandidateKey(candidate) {
+  return [candidate.subjectHashes.uidHash, candidate.handle.handleKey, candidate.subjectHashes.trainerHash].join(':');
+}
+
+function canonicalCandidateOrder(candidates) {
+  return [...candidates].sort((left, right) => {
+    const leftKey = canonicalCandidateKey(left);
+    const rightKey = canonicalCandidateKey(right);
+    return leftKey < rightKey ? -1 : leftKey > rightKey ? 1 : 0;
+  });
+}
+
+function candidatePoolDigest(candidates) {
+  return sha256(JSON.stringify([
+    1,
+    'e1-group-d3-private-candidate-pool',
+    D2_STATE_DIGEST,
+    canonicalCandidateOrder(candidates).map((candidate) => ({
+      uidHash: candidate.subjectHashes.uidHash,
+      trainerHash: candidate.subjectHashes.trainerHash,
+      handleKey: candidate.handle.handleKey
+    }))
+  ]));
+}
+
+function subjectBindingDigest(priorCohort, candidates, poolDigest) {
   return sha256(JSON.stringify([
     1,
     'e1-group-d3-subject-binding',
     D2_STATE_DIGEST,
+    poolDigest,
     priorCohort,
     candidates.map((candidate) => ({
       slot: candidate.slot,
@@ -177,6 +213,7 @@ function expectedDocumentCount(step) {
 
 module.exports = Object.freeze({
   ALLOWED_OPERATIONS,
+  CANDIDATE_POOL_POLICY,
   COHORT_SIZE,
   D2_BASELINE,
   D2_STATE_DIGEST,
@@ -193,6 +230,9 @@ module.exports = Object.freeze({
   OPERATION_BUDGET,
   PER_SUBJECT_DELTA,
   STOP_POLICY,
+  candidatePoolDigest,
+  canonicalCandidateKey,
+  canonicalCandidateOrder,
   expectedDocumentCount,
   sha256,
   subjectBindingDigest

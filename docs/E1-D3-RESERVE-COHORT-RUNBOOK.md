@@ -21,15 +21,52 @@ D3 requires the accepted D2 state exactly:
 
 An approximate, superset, or recomputed substitute baseline is not accepted.
 
-## Subject preparation
+## Operator-supplied candidate pool
 
-1. Read-only screen candidate accounts using exact RTDB leaves and exact Firestore document paths only.
-2. Select exactly five candidates. Four, six, or a dynamically reduced cohort fails closed.
-3. Require reciprocal `authIndex/{uid}/username` and `users/{trainer}/authUid` ownership, a usable `loginDirectory/{trainer}` entry, no identity ambiguity, no migration/conflict evidence, and absence of the planned account, handle, operation request, and rate-limit documents.
-4. Exclude every D1/D2 member, already reserved identity, conflicting owner, ambiguous handle, and admin/system-only identity.
+D3 never enumerates, discovers, ranks, or selects production accounts. A human operator must privately supply exactly five intended subjects before D3 tooling runs. If the operator cannot identify five candidates confidently, D3 subject preparation is blocked; any future privacy-safe discovery project requires separate design and approval.
+
+The private path is `functions/.local/e1-production-third-mutation-candidate-pool.json`. It must be Git-ignored, mode `0600`, and contain exactly:
+
+```json
+{
+  "schemaVersion": 1,
+  "environment": "production",
+  "projectId": "trade-list-a4297",
+  "cohortStage": "D3",
+  "acquisitionMode": "operator-supplied-exact-five",
+  "candidateCount": 5,
+  "humanSupplied": true,
+  "suppliedAt": "<ISO-8601 timestamp>",
+  "candidates": [
+    { "firebaseUid": "<private UID>", "trainerUsername": "<private trainer>" }
+  ],
+  "candidatePoolDigest": "<domain-separated SHA-256>",
+  "executionAuthorized": false,
+  "laterGroupsAuthorized": false,
+  "groupEAuthorized": false
+}
+```
+
+The `candidates` array must contain exactly five entries. Passwords, PINs, tokens, email/profile data, request records, and unrelated application data are forbidden by the exact schema. No real candidate-pool file is tracked.
+
+Validate only the local schema and canonical digest with:
+
+```sh
+E1_PRODUCTION_THIRD_MUTATION_CANDIDATE_POOL=functions/.local/e1-production-third-mutation-candidate-pool.json \
+node functions/scripts/check-e1-production-third-mutation-target.cjs --mode=candidate-pool
+```
+
+Pool validation canonicalizes harmless trainer-name normalization, rejects duplicate raw or normalized identities, and orders all five by the existing privacy-safe subject fingerprint. Presence or validation of the pool does not bind subjects, authorize D3, or authorize Group E.
+
+## Exact-five eligibility and binding
+
+1. Evaluate only the five operator-supplied subjects using exact RTDB leaves and exact Firestore document paths. Production-wide enumeration and fallback substitution are prohibited.
+2. Require reciprocal `authIndex/{uid}/username` and `users/{trainer}/authUid` ownership, a usable `loginDirectory/{trainer}` entry, no identity ambiguity, no migration/conflict evidence, and absence of the planned account, handle, operation request, and rate-limit documents.
+3. Exclude every D1/D2 member, already reserved identity, conflicting owner, ambiguous handle, and admin/system-only identity.
+4. If any one candidate fails, mark the entire pool not ready and stop. Do not choose a sixth subject.
 5. Store raw UID/trainer evidence only in ignored `functions/.local/**` files with mode `0600`.
-6. Create `e1-production-third-mutation-subjects.json` with five slots (`A` through `E`) and its deterministic domain-separated binding digest.
-7. Human-review the five-member binding. Subject binding remains distinct from production authorization.
+6. Create `e1-production-third-mutation-subjects.json` from the same canonical five, with slots (`A` through `E`), the candidate-pool digest, and its distinct domain-separated binding digest.
+7. Human-review the five-member binding. Candidate pool, subject binding, readiness, and execution authorization remain separate lifecycle stages.
 
 The tracked manifest remains `subjectsBound=false` and `executionAuthorized=false`; private reviewed evidence supplies those later states to the guard without committing identities.
 
@@ -37,6 +74,7 @@ The tracked manifest remains `subjectsBound=false` and `executionAuthorized=fals
 
 Create private mode-`0600` files:
 
+- `functions/.local/e1-production-third-mutation-candidate-pool.json`
 - `functions/.local/e1-production-third-mutation-subjects.json`
 - `functions/.local/e1-production-third-mutation-activation.json`
 - `functions/.local/e1-production-third-mutation-guard-input.json`
@@ -46,6 +84,7 @@ The input must prove the exact D2 baseline, all gates disabled, the reviewed aut
 Run only the read-only local checker:
 
 ```sh
+E1_PRODUCTION_THIRD_MUTATION_CANDIDATE_POOL=functions/.local/e1-production-third-mutation-candidate-pool.json \
 E1_PRODUCTION_THIRD_MUTATION_SUBJECTS=functions/.local/e1-production-third-mutation-subjects.json \
 E1_PRODUCTION_THIRD_MUTATION_READINESS=functions/.local/e1-production-third-mutation-activation.json \
 E1_PRODUCTION_THIRD_MUTATION_GUARD_INPUT=functions/.local/e1-production-third-mutation-guard-input.json \
@@ -114,4 +153,4 @@ D3 is accepted only after all five reserves and replays pass, the exact `32`-doc
 
 ## Next boundary
 
-After this source contract is accepted, the next task is read-only selection of exactly five eligible subjects and creation of the private immutable subject-binding candidate. It must stop before readiness authorization, enablement, or mutation.
+After this source contract is accepted, the next task is for the operator to prepare the private exact-five candidate pool. A separately approved read-only task may then validate eligibility for those exact five and prepare the immutable binding candidate. It must stop before readiness authorization, enablement, or mutation.

@@ -15,6 +15,7 @@
     "test:e1-production-first-mutation-guard": "node --test test/e1-production-first-mutation-guard.test.cjs",
     "test:e1-production-second-mutation-guard": "node --test test/e1-production-second-mutation-guard.test.cjs",
     "test:e1-production-third-mutation-guard": "node --test test/e1-production-third-mutation-guard.test.cjs",
+    "check:e1-production-third-mutation-candidate-pool": "node scripts/check-e1-production-third-mutation-target.cjs --mode=candidate-pool",
     "test:e1-read-proof-mode": "node --test test/e1-read-proof-mode.test.cjs",
     "test:emulator": "node --test --test-concurrency=1 test/emulator-contract.test.cjs",
     "check:contract": "node scripts/check-contract.cjs"

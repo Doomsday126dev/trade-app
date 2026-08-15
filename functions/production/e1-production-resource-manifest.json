@@ -130,6 +130,15 @@
     "purpose": "final-pre-group-e-reserve-cohort-validation",
     "operation": "reserve-plus-exact-replay",
     "cohortSize": 5,
+    "candidatePool": {
+      "acquisitionMode": "operator-supplied-exact-five",
+      "candidatePoolSize": 5,
+      "automatedProductionDiscovery": false,
+      "toolingSelectsSubjects": false,
+      "fallbackCandidateSubstitution": false,
+      "canonicalOrder": "privacy-safe-subject-fingerprint",
+      "poolValidationAuthorizesExecution": false
+    },
     "subjectBinding": {
       "state": "unbound",
       "cohortSize": 0,
@@ -259,6 +268,8 @@
       "targetSize": 5,
       "observeHours": 24,
       "contract": "thirdMutation",
+      "acquisitionMode": "operator-supplied-exact-five",
+      "automatedProductionDiscovery": false,
       "subjectsBound": false,
       "executionAuthorized": false
     }
