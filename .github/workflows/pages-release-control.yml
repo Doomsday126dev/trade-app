@@ -174,10 +174,12 @@ jobs:
       - name: Verify deployed provenance and served release
         env:
           GITHUB_TOKEN: ${{ github.token }}
-          EXPECTED_LIVE_SHA: ${{ inputs.approved_sha }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
           APPROVED_SHA: ${{ inputs.approved_sha }}
           RELEASE_ID: ${{ inputs.release_id }}
           RELEASE_TAG: release-${{ inputs.release_id }}
           CONTROL_WORKFLOW_SHA: ${{ job.workflow_sha }}
+          EXPECTED_ARTIFACT_DIGEST: ${{ needs.validate-build.outputs.artifact_digest }}
+          DEPLOY_STEP_CONCLUSION: ${{ steps.deployment.conclusion }}
           SITE_ORIGIN: ${{ steps.deployment.outputs.page_url }}
         run: node control/scripts/pages/verify-deployment.cjs postdeploy

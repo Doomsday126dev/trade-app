@@ -18,6 +18,12 @@ const builder=require(path.join(root,'scripts/pages/build-artifact.cjs'));
 const verifier=require(path.join(root,'scripts/pages/verify-deployment.cjs'));
 const SHA_A='a'.repeat(40),SHA_B='b'.repeat(40),CONTROL='c'.repeat(40);
 const releaseId='2026-08-05.46';
+const releaseTag=`release-${releaseId}`;
+const RUN_ID='31861434906';
+const ARTIFACT_DIGEST='d'.repeat(64);
+const REHEARSAL_SHA='d7491e83a917bdbbf341bfb68fc947549557a54e';
+const PREVIOUS_SHA='4505828ca7fc8f48ca1b23dfcadf860691e6e588';
+const REHEARSAL_DEPLOYMENT_ID=5916645350;
 
 function validContext(overrides={}){
   return{
@@ -29,6 +35,12 @@ function validContext(overrides={}){
 }
 function expectRejected(overrides,pattern){assert.throws(()=>validator.validateDispatchContext(validContext(overrides)),pattern);}
 function tempDir(){return fs.mkdtempSync(path.join(os.tmpdir(),'pages-control-'));}
+function jsonResponse(value){return{ok:true,status:200,json:async()=>value,text:async()=>JSON.stringify(value)};}
+function textResponse(value,status=200){return{ok:status>=200&&status<300,status,text:async()=>value,json:async()=>JSON.parse(value)};}
+function runLogUrl(runId=RUN_ID,jobId='94955481756'){return`https://github.com/owner/repo/actions/runs/${runId}/job/${jobId}`;}
+function currentDeployment(overrides={}){
+  return{id:REHEARSAL_DEPLOYMENT_ID,sha:REHEARSAL_SHA,ref:releaseTag,environment:'github-pages',created_at:'2026-08-15T03:18:13Z',...overrides};
+}
 
 test('reusable control exposes workflow_call only and has no automatic production trigger',()=>{
   assert.deepEqual(Object.keys(reusable.on),['workflow_call']);
@@ -80,6 +92,13 @@ test('validation/build and environment-gated deployment remain separate jobs',()
   assert.ok(deploy.steps.some(step=>step.uses?.startsWith('actions/deploy-pages@')));
   assert.equal(deploy.steps.some(step=>/build/i.test(step.name||'')),false);
   assert.match(reusableText,/artifact_name:\s*\$\{\{ needs\.validate-build\.outputs\.artifact_name \}\}/);
+  const predeploy=deploy.steps.find(step=>step.run?.includes('verify-deployment.cjs predeploy'));
+  const postdeploy=deploy.steps.find(step=>step.run?.includes('verify-deployment.cjs postdeploy'));
+  assert.equal(predeploy.env.EXPECTED_LIVE_SHA,'${{ inputs.expected_live_sha }}');
+  assert.equal(postdeploy.env.GITHUB_RUN_ID,'${{ github.run_id }}');
+  assert.equal(postdeploy.env.EXPECTED_ARTIFACT_DIGEST,'${{ needs.validate-build.outputs.artifact_digest }}');
+  assert.equal(postdeploy.env.DEPLOY_STEP_CONCLUSION,'${{ steps.deployment.conclusion }}');
+  assert.equal(postdeploy.env.EXPECTED_LIVE_SHA,undefined);
 });
 
 test('exact tag, SHA, checkout, trusted control, and release confirmation are required',()=>{
@@ -175,10 +194,54 @@ test('expected-live verification uses latest successful GitHub deployment proven
   await assert.rejects(verifier.verifyExpectedLiveSha({fetchImpl,repository:'owner/repo',token:'test-token',expectedLiveSha:SHA_B}),/differs/);
 });
 
+test('rehearsal replay proves old verifier selects previous success while current-run verifier selects deployment 5916645350',async()=>{
+  const previous={id:5895368699,sha:PREVIOUS_SHA,ref:'main',environment:'github-pages',created_at:'2026-08-13T20:17:27Z'};
+  const current=currentDeployment();
+  const fetchImpl=async url=>{
+    const parsed=new URL(url),key=parsed.pathname.replace('/repos/owner/repo','')+parsed.search;
+    if(key==='/deployments?environment=github-pages&per_page=30')return jsonResponse([current,previous]);
+    if(key===`/deployments?environment=github-pages&sha=${REHEARSAL_SHA}&per_page=30`)return jsonResponse([current]);
+    if(key===`/deployments/${current.id}/statuses?per_page=20`)return jsonResponse([{state:'in_progress',log_url:runLogUrl()}]);
+    if(key===`/deployments/${previous.id}/statuses?per_page=20`)return jsonResponse([{state:'success',log_url:'https://github.com/owner/repo/actions/runs/31740072384/job/94581166711'}]);
+    return jsonResponse([]);
+  };
+  await assert.rejects(verifier.verifyExpectedLiveSha({fetchImpl,repository:'owner/repo',token:'test-token',expectedLiveSha:REHEARSAL_SHA}),new RegExp(PREVIOUS_SHA));
+  const selected=await verifier.currentRunDeployment({fetchImpl,repository:'owner/repo',token:'test-token',runId:RUN_ID,approvedSha:REHEARSAL_SHA,releaseTag});
+  assert.equal(selected.id,REHEARSAL_DEPLOYMENT_ID);
+  assert.equal(selected.state,'in_progress');
+});
+
+test('current-run deployment identity rejects previous, concurrent, ambiguous, and finalized deployments',async()=>{
+  const current=currentDeployment();
+  const concurrent=currentDeployment({id:5916645351,created_at:'2026-08-15T03:18:14Z'});
+  const statuses=new Map([
+    [current.id,[{state:'in_progress',log_url:runLogUrl()}]],
+    [concurrent.id,[{state:'in_progress',log_url:runLogUrl('31861499999','94955499999')}]]
+  ]);
+  const makeFetch=(deployments,statusOverrides=statuses)=>async url=>{
+    const parsed=new URL(url),path=parsed.pathname.replace('/repos/owner/repo','');
+    if(path==='/deployments')return jsonResponse(deployments);
+    const id=Number(path.match(/^\/deployments\/(\d+)\/statuses$/)?.[1]);
+    return jsonResponse(statusOverrides.get(id)||[]);
+  };
+  const selected=await verifier.currentRunDeployment({fetchImpl:makeFetch([concurrent,current]),repository:'owner/repo',token:'test-token',runId:RUN_ID,approvedSha:REHEARSAL_SHA,releaseTag});
+  assert.equal(selected.id,current.id);
+
+  const ambiguousStatuses=new Map(statuses);
+  ambiguousStatuses.set(concurrent.id,[{state:'in_progress',log_url:runLogUrl(RUN_ID,'94955499999')}]);
+  await assert.rejects(verifier.currentRunDeployment({fetchImpl:makeFetch([current,concurrent],ambiguousStatuses),repository:'owner/repo',token:'test-token',runId:RUN_ID,approvedSha:REHEARSAL_SHA,releaseTag}),/found 2/);
+
+  const failedStatuses=new Map([[current.id,[{state:'failure',log_url:runLogUrl()}]]]);
+  await assert.rejects(verifier.currentRunDeployment({fetchImpl:makeFetch([current],failedStatuses),repository:'owner/repo',token:'test-token',runId:RUN_ID,approvedSha:REHEARSAL_SHA,releaseTag}),/found 0/);
+  await assert.rejects(verifier.currentRunDeployment({fetchImpl:makeFetch([currentDeployment({sha:PREVIOUS_SHA})]),repository:'owner/repo',token:'test-token',runId:RUN_ID,approvedSha:REHEARSAL_SHA,releaseTag}),/found 0/);
+  await assert.rejects(verifier.currentRunDeployment({fetchImpl:makeFetch([currentDeployment({ref:'release-2026-08-05.99'})]),repository:'owner/repo',token:'test-token',runId:RUN_ID,approvedSha:REHEARSAL_SHA,releaseTag}),/found 0/);
+  assert.equal(verifier.statusBelongsToRun({status:{state:'success',log_url:runLogUrl()},repository:'owner/repo',runId:RUN_ID}),false);
+});
+
 test('served verification ties public manifest, release files, and all first-party script responses together',async()=>{
   const index=fs.readFileSync(path.join(root,'index.html'),'utf8');
   const files=new Map([
-    ['deployment-manifest.json',JSON.stringify({source_sha:SHA_A,release_id:releaseId,release_tag:`release-${releaseId}`,control_workflow_sha:CONTROL,artifact_digest:'d'.repeat(64)})],
+    ['deployment-manifest.json',JSON.stringify({schema_version:1,source_sha:SHA_A,release_id:releaseId,release_tag:`release-${releaseId}`,github_run_id:RUN_ID,control_workflow_sha:CONTROL,artifact_digest:ARTIFACT_DIGEST,artifact_digest_algorithm:'sha256-path-null-content-sha256-v1'})],
     ['index.html',index],['js/domain/clientRelease.js',fs.readFileSync(path.join(root,'js/domain/clientRelease.js'),'utf8')],['sw.js',fs.readFileSync(path.join(root,'sw.js'),'utf8')]
   ]);
   for(const src of verifier.firstPartyScripts(index)){
@@ -186,8 +249,54 @@ test('served verification ties public manifest, release files, and all first-par
     if(!files.has(file))files.set(file,'ok');
   }
   const fetchImpl=async url=>{const key=new URL(url).pathname.replace('/trade-app/','');return{ok:files.has(key),status:files.has(key)?200:404,text:async()=>files.get(key)};};
-  const result=await verifier.verifyServedDeployment({fetchImpl,siteOrigin:'https://example.test/trade-app/',approvedSha:SHA_A,releaseId,releaseTag:`release-${releaseId}`,controlWorkflowSha:CONTROL});
+  const result=await verifier.verifyServedDeployment({fetchImpl,siteOrigin:'https://example.test/trade-app/',approvedSha:SHA_A,releaseId,releaseTag:`release-${releaseId}`,controlWorkflowSha:CONTROL,runId:RUN_ID,expectedArtifactDigest:ARTIFACT_DIGEST});
   assert.equal(result.scriptCount,60);assert.equal(result.releaseId,releaseId);
+  files.set('deployment-manifest.json',JSON.stringify({schema_version:1,source_sha:SHA_A,release_id:releaseId,release_tag:`release-${releaseId}`,github_run_id:'31861499999',control_workflow_sha:CONTROL,artifact_digest:ARTIFACT_DIGEST,artifact_digest_algorithm:'sha256-path-null-content-sha256-v1'}));
+  await assert.rejects(verifier.verifyServedDeployment({fetchImpl,siteOrigin:'https://example.test/trade-app/',approvedSha:SHA_A,releaseId,releaseTag,controlWorkflowSha:CONTROL,runId:RUN_ID,expectedArtifactDigest:ARTIFACT_DIGEST}),/github_run_id mismatch/);
+  files.set('deployment-manifest.json',JSON.stringify({schema_version:1,source_sha:SHA_A,release_id:releaseId,release_tag:`release-${releaseId}`,github_run_id:RUN_ID,control_workflow_sha:CONTROL,artifact_digest:'e'.repeat(64),artifact_digest_algorithm:'sha256-path-null-content-sha256-v1'}));
+  await assert.rejects(verifier.verifyServedDeployment({fetchImpl,siteOrigin:'https://example.test/trade-app/',approvedSha:SHA_A,releaseId,releaseTag,controlWorkflowSha:CONTROL,runId:RUN_ID,expectedArtifactDigest:ARTIFACT_DIGEST}),/artifact_digest mismatch/);
+});
+
+test('post-deploy verification retries stale CDN bytes and binds current run, deployment, and artifact',async()=>{
+  const index=fs.readFileSync(path.join(root,'index.html'),'utf8');
+  const staleManifest={schema_version:1,source_sha:PREVIOUS_SHA,release_id:releaseId,release_tag:releaseTag,github_run_id:'31740072384',control_workflow_sha:CONTROL,artifact_digest:'e'.repeat(64),artifact_digest_algorithm:'sha256-path-null-content-sha256-v1'};
+  const currentManifest={...staleManifest,source_sha:REHEARSAL_SHA,github_run_id:RUN_ID,artifact_digest:ARTIFACT_DIGEST};
+  const files=new Map([
+    ['index.html',index],['js/domain/clientRelease.js',fs.readFileSync(path.join(root,'js/domain/clientRelease.js'),'utf8')],['sw.js',fs.readFileSync(path.join(root,'sw.js'),'utf8')]
+  ]);
+  for(const src of verifier.firstPartyScripts(index)){
+    const file=new URL(src,'https://example.test/trade-app/').pathname.replace('/trade-app/','');
+    if(!files.has(file))files.set(file,'ok');
+  }
+  let manifestReads=0;
+  const fetchImpl=async url=>{
+    const parsed=new URL(url);
+    if(parsed.origin==='https://api.github.com'){
+      const apiPath=parsed.pathname.replace('/repos/owner/repo','');
+      if(apiPath==='/deployments')return jsonResponse([currentDeployment()]);
+      if(apiPath===`/deployments/${REHEARSAL_DEPLOYMENT_ID}/statuses`)return jsonResponse([{state:'in_progress',log_url:runLogUrl()}]);
+      return jsonResponse([]);
+    }
+    const file=parsed.pathname.replace('/trade-app/','');
+    if(file==='deployment-manifest.json')return textResponse(JSON.stringify(++manifestReads===1?staleManifest:currentManifest));
+    return textResponse(files.get(file)||'',files.has(file)?200:404);
+  };
+  const options={fetchImpl,repository:'owner/repo',token:'test-token',runId:RUN_ID,approvedSha:REHEARSAL_SHA,releaseId,releaseTag,controlWorkflowSha:CONTROL,siteOrigin:'https://example.test/trade-app/',expectedArtifactDigest:ARTIFACT_DIGEST,deployStepConclusion:'success'};
+  const result=await verifier.verifyCurrentRunPostDeploy(options,{attempts:2,delayMs:0});
+  assert.equal(result.deployment.id,REHEARSAL_DEPLOYMENT_ID);
+  assert.equal(result.served.artifactDigest,ARTIFACT_DIGEST);
+  assert.equal(manifestReads,2);
+
+  manifestReads=0;
+  const staleFetch=async url=>{
+    const parsed=new URL(url);
+    if(parsed.origin==='https://api.github.com')return fetchImpl(url);
+    const file=parsed.pathname.replace('/trade-app/','');
+    if(file==='deployment-manifest.json')return textResponse(JSON.stringify(staleManifest));
+    return textResponse(files.get(file)||'',files.has(file)?200:404);
+  };
+  await assert.rejects(verifier.verifyCurrentRunPostDeploy({...options,fetchImpl:staleFetch},{attempts:2,delayMs:0}),/source_sha mismatch/);
+  await assert.rejects(verifier.verifyCurrentRunPostDeploy({...options,deployStepConclusion:'failure'},{attempts:1,delayMs:0}),/deploy-pages step did not succeed/);
 });
 
 test('post-deploy verification can wait for immutable provenance and served bytes to converge',async()=>{

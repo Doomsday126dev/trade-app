@@ -15,7 +15,7 @@ The production path is deliberately split:
 3. The reusable workflow validates the tag, SHA, checked-out commit, release graph, test gates, and reviewed frontend allowlist.
 4. It builds one deterministic artifact and uploads it under a run-specific name.
 5. A separate `deploy` job enters the protected `github-pages` environment. A reviewer sees SHA, tag, release, artifact digest, and trusted control SHA before approval.
-6. The deploy job verifies the operator's `expected_live_sha`, deploys the existing artifact without rebuilding, then verifies GitHub deployment provenance and the served manifest/release graph.
+6. The deploy job verifies the operator's `expected_live_sha`, deploys the existing artifact without rebuilding, then binds the current run's in-progress GitHub deployment to the approved SHA and verifies the served manifest/release graph.
 
 Legacy branch publication was unsafe for this workflow because every push to the configured branch could publish repository-root content without a release-specific approval. The reviewed artifact now contains only the runtime allowlist plus `deployment-manifest.json`.
 
@@ -130,15 +130,39 @@ The release gate checks `index.html`, `clientRelease.js`, `sw.js`, all first-par
 
 `expected_live_sha` is compared with the newest successful `github-pages` deployment from the GitHub Deployments API after environment approval and immediately before deploy. This is stronger than a mutable served file and is why `deployments: read` is present. A mismatch stops the run.
 
+## Post-Deploy Current-Run Proof
+
+The pinned `actions/deploy-pages` action exposes `page_url` but not the GitHub Deployments API ID. Post-deploy verification therefore does not ask for the newest successful deployment: the enclosing job cannot become successful until verification exits, so that would create a circular dependency.
+
+Instead, the verifier queries deployments narrowed to `environment=github-pages` and the approved SHA, then requires exactly one deployment with:
+
+- the exact release-tag ref;
+- the exact approved SHA and `github-pages` environment;
+- a current `in_progress` status whose `log_url` names this `GITHUB_RUN_ID` and a concrete job ID;
+- a successful `deploy-pages` step;
+- a cache-busted served manifest containing this run ID and the exact prebuilt artifact digest; and
+- the expected release, control SHA, runtime files, and first-party script graph.
+
+`in_progress` is the correct GitHub environment-deployment state while the protected deployment job is still executing. After the current-run deployment and served bytes are proven, the verifier exits successfully; only then can GitHub finalize the job and deployment as successful. Zero or multiple current-run matches fail closed. A previous successful deployment, concurrent run, wrong SHA/ref, failed deploy step, or stale manifest cannot satisfy this proof.
+
+Pre-deploy and post-deploy checks intentionally remain different. Before deployment, `expected_live_sha` still protects against overwriting an unexpected latest successful deployment. After deployment, current-run identity and served artifact provenance replace the globally newest-successful lookup.
+
 After deployment, verification requires:
 
 ```text
 approved/tag/workflow SHA
-= GitHub successful deployment SHA
+= current-run GitHub deployment SHA
 = served deployment-manifest source_sha
+
+current workflow run ID
+= deployment status log run ID
+= served deployment-manifest github_run_id
+
+prebuilt artifact digest
+= served deployment-manifest artifact_digest
 ```
 
-It also fetches `index.html`, `clientRelease.js`, `sw.js`, and every first-party script URL, requiring HTTP success and one release ID. Troubleshooting starts with the build summary, deployment status, and public manifest; never bypass a failed expected-live or release-coherence check.
+It also fetches `index.html`, `clientRelease.js`, `sw.js`, and every first-party script URL, requiring HTTP success and one release ID. Troubleshooting starts with the build summary, current-run deployment status, and public manifest; never bypass a failed expected-live or release-coherence check.
 
 ## Safe Cutover
 
