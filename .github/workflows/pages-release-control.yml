@@ -62,6 +62,13 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
           path: control
+      - name: Check out immutable caller dispatcher
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+          path: caller
       - name: Install reviewed validation dependencies
         run: npm ci --ignore-scripts --prefix control
       - name: Validate tag, SHA, release, and trusted control
@@ -108,6 +115,10 @@ jobs:
           node -e "for (const file of process.argv.slice(1)) JSON.parse(require('node:fs').readFileSync(file))" target/package.json target/package-lock.json target/manifest.json target/scripts/pages/frontend-files.json
       - name: Run immutable control regression suite
         env:
+          PAGES_CONTROL_ROOT: ${{ github.workspace }}/control
+          PAGES_CALLER_ROOT: ${{ github.workspace }}/caller
+          PAGES_RUNTIME_ROOT: ${{ github.workspace }}/target
+          PAGES_EXPECTED_CONTROL_SHA: ${{ job.workflow_sha }}
           PAGES_SOURCE_DIR: ${{ github.workspace }}/control
         run: node --test control/tests/pages-deployment-control.test.cjs control/tests/service-worker-deployment-rollback.test.cjs
       - name: Define unique artifact name

@@ -6,15 +6,19 @@ const path=require('node:path');
 const {spawnSync}=require('node:child_process');
 const YAML=require('yaml');
 
-const root=path.resolve(process.env.PAGES_SOURCE_DIR||path.join(__dirname,'..'));
-const reusableText=fs.readFileSync(path.join(root,'.github/workflows/pages-release-control.yml'),'utf8');
-const dispatcherPath=path.join(root,'.github/workflows/deploy-pages.yml');
+const defaultRoot=path.join(__dirname,'..');
+const controlRoot=path.resolve(process.env.PAGES_CONTROL_ROOT||process.env.PAGES_SOURCE_DIR||defaultRoot);
+const callerRoot=path.resolve(process.env.PAGES_CALLER_ROOT||process.env.PAGES_SOURCE_DIR||defaultRoot);
+const runtimeRoot=path.resolve(process.env.PAGES_RUNTIME_ROOT||process.env.PAGES_SOURCE_DIR||defaultRoot);
+const root=runtimeRoot;
+const reusableText=fs.readFileSync(path.join(controlRoot,'.github/workflows/pages-release-control.yml'),'utf8');
+const dispatcherPath=path.join(callerRoot,'.github/workflows/deploy-pages.yml');
 const dispatcherExists=fs.existsSync(dispatcherPath);
 const dispatcherText=dispatcherExists?fs.readFileSync(dispatcherPath,'utf8'):'';
 const reusable=YAML.parse(reusableText),dispatcher=dispatcherExists?YAML.parse(dispatcherText):null;
-const validator=require(path.join(root,'scripts/pages/validate-release.cjs'));
-const builder=require(path.join(root,'scripts/pages/build-artifact.cjs'));
-const verifier=require(path.join(root,'scripts/pages/verify-deployment.cjs'));
+const validator=require(path.join(controlRoot,'scripts/pages/validate-release.cjs'));
+const builder=require(path.join(controlRoot,'scripts/pages/build-artifact.cjs'));
+const verifier=require(path.join(controlRoot,'scripts/pages/verify-deployment.cjs'));
 
 const RUNTIME_SHA='d7491e83a917bdbbf341bfb68fc947549557a54e';
 const PREVIOUS_SHA='4505828ca7fc8f48ca1b23dfcadf860691e6e588';
@@ -70,6 +74,22 @@ function pagesFetch(files,{manifestSequence=[]}={}){
   };
 }
 function git(rootDir,args){const result=spawnSync('git',args,{cwd:rootDir,encoding:'utf8'});assert.equal(result.status,0,result.stderr);return result.stdout.trim();}
+function readDispatcher(rootDir){return YAML.parse(fs.readFileSync(path.join(rootDir,'.github/workflows/deploy-pages.yml'),'utf8'));}
+function dispatcherContract(rootDir,{expectedControlSha}={}){
+  const value=readDispatcher(rootDir),job=value.jobs.deploy,match=job.uses.match(/@([0-9a-f]{40})$/);
+  assert.deepEqual(Object.keys(value.on),['workflow_dispatch']);
+  assert.deepEqual(Object.keys(value.on.workflow_dispatch.inputs),['runtime_source_sha','runtime_release_id','runtime_release_tag','expected_live_sha','mode','confirmation']);
+  assert.ok(match);assert.equal(job.with.control_workflow_sha,match[1]);
+  if(expectedControlSha)assert.equal(match[1],expectedControlSha);
+  assert.equal(job.with.control_selector_tag,'${{ github.ref_name }}');assert.equal(job.with.dispatcher_sha,'${{ github.sha }}');
+  assert.equal(job.with.runtime_source_sha,'${{ inputs.runtime_source_sha }}');
+  assert.doesNotMatch(job.uses,/@(?:main|master|HEAD|latest)$/);
+  return{controlSha:match[1],inputs:Object.keys(value.on.workflow_dispatch.inputs)};
+}
+function writeDispatcher(rootDir,text){const target=path.join(rootDir,'.github/workflows/deploy-pages.yml');fs.mkdirSync(path.dirname(target),{recursive:true});fs.writeFileSync(target,text);}
+function oldDispatcherFixture(controlSha='c'.repeat(40)){
+  return`name: Deploy approved Pages release\non:\n  workflow_dispatch:\n    inputs:\n      approved_sha:\n        required: true\n        type: string\n      release_id:\n        required: true\n        type: string\n      expected_live_sha:\n        required: true\n        type: string\n      mode:\n        required: true\n        type: string\n      confirmation:\n        required: true\n        type: string\npermissions: {}\njobs:\n  deploy:\n    uses: Doomsday126dev/trade-app/.github/workflows/pages-release-control.yml@${controlSha}\n    with:\n      approved_sha: \${{ inputs.approved_sha }}\n      release_id: \${{ inputs.release_id }}\n      expected_live_sha: \${{ inputs.expected_live_sha }}\n      mode: \${{ inputs.mode }}\n      confirmation: \${{ inputs.confirmation }}\n      control_selector_tag: \${{ github.ref_name }}\n      dispatcher_sha: \${{ github.sha }}\n      control_workflow_sha: "${controlSha}"\n`;
+}
 
 test('trusted control is workflow_call only and dispatcher is workflow_dispatch only',()=>{
   assert.deepEqual(Object.keys(reusable.on),['workflow_call']);
@@ -81,12 +101,31 @@ test('trusted control is workflow_call only and dispatcher is workflow_dispatch 
 });
 
 test('dispatcher exposes runtime inputs and derives control identity from immutable GitHub context',{skip:!dispatcherExists},()=>{
-  assert.deepEqual(Object.keys(dispatcher.on.workflow_dispatch.inputs),['runtime_source_sha','runtime_release_id','runtime_release_tag','expected_live_sha','mode','confirmation']);
-  const job=dispatcher.jobs.deploy,match=job.uses.match(/@([0-9a-f]{40})$/);
-  assert.ok(match);assert.equal(job.with.control_workflow_sha,match[1]);
-  assert.equal(job.with.control_selector_tag,'${{ github.ref_name }}');assert.equal(job.with.dispatcher_sha,'${{ github.sha }}');
-  assert.equal(job.with.runtime_source_sha,'${{ inputs.runtime_source_sha }}');
-  assert.doesNotMatch(job.uses,/@(?:main|master|HEAD|latest)$/);
+  dispatcherContract(callerRoot,{expectedControlSha:process.env.PAGES_EXPECTED_CONTROL_SHA||undefined});
+});
+
+test('cross-commit regression reads the new dispatcher from caller source, not the historical control checkout',()=>{
+  const control=tempDir(),caller=tempDir();writeDispatcher(control,oldDispatcherFixture());writeDispatcher(caller,dispatcherText);
+  assert.throws(()=>dispatcherContract(control),/strictly deep-equal/);
+  assert.deepEqual(dispatcherContract(caller).inputs,['runtime_source_sha','runtime_release_id','runtime_release_tag','expected_live_sha','mode','confirmation']);
+  fs.rmSync(control,{recursive:true,force:true});fs.rmSync(caller,{recursive:true,force:true});
+});
+
+test('wrong caller fails even when the control checkout contains a correct-looking dispatcher',()=>{
+  const control=tempDir(),caller=tempDir();writeDispatcher(control,dispatcherText);writeDispatcher(caller,oldDispatcherFixture());
+  assert.doesNotThrow(()=>dispatcherContract(control));
+  assert.throws(()=>dispatcherContract(caller),/strictly deep-equal/);
+  fs.rmSync(control,{recursive:true,force:true});fs.rmSync(caller,{recursive:true,force:true});
+});
+
+test('future dispatcher may pin a later control fix without existing inside that control commit',()=>{
+  const future='a'.repeat(40),caller=tempDir();
+  const futureDispatcher=dispatcherText
+    .replace(/(pages-release-control\.yml@)[0-9a-f]{40}/,`$1${future}`)
+    .replace(/(control_workflow_sha:\s*")[0-9a-f]{40}("\s*)/,`$1${future}$2`);
+  writeDispatcher(caller,futureDispatcher);
+  assert.equal(dispatcherContract(caller,{expectedControlSha:future}).controlSha,future);
+  fs.rmSync(caller,{recursive:true,force:true});
 });
 
 test('control-selector validation accepts only a full dispatcher-SHA tag',()=>{
@@ -123,6 +162,13 @@ test('runtime tag must resolve exactly to checked-out runtime source SHA',()=>{
 test('workflow checks out runtime_source_sha, never github.sha, and preserves immutable action pins',()=>{
   const job=reusable.jobs['validate-build'],source=job.steps.find(step=>step.name==='Check out approved release source');
   assert.equal(source.with.ref,'${{ inputs.runtime_source_sha }}');assert.notEqual(source.with.ref,'${{ github.sha }}');
+  const caller=job.steps.find(step=>step.name==='Check out immutable caller dispatcher');
+  assert.equal(caller.with.ref,'${{ github.sha }}');assert.equal(caller.with.path,'caller');assert.equal(caller.with['persist-credentials'],false);
+  const regression=job.steps.find(step=>step.name==='Run immutable control regression suite');
+  assert.equal(regression.env.PAGES_CONTROL_ROOT,'${{ github.workspace }}/control');
+  assert.equal(regression.env.PAGES_CALLER_ROOT,'${{ github.workspace }}/caller');
+  assert.equal(regression.env.PAGES_RUNTIME_ROOT,'${{ github.workspace }}/target');
+  assert.equal(regression.env.PAGES_EXPECTED_CONTROL_SHA,'${{ job.workflow_sha }}');
   const uses=[...reusableText.matchAll(/^\s*uses:\s*([^\s]+)$/gm)].map(match=>match[1]);
   for(const value of uses)assert.match(value,/@[0-9a-f]{40}$/);
   assert.match(reusableText,/actions\/checkout@d23441a48e516b6c34aea4fa41551a30e30af803/);

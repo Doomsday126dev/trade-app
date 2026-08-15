@@ -26,15 +26,20 @@ The control selector and runtime release tag must not be the same tag. Runtime t
 
 ## Architecture
 
-The production path is deliberately split:
+The production path is deliberately split across three immutable source identities:
+
+- **Trusted control source:** reusable workflow, validators, builder, verifier, and regression logic selected by the dispatcher's full workflow SHA.
+- **Caller source:** the actual dispatcher selected by the control-selector tag; reusable-workflow `github.sha` identifies this caller commit.
+- **Runtime source:** the frontend bytes selected independently by `runtime_source_sha`.
 
 1. An operator dispatches `.github/workflows/deploy-pages.yml` from an immutable `release-pages-control-<dispatcher-sha>` tag.
 2. The dispatcher pins `.github/workflows/pages-release-control.yml` by a full immutable SHA.
 3. Explicit inputs select a runtime tag, runtime release ID, runtime source SHA, expected live SHA, mode, and exact confirmation.
-4. The reusable workflow validates both identities and checks that the runtime tag resolves exactly to the runtime source SHA.
-5. The build job checks out `runtime_source_sha`, never `github.sha`, `main`, or the control-selector commit.
-6. It validates release coherence and builds only the reviewed 68-file runtime allowlist.
-7. A separate protected-environment job verifies the actually served manifest, deploys the existing artifact without rebuilding, and proves the current run's deployment plus the served schema-2 manifest.
+4. The reusable workflow checks out its own immutable control source, the caller at `github.sha`, and the runtime at `runtime_source_sha` into separate directories.
+5. Control tests use the trusted-control checkout; dispatcher contract tests use the caller checkout; release and artifact checks use the runtime checkout.
+6. The reusable workflow validates all identities and checks that the runtime tag resolves exactly to the runtime source SHA.
+7. It validates release coherence and builds only the reviewed 68-file runtime allowlist.
+8. A separate protected-environment job verifies the actually served manifest, deploys the existing artifact without rebuilding, and proves the current run's deployment plus the served schema-2 manifest.
 
 The runtime source cannot replace the workflow, validators, builder, verifier, permissions, or artifact allowlist. Ordinary pushes and tag creation are inert because both workflows remain manual-only.
 
@@ -99,6 +104,8 @@ control_selector_tag = github.ref_name
 The SHA must be 40 lowercase hexadecimal characters. Branches, runtime release tags, short-SHA selectors, and mismatched selectors fail closed.
 
 The dispatcher passes its own immutable SHA and selector to the reusable control. The reusable control additionally requires its `job.workflow_sha` to equal the dispatcher-pinned `control_workflow_sha`.
+
+Reusable-workflow regression tests receive explicit control, caller, and runtime roots. The dispatcher is always read from the caller checkout at `github.sha`, never from the trusted-control checkout. This matters because a control-fix commit necessarily predates the later dispatcher-only repin commit; requiring the future dispatcher to exist inside the earlier control commit would recreate the trust-bootstrap cycle.
 
 ## Runtime Validation And Checkout
 
