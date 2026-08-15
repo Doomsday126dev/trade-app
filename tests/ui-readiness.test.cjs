@@ -156,7 +156,8 @@ test('Browse Favorites is Favorite-scoped, memory-only, and free of broad remote
   assert.match(browse,/store\.read\(\)[\s\S]*\.favorites/);
   assert.match(setup,/concurrency:4,maxFavorites:favoriteShareSessionCacheData\.DEFAULT_MAX_FAVORITES/);
   assert.match(cache,/DEFAULT_MAX_FAVORITES=global\.PogoDomain\?\.productLimits\?\.MAX_FAVORITES/);
-  assert.match(cache,/let records=new Map\(\),inflight=new Map\(\),candidateKeys=new Set\(\),queue=\[\]/);
+  assert.match(cache,/DEFAULT_READ_DEADLINE_MS=5000/);
+  assert.match(cache,/let records=new Map\(\),inflight=new Map\(\),physicalReads=new Map\(\),readEpochs=new Map\(\),candidateKeys=new Set\(\),queue=\[\],activeEntries=new Set\(\)/);
   assert.match(cache,/validateProjection\(result\.value,\{username:favorite\.displayName\}\)/);
   assert.doesNotMatch(`${cache}\n${domain}`,/localStorage|sessionStorage|indexedDB|onValue|\.listen\(|publicShares\/|loginDirectory|private.?note|set\s*\(\s*ref|update\s*\(\s*ref/i);
   assert.doesNotMatch(`${setup}\n${browse}`,/Object\.keys\(allData\.loginDirectory|managedPublicShareRepository\.listen|publicShares\/|queueSync|publishPublicShare/);

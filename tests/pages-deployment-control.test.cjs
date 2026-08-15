@@ -23,9 +23,9 @@ const verifier=require(path.join(controlRoot,'scripts/pages/verify-deployment.cj
 const RUNTIME_SHA='d7491e83a917bdbbf341bfb68fc947549557a54e';
 const PREVIOUS_SHA='4505828ca7fc8f48ca1b23dfcadf860691e6e588';
 const DISPATCHER_SHA='b'.repeat(40),OTHER_DISPATCHER='e'.repeat(40),CONTROL_SHA='c'.repeat(40);
-const RELEASE_ID='2026-08-05.46',RUNTIME_TAG=`release-${RELEASE_ID}`;
+const RELEASE_ID='2026-08-05.47',RUNTIME_TAG=`release-${RELEASE_ID}`;
 const SELECTOR=`release-pages-control-${DISPATCHER_SHA}`;
-const RUN_ID='31861434906',ARTIFACT_DIGEST='98fd4696359e7cbc478ef808fe86f57094ae48d59c2f1a2bee55de913556efe4';
+const RUN_ID='31861434906',ARTIFACT_DIGEST='bb24c2e217e5f8e153447bfab4c7ae3994872d949b95f2c5a6edb230c8736bc9';
 const DEPLOYMENT_ID=5916645350;
 
 function validContext(overrides={}){

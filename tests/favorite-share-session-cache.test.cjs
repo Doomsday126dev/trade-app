@@ -4,17 +4,45 @@ const {readFileSync}=require('node:fs');
 const path=require('node:path');
 const vm=require('node:vm');
 
-function loadCache({read,now=()=>100,maxFavorites}={}){
-  const window={};const context=vm.createContext({window,Map,Set,Promise,Object,Number,String,Math,RangeError,TypeError,Error});
+function loadCache({read,now=()=>100,maxFavorites,readDeadlineMs,setTimer,clearTimer}={}){
+  const window={};const context=vm.createContext({window,Map,Set,Promise,Object,Number,String,Math,RangeError,TypeError,Error,setTimeout,clearTimeout});
   for(const file of ['js/domain/productLimits.js','js/data/favoriteShareSessionCache.js'])vm.runInContext(readFileSync(path.join(__dirname,'..',file),'utf8'),context);
   return window.PogoData.favoriteShareSessionCache.createFavoriteShareSessionCache({repository:{read},validateProjection(value,{username}){
     if(value===null)return{ok:false,status:'not_published'};
     if(value?.malformed)return{ok:false,status:'projection_unsupported'};
     return{ok:true,status:Object.values(value.lists||{}).some(list=>Object.keys(list).length)?'published':'published_empty',snapshot:{username,lists:value.lists||{},updatedAt:value.updatedAt||1}};
-  },projectSnapshot(snapshot){return Object.entries(snapshot.lists.wishlist||{}).map(([pokemonName,priority])=>({pokemonKey:pokemonName.toLowerCase(),pokemonName,priority,categories:['wishlist']}));},now,...(maxFavorites===undefined?{}:{maxFavorites})});
+  },projectSnapshot(snapshot){return Object.entries(snapshot.lists.wishlist||{}).map(([pokemonName,priority])=>({pokemonKey:pokemonName.toLowerCase(),pokemonName,priority,categories:['wishlist']}));},now,...(maxFavorites===undefined?{}:{maxFavorites}),...(readDeadlineMs===undefined?{}:{readDeadlineMs}),...(setTimer?{setTimer}:{}),...(clearTimer?{clearTimer}:{})});
 }
 const favorites=count=>Array.from({length:count},(_,i)=>({key:`trainer-${i}`,displayName:`Trainer-${i}`}));
 const share=name=>({lists:{wishlist:{Pikachu:'H'},dynamax:{},gmax:{},costumes:{}},updatedAt:1,username:name});
+function controlledTimers(){
+  let nextId=1;const timers=new Map();
+  return{
+    setTimer(handler){const id=nextId++;timers.set(id,handler);return id;},
+    clearTimer(id){timers.delete(id);},
+    expireAll(){const pending=[...timers.values()];timers.clear();pending.forEach(handler=>handler());},
+    size(){return timers.size;}
+  };
+}
+function virtualClock(){
+  let current=0,nextId=1;const timers=new Map();
+  const drain=async()=>{for(let i=0;i<16;i++)await Promise.resolve();};
+  return{
+    now:()=>current,
+    setTimer(handler,delay){const id=nextId++;timers.set(id,{at:current+Number(delay||0),handler});return id;},
+    clearTimer(id){timers.delete(id);},
+    async advance(ms){
+      const target=current+ms;
+      while(true){
+        const due=[...timers.entries()].filter(([,timer])=>timer.at<=target).sort((a,b)=>a[1].at-b[1].at||a[0]-b[0])[0];
+        if(!due)break;
+        timers.delete(due[0]);current=due[1].at;due[1].handler();await drain();
+      }
+      current=target;await drain();
+    }
+  };
+}
+const flush=()=>new Promise(resolve=>setImmediate(resolve));
 
 test('zero Favorites performs zero reads and cold hydration reads each exact Favorite once',async()=>{
   const calls=[];const cache=loadCache({read:async name=>{calls.push(`publicShares/${name}`);return{ok:true,value:share(name)};}});cache.activate({uid:'u',username:'Owner'});
@@ -141,4 +169,177 @@ test('production defaults reject fan-out only beyond the 100-Favorite product ca
   const cache=loadCache({read:async name=>({ok:true,value:share(name)})});cache.activate({uid:'u',username:'Owner'});
   assert.doesNotThrow(()=>cache.syncFavorites(favorites(100)));
   assert.throws(()=>cache.syncFavorites(favorites(101)),/at most 100/);
+});
+
+test('three unconstrained reads start before the first settlement and progress counts every settled attempt',async()=>{
+  const releases=[],progress=[];let started=0;
+  const cache=loadCache({read:name=>new Promise(resolve=>{started++;releases.push(()=>resolve({ok:true,value:share(name)}));})});
+  cache.activate({uid:'u-three',username:'Owner'});
+  const pending=cache.hydrate(favorites(3),{onProgress:({completed,total})=>progress.push(`${completed}/${total}`)});
+  await flush();assert.equal(started,3);assert.deepEqual(progress,[]);
+  releases[1]();await flush();releases[0]();await flush();releases[2]();await pending;
+  assert.deepEqual(progress,['1/3','2/3','3/3']);
+});
+
+test('three never-settling reads reach a bounded retryable state without exceeding physical concurrency',async()=>{
+  const timers=controlledTimers(),progress=[];let started=0,active=0,maxActive=0;
+  const cache=loadCache({readDeadlineMs:5000,setTimer:timers.setTimer,clearTimer:timers.clearTimer,read:()=>{started++;active++;maxActive=Math.max(maxActive,active);return new Promise(()=>{});}});
+  cache.activate({uid:'u-hang',username:'Owner'});
+  const pending=cache.hydrate(favorites(3),{onProgress:({completed,total})=>progress.push(`${completed}/${total}`)});
+  await flush();assert.equal(started,3);assert.equal(timers.size(),3);
+  timers.expireAll();await pending;
+  assert.deepEqual(progress,['1/3','2/3','3/3']);assert.equal(cache.summary(favorites(3)).failed,3);assert.equal(maxActive,3);assert.equal(active,3);
+});
+
+test('ten Refresh cycles retain at most one original and one unresolved replacement per Favorite',async()=>{
+  const timers=controlledTimers(),trace=[];let physicalReads=0;
+  const cache=loadCache({readDeadlineMs:5000,setTimer:timers.setTimer,clearTimer:timers.clearTimer,read:()=>{physicalReads++;return new Promise(()=>{});}});
+  const list=favorites(1);cache.activate({uid:'u-refresh-bound',username:'Owner'});
+  let pending=cache.hydrate(list);await flush();timers.expireAll();await pending;
+  for(let refresh=1;refresh<=10;refresh++){
+    cache.invalidate();pending=cache.hydrate(list,{force:true});await flush();
+    const before=cache.snapshot();timers.expireAll();await pending;await flush();const after=cache.snapshot();
+    trace.push({refresh,physicalReads,unresolved:after.unresolvedPhysicalReads,references:after.physicalReferences,epoch:after.readEpochs.get('trainer-0')});
+    assert.ok(before.unresolvedPhysicalReads<=2);assert.ok(after.unresolvedPhysicalReads<=2);
+    assert.ok([...after.physicalReferencesByKey.values()].every(count=>count<=2));assert.equal(cache.peek(list[0]).retryable,true);
+  }
+  assert.equal(physicalReads,2);assert.equal(cache.snapshot().physicalReferences,2);
+  assert.deepEqual(trace.map(item=>item.epoch),[1,2,3,4,5,6,7,8,9,10]);
+});
+
+test('twenty Retry attempts reattach to one unresolved physical read without duplicate progress',async()=>{
+  const timers=controlledTimers();let physicalReads=0,progressEvents=0;
+  const cache=loadCache({readDeadlineMs:5000,setTimer:timers.setTimer,clearTimer:timers.clearTimer,read:()=>{physicalReads++;return new Promise(()=>{});}});
+  const list=favorites(1);cache.activate({uid:'u-retry-bound',username:'Owner'});
+  let pending=cache.hydrate(list);await flush();timers.expireAll();await pending;
+  for(let retry=0;retry<20;retry++){
+    pending=cache.retryUnavailable(list,{onProgress:({completed,total})=>{assert.equal(completed,1);assert.equal(total,1);progressEvents++;}});
+    await flush();timers.expireAll();await pending;
+    assert.equal(cache.peek(list[0]).retryable,true);assert.equal(cache.snapshot().unresolvedPhysicalReads,1);
+  }
+  assert.equal(physicalReads,1);assert.equal(progressEvents,20);assert.equal(cache.snapshot().physicalReferences,1);
+});
+
+test('repeated Refresh keeps N=3 and N=100 physically bounded by the scheduler rather than loop count',async()=>{
+  for(const count of [3,100]){
+    const timers=controlledTimers();let physicalReads=0,maxPhysical=0,maxPerFavorite=0;
+    const cache=loadCache({readDeadlineMs:5000,setTimer:timers.setTimer,clearTimer:timers.clearTimer,read:()=>{physicalReads++;return new Promise(()=>{});}});
+    const list=favorites(count);cache.activate({uid:`u-refresh-${count}`,username:'Owner'});
+    let pending=cache.hydrate(list);await flush();timers.expireAll();await pending;
+    for(let refresh=0;refresh<10;refresh++){
+      cache.invalidate();pending=cache.hydrate(list,{force:true});await flush();
+      let state=cache.snapshot();maxPhysical=Math.max(maxPhysical,state.unresolvedPhysicalReads);maxPerFavorite=Math.max(maxPerFavorite,...state.physicalReferencesByKey.values(),0);
+      timers.expireAll();await pending;await flush();state=cache.snapshot();
+      maxPhysical=Math.max(maxPhysical,state.unresolvedPhysicalReads);maxPerFavorite=Math.max(maxPerFavorite,...state.physicalReferencesByKey.values(),0);assert.ok(state.physicalReferences<=4);
+    }
+    assert.ok(maxPhysical<=4);assert.ok(maxPerFavorite<=2);
+    assert.equal(physicalReads,count===3?4:4);assert.equal(cache.summary(list).failed,count);
+  }
+});
+
+test('a shared never-settling repository prerequisite is bounded independently for all three Favorites',async()=>{
+  const timers=controlledTimers(),shared=new Promise(()=>{});let started=0;
+  const cache=loadCache({readDeadlineMs:5000,setTimer:timers.setTimer,clearTimer:timers.clearTimer,read:()=>{started++;return shared;}});
+  const list=favorites(3);cache.activate({uid:'u-shared',username:'Owner'});
+  const pending=cache.hydrate(list);await flush();assert.equal(started,3);
+  timers.expireAll();await pending;assert.equal(cache.summary(list).failed,3);
+});
+
+test('partial timeout preserves successes and Retry reattaches to the one still-running physical read',async()=>{
+  const timers=controlledTimers(),counts=new Map();let releaseSlow;
+  const cache=loadCache({readDeadlineMs:5000,setTimer:timers.setTimer,clearTimer:timers.clearTimer,read:name=>{
+    counts.set(name,(counts.get(name)||0)+1);
+    if(name==='Trainer-1')return new Promise(resolve=>{releaseSlow=resolve;});
+    return Promise.resolve({ok:true,value:name==='Trainer-0'?null:share(name)});
+  }});
+  const list=favorites(3);cache.activate({uid:'u-partial',username:'Owner'});
+  const first=cache.hydrate(list);await flush();await flush();timers.expireAll();await first;
+  assert.equal(cache.peek(list[0]).status,'not_published');assert.equal(cache.peek(list[1]).retryable,true);assert.equal(cache.peek(list[2]).status,'published');
+  const retry=cache.retryUnavailable(list);await flush();assert.equal(counts.get('Trainer-1'),1);
+  releaseSlow({ok:true,value:share('Trainer-1')});await retry;
+  assert.equal(cache.summary(list).failed,0);assert.deepEqual([...counts.values()],[1,1,1]);
+});
+
+test('a late timed-out result cannot overwrite a newer explicit Refresh result',async()=>{
+  const timers=controlledTimers(),releases=[];let reads=0;
+  const cache=loadCache({readDeadlineMs:5000,setTimer:timers.setTimer,clearTimer:timers.clearTimer,read:name=>new Promise(resolve=>{reads++;releases.push(value=>resolve({ok:true,value}));})});
+  const list=favorites(1);cache.activate({uid:'u-refresh',username:'Owner'});
+  const first=cache.hydrate(list);await flush();timers.expireAll();await first;assert.equal(cache.peek(list[0]).retryable,true);
+  cache.invalidate();const refreshed=cache.hydrate(list,{force:true});await flush();assert.equal(reads,2);
+  releases[1]({...share('Trainer-0'),updatedAt:200});await refreshed;assert.equal(cache.peek(list[0]).updatedAt,200);
+  releases[0]({...share('Trainer-0'),updatedAt:100});await flush();assert.equal(cache.peek(list[0]).updatedAt,200);
+});
+
+test('late rejection after logical timeout is handled and cannot emit a second progress or mutate state',async()=>{
+  const timers=controlledTimers(),progress=[];let rejectPhysical;
+  const cache=loadCache({readDeadlineMs:5000,setTimer:timers.setTimer,clearTimer:timers.clearTimer,read:()=>new Promise((resolve,reject)=>{rejectPhysical=reject;})});
+  const list=favorites(1);cache.activate({uid:'u-late-failure',username:'Owner'});
+  const pending=cache.hydrate(list,{onProgress:value=>progress.push(value.completed)});await flush();timers.expireAll();await pending;
+  const timedOut=cache.peek(list[0]);rejectPhysical(Object.assign(new Error('private provider failure'),{code:'network/offline'}));await flush();await flush();
+  assert.deepEqual(progress,[1]);assert.equal(cache.peek(list[0]),timedOut);assert.equal(cache.peek(list[0]).error.code,'favorite-cache/deadline-exceeded');assert.equal(cache.snapshot().physicalReferences,0);
+});
+
+test('late physical settlement after a Pokémon selection change cannot alter the newer logical result',async()=>{
+  const timers=controlledTimers(),progressA=[],progressB=[];let release;
+  const cache=loadCache({readDeadlineMs:5000,setTimer:timers.setTimer,clearTimer:timers.clearTimer,read:()=>new Promise(resolve=>{release=resolve;})});
+  const list=favorites(1);cache.activate({uid:'u-selection-change',username:'Owner'});
+  const selectionA=cache.hydrate(list,{onProgress:value=>progressA.push(value.completed)});await flush();timers.expireAll();await selectionA;
+  const selectionB=cache.hydrate(list,{onProgress:value=>progressB.push(value.completed)});await selectionB;const current=cache.peek(list[0]);
+  release({ok:true,value:{...share('Trainer-0'),updatedAt:300}});await flush();await flush();
+  assert.deepEqual(progressA,[1]);assert.deepEqual(progressB,[1]);assert.equal(cache.peek(list[0]),current);assert.equal(cache.peek(list[0]).retryable,true);
+});
+
+test('late settlement after timeout cannot repopulate removal or a replacement account',async()=>{
+  const timers=controlledTimers(),releases=[];
+  const cache=loadCache({readDeadlineMs:5000,setTimer:timers.setTimer,clearTimer:timers.clearTimer,read:()=>new Promise(resolve=>releases.push(resolve))});
+  const list=favorites(1);cache.activate({uid:'u-old',username:'Owner'});
+  const first=cache.hydrate(list);await flush();timers.expireAll();await first;
+  cache.syncFavorites([]);releases[0]({ok:true,value:share('Trainer-0')});await flush();assert.equal(cache.snapshot().size,0);
+  cache.activate({uid:'u-new',username:'Other'});assert.equal(cache.snapshot().size,0);
+});
+
+test('four hung physical reads cap a 100-Favorite batch and queued logical work settles retryably',async()=>{
+  const timers=controlledTimers();let started=0,active=0,maxActive=0;
+  const cache=loadCache({readDeadlineMs:5000,setTimer:timers.setTimer,clearTimer:timers.clearTimer,read:()=>{started++;active++;maxActive=Math.max(maxActive,active);return new Promise(()=>{});}});
+  const list=favorites(100);cache.activate({uid:'u-100-hang',username:'Owner'});
+  const pending=cache.hydrate(list);await flush();assert.equal(started,4);
+  timers.expireAll();await pending;
+  assert.equal(started,4);assert.equal(maxActive,4);assert.equal(active,4);assert.equal(cache.summary(list).failed,100);
+});
+
+test('three-Favorite latency matrix starts all reads together and completes without an artificial delay',async()=>{
+  for(const latency of [0,100,500,1000,4000]){
+    const clock=virtualClock(),progress=[];let reads=0,active=0,maxActive=0;
+    const cache=loadCache({readDeadlineMs:5000,now:clock.now,setTimer:clock.setTimer,clearTimer:clock.clearTimer,read:name=>new Promise(resolve=>{
+      reads++;active++;maxActive=Math.max(maxActive,active);clock.setTimer(()=>{active--;resolve({ok:true,value:share(name)});},latency);
+    })});
+    cache.activate({uid:`u-latency-${latency}`,username:'Owner'});
+    const pending=cache.hydrate(favorites(3),{onProgress:({completed,total})=>progress.push({completed,total,at:clock.now()})});
+    await flush();assert.equal(reads,3);assert.equal(maxActive,3);
+    await clock.advance(latency);await pending;
+    assert.deepEqual(progress.map(item=>`${item.completed}/${item.total}`),['1/3','2/3','3/3']);
+    assert.equal(progress[0].at,latency);assert.equal(progress[2].at,latency);assert.equal(active,0);
+  }
+});
+
+test('Auth, App Check, permission, and offline failures remain distinguishable without exposing raw messages',async()=>{
+  const codes=['auth/unavailable','app-check/token-rejected','database/permission-denied','network/offline'];let index=0;
+  const cache=loadCache({read:async()=>({ok:false,error:{code:codes[index++],message:'private provider detail'}})});
+  const list=favorites(4);cache.activate({uid:'u-errors',username:'Owner'});await cache.hydrate(list);
+  assert.deepEqual(list.map(item=>cache.peek(item).error.code),codes);
+  assert.equal(JSON.stringify([...cache.snapshot().records.values()]).includes('private provider detail'),false);
+  assert.equal(cache.summary(list).failed,2);assert.equal(cache.summary(list).invalid,2);
+});
+
+test('a handful of hung reads cannot block the other 98 records in a 100-Favorite batch',async()=>{
+  const timers=controlledTimers();let started=0,active=0,maxActive=0;
+  const cache=loadCache({readDeadlineMs:5000,setTimer:timers.setTimer,clearTimer:timers.clearTimer,read:name=>{
+    started++;active++;maxActive=Math.max(maxActive,active);
+    if(name==='Trainer-1'||name==='Trainer-27')return new Promise(()=>{});
+    active--;return Promise.resolve({ok:true,value:share(name)});
+  }});
+  const list=favorites(100);cache.activate({uid:'u-100-partial',username:'Owner'});
+  const pending=cache.hydrate(list);await flush();await flush();assert.equal(started,100);
+  timers.expireAll();await pending;
+  assert.ok(maxActive<=4);assert.equal(started,100);assert.equal(cache.summary(list).checked,100);assert.equal(cache.summary(list).failed,2);assert.equal(cache.summary(list).published,98);
 });

@@ -1347,6 +1347,37 @@ test.describe('visual smoke', () => {
     await expect(page.locator('#favorite-browse-results')).toContainText(/No Favorites|Keine Favoriten|Sin favoritos|お気に入り/);
   });
 
+  test('Browse exits Checking 0 of 3 when every exact Favorite read stops settling',async({page,browserName})=>{
+    test.skip(browserName!=='chromium');
+    await page.setViewportSize({width:390,height:844});
+    await page.goto(`./?favorite-browse-deadline=${Date.now()}`,{waitUntil:'domcontentloaded'});
+    await waitForStableLocalOrganizerStartup(page);
+    await isolateAuthenticatedMyListFixture(page,{username:'BrowseDeadline',uid:'uid-browse-deadline'});
+    const result=await page.evaluate(async()=>{
+      const favorites=['Alpha','Beta','Gamma'].map((displayName,index)=>({key:displayName.toLowerCase(),displayName,tagIds:[],createdAt:index,updatedAt:index}));
+      const state={version:3,schemaVersion:3,migrationVersion:3,owner:{uid:'uid-browse-deadline',username:'BrowseDeadline'},favorites,recent:[],snapshots:{},tags:{},syncState:'local-only',migration:{skippedFavorites:0,skippedRecents:0}};
+      ensureTrainerHistoryStore=()=>({read:()=>state,filterFavorites:()=>favorites,snapshotFor:()=>null,updateCanonicalName:()=>false,favoriteFor:name=>favorites.find(item=>item.displayName===name)||null});
+      let reads=0,active=0,maxActive=0;
+      managedPublicShareRepository={read:()=>{reads++;active++;maxActive=Math.max(maxActive,active);return new Promise(()=>{});}};
+      favoriteShareSessionCache=favoriteShareSessionCacheData.createFavoriteShareSessionCache({
+        repository:managedPublicShareRepository,
+        validateProjection:publicSharePublicationDomain.publicShareProjectionStatus,
+        projectSnapshot:favoritePokemonBrowseDomain.projectSnapshot,
+        concurrency:4,maxFavorites:favoriteShareSessionCacheData.DEFAULT_MAX_FAVORITES,readDeadlineMs:25
+      });
+      favoriteBrowseState={selected:{name:'Cascoon',dn:'Cascoon',no:268},suggestions:[],focusIndex:-1,busy:false,error:false,generation:0,expanded:true};
+      switchTab('find',{render:false});document.getElementById('favorite-browse-input').value='Cascoon';syncFavoriteBrowseDisclosure();
+      const pending=hydrateFavoriteBrowse();
+      await new Promise(resolve=>setTimeout(resolve,0));
+      const loading=document.getElementById('favorite-browse-results').textContent;
+      await pending;
+      return{reads,active,maxActive,loading,busy:favoriteBrowseState.busy,summary:favoriteShareSessionCache.summary(favorites)};
+    });
+    expect(result.reads).toBe(3);expect(result.active).toBe(3);expect(result.maxActive).toBe(3);expect(result.loading).toContain('0');expect(result.loading).toContain('3');expect(result.busy).toBe(false);expect(result.summary).toMatchObject({checked:3,failed:3});
+    await expect(page.locator('#favorite-browse-results')).not.toHaveAttribute('aria-busy','true');
+    await expect(page.getByRole('button',{name:/Retry unavailable/i})).toBeVisible();
+  });
+
   test('Browse explicitly hydrates 21 and 100 Favorites with four-way bounded exact reads',async({page,browserName})=>{
     await page.setViewportSize({width:390,height:844});
     await page.goto(`./?favorite-browse-scale=${browserName}-${Date.now()}`,{waitUntil:'domcontentloaded'});
