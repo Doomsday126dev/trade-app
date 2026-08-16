@@ -6,7 +6,7 @@ const vm=require('node:vm');
 
 const currentSource=fs.readFileSync(path.join(__dirname,'..','sw.js'),'utf8');
 const targetRelease='2026-08-05.45';
-const rollbackSource=currentSource.replace("const RELEASE='2026-08-05.48';",`const RELEASE='${targetRelease}';`);
+const rollbackSource=currentSource.replace("const RELEASE='2026-08-05.49';",`const RELEASE='${targetRelease}';`);
 function key(value){return typeof value==='string'?value:String(value?.url||value);}
 function response(status=200,body='ok'){return{ok:status>=200&&status<300,status,body,clone(){return response(status,body);}};}
 class MemoryCache{
