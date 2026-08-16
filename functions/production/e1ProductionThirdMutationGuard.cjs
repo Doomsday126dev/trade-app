@@ -21,11 +21,13 @@ const {
   EXECUTION_SEQUENCE,
   EXPECTED_COUNT_SEQUENCE,
   EXPECTED_D3_MANIFEST,
+  EXECUTION_EVIDENCE_PURPOSE,
   FINAL_COUNTS,
   OBSERVATION_CHECKS,
   OBSERVATION_HOURS,
   OPERATION_BUDGET,
   STOP_POLICY,
+  SYNTHETIC_COHORT_TYPE,
   candidatePoolDigest,
   canonicalCandidateOrder,
   readinessContract,
@@ -33,12 +35,16 @@ const {
   subjectBindingDigest,
   validateThirdMutationEntryTiming
 } = require('./e1ProductionThirdMutationContract.cjs');
+const {
+  validateBrowserHarnessArtifact
+} = require('./e1ProductionThirdMutationBrowserHarness.cjs');
 
 const MANIFEST_PATH = path.resolve(__dirname, 'e1-production-resource-manifest.json');
 const PRIVATE_CANDIDATE_POOL_PATH = path.resolve(__dirname, '../.local/e1-production-third-mutation-candidate-pool.json');
 const PRIVATE_BINDING_PATH = path.resolve(__dirname, '../.local/e1-production-third-mutation-subjects.json');
 const PRIVATE_READINESS_PATH = path.resolve(__dirname, '../.local/e1-production-third-mutation-activation.json');
 const PRIVATE_INPUT_PATH = path.resolve(__dirname, '../.local/e1-production-third-mutation-guard-input.json');
+const PRIVATE_BROWSER_HARNESS_PATH = path.resolve(__dirname, '../.local/e1-production-third-mutation-browser-harness.json');
 const MAX_WINDOW_MS = 2 * 60 * 60 * 1000;
 const MAX_EVIDENCE_AGE_MS = ENTRY_EVIDENCE_MAX_AGE_MS;
 const SLOTS = Object.freeze(['A', 'B', 'C', 'D', 'E']);
@@ -51,16 +57,16 @@ const RATE_LIMIT_PATH = /^rateLimits\/reserveTrainerHandle_[a-f0-9]{16}$/u;
 const REVISION = /^e1-identity-authority-[0-9]{5}-[a-z0-9]{3}$/u;
 const IMAGE_DIGEST = /^sha256:[a-f0-9]{64}$/u;
 const BINDING_FIELDS = Object.freeze([
-  'schemaVersion', 'environment', 'projectId', 'cohortStage', 'cohortSize', 'state', 'subjectsBound',
+  'schemaVersion', 'environment', 'projectId', 'cohortStage', 'cohortType', 'evidencePurpose', 'cohortSize', 'state', 'subjectsBound',
   'executionAuthorized', 'acquisitionMode', 'candidatePoolDigest', 'boundAt', 'humanReviewed', 'priorCohort',
-  'candidates', 'bindingDigest'
+  'syntheticSetupDigest', 'candidates', 'bindingDigest'
 ]);
 const CANDIDATE_POOL_FIELDS = Object.freeze([
-  'schemaVersion', 'environment', 'projectId', 'cohortStage', 'acquisitionMode', 'candidateCount',
+  'schemaVersion', 'environment', 'projectId', 'cohortStage', 'cohortType', 'evidencePurpose', 'acquisitionMode', 'candidateCount',
   'humanSupplied', 'suppliedAt', 'candidates', 'candidatePoolDigest', 'executionAuthorized',
-  'laterGroupsAuthorized', 'groupEAuthorized'
+  'syntheticSetupDigest', 'laterGroupsAuthorized', 'groupEAuthorized'
 ]);
-const CANDIDATE_POOL_SUBJECT_FIELDS = Object.freeze(['firebaseUid', 'trainerUsername']);
+const CANDIDATE_POOL_SUBJECT_FIELDS = Object.freeze(['firebaseUid', 'trainerUsername', 'syntheticCanary']);
 const PRIOR_COHORT_FIELDS = Object.freeze(['d2StateDigest', 'members', 'humanReviewed', 'evidenceDigest']);
 const PRIOR_MEMBER_FIELDS = Object.freeze(['uidHash', 'trainerHash', 'handleKey']);
 const CANDIDATE_FIELDS = Object.freeze([
@@ -85,7 +91,7 @@ const TARGETED_FIELDS = Object.freeze([
 const REVIEW_FIELDS = Object.freeze(['humanReviewed', 'reviewedAt', 'selectionSource']);
 const READINESS_FIELDS = Object.freeze([
   'schemaVersion', 'environment', 'projectId', 'projectNumber', 'region', 'firestoreDatabaseId', 'rtdbDatabaseUrl',
-  'approvalGroup', 'cohortStage', 'contractDefined', 'subjectsBindingDigest', 'subjectsBound', 'executionAuthorized',
+  'approvalGroup', 'cohortStage', 'cohortType', 'evidencePurpose', 'contractDefined', 'subjectsBindingDigest', 'browserHarnessDigest', 'subjectsBound', 'executionAuthorized',
   'approvedAt', 'humanOperator', 'teardownOwner', 'approvalAcknowledged', 'teardownOwnerAcknowledged',
   'readinessContract', 'mutationWindow', 'authorizedOperations', 'd2Baseline', 'runtimeProvenance', 'activationGatePlan',
   'restorationGatePlan', 'operationBudget', 'executionSequence', 'observationHours', 'observationChecks',
@@ -93,7 +99,7 @@ const READINESS_FIELDS = Object.freeze([
 ]);
 const INPUT_FIELDS = Object.freeze([
   'environment', 'projectId', 'projectNumber', 'expectedProjectNumber', 'region', 'databaseId', 'rtdbDatabaseUrl',
-  'approvalGroup', 'cohortStage', 'subjectsBindingDigest', 'subjectsBound', 'executionAuthorized', 'requestedOperations',
+  'approvalGroup', 'cohortStage', 'cohortType', 'evidencePurpose', 'subjectsBindingDigest', 'browserHarnessDigest', 'subjectsBound', 'executionAuthorized', 'requestedOperations',
   'readinessContract', 'd2Baseline', 'currentGates', 'activationGatePlan', 'restorationGatePlan', 'runtimeProvenance', 'securityBoundary',
   'tokenVerifier', 'rateLimiterMode', 'readProofModePresent', 'reserveConsumesLimitedUseAppCheck', 'operationBudget',
   'expectedCountSequence', 'executionSequence', 'observationHours', 'observationChecks', 'stopPolicy',
@@ -116,7 +122,7 @@ const ACCEPTANCE_FIELDS = Object.freeze([
   'observationHealthy', 'groupEAuthorized', 'accepted'
 ]);
 const ACCEPTANCE_EVIDENCE_FIELDS = Object.freeze([
-  'schemaVersion', 'cohortStage', 'subjectsBindingDigest', 'executedSubjects', 'reserveSuccesses', 'replaySuccesses',
+  'schemaVersion', 'cohortStage', 'cohortType', 'subjectsBindingDigest', 'executedSubjects', 'reserveSuccesses', 'replaySuccesses',
   'steps', 'finalCounts', 'finalStateDigest', 'ownershipReciprocal', 'anomaliesAbsent', 'gatesRestored',
   'observation', 'unexpectedCostOrLogAnomaly', 'groupEAuthorized', 'accepted'
 ]);
@@ -167,7 +173,9 @@ function subjectHashesFor(subject) {
 
 function canonicalPoolCandidate(subject) {
   if (!exactFields(subject, CANDIDATE_POOL_SUBJECT_FIELDS) || !validFirebaseUid(subject.firebaseUid) ||
-      !validIdentity(subject.trainerUsername)) throw new Error('group_d3_candidate_pool_subject_invalid');
+      !validIdentity(subject.trainerUsername) || subject.syntheticCanary !== true) {
+    throw new Error('group_d3_candidate_pool_subject_invalid');
+  }
   const normalized = normalizeHandle(subject.trainerUsername);
   const reviewedSubject = Object.freeze({
     firebaseUid: subject.firebaseUid,
@@ -191,10 +199,12 @@ function validateCandidatePoolArtifact(pool, options = {}) {
   if (!privateMode(poolPath)) errors.push('group_d3_candidate_pool_permissions_invalid');
   if (!exactFields(pool, CANDIDATE_POOL_FIELDS) || pool.schemaVersion !== 1 || pool.environment !== 'production' ||
       pool.projectId !== 'trade-list-a4297' || pool.cohortStage !== 'D3' ||
+      pool.cohortType !== SYNTHETIC_COHORT_TYPE || pool.evidencePurpose !== EXECUTION_EVIDENCE_PURPOSE ||
       pool.acquisitionMode !== CANDIDATE_POOL_POLICY.acquisitionMode || pool.candidateCount !== COHORT_SIZE ||
       pool.humanSupplied !== true || !Number.isFinite(Date.parse(pool.suppliedAt)) || Date.parse(pool.suppliedAt) > now ||
       !Array.isArray(pool.candidates) || pool.candidates.length !== COHORT_SIZE || !HASH.test(pool.candidatePoolDigest || '') ||
-      pool.executionAuthorized !== false || pool.laterGroupsAuthorized !== false || pool.groupEAuthorized !== false) {
+      !HASH.test(pool.syntheticSetupDigest || '') || pool.executionAuthorized !== false ||
+      pool.laterGroupsAuthorized !== false || pool.groupEAuthorized !== false) {
     errors.push('group_d3_candidate_pool_schema_invalid');
   }
   const canonicalCandidates = [];
@@ -214,7 +224,9 @@ function validateCandidatePoolArtifact(pool, options = {}) {
     const handles = canonicalCandidates.map((candidate) => candidate.handle.handleKey);
     if (new Set(handles).size !== handles.length) errors.push('group_d3_candidate_pool_normalized_duplicate');
     const ordered = canonicalCandidateOrder(canonicalCandidates);
-    if (pool.candidatePoolDigest !== candidatePoolDigest(ordered)) errors.push('group_d3_candidate_pool_digest_mismatch');
+    if (pool.candidatePoolDigest !== candidatePoolDigest(ordered, pool.syntheticSetupDigest)) {
+      errors.push('group_d3_candidate_pool_digest_mismatch');
+    }
     canonicalCandidates.splice(0, canonicalCandidates.length, ...ordered);
   }
   if (errors.length) {
@@ -226,8 +238,11 @@ function validateCandidatePoolArtifact(pool, options = {}) {
     ok: true,
     mode: 'candidate-pool-schema-validation',
     acquisitionMode: CANDIDATE_POOL_POLICY.acquisitionMode,
+    cohortType: SYNTHETIC_COHORT_TYPE,
+    evidencePurpose: EXECUTION_EVIDENCE_PURPOSE,
     candidateCount: COHORT_SIZE,
     candidatePoolDigest: pool.candidatePoolDigest,
+    syntheticSetupDigest: pool.syntheticSetupDigest,
     canonicalOrderVerified: true,
     subjectsBound: false,
     executionAuthorized: false,
@@ -340,7 +355,7 @@ function validateCandidate(candidate, slot, prior, now, windowStart, errors) {
     errors.push(`group_d3_candidate_${slot.toLowerCase()}_targeted_state_invalid`);
   }
   if (!exactFields(candidate.review, REVIEW_FIELDS) || candidate.review.humanReviewed !== true ||
-      candidate.review.selectionSource !== 'explicit-private-d3-candidate' ||
+      candidate.review.selectionSource !== 'guarded-private-d3-synthetic-canary' ||
       !Number.isFinite(Date.parse(candidate.review.reviewedAt)) || Date.parse(candidate.review.reviewedAt) > now) {
     errors.push(`group_d3_candidate_${slot.toLowerCase()}_review_invalid`);
   }
@@ -353,9 +368,11 @@ function validateCandidate(candidate, slot, prior, now, windowStart, errors) {
 function validateBinding(binding, poolResult, now, windowStart, errors) {
   if (!exactFields(binding, BINDING_FIELDS) || binding.schemaVersion !== 1 || binding.environment !== 'production' ||
       binding.projectId !== 'trade-list-a4297' || binding.cohortStage !== 'D3' || binding.cohortSize !== COHORT_SIZE ||
+      binding.cohortType !== SYNTHETIC_COHORT_TYPE || binding.evidencePurpose !== EXECUTION_EVIDENCE_PURPOSE ||
       binding.state !== 'bound-reviewed' || binding.subjectsBound !== true || binding.executionAuthorized !== false ||
       binding.acquisitionMode !== CANDIDATE_POOL_POLICY.acquisitionMode ||
       binding.candidatePoolDigest !== poolResult?.candidatePoolDigest ||
+      !HASH.test(binding.syntheticSetupDigest || '') || binding.syntheticSetupDigest !== poolResult?.syntheticSetupDigest ||
       binding.humanReviewed !== true || !Number.isFinite(Date.parse(binding.boundAt)) || Date.parse(binding.boundAt) > now ||
       !Array.isArray(binding.candidates) || binding.candidates.length !== COHORT_SIZE || !HASH.test(binding.bindingDigest || '')) {
     errors.push('group_d3_subject_binding_invalid');
@@ -419,6 +436,7 @@ function validateThirdMutationAcceptance(value, options = {}) {
   const errors = [];
   const now = options.now ? options.now() : Date.now();
   if (!exactFields(value, ACCEPTANCE_EVIDENCE_FIELDS) || value.schemaVersion !== 1 || value.cohortStage !== 'D3' ||
+      value.cohortType !== SYNTHETIC_COHORT_TYPE ||
       !HASH.test(value.subjectsBindingDigest || '') || value.executedSubjects !== COHORT_SIZE ||
       value.reserveSuccesses !== COHORT_SIZE || value.replaySuccesses !== COHORT_SIZE ||
       !Array.isArray(value.steps) || value.steps.length !== COHORT_SIZE * 2 || !sameJson(value.finalCounts, FINAL_COUNTS) ||
@@ -460,6 +478,7 @@ function validateThirdMutationAcceptance(value, options = {}) {
   return Object.freeze({
     ok: true,
     cohortStage: 'D3',
+    cohortType: SYNTHETIC_COHORT_TYPE,
     executedSubjects: COHORT_SIZE,
     finalDocumentCount: FINAL_COUNTS.totalDocuments,
     finalStateDigest: value.finalStateDigest,
@@ -479,22 +498,28 @@ function guardProductionThirdMutation(input, options = {}) {
   const bindingPath = options.bindingPath || PRIVATE_BINDING_PATH;
   const readinessPath = options.readinessPath || PRIVATE_READINESS_PATH;
   const inputPath = options.inputPath || PRIVATE_INPUT_PATH;
+  const browserHarnessPath = options.browserHarnessPath || PRIVATE_BROWSER_HARNESS_PATH;
   const expectedSourceSha = options.expectedSourceSha;
   let manifest;
   let candidatePool;
   let candidatePoolResult;
   let binding;
   let readiness;
+  let browserHarness;
+  let browserHarnessResult;
   try { manifest = readJson(manifestPath); } catch { errors.push('production_manifest_missing_or_invalid'); }
   try { candidatePool = readJson(candidatePoolPath); } catch { errors.push('group_d3_candidate_pool_missing_or_invalid'); }
   try { binding = readJson(bindingPath); } catch { errors.push('group_d3_subject_binding_missing_or_invalid'); }
   try { readiness = readJson(readinessPath); } catch { errors.push('group_d3_readiness_missing_or_invalid'); }
+  try { browserHarness = readJson(browserHarnessPath); } catch { errors.push('group_d3_browser_harness_missing_or_invalid'); }
 
   if (!exactFields(input, INPUT_FIELDS)) errors.push('group_d3_input_schema_invalid');
   if (readiness && !exactFields(readiness, READINESS_FIELDS)) errors.push('group_d3_readiness_schema_invalid');
   if (!/^[a-f0-9]{40}$/u.test(expectedSourceSha || '')) errors.push('group_d3_source_sha_invalid');
   try { candidatePoolResult = validateCandidatePoolArtifact(candidatePool, { now: () => now, candidatePoolPath }); }
   catch (error) { errors.push(...(error.reasons || ['group_d3_candidate_pool_invalid'])); }
+  try { browserHarnessResult = validateBrowserHarnessArtifact(browserHarness, { now: () => now, harnessPath: browserHarnessPath }); }
+  catch (error) { errors.push(...(error.reasons || ['group_d3_browser_harness_invalid'])); }
   if (!privateMode(bindingPath)) errors.push('group_d3_subject_binding_permissions_invalid');
   if (!privateMode(readinessPath)) errors.push('group_d3_readiness_permissions_invalid');
   if (!privateMode(inputPath)) errors.push('group_d3_input_permissions_invalid');
@@ -510,7 +535,7 @@ function guardProductionThirdMutation(input, options = {}) {
   if (manifest?.legacyRtdb?.url !== 'https://trade-list-a4297-default-rtdb.firebaseio.com' ||
       input?.rtdbDatabaseUrl !== manifest?.legacyRtdb?.url) errors.push('rtdb_mismatch');
   if (!sameJson(manifest?.thirdMutation, EXPECTED_D3_MANIFEST)) errors.push('group_d3_manifest_contract_invalid');
-  if (JSON.stringify({ manifest, input, candidatePool, binding, readiness }).includes('trainer-hub-staging-37ib4wct')) {
+  if (JSON.stringify({ manifest, input, candidatePool, binding, readiness, browserHarness }).includes('trainer-hub-staging-37ib4wct')) {
     errors.push('staging_target_present');
   }
 
@@ -521,6 +546,7 @@ function guardProductionThirdMutation(input, options = {}) {
         readiness.firestoreDatabaseId !== manifest?.firestore?.databaseId ||
         readiness.rtdbDatabaseUrl !== manifest?.legacyRtdb?.url) errors.push('group_d3_readiness_target_mismatch');
     if (readiness.approvalGroup !== 'D' || readiness.cohortStage !== 'D3' || readiness.contractDefined !== true ||
+        readiness.cohortType !== SYNTHETIC_COHORT_TYPE || readiness.evidencePurpose !== EXECUTION_EVIDENCE_PURPOSE ||
         readiness.subjectsBound !== true || readiness.executionAuthorized !== true ||
         readiness.approvalAcknowledged !== true || readiness.teardownOwnerAcknowledged !== true ||
         readiness.humanOperator !== readiness.teardownOwner || !validIdentity(readiness.humanOperator) ||
@@ -542,6 +568,11 @@ function guardProductionThirdMutation(input, options = {}) {
   }
 
   validateBinding(binding, candidatePoolResult, now, windowStart, errors);
+  if (browserHarnessResult?.bindingDigest !== binding?.bindingDigest ||
+      readiness?.browserHarnessDigest !== browserHarnessResult?.harnessDigest ||
+      input?.browserHarnessDigest !== browserHarnessResult?.harnessDigest) {
+    errors.push('group_d3_browser_harness_binding_invalid');
+  }
   const evidenceExpiresAt = entryEvidenceExpiresAt(binding);
   let entryTiming;
   try {
@@ -553,7 +584,8 @@ function guardProductionThirdMutation(input, options = {}) {
   } catch { errors.push('group_d3_entry_timing_invalid'); }
   if (readiness?.subjectsBindingDigest !== binding?.bindingDigest || input?.subjectsBindingDigest !== binding?.bindingDigest ||
       input?.subjectsBound !== true || input?.executionAuthorized !== true || input?.approvalGroup !== 'D' ||
-      input?.cohortStage !== 'D3') errors.push('group_d3_binding_or_authorization_invalid');
+      input?.cohortStage !== 'D3' || input?.cohortType !== SYNTHETIC_COHORT_TYPE ||
+      input?.evidencePurpose !== EXECUTION_EVIDENCE_PURPOSE) errors.push('group_d3_binding_or_authorization_invalid');
   if (!sameValues(readiness?.authorizedOperations, ALLOWED_OPERATIONS) ||
       !sameValues(input?.requestedOperations, ALLOWED_OPERATIONS)) errors.push('group_d3_operations_invalid');
   if (!validD2Baseline(readiness?.d2Baseline) || !validD2Baseline(input?.d2Baseline) ||
@@ -597,12 +629,16 @@ function guardProductionThirdMutation(input, options = {}) {
     ok: true,
     approvalGroup: 'D',
     cohortStage: 'D3',
+    cohortType: SYNTHETIC_COHORT_TYPE,
+    evidencePurpose: EXECUTION_EVIDENCE_PURPOSE,
     environment: 'production',
     targetVerified: true,
     contractDefined: true,
     d2BaselineVerified: true,
     candidatePoolValidated: true,
     candidatePoolDigest: candidatePoolResult.candidatePoolDigest,
+    browserHarnessVerified: true,
+    browserHarnessDigest: browserHarnessResult.harnessDigest,
     subjectsBound: true,
     executionAuthorized: true,
     sourceSha: expectedSourceSha,
@@ -642,6 +678,7 @@ module.exports = Object.freeze({
   MAX_EVIDENCE_AGE_MS,
   MAX_WINDOW_MS,
   PRIVATE_BINDING_PATH,
+  PRIVATE_BROWSER_HARNESS_PATH,
   PRIVATE_CANDIDATE_POOL_PATH,
   PRIVATE_INPUT_PATH,
   PRIVATE_READINESS_PATH,

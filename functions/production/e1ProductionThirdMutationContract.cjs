@@ -5,6 +5,9 @@ const { DURABLE_MODE } = require('../e1-authority-service/readRateLimiters');
 
 const D2_STATE_DIGEST = '2923aafa890de58cb04fb5941528f7a425c22d0a131dd9fc0fcf71013468bf0b';
 const COHORT_SIZE = 5;
+const SYNTHETIC_COHORT_TYPE = 'controlled-synthetic-legacy-canary';
+const REAL_WORLD_EVIDENCE_TYPE = 'real-world-read-only-compatibility';
+const EXECUTION_EVIDENCE_PURPOSE = 'synthetic-mutation-execution';
 const OBSERVATION_HOURS = 24;
 const MAX_WINDOW_HOURS = 2;
 const ENTRY_EVIDENCE_MAX_AGE_MS = 15 * 60 * 1000;
@@ -119,6 +122,8 @@ const STOP_POLICY = Object.freeze({
   groupEActivationAllowed: false
 });
 const DEFAULT_SUBJECT_BINDING = Object.freeze({
+  cohortType: SYNTHETIC_COHORT_TYPE,
+  evidencePurpose: EXECUTION_EVIDENCE_PURPOSE,
   state: 'unbound',
   cohortSize: 0,
   bindingDigest: null,
@@ -126,7 +131,9 @@ const DEFAULT_SUBJECT_BINDING = Object.freeze({
   executionAuthorized: false
 });
 const CANDIDATE_POOL_POLICY = Object.freeze({
-  acquisitionMode: 'operator-supplied-exact-five',
+  cohortType: SYNTHETIC_COHORT_TYPE,
+  evidencePurpose: EXECUTION_EVIDENCE_PURPOSE,
+  acquisitionMode: 'guarded-synthetic-setup-exact-five',
   candidatePoolSize: COHORT_SIZE,
   automatedProductionDiscovery: false,
   toolingSelectsSubjects: false,
@@ -183,10 +190,16 @@ function canonicalCandidateOrder(candidates) {
   });
 }
 
-function candidatePoolDigest(candidates) {
+function candidatePoolDigest(candidates, syntheticSetupDigest) {
+  if (!/^[a-f0-9]{64}$/u.test(syntheticSetupDigest || '')) {
+    throw new Error('e1/group-d3-synthetic-setup-digest-invalid');
+  }
   return sha256(JSON.stringify([
     1,
-    'e1-group-d3-private-candidate-pool',
+    'e1-group-d3-synthetic-candidate-pool',
+    SYNTHETIC_COHORT_TYPE,
+    EXECUTION_EVIDENCE_PURPOSE,
+    syntheticSetupDigest,
     D2_STATE_DIGEST,
     canonicalCandidateOrder(candidates).map((candidate) => ({
       uidHash: candidate.subjectHashes.uidHash,
@@ -199,7 +212,9 @@ function candidatePoolDigest(candidates) {
 function subjectBindingDigest(priorCohort, candidates, poolDigest) {
   return sha256(JSON.stringify([
     1,
-    'e1-group-d3-subject-binding',
+    'e1-group-d3-synthetic-subject-binding',
+    SYNTHETIC_COHORT_TYPE,
+    EXECUTION_EVIDENCE_PURPOSE,
     D2_STATE_DIGEST,
     poolDigest,
     priorCohort,
@@ -286,6 +301,7 @@ module.exports = Object.freeze({
   EXECUTION_SEQUENCE,
   EXPECTED_COUNT_SEQUENCE,
   EXPECTED_D3_MANIFEST,
+  EXECUTION_EVIDENCE_PURPOSE,
   FINAL_COUNTS,
   FIRESTORE_TRANSACTION_MAX_ATTEMPTS,
   MAX_WINDOW_HOURS,
@@ -294,7 +310,9 @@ module.exports = Object.freeze({
   OPERATION_BUDGET,
   PER_SUBJECT_DELTA,
   READINESS_TIMING_POLICY,
+  REAL_WORLD_EVIDENCE_TYPE,
   STOP_POLICY,
+  SYNTHETIC_COHORT_TYPE,
   candidatePoolDigest,
   canonicalCandidateKey,
   canonicalCandidateOrder,

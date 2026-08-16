@@ -131,7 +131,9 @@
     "operation": "reserve-plus-exact-replay",
     "cohortSize": 5,
     "candidatePool": {
-      "acquisitionMode": "operator-supplied-exact-five",
+      "cohortType": "controlled-synthetic-legacy-canary",
+      "evidencePurpose": "synthetic-mutation-execution",
+      "acquisitionMode": "guarded-synthetic-setup-exact-five",
       "candidatePoolSize": 5,
       "automatedProductionDiscovery": false,
       "toolingSelectsSubjects": false,
@@ -140,6 +142,8 @@
       "poolValidationAuthorizesExecution": false
     },
     "subjectBinding": {
+      "cohortType": "controlled-synthetic-legacy-canary",
+      "evidencePurpose": "synthetic-mutation-execution",
       "state": "unbound",
       "cohortSize": 0,
       "bindingDigest": null,
@@ -277,7 +281,9 @@
       "targetSize": 5,
       "observeHours": 24,
       "contract": "thirdMutation",
-      "acquisitionMode": "operator-supplied-exact-five",
+      "cohortType": "controlled-synthetic-legacy-canary",
+      "evidencePurpose": "synthetic-mutation-execution",
+      "acquisitionMode": "guarded-synthetic-setup-exact-five",
       "automatedProductionDiscovery": false,
       "subjectsBound": false,
       "executionAuthorized": false

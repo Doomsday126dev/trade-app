@@ -1,14 +1,18 @@
-# E.1 Group D3 reserve cohort runbook
+# E.1 Group D3 synthetic reserve cohort runbook
 
-## Status and boundary
+## Status and evidence boundary
 
-Group D3 is the final pre-Group-E reserve cohort validation. It covers exactly five additional eligible legacy accounts. Each account performs one `reserveTrainerHandle` call followed immediately by one exact replay of the same request. D3 does not authorize repair, migration, freeze, provider linking, client-foundation activation, SEC-02 work, or Group E.
+Group D3 is the final pre-Group-E reserve-cohort validation. D3 mutation execution uses exactly five controlled synthetic legacy canaries. Each canary performs one `reserveTrainerHandle` call followed immediately by one exact replay. D3 does not authorize repair, migration, freeze, provider linking, client-foundation activation, SEC-02 work, or Group E.
 
-The tracked contract is intentionally unbound and unauthorized. This document does not select subjects or authorize production execution.
+The previously reviewed five real production users remain valuable **real-world read-only compatibility evidence**. Their exact Auth presence, reciprocal legacy ownership, login-directory readiness, exclusions, and durable-target absence show that organic ownership shapes are compatible with D3 admission checks. They are not D3 mutation subjects, receive no reserve or replay, and require no credentials or participation.
 
-## Immutable precondition
+Synthetic D3 proves that the authentic browser, Firebase Auth, App Check, gateway, authority, and durable identity path works sequentially at five-subject scale. It does not prove that five arbitrary organic users were migrated.
 
-D3 requires the accepted D2 state exactly:
+The tracked contract is intentionally unbound and unauthorized. This document neither creates canaries nor authorizes production execution.
+
+## Immutable E.1 precondition
+
+D3 requires the accepted D2 Firestore state exactly:
 
 - total documents: 12
 - `accounts`: 3
@@ -19,96 +23,83 @@ D3 requires the accepted D2 state exactly:
 - `identityConflicts`: 0
 - canonical digest: `2923aafa890de58cb04fb5941528f7a425c22d0a131dd9fc0fcf71013468bf0b`
 
-An approximate, superset, or recomputed substitute baseline is not accepted.
+Synthetic legacy setup must not change this state or digest.
 
-## Operator-supplied candidate pool
+## Retired real-world execution artifacts
 
-D3 never enumerates, discovers, ranks, or selects production accounts. A human operator must privately supply exactly five intended subjects before D3 tooling runs. If the operator cannot identify five candidates confidently, D3 subject preparation is blocked; any future privacy-safe discovery project requires separate design and approval.
+Old private candidate-pool, binding, activation, and guard-input files may be retained as historical evidence. They use the retired `real-world-read-only-compatibility` evidence type and cannot satisfy the current synthetic contract. `enable-group-d3` requires all of the following domain-bound values:
 
-The private path is `functions/.local/e1-production-third-mutation-candidate-pool.json`. It must be Git-ignored, mode `0600`, and contain exactly:
+- `cohortType=controlled-synthetic-legacy-canary`
+- `evidencePurpose=synthetic-mutation-execution`
+- `acquisitionMode=guarded-synthetic-setup-exact-five`
+- exact synthetic setup digest
+- exact synthetic candidate-pool and binding digests
+- exact private browser-harness digest bound to that binding
 
-```json
-{
-  "schemaVersion": 1,
-  "environment": "production",
-  "projectId": "trade-list-a4297",
-  "cohortStage": "D3",
-  "acquisitionMode": "operator-supplied-exact-five",
-  "candidateCount": 5,
-  "humanSupplied": true,
-  "suppliedAt": "<ISO-8601 timestamp>",
-  "candidates": [
-    { "firebaseUid": "<private UID>", "trainerUsername": "<private trainer>" }
-  ],
-  "candidatePoolDigest": "<domain-separated SHA-256>",
-  "executionAuthorized": false,
-  "laterGroupsAuthorized": false,
-  "groupEAuthorized": false
-}
-```
+Missing, mixed, or real-world types fail closed. Source changes also invalidate activation/readiness by immutable SHA.
 
-The `candidates` array must contain exactly five entries. Passwords, PINs, tokens, email/profile data, request records, and unrelated application data are forbidden by the exact schema. No real candidate-pool file is tracked.
+## Separate canary setup stage
 
-Validate only the local schema and canonical digest with:
+`PREPARE D3 SYNTHETIC CANARIES` is a separate, later, human-approved production stage. Its private mode-`0600` plan must use a deterministic operation ID and exactly five clearly test-only identities following the guarded `E1D3Canary` naming policy. Passwords, six-digit PINs, synthetic login emails, and tokens are private operator material and never enter tracked source, logs, reports, localStorage, or sessionStorage.
 
-```sh
-E1_PRODUCTION_THIRD_MUTATION_CANDIDATE_POOL=functions/.local/e1-production-third-mutation-candidate-pool.json \
-node functions/scripts/check-e1-production-third-mutation-target.cjs --mode=candidate-pool
-```
+Before any setup write, exact absence must be proven for every proposed Auth UID/email, `users/{trainer}`, `loginDirectory/{trainer}`, `authIndex/{uid}`, and every planned E.1 account/handle/rate-limit/request/migration/conflict target. No enumeration or fallback substitution is authorized.
 
-Pool validation canonicalizes harmless trainer-name normalization, rejects duplicate raw or normalized identities, and orders all five by the existing privacy-safe subject fingerprint. Presence or validation of the pool does not bind subjects, authorize D3, or authorize Group E.
+The setup mutation ceiling is exactly 20 logical creates:
 
-## Exact-five eligibility and binding
+- 5 Firebase Auth user creates
+- 5 minimal `users/{trainer}` creates
+- 5 `loginDirectory/{trainer}` creates
+- 5 reciprocal `authIndex/{uid}` creates
+- 0 `phase-e-identity` writes
 
-1. Evaluate only the five operator-supplied subjects using exact RTDB leaves and exact Firestore document paths. Production-wide enumeration and fallback substitution are prohibited.
-2. Require reciprocal `authIndex/{uid}/username` and `users/{trainer}/authUid` ownership, a usable `loginDirectory/{trainer}` entry, no identity ambiguity, no migration/conflict evidence, and absence of the planned account, handle, operation request, and rate-limit documents.
-3. Exclude every D1/D2 member, already reserved identity, conflicting owner, ambiguous handle, and admin/system-only identity.
-4. If any one candidate fails, mark the entire pool not ready and stop. Do not choose a sixth subject.
-5. Store raw UID/trainer evidence only in ignored `functions/.local/**` files with mode `0600`.
-6. Create `e1-production-third-mutation-subjects.json` from the same canonical five, with slots (`A` through `E`), the candidate-pool digest, and its distinct domain-separated binding digest.
-7. Human-review the five-member binding. Candidate pool, subject binding, readiness, and execution authorization remain separate lifecycle stages.
+The user shell contains only fields needed for supported username/PIN login and reciprocal ownership. Setup creates no lists, Favorites, shares, requests, admin/community state, or E.1 documents.
 
-The tracked manifest remains `subjectsBound=false` and `executionAuthorized=false`; private reviewed evidence supplies those later states to the guard without committing identities.
-
-## Read-only readiness
-
-Create private mode-`0600` files:
-
-- `functions/.local/e1-production-third-mutation-candidate-pool.json`
-- `functions/.local/e1-production-third-mutation-subjects.json`
-- `functions/.local/e1-production-third-mutation-activation.json`
-- `functions/.local/e1-production-third-mutation-guard-input.json`
-
-The input must prove the exact D2 baseline, all gates disabled, the reviewed authority revision/image and identities, private authority/IAM boundaries, App Check token-verifier boundary, the exact budget, no preflight writes, and `groupEAuthorized=false`.
-
-Run only the read-only local checker:
+Validate a future private setup plan locally with:
 
 ```sh
-E1_PRODUCTION_THIRD_MUTATION_CANDIDATE_POOL=functions/.local/e1-production-third-mutation-candidate-pool.json \
-E1_PRODUCTION_THIRD_MUTATION_SUBJECTS=functions/.local/e1-production-third-mutation-subjects.json \
-E1_PRODUCTION_THIRD_MUTATION_READINESS=functions/.local/e1-production-third-mutation-activation.json \
-E1_PRODUCTION_THIRD_MUTATION_GUARD_INPUT=functions/.local/e1-production-third-mutation-guard-input.json \
-node functions/scripts/check-e1-production-third-mutation-target.cjs
+E1_PRODUCTION_THIRD_MUTATION_CANARY_SETUP=functions/.local/e1-production-third-mutation-canary-setup.json \
+node functions/scripts/check-e1-production-third-mutation-canary-setup.cjs
 ```
 
-The guard must report `ok=true`, `cohortStage=D3`, `candidateCount=5`, `subjectsBound=true`, `executionAuthorized=true`, and `groupEAuthorized=false`. A passing readiness check is not itself execution approval.
+Validation performs no cloud operation and does not authorize setup or D3.
 
-### Readiness timing model
+### Setup idempotency and rollback
 
-D3 uses `pre-enable-jit-v1`. Candidate eligibility and the reviewed five-subject binding establish who may enter the cohort, but they do not authorize execution. The private activation and guard-input artifacts bind the authorization to the exact reviewed source SHA. Any source change makes those two artifacts stale and requires regeneration; the candidate-pool and subject-binding digests remain reusable because they do not include source or timing authorization.
+The setup operation ID, exact five identities, credential fingerprints, D2 digest, and mutation budget form a deterministic setup digest. Exact replay performs zero mutations. Any partial or conflicting existing state fails closed and is never overwritten.
 
-The 15-minute Auth and targeted-state evidence age is an entry precondition checked when the canonical helper prepares `enable-group-d3`. It is not a lease that must remain unexpired for every later reserve, replay, or verification step. A successful enable records that all entry evidence was fresh at admission. After enablement, the approved mutation window, capped at two hours, governs the strictly sequential operation. Each live request must still pass Firebase token verification, App Check, reciprocal legacy ownership, transaction, idempotency, count, digest, and stop checks.
+A failed setup may roll back only exact entries in its creation ledger, only while those entries still belong to that setup operation, and only before any canary has successfully entered D3 durable identity state. The rollback ceiling is 20 exact deletes. It must never delete pre-existing production data. Once any canary reserve succeeds, normal D3 evidence-preservation rules apply and destructive rollback is forbidden.
 
-Therefore the full five-subject run does not need to finish inside the 15-minute evidence age. It must start with fresh evidence and finish before the mutation-window end. Evidence that expires before enablement fails closed. The exact expiry boundary is accepted at enablement; one millisecond after it is not. Mutation-window expiry stops the next operation. Containment restoration remains available independently after either readiness or mutation-window expiry.
+## Synthetic candidate pool and binding
 
-## Separate production authorization
+After separately approved setup, create a private mode-`0600` candidate pool containing exactly five `syntheticCanary=true` identities and the setup digest. The exact schema forbids credentials and tokens. Validation canonicalizes trainer names, rejects UID/trainer/handle collisions, and orders candidates by the privacy-safe subject fingerprint.
 
-A human approval must name the immutable binding digest, bounded window, operator, teardown owner, exact allowed operations, source SHA, authority revision/image, and the exact confirmations:
+The private binding must contain exactly slots A-E, unique UID/trainer/handle/request identities, the D2 prior-cohort evidence, the setup and pool digests, and a domain-separated synthetic binding digest. It remains `executionAuthorized=false` and `groupEAuthorized=false`.
 
-- enable: `ENABLE E1 GROUP D3 RESERVE COHORT`
-- restore: `RESTORE E1 GROUP D3 GATES`
+D3 still never enumerates, discovers, ranks, or selects production accounts. Do not choose a sixth subject. A pool or binding does not authorize execution.
 
-Only the canonical helper may prepare gateway deployment plans:
+## Authentic browser harness
+
+The private D3 browser harness runs in five isolated supported browser contexts using the production Firebase web configuration. For each canary and each operation it must:
+
+1. start with no previous, operator, or admin Firebase session;
+2. sign in through the supported username/PIN to Firebase email/password path;
+3. require `currentUser.uid` to equal the exact bound canary UID;
+4. obtain a fresh Firebase ID token from that signed-in user;
+5. obtain a fresh limited-use token from the production App Check provider;
+6. call only the reviewed `reserveE1TrainerHandle` gateway operation;
+7. discard both tokens and sign out.
+
+Debug App Check, hardcoded tokens, custom-token minting, Admin SDK ID tokens, service-account impersonation, operator substitution, token reuse, and browser-storage persistence are forbidden. Every reserve and replay obtains fresh user and App Check tokens independently.
+
+The private browser-harness evidence is bound to the synthetic subject-binding digest. It proves five distinct contexts, exact UID matching, production App Check availability, no debug token, no token persistence, and no operator/admin session. It is not execution authorization.
+
+## Readiness and timing
+
+Private candidate-pool, binding, browser-harness, activation, and guard-input artifacts must be Git-ignored and mode `0600`. The guard requires the exact D2 baseline, all gates disabled, reviewed runtime provenance, private IAM boundary, App Check token-verifier boundary, exact operation budget, no preflight writes, and `groupEAuthorized=false`.
+
+D3 preserves `pre-enable-jit-v1`: Auth metadata and targeted-state admission evidence must be at most 15 minutes old at enable, the mutation window is at most two hours, and containment restoration remains available after expiry. Fresh browser ID/App Check tokens are required for every operation regardless of metadata age.
+
+Only the canonical gateway helper may prepare enable or restore plans:
 
 ```sh
 node functions/scripts/deploy-e1-production-gateway.cjs \
@@ -119,48 +110,22 @@ node functions/scripts/deploy-e1-production-gateway.cjs \
   --confirmation='ENABLE E1 GROUP D3 RESERVE COHORT'
 ```
 
-Deployment is a later, separately approved operation. Never reconstruct raw `gcloud functions deploy` commands.
+Restoration uses `--action=restore-group-d3` and confirmation `RESTORE E1 GROUP D3 GATES`. Deployment and execution always require separate human approval.
 
-## Sequential execution
+## Sequential mutation and budget
 
-The only valid sequence is:
+The only sequence is synthetic A reserve, verify, exact replay, verify, then B through E, never concurrently. Expected document counts remain `12, 16, 16, 20, 20, 24, 24, 28, 28, 32, 32`. Each reserve creates exactly one account, trainer handle, rate-limit, and operation-request document. Exact replay commits zero writes.
 
-1. Subject 1 reserve, verify count/digest and reciprocal ownership, exact replay, verify no change.
-2. Repeat for subjects 2 through 5, never concurrently.
+The ten requests permit ten gateway calls, ten authority calls, ten limited-use App Check tokens, twenty logical Firestore transactions, twenty committed Firestore writes, thirty exact RTDB reads, and zero RTDB writes. Existing transaction/read ceilings remain unchanged.
 
-Expected total counts are `12, 16, 16, 20, 20, 24, 24, 28, 28, 32, 32`. Each first reserve creates one rate-limit, account, handle, and operation-request document. The immediate exact replay must stay in the same fixed rate-limit window and commit zero writes.
+Stop before the next subject on any mismatch, collision, auth/App Check anomaly, count/digest drift, unexpected document, ownership failure, or budget breach. Restore temporary gates and preserve durable evidence.
 
-Stop before the next subject on any collision, mismatch, malformed rate-limit state, unexpected document, migration/conflict evidence, 5xx/auth anomaly, count mismatch, digest mismatch, or ownership failure. Preserve durable evidence and restore gates; do not repair or delete records within D3.
+## Observation, Group E, and canary lifecycle
 
-The operational lifecycle is: candidate eligibility, private activation, just-in-time entry verification, successful enablement, bounded sequential mutation, immediate per-step invariant checks, containment restoration, then observation. Do not reinterpret a successful entry check as permission to exceed the mutation window or skip any per-step invariant.
+After all five replay verifications, restore all gates and begin the existing 24-hour observation. Final state is exactly 32 documents: 8 accounts, 8 trainer handles, 8 rate limits, 8 operation requests, and zero migrations/conflicts.
 
-## Bounded budget
-
-The ten reviewed requests permit exactly ten gateway calls, ten authority calls, ten limited-use App Check tokens, twenty logical Firestore transactions, twenty committed Firestore writes, thirty exact RTDB reads, and zero RTDB writes. With the pinned Firestore SDK's five-attempt transaction ceiling, at most 100 transaction attempts and 200 operation reads are modeled.
-
-Immediate exact-path verification is capped at 468 document reads; the final observation check is capped at 42. Total verification is capped at 510 reads. Including operation reads, the expected ceiling is 550 and the retry ceiling is 710. No query, collection enumeration, extra mutation retry, or budget increase is authorized by D3.
-
-## Containment restoration
-
-Restoration remains available after readiness expires and requires:
-
-```sh
-node functions/scripts/deploy-e1-production-gateway.cjs \
-  --mode=plan \
-  --action=restore-group-d3 \
-  --source=functions/e1-gateway \
-  --expected-sha=<reviewed-sha> \
-  --confirmation='RESTORE E1 GROUP D3 GATES'
-```
-
-Containment disables gateway/reserve/proof capability and preserves successful accounts, handles, operation requests, and rate-limit evidence. It never deletes or rewrites identity state and never activates Group E.
-
-## Observation and acceptance
-
-The 24-hour observation begins only after subject 5's exact replay verification. Use low-frequency read-only checks for the canonical digest, exact 8+8+8+8 family counts, zero migration/conflict records, replay/collision anomalies, authority/gateway 5xx, OIDC/App Check anomalies, public exposure, IAM drift, reciprocal RTDB ownership, cost/log anomalies, and restored gates.
-
-D3 is accepted only after all five reserves and replays pass, the exact `32`-document state and final canonical digest are captured and human-accepted, gates remain restored, the 24-hour observation completes healthy, and Group E remains disabled. An observation anomaly leaves D3 unaccepted and requires manual review.
+Group E remains unauthorized after D3 until separate human approval. Successful synthetic canaries and their durable identity evidence are retained through the Group E/Google rollout as clearly test-only production canaries. No automatic deletion occurs; eventual retirement is a separate reviewed migration task.
 
 ## Next boundary
 
-After this source contract is accepted, the next task is for the operator to prepare the private exact-five candidate pool. A separately approved read-only task may then validate eligibility for those exact five and prepare the immutable binding candidate. It must stop before readiness authorization, enablement, or mutation.
+After this source amendment is accepted, the next separately approved task is guarded creation of exactly five synthetic D3 legacy canaries. That task creates the minimal Auth/RTDB state, stores credentials privately, verifies the unchanged 12-document D2 baseline, proves authentic browser sign-in and production App Check capability read-only, binds the cohort, and stops before reserve/replay.

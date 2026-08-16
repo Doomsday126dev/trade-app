@@ -245,10 +245,13 @@ function d3GuardResult(overrides = {}) {
     ok: true,
     approvalGroup: 'D',
     cohortStage: 'D3',
+    cohortType: 'controlled-synthetic-legacy-canary',
+    evidencePurpose: 'synthetic-mutation-execution',
     environment: 'production',
     targetVerified: true,
     subjectsBound: true,
     executionAuthorized: true,
+    browserHarnessVerified: true,
     sourceSha: HEAD,
     entryEvidenceFreshAtEnable: true,
     entryEvidenceExpiresAt: '2026-08-15T15:10:00.000Z',
@@ -408,6 +411,10 @@ test('D3 enable uses the canonical source only with five-subject guard and exact
     /action-guard-mismatch/u);
   assert.throws(() => createDeploymentPlan({ ...common, guardResult: d3GuardResult({ subjectsBound: false }) }),
     /action-guard-mismatch/u);
+  assert.throws(() => createDeploymentPlan({ ...common,
+    guardResult: d3GuardResult({ cohortType: 'real-world-read-only-compatibility' }) }), /action-guard-mismatch/u);
+  assert.throws(() => createDeploymentPlan({ ...common,
+    guardResult: d3GuardResult({ browserHarnessVerified: false }) }), /action-guard-mismatch/u);
   assert.throws(() => createDeploymentPlan({ ...common, guardResult: d3GuardResult({ groupEAuthorized: true }) }),
     /action-guard-mismatch/u);
   assert.throws(() => createDeploymentPlan({ ...common, guardResult: d3GuardResult({ sourceSha: '0'.repeat(40) }) }),

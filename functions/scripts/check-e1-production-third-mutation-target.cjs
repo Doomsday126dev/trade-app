@@ -6,6 +6,7 @@ const path = require('node:path');
 const { execFileSync } = require('node:child_process');
 const {
   PRIVATE_BINDING_PATH,
+  PRIVATE_BROWSER_HARNESS_PATH,
   PRIVATE_CANDIDATE_POOL_PATH,
   PRIVATE_READINESS_PATH,
   guardProductionThirdMutation,
@@ -51,6 +52,10 @@ if (selectedMode === 'candidate-pool') {
     process.env.E1_PRODUCTION_THIRD_MUTATION_READINESS || PRIVATE_READINESS_PATH,
     'Group D3 readiness'
   );
+  const browserHarnessPath = privatePath(
+    process.env.E1_PRODUCTION_THIRD_MUTATION_BROWSER_HARNESS || PRIVATE_BROWSER_HARNESS_PATH,
+    'Group D3 browser harness evidence'
+  );
   const input = JSON.parse(fs.readFileSync(inputPath, 'utf8'));
   const repoRoot = path.resolve(__dirname, '../..');
   const expectedSourceSha = execFileSync('git', ['-C', repoRoot, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
@@ -58,6 +63,7 @@ if (selectedMode === 'candidate-pool') {
     inputPath,
     candidatePoolPath,
     bindingPath,
+    browserHarnessPath,
     readinessPath,
     expectedSourceSha
   });

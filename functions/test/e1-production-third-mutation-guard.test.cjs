@@ -21,12 +21,14 @@ const {
   EXECUTION_SEQUENCE,
   EXPECTED_COUNT_SEQUENCE,
   EXPECTED_D3_MANIFEST,
+  EXECUTION_EVIDENCE_PURPOSE,
   FINAL_COUNTS,
   OBSERVATION_CHECKS,
   OBSERVATION_HOURS,
   OPERATION_BUDGET,
   READINESS_TIMING_POLICY,
   STOP_POLICY,
+  SYNTHETIC_COHORT_TYPE,
   candidatePoolDigest,
   canonicalCandidateOrder,
   expectedDocumentCount,
@@ -46,6 +48,12 @@ const {
   validateCandidatePoolArtifact,
   validateThirdMutationAcceptance
 } = require('../production/e1ProductionThirdMutationGuard.cjs');
+const {
+  APP_CHECK_MODE,
+  HARNESS_MODE,
+  LOGIN_METHOD,
+  harnessDigest
+} = require('../production/e1ProductionThirdMutationBrowserHarness.cjs');
 
 const NOW = Date.parse('2026-08-15T15:00:00.000Z');
 const START = '2026-08-15T14:30:00.000Z';
@@ -69,24 +77,29 @@ function priorCohort() {
 function poolSubjects() {
   return ['A', 'B', 'C', 'D', 'E'].map((slot, index) => ({
     firebaseUid: `synthetic-d3-uid-${index + 1}`,
-    trainerUsername: `D3Trainer${slot}`
+    trainerUsername: `D3Trainer${slot}`,
+    syntheticCanary: true
   }));
 }
 
 function candidatePool(subjects = poolSubjects()) {
   const canonical = subjects.map(canonicalPoolCandidate);
+  const syntheticSetupDigest = '9'.repeat(64);
   return {
     schemaVersion: 1,
     environment: 'production',
     projectId: 'trade-list-a4297',
     cohortStage: 'D3',
+    cohortType: SYNTHETIC_COHORT_TYPE,
+    evidencePurpose: EXECUTION_EVIDENCE_PURPOSE,
     acquisitionMode: CANDIDATE_POOL_POLICY.acquisitionMode,
     candidateCount: subjects.length,
     humanSupplied: true,
     suppliedAt: '2026-08-15T14:20:00.000Z',
     candidates: subjects,
-    candidatePoolDigest: candidatePoolDigest(canonical),
+    candidatePoolDigest: candidatePoolDigest(canonical, syntheticSetupDigest),
     executionAuthorized: false,
+    syntheticSetupDigest,
     laterGroupsAuthorized: false,
     groupEAuthorized: false
   };
@@ -147,7 +160,7 @@ function candidate(slot, index, reviewedSubject) {
     review: {
       humanReviewed: true,
       reviewedAt: '2026-08-15T14:50:00.000Z',
-      selectionSource: 'explicit-private-d3-candidate'
+      selectionSource: 'guarded-private-d3-synthetic-canary'
     }
   };
 }
@@ -173,6 +186,8 @@ function fixture(subjects = poolSubjects()) {
     environment: 'production',
     projectId: 'trade-list-a4297',
     cohortStage: 'D3',
+    cohortType: SYNTHETIC_COHORT_TYPE,
+    evidencePurpose: EXECUTION_EVIDENCE_PURPOSE,
     cohortSize: 5,
     state: 'bound-reviewed',
     subjectsBound: true,
@@ -182,9 +197,44 @@ function fixture(subjects = poolSubjects()) {
     boundAt: '2026-08-15T14:45:00.000Z',
     humanReviewed: true,
     priorCohort: prior,
+    syntheticSetupDigest: pool.syntheticSetupDigest,
     candidates,
     bindingDigest
   };
+  const browserHarness = {
+    schemaVersion: 1,
+    environment: 'production',
+    projectId: 'trade-list-a4297',
+    appId: EXPECTED_APP_ID,
+    cohortStage: 'D3',
+    cohortType: SYNTHETIC_COHORT_TYPE,
+    evidencePurpose: EXECUTION_EVIDENCE_PURPOSE,
+    mode: HARNESS_MODE,
+    bindingDigest,
+    verifiedAt: '2026-08-15T14:55:00.000Z',
+    subjects: candidates.map((value, index) => ({
+      slot: value.slot,
+      uidHash: value.subjectHashes.uidHash,
+      trainerHash: value.subjectHashes.trainerHash,
+      browserContextHash: String(index + 4).repeat(64),
+      loginMethod: LOGIN_METHOD,
+      exactUidMatch: true,
+      previousSessionAbsent: true,
+      operatorAdminSessionAbsent: true,
+      firebaseIdTokenFresh: true,
+      limitedUseAppCheckAvailable: true,
+      appCheckMode: APP_CHECK_MODE,
+      debugTokenUsed: false,
+      tokenPersistence: 'none',
+      tokenReuseDetected: false
+    })),
+    debugTokensUsed: false,
+    tokensPersisted: false,
+    executionAuthorized: false,
+    groupEAuthorized: false,
+    harnessDigest: ''
+  };
+  browserHarness.harnessDigest = harnessDigest(browserHarness);
   const readiness = {
     schemaVersion: 1,
     environment: 'production',
@@ -195,8 +245,11 @@ function fixture(subjects = poolSubjects()) {
     rtdbDatabaseUrl: 'https://trade-list-a4297-default-rtdb.firebaseio.com',
     approvalGroup: 'D',
     cohortStage: 'D3',
+    cohortType: SYNTHETIC_COHORT_TYPE,
+    evidencePurpose: EXECUTION_EVIDENCE_PURPOSE,
     contractDefined: true,
     subjectsBindingDigest: bindingDigest,
+    browserHarnessDigest: browserHarness.harnessDigest,
     subjectsBound: true,
     executionAuthorized: true,
     approvedAt: '2026-08-15T14:40:00.000Z',
@@ -229,7 +282,10 @@ function fixture(subjects = poolSubjects()) {
     rtdbDatabaseUrl: 'https://trade-list-a4297-default-rtdb.firebaseio.com',
     approvalGroup: 'D',
     cohortStage: 'D3',
+    cohortType: SYNTHETIC_COHORT_TYPE,
+    evidencePurpose: EXECUTION_EVIDENCE_PURPOSE,
     subjectsBindingDigest: bindingDigest,
+    browserHarnessDigest: browserHarness.harnessDigest,
     subjectsBound: true,
     executionAuthorized: true,
     readinessContract: readinessContract(SOURCE_SHA),
@@ -277,7 +333,7 @@ function fixture(subjects = poolSubjects()) {
     laterGroupsAuthorized: false,
     groupEAuthorized: false
   };
-  return { pool, binding, readiness, input };
+  return { pool, binding, browserHarness, readiness, input };
 }
 
 function writePrivate(directory, name, value) {
@@ -293,12 +349,14 @@ function runGuard(values = fixture()) {
     const bindingPath = writePrivate(directory, 'subjects.json', values.binding);
     const candidatePoolPath = writePrivate(directory, 'candidate-pool.json', values.pool);
     const readinessPath = writePrivate(directory, 'readiness.json', values.readiness);
+    const browserHarnessPath = writePrivate(directory, 'browser-harness.json', values.browserHarness);
     const inputPath = writePrivate(directory, 'input.json', values.input);
     return guardProductionThirdMutation(values.input, {
       now: () => NOW,
       manifestPath: MANIFEST_PATH,
       candidatePoolPath,
       bindingPath,
+      browserHarnessPath,
       readinessPath,
       inputPath,
       expectedSourceSha: SOURCE_SHA
@@ -337,6 +395,7 @@ function acceptance() {
   return {
     schemaVersion: 1,
     cohortStage: 'D3',
+    cohortType: SYNTHETIC_COHORT_TYPE,
     subjectsBindingDigest: 'a'.repeat(64),
     executedSubjects: 5,
     reserveSuccesses: 5,
@@ -389,7 +448,7 @@ test('tracked D3 contract is unbound and unauthorized while defining exact reser
   assert.equal(OPERATION_BUDGET.verificationReadsTotalMaximum, 510);
 });
 
-test('operator-supplied exact-five pool validates without binding or authorization and reports no raw identity', () => {
+test('guarded synthetic exact-five pool validates without binding or authorization and reports no raw identity', () => {
   const pool = candidatePool();
   const result = validatePool(pool);
   assert.equal(result.ok, true);
@@ -404,6 +463,24 @@ test('operator-supplied exact-five pool validates without binding or authorizati
     assert.doesNotMatch(report, new RegExp(subject.firebaseUid, 'u'));
     assert.doesNotMatch(report, new RegExp(subject.trainerUsername, 'u'));
   }
+});
+
+test('retired real-world eligibility artifacts cannot satisfy the synthetic D3 pool contract', () => {
+  const retired = candidatePool();
+  retired.cohortType = 'real-world-read-only-compatibility';
+  retired.evidencePurpose = 'read-only-compatibility';
+  retired.acquisitionMode = 'operator-supplied-exact-five';
+  retired.candidates = retired.candidates.map(({ firebaseUid, trainerUsername }) => ({ firebaseUid, trainerUsername }));
+  assert.throws(() => validatePool(retired), (error) =>
+    error.reasons.includes('group_d3_candidate_pool_schema_invalid') &&
+    error.reasons.includes('group_d3_candidate_pool_subject_invalid'));
+});
+
+test('mixed real and synthetic candidate pools fail closed', () => {
+  const mixed = candidatePool();
+  mixed.candidates[2].syntheticCanary = false;
+  assert.throws(() => validatePool(mixed), (error) =>
+    error.reasons.includes('group_d3_candidate_pool_subject_invalid'));
 });
 
 test('candidate pool canonical order and digest are stable across input order and harmless normalization', () => {
@@ -455,7 +532,7 @@ for (const [name, mutate, reason] of [
     mutate(value);
     value.candidatePoolDigest = candidatePoolDigest(value.candidates.slice(0, 5).map((subject) => {
       try { return canonicalPoolCandidate(subject); } catch { return canonicalPoolCandidate(poolSubjects()[4]); }
-    }));
+    }), value.syntheticSetupDigest);
     assert.throws(() => validatePool(value), (error) => error.reasons.includes(reason));
   });
 }
@@ -574,7 +651,7 @@ test('D3 activation and input bind to the exact source while pool and subject bi
   assert.throws(() => runGuard(values), (error) => error.reasons.includes('group_d3_readiness_contract_invalid'));
   assert.equal(values.pool.candidatePoolDigest, poolDigest);
   assert.equal(values.binding.bindingDigest, bindingDigest);
-  assert.equal(candidatePoolDigest(values.pool.candidates.map(canonicalPoolCandidate)), poolDigest);
+  assert.equal(candidatePoolDigest(values.pool.candidates.map(canonicalPoolCandidate), values.pool.syntheticSetupDigest), poolDigest);
   assert.equal(subjectBindingDigest(values.binding.priorCohort, values.binding.candidates, poolDigest), bindingDigest);
 });
 
@@ -596,6 +673,9 @@ test('subject binding is separate from execution authorization and uses a determ
 for (const [name, mutate, reason] of [
   ['four subjects', (value) => { value.binding.candidates.pop(); }, 'group_d3_subject_binding_invalid'],
   ['six subjects', (value) => { value.binding.candidates.push(structuredClone(value.binding.candidates[0])); }, 'group_d3_subject_binding_invalid'],
+  ['real-world binding type', (value) => { value.binding.cohortType = 'real-world-read-only-compatibility'; }, 'group_d3_subject_binding_invalid'],
+  ['wrong activation cohort type', (value) => { value.readiness.cohortType = 'real-world-read-only-compatibility'; }, 'group_d3_approval_invalid'],
+  ['stale browser binding', (value) => { value.browserHarness.bindingDigest = 'f'.repeat(64); value.browserHarness.harnessDigest = harnessDigest(value.browserHarness); }, 'group_d3_browser_harness_binding_invalid'],
   ['duplicate subject', (value) => { value.binding.candidates[1] = structuredClone(value.binding.candidates[0]); value.binding.candidates[1].slot = 'B'; }, 'group_d3_candidates_not_distinct'],
   ['prior D1 overlap', (value) => { value.binding.priorCohort.members[0].uidHash = value.binding.candidates[0].subjectHashes.uidHash; }, 'group_d3_candidate_a_prior_cohort_overlap'],
   ['prior D2 overlap', (value) => { value.binding.priorCohort.members[1].handleKey = value.binding.candidates[1].handle.handleKey; }, 'group_d3_candidate_b_prior_cohort_overlap'],
@@ -666,7 +746,8 @@ for (const [name, mutate, reason] of [
   ['wrong final count', (value) => { value.finalCounts = { ...value.finalCounts, totalDocuments: 33 }; }, 'group_d3_acceptance_schema_or_summary_invalid'],
   ['short observation', (value) => { value.observation.endAt = '2026-08-15T13:59:59.000Z'; }, 'group_d3_acceptance_observation_invalid'],
   ['unrestored gate', (value) => { value.gatesRestored = { ...value.gatesRestored, GATEWAY_INVOCATION_ENABLED: true }; }, 'group_d3_acceptance_schema_or_summary_invalid'],
-  ['Group E enabled', (value) => { value.groupEAuthorized = true; }, 'group_d3_acceptance_schema_or_summary_invalid']
+  ['Group E enabled', (value) => { value.groupEAuthorized = true; }, 'group_d3_acceptance_schema_or_summary_invalid'],
+  ['real-world cohort acceptance', (value) => { value.cohortType = 'real-world-read-only-compatibility'; }, 'group_d3_acceptance_schema_or_summary_invalid']
 ]) {
   test(`final D3 acceptance fails for ${name}`, () => {
     const value = acceptance();

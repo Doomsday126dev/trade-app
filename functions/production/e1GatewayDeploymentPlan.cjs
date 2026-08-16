@@ -9,6 +9,10 @@ const {
   ENABLE_CONFIRMATION: D3_ENABLE_CONFIRMATION,
   RESTORE_CONFIRMATION: D3_RESTORE_CONFIRMATION
 } = require('./e1ProductionThirdMutationGuard.cjs');
+const {
+  EXECUTION_EVIDENCE_PURPOSE,
+  SYNTHETIC_COHORT_TYPE
+} = require('./e1ProductionThirdMutationContract.cjs');
 
 const MANIFEST_PATH = path.resolve(__dirname, 'e1-gateway-source-manifest.json');
 const RESOURCE_MANIFEST_PATH = path.resolve(__dirname, 'e1-production-resource-manifest.json');
@@ -180,6 +184,8 @@ function verifyActionGuard(actionName, guardResult, expectedSha) {
       guardResult.candidateCount === (action.cohortStage === 'D3' ? 5 : 2) &&
       guardResult.sequentialExecutionRequired === true &&
       (action.cohortStage !== 'D3' || (guardResult.subjectsBound === true && guardResult.executionAuthorized === true &&
+        guardResult.cohortType === SYNTHETIC_COHORT_TYPE &&
+        guardResult.evidencePurpose === EXECUTION_EVIDENCE_PURPOSE && guardResult.browserHarnessVerified === true &&
         guardResult.sourceSha === expectedSha && guardResult.entryEvidenceFreshAtEnable === true &&
         guardResult.entryEvidenceRequiredAfterEnable === false && guardResult.mutationWindowGovernsPostEnable === true &&
         Number.isFinite(Date.parse(guardResult.entryEvidenceExpiresAt)) &&
