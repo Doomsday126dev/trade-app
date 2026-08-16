@@ -40,7 +40,7 @@ function privateJsonPath(value, label) {
   return resolved;
 }
 
-function verifiedGuardResult(action, mode) {
+function verifiedGuardResult(action, mode, expectedSourceSha) {
   if (action.startsWith('restore-')) return null;
   const cohort = action.replace(/^(?:enable|restore)-/u, '');
   const contract = GUARDS[cohort];
@@ -54,6 +54,7 @@ function verifiedGuardResult(action, mode) {
     options.readinessPath = privateJsonPath(process.env.E1_PRODUCTION_SECOND_MUTATION_READINESS, 'group-d2-readiness');
   }
   if (action === 'enable-group-d3') {
+    options.expectedSourceSha = expectedSourceSha;
     if (process.env.E1_PRODUCTION_THIRD_MUTATION_READINESS) {
       options.readinessPath = privateJsonPath(process.env.E1_PRODUCTION_THIRD_MUTATION_READINESS, 'group-d3-readiness');
     }
@@ -71,7 +72,7 @@ function run() {
   const repoRoot = resolveRepositoryRoot(__dirname);
   const rootIgnore = path.join(repoRoot, '.gcloudignore');
   if (fs.existsSync(rootIgnore)) throw new Error('e1/repository-root-gcloudignore-present');
-  const guardResult = verifiedGuardResult(args.action, mode);
+  const guardResult = verifiedGuardResult(args.action, mode, args['expected-sha']);
   const plan = createDeploymentPlan({
     action: args.action,
     expectedSha: args['expected-sha'],

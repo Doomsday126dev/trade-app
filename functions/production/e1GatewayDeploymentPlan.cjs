@@ -167,7 +167,7 @@ function verifyPinnedSource(manifest, repository) {
   return observed;
 }
 
-function verifyActionGuard(actionName, guardResult) {
+function verifyActionGuard(actionName, guardResult, expectedSha) {
   const action = ACTIONS[actionName];
   if (!action) throw new Error('e1/gateway-action-invalid');
   if (!guardResult) return false;
@@ -179,7 +179,11 @@ function verifyActionGuard(actionName, guardResult) {
     : guardResult.cohortStage === action.cohortStage && guardResult.groupEAuthorized === false &&
       guardResult.candidateCount === (action.cohortStage === 'D3' ? 5 : 2) &&
       guardResult.sequentialExecutionRequired === true &&
-      (action.cohortStage !== 'D3' || (guardResult.subjectsBound === true && guardResult.executionAuthorized === true));
+      (action.cohortStage !== 'D3' || (guardResult.subjectsBound === true && guardResult.executionAuthorized === true &&
+        guardResult.sourceSha === expectedSha && guardResult.entryEvidenceFreshAtEnable === true &&
+        guardResult.entryEvidenceRequiredAfterEnable === false && guardResult.mutationWindowGovernsPostEnable === true &&
+        Number.isFinite(Date.parse(guardResult.entryEvidenceExpiresAt)) &&
+        Number.isFinite(Date.parse(guardResult.mutationWindowEnd))));
   if (!commonValid || !stageValid) throw new Error('e1/gateway-action-guard-mismatch');
   return true;
 }
@@ -202,8 +206,8 @@ function createDeploymentPlan(options = {}) {
   if (Object.hasOwn(D3_CONFIRMATIONS, options.action) && options.confirmation !== D3_CONFIRMATIONS[options.action]) {
     throw new Error('e1/gateway-d3-confirmation-invalid');
   }
-  const guardVerified = verifyActionGuard(options.action, options.guardResult);
   if (!/^[0-9a-f]{40}$/u.test(options.expectedSha || '')) throw new Error('e1/gateway-expected-sha-invalid');
+  const guardVerified = verifyActionGuard(options.action, options.guardResult, options.expectedSha);
 
   const repository = options.repository || createGitRepository(repoRoot);
   const head = repository.head();
@@ -240,6 +244,14 @@ function createDeploymentPlan(options = {}) {
     containmentRestore: !action.gateEnabled && !guardVerified,
     gateEnabled: action.gateEnabled,
     readProofMode: action.readProofMode,
+    entryEvidenceExpiresAt: action.cohortStage === 'D3' && action.gateEnabled
+      ? options.guardResult?.entryEvidenceExpiresAt || null : null,
+    entryEvidenceRequiredAfterEnable: action.cohortStage === 'D3' && action.gateEnabled
+      ? options.guardResult?.entryEvidenceRequiredAfterEnable ?? null : null,
+    mutationWindowEnd: action.cohortStage === 'D3' && action.gateEnabled
+      ? options.guardResult?.mutationWindowEnd || null : null,
+    mutationWindowGovernsPostEnable: action.cohortStage === 'D3' && action.gateEnabled
+      ? options.guardResult?.mutationWindowGovernsPostEnable ?? null : null,
     confirmationValidated: Object.hasOwn(D3_CONFIRMATIONS, options.action),
     trackedWorkingTreeClean,
     deploymentAllowed,
@@ -334,6 +346,10 @@ function publicPlan(plan) {
     containmentRestore: plan.containmentRestore,
     gateEnabled: plan.gateEnabled,
     readProofMode: plan.readProofMode,
+    entryEvidenceExpiresAt: plan.entryEvidenceExpiresAt,
+    entryEvidenceRequiredAfterEnable: plan.entryEvidenceRequiredAfterEnable,
+    mutationWindowEnd: plan.mutationWindowEnd,
+    mutationWindowGovernsPostEnable: plan.mutationWindowGovernsPostEnable,
     confirmationValidated: plan.confirmationValidated,
     trackedWorkingTreeClean: plan.trackedWorkingTreeClean,
     deploymentAllowed: plan.deploymentAllowed

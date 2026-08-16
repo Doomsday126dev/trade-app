@@ -3,6 +3,7 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
+const { execFileSync } = require('node:child_process');
 const {
   PRIVATE_BINDING_PATH,
   PRIVATE_CANDIDATE_POOL_PATH,
@@ -51,11 +52,14 @@ if (selectedMode === 'candidate-pool') {
     'Group D3 readiness'
   );
   const input = JSON.parse(fs.readFileSync(inputPath, 'utf8'));
+  const repoRoot = path.resolve(__dirname, '../..');
+  const expectedSourceSha = execFileSync('git', ['-C', repoRoot, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
   const result = guardProductionThirdMutation(input, {
     inputPath,
     candidatePoolPath,
     bindingPath,
-    readinessPath
+    readinessPath,
+    expectedSourceSha
   });
   process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
 }

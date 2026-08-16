@@ -249,6 +249,12 @@ function d3GuardResult(overrides = {}) {
     targetVerified: true,
     subjectsBound: true,
     executionAuthorized: true,
+    sourceSha: HEAD,
+    entryEvidenceFreshAtEnable: true,
+    entryEvidenceExpiresAt: '2026-08-15T15:10:00.000Z',
+    entryEvidenceRequiredAfterEnable: false,
+    mutationWindowEnd: '2026-08-15T16:30:00.000Z',
+    mutationWindowGovernsPostEnable: true,
     candidateCount: 5,
     sequentialExecutionRequired: true,
     laterGroupsAuthorized: false,
@@ -390,6 +396,10 @@ test('D3 enable uses the canonical source only with five-subject guard and exact
   assert.equal(enabled.confirmationValidated, true);
   assert.equal(enabled.gateEnabled, true);
   assert.equal(enabled.readProofMode, false);
+  assert.equal(enabled.entryEvidenceExpiresAt, '2026-08-15T15:10:00.000Z');
+  assert.equal(enabled.entryEvidenceRequiredAfterEnable, false);
+  assert.equal(enabled.mutationWindowEnd, '2026-08-15T16:30:00.000Z');
+  assert.equal(enabled.mutationWindowGovernsPostEnable, true);
   assert.equal(enabled.sourceCommitSha, 'c74d5cb291310f83ff1ec08d032de5bcde3467ba');
   assert.equal(enabled.sourceFingerprint, 'd3b999dee62d7498493bc780cff2d2e1f56bf7921826248d9abc4a5a6c9a7713');
   assert.throws(() => createDeploymentPlan({ ...common, confirmation: 'ENABLE E1 GROUP D2 RESERVE COHORT',
@@ -400,6 +410,10 @@ test('D3 enable uses the canonical source only with five-subject guard and exact
     /action-guard-mismatch/u);
   assert.throws(() => createDeploymentPlan({ ...common, guardResult: d3GuardResult({ groupEAuthorized: true }) }),
     /action-guard-mismatch/u);
+  assert.throws(() => createDeploymentPlan({ ...common, guardResult: d3GuardResult({ sourceSha: '0'.repeat(40) }) }),
+    /action-guard-mismatch/u);
+  assert.throws(() => createDeploymentPlan({ ...common,
+    guardResult: d3GuardResult({ entryEvidenceRequiredAfterEnable: true }) }), /action-guard-mismatch/u);
 });
 
 test('D3 restoration remains available after readiness expiry and preserves immutable source', () => {
@@ -413,6 +427,8 @@ test('D3 restoration remains available after readiness expiry and preserves immu
   assert.equal(restored.containmentRestore, true);
   assert.equal(restored.gateEnabled, false);
   assert.equal(restored.readProofMode, false);
+  assert.equal(restored.entryEvidenceExpiresAt, null);
+  assert.equal(restored.mutationWindowEnd, null);
   assert.equal(restored.confirmationValidated, true);
   assert.equal(restored.deploymentAllowed, true);
   assert.equal(restored.sourceCommitSha, manifest.sourceCommitSha);

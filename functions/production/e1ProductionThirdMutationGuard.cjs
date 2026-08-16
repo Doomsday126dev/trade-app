@@ -16,6 +16,7 @@ const {
   CANDIDATE_POOL_POLICY,
   COHORT_SIZE,
   D2_BASELINE,
+  ENTRY_EVIDENCE_MAX_AGE_MS,
   ELIGIBILITY_FIELDS,
   EXECUTION_SEQUENCE,
   EXPECTED_COUNT_SEQUENCE,
@@ -27,8 +28,10 @@ const {
   STOP_POLICY,
   candidatePoolDigest,
   canonicalCandidateOrder,
+  readinessContract,
   sha256,
-  subjectBindingDigest
+  subjectBindingDigest,
+  validateThirdMutationEntryTiming
 } = require('./e1ProductionThirdMutationContract.cjs');
 
 const MANIFEST_PATH = path.resolve(__dirname, 'e1-production-resource-manifest.json');
@@ -37,7 +40,7 @@ const PRIVATE_BINDING_PATH = path.resolve(__dirname, '../.local/e1-production-th
 const PRIVATE_READINESS_PATH = path.resolve(__dirname, '../.local/e1-production-third-mutation-activation.json');
 const PRIVATE_INPUT_PATH = path.resolve(__dirname, '../.local/e1-production-third-mutation-guard-input.json');
 const MAX_WINDOW_MS = 2 * 60 * 60 * 1000;
-const MAX_EVIDENCE_AGE_MS = 15 * 60 * 1000;
+const MAX_EVIDENCE_AGE_MS = ENTRY_EVIDENCE_MAX_AGE_MS;
 const SLOTS = Object.freeze(['A', 'B', 'C', 'D', 'E']);
 const ENABLE_CONFIRMATION = 'ENABLE E1 GROUP D3 RESERVE COHORT';
 const RESTORE_CONFIRMATION = 'RESTORE E1 GROUP D3 GATES';
@@ -84,14 +87,14 @@ const READINESS_FIELDS = Object.freeze([
   'schemaVersion', 'environment', 'projectId', 'projectNumber', 'region', 'firestoreDatabaseId', 'rtdbDatabaseUrl',
   'approvalGroup', 'cohortStage', 'contractDefined', 'subjectsBindingDigest', 'subjectsBound', 'executionAuthorized',
   'approvedAt', 'humanOperator', 'teardownOwner', 'approvalAcknowledged', 'teardownOwnerAcknowledged',
-  'mutationWindow', 'authorizedOperations', 'd2Baseline', 'runtimeProvenance', 'activationGatePlan',
+  'readinessContract', 'mutationWindow', 'authorizedOperations', 'd2Baseline', 'runtimeProvenance', 'activationGatePlan',
   'restorationGatePlan', 'operationBudget', 'executionSequence', 'observationHours', 'observationChecks',
   'stopPolicy', 'laterGroupsAuthorized', 'groupEAuthorized'
 ]);
 const INPUT_FIELDS = Object.freeze([
   'environment', 'projectId', 'projectNumber', 'expectedProjectNumber', 'region', 'databaseId', 'rtdbDatabaseUrl',
   'approvalGroup', 'cohortStage', 'subjectsBindingDigest', 'subjectsBound', 'executionAuthorized', 'requestedOperations',
-  'd2Baseline', 'currentGates', 'activationGatePlan', 'restorationGatePlan', 'runtimeProvenance', 'securityBoundary',
+  'readinessContract', 'd2Baseline', 'currentGates', 'activationGatePlan', 'restorationGatePlan', 'runtimeProvenance', 'securityBoundary',
   'tokenVerifier', 'rateLimiterMode', 'readProofModePresent', 'reserveConsumesLimitedUseAppCheck', 'operationBudget',
   'expectedCountSequence', 'executionSequence', 'observationHours', 'observationChecks', 'stopPolicy',
   'writeBoundary', 'finalAcceptanceTemplate', 'laterGroupsAuthorized', 'groupEAuthorized'
@@ -266,6 +269,16 @@ function validD2Baseline(value) {
 function fresh(value, now, start) {
   const at = Date.parse(value);
   return Number.isFinite(at) && at >= start && at <= now && now - at <= MAX_EVIDENCE_AGE_MS;
+}
+
+function entryEvidenceExpiresAt(binding) {
+  if (!Array.isArray(binding?.candidates) || binding.candidates.length !== COHORT_SIZE) return null;
+  const timestamps = binding.candidates.flatMap((candidate) => [
+    Date.parse(candidate.authEligibility?.verifiedAt),
+    Date.parse(candidate.targetedAuthorityState?.verifiedAt)
+  ]);
+  if (timestamps.length !== COHORT_SIZE * 2 || timestamps.some((value) => !Number.isFinite(value))) return null;
+  return new Date(Math.min(...timestamps) + MAX_EVIDENCE_AGE_MS).toISOString();
 }
 
 function validatePriorCohort(prior, errors) {
@@ -466,6 +479,7 @@ function guardProductionThirdMutation(input, options = {}) {
   const bindingPath = options.bindingPath || PRIVATE_BINDING_PATH;
   const readinessPath = options.readinessPath || PRIVATE_READINESS_PATH;
   const inputPath = options.inputPath || PRIVATE_INPUT_PATH;
+  const expectedSourceSha = options.expectedSourceSha;
   let manifest;
   let candidatePool;
   let candidatePoolResult;
@@ -478,6 +492,7 @@ function guardProductionThirdMutation(input, options = {}) {
 
   if (!exactFields(input, INPUT_FIELDS)) errors.push('group_d3_input_schema_invalid');
   if (readiness && !exactFields(readiness, READINESS_FIELDS)) errors.push('group_d3_readiness_schema_invalid');
+  if (!/^[a-f0-9]{40}$/u.test(expectedSourceSha || '')) errors.push('group_d3_source_sha_invalid');
   try { candidatePoolResult = validateCandidatePoolArtifact(candidatePool, { now: () => now, candidatePoolPath }); }
   catch (error) { errors.push(...(error.reasons || ['group_d3_candidate_pool_invalid'])); }
   if (!privateMode(bindingPath)) errors.push('group_d3_subject_binding_permissions_invalid');
@@ -518,7 +533,24 @@ function guardProductionThirdMutation(input, options = {}) {
         approvedAt > now) errors.push('group_d3_window_invalid');
   }
 
+  let expectedReadinessContract;
+  try { expectedReadinessContract = readinessContract(expectedSourceSha); }
+  catch { expectedReadinessContract = null; }
+  if (!sameJson(readiness?.readinessContract, expectedReadinessContract) ||
+      !sameJson(input?.readinessContract, expectedReadinessContract)) {
+    errors.push('group_d3_readiness_contract_invalid');
+  }
+
   validateBinding(binding, candidatePoolResult, now, windowStart, errors);
+  const evidenceExpiresAt = entryEvidenceExpiresAt(binding);
+  let entryTiming;
+  try {
+    entryTiming = validateThirdMutationEntryTiming({
+      at: now,
+      mutationWindow: readiness?.mutationWindow,
+      entryEvidenceExpiresAt: evidenceExpiresAt
+    });
+  } catch { errors.push('group_d3_entry_timing_invalid'); }
   if (readiness?.subjectsBindingDigest !== binding?.bindingDigest || input?.subjectsBindingDigest !== binding?.bindingDigest ||
       input?.subjectsBound !== true || input?.executionAuthorized !== true || input?.approvalGroup !== 'D' ||
       input?.cohortStage !== 'D3') errors.push('group_d3_binding_or_authorization_invalid');
@@ -573,9 +605,16 @@ function guardProductionThirdMutation(input, options = {}) {
     candidatePoolDigest: candidatePoolResult.candidatePoolDigest,
     subjectsBound: true,
     executionAuthorized: true,
+    sourceSha: expectedSourceSha,
     candidateCount: COHORT_SIZE,
     candidatesDistinct: true,
     targetedAbsenceVerified: true,
+    entryEvidenceFreshAtEnable: true,
+    entryEvidenceExpiresAt: entryTiming.entryEvidenceExpiresAt,
+    entryEvidenceRequiredAfterEnable: false,
+    mutationWindowStart: entryTiming.mutationWindowStart,
+    mutationWindowEnd: entryTiming.mutationWindowEnd,
+    mutationWindowGovernsPostEnable: true,
     runtimeProvenanceVerified: true,
     securityBoundaryVerified: true,
     budgetVerified: true,
@@ -611,6 +650,7 @@ module.exports = Object.freeze({
   SLOTS,
   canonicalPoolCandidate,
   foundationFingerprint,
+  entryEvidenceExpiresAt,
   guardProductionThirdMutation,
   requestBodyHash,
   requestIdHash,

@@ -7,6 +7,7 @@ const D2_STATE_DIGEST = '2923aafa890de58cb04fb5941528f7a425c22d0a131dd9fc0fcf710
 const COHORT_SIZE = 5;
 const OBSERVATION_HOURS = 24;
 const MAX_WINDOW_HOURS = 2;
+const ENTRY_EVIDENCE_MAX_AGE_MS = 15 * 60 * 1000;
 const FIRESTORE_TRANSACTION_MAX_ATTEMPTS = 5;
 const EXPECTED_COUNT_SEQUENCE = Object.freeze([12, 16, 16, 20, 20, 24, 24, 28, 28, 32, 32]);
 const EXECUTION_SEQUENCE = Object.freeze(Array.from({ length: COHORT_SIZE }, (_, index) => {
@@ -133,6 +134,15 @@ const CANDIDATE_POOL_POLICY = Object.freeze({
   canonicalOrder: 'privacy-safe-subject-fingerprint',
   poolValidationAuthorizesExecution: false
 });
+const READINESS_TIMING_POLICY = Object.freeze({
+  mode: 'pre-enable-jit-v1',
+  entryEvidenceMaxAgeMs: ENTRY_EVIDENCE_MAX_AGE_MS,
+  requiredAt: 'enable-group-d3',
+  requiredAfterEnable: false,
+  mutationWindowMaxHours: MAX_WINDOW_HOURS,
+  mutationWindowGovernsPostEnable: true,
+  restoreAllowedAfterExpiry: true
+});
 const EXPECTED_D3_MANIFEST = Object.freeze({
   approvalGroup: 'D',
   cohortStage: 'D3',
@@ -141,6 +151,7 @@ const EXPECTED_D3_MANIFEST = Object.freeze({
   cohortSize: COHORT_SIZE,
   candidatePool: CANDIDATE_POOL_POLICY,
   subjectBinding: DEFAULT_SUBJECT_BINDING,
+  readinessTiming: READINESS_TIMING_POLICY,
   maxWindowHours: MAX_WINDOW_HOURS,
   rateLimiterMode: DURABLE_MODE,
   d2Baseline: D2_BASELINE,
@@ -211,6 +222,58 @@ function expectedDocumentCount(step) {
   return EXPECTED_COUNT_SEQUENCE[step];
 }
 
+function readinessContract(sourceSha) {
+  if (!/^[a-f0-9]{40}$/u.test(sourceSha || '')) throw new Error('e1/group-d3-source-sha-invalid');
+  return Object.freeze({
+    schemaVersion: 1,
+    sourceSha,
+    timingPolicy: READINESS_TIMING_POLICY
+  });
+}
+
+function parseMutationWindow(mutationWindow) {
+  const startAt = Date.parse(mutationWindow?.startAt);
+  const endAt = Date.parse(mutationWindow?.endAt);
+  if (!Number.isFinite(startAt) || !Number.isFinite(endAt) || startAt >= endAt ||
+      endAt - startAt > MAX_WINDOW_HOURS * 60 * 60 * 1000) {
+    throw new Error('e1/group-d3-mutation-window-invalid');
+  }
+  return Object.freeze({ startAt, endAt });
+}
+
+function validateThirdMutationEntryTiming({ at, mutationWindow, entryEvidenceExpiresAt }) {
+  const window = parseMutationWindow(mutationWindow);
+  const evidenceExpiry = Date.parse(entryEvidenceExpiresAt);
+  if (!Number.isFinite(at) || !Number.isFinite(evidenceExpiry) || at < window.startAt || at >= window.endAt ||
+      at > evidenceExpiry) {
+    throw new Error('e1/group-d3-entry-timing-invalid');
+  }
+  return Object.freeze({
+    entryEvidenceFreshAtEnable: true,
+    entryEvidenceExpiresAt: new Date(evidenceExpiry).toISOString(),
+    mutationWindowStart: new Date(window.startAt).toISOString(),
+    mutationWindowEnd: new Date(window.endAt).toISOString()
+  });
+}
+
+function validateThirdMutationExecutionTiming({ enabledAt, operationAt, mutationWindow, entryEvidenceExpiresAt }) {
+  const entry = validateThirdMutationEntryTiming({
+    at: enabledAt,
+    mutationWindow,
+    entryEvidenceExpiresAt
+  });
+  const operation = typeof operationAt === 'number' ? operationAt : Date.parse(operationAt);
+  if (!Number.isFinite(operation) || operation < enabledAt || operation >= Date.parse(entry.mutationWindowEnd)) {
+    throw new Error('e1/group-d3-execution-timing-invalid');
+  }
+  return Object.freeze({
+    ...entry,
+    operationAt: new Date(operation).toISOString(),
+    entryEvidenceRequiredAfterEnable: false,
+    mutationWindowGovernsPostEnable: true
+  });
+}
+
 module.exports = Object.freeze({
   ALLOWED_OPERATIONS,
   CANDIDATE_POOL_POLICY,
@@ -218,6 +281,7 @@ module.exports = Object.freeze({
   D2_BASELINE,
   D2_STATE_DIGEST,
   DEFAULT_SUBJECT_BINDING,
+  ENTRY_EVIDENCE_MAX_AGE_MS,
   ELIGIBILITY_FIELDS,
   EXECUTION_SEQUENCE,
   EXPECTED_COUNT_SEQUENCE,
@@ -229,11 +293,15 @@ module.exports = Object.freeze({
   OBSERVATION_HOURS,
   OPERATION_BUDGET,
   PER_SUBJECT_DELTA,
+  READINESS_TIMING_POLICY,
   STOP_POLICY,
   candidatePoolDigest,
   canonicalCandidateKey,
   canonicalCandidateOrder,
   expectedDocumentCount,
+  readinessContract,
   sha256,
-  subjectBindingDigest
+  subjectBindingDigest,
+  validateThirdMutationEntryTiming,
+  validateThirdMutationExecutionTiming
 });

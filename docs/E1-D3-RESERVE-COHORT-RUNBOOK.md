@@ -93,6 +93,14 @@ node functions/scripts/check-e1-production-third-mutation-target.cjs
 
 The guard must report `ok=true`, `cohortStage=D3`, `candidateCount=5`, `subjectsBound=true`, `executionAuthorized=true`, and `groupEAuthorized=false`. A passing readiness check is not itself execution approval.
 
+### Readiness timing model
+
+D3 uses `pre-enable-jit-v1`. Candidate eligibility and the reviewed five-subject binding establish who may enter the cohort, but they do not authorize execution. The private activation and guard-input artifacts bind the authorization to the exact reviewed source SHA. Any source change makes those two artifacts stale and requires regeneration; the candidate-pool and subject-binding digests remain reusable because they do not include source or timing authorization.
+
+The 15-minute Auth and targeted-state evidence age is an entry precondition checked when the canonical helper prepares `enable-group-d3`. It is not a lease that must remain unexpired for every later reserve, replay, or verification step. A successful enable records that all entry evidence was fresh at admission. After enablement, the approved mutation window, capped at two hours, governs the strictly sequential operation. Each live request must still pass Firebase token verification, App Check, reciprocal legacy ownership, transaction, idempotency, count, digest, and stop checks.
+
+Therefore the full five-subject run does not need to finish inside the 15-minute evidence age. It must start with fresh evidence and finish before the mutation-window end. Evidence that expires before enablement fails closed. The exact expiry boundary is accepted at enablement; one millisecond after it is not. Mutation-window expiry stops the next operation. Containment restoration remains available independently after either readiness or mutation-window expiry.
+
 ## Separate production authorization
 
 A human approval must name the immutable binding digest, bounded window, operator, teardown owner, exact allowed operations, source SHA, authority revision/image, and the exact confirmations:
@@ -123,6 +131,8 @@ The only valid sequence is:
 Expected total counts are `12, 16, 16, 20, 20, 24, 24, 28, 28, 32, 32`. Each first reserve creates one rate-limit, account, handle, and operation-request document. The immediate exact replay must stay in the same fixed rate-limit window and commit zero writes.
 
 Stop before the next subject on any collision, mismatch, malformed rate-limit state, unexpected document, migration/conflict evidence, 5xx/auth anomaly, count mismatch, digest mismatch, or ownership failure. Preserve durable evidence and restore gates; do not repair or delete records within D3.
+
+The operational lifecycle is: candidate eligibility, private activation, just-in-time entry verification, successful enablement, bounded sequential mutation, immediate per-step invariant checks, containment restoration, then observation. Do not reinterpret a successful entry check as permission to exceed the mutation window or skip any per-step invariant.
 
 ## Bounded budget
 

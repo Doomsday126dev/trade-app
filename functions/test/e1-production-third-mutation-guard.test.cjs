@@ -17,6 +17,7 @@ const {
   ALLOWED_OPERATIONS,
   CANDIDATE_POOL_POLICY,
   D2_BASELINE,
+  ENTRY_EVIDENCE_MAX_AGE_MS,
   EXECUTION_SEQUENCE,
   EXPECTED_COUNT_SEQUENCE,
   EXPECTED_D3_MANIFEST,
@@ -24,11 +25,14 @@ const {
   OBSERVATION_CHECKS,
   OBSERVATION_HOURS,
   OPERATION_BUDGET,
+  READINESS_TIMING_POLICY,
   STOP_POLICY,
   candidatePoolDigest,
   canonicalCandidateOrder,
   expectedDocumentCount,
-  subjectBindingDigest
+  readinessContract,
+  subjectBindingDigest,
+  validateThirdMutationExecutionTiming
 } = require('../production/e1ProductionThirdMutationContract.cjs');
 const {
   ENABLE_CONFIRMATION,
@@ -46,6 +50,7 @@ const {
 const NOW = Date.parse('2026-08-15T15:00:00.000Z');
 const START = '2026-08-15T14:30:00.000Z';
 const END = '2026-08-15T16:30:00.000Z';
+const SOURCE_SHA = 'a'.repeat(40);
 const MANIFEST_PATH = path.resolve(__dirname, '../production/e1-production-resource-manifest.json');
 
 function priorCohort() {
@@ -199,6 +204,7 @@ function fixture(subjects = poolSubjects()) {
     teardownOwner: 'primary-operator',
     approvalAcknowledged: true,
     teardownOwnerAcknowledged: true,
+    readinessContract: readinessContract(SOURCE_SHA),
     mutationWindow: { startAt: START, endAt: END },
     authorizedOperations: ALLOWED_OPERATIONS,
     d2Baseline: D2_BASELINE,
@@ -226,6 +232,7 @@ function fixture(subjects = poolSubjects()) {
     subjectsBindingDigest: bindingDigest,
     subjectsBound: true,
     executionAuthorized: true,
+    readinessContract: readinessContract(SOURCE_SHA),
     requestedOperations: ALLOWED_OPERATIONS,
     d2Baseline: D2_BASELINE,
     currentGates: disabledGatePlan(),
@@ -293,7 +300,8 @@ function runGuard(values = fixture()) {
       candidatePoolPath,
       bindingPath,
       readinessPath,
-      inputPath
+      inputPath,
+      expectedSourceSha: SOURCE_SHA
     });
   } finally { fs.rmSync(directory, { recursive: true, force: true }); }
 }
@@ -365,6 +373,11 @@ test('tracked D3 contract is unbound and unauthorized while defining exact reser
   assert.deepEqual(Array.from({ length: 11 }, (_, index) => expectedDocumentCount(index)), EXPECTED_COUNT_SEQUENCE);
   assert.equal(manifest.thirdMutation.subjectBinding.subjectsBound, false);
   assert.equal(manifest.thirdMutation.subjectBinding.executionAuthorized, false);
+  assert.deepEqual(manifest.thirdMutation.readinessTiming, READINESS_TIMING_POLICY);
+  assert.equal(READINESS_TIMING_POLICY.entryEvidenceMaxAgeMs, ENTRY_EVIDENCE_MAX_AGE_MS);
+  assert.equal(READINESS_TIMING_POLICY.requiredAt, 'enable-group-d3');
+  assert.equal(READINESS_TIMING_POLICY.requiredAfterEnable, false);
+  assert.equal(READINESS_TIMING_POLICY.mutationWindowGovernsPostEnable, true);
   assert.deepEqual(manifest.thirdMutation.candidatePool, CANDIDATE_POOL_POLICY);
   assert.equal(manifest.thirdMutation.candidatePool.automatedProductionDiscovery, false);
   assert.equal(manifest.thirdMutation.candidatePool.toolingSelectsSubjects, false);
@@ -489,9 +502,80 @@ test('exact five-subject private binding and authorized preflight pass without c
   assert.equal(result.candidateCount, 5);
   assert.equal(result.subjectsBound, true);
   assert.equal(result.executionAuthorized, true);
+  assert.equal(result.sourceSha, SOURCE_SHA);
+  assert.equal(result.entryEvidenceFreshAtEnable, true);
+  assert.equal(result.entryEvidenceExpiresAt, '2026-08-15T15:10:00.000Z');
+  assert.equal(result.entryEvidenceRequiredAfterEnable, false);
+  assert.equal(result.mutationWindowEnd, END);
+  assert.equal(result.mutationWindowGovernsPostEnable, true);
   assert.equal(result.d2BaselineVerified, true);
   assert.equal(result.cloudOperations, 0);
   assert.equal(result.groupEAuthorized, false);
+});
+
+test('D3 entry evidence is required at enable but is not a post-enable lease', () => {
+  const exactBoundary = fixture();
+  for (const candidateValue of exactBoundary.binding.candidates) {
+    candidateValue.authEligibility.verifiedAt = '2026-08-15T14:45:00.000Z';
+    candidateValue.targetedAuthorityState.verifiedAt = '2026-08-15T14:45:00.000Z';
+  }
+  assert.equal(runGuard(exactBoundary).entryEvidenceExpiresAt, '2026-08-15T15:00:00.000Z');
+
+  const operationTimes = [
+    '2026-08-15T15:00:00.500Z',
+    '2026-08-15T15:00:00.900Z',
+    '2026-08-15T15:00:01.001Z',
+    '2026-08-15T15:20:00.000Z',
+    '2026-08-15T16:00:00.000Z'
+  ];
+  for (const operationAt of operationTimes) {
+    const execution = validateThirdMutationExecutionTiming({
+      enabledAt: NOW,
+      operationAt: Date.parse(operationAt),
+      mutationWindow: { startAt: START, endAt: END },
+      entryEvidenceExpiresAt: '2026-08-15T15:00:01.000Z'
+    });
+    assert.equal(execution.entryEvidenceRequiredAfterEnable, false);
+    assert.equal(execution.mutationWindowGovernsPostEnable, true);
+    assert.equal(execution.operationAt, operationAt);
+  }
+  assert.throws(() => validateThirdMutationExecutionTiming({
+    enabledAt: NOW,
+    operationAt: Date.parse(END),
+    mutationWindow: { startAt: START, endAt: END },
+    entryEvidenceExpiresAt: '2026-08-15T15:00:01.000Z'
+  }), /execution-timing-invalid/u);
+});
+
+test('D3 fails closed when entry evidence expires before enable', () => {
+  const values = fixture();
+  for (const candidateValue of values.binding.candidates) {
+    candidateValue.authEligibility.verifiedAt = '2026-08-15T14:44:59.999Z';
+    candidateValue.targetedAuthorityState.verifiedAt = '2026-08-15T14:44:59.999Z';
+  }
+  assert.throws(() => runGuard(values), (error) =>
+    error.reasons.includes('group_d3_entry_timing_invalid') &&
+    error.reasons.includes('group_d3_candidate_a_auth_invalid'));
+});
+
+test('D3 enable fails closed after the mutation window expires', () => {
+  const values = fixture();
+  values.readiness.mutationWindow.endAt = '2026-08-15T14:59:59.999Z';
+  assert.throws(() => runGuard(values), (error) =>
+    error.reasons.includes('group_d3_window_invalid') &&
+    error.reasons.includes('group_d3_entry_timing_invalid'));
+});
+
+test('D3 activation and input bind to the exact source while pool and subject binding remain reusable', () => {
+  const values = fixture();
+  const poolDigest = values.pool.candidatePoolDigest;
+  const bindingDigest = values.binding.bindingDigest;
+  values.readiness.readinessContract = readinessContract('b'.repeat(40));
+  assert.throws(() => runGuard(values), (error) => error.reasons.includes('group_d3_readiness_contract_invalid'));
+  assert.equal(values.pool.candidatePoolDigest, poolDigest);
+  assert.equal(values.binding.bindingDigest, bindingDigest);
+  assert.equal(candidatePoolDigest(values.pool.candidates.map(canonicalPoolCandidate)), poolDigest);
+  assert.equal(subjectBindingDigest(values.binding.priorCohort, values.binding.candidates, poolDigest), bindingDigest);
 });
 
 test('subject binding is separate from execution authorization and uses a deterministic reviewed digest', () => {

@@ -146,6 +146,15 @@
       "subjectsBound": false,
       "executionAuthorized": false
     },
+    "readinessTiming": {
+      "mode": "pre-enable-jit-v1",
+      "entryEvidenceMaxAgeMs": 900000,
+      "requiredAt": "enable-group-d3",
+      "requiredAfterEnable": false,
+      "mutationWindowMaxHours": 2,
+      "mutationWindowGovernsPostEnable": true,
+      "restoreAllowedAfterExpiry": true
+    },
     "maxWindowHours": 2,
     "rateLimiterMode": "firestore-rolling-v1",
     "d2Baseline": {
