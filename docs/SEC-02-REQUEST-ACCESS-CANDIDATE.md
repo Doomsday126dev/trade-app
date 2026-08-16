@@ -1,10 +1,10 @@
 # SEC-02 Request Access Candidate
 
-Status: local design and emulator candidate only. It is not a production Rules source and must not be deployed. Production remains on the existing Request Access boundary until D2 completes and the compatibility review below is approved.
+Status: final source-only candidate, emulator validated and **not deployed**. The `.49` client must be served for a full 24-hour cached-client window before a separately approved Rules deployment.
 
 ## Current writer inventory
 
-The supported writer is `submitRequest()` in `index.html`. The `.46` candidate routes its existing behavior through `PogoDomain.requestAccess.build()` and still performs exactly one active write:
+The supported writer is `submitRequest()` in `index.html`. The final client routes its behavior through `PogoDomain.requestAccess.build()` and still performs exactly one active write:
 
 ```text
 set(ref(db, `requests/${requestId}`), payload)
@@ -27,22 +27,22 @@ The new-request payload is exactly:
 }
 ```
 
-The UI trims username and note, requires a username of at least two characters, resolves casing against known login names, rejects registered/pending duplicate names case-insensitively, and stores an omitted/empty note as `""`. The candidate additionally rejects C0/DEL control characters, including line breaks, before constructing the payload. The emulator Rules independently reject boundary spaces, NUL, tab, CR, and LF; the final representable Rules policy for the remaining uncommon controls stays part of compatibility review. It does not impose a username or note maximum.
+The centralized builder trims username and note, resolves casing against known login names, requires a username of 2–32 UTF-16 string units, permits Unicode and internal spaces, and stores an omitted, empty, or whitespace-only note as `""`. Notes may contain 0–280 UTF-16 string units. This matches the RTDB Rules `String.length` convention, including supplementary Unicode characters counting as two units. Both fields reject C0 and DEL control characters. The candidate Rules independently enforce the same accepted size boundary and the complete C0/DEL exclusion through emulator-proven expressions.
 
-`requestedAt` remains the same numeric client `Date.now()` value used in the key and payload. No server timestamp or skew policy is introduced. Anonymous submission always creates `pending`. Admin approval changes `pending` to `approved` as part of `createMemberNow()`; denial changes it to `denied`. The supported UI does not use `rejected`.
+The builder captures the client clock once and uses that exact nonnegative integer for both the key timestamp and `payload.requestedAt`. Rules do not compare the value to current time, so historical administration cannot fail because a creation timestamp has aged. Anonymous submission always creates `pending`. Admin approval changes `pending` to `approved`; denial changes it to `denied`. Both are terminal. The supported UI does not use `rejected`.
 
 ## Proposed new-request contract
 
 | Field | Create | Normalization | Mutability |
 | --- | --- | --- | --- |
-| `username` | Required string, at least two characters | Trim outer whitespace; preserve Unicode, case, and internal spaces; reject C0/DEL controls | Immutable |
-| `note` | Required in storage; optional in UI and represented by `""` | Trim outer whitespace; preserve Unicode; reject C0/DEL controls | Immutable |
+| `username` | Required string, 2–32 characters | Trim outer whitespace; preserve Unicode, case, and internal spaces; reject C0/DEL controls | Immutable |
+| `note` | Required string, 0–280 characters; optional in UI and represented by `""` | Trim outer whitespace; preserve Unicode and internal whitespace; reject C0/DEL controls | Immutable |
 | `requestedAt` | Required non-negative integer client timestamp | None | Immutable |
 | `status` | Required literal `pending` | None | Admin-only transition to `approved` or `denied` |
 
 No additional fields are proposed. Unknown and nested children fail closed. Anonymous creation under an arbitrary key fails. Anonymous and authenticated non-admin actors cannot read, overwrite, update, transition, or delete requests. An indexed Admin/owner can read requests, transition `pending` to `approved` or `denied`, and delete a request. Admins cannot rewrite identity, note, timestamp, or add children through this candidate.
 
-The emulator fixture intentionally accepts far-past/far-future integer timestamps and large username/note stress values. Those are test markers for unresolved policy, not endorsements of unlimited production data.
+The emulator fixture accepts far-past and far-future nonnegative integer timestamps because no current-time window is part of the final policy. It rejects usernames above 32 characters and notes above 280 characters.
 
 ## Authorization matrix
 
@@ -58,35 +58,23 @@ The emulator fixture intentionally accepts far-past/far-future integer timestamp
 
 The candidate does not expand any active Firebase surface. Its Rules and Firebase config live only under `tests/firebase/` and are invoked only by `check:request-access-candidate-rules` against a demo emulator project.
 
-## Compatibility decisions deferred until after D2
+## Accepted aggregate compatibility evidence
 
-Perform a narrowly scoped, aggregate-only, read-only inventory after D2. Do not include request text or trainer names in the report. Record only:
+The approved read-only production inventory aggregated 20 historical requests without retaining record content. It found 19 `approved` and 1 `denied`; username lengths 3–15; note lengths 0–37; 11 empty notes; 20 nonnegative integer timestamps; 20 exact four-field shapes; no unknown or nested children; and no candidate-policy violations. The aggregate report digest is `decbcac573b8bebdabc965b1914f89677343c7cf60358d09e8f0bd9cfb006fae`.
 
-1. Request count and key-pattern variants, including suffix lengths.
-2. Maximum and distribution buckets for username length.
-3. Maximum and distribution buckets for note length.
-4. Counts for missing, empty, whitespace-only, multiline, and non-string notes.
-5. Field-set variants and unknown-child names/counts.
-6. `requestedAt` type counts, minimum/maximum, non-integer/negative counts, and observed clock skew relative to trustworthy adjacent metadata where available.
-7. Status value counts and transition-relevant legacy variants.
-8. Counts of leading/trailing whitespace, control characters, and non-string usernames without exposing values.
-
-Stop if the inventory requires broad content export, exposes request content, encounters an unexpected schema, or cannot be performed read-only. Use the results to choose actual username/note maxima and timestamp skew. The previously suggested 32/280 limits remain unapproved.
+All observed records fit the final 2–32 username and 0–280 note policy. The note ceiling is a product ceiling with future room, not a claim about the historical maximum. Fifteen key timestamps equaled `requestedAt`; five payload timestamps followed their key by 1 ms–1 s. The client now eliminates that skew by capturing one timestamp, while Rules intentionally avoid brittle key parsing or a current-time window.
 
 ## Cached-client and Rules rollout
 
-Production currently serves `.40`; cached clients can outlive a later client deployment. The safe order is:
+Production currently serves `.48`; cached clients can outlive the `.49` deployment. The safe order is:
 
-1. Complete D2 and its observation.
-2. Run and review the aggregate historical inventory.
-3. Select compatible size and timestamp policies.
-4. Finalize client and candidate Rules together.
-5. Deploy the compatible client first.
-6. Allow a reviewed cache compatibility window or make the Rules accept the last supported cached writer shape.
-7. Re-run adversarial emulator tests against the exact deployable Rules source.
-8. Deploy Rules separately with no unrelated Rules change.
-9. Monitor permission-denied/request-submission errors and legitimate rejection rate.
-10. Roll back to the prior Rules immediately if a supported client or legitimate historical Admin transition is rejected.
+1. Deploy the compatible `.49` client only.
+2. Begin the exact 24-hour window when the served deployment manifest converges.
+3. Keep production Rules unchanged throughout that window.
+4. Re-run adversarial emulator tests against the exact candidate after the boundary.
+5. Deploy only the reviewed `/requests` Rules diff under separate approval.
+6. Read back Rules and monitor permission-denied/request-submission errors.
+7. Roll back to the prior Rules immediately if a supported client or legitimate historical Admin transition is rejected.
 
 Stop before Rules deployment on unknown historical fields/statuses/keys, unresolved bounds, cached-client mismatch, changed Admin transition semantics, emulator divergence, a new active Firebase path, or inability to observe rejection safely.
 

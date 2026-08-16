@@ -51,16 +51,20 @@ test('anonymous create rejects missing empty whitespace short and wrong-type use
 });
 
 test('username permits Unicode and internal spaces but rejects boundary whitespace and controls',async()=>{
-  await succeeds(db('PUT',`requests/req_${now}_u1`,valid({username:'ポケモン'})),'unicode');
-  await succeeds(db('PUT',`requests/req_${now}_u2`,valid({username:'A B'})),'internal space');
-  for(const [suffix,username] of [['w1',' AB'],['w2','AB '],['c1','AB\nCD'],['c2','AB\u0000CD']])await denied(db('PUT',`requests/req_${now}_${suffix}`,valid({username})),suffix);
+  for(const [suffix,username] of [['b2','AB'],['b32','U'.repeat(32)],['u1','ポケモン'],['u2','A B'],['u32','😀'.repeat(16)]])await succeeds(db('PUT',`requests/req_${now}_${suffix}`,valid({username})),suffix);
+  for(const [suffix,username] of [['b33','U'.repeat(33)],['u33','😀'.repeat(17)],['w1',' AB'],['w2','AB '],['c1','AB\nCD'],['c2','AB\u0000CD'],['c3','AB\u0001CD'],['del','AB\u007fCD']])await denied(db('PUT',`requests/req_${now}_${suffix}`,valid({username})),suffix);
+  for(const codePoint of [...Array(32).keys(),127]){
+    await denied(db('PUT',`requests/req_${now}_${codePoint.toString(36)}`,valid({username:`AB${String.fromCodePoint(codePoint)}CD`})),`username control U+${codePoint.toString(16).padStart(4,'0')}`);
+  }
 });
 
-test('note is a required string that may be empty or Unicode but not whitespace-only multiline controls or objects',async()=>{
-  await succeeds(db('PUT',`requests/req_${now}_n1`,valid({note:''})),'empty note');
-  await succeeds(db('PUT',`requests/req_${now}_n2`,valid({note:'日本語'})),'unicode note');
+test('note is a required bounded string that may be empty or Unicode but rejects invalid content',async()=>{
+  for(const [suffix,note] of [['n1',''],['n2','日本語'],['n280','N'.repeat(280)],['nu280','😀'.repeat(140)]])await succeeds(db('PUT',`requests/req_${now}_${suffix}`,valid({note})),suffix);
   const {note,...missing}=valid();
-  for(const [suffix,payload] of [['n3',missing],['n4',valid({note:'   '})],['n5',valid({note:'one\ntwo'})],['n6',valid({note:{nested:true}})]])await denied(db('PUT',`requests/req_${now}_${suffix}`,payload),suffix);
+  for(const [suffix,payload] of [['n3',missing],['n4',valid({note:'   '})],['n5',valid({note:'one\ntwo'})],['n6',valid({note:{nested:true}})],['n281',valid({note:'N'.repeat(281)})],['nu281',valid({note:'😀'.repeat(141)})],['nc1',valid({note:'safe\u0001unsafe'})],['ndel',valid({note:'safe\u007funsafe'})]])await denied(db('PUT',`requests/req_${now}_${suffix}`,payload),suffix);
+  for(const codePoint of [...Array(32).keys(),127]){
+    await denied(db('PUT',`requests/req_${now}_n${codePoint.toString(36)}`,valid({note:`safe${String.fromCodePoint(codePoint)}unsafe`})),`note control U+${codePoint.toString(16).padStart(4,'0')}`);
+  }
 });
 
 test('requestedAt requires a non-negative integer but deliberately leaves skew unresolved',async()=>{
@@ -105,6 +109,10 @@ test('Admin and owner-equivalent index members may approve deny or delete but no
   await denied(db('PATCH','requests/req_1699999999996_edit1',{username:'Changed',status:'approved'},TOKENS.admin),'username immutable');
   await denied(db('PATCH','requests/req_1699999999996_edit1',{note:'Changed',status:'approved'},TOKENS.admin),'note immutable');
   await denied(db('PATCH','requests/req_1699999999996_edit1',{requestedAt:now+1,status:'approved'},TOKENS.admin),'timestamp immutable');
+  await denied(db('PATCH',approve,{status:'pending'},TOKENS.admin),'approved is terminal');
+  await denied(db('PATCH','requests/req_1699999999998_deny1',{status:'pending'},TOKENS.admin),'denied is terminal');
+  await denied(db('PATCH',approve,{status:'denied'},TOKENS.admin),'terminal status cannot be rewritten');
+  await denied(db('PATCH',approve,{extra:true},TOKENS.admin),'unknown child introduction');
 });
 
 test('anonymous and ordinary actors cannot read requests while Admin can read the reviewed collection',async()=>{
@@ -113,6 +121,15 @@ test('anonymous and ordinary actors cannot read requests while Admin can read th
   await succeeds(db('GET','requests',undefined,TOKENS.admin),'admin read');
 });
 
-test('large payload stress remains accepted because final production bounds require historical evidence',async()=>{
-  await succeeds(db('PUT',`requests/req_${now}_big1`,valid({username:'U'.repeat(5000),note:'N'.repeat(20000)})),'large pending compatibility payload');
+test('synthetic historical boundaries remain compatible without copying production values',async()=>{
+  const cases=[
+    ['h1','Abc','',now,'approved'],
+    ['h2','U'.repeat(15),'N'.repeat(37),now+1,'denied'],
+    ['h3','Trainer Nine','short note',now+1000,'approved']
+  ];
+  for(const [suffix,username,note,requestedAt,status] of cases){
+    const path=`requests/req_${now}_${suffix}`;
+    await succeeds(db('PUT',path,valid({username,note,requestedAt})),'historical-compatible create');
+    await succeeds(db('PATCH',path,{status},TOKENS.admin),'historical-compatible transition');
+  }
 });

@@ -120,12 +120,15 @@ test('production mode refuses before D2, missing/wrong confirmation and unsafe c
 });
 
 test('fixture mode remains available before D2 and emits no production report',()=>{
+  const reportPath=path.join(root,inventory.REPORT_PATH);
+  const reportBefore=fs.existsSync(reportPath)?fs.readFileSync(reportPath):null;
   const run=spawnSync(process.execPath,['scripts/sec02/inventory-request-access.cjs','--fixture','scripts/sec02/fixtures/request-inventory.json','--now',String(now)],{cwd:root,encoding:'utf8'});
   assert.equal(run.status,0,run.stderr);
   const result=JSON.parse(run.stdout);
   assert.equal(result.report.recordCount,27);
   assert.match(result.reportDigest,/^[0-9a-f]{64}$/u);
-  assert.equal(fs.existsSync(path.join(root,inventory.REPORT_PATH)),false);
+  const reportAfter=fs.existsSync(reportPath)?fs.readFileSync(reportPath):null;
+  assert.deepEqual(reportAfter,reportBefore);
 });
 
 test('production reader sends a Firebase ID token as one encoded auth query on a bounded GET',async()=>{

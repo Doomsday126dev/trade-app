@@ -9768,7 +9768,13 @@ async function submitRequest(){
   const err=document.getElementById('req-err');err.textContent='';
   const built=window.PogoDomain.requestAccess.build({rawUsername,rawNote,canonicalize:canonicalUsernameInput});
   if(!built.ok){
-    const key=built.code==='username-required'?'request.nameRequired':built.code==='username-too-short'?'request.nameTooShort':'request.invalidCharacters';
+    const key={
+      'username-required':'request.nameRequired',
+      'username-too-short':'request.nameTooShort',
+      'username-too-long':'request.nameTooLong',
+      'note-too-long':'request.noteTooLong',
+      'invalid-characters':'request.invalidCharacters'
+    }[built.code]||'request.invalidCharacters';
     err.textContent=i18nCore.t(key);return;
   }
   const {id:reqId,payload:reqData}=built,username=reqData.username;
