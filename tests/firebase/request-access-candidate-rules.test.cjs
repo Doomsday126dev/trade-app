@@ -1,7 +1,7 @@
 const {test,before,beforeEach,after}=require('node:test');
 const assert=require('node:assert/strict');
 
-const PROJECT_ID='demo-pogo-request-access-candidate';
+const PROJECT_ID=process.env.POGO_RULES_PROJECT_ID||'demo-pogo-request-access-candidate';
 const DATABASE_HOST=process.env.FIREBASE_DATABASE_EMULATOR_HOST||'127.0.0.1:9600';
 const AUTH_HOST=process.env.FIREBASE_AUTH_EMULATOR_HOST||'127.0.0.1:9699';
 const NAMESPACE=`${PROJECT_ID}-default-rtdb`;

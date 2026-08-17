@@ -1,0 +1,8 @@
+{
+  "database": [
+    {
+      "instance": "trade-list-a4297-default-rtdb",
+      "rules": "release/firebase/sec02/rollback/database.rules.trade-list-a4297-default-rtdb.pre-sec02-20260817T040808Z.json"
+    }
+  ]
+}

@@ -166,26 +166,18 @@ test('pending decrement reads and retained writes remain exact and identity boun
   await succeeds(db('DELETE',`pendingDecrements/${NAMES.ordinary}/decExisting`,undefined,TOKENS.ordinary),'owner consumes decrement');
 });
 
-test('inactive future paths keep bounded reads while writes and legacy identity or group paths remain denied',async()=>{
-  await succeeds(db('GET','shareDirectory/ordinarytrainer',undefined),'anonymous exact future directory');
-  await succeeds(db('GET',`trainerShares/${IDS.ordinary}`,undefined),'anonymous future public share');
-  await fails(db('GET','shareDirectory',undefined),'future directory enumeration');
-  await fails(db('GET','trainerShares',undefined),'future share enumeration');
-  await fails(db('GET',`shareVisibility/${IDS.ordinary}`,undefined,TOKENS.other),'foreign visibility metadata');
-  await fails(db('GET',`shareAccess/${IDS.ordinary}`,undefined,TOKENS.other),'foreign access grants');
-  await fails(db('GET',`userPreferences/${IDS.ordinary}`,undefined,TOKENS.other),'foreign preferences');
-  await fails(db('GET',`accounts/${IDS.ordinary}`,undefined,TOKENS.other),'foreign account');
-  await fails(db('GET',`shareGroupAccess/${IDS.ordinary}`,undefined,TOKENS.other),'foreign group grants');
-  for(const actor of [TOKENS.ordinary,TOKENS.admin]){
-    await succeeds(db('GET',`shareVisibility/${IDS.ordinary}`,undefined,actor),'owner or admin visibility metadata');
-    await succeeds(db('GET',`shareAccess/${IDS.ordinary}`,undefined,actor),'owner or admin access grants');
-    await succeeds(db('GET',`accounts/${IDS.ordinary}`,undefined,actor),'owner or admin account');
-    await succeeds(db('GET',`shareGroupAccess/${IDS.ordinary}`,undefined,actor),'owner or admin reserved group grants');
+test('inactive future identity sharing and preference paths remain denied to every actor',async()=>{
+  const deniedPaths=[
+    'shareDirectory/ordinarytrainer',`trainerShares/${IDS.ordinary}`,
+    'shareDirectory','trainerShares',`shareVisibility/${IDS.ordinary}`,
+    `shareAccess/${IDS.ordinary}`,`userPreferences/${IDS.ordinary}`,
+    `accounts/${IDS.ordinary}`,`shareGroupAccess/${IDS.ordinary}`,
+    `privateProfiles/${IDS.ordinary}`,`publicProfiles/${IDS.ordinary}`,
+    `publicLists/${IDS.ordinary}`,'unlistedShares/share1','groups/group1'
+  ];
+  for(const actor of [undefined,TOKENS.ordinary,TOKENS.other,TOKENS.admin]){
+    for(const path of deniedPaths)await fails(db('GET',path,undefined,actor),`denied ${path}`);
   }
-  await succeeds(db('GET',`userPreferences/${IDS.ordinary}`,undefined,TOKENS.ordinary),'owner preferences');
-  await fails(db('GET',`userPreferences/${IDS.ordinary}`,undefined,TOKENS.admin),'admin private preferences');
-  const deniedPaths=[`privateProfiles/${IDS.ordinary}`,`publicProfiles/${IDS.ordinary}`,`publicLists/${IDS.ordinary}`,'unlistedShares/share1','groups/group1'];
-  for(const actor of [undefined,TOKENS.ordinary,TOKENS.admin])for(const path of deniedPaths)await fails(db('GET',path,undefined,actor),`denied ${path}`);
   await fails(db('PUT',`userPreferences/${IDS.ordinary}/favoriteTrainers/${IDS.other}`,{trainerName:NAMES.other},TOKENS.ordinary),'disabled preference write');
   await fails(db('PUT',`shareAccess/${IDS.ordinary}/${IDS.other}`,true,TOKENS.ordinary),'disabled access write');
   await fails(db('PUT',`trainerShares/${IDS.ordinary}`,{schemaVersion:1},TOKENS.admin),'disabled admin share write');
@@ -198,7 +190,7 @@ test('retained owner list profile share auth-index request and Admin writes stil
   await succeeds(db('PUT',`wishlist/${NAMES.ordinary}`,{Pikachu:'M'},TOKENS.ordinary),'own list');
   await succeeds(db('PUT',`publicShares/${NAMES.ordinary}`,publicShare(NAMES.ordinary,{wishlist:{Pikachu:'M'}}),TOKENS.ordinary),'own public share');
   await succeeds(db('PATCH',`authIndex/${IDS.ordinary}`,{lastSeen:200},TOKENS.ordinary),'own auth index refresh');
-  await succeeds(db('PUT','requests/newRequest',{username:'NewTrainer',status:'pending'},undefined),'anonymous request create');
+  await succeeds(db('PUT','requests/req_1700000000000_test1',{username:'NewTrainer',note:'',requestedAt:1700000000000,status:'pending'},undefined),'canonical anonymous request create');
   await succeeds(db('PUT','communities/new-community',{name:'New Community'},TOKENS.admin),'admin community maintenance');
   await succeeds(db('PUT',`userCommunities/${IDS.other}/new-community`,{role:'member'},TOKENS.admin),'admin membership maintenance');
   await succeeds(db('PUT',`communityRequests/new-community/request2`,{uid:IDS.other,status:'pending'},TOKENS.admin),'admin community request maintenance');

@@ -1,0 +1,8 @@
+{
+  "database": [
+    {
+      "instance": "trade-list-a4297-default-rtdb",
+      "rules": "tests/firebase/database.rules.sec02-production.json"
+    }
+  ]
+}

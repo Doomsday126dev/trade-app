@@ -1,0 +1,11 @@
+{
+  "database": {
+    "rules": "database.rules.sec02-production.json"
+  },
+  "emulators": {
+    "auth": { "port": 9599 },
+    "database": { "port": 9500 },
+    "ui": { "enabled": false },
+    "singleProjectMode": true
+  }
+}

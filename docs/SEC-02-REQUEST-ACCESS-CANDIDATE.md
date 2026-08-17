@@ -56,7 +56,13 @@ The emulator fixture accepts far-past and far-future nonnegative integer timesta
 | Delete | Deny | Deny | Allow | Allow |
 | Read collection | Deny | Deny | Allow | Allow |
 
-The candidate does not expand any active Firebase surface. Its Rules and Firebase config live only under `tests/firebase/` and are invoked only by `check:request-access-candidate-rules` against a demo emulator project.
+The emulator-only candidate does not expand any active Firebase surface. Its Rules and Firebase config live only under `tests/firebase/` and are invoked only by `check:request-access-candidate-rules` against a demo emulator project.
+
+## Complete production assembly
+
+The separately generated complete artifact is `tests/firebase/database.rules.sec02-production.json`. `scripts/build-sec02-production-rules.cjs` deterministically copies the authoritative `database.rules.narrow-read.json` document and replaces only `/rules/requests` with this reviewed contract. `check:sec02-production-rules` proves all 19 authoritative roots remain present, every root outside `/requests` is deeply equal to the baseline, and both the narrow-read and Request Access emulator suites pass against the assembled artifact.
+
+`firebase.sec02-production.json` targets only `trade-list-a4297-default-rtdb` and only that complete artifact. It contains no Hosting, Functions, Firestore, Storage, Auth, or other deployment configuration. The pre-change live Rules export and its independent rollback config are preserved under `release/firebase/sec02/`. These files prepare a separately approved Rules-only release; they do not authorize or perform deployment.
 
 ## Accepted aggregate compatibility evidence
 

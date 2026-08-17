@@ -1,0 +1,11 @@
+{
+  "artifact": "database.rules.trade-list-a4297-default-rtdb.pre-sec02-20260817T040808Z.json",
+  "acquiredAt": "2026-08-17T04:08:17Z",
+  "project": "trade-list-a4297",
+  "instance": "trade-list-a4297-default-rtdb",
+  "firebaseToolsVersion": "15.24.0",
+  "mechanism": "firebase database:get /.settings/rules --project trade-list-a4297 --instance trade-list-a4297-default-rtdb --pretty --output <artifact>",
+  "sha256": "b1fe3b0a7ac4158fb29df8408b199a5ec865a51d1ceec89a013ef0d08bad5d62",
+  "baselineSha256": "e0632a98ed106117f03e61da0446ef4b2c2e6ed02ea8c6f1c498a0e7edcb17bf",
+  "semanticallyMatchesBaseline": true
+}
