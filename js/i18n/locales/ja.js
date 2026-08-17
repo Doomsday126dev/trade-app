@@ -63,5 +63,6 @@
     ,'admin.communityDiagnosticLegacy':'複数コミュニティ機能は無効です。アプリは従来のグローバルコミュニティ互換モードを維持します。ポケモンリストとインベントリは引き続きユーザー全体で共通です。','admin.communityDiagnosticInterim':'コミュニティ絞り込みは有効です。トレーナー優先の暫定モードではメンバー向けコミュニティ切り替えを非表示にし、オーナープレビューはこのブラウザ内に保持されます。ポケモンリストとインベントリは引き続きユーザー全体で共通です。','admin.communityDiagnosticEnabled':'コミュニティ絞り込みとメンバー向けコミュニティ選択は有効です。ポケモンリストとインベントリは引き続きユーザー全体で共通です。'
     ,'myList.moveUp':'{name} を上へ移動','myList.moveDown':'{name} を下へ移動','myList.movedPosition':'{name} を {count} 件中 {position} 番目に移動しました。'
     ,'request.nameTooLong':'トレーナー名は32文字以内で入力してください。','request.noteTooLong':'メモは280文字以内で入力してください。'
+    ,'app.preparing':'トレードリストを準備しています','app.preparingDetail':'この端末とログイン状態を安全に確認しています。確認が完了するまで、アカウントデータは表示されません。'
   });
 })(window);

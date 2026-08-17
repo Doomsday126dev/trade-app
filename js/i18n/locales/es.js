@@ -64,5 +64,6 @@
     ,'admin.communityDiagnosticLegacy':'El uso de varias comunidades está desactivado. La aplicación mantiene el modo de compatibilidad con la comunidad global anterior. Las listas de Pokémon y el inventario siguen siendo globales para cada usuario.','admin.communityDiagnosticInterim':'El filtro por comunidad está activado. El modo provisional centrado en entrenadores mantiene oculto el selector de comunidad; la vista previa del propietario sigue siendo local en este navegador. Las listas de Pokémon y el inventario siguen siendo globales para cada usuario.','admin.communityDiagnosticEnabled':'El filtro y la selección de comunidades están activados. Las listas de Pokémon y el inventario siguen siendo globales para cada usuario.'
     ,'myList.moveUp':'Subir {name}','myList.moveDown':'Bajar {name}','myList.movedPosition':'{name} se movió a la posición {position} de {count}.'
     ,'request.nameTooLong':'El nombre de Entrenador no puede superar los 32 caracteres.','request.noteTooLong':'La nota no puede superar los 280 caracteres.'
+    ,'app.preparing':'Preparando tu lista de intercambios','app.preparingDetail':'Comprobando de forma segura este dispositivo y tu sesión. Los datos de tu cuenta permanecen ocultos hasta completar la verificación.'
   });
 })(window);

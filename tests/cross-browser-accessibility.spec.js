@@ -9,11 +9,11 @@ async function captureReview(page,name){
 }
 
 async function waitForApp(page){
-  await page.waitForFunction(()=>typeof openSettingsPanel==='function'&&typeof syncSettingsRoute==='function');
+  await page.waitForFunction(()=>typeof openSettingsPanel==='function'&&typeof syncSettingsRoute==='function'&&window.__pogoStartup?.firebaseStartupSettledAt!==null);
 }
 
 async function establishAccount(page,name='CrossBrowserTrainer'){
-  await page.waitForFunction(()=>_authStateKnown===true);
+  await page.waitForFunction(()=>_authStateKnown===true&&window.__pogoStartup?.firebaseStartupSettledAt!==null);
   await page.evaluate(username=>{
     managedSubscriptions?.unsubscribeByKey?.('public:loginDirectory');
     managedListenerLifecycle?.deactivateSession?.('cross_browser_fixture');

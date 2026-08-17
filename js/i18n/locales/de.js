@@ -64,5 +64,6 @@
     ,'admin.communityDiagnosticLegacy':'Mehrere Communities sind deaktiviert. Die App bleibt im bisherigen globalen Community-Kompatibilitätsmodus. Pokémon-Listen und Inventar bleiben benutzerweit.','admin.communityDiagnosticInterim':'Die Community-Filterung ist aktiviert. Im vorläufigen trainerzentrierten Modus bleibt die Community-Auswahl für Mitglieder ausgeblendet; die Eigentümervorschau bleibt lokal in diesem Browser. Pokémon-Listen und Inventar bleiben benutzerweit.','admin.communityDiagnosticEnabled':'Community-Filterung und Community-Auswahl für Mitglieder sind aktiviert. Pokémon-Listen und Inventar bleiben benutzerweit.'
     ,'myList.moveUp':'{name} nach oben verschieben','myList.moveDown':'{name} nach unten verschieben','myList.movedPosition':'{name} wurde an Position {position} von {count} verschoben.'
     ,'request.nameTooLong':'Trainernamen dürfen höchstens 32 Zeichen lang sein.','request.noteTooLong':'Notizen dürfen höchstens 280 Zeichen lang sein.'
+    ,'app.preparing':'Deine Tauschliste wird vorbereitet','app.preparingDetail':'Dieses Gerät und deine Anmeldung werden sicher geprüft. Deine Kontodaten bleiben bis zum Abschluss der Prüfung verborgen.'
   });
 })(window);

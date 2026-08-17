@@ -349,5 +349,6 @@
     ,'admin.communityDiagnosticLegacy':'Multi-community behavior is disabled. The app remains in legacy global-community compatibility mode. Pokémon lists and inventory stay user-global.','admin.communityDiagnosticInterim':'Community filtering is enabled. Trainer-first interim mode keeps the member community switcher hidden; owner preview remains local to this browser. Pokémon lists and inventory stay user-global.','admin.communityDiagnosticEnabled':'Community filtering and member community selection are enabled. Pokémon lists and inventory stay user-global.'
     ,'myList.moveUp':'Move {name} up','myList.moveDown':'Move {name} down','myList.movedPosition':'{name} moved to position {position} of {count}.'
     ,'request.nameTooLong':'Trainer names must contain no more than 32 characters.','request.noteTooLong':'Notes must contain no more than 280 characters.'
+    ,'app.preparing':'Preparing your trade list','app.preparingDetail':'Checking this device and your sign-in safely. Your account data stays hidden until verification is complete.'
   });
 })(window);

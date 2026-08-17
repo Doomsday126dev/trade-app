@@ -56,19 +56,25 @@ test('missing invalid or failed configuration stays inert without a debug fallba
   assert.doesNotMatch(source,/debugToken|FIREBASE_APPCHECK_DEBUG_TOKEN|CustomProvider/);
 });
 
-test('client insertion is non-blocking and introduces no E.1 callable activation',()=>{
+test('App Check starts after paint and activates the RTDB client only after successful initialization',()=>{
   assert.match(html,/import\(`\$\{base\}\/firebase-app-check\.js`\)/);
   assert.match(html,/ReCaptchaEnterpriseProvider:appCheckMod\.ReCaptchaEnterpriseProvider/);
   assert.match(html,/firebaseAppCheckInitializationPromise=loadFirebaseAppCheckSdk\(\)[\s\S]+initializeAppCheckOnce\(\{app,siteKey:FIREBASE_APP_CHECK_SITE_KEY,\.\.\.sdk\}\)/);
-  assert.match(html,/fbApp=initializeApp\(firebaseConfig\(url\),'pogo'\);\s*startFirebaseAppCheck\(fbApp\);\s*db=getDatabase\(fbApp\)/);
+  assert.match(html,/fbApp=early\?\.app\|\|initializeApp\(firebaseConfig\(url\),'pogo'\);\s*firebaseDatabaseHandle=getDatabase\(fbApp,url\)/);
+  assert.match(html,/afterFirstPaint\(\(\)=>\{\s*startBackgroundStartup\(\);\s*startFirebaseStartup\(shareReq\)/);
+  assert.match(html,/ensureFirebaseDataProtection[\s\S]+if\(!status\?\.ok\)throw[\s\S]+activateFirebaseDataClient\(\)/);
+  assert.match(html,/function activateFirebaseDataClient\(\)[\s\S]+db=firebaseDatabaseHandle[\s\S]+firebaseDataProtectionReady=true;\s*fbOn=true/);
+  assert.match(html,/function startManagedSnapshotListener[\s\S]+if\(!firebaseDataProtectionReady\)/);
+  assert.doesNotMatch(html,/setupFirebase\(url=FIREBASE_URL\)[\s\S]{0,260}startFirebaseAppCheck\(fbApp\)/);
   assert.match(html,/const FIREBASE_APP_CHECK_SITE_KEY="6Lc6-X8tAAAAAI-MY4WdeI8RV-njpbiFX5mFjDbz";/);
-  assert.match(html,/firebaseSdkPromise=Promise\.all\(\[[\s\S]+firebase-app\.js[\s\S]+firebase-database\.js[\s\S]+firebase-auth\.js[\s\S]+\]\)/);
+  assert.match(html,/state\.sdkPromise=Promise\.all\(\[import\(base\+'\/firebase-app\.js'\),import\(base\+'\/firebase-auth\.js'\)\]\)/);
+  assert.match(html,/firebaseSdkPromise=Promise\.all\(\[[\s\S]+startPogoEarlyAuth\(\)[\s\S]+firebase-database\.js[\s\S]+\]\)/);
   assert.doesNotMatch(html,/getFunctions\(|httpsCallable\(|readE1AccountFoundation\(|reserveE1TrainerHandle\(/);
   assert.doesNotMatch(html,/FIREBASE_APPCHECK_DEBUG_TOKEN|ReCaptchaV3Provider|CustomProvider/);
 });
 
 test('current Auth behavior and callable monitor configuration remain unchanged',()=>{
-  assert.match(html,/auth=getAuth\(fbApp\);\s*bindAuthObserver\(\);/);
+  assert.match(html,/auth=early\?\.auth\|\|getAuth\(fbApp\);\s*bindAuthObserver\(\);/);
   assert.match(html,/signInWithEmailAndPassword\(auth,email,pin\)/);
   const gateway=readFileSync(path.join(root,'functions/e1-gateway/index.js'),'utf8');
   assert.match(gateway,/enforceAppCheck: configuration\.appCheckEnforcementMode === 'enforced'/);

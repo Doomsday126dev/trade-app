@@ -3,7 +3,7 @@ const{test,expect}=require('@playwright/test');
 async function openFixture(page,{preserveOrder=false}={}){
   await page.route(url=>url.hostname.endsWith('.firebaseio.com')||url.hostname.endsWith('.firebasedatabase.app'),route=>route.abort());
   await page.goto(`./?launch-fixes=${Date.now()}`,{waitUntil:'domcontentloaded'});
-  await page.waitForFunction(()=>typeof renderMyList==='function'&&_authStateKnown===true);
+  await page.waitForFunction(()=>typeof renderMyList==='function'&&_authStateKnown===true&&window.__pogoStartup?.firebaseStartupSettledAt!==null);
   await page.evaluate(preserveOrder=>{
     managedSubscriptions?.unsubscribeAll?.();managedListenerLifecycle?.deactivateSession?.('launch_fixes');
     db=null;fbOn=false;managedFirebaseClient=null;cur='LaunchTester';auth={currentUser:{uid:'uid-launch-tester'}};currentAuthUid='uid-launch-tester';
@@ -69,7 +69,7 @@ test('UX-01 historical, keyboard, desktop, pointer, priority, and reload orderin
 
   const orderRecord=await page.evaluate(()=>localStorage.getItem(myListOrderStorageKey('wishlist','LaunchTester')));
   expect(orderRecord).toContain('Pikachu');
-  await page.reload({waitUntil:'domcontentloaded'});await page.waitForFunction(()=>_authStateKnown===true&&typeof renderMyList==='function');
+  await page.reload({waitUntil:'domcontentloaded'});await page.waitForFunction(()=>_authStateKnown===true&&typeof renderMyList==='function'&&window.__pogoStartup?.firebaseStartupSettledAt!==null);
   await page.waitForTimeout(500);
   await page.evaluate(()=>{
     managedSubscriptions?.unsubscribeAll?.();db=null;fbOn=false;cur='LaunchTester';auth={currentUser:{uid:'uid-launch-tester'}};currentAuthUid='uid-launch-tester';managedSessionCache.activate({uid:'uid-launch-tester',username:'LaunchTester'});

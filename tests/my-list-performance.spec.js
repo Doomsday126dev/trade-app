@@ -32,7 +32,7 @@ test.describe('isolated My List scale profile',()=>{
     test.skip(testInfo.project.name!=='desktop','Isolated desktop benchmark avoids duplicate noisy timing runs.');
     await page.route(url=>url.hostname.endsWith('.firebaseio.com')||url.hostname.endsWith('.firebasedatabase.app')||url.hostname.endsWith('googleapis.com'),route=>route.abort());
     await page.goto(`./?my-list-performance=${Date.now()}`,{waitUntil:'domcontentloaded'});
-    await page.waitForFunction(()=>typeof renderMyList==='function'&&typeof _authStateKnown==='boolean'&&_authStateKnown);
+    await page.waitForFunction(()=>typeof renderMyList==='function'&&typeof _authStateKnown==='boolean'&&_authStateKnown&&window.__pogoStartup?.firebaseStartupSettledAt!==null);
     const measurements=[];
     for(const count of [100,250,500,1000]){
       const measurement=await installListFixture(page,count);

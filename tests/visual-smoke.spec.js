@@ -108,7 +108,7 @@ async function expectAutocompleteClears(page, inputSelector, dropdownSelector) {
 }
 
 async function waitForStableLocalOrganizerStartup(page) {
-  await page.waitForFunction(() => typeof openTrainerOrganizer === 'function' && _authStateKnown === true);
+  await page.waitForFunction(() => typeof openTrainerOrganizer === 'function' && _authStateKnown === true && window.__pogoStartup?.firebaseStartupSettledAt !== null);
   await page.evaluate(() => {
     resetTrainerOrganizerState();
     localStorage.clear();
@@ -117,7 +117,7 @@ async function waitForStableLocalOrganizerStartup(page) {
 }
 
 async function isolateAuthenticatedMyListFixture(page,{username,uid}) {
-  await page.waitForFunction(() => _authStateKnown === true && typeof managedSubscriptions?.unsubscribeByKey === 'function');
+  await page.waitForFunction(() => _authStateKnown === true && window.__pogoStartup?.firebaseStartupSettledAt !== null && typeof managedSubscriptions?.unsubscribeByKey === 'function');
   await page.evaluate(({username,uid}) => {
     managedSubscriptions.unsubscribeByKey('public:loginDirectory');
     managedListenerLifecycle.deactivateSession('playwright_fixture');
@@ -168,7 +168,8 @@ async function waitForSettingsStartupReady(page) {
     typeof openSettingsPanel === 'function' &&
     typeof syncSettingsRoute === 'function' &&
     typeof _authStateKnown === 'boolean' &&
-    _authStateKnown === true
+    _authStateKnown === true &&
+    window.__pogoStartup?.firebaseStartupSettledAt !== null
   ));
 }
 
@@ -1870,7 +1871,7 @@ test.describe('visual smoke', () => {
     test(`find trainer suggestions stay visible at ${width}px`, async ({ page }) => {
       await page.setViewportSize({ width, height: 640 });
       await page.goto(`./?autocomplete-layout=${width}-${Date.now()}`, { waitUntil: 'domcontentloaded' });
-      await page.waitForFunction(() => typeof renderTrainerSuggestions === 'function');
+      await page.waitForFunction(() => typeof renderTrainerSuggestions === 'function' && window.__pogoStartup?.firebaseStartupSettledAt !== null);
       await page.evaluate(() => {
         document.getElementById('login-pg').style.display='none';
         document.getElementById('app').style.display='block';
