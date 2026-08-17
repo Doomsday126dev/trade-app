@@ -54,10 +54,18 @@ test('Auth-only bootstrap reuses one Firebase app without exposing data or activ
 test('cached private UI cannot replace pre-auth before Firebase Auth restoration',()=>{
   const startup=between('async function startFirebaseStartup(shareReq){','// ── BOOT');
   assert.match(startup,/setupFirebase\(FIREBASE_URL\);\s*const restoredUser=await waitForAuthState\(\)/);
-  assert.match(startup,/else if\(restoredUser&&cur&&document\.getElementById\('app'\)\?\.style\.display==='none'\)showApp\(\)/);
+  assert.match(startup,/restoredUser&&auth\?\.currentUser\?\.uid===restoredUser\.uid&&currentAuthUid===restoredUser\.uid&&cur/);
   assert.doesNotMatch(startup,/showApp\(\)[\s\S]+waitForAuthState/);
+  const observer=between('function bindAuthObserver(){','function waitForAuthState(');
+  assert.match(observer,/firebaseDataProtectionReady&&auth\?\.currentUser\?\.uid===user\.uid[\s\S]+showApp\(\)/);
   for(const fn of ['showConfig','showLogin'])assert.match(between(`function ${fn}(`,'\n}'),/hidePreAuth\(\)/);
   assert.match(between('function showApp(){','const renderFrame='),/hidePreAuth\(\)/);
+});
+
+test('restored startup failures expose a recoverable login state instead of a permanent preparing shell',()=>{
+  const startup=between('async function startFirebaseStartup(shareReq){','// ── BOOT');
+  assert.match(startup,/catch\(error\)[\s\S]+if\(shareReq\)renderUnavailableShareView[\s\S]+else showBootError\(error\)/);
+  assert.match(between('function showBootError(','function showConfig('),/hidePreAuth\(\)[\s\S]+completeLoginBootstrap\(\)/);
 });
 
 test('RTDB handles and listeners fail closed until App Check initialization succeeds',()=>{

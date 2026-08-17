@@ -393,6 +393,7 @@ test.describe('visual smoke', () => {
     test.skip(browserName!=='chromium','Chromium CDP is required to force the autofill pseudo-state.');
     await page.goto(`./?autofill-theme=${Date.now()}`,{waitUntil:'domcontentloaded'});
     await expect(page.locator('#login-user')).toBeVisible();
+    await expect(page.locator('#login-user')).toBeEnabled();
     expect(await page.evaluate(()=>CSS.supports('selector(input:-webkit-autofill)'))).toBe(true);
     expect(await page.evaluate(()=>CSS.supports('selector(input:autofill)'))).toBe(true);
     const session=await page.context().newCDPSession(page);
@@ -892,8 +893,8 @@ test.describe('visual smoke', () => {
   });
 
   test('Settings route restores the latest same-session scroll across close, Escape, Back, Forward, locale, and surfaces',async({page})=>{
-    await page.goto(`./?settings-scroll-lifecycle=${Date.now()}`,{waitUntil:'domcontentloaded'});
     for(const surface of ['share','login','account']){
+      await page.goto(`./?settings-scroll-lifecycle=${surface}-${Date.now()}`,{waitUntil:'domcontentloaded'});
       await installSettingsScrollFixture(page,surface,900);
       await page.evaluate(context=>openSettingsPanel(context),surface==='account'?'account':'public');
       await expect(page.locator('#settings-modal')).toBeVisible();

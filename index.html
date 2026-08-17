@@ -4112,7 +4112,7 @@ function bindAuthObserver(){
       ensureProtectedSubscriptions();
       if(_activeShareView?.username)ensureShareViewSubscriptions(_activeShareView.username);
       if(_pendingShareRequest)openShareViewFromRequest(_pendingShareRequest);
-      if(cur&&document.getElementById('app')?.style.display==='none'&&!document.getElementById('share-view')?.classList.contains('active'))showApp();
+      if(firebaseDataProtectionReady&&auth?.currentUser?.uid===user.uid&&cur&&document.getElementById('app')?.style.display==='none'&&!document.getElementById('share-view')?.classList.contains('active'))showApp();
       if(Object.keys(syncQueue).length)flushSyncQueue();
       return;
     }
@@ -15331,18 +15331,15 @@ async function startFirebaseStartup(shareReq){
       console.warn('Protected Firebase startup unavailable',error);
       setSyncStatus('offline');
       if(shareReq)renderUnavailableShareView(shareReq.username,i18nCore.t('share.offlineLoadFailed'));
-      else{
-        if(!restoredUser)showLogin();
-        const err=document.getElementById('login-err');
-        if(err&&!restoredUser)err.textContent=i18nCore.t('app.startupError');
-      }
+      else showBootError(error);
       return;
     }
     startListener();
     flushSyncQueue();
     if(shareReq)await openShareViewFromRequest(shareReq);
-    else if(restoredUser&&cur&&document.getElementById('app')?.style.display==='none')showApp();
-    else if(!restoredUser)showLogin();
+    else if(restoredUser&&auth?.currentUser?.uid===restoredUser.uid&&currentAuthUid===restoredUser.uid&&cur){
+      if(document.getElementById('app')?.style.display==='none')showApp();
+    }else showLogin();
   }catch(e){
     console.warn('Firebase SDK failed to load',e);
     setSyncStatus('offline');
