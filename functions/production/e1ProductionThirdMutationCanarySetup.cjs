@@ -1,6 +1,7 @@
 'use strict';
 
 const fs = require('node:fs');
+const { isDeepStrictEqual } = require('node:util');
 const { normalizeHandle } = require('../e1-authority-service/handleNormalization');
 const { readProofSubjectHash } = require('../e1-authority-service/readRateLimiters');
 const {
@@ -55,7 +56,7 @@ const SETUP_LIFECYCLE = Object.freeze({
 });
 const LEGACY_RECORD_CONTRACT = Object.freeze({
   userFields: Object.freeze([
-    'friendCode', 'joined', 'lastSeen', 'lastUpdated', 'pin', 'pinHashed', 'authVersion',
+    'friendCode', 'joined', 'pin', 'pinHashed', 'authVersion',
     'authEmail', 'authUid', 'isAdmin', 'isOwner'
   ]),
   loginDirectoryFields: Object.freeze(['authVersion', 'authReady', 'approvedAt']),
@@ -88,8 +89,6 @@ function legacySetupRecords(canary, createdAt) {
     user: Object.freeze({
       friendCode: '',
       joined: timestamp,
-      lastSeen: null,
-      lastUpdated: null,
       pin: pinHash(canary.pin),
       pinHashed: true,
       authVersion: canary.authVersion,
@@ -124,9 +123,16 @@ function setupDigest(plan) {
     EXECUTION_EVIDENCE_PURPOSE,
     plan.setupOperationId,
     D2_BASELINE.stateDigest,
-    plan.canaries.map(canaryIdentity),
+    plan.canaries.map((canary) => Object.freeze({
+      identity: canaryIdentity(canary),
+      rtdbRecords: legacySetupRecords(canary, plan.createdAt)
+    })),
     SETUP_MUTATION_BUDGET
   ]));
+}
+
+function exactRtdbRecordMatches(expected, actual) {
+  return isDeepStrictEqual(actual, expected);
 }
 
 function validateCanary(canary, slot, errors) {
@@ -234,6 +240,7 @@ module.exports = Object.freeze({
   TRAINER_NAME,
   authEmailFor,
   canaryIdentity,
+  exactRtdbRecordMatches,
   legacySetupRecords,
   pinHash,
   rollbackPlan,

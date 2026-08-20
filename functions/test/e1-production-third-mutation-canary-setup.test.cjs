@@ -11,9 +11,11 @@ const {
   SYNTHETIC_COHORT_TYPE
 } = require('../production/e1ProductionThirdMutationContract.cjs');
 const {
+  LEGACY_RECORD_CONTRACT,
   SETUP_MUTATION_BUDGET,
   SETUP_OPERATION,
   authEmailFor,
+  exactRtdbRecordMatches,
   legacySetupRecords,
   rollbackPlan,
   setupDigest,
@@ -102,9 +104,11 @@ test('minimal legacy setup records contain only supported login and reciprocal o
   const plan = fixture();
   const records = legacySetupRecords(plan.canaries[0], plan.createdAt);
   assert.deepEqual(Object.keys(records.user).sort(), [
-    'authEmail', 'authUid', 'authVersion', 'friendCode', 'isAdmin', 'isOwner', 'joined', 'lastSeen',
-    'lastUpdated', 'pin', 'pinHashed'
+    'authEmail', 'authUid', 'authVersion', 'friendCode', 'isAdmin', 'isOwner', 'joined', 'pin',
+    'pinHashed'
   ]);
+  assert.deepEqual(Object.keys(records.user).sort(), [...LEGACY_RECORD_CONTRACT.userFields].sort());
+  assert.equal(Object.values(records).flatMap(Object.values).includes(null), false);
   assert.deepEqual(records.loginDirectory, { authVersion: 1, authReady: true, approvedAt: Date.parse(plan.createdAt) });
   assert.deepEqual(records.authIndex, {
     username: plan.canaries[0].trainerUsername,
@@ -113,6 +117,19 @@ test('minimal legacy setup records contain only supported login and reciprocal o
     lastSeen: Date.parse(plan.createdAt)
   });
   assert.notEqual(records.user.pin, plan.canaries[0].pin);
+});
+
+test('persisted RTDB comparison remains exact after omitting unset timestamp children', () => {
+  const plan = fixture();
+  const expected = legacySetupRecords(plan.canaries[0], plan.createdAt).user;
+  assert.equal(exactRtdbRecordMatches(expected, structuredClone(expected)), true);
+
+  const missingRequired = structuredClone(expected);
+  delete missingRequired.authUid;
+  assert.equal(exactRtdbRecordMatches(expected, missingRequired), false);
+
+  const unexpectedExtra = { ...structuredClone(expected), unexplained: true };
+  assert.equal(exactRtdbRecordMatches(expected, unexpectedExtra), false);
 });
 
 for (const [name, mutate, reason] of [
@@ -140,6 +157,13 @@ test('setup exact replay uses the same deterministic digest and mutation ledger'
   assert.equal(setupDigest(first), setupDigest(replay));
   assert.deepEqual(setupMutationLedger(first), setupMutationLedger(replay));
   assert.equal(SETUP_MUTATION_BUDGET.exactReplayMutations, 0);
+});
+
+test('setup digest binds the exact persisted RTDB record shape', () => {
+  const first = fixture();
+  const changedRecordTimestamp = structuredClone(first);
+  changedRecordTimestamp.createdAt = '2026-08-16T11:50:01.000Z';
+  assert.notEqual(setupDigest(first), setupDigest(changedRecordTimestamp));
 });
 
 test('partial setup rollback deletes only the exact canonical creation prefix in reverse order', () => {
