@@ -50,8 +50,11 @@ const {
 } = require('../production/e1ProductionThirdMutationGuard.cjs');
 const {
   APP_CHECK_MODE,
+  EXPECTED_ORIGIN,
+  EXPECTED_PATHNAMES,
   HARNESS_MODE,
   LOGIN_METHOD,
+  appCheckRuntimeProofDigest,
   harnessDigest
 } = require('../production/e1ProductionThirdMutationBrowserHarness.cjs');
 
@@ -202,7 +205,7 @@ function fixture(subjects = poolSubjects()) {
     bindingDigest
   };
   const browserHarness = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     environment: 'production',
     projectId: 'trade-list-a4297',
     appId: EXPECTED_APP_ID,
@@ -212,22 +215,48 @@ function fixture(subjects = poolSubjects()) {
     mode: HARNESS_MODE,
     bindingDigest,
     verifiedAt: '2026-08-15T14:55:00.000Z',
-    subjects: candidates.map((value, index) => ({
-      slot: value.slot,
-      uidHash: value.subjectHashes.uidHash,
-      trainerHash: value.subjectHashes.trainerHash,
-      browserContextHash: String(index + 4).repeat(64),
-      loginMethod: LOGIN_METHOD,
-      exactUidMatch: true,
-      previousSessionAbsent: true,
-      operatorAdminSessionAbsent: true,
-      firebaseIdTokenFresh: true,
-      limitedUseAppCheckAvailable: true,
-      appCheckMode: APP_CHECK_MODE,
-      debugTokenUsed: false,
-      tokenPersistence: 'none',
-      tokenReuseDetected: false
-    })),
+    subjects: candidates.map((value, index) => {
+      const at = (offset) => new Date(Date.parse('2026-08-15T14:54:00.000Z') + offset).toISOString();
+      const subject = {
+        slot: value.slot,
+        uidHash: value.subjectHashes.uidHash,
+        trainerHash: value.subjectHashes.trainerHash,
+        browserContextHash: String(index + 4).repeat(64),
+        loginMethod: LOGIN_METHOD,
+        exactUidMatch: true,
+        previousSessionAbsent: true,
+        operatorAdminSessionAbsent: true,
+        firebaseIdTokenFresh: true,
+        appCheckProvenance: {
+          slot: value.slot,
+          origin: EXPECTED_ORIGIN,
+          pathname: EXPECTED_PATHNAMES[0],
+          appId: EXPECTED_APP_ID,
+          uidHash: value.subjectHashes.uidHash,
+          trainerHash: value.subjectHashes.trainerHash,
+          bindingDigest,
+          probeStartedAt: at(0),
+          samePageRuntimeEstablished: true,
+          pageRuntimeBinding: { startedAt: at(0), settledAt: at(50), outcome: 'verified' },
+          sdkImport: { startedAt: at(50), settledAt: at(100), outcome: 'resolved' },
+          readiness: { startedAt: at(100), settledAt: at(150), outcome: 'resolved' },
+          appCheckInstance: { startedAt: at(150), settledAt: at(160), outcome: 'verified', exactInstance: true },
+          limitedUseToken: {
+            startedAt: at(160), settledAt: at(250), outcome: 'resolved', nonEmpty: true,
+            tokenFingerprint: ['b', 'c', 'd', 'e', 'f'][index].repeat(64), debug: false,
+            persisted: false, reused: false, sentToCallable: false
+          },
+          failureStage: null,
+          runtimeProofDigest: ''
+        },
+        appCheckMode: APP_CHECK_MODE,
+        debugTokenUsed: false,
+        tokenPersistence: 'none',
+        tokenReuseDetected: false
+      };
+      subject.appCheckProvenance.runtimeProofDigest = appCheckRuntimeProofDigest(subject.appCheckProvenance);
+      return subject;
+    }),
     debugTokensUsed: false,
     tokensPersisted: false,
     executionAuthorized: false,
@@ -668,6 +697,18 @@ test('subject binding is separate from execution authorization and uses a determ
   ));
   values.binding.bindingDigest = 'f'.repeat(64);
   assert.throws(() => runGuard(values), (error) => error.reasons.includes('group_d3_binding_digest_mismatch'));
+});
+
+test('boolean-only App Check evidence cannot begin D3 readiness or authorize gate enablement', () => {
+  const values = fixture();
+  delete values.browserHarness.subjects[0].appCheckProvenance;
+  values.browserHarness.subjects[0].limitedUseAppCheckAvailable = true;
+  values.browserHarness.harnessDigest = harnessDigest(values.browserHarness);
+  values.readiness.browserHarnessDigest = values.browserHarness.harnessDigest;
+  values.input.browserHarnessDigest = values.browserHarness.harnessDigest;
+  assert.throws(() => runGuard(values), (error) =>
+    error.reasons.includes('group_d3_browser_harness_subject_a_invalid'));
+  assert.deepEqual(values.input.currentGates, disabledGatePlan());
 });
 
 for (const [name, mutate, reason] of [

@@ -2796,6 +2796,7 @@ let firebaseSdkPromise=null;
 let firebaseAppCheckSdkPromise=null;
 let firebaseAppCheckInitializationPromise=null;
 let firebaseDataProtectionPromise=null;
+let firebaseAppCheckStage='not-started';
 function firebaseSdkReady(){return typeof initializeApp==='function'&&typeof getDatabase==='function'&&typeof getAuth==='function';}
 async function loadFirebaseSdk(){
   if(firebaseSdkReady())return true;
@@ -2831,11 +2832,31 @@ async function loadFirebaseSdk(){
 function loadFirebaseAppCheckSdk(){
   if(firebaseAppCheckSdkPromise)return firebaseAppCheckSdkPromise;
   const base='https://www.gstatic.com/firebasejs/10.12.2';
-  firebaseAppCheckSdkPromise=import(`${base}/firebase-app-check.js`).then(appCheckMod=>({
-    initializeAppCheck:appCheckMod.initializeAppCheck,
-    ReCaptchaEnterpriseProvider:appCheckMod.ReCaptchaEnterpriseProvider
-  }));
+  firebaseAppCheckStage='sdk-import';
+  firebaseAppCheckSdkPromise=import(`${base}/firebase-app-check.js`).then(appCheckMod=>{
+    firebaseAppCheckStage='sdk-import-settled';
+    return{
+      initializeAppCheck:appCheckMod.initializeAppCheck,
+      ReCaptchaEnterpriseProvider:appCheckMod.ReCaptchaEnterpriseProvider
+    };
+  }).catch(error=>{
+    firebaseAppCheckStage='failed';
+    if(error?.code)throw error;
+    throw Object.assign(new Error('Firebase App Check SDK import failed'),{code:'app-check/sdk-import-failed'});
+  });
   return firebaseAppCheckSdkPromise;
+}
+const FIREBASE_APP_CHECK_STAGE_TIMEOUT_MS=30*1000;
+function appCheckStageTimeout(promise,code){
+  let timer;
+  return Promise.race([
+    Promise.resolve(promise),
+    new Promise((resolve,reject)=>{
+      timer=setTimeout(()=>reject(Object.assign(new Error('Firebase App Check stage timed out'),{
+        code:typeof code==='function'?code():code
+      })),FIREBASE_APP_CHECK_STAGE_TIMEOUT_MS);
+    })
+  ]).finally(()=>clearTimeout(timer));
 }
 function startFirebaseAppCheck(app){
   if(firebaseAppCheckInitializationPromise)return firebaseAppCheckInitializationPromise;
@@ -2847,12 +2868,24 @@ function startFirebaseAppCheck(app){
   window.__pogoStartup.appCheckStartedAt=performance.now();
   try{performance.mark('pogo:app-check-start')}catch{}
   firebaseAppCheckInitializationPromise=loadFirebaseAppCheckSdk()
-    .then(sdk=>service.initializeAppCheckOnce({app,siteKey:FIREBASE_APP_CHECK_SITE_KEY,...sdk}))
-    .catch(()=>service.unavailable('app-check/sdk-unavailable'));
+    .then(sdk=>{
+      firebaseAppCheckStage='initializing';
+      const status=service.initializeAppCheckOnce({app,siteKey:FIREBASE_APP_CHECK_SITE_KEY,...sdk});
+      firebaseAppCheckStage=status?.ok?'ready':'failed';
+      return status;
+    })
+    .catch(error=>{
+      firebaseAppCheckStage='failed';
+      return service.unavailable(error?.code||'app-check/sdk-unavailable');
+    });
   return firebaseAppCheckInitializationPromise;
 }
 function firebaseAppCheckReady(){
-  return firebaseAppCheckInitializationPromise||Promise.resolve(Object.freeze({ok:false,code:'app-check/not-started'}));
+  if(!firebaseAppCheckInitializationPromise)return Promise.resolve(Object.freeze({ok:false,code:'app-check/not-started'}));
+  return appCheckStageTimeout(firebaseAppCheckInitializationPromise,()=>
+    firebaseAppCheckStage==='sdk-import'?'app-check/sdk-import-timeout':
+      firebaseAppCheckStage==='initializing'?'app-check/initialization-timeout':'app-check/readiness-timeout')
+    .catch(error=>firebaseAppCheckService.unavailable(error?.code||'app-check/readiness-failed'));
 }
 function activateFirebaseDataClient(){
   if(firebaseDataProtectionReady&&db)return db;
@@ -2877,12 +2910,14 @@ function ensureFirebaseDataProtection(){
   if(firebaseDataProtectionReady&&db)return Promise.resolve(Object.freeze({ok:true,code:'app-check/already-ready'}));
   if(firebaseDataProtectionPromise)return firebaseDataProtectionPromise;
   if(!fbApp)return Promise.reject(Object.assign(new Error('Firebase app is not ready'),{code:'app-check/app-not-ready'}));
-  firebaseDataProtectionPromise=Promise.resolve(startFirebaseAppCheck(fbApp)).then(status=>{
+  startFirebaseAppCheck(fbApp);
+  firebaseDataProtectionPromise=firebaseAppCheckReady().then(status=>{
     if(!status?.ok)throw Object.assign(new Error('App Check did not initialize'),{code:status?.code||'app-check/unavailable'});
     activateFirebaseDataClient();
     return status;
   }).catch(error=>{
     db=null;fbOn=false;firebaseDataProtectionReady=false;
+    firebaseDataProtectionPromise=null;
     throw error;
   });
   return firebaseDataProtectionPromise;

@@ -73,6 +73,20 @@ test('App Check starts after paint and activates the RTDB client only after succ
   assert.doesNotMatch(html,/FIREBASE_APPCHECK_DEBUG_TOKEN|ReCaptchaV3Provider|CustomProvider/);
 });
 
+test('App Check import and readiness waits fail closed with bounded stage-specific errors',()=>{
+  assert.match(html,/const FIREBASE_APP_CHECK_STAGE_TIMEOUT_MS=30\*1000/);
+  assert.match(html,/function appCheckStageTimeout\(promise,code\)[\s\S]+Promise\.race/);
+  assert.match(html,/firebaseAppCheckStage='sdk-import';\s*firebaseAppCheckSdkPromise=import\(`\$\{base\}\/firebase-app-check\.js`\)/);
+  assert.match(html,/app-check\/sdk-import-failed/);
+  assert.match(html,/function firebaseAppCheckReady\(\)[\s\S]+app-check\/sdk-import-timeout[\s\S]+app-check\/initialization-timeout[\s\S]+app-check\/readiness-timeout/);
+  assert.match(html,/service\.unavailable\(error\?\.code\|\|'app-check\/sdk-unavailable'\)/);
+  assert.match(html,/startFirebaseAppCheck\(fbApp\);\s*firebaseDataProtectionPromise=firebaseAppCheckReady\(\)/);
+  assert.match(html,/function startFirebaseAppCheck\(app\)\{\s*if\(firebaseAppCheckInitializationPromise\)return firebaseAppCheckInitializationPromise/);
+  assert.match(html,/firebaseDataProtectionPromise=null;\s*throw error/);
+  assert.doesNotMatch(html,/appCheckStageTimeout\(\s*import\(`\$\{base\}\/firebase-app-check\.js`\)/);
+  assert.equal((html.match(/firebaseAppCheckSdkPromise=null/g)||[]).length,1);
+});
+
 test('current Auth behavior and callable monitor configuration remain unchanged',()=>{
   assert.match(html,/auth=early\?\.auth\|\|getAuth\(fbApp\);\s*bindAuthObserver\(\);/);
   assert.match(html,/signInWithEmailAndPassword\(auth,email,pin\)/);

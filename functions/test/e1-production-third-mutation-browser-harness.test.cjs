@@ -12,10 +12,14 @@ const {
 const {
   APP_CHECK_MODE,
   EXPECTED_APP_ID,
+  EXPECTED_ORIGIN,
+  EXPECTED_PATHNAMES,
   HARNESS_MODE,
   LOGIN_METHOD,
+  appCheckRuntimeProofDigest,
   createBrowserExecutionHarness,
   harnessDigest,
+  runSameRuntimeAppCheckProbe,
   validateBrowserHarnessArtifact
 } = require('../production/e1ProductionThirdMutationBrowserHarness.cjs');
 
@@ -23,7 +27,7 @@ const NOW = Date.parse('2026-08-16T12:00:00.000Z');
 
 function artifact() {
   const value = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     environment: 'production',
     projectId: 'trade-list-a4297',
     appId: EXPECTED_APP_ID,
@@ -33,22 +37,50 @@ function artifact() {
     mode: HARNESS_MODE,
     bindingDigest: 'a'.repeat(64),
     verifiedAt: '2026-08-16T11:55:00.000Z',
-    subjects: ['A', 'B', 'C', 'D', 'E'].map((slot, index) => ({
-      slot,
-      uidHash: String(index + 1).repeat(64),
-      trainerHash: ['6', '7', '8', '9', 'a'][index].repeat(64),
-      browserContextHash: String.fromCharCode(97 + index).repeat(64),
-      loginMethod: LOGIN_METHOD,
-      exactUidMatch: true,
-      previousSessionAbsent: true,
-      operatorAdminSessionAbsent: true,
-      firebaseIdTokenFresh: true,
-      limitedUseAppCheckAvailable: true,
-      appCheckMode: APP_CHECK_MODE,
-      debugTokenUsed: false,
-      tokenPersistence: 'none',
-      tokenReuseDetected: false
-    })),
+    subjects: ['A', 'B', 'C', 'D', 'E'].map((slot, index) => {
+      const uidHash = String(index + 1).repeat(64);
+      const trainerHash = ['6', '7', '8', '9', 'a'][index].repeat(64);
+      const at = (offset) => new Date(Date.parse('2026-08-16T11:54:00.000Z') + offset).toISOString();
+      const subject = {
+        slot,
+        uidHash,
+        trainerHash,
+        browserContextHash: String.fromCharCode(97 + index).repeat(64),
+        loginMethod: LOGIN_METHOD,
+        exactUidMatch: true,
+        previousSessionAbsent: true,
+        operatorAdminSessionAbsent: true,
+        firebaseIdTokenFresh: true,
+        appCheckProvenance: {
+          slot,
+          origin: EXPECTED_ORIGIN,
+          pathname: EXPECTED_PATHNAMES[0],
+          appId: EXPECTED_APP_ID,
+          uidHash,
+          trainerHash,
+          bindingDigest: 'a'.repeat(64),
+          probeStartedAt: at(0),
+          samePageRuntimeEstablished: true,
+          pageRuntimeBinding: { startedAt: at(0), settledAt: at(50), outcome: 'verified' },
+          sdkImport: { startedAt: at(50), settledAt: at(100), outcome: 'resolved' },
+          readiness: { startedAt: at(100), settledAt: at(150), outcome: 'resolved' },
+          appCheckInstance: { startedAt: at(150), settledAt: at(160), outcome: 'verified', exactInstance: true },
+          limitedUseToken: {
+            startedAt: at(160), settledAt: at(250), outcome: 'resolved', nonEmpty: true,
+            tokenFingerprint: ['b', 'c', 'd', 'e', 'f'][index].repeat(64),
+            debug: false, persisted: false, reused: false, sentToCallable: false
+          },
+          failureStage: null,
+          runtimeProofDigest: ''
+        },
+        appCheckMode: APP_CHECK_MODE,
+        debugTokenUsed: false,
+        tokenPersistence: 'none',
+        tokenReuseDetected: false
+      };
+      subject.appCheckProvenance.runtimeProofDigest = appCheckRuntimeProofDigest(subject.appCheckProvenance);
+      return subject;
+    }),
     debugTokensUsed: false,
     tokensPersisted: false,
     executionAuthorized: false,
@@ -69,7 +101,7 @@ function validate(value = artifact(), mode = 0o600) {
   } finally { fs.rmSync(directory, { recursive: true, force: true }); }
 }
 
-test('private browser evidence binds five isolated exact synthetic subjects with real limited-use App Check', () => {
+test('private browser evidence requires complete reviewed same-runtime App Check provenance', () => {
   const result = validate();
   assert.equal(result.subjectsReady, 5);
   assert.equal(result.authenticFirebaseLoginRequired, true);
@@ -83,13 +115,101 @@ for (const [name, mutate, reason] of [
   ['shared browser context', (value) => { value.subjects[1].browserContextHash = value.subjects[0].browserContextHash; }, 'group_d3_browser_harness_subjects_not_isolated'],
   ['operator session present', (value) => { value.subjects[2].operatorAdminSessionAbsent = false; }, 'group_d3_browser_harness_subject_c_invalid'],
   ['debug App Check', (value) => { value.subjects[3].debugTokenUsed = true; }, 'group_d3_browser_harness_subject_d_invalid'],
-  ['token persistence', (value) => { value.subjects[4].tokenPersistence = 'localStorage'; }, 'group_d3_browser_harness_subject_e_invalid']
+  ['token persistence', (value) => { value.subjects[4].tokenPersistence = 'localStorage'; }, 'group_d3_browser_harness_subject_e_invalid'],
+  ['boolean-only App Check', (value) => {
+    delete value.subjects[0].appCheckProvenance;
+    value.subjects[0].limitedUseAppCheckAvailable = true;
+  }, 'group_d3_browser_harness_subject_a_invalid'],
+  ['self-declared token without fingerprint', (value) => {
+    value.subjects[0].appCheckProvenance.limitedUseToken.tokenFingerprint = '';
+  }, 'group_d3_browser_harness_subject_a_invalid'],
+  ['wrong production origin', (value) => {
+    value.subjects[0].appCheckProvenance.origin = 'https://example.com';
+  }, 'group_d3_browser_harness_subject_a_invalid'],
+  ['wrong production path', (value) => {
+    value.subjects[0].appCheckProvenance.pathname = '/another-site/';
+  }, 'group_d3_browser_harness_subject_a_invalid'],
+  ['wrong cohort binding', (value) => {
+    value.subjects[0].appCheckProvenance.bindingDigest = 'b'.repeat(64);
+  }, 'group_d3_browser_harness_subject_a_invalid'],
+  ['callable transmission during evidence', (value) => {
+    value.subjects[0].appCheckProvenance.limitedUseToken.sentToCallable = true;
+  }, 'group_d3_browser_harness_subject_a_invalid'],
+  ['fabricated runtime proof digest', (value) => {
+    value.subjects[0].appCheckProvenance.runtimeProofDigest = 'f'.repeat(64);
+  }, 'group_d3_browser_harness_subject_a_invalid'],
+  ['stale stage evidence with a fresh artifact timestamp', (value) => {
+    for (const stage of ['pageRuntimeBinding', 'sdkImport', 'readiness', 'appCheckInstance', 'limitedUseToken']) {
+      value.subjects[0].appCheckProvenance[stage].startedAt = '2026-08-16T10:00:00.000Z';
+      value.subjects[0].appCheckProvenance[stage].settledAt = '2026-08-16T10:00:00.010Z';
+    }
+  }, 'group_d3_browser_harness_subject_a_invalid']
 ]) {
   test(`browser evidence fails closed for ${name}`, () => {
     const value = artifact();
     mutate(value);
     value.harnessDigest = harnessDigest(value);
     assert.throws(() => validate(value), (error) => error.reasons.includes(reason));
+  });
+}
+
+function probeFixture(overrides = {}) {
+  const instance = {};
+  const sdk = {};
+  const adapter = {
+    importSdk: async () => sdk,
+    constructProvider: () => assert.fail('collector must not construct another provider'),
+    initializeAppCheck: () => assert.fail('collector must not initialize App Check again'),
+    verifyPageRuntime: async () => true,
+    firebaseAppCheckReady: async () => ({ ok: true, instance }),
+    isExpectedInstance: (value) => value === instance,
+    getLimitedUseToken: async () => ({ token: 'ephemeral-limited-use-token', debug: false }),
+    ...overrides
+  };
+  let clock = Date.parse('2026-08-16T11:54:00.000Z');
+  return {
+    adapter,
+    slot: 'A',
+    origin: EXPECTED_ORIGIN,
+    pathname: EXPECTED_PATHNAMES[0],
+    appId: EXPECTED_APP_ID,
+    uidHash: '1'.repeat(64),
+    trainerHash: '6'.repeat(64),
+    bindingDigest: 'a'.repeat(64),
+    now: () => new Date(clock += 10).toISOString(),
+    stageTimeoutMs: 10
+  };
+}
+
+test('same-runtime probe returns only bounded provenance and discards the raw token', async () => {
+  const result = await runSameRuntimeAppCheckProbe(probeFixture());
+  assert.equal(result.origin, EXPECTED_ORIGIN);
+  assert.equal(result.pathname, EXPECTED_PATHNAMES[0]);
+  assert.equal(result.samePageRuntimeEstablished, true);
+  assert.equal(result.appCheckInstance.exactInstance, true);
+  assert.equal(result.limitedUseToken.nonEmpty, true);
+  assert.equal(result.limitedUseToken.sentToCallable, false);
+  assert.match(result.limitedUseToken.tokenFingerprint, /^[a-f0-9]{64}$/u);
+  assert.match(result.runtimeProofDigest, /^[a-f0-9]{64}$/u);
+  assert.equal(result.runtimeProofDigest, appCheckRuntimeProofDigest(result));
+  assert.doesNotMatch(JSON.stringify(result), /ephemeral-limited-use-token/u);
+});
+
+for (const [name, stage, override, code] of [
+  ['import timeout', 'import', { importSdk: () => new Promise(() => {}) }, 'group_d3_app_check_import_timeout'],
+  ['page runtime mismatch', 'page-runtime-binding', { verifyPageRuntime: async () => false }, undefined],
+  ['import rejection', 'import', { importSdk: async () => { throw new Error('blocked'); } }, undefined],
+  ['readiness timeout', 'readiness', { firebaseAppCheckReady: () => new Promise(() => {}) }, 'group_d3_app_check_readiness_timeout'],
+  ['instance mismatch', 'instance', { isExpectedInstance: () => false }, undefined],
+  ['token timeout', 'token', { getLimitedUseToken: () => new Promise(() => {}) }, 'group_d3_app_check_token_timeout'],
+  ['token rejection', 'token', { getLimitedUseToken: async () => { throw new Error('blocked'); } }, undefined]
+]) {
+  test(`same-runtime probe fails closed for ${name}`, async () => {
+    await assert.rejects(() => runSameRuntimeAppCheckProbe(probeFixture(override)), (error) => {
+      assert.equal(error.stage, stage);
+      if (code) assert.equal(error.code, code);
+      return true;
+    });
   });
 }
 
