@@ -237,13 +237,14 @@ function fixture(subjects = poolSubjects()) {
           bindingDigest,
           probeStartedAt: at(0),
           samePageRuntimeEstablished: true,
+          debugTokenGlobalAbsent: true,
           pageRuntimeBinding: { startedAt: at(0), settledAt: at(50), outcome: 'verified' },
           sdkImport: { startedAt: at(50), settledAt: at(100), outcome: 'resolved' },
           readiness: { startedAt: at(100), settledAt: at(150), outcome: 'resolved' },
           appCheckInstance: { startedAt: at(150), settledAt: at(160), outcome: 'verified', exactInstance: true },
           limitedUseToken: {
             startedAt: at(160), settledAt: at(250), outcome: 'resolved', nonEmpty: true,
-            tokenFingerprint: ['b', 'c', 'd', 'e', 'f'][index].repeat(64), debug: false,
+            tokenFingerprint: ['b', 'c', 'd', 'e', 'f'][index].repeat(64),
             persisted: false, reused: false, sentToCallable: false
           },
           failureStage: null,

@@ -17,6 +17,7 @@ const LOGIN_METHOD = 'legacy-username-pin-firebase-password-v1';
 const APP_CHECK_MODE = 'production-limited-use-token';
 const APP_CHECK_STAGE_TIMEOUT_MS = 30 * 1000;
 const APP_CHECK_PROBE_TIMEOUT_MS = 3 * 60 * 1000;
+const APP_CHECK_DEBUG_TOKEN_GLOBAL = 'FIREBASE_APPCHECK_DEBUG_TOKEN';
 const SLOTS = Object.freeze(['A', 'B', 'C', 'D', 'E']);
 const HASH = /^[a-f0-9]{64}$/u;
 const HARNESS_FIELDS = Object.freeze([
@@ -32,13 +33,14 @@ const SUBJECT_FIELDS = Object.freeze([
 ]);
 const APP_CHECK_PROVENANCE_FIELDS = Object.freeze([
   'slot', 'origin', 'pathname', 'appId', 'uidHash', 'trainerHash', 'bindingDigest', 'probeStartedAt',
-  'samePageRuntimeEstablished', 'pageRuntimeBinding', 'sdkImport', 'readiness', 'appCheckInstance', 'limitedUseToken',
-  'failureStage', 'runtimeProofDigest'
+  'samePageRuntimeEstablished', 'debugTokenGlobalAbsent', 'pageRuntimeBinding', 'sdkImport', 'readiness',
+  'appCheckInstance', 'limitedUseToken', 'failureStage', 'runtimeProofDigest'
 ]);
+const DEBUG_TOKEN_STATE_FIELDS = Object.freeze(['mechanism', 'present']);
 const STAGE_FIELDS = Object.freeze(['startedAt', 'settledAt', 'outcome']);
 const INSTANCE_STAGE_FIELDS = Object.freeze([...STAGE_FIELDS, 'exactInstance']);
 const TOKEN_STAGE_FIELDS = Object.freeze([
-  ...STAGE_FIELDS, 'nonEmpty', 'tokenFingerprint', 'debug', 'persisted', 'reused', 'sentToCallable'
+  ...STAGE_FIELDS, 'nonEmpty', 'tokenFingerprint', 'persisted', 'reused', 'sentToCallable'
 ]);
 
 function exactFields(value, fields) {
@@ -92,6 +94,7 @@ function appCheckRuntimeProofDigest(provenance) {
     provenance?.uidHash,
     provenance?.trainerHash,
     provenance?.probeStartedAt,
+    provenance?.debugTokenGlobalAbsent,
     stages,
     provenance?.limitedUseToken?.tokenFingerprint ?? null
   ]));
@@ -110,7 +113,8 @@ function validAppCheckProvenance(provenance, artifact, subject) {
       provenance.origin !== EXPECTED_ORIGIN || !EXPECTED_PATHNAMES.includes(provenance.pathname) ||
       provenance.appId !== EXPECTED_APP_ID || provenance.uidHash !== subject.uidHash ||
       provenance.trainerHash !== subject.trainerHash || provenance.bindingDigest !== artifact.bindingDigest ||
-      provenance.samePageRuntimeEstablished !== true || provenance.failureStage !== null ||
+      provenance.samePageRuntimeEstablished !== true || provenance.debugTokenGlobalAbsent !== true ||
+      provenance.failureStage !== null ||
       !validStage(provenance.pageRuntimeBinding, STAGE_FIELDS, 'verified') ||
       !validStage(provenance.sdkImport, STAGE_FIELDS, 'resolved') ||
       !validStage(provenance.readiness, STAGE_FIELDS, 'resolved') ||
@@ -118,8 +122,8 @@ function validAppCheckProvenance(provenance, artifact, subject) {
       provenance.appCheckInstance.exactInstance !== true ||
       !validStage(provenance.limitedUseToken, TOKEN_STAGE_FIELDS, 'resolved') ||
       provenance.limitedUseToken.nonEmpty !== true || !HASH.test(provenance.limitedUseToken.tokenFingerprint || '') ||
-      provenance.limitedUseToken.debug !== false || provenance.limitedUseToken.persisted !== false ||
-      provenance.limitedUseToken.reused !== false || provenance.limitedUseToken.sentToCallable !== false ||
+      provenance.limitedUseToken.persisted !== false || provenance.limitedUseToken.reused !== false ||
+      provenance.limitedUseToken.sentToCallable !== false ||
       !HASH.test(provenance.runtimeProofDigest || '') ||
       provenance.runtimeProofDigest !== appCheckRuntimeProofDigest(provenance)) return false;
   const stages = [provenance.pageRuntimeBinding, provenance.sdkImport, provenance.readiness, provenance.appCheckInstance,
@@ -154,7 +158,7 @@ async function runSameRuntimeAppCheckProbe(options = {}) {
       !HASH.test(trainerHash || '') || !HASH.test(bindingDigest || '') ||
       typeof adapter.importSdk !== 'function' || typeof adapter.firebaseAppCheckReady !== 'function' ||
       typeof adapter.verifyPageRuntime !== 'function' || typeof adapter.isExpectedInstance !== 'function' ||
-      typeof adapter.getLimitedUseToken !== 'function' ||
+      typeof adapter.inspectDebugTokenGlobal !== 'function' ||
       (options.stageTimeoutMs !== undefined &&
         (!Number.isFinite(options.stageTimeoutMs) || options.stageTimeoutMs <= 0 ||
           options.stageTimeoutMs > APP_CHECK_STAGE_TIMEOUT_MS))) {
@@ -180,12 +184,26 @@ async function runSameRuntimeAppCheckProbe(options = {}) {
     const runtimeBinding = await timed('page-runtime-binding', async () => {
       const verified = await adapter.verifyPageRuntime({ slot, origin, pathname, appId, uidHash, trainerHash, bindingDigest });
       if (verified !== true) throw Object.assign(new Error('e1/group-d3-app-check-page-runtime-mismatch'), { stage: 'page-runtime-binding' });
-      return true;
+      const debugState = await adapter.inspectDebugTokenGlobal();
+      if (!exactFields(debugState, DEBUG_TOKEN_STATE_FIELDS) || debugState.mechanism !== APP_CHECK_DEBUG_TOKEN_GLOBAL ||
+          debugState.present !== false) {
+        throw Object.assign(new Error('e1/group-d3-app-check-debug-provenance-invalid'),
+          { code: 'group_d3_app_check_debug_provenance_invalid', stage: 'page-runtime-binding' });
+      }
+      return Object.freeze({ debugTokenGlobalAbsent: true });
     }, 'verified');
     evidence.pageRuntimeBinding = runtimeBinding.record;
     evidence.probeStartedAt = evidence.pageRuntimeBinding.startedAt;
     evidence.samePageRuntimeEstablished = true;
-    const sdk = await timed('import', () => adapter.importSdk());
+    evidence.debugTokenGlobalAbsent = runtimeBinding.value.debugTokenGlobalAbsent;
+    const sdk = await timed('import', async () => {
+      const imported = await adapter.importSdk();
+      if (!imported || typeof imported.getLimitedUseToken !== 'function') {
+        throw Object.assign(new Error('e1/group-d3-app-check-sdk-invalid'),
+          { code: 'group_d3_app_check_sdk_invalid', stage: 'import' });
+      }
+      return imported;
+    });
     evidence.sdkImport = sdk.record;
     const ready = await timed('readiness', () => adapter.firebaseAppCheckReady(), 'resolved');
     evidence.readiness = ready.record;
@@ -195,13 +213,12 @@ async function runSameRuntimeAppCheckProbe(options = {}) {
     const exactInstance = instance.value === true;
     evidence.appCheckInstance = { ...instance.record, exactInstance };
     if (!exactInstance) throw Object.assign(new Error('e1/group-d3-app-check-instance-mismatch'), { stage: 'instance' });
-    const acquired = await timed('token', () => adapter.getLimitedUseToken(expectedInstance), 'resolved');
+    const acquired = await timed('token', () => sdk.value.getLimitedUseToken(expectedInstance), 'resolved');
     token = acquired.value?.token;
     evidence.limitedUseToken = {
       ...acquired.record,
       nonEmpty: typeof token === 'string' && token.length > 0,
       tokenFingerprint: limitedUseTokenFingerprint(token),
-      debug: acquired.value?.debug === true,
       persisted: false,
       reused: false,
       sentToCallable: false
@@ -325,6 +342,7 @@ function createBrowserExecutionHarness({ subjects, authAdapter, appCheckAdapter,
 }
 
 module.exports = Object.freeze({
+  APP_CHECK_DEBUG_TOKEN_GLOBAL,
   APP_CHECK_PROBE_TIMEOUT_MS,
   APP_CHECK_PROVENANCE_FIELDS,
   APP_CHECK_STAGE_TIMEOUT_MS,
