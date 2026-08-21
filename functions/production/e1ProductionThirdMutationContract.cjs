@@ -115,6 +115,44 @@ const CONTINUATION_REMAINING_BUDGET = Object.freeze({
   rtdbExactReads: 27,
   rtdbWrites: 0
 });
+
+function subtractBudget(value, decrement, label) {
+  const next = value - decrement;
+  if (!Number.isInteger(next) || next < 0) throw new Error(`e1/group-d3-continuation-budget-${label}-invalid`);
+  return next;
+}
+
+function continuationProgress(completedSuffixOperations = 0) {
+  if (!Number.isInteger(completedSuffixOperations) || completedSuffixOperations < 0 ||
+      completedSuffixOperations > CONTINUATION_REMAINING_SEQUENCE.length) {
+    throw new Error('e1/group-d3-continuation-progress-invalid');
+  }
+  const budget = { ...CONTINUATION_REMAINING_BUDGET };
+  for (const operation of CONTINUATION_REMAINING_SEQUENCE.slice(0, completedSuffixOperations)) {
+    for (const [field, decrement] of [
+      ['gatewayCalls', 1], ['authorityCalls', 1], ['limitedUseAppCheckTokens', 1],
+      ['logicalFirestoreTransactions', 2], ['firestoreTransactionAttemptsExpected', 2],
+      ['firestoreTransactionAttemptsMaximum', 10], ['firestoreOperationReadsExpected', 4],
+      ['firestoreOperationReadsMaximum', 20], ['rtdbExactReads', 3]
+    ]) budget[field] = subtractBudget(budget[field], decrement, field);
+    if (operation.operation === 'reserve') {
+      for (const [field, decrement] of [
+        ['firestoreCommittedWrites', 4], ['operationRequestCreates', 1], ['rateLimitCreates', 1],
+        ['firstWriteSubjects', 1]
+      ]) budget[field] = subtractBudget(budget[field], decrement, field);
+    } else {
+      budget.replayOperations = subtractBudget(budget.replayOperations, 1, 'replayOperations');
+    }
+  }
+  return Object.freeze({
+    completedSuffixOperations,
+    currentDocumentCount: CONTINUATION_COUNT_SEQUENCE[completedSuffixOperations],
+    nextOperation: CONTINUATION_REMAINING_SEQUENCE[completedSuffixOperations] || null,
+    remainingSequence: Object.freeze(CONTINUATION_REMAINING_SEQUENCE.slice(completedSuffixOperations)),
+    remainingBudget: Object.freeze(budget),
+    complete: completedSuffixOperations === CONTINUATION_REMAINING_SEQUENCE.length
+  });
+}
 const OBSERVATION_CHECKS = Object.freeze([
   'exact-firestore-count-and-canonical-digest',
   'family-counts',
@@ -427,6 +465,7 @@ module.exports = Object.freeze({
   candidatePoolDigest,
   canonicalCandidateKey,
   canonicalCandidateOrder,
+  continuationProgress,
   expectedDocumentCount,
   continuationArtifactDigest,
   continuationJitDigest,

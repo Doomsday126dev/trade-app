@@ -10,9 +10,13 @@ const {
   RESTORE_CONFIRMATION: D3_RESTORE_CONFIRMATION
 } = require('./e1ProductionThirdMutationGuard.cjs');
 const {
+  CONTINUATION_PRODUCTION_RUNTIME,
+  CONTINUATION_REMAINING_BUDGET,
+  CONTINUATION_REMAINING_SEQUENCE,
   EXECUTION_EVIDENCE_PURPOSE,
   SYNTHETIC_COHORT_TYPE
 } = require('./e1ProductionThirdMutationContract.cjs');
+const { activationGatePlan, disabledGatePlan } = require('./e1ProductionFirstMutationGuard.cjs');
 
 const MANIFEST_PATH = path.resolve(__dirname, 'e1-gateway-source-manifest.json');
 const RESOURCE_MANIFEST_PATH = path.resolve(__dirname, 'e1-production-resource-manifest.json');
@@ -35,6 +39,19 @@ const ACTIONS = Object.freeze({
 const D3_CONFIRMATIONS = Object.freeze({
   'enable-group-d3': D3_ENABLE_CONFIRMATION,
   'restore-group-d3': D3_RESTORE_CONFIRMATION
+});
+const D3_MODES = Object.freeze(['clean-start', 'continuation']);
+const HASH = /^[a-f0-9]{64}$/u;
+const D3_REVISION = /^e1-identity-authority-[0-9]{5}-[a-z0-9]{3}$/u;
+const D3_IMAGE_DIGEST = /^sha256:[a-f0-9]{64}$/u;
+const D3_SECURITY_BOUNDARY = Object.freeze({
+  authorityPrivate: true,
+  gatewayRuntimeSoleAuthorityInvoker: true,
+  publicAuthorityInvoker: false,
+  projectWideRunInvoker: false,
+  gatewayForbiddenRolesPresent: false,
+  runtimeIamDrift: false,
+  productionDebugTokensRegistered: false
 });
 const PRIVATE_PATH_PATTERNS = Object.freeze([
   /(^|\/)\.local(\/|$)/u,
@@ -95,10 +112,12 @@ function authorityTarget(resourceManifest) {
   const origin = normalizeAuthorityOrigin(authority.origin);
   if (resourceManifest?.environment !== 'production' || project.id !== EXPECTED_AUTHORITY.projectId ||
       project.region !== EXPECTED_AUTHORITY.region || authority.service !== EXPECTED_AUTHORITY.service ||
-      authority.region !== EXPECTED_AUTHORITY.region || origin !== EXPECTED_AUTHORITY.origin) {
+      authority.region !== EXPECTED_AUTHORITY.region || origin !== EXPECTED_AUTHORITY.origin ||
+      authority.runtimeServiceAccount !== 'e1-identity-authority-runtime@trade-list-a4297.iam.gserviceaccount.com') {
     throw new Error('e1/gateway-authority-target-mismatch');
   }
-  return Object.freeze({ origin, url: `${origin}/`, audience: origin });
+  return Object.freeze({ service: authority.service, origin, url: `${origin}/`, audience: origin,
+    runtimeServiceAccount: authority.runtimeServiceAccount });
 }
 
 function verifyManifestShape(manifest) {
@@ -171,25 +190,53 @@ function verifyPinnedSource(manifest, repository) {
   return observed;
 }
 
-function verifyActionGuard(actionName, guardResult, expectedSha) {
+function verifyActionGuard(actionName, guardResult, expectedSha, d3Mode, manifest, target) {
   const action = ACTIONS[actionName];
   if (!action) throw new Error('e1/gateway-action-invalid');
   if (!guardResult) return false;
   const commonValid = guardResult.ok === true && guardResult.environment === 'production' &&
     guardResult.targetVerified === true && guardResult.laterGroupsAuthorized === false &&
     guardResult.cloudOperations === 0 && guardResult.approvalGroup === action.approvalGroup;
-  const stageValid = action.cohortStage === 'read-proof' || action.cohortStage === 'D1'
+  let stageValid = action.cohortStage === 'read-proof' || action.cohortStage === 'D1'
     ? !Object.hasOwn(guardResult, 'cohortStage')
     : guardResult.cohortStage === action.cohortStage && guardResult.groupEAuthorized === false &&
       guardResult.candidateCount === (action.cohortStage === 'D3' ? 5 : 2) &&
-      guardResult.sequentialExecutionRequired === true &&
-      (action.cohortStage !== 'D3' || (guardResult.subjectsBound === true && guardResult.executionAuthorized === true &&
-        guardResult.cohortType === SYNTHETIC_COHORT_TYPE &&
-        guardResult.evidencePurpose === EXECUTION_EVIDENCE_PURPOSE && guardResult.browserHarnessVerified === true &&
-        guardResult.sourceSha === expectedSha && guardResult.entryEvidenceFreshAtEnable === true &&
-        guardResult.entryEvidenceRequiredAfterEnable === false && guardResult.mutationWindowGovernsPostEnable === true &&
-        Number.isFinite(Date.parse(guardResult.entryEvidenceExpiresAt)) &&
-        Number.isFinite(Date.parse(guardResult.mutationWindowEnd))));
+      guardResult.sequentialExecutionRequired === true;
+  if (action.cohortStage === 'D3') {
+    const commonD3 = D3_MODES.includes(d3Mode) && guardResult.subjectsBound === true &&
+      guardResult.executionAuthorized === true && guardResult.cohortType === SYNTHETIC_COHORT_TYPE &&
+      guardResult.evidencePurpose === EXECUTION_EVIDENCE_PURPOSE && guardResult.browserHarnessVerified === true &&
+      guardResult.sourceSha === expectedSha && guardResult.toolingSourceSha === expectedSha &&
+      guardResult.entryEvidenceFreshAtEnable === true && guardResult.entryEvidenceRequiredAfterEnable === false &&
+      guardResult.mutationWindowGovernsPostEnable === true &&
+      Number.isFinite(Date.parse(guardResult.entryEvidenceExpiresAt)) &&
+      Number.isFinite(Date.parse(guardResult.mutationWindowEnd)) &&
+      JSON.stringify(guardResult.startingGates) === JSON.stringify(disabledGatePlan()) &&
+      JSON.stringify(guardResult.activationGatePlan) === JSON.stringify(activationGatePlan()) &&
+      JSON.stringify(guardResult.restorationGatePlan) === JSON.stringify(disabledGatePlan()) &&
+      JSON.stringify(guardResult.securityBoundary) === JSON.stringify(D3_SECURITY_BOUNDARY) &&
+      guardResult.runtimeProvenance?.authorityService === target.service &&
+      guardResult.runtimeProvenance?.authorityOrigin === target.origin &&
+      D3_REVISION.test(guardResult.runtimeProvenance?.authorityRevision || '') &&
+      D3_IMAGE_DIGEST.test(guardResult.runtimeProvenance?.authorityImageDigest || '') &&
+      guardResult.runtimeProvenance?.runtimeServiceAccount === target.runtimeServiceAccount &&
+      guardResult.runtimeProvenance?.gatewayServiceAccount === manifest.runtimeServiceAccount &&
+      guardResult.runtimeProvenance?.reviewed === true;
+    const cleanStart = d3Mode === 'clean-start' && guardResult.deploymentMode === 'clean-start' &&
+      !Object.hasOwn(guardResult, 'continuationArtifactDigest') &&
+      !Object.hasOwn(guardResult, 'continuationJitDigest');
+    const continuation = d3Mode === 'continuation' && guardResult.deploymentMode === 'continuation' &&
+      guardResult.mode === 'reconciled-a-reserve-continuation' && guardResult.currentStateVerified === true &&
+      guardResult.historicalAdmissionVerified === true && guardResult.currentDocumentCount === 16 &&
+      guardResult.historicalEvidenceRecollectionRequired === false &&
+      JSON.stringify(guardResult.nextOperation) === JSON.stringify({ slot: 'A', operation: 'exact-replay' }) &&
+      JSON.stringify(guardResult.remainingSequence) === JSON.stringify(CONTINUATION_REMAINING_SEQUENCE) &&
+      JSON.stringify(guardResult.remainingBudget) === JSON.stringify(CONTINUATION_REMAINING_BUDGET) &&
+      JSON.stringify(guardResult.productionRuntime) === JSON.stringify(CONTINUATION_PRODUCTION_RUNTIME) &&
+      HASH.test(guardResult.continuationArtifactDigest || '') &&
+      HASH.test(guardResult.continuationPreflightDigest || '') && HASH.test(guardResult.continuationJitDigest || '');
+    stageValid = stageValid && commonD3 && (cleanStart || continuation);
+  }
   if (!commonValid || !stageValid) throw new Error('e1/gateway-action-guard-mismatch');
   return true;
 }
@@ -213,7 +260,14 @@ function createDeploymentPlan(options = {}) {
     throw new Error('e1/gateway-d3-confirmation-invalid');
   }
   if (!/^[0-9a-f]{40}$/u.test(options.expectedSha || '')) throw new Error('e1/gateway-expected-sha-invalid');
-  const guardVerified = verifyActionGuard(options.action, options.guardResult, options.expectedSha);
+  const d3Mode = options.d3Mode;
+  if (action.cohortStage === 'D3' && action.gateEnabled && options.mode === 'deploy' && !D3_MODES.includes(d3Mode)) {
+    throw new Error('e1/gateway-d3-mode-required');
+  }
+  if (action.cohortStage === 'D3' && options.guardResult && !D3_MODES.includes(d3Mode)) {
+    throw new Error('e1/gateway-d3-mode-required');
+  }
+  const guardVerified = verifyActionGuard(options.action, options.guardResult, options.expectedSha, d3Mode, manifest, target);
 
   const repository = options.repository || createGitRepository(repoRoot);
   const head = repository.head();
@@ -246,6 +300,17 @@ function createDeploymentPlan(options = {}) {
     expectedExports: Object.freeze([...manifest.expectedExports]),
     approvalGroup: action.approvalGroup,
     cohortStage: action.cohortStage,
+    d3Mode: action.cohortStage === 'D3' ? d3Mode || null : null,
+    toolingSourceSha: options.expectedSha,
+    productionRuntime: options.guardResult?.productionRuntime || null,
+    authorityRuntime: action.cohortStage === 'D3' && options.guardResult ? Object.freeze({
+      service: options.guardResult.runtimeProvenance?.authorityService,
+      origin: options.guardResult.runtimeProvenance?.authorityOrigin,
+      revision: options.guardResult.runtimeProvenance?.authorityRevision,
+      imageDigest: options.guardResult.runtimeProvenance?.authorityImageDigest,
+      runtimeServiceAccount: options.guardResult.runtimeProvenance?.runtimeServiceAccount,
+      securityBoundary: options.guardResult.securityBoundary || null
+    }) : null,
     guardVerified,
     containmentRestore: !action.gateEnabled && !guardVerified,
     gateEnabled: action.gateEnabled,
@@ -348,6 +413,9 @@ function publicPlan(plan) {
     expectedExports: plan.expectedExports,
     approvalGroup: plan.approvalGroup,
     cohortStage: plan.cohortStage,
+    d3Mode: plan.d3Mode,
+    toolingSourceSha: plan.toolingSourceSha,
+    productionRuntime: plan.productionRuntime,
     guardVerified: plan.guardVerified,
     containmentRestore: plan.containmentRestore,
     gateEnabled: plan.gateEnabled,

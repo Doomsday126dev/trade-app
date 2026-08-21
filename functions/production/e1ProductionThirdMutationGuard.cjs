@@ -184,6 +184,10 @@ const CONTINUATION_JIT_FIELDS = Object.freeze([
   'remainingBudget', 'activationGatePlan', 'restorationGatePlan', 'executionAuthorized', 'laterGroupsAuthorized',
   'groupEAuthorized', 'jitDigest'
 ]);
+const CONTINUATION_OBSERVATION_START_FIELDS = Object.freeze([
+  'completedSuffixOperations', 'finalCounts', 'finalStateDigest', 'gatesRestored', 'securityBoundary',
+  'anomaliesAbsent', 'startedAt', 'observationHours', 'groupEAuthorized'
+]);
 
 function sameValues(actual, expected) {
   return Array.isArray(actual) && actual.length === expected.length &&
@@ -733,6 +737,27 @@ function validateThirdMutationContinuationJit(value, artifactResult, expectedSou
   });
 }
 
+function validateThirdMutationContinuationObservationStart(value, options = {}) {
+  const now = options.now ? options.now() : Date.now();
+  const startedAt = Date.parse(value?.startedAt);
+  if (!exactFields(value, CONTINUATION_OBSERVATION_START_FIELDS) ||
+      value.completedSuffixOperations !== CONTINUATION_REMAINING_SEQUENCE.length ||
+      !sameJson(value.finalCounts, FINAL_COUNTS) || !HASH.test(value.finalStateDigest || '') ||
+      !sameJson(value.gatesRestored, disabledGatePlan()) || !validSecurityBoundary(value.securityBoundary) ||
+      value.anomaliesAbsent !== true || !Number.isFinite(startedAt) || startedAt > now || now - startedAt > 60_000 ||
+      value.observationHours !== OBSERVATION_HOURS || value.groupEAuthorized !== false) {
+    throw new Error('e1/production-third-mutation-continuation-observation-start-invalid');
+  }
+  return Object.freeze({
+    ok: true,
+    startAt: new Date(startedAt).toISOString(),
+    endAt: new Date(startedAt + (OBSERVATION_HOURS * 60 * 60 * 1000)).toISOString(),
+    observationHours: OBSERVATION_HOURS,
+    gatesRestored: true,
+    groupEAuthorized: false
+  });
+}
+
 function guardProductionThirdMutationContinuation(options = {}) {
   const errors = [];
   const now = options.now ? options.now() : Date.now();
@@ -813,7 +838,11 @@ function guardProductionThirdMutationContinuation(options = {}) {
     ok: true,
     approvalGroup: 'D',
     cohortStage: 'D3',
+    deploymentMode: 'continuation',
     mode: 'reconciled-a-reserve-continuation',
+    environment: 'production',
+    cohortType: SYNTHETIC_COHORT_TYPE,
+    evidencePurpose: EXECUTION_EVIDENCE_PURPOSE,
     targetVerified: true,
     historicalAdmissionVerified: true,
     currentStateVerified: true,
@@ -824,6 +853,26 @@ function guardProductionThirdMutationContinuation(options = {}) {
     remainingBudget: CONTINUATION_REMAINING_BUDGET,
     currentDocumentCount: 16,
     sourceSha: options.expectedSourceSha,
+    toolingSourceSha: options.expectedSourceSha,
+    productionRuntime: CONTINUATION_PRODUCTION_RUNTIME,
+    runtimeProvenance: continuation.runtimeProvenance,
+    securityBoundary: continuation.securityBoundary,
+    startingGates: continuation.currentGates,
+    activationGatePlan: jit.activationGatePlan,
+    restorationGatePlan: jit.restorationGatePlan,
+    continuationArtifactDigest: artifactResult.continuationArtifactDigest,
+    continuationPreflightDigest: artifactResult.continuationPreflightDigest,
+    continuationJitDigest: jit.jitDigest,
+    entryEvidenceFreshAtEnable: true,
+    entryEvidenceExpiresAt: jitResult.entryEvidenceExpiresAt,
+    entryEvidenceRequiredAfterEnable: false,
+    mutationWindowStart: jitResult.mutationWindowStart,
+    mutationWindowEnd: jitResult.mutationWindowEnd,
+    mutationWindowGovernsPostEnable: true,
+    candidateCount: COHORT_SIZE,
+    subjectsBound: true,
+    browserHarnessVerified: true,
+    sequentialExecutionRequired: true,
     laterGroupsAuthorized: false,
     groupEAuthorized: false,
     cloudOperations: 0
@@ -969,6 +1018,7 @@ function guardProductionThirdMutation(input, options = {}) {
     ok: true,
     approvalGroup: 'D',
     cohortStage: 'D3',
+    deploymentMode: 'clean-start',
     cohortType: SYNTHETIC_COHORT_TYPE,
     evidencePurpose: EXECUTION_EVIDENCE_PURPOSE,
     environment: 'production',
@@ -982,6 +1032,12 @@ function guardProductionThirdMutation(input, options = {}) {
     subjectsBound: true,
     executionAuthorized: true,
     sourceSha: expectedSourceSha,
+    toolingSourceSha: expectedSourceSha,
+    runtimeProvenance: readiness.runtimeProvenance,
+    securityBoundary: input.securityBoundary,
+    startingGates: input.currentGates,
+    activationGatePlan: readiness.activationGatePlan,
+    restorationGatePlan: readiness.restorationGatePlan,
     candidateCount: COHORT_SIZE,
     candidatesDistinct: true,
     targetedAbsenceVerified: true,
@@ -1014,6 +1070,7 @@ module.exports = Object.freeze({
   CANDIDATE_FIELDS,
   CONTINUATION_FIELDS,
   CONTINUATION_JIT_FIELDS,
+  CONTINUATION_OBSERVATION_START_FIELDS,
   ENABLE_CONFIRMATION,
   INPUT_FIELDS,
   MANIFEST_PATH,
@@ -1042,5 +1099,6 @@ module.exports = Object.freeze({
   validateCandidatePoolArtifact,
   validateThirdMutationContinuationArtifact,
   validateThirdMutationContinuationJit,
+  validateThirdMutationContinuationObservationStart,
   validateThirdMutationAcceptance
 });

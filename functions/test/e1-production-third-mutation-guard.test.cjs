@@ -43,6 +43,7 @@ const {
   continuationArtifactDigest,
   continuationJitDigest,
   continuationPreflightDigest,
+  continuationProgress,
   expectedDocumentCount,
   readinessContract,
   subjectBindingDigest,
@@ -60,6 +61,7 @@ const {
   validateCandidatePoolArtifact,
   validateThirdMutationContinuationArtifact,
   validateThirdMutationContinuationJit,
+  validateThirdMutationContinuationObservationStart,
   validateThirdMutationAcceptance
 } = require('../production/e1ProductionThirdMutationGuard.cjs');
 const {
@@ -787,6 +789,46 @@ test('exact reconciled A-reserve continuation passes preflight and authorizes on
   assert.deepEqual(jitResult.nextOperation, { slot: 'A', operation: 'exact-replay' });
   assert.equal(jitResult.remainingSequence.length, 9);
   assert.equal(jitResult.groupEAuthorized, false);
+});
+
+test('mocked continuation rehearsal advances exact A-replay through E-replay budget and starts observation only after restoration', () => {
+  const expectedCounts = [16, 16, 20, 20, 24, 24, 28, 28, 32, 32];
+  for (let completed = 0; completed <= CONTINUATION_REMAINING_SEQUENCE.length; completed += 1) {
+    const progress = continuationProgress(completed);
+    assert.equal(progress.currentDocumentCount, expectedCounts[completed]);
+    assert.deepEqual(progress.nextOperation, CONTINUATION_REMAINING_SEQUENCE[completed] || null);
+    assert.deepEqual(progress.remainingSequence, CONTINUATION_REMAINING_SEQUENCE.slice(completed));
+    assert.equal(progress.remainingBudget.gatewayCalls, 9 - completed);
+    assert.equal(progress.remainingBudget.authorityCalls, 9 - completed);
+    assert.equal(progress.remainingBudget.limitedUseAppCheckTokens, 9 - completed);
+    assert.equal(progress.remainingBudget.firstWriteSubjects,
+      4 - CONTINUATION_REMAINING_SEQUENCE.slice(0, completed).filter((item) => item.operation === 'reserve').length);
+    assert.equal(progress.remainingBudget.replayOperations,
+      5 - CONTINUATION_REMAINING_SEQUENCE.slice(0, completed).filter((item) => item.operation === 'exact-replay').length);
+  }
+  const finalProgress = continuationProgress(9);
+  assert.equal(finalProgress.complete, true);
+  assert.equal(finalProgress.currentDocumentCount, 32);
+  assert.equal(finalProgress.remainingBudget.firestoreCommittedWrites, 0);
+  assert.equal(finalProgress.remainingBudget.operationRequestCreates, 0);
+  assert.equal(finalProgress.remainingBudget.rateLimitCreates, 0);
+  const start = {
+    completedSuffixOperations: 9,
+    finalCounts: FINAL_COUNTS,
+    finalStateDigest: 'f'.repeat(64),
+    gatesRestored: disabledGatePlan(),
+    securityBoundary: fixture().input.securityBoundary,
+    anomaliesAbsent: true,
+    startedAt: new Date(NOW - 1_000).toISOString(),
+    observationHours: 24,
+    groupEAuthorized: false
+  };
+  const observation = validateThirdMutationContinuationObservationStart(start, { now: () => NOW });
+  assert.equal(Date.parse(observation.endAt) - Date.parse(observation.startAt), 24 * 60 * 60 * 1000);
+  assert.throws(() => validateThirdMutationContinuationObservationStart({ ...start,
+    gatesRestored: activationGatePlan() }, { now: () => NOW }), /observation-start-invalid/u);
+  assert.throws(() => validateThirdMutationContinuationObservationStart({ ...start,
+    completedSuffixOperations: 8 }, { now: () => NOW }), /observation-start-invalid/u);
 });
 
 test('original clean-start guard remains the unchanged 12-document all-targets-absent mode', () => {
