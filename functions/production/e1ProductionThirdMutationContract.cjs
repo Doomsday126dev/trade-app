@@ -11,8 +11,8 @@ const EXECUTION_EVIDENCE_PURPOSE = 'synthetic-mutation-execution';
 const OBSERVATION_HOURS = 24;
 const MAX_WINDOW_HOURS = 2;
 const ENTRY_EVIDENCE_MAX_AGE_MS = 15 * 60 * 1000;
-const CONTINUATION_PURPOSE = 'resume-after-reconciled-b-reserve-prefix-v1';
-const CONTINUATION_JIT_PURPOSE = 'authorize-reconciled-b-reserve-suffix-v1';
+const CONTINUATION_PURPOSE = 'resume-after-authoritative-exact-prefix-v1';
+const CONTINUATION_JIT_PURPOSE = 'authorize-authoritative-exact-suffix-v1';
 const CONTINUATION_STATE_FINGERPRINT = 'f92d3f33ec600176328ddce117f9fa12a458b3cd61e24872ecc32416f9111cbd';
 const CONTINUATION_PRODUCTION_RUNTIME = Object.freeze({
   releaseId: '2026-08-20.51',
@@ -29,8 +29,9 @@ const CONTINUATION_PINS = Object.freeze({
   initialReadinessDigest: '78aee40d266698fe71d317123794f7f3a3af3b040adaf8e318fcf81b9a738589',
   initialGuardDigest: '5dc303c138b982f94169a8a1a21c85c54af318a62f225831545e8bd6de921478',
   acceptedRolloverEvidenceDigest: 'f9a3d828fd31f57e4a0e8bc5b9ea7890f9f8e11da76bbd6a72f11c5c6d085f1a',
-  reconciliationEvidenceDigest: '4000f62c36c9dde2477b161aec29de3839f497938d1597f300301f7e7c2c236a',
-  executionLedgerDigest: '01c8f9627298b735b7625aaf89c7d86d6195b4e3776ebaf0e8b6b6b379ba3013'
+  bReserveReconciliationEvidenceDigest: '4000f62c36c9dde2477b161aec29de3839f497938d1597f300301f7e7c2c236a',
+  reconciliationEvidenceDigest: '68fc671781c972cd2292d995f21fe5c5f02d1e17db2b500d0989d63f391109dd',
+  executionLedgerDigest: '2bb559ce843b8b246ee6487121892621e6e54a77c5cf591e543d90d07a5893fd'
 });
 const FIRESTORE_TRANSACTION_MAX_ATTEMPTS = 5;
 const EXPECTED_COUNT_SEQUENCE = Object.freeze([12, 16, 16, 20, 20, 24, 24, 28, 28, 32, 32]);
@@ -45,16 +46,19 @@ const CONTINUATION_COMPLETED_PREFIX = Object.freeze([
     committedWrites: 1, acceptedHistoricalRateLimitReplayWrites: 1,
     stateFingerprint: 'acb7546d5f4ba45cb8b89b398f1f37d60a84d2365d7e60b35053d1e4e5a300f0' }),
   Object.freeze({ slot: 'B', operation: 'reserve', resultCode: 'SUCCESS', documentCount: 20,
-    committedWrites: 4, stateFingerprint: CONTINUATION_STATE_FINGERPRINT })
+    committedWrites: 4, evidenceDigest: CONTINUATION_PINS.bReserveReconciliationEvidenceDigest,
+    stateFingerprint: CONTINUATION_STATE_FINGERPRINT }),
+  Object.freeze({ slot: 'B', operation: 'exact-replay', resultCode: 'IDEMPOTENT', documentCount: 20,
+    committedWrites: 0, evidenceDigest: CONTINUATION_PINS.reconciliationEvidenceDigest,
+    stateFingerprint: CONTINUATION_STATE_FINGERPRINT })
 ]);
 const CONTINUATION_REMAINING_SEQUENCE = Object.freeze([
-  Object.freeze({ slot: 'B', operation: 'exact-replay' }),
   ...['C', 'D', 'E'].flatMap((slot) => [
     Object.freeze({ slot, operation: 'reserve' }),
     Object.freeze({ slot, operation: 'exact-replay' })
   ])
 ]);
-const CONTINUATION_COUNT_SEQUENCE = Object.freeze([20, 20, 24, 24, 28, 28, 32, 32]);
+const CONTINUATION_COUNT_SEQUENCE = Object.freeze([20, 24, 24, 28, 28, 32, 32]);
 const D2_BASELINE = Object.freeze({
   totalDocuments: 12,
   accounts: 3,
@@ -106,43 +110,43 @@ const OPERATION_BUDGET = Object.freeze({
   firestoreReadsRetryCeiling: 695
 });
 const CONTINUATION_ACCEPTED_USAGE = Object.freeze({
-  gatewayCalls: 3,
-  authorityCalls: 3,
-  limitedUseAppCheckTokens: 3,
-  logicalFirestoreTransactions: 6,
-  firestoreTransactionAttemptsExpected: 6,
-  firestoreTransactionAttemptsMaximum: 30,
-  firestoreOperationReadsExpected: 13,
-  firestoreOperationReadsMaximum: 61,
-  operationRequestExistenceReads: 1,
+  gatewayCalls: 4,
+  authorityCalls: 4,
+  limitedUseAppCheckTokens: 4,
+  logicalFirestoreTransactions: 7,
+  firestoreTransactionAttemptsExpected: 7,
+  firestoreTransactionAttemptsMaximum: 35,
+  firestoreOperationReadsExpected: 17,
+  firestoreOperationReadsMaximum: 77,
+  operationRequestExistenceReads: 2,
   firestoreCommittedWrites: 9,
   operationRequestCreates: 2,
   rateLimitCreates: 2,
   rateLimitReplayWrites: 1,
   firstWriteSubjects: 2,
-  replayOperations: 1,
-  rtdbExactReads: 9,
+  replayOperations: 2,
+  rtdbExactReads: 12,
   rtdbWrites: 0,
   ordinaryUserWrites: 0
 });
 const CONTINUATION_REMAINING_BUDGET = Object.freeze({
-  gatewayCalls: 7,
-  authorityCalls: 7,
-  limitedUseAppCheckTokens: 7,
-  logicalFirestoreTransactions: 10,
+  gatewayCalls: 6,
+  authorityCalls: 6,
+  limitedUseAppCheckTokens: 6,
+  logicalFirestoreTransactions: 9,
   firestoreTransactionMaxAttempts: FIRESTORE_TRANSACTION_MAX_ATTEMPTS,
-  firestoreTransactionAttemptsExpected: 10,
-  firestoreTransactionAttemptsMaximum: 50,
-  firestoreOperationReadsExpected: 31,
-  firestoreOperationReadsMaximum: 127,
-  operationRequestExistenceReads: 7,
+  firestoreTransactionAttemptsExpected: 9,
+  firestoreTransactionAttemptsMaximum: 45,
+  firestoreOperationReadsExpected: 27,
+  firestoreOperationReadsMaximum: 111,
+  operationRequestExistenceReads: 6,
   firestoreCommittedWrites: 12,
   operationRequestCreates: 3,
   rateLimitCreates: 3,
   rateLimitReplayWrites: 0,
   firstWriteSubjects: 3,
-  replayOperations: 4,
-  rtdbExactReads: 21,
+  replayOperations: 3,
+  rtdbExactReads: 18,
   rtdbWrites: 0,
   ordinaryUserWrites: 0
 });
@@ -151,6 +155,35 @@ function subtractBudget(value, decrement, label) {
   const next = value - decrement;
   if (!Number.isInteger(next) || next < 0) throw new Error(`e1/group-d3-continuation-budget-${label}-invalid`);
   return next;
+}
+
+function continuationAcceptedUsage(completedSuffixOperations = 0) {
+  if (!Number.isInteger(completedSuffixOperations) || completedSuffixOperations < 0 ||
+      completedSuffixOperations > CONTINUATION_REMAINING_SEQUENCE.length) {
+    throw new Error('e1/group-d3-continuation-progress-invalid');
+  }
+  const usage = { ...CONTINUATION_ACCEPTED_USAGE };
+  for (const operation of CONTINUATION_REMAINING_SEQUENCE.slice(0, completedSuffixOperations)) {
+    for (const [field, increment] of [
+      ['gatewayCalls', 1], ['authorityCalls', 1], ['limitedUseAppCheckTokens', 1],
+      ['operationRequestExistenceReads', 1], ['rtdbExactReads', 3]
+    ]) usage[field] += increment;
+    if (operation.operation === 'reserve') {
+      for (const [field, increment] of [
+        ['logicalFirestoreTransactions', 2], ['firestoreTransactionAttemptsExpected', 2],
+        ['firestoreTransactionAttemptsMaximum', 10], ['firestoreOperationReadsExpected', 5],
+        ['firestoreOperationReadsMaximum', 21], ['firestoreCommittedWrites', 4],
+        ['operationRequestCreates', 1], ['rateLimitCreates', 1], ['firstWriteSubjects', 1]
+      ]) usage[field] += increment;
+    } else {
+      for (const [field, increment] of [
+        ['logicalFirestoreTransactions', 1], ['firestoreTransactionAttemptsExpected', 1],
+        ['firestoreTransactionAttemptsMaximum', 5], ['firestoreOperationReadsExpected', 4],
+        ['firestoreOperationReadsMaximum', 16], ['replayOperations', 1]
+      ]) usage[field] += increment;
+    }
+  }
+  return Object.freeze(usage);
 }
 
 function continuationProgress(completedSuffixOperations = 0) {
@@ -186,6 +219,8 @@ function continuationProgress(completedSuffixOperations = 0) {
     currentDocumentCount: CONTINUATION_COUNT_SEQUENCE[completedSuffixOperations],
     nextOperation: CONTINUATION_REMAINING_SEQUENCE[completedSuffixOperations] || null,
     remainingSequence: Object.freeze(CONTINUATION_REMAINING_SEQUENCE.slice(completedSuffixOperations)),
+    expectedCountSequence: Object.freeze(CONTINUATION_COUNT_SEQUENCE.slice(completedSuffixOperations)),
+    acceptedUsage: continuationAcceptedUsage(completedSuffixOperations),
     remainingBudget: Object.freeze(budget),
     complete: completedSuffixOperations === CONTINUATION_REMAINING_SEQUENCE.length
   });
@@ -328,6 +363,7 @@ function continuationPreflightDigest(value) {
     value?.interruptedSession,
     value?.reconciliation,
     value?.completedPrefix,
+    value?.completedSuffixOperations,
     value?.acceptedUsage,
     value?.nextOperation,
     value?.currentState,
@@ -507,6 +543,7 @@ module.exports = Object.freeze({
   continuationProgress,
   expectedDocumentCount,
   continuationArtifactDigest,
+  continuationAcceptedUsage,
   continuationJitDigest,
   continuationPreflightDigest,
   readinessContract,

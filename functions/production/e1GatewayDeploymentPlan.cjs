@@ -10,12 +10,10 @@ const {
   RESTORE_CONFIRMATION: D3_RESTORE_CONFIRMATION
 } = require('./e1ProductionThirdMutationGuard.cjs');
 const {
-  CONTINUATION_ACCEPTED_USAGE,
   CONTINUATION_PRODUCTION_RUNTIME,
-  CONTINUATION_REMAINING_BUDGET,
-  CONTINUATION_REMAINING_SEQUENCE,
   EXECUTION_EVIDENCE_PURPOSE,
-  SYNTHETIC_COHORT_TYPE
+  SYNTHETIC_COHORT_TYPE,
+  continuationProgress
 } = require('./e1ProductionThirdMutationContract.cjs');
 const { activationGatePlan, disabledGatePlan } = require('./e1ProductionFirstMutationGuard.cjs');
 
@@ -226,17 +224,24 @@ function verifyActionGuard(actionName, guardResult, expectedSha, d3Mode, manifes
     const cleanStart = d3Mode === 'clean-start' && guardResult.deploymentMode === 'clean-start' &&
       !Object.hasOwn(guardResult, 'continuationArtifactDigest') &&
       !Object.hasOwn(guardResult, 'continuationJitDigest');
-    const continuation = d3Mode === 'continuation' && guardResult.deploymentMode === 'continuation' &&
-      guardResult.mode === 'reconciled-through-b-reserve-continuation' && guardResult.currentStateVerified === true &&
-      guardResult.historicalAdmissionVerified === true && guardResult.currentDocumentCount === 20 &&
-      guardResult.historicalEvidenceRecollectionRequired === false &&
-      JSON.stringify(guardResult.nextOperation) === JSON.stringify({ slot: 'B', operation: 'exact-replay' }) &&
-      JSON.stringify(guardResult.remainingSequence) === JSON.stringify(CONTINUATION_REMAINING_SEQUENCE) &&
-      JSON.stringify(guardResult.acceptedUsage) === JSON.stringify(CONTINUATION_ACCEPTED_USAGE) &&
-      JSON.stringify(guardResult.remainingBudget) === JSON.stringify(CONTINUATION_REMAINING_BUDGET) &&
-      JSON.stringify(guardResult.productionRuntime) === JSON.stringify(CONTINUATION_PRODUCTION_RUNTIME) &&
-      HASH.test(guardResult.continuationArtifactDigest || '') &&
-      HASH.test(guardResult.continuationPreflightDigest || '') && HASH.test(guardResult.continuationJitDigest || '');
+    let continuation = false;
+    if (d3Mode === 'continuation' && guardResult.deploymentMode === 'continuation' &&
+        Number.isInteger(guardResult.completedSuffixOperations)) {
+      let progress;
+      try { progress = continuationProgress(guardResult.completedSuffixOperations); } catch { progress = null; }
+      continuation = progress?.complete === false && guardResult.mode === 'authoritative-exact-prefix-continuation' &&
+        guardResult.currentStateVerified === true && guardResult.historicalAdmissionVerified === true &&
+        guardResult.currentDocumentCount === progress.currentDocumentCount &&
+        guardResult.historicalEvidenceRecollectionRequired === false &&
+        JSON.stringify(guardResult.nextOperation) === JSON.stringify(progress.nextOperation) &&
+        JSON.stringify(guardResult.remainingSequence) === JSON.stringify(progress.remainingSequence) &&
+        JSON.stringify(guardResult.expectedCountSequence) === JSON.stringify(progress.expectedCountSequence) &&
+        JSON.stringify(guardResult.acceptedUsage) === JSON.stringify(progress.acceptedUsage) &&
+        JSON.stringify(guardResult.remainingBudget) === JSON.stringify(progress.remainingBudget) &&
+        JSON.stringify(guardResult.productionRuntime) === JSON.stringify(CONTINUATION_PRODUCTION_RUNTIME) &&
+        HASH.test(guardResult.continuationArtifactDigest || '') &&
+        HASH.test(guardResult.continuationPreflightDigest || '') && HASH.test(guardResult.continuationJitDigest || '');
+    }
     stageValid = stageValid && commonD3 && (cleanStart || continuation);
   }
   if (!commonValid || !stageValid) throw new Error('e1/gateway-action-guard-mismatch');

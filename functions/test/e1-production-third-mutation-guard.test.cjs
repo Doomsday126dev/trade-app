@@ -2,6 +2,7 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const crypto = require('node:crypto');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
@@ -16,14 +17,12 @@ const {
 const {
   ALLOWED_OPERATIONS,
   CANDIDATE_POOL_POLICY,
-  CONTINUATION_ACCEPTED_USAGE,
   CONTINUATION_ARTIFACT_PURPOSE,
   CONTINUATION_COMPLETED_PREFIX,
   CONTINUATION_COUNT_SEQUENCE,
   CONTINUATION_JIT_PURPOSE,
   CONTINUATION_PINS,
   CONTINUATION_PRODUCTION_RUNTIME,
-  CONTINUATION_REMAINING_BUDGET,
   CONTINUATION_REMAINING_SEQUENCE,
   CONTINUATION_STATE_FINGERPRINT,
   D2_BASELINE,
@@ -411,10 +410,30 @@ function runGuard(values = fixture()) {
   } finally { fs.rmSync(directory, { recursive: true, force: true }); }
 }
 
-function continuationFixture() {
+function checkpointHash(label) {
+  return crypto.createHash('sha256').update(`d3-test-${label}`).digest('hex');
+}
+
+function continuationFixture(completedSuffixOperations = 0) {
   const values = fixture();
   values.binding.bindingDigest = CONTINUATION_PINS.bindingDigest;
   values.binding.candidatePoolDigest = CONTINUATION_PINS.candidatePoolDigest;
+  const progress = continuationProgress(completedSuffixOperations);
+  let stateFingerprint = CONTINUATION_STATE_FINGERPRINT;
+  const completedSuffix = CONTINUATION_REMAINING_SEQUENCE
+    .slice(0, completedSuffixOperations)
+    .map((operation, index) => {
+      if (operation.operation === 'reserve') stateFingerprint = checkpointHash(`state-${index}`);
+      return {
+        ...operation,
+        resultCode: operation.operation === 'reserve' ? 'SUCCESS' : 'IDEMPOTENT',
+        documentCount: CONTINUATION_COUNT_SEQUENCE[index + 1],
+        committedWrites: operation.operation === 'reserve' ? 4 : 0,
+        evidenceDigest: checkpointHash(`evidence-${index}`),
+        stateFingerprint
+      };
+    });
+  const completedPrefix = [...structuredClone(CONTINUATION_COMPLETED_PREFIX), ...completedSuffix];
   const candidateState = values.binding.candidates.map((candidateValue, index) => ({
     slot: candidateValue.slot,
     uidHash: candidateValue.subjectHashes.uidHash,
@@ -424,13 +443,20 @@ function continuationFixture() {
     requestBodyHash: candidateValue.request.requestBodyHash,
     foundationFingerprint: candidateValue.request.foundationFingerprint,
     rateLimitDocumentPath: candidateValue.request.rateLimitDocumentPath,
-    accountState: index < 2 ? 'present-owned' : 'absent',
-    handleState: index < 2 ? 'present-owned' : 'absent',
-    rateLimitState: index < 2 ? 'present-valid' : 'absent',
-    operationRequestCount: index < 2 ? 1 : 0,
-    ownershipReciprocal: index < 2,
-    requestBindingVerified: index < 2,
-    replayEvidenceCount: index === 0 ? 1 : 0
+    accountState: completedPrefix.some((operation) => operation.slot === candidateValue.slot &&
+      operation.operation === 'reserve') ? 'present-owned' : 'absent',
+    handleState: completedPrefix.some((operation) => operation.slot === candidateValue.slot &&
+      operation.operation === 'reserve') ? 'present-owned' : 'absent',
+    rateLimitState: completedPrefix.some((operation) => operation.slot === candidateValue.slot &&
+      operation.operation === 'reserve') ? 'present-valid' : 'absent',
+    operationRequestCount: completedPrefix.some((operation) => operation.slot === candidateValue.slot &&
+      operation.operation === 'reserve') ? 1 : 0,
+    ownershipReciprocal: completedPrefix.some((operation) => operation.slot === candidateValue.slot &&
+      operation.operation === 'reserve'),
+    requestBindingVerified: completedPrefix.some((operation) => operation.slot === candidateValue.slot &&
+      operation.operation === 'reserve'),
+    replayEvidenceCount: completedPrefix.some((operation) => operation.slot === candidateValue.slot &&
+      operation.operation === 'exact-replay') ? 1 : 0
   }));
   const artifact = {
     schemaVersion: 1,
@@ -463,40 +489,42 @@ function continuationFixture() {
       sessionIdHash: '7'.repeat(64),
       state: 'paused-closed',
       closedAt: '2026-08-15T14:57:00.000Z',
-      closeReason: 'contained-after-b-reserve-authoritative-reconciliation'
+      closeReason: `contained-after-${completedPrefix.at(-1).slot.toLowerCase()}-${completedPrefix.at(-1).operation}-authoritative-reconciliation`
     },
     reconciliation: {
       acceptedRolloverEvidenceDigest: CONTINUATION_PINS.acceptedRolloverEvidenceDigest,
-      evidenceDigest: CONTINUATION_PINS.reconciliationEvidenceDigest,
-      executionLedgerDigest: CONTINUATION_PINS.executionLedgerDigest,
+      evidenceDigest: completedPrefix.at(-1).evidenceDigest,
+      executionLedgerDigest: completedSuffixOperations === 0
+        ? CONTINUATION_PINS.executionLedgerDigest : checkpointHash(`ledger-${completedSuffixOperations}`),
       verifiedAt: '2026-08-15T14:58:00.000Z',
       aReserveInvocations: 1,
       aReplayInvocations: 1,
-      laterSlotInvocations: 1,
+      laterSlotInvocations: 2 + completedSuffixOperations,
       acceptedHistoricalRateLimitReplayWrites: 1,
       remainingRateLimitReplayWrites: 0,
-      previousStateFingerprint: CONTINUATION_COMPLETED_PREFIX.at(-2).stateFingerprint,
-      currentStateFingerprint: CONTINUATION_STATE_FINGERPRINT
+      previousStateFingerprint: completedPrefix.at(-2).stateFingerprint,
+      currentStateFingerprint: completedPrefix.at(-1).stateFingerprint
     },
-    completedPrefix: structuredClone(CONTINUATION_COMPLETED_PREFIX),
-    acceptedUsage: structuredClone(CONTINUATION_ACCEPTED_USAGE),
-    nextOperation: structuredClone(CONTINUATION_REMAINING_SEQUENCE[0]),
+    completedPrefix,
+    completedSuffixOperations,
+    acceptedUsage: structuredClone(progress.acceptedUsage),
+    nextOperation: structuredClone(progress.nextOperation),
     currentState: {
-      totalDocuments: 20,
-      accounts: 5,
-      trainerHandles: 5,
-      rateLimits: 5,
-      operationRequests: 5,
+      totalDocuments: progress.currentDocumentCount,
+      accounts: 5 + completedSuffix.filter((operation) => operation.operation === 'reserve').length,
+      trainerHandles: 5 + completedSuffix.filter((operation) => operation.operation === 'reserve').length,
+      rateLimits: 5 + completedSuffix.filter((operation) => operation.operation === 'reserve').length,
+      operationRequests: 5 + completedSuffix.filter((operation) => operation.operation === 'reserve').length,
       identityMigrations: 0,
       identityConflicts: 0,
       unexpectedPaths: 0,
       ordinaryUserEffects: 0,
-      canonicalFingerprint: CONTINUATION_STATE_FINGERPRINT
+      canonicalFingerprint: completedPrefix.at(-1).stateFingerprint
     },
     candidateState,
-    remainingSequence: structuredClone(CONTINUATION_REMAINING_SEQUENCE),
-    expectedCountSequence: structuredClone(CONTINUATION_COUNT_SEQUENCE),
-    remainingBudget: structuredClone(CONTINUATION_REMAINING_BUDGET),
+    remainingSequence: structuredClone(progress.remainingSequence),
+    expectedCountSequence: structuredClone(progress.expectedCountSequence),
+    remainingBudget: structuredClone(progress.remainingBudget),
     currentGates: structuredClone(disabledGatePlan()),
     runtimeProvenance: values.readiness.runtimeProvenance,
     securityBoundary: values.input.securityBoundary,
@@ -527,11 +555,12 @@ function continuationFixture() {
     approvalAcknowledged: true,
     teardownOwnerAcknowledged: true,
     mutationWindow: { startAt: '2026-08-15T15:00:00.000Z', endAt: '2026-08-15T16:30:00.000Z' },
-    nextOperation: structuredClone(CONTINUATION_REMAINING_SEQUENCE[0]),
-    remainingSequence: structuredClone(CONTINUATION_REMAINING_SEQUENCE),
-    expectedCountSequence: structuredClone(CONTINUATION_COUNT_SEQUENCE),
-    acceptedUsage: structuredClone(CONTINUATION_ACCEPTED_USAGE),
-    remainingBudget: structuredClone(CONTINUATION_REMAINING_BUDGET),
+    completedSuffixOperations,
+    nextOperation: structuredClone(progress.nextOperation),
+    remainingSequence: structuredClone(progress.remainingSequence),
+    expectedCountSequence: structuredClone(progress.expectedCountSequence),
+    acceptedUsage: structuredClone(progress.acceptedUsage),
+    remainingBudget: structuredClone(progress.remainingBudget),
     activationGatePlan: activationGatePlan(),
     restorationGatePlan: disabledGatePlan(),
     executionAuthorized: true,
@@ -784,37 +813,124 @@ test('exact five-subject private binding and authorized preflight pass without c
   assert.equal(result.groupEAuthorized, false);
 });
 
-test('exact reconciled prefix through B reserve authorizes only B replay after fresh JIT', () => {
-  const values = continuationFixture();
-  const artifactResult = validateContinuation(values);
-  assert.equal(artifactResult.ok, true);
-  assert.equal(artifactResult.currentDocumentCount, 20);
-  assert.deepEqual(artifactResult.completedPrefix, CONTINUATION_COMPLETED_PREFIX);
-  assert.deepEqual(artifactResult.nextOperation, { slot: 'B', operation: 'exact-replay' });
-  assert.deepEqual(artifactResult.acceptedUsage, CONTINUATION_ACCEPTED_USAGE);
-  assert.equal(artifactResult.executionAuthorized, false);
-  assert.equal(artifactResult.historicalEvidenceRecollectionRequired, false);
-  const jitResult = validateThirdMutationContinuationJit(values.jit, artifactResult, SOURCE_SHA, { now: () => NOW });
-  assert.equal(jitResult.executionAuthorized, true);
-  assert.deepEqual(jitResult.nextOperation, { slot: 'B', operation: 'exact-replay' });
-  assert.equal(jitResult.remainingSequence.length, 7);
-  assert.equal(jitResult.groupEAuthorized, false);
+test('authoritative exact-prefix checkpoint matrix derives every C-through-E re-entry boundary', () => {
+  const expectedNext = [
+    { slot: 'C', operation: 'reserve' },
+    { slot: 'C', operation: 'exact-replay' },
+    { slot: 'D', operation: 'reserve' },
+    { slot: 'D', operation: 'exact-replay' },
+    { slot: 'E', operation: 'reserve' },
+    { slot: 'E', operation: 'exact-replay' },
+    null
+  ];
+  for (let completed = 0; completed <= CONTINUATION_REMAINING_SEQUENCE.length; completed += 1) {
+    const values = continuationFixture(completed);
+    const progress = continuationProgress(completed);
+    const artifactResult = validateContinuation(values);
+    assert.equal(artifactResult.ok, true);
+    assert.equal(artifactResult.completedSuffixOperations, completed);
+    assert.equal(artifactResult.currentDocumentCount, progress.currentDocumentCount);
+    assert.deepEqual(artifactResult.nextOperation, expectedNext[completed]);
+    assert.deepEqual(artifactResult.remainingSequence, progress.remainingSequence);
+    assert.deepEqual(artifactResult.expectedCountSequence, progress.expectedCountSequence);
+    assert.deepEqual(artifactResult.acceptedUsage, progress.acceptedUsage);
+    assert.deepEqual(artifactResult.remainingBudget, progress.remainingBudget);
+    assert.equal(artifactResult.complete, completed === CONTINUATION_REMAINING_SEQUENCE.length);
+    if (artifactResult.complete) {
+      assert.throws(() => validateThirdMutationContinuationJit(values.jit, artifactResult, SOURCE_SHA,
+        { now: () => NOW }), /continuation-jit-failed/u);
+    } else {
+      const jitResult = validateThirdMutationContinuationJit(values.jit, artifactResult, SOURCE_SHA,
+        { now: () => NOW });
+      assert.equal(jitResult.executionAuthorized, true);
+      assert.equal(jitResult.completedSuffixOperations, completed);
+      assert.deepEqual(jitResult.nextOperation, expectedNext[completed]);
+      assert.deepEqual(jitResult.remainingBudget, progress.remainingBudget);
+      assert.equal(jitResult.groupEAuthorized, false);
+    }
+  }
 });
 
-test('mocked continuation rehearsal advances B replay through E replay and starts observation only after restoration', () => {
+test('every reconciled checkpoint permanently excludes all previously completed operations from retry', () => {
+  for (let completed = 0; completed < CONTINUATION_REMAINING_SEQUENCE.length; completed += 1) {
+    const values = continuationFixture(completed);
+    const completedOperations = values.artifact.completedPrefix.map(({ slot, operation }) => ({ slot, operation }));
+    for (const prior of completedOperations) {
+      const copy = structuredClone(values.artifact);
+      copy.nextOperation = prior;
+      refreshContinuationDigests(copy);
+      assert.throws(() => validateThirdMutationContinuationArtifact(copy, {
+        manifest: values.manifest,
+        binding: values.binding,
+        historicalAdmissionVerified: true
+      }, { now: () => NOW }), (error) => error.reasons.includes('group_d3_continuation_prefix_or_next_invalid'));
+    }
+  }
+});
+
+for (const [name, completed, mutate, reason] of [
+  ['suffix length does not match checkpoint', 3,
+    (value) => { value.completedSuffixOperations = 2; }, 'group_d3_continuation_prefix_or_next_invalid'],
+  ['dynamic operation is reordered', 3,
+    (value) => { value.completedPrefix[4].slot = 'D'; }, 'group_d3_continuation_prefix_or_next_invalid'],
+  ['dynamic evidence digest is reused', 2,
+    (value) => { value.completedPrefix[5].evidenceDigest = value.completedPrefix[4].evidenceDigest; },
+    'group_d3_continuation_prefix_or_next_invalid'],
+  ['reserve state digest does not advance', 1,
+    (value) => { value.completedPrefix[4].stateFingerprint = value.completedPrefix[3].stateFingerprint; },
+    'group_d3_continuation_prefix_or_next_invalid'],
+  ['replay state digest changes', 2,
+    (value) => { value.completedPrefix[5].stateFingerprint = checkpointHash('unexpected-replay-state'); },
+    'group_d3_continuation_prefix_or_next_invalid'],
+  ['later checkpoint reuses the B ledger pin', 1,
+    (value) => { value.reconciliation.executionLedgerDigest = CONTINUATION_PINS.executionLedgerDigest; },
+    'group_d3_continuation_reconciliation_invalid'],
+  ['reconciliation is not bound to latest evidence', 3,
+    (value) => { value.reconciliation.evidenceDigest = value.completedPrefix.at(-2).evidenceDigest; },
+    'group_d3_continuation_reconciliation_invalid'],
+  ['containment reason names the wrong checkpoint', 3,
+    (value) => { value.interruptedSession.closeReason = 'contained-after-c-reserve-authoritative-reconciliation'; },
+    'group_d3_continuation_session_invalid'],
+  ['completed C ownership is hidden', 1,
+    (value) => { value.candidateState[2].accountState = 'absent'; },
+    'group_d3_continuation_candidate_c_state_invalid'],
+  ['current digest is not the latest reconciled digest', 4,
+    (value) => { value.currentState.canonicalFingerprint = value.completedPrefix[5].stateFingerprint; },
+    'group_d3_continuation_current_state_invalid'],
+  ['accepted usage omits a completed call', 3,
+    (value) => { value.acceptedUsage.gatewayCalls -= 1; }, 'group_d3_continuation_prefix_or_next_invalid'],
+  ['remaining budget ignores completed work', 3,
+    (value) => { value.remainingBudget.gatewayCalls += 1; }, 'group_d3_continuation_sequence_or_budget_invalid']
+]) {
+  test(`D3 exact-prefix checkpoint fails closed when ${name}`, () => {
+    const values = continuationFixture(completed);
+    mutate(values.artifact);
+    refreshContinuationDigests(values.artifact);
+    assert.throws(() => validateContinuation(values), (error) => error.reasons.includes(reason));
+  });
+}
+
+test('continuation progress advances C reserve through E replay and starts observation only after restoration', () => {
   const expectedCounts = CONTINUATION_COUNT_SEQUENCE;
+  const admitted = continuationProgress(0);
   for (let completed = 0; completed <= CONTINUATION_REMAINING_SEQUENCE.length; completed += 1) {
     const progress = continuationProgress(completed);
     assert.equal(progress.currentDocumentCount, expectedCounts[completed]);
     assert.deepEqual(progress.nextOperation, CONTINUATION_REMAINING_SEQUENCE[completed] || null);
     assert.deepEqual(progress.remainingSequence, CONTINUATION_REMAINING_SEQUENCE.slice(completed));
-    assert.equal(progress.remainingBudget.gatewayCalls, 7 - completed);
-    assert.equal(progress.remainingBudget.authorityCalls, 7 - completed);
-    assert.equal(progress.remainingBudget.limitedUseAppCheckTokens, 7 - completed);
+    assert.equal(progress.remainingBudget.gatewayCalls, 6 - completed);
+    assert.equal(progress.remainingBudget.authorityCalls, 6 - completed);
+    assert.equal(progress.remainingBudget.limitedUseAppCheckTokens, 6 - completed);
     assert.equal(progress.remainingBudget.firstWriteSubjects,
       3 - CONTINUATION_REMAINING_SEQUENCE.slice(0, completed).filter((item) => item.operation === 'reserve').length);
     assert.equal(progress.remainingBudget.replayOperations,
-      4 - CONTINUATION_REMAINING_SEQUENCE.slice(0, completed).filter((item) => item.operation === 'exact-replay').length);
+      3 - CONTINUATION_REMAINING_SEQUENCE.slice(0, completed).filter((item) => item.operation === 'exact-replay').length);
+    for (const field of Object.keys(progress.acceptedUsage)) {
+      if (Object.hasOwn(progress.remainingBudget, field)) {
+        assert.equal(progress.acceptedUsage[field] + progress.remainingBudget[field],
+          admitted.acceptedUsage[field] + admitted.remainingBudget[field], field);
+      }
+    }
   }
   const finalProgress = continuationProgress(CONTINUATION_REMAINING_SEQUENCE.length);
   assert.equal(finalProgress.complete, true);
@@ -824,7 +940,7 @@ test('mocked continuation rehearsal advances B replay through E replay and start
   assert.equal(finalProgress.remainingBudget.rateLimitCreates, 0);
   const start = {
     completedSuffixOperations: CONTINUATION_REMAINING_SEQUENCE.length,
-    acceptedUsage: CONTINUATION_ACCEPTED_USAGE,
+    acceptedUsage: finalProgress.acceptedUsage,
     remainingBudget: finalProgress.remainingBudget,
     finalCounts: FINAL_COUNTS,
     finalStateDigest: 'f'.repeat(64),
@@ -855,7 +971,7 @@ for (const [name, mutate, reason] of [
   ['empty completed prefix', (value) => { value.completedPrefix = []; }, 'group_d3_continuation_prefix_or_next_invalid'],
   ['extra completed operation', (value) => { value.completedPrefix.push({ slot: 'A', operation: 'exact-replay' }); }, 'group_d3_continuation_prefix_or_next_invalid'],
   ['A reserve eligible again', (value) => { value.nextOperation = { slot: 'A', operation: 'reserve' }; }, 'group_d3_continuation_prefix_or_next_invalid'],
-  ['skipped next operation', (value) => { value.nextOperation = { slot: 'C', operation: 'reserve' }; }, 'group_d3_continuation_prefix_or_next_invalid'],
+  ['skipped next operation', (value) => { value.nextOperation = { slot: 'D', operation: 'reserve' }; }, 'group_d3_continuation_prefix_or_next_invalid'],
   ['12 documents', (value) => { value.currentState.totalDocuments = 12; }, 'group_d3_continuation_current_state_invalid'],
   ['19 documents', (value) => { value.currentState.totalDocuments = 19; }, 'group_d3_continuation_current_state_invalid'],
   ['21 documents', (value) => { value.currentState.totalDocuments = 21; }, 'group_d3_continuation_current_state_invalid'],
@@ -869,12 +985,14 @@ for (const [name, mutate, reason] of [
   ['A operation request duplicated', (value) => { value.candidateState[0].operationRequestCount = 2; }, 'group_d3_continuation_candidate_a_state_invalid'],
   ['A replay evidence missing', (value) => { value.candidateState[0].replayEvidenceCount = 0; }, 'group_d3_continuation_candidate_a_state_invalid'],
   ['B target absent', (value) => { value.candidateState[1].accountState = 'absent'; }, 'group_d3_continuation_candidate_b_state_invalid'],
-  ['B replay falsely completed', (value) => { value.candidateState[1].replayEvidenceCount = 1; }, 'group_d3_continuation_candidate_b_state_invalid'],
+  ['B replay evidence missing', (value) => { value.candidateState[1].replayEvidenceCount = 0; }, 'group_d3_continuation_candidate_b_state_invalid'],
+  ['B reserve evidence pin mismatch', (value) => { value.completedPrefix[2].evidenceDigest = 'f'.repeat(64); }, 'group_d3_continuation_prefix_or_next_invalid'],
+  ['B replay evidence pin mismatch', (value) => { value.completedPrefix[3].evidenceDigest = 'f'.repeat(64); }, 'group_d3_continuation_prefix_or_next_invalid'],
   ['accepted rollover digest mismatch', (value) => { value.reconciliation.acceptedRolloverEvidenceDigest = 'f'.repeat(64); }, 'group_d3_continuation_reconciliation_invalid'],
   ['reconciliation digest mismatch', (value) => { value.reconciliation.evidenceDigest = 'f'.repeat(64); }, 'group_d3_continuation_reconciliation_invalid'],
   ['execution ledger mismatch', (value) => { value.reconciliation.executionLedgerDigest = 'f'.repeat(64); }, 'group_d3_continuation_reconciliation_invalid'],
   ['A replay invocation hidden', (value) => { value.reconciliation.aReplayInvocations = 0; }, 'group_d3_continuation_reconciliation_invalid'],
-  ['B reserve invocation hidden', (value) => { value.reconciliation.laterSlotInvocations = 0; }, 'group_d3_continuation_reconciliation_invalid'],
+  ['B replay invocation hidden', (value) => { value.reconciliation.laterSlotInvocations = 1; }, 'group_d3_continuation_reconciliation_invalid'],
   ['historical replay write count expanded', (value) => { value.reconciliation.acceptedHistoricalRateLimitReplayWrites = 2; }, 'group_d3_continuation_reconciliation_invalid'],
   ['pre-replay state digest mismatch', (value) => { value.reconciliation.previousStateFingerprint = 'f'.repeat(64); }, 'group_d3_continuation_reconciliation_invalid'],
   ['post-replay state digest mismatch', (value) => { value.reconciliation.currentStateFingerprint = 'f'.repeat(64); }, 'group_d3_continuation_reconciliation_invalid'],
@@ -912,7 +1030,7 @@ for (const [name, mutate] of [
   ['missing fresh JIT', (value) => { value.schemaVersion = 0; }],
   ['stale JIT', (value) => { value.approvedAt = '2026-08-15T14:40:00.000Z'; value.entryEvidenceExpiresAt = '2026-08-15T14:55:00.000Z'; }],
   ['wrong contract source', (value) => { value.continuationContractSourceSha = 'f'.repeat(40); }],
-  ['A replay next', (value) => { value.nextOperation = { slot: 'A', operation: 'exact-replay' }; }],
+  ['B replay next', (value) => { value.nextOperation = { slot: 'B', operation: 'exact-replay' }; }],
   ['historical usage omitted', (value) => { delete value.acceptedUsage; }],
   ['skipped JIT suffix', (value) => { value.remainingSequence.shift(); }],
   ['skipped JIT count state', (value) => { value.expectedCountSequence.shift(); }],
