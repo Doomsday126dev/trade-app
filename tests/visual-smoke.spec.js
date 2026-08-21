@@ -1724,6 +1724,43 @@ test.describe('visual smoke', () => {
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
   });
 
+  test('My List Variant details uses the canonical dark input treatment',async({page})=>{
+    for(const [width,height] of [[1440,900],[390,844]]){
+      await page.setViewportSize({width,height});
+      await page.goto(`./?variant-details-style=${width}-${Date.now()}`,{waitUntil:'domcontentloaded'});
+      await waitForStableLocalOrganizerStartup(page);
+      await isolateAuthenticatedMyListFixture(page,{username:'VariantStyleTester',uid:'uid-variant-style-tester'});
+      await page.locator('#add-adv-toggle').click();
+
+      const details=page.locator('#add-pmon-notes'),reference=page.locator('#ac-input');
+      await expect(details).toBeVisible();
+      await expect(details).toHaveClass(/field-control/);
+      const styles=await page.evaluate(()=>{
+        const read=element=>{
+          const style=getComputedStyle(element),placeholder=getComputedStyle(element,'::placeholder');
+          return{
+            background:style.backgroundColor,color:style.color,caret:style.caretColor,
+            borderColor:style.borderColor,borderStyle:style.borderStyle,borderWidth:style.borderWidth,
+            borderRadius:style.borderRadius,minHeight:style.minHeight,placeholder:placeholder.color
+          };
+        };
+        return{details:read(document.getElementById('add-pmon-notes')),reference:read(document.getElementById('ac-input'))};
+      });
+      expect(styles.details).toEqual(styles.reference);
+
+      await details.fill('female shadow');
+      await expect(details).toHaveValue('female shadow');
+      await details.focus();
+      await page.waitForTimeout(180);
+      const detailsFocus=await details.evaluate(element=>({borderColor:getComputedStyle(element).borderColor,boxShadow:getComputedStyle(element).boxShadow}));
+      await reference.focus();
+      await page.waitForTimeout(180);
+      const referenceFocus=await reference.evaluate(element=>({borderColor:getComputedStyle(element).borderColor,boxShadow:getComputedStyle(element).boxShadow}));
+      expect(detailsFocus).toEqual(referenceFocus);
+      expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
+    }
+  });
+
   test('My List category counts and empty context remain unmistakable and state-safe',async({page})=>{
     const viewports=[[320,640],[375,700],[390,420],[390,300],[430,760],[768,800],[1024,800],[1440,900]];
     for(const [width,height] of viewports){

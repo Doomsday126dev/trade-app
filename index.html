@@ -2214,7 +2214,7 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
         <label class="lucky-add" title="XXS — mark as extra-small; generates a separate XXS search string">
           <input type="checkbox" id="add-pmon-xxs" onchange="if(this.checked)document.getElementById('add-pmon-xxl').checked=false;renderAddTray()"> XXS
         </label>
-        <input type="text" id="add-pmon-notes" data-i18n-placeholder="myList.variantDetailsPlaceholder" data-i18n-aria-label="myList.variantDetails" placeholder="Variant details: female, male, shadow…" aria-label="Variant details" style="flex:1;min-width:120px" oninput="renderAddTray()">
+        <input type="text" class="field-control" id="add-pmon-notes" data-i18n-placeholder="myList.variantDetailsPlaceholder" data-i18n-aria-label="myList.variantDetails" placeholder="Variant details: female, male, shadow…" aria-label="Variant details" style="flex:1;min-width:120px" oninput="renderAddTray()">
       </div>
       <div class="add-actions">
         <button class="bsave" onclick="addEntry()" data-i18n="myList.addAction">Add</button>
