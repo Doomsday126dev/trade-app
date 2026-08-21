@@ -7,6 +7,12 @@ const RATE_LIMIT_OPERATIONS = new Set([
   'applyMigrationManifest',
   'freezeIdentityConflict'
 ]);
+const MUTATION_OPERATIONS = new Set([
+  'reserveTrainerHandle',
+  'repairAccountFoundation',
+  'applyMigrationManifest',
+  'freezeIdentityConflict'
+]);
 const HASH = /^[a-f0-9]{16,64}$/;
 
 function fail(code) {
@@ -26,6 +32,22 @@ function createFirestoreE1AuthorityAdapter({ firestore, now = () => Date.now() }
   const migrationRef = (uid, requestId) => firestore.doc(`identityMigrations/${uid}/operations/${requestId}`);
   const conflictRef = (uid, requestId) => firestore.doc(`identityConflicts/${uid}/events/${requestId}`);
   const rateLimitRef = (operation, subjectHash) => firestore.doc(`rateLimits/${operation}_${subjectHash}`);
+
+  function validOperationRequest(data, operation) {
+    return data?.schemaVersion === 1 && data.operation === operation && HASH.test(data.fingerprint || '') &&
+      data.result && typeof data.result === 'object' && !Array.isArray(data.result);
+  }
+
+  async function operationRequestExists({ operation, uid, requestId }) {
+    if (!MUTATION_OPERATIONS.has(operation) || typeof uid !== 'string' || !uid || uid.length > 128 || uid.includes('/') ||
+        typeof requestId !== 'string' || !requestId || requestId.length > 128 || requestId.includes('/')) {
+      fail('e1/replay-input-invalid');
+    }
+    const snapshot = await operationRef(uid, requestId).get();
+    if (!snapshot.exists) return false;
+    if (!validOperationRequest(snapshot.data(), operation)) fail('e1/replay-state-invalid');
+    return true;
+  }
 
   async function consumeRateLimit({ operation, subjectHash, attemptHash, limit, windowMs, at = now() }) {
     if (!RATE_LIMIT_OPERATIONS.has(operation) || !HASH.test(subjectHash || '') || !HASH.test(attemptHash || '') ||
@@ -65,9 +87,13 @@ function createFirestoreE1AuthorityAdapter({ firestore, now = () => Date.now() }
     });
   }
 
-  function replay(snapshot, fingerprint) {
-    if (!snapshot.exists) return null;
+  function replay(snapshot, fingerprint, operation, replayOnly = false) {
+    if (!snapshot.exists) {
+      if (replayOnly) fail('e1/replay-not-found');
+      return null;
+    }
     const data = snapshot.data();
+    if (!validOperationRequest(data, operation)) fail('e1/replay-state-invalid');
     if (data.fingerprint !== fingerprint) fail('e1/replay-mismatch');
     return Object.freeze({ ...data.result, replay: true });
   }
@@ -139,11 +165,11 @@ function createFirestoreE1AuthorityAdapter({ firestore, now = () => Date.now() }
     return snapshot.exists ? Object.freeze(snapshot.data()) : null;
   }
 
-  async function reserveTrainerHandle(input) {
+  async function reserveTrainerHandle(input, { replayOnly = false } = {}) {
     return firestore.runTransaction(async (transaction) => {
       const refs = [accountRef(input.uid), handleRef(input.handleKey), operationRef(input.uid, input.requestId)];
       const [account, handle, request] = await Promise.all(refs.map((ref) => transaction.get(ref)));
-      const prior = replay(request, input.fingerprint);
+      const prior = replay(request, input.fingerprint, 'reserveTrainerHandle', replayOnly);
       if (prior) return prior;
 
       if (account.exists && !handle.exists) fail('e1/foundation-conflict');
@@ -168,11 +194,11 @@ function createFirestoreE1AuthorityAdapter({ firestore, now = () => Date.now() }
     });
   }
 
-  async function repairAccountFoundation(input) {
+  async function repairAccountFoundation(input, { replayOnly = false } = {}) {
     return firestore.runTransaction(async (transaction) => {
       const refs = [accountRef(input.uid), handleRef(input.handleKey), operationRef(input.uid, input.requestId), migrationRef(input.uid, input.requestId)];
       const [account, handle, request, migration] = await Promise.all(refs.map((ref) => transaction.get(ref)));
-      const prior = replay(request, input.fingerprint);
+      const prior = replay(request, input.fingerprint, 'repairAccountFoundation', replayOnly);
       if (prior) return prior;
       if (migration.exists) fail('e1/repair-review-required');
       if (account.exists && !exactAccount(account.data(), input)) fail('e1/foundation-conflict');
@@ -190,11 +216,11 @@ function createFirestoreE1AuthorityAdapter({ firestore, now = () => Date.now() }
     });
   }
 
-  async function applyMigrationManifest(input) {
+  async function applyMigrationManifest(input, { replayOnly = false } = {}) {
     return firestore.runTransaction(async (transaction) => {
       const refs = [accountRef(input.uid), handleRef(input.handleKey), operationRef(input.uid, input.requestId), migrationRef(input.uid, input.requestId)];
       const [account, handle, request, migration] = await Promise.all(refs.map((ref) => transaction.get(ref)));
-      const prior = replay(request, input.fingerprint);
+      const prior = replay(request, input.fingerprint, 'applyMigrationManifest', replayOnly);
       if (prior) return prior;
       if (migration.exists) fail('e1/migration-conflict');
       if (account.exists && !exactAccount(account.data(), input)) fail('e1/foundation-conflict');
@@ -219,14 +245,14 @@ function createFirestoreE1AuthorityAdapter({ firestore, now = () => Date.now() }
     });
   }
 
-  async function freezeIdentityConflict(input) {
+  async function freezeIdentityConflict(input, { replayOnly = false } = {}) {
     return firestore.runTransaction(async (transaction) => {
       const refs = [operationRef(input.uid, input.requestId), conflictRef(input.uid, input.requestId)];
       const checkedRefs = input.reasonCode === 'handle-owner-conflict'
         ? [...refs, accountRef(input.uid), handleRef(input.handleKey)] : refs;
       const snapshots = await Promise.all(checkedRefs.map((ref) => transaction.get(ref)));
       const [request, conflict, account, handle] = snapshots;
-      const prior = replay(request, input.fingerprint);
+      const prior = replay(request, input.fingerprint, 'freezeIdentityConflict', replayOnly);
       if (prior) return prior;
       if (conflict.exists && conflict.data().fingerprint !== input.fingerprint) fail('e1/conflict-record-mismatch');
       if (input.reasonCode === 'handle-owner-conflict') {
@@ -258,10 +284,11 @@ function createFirestoreE1AuthorityAdapter({ firestore, now = () => Date.now() }
     applyMigrationManifest,
     consumeRateLimit,
     freezeIdentityConflict,
+    operationRequestExists,
     readAccountFoundation,
     repairAccountFoundation,
     reserveTrainerHandle
   });
 }
 
-module.exports = { RATE_LIMIT_OPERATIONS, createFirestoreE1AuthorityAdapter };
+module.exports = { MUTATION_OPERATIONS, RATE_LIMIT_OPERATIONS, createFirestoreE1AuthorityAdapter };

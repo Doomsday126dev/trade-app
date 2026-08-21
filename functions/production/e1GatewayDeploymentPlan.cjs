@@ -10,6 +10,7 @@ const {
   RESTORE_CONFIRMATION: D3_RESTORE_CONFIRMATION
 } = require('./e1ProductionThirdMutationGuard.cjs');
 const {
+  CONTINUATION_ACCEPTED_USAGE,
   CONTINUATION_PRODUCTION_RUNTIME,
   CONTINUATION_REMAINING_BUDGET,
   CONTINUATION_REMAINING_SEQUENCE,
@@ -226,11 +227,12 @@ function verifyActionGuard(actionName, guardResult, expectedSha, d3Mode, manifes
       !Object.hasOwn(guardResult, 'continuationArtifactDigest') &&
       !Object.hasOwn(guardResult, 'continuationJitDigest');
     const continuation = d3Mode === 'continuation' && guardResult.deploymentMode === 'continuation' &&
-      guardResult.mode === 'reconciled-a-reserve-continuation' && guardResult.currentStateVerified === true &&
+      guardResult.mode === 'reconciled-a-reserve-and-replay-continuation' && guardResult.currentStateVerified === true &&
       guardResult.historicalAdmissionVerified === true && guardResult.currentDocumentCount === 16 &&
       guardResult.historicalEvidenceRecollectionRequired === false &&
-      JSON.stringify(guardResult.nextOperation) === JSON.stringify({ slot: 'A', operation: 'exact-replay' }) &&
+      JSON.stringify(guardResult.nextOperation) === JSON.stringify({ slot: 'B', operation: 'reserve' }) &&
       JSON.stringify(guardResult.remainingSequence) === JSON.stringify(CONTINUATION_REMAINING_SEQUENCE) &&
+      JSON.stringify(guardResult.acceptedUsage) === JSON.stringify(CONTINUATION_ACCEPTED_USAGE) &&
       JSON.stringify(guardResult.remainingBudget) === JSON.stringify(CONTINUATION_REMAINING_BUDGET) &&
       JSON.stringify(guardResult.productionRuntime) === JSON.stringify(CONTINUATION_PRODUCTION_RUNTIME) &&
       HASH.test(guardResult.continuationArtifactDigest || '') &&

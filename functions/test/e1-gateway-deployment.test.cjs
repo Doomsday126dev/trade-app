@@ -22,6 +22,7 @@ const {
 } = require('../production/e1GatewayDeploymentPlan.cjs');
 const { activationGatePlan, disabledGatePlan } = require('../production/e1ProductionFirstMutationGuard.cjs');
 const {
+  CONTINUATION_ACCEPTED_USAGE,
   CONTINUATION_PRODUCTION_RUNTIME,
   CONTINUATION_REMAINING_BUDGET,
   CONTINUATION_REMAINING_SEQUENCE
@@ -381,13 +382,14 @@ function d3GuardResult(overrides = {}) {
 function d3ContinuationGuardResult(overrides = {}) {
   return d3GuardResult({
     deploymentMode: 'continuation',
-    mode: 'reconciled-a-reserve-continuation',
+    mode: 'reconciled-a-reserve-and-replay-continuation',
     historicalAdmissionVerified: true,
     currentStateVerified: true,
     historicalEvidenceRecollectionRequired: false,
     currentDocumentCount: 16,
-    nextOperation: { slot: 'A', operation: 'exact-replay' },
+    nextOperation: { slot: 'B', operation: 'reserve' },
     remainingSequence: CONTINUATION_REMAINING_SEQUENCE,
+    acceptedUsage: CONTINUATION_ACCEPTED_USAGE,
     remainingBudget: CONTINUATION_REMAINING_BUDGET,
     productionRuntime: CONTINUATION_PRODUCTION_RUNTIME,
     continuationArtifactDigest: 'b'.repeat(64),
@@ -593,8 +595,11 @@ test('D3 continuation deployer binds exact guard mode, tooling SHA, production r
     ['authority isolation drift', () => createDeploymentPlan({ ...common,
       guardResult: d3ContinuationGuardResult({ securityBoundary: {
         ...d3GuardResult().securityBoundary, publicAuthorityInvoker: true } }) })],
-    ['A reserve retry', () => createDeploymentPlan({ ...common,
-      guardResult: d3ContinuationGuardResult({ nextOperation: { slot: 'A', operation: 'reserve' } }) })],
+    ['A replay retry', () => createDeploymentPlan({ ...common,
+      guardResult: d3ContinuationGuardResult({ nextOperation: { slot: 'A', operation: 'exact-replay' } }) })],
+    ['hidden accepted rollover', () => createDeploymentPlan({ ...common,
+      guardResult: d3ContinuationGuardResult({ acceptedUsage: {
+        ...CONTINUATION_ACCEPTED_USAGE, rateLimitReplayWrites: 0 } }) })],
     ['reordered suffix', () => createDeploymentPlan({ ...common,
       guardResult: d3ContinuationGuardResult({ remainingSequence: [...CONTINUATION_REMAINING_SEQUENCE].reverse() }) })],
     ['expanded budget', () => createDeploymentPlan({ ...common,

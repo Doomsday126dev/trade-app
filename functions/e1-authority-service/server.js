@@ -602,21 +602,25 @@ function createHandler(configuration, dependencies = {}) {
   });
   const readLegacyBinding = dependencies.readLegacyBinding || ((input) => legacyReader.readVerifiedLegacyMapping(input));
   let authorityStore = dependencies.authorityStore;
-  const reserveHandle = dependencies.reserveTrainerHandle || (async (input) => {
+  const reserveHandle = dependencies.reserveTrainerHandle || (async (input, options) => {
     authorityStore ||= createDefaultAuthorityStore(configuration);
-    return authorityStore.reserveTrainerHandle(input);
+    return authorityStore.reserveTrainerHandle(input, options);
   });
-  const repairFoundation = dependencies.repairAccountFoundation || (async (input) => {
+  const repairFoundation = dependencies.repairAccountFoundation || (async (input, options) => {
     authorityStore ||= createDefaultAuthorityStore(configuration);
-    return authorityStore.repairAccountFoundation(input);
+    return authorityStore.repairAccountFoundation(input, options);
   });
-  const applyManifest = dependencies.applyMigrationManifest || (async (input) => {
+  const applyManifest = dependencies.applyMigrationManifest || (async (input, options) => {
     authorityStore ||= createDefaultAuthorityStore(configuration);
-    return authorityStore.applyMigrationManifest(input);
+    return authorityStore.applyMigrationManifest(input, options);
   });
-  const freezeConflict = dependencies.freezeIdentityConflict || (async (input) => {
+  const freezeConflict = dependencies.freezeIdentityConflict || (async (input, options) => {
     authorityStore ||= createDefaultAuthorityStore(configuration);
-    return authorityStore.freezeIdentityConflict(input);
+    return authorityStore.freezeIdentityConflict(input, options);
+  });
+  const operationRequestExists = dependencies.operationRequestExists || (async (input) => {
+    authorityStore ||= createDefaultAuthorityStore(configuration);
+    return authorityStore.operationRequestExists(input);
   });
   const parseBody = dependencies.readJsonRequest || readJsonRequest;
   const log = dependencies.structuredLog || structuredLog;
@@ -739,12 +743,15 @@ function createHandler(configuration, dependencies = {}) {
         const { uid } = await verifyToken(configuration, firebaseIdToken);
         callerHash = uidHash(configuration, uid);
         handleHash = handleCorrelationHash(configuration, handle.handleKey);
-        await limitOperation('reserveTrainerHandle', callerHash,
-          rateAttemptHash('reserveTrainerHandle', callerHash, [requestId, handle.handleKey]));
+        const replayOnly = await operationRequestExists({ operation: 'reserveTrainerHandle', uid, requestId });
+        if (!replayOnly) {
+          await limitOperation('reserveTrainerHandle', callerHash,
+            rateAttemptHash('reserveTrainerHandle', callerHash, [requestId, handle.handleKey]));
+        }
         const legacy = await readLegacyBinding({ verifiedUid: uid, firebaseIdToken });
         const foundation = verifiedLegacyFoundation(uid, handle, legacy);
         const input = Object.freeze({ uid, requestId, ...foundation });
-        const result = await reserveHandle(Object.freeze({ ...input, fingerprint: reserveFingerprint(input) }));
+        const result = await reserveHandle(Object.freeze({ ...input, fingerprint: reserveFingerprint(input) }), { replayOnly });
         if (!['reserved', 'idempotent'].includes(result.status)) fail('INTERNAL_ERROR');
         const code = result.replay === true || result.status === 'idempotent' ? 'IDEMPOTENT' : 'SUCCESS';
         log(configuration, 'reserveTrainerHandle', code.toLowerCase(), startedAt, {
@@ -783,8 +790,12 @@ function createHandler(configuration, dependencies = {}) {
         const firebaseIdToken = subjectFirebaseTokenHeader(request);
         const { uid } = await verifyToken(configuration, firebaseIdToken);
         callerHash = uidHash(configuration, uid);
-        await limitOperation('repairAccountFoundation', callerHash,
-          rateAttemptHash('repairAccountFoundation', callerHash, [reviewed.operationId, reviewed.manifestFingerprint]));
+        const replayOnly = await operationRequestExists({ operation: 'repairAccountFoundation', uid,
+          requestId: reviewed.operationId });
+        if (!replayOnly) {
+          await limitOperation('repairAccountFoundation', callerHash,
+            rateAttemptHash('repairAccountFoundation', callerHash, [reviewed.operationId, reviewed.manifestFingerprint]));
+        }
         const legacy = await readLegacyBinding({ verifiedUid: uid, firebaseIdToken });
         if (legacy?.status === 'mapping-incomplete') fail('MAPPING_INCOMPLETE');
         if (legacy?.status === 'mapping-conflict') fail('MAPPING_CONFLICT');
@@ -805,7 +816,7 @@ function createHandler(configuration, dependencies = {}) {
           sourceMappingFingerprint: sourceFingerprint,
           fingerprint: hashParts([1, 'repairAccountFoundation', uid, reviewed.operationId, reviewed.manifestFingerprint, sourceFingerprint])
         });
-        const result = await repairFoundation(input);
+        const result = await repairFoundation(input, { replayOnly });
         const code = result.replay === true ? 'IDEMPOTENT' : 'SUCCESS';
         log(configuration, 'repairAccountFoundation', code.toLowerCase(), startedAt, {
           uidHash: callerHash,
@@ -847,8 +858,12 @@ function createHandler(configuration, dependencies = {}) {
         const { uid } = await verifyToken(configuration, firebaseIdToken);
         if (uid !== manifest.uid) fail('REQUEST_INVALID');
         callerHash = uidHash(configuration, uid);
-        await limitOperation('applyMigrationManifest', operatorHash,
-          rateAttemptHash('applyMigrationManifest', operatorHash, [manifest.operationId, manifest.manifestFingerprint]));
+        const replayOnly = await operationRequestExists({ operation: 'applyMigrationManifest', uid,
+          requestId: manifest.operationId });
+        if (!replayOnly) {
+          await limitOperation('applyMigrationManifest', operatorHash,
+            rateAttemptHash('applyMigrationManifest', operatorHash, [manifest.operationId, manifest.manifestFingerprint]));
+        }
         const legacy = await readLegacyBinding({ verifiedUid: uid, firebaseIdToken });
         const requestedHandle = Object.freeze({
           display: manifest.canonicalTrainerName,
@@ -867,7 +882,7 @@ function createHandler(configuration, dependencies = {}) {
           sourceMappingFingerprint: sourceFingerprint,
           fingerprint: hashParts([1, 'applyMigrationManifest', uid, manifest.operationId, manifest.manifestFingerprint])
         });
-        const result = await applyManifest(input);
+        const result = await applyManifest(input, { replayOnly });
         const code = result.replay === true ? 'IDEMPOTENT' : result.status === 'already-migrated' ? 'ALREADY_MIGRATED' : 'SUCCESS';
         log(configuration, 'applyMigrationManifest', code.toLowerCase(), startedAt, {
           uidHash: callerHash, operatorHash, replayClass: result.replay === true ? 'exact-replay' : result.status
@@ -903,8 +918,12 @@ function createHandler(configuration, dependencies = {}) {
         const { uid } = await verifyToken(configuration, firebaseIdToken);
         if (uid !== reviewed.uid) fail('REQUEST_INVALID');
         callerHash = uidHash(configuration, uid);
-        await limitOperation('freezeIdentityConflict', operatorHash,
-          rateAttemptHash('freezeIdentityConflict', operatorHash, [reviewed.operationId, reviewed.manifestFingerprint]));
+        const replayOnly = await operationRequestExists({ operation: 'freezeIdentityConflict', uid,
+          requestId: reviewed.operationId });
+        if (!replayOnly) {
+          await limitOperation('freezeIdentityConflict', operatorHash,
+            rateAttemptHash('freezeIdentityConflict', operatorHash, [reviewed.operationId, reviewed.manifestFingerprint]));
+        }
         const legacy = await readLegacyBinding({ verifiedUid: uid, firebaseIdToken });
         let foundation;
         if (legacy?.status === 'ready') {
@@ -926,7 +945,7 @@ function createHandler(configuration, dependencies = {}) {
           requestId: reviewed.operationId,
           fingerprint: hashParts([1, 'freezeIdentityConflict', uid, reviewed.operationId, reviewed.manifestFingerprint])
         });
-        const result = await freezeConflict(input);
+        const result = await freezeConflict(input, { replayOnly });
         const code = result.replay === true ? 'IDEMPOTENT' : 'SUCCESS';
         log(configuration, 'freezeIdentityConflict', code.toLowerCase(), startedAt, {
           uidHash: callerHash, operatorHash, replayClass: result.replay === true ? 'exact-replay' : 'first-write'

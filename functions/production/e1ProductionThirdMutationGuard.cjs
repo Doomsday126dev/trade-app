@@ -15,6 +15,7 @@ const {
   ALLOWED_OPERATIONS,
   CANDIDATE_POOL_POLICY,
   COHORT_SIZE,
+  CONTINUATION_ACCEPTED_USAGE,
   CONTINUATION_ARTIFACT_PURPOSE,
   CONTINUATION_COMPLETED_PREFIX,
   CONTINUATION_COUNT_SEQUENCE,
@@ -42,6 +43,7 @@ const {
   continuationArtifactDigest,
   continuationJitDigest,
   continuationPreflightDigest,
+  continuationProgress,
   readinessContract,
   sha256,
   subjectBindingDigest,
@@ -154,7 +156,7 @@ const CONTINUATION_FIELDS = Object.freeze([
   'schemaVersion', 'purpose', 'environment', 'projectId', 'projectNumber', 'region', 'databaseId', 'rtdbDatabaseUrl',
   'productionRuntime', 'appId', 'approvalGroup', 'cohortStage', 'cohortType', 'evidencePurpose', 'candidatePoolDigest',
   'bindingFileSha', 'bindingDigest', 'historicalAdmission', 'interruptedSession', 'reconciliation', 'completedPrefix',
-  'nextOperation', 'currentState', 'candidateState', 'remainingSequence', 'expectedCountSequence', 'remainingBudget', 'currentGates',
+  'acceptedUsage', 'nextOperation', 'currentState', 'candidateState', 'remainingSequence', 'expectedCountSequence', 'remainingBudget', 'currentGates',
   'runtimeProvenance', 'securityBoundary', 'writeBoundary', 'preflight', 'historicalEvidenceRecollectionRequired',
   'executionAuthorized', 'laterGroupsAuthorized', 'groupEAuthorized', 'artifactDigest'
 ]);
@@ -165,7 +167,8 @@ const CONTINUATION_HISTORY_FIELDS = Object.freeze([
 const CONTINUATION_SESSION_FIELDS = Object.freeze(['sessionIdHash', 'state', 'closedAt', 'closeReason']);
 const CONTINUATION_RECONCILIATION_FIELDS = Object.freeze([
   'evidenceDigest', 'executionLedgerDigest', 'verifiedAt', 'aReserveInvocations', 'aReplayInvocations',
-  'laterSlotInvocations'
+  'laterSlotInvocations', 'acceptedHistoricalRateLimitReplayWrites', 'remainingRateLimitReplayWrites',
+  'previousStateFingerprint', 'currentStateFingerprint'
 ]);
 const CONTINUATION_STATE_FIELDS = Object.freeze([
   'totalDocuments', 'accounts', 'trainerHandles', 'rateLimits', 'operationRequests', 'identityMigrations',
@@ -181,11 +184,11 @@ const CONTINUATION_JIT_FIELDS = Object.freeze([
   'schemaVersion', 'purpose', 'continuationArtifactDigest', 'continuationPreflightDigest',
   'continuationContractSourceSha', 'approvedAt', 'entryEvidenceExpiresAt', 'humanOperator', 'teardownOwner',
   'approvalAcknowledged', 'teardownOwnerAcknowledged', 'mutationWindow', 'nextOperation', 'remainingSequence', 'expectedCountSequence',
-  'remainingBudget', 'activationGatePlan', 'restorationGatePlan', 'executionAuthorized', 'laterGroupsAuthorized',
+  'acceptedUsage', 'remainingBudget', 'activationGatePlan', 'restorationGatePlan', 'executionAuthorized', 'laterGroupsAuthorized',
   'groupEAuthorized', 'jitDigest'
 ]);
 const CONTINUATION_OBSERVATION_START_FIELDS = Object.freeze([
-  'completedSuffixOperations', 'finalCounts', 'finalStateDigest', 'gatesRestored', 'securityBoundary',
+  'completedSuffixOperations', 'acceptedUsage', 'remainingBudget', 'finalCounts', 'finalStateDigest', 'gatesRestored', 'securityBoundary',
   'anomaliesAbsent', 'startedAt', 'observationHours', 'groupEAuthorized'
 ]);
 
@@ -569,7 +572,7 @@ function validateContinuationCandidateState(states, binding, errors) {
       if (state.accountState !== 'present-owned' || state.handleState !== 'present-owned' ||
           state.rateLimitState !== 'present-valid' || state.operationRequestCount !== 1 ||
           state.ownershipReciprocal !== true || state.requestBindingVerified !== true ||
-          state.replayEvidenceCount !== 0) {
+          state.replayEvidenceCount !== 1) {
         errors.push('group_d3_continuation_candidate_a_state_invalid');
       }
     } else if (state.accountState !== 'absent' || state.handleState !== 'absent' ||
@@ -630,17 +633,22 @@ function validateThirdMutationContinuationArtifact(value, context = {}, options 
   }
   if (!exactFields(session, CONTINUATION_SESSION_FIELDS) || !HASH.test(session?.sessionIdHash || '') ||
       session.state !== 'paused-closed' || !Number.isFinite(closedAt) ||
-      session.closeReason !== 'browser-result-handoff-failure-after-durable-commit') {
+      session.closeReason !== 'accepted-a-replay-rate-limit-rollover-after-authoritative-reconciliation') {
     errors.push('group_d3_continuation_session_invalid');
   }
   if (!exactFields(reconciliation, CONTINUATION_RECONCILIATION_FIELDS) ||
       reconciliation.evidenceDigest !== CONTINUATION_PINS.reconciliationEvidenceDigest ||
       reconciliation.executionLedgerDigest !== CONTINUATION_PINS.executionLedgerDigest ||
       !Number.isFinite(reconciledAt) || reconciledAt > now || reconciliation.aReserveInvocations !== 1 ||
-      reconciliation.aReplayInvocations !== 0 || reconciliation.laterSlotInvocations !== 0) {
+      reconciliation.aReplayInvocations !== 1 || reconciliation.laterSlotInvocations !== 0 ||
+      reconciliation.acceptedHistoricalRateLimitReplayWrites !== 1 ||
+      reconciliation.remainingRateLimitReplayWrites !== 0 ||
+      reconciliation.previousStateFingerprint !== CONTINUATION_COMPLETED_PREFIX[0].stateFingerprint ||
+      reconciliation.currentStateFingerprint !== CONTINUATION_STATE_FINGERPRINT) {
     errors.push('group_d3_continuation_reconciliation_invalid');
   }
   if (!sameJson(value?.completedPrefix, CONTINUATION_COMPLETED_PREFIX) ||
+      !sameJson(value?.acceptedUsage, CONTINUATION_ACCEPTED_USAGE) ||
       !sameJson(value?.nextOperation, CONTINUATION_REMAINING_SEQUENCE[0])) {
     errors.push('group_d3_continuation_prefix_or_next_invalid');
   }
@@ -677,11 +685,12 @@ function validateThirdMutationContinuationArtifact(value, context = {}, options 
   }
   return Object.freeze({
     ok: true,
-    mode: 'reconciled-a-reserve-continuation-preflight',
+    mode: 'reconciled-a-reserve-and-replay-continuation-preflight',
     continuationArtifactDigest: value.artifactDigest,
     continuationPreflightDigest: preflight.digest,
     historicalEvidenceRecollectionRequired: false,
     completedPrefix: CONTINUATION_COMPLETED_PREFIX,
+    acceptedUsage: CONTINUATION_ACCEPTED_USAGE,
     nextOperation: CONTINUATION_REMAINING_SEQUENCE[0],
     remainingSequence: CONTINUATION_REMAINING_SEQUENCE,
     remainingBudget: CONTINUATION_REMAINING_BUDGET,
@@ -712,6 +721,7 @@ function validateThirdMutationContinuationJit(value, artifactResult, expectedSou
       !sameJson(value.nextOperation, CONTINUATION_REMAINING_SEQUENCE[0]) ||
       !sameJson(value.remainingSequence, CONTINUATION_REMAINING_SEQUENCE) ||
       !sameJson(value.expectedCountSequence, CONTINUATION_COUNT_SEQUENCE) ||
+      !sameJson(value.acceptedUsage, CONTINUATION_ACCEPTED_USAGE) ||
       !sameJson(value.remainingBudget, CONTINUATION_REMAINING_BUDGET) ||
       !sameJson(value.activationGatePlan, activationGatePlan()) ||
       !sameJson(value.restorationGatePlan, disabledGatePlan()) || value.executionAuthorized !== true ||
@@ -729,6 +739,7 @@ function validateThirdMutationContinuationJit(value, artifactResult, expectedSou
     executionAuthorized: true,
     nextOperation: CONTINUATION_REMAINING_SEQUENCE[0],
     remainingSequence: CONTINUATION_REMAINING_SEQUENCE,
+    acceptedUsage: CONTINUATION_ACCEPTED_USAGE,
     mutationWindowStart: value.mutationWindow.startAt,
     mutationWindowEnd: value.mutationWindow.endAt,
     entryEvidenceExpiresAt: value.entryEvidenceExpiresAt,
@@ -740,8 +751,11 @@ function validateThirdMutationContinuationJit(value, artifactResult, expectedSou
 function validateThirdMutationContinuationObservationStart(value, options = {}) {
   const now = options.now ? options.now() : Date.now();
   const startedAt = Date.parse(value?.startedAt);
+  const completedProgress = continuationProgress(CONTINUATION_REMAINING_SEQUENCE.length);
   if (!exactFields(value, CONTINUATION_OBSERVATION_START_FIELDS) ||
       value.completedSuffixOperations !== CONTINUATION_REMAINING_SEQUENCE.length ||
+      !sameJson(value.acceptedUsage, CONTINUATION_ACCEPTED_USAGE) ||
+      !sameJson(value.remainingBudget, completedProgress.remainingBudget) ||
       !sameJson(value.finalCounts, FINAL_COUNTS) || !HASH.test(value.finalStateDigest || '') ||
       !sameJson(value.gatesRestored, disabledGatePlan()) || !validSecurityBoundary(value.securityBoundary) ||
       value.anomaliesAbsent !== true || !Number.isFinite(startedAt) || startedAt > now || now - startedAt > 60_000 ||
@@ -839,7 +853,7 @@ function guardProductionThirdMutationContinuation(options = {}) {
     approvalGroup: 'D',
     cohortStage: 'D3',
     deploymentMode: 'continuation',
-    mode: 'reconciled-a-reserve-continuation',
+    mode: 'reconciled-a-reserve-and-replay-continuation',
     environment: 'production',
     cohortType: SYNTHETIC_COHORT_TYPE,
     evidencePurpose: EXECUTION_EVIDENCE_PURPOSE,
@@ -850,6 +864,7 @@ function guardProductionThirdMutationContinuation(options = {}) {
     executionAuthorized: true,
     nextOperation: jitResult.nextOperation,
     remainingSequence: jitResult.remainingSequence,
+    acceptedUsage: CONTINUATION_ACCEPTED_USAGE,
     remainingBudget: CONTINUATION_REMAINING_BUDGET,
     currentDocumentCount: 16,
     sourceSha: options.expectedSourceSha,
