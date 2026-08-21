@@ -16,6 +16,15 @@ const {
 const {
   ALLOWED_OPERATIONS,
   CANDIDATE_POOL_POLICY,
+  CONTINUATION_ARTIFACT_PURPOSE,
+  CONTINUATION_COMPLETED_PREFIX,
+  CONTINUATION_COUNT_SEQUENCE,
+  CONTINUATION_JIT_PURPOSE,
+  CONTINUATION_PINS,
+  CONTINUATION_PRODUCTION_RUNTIME,
+  CONTINUATION_REMAINING_BUDGET,
+  CONTINUATION_REMAINING_SEQUENCE,
+  CONTINUATION_STATE_FINGERPRINT,
   D2_BASELINE,
   ENTRY_EVIDENCE_MAX_AGE_MS,
   EXECUTION_SEQUENCE,
@@ -31,6 +40,9 @@ const {
   SYNTHETIC_COHORT_TYPE,
   candidatePoolDigest,
   canonicalCandidateOrder,
+  continuationArtifactDigest,
+  continuationJitDigest,
+  continuationPreflightDigest,
   expectedDocumentCount,
   readinessContract,
   subjectBindingDigest,
@@ -46,6 +58,8 @@ const {
   requestIdHash,
   subjectHashesFor,
   validateCandidatePoolArtifact,
+  validateThirdMutationContinuationArtifact,
+  validateThirdMutationContinuationJit,
   validateThirdMutationAcceptance
 } = require('../production/e1ProductionThirdMutationGuard.cjs');
 const {
@@ -321,7 +335,7 @@ function fixture(subjects = poolSubjects()) {
     readinessContract: readinessContract(SOURCE_SHA),
     requestedOperations: ALLOWED_OPERATIONS,
     d2Baseline: D2_BASELINE,
-    currentGates: disabledGatePlan(),
+    currentGates: structuredClone(disabledGatePlan()),
     activationGatePlan: activationGatePlan(),
     restorationGatePlan: disabledGatePlan(),
     runtimeProvenance,
@@ -392,6 +406,145 @@ function runGuard(values = fixture()) {
       expectedSourceSha: SOURCE_SHA
     });
   } finally { fs.rmSync(directory, { recursive: true, force: true }); }
+}
+
+function continuationFixture() {
+  const values = fixture();
+  values.binding.bindingDigest = CONTINUATION_PINS.bindingDigest;
+  values.binding.candidatePoolDigest = CONTINUATION_PINS.candidatePoolDigest;
+  const candidateState = values.binding.candidates.map((candidateValue, index) => ({
+    slot: candidateValue.slot,
+    uidHash: candidateValue.subjectHashes.uidHash,
+    trainerHash: candidateValue.subjectHashes.trainerHash,
+    handleKey: candidateValue.handle.handleKey,
+    requestIdHash: candidateValue.request.requestIdHash,
+    requestBodyHash: candidateValue.request.requestBodyHash,
+    foundationFingerprint: candidateValue.request.foundationFingerprint,
+    rateLimitDocumentPath: candidateValue.request.rateLimitDocumentPath,
+    accountState: index === 0 ? 'present-owned' : 'absent',
+    handleState: index === 0 ? 'present-owned' : 'absent',
+    rateLimitState: index === 0 ? 'present-valid' : 'absent',
+    operationRequestCount: index === 0 ? 1 : 0,
+    ownershipReciprocal: index === 0,
+    requestBindingVerified: index === 0,
+    replayEvidenceCount: 0
+  }));
+  const artifact = {
+    schemaVersion: 1,
+    purpose: CONTINUATION_ARTIFACT_PURPOSE,
+    environment: 'production',
+    projectId: 'trade-list-a4297',
+    projectNumber: '1053781218847',
+    region: 'us-central1',
+    databaseId: 'phase-e-identity',
+    rtdbDatabaseUrl: 'https://trade-list-a4297-default-rtdb.firebaseio.com',
+    productionRuntime: structuredClone(CONTINUATION_PRODUCTION_RUNTIME),
+    appId: EXPECTED_APP_ID,
+    approvalGroup: 'D',
+    cohortStage: 'D3',
+    cohortType: SYNTHETIC_COHORT_TYPE,
+    evidencePurpose: EXECUTION_EVIDENCE_PURPOSE,
+    candidatePoolDigest: CONTINUATION_PINS.candidatePoolDigest,
+    bindingFileSha: CONTINUATION_PINS.bindingFileSha,
+    bindingDigest: CONTINUATION_PINS.bindingDigest,
+    historicalAdmission: {
+      admittedAt: '2026-08-15T14:56:00.000Z',
+      browserHarnessDigest: CONTINUATION_PINS.browserHarnessDigest,
+      browserHarnessFileSha: CONTINUATION_PINS.browserHarnessFileSha,
+      initialJitDigest: CONTINUATION_PINS.initialJitDigest,
+      initialReadinessDigest: CONTINUATION_PINS.initialReadinessDigest,
+      initialGuardDigest: CONTINUATION_PINS.initialGuardDigest,
+      originalEvidenceValidAtAdmission: true
+    },
+    interruptedSession: {
+      sessionIdHash: '7'.repeat(64),
+      state: 'paused-closed',
+      closedAt: '2026-08-15T14:57:00.000Z',
+      closeReason: 'browser-result-handoff-failure-after-durable-commit'
+    },
+    reconciliation: {
+      evidenceDigest: CONTINUATION_PINS.reconciliationEvidenceDigest,
+      executionLedgerDigest: CONTINUATION_PINS.executionLedgerDigest,
+      verifiedAt: '2026-08-15T14:58:00.000Z',
+      aReserveInvocations: 1,
+      aReplayInvocations: 0,
+      laterSlotInvocations: 0
+    },
+    completedPrefix: structuredClone(CONTINUATION_COMPLETED_PREFIX),
+    nextOperation: structuredClone(CONTINUATION_REMAINING_SEQUENCE[0]),
+    currentState: {
+      totalDocuments: 16,
+      accounts: 4,
+      trainerHandles: 4,
+      rateLimits: 4,
+      operationRequests: 4,
+      identityMigrations: 0,
+      identityConflicts: 0,
+      unexpectedPaths: 0,
+      ordinaryUserEffects: 0,
+      canonicalFingerprint: CONTINUATION_STATE_FINGERPRINT
+    },
+    candidateState,
+    remainingSequence: structuredClone(CONTINUATION_REMAINING_SEQUENCE),
+    expectedCountSequence: structuredClone(CONTINUATION_COUNT_SEQUENCE),
+    remainingBudget: structuredClone(CONTINUATION_REMAINING_BUDGET),
+    currentGates: structuredClone(disabledGatePlan()),
+    runtimeProvenance: values.readiness.runtimeProvenance,
+    securityBoundary: values.input.securityBoundary,
+    writeBoundary: values.input.writeBoundary,
+    preflight: {
+      verifiedAt: '2026-08-15T14:59:00.000Z',
+      expiresAt: '2026-08-15T15:10:00.000Z',
+      digest: ''
+    },
+    historicalEvidenceRecollectionRequired: false,
+    executionAuthorized: false,
+    laterGroupsAuthorized: false,
+    groupEAuthorized: false,
+    artifactDigest: ''
+  };
+  artifact.preflight.digest = continuationPreflightDigest(artifact);
+  artifact.artifactDigest = continuationArtifactDigest(artifact);
+  const jit = {
+    schemaVersion: 1,
+    purpose: CONTINUATION_JIT_PURPOSE,
+    continuationArtifactDigest: artifact.artifactDigest,
+    continuationPreflightDigest: artifact.preflight.digest,
+    continuationContractSourceSha: SOURCE_SHA,
+    approvedAt: '2026-08-15T14:59:30.000Z',
+    entryEvidenceExpiresAt: '2026-08-15T15:10:00.000Z',
+    humanOperator: 'primary-operator',
+    teardownOwner: 'primary-operator',
+    approvalAcknowledged: true,
+    teardownOwnerAcknowledged: true,
+    mutationWindow: { startAt: '2026-08-15T15:00:00.000Z', endAt: '2026-08-15T16:30:00.000Z' },
+    nextOperation: structuredClone(CONTINUATION_REMAINING_SEQUENCE[0]),
+    remainingSequence: structuredClone(CONTINUATION_REMAINING_SEQUENCE),
+    expectedCountSequence: structuredClone(CONTINUATION_COUNT_SEQUENCE),
+    remainingBudget: structuredClone(CONTINUATION_REMAINING_BUDGET),
+    activationGatePlan: activationGatePlan(),
+    restorationGatePlan: disabledGatePlan(),
+    executionAuthorized: true,
+    laterGroupsAuthorized: false,
+    groupEAuthorized: false,
+    jitDigest: ''
+  };
+  jit.jitDigest = continuationJitDigest(jit);
+  return { artifact, binding: values.binding, manifest: JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf8')), jit };
+}
+
+function refreshContinuationDigests(value) {
+  value.preflight.digest = continuationPreflightDigest(value);
+  value.artifactDigest = continuationArtifactDigest(value);
+  return value;
+}
+
+function validateContinuation(values = continuationFixture()) {
+  return validateThirdMutationContinuationArtifact(values.artifact, {
+    manifest: values.manifest,
+    binding: values.binding,
+    historicalAdmissionVerified: true
+  }, { now: () => NOW });
 }
 
 function validatePool(pool = candidatePool(), mode = 0o600) {
@@ -619,6 +772,97 @@ test('exact five-subject private binding and authorized preflight pass without c
   assert.equal(result.cloudOperations, 0);
   assert.equal(result.groupEAuthorized, false);
 });
+
+test('exact reconciled A-reserve continuation passes preflight and authorizes only A replay after fresh JIT', () => {
+  const values = continuationFixture();
+  const artifactResult = validateContinuation(values);
+  assert.equal(artifactResult.ok, true);
+  assert.equal(artifactResult.currentDocumentCount, 16);
+  assert.deepEqual(artifactResult.completedPrefix, CONTINUATION_COMPLETED_PREFIX);
+  assert.deepEqual(artifactResult.nextOperation, { slot: 'A', operation: 'exact-replay' });
+  assert.equal(artifactResult.executionAuthorized, false);
+  assert.equal(artifactResult.historicalEvidenceRecollectionRequired, false);
+  const jitResult = validateThirdMutationContinuationJit(values.jit, artifactResult, SOURCE_SHA, { now: () => NOW });
+  assert.equal(jitResult.executionAuthorized, true);
+  assert.deepEqual(jitResult.nextOperation, { slot: 'A', operation: 'exact-replay' });
+  assert.equal(jitResult.remainingSequence.length, 9);
+  assert.equal(jitResult.groupEAuthorized, false);
+});
+
+test('original clean-start guard remains the unchanged 12-document all-targets-absent mode', () => {
+  const result = runGuard();
+  assert.equal(result.d2BaselineVerified, true);
+  assert.equal(result.targetedAbsenceVerified, true);
+  assert.deepEqual(result.expectedCountSequence, EXPECTED_COUNT_SEQUENCE);
+  assert.equal(result.expectedCountSequence[0], 12);
+});
+
+for (const [name, mutate, reason] of [
+  ['empty completed prefix', (value) => { value.completedPrefix = []; }, 'group_d3_continuation_prefix_or_next_invalid'],
+  ['extra completed operation', (value) => { value.completedPrefix.push({ slot: 'A', operation: 'exact-replay' }); }, 'group_d3_continuation_prefix_or_next_invalid'],
+  ['A reserve eligible again', (value) => { value.nextOperation = { slot: 'A', operation: 'reserve' }; }, 'group_d3_continuation_prefix_or_next_invalid'],
+  ['skipped next operation', (value) => { value.nextOperation = { slot: 'B', operation: 'reserve' }; }, 'group_d3_continuation_prefix_or_next_invalid'],
+  ['12 documents', (value) => { value.currentState.totalDocuments = 12; }, 'group_d3_continuation_current_state_invalid'],
+  ['15 documents', (value) => { value.currentState.totalDocuments = 15; }, 'group_d3_continuation_current_state_invalid'],
+  ['17 documents', (value) => { value.currentState.totalDocuments = 17; }, 'group_d3_continuation_current_state_invalid'],
+  ['wrong family composition', (value) => { value.currentState.accounts = 5; value.currentState.trainerHandles = 3; }, 'group_d3_continuation_current_state_invalid'],
+  ['wrong state fingerprint', (value) => { value.currentState.canonicalFingerprint = 'f'.repeat(64); }, 'group_d3_continuation_current_state_invalid'],
+  ['A ownership mismatch', (value) => { value.candidateState[0].ownershipReciprocal = false; }, 'group_d3_continuation_candidate_a_state_invalid'],
+  ['A subject mismatch', (value) => { value.candidateState[0].uidHash = 'f'.repeat(64); }, 'group_d3_continuation_candidate_a_binding_invalid'],
+  ['A handle mismatch', (value) => { value.candidateState[0].handleKey = 'v1_00'; }, 'group_d3_continuation_candidate_a_binding_invalid'],
+  ['A request binding mismatch', (value) => { value.candidateState[0].requestBodyHash = 'f'.repeat(64); }, 'group_d3_continuation_candidate_a_binding_invalid'],
+  ['A operation request absent', (value) => { value.candidateState[0].operationRequestCount = 0; }, 'group_d3_continuation_candidate_a_state_invalid'],
+  ['A operation request duplicated', (value) => { value.candidateState[0].operationRequestCount = 2; }, 'group_d3_continuation_candidate_a_state_invalid'],
+  ['A replay evidence present', (value) => { value.candidateState[0].replayEvidenceCount = 1; }, 'group_d3_continuation_candidate_a_state_invalid'],
+  ['B target present', (value) => { value.candidateState[1].accountState = 'present-owned'; }, 'group_d3_continuation_candidate_b_state_invalid'],
+  ['reconciliation digest mismatch', (value) => { value.reconciliation.evidenceDigest = 'f'.repeat(64); }, 'group_d3_continuation_reconciliation_invalid'],
+  ['execution ledger mismatch', (value) => { value.reconciliation.executionLedgerDigest = 'f'.repeat(64); }, 'group_d3_continuation_reconciliation_invalid'],
+  ['historical harness mismatch', (value) => { value.historicalAdmission.browserHarnessDigest = 'f'.repeat(64); }, 'group_d3_continuation_historical_admission_invalid'],
+  ['historical JIT mismatch', (value) => { value.historicalAdmission.initialJitDigest = 'f'.repeat(64); }, 'group_d3_continuation_historical_admission_invalid'],
+  ['historical guard mismatch', (value) => { value.historicalAdmission.initialGuardDigest = 'f'.repeat(64); }, 'group_d3_continuation_historical_admission_invalid'],
+  ['release drift', (value) => { value.productionRuntime.releaseId = '2026-08-20.52'; }, 'group_d3_continuation_schema_or_target_invalid'],
+  ['source drift', (value) => { value.productionRuntime.sourceSha = 'f'.repeat(40); }, 'group_d3_continuation_schema_or_target_invalid'],
+  ['app drift', (value) => { value.appId = 'wrong-app'; }, 'group_d3_continuation_schema_or_target_invalid'],
+  ['cohort drift', (value) => { value.cohortType = 'ordinary-users'; }, 'group_d3_continuation_schema_or_target_invalid'],
+  ['binding drift', (value) => { value.bindingDigest = 'f'.repeat(64); }, 'group_d3_continuation_schema_or_target_invalid'],
+  ['stale preflight', (value) => { value.preflight.verifiedAt = '2026-08-15T14:40:00.000Z'; value.preflight.expiresAt = '2026-08-15T14:55:00.000Z'; }, 'group_d3_continuation_preflight_invalid'],
+  ['enabled starting gate', (value) => { value.currentGates.RESERVE_HANDLE_ENABLED = true; }, 'group_d3_continuation_gates_not_disabled'],
+  ['authority revision drift', (value) => { value.runtimeProvenance.authorityRevision = 'wrong'; }, 'group_d3_continuation_runtime_or_isolation_invalid'],
+  ['public authority', (value) => { value.securityBoundary.publicAuthorityInvoker = true; }, 'group_d3_continuation_runtime_or_isolation_invalid'],
+  ['unexpected path', (value) => { value.currentState.unexpectedPaths = 1; }, 'group_d3_continuation_current_state_invalid'],
+  ['identity conflict', (value) => { value.currentState.identityConflicts = 1; }, 'group_d3_continuation_current_state_invalid'],
+  ['identity migration', (value) => { value.currentState.identityMigrations = 1; }, 'group_d3_continuation_current_state_invalid'],
+  ['ordinary-user effect', (value) => { value.currentState.ordinaryUserEffects = 1; }, 'group_d3_continuation_current_state_invalid'],
+  ['expanded mutation budget', (value) => { value.remainingBudget.firstWriteSubjects = 5; }, 'group_d3_continuation_sequence_or_budget_invalid'],
+  ['reordered suffix', (value) => { [value.remainingSequence[1], value.remainingSequence[2]] = [value.remainingSequence[2], value.remainingSequence[1]]; }, 'group_d3_continuation_sequence_or_budget_invalid'],
+  ['skipped count state', (value) => { value.expectedCountSequence.splice(1, 1); }, 'group_d3_continuation_sequence_or_budget_invalid']
+]) {
+  test(`D3 continuation fails closed for ${name}`, () => {
+    const values = continuationFixture();
+    mutate(values.artifact);
+    refreshContinuationDigests(values.artifact);
+    assert.throws(() => validateContinuation(values), (error) => error.reasons.includes(reason));
+  });
+}
+
+for (const [name, mutate] of [
+  ['missing fresh JIT', (value) => { value.schemaVersion = 0; }],
+  ['stale JIT', (value) => { value.approvedAt = '2026-08-15T14:40:00.000Z'; value.entryEvidenceExpiresAt = '2026-08-15T14:55:00.000Z'; }],
+  ['wrong contract source', (value) => { value.continuationContractSourceSha = 'f'.repeat(40); }],
+  ['A reserve next', (value) => { value.nextOperation = { slot: 'A', operation: 'reserve' }; }],
+  ['skipped JIT suffix', (value) => { value.remainingSequence.shift(); }],
+  ['skipped JIT count state', (value) => { value.expectedCountSequence.shift(); }],
+  ['expanded JIT budget', (value) => { value.remainingBudget.gatewayCalls = 10; }]
+]) {
+  test(`D3 continuation JIT fails closed for ${name}`, () => {
+    const values = continuationFixture();
+    const artifactResult = validateContinuation(values);
+    mutate(values.jit);
+    values.jit.jitDigest = continuationJitDigest(values.jit);
+    assert.throws(() => validateThirdMutationContinuationJit(values.jit, artifactResult, SOURCE_SHA, { now: () => NOW }),
+      /continuation-jit-failed/u);
+  });
+}
 
 test('D3 entry evidence is required at enable but is not a post-enable lease', () => {
   const exactBoundary = fixture();

@@ -15,6 +15,15 @@ const {
   ALLOWED_OPERATIONS,
   CANDIDATE_POOL_POLICY,
   COHORT_SIZE,
+  CONTINUATION_ARTIFACT_PURPOSE,
+  CONTINUATION_COMPLETED_PREFIX,
+  CONTINUATION_COUNT_SEQUENCE,
+  CONTINUATION_JIT_PURPOSE,
+  CONTINUATION_PINS,
+  CONTINUATION_PRODUCTION_RUNTIME,
+  CONTINUATION_REMAINING_BUDGET,
+  CONTINUATION_REMAINING_SEQUENCE,
+  CONTINUATION_STATE_FINGERPRINT,
   D2_BASELINE,
   ENTRY_EVIDENCE_MAX_AGE_MS,
   ELIGIBILITY_FIELDS,
@@ -30,6 +39,9 @@ const {
   SYNTHETIC_COHORT_TYPE,
   candidatePoolDigest,
   canonicalCandidateOrder,
+  continuationArtifactDigest,
+  continuationJitDigest,
+  continuationPreflightDigest,
   readinessContract,
   sha256,
   subjectBindingDigest,
@@ -45,6 +57,10 @@ const PRIVATE_BINDING_PATH = path.resolve(__dirname, '../.local/e1-production-th
 const PRIVATE_READINESS_PATH = path.resolve(__dirname, '../.local/e1-production-third-mutation-activation.json');
 const PRIVATE_INPUT_PATH = path.resolve(__dirname, '../.local/e1-production-third-mutation-guard-input.json');
 const PRIVATE_BROWSER_HARNESS_PATH = path.resolve(__dirname, '../.local/e1-production-third-mutation-browser-harness.json');
+const PRIVATE_SYNTHETIC_CANDIDATE_POOL_PATH = path.resolve(__dirname, '../.local/e1-production-third-mutation-candidate-pool-synthetic.json');
+const PRIVATE_SYNTHETIC_BINDING_PATH = path.resolve(__dirname, '../.local/e1-production-third-mutation-subjects-synthetic.json');
+const PRIVATE_CONTINUATION_PATH = path.resolve(__dirname, '../.local/e1-production-third-mutation-continuation.json');
+const PRIVATE_CONTINUATION_JIT_PATH = path.resolve(__dirname, '../.local/e1-production-third-mutation-continuation-activation.json');
 const MAX_WINDOW_MS = 2 * 60 * 60 * 1000;
 const MAX_EVIDENCE_AGE_MS = ENTRY_EVIDENCE_MAX_AGE_MS;
 const SLOTS = Object.freeze(['A', 'B', 'C', 'D', 'E']);
@@ -134,6 +150,40 @@ const OBSERVATION_FIELDS = Object.freeze([
   'startAt', 'endAt', 'durationHours', 'completed', 'healthy', 'stateDigestAccepted', 'familyCountsVerified',
   'migrationConflictAbsent', 'serviceAuthAnomaliesAbsent', 'privacyIamDriftAbsent', 'costLogAnomaliesAbsent'
 ]);
+const CONTINUATION_FIELDS = Object.freeze([
+  'schemaVersion', 'purpose', 'environment', 'projectId', 'projectNumber', 'region', 'databaseId', 'rtdbDatabaseUrl',
+  'productionRuntime', 'appId', 'approvalGroup', 'cohortStage', 'cohortType', 'evidencePurpose', 'candidatePoolDigest',
+  'bindingFileSha', 'bindingDigest', 'historicalAdmission', 'interruptedSession', 'reconciliation', 'completedPrefix',
+  'nextOperation', 'currentState', 'candidateState', 'remainingSequence', 'expectedCountSequence', 'remainingBudget', 'currentGates',
+  'runtimeProvenance', 'securityBoundary', 'writeBoundary', 'preflight', 'historicalEvidenceRecollectionRequired',
+  'executionAuthorized', 'laterGroupsAuthorized', 'groupEAuthorized', 'artifactDigest'
+]);
+const CONTINUATION_HISTORY_FIELDS = Object.freeze([
+  'admittedAt', 'browserHarnessDigest', 'browserHarnessFileSha', 'initialJitDigest', 'initialReadinessDigest',
+  'initialGuardDigest', 'originalEvidenceValidAtAdmission'
+]);
+const CONTINUATION_SESSION_FIELDS = Object.freeze(['sessionIdHash', 'state', 'closedAt', 'closeReason']);
+const CONTINUATION_RECONCILIATION_FIELDS = Object.freeze([
+  'evidenceDigest', 'executionLedgerDigest', 'verifiedAt', 'aReserveInvocations', 'aReplayInvocations',
+  'laterSlotInvocations'
+]);
+const CONTINUATION_STATE_FIELDS = Object.freeze([
+  'totalDocuments', 'accounts', 'trainerHandles', 'rateLimits', 'operationRequests', 'identityMigrations',
+  'identityConflicts', 'unexpectedPaths', 'ordinaryUserEffects', 'canonicalFingerprint'
+]);
+const CONTINUATION_CANDIDATE_STATE_FIELDS = Object.freeze([
+  'slot', 'uidHash', 'trainerHash', 'handleKey', 'requestIdHash', 'requestBodyHash', 'foundationFingerprint',
+  'rateLimitDocumentPath', 'accountState', 'handleState', 'rateLimitState', 'operationRequestCount',
+  'ownershipReciprocal', 'requestBindingVerified', 'replayEvidenceCount'
+]);
+const CONTINUATION_PREFLIGHT_FIELDS = Object.freeze(['verifiedAt', 'expiresAt', 'digest']);
+const CONTINUATION_JIT_FIELDS = Object.freeze([
+  'schemaVersion', 'purpose', 'continuationArtifactDigest', 'continuationPreflightDigest',
+  'continuationContractSourceSha', 'approvedAt', 'entryEvidenceExpiresAt', 'humanOperator', 'teardownOwner',
+  'approvalAcknowledged', 'teardownOwnerAcknowledged', 'mutationWindow', 'nextOperation', 'remainingSequence', 'expectedCountSequence',
+  'remainingBudget', 'activationGatePlan', 'restorationGatePlan', 'executionAuthorized', 'laterGroupsAuthorized',
+  'groupEAuthorized', 'jitDigest'
+]);
 
 function sameValues(actual, expected) {
   return Array.isArray(actual) && actual.length === expected.length &&
@@ -154,6 +204,10 @@ function privateMode(file) {
 
 function readJson(file) {
   return JSON.parse(fs.readFileSync(file, 'utf8'));
+}
+
+function fileSha256(file) {
+  return require('node:crypto').createHash('sha256').update(fs.readFileSync(file)).digest('hex');
 }
 
 function validIdentity(value) {
@@ -490,6 +544,292 @@ function validateThirdMutationAcceptance(value, options = {}) {
   });
 }
 
+function validateContinuationCandidateState(states, binding, errors) {
+  if (!Array.isArray(states) || states.length !== COHORT_SIZE) {
+    errors.push('group_d3_continuation_candidate_state_invalid');
+    return;
+  }
+  states.forEach((state, index) => {
+    const slot = SLOTS[index];
+    const candidate = binding?.candidates?.[index];
+    if (!exactFields(state, CONTINUATION_CANDIDATE_STATE_FIELDS) || state.slot !== slot ||
+        state.uidHash !== candidate?.subjectHashes?.uidHash || state.trainerHash !== candidate?.subjectHashes?.trainerHash ||
+        state.handleKey !== candidate?.handle?.handleKey || state.requestIdHash !== candidate?.request?.requestIdHash ||
+        state.requestBodyHash !== candidate?.request?.requestBodyHash ||
+        state.foundationFingerprint !== candidate?.request?.foundationFingerprint ||
+        state.rateLimitDocumentPath !== candidate?.request?.rateLimitDocumentPath) {
+      errors.push(`group_d3_continuation_candidate_${slot.toLowerCase()}_binding_invalid`);
+      return;
+    }
+    if (slot === 'A') {
+      if (state.accountState !== 'present-owned' || state.handleState !== 'present-owned' ||
+          state.rateLimitState !== 'present-valid' || state.operationRequestCount !== 1 ||
+          state.ownershipReciprocal !== true || state.requestBindingVerified !== true ||
+          state.replayEvidenceCount !== 0) {
+        errors.push('group_d3_continuation_candidate_a_state_invalid');
+      }
+    } else if (state.accountState !== 'absent' || state.handleState !== 'absent' ||
+        state.rateLimitState !== 'absent' || state.operationRequestCount !== 0 ||
+        state.ownershipReciprocal !== false || state.requestBindingVerified !== false ||
+        state.replayEvidenceCount !== 0) {
+      errors.push(`group_d3_continuation_candidate_${slot.toLowerCase()}_state_invalid`);
+    }
+  });
+}
+
+function validateThirdMutationContinuationArtifact(value, context = {}, options = {}) {
+  const errors = [];
+  const now = options.now ? options.now() : Date.now();
+  const manifest = context.manifest;
+  const binding = context.binding;
+  const history = value?.historicalAdmission;
+  const session = value?.interruptedSession;
+  const reconciliation = value?.reconciliation;
+  const state = value?.currentState;
+  const preflight = value?.preflight;
+  const preflightVerifiedAt = Date.parse(preflight?.verifiedAt);
+  const preflightExpiresAt = Date.parse(preflight?.expiresAt);
+  const closedAt = Date.parse(session?.closedAt);
+  const reconciledAt = Date.parse(reconciliation?.verifiedAt);
+
+  if (!exactFields(value, CONTINUATION_FIELDS) || value.schemaVersion !== 1 ||
+      value.purpose !== CONTINUATION_ARTIFACT_PURPOSE || value.environment !== 'production' ||
+      value.projectId !== 'trade-list-a4297' || value.projectNumber !== '1053781218847' ||
+      value.region !== 'us-central1' || value.databaseId !== 'phase-e-identity' ||
+      value.rtdbDatabaseUrl !== 'https://trade-list-a4297-default-rtdb.firebaseio.com' ||
+      !sameJson(value.productionRuntime, CONTINUATION_PRODUCTION_RUNTIME) || value.appId !== EXPECTED_APP_ID ||
+      value.approvalGroup !== 'D' || value.cohortStage !== 'D3' || value.cohortType !== SYNTHETIC_COHORT_TYPE ||
+      value.evidencePurpose !== EXECUTION_EVIDENCE_PURPOSE ||
+      value.candidatePoolDigest !== CONTINUATION_PINS.candidatePoolDigest ||
+      value.bindingFileSha !== CONTINUATION_PINS.bindingFileSha || value.bindingDigest !== CONTINUATION_PINS.bindingDigest ||
+      binding?.bindingDigest !== CONTINUATION_PINS.bindingDigest ||
+      binding?.candidatePoolDigest !== CONTINUATION_PINS.candidatePoolDigest ||
+      value.historicalEvidenceRecollectionRequired !== false || value.executionAuthorized !== false ||
+      value.laterGroupsAuthorized !== false || value.groupEAuthorized !== false) {
+    errors.push('group_d3_continuation_schema_or_target_invalid');
+  }
+  if (manifest && (manifest.environment !== 'production' || manifest.project?.id !== value?.projectId ||
+      manifest.project?.number !== value?.projectNumber || manifest.project?.region !== value?.region ||
+      manifest.firestore?.databaseId !== value?.databaseId || manifest.legacyRtdb?.url !== value?.rtdbDatabaseUrl ||
+      !sameJson(manifest.thirdMutation, EXPECTED_D3_MANIFEST))) {
+    errors.push('group_d3_continuation_manifest_invalid');
+  }
+  if (!exactFields(history, CONTINUATION_HISTORY_FIELDS) ||
+      !Number.isFinite(Date.parse(history?.admittedAt)) || Date.parse(history?.admittedAt) > now ||
+      history.browserHarnessDigest !== CONTINUATION_PINS.browserHarnessDigest ||
+      history.browserHarnessFileSha !== CONTINUATION_PINS.browserHarnessFileSha ||
+      history.initialJitDigest !== CONTINUATION_PINS.initialJitDigest ||
+      history.initialReadinessDigest !== CONTINUATION_PINS.initialReadinessDigest ||
+      history.initialGuardDigest !== CONTINUATION_PINS.initialGuardDigest ||
+      history.originalEvidenceValidAtAdmission !== true || context.historicalAdmissionVerified !== true) {
+    errors.push('group_d3_continuation_historical_admission_invalid');
+  }
+  if (!exactFields(session, CONTINUATION_SESSION_FIELDS) || !HASH.test(session?.sessionIdHash || '') ||
+      session.state !== 'paused-closed' || !Number.isFinite(closedAt) ||
+      session.closeReason !== 'browser-result-handoff-failure-after-durable-commit') {
+    errors.push('group_d3_continuation_session_invalid');
+  }
+  if (!exactFields(reconciliation, CONTINUATION_RECONCILIATION_FIELDS) ||
+      reconciliation.evidenceDigest !== CONTINUATION_PINS.reconciliationEvidenceDigest ||
+      reconciliation.executionLedgerDigest !== CONTINUATION_PINS.executionLedgerDigest ||
+      !Number.isFinite(reconciledAt) || reconciledAt > now || reconciliation.aReserveInvocations !== 1 ||
+      reconciliation.aReplayInvocations !== 0 || reconciliation.laterSlotInvocations !== 0) {
+    errors.push('group_d3_continuation_reconciliation_invalid');
+  }
+  if (!sameJson(value?.completedPrefix, CONTINUATION_COMPLETED_PREFIX) ||
+      !sameJson(value?.nextOperation, CONTINUATION_REMAINING_SEQUENCE[0])) {
+    errors.push('group_d3_continuation_prefix_or_next_invalid');
+  }
+  if (!exactFields(state, CONTINUATION_STATE_FIELDS) || state.totalDocuments !== 16 || state.accounts !== 4 ||
+      state.trainerHandles !== 4 || state.rateLimits !== 4 || state.operationRequests !== 4 ||
+      state.identityMigrations !== 0 || state.identityConflicts !== 0 || state.unexpectedPaths !== 0 ||
+      state.ordinaryUserEffects !== 0 || state.canonicalFingerprint !== CONTINUATION_STATE_FINGERPRINT) {
+    errors.push('group_d3_continuation_current_state_invalid');
+  }
+  validateContinuationCandidateState(value?.candidateState, binding, errors);
+  if (!sameJson(value?.remainingSequence, CONTINUATION_REMAINING_SEQUENCE) ||
+      !sameJson(value?.expectedCountSequence, CONTINUATION_COUNT_SEQUENCE) ||
+      !sameJson(value?.remainingBudget, CONTINUATION_REMAINING_BUDGET)) {
+    errors.push('group_d3_continuation_sequence_or_budget_invalid');
+  }
+  if (!sameJson(value?.currentGates, disabledGatePlan())) errors.push('group_d3_continuation_gates_not_disabled');
+  if (!validRuntimeProvenance(value?.runtimeProvenance, manifest) || !validSecurityBoundary(value?.securityBoundary)) {
+    errors.push('group_d3_continuation_runtime_or_isolation_invalid');
+  }
+  if (!validWriteBoundary(value?.writeBoundary)) errors.push('group_d3_continuation_write_boundary_invalid');
+  if (!exactFields(preflight, CONTINUATION_PREFLIGHT_FIELDS) || !Number.isFinite(preflightVerifiedAt) ||
+      !Number.isFinite(preflightExpiresAt) || preflightVerifiedAt > now || now >= preflightExpiresAt ||
+      preflightExpiresAt - preflightVerifiedAt > MAX_EVIDENCE_AGE_MS ||
+      preflight?.digest !== continuationPreflightDigest(value)) {
+    errors.push('group_d3_continuation_preflight_invalid');
+  }
+  if (value?.artifactDigest !== continuationArtifactDigest(value)) {
+    errors.push('group_d3_continuation_artifact_digest_invalid');
+  }
+  if (errors.length) {
+    const error = new Error('e1/production-third-mutation-continuation-artifact-failed');
+    error.reasons = Object.freeze([...new Set(errors)].sort());
+    throw error;
+  }
+  return Object.freeze({
+    ok: true,
+    mode: 'reconciled-a-reserve-continuation-preflight',
+    continuationArtifactDigest: value.artifactDigest,
+    continuationPreflightDigest: preflight.digest,
+    historicalEvidenceRecollectionRequired: false,
+    completedPrefix: CONTINUATION_COMPLETED_PREFIX,
+    nextOperation: CONTINUATION_REMAINING_SEQUENCE[0],
+    remainingSequence: CONTINUATION_REMAINING_SEQUENCE,
+    remainingBudget: CONTINUATION_REMAINING_BUDGET,
+    currentDocumentCount: 16,
+    executionAuthorized: false,
+    laterGroupsAuthorized: false,
+    groupEAuthorized: false,
+    cloudOperations: 0
+  });
+}
+
+function validateThirdMutationContinuationJit(value, artifactResult, expectedSourceSha, options = {}) {
+  const errors = [];
+  const now = options.now ? options.now() : Date.now();
+  const approvedAt = Date.parse(value?.approvedAt);
+  const expiresAt = Date.parse(value?.entryEvidenceExpiresAt);
+  const windowStart = Date.parse(value?.mutationWindow?.startAt);
+  const windowEnd = Date.parse(value?.mutationWindow?.endAt);
+  if (!exactFields(value, CONTINUATION_JIT_FIELDS) || value.schemaVersion !== 1 ||
+      value.purpose !== CONTINUATION_JIT_PURPOSE || value.continuationArtifactDigest !== artifactResult?.continuationArtifactDigest ||
+      value.continuationPreflightDigest !== artifactResult?.continuationPreflightDigest ||
+      value.continuationContractSourceSha !== expectedSourceSha || !/^[a-f0-9]{40}$/u.test(expectedSourceSha || '') ||
+      !Number.isFinite(approvedAt) || !Number.isFinite(expiresAt) || approvedAt > now || now >= expiresAt ||
+      expiresAt - approvedAt > MAX_EVIDENCE_AGE_MS || !Number.isFinite(windowStart) || !Number.isFinite(windowEnd) ||
+      windowStart > now || now >= windowEnd || windowStart < approvedAt || windowEnd - windowStart > MAX_WINDOW_MS ||
+      !validIdentity(value.humanOperator) || value.humanOperator !== value.teardownOwner ||
+      value.approvalAcknowledged !== true || value.teardownOwnerAcknowledged !== true ||
+      !sameJson(value.nextOperation, CONTINUATION_REMAINING_SEQUENCE[0]) ||
+      !sameJson(value.remainingSequence, CONTINUATION_REMAINING_SEQUENCE) ||
+      !sameJson(value.expectedCountSequence, CONTINUATION_COUNT_SEQUENCE) ||
+      !sameJson(value.remainingBudget, CONTINUATION_REMAINING_BUDGET) ||
+      !sameJson(value.activationGatePlan, activationGatePlan()) ||
+      !sameJson(value.restorationGatePlan, disabledGatePlan()) || value.executionAuthorized !== true ||
+      value.laterGroupsAuthorized !== false || value.groupEAuthorized !== false ||
+      value.jitDigest !== continuationJitDigest(value)) {
+    errors.push('group_d3_continuation_jit_invalid');
+  }
+  if (errors.length) {
+    const error = new Error('e1/production-third-mutation-continuation-jit-failed');
+    error.reasons = Object.freeze(errors);
+    throw error;
+  }
+  return Object.freeze({
+    ok: true,
+    executionAuthorized: true,
+    nextOperation: CONTINUATION_REMAINING_SEQUENCE[0],
+    remainingSequence: CONTINUATION_REMAINING_SEQUENCE,
+    mutationWindowStart: value.mutationWindow.startAt,
+    mutationWindowEnd: value.mutationWindow.endAt,
+    entryEvidenceExpiresAt: value.entryEvidenceExpiresAt,
+    laterGroupsAuthorized: false,
+    groupEAuthorized: false
+  });
+}
+
+function guardProductionThirdMutationContinuation(options = {}) {
+  const errors = [];
+  const now = options.now ? options.now() : Date.now();
+  const manifestPath = options.manifestPath || MANIFEST_PATH;
+  const candidatePoolPath = options.candidatePoolPath || PRIVATE_SYNTHETIC_CANDIDATE_POOL_PATH;
+  const bindingPath = options.bindingPath || PRIVATE_SYNTHETIC_BINDING_PATH;
+  const browserHarnessPath = options.browserHarnessPath || PRIVATE_BROWSER_HARNESS_PATH;
+  const continuationPath = options.continuationPath || PRIVATE_CONTINUATION_PATH;
+  const continuationJitPath = options.continuationJitPath || PRIVATE_CONTINUATION_JIT_PATH;
+  let manifest;
+  let candidatePool;
+  let binding;
+  let browserHarness;
+  let continuation;
+  let jit;
+  try { manifest = readJson(manifestPath); } catch { errors.push('production_manifest_missing_or_invalid'); }
+  try { candidatePool = readJson(candidatePoolPath); } catch { errors.push('group_d3_candidate_pool_missing_or_invalid'); }
+  try { binding = readJson(bindingPath); } catch { errors.push('group_d3_subject_binding_missing_or_invalid'); }
+  try { browserHarness = readJson(browserHarnessPath); } catch { errors.push('group_d3_browser_harness_missing_or_invalid'); }
+  try { continuation = readJson(continuationPath); } catch { errors.push('group_d3_continuation_missing_or_invalid'); }
+  try { jit = readJson(continuationJitPath); } catch { errors.push('group_d3_continuation_jit_missing_or_invalid'); }
+  for (const [file, reason] of [[candidatePoolPath, 'group_d3_candidate_pool_permissions_invalid'],
+    [bindingPath, 'group_d3_subject_binding_permissions_invalid'],
+    [browserHarnessPath, 'group_d3_browser_harness_permissions_invalid'],
+    [continuationPath, 'group_d3_continuation_permissions_invalid'],
+    [continuationJitPath, 'group_d3_continuation_jit_permissions_invalid']]) {
+    if (!privateMode(file)) errors.push(reason);
+  }
+  if (binding && fileSha256(bindingPath) !== CONTINUATION_PINS.bindingFileSha) errors.push('group_d3_continuation_binding_file_sha_invalid');
+  if (browserHarness && fileSha256(browserHarnessPath) !== CONTINUATION_PINS.browserHarnessFileSha) {
+    errors.push('group_d3_continuation_browser_harness_file_sha_invalid');
+  }
+  let poolResult;
+  try { poolResult = validateCandidatePoolArtifact(candidatePool, { now: () => now, candidatePoolPath }); }
+  catch (error) { errors.push(...(error.reasons || ['group_d3_candidate_pool_invalid'])); }
+  const historicalAt = Date.parse(continuation?.historicalAdmission?.admittedAt);
+  if (Number.isFinite(historicalAt)) {
+    const bindingEvidenceAt = Math.max(...(binding?.candidates || []).flatMap((candidate) => [
+      Date.parse(candidate.authEligibility?.verifiedAt),
+      Date.parse(candidate.targetedAuthorityState?.verifiedAt)
+    ]));
+    if (!Number.isFinite(bindingEvidenceAt) || bindingEvidenceAt > historicalAt) {
+      errors.push('group_d3_continuation_historical_binding_time_invalid');
+    } else {
+      validateBinding(binding, poolResult, bindingEvidenceAt,
+        bindingEvidenceAt - MAX_EVIDENCE_AGE_MS, errors);
+    }
+    try {
+      const harnessResult = validateBrowserHarnessArtifact(browserHarness, {
+        now: () => historicalAt,
+        harnessPath: browserHarnessPath
+      });
+      if (harnessResult.harnessDigest !== CONTINUATION_PINS.browserHarnessDigest ||
+          harnessResult.bindingDigest !== CONTINUATION_PINS.bindingDigest) {
+        errors.push('group_d3_continuation_historical_harness_invalid');
+      }
+    } catch (error) { errors.push(...(error.reasons || ['group_d3_continuation_historical_harness_invalid'])); }
+  } else {
+    errors.push('group_d3_continuation_historical_time_invalid');
+  }
+  let artifactResult;
+  try {
+    artifactResult = validateThirdMutationContinuationArtifact(continuation, {
+      manifest,
+      binding,
+      historicalAdmissionVerified: errors.length === 0
+    }, { now: () => now });
+  } catch (error) { errors.push(...(error.reasons || ['group_d3_continuation_artifact_invalid'])); }
+  let jitResult;
+  try { jitResult = validateThirdMutationContinuationJit(jit, artifactResult, options.expectedSourceSha, { now: () => now }); }
+  catch (error) { errors.push(...(error.reasons || ['group_d3_continuation_jit_invalid'])); }
+  if (errors.length) {
+    const error = new Error('e1/production-third-mutation-continuation-guard-failed');
+    error.reasons = Object.freeze([...new Set(errors)].sort());
+    throw error;
+  }
+  return Object.freeze({
+    ok: true,
+    approvalGroup: 'D',
+    cohortStage: 'D3',
+    mode: 'reconciled-a-reserve-continuation',
+    targetVerified: true,
+    historicalAdmissionVerified: true,
+    currentStateVerified: true,
+    historicalEvidenceRecollectionRequired: false,
+    executionAuthorized: true,
+    nextOperation: jitResult.nextOperation,
+    remainingSequence: jitResult.remainingSequence,
+    remainingBudget: CONTINUATION_REMAINING_BUDGET,
+    currentDocumentCount: 16,
+    sourceSha: options.expectedSourceSha,
+    laterGroupsAuthorized: false,
+    groupEAuthorized: false,
+    cloudOperations: 0
+  });
+}
+
 function guardProductionThirdMutation(input, options = {}) {
   const errors = [];
   const now = options.now ? options.now() : Date.now();
@@ -672,6 +1012,8 @@ module.exports = Object.freeze({
   CANDIDATE_POOL_FIELDS,
   CANDIDATE_POOL_SUBJECT_FIELDS,
   CANDIDATE_FIELDS,
+  CONTINUATION_FIELDS,
+  CONTINUATION_JIT_FIELDS,
   ENABLE_CONFIRMATION,
   INPUT_FIELDS,
   MANIFEST_PATH,
@@ -680,8 +1022,12 @@ module.exports = Object.freeze({
   PRIVATE_BINDING_PATH,
   PRIVATE_BROWSER_HARNESS_PATH,
   PRIVATE_CANDIDATE_POOL_PATH,
+  PRIVATE_CONTINUATION_JIT_PATH,
+  PRIVATE_CONTINUATION_PATH,
   PRIVATE_INPUT_PATH,
   PRIVATE_READINESS_PATH,
+  PRIVATE_SYNTHETIC_BINDING_PATH,
+  PRIVATE_SYNTHETIC_CANDIDATE_POOL_PATH,
   READINESS_FIELDS,
   RESTORE_CONFIRMATION,
   SLOTS,
@@ -689,9 +1035,12 @@ module.exports = Object.freeze({
   foundationFingerprint,
   entryEvidenceExpiresAt,
   guardProductionThirdMutation,
+  guardProductionThirdMutationContinuation,
   requestBodyHash,
   requestIdHash,
   subjectHashesFor,
   validateCandidatePoolArtifact,
+  validateThirdMutationContinuationArtifact,
+  validateThirdMutationContinuationJit,
   validateThirdMutationAcceptance
 });
