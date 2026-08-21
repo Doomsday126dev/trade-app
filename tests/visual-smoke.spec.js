@@ -1761,6 +1761,74 @@ test.describe('visual smoke', () => {
     }
   });
 
+  test('My List groups unprioritized collection goals into exact Dex sections',async({page})=>{
+    for(const [width,height] of [[1440,900],[390,844]]){
+      await page.setViewportSize({width,height});
+      await page.goto(`./?my-list-dex-sections=${width}-${Date.now()}`,{waitUntil:'domcontentloaded'});
+      await waitForStableLocalOrganizerStartup(page);
+      await isolateAuthenticatedMyListFixture(page,{username:'DexSectionTester',uid:'uid-dex-section-tester'});
+      const fixture=await page.evaluate(()=>{
+        const entries=DB.wishlist.filter(entry=>entry.no).slice(0,7);
+        const [priority,lucky,shiny,xxl,xxs,multi,other]=entries;
+        allData=normalizeData({users:{DexSectionTester:{}},wishlist:{DexSectionTester:{}},dynamax:{},gmax:{},costumes:{}});
+        Object.assign(allData.wishlist.DexSectionTester,{
+          [priority.name]:priValue('H','',true),
+          [lucky.name]:priValue('','',true),
+          [shiny.name]:priValue('','',false,false,false,true),
+          [xxl.name]:priValue('','',false,true),
+          [xxs.name]:priValue('','',false,false,true),
+          [multi.name]:priValue('','',true,true,false,true),
+          [other.name]:priValue('','legacy note')
+        });
+        writeList=async(type,username,list)=>{allData[type][username]={...list};renderMyList();};
+        document.getElementById('login-pg').style.display='none';document.getElementById('app').style.display='flex';setMyList('wishlist');
+        return Object.fromEntries(Object.entries({priority,lucky,shiny,xxl,xxs,multi,other}).map(([key,entry])=>[key,{name:entry.name,no:entry.no}]));
+      });
+
+      if(width===1440){
+        await expect(page.locator('#mylist-guidance-title')).toHaveText('Build your trade list');
+        await expect(page.locator('.journey-guidance')).toContainText('Add Pokémon, set priorities, and share your list when you’re ready. Favorites and private tags stay on this device.');
+      }
+      for(const [key,label] of Object.entries({LUCKY:'Lucky Dex',SHINY:'Shiny Dex',XXL:'XXL Dex',XXS:'XXS Dex',OTHER:'Other Pokémon'})){
+        const section=page.locator(`[data-dex-section="${key}"]`);
+        await expect(section).toBeVisible();await expect(section.locator('.mylist-priority-heading')).toContainText(label);
+      }
+      for(const [key,name] of [['LUCKY',fixture.lucky.name],['SHINY',fixture.shiny.name],['XXL',fixture.xxl.name],['XXS',fixture.xxs.name],['OTHER',fixture.other.name]]){
+        await expect(page.locator(`[data-dex-section="${key}"] .myrow[data-name="${name}"]`)).toHaveCount(1);
+      }
+      for(const key of ['LUCKY','SHINY','XXL'])await expect(page.locator(`[data-dex-section="${key}"] .myrow[data-name="${fixture.multi.name}"]`)).toHaveCount(1);
+      await expect(page.locator(`[data-priority-section="H"] .myrow[data-name="${fixture.priority.name}"]`)).toHaveCount(1);
+      await expect(page.locator(`[data-dex-section] .myrow[data-name="${fixture.priority.name}"]`)).toHaveCount(0);
+      expect(await page.evaluate(()=>Object.keys(allData.wishlist.DexSectionTester).length)).toBe(7);
+
+      const expectedLabels={LUCKY:'Lucky Dex Search String',SHINY:'Shiny Dex Search String',XXL:'XXL Dex Search String',XXS:'XXS Dex Search String'};
+      for(const [key,label] of Object.entries(expectedLabels)){
+        const footer=page.locator(`[data-dex-search="${key}"]`),raw=footer.locator('.mylist-search-raw'),copy=footer.locator('.cpbtn');
+        await expect(footer.locator('.mylist-search-option-label')).toHaveText(label);
+        await expect(raw).toBeHidden();
+        expect(await copy.getAttribute('data-copy')).toBe(await raw.textContent());
+      }
+      const dexMembership=await page.evaluate(()=>Object.fromEntries(['LUCKY','SHINY','XXL','XXS'].map(key=>[key,stringParts(buildStrings('wishlist','DexSectionTester')[key]).map(Number)])));
+      expect(dexMembership).toEqual({
+        LUCKY:[fixture.lucky.no,fixture.multi.no].sort((a,b)=>a-b),
+        SHINY:[fixture.shiny.no,fixture.multi.no].sort((a,b)=>a-b),
+        XXL:[fixture.xxl.no,fixture.multi.no].sort((a,b)=>a-b),
+        XXS:[fixture.xxs.no]
+      });
+      for(const members of Object.values(dexMembership))expect(members).not.toContain(fixture.priority.no);
+      for(const [priority,label] of Object.entries({H:'High Priority Search String'}))await expect(page.locator(`[data-priority-search="${priority}"] .mylist-search-option-label`)).toHaveText(label);
+      await expect(page.locator('.my-string-heading')).toBeHidden();
+
+      const multiRow=page.locator(`[data-dex-section="LUCKY"] .myrow[data-name="${fixture.multi.name}"]`);
+      await multiRow.locator('.myrow-edit').click();
+      const notes=multiRow.locator('.myrow-editor-popover .ni');await notes.fill('updated variant');await notes.blur();
+      await expect(page.locator(`.myrow[data-name="${fixture.multi.name}"] .myrow-trait.detail`)).toHaveCount(3);
+      for(const trait of await page.locator(`.myrow[data-name="${fixture.multi.name}"] .myrow-trait.detail`).all())await expect(trait).toHaveText('updated variant');
+      expect(await page.evaluate(name=>({count:Object.keys(allData.wishlist.DexSectionTester).length,value:allData.wishlist.DexSectionTester[name]}),fixture.multi.name)).toEqual({count:7,value:'[lucky][shiny][xxl](updated variant)'});
+      expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
+    }
+  });
+
   test('My List category counts and empty context remain unmistakable and state-safe',async({page})=>{
     const viewports=[[320,640],[375,700],[390,420],[390,300],[430,760],[768,800],[1024,800],[1440,900]];
     for(const [width,height] of viewports){

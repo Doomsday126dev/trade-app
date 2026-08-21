@@ -69,11 +69,11 @@ test('an oversized All-priorities search suggests the smallest valid complete sp
   assert.deepEqual([...new Set(plan.split.flatMap(part=>part.levels))].sort(),['H','L','M']);
 });
 
-test('special searches remain distinct and collapsed',()=>{
-  const plan=domain.myListSearchPlan({H:'h',LUCKY:'lucky',XXL:'xxl',XXS:'xxs'},{locale:'en'});
-  assert.equal(JSON.stringify(plan.specials.map(option=>option.key)),JSON.stringify(['LUCKY','XXL','XXS']));
-  assert.match(html,/strings\.specialSearches/);
-  assert.match(html,/special-\$\{option\.key\}/);
+test('Dex searches remain distinct and render beside their matching sections',()=>{
+  const plan=domain.myListSearchPlan({H:'h',LUCKY:'lucky',SHINY:'shiny',XXL:'xxl',XXS:'xxs'},{locale:'en'});
+  assert.equal(JSON.stringify(plan.specials.map(option=>option.key)),JSON.stringify(['LUCKY','SHINY','XXL','XXS']));
+  assert.match(html,/data-dex-search="\$\{group\.key\}"/);
+  assert.match(html,/const dexLabels=\{LUCKY:'strings\.luckyDexSearch',SHINY:'strings\.shinyDexSearch',XXL:'strings\.xxlDexSearch',XXS:'strings\.xxsDexSearch'\}/);
 });
 
 test('search-language locale is supplied to every generated combined search',()=>{
@@ -86,7 +86,6 @@ test('search-language locale is supplied to every generated combined search',()=
 test('advanced searches use grouped summary rows with predictable Copy and View placement',()=>{
   assert.match(html,/class="mylist-search-groups"/);
   assert.match(html,/class="mylist-search-section" aria-labelledby="combined-search-title"/);
-  assert.match(html,/class="mylist-search-section" aria-labelledby="special-search-title"/);
   assert.match(html,/class="mylist-search-option-summary"/);
   assert.match(html,/class="mylist-search-actions"/);
   assert.match(html,/class="cpbtn mylist-search-action"/);

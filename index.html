@@ -2171,7 +2171,7 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
       </div>
     </div>
     <aside class="journey-guidance" aria-labelledby="mylist-guidance-title">
-      <div><strong id="mylist-guidance-title" data-i18n="guidance.myListTitle">Build the list you want to share</strong><span data-i18n="guidance.myListBody">Add Pokémon and priorities here. Sharing is always explicit; Favorites and private tags live under Find Trainer and stay on this device.</span></div>
+      <div><strong id="mylist-guidance-title" data-i18n="guidance.myListTitle">Build your trade list</strong><span data-i18n="guidance.myListBody">Add Pokémon, set priorities, and share your list when you’re ready. Favorites and private tags stay on this device.</span></div>
       <div class="journey-guidance-actions"><button type="button" class="bghost" onclick="switchTab('find')" data-i18n="guidance.findTrainer">Find a trainer</button><button type="button" class="bghost" onclick="switchTab('schedule')" data-i18n="guidance.exploreEvents">Explore Events</button></div>
     </aside>
     <div class="list-tabs mylist-type-tabs" role="tablist" data-i18n-aria-label="myList.categories" aria-label="My List categories">
@@ -8135,6 +8135,28 @@ function myListPrioritySectionHtml(priority,entries){
     <div data-priority-search="${priority}"></div>
   </section>`;
 }
+const MY_LIST_DEX_GROUPS=Object.freeze([
+  Object.freeze({key:'LUCKY',flag:'lucky',labelKey:'myList.luckyDex'}),
+  Object.freeze({key:'SHINY',flag:'shiny',labelKey:'myList.shinyDex'}),
+  Object.freeze({key:'XXL',flag:'xxl',labelKey:'myList.xxlDex'}),
+  Object.freeze({key:'XXS',flag:'xxs',labelKey:'myList.xxsDex'})
+]);
+function myListDexGroups(entries){
+  const unprioritized=entries.filter(entry=>!entry.p);
+  const groups=MY_LIST_DEX_GROUPS.map(group=>({...group,entries:unprioritized.filter(entry=>entry[group.flag])}))
+    .filter(group=>group.entries.length);
+  const other=unprioritized.filter(entry=>!MY_LIST_DEX_GROUPS.some(group=>entry[group.flag]));
+  if(other.length)groups.push({key:'OTHER',labelKey:'myList.otherPokemon',entries:other});
+  return groups;
+}
+function myListDexSectionHtml(group){
+  const id=`mylist-dex-${group.key.toLowerCase()}`;
+  return`<section class="mylist-priority-section mylist-dex-section" data-dex-section="${group.key}" aria-labelledby="${id}">
+    <h3 class="mylist-priority-heading" id="${id}">${escHtml(i18nCore.t(group.labelKey))}<span class="priority-count">${escHtml(i18nCore.t('myList.priorityPokemonCount',{count:i18nCore.formatNumber(group.entries.length)}))}</span></h3>
+    <div class="mygrid">${myListRowsHtml(group.entries)}</div>
+    ${group.key==='OTHER'?'':`<div data-dex-search="${group.key}"></div>`}
+  </section>`;
+}
 function renderMyList(filterVal){
   const q=(filterVal??document.getElementById('mylist-filter')?.value??'').toLowerCase();
   const list=allData[myListType]?.[cur]||{};
@@ -8161,8 +8183,8 @@ function renderMyList(filterVal){
 
   const prioritySections=['H','M','L'].filter(priority=>entries.some(entry=>entry.p===priority))
     .map(priority=>myListPrioritySectionHtml(priority,entries.filter(entry=>entry.p===priority))).join('');
-  const unprioritized=entries.filter(entry=>!entry.p);
-  el.innerHTML=`<div class="mylist-priority-sections">${prioritySections}${unprioritized.length?`<section class="mylist-priority-section" aria-labelledby="mylist-special-entries"><h3 class="mylist-priority-heading" id="mylist-special-entries">${escHtml(i18nCore.t('myList.flaggedWithoutPriority'))}</h3><div class="mygrid">${myListRowsHtml(unprioritized)}</div></section>`:''}</div>`;
+  const dexSections=myListDexGroups(entries).map(myListDexSectionHtml).join('');
+  el.innerHTML=`<div class="mylist-priority-sections">${prioritySections}${dexSections}</div>`;
   renderMyStrings();
   renderOwnerShareRepublishNotice();
   applyTypeColors();
@@ -8941,17 +8963,18 @@ function buildStrings(type,username){
   if(type==='costumes'){
     const costumeNoMap={};
     allCostumeEntries().forEach(e=>(e.legacyAliases||[e.name]).forEach(alias=>{if(e.no)costumeNoMap[alias]=e.no;}));
-    const byP={H:[],M:[],L:[]},luckyDex=[],xxlDex=[],xxsDex=[];
+    const byP={H:[],M:[],L:[]},luckyDex=[],shinyDex=[],xxlDex=[],xxsDex=[];
     Object.entries(list).forEach(([name,val])=>{
-      const{p,lucky,xxl,xxs}=parsePri(val);
+      const{p,lucky,shiny,xxl,xxs}=parsePri(val);
       let no=costumeNoMap[name];
       if(!no){const sp=spriteEntryForListItem('costumes',name,pokemonEntryForLegacyKey(allCostumeEntries(),name)||{});no=sp?.no||null;}
       const dex=parseInt(no);
       if(!Number.isFinite(dex))return;
       if(p&&byP[p])byP[p].push(dex);
-      if(lucky)luckyDex.push(dex);
-      if(xxl)xxlDex.push(dex);
-      if(xxs)xxsDex.push(dex);
+      if(!p&&lucky)luckyDex.push(dex);
+      if(!p&&shiny)shinyDex.push(dex);
+      if(!p&&xxl)xxlDex.push(dex);
+      if(!p&&xxs)xxsDex.push(dex);
     });
     const out={};
     ['H','M','L'].forEach(p=>{
@@ -8959,6 +8982,7 @@ function buildStrings(type,username){
       out[p]=dexStringFromNumbers(byP[p],searchOptions);
     });
     const luckyStr=dexStringFromNumbers(luckyDex,searchOptions);if(luckyStr)out.LUCKY=luckyStr;
+    const shinyStr=dexStringFromNumbers(shinyDex,searchOptions);if(shinyStr)out.SHINY=shinyStr;
     const xxlStr=dexStringFromNumbers(xxlDex,searchOptions);if(xxlStr)out.XXL=xxlStr;
     const xxsStr=dexStringFromNumbers(xxsDex,searchOptions);if(xxsStr)out.XXS=xxsStr;
     return Object.keys(out).length?out:null;
@@ -8970,17 +8994,18 @@ function buildStrings(type,username){
     (e.legacyAliases||[e.name]).forEach(alias=>{if(!nameToEntry[alias])nameToEntry[alias]=e;});
     if(regionalFormTerm(e.name))dexHasRegional[e.no]=true;
   });
-  const byP={H:[],M:[],L:[]},luckyItems=[],xxlItems=[],xxsItems=[];
+  const byP={H:[],M:[],L:[]},luckyItems=[],shinyItems=[],xxlItems=[],xxsItems=[];
   Object.entries(list).forEach(([name,val])=>{
-    const{p,mod,lucky,xxl,xxs}=parsePri(val);
+    const{p,mod,lucky,shiny,xxl,xxs}=parsePri(val);
     const entry=nameToEntry[name];if(!entry?.no)return;
     const effectiveEntry={...entry,maxType:maxTypeForEntry(entry,type)};
     const term=dexSearchTerm(effectiveEntry,dexHasRegional);if(!term)return;
     const item={term,filters:entrySearchFilters(effectiveEntry,mod)};
     if(p&&byP[p])byP[p].push(item);
-    if(lucky)luckyItems.push(item);
-    if(xxl)xxlItems.push(item);
-    if(xxs)xxsItems.push(item);
+    if(!p&&lucky)luckyItems.push(item);
+    if(!p&&shiny)shinyItems.push(item);
+    if(!p&&xxl)xxlItems.push(item);
+    if(!p&&xxs)xxsItems.push(item);
   });
   const out={};
   ['H','M','L'].forEach(p=>{
@@ -8988,6 +9013,7 @@ function buildStrings(type,username){
     out[p]=stringFromSearchItems(byP[p],searchOptions);
   });
   const luckyStr=stringFromSearchItems(luckyItems,searchOptions);if(luckyStr)out.LUCKY=luckyStr;
+  const shinyStr=stringFromSearchItems(shinyItems,searchOptions);if(shinyStr)out.SHINY=shinyStr;
   const xxlStr=stringFromSearchItems(xxlItems,searchOptions);if(xxlStr)out.XXL=xxlStr;
   const xxsStr=stringFromSearchItems(xxsItems,searchOptions);if(xxsStr)out.XXS=xxsStr;
   return Object.keys(out).length?out:null;
@@ -9026,15 +9052,23 @@ function myListSearchOptionHtml(option,key,{label=myListSearchLabel(option.level
 function renderMyStrings(){
   const el=document.getElementById('my-strings-out');if(!el)return;
   const strs=buildStrings(myListType,cur);
-  const heading=document.querySelector('.my-string-heading');if(heading)heading.hidden=!strs;
-  document.querySelectorAll('[data-priority-search]').forEach(footer=>{footer.innerHTML='';});
-  if(!strs){el.innerHTML='';return;}
+  const heading=document.querySelector('.my-string-heading');
+  document.querySelectorAll('[data-priority-search],[data-dex-search]').forEach(footer=>{footer.innerHTML='';});
+  if(!strs){if(heading)heading.hidden=true;el.innerHTML='';return;}
   ['H','M','L'].forEach(priority=>{
     const footer=document.querySelector(`[data-priority-search="${priority}"]`);
     if(!footer||!strs[priority])return;
     const label=i18nCore.t('strings.prioritySearch',{priority:publicSharePriorityLabel(priority)});
     const tooLong=strLenInfo(strs[priority]).len>POGO_STR_LIMIT;
     footer.innerHTML=`<div class="mylist-search-footer"><div class="mylist-search-option-summary"><span class="mylist-search-option-icon" aria-hidden="true">${uiIconMarkup('search','ui-icon ui-icon-sm')}</span><div class="mylist-search-option-copy"><span class="mylist-search-option-label">${escHtml(label)}</span>${strLenHtml(strs[priority],{t:i18nCore.t,formatNumber:i18nCore.formatNumber})}</div></div>${tooLong?`<div class="mylist-search-limit" role="status">${escHtml(i18nCore.t('strings.tooLongForPokemonGo'))}</div>`:''}${myListSearchActionHtml(strs[priority],label,`priority-${priority}`,{tooLong})}</div>`;
+  });
+
+  const dexLabels={LUCKY:'strings.luckyDexSearch',SHINY:'strings.shinyDexSearch',XXL:'strings.xxlDexSearch',XXS:'strings.xxsDexSearch'};
+  Object.entries(dexLabels).forEach(([key,labelKey])=>{
+    const footer=document.querySelector(`[data-dex-search="${key}"]`);
+    if(!footer||!strs[key])return;
+    const label=i18nCore.t(labelKey),tooLong=strLenInfo(strs[key]).len>POGO_STR_LIMIT;
+    footer.innerHTML=`<div class="mylist-search-footer"><div class="mylist-search-option-summary"><span class="mylist-search-option-icon" aria-hidden="true">${uiIconMarkup('search','ui-icon ui-icon-sm')}</span><div class="mylist-search-option-copy"><span class="mylist-search-option-label">${escHtml(label)}</span>${strLenHtml(strs[key],{t:i18nCore.t,formatNumber:i18nCore.formatNumber})}</div></div>${tooLong?`<div class="mylist-search-limit" role="status">${escHtml(i18nCore.t('strings.tooLongForPokemonGo'))}</div>`:''}${myListSearchActionHtml(strs[key],label,`dex-${key.toLowerCase()}`,{tooLong})}</div>`;
   });
 
   const plan=myListSearchPlan(strs,{locale:pokemonGoSearchLocale()});
@@ -9049,9 +9083,8 @@ function renderMyStrings(){
   if(plan.more.length){
     combined.push(`<div class="mylist-search-more"><button class="combo-toggle" type="button" aria-expanded="false" aria-controls="mylist-more-combinations" onclick="toggleMyListMoreCombinations(this)"><span>${escHtml(i18nCore.t('strings.moreCombinations'))}</span><span class="collapse-icon" aria-hidden="true">${uiIconMarkup('chevron-down','ui-icon ui-icon-sm')}</span></button><div class="mylist-search-more-body" id="mylist-more-combinations" hidden>${plan.more.map((option,index)=>myListSearchOptionHtml(option,`more-${index}`)).join('')}</div></div>`);
   }
-  const specialLabels={LUCKY:i18nCore.t('share.luckyDex'),XXL:'XXL',XXS:'XXS'};
-  const specials=plan.specials.map(option=>myListSearchOptionHtml({...option,levels:[]},`special-${option.key}`,{label:specialLabels[option.key]})).join('');
-  el.innerHTML=`<div class="mylist-search-groups">${combined.length?`<section class="mylist-search-section" aria-labelledby="combined-search-title"><h3 id="combined-search-title">${uiIconMarkup('list','ui-icon ui-icon-sm')}<span>${escHtml(i18nCore.t('strings.combinedSearch'))}</span></h3>${combined.join('')}</section>`:''}${specials?`<section class="mylist-search-section" aria-labelledby="special-search-title"><h3 id="special-search-title">${uiIconMarkup('sliders','ui-icon ui-icon-sm')}<span>${escHtml(i18nCore.t('strings.specialSearches'))}</span></h3>${specials}</section>`:''}</div>`;
+  if(heading)heading.hidden=!combined.length;
+  el.innerHTML=`<div class="mylist-search-groups">${combined.length?`<section class="mylist-search-section" aria-labelledby="combined-search-title"><h3 id="combined-search-title">${uiIconMarkup('list','ui-icon ui-icon-sm')}<span>${escHtml(i18nCore.t('strings.combinedSearch'))}</span></h3>${combined.join('')}</section>`:''}</div>`;
 }
 async function copyText(str){
   if(navigator.clipboard&&window.isSecureContext){

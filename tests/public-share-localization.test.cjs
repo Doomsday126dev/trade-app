@@ -33,7 +33,7 @@ function block(start,end){
 test('anonymous share catalogs have exact parity and natural share chrome',()=>{
   const window=load(),catalogs=window.PogoLocales;
   const keys=Object.keys(catalogs.en).sort();
-  assert.equal(keys.length,1098);
+  assert.equal(keys.length,1106);
   for(const locale of ['ja','es','de'])assert.deepEqual(Object.keys(catalogs[locale]).sort(),keys,locale);
   assert.equal(catalogs.ja['share.listTitle'],'{username} の交換リスト');
   assert.equal(catalogs.es['share.listTitle'],'Lista de intercambios de {username}');
@@ -102,6 +102,20 @@ test('public search panels localize controls while preserving canonical clipboar
   assert.match(ja,/コピー/);
   assert.match(ja,/検索を表示/);
   assert.match(ja,/data-copy="!4\*&amp;!traded&amp;25,150"/);
+});
+
+test('all generated priority and Dex panels use explicit Search String labels',()=>{
+  const window=load(),core=window.PogoI18n.core,panel=window.PogoUi.stringPanels;
+  core.setLocale('en',{persist:false});
+  const rendered=panel.strLevelsHtml({H:'1',M:'2',L:'3',LUCKY:'4',SHINY:'5',XXL:'6',XXS:'7'}, {
+    t:core.t,formatNumber:core.formatNumber,
+    priorityLabel:p=>core.t({H:'priority.high',M:'priority.medium',L:'priority.low'}[p])
+  });
+  for(const label of [
+    'High Priority Search String','Medium Priority Search String','Low Priority Search String',
+    'Lucky Dex Search String','Shiny Dex Search String','XXL Dex Search String','XXS Dex Search String'
+  ])assert.match(rendered,new RegExp(label));
+  for(const value of ['1','2','3','4','5','6','7'])assert.match(rendered,new RegExp(`data-copy="${value}"`));
 });
 
 test('copy success and failure use anonymous-share keys only for share buttons',()=>{
