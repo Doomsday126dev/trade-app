@@ -27,6 +27,7 @@ const {
   CONTINUATION_REMAINING_SEQUENCE
 } = require('../production/e1ProductionThirdMutationContract.cjs');
 const {
+  argumentsMap,
   authorityReplacement,
   executePlan,
   verifyAuthorityService
@@ -74,6 +75,75 @@ function repositoryFixture(manifest, overrides = {}) {
     ...overrides
   };
 }
+
+test('canonical CLI argument names accept numeric segments and reject malformed names', () => {
+  const parsed = argumentsMap([
+    '--mode=plan',
+    '--action=enable-group-d3',
+    `--expected-sha=${HEAD}`,
+    '--source=functions/e1-gateway',
+    `--confirmation=${D3_CONFIRMATIONS['enable-group-d3']}`,
+    '--d3-mode=continuation'
+  ]);
+  assert.deepEqual(parsed, {
+    mode: 'plan',
+    action: 'enable-group-d3',
+    'expected-sha': HEAD,
+    source: 'functions/e1-gateway',
+    confirmation: D3_CONFIRMATIONS['enable-group-d3'],
+    'd3-mode': 'continuation'
+  });
+  for (const argument of [
+    '--D3-mode=continuation',
+    '--3d-mode=continuation',
+    '--d3_mode=continuation',
+    '--d3-mode',
+    'd3-mode=continuation',
+    '---d3-mode=continuation',
+    '--=continuation'
+  ]) {
+    assert.throws(() => argumentsMap([argument]), /gateway-deployment-argument-invalid/u, argument);
+  }
+});
+
+test('complete canonical continuation CLI inventory reaches an isolated continuation plan', () => {
+  const manifest = loadManifest();
+  const parsed = argumentsMap([
+    '--mode=plan',
+    '--action=enable-group-d3',
+    `--expected-sha=${HEAD}`,
+    `--source=${manifest.sourceRoot}`,
+    `--confirmation=${D3_CONFIRMATIONS['enable-group-d3']}`,
+    '--d3-mode=continuation'
+  ]);
+  const plan = createDeploymentPlan({
+    action: parsed.action,
+    expectedSha: parsed['expected-sha'],
+    explicitSource: parsed.source,
+    mode: parsed.mode,
+    repoRoot: REPO_ROOT,
+    manifest,
+    repository: repositoryFixture(manifest),
+    guardResult: d3ContinuationGuardResult(),
+    confirmation: parsed.confirmation,
+    d3Mode: parsed['d3-mode']
+  });
+  assert.equal(plan.d3Mode, 'continuation');
+  assert.equal(plan.guardVerified, true);
+  assert.equal(plan.deploymentAllowed, true);
+  assert.throws(() => createDeploymentPlan({
+    action: parsed.action,
+    expectedSha: parsed['expected-sha'],
+    explicitSource: parsed.source,
+    mode: parsed.mode,
+    repoRoot: REPO_ROOT,
+    manifest,
+    repository: repositoryFixture(manifest),
+    guardResult: d3ContinuationGuardResult(),
+    confirmation: parsed.confirmation,
+    d3Mode: 'clean-start'
+  }), /action-guard-mismatch/u);
+});
 
 test('plan chooses the exact pinned gateway source independently of cwd and creates no root ignore file', () => {
   const rootIgnore = path.join(REPO_ROOT, '.gcloudignore');

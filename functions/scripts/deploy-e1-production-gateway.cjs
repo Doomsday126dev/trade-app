@@ -21,7 +21,7 @@ const {
 
 function argumentsMap(argv) {
   return Object.fromEntries(argv.map((argument) => {
-    const match = /^--([a-z-]+)=(.*)$/u.exec(argument);
+    const match = /^--([a-z][a-z0-9-]*)=(.*)$/u.exec(argument);
     if (!match) throw new Error('e1/gateway-deployment-argument-invalid');
     return [match[1], match[2]];
   }));
