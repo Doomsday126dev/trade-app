@@ -637,7 +637,7 @@ function validateThirdMutationContinuationArtifact(value, context = {}, options 
   }
   if (!exactFields(session, CONTINUATION_SESSION_FIELDS) || !HASH.test(session?.sessionIdHash || '') ||
       session.state !== 'paused-closed' || !Number.isFinite(closedAt) ||
-      session.closeReason !== 'contained-after-b-reserve-authoritative-reconciliation') {
+      session.closeReason !== 'contained-after-b-exact-replay-authoritative-reconciliation') {
     errors.push('group_d3_continuation_session_invalid');
   }
   if (!exactFields(reconciliation, CONTINUATION_RECONCILIATION_FIELDS) ||
@@ -645,7 +645,7 @@ function validateThirdMutationContinuationArtifact(value, context = {}, options 
       reconciliation.evidenceDigest !== CONTINUATION_PINS.reconciliationEvidenceDigest ||
       reconciliation.executionLedgerDigest !== CONTINUATION_PINS.executionLedgerDigest ||
       !Number.isFinite(reconciledAt) || reconciledAt > now || reconciliation.aReserveInvocations !== 1 ||
-      reconciliation.aReplayInvocations !== 1 || reconciliation.laterSlotInvocations !== 1 ||
+      reconciliation.aReplayInvocations !== 1 || reconciliation.laterSlotInvocations !== 2 ||
       reconciliation.acceptedHistoricalRateLimitReplayWrites !== 1 ||
       reconciliation.remainingRateLimitReplayWrites !== 0 ||
       reconciliation.previousStateFingerprint !== CONTINUATION_COMPLETED_PREFIX.at(-2).stateFingerprint ||
@@ -690,7 +690,7 @@ function validateThirdMutationContinuationArtifact(value, context = {}, options 
   }
   return Object.freeze({
     ok: true,
-    mode: 'reconciled-through-b-reserve-continuation-preflight',
+    mode: 'reconciled-through-b-replay-continuation-preflight',
     continuationArtifactDigest: value.artifactDigest,
     continuationPreflightDigest: preflight.digest,
     historicalEvidenceRecollectionRequired: false,
@@ -858,7 +858,7 @@ function guardProductionThirdMutationContinuation(options = {}) {
     approvalGroup: 'D',
     cohortStage: 'D3',
     deploymentMode: 'continuation',
-    mode: 'reconciled-through-b-reserve-continuation',
+    mode: 'reconciled-through-b-replay-continuation',
     environment: 'production',
     cohortType: SYNTHETIC_COHORT_TYPE,
     evidencePurpose: EXECUTION_EVIDENCE_PURPOSE,
