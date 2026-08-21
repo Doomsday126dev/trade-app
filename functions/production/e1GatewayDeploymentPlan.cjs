@@ -227,10 +227,10 @@ function verifyActionGuard(actionName, guardResult, expectedSha, d3Mode, manifes
       !Object.hasOwn(guardResult, 'continuationArtifactDigest') &&
       !Object.hasOwn(guardResult, 'continuationJitDigest');
     const continuation = d3Mode === 'continuation' && guardResult.deploymentMode === 'continuation' &&
-      guardResult.mode === 'reconciled-a-reserve-and-replay-continuation' && guardResult.currentStateVerified === true &&
-      guardResult.historicalAdmissionVerified === true && guardResult.currentDocumentCount === 16 &&
+      guardResult.mode === 'reconciled-through-b-reserve-continuation' && guardResult.currentStateVerified === true &&
+      guardResult.historicalAdmissionVerified === true && guardResult.currentDocumentCount === 20 &&
       guardResult.historicalEvidenceRecollectionRequired === false &&
-      JSON.stringify(guardResult.nextOperation) === JSON.stringify({ slot: 'B', operation: 'reserve' }) &&
+      JSON.stringify(guardResult.nextOperation) === JSON.stringify({ slot: 'B', operation: 'exact-replay' }) &&
       JSON.stringify(guardResult.remainingSequence) === JSON.stringify(CONTINUATION_REMAINING_SEQUENCE) &&
       JSON.stringify(guardResult.acceptedUsage) === JSON.stringify(CONTINUATION_ACCEPTED_USAGE) &&
       JSON.stringify(guardResult.remainingBudget) === JSON.stringify(CONTINUATION_REMAINING_BUDGET) &&

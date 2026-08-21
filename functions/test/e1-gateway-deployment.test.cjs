@@ -382,12 +382,12 @@ function d3GuardResult(overrides = {}) {
 function d3ContinuationGuardResult(overrides = {}) {
   return d3GuardResult({
     deploymentMode: 'continuation',
-    mode: 'reconciled-a-reserve-and-replay-continuation',
+    mode: 'reconciled-through-b-reserve-continuation',
     historicalAdmissionVerified: true,
     currentStateVerified: true,
     historicalEvidenceRecollectionRequired: false,
-    currentDocumentCount: 16,
-    nextOperation: { slot: 'B', operation: 'reserve' },
+    currentDocumentCount: 20,
+    nextOperation: { slot: 'B', operation: 'exact-replay' },
     remainingSequence: CONTINUATION_REMAINING_SEQUENCE,
     acceptedUsage: CONTINUATION_ACCEPTED_USAGE,
     remainingBudget: CONTINUATION_REMAINING_BUDGET,
@@ -597,6 +597,8 @@ test('D3 continuation deployer binds exact guard mode, tooling SHA, production r
         ...d3GuardResult().securityBoundary, publicAuthorityInvoker: true } }) })],
     ['A replay retry', () => createDeploymentPlan({ ...common,
       guardResult: d3ContinuationGuardResult({ nextOperation: { slot: 'A', operation: 'exact-replay' } }) })],
+    ['B reserve retry', () => createDeploymentPlan({ ...common,
+      guardResult: d3ContinuationGuardResult({ nextOperation: { slot: 'B', operation: 'reserve' } }) })],
     ['hidden accepted rollover', () => createDeploymentPlan({ ...common,
       guardResult: d3ContinuationGuardResult({ acceptedUsage: {
         ...CONTINUATION_ACCEPTED_USAGE, rateLimitReplayWrites: 0 } }) })],

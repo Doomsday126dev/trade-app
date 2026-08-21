@@ -11,9 +11,9 @@ const EXECUTION_EVIDENCE_PURPOSE = 'synthetic-mutation-execution';
 const OBSERVATION_HOURS = 24;
 const MAX_WINDOW_HOURS = 2;
 const ENTRY_EVIDENCE_MAX_AGE_MS = 15 * 60 * 1000;
-const CONTINUATION_PURPOSE = 'resume-after-authoritative-a-reserve-and-replay-v1';
-const CONTINUATION_JIT_PURPOSE = 'authorize-reconciled-a-reserve-and-replay-suffix-v1';
-const CONTINUATION_STATE_FINGERPRINT = 'acb7546d5f4ba45cb8b89b398f1f37d60a84d2365d7e60b35053d1e4e5a300f0';
+const CONTINUATION_PURPOSE = 'resume-after-reconciled-b-reserve-prefix-v1';
+const CONTINUATION_JIT_PURPOSE = 'authorize-reconciled-b-reserve-suffix-v1';
+const CONTINUATION_STATE_FINGERPRINT = 'f92d3f33ec600176328ddce117f9fa12a458b3cd61e24872ecc32416f9111cbd';
 const CONTINUATION_PRODUCTION_RUNTIME = Object.freeze({
   releaseId: '2026-08-20.51',
   sourceSha: 'e28ffe8b29bc51bd40af4c4158ab6372bf041050',
@@ -28,8 +28,9 @@ const CONTINUATION_PINS = Object.freeze({
   initialJitDigest: 'b71abc63664f4d7d50b48f823dddc58fec6b93a000b810e49edcdd7405a1d6d1',
   initialReadinessDigest: '78aee40d266698fe71d317123794f7f3a3af3b040adaf8e318fcf81b9a738589',
   initialGuardDigest: '5dc303c138b982f94169a8a1a21c85c54af318a62f225831545e8bd6de921478',
-  reconciliationEvidenceDigest: 'f9a3d828fd31f57e4a0e8bc5b9ea7890f9f8e11da76bbd6a72f11c5c6d085f1a',
-  executionLedgerDigest: '799049bf81473ec876e99b581e33e20ad96b2a3873ab2f77afae376d1f744060'
+  acceptedRolloverEvidenceDigest: 'f9a3d828fd31f57e4a0e8bc5b9ea7890f9f8e11da76bbd6a72f11c5c6d085f1a',
+  reconciliationEvidenceDigest: '4000f62c36c9dde2477b161aec29de3839f497938d1597f300301f7e7c2c236a',
+  executionLedgerDigest: '01c8f9627298b735b7625aaf89c7d86d6195b4e3776ebaf0e8b6b6b379ba3013'
 });
 const FIRESTORE_TRANSACTION_MAX_ATTEMPTS = 5;
 const EXPECTED_COUNT_SEQUENCE = Object.freeze([12, 16, 16, 20, 20, 24, 24, 28, 28, 32, 32]);
@@ -42,15 +43,18 @@ const CONTINUATION_COMPLETED_PREFIX = Object.freeze([
     committedWrites: 4, stateFingerprint: '4b24a8a2e8253fbb086a30d52b5265533cd9cb50cade54ff900f20f8770313fa' }),
   Object.freeze({ slot: 'A', operation: 'exact-replay', resultCode: 'IDEMPOTENT', documentCount: 16,
     committedWrites: 1, acceptedHistoricalRateLimitReplayWrites: 1,
-    stateFingerprint: CONTINUATION_STATE_FINGERPRINT })
+    stateFingerprint: 'acb7546d5f4ba45cb8b89b398f1f37d60a84d2365d7e60b35053d1e4e5a300f0' }),
+  Object.freeze({ slot: 'B', operation: 'reserve', resultCode: 'SUCCESS', documentCount: 20,
+    committedWrites: 4, stateFingerprint: CONTINUATION_STATE_FINGERPRINT })
 ]);
 const CONTINUATION_REMAINING_SEQUENCE = Object.freeze([
-  ...['B', 'C', 'D', 'E'].flatMap((slot) => [
+  Object.freeze({ slot: 'B', operation: 'exact-replay' }),
+  ...['C', 'D', 'E'].flatMap((slot) => [
     Object.freeze({ slot, operation: 'reserve' }),
     Object.freeze({ slot, operation: 'exact-replay' })
   ])
 ]);
-const CONTINUATION_COUNT_SEQUENCE = Object.freeze([16, 20, 20, 24, 24, 28, 28, 32, 32]);
+const CONTINUATION_COUNT_SEQUENCE = Object.freeze([20, 20, 24, 24, 28, 28, 32, 32]);
 const D2_BASELINE = Object.freeze({
   totalDocuments: 12,
   accounts: 3,
@@ -102,43 +106,43 @@ const OPERATION_BUDGET = Object.freeze({
   firestoreReadsRetryCeiling: 695
 });
 const CONTINUATION_ACCEPTED_USAGE = Object.freeze({
-  gatewayCalls: 2,
-  authorityCalls: 2,
-  limitedUseAppCheckTokens: 2,
-  logicalFirestoreTransactions: 4,
-  firestoreTransactionAttemptsExpected: 4,
-  firestoreTransactionAttemptsMaximum: 20,
-  firestoreOperationReadsExpected: 8,
-  firestoreOperationReadsMaximum: 40,
-  operationRequestExistenceReads: 0,
-  firestoreCommittedWrites: 5,
-  operationRequestCreates: 1,
-  rateLimitCreates: 1,
+  gatewayCalls: 3,
+  authorityCalls: 3,
+  limitedUseAppCheckTokens: 3,
+  logicalFirestoreTransactions: 6,
+  firestoreTransactionAttemptsExpected: 6,
+  firestoreTransactionAttemptsMaximum: 30,
+  firestoreOperationReadsExpected: 13,
+  firestoreOperationReadsMaximum: 61,
+  operationRequestExistenceReads: 1,
+  firestoreCommittedWrites: 9,
+  operationRequestCreates: 2,
+  rateLimitCreates: 2,
   rateLimitReplayWrites: 1,
-  firstWriteSubjects: 1,
+  firstWriteSubjects: 2,
   replayOperations: 1,
-  rtdbExactReads: 6,
+  rtdbExactReads: 9,
   rtdbWrites: 0,
   ordinaryUserWrites: 0
 });
 const CONTINUATION_REMAINING_BUDGET = Object.freeze({
-  gatewayCalls: 8,
-  authorityCalls: 8,
-  limitedUseAppCheckTokens: 8,
-  logicalFirestoreTransactions: 12,
+  gatewayCalls: 7,
+  authorityCalls: 7,
+  limitedUseAppCheckTokens: 7,
+  logicalFirestoreTransactions: 10,
   firestoreTransactionMaxAttempts: FIRESTORE_TRANSACTION_MAX_ATTEMPTS,
-  firestoreTransactionAttemptsExpected: 12,
-  firestoreTransactionAttemptsMaximum: 60,
-  firestoreOperationReadsExpected: 36,
-  firestoreOperationReadsMaximum: 148,
-  operationRequestExistenceReads: 8,
-  firestoreCommittedWrites: 16,
-  operationRequestCreates: 4,
-  rateLimitCreates: 4,
+  firestoreTransactionAttemptsExpected: 10,
+  firestoreTransactionAttemptsMaximum: 50,
+  firestoreOperationReadsExpected: 31,
+  firestoreOperationReadsMaximum: 127,
+  operationRequestExistenceReads: 7,
+  firestoreCommittedWrites: 12,
+  operationRequestCreates: 3,
+  rateLimitCreates: 3,
   rateLimitReplayWrites: 0,
-  firstWriteSubjects: 4,
+  firstWriteSubjects: 3,
   replayOperations: 4,
-  rtdbExactReads: 24,
+  rtdbExactReads: 21,
   rtdbWrites: 0,
   ordinaryUserWrites: 0
 });
