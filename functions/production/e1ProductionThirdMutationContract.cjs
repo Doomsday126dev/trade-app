@@ -11,12 +11,44 @@ const EXECUTION_EVIDENCE_PURPOSE = 'synthetic-mutation-execution';
 const OBSERVATION_HOURS = 24;
 const MAX_WINDOW_HOURS = 2;
 const ENTRY_EVIDENCE_MAX_AGE_MS = 15 * 60 * 1000;
+const CONTINUATION_PURPOSE = 'resume-after-authoritative-a-reserve-v1';
+const CONTINUATION_JIT_PURPOSE = 'authorize-reconciled-a-reserve-suffix-v1';
+const CONTINUATION_STATE_FINGERPRINT = '4b24a8a2e8253fbb086a30d52b5265533cd9cb50cade54ff900f20f8770313fa';
+const CONTINUATION_PRODUCTION_RUNTIME = Object.freeze({
+  releaseId: '2026-08-20.51',
+  sourceSha: 'e28ffe8b29bc51bd40af4c4158ab6372bf041050',
+  artifactDigest: 'c5b057fe0192f999a03d2c0ea9afa2d37be650882c4b440ea6ee870776ec12ab'
+});
+const CONTINUATION_PINS = Object.freeze({
+  bindingFileSha: 'b2cc60151c0cc5f2d41c82737e62b2653ad026653c3487e20a08f2d05d534e3f',
+  bindingDigest: '54a71b3dec0cc6db60f874d68e235e8a20120b3049c80bc30af19fbc50f2716e',
+  candidatePoolDigest: '5d8f2bbf618feba394c7f403347ae88632c626830c30973c512b564c7fb88c7b',
+  browserHarnessDigest: 'b2285997164d8216f46c0f8b5be64f4a6b032f437e5ce8208742ad1ea0c2f1f4',
+  browserHarnessFileSha: '299a5e1776e3cf71b74acf28bf12bea74ddf277009d5f68e42fe13a7a8ea22ef',
+  initialJitDigest: 'b71abc63664f4d7d50b48f823dddc58fec6b93a000b810e49edcdd7405a1d6d1',
+  initialReadinessDigest: '78aee40d266698fe71d317123794f7f3a3af3b040adaf8e318fcf81b9a738589',
+  initialGuardDigest: '5dc303c138b982f94169a8a1a21c85c54af318a62f225831545e8bd6de921478',
+  reconciliationEvidenceDigest: 'e5a26d7749cc680762b4d6fba3304447fbe346611dd91117f3eb9119380f13c0',
+  executionLedgerDigest: 'e4197538131a30071fdb8e13e15eb088cf57c9e34f0f7a0775cad53248fea39b'
+});
 const FIRESTORE_TRANSACTION_MAX_ATTEMPTS = 5;
 const EXPECTED_COUNT_SEQUENCE = Object.freeze([12, 16, 16, 20, 20, 24, 24, 28, 28, 32, 32]);
 const EXECUTION_SEQUENCE = Object.freeze(Array.from({ length: COHORT_SIZE }, (_, index) => {
   const subject = index + 1;
   return [`subject-${subject}-reserve`, `subject-${subject}-verify`, `subject-${subject}-replay`, `subject-${subject}-replay-verify`];
 }).flat());
+const CONTINUATION_COMPLETED_PREFIX = Object.freeze([
+  Object.freeze({ slot: 'A', operation: 'reserve', resultCode: 'SUCCESS', documentCount: 16,
+    committedWrites: 4, stateFingerprint: CONTINUATION_STATE_FINGERPRINT })
+]);
+const CONTINUATION_REMAINING_SEQUENCE = Object.freeze([
+  Object.freeze({ slot: 'A', operation: 'exact-replay' }),
+  ...['B', 'C', 'D', 'E'].flatMap((slot) => [
+    Object.freeze({ slot, operation: 'reserve' }),
+    Object.freeze({ slot, operation: 'exact-replay' })
+  ])
+]);
+const CONTINUATION_COUNT_SEQUENCE = Object.freeze([16, 16, 20, 20, 24, 24, 28, 28, 32, 32]);
 const D2_BASELINE = Object.freeze({
   totalDocuments: 12,
   accounts: 3,
@@ -64,6 +96,63 @@ const OPERATION_BUDGET = Object.freeze({
   firestoreReadsExpectedMaximum: 550,
   firestoreReadsRetryCeiling: 710
 });
+const CONTINUATION_REMAINING_BUDGET = Object.freeze({
+  gatewayCalls: 9,
+  authorityCalls: 9,
+  limitedUseAppCheckTokens: 9,
+  logicalFirestoreTransactions: 18,
+  firestoreTransactionMaxAttempts: FIRESTORE_TRANSACTION_MAX_ATTEMPTS,
+  firestoreTransactionAttemptsExpected: 18,
+  firestoreTransactionAttemptsMaximum: 90,
+  firestoreOperationReadsExpected: 36,
+  firestoreOperationReadsMaximum: 180,
+  firestoreCommittedWrites: 16,
+  operationRequestCreates: 4,
+  rateLimitCreates: 4,
+  rateLimitReplayWrites: 0,
+  firstWriteSubjects: 4,
+  replayOperations: 5,
+  rtdbExactReads: 27,
+  rtdbWrites: 0
+});
+
+function subtractBudget(value, decrement, label) {
+  const next = value - decrement;
+  if (!Number.isInteger(next) || next < 0) throw new Error(`e1/group-d3-continuation-budget-${label}-invalid`);
+  return next;
+}
+
+function continuationProgress(completedSuffixOperations = 0) {
+  if (!Number.isInteger(completedSuffixOperations) || completedSuffixOperations < 0 ||
+      completedSuffixOperations > CONTINUATION_REMAINING_SEQUENCE.length) {
+    throw new Error('e1/group-d3-continuation-progress-invalid');
+  }
+  const budget = { ...CONTINUATION_REMAINING_BUDGET };
+  for (const operation of CONTINUATION_REMAINING_SEQUENCE.slice(0, completedSuffixOperations)) {
+    for (const [field, decrement] of [
+      ['gatewayCalls', 1], ['authorityCalls', 1], ['limitedUseAppCheckTokens', 1],
+      ['logicalFirestoreTransactions', 2], ['firestoreTransactionAttemptsExpected', 2],
+      ['firestoreTransactionAttemptsMaximum', 10], ['firestoreOperationReadsExpected', 4],
+      ['firestoreOperationReadsMaximum', 20], ['rtdbExactReads', 3]
+    ]) budget[field] = subtractBudget(budget[field], decrement, field);
+    if (operation.operation === 'reserve') {
+      for (const [field, decrement] of [
+        ['firestoreCommittedWrites', 4], ['operationRequestCreates', 1], ['rateLimitCreates', 1],
+        ['firstWriteSubjects', 1]
+      ]) budget[field] = subtractBudget(budget[field], decrement, field);
+    } else {
+      budget.replayOperations = subtractBudget(budget.replayOperations, 1, 'replayOperations');
+    }
+  }
+  return Object.freeze({
+    completedSuffixOperations,
+    currentDocumentCount: CONTINUATION_COUNT_SEQUENCE[completedSuffixOperations],
+    nextOperation: CONTINUATION_REMAINING_SEQUENCE[completedSuffixOperations] || null,
+    remainingSequence: Object.freeze(CONTINUATION_REMAINING_SEQUENCE.slice(completedSuffixOperations)),
+    remainingBudget: Object.freeze(budget),
+    complete: completedSuffixOperations === CONTINUATION_REMAINING_SEQUENCE.length
+  });
+}
 const OBSERVATION_CHECKS = Object.freeze([
   'exact-firestore-count-and-canonical-digest',
   'family-counts',
@@ -176,6 +265,57 @@ const EXPECTED_D3_MANIFEST = Object.freeze({
 
 function sha256(value) {
   return crypto.createHash('sha256').update(value, 'utf8').digest('hex');
+}
+
+function continuationPreflightDigest(value) {
+  return sha256(JSON.stringify([
+    1,
+    'e1-group-d3-continuation-preflight',
+    value?.purpose,
+    value?.environment,
+    value?.projectId,
+    value?.projectNumber,
+    value?.region,
+    value?.databaseId,
+    value?.rtdbDatabaseUrl,
+    value?.productionRuntime,
+    value?.appId,
+    value?.approvalGroup,
+    value?.cohortStage,
+    value?.cohortType,
+    value?.evidencePurpose,
+    value?.candidatePoolDigest,
+    value?.bindingFileSha,
+    value?.bindingDigest,
+    value?.historicalAdmission,
+    value?.interruptedSession,
+    value?.reconciliation,
+    value?.completedPrefix,
+    value?.nextOperation,
+    value?.currentState,
+    value?.candidateState,
+    value?.remainingBudget,
+    value?.remainingSequence,
+    value?.expectedCountSequence,
+    value?.currentGates,
+    value?.runtimeProvenance,
+    value?.securityBoundary,
+    value?.writeBoundary,
+    value?.preflight?.verifiedAt,
+    value?.preflight?.expiresAt
+  ]));
+}
+
+function continuationArtifactDigest(value) {
+  const copy = { ...value };
+  delete copy.artifactDigest;
+  return sha256(JSON.stringify([1, 'e1-group-d3-continuation-artifact', copy]));
+}
+
+function continuationJitDigest(value) {
+  const copy = { ...value };
+  delete copy.jitDigest;
+  return sha256(JSON.stringify([1, 'e1-group-d3-continuation-jit', copy]));
 }
 
 function canonicalCandidateKey(candidate) {
@@ -293,6 +433,15 @@ module.exports = Object.freeze({
   ALLOWED_OPERATIONS,
   CANDIDATE_POOL_POLICY,
   COHORT_SIZE,
+  CONTINUATION_ARTIFACT_PURPOSE: CONTINUATION_PURPOSE,
+  CONTINUATION_COMPLETED_PREFIX,
+  CONTINUATION_COUNT_SEQUENCE,
+  CONTINUATION_JIT_PURPOSE,
+  CONTINUATION_PINS,
+  CONTINUATION_PRODUCTION_RUNTIME,
+  CONTINUATION_REMAINING_BUDGET,
+  CONTINUATION_REMAINING_SEQUENCE,
+  CONTINUATION_STATE_FINGERPRINT,
   D2_BASELINE,
   D2_STATE_DIGEST,
   DEFAULT_SUBJECT_BINDING,
@@ -316,7 +465,11 @@ module.exports = Object.freeze({
   candidatePoolDigest,
   canonicalCandidateKey,
   canonicalCandidateOrder,
+  continuationProgress,
   expectedDocumentCount,
+  continuationArtifactDigest,
+  continuationJitDigest,
+  continuationPreflightDigest,
   readinessContract,
   sha256,
   subjectBindingDigest,

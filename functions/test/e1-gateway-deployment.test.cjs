@@ -20,10 +20,31 @@ const {
   verifyManifestShape,
   verifyPinnedSource
 } = require('../production/e1GatewayDeploymentPlan.cjs');
+const { activationGatePlan, disabledGatePlan } = require('../production/e1ProductionFirstMutationGuard.cjs');
+const {
+  CONTINUATION_PRODUCTION_RUNTIME,
+  CONTINUATION_REMAINING_BUDGET,
+  CONTINUATION_REMAINING_SEQUENCE
+} = require('../production/e1ProductionThirdMutationContract.cjs');
+const {
+  authorityReplacement,
+  executePlan,
+  verifyAuthorityService
+} = require('../scripts/deploy-e1-production-gateway.cjs');
 
 const REPO_ROOT = execFileSync('git', ['-C', __dirname, 'rev-parse', '--show-toplevel'], { encoding: 'utf8' }).trim();
 const HEAD = execFileSync('git', ['-C', REPO_ROOT, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
+const ORIGIN_MAIN = execFileSync('git', ['-C', REPO_ROOT, 'rev-parse', 'origin/main'], { encoding: 'utf8' }).trim();
 const CLI = path.join(REPO_ROOT, 'functions/scripts/deploy-e1-production-gateway.cjs');
+
+function assertBranchGuard(...runs) {
+  if (HEAD === ORIGIN_MAIN) return false;
+  for (const run of runs) {
+    assert.equal(run.status, 1);
+    assert.match(run.stderr, /commit-mismatch/u);
+  }
+  return true;
+}
 
 function runPlan(cwd, source = 'functions/e1-gateway', expectedSha = HEAD, action = 'restore-group-d2') {
   return spawnSync(process.execPath, [CLI, '--mode=plan', `--action=${action}`, `--source=${source}`, `--expected-sha=${expectedSha}`], {
@@ -59,6 +80,7 @@ test('plan chooses the exact pinned gateway source independently of cwd and crea
   assert.equal(fs.existsSync(rootIgnore), false);
   const root = runPlan(REPO_ROOT);
   const other = runPlan(os.tmpdir());
+  if (assertBranchGuard(root, other)) return;
   assert.equal(root.status, 0, root.stderr);
   assert.equal(other.status, 0, other.stderr);
   const rootPlan = JSON.parse(root.stdout);
@@ -251,8 +273,27 @@ function d3GuardResult(overrides = {}) {
     targetVerified: true,
     subjectsBound: true,
     executionAuthorized: true,
+    deploymentMode: 'clean-start',
     browserHarnessVerified: true,
     sourceSha: HEAD,
+    toolingSourceSha: HEAD,
+    runtimeProvenance: {
+      authorityService: 'e1-identity-authority',
+      authorityOrigin: EXPECTED_AUTHORITY.origin,
+      authorityRevision: 'e1-identity-authority-00026-l5s',
+      authorityImageDigest: `sha256:${'a'.repeat(64)}`,
+      runtimeServiceAccount: 'e1-identity-authority-runtime@trade-list-a4297.iam.gserviceaccount.com',
+      gatewayServiceAccount: 'e1-authority-gateway@trade-list-a4297.iam.gserviceaccount.com',
+      reviewed: true
+    },
+    securityBoundary: {
+      authorityPrivate: true, gatewayRuntimeSoleAuthorityInvoker: true, publicAuthorityInvoker: false,
+      projectWideRunInvoker: false, gatewayForbiddenRolesPresent: false, runtimeIamDrift: false,
+      productionDebugTokensRegistered: false
+    },
+    startingGates: disabledGatePlan(),
+    activationGatePlan: activationGatePlan(),
+    restorationGatePlan: disabledGatePlan(),
     entryEvidenceFreshAtEnable: true,
     entryEvidenceExpiresAt: '2026-08-15T15:10:00.000Z',
     entryEvidenceRequiredAfterEnable: false,
@@ -265,6 +306,25 @@ function d3GuardResult(overrides = {}) {
     cloudOperations: 0,
     ...overrides
   };
+}
+
+function d3ContinuationGuardResult(overrides = {}) {
+  return d3GuardResult({
+    deploymentMode: 'continuation',
+    mode: 'reconciled-a-reserve-continuation',
+    historicalAdmissionVerified: true,
+    currentStateVerified: true,
+    historicalEvidenceRecollectionRequired: false,
+    currentDocumentCount: 16,
+    nextOperation: { slot: 'A', operation: 'exact-replay' },
+    remainingSequence: CONTINUATION_REMAINING_SEQUENCE,
+    remainingBudget: CONTINUATION_REMAINING_BUDGET,
+    productionRuntime: CONTINUATION_PRODUCTION_RUNTIME,
+    continuationArtifactDigest: 'b'.repeat(64),
+    continuationPreflightDigest: 'c'.repeat(64),
+    continuationJitDigest: 'd'.repeat(64),
+    ...overrides
+  });
 }
 
 test('D2 enable and restoration use the canonical immutable source and only approved gates differ', () => {
@@ -319,6 +379,7 @@ test('D2 enable fails closed without an exact current D2 guard result', () => {
     /action-guard-mismatch/u);
   const cli = spawnSync(process.execPath, [CLI, '--mode=plan', '--action=enable-group-d2',
     '--source=functions/e1-gateway', `--expected-sha=${HEAD}`], { cwd: os.tmpdir(), encoding: 'utf8' });
+  if (assertBranchGuard(cli)) return;
   assert.equal(cli.status, 0, cli.stderr);
   assert.equal(JSON.parse(cli.stdout).guardVerified, false);
   assert.equal(JSON.parse(cli.stdout).deploymentAllowed, false);
@@ -364,6 +425,7 @@ test('D2 restore plans are cwd-independent and plan mode never creates root igno
   assert.equal(fs.existsSync(rootIgnore), false);
   const root = runPlan(REPO_ROOT);
   const unrelated = runPlan(os.tmpdir());
+  if (assertBranchGuard(root, unrelated)) return;
   assert.equal(root.status, 0, root.stderr);
   assert.equal(unrelated.status, 0, unrelated.stderr);
   assert.deepEqual(JSON.parse(root.stdout), JSON.parse(unrelated.stdout));
@@ -373,6 +435,7 @@ test('D2 restore plans are cwd-independent and plan mode never creates root igno
 test('D2 blocked enable previews are also cwd-independent and expose no private guard data', () => {
   const root = runPlan(REPO_ROOT, 'functions/e1-gateway', HEAD, 'enable-group-d2');
   const unrelated = runPlan(os.tmpdir(), 'functions/e1-gateway', HEAD, 'enable-group-d2');
+  if (assertBranchGuard(root, unrelated)) return;
   assert.equal(root.status, 0, root.stderr);
   assert.equal(unrelated.status, 0, unrelated.stderr);
   const plan = JSON.parse(root.stdout);
@@ -391,7 +454,7 @@ test('D3 enable uses the canonical source only with five-subject guard and exact
   const common = {
     action: 'enable-group-d3', expectedSha: HEAD, explicitSource: manifest.sourceRoot, mode: 'plan',
     repoRoot: REPO_ROOT, manifest, repository: repositoryFixture(manifest),
-    confirmation: D3_CONFIRMATIONS['enable-group-d3']
+    confirmation: D3_CONFIRMATIONS['enable-group-d3'], d3Mode: 'clean-start'
   };
   const enabled = createDeploymentPlan({ ...common, guardResult: d3GuardResult() });
   assert.equal(enabled.cohortStage, 'D3');
@@ -423,6 +486,204 @@ test('D3 enable uses the canonical source only with five-subject guard and exact
     guardResult: d3GuardResult({ entryEvidenceRequiredAfterEnable: true }) }), /action-guard-mismatch/u);
 });
 
+test('D3 continuation deployer binds exact guard mode, tooling SHA, production runtime, suffix, and budget', () => {
+  const manifest = loadManifest();
+  const common = {
+    action: 'enable-group-d3', expectedSha: HEAD, explicitSource: manifest.sourceRoot, mode: 'plan',
+    repoRoot: REPO_ROOT, manifest, repository: repositoryFixture(manifest),
+    confirmation: D3_CONFIRMATIONS['enable-group-d3'], d3Mode: 'continuation'
+  };
+  const plan = createDeploymentPlan({ ...common, guardResult: d3ContinuationGuardResult() });
+  assert.equal(plan.guardVerified, true);
+  assert.equal(plan.d3Mode, 'continuation');
+  assert.equal(plan.toolingSourceSha, HEAD);
+  assert.deepEqual(plan.productionRuntime, CONTINUATION_PRODUCTION_RUNTIME);
+  assert.equal(plan.authorityRuntime.revision, 'e1-identity-authority-00026-l5s');
+  const flagOnly = createDeploymentPlan(common);
+  assert.equal(flagOnly.guardVerified, false);
+  assert.equal(flagOnly.deploymentAllowed, false);
+  assert.throws(() => createDeploymentPlan({ ...common, mode: 'deploy' }), /action-guard-required/u);
+  for (const [name, result] of [
+    ['missing mode', () => createDeploymentPlan({ ...common, d3Mode: undefined,
+      guardResult: d3ContinuationGuardResult() })],
+    ['clean guard in continuation mode', () => createDeploymentPlan({ ...common, guardResult: d3GuardResult() })],
+    ['continuation guard in clean mode', () => createDeploymentPlan({ ...common, d3Mode: 'clean-start',
+      guardResult: d3ContinuationGuardResult() })],
+    ['wrong tooling source', () => createDeploymentPlan({ ...common,
+      guardResult: d3ContinuationGuardResult({ toolingSourceSha: '0'.repeat(40) }) })],
+    ['production source drift', () => createDeploymentPlan({ ...common,
+      guardResult: d3ContinuationGuardResult({ productionRuntime: {
+        ...CONTINUATION_PRODUCTION_RUNTIME, sourceSha: '0'.repeat(40) } }) })],
+    ['production artifact drift', () => createDeploymentPlan({ ...common,
+      guardResult: d3ContinuationGuardResult({ productionRuntime: {
+        ...CONTINUATION_PRODUCTION_RUNTIME, artifactDigest: '0'.repeat(64) } }) })],
+    ['starting gate enabled', () => createDeploymentPlan({ ...common,
+      guardResult: d3ContinuationGuardResult({ startingGates: {
+        ...disabledGatePlan(), RESERVE_HANDLE_ENABLED: true } }) })],
+    ['authority isolation drift', () => createDeploymentPlan({ ...common,
+      guardResult: d3ContinuationGuardResult({ securityBoundary: {
+        ...d3GuardResult().securityBoundary, publicAuthorityInvoker: true } }) })],
+    ['A reserve retry', () => createDeploymentPlan({ ...common,
+      guardResult: d3ContinuationGuardResult({ nextOperation: { slot: 'A', operation: 'reserve' } }) })],
+    ['reordered suffix', () => createDeploymentPlan({ ...common,
+      guardResult: d3ContinuationGuardResult({ remainingSequence: [...CONTINUATION_REMAINING_SEQUENCE].reverse() }) })],
+    ['expanded budget', () => createDeploymentPlan({ ...common,
+      guardResult: d3ContinuationGuardResult({ remainingBudget: {
+        ...CONTINUATION_REMAINING_BUDGET, gatewayCalls: 10 } }) })]
+  ]) assert.throws(result, /d3-mode-required|action-guard-mismatch/u, name);
+});
+
+function authorityServiceFixture(reserveEnabled = false) {
+  return {
+    metadata: { name: 'e1-identity-authority' },
+    status: { url: EXPECTED_AUTHORITY.origin, latestReadyRevisionName: 'e1-identity-authority-00026-l5s' },
+    spec: { template: { spec: {
+      serviceAccountName: 'e1-identity-authority-runtime@trade-list-a4297.iam.gserviceaccount.com',
+      containers: [{ image: `us-central1-docker.pkg.dev/project/authority@sha256:${'a'.repeat(64)}`, env: [
+        ['READ_ACCOUNT_FOUNDATION_ENABLED', false], ['RESERVE_HANDLE_ENABLED', reserveEnabled],
+        ['REPAIR_FOUNDATION_ENABLED', false], ['APPLY_MIGRATION_ENABLED', false],
+        ['FREEZE_CONFLICT_ENABLED', false]
+      ].map(([name, value]) => ({ name, value: String(value) })) }]
+    } } }
+  };
+}
+
+test('mocked D3 continuation deployment enables only reserve plus gateway', () => {
+  const manifest = loadManifest();
+  const plan = createDeploymentPlan({
+    action: 'enable-group-d3', expectedSha: HEAD, explicitSource: manifest.sourceRoot, mode: 'plan',
+    repoRoot: REPO_ROOT, manifest, repository: repositoryFixture(manifest),
+    confirmation: D3_CONFIRMATIONS['enable-group-d3'], d3Mode: 'continuation',
+    guardResult: d3ContinuationGuardResult()
+  });
+  let authority = authorityServiceFixture(false);
+  const calls = [];
+  const spawn = (_command, args) => {
+    calls.push([...args]);
+    if (args[0] === 'run' && args[1] === 'services' && args[2] === 'describe') {
+      return { status: 0, stdout: JSON.stringify(authority), stderr: '' };
+    }
+    if (args[0] === 'run' && args[1] === 'services' && args[2] === 'get-iam-policy') {
+      return { status: 0, stdout: JSON.stringify({ bindings: [{ role: 'roles/run.invoker',
+        members: ['serviceAccount:e1-authority-gateway@trade-list-a4297.iam.gserviceaccount.com'] }] }), stderr: '' };
+    }
+    if (args[0] === 'projects' && args[1] === 'get-iam-policy') {
+      return { status: 0, stdout: JSON.stringify({ bindings: [{ role: 'roles/firebaseappcheck.tokenVerifier',
+        members: ['serviceAccount:e1-authority-gateway@trade-list-a4297.iam.gserviceaccount.com'] }] }), stderr: '' };
+    }
+    if (args[0] === 'run' && args[1] === 'services' && args[2] === 'replace') {
+      if (!args.includes('--dry-run')) {
+        const spec = JSON.parse(fs.readFileSync(args[3], 'utf8'));
+        authority = { ...spec, status: { url: EXPECTED_AUTHORITY.origin,
+          latestReadyRevisionName: 'e1-identity-authority-00027-new' } };
+      }
+      return { status: 0, stdout: '', stderr: '' };
+    }
+    if (args[0] === 'functions' && args[1] === 'deploy') return { status: 0, stdout: '', stderr: '' };
+    if (args[0] === 'functions' && args[1] === 'describe') return { status: 0, stderr: '', stdout: JSON.stringify({
+      serviceConfig: { serviceAccountEmail: 'e1-authority-gateway@trade-list-a4297.iam.gserviceaccount.com',
+        environmentVariables: { GATEWAY_INVOCATION_ENABLED: String(plan.gateEnabled), READ_PROOF_MODE: 'false' } }
+    }) };
+    throw new Error(`unexpected mocked command: ${args.join(' ')}`);
+  };
+  executePlan(plan, { spawn });
+  verifyAuthorityService(plan, authority, true);
+  const replacements = calls.filter((args) => args[0] === 'run' && args[1] === 'services' && args[2] === 'replace');
+  assert.equal(replacements.length, 2);
+  assert.equal(calls.filter((args) => args[0] === 'functions' && args[1] === 'deploy').length, 2);
+  assert.equal(calls.some((args) => args.includes('functions/.local')), false);
+  const enabled = authorityReplacement(authorityServiceFixture(false), true);
+  const values = Object.fromEntries(enabled.spec.template.spec.containers[0].env.map((entry) => [entry.name, entry.value]));
+  assert.equal(values.RESERVE_HANDLE_ENABLED, 'true');
+  assert.deepEqual(Object.entries(values).filter(([name]) => name !== 'RESERVE_HANDLE_ENABLED')
+    .map(([, value]) => value), ['false', 'false', 'false', 'false']);
+});
+
+test('clean-start D3 execution preserves the original gateway-only deploy behavior', () => {
+  const manifest = loadManifest();
+  const plan = createDeploymentPlan({
+    action: 'enable-group-d3', expectedSha: HEAD, explicitSource: manifest.sourceRoot, mode: 'plan',
+    repoRoot: REPO_ROOT, manifest, repository: repositoryFixture(manifest),
+    confirmation: D3_CONFIRMATIONS['enable-group-d3'], d3Mode: 'clean-start',
+    guardResult: d3GuardResult()
+  });
+  const calls = [];
+  const spawn = (_command, args) => {
+    calls.push([...args]);
+    if (args[0] === 'functions' && args[1] === 'deploy') return { status: 0, stdout: '', stderr: '' };
+    if (args[0] === 'functions' && args[1] === 'describe') return { status: 0, stderr: '', stdout: JSON.stringify({
+      serviceConfig: { serviceAccountEmail: 'e1-authority-gateway@trade-list-a4297.iam.gserviceaccount.com',
+        environmentVariables: { GATEWAY_INVOCATION_ENABLED: 'true', READ_PROOF_MODE: 'false' } }
+    }) };
+    throw new Error(`clean-start invoked an unexpected command: ${args.join(' ')}`);
+  };
+  executePlan(plan, { spawn });
+  assert.equal(calls.filter((args) => args[0] === 'functions' && args[1] === 'deploy').length, 2);
+  assert.equal(calls.some((args) => args[0] === 'run'), false);
+});
+
+test('mocked D3 continuation deployment restores gateway and authority after enablement failure', () => {
+  const manifest = loadManifest();
+  const plan = createDeploymentPlan({
+    action: 'enable-group-d3', expectedSha: HEAD, explicitSource: manifest.sourceRoot, mode: 'plan',
+    repoRoot: REPO_ROOT, manifest, repository: repositoryFixture(manifest),
+    confirmation: D3_CONFIRMATIONS['enable-group-d3'], d3Mode: 'continuation',
+    guardResult: d3ContinuationGuardResult()
+  });
+  let authority = authorityServiceFixture(false);
+  let gatewayEnabled = false;
+  let deploymentAttempts = 0;
+  const calls = [];
+  const spawn = (_command, args) => {
+    calls.push([...args]);
+    if (args[0] === 'run' && args[1] === 'services' && args[2] === 'describe') {
+      return { status: 0, stdout: JSON.stringify(authority), stderr: '' };
+    }
+    if (args[0] === 'run' && args[1] === 'services' && args[2] === 'get-iam-policy') {
+      return { status: 0, stdout: JSON.stringify({ bindings: [{ role: 'roles/run.invoker',
+        members: ['serviceAccount:e1-authority-gateway@trade-list-a4297.iam.gserviceaccount.com'] }] }), stderr: '' };
+    }
+    if (args[0] === 'projects' && args[1] === 'get-iam-policy') {
+      return { status: 0, stdout: JSON.stringify({ bindings: [{ role: 'roles/firebaseappcheck.tokenVerifier',
+        members: ['serviceAccount:e1-authority-gateway@trade-list-a4297.iam.gserviceaccount.com'] }] }), stderr: '' };
+    }
+    if (args[0] === 'run' && args[1] === 'services' && args[2] === 'replace') {
+      if (!args.includes('--dry-run')) {
+        const spec = JSON.parse(fs.readFileSync(args[3], 'utf8'));
+        authority = { ...spec, status: { url: EXPECTED_AUTHORITY.origin,
+          latestReadyRevisionName: 'e1-identity-authority-00027-new' } };
+      }
+      return { status: 0, stdout: '', stderr: '' };
+    }
+    if (args[0] === 'functions' && args[1] === 'deploy') {
+      deploymentAttempts += 1;
+      if (deploymentAttempts === 1) return { status: 1, stdout: '', stderr: 'contained mock failure' };
+      gatewayEnabled = args.find((value) => value.startsWith('--set-env-vars='))
+        .includes('GATEWAY_INVOCATION_ENABLED=true');
+      return { status: 0, stdout: '', stderr: '' };
+    }
+    if (args[0] === 'functions' && args[1] === 'describe') return { status: 0, stderr: '', stdout: JSON.stringify({
+      serviceConfig: { serviceAccountEmail: 'e1-authority-gateway@trade-list-a4297.iam.gserviceaccount.com',
+        environmentVariables: { GATEWAY_INVOCATION_ENABLED: String(gatewayEnabled), READ_PROOF_MODE: 'false' } }
+    }) };
+    throw new Error(`unexpected mocked command: ${args.join(' ')}`);
+  };
+  assert.throws(() => executePlan(plan, { spawn }), /gateway-deployment-failed/u);
+  assert.equal(Object.fromEntries(authority.spec.template.spec.containers[0].env
+    .map((entry) => [entry.name, entry.value])).RESERVE_HANDLE_ENABLED, 'false');
+  assert.equal(gatewayEnabled, false);
+  assert.equal(calls.filter((args) => args[0] === 'run' && args[1] === 'services' && args[2] === 'replace').length, 4);
+  assert.equal(deploymentAttempts, 3);
+});
+
+test('authority gate-only replacement rejects immutable image drift', () => {
+  const service = authorityServiceFixture(true);
+  const plan = { authorityOrigin: EXPECTED_AUTHORITY.origin, authorityRuntime: null };
+  assert.throws(() => verifyAuthorityService(plan, service, true, {
+    expectedImage: `us-central1-docker.pkg.dev/project/authority@sha256:${'b'.repeat(64)}`
+  }), /authority-image-drift/u);
+});
+
 test('D3 restoration remains available after readiness expiry and preserves immutable source', () => {
   const manifest = loadManifest();
   const restored = createDeploymentPlan({
@@ -448,6 +709,7 @@ test('D3 restoration remains available after readiness expiry and preserves immu
 
 test('D3 deployment CLI requires exact confirmation and keeps enable fail-closed without private readiness', () => {
   const restore = runD3Plan(os.tmpdir(), 'restore-group-d3', D3_CONFIRMATIONS['restore-group-d3']);
+  if (assertBranchGuard(restore)) return;
   assert.equal(restore.status, 0, restore.stderr);
   const restorePlan = JSON.parse(restore.stdout);
   assert.equal(restorePlan.cohortStage, 'D3');
@@ -474,7 +736,8 @@ test('D1, D2, and D3 guards cannot authorize another cohort', () => {
   assert.throws(() => createDeploymentPlan({ ...common, action: 'enable-group-d2', guardResult: d3GuardResult() }),
     /action-guard-mismatch/u);
   assert.throws(() => createDeploymentPlan({ ...common, action: 'enable-group-d3',
-    confirmation: D3_CONFIRMATIONS['enable-group-d3'], guardResult: d2GuardResult() }), /action-guard-mismatch/u);
+    confirmation: D3_CONFIRMATIONS['enable-group-d3'], d3Mode: 'clean-start',
+    guardResult: d2GuardResult() }), /action-guard-mismatch/u);
 });
 
 test('tracked scripts expose only the canonical gateway deploy entrypoint', () => {
@@ -487,5 +750,7 @@ test('tracked scripts expose only the canonical gateway deploy entrypoint', () =
   const deploySource = fs.readFileSync(CLI, 'utf8');
   assert.match(deploySource, /stagePinnedSource\(plan\)/u);
   assert.match(deploySource, /deploymentArguments\(plan, functionName, stagedSource\)/u);
+  assert.match(deploySource, /guardProductionThirdMutationContinuation\(\{ expectedSourceSha \}\)/u);
+  assert.match(deploySource, /args\['d3-mode'\]/u);
   assert.doesNotMatch(deploySource, /gcloud['"`]?,\s*\[['"`]functions['"`],\s*['"`]deploy/u);
 });

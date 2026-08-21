@@ -17,6 +17,7 @@ const LOGIN_METHOD = 'legacy-username-pin-firebase-password-v1';
 const APP_CHECK_MODE = 'production-limited-use-token';
 const APP_CHECK_STAGE_TIMEOUT_MS = 30 * 1000;
 const APP_CHECK_PROBE_TIMEOUT_MS = 3 * 60 * 1000;
+const APP_CHECK_EVIDENCE_ASSEMBLY_MAX_AGE_MS = 4 * 60 * 60 * 1000;
 const APP_CHECK_DEBUG_TOKEN_GLOBAL = 'FIREBASE_APPCHECK_DEBUG_TOKEN';
 const SLOTS = Object.freeze(['A', 'B', 'C', 'D', 'E']);
 const HASH = /^[a-f0-9]{64}$/u;
@@ -131,11 +132,13 @@ function validAppCheckProvenance(provenance, artifact, subject) {
   const starts = stages.map((stage) => Date.parse(stage.startedAt));
   const ends = stages.map((stage) => Date.parse(stage.settledAt));
   const probeStartedAt = Date.parse(provenance.probeStartedAt);
+  const finalProbeSettledAt = ends.at(-1);
   const verifiedAt = Date.parse(artifact.verifiedAt);
   return Number.isFinite(probeStartedAt) && probeStartedAt === starts[0] &&
     starts.every((startedAt, index) => index === 0 || startedAt >= ends[index - 1]) &&
-    Number.isFinite(verifiedAt) && ends.at(-1) <= verifiedAt &&
-    verifiedAt - starts[0] <= APP_CHECK_PROBE_TIMEOUT_MS;
+    Number.isFinite(finalProbeSettledAt) && finalProbeSettledAt <= verifiedAt &&
+    finalProbeSettledAt - probeStartedAt <= APP_CHECK_PROBE_TIMEOUT_MS &&
+    verifiedAt - finalProbeSettledAt <= APP_CHECK_EVIDENCE_ASSEMBLY_MAX_AGE_MS;
 }
 
 function stageTimeout(promise, timeoutMs, stage) {
@@ -343,6 +346,7 @@ function createBrowserExecutionHarness({ subjects, authAdapter, appCheckAdapter,
 
 module.exports = Object.freeze({
   APP_CHECK_DEBUG_TOKEN_GLOBAL,
+  APP_CHECK_EVIDENCE_ASSEMBLY_MAX_AGE_MS,
   APP_CHECK_PROBE_TIMEOUT_MS,
   APP_CHECK_PROVENANCE_FIELDS,
   APP_CHECK_STAGE_TIMEOUT_MS,

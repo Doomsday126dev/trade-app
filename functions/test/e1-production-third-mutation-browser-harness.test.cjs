@@ -6,12 +6,16 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const {
+  ENTRY_EVIDENCE_MAX_AGE_MS,
   EXECUTION_EVIDENCE_PURPOSE,
   SYNTHETIC_COHORT_TYPE
 } = require('../production/e1ProductionThirdMutationContract.cjs');
 const {
   APP_CHECK_DEBUG_TOKEN_GLOBAL,
+  APP_CHECK_EVIDENCE_ASSEMBLY_MAX_AGE_MS,
   APP_CHECK_MODE,
+  APP_CHECK_PROBE_TIMEOUT_MS,
+  APP_CHECK_STAGE_TIMEOUT_MS,
   EXPECTED_APP_ID,
   EXPECTED_ORIGIN,
   EXPECTED_PATHNAMES,
@@ -63,12 +67,12 @@ function artifact() {
           probeStartedAt: at(0),
           samePageRuntimeEstablished: true,
           debugTokenGlobalAbsent: true,
-          pageRuntimeBinding: { startedAt: at(0), settledAt: at(50), outcome: 'verified' },
-          sdkImport: { startedAt: at(50), settledAt: at(100), outcome: 'resolved' },
-          readiness: { startedAt: at(100), settledAt: at(150), outcome: 'resolved' },
-          appCheckInstance: { startedAt: at(150), settledAt: at(160), outcome: 'verified', exactInstance: true },
+          pageRuntimeBinding: { startedAt: at(0), settledAt: at(100), outcome: 'verified' },
+          sdkImport: { startedAt: at(100), settledAt: at(200), outcome: 'resolved' },
+          readiness: { startedAt: at(200), settledAt: at(300), outcome: 'resolved' },
+          appCheckInstance: { startedAt: at(300), settledAt: at(400), outcome: 'verified', exactInstance: true },
           limitedUseToken: {
-            startedAt: at(160), settledAt: at(250), outcome: 'resolved', nonEmpty: true,
+            startedAt: at(400), settledAt: at(1000), outcome: 'resolved', nonEmpty: true,
             tokenFingerprint: ['b', 'c', 'd', 'e', 'f'][index].repeat(64),
             persisted: false, reused: false, sentToCallable: false
           },
@@ -93,6 +97,32 @@ function artifact() {
   return value;
 }
 
+const PROVENANCE_STAGES = Object.freeze([
+  'pageRuntimeBinding', 'sdkImport', 'readiness', 'appCheckInstance', 'limitedUseToken'
+]);
+
+function shiftSubjectProbe(value, index, deltaMs) {
+  const provenance = value.subjects[index].appCheckProvenance;
+  provenance.probeStartedAt = new Date(Date.parse(provenance.probeStartedAt) + deltaMs).toISOString();
+  for (const name of PROVENANCE_STAGES) {
+    provenance[name].startedAt = new Date(Date.parse(provenance[name].startedAt) + deltaMs).toISOString();
+    provenance[name].settledAt = new Date(Date.parse(provenance[name].settledAt) + deltaMs).toISOString();
+  }
+  provenance.runtimeProofDigest = appCheckRuntimeProofDigest(provenance);
+}
+
+function setSubjectAssemblyAge(value, index, ageMs) {
+  const provenance = value.subjects[index].appCheckProvenance;
+  const currentFinal = Date.parse(provenance.limitedUseToken.settledAt);
+  const targetFinal = Date.parse(value.verifiedAt) - ageMs;
+  shiftSubjectProbe(value, index, targetFinal - currentFinal);
+}
+
+function refreshHarnessDigest(value) {
+  value.harnessDigest = harnessDigest(value);
+  return value;
+}
+
 function validate(value = artifact(), mode = 0o600) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'e1-d3-browser-'));
   try {
@@ -110,6 +140,70 @@ test('private browser evidence requires complete reviewed same-runtime App Check
   assert.equal(result.limitedUseAppCheckRequired, true);
   assert.equal(result.debugTokensUsed, false);
   assert.equal(result.tokensPersisted, false);
+});
+
+test('manual evidence timing separates the three-minute probe from the four-hour assembly window', () => {
+  assert.equal(APP_CHECK_PROBE_TIMEOUT_MS, 3 * 60 * 1000);
+  assert.equal(APP_CHECK_EVIDENCE_ASSEMBLY_MAX_AGE_MS, 4 * 60 * 60 * 1000);
+
+  const manual = artifact();
+  for (let index = 0; index < manual.subjects.length; index += 1) {
+    setSubjectAssemblyAge(manual, index, (75 - index * 5) * 60 * 1000);
+  }
+  assert.equal(validate(refreshHarnessDigest(manual)).subjectsReady, 5);
+
+  const justInside = artifact();
+  setSubjectAssemblyAge(justInside, 0, APP_CHECK_EVIDENCE_ASSEMBLY_MAX_AGE_MS - 1);
+  assert.equal(validate(refreshHarnessDigest(justInside)).subjectsReady, 5);
+
+  const outside = artifact();
+  setSubjectAssemblyAge(outside, 0, APP_CHECK_EVIDENCE_ASSEMBLY_MAX_AGE_MS + 1);
+  assert.throws(() => validate(refreshHarnessDigest(outside)),
+    (error) => error.reasons.includes('group_d3_browser_harness_subject_a_invalid'));
+});
+
+test('probe duration, stage duration, ordering, and final-settlement bounds remain fail closed', () => {
+  const overProbe = artifact();
+  const overProbeStart = Date.parse(overProbe.subjects[0].appCheckProvenance.probeStartedAt);
+  const overProbeToken = overProbe.subjects[0].appCheckProvenance.limitedUseToken;
+  overProbeToken.startedAt = new Date(overProbeStart + APP_CHECK_PROBE_TIMEOUT_MS).toISOString();
+  overProbeToken.settledAt = new Date(overProbeStart + APP_CHECK_PROBE_TIMEOUT_MS + 1).toISOString();
+  overProbe.subjects[0].appCheckProvenance.runtimeProofDigest =
+    appCheckRuntimeProofDigest(overProbe.subjects[0].appCheckProvenance);
+  overProbe.verifiedAt = new Date(overProbeStart + APP_CHECK_PROBE_TIMEOUT_MS + 60_000).toISOString();
+  assert.throws(() => validate(refreshHarnessDigest(overProbe)),
+    (error) => error.reasons.includes('group_d3_browser_harness_subject_a_invalid'));
+
+  const overStage = artifact();
+  const overStageToken = overStage.subjects[0].appCheckProvenance.limitedUseToken;
+  overStageToken.settledAt = new Date(Date.parse(overStageToken.startedAt) + APP_CHECK_STAGE_TIMEOUT_MS + 1).toISOString();
+  overStage.subjects[0].appCheckProvenance.runtimeProofDigest =
+    appCheckRuntimeProofDigest(overStage.subjects[0].appCheckProvenance);
+  assert.throws(() => validate(refreshHarnessDigest(overStage)),
+    (error) => error.reasons.includes('group_d3_browser_harness_subject_a_invalid'));
+
+  const beforeFinal = artifact();
+  beforeFinal.verifiedAt = new Date(Date.parse(
+    beforeFinal.subjects[0].appCheckProvenance.limitedUseToken.settledAt) - 1).toISOString();
+  assert.throws(() => validate(refreshHarnessDigest(beforeFinal)),
+    (error) => error.reasons.includes('group_d3_browser_harness_subject_a_invalid'));
+
+  const outOfOrder = artifact();
+  const provenance = outOfOrder.subjects[0].appCheckProvenance;
+  provenance.sdkImport.startedAt = new Date(Date.parse(provenance.pageRuntimeBinding.settledAt) - 1).toISOString();
+  provenance.runtimeProofDigest = appCheckRuntimeProofDigest(provenance);
+  assert.throws(() => validate(refreshHarnessDigest(outOfOrder)),
+    (error) => error.reasons.includes('group_d3_browser_harness_subject_a_invalid'));
+});
+
+test('assembled harness retains the separate fifteen-minute admission boundary', () => {
+  const stale = artifact();
+  const freshHarnessTime = NOW - ENTRY_EVIDENCE_MAX_AGE_MS - 1;
+  const delta = freshHarnessTime - Date.parse(stale.verifiedAt);
+  stale.verifiedAt = new Date(freshHarnessTime).toISOString();
+  for (let index = 0; index < stale.subjects.length; index += 1) shiftSubjectProbe(stale, index, delta);
+  assert.throws(() => validate(refreshHarnessDigest(stale)),
+    (error) => error.reasons.includes('group_d3_browser_harness_schema_invalid'));
 });
 
 for (const [name, mutate, reason] of [
