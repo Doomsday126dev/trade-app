@@ -166,9 +166,10 @@ const CONTINUATION_HISTORY_FIELDS = Object.freeze([
 ]);
 const CONTINUATION_SESSION_FIELDS = Object.freeze(['sessionIdHash', 'state', 'closedAt', 'closeReason']);
 const CONTINUATION_RECONCILIATION_FIELDS = Object.freeze([
-  'evidenceDigest', 'executionLedgerDigest', 'verifiedAt', 'aReserveInvocations', 'aReplayInvocations',
-  'laterSlotInvocations', 'acceptedHistoricalRateLimitReplayWrites', 'remainingRateLimitReplayWrites',
-  'previousStateFingerprint', 'currentStateFingerprint'
+  'acceptedRolloverEvidenceDigest', 'evidenceDigest', 'executionLedgerDigest', 'verifiedAt',
+  'aReserveInvocations', 'aReplayInvocations', 'laterSlotInvocations',
+  'acceptedHistoricalRateLimitReplayWrites', 'remainingRateLimitReplayWrites', 'previousStateFingerprint',
+  'currentStateFingerprint'
 ]);
 const CONTINUATION_STATE_FIELDS = Object.freeze([
   'totalDocuments', 'accounts', 'trainerHandles', 'rateLimits', 'operationRequests', 'identityMigrations',
@@ -568,12 +569,15 @@ function validateContinuationCandidateState(states, binding, errors) {
       errors.push(`group_d3_continuation_candidate_${slot.toLowerCase()}_binding_invalid`);
       return;
     }
-    if (slot === 'A') {
+    const completed = CONTINUATION_COMPLETED_PREFIX.filter((operation) => operation.slot === slot);
+    const reserveCompleted = completed.some((operation) => operation.operation === 'reserve');
+    const replayCompleted = completed.some((operation) => operation.operation === 'exact-replay');
+    if (reserveCompleted) {
       if (state.accountState !== 'present-owned' || state.handleState !== 'present-owned' ||
           state.rateLimitState !== 'present-valid' || state.operationRequestCount !== 1 ||
           state.ownershipReciprocal !== true || state.requestBindingVerified !== true ||
-          state.replayEvidenceCount !== 1) {
-        errors.push('group_d3_continuation_candidate_a_state_invalid');
+          state.replayEvidenceCount !== (replayCompleted ? 1 : 0)) {
+        errors.push(`group_d3_continuation_candidate_${slot.toLowerCase()}_state_invalid`);
       }
     } else if (state.accountState !== 'absent' || state.handleState !== 'absent' ||
         state.rateLimitState !== 'absent' || state.operationRequestCount !== 0 ||
@@ -633,17 +637,18 @@ function validateThirdMutationContinuationArtifact(value, context = {}, options 
   }
   if (!exactFields(session, CONTINUATION_SESSION_FIELDS) || !HASH.test(session?.sessionIdHash || '') ||
       session.state !== 'paused-closed' || !Number.isFinite(closedAt) ||
-      session.closeReason !== 'accepted-a-replay-rate-limit-rollover-after-authoritative-reconciliation') {
+      session.closeReason !== 'contained-after-b-reserve-authoritative-reconciliation') {
     errors.push('group_d3_continuation_session_invalid');
   }
   if (!exactFields(reconciliation, CONTINUATION_RECONCILIATION_FIELDS) ||
+      reconciliation.acceptedRolloverEvidenceDigest !== CONTINUATION_PINS.acceptedRolloverEvidenceDigest ||
       reconciliation.evidenceDigest !== CONTINUATION_PINS.reconciliationEvidenceDigest ||
       reconciliation.executionLedgerDigest !== CONTINUATION_PINS.executionLedgerDigest ||
       !Number.isFinite(reconciledAt) || reconciledAt > now || reconciliation.aReserveInvocations !== 1 ||
-      reconciliation.aReplayInvocations !== 1 || reconciliation.laterSlotInvocations !== 0 ||
+      reconciliation.aReplayInvocations !== 1 || reconciliation.laterSlotInvocations !== 1 ||
       reconciliation.acceptedHistoricalRateLimitReplayWrites !== 1 ||
       reconciliation.remainingRateLimitReplayWrites !== 0 ||
-      reconciliation.previousStateFingerprint !== CONTINUATION_COMPLETED_PREFIX[0].stateFingerprint ||
+      reconciliation.previousStateFingerprint !== CONTINUATION_COMPLETED_PREFIX.at(-2).stateFingerprint ||
       reconciliation.currentStateFingerprint !== CONTINUATION_STATE_FINGERPRINT) {
     errors.push('group_d3_continuation_reconciliation_invalid');
   }
@@ -652,8 +657,8 @@ function validateThirdMutationContinuationArtifact(value, context = {}, options 
       !sameJson(value?.nextOperation, CONTINUATION_REMAINING_SEQUENCE[0])) {
     errors.push('group_d3_continuation_prefix_or_next_invalid');
   }
-  if (!exactFields(state, CONTINUATION_STATE_FIELDS) || state.totalDocuments !== 16 || state.accounts !== 4 ||
-      state.trainerHandles !== 4 || state.rateLimits !== 4 || state.operationRequests !== 4 ||
+  if (!exactFields(state, CONTINUATION_STATE_FIELDS) || state.totalDocuments !== 20 || state.accounts !== 5 ||
+      state.trainerHandles !== 5 || state.rateLimits !== 5 || state.operationRequests !== 5 ||
       state.identityMigrations !== 0 || state.identityConflicts !== 0 || state.unexpectedPaths !== 0 ||
       state.ordinaryUserEffects !== 0 || state.canonicalFingerprint !== CONTINUATION_STATE_FINGERPRINT) {
     errors.push('group_d3_continuation_current_state_invalid');
@@ -685,7 +690,7 @@ function validateThirdMutationContinuationArtifact(value, context = {}, options 
   }
   return Object.freeze({
     ok: true,
-    mode: 'reconciled-a-reserve-and-replay-continuation-preflight',
+    mode: 'reconciled-through-b-reserve-continuation-preflight',
     continuationArtifactDigest: value.artifactDigest,
     continuationPreflightDigest: preflight.digest,
     historicalEvidenceRecollectionRequired: false,
@@ -694,7 +699,7 @@ function validateThirdMutationContinuationArtifact(value, context = {}, options 
     nextOperation: CONTINUATION_REMAINING_SEQUENCE[0],
     remainingSequence: CONTINUATION_REMAINING_SEQUENCE,
     remainingBudget: CONTINUATION_REMAINING_BUDGET,
-    currentDocumentCount: 16,
+    currentDocumentCount: 20,
     executionAuthorized: false,
     laterGroupsAuthorized: false,
     groupEAuthorized: false,
@@ -853,7 +858,7 @@ function guardProductionThirdMutationContinuation(options = {}) {
     approvalGroup: 'D',
     cohortStage: 'D3',
     deploymentMode: 'continuation',
-    mode: 'reconciled-a-reserve-and-replay-continuation',
+    mode: 'reconciled-through-b-reserve-continuation',
     environment: 'production',
     cohortType: SYNTHETIC_COHORT_TYPE,
     evidencePurpose: EXECUTION_EVIDENCE_PURPOSE,
@@ -866,7 +871,7 @@ function guardProductionThirdMutationContinuation(options = {}) {
     remainingSequence: jitResult.remainingSequence,
     acceptedUsage: CONTINUATION_ACCEPTED_USAGE,
     remainingBudget: CONTINUATION_REMAINING_BUDGET,
-    currentDocumentCount: 16,
+    currentDocumentCount: 20,
     sourceSha: options.expectedSourceSha,
     toolingSourceSha: options.expectedSourceSha,
     productionRuntime: CONTINUATION_PRODUCTION_RUNTIME,
