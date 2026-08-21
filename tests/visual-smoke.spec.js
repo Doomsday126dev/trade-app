@@ -1195,6 +1195,60 @@ test.describe('visual smoke', () => {
     }
   });
 
+  test('last Favorite overflow menu escapes card clipping and remains hit-testable',async({page})=>{
+    await page.setViewportSize({width:1440,height:900});
+    await page.goto(`./?favorite-card-overflow=${Date.now()}`,{waitUntil:'domcontentloaded'});
+    await waitForStableLocalOrganizerStartup(page);
+    await installLocalOrganizerFixture(page);
+    await page.evaluate(async()=>{
+      document.querySelectorAll('.page').forEach(node=>node.classList.remove('active'));
+      document.getElementById('tab-find').classList.add('active');
+      managedPublicShareRepository=null;
+      await renderTrainerQuickLists();
+    });
+
+    const cards=page.locator('.favorite-card-shell');
+    const card=cards.last();
+    await card.scrollIntoViewIfNeeded();
+    await card.locator('.favorite-card-more').click();
+    const menu=card.locator('.favorite-card-menu');
+    const action=menu.getByRole('menuitem').first();
+    await expect(menu).toBeVisible();
+
+    const geometry=await page.evaluate(()=>{
+      const cards=[...document.querySelectorAll('.favorite-card-shell')];
+      const card=cards.at(-1),previous=cards.at(-2),menu=card.querySelector('.favorite-card-menu');
+      const action=menu.querySelector('[role="menuitem"]');
+      const rect=value=>{const box=value.getBoundingClientRect();return{top:box.top,right:box.right,bottom:box.bottom,left:box.left,width:box.width,height:box.height};};
+      const menuRect=rect(menu),cardRect=rect(card),previousRect=rect(previous),actionRect=rect(action);
+      const point={x:actionRect.left+(actionRect.width/2),y:actionRect.top+(actionRect.height/2)};
+      const hit=document.elementFromPoint(point.x,point.y);
+      const clippingAncestors=[];
+      for(let node=menu.parentElement;node;node=node.parentElement){
+        const style=getComputedStyle(node);
+        if(['hidden','clip','auto','scroll'].includes(style.overflowX)||['hidden','clip','auto','scroll'].includes(style.overflowY)){
+          const ancestorRect=rect(node);
+          if(menuRect.left<ancestorRect.left||menuRect.right>ancestorRect.right||menuRect.top<ancestorRect.top||menuRect.bottom>ancestorRect.bottom){
+            clippingAncestors.push({className:node.className,overflowX:style.overflowX,overflowY:style.overflowY});
+          }
+        }
+      }
+      return{
+        menuRect,cardRect,previousRect,actionRect,clippingAncestors,
+        overlapsPrevious:point.y>=previousRect.top&&point.y<=previousRect.bottom,
+        actionHit:hit===action||action.contains(hit),
+        insideViewport:menuRect.left>=0&&menuRect.top>=0&&menuRect.right<=innerWidth&&menuRect.bottom<=innerHeight
+      };
+    });
+    expect(geometry.menuRect.top).toBeLessThan(geometry.cardRect.top);
+    expect(geometry.overlapsPrevious).toBe(true);
+    expect(geometry.clippingAncestors).toEqual([]);
+    expect(geometry.insideViewport).toBe(true);
+    expect(geometry.actionHit).toBe(true);
+    await action.click();
+    await expect(page.locator('#trainer-organizer-modal')).toBeVisible();
+  });
+
   test('Browse Favorites stays Favorite-only across canonical search, bounded hydration, retry, refresh, and responsive states',async({page})=>{
     await page.setViewportSize({width:1440,height:900});
     await page.goto(`./?favorite-pokemon-browse=${Date.now()}`,{waitUntil:'domcontentloaded'});
