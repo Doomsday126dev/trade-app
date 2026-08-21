@@ -25,7 +25,8 @@ const {
   CONTINUATION_ACCEPTED_USAGE,
   CONTINUATION_PRODUCTION_RUNTIME,
   CONTINUATION_REMAINING_BUDGET,
-  CONTINUATION_REMAINING_SEQUENCE
+  CONTINUATION_REMAINING_SEQUENCE,
+  continuationProgress
 } = require('../production/e1ProductionThirdMutationContract.cjs');
 const {
   argumentsMap,
@@ -379,23 +380,28 @@ function d3GuardResult(overrides = {}) {
   };
 }
 
-function d3ContinuationGuardResult(overrides = {}) {
+function d3ContinuationGuardResult(completedOrOverrides = 0, overrides = {}) {
+  const completedSuffixOperations = Number.isInteger(completedOrOverrides) ? completedOrOverrides : 0;
+  const finalOverrides = Number.isInteger(completedOrOverrides) ? overrides : completedOrOverrides;
+  const progress = continuationProgress(completedSuffixOperations);
   return d3GuardResult({
     deploymentMode: 'continuation',
-    mode: 'reconciled-through-b-replay-continuation',
+    mode: 'authoritative-exact-prefix-continuation',
     historicalAdmissionVerified: true,
     currentStateVerified: true,
     historicalEvidenceRecollectionRequired: false,
-    currentDocumentCount: 20,
-    nextOperation: { slot: 'C', operation: 'reserve' },
-    remainingSequence: CONTINUATION_REMAINING_SEQUENCE,
-    acceptedUsage: CONTINUATION_ACCEPTED_USAGE,
-    remainingBudget: CONTINUATION_REMAINING_BUDGET,
+    completedSuffixOperations,
+    currentDocumentCount: progress.currentDocumentCount,
+    nextOperation: progress.nextOperation,
+    remainingSequence: progress.remainingSequence,
+    expectedCountSequence: progress.expectedCountSequence,
+    acceptedUsage: progress.acceptedUsage,
+    remainingBudget: progress.remainingBudget,
     productionRuntime: CONTINUATION_PRODUCTION_RUNTIME,
     continuationArtifactDigest: 'b'.repeat(64),
     continuationPreflightDigest: 'c'.repeat(64),
     continuationJitDigest: 'd'.repeat(64),
-    ...overrides
+    ...finalOverrides
   });
 }
 
@@ -571,6 +577,16 @@ test('D3 continuation deployer binds exact guard mode, tooling SHA, production r
   assert.equal(plan.toolingSourceSha, HEAD);
   assert.deepEqual(plan.productionRuntime, CONTINUATION_PRODUCTION_RUNTIME);
   assert.equal(plan.authorityRuntime.revision, 'e1-identity-authority-00026-l5s');
+  for (let completed = 0; completed < CONTINUATION_REMAINING_SEQUENCE.length; completed += 1) {
+    const progress = continuationProgress(completed);
+    const checkpointPlan = createDeploymentPlan({ ...common,
+      guardResult: d3ContinuationGuardResult(completed) });
+    assert.equal(checkpointPlan.guardVerified, true);
+    assert.deepEqual(d3ContinuationGuardResult(completed).nextOperation, progress.nextOperation);
+    assert.deepEqual(d3ContinuationGuardResult(completed).remainingBudget, progress.remainingBudget);
+  }
+  assert.throws(() => createDeploymentPlan({ ...common,
+    guardResult: d3ContinuationGuardResult(CONTINUATION_REMAINING_SEQUENCE.length) }), /action-guard-mismatch/u);
   const flagOnly = createDeploymentPlan(common);
   assert.equal(flagOnly.guardVerified, false);
   assert.equal(flagOnly.deploymentAllowed, false);
@@ -601,6 +617,10 @@ test('D3 continuation deployer binds exact guard mode, tooling SHA, production r
       guardResult: d3ContinuationGuardResult({ nextOperation: { slot: 'B', operation: 'reserve' } }) })],
     ['B replay retry', () => createDeploymentPlan({ ...common,
       guardResult: d3ContinuationGuardResult({ nextOperation: { slot: 'B', operation: 'exact-replay' } }) })],
+    ['checkpoint metadata mismatch', () => createDeploymentPlan({ ...common,
+      guardResult: d3ContinuationGuardResult({ completedSuffixOperations: 1 }) })],
+    ['completed C reserve retry', () => createDeploymentPlan({ ...common,
+      guardResult: d3ContinuationGuardResult(1, { nextOperation: { slot: 'C', operation: 'reserve' } }) })],
     ['hidden accepted rollover', () => createDeploymentPlan({ ...common,
       guardResult: d3ContinuationGuardResult({ acceptedUsage: {
         ...CONTINUATION_ACCEPTED_USAGE, rateLimitReplayWrites: 0 } }) })],

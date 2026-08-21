@@ -11,8 +11,8 @@ const EXECUTION_EVIDENCE_PURPOSE = 'synthetic-mutation-execution';
 const OBSERVATION_HOURS = 24;
 const MAX_WINDOW_HOURS = 2;
 const ENTRY_EVIDENCE_MAX_AGE_MS = 15 * 60 * 1000;
-const CONTINUATION_PURPOSE = 'resume-after-reconciled-b-replay-prefix-v1';
-const CONTINUATION_JIT_PURPOSE = 'authorize-reconciled-b-replay-suffix-v1';
+const CONTINUATION_PURPOSE = 'resume-after-authoritative-exact-prefix-v1';
+const CONTINUATION_JIT_PURPOSE = 'authorize-authoritative-exact-suffix-v1';
 const CONTINUATION_STATE_FINGERPRINT = 'f92d3f33ec600176328ddce117f9fa12a458b3cd61e24872ecc32416f9111cbd';
 const CONTINUATION_PRODUCTION_RUNTIME = Object.freeze({
   releaseId: '2026-08-20.51',
@@ -157,6 +157,35 @@ function subtractBudget(value, decrement, label) {
   return next;
 }
 
+function continuationAcceptedUsage(completedSuffixOperations = 0) {
+  if (!Number.isInteger(completedSuffixOperations) || completedSuffixOperations < 0 ||
+      completedSuffixOperations > CONTINUATION_REMAINING_SEQUENCE.length) {
+    throw new Error('e1/group-d3-continuation-progress-invalid');
+  }
+  const usage = { ...CONTINUATION_ACCEPTED_USAGE };
+  for (const operation of CONTINUATION_REMAINING_SEQUENCE.slice(0, completedSuffixOperations)) {
+    for (const [field, increment] of [
+      ['gatewayCalls', 1], ['authorityCalls', 1], ['limitedUseAppCheckTokens', 1],
+      ['operationRequestExistenceReads', 1], ['rtdbExactReads', 3]
+    ]) usage[field] += increment;
+    if (operation.operation === 'reserve') {
+      for (const [field, increment] of [
+        ['logicalFirestoreTransactions', 2], ['firestoreTransactionAttemptsExpected', 2],
+        ['firestoreTransactionAttemptsMaximum', 10], ['firestoreOperationReadsExpected', 5],
+        ['firestoreOperationReadsMaximum', 21], ['firestoreCommittedWrites', 4],
+        ['operationRequestCreates', 1], ['rateLimitCreates', 1], ['firstWriteSubjects', 1]
+      ]) usage[field] += increment;
+    } else {
+      for (const [field, increment] of [
+        ['logicalFirestoreTransactions', 1], ['firestoreTransactionAttemptsExpected', 1],
+        ['firestoreTransactionAttemptsMaximum', 5], ['firestoreOperationReadsExpected', 4],
+        ['firestoreOperationReadsMaximum', 16], ['replayOperations', 1]
+      ]) usage[field] += increment;
+    }
+  }
+  return Object.freeze(usage);
+}
+
 function continuationProgress(completedSuffixOperations = 0) {
   if (!Number.isInteger(completedSuffixOperations) || completedSuffixOperations < 0 ||
       completedSuffixOperations > CONTINUATION_REMAINING_SEQUENCE.length) {
@@ -190,6 +219,8 @@ function continuationProgress(completedSuffixOperations = 0) {
     currentDocumentCount: CONTINUATION_COUNT_SEQUENCE[completedSuffixOperations],
     nextOperation: CONTINUATION_REMAINING_SEQUENCE[completedSuffixOperations] || null,
     remainingSequence: Object.freeze(CONTINUATION_REMAINING_SEQUENCE.slice(completedSuffixOperations)),
+    expectedCountSequence: Object.freeze(CONTINUATION_COUNT_SEQUENCE.slice(completedSuffixOperations)),
+    acceptedUsage: continuationAcceptedUsage(completedSuffixOperations),
     remainingBudget: Object.freeze(budget),
     complete: completedSuffixOperations === CONTINUATION_REMAINING_SEQUENCE.length
   });
@@ -332,6 +363,7 @@ function continuationPreflightDigest(value) {
     value?.interruptedSession,
     value?.reconciliation,
     value?.completedPrefix,
+    value?.completedSuffixOperations,
     value?.acceptedUsage,
     value?.nextOperation,
     value?.currentState,
@@ -511,6 +543,7 @@ module.exports = Object.freeze({
   continuationProgress,
   expectedDocumentCount,
   continuationArtifactDigest,
+  continuationAcceptedUsage,
   continuationJitDigest,
   continuationPreflightDigest,
   readinessContract,

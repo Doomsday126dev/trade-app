@@ -15,16 +15,13 @@ const {
   ALLOWED_OPERATIONS,
   CANDIDATE_POOL_POLICY,
   COHORT_SIZE,
-  CONTINUATION_ACCEPTED_USAGE,
   CONTINUATION_ARTIFACT_PURPOSE,
   CONTINUATION_COMPLETED_PREFIX,
   CONTINUATION_COUNT_SEQUENCE,
   CONTINUATION_JIT_PURPOSE,
   CONTINUATION_PINS,
   CONTINUATION_PRODUCTION_RUNTIME,
-  CONTINUATION_REMAINING_BUDGET,
   CONTINUATION_REMAINING_SEQUENCE,
-  CONTINUATION_STATE_FINGERPRINT,
   D2_BASELINE,
   ENTRY_EVIDENCE_MAX_AGE_MS,
   ELIGIBILITY_FIELDS,
@@ -156,7 +153,8 @@ const CONTINUATION_FIELDS = Object.freeze([
   'schemaVersion', 'purpose', 'environment', 'projectId', 'projectNumber', 'region', 'databaseId', 'rtdbDatabaseUrl',
   'productionRuntime', 'appId', 'approvalGroup', 'cohortStage', 'cohortType', 'evidencePurpose', 'candidatePoolDigest',
   'bindingFileSha', 'bindingDigest', 'historicalAdmission', 'interruptedSession', 'reconciliation', 'completedPrefix',
-  'acceptedUsage', 'nextOperation', 'currentState', 'candidateState', 'remainingSequence', 'expectedCountSequence', 'remainingBudget', 'currentGates',
+  'completedSuffixOperations', 'acceptedUsage', 'nextOperation', 'currentState', 'candidateState', 'remainingSequence',
+  'expectedCountSequence', 'remainingBudget', 'currentGates',
   'runtimeProvenance', 'securityBoundary', 'writeBoundary', 'preflight', 'historicalEvidenceRecollectionRequired',
   'executionAuthorized', 'laterGroupsAuthorized', 'groupEAuthorized', 'artifactDigest'
 ]);
@@ -180,11 +178,15 @@ const CONTINUATION_CANDIDATE_STATE_FIELDS = Object.freeze([
   'rateLimitDocumentPath', 'accountState', 'handleState', 'rateLimitState', 'operationRequestCount',
   'ownershipReciprocal', 'requestBindingVerified', 'replayEvidenceCount'
 ]);
+const CONTINUATION_DYNAMIC_STEP_FIELDS = Object.freeze([
+  'slot', 'operation', 'resultCode', 'documentCount', 'committedWrites', 'evidenceDigest', 'stateFingerprint'
+]);
 const CONTINUATION_PREFLIGHT_FIELDS = Object.freeze(['verifiedAt', 'expiresAt', 'digest']);
 const CONTINUATION_JIT_FIELDS = Object.freeze([
   'schemaVersion', 'purpose', 'continuationArtifactDigest', 'continuationPreflightDigest',
   'continuationContractSourceSha', 'approvedAt', 'entryEvidenceExpiresAt', 'humanOperator', 'teardownOwner',
-  'approvalAcknowledged', 'teardownOwnerAcknowledged', 'mutationWindow', 'nextOperation', 'remainingSequence', 'expectedCountSequence',
+  'approvalAcknowledged', 'teardownOwnerAcknowledged', 'mutationWindow', 'completedSuffixOperations', 'nextOperation',
+  'remainingSequence', 'expectedCountSequence',
   'acceptedUsage', 'remainingBudget', 'activationGatePlan', 'restorationGatePlan', 'executionAuthorized', 'laterGroupsAuthorized',
   'groupEAuthorized', 'jitDigest'
 ]);
@@ -552,7 +554,57 @@ function validateThirdMutationAcceptance(value, options = {}) {
   });
 }
 
-function validateContinuationCandidateState(states, binding, errors) {
+function continuationCloseReason(operation) {
+  if (!operation || !SLOTS.includes(operation.slot) ||
+      !['reserve', 'exact-replay'].includes(operation.operation)) return null;
+  return `contained-after-${operation.slot.toLowerCase()}-${operation.operation}-authoritative-reconciliation`;
+}
+
+function validateContinuationPrefix(value, errors) {
+  let progress;
+  try { progress = continuationProgress(value?.completedSuffixOperations); }
+  catch { errors.push('group_d3_continuation_progress_invalid'); return null; }
+  const prefix = value?.completedPrefix;
+  const baselineLength = CONTINUATION_COMPLETED_PREFIX.length;
+  if (!Array.isArray(prefix) || prefix.length !== baselineLength + progress.completedSuffixOperations ||
+      !sameJson(prefix.slice(0, baselineLength), CONTINUATION_COMPLETED_PREFIX)) {
+    errors.push('group_d3_continuation_prefix_or_next_invalid');
+    return null;
+  }
+  let previousFingerprint = CONTINUATION_COMPLETED_PREFIX.at(-1).stateFingerprint;
+  const evidenceDigests = new Set(CONTINUATION_COMPLETED_PREFIX
+    .map((operation) => operation.evidenceDigest)
+    .filter(Boolean));
+  for (let index = 0; index < progress.completedSuffixOperations; index += 1) {
+    const expected = CONTINUATION_REMAINING_SEQUENCE[index];
+    const actual = prefix[baselineLength + index];
+    const reserve = expected.operation === 'reserve';
+    if (!exactFields(actual, CONTINUATION_DYNAMIC_STEP_FIELDS) || actual.slot !== expected.slot ||
+        actual.operation !== expected.operation || actual.resultCode !== (reserve ? 'SUCCESS' : 'IDEMPOTENT') ||
+        actual.documentCount !== CONTINUATION_COUNT_SEQUENCE[index + 1] ||
+        actual.committedWrites !== (reserve ? 4 : 0) || !HASH.test(actual.evidenceDigest || '') ||
+        !HASH.test(actual.stateFingerprint || '') || evidenceDigests.has(actual.evidenceDigest) ||
+        (reserve && actual.stateFingerprint === previousFingerprint) ||
+        (!reserve && actual.stateFingerprint !== previousFingerprint)) {
+      errors.push('group_d3_continuation_prefix_or_next_invalid');
+      return null;
+    }
+    evidenceDigests.add(actual.evidenceDigest);
+    previousFingerprint = actual.stateFingerprint;
+  }
+  const latest = prefix.at(-1);
+  const prior = prefix.at(-2);
+  return Object.freeze({
+    progress,
+    prefix,
+    latest,
+    previousStateFingerprint: prior.stateFingerprint,
+    currentStateFingerprint: latest.stateFingerprint,
+    latestEvidenceDigest: latest.evidenceDigest
+  });
+}
+
+function validateContinuationCandidateState(states, binding, completedPrefix, errors) {
   if (!Array.isArray(states) || states.length !== COHORT_SIZE) {
     errors.push('group_d3_continuation_candidate_state_invalid');
     return;
@@ -569,7 +621,7 @@ function validateContinuationCandidateState(states, binding, errors) {
       errors.push(`group_d3_continuation_candidate_${slot.toLowerCase()}_binding_invalid`);
       return;
     }
-    const completed = CONTINUATION_COMPLETED_PREFIX.filter((operation) => operation.slot === slot);
+    const completed = completedPrefix.filter((operation) => operation.slot === slot);
     const reserveCompleted = completed.some((operation) => operation.operation === 'reserve');
     const replayCompleted = completed.some((operation) => operation.operation === 'exact-replay');
     if (reserveCompleted) {
@@ -598,6 +650,8 @@ function validateThirdMutationContinuationArtifact(value, context = {}, options 
   const reconciliation = value?.reconciliation;
   const state = value?.currentState;
   const preflight = value?.preflight;
+  const checkpoint = validateContinuationPrefix(value, errors);
+  const progress = checkpoint?.progress;
   const preflightVerifiedAt = Date.parse(preflight?.verifiedAt);
   const preflightExpiresAt = Date.parse(preflight?.expiresAt);
   const closedAt = Date.parse(session?.closedAt);
@@ -637,36 +691,43 @@ function validateThirdMutationContinuationArtifact(value, context = {}, options 
   }
   if (!exactFields(session, CONTINUATION_SESSION_FIELDS) || !HASH.test(session?.sessionIdHash || '') ||
       session.state !== 'paused-closed' || !Number.isFinite(closedAt) ||
-      session.closeReason !== 'contained-after-b-exact-replay-authoritative-reconciliation') {
+      session.closeReason !== continuationCloseReason(checkpoint?.latest)) {
     errors.push('group_d3_continuation_session_invalid');
   }
+  const ledgerDigestValid = progress?.completedSuffixOperations === 0
+    ? reconciliation?.executionLedgerDigest === CONTINUATION_PINS.executionLedgerDigest
+    : HASH.test(reconciliation?.executionLedgerDigest || '') &&
+      reconciliation.executionLedgerDigest !== CONTINUATION_PINS.executionLedgerDigest;
   if (!exactFields(reconciliation, CONTINUATION_RECONCILIATION_FIELDS) ||
       reconciliation.acceptedRolloverEvidenceDigest !== CONTINUATION_PINS.acceptedRolloverEvidenceDigest ||
-      reconciliation.evidenceDigest !== CONTINUATION_PINS.reconciliationEvidenceDigest ||
-      reconciliation.executionLedgerDigest !== CONTINUATION_PINS.executionLedgerDigest ||
+      reconciliation.evidenceDigest !== checkpoint?.latestEvidenceDigest || !ledgerDigestValid ||
       !Number.isFinite(reconciledAt) || reconciledAt > now || reconciliation.aReserveInvocations !== 1 ||
-      reconciliation.aReplayInvocations !== 1 || reconciliation.laterSlotInvocations !== 2 ||
+      reconciliation.aReplayInvocations !== 1 ||
+      reconciliation.laterSlotInvocations !== 2 + (progress?.completedSuffixOperations ?? -1) ||
       reconciliation.acceptedHistoricalRateLimitReplayWrites !== 1 ||
       reconciliation.remainingRateLimitReplayWrites !== 0 ||
-      reconciliation.previousStateFingerprint !== CONTINUATION_COMPLETED_PREFIX.at(-2).stateFingerprint ||
-      reconciliation.currentStateFingerprint !== CONTINUATION_STATE_FINGERPRINT) {
+      reconciliation.previousStateFingerprint !== checkpoint?.previousStateFingerprint ||
+      reconciliation.currentStateFingerprint !== checkpoint?.currentStateFingerprint) {
     errors.push('group_d3_continuation_reconciliation_invalid');
   }
-  if (!sameJson(value?.completedPrefix, CONTINUATION_COMPLETED_PREFIX) ||
-      !sameJson(value?.acceptedUsage, CONTINUATION_ACCEPTED_USAGE) ||
-      !sameJson(value?.nextOperation, CONTINUATION_REMAINING_SEQUENCE[0])) {
+  if (!progress || !sameJson(value?.acceptedUsage, progress.acceptedUsage) ||
+      !sameJson(value?.nextOperation, progress.nextOperation)) {
     errors.push('group_d3_continuation_prefix_or_next_invalid');
   }
-  if (!exactFields(state, CONTINUATION_STATE_FIELDS) || state.totalDocuments !== 20 || state.accounts !== 5 ||
-      state.trainerHandles !== 5 || state.rateLimits !== 5 || state.operationRequests !== 5 ||
+  const expectedFamilyCount = progress ? 5 + CONTINUATION_REMAINING_SEQUENCE
+    .slice(0, progress.completedSuffixOperations)
+    .filter((operation) => operation.operation === 'reserve').length : -1;
+  if (!exactFields(state, CONTINUATION_STATE_FIELDS) || state.totalDocuments !== progress?.currentDocumentCount ||
+      state.accounts !== expectedFamilyCount || state.trainerHandles !== expectedFamilyCount ||
+      state.rateLimits !== expectedFamilyCount || state.operationRequests !== expectedFamilyCount ||
       state.identityMigrations !== 0 || state.identityConflicts !== 0 || state.unexpectedPaths !== 0 ||
-      state.ordinaryUserEffects !== 0 || state.canonicalFingerprint !== CONTINUATION_STATE_FINGERPRINT) {
+      state.ordinaryUserEffects !== 0 || state.canonicalFingerprint !== checkpoint?.currentStateFingerprint) {
     errors.push('group_d3_continuation_current_state_invalid');
   }
-  validateContinuationCandidateState(value?.candidateState, binding, errors);
-  if (!sameJson(value?.remainingSequence, CONTINUATION_REMAINING_SEQUENCE) ||
-      !sameJson(value?.expectedCountSequence, CONTINUATION_COUNT_SEQUENCE) ||
-      !sameJson(value?.remainingBudget, CONTINUATION_REMAINING_BUDGET)) {
+  validateContinuationCandidateState(value?.candidateState, binding, checkpoint?.prefix || [], errors);
+  if (!progress || !sameJson(value?.remainingSequence, progress.remainingSequence) ||
+      !sameJson(value?.expectedCountSequence, progress.expectedCountSequence) ||
+      !sameJson(value?.remainingBudget, progress.remainingBudget)) {
     errors.push('group_d3_continuation_sequence_or_budget_invalid');
   }
   if (!sameJson(value?.currentGates, disabledGatePlan())) errors.push('group_d3_continuation_gates_not_disabled');
@@ -690,16 +751,19 @@ function validateThirdMutationContinuationArtifact(value, context = {}, options 
   }
   return Object.freeze({
     ok: true,
-    mode: 'reconciled-through-b-replay-continuation-preflight',
+    mode: 'authoritative-exact-prefix-continuation-preflight',
     continuationArtifactDigest: value.artifactDigest,
     continuationPreflightDigest: preflight.digest,
     historicalEvidenceRecollectionRequired: false,
-    completedPrefix: CONTINUATION_COMPLETED_PREFIX,
-    acceptedUsage: CONTINUATION_ACCEPTED_USAGE,
-    nextOperation: CONTINUATION_REMAINING_SEQUENCE[0],
-    remainingSequence: CONTINUATION_REMAINING_SEQUENCE,
-    remainingBudget: CONTINUATION_REMAINING_BUDGET,
-    currentDocumentCount: 20,
+    completedSuffixOperations: progress.completedSuffixOperations,
+    completedPrefix: checkpoint.prefix,
+    acceptedUsage: progress.acceptedUsage,
+    nextOperation: progress.nextOperation,
+    remainingSequence: progress.remainingSequence,
+    expectedCountSequence: progress.expectedCountSequence,
+    remainingBudget: progress.remainingBudget,
+    currentDocumentCount: progress.currentDocumentCount,
+    complete: progress.complete,
     executionAuthorized: false,
     laterGroupsAuthorized: false,
     groupEAuthorized: false,
@@ -723,11 +787,12 @@ function validateThirdMutationContinuationJit(value, artifactResult, expectedSou
       windowStart > now || now >= windowEnd || windowStart < approvedAt || windowEnd - windowStart > MAX_WINDOW_MS ||
       !validIdentity(value.humanOperator) || value.humanOperator !== value.teardownOwner ||
       value.approvalAcknowledged !== true || value.teardownOwnerAcknowledged !== true ||
-      !sameJson(value.nextOperation, CONTINUATION_REMAINING_SEQUENCE[0]) ||
-      !sameJson(value.remainingSequence, CONTINUATION_REMAINING_SEQUENCE) ||
-      !sameJson(value.expectedCountSequence, CONTINUATION_COUNT_SEQUENCE) ||
-      !sameJson(value.acceptedUsage, CONTINUATION_ACCEPTED_USAGE) ||
-      !sameJson(value.remainingBudget, CONTINUATION_REMAINING_BUDGET) ||
+      artifactResult?.complete !== false || value.completedSuffixOperations !== artifactResult?.completedSuffixOperations ||
+      !sameJson(value.nextOperation, artifactResult?.nextOperation) ||
+      !sameJson(value.remainingSequence, artifactResult?.remainingSequence) ||
+      !sameJson(value.expectedCountSequence, artifactResult?.expectedCountSequence) ||
+      !sameJson(value.acceptedUsage, artifactResult?.acceptedUsage) ||
+      !sameJson(value.remainingBudget, artifactResult?.remainingBudget) ||
       !sameJson(value.activationGatePlan, activationGatePlan()) ||
       !sameJson(value.restorationGatePlan, disabledGatePlan()) || value.executionAuthorized !== true ||
       value.laterGroupsAuthorized !== false || value.groupEAuthorized !== false ||
@@ -742,9 +807,12 @@ function validateThirdMutationContinuationJit(value, artifactResult, expectedSou
   return Object.freeze({
     ok: true,
     executionAuthorized: true,
-    nextOperation: CONTINUATION_REMAINING_SEQUENCE[0],
-    remainingSequence: CONTINUATION_REMAINING_SEQUENCE,
-    acceptedUsage: CONTINUATION_ACCEPTED_USAGE,
+    completedSuffixOperations: artifactResult.completedSuffixOperations,
+    nextOperation: artifactResult.nextOperation,
+    remainingSequence: artifactResult.remainingSequence,
+    expectedCountSequence: artifactResult.expectedCountSequence,
+    acceptedUsage: artifactResult.acceptedUsage,
+    remainingBudget: artifactResult.remainingBudget,
     mutationWindowStart: value.mutationWindow.startAt,
     mutationWindowEnd: value.mutationWindow.endAt,
     entryEvidenceExpiresAt: value.entryEvidenceExpiresAt,
@@ -759,7 +827,7 @@ function validateThirdMutationContinuationObservationStart(value, options = {}) 
   const completedProgress = continuationProgress(CONTINUATION_REMAINING_SEQUENCE.length);
   if (!exactFields(value, CONTINUATION_OBSERVATION_START_FIELDS) ||
       value.completedSuffixOperations !== CONTINUATION_REMAINING_SEQUENCE.length ||
-      !sameJson(value.acceptedUsage, CONTINUATION_ACCEPTED_USAGE) ||
+      !sameJson(value.acceptedUsage, completedProgress.acceptedUsage) ||
       !sameJson(value.remainingBudget, completedProgress.remainingBudget) ||
       !sameJson(value.finalCounts, FINAL_COUNTS) || !HASH.test(value.finalStateDigest || '') ||
       !sameJson(value.gatesRestored, disabledGatePlan()) || !validSecurityBoundary(value.securityBoundary) ||
@@ -858,7 +926,7 @@ function guardProductionThirdMutationContinuation(options = {}) {
     approvalGroup: 'D',
     cohortStage: 'D3',
     deploymentMode: 'continuation',
-    mode: 'reconciled-through-b-replay-continuation',
+    mode: 'authoritative-exact-prefix-continuation',
     environment: 'production',
     cohortType: SYNTHETIC_COHORT_TYPE,
     evidencePurpose: EXECUTION_EVIDENCE_PURPOSE,
@@ -867,11 +935,13 @@ function guardProductionThirdMutationContinuation(options = {}) {
     currentStateVerified: true,
     historicalEvidenceRecollectionRequired: false,
     executionAuthorized: true,
+    completedSuffixOperations: jitResult.completedSuffixOperations,
     nextOperation: jitResult.nextOperation,
     remainingSequence: jitResult.remainingSequence,
-    acceptedUsage: CONTINUATION_ACCEPTED_USAGE,
-    remainingBudget: CONTINUATION_REMAINING_BUDGET,
-    currentDocumentCount: 20,
+    expectedCountSequence: jitResult.expectedCountSequence,
+    acceptedUsage: jitResult.acceptedUsage,
+    remainingBudget: jitResult.remainingBudget,
+    currentDocumentCount: artifactResult.currentDocumentCount,
     sourceSha: options.expectedSourceSha,
     toolingSourceSha: options.expectedSourceSha,
     productionRuntime: CONTINUATION_PRODUCTION_RUNTIME,
