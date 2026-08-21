@@ -53,7 +53,7 @@ function invoke(handler, { body, token, method = 'POST', path = '/v1/reserve-tra
 }
 
 function enabledHarness(overrides = {}) {
-  const calls = { legacy: [], reserve: [], logs: [] };
+  const calls = { legacy: [], presence: [], rateLimit: [], reserve: [], reserveOptions: [], logs: [] };
   const configuration = loadConfiguration(environment({ READ_ACCOUNT_FOUNDATION_ENABLED: 'true', RESERVE_HANDLE_ENABLED: 'true' }));
   const dependencies = {
     async verifyFirebaseIdToken(_configuration, token) {
@@ -69,11 +69,19 @@ function enabledHarness(overrides = {}) {
         legacyAuthVersion: 3
       };
     },
-    async reserveTrainerHandle(input) {
+    async operationRequestExists(input) {
+      calls.presence.push(input);
+      return false;
+    },
+    async reserveTrainerHandle(input, options) {
       calls.reserve.push(input);
+      calls.reserveOptions.push(options);
       return { status: 'reserved', handleKey: input.handleKey, revision: 1 };
     },
-    async consumeRateLimit() { return { allowed: true, consumed: true }; },
+    async consumeRateLimit(input) {
+      calls.rateLimit.push(input);
+      return { allowed: true, consumed: true };
+    },
     structuredLog(config, operation, outcome, startedAt, extra) {
       calls.logs.push({ config, operation, outcome, startedAt, extra });
     },
@@ -138,13 +146,17 @@ test('reciprocal legacy mapping creates a bounded transaction input derived from
   });
 });
 
-test('first reserve is SUCCESS while exact replay is IDEMPOTENT and changed replay remains bounded', async () => {
+test('same-window and cross-window exact replays bypass the limiter while changed replay fails closed', async () => {
   let legacyUsername = 'TrainerOne';
   let storedState;
+  let now = 1_000;
   const { handler, calls } = enabledHarness({
+    now: () => now,
+    operationRequestExists: async () => Boolean(storedState),
     readLegacyBinding: async () => ({ status: 'ready', username: legacyUsername, legacyAuthVersion: 3 }),
-    reserveTrainerHandle: async (input) => {
+    reserveTrainerHandle: async (input, { replayOnly }) => {
       if (!storedState) {
+        assert.equal(replayOnly, false);
         storedState = Object.freeze({
           requestId: input.requestId,
           fingerprint: input.fingerprint,
@@ -158,20 +170,26 @@ test('first reserve is SUCCESS while exact replay is IDEMPOTENT and changed repl
         error.code = 'e1/replay-mismatch';
         throw error;
       }
+      assert.equal(replayOnly, true);
       return { ...storedState.result, replay: true };
     }
   });
   const first = await invoke(handler, { body: validBody, token: 'valid-token' });
   const stateAfterFirst = JSON.stringify(storedState);
-  const replay = await invoke(handler, { body: validBody, token: 'valid-token' });
+  now = 2_000;
+  const sameWindow = await invoke(handler, { body: validBody, token: 'valid-token' });
+  now = 901_000;
+  const crossWindow = await invoke(handler, { body: validBody, token: 'valid-token' });
   assert.equal(first.status, 200);
   assert.equal(first.body.code, 'SUCCESS');
-  assert.equal(replay.status, 200);
-  assert.equal(replay.body.code, 'IDEMPOTENT');
+  assert.equal(sameWindow.body.code, 'IDEMPOTENT');
+  assert.equal(crossWindow.body.code, 'IDEMPOTENT');
   assert.equal(JSON.stringify(storedState), stateAfterFirst);
   assert.equal(calls.logs.at(-1).extra.replayClass, 'exact-replay');
+  assert.equal(calls.rateLimit.length, 1);
 
   legacyUsername = 'TrainerTwo';
+  now = 1_801_000;
   const mismatch = await invoke(handler, {
     body: { ...validBody, requestedHandle: 'TrainerTwo' },
     token: 'valid-token'
@@ -179,6 +197,44 @@ test('first reserve is SUCCESS while exact replay is IDEMPOTENT and changed repl
   assert.equal(mismatch.status, 409);
   assert.deepEqual(mismatch.body, { code: 'REQUEST_INVALID' });
   assert.equal(JSON.stringify(storedState), stateAfterFirst);
+  assert.equal(calls.rateLimit.length, 1);
+});
+
+test('an unknown request is rate-limited before legacy reads or first-write authority mutation', async () => {
+  const sequence = [];
+  const { handler } = enabledHarness({
+    operationRequestExists: async () => { sequence.push('presence'); return false; },
+    consumeRateLimit: async () => { sequence.push('limiter'); return { allowed: true, consumed: true }; },
+    readLegacyBinding: async () => {
+      sequence.push('legacy');
+      return { status: 'ready', username: 'TrainerOne', legacyAuthVersion: 3 };
+    },
+    reserveTrainerHandle: async (_input, { replayOnly }) => {
+      assert.equal(replayOnly, false);
+      sequence.push('mutation');
+      return { status: 'reserved', revision: 1 };
+    }
+  });
+  assert.equal((await invoke(handler, { body: validBody, token: 'valid-token' })).body.code, 'SUCCESS');
+  assert.deepEqual(sequence, ['presence', 'limiter', 'legacy', 'mutation']);
+});
+
+test('rate-limit exhaustion blocks an unknown request before legacy or authority mutation', async () => {
+  let downstreamCalls = 0;
+  const { handler } = enabledHarness({
+    operationRequestExists: async () => false,
+    consumeRateLimit: async () => {
+      const error = new Error('e1/rate-limit-exceeded');
+      error.code = 'e1/rate-limit-exceeded';
+      throw error;
+    },
+    readLegacyBinding: async () => { downstreamCalls += 1; },
+    reserveTrainerHandle: async () => { downstreamCalls += 1; }
+  });
+  const result = await invoke(handler, { body: validBody, token: 'valid-token' });
+  assert.equal(result.status, 429);
+  assert.deepEqual(result.body, { code: 'RATE_LIMITED' });
+  assert.equal(downstreamCalls, 0);
 });
 
 test('missing and conflicting reciprocal legacy mappings fail without transaction calls', async () => {

@@ -16,6 +16,7 @@ const {
 const {
   ALLOWED_OPERATIONS,
   CANDIDATE_POOL_POLICY,
+  CONTINUATION_ACCEPTED_USAGE,
   CONTINUATION_ARTIFACT_PURPOSE,
   CONTINUATION_COMPLETED_PREFIX,
   CONTINUATION_COUNT_SEQUENCE,
@@ -429,7 +430,7 @@ function continuationFixture() {
     operationRequestCount: index === 0 ? 1 : 0,
     ownershipReciprocal: index === 0,
     requestBindingVerified: index === 0,
-    replayEvidenceCount: 0
+    replayEvidenceCount: index === 0 ? 1 : 0
   }));
   const artifact = {
     schemaVersion: 1,
@@ -462,17 +463,22 @@ function continuationFixture() {
       sessionIdHash: '7'.repeat(64),
       state: 'paused-closed',
       closedAt: '2026-08-15T14:57:00.000Z',
-      closeReason: 'browser-result-handoff-failure-after-durable-commit'
+      closeReason: 'accepted-a-replay-rate-limit-rollover-after-authoritative-reconciliation'
     },
     reconciliation: {
       evidenceDigest: CONTINUATION_PINS.reconciliationEvidenceDigest,
       executionLedgerDigest: CONTINUATION_PINS.executionLedgerDigest,
       verifiedAt: '2026-08-15T14:58:00.000Z',
       aReserveInvocations: 1,
-      aReplayInvocations: 0,
-      laterSlotInvocations: 0
+      aReplayInvocations: 1,
+      laterSlotInvocations: 0,
+      acceptedHistoricalRateLimitReplayWrites: 1,
+      remainingRateLimitReplayWrites: 0,
+      previousStateFingerprint: CONTINUATION_COMPLETED_PREFIX[0].stateFingerprint,
+      currentStateFingerprint: CONTINUATION_STATE_FINGERPRINT
     },
     completedPrefix: structuredClone(CONTINUATION_COMPLETED_PREFIX),
+    acceptedUsage: structuredClone(CONTINUATION_ACCEPTED_USAGE),
     nextOperation: structuredClone(CONTINUATION_REMAINING_SEQUENCE[0]),
     currentState: {
       totalDocuments: 16,
@@ -523,6 +529,7 @@ function continuationFixture() {
     nextOperation: structuredClone(CONTINUATION_REMAINING_SEQUENCE[0]),
     remainingSequence: structuredClone(CONTINUATION_REMAINING_SEQUENCE),
     expectedCountSequence: structuredClone(CONTINUATION_COUNT_SEQUENCE),
+    acceptedUsage: structuredClone(CONTINUATION_ACCEPTED_USAGE),
     remainingBudget: structuredClone(CONTINUATION_REMAINING_BUDGET),
     activationGatePlan: activationGatePlan(),
     restorationGatePlan: disabledGatePlan(),
@@ -610,7 +617,7 @@ function acceptance() {
   };
 }
 
-test('tracked D3 contract is unbound and unauthorized while defining exact reserve-only progression and budget', () => {
+test('tracked D3 contract is unbound and unauthorized while defining exact reserve/replay progression and budget', () => {
   const manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf8'));
   assert.deepEqual(manifest.thirdMutation, EXPECTED_D3_MANIFEST);
   assert.deepEqual(EXPECTED_COUNT_SEQUENCE, [12, 16, 16, 20, 20, 24, 24, 28, 28, 32, 32]);
@@ -627,7 +634,8 @@ test('tracked D3 contract is unbound and unauthorized while defining exact reser
   assert.equal(manifest.thirdMutation.candidatePool.toolingSelectsSubjects, false);
   assert.equal(manifest.thirdMutation.operation, 'reserve-plus-exact-replay');
   assert.equal(OPERATION_BUDGET.gatewayCalls, 10);
-  assert.equal(OPERATION_BUDGET.firestoreTransactionAttemptsMaximum, 100);
+  assert.equal(OPERATION_BUDGET.firestoreTransactionAttemptsMaximum, 75);
+  assert.equal(OPERATION_BUDGET.operationRequestExistenceReads, 10);
   assert.equal(OPERATION_BUDGET.firestoreCommittedWrites, 20);
   assert.equal(OPERATION_BUDGET.rtdbWrites, 0);
   assert.equal(OPERATION_BUDGET.verificationReadsTotalMaximum, 510);
@@ -775,45 +783,48 @@ test('exact five-subject private binding and authorized preflight pass without c
   assert.equal(result.groupEAuthorized, false);
 });
 
-test('exact reconciled A-reserve continuation passes preflight and authorizes only A replay after fresh JIT', () => {
+test('exact reconciled A reserve and replay continuation authorizes only B reserve after fresh JIT', () => {
   const values = continuationFixture();
   const artifactResult = validateContinuation(values);
   assert.equal(artifactResult.ok, true);
   assert.equal(artifactResult.currentDocumentCount, 16);
   assert.deepEqual(artifactResult.completedPrefix, CONTINUATION_COMPLETED_PREFIX);
-  assert.deepEqual(artifactResult.nextOperation, { slot: 'A', operation: 'exact-replay' });
+  assert.deepEqual(artifactResult.nextOperation, { slot: 'B', operation: 'reserve' });
+  assert.deepEqual(artifactResult.acceptedUsage, CONTINUATION_ACCEPTED_USAGE);
   assert.equal(artifactResult.executionAuthorized, false);
   assert.equal(artifactResult.historicalEvidenceRecollectionRequired, false);
   const jitResult = validateThirdMutationContinuationJit(values.jit, artifactResult, SOURCE_SHA, { now: () => NOW });
   assert.equal(jitResult.executionAuthorized, true);
-  assert.deepEqual(jitResult.nextOperation, { slot: 'A', operation: 'exact-replay' });
-  assert.equal(jitResult.remainingSequence.length, 9);
+  assert.deepEqual(jitResult.nextOperation, { slot: 'B', operation: 'reserve' });
+  assert.equal(jitResult.remainingSequence.length, 8);
   assert.equal(jitResult.groupEAuthorized, false);
 });
 
-test('mocked continuation rehearsal advances exact A-replay through E-replay budget and starts observation only after restoration', () => {
-  const expectedCounts = [16, 16, 20, 20, 24, 24, 28, 28, 32, 32];
+test('mocked continuation rehearsal advances B reserve through E replay and starts observation only after restoration', () => {
+  const expectedCounts = CONTINUATION_COUNT_SEQUENCE;
   for (let completed = 0; completed <= CONTINUATION_REMAINING_SEQUENCE.length; completed += 1) {
     const progress = continuationProgress(completed);
     assert.equal(progress.currentDocumentCount, expectedCounts[completed]);
     assert.deepEqual(progress.nextOperation, CONTINUATION_REMAINING_SEQUENCE[completed] || null);
     assert.deepEqual(progress.remainingSequence, CONTINUATION_REMAINING_SEQUENCE.slice(completed));
-    assert.equal(progress.remainingBudget.gatewayCalls, 9 - completed);
-    assert.equal(progress.remainingBudget.authorityCalls, 9 - completed);
-    assert.equal(progress.remainingBudget.limitedUseAppCheckTokens, 9 - completed);
+    assert.equal(progress.remainingBudget.gatewayCalls, 8 - completed);
+    assert.equal(progress.remainingBudget.authorityCalls, 8 - completed);
+    assert.equal(progress.remainingBudget.limitedUseAppCheckTokens, 8 - completed);
     assert.equal(progress.remainingBudget.firstWriteSubjects,
       4 - CONTINUATION_REMAINING_SEQUENCE.slice(0, completed).filter((item) => item.operation === 'reserve').length);
     assert.equal(progress.remainingBudget.replayOperations,
-      5 - CONTINUATION_REMAINING_SEQUENCE.slice(0, completed).filter((item) => item.operation === 'exact-replay').length);
+      4 - CONTINUATION_REMAINING_SEQUENCE.slice(0, completed).filter((item) => item.operation === 'exact-replay').length);
   }
-  const finalProgress = continuationProgress(9);
+  const finalProgress = continuationProgress(CONTINUATION_REMAINING_SEQUENCE.length);
   assert.equal(finalProgress.complete, true);
   assert.equal(finalProgress.currentDocumentCount, 32);
   assert.equal(finalProgress.remainingBudget.firestoreCommittedWrites, 0);
   assert.equal(finalProgress.remainingBudget.operationRequestCreates, 0);
   assert.equal(finalProgress.remainingBudget.rateLimitCreates, 0);
   const start = {
-    completedSuffixOperations: 9,
+    completedSuffixOperations: CONTINUATION_REMAINING_SEQUENCE.length,
+    acceptedUsage: CONTINUATION_ACCEPTED_USAGE,
+    remainingBudget: finalProgress.remainingBudget,
     finalCounts: FINAL_COUNTS,
     finalStateDigest: 'f'.repeat(64),
     gatesRestored: disabledGatePlan(),
@@ -828,7 +839,7 @@ test('mocked continuation rehearsal advances exact A-replay through E-replay bud
   assert.throws(() => validateThirdMutationContinuationObservationStart({ ...start,
     gatesRestored: activationGatePlan() }, { now: () => NOW }), /observation-start-invalid/u);
   assert.throws(() => validateThirdMutationContinuationObservationStart({ ...start,
-    completedSuffixOperations: 8 }, { now: () => NOW }), /observation-start-invalid/u);
+    completedSuffixOperations: CONTINUATION_REMAINING_SEQUENCE.length - 1 }, { now: () => NOW }), /observation-start-invalid/u);
 });
 
 test('original clean-start guard remains the unchanged 12-document all-targets-absent mode', () => {
@@ -843,7 +854,7 @@ for (const [name, mutate, reason] of [
   ['empty completed prefix', (value) => { value.completedPrefix = []; }, 'group_d3_continuation_prefix_or_next_invalid'],
   ['extra completed operation', (value) => { value.completedPrefix.push({ slot: 'A', operation: 'exact-replay' }); }, 'group_d3_continuation_prefix_or_next_invalid'],
   ['A reserve eligible again', (value) => { value.nextOperation = { slot: 'A', operation: 'reserve' }; }, 'group_d3_continuation_prefix_or_next_invalid'],
-  ['skipped next operation', (value) => { value.nextOperation = { slot: 'B', operation: 'reserve' }; }, 'group_d3_continuation_prefix_or_next_invalid'],
+  ['skipped next operation', (value) => { value.nextOperation = { slot: 'B', operation: 'exact-replay' }; }, 'group_d3_continuation_prefix_or_next_invalid'],
   ['12 documents', (value) => { value.currentState.totalDocuments = 12; }, 'group_d3_continuation_current_state_invalid'],
   ['15 documents', (value) => { value.currentState.totalDocuments = 15; }, 'group_d3_continuation_current_state_invalid'],
   ['17 documents', (value) => { value.currentState.totalDocuments = 17; }, 'group_d3_continuation_current_state_invalid'],
@@ -855,10 +866,16 @@ for (const [name, mutate, reason] of [
   ['A request binding mismatch', (value) => { value.candidateState[0].requestBodyHash = 'f'.repeat(64); }, 'group_d3_continuation_candidate_a_binding_invalid'],
   ['A operation request absent', (value) => { value.candidateState[0].operationRequestCount = 0; }, 'group_d3_continuation_candidate_a_state_invalid'],
   ['A operation request duplicated', (value) => { value.candidateState[0].operationRequestCount = 2; }, 'group_d3_continuation_candidate_a_state_invalid'],
-  ['A replay evidence present', (value) => { value.candidateState[0].replayEvidenceCount = 1; }, 'group_d3_continuation_candidate_a_state_invalid'],
+  ['A replay evidence missing', (value) => { value.candidateState[0].replayEvidenceCount = 0; }, 'group_d3_continuation_candidate_a_state_invalid'],
   ['B target present', (value) => { value.candidateState[1].accountState = 'present-owned'; }, 'group_d3_continuation_candidate_b_state_invalid'],
   ['reconciliation digest mismatch', (value) => { value.reconciliation.evidenceDigest = 'f'.repeat(64); }, 'group_d3_continuation_reconciliation_invalid'],
   ['execution ledger mismatch', (value) => { value.reconciliation.executionLedgerDigest = 'f'.repeat(64); }, 'group_d3_continuation_reconciliation_invalid'],
+  ['A replay invocation hidden', (value) => { value.reconciliation.aReplayInvocations = 0; }, 'group_d3_continuation_reconciliation_invalid'],
+  ['historical replay write count expanded', (value) => { value.reconciliation.acceptedHistoricalRateLimitReplayWrites = 2; }, 'group_d3_continuation_reconciliation_invalid'],
+  ['pre-replay state digest mismatch', (value) => { value.reconciliation.previousStateFingerprint = 'f'.repeat(64); }, 'group_d3_continuation_reconciliation_invalid'],
+  ['post-replay state digest mismatch', (value) => { value.reconciliation.currentStateFingerprint = 'f'.repeat(64); }, 'group_d3_continuation_reconciliation_invalid'],
+  ['historical replay usage hidden', (value) => { value.acceptedUsage.rateLimitReplayWrites = 0; }, 'group_d3_continuation_prefix_or_next_invalid'],
+  ['remaining replay write allowed', (value) => { value.remainingBudget.rateLimitReplayWrites = 1; }, 'group_d3_continuation_sequence_or_budget_invalid'],
   ['historical harness mismatch', (value) => { value.historicalAdmission.browserHarnessDigest = 'f'.repeat(64); }, 'group_d3_continuation_historical_admission_invalid'],
   ['historical JIT mismatch', (value) => { value.historicalAdmission.initialJitDigest = 'f'.repeat(64); }, 'group_d3_continuation_historical_admission_invalid'],
   ['historical guard mismatch', (value) => { value.historicalAdmission.initialGuardDigest = 'f'.repeat(64); }, 'group_d3_continuation_historical_admission_invalid'],
@@ -891,7 +908,8 @@ for (const [name, mutate] of [
   ['missing fresh JIT', (value) => { value.schemaVersion = 0; }],
   ['stale JIT', (value) => { value.approvedAt = '2026-08-15T14:40:00.000Z'; value.entryEvidenceExpiresAt = '2026-08-15T14:55:00.000Z'; }],
   ['wrong contract source', (value) => { value.continuationContractSourceSha = 'f'.repeat(40); }],
-  ['A reserve next', (value) => { value.nextOperation = { slot: 'A', operation: 'reserve' }; }],
+  ['A replay next', (value) => { value.nextOperation = { slot: 'A', operation: 'exact-replay' }; }],
+  ['historical usage omitted', (value) => { delete value.acceptedUsage; }],
   ['skipped JIT suffix', (value) => { value.remainingSequence.shift(); }],
   ['skipped JIT count state', (value) => { value.expectedCountSequence.shift(); }],
   ['expanded JIT budget', (value) => { value.remainingBudget.gatewayCalls = 10; }]

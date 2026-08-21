@@ -144,6 +144,7 @@ test('repair requires pinned operator plus subject auth and exact reviewed live 
       return { uid: UID };
     },
     readLegacyBinding: async () => LEGACY,
+    operationRequestExists: async () => false,
     consumeRateLimit: async () => ({ allowed: true, consumed: true }),
     repairAccountFoundation: async (input) => { stored = input; return { status: 'repaired', revision: 1, repairClass: 'handle-restored' }; },
     now: () => Date.parse('2026-08-10T20:30:00.000Z'),
@@ -170,6 +171,7 @@ test('repair denies subject-only wrong-operator operator-only and closed-window 
   const configuration = loadConfiguration(environment({ REPAIR_FOUNDATION_ENABLED: 'true' }));
   let writes = 0;
   let replay = false;
+  let limiterCalls = 0;
   const dependencies = {
     verifyOperatorAccessToken: async (_configuration, token) => {
       if (!token) { const error = new Error('OPERATOR_AUTH_REQUIRED'); error.code = 'OPERATOR_AUTH_REQUIRED'; throw error; }
@@ -181,8 +183,10 @@ test('repair denies subject-only wrong-operator operator-only and closed-window 
       return { uid: UID };
     },
     readLegacyBinding: async () => LEGACY,
-    consumeRateLimit: async () => ({ allowed: true, consumed: !replay }),
-    repairAccountFoundation: async () => {
+    operationRequestExists: async () => replay,
+    consumeRateLimit: async () => { limiterCalls += 1; return { allowed: true, consumed: true }; },
+    repairAccountFoundation: async (_input, options) => {
+      assert.equal(options.replayOnly, replay);
       writes += replay ? 0 : 1;
       return { status: 'repaired', revision: 1, repairClass: 'handle-restored', replay };
     },
@@ -206,6 +210,7 @@ test('repair denies subject-only wrong-operator operator-only and closed-window 
   replay = true;
   assert.equal((await invoke(handler, '/v1/repair-account-foundation', repairBody(), valid)).body.code, 'IDEMPOTENT');
   assert.equal(writes, 1);
+  assert.equal(limiterCalls, 1);
 
   const closed = createHandler(configuration, { ...dependencies, now: () => Date.parse('2026-08-12T00:00:00.000Z') });
   assert.deepEqual(await invoke(closed, '/v1/repair-account-foundation', repairBody(), valid), {
@@ -225,6 +230,7 @@ test('migration requires separate operator and subject authentication plus an ex
       return { uid: UID };
     },
     readLegacyBinding: async () => LEGACY,
+    operationRequestExists: async () => false,
     consumeRateLimit: async () => ({ allowed: true, consumed: true }),
     applyMigrationManifest: async (input) => {
       calls.push(['store', input]);
@@ -253,6 +259,62 @@ test('migration requires separate operator and subject authentication plus an ex
   }), { status: 400, body: { code: 'REQUEST_INVALID' } });
 });
 
+test('migration and freeze exact replays bypass the limiter and remain transaction-bound', async () => {
+  const cases = [
+    {
+      gate: 'APPLY_MIGRATION_ENABLED',
+      operation: 'applyMigrationManifest',
+      path: '/v1/apply-migration-manifest',
+      body: migrationBody(),
+      legacy: LEGACY,
+      dependency: 'applyMigrationManifest',
+      expectedRequestId: 'operation-migration-0001',
+      result: { status: 'migrated', revision: 1, replay: true },
+      response: { status: 200, body: { code: 'IDEMPOTENT', revision: 1 } }
+    },
+    {
+      gate: 'FREEZE_CONFLICT_ENABLED',
+      operation: 'freezeIdentityConflict',
+      path: '/v1/freeze-identity-conflict',
+      body: freezeBody('legacy-binding-conflict', { status: 'mapping-conflict', reason: 'uid-mismatch' }),
+      legacy: { status: 'mapping-conflict', reason: 'uid-mismatch' },
+      dependency: 'freezeIdentityConflict',
+      expectedRequestId: 'operation-freeze-0001',
+      result: { status: 'frozen', replay: true },
+      response: { status: 200, body: { code: 'IDEMPOTENT', status: 'frozen', reasonCode: 'legacy-binding-conflict' } }
+    }
+  ];
+  const headers = {
+    'x-e1-operator-access-token': 'operator-oauth-token',
+    'x-e1-subject-firebase-id-token': 'subject-firebase-token'
+  };
+
+  for (const entry of cases) {
+    let limiterCalls = 0;
+    let storeCalls = 0;
+    const handler = createHandler(loadConfiguration(environment({ [entry.gate]: 'true' })), {
+      verifyOperatorAccessToken: async () => ({ operatorHash: 'operator-hash' }),
+      verifyFirebaseIdToken: async () => ({ uid: UID }),
+      operationRequestExists: async (input) => {
+        assert.deepEqual(input, { operation: entry.operation, uid: UID, requestId: entry.expectedRequestId });
+        return true;
+      },
+      consumeRateLimit: async () => { limiterCalls += 1; return { allowed: true, consumed: true }; },
+      readLegacyBinding: async () => entry.legacy,
+      [entry.dependency]: async (_input, options) => {
+        storeCalls += 1;
+        assert.deepEqual(options, { replayOnly: true });
+        return entry.result;
+      },
+      structuredLog: () => {}
+    });
+
+    assert.deepEqual(await invoke(handler, entry.path, entry.body, headers), entry.response);
+    assert.equal(limiterCalls, 0);
+    assert.equal(storeCalls, 1);
+  }
+});
+
 test('conflict freeze is review-bound to the currently observed legacy conflict and stores no raw legacy record', async () => {
   const legacy = { status: 'mapping-conflict', reason: 'uid-mismatch' };
   let stored;
@@ -260,6 +322,7 @@ test('conflict freeze is review-bound to the currently observed legacy conflict 
     verifyOperatorAccessToken: async () => ({ operatorHash: 'operator-hash' }),
     verifyFirebaseIdToken: async () => ({ uid: UID }),
     readLegacyBinding: async () => legacy,
+    operationRequestExists: async () => false,
     consumeRateLimit: async () => ({ allowed: true, consumed: true }),
     freezeIdentityConflict: async (input) => { stored = input; return { status: 'frozen' }; },
     structuredLog: () => {}

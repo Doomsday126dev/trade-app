@@ -176,7 +176,8 @@
       "reserveCommittedDocuments": 4,
       "replayCommittedDocuments": 0,
       "reserveFamilies": ["accounts", "trainerHandles", "rateLimits", "operationRequests"],
-      "replayMustRemainInSameRateLimitWindow": true
+      "replayRequiresExactOperationRequest": true,
+      "replayRateLimitMutationAllowed": false
     },
     "finalCounts": {
       "totalDocuments": 32,
@@ -191,23 +192,25 @@
       "gatewayCalls": 10,
       "authorityCalls": 10,
       "limitedUseAppCheckTokens": 10,
-      "logicalFirestoreTransactions": 20,
+      "logicalFirestoreTransactions": 15,
       "firestoreTransactionMaxAttempts": 5,
-      "firestoreTransactionAttemptsExpected": 20,
-      "firestoreTransactionAttemptsMaximum": 100,
-      "firestoreOperationReadsExpected": 40,
-      "firestoreOperationReadsMaximum": 200,
+      "firestoreTransactionAttemptsExpected": 15,
+      "firestoreTransactionAttemptsMaximum": 75,
+      "firestoreOperationReadsExpected": 45,
+      "firestoreOperationReadsMaximum": 185,
+      "operationRequestExistenceReads": 10,
       "firestoreCommittedWrites": 20,
       "operationRequestCreates": 5,
       "rateLimitCreates": 5,
       "rateLimitReplayWrites": 0,
       "rtdbExactReads": 30,
       "rtdbWrites": 0,
+      "ordinaryUserWrites": 0,
       "verificationReadsImmediateMaximum": 468,
       "verificationReadsObservationMaximum": 42,
       "verificationReadsTotalMaximum": 510,
-      "firestoreReadsExpectedMaximum": 550,
-      "firestoreReadsRetryCeiling": 710
+      "firestoreReadsExpectedMaximum": 555,
+      "firestoreReadsRetryCeiling": 695
     },
     "executionSequence": [
       "subject-1-reserve", "subject-1-verify", "subject-1-replay", "subject-1-replay-verify",

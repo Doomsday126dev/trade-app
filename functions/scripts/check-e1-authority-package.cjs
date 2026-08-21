@@ -70,6 +70,7 @@ try {
         readAccountDocument: async () => null,
         readLegacyBinding: async () => ({ status: 'ready', username: 'PackageTrainer', legacyAuthVersion: 1 }),
         authorityStore: {
+          operationRequestExists: async () => false,
           consumeRateLimit: async () => ({ allowed: true, consumed: true }),
           reserveTrainerHandle: async (input) => { writes.push(input); return { status: 'reserved', revision: 1 }; }
         },
