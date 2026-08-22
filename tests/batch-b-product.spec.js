@@ -42,7 +42,7 @@ test('dense My List keeps editing progressive and reorder explicit',async({page}
   await expect(page.locator('#mylist-out .myrow-priority-editor')).toHaveCount(0);
   const firstRow=page.locator('#mylist-out .myrow').first();
   const movedName=await firstRow.getAttribute('data-name');
-  const box=await firstRow.boundingBox();expect(box.height).toBeGreaterThanOrEqual(56);expect(box.height).toBeLessThanOrEqual(68);
+  const box=await firstRow.boundingBox();expect(box.height).toBeGreaterThanOrEqual(54);expect(box.height).toBeLessThanOrEqual(68);
   const quick=firstRow.locator('.myrow-priority-quick');
   if(testInfo.project.name==='mobile')await expect(quick).toBeHidden();else await expect(quick).toBeVisible();
   await firstRow.locator('.myrow-edit').click();

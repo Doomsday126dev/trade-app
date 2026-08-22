@@ -145,13 +145,17 @@ test('obvious application chrome uses the shared icon system and dense rows disc
   const editor=html.slice(html.indexOf('function myListEditorHtml'),html.indexOf('function myListRowsHtml'));
   assert.match(rows,/class="myrow-priority-quick"/);
   assert.match(rows,/class="myrow-active-traits"/);
+  assert.doesNotMatch(rows,/class="myrow-trait detail" title=/);
   assert.match(rows,/details class="myrow-editor"/);
   assert.match(rows,/summary class="myrow-edit"/);
   for(const handler of ['setLucky','setShiny','setXxl','setXxs','setNotes','confirmRemove'])assert.match(editor,new RegExp(`${handler}\\(`));
   assert.match(rows,/ontoggle="hydrateMyRowEditor\(this\)"/);
   assert.match(editor,/insertAdjacentHTML\('beforeend',myListEditorHtml\(entry\)\)/);
+  assert.match(editor,/class="myrow-editor-title">\$\{escHtml\(dn\)\}/);
   assert.match(css,/\.myrow-edit\{[^}]*min-width:48px/);
   assert.match(css,/\.myrow-editor-popover\{[^}]*position:absolute/);
+  assert.doesNotMatch(css,/\.myrow\[data-full\]:has\(\.myrow-name:hover\)::(?:before|after)/);
+  assert.doesNotMatch(css,/content:attr\(data-full\)/);
 });
 
 test('My List rows foreground collection identity while retaining fast editing',()=>{
@@ -166,6 +170,11 @@ test('My List rows foreground collection identity while retaining fast editing',
   assert.match(css,/\.myrow-sprite-wrap\{width:34px;height:34px/);
   assert.match(css,/\.myrow-name\{font-size:14px;font-weight:700/);
   assert.match(css,/\.drag-handle\{[^}]*width:28px;height:40px/);
+  assert.match(css,/@media\(max-width:600px\)\{[\s\S]*?\.myrow\{min-height:54px;padding:3px var\(--space-1\);gap:6px\}/);
+  assert.match(css,/\.myrow-sprite-wrap,\.myrow-sprite\{width:32px;height:32px\}/);
+  assert.match(css,/\.myrow-active-traits\{max-width:156px;gap:2px\}/);
+  assert.match(css,/\.myrow-trait\.detail\{display:inline-flex;max-width:62px\}/);
+  assert.match(css,/\.myrow-edit\{width:var\(--control-min\);min-width:var\(--control-min\);height:var\(--control-min\);min-height:var\(--control-min\);padding:0\}/);
 });
 
 test('cards, priority, status, and empty-state primitives preserve semantic structure',()=>{
