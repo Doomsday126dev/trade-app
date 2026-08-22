@@ -4041,6 +4041,9 @@ function queueSync(path,data){
 }
 function queueItemIsCurrent(key,item){return syncQueue[key]===item;}
 function queueMyListUpdate(type,u,patch){
+  const patchValid=!!patch&&typeof patch==='object'&&!Array.isArray(patch);
+  const changed=patchValid?Object.keys(patch).length:0;
+  if(!patchValid||!changed)return Object.freeze({ok:false,status:'validation_failed',changed});
   const rootPath=`${type}/${u}`;
   const key=sessionCacheBoundaryData.myListUpdateQueueKey(rootPath);
   const existing=syncQueue[key];
@@ -4059,18 +4062,23 @@ function queueMyListUpdate(type,u,patch){
   Object.assign(merged,patch);
   const item={kind:sessionCacheBoundaryData.MY_LIST_UPDATE_KIND,path:rootPath,data:merged,ts:Date.now()};
   const owner=managedSessionCache.snapshot().activeOwner;
-  if(!sessionCacheBoundaryData.queueEntryClassification(key,item,owner).ok)return false;
+  if(!sessionCacheBoundaryData.queueEntryClassification(key,item,owner).ok){
+    return Object.freeze({ok:false,status:'validation_failed',changed});
+  }
   const previousQueue=syncQueue;
   const nextQueue={...syncQueue,[key]:item};
   absorbed.forEach(queuedKey=>delete nextQueue[queuedKey]);
   syncQueue=nextQueue;
   const saved=saveSyncQueue();
-  if(!saved.ok){syncQueue=previousQueue;return false;}
+  if(!saved.ok){
+    syncQueue=previousQueue;
+    return Object.freeze({ok:false,status:'persistence_failed',changed,errorCode:saved.error?.code||'storage/queue-save-failed'});
+  }
   showSyncDot(true);
   refreshSyncUi();
   clearTimeout(syncFlushTimer);
   syncFlushTimer=setTimeout(flushSyncQueue,250);
-  return true;
+  return Object.freeze({ok:true,status:'queued',changed});
 }
 async function flushSyncQueue(){
   if(firebaseAuthConfigured()&&auth&&!auth.currentUser){
@@ -5360,9 +5368,11 @@ function resetOwnedHydrationState(){
 function requireOwnedListHydration(type,u){
   if(!OWNED_MY_LIST_TYPES.includes(type)||!u)return false;
   if(!fbOn||!db)return true;
-  const sameAuthenticatedOwner=!!auth?.currentUser&&u===cur;
+  const authUid=String(auth?.currentUser?.uid||'');
+  const activeOwner=managedSessionCache?.snapshot?.().activeOwner;
+  const sameAuthenticatedOwner=!!authUid&&u===cur&&activeOwner?.uid===authUid&&activeOwner?.username===u;
   const hydrated=sameAuthenticatedOwner&&(ownedExactReadsEnabled()
-    ?managedOwnedDataCoordinator?.isHydrated(type)===true
+    ?managedOwnedDataCoordinator?.isHydratedFor(type,{uid:authUid,username:u})===true
     :_pathLoadState[type]==='loaded');
   if(hydrated)return true;
   if(sameAuthenticatedOwner)ensureListSubscribed(type);
@@ -5385,7 +5395,8 @@ function queueListEntryDiff(type,u,previous,next){
     patch[name]=afterHas?after[name]:null;
   });
   const changed=Object.keys(patch).length;
-  return changed&&queueMyListUpdate(type,u,patch)?changed:0;
+  if(!changed)return Object.freeze({ok:true,status:'no_changes',changed:0});
+  return queueMyListUpdate(type,u,patch);
 }
 function writeList(type,u,list,{previousList}={}){
   if(!requireOwnedListHydration(type,u))return false;
@@ -5393,6 +5404,13 @@ function writeList(type,u,list,{previousList}={}){
   if(!s[type])s[type]={};
   const cachedPrevious={...(s[type][u]||{})};
   const previous={...(previousList||cachedPrevious)};
+  if(fbOn&&db){
+    const queued=queueListEntryDiff(type,u,previous,list||{});
+    if(!queued.ok){
+      toast(i18nCore.t('storage.offlineRecoveryUnavailable'),5000);
+      return false;
+    }
+  }
   // Record activity delta for sparkline
   const prevCount=Object.keys(cachedPrevious).length;
   const newCount=Object.keys(list||{}).length;
@@ -5402,7 +5420,6 @@ function writeList(type,u,list,{previousList}={}){
   s.users[u]={...s.users[u],lastUpdated:now,lastSeen:now};
   saveLocal(s);
   if(fbOn&&db){
-    queueListEntryDiff(type,u,previous,list||{});
     queueSync(`users/${u}/lastUpdated`,now);
     queueSync(`users/${u}/lastSeen`,now);
     if(u===cur)requestPublicSharePublication('owned_list_edit',s,u);
@@ -5419,6 +5436,13 @@ function writeListItem(type,u,name,value){
   const list={...(s[type][u]||{})};
   if(value==null)delete list[name];
   else list[name]=value;
+  if(fbOn&&db){
+    const queued=queueListEntryDiff(type,u,s[type][u]||{},list);
+    if(!queued.ok){
+      toast(i18nCore.t('storage.offlineRecoveryUnavailable'),5000);
+      return false;
+    }
+  }
   const newCount=Object.keys(list).length;
   if(prevCount!==newCount)recordActivityEvent(u,newCount-prevCount);
   s[type][u]=list;
@@ -5426,7 +5450,6 @@ function writeListItem(type,u,name,value){
   s.users[u]={...s.users[u],lastUpdated:now,lastSeen:now};
   saveLocal(s);
   if(fbOn&&db){
-    queueMyListUpdate(type,u,{[name]:value??null});
     queueSync(`users/${u}/lastUpdated`,now);
     queueSync(`users/${u}/lastSeen`,now);
     if(u===cur)requestPublicSharePublication('owned_list_edit',s,u);
@@ -8833,9 +8856,10 @@ function movePriority(name,p){
   model.priorities[sourceKey]=model.priorities[sourceKey].filter(entryName=>entryName!==name);
   model.priorities[targetKey]=model.priorities[targetKey].filter(entryName=>entryName!==name);
   model.priorities[targetKey].push(name);
-  persistMyListOrder(model,myListType,cur);
   list[name]=priValue(p,current.mod,current.lucky,current.xxl,current.xxs,current.shiny);
   if(!writeList(myListType,cur,list))return;
+  persistMyListOrder(model,myListType,cur);
+  renderMyList();
   announceMyListAction(i18nCore.t('myList.priorityChanged',{name,priority:i18nCore.t({'H':'priority.high','M':'priority.medium','L':'priority.low'}[p])}));
   requestAnimationFrame(()=>[...document.querySelectorAll('.myrow')].find(row=>row.dataset.name===name)?.querySelector('.myrow-edit')?.focus({preventScroll:true}));
 }
@@ -8889,16 +8913,22 @@ function removeEntry(name){
   const prevList={...(allData[myListType]?.[cur]||{})};
   const srcArr=listSource(myListType);
   const sourceEntry=srcArr.find(x=>x.name===name),dn=sourceEntry?pokemonDisplayName(sourceEntry):name;
-  undoStack={type:myListType,username:cur,list:{...prevList},name:dn};
+  const pendingUndo={type:myListType,username:cur,list:{...prevList},name:dn};
   // Animate the row out
   const row=[...document.querySelectorAll('.myrow')].find(r=>r.dataset.name===name);
   if(row){
     row.classList.add('removing');
     setTimeout(sessionTransientCallback(()=>{
-      if(writeListItem(myListType,cur,name,null))showUndo(dn);
+      if(writeListItem(myListType,cur,name,null)){
+        undoStack=pendingUndo;
+        showUndo(dn);
+      }else row.classList.remove('removing');
     }),220);
   }else{
-    if(writeListItem(myListType,cur,name,null))showUndo(dn);
+    if(writeListItem(myListType,cur,name,null)){
+      undoStack=pendingUndo;
+      showUndo(dn);
+    }
   }
 }
 

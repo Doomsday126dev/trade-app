@@ -65,6 +65,9 @@ test('list hydration requires a current-identity authoritative snapshot',()=>{
   assert.equal(h.coordinator.isHydrated('wishlist'),false);
   h.handlers.get('wishlist:wishlist/TrainerA').onData({Pikachu:{p:'H'}});
   assert.equal(h.coordinator.isHydrated('wishlist'),true);
+  assert.equal(h.coordinator.isHydratedFor('wishlist',{uid:'uid-a',username:'TrainerA'}),true);
+  assert.equal(h.coordinator.isHydratedFor('wishlist',{uid:'uid-b',username:'TrainerA'}),false);
+  assert.equal(h.coordinator.isHydratedFor('wishlist',{uid:'uid-a',username:'TrainerB'}),false);
   assert.deepEqual(Array.from(h.coordinator.snapshot().hydratedSurfaces),['wishlist']);
 
   h.coordinator.activate({uid:'uid-b',username:'TrainerB'});
@@ -72,6 +75,8 @@ test('list hydration requires a current-identity authoritative snapshot',()=>{
   h.coordinator.subscribeList('wishlist');
   h.handlers.get('wishlist:wishlist/TrainerB').onData({Eevee:{p:'M'}});
   assert.equal(h.coordinator.isHydrated('wishlist'),true);
+  assert.equal(h.coordinator.isHydratedFor('wishlist',{uid:'uid-b',username:'TrainerB'}),true);
+  assert.equal(h.coordinator.isHydratedFor('wishlist',{uid:'uid-a',username:'TrainerA'}),false);
   h.coordinator.reset();
   assert.equal(h.coordinator.isHydrated('wishlist'),false);
 });

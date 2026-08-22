@@ -13,7 +13,7 @@ function between(start,end){
   return source.slice(from,to);
 }
 
-function syncHelperHarness(){
+function syncHelperHarness({exactReads=true,authUid='uid-a',activeOwner={uid:'uid-a',username:'TrainerA'},coordinatorOwner={uid:'uid-a',username:'TrainerA'}}={}){
   let hydrated=false;
   const subscriptions=[];
   const notices=[];
@@ -21,14 +21,22 @@ function syncHelperHarness(){
   const context={
     fbOn:true,
     db:{},
-    auth:{currentUser:{uid:'uid-a'}},
+    auth:{currentUser:{uid:authUid}},
     cur:'TrainerA',
-    ownedExactReadsEnabled:()=>true,
-    managedOwnedDataCoordinator:{isHydrated:()=>hydrated},
+    _firstSyncDone:false,
+    _pathLoadState:{},
+    managedSessionCache:{snapshot:()=>({activeOwner})},
+    ownedExactReadsEnabled:()=>exactReads,
+    managedOwnedDataCoordinator:{
+      isHydratedFor:(_surface,identity)=>hydrated&&identity.uid===coordinatorOwner.uid&&identity.username===coordinatorOwner.username
+    },
     ensureListSubscribed:type=>subscriptions.push(type),
     toast:message=>notices.push(message),
     i18nCore:{t:key=>key},
-    queueMyListUpdate:(type,username,patch)=>{queued.push({type,username,patch});return true;}
+    queueMyListUpdate:(type,username,patch)=>{
+      queued.push({type,username,patch});
+      return Object.freeze({ok:true,status:'queued',changed:Object.keys(patch).length});
+    }
   };
   vm.runInNewContext(
     between('const OWNED_MY_LIST_TYPES','function writeList(type,u,list,{previousList}={})'),
@@ -47,6 +55,32 @@ test('My List mutation fails closed until this session receives its exact list s
   assert.equal(h.context.requireOwnedListHydration('wishlist','DifferentTrainer'),false);
 });
 
+test('My List hydration binds the authenticated UID, active cache owner, username, and snapshot identity',()=>{
+  const wrongAuth=syncHelperHarness({authUid:'uid-b'});wrongAuth.setHydrated(true);
+  assert.equal(wrongAuth.context.requireOwnedListHydration('wishlist','TrainerA'),false);
+  assert.deepEqual(wrongAuth.subscriptions,[]);
+
+  const wrongOwner=syncHelperHarness({activeOwner:{uid:'uid-a',username:'TrainerB'}});wrongOwner.setHydrated(true);
+  assert.equal(wrongOwner.context.requireOwnedListHydration('wishlist','TrainerA'),false);
+
+  const staleSnapshot=syncHelperHarness({coordinatorOwner:{uid:'uid-b',username:'TrainerA'}});staleSnapshot.setHydrated(true);
+  assert.equal(staleSnapshot.context.requireOwnedListHydration('wishlist','TrainerA'),false);
+
+  const exact=syncHelperHarness();exact.setHydrated(true);
+  assert.equal(exact.context.requireOwnedListHydration('wishlist','TrainerA'),true);
+});
+
+test('legacy hydration fallback uses the broad listener root key recorded by subscribePath(type)',()=>{
+  const h=syncHelperHarness({exactReads:false});
+  h.context._pathLoadState.wishlist='loaded';
+  assert.equal(h.context.requireOwnedListHydration('wishlist','TrainerA'),true);
+  delete h.context._pathLoadState.wishlist;
+  h.context._pathLoadState['wishlist/TrainerA']='loaded';
+  assert.equal(h.context.requireOwnedListHydration('wishlist','TrainerA'),false);
+  assert.match(source,/if\(LEGACY_BROAD_READS_ENABLED\)subscribePath\(type\)/);
+  assert.match(source,/_pathLoadState\[path\]='loaded'/);
+});
+
 test('whole-list changes produce one atomic patch containing only changed Pokemon',()=>{
   const h=syncHelperHarness();
   const queued=h.context.queueListEntryDiff('wishlist','TrainerA',{
@@ -54,7 +88,7 @@ test('whole-list changes produce one atomic patch containing only changed Pokemo
   },{
     Pikachu:'H',Bulbasaur:'H',Squirtle:'M'
   });
-  assert.equal(queued,3);
+  assert.deepEqual(JSON.parse(JSON.stringify(queued)),{ok:true,status:'queued',changed:3});
   assert.deepEqual(JSON.parse(JSON.stringify(h.queued)),[
     {type:'wishlist',username:'TrainerA',patch:{Pikachu:'H',Eevee:null,Squirtle:'M'}}
   ]);
@@ -80,7 +114,7 @@ function deferred(){
   const promise=new Promise((res,rej)=>{resolve=res;reject=rej;});
   return{promise,resolve,reject};
 }
-function queueRuntimeHarness({setAdapter=async()=>{},updateAdapter=async()=>{}}={}){
+function queueRuntimeHarness({setAdapter=async()=>{},updateAdapter=async()=>{},saveQueueResult={ok:true}}={}){
   const window={};
   const context=vm.createContext({window});
   vm.runInContext(readFileSync(path.join(__dirname,'..','js/data/sessionCacheBoundary.js'),'utf8'),context);
@@ -94,7 +128,7 @@ function queueRuntimeHarness({setAdapter=async()=>{},updateAdapter=async()=>{}}=
     syncQueue:{},syncFlushTimer:null,fbOn:true,db:{},auth:{currentUser:{uid:'uid-a'}},cur:'TrainerA',
     firebaseAuthConfigured:()=>false,setSyncStatus:()=>{},showSyncDot:()=>{},refreshSyncUi:()=>{},
     showSessionStorageNotices:()=>{},toast:()=>{},i18nCore:{t:key=>key},warnLocalOnlyMode:()=>{},
-    clearTimeout:()=>{},setTimeout:()=>1,saveSyncQueue:()=>({ok:true}),
+    clearTimeout:()=>{},setTimeout:()=>1,saveSyncQueue:()=>saveQueueResult,
     ref:(_db,target)=>target,set:setAdapter,update:updateAdapter,
     activePublicShareHydrationToken:null,publicShareSessionMatches:()=>false,
     inspectOwnPublicShareAfterHydration:()=>{},console
@@ -107,13 +141,109 @@ function queueRuntimeHarness({setAdapter=async()=>{},updateAdapter=async()=>{}}=
 test('multi-Pokemon action reaches Firebase as one atomic root update with null deletion',async()=>{
   const calls=[];
   const h=queueRuntimeHarness({updateAdapter:async(target,patch)=>calls.push({target,patch})});
-  assert.equal(h.queueListEntryDiff('wishlist','TrainerA',
+  assert.deepEqual(JSON.parse(JSON.stringify(h.queueListEntryDiff('wishlist','TrainerA',
     {Pikachu:'M',Eevee:'L',Bulbasaur:'H'},
     {Pikachu:'H',Bulbasaur:'H',Squirtle:'M'}
-  ),3);
+  ))),{ok:true,status:'queued',changed:3});
   await h.flushSyncQueue();
   assert.deepEqual(JSON.parse(JSON.stringify(calls)),[{target:'wishlist/TrainerA',patch:{Pikachu:'H',Eevee:null,Squirtle:'M'}}]);
   assert.deepEqual(JSON.parse(JSON.stringify(h.syncQueue)),{});
+});
+
+test('list diff distinguishes no-op, validation failure, and queue persistence failure',()=>{
+  const noOp=queueRuntimeHarness();
+  assert.deepEqual(JSON.parse(JSON.stringify(noOp.queueListEntryDiff(
+    'wishlist','TrainerA',{Pikachu:'H'},{Pikachu:'H'}
+  ))),{ok:true,status:'no_changes',changed:0});
+
+  const invalid=queueRuntimeHarness();
+  assert.deepEqual(JSON.parse(JSON.stringify(invalid.queueMyListUpdate(
+    'wishlist','TrainerA',{Pikachu:{priority:'H'}}
+  ))),{ok:false,status:'validation_failed',changed:1});
+
+  const failed=queueRuntimeHarness({saveQueueResult:{ok:false,error:{code:'storage/quota'}}});
+  assert.deepEqual(JSON.parse(JSON.stringify(failed.queueListEntryDiff(
+    'wishlist','TrainerA',{Pikachu:'M'},{Pikachu:'H'}
+  ))),{ok:false,status:'persistence_failed',changed:1,errorCode:'storage/quota'});
+  assert.deepEqual(failed.syncQueue,{});
+});
+
+function mutationHarness({queueResult={ok:true,status:'queued',changed:1}}={}){
+  let state={
+    users:{TrainerA:{lastUpdated:10,lastSeen:11}},
+    wishlist:{TrainerA:{Pikachu:'M'}}
+  };
+  const effects={activity:[],queueSync:[],publication:[],notices:[],saves:0,syncs:0,refreshes:0};
+  const context={
+    fbOn:true,db:{},
+    requireOwnedListHydration:()=>true,
+    getLocal:()=>JSON.parse(JSON.stringify(state)),
+    queueListEntryDiff:()=>queueResult,
+    recordActivityEvent:(...args)=>effects.activity.push(args),
+    saveLocal:value=>{effects.saves++;state=JSON.parse(JSON.stringify(value));},
+    queueSync:(...args)=>{effects.queueSync.push(args);return true;},
+    requestPublicSharePublication:(...args)=>effects.publication.push(args),
+    syncFromLocal:()=>{effects.syncs++;},
+    refreshAddPokemonChoices:()=>{effects.refreshes++;},
+    toast:message=>effects.notices.push(message),
+    i18nCore:{t:key=>key},cur:'TrainerA',Date
+  };
+  vm.runInNewContext(
+    between('function writeList(type,u,list,{previousList}={})','function refreshAddPokemonChoices'),
+    context
+  );
+  return{context,effects,state:()=>JSON.parse(JSON.stringify(state))};
+}
+
+test('failed queue persistence leaves whole-list and item writes completely unchanged',()=>{
+  const failed={ok:false,status:'persistence_failed',changed:1,errorCode:'storage/quota'};
+  for(const operation of[
+    h=>h.context.writeList('wishlist','TrainerA',{Pikachu:'H',Eevee:'L'}),
+    h=>h.context.writeListItem('wishlist','TrainerA','Pikachu','H')
+  ]){
+    const h=mutationHarness({queueResult:failed});
+    const before=h.state();
+    assert.equal(operation(h),false);
+    assert.deepEqual(h.state(),before);
+    assert.deepEqual(h.effects.activity,[]);
+    assert.deepEqual(h.effects.queueSync,[]);
+    assert.deepEqual(h.effects.publication,[]);
+    assert.equal(h.effects.saves,0);
+    assert.equal(h.effects.syncs,0);
+    assert.equal(h.effects.refreshes,0);
+    assert.deepEqual(h.effects.notices,['storage.offlineRecoveryUnavailable']);
+  }
+});
+
+test('successfully persisted offline queue keeps optimistic list behavior',()=>{
+  const h=mutationHarness();
+  assert.equal(h.context.writeList('wishlist','TrainerA',{Pikachu:'H',Eevee:'L'}),true);
+  assert.deepEqual(h.state().wishlist.TrainerA,{Pikachu:'H',Eevee:'L'});
+  assert.deepEqual(h.effects.activity,[['TrainerA',1]]);
+  assert.equal(h.effects.saves,1);
+  assert.equal(h.effects.syncs,1);
+  assert.equal(h.effects.refreshes,1);
+  assert.equal(h.effects.publication.length,1);
+  assert.deepEqual(h.effects.queueSync.map(entry=>entry[0]),[
+    'users/TrainerA/lastUpdated','users/TrainerA/lastSeen'
+  ]);
+  assert.deepEqual(h.effects.notices,[]);
+});
+
+test('add, import, bulk, and delete UI state changes remain after the write-success boundary',()=>{
+  const add=between('function addEntry(){','function allCostumeEntries');
+  const tray=between('function confirmAddTray(){','document.addEventListener');
+  const imported=between('function confirmImport(){','// ── GLOBAL KEYBOARD SHORTCUTS');
+  const bulk=between('function bulkSetPri(){','// ── VOICE INPUT');
+  const remove=between('function removeEntry(name){','// ── SEARCH STRINGS');
+  assert.ok(add.indexOf('if(!writeList(myListType,cur,list))return;')<add.indexOf("document.getElementById('ac-input').value='';"));
+  assert.ok(tray.indexOf('if(!writeList(myListType,cur,list))return;')<tray.indexOf('addTray=[];'));
+  assert.ok(imported.indexOf('if(!writeList(myListType,cur,list))return;')<imported.indexOf("closeModal('import-modal')"));
+  const firstBulkWrite=bulk.indexOf('if(!writeList(myListType,cur,list))return;');
+  assert.ok(firstBulkWrite<bulk.indexOf("sel.value='';",firstBulkWrite));
+  assert.ok(bulk.lastIndexOf('if(!writeList(myListType,cur,list))return;')<bulk.indexOf('undoStack=',bulk.lastIndexOf('if(!writeList(myListType,cur,list))return;')));
+  assert.ok(remove.indexOf('if(writeListItem(')<remove.indexOf('undoStack=pendingUndo;'));
+  assert.match(remove,/else row\.classList\.remove\('removing'\)/);
 });
 
 test('another-client Pokemon remains unchanged when this client updates a different Pokemon',async()=>{

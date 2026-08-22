@@ -117,7 +117,8 @@ test('delayed removal and swipe callbacks are invalidated while conflict UI is r
   const cleanup=between("function resetSessionTransientUi(reason='session_boundary'){",'function resetTransientUiBeforeSessionActivation');
   const conflict=between('function showConflictModal','// ── IMPORT FROM SEARCH STRING');
   assert.match(callback,/generation!==_sessionTransientGeneration/);
-  assert.match(source,/setTimeout\(sessionTransientCallback\(\(\)=>\{\s*if\(writeListItem\([^)]*\)\)showUndo/);
+  assert.match(source,/setTimeout\(sessionTransientCallback\(\(\)=>\{\s*if\(writeListItem\([^)]*\)\)\{\s*undoStack=pendingUndo;\s*showUndo/);
+  assert.match(source,/else row\.classList\.remove\('removing'\)/);
   assert.match(source,/setTimeout\(sessionTransientCallback\(\(\)=>\{const n=row\.dataset\.name/);
   assert.match(cleanup,/querySelectorAll\('\.conflict-notice'\).*el=>el\.remove\(\)/);
   assert.doesNotMatch(conflict,/setTimeout|sessionTransientCallback/);

@@ -104,6 +104,10 @@
       return{ok:true,status:'reset'};
     }
     function isHydrated(surface){return!!activeIdentity&&hydratedSurfaces.has(surface);}
+    function isHydratedFor(surface,value){
+      const expected=normalizeIdentity(value);
+      return!!expected&&sameIdentity(activeIdentity,expected)&&hydratedSurfaces.has(surface);
+    }
     function snapshotMetrics(){
       return Object.freeze([...metrics.values()].map(item=>Object.freeze({...item})));
     }
@@ -116,7 +120,7 @@
       });
     }
 
-    return Object.freeze({activate,subscribeCore,subscribeList,subscribeSurface,isHydrated,reset,snapshot,snapshotMetrics});
+    return Object.freeze({activate,subscribeCore,subscribeList,subscribeSurface,isHydrated,isHydratedFor,reset,snapshot,snapshotMetrics});
   }
 
   root.ownedDataCoordinator=Object.freeze({CORE_SURFACES,LIST_SURFACES,createOwnedDataCoordinator});
