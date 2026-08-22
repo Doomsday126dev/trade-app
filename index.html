@@ -4012,26 +4012,62 @@ function refreshSession(){
 
 // ── SYNC QUEUE (offline support) ─────────────────────────────
 function unsafeWholeListQueueEntry(path,item={}){
+  if(item?.kind===sessionCacheBoundaryData.MY_LIST_UPDATE_KIND)return false;
   return sessionCacheBoundaryData.isWholeListReplacementPath(path)||
     sessionCacheBoundaryData.isWholeListReplacementPath(item?.path);
 }
 function queueSync(path,data){
-  const item={path,data,ts:Date.now()};
+  const item={kind:'set',path,data,ts:Date.now()};
   if(unsafeWholeListQueueEntry(path,item)){
     const quarantined=managedSessionCache.quarantineQueueEntry(path,item);
     if(quarantined.ok)showSessionStorageNotices();
     else toast(i18nCore.t('storage.offlineRecoveryUnavailable'),5000);
     return false;
   }
-  syncQueue[path]=item;
+  const previousQueue=syncQueue;
+  syncQueue={...syncQueue,[path]:item};
   const saved=saveSyncQueue();
   if(!saved.ok){
+    syncQueue=previousQueue;
     toast(i18nCore.t('storage.offlineRecoveryUnavailable'),5000);
     return false;
   }
   showSyncDot(true);
   refreshSyncUi();
   if(firebaseAuthConfigured()&&auth&&!auth.currentUser)warnLocalOnlyMode();
+  clearTimeout(syncFlushTimer);
+  syncFlushTimer=setTimeout(flushSyncQueue,250);
+  return true;
+}
+function queueItemIsCurrent(key,item){return syncQueue[key]===item;}
+function queueMyListUpdate(type,u,patch){
+  const rootPath=`${type}/${u}`;
+  const key=sessionCacheBoundaryData.myListUpdateQueueKey(rootPath);
+  const existing=syncQueue[key];
+  const merged=existing?.kind===sessionCacheBoundaryData.MY_LIST_UPDATE_KIND&&existing.path===rootPath
+    ?{...existing.data}:{};
+  const absorbed=[];
+  Object.entries(syncQueue).forEach(([queuedKey,item])=>{
+    if(queuedKey===key||(item?.kind!=null&&item.kind!=='set')||typeof item.path!=='string')return;
+    const prefix=`${rootPath}/`;
+    if(!item.path.startsWith(prefix))return;
+    const name=item.path.slice(prefix.length);
+    if(!name||name.includes('/'))return;
+    merged[name]=item.data??null;
+    absorbed.push(queuedKey);
+  });
+  Object.assign(merged,patch);
+  const item={kind:sessionCacheBoundaryData.MY_LIST_UPDATE_KIND,path:rootPath,data:merged,ts:Date.now()};
+  const owner=managedSessionCache.snapshot().activeOwner;
+  if(!sessionCacheBoundaryData.queueEntryClassification(key,item,owner).ok)return false;
+  const previousQueue=syncQueue;
+  const nextQueue={...syncQueue,[key]:item};
+  absorbed.forEach(queuedKey=>delete nextQueue[queuedKey]);
+  syncQueue=nextQueue;
+  const saved=saveSyncQueue();
+  if(!saved.ok){syncQueue=previousQueue;return false;}
+  showSyncDot(true);
+  refreshSyncUi();
   clearTimeout(syncFlushTimer);
   syncFlushTimer=setTimeout(flushSyncQueue,250);
   return true;
@@ -4047,19 +4083,31 @@ async function flushSyncQueue(){
   const entries=Object.entries(syncQueue);
   let permanentDrops=0;
   for(const[path,item] of entries){
+    const owner=managedSessionCache.snapshot().activeOwner;
+    const classification=sessionCacheBoundaryData.queueEntryClassification(path,item,owner);
     if(unsafeWholeListQueueEntry(path,item)){
       const quarantined=managedSessionCache.quarantineQueueEntry(path,item);
       if(quarantined.ok){
-        if(syncQueue[path]?.ts===item.ts)delete syncQueue[path];
+        if(queueItemIsCurrent(path,item))delete syncQueue[path];
         saveSyncQueue();
         showSessionStorageNotices();
         refreshSyncUi();
       }
       continue;
     }
+    if(!classification.ok){
+      if(queueItemIsCurrent(path,item)){
+        delete syncQueue[path];
+        saveSyncQueue();
+        refreshSyncUi();
+        toast(i18nCore.t('storage.offlineRecoveryUnavailable'),5000);
+      }
+      continue;
+    }
     try{
-      await set(ref(db,path),item.data??null);
-      if(syncQueue[path]?.ts===item.ts)delete syncQueue[path];
+      if(classification.kind===sessionCacheBoundaryData.MY_LIST_UPDATE_KIND)await update(ref(db,item.path),item.data);
+      else await set(ref(db,item.path),item.data??null);
+      if(queueItemIsCurrent(path,item))delete syncQueue[path];
       saveSyncQueue();
       refreshSyncUi();
       if(path===`publicShares/${cur}`&&activePublicShareHydrationToken&&publicShareSessionMatches(cur)){
@@ -4072,14 +4120,13 @@ async function flushSyncQueue(){
       // spamming the console and never succeeding. Drop them instead.
       const code=String(e?.code||e?.message||'').toUpperCase();
       if(code.includes('PERMISSION_DENIED')||code.includes('INVALID_TOKEN')||code.includes('UNAUTH')){
-        delete syncQueue[path];
-        saveSyncQueue();
-        refreshSyncUi();
-        permanentDrops++;
-        console.warn(`flushSyncQueue: dropped ${path} (${code}). Server rejected it permanently; not retrying.`);
-      }else{
-        syncQueue[path]=item;
-        saveSyncQueue();
+        if(queueItemIsCurrent(path,item)){
+          delete syncQueue[path];
+          saveSyncQueue();
+          refreshSyncUi();
+          permanentDrops++;
+          console.warn(`flushSyncQueue: dropped ${path} (${code}). Server rejected it permanently; not retrying.`);
+        }
       }
     }
   }
@@ -4422,6 +4469,7 @@ function showSessionStorageNotices(){
     const key={
       'storage/legacy-queue-discarded':'storage.pendingChangesDiscarded',
       'storage/queue-reset':'storage.pendingChangesDiscarded',
+      'storage/queue-entry-discarded':'storage.pendingChangesDiscarded',
       'storage/cache-migrated':'storage.cacheReset',
       'storage/cache-reset':'storage.cacheReset',
       'storage/cache-owner-reset':'storage.cacheReset',
@@ -5329,14 +5377,15 @@ function queueListEntryDiff(type,u,previous,next){
   const before=previous&&typeof previous==='object'?previous:{};
   const after=next&&typeof next==='object'?next:{};
   const names=new Set([...Object.keys(before),...Object.keys(after)]);
-  let queued=0;
+  const patch={};
   names.forEach(name=>{
     const beforeHas=Object.prototype.hasOwnProperty.call(before,name);
     const afterHas=Object.prototype.hasOwnProperty.call(after,name);
     if(beforeHas===afterHas&&listEntryValuesEqual(before[name],after[name]))return;
-    if(queueSync(`${type}/${u}/${name}`,afterHas?after[name]:null))queued++;
+    patch[name]=afterHas?after[name]:null;
   });
-  return queued;
+  const changed=Object.keys(patch).length;
+  return changed&&queueMyListUpdate(type,u,patch)?changed:0;
 }
 function writeList(type,u,list,{previousList}={}){
   if(!requireOwnedListHydration(type,u))return false;
@@ -5377,7 +5426,7 @@ function writeListItem(type,u,name,value){
   s.users[u]={...s.users[u],lastUpdated:now,lastSeen:now};
   saveLocal(s);
   if(fbOn&&db){
-    queueSync(`${type}/${u}/${name}`,value??null);
+    queueMyListUpdate(type,u,{[name]:value??null});
     queueSync(`users/${u}/lastUpdated`,now);
     queueSync(`users/${u}/lastSeen`,now);
     if(u===cur)requestPublicSharePublication('owned_list_edit',s,u);
@@ -5617,6 +5666,13 @@ function applyDataPath(root,path,data){
   if(data==null)delete node[last];
   else node[last]=data;
 }
+function applyQueuedData(root,item){
+  if(item?.kind===sessionCacheBoundaryData.MY_LIST_UPDATE_KIND){
+    Object.entries(item.data||{}).forEach(([name,value])=>applyDataPath(root,`${item.path}/${name}`,value));
+    return;
+  }
+  applyDataPath(root,item?.path,item?.data);
+}
 function mergeRemoteData(d){
   const merged=normalizeData({
     users:d?.users||{},
@@ -5653,7 +5709,7 @@ function mergeRemoteData(d){
       }
     });
   }
-  Object.values(syncQueue||{}).forEach(({path,data})=>applyDataPath(merged,path,data));
+  Object.values(syncQueue||{}).forEach(item=>applyQueuedData(merged,item));
   return normalizeData(merged);
 }
 // ── LAZY-LOAD LISTENERS ───────────────────────────────────────
@@ -5698,7 +5754,7 @@ function _onSubSnapshot(path,snap,meta={}){
   saveLocal(s);
   allData=runtimeDataWithSelectedTrainer(s);
   // Apply pending writes from sync queue
-  Object.values(syncQueue||{}).forEach(({path:p,data})=>applyDataPath(allData,p,data));
+  Object.values(syncQueue||{}).forEach(item=>applyQueuedData(allData,item));
   if(Object.keys(syncQueue||{}).length)saveLocal(allData);
   _pathLoadState[path]='loaded';
   setSyncStatus('online');
@@ -5837,7 +5893,7 @@ function _onOwnedDataSnapshot({surface,path,value}){
   s=normalizeData(s);
   saveLocal(s);
   allData=runtimeDataWithSelectedTrainer(s);
-  Object.values(syncQueue||{}).forEach(({path:queuedPath,data})=>applyDataPath(allData,queuedPath,data));
+  Object.values(syncQueue||{}).forEach(item=>applyQueuedData(allData,item));
   if(Object.keys(syncQueue||{}).length)saveLocal(allData);
   if((surface==='profile'||PUBLIC_SHARE_TYPES.includes(surface))&&activePublicShareHydrationToken){
     const marked=managedPublicSharePublication.markLoaded(activePublicShareHydrationToken,surface);
@@ -13448,7 +13504,7 @@ function queueRenderMyHave(delay=60){
 }
 function refreshAfterHaveWrite(username,scope='all'){
   allData=getLocal();
-  Object.values(syncQueue||{}).forEach(({path,data})=>applyDataPath(allData,path,data));
+  Object.values(syncQueue||{}).forEach(item=>applyQueuedData(allData,item));
   if(scope==='mine'&&username===cur){
     queueRenderMyHave();
     const inCount=totalOffersForRecipient(cur);

@@ -7,6 +7,10 @@
   const DEFAULT_QUEUE_KEY='pogoSyncQueue_v2';
   const LEGACY_QUEUE_KEY='pogoSyncQueue_v1';
   const OWNED_LIST_ROOTS=Object.freeze(['wishlist','dynamax','gmax','costumes']);
+  const MY_LIST_UPDATE_KIND='my-list-update';
+  const MY_LIST_UPDATE_KEY_PREFIX='@my-list-update:';
+  const MAX_MY_LIST_UPDATE_ENTRIES=4000;
+  const MAX_QUARANTINED_LIST_ROOTS=OWNED_LIST_ROOTS.length;
 
   function resultError(code,message){return{ok:false,error:Object.freeze({code,message})};}
   function objectValue(value){return value&&typeof value==='object'&&!Array.isArray(value)?value:{};}
@@ -27,12 +31,53 @@
   function emptyQueue(owner=null){
     return{schemaVersion:QUEUE_SCHEMA_VERSION,owner:owner?{...owner}:null,entries:{},quarantined:{}};
   }
+  function plainObject(value){return!!value&&typeof value==='object'&&!Array.isArray(value);}
+  function pathParts(path){return typeof path==='string'?path.split('/'):[];}
+  function ownedListRootParts(path){
+    const parts=pathParts(path);
+    return parts.length===2&&OWNED_LIST_ROOTS.includes(parts[0])&&!!parts[1]?parts:null;
+  }
   function isWholeListReplacementPath(path){
-    const parts=String(path||'').split('/').filter(Boolean);
-    return parts.length===2&&OWNED_LIST_ROOTS.includes(parts[0])&&!!parts[1];
+    return!!ownedListRootParts(path);
   }
   function isWholeListReplacementEntry(key,item){
     return isWholeListReplacementPath(key)||isWholeListReplacementPath(item?.path);
+  }
+  function myListUpdateQueueKey(path){return`${MY_LIST_UPDATE_KEY_PREFIX}${path}`;}
+  function finiteTimestamp(value){return Number.isFinite(value)&&value>=0;}
+  function jsonSafe(value){
+    try{return JSON.stringify(value)!==undefined;}catch{return false;}
+  }
+  function validListMap(value,{allowNull=false,allowEmpty=false}={}){
+    if(!plainObject(value))return false;
+    const entries=Object.entries(value);
+    if((!entries.length&&!allowEmpty)||entries.length>MAX_MY_LIST_UPDATE_ENTRIES)return false;
+    return entries.every(([name,item])=>
+      !!name&&name.length<=256&&!name.includes('/')&&
+      (typeof item==='string'||(allowNull&&item===null))
+    );
+  }
+  function queueEntryClassification(key,item,ownerValue){
+    const owner=ownerIdentity(ownerValue);
+    if(!owner||!plainObject(item)||!finiteTimestamp(item.ts))return Object.freeze({ok:false,kind:'invalid'});
+    if(item.kind===MY_LIST_UPDATE_KIND){
+      const root=ownedListRootParts(item.path);
+      const valid=!!root&&root[1]===owner.username&&key===myListUpdateQueueKey(item.path)&&
+        validListMap(item.data,{allowNull:true});
+      return Object.freeze({ok:valid,kind:valid?MY_LIST_UPDATE_KIND:'invalid'});
+    }
+    const keyRoot=ownedListRootParts(key);
+    const itemRoot=ownedListRootParts(item.path);
+    if(keyRoot||itemRoot){
+      const valid=!!keyRoot&&!!itemRoot&&key===item.path&&keyRoot[1]===owner.username&&
+        (item.kind==null||item.kind==='set')&&validListMap(item.data,{allowEmpty:true});
+      return Object.freeze({ok:valid,kind:valid?'whole-list-replacement':'invalid'});
+    }
+    const parts=pathParts(item.path);
+    const ownedListLeafValid=!OWNED_LIST_ROOTS.includes(parts[0])||parts.length===3&&parts[1]===owner.username;
+    const valid=(item.kind==null||item.kind==='set')&&key===item.path&&parts.length>1&&
+      parts.every(Boolean)&&ownedListLeafValid&&jsonSafe(item.data);
+    return Object.freeze({ok:valid,kind:valid?'set':'invalid'});
   }
   function parseStored(storage,key){
     const raw=storage.getItem(key);
@@ -136,21 +181,38 @@
     let queue=loadQueue();
     discardLegacyQueue();
 
-    function quarantineWholeListReplacements(){
+    function sanitizeQueueForOwner(owner){
       const moved=[];
+      const dropped=[];
       const entries=objectValue(queue.entries);
-      const quarantined=clone(objectValue(queue.quarantined));
-      for(const[key,item]of Object.entries(entries)){
-        if(!isWholeListReplacementEntry(key,item))continue;
-        quarantined[key]=clone(item);
-        delete entries[key];
-        moved.push(key);
+      const priorQuarantined=objectValue(queue.quarantined);
+      const quarantined={};
+      let droppedQuarantined=0;
+      for(const[key,item]of Object.entries(priorQuarantined)){
+        if(Object.keys(quarantined).length>=MAX_QUARANTINED_LIST_ROOTS){droppedQuarantined++;continue;}
+        if(queueEntryClassification(key,item,owner).kind==='whole-list-replacement')quarantined[key]=clone(item);
+        else droppedQuarantined++;
       }
-      if(!moved.length)return moved;
+      for(const[key,item]of Object.entries(entries)){
+        const classification=queueEntryClassification(key,item,owner);
+        if(classification.kind==='whole-list-replacement'){
+          if(Object.keys(quarantined).length<MAX_QUARANTINED_LIST_ROOTS)quarantined[key]=clone(item);
+          delete entries[key];
+          moved.push(key);
+        }else if(!classification.ok){
+          delete entries[key];
+          dropped.push(key);
+        }
+      }
+      const quarantineChanged=JSON.stringify(quarantined)!==JSON.stringify(priorQuarantined);
+      if(!moved.length&&!dropped.length&&!quarantineChanged)return{moved,dropped};
       queue={...queue,entries:clone(entries),quarantined};
       write(queueKey,queue);
-      notices.push('storage/whole-list-queue-quarantined');
-      return moved;
+      if(moved.length)notices.push('storage/whole-list-queue-quarantined');
+      if(dropped.length||droppedQuarantined){
+        notices.push('storage/queue-entry-discarded');
+      }
+      return{moved,dropped};
     }
 
     function activate(value){
@@ -173,7 +235,7 @@
         cache={...cache,protected:{owner:{...next},data:{}}};
       }
       if(!sameOwner(ownerIdentity(queue.owner),next))queue=emptyQueue(next);
-      quarantineWholeListReplacements();
+      sanitizeQueueForOwner(next);
       write(cacheKey,cache);
       write(queueKey,queue);
       return{ok:true,status:priorOwners.length?'restored':'initialized',owner:activeOwner};
@@ -219,13 +281,21 @@
       if(!activeOwner)return resultError('storage/session-inactive','Pending changes require an authenticated cache owner');
       const owner=ownerIdentity(queue.owner);
       if(!sameOwner(owner,activeOwner))return resultError('storage/owner-mismatch','Pending-change owner changed during the active session');
+      let nextEntries;
+      try{nextEntries=clone(objectValue(entries));}
+      catch{return resultError('storage/queue-entry-invalid','Pending change is not serializable');}
+      for(const[key,item]of Object.entries(nextEntries)){
+        if(queueEntryClassification(key,item,activeOwner).kind==='invalid'){
+          return resultError('storage/queue-entry-invalid','Pending change is malformed or does not belong to the active owner');
+        }
+      }
       queue={
         schemaVersion:QUEUE_SCHEMA_VERSION,
         owner:{...activeOwner},
-        entries:clone(objectValue(entries)),
+        entries:nextEntries,
         quarantined:clone(objectValue(queue.quarantined))
       };
-      quarantineWholeListReplacements();
+      sanitizeQueueForOwner(activeOwner);
       write(queueKey,queue);
       return{ok:true,status:'queue_saved'};
     }
@@ -233,9 +303,14 @@
       if(!activeOwner)return resultError('storage/session-inactive','Queue quarantine requires an authenticated cache owner');
       const owner=ownerIdentity(queue.owner);
       if(!sameOwner(owner,activeOwner))return resultError('storage/owner-mismatch','Pending-change owner changed during queue quarantine');
-      if(!isWholeListReplacementEntry(key,item))return resultError('storage/quarantine-path-invalid','Only whole-list replacement writes may enter this quarantine');
+      if(queueEntryClassification(key,item,activeOwner).kind!=='whole-list-replacement'){
+        return resultError('storage/quarantine-path-invalid','Only owner-bound whole-list replacement writes may enter this quarantine');
+      }
       const entries=clone(objectValue(queue.entries));
       const quarantined=clone(objectValue(queue.quarantined));
+      if(!Object.prototype.hasOwnProperty.call(quarantined,key)&&Object.keys(quarantined).length>=MAX_QUARANTINED_LIST_ROOTS){
+        return resultError('storage/quarantine-full','Whole-list replacement quarantine is full');
+      }
       quarantined[key]=clone(item);
       delete entries[key];
       queue={schemaVersion:QUEUE_SCHEMA_VERSION,owner:{...activeOwner},entries,quarantined};
@@ -263,7 +338,8 @@
 
   root.sessionCacheBoundary=Object.freeze({
     CACHE_SCHEMA_VERSION,QUEUE_SCHEMA_VERSION,DEFAULT_CACHE_KEY,LEGACY_CACHE_KEY,DEFAULT_QUEUE_KEY,LEGACY_QUEUE_KEY,
-    OWNED_LIST_ROOTS,isWholeListReplacementPath,
+    OWNED_LIST_ROOTS,MY_LIST_UPDATE_KIND,MY_LIST_UPDATE_KEY_PREFIX,MAX_MY_LIST_UPDATE_ENTRIES,
+    isWholeListReplacementPath,myListUpdateQueueKey,queueEntryClassification,
     createSessionCacheBoundary
   });
 })(window);

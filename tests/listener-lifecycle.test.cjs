@@ -80,6 +80,18 @@ test('auth loss invalidates a callback that was scheduled before cleanup',()=>{
   assert.equal(h.starts[0].stopped,true);
 });
 
+test('terminal listener error releases its key so an explicit retry starts cleanly',()=>{
+  const h=createHarness();
+  h.lifecycle.activateSession({uid:'uid-a',username:'TrainerA'});
+  const first=h.lifecycle.subscribeSession({...h.options('wishlist'),key:'session:wishlist'});
+  h.starts[0].error({code:'database/disconnected'});
+  const retry=h.lifecycle.subscribeSession({...h.options('wishlist'),key:'session:wishlist'});
+  assert.equal(first.status,'subscribed');
+  assert.equal(h.starts[0].stopped,true);
+  assert.equal(retry.status,'subscribed');
+  assert.equal(h.starts.length,2);
+});
+
 test('selected-trainer switch removes every previous trainer listener',()=>{
   const h=createHarness();
   const oldValues=[];

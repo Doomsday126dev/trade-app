@@ -77,6 +77,8 @@
         onError:error=>{
           if(!sameIdentity(activeIdentity,expectedIdentity))return;
           stats.errors++;
+          hydratedSurfaces.delete(surface);
+          if(LIST_SURFACES.includes(surface))subscribedLists.delete(surface);
           onError?.(Object.freeze({surface,error}));
         }
       });

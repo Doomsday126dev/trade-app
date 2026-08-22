@@ -57,7 +57,7 @@ test('owned cache and queue persist UID and username metadata',()=>{
   const boundary=loadBoundary(storage);
   assert.equal(boundary.activate(ownerA).ok,true);
   boundary.writeData({loginDirectory:{Public:{}},users:{TrainerA:{bio:'private'}},wishlist:{TrainerA:{Pikachu:'H'}}});
-  boundary.writeQueue({'wishlist/TrainerA/Pikachu':{path:'wishlist/TrainerA/Pikachu',data:'H',ts:1}});
+  boundary.writeQueue({'wishlist/TrainerA/Pikachu':{kind:'set',path:'wishlist/TrainerA/Pikachu',data:'H',ts:1}});
   assert.deepEqual(parsed(storage,'pogoSessionCache_v2').protected.owner,ownerA);
   assert.deepEqual(parsed(storage,'pogoSyncQueue_v2').owner,ownerA);
   assert.equal(boundary.readData().users.TrainerA.bio,'private');
@@ -99,6 +99,49 @@ test('new whole-list queue entries fail into quarantine while item writes remain
   assert.equal(boundary.quarantineQueueEntry('costumes/TrainerA/Pikachu (Dawn)',leaf).error.code,'storage/quarantine-path-invalid');
 });
 
+test('owner-bound atomic My List patches persist while foreign or mismatched entries fail closed',()=>{
+  const storage=memoryStorage();
+  const boundary=loadBoundary(storage);
+  boundary.activate(ownerA);
+  const root='wishlist/TrainerA';
+  const key=`@my-list-update:${root}`;
+  const patch={kind:'my-list-update',path:root,data:{Pikachu:'H',Eevee:null},ts:5};
+  assert.equal(boundary.writeQueue({[key]:patch}).ok,true);
+  assert.deepEqual(plain(boundary.readQueue()),{[key]:patch});
+  assert.equal(boundary.writeQueue({wrong:{kind:'set',path:'wishlist/TrainerA/Pikachu',data:'M',ts:6}}).error.code,'storage/queue-entry-invalid');
+  assert.equal(boundary.writeQueue({'wishlist/TrainerB/Pikachu':{kind:'set',path:'wishlist/TrainerB/Pikachu',data:'M',ts:7}}).error.code,'storage/queue-entry-invalid');
+});
+
+test('restored malformed and foreign queue records are discarded before activation can expose them',()=>{
+  const valid={kind:'set',path:'users/TrainerA/bio',data:'kept',ts:1};
+  const storage=memoryStorage({
+    pogoSyncQueue_v2:JSON.stringify({schemaVersion:2,owner:ownerA,entries:{
+      mismatch:{kind:'set',path:'users/TrainerA/bio',data:'wrong-key',ts:2},
+      'wishlist/TrainerB/Pikachu':{kind:'set',path:'wishlist/TrainerB/Pikachu',data:'H',ts:3},
+      'users/TrainerA/bio':valid
+    },quarantined:{'wishlist/TrainerB':{path:'wishlist/TrainerB',data:{Pikachu:'H'},ts:4}}})
+  });
+  const boundary=loadBoundary(storage);
+  boundary.activate(ownerA);
+  assert.deepEqual(plain(boundary.readQueue()),{'users/TrainerA/bio':valid});
+  assert.deepEqual(plain(boundary.readQuarantinedQueue()),{});
+  assert.deepEqual(Array.from(boundary.drainNotices()),['storage/queue-entry-discarded']);
+});
+
+test('quarantine is bounded to the four owner list roots and excludes unrelated payloads',()=>{
+  const storage=memoryStorage();
+  const boundary=loadBoundary(storage);
+  boundary.activate(ownerA);
+  const entries=Object.fromEntries(['wishlist','dynamax','gmax','costumes'].map((type,index)=>{
+    const path=`${type}/TrainerA`;
+    return[path,{kind:'set',path,data:{Pikachu:index?'M':'H'},ts:index+1}];
+  }));
+  assert.equal(boundary.writeQueue(entries).ok,true);
+  assert.equal(boundary.snapshot().quarantinedQueueCount,4);
+  assert.deepEqual(Object.keys(boundary.readQuarantinedQueue()).sort(),Object.keys(entries).sort());
+  assert.equal(JSON.stringify(boundary.readQuarantinedQueue()).includes('pin'),false);
+});
+
 test('quarantined stale replacement cannot delete unrelated authoritative entries',()=>{
   const stale={path:'wishlist/TrainerA',data:{Pikachu:'H'},ts:1};
   const narrow={path:'wishlist/TrainerA/Pikachu',data:'H',ts:2};
@@ -124,7 +167,7 @@ test('transient auth loss locks protected data and same-user recovery restores i
   const boundary=loadBoundary(storage);
   boundary.activate(ownerA);
   boundary.writeData({loginDirectory:{Public:{}},users:{TrainerA:{bio:'private'}}});
-  boundary.writeQueue({pending:{path:'users/TrainerA',data:{bio:'private'},ts:1}});
+  boundary.writeQueue({'users/TrainerA':{path:'users/TrainerA',data:{bio:'private'},ts:1}});
   boundary.suspend('auth_loss');
   assert.deepEqual(plain(boundary.readData()),{loginDirectory:{Public:{}}});
   assert.deepEqual(plain(boundary.readQueue()),{});
@@ -138,7 +181,7 @@ test('explicit logout removes protected cache and pending changes but keeps publ
   const boundary=loadBoundary(storage);
   boundary.activate(ownerA);
   boundary.writeData({loginDirectory:{Public:{}},users:{TrainerA:{bio:'private'}}});
-  boundary.writeQueue({pending:{path:'users/TrainerA',data:{bio:'private'},ts:1}});
+  boundary.writeQueue({'users/TrainerA':{path:'users/TrainerA',data:{bio:'private'},ts:1}});
   boundary.clearForLogout();
   assert.deepEqual(plain(boundary.readData()),{loginDirectory:{Public:{}}});
   assert.equal(parsed(storage,'pogoSessionCache_v2').protected,null);
@@ -163,7 +206,7 @@ test('direct switch to a wholly different owner discards the previous partition'
   const boundary=loadBoundary(storage);
   boundary.activate(ownerA);
   boundary.writeData({users:{TrainerA:{secret:'a'}}});
-  boundary.writeQueue({pending:{path:'users/TrainerA',data:{secret:'a'},ts:1}});
+  boundary.writeQueue({'users/TrainerA':{path:'users/TrainerA',data:{secret:'a'},ts:1}});
   const switched=boundary.activate(ownerB);
   assert.equal(switched.ok,true);
   assert.equal(boundary.readData().users,undefined);

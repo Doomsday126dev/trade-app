@@ -76,6 +76,19 @@ test('list hydration requires a current-identity authoritative snapshot',()=>{
   assert.equal(h.coordinator.isHydrated('wishlist'),false);
 });
 
+test('runtime listener failure revokes hydration and permits a fresh subscription',()=>{
+  const h=harness();
+  h.coordinator.activate({uid:'uid-a',username:'TrainerA'});
+  h.coordinator.subscribeList('wishlist');
+  const first=h.handlers.get('wishlist:wishlist/TrainerA');
+  first.onData(null);
+  assert.equal(h.coordinator.isHydrated('wishlist'),true);
+  first.onError({code:'database/disconnected'});
+  assert.equal(h.coordinator.isHydrated('wishlist'),false);
+  assert.equal(h.coordinator.subscribeList('wishlist').status,'subscribed');
+  assert.equal(h.starts.filter(item=>item.surface==='wishlist').length,2);
+});
+
 test('switching users replaces listeners and suppresses stale callbacks',()=>{
   const h=harness();
   h.coordinator.activate({uid:'uid-a',username:'TrainerA'});
