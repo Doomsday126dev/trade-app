@@ -1701,6 +1701,8 @@ test.describe('visual smoke', () => {
     await expect(page.locator('#ac-input')).toBeVisible();
     await expect(page.locator('#voice-btn')).toHaveAttribute('aria-label',/.+/);
     await expect(page.locator('#export-menu-btn')).toHaveAttribute('aria-haspopup','menu');
+    await expect(page.locator('#add-adv-toggle')).toHaveText(/Flags & details/);
+    await expect(page.locator('#export-menu-btn')).toHaveText(/List tools/);
     await expect(page.locator('#tab-mylist')).toHaveClass(/has-list-content/);
     await expect(page.locator('.journey-guidance')).toBeHidden();
     await expect(page.locator('.myrow').first().locator(':scope > .mctrl > .flag-btn')).toHaveCount(0);
@@ -1715,13 +1717,46 @@ test.describe('visual smoke', () => {
     const searchBox=await page.locator('#ac-input').boundingBox(),addBox=await page.locator('.add-actions .bsave').boundingBox(),firstRow=await page.locator('.myrow').first().boundingBox();
     expect(Math.abs((searchBox?.y||0)-(addBox?.y||0))).toBeLessThanOrEqual(2);
     expect(firstRow?.y).toBeLessThan(760);
+    await page.locator('#add-adv-toggle').click();
+    for(const id of ['add-pmon-lucky','add-pmon-shiny','add-pmon-xxl','add-pmon-xxs','add-pmon-notes'])await expect(page.locator(`#${id}`)).toBeVisible();
+    const scopes=await page.evaluate(()=>{
+      const add=document.querySelector('.add-form'),toolbar=document.querySelector('.mylist-list-toolbar');
+      const details=document.getElementById('add-adv-toggle').getBoundingClientRect();
+      const tools=document.getElementById('export-menu-btn').getBoundingClientRect();
+      const reorder=document.getElementById('mylist-reorder-toggle').getBoundingClientRect();
+      return{
+        addContainsTools:add.contains(document.getElementById('export-menu-btn')),
+        toolbarContainsTools:toolbar.contains(document.getElementById('export-menu-btn')),
+        sameListActionGroup:document.getElementById('export-menu-btn').closest('.mylist-list-actions')?.contains(document.getElementById('mylist-reorder-toggle'))===true,
+        detailsOverlapsTools:!(details.right<=tools.left||tools.right<=details.left||details.bottom<=tools.top||tools.bottom<=details.top),
+        reorderToolsGap:Math.max(0,tools.left-reorder.right)
+      };
+    });
+    const{reorderToolsGap,...scopeFlags}=scopes;
+    expect(scopeFlags).toEqual({addContainsTools:false,toolbarContainsTools:true,sameListActionGroup:true,detailsOverlapsTools:false});
+    expect(reorderToolsGap).toBeGreaterThanOrEqual(8);
     await page.locator('#export-menu-btn').click();
     await expect(page.locator('#export-menu')).toBeVisible();
     await expect(page.locator('#export-menu [role^="menuitem"]').first()).toBeFocused();
+    await expect(page.locator('#export-menu [role^="menuitem"]')).toHaveCount(9);
+    await expect(page.locator('#export-menu [role^="menuitem"]').last()).toBeVisible();
     await page.keyboard.press('Escape');
     await expect(page.locator('#export-menu')).toBeHidden();
     await expect(page.locator('#export-menu-btn')).toBeFocused();
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
+    await page.setViewportSize({width:1024,height:800});
+    const desktopScopes=await page.evaluate(()=>{
+      const add=document.querySelector('.add-form').getBoundingClientRect();
+      const actions=document.querySelector('.mylist-list-actions').getBoundingClientRect();
+      const toolbar=document.querySelector('.mylist-list-toolbar').getBoundingClientRect();
+      return{
+        listToolsOutsideAdd:!document.querySelector('.add-form').contains(document.getElementById('export-menu-btn')),
+        actionsInsideToolbar:actions.left>=toolbar.left&&actions.right<=toolbar.right,
+        scopesSeparated:add.bottom<=actions.top,
+        noOverflow:document.documentElement.scrollWidth<=document.documentElement.clientWidth
+      };
+    });
+    expect(desktopScopes).toEqual({listToolsOutsideAdd:true,actionsInsideToolbar:true,scopesSeparated:true,noOverflow:true});
   });
 
   test('My List Variant details uses the canonical dark input treatment',async({page})=>{

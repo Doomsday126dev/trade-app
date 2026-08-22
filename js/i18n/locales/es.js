@@ -1,6 +1,7 @@
 (function(global){
   const root=global.PogoLocales=global.PogoLocales||{};
   root.es=Object.freeze({...root.en,
+    'myList.flagsAndDetails':'Indicadores y detalles','myList.listTools':'Herramientas de lista','myList.listActions':'Acciones de lista',
     'data.loading':'Cargando {resource}…','data.empty':'No se encontró {resource}.','data.readError':'No se pudo cargar {resource}. Inténtalo de nuevo.','data.offline':'Estás sin conexión. Los datos guardados en este dispositivo siguen disponibles.','data.retrying':'Reintentando…','data.permissionDenied':'No tienes acceso a este contenido.','data.signedOut':'Tu sesión terminó. Inicia sesión de nuevo para continuar.','data.stale':'Se muestran datos guardados porque no hay una copia reciente disponible.',
     'app.updateRequired':'Hay una nueva versión disponible. Actualiza para continuar.','app.reloadAction':'Actualizar app','app.mainSections':'Secciones principales','app.install':'Instalar','app.installLabel':'Instalar aplicación','app.whatsNew':'Novedades','app.theme':'Cambiar tema','app.openProfile':'Abrir perfil','app.dismiss':'Cerrar durante esta sesión',
     'account.title':'Cuenta','account.openMenu':'Abrir menú de cuenta','account.closeMenu':'Cerrar menú de cuenta','account.signedInAs':'Sesión iniciada como','account.settings':'Ajustes','account.signOut':'Cerrar sesión','account.language':'Idioma','account.languageSettings':'Ajustes de idioma','account.closeSettings':'Cerrar ajustes','settings.publicDescription':'Elige el idioma de la interfaz guardado en este dispositivo.',

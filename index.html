@@ -865,8 +865,6 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
   .add-advanced input#add-pmon-notes{width:100%;flex:none !important;min-width:0 !important}
   .add-actions{flex-wrap:wrap;align-items:stretch;gap:6px}
   .add-actions .bsave{flex:1 1 auto;justify-content:center;padding:var(--space-3);font-size:14px}
-  .add-actions .export-menu-wrap{flex:0 0 auto}
-  .add-actions .image-btn{min-height:48px;justify-content:center}
   .add-tray{position:sticky;bottom:calc(8px + env(safe-area-inset-bottom));z-index:90;box-shadow:0 10px 28px rgba(0,0,0,.4);background:rgba(31,29,59,.97)}
   .add-tray-head{margin-bottom:6px}
   .add-tray-chips{max-height:76px}
@@ -1914,6 +1912,8 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
 .undo-btn{min-width:48px;min-height:48px;padding:8px 12px;pointer-events:auto}
 @media(max-width:600px){.toast,.undo-toast{left:50%;right:auto;width:max-content;max-width:calc(100vw - 24px);transform:translateX(-50%) translateY(100px)}.toast.show,.undo-toast.show{transform:translateX(-50%) translateY(0)}}
 @media(max-height:600px){.toast,.undo-toast{bottom:calc(8px + env(safe-area-inset-bottom));max-height:calc(100dvh - 16px - env(safe-area-inset-top) - env(safe-area-inset-bottom));overflow:auto}}
+.mylist-list-actions{display:inline-flex;align-items:center;gap:8px;margin-right:auto}.mylist-list-actions .mylist-reorder-toggle{margin-right:0}.mylist-list-tools{min-height:44px}
+@media(max-width:600px){#tab-mylist .add-ttl{padding-right:0}#tab-mylist .mylist-list-actions{width:100%;justify-content:space-between;margin-right:0}}
 </style>
 </head>
 <body>
@@ -2197,7 +2197,7 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
           <button type="button" class="pb add-pri-btn" data-pri="L" onclick="setAddPri('L')" aria-pressed="false" data-i18n-title="priority.low">L</button>
         </div>
         <input type="hidden" id="add-pmon-pri" value="">
-        <button type="button" class="add-advanced-toggle" id="add-adv-toggle" onclick="toggleAddAdvanced()" aria-expanded="false" aria-controls="add-advanced"><span data-i18n="myList.moreOptions">More options</span> <span class="caret">▾</span></button>
+        <button type="button" class="add-advanced-toggle" id="add-adv-toggle" onclick="toggleAddAdvanced()" aria-expanded="false" aria-controls="add-advanced"><span data-i18n="myList.flagsAndDetails">Flags &amp; details</span> <span class="caret">▾</span></button>
       </div>
       <div class="add-tray" id="add-tray" hidden></div>
       <div class="add-advanced" id="add-advanced">
@@ -2218,22 +2218,6 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
       </div>
       <div class="add-actions">
         <button class="bsave" onclick="addEntry()" data-i18n="myList.addAction">Add</button>
-        <div class="export-menu-wrap">
-          <button class="image-btn" onclick="toggleExportMenu(event)" aria-haspopup="menu" aria-expanded="false" aria-controls="export-menu" id="export-menu-btn"><span data-i18n="account.tools">Tools</span> <span aria-hidden="true">▾</span></button>
-          <div class="export-menu" id="export-menu" role="menu" aria-label="Tools" data-i18n-aria-label="account.tools" onkeydown="toolsMenuKeydown(event)">
-            <button class="export-menu-item" role="menuitem" onclick="openImport();closeExportMenu()"><span class="icon">↥</span> <span data-i18n="myList.importAction">Import string</span></button>
-            <button class="export-menu-item" role="menuitemcheckbox" id="speed-add-toggle" aria-checked="false" onclick="toggleSpeedAddMode()"><span class="icon">⚡</span> <span data-i18n="myList.speedAdd">Speed add</span></button>
-            <button class="export-menu-item" role="menuitemcheckbox" id="bulk-toggle-btn" aria-checked="false" onclick="toggleBulkMode();closeExportMenu()"><span class="icon">☑</span> <span data-i18n="myList.bulkEdit">Bulk edit</span></button>
-            <div class="export-menu-sep"></div>
-            <button class="export-menu-item" role="menuitem" onclick="exportMyListImage('classic');closeExportMenu()"><span class="icon">🖼️</span> <span data-i18n="export.classicImage">Classic image (light)</span></button>
-            <button class="export-menu-item" role="menuitem" onclick="exportMyListImage('cards');closeExportMenu()"><span class="icon">🌙</span> <span data-i18n="export.darkImage">Dark card image</span></button>
-            <button class="export-menu-item" role="menuitem" onclick="openSpecialTradeBoard();closeExportMenu()"><span class="icon">🎯</span> <span data-i18n="export.specialBoard">Special Trade Board (LF/FT)</span></button>
-            <button class="export-menu-item" role="menuitem" onclick="exportMyListMarkdown();closeExportMenu()"><span class="icon">📝</span> <span data-i18n="export.markdown">Markdown (Discord/Reddit)</span></button>
-            <button class="export-menu-item" role="menuitem" onclick="exportMyListCSV();closeExportMenu()"><span class="icon">📊</span> <span data-i18n="export.csv">CSV spreadsheet</span></button>
-            <div class="export-menu-sep"></div>
-            <button class="export-menu-item" role="menuitem" onclick="copyShareLink();closeExportMenu()"><span class="icon">🔗</span> <span data-i18n="export.copyShareLink">Copy share link</span></button>
-          </div>
-        </div>
       </div>
       <div class="speed-add-hint" id="speed-add-hint" data-i18n="myList.speedAddHint">Speed add is on. Priority and flags stay selected after each addition.</div>
     </div>
@@ -2260,7 +2244,25 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
     </div>
     <div class="sec mylist-list-toolbar" style="display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap">
       <h2 class="sr-only" id="mylist-category-heading"><span id="mylist-category-name">Trades</span> <span aria-hidden="true">·</span> <span id="mylist-count"></span></h2>
-      <button type="button" class="mylist-reorder-toggle btn btn-secondary" id="mylist-reorder-toggle" onclick="toggleReorderMode()" aria-pressed="false"><span data-i18n="myList.reorder">Reorder</span></button>
+      <div class="mylist-list-actions" role="group" data-i18n-aria-label="myList.listActions" aria-label="List actions">
+        <button type="button" class="mylist-reorder-toggle btn btn-secondary" id="mylist-reorder-toggle" onclick="toggleReorderMode()" aria-pressed="false"><span data-i18n="myList.reorder">Reorder</span></button>
+        <div class="export-menu-wrap">
+          <button class="image-btn mylist-list-tools" onclick="toggleExportMenu(event)" aria-haspopup="menu" aria-expanded="false" aria-controls="export-menu" id="export-menu-btn"><span data-i18n="myList.listTools">List tools</span> <span aria-hidden="true">▾</span></button>
+          <div class="export-menu" id="export-menu" role="menu" aria-label="List tools" data-i18n-aria-label="myList.listTools" onkeydown="toolsMenuKeydown(event)">
+            <button class="export-menu-item" role="menuitem" onclick="openImport();closeExportMenu()"><span class="icon">↥</span> <span data-i18n="myList.importAction">Import string</span></button>
+            <button class="export-menu-item" role="menuitemcheckbox" id="speed-add-toggle" aria-checked="false" onclick="toggleSpeedAddMode()"><span class="icon">⚡</span> <span data-i18n="myList.speedAdd">Speed add</span></button>
+            <button class="export-menu-item" role="menuitemcheckbox" id="bulk-toggle-btn" aria-checked="false" onclick="toggleBulkMode();closeExportMenu()"><span class="icon">☑</span> <span data-i18n="myList.bulkEdit">Bulk edit</span></button>
+            <div class="export-menu-sep"></div>
+            <button class="export-menu-item" role="menuitem" onclick="exportMyListImage('classic');closeExportMenu()"><span class="icon">🖼️</span> <span data-i18n="export.classicImage">Classic image (light)</span></button>
+            <button class="export-menu-item" role="menuitem" onclick="exportMyListImage('cards');closeExportMenu()"><span class="icon">🌙</span> <span data-i18n="export.darkImage">Dark card image</span></button>
+            <button class="export-menu-item" role="menuitem" onclick="openSpecialTradeBoard();closeExportMenu()"><span class="icon">🎯</span> <span data-i18n="export.specialBoard">Special Trade Board (LF/FT)</span></button>
+            <button class="export-menu-item" role="menuitem" onclick="exportMyListMarkdown();closeExportMenu()"><span class="icon">📝</span> <span data-i18n="export.markdown">Markdown (Discord/Reddit)</span></button>
+            <button class="export-menu-item" role="menuitem" onclick="exportMyListCSV();closeExportMenu()"><span class="icon">📊</span> <span data-i18n="export.csv">CSV spreadsheet</span></button>
+            <div class="export-menu-sep"></div>
+            <button class="export-menu-item" role="menuitem" onclick="copyShareLink();closeExportMenu()"><span class="icon">🔗</span> <span data-i18n="export.copyShareLink">Copy share link</span></button>
+          </div>
+        </div>
+      </div>
       <span style="font-size:10px;color:var(--muted);display:inline-flex;gap:6px;align-items:center;text-transform:none;letter-spacing:0;font-weight:500">
         <span data-i18n-title="myList.luckyHelp" title="Lucky entries generate a separate search string">⚡ <span data-i18n="myList.lucky">Lucky</span></span>
         <span style="color:var(--border2)">·</span>

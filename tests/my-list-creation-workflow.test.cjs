@@ -6,19 +6,23 @@ const path=require('node:path');
 const root=path.join(__dirname,'..');
 const html=readFileSync(path.join(root,'index.html'),'utf8');
 const add=html.slice(html.indexOf('<div class="add-form'),html.indexOf('<div class="owner-share-notice"'));
+const toolbar=html.slice(html.indexOf('<div class="sec mylist-list-toolbar"'),html.indexOf('<div id="mylist-out">'));
 
-test('normal add hierarchy keeps lookup, priority, Add, More options, and Tools visible',()=>{
+test('normal add hierarchy keeps lookup, priority, Add, and per-entry details together',()=>{
   assert.match(add,/class="[^"]*ac-wrap[^"]*search-lookup[^"]*"/);
   assert.match(add,/class="add-pri-group"/);
   assert.match(add,/class="bsave"[^>]+myList\.addAction/);
-  assert.match(add,/myList\.moreOptions/);
-  assert.match(add,/aria-controls="export-menu"/);
+  assert.match(add,/myList\.flagsAndDetails/);
+  assert.doesNotMatch(add,/aria-controls="export-menu"/);
 });
 
-test('power actions live inside one compact Tools menu',()=>{
-  const menu=add.slice(add.indexOf('id="export-menu"'),add.indexOf('</div>\n        </div>',add.indexOf('id="export-menu"')));
+test('list-wide actions live beside Reorder inside one compact List tools menu',()=>{
+  assert.match(toolbar,/class="mylist-list-actions"/);
+  assert.match(toolbar,/id="mylist-reorder-toggle"/);
+  assert.match(toolbar,/myList\.listTools/);
+  const menu=toolbar.slice(toolbar.indexOf('id="export-menu"'),toolbar.indexOf('</div>\n        </div>',toolbar.indexOf('id="export-menu"')));
   for(const key of ['myList.importAction','myList.speedAdd','myList.bulkEdit','export.classicImage'])assert.match(menu,new RegExp(key.replace('.','\\.')));
-  assert.equal((add.match(/id="export-menu-btn"/g)||[]).length,1);
+  assert.equal((toolbar.match(/id="export-menu-btn"/g)||[]).length,1);
 });
 
 test('voice is an accessible action inside the lookup field',()=>{
@@ -28,7 +32,7 @@ test('voice is an accessible action inside the lookup field',()=>{
   assert.match(html,/\.voice-btn\{[^}]*width:48px;height:48px/);
 });
 
-test('flags and variant details remain behind More options without changing identifiers',()=>{
+test('flags and variant details remain behind Flags & details without changing identifiers',()=>{
   assert.match(add,/id="add-advanced"/);
   for(const id of ['add-pmon-lucky','add-pmon-shiny','add-pmon-xxl','add-pmon-xxs','add-pmon-notes'])assert.match(add,new RegExp(`id="${id}"`));
   assert.match(add,/myList\.variantDetailsPlaceholder/);

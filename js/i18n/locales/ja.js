@@ -1,6 +1,7 @@
 (function(global){
   const root=global.PogoLocales=global.PogoLocales||{};
   root.ja=Object.freeze({...root.en,
+    'myList.flagsAndDetails':'フラグと詳細','myList.listTools':'リストツール','myList.listActions':'リスト操作',
     'data.loading':'{resource}を読み込んでいます…','data.empty':'{resource}はありません。','data.readError':'{resource}を読み込めませんでした。もう一度お試しください。','data.offline':'オフラインです。端末に保存されたデータは引き続き利用できます。','data.retrying':'再試行しています…','data.permissionDenied':'このコンテンツを表示する権限がありません。','data.signedOut':'セッションが終了しました。もう一度ログインしてください。','data.stale':'最新データを取得できないため、保存済みデータを表示しています。',
     'app.updateRequired':'新しいバージョンがあります。更新して続行してください。','app.reloadAction':'アプリを更新','app.mainSections':'メインセクション','app.install':'インストール','app.installLabel':'アプリをインストール','app.whatsNew':'新着情報','app.theme':'テーマを切り替え','app.openProfile':'プロフィールを開く','app.dismiss':'このセッションでは閉じる',
     'account.title':'アカウント','account.openMenu':'アカウントメニューを開く','account.closeMenu':'アカウントメニューを閉じる','account.signedInAs':'ログイン中','account.settings':'設定','account.signOut':'ログアウト','account.language':'言語','account.languageSettings':'言語設定','account.closeSettings':'設定を閉じる','settings.publicDescription':'この端末に保存する表示言語を選択します。',
