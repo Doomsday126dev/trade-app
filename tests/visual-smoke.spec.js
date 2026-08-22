@@ -1796,6 +1796,131 @@ test.describe('visual smoke', () => {
     expect(desktopScopes).toEqual({listToolsOutsideAdd:true,actionsInsideToolbar:true,scopesSeparated:true,noOverflow:true});
   });
 
+  test('Add Pokemon flags and details preserve hierarchy, touch targets, and behavior',async({page})=>{
+    for(const [width,height] of [[1440,900],[390,844]]){
+      await page.setViewportSize({width,height});
+      await page.goto(`./?add-flags-layout=${width}-${Date.now()}`,{waitUntil:'domcontentloaded'});
+      await waitForStableLocalOrganizerStartup(page);
+      await isolateAuthenticatedMyListFixture(page,{username:'AddLayoutTester',uid:'uid-add-layout-tester'});
+      await page.evaluate(width=>{
+        const local=normalizeData({users:{AddLayoutTester:{}},wishlist:{AddLayoutTester:{}},dynamax:{},gmax:{},costumes:{}});
+        saveLocal(local);allData=normalizeData(local);buildAcItems();renderMyList();
+        document.documentElement.dataset.theme=width===390?'light':'dark';
+        if(width===390){
+          document.querySelector('label:has(#add-pmon-lucky) span').textContent='Glücks-Pokémon';
+          document.querySelector('label:has(#add-pmon-shiny) span').textContent='Schillernd';
+        }
+        window.__addFlagRenderCount=0;
+        const originalRenderAddTray=renderAddTray;
+        renderAddTray=function(...args){window.__addFlagRenderCount++;return originalRenderAddTray(...args);};
+        window.__addListWriteCount=0;
+        window.__addCapturedWrite=null;
+        writeList=function(type,username,list){
+          window.__addListWriteCount++;
+          window.__addCapturedWrite={type,username,list:structuredClone(list)};
+          allData[type][username]=structuredClone(list);
+          renderMyList();
+          return true;
+        };
+      },width);
+
+      await page.locator('#ac-input').fill('Pikachu');
+      const pikachu=page.locator('#ac-dropdown .ac-item').filter({has:page.locator('.ac-item-name').filter({hasText:/^Pikachu$/})}).first();
+      await expect(pikachu).toBeVisible();
+      await pikachu.dispatchEvent('mousedown');
+      await expect(page.locator('#add-pmon-sel')).toHaveValue('Pikachu');
+      await page.locator('.add-pri-btn[data-pri="M"]').click();
+      await page.locator('#add-adv-toggle').click();
+
+      const geometry=await page.evaluate(()=>{
+        const rect=selector=>{
+          const r=document.querySelector(selector).getBoundingClientRect();
+          return{x:r.x,y:r.y,width:r.width,height:r.height,right:r.right,bottom:r.bottom};
+        };
+        const flagLabels=[...document.querySelectorAll('.add-flag-grid .lucky-add')];
+        const targets=flagLabels.map(label=>{
+          const r=label.getBoundingClientRect(),hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);
+          return label.contains(hit);
+        });
+        const controls=[...document.querySelector('.add-form').querySelectorAll('input:not([type="hidden"]),button')].filter(node=>!node.disabled);
+        const indexOf=selector=>controls.indexOf(document.querySelector(selector));
+        return{
+          search:rect('#ac-input'),priority:rect('.add-pri-group'),add:rect('.add-actions .bsave'),toggle:rect('#add-adv-toggle'),
+          advanced:rect('#add-advanced'),notes:rect('#add-pmon-notes'),
+          labelRects:flagLabels.map(label=>{const r=label.getBoundingClientRect();return{x:r.x,y:r.y,width:r.width,height:r.height};}),
+          targets,
+          focusOrder:{search:indexOf('#ac-input'),priority:indexOf('.add-pri-btn[data-pri="H"]'),add:indexOf('.add-actions .bsave'),toggle:indexOf('#add-adv-toggle'),lucky:indexOf('#add-pmon-lucky'),notes:indexOf('#add-pmon-notes')},
+          toolsOutsideForm:!document.querySelector('.add-form').contains(document.getElementById('export-menu-btn')),
+          noOverflow:document.documentElement.scrollWidth<=document.documentElement.clientWidth
+        };
+      });
+      expect(geometry.targets.every(Boolean)).toBe(true);
+      expect(geometry.labelRects.every(box=>box.width>=48&&box.height>=48)).toBe(true);
+      expect(geometry.noOverflow).toBe(true);
+      expect(geometry.toolsOutsideForm).toBe(true);
+      expect(geometry.focusOrder.search).toBeLessThan(geometry.focusOrder.priority);
+      expect(geometry.focusOrder.priority).toBeLessThan(geometry.focusOrder.add);
+      expect(geometry.focusOrder.add).toBeLessThan(geometry.focusOrder.toggle);
+      expect(geometry.focusOrder.toggle).toBeLessThan(geometry.focusOrder.lucky);
+      expect(geometry.focusOrder.lucky).toBeLessThan(geometry.focusOrder.notes);
+
+      if(width>600){
+        for(const control of [geometry.priority,geometry.add,geometry.toggle])expect(Math.abs(control.y-geometry.search.y)).toBeLessThanOrEqual(2);
+        for(const box of geometry.labelRects)expect(Math.abs(box.y-geometry.notes.y)).toBeLessThanOrEqual(2);
+      }else{
+        expect(Math.abs(geometry.search.y-geometry.add.y)).toBeLessThanOrEqual(2);
+        expect(Math.abs(geometry.priority.y-geometry.toggle.y)).toBeLessThanOrEqual(2);
+        expect(new Set(geometry.labelRects.map(box=>Math.round(box.x))).size).toBe(2);
+        expect(new Set(geometry.labelRects.map(box=>Math.round(box.y))).size).toBe(2);
+        expect(Math.abs(geometry.notes.x-geometry.advanced.x)).toBeLessThanOrEqual(1);
+        expect(Math.abs(geometry.notes.width-geometry.advanced.width)).toBeLessThanOrEqual(1);
+      }
+
+      for(const id of ['add-pmon-lucky','add-pmon-shiny','add-pmon-xxs','add-pmon-xxl']){
+        const before=await page.evaluate(()=>window.__addFlagRenderCount);
+        await page.locator(`label:has(#${id})`).click();
+        expect(await page.evaluate(()=>window.__addFlagRenderCount)).toBe(before+1);
+      }
+      await expect(page.locator('#add-pmon-xxl')).toBeChecked();
+      await expect(page.locator('#add-pmon-xxs')).not.toBeChecked();
+
+      const notes=page.locator('#add-pmon-notes');
+      const beforeNotes=await page.evaluate(()=>window.__addFlagRenderCount);
+      await notes.fill('female shadow');
+      expect(await page.evaluate(()=>window.__addFlagRenderCount)).toBe(beforeNotes+1);
+      const lucky=page.locator('#add-pmon-lucky');
+      await lucky.focus();
+      const beforeKeyboard=await page.evaluate(()=>window.__addFlagRenderCount);
+      await page.keyboard.press('Space');
+      expect(await page.evaluate(()=>window.__addFlagRenderCount)).toBe(beforeKeyboard+1);
+      await page.keyboard.press('Space');
+      expect(await page.evaluate(()=>window.__addFlagRenderCount)).toBe(beforeKeyboard+2);
+      await expect(lucky).toBeChecked();
+      const focusStyle=await lucky.locator('..').evaluate(label=>getComputedStyle(label).boxShadow);
+      expect(focusStyle).not.toBe('none');
+
+      await page.locator('#add-adv-toggle').click();
+      await expect(page.locator('#add-advanced')).not.toHaveClass(/open/);
+      await page.locator('#add-adv-toggle').click();
+      await expect(page.locator('#add-pmon-lucky')).toBeChecked();
+      await expect(page.locator('#add-pmon-shiny')).toBeChecked();
+      await expect(page.locator('#add-pmon-xxl')).toBeChecked();
+      await expect(notes).toHaveValue('female shadow');
+
+      await page.locator('.add-actions .bsave').click();
+      expect(await page.evaluate(()=>window.__addListWriteCount)).toBe(1);
+      const saved=await page.evaluate(()=>{
+        const captured=window.__addCapturedWrite;
+        const parsed=parsePri(allData.wishlist.AddLayoutTester.Pikachu);
+        return{type:captured.type,username:captured.username,p:parsed.p,mod:parsed.mod,lucky:parsed.lucky,shiny:parsed.shiny,xxl:parsed.xxl,xxs:parsed.xxs};
+      });
+      expect(saved).toEqual({type:'wishlist',username:'AddLayoutTester',p:'M',mod:'female shadow',lucky:true,shiny:true,xxl:true,xxs:false});
+      await expect(page.locator('#ac-input')).toHaveValue('');
+      await expect(page.locator('#add-pmon-sel')).toHaveValue('');
+      await expect(page.locator('.myrow-name',{hasText:'Pikachu'})).toBeVisible();
+    }
+  });
+
   test('My List dense rows preserve states without hover or tap tooltips',async({page})=>{
     const mobile=test.info().project.name==='mobile';
     await page.setViewportSize({width:mobile?390:1440,height:900});
