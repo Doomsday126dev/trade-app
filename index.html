@@ -304,8 +304,6 @@ input,select,textarea{font-family:var(--font);outline:none}
 .max-chip.dmax-chip{background:#dc2626}
 .max-chip.gmax-chip{background:#7c3aed}
 .myrow-name{font-size:13px;font-weight:500;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.myrow[data-full]:has(.myrow-name:hover)::after{content:attr(data-full);position:absolute;left:44px;bottom:calc(100% + 6px);max-width:min(360px,calc(100vw - 70px));background:rgba(18,17,34,.97);border:1px solid var(--border2);color:var(--text);border-radius:7px;padding:6px 9px;font-size:12px;line-height:1.25;white-space:normal;box-shadow:0 8px 24px rgba(0,0,0,.28);pointer-events:none;z-index:30}
-.myrow[data-full]:has(.myrow-name:hover)::before{content:'';position:absolute;left:55px;bottom:100%;border:5px solid transparent;border-top-color:var(--border2);pointer-events:none;z-index:31}
 .mctrl{display:flex;gap:3px;align-items:center;flex-shrink:0;flex-wrap:nowrap;justify-content:flex-end;overflow:hidden}
 .mctrl-sep{width:1px;height:18px;background:var(--border2);margin:0 2px;flex-shrink:0}
 .pb{width:22px;height:24px;border-radius:var(--radius-sm);border:1px solid var(--border);background:transparent;color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;transition:.15s;flex-shrink:0;padding:0}
@@ -1868,7 +1866,7 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
 .trainer-quick-section .favorite-empty,.events-state .empty-state{justify-items:start;padding:14px 2px;border:0;background:transparent;text-align:left}.trainer-quick-section .empty-state-body{max-width:480px}
 .event-filter-row{gap:3px;padding-bottom:18px}.event-filter{background:transparent;border-color:transparent;padding-inline:10px}.event-filter:hover{background:var(--surface-subtle);color:var(--text)}.event-filter[aria-pressed="true"]{background:var(--surface-raised);border-color:var(--border-strong);color:var(--text);box-shadow:inset 0 -2px var(--accent)}
 .event-group{margin-bottom:28px}.event-group-heading{margin-bottom:10px}.event-card-grid{gap:8px}.event-card{display:grid;grid-template-columns:minmax(0,1fr) 86px;min-height:88px;border-color:var(--border);border-left-width:2px;background:var(--surface-raised);box-shadow:var(--shadow-low)}.event-card:hover{background:color-mix(in srgb,var(--surface-raised) 96%,var(--accent));border-color:var(--border-strong)}.event-card-title{font-size:15px}.event-card-summary{color:var(--muted)}.event-current-badge{min-height:24px;padding:2px 8px;font-size:10px;font-weight:800;text-transform:none;letter-spacing:0}.event-card-cue{width:86px;min-width:86px;justify-content:flex-end;white-space:nowrap}.event-card-cue-icon{width:18px;height:18px}.event-card:not(a){grid-template-columns:minmax(0,1fr)}
-.myrow{overflow:visible}.mctrl{gap:7px;overflow:visible}.myrow-priority{display:inline-flex;align-items:center;gap:3px}.myrow-active-traits{display:flex;align-items:center;gap:3px;min-width:0}.myrow-trait{display:inline-flex;align-items:center;min-height:24px;padding:2px 6px;border:1px solid var(--border);border-radius:var(--radius-pill);background:var(--surface-subtle);color:var(--muted);font:750 9px var(--font);white-space:nowrap}.myrow-trait.lucky{color:#d7aa18}.myrow-trait.shiny{color:#e76aaf}.myrow-trait.xxl{color:#7376e8}.myrow-trait.xxs{color:#159d91}.myrow-trait.detail{max-width:90px;overflow:hidden;text-overflow:ellipsis}.myrow-editor{position:relative;flex:0 0 auto}.myrow-editor>summary{list-style:none}.myrow-editor>summary::-webkit-details-marker{display:none}.myrow-edit{display:inline-flex;align-items:center;justify-content:center;gap:5px;min-width:48px;min-height:40px;padding:6px 8px;border:1px solid transparent;border-radius:var(--radius-md);color:var(--muted);font:700 11px var(--font);cursor:pointer}.myrow-edit:hover,.myrow-editor[open] .myrow-edit{border-color:var(--border);background:var(--surface-hover);color:var(--text)}.myrow-editor-popover{position:absolute;z-index:60;top:calc(100% + 5px);right:0;width:min(290px,calc(100vw - 34px));padding:10px;border:1px solid var(--border-strong);border-radius:var(--radius-md);background:var(--surface-raised);box-shadow:var(--shadow-high)}.myrow-trait-controls{display:flex;align-items:center;gap:5px;flex-wrap:wrap}.myrow-trait-controls .flag-btn{min-width:44px;height:40px;padding-inline:8px}.myrow-editor-fields{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px;margin-top:9px;padding-top:9px;border-top:1px solid var(--border)}.myrow-editor-fields .ni{width:100%!important;max-width:none!important;min-height:40px;padding:7px 9px;font:500 var(--type-meta)}.myrow-editor-fields .rm{width:40px;height:40px;border-color:transparent;background:transparent}.myrow-editor-fields .rm:hover{background:color-mix(in srgb,var(--danger) 12%,transparent)}
+.myrow{overflow:visible}.mctrl{gap:7px;overflow:visible}.myrow-priority{display:inline-flex;align-items:center;gap:3px}.myrow-active-traits{display:flex;align-items:center;gap:3px;min-width:0}.myrow-trait{display:inline-flex;align-items:center;min-height:24px;padding:2px 6px;border:1px solid var(--border);border-radius:var(--radius-pill);background:var(--surface-subtle);color:var(--muted);font:750 9px var(--font);white-space:nowrap}.myrow-trait.lucky{color:#d7aa18}.myrow-trait.shiny{color:#e76aaf}.myrow-trait.xxl{color:#7376e8}.myrow-trait.xxs{color:#159d91}.myrow-trait.detail{max-width:90px;overflow:hidden;text-overflow:ellipsis}.myrow-editor{position:relative;flex:0 0 auto}.myrow-editor>summary{list-style:none}.myrow-editor>summary::-webkit-details-marker{display:none}.myrow-edit{display:inline-flex;align-items:center;justify-content:center;gap:5px;min-width:48px;min-height:40px;padding:6px 8px;border:1px solid transparent;border-radius:var(--radius-md);color:var(--muted);font:700 11px var(--font);cursor:pointer}.myrow-edit:hover,.myrow-editor[open] .myrow-edit{border-color:var(--border);background:var(--surface-hover);color:var(--text)}.myrow-editor-popover{position:absolute;z-index:60;top:calc(100% + 5px);right:0;width:min(290px,calc(100vw - 34px));padding:10px;border:1px solid var(--border-strong);border-radius:var(--radius-md);background:var(--surface-raised);box-shadow:var(--shadow-high)}.myrow-editor-title{margin-bottom:8px;color:var(--text);font:700 var(--type-meta);overflow-wrap:anywhere}.myrow-trait-controls{display:flex;align-items:center;gap:5px;flex-wrap:wrap}.myrow-trait-controls .flag-btn{min-width:44px;height:40px;padding-inline:8px}.myrow-editor-fields{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px;margin-top:9px;padding-top:9px;border-top:1px solid var(--border)}.myrow-editor-fields .ni{width:100%!important;max-width:none!important;min-height:40px;padding:7px 9px;font:500 var(--type-meta)}.myrow-editor-fields .rm{width:40px;height:40px;border-color:transparent;background:transparent}.myrow-editor-fields .rm:hover{background:color-mix(in srgb,var(--danger) 12%,transparent)}
 .settings-page-mode .settings-modal-header{padding-top:30px}.settings-page-mode .settings-layout{grid-template-columns:232px minmax(0,1fr);gap:28px;border-top:0}.settings-page-mode .settings-nav{padding:22px 0 32px var(--page-gutter);border-right:0;background:transparent}.settings-page-mode .settings-detail{padding:24px var(--page-gutter) 56px 0}.settings-nav-button{position:relative;border-radius:var(--radius-md);color:var(--muted)}.settings-nav-button:hover{background:var(--surface-subtle);color:var(--text)}.settings-nav-button[aria-current="page"]{background:var(--surface-raised);color:var(--text);box-shadow:var(--shadow-low)}.settings-nav-button[aria-current="page"]::before{content:"";position:absolute;left:0;top:12px;bottom:12px;width:3px;border-radius:2px;background:var(--accent)}
 .settings-section-heading{margin-bottom:22px}.settings-section-heading h2{font-size:20px}.settings-panel{margin:0;padding:16px 0;border:0;border-bottom:1px solid var(--border);border-radius:0;background:transparent}.settings-profile-card{border-color:var(--border);box-shadow:var(--shadow-low)}
 #login-pg,#config-pg{background:var(--surface-canvas)}.lcard{border-color:var(--border);padding:32px;background:var(--surface-raised);box-shadow:var(--shadow-high)}.llogo{font-size:24px;margin-bottom:6px}.lsub{margin-bottom:22px}.brand-disclaimer{border-color:var(--border);background:var(--surface-subtle)}
@@ -1883,7 +1881,7 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
   :root{--topbar-h:58px}.topbar{padding-inline:12px}.logo{font-size:16px}.brand-mark{width:28px;height:28px}.sync-row,.bell-btn,.theme-toggle{width:48px;height:48px;min-width:48px;min-height:48px;justify-content:center}.tabs{justify-content:space-around;padding-inline:0}.tab{flex:1;flex-direction:column;gap:2px;min-height:58px;padding:6px 2px;font-size:0}.tab-label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}.tab-short-label{display:block;font-size:10px;line-height:12px;white-space:nowrap}.page{padding:20px 14px 56px}.my-hdr{margin-bottom:12px}.journey-guidance{padding:11px 12px}.journey-guidance-actions{gap:4px}.journey-guidance-actions .bghost{padding-inline:8px}.add-form{padding:14px}.settings-nav-button{background:transparent;border-color:transparent}.settings-nav-button[aria-current="page"]{background:var(--surface-raised)}
 }
 @media(max-width:600px){#tab-mylist.has-list-content .journey-guidance{display:none}#tab-mylist .my-hdr{gap:9px;margin-bottom:8px}#tab-mylist .my-hdr .av.lg{width:38px;height:38px}#tab-mylist .my-uname{font-size:20px;line-height:24px}#tab-mylist #my-fc-wrap{margin-top:0!important}#tab-mylist .fc-chip{padding-block:2px}#tab-mylist .mylist-type-tabs{margin-bottom:8px}#tab-mylist .add-form{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 68px;gap:7px 6px;margin-bottom:10px;padding:11px 10px}#tab-mylist .add-ttl{grid-column:1/-1;margin:0;padding-right:76px;font-size:13px;line-height:20px}#tab-mylist .add-form .frow,#tab-mylist .add-actions{display:contents}#tab-mylist .add-form .ac-wrap{grid-column:1;grid-row:2;width:100%}#tab-mylist .add-form .add-pri-group{grid-column:1;grid-row:3;width:max-content;max-width:100%;justify-content:flex-start;padding:4px 7px}#tab-mylist .add-advanced-toggle{grid-column:2;grid-row:3;width:100%;min-height:48px;justify-content:center;padding:6px;font-size:11px}#tab-mylist .add-actions .bsave{grid-column:2;grid-row:2;width:68px;min-width:68px;margin:0;padding:8px;box-shadow:none}#tab-mylist .add-actions .export-menu-wrap{position:absolute;top:5px;right:6px}#tab-mylist .add-actions .image-btn{min-height:40px;padding:6px 8px;border-color:transparent;background:transparent;color:var(--muted)}#tab-mylist .add-advanced,#tab-mylist .add-tray,#tab-mylist .speed-add-hint{grid-column:1/-1}#tab-mylist .mylist-search{margin-top:10px;margin-bottom:6px}#tab-mylist .sec{margin-block:4px!important}.favorite-card-surface{grid-template-columns:minmax(0,1fr);gap:4px}.favorite-card-surface .trainer-quick-name{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;white-space:normal;overflow:hidden;overflow-wrap:anywhere;line-height:1.35}.favorite-card-footer{justify-content:flex-end;padding-top:4px;border-top:1px solid var(--border)}.favorite-card-open{margin-right:auto}.event-filter-scroll{margin-inline:-14px}.event-filter-row{margin:0;padding:2px 32px 10px 14px}.event-filter-scroll::after{right:0;width:42px}.event-group:not([data-group="now"]) .event-card{min-height:88px}.organizer-header{padding:14px 14px 10px}.organizer-body{padding-inline:14px}.organizer-actions{bottom:calc(-16px - env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom)}}
-@media(max-width:430px){.my-uname{font-size:21px}.mylist-type-tabs{flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}.mylist-type-tabs::-webkit-scrollbar{display:none}.event-card{grid-template-columns:minmax(0,1fr) 48px}.event-card-cue{width:48px;min-width:48px}.favorite-card-open{padding-inline:7px}.favorite-card-add-tag{padding-inline:9px;min-width:60px}.myrow-active-traits{overflow:hidden}.myrow-trait.detail{display:none}.myrow-edit span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}}
+@media(max-width:430px){.my-uname{font-size:21px}.mylist-type-tabs{flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}.mylist-type-tabs::-webkit-scrollbar{display:none}.event-card{grid-template-columns:minmax(0,1fr) 48px}.event-card-cue{width:48px;min-width:48px}.favorite-card-open{padding-inline:7px}.favorite-card-add-tag{padding-inline:9px;min-width:60px}.myrow-active-traits{overflow:hidden}.myrow-edit span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}}
 @media(max-width:360px){.logo span{display:none}.favorite-card-surface{grid-template-columns:1fr;gap:2px}.favorite-card-footer{justify-content:flex-end}.favorite-card-tags{margin-bottom:2px}}
 
 /* Consumer product finish pass 3: secondary tools share the primary product language. */
@@ -1905,6 +1903,18 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
 @media(min-width:1280px){.page{padding-top:34px}.admin-shell{gap:26px}.mylist-priority-sections{gap:30px}.mylist-search-groups{gap:18px}.admin-section-heading p{max-width:720px}}
 @media(max-width:900px){.mylist-search-groups{grid-template-columns:1fr}.mylist-search-section:only-child{grid-column:auto}}
 @media(max-width:600px){.my-string-heading{align-items:flex-start}.my-string-heading span{text-align:left}.mylist-search-footer,.mylist-search-option-head{grid-template-columns:1fr;gap:8px}.mylist-search-actions{grid-column:1;grid-row:auto;width:100%;justify-content:stretch}.mylist-search-actions>*{flex:1 1 0}.mylist-search-limit{margin-left:37px}.myrow{display:flex;min-height:58px;padding:7px 8px;gap:7px;overflow:visible}.myrow .bulk-chk,.myrow .drag-handle,.myrow .myrow-reorder-controls,.myrow .myrow-sprite-wrap,.myrow .myrow-name,.myrow .mctrl{grid-area:auto}.myrow .myrow-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.myrow .mctrl{width:auto;margin-left:auto;justify-content:flex-end;flex-wrap:nowrap;overflow:visible}.myrow-sprite-wrap{width:34px;height:34px}.myrow-sprite{width:34px;height:34px}.drag-handle{width:28px}.myrow-reorder-move{width:32px}.myrow-priority-quick{display:none}.mctrl{gap:4px}.myrow-active-traits{max-width:92px}.myrow-edit span{display:none}.profile-avatar-results{grid-template-columns:1fr}.admin-nav{margin-inline:-14px;padding-inline:14px}.admin-nav-button{padding-inline:10px}.admin-nav-button .ui-icon{display:none}.archive-list-heading{align-items:flex-start}.archive-list-actions{align-items:flex-end;flex-direction:column}.archive-list-actions .bulk-toggle{min-width:48px}.archive-list-actions .bulk-toggle span{display:none}.toast,.undo-toast{left:14px;right:14px;max-width:none;transform:translateY(100px)}.toast.show,.undo-toast.show{transform:translateY(0)}}
+@media(max-width:600px){
+  .myrow{min-height:54px;padding:3px var(--space-1);gap:6px}
+  .myrow .myrow-name{flex:1 1 auto;min-width:52px;font-size:13px}
+  .myrow-sprite-wrap,.myrow-sprite{width:32px;height:32px}.myrow-sprite-wrap{flex-basis:32px}
+  .myrow .mctrl{flex:0 1 auto;min-width:0;gap:3px}
+  .myrow-active-traits{max-width:156px;gap:2px}
+  .myrow-trait{min-height:24px;padding-inline:5px}
+  .myrow-trait.lucky,.myrow-trait.shiny{width:24px;min-width:24px;max-width:24px;padding:0;justify-content:center;font-size:0}
+  .myrow-trait.lucky::before{content:'⚡';font-size:12px}.myrow-trait.shiny::before{content:'✨';font-size:12px}
+  .myrow-trait.detail{display:inline-flex;max-width:62px}
+  .myrow-edit{width:var(--control-min);min-width:var(--control-min);height:var(--control-min);min-height:var(--control-min);padding:0}
+}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
 .myrow-trait.xxl{color:var(--trait-xxl)}
 .myrow-trait.xxs{color:var(--trait-xxs)}
@@ -2683,7 +2693,7 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
 <div class="ptr-indicator" id="ptr-indicator" aria-hidden="true">↓</div>
 
 <script>
-window.__POGO_RELEASE_ID='2026-08-22.54';
+window.__POGO_RELEASE_ID='2026-08-22.55';
 window.__pogoStartup=window.__pogoStartup||{preAuthMarkupReady:performance.now(),preAuthPaintOpportunity:null,authSdkStartedAt:null,authStateKnownAt:null,loginShellRevealedAt:performance.now(),appCheckStartedAt:null,appCheckReadyAt:null,firebaseStartupSettledAt:null,catalogsReadyAt:null,signedInReadyAt:null};
 window.__POGO_FIREBASE_CONFIG=Object.freeze({
   apiKey:'AIzaSyCazZNLj9_lEb1vUNUlrMe9hodqY_l34VU',
@@ -2732,66 +2742,66 @@ window.__pogoBootWatch=setTimeout(function(){
   if(status)status.setAttribute('aria-busy','false');
 },4000);
 </script>
-<script src="data.js?v=2026-08-22.54"></script>
-<script src="js/domain/productLimits.js?v=2026-08-22.54"></script>
-<script src="js/domain/priorities.js?v=2026-08-22.54"></script>
-<script src="js/ui/badges.js?v=2026-08-22.54"></script>
-<script src="js/domain/username.js?v=2026-08-22.54"></script>
-<script src="js/domain/requestAccess.js?v=2026-08-22.54"></script>
-<script src="js/domain/priorityValues.js?v=2026-08-22.54"></script>
-<script src="js/domain/scheduleDates.js?v=2026-08-22.54"></script>
-<script src="js/domain/pokemonSearchTerms.js?v=2026-08-22.54"></script>
-<script src="js/domain/pokemonEntryRules.js?v=2026-08-22.54"></script>
-<script src="js/domain/pokemonGoSearchSyntax.js?v=2026-08-22.54"></script>
-<script src="js/domain/searchStrings.js?v=2026-08-22.54"></script>
-<script src="js/ui/stringHtml.js?v=2026-08-22.54"></script>
-<script src="js/domain/scheduleEventRules.js?v=2026-08-22.54"></script>
-<script src="js/domain/scheduleTradeRules.js?v=2026-08-22.54"></script>
-<script src="js/domain/pokemonKeys.js?v=2026-08-22.54"></script>
-<script src="js/domain/spriteSlugs.js?v=2026-08-22.54"></script>
-<script src="js/domain/fuzzyText.js?v=2026-08-22.54"></script>
-<script src="js/domain/autocompleteText.js?v=2026-08-22.54"></script>
-<script src="js/domain/autocompleteMatching.js?v=2026-08-22.54"></script>
-<script src="js/domain/autocompleteRanking.js?v=2026-08-22.54"></script>
-<script src="js/domain/relativeTime.js?v=2026-08-22.54"></script>
-<script src="js/domain/clientRelease.js?v=2026-08-22.54"></script>
-<script src="js/domain/favoriteCardInteractions.js?v=2026-08-22.54"></script>
-<script src="js/domain/favoritePokemonBrowse.js?v=2026-08-22.54"></script>
-<script src="js/domain/trainerDiscovery.js?v=2026-08-22.54"></script>
-<script src="js/domain/eventPresentation.js?v=2026-08-22.54"></script>
-<script src="js/domain/publicSharePublication.js?v=2026-08-22.54"></script>
-<script src="js/domain/trainerPreferences.js?v=2026-08-22.54"></script>
-<script src="js/domain/trainerPreferenceSync.js?v=2026-08-22.54"></script>
-<script src="js/domain/authenticationReadiness.js?v=2026-08-22.54"></script>
-<script src="js/domain/loginDirectory.js?v=2026-08-22.54"></script>
-<script src="js/utils/textSafety.js?v=2026-08-22.54"></script>
-<script src="js/ui/stringPanels.js?v=2026-08-22.54"></script>
-<script src="js/ui/emptyState.js?v=2026-08-22.54"></script>
-<script src="js/i18n/locales/en.js?v=2026-08-22.54"></script>
-<script src="js/i18n/locales/ja.js?v=2026-08-22.54"></script>
-<script src="js/i18n/locales/es.js?v=2026-08-22.54"></script>
-<script src="js/i18n/locales/de.js?v=2026-08-22.54"></script>
-<script src="js/i18n/pokemonNames/catalog.js?v=2026-08-22.54"></script>
-<script src="js/i18n/pokemonNames/variants.js?v=2026-08-22.54"></script>
-<script src="js/i18n/pokemonNames/core.js?v=2026-08-22.54"></script>
-<script src="js/i18n/eventLabels/currentTitles.js?v=2026-08-22.54"></script>
-<script src="js/i18n/eventLabels/core.js?v=2026-08-22.54"></script>
-<script src="js/i18n/core.js?v=2026-08-22.54"></script>
-<script src="js/services/firebaseClient.js?v=2026-08-22.54"></script>
-<script src="js/services/firebaseAppCheck.js?v=2026-08-22.54"></script>
-<script src="js/data/subscriptionManager.js?v=2026-08-22.54"></script>
-<script src="js/data/listenerLifecycle.js?v=2026-08-22.54"></script>
-<script src="js/data/sessionCacheBoundary.js?v=2026-08-22.54"></script>
-<script src="js/data/firebaseReadRegistry.js?v=2026-08-22.54"></script>
-<script src="js/data/currentUserRepository.js?v=2026-08-22.54"></script>
-<script src="js/data/ownedDataCoordinator.js?v=2026-08-22.54"></script>
-<script src="js/data/publicShareRepository.js?v=2026-08-22.54"></script>
-<script src="js/data/trainerHistoryStore.js?v=2026-08-22.54"></script>
-<script src="js/data/favoriteShareSessionCache.js?v=2026-08-22.54"></script>
-<script src="js/data/trainerPreferencesRepository.js?v=2026-08-22.54"></script>
-<script src="js/data/trainerPreferenceSyncQueue.js?v=2026-08-22.54"></script>
-<script src="js/domain/cacheAdapters.js?v=2026-08-22.54"></script>
-<script src="js/ui/trainerTagPanel.js?v=2026-08-22.54"></script>
+<script src="data.js?v=2026-08-22.55"></script>
+<script src="js/domain/productLimits.js?v=2026-08-22.55"></script>
+<script src="js/domain/priorities.js?v=2026-08-22.55"></script>
+<script src="js/ui/badges.js?v=2026-08-22.55"></script>
+<script src="js/domain/username.js?v=2026-08-22.55"></script>
+<script src="js/domain/requestAccess.js?v=2026-08-22.55"></script>
+<script src="js/domain/priorityValues.js?v=2026-08-22.55"></script>
+<script src="js/domain/scheduleDates.js?v=2026-08-22.55"></script>
+<script src="js/domain/pokemonSearchTerms.js?v=2026-08-22.55"></script>
+<script src="js/domain/pokemonEntryRules.js?v=2026-08-22.55"></script>
+<script src="js/domain/pokemonGoSearchSyntax.js?v=2026-08-22.55"></script>
+<script src="js/domain/searchStrings.js?v=2026-08-22.55"></script>
+<script src="js/ui/stringHtml.js?v=2026-08-22.55"></script>
+<script src="js/domain/scheduleEventRules.js?v=2026-08-22.55"></script>
+<script src="js/domain/scheduleTradeRules.js?v=2026-08-22.55"></script>
+<script src="js/domain/pokemonKeys.js?v=2026-08-22.55"></script>
+<script src="js/domain/spriteSlugs.js?v=2026-08-22.55"></script>
+<script src="js/domain/fuzzyText.js?v=2026-08-22.55"></script>
+<script src="js/domain/autocompleteText.js?v=2026-08-22.55"></script>
+<script src="js/domain/autocompleteMatching.js?v=2026-08-22.55"></script>
+<script src="js/domain/autocompleteRanking.js?v=2026-08-22.55"></script>
+<script src="js/domain/relativeTime.js?v=2026-08-22.55"></script>
+<script src="js/domain/clientRelease.js?v=2026-08-22.55"></script>
+<script src="js/domain/favoriteCardInteractions.js?v=2026-08-22.55"></script>
+<script src="js/domain/favoritePokemonBrowse.js?v=2026-08-22.55"></script>
+<script src="js/domain/trainerDiscovery.js?v=2026-08-22.55"></script>
+<script src="js/domain/eventPresentation.js?v=2026-08-22.55"></script>
+<script src="js/domain/publicSharePublication.js?v=2026-08-22.55"></script>
+<script src="js/domain/trainerPreferences.js?v=2026-08-22.55"></script>
+<script src="js/domain/trainerPreferenceSync.js?v=2026-08-22.55"></script>
+<script src="js/domain/authenticationReadiness.js?v=2026-08-22.55"></script>
+<script src="js/domain/loginDirectory.js?v=2026-08-22.55"></script>
+<script src="js/utils/textSafety.js?v=2026-08-22.55"></script>
+<script src="js/ui/stringPanels.js?v=2026-08-22.55"></script>
+<script src="js/ui/emptyState.js?v=2026-08-22.55"></script>
+<script src="js/i18n/locales/en.js?v=2026-08-22.55"></script>
+<script src="js/i18n/locales/ja.js?v=2026-08-22.55"></script>
+<script src="js/i18n/locales/es.js?v=2026-08-22.55"></script>
+<script src="js/i18n/locales/de.js?v=2026-08-22.55"></script>
+<script src="js/i18n/pokemonNames/catalog.js?v=2026-08-22.55"></script>
+<script src="js/i18n/pokemonNames/variants.js?v=2026-08-22.55"></script>
+<script src="js/i18n/pokemonNames/core.js?v=2026-08-22.55"></script>
+<script src="js/i18n/eventLabels/currentTitles.js?v=2026-08-22.55"></script>
+<script src="js/i18n/eventLabels/core.js?v=2026-08-22.55"></script>
+<script src="js/i18n/core.js?v=2026-08-22.55"></script>
+<script src="js/services/firebaseClient.js?v=2026-08-22.55"></script>
+<script src="js/services/firebaseAppCheck.js?v=2026-08-22.55"></script>
+<script src="js/data/subscriptionManager.js?v=2026-08-22.55"></script>
+<script src="js/data/listenerLifecycle.js?v=2026-08-22.55"></script>
+<script src="js/data/sessionCacheBoundary.js?v=2026-08-22.55"></script>
+<script src="js/data/firebaseReadRegistry.js?v=2026-08-22.55"></script>
+<script src="js/data/currentUserRepository.js?v=2026-08-22.55"></script>
+<script src="js/data/ownedDataCoordinator.js?v=2026-08-22.55"></script>
+<script src="js/data/publicShareRepository.js?v=2026-08-22.55"></script>
+<script src="js/data/trainerHistoryStore.js?v=2026-08-22.55"></script>
+<script src="js/data/favoriteShareSessionCache.js?v=2026-08-22.55"></script>
+<script src="js/data/trainerPreferencesRepository.js?v=2026-08-22.55"></script>
+<script src="js/data/trainerPreferenceSyncQueue.js?v=2026-08-22.55"></script>
+<script src="js/domain/cacheAdapters.js?v=2026-08-22.55"></script>
+<script src="js/ui/trainerTagPanel.js?v=2026-08-22.55"></script>
 <script>
 let initializeApp,getDatabase,ref,set,get,onValue,update,getAuth,signInWithEmailAndPassword,createUserWithEmailAndPassword,firebaseSignOut,updatePassword,deleteUser,onAuthStateChanged;
 let firebaseSdkPromise=null;
@@ -8080,6 +8090,7 @@ function myListEditorHtml(entry){
   const jsName=escAttr(name.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r?\n/g,' '));
   const jsDn=escAttr(String(dn).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r?\n/g,' '));
   return`<div class="myrow-editor-popover" onkeydown="if(event.key==='Escape'){event.preventDefault();const d=this.closest('details');d.removeAttribute('open');d.querySelector('summary').focus()}">
+    <div class="myrow-editor-title">${escHtml(dn)}</div>
     <fieldset class="myrow-priority-editor"><legend>${escHtml(i18nCore.t('myList.priority'))}</legend><div role="group" aria-label="${escAttr(i18nCore.t('myList.priorityFor',{name:dn}))}">${['H','M','L'].map(value=>`<button type="button" class="pb priority-choice ${p===value?'on '+value:''}" aria-pressed="${p===value}" onclick="movePriority('${jsName}','${value}')">${escHtml(i18nCore.t({'H':'priority.high','M':'priority.medium','L':'priority.low'}[value]))}</button>`).join('')}</div></fieldset>
     <div class="myrow-trait-controls">
       <button class="flag-btn lucky-flag ${lucky?'on':''}" onclick="setLucky('${jsName}')" title="${escAttr(i18nCore.t('myList.lucky'))}" aria-pressed="${lucky}" aria-label="${escAttr(i18nCore.t('myList.toggleLuckyFor',{name:dn}))}">⚡</button>
@@ -8115,7 +8126,7 @@ function myListRowsHtml(entries){
       shiny?`<span class="myrow-trait shiny">${escHtml(i18nCore.t('myList.shiny'))}</span>`:'',
       xxl?'<span class="myrow-trait xxl">XXL</span>':'',
       xxs?'<span class="myrow-trait xxs">XXS</span>':'',
-      mod?`<span class="myrow-trait detail" title="${escAttr(mod)}">${escHtml(mod)}</span>`:''
+      mod?`<span class="myrow-trait detail">${escHtml(mod)}</span>`:''
     ].join('');
     const priorityIndex=idx,priorityCount=entries.length;
     return`<div class="myrow${isSel?' bulk-selected':''}" ${reorderMode&&!bulkMode?'draggable="true"':''} data-name="${attrName}" data-priority="${escAttr(p||'')}" data-dex="${no||''}" data-idx="${idx}" data-full="${escAttr(dn)}" aria-label="${escAttr(dn)}" ${clickHandler}

@@ -1796,6 +1796,134 @@ test.describe('visual smoke', () => {
     expect(desktopScopes).toEqual({listToolsOutsideAdd:true,actionsInsideToolbar:true,scopesSeparated:true,noOverflow:true});
   });
 
+  test('My List dense rows preserve states without hover or tap tooltips',async({page})=>{
+    const mobile=test.info().project.name==='mobile';
+    await page.setViewportSize({width:mobile?390:1440,height:900});
+    await page.goto(`./?my-list-dense-rows=${mobile?'mobile':'desktop'}-${Date.now()}`,{waitUntil:'domcontentloaded'});
+    await waitForStableLocalOrganizerStartup(page);
+    await isolateAuthenticatedMyListFixture(page,{username:'DenseRowTester',uid:'uid-dense-row-tester'});
+    await page.evaluate(()=>{
+      allData=normalizeData({
+        users:{DenseRowTester:{}},
+        wishlist:{DenseRowTester:{
+          Mew:'H',
+          'P-Tauros (Combat)':'H',
+          'Darmanitan (Galarian Standard Mode)':'H(winter ceremonial variant)',
+          Pikachu:'H[lucky]',
+          Eevee:'H[shiny][xxl][xxs](female shadow)',
+          Squirtle:'H[lucky][shiny][xxl][xxs]',
+          'Oricorio (Sensu)':'H'
+        }},
+        dynamax:{},gmax:{},costumes:{}
+      });
+      writeList=async(type,username,list)=>{allData[type][username]={...list};renderMyList();return true;};
+      renderMyList();
+    });
+
+    const rows=page.locator('.myrow');
+    await expect(rows).toHaveCount(7);
+    const tauros=rows.filter({has:page.locator('.myrow-name', {hasText:'P-Tauros (Combat)'})});
+    await expect(tauros).toHaveCount(1);
+    await expect(tauros.locator('.myrow-name')).not.toHaveAttribute('title');
+    await expect(tauros).not.toHaveAttribute('title');
+    await tauros.scrollIntoViewIfNeeded();
+    if(mobile)await tauros.locator('.myrow-name').tap();
+    else await tauros.locator('.myrow-name').hover();
+    const interaction=await tauros.evaluate(row=>({
+      before:getComputedStyle(row,'::before').content,
+      after:getComputedStyle(row,'::after').content,
+      editorOpen:row.querySelector('.myrow-editor')?.open===true,
+      swiping:row.classList.contains('swiping'),
+      transform:getComputedStyle(row).transform
+    }));
+    expect(['none','""']).toContain(interaction.before);
+    expect(['none','""']).toContain(interaction.after);
+    expect(`${interaction.before}${interaction.after}`).not.toContain('P-Tauros');
+    expect({editorOpen:interaction.editorOpen,swiping:interaction.swiping,transform:interaction.transform}).toEqual({editorOpen:false,swiping:false,transform:'none'});
+    if(mobile){
+      const verticalGesture=await tauros.evaluate(row=>{
+        const name=row.querySelector('.myrow-name');
+        swipeStart({target:name,touches:[{clientX:120,clientY:200}]});
+        swipeMove({touches:[{clientX:122,clientY:246}],preventDefault(){throw new Error('vertical scroll was prevented');}});
+        swipeEnd({});
+        return{
+          editorOpen:row.querySelector('.myrow-editor')?.open===true,
+          swiping:row.classList.contains('swiping'),
+          transform:getComputedStyle(row).transform,
+          swipeStateCleared:_swipeState===null
+        };
+      });
+      expect(verticalGesture).toEqual({editorOpen:false,swiping:false,transform:'none',swipeStateCleared:true});
+    }
+
+    const layout=await page.evaluate(()=>{
+      const all=[...document.querySelectorAll('.myrow')];
+      const find=name=>all.find(row=>row.dataset.name===name);
+      const boxes=all.map(row=>row.getBoundingClientRect());
+      const squirtle=find('Squirtle'),eevee=find('Eevee'),mew=find('Mew'),long=find('Darmanitan (Galarian Standard Mode)');
+      const edit=squirtle.querySelector('.myrow-edit').getBoundingClientRect();
+      const sprite=squirtle.querySelector('.myrow-sprite-wrap').getBoundingClientRect();
+      const traits=[...squirtle.querySelectorAll('.myrow-trait')];
+      return{
+        rowHeights:boxes.map(box=>box.height),
+        rowXs:boxes.map(box=>box.x),
+        sprite:{width:sprite.width,height:sprite.height},
+        edit:{width:edit.width,height:edit.height,left:edit.left},
+        traitCount:traits.length,
+        traitRight:Math.max(...traits.map(trait=>trait.getBoundingClientRect().right)),
+        emptyTraitCount:mew.querySelectorAll('.myrow-active-traits').length,
+        eeveeDetail:eevee.querySelector('.myrow-trait.detail')?.textContent||'',
+        eeveeDetailVisible:getComputedStyle(eevee.querySelector('.myrow-trait.detail')).display!=='none',
+        longNameTruncated:long.querySelector('.myrow-name').scrollWidth>long.querySelector('.myrow-name').clientWidth,
+        priorityQuickVisible:getComputedStyle(squirtle.querySelector('.myrow-priority-quick')).display!=='none',
+        overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth,
+        openEditors:document.querySelectorAll('.myrow-editor[open]').length,
+        luckyMarker:getComputedStyle(squirtle.querySelector('.myrow-trait.lucky'),'::before').content,
+        shinyMarker:getComputedStyle(squirtle.querySelector('.myrow-trait.shiny'),'::before').content
+      };
+    });
+    expect(layout.overflow).toBe(false);
+    expect(layout.openEditors).toBe(0);
+    expect(layout.emptyTraitCount).toBe(0);
+    expect(layout.traitCount).toBe(4);
+    expect(layout.eeveeDetail).toBe('female shadow');
+    expect(layout.eeveeDetailVisible).toBe(true);
+    if(mobile){
+      expect(Math.max(...layout.rowHeights)).toBeLessThanOrEqual(56);
+      expect(Math.min(...layout.rowHeights)).toBeGreaterThanOrEqual(54);
+      expect(layout.sprite).toEqual({width:32,height:32});
+      expect(layout.edit.width).toBeGreaterThanOrEqual(48);
+      expect(layout.edit.height).toBeGreaterThanOrEqual(48);
+      expect(layout.traitRight).toBeLessThanOrEqual(layout.edit.left);
+      expect(layout.longNameTruncated).toBe(true);
+      expect(layout.priorityQuickVisible).toBe(false);
+      expect(layout.luckyMarker).toBe('"⚡"');
+      expect(layout.shinyMarker).toBe('"✨"');
+      expect(new Set(layout.rowXs).size).toBe(1);
+    }else{
+      expect(Math.min(...layout.rowHeights)).toBeGreaterThanOrEqual(58);
+      expect(new Set(layout.rowXs).size).toBeGreaterThan(1);
+      expect(layout.priorityQuickVisible).toBe(true);
+    }
+
+    const longRow=rows.filter({has:page.locator('.myrow-name',{hasText:'Darmanitan (Galarian Standard Mode)'})});
+    await expect(longRow.locator('.myrow-trait.detail')).not.toHaveAttribute('title');
+    await expect(longRow.locator('.myrow-edit')).toHaveAttribute('aria-label',/Darmanitan \(Galarian Standard Mode\)/);
+    await longRow.locator('.myrow-edit').click();
+    await expect(longRow.locator('.myrow-editor-title')).toHaveText('Darmanitan (Galarian Standard Mode)');
+    await expect(longRow.locator('.myrow-editor-fields .ni')).toHaveValue('winter ceremonial variant');
+    await longRow.locator('.myrow-editor-fields .ni').fill('winter ceremonial variant updated');
+    await expect(longRow.locator('.myrow-editor-fields .ni')).toHaveValue('winter ceremonial variant updated');
+    await page.keyboard.press('Escape');
+    await expect(longRow.locator('.myrow-editor-popover')).toBeHidden();
+    await page.locator('#mylist-filter').fill('P-Tauros');
+    await expect(page.locator('.myrow')).toHaveCount(1);
+    await expect(page.locator('.myrow-name')).toHaveText('P-Tauros (Combat)');
+    await page.locator('#mylist-filter').fill('');
+    await expect(page.locator('.myrow')).toHaveCount(7);
+    expect(await page.evaluate(()=>document.querySelectorAll('.myrow.swiping,.myrow-editor[open]').length)).toBe(0);
+  });
+
   test('My List Variant details uses the canonical dark input treatment',async({page})=>{
     for(const [width,height] of [[1440,900],[390,844]]){
       await page.setViewportSize({width,height});
