@@ -64,5 +64,6 @@
     ,'myList.moveUp':'{name} を上へ移動','myList.moveDown':'{name} を下へ移動','myList.movedPosition':'{name} を {count} 件中 {position} 番目に移動しました。'
     ,'request.nameTooLong':'トレーナー名は32文字以内で入力してください。','request.noteTooLong':'メモは280文字以内で入力してください。'
     ,'app.preparing':'トレードリストを準備しています','app.preparingDetail':'この端末とログイン状態を安全に確認しています。確認が完了するまで、アカウントデータは表示されません。'
+    ,'storage.listHydrationRequired':'保存済みリストをサーバーから読み込み中です。編集する前に完了するまでお待ちください。','storage.pendingListQuarantined':'古いリスト全体の保留中の変更は、新しいリストデータを上書きする可能性があるため、保存されましたが同期されませんでした。'
   });
 })(window);

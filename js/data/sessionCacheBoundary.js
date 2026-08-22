@@ -6,6 +6,7 @@
   const LEGACY_CACHE_KEY='pogo3';
   const DEFAULT_QUEUE_KEY='pogoSyncQueue_v2';
   const LEGACY_QUEUE_KEY='pogoSyncQueue_v1';
+  const OWNED_LIST_ROOTS=Object.freeze(['wishlist','dynamax','gmax','costumes']);
 
   function resultError(code,message){return{ok:false,error:Object.freeze({code,message})};}
   function objectValue(value){return value&&typeof value==='object'&&!Array.isArray(value)?value:{};}
@@ -24,7 +25,14 @@
     return{schemaVersion:CACHE_SCHEMA_VERSION,public:{loginDirectory:clone(objectValue(publicData.loginDirectory))},protected:null};
   }
   function emptyQueue(owner=null){
-    return{schemaVersion:QUEUE_SCHEMA_VERSION,owner:owner?{...owner}:null,entries:{}};
+    return{schemaVersion:QUEUE_SCHEMA_VERSION,owner:owner?{...owner}:null,entries:{},quarantined:{}};
+  }
+  function isWholeListReplacementPath(path){
+    const parts=String(path||'').split('/').filter(Boolean);
+    return parts.length===2&&OWNED_LIST_ROOTS.includes(parts[0])&&!!parts[1];
+  }
+  function isWholeListReplacementEntry(key,item){
+    return isWholeListReplacementPath(key)||isWholeListReplacementPath(item?.path);
   }
   function parseStored(storage,key){
     const raw=storage.getItem(key);
@@ -109,7 +117,12 @@
         notices.push('storage/queue-reset');
         return reset;
       }
-      return{schemaVersion:QUEUE_SCHEMA_VERSION,owner:owner?{...owner}:null,entries:clone(objectValue(value.entries))};
+      return{
+        schemaVersion:QUEUE_SCHEMA_VERSION,
+        owner:owner?{...owner}:null,
+        entries:clone(objectValue(value.entries)),
+        quarantined:clone(objectValue(value.quarantined))
+      };
     }
     function discardLegacyQueue(){
       const legacy=parseStored(storage,legacyQueueKey);
@@ -122,6 +135,23 @@
     let cache=loadCache();
     let queue=loadQueue();
     discardLegacyQueue();
+
+    function quarantineWholeListReplacements(){
+      const moved=[];
+      const entries=objectValue(queue.entries);
+      const quarantined=clone(objectValue(queue.quarantined));
+      for(const[key,item]of Object.entries(entries)){
+        if(!isWholeListReplacementEntry(key,item))continue;
+        quarantined[key]=clone(item);
+        delete entries[key];
+        moved.push(key);
+      }
+      if(!moved.length)return moved;
+      queue={...queue,entries:clone(entries),quarantined};
+      write(queueKey,queue);
+      notices.push('storage/whole-list-queue-quarantined');
+      return moved;
+    }
 
     function activate(value){
       const next=ownerIdentity(value);
@@ -143,6 +173,7 @@
         cache={...cache,protected:{owner:{...next},data:{}}};
       }
       if(!sameOwner(ownerIdentity(queue.owner),next))queue=emptyQueue(next);
+      quarantineWholeListReplacements();
       write(cacheKey,cache);
       write(queueKey,queue);
       return{ok:true,status:priorOwners.length?'restored':'initialized',owner:activeOwner};
@@ -180,13 +211,37 @@
       const owner=ownerIdentity(queue.owner);
       return activeOwner&&sameOwner(owner,activeOwner)?clone(queue.entries):{};
     }
+    function readQuarantinedQueue(){
+      const owner=ownerIdentity(queue.owner);
+      return activeOwner&&sameOwner(owner,activeOwner)?clone(queue.quarantined):{};
+    }
     function writeQueue(entries){
       if(!activeOwner)return resultError('storage/session-inactive','Pending changes require an authenticated cache owner');
       const owner=ownerIdentity(queue.owner);
       if(!sameOwner(owner,activeOwner))return resultError('storage/owner-mismatch','Pending-change owner changed during the active session');
-      queue={schemaVersion:QUEUE_SCHEMA_VERSION,owner:{...activeOwner},entries:clone(objectValue(entries))};
+      queue={
+        schemaVersion:QUEUE_SCHEMA_VERSION,
+        owner:{...activeOwner},
+        entries:clone(objectValue(entries)),
+        quarantined:clone(objectValue(queue.quarantined))
+      };
+      quarantineWholeListReplacements();
       write(queueKey,queue);
       return{ok:true,status:'queue_saved'};
+    }
+    function quarantineQueueEntry(key,item){
+      if(!activeOwner)return resultError('storage/session-inactive','Queue quarantine requires an authenticated cache owner');
+      const owner=ownerIdentity(queue.owner);
+      if(!sameOwner(owner,activeOwner))return resultError('storage/owner-mismatch','Pending-change owner changed during queue quarantine');
+      if(!isWholeListReplacementEntry(key,item))return resultError('storage/quarantine-path-invalid','Only whole-list replacement writes may enter this quarantine');
+      const entries=clone(objectValue(queue.entries));
+      const quarantined=clone(objectValue(queue.quarantined));
+      quarantined[key]=clone(item);
+      delete entries[key];
+      queue={schemaVersion:QUEUE_SCHEMA_VERSION,owner:{...activeOwner},entries,quarantined};
+      write(queueKey,queue);
+      notices.push('storage/whole-list-queue-quarantined');
+      return{ok:true,status:'queue_entry_quarantined'};
     }
     function drainNotices(){return notices.splice(0);}
     function snapshot(){
@@ -195,14 +250,20 @@
         cacheOwner:ownerIdentity(cache.protected?.owner),
         queueOwner:ownerIdentity(queue.owner),
         protectedAccessible:!!activeOwner&&sameOwner(ownerIdentity(cache.protected?.owner),activeOwner),
-        queueAccessible:!!activeOwner&&sameOwner(ownerIdentity(queue.owner),activeOwner)
+        queueAccessible:!!activeOwner&&sameOwner(ownerIdentity(queue.owner),activeOwner),
+        quarantinedQueueCount:activeOwner&&sameOwner(ownerIdentity(queue.owner),activeOwner)
+          ?Object.keys(objectValue(queue.quarantined)).length:0
       });
     }
-    return Object.freeze({activate,suspend,clearForLogout,readData,writeData,readQueue,writeQueue,drainNotices,snapshot});
+    return Object.freeze({
+      activate,suspend,clearForLogout,readData,writeData,readQueue,readQuarantinedQueue,
+      writeQueue,quarantineQueueEntry,drainNotices,snapshot
+    });
   }
 
   root.sessionCacheBoundary=Object.freeze({
     CACHE_SCHEMA_VERSION,QUEUE_SCHEMA_VERSION,DEFAULT_CACHE_KEY,LEGACY_CACHE_KEY,DEFAULT_QUEUE_KEY,LEGACY_QUEUE_KEY,
+    OWNED_LIST_ROOTS,isWholeListReplacementPath,
     createSessionCacheBoundary
   });
 })(window);

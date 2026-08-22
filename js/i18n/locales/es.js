@@ -65,5 +65,6 @@
     ,'myList.moveUp':'Subir {name}','myList.moveDown':'Bajar {name}','myList.movedPosition':'{name} se movió a la posición {position} de {count}.'
     ,'request.nameTooLong':'El nombre de Entrenador no puede superar los 32 caracteres.','request.noteTooLong':'La nota no puede superar los 280 caracteres.'
     ,'app.preparing':'Preparando tu lista de intercambios','app.preparingDetail':'Comprobando de forma segura este dispositivo y tu sesión. Los datos de tu cuenta permanecen ocultos hasta completar la verificación.'
+    ,'storage.listHydrationRequired':'Tu lista guardada todavía se está cargando desde el servidor. Espera a que termine antes de editarla.','storage.pendingListQuarantined':'Se conservó un cambio pendiente antiguo de la lista completa, pero no se sincronizó porque podía sobrescribir datos más recientes.'
   });
 })(window);

@@ -58,6 +58,24 @@ test('lazy list subscriptions are constrained and deduplicated',()=>{
   assert.equal(h.coordinator.subscribeList('offers').error.code,'owned-read/list-invalid');
 });
 
+test('list hydration requires a current-identity authoritative snapshot',()=>{
+  const h=harness();
+  h.coordinator.activate({uid:'uid-a',username:'TrainerA'});
+  h.coordinator.subscribeList('wishlist');
+  assert.equal(h.coordinator.isHydrated('wishlist'),false);
+  h.handlers.get('wishlist:wishlist/TrainerA').onData({Pikachu:{p:'H'}});
+  assert.equal(h.coordinator.isHydrated('wishlist'),true);
+  assert.deepEqual(Array.from(h.coordinator.snapshot().hydratedSurfaces),['wishlist']);
+
+  h.coordinator.activate({uid:'uid-b',username:'TrainerB'});
+  assert.equal(h.coordinator.isHydrated('wishlist'),false);
+  h.coordinator.subscribeList('wishlist');
+  h.handlers.get('wishlist:wishlist/TrainerB').onData({Eevee:{p:'M'}});
+  assert.equal(h.coordinator.isHydrated('wishlist'),true);
+  h.coordinator.reset();
+  assert.equal(h.coordinator.isHydrated('wishlist'),false);
+});
+
 test('switching users replaces listeners and suppresses stale callbacks',()=>{
   const h=harness();
   h.coordinator.activate({uid:'uid-a',username:'TrainerA'});

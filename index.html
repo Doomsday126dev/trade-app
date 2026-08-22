@@ -4011,8 +4011,19 @@ function refreshSession(){
 }
 
 // ── SYNC QUEUE (offline support) ─────────────────────────────
+function unsafeWholeListQueueEntry(path,item={}){
+  return sessionCacheBoundaryData.isWholeListReplacementPath(path)||
+    sessionCacheBoundaryData.isWholeListReplacementPath(item?.path);
+}
 function queueSync(path,data){
-  syncQueue[path]={path,data,ts:Date.now()};
+  const item={path,data,ts:Date.now()};
+  if(unsafeWholeListQueueEntry(path,item)){
+    const quarantined=managedSessionCache.quarantineQueueEntry(path,item);
+    if(quarantined.ok)showSessionStorageNotices();
+    else toast(i18nCore.t('storage.offlineRecoveryUnavailable'),5000);
+    return false;
+  }
+  syncQueue[path]=item;
   const saved=saveSyncQueue();
   if(!saved.ok){
     toast(i18nCore.t('storage.offlineRecoveryUnavailable'),5000);
@@ -4036,6 +4047,16 @@ async function flushSyncQueue(){
   const entries=Object.entries(syncQueue);
   let permanentDrops=0;
   for(const[path,item] of entries){
+    if(unsafeWholeListQueueEntry(path,item)){
+      const quarantined=managedSessionCache.quarantineQueueEntry(path,item);
+      if(quarantined.ok){
+        if(syncQueue[path]?.ts===item.ts)delete syncQueue[path];
+        saveSyncQueue();
+        showSessionStorageNotices();
+        refreshSyncUi();
+      }
+      continue;
+    }
     try{
       await set(ref(db,path),item.data??null);
       if(syncQueue[path]?.ts===item.ts)delete syncQueue[path];
@@ -4265,6 +4286,7 @@ function sessionTransientCallback(callback){
 }
 function resetSessionTransientUi(reason='session_boundary'){
   _sessionTransientGeneration++;
+  resetOwnedHydrationState();
 
   if(typeof trainerSuggestionTimer!=='undefined')clearTimeout(trainerSuggestionTimer);
   if(typeof favoriteSavedPromptTimer!=='undefined')clearTimeout(favoriteSavedPromptTimer);
@@ -4364,6 +4386,7 @@ function activateOwnedSession(uid,username){
   }
   syncQueue=managedSessionCache.readQueue();
   allData=getLocal();
+  showSessionStorageNotices();
   const hydration=managedPublicSharePublication.activate({uid,username});
   if(!hydration.ok){
     const error=new Error(hydration.error.message);
@@ -4401,7 +4424,8 @@ function showSessionStorageNotices(){
       'storage/queue-reset':'storage.pendingChangesDiscarded',
       'storage/cache-migrated':'storage.cacheReset',
       'storage/cache-reset':'storage.cacheReset',
-      'storage/cache-owner-reset':'storage.cacheReset'
+      'storage/cache-owner-reset':'storage.cacheReset',
+      'storage/whole-list-queue-quarantined':'storage.pendingListQuarantined'
     }[code];
     if(key)toast(i18nCore.t(key),5000);
   });
@@ -5280,11 +5304,48 @@ async function ensureLoginDirectoryPublished(){
     console.warn('Could not publish login directory',e);
   }
 }
-async function writeList(type,u,list){
+const OWNED_MY_LIST_TYPES=Object.freeze(['wishlist','dynamax','gmax','costumes']);
+function resetOwnedHydrationState(){
+  _firstSyncDone=false;
+  _pathLoadState={};
+}
+function requireOwnedListHydration(type,u){
+  if(!OWNED_MY_LIST_TYPES.includes(type)||!u)return false;
+  if(!fbOn||!db)return true;
+  const sameAuthenticatedOwner=!!auth?.currentUser&&u===cur;
+  const hydrated=sameAuthenticatedOwner&&(ownedExactReadsEnabled()
+    ?managedOwnedDataCoordinator?.isHydrated(type)===true
+    :_pathLoadState[type]==='loaded');
+  if(hydrated)return true;
+  if(sameAuthenticatedOwner)ensureListSubscribed(type);
+  toast(i18nCore.t('storage.listHydrationRequired'),5000);
+  return false;
+}
+function listEntryValuesEqual(a,b){
+  if(a===b)return true;
+  try{return JSON.stringify(a)===JSON.stringify(b);}catch{return false;}
+}
+function queueListEntryDiff(type,u,previous,next){
+  const before=previous&&typeof previous==='object'?previous:{};
+  const after=next&&typeof next==='object'?next:{};
+  const names=new Set([...Object.keys(before),...Object.keys(after)]);
+  let queued=0;
+  names.forEach(name=>{
+    const beforeHas=Object.prototype.hasOwnProperty.call(before,name);
+    const afterHas=Object.prototype.hasOwnProperty.call(after,name);
+    if(beforeHas===afterHas&&listEntryValuesEqual(before[name],after[name]))return;
+    if(queueSync(`${type}/${u}/${name}`,afterHas?after[name]:null))queued++;
+  });
+  return queued;
+}
+function writeList(type,u,list,{previousList}={}){
+  if(!requireOwnedListHydration(type,u))return false;
   const s=getLocal();
   if(!s[type])s[type]={};
+  const cachedPrevious={...(s[type][u]||{})};
+  const previous={...(previousList||cachedPrevious)};
   // Record activity delta for sparkline
-  const prevCount=Object.keys(s[type][u]||{}).length;
+  const prevCount=Object.keys(cachedPrevious).length;
   const newCount=Object.keys(list||{}).length;
   if(prevCount!==newCount)recordActivityEvent(u,newCount-prevCount);
   s[type][u]=list;
@@ -5292,15 +5353,17 @@ async function writeList(type,u,list){
   s.users[u]={...s.users[u],lastUpdated:now,lastSeen:now};
   saveLocal(s);
   if(fbOn&&db){
-    queueSync(`${type}/${u}`,list);
+    queueListEntryDiff(type,u,previous,list||{});
     queueSync(`users/${u}/lastUpdated`,now);
     queueSync(`users/${u}/lastSeen`,now);
     if(u===cur)requestPublicSharePublication('owned_list_edit',s,u);
   }
   syncFromLocal();
   refreshAddPokemonChoices(type,u);
+  return true;
 }
-async function writeListItem(type,u,name,value){
+function writeListItem(type,u,name,value){
+  if(!requireOwnedListHydration(type,u))return false;
   const s=getLocal();
   if(!s[type])s[type]={};
   const prevCount=Object.keys(s[type][u]||{}).length;
@@ -5321,6 +5384,7 @@ async function writeListItem(type,u,name,value){
   }
   syncFromLocal();
   refreshAddPokemonChoices(type,u);
+  return true;
 }
 function refreshAddPokemonChoices(type,u){
   if(type!==myListType||u!==cur)return;
@@ -5582,9 +5646,7 @@ function mergeRemoteData(d){
       if(conflicts.length>0&&conflicts.length<=10){
         showConflictModal(conflicts,
           ()=>{
-            queueSync(`${type}/${cur}`,localList);
-            allData[type][cur]=localList;
-            refreshAll();
+            writeList(type,cur,localList,{previousList:remoteList});
           },
           ()=>{}
         );
@@ -7478,7 +7540,7 @@ function confirmAddTray(){
     added++;
   });
   if(!added){clearAddTray();toast(i18nCore.t('myList.nothingNew'));return;}
-  writeList(myListType,cur,list);
+  if(!writeList(myListType,cur,list))return;
   addTray=[];
   renderAddTray();
   document.getElementById('add-pmon-sel').value='';
@@ -7524,10 +7586,10 @@ function hideUndo({restoreFocus=false}={}){
 }
 function doUndo(){
   if(!undoStack)return;
-  clearTimeout(undoTimer);
   const restored=undoStack;
+  if(!writeList(restored.type,restored.username,restored.list))return;
+  clearTimeout(undoTimer);
   hideUndo({restoreFocus:true});
-  writeList(restored.type,restored.username,restored.list);
   toast(i18nCore.t('myList.restored',{name:restored.name}));
   undoStack=null;
 }
@@ -7762,7 +7824,7 @@ function addEntry(){
   const dn=acItems.find(x=>x.name===name)?.dn||name;
   const list={...(allData[myListType]?.[cur]||{})};
   list[name]=priValue(pri,notes,lucky,xxl,xxs,shiny);
-  writeList(myListType,cur,list);
+  if(!writeList(myListType,cur,list))return;
   const speedAdd=syncSpeedAddMode();
   document.getElementById('ac-input').value='';
   document.getElementById('add-pmon-sel').value='';
@@ -8710,13 +8772,14 @@ function movePriority(name,p){
   if(!['H','M','L'].includes(p))return;
   const list={...(allData[myListType]?.[cur]||{})};if(!Object.prototype.hasOwnProperty.call(list,name))return;
   const current=parsePri(list[name]||'');if(current.p===p)return;
+  if(!requireOwnedListHydration(myListType,cur))return;
   const model=currentMyListOrderModel(myListType,cur),sourceKey=myListOrderPriorityKey(current.p),targetKey=myListOrderPriorityKey(p);
   model.priorities[sourceKey]=model.priorities[sourceKey].filter(entryName=>entryName!==name);
   model.priorities[targetKey]=model.priorities[targetKey].filter(entryName=>entryName!==name);
   model.priorities[targetKey].push(name);
   persistMyListOrder(model,myListType,cur);
   list[name]=priValue(p,current.mod,current.lucky,current.xxl,current.xxs,current.shiny);
-  writeList(myListType,cur,list);
+  if(!writeList(myListType,cur,list))return;
   announceMyListAction(i18nCore.t('myList.priorityChanged',{name,priority:i18nCore.t({'H':'priority.high','M':'priority.medium','L':'priority.low'}[p])}));
   requestAnimationFrame(()=>[...document.querySelectorAll('.myrow')].find(row=>row.dataset.name===name)?.querySelector('.myrow-edit')?.focus({preventScroll:true}));
 }
@@ -8735,17 +8798,17 @@ function setPri(name,p){
   if(!newP&&!lucky&&!xxl&&!xxs&&!shiny){
     if(!confirm(`"${name}" will have no priority or flags. Remove it from your list?`))return;
     delete list[name];
-    writeList(myListType,cur,list);
+    if(!writeList(myListType,cur,list))return;
     return;
   }
   list[name]=priValue(newP,mod,lucky,xxl,xxs,shiny);
-  writeList(myListType,cur,list);
+  if(!writeList(myListType,cur,list))return;
 }
 function setNotes(name,notes){
   const list={...(allData[myListType]?.[cur]||{})};
   const{p,lucky,xxl,xxs,shiny}=parsePri(list[name]||'');
   list[name]=priValue(p,notes,lucky,xxl,xxs,shiny);
-  writeList(myListType,cur,list);
+  if(!writeList(myListType,cur,list))return;
 }
 function _setFlags(name,update){
   const list={...(allData[myListType]?.[cur]||{})};
@@ -8755,17 +8818,18 @@ function _setFlags(name,update){
   if(!next.p&&!next.lucky&&!next.xxl&&!next.xxs&&!next.shiny){
     if(!confirm(`"${name}" will have no priority or flags. Remove it from your list?`))return;
     delete list[name];
-    writeList(myListType,cur,list);
+    if(!writeList(myListType,cur,list))return;
     return;
   }
   list[name]=priValue(next.p,next.mod,next.lucky,next.xxl,next.xxs,next.shiny);
-  writeList(myListType,cur,list);
+  if(!writeList(myListType,cur,list))return;
 }
 function setLucky(name){_setFlags(name,s=>({...s,lucky:!s.lucky}));}
 function setXxl(name){_setFlags(name,s=>{const nx=!s.xxl;return{...s,xxl:nx,xxs:nx?false:s.xxs};});}
 function setXxs(name){_setFlags(name,s=>{const ns=!s.xxs;return{...s,xxs:ns,xxl:ns?false:s.xxl};});}
 function setShiny(name){_setFlags(name,s=>({...s,shiny:!s.shiny}));}
 function removeEntry(name){
+  if(!requireOwnedListHydration(myListType,cur))return;
   const prevList={...(allData[myListType]?.[cur]||{})};
   const srcArr=listSource(myListType);
   const sourceEntry=srcArr.find(x=>x.name===name),dn=sourceEntry?pokemonDisplayName(sourceEntry):name;
@@ -8775,12 +8839,10 @@ function removeEntry(name){
   if(row){
     row.classList.add('removing');
     setTimeout(sessionTransientCallback(()=>{
-      writeListItem(myListType,cur,name,null);
-      showUndo(dn);
+      if(writeListItem(myListType,cur,name,null))showUndo(dn);
     }),220);
   }else{
-    writeListItem(myListType,cur,name,null);
-    showUndo(dn);
+    if(writeListItem(myListType,cur,name,null))showUndo(dn);
   }
 }
 
@@ -11223,7 +11285,7 @@ function confirmAddAllVariants(familyKey){
     list[v.name]=priValue(pri,'',false,false,false);
     added++;
   });
-  writeList(myListType,cur,list);
+  if(!writeList(myListType,cur,list))return;
   closeAddAllVariants();
   toast(i18nCore.t('myList.variantsAdded',{count:i18nCore.formatNumber(added),family:VARIANT_FAMILIES[familyKey].label,priority:priLabel(pri)}));
 }
@@ -11289,7 +11351,7 @@ function confirmAddShownResults(){
     list[v.name]=priValue(pri,flags.notes,flags.lucky,flags.xxl,flags.xxs,flags.shiny);
     added++;
   });
-  writeList(myListType,cur,list);
+  if(!writeList(myListType,cur,list))return;
   closeAddShownResults();
   closeAddAutocomplete();
   document.getElementById('ac-input').value='';
@@ -14776,7 +14838,7 @@ function bulkSetPri(){
     const{mod,lucky,xxl,xxs,shiny}=parsePri(list[name]);
     list[name]=priValue(v==='_clear'?'':v,mod,lucky,xxl,xxs,shiny);
   });
-  writeList(myListType,cur,list);
+  if(!writeList(myListType,cur,list))return;
   sel.value='';
   toast(i18nCore.t('bulk.updated',{count:i18nCore.formatNumber(bulkSelected.size)}));
 }
@@ -14801,7 +14863,7 @@ function bulkToggleFlag(flag){
     if(flag==='xxs'){ns=turnOn;if(turnOn)nx=false;}
     list[name]=priValue(p,mod,nl,nx,ns,nsh);
   });
-  writeList(myListType,cur,list);
+  if(!writeList(myListType,cur,list))return;
   toast(i18nCore.t(turnOn?'bulk.flagAdded':'bulk.flagRemoved',{flag:flag.toUpperCase(),count:i18nCore.formatNumber(bulkSelected.size)}));
 }
 function bulkDelete(){
@@ -14811,9 +14873,9 @@ function bulkDelete(){
   const list={...prevList};
   bulkSelected.forEach(name=>{delete list[name];});
   const count=bulkSelected.size;
+  if(!writeList(myListType,cur,list))return;
   // Single undo for the batch
   undoStack={type:myListType,username:cur,list:prevList,name:i18nCore.t('bulk.entries',{count:i18nCore.formatNumber(count)})};
-  writeList(myListType,cur,list);
   showUndo(i18nCore.t('bulk.entries',{count:i18nCore.formatNumber(count)}));
   bulkSelected.clear();
   updateBulkCount();
@@ -15165,7 +15227,7 @@ function confirmImport(){
   if(!toAdd.length){toast(i18nCore.t('import.nothingSelected'));return;}
   const list=Object.assign({},allData[myListType]&&allData[myListType][cur]||{});
   toAdd.forEach(function(e){list[e.name]=importPri+(e.mod?'('+e.mod+')':'');});
-  writeList(myListType,cur,list);
+  if(!writeList(myListType,cur,list))return;
   closeModal('import-modal');
   toast(i18nCore.t('import.completed',{count:i18nCore.formatNumber(toAdd.length),priority:priLabel(importPri)}));
 }

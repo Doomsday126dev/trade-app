@@ -21,6 +21,7 @@
     if(typeof onSnapshot!=='function')throw new TypeError('Owned-data coordinator requires an onSnapshot callback');
     let activeIdentity=null;
     const subscribedLists=new Set();
+    const hydratedSurfaces=new Set();
     const metrics=new Map();
 
     function metric(surface){
@@ -41,9 +42,10 @@
     function activate(value){
       const next=normalizeIdentity(value);
       if(!next)return errorResult('owned-read/identity-required','Owned reads require UID and username');
-      if(!sameIdentity(activeIdentity,next))subscribedLists.clear();
+      const identityChanged=!sameIdentity(activeIdentity,next);
       const result=lifecycle.activateSession(next);
       if(!result.ok)return result;
+      if(identityChanged){subscribedLists.clear();hydratedSurfaces.clear();}
       activeIdentity=next;
       return{ok:true,status:result.status};
     }
@@ -69,6 +71,7 @@
           if(!sameIdentity(activeIdentity,expectedIdentity))return;
           stats.snapshots++;
           stats.payloadBytes=payloadBytes(value);
+          hydratedSurfaces.add(surface);
           onSnapshot(Object.freeze({surface,path:definition.path,value}));
         },
         onError:error=>{
@@ -95,16 +98,23 @@
     function reset(){
       activeIdentity=null;
       subscribedLists.clear();
+      hydratedSurfaces.clear();
       return{ok:true,status:'reset'};
     }
+    function isHydrated(surface){return!!activeIdentity&&hydratedSurfaces.has(surface);}
     function snapshotMetrics(){
       return Object.freeze([...metrics.values()].map(item=>Object.freeze({...item})));
     }
     function snapshot(){
-      return Object.freeze({active:!!activeIdentity,subscribedLists:Object.freeze([...subscribedLists]),metrics:snapshotMetrics()});
+      return Object.freeze({
+        active:!!activeIdentity,
+        subscribedLists:Object.freeze([...subscribedLists]),
+        hydratedSurfaces:Object.freeze([...hydratedSurfaces]),
+        metrics:snapshotMetrics()
+      });
     }
 
-    return Object.freeze({activate,subscribeCore,subscribeList,subscribeSurface,reset,snapshot,snapshotMetrics});
+    return Object.freeze({activate,subscribeCore,subscribeList,subscribeSurface,isHydrated,reset,snapshot,snapshotMetrics});
   }
 
   root.ownedDataCoordinator=Object.freeze({CORE_SURFACES,LIST_SURFACES,createOwnedDataCoordinator});

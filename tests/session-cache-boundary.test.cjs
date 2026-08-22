@@ -57,11 +57,66 @@ test('owned cache and queue persist UID and username metadata',()=>{
   const boundary=loadBoundary(storage);
   assert.equal(boundary.activate(ownerA).ok,true);
   boundary.writeData({loginDirectory:{Public:{}},users:{TrainerA:{bio:'private'}},wishlist:{TrainerA:{Pikachu:'H'}}});
-  boundary.writeQueue({'wishlist/TrainerA':{path:'wishlist/TrainerA',data:{Pikachu:'H'},ts:1}});
+  boundary.writeQueue({'wishlist/TrainerA/Pikachu':{path:'wishlist/TrainerA/Pikachu',data:'H',ts:1}});
   assert.deepEqual(parsed(storage,'pogoSessionCache_v2').protected.owner,ownerA);
   assert.deepEqual(parsed(storage,'pogoSyncQueue_v2').owner,ownerA);
   assert.equal(boundary.readData().users.TrainerA.bio,'private');
   assert.equal(Object.keys(boundary.readQueue()).length,1);
+});
+
+test('owned whole-list replacements are preserved in quarantine and never restored for flush',()=>{
+  const fullList={path:'wishlist/TrainerA',data:{Pikachu:'H'},ts:1};
+  const leaf={path:'wishlist/TrainerA/Eevee',data:'M',ts:2};
+  const storage=memoryStorage({
+    pogoSyncQueue_v2:JSON.stringify({
+      schemaVersion:2,owner:ownerA,
+      entries:{'wishlist/TrainerA':fullList,'wishlist/TrainerA/Eevee':leaf}
+    })
+  });
+  const boundary=loadBoundary(storage);
+  assert.equal(boundary.activate(ownerA).ok,true);
+  assert.deepEqual(plain(boundary.readQueue()),{'wishlist/TrainerA/Eevee':leaf});
+  assert.deepEqual(plain(boundary.readQuarantinedQueue()),{'wishlist/TrainerA':fullList});
+  assert.equal(boundary.snapshot().quarantinedQueueCount,1);
+  assert.deepEqual(Array.from(boundary.drainNotices()),['storage/whole-list-queue-quarantined']);
+  const persisted=parsed(storage,'pogoSyncQueue_v2');
+  assert.equal(Object.prototype.hasOwnProperty.call(persisted.entries,'wishlist/TrainerA'),false);
+  assert.deepEqual(persisted.quarantined['wishlist/TrainerA'],fullList);
+});
+
+test('new whole-list queue entries fail into quarantine while item writes remain flushable',()=>{
+  const storage=memoryStorage();
+  const boundary=loadBoundary(storage);
+  boundary.activate(ownerA);
+  const fullList={path:'costumes/TrainerA',data:{'Pikachu (Dawn)':'M'},ts:3};
+  const leaf={path:'costumes/TrainerA/Pikachu (Dawn)',data:'M',ts:4};
+  assert.equal(boundary.writeQueue({
+    'costumes/TrainerA':fullList,
+    'costumes/TrainerA/Pikachu (Dawn)':leaf
+  }).ok,true);
+  assert.deepEqual(plain(boundary.readQueue()),{'costumes/TrainerA/Pikachu (Dawn)':leaf});
+  assert.deepEqual(plain(boundary.readQuarantinedQueue()),{'costumes/TrainerA':fullList});
+  assert.equal(boundary.quarantineQueueEntry('costumes/TrainerA/Pikachu (Dawn)',leaf).error.code,'storage/quarantine-path-invalid');
+});
+
+test('quarantined stale replacement cannot delete unrelated authoritative entries',()=>{
+  const stale={path:'wishlist/TrainerA',data:{Pikachu:'H'},ts:1};
+  const narrow={path:'wishlist/TrainerA/Pikachu',data:'H',ts:2};
+  const storage=memoryStorage({
+    pogoSyncQueue_v2:JSON.stringify({
+      schemaVersion:2,owner:ownerA,
+      entries:{'wishlist/TrainerA':stale,'wishlist/TrainerA/Pikachu':narrow}
+    })
+  });
+  const boundary=loadBoundary(storage);
+  boundary.activate(ownerA);
+  const server={Pikachu:'L',Eevee:'M',Bulbasaur:'H'};
+  for(const item of Object.values(boundary.readQueue())){
+    const name=item.path.split('/')[2];
+    if(item.data==null)delete server[name];else server[name]=item.data;
+  }
+  assert.deepEqual(server,{Pikachu:'H',Eevee:'M',Bulbasaur:'H'});
+  assert.equal(Object.keys(boundary.readQuarantinedQueue()).length,1);
 });
 
 test('transient auth loss locks protected data and same-user recovery restores it',()=>{
