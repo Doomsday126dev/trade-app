@@ -87,7 +87,7 @@
       secondary:combined.find(candidate=>candidate.kind==='important')||null,
       more:combined.filter(candidate=>candidate.kind==='more'),
       split,
-      specials:['LUCKY','XXL','XXS'].filter(key=>strs?.[key]).map(key=>({key,value:strs[key],length:strs[key].length,tooLong:strs[key].length>limit}))
+      specials:['LUCKY','SHINY','XXL','XXS'].filter(key=>strs?.[key]).map(key=>({key,value:strs[key],length:strs[key].length,tooLong:strs[key].length>limit}))
     };
   }
   function strLenInfo(str){

@@ -33,7 +33,7 @@ function block(start,end){
 test('anonymous share catalogs have exact parity and natural share chrome',()=>{
   const window=load(),catalogs=window.PogoLocales;
   const keys=Object.keys(catalogs.en).sort();
-  assert.equal(keys.length,1098);
+  assert.equal(keys.length,1109);
   for(const locale of ['ja','es','de'])assert.deepEqual(Object.keys(catalogs[locale]).sort(),keys,locale);
   assert.equal(catalogs.ja['share.listTitle'],'{username} の交換リスト');
   assert.equal(catalogs.es['share.listTitle'],'Lista de intercambios de {username}');
@@ -104,6 +104,20 @@ test('public search panels localize controls while preserving canonical clipboar
   assert.match(ja,/data-copy="!4\*&amp;!traded&amp;25,150"/);
 });
 
+test('all generated priority and Dex panels use explicit Search String labels',()=>{
+  const window=load(),core=window.PogoI18n.core,panel=window.PogoUi.stringPanels;
+  core.setLocale('en',{persist:false});
+  const rendered=panel.strLevelsHtml({H:'1',M:'2',L:'3',LUCKY:'4',SHINY:'5',XXL:'6',XXS:'7'}, {
+    t:core.t,formatNumber:core.formatNumber,
+    priorityLabel:p=>core.t({H:'priority.high',M:'priority.medium',L:'priority.low'}[p])
+  });
+  for(const label of [
+    'High Priority Search String','Medium Priority Search String','Low Priority Search String',
+    'Lucky Dex Search String','Shiny Dex Search String','XXL Dex Search String','XXS Dex Search String'
+  ])assert.match(rendered,new RegExp(label));
+  for(const value of ['1','2','3','4','5','6','7'])assert.match(rendered,new RegExp(`data-copy="${value}"`));
+});
+
 test('copy success and failure use anonymous-share keys only for share buttons',()=>{
   const copy=block('async function copyStr(str,btn){','// ── STRINGS PAGE');
   assert.match(copy,/dataset\.copyScope==='share'\?'share':'strings'/);
@@ -139,13 +153,13 @@ test('Japanese and German share chrome retains bounded responsive wrapping',()=>
   assert.match(html,/\.share-search-disclosure summary\{[^}]*min-height:48px/);
 });
 
-test('release 2026-08-20.51 is coherent and contains no active .50 assets',()=>{
+test('release 2026-08-22.52 is coherent and contains no active .51 assets',()=>{
   const worker=source('sw.js'),release=source('js/domain/clientRelease.js');
-  assert.match(html,/window\.__POGO_RELEASE_ID='2026-08-20\.51'/);
-  assert.match(worker,/const RELEASE='2026-08-20\.51'/);
-  assert.match(release,/RELEASE_ID='2026-08-20\.51'/);
+  assert.match(html,/window\.__POGO_RELEASE_ID='2026-08-22\.52'/);
+  assert.match(worker,/const RELEASE='2026-08-22\.52'/);
+  assert.match(release,/RELEASE_ID='2026-08-22\.52'/);
   const firstParty=[...html.matchAll(/<script\s+src="([^"]+)"/g)].map(match=>match[1]).filter(src=>!/^https?:/.test(src));
   assert.equal(firstParty.length,60);
-  for(const src of firstParty)assert.equal(new URL(src,'https://example.test').searchParams.get('v'),'2026-08-20.51');
-  assert.doesNotMatch(`${html}\n${worker}\n${release}`,/2026-08-05\.50/);
+  for(const src of firstParty)assert.equal(new URL(src,'https://example.test').searchParams.get('v'),'2026-08-22.52');
+  assert.doesNotMatch(`${html}\n${worker}\n${release}`,/2026-08-20\.51/);
 });

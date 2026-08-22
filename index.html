@@ -865,8 +865,6 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
   .add-advanced input#add-pmon-notes{width:100%;flex:none !important;min-width:0 !important}
   .add-actions{flex-wrap:wrap;align-items:stretch;gap:6px}
   .add-actions .bsave{flex:1 1 auto;justify-content:center;padding:var(--space-3);font-size:14px}
-  .add-actions .export-menu-wrap{flex:0 0 auto}
-  .add-actions .image-btn{min-height:48px;justify-content:center}
   .add-tray{position:sticky;bottom:calc(8px + env(safe-area-inset-bottom));z-index:90;box-shadow:0 10px 28px rgba(0,0,0,.4);background:rgba(31,29,59,.97)}
   .add-tray-head{margin-bottom:6px}
   .add-tray-chips{max-height:76px}
@@ -1376,7 +1374,7 @@ html[data-theme="light"] .have-mirror-badge,html[data-theme="light"] .have-mirro
 .trainer-quick-main{display:flex;flex:1;min-width:0;flex-direction:column;justify-content:center}.trainer-quick-name{display:block;font-weight:750;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.trainer-quick-meta{display:block;font-size:11px;color:var(--muted);margin-top:3px;line-height:1.4}
 .trainer-quick-actions{display:flex;gap:5px}.trainer-icon-btn{width:48px;height:48px;min-width:48px;min-height:48px;border:1px solid var(--border2);border-radius:var(--radius-md);background:var(--bg);color:var(--text);cursor:pointer;font-size:16px}.trainer-icon-btn:hover{border-color:var(--accent)}
 .favorite-toolbar{display:grid;grid-template-columns:minmax(0,340px);align-items:start;justify-content:start;gap:7px;margin-bottom:9px}.favorite-toolbar-search{position:relative;width:100%}.favorite-toolbar>.bghost{justify-self:start}.favorite-filter-tags,.favorite-card-tags,.organizer-tag-list{display:flex;flex-wrap:wrap;gap:6px}.favorite-filter-tags{grid-column:1/-1}.favorite-filter-chip,.favorite-card-tag{max-width:100%;border:1px solid var(--border2);border-radius:var(--radius-pill);background:var(--bg);color:var(--muted);font:700 11px var(--font);padding:6px 9px;overflow-wrap:anywhere}.favorite-filter-chip{display:inline-flex;align-items:center;gap:5px;cursor:pointer;min-height:48px}.favorite-filter-check{display:inline-flex;width:12px;justify-content:center;font-weight:900}.favorite-filter-chip[aria-pressed="true"]{background:color-mix(in srgb,var(--accent) 18%,var(--bg));border-color:var(--accent);color:var(--ac2);box-shadow:inset 0 0 0 1px var(--accent)}.favorite-card-shell{position:relative;overflow:hidden;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--bg2);min-width:0}.favorite-card-rail{position:absolute;inset:0 0 0 auto;width:116px;display:flex;align-items:stretch;justify-content:flex-end}.favorite-card-rail button{width:58px;min-width:58px;border:0;border-left:1px solid var(--border);background:var(--bg2);color:var(--text);font:800 11px var(--font);cursor:pointer}.favorite-card-rail button:hover,.favorite-card-rail button:focus-visible{background:var(--accent);color:#fff}.favorite-card-surface{position:relative;z-index:1;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;min-height:100%;padding:8px 9px 8px 11px;background:var(--card);touch-action:pan-y;transform:translateX(0);transition:transform .18s ease}.favorite-card-shell.swipe-open .favorite-card-surface{transform:translateX(-116px)}.favorite-card-tags{align-items:center;margin-top:4px}
-.favorite-card-tag{display:inline-flex;align-items:center;min-height:26px;padding:4px 8px;color:var(--ac2);background:rgba(108,99,255,.10);border-color:rgba(108,99,255,.32)}.favorite-card-add-tag,.favorite-card-more{width:48px;height:48px;min-width:48px;border:1px solid var(--border2);border-radius:var(--radius-pill);background:var(--bg);color:var(--text);font:800 18px var(--font);cursor:pointer}.favorite-card-footer{display:flex;align-items:center;align-self:center;gap:4px}.favorite-card-open{min-height:48px;padding:8px 9px;border:0;background:transparent;color:var(--ac2);font:750 12px var(--font);cursor:pointer;white-space:nowrap}.favorite-card-menu{position:absolute;z-index:5;right:10px;bottom:58px;display:grid;min-width:190px;padding:5px;border:1px solid var(--border2);border-radius:var(--radius-md);background:var(--card);box-shadow:var(--shadow)}.favorite-card-menu[hidden]{display:none}.favorite-card-menu button{min-height:48px;padding:9px 11px;border:0;border-radius:var(--radius-sm);background:transparent;color:var(--text);font:700 12px var(--font);text-align:left;cursor:pointer}.favorite-card-menu button:hover,.favorite-card-menu button:focus-visible{background:var(--bg2)}.favorite-card-menu .danger{color:var(--danger)}.favorite-empty{border:1px dashed var(--border2);border-radius:var(--radius-md);padding:12px 14px;color:var(--muted);font-size:12px}.trainer-quick-section .favorite-empty{justify-items:start;gap:0;padding:10px 12px;text-align:left}.favorite-empty .empty-state-title{display:block;color:var(--text);font-weight:750}.favorite-empty .empty-state-body{display:block;margin-top:3px;line-height:1.45}.recent-trainer-row{width:100%;min-height:64px;padding-block:7px;color:var(--text);font:inherit;text-align:left;cursor:pointer}.recent-trainer-row:hover,.recent-trainer-row:focus-visible{border-color:var(--accent);background:var(--bg2)}.recent-trainer-chevron{display:inline-flex;align-items:center;justify-content:center;width:48px;height:48px;min-width:48px;color:var(--ac2);font-size:22px}.favorite-saved-prompt{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:480;display:flex;align-items:center;gap:10px;max-width:calc(100vw - 24px);padding:10px 12px;border:1px solid var(--border2);border-radius:var(--radius-md);background:var(--card);box-shadow:var(--shadow)}.favorite-saved-prompt[hidden]{display:none}.favorite-saved-prompt span{font-size:12px}.favorite-saved-prompt button{min-height:48px}.organizer-modal{max-width:460px;padding:0;overflow:hidden;display:flex;flex-direction:column}.organizer-header{display:flex;justify-content:space-between;gap:12px;padding:16px 20px 12px;border-bottom:1px solid var(--border)}.organizer-header h2{font-size:18px;margin:0}.organizer-header p{font-size:11px;color:var(--muted);margin-top:3px}.organizer-close{width:48px;height:48px;min-width:48px;flex:0 0 48px;border:1px solid var(--border2);border-radius:50%;background:transparent;color:var(--text);font-size:22px}
+.favorite-card-tag{display:inline-flex;align-items:center;min-height:26px;padding:4px 8px;color:var(--ac2);background:rgba(108,99,255,.10);border-color:rgba(108,99,255,.32)}.favorite-card-add-tag,.favorite-card-more{width:48px;height:48px;min-width:48px;border:1px solid var(--border2);border-radius:var(--radius-pill);background:var(--bg);color:var(--text);font:800 18px var(--font);cursor:pointer}.favorite-card-footer{display:flex;align-items:center;align-self:center;gap:4px}.favorite-card-open{min-height:48px;padding:8px 9px;border:0;background:transparent;color:var(--ac2);font:750 12px var(--font);cursor:pointer;white-space:nowrap}.favorite-card-shell.menu-open{overflow:visible;z-index:2}.favorite-card-shell.menu-open .favorite-card-surface{border-radius:inherit}.favorite-card-menu{position:absolute;z-index:5;right:10px;bottom:58px;display:grid;min-width:190px;padding:5px;border:1px solid var(--border2);border-radius:var(--radius-md);background:var(--card);box-shadow:var(--shadow)}.favorite-card-menu[hidden]{display:none}.favorite-card-menu button{min-height:48px;padding:9px 11px;border:0;border-radius:var(--radius-sm);background:transparent;color:var(--text);font:700 12px var(--font);text-align:left;cursor:pointer}.favorite-card-menu button:hover,.favorite-card-menu button:focus-visible{background:var(--bg2)}.favorite-card-menu .danger{color:var(--danger)}.favorite-empty{border:1px dashed var(--border2);border-radius:var(--radius-md);padding:12px 14px;color:var(--muted);font-size:12px}.trainer-quick-section .favorite-empty{justify-items:start;gap:0;padding:10px 12px;text-align:left}.favorite-empty .empty-state-title{display:block;color:var(--text);font-weight:750}.favorite-empty .empty-state-body{display:block;margin-top:3px;line-height:1.45}.recent-trainer-row{width:100%;min-height:64px;padding-block:7px;color:var(--text);font:inherit;text-align:left;cursor:pointer}.recent-trainer-row:hover,.recent-trainer-row:focus-visible{border-color:var(--accent);background:var(--bg2)}.recent-trainer-chevron{display:inline-flex;align-items:center;justify-content:center;width:48px;height:48px;min-width:48px;color:var(--ac2);font-size:22px}.favorite-saved-prompt{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:480;display:flex;align-items:center;gap:10px;max-width:calc(100vw - 24px);padding:10px 12px;border:1px solid var(--border2);border-radius:var(--radius-md);background:var(--card);box-shadow:var(--shadow)}.favorite-saved-prompt[hidden]{display:none}.favorite-saved-prompt span{font-size:12px}.favorite-saved-prompt button{min-height:48px}.organizer-modal{max-width:460px;padding:0;overflow:hidden;display:flex;flex-direction:column}.organizer-header{display:flex;justify-content:space-between;gap:12px;padding:16px 20px 12px;border-bottom:1px solid var(--border)}.organizer-header h2{font-size:18px;margin:0}.organizer-header p{font-size:11px;color:var(--muted);margin-top:3px}.organizer-close{width:48px;height:48px;min-width:48px;flex:0 0 48px;border:1px solid var(--border2);border-radius:50%;background:transparent;color:var(--text);font-size:22px}
 .organizer-body{padding:12px 20px 16px;overflow-y:auto;overscroll-behavior:contain}.organizer-section{padding:10px 0}.organizer-help{font-size:11px;color:var(--muted);line-height:1.45;margin-bottom:8px}.organizer-assignment{display:flex;flex-wrap:wrap;gap:8px;max-height:180px;overflow-y:auto;overscroll-behavior:contain;padding:2px}.organizer-selectable-chip{display:inline-flex;align-items:center;gap:6px;min-height:48px;max-width:100%;padding:8px 12px;border:1px solid var(--border2);border-radius:var(--radius-pill);background:var(--bg);color:var(--muted);font:700 12px var(--font);cursor:pointer}.organizer-selectable-chip[aria-pressed="true"]{background:rgba(108,99,255,.18);border-color:var(--accent);color:var(--ac2)}.organizer-selectable-chip span{overflow-wrap:anywhere}.organizer-chip-check{font-weight:900}.organizer-add-tag{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-top:8px}.organizer-add-tag[hidden]{display:none}.organizer-new-tag-toggle{margin-top:8px}.organizer-tag-row,.organizer-manage-details{display:none}.organizer-tag-row input{min-width:0}.organizer-add-tag button,.organizer-new-tag-toggle{min-height:48px}.organizer-actions{position:sticky;bottom:-16px;display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;padding:12px 0 0;background:var(--card)}.organizer-actions button{min-width:88px;min-height:48px}.organizer-status{min-height:18px;font-size:11px;color:var(--muted);margin-top:6px}
 @media(prefers-reduced-motion:reduce){.favorite-card-surface{transition:none}}
 .trainer-sync-status{display:flex;align-items:flex-start;gap:9px;min-width:0;margin-top:10px;padding:10px 11px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--bg)}.trainer-sync-status-icon{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;flex:0 0 24px;color:var(--ac2);font-weight:800}.trainer-sync-status-copy{min-width:0}.trainer-sync-status-copy strong{display:block;font-size:12px;line-height:1.35;overflow-wrap:anywhere}.trainer-sync-status-copy span{display:block;margin-top:2px;color:var(--muted);font-size:11px;line-height:1.45;overflow-wrap:anywhere}.trainer-sync-status-detail{max-width:100%;overflow-wrap:anywhere}
@@ -1914,6 +1912,8 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
 .undo-btn{min-width:48px;min-height:48px;padding:8px 12px;pointer-events:auto}
 @media(max-width:600px){.toast,.undo-toast{left:50%;right:auto;width:max-content;max-width:calc(100vw - 24px);transform:translateX(-50%) translateY(100px)}.toast.show,.undo-toast.show{transform:translateX(-50%) translateY(0)}}
 @media(max-height:600px){.toast,.undo-toast{bottom:calc(8px + env(safe-area-inset-bottom));max-height:calc(100dvh - 16px - env(safe-area-inset-top) - env(safe-area-inset-bottom));overflow:auto}}
+.mylist-list-actions{display:inline-flex;align-items:center;gap:8px;margin-right:auto}.mylist-list-actions .mylist-reorder-toggle{margin-right:0}.mylist-list-tools{min-height:44px}
+@media(max-width:600px){#tab-mylist .add-ttl{padding-right:0}#tab-mylist .mylist-list-actions{width:100%;justify-content:space-between;margin-right:0}}
 </style>
 </head>
 <body>
@@ -2171,7 +2171,7 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
       </div>
     </div>
     <aside class="journey-guidance" aria-labelledby="mylist-guidance-title">
-      <div><strong id="mylist-guidance-title" data-i18n="guidance.myListTitle">Build the list you want to share</strong><span data-i18n="guidance.myListBody">Add Pokémon and priorities here. Sharing is always explicit; Favorites and private tags live under Find Trainer and stay on this device.</span></div>
+      <div><strong id="mylist-guidance-title" data-i18n="guidance.myListTitle">Build your trade list</strong><span data-i18n="guidance.myListBody">Add Pokémon, set priorities, and share your list when you’re ready. Favorites and private tags stay on this device.</span></div>
       <div class="journey-guidance-actions"><button type="button" class="bghost" onclick="switchTab('find')" data-i18n="guidance.findTrainer">Find a trainer</button><button type="button" class="bghost" onclick="switchTab('schedule')" data-i18n="guidance.exploreEvents">Explore Events</button></div>
     </aside>
     <div class="list-tabs mylist-type-tabs" role="tablist" data-i18n-aria-label="myList.categories" aria-label="My List categories">
@@ -2197,7 +2197,7 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
           <button type="button" class="pb add-pri-btn" data-pri="L" onclick="setAddPri('L')" aria-pressed="false" data-i18n-title="priority.low">L</button>
         </div>
         <input type="hidden" id="add-pmon-pri" value="">
-        <button type="button" class="add-advanced-toggle" id="add-adv-toggle" onclick="toggleAddAdvanced()" aria-expanded="false" aria-controls="add-advanced"><span data-i18n="myList.moreOptions">More options</span> <span class="caret">▾</span></button>
+        <button type="button" class="add-advanced-toggle" id="add-adv-toggle" onclick="toggleAddAdvanced()" aria-expanded="false" aria-controls="add-advanced"><span data-i18n="myList.flagsAndDetails">Flags &amp; details</span> <span class="caret">▾</span></button>
       </div>
       <div class="add-tray" id="add-tray" hidden></div>
       <div class="add-advanced" id="add-advanced">
@@ -2214,26 +2214,10 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
         <label class="lucky-add" title="XXS — mark as extra-small; generates a separate XXS search string">
           <input type="checkbox" id="add-pmon-xxs" onchange="if(this.checked)document.getElementById('add-pmon-xxl').checked=false;renderAddTray()"> XXS
         </label>
-        <input type="text" id="add-pmon-notes" data-i18n-placeholder="myList.variantDetailsPlaceholder" data-i18n-aria-label="myList.variantDetails" placeholder="Variant details: female, male, shadow…" aria-label="Variant details" style="flex:1;min-width:120px" oninput="renderAddTray()">
+        <input type="text" class="field-control" id="add-pmon-notes" data-i18n-placeholder="myList.variantDetailsPlaceholder" data-i18n-aria-label="myList.variantDetails" placeholder="Variant details: female, male, shadow…" aria-label="Variant details" style="flex:1;min-width:120px" oninput="renderAddTray()">
       </div>
       <div class="add-actions">
         <button class="bsave" onclick="addEntry()" data-i18n="myList.addAction">Add</button>
-        <div class="export-menu-wrap">
-          <button class="image-btn" onclick="toggleExportMenu(event)" aria-haspopup="menu" aria-expanded="false" aria-controls="export-menu" id="export-menu-btn"><span data-i18n="account.tools">Tools</span> <span aria-hidden="true">▾</span></button>
-          <div class="export-menu" id="export-menu" role="menu" aria-label="Tools" data-i18n-aria-label="account.tools" onkeydown="toolsMenuKeydown(event)">
-            <button class="export-menu-item" role="menuitem" onclick="openImport();closeExportMenu()"><span class="icon">↥</span> <span data-i18n="myList.importAction">Import string</span></button>
-            <button class="export-menu-item" role="menuitemcheckbox" id="speed-add-toggle" aria-checked="false" onclick="toggleSpeedAddMode()"><span class="icon">⚡</span> <span data-i18n="myList.speedAdd">Speed add</span></button>
-            <button class="export-menu-item" role="menuitemcheckbox" id="bulk-toggle-btn" aria-checked="false" onclick="toggleBulkMode();closeExportMenu()"><span class="icon">☑</span> <span data-i18n="myList.bulkEdit">Bulk edit</span></button>
-            <div class="export-menu-sep"></div>
-            <button class="export-menu-item" role="menuitem" onclick="exportMyListImage('classic');closeExportMenu()"><span class="icon">🖼️</span> <span data-i18n="export.classicImage">Classic image (light)</span></button>
-            <button class="export-menu-item" role="menuitem" onclick="exportMyListImage('cards');closeExportMenu()"><span class="icon">🌙</span> <span data-i18n="export.darkImage">Dark card image</span></button>
-            <button class="export-menu-item" role="menuitem" onclick="openSpecialTradeBoard();closeExportMenu()"><span class="icon">🎯</span> <span data-i18n="export.specialBoard">Special Trade Board (LF/FT)</span></button>
-            <button class="export-menu-item" role="menuitem" onclick="exportMyListMarkdown();closeExportMenu()"><span class="icon">📝</span> <span data-i18n="export.markdown">Markdown (Discord/Reddit)</span></button>
-            <button class="export-menu-item" role="menuitem" onclick="exportMyListCSV();closeExportMenu()"><span class="icon">📊</span> <span data-i18n="export.csv">CSV spreadsheet</span></button>
-            <div class="export-menu-sep"></div>
-            <button class="export-menu-item" role="menuitem" onclick="copyShareLink();closeExportMenu()"><span class="icon">🔗</span> <span data-i18n="export.copyShareLink">Copy share link</span></button>
-          </div>
-        </div>
       </div>
       <div class="speed-add-hint" id="speed-add-hint" data-i18n="myList.speedAddHint">Speed add is on. Priority and flags stay selected after each addition.</div>
     </div>
@@ -2260,7 +2244,25 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
     </div>
     <div class="sec mylist-list-toolbar" style="display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap">
       <h2 class="sr-only" id="mylist-category-heading"><span id="mylist-category-name">Trades</span> <span aria-hidden="true">·</span> <span id="mylist-count"></span></h2>
-      <button type="button" class="mylist-reorder-toggle btn btn-secondary" id="mylist-reorder-toggle" onclick="toggleReorderMode()" aria-pressed="false"><span data-i18n="myList.reorder">Reorder</span></button>
+      <div class="mylist-list-actions" role="group" data-i18n-aria-label="myList.listActions" aria-label="List actions">
+        <button type="button" class="mylist-reorder-toggle btn btn-secondary" id="mylist-reorder-toggle" onclick="toggleReorderMode()" aria-pressed="false"><span data-i18n="myList.reorder">Reorder</span></button>
+        <div class="export-menu-wrap">
+          <button class="image-btn mylist-list-tools" onclick="toggleExportMenu(event)" aria-haspopup="menu" aria-expanded="false" aria-controls="export-menu" id="export-menu-btn"><span data-i18n="myList.listTools">List tools</span> <span aria-hidden="true">▾</span></button>
+          <div class="export-menu" id="export-menu" role="menu" aria-label="List tools" data-i18n-aria-label="myList.listTools" onkeydown="toolsMenuKeydown(event)">
+            <button class="export-menu-item" role="menuitem" onclick="openImport();closeExportMenu()"><span class="icon">↥</span> <span data-i18n="myList.importAction">Import string</span></button>
+            <button class="export-menu-item" role="menuitemcheckbox" id="speed-add-toggle" aria-checked="false" onclick="toggleSpeedAddMode()"><span class="icon">⚡</span> <span data-i18n="myList.speedAdd">Speed add</span></button>
+            <button class="export-menu-item" role="menuitemcheckbox" id="bulk-toggle-btn" aria-checked="false" onclick="toggleBulkMode();closeExportMenu()"><span class="icon">☑</span> <span data-i18n="myList.bulkEdit">Bulk edit</span></button>
+            <div class="export-menu-sep"></div>
+            <button class="export-menu-item" role="menuitem" onclick="exportMyListImage('classic');closeExportMenu()"><span class="icon">🖼️</span> <span data-i18n="export.classicImage">Classic image (light)</span></button>
+            <button class="export-menu-item" role="menuitem" onclick="exportMyListImage('cards');closeExportMenu()"><span class="icon">🌙</span> <span data-i18n="export.darkImage">Dark card image</span></button>
+            <button class="export-menu-item" role="menuitem" onclick="openSpecialTradeBoard();closeExportMenu()"><span class="icon">🎯</span> <span data-i18n="export.specialBoard">Special Trade Board (LF/FT)</span></button>
+            <button class="export-menu-item" role="menuitem" onclick="exportMyListMarkdown();closeExportMenu()"><span class="icon">📝</span> <span data-i18n="export.markdown">Markdown (Discord/Reddit)</span></button>
+            <button class="export-menu-item" role="menuitem" onclick="exportMyListCSV();closeExportMenu()"><span class="icon">📊</span> <span data-i18n="export.csv">CSV spreadsheet</span></button>
+            <div class="export-menu-sep"></div>
+            <button class="export-menu-item" role="menuitem" onclick="copyShareLink();closeExportMenu()"><span class="icon">🔗</span> <span data-i18n="export.copyShareLink">Copy share link</span></button>
+          </div>
+        </div>
+      </div>
       <span style="font-size:10px;color:var(--muted);display:inline-flex;gap:6px;align-items:center;text-transform:none;letter-spacing:0;font-weight:500">
         <span data-i18n-title="myList.luckyHelp" title="Lucky entries generate a separate search string">⚡ <span data-i18n="myList.lucky">Lucky</span></span>
         <span style="color:var(--border2)">·</span>
@@ -2681,7 +2683,7 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
 <div class="ptr-indicator" id="ptr-indicator" aria-hidden="true">↓</div>
 
 <script>
-window.__POGO_RELEASE_ID='2026-08-20.51';
+window.__POGO_RELEASE_ID='2026-08-22.52';
 window.__pogoStartup=window.__pogoStartup||{preAuthMarkupReady:performance.now(),preAuthPaintOpportunity:null,authSdkStartedAt:null,authStateKnownAt:null,loginShellRevealedAt:performance.now(),appCheckStartedAt:null,appCheckReadyAt:null,firebaseStartupSettledAt:null,catalogsReadyAt:null,signedInReadyAt:null};
 window.__POGO_FIREBASE_CONFIG=Object.freeze({
   apiKey:'AIzaSyCazZNLj9_lEb1vUNUlrMe9hodqY_l34VU',
@@ -2730,66 +2732,66 @@ window.__pogoBootWatch=setTimeout(function(){
   if(status)status.setAttribute('aria-busy','false');
 },4000);
 </script>
-<script src="data.js?v=2026-08-20.51"></script>
-<script src="js/domain/productLimits.js?v=2026-08-20.51"></script>
-<script src="js/domain/priorities.js?v=2026-08-20.51"></script>
-<script src="js/ui/badges.js?v=2026-08-20.51"></script>
-<script src="js/domain/username.js?v=2026-08-20.51"></script>
-<script src="js/domain/requestAccess.js?v=2026-08-20.51"></script>
-<script src="js/domain/priorityValues.js?v=2026-08-20.51"></script>
-<script src="js/domain/scheduleDates.js?v=2026-08-20.51"></script>
-<script src="js/domain/pokemonSearchTerms.js?v=2026-08-20.51"></script>
-<script src="js/domain/pokemonEntryRules.js?v=2026-08-20.51"></script>
-<script src="js/domain/pokemonGoSearchSyntax.js?v=2026-08-20.51"></script>
-<script src="js/domain/searchStrings.js?v=2026-08-20.51"></script>
-<script src="js/ui/stringHtml.js?v=2026-08-20.51"></script>
-<script src="js/domain/scheduleEventRules.js?v=2026-08-20.51"></script>
-<script src="js/domain/scheduleTradeRules.js?v=2026-08-20.51"></script>
-<script src="js/domain/pokemonKeys.js?v=2026-08-20.51"></script>
-<script src="js/domain/spriteSlugs.js?v=2026-08-20.51"></script>
-<script src="js/domain/fuzzyText.js?v=2026-08-20.51"></script>
-<script src="js/domain/autocompleteText.js?v=2026-08-20.51"></script>
-<script src="js/domain/autocompleteMatching.js?v=2026-08-20.51"></script>
-<script src="js/domain/autocompleteRanking.js?v=2026-08-20.51"></script>
-<script src="js/domain/relativeTime.js?v=2026-08-20.51"></script>
-<script src="js/domain/clientRelease.js?v=2026-08-20.51"></script>
-<script src="js/domain/favoriteCardInteractions.js?v=2026-08-20.51"></script>
-<script src="js/domain/favoritePokemonBrowse.js?v=2026-08-20.51"></script>
-<script src="js/domain/trainerDiscovery.js?v=2026-08-20.51"></script>
-<script src="js/domain/eventPresentation.js?v=2026-08-20.51"></script>
-<script src="js/domain/publicSharePublication.js?v=2026-08-20.51"></script>
-<script src="js/domain/trainerPreferences.js?v=2026-08-20.51"></script>
-<script src="js/domain/trainerPreferenceSync.js?v=2026-08-20.51"></script>
-<script src="js/domain/authenticationReadiness.js?v=2026-08-20.51"></script>
-<script src="js/domain/loginDirectory.js?v=2026-08-20.51"></script>
-<script src="js/utils/textSafety.js?v=2026-08-20.51"></script>
-<script src="js/ui/stringPanels.js?v=2026-08-20.51"></script>
-<script src="js/ui/emptyState.js?v=2026-08-20.51"></script>
-<script src="js/i18n/locales/en.js?v=2026-08-20.51"></script>
-<script src="js/i18n/locales/ja.js?v=2026-08-20.51"></script>
-<script src="js/i18n/locales/es.js?v=2026-08-20.51"></script>
-<script src="js/i18n/locales/de.js?v=2026-08-20.51"></script>
-<script src="js/i18n/pokemonNames/catalog.js?v=2026-08-20.51"></script>
-<script src="js/i18n/pokemonNames/variants.js?v=2026-08-20.51"></script>
-<script src="js/i18n/pokemonNames/core.js?v=2026-08-20.51"></script>
-<script src="js/i18n/eventLabels/currentTitles.js?v=2026-08-20.51"></script>
-<script src="js/i18n/eventLabels/core.js?v=2026-08-20.51"></script>
-<script src="js/i18n/core.js?v=2026-08-20.51"></script>
-<script src="js/services/firebaseClient.js?v=2026-08-20.51"></script>
-<script src="js/services/firebaseAppCheck.js?v=2026-08-20.51"></script>
-<script src="js/data/subscriptionManager.js?v=2026-08-20.51"></script>
-<script src="js/data/listenerLifecycle.js?v=2026-08-20.51"></script>
-<script src="js/data/sessionCacheBoundary.js?v=2026-08-20.51"></script>
-<script src="js/data/firebaseReadRegistry.js?v=2026-08-20.51"></script>
-<script src="js/data/currentUserRepository.js?v=2026-08-20.51"></script>
-<script src="js/data/ownedDataCoordinator.js?v=2026-08-20.51"></script>
-<script src="js/data/publicShareRepository.js?v=2026-08-20.51"></script>
-<script src="js/data/trainerHistoryStore.js?v=2026-08-20.51"></script>
-<script src="js/data/favoriteShareSessionCache.js?v=2026-08-20.51"></script>
-<script src="js/data/trainerPreferencesRepository.js?v=2026-08-20.51"></script>
-<script src="js/data/trainerPreferenceSyncQueue.js?v=2026-08-20.51"></script>
-<script src="js/domain/cacheAdapters.js?v=2026-08-20.51"></script>
-<script src="js/ui/trainerTagPanel.js?v=2026-08-20.51"></script>
+<script src="data.js?v=2026-08-22.52"></script>
+<script src="js/domain/productLimits.js?v=2026-08-22.52"></script>
+<script src="js/domain/priorities.js?v=2026-08-22.52"></script>
+<script src="js/ui/badges.js?v=2026-08-22.52"></script>
+<script src="js/domain/username.js?v=2026-08-22.52"></script>
+<script src="js/domain/requestAccess.js?v=2026-08-22.52"></script>
+<script src="js/domain/priorityValues.js?v=2026-08-22.52"></script>
+<script src="js/domain/scheduleDates.js?v=2026-08-22.52"></script>
+<script src="js/domain/pokemonSearchTerms.js?v=2026-08-22.52"></script>
+<script src="js/domain/pokemonEntryRules.js?v=2026-08-22.52"></script>
+<script src="js/domain/pokemonGoSearchSyntax.js?v=2026-08-22.52"></script>
+<script src="js/domain/searchStrings.js?v=2026-08-22.52"></script>
+<script src="js/ui/stringHtml.js?v=2026-08-22.52"></script>
+<script src="js/domain/scheduleEventRules.js?v=2026-08-22.52"></script>
+<script src="js/domain/scheduleTradeRules.js?v=2026-08-22.52"></script>
+<script src="js/domain/pokemonKeys.js?v=2026-08-22.52"></script>
+<script src="js/domain/spriteSlugs.js?v=2026-08-22.52"></script>
+<script src="js/domain/fuzzyText.js?v=2026-08-22.52"></script>
+<script src="js/domain/autocompleteText.js?v=2026-08-22.52"></script>
+<script src="js/domain/autocompleteMatching.js?v=2026-08-22.52"></script>
+<script src="js/domain/autocompleteRanking.js?v=2026-08-22.52"></script>
+<script src="js/domain/relativeTime.js?v=2026-08-22.52"></script>
+<script src="js/domain/clientRelease.js?v=2026-08-22.52"></script>
+<script src="js/domain/favoriteCardInteractions.js?v=2026-08-22.52"></script>
+<script src="js/domain/favoritePokemonBrowse.js?v=2026-08-22.52"></script>
+<script src="js/domain/trainerDiscovery.js?v=2026-08-22.52"></script>
+<script src="js/domain/eventPresentation.js?v=2026-08-22.52"></script>
+<script src="js/domain/publicSharePublication.js?v=2026-08-22.52"></script>
+<script src="js/domain/trainerPreferences.js?v=2026-08-22.52"></script>
+<script src="js/domain/trainerPreferenceSync.js?v=2026-08-22.52"></script>
+<script src="js/domain/authenticationReadiness.js?v=2026-08-22.52"></script>
+<script src="js/domain/loginDirectory.js?v=2026-08-22.52"></script>
+<script src="js/utils/textSafety.js?v=2026-08-22.52"></script>
+<script src="js/ui/stringPanels.js?v=2026-08-22.52"></script>
+<script src="js/ui/emptyState.js?v=2026-08-22.52"></script>
+<script src="js/i18n/locales/en.js?v=2026-08-22.52"></script>
+<script src="js/i18n/locales/ja.js?v=2026-08-22.52"></script>
+<script src="js/i18n/locales/es.js?v=2026-08-22.52"></script>
+<script src="js/i18n/locales/de.js?v=2026-08-22.52"></script>
+<script src="js/i18n/pokemonNames/catalog.js?v=2026-08-22.52"></script>
+<script src="js/i18n/pokemonNames/variants.js?v=2026-08-22.52"></script>
+<script src="js/i18n/pokemonNames/core.js?v=2026-08-22.52"></script>
+<script src="js/i18n/eventLabels/currentTitles.js?v=2026-08-22.52"></script>
+<script src="js/i18n/eventLabels/core.js?v=2026-08-22.52"></script>
+<script src="js/i18n/core.js?v=2026-08-22.52"></script>
+<script src="js/services/firebaseClient.js?v=2026-08-22.52"></script>
+<script src="js/services/firebaseAppCheck.js?v=2026-08-22.52"></script>
+<script src="js/data/subscriptionManager.js?v=2026-08-22.52"></script>
+<script src="js/data/listenerLifecycle.js?v=2026-08-22.52"></script>
+<script src="js/data/sessionCacheBoundary.js?v=2026-08-22.52"></script>
+<script src="js/data/firebaseReadRegistry.js?v=2026-08-22.52"></script>
+<script src="js/data/currentUserRepository.js?v=2026-08-22.52"></script>
+<script src="js/data/ownedDataCoordinator.js?v=2026-08-22.52"></script>
+<script src="js/data/publicShareRepository.js?v=2026-08-22.52"></script>
+<script src="js/data/trainerHistoryStore.js?v=2026-08-22.52"></script>
+<script src="js/data/favoriteShareSessionCache.js?v=2026-08-22.52"></script>
+<script src="js/data/trainerPreferencesRepository.js?v=2026-08-22.52"></script>
+<script src="js/data/trainerPreferenceSyncQueue.js?v=2026-08-22.52"></script>
+<script src="js/domain/cacheAdapters.js?v=2026-08-22.52"></script>
+<script src="js/ui/trainerTagPanel.js?v=2026-08-22.52"></script>
 <script>
 let initializeApp,getDatabase,ref,set,get,onValue,update,getAuth,signInWithEmailAndPassword,createUserWithEmailAndPassword,firebaseSignOut,updatePassword,deleteUser,onAuthStateChanged;
 let firebaseSdkPromise=null;
@@ -7089,14 +7091,15 @@ function refreshFavoriteBrowse(){const cache=ensureFavoriteShareSessionCache();i
 function retryFavoriteBrowse(){hydrateFavoriteBrowse({retry:true});}
 function closeFavoriteCardActions(except=null,restoreFocus=false){
   document.querySelectorAll('.favorite-card-shell.swipe-open').forEach(card=>{if(card!==except)card.classList.remove('swipe-open');});
-  document.querySelectorAll('.favorite-card-menu:not([hidden])').forEach(menu=>{if(!except||!except.contains(menu))menu.hidden=true;});
+  document.querySelectorAll('.favorite-card-menu:not([hidden])').forEach(menu=>{if(!except||!except.contains(menu)){menu.hidden=true;menu.closest('.favorite-card-shell')?.classList.remove('menu-open');}});
+  document.querySelectorAll('.favorite-card-shell.menu-open').forEach(card=>{if(card!==except)card.classList.remove('menu-open');});
   if(restoreFocus&&favoriteCardMenuTrigger?.isConnected)favoriteCardMenuTrigger.focus();
   if(!except)favoriteCardMenuTrigger=null;
 }
 function openFavoriteSwipeActions(button){const card=button?.closest('.favorite-card-shell');if(!card)return;closeFavoriteCardActions(card);card.classList.add('swipe-open');}
 function toggleFavoriteCardMenu(event,button){
   event?.stopPropagation();const card=button?.closest('.favorite-card-shell'),menu=card?.querySelector('.favorite-card-menu');if(!card||!menu)return;
-  const opening=menu.hidden;closeFavoriteCardActions(card);card.classList.remove('swipe-open');menu.hidden=!opening;if(opening){favoriteCardMenuTrigger=button;menu.querySelector('button')?.focus();}
+  const opening=menu.hidden;closeFavoriteCardActions(card);card.classList.remove('swipe-open');menu.hidden=!opening;card.classList.toggle('menu-open',opening);if(opening){favoriteCardMenuTrigger=button;menu.querySelector('button')?.focus();}
 }
 function openFavoriteTagsFromMenu(button,username){const trigger=button?.closest('.favorite-card-shell')?.querySelector('.favorite-card-more');openTrainerOrganizer(username,trigger);}
 function favoriteCardPointerDown(event){
@@ -8134,6 +8137,28 @@ function myListPrioritySectionHtml(priority,entries){
     <div data-priority-search="${priority}"></div>
   </section>`;
 }
+const MY_LIST_DEX_GROUPS=Object.freeze([
+  Object.freeze({key:'LUCKY',flag:'lucky',labelKey:'myList.luckyDex'}),
+  Object.freeze({key:'SHINY',flag:'shiny',labelKey:'myList.shinyDex'}),
+  Object.freeze({key:'XXL',flag:'xxl',labelKey:'myList.xxlDex'}),
+  Object.freeze({key:'XXS',flag:'xxs',labelKey:'myList.xxsDex'})
+]);
+function myListDexGroups(entries){
+  const unprioritized=entries.filter(entry=>!entry.p);
+  const groups=MY_LIST_DEX_GROUPS.map(group=>({...group,entries:unprioritized.filter(entry=>entry[group.flag])}))
+    .filter(group=>group.entries.length);
+  const other=unprioritized.filter(entry=>!MY_LIST_DEX_GROUPS.some(group=>entry[group.flag]));
+  if(other.length)groups.push({key:'OTHER',labelKey:'myList.otherPokemon',entries:other});
+  return groups;
+}
+function myListDexSectionHtml(group){
+  const id=`mylist-dex-${group.key.toLowerCase()}`;
+  return`<section class="mylist-priority-section mylist-dex-section" data-dex-section="${group.key}" aria-labelledby="${id}">
+    <h3 class="mylist-priority-heading" id="${id}">${escHtml(i18nCore.t(group.labelKey))}<span class="priority-count">${escHtml(i18nCore.t('myList.priorityPokemonCount',{count:i18nCore.formatNumber(group.entries.length)}))}</span></h3>
+    <div class="mygrid">${myListRowsHtml(group.entries)}</div>
+    ${group.key==='OTHER'?'':`<div data-dex-search="${group.key}"></div>`}
+  </section>`;
+}
 function renderMyList(filterVal){
   const q=(filterVal??document.getElementById('mylist-filter')?.value??'').toLowerCase();
   const list=allData[myListType]?.[cur]||{};
@@ -8160,8 +8185,8 @@ function renderMyList(filterVal){
 
   const prioritySections=['H','M','L'].filter(priority=>entries.some(entry=>entry.p===priority))
     .map(priority=>myListPrioritySectionHtml(priority,entries.filter(entry=>entry.p===priority))).join('');
-  const unprioritized=entries.filter(entry=>!entry.p);
-  el.innerHTML=`<div class="mylist-priority-sections">${prioritySections}${unprioritized.length?`<section class="mylist-priority-section" aria-labelledby="mylist-special-entries"><h3 class="mylist-priority-heading" id="mylist-special-entries">${escHtml(i18nCore.t('myList.flaggedWithoutPriority'))}</h3><div class="mygrid">${myListRowsHtml(unprioritized)}</div></section>`:''}</div>`;
+  const dexSections=myListDexGroups(entries).map(myListDexSectionHtml).join('');
+  el.innerHTML=`<div class="mylist-priority-sections">${prioritySections}${dexSections}</div>`;
   renderMyStrings();
   renderOwnerShareRepublishNotice();
   applyTypeColors();
@@ -8940,17 +8965,18 @@ function buildStrings(type,username){
   if(type==='costumes'){
     const costumeNoMap={};
     allCostumeEntries().forEach(e=>(e.legacyAliases||[e.name]).forEach(alias=>{if(e.no)costumeNoMap[alias]=e.no;}));
-    const byP={H:[],M:[],L:[]},luckyDex=[],xxlDex=[],xxsDex=[];
+    const byP={H:[],M:[],L:[]},luckyDex=[],shinyDex=[],xxlDex=[],xxsDex=[];
     Object.entries(list).forEach(([name,val])=>{
-      const{p,lucky,xxl,xxs}=parsePri(val);
+      const{p,lucky,shiny,xxl,xxs}=parsePri(val);
       let no=costumeNoMap[name];
       if(!no){const sp=spriteEntryForListItem('costumes',name,pokemonEntryForLegacyKey(allCostumeEntries(),name)||{});no=sp?.no||null;}
       const dex=parseInt(no);
       if(!Number.isFinite(dex))return;
       if(p&&byP[p])byP[p].push(dex);
-      if(lucky)luckyDex.push(dex);
-      if(xxl)xxlDex.push(dex);
-      if(xxs)xxsDex.push(dex);
+      if(!p&&lucky)luckyDex.push(dex);
+      if(!p&&shiny)shinyDex.push(dex);
+      if(!p&&xxl)xxlDex.push(dex);
+      if(!p&&xxs)xxsDex.push(dex);
     });
     const out={};
     ['H','M','L'].forEach(p=>{
@@ -8958,6 +8984,7 @@ function buildStrings(type,username){
       out[p]=dexStringFromNumbers(byP[p],searchOptions);
     });
     const luckyStr=dexStringFromNumbers(luckyDex,searchOptions);if(luckyStr)out.LUCKY=luckyStr;
+    const shinyStr=dexStringFromNumbers(shinyDex,searchOptions);if(shinyStr)out.SHINY=shinyStr;
     const xxlStr=dexStringFromNumbers(xxlDex,searchOptions);if(xxlStr)out.XXL=xxlStr;
     const xxsStr=dexStringFromNumbers(xxsDex,searchOptions);if(xxsStr)out.XXS=xxsStr;
     return Object.keys(out).length?out:null;
@@ -8969,17 +8996,18 @@ function buildStrings(type,username){
     (e.legacyAliases||[e.name]).forEach(alias=>{if(!nameToEntry[alias])nameToEntry[alias]=e;});
     if(regionalFormTerm(e.name))dexHasRegional[e.no]=true;
   });
-  const byP={H:[],M:[],L:[]},luckyItems=[],xxlItems=[],xxsItems=[];
+  const byP={H:[],M:[],L:[]},luckyItems=[],shinyItems=[],xxlItems=[],xxsItems=[];
   Object.entries(list).forEach(([name,val])=>{
-    const{p,mod,lucky,xxl,xxs}=parsePri(val);
+    const{p,mod,lucky,shiny,xxl,xxs}=parsePri(val);
     const entry=nameToEntry[name];if(!entry?.no)return;
     const effectiveEntry={...entry,maxType:maxTypeForEntry(entry,type)};
     const term=dexSearchTerm(effectiveEntry,dexHasRegional);if(!term)return;
     const item={term,filters:entrySearchFilters(effectiveEntry,mod)};
     if(p&&byP[p])byP[p].push(item);
-    if(lucky)luckyItems.push(item);
-    if(xxl)xxlItems.push(item);
-    if(xxs)xxsItems.push(item);
+    if(!p&&lucky)luckyItems.push(item);
+    if(!p&&shiny)shinyItems.push(item);
+    if(!p&&xxl)xxlItems.push(item);
+    if(!p&&xxs)xxsItems.push(item);
   });
   const out={};
   ['H','M','L'].forEach(p=>{
@@ -8987,6 +9015,7 @@ function buildStrings(type,username){
     out[p]=stringFromSearchItems(byP[p],searchOptions);
   });
   const luckyStr=stringFromSearchItems(luckyItems,searchOptions);if(luckyStr)out.LUCKY=luckyStr;
+  const shinyStr=stringFromSearchItems(shinyItems,searchOptions);if(shinyStr)out.SHINY=shinyStr;
   const xxlStr=stringFromSearchItems(xxlItems,searchOptions);if(xxlStr)out.XXL=xxlStr;
   const xxsStr=stringFromSearchItems(xxsItems,searchOptions);if(xxsStr)out.XXS=xxsStr;
   return Object.keys(out).length?out:null;
@@ -9025,15 +9054,23 @@ function myListSearchOptionHtml(option,key,{label=myListSearchLabel(option.level
 function renderMyStrings(){
   const el=document.getElementById('my-strings-out');if(!el)return;
   const strs=buildStrings(myListType,cur);
-  const heading=document.querySelector('.my-string-heading');if(heading)heading.hidden=!strs;
-  document.querySelectorAll('[data-priority-search]').forEach(footer=>{footer.innerHTML='';});
-  if(!strs){el.innerHTML='';return;}
+  const heading=document.querySelector('.my-string-heading');
+  document.querySelectorAll('[data-priority-search],[data-dex-search]').forEach(footer=>{footer.innerHTML='';});
+  if(!strs){if(heading)heading.hidden=true;el.innerHTML='';return;}
   ['H','M','L'].forEach(priority=>{
     const footer=document.querySelector(`[data-priority-search="${priority}"]`);
     if(!footer||!strs[priority])return;
     const label=i18nCore.t('strings.prioritySearch',{priority:publicSharePriorityLabel(priority)});
     const tooLong=strLenInfo(strs[priority]).len>POGO_STR_LIMIT;
     footer.innerHTML=`<div class="mylist-search-footer"><div class="mylist-search-option-summary"><span class="mylist-search-option-icon" aria-hidden="true">${uiIconMarkup('search','ui-icon ui-icon-sm')}</span><div class="mylist-search-option-copy"><span class="mylist-search-option-label">${escHtml(label)}</span>${strLenHtml(strs[priority],{t:i18nCore.t,formatNumber:i18nCore.formatNumber})}</div></div>${tooLong?`<div class="mylist-search-limit" role="status">${escHtml(i18nCore.t('strings.tooLongForPokemonGo'))}</div>`:''}${myListSearchActionHtml(strs[priority],label,`priority-${priority}`,{tooLong})}</div>`;
+  });
+
+  const dexLabels={LUCKY:'strings.luckyDexSearch',SHINY:'strings.shinyDexSearch',XXL:'strings.xxlDexSearch',XXS:'strings.xxsDexSearch'};
+  Object.entries(dexLabels).forEach(([key,labelKey])=>{
+    const footer=document.querySelector(`[data-dex-search="${key}"]`);
+    if(!footer||!strs[key])return;
+    const label=i18nCore.t(labelKey),tooLong=strLenInfo(strs[key]).len>POGO_STR_LIMIT;
+    footer.innerHTML=`<div class="mylist-search-footer"><div class="mylist-search-option-summary"><span class="mylist-search-option-icon" aria-hidden="true">${uiIconMarkup('search','ui-icon ui-icon-sm')}</span><div class="mylist-search-option-copy"><span class="mylist-search-option-label">${escHtml(label)}</span>${strLenHtml(strs[key],{t:i18nCore.t,formatNumber:i18nCore.formatNumber})}</div></div>${tooLong?`<div class="mylist-search-limit" role="status">${escHtml(i18nCore.t('strings.tooLongForPokemonGo'))}</div>`:''}${myListSearchActionHtml(strs[key],label,`dex-${key.toLowerCase()}`,{tooLong})}</div>`;
   });
 
   const plan=myListSearchPlan(strs,{locale:pokemonGoSearchLocale()});
@@ -9048,9 +9085,8 @@ function renderMyStrings(){
   if(plan.more.length){
     combined.push(`<div class="mylist-search-more"><button class="combo-toggle" type="button" aria-expanded="false" aria-controls="mylist-more-combinations" onclick="toggleMyListMoreCombinations(this)"><span>${escHtml(i18nCore.t('strings.moreCombinations'))}</span><span class="collapse-icon" aria-hidden="true">${uiIconMarkup('chevron-down','ui-icon ui-icon-sm')}</span></button><div class="mylist-search-more-body" id="mylist-more-combinations" hidden>${plan.more.map((option,index)=>myListSearchOptionHtml(option,`more-${index}`)).join('')}</div></div>`);
   }
-  const specialLabels={LUCKY:i18nCore.t('share.luckyDex'),XXL:'XXL',XXS:'XXS'};
-  const specials=plan.specials.map(option=>myListSearchOptionHtml({...option,levels:[]},`special-${option.key}`,{label:specialLabels[option.key]})).join('');
-  el.innerHTML=`<div class="mylist-search-groups">${combined.length?`<section class="mylist-search-section" aria-labelledby="combined-search-title"><h3 id="combined-search-title">${uiIconMarkup('list','ui-icon ui-icon-sm')}<span>${escHtml(i18nCore.t('strings.combinedSearch'))}</span></h3>${combined.join('')}</section>`:''}${specials?`<section class="mylist-search-section" aria-labelledby="special-search-title"><h3 id="special-search-title">${uiIconMarkup('sliders','ui-icon ui-icon-sm')}<span>${escHtml(i18nCore.t('strings.specialSearches'))}</span></h3>${specials}</section>`:''}</div>`;
+  if(heading)heading.hidden=!combined.length;
+  el.innerHTML=`<div class="mylist-search-groups">${combined.length?`<section class="mylist-search-section" aria-labelledby="combined-search-title"><h3 id="combined-search-title">${uiIconMarkup('list','ui-icon ui-icon-sm')}<span>${escHtml(i18nCore.t('strings.combinedSearch'))}</span></h3>${combined.join('')}</section>`:''}</div>`;
 }
 async function copyText(str){
   if(navigator.clipboard&&window.isSecureContext){

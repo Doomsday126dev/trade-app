@@ -89,5 +89,5 @@ test('logout and a new authenticated identity reset category to Trades',()=>{
 
 test('empty category suppresses detached search controls',()=>{
   const strings=html.slice(html.indexOf('function renderMyStrings('),html.indexOf('async function copyText('));
-  assert.match(strings,/if\(!strs\)\{el\.innerHTML='';return;\}/);
+  assert.match(strings,/if\(!strs\)\{if\(heading\)heading\.hidden=true;el\.innerHTML='';return;\}/);
 });

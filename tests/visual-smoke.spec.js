@@ -1195,6 +1195,60 @@ test.describe('visual smoke', () => {
     }
   });
 
+  test('last Favorite overflow menu escapes card clipping and remains hit-testable',async({page})=>{
+    await page.setViewportSize({width:1440,height:900});
+    await page.goto(`./?favorite-card-overflow=${Date.now()}`,{waitUntil:'domcontentloaded'});
+    await waitForStableLocalOrganizerStartup(page);
+    await installLocalOrganizerFixture(page);
+    await page.evaluate(async()=>{
+      document.querySelectorAll('.page').forEach(node=>node.classList.remove('active'));
+      document.getElementById('tab-find').classList.add('active');
+      managedPublicShareRepository=null;
+      await renderTrainerQuickLists();
+    });
+
+    const cards=page.locator('.favorite-card-shell');
+    const card=cards.last();
+    await card.scrollIntoViewIfNeeded();
+    await card.locator('.favorite-card-more').click();
+    const menu=card.locator('.favorite-card-menu');
+    const action=menu.getByRole('menuitem').first();
+    await expect(menu).toBeVisible();
+
+    const geometry=await page.evaluate(()=>{
+      const cards=[...document.querySelectorAll('.favorite-card-shell')];
+      const card=cards.at(-1),previous=cards.at(-2),menu=card.querySelector('.favorite-card-menu');
+      const action=menu.querySelector('[role="menuitem"]');
+      const rect=value=>{const box=value.getBoundingClientRect();return{top:box.top,right:box.right,bottom:box.bottom,left:box.left,width:box.width,height:box.height};};
+      const menuRect=rect(menu),cardRect=rect(card),previousRect=rect(previous),actionRect=rect(action);
+      const point={x:actionRect.left+(actionRect.width/2),y:actionRect.top+(actionRect.height/2)};
+      const hit=document.elementFromPoint(point.x,point.y);
+      const clippingAncestors=[];
+      for(let node=menu.parentElement;node;node=node.parentElement){
+        const style=getComputedStyle(node);
+        if(['hidden','clip','auto','scroll'].includes(style.overflowX)||['hidden','clip','auto','scroll'].includes(style.overflowY)){
+          const ancestorRect=rect(node);
+          if(menuRect.left<ancestorRect.left||menuRect.right>ancestorRect.right||menuRect.top<ancestorRect.top||menuRect.bottom>ancestorRect.bottom){
+            clippingAncestors.push({className:node.className,overflowX:style.overflowX,overflowY:style.overflowY});
+          }
+        }
+      }
+      return{
+        menuRect,cardRect,previousRect,actionRect,clippingAncestors,
+        overlapsPrevious:point.y>=previousRect.top&&point.y<=previousRect.bottom,
+        actionHit:hit===action||action.contains(hit),
+        insideViewport:menuRect.left>=0&&menuRect.top>=0&&menuRect.right<=innerWidth&&menuRect.bottom<=innerHeight
+      };
+    });
+    expect(geometry.menuRect.top).toBeLessThan(geometry.cardRect.top);
+    expect(geometry.overlapsPrevious).toBe(true);
+    expect(geometry.clippingAncestors).toEqual([]);
+    expect(geometry.insideViewport).toBe(true);
+    expect(geometry.actionHit).toBe(true);
+    await action.click();
+    await expect(page.locator('#trainer-organizer-modal')).toBeVisible();
+  });
+
   test('Browse Favorites stays Favorite-only across canonical search, bounded hydration, retry, refresh, and responsive states',async({page})=>{
     await page.setViewportSize({width:1440,height:900});
     await page.goto(`./?favorite-pokemon-browse=${Date.now()}`,{waitUntil:'domcontentloaded'});
@@ -1647,6 +1701,8 @@ test.describe('visual smoke', () => {
     await expect(page.locator('#ac-input')).toBeVisible();
     await expect(page.locator('#voice-btn')).toHaveAttribute('aria-label',/.+/);
     await expect(page.locator('#export-menu-btn')).toHaveAttribute('aria-haspopup','menu');
+    await expect(page.locator('#add-adv-toggle')).toHaveText(/Flags & details/);
+    await expect(page.locator('#export-menu-btn')).toHaveText(/List tools/);
     await expect(page.locator('#tab-mylist')).toHaveClass(/has-list-content/);
     await expect(page.locator('.journey-guidance')).toBeHidden();
     await expect(page.locator('.myrow').first().locator(':scope > .mctrl > .flag-btn')).toHaveCount(0);
@@ -1661,13 +1717,151 @@ test.describe('visual smoke', () => {
     const searchBox=await page.locator('#ac-input').boundingBox(),addBox=await page.locator('.add-actions .bsave').boundingBox(),firstRow=await page.locator('.myrow').first().boundingBox();
     expect(Math.abs((searchBox?.y||0)-(addBox?.y||0))).toBeLessThanOrEqual(2);
     expect(firstRow?.y).toBeLessThan(760);
+    await page.locator('#add-adv-toggle').click();
+    for(const id of ['add-pmon-lucky','add-pmon-shiny','add-pmon-xxl','add-pmon-xxs','add-pmon-notes'])await expect(page.locator(`#${id}`)).toBeVisible();
+    const scopes=await page.evaluate(()=>{
+      const add=document.querySelector('.add-form'),toolbar=document.querySelector('.mylist-list-toolbar');
+      const details=document.getElementById('add-adv-toggle').getBoundingClientRect();
+      const tools=document.getElementById('export-menu-btn').getBoundingClientRect();
+      const reorder=document.getElementById('mylist-reorder-toggle').getBoundingClientRect();
+      return{
+        addContainsTools:add.contains(document.getElementById('export-menu-btn')),
+        toolbarContainsTools:toolbar.contains(document.getElementById('export-menu-btn')),
+        sameListActionGroup:document.getElementById('export-menu-btn').closest('.mylist-list-actions')?.contains(document.getElementById('mylist-reorder-toggle'))===true,
+        detailsOverlapsTools:!(details.right<=tools.left||tools.right<=details.left||details.bottom<=tools.top||tools.bottom<=details.top),
+        reorderToolsGap:Math.max(0,tools.left-reorder.right)
+      };
+    });
+    const{reorderToolsGap,...scopeFlags}=scopes;
+    expect(scopeFlags).toEqual({addContainsTools:false,toolbarContainsTools:true,sameListActionGroup:true,detailsOverlapsTools:false});
+    expect(reorderToolsGap).toBeGreaterThanOrEqual(8);
     await page.locator('#export-menu-btn').click();
     await expect(page.locator('#export-menu')).toBeVisible();
     await expect(page.locator('#export-menu [role^="menuitem"]').first()).toBeFocused();
+    await expect(page.locator('#export-menu [role^="menuitem"]')).toHaveCount(9);
+    await expect(page.locator('#export-menu [role^="menuitem"]').last()).toBeVisible();
     await page.keyboard.press('Escape');
     await expect(page.locator('#export-menu')).toBeHidden();
     await expect(page.locator('#export-menu-btn')).toBeFocused();
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
+    await page.setViewportSize({width:1024,height:800});
+    const desktopScopes=await page.evaluate(()=>{
+      const add=document.querySelector('.add-form').getBoundingClientRect();
+      const actions=document.querySelector('.mylist-list-actions').getBoundingClientRect();
+      const toolbar=document.querySelector('.mylist-list-toolbar').getBoundingClientRect();
+      return{
+        listToolsOutsideAdd:!document.querySelector('.add-form').contains(document.getElementById('export-menu-btn')),
+        actionsInsideToolbar:actions.left>=toolbar.left&&actions.right<=toolbar.right,
+        scopesSeparated:add.bottom<=actions.top,
+        noOverflow:document.documentElement.scrollWidth<=document.documentElement.clientWidth
+      };
+    });
+    expect(desktopScopes).toEqual({listToolsOutsideAdd:true,actionsInsideToolbar:true,scopesSeparated:true,noOverflow:true});
+  });
+
+  test('My List Variant details uses the canonical dark input treatment',async({page})=>{
+    for(const [width,height] of [[1440,900],[390,844]]){
+      await page.setViewportSize({width,height});
+      await page.goto(`./?variant-details-style=${width}-${Date.now()}`,{waitUntil:'domcontentloaded'});
+      await waitForStableLocalOrganizerStartup(page);
+      await isolateAuthenticatedMyListFixture(page,{username:'VariantStyleTester',uid:'uid-variant-style-tester'});
+      await page.locator('#add-adv-toggle').click();
+
+      const details=page.locator('#add-pmon-notes'),reference=page.locator('#ac-input');
+      await expect(details).toBeVisible();
+      await expect(details).toHaveClass(/field-control/);
+      const styles=await page.evaluate(()=>{
+        const read=element=>{
+          const style=getComputedStyle(element),placeholder=getComputedStyle(element,'::placeholder');
+          return{
+            background:style.backgroundColor,color:style.color,caret:style.caretColor,
+            borderColor:style.borderColor,borderStyle:style.borderStyle,borderWidth:style.borderWidth,
+            borderRadius:style.borderRadius,minHeight:style.minHeight,placeholder:placeholder.color
+          };
+        };
+        return{details:read(document.getElementById('add-pmon-notes')),reference:read(document.getElementById('ac-input'))};
+      });
+      expect(styles.details).toEqual(styles.reference);
+
+      await details.fill('female shadow');
+      await expect(details).toHaveValue('female shadow');
+      await details.focus();
+      await page.waitForTimeout(180);
+      const detailsFocus=await details.evaluate(element=>({borderColor:getComputedStyle(element).borderColor,boxShadow:getComputedStyle(element).boxShadow}));
+      await reference.focus();
+      await page.waitForTimeout(180);
+      const referenceFocus=await reference.evaluate(element=>({borderColor:getComputedStyle(element).borderColor,boxShadow:getComputedStyle(element).boxShadow}));
+      expect(detailsFocus).toEqual(referenceFocus);
+      expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
+    }
+  });
+
+  test('My List groups unprioritized collection goals into exact Dex sections',async({page})=>{
+    for(const [width,height] of [[1440,900],[390,844]]){
+      await page.setViewportSize({width,height});
+      await page.goto(`./?my-list-dex-sections=${width}-${Date.now()}`,{waitUntil:'domcontentloaded'});
+      await waitForStableLocalOrganizerStartup(page);
+      await isolateAuthenticatedMyListFixture(page,{username:'DexSectionTester',uid:'uid-dex-section-tester'});
+      const fixture=await page.evaluate(()=>{
+        const entries=DB.wishlist.filter(entry=>entry.no).slice(0,7);
+        const [priority,lucky,shiny,xxl,xxs,multi,other]=entries;
+        allData=normalizeData({users:{DexSectionTester:{}},wishlist:{DexSectionTester:{}},dynamax:{},gmax:{},costumes:{}});
+        Object.assign(allData.wishlist.DexSectionTester,{
+          [priority.name]:priValue('H','',true),
+          [lucky.name]:priValue('','',true),
+          [shiny.name]:priValue('','',false,false,false,true),
+          [xxl.name]:priValue('','',false,true),
+          [xxs.name]:priValue('','',false,false,true),
+          [multi.name]:priValue('','',true,true,false,true),
+          [other.name]:priValue('','legacy note')
+        });
+        writeList=async(type,username,list)=>{allData[type][username]={...list};renderMyList();};
+        document.getElementById('login-pg').style.display='none';document.getElementById('app').style.display='flex';setMyList('wishlist');
+        return Object.fromEntries(Object.entries({priority,lucky,shiny,xxl,xxs,multi,other}).map(([key,entry])=>[key,{name:entry.name,no:entry.no}]));
+      });
+
+      if(width===1440){
+        await expect(page.locator('#mylist-guidance-title')).toHaveText('Build your trade list');
+        await expect(page.locator('.journey-guidance')).toContainText('Add Pokémon, set priorities, and share your list when you’re ready. Favorites and private tags stay on this device.');
+      }
+      for(const [key,label] of Object.entries({LUCKY:'Lucky Dex',SHINY:'Shiny Dex',XXL:'XXL Dex',XXS:'XXS Dex',OTHER:'Other Pokémon'})){
+        const section=page.locator(`[data-dex-section="${key}"]`);
+        await expect(section).toBeVisible();await expect(section.locator('.mylist-priority-heading')).toContainText(label);
+      }
+      for(const [key,name] of [['LUCKY',fixture.lucky.name],['SHINY',fixture.shiny.name],['XXL',fixture.xxl.name],['XXS',fixture.xxs.name],['OTHER',fixture.other.name]]){
+        await expect(page.locator(`[data-dex-section="${key}"] .myrow[data-name="${name}"]`)).toHaveCount(1);
+      }
+      for(const key of ['LUCKY','SHINY','XXL'])await expect(page.locator(`[data-dex-section="${key}"] .myrow[data-name="${fixture.multi.name}"]`)).toHaveCount(1);
+      await expect(page.locator(`[data-priority-section="H"] .myrow[data-name="${fixture.priority.name}"]`)).toHaveCount(1);
+      await expect(page.locator(`[data-dex-section] .myrow[data-name="${fixture.priority.name}"]`)).toHaveCount(0);
+      expect(await page.evaluate(()=>Object.keys(allData.wishlist.DexSectionTester).length)).toBe(7);
+
+      const expectedLabels={LUCKY:'Lucky Dex Search String',SHINY:'Shiny Dex Search String',XXL:'XXL Dex Search String',XXS:'XXS Dex Search String'};
+      for(const [key,label] of Object.entries(expectedLabels)){
+        const footer=page.locator(`[data-dex-search="${key}"]`),raw=footer.locator('.mylist-search-raw'),copy=footer.locator('.cpbtn');
+        await expect(footer.locator('.mylist-search-option-label')).toHaveText(label);
+        await expect(raw).toBeHidden();
+        expect(await copy.getAttribute('data-copy')).toBe(await raw.textContent());
+      }
+      const dexMembership=await page.evaluate(()=>Object.fromEntries(['LUCKY','SHINY','XXL','XXS'].map(key=>[key,stringParts(buildStrings('wishlist','DexSectionTester')[key]).map(Number)])));
+      expect(dexMembership).toEqual({
+        LUCKY:[fixture.lucky.no,fixture.multi.no].sort((a,b)=>a-b),
+        SHINY:[fixture.shiny.no,fixture.multi.no].sort((a,b)=>a-b),
+        XXL:[fixture.xxl.no,fixture.multi.no].sort((a,b)=>a-b),
+        XXS:[fixture.xxs.no]
+      });
+      for(const members of Object.values(dexMembership))expect(members).not.toContain(fixture.priority.no);
+      for(const [priority,label] of Object.entries({H:'High Priority Search String'}))await expect(page.locator(`[data-priority-search="${priority}"] .mylist-search-option-label`)).toHaveText(label);
+      await expect(page.locator('.my-string-heading')).toBeHidden();
+
+      const multiRow=page.locator(`[data-dex-section="LUCKY"] .myrow[data-name="${fixture.multi.name}"]`);
+      await multiRow.locator('.myrow-edit').click();
+      const notes=multiRow.locator('.myrow-editor-popover .ni');await notes.fill('updated variant');await notes.blur();
+      await expect(page.locator(`.myrow[data-name="${fixture.multi.name}"] .myrow-trait.detail`)).toHaveCount(3);
+      for(const trait of await page.locator(`.myrow[data-name="${fixture.multi.name}"] .myrow-trait.detail`).all())await expect(trait).toHaveText('updated variant');
+      expect(await page.evaluate(name=>({count:Object.keys(allData.wishlist.DexSectionTester).length,value:allData.wishlist.DexSectionTester[name]}),fixture.multi.name)).toEqual({count:7,value:'[lucky][shiny][xxl](updated variant)'});
+      expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
+    }
   });
 
   test('My List category counts and empty context remain unmistakable and state-safe',async({page})=>{
