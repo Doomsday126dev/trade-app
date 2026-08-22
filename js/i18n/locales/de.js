@@ -65,5 +65,6 @@
     ,'myList.moveUp':'{name} nach oben verschieben','myList.moveDown':'{name} nach unten verschieben','myList.movedPosition':'{name} wurde an Position {position} von {count} verschoben.'
     ,'request.nameTooLong':'Trainernamen dürfen höchstens 32 Zeichen lang sein.','request.noteTooLong':'Notizen dürfen höchstens 280 Zeichen lang sein.'
     ,'app.preparing':'Deine Tauschliste wird vorbereitet','app.preparingDetail':'Dieses Gerät und deine Anmeldung werden sicher geprüft. Deine Kontodaten bleiben bis zum Abschluss der Prüfung verborgen.'
+    ,'storage.listHydrationRequired':'Deine gespeicherte Liste wird noch vom Server geladen. Warte vor dem Bearbeiten, bis der Vorgang abgeschlossen ist.','storage.pendingListQuarantined':'Eine ältere ausstehende Änderung der gesamten Liste wurde aufbewahrt, aber nicht synchronisiert, da sie neuere Listendaten überschreiben könnte.'
   });
 })(window);

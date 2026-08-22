@@ -232,7 +232,7 @@ test('owner republish prompt reads only the owner projection and clears after ve
 
 test('only confirmed list and profile changes request automatic publication',()=>{
   const writeUser=between('async function writeUser(u,data)','function canWriteLoginDirectoryNow');
-  const writeList=between('async function writeList(type,u,list)','function refreshAddPokemonChoices');
+  const writeList=between('function writeList(type,u,list,{previousList}={})','function refreshAddPokemonChoices');
   const profile=between('async function saveProfile(){','// ── UI HELPERS');
   assert.doesNotMatch(writeUser,/publicShare|requestPublicSharePublication/);
   assert.equal((writeList.match(/requestPublicSharePublication\('owned_list_edit'/g)||[]).length,2);

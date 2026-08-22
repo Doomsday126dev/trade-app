@@ -43,7 +43,12 @@
       try{
         const unsubscribe=start({
           next:value=>{if(isCurrent())onValue(value);},
-          error:error=>{if(isCurrent())onError?.(errorDetails(error,'listener/runtime-failed'));}
+          error:error=>{
+            if(!isCurrent())return;
+            entries.delete(key);
+            unsubscribeEntry(entry);
+            onError?.(errorDetails(error,'listener/runtime-failed'));
+          }
         });
         if(typeof unsubscribe!=='function'){
           entry.active=false;

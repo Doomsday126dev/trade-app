@@ -60,13 +60,15 @@ test('session ownership warnings use stable translation keys with English fallba
   assert.match(core.t('storage.cacheReset'),/Cached session data was reset/);
   assert.match(core.t('storage.sessionOwnershipMismatch'),/does not match the authenticated account/);
   assert.match(core.t('storage.offlineRecoveryUnavailable'),/securely verified again/);
+  assert.match(core.t('storage.listHydrationRequired'),/still loading from the server/);
+  assert.match(core.t('storage.pendingListQuarantined'),/preserved but not synced/);
   assert.match(core.t('data.ownedReadUnavailable'),/verified offline cache remains available/);
 });
 
 test('English, Japanese, Spanish, and German expose the same UI key set',()=>{
   const {catalogs}=load();
   const expected=Object.keys(catalogs.en).sort();
-  assert.equal(expected.length,1096);
+  assert.equal(expected.length,1098);
   for(const locale of ['ja','es','de'])assert.deepEqual(Object.keys(catalogs[locale]).sort(),expected,locale);
 });
 

@@ -109,6 +109,26 @@ test('unknown historical values fail safely while known aliases round trip',()=>
   assert.ok(entry.legacyAliases.includes(legacy));
 });
 
+test('all twelve reported historical Pikachu keys remain owner-visible without rewriting storage',()=>{
+  const historical=[
+    'Pikachu (Pop Star)','Pikachu (Brendan)','Pikachu (Dawn)','Pikachu (Ethan)',
+    'Pikachu (Fossil)','Pikachu (Shaymin Scarf)','Pikachu (Kariyushi Shirt)',
+    'Pikachu (Hilda)','Pikachu (Top Hat)','Pikachu (Leaf)','Pikachu (Lyra)','Pikachu (May)'
+  ];
+  const stored=Object.fromEntries(historical.map((name,index)=>[name,index?'M':'H']));
+  const before=JSON.stringify(stored);
+  for(const name of historical){
+    const entry=catalog.entryForLegacyKey(selectablePikachu,name);
+    assert.ok(entry,name);
+    assert.ok(entry.legacyAliases.includes(name),name);
+  }
+  const ownerEntries=html.slice(html.indexOf('function currentListEntries('),html.indexOf('function myListEditorHtml('));
+  assert.match(ownerEntries,/Object\.entries\(list\)\.map\(\(\[name,val\]\)/);
+  assert.match(ownerEntries,/return\{\s*name,/);
+  assert.doesNotMatch(ownerEntries,/delete |queueSync|writeList|set\(ref/);
+  assert.equal(JSON.stringify(stored),before);
+});
+
 test('localized labels and legacy aliases search the same locale-independent identity',()=>{
   const entry=catalog.entryForLegacyKey(selectablePikachu,'Pikachu Varsity Jacket');
   const labels=window.PogoI18n.pokemonNames.searchLabels(entry,{locale:'ja'});
