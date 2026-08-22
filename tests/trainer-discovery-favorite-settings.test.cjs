@@ -20,6 +20,17 @@ test('Find Trainer uses one compact combobox with inline clear and no submit but
   assert.match(html,/event\.key==='Enter'/);
 });
 
+test('Favorites search updates only the results subtree and preserves its input owner',()=>{
+  const html=readFileSync(path.join(__dirname,'..','index.html'),'utf8');
+  const setter=html.slice(html.indexOf('function setFavoriteSearch'),html.indexOf('function favoriteTrainerAction'));
+  const render=html.slice(html.indexOf('async function renderTrainerQuickLists'),html.indexOf('function toggleTrainerFavorite'));
+  assert.match(setter,/renderTrainerQuickLists\(\{preserveFavoriteControls:true,favoritesOnly:true\}\)/);
+  assert.doesNotMatch(setter,/renderTrainerQuickLists\(\)/);
+  assert.match(render,/if\(!preserveFavoriteControls\)favoritesControlsEl\.innerHTML/);
+  assert.match(render,/if\(favoritesOnly\)return/);
+  assert.match(render,/data-favorite-clear/);
+});
+
 test('Find by Pokémon is a collapsed Favorite-scoped disclosure with a canonical combobox',()=>{
   const block=html.slice(html.indexOf('<!-- FIND TRAINER'),html.indexOf('<!-- MY LIST'));
   const trainer=block.indexOf('class="trainer-search-shell search-lookup"');

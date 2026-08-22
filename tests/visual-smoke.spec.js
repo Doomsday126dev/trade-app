@@ -1195,6 +1195,43 @@ test.describe('visual smoke', () => {
     }
   });
 
+  test('Favorites search keeps focus, caret, filtering, and composition on one stable input',async({page})=>{
+    for(const [width,theme] of [[390,'dark'],[1440,'light']]){
+      await page.setViewportSize({width,height:800});
+      await page.goto(`./?favorite-search-focus=${width}-${Date.now()}`,{waitUntil:'domcontentloaded'});
+      await waitForStableLocalOrganizerStartup(page);
+      await installLocalOrganizerFixture(page);
+      await page.evaluate(async theme=>{
+        const store=ensureTrainerHistoryStore();store.toggleFavorite('交換トレーナー');
+        document.querySelectorAll('.page').forEach(node=>node.classList.remove('active'));
+        document.getElementById('tab-find').classList.add('active');
+        applyTheme(theme);await renderTrainerQuickLists();
+        window.__favoriteSearchInput=document.querySelector('.favorite-toolbar-search input');
+        window.__favoriteSearchRenderCount=0;
+        const render=renderTrainerQuickLists;
+        renderTrainerQuickLists=options=>{window.__favoriteSearchRenderCount++;return render(options);};
+      },theme);
+      const input=page.locator('.favorite-toolbar-search input');
+      await input.focus();
+      let expected='';
+      for(const char of 'Alpha'){
+        expected+=char;await page.keyboard.type(char);
+        await expect(input).toHaveValue(expected);await expect(input).toBeFocused();
+        expect(await input.evaluate(element=>({same:element===window.__favoriteSearchInput,start:element.selectionStart,end:element.selectionEnd}))).toEqual({same:true,start:expected.length,end:expected.length});
+        await expect(page.locator('.favorite-card-shell')).toHaveCount(expected==='A'?3:1);
+      }
+      await page.keyboard.press('Backspace');await expect(input).toHaveValue('Alph');await expect(input).toBeFocused();
+      await input.evaluate(element=>{element.setSelectionRange(0,element.value.length);element.setRangeText('Beta',0,element.value.length,'end');element.dispatchEvent(new InputEvent('input',{bubbles:true,inputType:'insertFromPaste',data:'Beta'}));});
+      await expect(input).toHaveValue('Beta');await expect(input).toBeFocused();await expect(page.locator('.favorite-card-shell')).toHaveCount(1);
+      await input.evaluate(element=>{element.dispatchEvent(new CompositionEvent('compositionstart',{bubbles:true,data:''}));element.value='交換';element.dispatchEvent(new InputEvent('input',{bubbles:true,inputType:'insertCompositionText',data:'交換',isComposing:true}));element.dispatchEvent(new CompositionEvent('compositionend',{bubbles:true,data:'交換'}));});
+      await expect(input).toHaveValue('交換');await expect(input).toBeFocused();await expect(page.locator('.favorite-card-shell')).toHaveCount(2);
+      await input.press(process.platform==='darwin'?'Meta+A':'Control+A');await page.keyboard.press('Backspace');
+      await expect(input).toHaveValue('');await expect(input).toBeFocused();await expect(page.locator('.favorite-card-shell')).toHaveCount(4);
+      expect(await page.evaluate(()=>({same:document.querySelector('.favorite-toolbar-search input')===window.__favoriteSearchInput,renders:window.__favoriteSearchRenderCount}))).toEqual({same:true,renders:9});
+      await expect(page.locator('[data-favorite-clear]')).toBeHidden();
+    }
+  });
+
   test('last Favorite overflow menu escapes card clipping and remains hit-testable',async({page})=>{
     await page.setViewportSize({width:1440,height:900});
     await page.goto(`./?favorite-card-overflow=${Date.now()}`,{waitUntil:'domcontentloaded'});
