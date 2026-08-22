@@ -57,7 +57,7 @@
       Object.freeze({
         start:'function _onSubSnapshot',
         end:'const _snapshotFirstSeen',
-        sha256:'5e79899200b7b77bb20a0641d7beb5b075953a6d59402255c57bd3011c985e92'
+        sha256:'fe49aaa53260e13b7ba10b62dbb419b16d943437ebafb1445839f9ccd9664fb1'
       }),
       Object.freeze({
         start:'function onPublicShareSnapshot',
