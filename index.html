@@ -314,7 +314,8 @@ input,select,textarea{font-family:var(--font);outline:none}
 .flag-btn.lucky-flag.on{background:rgba(250,204,21,.15);color:#facc15;border-color:rgba(250,204,21,.5)}
 .flag-btn.xxl-flag.on{background:rgba(99,102,241,.15);color:var(--trait-xxl);border-color:rgba(99,102,241,.5)}
 .flag-btn.xxs-flag.on{background:rgba(20,184,166,.15);color:var(--trait-xxs);border-color:rgba(20,184,166,.5)}
-.lucky-add{display:inline-flex;align-items:center;justify-content:center;gap:6px;flex:0 0 auto;background:var(--bg);border:1px solid var(--border2);color:var(--muted);padding:6px 9px;border-radius:var(--radius-md);font-size:13px;font-weight:700;cursor:pointer;user-select:none}
+.lucky-add{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:0;min-height:var(--control-min);background:var(--bg);border:1px solid var(--border2);color:var(--muted);padding:8px 10px;border-radius:var(--radius-md);font-size:13px;font-weight:700;cursor:pointer;user-select:none;white-space:normal;overflow-wrap:anywhere}
+.lucky-add:focus-within{border-color:var(--accent);box-shadow:var(--focus-ring)}
 .lucky-add input{appearance:auto;flex:0 0 auto;width:14px;height:14px;min-width:0;margin:0;padding:0;background:initial;border:initial;border-radius:0;accent-color:var(--M)}
 .lucky-mark,.flag-mark{display:inline-flex;align-items:center;margin-left:3px;padding:1px 4px;border-radius:var(--radius-sm);font-size:9px;font-weight:800;line-height:1.1}
 .lucky-mark{background:rgba(250,204,21,.16);border:1px solid rgba(250,204,21,.36);color:#facc15}
@@ -857,10 +858,7 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
   .add-form .ac-wrap{min-width:0}
   .add-form .add-pri-group{width:100%;justify-content:center;padding:6px 12px}
   .add-form .add-advanced-toggle{width:100%;justify-content:center;padding:8px}
-  .add-advanced{flex-direction:column;align-items:stretch}
   .add-advanced .add-adv-label{display:none}
-  .add-advanced .lucky-add{justify-content:center;min-height:38px;width:100%}
-  .add-advanced input#add-pmon-notes{width:100%;flex:none !important;min-width:0 !important}
   .add-actions{flex-wrap:wrap;align-items:stretch;gap:6px}
   .add-actions .bsave{flex:1 1 auto;justify-content:center;padding:var(--space-3);font-size:14px}
   .add-tray{position:sticky;bottom:calc(8px + env(safe-area-inset-bottom));z-index:90;box-shadow:0 10px 28px rgba(0,0,0,.4);background:rgba(31,29,59,.97)}
@@ -903,8 +901,10 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
 .add-advanced-toggle:hover{color:var(--ac2);border-color:var(--ac2)}
 .add-advanced-toggle .caret{transition:transform .2s;font-size:10px}
 .add-advanced-toggle[aria-expanded="true"] .caret{transform:rotate(180deg)}
-.add-advanced{display:none;align-items:center;gap:7px;flex-wrap:wrap;margin-top:8px;padding-top:10px;border-top:1px dashed var(--border)}
-.add-advanced.open{display:flex}
+.add-advanced{display:none;grid-template-columns:auto auto minmax(180px,1fr);align-items:stretch;gap:7px;margin-top:8px;padding-top:10px;border-top:1px dashed var(--border)}
+.add-advanced.open{display:grid}
+.add-flag-grid{display:grid;grid-template-columns:repeat(4,max-content);gap:7px;min-width:0}
+.add-advanced #add-pmon-notes{width:100%;min-width:0!important}
 .add-adv-label{font-size:11px;color:var(--muted);font-weight:500;user-select:none;margin-right:2px}
 
 /* PWA INSTALL BUTTON (#1) */
@@ -1719,6 +1719,7 @@ html[data-theme="light"] .wp-swatch.selected{border-color:var(--accent);box-shad
 .import-btn{background:transparent;border:1px solid var(--border2);color:var(--muted);padding:6px 13px;border-radius:var(--radius-md);font-size:12px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:5px;margin-top:8px;font-family:var(--font)}
 .import-btn:hover{border-color:var(--ac2);color:var(--ac2)}
 .add-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}
+.add-form>.frow>.add-actions{flex:0 0 auto;margin-top:0}
 .add-actions .bsave,.add-actions .import-btn,.add-actions .image-btn{margin-top:0}
 .speed-add-toggle{display:inline-flex;align-items:center;gap:6px;background:var(--bg);border:1px solid var(--border2);color:var(--muted);padding:7px 11px;border-radius:var(--radius-md);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);transition:.15s}
 .speed-add-toggle:hover{border-color:var(--accent);color:var(--ac2)}
@@ -1881,6 +1882,7 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
   :root{--topbar-h:58px}.topbar{padding-inline:12px}.logo{font-size:16px}.brand-mark{width:28px;height:28px}.sync-row,.bell-btn,.theme-toggle{width:48px;height:48px;min-width:48px;min-height:48px;justify-content:center}.tabs{justify-content:space-around;padding-inline:0}.tab{flex:1;flex-direction:column;gap:2px;min-height:58px;padding:6px 2px;font-size:0}.tab-label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}.tab-short-label{display:block;font-size:10px;line-height:12px;white-space:nowrap}.page{padding:20px 14px 56px}.my-hdr{margin-bottom:12px}.journey-guidance{padding:11px 12px}.journey-guidance-actions{gap:4px}.journey-guidance-actions .bghost{padding-inline:8px}.add-form{padding:14px}.settings-nav-button{background:transparent;border-color:transparent}.settings-nav-button[aria-current="page"]{background:var(--surface-raised)}
 }
 @media(max-width:600px){#tab-mylist.has-list-content .journey-guidance{display:none}#tab-mylist .my-hdr{gap:9px;margin-bottom:8px}#tab-mylist .my-hdr .av.lg{width:38px;height:38px}#tab-mylist .my-uname{font-size:20px;line-height:24px}#tab-mylist #my-fc-wrap{margin-top:0!important}#tab-mylist .fc-chip{padding-block:2px}#tab-mylist .mylist-type-tabs{margin-bottom:8px}#tab-mylist .add-form{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 68px;gap:7px 6px;margin-bottom:10px;padding:11px 10px}#tab-mylist .add-ttl{grid-column:1/-1;margin:0;padding-right:76px;font-size:13px;line-height:20px}#tab-mylist .add-form .frow,#tab-mylist .add-actions{display:contents}#tab-mylist .add-form .ac-wrap{grid-column:1;grid-row:2;width:100%}#tab-mylist .add-form .add-pri-group{grid-column:1;grid-row:3;width:max-content;max-width:100%;justify-content:flex-start;padding:4px 7px}#tab-mylist .add-advanced-toggle{grid-column:2;grid-row:3;width:100%;min-height:48px;justify-content:center;padding:6px;font-size:11px}#tab-mylist .add-actions .bsave{grid-column:2;grid-row:2;width:68px;min-width:68px;margin:0;padding:8px;box-shadow:none}#tab-mylist .add-actions .export-menu-wrap{position:absolute;top:5px;right:6px}#tab-mylist .add-actions .image-btn{min-height:40px;padding:6px 8px;border-color:transparent;background:transparent;color:var(--muted)}#tab-mylist .add-advanced,#tab-mylist .add-tray,#tab-mylist .speed-add-hint{grid-column:1/-1}#tab-mylist .mylist-search{margin-top:10px;margin-bottom:6px}#tab-mylist .sec{margin-block:4px!important}.favorite-card-surface{grid-template-columns:minmax(0,1fr);gap:4px}.favorite-card-surface .trainer-quick-name{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;white-space:normal;overflow:hidden;overflow-wrap:anywhere;line-height:1.35}.favorite-card-footer{justify-content:flex-end;padding-top:4px;border-top:1px solid var(--border)}.favorite-card-open{margin-right:auto}.event-filter-scroll{margin-inline:-14px}.event-filter-row{margin:0;padding:2px 32px 10px 14px}.event-filter-scroll::after{right:0;width:42px}.event-group:not([data-group="now"]) .event-card{min-height:88px}.organizer-header{padding:14px 14px 10px}.organizer-body{padding-inline:14px}.organizer-actions{bottom:calc(-16px - env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom)}}
+@media(max-width:600px){#tab-mylist .add-advanced{grid-template-columns:minmax(0,1fr)}#tab-mylist .add-flag-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}#tab-mylist .add-advanced .lucky-add{width:auto;min-height:var(--control-min);justify-content:flex-start}#tab-mylist .add-advanced #add-pmon-notes{grid-column:1;width:100%}}
 @media(max-width:430px){.my-uname{font-size:21px}.mylist-type-tabs{flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}.mylist-type-tabs::-webkit-scrollbar{display:none}.event-card{grid-template-columns:minmax(0,1fr) 48px}.event-card-cue{width:48px;min-width:48px}.favorite-card-open{padding-inline:7px}.favorite-card-add-tag{padding-inline:9px;min-width:60px}.myrow-active-traits{overflow:hidden}.myrow-edit span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}}
 @media(max-width:360px){.logo span{display:none}.favorite-card-surface{grid-template-columns:1fr;gap:2px}.favorite-card-footer{justify-content:flex-end}.favorite-card-tags{margin-bottom:2px}}
 
@@ -2207,27 +2209,29 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
           <button type="button" class="pb add-pri-btn" data-pri="L" onclick="setAddPri('L')" aria-pressed="false" data-i18n-title="priority.low">L</button>
         </div>
         <input type="hidden" id="add-pmon-pri" value="">
+        <div class="add-actions">
+          <button class="bsave" onclick="addEntry()" data-i18n="myList.addAction">Add</button>
+        </div>
         <button type="button" class="add-advanced-toggle" id="add-adv-toggle" onclick="toggleAddAdvanced()" aria-expanded="false" aria-controls="add-advanced"><span data-i18n="myList.flagsAndDetails">Flags &amp; details</span> <span class="caret">▾</span></button>
       </div>
       <div class="add-tray" id="add-tray" hidden></div>
       <div class="add-advanced" id="add-advanced">
         <span class="add-adv-label" data-i18n="myList.flags">Flags</span>
-        <label class="lucky-add" data-i18n-title="myList.luckyHelp" title="Lucky entries generate a separate search string">
-          <input type="checkbox" id="add-pmon-lucky" onchange="renderAddTray()"> ⚡ <span data-i18n="myList.lucky">Lucky</span>
-        </label>
-        <label class="lucky-add" data-i18n-title="myList.shinyHelp" title="Mark this entry as Shiny only">
-          <input type="checkbox" id="add-pmon-shiny" onchange="renderAddTray()"> ✨ <span data-i18n="myList.shiny">Shiny</span>
-        </label>
-        <label class="lucky-add" title="XXL — mark as extra-large; generates a separate XXL search string">
-          <input type="checkbox" id="add-pmon-xxl" onchange="if(this.checked)document.getElementById('add-pmon-xxs').checked=false;renderAddTray()"> XXL
-        </label>
-        <label class="lucky-add" title="XXS — mark as extra-small; generates a separate XXS search string">
-          <input type="checkbox" id="add-pmon-xxs" onchange="if(this.checked)document.getElementById('add-pmon-xxl').checked=false;renderAddTray()"> XXS
-        </label>
+        <div class="add-flag-grid">
+          <label class="lucky-add" data-i18n-title="myList.luckyHelp" title="Lucky entries generate a separate search string">
+            <input type="checkbox" id="add-pmon-lucky" onchange="renderAddTray()"> ⚡ <span data-i18n="myList.lucky">Lucky</span>
+          </label>
+          <label class="lucky-add" data-i18n-title="myList.shinyHelp" title="Mark this entry as Shiny only">
+            <input type="checkbox" id="add-pmon-shiny" onchange="renderAddTray()"> ✨ <span data-i18n="myList.shiny">Shiny</span>
+          </label>
+          <label class="lucky-add" title="XXL — mark as extra-large; generates a separate XXL search string">
+            <input type="checkbox" id="add-pmon-xxl" onchange="if(this.checked)document.getElementById('add-pmon-xxs').checked=false;renderAddTray()"> XXL
+          </label>
+          <label class="lucky-add" title="XXS — mark as extra-small; generates a separate XXS search string">
+            <input type="checkbox" id="add-pmon-xxs" onchange="if(this.checked)document.getElementById('add-pmon-xxl').checked=false;renderAddTray()"> XXS
+          </label>
+        </div>
         <input type="text" class="field-control" id="add-pmon-notes" data-i18n-placeholder="myList.variantDetailsPlaceholder" data-i18n-aria-label="myList.variantDetails" placeholder="Variant details: female, male, shadow…" aria-label="Variant details" style="flex:1;min-width:120px" oninput="renderAddTray()">
-      </div>
-      <div class="add-actions">
-        <button class="bsave" onclick="addEntry()" data-i18n="myList.addAction">Add</button>
       </div>
       <div class="speed-add-hint" id="speed-add-hint" data-i18n="myList.speedAddHint">Speed add is on. Priority and flags stay selected after each addition.</div>
     </div>
@@ -2693,7 +2697,7 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
 <div class="ptr-indicator" id="ptr-indicator" aria-hidden="true">↓</div>
 
 <script>
-window.__POGO_RELEASE_ID='2026-08-22.55';
+window.__POGO_RELEASE_ID='2026-08-22.56';
 window.__pogoStartup=window.__pogoStartup||{preAuthMarkupReady:performance.now(),preAuthPaintOpportunity:null,authSdkStartedAt:null,authStateKnownAt:null,loginShellRevealedAt:performance.now(),appCheckStartedAt:null,appCheckReadyAt:null,firebaseStartupSettledAt:null,catalogsReadyAt:null,signedInReadyAt:null};
 window.__POGO_FIREBASE_CONFIG=Object.freeze({
   apiKey:'AIzaSyCazZNLj9_lEb1vUNUlrMe9hodqY_l34VU',
@@ -2742,66 +2746,66 @@ window.__pogoBootWatch=setTimeout(function(){
   if(status)status.setAttribute('aria-busy','false');
 },4000);
 </script>
-<script src="data.js?v=2026-08-22.55"></script>
-<script src="js/domain/productLimits.js?v=2026-08-22.55"></script>
-<script src="js/domain/priorities.js?v=2026-08-22.55"></script>
-<script src="js/ui/badges.js?v=2026-08-22.55"></script>
-<script src="js/domain/username.js?v=2026-08-22.55"></script>
-<script src="js/domain/requestAccess.js?v=2026-08-22.55"></script>
-<script src="js/domain/priorityValues.js?v=2026-08-22.55"></script>
-<script src="js/domain/scheduleDates.js?v=2026-08-22.55"></script>
-<script src="js/domain/pokemonSearchTerms.js?v=2026-08-22.55"></script>
-<script src="js/domain/pokemonEntryRules.js?v=2026-08-22.55"></script>
-<script src="js/domain/pokemonGoSearchSyntax.js?v=2026-08-22.55"></script>
-<script src="js/domain/searchStrings.js?v=2026-08-22.55"></script>
-<script src="js/ui/stringHtml.js?v=2026-08-22.55"></script>
-<script src="js/domain/scheduleEventRules.js?v=2026-08-22.55"></script>
-<script src="js/domain/scheduleTradeRules.js?v=2026-08-22.55"></script>
-<script src="js/domain/pokemonKeys.js?v=2026-08-22.55"></script>
-<script src="js/domain/spriteSlugs.js?v=2026-08-22.55"></script>
-<script src="js/domain/fuzzyText.js?v=2026-08-22.55"></script>
-<script src="js/domain/autocompleteText.js?v=2026-08-22.55"></script>
-<script src="js/domain/autocompleteMatching.js?v=2026-08-22.55"></script>
-<script src="js/domain/autocompleteRanking.js?v=2026-08-22.55"></script>
-<script src="js/domain/relativeTime.js?v=2026-08-22.55"></script>
-<script src="js/domain/clientRelease.js?v=2026-08-22.55"></script>
-<script src="js/domain/favoriteCardInteractions.js?v=2026-08-22.55"></script>
-<script src="js/domain/favoritePokemonBrowse.js?v=2026-08-22.55"></script>
-<script src="js/domain/trainerDiscovery.js?v=2026-08-22.55"></script>
-<script src="js/domain/eventPresentation.js?v=2026-08-22.55"></script>
-<script src="js/domain/publicSharePublication.js?v=2026-08-22.55"></script>
-<script src="js/domain/trainerPreferences.js?v=2026-08-22.55"></script>
-<script src="js/domain/trainerPreferenceSync.js?v=2026-08-22.55"></script>
-<script src="js/domain/authenticationReadiness.js?v=2026-08-22.55"></script>
-<script src="js/domain/loginDirectory.js?v=2026-08-22.55"></script>
-<script src="js/utils/textSafety.js?v=2026-08-22.55"></script>
-<script src="js/ui/stringPanels.js?v=2026-08-22.55"></script>
-<script src="js/ui/emptyState.js?v=2026-08-22.55"></script>
-<script src="js/i18n/locales/en.js?v=2026-08-22.55"></script>
-<script src="js/i18n/locales/ja.js?v=2026-08-22.55"></script>
-<script src="js/i18n/locales/es.js?v=2026-08-22.55"></script>
-<script src="js/i18n/locales/de.js?v=2026-08-22.55"></script>
-<script src="js/i18n/pokemonNames/catalog.js?v=2026-08-22.55"></script>
-<script src="js/i18n/pokemonNames/variants.js?v=2026-08-22.55"></script>
-<script src="js/i18n/pokemonNames/core.js?v=2026-08-22.55"></script>
-<script src="js/i18n/eventLabels/currentTitles.js?v=2026-08-22.55"></script>
-<script src="js/i18n/eventLabels/core.js?v=2026-08-22.55"></script>
-<script src="js/i18n/core.js?v=2026-08-22.55"></script>
-<script src="js/services/firebaseClient.js?v=2026-08-22.55"></script>
-<script src="js/services/firebaseAppCheck.js?v=2026-08-22.55"></script>
-<script src="js/data/subscriptionManager.js?v=2026-08-22.55"></script>
-<script src="js/data/listenerLifecycle.js?v=2026-08-22.55"></script>
-<script src="js/data/sessionCacheBoundary.js?v=2026-08-22.55"></script>
-<script src="js/data/firebaseReadRegistry.js?v=2026-08-22.55"></script>
-<script src="js/data/currentUserRepository.js?v=2026-08-22.55"></script>
-<script src="js/data/ownedDataCoordinator.js?v=2026-08-22.55"></script>
-<script src="js/data/publicShareRepository.js?v=2026-08-22.55"></script>
-<script src="js/data/trainerHistoryStore.js?v=2026-08-22.55"></script>
-<script src="js/data/favoriteShareSessionCache.js?v=2026-08-22.55"></script>
-<script src="js/data/trainerPreferencesRepository.js?v=2026-08-22.55"></script>
-<script src="js/data/trainerPreferenceSyncQueue.js?v=2026-08-22.55"></script>
-<script src="js/domain/cacheAdapters.js?v=2026-08-22.55"></script>
-<script src="js/ui/trainerTagPanel.js?v=2026-08-22.55"></script>
+<script src="data.js?v=2026-08-22.56"></script>
+<script src="js/domain/productLimits.js?v=2026-08-22.56"></script>
+<script src="js/domain/priorities.js?v=2026-08-22.56"></script>
+<script src="js/ui/badges.js?v=2026-08-22.56"></script>
+<script src="js/domain/username.js?v=2026-08-22.56"></script>
+<script src="js/domain/requestAccess.js?v=2026-08-22.56"></script>
+<script src="js/domain/priorityValues.js?v=2026-08-22.56"></script>
+<script src="js/domain/scheduleDates.js?v=2026-08-22.56"></script>
+<script src="js/domain/pokemonSearchTerms.js?v=2026-08-22.56"></script>
+<script src="js/domain/pokemonEntryRules.js?v=2026-08-22.56"></script>
+<script src="js/domain/pokemonGoSearchSyntax.js?v=2026-08-22.56"></script>
+<script src="js/domain/searchStrings.js?v=2026-08-22.56"></script>
+<script src="js/ui/stringHtml.js?v=2026-08-22.56"></script>
+<script src="js/domain/scheduleEventRules.js?v=2026-08-22.56"></script>
+<script src="js/domain/scheduleTradeRules.js?v=2026-08-22.56"></script>
+<script src="js/domain/pokemonKeys.js?v=2026-08-22.56"></script>
+<script src="js/domain/spriteSlugs.js?v=2026-08-22.56"></script>
+<script src="js/domain/fuzzyText.js?v=2026-08-22.56"></script>
+<script src="js/domain/autocompleteText.js?v=2026-08-22.56"></script>
+<script src="js/domain/autocompleteMatching.js?v=2026-08-22.56"></script>
+<script src="js/domain/autocompleteRanking.js?v=2026-08-22.56"></script>
+<script src="js/domain/relativeTime.js?v=2026-08-22.56"></script>
+<script src="js/domain/clientRelease.js?v=2026-08-22.56"></script>
+<script src="js/domain/favoriteCardInteractions.js?v=2026-08-22.56"></script>
+<script src="js/domain/favoritePokemonBrowse.js?v=2026-08-22.56"></script>
+<script src="js/domain/trainerDiscovery.js?v=2026-08-22.56"></script>
+<script src="js/domain/eventPresentation.js?v=2026-08-22.56"></script>
+<script src="js/domain/publicSharePublication.js?v=2026-08-22.56"></script>
+<script src="js/domain/trainerPreferences.js?v=2026-08-22.56"></script>
+<script src="js/domain/trainerPreferenceSync.js?v=2026-08-22.56"></script>
+<script src="js/domain/authenticationReadiness.js?v=2026-08-22.56"></script>
+<script src="js/domain/loginDirectory.js?v=2026-08-22.56"></script>
+<script src="js/utils/textSafety.js?v=2026-08-22.56"></script>
+<script src="js/ui/stringPanels.js?v=2026-08-22.56"></script>
+<script src="js/ui/emptyState.js?v=2026-08-22.56"></script>
+<script src="js/i18n/locales/en.js?v=2026-08-22.56"></script>
+<script src="js/i18n/locales/ja.js?v=2026-08-22.56"></script>
+<script src="js/i18n/locales/es.js?v=2026-08-22.56"></script>
+<script src="js/i18n/locales/de.js?v=2026-08-22.56"></script>
+<script src="js/i18n/pokemonNames/catalog.js?v=2026-08-22.56"></script>
+<script src="js/i18n/pokemonNames/variants.js?v=2026-08-22.56"></script>
+<script src="js/i18n/pokemonNames/core.js?v=2026-08-22.56"></script>
+<script src="js/i18n/eventLabels/currentTitles.js?v=2026-08-22.56"></script>
+<script src="js/i18n/eventLabels/core.js?v=2026-08-22.56"></script>
+<script src="js/i18n/core.js?v=2026-08-22.56"></script>
+<script src="js/services/firebaseClient.js?v=2026-08-22.56"></script>
+<script src="js/services/firebaseAppCheck.js?v=2026-08-22.56"></script>
+<script src="js/data/subscriptionManager.js?v=2026-08-22.56"></script>
+<script src="js/data/listenerLifecycle.js?v=2026-08-22.56"></script>
+<script src="js/data/sessionCacheBoundary.js?v=2026-08-22.56"></script>
+<script src="js/data/firebaseReadRegistry.js?v=2026-08-22.56"></script>
+<script src="js/data/currentUserRepository.js?v=2026-08-22.56"></script>
+<script src="js/data/ownedDataCoordinator.js?v=2026-08-22.56"></script>
+<script src="js/data/publicShareRepository.js?v=2026-08-22.56"></script>
+<script src="js/data/trainerHistoryStore.js?v=2026-08-22.56"></script>
+<script src="js/data/favoriteShareSessionCache.js?v=2026-08-22.56"></script>
+<script src="js/data/trainerPreferencesRepository.js?v=2026-08-22.56"></script>
+<script src="js/data/trainerPreferenceSyncQueue.js?v=2026-08-22.56"></script>
+<script src="js/domain/cacheAdapters.js?v=2026-08-22.56"></script>
+<script src="js/ui/trainerTagPanel.js?v=2026-08-22.56"></script>
 <script>
 let initializeApp,getDatabase,ref,set,get,onValue,update,getAuth,signInWithEmailAndPassword,createUserWithEmailAndPassword,firebaseSignOut,updatePassword,deleteUser,onAuthStateChanged;
 let firebaseSdkPromise=null;

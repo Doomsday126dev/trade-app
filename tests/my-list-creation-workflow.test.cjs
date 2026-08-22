@@ -34,8 +34,12 @@ test('voice is an accessible action inside the lookup field',()=>{
 
 test('flags and variant details remain behind Flags & details without changing identifiers',()=>{
   assert.match(add,/id="add-advanced"/);
+  assert.match(add,/class="add-flag-grid"/);
   for(const id of ['add-pmon-lucky','add-pmon-shiny','add-pmon-xxl','add-pmon-xxs','add-pmon-notes'])assert.match(add,new RegExp(`id="${id}"`));
   assert.match(add,/myList\.variantDetailsPlaceholder/);
+  assert.match(html,/\.lucky-add\{[^}]*min-height:var\(--control-min\)/);
+  assert.match(html,/\.add-flag-grid\{[^}]*grid-template-columns:repeat\(4,max-content\)/);
+  assert.match(html,/@media\(max-width:600px\)\{#tab-mylist \.add-advanced\{[^}]*grid-template-columns:minmax\(0,1fr\)[^}]*\}#tab-mylist \.add-flag-grid\{[^}]*grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
   assert.match(html,/list\[name\]=priValue\(pri,notes,lucky,xxl,xxs,shiny\)/);
 });
 
