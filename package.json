@@ -71,6 +71,7 @@
     "check:e1-production-first-mutation-guard": "npm --prefix functions run test:e1-production-first-mutation-guard",
     "check:e1-production-second-mutation-guard": "npm --prefix functions run test:e1-production-second-mutation-guard",
     "check:e1-production-third-mutation-guard": "npm --prefix functions run test:e1-production-third-mutation-guard",
+    "check:e1-production-client-foundation": "node --test tests/e1-client-foundation-canary.test.cjs && npm --prefix functions run test:e1-production-client-foundation",
     "check:e1-production-third-mutation-candidate-pool": "npm --prefix functions run check:e1-production-third-mutation-candidate-pool",
     "check:e1-production-third-mutation-canary-setup": "npm --prefix functions run check:e1-production-third-mutation-canary-setup",
     "check:e1-gateway-source": "npm --prefix functions run test:e1-gateway-source",

@@ -5,7 +5,7 @@ const http = require('node:http');
 const { getApps, initializeApp } = require('firebase-admin/app');
 const { getAuth: getAdminAuth } = require('firebase-admin/auth');
 const { createFirestoreE1AuthorityAdapter } = require('./firestoreE1AuthorityAdapter');
-const { DURABLE_MODE, GROUP_C_PROOF_MODE, createReadLimiter } = require('./readRateLimiters');
+const { DURABLE_MODE, GROUP_C_PROOF_MODE, GROUP_E_CANARY_MODE, createReadLimiter } = require('./readRateLimiters');
 const { validateTarget } = require('./e1TargetContracts');
 const { HandleValidationError, normalizeHandle } = require('./handleNormalization');
 const { createVerifiedLegacyMappingReader, validatedTarget } = require('./rtdbVerifiedLegacyMappingReader');
@@ -27,6 +27,7 @@ const RATE_LIMITS = Object.freeze({
 });
 const UID = /^[A-Za-z0-9_-]{6,128}$/;
 const PROOF_ATTEMPT_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u;
+const GROUP_E_MODE = 'synthetic-canary';
 const HANDLE_KEY = /^v1_[a-f0-9]{2,512}$/;
 const REQUEST_ID = /^[A-Za-z0-9][A-Za-z0-9._:-]{7,127}$/;
 const SHA256 = /^[a-f0-9]{64}$/;
@@ -107,6 +108,41 @@ function readProofConfiguration(env, configuration, gates, now) {
   });
 }
 
+function parseGroupEBindings(value) {
+  const entries = typeof value === 'string' && value ? value.split(';') : [];
+  if (entries.length !== 2) fail('E1_GROUP_E_CONFIGURATION_INVALID');
+  const bindings = entries.map((entry) => {
+    const [uidHashValue, trainerHash, extra] = entry.split(':');
+    if (extra !== undefined || !SHA256.test(uidHashValue || '') || !SHA256.test(trainerHash || '')) {
+      fail('E1_GROUP_E_CONFIGURATION_INVALID');
+    }
+    return Object.freeze({ uidHash: uidHashValue, trainerHash });
+  });
+  if (new Set(bindings.map((entry) => entry.uidHash)).size !== 2 ||
+      new Set(bindings.map((entry) => entry.trainerHash)).size !== 2) fail('E1_GROUP_E_CONFIGURATION_INVALID');
+  return Object.freeze(bindings);
+}
+
+function groupEConfiguration(env, configuration, gates, readProof, now) {
+  const mode = env.GROUP_E_CLIENT_MODE || 'disabled';
+  const values = [env.GROUP_E_SUBJECT_BINDINGS, env.GROUP_E_COHORT_DIGEST, env.GROUP_E_WINDOW_START, env.GROUP_E_WINDOW_END];
+  if (mode === 'disabled') {
+    if (values.some((value) => value !== undefined && value !== '')) fail('E1_GROUP_E_CONFIGURATION_INVALID');
+    return Object.freeze({ enabled: false, mode, bindings: Object.freeze([]), cohortDigest: null, start: null, end: null });
+  }
+  const start = Date.parse(env.GROUP_E_WINDOW_START);
+  const end = Date.parse(env.GROUP_E_WINDOW_END);
+  const at = now();
+  if (mode !== GROUP_E_MODE || configuration.environment !== 'production' || readProof.enabled ||
+      gates.READ_ACCOUNT_FOUNDATION_ENABLED !== 'true' || MUTATION_GATES.some((gate) => gates[gate] !== 'false') ||
+      !SHA256.test(env.GROUP_E_COHORT_DIGEST || '') || !Number.isFinite(start) || !Number.isFinite(end) ||
+      start >= end || end - start > 45 * 60 * 1000 || !Number.isSafeInteger(at) || at < start || at >= end) {
+    fail('E1_GROUP_E_CONFIGURATION_INVALID');
+  }
+  return Object.freeze({ enabled: true, mode, bindings: parseGroupEBindings(env.GROUP_E_SUBJECT_BINDINGS),
+    cohortDigest: env.GROUP_E_COHORT_DIGEST, start, end });
+}
+
 function loadConfiguration(env = process.env, now = () => Date.now()) {
   const configuration = {
     environment: env.APP_ENVIRONMENT,
@@ -136,6 +172,7 @@ function loadConfiguration(env = process.env, now = () => Date.now()) {
   const repairAccountFoundationEnabled = env.REPAIR_FOUNDATION_ENABLED === 'true';
   const applyMigrationManifestEnabled = env.APPLY_MIGRATION_ENABLED === 'true';
   const readProof = readProofConfiguration(env, configuration, env, now);
+  const groupE = groupEConfiguration(env, configuration, env, readProof, now);
   return Object.freeze({
     ...configuration,
     readAccountFoundationEnabled: env.READ_ACCOUNT_FOUNDATION_ENABLED === 'true',
@@ -144,8 +181,10 @@ function loadConfiguration(env = process.env, now = () => Date.now()) {
     applyMigrationManifestEnabled,
     freezeIdentityConflictEnabled: env.FREEZE_CONFLICT_ENABLED === 'true',
     readProofMode: readProof.enabled,
-    readLimiterMode: readProof.limiterMode,
+    readLimiterMode: groupE.enabled ? GROUP_E_CANARY_MODE : readProof.limiterMode,
     readProof: readProof.proof,
+    groupEClientMode: groupE.enabled,
+    groupE,
     repairApprovalWindow: approvalWindow(env, repairAccountFoundationEnabled),
     approvedMigrationManifestIds: approvedManifestIds(env.APPROVED_MIGRATION_MANIFEST_IDS, applyMigrationManifestEnabled)
   });
@@ -516,12 +555,13 @@ async function readAccountDocument(configuration, uid, fetchImpl = fetch) {
   return response.json();
 }
 
-function exactReadRequest(body, readProofMode) {
-  const expectedFields = readProofMode ? ['proofAttemptId', 'schemaVersion'] : ['schemaVersion'];
+function exactReadRequest(body, readProofMode, groupEClientMode = false) {
+  const expectedFields = groupEClientMode ? ['attemptId', 'schemaVersion'] : readProofMode ? ['proofAttemptId', 'schemaVersion'] : ['schemaVersion'];
   const fields = body && typeof body === 'object' && !Array.isArray(body) ? Object.keys(body).sort() : [];
   if (!body || typeof body !== 'object' || Array.isArray(body) || fields.length !== expectedFields.length ||
       fields.some((field, index) => field !== expectedFields[index]) || body.schemaVersion !== 1 ||
-      (readProofMode && !PROOF_ATTEMPT_ID.test(body.proofAttemptId || ''))) {
+      (readProofMode && !PROOF_ATTEMPT_ID.test(body.proofAttemptId || '')) ||
+      (groupEClientMode && !PROOF_ATTEMPT_ID.test(body.attemptId || ''))) {
     fail('REQUEST_INVALID');
   }
   return Object.freeze({ ...body });
@@ -566,6 +606,15 @@ function handleCorrelationHash(configuration, handleKey) {
 function proofAttemptHash(proofAttemptId) {
   return crypto.createHash('sha256').update(JSON.stringify([1, 'group-c-proof-attempt', proofAttemptId]), 'utf8')
     .digest('hex').slice(0, 16);
+}
+
+function groupEAttemptHash(attemptId) {
+  return crypto.createHash('sha256').update(JSON.stringify([1, 'group-e-client-attempt', attemptId]), 'utf8')
+    .digest('hex').slice(0, 16);
+}
+
+function groupEResponseBinding(uid, attemptId) {
+  return crypto.createHash('sha256').update(JSON.stringify([1, 'group-e-client-response', uid, attemptId]), 'utf8').digest('hex');
 }
 
 function rateAttemptHash(operation, subjectHash, parts) {
@@ -640,6 +689,7 @@ function createHandler(configuration, dependencies = {}) {
   const readLimiter = dependencies.readLimiter || createReadLimiter({
     mode: configuration.readLimiterMode,
     proof: configuration.readProof,
+    groupE: configuration.groupE,
     consumeRateLimit: applyRateLimit,
     rateLimit: RATE_LIMITS.readAccountFoundation,
     now,
@@ -655,44 +705,56 @@ function createHandler(configuration, dependencies = {}) {
       try {
         if (request.method !== 'POST') fail('METHOD_NOT_ALLOWED');
         if (!configuration.readAccountFoundationEnabled) fail('E1_NOT_ENABLED');
-        const readRequest = exactReadRequest(await parseBody(request), configuration.readProofMode);
+        const readRequest = exactReadRequest(await parseBody(request), configuration.readProofMode, configuration.groupEClientMode);
         attemptHash = readRequest.proofAttemptId ? proofAttemptHash(readRequest.proofAttemptId) : undefined;
+        const groupEAttempt = readRequest.attemptId ? groupEAttemptHash(readRequest.attemptId) : undefined;
+        if (configuration.groupEClientMode && (request.headers?.['x-e1-client-mode'] !== GROUP_E_MODE ||
+            request.headers?.['x-e1-cohort-digest'] !== configuration.groupE.cohortDigest)) fail('E1_GROUP_E_BOUNDARY_INVALID');
         const firebaseIdToken = firebaseTokenHeader(request);
         const { uid } = await verifyToken(configuration, firebaseIdToken);
         callerHash = uidHash(configuration, uid);
         readLimiter.assertUid(uid);
-        if (configuration.readProofMode) {
+        if (configuration.readProofMode || configuration.groupEClientMode) {
           const legacy = await readLegacyBinding({ verifiedUid: uid, firebaseIdToken });
-          if (legacy?.status === 'mapping-incomplete' || legacy?.status === 'mapping-conflict') fail('E1_READ_PROOF_MAPPING_NOT_READY');
-          if (legacy?.status === 'permission-denied') fail('E1_READ_PROOF_MAPPING_DENIED');
-          if (legacy?.status !== 'ready') fail('E1_READ_PROOF_MAPPING_UNAVAILABLE');
+          if (legacy?.status === 'mapping-incomplete' || legacy?.status === 'mapping-conflict') {
+            fail(configuration.groupEClientMode ? 'E1_GROUP_E_MAPPING_NOT_READY' : 'E1_READ_PROOF_MAPPING_NOT_READY');
+          }
+          if (legacy?.status === 'permission-denied') fail(configuration.groupEClientMode ? 'E1_GROUP_E_SUBJECT_DENIED' : 'E1_READ_PROOF_MAPPING_DENIED');
+          if (legacy?.status !== 'ready') fail(configuration.groupEClientMode ? 'E1_GROUP_E_MAPPING_UNAVAILABLE' : 'E1_READ_PROOF_MAPPING_UNAVAILABLE');
           await readLimiter.consume({ uid, trainerUsername: legacy.username });
         } else {
           await readLimiter.consume({ uid, subjectHash: callerHash });
         }
         const document = await readAccount(configuration, uid);
+        const canaryEnvelope = configuration.groupEClientMode ? {
+          schemaVersion: 1,
+          attemptHash: groupEAttempt,
+          subjectBinding: groupEResponseBinding(uid, readRequest.attemptId)
+        } : {};
         if (!document) {
-          log(configuration, 'readAccountFoundation', 'not_initialized', startedAt, { uidHash: callerHash, proofAttemptHash: attemptHash });
-          return json(response, 200, { code: 'FOUNDATION_NOT_INITIALIZED' });
+          log(configuration, 'readAccountFoundation', 'not_initialized', startedAt, { uidHash: callerHash, proofAttemptHash: attemptHash,
+            groupEAttemptHash: groupEAttempt, authoritativeCallBudget: configuration.groupEClientMode ? false : undefined });
+          return json(response, 200, { ...canaryEnvelope, code: 'FOUNDATION_NOT_INITIALIZED' });
         }
         const foundation = redactFoundationDocument(document);
         if (FROZEN_STATUSES.has(foundation.status)) {
           log(configuration, 'readAccountFoundation', 'frozen', startedAt, { uidHash: callerHash, proofAttemptHash: attemptHash });
-          return json(response, 423, { code: 'ACCOUNT_FROZEN', foundation });
+          return json(response, 423, { ...canaryEnvelope, code: 'ACCOUNT_FROZEN', foundation });
         }
         if (foundation.status !== 'active') fail('INTERNAL_ERROR');
         log(configuration, 'readAccountFoundation', 'success', startedAt, { uidHash: callerHash, proofAttemptHash: attemptHash });
-        return json(response, 200, { code: 'SUCCESS', foundation });
+        return json(response, 200, { ...canaryEnvelope, code: 'SUCCESS', foundation });
       } catch (error) {
         const code = ['E1_NOT_ENABLED', 'AUTH_REQUIRED', 'AUTH_INVALID', 'REQUEST_INVALID', 'REQUEST_TOO_LARGE', 'METHOD_NOT_ALLOWED',
           'E1_READ_PROOF_SUBJECT_DENIED', 'E1_READ_PROOF_EXPIRED', 'E1_READ_PROOF_MAPPING_NOT_READY',
-          'E1_READ_PROOF_MAPPING_DENIED', 'E1_READ_PROOF_MAPPING_UNAVAILABLE'].includes(error?.code)
+          'E1_READ_PROOF_MAPPING_DENIED', 'E1_READ_PROOF_MAPPING_UNAVAILABLE', 'E1_GROUP_E_BOUNDARY_INVALID',
+          'E1_GROUP_E_SUBJECT_DENIED', 'E1_GROUP_E_EXPIRED', 'E1_GROUP_E_MAPPING_NOT_READY', 'E1_GROUP_E_MAPPING_UNAVAILABLE'].includes(error?.code)
           ? error.code : 'INTERNAL_ERROR';
         const status = code === 'E1_NOT_ENABLED' ? 503 : code === 'AUTH_REQUIRED' || code === 'AUTH_INVALID' ? 401 :
           code === 'REQUEST_TOO_LARGE' ? 413 : code === 'METHOD_NOT_ALLOWED' ? 405 : code === 'REQUEST_INVALID' ? 400 :
-            code === 'E1_READ_PROOF_SUBJECT_DENIED' || code === 'E1_READ_PROOF_MAPPING_DENIED' ? 403 :
-              code === 'E1_READ_PROOF_MAPPING_NOT_READY' ? 409 :
-                code === 'E1_READ_PROOF_EXPIRED' || code === 'E1_READ_PROOF_MAPPING_UNAVAILABLE' ? 503 :
+            ['E1_READ_PROOF_SUBJECT_DENIED', 'E1_READ_PROOF_MAPPING_DENIED', 'E1_GROUP_E_SUBJECT_DENIED', 'E1_GROUP_E_BOUNDARY_INVALID'].includes(code) ? 403 :
+              ['E1_READ_PROOF_MAPPING_NOT_READY', 'E1_GROUP_E_MAPPING_NOT_READY'].includes(code) ? 409 :
+                ['E1_READ_PROOF_EXPIRED', 'E1_READ_PROOF_MAPPING_UNAVAILABLE', 'E1_GROUP_E_EXPIRED', 'E1_GROUP_E_MAPPING_UNAVAILABLE'].includes(code) ? 503 :
             error?.code === 'e1/rate-limit-exceeded' ? 429 : 500;
         const responseCode = error?.code === 'e1/rate-limit-exceeded' ? 'RATE_LIMITED' : code;
         log(configuration, 'readAccountFoundation', responseCode.toLowerCase(), startedAt, {
@@ -1023,6 +1085,8 @@ module.exports = Object.freeze({
   observedLegacyFingerprint,
   readAccountDocument,
   proofAttemptHash,
+  groupEAttemptHash,
+  groupEResponseBinding,
   repairReviewFingerprint,
   reserveFingerprint,
   redactFoundationDocument,

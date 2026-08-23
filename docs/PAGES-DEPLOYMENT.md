@@ -164,7 +164,7 @@ This permits new deployment control to restore old frontend bytes without execut
 
 ## Artifact Contract
 
-`scripts/pages/frontend-files.json` is the reviewed source of truth. It contains exactly 68 runtime files: `index.html`, `manifest.json`, `sw.js`, all 60 HTML-loaded first-party scripts, and five referenced icons. It excludes workflows, deployment scripts, tests, docs, functions, private/local files, logs, reports, `node_modules`, and temporary output.
+`scripts/pages/frontend-files.json` is the reviewed source of truth. It contains exactly 69 runtime files: `index.html`, `manifest.json`, `sw.js`, all 61 HTML-loaded first-party scripts, and five referenced icons. It excludes workflows, deployment scripts, tests, docs, functions, private/local files, logs, reports, `node_modules`, and temporary output.
 
 The runtime payload digest excludes `deployment-manifest.json`, so identical runtime bytes remain deterministic across runs and control revisions. For every allowlisted path sorted lexically, the hash input is the path, a NUL byte, the lowercase SHA-256 of the file bytes, and a newline.
 

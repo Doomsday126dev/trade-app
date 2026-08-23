@@ -4,16 +4,16 @@
   "projectId": "trade-list-a4297",
   "region": "us-central1",
   "sourceRoot": "functions/e1-gateway",
-  "sourceCommitSha": "c74d5cb291310f83ff1ec08d032de5bcde3467ba",
-  "sourceFingerprint": "d3b999dee62d7498493bc780cff2d2e1f56bf7921826248d9abc4a5a6c9a7713",
+  "sourceCommitSha": "686accb6bfe5080293ee4864cabd40249c8f0237",
+  "sourceFingerprint": "498248986745e2c6504d6b2370fd597d6ed471d48c3abed3e258324e6fa7f725",
   "sourceFiles": [
     {
       "path": "gatewayCore.js",
-      "sha256": "4aa877e8ec20b93dc3730b4d7683b9906f86f53c7ed6e5e4f5497a7cf4ed12b5"
+      "sha256": "6fa81ff409a0d8d410f8bdd829e8624b5d9f0341fbe04230a29f84e533a3da26"
     },
     {
       "path": "index.js",
-      "sha256": "2a293e4ec7456712522e9512079e9c22224b9cfcbff505846a401fadfc091f11"
+      "sha256": "31c8a631cdc6f814322a9d387788c83e66bbaaebf924bebb64de6e7266f16860"
     },
     {
       "path": "package-lock.json",

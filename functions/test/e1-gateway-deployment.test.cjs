@@ -7,6 +7,7 @@ const os = require('node:os');
 const path = require('node:path');
 const { execFileSync, spawnSync } = require('node:child_process');
 const {
+  ACTION_CONFIRMATIONS,
   D3_CONFIRMATIONS,
   EXPECTED_AUTHORITY,
   authorityTarget,
@@ -21,6 +22,7 @@ const {
   verifyPinnedSource
 } = require('../production/e1GatewayDeploymentPlan.cjs');
 const { activationGatePlan, disabledGatePlan } = require('../production/e1ProductionFirstMutationGuard.cjs');
+const { activationGatePlan: groupEActivationGatePlan } = require('../production/e1ProductionClientFoundationGuard.cjs');
 const {
   CONTINUATION_ACCEPTED_USAGE,
   CONTINUATION_PRODUCTION_RUNTIME,
@@ -29,6 +31,7 @@ const {
   continuationProgress
 } = require('../production/e1ProductionThirdMutationContract.cjs');
 const {
+  AUTHORITY_GATES,
   argumentsMap,
   authorityReplacement,
   executePlan,
@@ -158,7 +161,7 @@ test('plan chooses the exact pinned gateway source independently of cwd and crea
   const rootPlan = JSON.parse(root.stdout);
   const otherPlan = JSON.parse(other.stdout);
   assert.equal(rootPlan.sourceRoot, 'functions/e1-gateway');
-  assert.equal(rootPlan.sourceFingerprint, 'd3b999dee62d7498493bc780cff2d2e1f56bf7921826248d9abc4a5a6c9a7713');
+  assert.equal(rootPlan.sourceFingerprint, manifest.sourceFingerprint);
   assert.deepEqual(otherPlan, rootPlan);
   assert.equal(fs.existsSync(rootIgnore), false);
 });
@@ -405,6 +408,51 @@ function d3ContinuationGuardResult(completedOrOverrides = 0, overrides = {}) {
   });
 }
 
+function groupEGuardResult(overrides = {}) {
+  return {
+    ok: true,
+    environment: 'production',
+    targetVerified: true,
+    approvalGroup: 'E',
+    cohortStage: 'client-foundation-canary',
+    cohortSize: 2,
+    cohortDigest: 'c'.repeat(64),
+    bindings: {
+      A: { uidHash: 'a'.repeat(64), trainerHash: '1'.repeat(64) },
+      B: { uidHash: 'b'.repeat(64), trainerHash: '2'.repeat(64) }
+    },
+    provenance: {
+      toolingSourceSha: HEAD,
+      pagesSourceSha: 'e'.repeat(40),
+      pagesArtifactDigest: '3'.repeat(64),
+      gatewaySourceSha: loadManifest().sourceCommitSha,
+      gatewaySourceFingerprint: loadManifest().sourceFingerprint,
+      authorityRevision: 'e1-identity-authority-00026-l5s',
+      authorityImageDigest: `sha256:${'a'.repeat(64)}`
+    },
+    securityBoundary: {
+      authorityPrivate: true, gatewayOnlyInvoker: true, projectWideInvoker: false,
+      gatewayForbiddenRolesPresent: false, iamDrift: false, productionDebugTokensRegistered: false,
+      providerLinkRoutePresent: false
+    },
+    budget: {
+      expectedGatewayCalls: 2, expectedAuthorityCalls: 2, expectedSuccessfulReads: 2,
+      applicationWrites: 0, firestoreWrites: 0, rtdbWrites: 0, ordinaryUserWrites: 0,
+      processLocalCounterAuthoritative: false, authoritativeReconciliationRequired: true
+    },
+    activationGatePlan: groupEActivationGatePlan(),
+    restorationGatePlan: disabledGatePlan(),
+    activationWindowStart: '2030-01-01T12:00:00.000Z',
+    activationWindowEnd: '2030-01-01T12:30:00.000Z',
+    entryEvidenceExpiresAt: '2030-01-01T12:15:00.000Z',
+    executionAuthorized: true,
+    groupEAuthorized: true,
+    laterGroupsAuthorized: false,
+    cloudOperations: 0,
+    ...overrides
+  };
+}
+
 test('D2 enable and restoration use the canonical immutable source and only approved gates differ', () => {
   const manifest = loadManifest();
   const repository = repositoryFixture(manifest);
@@ -413,9 +461,9 @@ test('D2 enable and restoration use the canonical immutable source and only appr
   };
   const enabled = createDeploymentPlan({ ...common, action: 'enable-group-d2', guardResult: d2GuardResult() });
   const restored = createDeploymentPlan({ ...common, action: 'restore-group-d2' });
-  assert.equal(enabled.sourceCommitSha, 'c74d5cb291310f83ff1ec08d032de5bcde3467ba');
+  assert.equal(enabled.sourceCommitSha, manifest.sourceCommitSha);
   assert.equal(enabled.sourceCommitSha, restored.sourceCommitSha);
-  assert.equal(enabled.sourceFingerprint, 'd3b999dee62d7498493bc780cff2d2e1f56bf7921826248d9abc4a5a6c9a7713');
+  assert.equal(enabled.sourceFingerprint, manifest.sourceFingerprint);
   assert.equal(enabled.sourceFingerprint, restored.sourceFingerprint);
   assert.deepEqual(enabled.functions, ['readE1AccountFoundation', 'reserveE1TrainerHandle']);
   assert.deepEqual(enabled.functions, restored.functions);
@@ -544,8 +592,8 @@ test('D3 enable uses the canonical source only with five-subject guard and exact
   assert.equal(enabled.entryEvidenceRequiredAfterEnable, false);
   assert.equal(enabled.mutationWindowEnd, '2026-08-15T16:30:00.000Z');
   assert.equal(enabled.mutationWindowGovernsPostEnable, true);
-  assert.equal(enabled.sourceCommitSha, 'c74d5cb291310f83ff1ec08d032de5bcde3467ba');
-  assert.equal(enabled.sourceFingerprint, 'd3b999dee62d7498493bc780cff2d2e1f56bf7921826248d9abc4a5a6c9a7713');
+  assert.equal(enabled.sourceCommitSha, manifest.sourceCommitSha);
+  assert.equal(enabled.sourceFingerprint, manifest.sourceFingerprint);
   assert.throws(() => createDeploymentPlan({ ...common, confirmation: 'ENABLE E1 GROUP D2 RESERVE COHORT',
     guardResult: d3GuardResult() }), /d3-confirmation-invalid/u);
   assert.throws(() => createDeploymentPlan({ ...common, guardResult: d3GuardResult({ candidateCount: 4 }) }),
@@ -839,6 +887,72 @@ test('D1, D2, and D3 guards cannot authorize another cohort', () => {
     guardResult: d2GuardResult() }), /action-guard-mismatch/u);
 });
 
+test('Group E enable and restore plans are exact cohort-bound zero-write containment actions', () => {
+  const manifest = loadManifest();
+  const common = { expectedSha: HEAD, explicitSource: manifest.sourceRoot, mode: 'plan', repoRoot: REPO_ROOT,
+    manifest, repository: repositoryFixture(manifest) };
+  const enabled = createDeploymentPlan({ ...common, action: 'enable-group-e', guardResult: groupEGuardResult(),
+    confirmation: ACTION_CONFIRMATIONS['enable-group-e'] });
+  const restored = createDeploymentPlan({ ...common, action: 'restore-group-e',
+    confirmation: ACTION_CONFIRMATIONS['restore-group-e'] });
+  assert.equal(enabled.guardVerified, true);
+  assert.equal(enabled.groupEClientMode, 'synthetic-canary');
+  assert.equal(groupEActivationGatePlan().CLIENT_FOUNDATION_USE_ENABLED,false);
+  assert.equal(groupEActivationGatePlan().GATEWAY_INVOCATION_ENABLED,true);
+  assert.equal(groupEActivationGatePlan().READ_ACCOUNT_FOUNDATION_ENABLED,true);
+  assert.equal(enabled.groupECohortDigest, 'c'.repeat(64));
+  assert.match(enabled.groupEBindings, /^[a-f0-9]{64}:[a-f0-9]{64};[a-f0-9]{64}:[a-f0-9]{64}$/u);
+  assert.equal(restored.groupEClientMode, 'disabled');
+  assert.equal(restored.groupEBindings, null);
+  assert.equal(restored.containmentRestore, true);
+  assert.equal(restored.sourceCommitSha, enabled.sourceCommitSha);
+  assert.equal(restored.sourceFingerprint, enabled.sourceFingerprint);
+  assert.throws(() => createDeploymentPlan({ ...common, action: 'enable-group-e', guardResult: d3GuardResult(),
+    confirmation: ACTION_CONFIRMATIONS['enable-group-e'] }), /action-guard-mismatch/u);
+  assert.throws(() => createDeploymentPlan({ ...common, action: 'enable-group-e', guardResult: groupEGuardResult(),
+    confirmation: 'ENABLE E1 GROUP D3 RESERVE COHORT' }), /group-e-confirmation-invalid/u);
+});
+
+test('Group E staged gateway arguments carry private hashes only while restore removes them', () => {
+  const manifest = loadManifest();
+  const common = { expectedSha: HEAD, explicitSource: manifest.sourceRoot, mode: 'plan', repoRoot: REPO_ROOT,
+    manifest, repository: repositoryFixture(manifest) };
+  const enabled = createDeploymentPlan({ ...common, action: 'enable-group-e', guardResult: groupEGuardResult(),
+    confirmation: ACTION_CONFIRMATIONS['enable-group-e'] });
+  const restored = createDeploymentPlan({ ...common, action: 'restore-group-e',
+    confirmation: ACTION_CONFIRMATIONS['restore-group-e'] });
+  const staging = stagePinnedSource(enabled);
+  try {
+    const enableArgs = deploymentArguments(enabled, 'readE1AccountFoundation', staging).join(' ');
+    const restoreArgs = deploymentArguments(restored, 'readE1AccountFoundation', staging).join(' ');
+    assert.match(enableArgs, /GROUP_E_CLIENT_MODE=synthetic-canary/u);
+    assert.match(enableArgs, /GROUP_E_SUBJECT_BINDINGS=[a-f0-9]{64}:[a-f0-9]{64};/u);
+    assert.match(enableArgs, /GROUP_E_COHORT_DIGEST=[a-f0-9]{64}/u);
+    assert.match(restoreArgs, /GROUP_E_CLIENT_MODE=disabled/u);
+    assert.doesNotMatch(restoreArgs, /GROUP_E_SUBJECT_BINDINGS|GROUP_E_COHORT_DIGEST|GROUP_E_WINDOW_/u);
+  } finally { fs.rmSync(staging, { recursive: true, force: true }); }
+});
+
+test('Group E authority replacement enables only read and restore strips private cohort values', () => {
+  const plan = { cohortStage: 'client-foundation-canary', groupEBindings: `${'a'.repeat(64)}:${'1'.repeat(64)};${'b'.repeat(64)}:${'2'.repeat(64)}`,
+    groupECohortDigest: 'c'.repeat(64), groupEWindowStart: '2030-01-01T12:00:00.000Z',
+    groupEWindowEnd: '2030-01-01T12:30:00.000Z' };
+  const enabled = authorityReplacement(authorityServiceFixture(false), true, plan);
+  const enabledEnv = Object.fromEntries(enabled.spec.template.spec.containers[0].env.map((entry) => [entry.name, entry.value]));
+  assert.equal(enabledEnv.READ_ACCOUNT_FOUNDATION_ENABLED, 'true');
+  assert.deepEqual(Object.fromEntries(['RESERVE_HANDLE_ENABLED','REPAIR_FOUNDATION_ENABLED','APPLY_MIGRATION_ENABLED',
+    'FREEZE_CONFLICT_ENABLED'].map((name) => [name, enabledEnv[name]])), {
+    RESERVE_HANDLE_ENABLED:'false',REPAIR_FOUNDATION_ENABLED:'false',APPLY_MIGRATION_ENABLED:'false',FREEZE_CONFLICT_ENABLED:'false'
+  });
+  assert.equal(enabledEnv.GROUP_E_CLIENT_MODE, 'synthetic-canary');
+  const restored = authorityReplacement(enabled, false, plan);
+  const restoredEnv = Object.fromEntries(restored.spec.template.spec.containers[0].env.map((entry) => [entry.name, entry.value]));
+  assert.equal(restoredEnv.GROUP_E_CLIENT_MODE, 'disabled');
+  assert.equal(Object.hasOwn(restoredEnv, 'GROUP_E_SUBJECT_BINDINGS'), false);
+  assert.deepEqual(Object.fromEntries(AUTHORITY_GATES.map((name) => [name, restoredEnv[name]])),
+    Object.fromEntries(AUTHORITY_GATES.map((name) => [name, 'false'])));
+});
+
 test('tracked scripts expose only the canonical gateway deploy entrypoint', () => {
   const scripts = spawnSync('rg', [
     '-n', 'gcloud functions deploy', 'functions/scripts', 'functions/production',
@@ -851,5 +965,7 @@ test('tracked scripts expose only the canonical gateway deploy entrypoint', () =
   assert.match(deploySource, /deploymentArguments\(plan, functionName, stagedSource\)/u);
   assert.match(deploySource, /guardProductionThirdMutationContinuation\(\{ expectedSourceSha \}\)/u);
   assert.match(deploySource, /args\['d3-mode'\]/u);
+  assert.match(deploySource,/plan\.cohortStage === 'client-foundation-canary' \? 'group-e' : 'd3'/u);
+  assert.match(deploySource,/e1\/\$\{scope\}-containment-restore-failed/u);
   assert.doesNotMatch(deploySource, /gcloud['"`]?,\s*\[['"`]functions['"`],\s*['"`]deploy/u);
 });
