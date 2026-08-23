@@ -47,6 +47,15 @@ function htmlScripts(html){
   return[...html.matchAll(/<script\s+[^>]*src="([^"]+)"/g)]
     .map(match=>match[1]).filter(src=>!/^https?:\/\//i.test(src));
 }
+function requireTrustedOrder(actual,expected,label){
+  const length=Math.max(actual.length,expected.length);
+  for(let index=0;index<length;index++){
+    if(actual[index]===expected[index])continue;
+    const runtime=actual[index]===undefined?'<missing>':actual[index];
+    const trusted=expected[index]===undefined?'<missing>':expected[index];
+    fail(`${label} differs from trusted-control frontend manifest at index ${index}: runtime=${runtime}, trusted=${trusted}; reviewed inventory changes require a new immutable control revision and dispatcher selector`);
+  }
+}
 function manifestAssets(webManifest){
   const values=[];
   for(const icon of webManifest.icons||[])if(icon.src)values.push(icon.src);
@@ -86,9 +95,9 @@ function validateReleaseCoherence(root,{expectedReleaseId}={}){
     if(url.searchParams.get('v')!==releases.index)fail(`First-party script has a mixed or missing release: ${src}`);
     return url.pathname.replace(/^\/trade-app\//,'');
   });
-  if(JSON.stringify(scriptPaths)!==JSON.stringify(allowlist.scriptFiles))fail('HTML first-party script order differs from reviewed frontend manifest');
+  requireTrustedOrder(scriptPaths,allowlist.scriptFiles,'HTML first-party script order');
   const precache=workerArray(worker,'RELEASE_ASSETS');
-  if(JSON.stringify(precache)!==JSON.stringify(allowlist.scriptFiles))fail('Service-worker release graph differs from reviewed frontend manifest');
+  requireTrustedOrder(precache,allowlist.scriptFiles,'Service-worker release graph');
   const declaredAssets=manifestAssets(webManifest);
   for(const asset of declaredAssets)if(!allowlist.assetFiles.includes(asset))fail(`Web manifest asset is not allowlisted: ${asset}`);
   for(const required of ['index.html','manifest.json','sw.js','js/domain/clientRelease.js'])if(!allowlist.files.includes(required))fail(`Required runtime file omitted: ${required}`);
