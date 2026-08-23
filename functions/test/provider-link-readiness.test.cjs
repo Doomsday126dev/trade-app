@@ -282,6 +282,61 @@ test('exact replay is write-free and changed evidence under the same request ID 
   assert.deepEqual(adapter.inspect(), afterFirst);
 });
 
+test('exact replay rejects every malformed durable three-record relationship without writes or repair', async () => {
+  const subject = 'google-subject-001';
+  const request = input('google', 'durable-replay');
+  const initial = harness();
+  await initial.operations.linkVerifiedProvider(request, context());
+  const coherent = initial.adapter.inspect();
+  const key = providerSubjectKey('google', subjectHasher(PROVIDERS.google, subject));
+  const operation = (state) => state.operationRequests[UID].requests[request.requestId];
+  const provider = (state) => state.accounts[UID].providers.google;
+  const reverse = (state) => state.providerSubjects[key];
+  const changedKey = providerSubjectKey('google', subjectHasher(PROVIDERS.google, 'different-subject'));
+  const mutations = [
+    ['account-provider deleted', (state) => { delete state.accounts[UID].providers.google; }],
+    ['reverse claim deleted', (state) => { delete state.providerSubjects[key]; }],
+    ['account-provider subject key changed', (state) => { provider(state).providerSubjectKey = changedKey; }],
+    ['reverse claim UID changed', (state) => { reverse(state).uid = OTHER_UID; }],
+    ['provider changed', (state) => { provider(state).provider = 'discord'; }],
+    ['provider ID changed', (state) => { reverse(state).providerId = PROVIDERS.discord; }],
+    ['link state changed', (state) => { provider(state).state = 'pending'; }],
+    ['schema version changed', (state) => { provider(state).schemaVersion = 2; }],
+    ['provider revision changed', (state) => { provider(state).revision = 2; }],
+    ['reverse linkedAt changed', (state) => { reverse(state).linkedAt += 1; }],
+    ['operation status missing', (state) => { delete operation(state).status; }],
+    ['operation status malformed', (state) => { operation(state).status = 'pending'; }],
+    ['operation name changed', (state) => { operation(state).operation = 'reserveTrainerHandle'; }],
+    ['operation result missing', (state) => { delete operation(state).result; }],
+    ['operation result malformed', (state) => { operation(state).result = { status: 'linked' }; }],
+    ['operation result terminal status unsupported', (state) => { operation(state).result.status = 'reconciled'; }],
+    ['operation fingerprint changed', (state) => { operation(state).fingerprint = 'f'.repeat(64); }]
+  ];
+
+  for (const [label, mutate] of mutations) {
+    const state = structuredClone(coherent);
+    mutate(state);
+    const adapter = createInMemoryProviderLinkAdapter({
+      ...state,
+      verifiedProviderEvidence: {
+        [UID]: { [PROVIDERS.google]: evidence(UID, PROVIDERS.google, subject) }
+      }
+    });
+    const operations = createProviderLinkOperations({ adapter, now: () => NOW, subjectHasher });
+    const before = adapter.inspect();
+    let caught;
+    try {
+      await operations.linkVerifiedProvider(request, context());
+    } catch (error) {
+      caught = error;
+    }
+    assert.ok(caught, label);
+    assert.ok(['conflict', 'unavailable', 'replay_mismatch'].includes(caught.code), label);
+    assert.doesNotMatch(JSON.stringify({ code: caught.code, reason: caught.reason, message: caught.message }), new RegExp(subject), label);
+    assert.deepEqual(adapter.inspect(), before, label);
+  }
+});
+
 test('same UID and subject with a new request is already linked without rewriting the claim', async () => {
   const { adapter, operations } = harness();
   await operations.linkVerifiedProvider(input('google', 'same-first'), context());

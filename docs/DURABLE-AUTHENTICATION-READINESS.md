@@ -58,6 +58,8 @@ Operator-only recovery state is outside this contract. No collision can invoke r
 
 Feature-branch source publication does not activate the contract. A later production path would require, at minimum, separate review of the Firestore adapter, provider verification, rate limiting, observability, reconciliation, IAM, gateway/App Check boundary, client UX, rollout guard, and rollback.
 
+Future provider-specific work must preserve bounded, single-use attempts and replay protection; fixed rate limits; redacted observability; OAuth `state` and server-side code exchange where applicable; and protection against unlinking the final usable credential. Interrupted or contradictory state requires a separate recovery/reconciliation flow and must never trigger an automatic merge. Email/PIN conversion remains deferred to its own UID- and PIN-preserving proof and rollback contract.
+
 ## Threat and test contract
 
 | Threat | Required behavior |
