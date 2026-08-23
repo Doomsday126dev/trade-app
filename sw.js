@@ -67,6 +67,7 @@ const RELEASE_ASSETS=[
   'js/i18n/core.js',
   'js/services/firebaseClient.js',
   'js/services/firebaseAppCheck.js',
+  'js/services/e1ClientFoundationCanary.js',
   'js/data/subscriptionManager.js',
   'js/data/listenerLifecycle.js',
   'js/data/sessionCacheBoundary.js',

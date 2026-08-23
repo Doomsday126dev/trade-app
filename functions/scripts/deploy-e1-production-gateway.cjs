@@ -11,6 +11,7 @@ const {
   guardProductionThirdMutation,
   guardProductionThirdMutationContinuation
 } = require('../production/e1ProductionThirdMutationGuard.cjs');
+const { guardProductionClientFoundation } = require('../production/e1ProductionClientFoundationGuard.cjs');
 const {
   createDeploymentPlan,
   deploymentArguments,
@@ -31,7 +32,8 @@ const GUARDS = Object.freeze({
   'group-c': Object.freeze({ input: 'E1_PRODUCTION_READ_PROOF_GUARD_INPUT', run: guardProductionReadProof }),
   'group-d1': Object.freeze({ input: 'E1_PRODUCTION_FIRST_MUTATION_GUARD_INPUT', run: guardProductionFirstMutation }),
   'group-d2': Object.freeze({ input: 'E1_PRODUCTION_SECOND_MUTATION_GUARD_INPUT', run: guardProductionSecondMutation }),
-  'group-d3': Object.freeze({ input: 'E1_PRODUCTION_THIRD_MUTATION_GUARD_INPUT', run: guardProductionThirdMutation })
+  'group-d3': Object.freeze({ input: 'E1_PRODUCTION_THIRD_MUTATION_GUARD_INPUT', run: guardProductionThirdMutation }),
+  'group-e': Object.freeze({ input: 'E1_PRODUCTION_GROUP_E_GUARD_INPUT', run: guardProductionClientFoundation })
 });
 
 function privateJsonPath(value, label) {
@@ -72,6 +74,12 @@ function verifiedGuardResult(action, mode, expectedSourceSha, d3Mode) {
       options.bindingPath = privateJsonPath(process.env.E1_PRODUCTION_THIRD_MUTATION_SUBJECTS, 'group-d3-subjects');
     }
   }
+  if (action === 'enable-group-e') {
+    for (const [name, key] of [['readinessPath','E1_PRODUCTION_GROUP_E_READINESS'],
+      ['evidencePath','E1_PRODUCTION_GROUP_E_EVIDENCE'],['jitPath','E1_PRODUCTION_GROUP_E_JIT']]) {
+      options[name] = privateJsonPath(process.env[key], key.toLowerCase().replaceAll('_','-'));
+    }
+  }
   return contract.run(input, options);
 }
 
@@ -105,16 +113,29 @@ function verifyAuthorityIam(plan, spawn) {
   }
 }
 
+function authorityGateValues(plan, enabled) {
+  const cohortStage = plan.cohortStage || 'D3';
+  return Object.fromEntries(AUTHORITY_GATES.map((gate) => [gate, enabled && (
+    cohortStage === 'D3' ? gate === 'RESERVE_HANDLE_ENABLED' :
+      cohortStage === 'client-foundation-canary' ? gate === 'READ_ACCOUNT_FOUNDATION_ENABLED' : false
+  )]));
+}
+
 function verifyAuthorityService(plan, service, expectedEnabled, options = {}) {
   const container = service?.spec?.template?.spec?.containers?.[0];
   const env = environment(container);
   const expectedRuntime = 'e1-identity-authority-runtime@trade-list-a4297.iam.gserviceaccount.com';
+  const expectedGates = expectedEnabled === null ? null : authorityGateValues(plan, expectedEnabled);
   if (service?.metadata?.name !== 'e1-identity-authority' || service?.status?.url !== plan.authorityOrigin ||
       service?.spec?.template?.spec?.serviceAccountName !== expectedRuntime ||
       service?.spec?.template?.spec?.containers?.length !== 1 || !String(container?.image || '').includes('@sha256:') ||
-      AUTHORITY_GATES.some((gate) => gate === 'RESERVE_HANDLE_ENABLED' && expectedEnabled === null
-        ? !['true', 'false'].includes(env[gate])
-        : env[gate] !== String(gate === 'RESERVE_HANDLE_ENABLED' && expectedEnabled))) {
+      AUTHORITY_GATES.some((gate) => expectedGates === null ? !['true', 'false'].includes(env[gate]) :
+        env[gate] !== String(expectedGates[gate])) ||
+      (plan.cohortStage === 'client-foundation-canary' && expectedEnabled !== null &&
+        ((env.GROUP_E_CLIENT_MODE || 'disabled') !== (expectedEnabled ? 'synthetic-canary' : 'disabled') ||
+          (expectedEnabled && (env.GROUP_E_SUBJECT_BINDINGS !== plan.groupEBindings ||
+            env.GROUP_E_COHORT_DIGEST !== plan.groupECohortDigest || env.GROUP_E_WINDOW_START !== plan.groupEWindowStart ||
+            env.GROUP_E_WINDOW_END !== plan.groupEWindowEnd))))) {
     throw new Error('e1/authority-runtime-or-gates-invalid');
   }
   if (options.expectedImage && container.image !== options.expectedImage) {
@@ -122,29 +143,53 @@ function verifyAuthorityService(plan, service, expectedEnabled, options = {}) {
   }
   if (options.requireGuardBinding) {
     const expected = plan.authorityRuntime;
+    const securityValid = plan.cohortStage === 'client-foundation-canary'
+      ? expected?.securityBoundary?.authorityPrivate === true && expected.securityBoundary.gatewayOnlyInvoker === true &&
+        expected.securityBoundary.iamDrift === false
+      : expected?.securityBoundary?.authorityPrivate === true &&
+        expected.securityBoundary.gatewayRuntimeSoleAuthorityInvoker === true && expected.securityBoundary.runtimeIamDrift === false;
     if (!expected || expected.service !== 'e1-identity-authority' || expected.origin !== plan.authorityOrigin ||
         expected.revision !== service.status.latestReadyRevisionName ||
         !String(container.image).endsWith(`@${expected.imageDigest}`) ||
-        expected.runtimeServiceAccount !== expectedRuntime || expected.securityBoundary?.authorityPrivate !== true ||
-        expected.securityBoundary?.gatewayRuntimeSoleAuthorityInvoker !== true ||
-        expected.securityBoundary?.runtimeIamDrift !== false) {
+        expected.runtimeServiceAccount !== expectedRuntime || !securityValid) {
       throw new Error('e1/authority-continuation-binding-invalid');
     }
   }
   return true;
 }
 
-function authorityReplacement(service, enabled) {
+function authorityReplacement(service, enabled, plan = { cohortStage: 'D3' }) {
   const replacement = structuredClone(service);
   delete replacement.status;
   for (const key of ['creationTimestamp', 'generation', 'resourceVersion', 'selfLink', 'uid']) {
     delete replacement.metadata?.[key];
   }
   const entries = replacement.spec.template.spec.containers[0].env;
+  const gates = authorityGateValues(plan, enabled);
   for (const gate of AUTHORITY_GATES) {
     const entry = entries.find((candidate) => candidate.name === gate);
     if (!entry) throw new Error(`e1/authority-gate-missing:${gate}`);
-    entry.value = String(gate === 'RESERVE_HANDLE_ENABLED' && enabled);
+    entry.value = String(gates[gate]);
+  }
+  const upsert = (name, value) => {
+    const entry = entries.find((candidate) => candidate.name === name);
+    if (entry) entry.value = value;
+    else entries.push({ name, value });
+  };
+  const privateNames = ['GROUP_E_SUBJECT_BINDINGS','GROUP_E_COHORT_DIGEST','GROUP_E_WINDOW_START','GROUP_E_WINDOW_END'];
+  if (plan.cohortStage === 'client-foundation-canary') {
+    upsert('GROUP_E_CLIENT_MODE', enabled ? 'synthetic-canary' : 'disabled');
+    for (const name of privateNames) {
+      const index = entries.findIndex((entry) => entry.name === name);
+      if (enabled) {
+      upsert(name, {
+        GROUP_E_SUBJECT_BINDINGS: plan.groupEBindings,
+        GROUP_E_COHORT_DIGEST: plan.groupECohortDigest,
+        GROUP_E_WINDOW_START: plan.groupEWindowStart,
+        GROUP_E_WINDOW_END: plan.groupEWindowEnd
+      }[name]);
+      } else if (index >= 0) entries.splice(index, 1);
+    }
   }
   return replacement;
 }
@@ -158,7 +203,7 @@ function replaceAuthority(plan, enabled, options = {}) {
   const directory = fs.mkdtempSync(path.join(require('node:os').tmpdir(), 'e1-authority-gates-'));
   const spec = path.join(directory, 'service.json');
   try {
-    fs.writeFileSync(spec, JSON.stringify(authorityReplacement(service, enabled)), { mode: 0o600 });
+    fs.writeFileSync(spec, JSON.stringify(authorityReplacement(service, enabled, plan)), { mode: 0o600 });
     for (const dryRun of [true, false]) {
       const args = ['run', 'services', 'replace', spec, `--project=${plan.project}`, `--region=${plan.region}`,
         ...(dryRun ? ['--dry-run'] : []), '--quiet'];
@@ -182,7 +227,8 @@ function deployGateway(plan, stagedSource, options = {}) {
       `--project=${plan.project}`, `--region=${plan.region}`], `gateway-${functionName}`);
     const env = service?.serviceConfig?.environmentVariables || {};
     if (service?.serviceConfig?.serviceAccountEmail !== plan.runtimeServiceAccount ||
-        env.GATEWAY_INVOCATION_ENABLED !== String(plan.gateEnabled) || env.READ_PROOF_MODE !== 'false') {
+        env.GATEWAY_INVOCATION_ENABLED !== String(plan.gateEnabled) || env.READ_PROOF_MODE !== 'false' ||
+        (env.GROUP_E_CLIENT_MODE || 'disabled') !== (plan.groupEClientMode || 'disabled')) {
       throw new Error(`e1/gateway-post-deploy-verification-failed:${functionName}`);
     }
   }
@@ -192,7 +238,7 @@ function executePlan(plan, options = {}) {
   let stagedSource;
   try {
     stagedSource = stagePinnedSource(plan);
-    if (plan.cohortStage !== 'D3') return deployGateway(plan, stagedSource, options);
+    if (!['D3','client-foundation-canary'].includes(plan.cohortStage)) return deployGateway(plan, stagedSource, options);
     if (plan.gateEnabled && plan.d3Mode === 'clean-start') return deployGateway(plan, stagedSource, options);
     if (plan.gateEnabled) {
       try {

@@ -2793,6 +2793,7 @@ window.__pogoBootWatch=setTimeout(function(){
 <script src="js/i18n/core.js?v=2026-08-22.56"></script>
 <script src="js/services/firebaseClient.js?v=2026-08-22.56"></script>
 <script src="js/services/firebaseAppCheck.js?v=2026-08-22.56"></script>
+<script src="js/services/e1ClientFoundationCanary.js?v=2026-08-22.56"></script>
 <script src="js/data/subscriptionManager.js?v=2026-08-22.56"></script>
 <script src="js/data/listenerLifecycle.js?v=2026-08-22.56"></script>
 <script src="js/data/sessionCacheBoundary.js?v=2026-08-22.56"></script>
@@ -2951,6 +2952,19 @@ const LEGACY_INVENTORY_READ_ONLY=true;
 // SEC-03 dead-code backlog: remove the retired Inventory edit/browse/Offers
 // renderers and their window exports after archive compatibility is retired.
 // No current product route or rendered control reaches those legacy templates.
+window.__pogoCreateGroupEClientFoundationCanary=(configuration)=>{
+  if(!fbApp||!auth)throw Object.assign(new Error('Group E client dependencies are not ready'),{code:'group-e/dependencies-not-ready'});
+  if(e1ClientFoundationCanary)e1ClientFoundationCanary.close();
+  e1ClientFoundationCanary=e1ClientFoundationCanaryService.createClientFoundationCanary({
+    firebaseApp:fbApp,
+    auth,
+    firebaseAppCheckReady,
+    getSessionGeneration:()=>_sessionTransientGeneration,
+    importFunctionsSdk:()=>import('https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js')
+  });
+  e1ClientFoundationCanary.open(configuration);
+  return e1ClientFoundationCanary;
+};
 const i18nCore=window.PogoI18n?.core;
 if(!i18nCore)throw new Error('Locale foundation failed to load');
 const pokemonNamesI18n=window.PogoI18n?.pokemonNames;
@@ -2961,6 +2975,8 @@ const firebaseClientService=window.PogoServices?.firebaseClient;
 if(!firebaseClientService)throw new Error('Firebase client service failed to load');
 const firebaseAppCheckService=window.PogoServices?.firebaseAppCheck;
 if(!firebaseAppCheckService)throw new Error('Firebase App Check foundation failed to load');
+const e1ClientFoundationCanaryService=window.PogoServices?.e1ClientFoundationCanary;
+if(!e1ClientFoundationCanaryService)throw new Error('E.1 client-foundation canary contract failed to load');
 const subscriptionManagerData=window.PogoData?.subscriptionManager;
 if(!subscriptionManagerData)throw new Error('Subscription manager failed to load');
 const listenerLifecycleData=window.PogoData?.listenerLifecycle;
@@ -3130,6 +3146,7 @@ const FIREBASE_RULES_STATUS=Object.freeze({
 });
 
 let db=null,fbOn=false,cur=null,fbApp=null,auth=null,currentAuthUid=null;
+let e1ClientFoundationCanary=null;
 let firebaseDatabaseHandle=null,firebaseDataProtectionReady=false;
 let allData={};
 let selectedTrainerRuntime={username:'',publicData:null};
@@ -4357,6 +4374,7 @@ function sessionTransientCallback(callback){
 }
 function resetSessionTransientUi(reason='session_boundary'){
   _sessionTransientGeneration++;
+  if(typeof e1ClientFoundationCanary!=='undefined'&&e1ClientFoundationCanary){e1ClientFoundationCanary.close();e1ClientFoundationCanary=null;}
   resetOwnedHydrationState();
 
   if(typeof trainerSuggestionTimer!=='undefined')clearTimeout(trainerSuggestionTimer);

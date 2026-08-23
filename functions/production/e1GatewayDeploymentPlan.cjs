@@ -16,6 +16,10 @@ const {
   continuationProgress
 } = require('./e1ProductionThirdMutationContract.cjs');
 const { activationGatePlan, disabledGatePlan } = require('./e1ProductionFirstMutationGuard.cjs');
+const {
+  ENABLE_CONFIRMATION: GROUP_E_ENABLE_CONFIRMATION,
+  RESTORE_CONFIRMATION: GROUP_E_RESTORE_CONFIRMATION
+} = require('./e1ProductionClientFoundationGuard.cjs');
 
 const MANIFEST_PATH = path.resolve(__dirname, 'e1-gateway-source-manifest.json');
 const RESOURCE_MANIFEST_PATH = path.resolve(__dirname, 'e1-production-resource-manifest.json');
@@ -33,11 +37,18 @@ const ACTIONS = Object.freeze({
   'enable-group-d2': Object.freeze({ approvalGroup: 'D', cohortStage: 'D2', gateEnabled: true, readProofMode: false }),
   'restore-group-d2': Object.freeze({ approvalGroup: 'D', cohortStage: 'D2', gateEnabled: false, readProofMode: false }),
   'enable-group-d3': Object.freeze({ approvalGroup: 'D', cohortStage: 'D3', gateEnabled: true, readProofMode: false }),
-  'restore-group-d3': Object.freeze({ approvalGroup: 'D', cohortStage: 'D3', gateEnabled: false, readProofMode: false })
+  'restore-group-d3': Object.freeze({ approvalGroup: 'D', cohortStage: 'D3', gateEnabled: false, readProofMode: false }),
+  'enable-group-e': Object.freeze({ approvalGroup: 'E', cohortStage: 'client-foundation-canary', gateEnabled: true, readProofMode: false }),
+  'restore-group-e': Object.freeze({ approvalGroup: 'E', cohortStage: 'client-foundation-canary', gateEnabled: false, readProofMode: false })
 });
 const D3_CONFIRMATIONS = Object.freeze({
   'enable-group-d3': D3_ENABLE_CONFIRMATION,
   'restore-group-d3': D3_RESTORE_CONFIRMATION
+});
+const ACTION_CONFIRMATIONS = Object.freeze({
+  ...D3_CONFIRMATIONS,
+  'enable-group-e': GROUP_E_ENABLE_CONFIRMATION,
+  'restore-group-e': GROUP_E_RESTORE_CONFIRMATION
 });
 const D3_MODES = Object.freeze(['clean-start', 'continuation']);
 const HASH = /^[a-f0-9]{64}$/u;
@@ -244,6 +255,20 @@ function verifyActionGuard(actionName, guardResult, expectedSha, d3Mode, manifes
     }
     stageValid = stageValid && commonD3 && (cleanStart || continuation);
   }
+  if (action.cohortStage === 'client-foundation-canary') {
+    const expectedEnabled = action.gateEnabled;
+    stageValid = guardResult.cohortStage === 'client-foundation-canary' && guardResult.cohortSize === 2 &&
+      guardResult.groupEAuthorized === true && guardResult.executionAuthorized === true &&
+      guardResult.toolingSourceSha === undefined && guardResult.provenance?.toolingSourceSha === expectedSha &&
+      guardResult.budget?.applicationWrites === 0 && guardResult.budget?.firestoreWrites === 0 &&
+      guardResult.budget?.rtdbWrites === 0 && guardResult.budget?.processLocalCounterAuthoritative === false &&
+      guardResult.budget?.authoritativeReconciliationRequired === true &&
+      JSON.stringify(guardResult.activationGatePlan) === JSON.stringify({
+        ...disabledGatePlan(), CLIENT_FOUNDATION_USE_ENABLED: true, GATEWAY_INVOCATION_ENABLED: true,
+        READ_ACCOUNT_FOUNDATION_ENABLED: true
+      }) && JSON.stringify(guardResult.restorationGatePlan) === JSON.stringify(disabledGatePlan()) &&
+      (!expectedEnabled || guardResult.entryEvidenceExpiresAt);
+  }
   if (!commonValid || !stageValid) throw new Error('e1/gateway-action-guard-mismatch');
   return true;
 }
@@ -263,8 +288,8 @@ function createDeploymentPlan(options = {}) {
   if (!fs.existsSync(resolvedSource)) throw new Error('e1/gateway-source-missing');
   if (!Object.hasOwn(ACTIONS, options.action)) throw new Error('e1/gateway-action-invalid');
   const action = ACTIONS[options.action];
-  if (Object.hasOwn(D3_CONFIRMATIONS, options.action) && options.confirmation !== D3_CONFIRMATIONS[options.action]) {
-    throw new Error('e1/gateway-d3-confirmation-invalid');
+  if (Object.hasOwn(ACTION_CONFIRMATIONS, options.action) && options.confirmation !== ACTION_CONFIRMATIONS[options.action]) {
+    throw new Error(options.action.includes('group-e') ? 'e1/gateway-group-e-confirmation-invalid' : 'e1/gateway-d3-confirmation-invalid');
   }
   if (!/^[0-9a-f]{40}$/u.test(options.expectedSha || '')) throw new Error('e1/gateway-expected-sha-invalid');
   const d3Mode = options.d3Mode;
@@ -310,12 +335,12 @@ function createDeploymentPlan(options = {}) {
     d3Mode: action.cohortStage === 'D3' ? d3Mode || null : null,
     toolingSourceSha: options.expectedSha,
     productionRuntime: options.guardResult?.productionRuntime || null,
-    authorityRuntime: action.cohortStage === 'D3' && options.guardResult ? Object.freeze({
-      service: options.guardResult.runtimeProvenance?.authorityService,
-      origin: options.guardResult.runtimeProvenance?.authorityOrigin,
-      revision: options.guardResult.runtimeProvenance?.authorityRevision,
-      imageDigest: options.guardResult.runtimeProvenance?.authorityImageDigest,
-      runtimeServiceAccount: options.guardResult.runtimeProvenance?.runtimeServiceAccount,
+    authorityRuntime: ['D3', 'client-foundation-canary'].includes(action.cohortStage) && options.guardResult ? Object.freeze({
+      service: options.guardResult.runtimeProvenance?.authorityService || 'e1-identity-authority',
+      origin: options.guardResult.runtimeProvenance?.authorityOrigin || target.origin,
+      revision: options.guardResult.runtimeProvenance?.authorityRevision || options.guardResult.provenance?.authorityRevision,
+      imageDigest: options.guardResult.runtimeProvenance?.authorityImageDigest || options.guardResult.provenance?.authorityImageDigest,
+      runtimeServiceAccount: options.guardResult.runtimeProvenance?.runtimeServiceAccount || target.runtimeServiceAccount,
       securityBoundary: options.guardResult.securityBoundary || null
     }) : null,
     guardVerified,
@@ -330,7 +355,16 @@ function createDeploymentPlan(options = {}) {
       ? options.guardResult?.mutationWindowEnd || null : null,
     mutationWindowGovernsPostEnable: action.cohortStage === 'D3' && action.gateEnabled
       ? options.guardResult?.mutationWindowGovernsPostEnable ?? null : null,
-    confirmationValidated: Object.hasOwn(D3_CONFIRMATIONS, options.action),
+    groupEClientMode: action.cohortStage === 'client-foundation-canary' && action.gateEnabled ? 'synthetic-canary' : 'disabled',
+    groupEBindings: action.cohortStage === 'client-foundation-canary' && action.gateEnabled
+      ? Object.values(options.guardResult?.bindings || {}).map((binding) => `${binding.uidHash}:${binding.trainerHash}`).join(';') : null,
+    groupECohortDigest: action.cohortStage === 'client-foundation-canary' && action.gateEnabled
+      ? options.guardResult?.cohortDigest || null : null,
+    groupEWindowStart: action.cohortStage === 'client-foundation-canary' && action.gateEnabled
+      ? options.guardResult?.activationWindowStart || null : null,
+    groupEWindowEnd: action.cohortStage === 'client-foundation-canary' && action.gateEnabled
+      ? options.guardResult?.activationWindowEnd || null : null,
+    confirmationValidated: Object.hasOwn(ACTION_CONFIRMATIONS, options.action),
     trackedWorkingTreeClean,
     deploymentAllowed,
     manifest: Object.freeze(manifest)
@@ -384,6 +418,13 @@ function deploymentArguments(plan, functionName, stagedSource) {
     `E1_GATEWAY_SERVICE_ACCOUNT=${manifest.runtimeServiceAccount}`,
     `GATEWAY_INVOCATION_ENABLED=${plan.gateEnabled}`,
     `READ_PROOF_MODE=${plan.readProofMode}`,
+    `GROUP_E_CLIENT_MODE=${plan.groupEClientMode}`,
+    ...(plan.groupEClientMode === 'synthetic-canary' ? [
+      `GROUP_E_SUBJECT_BINDINGS=${plan.groupEBindings}`,
+      `GROUP_E_COHORT_DIGEST=${plan.groupECohortDigest}`,
+      `GROUP_E_WINDOW_START=${plan.groupEWindowStart}`,
+      `GROUP_E_WINDOW_END=${plan.groupEWindowEnd}`
+    ] : []),
     `APP_CHECK_ENFORCEMENT_MODE=${manifest.appCheckMode}`,
     'APP_CHECK_DEBUG_TOKENS_ALLOWED=false',
     `E1_RATE_LIMIT_POLICY=${manifest.rateLimitPolicy}`
@@ -427,6 +468,7 @@ function publicPlan(plan) {
     containmentRestore: plan.containmentRestore,
     gateEnabled: plan.gateEnabled,
     readProofMode: plan.readProofMode,
+    groupEClientMode: plan.groupEClientMode,
     entryEvidenceExpiresAt: plan.entryEvidenceExpiresAt,
     entryEvidenceRequiredAfterEnable: plan.entryEvidenceRequiredAfterEnable,
     mutationWindowEnd: plan.mutationWindowEnd,
@@ -439,6 +481,7 @@ function publicPlan(plan) {
 
 module.exports = Object.freeze({
   ACTIONS,
+  ACTION_CONFIRMATIONS,
   D3_CONFIRMATIONS,
   EXPECTED_AUTHORITY,
   MANIFEST_PATH,
