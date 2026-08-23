@@ -43,7 +43,7 @@ The production path is deliberately split across three immutable source identiti
 
 The runtime source cannot replace the workflow, validators, builder, verifier, permissions, or artifact allowlist. Ordinary pushes and tag creation are inert because both workflows remain manual-only.
 
-Trusted-control regression tests are release-neutral. They read the selected runtime identity from the runtime checkout and explicit workflow inputs, compute that runtime's deterministic artifact digest, and verify the digest through the generated and served manifests. A runtime release change alone does not require a trusted-control revision; only control-logic changes do.
+Trusted-control regression tests are release-neutral. They read the selected runtime identity from the runtime checkout and explicit workflow inputs, compute that runtime's deterministic artifact digest, and verify the digest through the generated and served manifests. A runtime release-marker change alone does not require a trusted-control revision while the reviewed frontend inventory is unchanged. Adding, removing, or reordering a path in `scripts/pages/frontend-files.json` requires a new immutable control revision, a dispatcher-only re-pin, and a new control-selector tag before dispatch. Runtime-local validation cannot establish compatibility with an older selector's frozen inventory.
 
 ## Trust Bootstrap And Updates
 

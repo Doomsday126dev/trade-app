@@ -222,6 +222,19 @@ test('synthetic future runtime release validates and builds without changing tru
   fs.rmSync(fixture,{recursive:true,force:true});fs.rmSync(output,{recursive:true,force:true});fs.rmSync(secondOutput,{recursive:true,force:true});
 });
 
+test('trusted control fails clearly when a runtime adds an unreviewed first-party script',()=>{
+  const fixture=tempDir();copyRuntime(root,fixture);
+  const modulePath='js/domain/future-control-rotation.js';
+  fs.writeFileSync(path.join(fixture,modulePath),'// fixture only\n');
+  const index=path.join(fixture,'index.html');
+  fs.writeFileSync(index,fs.readFileSync(index,'utf8').replace('</body>',`<script src="${modulePath}?v=${RELEASE_ID}"></script>\n</body>`));
+  assert.throws(
+    ()=>validator.validateReleaseCoherence(fixture),
+    /trusted-control frontend manifest.*new immutable control revision and dispatcher selector/
+  );
+  fs.rmSync(fixture,{recursive:true,force:true});
+});
+
 test('artifact digest algorithm has an independent stable fixture',()=>{
   const fixture=tempDir();fs.writeFileSync(path.join(fixture,'a.txt'),'alpha\n');fs.mkdirSync(path.join(fixture,'nested'));fs.writeFileSync(path.join(fixture,'nested/b.txt'),'beta\n');
   assert.equal(builder.artifactDigest(fixture,['nested/b.txt','a.txt']),'15db8ea5ae2ce6f2d10b22e327a2ebc8400c23232aece5400058519012c60606');
