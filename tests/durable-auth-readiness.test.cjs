@@ -71,17 +71,17 @@ test('OAuth authentication cannot create a trainer profile before explicit handl
   assert.equal(domain.onboardingDecision({oauthAuthenticated:true,handleReserved:true}).mayCreateTrainerProfile,false);
 });
 
-test('provider metadata roots remain absent from client reads, writes, and current Rules',()=>{
+test('E.2 provider metadata remains absent from client reads, writes, and current Rules',()=>{
   const clientFiles=['index.html',...fs.readdirSync(path.join(root,'js'),{recursive:true}).filter(name=>/\.js$/.test(name)).map(name=>`js/${name}`)];
   const clientText=clientFiles.map(file=>fs.readFileSync(path.join(root,file),'utf8')).join('\n');
-  for(const rootName of ['authProviders','authProviderSubjects','authLinkAttempts']){
+  for(const rootName of ['authProviders','authProviderSubjects','authLinkAttempts','providerSubjects']){
     const matches=clientText.match(new RegExp(rootName,'g'))||[];
     assert.equal(matches.length,0,rootName);
   }
   const rules=fs.readFileSync(path.join(root,'tests/firebase/database.rules.share-visibility.json'),'utf8');
   assert.match(rules,/"\.read": false/);
   assert.match(rules,/"\.write": false/);
-  assert.doesNotMatch(rules,/authProviders|authProviderSubjects|authLinkAttempts/);
+  assert.doesNotMatch(rules,/authProviders|authProviderSubjects|authLinkAttempts|providerSubjects/);
 });
 
 test('PIN remains the active login and provider SDK methods are not imported',()=>{

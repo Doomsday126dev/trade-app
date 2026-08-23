@@ -172,7 +172,7 @@ Cost is one service invocation and one exact document read. At this scale, that 
 
 ### E.2 provider linking and recovery
 
-Add `accounts/{uid}/providers/{provider}` and globally unique `providerSubjects/{providerAndSubjectHash}` documents in `phase-e-identity`. Reserve both in one authority-service transaction. Provider data must come from a verified provider exchange/Admin Auth observation, never client fields. Recovery and unlink remain separate operator/reauth flows. No provider can replace the account UID.
+Add `accounts/{uid}/providers/{provider}` and globally unique `providerSubjects/{providerAndSubjectHash}` documents in `phase-e-identity`. Reserve both with exact idempotency evidence in one authority-service transaction. Provider data must come from a fresh verified provider exchange/Admin Auth observation bound to the authenticated UID, never client identity fields. Google (`google.com`) is the first admitted contract provider; Discord (`discord.com`) is representable but its OAuth exchange is not part of the foundation contract. Email link is deferred because Firebase reports email/password and email-link under the same `password` provider ID, so they cannot be treated as independent provider links without a separately reviewed migration. Recovery and unlink remain separate operator/reauth flows. No provider can replace the account UID.
 
 ### E.3 Favorites, tags, preferences, and Recents
 

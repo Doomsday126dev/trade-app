@@ -6,146 +6,158 @@ function clone(value) {
   return structuredClone(value);
 }
 
-function createInMemoryProviderLinkAdapter(seed = {}) {
-  const state = clone({
-    gates: { durable_authentication: false },
-    users: {},
+function providerDocument(accountNode, provider) {
+  return accountNode?.providers?.[provider] || null;
+}
+
+function operationDocument(state, uid, requestId) {
+  return state.operationRequests[uid]?.requests?.[requestId] || null;
+}
+
+function assertFoundation(state, uid) {
+  const accountNode = state.accounts[uid];
+  const account = accountNode?.document;
+  if (!account || account.schemaVersion !== 1 || account.uid !== uid || account.status !== 'active') {
+    fail('permission_denied', 'identity/account_foundation_invalid');
+  }
+  const handle = state.trainerHandles[account.handleKey];
+  if (!handle || handle.uid !== uid || handle.canonicalTrainerName !== account.canonicalTrainerName ||
+      handle.normalizedTrainerName !== account.normalizedTrainerName) {
+    fail('permission_denied', 'identity/handle_ownership_invalid');
+  }
+  const legacyName = account.legacyUsername;
+  const directory = state.loginDirectory[account.normalizedTrainerName];
+  if (!legacyName || state.authIndex[uid]?.username !== legacyName || state.users[legacyName]?.authUid !== uid ||
+      directory?.username !== legacyName || directory?.authUid !== uid) {
+    fail('permission_denied', 'identity/legacy_binding_invalid');
+  }
+  return accountNode;
+}
+
+function assertLinkedPair({ providerDoc, reverseDoc, callerUid, provider, providerId, providerSubjectKey }) {
+  if (!providerDoc && !reverseDoc) return false;
+  if (reverseDoc && reverseDoc.uid !== callerUid) fail('conflict', 'provider/subject_already_linked');
+  if (!providerDoc || !reverseDoc) fail('conflict', 'provider/state_inconsistent');
+  if (providerDoc.provider !== provider || providerDoc.providerId !== providerId ||
+      providerDoc.providerSubjectKey !== providerSubjectKey || providerDoc.state !== 'linked' ||
+      reverseDoc.provider !== provider || reverseDoc.providerId !== providerId ||
+      reverseDoc.providerSubjectKey !== providerSubjectKey) {
+    fail('conflict', 'provider/account_already_linked');
+  }
+  return true;
+}
+
+function createInMemoryProviderLinkAdapter(seed = {}, options = {}) {
+  const trustedEvidence = clone(seed.verifiedProviderEvidence || {});
+  let state = clone({
+    gates: { e2_provider_link: false },
+    accounts: {},
+    trainerHandles: {},
     authIndex: {},
+    users: {},
+    loginDirectory: {},
+    providerSubjects: {},
+    operationRequests: {},
     admins: {},
-    firebaseProviderSubjects: {},
-    discordCodes: {},
-    authProviders: {},
-    authProviderSubjects: {},
-    authLinkAttempts: {},
-    trustedOperationRequests: {},
-    rateLimits: {},
+    privateLists: {},
+    publicShares: {},
+    userPreferences: {},
     ...seed
   });
+  delete state.verifiedProviderEvidence;
   let chain = Promise.resolve();
   const serialized = (work) => {
     const next = chain.then(work, work);
     chain = next.catch(() => {});
     return next;
   };
-  const requestKey = ({ callerUid, operation, requestId }) => `${callerUid}/${operation}/${requestId}`;
 
   async function assertOperationEnabled(kind) {
-    if (kind !== 'durable_authentication' || state.gates[kind] !== true) fail('unavailable', 'operation/write_gate_disabled');
+    if (kind !== 'e2_provider_link' || state.gates[kind] !== true) {
+      fail('unavailable', 'operation/write_gate_disabled');
+    }
   }
 
-  async function assertRateLimit({ callerUid, operation }) {
-    const key = `${callerUid}/${operation}`;
-    state.rateLimits[key] = Number(state.rateLimits[key] || 0) + 1;
-    if (state.rateLimits[key] > 20) fail('unavailable', 'provider/rate_limited');
+  async function getVerifiedProviderEvidence({ callerUid, providerId }) {
+    const evidence = typeof options.evidenceReader === 'function'
+      ? await options.evidenceReader({ callerUid, providerId })
+      : trustedEvidence[callerUid]?.[providerId];
+    return evidence ? clone(evidence) : null;
   }
 
-  async function assertTrainerBinding({ callerUid }) {
-    const username = state.authIndex[callerUid]?.username;
-    if (!username || state.users[username]?.authUid !== callerUid) fail('permission_denied', 'identity/binding_invalid');
-    return { username };
-  }
-
-  async function beginOperationRequest(input) {
-    return serialized(() => {
-      const key = requestKey(input), current = state.trustedOperationRequests[key];
-      if (!current) {
-        state.trustedOperationRequests[key] = { fingerprint: input.fingerprint, status: 'pending', createdAt: input.createdAt, expiresAt: input.expiresAt };
-        return { state: 'acquired' };
+  async function linkVerifiedProviderAtomic(input) {
+    return serialized(async () => {
+      const draft = clone(state);
+      const accountNode = assertFoundation(draft, input.callerUid);
+      const existingOperation = operationDocument(draft, input.callerUid, input.requestId);
+      if (existingOperation) {
+        if (existingOperation.operation !== 'linkVerifiedProvider' || existingOperation.fingerprint !== input.requestFingerprint) {
+          fail('replay_mismatch', 'idempotency/request_reused');
+        }
+        if (existingOperation.status !== 'complete') fail('unavailable', 'idempotency/request_pending');
+        return { status: existingOperation.result.status, replay: true };
       }
-      if (current.fingerprint !== input.fingerprint) return { state: 'mismatch' };
-      if (current.status === 'complete') return { state: 'terminal', result: clone(current.result) };
-      return { state: 'pending' };
-    });
-  }
 
-  async function completeOperationRequest(input) {
-    return serialized(() => {
-      const key = requestKey(input), current = state.trustedOperationRequests[key];
-      if (!current || current.fingerprint !== input.fingerprint || current.status !== 'pending') fail('unavailable', 'idempotency/completion_failed');
-      state.trustedOperationRequests[key] = { ...current, status: 'complete', result: clone(input.result) };
-    });
-  }
-
-  async function failOperationRequest(input) {
-    return serialized(() => {
-      const key = requestKey(input), current = state.trustedOperationRequests[key];
-      if (current?.fingerprint === input.fingerprint && current.status === 'pending') current.status = 'failed';
-    });
-  }
-
-  async function getVerifiedFirebaseProviderSubject({ callerUid, providerId }) {
-    const subject = state.firebaseProviderSubjects[callerUid]?.[providerId];
-    return subject ? { subject } : null;
-  }
-
-  async function createDiscordLinkAttempt(input) {
-    return serialized(() => {
-      if (state.authLinkAttempts[input.attemptId]) fail('conflict', 'discord/attempt_collision');
-      state.authLinkAttempts[input.attemptId] = {
+      const providerDoc = providerDocument(accountNode, input.provider);
+      const reverseDoc = draft.providerSubjects[input.providerSubjectKey] || null;
+      const alreadyLinked = assertLinkedPair({
+        providerDoc,
+        reverseDoc,
         callerUid: input.callerUid,
-        stateHash: input.stateHash,
-        codeChallenge: input.codeChallenge,
-        createdAt: input.createdAt,
-        expiresAt: input.expiresAt,
-        consumedAt: null
+        provider: input.provider,
+        providerId: input.providerId,
+        providerSubjectKey: input.providerSubjectKey
+      });
+      const result = Object.freeze({
+        ok: true,
+        operation: 'linkVerifiedProvider',
+        provider: input.provider,
+        status: alreadyLinked ? 'already_linked' : 'linked'
+      });
+
+      if (!alreadyLinked) {
+        accountNode.providers ||= {};
+        accountNode.providers[input.provider] = {
+          schemaVersion: 1,
+          provider: input.provider,
+          providerId: input.providerId,
+          providerSubjectKey: input.providerSubjectKey,
+          state: 'linked',
+          linkedAt: input.timestamp,
+          updatedAt: input.timestamp,
+          revision: 1
+        };
+        draft.providerSubjects[input.providerSubjectKey] = {
+          schemaVersion: 1,
+          uid: input.callerUid,
+          provider: input.provider,
+          providerId: input.providerId,
+          providerSubjectKey: input.providerSubjectKey,
+          linkedAt: input.timestamp,
+          revision: 1
+        };
+      }
+
+      draft.operationRequests[input.callerUid] ||= { requests: {} };
+      draft.operationRequests[input.callerUid].requests[input.requestId] = {
+        schemaVersion: 1,
+        operation: 'linkVerifiedProvider',
+        fingerprint: input.requestFingerprint,
+        status: 'complete',
+        createdAt: input.timestamp,
+        completedAt: input.timestamp,
+        result
       };
-    });
-  }
-
-  async function consumeDiscordLinkAttempt(input) {
-    return serialized(() => {
-      const attempt = state.authLinkAttempts[input.attemptId];
-      if (!attempt || attempt.callerUid !== input.callerUid) fail('permission_denied', 'discord/attempt_unavailable');
-      if (attempt.consumedAt != null) fail('replay_mismatch', 'discord/attempt_consumed');
-      if (attempt.expiresAt < input.now) fail('permission_denied', 'discord/attempt_expired');
-      if (attempt.stateHash !== input.stateHash) fail('permission_denied', 'discord/state_mismatch');
-      if (attempt.codeChallenge !== input.codeChallenge) fail('permission_denied', 'discord/pkce_mismatch');
-      attempt.consumedAt = input.now;
-    });
-  }
-
-  async function exchangeDiscordAuthorizationCode({ code }) {
-    const subject = state.discordCodes[code];
-    if (!subject) fail('permission_denied', 'discord/code_exchange_failed');
-    delete state.discordCodes[code];
-    return { subject };
-  }
-
-  async function linkProviderSubject({ callerUid, provider, subjectHash, now }) {
-    return serialized(() => {
-      const claim = state.authProviderSubjects[provider]?.[subjectHash];
-      if (claim && claim.uid !== callerUid) fail('conflict', 'provider/subject_already_linked');
-      const existing = state.authProviders[callerUid]?.[provider];
-      if (existing && existing.subjectHash !== subjectHash) fail('conflict', 'provider/account_already_linked');
-      if (existing && claim?.uid === callerUid) return { status: 'already_linked' };
-      const revision = Number(existing?.revision || 0) + 1;
-      state.authProviders[callerUid] ||= {};
-      state.authProviderSubjects[provider] ||= {};
-      state.authProviders[callerUid][provider] = {
-        provider,
-        subjectHash,
-        linkedAt: existing?.linkedAt || now,
-        updatedAt: now,
-        revision,
-        state: 'linked'
-      };
-      state.authProviderSubjects[provider][subjectHash] = { uid: callerUid, linkedAt: existing?.linkedAt || now, revision };
-      return { status: existing ? 'reconciled' : 'linked' };
+      if (typeof options.beforeCommit === 'function') await options.beforeCommit();
+      state = draft;
+      return { status: result.status, replay: false };
     });
   }
 
   return Object.freeze({
     assertOperationEnabled,
-    assertRateLimit,
-    assertTrainerBinding,
-    beginOperationRequest,
-    completeOperationRequest,
-    failOperationRequest,
-    getVerifiedFirebaseProviderSubject,
-    createDiscordLinkAttempt,
-    consumeDiscordLinkAttempt,
-    exchangeDiscordAuthorizationCode,
-    linkProviderSubject,
+    getVerifiedProviderEvidence,
+    linkVerifiedProviderAtomic,
     inspect: () => clone(state)
   });
 }
