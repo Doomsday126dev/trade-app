@@ -159,7 +159,7 @@ test('release 2026-08-22.56 is coherent and contains no active .55 assets',()=>{
   assert.match(worker,/const RELEASE='2026-08-22\.56'/);
   assert.match(release,/RELEASE_ID='2026-08-22\.56'/);
   const firstParty=[...html.matchAll(/<script\s+src="([^"]+)"/g)].map(match=>match[1]).filter(src=>!/^https?:/.test(src));
-  assert.equal(firstParty.length,60);
+  assert.equal(firstParty.length,61);
   for(const src of firstParty)assert.equal(new URL(src,'https://example.test').searchParams.get('v'),'2026-08-22.56');
   assert.doesNotMatch(`${html}\n${worker}\n${release}`,/2026-08-22\.55/);
 });
