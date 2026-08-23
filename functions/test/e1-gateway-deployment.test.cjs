@@ -897,6 +897,9 @@ test('Group E enable and restore plans are exact cohort-bound zero-write contain
     confirmation: ACTION_CONFIRMATIONS['restore-group-e'] });
   assert.equal(enabled.guardVerified, true);
   assert.equal(enabled.groupEClientMode, 'synthetic-canary');
+  assert.equal(groupEActivationGatePlan().CLIENT_FOUNDATION_USE_ENABLED,false);
+  assert.equal(groupEActivationGatePlan().GATEWAY_INVOCATION_ENABLED,true);
+  assert.equal(groupEActivationGatePlan().READ_ACCOUNT_FOUNDATION_ENABLED,true);
   assert.equal(enabled.groupECohortDigest, 'c'.repeat(64));
   assert.match(enabled.groupEBindings, /^[a-f0-9]{64}:[a-f0-9]{64};[a-f0-9]{64}:[a-f0-9]{64}$/u);
   assert.equal(restored.groupEClientMode, 'disabled');
@@ -962,5 +965,7 @@ test('tracked scripts expose only the canonical gateway deploy entrypoint', () =
   assert.match(deploySource, /deploymentArguments\(plan, functionName, stagedSource\)/u);
   assert.match(deploySource, /guardProductionThirdMutationContinuation\(\{ expectedSourceSha \}\)/u);
   assert.match(deploySource, /args\['d3-mode'\]/u);
+  assert.match(deploySource,/plan\.cohortStage === 'client-foundation-canary' \? 'group-e' : 'd3'/u);
+  assert.match(deploySource,/e1\/\$\{scope\}-containment-restore-failed/u);
   assert.doesNotMatch(deploySource, /gcloud['"`]?,\s*\[['"`]functions['"`],\s*['"`]deploy/u);
 });

@@ -39,5 +39,5 @@ function callable(operation, consumeAppCheckToken) {
   });
 }
 
-exports.readE1AccountFoundation = callable('readAccountFoundation', false);
+exports.readE1AccountFoundation = callable('readAccountFoundation', configuration.groupE.enabled);
 exports.reserveE1TrainerHandle = callable('reserveTrainerHandle', true);

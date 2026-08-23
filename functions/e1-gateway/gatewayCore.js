@@ -134,7 +134,8 @@ function firebaseIdToken(request) {
 function verifyCallableBoundary(operation, request, readProofMode = false, groupE = { enabled: false }) {
   if (!request.auth?.uid) fail('AUTH_REQUIRED');
   if (!request.app?.appId) fail('APP_CHECK_REQUIRED');
-  if (operation === 'reserveTrainerHandle' && request.app.alreadyConsumed === true) fail('APP_CHECK_REPLAYED');
+  if ((operation === 'reserveTrainerHandle' || operation === 'readAccountFoundation' && groupE.enabled) &&
+      request.app.alreadyConsumed === true) fail('APP_CHECK_REPLAYED');
   return Object.freeze({
     uid: request.auth.uid,
     firebaseIdToken: firebaseIdToken(request),

@@ -64,17 +64,23 @@
     let configuration=null;
     let held=null;
     let inFlight=false;
+    let terminal=false;
+    let destroyed=false;
     function clear(){generation++;held=null;inFlight=false;}
-    function close(){clear();configuration=null;return Object.freeze({ok:true,closed:true});}
+    function close(){clear();configuration=null;destroyed=true;return Object.freeze({ok:true,closed:true});}
     function open(value={}){
+      if(destroyed)fail('group-e/controller-closed');
       clear();
       const bindings=value.bindings;
-      if(value.mode!==MODE||!exactFields(value,['bindings','cohortDigest','mode'])||!SHA256.test(value.cohortDigest||'')||
+      if(value.mode!==MODE||!exactFields(value,['authorizedSlot','bindings','cohortDigest','generationId','mode','priorReconciliationDigest'])||
+        !['A','B'].includes(value.authorizedSlot)||!UUID_V4.test(value.generationId||'')||!SHA256.test(value.cohortDigest||'')||
+        (value.authorizedSlot==='A'?value.priorReconciliationDigest!==null:!SHA256.test(value.priorReconciliationDigest||''))||
         !bindings||!exactFields(bindings,['A','B'])||!SHA256.test(bindings.A||'')||!SHA256.test(bindings.B||'')||bindings.A===bindings.B){
         configuration=null;fail('group-e/configuration-invalid');
       }
-      configuration=Object.freeze({mode:value.mode,cohortDigest:value.cohortDigest,bindings:Object.freeze({...bindings})});
-      return Object.freeze({ok:true,mode:MODE});
+      configuration=Object.freeze({mode:value.mode,cohortDigest:value.cohortDigest,bindings:Object.freeze({...bindings}),
+        authorizedSlot:value.authorizedSlot,generationId:value.generationId,priorReconciliationDigest:value.priorReconciliationDigest});
+      return Object.freeze({ok:true,mode:MODE,authorizedSlot:value.authorizedSlot,generationId:value.generationId});
     }
     function currentResult(){
       const user=auth.currentUser;
@@ -84,6 +90,8 @@
     async function read({slot,attemptId}={}){
       if(!configuration)fail('group-e/disabled');
       if(!['A','B'].includes(slot)||!UUID_V4.test(attemptId||''))fail('group-e/request-invalid');
+      if(slot!==configuration.authorizedSlot)fail('group-e/sequence-denied');
+      if(terminal)fail('group-e/invocation-terminal');
       if(inFlight)fail('group-e/request-in-flight');
       const user=auth.currentUser;
       if(!user?.uid||typeof user.getIdToken!=='function')fail('group-e/auth-required');
@@ -106,10 +114,12 @@
         const sdk=await stage(importFunctionsSdk(),'group-e/sdk-timeout');
         if(typeof sdk?.getFunctions!=='function'||typeof sdk?.httpsCallable!=='function')fail('group-e/sdk-invalid');
         const functions=sdk.getFunctions(firebaseApp,REGION);
-        const callable=sdk.httpsCallable(functions,CALLABLE);
+        const callable=sdk.httpsCallable(functions,CALLABLE,{limitedUseAppCheckTokens:true});
         if(typeof callable!=='function')fail('group-e/sdk-invalid');
         const expectedAttemptHash=(await sha256([1,'group-e-client-attempt',attemptId],cryptoImpl)).slice(0,16);
         const expectedSubjectBinding=await sha256([1,'group-e-client-response',user.uid,attemptId],cryptoImpl);
+        if(!stillCurrent(readyInstance))fail('group-e/stale-session');
+        terminal=true;
         const result=await stage(callable({schemaVersion:1,attemptId}),'group-e/callable-timeout');
         const after=await stage(firebaseAppCheckReady(),'group-e/app-check-timeout');
         if(!after?.ok||after.instance!==readyInstance||!stillCurrent(after.instance))fail('group-e/stale-session');
@@ -119,7 +129,7 @@
       }catch(error){held=null;throw error;}
       finally{if(generation===requestGeneration)inFlight=false;}
     }
-    return Object.freeze({open,read,currentResult,clear,close,isEnabled:()=>configuration!==null});
+    return Object.freeze({open,read,currentResult,clear,close,isEnabled:()=>configuration!==null,isTerminal:()=>terminal});
   }
 
   root.e1ClientFoundationCanary=Object.freeze({CALLABLE,MODE,REGION,createClientFoundationCanary,validateResponse});

@@ -25,13 +25,16 @@ function setup(overrides={}){
   const app={},instance={},auth={currentUser:{uid,getIdToken:async(force)=>{assert.equal(force,true);return'id-token';}}};
   let imports=0,calls=0,generation=1;
   const sdk={getFunctions(received,region){assert.equal(received,app);assert.equal(region,'us-central1');return{};},
-    httpsCallable(_functions,name){assert.equal(name,'readE1AccountFoundation');return async(body)=>{calls++;
+    httpsCallable(_functions,name,options){assert.equal(name,'readE1AccountFoundation');
+      assert.equal(JSON.stringify(options),JSON.stringify({limitedUseAppCheckTokens:true}));return async(body)=>{calls++;
       assert.equal(JSON.stringify(body),JSON.stringify({schemaVersion:1,attemptId}));return{data:success(uid,attemptId)};};}};
   const controller=service.createClientFoundationCanary({firebaseApp:app,auth,
     firebaseAppCheckReady:async()=>({ok:true,instance}),getSessionGeneration:()=>generation,
     importFunctionsSdk:async()=>{imports++;return sdk;},cryptoImpl:crypto.webcrypto,timeoutMs:1000,...overrides});
   const bindings={A:digest([1,'group-e-client-foundation','uid',uid]),B:'b'.repeat(64)};
-  return{service,controller,auth,uid,attemptId,bindings,stats:()=>({imports,calls}),switchGeneration:()=>generation++};
+  const config=(authorizedSlot='A')=>({mode:'synthetic-ab',bindings,cohortDigest:'c'.repeat(64),authorizedSlot,
+    generationId:'123e4567-e89b-42d3-a456-426614174000',priorReconciliationDigest:authorizedSlot==='A'?null:'d'.repeat(64)});
+  return{service,controller,auth,uid,attemptId,bindings,config,stats:()=>({imports,calls}),switchGeneration:()=>generation++};
 }
 
 test('Group E client is disabled by default and imports Functions only through explicit open/read',async()=>{
@@ -40,10 +43,12 @@ test('Group E client is disabled by default and imports Functions only through e
   assert.equal(state.controller.currentResult(),null);
   await assert.rejects(state.controller.read({slot:'A',attemptId:state.attemptId}),/group-e\/disabled/);
   assert.deepEqual(state.stats(),{imports:0,calls:0});
-  state.controller.open({mode:'synthetic-ab',bindings:state.bindings,cohortDigest:'c'.repeat(64)});
+  state.controller.open(state.config());
   const result=await state.controller.read({slot:'A',attemptId:state.attemptId});
   assert.equal(result.code,'SUCCESS');
   assert.equal(state.controller.currentResult(),result);
+  assert.deepEqual(state.stats(),{imports:1,calls:1});
+  await assert.rejects(state.controller.read({slot:'A',attemptId:state.attemptId}),/group-e\/invocation-terminal/);
   assert.deepEqual(state.stats(),{imports:1,calls:1});
 });
 
@@ -63,7 +68,7 @@ test('account switch session generation and App Check instance changes suppress 
   const callPromise=new Promise((resolve)=>{resolveCall=resolve;});
   const started=new Promise((resolve)=>{markStarted=resolve;});
   const state=setup({importFunctionsSdk:async()=>({getFunctions:()=>({}),httpsCallable:()=>()=>{markStarted();return callPromise;}})});
-  state.controller.open({mode:'synthetic-ab',bindings:state.bindings,cohortDigest:'c'.repeat(64)});
+  state.controller.open(state.config());
   const pending=state.controller.read({slot:'A',attemptId:state.attemptId});
   await started;
   state.switchGeneration();
@@ -74,13 +79,55 @@ test('account switch session generation and App Check instance changes suppress 
   assert.equal(state.controller.isEnabled(),false);
 });
 
-test('wrong cohort timeout and callable failure are non-retrying memory-only failures',async()=>{
+test('session change during SDK import is rejected before the terminal callable boundary',async()=>{
+  let releaseImport,callCount=0;
+  const importWait=new Promise((resolve)=>{releaseImport=resolve;});
+  const state=setup({importFunctionsSdk:async()=>{await importWait;return{getFunctions:()=>({}),
+    httpsCallable:()=>async()=>{callCount++;return{data:success(state.uid,state.attemptId)};}};}});
+  state.controller.open(state.config());
+  const pending=state.controller.read({slot:'A',attemptId:state.attemptId});
+  await new Promise((resolve)=>setTimeout(resolve,0));
+  state.switchGeneration();
+  releaseImport();
+  await assert.rejects(pending,/group-e\/stale-session/);
+  assert.equal(callCount,0);
+  assert.equal(state.controller.isTerminal(),false);
+});
+
+test('wrong sequence is rejected and callable failure permanently terminates the generation',async()=>{
   const state=setup({importFunctionsSdk:async()=>({getFunctions:()=>({}),httpsCallable:()=>async()=>{throw new Error('offline');}})});
-  state.controller.open({mode:'synthetic-ab',bindings:state.bindings,cohortDigest:'c'.repeat(64)});
-  await assert.rejects(state.controller.read({slot:'B',attemptId:state.attemptId}),/group-e\/subject-denied/);
+  state.controller.open(state.config());
+  await assert.rejects(state.controller.read({slot:'B',attemptId:state.attemptId}),/group-e\/sequence-denied/);
   await assert.rejects(state.controller.read({slot:'A',attemptId:state.attemptId}),/offline/);
+  assert.equal(state.controller.isTerminal(),true);
+  state.controller.clear();
+  await assert.rejects(state.controller.read({slot:'A',attemptId:state.attemptId}),/group-e\/invocation-terminal/);
   assert.equal(state.controller.currentResult(),null);
   assert.doesNotMatch(source,/localStorage|sessionStorage|indexedDB|set\(|update\(/);
+});
+
+test('malformed response is terminal and only a closed newly created controller can authorize a later slot',async()=>{
+  const state=setup({importFunctionsSdk:async()=>({getFunctions:()=>({}),httpsCallable:()=>async()=>({data:{code:'SUCCESS'}})})});
+  state.controller.open(state.config());
+  await assert.rejects(state.controller.read({slot:'A',attemptId:state.attemptId}),/group-e\/response-invalid/);
+  await assert.rejects(state.controller.read({slot:'A',attemptId:state.attemptId}),/group-e\/invocation-terminal/);
+  state.controller.close();
+  assert.throws(()=>state.controller.open(state.config('B')),/group-e\/controller-closed/);
+});
+
+test('a callable timeout is ambiguous and terminal with no resend',async()=>{
+  const state=setup({timeoutMs:1000,importFunctionsSdk:async()=>({getFunctions:()=>({}),httpsCallable:()=>()=>new Promise(()=>{})})});
+  state.controller.open(state.config());
+  await assert.rejects(state.controller.read({slot:'A',attemptId:state.attemptId}),/group-e\/callable-timeout/);
+  assert.equal(state.controller.isTerminal(),true);
+  await assert.rejects(state.controller.read({slot:'A',attemptId:state.attemptId}),/group-e\/invocation-terminal/);
+});
+
+test('slot B requires an exact prior reconciliation digest and cannot be opened from A configuration',()=>{
+  const state=setup();
+  const invalid={...state.config('B'),priorReconciliationDigest:null};
+  assert.throws(()=>state.controller.open(invalid),/group-e\/configuration-invalid/);
+  assert.equal(state.controller.open(state.config('B')).authorizedSlot,'B');
 });
 
 test('page integration has no ordinary startup trigger and clears the canary on every session boundary',()=>{

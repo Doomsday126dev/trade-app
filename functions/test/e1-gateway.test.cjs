@@ -48,6 +48,10 @@ test('production gateway requires Auth App Check exact request shape and rejects
   assert.throws(() => verifyCallableBoundary('reserveTrainerHandle', request({ schemaVersion: 1, requestId: 'request-gateway-1', requestedHandle: 'Trainer' }, {
     app: { appId: 'production-app-id', alreadyConsumed: true }
   })), /APP_CHECK_REPLAYED/);
+  const groupE={enabled:true,bindings:[{uidHash:'0'.repeat(64)},{uidHash:'1'.repeat(64)}]};
+  assert.throws(()=>verifyCallableBoundary('readAccountFoundation',request({schemaVersion:1,
+    attemptId:'123e4567-e89b-42d3-a456-426614174000'},{app:{appId:'production-app-id',alreadyConsumed:true}}),false,groupE),
+    /APP_CHECK_REPLAYED/);
   assert.throws(() => loadGatewayConfiguration(productionEnvironment({ APP_CHECK_DEBUG_TOKENS_ALLOWED: 'true' })), /GATEWAY_CONFIGURATION_INVALID/);
   assert.throws(() => loadGatewayConfiguration(productionEnvironment({ APP_CHECK_ENFORCEMENT_MODE: 'enforced' })), /GATEWAY_CONFIGURATION_INVALID/);
   assert.throws(() => loadGatewayConfiguration(productionEnvironment({ E1_GATEWAY_SERVICE_ACCOUNT: 'default@developer.gserviceaccount.com' })),
@@ -61,6 +65,19 @@ test('gateway is disabled before authentication or authority invocation', async 
   });
   await assert.rejects(handler({}), /GATEWAY_NOT_ENABLED/);
   assert.equal(calls, 0);
+});
+
+test('Group E alone selects limited-use App Check consumption while restored and normal reads remain standard',()=>{
+  const start='2030-01-01T12:00:00.000Z',end='2030-01-01T12:30:00.000Z';
+  const enabled=loadGatewayConfiguration(productionEnvironment({GATEWAY_INVOCATION_ENABLED:'true',
+    GROUP_E_CLIENT_MODE:'synthetic-canary',GROUP_E_SUBJECT_BINDINGS:`${'a'.repeat(64)}:${'1'.repeat(64)};${'b'.repeat(64)}:${'2'.repeat(64)}`,
+    GROUP_E_COHORT_DIGEST:'c'.repeat(64),GROUP_E_WINDOW_START:start,GROUP_E_WINDOW_END:end}),
+  ()=>Date.parse('2030-01-01T12:10:00.000Z'));
+  assert.equal(enabled.groupE.enabled,true);
+  const restored=loadGatewayConfiguration(productionEnvironment({GROUP_E_CLIENT_MODE:'disabled'}));
+  assert.equal(restored.groupE.enabled,false);
+  const source=fs.readFileSync(path.resolve(__dirname,'../e1-gateway/index.js'),'utf8');
+  assert.match(source,/readE1AccountFoundation = callable\('readAccountFoundation', configuration\.groupE\.enabled\)/u);
 });
 
 test('gateway uses Google OIDC serverless authorization and forwards the subject token separately', async () => {
@@ -150,5 +167,6 @@ test('gateway exports only the two reviewed public operations and delegates dura
   assert.match(source, /enforceAppCheck:\s*configuration\.appCheckEnforcementMode === 'enforced'/u);
   assert.match(source, /serviceAccount:\s*configuration\.gatewayServiceAccount/u);
   assert.match(source, /callable\('reserveTrainerHandle', true\)/u);
+  assert.match(source, /callable\('readAccountFoundation', configuration\.groupE\.enabled\)/u);
   assert.doesNotMatch(source, /firebase-admin|Firestore|Database|serviceAccountTokenCreator|private_key/u);
 });

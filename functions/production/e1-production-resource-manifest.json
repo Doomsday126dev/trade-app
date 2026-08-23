@@ -254,7 +254,8 @@
     "holdbackSlots": ["C", "D", "E"],
     "requestSchema": ["attemptId", "schemaVersion"],
     "clientResultStorage": "memory-only",
-    "appCheckTokenMode": "standard-token",
+    "appCheckTokenMode": "limited-use-token-only-while-group-e-mode-enabled",
+    "normalReadAppCheckTokenMode": "standard-token",
     "readLimiterMode": "group-e-synthetic-read-v1",
     "normalDurableReadLimiter": "firestore-rolling-v1",
     "processLocalCounterAuthoritative": false,
@@ -284,7 +285,13 @@
       "observationCompleted": true,
       "observationHealthy": true
     },
-    "observationMinutes": { "minimum": 30, "maximum": 60 },
+    "clientController": {
+      "persistentBrowserFlag": false,
+      "deploymentArmsController": false,
+      "oneAuthorizedSlotPerGeneration": true,
+      "reconciliationRequiredBeforeNextSlot": true
+    },
+    "observationMinutes": { "minimum": 30, "targetMaximum": 60, "closeoutGrace": 15 },
     "providerLinkingReachable": false,
     "productionActivated": false
   },

@@ -264,8 +264,7 @@ function verifyActionGuard(actionName, guardResult, expectedSha, d3Mode, manifes
       guardResult.budget?.rtdbWrites === 0 && guardResult.budget?.processLocalCounterAuthoritative === false &&
       guardResult.budget?.authoritativeReconciliationRequired === true &&
       JSON.stringify(guardResult.activationGatePlan) === JSON.stringify({
-        ...disabledGatePlan(), CLIENT_FOUNDATION_USE_ENABLED: true, GATEWAY_INVOCATION_ENABLED: true,
-        READ_ACCOUNT_FOUNDATION_ENABLED: true
+        ...disabledGatePlan(), GATEWAY_INVOCATION_ENABLED: true, READ_ACCOUNT_FOUNDATION_ENABLED: true
       }) && JSON.stringify(guardResult.restorationGatePlan) === JSON.stringify(disabledGatePlan()) &&
       (!expectedEnabled || guardResult.entryEvidenceExpiresAt);
   }

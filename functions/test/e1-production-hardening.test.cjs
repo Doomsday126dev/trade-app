@@ -39,8 +39,14 @@ test('reserve replay protection grants the gateway only App Check token verifica
   const manifest = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../production/e1-production-resource-manifest.json'), 'utf8'));
   const gatewaySource = fs.readFileSync(path.resolve(__dirname, '../e1-gateway/index.js'), 'utf8');
 
-  assert.match(gatewaySource, /exports\.readE1AccountFoundation = callable\('readAccountFoundation', false\)/);
+  assert.match(gatewaySource, /exports\.readE1AccountFoundation = callable\('readAccountFoundation', configuration\.groupE\.enabled\)/);
   assert.match(gatewaySource, /exports\.reserveE1TrainerHandle = callable\('reserveTrainerHandle', true\)/);
+  assert.equal(manifest.clientFoundationCanary.appCheckTokenMode,'limited-use-token-only-while-group-e-mode-enabled');
+  assert.equal(manifest.clientFoundationCanary.normalReadAppCheckTokenMode,'standard-token');
+  assert.deepEqual(manifest.clientFoundationCanary.clientController,{
+    persistentBrowserFlag:false,deploymentArmsController:false,oneAuthorizedSlotPerGeneration:true,
+    reconciliationRequiredBeforeNextSlot:true
+  });
   assert.deepEqual(manifest.appCheck.tokenVerifier, {
     principal: manifest.gateway.serviceAccount,
     role: 'roles/firebaseappcheck.tokenVerifier',

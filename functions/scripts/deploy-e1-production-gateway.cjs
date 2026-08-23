@@ -254,7 +254,10 @@ function executePlan(plan, options = {}) {
         try { replaceAuthority(restorePlan, false, options); } catch (restoreError) {
           failures.push(restoreError.message);
         }
-        if (failures.length) throw new Error(`e1/d3-containment-restore-failed:${failures.join(',')}`, { cause: error });
+        if (failures.length) {
+          const scope = plan.cohortStage === 'client-foundation-canary' ? 'group-e' : 'd3';
+          throw new Error(`e1/${scope}-containment-restore-failed:${failures.join(',')}`, { cause: error });
+        }
         throw error;
       }
     } else {
