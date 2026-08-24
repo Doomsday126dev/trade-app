@@ -37,6 +37,7 @@ const {
   argumentsMap,
   authorityReplacement,
   executePlan,
+  run: runDeployment,
   verifyAuthorityService
 } = require('../scripts/deploy-e1-production-gateway.cjs');
 
@@ -936,13 +937,31 @@ test('D3 deployment CLI binds the valid source pin, branch state, confirmation, 
   if (!assertBranchGuard(restore, enable)) {
     assert.equal(restore.status, 0, restore.stderr);
     assert.equal(JSON.parse(restore.stdout).containmentRestore, true);
-    assert.equal(enable.status, 1);
-    assert.match(enable.stderr, /gateway-d3-mode-required/u);
+    assert.equal(enable.status, 0, enable.stderr);
+    const enablePlan = JSON.parse(enable.stdout);
+    assert.equal(enablePlan.guardVerified, false);
+    assert.equal(enablePlan.deploymentAllowed, false);
+    assert.equal(enablePlan.d3Mode, null);
   }
   for (const result of [missing, wrong]) {
     assert.equal(result.status, 1);
     assert.match(result.stderr, /gateway-d3-confirmation-invalid/u);
   }
+
+  let cloudCalls = 0;
+  assert.throws(() => runDeployment([
+    '--mode=deploy',
+    '--action=enable-group-d3',
+    '--source=functions/e1-gateway',
+    `--expected-sha=${HEAD}`,
+    `--confirmation=${D3_CONFIRMATIONS['enable-group-d3']}`
+  ], {
+    spawn: () => {
+      cloudCalls += 1;
+      throw new Error('unexpected-cloud-command');
+    }
+  }), /gateway-d3-mode-required/u);
+  assert.equal(cloudCalls, 0);
 });
 
 test('D1, D2, and D3 guards cannot authorize another cohort', () => {
@@ -1025,12 +1044,15 @@ test('Group E authority replacement enables only read and restore strips private
 });
 
 test('tracked scripts expose only the canonical gateway deploy entrypoint', () => {
-  const scripts = spawnSync('rg', [
-    '-n', 'gcloud functions deploy', 'functions/scripts', 'functions/production',
-    '-g', '!functions/.local/**'
-  ], { cwd: REPO_ROOT, encoding: 'utf8' });
-  assert.equal(scripts.status, 1, scripts.stderr);
-  assert.equal(scripts.stdout.trim(), '');
+  const trackedFiles = execFileSync('git', [
+    '-C', REPO_ROOT, 'ls-files', '--', 'functions/scripts', 'functions/production'
+  ], { encoding: 'utf8' }).trim().split('\n').filter(Boolean);
+  assert.ok(trackedFiles.length > 0);
+  for (const file of trackedFiles) {
+    const source = fs.readFileSync(path.join(REPO_ROOT, file), 'utf8');
+    assert.doesNotMatch(source, /gcloud functions deploy/u,
+      `tracked file exposes a raw gateway deployment entrypoint: ${file}`);
+  }
   const deploySource = fs.readFileSync(CLI, 'utf8');
   assert.match(deploySource, /stagePinnedSource\(plan\)/u);
   assert.match(deploySource, /deploymentArguments\(plan, functionName, stagedSource\)/u);
