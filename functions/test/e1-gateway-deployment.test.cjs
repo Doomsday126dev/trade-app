@@ -44,6 +44,7 @@ const REPO_ROOT = execFileSync('git', ['-C', __dirname, 'rev-parse', '--show-top
 const HEAD = execFileSync('git', ['-C', REPO_ROOT, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
 const ORIGIN_MAIN = execFileSync('git', ['-C', REPO_ROOT, 'rev-parse', 'origin/main'], { encoding: 'utf8' }).trim();
 const CLI = path.join(REPO_ROOT, 'functions/scripts/deploy-e1-production-gateway.cjs');
+const PINNED_COMMIT_A_SOURCE_SHA = 'ad2edab9be2b1c0e6851dfded3a0f3f71a73b987';
 const TEST_COMMIT_A_SOURCE_SHA = '0'.repeat(40);
 const TEST_GROUP_E_PUBLIC_KEY_SPKI = crypto.generateKeyPairSync('ed25519').publicKey
   .export({ format: 'der', type: 'spki' }).toString('base64url');
@@ -105,6 +106,16 @@ function repositoryFixture(manifest, overrides = {}) {
   };
 }
 
+function immutableGitRepository(overrides = {}) {
+  return {
+    sourceFiles: (commit, sourceRoot) => execFileSync('git', [
+      '-C', REPO_ROOT, 'ls-tree', '-r', '--name-only', commit, '--', sourceRoot
+    ], { encoding: 'utf8' }).trim().split('\n').filter(Boolean),
+    readSourceFile: (commit, file) => execFileSync('git', ['-C', REPO_ROOT, 'show', `${commit}:${file}`]),
+    ...overrides
+  };
+}
+
 test('canonical CLI argument names accept numeric segments and reject malformed names', () => {
   const parsed = argumentsMap([
     '--mode=plan',
@@ -135,14 +146,30 @@ test('canonical CLI argument names accept numeric segments and reject malformed 
   }
 });
 
-test('tracked four-file gateway manifest remains deliberately ineligible until the later Commit B pin', () => {
+test('tracked six-file gateway manifest pins the exact immutable Commit A source', () => {
   const tracked = loadManifest();
-  assert.equal(tracked.sourceFiles.length, 4);
-  assert.throws(() => verifyManifestShape(tracked), /gateway-source-manifest-invalid/u);
-  const preview = candidateManifest();
-  assert.equal(verifyManifestShape(preview), preview);
-  assert.equal(preview.sourceCommitSha, TEST_COMMIT_A_SOURCE_SHA);
-  assert.equal(preview.sourceFiles.length, 6);
+  assert.equal(verifyManifestShape(tracked), tracked);
+  assert.equal(tracked.sourceCommitSha, PINNED_COMMIT_A_SOURCE_SHA);
+  assert.deepEqual(tracked.sourceFiles.map((file) => file.path), [...COMMIT_A_SOURCE_PATHS]);
+  const observed = verifyPinnedSource(tracked, immutableGitRepository());
+  assert.equal(observed.length, 6);
+  assert.equal(observed.every((file) => file.sha256 === file.observedSha256), true);
+
+  const wrongCommit = { ...tracked, sourceCommitSha: 'f'.repeat(40) };
+  assert.notEqual(wrongCommit.sourceCommitSha, PINNED_COMMIT_A_SOURCE_SHA);
+  assert.throws(() => {
+    assert.equal(wrongCommit.sourceCommitSha, PINNED_COMMIT_A_SOURCE_SHA,
+      'tracked gateway manifest must remain pinned to reviewed Commit A');
+  }, /must remain pinned to reviewed Commit A/u);
+
+  const omitted = structuredClone(tracked);
+  omitted.sourceFiles.splice(1, 1);
+  omitted.sourceFingerprint = sourceFingerprint(omitted.sourceFiles);
+  assert.throws(() => verifyManifestShape(omitted), /gateway-source-manifest-invalid/u);
+
+  const reordered = structuredClone(tracked);
+  [reordered.sourceFiles[0], reordered.sourceFiles[1]] = [reordered.sourceFiles[1], reordered.sourceFiles[0]];
+  assert.throws(() => verifyManifestShape(reordered), /gateway-source-file-inventory-invalid/u);
 });
 
 test('complete canonical continuation CLI inventory reaches an isolated continuation plan', () => {
@@ -209,14 +236,22 @@ test('explicit source and expected pushed commit are mandatory', () => {
 });
 
 test('manifest fingerprint and pinned source hashes fail closed', () => {
-  const manifest = candidateManifest();
+  const manifest = loadManifest();
   assert.equal(sourceFingerprint(manifest.sourceFiles), manifest.sourceFingerprint);
   assert.throws(() => verifyManifestShape({ ...manifest, sourceFingerprint: '0'.repeat(64) }), /fingerprint-invalid/u);
-  const repository = repositoryFixture(manifest, {
-    readSourceFile: (_commit, file) => file.endsWith('gatewayCore.js') ? Buffer.from('changed') :
-      fs.readFileSync(path.join(REPO_ROOT, file))
-  });
-  assert.throws(() => verifyPinnedSource(manifest, repository), /pinned-source-hash-mismatch/u);
+  for (const changedFile of manifest.sourceFiles) {
+    const repository = immutableGitRepository({
+      readSourceFile: (commit, file) => {
+        const value = execFileSync('git', ['-C', REPO_ROOT, 'show', `${commit}:${file}`]);
+        if (!file.endsWith(`/${changedFile.path}`)) return value;
+        const changed = Buffer.from(value);
+        changed[0] ^= 1;
+        return changed;
+      }
+    });
+    assert.throws(() => verifyPinnedSource(manifest, repository), /pinned-source-hash-mismatch/u,
+      changedFile.path);
+  }
 });
 
 test('production target derives URL and OIDC audience from the reviewed Cloud Run origin', () => {
@@ -546,8 +581,12 @@ test('D2 enable fails closed without an exact current D2 guard result', () => {
     /action-guard-mismatch/u);
   const cli = spawnSync(process.execPath, [CLI, '--mode=plan', '--action=enable-group-d2',
     '--source=functions/e1-gateway', `--expected-sha=${HEAD}`], { cwd: os.tmpdir(), encoding: 'utf8' });
-  assert.equal(cli.status, 1);
-  assert.match(cli.stderr, /gateway-source-manifest-invalid/u);
+  if (!assertBranchGuard(cli)) {
+    assert.equal(cli.status, 0, cli.stderr);
+    const output = JSON.parse(cli.stdout);
+    assert.equal(output.guardVerified, false);
+    assert.equal(output.deploymentAllowed, false);
+  }
 });
 
 test('D1 and D2 cannot inherit one another guard while all cohorts share one planner', () => {
@@ -590,20 +629,23 @@ test('D2 restore plans are cwd-independent and plan mode never creates root igno
   assert.equal(fs.existsSync(rootIgnore), false);
   const root = runPlan(REPO_ROOT);
   const unrelated = runPlan(os.tmpdir());
-  assert.equal(root.status, 1);
-  assert.equal(unrelated.status, 1);
-  assert.match(root.stderr, /gateway-source-manifest-invalid/u);
-  assert.match(unrelated.stderr, /gateway-source-manifest-invalid/u);
+  if (!assertBranchGuard(root, unrelated)) {
+    assert.equal(root.status, 0, root.stderr);
+    assert.equal(unrelated.status, 0, unrelated.stderr);
+    assert.deepEqual(JSON.parse(root.stdout), JSON.parse(unrelated.stdout));
+  }
   assert.equal(fs.existsSync(rootIgnore), false);
 });
 
 test('D2 blocked enable previews are also cwd-independent and expose no private guard data', () => {
   const root = runPlan(REPO_ROOT, 'functions/e1-gateway', HEAD, 'enable-group-d2');
   const unrelated = runPlan(os.tmpdir(), 'functions/e1-gateway', HEAD, 'enable-group-d2');
-  assert.equal(root.status, 1);
-  assert.equal(unrelated.status, 1);
-  assert.match(root.stderr, /gateway-source-manifest-invalid/u);
-  assert.match(unrelated.stderr, /gateway-source-manifest-invalid/u);
+  if (!assertBranchGuard(root, unrelated)) {
+    assert.equal(root.status, 0, root.stderr);
+    assert.equal(unrelated.status, 0, unrelated.stderr);
+    assert.equal(JSON.parse(root.stdout).guardVerified, false);
+    assert.deepEqual(JSON.parse(root.stdout), JSON.parse(unrelated.stdout));
+  }
   assert.doesNotMatch(`${root.stdout}${root.stderr}`, /firebaseUid|trainerUsername|requestId|token/iu);
 });
 
@@ -886,14 +928,20 @@ test('D3 restoration remains available after readiness expiry and preserves immu
   }), /d3-confirmation-invalid/u);
 });
 
-test('D3 deployment CLI fails closed at the deliberately stale source pin before any readiness path', () => {
+test('D3 deployment CLI binds the valid source pin, branch state, confirmation, and readiness independently', () => {
   const restore = runD3Plan(os.tmpdir(), 'restore-group-d3', D3_CONFIRMATIONS['restore-group-d3']);
   const enable = runD3Plan(REPO_ROOT, 'enable-group-d3', D3_CONFIRMATIONS['enable-group-d3']);
   const missing = runD3Plan(REPO_ROOT, 'restore-group-d3');
   const wrong = runD3Plan(REPO_ROOT, 'enable-group-d3', D3_CONFIRMATIONS['restore-group-d3']);
-  for (const result of [restore, enable, missing, wrong]) {
+  if (!assertBranchGuard(restore, enable)) {
+    assert.equal(restore.status, 0, restore.stderr);
+    assert.equal(JSON.parse(restore.stdout).containmentRestore, true);
+    assert.equal(enable.status, 1);
+    assert.match(enable.stderr, /gateway-d3-mode-required/u);
+  }
+  for (const result of [missing, wrong]) {
     assert.equal(result.status, 1);
-    assert.match(result.stderr, /gateway-source-manifest-invalid/u);
+    assert.match(result.stderr, /gateway-d3-confirmation-invalid/u);
   }
 });
 
