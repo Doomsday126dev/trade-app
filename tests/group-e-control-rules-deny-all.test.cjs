@@ -9,6 +9,8 @@ const {
   CONFIRMATION,
   PROBE_PATH,
   run,
+  sanitizedFailure,
+  validateProbePath,
   verifyProduction
 } = require('../scripts/verify-group-e-control-rules-deny-all.cjs');
 
@@ -22,8 +24,33 @@ const ARGS = [
   `--confirm=${CONFIRMATION}`
 ];
 
-function response(status, errorClass) {
-  return { status, async json() { return errorClass === null ? {} : { error: { status: errorClass } }; } };
+function response(status, errorClass, { reason, message } = {}) {
+  return {
+    status,
+    async json() {
+      return errorClass === null ? {} : {
+        error: {
+          status: errorClass,
+          ...(message ? { message } : {}),
+          ...(reason ? { details: [{
+            '@type': 'type.googleapis.com/google.rpc.ErrorInfo',
+            reason,
+            domain: 'googleapis.com',
+            metadata: { private: 'must not escape' }
+          }] } : {})
+        }
+      };
+    }
+  };
+}
+
+async function rejectionDiagnostic(promise) {
+  try {
+    await promise;
+    assert.fail('expected verifier rejection');
+  } catch (error) {
+    return { error, diagnostic: sanitizedFailure(error) };
+  }
 }
 
 test('default plan mode is inert and requires no key or network adapter', async () => {
@@ -35,6 +62,17 @@ test('default plan mode is inert and requires no key or network adapter', async 
   assert.equal(result.probePath, PROBE_PATH);
   assert.equal(result.updatePrecondition, 'currentDocument.exists=true');
   assert.equal(result.documentsCreatedByDesign, 0);
+});
+
+test('probe path is fixed to two valid Firestore segments and rejects reserved or malformed paths', () => {
+  assert.equal(PROBE_PATH, 'group-e-rules-probe/deny-all');
+  assert.equal(validateProbePath(PROBE_PATH), PROBE_PATH);
+  for (const invalid of [
+    '__group_e_rules_probe__/deny-all', '', 'one-segment', 'one/two/three', './deny-all',
+    '../deny-all', 'group-e-rules-probe/.', 'group-e-rules-probe/..', 'group-e-rules-probe/__deny__'
+  ]) {
+    assert.throws(() => validateProbePath(invalid), /group_e_control_rules_verifier_probe_path_invalid/);
+  }
 });
 
 test('production verifier uses exact unauthenticated GET and non-creating existing-document PATCH', async () => {
@@ -52,7 +90,8 @@ test('production verifier uses exact unauthenticated GET and non-creating existi
   assert.equal(calls.length, 2);
   assert.equal(calls[0].url.origin, 'https://firestore.googleapis.com');
   assert.equal(calls[0].url.pathname,
-    '/v1/projects/trade-list-a4297/databases/e1-group-e-control/documents/__group_e_rules_probe__/deny-all');
+    '/v1/projects/trade-list-a4297/databases/e1-group-e-control/documents/group-e-rules-probe/deny-all');
+  assert.equal(calls[1].url.pathname, calls[0].url.pathname);
   assert.equal(calls[0].url.searchParams.get('key'), API_KEY);
   assert.equal(calls[0].init.method, 'GET');
   assert.equal(calls[1].init.method, 'PATCH');
@@ -114,6 +153,62 @@ test('403 permission denial is the only accepted result and failures are termina
     return updateCalls === 1 ? response(403, 'PERMISSION_DENIED') : response(412, 'FAILED_PRECONDITION');
   } }), /group_e_control_rules_verifier_precondition_allowed/);
   assert.equal(updateCalls, 2);
+});
+
+test('HTTP failures expose only bounded phase-aware sanitized diagnostics', async () => {
+  for (const [status, errorClass] of [[400, 'INVALID_ARGUMENT'], [401, 'UNAUTHENTICATED']]) {
+    let calls = 0;
+    const { error, diagnostic } = await rejectionDiagnostic(verifyProduction({
+      apiKey: API_KEY,
+      fetchImpl: async () => {
+        calls += 1;
+        return response(status, errorClass, {
+          reason: status === 400 ? 'INVALID_ARGUMENT' : 'AUTH_CREDENTIALS_INVALID',
+          message: `raw private error contains ${API_KEY}`
+        });
+      }
+    }));
+    assert.match(error.message, /group_e_control_rules_verifier_not_denied/);
+    assert.equal(calls, 1);
+    assert.deepEqual(diagnostic, {
+      verifierErrorCode: 'group_e_control_rules_verifier_not_denied',
+      httpStatus: status,
+      googleErrorStatus: errorClass,
+      errorInfoReasons: [status === 400 ? 'INVALID_ARGUMENT' : 'AUTH_CREDENTIALS_INVALID'],
+      requestPhase: 'read',
+      credentialsPersisted: 0,
+      documentsCreatedByDesign: 0
+    });
+    const output = JSON.stringify(diagnostic);
+    assert.doesNotMatch(output, new RegExp(API_KEY, 'u'));
+    assert.doesNotMatch(output, /raw private error|must not escape/iu);
+  }
+});
+
+test('infrastructure-originated 403 permission denials fail closed instead of proving Rules', async () => {
+  let calls = 0;
+  const { error, diagnostic } = await rejectionDiagnostic(verifyProduction({
+    apiKey: API_KEY,
+    fetchImpl: async () => {
+      calls += 1;
+      return response(403, 'PERMISSION_DENIED', {
+        reason: 'API_KEY_HTTP_REFERRER_BLOCKED',
+        message: `blocked key ${API_KEY}`
+      });
+    }
+  }));
+  assert.match(error.message, /group_e_control_rules_verifier_infrastructure_denied/);
+  assert.equal(calls, 1);
+  assert.deepEqual(diagnostic, {
+    verifierErrorCode: 'group_e_control_rules_verifier_infrastructure_denied',
+    httpStatus: 403,
+    googleErrorStatus: 'PERMISSION_DENIED',
+    errorInfoReasons: ['API_KEY_HTTP_REFERRER_BLOCKED'],
+    requestPhase: 'read',
+    credentialsPersisted: 0,
+    documentsCreatedByDesign: 0
+  });
+  assert.doesNotMatch(JSON.stringify(diagnostic), new RegExp(API_KEY, 'u'));
 });
 
 test('network errors malformed responses and bounded timeout fail without retry', async () => {
