@@ -38,6 +38,7 @@ const {
   authorityReplacement,
   executePlan,
   run: runDeployment,
+  verifyAuthorityIam,
   verifyAuthorityService
 } = require('../scripts/deploy-e1-production-gateway.cjs');
 
@@ -52,6 +53,15 @@ const TEST_GROUP_E_PUBLIC_KEY_SPKI = crypto.generateKeyPairSync('ed25519').publi
 const COMMIT_A_SOURCE_PATHS = Object.freeze([
   'gatewayCore.js', 'groupEAdmission.js', 'groupEControlStore.js', 'index.js', 'package-lock.json', 'package.json'
 ]);
+const GATEWAY_RUNTIME_SERVICE_ACCOUNT = 'e1-authority-gateway@trade-list-a4297.iam.gserviceaccount.com';
+const GATEWAY_RUNTIME_MEMBER = `serviceAccount:${GATEWAY_RUNTIME_SERVICE_ACCOUNT}`;
+const GROUP_E_CONTROL_ROLE = 'projects/trade-list-a4297/roles/e1GroupEControlGateway';
+const GROUP_E_CONTROL_CONDITION = Object.freeze({
+  title: 'e1-group-e-control-only',
+  description: 'Restrict Group E control access to the named database',
+  expression: 'resource.type == "firestore.googleapis.com/Database" && resource.name == ' +
+    '"projects/trade-list-a4297/databases/e1-group-e-control"'
+});
 
 function candidateManifest(overrides = {}) {
   const sourceFiles = COMMIT_A_SOURCE_PATHS.map((file) => ({
@@ -770,6 +780,124 @@ function authorityServiceFixture(reserveEnabled = false) {
   };
 }
 
+function exactGatewayProjectBindings() {
+  return [{
+    role: 'roles/firebaseappcheck.tokenVerifier',
+    members: [GATEWAY_RUNTIME_MEMBER]
+  }, {
+    role: GROUP_E_CONTROL_ROLE,
+    members: [GATEWAY_RUNTIME_MEMBER],
+    condition: { ...GROUP_E_CONTROL_CONDITION }
+  }];
+}
+
+function authorityIamMock({
+  invokerMembers = [GATEWAY_RUNTIME_MEMBER],
+  projectBindings = exactGatewayProjectBindings()
+} = {}) {
+  const calls = [];
+  const spawn = (command, args) => {
+    assert.equal(command, 'gcloud');
+    calls.push([...args]);
+    if (args[0] === 'run' && args[1] === 'services' && args[2] === 'get-iam-policy') {
+      return { status: 0, stderr: '', stdout: JSON.stringify({
+        bindings: [{ role: 'roles/run.invoker', members: invokerMembers }]
+      }) };
+    }
+    if (args[0] === 'projects' && args[1] === 'get-iam-policy') {
+      return { status: 0, stderr: '', stdout: JSON.stringify({ bindings: projectBindings }) };
+    }
+    throw new Error(`unexpected mocked command: ${args.join(' ')}`);
+  };
+  return { calls, spawn };
+}
+
+function verifyIamWithMock(overrides = {}) {
+  const mock = authorityIamMock(overrides);
+  verifyAuthorityIam({
+    project: 'trade-list-a4297',
+    region: 'us-central1',
+    runtimeServiceAccount: GATEWAY_RUNTIME_SERVICE_ACCOUNT
+  }, mock.spawn);
+  return mock;
+}
+
+test('authority IAM accepts only App Check plus the exact conditioned Group E gateway role', () => {
+  const mock = verifyIamWithMock();
+  assert.equal(mock.calls.length, 2);
+  assert.deepEqual(mock.calls.map((args) => args.slice(0, 3)), [
+    ['run', 'services', 'get-iam-policy'],
+    ['projects', 'get-iam-policy', 'trade-list-a4297']
+  ]);
+});
+
+test('authority IAM rejects the historical App Check-only project state', () => {
+  assert.throws(() => verifyIamWithMock({ projectBindings: [exactGatewayProjectBindings()[0]] }),
+    /authority-iam-isolation-invalid/u);
+});
+
+test('authority IAM rejects a missing App Check verifier binding', () => {
+  assert.throws(() => verifyIamWithMock({ projectBindings: [exactGatewayProjectBindings()[1]] }),
+    /authority-iam-isolation-invalid/u);
+});
+
+test('authority IAM rejects an unconditioned Group E gateway role', () => {
+  const bindings = exactGatewayProjectBindings();
+  delete bindings[1].condition;
+  assert.throws(() => verifyIamWithMock({ projectBindings: bindings }), /authority-iam-isolation-invalid/u);
+});
+
+test('authority IAM rejects the wrong Group E condition title', () => {
+  const bindings = exactGatewayProjectBindings();
+  bindings[1].condition.title = 'group-e-control';
+  assert.throws(() => verifyIamWithMock({ projectBindings: bindings }), /authority-iam-isolation-invalid/u);
+});
+
+test('authority IAM rejects the wrong Group E condition description', () => {
+  const bindings = exactGatewayProjectBindings();
+  bindings[1].condition.description = 'Restrict access';
+  assert.throws(() => verifyIamWithMock({ projectBindings: bindings }), /authority-iam-isolation-invalid/u);
+});
+
+test('authority IAM rejects a Group E condition targeting another database', () => {
+  const bindings = exactGatewayProjectBindings();
+  bindings[1].condition.expression = bindings[1].condition.expression.replace('e1-group-e-control', 'phase-e-identity');
+  assert.throws(() => verifyIamWithMock({ projectBindings: bindings }), /authority-iam-isolation-invalid/u);
+});
+
+test('authority IAM rejects duplicate conditioned or unconditioned Group E role bindings', () => {
+  const bindings = exactGatewayProjectBindings();
+  bindings.push({ role: GROUP_E_CONTROL_ROLE, members: [GATEWAY_RUNTIME_MEMBER] });
+  assert.throws(() => verifyIamWithMock({ projectBindings: bindings }), /authority-iam-isolation-invalid/u);
+});
+
+test('authority IAM rejects any additional broad project role held by the gateway', () => {
+  const bindings = exactGatewayProjectBindings();
+  bindings.push({ role: 'roles/editor', members: [GATEWAY_RUNTIME_MEMBER] });
+  assert.throws(() => verifyIamWithMock({ projectBindings: bindings }), /authority-iam-isolation-invalid/u);
+});
+
+test('authority IAM rejects wrong or additional members on reviewed gateway bindings', () => {
+  const wrongControlMember = exactGatewayProjectBindings();
+  wrongControlMember[1].members = ['serviceAccount:other@trade-list-a4297.iam.gserviceaccount.com'];
+  assert.throws(() => verifyIamWithMock({ projectBindings: wrongControlMember }), /authority-iam-isolation-invalid/u);
+
+  const additionalAppCheckMember = exactGatewayProjectBindings();
+  additionalAppCheckMember[0].members.push('serviceAccount:other@trade-list-a4297.iam.gserviceaccount.com');
+  assert.throws(() => verifyIamWithMock({ projectBindings: additionalAppCheckMember }),
+    /authority-iam-isolation-invalid/u);
+});
+
+test('authority IAM preserves exact sole Run invoker isolation', () => {
+  for (const invokerMembers of [
+    [],
+    ['serviceAccount:other@trade-list-a4297.iam.gserviceaccount.com'],
+    [GATEWAY_RUNTIME_MEMBER, 'serviceAccount:other@trade-list-a4297.iam.gserviceaccount.com']
+  ]) {
+    assert.throws(() => verifyIamWithMock({ invokerMembers }), /authority-iam-isolation-invalid/u);
+  }
+});
+
 test('mocked D3 continuation deployment enables only reserve plus gateway', () => {
   const manifest = candidateManifest();
   const plan = createDeploymentPlan({
@@ -790,8 +918,7 @@ test('mocked D3 continuation deployment enables only reserve plus gateway', () =
         members: ['serviceAccount:e1-authority-gateway@trade-list-a4297.iam.gserviceaccount.com'] }] }), stderr: '' };
     }
     if (args[0] === 'projects' && args[1] === 'get-iam-policy') {
-      return { status: 0, stdout: JSON.stringify({ bindings: [{ role: 'roles/firebaseappcheck.tokenVerifier',
-        members: ['serviceAccount:e1-authority-gateway@trade-list-a4297.iam.gserviceaccount.com'] }] }), stderr: '' };
+      return { status: 0, stdout: JSON.stringify({ bindings: exactGatewayProjectBindings() }), stderr: '' };
     }
     if (args[0] === 'run' && args[1] === 'services' && args[2] === 'replace') {
       if (!args.includes('--dry-run')) {
@@ -866,8 +993,7 @@ test('mocked D3 continuation deployment restores gateway and authority after ena
         members: ['serviceAccount:e1-authority-gateway@trade-list-a4297.iam.gserviceaccount.com'] }] }), stderr: '' };
     }
     if (args[0] === 'projects' && args[1] === 'get-iam-policy') {
-      return { status: 0, stdout: JSON.stringify({ bindings: [{ role: 'roles/firebaseappcheck.tokenVerifier',
-        members: ['serviceAccount:e1-authority-gateway@trade-list-a4297.iam.gserviceaccount.com'] }] }), stderr: '' };
+      return { status: 0, stdout: JSON.stringify({ bindings: exactGatewayProjectBindings() }), stderr: '' };
     }
     if (args[0] === 'run' && args[1] === 'services' && args[2] === 'replace') {
       if (!args.includes('--dry-run')) {

@@ -112,6 +112,26 @@ const AUTHORITY_GATES = Object.freeze([
   'APPLY_MIGRATION_ENABLED', 'FREEZE_CONFLICT_ENABLED'
 ]);
 
+const GATEWAY_APP_CHECK_ROLE = 'roles/firebaseappcheck.tokenVerifier';
+const GROUP_E_CONTROL_ROLE = 'projects/trade-list-a4297/roles/e1GroupEControlGateway';
+const GROUP_E_CONTROL_CONDITION = Object.freeze({
+  title: 'e1-group-e-control-only',
+  description: 'Restrict Group E control access to the named database',
+  expression: 'resource.type == "firestore.googleapis.com/Database" && resource.name == ' +
+    '"projects/trade-list-a4297/databases/e1-group-e-control"'
+});
+
+function exactMembers(binding, member) {
+  return Array.isArray(binding?.members) && binding.members.length === 1 && binding.members[0] === member;
+}
+
+function exactGroupEControlCondition(condition) {
+  return condition?.title === GROUP_E_CONTROL_CONDITION.title &&
+    condition.description === GROUP_E_CONTROL_CONDITION.description &&
+    condition.expression === GROUP_E_CONTROL_CONDITION.expression &&
+    JSON.stringify(Object.keys(condition).sort()) === JSON.stringify(['description', 'expression', 'title']);
+}
+
 function verifyAuthorityIam(plan, spawn) {
   const servicePolicy = gcloudJson(spawn, ['run', 'services', 'get-iam-policy', 'e1-identity-authority',
     `--project=${plan.project}`, `--region=${plan.region}`], 'authority-iam');
@@ -119,10 +139,18 @@ function verifyAuthorityIam(plan, spawn) {
   const member = `serviceAccount:${plan.runtimeServiceAccount}`;
   const invokers = (servicePolicy.bindings || []).filter((binding) => binding.role === 'roles/run.invoker')
     .flatMap((binding) => binding.members || []);
-  const projectRoles = (projectPolicy.bindings || []).filter((binding) => (binding.members || []).includes(member))
-    .map((binding) => binding.role).sort();
+  const projectBindings = (projectPolicy.bindings || []).filter((binding) =>
+    (binding.members || []).includes(member));
+  const appCheckBindings = projectBindings.filter((binding) => binding.role === GATEWAY_APP_CHECK_ROLE);
+  const groupEControlBindings = (projectPolicy.bindings || []).filter((binding) =>
+    binding.role === GROUP_E_CONTROL_ROLE);
+  const appCheckExact = appCheckBindings.length === 1 && exactMembers(appCheckBindings[0], member) &&
+    appCheckBindings[0].condition === undefined;
+  const groupEControlExact = groupEControlBindings.length === 1 &&
+    exactMembers(groupEControlBindings[0], member) &&
+    exactGroupEControlCondition(groupEControlBindings[0].condition);
   if (invokers.length !== 1 || invokers[0] !== member ||
-      JSON.stringify(projectRoles) !== JSON.stringify(['roles/firebaseappcheck.tokenVerifier'])) {
+      projectBindings.length !== 2 || !appCheckExact || !groupEControlExact) {
     throw new Error('e1/authority-iam-isolation-invalid');
   }
 }
@@ -332,6 +360,7 @@ module.exports = Object.freeze({
   replaceAuthority,
   run,
   verifiedGuardResult,
+  verifyAuthorityIam,
   verifyAuthorityService,
   privateDirectoryPath
 });
