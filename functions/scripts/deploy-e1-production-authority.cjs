@@ -61,6 +61,15 @@ function environment(container) {
   return Object.fromEntries((container?.env || []).map((entry) => [entry.name, String(entry.value ?? '')]));
 }
 
+function inactiveEnvironmentValid(env, options = {}) {
+  return Object.entries(REQUIRED_INACTIVE_ENVIRONMENT).every(([name, value]) => {
+    if (name === 'READ_PROOF_MODE' && options.allowLegacyMissingReadProofMode === true && env[name] === undefined) {
+      return true;
+    }
+    return env[name] === value;
+  });
+}
+
 function verifyAuthorityIam(plan, spawn) {
   const policy = gcloudJson(spawn, ['run', 'services', 'get-iam-policy', plan.target.service,
     `--project=${plan.target.projectId}`, `--region=${plan.target.region}`], 'authority-iam');
@@ -83,8 +92,7 @@ function verifyAuthorityService(plan, service, options = {}) {
   if (service?.metadata?.name !== plan.target.service || service?.status?.url !== plan.target.origin ||
       service?.spec?.template?.spec?.serviceAccountName !== plan.target.runtimeServiceAccount ||
       !Array.isArray(containers) || containers.length !== 1 || !/@sha256:[a-f0-9]{64}$/u.test(container?.image || '') ||
-      !ready || (options.requireInactive !== false &&
-        Object.entries(REQUIRED_INACTIVE_ENVIRONMENT).some(([name, value]) => env[name] !== value)) ||
+      !ready || (options.requireInactive !== false && !inactiveEnvironmentValid(env, options)) ||
       (options.allowPrivateEnvironment !== true && (
         GROUP_E_PRIVATE_ENVIRONMENT.some((name) => env[name] !== undefined && env[name] !== '') ||
         Object.keys(env).some((name) => name.startsWith('GROUP_E_') &&
@@ -98,7 +106,10 @@ function verifyAuthorityService(plan, service, options = {}) {
 }
 
 function inactiveServiceSpec(plan, service, image) {
-  verifyAuthorityService(plan, service, { allowPrivateEnvironment: true });
+  verifyAuthorityService(plan, service, {
+    allowLegacyMissingReadProofMode: true,
+    allowPrivateEnvironment: true
+  });
   if (!new RegExp(`^${plan.target.imageUri.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&')}@sha256:[a-f0-9]{64}$`, 'u').test(image)) {
     throw new Error('e1/authority-built-image-invalid');
   }
@@ -116,7 +127,8 @@ function inactiveServiceSpec(plan, service, image) {
   delete container.command;
   delete container.args;
   const originalNames = new Set((container.env || []).map((entry) => entry.name));
-  if (Object.keys(REQUIRED_INACTIVE_ENVIRONMENT).some((name) => !originalNames.has(name))) {
+  if (Object.keys(REQUIRED_INACTIVE_ENVIRONMENT)
+    .some((name) => name !== 'READ_PROOF_MODE' && !originalNames.has(name))) {
     throw new Error('e1/authority-required-inactive-environment-missing');
   }
   container.env = (container.env || []).flatMap((entry) => {
@@ -126,6 +138,9 @@ function inactiveServiceSpec(plan, service, image) {
     }
     return [entry];
   });
+  if (!originalNames.has('READ_PROOF_MODE')) {
+    container.env.push({ name: 'READ_PROOF_MODE', value: REQUIRED_INACTIVE_ENVIRONMENT.READ_PROOF_MODE });
+  }
   const fakeReady = { ...replacement, status: { url: plan.target.origin, conditions: [{ type: 'Ready', status: 'True' }] } };
   verifyAuthorityService(plan, fakeReady, { expectedImage: image });
   return replacement;
@@ -175,7 +190,10 @@ function buildAuthority(plan, stagedSource, configPath, spawn) {
 function replaceAuthority(plan, built, workDirectory, spawn) {
   const before = gcloudJson(spawn, ['run', 'services', 'describe', plan.target.service,
     `--project=${plan.target.projectId}`, `--region=${plan.target.region}`], 'authority-describe');
-  verifyAuthorityService(plan, before, { allowPrivateEnvironment: true });
+  verifyAuthorityService(plan, before, {
+    allowLegacyMissingReadProofMode: true,
+    allowPrivateEnvironment: true
+  });
   verifyAuthorityIam(plan, spawn);
   const specPath = path.join(workDirectory, 'service.json');
   fs.writeFileSync(specPath, `${JSON.stringify(inactiveServiceSpec(plan, before, built.image))}\n`, { mode: 0o600 });
@@ -279,6 +297,7 @@ module.exports = Object.freeze({
   cloudBuildConfig,
   environment,
   executePlan,
+  inactiveEnvironmentValid,
   inactiveServiceSpec,
   replaceAuthority,
   run,

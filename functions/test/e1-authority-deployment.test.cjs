@@ -26,6 +26,7 @@ const {
   REQUIRED_INACTIVE_ENVIRONMENT,
   argumentsMap,
   executePlan,
+  inactiveEnvironmentValid,
   inactiveServiceSpec,
   run,
   verifyAuthorityIam,
@@ -271,10 +272,43 @@ test('authority service and IAM verification fail closed on public runtime or in
   }
 });
 
+test('legacy authority preflight accepts only an absent or false read proof mode', () => {
+  const plan = planFixture();
+  const absent = serviceFixture();
+  absent.spec.template.spec.containers[0].env = absent.spec.template.spec.containers[0].env
+    .filter((entry) => entry.name !== 'READ_PROOF_MODE');
+  const absentEnvironment = Object.fromEntries(absent.spec.template.spec.containers[0].env
+    .map((entry) => [entry.name, String(entry.value ?? '')]));
+  assert.equal(inactiveEnvironmentValid(absentEnvironment, { allowLegacyMissingReadProofMode: true }), true);
+  assert.equal(verifyAuthorityService(plan, absent, { allowLegacyMissingReadProofMode: true }), true);
+  assert.throws(() => verifyAuthorityService(plan, absent), /runtime-or-inactive-state-invalid/u);
+
+  const explicitFalse = serviceFixture();
+  assert.equal(verifyAuthorityService(plan, explicitFalse, { allowLegacyMissingReadProofMode: true }), true);
+  assert.equal(verifyAuthorityService(plan, explicitFalse), true);
+
+  for (const value of ['true', 'unexpected']) {
+    const invalid = serviceFixture();
+    invalid.spec.template.spec.containers[0].env
+      .find((entry) => entry.name === 'READ_PROOF_MODE').value = value;
+    assert.throws(() => verifyAuthorityService(plan, invalid, { allowLegacyMissingReadProofMode: true }),
+      /runtime-or-inactive-state-invalid/u);
+  }
+
+  const missingOperationGate = structuredClone(absent);
+  missingOperationGate.spec.template.spec.containers[0].env =
+    missingOperationGate.spec.template.spec.containers[0].env
+      .filter((entry) => entry.name !== 'READ_ACCOUNT_FOUNDATION_ENABLED');
+  assert.throws(() => verifyAuthorityService(plan, missingOperationGate, {
+    allowLegacyMissingReadProofMode: true
+  }), /runtime-or-inactive-state-invalid/u);
+});
+
 test('inactive authority replacement preserves unrelated configuration and strips all Group E activation values', () => {
   const plan = planFixture();
   const service = serviceFixture();
   const container = service.spec.template.spec.containers[0];
+  container.env = container.env.filter((entry) => entry.name !== 'READ_PROOF_MODE');
   container.env.push({ name: 'GROUP_E_RUN_ID', value: 'private-run' });
   container.env.push({ name: 'GROUP_E_FUTURE_PRIVATE_VALUE', value: 'private-future' });
   assert.throws(() => verifyAuthorityService(plan, service), /runtime-or-inactive-state-invalid/u);
@@ -286,6 +320,9 @@ test('inactive authority replacement preserves unrelated configuration and strip
   });
   assert.equal(next.env.some((entry) => GROUP_E_PRIVATE_ENVIRONMENT.includes(entry.name)), false);
   assert.equal(next.env.some((entry) => entry.name.startsWith('GROUP_E_') && entry.name !== 'GROUP_E_CLIENT_MODE'), false);
+  assert.deepEqual(next.env.filter((entry) => entry.name === 'READ_PROOF_MODE'), [
+    { name: 'READ_PROOF_MODE', value: 'false' }
+  ]);
   assert.deepEqual(Object.fromEntries(next.env.filter((entry) => Object.hasOwn(REQUIRED_INACTIVE_ENVIRONMENT, entry.name))
     .map((entry) => [entry.name, entry.value])), REQUIRED_INACTIVE_ENVIRONMENT);
   assert.equal(replacement.spec.template.metadata.annotations['autoscaling.knative.dev/maxScale'], '2');
@@ -297,6 +334,8 @@ test('inactive authority replacement preserves unrelated configuration and strip
 test('mocked deploy builds staged Commit A source then dry-runs and replaces without IAM mutation', () => {
   const plan = planFixture('deploy');
   const before = serviceFixture();
+  before.spec.template.spec.containers[0].env = before.spec.template.spec.containers[0].env
+    .filter((entry) => entry.name !== 'READ_PROOF_MODE');
   const after = serviceFixture({ imageDigest: NEXT_IMAGE_DIGEST, revision: 'e1-identity-authority-00053-new' });
   let describeCalls = 0;
   const calls = [];
