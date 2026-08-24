@@ -21,10 +21,59 @@ const PERMISSIONS = Object.freeze({
     'datastore.databases.get', 'datastore.databases.getMetadata', 'datastore.entities.get'
   ])
 });
+const ROLE_IDS = Object.freeze({
+  gateway: 'e1GroupEControlGateway',
+  operator: 'e1GroupEControlOperator',
+  reviewer: 'e1GroupEControlReviewer'
+});
 const FORBIDDEN_PERMISSIONS = Object.freeze([
   'datastore.entities.list', 'datastore.entities.update', 'datastore.entities.delete',
   'datastore.databases.create', 'datastore.databases.update', 'datastore.databases.delete'
 ]);
+const PRINCIPALS = Object.freeze({
+  operator: Object.freeze({
+    member: 'serviceAccount:e1-group-e-control-operator@trade-list-a4297.iam.gserviceaccount.com',
+    serviceAccountStatus: 'NOT_CREATED',
+    controlRoleBindingStatus: 'NOT_BOUND',
+    authenticationMode: 'short-lived-impersonation-only',
+    serviceAccountKeys: 'FORBIDDEN',
+    tokenCreatorBinding: Object.freeze({
+      role: 'roles/iam.serviceAccountTokenCreator',
+      scope: 'service-account-only',
+      targetServiceAccount: 'e1-group-e-control-operator@trade-list-a4297.iam.gserviceaccount.com',
+      status: 'NOT_BOUND',
+      humanImpersonatorSource: 'private-mode-0600-artifact'
+    })
+  }),
+  reviewer: Object.freeze({
+    member: 'serviceAccount:e1-group-e-control-reviewer@trade-list-a4297.iam.gserviceaccount.com',
+    serviceAccountStatus: 'NOT_CREATED',
+    controlRoleBindingStatus: 'NOT_BOUND',
+    authenticationMode: 'short-lived-impersonation-only',
+    serviceAccountKeys: 'FORBIDDEN',
+    tokenCreatorBinding: Object.freeze({
+      role: 'roles/iam.serviceAccountTokenCreator',
+      scope: 'service-account-only',
+      targetServiceAccount: 'e1-group-e-control-reviewer@trade-list-a4297.iam.gserviceaccount.com',
+      status: 'NOT_BOUND',
+      humanImpersonatorSource: 'private-mode-0600-artifact'
+    })
+  }),
+  gateway: Object.freeze({
+    member: 'serviceAccount:e1-authority-gateway@trade-list-a4297.iam.gserviceaccount.com',
+    serviceAccountStatus: 'EXISTING',
+    controlRoleBindingStatus: 'NOT_BOUND',
+    authenticationMode: 'runtime-service-account',
+    serviceAccountKeys: 'FORBIDDEN'
+  }),
+  authority: Object.freeze({
+    member: 'serviceAccount:e1-identity-authority-runtime@trade-list-a4297.iam.gserviceaccount.com',
+    serviceAccountStatus: 'EXISTING',
+    controlRole: 'NONE',
+    controlRoleBindingStatus: 'NOT_BOUND',
+    serviceAccountKeys: 'FORBIDDEN'
+  })
+});
 const DEPLOYED_FIELDS = Object.freeze([
   'status', 'projectId', 'databaseId', 'location', 'type', 'edition', 'deletionProtection', 'pitr', 'ttl',
   'mobileWebRules', 'rulesDigest', 'iamPlanDigest', 'verifiedAt', 'deploymentDigest'
@@ -47,9 +96,27 @@ function sha256(value) {
   return crypto.createHash('sha256').update(value).digest('hex');
 }
 
+function canonicalPrincipalValues(principals) {
+  return ['operator', 'reviewer'].flatMap((role) => {
+    const principal = principals[role];
+    return [role, principal.member, principal.serviceAccountStatus, principal.controlRoleBindingStatus,
+      principal.authenticationMode, principal.serviceAccountKeys, principal.tokenCreatorBinding.role,
+      principal.tokenCreatorBinding.scope, principal.tokenCreatorBinding.targetServiceAccount,
+      principal.tokenCreatorBinding.status, principal.tokenCreatorBinding.humanImpersonatorSource];
+  }).concat([
+    'gateway', principals.gateway.member, principals.gateway.serviceAccountStatus,
+    principals.gateway.controlRoleBindingStatus, principals.gateway.authenticationMode,
+    principals.gateway.serviceAccountKeys,
+    'authority', principals.authority.member, principals.authority.serviceAccountStatus,
+    principals.authority.controlRole, principals.authority.controlRoleBindingStatus,
+    principals.authority.serviceAccountKeys
+  ]);
+}
+
 function canonicalIamPlan(plan) {
-  return sha256(JSON.stringify([1, 'group-e-control-iam-plan', IAM_CONDITION,
-    ...Object.keys(PERMISSIONS).flatMap((role) => [role, plan.planned.roles[role].roleId, ...PERMISSIONS[role]])]));
+  return sha256(JSON.stringify([2, 'group-e-control-iam-plan', IAM_CONDITION,
+    ...Object.keys(PERMISSIONS).flatMap((role) => [role, plan.planned.roles[role].roleId, ...PERMISSIONS[role]]),
+    ...canonicalPrincipalValues(plan.planned.principals)]));
 }
 
 function expectedRulesDigest() {
@@ -59,9 +126,10 @@ function expectedRulesDigest() {
 function validateControlPlanePlan(value) {
   const database = value?.planned?.database;
   const roles = value?.planned?.roles;
+  const principals = value?.planned?.principals;
   if (!exactFields(value, ['schemaVersion', 'environment', 'projectId', 'planned', 'deployed']) ||
-      value.schemaVersion !== 1 || value.environment !== 'production' || value.projectId !== PROJECT_ID ||
-      !exactFields(value.planned, ['database', 'rulesSource', 'iamCondition', 'roles']) ||
+      value.schemaVersion !== 2 || value.environment !== 'production' || value.projectId !== PROJECT_ID ||
+      !exactFields(value.planned, ['database', 'rulesSource', 'iamCondition', 'roles', 'principals']) ||
       !exactFields(database, ['databaseId', 'location', 'type', 'edition', 'deletionProtection', 'pitr', 'ttl',
         'mobileWebRules', 'status']) || database.databaseId !== DATABASE_ID || database.location !== 'us-central1' ||
       database.type !== 'FIRESTORE_NATIVE' || database.edition !== 'STANDARD' || database.deletionProtection !== true ||
@@ -71,10 +139,18 @@ function validateControlPlanePlan(value) {
       value.deployed !== null) fail('group_e_control_plan_invalid');
   for (const role of Object.keys(PERMISSIONS)) {
     if (!exactFields(roles[role], ['roleId', 'permissions']) ||
+        roles[role].roleId !== ROLE_IDS[role] ||
         JSON.stringify(roles[role].permissions) !== JSON.stringify(PERMISSIONS[role]) ||
         roles[role].permissions.some((permission) => FORBIDDEN_PERMISSIONS.includes(permission))) {
       fail('group_e_control_iam_plan_invalid');
     }
+  }
+  if (!exactFields(principals, ['operator', 'reviewer', 'gateway', 'authority']) ||
+      JSON.stringify(principals) !== JSON.stringify(PRINCIPALS) ||
+      new Set(Object.values(principals).map((principal) => principal.member)).size !== 4 ||
+      JSON.stringify(principals).includes('${') ||
+      Object.values(principals).some((principal) => principal.member.startsWith('user:'))) {
+    fail('group_e_control_principal_plan_invalid');
   }
   const rules = fs.readFileSync(RULES_PATH, 'utf8');
   if (!/allow read, write: if false;/u.test(rules) || /allow\s+(?:read|write):\s*if\s+true/iu.test(rules)) {
@@ -120,6 +196,7 @@ function publicProvisioningPlan() {
     iamCondition: IAM_CONDITION,
     iamPlanDigest: canonicalIamPlan(plan),
     roles: plan.planned.roles,
+    principals: plan.planned.principals,
     deployed: false
   });
 }
@@ -131,6 +208,8 @@ module.exports = Object.freeze({
   FORBIDDEN_PERMISSIONS,
   IAM_CONDITION,
   PERMISSIONS,
+  PRINCIPALS,
+  ROLE_IDS,
   PLAN_PATH,
   PROJECT_ID,
   RULES_PATH,

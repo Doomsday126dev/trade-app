@@ -1,0 +1,8 @@
+{
+  "firestore": [
+    {
+      "database": "e1-group-e-control",
+      "rules": "functions/production/e1-group-e-control.rules"
+    }
+  ]
+}

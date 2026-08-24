@@ -15,9 +15,12 @@ const {
   FORBIDDEN_PERMISSIONS: GROUP_E_CONTROL_FORBIDDEN_PERMISSIONS,
   IAM_CONDITION: GROUP_E_CONTROL_IAM_CONDITION,
   PERMISSIONS: GROUP_E_CONTROL_PERMISSIONS,
+  PRINCIPALS: GROUP_E_CONTROL_PRINCIPALS,
+  ROLE_IDS: GROUP_E_CONTROL_ROLE_IDS,
   loadControlPlanePlan,
   publicProvisioningPlan,
-  requireDeployedControlPlane
+  requireDeployedControlPlane,
+  validateControlPlanePlan
 } = require('../production/e1GroupEControlPlane.cjs');
 
 test('authority targets are explicit for staging production and emulator with no cross-environment fallback', () => {
@@ -203,6 +206,7 @@ test('Group E control plane remains an exact deny-all planned resource with narr
     status: 'NOT_CREATED'
   });
   assert.equal(plan.deployed, null);
+  assert.equal(plan.schemaVersion, 2);
   assert.equal(publicPlan.cloudOperations, 0);
   assert.equal(publicPlan.deployed, false);
   assert.equal(GROUP_E_CONTROL_DATABASE_ID, 'e1-group-e-control');
@@ -223,6 +227,25 @@ test('Group E control plane remains an exact deny-all planned resource with narr
     'datastore.databases.getMetadata',
     'datastore.entities.get'
   ]);
+  assert.deepEqual(GROUP_E_CONTROL_ROLE_IDS, {
+    gateway: 'e1GroupEControlGateway',
+    operator: 'e1GroupEControlOperator',
+    reviewer: 'e1GroupEControlReviewer'
+  });
+  assert.deepEqual(plan.planned.principals, GROUP_E_CONTROL_PRINCIPALS);
+  assert.deepEqual(publicPlan.principals, GROUP_E_CONTROL_PRINCIPALS);
+  assert.equal(GROUP_E_CONTROL_PRINCIPALS.operator.member,
+    'serviceAccount:e1-group-e-control-operator@trade-list-a4297.iam.gserviceaccount.com');
+  assert.equal(GROUP_E_CONTROL_PRINCIPALS.reviewer.member,
+    'serviceAccount:e1-group-e-control-reviewer@trade-list-a4297.iam.gserviceaccount.com');
+  assert.equal(GROUP_E_CONTROL_PRINCIPALS.gateway.member,
+    'serviceAccount:e1-authority-gateway@trade-list-a4297.iam.gserviceaccount.com');
+  assert.equal(GROUP_E_CONTROL_PRINCIPALS.authority.controlRole, 'NONE');
+  assert.equal(GROUP_E_CONTROL_PRINCIPALS.operator.serviceAccountStatus, 'NOT_CREATED');
+  assert.equal(GROUP_E_CONTROL_PRINCIPALS.reviewer.serviceAccountStatus, 'NOT_CREATED');
+  assert.equal(GROUP_E_CONTROL_PRINCIPALS.operator.tokenCreatorBinding.scope, 'service-account-only');
+  assert.equal(GROUP_E_CONTROL_PRINCIPALS.reviewer.tokenCreatorBinding.status, 'NOT_BOUND');
+  assert.equal(JSON.stringify(GROUP_E_CONTROL_PRINCIPALS).includes('${'), false);
   for (const permissions of Object.values(GROUP_E_CONTROL_PERMISSIONS)) {
     assert.equal(permissions.some((permission) => GROUP_E_CONTROL_FORBIDDEN_PERMISSIONS.includes(permission)), false);
   }
@@ -231,4 +254,26 @@ test('Group E control plane remains an exact deny-all planned resource with narr
   assert.throws(() => requireDeployedControlPlane(null), /group_e_control_deployment_absent/);
   assert.equal(Object.hasOwn(productionManifest, 'groupEControlPlane'), false);
   assert.equal(JSON.stringify(productionManifest).includes('e1-group-e-control'), false);
+});
+
+test('Group E principal plan rejects humans reused runtimes keys broad impersonation and placeholders', () => {
+  const plan = structuredClone(loadControlPlanePlan());
+  const mutations = [
+    (value) => { value.planned.principals.operator.member = 'user:owner@example.test'; },
+    (value) => { value.planned.principals.reviewer.member = value.planned.principals.operator.member; },
+    (value) => { value.planned.principals.operator.member = value.planned.principals.gateway.member; },
+    (value) => { value.planned.principals.reviewer.member = value.planned.principals.authority.member; },
+    (value) => { value.planned.principals.operator.serviceAccountKeys = 'ALLOWED'; },
+    (value) => { value.planned.principals.operator.tokenCreatorBinding.scope = 'project'; },
+    (value) => { value.planned.principals.reviewer.member = '${GROUP_E_REVIEWER_PRINCIPAL}'; },
+    (value) => { value.planned.principals.authority.controlRole = 'roles/viewer'; },
+    (value) => { value.planned.roles.operator.roleId = 'roles/owner'; },
+    (value) => { value.planned.roles.reviewer.roleId = 'roles/viewer'; },
+    (value) => { value.planned.roles.gateway.roleId = 'roles/editor'; }
+  ];
+  for (const mutate of mutations) {
+    const invalid = structuredClone(plan);
+    mutate(invalid);
+    assert.throws(() => validateControlPlanePlan(invalid), /group_e_control_(?:principal|iam)_plan_invalid/);
+  }
 });

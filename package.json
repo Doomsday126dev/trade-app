@@ -76,6 +76,7 @@
     "check:e1-production-third-mutation-candidate-pool": "npm --prefix functions run check:e1-production-third-mutation-candidate-pool",
     "check:e1-production-third-mutation-canary-setup": "npm --prefix functions run check:e1-production-third-mutation-canary-setup",
     "check:e1-gateway-source": "npm --prefix functions run test:e1-gateway-source",
+    "check:group-e-control-rules-tooling": "node scripts/check-group-e-control-rules-tooling.cjs && node --test tests/group-e-control-rules-tooling.test.cjs tests/group-e-control-rules-deny-all.test.cjs",
     "check:firebase-app-check-client": "node --test tests/firebase-app-check-client.test.cjs",
     "audit:trainer-names": "node scripts/audit-trainer-names.js",
     "audit:uid-handles": "node scripts/audit-uid-handle-mappings.js",

@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "environment": "production",
   "projectId": "trade-list-a4297",
   "planned": {
@@ -42,6 +42,50 @@
           "datastore.databases.getMetadata",
           "datastore.entities.get"
         ]
+      }
+    },
+    "principals": {
+      "operator": {
+        "member": "serviceAccount:e1-group-e-control-operator@trade-list-a4297.iam.gserviceaccount.com",
+        "serviceAccountStatus": "NOT_CREATED",
+        "controlRoleBindingStatus": "NOT_BOUND",
+        "authenticationMode": "short-lived-impersonation-only",
+        "serviceAccountKeys": "FORBIDDEN",
+        "tokenCreatorBinding": {
+          "role": "roles/iam.serviceAccountTokenCreator",
+          "scope": "service-account-only",
+          "targetServiceAccount": "e1-group-e-control-operator@trade-list-a4297.iam.gserviceaccount.com",
+          "status": "NOT_BOUND",
+          "humanImpersonatorSource": "private-mode-0600-artifact"
+        }
+      },
+      "reviewer": {
+        "member": "serviceAccount:e1-group-e-control-reviewer@trade-list-a4297.iam.gserviceaccount.com",
+        "serviceAccountStatus": "NOT_CREATED",
+        "controlRoleBindingStatus": "NOT_BOUND",
+        "authenticationMode": "short-lived-impersonation-only",
+        "serviceAccountKeys": "FORBIDDEN",
+        "tokenCreatorBinding": {
+          "role": "roles/iam.serviceAccountTokenCreator",
+          "scope": "service-account-only",
+          "targetServiceAccount": "e1-group-e-control-reviewer@trade-list-a4297.iam.gserviceaccount.com",
+          "status": "NOT_BOUND",
+          "humanImpersonatorSource": "private-mode-0600-artifact"
+        }
+      },
+      "gateway": {
+        "member": "serviceAccount:e1-authority-gateway@trade-list-a4297.iam.gserviceaccount.com",
+        "serviceAccountStatus": "EXISTING",
+        "controlRoleBindingStatus": "NOT_BOUND",
+        "authenticationMode": "runtime-service-account",
+        "serviceAccountKeys": "FORBIDDEN"
+      },
+      "authority": {
+        "member": "serviceAccount:e1-identity-authority-runtime@trade-list-a4297.iam.gserviceaccount.com",
+        "serviceAccountStatus": "EXISTING",
+        "controlRole": "NONE",
+        "controlRoleBindingStatus": "NOT_BOUND",
+        "serviceAccountKeys": "FORBIDDEN"
       }
     }
   },
