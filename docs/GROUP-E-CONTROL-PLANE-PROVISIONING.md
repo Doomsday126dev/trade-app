@@ -31,7 +31,7 @@ The planner prints hashes and a future command but never executes a deployment.
 
 The future production verifier uses unauthenticated Firestore REST requests because Admin SDK and
 server-IAM clients bypass Firebase Security Rules. It is fixed to project `trade-list-a4297`, database
-`e1-group-e-control`, and document `__group_e_rules_probe__/deny-all`.
+`e1-group-e-control`, and document `group-e-rules-probe/deny-all`.
 
 The read probe is `GET`. The write-denial probe is `PATCH` with `currentDocument.exists=true` against
 the same expected-absent document. Even accidentally permissive Rules therefore cannot create it.
@@ -95,3 +95,32 @@ gcloud iam service-accounts create e1-group-e-control-reviewer --project=trade-l
 
 The human impersonator value must be loaded privately and must never be added to this document or tracked
 source. No command here authorizes a cloud operation; each block requires separate explicit approval.
+
+## Exact database condition metadata
+
+Every future Group E control-role binding must use all three reviewed values without substitution:
+
+- Title: `e1-group-e-control-only`
+- Description: `Restrict Group E control access to the named database`
+- Expression: `resource.type == "firestore.googleapis.com/Database" && resource.name == "projects/trade-list-a4297/databases/e1-group-e-control"`
+
+The title, description, and expression are part of the canonical IAM-plan digest. The tracked validator rejects
+missing fields, extra fields, alternate text, or a condition represented only as an expression string.
+
+## Immutable inactive authority deployment
+
+`functions/production/e1-authority-source-manifest.json` pins the exact nine-file authority source from reviewed
+Commit A. `functions/scripts/deploy-e1-production-authority.cjs` stages only those Git objects in an isolated
+temporary directory. Plan mode performs no cloud operation and emits only sanitized source and identity provenance.
+
+Deploy mode requires the exact confirmation `DEPLOY INACTIVE E1 GROUP E AUTHORITY`, clean synchronized refs, the
+reviewed builder and deployer identities, a private existing authority service, and the gateway as its sole Run
+invoker. It dry-runs before replacement, changes only the immutable image and inactive environment state, preserves
+unrelated required configuration without printing it, strips Group E private activation values, and performs no IAM
+mutation.
+
+**NOT AUTHORIZED - DO NOT RUN YET**
+
+```sh
+node functions/scripts/deploy-e1-production-authority.cjs --mode=deploy --source=functions/e1-authority-service --expected-sha=<REVIEWED_TOOLING_SHA> --confirmation='DEPLOY INACTIVE E1 GROUP E AUTHORITY'
+```

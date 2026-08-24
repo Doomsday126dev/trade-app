@@ -14,6 +14,9 @@ const {
   DATABASE_RESOURCE: GROUP_E_CONTROL_DATABASE_RESOURCE,
   FORBIDDEN_PERMISSIONS: GROUP_E_CONTROL_FORBIDDEN_PERMISSIONS,
   IAM_CONDITION: GROUP_E_CONTROL_IAM_CONDITION,
+  IAM_CONDITION_DESCRIPTION: GROUP_E_CONTROL_IAM_CONDITION_DESCRIPTION,
+  IAM_CONDITION_METADATA: GROUP_E_CONTROL_IAM_CONDITION_METADATA,
+  IAM_CONDITION_TITLE: GROUP_E_CONTROL_IAM_CONDITION_TITLE,
   PERMISSIONS: GROUP_E_CONTROL_PERMISSIONS,
   PRINCIPALS: GROUP_E_CONTROL_PRINCIPALS,
   ROLE_IDS: GROUP_E_CONTROL_ROLE_IDS,
@@ -215,6 +218,16 @@ test('Group E control plane remains an exact deny-all planned resource with narr
   assert.equal(GROUP_E_CONTROL_IAM_CONDITION,
     'resource.type == "firestore.googleapis.com/Database" && resource.name == ' +
     '"projects/trade-list-a4297/databases/e1-group-e-control"');
+  assert.equal(GROUP_E_CONTROL_IAM_CONDITION_TITLE, 'e1-group-e-control-only');
+  assert.equal(GROUP_E_CONTROL_IAM_CONDITION_DESCRIPTION,
+    'Restrict Group E control access to the named database');
+  assert.deepEqual(GROUP_E_CONTROL_IAM_CONDITION_METADATA, {
+    title: GROUP_E_CONTROL_IAM_CONDITION_TITLE,
+    description: GROUP_E_CONTROL_IAM_CONDITION_DESCRIPTION,
+    expression: GROUP_E_CONTROL_IAM_CONDITION
+  });
+  assert.deepEqual(plan.planned.iamCondition, GROUP_E_CONTROL_IAM_CONDITION_METADATA);
+  assert.deepEqual(publicPlan.iamCondition, GROUP_E_CONTROL_IAM_CONDITION_METADATA);
   assert.deepEqual(GROUP_E_CONTROL_PERMISSIONS.gateway, [
     'datastore.databases.get',
     'datastore.databases.getMetadata',
@@ -275,5 +288,20 @@ test('Group E principal plan rejects humans reused runtimes keys broad impersona
     const invalid = structuredClone(plan);
     mutate(invalid);
     assert.throws(() => validateControlPlanePlan(invalid), /group_e_control_(?:principal|iam)_plan_invalid/);
+  }
+});
+
+test('Group E IAM condition metadata rejects title description expression and field substitution', () => {
+  const mutations = [
+    (value) => { value.planned.iamCondition.title = 'substituted'; },
+    (value) => { value.planned.iamCondition.description = 'substituted'; },
+    (value) => { value.planned.iamCondition.expression = 'resource.name == "wrong"'; },
+    (value) => { value.planned.iamCondition.extra = true; },
+    (value) => { value.planned.iamCondition = GROUP_E_CONTROL_IAM_CONDITION; }
+  ];
+  for (const mutate of mutations) {
+    const plan = structuredClone(loadControlPlanePlan());
+    mutate(plan);
+    assert.throws(() => validateControlPlanePlan(plan), /group_e_control_plan_invalid/u);
   }
 });

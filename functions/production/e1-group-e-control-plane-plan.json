@@ -15,7 +15,11 @@
       "status": "NOT_CREATED"
     },
     "rulesSource": "functions/production/e1-group-e-control.rules",
-    "iamCondition": "resource.type == \"firestore.googleapis.com/Database\" && resource.name == \"projects/trade-list-a4297/databases/e1-group-e-control\"",
+    "iamCondition": {
+      "title": "e1-group-e-control-only",
+      "description": "Restrict Group E control access to the named database",
+      "expression": "resource.type == \"firestore.googleapis.com/Database\" && resource.name == \"projects/trade-list-a4297/databases/e1-group-e-control\""
+    },
     "roles": {
       "gateway": {
         "roleId": "e1GroupEControlGateway",

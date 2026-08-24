@@ -10,6 +10,13 @@ const PROJECT_ID = 'trade-list-a4297';
 const DATABASE_ID = 'e1-group-e-control';
 const DATABASE_RESOURCE = `projects/${PROJECT_ID}/databases/${DATABASE_ID}`;
 const IAM_CONDITION = `resource.type == "firestore.googleapis.com/Database" && resource.name == "${DATABASE_RESOURCE}"`;
+const IAM_CONDITION_TITLE = 'e1-group-e-control-only';
+const IAM_CONDITION_DESCRIPTION = 'Restrict Group E control access to the named database';
+const IAM_CONDITION_METADATA = Object.freeze({
+  title: IAM_CONDITION_TITLE,
+  description: IAM_CONDITION_DESCRIPTION,
+  expression: IAM_CONDITION
+});
 const PERMISSIONS = Object.freeze({
   gateway: Object.freeze([
     'datastore.databases.get', 'datastore.databases.getMetadata', 'datastore.entities.get', 'datastore.entities.create'
@@ -114,7 +121,8 @@ function canonicalPrincipalValues(principals) {
 }
 
 function canonicalIamPlan(plan) {
-  return sha256(JSON.stringify([2, 'group-e-control-iam-plan', IAM_CONDITION,
+  return sha256(JSON.stringify([3, 'group-e-control-iam-plan', IAM_CONDITION_TITLE,
+    IAM_CONDITION_DESCRIPTION, IAM_CONDITION,
     ...Object.keys(PERMISSIONS).flatMap((role) => [role, plan.planned.roles[role].roleId, ...PERMISSIONS[role]]),
     ...canonicalPrincipalValues(plan.planned.principals)]));
 }
@@ -135,7 +143,9 @@ function validateControlPlanePlan(value) {
       database.type !== 'FIRESTORE_NATIVE' || database.edition !== 'STANDARD' || database.deletionProtection !== true ||
       database.pitr !== 'ENABLED' || database.ttl !== null || database.mobileWebRules !== 'deny-all' ||
       database.status !== 'NOT_CREATED' || value.planned.rulesSource !== 'functions/production/e1-group-e-control.rules' ||
-      value.planned.iamCondition !== IAM_CONDITION || !exactFields(roles, ['gateway', 'operator', 'reviewer']) ||
+      !exactFields(value.planned.iamCondition, ['title', 'description', 'expression']) ||
+      JSON.stringify(value.planned.iamCondition) !== JSON.stringify(IAM_CONDITION_METADATA) ||
+      !exactFields(roles, ['gateway', 'operator', 'reviewer']) ||
       value.deployed !== null) fail('group_e_control_plan_invalid');
   for (const role of Object.keys(PERMISSIONS)) {
     if (!exactFields(roles[role], ['roleId', 'permissions']) ||
@@ -193,7 +203,7 @@ function publicProvisioningPlan() {
     projectId: PROJECT_ID,
     database: plan.planned.database,
     rulesDigest: expectedRulesDigest(),
-    iamCondition: IAM_CONDITION,
+    iamCondition: IAM_CONDITION_METADATA,
     iamPlanDigest: canonicalIamPlan(plan),
     roles: plan.planned.roles,
     principals: plan.planned.principals,
@@ -207,6 +217,9 @@ module.exports = Object.freeze({
   DEPLOYED_FIELDS,
   FORBIDDEN_PERMISSIONS,
   IAM_CONDITION,
+  IAM_CONDITION_DESCRIPTION,
+  IAM_CONDITION_METADATA,
+  IAM_CONDITION_TITLE,
   PERMISSIONS,
   PRINCIPALS,
   ROLE_IDS,

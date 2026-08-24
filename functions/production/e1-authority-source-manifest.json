@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "environment": "production",
+  "projectId": "trade-list-a4297",
+  "region": "us-central1",
+  "service": "e1-identity-authority",
+  "sourceRoot": "functions/e1-authority-service",
+  "sourceCommitSha": "ad2edab9be2b1c0e6851dfded3a0f3f71a73b987",
+  "sourceFingerprint": "1f28539b8486c05f31bd0922b282945ba809ff3a88622d2fa10383f9e2d76f69",
+  "sourceFiles": [
+    {
+      "path": "e1TargetContracts.js",
+      "sha256": "ad4f8f85618403038eb0a2241662f0bd71c419d53e718acec96180ce40ee7dd1"
+    },
+    {
+      "path": "firestoreE1AuthorityAdapter.js",
+      "sha256": "626a56ad6cca4551ac6220b09165fc3eed5ef6e063ae90df56c4322878c68cc4"
+    },
+    {
+      "path": "groupEAdmissionReceipt.js",
+      "sha256": "f2ddd6b3f851dde2970cd916520c6a46e5d30e0bd3b048cc83b17dad5ffbd899"
+    },
+    {
+      "path": "handleNormalization.js",
+      "sha256": "dfefa21345c09b7277e0e4d6bc85488b10dc2a0b2e09bfe356819da2e1e404d9"
+    },
+    {
+      "path": "package-lock.json",
+      "sha256": "86c389cd71effb3b689789cfedc252c767bcfeb309463b504ecd1f8a8278c193"
+    },
+    {
+      "path": "package.json",
+      "sha256": "a9d1ccc295897d508816cc1fcfb4fd3a6a430fdb7c9225247abf93d92c6c04d1"
+    },
+    {
+      "path": "readRateLimiters.js",
+      "sha256": "23e91a9372a85e096ab2c4de5beb2bc6f4ef3461bcb9b64e42a4f31f3af35864"
+    },
+    {
+      "path": "rtdbVerifiedLegacyMappingReader.js",
+      "sha256": "002f718259d086393b0c53bc3b5b4eae21bda151a4834c2edd96dfa738e0b752"
+    },
+    {
+      "path": "server.js",
+      "sha256": "55cf22774c696942aec0f7bc010013de3f2106984349fbb915e974f9427a8bbe"
+    }
+  ],
+  "entrypointFile": "server.js",
+  "packageFile": "package.json",
+  "runtimeServiceAccount": "e1-identity-authority-runtime@trade-list-a4297.iam.gserviceaccount.com"
+}
