@@ -68,8 +68,7 @@ function createProofReadLimiter({ proof, now }) {
 }
 
 function createGroupEReadLimiter({ groupE, now }) {
-  if (!groupE || typeof now !== 'function' || !Array.isArray(groupE.bindings) || groupE.bindings.length !== 2 ||
-      !Number.isSafeInteger(groupE.start) || !Number.isSafeInteger(groupE.end) || groupE.start >= groupE.end) {
+  if (!groupE || typeof now !== 'function' || !Array.isArray(groupE.bindings) || groupE.bindings.length !== 2) {
     fail('E1_GROUP_E_CONFIGURATION_INVALID');
   }
   const seen = new Set();
@@ -77,19 +76,13 @@ function createGroupEReadLimiter({ groupE, now }) {
     const uidHash = groupESubjectHash('uid', uid);
     return groupE.bindings.find((binding) => binding.uidHash === uidHash);
   }
-  function assertWindow() {
-    const at = now();
-    if (!Number.isSafeInteger(at) || at < groupE.start || at >= groupE.end) fail('E1_GROUP_E_EXPIRED');
-  }
   return Object.freeze({
     mode: GROUP_E_CANARY_MODE,
     authoritative: false,
     assertUid(uid) {
-      assertWindow();
       if (!bindingForUid(uid)) fail('E1_GROUP_E_SUBJECT_DENIED');
     },
     async consume({ uid, trainerUsername }) {
-      assertWindow();
       const binding = bindingForUid(uid);
       if (!binding || groupESubjectHash('trainer', trainerUsername) !== binding.trainerHash) fail('E1_GROUP_E_SUBJECT_DENIED');
       if (seen.has(binding.uidHash) || seen.size >= 2) fail('e1/rate-limit-exceeded');

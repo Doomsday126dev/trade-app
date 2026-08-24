@@ -2952,7 +2952,7 @@ const LEGACY_INVENTORY_READ_ONLY=true;
 // SEC-03 dead-code backlog: remove the retired Inventory edit/browse/Offers
 // renderers and their window exports after archive compatibility is retired.
 // No current product route or rendered control reaches those legacy templates.
-window.__pogoCreateGroupEClientFoundationCanary=(configuration)=>{
+window.__pogoCreateGroupEClientFoundationCanary=async(configuration)=>{
   if(!fbApp||!auth)throw Object.assign(new Error('Group E client dependencies are not ready'),{code:'group-e/dependencies-not-ready'});
   if(e1ClientFoundationCanary)e1ClientFoundationCanary.close();
   e1ClientFoundationCanary=e1ClientFoundationCanaryService.createClientFoundationCanary({
@@ -2960,9 +2960,11 @@ window.__pogoCreateGroupEClientFoundationCanary=(configuration)=>{
     auth,
     firebaseAppCheckReady,
     getSessionGeneration:()=>_sessionTransientGeneration,
+    getBrowserContextDigest:()=>e1ClientFoundationCanaryService.browserContextDigest(
+      location.origin,location.pathname,fbApp.options.appId,crypto),
     importFunctionsSdk:()=>import('https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js')
   });
-  e1ClientFoundationCanary.open(configuration);
+  await e1ClientFoundationCanary.open(configuration);
   return e1ClientFoundationCanary;
 };
 const i18nCore=window.PogoI18n?.core;

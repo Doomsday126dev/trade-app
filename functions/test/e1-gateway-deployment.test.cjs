@@ -3,6 +3,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
+const crypto = require('node:crypto');
 const os = require('node:os');
 const path = require('node:path');
 const { execFileSync, spawnSync } = require('node:child_process');
@@ -23,6 +24,7 @@ const {
 } = require('../production/e1GatewayDeploymentPlan.cjs');
 const { activationGatePlan, disabledGatePlan } = require('../production/e1ProductionFirstMutationGuard.cjs');
 const { activationGatePlan: groupEActivationGatePlan } = require('../production/e1ProductionClientFoundationGuard.cjs');
+const { keyIdFromSpki } = require('../e1-gateway/groupEAdmission');
 const {
   CONTINUATION_ACCEPTED_USAGE,
   CONTINUATION_PRODUCTION_RUNTIME,
@@ -42,6 +44,28 @@ const REPO_ROOT = execFileSync('git', ['-C', __dirname, 'rev-parse', '--show-top
 const HEAD = execFileSync('git', ['-C', REPO_ROOT, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
 const ORIGIN_MAIN = execFileSync('git', ['-C', REPO_ROOT, 'rev-parse', 'origin/main'], { encoding: 'utf8' }).trim();
 const CLI = path.join(REPO_ROOT, 'functions/scripts/deploy-e1-production-gateway.cjs');
+const TEST_COMMIT_A_SOURCE_SHA = '0'.repeat(40);
+const TEST_GROUP_E_PUBLIC_KEY_SPKI = crypto.generateKeyPairSync('ed25519').publicKey
+  .export({ format: 'der', type: 'spki' }).toString('base64url');
+const COMMIT_A_SOURCE_PATHS = Object.freeze([
+  'gatewayCore.js', 'groupEAdmission.js', 'groupEControlStore.js', 'index.js', 'package-lock.json', 'package.json'
+]);
+
+function candidateManifest(overrides = {}) {
+  const sourceFiles = COMMIT_A_SOURCE_PATHS.map((file) => ({
+    path: file,
+    sha256: crypto.createHash('sha256')
+      .update(fs.readFileSync(path.join(REPO_ROOT, 'functions/e1-gateway', file)))
+      .digest('hex')
+  }));
+  return {
+    ...loadManifest(),
+    sourceCommitSha: TEST_COMMIT_A_SOURCE_SHA,
+    sourceFiles,
+    sourceFingerprint: sourceFingerprint(sourceFiles),
+    ...overrides
+  };
+}
 
 function assertBranchGuard(...runs) {
   if (HEAD === ORIGIN_MAIN) return false;
@@ -68,7 +92,7 @@ function runD3Plan(cwd, action, confirmation) {
 function repositoryFixture(manifest, overrides = {}) {
   const contents = Object.fromEntries(manifest.sourceFiles.map((file) => [
     `${manifest.sourceRoot}/${file.path}`,
-    execFileSync('git', ['-C', REPO_ROOT, 'show', `${manifest.sourceCommitSha}:${manifest.sourceRoot}/${file.path}`])
+    fs.readFileSync(path.join(REPO_ROOT, manifest.sourceRoot, file.path))
   ]));
   return {
     head: () => HEAD,
@@ -111,8 +135,18 @@ test('canonical CLI argument names accept numeric segments and reject malformed 
   }
 });
 
+test('tracked four-file gateway manifest remains deliberately ineligible until the later Commit B pin', () => {
+  const tracked = loadManifest();
+  assert.equal(tracked.sourceFiles.length, 4);
+  assert.throws(() => verifyManifestShape(tracked), /gateway-source-manifest-invalid/u);
+  const preview = candidateManifest();
+  assert.equal(verifyManifestShape(preview), preview);
+  assert.equal(preview.sourceCommitSha, TEST_COMMIT_A_SOURCE_SHA);
+  assert.equal(preview.sourceFiles.length, 6);
+});
+
 test('complete canonical continuation CLI inventory reaches an isolated continuation plan', () => {
-  const manifest = loadManifest();
+  const manifest = candidateManifest();
   const parsed = argumentsMap([
     '--mode=plan',
     '--action=enable-group-d3',
@@ -151,15 +185,13 @@ test('complete canonical continuation CLI inventory reaches an isolated continua
 });
 
 test('plan chooses the exact pinned gateway source independently of cwd and creates no root ignore file', () => {
+  const manifest = candidateManifest();
   const rootIgnore = path.join(REPO_ROOT, '.gcloudignore');
   assert.equal(fs.existsSync(rootIgnore), false);
-  const root = runPlan(REPO_ROOT);
-  const other = runPlan(os.tmpdir());
-  if (assertBranchGuard(root, other)) return;
-  assert.equal(root.status, 0, root.stderr);
-  assert.equal(other.status, 0, other.stderr);
-  const rootPlan = JSON.parse(root.stdout);
-  const otherPlan = JSON.parse(other.stdout);
+  const options = { action: 'restore-group-d2', expectedSha: HEAD, explicitSource: manifest.sourceRoot, mode: 'plan',
+    repoRoot: REPO_ROOT, manifest, repository: repositoryFixture(manifest) };
+  const rootPlan = createDeploymentPlan(options);
+  const otherPlan = createDeploymentPlan({ ...options, repository: repositoryFixture(manifest) });
   assert.equal(rootPlan.sourceRoot, 'functions/e1-gateway');
   assert.equal(rootPlan.sourceFingerprint, manifest.sourceFingerprint);
   assert.deepEqual(otherPlan, rootPlan);
@@ -167,21 +199,17 @@ test('plan chooses the exact pinned gateway source independently of cwd and crea
 });
 
 test('explicit source and expected pushed commit are mandatory', () => {
-  const missing = spawnSync(process.execPath, [CLI, '--mode=plan', '--action=restore-group-d2', `--expected-sha=${HEAD}`], {
-    cwd: REPO_ROOT, encoding: 'utf8'
-  });
-  assert.equal(missing.status, 1);
-  assert.match(missing.stderr, /explicit-source-required/u);
-  const repoRootSource = runPlan(REPO_ROOT, '.');
-  assert.equal(repoRootSource.status, 1);
-  assert.match(repoRootSource.stderr, /explicit-source-mismatch/u);
-  const wrongCommit = runPlan(REPO_ROOT, 'functions/e1-gateway', '0'.repeat(40));
-  assert.equal(wrongCommit.status, 1);
-  assert.match(wrongCommit.stderr, /commit-mismatch/u);
+  const manifest = candidateManifest();
+  const common = { action: 'restore-group-d2', expectedSha: HEAD, mode: 'plan', repoRoot: REPO_ROOT,
+    manifest, repository: repositoryFixture(manifest) };
+  assert.throws(() => createDeploymentPlan(common), /explicit-source-required/u);
+  assert.throws(() => createDeploymentPlan({ ...common, explicitSource: '.' }), /explicit-source-mismatch/u);
+  assert.throws(() => createDeploymentPlan({ ...common, explicitSource: manifest.sourceRoot,
+    expectedSha: '1'.repeat(40) }), /commit-mismatch/u);
 });
 
 test('manifest fingerprint and pinned source hashes fail closed', () => {
-  const manifest = loadManifest();
+  const manifest = candidateManifest();
   assert.equal(sourceFingerprint(manifest.sourceFiles), manifest.sourceFingerprint);
   assert.throws(() => verifyManifestShape({ ...manifest, sourceFingerprint: '0'.repeat(64) }), /fingerprint-invalid/u);
   const repository = repositoryFixture(manifest, {
@@ -192,7 +220,7 @@ test('manifest fingerprint and pinned source hashes fail closed', () => {
 });
 
 test('production target derives URL and OIDC audience from the reviewed Cloud Run origin', () => {
-  const manifest = loadManifest();
+  const manifest = candidateManifest();
   const resourceManifest = loadResourceManifest();
   const target = authorityTarget(resourceManifest);
   assert.equal(resourceManifest.authority.origin, EXPECTED_AUTHORITY.origin);
@@ -238,7 +266,7 @@ test('authority origin normalization is deterministic and stale or unrelated tar
 });
 
 test('dirty tracked gateway source and unexpected tracked gateway files fail closed', () => {
-  const manifest = loadManifest();
+  const manifest = candidateManifest();
   assert.throws(() => createDeploymentPlan({
     action: 'restore-group-d2', expectedSha: HEAD, explicitSource: manifest.sourceRoot, mode: 'plan', repoRoot: REPO_ROOT,
     manifest, repository: repositoryFixture(manifest, { sourceStatus: () => ' M functions/e1-gateway/index.js' })
@@ -250,7 +278,7 @@ test('dirty tracked gateway source and unexpected tracked gateway files fail clo
 });
 
 test('unexpected gateway exports fail even when a candidate manifest is self-consistent', () => {
-  const original = loadManifest();
+  const original = candidateManifest();
   const modified = Buffer.from(`${fs.readFileSync(path.join(REPO_ROOT, original.sourceRoot, 'index.js'), 'utf8')}\nexports.extra = true;\n`);
   const manifest = structuredClone(original);
   const index = manifest.sourceFiles.find((file) => file.path === 'index.js');
@@ -259,13 +287,13 @@ test('unexpected gateway exports fail even when a candidate manifest is self-con
   verifyManifestShape(manifest);
   const repository = repositoryFixture(manifest, {
     readSourceFile: (_commit, file) => file.endsWith('/index.js') ? modified :
-      execFileSync('git', ['-C', REPO_ROOT, 'show', `${original.sourceCommitSha}:${file}`])
+      fs.readFileSync(path.join(REPO_ROOT, file))
   });
   assert.throws(() => verifyPinnedSource(manifest, repository), /export-inventory-mismatch/u);
 });
 
 test('staging copies only reviewed files and excludes private local or repository content', () => {
-  const manifest = loadManifest();
+  const manifest = candidateManifest();
   const plan = createDeploymentPlan({
     action: 'restore-group-d2', expectedSha: HEAD, explicitSource: manifest.sourceRoot, mode: 'plan', repoRoot: REPO_ROOT,
     manifest, repository: repositoryFixture(manifest)
@@ -273,7 +301,7 @@ test('staging copies only reviewed files and excludes private local or repositor
   const staging = fs.mkdtempSync(path.join(os.tmpdir(), 'e1-gateway-stage-test-'));
   try {
     stagePinnedSource(plan, { temporaryRoot: staging });
-    assert.deepEqual(fs.readdirSync(staging).sort(), ['gatewayCore.js', 'index.js', 'package-lock.json', 'package.json']);
+    assert.deepEqual(fs.readdirSync(staging).sort(), [...COMMIT_A_SOURCE_PATHS]);
     assert.equal(fs.existsSync(path.join(staging, '.local')), false);
     assert.equal(fs.existsSync(path.join(staging, '.env')), false);
     assert.equal(fs.existsSync(path.join(staging, '.gcloudignore')), false);
@@ -281,7 +309,7 @@ test('staging copies only reviewed files and excludes private local or repositor
 });
 
 test('Group C enable and restoration use one fingerprint source and differ only in explicit gate state', () => {
-  const manifest = loadManifest();
+  const manifest = candidateManifest();
   const repository = repositoryFixture(manifest);
   const common = { expectedSha: HEAD, explicitSource: manifest.sourceRoot, mode: 'plan', repoRoot: REPO_ROOT, manifest, repository };
   const enabled = createDeploymentPlan({ ...common, action: 'enable-group-c', guardResult: {
@@ -314,7 +342,7 @@ test('Group C enable and restoration use one fingerprint source and differ only 
 });
 
 test('deploy mode rejects any tracked worktree change while plan mode remains mutation-free', () => {
-  const manifest = loadManifest();
+  const manifest = candidateManifest();
   const repository = repositoryFixture(manifest, { trackedStatus: () => ' M package.json' });
   const common = { action: 'restore-group-d2', expectedSha: HEAD, explicitSource: manifest.sourceRoot, repoRoot: REPO_ROOT, manifest, repository };
   assert.equal(createDeploymentPlan({ ...common, mode: 'plan' }).deploymentAllowed, false);
@@ -423,22 +451,25 @@ function groupEGuardResult(overrides = {}) {
     },
     provenance: {
       toolingSourceSha: HEAD,
+      pagesReleaseId: '2030-01-01.99',
       pagesSourceSha: 'e'.repeat(40),
       pagesArtifactDigest: '3'.repeat(64),
-      gatewaySourceSha: loadManifest().sourceCommitSha,
-      gatewaySourceFingerprint: loadManifest().sourceFingerprint,
+      gatewaySourceSha: candidateManifest().sourceCommitSha,
+      gatewaySourceFingerprint: candidateManifest().sourceFingerprint,
       authorityRevision: 'e1-identity-authority-00026-l5s',
       authorityImageDigest: `sha256:${'a'.repeat(64)}`
     },
     securityBoundary: {
       authorityPrivate: true, gatewayOnlyInvoker: true, projectWideInvoker: false,
       gatewayForbiddenRolesPresent: false, iamDrift: false, productionDebugTokensRegistered: false,
-      providerLinkRoutePresent: false
+      providerLinkRoutePresent: false, controlDatabaseRules: 'deny-all'
     },
     budget: {
-      expectedGatewayCalls: 2, expectedAuthorityCalls: 2, expectedSuccessfulReads: 2,
-      applicationWrites: 0, firestoreWrites: 0, rtdbWrites: 0, ordinaryUserWrites: 0,
-      processLocalCounterAuthoritative: false, authoritativeReconciliationRequired: true
+      expectedBrowserAttempts: 2, expectedGatewayInvocations: 2, expectedAdmittedClaims: 2,
+      expectedAuthorityCalls: 2, expectedSuccessfulReads: 2, expectedControlWrites: 6,
+      phaseEIdentityWrites: 0, rtdbUserDataWrites: 0, ordinaryUserWrites: 0,
+      maxAdmittedA: 1, maxAdmittedB: 1, maxAuthorityCallsAfterA: 1, maxAuthorityCallsAfterB: 1,
+      maxSuccessfulReads: 2, authoritativeReplayBoundary: 'e1-group-e-control-create-only-consumption'
     },
     activationGatePlan: groupEActivationGatePlan(),
     restorationGatePlan: disabledGatePlan(),
@@ -446,6 +477,16 @@ function groupEGuardResult(overrides = {}) {
     activationWindowEnd: '2030-01-01T12:30:00.000Z',
     entryEvidenceExpiresAt: '2030-01-01T12:15:00.000Z',
     executionAuthorized: true,
+    executionLedgerDigest: '9'.repeat(64),
+    executionStage: 'A_READY',
+    nextOperation: 'ENABLE_GATES_AND_COMMIT_A_DISPATCH',
+    runId: '123e4567-e89b-42d3-a456-426614174000',
+    runManifestDigest: '4'.repeat(64),
+    keyId: keyIdFromSpki(TEST_GROUP_E_PUBLIC_KEY_SPKI),
+    publicKeySpki: TEST_GROUP_E_PUBLIC_KEY_SPKI,
+    firebaseAppIdHash: '5'.repeat(64),
+    controlPlaneDeploymentDigest: '6'.repeat(64),
+    controlDatabaseId: 'e1-group-e-control',
     groupEAuthorized: true,
     laterGroupsAuthorized: false,
     cloudOperations: 0,
@@ -454,7 +495,7 @@ function groupEGuardResult(overrides = {}) {
 }
 
 test('D2 enable and restoration use the canonical immutable source and only approved gates differ', () => {
-  const manifest = loadManifest();
+  const manifest = candidateManifest();
   const repository = repositoryFixture(manifest);
   const common = {
     expectedSha: HEAD, explicitSource: manifest.sourceRoot, mode: 'plan', repoRoot: REPO_ROOT, manifest, repository
@@ -490,7 +531,7 @@ test('D2 enable and restoration use the canonical immutable source and only appr
 });
 
 test('D2 enable fails closed without an exact current D2 guard result', () => {
-  const manifest = loadManifest();
+  const manifest = candidateManifest();
   const common = {
     action: 'enable-group-d2', expectedSha: HEAD, explicitSource: manifest.sourceRoot, mode: 'plan',
     repoRoot: REPO_ROOT, manifest, repository: repositoryFixture(manifest)
@@ -505,14 +546,12 @@ test('D2 enable fails closed without an exact current D2 guard result', () => {
     /action-guard-mismatch/u);
   const cli = spawnSync(process.execPath, [CLI, '--mode=plan', '--action=enable-group-d2',
     '--source=functions/e1-gateway', `--expected-sha=${HEAD}`], { cwd: os.tmpdir(), encoding: 'utf8' });
-  if (assertBranchGuard(cli)) return;
-  assert.equal(cli.status, 0, cli.stderr);
-  assert.equal(JSON.parse(cli.stdout).guardVerified, false);
-  assert.equal(JSON.parse(cli.stdout).deploymentAllowed, false);
+  assert.equal(cli.status, 1);
+  assert.match(cli.stderr, /gateway-source-manifest-invalid/u);
 });
 
 test('D1 and D2 cannot inherit one another guard while all cohorts share one planner', () => {
-  const manifest = loadManifest();
+  const manifest = candidateManifest();
   const common = {
     expectedSha: HEAD, explicitSource: manifest.sourceRoot, mode: 'plan', repoRoot: REPO_ROOT,
     manifest, repository: repositoryFixture(manifest)
@@ -529,7 +568,7 @@ test('D1 and D2 cannot inherit one another guard while all cohorts share one pla
 });
 
 test('raw cwd-dependent gateway packages and root ignore files fail before gcloud arguments exist', () => {
-  const manifest = loadManifest();
+  const manifest = candidateManifest();
   const plan = createDeploymentPlan({
     action: 'restore-group-d2', expectedSha: HEAD, explicitSource: manifest.sourceRoot, mode: 'plan',
     repoRoot: REPO_ROOT, manifest, repository: repositoryFixture(manifest)
@@ -551,32 +590,25 @@ test('D2 restore plans are cwd-independent and plan mode never creates root igno
   assert.equal(fs.existsSync(rootIgnore), false);
   const root = runPlan(REPO_ROOT);
   const unrelated = runPlan(os.tmpdir());
-  if (assertBranchGuard(root, unrelated)) return;
-  assert.equal(root.status, 0, root.stderr);
-  assert.equal(unrelated.status, 0, unrelated.stderr);
-  assert.deepEqual(JSON.parse(root.stdout), JSON.parse(unrelated.stdout));
+  assert.equal(root.status, 1);
+  assert.equal(unrelated.status, 1);
+  assert.match(root.stderr, /gateway-source-manifest-invalid/u);
+  assert.match(unrelated.stderr, /gateway-source-manifest-invalid/u);
   assert.equal(fs.existsSync(rootIgnore), false);
 });
 
 test('D2 blocked enable previews are also cwd-independent and expose no private guard data', () => {
   const root = runPlan(REPO_ROOT, 'functions/e1-gateway', HEAD, 'enable-group-d2');
   const unrelated = runPlan(os.tmpdir(), 'functions/e1-gateway', HEAD, 'enable-group-d2');
-  if (assertBranchGuard(root, unrelated)) return;
-  assert.equal(root.status, 0, root.stderr);
-  assert.equal(unrelated.status, 0, unrelated.stderr);
-  const plan = JSON.parse(root.stdout);
-  assert.deepEqual(plan, JSON.parse(unrelated.stdout));
-  assert.equal(plan.approvalGroup, 'D');
-  assert.equal(plan.cohortStage, 'D2');
-  assert.equal(plan.guardVerified, false);
-  assert.equal(plan.deploymentAllowed, false);
-  assert.equal(plan.gateEnabled, true);
-  assert.equal(plan.readProofMode, false);
-  assert.doesNotMatch(root.stdout, /candidate|firebaseUid|trainerUsername|requestId|token/iu);
+  assert.equal(root.status, 1);
+  assert.equal(unrelated.status, 1);
+  assert.match(root.stderr, /gateway-source-manifest-invalid/u);
+  assert.match(unrelated.stderr, /gateway-source-manifest-invalid/u);
+  assert.doesNotMatch(`${root.stdout}${root.stderr}`, /firebaseUid|trainerUsername|requestId|token/iu);
 });
 
 test('D3 enable uses the canonical source only with five-subject guard and exact confirmation', () => {
-  const manifest = loadManifest();
+  const manifest = candidateManifest();
   const common = {
     action: 'enable-group-d3', expectedSha: HEAD, explicitSource: manifest.sourceRoot, mode: 'plan',
     repoRoot: REPO_ROOT, manifest, repository: repositoryFixture(manifest),
@@ -613,7 +645,7 @@ test('D3 enable uses the canonical source only with five-subject guard and exact
 });
 
 test('D3 continuation deployer binds exact guard mode, tooling SHA, production runtime, suffix, and budget', () => {
-  const manifest = loadManifest();
+  const manifest = candidateManifest();
   const common = {
     action: 'enable-group-d3', expectedSha: HEAD, explicitSource: manifest.sourceRoot, mode: 'plan',
     repoRoot: REPO_ROOT, manifest, repository: repositoryFixture(manifest),
@@ -696,7 +728,7 @@ function authorityServiceFixture(reserveEnabled = false) {
 }
 
 test('mocked D3 continuation deployment enables only reserve plus gateway', () => {
-  const manifest = loadManifest();
+  const manifest = candidateManifest();
   const plan = createDeploymentPlan({
     action: 'enable-group-d3', expectedSha: HEAD, explicitSource: manifest.sourceRoot, mode: 'plan',
     repoRoot: REPO_ROOT, manifest, repository: repositoryFixture(manifest),
@@ -747,7 +779,7 @@ test('mocked D3 continuation deployment enables only reserve plus gateway', () =
 });
 
 test('clean-start D3 execution preserves the original gateway-only deploy behavior', () => {
-  const manifest = loadManifest();
+  const manifest = candidateManifest();
   const plan = createDeploymentPlan({
     action: 'enable-group-d3', expectedSha: HEAD, explicitSource: manifest.sourceRoot, mode: 'plan',
     repoRoot: REPO_ROOT, manifest, repository: repositoryFixture(manifest),
@@ -770,7 +802,7 @@ test('clean-start D3 execution preserves the original gateway-only deploy behavi
 });
 
 test('mocked D3 continuation deployment restores gateway and authority after enablement failure', () => {
-  const manifest = loadManifest();
+  const manifest = candidateManifest();
   const plan = createDeploymentPlan({
     action: 'enable-group-d3', expectedSha: HEAD, explicitSource: manifest.sourceRoot, mode: 'plan',
     repoRoot: REPO_ROOT, manifest, repository: repositoryFixture(manifest),
@@ -832,7 +864,7 @@ test('authority gate-only replacement rejects immutable image drift', () => {
 });
 
 test('D3 restoration remains available after readiness expiry and preserves immutable source', () => {
-  const manifest = loadManifest();
+  const manifest = candidateManifest();
   const restored = createDeploymentPlan({
     action: 'restore-group-d3', expectedSha: HEAD, explicitSource: manifest.sourceRoot, mode: 'plan',
     repoRoot: REPO_ROOT, manifest, repository: repositoryFixture(manifest),
@@ -854,28 +886,19 @@ test('D3 restoration remains available after readiness expiry and preserves immu
   }), /d3-confirmation-invalid/u);
 });
 
-test('D3 deployment CLI requires exact confirmation and keeps enable fail-closed without private readiness', () => {
+test('D3 deployment CLI fails closed at the deliberately stale source pin before any readiness path', () => {
   const restore = runD3Plan(os.tmpdir(), 'restore-group-d3', D3_CONFIRMATIONS['restore-group-d3']);
-  if (assertBranchGuard(restore)) return;
-  assert.equal(restore.status, 0, restore.stderr);
-  const restorePlan = JSON.parse(restore.stdout);
-  assert.equal(restorePlan.cohortStage, 'D3');
-  assert.equal(restorePlan.containmentRestore, true);
-  assert.equal(restorePlan.confirmationValidated, true);
   const enable = runD3Plan(REPO_ROOT, 'enable-group-d3', D3_CONFIRMATIONS['enable-group-d3']);
-  assert.equal(enable.status, 0, enable.stderr);
-  assert.equal(JSON.parse(enable.stdout).guardVerified, false);
-  assert.equal(JSON.parse(enable.stdout).deploymentAllowed, false);
   const missing = runD3Plan(REPO_ROOT, 'restore-group-d3');
-  assert.equal(missing.status, 1);
-  assert.match(missing.stderr, /d3-confirmation-invalid/u);
   const wrong = runD3Plan(REPO_ROOT, 'enable-group-d3', D3_CONFIRMATIONS['restore-group-d3']);
-  assert.equal(wrong.status, 1);
-  assert.match(wrong.stderr, /d3-confirmation-invalid/u);
+  for (const result of [restore, enable, missing, wrong]) {
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /gateway-source-manifest-invalid/u);
+  }
 });
 
 test('D1, D2, and D3 guards cannot authorize another cohort', () => {
-  const manifest = loadManifest();
+  const manifest = candidateManifest();
   const common = {
     expectedSha: HEAD, explicitSource: manifest.sourceRoot, mode: 'plan', repoRoot: REPO_ROOT,
     manifest, repository: repositoryFixture(manifest)
@@ -888,7 +911,7 @@ test('D1, D2, and D3 guards cannot authorize another cohort', () => {
 });
 
 test('Group E enable and restore plans are exact cohort-bound zero-write containment actions', () => {
-  const manifest = loadManifest();
+  const manifest = candidateManifest();
   const common = { expectedSha: HEAD, explicitSource: manifest.sourceRoot, mode: 'plan', repoRoot: REPO_ROOT,
     manifest, repository: repositoryFixture(manifest) };
   const enabled = createDeploymentPlan({ ...common, action: 'enable-group-e', guardResult: groupEGuardResult(),
@@ -914,7 +937,7 @@ test('Group E enable and restore plans are exact cohort-bound zero-write contain
 });
 
 test('Group E staged gateway arguments carry private hashes only while restore removes them', () => {
-  const manifest = loadManifest();
+  const manifest = candidateManifest();
   const common = { expectedSha: HEAD, explicitSource: manifest.sourceRoot, mode: 'plan', repoRoot: REPO_ROOT,
     manifest, repository: repositoryFixture(manifest) };
   const enabled = createDeploymentPlan({ ...common, action: 'enable-group-e', guardResult: groupEGuardResult(),

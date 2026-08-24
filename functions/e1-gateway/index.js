@@ -3,8 +3,10 @@
 const { GoogleAuth } = require('google-auth-library');
 const { HttpsError, onCall } = require('firebase-functions/v2/https');
 const { createAuthorityInvoker, createGatewayOperation, loadGatewayConfiguration } = require('./gatewayCore');
+const { createProductionGroupEControlStore } = require('./groupEControlStore');
 
 const configuration = loadGatewayConfiguration();
+const controlStore = configuration.groupE.enabled ? createProductionGroupEControlStore() : null;
 const auth = new GoogleAuth();
 const invokeAuthority = createAuthorityInvoker(configuration, {
   async getOidcToken(audience) {
@@ -14,7 +16,7 @@ const invokeAuthority = createAuthorityInvoker(configuration, {
 });
 
 function callable(operation, consumeAppCheckToken) {
-  const handler = createGatewayOperation(operation, configuration, { invokeAuthority });
+  const handler = createGatewayOperation(operation, configuration, { invokeAuthority, controlStore });
   return onCall({
     region: configuration.region,
     enforceAppCheck: configuration.appCheckEnforcementMode === 'enforced',
@@ -31,6 +33,10 @@ function callable(operation, consumeAppCheckToken) {
         APP_CHECK_REPLAYED: ['permission-denied', 'App Check token already consumed'],
         REQUEST_INVALID: ['invalid-argument', 'Invalid request'],
         RATE_LIMITED: ['resource-exhausted', 'Too many requests'],
+        GROUP_E_ADMISSION_CONSUMED: ['already-exists', 'Admission already consumed'],
+        GROUP_E_CAPABILITY_EXPIRED: ['permission-denied', 'Admission expired'],
+        GROUP_E_BOUNDARY_INVALID: ['permission-denied', 'Admission denied'],
+        GROUP_E_OPERATION_DENIED: ['unavailable', 'Service unavailable'],
         GATEWAY_NOT_ENABLED: ['unavailable', 'Service unavailable']
       };
       const [code, message] = mapping[error?.code] || ['unavailable', 'Service unavailable'];

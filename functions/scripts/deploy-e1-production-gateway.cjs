@@ -45,6 +45,16 @@ function privateJsonPath(value, label) {
   return resolved;
 }
 
+function privateDirectoryPath(value, label) {
+  if (!value) throw new Error(`e1/${label}-input-required`);
+  const resolved = path.resolve(value);
+  const localRoot = path.resolve(__dirname, '../.local');
+  if (!resolved.startsWith(`${localRoot}${path.sep}`) || (fs.statSync(resolved).mode & 0o777) !== 0o700) {
+    throw new Error(`e1/${label}-input-not-private`);
+  }
+  return resolved;
+}
+
 function verifiedGuardResult(action, mode, expectedSourceSha, d3Mode) {
   if (action.startsWith('restore-')) return null;
   if (action === 'enable-group-d3' && d3Mode === 'continuation') {
@@ -76,9 +86,13 @@ function verifiedGuardResult(action, mode, expectedSourceSha, d3Mode) {
   }
   if (action === 'enable-group-e') {
     for (const [name, key] of [['readinessPath','E1_PRODUCTION_GROUP_E_READINESS'],
-      ['evidencePath','E1_PRODUCTION_GROUP_E_EVIDENCE'],['jitPath','E1_PRODUCTION_GROUP_E_JIT']]) {
+      ['evidencePath','E1_PRODUCTION_GROUP_E_EVIDENCE'],['jitPath','E1_PRODUCTION_GROUP_E_JIT'],
+      ['replayLedgerPath','E1_PRODUCTION_GROUP_E_REPLAY_LEDGER'],
+      ['controlDeploymentPath','E1_PRODUCTION_GROUP_E_CONTROL_DEPLOYMENT']]) {
       options[name] = privateJsonPath(process.env[key], key.toLowerCase().replaceAll('_','-'));
     }
+    options.executionLedgerPath = privateDirectoryPath(process.env.E1_PRODUCTION_GROUP_E_EXECUTION_LEDGER,
+      'e1-production-group-e-execution-ledger');
   }
   return contract.run(input, options);
 }
@@ -134,8 +148,8 @@ function verifyAuthorityService(plan, service, expectedEnabled, options = {}) {
       (plan.cohortStage === 'client-foundation-canary' && expectedEnabled !== null &&
         ((env.GROUP_E_CLIENT_MODE || 'disabled') !== (expectedEnabled ? 'synthetic-canary' : 'disabled') ||
           (expectedEnabled && (env.GROUP_E_SUBJECT_BINDINGS !== plan.groupEBindings ||
-            env.GROUP_E_COHORT_DIGEST !== plan.groupECohortDigest || env.GROUP_E_WINDOW_START !== plan.groupEWindowStart ||
-            env.GROUP_E_WINDOW_END !== plan.groupEWindowEnd))))) {
+            env.GROUP_E_COHORT_DIGEST !== plan.groupECohortDigest || env.GROUP_E_RUN_ID !== plan.groupERunId ||
+            env.GROUP_E_KEY_ID !== plan.groupEKeyId))))) {
     throw new Error('e1/authority-runtime-or-gates-invalid');
   }
   if (options.expectedImage && container.image !== options.expectedImage) {
@@ -176,19 +190,20 @@ function authorityReplacement(service, enabled, plan = { cohortStage: 'D3' }) {
     if (entry) entry.value = value;
     else entries.push({ name, value });
   };
-  const privateNames = ['GROUP_E_SUBJECT_BINDINGS','GROUP_E_COHORT_DIGEST','GROUP_E_WINDOW_START','GROUP_E_WINDOW_END'];
+  const privateNames = ['GROUP_E_SUBJECT_BINDINGS','GROUP_E_COHORT_DIGEST','GROUP_E_RUN_ID','GROUP_E_KEY_ID',
+    'GROUP_E_WINDOW_START','GROUP_E_WINDOW_END'];
   if (plan.cohortStage === 'client-foundation-canary') {
     upsert('GROUP_E_CLIENT_MODE', enabled ? 'synthetic-canary' : 'disabled');
     for (const name of privateNames) {
       const index = entries.findIndex((entry) => entry.name === name);
-      if (enabled) {
-      upsert(name, {
+      const value = {
         GROUP_E_SUBJECT_BINDINGS: plan.groupEBindings,
         GROUP_E_COHORT_DIGEST: plan.groupECohortDigest,
-        GROUP_E_WINDOW_START: plan.groupEWindowStart,
-        GROUP_E_WINDOW_END: plan.groupEWindowEnd
-      }[name]);
-      } else if (index >= 0) entries.splice(index, 1);
+        GROUP_E_RUN_ID: plan.groupERunId,
+        GROUP_E_KEY_ID: plan.groupEKeyId
+      }[name];
+      if (enabled && value !== undefined) upsert(name, value);
+      else if (index >= 0) entries.splice(index, 1);
     }
   }
   return replacement;
@@ -228,7 +243,10 @@ function deployGateway(plan, stagedSource, options = {}) {
     const env = service?.serviceConfig?.environmentVariables || {};
     if (service?.serviceConfig?.serviceAccountEmail !== plan.runtimeServiceAccount ||
         env.GATEWAY_INVOCATION_ENABLED !== String(plan.gateEnabled) || env.READ_PROOF_MODE !== 'false' ||
-        (env.GROUP_E_CLIENT_MODE || 'disabled') !== (plan.groupEClientMode || 'disabled')) {
+        (env.GROUP_E_CLIENT_MODE || 'disabled') !== (plan.groupEClientMode || 'disabled') ||
+        (plan.groupEClientMode === 'synthetic-canary' &&
+          (env.GROUP_E_RUN_ID !== plan.groupERunId || env.GROUP_E_RUN_MANIFEST_DIGEST !== plan.groupERunManifestDigest ||
+           env.GROUP_E_KEY_ID !== plan.groupEKeyId || env.GROUP_E_CONTROL_DATABASE_ID !== plan.groupEControlDatabaseId))) {
       throw new Error(`e1/gateway-post-deploy-verification-failed:${functionName}`);
     }
   }
@@ -314,5 +332,6 @@ module.exports = Object.freeze({
   replaceAuthority,
   run,
   verifiedGuardResult,
-  verifyAuthorityService
+  verifyAuthorityService,
+  privateDirectoryPath
 });

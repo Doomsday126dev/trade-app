@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "environment": "production",
+  "projectId": "trade-list-a4297",
+  "planned": {
+    "database": {
+      "databaseId": "e1-group-e-control",
+      "location": "us-central1",
+      "type": "FIRESTORE_NATIVE",
+      "edition": "STANDARD",
+      "deletionProtection": true,
+      "pitr": "ENABLED",
+      "ttl": null,
+      "mobileWebRules": "deny-all",
+      "status": "NOT_CREATED"
+    },
+    "rulesSource": "functions/production/e1-group-e-control.rules",
+    "iamCondition": "resource.type == \"firestore.googleapis.com/Database\" && resource.name == \"projects/trade-list-a4297/databases/e1-group-e-control\"",
+    "roles": {
+      "gateway": {
+        "roleId": "e1GroupEControlGateway",
+        "permissions": [
+          "datastore.databases.get",
+          "datastore.databases.getMetadata",
+          "datastore.entities.get",
+          "datastore.entities.create"
+        ]
+      },
+      "operator": {
+        "roleId": "e1GroupEControlOperator",
+        "permissions": [
+          "datastore.databases.get",
+          "datastore.databases.getMetadata",
+          "datastore.entities.get",
+          "datastore.entities.create"
+        ]
+      },
+      "reviewer": {
+        "roleId": "e1GroupEControlReviewer",
+        "permissions": [
+          "datastore.databases.get",
+          "datastore.databases.getMetadata",
+          "datastore.entities.get"
+        ]
+      }
+    }
+  },
+  "deployed": null
+}

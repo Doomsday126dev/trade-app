@@ -11,6 +11,7 @@ const {
   proofAttemptHash,
   verifyCallableBoundary
 } = require('../e1-gateway/gatewayCore');
+const { createFixture: createGroupEFixture } = require('./helpers/groupEFixture.cjs');
 
 function productionEnvironment(overrides = {}) {
   return {
@@ -68,12 +69,25 @@ test('gateway is disabled before authentication or authority invocation', async 
 });
 
 test('Group E alone selects limited-use App Check consumption while restored and normal reads remain standard',()=>{
-  const start='2030-01-01T12:00:00.000Z',end='2030-01-01T12:30:00.000Z';
+  const fixture=createGroupEFixture();
   const enabled=loadGatewayConfiguration(productionEnvironment({GATEWAY_INVOCATION_ENABLED:'true',
-    GROUP_E_CLIENT_MODE:'synthetic-canary',GROUP_E_SUBJECT_BINDINGS:`${'a'.repeat(64)}:${'1'.repeat(64)};${'b'.repeat(64)}:${'2'.repeat(64)}`,
-    GROUP_E_COHORT_DIGEST:'c'.repeat(64),GROUP_E_WINDOW_START:start,GROUP_E_WINDOW_END:end}),
-  ()=>Date.parse('2030-01-01T12:10:00.000Z'));
+    GROUP_E_CLIENT_MODE:'synthetic-canary',
+    GROUP_E_SUBJECT_BINDINGS:Object.values(fixture.bindings).map((binding)=>
+      `${binding.uidHash}:${binding.trainerHash}`).join(';'),
+    GROUP_E_COHORT_DIGEST:fixture.cohortDigest,
+    GROUP_E_RUN_ID:fixture.run.runId,
+    GROUP_E_RUN_MANIFEST_DIGEST:fixture.run.manifestDigest,
+    GROUP_E_KEY_ID:fixture.run.keyId,
+    GROUP_E_PUBLIC_KEY_SPKI:fixture.run.publicKeySpki,
+    GROUP_E_FIREBASE_APP_ID_HASH:fixture.run.firebaseAppIdHash,
+    GROUP_E_CONTROL_DATABASE_ID:'e1-group-e-control'}));
   assert.equal(enabled.groupE.enabled,true);
+  assert.equal(enabled.groupE.runId,fixture.run.runId);
+  assert.equal(enabled.groupE.keyId,fixture.run.keyId);
+  assert.throws(()=>loadGatewayConfiguration(productionEnvironment({GATEWAY_INVOCATION_ENABLED:'true',
+    GROUP_E_CLIENT_MODE:'synthetic-canary',GROUP_E_SUBJECT_BINDINGS:`${'a'.repeat(64)}:${'1'.repeat(64)};${'b'.repeat(64)}:${'2'.repeat(64)}`,
+    GROUP_E_COHORT_DIGEST:'c'.repeat(64),GROUP_E_WINDOW_START:'2030-01-01T12:00:00.000Z',
+    GROUP_E_WINDOW_END:'2030-01-01T12:30:00.000Z'})),/GROUP_E_CONFIGURATION_INVALID/);
   const restored=loadGatewayConfiguration(productionEnvironment({GROUP_E_CLIENT_MODE:'disabled'}));
   assert.equal(restored.groupE.enabled,false);
   const source=fs.readFileSync(path.resolve(__dirname,'../e1-gateway/index.js'),'utf8');

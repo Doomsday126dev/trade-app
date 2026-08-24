@@ -9,6 +9,16 @@ const { PRODUCTION, STAGING, validateRtdbTarget, validateTarget } = require('../
 const { EXCLUDED_PERMISSIONS, OPERATION_PERMISSIONS, PERMISSIONS, verifyPermissionInventory } = require('../production/e1CustomRole.cjs');
 const { DISABLED_GATES, rollbackState } = require('../production/e1RollbackPlan.cjs');
 const { ALLOWED_OPERATIONS, guardProductionTarget } = require('../production/e1ProductionDeploymentGuard.cjs');
+const {
+  DATABASE_ID: GROUP_E_CONTROL_DATABASE_ID,
+  DATABASE_RESOURCE: GROUP_E_CONTROL_DATABASE_RESOURCE,
+  FORBIDDEN_PERMISSIONS: GROUP_E_CONTROL_FORBIDDEN_PERMISSIONS,
+  IAM_CONDITION: GROUP_E_CONTROL_IAM_CONDITION,
+  PERMISSIONS: GROUP_E_CONTROL_PERMISSIONS,
+  loadControlPlanePlan,
+  publicProvisioningPlan,
+  requireDeployedControlPlane
+} = require('../production/e1GroupEControlPlane.cjs');
 
 test('authority targets are explicit for staging production and emulator with no cross-environment fallback', () => {
   assert.equal(validateTarget(STAGING).projectNumber, '391359988648');
@@ -171,4 +181,54 @@ test('rollback disables every activation path while preserving legacy username P
   assert.equal(result.authorityRecordsDeleted, false);
   assert.equal(result.orderedActions.at(-1), 'remove-gateway-run-invoker-for-emergency-containment');
   assert.throws(() => rollbackState({ GATEWAY_INVOCATION_ENABLED: true }), /rollback-not-contained/);
+});
+
+test('Group E control plane remains an exact deny-all planned resource with narrow database-conditioned IAM', () => {
+  const plan = loadControlPlanePlan();
+  const publicPlan = publicProvisioningPlan();
+  const productionManifest = JSON.parse(fs.readFileSync(
+    path.resolve(__dirname, '../production/e1-production-resource-manifest.json'), 'utf8'
+  ));
+  const rules = fs.readFileSync(path.resolve(__dirname, '../production/e1-group-e-control.rules'), 'utf8');
+
+  assert.deepEqual(plan.planned.database, {
+    databaseId: 'e1-group-e-control',
+    location: 'us-central1',
+    type: 'FIRESTORE_NATIVE',
+    edition: 'STANDARD',
+    deletionProtection: true,
+    pitr: 'ENABLED',
+    ttl: null,
+    mobileWebRules: 'deny-all',
+    status: 'NOT_CREATED'
+  });
+  assert.equal(plan.deployed, null);
+  assert.equal(publicPlan.cloudOperations, 0);
+  assert.equal(publicPlan.deployed, false);
+  assert.equal(GROUP_E_CONTROL_DATABASE_ID, 'e1-group-e-control');
+  assert.equal(GROUP_E_CONTROL_DATABASE_RESOURCE,
+    'projects/trade-list-a4297/databases/e1-group-e-control');
+  assert.equal(GROUP_E_CONTROL_IAM_CONDITION,
+    'resource.type == "firestore.googleapis.com/Database" && resource.name == ' +
+    '"projects/trade-list-a4297/databases/e1-group-e-control"');
+  assert.deepEqual(GROUP_E_CONTROL_PERMISSIONS.gateway, [
+    'datastore.databases.get',
+    'datastore.databases.getMetadata',
+    'datastore.entities.get',
+    'datastore.entities.create'
+  ]);
+  assert.deepEqual(GROUP_E_CONTROL_PERMISSIONS.operator, GROUP_E_CONTROL_PERMISSIONS.gateway);
+  assert.deepEqual(GROUP_E_CONTROL_PERMISSIONS.reviewer, [
+    'datastore.databases.get',
+    'datastore.databases.getMetadata',
+    'datastore.entities.get'
+  ]);
+  for (const permissions of Object.values(GROUP_E_CONTROL_PERMISSIONS)) {
+    assert.equal(permissions.some((permission) => GROUP_E_CONTROL_FORBIDDEN_PERMISSIONS.includes(permission)), false);
+  }
+  assert.match(rules, /allow read, write: if false;/u);
+  assert.doesNotMatch(rules, /allow\s+(?:read|write):\s*if\s+true/iu);
+  assert.throws(() => requireDeployedControlPlane(null), /group_e_control_deployment_absent/);
+  assert.equal(Object.hasOwn(productionManifest, 'groupEControlPlane'), false);
+  assert.equal(JSON.stringify(productionManifest).includes('e1-group-e-control'), false);
 });

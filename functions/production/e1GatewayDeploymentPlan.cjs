@@ -20,6 +20,8 @@ const {
   ENABLE_CONFIRMATION: GROUP_E_ENABLE_CONFIRMATION,
   RESTORE_CONFIRMATION: GROUP_E_RESTORE_CONFIRMATION
 } = require('./e1ProductionClientFoundationGuard.cjs');
+const { UUID_V4, keyIdFromSpki } = require('../e1-gateway/groupEAdmission');
+const { DATABASE_ID: GROUP_E_CONTROL_DATABASE_ID } = require('../e1-gateway/groupEControlStore');
 
 const MANIFEST_PATH = path.resolve(__dirname, 'e1-gateway-source-manifest.json');
 const RESOURCE_MANIFEST_PATH = path.resolve(__dirname, 'e1-production-resource-manifest.json');
@@ -135,7 +137,7 @@ function verifyManifestShape(manifest) {
       manifest.projectId !== 'trade-list-a4297' || manifest.region !== 'us-central1' ||
       manifest.sourceRoot !== 'functions/e1-gateway' || !/^[0-9a-f]{40}$/u.test(manifest.sourceCommitSha || '') ||
       !/^[0-9a-f]{64}$/u.test(manifest.sourceFingerprint || '') || !Array.isArray(manifest.sourceFiles) ||
-      manifest.sourceFiles.length !== 4 || manifest.entrypointFile !== 'index.js' ||
+      manifest.sourceFiles.length !== 6 || manifest.entrypointFile !== 'index.js' ||
       !sameValues(manifest.expectedExports, ['readE1AccountFoundation', 'reserveE1TrainerHandle']) ||
       manifest.runtime !== 'nodejs22' || manifest.runtimeServiceAccount !==
         'e1-authority-gateway@trade-list-a4297.iam.gserviceaccount.com' ||
@@ -144,7 +146,9 @@ function verifyManifestShape(manifest) {
     throw new Error('e1/gateway-source-manifest-invalid');
   }
   const paths = manifest.sourceFiles.map((file) => file.path);
-  if (!sameValues(paths, ['gatewayCore.js', 'index.js', 'package-lock.json', 'package.json']) ||
+  if (!sameValues(paths, [
+    'gatewayCore.js', 'groupEAdmission.js', 'groupEControlStore.js', 'index.js', 'package-lock.json', 'package.json'
+  ]) ||
       manifest.sourceFiles.some((file) => !/^[0-9a-f]{64}$/u.test(file.sha256 || ''))) {
     throw new Error('e1/gateway-source-file-inventory-invalid');
   }
@@ -256,17 +260,26 @@ function verifyActionGuard(actionName, guardResult, expectedSha, d3Mode, manifes
     stageValid = stageValid && commonD3 && (cleanStart || continuation);
   }
   if (action.cohortStage === 'client-foundation-canary') {
-    const expectedEnabled = action.gateEnabled;
     stageValid = guardResult.cohortStage === 'client-foundation-canary' && guardResult.cohortSize === 2 &&
       guardResult.groupEAuthorized === true && guardResult.executionAuthorized === true &&
       guardResult.toolingSourceSha === undefined && guardResult.provenance?.toolingSourceSha === expectedSha &&
-      guardResult.budget?.applicationWrites === 0 && guardResult.budget?.firestoreWrites === 0 &&
-      guardResult.budget?.rtdbWrites === 0 && guardResult.budget?.processLocalCounterAuthoritative === false &&
-      guardResult.budget?.authoritativeReconciliationRequired === true &&
+      guardResult.budget?.expectedAdmittedClaims === 2 && guardResult.budget?.expectedControlWrites === 6 &&
+      guardResult.budget?.phaseEIdentityWrites === 0 && guardResult.budget?.rtdbUserDataWrites === 0 &&
+      guardResult.budget?.ordinaryUserWrites === 0 && guardResult.budget?.maxAdmittedA === 1 &&
+      guardResult.budget?.maxAdmittedB === 1 && guardResult.budget?.maxSuccessfulReads === 2 &&
+      guardResult.budget?.authoritativeReplayBoundary === 'e1-group-e-control-create-only-consumption' &&
+      guardResult.provenance?.gatewaySourceSha === manifest.sourceCommitSha &&
+      guardResult.provenance?.gatewaySourceFingerprint === manifest.sourceFingerprint &&
+      HASH.test(guardResult.executionLedgerDigest || '') && guardResult.executionStage === 'A_READY' &&
+      guardResult.nextOperation === 'ENABLE_GATES_AND_COMMIT_A_DISPATCH' &&
+      UUID_V4.test(guardResult.runId || '') && HASH.test(guardResult.runManifestDigest || '') &&
+      HASH.test(guardResult.keyId || '') && keyIdFromSpki(guardResult.publicKeySpki) === guardResult.keyId &&
+      HASH.test(guardResult.firebaseAppIdHash || '') && HASH.test(guardResult.controlPlaneDeploymentDigest || '') &&
+      guardResult.controlDatabaseId === GROUP_E_CONTROL_DATABASE_ID &&
       JSON.stringify(guardResult.activationGatePlan) === JSON.stringify({
         ...disabledGatePlan(), GATEWAY_INVOCATION_ENABLED: true, READ_ACCOUNT_FOUNDATION_ENABLED: true
       }) && JSON.stringify(guardResult.restorationGatePlan) === JSON.stringify(disabledGatePlan()) &&
-      (!expectedEnabled || guardResult.entryEvidenceExpiresAt);
+      (!action.gateEnabled || guardResult.entryEvidenceExpiresAt);
   }
   if (!commonValid || !stageValid) throw new Error('e1/gateway-action-guard-mismatch');
   return true;
@@ -359,10 +372,18 @@ function createDeploymentPlan(options = {}) {
       ? Object.values(options.guardResult?.bindings || {}).map((binding) => `${binding.uidHash}:${binding.trainerHash}`).join(';') : null,
     groupECohortDigest: action.cohortStage === 'client-foundation-canary' && action.gateEnabled
       ? options.guardResult?.cohortDigest || null : null,
-    groupEWindowStart: action.cohortStage === 'client-foundation-canary' && action.gateEnabled
-      ? options.guardResult?.activationWindowStart || null : null,
-    groupEWindowEnd: action.cohortStage === 'client-foundation-canary' && action.gateEnabled
-      ? options.guardResult?.activationWindowEnd || null : null,
+    groupERunId: action.cohortStage === 'client-foundation-canary' && action.gateEnabled
+      ? options.guardResult?.runId || null : null,
+    groupERunManifestDigest: action.cohortStage === 'client-foundation-canary' && action.gateEnabled
+      ? options.guardResult?.runManifestDigest || null : null,
+    groupEKeyId: action.cohortStage === 'client-foundation-canary' && action.gateEnabled
+      ? options.guardResult?.keyId || null : null,
+    groupEPublicKeySpki: action.cohortStage === 'client-foundation-canary' && action.gateEnabled
+      ? options.guardResult?.publicKeySpki || null : null,
+    groupEFirebaseAppIdHash: action.cohortStage === 'client-foundation-canary' && action.gateEnabled
+      ? options.guardResult?.firebaseAppIdHash || null : null,
+    groupEControlDatabaseId: action.cohortStage === 'client-foundation-canary' && action.gateEnabled
+      ? options.guardResult?.controlDatabaseId || null : null,
     confirmationValidated: Object.hasOwn(ACTION_CONFIRMATIONS, options.action),
     trackedWorkingTreeClean,
     deploymentAllowed,
@@ -421,8 +442,12 @@ function deploymentArguments(plan, functionName, stagedSource) {
     ...(plan.groupEClientMode === 'synthetic-canary' ? [
       `GROUP_E_SUBJECT_BINDINGS=${plan.groupEBindings}`,
       `GROUP_E_COHORT_DIGEST=${plan.groupECohortDigest}`,
-      `GROUP_E_WINDOW_START=${plan.groupEWindowStart}`,
-      `GROUP_E_WINDOW_END=${plan.groupEWindowEnd}`
+      `GROUP_E_RUN_ID=${plan.groupERunId}`,
+      `GROUP_E_RUN_MANIFEST_DIGEST=${plan.groupERunManifestDigest}`,
+      `GROUP_E_KEY_ID=${plan.groupEKeyId}`,
+      `GROUP_E_PUBLIC_KEY_SPKI=${plan.groupEPublicKeySpki}`,
+      `GROUP_E_FIREBASE_APP_ID_HASH=${plan.groupEFirebaseAppIdHash}`,
+      `GROUP_E_CONTROL_DATABASE_ID=${plan.groupEControlDatabaseId}`
     ] : []),
     `APP_CHECK_ENFORCEMENT_MODE=${manifest.appCheckMode}`,
     'APP_CHECK_DEBUG_TOKENS_ALLOWED=false',
@@ -468,6 +493,10 @@ function publicPlan(plan) {
     gateEnabled: plan.gateEnabled,
     readProofMode: plan.readProofMode,
     groupEClientMode: plan.groupEClientMode,
+    groupERunId: plan.groupERunId,
+    groupERunManifestDigest: plan.groupERunManifestDigest,
+    groupEKeyId: plan.groupEKeyId,
+    groupEControlDatabaseId: plan.groupEControlDatabaseId,
     entryEvidenceExpiresAt: plan.entryEvidenceExpiresAt,
     entryEvidenceRequiredAfterEnable: plan.entryEvidenceRequiredAfterEnable,
     mutationWindowEnd: plan.mutationWindowEnd,

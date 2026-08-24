@@ -5,10 +5,22 @@ const http = require('node:http');
 const { getApps, initializeApp } = require('firebase-admin/app');
 const { getAuth: getAdminAuth } = require('firebase-admin/auth');
 const { createFirestoreE1AuthorityAdapter } = require('./firestoreE1AuthorityAdapter');
-const { DURABLE_MODE, GROUP_C_PROOF_MODE, GROUP_E_CANARY_MODE, createReadLimiter } = require('./readRateLimiters');
+const {
+  DURABLE_MODE,
+  GROUP_C_PROOF_MODE,
+  GROUP_E_CANARY_MODE,
+  createReadLimiter,
+  groupESubjectHash
+} = require('./readRateLimiters');
 const { validateTarget } = require('./e1TargetContracts');
 const { HandleValidationError, normalizeHandle } = require('./handleNormalization');
 const { createVerifiedLegacyMappingReader, validatedTarget } = require('./rtdbVerifiedLegacyMappingReader');
+const {
+  attemptHash: groupEAdmissionAttemptHash,
+  responseBinding: groupEAdmissionResponseBinding,
+  subjectHash: groupEAdmissionSubjectHash,
+  validateAdmissionReceipt
+} = require('./groupEAdmissionReceipt');
 
 const GATES = Object.freeze([
   'READ_ACCOUNT_FOUNDATION_ENABLED',
@@ -31,6 +43,7 @@ const GROUP_E_MODE = 'synthetic-canary';
 const HANDLE_KEY = /^v1_[a-f0-9]{2,512}$/;
 const REQUEST_ID = /^[A-Za-z0-9][A-Za-z0-9._:-]{7,127}$/;
 const SHA256 = /^[a-f0-9]{64}$/;
+const SAFE_ATTEMPT_HASH = /^[a-f0-9]{16}$/;
 const MAX_REQUEST_BYTES = 4096;
 const FROZEN_STATUSES = new Set(['frozen', 'blocked', 'conflict', 'conflict-frozen']);
 const MIGRATION_DECISIONS = new Set(['eligible', 'exact-already-migrated']);
@@ -125,22 +138,20 @@ function parseGroupEBindings(value) {
 
 function groupEConfiguration(env, configuration, gates, readProof, now) {
   const mode = env.GROUP_E_CLIENT_MODE || 'disabled';
-  const values = [env.GROUP_E_SUBJECT_BINDINGS, env.GROUP_E_COHORT_DIGEST, env.GROUP_E_WINDOW_START, env.GROUP_E_WINDOW_END];
+  const values = [env.GROUP_E_SUBJECT_BINDINGS, env.GROUP_E_COHORT_DIGEST, env.GROUP_E_RUN_ID, env.GROUP_E_KEY_ID,
+    env.GROUP_E_WINDOW_START, env.GROUP_E_WINDOW_END];
   if (mode === 'disabled') {
     if (values.some((value) => value !== undefined && value !== '')) fail('E1_GROUP_E_CONFIGURATION_INVALID');
-    return Object.freeze({ enabled: false, mode, bindings: Object.freeze([]), cohortDigest: null, start: null, end: null });
+    return Object.freeze({ enabled: false, mode, bindings: Object.freeze([]), cohortDigest: null, runId: null, keyId: null });
   }
-  const start = Date.parse(env.GROUP_E_WINDOW_START);
-  const end = Date.parse(env.GROUP_E_WINDOW_END);
-  const at = now();
   if (mode !== GROUP_E_MODE || configuration.environment !== 'production' || readProof.enabled ||
       gates.READ_ACCOUNT_FOUNDATION_ENABLED !== 'true' || MUTATION_GATES.some((gate) => gates[gate] !== 'false') ||
-      !SHA256.test(env.GROUP_E_COHORT_DIGEST || '') || !Number.isFinite(start) || !Number.isFinite(end) ||
-      start >= end || end - start > 45 * 60 * 1000 || !Number.isSafeInteger(at) || at < start || at >= end) {
+      !SHA256.test(env.GROUP_E_COHORT_DIGEST || '') || !PROOF_ATTEMPT_ID.test(env.GROUP_E_RUN_ID || '') ||
+      !SHA256.test(env.GROUP_E_KEY_ID || '') || env.GROUP_E_WINDOW_START || env.GROUP_E_WINDOW_END) {
     fail('E1_GROUP_E_CONFIGURATION_INVALID');
   }
   return Object.freeze({ enabled: true, mode, bindings: parseGroupEBindings(env.GROUP_E_SUBJECT_BINDINGS),
-    cohortDigest: env.GROUP_E_COHORT_DIGEST, start, end });
+    cohortDigest: env.GROUP_E_COHORT_DIGEST, runId: env.GROUP_E_RUN_ID, keyId: env.GROUP_E_KEY_ID });
 }
 
 function loadConfiguration(env = process.env, now = () => Date.now()) {
@@ -556,7 +567,8 @@ async function readAccountDocument(configuration, uid, fetchImpl = fetch) {
 }
 
 function exactReadRequest(body, readProofMode, groupEClientMode = false) {
-  const expectedFields = groupEClientMode ? ['attemptId', 'schemaVersion'] : readProofMode ? ['proofAttemptId', 'schemaVersion'] : ['schemaVersion'];
+  const expectedFields = groupEClientMode ? ['admissionReceipt', 'attemptId', 'schemaVersion'] :
+    readProofMode ? ['proofAttemptId', 'schemaVersion'] : ['schemaVersion'];
   const fields = body && typeof body === 'object' && !Array.isArray(body) ? Object.keys(body).sort() : [];
   if (!body || typeof body !== 'object' || Array.isArray(body) || fields.length !== expectedFields.length ||
       fields.some((field, index) => field !== expectedFields[index]) || body.schemaVersion !== 1 ||
@@ -609,12 +621,32 @@ function proofAttemptHash(proofAttemptId) {
 }
 
 function groupEAttemptHash(attemptId) {
-  return crypto.createHash('sha256').update(JSON.stringify([1, 'group-e-client-attempt', attemptId]), 'utf8')
+  return groupEAdmissionAttemptHash(attemptId).slice(0, 16);
+}
+
+function groupECohortBindingHash(cohortDigest) {
+  return crypto.createHash('sha256')
+    .update(JSON.stringify([1, 'group-e-client-foundation-cohort-log-binding', cohortDigest]), 'utf8')
     .digest('hex').slice(0, 16);
 }
 
-function groupEResponseBinding(uid, attemptId) {
-  return crypto.createHash('sha256').update(JSON.stringify([1, 'group-e-client-response', uid, attemptId]), 'utf8').digest('hex');
+function groupETerminalLogFields(configuration, attemptHash, uid, responseSubjectBinding, admissionReceiptDigest) {
+  if (!configuration.groupEClientMode || !SAFE_ATTEMPT_HASH.test(attemptHash || '')) return {};
+  const slotIndex = uid
+    ? configuration.groupE.bindings.findIndex((binding) => binding.uidHash === groupESubjectHash('uid', uid))
+    : -1;
+  return {
+    groupEAttemptHash: attemptHash,
+    ...(slotIndex >= 0 ? { canarySlot: String.fromCharCode(65 + slotIndex) } : {}),
+    cohortBindingHash: groupECohortBindingHash(configuration.groupE.cohortDigest),
+    ...(SHA256.test(admissionReceiptDigest || '') ? { admissionReceiptDigest } : {}),
+    ...(SHA256.test(responseSubjectBinding || '') ? { responseSubjectBinding } : {}),
+    authoritativeCallBudget: false
+  };
+}
+
+function groupEResponseBinding(uid, attemptId, admissionReceiptDigest) {
+  return groupEAdmissionResponseBinding(uid, attemptId, admissionReceiptDigest);
 }
 
 function rateAttemptHash(operation, subjectHash, parts) {
@@ -702,16 +734,52 @@ function createHandler(configuration, dependencies = {}) {
     if (url.pathname === '/v1/read-account-foundation') {
       let callerHash;
       let attemptHash;
+      let groupEAttempt;
+      let groupEUid;
+      let groupEResponseSubjectBinding;
+      let groupEAdmissionReceiptDigest;
+      const logFields = () => ({
+        ...(callerHash ? { uidHash: callerHash } : {}),
+        ...(attemptHash ? { proofAttemptHash: attemptHash } : {}),
+        ...groupETerminalLogFields(configuration, groupEAttempt, groupEUid, groupEResponseSubjectBinding,
+          groupEAdmissionReceiptDigest)
+      });
       try {
         if (request.method !== 'POST') fail('METHOD_NOT_ALLOWED');
         if (!configuration.readAccountFoundationEnabled) fail('E1_NOT_ENABLED');
         const readRequest = exactReadRequest(await parseBody(request), configuration.readProofMode, configuration.groupEClientMode);
         attemptHash = readRequest.proofAttemptId ? proofAttemptHash(readRequest.proofAttemptId) : undefined;
-        const groupEAttempt = readRequest.attemptId ? groupEAttemptHash(readRequest.attemptId) : undefined;
-        if (configuration.groupEClientMode && (request.headers?.['x-e1-client-mode'] !== GROUP_E_MODE ||
-            request.headers?.['x-e1-cohort-digest'] !== configuration.groupE.cohortDigest)) fail('E1_GROUP_E_BOUNDARY_INVALID');
+        let groupEReceipt;
+        if (configuration.groupEClientMode) {
+          groupEReceipt = validateAdmissionReceipt(readRequest.admissionReceipt, {
+            runId: configuration.groupE.runId,
+            cohortDigest: configuration.groupE.cohortDigest,
+            keyId: configuration.groupE.keyId,
+            attemptHash: groupEAdmissionAttemptHash(readRequest.attemptId)
+          });
+          groupEAttempt = groupEReceipt.attemptHash.slice(0, 16);
+          groupEAdmissionReceiptDigest = groupEReceipt.receiptDigest;
+          if (request.headers?.['x-e1-client-mode'] !== GROUP_E_MODE ||
+              request.headers?.['x-e1-cohort-digest'] !== configuration.groupE.cohortDigest ||
+              request.headers?.['x-e1-run-id'] !== configuration.groupE.runId ||
+              request.headers?.['x-e1-key-id'] !== configuration.groupE.keyId ||
+              request.headers?.['x-e1-admission-receipt-digest'] !== groupEReceipt.receiptDigest) {
+            fail('E1_GROUP_E_BOUNDARY_INVALID');
+          }
+        }
         const firebaseIdToken = firebaseTokenHeader(request);
         const { uid } = await verifyToken(configuration, firebaseIdToken);
+        groupEUid = configuration.groupEClientMode ? uid : undefined;
+        if (configuration.groupEClientMode) {
+          const slotIndex = configuration.groupE.bindings.findIndex((binding) =>
+            binding.uidHash === groupEAdmissionSubjectHash('uid', uid));
+          if (slotIndex < 0 || groupEReceipt.slot !== String.fromCharCode(65 + slotIndex) ||
+              groupEReceipt.uidHash !== configuration.groupE.bindings[slotIndex].uidHash) {
+            fail('E1_GROUP_E_SUBJECT_DENIED');
+          }
+          groupEResponseSubjectBinding = groupEResponseBinding(uid, readRequest.attemptId,
+            groupEReceipt.receiptDigest);
+        }
         callerHash = uidHash(configuration, uid);
         readLimiter.assertUid(uid);
         if (configuration.readProofMode || configuration.groupEClientMode) {
@@ -729,38 +797,37 @@ function createHandler(configuration, dependencies = {}) {
         const canaryEnvelope = configuration.groupEClientMode ? {
           schemaVersion: 1,
           attemptHash: groupEAttempt,
-          subjectBinding: groupEResponseBinding(uid, readRequest.attemptId)
+          admissionReceiptDigest: groupEAdmissionReceiptDigest,
+          subjectBinding: groupEResponseSubjectBinding
         } : {};
         if (!document) {
-          log(configuration, 'readAccountFoundation', 'not_initialized', startedAt, { uidHash: callerHash, proofAttemptHash: attemptHash,
-            groupEAttemptHash: groupEAttempt, authoritativeCallBudget: configuration.groupEClientMode ? false : undefined });
+          log(configuration, 'readAccountFoundation', 'not_initialized', startedAt, logFields());
           return json(response, 200, { ...canaryEnvelope, code: 'FOUNDATION_NOT_INITIALIZED' });
         }
         const foundation = redactFoundationDocument(document);
         if (FROZEN_STATUSES.has(foundation.status)) {
-          log(configuration, 'readAccountFoundation', 'frozen', startedAt, { uidHash: callerHash, proofAttemptHash: attemptHash });
+          log(configuration, 'readAccountFoundation', 'frozen', startedAt, logFields());
           return json(response, 423, { ...canaryEnvelope, code: 'ACCOUNT_FROZEN', foundation });
         }
         if (foundation.status !== 'active') fail('INTERNAL_ERROR');
-        log(configuration, 'readAccountFoundation', 'success', startedAt, { uidHash: callerHash, proofAttemptHash: attemptHash });
+        log(configuration, 'readAccountFoundation', 'success', startedAt, logFields());
         return json(response, 200, { ...canaryEnvelope, code: 'SUCCESS', foundation });
       } catch (error) {
         const code = ['E1_NOT_ENABLED', 'AUTH_REQUIRED', 'AUTH_INVALID', 'REQUEST_INVALID', 'REQUEST_TOO_LARGE', 'METHOD_NOT_ALLOWED',
           'E1_READ_PROOF_SUBJECT_DENIED', 'E1_READ_PROOF_EXPIRED', 'E1_READ_PROOF_MAPPING_NOT_READY',
           'E1_READ_PROOF_MAPPING_DENIED', 'E1_READ_PROOF_MAPPING_UNAVAILABLE', 'E1_GROUP_E_BOUNDARY_INVALID',
-          'E1_GROUP_E_SUBJECT_DENIED', 'E1_GROUP_E_EXPIRED', 'E1_GROUP_E_MAPPING_NOT_READY', 'E1_GROUP_E_MAPPING_UNAVAILABLE'].includes(error?.code)
+          'E1_GROUP_E_SUBJECT_DENIED', 'E1_GROUP_E_RECEIPT_INVALID', 'E1_GROUP_E_RECEIPT_MISMATCH',
+          'E1_GROUP_E_MAPPING_NOT_READY', 'E1_GROUP_E_MAPPING_UNAVAILABLE'].includes(error?.code)
           ? error.code : 'INTERNAL_ERROR';
         const status = code === 'E1_NOT_ENABLED' ? 503 : code === 'AUTH_REQUIRED' || code === 'AUTH_INVALID' ? 401 :
           code === 'REQUEST_TOO_LARGE' ? 413 : code === 'METHOD_NOT_ALLOWED' ? 405 : code === 'REQUEST_INVALID' ? 400 :
-            ['E1_READ_PROOF_SUBJECT_DENIED', 'E1_READ_PROOF_MAPPING_DENIED', 'E1_GROUP_E_SUBJECT_DENIED', 'E1_GROUP_E_BOUNDARY_INVALID'].includes(code) ? 403 :
+            ['E1_READ_PROOF_SUBJECT_DENIED', 'E1_READ_PROOF_MAPPING_DENIED', 'E1_GROUP_E_SUBJECT_DENIED',
+              'E1_GROUP_E_BOUNDARY_INVALID', 'E1_GROUP_E_RECEIPT_INVALID', 'E1_GROUP_E_RECEIPT_MISMATCH'].includes(code) ? 403 :
               ['E1_READ_PROOF_MAPPING_NOT_READY', 'E1_GROUP_E_MAPPING_NOT_READY'].includes(code) ? 409 :
-                ['E1_READ_PROOF_EXPIRED', 'E1_READ_PROOF_MAPPING_UNAVAILABLE', 'E1_GROUP_E_EXPIRED', 'E1_GROUP_E_MAPPING_UNAVAILABLE'].includes(code) ? 503 :
+                ['E1_READ_PROOF_EXPIRED', 'E1_READ_PROOF_MAPPING_UNAVAILABLE', 'E1_GROUP_E_MAPPING_UNAVAILABLE'].includes(code) ? 503 :
             error?.code === 'e1/rate-limit-exceeded' ? 429 : 500;
         const responseCode = error?.code === 'e1/rate-limit-exceeded' ? 'RATE_LIMITED' : code;
-        log(configuration, 'readAccountFoundation', responseCode.toLowerCase(), startedAt, {
-          ...(callerHash ? { uidHash: callerHash } : {}),
-          ...(attemptHash ? { proofAttemptHash: attemptHash } : {})
-        });
+        log(configuration, 'readAccountFoundation', responseCode.toLowerCase(), startedAt, logFields());
         return json(response, status, { code: responseCode === 'REQUEST_TOO_LARGE' ? 'REQUEST_INVALID' : responseCode });
       }
     }
@@ -1086,6 +1153,7 @@ module.exports = Object.freeze({
   readAccountDocument,
   proofAttemptHash,
   groupEAttemptHash,
+  groupECohortBindingHash,
   groupEResponseBinding,
   repairReviewFingerprint,
   reserveFingerprint,

@@ -57,8 +57,8 @@ test('shell configuration is explicit and all authority gates fail closed', () =
     groupE: {
       enabled: false,
       mode: 'disabled',
-      start: null,
-      end: null,
+      runId: null,
+      keyId: null,
       cohortDigest: null,
       bindings: []
     },
