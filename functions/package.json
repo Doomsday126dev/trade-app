@@ -15,7 +15,7 @@
     "test:e1-production-first-mutation-guard": "node --test test/e1-production-first-mutation-guard.test.cjs",
     "test:e1-production-second-mutation-guard": "node --test test/e1-production-second-mutation-guard.test.cjs",
     "test:e1-production-third-mutation-guard": "node --test test/e1-production-third-mutation-browser-harness.test.cjs test/e1-production-third-mutation-canary-setup.test.cjs test/e1-production-third-mutation-guard.test.cjs",
-    "test:e1-production-client-foundation": "node --test test/e1-group-e-admission.test.cjs test/e1-group-e-client-foundation.test.cjs test/e1-group-e-control-store.test.cjs test/e1-production-client-foundation-execution.test.cjs test/e1-production-client-foundation-guard.test.cjs test/e1-production-client-foundation-pre-enable.test.cjs",
+    "test:e1-production-client-foundation": "node --test test/e1-group-e-admission.test.cjs test/e1-group-e-client-foundation.test.cjs test/e1-group-e-control-store.test.cjs test/e1-production-client-foundation-browser-operator.test.cjs test/e1-production-client-foundation-execution.test.cjs test/e1-production-client-foundation-guard.test.cjs test/e1-production-client-foundation-pre-enable.test.cjs",
     "e1:client-foundation-execution": "node scripts/check-e1-production-client-foundation-execution.cjs",
     "check:e1-production-third-mutation-candidate-pool": "node scripts/check-e1-production-third-mutation-target.cjs --mode=candidate-pool",
     "check:e1-production-third-mutation-canary-setup": "node scripts/check-e1-production-third-mutation-canary-setup.cjs",

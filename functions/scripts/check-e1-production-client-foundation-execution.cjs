@@ -23,6 +23,9 @@ const {
   validateExecutionLedger,
   validateLedgerDirectory
 } = require('../production/e1ProductionClientFoundationExecution.cjs');
+const {
+  validatePreDispatchReadiness
+} = require('../production/e1ProductionClientFoundationBrowserOperator.cjs');
 
 const INPUT_FIELDS = Object.freeze(['schemaVersion', 'action', 'expectedPriorDigest', 'payload']);
 const ACTIONS = new Set([
@@ -172,13 +175,39 @@ function run(argv = process.argv.slice(2), options = {}) {
   } else if (input.action === 'dispatch') {
     const fields = ['slot', 'generationId', 'sessionGeneration', 'jti', 'attemptId', 'browserContextDigest',
       'runtimeInstanceDigest', 'sessionGenerationDigest', 'committedAt', 'expiresAt', 'runManifestPath', 'signingKeyPath',
-      'capabilityOutputPath'];
+      'capabilityOutputPath', 'preDispatchReadinessPath'];
     if (!exactFields(input.payload, fields)) fail('group_e_execution_action_payload_invalid');
     requireMode(ledgerPath, 0o700, 'ledger');
     const manifestPath = privatePath(input.payload.runManifestPath, 'run-manifest', options);
     const keyPath = privatePath(input.payload.signingKeyPath, 'signing-key', options);
     const outputPath = privatePath(input.payload.capabilityOutputPath, 'capability-output', options);
+    const readinessPath = privatePath(input.payload.preDispatchReadinessPath, 'pre-dispatch-readiness', options);
     const manifest = readJson(manifestPath, 'run_manifest');
+    const dispatchNow = typeof options.now === 'function' ? options.now() : Date.now();
+    const committedAt = Date.parse(input.payload.committedAt);
+    if (!Number.isFinite(dispatchNow) || !Number.isFinite(committedAt) || Math.abs(dispatchNow - committedAt) > 60_000) {
+      fail('group_e_execution_dispatch_clock_invalid');
+    }
+    const binding = manifest.bindings?.[input.payload.slot];
+    const expectedReadiness = {
+      releaseId: manifest.provenance?.pagesReleaseId,
+      sourceSha: manifest.provenance?.pagesSourceSha,
+      origin: 'https://doomsday126dev.github.io',
+      pathname: '/trade-app/',
+      runId: manifest.runId,
+      cohortDigest: manifest.cohortDigest,
+      slot: input.payload.slot,
+      uidHash: binding?.uidHash,
+      trainerHash: binding?.trainerHash,
+      generationId: input.payload.generationId,
+      sessionGeneration: input.payload.sessionGeneration,
+      firebaseAppIdHash: manifest.firebaseAppIdHash,
+      browserContextDigest: input.payload.browserContextDigest,
+      runtimeInstanceDigest: input.payload.runtimeInstanceDigest,
+      sessionGenerationDigest: input.payload.sessionGenerationDigest
+    };
+    validatePreDispatchReadiness(readJson(readinessPath, 'pre_dispatch_readiness'), expectedReadiness,
+      { now: dispatchNow });
     let privateKey = null;
     if (mode === 'apply') {
       requireMode(keyPath, 0o600, 'signing_key');

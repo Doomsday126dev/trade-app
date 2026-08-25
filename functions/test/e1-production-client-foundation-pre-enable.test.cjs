@@ -35,6 +35,13 @@ const {
   validateGroupEGuard
 } = require('../production/e1ProductionClientFoundationGuard.cjs');
 const {
+  LEGACY_OPERATOR_STATE_KEY,
+  OPERATOR_LEASE_KEY,
+  buildBrowserActionScript,
+  buildPreDispatchReadinessScript,
+  validatePreDispatchReadiness
+} = require('../production/e1ProductionClientFoundationBrowserOperator.cjs');
+const {
   SECURITY_BOUNDARY,
   STAGES,
   createExecutionRunManifest,
@@ -78,7 +85,7 @@ const PROVENANCE = Object.freeze({
 });
 const browserSource = fs.readFileSync(path.resolve(__dirname, '../../js/services/e1ClientFoundationCanary.js'), 'utf8');
 
-function loadBrowserService() {
+function loadBrowserRuntime() {
   const runtimeCrypto = {
     subtle: crypto.webcrypto.subtle,
     getRandomValues(value) {
@@ -94,7 +101,11 @@ function loadBrowserService() {
     btoa: (value) => Buffer.from(value, 'binary').toString('base64')
   };
   vm.runInNewContext(browserSource, { window, TextEncoder, Uint8Array, setTimeout, clearTimeout });
-  return window.PogoServices.e1ClientFoundationCanary;
+  return Object.freeze({ runtimeCrypto, service: window.PogoServices.e1ClientFoundationCanary, window });
+}
+
+function loadBrowserService() {
+  return loadBrowserRuntime().service;
 }
 
 function runtimeProvenance(slot, index, bindings, cohortDigest) {
@@ -153,7 +164,7 @@ function deployedControlPlane() {
   return value;
 }
 
-async function buildGoldenAssembly(mutate = () => {}) {
+async function buildGoldenAssembly(mutate = () => {}, options = {}) {
   const browser = loadBrowserService();
   const bindings = {};
   for (const slot of ['A', 'B']) {
@@ -342,6 +353,9 @@ async function buildGoldenAssembly(mutate = () => {}) {
     sessionGenerationDigest: sessionGenerationDigest(sessionGenerationContext(dispatchContext)),
     committedAt: '2030-01-01T12:10:00.000Z'
   };
+  if (options.stopBeforeDispatch === true) {
+    return { ...assembly, guard, startedLedger, continuedGuard, dispatchContext, dispatch };
+  }
   const dispatchedLedger = recordDispatch(startedLedger, runManifest, dispatch);
   const storedEnvelope = createSignedSlotCapability(dispatchedLedger, runManifest, {
     slot: 'A',
@@ -535,4 +549,176 @@ test('pre-enable rehearsal rejects binding, digest, provenance, key, and project
     iam: 0,
     persistedFiles: 0
   });
+});
+
+test('stateful golden path rejects the legacy stale operator before dispatch and reaches exact delivery open after correction', async () => {
+  const value = await buildGoldenAssembly(() => {}, { stopBeforeDispatch: true });
+  const { runtimeCrypto, service, window } = loadBrowserRuntime();
+  class Button {
+    constructor(document) {
+      this.document = document;
+      this.dataset = {};
+      this.style = {};
+      this.disabled = false;
+      this.textContent = '';
+      this.listeners = new Map();
+    }
+    addEventListener(name, callback) { this.listeners.set(name, callback); }
+    async click() { return this.listeners.get('click')?.(); }
+    remove() { this.document.buttons = this.document.buttons.filter((entry) => entry !== this); }
+  }
+  const document = {
+    buttons: [],
+    createElement(name) {
+      assert.equal(name, 'button');
+      return new Button(document);
+    },
+    querySelectorAll(name) { return name === 'button' ? [...document.buttons] : []; }
+  };
+  document.body = { appendChild(button) { document.buttons.push(button); } };
+  let clipboard = '';
+  const dispatch = value.dispatch;
+  const expected = {
+    releaseId: PROVENANCE.pagesReleaseId,
+    sourceSha: PROVENANCE.pagesSourceSha,
+    origin: ORIGIN,
+    pathname: PATHNAME,
+    runId: RUN_ID,
+    cohortDigest: value.cohortDigest,
+    slot: 'A',
+    uidHash: value.bindings.A.uidHash,
+    trainerHash: value.bindings.A.trainerHash,
+    generationId: dispatch.generationId,
+    sessionGeneration: dispatch.sessionGeneration,
+    firebaseAppIdHash: value.runManifest.firebaseAppIdHash,
+    browserContextDigest: dispatch.browserContextDigest,
+    runtimeInstanceDigest: dispatch.runtimeInstanceDigest,
+    sessionGenerationDigest: dispatch.sessionGenerationDigest
+  };
+  window.__POGO_RELEASE_ID = PROVENANCE.pagesReleaseId;
+  window.__groupELiveRuntimeRecord = Object.freeze({
+    schemaVersion: 1,
+    recordType: 'group-e-browser-session-context',
+    releaseId: expected.releaseId,
+    sourceSha: expected.sourceSha,
+    environment: 'production',
+    projectId: 'trade-list-a4297',
+    runId: expected.runId,
+    cohortDigest: expected.cohortDigest,
+    slot: expected.slot,
+    uidHash: expected.uidHash,
+    trainerHash: expected.trainerHash,
+    generationId: expected.generationId,
+    sessionGeneration: expected.sessionGeneration,
+    firebaseAppIdHash: expected.firebaseAppIdHash,
+    browserContextDigest: expected.browserContextDigest,
+    runtimeInstanceDigest: expected.runtimeInstanceDigest,
+    sessionGenerationDigest: expected.sessionGenerationDigest,
+    capturedAt: new Date(NOW).toISOString()
+  });
+  const auth = { currentUser: { uid: RAW_SUBJECTS.A.uid } };
+  const fbApp = { options: { appId: FIREBASE_APP_ID } };
+  const counters = { dispatches: 0, factories: 0, sdkImports: 0, appCheck: 0, callables: 0, cloud: 0, iam: 0 };
+  const context = vm.createContext({
+    window,
+    location: window.location,
+    document,
+    navigator: { clipboard: { writeText: async (text) => { clipboard = text; } } },
+    auth,
+    fbApp,
+    cur: RAW_SUBJECTS.A.trainer,
+    _sessionTransientGeneration: dispatch.sessionGeneration,
+    e1ClientFoundationCanary: null,
+    crypto: runtimeCrypto,
+    TextEncoder,
+    Uint8Array,
+    setTimeout,
+    clearTimeout,
+    setInterval,
+    clearInterval,
+    console: { log() {}, error() {} }
+  });
+  window.__pogoCreateGroupEClientFoundationCanary = async (storedEnvelope) => {
+    counters.factories += 1;
+    if (context.e1ClientFoundationCanary) context.e1ClientFoundationCanary.close();
+    context.e1ClientFoundationCanary = service.createClientFoundationCanary({
+      firebaseApp: fbApp,
+      auth,
+      firebaseAppCheckReady: async () => { counters.appCheck += 1; return { ok: false }; },
+      getSessionGeneration: () => context._sessionTransientGeneration,
+      getBrowserContextDigest: () => expected.browserContextDigest,
+      importFunctionsSdk: async () => { counters.sdkImports += 1; return {}; },
+      cryptoImpl: runtimeCrypto,
+      timeoutMs: 1000,
+      now: () => NOW
+    });
+    await context.e1ClientFoundationCanary.open(service.browserConfigurationFromStoredEnvelope(storedEnvelope));
+    return context.e1ClientFoundationCanary;
+  };
+
+  window[LEGACY_OPERATOR_STATE_KEY] = 'GROUP E A RUNTIME CAPTURE';
+  await assert.rejects(vm.runInContext(buildPreDispatchReadinessScript(expected), context),
+    (error) => error.code === 'GROUP_E_STALE_OPERATOR_STATE');
+  assert.equal(counters.dispatches, 0);
+  assert.equal(clipboard, '');
+  delete window[LEGACY_OPERATOR_STATE_KEY];
+
+  await vm.runInContext(buildPreDispatchReadinessScript(expected), context);
+  await new Promise((resolve) => setTimeout(resolve, 225));
+  await document.buttons.at(-1).click();
+  const copiedReadiness = JSON.parse(clipboard);
+  const preDispatch = validatePreDispatchReadiness(copiedReadiness, expected,
+    { now: Date.parse(copiedReadiness.capturedAt) });
+  assert.equal(preDispatch.runtimeRecordMatched, true);
+  assert.equal(preDispatch.callableConstructed, false);
+  assert.equal(preDispatch.callableInvoked, false);
+  assert.equal(Object.hasOwn(window, OPERATOR_LEASE_KEY), false);
+
+  const committed = recordDispatch(value.startedLedger, value.runManifest, {
+    slot: dispatch.slot,
+    generationId: dispatch.generationId,
+    sessionGeneration: dispatch.sessionGeneration,
+    jti: JTI,
+    attemptId: ATTEMPT_ID,
+    browserContextDigest: dispatch.browserContextDigest,
+    runtimeInstanceDigest: dispatch.runtimeInstanceDigest,
+    sessionGenerationDigest: dispatch.sessionGenerationDigest,
+    committedAt: dispatch.committedAt
+  });
+  counters.dispatches += 1;
+  assert.equal(committed.stage, STAGES.A_DISPATCH_COMMITTED);
+  assert.equal(committed.priorTransitionDigest, value.startedLedger.transitionDigest);
+  const envelope = createSignedSlotCapability(committed, value.runManifest, {
+    slot: 'A',
+    jti: JTI,
+    attemptId: ATTEMPT_ID,
+    expiresAt: '2030-01-01T12:25:00.000Z'
+  }, value.privateKeyPem);
+  clipboard = '';
+  const deliveryScript = buildBrowserActionScript({
+    label: 'GROUP E A DELIVERY OPEN',
+    body: `await window.__pogoCreateGroupEClientFoundationCanary(${JSON.stringify(envelope)});`,
+    origin: ORIGIN,
+    pathname: PATHNAME,
+    releaseId: PROVENANCE.pagesReleaseId,
+    requireCleanExecutionState: true
+  });
+  await vm.runInContext(deliveryScript, context);
+  await document.buttons.at(-1).click();
+  assert.equal(counters.dispatches, 1);
+  assert.equal(counters.factories, 1);
+  assert.equal(context.e1ClientFoundationCanary.isEnabled(), true);
+  assert.equal(context.e1ClientFoundationCanary.isTerminal(), false);
+  assert.equal(Object.hasOwn(window, OPERATOR_LEASE_KEY), false);
+  assert.deepEqual(counters, {
+    dispatches: 1,
+    factories: 1,
+    sdkImports: 0,
+    appCheck: 0,
+    callables: 0,
+    cloud: 0,
+    iam: 0
+  });
+  assert.equal(value.guard.ok, true);
+  assert.equal(value.startedLedger.stage, STAGES.ENABLEMENT_STARTED);
 });

@@ -52,6 +52,9 @@ const {
   sessionGenerationDigest
 } = require('../e1-gateway/groupEAdmission');
 const { jitDigest } = require('../production/e1ProductionClientFoundationGuard.cjs');
+const {
+  readinessDigest
+} = require('../production/e1ProductionClientFoundationBrowserOperator.cjs');
 const { assertNoSensitiveMaterial, run } = require('../scripts/check-e1-production-client-foundation-execution.cjs');
 const { createFixture } = require('./helpers/groupEFixture.cjs');
 
@@ -136,6 +139,49 @@ function state() {
       verifiedAt: TIMES.boundary, boundaryDigest: null, ...overrides };
   };
   return { fixture, initialInput, initial, started, jit, runManifest, dispatch, capability, terminal, evidence, boundary };
+}
+
+function preDispatchReadiness(value, slot, overrides = {}) {
+  const dispatch = value.dispatch(slot);
+  const binding = value.runManifest.bindings[slot];
+  const record = {
+    schemaVersion: 1,
+    recordType: 'group-e-pre-dispatch-readiness',
+    operatorLifecycleVersion: 1,
+    environment: 'production',
+    projectId: 'trade-list-a4297',
+    releaseId: value.runManifest.provenance.pagesReleaseId,
+    sourceSha: value.runManifest.provenance.pagesSourceSha,
+    origin: 'https://doomsday126dev.github.io',
+    pathname: '/trade-app/',
+    runId: value.runManifest.runId,
+    cohortDigest: value.runManifest.cohortDigest,
+    slot,
+    uidHash: binding.uidHash,
+    trainerHash: binding.trainerHash,
+    generationId: dispatch.generationId,
+    sessionGeneration: dispatch.sessionGeneration,
+    firebaseAppIdHash: value.runManifest.firebaseAppIdHash,
+    browserContextDigest: dispatch.browserContextDigest,
+    runtimeInstanceDigest: dispatch.runtimeInstanceDigest,
+    sessionGenerationDigest: dispatch.sessionGenerationDigest,
+    priorOperatorStateClean: true,
+    operatorLeaseExclusive: true,
+    legacyOperatorStateAbsent: true,
+    runtimeRecordMatched: true,
+    controllerFactoryAvailable: true,
+    staleControllerAbsent: true,
+    staleTerminalRecordAbsent: true,
+    staleAttemptFailureAbsent: true,
+    staleCapabilityStateAbsent: true,
+    callableConstructed: false,
+    callableInvoked: false,
+    capturedAt: dispatch.committedAt,
+    readinessDigest: null,
+    ...overrides
+  };
+  record.readinessDigest = readinessDigest(record);
+  return record;
 }
 
 function legacyState() {
@@ -705,6 +751,7 @@ test('operator constructor refuses integrity-resealed cross-runtime evidence bef
   const inputPath = path.join(root, 'input.json');
   const manifestPath = path.join(root, 'run.json');
   const keyPath = path.join(root, 'signing.pem');
+  const readinessPath = path.join(root, 'pre-dispatch.json');
   const outputPath = path.join(root, 'capability.json');
   let signCalls = 0;
   const originalSign = crypto.sign;
@@ -749,14 +796,17 @@ test('operator constructor refuses integrity-resealed cross-runtime evidence bef
     writePrivateJson(manifestPath, value.runManifest);
     fs.writeFileSync(keyPath, value.fixture.privateKeyPem, { mode: 0o600 });
     fs.chmodSync(keyPath, 0o600);
+    writePrivateJson(readinessPath, preDispatchReadiness(value, 'B'));
     writePrivateJson(inputPath, { schemaVersion: 1, action: 'dispatch',
       expectedPriorDigest: tampered.transitionDigest,
       payload: { ...value.dispatch('B'), expiresAt: value.capability('B').expiresAt,
-        runManifestPath: manifestPath, signingKeyPath: keyPath, capabilityOutputPath: outputPath } });
+        runManifestPath: manifestPath, signingKeyPath: keyPath, preDispatchReadinessPath: readinessPath,
+        capabilityOutputPath: outputPath } });
 
     crypto.sign = (...args) => { signCalls++; return originalSign(...args); };
     assert.throws(() => run([`--input=${inputPath}`, `--ledger=${directory}`, '--mode=apply'],
-      { allowExternalPaths: true, stdout: { write() {} } }), /group_e_session_boundary_invalid/);
+      { allowExternalPaths: true, stdout: { write() {} }, now: () => Date.parse(TIMES.dispatchB) }),
+    /group_e_session_boundary_invalid/);
     assert.equal(signCalls, 0);
     assert.equal(fs.existsSync(outputPath), false);
     assert.equal(fs.readFileSync(path.join(directory, 'HEAD.json'), 'utf8'), headBefore);
@@ -920,6 +970,7 @@ test('CLI plan signs and writes nothing; apply emits one private capability afte
   const inputPath = path.join(root, 'input.json');
   const manifestPath = path.join(root, 'run.json');
   const keyPath = path.join(root, 'signing.pem');
+  const readinessPath = path.join(root, 'pre-dispatch.json');
   const outputPath = path.join(root, 'capability.json');
   const stdout = { value: '', write(chunk) { this.value += chunk; } };
   try {
@@ -938,24 +989,85 @@ test('CLI plan signs and writes nothing; apply emits one private capability afte
     assert.equal(start.ledger.stage, STAGES.ENABLEMENT_STARTED);
     fs.writeFileSync(keyPath, value.fixture.privateKeyPem, { mode: 0o600 });
     fs.chmodSync(keyPath, 0o600);
+    writePrivateJson(readinessPath, preDispatchReadiness(value, 'A'));
     writePrivateJson(inputPath, { schemaVersion: 1, action: 'dispatch',
       expectedPriorDigest: start.ledger.transitionDigest,
       payload: { ...value.dispatch('A'), expiresAt: value.capability('A').expiresAt,
-        runManifestPath: manifestPath, signingKeyPath: keyPath, capabilityOutputPath: outputPath } });
-    const dispatchPlan = run([`--input=${inputPath}`, `--ledger=${ledger}`], { allowExternalPaths: true, stdout });
+        runManifestPath: manifestPath, signingKeyPath: keyPath, preDispatchReadinessPath: readinessPath,
+        capabilityOutputPath: outputPath } });
+    const dispatchPlan = run([`--input=${inputPath}`, `--ledger=${ledger}`],
+      { allowExternalPaths: true, stdout, now: () => Date.parse(TIMES.dispatchA) });
     assert.equal(dispatchPlan.verdict.written, false);
     assert.equal(fs.existsSync(outputPath), false);
     assert.equal(validateLedgerDirectory(ledger).latest.stage, STAGES.ENABLEMENT_STARTED);
     const applied = run([`--input=${inputPath}`, `--ledger=${ledger}`, '--mode=apply'],
-      { allowExternalPaths: true, stdout });
+      { allowExternalPaths: true, stdout, now: () => Date.parse(TIMES.dispatchA) });
     assert.equal(applied.verdict.written, true);
     assert.equal(fs.statSync(outputPath).mode & 0o777, 0o600);
     assert.equal(JSON.parse(fs.readFileSync(outputPath, 'utf8')).capability.dispatchLedgerDigest,
       applied.ledger.transitionDigest);
     assert.doesNotMatch(stdout.value, /uidHash|trainerHash|signature|publicKeySpki|authorityImageDigest/u);
     assert.throws(() => run([`--input=${inputPath}`, `--ledger=${ledger}`, '--mode=apply'],
-      { allowExternalPaths: true, stdout }), /group_e_execution_capability_output_exists|group_e_ledger_stale_writer/);
+      { allowExternalPaths: true, stdout, now: () => Date.parse(TIMES.dispatchA) }),
+    /group_e_execution_capability_output_exists|group_e_ledger_stale_writer/);
   } finally { fs.rmSync(root, { recursive: true, force: true }); }
+});
+
+test('CLI refuses missing or asserted pre-dispatch readiness before signing or durable dispatch', () => {
+  const value = state();
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'group-e-cli-readiness-'));
+  const ledger = path.join(root, 'ledger');
+  const inputPath = path.join(root, 'input.json');
+  const manifestPath = path.join(root, 'run.json');
+  const keyPath = path.join(root, 'signing.pem');
+  const readinessPath = path.join(root, 'pre-dispatch.json');
+  const outputPath = path.join(root, 'capability.json');
+  const stdout = { write() {} };
+  const originalSign = crypto.sign;
+  let signCalls = 0;
+  try {
+    writePrivateJson(inputPath, { schemaVersion: 1, action: 'initialize', expectedPriorDigest: null,
+      payload: value.initialInput });
+    run([`--input=${inputPath}`, `--ledger=${ledger}`, '--mode=apply'], { allowExternalPaths: true, stdout });
+    writePrivateJson(manifestPath, value.runManifest);
+    writePrivateJson(inputPath, { schemaVersion: 1, action: 'enablement-start',
+      expectedPriorDigest: value.initial.transitionDigest,
+      payload: { startedAt: TIMES.enable, jit: value.jit, runManifestPath: manifestPath } });
+    const started = run([`--input=${inputPath}`, `--ledger=${ledger}`, '--mode=apply'],
+      { allowExternalPaths: true, stdout }).ledger;
+    fs.writeFileSync(keyPath, value.fixture.privateKeyPem, { mode: 0o600 });
+    fs.chmodSync(keyPath, 0o600);
+    const payload = { ...value.dispatch('A'), expiresAt: value.capability('A').expiresAt,
+      runManifestPath: manifestPath, signingKeyPath: keyPath, preDispatchReadinessPath: readinessPath,
+      capabilityOutputPath: outputPath };
+    const writeInput = () => writePrivateJson(inputPath, { schemaVersion: 1, action: 'dispatch',
+      expectedPriorDigest: started.transitionDigest, payload });
+    const headBefore = fs.readFileSync(path.join(ledger, 'HEAD.json'), 'utf8');
+    crypto.sign = (...args) => { signCalls += 1; return originalSign(...args); };
+
+    writeInput();
+    assert.throws(() => run([`--input=${inputPath}`, `--ledger=${ledger}`, '--mode=apply'],
+      { allowExternalPaths: true, stdout, now: () => Date.parse(TIMES.dispatchA) }),
+    /group_e_execution_pre_dispatch_readiness_missing/);
+    const asserted = preDispatchReadiness(value, 'A', { priorOperatorStateClean: false });
+    writePrivateJson(readinessPath, asserted);
+    writeInput();
+    assert.throws(() => run([`--input=${inputPath}`, `--ledger=${ledger}`, '--mode=apply'],
+      { allowExternalPaths: true, stdout, now: () => Date.parse(TIMES.dispatchA) }),
+    /GROUP_E_PRE_DISPATCH_READINESS_INVALID/);
+    writePrivateJson(readinessPath, preDispatchReadiness(value, 'A'));
+    writeInput();
+    assert.throws(() => run([`--input=${inputPath}`, `--ledger=${ledger}`, '--mode=apply'],
+      { allowExternalPaths: true, stdout, now: () => Date.parse(TIMES.dispatchA) + 60_001 }),
+    /group_e_execution_dispatch_clock_invalid/);
+    assert.equal(signCalls, 0);
+    assert.equal(fs.existsSync(outputPath), false);
+    assert.equal(fs.readFileSync(path.join(ledger, 'HEAD.json'), 'utf8'), headBefore);
+    assert.equal(validateLedgerDirectory(ledger).latest.stage, STAGES.ENABLEMENT_STARTED);
+  } finally {
+    crypto.sign = originalSign;
+    fs.rmSync(root, { recursive: true, force: true });
+  }
 });
 
 test('CLI rejects secrets and imports no cloud SDK or production transport', () => {

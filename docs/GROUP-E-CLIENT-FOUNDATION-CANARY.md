@@ -84,6 +84,17 @@ The browser evidence helper must derive UID and trainer hashes through
 `group-e-client-foundation` domain. Historical Group C/D3 evidence uses a different domain and is
 never accepted as Group E evidence.
 
+Private browser actions use one explicit page-runtime operator lease. A successful action, a failed
+action, or the bounded arm timeout always releases that lease; a genuinely concurrent action and
+the retired legacy operator flag still fail closed. Immediately before either durable dispatch,
+the same page captures a fresh, canonically hashed pre-dispatch record. It binds the exact release,
+source, run, slot, subject hashes, controller generation, session integer and digest, Firebase app,
+stable browser context, and ephemeral runtime instance. It also proves that the lease was acquired
+from a clean prior state, no old controller/capability/result remains, the production controller
+factory exists, and no callable was constructed or invoked. Private operator tooling independently
+recomputes this record and refuses to commit the dispatch when it is stale or inconsistent. The
+readiness record is trusted-operator evidence and browser defense in depth, not browser attestation.
+
 Before any live run is created or any gate is enabled, the focused
 `npm run check:e1-production-client-foundation` rehearsal must reach `READY_TO_ENABLE`. It assembles
 synthetic schema-v2 evidence, replay and immutable-ledger digests, an in-memory Ed25519 run, JIT,
