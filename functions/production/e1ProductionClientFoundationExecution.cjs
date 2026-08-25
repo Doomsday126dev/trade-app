@@ -1065,6 +1065,7 @@ module.exports = Object.freeze({
   canonicalLedgerDigest,
   createExecutionRunManifest,
   createInitialExecutionLedger,
+  createSignedSlotCapability,
   commitDispatchAndCreateCapability,
   dispatchSessionGenerationContext,
   executionDispatchDigest,

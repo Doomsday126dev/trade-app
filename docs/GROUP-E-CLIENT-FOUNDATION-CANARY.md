@@ -79,6 +79,18 @@ read the control database and does not claim to independently verify marker comm
 The local reconciler validates control, gateway, authority, state, write, gate, IAM, privacy, and
 runtime evidence. Browser output alone is never authoritative.
 
+The browser evidence helper must derive UID and trainer hashes through
+`PogoServices.e1ClientFoundationCanary.subjectHash()`. That helper and the gateway use the exact
+`group-e-client-foundation` domain. Historical Group C/D3 evidence uses a different domain and is
+never accepted as Group E evidence.
+
+Before any live run is created or any gate is enabled, the focused
+`npm run check:e1-production-client-foundation` rehearsal must reach `READY_TO_ENABLE`. It assembles
+synthetic schema-v2 evidence, replay and immutable-ledger digests, an in-memory Ed25519 run, JIT,
+guard result, dispatch-bound capability envelope, exact five-to-four browser projection, and
+browser `open()` validation. The rehearsal performs no IAM, cloud, Firebase SDK, callable, or
+private-artifact operation. Live raw evidence is never an input to this local rehearsal.
+
 ## Signed capability
 
 The run stores exact schema, environment, project, run ID, slots and hashed bindings, cohort and
@@ -104,6 +116,14 @@ The browser request has exactly `schemaVersion`, raw request-scoped `attemptId`,
 and a strict base64url signature. Missing/extra fields, malformed encoding, modified payloads,
 wrong keys, stale windows, and mismatched runtime values fail closed. Public source and arbitrary
 values cannot forge the signature.
+
+Slow browser evidence collection and operator preparation happen before the short execution
+clock. After all evidence is assembled, the pre-enable rehearsal passes first; fresh JIT, run, and
+capability times are then created as late as possible. The JIT admission proof remains limited to
+15 minutes. The run/activation envelope may span at most 45 minutes, while each A or B capability
+is issued only after its durable dispatch and remains valid for at most 15 minutes. This ordering
+provides a fresh per-slot window without extending replay exposure or starting the JIT clock during
+manual evidence collection.
 
 The one session-generation digest contract is the ordered array
 `[1, "group-e-session-generation", schemaVersion, environment, projectId, runId, cohortDigest,

@@ -97,7 +97,10 @@
     return digest([1,'group-e-browser-runtime-instance',origin,pathname,firebaseAppIdHashValue,
       hex(RUNTIME_INSTANCE_NONCE)],global.crypto);
   }
-  async function subjectHash(kind,value,cryptoImpl){return digest([1,'group-e-client-foundation',kind,value],cryptoImpl);}
+  async function subjectHash(kind,value,cryptoImpl=global.crypto){
+    if(!['uid','trainer'].includes(kind)||typeof value!=='string'||!value)fail('group-e/subject-invalid');
+    return digest([1,'group-e-client-foundation',kind,value],cryptoImpl);
+  }
   function sessionGenerationContext(value,generation=value?.sessionGeneration){
     return{
       schemaVersion:value?.schemaVersion,environment:value?.environment,projectId:value?.projectId,runId:value?.runId,
@@ -275,7 +278,7 @@
 
   root.e1ClientFoundationCanary=Object.freeze({
     CALLABLE,REGION,browserConfigurationFromStoredEnvelope,browserContextDigest,canonicalCapability,
-    createClientFoundationCanary,sessionGenerationContext,runtimeInstanceDigest,sessionGenerationDigest,
+    createClientFoundationCanary,sessionGenerationContext,runtimeInstanceDigest,sessionGenerationDigest,subjectHash,
     validateResponse,verifyCapability
   });
 })(window);
