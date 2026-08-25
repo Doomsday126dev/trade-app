@@ -260,6 +260,13 @@ function verifyActionGuard(actionName, guardResult, expectedSha, d3Mode, manifes
     stageValid = stageValid && commonD3 && (cleanStart || continuation);
   }
   if (action.cohortStage === 'client-foundation-canary') {
+    const pristineStart = guardResult.executionStage === 'A_READY' && guardResult.enablementStarted === false &&
+      guardResult.enablementStartedAt === null && guardResult.enablementStartDigest === null &&
+      guardResult.nextOperation === 'COMMIT_ENABLEMENT_START';
+    const startedContinuation = guardResult.executionStage === 'ENABLEMENT_STARTED' &&
+      guardResult.enablementStarted === true && Number.isFinite(Date.parse(guardResult.enablementStartedAt)) &&
+      HASH.test(guardResult.enablementStartDigest || '') &&
+      guardResult.nextOperation === 'COMPLETE_ENABLEMENT_AND_COMMIT_A_DISPATCH';
     stageValid = guardResult.cohortStage === 'client-foundation-canary' && guardResult.cohortSize === 2 &&
       guardResult.groupEAuthorized === true && guardResult.executionAuthorized === true &&
       guardResult.toolingSourceSha === undefined && guardResult.provenance?.toolingSourceSha === expectedSha &&
@@ -270,8 +277,7 @@ function verifyActionGuard(actionName, guardResult, expectedSha, d3Mode, manifes
       guardResult.budget?.authoritativeReplayBoundary === 'e1-group-e-control-create-only-consumption' &&
       guardResult.provenance?.gatewaySourceSha === manifest.sourceCommitSha &&
       guardResult.provenance?.gatewaySourceFingerprint === manifest.sourceFingerprint &&
-      HASH.test(guardResult.executionLedgerDigest || '') && guardResult.executionStage === 'A_READY' &&
-      guardResult.nextOperation === 'ENABLE_GATES_AND_COMMIT_A_DISPATCH' &&
+      HASH.test(guardResult.executionLedgerDigest || '') && (pristineStart || startedContinuation) &&
       UUID_V4.test(guardResult.runId || '') && HASH.test(guardResult.runManifestDigest || '') &&
       HASH.test(guardResult.keyId || '') && keyIdFromSpki(guardResult.publicKeySpki) === guardResult.keyId &&
       HASH.test(guardResult.firebaseAppIdHash || '') && HASH.test(guardResult.controlPlaneDeploymentDigest || '') &&
@@ -359,7 +365,7 @@ function createDeploymentPlan(options = {}) {
     containmentRestore: !action.gateEnabled && !guardVerified,
     gateEnabled: action.gateEnabled,
     readProofMode: action.readProofMode,
-    entryEvidenceExpiresAt: action.cohortStage === 'D3' && action.gateEnabled
+    entryEvidenceExpiresAt: ['D3', 'client-foundation-canary'].includes(action.cohortStage) && action.gateEnabled
       ? options.guardResult?.entryEvidenceExpiresAt || null : null,
     entryEvidenceRequiredAfterEnable: action.cohortStage === 'D3' && action.gateEnabled
       ? options.guardResult?.entryEvidenceRequiredAfterEnable ?? null : null,
@@ -384,6 +390,12 @@ function createDeploymentPlan(options = {}) {
       ? options.guardResult?.firebaseAppIdHash || null : null,
     groupEControlDatabaseId: action.cohortStage === 'client-foundation-canary' && action.gateEnabled
       ? options.guardResult?.controlDatabaseId || null : null,
+    groupEEnablementStarted: action.cohortStage === 'client-foundation-canary' && action.gateEnabled
+      ? options.guardResult?.enablementStarted ?? null : null,
+    groupEEnablementStartedAt: action.cohortStage === 'client-foundation-canary' && action.gateEnabled
+      ? options.guardResult?.enablementStartedAt || null : null,
+    groupEEnablementStartDigest: action.cohortStage === 'client-foundation-canary' && action.gateEnabled
+      ? options.guardResult?.enablementStartDigest || null : null,
     confirmationValidated: Object.hasOwn(ACTION_CONFIRMATIONS, options.action),
     trackedWorkingTreeClean,
     deploymentAllowed,
@@ -497,6 +509,9 @@ function publicPlan(plan) {
     groupERunManifestDigest: plan.groupERunManifestDigest,
     groupEKeyId: plan.groupEKeyId,
     groupEControlDatabaseId: plan.groupEControlDatabaseId,
+    groupEEnablementStarted: plan.groupEEnablementStarted,
+    groupEEnablementStartedAt: plan.groupEEnablementStartedAt,
+    groupEEnablementStartDigest: plan.groupEEnablementStartDigest,
     entryEvidenceExpiresAt: plan.entryEvidenceExpiresAt,
     entryEvidenceRequiredAfterEnable: plan.entryEvidenceRequiredAfterEnable,
     mutationWindowEnd: plan.mutationWindowEnd,

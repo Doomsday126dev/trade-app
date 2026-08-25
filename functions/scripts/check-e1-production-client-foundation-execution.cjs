@@ -13,7 +13,9 @@ const {
   recordAReconciliationEvidence,
   recordBReconciliation,
   recordCapabilityDeliveryUncertain,
+  recordEnablementStarted,
   recordObservationCloseout,
+  recordPreEnableAbort,
   recordRestoration,
   recordRuntimeInstanceLoss,
   recordSessionBoundary,
@@ -24,7 +26,7 @@ const {
 
 const INPUT_FIELDS = Object.freeze(['schemaVersion', 'action', 'expectedPriorDigest', 'payload']);
 const ACTIONS = new Set([
-  'validate', 'initialize', 'dispatch', 'terminal', 'a-reconciliation', 'session-boundary',
+  'validate', 'initialize', 'enablement-start', 'pre-enable-abort', 'dispatch', 'terminal', 'a-reconciliation', 'session-boundary',
   'b-reconciliation', 'restore', 'block', 'delivery-uncertain', 'runtime-loss', 'closeout'
 ]);
 const SENSITIVE_KEY = /(?:^|_)(?:raw_?)?(?:id_?token|app_?check_?token|credential|password|pin|secret|auth_?email|trainer_?name|private_?key)$/iu;
@@ -150,6 +152,24 @@ function run(argv = process.argv.slice(2), options = {}) {
     const ledger = validateLedgerDirectory(ledgerPath).latest;
     if (ledger.transitionDigest !== input.expectedPriorDigest) fail('group_e_ledger_stale_writer');
     result = Object.freeze({ written: false, ledger });
+  } else if (input.action === 'enablement-start') {
+    if (!exactFields(input.payload, ['startedAt', 'jit', 'runManifestPath'])) {
+      fail('group_e_execution_action_payload_invalid');
+    }
+    requireMode(ledgerPath, 0o700, 'ledger');
+    const manifest = readJson(privatePath(input.payload.runManifestPath, 'run-manifest', options), 'run_manifest');
+    result = applyLedgerTransition(ledgerPath, input.expectedPriorDigest,
+      (ledger) => recordEnablementStarted(ledger, manifest,
+        { startedAt: input.payload.startedAt, jit: input.payload.jit }), { mode });
+  } else if (input.action === 'pre-enable-abort') {
+    if (!exactFields(input.payload, ['record', 'runManifestPath', 'controlRecordCreated'])) {
+      fail('group_e_execution_action_payload_invalid');
+    }
+    requireMode(ledgerPath, 0o700, 'ledger');
+    const manifest = readJson(privatePath(input.payload.runManifestPath, 'run-manifest', options), 'run_manifest');
+    result = applyLedgerTransition(ledgerPath, input.expectedPriorDigest,
+      (ledger) => recordPreEnableAbort(ledger, manifest, input.payload.record,
+        { controlRecordCreated: input.payload.controlRecordCreated }), { mode });
   } else if (input.action === 'dispatch') {
     const fields = ['slot', 'generationId', 'sessionGeneration', 'jti', 'attemptId', 'browserContextDigest',
       'runtimeInstanceDigest', 'sessionGenerationDigest', 'committedAt', 'expiresAt', 'runManifestPath', 'signingKeyPath',

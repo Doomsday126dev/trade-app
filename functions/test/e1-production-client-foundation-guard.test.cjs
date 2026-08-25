@@ -28,7 +28,8 @@ const {
   STAGES,
   createExecutionRunManifest,
   createInitialExecutionLedger,
-  initializeLedgerDirectory
+  initializeLedgerDirectory,
+  recordEnablementStarted
 } = require('../production/e1ProductionClientFoundationExecution.cjs');
 const {
   canonicalIamPlan,
@@ -191,7 +192,7 @@ function fixture() {
     publicKeySpki,
     d3CloseoutDigest: d3CloseoutDigest(),
     issuedAt: jit.approvedAt,
-    expiresAt: jit.expiresAt
+    expiresAt: jit.activationWindowEnd
   });
   const controlPlaneDeployment = deployedControlPlane();
   const budget = expectedBudget();
@@ -217,7 +218,7 @@ function fixture() {
     clientControllerContract: clientControllerContract(),
     budget,
     executionSequence: [
-      'create-run', 'commit-A-dispatch', 'A-read', 'verify-session-boundary', 'create-A-reconciliation',
+      'create-run', 'commit-enablement-start', 'commit-A-dispatch', 'A-read', 'verify-session-boundary', 'create-A-reconciliation',
       'commit-B-dispatch', 'B-read', 'create-B-reconciliation', 'restore', 'observe', 'create-closeout'
     ],
     runManifest,
@@ -273,9 +274,46 @@ test('Group E guard accepts exact schema-v2 evidence, pristine immutable ledger,
   assert.equal(result.cohortSize, 2);
   assert.equal(result.executionAuthorized, true);
   assert.equal(result.executionStage, STAGES.A_READY);
-  assert.equal(result.nextOperation, 'ENABLE_GATES_AND_COMMIT_A_DISPATCH');
+  assert.equal(result.nextOperation, 'COMMIT_ENABLEMENT_START');
+  assert.equal(result.enablementStarted, false);
   assert.equal(result.controlDatabaseId, 'e1-group-e-control');
   assert.deepEqual(result.budget, expectedBudget());
+});
+
+test('fresh start marker survives JIT expiry but never the 45-minute activation deadline', () => {
+  const value = fixture();
+  const started = recordEnablementStarted(value.executionLedger, value.readiness.runManifest, {
+    startedAt: new Date(NOW).toISOString(),
+    jit: value.readiness.jit
+  });
+  const continued = validateGroupEGuard(value.readiness, value.input, {
+    now: Date.parse('2030-01-01T12:22:00.000Z'),
+    executionLedger: started,
+    controlPlaneDeployment: value.controlPlaneDeployment
+  });
+  assert.equal(continued.enablementStarted, true);
+  assert.equal(continued.enablementStartedAt, new Date(NOW).toISOString());
+  assert.equal(continued.enablementStartDigest, started.transitionDigest);
+  assert.equal(continued.nextOperation, 'COMPLETE_ENABLEMENT_AND_COMMIT_A_DISPATCH');
+  assert.throws(() => validateGroupEGuard(value.readiness, value.input, {
+    now: Date.parse(value.readiness.jit.activationWindowEnd),
+    executionLedger: started,
+    controlPlaneDeployment: value.controlPlaneDeployment
+  }), /GROUP_E_RUN_EXPIRED/);
+
+  for (const mutate of [
+    (candidate) => { candidate.input.runManifestDigest = '0'.repeat(64); },
+    (candidate) => { candidate.input.evidenceDigest = '0'.repeat(64); },
+    (candidate) => { candidate.readiness.runManifest.keyId = '0'.repeat(64); },
+    (candidate) => { candidate.readiness.provenance.pagesSourceSha = '0'.repeat(40); }
+  ]) {
+    const substituted = clone(value);
+    mutate(substituted);
+    assert.throws(() => validateGroupEGuard(substituted.readiness, substituted.input, {
+      now: Date.parse('2030-01-01T12:22:00.000Z'), executionLedger: started,
+      controlPlaneDeployment: substituted.controlPlaneDeployment
+    }));
+  }
 });
 
 test('legacy booleans, stale evidence, substitution, missing deployment, and non-pristine execution fail closed', () => {

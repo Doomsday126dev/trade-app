@@ -16,6 +16,7 @@ const {
   SECURITY_BOUNDARY,
   STAGES,
   groupEActivationGatePlan,
+  jitAuthorizationDigest,
   validateExecutionLedger,
   validateLedgerDirectory
 } = require('./e1ProductionClientFoundationExecution.cjs');
@@ -109,7 +110,7 @@ function bindingDigest(bindings){return sha256(JSON.stringify([1,'group-e-client
   ...SLOTS.flatMap((slot)=>[slot,bindings[slot].uidHash,bindings[slot].trainerHash])]));}
 function replayLedgerDigest(ledger){return sha256(JSON.stringify([1,'group-e-client-foundation-evidence-ledger',
   ledger.schemaVersion,ledger.cohortDigest,ledger.generationId,ledger.createdAt,ledger.entries,ledger.callableInvocations]));}
-function jitDigest(jit){return sha256(JSON.stringify([1,'group-e-client-foundation-jit',jit]));}
+function jitDigest(jit){return jitAuthorizationDigest(jit);}
 function d3CloseoutDigest(){return digestArray('group-e-d3-closeout',[D3_CLOSEOUT]);}
 function clientControllerContract(){return Object.freeze({persistentBrowserStorage:false,deploymentArmsController:false,
   explicitSameRuntimeControllerRequired:true,oneTerminalAttemptPerController:true,browserIntegrityDefenseOnly:true,
@@ -206,7 +207,14 @@ function validateGroupEGuard(readiness,input,{now=Date.now(),executionLedger,con
       !sameJson(readiness.d3Closeout,D3_CLOSEOUT)||!sameJson(input.d3Closeout,D3_CLOSEOUT))fail('group_e_d3_closeout_invalid');
   validateProvenance(readiness.provenance);validateProvenance(input.provenance);
   if(!sameJson(readiness.provenance,input.provenance))fail('group_e_provenance_invalid');
-  validateEvidence(readiness.evidence,readiness.cohortDigest,readiness.provenance,now);
+  if(!executionLedger)fail('group_e_execution_ledger_absent');
+  const execution=validateExecutionLedger(executionLedger);
+  const enablementStarted=execution.stage===STAGES.ENABLEMENT_STARTED;
+  if(!enablementStarted&&execution.stage!==STAGES.A_READY)fail('group_e_execution_stage_invalid');
+  if(!enablementStarted)validateExecutionLedger(executionLedger,{requirePristine:true});
+  const freshnessNow=enablementStarted?Date.parse(executionLedger.updatedAt):now;
+  if(!Number.isFinite(freshnessNow))fail('group_e_enablement_start_invalid');
+  validateEvidence(readiness.evidence,readiness.cohortDigest,readiness.provenance,freshnessNow);
   if(SLOTS.some((slot)=>{const entry=readiness.evidence.find((candidate)=>candidate.slot===slot);
     return entry.uidHash!==readiness.bindings[slot].uidHash||entry.trainerHash!==readiness.bindings[slot].trainerHash;})){
     fail('group_e_evidence_binding_invalid');
@@ -216,7 +224,7 @@ function validateGroupEGuard(readiness,input,{now=Date.now(),executionLedger,con
   validateReplayLedger(readiness.replayLedger,readiness.evidence,readiness.cohortDigest);
   if(readiness.replayLedgerDigest!==readiness.replayLedger.ledgerDigest||
       input.replayLedgerDigest!==readiness.replayLedgerDigest)fail('group_e_replay_ledger_invalid');
-  validateJit(readiness.jit,readiness.cohortDigest,digest,readiness.replayLedgerDigest,readiness.evidence,now);
+  validateJit(readiness.jit,readiness.cohortDigest,digest,readiness.replayLedgerDigest,readiness.evidence,freshnessNow);
   validateSecurity(readiness.securityBoundary);validateSecurity(input.securityBoundary);
   if(!sameJson(readiness.securityBoundary,input.securityBoundary))fail('group_e_security_boundary_invalid');
   const disabled=disabledGatePlan(),enabled=activationGatePlan();
@@ -228,9 +236,8 @@ function validateGroupEGuard(readiness,input,{now=Date.now(),executionLedger,con
     fail('group_e_client_controller_contract_invalid');
   }
   validateBudget(readiness.budget);validateBudget(input.budget);
-  if(!executionLedger)fail('group_e_execution_ledger_absent');
-  const execution=validateExecutionLedger(executionLedger,{requireStage:STAGES.A_READY,requirePristine:true});
-  if(readiness.executionLedgerDigest!==execution.transitionDigest||input.executionLedgerDigest!==execution.transitionDigest||
+  const initialExecutionDigest=enablementStarted?executionLedger.priorTransitionDigest:execution.transitionDigest;
+  if(readiness.executionLedgerDigest!==initialExecutionDigest||input.executionLedgerDigest!==initialExecutionDigest||
       executionLedger.runId!==readiness.runManifest?.runId||!sameJson(executionLedger.bindings,readiness.bindings)||
       !sameJson(executionLedger.provenance,readiness.provenance)||
       executionLedger.admission.evidenceDigest!==digest||
@@ -242,13 +249,14 @@ function validateGroupEGuard(readiness,input,{now=Date.now(),executionLedger,con
       run.firebaseAppIdHash!==appIdHash(PRODUCTION_FIREBASE_APP_ID)||run.d3CloseoutDigest!==d3CloseoutDigest()||
       !sameJson(run.identityBaseline,IDENTITY_BASELINE)||run.admissionEvidenceDigest!==digest||
       run.preCallReplayLedgerDigest!==readiness.replayLedgerDigest||
-      run.initialExecutionLedgerDigest!==execution.transitionDigest||
+      run.initialExecutionLedgerDigest!==initialExecutionDigest||
       Date.parse(run.issuedAt)<Date.parse(readiness.jit.approvedAt)||
       Date.parse(run.expiresAt)>Date.parse(readiness.jit.activationWindowEnd))fail('group_e_run_manifest_invalid');
-  const deployed=requireDeployedControlPlane(controlPlaneDeployment,{now,maxAgeMs:MAX_CONTROL_EVIDENCE_AGE_MS});
+  if(enablementStarted&&executionLedger.runManifestDigest!==run.manifestDigest)fail('group_e_run_ledger_mismatch');
+  const deployed=requireDeployedControlPlane(controlPlaneDeployment,{now:freshnessNow,maxAgeMs:MAX_CONTROL_EVIDENCE_AGE_MS});
   if(readiness.controlPlaneDeploymentDigest!==deployed.deploymentDigest||
       input.controlPlaneDeploymentDigest!==deployed.deploymentDigest)fail('group_e_control_deployment_invalid');
-  if(!sameJson(readiness.executionSequence,['create-run','commit-A-dispatch','A-read','verify-session-boundary',
+  if(!sameJson(readiness.executionSequence,['create-run','commit-enablement-start','commit-A-dispatch','A-read','verify-session-boundary',
       'create-A-reconciliation','commit-B-dispatch','B-read','create-B-reconciliation','restore','observe','create-closeout'])||
       readiness.laterGroupsAuthorized!==false||readiness.groupEAuthorized!==true||input.e2Reachable!==false||
       input.readRateLimiterMode!=='group-e-synthetic-read-v1'||input.normalDurableLimiterChanged!==false||
@@ -263,7 +271,9 @@ function validateGroupEGuard(readiness,input,{now=Date.now(),executionLedger,con
     runId:run.runId,runManifestDigest:run.manifestDigest,keyId:run.keyId,publicKeySpki:run.publicKeySpki,
     firebaseAppIdHash:run.firebaseAppIdHash,controlPlaneDeploymentDigest:deployed.deploymentDigest,
     controlDatabaseId:deployed.databaseId,executionLedgerDigest:execution.transitionDigest,
-    executionStage:execution.stage,nextOperation:execution.nextAction,cloudOperations:0});
+    executionStage:execution.stage,nextOperation:execution.nextAction,enablementStarted,
+    enablementStartedAt:enablementStarted?executionLedger.updatedAt:null,
+    enablementStartDigest:enablementStarted?execution.transitionDigest:null,cloudOperations:0});
 }
 
 function validateGroupEObservation(value){

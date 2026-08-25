@@ -4,11 +4,13 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
 const fs = require('node:fs');
+const os = require('node:os');
 const path = require('node:path');
 const vm = require('node:vm');
 const {
   appIdHash,
   capabilityDigest,
+  createPreEnableAbort,
   sessionGenerationContext,
   sessionGenerationDigest,
   subjectHash
@@ -37,9 +39,14 @@ const {
   STAGES,
   createExecutionRunManifest,
   createInitialExecutionLedger,
+  initializeLedgerDirectory,
   createSignedSlotCapability,
-  recordDispatch
+  recordDispatch,
+  recordEnablementStarted,
+  recordPreEnableAbort,
+  ZERO_WRITES
 } = require('../production/e1ProductionClientFoundationExecution.cjs');
+const { commitGroupEEnablementStart } = require('../scripts/deploy-e1-production-gateway.cjs');
 const {
   canonicalIamPlan,
   deploymentDigest,
@@ -249,7 +256,7 @@ async function buildGoldenAssembly(mutate = () => {}) {
     clientControllerContract: clientControllerContract(),
     budget: expectedBudget(),
     executionSequence: [
-      'create-run', 'commit-A-dispatch', 'A-read', 'verify-session-boundary', 'create-A-reconciliation',
+      'create-run', 'commit-enablement-start', 'commit-A-dispatch', 'A-read', 'verify-session-boundary', 'create-A-reconciliation',
       'commit-B-dispatch', 'B-read', 'create-B-reconciliation', 'restore', 'observe', 'create-closeout'
     ],
     runManifest,
@@ -297,6 +304,15 @@ async function buildGoldenAssembly(mutate = () => {}) {
   };
   mutate(assembly);
   const guard = validateGroupEGuard(readiness, input, { now: NOW, executionLedger, controlPlaneDeployment });
+  const startedLedger = recordEnablementStarted(executionLedger, runManifest, {
+    startedAt: new Date(NOW).toISOString(),
+    jit
+  });
+  const continuedGuard = validateGroupEGuard(readiness, input, {
+    now: Date.parse('2030-01-01T12:22:00.000Z'),
+    executionLedger: startedLedger,
+    controlPlaneDeployment
+  });
 
   const browserContextDigest = await browser.browserContextDigest(ORIGIN, PATHNAME, FIREBASE_APP_ID, crypto.webcrypto);
   const runtimeInstanceDigest = await browser.runtimeInstanceDigest(runManifest.firebaseAppIdHash);
@@ -326,7 +342,7 @@ async function buildGoldenAssembly(mutate = () => {}) {
     sessionGenerationDigest: sessionGenerationDigest(sessionGenerationContext(dispatchContext)),
     committedAt: '2030-01-01T12:10:00.000Z'
   };
-  const dispatchedLedger = recordDispatch(executionLedger, runManifest, dispatch);
+  const dispatchedLedger = recordDispatch(startedLedger, runManifest, dispatch);
   const storedEnvelope = createSignedSlotCapability(dispatchedLedger, runManifest, {
     slot: 'A',
     jti: JTI,
@@ -362,7 +378,8 @@ async function buildGoldenAssembly(mutate = () => {}) {
     iamOperations: counters.iam,
     persistedFiles: counters.persistedFiles
   });
-  return { ...assembly, guard, dispatchedLedger, storedEnvelope, configuration, controller, counters, result };
+  return { ...assembly, guard, startedLedger, continuedGuard, dispatchedLedger, storedEnvelope, configuration,
+    controller, counters, result };
 }
 
 test('production-exact Group E pre-enable golden path reaches READY_TO_ENABLE with zero side effects', async () => {
@@ -392,6 +409,10 @@ test('production-exact Group E pre-enable golden path reaches READY_TO_ENABLE wi
   assert.equal(value.runManifest.preCallReplayLedgerDigest, value.replayLedger.ledgerDigest);
   assert.equal(value.executionLedger.admission.jitDigest, jitDigest(value.jit));
   assert.equal(value.guard.executionLedgerDigest, value.executionLedger.transitionDigest);
+  assert.equal(value.startedLedger.stage, STAGES.ENABLEMENT_STARTED);
+  assert.equal(value.continuedGuard.enablementStarted, true);
+  assert.equal(value.continuedGuard.executionLedgerDigest, value.startedLedger.transitionDigest);
+  assert.equal(Date.parse(value.continuedGuard.enablementStartedAt) < Date.parse(value.jit.expiresAt), true);
   assert.equal(value.guard.keyId, value.runManifest.keyId);
   assert.equal(value.storedEnvelope.capability.runManifestDigest, value.runManifest.manifestDigest);
   assert.equal(value.storedEnvelope.capability.dispatchLedgerDigest, value.dispatchedLedger.transitionDigest);
@@ -400,6 +421,59 @@ test('production-exact Group E pre-enable golden path reaches READY_TO_ENABLE wi
     assert.equal(sanitized.includes(subject.uid), false);
     assert.equal(sanitized.includes(subject.trainer), false);
   }
+});
+
+test('deployment helper atomically commits the enablement-start marker before any cloud operation', async () => {
+  const value = await buildGoldenAssembly();
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'group-e-enable-start-'));
+  const ledger = path.join(root, 'ledger');
+  const readinessPath = path.join(root, 'readiness.json');
+  try {
+    initializeLedgerDirectory(ledger, value.executionLedger, { mode: 'apply' });
+    fs.writeFileSync(readinessPath, JSON.stringify(value.readiness), { mode: 0o600 });
+    fs.chmodSync(readinessPath, 0o600);
+    const result = commitGroupEEnablementStart(value.guard, {
+      now: NOW,
+      groupEPaths: { readinessPath, executionLedgerPath: ledger }
+    });
+    assert.equal(result.written, true);
+    assert.equal(result.ledger.stage, STAGES.ENABLEMENT_STARTED);
+    assert.equal(result.ledger.priorTransitionDigest, value.executionLedger.transitionDigest);
+    assert.equal(result.ledger.updatedAt, new Date(NOW).toISOString());
+    assert.equal(value.counters.cloud, 0);
+    assert.throws(() => commitGroupEEnablementStart(value.guard, {
+      now: NOW,
+      groupEPaths: { readinessPath, executionLedgerPath: ledger }
+    }), /group_e_ledger_stale_writer/);
+  } finally { fs.rmSync(root, { recursive: true, force: true }); }
+});
+
+test('production-exact pre-enable expiry closes a pristine run without A/B execution or observation', async () => {
+  const value = await buildGoldenAssembly();
+  assert.throws(() => validateGroupEGuard(value.readiness, value.input, {
+    now: Date.parse(value.jit.expiresAt),
+    executionLedger: value.executionLedger,
+    controlPlaneDeployment: value.controlPlaneDeployment
+  }), /group_e_evidence_invalid|group_e_jit_invalid/);
+  const abort = createPreEnableAbort({
+    runId: value.runManifest.runId,
+    runManifestDigest: value.runManifest.manifestDigest,
+    executionLedgerDigest: value.executionLedger.transitionDigest,
+    reason: 'TIMING_EXPIRED_BEFORE_ENABLEMENT',
+    gates: disabledGatePlan(),
+    prohibitedWrites: ZERO_WRITES,
+    aDispatchAbsent: true,
+    consumptionsAbsent: true,
+    reconciliationsAbsent: true,
+    createdAt: value.jit.expiresAt
+  });
+  const closed = recordPreEnableAbort(value.executionLedger, value.runManifest, abort,
+    { controlRecordCreated: true });
+  assert.equal(closed.stage, STAGES.PRE_ENABLE_ABORTED);
+  assert.equal(closed.remainingAdmittedBudget, 0);
+  assert.equal(closed.dispatches.A, null);
+  assert.equal(closed.dispatches.B, null);
+  assert.throws(() => recordDispatch(closed, value.runManifest, {}), /group_e_dispatch_invalid/);
 });
 
 test('Group E evidence uses its canonical subject domain and D3 remains distinct and unchanged', async () => {

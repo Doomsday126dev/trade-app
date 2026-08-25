@@ -7,12 +7,15 @@ const {
   BASELINE_FIELDS,
   CAPABILITY_FIELDS,
   CLOSEOUT_FIELDS,
+  PRE_ENABLE_ABORT_FIELDS,
   SESSION_GENERATION_FIELDS,
   canonicalCapabilityArray,
   createAdmissionReceipt,
   createFinalCloseout,
+  createPreEnableAbort,
   createReconciliationRecord,
   finalCloseoutDigest,
+  preEnableAbortDigest,
   keyIdFromSpki,
   sessionGenerationContext,
   sessionGenerationDigest,
@@ -21,6 +24,7 @@ const {
   validateCapabilityShape,
   validateConsumptionRecord,
   validateFinalCloseout,
+  validatePreEnableAbort,
   validateReconciliationRecord,
   validateRunManifest,
   validateSignedRequest,
@@ -234,4 +238,35 @@ test('final closeout is canonical, observation-bounded, and cannot precede passi
     assert.throws(() => validateFinalCloseout(value), /GROUP_E_CLOSEOUT_INVALID/, errorCode);
   }
   assert.equal(BASELINE_FIELDS.length, 8);
+});
+
+test('pre-enable abort is a distinct exact terminal record with disabled gates and zero writes', () => {
+  const fixture = createFixture();
+  const base = {
+    runId: fixture.RUN_ID,
+    runManifestDigest: fixture.run.manifestDigest,
+    executionLedgerDigest: fixture.run.initialExecutionLedgerDigest,
+    reason: 'TIMING_EXPIRED_BEFORE_ENABLEMENT',
+    gates: Object.fromEntries(Object.keys(fixture.GATES_ENABLED).map((gate) => [gate, false])),
+    prohibitedWrites: fixture.ZERO_WRITES,
+    aDispatchAbsent: true,
+    consumptionsAbsent: true,
+    reconciliationsAbsent: true,
+    createdAt: '2030-01-01T12:31:00.000Z'
+  };
+  const record = createPreEnableAbort(base);
+  assert.deepEqual(validatePreEnableAbort(record), record);
+  assert.deepEqual(Object.keys(record).sort(), [...PRE_ENABLE_ABORT_FIELDS].sort());
+  assert.equal(record.abortDigest, preEnableAbortDigest(record));
+  for (const mutate of [
+    (value) => { value.reason = 'UNBOUNDED_REASON'; },
+    (value) => { value.gates.GATEWAY_INVOCATION_ENABLED = true; },
+    (value) => { value.prohibitedWrites.ordinaryUserWrites = 1; },
+    (value) => { value.aDispatchAbsent = false; }
+  ]) {
+    const changed = clone(record);
+    mutate(changed);
+    changed.abortDigest = preEnableAbortDigest(changed);
+    assert.throws(() => validatePreEnableAbort(changed), /GROUP_E_PRE_ENABLE_ABORT_INVALID/);
+  }
 });

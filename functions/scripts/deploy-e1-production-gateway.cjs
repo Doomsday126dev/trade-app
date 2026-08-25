@@ -13,6 +13,10 @@ const {
 } = require('../production/e1ProductionThirdMutationGuard.cjs');
 const { guardProductionClientFoundation } = require('../production/e1ProductionClientFoundationGuard.cjs');
 const {
+  applyLedgerTransition,
+  recordEnablementStarted
+} = require('../production/e1ProductionClientFoundationExecution.cjs');
+const {
   createDeploymentPlan,
   deploymentArguments,
   publicPlan,
@@ -55,7 +59,20 @@ function privateDirectoryPath(value, label) {
   return resolved;
 }
 
-function verifiedGuardResult(action, mode, expectedSourceSha, d3Mode) {
+function groupEPrivatePaths() {
+  const paths = {};
+  for (const [name, key] of [['readinessPath','E1_PRODUCTION_GROUP_E_READINESS'],
+    ['evidencePath','E1_PRODUCTION_GROUP_E_EVIDENCE'],['jitPath','E1_PRODUCTION_GROUP_E_JIT'],
+    ['replayLedgerPath','E1_PRODUCTION_GROUP_E_REPLAY_LEDGER'],
+    ['controlDeploymentPath','E1_PRODUCTION_GROUP_E_CONTROL_DEPLOYMENT']]) {
+    paths[name] = privateJsonPath(process.env[key], key.toLowerCase().replaceAll('_','-'));
+  }
+  paths.executionLedgerPath = privateDirectoryPath(process.env.E1_PRODUCTION_GROUP_E_EXECUTION_LEDGER,
+    'e1-production-group-e-execution-ledger');
+  return paths;
+}
+
+function verifiedGuardResult(action, mode, expectedSourceSha, d3Mode, runOptions = {}) {
   if (action.startsWith('restore-')) return null;
   if (action === 'enable-group-d3' && d3Mode === 'continuation') {
     return guardProductionThirdMutationContinuation({ expectedSourceSha });
@@ -85,16 +102,25 @@ function verifiedGuardResult(action, mode, expectedSourceSha, d3Mode) {
     }
   }
   if (action === 'enable-group-e') {
-    for (const [name, key] of [['readinessPath','E1_PRODUCTION_GROUP_E_READINESS'],
-      ['evidencePath','E1_PRODUCTION_GROUP_E_EVIDENCE'],['jitPath','E1_PRODUCTION_GROUP_E_JIT'],
-      ['replayLedgerPath','E1_PRODUCTION_GROUP_E_REPLAY_LEDGER'],
-      ['controlDeploymentPath','E1_PRODUCTION_GROUP_E_CONTROL_DEPLOYMENT']]) {
-      options[name] = privateJsonPath(process.env[key], key.toLowerCase().replaceAll('_','-'));
-    }
-    options.executionLedgerPath = privateDirectoryPath(process.env.E1_PRODUCTION_GROUP_E_EXECUTION_LEDGER,
-      'e1-production-group-e-execution-ledger');
+    Object.assign(options, groupEPrivatePaths());
+    if (runOptions.now !== undefined) options.now = runOptions.now;
   }
   return contract.run(input, options);
+}
+
+function commitGroupEEnablementStart(guardResult, runOptions = {}) {
+  if (guardResult?.executionStage !== 'A_READY' || guardResult.enablementStarted !== false) {
+    throw new Error('e1/group-e-enable-start-state-invalid');
+  }
+  const paths = runOptions.groupEPaths || groupEPrivatePaths();
+  const readiness = JSON.parse(fs.readFileSync(paths.readinessPath, 'utf8'));
+  const now = runOptions.now === undefined ? Date.now() : runOptions.now;
+  if (!Number.isFinite(now)) throw new Error('e1/group-e-enable-start-time-invalid');
+  return applyLedgerTransition(paths.executionLedgerPath, guardResult.executionLedgerDigest,
+    (ledger) => recordEnablementStarted(ledger, readiness.runManifest, {
+      startedAt: new Date(now).toISOString(),
+      jit: readiness.jit
+    }), { mode: 'apply' });
 }
 
 function gcloudJson(spawn, args, label) {
@@ -322,8 +348,8 @@ function run(argv = process.argv.slice(2), options = {}) {
   const repoRoot = resolveRepositoryRoot(__dirname);
   const rootIgnore = path.join(repoRoot, '.gcloudignore');
   if (fs.existsSync(rootIgnore)) throw new Error('e1/repository-root-gcloudignore-present');
-  const guardResult = verifiedGuardResult(args.action, mode, args['expected-sha'], args['d3-mode']);
-  const plan = createDeploymentPlan({
+  let guardResult = verifiedGuardResult(args.action, mode, args['expected-sha'], args['d3-mode'], options);
+  let plan = createDeploymentPlan({
     action: args.action,
     expectedSha: args['expected-sha'],
     explicitSource: args.source,
@@ -337,6 +363,21 @@ function run(argv = process.argv.slice(2), options = {}) {
     process.stdout.write(`${JSON.stringify(publicPlan(plan), null, 2)}\n`);
     if (fs.existsSync(rootIgnore)) throw new Error('e1/repository-root-gcloudignore-created');
     return plan;
+  }
+  if (args.action === 'enable-group-e' && guardResult.enablementStarted === false) {
+    commitGroupEEnablementStart(guardResult, options);
+    guardResult = verifiedGuardResult(args.action, mode, args['expected-sha'], args['d3-mode'], options);
+    plan = createDeploymentPlan({
+      action: args.action,
+      expectedSha: args['expected-sha'],
+      explicitSource: args.source,
+      mode,
+      repoRoot,
+      guardResult,
+      confirmation: args.confirmation,
+      d3Mode: args['d3-mode']
+    });
+    if (plan.groupEEnablementStarted !== true) throw new Error('e1/group-e-enable-start-not-durable');
   }
   executePlan(plan, options);
   if (fs.existsSync(rootIgnore)) throw new Error('e1/repository-root-gcloudignore-created');
@@ -355,6 +396,7 @@ module.exports = Object.freeze({
   AUTHORITY_GATES,
   argumentsMap,
   authorityReplacement,
+  commitGroupEEnablementStart,
   deployGateway,
   executePlan,
   replaceAuthority,
@@ -362,5 +404,6 @@ module.exports = Object.freeze({
   verifiedGuardResult,
   verifyAuthorityIam,
   verifyAuthorityService,
-  privateDirectoryPath
+  privateDirectoryPath,
+  groupEPrivatePaths
 });

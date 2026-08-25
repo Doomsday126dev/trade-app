@@ -6,6 +6,7 @@ const {
   baselineDigest,
   createAdmissionReceipt,
   createFinalCloseout,
+  createPreEnableAbort,
   createReconciliationRecord
 } = require('../e1-gateway/groupEAdmission');
 const {
@@ -245,6 +246,7 @@ test('production adapter pins project/database and exports no operator write sur
   assert.equal(store.createRun, undefined);
   assert.equal(store.createReconciliation, undefined);
   assert.equal(store.createCloseout, undefined);
+  assert.equal(store.createPreEnableAbort, undefined);
 });
 
 test('operator and gateway create exactly the six immutable control records in the reviewed lifecycle', async () => {
@@ -322,8 +324,43 @@ test('production operator adapter pins the named database and exposes no gateway
   }
   const store = createProductionGroupEOperatorControlStore({ Firestore });
   assert.deepEqual(constructed, [{ projectId: 'trade-list-a4297', databaseId: 'e1-group-e-control' }]);
-  assert.deepEqual(Object.keys(store), ['createRun', 'createReconciliation', 'createCloseout']);
+  assert.deepEqual(Object.keys(store), ['createRun', 'createReconciliation', 'createCloseout', 'createPreEnableAbort']);
   assert.equal(store.consumeAdmission, undefined);
+});
+
+test('operator creates exactly one terminal pre-enable abort only for a pristine control run', async () => {
+  const fixture = createFixture();
+  const record = createPreEnableAbort({
+    runId: fixture.RUN_ID,
+    runManifestDigest: fixture.run.manifestDigest,
+    executionLedgerDigest: fixture.run.initialExecutionLedgerDigest,
+    reason: 'TIMING_EXPIRED_BEFORE_ENABLEMENT',
+    gates: Object.fromEntries(Object.keys(fixture.GATES_ENABLED).map((gate) => [gate, false])),
+    prohibitedWrites: fixture.ZERO_WRITES,
+    aDispatchAbsent: true,
+    consumptionsAbsent: true,
+    reconciliationsAbsent: true,
+    createdAt: '2030-01-01T12:31:00.000Z'
+  });
+  const firestore = new FakeFirestore(seedFor(fixture));
+  const operator = createGroupEOperatorControlStore(firestore);
+  assert.deepEqual(await operator.createPreEnableAbort(record), record);
+  assert.equal(firestore.documents.size, 2);
+  assert.deepEqual(firestore.documents.get(controlPaths(fixture.RUN_ID, 'A').closeout), record);
+  await assert.rejects(operator.createPreEnableAbort(record), /GROUP_E_PRE_ENABLE_ABORT_EXISTS/);
+  assert.equal(firestore.documents.size, 2);
+
+  for (const [path, value] of [
+    [controlPaths(fixture.RUN_ID, 'A').consumption, fixture.consumption('A')],
+    [controlPaths(fixture.RUN_ID, 'B').consumption, fixture.consumption('B')],
+    [controlPaths(fixture.RUN_ID, 'A').reconciliation, {}],
+    [controlPaths(fixture.RUN_ID, 'B').reconciliation, {}]
+  ]) {
+    const nonPristine = new FakeFirestore(seedFor(fixture, { [path]: value }));
+    await assert.rejects(createGroupEOperatorControlStore(nonPristine).createPreEnableAbort(record),
+      /GROUP_E_PRE_ENABLE_ABORT_NOT_PRISTINE/);
+    assert.equal(nonPristine.documents.has(controlPaths(fixture.RUN_ID, 'A').closeout), false);
+  }
 });
 
 test('blocked closeout cannot claim an unverified B reconciliation digest', async () => {

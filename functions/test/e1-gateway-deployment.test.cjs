@@ -525,7 +525,10 @@ function groupEGuardResult(overrides = {}) {
     executionAuthorized: true,
     executionLedgerDigest: '9'.repeat(64),
     executionStage: 'A_READY',
-    nextOperation: 'ENABLE_GATES_AND_COMMIT_A_DISPATCH',
+    nextOperation: 'COMMIT_ENABLEMENT_START',
+    enablementStarted: false,
+    enablementStartedAt: null,
+    enablementStartDigest: null,
     runId: '123e4567-e89b-42d3-a456-426614174000',
     runManifestDigest: '4'.repeat(64),
     keyId: keyIdFromSpki(TEST_GROUP_E_PUBLIC_KEY_SPKI),
@@ -1117,6 +1120,7 @@ test('Group E enable and restore plans are exact cohort-bound zero-write contain
   assert.equal(groupEActivationGatePlan().GATEWAY_INVOCATION_ENABLED,true);
   assert.equal(groupEActivationGatePlan().READ_ACCOUNT_FOUNDATION_ENABLED,true);
   assert.equal(enabled.groupECohortDigest, 'c'.repeat(64));
+  assert.equal(enabled.groupEEnablementStarted, false);
   assert.match(enabled.groupEBindings, /^[a-f0-9]{64}:[a-f0-9]{64};[a-f0-9]{64}:[a-f0-9]{64}$/u);
   assert.equal(restored.groupEClientMode, 'disabled');
   assert.equal(restored.groupEBindings, null);
@@ -1127,6 +1131,14 @@ test('Group E enable and restore plans are exact cohort-bound zero-write contain
     confirmation: ACTION_CONFIRMATIONS['enable-group-e'] }), /action-guard-mismatch/u);
   assert.throws(() => createDeploymentPlan({ ...common, action: 'enable-group-e', guardResult: groupEGuardResult(),
     confirmation: 'ENABLE E1 GROUP D3 RESERVE COHORT' }), /group-e-confirmation-invalid/u);
+
+  const resumed = createDeploymentPlan({ ...common, action: 'enable-group-e', guardResult: groupEGuardResult({
+    executionStage: 'ENABLEMENT_STARTED', nextOperation: 'COMPLETE_ENABLEMENT_AND_COMMIT_A_DISPATCH',
+    enablementStarted: true, enablementStartedAt: '2030-01-01T12:10:00.000Z',
+    enablementStartDigest: '8'.repeat(64)
+  }), confirmation: ACTION_CONFIRMATIONS['enable-group-e'] });
+  assert.equal(resumed.groupEEnablementStarted, true);
+  assert.equal(resumed.groupEEnablementStartDigest, '8'.repeat(64));
 });
 
 test('Group E staged gateway arguments carry private hashes only while restore removes them', () => {

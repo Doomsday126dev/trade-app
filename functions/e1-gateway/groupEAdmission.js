@@ -80,6 +80,14 @@ const CLOSEOUT_FIELDS = Object.freeze([
   'observationAccepted',
   'unexpectedAdditionalAdmittedCalls', 'prohibitedWrites', 'createdAt', 'closeoutDigest'
 ]);
+const PRE_ENABLE_ABORT_FIELDS = Object.freeze([
+  'schemaVersion', 'recordType', 'runId', 'runManifestDigest', 'executionLedgerDigest', 'reason', 'gates',
+  'prohibitedWrites', 'aDispatchAbsent', 'consumptionsAbsent', 'reconciliationsAbsent', 'createdAt', 'abortDigest'
+]);
+const PRE_ENABLE_ABORT_REASONS = Object.freeze([
+  'TIMING_EXPIRED_BEFORE_ENABLEMENT',
+  'OPERATOR_ABORTED_BEFORE_ENABLEMENT'
+]);
 const MIN_PASSIVE_OBSERVATION_MS = 30 * 60 * 1000;
 const MAX_PASSIVE_OBSERVATION_MS = 75 * 60 * 1000;
 
@@ -514,6 +522,36 @@ function validateFinalCloseout(value) {
   return Object.freeze(structuredClone(value));
 }
 
+function preEnableAbortDigest(value) {
+  return digestArray('group-e-pre-enable-abort', [
+    value.schemaVersion, value.recordType, value.runId, value.runManifestDigest, value.executionLedgerDigest,
+    value.reason, GATE_FIELDS.map((field) => value.gates?.[field]),
+    PROHIBITED_WRITE_FIELDS.map((field) => value.prohibitedWrites?.[field]),
+    value.aDispatchAbsent, value.consumptionsAbsent, value.reconciliationsAbsent, value.createdAt
+  ]);
+}
+
+function createPreEnableAbort(value) {
+  const record = { schemaVersion: SCHEMA_VERSION, recordType: 'group-e-pre-enable-abort', ...structuredClone(value),
+    abortDigest: null };
+  record.abortDigest = preEnableAbortDigest(record);
+  return validatePreEnableAbort(record);
+}
+
+function validatePreEnableAbort(value) {
+  if (!exactFields(value, PRE_ENABLE_ABORT_FIELDS) || value.schemaVersion !== SCHEMA_VERSION ||
+      value.recordType !== 'group-e-pre-enable-abort' || !UUID_V4.test(value.runId || '') ||
+      !HASH.test(value.runManifestDigest || '') || !HASH.test(value.executionLedgerDigest || '') ||
+      !PRE_ENABLE_ABORT_REASONS.includes(value.reason) || !validGates(value.gates, false) ||
+      !validProhibitedWrites(value.prohibitedWrites) || value.aDispatchAbsent !== true ||
+      value.consumptionsAbsent !== true || value.reconciliationsAbsent !== true ||
+      !validTimestamp(value.createdAt) || !HASH.test(value.abortDigest || '') ||
+      value.abortDigest !== preEnableAbortDigest(value)) {
+    fail('GROUP_E_PRE_ENABLE_ABORT_INVALID');
+  }
+  return Object.freeze(structuredClone(value));
+}
+
 module.exports = Object.freeze({
   BASELINE_FIELDS,
   CAPABILITY_FIELDS,
@@ -528,6 +566,8 @@ module.exports = Object.freeze({
   MAX_PASSIVE_OBSERVATION_MS,
   PROJECT_ID,
   PROHIBITED_WRITE_FIELDS,
+  PRE_ENABLE_ABORT_FIELDS,
+  PRE_ENABLE_ABORT_REASONS,
   PROVENANCE_FIELDS,
   SESSION_GENERATION_FIELDS,
   RECEIPT_FIELDS,
@@ -548,11 +588,13 @@ module.exports = Object.freeze({
   createAdmissionReceipt,
   createConsumptionRecord,
   createFinalCloseout,
+  createPreEnableAbort,
   createReconciliationRecord,
   createRunManifest,
   digestArray,
   exactFields,
   finalCloseoutDigest,
+  preEnableAbortDigest,
   jtiHash,
   keyIdFromSpki,
   reconciliationDigest,
@@ -567,6 +609,7 @@ module.exports = Object.freeze({
   validateCapabilityShape,
   validateConsumptionRecord,
   validateFinalCloseout,
+  validatePreEnableAbort,
   validateReconciliationRecord,
   validateRunManifest,
   validateSignedRequest,

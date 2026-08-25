@@ -30,6 +30,7 @@ const {
   jtiHash,
   sessionGenerationDigest,
   validateCapabilityShape,
+  validatePreEnableAbort,
   validateReconciliationRecord,
   validateRunManifest
 } = require('../e1-gateway/groupEAdmission');
@@ -43,6 +44,8 @@ const PURPOSE = 'group-e-durable-at-most-once-execution-ledger-v1';
 const SCHEMA_VERSION = 1;
 const STAGES = Object.freeze({
   A_READY: 'A_READY',
+  ENABLEMENT_STARTED: 'ENABLEMENT_STARTED',
+  PRE_ENABLE_ABORTED: 'PRE_ENABLE_ABORTED',
   A_DISPATCH_COMMITTED: 'A_DISPATCH_COMMITTED',
   A_TERMINAL_UNRECONCILED: 'A_TERMINAL_UNRECONCILED',
   A_RECONCILED_SESSION_BOUNDARY_PENDING: 'A_RECONCILED_SESSION_BOUNDARY_PENDING',
@@ -56,7 +59,9 @@ const STAGES = Object.freeze({
   CLOSED_BLOCKED: 'CLOSED_BLOCKED'
 });
 const NEXT_ACTION = Object.freeze({
-  [STAGES.A_READY]: 'ENABLE_GATES_AND_COMMIT_A_DISPATCH',
+  [STAGES.A_READY]: 'COMMIT_ENABLEMENT_START',
+  [STAGES.ENABLEMENT_STARTED]: 'COMPLETE_ENABLEMENT_AND_COMMIT_A_DISPATCH',
+  [STAGES.PRE_ENABLE_ABORTED]: 'STOP_PRE_ENABLE_ABORTED',
   [STAGES.A_DISPATCH_COMMITTED]: 'DELIVER_A_CAPABILITY_ONCE',
   [STAGES.A_TERMINAL_UNRECONCILED]: 'RECONCILE_A',
   [STAGES.A_RECONCILED_SESSION_BOUNDARY_PENDING]: 'VERIFY_A_SESSION_BOUNDARY',
@@ -69,6 +74,7 @@ const NEXT_ACTION = Object.freeze({
   [STAGES.CLOSED_BLOCKED]: 'STOP_CLOSED_BLOCKED'
 });
 const POST_ENABLE_STAGES = Object.freeze([
+  STAGES.ENABLEMENT_STARTED,
   STAGES.A_DISPATCH_COMMITTED,
   STAGES.A_TERMINAL_UNRECONCILED,
   STAGES.A_RECONCILED_SESSION_BOUNDARY_PENDING,
@@ -127,6 +133,14 @@ const BLOCK_REASONS = new Set([
   'STATE_OR_SECURITY_DRIFT',
   'OPERATOR_CONTAINMENT'
 ]);
+const PRE_ENABLE_ABORT_REASONS = new Set([
+  'TIMING_EXPIRED_BEFORE_ENABLEMENT',
+  'OPERATOR_ABORTED_BEFORE_ENABLEMENT'
+]);
+const JIT_FIELDS = Object.freeze([
+  'approvedAt', 'expiresAt', 'cohortDigest', 'evidenceDigest', 'replayLedgerDigest', 'activationWindowStart',
+  'activationWindowEnd', 'confirmation', 'humanOperatorPresent', 'restorationOwnerPresent'
+]);
 const GIT_SHA = /^[a-f0-9]{40}$/u;
 const RELEASE_ID = /^\d{4}-\d{2}-\d{2}\.\d+$/u;
 const REVISION = /^e1-identity-authority-[0-9]{5}-[a-z0-9]{3}$/u;
@@ -160,7 +174,11 @@ const SESSION_BOUNDARY_FIELDS = Object.freeze([
 const BOUNDARY_SESSION_FIELDS = Object.freeze([...SESSION_GENERATION_FIELDS, 'sessionGenerationDigest']);
 const HEAD_FIELDS = Object.freeze(['schemaVersion', 'sequence', 'snapshotFile', 'transitionDigest']);
 const ALLOWED_STAGE_TRANSITIONS = Object.freeze({
-  [STAGES.A_READY]: Object.freeze([STAGES.A_DISPATCH_COMMITTED]),
+  [STAGES.A_READY]: Object.freeze([STAGES.ENABLEMENT_STARTED, STAGES.PRE_ENABLE_ABORTED]),
+  [STAGES.ENABLEMENT_STARTED]: Object.freeze([
+    STAGES.A_DISPATCH_COMMITTED, STAGES.BLOCKED_RESTORATION_REQUIRED, STAGES.RESTORED_OBSERVATION_PENDING
+  ]),
+  [STAGES.PRE_ENABLE_ABORTED]: Object.freeze([]),
   [STAGES.A_DISPATCH_COMMITTED]: Object.freeze([
     STAGES.A_TERMINAL_UNRECONCILED, STAGES.BLOCKED_RESTORATION_REQUIRED, STAGES.RESTORED_OBSERVATION_PENDING
   ]),
@@ -301,8 +319,9 @@ function expectedPrefix(stage, ledger) {
 }
 
 function expectedBudget(stage, ledger) {
-  if ([STAGES.A_READY, STAGES.A_DISPATCH_COMMITTED, STAGES.A_TERMINAL_UNRECONCILED,
+  if ([STAGES.A_READY, STAGES.ENABLEMENT_STARTED, STAGES.A_DISPATCH_COMMITTED, STAGES.A_TERMINAL_UNRECONCILED,
     STAGES.A_RECONCILED_SESSION_BOUNDARY_PENDING].includes(stage)) return 2;
+  if (stage === STAGES.PRE_ENABLE_ABORTED) return 0;
   if ([STAGES.A_RECONCILED_B_PENDING, STAGES.B_DISPATCH_COMMITTED, STAGES.B_TERMINAL_UNRECONCILED].includes(stage)) return 1;
   if ([STAGES.AB_RECONCILED_RESTORATION_REQUIRED, STAGES.CLOSED_HEALTHY].includes(stage)) return 0;
   return ledger.remainingAdmittedBudget;
@@ -332,6 +351,30 @@ function validProvenance(value) {
 function validAdmission(value) {
   return exactFields(value, ADMISSION_FIELDS) && HASH.test(value.evidenceDigest || '') &&
     HASH.test(value.replayLedgerDigest || '') && HASH.test(value.jitDigest || '');
+}
+
+function jitAuthorizationDigest(value) {
+  return crypto.createHash('sha256').update(JSON.stringify([1, 'group-e-client-foundation-jit', value]), 'utf8').digest('hex');
+}
+
+function validateEnablementStartJit(value, startedAt, ledger) {
+  const approved = Date.parse(value?.approvedAt);
+  const expires = Date.parse(value?.expiresAt);
+  const windowStart = Date.parse(value?.activationWindowStart);
+  const windowEnd = Date.parse(value?.activationWindowEnd);
+  const started = Date.parse(startedAt);
+  if (!exactFields(value, JIT_FIELDS) || !Number.isFinite(approved) || !Number.isFinite(expires) ||
+      !Number.isFinite(windowStart) || !Number.isFinite(windowEnd) || !Number.isFinite(started) ||
+      expires - approved > 15 * 60 * 1000 || expires <= approved || windowStart < approved ||
+      windowEnd <= windowStart || windowEnd - windowStart > 45 * 60 * 1000 || started < approved ||
+      started >= expires || started < windowStart || started >= windowEnd ||
+      value.confirmation !== 'ENABLE E1 GROUP E CLIENT FOUNDATION CANARY' ||
+      value.humanOperatorPresent !== true || value.restorationOwnerPresent !== true ||
+      value.evidenceDigest !== ledger.admission.evidenceDigest ||
+      value.replayLedgerDigest !== ledger.admission.replayLedgerDigest ||
+      jitAuthorizationDigest(value) !== ledger.admission.jitDigest) {
+    fail('group_e_enablement_start_invalid');
+  }
 }
 
 function validSessionContext(value) {
@@ -490,7 +533,10 @@ function validateExecutionLedger(value, options = {}) {
   if (aDispatched ? !validSessionContext(value.sessionContext) : value.sessionContext !== null) {
     fail('group_e_session_context_invalid');
   }
-  if (aDispatched ? !validDispatch(value.dispatches.A, 'A', value) : value.stage !== STAGES.A_READY) {
+  if (aDispatched ? !validDispatch(value.dispatches.A, 'A', value) :
+    ![STAGES.A_READY, STAGES.ENABLEMENT_STARTED, STAGES.PRE_ENABLE_ABORTED,
+      STAGES.BLOCKED_RESTORATION_REQUIRED, STAGES.RESTORED_OBSERVATION_PENDING,
+      STAGES.CLOSED_BLOCKED].includes(value.stage)) {
     fail('group_e_dispatch_invalid');
   }
   if (bDispatched && !validDispatch(value.dispatches.B, 'B', value)) fail('group_e_dispatch_invalid');
@@ -538,15 +584,20 @@ function validateExecutionLedger(value, options = {}) {
     fail('group_e_dispatch_session_mismatch');
   }
 
-  const restored = [STAGES.RESTORED_OBSERVATION_PENDING, STAGES.CLOSED_HEALTHY, STAGES.CLOSED_BLOCKED].includes(value.stage) ||
+  const restored = [STAGES.RESTORED_OBSERVATION_PENDING, STAGES.CLOSED_HEALTHY, STAGES.CLOSED_BLOCKED,
+    STAGES.PRE_ENABLE_ABORTED].includes(value.stage) ||
     value.stage === STAGES.BLOCKED_RESTORATION_REQUIRED && sameJson(value.gates, disabledGatePlan());
-  const active = POST_ENABLE_STAGES.includes(value.stage) && value.stage !== STAGES.BLOCKED_RESTORATION_REQUIRED;
+  const active = POST_ENABLE_STAGES.includes(value.stage) &&
+    ![STAGES.ENABLEMENT_STARTED, STAGES.BLOCKED_RESTORATION_REQUIRED].includes(value.stage);
   const blockedNeedsRestoration = value.stage === STAGES.BLOCKED_RESTORATION_REQUIRED && !restored;
   if (restored ? !sameJson(value.gates, disabledGatePlan()) : active ? !sameJson(value.gates, groupEActivationGatePlan()) :
     blockedNeedsRestoration ? !sameJson(value.gates, groupEActivationGatePlan()) :
-    value.stage === STAGES.A_READY ? !sameJson(value.gates, disabledGatePlan()) : false) fail('group_e_gates_invalid');
+    [STAGES.A_READY, STAGES.ENABLEMENT_STARTED, STAGES.PRE_ENABLE_ABORTED].includes(value.stage) ?
+      !sameJson(value.gates, disabledGatePlan()) : false) fail('group_e_gates_invalid');
 
-  if ([STAGES.BLOCKED_RESTORATION_REQUIRED, STAGES.CLOSED_BLOCKED].includes(value.stage) ||
+  if (value.stage === STAGES.PRE_ENABLE_ABORTED) {
+    if (!PRE_ENABLE_ABORT_REASONS.has(value.blockedReason) || value.outcome !== 'blocked') fail('group_e_block_invalid');
+  } else if ([STAGES.BLOCKED_RESTORATION_REQUIRED, STAGES.CLOSED_BLOCKED].includes(value.stage) ||
       value.stage === STAGES.RESTORED_OBSERVATION_PENDING && value.outcome === 'blocked') {
     if (!BLOCK_REASONS.has(value.blockedReason) || value.outcome !== 'blocked') fail('group_e_block_invalid');
   } else if (value.blockedReason !== null || !['pending', 'healthy'].includes(value.outcome)) fail('group_e_block_invalid');
@@ -661,9 +712,46 @@ function createExecutionRunManifest(initialLedger, value) {
   });
 }
 
+function recordEnablementStarted(ledger, runManifest, value) {
+  validateExecutionLedger(ledger, { requirePristine: true });
+  if (!exactFields(value, ['startedAt', 'jit']) || !validTimestamp(value.startedAt)) {
+    fail('group_e_enablement_start_invalid');
+  }
+  const run = validateRunManifest(runManifest, { now: Date.parse(value.startedAt) });
+  if (run.initialExecutionLedgerDigest !== ledger.transitionDigest || run.runId !== ledger.runId ||
+      !sameJson(run.bindings, ledger.bindings) || !sameJson(run.provenance, ledger.provenance) ||
+      value.jit.cohortDigest !== run.cohortDigest ||
+      run.admissionEvidenceDigest !== ledger.admission.evidenceDigest ||
+      run.preCallReplayLedgerDigest !== ledger.admission.replayLedgerDigest) {
+    fail('group_e_run_ledger_mismatch');
+  }
+  validateEnablementStartJit(value.jit, value.startedAt, ledger);
+  return seal({ ...structuredClone(ledger), runManifestDigest: run.manifestDigest,
+    stage: STAGES.ENABLEMENT_STARTED, updatedAt: value.startedAt }, ledger);
+}
+
+function recordPreEnableAbort(ledger, runManifest, abortRecord, options = {}) {
+  validateExecutionLedger(ledger, { requirePristine: true });
+  const run = validateRunManifest(runManifest);
+  const record = validatePreEnableAbort(abortRecord);
+  if (options.controlRecordCreated !== true || record.runId !== ledger.runId ||
+      record.runManifestDigest !== run.manifestDigest || record.executionLedgerDigest !== ledger.transitionDigest ||
+      run.initialExecutionLedgerDigest !== ledger.transitionDigest || !sameJson(run.bindings, ledger.bindings) ||
+      !sameJson(run.provenance, ledger.provenance) || !PRE_ENABLE_ABORT_REASONS.has(record.reason) ||
+      !sameJson(record.gates, disabledGatePlan()) || !sameJson(record.prohibitedWrites, ZERO_WRITES) ||
+      record.aDispatchAbsent !== true || record.consumptionsAbsent !== true ||
+      record.reconciliationsAbsent !== true) {
+    fail('group_e_pre_enable_abort_invalid');
+  }
+  return seal({ ...structuredClone(ledger), runManifestDigest: run.manifestDigest,
+    stage: STAGES.PRE_ENABLE_ABORTED, remainingAdmittedBudget: 0, outcome: 'blocked',
+    blockedReason: record.reason, updatedAt: record.createdAt }, ledger);
+}
+
 function recordDispatch(ledger, runManifest, value) {
   validateExecutionLedger(ledger);
-  const expectedSlot = ledger.stage === STAGES.A_READY ? 'A' : ledger.stage === STAGES.A_RECONCILED_B_PENDING ? 'B' : null;
+  const expectedSlot = ledger.stage === STAGES.ENABLEMENT_STARTED ? 'A' :
+    ledger.stage === STAGES.A_RECONCILED_B_PENDING ? 'B' : null;
   if (!expectedSlot || !exactFields(value, ['slot', 'generationId', 'sessionGeneration', 'jti', 'attemptId',
     'browserContextDigest', 'runtimeInstanceDigest', 'sessionGenerationDigest', 'committedAt']) || value.slot !== expectedSlot ||
     !UUID_V4.test(value.generationId || '') || !Number.isSafeInteger(value.sessionGeneration) ||
@@ -672,7 +760,8 @@ function recordDispatch(ledger, runManifest, value) {
     !HASH.test(value.runtimeInstanceDigest || '') || !HASH.test(value.sessionGenerationDigest || '') ||
     !validTimestamp(value.committedAt)) fail('group_e_dispatch_invalid');
   const run = validateRunManifest(runManifest, { now: Date.parse(value.committedAt) });
-  if (run.initialExecutionLedgerDigest !== (ledger.sequence === 0 ? ledger.transitionDigest : run.initialExecutionLedgerDigest) ||
+  if (run.initialExecutionLedgerDigest !== (ledger.stage === STAGES.ENABLEMENT_STARTED ?
+    ledger.priorTransitionDigest : run.initialExecutionLedgerDigest) ||
       !sameJson(run.bindings, ledger.bindings) || !sameJson(run.provenance, ledger.provenance) ||
       (ledger.runManifestDigest && ledger.runManifestDigest !== run.manifestDigest)) fail('group_e_run_ledger_mismatch');
   const sessionContext = {
@@ -1054,6 +1143,7 @@ module.exports = Object.freeze({
   IDENTITY_BASELINE,
   NEXT_ACTION,
   POST_ENABLE_STAGES,
+  PRE_ENABLE_ABORT_REASONS,
   PRIVATE_EXECUTION_LEDGER_PATH,
   PURPOSE,
   SCHEMA_VERSION,
@@ -1071,12 +1161,15 @@ module.exports = Object.freeze({
   executionDispatchDigest,
   groupEActivationGatePlan,
   initializeLedgerDirectory,
+  jitAuthorizationDigest,
   provenanceDigest,
   recordAReconciliationEvidence,
   recordBReconciliation,
   recordCapabilityDeliveryUncertain,
   recordDispatch,
+  recordEnablementStarted,
   recordObservationCloseout,
+  recordPreEnableAbort,
   recordRestoration,
   recordRuntimeInstanceLoss,
   recordSessionBoundary,

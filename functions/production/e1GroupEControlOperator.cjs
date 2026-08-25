@@ -5,6 +5,7 @@ const {
   createAdmissionReceipt,
   validateConsumptionRecord,
   validateFinalCloseout,
+  validatePreEnableAbort,
   validateReconciliationRecord,
   validateRunManifest
 } = require('../e1-gateway/groupEAdmission');
@@ -101,6 +102,32 @@ function createGroupEOperatorControlStore(firestore) {
           }
         }
         if ((await transaction.get(closeoutRef))?.exists) fail('GROUP_E_CLOSEOUT_EXISTS');
+        transaction.create(closeoutRef, record);
+      }, { maxAttempts: MAX_TRANSACTION_ATTEMPTS });
+      return record;
+    },
+
+    async createPreEnableAbort(abort) {
+      const record = validatePreEnableAbort(abort);
+      validateRunId(record.runId);
+      const pathsA = controlPaths(record.runId, 'A');
+      const pathsB = controlPaths(record.runId, 'B');
+      const runRef = firestore.doc(pathsA.run);
+      const closeoutRef = firestore.doc(pathsA.closeout);
+      const absentRefs = [
+        firestore.doc(pathsA.consumption), firestore.doc(pathsB.consumption),
+        firestore.doc(pathsA.reconciliation), firestore.doc(pathsB.reconciliation)
+      ];
+      await firestore.runTransaction(async (transaction) => {
+        const run = validateRunManifest(snapshotData(await transaction.get(runRef), 'GROUP_E_RUN_MISSING'));
+        if (record.runManifestDigest !== run.manifestDigest ||
+            record.executionLedgerDigest !== run.initialExecutionLedgerDigest) {
+          fail('GROUP_E_PRE_ENABLE_ABORT_MISMATCH');
+        }
+        for (const reference of absentRefs) {
+          if ((await transaction.get(reference))?.exists) fail('GROUP_E_PRE_ENABLE_ABORT_NOT_PRISTINE');
+        }
+        if ((await transaction.get(closeoutRef))?.exists) fail('GROUP_E_PRE_ENABLE_ABORT_EXISTS');
         transaction.create(closeoutRef, record);
       }, { maxAttempts: MAX_TRANSACTION_ATTEMPTS });
       return record;

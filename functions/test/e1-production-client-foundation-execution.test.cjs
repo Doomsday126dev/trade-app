@@ -19,6 +19,7 @@ const {
   commitDispatchAndCreateCapability,
   createExecutionRunManifest,
   createInitialExecutionLedger,
+  createSignedSlotCapability,
   dispatchSessionGenerationContext,
   executionDispatchDigest,
   groupEActivationGatePlan,
@@ -27,7 +28,9 @@ const {
   recordBReconciliation,
   recordCapabilityDeliveryUncertain,
   recordDispatch,
+  recordEnablementStarted,
   recordObservationCloseout,
+  recordPreEnableAbort,
   recordRestoration,
   recordRuntimeInstanceLoss,
   recordSessionBoundary,
@@ -43,13 +46,15 @@ const {
   SESSION_GENERATION_FIELDS,
   baselineDigest,
   createReconciliationRecord,
+  createPreEnableAbort,
   sessionGenerationDigest
 } = require('../e1-gateway/groupEAdmission');
+const { jitDigest } = require('../production/e1ProductionClientFoundationGuard.cjs');
 const { assertNoSensitiveMaterial, run } = require('../scripts/check-e1-production-client-foundation-execution.cjs');
 const { createFixture } = require('./helpers/groupEFixture.cjs');
 
 const TIMES = Object.freeze({
-  initial: '2030-01-01T12:00:00.000Z', dispatchA: '2030-01-01T12:05:00.000Z',
+  initial: '2030-01-01T12:00:00.000Z', enable: '2030-01-01T12:04:00.000Z', dispatchA: '2030-01-01T12:05:00.000Z',
   terminalA: '2030-01-01T12:06:00.000Z', reconcileA: '2030-01-01T12:07:00.000Z',
   boundary: '2030-01-01T12:08:00.000Z', dispatchB: '2030-01-01T12:09:00.000Z',
   terminalB: '2030-01-01T12:10:00.000Z', reconcileB: '2030-01-01T12:11:00.000Z',
@@ -59,8 +64,15 @@ const TIMES = Object.freeze({
 
 function state() {
   const fixture = createFixture();
+  const jit = {
+    approvedAt: '2030-01-01T12:03:00.000Z', expiresAt: '2030-01-01T12:18:00.000Z',
+    cohortDigest: fixture.cohortDigest, evidenceDigest: '2'.repeat(64), replayLedgerDigest: '3'.repeat(64),
+    activationWindowStart: '2030-01-01T12:03:00.000Z', activationWindowEnd: '2030-01-01T12:30:00.000Z',
+    confirmation: 'ENABLE E1 GROUP E CLIENT FOUNDATION CANARY', humanOperatorPresent: true,
+    restorationOwnerPresent: true
+  };
   const initialInput = { runId: fixture.RUN_ID, bindings: fixture.bindings, provenance: fixture.PROVENANCE,
-    admission: { evidenceDigest: '2'.repeat(64), replayLedgerDigest: '3'.repeat(64), jitDigest: '4'.repeat(64) },
+    admission: { evidenceDigest: '2'.repeat(64), replayLedgerDigest: '3'.repeat(64), jitDigest: jitDigest(jit) },
     createdAt: TIMES.initial };
   const initial = createInitialExecutionLedger(initialInput);
   const runManifest = createExecutionRunManifest(initial, {
@@ -71,6 +83,7 @@ function state() {
     issuedAt: TIMES.initial,
     expiresAt: '2030-01-01T12:30:00.000Z'
   });
+  const started = recordEnablementStarted(initial, runManifest, { startedAt: TIMES.enable, jit });
   const dispatch = (slot, overrides = {}) => {
     const capability = fixture.capability(slot, Object.fromEntries([
       'generationId', 'sessionGeneration', 'browserContextDigest', 'runtimeInstanceDigest', 'sessionGenerationDigest'
@@ -120,12 +133,12 @@ function state() {
       aControllerClosed: true, aInMemoryResultCleared: true, signOutVerified: true, before, after,
       verifiedAt: TIMES.boundary, boundaryDigest: null, ...overrides };
   };
-  return { fixture, initialInput, initial, runManifest, dispatch, capability, terminal, evidence, boundary };
+  return { fixture, initialInput, initial, started, jit, runManifest, dispatch, capability, terminal, evidence, boundary };
 }
 
 function healthyChain() {
   const value = state();
-  const aDispatch = recordDispatch(value.initial, value.runManifest, value.dispatch('A'));
+  const aDispatch = recordDispatch(value.started, value.runManifest, value.dispatch('A'));
   const aTerminal = recordTerminalAttempt(aDispatch, value.terminal('A'));
   const aEvidence = recordAReconciliationEvidence(aTerminal, value.evidence('A'));
   const aComplete = recordSessionBoundary(aEvidence, value.boundary(aEvidence), { controlRecordCreated: true });
@@ -137,7 +150,7 @@ function healthyChain() {
 
 function pendingBoundaryState() {
   const value = state();
-  const aDispatch = recordDispatch(value.initial, value.runManifest, value.dispatch('A'));
+  const aDispatch = recordDispatch(value.started, value.runManifest, value.dispatch('A'));
   const aTerminal = recordTerminalAttempt(aDispatch, value.terminal('A'));
   const aEvidence = recordAReconciliationEvidence(aTerminal, value.evidence('A'));
   const boundary = value.boundary(aEvidence);
@@ -158,6 +171,12 @@ function tempLedger(initial) {
 
 function removeTempLedger(directory) {
   fs.rmSync(path.dirname(directory), { recursive: true, force: true });
+}
+
+function persistEnablementStart(directory, value) {
+  return applyLedgerTransition(directory, value.initial.transitionDigest,
+    (ledger) => recordEnablementStarted(ledger, value.runManifest, { startedAt: TIMES.enable, jit: value.jit }),
+    { mode: 'apply' }).ledger;
 }
 
 function writePrivateJson(file, value) {
@@ -205,9 +224,68 @@ test('ledger follows exact A/B sequence, budget, dependencies, restoration, and 
   assert.equal(closed.closeout.bReconciliationDigest, chain.abComplete.reconciliations.B.reconciliationDigest);
 });
 
+test('fresh JIT commits one durable enablement start while the 45-minute run controls continuation', () => {
+  const value = state();
+  assert.equal(value.started.stage, STAGES.ENABLEMENT_STARTED);
+  assert.equal(value.started.priorTransitionDigest, value.initial.transitionDigest);
+  assert.equal(value.started.runManifestDigest, value.runManifest.manifestDigest);
+  assert.deepEqual(value.started.gates, disabledGatePlan());
+  assert.throws(() => recordDispatch(value.initial, value.runManifest, value.dispatch('A')),
+    /group_e_dispatch_invalid/);
+  assert.throws(() => recordEnablementStarted(value.initial, value.runManifest,
+    { startedAt: value.jit.expiresAt, jit: value.jit }), /group_e_enablement_start_invalid/);
+  assert.throws(() => recordEnablementStarted(value.started, value.runManifest,
+    { startedAt: TIMES.enable, jit: value.jit }), /group_e_execution_not_pristine/);
+
+  const lateDispatch = value.dispatch('A', { committedAt: '2030-01-01T12:20:00.000Z' });
+  const late = recordDispatch(value.started, value.runManifest, lateDispatch);
+  assert.equal(late.stage, STAGES.A_DISPATCH_COMMITTED);
+  const envelope = createSignedSlotCapability(late, value.runManifest, {
+    slot: 'A', jti: value.fixture.JTI.A, attemptId: value.fixture.ATTEMPT.A,
+    expiresAt: '2030-01-01T12:30:00.000Z'
+  }, value.fixture.privateKeyPem);
+  assert.equal(Date.parse(envelope.capability.expiresAt) - Date.parse(envelope.capability.issuedAt), 10 * 60 * 1000);
+  assert.throws(() => recordDispatch(value.started, value.runManifest,
+    value.dispatch('A', { committedAt: '2030-01-01T12:30:00.000Z' })), /GROUP_E_RUN_EXPIRED/);
+  const restored = recordRestoration(value.started,
+    restorationInput('OPERATOR_CONTAINMENT', '2030-01-01T12:20:00.000Z'));
+  assert.equal(restored.stage, STAGES.RESTORED_OBSERVATION_PENDING);
+  assert.deepEqual(restored.gates, disabledGatePlan());
+});
+
+test('pristine pre-enable abort is terminal, zero-budget, and cannot dispatch either slot', () => {
+  const value = state();
+  const record = createPreEnableAbort({
+    runId: value.initial.runId,
+    runManifestDigest: value.runManifest.manifestDigest,
+    executionLedgerDigest: value.initial.transitionDigest,
+    reason: 'TIMING_EXPIRED_BEFORE_ENABLEMENT',
+    gates: disabledGatePlan(),
+    prohibitedWrites: ZERO_WRITES,
+    aDispatchAbsent: true,
+    consumptionsAbsent: true,
+    reconciliationsAbsent: true,
+    createdAt: '2030-01-01T12:19:00.000Z'
+  });
+  const aborted = recordPreEnableAbort(value.initial, value.runManifest, record, { controlRecordCreated: true });
+  assert.equal(aborted.stage, STAGES.PRE_ENABLE_ABORTED);
+  assert.equal(aborted.outcome, 'blocked');
+  assert.equal(aborted.blockedReason, 'TIMING_EXPIRED_BEFORE_ENABLEMENT');
+  assert.equal(aborted.remainingAdmittedBudget, 0);
+  assert.deepEqual(aborted.gates, disabledGatePlan());
+  assert.throws(() => recordDispatch(aborted, value.runManifest, value.dispatch('A')), /group_e_dispatch_invalid/);
+  assert.throws(() => recordDispatch(aborted, value.runManifest, value.dispatch('B')), /group_e_dispatch_invalid/);
+  assert.throws(() => recordPreEnableAbort(aborted, value.runManifest, record,
+    { controlRecordCreated: true }), /group_e_execution_not_pristine/);
+  assert.throws(() => recordPreEnableAbort(value.started, value.runManifest, record,
+    { controlRecordCreated: true }), /group_e_execution_not_pristine/);
+  assert.throws(() => recordPreEnableAbort(value.initial, value.runManifest, record,
+    { controlRecordCreated: false }), /group_e_pre_enable_abort_invalid/);
+});
+
 test('B cannot dispatch before exact A reconciliation and session-boundary control evidence', () => {
   const value = state();
-  const aDispatch = recordDispatch(value.initial, value.runManifest, value.dispatch('A'));
+  const aDispatch = recordDispatch(value.started, value.runManifest, value.dispatch('A'));
   assert.throws(() => recordDispatch(aDispatch, value.runManifest, value.dispatch('B')), /group_e_dispatch_invalid/);
   const aTerminal = recordTerminalAttempt(aDispatch, value.terminal('A'));
   const aEvidence = recordAReconciliationEvidence(aTerminal, value.evidence('A'));
@@ -338,7 +416,8 @@ test('session-boundary failure preserves restoration and restart accepts only th
 
   const directory = tempLedger(value.initial);
   try {
-    let current = applyLedgerTransition(directory, value.initial.transitionDigest,
+    let current = persistEnablementStart(directory, value);
+    current = applyLedgerTransition(directory, current.transitionDigest,
       (ledger) => recordDispatch(ledger, value.runManifest, value.dispatch('A')), { mode: 'apply' }).ledger;
     current = applyLedgerTransition(directory, current.transitionDigest,
       (ledger) => recordTerminalAttempt(ledger, value.terminal('A')), { mode: 'apply' }).ledger;
@@ -385,12 +464,13 @@ test('durable dispatch is committed before signing and cannot be regenerated aft
   const value = state();
   const directory = tempLedger(value.initial);
   try {
-    const plan = commitDispatchAndCreateCapability(directory, value.initial.transitionDigest, value.runManifest,
+    const started = persistEnablementStart(directory, value);
+    const plan = commitDispatchAndCreateCapability(directory, started.transitionDigest, value.runManifest,
       value.dispatch('A'), value.capability('A'), null, { mode: 'plan' });
     assert.equal(plan.written, false);
     assert.equal(plan.capability, null);
-    assert.equal(validateLedgerDirectory(directory).latest.stage, STAGES.A_READY);
-    const applied = commitDispatchAndCreateCapability(directory, value.initial.transitionDigest, value.runManifest,
+    assert.equal(validateLedgerDirectory(directory).latest.stage, STAGES.ENABLEMENT_STARTED);
+    const applied = commitDispatchAndCreateCapability(directory, started.transitionDigest, value.runManifest,
       value.dispatch('A'), value.capability('A'), value.fixture.privateKeyPem, { mode: 'apply' });
     assert.equal(applied.written, true);
     assert.equal(applied.ledger.stage, STAGES.A_DISPATCH_COMMITTED);
@@ -414,11 +494,12 @@ test('invalid expiry or wrong Ed25519 key fails before the durable dispatch CAS'
   ]) {
     const directory = tempLedger(value.initial);
     try {
-      assert.throws(() => commitDispatchAndCreateCapability(directory, value.initial.transitionDigest, value.runManifest,
+      const started = persistEnablementStart(directory, value);
+      assert.throws(() => commitDispatchAndCreateCapability(directory, started.transitionDigest, value.runManifest,
         value.dispatch('A'), capability, key, { mode: 'apply' }), error);
       const current = validateLedgerDirectory(directory);
-      assert.equal(current.latest.stage, STAGES.A_READY);
-      assert.equal(current.snapshots.length, 1);
+      assert.equal(current.latest.stage, STAGES.ENABLEMENT_STARTED);
+      assert.equal(current.snapshots.length, 2);
     } finally { removeTempLedger(directory); }
   }
 });
@@ -434,7 +515,8 @@ test('operator constructor refuses integrity-resealed cross-runtime evidence bef
   let signCalls = 0;
   const originalSign = crypto.sign;
   try {
-    let current = applyLedgerTransition(directory, value.initial.transitionDigest,
+    let current = persistEnablementStart(directory, value);
+    current = applyLedgerTransition(directory, current.transitionDigest,
       (ledger) => recordDispatch(ledger, value.runManifest, value.dispatch('A')), { mode: 'apply' }).ledger;
     current = applyLedgerTransition(directory, current.transitionDigest,
       (ledger) => recordTerminalAttempt(ledger, value.terminal('A')), { mode: 'apply' }).ledger;
@@ -445,8 +527,9 @@ test('operator constructor refuses integrity-resealed cross-runtime evidence bef
       { mode: 'apply' }).ledger;
 
     const snapshotsDirectory = path.join(directory, 'snapshots');
+    const sequencePrefix = String(current.sequence).padStart(6, '0');
     const oldSnapshot = path.join(snapshotsDirectory,
-      fs.readdirSync(snapshotsDirectory).find((file) => file.startsWith('000004-')));
+      fs.readdirSync(snapshotsDirectory).find((file) => file.startsWith(`${sequencePrefix}-`)));
     const tampered = structuredClone(current);
     tampered.sessionBoundary.after.runtimeInstanceDigest = '9'.repeat(64);
     tampered.sessionBoundary.after.sessionGenerationDigest = sessionGenerationDigest(
@@ -461,10 +544,10 @@ test('operator constructor refuses integrity-resealed cross-runtime evidence bef
         [field, tampered.sessionBoundary.after[field]]))));
     assert.equal(tampered.transitionDigest, canonicalLedgerDigest(tampered));
 
-    const newSnapshotName = `000004-${tampered.transitionDigest}.json`;
+    const newSnapshotName = `${sequencePrefix}-${tampered.transitionDigest}.json`;
     writePrivateJson(path.join(snapshotsDirectory, newSnapshotName), tampered);
     fs.unlinkSync(oldSnapshot);
-    writePrivateJson(path.join(directory, 'HEAD.json'), { schemaVersion: 1, sequence: 4,
+    writePrivateJson(path.join(directory, 'HEAD.json'), { schemaVersion: 1, sequence: current.sequence,
       snapshotFile: newSnapshotName, transitionDigest: tampered.transitionDigest });
     const headBefore = fs.readFileSync(path.join(directory, 'HEAD.json'), 'utf8');
     const snapshotsBefore = fs.readdirSync(snapshotsDirectory).sort();
@@ -484,7 +567,8 @@ test('operator constructor refuses integrity-resealed cross-runtime evidence bef
     assert.equal(fs.existsSync(outputPath), false);
     assert.equal(fs.readFileSync(path.join(directory, 'HEAD.json'), 'utf8'), headBefore);
     assert.deepEqual(fs.readdirSync(snapshotsDirectory).sort(), snapshotsBefore);
-    assert.equal(fs.readdirSync(snapshotsDirectory).some((file) => file.startsWith('000005-')), false);
+    assert.equal(fs.readdirSync(snapshotsDirectory).some((file) =>
+      file.startsWith(`${String(current.sequence + 1).padStart(6, '0')}-`)), false);
   } finally {
     crypto.sign = originalSign;
     removeTempLedger(directory);
@@ -518,7 +602,7 @@ test('blocked execution records accept only exact active or restored gate plans'
 test('every post-enable stage has an exact fail-closed path to disabled gates', () => {
   const chain = healthyChain();
   const blocked = blockLedger(chain.aTerminal, 'OPERATOR_CONTAINMENT', TIMES.reconcileA);
-  const ledgers = [chain.aDispatch, chain.aTerminal, chain.aEvidence, chain.aComplete, chain.bDispatch,
+  const ledgers = [chain.started, chain.aDispatch, chain.aTerminal, chain.aEvidence, chain.aComplete, chain.bDispatch,
     chain.bTerminal, chain.abComplete, blocked];
   assert.deepEqual(new Set(ledgers.map((ledger) => ledger.stage)), new Set(POST_ENABLE_STAGES));
   ledgers.forEach((ledger, index) => {
@@ -532,15 +616,16 @@ test('every post-enable stage has an exact fail-closed path to disabled gates', 
 
 test('stage skipping, stale CAS writers, rewind, fork, corruption, and lock contention fail closed', () => {
   const chain = healthyChain();
-  assert.throws(() => validateMonotonicTransition(chain.initial, chain.aTerminal), /group_e_execution_transition_invalid/);
+  assert.throws(() => validateMonotonicTransition(chain.started, chain.aTerminal), /group_e_execution_transition_invalid/);
   for (const targets of Object.values(ALLOWED_STAGE_TRANSITIONS)) {
     assert.equal(Array.isArray(targets), true);
   }
   const directory = tempLedger(chain.initial);
   try {
-    applyLedgerTransition(directory, chain.initial.transitionDigest,
+    const started = persistEnablementStart(directory, chain);
+    applyLedgerTransition(directory, started.transitionDigest,
       (ledger) => recordDispatch(ledger, chain.runManifest, chain.dispatch('A')), { mode: 'apply' });
-    assert.throws(() => applyLedgerTransition(directory, chain.initial.transitionDigest,
+    assert.throws(() => applyLedgerTransition(directory, started.transitionDigest,
       (ledger) => recordDispatch(ledger, chain.runManifest, chain.dispatch('A')), { mode: 'apply' }),
     /group_e_ledger_stale_writer/);
     fs.writeFileSync(path.join(directory, 'snapshots', '000002-' + 'f'.repeat(64) + '.json'), '{}', { mode: 0o600 });
@@ -583,7 +668,8 @@ test('retained ledger history rejects rewind, fork, truncated, and missing snaps
 
   const directory = tempLedger(chain.initial);
   try {
-    applyLedgerTransition(directory, chain.initial.transitionDigest,
+    const started = persistEnablementStart(directory, chain);
+    applyLedgerTransition(directory, started.transitionDigest,
       (ledger) => recordDispatch(ledger, chain.runManifest, chain.dispatch('A')), { mode: 'apply' });
     const headPath = path.join(directory, 'HEAD.json');
     const currentHead = JSON.parse(fs.readFileSync(headPath, 'utf8'));
@@ -595,7 +681,7 @@ test('retained ledger history rejects rewind, fork, truncated, and missing snaps
     writePrivateJson(headPath, currentHead);
     const currentFile = currentHead.snapshotFile;
     const forkDigest = 'f'.repeat(64);
-    const forkFile = `000001-${forkDigest}.json`;
+    const forkFile = `000002-${forkDigest}.json`;
     fs.renameSync(path.join(directory, 'snapshots', currentFile), path.join(directory, 'snapshots', forkFile));
     writePrivateJson(headPath, { ...currentHead, snapshotFile: forkFile, transitionDigest: forkDigest });
     assert.throws(() => validateLedgerDirectory(directory), /group_e_ledger_rewind_or_fork/);
@@ -650,16 +736,22 @@ test('CLI plan signs and writes nothing; apply emits one private capability afte
     assert.equal(fs.existsSync(ledger), false);
     run([`--input=${inputPath}`, `--ledger=${ledger}`, '--mode=apply'], { allowExternalPaths: true, stdout });
     writePrivateJson(manifestPath, value.runManifest);
+    writePrivateJson(inputPath, { schemaVersion: 1, action: 'enablement-start',
+      expectedPriorDigest: value.initial.transitionDigest,
+      payload: { startedAt: TIMES.enable, jit: value.jit, runManifestPath: manifestPath } });
+    const start = run([`--input=${inputPath}`, `--ledger=${ledger}`, '--mode=apply'],
+      { allowExternalPaths: true, stdout });
+    assert.equal(start.ledger.stage, STAGES.ENABLEMENT_STARTED);
     fs.writeFileSync(keyPath, value.fixture.privateKeyPem, { mode: 0o600 });
     fs.chmodSync(keyPath, 0o600);
     writePrivateJson(inputPath, { schemaVersion: 1, action: 'dispatch',
-      expectedPriorDigest: value.initial.transitionDigest,
+      expectedPriorDigest: start.ledger.transitionDigest,
       payload: { ...value.dispatch('A'), expiresAt: value.capability('A').expiresAt,
         runManifestPath: manifestPath, signingKeyPath: keyPath, capabilityOutputPath: outputPath } });
     const dispatchPlan = run([`--input=${inputPath}`, `--ledger=${ledger}`], { allowExternalPaths: true, stdout });
     assert.equal(dispatchPlan.verdict.written, false);
     assert.equal(fs.existsSync(outputPath), false);
-    assert.equal(validateLedgerDirectory(ledger).latest.stage, STAGES.A_READY);
+    assert.equal(validateLedgerDirectory(ledger).latest.stage, STAGES.ENABLEMENT_STARTED);
     const applied = run([`--input=${inputPath}`, `--ledger=${ledger}`, '--mode=apply'],
       { allowExternalPaths: true, stdout });
     assert.equal(applied.verdict.written, true);

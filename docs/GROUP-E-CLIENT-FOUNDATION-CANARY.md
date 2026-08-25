@@ -50,7 +50,7 @@ request value becomes a path.
 
 The private operator validates evidence and provenance, owns the ephemeral Ed25519 private key,
 creates the run, durably commits local dispatch state before signing, creates reconciliations and
-the final closeout, and prepares unconditional restoration.
+the final closeout, can terminally abort a pristine pre-enable run, and prepares unconditional restoration.
 
 The browser receives one signed non-secret capability. It verifies public integrity and exact
 same-session Auth/slot binding, acquires one limited-use App Check token, makes one terminal
@@ -118,9 +118,13 @@ wrong keys, stale windows, and mismatched runtime values fail closed. Public sou
 values cannot forge the signature.
 
 Slow browser evidence collection and operator preparation happen before the short execution
-clock. After all evidence is assembled, the pre-enable rehearsal passes first; fresh JIT, run, and
-capability times are then created as late as possible. The JIT admission proof remains limited to
-15 minutes. The run/activation envelope may span at most 45 minutes, while each A or B capability
+clock. After all evidence is assembled, the pre-enable rehearsal passes first; fresh JIT and run
+times are then created as late as possible. The JIT admission proof remains limited to 15 minutes
+and authorizes the single durable `ENABLEMENT_STARTED` transition while it is fresh. Once that
+transition is committed, JIT expiry alone does not invalidate the already-started activation; the
+same immutable run, evidence, source, key, subject, and budget bindings remain fixed and the existing
+45-minute run/activation envelope becomes the deadline. An expired JIT cannot create that transition,
+replace it, or start another enablement. Each A or B capability
 is issued only after its durable dispatch and remains valid for at most 15 minutes. This ordering
 provides a fresh per-slot window without extending replay exposure or starting the JIT clock during
 manual evidence collection.
@@ -192,6 +196,13 @@ Blocked closeout records the containment reason and may preserve only verified c
 evidence. Both require restored gates, unchanged state, zero prohibited writes, and zero
 additional admitted calls.
 
+A pristine `A_READY` run may instead create exactly one `group-e-pre-enable-abort` record at
+`runs/{runId}/closeouts/final`. It requires disabled gates, no A dispatch, no A/B consumption or
+reconciliation, zero prohibited writes, and a bounded reason such as
+`TIMING_EXPIRED_BEFORE_ENABLEMENT`. The local ledger then enters terminal `PRE_ENABLE_ABORTED`
+with zero remaining budget. This is not `CLOSED_BLOCKED`, does not claim a post-enable lifecycle,
+and requires no passive observation because no gate or callable boundary was crossed.
+
 ## Immutable local ledger
 
 The private ledger is a mode-0700 directory containing a mode-0700 `snapshots` directory,
@@ -203,17 +214,19 @@ domain-separated transition digest.
 Stages are:
 
 1. `A_READY`
-2. `A_DISPATCH_COMMITTED`
-3. `A_TERMINAL_UNRECONCILED`
-4. `A_RECONCILED_SESSION_BOUNDARY_PENDING`
-5. `A_RECONCILED_B_PENDING`
-6. `B_DISPATCH_COMMITTED`
-7. `B_TERMINAL_UNRECONCILED`
-8. `AB_RECONCILED_RESTORATION_REQUIRED`
-9. `RESTORED_OBSERVATION_PENDING`
-10. `CLOSED_HEALTHY`
+2. `ENABLEMENT_STARTED`
+3. `A_DISPATCH_COMMITTED`
+4. `A_TERMINAL_UNRECONCILED`
+5. `A_RECONCILED_SESSION_BOUNDARY_PENDING`
+6. `A_RECONCILED_B_PENDING`
+7. `B_DISPATCH_COMMITTED`
+8. `B_TERMINAL_UNRECONCILED`
+9. `AB_RECONCILED_RESTORATION_REQUIRED`
+10. `RESTORED_OBSERVATION_PENDING`
+11. `CLOSED_HEALTHY`
 
-Any contained path uses `BLOCKED_RESTORATION_REQUIRED` and `CLOSED_BLOCKED`. Apply mode takes
+The pristine terminal branch is `PRE_ENABLE_ABORTED`. Any contained post-start path uses
+`BLOCKED_RESTORATION_REQUIRED` and `CLOSED_BLOCKED`. Apply mode takes
 an exclusive atomic lock, rereads and validates the complete chain, compares the expected prior
 digest, writes the next snapshot with `O_EXCL`, fsyncs it, atomically replaces and fsyncs HEAD,
 and fsyncs containing directories where supported. It fails closed on stale writers, live or
