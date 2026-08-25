@@ -21,6 +21,7 @@
     'sessionGeneration','firebaseAppIdHash','browserContextDigest','runtimeInstanceDigest'
   ]);
   const CONFIGURATION_FIELDS=Object.freeze(['schemaVersion','capability','signature','publicKeySpki']);
+  const STORED_ENVELOPE_FIELDS=Object.freeze([...CONFIGURATION_FIELDS,'capabilityDigest']);
   const FROZEN=new Set(['frozen','blocked','conflict','conflict-frozen']);
   const RESPONSE_FIELDS=Object.freeze({
     SUCCESS:['admissionReceiptDigest','attemptHash','code','foundation','schemaVersion','subjectBinding'],
@@ -44,6 +45,10 @@
     const keys=value&&typeof value==='object'&&!Array.isArray(value)?Object.keys(value).sort():[];
     const expectedKeys=[...expected].sort();
     return keys.length===expectedKeys.length&&keys.every((key,index)=>key===expectedKeys[index]);
+  }
+  function browserConfigurationFromStoredEnvelope(value){
+    if(!exactFields(value,STORED_ENVELOPE_FIELDS)||value.schemaVersion!==1)fail('group-e/configuration-invalid');
+    return Object.freeze(Object.fromEntries(CONFIGURATION_FIELDS.map(field=>[field,value[field]])));
   }
   function bytes(value){return new TextEncoder().encode(value);}
   function concat(left,right){const value=new Uint8Array(left.length+right.length);value.set(left);value.set(right,left.length);return value;}
@@ -269,7 +274,8 @@
   }
 
   root.e1ClientFoundationCanary=Object.freeze({
-    CALLABLE,REGION,browserContextDigest,canonicalCapability,createClientFoundationCanary,sessionGenerationContext,
-    runtimeInstanceDigest,sessionGenerationDigest,validateResponse,verifyCapability
+    CALLABLE,REGION,browserConfigurationFromStoredEnvelope,browserContextDigest,canonicalCapability,
+    createClientFoundationCanary,sessionGenerationContext,runtimeInstanceDigest,sessionGenerationDigest,
+    validateResponse,verifyCapability
   });
 })(window);

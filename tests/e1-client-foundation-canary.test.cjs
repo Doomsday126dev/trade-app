@@ -7,7 +7,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 const { createFixture } = require('../functions/test/helpers/groupEFixture.cjs');
-const { sessionGenerationContext, sessionGenerationDigest } = require('../functions/e1-gateway/groupEAdmission');
+const { capabilityDigest, sessionGenerationContext,
+  sessionGenerationDigest } = require('../functions/e1-gateway/groupEAdmission');
 
 const source = fs.readFileSync(path.resolve(__dirname, '../js/services/e1ClientFoundationCanary.js'), 'utf8');
 const ORIGIN = 'https://doomsday126dev.github.io';
@@ -121,8 +122,12 @@ function setup(overrides = {}, loadOptions = {}) {
     return { schemaVersion: 1, capability: signed.capability, signature: signed.signature,
       publicKeySpki: fixture.publicKeySpki };
   }
+  async function storedEnvelope(slot = 'A', capabilityOverrides = {}) {
+    const browserConfiguration = await configuration(slot, capabilityOverrides);
+    return { ...browserConfiguration, capabilityDigest: capabilityDigest(browserConfiguration.capability) };
+  }
   return {
-    service, fixture, firebaseApp, appCheckInstance, auth, dependencies, controller, configuration,
+    service, fixture, firebaseApp, appCheckInstance, auth, dependencies, controller, configuration, storedEnvelope,
     stats: () => ({ imports, calls, appCheckReadyCalls, lastBody }),
     randomCalls: loaded.randomCalls,
     sessionGeneration: () => sessionGeneration,
@@ -154,6 +159,42 @@ test('client is disabled by default and a signed capability permits one terminal
   });
   await assert.rejects(controller.read({ attemptId: state.fixture.ATTEMPT.A }), /group-e\/invocation-terminal/);
   assert.equal(state.stats().calls, 1);
+});
+
+test('stored capability envelope projects to the exact browser config without weakening strict open validation', async () => {
+  const state = setup();
+  const storedEnvelope = await state.storedEnvelope();
+  const expectedConfigurationKeys = ['capability', 'publicKeySpki', 'schemaVersion', 'signature'];
+  assert.deepEqual(Object.keys(storedEnvelope).sort(), [...expectedConfigurationKeys, 'capabilityDigest'].sort());
+  assert.equal(Object.hasOwn(storedEnvelope, 'capabilityDigest'), true);
+
+  const configuration = state.service.browserConfigurationFromStoredEnvelope(storedEnvelope);
+  assert.deepEqual(Object.keys(configuration).sort(), expectedConfigurationKeys);
+  assert.equal(Object.hasOwn(configuration, 'capabilityDigest'), false);
+  assert.equal(configuration.capability, storedEnvelope.capability);
+  assert.equal(configuration.signature, storedEnvelope.signature);
+  assert.equal(configuration.publicKeySpki, storedEnvelope.publicKeySpki);
+
+  const controller = state.controller();
+  await controller.open(configuration);
+  assert.deepEqual(state.stats(), { imports: 0, calls: 0, appCheckReadyCalls: 0, lastBody: undefined });
+  await controller.read({ attemptId: state.fixture.ATTEMPT.A });
+  await assert.rejects(controller.read({ attemptId: state.fixture.ATTEMPT.A }), /group-e\/invocation-terminal/);
+  assert.equal(state.stats().imports, 1);
+  assert.equal(state.stats().calls, 1);
+
+  assert.throws(() => state.service.browserConfigurationFromStoredEnvelope({ ...storedEnvelope, arbitrary: true }),
+    /group-e\/configuration-invalid/);
+  for (const field of expectedConfigurationKeys) {
+    const missing = { ...storedEnvelope };
+    delete missing[field];
+    assert.throws(() => state.service.browserConfigurationFromStoredEnvelope(missing),
+      /group-e\/configuration-invalid/);
+  }
+
+  const direct = setup();
+  await assert.rejects(direct.controller().open(await direct.storedEnvelope()), /group-e\/configuration-invalid/);
+  assert.deepEqual(direct.stats(), { imports: 0, calls: 0, appCheckReadyCalls: 0, lastBody: undefined });
 });
 
 test('runtime identity uses one private 256-bit nonce and matches an independent literal known vector', async () => {
@@ -389,7 +430,9 @@ test('close clears in-memory result and source has no persistent storage or dire
 
 test('page integration exposes only an explicit operator constructor and closes it at every session boundary', () => {
   const html = fs.readFileSync(path.resolve(__dirname, '../index.html'), 'utf8');
-  assert.match(html, /__pogoCreateGroupEClientFoundationCanary=async\(configuration\)=>/);
+  assert.match(html, /__pogoCreateGroupEClientFoundationCanary=async\(storedEnvelope\)=>/);
+  assert.match(html,
+    /const configuration=e1ClientFoundationCanaryService\.browserConfigurationFromStoredEnvelope\(storedEnvelope\);/);
   assert.match(html, /await e1ClientFoundationCanary\.open\(configuration\)/);
   assert.match(html, /getBrowserContextDigest:\(\)=>e1ClientFoundationCanaryService\.browserContextDigest\(/);
   assert.doesNotMatch(html, /getRuntimeInstanceDigest|runtimeInstanceNonce/);
