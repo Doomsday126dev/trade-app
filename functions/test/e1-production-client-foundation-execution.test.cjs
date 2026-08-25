@@ -14,6 +14,7 @@ const {
   STAGES,
   ZERO_WRITES,
   applyLedgerTransition,
+  applyPreEnableAbortTransition,
   blockLedger,
   canonicalLedgerDigest,
   commitDispatchAndCreateCapability,
@@ -47,6 +48,7 @@ const {
   baselineDigest,
   createReconciliationRecord,
   createPreEnableAbort,
+  createRunManifest,
   sessionGenerationDigest
 } = require('../e1-gateway/groupEAdmission');
 const { jitDigest } = require('../production/e1ProductionClientFoundationGuard.cjs');
@@ -136,6 +138,34 @@ function state() {
   return { fixture, initialInput, initial, started, jit, runManifest, dispatch, capability, terminal, evidence, boundary };
 }
 
+function legacyState() {
+  const value = state();
+  const initial = structuredClone(value.initial);
+  initial.nextAction = 'ENABLE_GATES_AND_COMMIT_A_DISPATCH';
+  initial.transitionDigest = canonicalLedgerDigest(initial);
+  const runManifest = createRunManifest({ ...value.runManifest,
+    initialExecutionLedgerDigest: initial.transitionDigest });
+  return { ...value, initial: Object.freeze(initial), runManifest };
+}
+
+function preEnableAbortInputs(value, ledger = value.initial) {
+  const runManifest = createRunManifest({ ...value.runManifest,
+    initialExecutionLedgerDigest: ledger.transitionDigest });
+  const record = createPreEnableAbort({
+    runId: ledger.runId,
+    runManifestDigest: runManifest.manifestDigest,
+    executionLedgerDigest: ledger.transitionDigest,
+    reason: 'TIMING_EXPIRED_BEFORE_ENABLEMENT',
+    gates: disabledGatePlan(),
+    prohibitedWrites: ZERO_WRITES,
+    aDispatchAbsent: true,
+    consumptionsAbsent: true,
+    reconciliationsAbsent: true,
+    createdAt: '2030-01-01T13:00:00.000Z'
+  });
+  return { runManifest, record };
+}
+
 function healthyChain() {
   const value = state();
   const aDispatch = recordDispatch(value.started, value.runManifest, value.dispatch('A'));
@@ -166,6 +196,24 @@ function tempLedger(initial) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'group-e-ledger-'));
   const directory = path.join(root, 'ledger');
   initializeLedgerDirectory(directory, initial, { mode: 'apply' });
+  return directory;
+}
+
+function tempLegacyLedger(initial) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'group-e-legacy-ledger-'));
+  const directory = path.join(root, 'ledger');
+  const snapshots = path.join(directory, 'snapshots');
+  fs.mkdirSync(snapshots, { recursive: true, mode: 0o700 });
+  fs.chmodSync(directory, 0o700);
+  fs.chmodSync(snapshots, 0o700);
+  const snapshotFile = `000000-${initial.transitionDigest}.json`;
+  writePrivateJson(path.join(snapshots, snapshotFile), initial);
+  writePrivateJson(path.join(directory, 'HEAD.json'), {
+    schemaVersion: 1,
+    sequence: 0,
+    snapshotFile,
+    transitionDigest: initial.transitionDigest
+  });
   return directory;
 }
 
@@ -281,6 +329,152 @@ test('pristine pre-enable abort is terminal, zero-budget, and cannot dispatch ei
     { controlRecordCreated: true }), /group_e_execution_not_pristine/);
   assert.throws(() => recordPreEnableAbort(value.initial, value.runManifest, record,
     { controlRecordCreated: false }), /group_e_pre_enable_abort_invalid/);
+});
+
+test('exact legacy pristine A_READY is accepted only for terminal pre-enable abort', () => {
+  const value = legacyState();
+  const { runManifest, record } = preEnableAbortInputs(value);
+  assert.equal(Date.parse(record.createdAt) > Date.parse(runManifest.expiresAt), true);
+  assert.throws(() => validateExecutionLedger(value.initial), /group_e_execution_progress_invalid/);
+  assert.throws(() => recordEnablementStarted(value.initial, runManifest,
+    { startedAt: TIMES.enable, jit: value.jit }), /group_e_execution_progress_invalid/);
+  assert.throws(() => recordDispatch(value.initial, runManifest, value.dispatch('A')),
+    /group_e_execution_progress_invalid/);
+
+  const aborted = recordPreEnableAbort(value.initial, runManifest, record, { controlRecordCreated: true });
+  assert.equal(aborted.stage, STAGES.PRE_ENABLE_ABORTED);
+  assert.equal(aborted.sequence, 1);
+  assert.equal(aborted.priorTransitionDigest, value.initial.transitionDigest);
+  assert.equal(aborted.nextAction, 'STOP_PRE_ENABLE_ABORTED');
+  assert.equal(aborted.remainingAdmittedBudget, 0);
+  assert.equal(aborted.outcome, 'blocked');
+  assert.equal(aborted.blockedReason, 'TIMING_EXPIRED_BEFORE_ENABLEMENT');
+  assert.deepEqual(aborted.dispatches, { A: null, B: null });
+  assert.deepEqual(aborted.terminals, { A: null, B: null });
+  assert.deepEqual(aborted.reconciliations, { A: null, B: null });
+  assert.deepEqual(aborted.gates, disabledGatePlan());
+  assert.equal(validateExecutionLedger(aborted).stage, STAGES.PRE_ENABLE_ABORTED);
+  assert.throws(() => recordPreEnableAbort(aborted, runManifest, record,
+    { controlRecordCreated: true }), /group_e_execution_not_pristine/);
+  assert.throws(() => recordEnablementStarted(aborted, runManifest,
+    { startedAt: TIMES.enable, jit: value.jit }), /group_e_execution_not_pristine/);
+  assert.throws(() => recordDispatch(aborted, runManifest, value.dispatch('A')), /group_e_dispatch_invalid/);
+});
+
+test('legacy abort compatibility rejects every non-pristine or noncanonical variant', () => {
+  const value = legacyState();
+  const cases = [
+    (ledger) => { ledger.nextAction = 'ENABLE_GATES_AND_DISPATCH'; },
+    (ledger) => { ledger.sequence = 1; ledger.priorTransitionDigest = '1'.repeat(64);
+      ledger.runManifestDigest = '2'.repeat(64); },
+    (ledger) => { ledger.runManifestDigest = '2'.repeat(64); },
+    (ledger) => { ledger.dispatches.A = value.dispatch('A'); },
+    (ledger) => { ledger.terminals.A = value.terminal('A'); },
+    (ledger) => { ledger.reconciliations.A = { reconciliationDigest: '3'.repeat(64) }; },
+    (ledger) => { ledger.gates.READ_PROOF_MODE = true; },
+    (ledger) => { ledger.updatedAt = '2030-01-01T12:00:01.000Z'; },
+    (ledger) => { ledger.consumptions = { A: '4'.repeat(64) }; }
+  ];
+  for (const mutate of cases) {
+    const ledger = structuredClone(value.initial);
+    mutate(ledger);
+    ledger.transitionDigest = canonicalLedgerDigest(ledger);
+    const { runManifest, record } = preEnableAbortInputs(value, ledger);
+    assert.throws(() => recordPreEnableAbort(ledger, runManifest, record,
+      { controlRecordCreated: true }));
+  }
+  const changedDigest = structuredClone(value.initial);
+  changedDigest.transitionDigest = 'f'.repeat(64);
+  const { runManifest, record } = preEnableAbortInputs(value, changedDigest);
+  assert.throws(() => recordPreEnableAbort(changedDigest, runManifest, record,
+    { controlRecordCreated: true }), /group_e_execution_ledger_invalid/);
+});
+
+test('legacy standalone directory stays invalid until dedicated abort creates one terminal chain', () => {
+  const value = legacyState();
+  const directory = tempLegacyLedger(value.initial);
+  const { runManifest, record } = preEnableAbortInputs(value);
+  try {
+    const headBefore = fs.readFileSync(path.join(directory, 'HEAD.json'), 'utf8');
+    const snapshotBefore = fs.readFileSync(path.join(directory, 'snapshots',
+      `000000-${value.initial.transitionDigest}.json`));
+    assert.throws(() => validateLedgerDirectory(directory), /group_e_execution_progress_invalid/);
+    assert.throws(() => applyLedgerTransition(directory, value.initial.transitionDigest,
+      (ledger) => recordPreEnableAbort(ledger, runManifest, record, { controlRecordCreated: true }),
+      { mode: 'plan' }), /group_e_execution_progress_invalid/);
+
+    const plan = applyPreEnableAbortTransition(directory, value.initial.transitionDigest, runManifest, record,
+      { mode: 'plan', controlRecordCreated: true });
+    assert.equal(plan.written, false);
+    assert.equal(plan.ledger.stage, STAGES.PRE_ENABLE_ABORTED);
+    assert.equal(plan.ledger.priorTransitionDigest, value.initial.transitionDigest);
+    assert.equal(fs.readFileSync(path.join(directory, 'HEAD.json'), 'utf8'), headBefore);
+    assert.deepEqual(fs.readFileSync(path.join(directory, 'snapshots',
+      `000000-${value.initial.transitionDigest}.json`)), snapshotBefore);
+    assert.equal(fs.readdirSync(path.join(directory, 'snapshots')).length, 1);
+
+    const applied = applyPreEnableAbortTransition(directory, value.initial.transitionDigest, runManifest, record,
+      { mode: 'apply', controlRecordCreated: true });
+    assert.equal(applied.written, true);
+    assert.equal(applied.ledger.stage, STAGES.PRE_ENABLE_ABORTED);
+    const terminal = validateLedgerDirectory(directory);
+    assert.equal(terminal.snapshots.length, 2);
+    assert.equal(terminal.snapshots[0].transitionDigest, value.initial.transitionDigest);
+    assert.equal(terminal.snapshots[1].priorTransitionDigest, value.initial.transitionDigest);
+    assert.equal(terminal.latest.transitionDigest, applied.ledger.transitionDigest);
+    assert.deepEqual(fs.readFileSync(path.join(directory, 'snapshots',
+      `000000-${value.initial.transitionDigest}.json`)), snapshotBefore);
+    assert.throws(() => applyPreEnableAbortTransition(directory, applied.ledger.transitionDigest,
+      runManifest, record, { mode: 'apply', controlRecordCreated: true }), /group_e_execution_not_pristine/);
+  } finally { removeTempLedger(directory); }
+});
+
+test('legacy compatibility leaves the existing CLOSED_BLOCKED lifecycle unchanged', () => {
+  const chain = healthyChain();
+  const blocked = recordCapabilityDeliveryUncertain(chain.aDispatch, TIMES.terminalA);
+  const restored = recordRestoration(blocked, restorationInput('CAPABILITY_DELIVERY_UNCERTAIN'));
+  const closed = recordObservationCloseout(restored, {
+    acceptedAt: TIMES.close,
+    observationDigest: '9'.repeat(64),
+    restorationDigest: 'a'.repeat(64),
+    finalStateDigest: IDENTITY_BASELINE.stateDigest,
+    observationStartedAt: TIMES.observationStart,
+    observationEndedAt: TIMES.observationEnd,
+    unexpectedAdditionalAdmittedCalls: 0,
+    prohibitedWrites: ZERO_WRITES,
+    controlRecordCreated: true
+  });
+  assert.equal(closed.ledger.stage, STAGES.CLOSED_BLOCKED);
+  assert.equal(closed.ledger.blockedReason, 'CAPABILITY_DELIVERY_UNCERTAIN');
+});
+
+test('CLI pre-enable-abort action alone can plan and apply the legacy terminal transition', () => {
+  const value = legacyState();
+  const directory = tempLegacyLedger(value.initial);
+  const root = path.dirname(directory);
+  const inputPath = path.join(root, 'legacy-abort-input.json');
+  const manifestPath = path.join(root, 'legacy-run-manifest.json');
+  const { runManifest, record } = preEnableAbortInputs(value);
+  const stdout = { value: '', write(chunk) { this.value += chunk; } };
+  try {
+    writePrivateJson(manifestPath, runManifest);
+    writePrivateJson(inputPath, {
+      schemaVersion: 1,
+      action: 'pre-enable-abort',
+      expectedPriorDigest: value.initial.transitionDigest,
+      payload: { record, runManifestPath: manifestPath, controlRecordCreated: true }
+    });
+    const plan = run([`--input=${inputPath}`, `--ledger=${directory}`, '--mode=plan'],
+      { allowExternalPaths: true, stdout });
+    assert.equal(plan.verdict.written, false);
+    assert.equal(plan.verdict.stage, STAGES.PRE_ENABLE_ABORTED);
+    assert.equal(fs.readdirSync(path.join(directory, 'snapshots')).length, 1);
+    const applied = run([`--input=${inputPath}`, `--ledger=${directory}`, '--mode=apply'],
+      { allowExternalPaths: true, stdout });
+    assert.equal(applied.verdict.written, true);
+    assert.equal(applied.verdict.stage, STAGES.PRE_ENABLE_ABORTED);
+    assert.equal(validateLedgerDirectory(directory).latest.stage, STAGES.PRE_ENABLE_ABORTED);
+  } finally { removeTempLedger(directory); }
 });
 
 test('B cannot dispatch before exact A reconciliation and session-boundary control evidence', () => {

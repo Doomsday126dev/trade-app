@@ -73,6 +73,7 @@ const NEXT_ACTION = Object.freeze({
   [STAGES.CLOSED_HEALTHY]: 'STOP_CLOSED_HEALTHY',
   [STAGES.CLOSED_BLOCKED]: 'STOP_CLOSED_BLOCKED'
 });
+const LEGACY_PRISTINE_NEXT_ACTION = 'ENABLE_GATES_AND_COMMIT_A_DISPATCH';
 const POST_ENABLE_STAGES = Object.freeze([
   STAGES.ENABLEMENT_STARTED,
   STAGES.A_DISPATCH_COMMITTED,
@@ -503,7 +504,23 @@ function validSessionBoundary(value, ledger) {
     value.boundaryDigest === sessionBoundaryDigest(value);
 }
 
-function validateExecutionLedger(value, options = {}) {
+function isLegacyPristineAReady(value) {
+  return value.schemaVersion === SCHEMA_VERSION && value.purpose === PURPOSE && value.sequence === 0 &&
+    value.stage === STAGES.A_READY && value.nextAction === LEGACY_PRISTINE_NEXT_ACTION &&
+    value.priorTransitionDigest === null && value.runManifestDigest === null &&
+    sameJson(value.completedPrefix, []) && value.remainingAdmittedBudget === 2 &&
+    value.transitionDigest === canonicalLedgerDigest(value) &&
+    sameJson(value.controlPaths, canonicalControlPaths(value.runId)) && validBindings(value.bindings) &&
+    validProvenance(value.provenance) && validAdmission(value.admission) &&
+    sameJson(value.identityBaseline, IDENTITY_BASELINE) && value.sessionContext === null &&
+    sameJson(value.dispatches, { A: null, B: null }) && sameJson(value.terminals, { A: null, B: null }) &&
+    value.pendingAReconciliation === null && sameJson(value.reconciliations, { A: null, B: null }) &&
+    value.sessionBoundary === null && value.sessionBoundaryDigest === null &&
+    sameJson(value.gates, disabledGatePlan()) && value.outcome === 'pending' && value.blockedReason === null &&
+    validTimestamp(value.createdAt) && validTimestamp(value.updatedAt) && value.updatedAt === value.createdAt;
+}
+
+function validateExecutionLedgerInternal(value, options = {}, allowLegacyPristineAbortSource = false) {
   if (!exactFields(value, LEDGER_FIELDS) || value.schemaVersion !== SCHEMA_VERSION || value.purpose !== PURPOSE ||
       !UUID_V4.test(value.runId || '') || (value.runManifestDigest !== null && !HASH.test(value.runManifestDigest || '')) ||
       !Number.isSafeInteger(value.sequence) || value.sequence < 0 ||
@@ -519,8 +536,10 @@ function validateExecutionLedger(value, options = {}) {
       !validTimestamp(value.createdAt) || !validTimestamp(value.updatedAt) ||
       Date.parse(value.updatedAt) < Date.parse(value.createdAt)) fail('group_e_execution_ledger_invalid');
 
-  if (!sameJson(value.completedPrefix, expectedPrefix(value.stage, value)) ||
-      value.remainingAdmittedBudget !== expectedBudget(value.stage, value) || value.nextAction !== expectedNextAction(value)) {
+  const legacyPristineAbortSource = allowLegacyPristineAbortSource && isLegacyPristineAReady(value);
+  if ((!sameJson(value.completedPrefix, expectedPrefix(value.stage, value)) ||
+      value.remainingAdmittedBudget !== expectedBudget(value.stage, value) || value.nextAction !== expectedNextAction(value)) &&
+      !legacyPristineAbortSource) {
     fail('group_e_execution_progress_invalid');
   }
   if (value.sequence === 0 ? value.priorTransitionDigest !== null || value.runManifestDigest !== null :
@@ -618,6 +637,14 @@ function validateExecutionLedger(value, options = {}) {
   });
 }
 
+function validateExecutionLedger(value, options = {}) {
+  return validateExecutionLedgerInternal(value, options, false);
+}
+
+function validateLegacyPristineAbortSource(value) {
+  return validateExecutionLedgerInternal(value, { requirePristine: true }, true);
+}
+
 function seal(value, previous = null) {
   const next = structuredClone(value);
   next.sequence = previous ? previous.sequence + 1 : 0;
@@ -660,6 +687,36 @@ function validateMonotonicTransition(previous, next) {
       previous.blockedReason && next.blockedReason !== previous.blockedReason) {
     fail('group_e_execution_transition_invalid');
   }
+}
+
+function validateLegacyPreEnableAbortTransition(previous, next) {
+  validateLegacyPristineAbortSource(previous);
+  validateExecutionLedger(next, { requireStage: STAGES.PRE_ENABLE_ABORTED });
+  if (next.sequence !== 1 || next.priorTransitionDigest !== previous.transitionDigest ||
+      next.stage !== STAGES.PRE_ENABLE_ABORTED || next.nextAction !== NEXT_ACTION[STAGES.PRE_ENABLE_ABORTED] ||
+      next.runId !== previous.runId || next.createdAt !== previous.createdAt ||
+      next.remainingAdmittedBudget !== 0 || !sameJson(next.completedPrefix, []) || next.outcome !== 'blocked' ||
+      !PRE_ENABLE_ABORT_REASONS.has(next.blockedReason) || !HASH.test(next.runManifestDigest || '') ||
+      !sameJson(next.controlPaths, previous.controlPaths) || !sameJson(next.bindings, previous.bindings) ||
+      !sameJson(next.provenance, previous.provenance) || !sameJson(next.admission, previous.admission) ||
+      !sameJson(next.identityBaseline, previous.identityBaseline) || next.sessionContext !== previous.sessionContext ||
+      !sameJson(next.dispatches, previous.dispatches) || !sameJson(next.terminals, previous.terminals) ||
+      next.pendingAReconciliation !== previous.pendingAReconciliation ||
+      !sameJson(next.reconciliations, previous.reconciliations) ||
+      next.sessionBoundary !== previous.sessionBoundary || next.sessionBoundaryDigest !== previous.sessionBoundaryDigest ||
+      !sameJson(next.gates, previous.gates) || Date.parse(next.updatedAt) < Date.parse(previous.updatedAt)) {
+    fail('group_e_execution_transition_invalid');
+  }
+}
+
+function sealLegacyPreEnableAbort(value, previous) {
+  const next = structuredClone(value);
+  next.sequence = previous.sequence + 1;
+  next.priorTransitionDigest = previous.transitionDigest;
+  next.nextAction = expectedNextAction(next);
+  next.transitionDigest = canonicalLedgerDigest(next);
+  validateLegacyPreEnableAbortTransition(previous, next);
+  return Object.freeze(next);
 }
 
 function createInitialExecutionLedger(value) {
@@ -731,7 +788,9 @@ function recordEnablementStarted(ledger, runManifest, value) {
 }
 
 function recordPreEnableAbort(ledger, runManifest, abortRecord, options = {}) {
-  validateExecutionLedger(ledger, { requirePristine: true });
+  const legacyPristineAbortSource = ledger?.nextAction === LEGACY_PRISTINE_NEXT_ACTION;
+  if (legacyPristineAbortSource) validateLegacyPristineAbortSource(ledger);
+  else validateExecutionLedger(ledger, { requirePristine: true });
   const run = validateRunManifest(runManifest);
   const record = validatePreEnableAbort(abortRecord);
   if (options.controlRecordCreated !== true || record.runId !== ledger.runId ||
@@ -743,9 +802,10 @@ function recordPreEnableAbort(ledger, runManifest, abortRecord, options = {}) {
       record.reconciliationsAbsent !== true) {
     fail('group_e_pre_enable_abort_invalid');
   }
-  return seal({ ...structuredClone(ledger), runManifestDigest: run.manifestDigest,
+  const next = { ...structuredClone(ledger), runManifestDigest: run.manifestDigest,
     stage: STAGES.PRE_ENABLE_ABORTED, remainingAdmittedBudget: 0, outcome: 'blocked',
-    blockedReason: record.reason, updatedAt: record.createdAt }, ledger);
+    blockedReason: record.reason, updatedAt: record.createdAt };
+  return legacyPristineAbortSource ? sealLegacyPreEnableAbort(next, ledger) : seal(next, ledger);
 }
 
 function recordDispatch(ledger, runManifest, value) {
@@ -1064,7 +1124,7 @@ function acquireLock(directory) {
   return () => { fs.unlinkSync(lock); fsyncPath(directory); };
 }
 
-function validateLedgerDirectory(directory = PRIVATE_EXECUTION_LEDGER_PATH) {
+function validateLedgerDirectoryInternal(directory, allowStandaloneLegacyAbortSource = false) {
   if (mode(directory) !== 0o700 || mode(path.join(directory, 'snapshots')) !== 0o700) fail('group_e_ledger_directory_invalid');
   const allowed = new Set(['HEAD.json', 'LOCK', 'snapshots']);
   if (fs.readdirSync(directory).some((entry) => !allowed.has(entry))) fail('group_e_ledger_orphan_history');
@@ -1081,19 +1141,36 @@ function validateLedgerDirectory(directory = PRIVATE_EXECUTION_LEDGER_PATH) {
     const match = /^(\d{6})-([a-f0-9]{64})\.json$/u.exec(file);
     if (!match || Number(match[1]) !== index) fail('group_e_ledger_fork_or_gap');
     const snapshot = readJson(path.join(directory, 'snapshots', file), 'group_e_ledger_snapshot_invalid');
-    validateExecutionLedger(snapshot);
     if (snapshot.sequence !== index || snapshot.transitionDigest !== match[2] ||
         (prior ? snapshot.priorTransitionDigest !== prior.transitionDigest : snapshot.priorTransitionDigest !== null)) {
       fail('group_e_ledger_rewind_or_fork');
     }
-    if (prior) validateMonotonicTransition(prior, snapshot);
     prior = snapshot;
     return snapshot;
   });
   const latest = snapshots.at(-1);
   if (!latest || latest.sequence !== head.sequence || latest.transitionDigest !== head.transitionDigest ||
       head.snapshotFile !== files.at(-1)) fail('group_e_ledger_head_invalid');
+
+  const standaloneLegacyAbortSource = allowStandaloneLegacyAbortSource && snapshots.length === 1 &&
+    snapshots[0]?.nextAction === LEGACY_PRISTINE_NEXT_ACTION;
+  const terminalLegacyAbortChain = snapshots.length === 2 &&
+    snapshots[0]?.nextAction === LEGACY_PRISTINE_NEXT_ACTION && snapshots[1]?.stage === STAGES.PRE_ENABLE_ABORTED;
+  if (standaloneLegacyAbortSource) {
+    validateLegacyPristineAbortSource(snapshots[0]);
+  } else if (terminalLegacyAbortChain) {
+    validateLegacyPreEnableAbortTransition(snapshots[0], snapshots[1]);
+  } else {
+    snapshots.forEach((snapshot, index) => {
+      validateExecutionLedger(snapshot);
+      if (index) validateMonotonicTransition(snapshots[index - 1], snapshot);
+    });
+  }
   return Object.freeze({ head: Object.freeze(head), latest, snapshots: Object.freeze(snapshots) });
+}
+
+function validateLedgerDirectory(directory = PRIVATE_EXECUTION_LEDGER_PATH) {
+  return validateLedgerDirectoryInternal(directory, false);
 }
 
 function initializeLedgerDirectory(directory, ledger, options = {}) {
@@ -1136,6 +1213,30 @@ function applyLedgerTransition(directory, expectedPriorDigest, advance, options 
   } finally { release(); }
 }
 
+function applyPreEnableAbortTransition(directory, expectedPriorDigest, runManifest, abortRecord, options = {}) {
+  const advance = (ledger) => recordPreEnableAbort(ledger, runManifest, abortRecord,
+    { controlRecordCreated: options.controlRecordCreated });
+  if (options.mode === 'plan') {
+    const current = validateLedgerDirectoryInternal(directory, true).latest;
+    if (current.transitionDigest !== expectedPriorDigest) fail('group_e_ledger_stale_writer');
+    return Object.freeze({ written: false, ledger: advance(current) });
+  }
+  const release = acquireLock(directory);
+  try {
+    const current = validateLedgerDirectoryInternal(directory, true).latest;
+    if (current.transitionDigest !== expectedPriorDigest) fail('group_e_ledger_stale_writer');
+    const next = advance(current);
+    if (current.nextAction === LEGACY_PRISTINE_NEXT_ACTION) validateLegacyPreEnableAbortTransition(current, next);
+    else validateMonotonicTransition(current, next);
+    const file = snapshotFileName(next);
+    writeFileExclusive(path.join(directory, 'snapshots', file), next);
+    fsyncPath(path.join(directory, 'snapshots'));
+    writeHeadAtomic(directory, { schemaVersion: 1, sequence: next.sequence, snapshotFile: file,
+      transitionDigest: next.transitionDigest });
+    return Object.freeze({ written: true, ledger: next });
+  } finally { release(); }
+}
+
 module.exports = Object.freeze({
   BLOCK_REASONS,
   ALLOWED_STAGE_TRANSITIONS,
@@ -1151,6 +1252,7 @@ module.exports = Object.freeze({
   STAGES,
   ZERO_WRITES,
   applyLedgerTransition,
+  applyPreEnableAbortTransition,
   blockLedger,
   canonicalLedgerDigest,
   createExecutionRunManifest,
