@@ -46,11 +46,11 @@ const REPO_ROOT = execFileSync('git', ['-C', __dirname, 'rev-parse', '--show-top
 const HEAD = execFileSync('git', ['-C', REPO_ROOT, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
 const ORIGIN_MAIN = execFileSync('git', ['-C', REPO_ROOT, 'rev-parse', 'origin/main'], { encoding: 'utf8' }).trim();
 const CLI = path.join(REPO_ROOT, 'functions/scripts/deploy-e1-production-gateway.cjs');
-const PINNED_COMMIT_A_SOURCE_SHA = 'ad2edab9be2b1c0e6851dfded3a0f3f71a73b987';
-const TEST_COMMIT_A_SOURCE_SHA = '0'.repeat(40);
+const PINNED_REVIEWED_SOURCE_SHA = '129b7ad7dbf33a5bc0126aec20e2412eb08774a1';
+const TEST_SOURCE_SHA = '0'.repeat(40);
 const TEST_GROUP_E_PUBLIC_KEY_SPKI = crypto.generateKeyPairSync('ed25519').publicKey
   .export({ format: 'der', type: 'spki' }).toString('base64url');
-const COMMIT_A_SOURCE_PATHS = Object.freeze([
+const GATEWAY_SOURCE_PATHS = Object.freeze([
   'gatewayCore.js', 'groupEAdmission.js', 'groupEControlStore.js', 'index.js', 'package-lock.json', 'package.json'
 ]);
 const GATEWAY_RUNTIME_SERVICE_ACCOUNT = 'e1-authority-gateway@trade-list-a4297.iam.gserviceaccount.com';
@@ -64,7 +64,7 @@ const GROUP_E_CONTROL_CONDITION = Object.freeze({
 });
 
 function candidateManifest(overrides = {}) {
-  const sourceFiles = COMMIT_A_SOURCE_PATHS.map((file) => ({
+  const sourceFiles = GATEWAY_SOURCE_PATHS.map((file) => ({
     path: file,
     sha256: crypto.createHash('sha256')
       .update(fs.readFileSync(path.join(REPO_ROOT, 'functions/e1-gateway', file)))
@@ -72,7 +72,7 @@ function candidateManifest(overrides = {}) {
   }));
   return {
     ...loadManifest(),
-    sourceCommitSha: TEST_COMMIT_A_SOURCE_SHA,
+    sourceCommitSha: TEST_SOURCE_SHA,
     sourceFiles,
     sourceFingerprint: sourceFingerprint(sourceFiles),
     ...overrides
@@ -157,21 +157,21 @@ test('canonical CLI argument names accept numeric segments and reject malformed 
   }
 });
 
-test('tracked six-file gateway manifest pins the exact immutable Commit A source', () => {
+test('tracked six-file gateway manifest pins the exact immutable reviewed source', () => {
   const tracked = loadManifest();
   assert.equal(verifyManifestShape(tracked), tracked);
-  assert.equal(tracked.sourceCommitSha, PINNED_COMMIT_A_SOURCE_SHA);
-  assert.deepEqual(tracked.sourceFiles.map((file) => file.path), [...COMMIT_A_SOURCE_PATHS]);
+  assert.equal(tracked.sourceCommitSha, PINNED_REVIEWED_SOURCE_SHA);
+  assert.deepEqual(tracked.sourceFiles.map((file) => file.path), [...GATEWAY_SOURCE_PATHS]);
   const observed = verifyPinnedSource(tracked, immutableGitRepository());
   assert.equal(observed.length, 6);
   assert.equal(observed.every((file) => file.sha256 === file.observedSha256), true);
 
   const wrongCommit = { ...tracked, sourceCommitSha: 'f'.repeat(40) };
-  assert.notEqual(wrongCommit.sourceCommitSha, PINNED_COMMIT_A_SOURCE_SHA);
+  assert.notEqual(wrongCommit.sourceCommitSha, PINNED_REVIEWED_SOURCE_SHA);
   assert.throws(() => {
-    assert.equal(wrongCommit.sourceCommitSha, PINNED_COMMIT_A_SOURCE_SHA,
-      'tracked gateway manifest must remain pinned to reviewed Commit A');
-  }, /must remain pinned to reviewed Commit A/u);
+    assert.equal(wrongCommit.sourceCommitSha, PINNED_REVIEWED_SOURCE_SHA,
+      'tracked gateway manifest must remain pinned to reviewed gateway source');
+  }, /must remain pinned to reviewed gateway source/u);
 
   const omitted = structuredClone(tracked);
   omitted.sourceFiles.splice(1, 1);
@@ -347,7 +347,7 @@ test('staging copies only reviewed files and excludes private local or repositor
   const staging = fs.mkdtempSync(path.join(os.tmpdir(), 'e1-gateway-stage-test-'));
   try {
     stagePinnedSource(plan, { temporaryRoot: staging });
-    assert.deepEqual(fs.readdirSync(staging).sort(), [...COMMIT_A_SOURCE_PATHS]);
+    assert.deepEqual(fs.readdirSync(staging).sort(), [...GATEWAY_SOURCE_PATHS]);
     assert.equal(fs.existsSync(path.join(staging, '.local')), false);
     assert.equal(fs.existsSync(path.join(staging, '.env')), false);
     assert.equal(fs.existsSync(path.join(staging, '.gcloudignore')), false);
