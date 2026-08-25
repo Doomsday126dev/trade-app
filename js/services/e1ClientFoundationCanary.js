@@ -123,7 +123,9 @@
   async function responseBinding(uid,attemptId,receiptDigest,cryptoImpl){
     return digest([1,'group-e-client-response',uid,attemptId,receiptDigest],cryptoImpl);
   }
-  function validTime(value){return typeof value==='string'&&Number.isFinite(Date.parse(value));}
+  function validTime(value){
+    return Number.isSafeInteger(value)&&value>=0||typeof value==='string'&&Number.isFinite(Date.parse(value));
+  }
   function validateCapabilityShape(value,now){
     const slot=value?.slot,issued=Date.parse(value?.issuedAt),expires=Date.parse(value?.expiresAt);
     if(!exactFields(value,CAPABILITY_FIELDS)||value.schemaVersion!==1||value.recordType!=='group-e-slot-capability'||

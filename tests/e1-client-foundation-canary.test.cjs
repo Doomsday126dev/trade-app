@@ -9,6 +9,7 @@ const vm = require('node:vm');
 const { createFixture } = require('../functions/test/helpers/groupEFixture.cjs');
 const { capabilityDigest, sessionGenerationContext,
   sessionGenerationDigest } = require('../functions/e1-gateway/groupEAdmission');
+const { redactFoundationDocument } = require('../functions/e1-authority-service/server');
 
 const source = fs.readFileSync(path.resolve(__dirname, '../js/services/e1ClientFoundationCanary.js'), 'utf8');
 const ORIGIN = 'https://doomsday126dev.github.io';
@@ -411,6 +412,36 @@ test('response allowlists accept expected terminal codes and reject extra, malfo
   await assert.rejects(state.service.validateResponse({ ...success(state.fixture.UID.A, state.fixture.ATTEMPT.A),
     subjectBinding: 'f'.repeat(64) }, context), /group-e\/response-invalid/);
   await assert.rejects(state.service.validateResponse({ code: 'SUCCESS' }, context), /group-e\/response-invalid/);
+});
+
+test('production authority epoch-millisecond foundation timestamps pass the browser response contract', async () => {
+  const state = setup();
+  const context = { attemptId: state.fixture.ATTEMPT.A, uid: state.fixture.UID.A, cryptoImpl: crypto.webcrypto };
+  const foundation = redactFoundationDocument({
+    fields: {
+      schemaVersion: { integerValue: '1' },
+      canonicalTrainerName: { stringValue: 'Synthetic A' },
+      normalizedTrainerName: { stringValue: 'synthetica' },
+      handleKey: { stringValue: 'v1_73796e74686574696361' },
+      legacyUsername: { stringValue: 'Synthetic A' },
+      status: { stringValue: 'active' },
+      revision: { integerValue: '1' },
+      createdAt: { integerValue: '1787686365000' },
+      updatedAt: { integerValue: '1787686365000' }
+    }
+  });
+  const response = { ...success(state.fixture.UID.A, state.fixture.ATTEMPT.A), foundation };
+
+  assert.equal(typeof response.foundation.createdAt, 'number');
+  assert.equal(typeof response.foundation.updatedAt, 'number');
+  assert.equal((await state.service.validateResponse(response, context)).code, 'SUCCESS');
+
+  for (const timestamp of [NaN, Infinity, -1, 1.5, Number.MAX_SAFE_INTEGER + 1, null, {}, 'not-a-timestamp']) {
+    await assert.rejects(state.service.validateResponse({
+      ...response,
+      foundation: { ...foundation, createdAt: timestamp }
+    }, context), /group-e\/response-invalid/);
+  }
 });
 
 test('close clears in-memory result and source has no persistent storage or direct Firebase write path', async () => {
