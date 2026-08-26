@@ -21,9 +21,14 @@ test('exact mode and legacy owned listeners cannot run together',()=>{
 
 test('exact snapshots preserve global cache shape and overlay pending local writes',()=>{
   const callback=source.slice(source.indexOf('function _onOwnedDataSnapshot'),source.indexOf('function _onOwnedDataError'));
-  assert.match(callback,/cacheAdapterDomain\.applyExactRecord\(getLocal\(\),path,value\)/);
+  assert.match(callback,/const canonicalActive=accountSyncProjectionReady\(\)/);
+  assert.match(callback,/if\(!\(canonicalActive&&OWNED_MY_LIST_TYPES\.includes\(surface\)\)\)s=cacheAdapterDomain\.applyExactRecord\(s,path,value\)/);
+  assert.match(callback,/if\(canonicalActive&&surface==='profile'\)/);
+  assert.match(callback,/specialTradeBoard:canonicalBoard/);
   assert.match(callback,/runtimeDataWithSelectedTrainer\(s\)/);
   assert.match(callback,/Object\.values\(syncQueue\|\|\{\}\)/);
+  assert.match(callback,/if\(canonicalActive&&\(/);
+  assert.match(callback,/applyAccountSyncCanonicalEntities\(accountSyncCanonicalEntities\)/);
   assert.doesNotMatch(callback,/replaceTopLevel/);
 });
 

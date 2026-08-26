@@ -3,8 +3,15 @@ const assert=require('node:assert/strict');
 const {readFileSync}=require('node:fs');
 const path=require('node:path');
 const vm=require('node:vm');
+const {webcrypto}=require('node:crypto');
 
 const source=readFileSync(path.join(__dirname,'..','index.html'),'utf8');
+function loadAccountSyncProduct(){
+  const window={crypto:webcrypto,btoa:value=>Buffer.from(value,'binary').toString('base64')},context=vm.createContext({window,Uint8Array,unescape,encodeURIComponent,console});
+  for(const file of ['js/domain/accountSyncModel.js','js/domain/accountSyncProduct.js'])vm.runInContext(readFileSync(path.join(__dirname,'..',file),'utf8'),context,{filename:file});
+  return window.PogoDomain.accountSyncProduct;
+}
+const accountSyncProduct=loadAccountSyncProduct();
 
 function between(start,end){
   const from=source.indexOf(start);
@@ -33,13 +40,15 @@ function syncHelperHarness({exactReads=true,authUid='uid-a',activeOwner={uid:'ui
     ensureListSubscribed:type=>subscriptions.push(type),
     toast:message=>notices.push(message),
     i18nCore:{t:key=>key},
+    OWNED_MY_LIST_TYPES:Object.freeze(['wishlist','dynamax','gmax','costumes']),
     queueMyListUpdate:(type,username,patch)=>{
       queued.push({type,username,patch});
       return Object.freeze({ok:true,status:'queued',changed:Object.keys(patch).length});
     }
   };
+  context.accountSyncProjectionReady=()=>false;
   vm.runInNewContext(
-    between('const OWNED_MY_LIST_TYPES','function writeList(type,u,list,{previousList}={})'),
+    between('function resetOwnedHydrationState','async function writeList(type,u,list,{previousList,orderModel}={})'),
     context
   );
   return{context,subscriptions,notices,queued,setHydrated:value=>{hydrated=value;}};
@@ -103,9 +112,11 @@ test('queue flush rejects restored whole-list replacements and uses atomic updat
   assert.match(queueBlock,/queueItemIsCurrent\(path,item\)/);
   assert.doesNotMatch(queueBlock,/syncQueue\[path\]=item/);
 
-  const writeBlock=between('function writeList(type,u,list,{previousList}={})','function refreshAddPokemonChoices');
+  const writeBlock=between('async function writeList(type,u,list,{previousList,orderModel}={})','function refreshAddPokemonChoices');
   assert.match(writeBlock,/requireOwnedListHydration\(type,u\)/);
-  assert.match(writeBlock,/queueListEntryDiff\(type,u,previous,list\|\|\{\}\)/);
+  assert.match(writeBlock,/writeList\.pending/);
+  assert.match(writeBlock,/accountSyncProduct\.rebaseListEdit/);
+  assert.match(writeBlock,/queueListEntryDiff\(type,u,cachedPrevious,list\|\|\{\}\)/);
   assert.doesNotMatch(writeBlock,/queueSync\(`\$\{type\}\/\$\{u\}`/);
 });
 
@@ -133,8 +144,11 @@ function queueRuntimeHarness({setAdapter=async()=>{},updateAdapter=async()=>{},s
     activePublicShareHydrationToken:null,publicShareSessionMatches:()=>false,
     inspectOwnPublicShareAfterHydration:()=>{},console
   });
+  context.accountSyncRolloutEligible=async()=>false;
+  context.accountSyncMarkMutationBlocked=()=>{};
+  context.accountSyncMigratedLegacyQueueItem=()=>false;
   vm.runInContext(between('function unsafeWholeListQueueEntry','function showSyncDot'),context);
-  vm.runInContext(between('function listEntryValuesEqual','function writeList(type,u,list,{previousList}={})'),context);
+  vm.runInContext(between('function listEntryValuesEqual','async function writeList(type,u,list,{previousList,orderModel}={})'),context);
   return context;
 }
 
@@ -168,15 +182,19 @@ test('list diff distinguishes no-op, validation failure, and queue persistence f
   assert.deepEqual(failed.syncQueue,{});
 });
 
-function mutationHarness({queueResult={ok:true,status:'queued',changed:1}}={}){
+function mutationHarness({queueResult={ok:true,status:'queued',changed:1},initialList={Pikachu:'M'},authority=async()=>Object.freeze({mode:'legacy'})}={}){
   let state={
     users:{TrainerA:{lastUpdated:10,lastSeen:11}},
-    wishlist:{TrainerA:{Pikachu:'M'}}
+    wishlist:{TrainerA:{...initialList}}
   };
   const effects={activity:[],queueSync:[],publication:[],notices:[],saves:0,syncs:0,refreshes:0};
   const context={
-    fbOn:true,db:{},
+    fbOn:true,db:{},auth:{currentUser:{uid:'uid-a'}},
     requireOwnedListHydration:()=>true,
+    accountSyncMutationAuthority:authority,
+    accountSyncProduct,
+    parsePri:value=>{const raw=String(value||'');if(raw.startsWith('{')){const parsed=JSON.parse(raw);return{p:parsed.priority||'',mod:parsed.variant||'',lucky:parsed.lucky===true,xxl:parsed.xxl===true,xxs:parsed.xxs===true,shiny:parsed.shiny===true,backgroundId:parsed.backgroundId||''};}return{p:['H','M','L'].includes(raw.charAt(0))?raw.charAt(0):'',mod:'',lucky:false,xxl:false,xxs:false,shiny:false,backgroundId:''};},
+    priValue:(priority,variant,lucky,xxl,xxs,shiny,backgroundId)=>variant||lucky||xxl||xxs||shiny||backgroundId?JSON.stringify({priority,variant,lucky,xxl,xxs,shiny,backgroundId}):priority,
     getLocal:()=>JSON.parse(JSON.stringify(state)),
     queueListEntryDiff:()=>queueResult,
     recordActivityEvent:(...args)=>effects.activity.push(args),
@@ -190,13 +208,13 @@ function mutationHarness({queueResult={ok:true,status:'queued',changed:1}}={}){
     i18nCore:{t:key=>key},cur:'TrainerA',Date
   };
   vm.runInNewContext(
-    between('function writeList(type,u,list,{previousList}={})','function refreshAddPokemonChoices'),
+    between('async function writeList(type,u,list,{previousList,orderModel}={})','function refreshAddPokemonChoices'),
     context
   );
   return{context,effects,state:()=>JSON.parse(JSON.stringify(state))};
 }
 
-test('failed queue persistence leaves whole-list and item writes completely unchanged',()=>{
+test('failed queue persistence leaves whole-list and item writes completely unchanged',async()=>{
   const failed={ok:false,status:'persistence_failed',changed:1,errorCode:'storage/quota'};
   for(const operation of[
     h=>h.context.writeList('wishlist','TrainerA',{Pikachu:'H',Eevee:'L'}),
@@ -204,7 +222,7 @@ test('failed queue persistence leaves whole-list and item writes completely unch
   ]){
     const h=mutationHarness({queueResult:failed});
     const before=h.state();
-    assert.equal(operation(h),false);
+    assert.equal(await operation(h),false);
     assert.deepEqual(h.state(),before);
     assert.deepEqual(h.effects.activity,[]);
     assert.deepEqual(h.effects.queueSync,[]);
@@ -216,9 +234,9 @@ test('failed queue persistence leaves whole-list and item writes completely unch
   }
 });
 
-test('successfully persisted offline queue keeps optimistic list behavior',()=>{
+test('successfully persisted offline queue keeps optimistic list behavior',async()=>{
   const h=mutationHarness();
-  assert.equal(h.context.writeList('wishlist','TrainerA',{Pikachu:'H',Eevee:'L'}),true);
+  assert.equal(await h.context.writeList('wishlist','TrainerA',{Pikachu:'H',Eevee:'L'}),true);
   assert.deepEqual(h.state().wishlist.TrainerA,{Pikachu:'H',Eevee:'L'});
   assert.deepEqual(h.effects.activity,[['TrainerA',1]]);
   assert.equal(h.effects.saves,1);
@@ -229,6 +247,23 @@ test('successfully persisted offline queue keeps optimistic list behavior',()=>{
     'users/TrainerA/lastUpdated','users/TrainerA/lastSeen'
   ]);
   assert.deepEqual(h.effects.notices,[]);
+});
+
+test('rapid disjoint qualifier edits serialize and rebase without losing either change',async()=>{
+  const h=mutationHarness({initialList:{Pikachu:'H'}}),base={priority:'H',variant:'',lucky:false,xxl:false,xxs:false,shiny:false,backgroundId:''};
+  const shiny=JSON.stringify({...base,shiny:true}),lucky=JSON.stringify({...base,lucky:true});
+  const first=h.context.writeList('wishlist','TrainerA',{Pikachu:shiny}),second=h.context.writeList('wishlist','TrainerA',{Pikachu:lucky});
+  assert.deepEqual(await Promise.all([first,second]),[true,true]);
+  assert.deepEqual(JSON.parse(h.state().wishlist.TrainerA.Pikachu),{...base,lucky:true,shiny:true});assert.equal(h.effects.saves,2);
+});
+
+test('a serialized My List write cannot cross an authentication-session boundary',async()=>{
+  const waiting=deferred(),h=mutationHarness({authority:()=>waiting.promise});
+  const pending=h.context.writeList('wishlist','TrainerA',{Pikachu:'H'});
+  h.context.auth.currentUser={uid:'uid-b'};h.context.cur='TrainerB';waiting.resolve(Object.freeze({mode:'legacy'}));
+  assert.equal(await pending,false);
+  assert.deepEqual(h.state().wishlist.TrainerA,{Pikachu:'M'});
+  assert.equal(h.effects.saves,0);assert.deepEqual(h.effects.queueSync,[]);assert.deepEqual(h.effects.publication,[]);
 });
 
 test('add, import, bulk, and delete UI state changes remain after the write-success boundary',()=>{
@@ -297,10 +332,11 @@ test('a failed atomic list patch retries idempotently without widening its root'
 
 test('an in-flight atomic patch cannot erase a newer merged patch',async()=>{
   const pending=deferred();
-  const h=queueRuntimeHarness({updateAdapter:()=>pending.promise});
+  const started=deferred();
+  const h=queueRuntimeHarness({updateAdapter:()=>{started.resolve();return pending.promise;}});
   h.queueMyListUpdate('wishlist','TrainerA',{Pikachu:'H'});
   const flushing=h.flushSyncQueue();
-  await Promise.resolve();
+  await started.promise;
   h.queueMyListUpdate('wishlist','TrainerA',{Eevee:'M'});
   pending.resolve();
   await flushing;

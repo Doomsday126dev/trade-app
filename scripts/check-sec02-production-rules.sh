@@ -22,8 +22,9 @@ NODE_BIN="$(command -v node)"
 PROJECT_ID=demo-pogo-sec02-production
 printf -v NARROW_COMMAND 'POGO_RULES_PROJECT_ID=%q %q --test %q' "$PROJECT_ID" "$NODE_BIN" tests/firebase/narrow-read-rules.test.cjs
 printf -v REQUEST_COMMAND 'POGO_RULES_PROJECT_ID=%q %q --test %q' "$PROJECT_ID" "$NODE_BIN" tests/firebase/request-access-candidate-rules.test.cjs
+printf -v ACCOUNT_SYNC_COMMAND 'POGO_RULES_PROJECT_ID=%q %q --test %q' "$PROJECT_ID" "$NODE_BIN" tests/firebase/account-sync-rules.test.cjs
 exec "${FIREBASE[@]}" emulators:exec \
   --only auth,database \
   --project "$PROJECT_ID" \
   --config tests/firebase/firebase.sec02-production.json \
-  "$NARROW_COMMAND && $REQUEST_COMMAND"
+  "$NARROW_COMMAND && $REQUEST_COMMAND && $ACCOUNT_SYNC_COMMAND"

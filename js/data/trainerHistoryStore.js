@@ -39,7 +39,8 @@
       const item=trainerRef(value?.displayName||value?.trainerName);
       if(!item.key)return null;
       const createdAt=timestamp(value?.createdAt||value?.addedAt||fallbackTime),updatedAt=timestamp(value?.updatedAt,createdAt);
-      return{...item,tagIds:[...new Set((Array.isArray(value?.tagIds)?value.tagIds:[]).map(String).filter(Boolean))].sort().slice(0,MAX_TAGS_PER_FAVORITE),createdAt,updatedAt};
+      const targetUid=String(value?.targetUid||'').trim();
+      return{...item,...(targetUid?{targetUid}:{}),tagIds:[...new Set((Array.isArray(value?.tagIds)?value.tagIds:[]).map(String).filter(Boolean))].sort().slice(0,MAX_TAGS_PER_FAVORITE),createdAt,updatedAt};
     }
     function cleanRecent(value){
       const item=trainerRef(value?.displayName||value?.trainerName);
@@ -102,10 +103,10 @@
     return Object.freeze({
       key,read,favoriteFor,
       isFavorite:username=>!!favoriteFor(username),
-      toggleFavorite(username){
+      toggleFavorite(username,{targetUid=''}={}){
         const state=read(),item=trainerRef(username),index=state.favorites.findIndex(value=>value.key===item.key),timestamp=Number(now());
         if(index>=0)state.favorites.splice(index,1);
-        else state.favorites.push({...item,tagIds:[],createdAt:timestamp,updatedAt:timestamp});
+        else state.favorites.push({...item,...(String(targetUid).trim()?{targetUid:String(targetUid).trim()}:{}),tagIds:[],createdAt:timestamp,updatedAt:timestamp});
         state.favorites.sort((a,b)=>a.displayName.localeCompare(b.displayName,'en',{sensitivity:'base'})||a.key.localeCompare(b.key));
         write(state);return{favorite:index<0,state:read()};
       },
@@ -162,18 +163,25 @@
         item.tagIds=ids;
         item.updatedAt=Number(now());write(state);return{ok:true,state:read()};
       },
-      saveFavoriteOrganization(username,{tagIds=[]}={}){
+      saveFavoriteOrganization(username,{tagIds=[],targetUid=''}={}){
         const state=read(),ref=trainerRef(username),ids=[...new Set((tagIds||[]).map(String))].filter(id=>state.tags[id]).sort();
         if(!ref.key)return{ok:false,code:'favorite-missing'};
         if(ids.length>MAX_TAGS_PER_FAVORITE)return{ok:false,code:'tag-limit'};
         let item=state.favorites.find(entry=>entry.key===ref.key),created=false;
         if(!item){
           if(state.favorites.length>=maxFavorites)return{ok:false,code:'favorite-limit'};
-          const timestamp=Number(now());item={...ref,tagIds:[],createdAt:timestamp,updatedAt:timestamp};state.favorites.push(item);created=true;
+          const timestamp=Number(now());item={...ref,...(String(targetUid).trim()?{targetUid:String(targetUid).trim()}:{}),tagIds:[],createdAt:timestamp,updatedAt:timestamp};state.favorites.push(item);created=true;
         }
-        item.displayName=ref.displayName;item.tagIds=ids;
+        item.displayName=ref.displayName;if(String(targetUid).trim())item.targetUid=String(targetUid).trim();item.tagIds=ids;
         item.updatedAt=Number(now());state.favorites.sort((a,b)=>a.displayName.localeCompare(b.displayName,'en',{sensitivity:'base'})||a.key.localeCompare(b.key));
         write(state);return{ok:true,created,state:read()};
+      },
+      replaceSyncedOrganization({favorites=[],tags={}}={}){
+        const state=read(),canonical=Array.isArray(favorites)?favorites:[],canonicalNames=new Set(canonical.map(item=>trainerRef(item.displayName).key));
+        const unresolved=state.favorites.filter(item=>!item.targetUid&&!canonicalNames.has(item.key));
+        state.tags=plainObject(tags);const activeTagIds=new Set(Object.keys(state.tags));
+        state.favorites=[...canonical,...unresolved.map(item=>({...item,tagIds:item.tagIds.filter(id=>activeTagIds.has(id))}))];
+        return{ok:true,state:write(state)};
       },
       filterFavorites({query='',tagIds=[]}={}){
         const state=read(),needle=labelIdentity(query),selected=[...new Set(tagIds.map(String))];

@@ -232,10 +232,15 @@ test('owner republish prompt reads only the owner projection and clears after ve
 
 test('only confirmed list and profile changes request automatic publication',()=>{
   const writeUser=between('async function writeUser(u,data)','function canWriteLoginDirectoryNow');
-  const writeList=between('function writeList(type,u,list,{previousList}={})','function refreshAddPokemonChoices');
+  const writeList=between('async function writeList(type,u,list,{previousList,orderModel}={})','function refreshAddPokemonChoices');
+  const canonicalAck=between('async function publishAccountSyncProjection','function retireMigratedLegacyListQueue');
   const profile=between('async function saveProfile(){','// ── UI HELPERS');
   assert.doesNotMatch(writeUser,/publicShare|requestPublicSharePublication/);
-  assert.equal((writeList.match(/requestPublicSharePublication\('owned_list_edit'/g)||[]).length,2);
+  assert.equal((writeList.match(/requestPublicSharePublication\('owned_list_edit'/g)||[]).length,1);
+  assert.equal((canonicalAck.match(/requestPublicSharePublication\('owned_list_edit'/g)||[]).length,1);
+  assert.match(canonicalAck,/projectAcceptedPublicRows\(\{rows:acceptedRows/);
+  assert.match(canonicalAck,/requestPublicSharePublication\('owned_list_edit',source,cur\)/);
+  assert.doesNotMatch(canonicalAck,/activeEntities|applyAccountSyncCanonicalEntities/);
   assert.match(profile,/requestPublicSharePublication\('share_profile_update'/);
 });
 

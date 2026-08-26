@@ -77,7 +77,7 @@ test('canonical picker retains multi-select, inline creation, duplicate reuse, a
 });
 
 test('Find Trainer, autocomplete, Favorites, and cards share one deliberate container',()=>{
-  assert.match(html,/\.trainer-discovery-content\{width:min\(100%,760px\);max-width:var\(--container-standard\)\}/);
+  assert.match(html,/\.trainer-discovery-content\{width:100%;max-width:var\(--container-wide\)\}/);
   assert.match(html,/\.trainer-search-shell\{[^}]*width:100%;max-width:none/);
   assert.match(html,/\.trainer-suggestions\{[^}]*left:0;right:0/);
   const find=html.slice(html.indexOf('<!-- FIND TRAINER'),html.indexOf('<!-- MY LIST'));

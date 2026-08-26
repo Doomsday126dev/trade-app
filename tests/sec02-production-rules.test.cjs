@@ -8,6 +8,7 @@ const root=path.join(__dirname,'..');
 const readJson=file=>JSON.parse(fs.readFileSync(path.join(root,file),'utf8'));
 const baseline=readJson('tests/firebase/database.rules.narrow-read.json');
 const requestCandidate=readJson('tests/firebase/database.rules.request-access-candidate.json');
+const accountSyncCandidate=readJson('tests/firebase/database.rules.account-sync.json');
 const production=readJson('tests/firebase/database.rules.sec02-production.json');
 const deployConfig=readJson('firebase.sec02-production.json');
 const rollbackConfig=readJson('firebase.sec02-rollback.json');
@@ -15,12 +16,20 @@ const rollbackPath='release/firebase/sec02/rollback/database.rules.trade-list-a4
 const rollback=readJson(rollbackPath);
 const rollbackMetadata=readJson('release/firebase/sec02/rollback/database.rules.trade-list-a4297-default-rtdb.pre-sec02-20260817T040808Z.metadata.json');
 
-test('production candidate preserves every authoritative root and changes only /requests',()=>{
-  assert.deepEqual(Object.keys(production.rules),Object.keys(baseline.rules));
+test('production candidate preserves every authoritative root and changes only /requests plus additive /accountSync',()=>{
+  assert.deepEqual(Object.keys(production.rules),[...Object.keys(baseline.rules),'accountSync']);
   assert.deepEqual(production.rules.requests,requestCandidate.rules.requests);
+  assert.deepEqual(production.rules.accountSync,accountSyncCandidate.rules.accountSync);
   for(const rootName of Object.keys(baseline.rules)){
     if(rootName!=='requests')assert.deepEqual(production.rules[rootName],baseline.rules[rootName],rootName);
   }
+});
+
+test('account sync is owner-exact and does not grant collection enumeration or a legacy schema',()=>{
+  const source=JSON.stringify(production.rules.accountSync);
+  assert.match(source,/auth\.uid === \$uid/);
+  assert.doesNotMatch(source,/auth\.uid !== \$uid|schemaVersion'\)\.val\(\) === 0/);
+  assert.equal(production.rules.accountSync.$uid.$other['.validate'],false);
 });
 
 test('production candidate retains active identity list share community trade and decrement roots',()=>{

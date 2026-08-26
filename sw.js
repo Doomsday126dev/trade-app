@@ -50,6 +50,10 @@ const RELEASE_ASSETS=[
   'js/domain/tradeListComparison.js',
   'js/domain/eventPresentation.js',
   'js/domain/publicSharePublication.js',
+  'js/domain/accountSyncModel.js',
+  'js/domain/accountSyncMerge.js',
+  'js/domain/accountSyncMigration.js',
+  'js/domain/accountSyncProduct.js',
   'js/domain/trainerPreferences.js',
   'js/domain/trainerPreferenceSync.js',
   'js/domain/authenticationReadiness.js',
@@ -82,6 +86,10 @@ const RELEASE_ASSETS=[
   'js/data/favoriteShareSessionCache.js',
   'js/data/trainerPreferencesRepository.js',
   'js/data/trainerPreferenceSyncQueue.js',
+  'js/data/accountSyncJournal.js',
+  'js/data/accountSyncRepository.js',
+  'js/data/accountSyncController.js',
+  'js/data/accountSyncRuntime.js',
   'js/domain/cacheAdapters.js',
   'js/ui/trainerTagPanel.js'
 ];

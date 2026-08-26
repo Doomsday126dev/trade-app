@@ -77,7 +77,7 @@ test('priority collapse state is renderer-owned, accessible, and separate from l
   assert.match(html,/onclick="toggleMyListPrioritySection\('\$\{priority\}'\)"/);
   assert.match(html,/class="mylist-priority-body" id="\$\{bodyId\}" \$\{collapsed\?'hidden':''\}/);
   assert.match(html,/function toggleMyListPrioritySection\(priority\)/);
-  assert.match(html,/expandMyListPrioritiesReceivingEntries\(type,u,previous,list\|\|\{\}\)/);
+  assert.match(html,/expandMyListPrioritiesReceivingEntries\(type,u,cachedPrevious,list\|\|\{\}\)/);
   assert.match(html,/nextPriority!==previousPriority/);
   assert.doesNotMatch(renderMyList,/localStorage|sessionStorage|queueSync|writeList\(/);
 });

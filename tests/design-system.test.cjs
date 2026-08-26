@@ -172,7 +172,8 @@ test('My List rows foreground collection identity while retaining fast editing',
   assert.match(css,/\.drag-handle\{[^}]*width:28px;height:40px/);
   assert.match(css,/@media\(max-width:600px\)\{[\s\S]*?\.myrow\{min-height:54px;padding:3px var\(--space-1\);gap:6px\}/);
   assert.match(css,/\.myrow-sprite-wrap,\.myrow-sprite\{width:32px;height:32px\}/);
-  assert.match(css,/\.myrow-active-traits\{max-width:156px;gap:2px\}/);
+  assert.match(css,/\.myrow-active-traits\{max-width:92px\}/);
+  assert.match(css,/\.myrow-copy \.myrow-active-traits\{max-width:100%;gap:2px;flex-wrap:nowrap;overflow:hidden\}/);
   assert.match(css,/\.myrow-trait\.detail\{display:inline-flex;max-width:62px\}/);
   assert.match(css,/\.myrow-edit\{width:var\(--control-min\);min-width:var\(--control-min\);height:var\(--control-min\);min-height:var\(--control-min\);padding:0\}/);
 });
