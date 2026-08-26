@@ -63,6 +63,7 @@ const RELEASE_ASSETS=[
   'js/i18n/locales/de.js',
   'js/i18n/pokemonNames/catalog.js',
   'js/i18n/pokemonNames/variants.js',
+  'js/i18n/pokemonNames/structuredForms.js',
   'js/i18n/pokemonNames/core.js',
   'js/i18n/eventLabels/currentTitles.js',
   'js/i18n/eventLabels/core.js',

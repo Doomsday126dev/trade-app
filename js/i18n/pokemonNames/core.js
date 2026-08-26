@@ -2,6 +2,8 @@
   const root=global.PogoI18n=global.PogoI18n||{};
   const catalogs=global.PogoPokemonNameCatalogs||{};
   const variantCatalog=global.PogoPokemonVariantCatalog||{entries:{}};
+  const structuredForms=global.PogoPokemonStructuredForms||{entries:{}};
+  const structuredEntries=Object.freeze({...variantCatalog.entries,...structuredForms.entries});
   const supported=Object.freeze(['en','ja','es','de']);
   const formNames=Object.freeze({
     en:Object.freeze({A:'Alolan',G:'Galarian',H:'Hisuian',P:'Paldean'}),
@@ -65,18 +67,18 @@
     const genderAlias=(entry?.no===29&&/^Nidoran[- ]?F$/i.test(canonical))||(entry?.no===32&&/^Nidoran[- ]?M$/i.test(canonical));
     const plain=!!englishSpecies&&(normalizeSpeciesLookup(canonical)===normalizeSpeciesLookup(englishSpecies)||normalizeSpeciesLookup(original)===normalizeSpeciesLookup(englishSpecies)||genderAlias);
     if(plain)return Object.freeze({text:localizedSpecies,status:'full',category:'ordinary-species'});
+    const known=structuredEntries[variantKey(entry)];
+    if(known){
+      const descriptor=known.labels?.[lang];
+      if(descriptor)return Object.freeze({text:composedVariantLabel(localizedSpecies,descriptor,lang),status:'full',category:known.category,formId:known.formId});
+      return Object.freeze({text:composedVariantLabel(localizedSpecies,known.canonicalDescriptor,lang),status:'partial',category:known.category,formId:known.formId});
+    }
     const regional=regionalParts(entry);
     if(regional){
       const descriptor=regionalDescriptor(entry,englishSpecies);
       if(descriptor==='')return Object.freeze({text:regionalLabel(localizedSpecies,regional.code,lang),status:'full',category:'regional-form'});
       if(descriptor)return Object.freeze({text:composedVariantLabel(regionalLabel(localizedSpecies,regional.code,lang),descriptor,lang),status:'partial',category:'regional-costume-or-subform'});
       return Object.freeze({text:original,status:'fallback',category:'unparseable-regional'});
-    }
-    const known=variantCatalog.entries?.[variantKey(entry)];
-    if(known){
-      const descriptor=known.labels?.[lang];
-      if(descriptor)return Object.freeze({text:composedVariantLabel(localizedSpecies,descriptor,lang),status:'full',category:known.category,formId:known.formId});
-      return Object.freeze({text:composedVariantLabel(localizedSpecies,known.canonicalDescriptor,lang),status:'partial',category:known.category,formId:known.formId});
     }
     const descriptor=safeDescriptor(entry,englishSpecies);
     if(descriptor)return Object.freeze({text:composedVariantLabel(localizedSpecies,descriptor,lang),status:'partial',category:'app-specific-costume'});
@@ -117,5 +119,5 @@
     return Object.freeze(summary);
   }
 
-  root.pokemonNames=Object.freeze({localeKey,identity,originalLabel,speciesName,speciesIdByEnglishName,normalizeSpeciesLookup,displayName,resolveDisplayName,searchLabels,compareDisplay,coverage,variantCoverage,regionalParts,variantSource:variantCatalog.source||null});
+  root.pokemonNames=Object.freeze({localeKey,identity,originalLabel,speciesName,speciesIdByEnglishName,normalizeSpeciesLookup,displayName,resolveDisplayName,searchLabels,compareDisplay,coverage,variantCoverage,regionalParts,variantSource:variantCatalog.source||null,structuredFormSource:structuredForms.source||null});
 })(window);

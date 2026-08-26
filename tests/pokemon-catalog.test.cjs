@@ -19,6 +19,7 @@ function load(files){
 const window=load([
   'js/i18n/pokemonNames/catalog.js',
   'js/i18n/pokemonNames/variants.js',
+  'js/i18n/pokemonNames/structuredForms.js',
   'js/i18n/pokemonNames/core.js',
   'js/domain/pokemonKeys.js',
   'js/domain/username.js',

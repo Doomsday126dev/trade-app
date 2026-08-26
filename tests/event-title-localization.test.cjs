@@ -9,7 +9,7 @@ const source=file=>readFileSync(path.join(root,file),'utf8');
 const html=source('index.html');
 const window={};window.window=window;
 const context=vm.createContext({window,Intl});
-for(const file of ['js/i18n/pokemonNames/catalog.js','js/i18n/pokemonNames/variants.js','js/i18n/pokemonNames/core.js','js/i18n/eventLabels/currentTitles.js','js/i18n/eventLabels/core.js'])vm.runInContext(source(file),context,{filename:file});
+for(const file of ['js/i18n/pokemonNames/catalog.js','js/i18n/pokemonNames/variants.js','js/i18n/pokemonNames/structuredForms.js','js/i18n/pokemonNames/core.js','js/i18n/eventLabels/currentTitles.js','js/i18n/eventLabels/core.js'])vm.runInContext(source(file),context,{filename:file});
 const labels=window.PogoI18n.eventLabels;
 
 const captured=[

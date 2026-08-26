@@ -15,7 +15,7 @@ function load(files){
   return window;
 }
 const window=load([
-  'js/i18n/pokemonNames/catalog.js','js/i18n/pokemonNames/variants.js','js/i18n/pokemonNames/core.js','js/i18n/eventLabels/currentTitles.js','js/i18n/eventLabels/core.js',
+  'js/i18n/pokemonNames/catalog.js','js/i18n/pokemonNames/variants.js','js/i18n/pokemonNames/structuredForms.js','js/i18n/pokemonNames/core.js','js/i18n/eventLabels/currentTitles.js','js/i18n/eventLabels/core.js',
   'js/domain/autocompleteText.js','js/domain/autocompleteMatching.js','js/domain/eventPresentation.js'
 ]);
 const pokemon=window.PogoI18n.pokemonNames;
@@ -65,9 +65,32 @@ test('structured official variants localize while app-specific costumes preserve
   }
 });
 
+test('structured form supplements localize official terminology without changing identity',()=>{
+  const examples=[
+    [{no:128,name:'P-Tauros (Aqua)',displayName:'P-Tauros (Aqua)'},'ja','ケンタロス（パルデアのすがた・ウォーター種）'],
+    [{no:128,name:'P-Tauros (Blaze)',displayName:'P-Tauros (Blaze)'},'es','Tauros (Forma de Paldea · variedad ardiente)'],
+    [{no:128,name:'P-Tauros (Combat)',displayName:'P-Tauros (Combat)'},'de','Tauros (Paldea-Form · Kampfvariante)'],
+    [{no:978,name:'Tatsugiri (Droopy)',displayName:'Tatsugiri (Droopy)'},'es','Tatsugiri (Forma Lánguida)'],
+    [{no:978,name:'Tatsugiri (Stretchy)',displayName:'Tatsugiri (Stretchy)'},'de','Nigiragi (Langgestreckte Form)'],
+    [{no:854,name:'Sinistea (Antique)',displayName:'Sinistea (Antique)'},'ja','ヤバチャ（しんさくフォルム）'],
+    [{no:386,name:'Deoxys (Attack)',displayName:'Deoxys (Attack)'},'es','Deoxys (Forma Ataque)'],
+    [{no:487,name:'Giratina (Origin)',displayName:'Giratina (Origin)'},'de','Giratina (Urform)'],
+    [{no:492,name:'Shaymin (Sky)',displayName:'Shaymin (Sky)'},'ja','シェイミ（スカイフォルム）'],
+    [{no:720,name:'Hoopa (Unbound)',displayName:'Hoopa (Unbound)'},'es','Hoopa Desatado'],
+    [{no:745,name:'Lycanroc (Dusk)',displayName:'Lycanroc (Dusk)'},'de','Wolwerock (Zwielichtform)']
+  ];
+  for(const[entry,locale,label]of examples){
+    const identity=JSON.parse(JSON.stringify(pokemon.identity(entry)));
+    assert.equal(pokemon.resolveDisplayName(entry,{locale}).text,label,`${locale} ${entry.name}`);
+    assert.deepEqual(JSON.parse(JSON.stringify(pokemon.identity(entry))),identity);
+    assert.equal(identity.variantId,entry.name);
+  }
+  assert.equal(pokemon.structuredFormSource.kind,'curated-official-form-supplement');
+});
+
 test('all 966 canonical entries have measurable full partial and fallback coverage',()=>{
   const baseline={full:620,partial:0,fallback:346};
-  const expected={ja:{full:769,partial:197,fallback:0},es:{full:725,partial:241,fallback:0},de:{full:762,partial:204,fallback:0}};
+  const expected={ja:{full:772,partial:194,fallback:0},es:{full:731,partial:235,fallback:0},de:{full:768,partial:198,fallback:0}};
   for(const locale of ['ja','es','de']){
     const report=JSON.parse(JSON.stringify(pokemon.variantCoverage(appEntries,locale)));
     assert.equal(report.total,966);assert.deepEqual({full:report.full,partial:report.partial,fallback:report.fallback},expected[locale]);
