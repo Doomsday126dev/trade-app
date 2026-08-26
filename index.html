@@ -1385,9 +1385,10 @@ html[data-theme="light"] .have-mirror-badge,html[data-theme="light"] .have-mirro
 .trainer-suggestions{position:absolute;z-index:340;top:calc(100% + 5px);left:0;right:0;display:none;background:var(--card);border:1px solid var(--border2);border-radius:var(--radius-md);box-shadow:var(--shadow);max-height:var(--trainer-suggestion-max-height,min(320px,45vh));overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 .trainer-suggestions[data-placement="above"]{top:auto;bottom:calc(100% + 5px)}
 .trainer-suggestions.open{display:block}
-.trainer-suggestion{width:100%;border:0;border-bottom:1px solid var(--border);background:transparent;color:var(--text);padding:11px 13px;text-align:left;font:600 13px var(--font);cursor:pointer;min-height:44px;overflow-wrap:anywhere}
+.trainer-suggestion{width:100%;border:0;border-bottom:1px solid var(--border);background:transparent;color:var(--text);padding:10px 13px;text-align:left;font:600 13px var(--font);cursor:pointer;min-height:52px;overflow-wrap:anywhere;display:grid;gap:4px}
 .trainer-suggestion:last-child{border-bottom:0}.trainer-suggestion:hover,.trainer-suggestion.active{background:var(--bg2);outline:none}.trainer-suggestion mark{background:rgba(168,139,250,.22);color:var(--ac2);border-radius:2px;padding:0 1px}
-.favorite-browse{margin:12px 0;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--surface-subtle)}.favorite-browse-heading{margin:0}.favorite-browse-disclosure{appearance:none;width:100%;min-height:58px;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;padding:9px 11px;border:0;border-radius:var(--radius-md);background:transparent;color:var(--text);text-align:left}.favorite-browse-disclosure:hover{background:var(--surface-hover)}.favorite-browse-disclosure-copy{display:grid;gap:2px;min-width:0}.favorite-browse-title{font-size:13px;font-weight:800}.favorite-browse-hint{color:var(--muted);font-size:11px;line-height:1.4}.favorite-browse-chevron{color:var(--muted);transition:transform var(--transition-base)}.favorite-browse[data-expanded="true"] .favorite-browse-chevron{transform:rotate(180deg)}.favorite-browse-panel{padding:12px;border-top:1px solid var(--border)}.favorite-browse-panel[hidden]{display:none}.favorite-browse-description{max-width:560px;margin:0 0 8px;color:var(--muted);font-size:12px;line-height:1.45}.favorite-browse-search{position:relative;width:min(100%,560px)}.favorite-browse-search .trainer-search-clear{z-index:2}.favorite-browse-search .ac-dropdown{z-index:350}.favorite-browse-search .ac-item{min-height:48px}.favorite-browse-result-region{min-height:0}.favorite-browse-result-region[aria-busy="true"]{min-height:72px}.favorite-browse-progress{display:flex;align-items:center;gap:10px;min-height:64px;color:var(--muted);font-size:12px}.favorite-browse-progress .skel{width:34%;min-width:120px}.favorite-browse-summary{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin:15px 0 8px}.favorite-browse-pokemon{font-size:16px;font-weight:850}.favorite-browse-count{color:var(--muted);font-size:12px}.favorite-browse-results{display:grid;grid-template-columns:minmax(0,1fr);gap:7px}.favorite-browse-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px;min-width:0;padding:9px 10px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--surface-raised)}.favorite-browse-main{min-width:0}.favorite-browse-name{font-size:13px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.favorite-browse-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:4px;color:var(--muted);font-size:11px}.favorite-browse-priority{display:inline-flex;align-items:center;min-height:24px;padding:2px 7px;border:1px solid var(--border2);border-radius:var(--radius-pill);font-weight:850}.favorite-browse-priority.H{color:var(--danger);border-color:color-mix(in srgb,var(--danger) 45%,var(--border))}.favorite-browse-priority.M{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 45%,var(--border))}.favorite-browse-priority.L{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 45%,var(--border))}.favorite-browse-tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}.favorite-browse-tags .favorite-card-tag{min-height:24px}.favorite-browse-open{min-width:48px;min-height:48px;padding:8px 10px}.favorite-browse-footer{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:10px;color:var(--muted);font-size:11px}.favorite-browse-footer button{min-height:48px}.favorite-browse-partial{flex-basis:100%;color:var(--warn);line-height:1.4}.favorite-browse .empty-state{margin-top:10px;padding:12px 0;text-align:left}.favorite-browse .empty-svg,.favorite-browse .empty-i{display:none}
+.trainer-suggestion-name{font-size:14px;font-weight:800}.trainer-suggestion-details,.trainer-suggestion-matches{display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:var(--muted);font-size:10px;line-height:1.35}.trainer-suggestion-match{display:inline-flex;align-items:baseline;gap:3px}.trainer-suggestion-match strong{color:var(--text);font-size:11px}.trainer-discovery-modes{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;width:min(100%,560px);margin-top:12px;padding:4px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--surface-subtle)}.trainer-discovery-modes button{min-height:44px;border:0;border-radius:var(--radius-sm);background:transparent;color:var(--muted);font:750 12px var(--font);cursor:pointer}.trainer-discovery-modes button:hover,.trainer-discovery-modes button:focus-visible{background:var(--surface-hover);color:var(--text)}
+.favorite-browse{margin:22px 0 0;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--surface-subtle)}.favorite-browse-heading{margin:0}.favorite-browse-disclosure{appearance:none;width:100%;min-height:58px;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;padding:9px 11px;border:0;border-radius:var(--radius-md);background:transparent;color:var(--text);text-align:left}.favorite-browse-disclosure:hover{background:var(--surface-hover)}.favorite-browse-disclosure-copy{display:grid;gap:2px;min-width:0}.favorite-browse-title{font-size:13px;font-weight:800}.favorite-browse-hint{color:var(--muted);font-size:11px;line-height:1.4}.favorite-browse-chevron{color:var(--muted);transition:transform var(--transition-base)}.favorite-browse[data-expanded="true"] .favorite-browse-chevron{transform:rotate(180deg)}.favorite-browse-panel{padding:12px;border-top:1px solid var(--border)}.favorite-browse-panel[hidden]{display:none}.favorite-browse-description{max-width:560px;margin:0 0 8px;color:var(--muted);font-size:12px;line-height:1.45}.favorite-browse-search{position:relative;width:min(100%,560px)}.favorite-browse-search .trainer-search-clear{z-index:2}.favorite-browse-search .ac-dropdown{z-index:350}.favorite-browse-search .ac-item{min-height:48px}.favorite-browse-result-region{min-height:0}.favorite-browse-result-region[aria-busy="true"]{min-height:72px}.favorite-browse-progress{display:flex;align-items:center;gap:10px;min-height:64px;color:var(--muted);font-size:12px}.favorite-browse-progress .skel{width:34%;min-width:120px}.favorite-browse-summary{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin:15px 0 8px}.favorite-browse-pokemon{font-size:16px;font-weight:850}.favorite-browse-count{color:var(--muted);font-size:12px}.favorite-browse-results{display:grid;grid-template-columns:minmax(0,1fr);gap:7px}.favorite-browse-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px;min-width:0;padding:9px 10px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--surface-raised)}.favorite-browse-main{min-width:0}.favorite-browse-name{font-size:13px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.favorite-browse-match{margin-top:3px;color:var(--ac2);font-size:11px}.favorite-browse-match strong{color:var(--text);font-size:13px}.favorite-browse-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:4px;color:var(--muted);font-size:11px}.favorite-browse-priority{display:inline-flex;align-items:center;min-height:24px;padding:2px 7px;border:1px solid var(--border2);border-radius:var(--radius-pill);font-weight:850}.favorite-browse-priority.H{color:var(--danger);border-color:color-mix(in srgb,var(--danger) 45%,var(--border))}.favorite-browse-priority.M{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 45%,var(--border))}.favorite-browse-priority.L{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 45%,var(--border))}.favorite-browse-tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}.favorite-browse-tags .favorite-card-tag{min-height:24px}.favorite-browse-open{min-width:48px;min-height:48px;padding:8px 10px}.favorite-browse-footer{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:10px;color:var(--muted);font-size:11px}.favorite-browse-footer button{min-height:48px}.favorite-browse-partial{flex-basis:100%;color:var(--warn);line-height:1.4}.favorite-browse .empty-state{margin-top:10px;padding:12px 0;text-align:left}.favorite-browse .empty-svg,.favorite-browse .empty-i{display:none}
 .trainer-quick-section{margin-top:22px;padding-top:18px;border-top:1px solid var(--border)}.trainer-section-heading{display:flex;align-items:center;gap:8px;margin:0 0 9px}.trainer-quick-heading{font-size:15px;font-weight:800;color:var(--text);margin:0}.trainer-section-count{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:24px;padding:0 7px;border:1px solid var(--border2);border-radius:var(--radius-pill);background:var(--bg2);color:var(--muted);font-size:11px;font-weight:800}
 .trainer-quick-grid,.recent-trainer-list{display:grid;grid-template-columns:minmax(0,1fr);gap:7px}
 .trainer-quick-card,.recent-trainer-row{border:1px solid var(--border);background:var(--card);border-radius:var(--radius-md);padding:8px 10px;display:flex;gap:9px;align-items:center;min-width:0}
@@ -1399,6 +1400,7 @@ html[data-theme="light"] .have-mirror-badge,html[data-theme="light"] .have-mirro
 @media(prefers-reduced-motion:reduce){.favorite-card-surface{transition:none}}
 .trainer-sync-status{display:flex;align-items:flex-start;gap:9px;min-width:0;margin-top:10px;padding:10px 11px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--bg)}.trainer-sync-status-icon{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;flex:0 0 24px;color:var(--ac2);font-weight:800}.trainer-sync-status-copy{min-width:0}.trainer-sync-status-copy strong{display:block;font-size:12px;line-height:1.35;overflow-wrap:anywhere}.trainer-sync-status-copy span{display:block;margin-top:2px;color:var(--muted);font-size:11px;line-height:1.45;overflow-wrap:anywhere}.trainer-sync-status-detail{max-width:100%;overflow-wrap:anywhere}
 .share-profile-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px}.share-profile-actions button{min-height:48px}
+.share-match-overview{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:9px}.share-match-metric{min-width:0;padding:7px 9px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-subtle)}.share-match-metric strong{display:block;font-size:16px;color:var(--text)}.share-match-metric span{display:block;color:var(--muted);font-size:10px;line-height:1.3;overflow-wrap:anywhere}
 .my-string-heading{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}.my-string-heading span{font-size:11px;color:var(--muted);font-weight:500;text-transform:none}
 .journey-guidance{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin:0 0 14px;padding:11px 0;border-block:1px solid var(--border);color:var(--muted);font-size:12px;line-height:1.5}.journey-guidance strong{display:block;color:var(--text);font-size:13px;margin-bottom:2px}.journey-guidance-actions{display:flex;gap:7px;flex-wrap:wrap;flex:0 0 auto}.journey-guidance button{min-height:48px}
 .trainer-no-result-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}.trainer-no-result-actions[hidden]{display:none}.trainer-no-result-actions button{min-height:48px}
@@ -1898,7 +1900,7 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
 .toast,.undo-toast,.favorite-saved-prompt{border-color:var(--border);box-shadow:var(--shadow-high)}
 .share-search-disclosure{margin-top:6px}.share-search-disclosure summary{display:inline-flex;align-items:center;gap:7px;min-height:48px;padding:8px 2px;color:var(--ac2);font:700 var(--type-meta);cursor:pointer;list-style:none}.share-search-disclosure summary::-webkit-details-marker{display:none}.share-search-disclosure .collapse-icon{font-size:10px;transition:transform var(--transition-fast)}.share-search-disclosure[open] .collapse-icon{transform:rotate(180deg)}.share-search-hide-label,.share-search-disclosure[open] .share-search-view-label{display:none}.share-search-disclosure[open] .share-search-hide-label{display:inline}.share-search-disclosure .strbox{margin:2px 0 8px}.str-level-hdr{margin-bottom:0}
 .organizer-close{border-color:transparent;background:transparent}.organizer-close:hover{border-color:var(--border);background:var(--surface-hover)}.organizer-section{padding-top:6px}.organizer-assignment{gap:6px}.organizer-new-tag-toggle{border-color:transparent;background:transparent;color:var(--ac2)}.organizer-actions{padding-top:10px;border-top:1px solid var(--border)}
-@media(min-width:900px){#tab-find .have-hdr,.trainer-discovery-content{width:min(100%,var(--container-wide));max-width:var(--container-wide)}.trainer-discovery-content{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(300px,.85fr);column-gap:28px;align-items:start}.trainer-search-shell{grid-column:1/-1;width:min(100%,760px)}#favorite-trainers{grid-column:1}#recent-trainers{grid-column:2}.trainer-quick-section{margin-top:28px}}
+@media(min-width:900px){#tab-find .have-hdr,.trainer-discovery-content{width:min(100%,var(--container-wide));max-width:var(--container-wide)}.trainer-discovery-content{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(300px,.85fr);column-gap:28px;align-items:start}.trainer-search-shell{grid-column:1/-1;width:min(100%,760px)}#favorite-trainers{grid-column:1;grid-row:3/5}#favorite-pokemon-browse{grid-column:2;grid-row:3}#recent-trainers{grid-column:2;grid-row:4}.trainer-quick-section{margin-top:28px}}
 .event-filter-scroll{position:relative}.event-filter-scroll::after{content:"";position:absolute;z-index:2;top:0;right:-1px;width:34px;height:50px;pointer-events:none;background:linear-gradient(90deg,transparent,var(--surface-canvas))}.event-filter-scroll.is-at-end::after{display:none}.event-filter-row{scroll-snap-type:x proximity;overscroll-behavior-inline:contain}.event-filter{scroll-snap-align:start}.event-group:not([data-group="now"]) .event-card-grid{gap:0;overflow:hidden;border-block:1px solid var(--border)}.event-group:not([data-group="now"]) .event-card{min-height:82px;border:0;border-bottom:1px solid var(--border);border-radius:0;background:transparent;box-shadow:none}.event-group:not([data-group="now"]) .event-card:last-child{border-bottom:0}.event-group:not([data-group="now"]) .event-card:hover{background:var(--surface-hover)}
 @media(max-width:767px){
   :root{--topbar-h:58px}.topbar{padding-inline:12px}.logo{font-size:16px}.brand-mark{width:28px;height:28px}.sync-row,.bell-btn,.theme-toggle{width:48px;height:48px;min-width:48px;min-height:48px;justify-content:center}.tabs{justify-content:space-around;padding-inline:0}.tab{flex:1;flex-direction:column;gap:2px;min-height:58px;padding:6px 2px;font-size:0}.tab-label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}.tab-short-label{display:block;font-size:10px;line-height:12px;white-space:nowrap}.page{padding:20px 14px 56px}.my-hdr{margin-bottom:12px}.journey-guidance{padding:11px 12px}.journey-guidance-actions{gap:4px}.journey-guidance-actions .bghost{padding-inline:8px}.add-form{padding:14px}.settings-nav-button{background:transparent;border-color:transparent}.settings-nav-button[aria-current="page"]{background:var(--surface-raised)}
@@ -2169,9 +2171,16 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
       </div>
       <button class="bghost" id="find-trainer-reload" style="display:none;margin-top:8px" onclick="reloadCompatibleClient()"></button>
     </div>
+    <nav class="trainer-discovery-modes" data-i18n-aria-label="trainer.discoveryModes" aria-label="Trainer discovery sections">
+      <button type="button" onclick="focusTrainerDiscoveryMode('trainers')" data-i18n="trainer.modeTrainers">Trainers</button>
+      <button type="button" onclick="focusTrainerDiscoveryMode('favorites')" data-i18n="trainer.modeFavorites">Favorites</button>
+      <button type="button" onclick="focusTrainerDiscoveryMode('pokemon')" data-i18n="trainer.modePokemon">Find by Pokémon</button>
+    </nav>
     <section id="favorite-trainers" class="trainer-quick-section">
       <div id="favorite-trainers-controls"></div>
-      <section class="favorite-browse" id="favorite-pokemon-browse" data-expanded="false" aria-labelledby="favorite-browse-title">
+      <div id="favorite-trainers-list"></div>
+    </section>
+    <section class="favorite-browse" id="favorite-pokemon-browse" data-expanded="false" aria-labelledby="favorite-browse-title">
         <h3 class="favorite-browse-heading"><button type="button" class="favorite-browse-disclosure" id="favorite-browse-toggle" aria-expanded="false" aria-controls="favorite-browse-panel" onclick="toggleFavoriteBrowse()"><span class="favorite-browse-disclosure-copy"><span class="favorite-browse-title" id="favorite-browse-title" data-i18n="favoriteBrowse.title">Find by Pokémon</span><span class="favorite-browse-hint" data-i18n="favoriteBrowse.disclosureHint">Search your Favorites by Pokémon</span></span><span class="favorite-browse-chevron" aria-hidden="true"><svg class="ui-icon ui-icon-sm"><use href="#ui-icon-chevron-down"></use></svg></span></button></h3>
         <div class="favorite-browse-panel" id="favorite-browse-panel" hidden>
           <p class="favorite-browse-description" data-i18n="favoriteBrowse.description">See which Favorites are looking for a Pokémon.</p>
@@ -2186,8 +2195,6 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
           </div>
           <div class="favorite-browse-result-region" id="favorite-browse-results" role="region" aria-live="polite" aria-atomic="false"></div>
         </div>
-      </section>
-      <div id="favorite-trainers-list"></div>
     </section>
     <div id="recent-trainers" class="trainer-quick-section"></div>
     <div id="trainer-history-note" style="display:none;font-size:11px;color:var(--muted);margin-top:12px"></div>
@@ -6844,6 +6851,7 @@ let trainerSuggestionTimer=0;
 let trainerSuggestionItems=[];
 let trainerSuggestionIndex=-1;
 let trainerSuggestionQuery='';
+let trainerSuggestionGeneration=0;
 let eventTypeFilter='all';
 let trainerOrganizerState={query:'',tagIds:[],username:''};
 let favoriteSavedPromptTimer=0;
@@ -6941,6 +6949,14 @@ function closeTrainerSuggestions(){
   if(input){input.setAttribute('aria-expanded','false');input.removeAttribute('aria-activedescendant');}
   trainerSuggestionItems=[];trainerSuggestionIndex=-1;trainerSuggestionQuery='';
 }
+function focusTrainerDiscoveryMode(mode){
+  if(mode==='trainers'){focusTrainerSearch();return;}
+  const target=document.getElementById(mode==='pokemon'?'favorite-pokemon-browse':'favorite-trainers');
+  if(mode==='pokemon'&&!favoriteBrowseState.expanded){favoriteBrowseState.expanded=true;syncFavoriteBrowseDisclosure();}
+  target?.scrollIntoView({behavior:'smooth',block:'start'});
+  if(mode==='pokemon')document.getElementById('favorite-browse-input')?.focus({preventScroll:true});
+  else target?.querySelector('input,button')?.focus({preventScroll:true});
+}
 function positionTrainerSuggestions(){
   const input=document.getElementById('find-trainer-input'),box=document.getElementById('find-trainer-suggestions');if(!input||!box)return;
   const viewport=window.visualViewport;
@@ -6958,10 +6974,17 @@ window.visualViewport?.addEventListener('resize',()=>document.getElementById('fi
 window.visualViewport?.addEventListener('scroll',()=>document.getElementById('find-trainer-suggestions')?.classList.contains('open')&&positionTrainerSuggestions());
 function trainerSuggestionOptions(){
   const store=ensureTrainerHistoryStore(),state=store?.read?.();
+  const ownedKeys=new Set((cur?diffInventoryEntries(cur):[]).map(item=>favoritePokemonBrowseDomain.pokemonKey(item.name)));
+  const matchCounts={};
+  Object.entries(state?.snapshots||{}).forEach(([key,record])=>{
+    const lists=record?.snapshot?.lists||{},wanted=new Set();
+    favoritePokemonBrowseDomain.LIST_TYPES.forEach(type=>Object.keys(lists[type]||{}).forEach(name=>wanted.add(favoritePokemonBrowseDomain.pokemonKey(name))));
+    matchCounts[key]={iHaveAvailable:true,iHaveTheirWants:[...wanted].filter(name=>ownedKeys.has(name)).length};
+  });
   return{
     minLength:2,limit:8,
     favoriteNames:(state?.favorites||[]).map(item=>item.displayName),
-    recentNames:(state?.recent||[]).map(item=>item.displayName)
+    recentNames:(state?.recent||[]).map(item=>item.displayName),matchCounts
   };
 }
 function rankedTrainerSuggestions(value){
@@ -6969,21 +6992,24 @@ function rankedTrainerSuggestions(value){
   return trainerDiscoveryDomain.trainerSuggestions(Object.keys(allData.loginDirectory||{}),value,trainerSuggestionOptions());
 }
 function trainerSuggestionHtml(item,index){
-  const before=item.name.slice(0,item.matchStart),match=item.name.slice(item.matchStart,item.matchStart+item.matchLength),after=item.name.slice(item.matchStart+item.matchLength);
-  return`<button type="button" class="trainer-suggestion${index===trainerSuggestionIndex?' active':''}" role="option" id="trainer-suggestion-${index}" aria-selected="${index===trainerSuggestionIndex}" data-index="${index}" onmousedown="event.preventDefault()" onclick="selectTrainerSuggestion(${index})">${escHtml(before)}<mark>${escHtml(match)}</mark>${escHtml(after)}</button>`;
+  const highlighted=item.matchStart>=0?`${escHtml(item.name.slice(0,item.matchStart))}<mark>${escHtml(item.name.slice(item.matchStart,item.matchStart+item.matchLength))}</mark>${escHtml(item.name.slice(item.matchStart+item.matchLength))}`:escHtml(item.name);
+  const signals=[item.favorite?i18nCore.t('trainer.modeFavorites'):'',item.recent?i18nCore.t('trainer.recent'):''].filter(Boolean);
+  const matches=`${item.theyHaveAvailable?`<span class="trainer-suggestion-match"><strong>${i18nCore.formatNumber(item.theyHaveMyWants)}</strong> ${escHtml(i18nCore.t('trainer.theyHaveMyWants'))}</span>`:''}${item.iHaveAvailable?`<span class="trainer-suggestion-match"><strong>${i18nCore.formatNumber(item.iHaveTheirWants)}</strong> ${escHtml(i18nCore.t('trainer.iHaveTheirWants'))}</span>`:''}`;
+  return`<button type="button" class="trainer-suggestion${index===trainerSuggestionIndex?' active':''}" role="option" id="trainer-suggestion-${index}" aria-selected="${index===trainerSuggestionIndex}" data-index="${index}" onmousedown="event.preventDefault()" onclick="selectTrainerSuggestion(${index})"><span class="trainer-suggestion-name">${highlighted}</span><span class="trainer-suggestion-details"><span>${escHtml(i18nCore.t(`trainer.match.${item.matchType}`))}</span>${signals.length?`<span>${escHtml(signals.join(' · '))}</span>`:''}</span>${matches?`<span class="trainer-suggestion-matches">${matches}</span>`:''}</button>`;
 }
-function renderTrainerSuggestions(value){
+function renderTrainerSuggestions(value,generation=trainerSuggestionGeneration){
   if(!requireCompatibleTrainerSearch())return;
   const input=document.getElementById('find-trainer-input'),box=document.getElementById('find-trainer-suggestions'),status=document.getElementById('find-trainer-status');
   if(!input||!box)return;
   const query=String(value||'').trim();syncTrainerSearchClear(query);
+  if(generation!==trainerSuggestionGeneration||trainerDiscoveryDomain.fold(input.value)!==trainerDiscoveryDomain.fold(query))return;
   if(query.length<2){closeTrainerSuggestions();setTrainerRecovery(false);if(status)status.textContent='';return;}
   trainerSuggestionItems=rankedTrainerSuggestions(query);trainerSuggestionQuery=trainerDiscoveryDomain.fold(query);
   trainerSuggestionIndex=trainerSuggestionItems.length?0:-1;
-  if(!trainerSuggestionItems.length){closeTrainerSuggestions();setTrainerRecovery(true);if(status)status.textContent=i18nCore.t('trainer.noMatchRecovery');return;}
+  if(!trainerSuggestionItems.length){closeTrainerSuggestions();setTrainerRecovery(true);if(status)status.textContent=i18nCore.t('trainer.noVisibleMatch');return;}
   setTrainerRecovery(false);
   box.innerHTML=trainerSuggestionItems.map(trainerSuggestionHtml).join('');box.classList.add('open');document.querySelector('.trainer-search-shell')?.classList.add('suggestions-open');positionTrainerSuggestions();input.setAttribute('aria-expanded','true');
-  input.setAttribute('aria-activedescendant','trainer-suggestion-0');if(status)status.textContent='';
+  input.setAttribute('aria-activedescendant','trainer-suggestion-0');if(status)status.textContent=i18nCore.t(trainerSuggestionItems[0].matchType==='exact'?'trainer.exactMatch':'trainer.partialMatches',{count:i18nCore.formatNumber(trainerSuggestionItems.length)});
 }
 function setTrainerRecovery(visible){const el=document.getElementById('find-trainer-recovery');if(el)el.hidden=!visible;}
 function syncTrainerSearchClear(value=document.getElementById('find-trainer-input')?.value){const clear=document.getElementById('find-trainer-clear');if(clear)clear.hidden=!String(value||'').length;}
@@ -6993,9 +7019,10 @@ function queueTrainerSuggestions(value,immediate=false){
   if(!requireCompatibleTrainerSearch())return;
   syncTrainerSearchClear(value);
   clearTimeout(trainerSuggestionTimer);
+  const generation=++trainerSuggestionGeneration;
   const status=document.getElementById('find-trainer-status');
   if(String(value||'').trim().length>=2&&status)status.textContent=i18nCore.t('trainer.searching');
-  trainerSuggestionTimer=setTimeout(()=>renderTrainerSuggestions(value),immediate?0:220);
+  trainerSuggestionTimer=setTimeout(()=>renderTrainerSuggestions(value,generation),immediate?0:220);
 }
 function selectTrainerSuggestion(index){
   if(!requireCompatibleTrainerSearch())return;
@@ -7121,7 +7148,7 @@ function renderFavoriteBrowseResults(){
   const cache=ensureFavoriteShareSessionCache();if(!cache)return;
   cache.syncFavorites(favorites);
   const snapshot=cache.snapshot(),summary=cache.summary(favorites),index=favoritePokemonBrowseDomain.buildIndex(snapshot.records);
-  const matches=favoritePokemonBrowseDomain.resultsForPokemon(index,selected.name,{favorites,tags:state.tags,recent:state.recent,locale:i18nCore.getLocale()});
+  const matches=favoritePokemonBrowseDomain.resultsForPokemon(index,selected.name,{favorites,tags:state.tags,recent:state.recent,locale:i18nCore.getLocale(),ownedPokemonNames:cur?diffInventoryEntries(cur).map(item=>item.name):[]});
   const hasPublished=summary.published+summary.publishedEmpty>0;
   const incomplete=summary.failed+summary.invalid;
   let body='';
@@ -7129,7 +7156,7 @@ function renderFavoriteBrowseResults(){
   else if(!matches.length)body=favoriteBrowseEmpty('favoriteBrowse.noMatchTitle','favoriteBrowse.noMatchBody',{pokemon:selected.dn});
   else body=`<div class="favorite-browse-summary"><span class="favorite-browse-pokemon">${escHtml(selected.dn)}</span><span class="favorite-browse-count">${escHtml(i18nCore.formatPlural('favoriteBrowse.results',matches.length,{pokemon:selected.dn}))}</span></div><div class="favorite-browse-results">${matches.map(match=>{
     const category=favoriteBrowseCategoryText(match.categories),trainer=escAttr(match.displayName);
-    return`<article class="favorite-browse-row"><div class="favorite-browse-main"><div class="favorite-browse-name">${escHtml(match.displayName)}</div><div class="favorite-browse-meta"><span class="favorite-browse-priority ${escAttr(match.priority)}">${escHtml(favoriteBrowsePriorityText(match.priority))}</span>${category?`<span>${escHtml(category)}</span>`:''}</div>${match.tags.length?`<div class="favorite-browse-tags">${match.tags.map(label=>`<span class="favorite-card-tag chip chip-metadata">${escHtml(label)}</span>`).join('')}</div>`:''}</div><button type="button" class="favorite-browse-open btn btn-ghost" data-trainer="${trainer}" onclick="openTrainerByName(this.dataset.trainer)" aria-label="${escAttr(i18nCore.t('trainer.openTrainerNamed',{trainer:match.displayName}))}">${escHtml(i18nCore.t('trainer.openAction'))} ${uiIconMarkup('chevron-right','ui-icon ui-icon-sm')}</button></article>`;
+    return`<article class="favorite-browse-row"><div class="favorite-browse-main"><div class="favorite-browse-name">${escHtml(match.displayName)}</div><div class="favorite-browse-match"><strong>${i18nCore.formatNumber(match.iHaveTheirWants)}</strong> ${escHtml(i18nCore.t('trainer.iHaveTheirWants'))}</div><div class="favorite-browse-meta"><span class="favorite-browse-priority ${escAttr(match.priority)}">${escHtml(favoriteBrowsePriorityText(match.priority))}</span>${category?`<span>${escHtml(category)}</span>`:''}</div>${match.tags.length?`<div class="favorite-browse-tags">${match.tags.map(label=>`<span class="favorite-card-tag chip chip-metadata">${escHtml(label)}</span>`).join('')}</div>`:''}</div><button type="button" class="favorite-browse-open btn btn-ghost" data-trainer="${trainer}" onclick="openTrainerByName(this.dataset.trainer)" aria-label="${escAttr(i18nCore.t('trainer.openTrainerNamed',{trainer:match.displayName}))}">${escHtml(i18nCore.t('trainer.openAction'))} ${uiIconMarkup('chevron-right','ui-icon ui-icon-sm')}</button></article>`;
   }).join('')}</div>`;
   const footer=summary.checked?`<div class="favorite-browse-footer"><span>${escHtml(i18nCore.t('favoriteBrowse.checked'))}</span><button type="button" class="btn btn-ghost" onclick="refreshFavoriteBrowse()">${escHtml(i18nCore.t('favoriteBrowse.refresh'))}</button>${summary.failed?`<button type="button" class="btn btn-secondary" onclick="retryFavoriteBrowse()">${escHtml(i18nCore.t('favoriteBrowse.retry'))}</button>`:''}${incomplete?`<span class="favorite-browse-partial">${escHtml(i18nCore.t('favoriteBrowse.partial',{checked:i18nCore.formatNumber(summary.total-incomplete),total:i18nCore.formatNumber(summary.total),failed:i18nCore.formatNumber(incomplete)}))}</span>`:''}</div>`:'';
   output.removeAttribute('aria-busy');output.innerHTML=body+footer;
@@ -12694,9 +12721,12 @@ function renderShareView(username,type){
   const favorite=ensureTrainerHistoryStore()?.isFavorite(username)||false;
   const hdr=document.getElementById('share-hdr');
   const bioHtml=ud.bio?`<div class="share-hdr-bio">"${escHtml(ud.bio)}"</div>`:'';
+  const matchSummary=cur&&cur!==username?computeTradeMatchSummary(username):null;
+  const matchOverview=matchSummary?`<div class="share-match-overview" aria-label="${escAttr(i18nCore.t('trainer.tradeUsefulness'))}"><div class="share-match-metric"><strong>${i18nCore.formatNumber(matchSummary.theyHaveYouWant.length)}</strong><span>${escHtml(i18nCore.t('trainer.theyHaveMyWants'))}</span></div><div class="share-match-metric"><strong>${i18nCore.formatNumber(matchSummary.youHaveTheyWant.length)}</strong><span>${escHtml(i18nCore.t('trainer.iHaveTheirWants'))}</span></div></div>`:'';
   hdr.innerHTML=`${userAvatarHtml(username,64)}
     <div class="share-hdr-info">
       <div class="share-hdr-name">${escHtml(i18nCore.t('share.listTitle',{username}))}</div>
+      ${matchOverview}
       <div class="share-hdr-meta">
         ${ud.friendCode?`<span class="meta-item">🎮 <code style="font-family:var(--mono);font-size:12px">${escHtml(ud.friendCode)}</code></span>`:''}
         ${ud.discord?`<span class="meta-item profile-discord">${escHtml(ud.discord)}</span>`:''}

@@ -31,14 +31,18 @@ test('Favorites search updates only the results subtree and preserves its input 
   assert.match(render,/data-favorite-clear/);
 });
 
-test('Find by Pokémon is a collapsed Favorite-scoped disclosure with a canonical combobox',()=>{
+test('trainer search, Favorites, and Find by Pokémon are sibling discovery modes',()=>{
   const block=html.slice(html.indexOf('<!-- FIND TRAINER'),html.indexOf('<!-- MY LIST'));
   const trainer=block.indexOf('class="trainer-search-shell search-lookup"');
   const favorites=block.indexOf('id="favorite-trainers"');
   const browse=block.indexOf('id="favorite-pokemon-browse"');
   const favoriteList=block.indexOf('id="favorite-trainers-list"');
   const recents=block.indexOf('id="recent-trainers"');
-  assert.ok(trainer>=0&&favorites>trainer&&browse>favorites&&favoriteList>browse&&recents>favoriteList);
+  assert.ok(trainer>=0&&favorites>trainer&&favoriteList>favorites&&browse>favoriteList&&recents>browse);
+  assert.match(block,/class="trainer-discovery-modes"/);
+  assert.match(block,/focusTrainerDiscoveryMode\('trainers'\)/);
+  assert.match(block,/focusTrainerDiscoveryMode\('favorites'\)/);
+  assert.match(block,/focusTrainerDiscoveryMode\('pokemon'\)/);
   assert.match(block,/id="favorite-browse-toggle" aria-expanded="false" aria-controls="favorite-browse-panel"/);
   assert.match(block,/id="favorite-browse-panel" hidden/);
   assert.match(block,/id="favorite-browse-input"[^>]*role="combobox" aria-autocomplete="list"/);
@@ -48,6 +52,17 @@ test('Find by Pokémon is a collapsed Favorite-scoped disclosure with a canonica
   const toggle=html.slice(html.indexOf('function toggleFavoriteBrowse()'),html.indexOf('function syncFavoriteBrowseClear'));
   assert.match(toggle,/favoriteBrowseState\.expanded=!favoriteBrowseState\.expanded/);
   assert.doesNotMatch(toggle,/invalidate|reset\(/);
+});
+
+test('trainer suggestions suppress stale debounced renders and present reciprocal hierarchy',()=>{
+  assert.match(html,/let trainerSuggestionGeneration=0/);
+  assert.match(html,/const generation=\+\+trainerSuggestionGeneration/);
+  assert.match(html,/generation!==trainerSuggestionGeneration/);
+  assert.match(html,/trainer-suggestion-name/);
+  assert.match(html,/trainer-suggestion-matches/);
+  assert.match(html,/trainer\.theyHaveMyWants/);
+  assert.match(html,/trainer\.iHaveTheirWants/);
+  assert.match(html,/trainer\.noVisibleMatch/);
 });
 
 test('Favorite creation is idempotent and saves stable tag assignments',()=>{

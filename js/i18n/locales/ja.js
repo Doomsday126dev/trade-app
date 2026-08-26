@@ -1,6 +1,7 @@
 (function(global){
   const root=global.PogoLocales=global.PogoLocales||{};
   root.ja=Object.freeze({...root.en,
+    'trainer.discoveryModes':'トレーナー検索セクション','trainer.modeTrainers':'トレーナー','trainer.modeFavorites':'お気に入り','trainer.modePokemon':'ポケモンから探す','trainer.noVisibleMatch':'表示できるトレーナーに一致しませんでした。','trainer.exactMatch':'完全一致','trainer.partialMatches':'表示できる候補：{count}件','trainer.match.exact':'完全一致','trainer.match.prefix':'前方一致','trainer.match.token_prefix':'単語の前方一致','trainer.match.substring':'部分一致','trainer.match.fuzzy':'入力ミスの可能性','trainer.theyHaveMyWants':'相手が持つ欲しいポケモン','trainer.iHaveTheirWants':'自分が持つ相手の欲しいポケモン','trainer.tradeUsefulness':'相互交換の候補',
     'myList.flagsAndDetails':'フラグと詳細','myList.listTools':'リストツール','myList.listActions':'リスト操作',
     'data.loading':'{resource}を読み込んでいます…','data.empty':'{resource}はありません。','data.readError':'{resource}を読み込めませんでした。もう一度お試しください。','data.offline':'オフラインです。端末に保存されたデータは引き続き利用できます。','data.retrying':'再試行しています…','data.permissionDenied':'このコンテンツを表示する権限がありません。','data.signedOut':'セッションが終了しました。もう一度ログインしてください。','data.stale':'最新データを取得できないため、保存済みデータを表示しています。',
     'app.updateRequired':'新しいバージョンがあります。更新して続行してください。','app.reloadAction':'アプリを更新','app.mainSections':'メインセクション','app.install':'インストール','app.installLabel':'アプリをインストール','app.whatsNew':'新着情報','app.theme':'テーマを切り替え','app.openProfile':'プロフィールを開く','app.dismiss':'このセッションでは閉じる',

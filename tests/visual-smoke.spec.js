@@ -1332,7 +1332,8 @@ test.describe('visual smoke', () => {
 
     await page.evaluate(()=>applyTheme('dark'));
     await expect(page.locator('#favorite-pokemon-browse')).toBeVisible();
-    expect(await page.evaluate(()=>document.getElementById('favorite-trainers').contains(document.getElementById('favorite-pokemon-browse')))).toBe(true);
+    expect(await page.evaluate(()=>document.getElementById('favorite-trainers').contains(document.getElementById('favorite-pokemon-browse')))).toBe(false);
+    await expect(page.locator('.trainer-discovery-modes')).toBeVisible();
     await expect(page.locator('#favorite-browse-toggle')).toHaveAttribute('aria-expanded','false');
     await expect(page.locator('#favorite-browse-panel')).toBeHidden();
     await captureFavoriteBrowse(page,'01-desktop-idle-collapsed');
@@ -1361,6 +1362,7 @@ test.describe('visual smoke', () => {
     await expect(page.locator('.favorite-browse-row').first()).toContainText('High');
     await expect(page.locator('.favorite-browse-row').first()).toContainText('Dynamax');
     await expect(page.locator('.favorite-browse-row').first()).toContainText('NYC');
+    await expect(page.locator('.favorite-browse-row').first().locator('.favorite-browse-match')).toContainText('I Have Their Wants');
     await expect(page.locator('.favorite-browse-partial')).toBeVisible();
     const beforeRetry=await page.evaluate(()=>({...window.__favoriteBrowseFixture.reads}));
     await page.getByRole('button',{name:/Retry unavailable/i}).click();
@@ -2464,9 +2466,9 @@ test.describe('visual smoke', () => {
     }
   });
 
-  for (const width of [320, 375, 390, 430]) {
+  for (const [width,height] of [[320,568],[375,812],[390,844],[430,932]]) {
     test(`find trainer suggestions stay visible at ${width}px`, async ({ page }) => {
-      await page.setViewportSize({ width, height: 640 });
+      await page.setViewportSize({ width, height });
       await page.goto(`./?autocomplete-layout=${width}-${Date.now()}`, { waitUntil: 'domcontentloaded' });
       await page.waitForFunction(() => typeof renderTrainerSuggestions === 'function' && window.__pogoStartup?.firebaseStartupSettledAt !== null);
       await page.evaluate(() => {
@@ -2486,10 +2488,11 @@ test.describe('visual smoke', () => {
       expect(box.x).toBeGreaterThanOrEqual(0);
       expect(box.x+box.width).toBeLessThanOrEqual(width+1);
       expect(box.y).toBeGreaterThanOrEqual(0);
-      expect(box.y).toBeLessThan(640);
+      expect(box.y).toBeLessThan(height);
       expect(bodyWidth).toBeLessThanOrEqual(width);
       await page.keyboard.press('ArrowDown');
       await expect(page.locator('.trainer-suggestion.active')).toBeVisible();
+      await capturePass3(page,`trainer-discovery-suggestions-${width}x${height}`);
     });
   }
 
@@ -2499,6 +2502,50 @@ test.describe('visual smoke', () => {
     await page.locator('#find-trainer-input').fill('Tes');
     await expect(page.locator('#find-trainer-suggestions.open')).toBeVisible({ timeout: 10_000 });
     await expect(page.locator('.trainer-suggestion').first()).toContainText(/TestUser/i);
+    await page.evaluate(()=>{
+      allData.loginDirectory={AlphaTrainer:{ready:true},BetaTrainer:{ready:true}};
+      const input=document.getElementById('find-trainer-input');
+      input.value='Alpha';queueTrainerSuggestions('Alpha');
+      input.value='Beta';queueTrainerSuggestions('Beta');
+    });
+    await expect(page.locator('.trainer-suggestion')).toHaveCount(1);
+    await expect(page.locator('.trainer-suggestion').first()).toContainText('BetaTrainer');
+    await expect(page.locator('.trainer-suggestion').first()).not.toContainText('AlphaTrainer');
+  });
+
+  test('trainer discovery keeps exact intent first and shows reciprocal hierarchy on mobile',async({page})=>{
+    await page.setViewportSize({width:320,height:568});
+    await page.goto(`./?trainer-ranking-ui=${Date.now()}`,{waitUntil:'domcontentloaded'});
+    await waitForStableLocalOrganizerStartup(page);
+    await isolateAuthenticatedMyListFixture(page,{username:'Viewer',uid:'uid-viewer'});
+    await page.evaluate(()=>{
+      allData=normalizeData({
+        users:{Alpha:{},AlphaFriendWithAVeryLongHandle:{}},loginDirectory:{Alpha:{},AlphaFriendWithAVeryLongHandle:{}},
+        have:{Viewer:{Pikachu:{qty:1},Eevee:{qty:1}},Alpha:{Mew:{qty:1}},AlphaFriendWithAVeryLongHandle:{Bulbasaur:{qty:1}}},
+        wishlist:{Viewer:{Mew:'H'},Alpha:{Pikachu:'H'},AlphaFriendWithAVeryLongHandle:{Pikachu:'H',Eevee:'M'}},dynamax:{},gmax:{},costumes:{}
+      });
+      switchTab('find',{render:false});renderFindTrainer();
+    });
+    const input=page.locator('#find-trainer-input');await input.fill('Alpha');
+    await expect(page.locator('.trainer-suggestion')).toHaveCount(2);
+    await expect(page.locator('.trainer-suggestion').first().locator('.trainer-suggestion-name')).toHaveText('Alpha');
+    await capturePass3(page,'trainer-discovery-ranking-320x568');
+    await page.evaluate(()=>{document.getElementById('app').style.display='none';document.getElementById('share-view').classList.add('active');renderShareView('Alpha','wishlist');});
+    await expect(page.locator('.share-match-overview')).toBeVisible();
+    await expect(page.locator('.share-match-metric').nth(0)).toContainText('They Have My Wants');
+    await expect(page.locator('.share-match-metric').nth(1)).toContainText('I Have Their Wants');
+    const scenarios=await page.evaluate(()=>{
+      const target='TrainerWithAnExceptionallyLongHandle123',inventory=names=>Object.fromEntries(names.map(name=>[name,{qty:1}])),wants=names=>Object.fromEntries(names.map(name=>[name,'H']));
+      const render=(theirHave,theirWants,myHave,myWants)=>{
+        allData=normalizeData({users:{Viewer:{},[target]:{}},have:{Viewer:inventory(myHave),[target]:inventory(theirHave)},wishlist:{Viewer:wants(myWants),[target]:wants(theirWants)},dynamax:{},gmax:{},costumes:{}});
+        renderShareView(target,'wishlist');return[...document.querySelectorAll('.share-match-metric strong')].map(node=>node.textContent.trim());
+      };
+      const many=Array.from({length:14},(_,index)=>`Wanted${index}`),owned=Array.from({length:12},(_,index)=>`Owned${index}`);
+      return{none:render([],[],[],[]),they:render(['Mew'],[],[],['Mew']),mine:render([],['Pikachu'],['Pikachu'],[]),bothLarge:render(many,owned,owned,many)};
+    });
+    expect(scenarios).toEqual({none:['0','0'],they:['1','0'],mine:['0','1'],bothLarge:['14','12']});
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
+    await capturePass3(page,'trainer-discovery-profile-320x568');
   });
 
   test('my list renders embedded search strings', async ({ page }) => {

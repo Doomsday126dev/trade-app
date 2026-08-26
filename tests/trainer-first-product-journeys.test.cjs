@@ -80,11 +80,12 @@ test('locale changes rerender only the active heavy surface',()=>{
 
 test('Find Trainer no-result recovery stays deterministic',()=>{
   const source=block('function renderTrainerSuggestions','function trainerSearchKeydown');
-  assert.match(source,/trainer\.noMatchRecovery/);
+  assert.match(source,/trainer\.noVisibleMatch/);
   assert.match(source,/setTrainerRecovery\(true\)/);
   assert.match(source,/function clearTrainerSearch/);
   assert.match(source,/function focusTrainerSearch/);
-  assert.doesNotMatch(source,/fuzzy|levenshtein|editDistance/i);
+  assert.match(source,/matchType/);
+  assert.match(source,/trainerSuggestionGeneration/);
 });
 
 test('physical smoke checklist remains explicitly pending',()=>{

@@ -42,6 +42,27 @@ test('favorites and recents break textual ties but never outrank a stronger matc
   assert.equal(JSON.stringify(tied),JSON.stringify(['AlphaTwo','AlphaOne']));
 });
 
+test('reciprocal usefulness orders only equal-quality text matches',()=>{
+  const counts={alphaone:{iHaveTheirWants:1},alphatwo:{theyHaveMyWants:9,iHaveTheirWants:8},myalpha:{theyHaveMyWants:99}};
+  const ranked=discovery.rankTrainerResults(['myAlpha','AlphaOne','AlphaTwo','Alpha'],'alpha',{matchCounts:counts});
+  assert.equal(JSON.stringify(ranked.map(item=>item.name)),JSON.stringify(['Alpha','AlphaTwo','AlphaOne','myAlpha']));
+  assert.equal(ranked[1].total,17);
+});
+
+test('conservative fuzzy matching permits one edit for long queries and never for short queries',()=>{
+  assert.equal(discovery.bestTrainerSuggestion(['PogoTrader'],'PogoTrder').matchType,'fuzzy');
+  assert.equal(discovery.bestTrainerSuggestion(['PogoTrader'],'PogoTraedr').matchType,'fuzzy');
+  assert.equal(discovery.bestTrainerSuggestion(['PogoTrader'],'PogoXrXder'),null);
+  assert.equal(discovery.trainerSuggestions(['Ax','Bx'],'Cx').length,0);
+});
+
+test('trainer ranking is stable across duplicate input order and normalized equivalents',()=>{
+  const a=discovery.rankTrainerResults(['ZetaOne','AlphaOne','ＡＬＰＨＡＯＮＥ'],'one').map(item=>item.normalized);
+  const b=discovery.rankTrainerResults(['AlphaOne','ZetaOne','alphaone'],'ONE').map(item=>item.normalized);
+  assert.equal(JSON.stringify(a),JSON.stringify(['zetaone','alphaone']));
+  assert.equal(JSON.stringify(b),JSON.stringify(['zetaone','alphaone']));
+});
+
 test('desktop and mobile suggestion inputs produce identical stable results',()=>{
   const names=['ScoopskiPotat0','PotatoFan','The Potato'];
   const desktop=discovery.trainerSuggestions(names,'POT',{favoriteNames:['The Potato']});

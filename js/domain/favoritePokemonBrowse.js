@@ -39,6 +39,7 @@
     const values=records&&typeof records.values==='function'?[...records.values()]:Array.from(records||[]);
     values.forEach(record=>{
       if(record?.status!=='published'&&record?.status!=='published_empty')return;
+      const wantedPokemonKeys=Object.freeze([...new Set((record.entries||[]).map(entry=>pokemonKey(entry.pokemonKey||entry.pokemonName)).filter(Boolean))]);
       (record.entries||[]).forEach(entry=>{
         const key=pokemonKey(entry.pokemonKey||entry.pokemonName);
         if(!key)return;
@@ -47,7 +48,8 @@
           trainerKey:trainerKey(record.trainerKey||record.displayName),
           displayName:normalizedText(record.displayName),
           priority:priorityFor(entry.priority),
-          categories:Object.freeze([...new Set((entry.categories||[]).filter(type=>LIST_TYPES.includes(type)))])
+          categories:Object.freeze([...new Set((entry.categories||[]).filter(type=>LIST_TYPES.includes(type)))]),
+          wantedPokemonKeys
         }));
         index.set(key,matches);
       });
@@ -55,9 +57,10 @@
     return index;
   }
 
-  function resultsForPokemon(index,pokemonName,{favorites=[],tags={},recent=[],locale='en'}={}){
+  function resultsForPokemon(index,pokemonName,{favorites=[],tags={},recent=[],ownedPokemonNames=[],locale='en'}={}){
     const favoriteMap=new Map((favorites||[]).map(item=>[trainerKey(item.key||item.displayName),item]));
     const recentMap=new Map((recent||[]).map(item=>[trainerKey(item.key||item.displayName),Number(item.openedAt)||0]));
+    const owned=new Set((ownedPokemonNames||[]).map(pokemonKey).filter(Boolean));
     const collator=new Intl.Collator(locale,{numeric:true,sensitivity:'base'});
     return(index?.get?.(pokemonKey(pokemonName))||[])
       .filter(match=>favoriteMap.has(match.trainerKey))
@@ -67,10 +70,11 @@
           ...match,
           displayName:favorite.displayName||match.displayName,
           tags:Object.freeze((favorite.tagIds||[]).map(id=>tags[id]?.label).filter(Boolean)),
+          iHaveTheirWants:match.wantedPokemonKeys.filter(key=>owned.has(key)).length,
           lastOpenedAt:recentMap.get(match.trainerKey)||0
         });
       })
-      .sort((a,b)=>(PRIORITY_ORDER[a.priority]??3)-(PRIORITY_ORDER[b.priority]??3)||b.lastOpenedAt-a.lastOpenedAt||collator.compare(a.displayName,b.displayName));
+      .sort((a,b)=>(PRIORITY_ORDER[a.priority]??3)-(PRIORITY_ORDER[b.priority]??3)||b.iHaveTheirWants-a.iHaveTheirWants||b.lastOpenedAt-a.lastOpenedAt||collator.compare(a.displayName,b.displayName));
   }
 
   root.favoritePokemonBrowse=Object.freeze({

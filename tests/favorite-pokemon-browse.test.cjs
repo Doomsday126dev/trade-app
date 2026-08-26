@@ -60,6 +60,16 @@ test('results sort by priority, recent view, then locale-aware trainer name',()=
   assert.deepEqual(plain(results.map(item=>item.displayName)),['Beta','Alpha','Low']);
 });
 
+test('equal-priority results prefer reciprocal usefulness before recency',()=>{
+  const record=(name,wants)=>({trainerKey:name.toLowerCase(),displayName:name,status:'published',entries:browse.projectSnapshot({lists:{wishlist:{Eevee:'H',...wants}}})});
+  const index=browse.buildIndex(new Map([['recent',record('Recent',{})],['useful',record('Useful',{Pikachu:'M',Mew:'L'})]]));
+  const results=browse.resultsForPokemon(index,'Eevee',{
+    favorites:[{key:'recent',displayName:'Recent'},{key:'useful',displayName:'Useful'}],
+    recent:[{key:'recent',openedAt:99}],ownedPokemonNames:['Pikachu','Mew']
+  });
+  assert.deepEqual(plain(results.map(item=>[item.displayName,item.iHaveTheirWants])),[['Useful',2],['Recent',0]]);
+});
+
 test('unpublished and malformed records never enter the Pokémon index',()=>{
   const index=browse.buildIndex(new Map([
     ['missing',{trainerKey:'missing',displayName:'Missing',status:'not_published',entries:[{pokemonKey:'mew',priority:'H',categories:['wishlist']}]}],

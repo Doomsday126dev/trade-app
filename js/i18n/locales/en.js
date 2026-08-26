@@ -1,6 +1,7 @@
 (function(global){
   const root=global.PogoLocales=global.PogoLocales||{};
   root.en=Object.freeze({
+    'trainer.discoveryModes':'Trainer discovery sections','trainer.modeTrainers':'Trainers','trainer.modeFavorites':'Favorites','trainer.modePokemon':'Find by Pokémon','trainer.noVisibleMatch':'No visible trainer matched this search.','trainer.exactMatch':'Exact trainer match','trainer.partialMatches':'{count} visible matches','trainer.match.exact':'Exact match','trainer.match.prefix':'Starts with your search','trainer.match.token_prefix':'Word starts with your search','trainer.match.substring':'Contains your search','trainer.match.fuzzy':'Possible typo match','trainer.theyHaveMyWants':'They Have My Wants','trainer.iHaveTheirWants':'I Have Their Wants','trainer.tradeUsefulness':'Reciprocal trade usefulness',
     'data.loading':'Loading {resource}…',
     'data.empty':'No {resource} found.',
     'data.readError':'Could not load {resource}. Try again.',
