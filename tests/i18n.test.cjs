@@ -68,7 +68,7 @@ test('session ownership warnings use stable translation keys with English fallba
 test('English, Japanese, Spanish, and German expose the same UI key set',()=>{
   const {catalogs}=load();
   const expected=Object.keys(catalogs.en).sort();
-  assert.equal(expected.length,1174);
+  assert.equal(expected.length,1172);
   for(const locale of ['ja','es','de'])assert.deepEqual(Object.keys(catalogs[locale]).sort(),expected,locale);
 });
 

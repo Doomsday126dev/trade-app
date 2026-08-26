@@ -1404,7 +1404,7 @@ html[data-theme="light"] .have-mirror-badge,html[data-theme="light"] .have-mirro
 @media(prefers-reduced-motion:reduce){.favorite-card-surface{transition:none}}
 .trainer-sync-status{display:flex;align-items:flex-start;gap:9px;min-width:0;margin-top:10px;padding:10px 11px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--bg)}.trainer-sync-status-icon{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;flex:0 0 24px;color:var(--ac2);font-weight:800}.trainer-sync-status-copy{min-width:0}.trainer-sync-status-copy strong{display:block;font-size:12px;line-height:1.35;overflow-wrap:anywhere}.trainer-sync-status-copy span{display:block;margin-top:2px;color:var(--muted);font-size:11px;line-height:1.45;overflow-wrap:anywhere}.trainer-sync-status-detail{max-width:100%;overflow-wrap:anywhere}
 .share-profile-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px}.share-profile-actions button{min-height:48px}
-.share-match-overview{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:9px}.share-match-metric{min-width:0;padding:7px 9px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-subtle)}.share-match-metric strong{display:block;font-size:16px;color:var(--text)}.share-match-metric span,.share-match-metric small{display:block;color:var(--muted);font-size:10px;line-height:1.3;overflow-wrap:anywhere}.share-match-metric small{margin-top:3px}
+.share-match-overview{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:9px}.share-match-metric{min-width:0;padding:7px 9px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-subtle)}.share-match-metric strong{display:block;font-size:16px;color:var(--text)}.share-match-metric span,.share-match-metric small{display:block;color:var(--muted);font-size:10px;line-height:1.3;overflow-wrap:anywhere}.share-match-metric small{margin-top:3px}
 .my-string-heading{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}.my-string-heading span{font-size:11px;color:var(--muted);font-weight:500;text-transform:none}
 .journey-guidance{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin:0 0 14px;padding:11px 0;border-block:1px solid var(--border);color:var(--muted);font-size:12px;line-height:1.5}.journey-guidance strong{display:block;color:var(--text);font-size:13px;margin-bottom:2px}.journey-guidance-actions{display:flex;gap:7px;flex-wrap:wrap;flex:0 0 auto}.journey-guidance button{min-height:48px}
 .trainer-no-result-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}.trainer-no-result-actions[hidden]{display:none}.trainer-no-result-actions button{min-height:48px}
@@ -1609,12 +1609,12 @@ html[data-theme="light"] .have-mirror-badge,html[data-theme="light"] .have-mirro
 .trade-match-modal{max-width:var(--container-standard)}.trade-match-modal .diff-hdr-title{overflow-wrap:anywhere}.trade-match-modal .diff-hdr-close{width:44px;height:44px}
 .trade-match-body{padding:16px 18px;overflow-y:auto}
 .trade-match-intro{display:grid;gap:4px;margin-bottom:12px}.trade-match-intro strong{font-size:14px}.trade-match-intro span{color:var(--muted);font-size:12px;line-height:1.45}
-.trade-match-overview{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:12px}.trade-match-overview .share-match-metric{min-height:74px;align-items:flex-start;text-align:left}.trade-match-overview .share-match-metric strong{font-size:22px}.trade-match-overview .share-match-metric.is-unavailable strong{font-size:18px;color:var(--muted)}
+.trade-match-overview{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:12px}.trade-match-overview .share-match-metric{min-height:74px;align-items:flex-start;text-align:left}.trade-match-overview .share-match-metric strong{font-size:22px}.trade-match-overview .share-match-metric.is-unavailable strong{font-size:18px;color:var(--muted)}
 .diff-match-panel{display:grid;grid-template-columns:1fr;gap:12px}
 .diff-match-box{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-md);padding:11px;min-width:0}
-.diff-match-box.want{border-color:rgba(245,158,11,.28)}
-.diff-match-box.give{border-color:rgba(16,185,129,.28)}
-.diff-match-box.mirror{border-color:rgba(96,165,250,.28)}
+.diff-match-box.both{border-color:rgba(96,165,250,.28)}
+.diff-match-box.mine{border-color:rgba(245,158,11,.28)}
+.diff-match-box.theirs{border-color:rgba(16,185,129,.28)}
 .diff-match-title{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:850;color:var(--text);margin-bottom:3px}.diff-match-direction{margin:0 0 9px;color:var(--muted);font-size:11px;line-height:1.4}
 .diff-match-count{margin-left:auto;color:var(--text);font-family:var(--mono);font-size:12px}
 .diff-match-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:7px}
@@ -1628,6 +1628,7 @@ html[data-theme="light"] .have-mirror-badge,html[data-theme="light"] .have-mirro
 .diff-match-empty{font-size:11px;color:var(--muted);line-height:1.35}
 .trade-match-actions{position:sticky;bottom:-16px;display:flex;gap:8px;flex-wrap:wrap;margin:14px -18px -16px;padding:12px 18px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--border);background:var(--card)}.trade-match-actions button{min-height:48px}
 .trade-return-banner{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 10px;padding:10px 12px;border:1px solid var(--border2);border-left:3px solid var(--accent);border-radius:var(--radius-md);background:var(--surface-subtle)}.trade-return-banner[hidden]{display:none}.trade-return-copy{min-width:0}.trade-return-copy strong{display:block;font-size:12px;overflow-wrap:anywhere}.trade-return-copy span{display:block;margin-top:2px;color:var(--muted);font-size:11px}.trade-return-banner button{min-height:44px;flex-shrink:0}
+@media(max-width:600px){.share-match-overview,.trade-match-overview{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:420px){.trade-match-body{padding:12px}.trade-match-overview{gap:6px}.trade-match-overview .share-match-metric{min-height:68px;padding:9px}.diff-match-list{grid-template-columns:minmax(0,1fr)}.trade-match-actions{bottom:-12px;margin:12px -12px -12px;padding:10px 12px calc(10px + env(safe-area-inset-bottom))}.trade-return-banner{align-items:stretch;flex-direction:column}.trade-return-banner button{width:100%}}
 .diff-tip{padding:12px 14px;margin-bottom:12px;background:rgba(108,99,255,.1);border:1px solid rgba(108,99,255,.26);border-radius:var(--radius-md);font-size:12px;color:var(--text);line-height:1.45}
 .diff-tip strong{color:var(--ac2)}
@@ -11106,14 +11107,6 @@ function tradeListWants(username){
   });
   return entries.sort((a,b)=>(PRI_ORDER[a.p]??9)-(PRI_ORDER[b.p]??9)||(parseInt(a.no)||9999)-(parseInt(b.no)||9999)||comparePokemonLabels(a.dn,b.dn));
 }
-function tradeListOffers(username){
-  const board=allData.users?.[username]?.specialTradeBoard;
-  return(Array.isArray(board?.ft)?board.ft:[]).map((item,index)=>{
-    if(!item?.name)return null;
-    const source=_nameToSpriteEntry(item.name);
-    return{key:`special-ft:${index}:${item.name}`,name:item.name,type:'special',p:'',mod:'',gender:'',backgroundId:normalizeBackgroundId(item.backgroundId),lucky:false,shiny:!!item.shiny,xxl:false,xxs:false,mirror:!!item.mirror,dn:pokemonDisplayName({...source,name:source.name||item.name,displayName:item.dn||source.displayName||item.name}),no:item.no||source.no};
-  }).filter(Boolean).sort((a,b)=>(parseInt(a.no)||9999)-(parseInt(b.no)||9999)||comparePokemonLabels(a.dn,b.dn));
-}
 function ownTradeListsAvailable(){
   if(!fbOn||!db)return true;
   const uid=String(auth?.currentUser?.uid||'');
@@ -11126,38 +11119,24 @@ function trainerTradeListsAvailable(them){
   if(selectedTrainerRuntime.username===them&&!!selectedTrainerRuntime.publicData)return true;
   return protectedOwnerSession()&&OWNED_MY_LIST_TYPES.every(type=>_pathLoadState[type]==='loaded')&&!!allData.users?.[them];
 }
-function tradeListIntentMatches(want,offer){
-  if(!matchesTradeIntent(want,offer))return false;
-  const detail=tradeIntentFreeform(want?.mod);
-  return!detail||detail===tradeIntentFreeform(offer?.mod);
-}
 function computeTradeMatchSummary(them){
   const myAvailable=ownTradeListsAvailable(),theirAvailable=trainerTradeListsAvailable(them);
-  const availability={
-    theyHaveYouWant:myAvailable&&theirAvailable,
-    youHaveTheyWant:myAvailable&&theirAvailable,
-    mirrors:myAvailable&&theirAvailable
-  };
-  if(!availability.mirrors)return{theyHaveYouWant:[],youHaveTheyWant:[],mirrors:[],availability};
-  const result=tradeListComparisonDomain.compareTradeLists({myWants:tradeListWants(cur),myOffers:tradeListOffers(cur),theirWants:tradeListWants(them),theirOffers:tradeListOffers(them)},{
+  const availability={wants:myAvailable&&theirAvailable};
+  if(!availability.wants)return{both:[],onlyMine:[],onlyTheirs:[],availability};
+  const result=tradeListComparisonDomain.compareWantedLists({myWants:tradeListWants(cur),theirWants:tradeListWants(them)},{
     nameKey:pokemonCatalogDomain.catalogKey,
-    matchesIntent:tradeListIntentMatches,
     normalizeQualifier:normalizeTradeQualifier
   });
-  return{theyHaveYouWant:result.theyOfferMyWants,youHaveTheyWant:result.iOfferTheirWants,mirrors:result.mirrors,availability};
+  return{...result,availability};
 }
 function tradeIntentFreeform(mod){
   return normalizeTradeQualifier(mod)
     .replace(/(^|[^\p{L}\p{N}])[MF](?=$|[^\p{L}\p{N}])/gu,'$1')
     .replace(/^[\s,;/|+_-]+|[\s,;/|+_-]+$/g,'').trim();
 }
-function tradeIntentQualifierTokens(intent,owner='mine'){
+function tradeIntentQualifierTokens(intent){
   if(!intent)return[];
   const tokens=[];
-  if(intent.p){
-    const priority=i18nCore.t(`priority.${intent.p==='H'?'high':intent.p==='M'?'medium':'low'}`);
-    tokens.push({label:i18nCore.t(owner==='mine'?'tradeMatch.myPriority':'tradeMatch.theirPriority',{priority}),cls:`priority-${intent.p}`});
-  }
   if(intent.type&&intent.type!=='wishlist')tokens.push({label:publicShareListLabel(intent.type)});
   if(intent.lucky)tokens.push({label:i18nCore.t('share.flagLucky')});
   if(intent.shiny)tokens.push({label:i18nCore.t('share.flagShiny')});
@@ -11175,25 +11154,24 @@ function tradeMatchMetric(label,items,available){
 }
 function renderTradeMatchSummary(them){
   const m=computeTradeMatchSummary(them);
-  const chip=(it,owner='mine',cls='')=>{
+  const chip=(it,cls='')=>{
     const img=it.no?spriteImg(it.no,38,'',it.name,it.gender||'',it.dn):'<span aria-hidden="true">◌</span>';
     const gender=it.gender?` ${it.gender==='f'?'♀':'♂'}`:'';
-    const qualifiers=tradeIntentQualifierTokens(it.intent,owner);
+    const qualifiers=tradeIntentQualifierTokens(it);
     if(it.backgroundId&&!qualifiers.some(token=>token.cls==='background'))qualifiers.push({label:i18nCore.t('background.badgeLabel',{name:backgroundDisplayName(it.backgroundId)}),cls:'background'});
     return`<article class="diff-match-chip ${cls}" title="${escAttr(it.dn+gender)}">${img}<div class="diff-match-main"><span class="diff-match-name">${escHtml(it.dn)}${gender}</span>${qualifiers.length?`<span class="diff-match-qualifiers">${qualifiers.map(token=>`<span class="diff-match-qualifier ${escAttr(token.cls||'')}">${escHtml(token.label)}</span>`).join('')}</span>`:''}</div></article>`;
   };
-  const box=(cls,title,direction,items,available,empty,owner)=>`<section class="diff-match-box ${cls}" aria-labelledby="trade-match-${cls}-title">
+  const box=(cls,title,direction,items,available,empty)=>`<section class="diff-match-box ${cls}" aria-labelledby="trade-match-${cls}-title">
     <div class="diff-match-title" id="trade-match-${cls}-title">${title}<span class="diff-match-count">${available?i18nCore.formatNumber(items.length):'—'}</span></div>
     <p class="diff-match-direction">${escHtml(direction)}</p>
-    ${!available?`<div class="diff-match-empty">${escHtml(i18nCore.t('tradeMatch.unavailableHelp'))}</div>`:items.length?`<div class="diff-match-list">${items.map((it,i)=>chip(it,owner,i>=14?'extra':'')).join('')}${items.length>14?`<button type="button" class="diff-match-chip diff-match-more" data-more="${escAttr(i18nCore.t('tradeMatch.moreCount',{count:i18nCore.formatNumber(items.length-14)}))}" onclick="toggleTradeMatchSection(this)" aria-expanded="false">${escHtml(i18nCore.t('tradeMatch.moreCount',{count:i18nCore.formatNumber(items.length-14)}))}</button>`:''}</div>`:`<div class="diff-match-empty">${escHtml(empty)}</div>`}
+    ${!available?`<div class="diff-match-empty">${escHtml(i18nCore.t('tradeMatch.unavailableHelp'))}</div>`:items.length?`<div class="diff-match-list">${items.map((it,i)=>chip(it,i>=14?'extra':'')).join('')}${items.length>14?`<button type="button" class="diff-match-chip diff-match-more" data-more="${escAttr(i18nCore.t('tradeMatch.moreCount',{count:i18nCore.formatNumber(items.length-14)}))}" onclick="toggleTradeMatchSection(this)" aria-expanded="false">${escHtml(i18nCore.t('tradeMatch.moreCount',{count:i18nCore.formatNumber(items.length-14)}))}</button>`:''}</div>`:`<div class="diff-match-empty">${escHtml(empty)}</div>`}
   </section>`;
-  const opportunity=m.availability.theyHaveYouWant&&m.availability.youHaveTheyWant&&m.theyHaveYouWant.length&&m.youHaveTheyWant.length?i18nCore.t('tradeMatch.reciprocal'):(m.theyHaveYouWant.length||m.youHaveTheyWant.length)?i18nCore.t('tradeMatch.oneWay'):i18nCore.t('tradeMatch.none');
-  return`<div class="trade-match-intro"><strong>${escHtml(opportunity)}</strong><span>${escHtml(i18nCore.t('tradeMatch.intro',{trainer:them}))}</span></div>
-    <div class="trade-match-overview" aria-label="${escAttr(i18nCore.t('trainer.tradeUsefulness'))}">${tradeMatchMetric(i18nCore.t('trainer.theyHaveMyWants'),m.theyHaveYouWant,m.availability.theyHaveYouWant)}${tradeMatchMetric(i18nCore.t('trainer.iHaveTheirWants'),m.youHaveTheyWant,m.availability.youHaveTheyWant)}</div>
+  return`<div class="trade-match-intro"><strong>${escHtml(i18nCore.t('tradeMatch.summary'))}</strong><span>${escHtml(i18nCore.t('tradeMatch.intro',{trainer:them}))}</span></div>
+    <div class="trade-match-overview" aria-label="${escAttr(i18nCore.t('tradeMatch.detailsLabel'))}">${tradeMatchMetric(i18nCore.t('tradeMatch.bothWant'),m.both,m.availability.wants)}${tradeMatchMetric(i18nCore.t('tradeMatch.onlyIWant'),m.onlyMine,m.availability.wants)}${tradeMatchMetric(i18nCore.t('tradeMatch.onlyTheyWant',{trainer:them}),m.onlyTheirs,m.availability.wants)}</div>
     <div class="diff-match-panel" aria-label="${escAttr(i18nCore.t('tradeMatch.detailsLabel'))}">
-    ${box('want',`<span aria-hidden="true">↓</span> ${escHtml(i18nCore.t('trainer.theyHaveMyWants'))}`,i18nCore.t('tradeMatch.theyDirection',{trainer:them}),m.theyHaveYouWant,m.availability.theyHaveYouWant,i18nCore.t('tradeMatch.emptyThey',{trainer:them}),'mine')}
-    ${box('give',`<span aria-hidden="true">↑</span> ${escHtml(i18nCore.t('trainer.iHaveTheirWants'))}`,i18nCore.t('tradeMatch.iDirection',{trainer:them}),m.youHaveTheyWant,m.availability.youHaveTheyWant,i18nCore.t('tradeMatch.emptyMine',{trainer:them}),'theirs')}
-    ${m.availability.mirrors?box('mirror',`<span aria-hidden="true">↔</span> ${escHtml(i18nCore.t('tradeMatch.possibleMirrors'))}`,i18nCore.t('tradeMatch.mirrorDirection'),m.mirrors,true,i18nCore.t('tradeMatch.emptyMirrors'),'mine'):''}
+    ${box('both',escHtml(i18nCore.t('tradeMatch.bothWant')),i18nCore.t('tradeMatch.bothDirection',{trainer:them}),m.both,m.availability.wants,i18nCore.t('tradeMatch.emptyBoth',{trainer:them}))}
+    ${box('mine',escHtml(i18nCore.t('tradeMatch.onlyIWant')),i18nCore.t('tradeMatch.mineDirection',{trainer:them}),m.onlyMine,m.availability.wants,i18nCore.t('tradeMatch.emptyMine',{trainer:them}))}
+    ${box('theirs',escHtml(i18nCore.t('tradeMatch.onlyTheyWant',{trainer:them})),i18nCore.t('tradeMatch.theirsDirection',{trainer:them}),m.onlyTheirs,m.availability.wants,i18nCore.t('tradeMatch.emptyTheirs',{trainer:them}))}
   </div>`;
 }
 function renderTradeMatchModal(){
@@ -13079,8 +13057,8 @@ function renderShareView(username,type){
   const hdr=document.getElementById('share-hdr');
   const bioHtml=ud.bio?`<div class="share-hdr-bio">"${escHtml(ud.bio)}"</div>`:'';
   const matchSummary=cur&&cur!==username?computeTradeMatchSummary(username):null;
-  const hasVisibleMatches=!!(matchSummary&&(matchSummary.theyHaveYouWant.length||matchSummary.youHaveTheyWant.length));
-  const matchOverview=hasVisibleMatches?`<div class="share-match-overview" aria-label="${escAttr(i18nCore.t('trainer.tradeUsefulness'))}">${tradeMatchMetric(i18nCore.t('trainer.theyHaveMyWants'),matchSummary.theyHaveYouWant,matchSummary.availability.theyHaveYouWant)}${tradeMatchMetric(i18nCore.t('trainer.iHaveTheirWants'),matchSummary.youHaveTheyWant,matchSummary.availability.youHaveTheyWant)}</div>`:'';
+  const hasVisibleMatches=!!(matchSummary&&(matchSummary.both.length||matchSummary.onlyMine.length||matchSummary.onlyTheirs.length));
+  const matchOverview=hasVisibleMatches?`<div class="share-match-overview" aria-label="${escAttr(i18nCore.t('tradeMatch.detailsLabel'))}">${tradeMatchMetric(i18nCore.t('tradeMatch.bothWant'),matchSummary.both,matchSummary.availability.wants)}${tradeMatchMetric(i18nCore.t('tradeMatch.onlyIWant'),matchSummary.onlyMine,matchSummary.availability.wants)}${tradeMatchMetric(i18nCore.t('tradeMatch.onlyTheyWant',{trainer:username}),matchSummary.onlyTheirs,matchSummary.availability.wants)}</div>`:'';
   hdr.innerHTML=`${userAvatarHtml(username,64)}
     <div class="share-hdr-info">
       <div class="share-hdr-name">${escHtml(i18nCore.t('share.listTitle',{username}))}</div>

@@ -16,8 +16,7 @@
       lucky:entry?.lucky===true,
       shiny:entry?.shiny===true,
       xxl:entry?.xxl===true,
-      xxs:entry?.xxs===true,
-      mirror:entry?.mirror===true
+      xxs:entry?.xxs===true
     });
   }
   function defaultNameKey(value){return String(value||'').trim().toLocaleLowerCase('en-US');}
@@ -28,38 +27,39 @@
       ...FLAG_KEYS.map(flag=>item[flag])
     ]);
   }
-  function exactOfferMatch(left,right,{nameKey=defaultNameKey,normalizeQualifier}={}){
-    return nameKey(left?.name)===nameKey(right?.name)
-      &&qualifierKey(left,normalizeQualifier)===qualifierKey(right,normalizeQualifier);
+  function wantedIntentKey(entry,{nameKey=defaultNameKey,normalizeQualifier}={}){
+    const item=cleanEntry(entry);
+    return JSON.stringify([
+      nameKey(item.name),item.type,item.backgroundId,item.gender,
+      normalizeQualifier?normalizeQualifier(item.mod):defaultNameKey(item.mod),
+      ...FLAG_KEYS.map(flag=>item[flag])
+    ]);
   }
-  function matchingOffer(want,offers,{nameKey,matchesIntent}){
-    return offers.find(offer=>nameKey(want.name)===nameKey(offer.name)&&matchesIntent(want,offer))||null;
+  function uniqueWants(entries,options){
+    const unique=new Map();
+    entries.forEach(entry=>{
+      const clean=cleanEntry(entry),key=wantedIntentKey(clean,options);
+      if(!unique.has(key))unique.set(key,clean);
+    });
+    return unique;
   }
-  function matchedWants(wants,offers,options){
-    return wants.map(want=>{
-      const offer=matchingOffer(want,offers,options);
-      return offer?Object.freeze({...cleanEntry(offer),intent:cleanEntry(want)}):null;
-    }).filter(Boolean);
-  }
-  function compareTradeLists({myWants=[],myOffers=[],theirWants=[],theirOffers=[]}={},options={}){
+  function compareWantedLists({myWants=[],theirWants=[]}={},options={}){
     const nameKey=typeof options.nameKey==='function'?options.nameKey:defaultNameKey;
-    const matchesIntent=typeof options.matchesIntent==='function'?options.matchesIntent:()=>false;
     const normalizeQualifier=typeof options.normalizeQualifier==='function'?options.normalizeQualifier:undefined;
-    const mine={wants:myWants.map(cleanEntry),offers:myOffers.map(cleanEntry)};
-    const theirs={wants:theirWants.map(cleanEntry),offers:theirOffers.map(cleanEntry)};
-    const compareOptions={nameKey,matchesIntent};
-    const theyOfferMyWants=matchedWants(mine.wants,theirs.offers,compareOptions);
-    const iOfferTheirWants=matchedWants(theirs.wants,mine.offers,compareOptions);
-    const mirrors=mine.offers.filter(offer=>offer.mirror).map(offer=>{
-      const counterpart=theirs.offers.find(other=>other.mirror&&exactOfferMatch(offer,other,{nameKey,normalizeQualifier}));
-      return counterpart?Object.freeze({...offer,intent:offer}):null;
-    }).filter(Boolean);
+    const compareOptions={nameKey,normalizeQualifier};
+    const mine=uniqueWants(myWants,compareOptions),theirs=uniqueWants(theirWants,compareOptions);
+    const both=[],onlyMine=[],onlyTheirs=[];
+    mine.forEach((entry,key)=>{
+      if(theirs.has(key))both.push(Object.freeze({...entry,counterpart:theirs.get(key)}));
+      else onlyMine.push(entry);
+    });
+    theirs.forEach((entry,key)=>{if(!mine.has(key))onlyTheirs.push(entry);});
     return Object.freeze({
-      theyOfferMyWants:Object.freeze(theyOfferMyWants),
-      iOfferTheirWants:Object.freeze(iOfferTheirWants),
-      mirrors:Object.freeze(mirrors)
+      both:Object.freeze(both),
+      onlyMine:Object.freeze(onlyMine),
+      onlyTheirs:Object.freeze(onlyTheirs)
     });
   }
 
-  root.tradeListComparison=Object.freeze({FLAG_KEYS,cleanEntry,qualifierKey,exactOfferMatch,compareTradeLists});
+  root.tradeListComparison=Object.freeze({FLAG_KEYS,cleanEntry,qualifierKey,wantedIntentKey,compareWantedLists});
 })(window);
