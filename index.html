@@ -1854,7 +1854,7 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
 .tab-icon-slot{display:flex;align-items:center;justify-content:center;width:22px;height:22px;flex:0 0 22px;line-height:0}.tab-icon-slot .tab-icon{width:20px;height:20px;flex:none}.tab-label{min-width:0}.tab-short-label{display:none}.tab::after{content:none}.tab .notif-badge{position:absolute;top:5px;right:4px;margin:0}
 .tab:hover{color:var(--text);background:var(--surface-hover)}.tab.active{color:var(--text);border-bottom-color:transparent;box-shadow:inset 0 -3px var(--accent)}
 .page{max-width:var(--container-wide);padding:28px var(--page-gutter) 72px}.have-hdr,.sched-hdr{margin-bottom:22px}.have-title,.sched-title{font-weight:700;color:var(--text)}.have-subtitle,.sched-subtitle{max-width:640px;margin-top:4px;color:var(--muted)}
-#tab-find .have-hdr,.trainer-discovery-content{width:min(100%,var(--container-standard));margin-inline:auto}#tab-schedule .sched-hdr,#events-out{width:min(100%,900px);margin-inline:auto}
+#tab-find .have-hdr,.trainer-discovery-content,#tab-schedule .sched-hdr,#events-out{width:100%;max-width:var(--container-wide);margin-inline:auto}
 .my-hdr{gap:12px;margin-bottom:14px;padding-top:2px}.my-hdr .av.lg{width:44px;height:44px}.my-uname{font-size:24px;line-height:30px}.fc-chip{background:transparent;border-color:transparent;padding-left:0}
 .journey-guidance{margin-bottom:18px;padding:12px 14px;border:0;border-left:3px solid var(--accent);border-radius:0 var(--radius-md) var(--radius-md) 0;background:var(--surface-subtle)}
 .journey-guidance strong{font-size:14px}.journey-guidance-actions .bghost{border-color:transparent;background:transparent}.journey-guidance-actions .bghost:hover{background:var(--surface-raised)}
@@ -1887,6 +1887,7 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
 @media(max-width:360px){.logo span{display:none}.favorite-card-surface{grid-template-columns:1fr;gap:2px}.favorite-card-footer{justify-content:flex-end}.favorite-card-tags{margin-bottom:2px}}
 
 /* Consumer product finish pass 3: secondary tools share the primary product language. */
+.myrow-copy{display:grid;align-content:center;gap:3px;flex:1;min-width:0}.myrow-copy .myrow-active-traits{max-width:100%;flex-wrap:wrap}
 .my-string-heading[hidden]{display:none}.my-string-heading{margin:28px 0 10px!important;padding-top:20px;border-top:1px solid var(--border)}.my-string-heading strong{font:750 var(--type-section);text-transform:none;letter-spacing:0;color:var(--text)}.my-string-heading span{max-width:580px;text-align:right}
 .mylist-search-footer,.mylist-search-option-head{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:6px 14px;min-width:0}.mylist-search-footer{margin-top:10px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--surface-subtle)}
 .mylist-search-option{padding:0;border-bottom:1px solid var(--border)}.mylist-search-option:last-child{border-bottom:0}.mylist-search-option-head{padding:11px 12px}.mylist-search-option-summary{display:grid;grid-template-columns:28px minmax(0,1fr);align-items:center;gap:9px;min-width:0}.mylist-search-option-icon{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:var(--surface-subtle);color:var(--muted)}.mylist-search-option-copy{display:grid;gap:2px;min-width:0}.mylist-search-option-label{font:750 var(--type-body);overflow-wrap:anywhere}.mylist-search-option .str-meta,.mylist-search-footer .str-meta{margin:0;color:var(--muted)}
@@ -1907,10 +1908,10 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
 @media(max-width:600px){.my-string-heading{align-items:flex-start}.my-string-heading span{text-align:left}.mylist-search-footer,.mylist-search-option-head{grid-template-columns:1fr;gap:8px}.mylist-search-actions{grid-column:1;grid-row:auto;width:100%;justify-content:stretch}.mylist-search-actions>*{flex:1 1 0}.mylist-search-limit{margin-left:37px}.myrow{display:flex;min-height:58px;padding:7px 8px;gap:7px;overflow:visible}.myrow .bulk-chk,.myrow .drag-handle,.myrow .myrow-reorder-controls,.myrow .myrow-sprite-wrap,.myrow .myrow-name,.myrow .mctrl{grid-area:auto}.myrow .myrow-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.myrow .mctrl{width:auto;margin-left:auto;justify-content:flex-end;flex-wrap:nowrap;overflow:visible}.myrow-sprite-wrap{width:34px;height:34px}.myrow-sprite{width:34px;height:34px}.drag-handle{width:28px}.myrow-reorder-move{width:32px}.myrow-priority-quick{display:none}.mctrl{gap:4px}.myrow-active-traits{max-width:92px}.myrow-edit span{display:none}.profile-avatar-results{grid-template-columns:1fr}.admin-nav{margin-inline:-14px;padding-inline:14px}.admin-nav-button{padding-inline:10px}.admin-nav-button .ui-icon{display:none}.archive-list-heading{align-items:flex-start}.archive-list-actions{align-items:flex-end;flex-direction:column}.archive-list-actions .bulk-toggle{min-width:48px}.archive-list-actions .bulk-toggle span{display:none}.toast,.undo-toast{left:14px;right:14px;max-width:none;transform:translateY(100px)}.toast.show,.undo-toast.show{transform:translateY(0)}}
 @media(max-width:600px){
   .myrow{min-height:54px;padding:3px var(--space-1);gap:6px}
-  .myrow .myrow-name{flex:1 1 auto;min-width:52px;font-size:13px}
+  .myrow-copy{gap:2px;flex:1 1 auto;min-width:52px}.myrow .myrow-name{font-size:13px}
   .myrow-sprite-wrap,.myrow-sprite{width:32px;height:32px}.myrow-sprite-wrap{flex-basis:32px}
   .myrow .mctrl{flex:0 1 auto;min-width:0;gap:3px}
-  .myrow-active-traits{max-width:156px;gap:2px}
+  .myrow-copy .myrow-active-traits{max-width:100%;gap:2px;flex-wrap:nowrap;overflow:hidden}
   .myrow-trait{min-height:24px;padding-inline:5px}
   .myrow-trait.lucky,.myrow-trait.shiny{width:24px;min-width:24px;max-width:24px;padding:0;justify-content:center;font-size:0}
   .myrow-trait.lucky::before{content:'⚡';font-size:12px}.myrow-trait.shiny::before{content:'✨';font-size:12px}
@@ -2231,7 +2232,7 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
             <input type="checkbox" id="add-pmon-xxs" onchange="if(this.checked)document.getElementById('add-pmon-xxl').checked=false;renderAddTray()"> XXS
           </label>
         </div>
-        <input type="text" class="field-control" id="add-pmon-notes" data-i18n-placeholder="myList.variantDetailsPlaceholder" data-i18n-aria-label="myList.variantDetails" placeholder="Variant details: female, male, shadow…" aria-label="Variant details" style="flex:1;min-width:120px" oninput="renderAddTray()">
+        <input type="text" class="field-control" id="add-pmon-notes" data-i18n-placeholder="myList.variantDetailsPlaceholder" data-i18n-aria-label="myList.variantDetails" placeholder="Variant details: female, male, costume…" aria-label="Variant details" style="flex:1;min-width:120px" oninput="renderAddTray()">
       </div>
       <div class="speed-add-hint" id="speed-add-hint" data-i18n="myList.speedAddHint">Speed add is on. Priority and flags stay selected after each addition.</div>
     </div>
@@ -8159,10 +8160,12 @@ function myListRowsHtml(entries){
       <input type="checkbox" class="bulk-chk" data-name="${attrName}" ${isSel?'checked':''} onclick="event.stopPropagation();toggleBulkSelection('${jsName}')" aria-label="${escAttr(i18nCore.t('myList.selectEntry',{name:dn}))}">
       ${reorderMode?`<button type="button" class="drag-handle" draggable="false" title="${escAttr(i18nCore.t('myList.reorderEntry',{name:dn}))}" aria-label="${escAttr(i18nCore.t('myList.reorderEntry',{name:dn}))}" onpointerdown="myListPointerStart(event)" onpointermove="myListPointerMove(event)" onpointerup="myListPointerEnd(event)" onpointercancel="myListPointerCancel(event)">${uiIconMarkup('grip','ui-icon')}</button><span class="myrow-reorder-controls"><button type="button" class="myrow-reorder-move" data-reorder-move="up" draggable="false" ${priorityIndex<=0?'disabled':''} aria-label="${escAttr(i18nCore.t('myList.moveUp',{name:dn}))}" onclick="event.stopPropagation();moveMyListEntry('${jsName}',-1)">${uiIconMarkup('chevron-down','ui-icon')}</button><button type="button" class="myrow-reorder-move" data-reorder-move="down" draggable="false" ${priorityIndex>=priorityCount-1?'disabled':''} aria-label="${escAttr(i18nCore.t('myList.moveDown',{name:dn}))}" onclick="event.stopPropagation();moveMyListEntry('${jsName}',1)">${uiIconMarkup('chevron-down','ui-icon')}</button></span>`:''}
       ${hasSprite?`<span class="myrow-sprite-wrap sprite-slot-list">${spriteImg(no,34,'myrow-sprite',name,'',dn,{urlOverride:entry.spriteUrl,catalogId:entry.catalogId})}${crownHtml}</span>`:crownHtml}
-      <div class="myrow-name">${escHtml(dn)}</div>
+      <div class="myrow-copy">
+        <div class="myrow-name">${escHtml(dn)}</div>
+        ${activeTraits?`<div class="myrow-active-traits" aria-label="${escAttr(i18nCore.t('myList.currentFlags',{flags:[lucky&&i18nCore.t('myList.lucky'),shiny&&i18nCore.t('myList.shiny'),xxl&&'XXL',xxs&&'XXS',mod].filter(Boolean).join(', ')}))}">${activeTraits}</div>`:''}
+      </div>
       <div class="mctrl">
         ${p?`<details class="myrow-priority-quick" onclick="event.stopPropagation()"><summary class="myrow-priority-chip ${p}" aria-label="${escAttr(i18nCore.t('myList.changePriorityFor',{name:dn,priority:i18nCore.t({'H':'priority.high','M':'priority.medium','L':'priority.low'}[p])}))}">${p}</summary><div class="myrow-priority-menu" role="group" aria-label="${escAttr(i18nCore.t('myList.priorityFor',{name:dn}))}">${['H','M','L'].map(value=>`<button type="button" class="pb ${p===value?'on '+value:''}" aria-pressed="${p===value}" onclick="movePriority('${jsName}','${value}')">${value}</button>`).join('')}</div></details>`:''}
-        ${activeTraits?`<div class="myrow-active-traits" aria-label="${escAttr(i18nCore.t('myList.currentFlags',{flags:[lucky&&i18nCore.t('myList.lucky'),shiny&&i18nCore.t('myList.shiny'),xxl&&'XXL',xxs&&'XXS',mod].filter(Boolean).join(', ')}))}">${activeTraits}</div>`:''}
         <details class="myrow-editor" onclick="event.stopPropagation()" ontoggle="hydrateMyRowEditor(this)">
           <summary class="myrow-edit" aria-label="${escAttr(i18nCore.t('myList.openMoreFor',{name:dn}))}" title="${escAttr(i18nCore.t('myList.openMoreFor',{name:dn}))}">${uiIconMarkup('sliders','ui-icon ui-icon-sm')}<span>${escHtml(i18nCore.t('myList.editEntry'))}</span></summary>
         </details>
@@ -10815,8 +10818,8 @@ function renderTradeMatchSummary(them){
     ${items.length?`<div class="diff-match-list">${items.map((it,i)=>chip(it,extraFn?extraFn(it):'',i>=14?'extra':'')).join('')}${items.length>14?`<button type="button" class="diff-match-chip diff-match-more" data-more="+${items.length-14} more" onclick="toggleTradeMatchSection(this)">+${items.length-14} more</button>`:''}</div>`:`<div class="diff-match-empty">${empty}</div>`}
   </div>`;
   return`<div class="diff-match-panel" aria-label="Trade match summary">
-    ${box('want','⭐ They have that you want',m.theyHaveYouWant.length,m.theyHaveYouWant,`${escHtml(them)} has not posted inventory matching your wants yet.`)}
-    ${box('give','🤝 You have that they want',m.youHaveTheyWant.length,m.youHaveTheyWant,`Your inventory does not currently match ${escHtml(them)}'s wants.`)}
+    ${box('want','⭐ They Have My Wants',m.theyHaveYouWant.length,m.theyHaveYouWant,`${escHtml(them)} has not posted inventory matching your wants yet.`)}
+    ${box('give','🤝 I Have Their Wants',m.youHaveTheyWant.length,m.youHaveTheyWant,`Your inventory does not currently match ${escHtml(them)}'s wants.`)}
     ${box('mirror','🪞 Possible mirrors',m.mirrors.length,m.mirrors,'No exact overlap where both trainers have it and both trainers want it or marked it mirror-only yet.',it=>` · their qty ${it.theirQty||1}`)}
   </div>`;
 }

@@ -2,11 +2,19 @@ const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const {readFileSync}=require('node:fs');
 const path=require('node:path');
+const vm=require('node:vm');
 
 const root=path.join(__dirname,'..');
 const html=readFileSync(path.join(root,'index.html'),'utf8');
 const add=html.slice(html.indexOf('<div class="add-form'),html.indexOf('<div class="owner-share-notice"'));
 const toolbar=html.slice(html.indexOf('<div class="sec mylist-list-toolbar"'),html.indexOf('<div id="mylist-out">'));
+const prioritySource=readFileSync(path.join(root,'js/domain/priorityValues.js'),'utf8');
+
+function loadPriorityValues(){
+  const window={PogoDomain:{}};
+  vm.runInNewContext(prioritySource,{window});
+  return window.PogoDomain.priorityValues;
+}
 
 test('normal add hierarchy keeps lookup, priority, Add, and per-entry details together',()=>{
   assert.match(add,/class="[^"]*ac-wrap[^"]*search-lookup[^"]*"/);
@@ -43,6 +51,21 @@ test('flags and variant details remain behind Flags & details without changing i
   assert.match(html,/list\[name\]=priValue\(pri,notes,lucky,xxl,xxs,shiny\)/);
 });
 
+test('trade qualifiers normalize gender aliases and reject impossible Shadow requirements',()=>{
+  const domain=loadPriorityValues();
+  for(const [value,expected] of [['male','M'],['MALE','M'],['m','M'],['M','M'],['♂','M'],['female','F'],['FEMALE','F'],['f','F'],['F','F'],['♀','F']]){
+    assert.equal(domain.normalizeTradeQualifier(value),expected,value);
+  }
+  for(const [value,expected] of [['macho','M'],['männlich','M'],['オス','M'],['hembra','F'],['weiblich','F'],['メス','F']])assert.equal(domain.normalizeTradeQualifier(value),expected,value);
+  assert.equal(domain.normalizeTradeQualifier('female shadow'),'F');
+  assert.equal(domain.normalizeTradeQualifier('male, winter costume'),'M, winter costume');
+  assert.equal(domain.normalizeTradeQualifier('Shadow'),'');
+  assert.equal(domain.normalizeTradeQualifier('winter costume'),'winter costume');
+  assert.equal(domain.priValue('H','female shadow'),'H(F)');
+  assert.equal(domain.parsePri('M(male)').mod,'M');
+  assert.equal(domain.parsePri('L(Shadow)').mod,'');
+});
+
 test('lookup and existing-list filter use deliberate search variants',()=>{
   assert.match(add,/search-lookup/);
   assert.match(html,/class="mylist-search app-search-shell search-filter"/);
@@ -66,4 +89,11 @@ test('Find Trainer uses one concise description and no repeated guidance paragra
   const find=html.slice(html.indexOf('<!-- FIND TRAINER'),html.indexOf('<!-- MY LIST'));
   assert.match(find,/id="find-trainer-description"/);
   assert.doesNotMatch(find,/find-guidance-title|sync is not active|private tags/i);
+});
+
+test('page containers and reciprocal match labels use one intentional product vocabulary',()=>{
+  assert.match(html,/#tab-find \.have-hdr,\.trainer-discovery-content,#tab-schedule \.sched-hdr,#events-out\{width:100%;max-width:var\(--container-wide\)/);
+  assert.match(html,/They Have My Wants/);
+  assert.match(html,/I Have Their Wants/);
+  assert.doesNotMatch(html,/They have that you want|You have that they want/);
 });

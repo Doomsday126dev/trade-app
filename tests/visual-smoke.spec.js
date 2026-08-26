@@ -1914,7 +1914,7 @@ test.describe('visual smoke', () => {
         const parsed=parsePri(allData.wishlist.AddLayoutTester.Pikachu);
         return{type:captured.type,username:captured.username,p:parsed.p,mod:parsed.mod,lucky:parsed.lucky,shiny:parsed.shiny,xxl:parsed.xxl,xxs:parsed.xxs};
       });
-      expect(saved).toEqual({type:'wishlist',username:'AddLayoutTester',p:'M',mod:'female shadow',lucky:true,shiny:true,xxl:true,xxs:false});
+      expect(saved).toEqual({type:'wishlist',username:'AddLayoutTester',p:'M',mod:'F',lucky:true,shiny:true,xxl:true,xxs:false});
       await expect(page.locator('#ac-input')).toHaveValue('');
       await expect(page.locator('#add-pmon-sel')).toHaveValue('');
       await expect(page.locator('.myrow-name',{hasText:'Pikachu'})).toBeVisible();
@@ -1999,7 +1999,12 @@ test.describe('visual smoke', () => {
         emptyTraitCount:mew.querySelectorAll('.myrow-active-traits').length,
         eeveeDetail:eevee.querySelector('.myrow-trait.detail')?.textContent||'',
         eeveeDetailVisible:getComputedStyle(eevee.querySelector('.myrow-trait.detail')).display!=='none',
-        longNameTruncated:long.querySelector('.myrow-name').scrollWidth>long.querySelector('.myrow-name').clientWidth,
+        eeveeCopyContainsTraits:eevee.querySelector('.myrow-copy>.myrow-active-traits')!==null,
+        eeveeTraitTop:eevee.querySelector('.myrow-active-traits').getBoundingClientRect().top,
+        eeveeNameBottom:eevee.querySelector('.myrow-name').getBoundingClientRect().bottom,
+        priorityCenter:(squirtle.querySelector('.myrow-priority-chip')?.getBoundingClientRect().top||0)+(squirtle.querySelector('.myrow-priority-chip')?.getBoundingClientRect().height||0)/2,
+        rowCenter:squirtle.getBoundingClientRect().top+squirtle.getBoundingClientRect().height/2,
+        longNameContained:long.querySelector('.myrow-name').getBoundingClientRect().right<=long.querySelector('.myrow-copy').getBoundingClientRect().right+1,
         priorityQuickVisible:getComputedStyle(squirtle.querySelector('.myrow-priority-quick')).display!=='none',
         overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth,
         openEditors:document.querySelectorAll('.myrow-editor[open]').length,
@@ -2011,8 +2016,10 @@ test.describe('visual smoke', () => {
     expect(layout.openEditors).toBe(0);
     expect(layout.emptyTraitCount).toBe(0);
     expect(layout.traitCount).toBe(4);
-    expect(layout.eeveeDetail).toBe('female shadow');
+    expect(layout.eeveeDetail).toBe('F');
     expect(layout.eeveeDetailVisible).toBe(true);
+    expect(layout.eeveeCopyContainsTraits).toBe(true);
+    expect(layout.eeveeTraitTop).toBeGreaterThanOrEqual(layout.eeveeNameBottom-1);
     if(mobile){
       expect(Math.max(...layout.rowHeights)).toBeLessThanOrEqual(56);
       expect(Math.min(...layout.rowHeights)).toBeGreaterThanOrEqual(54);
@@ -2020,7 +2027,7 @@ test.describe('visual smoke', () => {
       expect(layout.edit.width).toBeGreaterThanOrEqual(48);
       expect(layout.edit.height).toBeGreaterThanOrEqual(48);
       expect(layout.traitRight).toBeLessThanOrEqual(layout.edit.left);
-      expect(layout.longNameTruncated).toBe(true);
+      expect(layout.longNameContained).toBe(true);
       expect(layout.priorityQuickVisible).toBe(false);
       expect(layout.luckyMarker).toBe('"⚡"');
       expect(layout.shinyMarker).toBe('"✨"');
@@ -2029,7 +2036,9 @@ test.describe('visual smoke', () => {
       expect(Math.min(...layout.rowHeights)).toBeGreaterThanOrEqual(58);
       expect(new Set(layout.rowXs).size).toBeGreaterThan(1);
       expect(layout.priorityQuickVisible).toBe(true);
+      expect(Math.abs(layout.priorityCenter-layout.rowCenter)).toBeLessThanOrEqual(1);
     }
+    await capturePass3(page,`product-ui-mylist-rows-${mobile?'mobile':'desktop'}`);
 
     const longRow=rows.filter({has:page.locator('.myrow-name',{hasText:'Darmanitan (Galarian Standard Mode)'})});
     await expect(longRow.locator('.myrow-trait.detail')).not.toHaveAttribute('title');
@@ -2073,8 +2082,8 @@ test.describe('visual smoke', () => {
       });
       expect(styles.details).toEqual(styles.reference);
 
-      await details.fill('female shadow');
-      await expect(details).toHaveValue('female shadow');
+      await details.fill('winter costume');
+      await expect(details).toHaveValue('winter costume');
       await details.focus();
       await page.waitForTimeout(180);
       const detailsFocus=await details.evaluate(element=>({borderColor:getComputedStyle(element).borderColor,boxShadow:getComputedStyle(element).boxShadow}));
@@ -2716,11 +2725,13 @@ test.describe('visual smoke', () => {
     });
     await expect(page.locator('.event-group[data-group="now"]')).toBeVisible();await expect(page.locator('.event-group[data-group="soon"]')).toBeVisible();await expect(page.locator('.event-group[data-group="later"]')).toBeVisible();
     await expect(page.locator('.event-current-badge')).toBeVisible();await expect(page.locator('.event-card-relative').first()).toContainText(/.+/);
+    await expect(page.locator('.event-card-date').first()).toContainText(String(new Date().getFullYear()));
     await expect(page.locator('.event-current-badge')).not.toContainText('●');
     await expect(page.locator('.event-filter[data-type="spotlight"]')).toBeVisible();
     const cueRightEdges=await page.locator('a.event-card .event-card-cue').evaluateAll(nodes=>nodes.map(node=>Math.round(node.getBoundingClientRect().right)));
     expect(Math.max(...cueRightEdges)-Math.min(...cueRightEdges)).toBeLessThanOrEqual(2);
     await expect(page.locator('article.event-card .event-card-cue')).toHaveCount(0);
+    await capturePass3(page,`product-ui-events-${test.info().project.name}`);
     await page.setViewportSize({width:390,height:420});
     const filterGeometry=await page.locator('.event-filter-row').evaluate(node=>({clientWidth:node.clientWidth,scrollWidth:node.scrollWidth,tabIndex:node.tabIndex,edge:getComputedStyle(node.parentElement,'::after').display}));
     expect(filterGeometry.scrollWidth).toBeGreaterThan(filterGeometry.clientWidth);
@@ -2740,6 +2751,22 @@ test.describe('visual smoke', () => {
     await page.evaluate(()=>{_eventData={events:[],raids:[],fetchedAt:0};_eventLoadState='error';renderEventsOnly();});await expect(page.locator('.ui-state-unavailable')).toBeVisible();await expect(page.locator('.events-state-action')).toBeVisible();await capturePass3(page,'events-error-mobile');
     const viewports=[['en',320,640],['ja',375,700],['de',390,420],['es',430,760],['ja',390,300],['de',768,800],['es',1024,800],['en',1440,900]];
     for(const [locale,width,height] of viewports){await page.setViewportSize({width,height});await page.evaluate(locale=>{changeInterfaceLocale(locale);_eventData=window.__eventTimelineFixture;_eventLoadState='ready';eventTypeFilter='all';renderEventsOnly();},locale);await expect(page.locator('.event-card').first()).toBeVisible();const rowBox=await page.locator('.event-card').first().boundingBox();expect(rowBox?.height).toBeLessThan(width<=430?172:150);const summaryClamps=await page.locator('.event-card-summary').evaluateAll(nodes=>nodes.map(node=>getComputedStyle(node).webkitLineClamp));expect(summaryClamps.every(value=>value==='1')).toBe(true);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);}
+  });
+
+  test('main product tabs keep equivalent page headings on one left edge',async({page})=>{
+    await page.goto(`./?main-page-alignment=${Date.now()}`,{waitUntil:'domcontentloaded'});
+    await waitForStableLocalOrganizerStartup(page);
+    await isolateAuthenticatedMyListFixture(page,{username:'PageAlignmentTester',uid:'uid-page-alignment-tester'});
+    const lefts=[];
+    for(const [tab,heading] of [['mylist','#tab-mylist .my-hdr'],['find','#tab-find .have-hdr'],['schedule','#tab-schedule .sched-hdr']]){
+      await openMainTab(page,tab);
+      const box=await page.locator(heading).boundingBox();
+      expect(box).not.toBeNull();
+      lefts.push(box.x);
+      expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
+      await capturePass3(page,`product-ui-${tab}-${test.info().project.name}`);
+    }
+    expect(Math.max(...lefts)-Math.min(...lefts)).toBeLessThanOrEqual(1);
   });
 
   test('main tab switching keeps the app rendered', async ({ page }) => {

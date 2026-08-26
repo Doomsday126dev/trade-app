@@ -57,11 +57,13 @@
     const start=eventDate(event?.start),end=eventDate(event?.end,dateOnly(event?.end)),nowDate=new Date(now);
     if(!Number.isFinite(start.getTime()))return Object.freeze({dateLabel:'',timeLabel:'',relative:null,multiDay:false,dayOffset:null});
     const allDay=event?.allDay===true||dateOnly(event?.start),hasEnd=Number.isFinite(end.getTime());
-    const dateOptions={weekday:'short',month:'short',day:'numeric'};if(timeZone)dateOptions.timeZone=timeZone;
+    const dateOptions={weekday:'short',year:'numeric',month:'short',day:'numeric'};if(timeZone)dateOptions.timeZone=timeZone;
     const timeOptions={hour:'numeric',minute:'2-digit'};if(timeZone)timeOptions.timeZone=timeZone;
     const dateFormatter=new Intl.DateTimeFormat(locale,dateOptions),timeFormatter=new Intl.DateTimeFormat(locale,timeOptions);
     const sameDay=hasEnd&&dateParts(start,timeZone)===dateParts(end,timeZone),multiDay=hasEnd&&!sameDay;
-    const dateLabel=hasEnd&&multiDay&&typeof dateFormatter.formatRange==='function'?dateFormatter.formatRange(start,end):dateFormatter.format(start);
+    const dateLabel=hasEnd&&multiDay
+      ?(typeof dateFormatter.formatRange==='function'?dateFormatter.formatRange(start,end):`${dateFormatter.format(start)} – ${dateFormatter.format(end)}`)
+      :dateFormatter.format(start);
     let timeLabel='';
     if(!allDay){
       if(hasEnd&&typeof timeFormatter.formatRange==='function')timeLabel=timeFormatter.formatRange(start,end);

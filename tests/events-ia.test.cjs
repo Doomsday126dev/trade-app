@@ -26,13 +26,15 @@ test('event timing separates scannable dates, times, relative state, and multi-d
   const events=loadDomain(),now=Date.parse('2026-08-09T12:00:00Z');
   const active=events.eventTiming({start:'2026-08-09T11:00:00Z',end:'2026-08-09T13:10:00Z'},{now,locale:'en-US',timeZone:'UTC'});
   assert.equal(active.relative.kind,'ends');assert.equal(active.relative.unit,'minute');assert.equal(active.relative.value,70);
-  assert.ok(active.dateLabel);assert.ok(active.timeLabel);assert.equal(active.dayOffset,0);
+  assert.match(active.dateLabel,/2026/);assert.ok(active.timeLabel);assert.equal(active.dayOffset,0);
   const tomorrow=events.eventTiming({start:'2026-08-10T15:00:00Z',end:'2026-08-10T18:00:00Z'},{now,locale:'de-DE',timeZone:'UTC'});
   assert.equal(tomorrow.relative.kind,'starts');assert.equal(tomorrow.dayOffset,1);
   const multi=events.eventTiming({start:'2026-08-10T22:00:00Z',end:'2026-08-12T02:00:00Z'},{now,locale:'ja-JP',timeZone:'UTC'});
   assert.equal(multi.multiDay,true);assert.ok(multi.dateLabel);assert.ok(multi.timeLabel);
   const allDay=events.eventTiming({start:'2026-08-11',end:'2026-08-11',allDay:true},{now,locale:'es-ES',timeZone:'UTC'});
-  assert.equal(allDay.timeLabel,'');
+  assert.equal(allDay.timeLabel,'');assert.match(allDay.dateLabel,/2026/);
+  const crossYear=events.eventTiming({start:'2026-12-31',end:'2027-01-02',allDay:true},{now,locale:'en-US',timeZone:'UTC'});
+  assert.equal(crossYear.multiDay,true);assert.match(crossYear.dateLabel,/2026/);assert.match(crossYear.dateLabel,/2027/);
 });
 
 test('relative precision is low cost and appropriate to the remaining interval',()=>{

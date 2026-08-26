@@ -256,7 +256,7 @@
     'myList.priority':'Priority',
     'myList.flags':'Flags',
     'myList.advanced':'Advanced','myList.moreOptions':'More options',
-    'myList.notesPlaceholder':'Notes: female, male, shadow…','myList.variantDetails':'Variant details','myList.variantDetailsPlaceholder':'Variant details: female, male, shadow…',
+    'myList.notesPlaceholder':'Notes: female, male, costume…','myList.variantDetails':'Variant details','myList.variantDetailsPlaceholder':'Variant details: female, male, costume…',
     'myList.addAction':'Add',
     'myList.importAction':'Import string',
     'myList.speedAdd':'Speed add',

@@ -193,15 +193,15 @@ eq(auditTrainerNames(['Ace', ' ACE ']).summary.collisionGroups, 1, 'auditTrainer
 const { parsePri, priValue, entryGender } = domain.priorityValues;
 deepEq(
   parsePri('H[lucky][shiny][xxl](female)'),
-  { p: 'H', mod: 'female', lucky: true, xxl: true, xxs: false, shiny: true },
+  { p: 'H', mod: 'F', lucky: true, xxl: true, xxs: false, shiny: true },
   'parsePri should parse bracket flags and gender modifier'
 );
 deepEq(
   parsePri('M(shiny f)'),
-  { p: 'M', mod: 'f', lucky: false, xxl: false, xxs: false, shiny: true },
+  { p: 'M', mod: 'F', lucky: false, xxl: false, xxs: false, shiny: true },
   'parsePri should lift shiny out of modifier text'
 );
-eq(priValue('L', 'm', false, false, true, false), 'L[xxs](m)', 'priValue should serialize flags and modifier');
+eq(priValue('L', 'm', false, false, true, false), 'L[xxs](M)', 'priValue should serialize flags and modifier');
 eq(entryGender('female'), 'f', 'entryGender should normalize female');
 
 // --- scheduleDates ---
