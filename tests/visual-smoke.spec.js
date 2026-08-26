@@ -2563,7 +2563,7 @@ test.describe('visual smoke', () => {
       const them='TrainerWithAnExceptionallyLongHandle123';
       allData=normalizeData({
         users:{Doomsday126:{authUid:'uid-owner',isOwner:true},[them]:{}},
-        have:{Doomsday126:{'Pikachu::m':{qty:2},'Heracross::m':{qty:1}},[them]:{Mew:{qty:1},'Heracross::m':{qty:1}}},
+        have:{Doomsday126:{'Pikachu::m':{qty:26},'Heracross::m':{qty:3}},[them]:{Mew:{qty:45},'Heracross::m':{qty:57}}},
         wishlist:{Doomsday126:{Mew:'H[lucky][shiny][xxl](winter costume)',Heracross:'M(F)'},[them]:{Pikachu:'L[xxs](male)'}},
         dynamax:{},gmax:{},costumes:{}
       });
@@ -2584,6 +2584,10 @@ test.describe('visual smoke', () => {
     await expect(modal.locator('.diff-match-box.give')).toContainText('Their priority: Low');
     await expect(modal.locator('.diff-match-box.give')).toContainText('Extra Small');
     await expect(modal.locator('.diff-match-box.give')).toContainText('Male');
+    await expect(modal.locator('.diff-match-qty')).toHaveCount(0);
+    await expect(modal.locator('.diff-match-box.want .diff-match-count')).toHaveText('1');
+    await expect(modal.locator('.diff-match-box.give .diff-match-count')).toHaveText('1');
+    expect(await modal.locator('.diff-match-chip[title]').evaluateAll(nodes=>nodes.every(node=>!/[×x]\d+/i.test(node.getAttribute('title')||'')))).toBe(true);
     await page.getByRole('button',{name:'Edit My List'}).click();
     await expect(page.locator('#trade-return-banner')).toBeVisible();
     await page.evaluate(()=>{allData.wishlist.Doomsday126.Heracross='M(M)';renderMyList();});
@@ -2596,6 +2600,7 @@ test.describe('visual smoke', () => {
       names.forEach((name,index)=>{allData.have[them][name]={qty:index%3+1};allData.wishlist.Doomsday126[name]=index%3===0?'H[shiny]':index%3===1?'M[xxl]':'L[xxs]';});
       renderTradeMatchModal();
     });
+    await expect(page.locator('#trade-match-modal .diff-match-qty')).toHaveCount(0);
     await expect(page.locator('#trade-match-modal .diff-match-box.want .diff-match-more')).toBeVisible();
     for(const viewport of [{width:1440,height:900},{width:430,height:932},{width:375,height:812},{width:320,height:568}]){
       await page.setViewportSize(viewport);
@@ -2609,6 +2614,35 @@ test.describe('visual smoke', () => {
     await page.keyboard.press('Escape');
     await expect(page.locator('#trade-match-modal')).toHaveCount(0);
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
+  });
+
+  test('trainer discovery mode switching preserves the visible search shell and active mode',async({page})=>{
+    await page.goto(`./?trainer-mode-scroll=${Date.now()}`,{waitUntil:'domcontentloaded'});
+    await waitForStableLocalOrganizerStartup(page);
+    await isolateAuthenticatedMyListFixture(page,{username:'DiscoveryScrollTester',uid:'uid-discovery-scroll'});
+    await page.evaluate(()=>{
+      allData=normalizeData({users:{DiscoveryScrollTester:{},TrainerAlpha:{},TrainerBeta:{}},wishlist:{TrainerAlpha:{Pikachu:'H'},TrainerBeta:{Eevee:'M'}},dynamax:{},gmax:{},costumes:{}});
+      switchTab('find',{render:false});renderFindTrainer();
+      document.getElementById('recent-trainers').style.minHeight='1100px';
+    });
+    const viewports=[{width:1440,height:900},{width:430,height:932},{width:390,height:844},{width:375,height:812},{width:320,height:568}];
+    for(const viewport of viewports){
+      await page.setViewportSize(viewport);
+      for(const [mode,keyboard] of [['favorites',true],['pokemon',false],['trainers',false]]){
+        const button=page.locator(`[data-discovery-mode="${mode}"]`);
+        await button.focus();
+        await page.evaluate(()=>{const nav=document.querySelector('.trainer-discovery-modes');window.scrollTo(0,Math.max(0,scrollY+nav.getBoundingClientRect().top-Math.round(innerHeight*.2)));});
+        const before=await page.evaluate(()=>scrollY);
+        if(keyboard)await page.keyboard.press('Enter');else await button.click();
+        await expect(button).toHaveAttribute('aria-current','true');
+        await page.waitForTimeout(80);
+        const after=await page.evaluate(()=>scrollY);
+        expect(Math.abs(after-before)).toBeLessThanOrEqual(1);
+        expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
+        if(mode==='trainers')await expect(page.locator('#find-trainer-input')).toBeFocused();
+        if(mode==='pokemon')await expect(page.locator('#favorite-browse-input')).toBeFocused();
+      }
+    }
   });
 
   test('my list renders embedded search strings', async ({ page }) => {
@@ -2949,6 +2983,17 @@ test.describe('visual smoke', () => {
     const cueRightEdges=await page.locator('a.event-card .event-card-cue').evaluateAll(nodes=>nodes.map(node=>Math.round(node.getBoundingClientRect().right)));
     expect(Math.max(...cueRightEdges)-Math.min(...cueRightEdges)).toBeLessThanOrEqual(2);
     await expect(page.locator('article.event-card .event-card-cue')).toHaveCount(0);
+    await page.setViewportSize({width:1440,height:900});
+    const desktopGeometry=await page.evaluate(()=>{
+      const header=document.querySelector('#tab-schedule .sched-hdr').getBoundingClientRect();
+      const container=document.getElementById('events-out').getBoundingClientRect();
+      const timeline=document.querySelector('.events-timeline').getBoundingClientRect();
+      return{headerLeft:header.left,containerLeft:container.left,containerRight:container.right,timelineLeft:timeline.left,timelineRight:timeline.right,timelineWidth:timeline.width};
+    });
+    expect(Math.abs(desktopGeometry.headerLeft-desktopGeometry.containerLeft)).toBeLessThanOrEqual(1);
+    expect(desktopGeometry.timelineWidth).toBeLessThanOrEqual(861);
+    expect(desktopGeometry.timelineLeft).toBeGreaterThan(desktopGeometry.headerLeft);
+    expect(Math.abs((desktopGeometry.timelineLeft-desktopGeometry.containerLeft)-(desktopGeometry.containerRight-desktopGeometry.timelineRight))).toBeLessThanOrEqual(1);
     await capturePass3(page,`product-ui-events-${test.info().project.name}`);
     await page.setViewportSize({width:390,height:420});
     const filterGeometry=await page.locator('.event-filter-row').evaluate(node=>({clientWidth:node.clientWidth,scrollWidth:node.scrollWidth,tabIndex:node.tabIndex,edge:getComputedStyle(node.parentElement,'::after').display}));
@@ -2967,7 +3012,7 @@ test.describe('visual smoke', () => {
     await page.evaluate(()=>{_eventData={events:[],raids:[],fetchedAt:Date.now()};_eventLoadState='ready';renderEventsOnly();});await expect(page.locator('.events-state')).toBeVisible();await expect(page.locator('.events-state-action')).toHaveCount(0);
     await page.evaluate(()=>{_eventData=null;_eventLoadState='loading';renderEventsOnly();});await expect(page.locator('#events-out')).toHaveAttribute('aria-busy','true');await expect(page.locator('.ui-state-loading')).toBeVisible();await capturePass3(page,'events-loading-mobile');
     await page.evaluate(()=>{_eventData={events:[],raids:[],fetchedAt:0};_eventLoadState='error';renderEventsOnly();});await expect(page.locator('.ui-state-unavailable')).toBeVisible();await expect(page.locator('.events-state-action')).toBeVisible();await capturePass3(page,'events-error-mobile');
-    const viewports=[['en',320,640],['ja',375,700],['de',390,420],['es',430,760],['ja',390,300],['de',768,800],['es',1024,800],['en',1440,900]];
+    const viewports=[['en',320,640],['ja',375,700],['de',390,420],['es',430,760],['ja',390,300],['de',768,800],['es',1024,800],['en',1440,900],['en',430,932],['ja',390,844],['de',375,812],['es',320,568]];
     for(const [locale,width,height] of viewports){await page.setViewportSize({width,height});await page.evaluate(locale=>{changeInterfaceLocale(locale);_eventData=window.__eventTimelineFixture;_eventLoadState='ready';eventTypeFilter='all';renderEventsOnly();},locale);await expect(page.locator('.event-card').first()).toBeVisible();const rowBox=await page.locator('.event-card').first().boundingBox();expect(rowBox?.height).toBeLessThan(width<=430?192:150);const summaryClamps=await page.locator('.event-card-summary').evaluateAll(nodes=>nodes.map(node=>getComputedStyle(node).webkitLineClamp));expect(summaryClamps.every(value=>value==='1')).toBe(true);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);}
   });
 

@@ -47,11 +47,20 @@ test('trainer search, Favorites, and Find by Pokémon are sibling discovery mode
   assert.match(block,/id="favorite-browse-panel" hidden/);
   assert.match(block,/id="favorite-browse-input"[^>]*role="combobox" aria-autocomplete="list"/);
   assert.match(block,/id="favorite-browse-results" role="region" aria-live="polite"/);
+  assert.match(block,/data-discovery-mode="trainers" aria-current="true"/);
   assert.match(html,/favoriteBrowseCatalog\(\)[\s\S]*rankAutocompleteItems/);
   assert.match(html,/favoriteBrowseState\.selected=\{name:item\.name,dn:item\.dn,no:item\.no\};favoriteBrowseState\.error=false;favoriteBrowseState\.expanded=true/);
   const toggle=html.slice(html.indexOf('function toggleFavoriteBrowse()'),html.indexOf('function syncFavoriteBrowseClear'));
   assert.match(toggle,/favoriteBrowseState\.expanded=!favoriteBrowseState\.expanded/);
   assert.doesNotMatch(toggle,/invalidate|reset\(/);
+  const focus=html.slice(html.indexOf('function focusTrainerDiscoveryMode'),html.indexOf('function positionTrainerSuggestions'));
+  assert.match(focus,/focus\(\{preventScroll:true\}\)/);
+  assert.match(focus,/setAttribute\('aria-current','true'\)/);
+  assert.doesNotMatch(focus,/scrollIntoView|scrollTo/);
+  const inputFocusStart=html.indexOf('function trainerSearchFocused');
+  const inputFocus=html.slice(inputFocusStart,html.indexOf('window.visualViewport',inputFocusStart));
+  assert.match(inputFocus,/queueTrainerSuggestions/);
+  assert.doesNotMatch(inputFocus,/scrollIntoView|scrollTo/);
 });
 
 test('trainer suggestions suppress stale debounced renders and present reciprocal hierarchy',()=>{

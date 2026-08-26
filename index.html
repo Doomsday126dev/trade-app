@@ -1620,7 +1620,6 @@ html[data-theme="light"] .have-mirror-badge,html[data-theme="light"] .have-mirro
 .diff-match-more:hover{border-color:var(--ac2);color:var(--ac2)}
 .diff-match-chip img{width:38px;height:38px;object-fit:contain;image-rendering:pixelated;flex-shrink:0}.diff-match-main{display:grid;gap:5px;min-width:0}
 .diff-match-name{font-size:12px;font-weight:800;overflow-wrap:anywhere;min-width:0}.diff-match-qualifiers{display:flex;align-items:center;gap:4px;flex-wrap:wrap}.diff-match-qualifier{display:inline-flex;align-items:center;min-height:22px;padding:2px 6px;border:1px solid var(--border);border-radius:var(--radius-pill);color:var(--muted);font-size:9px;font-weight:750;line-height:1.2}.diff-match-qualifier.priority-H{color:var(--danger)}.diff-match-qualifier.priority-M{color:var(--warn)}.diff-match-qualifier.priority-L{color:var(--ok)}
-.diff-match-qty{align-self:start;flex-shrink:0;color:var(--text);font-weight:800}
 .diff-match-empty{font-size:11px;color:var(--muted);line-height:1.35}
 .trade-match-actions{position:sticky;bottom:-16px;display:flex;gap:8px;flex-wrap:wrap;margin:14px -18px -16px;padding:12px 18px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--border);background:var(--card)}.trade-match-actions button{min-height:48px}
 .trade-return-banner{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 10px;padding:10px 12px;border:1px solid var(--border2);border-left:3px solid var(--accent);border-radius:var(--radius-md);background:var(--surface-subtle)}.trade-return-banner[hidden]{display:none}.trade-return-copy{min-width:0}.trade-return-copy strong{display:block;font-size:12px;overflow-wrap:anywhere}.trade-return-copy span{display:block;margin-top:2px;color:var(--muted);font-size:11px}.trade-return-banner button{min-height:44px;flex-shrink:0}
@@ -1906,6 +1905,8 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
 .share-search-disclosure{margin-top:6px}.share-search-disclosure summary{display:inline-flex;align-items:center;gap:7px;min-height:48px;padding:8px 2px;color:var(--ac2);font:700 var(--type-meta);cursor:pointer;list-style:none}.share-search-disclosure summary::-webkit-details-marker{display:none}.share-search-disclosure .collapse-icon{font-size:10px;transition:transform var(--transition-fast)}.share-search-disclosure[open] .collapse-icon{transform:rotate(180deg)}.share-search-hide-label,.share-search-disclosure[open] .share-search-view-label{display:none}.share-search-disclosure[open] .share-search-hide-label{display:inline}.share-search-disclosure .strbox{margin:2px 0 8px}.str-level-hdr{margin-bottom:0}
 .organizer-close{border-color:transparent;background:transparent}.organizer-close:hover{border-color:var(--border);background:var(--surface-hover)}.organizer-section{padding-top:6px}.organizer-assignment{gap:6px}.organizer-new-tag-toggle{border-color:transparent;background:transparent;color:var(--ac2)}.organizer-actions{padding-top:10px;border-top:1px solid var(--border)}
 @media(min-width:900px){#tab-find .have-hdr,.trainer-discovery-content{width:min(100%,var(--container-wide));max-width:var(--container-wide)}.trainer-discovery-content{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(300px,.85fr);column-gap:28px;align-items:start}.trainer-search-shell{grid-column:1/-1;width:min(100%,760px)}#favorite-trainers{grid-column:1;grid-row:3/5}#favorite-pokemon-browse{grid-column:2;grid-row:3}#recent-trainers{grid-column:2;grid-row:4}.trainer-quick-section{margin-top:28px}}
+.trainer-discovery-modes button[aria-current="true"]{background:var(--surface-raised);color:var(--text);box-shadow:var(--shadow-low)}
+.events-timeline,.events-state{margin-inline:auto}
 .event-filter-scroll{position:relative}.event-filter-scroll::after{content:"";position:absolute;z-index:2;top:0;right:-1px;width:34px;height:50px;pointer-events:none;background:linear-gradient(90deg,transparent,var(--surface-canvas))}.event-filter-scroll.is-at-end::after{display:none}.event-filter-row{scroll-snap-type:x proximity;overscroll-behavior-inline:contain}.event-filter{scroll-snap-align:start}.event-group:not([data-group="now"]) .event-card-grid{gap:0;overflow:hidden;border-block:1px solid var(--border)}.event-group:not([data-group="now"]) .event-card{min-height:82px;border:0;border-bottom:1px solid var(--border);border-radius:0;background:transparent;box-shadow:none}.event-group:not([data-group="now"]) .event-card:last-child{border-bottom:0}.event-group:not([data-group="now"]) .event-card:hover{background:var(--surface-hover)}
 @media(max-width:767px){
   :root{--topbar-h:58px}.topbar{padding-inline:12px}.logo{font-size:16px}.brand-mark{width:28px;height:28px}.sync-row,.bell-btn,.theme-toggle{width:48px;height:48px;min-width:48px;min-height:48px;justify-content:center}.tabs{justify-content:space-around;padding-inline:0}.tab{flex:1;flex-direction:column;gap:2px;min-height:58px;padding:6px 2px;font-size:0}.tab-label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}.tab-short-label{display:block;font-size:10px;line-height:12px;white-space:nowrap}.page{padding:20px 14px 56px}.my-hdr{margin-bottom:12px}.journey-guidance{padding:11px 12px}.journey-guidance-actions{gap:4px}.journey-guidance-actions .bghost{padding-inline:8px}.add-form{padding:14px}.settings-nav-button{background:transparent;border-color:transparent}.settings-nav-button[aria-current="page"]{background:var(--surface-raised)}
@@ -2177,9 +2178,9 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
       <button class="bghost" id="find-trainer-reload" style="display:none;margin-top:8px" onclick="reloadCompatibleClient()"></button>
     </div>
     <nav class="trainer-discovery-modes" data-i18n-aria-label="trainer.discoveryModes" aria-label="Trainer discovery sections">
-      <button type="button" onclick="focusTrainerDiscoveryMode('trainers')" data-i18n="trainer.modeTrainers">Trainers</button>
-      <button type="button" onclick="focusTrainerDiscoveryMode('favorites')" data-i18n="trainer.modeFavorites">Favorites</button>
-      <button type="button" onclick="focusTrainerDiscoveryMode('pokemon')" data-i18n="trainer.modePokemon">Find by Pokémon</button>
+      <button type="button" data-discovery-mode="trainers" aria-current="true" onclick="focusTrainerDiscoveryMode('trainers')" data-i18n="trainer.modeTrainers">Trainers</button>
+      <button type="button" data-discovery-mode="favorites" onclick="focusTrainerDiscoveryMode('favorites')" data-i18n="trainer.modeFavorites">Favorites</button>
+      <button type="button" data-discovery-mode="pokemon" onclick="focusTrainerDiscoveryMode('pokemon')" data-i18n="trainer.modePokemon">Find by Pokémon</button>
     </nav>
     <section id="favorite-trainers" class="trainer-quick-section">
       <div id="favorite-trainers-controls"></div>
@@ -6957,10 +6958,16 @@ function closeTrainerSuggestions(){
   trainerSuggestionItems=[];trainerSuggestionIndex=-1;trainerSuggestionQuery='';
 }
 function focusTrainerDiscoveryMode(mode){
-  if(mode==='trainers'){focusTrainerSearch();return;}
+  const modeButton=document.querySelector(`.trainer-discovery-modes [data-discovery-mode="${mode}"]`);
+  if(!modeButton)return;
+  document.querySelectorAll('.trainer-discovery-modes [data-discovery-mode]').forEach(button=>button.removeAttribute('aria-current'));
+  modeButton.setAttribute('aria-current','true');
+  if(mode==='trainers'){
+    const input=document.getElementById('find-trainer-input');
+    input?.focus({preventScroll:true});input?.select();return;
+  }
   const target=document.getElementById(mode==='pokemon'?'favorite-pokemon-browse':'favorite-trainers');
   if(mode==='pokemon'&&!favoriteBrowseState.expanded){favoriteBrowseState.expanded=true;syncFavoriteBrowseDisclosure();}
-  target?.scrollIntoView({behavior:'smooth',block:'start'});
   if(mode==='pokemon')document.getElementById('favorite-browse-input')?.focus({preventScroll:true});
   else target?.querySelector('input,button')?.focus({preventScroll:true});
 }
@@ -6974,7 +6981,6 @@ function positionTrainerSuggestions(){
   box.style.setProperty('--trainer-suggestion-max-height',`${Math.max(96,Math.min(320,(above?spaceAbove:spaceBelow)-8))}px`);
 }
 function trainerSearchFocused(input){
-  input?.scrollIntoView?.({block:'center',behavior:'smooth'});
   queueTrainerSuggestions(input?.value,true);
 }
 window.visualViewport?.addEventListener('resize',()=>document.getElementById('find-trainer-suggestions')?.classList.contains('open')&&positionTrainerSuggestions());
@@ -10913,10 +10919,14 @@ function trainerTradeWantsAvailable(them){
 function trainerTradeInventoryAvailable(them){
   return them===cur?ownTradeInventoryAvailable():protectedOwnerSession()&&_pathLoadState.have==='loaded';
 }
+function tradeMatchEntry(it,intent=it.intent){
+  const{key,name,gender,mirrorOnly,dn,no}=it;
+  return{key,name,gender,mirrorOnly,dn,no,intent};
+}
 function matchedTradeInventory(entries,intentFor){
   return entries.map(it=>{
     const intent=intentFor(it.name);
-    return intent&&matchesTradeIntent(intent,it.gender)?{...it,intent}:null;
+    return intent&&matchesTradeIntent(intent,it.gender)?tradeMatchEntry(it,intent):null;
   }).filter(Boolean);
 }
 function computeTradeMatchSummary(them){
@@ -10937,7 +10947,7 @@ function computeTradeMatchSummary(them){
     .map(it=>{
       const theirsExact=theirByExact.get(joinHaveKey(it.name,it.gender));
       const theirIntent=entryWantedByOther(them,it.name),myIntent=entryWantedByCur(it.name);
-      return{...it,theirQty:theirsExact.qty,theirMirrorOnly:theirsExact.mirrorOnly,theirWants:!!(theirIntent&&matchesTradeIntent(theirIntent,it.gender)),youWant:!!(myIntent&&matchesTradeIntent(myIntent,it.gender))};
+      return{...tradeMatchEntry(it),theirMirrorOnly:theirsExact.mirrorOnly,theirWants:!!(theirIntent&&matchesTradeIntent(theirIntent,it.gender)),youWant:!!(myIntent&&matchesTradeIntent(myIntent,it.gender))};
     })
     .filter(it=>myMirrorIntent(it)&&theirMirrorIntent({name:it.name,gender:it.gender,mirrorOnly:it.theirMirrorOnly}))
     .sort((a,b)=>(b.mirrorOnly||b.theirMirrorOnly?1:0)-(a.mirrorOnly||a.theirMirrorOnly?1:0)||(parseInt(a.no)||9999)-(parseInt(b.no)||9999)||alphaCompare(a.dn,b.dn)):[];
@@ -10971,17 +10981,16 @@ function tradeMatchMetric(label,items,available){
 }
 function renderTradeMatchSummary(them){
   const m=computeTradeMatchSummary(them);
-  const chip=(it,owner='mine',extra='',cls='')=>{
+  const chip=(it,owner='mine',cls='')=>{
     const img=it.no?spriteImg(it.no,38,'',it.name,it.gender||'',it.dn):'<span aria-hidden="true">◌</span>';
     const gender=it.gender?` ${it.gender==='f'?'♀':'♂'}`:'';
-    const qty=it.qty>1?`×${it.qty}`:'';
     const qualifiers=tradeIntentQualifierTokens(it.intent,owner);
-    return`<article class="diff-match-chip ${cls}" title="${escAttr(it.dn+gender+(qty?' '+qty:'')+extra)}">${img}<div class="diff-match-main"><span class="diff-match-name">${escHtml(it.dn)}${gender}</span>${qualifiers.length?`<span class="diff-match-qualifiers">${qualifiers.map(token=>`<span class="diff-match-qualifier ${escAttr(token.cls||'')}">${escHtml(token.label)}</span>`).join('')}</span>`:''}</div>${qty?`<span class="diff-match-qty">${qty}</span>`:''}</article>`;
+    return`<article class="diff-match-chip ${cls}" title="${escAttr(it.dn+gender)}">${img}<div class="diff-match-main"><span class="diff-match-name">${escHtml(it.dn)}${gender}</span>${qualifiers.length?`<span class="diff-match-qualifiers">${qualifiers.map(token=>`<span class="diff-match-qualifier ${escAttr(token.cls||'')}">${escHtml(token.label)}</span>`).join('')}</span>`:''}</div></article>`;
   };
-  const box=(cls,title,direction,items,available,empty,owner,extraFn)=>`<section class="diff-match-box ${cls}" aria-labelledby="trade-match-${cls}-title">
+  const box=(cls,title,direction,items,available,empty,owner)=>`<section class="diff-match-box ${cls}" aria-labelledby="trade-match-${cls}-title">
     <div class="diff-match-title" id="trade-match-${cls}-title">${title}<span class="diff-match-count">${available?i18nCore.formatNumber(items.length):'—'}</span></div>
     <p class="diff-match-direction">${escHtml(direction)}</p>
-    ${!available?`<div class="diff-match-empty">${escHtml(i18nCore.t('tradeMatch.unavailableHelp'))}</div>`:items.length?`<div class="diff-match-list">${items.map((it,i)=>chip(it,owner,extraFn?extraFn(it):'',i>=14?'extra':'')).join('')}${items.length>14?`<button type="button" class="diff-match-chip diff-match-more" data-more="${escAttr(i18nCore.t('tradeMatch.moreCount',{count:i18nCore.formatNumber(items.length-14)}))}" onclick="toggleTradeMatchSection(this)" aria-expanded="false">${escHtml(i18nCore.t('tradeMatch.moreCount',{count:i18nCore.formatNumber(items.length-14)}))}</button>`:''}</div>`:`<div class="diff-match-empty">${escHtml(empty)}</div>`}
+    ${!available?`<div class="diff-match-empty">${escHtml(i18nCore.t('tradeMatch.unavailableHelp'))}</div>`:items.length?`<div class="diff-match-list">${items.map((it,i)=>chip(it,owner,i>=14?'extra':'')).join('')}${items.length>14?`<button type="button" class="diff-match-chip diff-match-more" data-more="${escAttr(i18nCore.t('tradeMatch.moreCount',{count:i18nCore.formatNumber(items.length-14)}))}" onclick="toggleTradeMatchSection(this)" aria-expanded="false">${escHtml(i18nCore.t('tradeMatch.moreCount',{count:i18nCore.formatNumber(items.length-14)}))}</button>`:''}</div>`:`<div class="diff-match-empty">${escHtml(empty)}</div>`}
   </section>`;
   const opportunity=m.availability.theyHaveYouWant&&m.availability.youHaveTheyWant&&m.theyHaveYouWant.length&&m.youHaveTheyWant.length?i18nCore.t('tradeMatch.reciprocal'):(m.theyHaveYouWant.length||m.youHaveTheyWant.length)?i18nCore.t('tradeMatch.oneWay'):i18nCore.t('tradeMatch.none');
   return`<div class="trade-match-intro"><strong>${escHtml(opportunity)}</strong><span>${escHtml(i18nCore.t('tradeMatch.intro',{trainer:them}))}</span></div>
@@ -10989,7 +10998,7 @@ function renderTradeMatchSummary(them){
     <div class="diff-match-panel" aria-label="${escAttr(i18nCore.t('tradeMatch.detailsLabel'))}">
     ${box('want',`<span aria-hidden="true">↓</span> ${escHtml(i18nCore.t('trainer.theyHaveMyWants'))}`,i18nCore.t('tradeMatch.theyDirection',{trainer:them}),m.theyHaveYouWant,m.availability.theyHaveYouWant,i18nCore.t('tradeMatch.emptyThey',{trainer:them}),'mine')}
     ${box('give',`<span aria-hidden="true">↑</span> ${escHtml(i18nCore.t('trainer.iHaveTheirWants'))}`,i18nCore.t('tradeMatch.iDirection',{trainer:them}),m.youHaveTheyWant,m.availability.youHaveTheyWant,i18nCore.t('tradeMatch.emptyMine',{trainer:them}),'theirs')}
-    ${m.availability.mirrors?box('mirror',`<span aria-hidden="true">↔</span> ${escHtml(i18nCore.t('tradeMatch.possibleMirrors'))}`,i18nCore.t('tradeMatch.mirrorDirection'),m.mirrors,true,i18nCore.t('tradeMatch.emptyMirrors'),'mine',it=>` · ${i18nCore.t('tradeMatch.theirQuantity',{count:it.theirQty||1})}`):''}
+    ${m.availability.mirrors?box('mirror',`<span aria-hidden="true">↔</span> ${escHtml(i18nCore.t('tradeMatch.possibleMirrors'))}`,i18nCore.t('tradeMatch.mirrorDirection'),m.mirrors,true,i18nCore.t('tradeMatch.emptyMirrors'),'mine'):''}
   </div>`;
 }
 function renderTradeMatchModal(){

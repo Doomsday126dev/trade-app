@@ -39,6 +39,16 @@ test('comparison cards render extensible qualifiers and keep direction non-color
   assert.match(source,/diff-match-qualifier/);
 });
 
+test('reciprocal view models and cards exclude retired inventory quantities',()=>{
+  const model=block('function tradeMatchEntry','function tradeIntentFreeform');
+  const render=block('function renderTradeMatchSummary','function renderTradeMatchModal');
+  assert.match(model,/const\{key,name,gender,mirrorOnly,dn,no\}=it/);
+  assert.match(model,/tradeMatchEntry\(it,intent\)/);
+  assert.doesNotMatch(model,/theirQty|\.qty\b/);
+  assert.doesNotMatch(render,/diff-match-qty|theirQuantity|\bit\.qty\b/);
+  assert.match(render,/diff-match-count/);
+});
+
 test('edit-and-return comparison state is process-local and recomputes from current data',()=>{
   const source=block('function renderTradeComparisonReturn','// ── SAFE-TO-TRANSFER');
   assert.match(source,/_tradeComparisonReturn=\{username,type:/);
