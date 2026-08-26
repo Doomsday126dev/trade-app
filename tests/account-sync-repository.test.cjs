@@ -19,21 +19,24 @@ function resolveServerTimestamps(value,time){
   if(value&&typeof value==='object')return Object.fromEntries(Object.entries(value).map(([key,item])=>[key,resolveServerTimestamps(item,time)]));
   return value;
 }
-function repositoryFixture(window){
-  let current=null,serverTime=50_000,serverTimestampCalls=0,transactionCalls=0,lastProposed=null;
+function repositoryFixture(window,{transactionTimestampOffset=0}={}){
+  let current=null,serverTime=50_000,serverTimestampCalls=0,transactionCalls=0,getCalls=0,lastProposed=null,lastTransactionValue=null;
   const snapshot=value=>({exists:()=>value!=null,val:()=>clone(value)});
   const repository=window.PogoData.accountSyncRepository.createAccountSyncRepository({
     database:{},ownerUid:'uid-owner',clock:()=>1,
-    ref:(_database,target)=>target,get:async()=>snapshot(null),onValue:()=>()=>{},
+    ref:(_database,target)=>target,get:async()=>{getCalls++;return snapshot(current);},onValue:()=>()=>{},
     serverTimestamp:()=>{serverTimestampCalls++;return{'.sv':'timestamp'};},
     runTransaction:async(_target,update)=>{
       transactionCalls++;lastProposed=update(clone(current));
       if(lastProposed===undefined)return{committed:false,snapshot:snapshot(current)};
-      current=resolveServerTimestamps(lastProposed,++serverTime);
-      return{committed:true,snapshot:snapshot(current)};
+      current=resolveServerTimestamps(lastProposed,++serverTime);lastTransactionValue=clone(current);
+      if(transactionTimestampOffset&&lastTransactionValue){
+        for(const field of ['createdAt','updatedAt','deletedAt'])if(Number.isSafeInteger(lastTransactionValue[field]))lastTransactionValue[field]+=transactionTimestampOffset;
+      }
+      return{committed:true,snapshot:snapshot(lastTransactionValue)};
     }
   });
-  return{repository,get current(){return current;},get lastProposed(){return lastProposed;},get serverTimestampCalls(){return serverTimestampCalls;},get transactionCalls(){return transactionCalls;}};
+  return{repository,get current(){return current;},get lastProposed(){return lastProposed;},get lastTransactionValue(){return lastTransactionValue;},get serverTimestampCalls(){return serverTimestampCalls;},get transactionCalls(){return transactionCalls;},get getCalls(){return getCalls;}};
 }
 async function operation(window,{kind='add',baseGeneration=0,generation=1,baseFieldRevisions={priority:0},patch={priority:'H'},operationId='op_0000000000000001'}={}){
   return window.PogoDomain.accountSyncModel.createOperation({
@@ -52,6 +55,16 @@ test('repository replaces client-clock entity timestamps with one server timesta
   const second=await fixture.repository.applyOperation(patched.value);assert.equal(second.ok,true);
   assert.equal(fixture.lastProposed.createdAt,50_001);assert.deepEqual(fixture.lastProposed.updatedAt,{'.sv':'timestamp'});
   assert.equal(second.value.updatedAt,50_002);assert.equal(second.value.values.priority,'M');
+});
+
+test('repository acknowledges the canonical readback instead of a transaction timestamp estimate',async()=>{
+  const window=load(),fixture=repositoryFixture(window,{transactionTimestampOffset:-57}),created=await operation(window);
+  const committed=await fixture.repository.applyOperation(created.value);
+  assert.equal(committed.ok,true);assert.equal(fixture.getCalls,1);
+  assert.equal(fixture.lastTransactionValue.revision,fixture.current.revision);
+  assert.notEqual(fixture.lastTransactionValue.updatedAt,fixture.current.updatedAt);
+  assert.deepEqual(committed.value,fixture.current);
+  assert.equal(committed.value.createdAt,50_001);assert.equal(committed.value.updatedAt,50_001);
 });
 
 test('idempotent retry preserves the committed timestamp and does not request a new server timestamp',async()=>{

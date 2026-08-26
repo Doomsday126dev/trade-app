@@ -232,6 +232,14 @@ test('a malformed canonical owner snapshot fails closed without replacing the la
   assert.equal(a.controller.getEntity('tradeEntry',added.value.entityId).values.priority,'H');
 });
 
+test('same-revision timestamp substitution remains fail closed at the canonical listener boundary',async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),a=h.createDevice('A');await a.start();
+  const added=await add(a,window,'pokemon:wiglett');await h.settle();const id=added.value.entityId,before=JSON.parse(JSON.stringify(a.controller.getEntity('tradeEntry',id))),substituted=structuredClone(before);
+  substituted.createdAt++;substituted.updatedAt++;
+  await assert.rejects(a.controller.acceptRemote({tradeEntries:{[id]:substituted}}),error=>error.code==='account-sync/remote-version-substitution');
+  assert.equal(window.PogoDomain.accountSyncModel.canonicalJson(a.controller.getEntity('tradeEntry',id)),window.PogoDomain.accountSyncModel.canonicalJson(before));
+});
+
 test('an adjacent shape-valid but semantically invalid canonical transition is rejected without replacing accepted state',async()=>{
   const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),a=h.createDevice('A');await a.start();
   const added=await add(a,window,'pokemon:giratina');await h.settle();const id=added.value.entityId,before=JSON.parse(JSON.stringify(a.controller.getEntity('tradeEntry',id))),malformed=structuredClone(before);

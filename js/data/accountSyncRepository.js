@@ -35,7 +35,8 @@
         if(finalMerge?.conflicts?.length)return Object.freeze({ok:false,status:'conflict',error:finalMerge.error,conflicts:finalMerge.conflicts,current:transaction.snapshot?.val?.()||null});
         return model.failure('account-sync/transaction-aborted','Account sync transaction was not committed');
       }
-      const value=transaction.snapshot?.val?.()||finalMerge?.value||null;
+      const committedSnapshot=await get(dbRef(path));
+      const value=committedSnapshot.exists()?committedSnapshot.val():null;
       const valid=merge.validateEntity(value,{ownerUid:owner,entityType:operation.entityType,entityId:operation.entityId});
       if(!valid.ok)return model.failure('account-sync/committed-entity-invalid','Committed account sync data is invalid');
       return Object.freeze({ok:true,status:finalMerge?.status||'applied',value,conflicts:finalMerge?.conflicts||Object.freeze([])});
