@@ -10,13 +10,13 @@ const worker=readFileSync(path.join(root,'sw.js'),'utf8');
 const controller=readFileSync(path.join(root,'js/data/accountSyncController.js'),'utf8');
 const product=readFileSync(path.join(root,'js/domain/accountSyncProduct.js'),'utf8');
 
-test('cross-device sync ships inert and constructs no journal or Firebase repository while disabled',()=>{
-  assert.match(html,/const ACCOUNT_SYNC_ROLLOUT=Object\.freeze\(\{enabled:false,writesEnabled:false,allowlistedUidHashes:Object\.freeze\(\[\]\),featureVersion:1\}\)/);
+test('cross-device sync is limited to one domain-separated owner hash and remains inert for every other account',()=>{
+  assert.match(html,/const ACCOUNT_SYNC_ROLLOUT=Object\.freeze\(\{enabled:true,writesEnabled:true,allowlistedUidHashes:Object\.freeze\(\['eb5f8130f7def5bab89d84e339e8f46787a33222ff407aa56b1807a835b180c1'\]\),featureVersion:1\}\)/);
   const start=html.slice(html.indexOf('async function ensureAccountSyncRuntime()'),html.indexOf('async function recordAccountSyncUnresolved'));
   assert.ok(start.indexOf('const eligible=await accountSyncRolloutEligible(uid)')<start.indexOf('createAccountSyncJournal'));
   assert.ok(start.indexOf('if(!eligible)')<start.indexOf('createAccountSyncRepository'));
   assert.match(html,/\[accountSyncModel\.SCHEMA_VERSION,'pogo-account-sync-rollout-owner',owner\]/);
-  assert.doesNotMatch(accountSyncRolloutSource(html),/allowlistedUids/);
+  assert.doesNotMatch(accountSyncRolloutSource(html),/allowlistedUids|Doomsday126|pogotrades\.nyc/);
   assert.doesNotMatch(html,/accountSyncRolloutEligible\([^)]*\)\s*\|\|\s*true/);
 });
 
@@ -27,7 +27,7 @@ test('every account sync runtime module is versioned in HTML and included in the
     'js/domain/accountSyncModel.js','js/domain/accountSyncMerge.js','js/domain/accountSyncMigration.js','js/domain/accountSyncProduct.js',
     'js/data/accountSyncJournal.js','js/data/accountSyncRepository.js','js/data/accountSyncController.js','js/data/accountSyncRuntime.js'
   ];
-  for(const module of modules){assert.match(html,new RegExp(`<script src="${module.replaceAll('.','\\.')}\\?v=2026-08-26\\.66"></script>`),module);assert.ok(worker.includes(`'${module}'`),module);}
+  for(const module of modules){assert.match(html,new RegExp(`<script src="${module.replaceAll('.','\\.')}\\?v=2026-08-26\\.67"></script>`),module);assert.ok(worker.includes(`'${module}'`),module);}
 });
 
 test('canonical sync scope includes current product lanes and excludes retired inventory authorities',()=>{

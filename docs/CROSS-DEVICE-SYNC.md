@@ -1,6 +1,6 @@
 # Cross-Device Sync
 
-Cross-device sync is an owner-only private-state layer for the existing account UID. It is additive, disabled by default, and does not change authentication, public-share authority, or retired inventory paths.
+Cross-device sync is an owner-only private-state layer for the existing account UID. It is additive, allowlisted for one production owner canary in `.67`, and does not change authentication, public-share authority, or retired inventory paths.
 
 ## Canonical State
 
@@ -77,14 +77,14 @@ Only an acknowledged private canonical entity can update the product projection.
 
 ## Rollout And Rollback
 
-The checked-in rollout is inert: `enabled`, `writesEnabled`, and a domain-separated SHA-256 owner allowlist must all permit the authenticated UID before the journal, repository, or listener is constructed. Raw owner UIDs are not embedded in the public bundle.
+The checked-in `.67` rollout permits exactly one domain-separated SHA-256 owner hash. `enabled`, `writesEnabled`, and exact allowlist membership must all pass before the journal, repository, or listener is constructed; every non-allowlisted account remains inert. Raw owner UIDs, usernames, and sign-in material are not embedded in the public bundle.
 
 Rollout order:
 
 1. Validate deterministic two-device and emulator suites.
 2. Deploy only the additive owner-only Rules.
 3. Keep client dispatch disabled and verify ordinary startup.
-4. Enable one owner account for two-device validation.
+4. Enable one domain-separated owner hash for two-device validation.
 5. Verify migration, offline/reconnect, conflict, delete, Favorites/tags, background, Special Board, and public projection behavior.
 6. Expand only after reviewed evidence.
 
