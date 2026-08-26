@@ -2530,22 +2530,85 @@ test.describe('visual smoke', () => {
     await expect(page.locator('.trainer-suggestion')).toHaveCount(2);
     await expect(page.locator('.trainer-suggestion').first().locator('.trainer-suggestion-name')).toHaveText('Alpha');
     await capturePass3(page,'trainer-discovery-ranking-320x568');
-    await page.evaluate(()=>{document.getElementById('app').style.display='none';document.getElementById('share-view').classList.add('active');renderShareView('Alpha','wishlist');});
+    await page.evaluate(()=>{selectedTrainerRuntime={username:'Alpha',publicData:normalizeData({users:{Alpha:{}},wishlist:{Alpha:{Pikachu:'H'}}})};document.getElementById('app').style.display='none';document.getElementById('share-view').classList.add('active');renderShareView('Alpha','wishlist');});
     await expect(page.locator('.share-match-overview')).toBeVisible();
     await expect(page.locator('.share-match-metric').nth(0)).toContainText('They Have My Wants');
+    await expect(page.locator('.share-match-metric').nth(0)).toContainText('Not shared');
     await expect(page.locator('.share-match-metric').nth(1)).toContainText('I Have Their Wants');
+    await expect(page.locator('.share-match-metric').nth(1).locator('strong')).toHaveText('1');
     const scenarios=await page.evaluate(()=>{
       const target='TrainerWithAnExceptionallyLongHandle123',inventory=names=>Object.fromEntries(names.map(name=>[name,{qty:1}])),wants=names=>Object.fromEntries(names.map(name=>[name,'H']));
       const render=(theirHave,theirWants,myHave,myWants)=>{
         allData=normalizeData({users:{Viewer:{},[target]:{}},have:{Viewer:inventory(myHave),[target]:inventory(theirHave)},wishlist:{Viewer:wants(myWants),[target]:wants(theirWants)},dynamax:{},gmax:{},costumes:{}});
-        renderShareView(target,'wishlist');return[...document.querySelectorAll('.share-match-metric strong')].map(node=>node.textContent.trim());
+        selectedTrainerRuntime={username:target,publicData:normalizeData({users:{[target]:{}},wishlist:{[target]:wants(theirWants)}})};
+        renderShareView(target,'wishlist');return[...document.querySelectorAll('.share-match-metric')].map(node=>({value:node.querySelector('strong')?.textContent||'',label:node.querySelector('span')?.textContent||'',status:node.querySelector('small')?.textContent||''}));
       };
       const many=Array.from({length:14},(_,index)=>`Wanted${index}`),owned=Array.from({length:12},(_,index)=>`Owned${index}`);
       return{none:render([],[],[],[]),they:render(['Mew'],[],[],['Mew']),mine:render([],['Pikachu'],['Pikachu'],[]),bothLarge:render(many,owned,owned,many)};
     });
-    expect(scenarios).toEqual({none:['0','0'],they:['1','0'],mine:['0','1'],bothLarge:['14','12']});
+    expect(scenarios.none).toEqual([]);
+    expect(scenarios.they).toEqual([]);
+    expect(scenarios.mine).toEqual([{value:'—',label:'They Have My Wants',status:'Not shared'},{value:'1',label:'I Have Their Wants',status:''}]);
+    expect(scenarios.bothLarge).toEqual([{value:'—',label:'They Have My Wants',status:'Not shared'},{value:'12',label:'I Have Their Wants',status:''}]);
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
     await capturePass3(page,'trainer-discovery-profile-320x568');
+  });
+
+  test('reciprocal trade details preserve qualifiers, reject gender mismatch, and refresh after My List edits',async({page})=>{
+    await page.setViewportSize({width:390,height:844});
+    await page.goto(`./?trade-match-ux=${Date.now()}`,{waitUntil:'domcontentloaded'});
+    await waitForStableLocalOrganizerStartup(page);
+    await isolateAuthenticatedMyListFixture(page,{username:'Doomsday126',uid:'uid-owner'});
+    await page.evaluate(()=>{
+      const them='TrainerWithAnExceptionallyLongHandle123';
+      allData=normalizeData({
+        users:{Doomsday126:{authUid:'uid-owner',isOwner:true},[them]:{}},
+        have:{Doomsday126:{'Pikachu::m':{qty:2},'Heracross::m':{qty:1}},[them]:{Mew:{qty:1},'Heracross::m':{qty:1}}},
+        wishlist:{Doomsday126:{Mew:'H[lucky][shiny][xxl](winter costume)',Heracross:'M(F)'},[them]:{Pikachu:'L[xxs](male)'}},
+        dynamax:{},gmax:{},costumes:{}
+      });
+      _pathLoadState={have:'loaded',wishlist:'loaded',dynamax:'loaded',gmax:'loaded',costumes:'loaded'};
+      selectedTrainerRuntime={username:them,publicData:normalizeData({users:{[them]:{}},wishlist:{[them]:{Pikachu:'L[xxs](male)'}}})};
+      document.getElementById('app').style.display='none';document.getElementById('share-view').classList.add('active');renderShareView(them,'wishlist');
+    });
+    await page.getByRole('button',{name:/Compare with My List/i}).click();
+    const modal=page.locator('#trade-match-modal');await expect(modal).toBeVisible();
+    await expect(modal).toHaveAttribute('aria-labelledby','trade-match-title');
+    await expect(modal.locator('.diff-match-box.want .diff-match-chip')).toHaveCount(1);
+    await expect(modal.locator('.diff-match-box.want')).toContainText('Mew');
+    await expect(modal.locator('.diff-match-box.want')).toContainText('My priority: High');
+    await expect(modal.locator('.diff-match-box.want')).toContainText('Shiny');
+    await expect(modal.locator('.diff-match-box.want')).toContainText('winter costume');
+    await expect(modal.locator('.diff-match-box.want')).not.toContainText('Heracross');
+    await expect(modal.locator('.diff-match-box.give')).toContainText('Pikachu');
+    await expect(modal.locator('.diff-match-box.give')).toContainText('Their priority: Low');
+    await expect(modal.locator('.diff-match-box.give')).toContainText('Extra Small');
+    await expect(modal.locator('.diff-match-box.give')).toContainText('Male');
+    await page.getByRole('button',{name:'Edit My List'}).click();
+    await expect(page.locator('#trade-return-banner')).toBeVisible();
+    await page.evaluate(()=>{allData.wishlist.Doomsday126.Heracross='M(M)';renderMyList();});
+    await page.getByRole('button',{name:'Return to matches'}).click();
+    await expect(page.locator('#trade-match-modal .diff-match-box.want')).toContainText('Heracross');
+    await capturePass3(page,'trade-match-detail-390x844');
+    await page.evaluate(()=>{
+      const them='TrainerWithAnExceptionallyLongHandle123';
+      const names=['Bulbasaur','Ivysaur','Venusaur','Charmander','Charmeleon','Charizard','Squirtle','Wartortle','Blastoise','Caterpie','Metapod','Butterfree','Weedle','Kakuna','Beedrill','Pidgey'];
+      names.forEach((name,index)=>{allData.have[them][name]={qty:index%3+1};allData.wishlist.Doomsday126[name]=index%3===0?'H[shiny]':index%3===1?'M[xxl]':'L[xxs]';});
+      renderTradeMatchModal();
+    });
+    await expect(page.locator('#trade-match-modal .diff-match-box.want .diff-match-more')).toBeVisible();
+    for(const viewport of [{width:1440,height:900},{width:430,height:932},{width:375,height:812},{width:320,height:568}]){
+      await page.setViewportSize(viewport);
+      await expect(page.locator('#trade-match-modal')).toBeVisible();
+      expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
+      for(const button of await page.locator('#trade-match-modal button').all()){
+        const box=await button.boundingBox();if(box)expect(box.height).toBeGreaterThanOrEqual(44);
+      }
+      await capturePass3(page,`trade-match-${viewport.width}x${viewport.height}`);
+    }
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#trade-match-modal')).toHaveCount(0);
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
   });
 
   test('my list renders embedded search strings', async ({ page }) => {

@@ -24,6 +24,11 @@
     return'';
   }
 
+  function matchesTradeIntent(intent,inventoryGender=''){
+    const wantedGender=entryGender(intent?.mod);
+    return !wantedGender||entryGender(inventoryGender)===wantedGender;
+  }
+
   function parsePri(v){
     if(!v)return{p:'',mod:'',lucky:false,xxl:false,xxs:false,shiny:false};
     const s=String(v);
@@ -51,6 +56,7 @@
 
   root.priorityValues=Object.freeze({
     entryGender,
+    matchesTradeIntent,
     normalizeTradeQualifier,
     parsePri,
     priValue

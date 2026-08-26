@@ -9,6 +9,7 @@ const html=readFileSync(path.join(root,'index.html'),'utf8');
 const add=html.slice(html.indexOf('<div class="add-form'),html.indexOf('<div class="owner-share-notice"'));
 const toolbar=html.slice(html.indexOf('<div class="sec mylist-list-toolbar"'),html.indexOf('<div id="mylist-out">'));
 const prioritySource=readFileSync(path.join(root,'js/domain/priorityValues.js'),'utf8');
+const enLocale=readFileSync(path.join(root,'js/i18n/locales/en.js'),'utf8');
 
 function loadPriorityValues(){
   const window={PogoDomain:{}};
@@ -64,6 +65,11 @@ test('trade qualifiers normalize gender aliases and reject impossible Shadow req
   assert.equal(domain.priValue('H','female shadow'),'H(F)');
   assert.equal(domain.parsePri('M(male)').mod,'M');
   assert.equal(domain.parsePri('L(Shadow)').mod,'');
+  assert.equal(domain.matchesTradeIntent({mod:'female'},'f'),true);
+  assert.equal(domain.matchesTradeIntent({mod:'female'},'m'),false);
+  assert.equal(domain.matchesTradeIntent({mod:'male, winter costume'},'m'),true);
+  assert.equal(domain.matchesTradeIntent({mod:'winter costume'},''),true);
+  assert.equal(domain.matchesTradeIntent({p:'H',mod:''},''),true);
 });
 
 test('lookup and existing-list filter use deliberate search variants',()=>{
@@ -93,7 +99,7 @@ test('Find Trainer uses one concise description and no repeated guidance paragra
 
 test('page containers and reciprocal match labels use one intentional product vocabulary',()=>{
   assert.match(html,/#tab-find \.have-hdr,\.trainer-discovery-content,#tab-schedule \.sched-hdr,#events-out\{width:100%;max-width:var\(--container-wide\)/);
-  assert.match(html,/They Have My Wants/);
-  assert.match(html,/I Have Their Wants/);
+  assert.match(enLocale,/They Have My Wants/);
+  assert.match(enLocale,/I Have Their Wants/);
   assert.doesNotMatch(html,/They have that you want|You have that they want/);
 });

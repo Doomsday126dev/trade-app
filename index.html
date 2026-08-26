@@ -1400,7 +1400,7 @@ html[data-theme="light"] .have-mirror-badge,html[data-theme="light"] .have-mirro
 @media(prefers-reduced-motion:reduce){.favorite-card-surface{transition:none}}
 .trainer-sync-status{display:flex;align-items:flex-start;gap:9px;min-width:0;margin-top:10px;padding:10px 11px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--bg)}.trainer-sync-status-icon{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;flex:0 0 24px;color:var(--ac2);font-weight:800}.trainer-sync-status-copy{min-width:0}.trainer-sync-status-copy strong{display:block;font-size:12px;line-height:1.35;overflow-wrap:anywhere}.trainer-sync-status-copy span{display:block;margin-top:2px;color:var(--muted);font-size:11px;line-height:1.45;overflow-wrap:anywhere}.trainer-sync-status-detail{max-width:100%;overflow-wrap:anywhere}
 .share-profile-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px}.share-profile-actions button{min-height:48px}
-.share-match-overview{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:9px}.share-match-metric{min-width:0;padding:7px 9px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-subtle)}.share-match-metric strong{display:block;font-size:16px;color:var(--text)}.share-match-metric span{display:block;color:var(--muted);font-size:10px;line-height:1.3;overflow-wrap:anywhere}
+.share-match-overview{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:9px}.share-match-metric{min-width:0;padding:7px 9px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-subtle)}.share-match-metric strong{display:block;font-size:16px;color:var(--text)}.share-match-metric span,.share-match-metric small{display:block;color:var(--muted);font-size:10px;line-height:1.3;overflow-wrap:anywhere}.share-match-metric small{margin-top:3px}
 .my-string-heading{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}.my-string-heading span{font-size:11px;color:var(--muted);font-weight:500;text-transform:none}
 .journey-guidance{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin:0 0 14px;padding:11px 0;border-block:1px solid var(--border);color:var(--muted);font-size:12px;line-height:1.5}.journey-guidance strong{display:block;color:var(--text);font-size:13px;margin-bottom:2px}.journey-guidance-actions{display:flex;gap:7px;flex-wrap:wrap;flex:0 0 auto}.journey-guidance button{min-height:48px}
 .trainer-no-result-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}.trainer-no-result-actions[hidden]{display:none}.trainer-no-result-actions button{min-height:48px}
@@ -1601,25 +1601,30 @@ html[data-theme="light"] .have-mirror-badge,html[data-theme="light"] .have-mirro
 .diff-copy-chip:hover{transform:translateY(-1px);filter:brightness(1.08)}
 .diff-copy-chip:active{transform:scale(.98)}
 .diff-copy-chip.copied{background:var(--ok);color:#06140f;border-color:rgba(16,185,129,.55)}
-.trade-match-modal{max-width:var(--container-standard)}
+.trade-match-modal{max-width:var(--container-standard)}.trade-match-modal .diff-hdr-title{overflow-wrap:anywhere}.trade-match-modal .diff-hdr-close{width:44px;height:44px}
 .trade-match-body{padding:16px 18px;overflow-y:auto}
+.trade-match-intro{display:grid;gap:4px;margin-bottom:12px}.trade-match-intro strong{font-size:14px}.trade-match-intro span{color:var(--muted);font-size:12px;line-height:1.45}
+.trade-match-overview{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:12px}.trade-match-overview .share-match-metric{min-height:74px;align-items:flex-start;text-align:left}.trade-match-overview .share-match-metric strong{font-size:22px}.trade-match-overview .share-match-metric.is-unavailable strong{font-size:18px;color:var(--muted)}
 .diff-match-panel{display:grid;grid-template-columns:1fr;gap:12px}
-.diff-match-box{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-md);padding:9px;min-width:0}
+.diff-match-box{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-md);padding:11px;min-width:0}
 .diff-match-box.want{border-color:rgba(245,158,11,.28)}
 .diff-match-box.give{border-color:rgba(16,185,129,.28)}
 .diff-match-box.mirror{border-color:rgba(96,165,250,.28)}
-.diff-match-title{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:800;color:var(--text);margin-bottom:7px}
-.diff-match-count{margin-left:auto;color:var(--muted);font-family:var(--mono);font-size:10px}
-.diff-match-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:6px}
-.diff-match-chip{display:inline-flex;align-items:center;gap:7px;max-width:100%;background:var(--card);border:1px solid var(--border2);border-radius:var(--radius-md);padding:6px 8px;font-size:11px;color:var(--text);min-width:0}
+.diff-match-title{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:850;color:var(--text);margin-bottom:3px}.diff-match-direction{margin:0 0 9px;color:var(--muted);font-size:11px;line-height:1.4}
+.diff-match-count{margin-left:auto;color:var(--text);font-family:var(--mono);font-size:12px}
+.diff-match-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:7px}
+.diff-match-chip{display:grid;grid-template-columns:38px minmax(0,1fr) auto;align-items:center;gap:8px;max-width:100%;background:var(--card);border:1px solid var(--border2);border-radius:var(--radius-md);padding:8px;font-size:11px;color:var(--text);min-width:0}
 .diff-match-chip.extra{display:none}
-.diff-match-box.expanded .diff-match-chip.extra{display:inline-flex}
+.diff-match-box.expanded .diff-match-chip.extra{display:grid}
 .diff-match-more{min-height:44px;font-family:var(--font);font-weight:800;cursor:pointer;justify-content:center}
 .diff-match-more:hover{border-color:var(--ac2);color:var(--ac2)}
-.diff-match-chip img{width:24px;height:24px;object-fit:contain;image-rendering:pixelated;flex-shrink:0}
-.diff-match-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
-.diff-match-qty{flex-shrink:0;color:var(--text);font-weight:800}
+.diff-match-chip img{width:38px;height:38px;object-fit:contain;image-rendering:pixelated;flex-shrink:0}.diff-match-main{display:grid;gap:5px;min-width:0}
+.diff-match-name{font-size:12px;font-weight:800;overflow-wrap:anywhere;min-width:0}.diff-match-qualifiers{display:flex;align-items:center;gap:4px;flex-wrap:wrap}.diff-match-qualifier{display:inline-flex;align-items:center;min-height:22px;padding:2px 6px;border:1px solid var(--border);border-radius:var(--radius-pill);color:var(--muted);font-size:9px;font-weight:750;line-height:1.2}.diff-match-qualifier.priority-H{color:var(--danger)}.diff-match-qualifier.priority-M{color:var(--warn)}.diff-match-qualifier.priority-L{color:var(--ok)}
+.diff-match-qty{align-self:start;flex-shrink:0;color:var(--text);font-weight:800}
 .diff-match-empty{font-size:11px;color:var(--muted);line-height:1.35}
+.trade-match-actions{position:sticky;bottom:-16px;display:flex;gap:8px;flex-wrap:wrap;margin:14px -18px -16px;padding:12px 18px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--border);background:var(--card)}.trade-match-actions button{min-height:48px}
+.trade-return-banner{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 10px;padding:10px 12px;border:1px solid var(--border2);border-left:3px solid var(--accent);border-radius:var(--radius-md);background:var(--surface-subtle)}.trade-return-banner[hidden]{display:none}.trade-return-copy{min-width:0}.trade-return-copy strong{display:block;font-size:12px;overflow-wrap:anywhere}.trade-return-copy span{display:block;margin-top:2px;color:var(--muted);font-size:11px}.trade-return-banner button{min-height:44px;flex-shrink:0}
+@media(max-width:420px){.trade-match-body{padding:12px}.trade-match-overview{gap:6px}.trade-match-overview .share-match-metric{min-height:68px;padding:9px}.diff-match-list{grid-template-columns:minmax(0,1fr)}.trade-match-actions{bottom:-12px;margin:12px -12px -12px;padding:10px 12px calc(10px + env(safe-area-inset-bottom))}.trade-return-banner{align-items:stretch;flex-direction:column}.trade-return-banner button{width:100%}}
 .diff-tip{padding:12px 14px;margin-bottom:12px;background:rgba(108,99,255,.1);border:1px solid rgba(108,99,255,.26);border-radius:var(--radius-md);font-size:12px;color:var(--text);line-height:1.45}
 .diff-tip strong{color:var(--ac2)}
 .diff-body{flex:1;overflow-y:auto;padding:14px 18px}
@@ -2216,6 +2221,7 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
       <div><strong id="mylist-guidance-title" data-i18n="guidance.myListTitle">Build your trade list</strong><span data-i18n="guidance.myListBody">Add Pokémon, set priorities, and share your list when you’re ready. Favorites and private tags stay on this device.</span></div>
       <div class="journey-guidance-actions"><button type="button" class="bghost" onclick="switchTab('find')" data-i18n="guidance.findTrainer">Find a trainer</button><button type="button" class="bghost" onclick="switchTab('schedule')" data-i18n="guidance.exploreEvents">Explore Events</button></div>
     </aside>
+    <aside class="trade-return-banner" id="trade-return-banner" hidden aria-live="polite"></aside>
     <div class="list-tabs mylist-type-tabs" role="tablist" data-i18n-aria-label="myList.categories" aria-label="My List categories">
       <button class="ltab nav-pill active" type="button" role="tab" data-mylist-type="wishlist" onclick="setMyList('wishlist')" aria-selected="true"><span class="ltab-marker" aria-hidden="true"></span><span class="ltab-label" data-i18n="list.wishlist">Trades</span><span class="ltab-count" data-mylist-count="wishlist">0</span></button>
       <button class="ltab nav-pill" type="button" role="tab" data-mylist-type="dynamax" onclick="setMyList('dynamax')" aria-selected="false"><span class="ltab-marker" aria-hidden="true"></span><span class="ltab-label"><span class="ltab-full" data-i18n="list.dynamax">Dynamax</span><span class="ltab-short" data-i18n="list.dynamaxShort">Dmax</span></span><span class="ltab-count" data-mylist-count="dynamax">0</span></button>
@@ -3104,7 +3110,7 @@ if(!usernameDomain)throw new Error('Username helpers failed to load');
 const {alphaCompare}=usernameDomain;
 const priorityValueDomain=window.PogoDomain?.priorityValues;
 if(!priorityValueDomain)throw new Error('Priority value helpers failed to load');
-const {entryGender,parsePri,priValue}=priorityValueDomain;
+const {entryGender,matchesTradeIntent,normalizeTradeQualifier,parsePri,priValue}=priorityValueDomain;
 const scheduleDateDomain=window.PogoDomain?.scheduleDates;
 if(!scheduleDateDomain)throw new Error('Schedule date helpers failed to load');
 const {isoDate,parseIsoDate,todayIso,startOfWeek,addDays,fmtWeekRange,WKDS}=scheduleDateDomain;
@@ -4369,7 +4375,7 @@ function syncPokemonGoSearchLanguageControl(){
   if(select){select.disabled=!override;select.value=override?preference:_pokemonGoSearchOverrideDraft;}
 }
 function rerenderPokemonGoSearchLanguageSurfaces(){
-  if(cur){renderMyStrings();renderStrings();if(_activeDiff)renderDiffModal();renderSafeTransferOutput();}
+  if(cur){renderMyStrings();renderStrings();if(_activeDiff)renderDiffModal();if(_activeTradeMatch)renderTradeMatchModal();renderSafeTransferOutput();}
   if(_activeShareView?.username)renderShareView(_activeShareView.username,_activeShareView.type);
 }
 function changePokemonGoSearchLocale(value){
@@ -4483,7 +4489,8 @@ function resetSessionTransientUi(reason='session_boundary'){
   _safeTransferSelected=null;
   _qaSelected={lf:new Set(),ft:new Set()};
   _activeDiff=null;
-  _activeTradeMatch=null;
+  closeTradeMatchModal(false);
+  _tradeComparisonReturn=null;
   _swipeState=null;
   _ptrState=null;
   if(voiceRecognition){try{voiceRecognition.abort();}catch{}voiceRecognition=null;}
@@ -8294,6 +8301,7 @@ function renderMyList(filterVal){
   const list=allData[myListType]?.[cur]||{};
   const el=document.getElementById('mylist-out');if(!el)return;
   const entries=currentListEntries(myListType,q);
+  renderTradeComparisonReturn();
 
   const count=Object.keys(list).length;
   document.getElementById('tab-mylist')?.classList.toggle('has-list-content',count>0);
@@ -10785,9 +10793,12 @@ function toast(msg,dur=2500){
 // ── DIFF VIEW (#6) ────────────────────────────────────────────
 let _activeDiff=null;
 let _activeTradeMatch=null;
+let _tradeMatchPrevFocus=null;
+let _tradeMatchKeyHandler=null;
+let _tradeComparisonReturn=null;
 function openActiveShareComparison(){
   const username=_activeShareView?.username;
-  if(username)openDiffModal(username);
+  if(username)openTradeMatchModal(username);
 }
 function openDiffModal(otherUsername){
   if(!cur||otherUsername===cur){toast(i18nCore.t('compare.pickAnother'));return;}
@@ -10855,14 +10866,20 @@ async function copyDiffSearch(section,btn){
 }
 function openTradeMatchModal(otherUsername){
   if(!cur||otherUsername===cur){toast(i18nCore.t('compare.pickAnother'));return;}
-  if(!guardReadScopeTrainer(otherUsername,'trade match'))return;
+  const publicShareActive=_activeShareView?.username===otherUsername&&!!selectedTrainerRuntime.publicData;
+  if(!publicShareActive&&!guardReadScopeTrainer(otherUsername,'trade match'))return;
   closeDiffModal();
+  if(!_activeTradeMatch)_tradeMatchPrevFocus=document.activeElement;
   _activeTradeMatch={them:otherUsername};
   renderTradeMatchModal();
 }
-function closeTradeMatchModal(){
+function closeTradeMatchModal(restoreFocus=true){
   document.getElementById('trade-match-modal')?.remove();
+  if(_tradeMatchKeyHandler)document.removeEventListener('keydown',_tradeMatchKeyHandler);
+  _tradeMatchKeyHandler=null;
   _activeTradeMatch=null;
+  const returnFocus=_tradeMatchPrevFocus;_tradeMatchPrevFocus=null;
+  if(restoreFocus&&returnFocus?.isConnected&&!returnFocus.disabled)returnFocus.focus();
 }
 function diffInventoryEntries(username){
   return Object.entries(allData.have?.[username]||{}).map(([key,val])=>{
@@ -10873,64 +10890,168 @@ function diffInventoryEntries(username){
     return{key,name,gender,qty:info.qty,mirrorOnly:info.mirrorOnly,dn:pokemonDisplayName({...e,name:e.name||name,displayName:e.displayName||name}),no:e.no};
   }).filter(Boolean).sort((a,b)=>(parseInt(a.no)||9999)-(parseInt(b.no)||9999)||comparePokemonLabels(a.dn,b.dn));
 }
+function ownTradeInventoryAvailable(){
+  if(!fbOn||!db)return true;
+  const uid=String(auth?.currentUser?.uid||'');
+  if(!uid||!cur)return false;
+  return ownedExactReadsEnabled()
+    ?managedOwnedDataCoordinator?.isHydratedFor('inventory',{uid,username:cur})===true
+    :_pathLoadState.have==='loaded';
+}
+function ownTradeWantsAvailable(){
+  if(!fbOn||!db)return true;
+  const uid=String(auth?.currentUser?.uid||'');
+  if(!uid||!cur)return false;
+  return OWNED_MY_LIST_TYPES.every(type=>ownedExactReadsEnabled()
+    ?managedOwnedDataCoordinator?.isHydratedFor(type,{uid,username:cur})===true
+    :_pathLoadState[type]==='loaded');
+}
+function trainerTradeWantsAvailable(them){
+  if(selectedTrainerRuntime.username===them&&!!selectedTrainerRuntime.publicData)return true;
+  return protectedOwnerSession()&&OWNED_MY_LIST_TYPES.every(type=>_pathLoadState[type]==='loaded');
+}
+function trainerTradeInventoryAvailable(them){
+  return them===cur?ownTradeInventoryAvailable():protectedOwnerSession()&&_pathLoadState.have==='loaded';
+}
+function matchedTradeInventory(entries,intentFor){
+  return entries.map(it=>{
+    const intent=intentFor(it.name);
+    return intent&&matchesTradeIntent(intent,it.gender)?{...it,intent}:null;
+  }).filter(Boolean);
+}
 function computeTradeMatchSummary(them){
   const mine=diffInventoryEntries(cur);
   const theirs=diffInventoryEntries(them);
+  const availability={
+    theyHaveYouWant:trainerTradeInventoryAvailable(them)&&ownTradeWantsAvailable(),
+    youHaveTheyWant:ownTradeInventoryAvailable()&&trainerTradeWantsAvailable(them)
+  };
+  availability.mirrors=availability.theyHaveYouWant&&availability.youHaveTheyWant;
   const theirByExact=new Map(theirs.map(it=>[joinHaveKey(it.name,it.gender),it]));
-  const theyHaveYouWant=theirs.filter(it=>entryWantedByCur(it.name));
-  const youHaveTheyWant=mine.filter(it=>entryWantedByOther(them,it.name));
-  const myMirrorIntent=it=>!!entryWantedByCur(it.name)||!!it.mirrorOnly;
-  const theirMirrorIntent=it=>!!entryWantedByOther(them,it.name)||!!it.mirrorOnly;
-  const mirrors=mine
+  const theyHaveYouWant=availability.theyHaveYouWant?matchedTradeInventory(theirs,entryWantedByCur):[];
+  const youHaveTheyWant=availability.youHaveTheyWant?matchedTradeInventory(mine,name=>entryWantedByOther(them,name)):[];
+  const myMirrorIntent=it=>{const intent=entryWantedByCur(it.name);return!!(intent&&matchesTradeIntent(intent,it.gender))||!!it.mirrorOnly;};
+  const theirMirrorIntent=it=>{const intent=entryWantedByOther(them,it.name);return!!(intent&&matchesTradeIntent(intent,it.gender))||!!it.mirrorOnly;};
+  const mirrors=availability.mirrors?mine
     .filter(it=>theirByExact.has(joinHaveKey(it.name,it.gender)))
     .map(it=>{
       const theirsExact=theirByExact.get(joinHaveKey(it.name,it.gender));
-      return{...it,theirQty:theirsExact.qty,theirMirrorOnly:theirsExact.mirrorOnly,theirWants:!!entryWantedByOther(them,it.name),youWant:!!entryWantedByCur(it.name)};
+      const theirIntent=entryWantedByOther(them,it.name),myIntent=entryWantedByCur(it.name);
+      return{...it,theirQty:theirsExact.qty,theirMirrorOnly:theirsExact.mirrorOnly,theirWants:!!(theirIntent&&matchesTradeIntent(theirIntent,it.gender)),youWant:!!(myIntent&&matchesTradeIntent(myIntent,it.gender))};
     })
-    .filter(it=>myMirrorIntent(it)&&theirMirrorIntent({name:it.name,mirrorOnly:it.theirMirrorOnly}))
-    .sort((a,b)=>(b.mirrorOnly||b.theirMirrorOnly?1:0)-(a.mirrorOnly||a.theirMirrorOnly?1:0)||(parseInt(a.no)||9999)-(parseInt(b.no)||9999)||alphaCompare(a.dn,b.dn));
-  return{theyHaveYouWant,youHaveTheyWant,mirrors};
+    .filter(it=>myMirrorIntent(it)&&theirMirrorIntent({name:it.name,gender:it.gender,mirrorOnly:it.theirMirrorOnly}))
+    .sort((a,b)=>(b.mirrorOnly||b.theirMirrorOnly?1:0)-(a.mirrorOnly||a.theirMirrorOnly?1:0)||(parseInt(a.no)||9999)-(parseInt(b.no)||9999)||alphaCompare(a.dn,b.dn)):[];
+  return{theyHaveYouWant,youHaveTheyWant,mirrors,availability};
+}
+function tradeIntentFreeform(mod){
+  return normalizeTradeQualifier(mod)
+    .replace(/(^|[^\p{L}\p{N}])[MF](?=$|[^\p{L}\p{N}])/gu,'$1')
+    .replace(/^[\s,;/|+_-]+|[\s,;/|+_-]+$/g,'').trim();
+}
+function tradeIntentQualifierTokens(intent,owner='mine'){
+  if(!intent)return[];
+  const tokens=[];
+  if(intent.p){
+    const priority=i18nCore.t(`priority.${intent.p==='H'?'high':intent.p==='M'?'medium':'low'}`);
+    tokens.push({label:i18nCore.t(owner==='mine'?'tradeMatch.myPriority':'tradeMatch.theirPriority',{priority}),cls:`priority-${intent.p}`});
+  }
+  if(intent.type&&intent.type!=='wishlist')tokens.push({label:publicShareListLabel(intent.type)});
+  if(intent.lucky)tokens.push({label:i18nCore.t('share.flagLucky')});
+  if(intent.shiny)tokens.push({label:i18nCore.t('share.flagShiny')});
+  if(intent.xxl)tokens.push({label:i18nCore.t('share.flagXxl')});
+  if(intent.xxs)tokens.push({label:i18nCore.t('share.flagXxs')});
+  const gender=entryGender(intent.mod);
+  if(gender)tokens.push({label:i18nCore.t(gender==='f'?'share.flagFemale':'share.flagMale')});
+  const detail=tradeIntentFreeform(intent.mod);
+  if(detail)tokens.push({label:detail});
+  return tokens;
+}
+function tradeMatchMetric(label,items,available){
+  return`<div class="share-match-metric ${available?'':'is-unavailable'}"><strong>${available?i18nCore.formatNumber(items.length):'—'}</strong><span>${escHtml(label)}</span>${available?'':`<small>${escHtml(i18nCore.t('tradeMatch.notShared'))}</small>`}</div>`;
 }
 function renderTradeMatchSummary(them){
   const m=computeTradeMatchSummary(them);
-  const chip=(it,extra='',cls='')=>{
-    const img=it.no?spriteImg(it.no,18,'',it.name,it.gender||'',it.dn):'';
+  const chip=(it,owner='mine',extra='',cls='')=>{
+    const img=it.no?spriteImg(it.no,38,'',it.name,it.gender||'',it.dn):'<span aria-hidden="true">◌</span>';
     const gender=it.gender?` ${it.gender==='f'?'♀':'♂'}`:'';
     const qty=it.qty>1?`×${it.qty}`:'';
-    return`<span class="diff-match-chip ${cls}" title="${escAttr(it.dn+gender+(qty?' '+qty:'')+extra)}">${img}<span class="diff-match-name">${escHtml(it.dn)}${gender}</span>${qty?`<span class="diff-match-qty">${qty}</span>`:''}</span>`;
+    const qualifiers=tradeIntentQualifierTokens(it.intent,owner);
+    return`<article class="diff-match-chip ${cls}" title="${escAttr(it.dn+gender+(qty?' '+qty:'')+extra)}">${img}<div class="diff-match-main"><span class="diff-match-name">${escHtml(it.dn)}${gender}</span>${qualifiers.length?`<span class="diff-match-qualifiers">${qualifiers.map(token=>`<span class="diff-match-qualifier ${escAttr(token.cls||'')}">${escHtml(token.label)}</span>`).join('')}</span>`:''}</div>${qty?`<span class="diff-match-qty">${qty}</span>`:''}</article>`;
   };
-  const box=(cls,title,count,items,empty,extraFn)=>`<div class="diff-match-box ${cls}">
-    <div class="diff-match-title">${title}<span class="diff-match-count">${count}</span></div>
-    ${items.length?`<div class="diff-match-list">${items.map((it,i)=>chip(it,extraFn?extraFn(it):'',i>=14?'extra':'')).join('')}${items.length>14?`<button type="button" class="diff-match-chip diff-match-more" data-more="+${items.length-14} more" onclick="toggleTradeMatchSection(this)">+${items.length-14} more</button>`:''}</div>`:`<div class="diff-match-empty">${empty}</div>`}
-  </div>`;
-  return`<div class="diff-match-panel" aria-label="Trade match summary">
-    ${box('want','⭐ They Have My Wants',m.theyHaveYouWant.length,m.theyHaveYouWant,`${escHtml(them)} has not posted inventory matching your wants yet.`)}
-    ${box('give','🤝 I Have Their Wants',m.youHaveTheyWant.length,m.youHaveTheyWant,`Your inventory does not currently match ${escHtml(them)}'s wants.`)}
-    ${box('mirror','🪞 Possible mirrors',m.mirrors.length,m.mirrors,'No exact overlap where both trainers have it and both trainers want it or marked it mirror-only yet.',it=>` · their qty ${it.theirQty||1}`)}
+  const box=(cls,title,direction,items,available,empty,owner,extraFn)=>`<section class="diff-match-box ${cls}" aria-labelledby="trade-match-${cls}-title">
+    <div class="diff-match-title" id="trade-match-${cls}-title">${title}<span class="diff-match-count">${available?i18nCore.formatNumber(items.length):'—'}</span></div>
+    <p class="diff-match-direction">${escHtml(direction)}</p>
+    ${!available?`<div class="diff-match-empty">${escHtml(i18nCore.t('tradeMatch.unavailableHelp'))}</div>`:items.length?`<div class="diff-match-list">${items.map((it,i)=>chip(it,owner,extraFn?extraFn(it):'',i>=14?'extra':'')).join('')}${items.length>14?`<button type="button" class="diff-match-chip diff-match-more" data-more="${escAttr(i18nCore.t('tradeMatch.moreCount',{count:i18nCore.formatNumber(items.length-14)}))}" onclick="toggleTradeMatchSection(this)" aria-expanded="false">${escHtml(i18nCore.t('tradeMatch.moreCount',{count:i18nCore.formatNumber(items.length-14)}))}</button>`:''}</div>`:`<div class="diff-match-empty">${escHtml(empty)}</div>`}
+  </section>`;
+  const opportunity=m.availability.theyHaveYouWant&&m.availability.youHaveTheyWant&&m.theyHaveYouWant.length&&m.youHaveTheyWant.length?i18nCore.t('tradeMatch.reciprocal'):(m.theyHaveYouWant.length||m.youHaveTheyWant.length)?i18nCore.t('tradeMatch.oneWay'):i18nCore.t('tradeMatch.none');
+  return`<div class="trade-match-intro"><strong>${escHtml(opportunity)}</strong><span>${escHtml(i18nCore.t('tradeMatch.intro',{trainer:them}))}</span></div>
+    <div class="trade-match-overview" aria-label="${escAttr(i18nCore.t('trainer.tradeUsefulness'))}">${tradeMatchMetric(i18nCore.t('trainer.theyHaveMyWants'),m.theyHaveYouWant,m.availability.theyHaveYouWant)}${tradeMatchMetric(i18nCore.t('trainer.iHaveTheirWants'),m.youHaveTheyWant,m.availability.youHaveTheyWant)}</div>
+    <div class="diff-match-panel" aria-label="${escAttr(i18nCore.t('tradeMatch.detailsLabel'))}">
+    ${box('want',`<span aria-hidden="true">↓</span> ${escHtml(i18nCore.t('trainer.theyHaveMyWants'))}`,i18nCore.t('tradeMatch.theyDirection',{trainer:them}),m.theyHaveYouWant,m.availability.theyHaveYouWant,i18nCore.t('tradeMatch.emptyThey',{trainer:them}),'mine')}
+    ${box('give',`<span aria-hidden="true">↑</span> ${escHtml(i18nCore.t('trainer.iHaveTheirWants'))}`,i18nCore.t('tradeMatch.iDirection',{trainer:them}),m.youHaveTheyWant,m.availability.youHaveTheyWant,i18nCore.t('tradeMatch.emptyMine',{trainer:them}),'theirs')}
+    ${m.availability.mirrors?box('mirror',`<span aria-hidden="true">↔</span> ${escHtml(i18nCore.t('tradeMatch.possibleMirrors'))}`,i18nCore.t('tradeMatch.mirrorDirection'),m.mirrors,true,i18nCore.t('tradeMatch.emptyMirrors'),'mine',it=>` · ${i18nCore.t('tradeMatch.theirQuantity',{count:it.theirQty||1})}`):''}
   </div>`;
 }
 function renderTradeMatchModal(){
   if(!_activeTradeMatch)return;
   const{them}=_activeTradeMatch;
-  const html=`<div class="diff-modal-overlay open" id="trade-match-modal" role="dialog" aria-modal="true" onclick="if(event.target===this)closeTradeMatchModal()">
+  const html=`<div class="diff-modal-overlay open" id="trade-match-modal" role="dialog" aria-modal="true" aria-labelledby="trade-match-title" onclick="if(event.target===this)closeTradeMatchModal()">
     <div class="diff-modal trade-match-modal" onclick="event.stopPropagation()">
       <div class="diff-hdr">
-        <div class="diff-hdr-title">🤝 Trade match · You ↔ <span style="color:var(--ac2)">${escHtml(them)}</span></div>
-        <button class="diff-hdr-close" onclick="closeTradeMatchModal()" aria-label="Close">×</button>
+        <div class="diff-hdr-title" id="trade-match-title">${escHtml(i18nCore.t('tradeMatch.title',{trainer:them}))}</div>
+        <button class="diff-hdr-close" onclick="closeTradeMatchModal()" aria-label="${escAttr(i18nCore.t('common.close'))}">×</button>
       </div>
       <div class="trade-match-body">
         ${renderTradeMatchSummary(them)}
+        <div class="trade-match-actions"><button type="button" class="bghost" onclick="closeTradeMatchModal()">${escHtml(i18nCore.t('tradeMatch.backToList'))}</button><button type="button" class="bpri" onclick="editMyListFromTradeMatch()">${escHtml(i18nCore.t('tradeMatch.editMyList'))}</button></div>
       </div>
     </div>
   </div>`;
   document.getElementById('trade-match-modal')?.remove();
   document.body.insertAdjacentHTML('beforeend',html);
+  if(_tradeMatchKeyHandler)document.removeEventListener('keydown',_tradeMatchKeyHandler);
+  _tradeMatchKeyHandler=event=>{
+    const modal=document.getElementById('trade-match-modal');if(!modal)return;
+    if(event.key==='Escape'){event.preventDefault();closeTradeMatchModal();return;}
+    if(event.key!=='Tab')return;
+    const focusable=[...modal.querySelectorAll('button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])')].filter(el=>!el.disabled&&el.offsetParent!==null);
+    if(!focusable.length)return;
+    const first=focusable[0],last=focusable[focusable.length-1];
+    if(event.shiftKey&&document.activeElement===first){last.focus();event.preventDefault();}
+    else if(!event.shiftKey&&document.activeElement===last){first.focus();event.preventDefault();}
+  };
+  document.addEventListener('keydown',_tradeMatchKeyHandler);
+  requestAnimationFrame(()=>document.querySelector('#trade-match-modal .diff-hdr-close')?.focus());
 }
 function toggleTradeMatchSection(btn){
   const box=btn.closest('.diff-match-box');
   if(!box)return;
   const expanded=box.classList.toggle('expanded');
+  btn.setAttribute('aria-expanded',expanded?'true':'false');
   btn.textContent=expanded?i18nCore.t('common.showLess'):(btn.dataset.more||i18nCore.t('common.showMore'));
+}
+function renderTradeComparisonReturn(){
+  const banner=document.getElementById('trade-return-banner');if(!banner)return;
+  if(!_tradeComparisonReturn){banner.hidden=true;banner.innerHTML='';return;}
+  banner.hidden=false;
+  banner.innerHTML=`<div class="trade-return-copy"><strong>${escHtml(i18nCore.t('tradeMatch.returnTitle',{trainer:_tradeComparisonReturn.username}))}</strong><span>${escHtml(i18nCore.t('tradeMatch.returnHelp'))}</span></div><button type="button" class="bpri" onclick="returnToTradeComparison()">${escHtml(i18nCore.t('tradeMatch.returnAction'))}</button>`;
+}
+function editMyListFromTradeMatch(){
+  const username=_activeTradeMatch?.them;if(!username)return;
+  _tradeComparisonReturn={username,type:_activeShareView?.type||'wishlist'};
+  closeTradeMatchModal(false);
+  document.getElementById('share-view')?.classList.remove('active');
+  const app=document.getElementById('app');if(app){app.style.display='flex';app.style.flexDirection='column';}
+  switchTab('mylist');
+  requestAnimationFrame(()=>{renderTradeComparisonReturn();document.getElementById('trade-return-banner')?.scrollIntoView({block:'start'});});
+}
+function returnToTradeComparison(){
+  const target=_tradeComparisonReturn;if(!target)return;
+  _tradeComparisonReturn=null;renderTradeComparisonReturn();
+  document.getElementById('app').style.display='none';
+  document.getElementById('share-view').classList.add('active');
+  renderShareView(target.username,target.type);
+  requestAnimationFrame(()=>openTradeMatchModal(target.username));
 }
 
 // ── SAFE-TO-TRANSFER SEARCH STRING (v4.6.14) ─────────────────
@@ -12722,7 +12843,8 @@ function renderShareView(username,type){
   const hdr=document.getElementById('share-hdr');
   const bioHtml=ud.bio?`<div class="share-hdr-bio">"${escHtml(ud.bio)}"</div>`:'';
   const matchSummary=cur&&cur!==username?computeTradeMatchSummary(username):null;
-  const matchOverview=matchSummary?`<div class="share-match-overview" aria-label="${escAttr(i18nCore.t('trainer.tradeUsefulness'))}"><div class="share-match-metric"><strong>${i18nCore.formatNumber(matchSummary.theyHaveYouWant.length)}</strong><span>${escHtml(i18nCore.t('trainer.theyHaveMyWants'))}</span></div><div class="share-match-metric"><strong>${i18nCore.formatNumber(matchSummary.youHaveTheyWant.length)}</strong><span>${escHtml(i18nCore.t('trainer.iHaveTheirWants'))}</span></div></div>`:'';
+  const hasVisibleMatches=!!(matchSummary&&(matchSummary.theyHaveYouWant.length||matchSummary.youHaveTheyWant.length));
+  const matchOverview=hasVisibleMatches?`<div class="share-match-overview" aria-label="${escAttr(i18nCore.t('trainer.tradeUsefulness'))}">${tradeMatchMetric(i18nCore.t('trainer.theyHaveMyWants'),matchSummary.theyHaveYouWant,matchSummary.availability.theyHaveYouWant)}${tradeMatchMetric(i18nCore.t('trainer.iHaveTheirWants'),matchSummary.youHaveTheyWant,matchSummary.availability.youHaveTheyWant)}</div>`:'';
   hdr.innerHTML=`${userAvatarHtml(username,64)}
     <div class="share-hdr-info">
       <div class="share-hdr-name">${escHtml(i18nCore.t('share.listTitle',{username}))}</div>
@@ -14136,8 +14258,8 @@ function entryWantedByCur(name){
   for(const t of['wishlist','dynamax','gmax','costumes']){
     const val=pokemonListValueForCanonicalName(allData[t]?.[cur],name);
     if(val){
-      const{p,lucky,xxl,xxs,shiny}=parsePri(val);
-      if(p||lucky||xxl||xxs||shiny)return{type:t,p,lucky,xxl,xxs,shiny};
+      const{p,lucky,xxl,xxs,shiny,mod}=parsePri(val);
+      if(p||lucky||xxl||xxs||shiny)return{type:t,p,lucky,xxl,xxs,shiny,mod};
     }
   }
   return null;
@@ -15617,7 +15739,7 @@ Object.assign(window,{
   openAvatarPicker,closeAvatarPicker,renderAvatarPicker,avatarPickerKeydown,selectAvatarOption,clearAvatarSelection,
   toggleReorderMode,movePriority,moveMyListEntry,myListPointerStart,myListPointerMove,myListPointerEnd,myListPointerCancel,
   // Latest batch
-  openDiffModal,closeDiffModal,setDiffListType,copyDiffSearch,openTradeMatchModal,closeTradeMatchModal,toggleTradeMatchSection,
+  openDiffModal,closeDiffModal,setDiffListType,copyDiffSearch,openTradeMatchModal,closeTradeMatchModal,toggleTradeMatchSection,editMyListFromTradeMatch,returnToTradeComparison,
   openSafeTransferModal,toggleSafeTransferTrainer,setAllSafeTransferTrainers,saveSafeTransferAsDefault,copySafeTransferString,toggleSafeTransferPrefilter,
   openAddAllVariantsModal,closeAddAllVariants,confirmAddAllVariants,
   openAddShownResultsModal,closeAddShownResults,confirmAddShownResults,
