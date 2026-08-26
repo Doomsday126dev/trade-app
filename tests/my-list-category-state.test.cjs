@@ -70,6 +70,18 @@ test('priority headings use restrained tinted accents instead of saturated full-
   assert.doesNotMatch(html,/\.mylist-priority-section\.[HML]\{[^}]*border-top-color/);
 });
 
+test('priority collapse state is renderer-owned, accessible, and separate from list data',()=>{
+  assert.match(html,/const myListCollapsedPrioritySections=new Set\(\)/);
+  assert.match(html,/function myListPriorityCollapseKey\(priority,type=myListType,username=cur\)/);
+  assert.match(html,/class="mylist-priority-toggle" aria-expanded="\$\{!collapsed\}" aria-controls="\$\{bodyId\}"/);
+  assert.match(html,/onclick="toggleMyListPrioritySection\('\$\{priority\}'\)"/);
+  assert.match(html,/class="mylist-priority-body" id="\$\{bodyId\}" \$\{collapsed\?'hidden':''\}/);
+  assert.match(html,/function toggleMyListPrioritySection\(priority\)/);
+  assert.match(html,/expandMyListPrioritiesReceivingEntries\(type,u,previous,list\|\|\{\}\)/);
+  assert.match(html,/nextPriority!==previousPriority/);
+  assert.doesNotMatch(renderMyList,/localStorage|sessionStorage|queueSync|writeList\(/);
+});
+
 test('category selection remains in-memory and fresh page load defaults to Trades',()=>{
   assert.match(html,/let myListType='wishlist'/);
   assert.match(setMyList,/myListType=t/);
@@ -85,6 +97,7 @@ test('logout and a new authenticated identity reset category to Trades',()=>{
   assert.match(observer,/user&&_lastAuthenticatedIdentityUid!==user\.uid/);
   assert.match(observer,/resetMyListCategoryForAccountBoundary\(\)/);
   assert.match(login,/if\(cur&&cur!==u\)resetMyListCategoryForAccountBoundary\(\)/);
+  assert.match(html,/function resetMyListCategoryForAccountBoundary\(\)\{[\s\S]*?myListCollapsedPrioritySections\.clear\(\)/);
 });
 
 test('empty category suppresses detached search controls',()=>{

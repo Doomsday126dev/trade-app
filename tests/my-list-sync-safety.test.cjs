@@ -180,6 +180,7 @@ function mutationHarness({queueResult={ok:true,status:'queued',changed:1}}={}){
     getLocal:()=>JSON.parse(JSON.stringify(state)),
     queueListEntryDiff:()=>queueResult,
     recordActivityEvent:(...args)=>effects.activity.push(args),
+    expandMyListPrioritiesReceivingEntries:()=>{},
     saveLocal:value=>{effects.saves++;state=JSON.parse(JSON.stringify(value));},
     queueSync:(...args)=>{effects.queueSync.push(args);return true;},
     requestPublicSharePublication:(...args)=>effects.publication.push(args),

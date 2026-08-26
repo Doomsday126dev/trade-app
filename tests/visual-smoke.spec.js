@@ -2058,6 +2058,109 @@ test.describe('visual smoke', () => {
     expect(await page.evaluate(()=>document.querySelectorAll('.myrow.swiping,.myrow-editor[open]').length)).toBe(0);
   });
 
+  test('My List priority groups preserve accessible collapse state across mobile rerenders',async({page})=>{
+    const viewports=[[1440,900],[430,932],[390,844],[375,812],[320,568]];
+    for(const [width,height] of viewports){
+      await page.setViewportSize({width,height});
+      await page.goto(`./?my-list-priority-collapse=${width}-${Date.now()}`,{waitUntil:'domcontentloaded'});
+      await waitForStableLocalOrganizerStartup(page);
+      await isolateAuthenticatedMyListFixture(page,{username:'CollapseTester',uid:'uid-collapse-tester'});
+      await page.evaluate(()=>{
+        myListCollapsedPrioritySections.clear();
+        allData=normalizeData({users:{CollapseTester:{}},wishlist:{CollapseTester:{Mew:'H',Eevee:'M',Squirtle:'L'}},dynamax:{CollapseTester:{Pikachu:'H'}},gmax:{},costumes:{}});
+        writeList=(type,username,list)=>{
+          const previous={...(allData[type]?.[username]||{})};
+          expandMyListPrioritiesReceivingEntries(type,username,previous,list||{});
+          allData[type][username]={...(list||{})};renderMyList();return true;
+        };
+        document.getElementById('login-pg').style.display='none';document.getElementById('app').style.display='flex';setMyList('wishlist');
+        const banner=document.getElementById('sync-banner');if(banner)banner.hidden=false;
+      });
+
+      for(const priority of ['H','M','L']){
+        await expect(page.locator(`[data-priority-section="${priority}"] .mylist-priority-toggle`)).toHaveAttribute('aria-expanded','true');
+        await expect(page.locator(`#mylist-priority-body-${priority}`)).toBeVisible();
+      }
+      const highToggle=page.locator('[data-priority-section="H"] .mylist-priority-toggle');
+      await highToggle.focus();await page.keyboard.press('Space');
+      await expect(highToggle).toHaveAttribute('aria-expanded','false');
+      await expect(page.locator('#mylist-priority-body-H')).toBeHidden();
+      await expect(page.locator('#mylist-priority-body-M')).toBeVisible();
+
+      await page.evaluate(()=>renderMyList());
+      await expect(page.locator('[data-priority-section="H"] .mylist-priority-toggle')).toHaveAttribute('aria-expanded','false');
+      await page.locator('#mylist-filter').fill('Mew');
+      await expect(page.locator('[data-priority-section="H"] .mylist-priority-toggle')).toHaveAttribute('aria-expanded','false');
+      await page.locator('#mylist-filter').fill('');
+      await page.evaluate(()=>setNotes('Mew','mobile trade note'));
+      await expect(page.locator('[data-priority-section="H"] .mylist-priority-toggle')).toHaveAttribute('aria-expanded','false');
+
+      const mediumToggle=page.locator('[data-priority-section="M"] .mylist-priority-toggle');
+      await mediumToggle.click();await expect(mediumToggle).toHaveAttribute('aria-expanded','false');
+      await page.evaluate(()=>{
+        const list={...allData.wishlist.CollapseTester,Pikachu:'M'};
+        writeList('wishlist','CollapseTester',list);
+      });
+      await expect(page.locator('[data-priority-section="M"] .mylist-priority-toggle')).toHaveAttribute('aria-expanded','true');
+      await expect(page.locator('[data-priority-section="M"] .myrow[data-name="Pikachu"]')).toBeVisible();
+      await expect(page.locator('[data-priority-section="H"] .mylist-priority-toggle')).toHaveAttribute('aria-expanded','false');
+
+      await page.evaluate(()=>setMyList('dynamax'));
+      await expect(page.locator('[data-priority-section="H"] .mylist-priority-toggle')).toHaveAttribute('aria-expanded','true');
+      await page.evaluate(()=>setMyList('wishlist'));
+      await expect(page.locator('[data-priority-section="H"] .mylist-priority-toggle')).toHaveAttribute('aria-expanded','false');
+
+      const geometry=await page.evaluate(()=>{
+        const banner=document.getElementById('sync-banner'),button=banner?.querySelector('.sync-banner-btn'),dismiss=banner?.querySelector('.sync-banner-dismiss');
+        const box=node=>{const r=node?.getBoundingClientRect();return r?{left:r.left,right:r.right,width:r.width,height:r.height}:null;};
+        return{overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth,banner:box(banner),action:box(button),dismiss:box(dismiss),display:banner?getComputedStyle(banner).display:''};
+      });
+      expect(geometry.overflow).toBe(false);
+      if(width<=600){
+        expect(geometry.display).toBe('grid');
+        expect(geometry.action.height).toBeGreaterThanOrEqual(44);
+        expect(geometry.dismiss.height).toBeGreaterThanOrEqual(48);
+        expect(geometry.action.width).toBeLessThan(geometry.banner.width-40);
+      }
+      for(const tab of await page.locator('.tabs .tab:visible').all()){
+        const box=await tab.boundingBox();expect(box?.height).toBeGreaterThanOrEqual(48);
+      }
+      await capturePass3(page,`mobile-polish-mylist-${width}x${height}`);
+    }
+  });
+
+  test('Special Trade Board keeps complete controls touch-safe on compact screens',async({page})=>{
+    for(const [width,height] of [[1440,900],[430,932],[390,844],[375,812],[320,568]]){
+      await page.setViewportSize({width,height});
+      await page.goto(`./?special-board-mobile=${width}-${Date.now()}`,{waitUntil:'domcontentloaded'});
+      await waitForStableLocalOrganizerStartup(page);
+      await isolateAuthenticatedMyListFixture(page,{username:'BoardTester',uid:'uid-board-tester'});
+      await page.evaluate(()=>{
+        allData.users.BoardTester={specialTradeBoard:{
+          lf:[{name:'Darmanitan (Galarian Standard Mode)',dn:'Darmanitan (Galarian Standard Mode)',no:555,shiny:true,mirror:true,note:'long-distance trade'}],
+          ft:[{name:'Pikachu',dn:'Pikachu',no:25,shiny:true,mirror:false,note:'costume details',qty:12}]
+        }};
+        openSpecialTradeBoard();
+      });
+      const modal=page.locator('#special-board-modal .special-board-modal');await expect(modal).toBeVisible();
+      await expect(page.locator('#special-lf-list .sb-row')).toHaveCount(1);await expect(page.locator('#special-ft-list .sb-row')).toHaveCount(1);
+      const geometry=await page.evaluate(()=>{
+        const modal=document.querySelector('#special-board-modal .special-board-modal'),r=modal.getBoundingClientRect();
+        const targets=[...modal.querySelectorAll('.special-board-add-row button,.sb-row button,.special-board-modal .mact button')].filter(node=>getComputedStyle(node).display!=='none').map(node=>{const box=node.getBoundingClientRect();return{width:box.width,height:box.height};});
+        const notes=[...modal.querySelectorAll('.sb-row-note')].map(node=>node.getBoundingClientRect().height);
+        return{modal:{left:r.left,right:r.right,top:r.top,bottom:r.bottom},targets,notes,overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth};
+      });
+      expect(geometry.overflow).toBe(false);
+      expect(geometry.modal.left).toBeGreaterThanOrEqual(0);expect(geometry.modal.right).toBeLessThanOrEqual(width+1);
+      expect(geometry.modal.top).toBeGreaterThanOrEqual(0);expect(geometry.modal.bottom).toBeLessThanOrEqual(height+1);
+      expect(geometry.targets.every(target=>target.height>=44&&target.width>=44)).toBe(true);
+      expect(geometry.notes.every(value=>value>=44)).toBe(true);
+      await capturePass3(page,`mobile-polish-special-board-${width}x${height}`);
+      await page.locator('#special-lf-ac').focus();await expect(page.locator('#special-lf-ac')).toBeFocused();
+      await page.keyboard.press('Escape');await expect(page.locator('#special-board-modal')).not.toHaveClass(/open/);
+    }
+  });
+
   test('My List Variant details uses the canonical dark input treatment',async({page})=>{
     for(const [width,height] of [[1440,900],[390,844]]){
       await page.setViewportSize({width,height});
@@ -2406,6 +2509,7 @@ test.describe('visual smoke', () => {
   });
 
   test('public trainer search commands stay collapsed until explicitly requested',async({page})=>{
+    await page.setViewportSize({width:390,height:844});
     await page.goto(`./?public-search-disclosure=${Date.now()}`,{waitUntil:'domcontentloaded'});
     await waitForStableLocalOrganizerStartup(page);
     await isolateAuthenticatedMyListFixture(page,{username:'ViewerFixture',uid:'uid-viewer-fixture'});
@@ -2422,7 +2526,11 @@ test.describe('visual smoke', () => {
     await disclosures.first().locator('summary').click();
     await expect(disclosures.first().locator('.strbox')).toBeVisible();
     await expect(disclosures.first().locator('.share-search-hide-label')).toBeVisible();
+    for(const target of await page.locator('.share-back-link,.share-profile-actions button,.share-list-tabs .ltab,#share-list-out .cpbtn').all()){
+      const box=await target.boundingBox();if(box)expect(box.height).toBeGreaterThanOrEqual(44);
+    }
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
+    await capturePass3(page,'mobile-polish-public-trainer-390x844');
   });
 
   test('my list add pokemon autocomplete shows normalized and dex results', async ({ page }) => {
