@@ -22,6 +22,7 @@
     {id:'owned_dynamax_live',path:'dynamax/{currentUsername}',method:'onValue',breadth:'exact',ownerScope:'session',audience:'owner',consumers:['my_list'],status:'transitional'},
     {id:'owned_gmax_live',path:'gmax/{currentUsername}',method:'onValue',breadth:'exact',ownerScope:'session',audience:'owner',consumers:['my_list'],status:'transitional'},
     {id:'owned_costumes_live',path:'costumes/{currentUsername}',method:'onValue',breadth:'exact',ownerScope:'session',audience:'owner',consumers:['my_list'],status:'transitional'},
+    {id:'account_sync_migration_reads',path:'wishlist/{currentUsername} + dynamax/{currentUsername} + gmax/{currentUsername} + costumes/{currentUsername} + users/{currentUsername}',method:'get',breadth:'exact',ownerScope:'session',audience:'owner',consumers:['account_sync_migration'],status:'transitional'},
     {id:'owned_inventory_live',path:'have/{currentUsername}',method:'onValue',breadth:'exact',ownerScope:'session',audience:'owner',consumers:['inventory'],status:'planned_retirement'},
     {id:'owned_auth_index_live',path:'authIndex/{currentUid}',method:'onValue',breadth:'exact',ownerScope:'session',audience:'owner',consumers:['login_freshness'],status:'transitional'},
     {id:'owned_memberships_live',path:'userCommunities/{currentUid}',method:'onValue',breadth:'exact',ownerScope:'session',audience:'owner',consumers:['community_switcher'],status:'planned_retirement'},
@@ -45,7 +46,7 @@
   ].map(freezeEntry));
 
   const SOURCE_CALL_CONTRACT=Object.freeze({
-    directGetCount:13,
+    directGetCount:14,
     directOnValueCount:0,
     managedListenCount:1,
     repositoryFiles:Object.freeze([
@@ -72,7 +73,8 @@
       Object.freeze({text:'get(indexRef)',count:1}),
       Object.freeze({text:'get(ref(db,`users/${username}/authUid`))',count:1}),
       Object.freeze({text:'get(ref(db,`publicShares/${username}`))',count:1}),
-      Object.freeze({text:'get(ref(db,path))',count:1}),
+      Object.freeze({text:'get(ref(db,path))',count:2}),
+      Object.freeze({text:"paths.map(path=>withTimeout(get(ref(db,path)),8000,'Reading account sync migration source timed out','account-sync/source-read-timeout'))",count:1}),
       Object.freeze({text:'get(ref(db,`users/${u}`))',count:2}),
       Object.freeze({text:'get(ref(db,`communities/${DEFAULT_COMMUNITY_ID}`))',count:1}),
       Object.freeze({text:'get(ref(db,`communities/${prep.id}`))',count:1})

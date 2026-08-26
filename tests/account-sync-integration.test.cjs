@@ -10,6 +10,24 @@ const worker=readFileSync(path.join(root,'sw.js'),'utf8');
 const controller=readFileSync(path.join(root,'js/data/accountSyncController.js'),'utf8');
 const product=readFileSync(path.join(root,'js/domain/accountSyncProduct.js'),'utf8');
 
+test('owner-only migration reads are explicitly registered in the Firebase source contract',()=>{
+  const window={};
+  vm.runInNewContext(readFileSync(path.join(root,'js/data/firebaseReadRegistry.js'),'utf8'),{window});
+  const {READ_SURFACES,SOURCE_CALL_CONTRACT}=window.PogoData.firebaseReadRegistry;
+  const migration=READ_SURFACES.find(surface=>surface.id==='account_sync_migration_reads');
+  assert.deepEqual(JSON.parse(JSON.stringify(migration)),{
+    id:'account_sync_migration_reads',
+    path:'wishlist/{currentUsername} + dynamax/{currentUsername} + gmax/{currentUsername} + costumes/{currentUsername} + users/{currentUsername}',
+    method:'get',breadth:'exact',ownerScope:'session',audience:'owner',consumers:['account_sync_migration'],status:'transitional'
+  });
+  assert.equal(SOURCE_CALL_CONTRACT.directGetCount,14);
+  assert.equal(SOURCE_CALL_CONTRACT.needles.find(item=>item.text==='get(ref(db,path))')?.count,2);
+  assert.equal(SOURCE_CALL_CONTRACT.needles.find(item=>item.text.includes('Reading account sync migration source timed out'))?.count,1);
+  const source=html.slice(html.indexOf('async function accountSyncReadLegacySources'),html.indexOf('function accountSyncEncodedPriority'));
+  assert.match(source,/const paths=\[\.\.\.OWNED_MY_LIST_TYPES\.map\(type=>`\$\{type\}\/\$\{username\}`\),`users\/\$\{username\}`\]/);
+  assert.match(source,/paths\.map\(path=>withTimeout\(get\(ref\(db,path\)\),8000/);
+});
+
 test('cross-device sync is limited to one domain-separated owner hash and remains inert for every other account',()=>{
   assert.match(html,/const ACCOUNT_SYNC_ROLLOUT=Object\.freeze\(\{enabled:true,writesEnabled:true,allowlistedUidHashes:Object\.freeze\(\['eb5f8130f7def5bab89d84e339e8f46787a33222ff407aa56b1807a835b180c1'\]\),featureVersion:1\}\)/);
   const start=html.slice(html.indexOf('async function ensureAccountSyncRuntime()'),html.indexOf('async function recordAccountSyncUnresolved'));
