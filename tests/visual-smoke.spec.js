@@ -7,6 +7,7 @@ const favoriteBrowseScreenshotDir=process.env.FAVORITE_BROWSE_SCREENSHOT_DIR||''
 const navScreenshotDir=process.env.NAV_SCREENSHOT_DIR||'';
 const securityScreenshotDir=process.env.SECURITY_SCREENSHOT_DIR||'';
 const p1ScreenshotDir=process.env.P1_SCREENSHOT_DIR||'';
+const backgroundScreenshotDir=process.env.BACKGROUND_SCREENSHOT_DIR||'';
 async function capturePass3(page,name){
   if(!pass3ScreenshotDir)return;
   mkdirSync(pass3ScreenshotDir,{recursive:true});
@@ -35,6 +36,11 @@ async function captureP1(page,name){
   if(!p1ScreenshotDir)return;
   mkdirSync(p1ScreenshotDir,{recursive:true});
   await page.screenshot({path:path.join(p1ScreenshotDir,`${name}.png`),fullPage:false});
+}
+async function captureBackground(page,name){
+  if(!backgroundScreenshotDir)return;
+  mkdirSync(backgroundScreenshotDir,{recursive:true});
+  await page.screenshot({path:path.join(backgroundScreenshotDir,`${name}.png`),fullPage:false});
 }
 
 function isLocalAuthBaseURL() {
@@ -2058,6 +2064,147 @@ test.describe('visual smoke', () => {
     await page.locator('#mylist-filter').fill('');
     await expect(page.locator('.myrow')).toHaveCount(7);
     expect(await page.evaluate(()=>document.querySelectorAll('.myrow.swiping,.myrow-editor[open]').length)).toBe(0);
+  });
+
+  test('background qualifier picker, matching, product surfaces, and exports stay coherent',async({page})=>{
+    const user='Doomsday126',nyc='location-gofestnewyorkcity',osaka='location-gofestosaka',longBackground='location-nationaltrustfountainsabbeyestate';
+    await page.setViewportSize({width:1440,height:900});
+    await page.goto(`./?background-qualifier=${Date.now()}`,{waitUntil:'domcontentloaded'});
+    await waitForStableLocalOrganizerStartup(page);
+    await isolateAuthenticatedMyListFixture(page,{username:user,uid:'uid-background-tester'});
+    await page.evaluate(({user,nyc,longBackground})=>{
+      const other='BackgroundPartner';
+      allData=normalizeData({
+        users:{
+          [user]:{authUid:'uid-background-tester',isOwner:true,specialTradeBoard:{lf:[],ft:[{name:'Necrozma',dn:'Necrozma',no:800,backgroundId:longBackground,shiny:true,mirror:false,qty:1}]}},
+          [other]:{specialTradeBoard:{lf:[],ft:[{name:'Rayquaza',dn:'Rayquaza',no:384,backgroundId:nyc,shiny:true,mirror:false,qty:1}]}}
+        },
+        have:{[user]:{},[other]:{}},
+        wishlist:{[user]:{Eevee:'M',Necrozma:`H[shiny][bg:${longBackground}]`},[other]:{Pikachu:'L'}},
+        dynamax:{},gmax:{},costumes:{}
+      });
+      writeList=(type,username,list)=>{
+        if(!allData[type])allData[type]={};
+        allData[type][username]={...(list||{})};
+        renderMyList();
+        return true;
+      };
+      selectedTrainerRuntime={username:other,publicData:allData};
+      _pathLoadState={have:'loaded',wishlist:'loaded',dynamax:'loaded',gmax:'loaded',costumes:'loaded'};
+      renderMyList();
+      document.getElementById('add-pmon-sel').value='Rayquaza';
+      document.getElementById('ac-input').value='Rayquaza';
+      setAddPri('M');
+      if(!document.getElementById('add-advanced').classList.contains('open'))toggleAddAdvanced();
+    },{user,nyc,longBackground});
+
+    const trigger=page.locator('#add-background-trigger');
+    await trigger.click();
+    await expect(page.locator('#background-picker-modal')).toHaveClass(/open/);
+    await expect(page.locator('#background-results .background-option')).toHaveCount(4);
+    await expect(page.locator('#background-results')).toContainText('GO Fest New York City');
+    await page.locator('[data-background-filter="all"]').click();
+    await expect(page.locator('#background-results-count')).toHaveText('Showing 80 of 241');
+    await expect(page.locator('#background-show-more')).toBeVisible();
+    await page.locator('#background-show-more').click();
+    await expect(page.locator('#background-results .background-option')).toHaveCount(160);
+    await page.locator('#background-search-input').fill('team valor');
+    await expect(page.locator('#background-results .background-option.incompatible')).toContainText('Not listed for Rayquaza');
+
+    const search=page.locator('#background-search-input');
+    await search.fill('2026 Pokémon World Championships');
+    await expect(page.locator('#background-results .background-option')).toHaveCount(0);
+    await expect(page.locator('.background-empty')).toBeVisible();
+    await search.fill('osaka');
+    await search.press('ArrowDown');
+    await expect(search).toHaveAttribute('aria-activedescendant','background-option-0');
+    await search.press('Enter');
+    await expect(page.locator('#add-pmon-background')).toHaveValue(osaka);
+    await trigger.click();
+    await page.locator('[data-background-filter="all"]').click();
+    await search.fill('nyc');
+    const nycOption=page.locator('.background-option').filter({has:page.getByText('GO Fest New York City',{exact:true})});
+    await expect(nycOption).toHaveCount(1);
+    await nycOption.click();
+    await expect(page.locator('#add-pmon-background')).toHaveValue(nyc);
+    await expect(trigger).toContainText('GO Fest New York City');
+
+    await page.locator('label:has(#add-pmon-shiny)').click();
+    await page.locator('.add-actions .bsave').click();
+    const stored=await page.evaluate(()=>parsePri(allData.wishlist[cur].Rayquaza));
+    expect(stored.backgroundId).toBe(nyc);expect(stored.shiny).toBe(true);
+    const rayquazaRow=page.locator('.myrow').filter({has:page.getByText('Rayquaza',{exact:true})});
+    await expect(rayquazaRow.locator('.background-badge,.myrow-trait.background')).toContainText('New York City 2023');
+    await expect(page.locator('.myrow').filter({has:page.getByText('Necrozma',{exact:true})}).locator('.background-badge,.myrow-trait.background')).toHaveCount(1);
+
+    const exported=await page.evaluate(async()=>{
+      window.__backgroundMarkdown='';window.__backgroundCsv='';
+      const originalCopy=copyText,originalCreate=URL.createObjectURL,originalClick=HTMLAnchorElement.prototype.click,originalImageLoader=loadCanvasImageWithFallback;
+      copyText=async value=>{window.__backgroundMarkdown=String(value);};
+      URL.createObjectURL=blob=>{window.__backgroundCsvPromise=blob.text().then(value=>{window.__backgroundCsv=value;});return'blob:background-test';};
+      HTMLAnchorElement.prototype.click=function(){};
+      loadCanvasImageWithFallback=async()=>null;
+      try{
+        exportMyListMarkdown();exportMyListCSV();await window.__backgroundCsvPromise;
+        const entry=currentListEntries('wishlist').find(item=>item.name==='Rayquaza');
+        const image=await renderListImage([entry],'wishlist','Doomsday126','classic');
+        return{markdown:window.__backgroundMarkdown,csv:window.__backgroundCsv,label:exportEntryNoteLabel(entry),imageSize:image.size};
+      }finally{copyText=originalCopy;URL.createObjectURL=originalCreate;HTMLAnchorElement.prototype.click=originalClick;loadCanvasImageWithFallback=originalImageLoader;}
+    });
+    expect(exported.markdown).toContain('GO Fest New York City BG');
+    expect(exported.csv).toContain('Background ID,Background');
+    expect(exported.csv).toContain(nyc);
+    expect(exported.label).toContain('New York City');
+    expect(exported.imageSize).toBeGreaterThan(1_000);
+
+    const reciprocal=await page.evaluate(other=>{
+      const exact=computeTradeMatchSummary(other).theyHaveYouWant.length;
+      allData.users[other].specialTradeBoard.ft[0].backgroundId='location-gofestosaka';
+      const mismatch=computeTradeMatchSummary(other).theyHaveYouWant.length;
+      allData.users[other].specialTradeBoard.ft[0].backgroundId='location-gofestnewyorkcity';
+      return{exact,mismatch};
+    },'BackgroundPartner');
+    expect(reciprocal).toEqual({exact:1,mismatch:0});
+    await page.evaluate(()=>{_activeTradeMatch={them:'BackgroundPartner'};renderTradeMatchModal();});
+    await expect(page.locator('#trade-match-modal .background')).toContainText('GO Fest New York City');
+    await page.keyboard.press('Escape');
+    await page.evaluate(()=>{allData.wishlist[cur].Rayquaza='M';_activeTradeMatch={them:'BackgroundPartner'};renderTradeMatchModal();});
+    await expect(page.locator('#trade-match-modal .background')).toContainText('GO Fest New York City');
+    await page.keyboard.press('Escape');
+    await page.evaluate(({nyc})=>{allData.wishlist[cur].Rayquaza=`M[shiny][bg:${nyc}]`;renderMyList();},{nyc});
+
+    await page.evaluate(()=>openSpecialTradeBoard());
+    await expect(page.locator('#special-ft-list .sb-row-background')).toContainText('Fountains Abbey Estate 2026');
+    await page.evaluate(()=>closeModal('special-board-modal'));
+
+    await page.evaluate(({nyc,longBackground})=>{
+      const trainer='PublicBackgroundTrainer';
+      allData.users[trainer]={};allData.wishlist[trainer]={Pikachu:`H[bg:${nyc}]`,Necrozma:`M[shiny][xxl][bg:${longBackground}]`};
+      selectedTrainerRuntime={username:trainer,publicData:normalizeData({users:{[trainer]:{}},wishlist:{[trainer]:allData.wishlist[trainer]},dynamax:{},gmax:{},costumes:{}})};
+      document.getElementById('app').style.display='none';document.getElementById('share-view').classList.add('active');renderShareView(trainer,'wishlist');
+    },{nyc,longBackground});
+    await expect(page.locator('#share-list-out .share-pcard-flag.background')).toHaveCount(2);
+    await expect(page.locator('#share-list-out')).toContainText('New York City 2023');
+
+    await page.evaluate(()=>{document.getElementById('share-view').classList.remove('active');document.getElementById('app').style.display='flex';document.querySelectorAll('.page').forEach(node=>node.classList.remove('active'));document.getElementById('tab-mylist').classList.add('active');renderMyList();});
+    await expect(page.locator('#toast')).toBeHidden({timeout:5_000});
+    for(const viewport of [{width:1440,height:900},{width:430,height:932},{width:390,height:844},{width:375,height:812},{width:320,height:568}]){
+      await page.setViewportSize(viewport);
+      expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
+      const badges=page.locator('.myrow .background-badge,.myrow .myrow-trait.background');
+      expect(await badges.count()).toBeGreaterThanOrEqual(2);
+      await rayquazaRow.scrollIntoViewIfNeeded();
+      await captureBackground(page,`background-my-list-${viewport.width}x${viewport.height}`);
+    }
+    await trigger.click();
+    await page.locator('[data-background-filter="all"]').click();
+    await page.locator('#background-search-input').fill('fountains abbey');
+    await expect(page.locator('.background-option')).toHaveCount(1);
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
+    for(const target of await page.locator('#background-picker-modal button').all()){
+      const box=await target.boundingBox();if(box)expect(box.height).toBeGreaterThanOrEqual(44);
+    }
+    await captureBackground(page,'background-picker-320x568');
   });
 
   test('My List priority groups preserve accessible collapse state across mobile rerenders',async({page})=>{

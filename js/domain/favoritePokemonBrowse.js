@@ -16,6 +16,10 @@
     const priority=String(parsed?.p||'').toUpperCase();
     return Object.prototype.hasOwnProperty.call(PRIORITY_ORDER,priority)?priority:'';
   }
+  function backgroundFor(value){
+    if(value&&typeof value==='object'&&!Array.isArray(value))return root.priorityValues?.normalizeBackgroundId?.(value.backgroundId)||'';
+    return root.priorityValues?.parsePri?.(value)?.backgroundId||'';
+  }
   function higherPriority(a,b){return(PRIORITY_ORDER[a]??3)<=(PRIORITY_ORDER[b]??3)?a:b;}
 
   function projectSnapshot(snapshot){
@@ -25,13 +29,14 @@
       Object.entries(lists[category]||{}).forEach(([name,value])=>{
         const canonicalName=normalizedText(name),key=pokemonKey(canonicalName);
         if(!key)return;
-        const priority=priorityFor(value),current=projected.get(key);
-        if(!current){projected.set(key,{pokemonKey:key,pokemonName:canonicalName,priority,categories:[category]});return;}
+        const priority=priorityFor(value),backgroundId=backgroundFor(value),current=projected.get(key);
+        if(!current){projected.set(key,{pokemonKey:key,pokemonName:canonicalName,priority,categories:[category],backgroundIds:backgroundId?[backgroundId]:[]});return;}
         current.priority=higherPriority(current.priority,priority);
         if(!current.categories.includes(category))current.categories.push(category);
+        if(backgroundId&&!current.backgroundIds.includes(backgroundId))current.backgroundIds.push(backgroundId);
       });
     });
-    return[...projected.values()].map(entry=>Object.freeze({...entry,categories:Object.freeze([...entry.categories])}));
+    return[...projected.values()].map(entry=>Object.freeze({...entry,categories:Object.freeze([...entry.categories]),backgroundIds:Object.freeze([...entry.backgroundIds])}));
   }
 
   function buildIndex(records){
@@ -49,6 +54,7 @@
           displayName:normalizedText(record.displayName),
           priority:priorityFor(entry.priority),
           categories:Object.freeze([...new Set((entry.categories||[]).filter(type=>LIST_TYPES.includes(type)))]),
+          backgroundIds:Object.freeze([...new Set((entry.backgroundIds||[]).map(value=>root.priorityValues?.normalizeBackgroundId?.(value)||'').filter(Boolean))]),
           wantedPokemonKeys
         }));
         index.set(key,matches);
@@ -78,6 +84,6 @@
   }
 
   root.favoritePokemonBrowse=Object.freeze({
-    LIST_TYPES,PRIORITY_ORDER,trainerKey,pokemonKey,priorityFor,projectSnapshot,buildIndex,resultsForPokemon
+    LIST_TYPES,PRIORITY_ORDER,trainerKey,pokemonKey,priorityFor,backgroundFor,projectSnapshot,buildIndex,resultsForPokemon
   });
 })(window);

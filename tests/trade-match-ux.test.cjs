@@ -25,13 +25,13 @@ test('reciprocal matching binds actual entries to compatible intent and honest a
   assert.match(source,/managedOwnedDataCoordinator\?\.isHydratedFor\('inventory'/);
   assert.match(source,/selectedTrainerRuntime\.username===them&&!!selectedTrainerRuntime\.publicData/);
   assert.match(source,/protectedOwnerSession\(\)&&_pathLoadState\.have==='loaded'/);
-  assert.match(source,/matchesTradeIntent\(intent,it\.gender\)/);
+  assert.match(source,/matchesTradeIntent\(intent,tradeHaveQualifier\(it\)\)/);
   assert.match(source,/return\{theyHaveYouWant,youHaveTheyWant,mirrors,availability\}/);
 });
 
 test('comparison cards render extensible qualifiers and keep direction non-color-dependent',()=>{
   const source=block('function tradeIntentQualifierTokens','function renderTradeMatchModal');
-  for(const token of ['priority','lucky','shiny','xxl','xxs','gender','detail'])assert.match(source,new RegExp(token,'i'));
+  for(const token of ['priority','lucky','shiny','xxl','xxs','background','gender','detail'])assert.match(source,new RegExp(token,'i'));
   assert.match(source,/tradeMatch\.theyDirection/);
   assert.match(source,/tradeMatch\.iDirection/);
   assert.match(source,/aria-hidden="true">↓/);
@@ -42,7 +42,7 @@ test('comparison cards render extensible qualifiers and keep direction non-color
 test('reciprocal view models and cards exclude retired inventory quantities',()=>{
   const model=block('function tradeMatchEntry','function tradeIntentFreeform');
   const render=block('function renderTradeMatchSummary','function renderTradeMatchModal');
-  assert.match(model,/const\{key,name,gender,mirrorOnly,dn,no\}=it/);
+  assert.match(model,/const\{key,name,gender,mirrorOnly,dn,no,backgroundId,shiny,lucky,xxl,xxs\}=it/);
   assert.match(model,/tradeMatchEntry\(it,intent\)/);
   assert.doesNotMatch(model,/theirQty|\.qty\b/);
   assert.doesNotMatch(render,/diff-match-qty|theirQuantity|\bit\.qty\b/);

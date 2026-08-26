@@ -33,7 +33,7 @@ function block(start,end){
 test('anonymous share catalogs have exact parity and natural share chrome',()=>{
   const window=load(),catalogs=window.PogoLocales;
   const keys=Object.keys(catalogs.en).sort();
-  assert.equal(keys.length,1148);
+  assert.equal(keys.length,1167);
   for(const locale of ['ja','es','de'])assert.deepEqual(Object.keys(catalogs[locale]).sort(),keys,locale);
   assert.equal(catalogs.ja['share.listTitle'],'{username} の交換リスト');
   assert.equal(catalogs.es['share.listTitle'],'Lista de intercambios de {username}');
@@ -159,7 +159,7 @@ test('release 2026-08-25.63 is coherent and contains no active .62 assets',()=>{
   assert.match(worker,/const RELEASE='2026-08-25\.63'/);
   assert.match(release,/RELEASE_ID='2026-08-25\.63'/);
   const firstParty=[...html.matchAll(/<script\s+src="([^"]+)"/g)].map(match=>match[1]).filter(src=>!/^https?:/.test(src));
-  assert.equal(firstParty.length,61);
+  assert.equal(firstParty.length,62);
   for(const src of firstParty)assert.equal(new URL(src,'https://example.test').searchParams.get('v'),'2026-08-25.63');
   assert.doesNotMatch(`${html}\n${worker}\n${release}`,/2026-08-25\.62/);
 });

@@ -90,7 +90,8 @@
       lucky:!!parsed.lucky,
       shiny:!!parsed.shiny,
       xxl:!!parsed.xxl,
-      xxs:!!parsed.xxs
+      xxs:!!parsed.xxs,
+      backgroundId:String(parsed.backgroundId||'')
     });
   }
 

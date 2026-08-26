@@ -27,6 +27,19 @@ test('all wanted-list categories are indexed with canonical variants kept distin
   assert.ok(entries.some(item=>item.pokemonName==='Pikachu (Libre)'));
 });
 
+test('published Favorite Pokémon projections retain exact background identities',()=>{
+  const entries=browse.projectSnapshot({lists:{
+    wishlist:{Pikachu:'H[bg:location-gofestnewyorkcity]'},
+    costumes:{Pikachu:'M[bg:location-gofestosaka]'}
+  }});
+  assert.deepEqual(plain(entries.find(item=>item.pokemonName==='Pikachu').backgroundIds),[
+    'location-gofestnewyorkcity','location-gofestosaka'
+  ]);
+  const index=browse.buildIndex(new Map([['alpha',{trainerKey:'alpha',displayName:'Alpha',status:'published',entries}]]));
+  const [result]=browse.resultsForPokemon(index,'Pikachu',{favorites:[{key:'alpha',displayName:'Alpha'}]});
+  assert.deepEqual(plain(result.backgroundIds),['location-gofestnewyorkcity','location-gofestosaka']);
+});
+
 test('one trainer is returned once with the highest applicable priority and category context',()=>{
   const records=new Map([
     ['alpha',{trainerKey:'alpha',displayName:'TrainerAlpha',status:'published',entries:browse.projectSnapshot({lists:{wishlist:{Palkia:'L'},dynamax:{Palkia:'H'},gmax:{},costumes:{}}})}],

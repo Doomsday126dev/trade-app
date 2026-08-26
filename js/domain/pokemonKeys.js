@@ -39,14 +39,15 @@
       const dontNeedBack=!!entry.dontNeedBack&&!mirrorOnly;
       const giveaway=!!entry.giveaway&&!mirrorOnly&&!dontNeedBack;
       const mode=mirrorOnly?'mirror':dontNeedBack?'dontNeedBack':giveaway?'giveaway':'any';
+      const backgroundId=root.priorityValues?.normalizeBackgroundId?.(entry.backgroundId)||'';
       return{
         qty:Math.max(0,Math.min(999,parseInt(entry.qty)||0)),
         mirrorOnly,dontNeedBack,giveaway,
         note:String(entry.note||'').slice(0,140),
-        mode
+        mode,backgroundId,shiny:!!entry.shiny,lucky:!!entry.lucky,xxl:!!entry.xxl,xxs:!!entry.xxs
       };
     }
-    return{qty:Math.max(0,Math.min(999,parseInt(entry)||0)),mirrorOnly:false,dontNeedBack:false,giveaway:false,note:'',mode:'any'};
+    return{qty:Math.max(0,Math.min(999,parseInt(entry)||0)),mirrorOnly:false,dontNeedBack:false,giveaway:false,note:'',mode:'any',backgroundId:'',shiny:false,lucky:false,xxl:false,xxs:false};
   }
   function haveEntryValue(qty,prev,opts={}){
     const old=haveEntryInfo(prev);
@@ -62,11 +63,15 @@
     }
     // Note carries through for giveaway mode (other modes drop the note)
     const note=opts.note!==undefined?String(opts.note||'').slice(0,140):old.note;
-    if(mode==='any')return q;
+    const backgroundId=root.priorityValues?.normalizeBackgroundId?.(opts.backgroundId!==undefined?opts.backgroundId:old.backgroundId)||'';
+    const shiny=opts.shiny!==undefined?!!opts.shiny:old.shiny,lucky=opts.lucky!==undefined?!!opts.lucky:old.lucky,xxl=opts.xxl!==undefined?!!opts.xxl:old.xxl,xxs=opts.xxs!==undefined?!!opts.xxs:old.xxs;
+    if(mode==='any'&&!backgroundId&&!shiny&&!lucky&&!xxl&&!xxs)return q;
     const obj={qty:q};
     if(mode==='mirror')obj.mirrorOnly=true;
     else if(mode==='dontNeedBack')obj.dontNeedBack=true;
     else if(mode==='giveaway'){obj.giveaway=true;if(note)obj.note=note;}
+    if(backgroundId)obj.backgroundId=backgroundId;
+    if(shiny)obj.shiny=true;if(lucky)obj.lucky=true;if(xxl)obj.xxl=true;if(xxs)obj.xxs=true;
     return obj;
   }
 
