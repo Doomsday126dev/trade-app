@@ -1,0 +1,6843 @@
+{
+  "schemaVersion": 1,
+  "catalogVersion": "2026-08-26",
+  "asOf": "2026-08-26",
+  "sources": [
+    {
+      "id": "serebii-backgrounds",
+      "url": "https://www.serebii.net/pokemongo/backgrounds.shtml",
+      "role": "normalized event, location, availability, and eligible-Pokémon interpretation",
+      "retrievedAt": "2026-08-26"
+    },
+    {
+      "id": "pokeminers-location-cards",
+      "url": "https://github.com/PokeMiners/pogo_assets/tree/master/Images/LocationCards",
+      "role": "machine-oriented addition and removal signal; artwork is not redistributed"
+    },
+    {
+      "id": "pokemon-go-live-official",
+      "url": "https://pokemongolive.com/",
+      "role": "official terminology and ambiguous recent-event confirmation"
+    }
+  ],
+  "backgrounds": [
+    {
+      "id": "location-pokexcitingphippines",
+      "displayName": "PokéXciting Philippines",
+      "shortName": "Philippines 2027",
+      "type": "location",
+      "event": "PokéXciting",
+      "location": "Philippines",
+      "year": 2027,
+      "aliases": [
+        "PokéXciting Philippines",
+        "Philippines 2027",
+        "PokéXciting",
+        "Philippines",
+        "2027",
+        "pokexcitingphippines"
+      ],
+      "pokemon": [],
+      "availability": "January 23rd - 24th 2027",
+      "status": "candidate",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokexcitingphippines",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-10thanniversarycelebration",
+      "displayName": "10th Anniversary Celebration",
+      "shortName": "10th Anniversary Celebration 2026",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "10th Anniversary Celebration",
+        "10th Anniversary Celebration 2026",
+        "2026",
+        "10thanniversarycelebration"
+      ],
+      "pokemon": [
+        "Mewtwo"
+      ],
+      "availability": "July 9th 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "10thanniversarycelebration",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-2026pokemonworldchampionships",
+      "displayName": "2026 Pokémon World Championships",
+      "shortName": "2026 Pokémon World Championships",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "2026 Pokémon World Championships",
+        "2026",
+        "2026pokemonworldchampionships",
+        "Worlds",
+        "WCS"
+      ],
+      "pokemon": [],
+      "availability": "August 28th - 30th 2026",
+      "status": "candidate",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "2026pokemonworldchampionships",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-belluna",
+      "displayName": "Belluna",
+      "shortName": "Belluna 2026",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "Belluna",
+        "Belluna 2026",
+        "2026",
+        "belluna"
+      ],
+      "pokemon": [
+        "Pikachu (Baseball Shirt)"
+      ],
+      "availability": "Spring 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "belluna",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-carnivalflamigocologne",
+      "displayName": "Carnival Flamigo Cologne",
+      "shortName": "Carnival Flamigo Cologne 2026",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "Carnival Flamigo Cologne",
+        "Carnival Flamigo Cologne 2026",
+        "2026",
+        "carnivalflamigocologne"
+      ],
+      "pokemon": [
+        "Flamigo"
+      ],
+      "availability": "February 3rd - 8th 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "carnivalflamigocologne",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-carnivalflamigorio",
+      "displayName": "Carnival Flamigo Rio",
+      "shortName": "Carnival Flamigo Rio 2026",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "Carnival Flamigo Rio",
+        "Carnival Flamigo Rio 2026",
+        "2026",
+        "carnivalflamigorio"
+      ],
+      "pokemon": [
+        "Flamigo"
+      ],
+      "availability": "February 3rd - 8th 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "carnivalflamigorio",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-chunichidragons",
+      "displayName": "Chunichi Dragons",
+      "shortName": "Chunichi Dragons 2026",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "Chunichi Dragons",
+        "Chunichi Dragons 2026",
+        "2026",
+        "chunichidragons"
+      ],
+      "pokemon": [
+        "Pikachu (Baseball Shirt)"
+      ],
+      "availability": "Spring 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "chunichidragons",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-gofest2026chicago",
+      "displayName": "GO Fest 2026 Chicago",
+      "shortName": "Chicago 2026",
+      "type": "location",
+      "event": "Pokémon GO Fest 2026",
+      "location": "Chicago",
+      "year": 2026,
+      "aliases": [
+        "GO Fest 2026 Chicago",
+        "Chicago 2026",
+        "Pokémon GO Fest 2026",
+        "Chicago",
+        "2026",
+        "gofest2026chicago",
+        "Pokémon GO Fest"
+      ],
+      "pokemon": [
+        "Tauros (Paldean Form - Blaze Breed)",
+        "Zapdos",
+        "Mewtwo",
+        "Raikou",
+        "Kyogre",
+        "Groudon",
+        "Zeraora"
+      ],
+      "availability": "June 5th - 7th 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "gofest2026chicago",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-gofest2026copenhagen",
+      "displayName": "GO Fest 2026 Copenhagen",
+      "shortName": "Copenhagen 2026",
+      "type": "location",
+      "event": "Pokémon GO Fest 2026",
+      "location": "Copenhagen",
+      "year": 2026,
+      "aliases": [
+        "GO Fest 2026 Copenhagen",
+        "Copenhagen 2026",
+        "Pokémon GO Fest 2026",
+        "Copenhagen",
+        "2026",
+        "gofest2026copenhagen",
+        "Pokémon GO Fest"
+      ],
+      "pokemon": [
+        "Tauros (Paldean Form - Combat Breed)",
+        "Moltres",
+        "Mewtwo",
+        "Entei",
+        "Kyogre",
+        "Groudon",
+        "Zeraora"
+      ],
+      "availability": "June 12th - 14th 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "gofest2026copenhagen",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-gofest2026tokyo",
+      "displayName": "GO Fest 2026 Tokyo",
+      "shortName": "Tokyo 2026",
+      "type": "location",
+      "event": "Pokémon GO Fest 2026",
+      "location": "Tokyo",
+      "year": 2026,
+      "aliases": [
+        "GO Fest 2026 Tokyo",
+        "Tokyo 2026",
+        "Pokémon GO Fest 2026",
+        "Tokyo",
+        "2026",
+        "gofest2026tokyo",
+        "Pokémon GO Fest"
+      ],
+      "pokemon": [
+        "Tauros (Paldean Form - Aqua Breed)",
+        "Articuno",
+        "Mewtwo",
+        "Suicune",
+        "Kyogre",
+        "Groudon",
+        "Zeraora"
+      ],
+      "availability": "May 28th - May 31st 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "gofest2026tokyo",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-gofesttokyokoto",
+      "displayName": "GO Fest Tokyo Koto",
+      "shortName": "Tokyo Koto 2026",
+      "type": "location",
+      "event": "Pokémon GO Fest",
+      "location": "Tokyo Koto",
+      "year": 2026,
+      "aliases": [
+        "GO Fest Tokyo Koto",
+        "Tokyo Koto 2026",
+        "Pokémon GO Fest",
+        "Tokyo Koto",
+        "2026",
+        "gofesttokyokoto"
+      ],
+      "pokemon": [
+        "Squirtle",
+        "Wingull"
+      ],
+      "availability": "May 28th - May 31st 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "gofesttokyokoto",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-gofesttokyominato",
+      "displayName": "GO Fest Tokyo Minato",
+      "shortName": "Tokyo Minato 2026",
+      "type": "location",
+      "event": "Pokémon GO Fest",
+      "location": "Tokyo Minato",
+      "year": 2026,
+      "aliases": [
+        "GO Fest Tokyo Minato",
+        "Tokyo Minato 2026",
+        "Pokémon GO Fest",
+        "Tokyo Minato",
+        "2026",
+        "gofesttokyominato"
+      ],
+      "pokemon": [
+        "Bulbasaur",
+        "Lapras",
+        "Marill"
+      ],
+      "availability": "May 28th - May 31st 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "gofesttokyominato",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-gofesttokyoshinagawa",
+      "displayName": "GO Fest Tokyo Shinagawa",
+      "shortName": "Tokyo Shinagawa 2026",
+      "type": "location",
+      "event": "Pokémon GO Fest",
+      "location": "Tokyo Shinagawa",
+      "year": 2026,
+      "aliases": [
+        "GO Fest Tokyo Shinagawa",
+        "Tokyo Shinagawa 2026",
+        "Pokémon GO Fest",
+        "Tokyo Shinagawa",
+        "2026",
+        "gofesttokyoshinagawa"
+      ],
+      "pokemon": [
+        "Charmander",
+        "Slowpoke"
+      ],
+      "availability": "May 28th - May 31st 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "gofesttokyoshinagawa",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-gotour2026losangeles",
+      "displayName": "GO Tour 2026 Los Angeles",
+      "shortName": "Los Angeles 2026",
+      "type": "location",
+      "event": "Pokémon GO Tour 2026",
+      "location": "Los Angeles",
+      "year": 2026,
+      "aliases": [
+        "GO Tour 2026 Los Angeles",
+        "Los Angeles 2026",
+        "Pokémon GO Tour 2026",
+        "Los Angeles",
+        "2026",
+        "gotour2026losangeles"
+      ],
+      "pokemon": [
+        "Honedge",
+        "Victreebel",
+        "Gyarados",
+        "Dragonite",
+        "Sceptile",
+        "Gardevoir",
+        "Absol",
+        "Lucario",
+        "Inkay",
+        "Xerneas",
+        "Yveltal"
+      ],
+      "availability": "February 21st - 22nd 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "gotour2026losangeles",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-gotour2026tainan",
+      "displayName": "GO Tour 2026 Tainan",
+      "shortName": "Tainan 2026",
+      "type": "location",
+      "event": "Pokémon GO Tour 2026",
+      "location": "Tainan",
+      "year": 2026,
+      "aliases": [
+        "GO Tour 2026 Tainan",
+        "Tainan 2026",
+        "Pokémon GO Tour 2026",
+        "Tainan",
+        "2026",
+        "gotour2026tainan"
+      ],
+      "pokemon": [
+        "Honedge",
+        "Victreebel",
+        "Gyarados",
+        "Dragonite",
+        "Sceptile",
+        "Gardevoir",
+        "Absol",
+        "Lucario",
+        "Inkay",
+        "Xerneas",
+        "Yveltal"
+      ],
+      "availability": "February 21st - 22nd 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "gotour2026tainan",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-hiroshimacarp",
+      "displayName": "Hiroshima Carp",
+      "shortName": "Hiroshima Carp 2026",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "Hiroshima Carp",
+        "Hiroshima Carp 2026",
+        "2026",
+        "hiroshimacarp"
+      ],
+      "pokemon": [
+        "Pikachu (Baseball Shirt)"
+      ],
+      "availability": "Spring 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "hiroshimacarp",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-hokkaidofighters",
+      "displayName": "Hokkaido Fighters",
+      "shortName": "Hokkaido Fighters 2026",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "Hokkaido Fighters",
+        "Hokkaido Fighters 2026",
+        "2026",
+        "hokkaidofighters"
+      ],
+      "pokemon": [
+        "Pikachu (Baseball Shirt)"
+      ],
+      "availability": "Spring 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "hokkaidofighters",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-koshienhanshintigers",
+      "displayName": "Koshien Hanshin Tigers",
+      "shortName": "Koshien Hanshin Tigers 2026",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "Koshien Hanshin Tigers",
+        "Koshien Hanshin Tigers 2026",
+        "2026",
+        "koshienhanshintigers"
+      ],
+      "pokemon": [
+        "Pikachu (Baseball Shirt)"
+      ],
+      "availability": "Spring 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "koshienhanshintigers",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-kyocera",
+      "displayName": "Kyocera",
+      "shortName": "Kyocera 2026",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "Kyocera",
+        "Kyocera 2026",
+        "2026",
+        "kyocera"
+      ],
+      "pokemon": [
+        "Pikachu (Baseball Shirt)"
+      ],
+      "availability": "Spring 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "kyocera",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-nationaltrustangleseyabbey",
+      "displayName": "National Trust Anglesey Abbey",
+      "shortName": "Anglesey Abbey 2026",
+      "type": "location",
+      "event": "National Trust",
+      "location": "Anglesey Abbey",
+      "year": 2026,
+      "aliases": [
+        "National Trust Anglesey Abbey",
+        "Anglesey Abbey 2026",
+        "National Trust",
+        "Anglesey Abbey",
+        "2026",
+        "nationaltrustangleseyabbey"
+      ],
+      "pokemon": [
+        "Sewaddle",
+        "Treecko",
+        "Grovyle",
+        "Sceptile"
+      ],
+      "availability": "July 18th - September 6th 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "nationaltrustangleseyabbey",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-nationaltrustattinghampark",
+      "displayName": "National Trust Attingham Park",
+      "shortName": "Attingham Park 2026",
+      "type": "location",
+      "event": "National Trust",
+      "location": "Attingham Park",
+      "year": 2026,
+      "aliases": [
+        "National Trust Attingham Park",
+        "Attingham Park 2026",
+        "National Trust",
+        "Attingham Park",
+        "2026",
+        "nationaltrustattinghampark"
+      ],
+      "pokemon": [
+        "Sewaddle",
+        "Treecko",
+        "Grovyle",
+        "Sceptile"
+      ],
+      "availability": "July 18th - September 6th 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "nationaltrustattinghampark",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-nationaltrustbeltonhouse",
+      "displayName": "National Trust Belton House",
+      "shortName": "Belton House 2026",
+      "type": "location",
+      "event": "National Trust",
+      "location": "Belton House",
+      "year": 2026,
+      "aliases": [
+        "National Trust Belton House",
+        "Belton House 2026",
+        "National Trust",
+        "Belton House",
+        "2026",
+        "nationaltrustbeltonhouse"
+      ],
+      "pokemon": [
+        "Sewaddle",
+        "Treecko",
+        "Grovyle",
+        "Sceptile"
+      ],
+      "availability": "July 18th - September 6th 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "nationaltrustbeltonhouse",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-nationaltrustcalkeabbey",
+      "displayName": "National Trust Calke Abbey",
+      "shortName": "Calke Abbey 2026",
+      "type": "location",
+      "event": "National Trust",
+      "location": "Calke Abbey",
+      "year": 2026,
+      "aliases": [
+        "National Trust Calke Abbey",
+        "Calke Abbey 2026",
+        "National Trust",
+        "Calke Abbey",
+        "2026",
+        "nationaltrustcalkeabbey"
+      ],
+      "pokemon": [
+        "Sewaddle",
+        "Treecko",
+        "Grovyle",
+        "Sceptile"
+      ],
+      "availability": "July 18th - September 6th 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "nationaltrustcalkeabbey",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-nationaltrustchirk",
+      "displayName": "National Trust Chirk",
+      "shortName": "Chirk 2026",
+      "type": "location",
+      "event": "National Trust",
+      "location": "Chirk",
+      "year": 2026,
+      "aliases": [
+        "National Trust Chirk",
+        "Chirk 2026",
+        "National Trust",
+        "Chirk",
+        "2026",
+        "nationaltrustchirk"
+      ],
+      "pokemon": [
+        "Seedot",
+        "Treecko",
+        "Grovyle",
+        "Sceptile"
+      ],
+      "availability": "July 18th - September 6th 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "nationaltrustchirk",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-nationaltrustcliveden",
+      "displayName": "National Trust Cliveden",
+      "shortName": "Cliveden 2026",
+      "type": "location",
+      "event": "National Trust",
+      "location": "Cliveden",
+      "year": 2026,
+      "aliases": [
+        "National Trust Cliveden",
+        "Cliveden 2026",
+        "National Trust",
+        "Cliveden",
+        "2026",
+        "nationaltrustcliveden"
+      ],
+      "pokemon": [
+        "Hoppip",
+        "Treecko",
+        "Grovyle",
+        "Sceptile"
+      ],
+      "availability": "July 18th - September 6th 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "nationaltrustcliveden",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-nationaltrustclumberpark",
+      "displayName": "National Trust Clumber Park",
+      "shortName": "Clumber Park 2026",
+      "type": "location",
+      "event": "National Trust",
+      "location": "Clumber Park",
+      "year": 2026,
+      "aliases": [
+        "National Trust Clumber Park",
+        "Clumber Park 2026",
+        "National Trust",
+        "Clumber Park",
+        "2026",
+        "nationaltrustclumberpark"
+      ],
+      "pokemon": [
+        "Sewaddle",
+        "Treecko",
+        "Grovyle",
+        "Sceptile"
+      ],
+      "availability": "July 18th - September 6th 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "nationaltrustclumberpark",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-nationaltrustdunhammassey",
+      "displayName": "National Trust Dunham Massey",
+      "shortName": "Dunham Massey 2026",
+      "type": "location",
+      "event": "National Trust",
+      "location": "Dunham Massey",
+      "year": 2026,
+      "aliases": [
+        "National Trust Dunham Massey",
+        "Dunham Massey 2026",
+        "National Trust",
+        "Dunham Massey",
+        "2026",
+        "nationaltrustdunhammassey"
+      ],
+      "pokemon": [
+        "Pineco",
+        "Treecko",
+        "Grovyle",
+        "Sceptile"
+      ],
+      "availability": "July 18th - September 6th 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "nationaltrustdunhammassey",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-nationaltrustfountainsabbeyestate",
+      "displayName": "National Trust Fountains Abbey Estate",
+      "shortName": "Fountains Abbey Estate 2026",
+      "type": "location",
+      "event": "National Trust",
+      "location": "Fountains Abbey Estate",
+      "year": 2026,
+      "aliases": [
+        "National Trust Fountains Abbey Estate",
+        "Fountains Abbey Estate 2026",
+        "National Trust",
+        "Fountains Abbey Estate",
+        "2026",
+        "nationaltrustfountainsabbeyestate"
+      ],
+      "pokemon": [
+        "Pineco",
+        "Treecko",
+        "Grovyle",
+        "Sceptile"
+      ],
+      "availability": "July 18th - September 6th 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "nationaltrustfountainsabbeyestate",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-nationaltrustgibside",
+      "displayName": "National Trust Gibside",
+      "shortName": "Gibside 2026",
+      "type": "location",
+      "event": "National Trust",
+      "location": "Gibside",
+      "year": 2026,
+      "aliases": [
+        "National Trust Gibside",
+        "Gibside 2026",
+        "National Trust",
+        "Gibside",
+        "2026",
+        "nationaltrustgibside"
+      ],
+      "pokemon": [
+        "Pineco",
+        "Treecko",
+        "Grovyle",
+        "Sceptile"
+      ],
+      "availability": "July 18th - September 6th 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "nationaltrustgibside",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-nationaltrusthanbury",
+      "displayName": "National Trust Hanbury",
+      "shortName": "Hanbury 2026",
+      "type": "location",
+      "event": "National Trust",
+      "location": "Hanbury",
+      "year": 2026,
+      "aliases": [
+        "National Trust Hanbury",
+        "Hanbury 2026",
+        "National Trust",
+        "Hanbury",
+        "2026",
+        "nationaltrusthanbury"
+      ],
+      "pokemon": [
+        "Sewaddle",
+        "Treecko",
+        "Grovyle",
+        "Sceptile"
+      ],
+      "availability": "July 18th - September 6th 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "nationaltrusthanbury",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-nationaltrusthardwick",
+      "displayName": "National Trust Hardwick",
+      "shortName": "Hardwick 2026",
+      "type": "location",
+      "event": "National Trust",
+      "location": "Hardwick",
+      "year": 2026,
+      "aliases": [
+        "National Trust Hardwick",
+        "Hardwick 2026",
+        "National Trust",
+        "Hardwick",
+        "2026",
+        "nationaltrusthardwick"
+      ],
+      "pokemon": [
+        "Sewaddle",
+        "Treecko",
+        "Grovyle",
+        "Sceptile"
+      ],
+      "availability": "July 18th - September 6th 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "nationaltrusthardwick",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-nationaltrustkillerton",
+      "displayName": "National Trust Killerton",
+      "shortName": "Killerton 2026",
+      "type": "location",
+      "event": "National Trust",
+      "location": "Killerton",
+      "year": 2026,
+      "aliases": [
+        "National Trust Killerton",
+        "Killerton 2026",
+        "National Trust",
+        "Killerton",
+        "2026",
+        "nationaltrustkillerton"
+      ],
+      "pokemon": [
+        "Seedot",
+        "Treecko",
+        "Grovyle",
+        "Sceptile"
+      ],
+      "availability": "July 18th - September 6th 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "nationaltrustkillerton",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-nationaltrustkingstonlacy",
+      "displayName": "National Trust Kingston Lacy",
+      "shortName": "Kingston Lacy 2026",
+      "type": "location",
+      "event": "National Trust",
+      "location": "Kingston Lacy",
+      "year": 2026,
+      "aliases": [
+        "National Trust Kingston Lacy",
+        "Kingston Lacy 2026",
+        "National Trust",
+        "Kingston Lacy",
+        "2026",
+        "nationaltrustkingstonlacy"
+      ],
+      "pokemon": [
+        "Seedot",
+        "Treecko",
+        "Grovyle",
+        "Sceptile"
+      ],
+      "availability": "July 18th - September 6th 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "nationaltrustkingstonlacy",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-nationaltrustlacock",
+      "displayName": "National Trust Lacock",
+      "shortName": "Lacock 2026",
+      "type": "location",
+      "event": "National Trust",
+      "location": "Lacock",
+      "year": 2026,
+      "aliases": [
+        "National Trust Lacock",
+        "Lacock 2026",
+        "National Trust",
+        "Lacock",
+        "2026",
+        "nationaltrustlacock"
+      ],
+      "pokemon": [
+        "Seedot",
+        "Treecko",
+        "Grovyle",
+        "Sceptile"
+      ],
+      "availability": "July 18th - September 6th 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "nationaltrustlacock",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-nationaltrustlymepark",
+      "displayName": "National Trust Lyme Park",
+      "shortName": "Lyme Park 2026",
+      "type": "location",
+      "event": "National Trust",
+      "location": "Lyme Park",
+      "year": 2026,
+      "aliases": [
+        "National Trust Lyme Park",
+        "Lyme Park 2026",
+        "National Trust",
+        "Lyme Park",
+        "2026",
+        "nationaltrustlymepark"
+      ],
+      "pokemon": [
+        "Pineco",
+        "Treecko",
+        "Grovyle",
+        "Sceptile"
+      ],
+      "availability": "July 18th - September 6th 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "nationaltrustlymepark",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-nationaltrustmottisfont",
+      "displayName": "National Trust Mottisfont",
+      "shortName": "Mottisfont 2026",
+      "type": "location",
+      "event": "National Trust",
+      "location": "Mottisfont",
+      "year": 2026,
+      "aliases": [
+        "National Trust Mottisfont",
+        "Mottisfont 2026",
+        "National Trust",
+        "Mottisfont",
+        "2026",
+        "nationaltrustmottisfont"
+      ],
+      "pokemon": [
+        "Hoppip",
+        "Treecko",
+        "Grovyle",
+        "Sceptile"
+      ],
+      "availability": "July 18th - September 6th 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "nationaltrustmottisfont",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-nationaltrustmountstewart",
+      "displayName": "National Trust Mount Stewart",
+      "shortName": "Mount Stewart 2026",
+      "type": "location",
+      "event": "National Trust",
+      "location": "Mount Stewart",
+      "year": 2026,
+      "aliases": [
+        "National Trust Mount Stewart",
+        "Mount Stewart 2026",
+        "National Trust",
+        "Mount Stewart",
+        "2026",
+        "nationaltrustmountstewart"
+      ],
+      "pokemon": [
+        "Pineco",
+        "Treecko",
+        "Grovyle",
+        "Sceptile"
+      ],
+      "availability": "July 18th - September 6th 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "nationaltrustmountstewart",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-nationaltrustnymans",
+      "displayName": "National Trust Nymans",
+      "shortName": "Nymans 2026",
+      "type": "location",
+      "event": "National Trust",
+      "location": "Nymans",
+      "year": 2026,
+      "aliases": [
+        "National Trust Nymans",
+        "Nymans 2026",
+        "National Trust",
+        "Nymans",
+        "2026",
+        "nationaltrustnymans"
+      ],
+      "pokemon": [
+        "Hoppip",
+        "Treecko",
+        "Grovyle",
+        "Sceptile"
+      ],
+      "availability": "July 18th - September 6th 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "nationaltrustnymans",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-nationaltrustpolesden",
+      "displayName": "National Trust Polesden",
+      "shortName": "Polesden 2026",
+      "type": "location",
+      "event": "National Trust",
+      "location": "Polesden",
+      "year": 2026,
+      "aliases": [
+        "National Trust Polesden",
+        "Polesden 2026",
+        "National Trust",
+        "Polesden",
+        "2026",
+        "nationaltrustpolesden"
+      ],
+      "pokemon": [
+        "Hoppip",
+        "Treecko",
+        "Grovyle",
+        "Sceptile"
+      ],
+      "availability": "July 18th - September 6th 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "nationaltrustpolesden",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-nationaltrustscotneycastle",
+      "displayName": "National Trust Scotney Castle",
+      "shortName": "Scotney Castle 2026",
+      "type": "location",
+      "event": "National Trust",
+      "location": "Scotney Castle",
+      "year": 2026,
+      "aliases": [
+        "National Trust Scotney Castle",
+        "Scotney Castle 2026",
+        "National Trust",
+        "Scotney Castle",
+        "2026",
+        "nationaltrustscotneycastle"
+      ],
+      "pokemon": [
+        "Hoppip",
+        "Treecko",
+        "Grovyle",
+        "Sceptile"
+      ],
+      "availability": "July 18th - September 6th 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "nationaltrustscotneycastle",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-nationaltruststourhead",
+      "displayName": "National Trust Stourhead",
+      "shortName": "Stourhead 2026",
+      "type": "location",
+      "event": "National Trust",
+      "location": "Stourhead",
+      "year": 2026,
+      "aliases": [
+        "National Trust Stourhead",
+        "Stourhead 2026",
+        "National Trust",
+        "Stourhead",
+        "2026",
+        "nationaltruststourhead"
+      ],
+      "pokemon": [
+        "Seedot",
+        "Treecko",
+        "Grovyle",
+        "Sceptile"
+      ],
+      "availability": "July 18th - September 6th 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "nationaltruststourhead",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-nationaltruststowegardenpark",
+      "displayName": "National Trust Stowe Garden Park",
+      "shortName": "Stowe Garden Park 2026",
+      "type": "location",
+      "event": "National Trust",
+      "location": "Stowe Garden Park",
+      "year": 2026,
+      "aliases": [
+        "National Trust Stowe Garden Park",
+        "Stowe Garden Park 2026",
+        "National Trust",
+        "Stowe Garden Park",
+        "2026",
+        "nationaltruststowegardenpark"
+      ],
+      "pokemon": [
+        "Hoppip",
+        "Treecko",
+        "Grovyle",
+        "Sceptile"
+      ],
+      "availability": "July 18th - September 6th 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "nationaltruststowegardenpark",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-nationaltrusttredegarhouse",
+      "displayName": "National Trust Tredegar House",
+      "shortName": "Tredegar House 2026",
+      "type": "location",
+      "event": "National Trust",
+      "location": "Tredegar House",
+      "year": 2026,
+      "aliases": [
+        "National Trust Tredegar House",
+        "Tredegar House 2026",
+        "National Trust",
+        "Tredegar House",
+        "2026",
+        "nationaltrusttredegarhouse"
+      ],
+      "pokemon": [
+        "Seedot",
+        "Treecko",
+        "Grovyle",
+        "Sceptile"
+      ],
+      "availability": "July 18th - September 6th 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "nationaltrusttredegarhouse",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-nationaltrusttrelissick",
+      "displayName": "National Trust Trelissick",
+      "shortName": "Trelissick 2026",
+      "type": "location",
+      "event": "National Trust",
+      "location": "Trelissick",
+      "year": 2026,
+      "aliases": [
+        "National Trust Trelissick",
+        "Trelissick 2026",
+        "National Trust",
+        "Trelissick",
+        "2026",
+        "nationaltrusttrelissick"
+      ],
+      "pokemon": [
+        "Seedot",
+        "Treecko",
+        "Grovyle",
+        "Sceptile"
+      ],
+      "availability": "July 18th - September 6th 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "nationaltrusttrelissick",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-nationaltrusttyntesfield",
+      "displayName": "National Trust Tyntesfield",
+      "shortName": "Tyntesfield 2026",
+      "type": "location",
+      "event": "National Trust",
+      "location": "Tyntesfield",
+      "year": 2026,
+      "aliases": [
+        "National Trust Tyntesfield",
+        "Tyntesfield 2026",
+        "National Trust",
+        "Tyntesfield",
+        "2026",
+        "nationaltrusttyntesfield"
+      ],
+      "pokemon": [
+        "Seedot",
+        "Treecko",
+        "Grovyle"
+      ],
+      "availability": "July 18th - September 6th 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "nationaltrusttyntesfield",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-nationaltrustwimpole",
+      "displayName": "National Trust Wimpole",
+      "shortName": "Wimpole 2026",
+      "type": "location",
+      "event": "National Trust",
+      "location": "Wimpole",
+      "year": 2026,
+      "aliases": [
+        "National Trust Wimpole",
+        "Wimpole 2026",
+        "National Trust",
+        "Wimpole",
+        "2026",
+        "nationaltrustwimpole"
+      ],
+      "pokemon": [
+        "Sewaddle",
+        "Treecko",
+        "Grovyle",
+        "Sceptile"
+      ],
+      "availability": "July 18th - September 6th 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "nationaltrustwimpole",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokelidaichi",
+      "displayName": "Pokelid Aichi",
+      "shortName": "Pokelid Aichi 2026",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "Pokelid Aichi",
+        "Pokelid Aichi 2026",
+        "2026",
+        "pokelidaichi"
+      ],
+      "pokemon": [],
+      "availability": "2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokelidaichi",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokelidakita",
+      "displayName": "Pokelid Akita",
+      "shortName": "Pokelid Akita 2026",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "Pokelid Akita",
+        "Pokelid Akita 2026",
+        "2026",
+        "pokelidakita"
+      ],
+      "pokemon": [],
+      "availability": "2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokelidakita",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokelidaomori",
+      "displayName": "Pokelid Aomori",
+      "shortName": "Pokelid Aomori 2026",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "Pokelid Aomori",
+        "Pokelid Aomori 2026",
+        "2026",
+        "pokelidaomori"
+      ],
+      "pokemon": [],
+      "availability": "2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokelidaomori",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokelidchiba",
+      "displayName": "Pokelid Chiba",
+      "shortName": "Pokelid Chiba 2026",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "Pokelid Chiba",
+        "Pokelid Chiba 2026",
+        "2026",
+        "pokelidchiba"
+      ],
+      "pokemon": [],
+      "availability": "2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokelidchiba",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokelidehime",
+      "displayName": "Pokelid Ehime",
+      "shortName": "Pokelid Ehime 2026",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "Pokelid Ehime",
+        "Pokelid Ehime 2026",
+        "2026",
+        "pokelidehime"
+      ],
+      "pokemon": [],
+      "availability": "2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokelidehime",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokelidfukui",
+      "displayName": "Pokelid Fukui",
+      "shortName": "Pokelid Fukui 2026",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "Pokelid Fukui",
+        "Pokelid Fukui 2026",
+        "2026",
+        "pokelidfukui"
+      ],
+      "pokemon": [],
+      "availability": "2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokelidfukui",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokelidfukushima",
+      "displayName": "Pokelid Fukushima",
+      "shortName": "Pokelid Fukushima 2026",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "Pokelid Fukushima",
+        "Pokelid Fukushima 2026",
+        "2026",
+        "pokelidfukushima"
+      ],
+      "pokemon": [],
+      "availability": "2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokelidfukushima",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokelidgifu",
+      "displayName": "Pokelid Gifu",
+      "shortName": "Pokelid Gifu 2026",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "Pokelid Gifu",
+        "Pokelid Gifu 2026",
+        "2026",
+        "pokelidgifu"
+      ],
+      "pokemon": [],
+      "availability": "2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokelidgifu",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokelidhokkaido",
+      "displayName": "Pokelid Hokkaido",
+      "shortName": "Pokelid Hokkaido 2026",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "Pokelid Hokkaido",
+        "Pokelid Hokkaido 2026",
+        "2026",
+        "pokelidhokkaido"
+      ],
+      "pokemon": [],
+      "availability": "2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokelidhokkaido",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokelidhyogo",
+      "displayName": "Pokelid Hyogo",
+      "shortName": "Pokelid Hyogo 2026",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "Pokelid Hyogo",
+        "Pokelid Hyogo 2026",
+        "2026",
+        "pokelidhyogo"
+      ],
+      "pokemon": [],
+      "availability": "2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokelidhyogo",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokelidibaraki",
+      "displayName": "Pokelid Ibaraki",
+      "shortName": "Pokelid Ibaraki 2026",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "Pokelid Ibaraki",
+        "Pokelid Ibaraki 2026",
+        "2026",
+        "pokelidibaraki"
+      ],
+      "pokemon": [],
+      "availability": "2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokelidibaraki",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokelidishikawa",
+      "displayName": "Pokelid Ishikawa",
+      "shortName": "Pokelid Ishikawa 2026",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "Pokelid Ishikawa",
+        "Pokelid Ishikawa 2026",
+        "2026",
+        "pokelidishikawa"
+      ],
+      "pokemon": [],
+      "availability": "2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokelidishikawa",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokelidiwate",
+      "displayName": "Pokelid Iwate",
+      "shortName": "Pokelid Iwate 2026",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "Pokelid Iwate",
+        "Pokelid Iwate 2026",
+        "2026",
+        "pokelidiwate"
+      ],
+      "pokemon": [],
+      "availability": "2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokelidiwate",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokelidkagawa",
+      "displayName": "Pokelid Kagawa",
+      "shortName": "Pokelid Kagawa 2026",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "Pokelid Kagawa",
+        "Pokelid Kagawa 2026",
+        "2026",
+        "pokelidkagawa"
+      ],
+      "pokemon": [],
+      "availability": "2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokelidkagawa",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokelidkanagawa",
+      "displayName": "Pokelid Kanagawa",
+      "shortName": "Pokelid Kanagawa 2026",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "Pokelid Kanagawa",
+        "Pokelid Kanagawa 2026",
+        "2026",
+        "pokelidkanagawa"
+      ],
+      "pokemon": [],
+      "availability": "2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokelidkanagawa",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokelidkochi",
+      "displayName": "Pokelid Kochi",
+      "shortName": "Pokelid Kochi 2026",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "Pokelid Kochi",
+        "Pokelid Kochi 2026",
+        "2026",
+        "pokelidkochi"
+      ],
+      "pokemon": [],
+      "availability": "2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokelidkochi",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokelidkyoto",
+      "displayName": "Pokelid Kyoto",
+      "shortName": "Pokelid Kyoto 2026",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "Pokelid Kyoto",
+        "Pokelid Kyoto 2026",
+        "2026",
+        "pokelidkyoto"
+      ],
+      "pokemon": [],
+      "availability": "2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokelidkyoto",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokelidmie",
+      "displayName": "Pokelid Mie",
+      "shortName": "Pokelid Mie 2026",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "Pokelid Mie",
+        "Pokelid Mie 2026",
+        "2026",
+        "pokelidmie"
+      ],
+      "pokemon": [],
+      "availability": "2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokelidmie",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokelidmiyagi",
+      "displayName": "Pokelid Miyagi",
+      "shortName": "Pokelid Miyagi 2026",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "Pokelid Miyagi",
+        "Pokelid Miyagi 2026",
+        "2026",
+        "pokelidmiyagi"
+      ],
+      "pokemon": [],
+      "availability": "2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokelidmiyagi",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokelidnara",
+      "displayName": "Pokelid Nara",
+      "shortName": "Pokelid Nara 2026",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "Pokelid Nara",
+        "Pokelid Nara 2026",
+        "2026",
+        "pokelidnara"
+      ],
+      "pokemon": [],
+      "availability": "2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokelidnara",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokelidniigata",
+      "displayName": "Pokelid Niigata",
+      "shortName": "Pokelid Niigata 2026",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "Pokelid Niigata",
+        "Pokelid Niigata 2026",
+        "2026",
+        "pokelidniigata"
+      ],
+      "pokemon": [],
+      "availability": "2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokelidniigata",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokelidokayama",
+      "displayName": "Pokelid Okayama",
+      "shortName": "Pokelid Okayama 2026",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "Pokelid Okayama",
+        "Pokelid Okayama 2026",
+        "2026",
+        "pokelidokayama"
+      ],
+      "pokemon": [],
+      "availability": "2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokelidokayama",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokelidosaka",
+      "displayName": "Pokelid Osaka",
+      "shortName": "Pokelid Osaka 2026",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "Pokelid Osaka",
+        "Pokelid Osaka 2026",
+        "2026",
+        "pokelidosaka"
+      ],
+      "pokemon": [],
+      "availability": "2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokelidosaka",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokelidsaitama",
+      "displayName": "Pokelid Saitama",
+      "shortName": "Pokelid Saitama 2026",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "Pokelid Saitama",
+        "Pokelid Saitama 2026",
+        "2026",
+        "pokelidsaitama"
+      ],
+      "pokemon": [],
+      "availability": "2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokelidsaitama",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokelidshiga",
+      "displayName": "Pokelid Shiga",
+      "shortName": "Pokelid Shiga 2026",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "Pokelid Shiga",
+        "Pokelid Shiga 2026",
+        "2026",
+        "pokelidshiga"
+      ],
+      "pokemon": [],
+      "availability": "2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokelidshiga",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokelidshimane",
+      "displayName": "Pokelid Shimane",
+      "shortName": "Pokelid Shimane 2026",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "Pokelid Shimane",
+        "Pokelid Shimane 2026",
+        "2026",
+        "pokelidshimane"
+      ],
+      "pokemon": [],
+      "availability": "2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokelidshimane",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokelidshizuoka",
+      "displayName": "Pokelid Shizuoka",
+      "shortName": "Pokelid Shizuoka 2026",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "Pokelid Shizuoka",
+        "Pokelid Shizuoka 2026",
+        "2026",
+        "pokelidshizuoka"
+      ],
+      "pokemon": [],
+      "availability": "2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokelidshizuoka",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokelidtochigi",
+      "displayName": "Pokelid Tochigi",
+      "shortName": "Pokelid Tochigi 2026",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "Pokelid Tochigi",
+        "Pokelid Tochigi 2026",
+        "2026",
+        "pokelidtochigi"
+      ],
+      "pokemon": [],
+      "availability": "2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokelidtochigi",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokelidtokushima",
+      "displayName": "Pokelid Tokushima",
+      "shortName": "Pokelid Tokushima 2026",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "Pokelid Tokushima",
+        "Pokelid Tokushima 2026",
+        "2026",
+        "pokelidtokushima"
+      ],
+      "pokemon": [],
+      "availability": "2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokelidtokushima",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokelidtokyo",
+      "displayName": "Pokelid Tokyo",
+      "shortName": "Pokelid Tokyo 2026",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "Pokelid Tokyo",
+        "Pokelid Tokyo 2026",
+        "2026",
+        "pokelidtokyo"
+      ],
+      "pokemon": [],
+      "availability": "2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokelidtokyo",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokelidtottori",
+      "displayName": "Pokelid Tottori",
+      "shortName": "Pokelid Tottori 2026",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "Pokelid Tottori",
+        "Pokelid Tottori 2026",
+        "2026",
+        "pokelidtottori"
+      ],
+      "pokemon": [],
+      "availability": "2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokelidtottori",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokelidtoyama",
+      "displayName": "Pokelid Toyama",
+      "shortName": "Pokelid Toyama 2026",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "Pokelid Toyama",
+        "Pokelid Toyama 2026",
+        "2026",
+        "pokelidtoyama"
+      ],
+      "pokemon": [],
+      "availability": "2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokelidtoyama",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokelidwakayama",
+      "displayName": "Pokelid Wakayama",
+      "shortName": "Pokelid Wakayama 2026",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "Pokelid Wakayama",
+        "Pokelid Wakayama 2026",
+        "2026",
+        "pokelidwakayama"
+      ],
+      "pokemon": [],
+      "availability": "2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokelidwakayama",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokelidyamaguchi",
+      "displayName": "Pokelid Yamaguchi",
+      "shortName": "Pokelid Yamaguchi 2026",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "Pokelid Yamaguchi",
+        "Pokelid Yamaguchi 2026",
+        "2026",
+        "pokelidyamaguchi"
+      ],
+      "pokemon": [],
+      "availability": "2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokelidyamaguchi",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokemoncenterfukuoka",
+      "displayName": "Pokémon Center Fukuoka",
+      "shortName": "Fukuoka 2026",
+      "type": "location",
+      "event": "Pokémon Center",
+      "location": "Fukuoka",
+      "year": 2026,
+      "aliases": [
+        "Pokémon Center Fukuoka",
+        "Fukuoka 2026",
+        "Pokémon Center",
+        "Fukuoka",
+        "2026",
+        "pokemoncenterfukuoka"
+      ],
+      "pokemon": [
+        "Pikachu"
+      ],
+      "availability": "July 1st 2026 - August 31st 2027",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokemoncenterfukuoka",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokemoncentergolab",
+      "displayName": "Pokémon Center GO Lab",
+      "shortName": "GO Lab 2026",
+      "type": "location",
+      "event": "Pokémon Center",
+      "location": "GO Lab",
+      "year": 2026,
+      "aliases": [
+        "Pokémon Center GO Lab",
+        "GO Lab 2026",
+        "Pokémon Center",
+        "GO Lab",
+        "2026",
+        "pokemoncentergolab"
+      ],
+      "pokemon": [
+        "Pikachu"
+      ],
+      "availability": "July 1st 2026 - August 31st 2027",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokemoncentergolab",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokemoncenterhiroshima",
+      "displayName": "Pokémon Center Hiroshima",
+      "shortName": "Hiroshima 2026",
+      "type": "location",
+      "event": "Pokémon Center",
+      "location": "Hiroshima",
+      "year": 2026,
+      "aliases": [
+        "Pokémon Center Hiroshima",
+        "Hiroshima 2026",
+        "Pokémon Center",
+        "Hiroshima",
+        "2026",
+        "pokemoncenterhiroshima"
+      ],
+      "pokemon": [
+        "Pikachu"
+      ],
+      "availability": "July 1st 2026 - August 31st 2027",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokemoncenterhiroshima",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokemoncenterkagawa",
+      "displayName": "Pokémon Center Kagawa",
+      "shortName": "Kagawa 2026",
+      "type": "location",
+      "event": "Pokémon Center",
+      "location": "Kagawa",
+      "year": 2026,
+      "aliases": [
+        "Pokémon Center Kagawa",
+        "Kagawa 2026",
+        "Pokémon Center",
+        "Kagawa",
+        "2026",
+        "pokemoncenterkagawa"
+      ],
+      "pokemon": [
+        "Pikachu"
+      ],
+      "availability": "July 1st 2026 - August 31st 2027",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokemoncenterkagawa",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokemoncenterkanazawa",
+      "displayName": "Pokémon Center Kanazawa",
+      "shortName": "Kanazawa 2026",
+      "type": "location",
+      "event": "Pokémon Center",
+      "location": "Kanazawa",
+      "year": 2026,
+      "aliases": [
+        "Pokémon Center Kanazawa",
+        "Kanazawa 2026",
+        "Pokémon Center",
+        "Kanazawa",
+        "2026",
+        "pokemoncenterkanazawa"
+      ],
+      "pokemon": [
+        "Pikachu"
+      ],
+      "availability": "July 1st 2026 - August 31st 2027",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokemoncenterkanazawa",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokemoncenterkyoto",
+      "displayName": "Pokémon Center Kyoto",
+      "shortName": "Kyoto 2026",
+      "type": "location",
+      "event": "Pokémon Center",
+      "location": "Kyoto",
+      "year": 2026,
+      "aliases": [
+        "Pokémon Center Kyoto",
+        "Kyoto 2026",
+        "Pokémon Center",
+        "Kyoto",
+        "2026",
+        "pokemoncenterkyoto"
+      ],
+      "pokemon": [
+        "Pikachu"
+      ],
+      "availability": "July 1st 2026 - August 31st 2027",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokemoncenterkyoto",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokemoncentermegatokyo",
+      "displayName": "Pokémon Center Mega Tokyo",
+      "shortName": "Mega Tokyo 2026",
+      "type": "location",
+      "event": "Pokémon Center",
+      "location": "Mega Tokyo",
+      "year": 2026,
+      "aliases": [
+        "Pokémon Center Mega Tokyo",
+        "Mega Tokyo 2026",
+        "Pokémon Center",
+        "Mega Tokyo",
+        "2026",
+        "pokemoncentermegatokyo"
+      ],
+      "pokemon": [
+        "Pikachu"
+      ],
+      "availability": "July 1st 2026 - August 31st 2027",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokemoncentermegatokyo",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokemoncenternagoya",
+      "displayName": "Pokémon Center Nagoya",
+      "shortName": "Nagoya 2026",
+      "type": "location",
+      "event": "Pokémon Center",
+      "location": "Nagoya",
+      "year": 2026,
+      "aliases": [
+        "Pokémon Center Nagoya",
+        "Nagoya 2026",
+        "Pokémon Center",
+        "Nagoya",
+        "2026",
+        "pokemoncenternagoya"
+      ],
+      "pokemon": [
+        "Pikachu"
+      ],
+      "availability": "July 1st 2026 - August 31st 2027",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokemoncenternagoya",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokemoncenterokinawa",
+      "displayName": "Pokémon Center Okinawa",
+      "shortName": "Okinawa 2026",
+      "type": "location",
+      "event": "Pokémon Center",
+      "location": "Okinawa",
+      "year": 2026,
+      "aliases": [
+        "Pokémon Center Okinawa",
+        "Okinawa 2026",
+        "Pokémon Center",
+        "Okinawa",
+        "2026",
+        "pokemoncenterokinawa"
+      ],
+      "pokemon": [
+        "Pikachu"
+      ],
+      "availability": "July 1st 2026 - August 31st 2027",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokemoncenterokinawa",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokemoncenterosaka",
+      "displayName": "Pokémon Center Osaka",
+      "shortName": "Osaka 2026",
+      "type": "location",
+      "event": "Pokémon Center",
+      "location": "Osaka",
+      "year": 2026,
+      "aliases": [
+        "Pokémon Center Osaka",
+        "Osaka 2026",
+        "Pokémon Center",
+        "Osaka",
+        "2026",
+        "pokemoncenterosaka"
+      ],
+      "pokemon": [
+        "Pikachu"
+      ],
+      "availability": "July 1st 2026 - August 31st 2027",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokemoncenterosaka",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokemoncenterosakadx",
+      "displayName": "Pokémon Center Osaka DX",
+      "shortName": "Osaka DX 2026",
+      "type": "location",
+      "event": "Pokémon Center",
+      "location": "Osaka DX",
+      "year": 2026,
+      "aliases": [
+        "Pokémon Center Osaka DX",
+        "Osaka DX 2026",
+        "Pokémon Center",
+        "Osaka DX",
+        "2026",
+        "pokemoncenterosakadx"
+      ],
+      "pokemon": [
+        "Pikachu"
+      ],
+      "availability": "July 1st 2026 - August 31st 2027",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokemoncenterosakadx",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokemoncentersapporo",
+      "displayName": "Pokémon Center Sapporo",
+      "shortName": "Sapporo 2026",
+      "type": "location",
+      "event": "Pokémon Center",
+      "location": "Sapporo",
+      "year": 2026,
+      "aliases": [
+        "Pokémon Center Sapporo",
+        "Sapporo 2026",
+        "Pokémon Center",
+        "Sapporo",
+        "2026",
+        "pokemoncentersapporo"
+      ],
+      "pokemon": [
+        "Pikachu"
+      ],
+      "availability": "July 1st 2026 - August 31st 2027",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokemoncentersapporo",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokemoncentershibuya",
+      "displayName": "Pokémon Center Shibuya",
+      "shortName": "Shibuya 2026",
+      "type": "location",
+      "event": "Pokémon Center",
+      "location": "Shibuya",
+      "year": 2026,
+      "aliases": [
+        "Pokémon Center Shibuya",
+        "Shibuya 2026",
+        "Pokémon Center",
+        "Shibuya",
+        "2026",
+        "pokemoncentershibuya"
+      ],
+      "pokemon": [
+        "Pikachu"
+      ],
+      "availability": "July 1st 2026 - August 31st 2027",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokemoncentershibuya",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokemoncenterskytreetown",
+      "displayName": "Pokémon Center Skytree Town",
+      "shortName": "Skytree Town 2026",
+      "type": "location",
+      "event": "Pokémon Center",
+      "location": "Skytree Town",
+      "year": 2026,
+      "aliases": [
+        "Pokémon Center Skytree Town",
+        "Skytree Town 2026",
+        "Pokémon Center",
+        "Skytree Town",
+        "2026",
+        "pokemoncenterskytreetown"
+      ],
+      "pokemon": [
+        "Pikachu"
+      ],
+      "availability": "July 1st 2026 - August 31st 2027",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokemoncenterskytreetown",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokemoncentertohoku",
+      "displayName": "Pokémon Center Tohoku",
+      "shortName": "Tohoku 2026",
+      "type": "location",
+      "event": "Pokémon Center",
+      "location": "Tohoku",
+      "year": 2026,
+      "aliases": [
+        "Pokémon Center Tohoku",
+        "Tohoku 2026",
+        "Pokémon Center",
+        "Tohoku",
+        "2026",
+        "pokemoncentertohoku"
+      ],
+      "pokemon": [
+        "Pikachu"
+      ],
+      "availability": "July 1st 2026 - August 31st 2027",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokemoncentertohoku",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokemoncentertokyobay",
+      "displayName": "Pokémon Center Tokyo Bay",
+      "shortName": "Tokyo Bay 2026",
+      "type": "location",
+      "event": "Pokémon Center",
+      "location": "Tokyo Bay",
+      "year": 2026,
+      "aliases": [
+        "Pokémon Center Tokyo Bay",
+        "Tokyo Bay 2026",
+        "Pokémon Center",
+        "Tokyo Bay",
+        "2026",
+        "pokemoncentertokyobay"
+      ],
+      "pokemon": [
+        "Pikachu"
+      ],
+      "availability": "July 1st 2026 - August 31st 2027",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokemoncentertokyobay",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokemoncentertokyodx",
+      "displayName": "Pokémon Center Tokyo DX",
+      "shortName": "Tokyo DX 2026",
+      "type": "location",
+      "event": "Pokémon Center",
+      "location": "Tokyo DX",
+      "year": 2026,
+      "aliases": [
+        "Pokémon Center Tokyo DX",
+        "Tokyo DX 2026",
+        "Pokémon Center",
+        "Tokyo DX",
+        "2026",
+        "pokemoncentertokyodx"
+      ],
+      "pokemon": [
+        "Pikachu"
+      ],
+      "availability": "July 1st 2026 - August 31st 2027",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokemoncentertokyodx",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokemonjetred",
+      "displayName": "Pokémon Jet Red",
+      "shortName": "Jet Red 2026",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "Pokémon Jet Red",
+        "Jet Red 2026",
+        "2026",
+        "pokemonjetred"
+      ],
+      "pokemon": [
+        "Charmander"
+      ],
+      "availability": "July 28th - August 31st 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokemonjetred",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokeparkkanto",
+      "displayName": "PokePark Kanto",
+      "shortName": "PokePark Kanto 2026",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "PokePark Kanto",
+        "PokePark Kanto 2026",
+        "2026",
+        "pokeparkkanto"
+      ],
+      "pokemon": [
+        "Pikachu",
+        "Articuno",
+        "Zapdos",
+        "Moltres"
+      ],
+      "availability": "February 5th 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokeparkkanto",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokexcitingmalaysia",
+      "displayName": "PokéXciting Malaysia",
+      "shortName": "Malaysia 2026",
+      "type": "location",
+      "event": "PokéXciting",
+      "location": "Malaysia",
+      "year": 2026,
+      "aliases": [
+        "PokéXciting Malaysia",
+        "Malaysia 2026",
+        "PokéXciting",
+        "Malaysia",
+        "2026",
+        "pokexcitingmalaysia"
+      ],
+      "pokemon": [],
+      "availability": "September 12th - 13th 2026",
+      "status": "candidate",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokexcitingmalaysia",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokexcitingsingapore",
+      "displayName": "PokéXciting Singapore",
+      "shortName": "Singapore 2026",
+      "type": "location",
+      "event": "PokéXciting",
+      "location": "Singapore",
+      "year": 2026,
+      "aliases": [
+        "PokéXciting Singapore",
+        "Singapore 2026",
+        "PokéXciting",
+        "Singapore",
+        "2026",
+        "pokexcitingsingapore"
+      ],
+      "pokemon": [],
+      "availability": "November 7th - 8th 2026",
+      "status": "candidate",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokexcitingsingapore",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokexcitingtaiwan",
+      "displayName": "PokéXciting Taiwan",
+      "shortName": "Taiwan 2026",
+      "type": "location",
+      "event": "PokéXciting",
+      "location": "Taiwan",
+      "year": 2026,
+      "aliases": [
+        "PokéXciting Taiwan",
+        "Taiwan 2026",
+        "PokéXciting",
+        "Taiwan",
+        "2026",
+        "pokexcitingtaiwan"
+      ],
+      "pokemon": [],
+      "availability": "Octboer 10th - 11th 2026",
+      "status": "candidate",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokexcitingtaiwan",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-rakuteneagles",
+      "displayName": "Rakuten Eagles",
+      "shortName": "Rakuten Eagles 2026",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "Rakuten Eagles",
+        "Rakuten Eagles 2026",
+        "2026",
+        "rakuteneagles"
+      ],
+      "pokemon": [
+        "Pikachu (Baseball Shirt)"
+      ],
+      "availability": "Spring 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "rakuteneagles",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-softbankhawks",
+      "displayName": "Softbank Hawks",
+      "shortName": "Softbank Hawks 2026",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "Softbank Hawks",
+        "Softbank Hawks 2026",
+        "2026",
+        "softbankhawks"
+      ],
+      "pokemon": [
+        "Pikachu (Baseball Shirt)"
+      ],
+      "availability": "Spring 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "softbankhawks",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-taipeifloralpicnic2016",
+      "displayName": "Taipei Floral Picnic 2016",
+      "shortName": "Taipei Floral Picnic 2016 2026",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "Taipei Floral Picnic 2016",
+        "Taipei Floral Picnic 2016 2026",
+        "2026",
+        "taipeifloralpicnic2016"
+      ],
+      "pokemon": [
+        "Deerling",
+        "Pikachu (Flower Hat)"
+      ],
+      "availability": "March 28th - April 6th 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "taipeifloralpicnic2016",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-tokyoswallows",
+      "displayName": "Tokyo Swallows",
+      "shortName": "Tokyo Swallows 2026",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "Tokyo Swallows",
+        "Tokyo Swallows 2026",
+        "2026",
+        "tokyoswallows"
+      ],
+      "pokemon": [
+        "Pikachu (Baseball Shirt)"
+      ],
+      "availability": "Summer 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "tokyoswallows",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-toyamaallstars",
+      "displayName": "Toyama All Stars",
+      "shortName": "Toyama All Stars 2026",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "Toyama All Stars",
+        "Toyama All Stars 2026",
+        "2026",
+        "toyamaallstars"
+      ],
+      "pokemon": [
+        "Pikachu (Baseball Shirt)"
+      ],
+      "availability": "Summer 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "toyamaallstars",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-yokohamabaystars",
+      "displayName": "Yokohama Baystars",
+      "shortName": "Yokohama Baystars 2026",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "Yokohama Baystars",
+        "Yokohama Baystars 2026",
+        "2026",
+        "yokohamabaystars"
+      ],
+      "pokemon": [
+        "Pikachu (Baseball Shirt)"
+      ],
+      "availability": "Spring 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "yokohamabaystars",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-yomiurigiants",
+      "displayName": "Yomiuri Giants",
+      "shortName": "Yomiuri Giants 2026",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "Yomiuri Giants",
+        "Yomiuri Giants 2026",
+        "2026",
+        "yomiurigiants"
+      ],
+      "pokemon": [
+        "Pikachu (Baseball Shirt)"
+      ],
+      "availability": "Spring 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "yomiurigiants",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-zozomarine",
+      "displayName": "Zozo Marine",
+      "shortName": "Zozo Marine 2026",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "Zozo Marine",
+        "Zozo Marine 2026",
+        "2026",
+        "zozomarine"
+      ],
+      "pokemon": [
+        "Pikachu (Baseball Shirt)"
+      ],
+      "availability": "Spring 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "zozomarine",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-2025pokemonworldchampionships",
+      "displayName": "2025 Pokémon World Championships",
+      "shortName": "2025 Pokémon World Championships",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "2025 Pokémon World Championships",
+        "2025",
+        "2025pokemonworldchampionships",
+        "Worlds",
+        "WCS"
+      ],
+      "pokemon": [
+        "Pikachu (World Championships 2025)"
+      ],
+      "availability": "August 15th - 17th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "2025pokemonworldchampionships",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-arizonadiamondbacks",
+      "displayName": "Arizona Diamond Backs",
+      "shortName": "Arizona Diamond Backs 2025",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "Arizona Diamond Backs",
+        "Arizona Diamond Backs 2025",
+        "2025",
+        "arizonadiamondbacks"
+      ],
+      "pokemon": [
+        "Pikachu"
+      ],
+      "availability": "August 10th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "arizonadiamondbacks",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-baltimoreorioles",
+      "displayName": "Baltimore Orioles",
+      "shortName": "Baltimore Orioles 2025",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "Baltimore Orioles",
+        "Baltimore Orioles 2025",
+        "2025",
+        "baltimoreorioles"
+      ],
+      "pokemon": [
+        "Pikachu"
+      ],
+      "availability": "August 13th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "baltimoreorioles",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-bostonredsox",
+      "displayName": "Boston Red Sox",
+      "shortName": "Boston Red Sox 2025",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "Boston Red Sox",
+        "Boston Red Sox 2025",
+        "2025",
+        "bostonredsox"
+      ],
+      "pokemon": [
+        "Pikachu"
+      ],
+      "availability": "August 29th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "bostonredsox",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-chicagowhitesox",
+      "displayName": "Chicago White Sox",
+      "shortName": "Chicago White Sox 2025",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "Chicago White Sox",
+        "Chicago White Sox 2025",
+        "2025",
+        "chicagowhitesox"
+      ],
+      "pokemon": [
+        "Pikachu"
+      ],
+      "availability": "August 11th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "chicagowhitesox",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-citysafariamsterdam",
+      "displayName": "City Safari Amsterdam",
+      "shortName": "Amsterdam 2025",
+      "type": "location",
+      "event": "Pokémon GO City Safari",
+      "location": "Amsterdam",
+      "year": 2025,
+      "aliases": [
+        "City Safari Amsterdam",
+        "Amsterdam 2025",
+        "Pokémon GO City Safari",
+        "Amsterdam",
+        "2025",
+        "citysafariamsterdam"
+      ],
+      "pokemon": [
+        "Eevee (Explorer Hat)"
+      ],
+      "availability": "September 13th-14th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "citysafariamsterdam",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-citysafaribangkok",
+      "displayName": "City Safari Bangkok",
+      "shortName": "Bangkok 2025",
+      "type": "location",
+      "event": "Pokémon GO City Safari",
+      "location": "Bangkok",
+      "year": 2025,
+      "aliases": [
+        "City Safari Bangkok",
+        "Bangkok 2025",
+        "Pokémon GO City Safari",
+        "Bangkok",
+        "2025",
+        "citysafaribangkok"
+      ],
+      "pokemon": [
+        "Eevee (Explorer Hat)"
+      ],
+      "availability": "September 13th-14th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "citysafaribangkok",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-citysafaribuenosaires",
+      "displayName": "City Safari Buenos Aires",
+      "shortName": "Buenos Aires 2025",
+      "type": "location",
+      "event": "Pokémon GO City Safari",
+      "location": "Buenos Aires",
+      "year": 2025,
+      "aliases": [
+        "City Safari Buenos Aires",
+        "Buenos Aires 2025",
+        "Pokémon GO City Safari",
+        "Buenos Aires",
+        "2025",
+        "citysafaribuenosaires"
+      ],
+      "pokemon": [
+        "Eevee (Explorer Hat)"
+      ],
+      "availability": "December 14th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "citysafaribuenosaires",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-citysafaricancun",
+      "displayName": "City Safari Cancun",
+      "shortName": "Cancun 2025",
+      "type": "location",
+      "event": "Pokémon GO City Safari",
+      "location": "Cancun",
+      "year": 2025,
+      "aliases": [
+        "City Safari Cancun",
+        "Cancun 2025",
+        "Pokémon GO City Safari",
+        "Cancun",
+        "2025",
+        "citysafaricancun"
+      ],
+      "pokemon": [
+        "Eevee (Explorer Hat)"
+      ],
+      "availability": "September 13th-14th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "citysafaricancun",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-citysafarimiami",
+      "displayName": "City Safari Miami",
+      "shortName": "Miami 2025",
+      "type": "location",
+      "event": "Pokémon GO City Safari",
+      "location": "Miami",
+      "year": 2025,
+      "aliases": [
+        "City Safari Miami",
+        "Miami 2025",
+        "Pokémon GO City Safari",
+        "Miami",
+        "2025",
+        "citysafarimiami"
+      ],
+      "pokemon": [
+        "Eevee (Explorer Hat)"
+      ],
+      "availability": "December 14th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "citysafarimiami",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-citysafarimilan",
+      "displayName": "City Safari Milan",
+      "shortName": "Milan 2025",
+      "type": "location",
+      "event": "Pokémon GO City Safari",
+      "location": "Milan",
+      "year": 2025,
+      "aliases": [
+        "City Safari Milan",
+        "Milan 2025",
+        "Pokémon GO City Safari",
+        "Milan",
+        "2025",
+        "citysafarimilan"
+      ],
+      "pokemon": [
+        "Eevee (Explorer Hat)"
+      ],
+      "availability": "March 29th - 30th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "citysafarimilan",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-citysafarimumbai",
+      "displayName": "City Safari Mumbai",
+      "shortName": "Mumbai 2025",
+      "type": "location",
+      "event": "Pokémon GO City Safari",
+      "location": "Mumbai",
+      "year": 2025,
+      "aliases": [
+        "City Safari Mumbai",
+        "Mumbai 2025",
+        "Pokémon GO City Safari",
+        "Mumbai",
+        "2025",
+        "citysafarimumbai"
+      ],
+      "pokemon": [
+        "Eevee (Explorer Hat)"
+      ],
+      "availability": "March 29th - 30th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "citysafarimumbai",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-citysafarisantiago",
+      "displayName": "City Safari Santiago",
+      "shortName": "Santiago 2025",
+      "type": "location",
+      "event": "Pokémon GO City Safari",
+      "location": "Santiago",
+      "year": 2025,
+      "aliases": [
+        "City Safari Santiago",
+        "Santiago 2025",
+        "Pokémon GO City Safari",
+        "Santiago",
+        "2025",
+        "citysafarisantiago"
+      ],
+      "pokemon": [
+        "Eevee (Explorer Hat)"
+      ],
+      "availability": "March 29th - 30th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "citysafarisantiago",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-citysafarisingapore",
+      "displayName": "City Safari Singapore",
+      "shortName": "Singapore 2025",
+      "type": "location",
+      "event": "Pokémon GO City Safari",
+      "location": "Singapore",
+      "year": 2025,
+      "aliases": [
+        "City Safari Singapore",
+        "Singapore 2025",
+        "Pokémon GO City Safari",
+        "Singapore",
+        "2025",
+        "citysafarisingapore"
+      ],
+      "pokemon": [
+        "Eevee (Explorer Hat)"
+      ],
+      "availability": "March 29th - 30th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "citysafarisingapore",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-citysafarisydney",
+      "displayName": "City Safari Sydney",
+      "shortName": "Sydney 2025",
+      "type": "location",
+      "event": "Pokémon GO City Safari",
+      "location": "Sydney",
+      "year": 2025,
+      "aliases": [
+        "City Safari Sydney",
+        "Sydney 2025",
+        "Pokémon GO City Safari",
+        "Sydney",
+        "2025",
+        "citysafarisydney"
+      ],
+      "pokemon": [
+        "Eevee (Explorer Hat)"
+      ],
+      "availability": "December 14th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "citysafarisydney",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-citysafarivalencia",
+      "displayName": "City Safari Valencia",
+      "shortName": "Valencia 2025",
+      "type": "location",
+      "event": "Pokémon GO City Safari",
+      "location": "Valencia",
+      "year": 2025,
+      "aliases": [
+        "City Safari Valencia",
+        "Valencia 2025",
+        "Pokémon GO City Safari",
+        "Valencia",
+        "2025",
+        "citysafarivalencia"
+      ],
+      "pokemon": [
+        "Eevee (Explorer Hat)"
+      ],
+      "availability": "September 13th-14th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "citysafarivalencia",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-citysafarivancouver",
+      "displayName": "City Safari Vancouver",
+      "shortName": "Vancouver 2025",
+      "type": "location",
+      "event": "Pokémon GO City Safari",
+      "location": "Vancouver",
+      "year": 2025,
+      "aliases": [
+        "City Safari Vancouver",
+        "Vancouver 2025",
+        "Pokémon GO City Safari",
+        "Vancouver",
+        "2025",
+        "citysafarivancouver"
+      ],
+      "pokemon": [
+        "Eevee (Explorer Hat)"
+      ],
+      "availability": "September 13th-14th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "citysafarivancouver",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-clevelandguardians",
+      "displayName": "Cleveland Guardians",
+      "shortName": "Cleveland Guardians 2025",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "Cleveland Guardians",
+        "Cleveland Guardians 2025",
+        "2025",
+        "clevelandguardians"
+      ],
+      "pokemon": [
+        "Pikachu"
+      ],
+      "availability": "August 14th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "clevelandguardians",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-expo2025-osaka",
+      "displayName": "Expo 2025 - Osaka",
+      "shortName": "Expo 2025 - Osaka",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "Expo 2025 - Osaka",
+        "2025",
+        "expo2025 osaka"
+      ],
+      "pokemon": [
+        "Pikachu"
+      ],
+      "availability": "April 13th - October 13th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "expo2025-osaka",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-expo2025-osaka2",
+      "displayName": "Expo 2025 - Osaka 2",
+      "shortName": "Expo 2025 - Osaka 2",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "Expo 2025 - Osaka 2",
+        "2025",
+        "expo2025 osaka2"
+      ],
+      "pokemon": [
+        "Bulbasaur",
+        "Charmander",
+        "Squirtle"
+      ],
+      "availability": "April 13th - October 13th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "expo2025-osaka2",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-gofest2025jerseycity",
+      "displayName": "GO Fest 2025 Jersey City",
+      "shortName": "Jersey City 2025",
+      "type": "location",
+      "event": "Pokémon GO Fest 2025",
+      "location": "Jersey City",
+      "year": 2025,
+      "aliases": [
+        "GO Fest 2025 Jersey City",
+        "Jersey City 2025",
+        "Pokémon GO Fest 2025",
+        "Jersey City",
+        "2025",
+        "gofest2025jerseycity",
+        "Pokémon GO Fest"
+      ],
+      "pokemon": [
+        "Cinderace",
+        "Zacian",
+        "Zamazenta"
+      ],
+      "availability": "June 6th - June 8th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "gofest2025jerseycity",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-gofest2025osaka",
+      "displayName": "GO Fest 2025 Osaka",
+      "shortName": "Osaka 2025",
+      "type": "location",
+      "event": "Pokémon GO Fest 2025",
+      "location": "Osaka",
+      "year": 2025,
+      "aliases": [
+        "GO Fest 2025 Osaka",
+        "Osaka 2025",
+        "Pokémon GO Fest 2025",
+        "Osaka",
+        "2025",
+        "gofest2025osaka",
+        "Pokémon GO Fest"
+      ],
+      "pokemon": [
+        "Rillaboom",
+        "Zacian",
+        "Zamazenta"
+      ],
+      "availability": "May 29th - June 1st 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "gofest2025osaka",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-gofest2025paris",
+      "displayName": "GO Fest 2025 Paris",
+      "shortName": "Paris 2025",
+      "type": "location",
+      "event": "Pokémon GO Fest 2025",
+      "location": "Paris",
+      "year": 2025,
+      "aliases": [
+        "GO Fest 2025 Paris",
+        "Paris 2025",
+        "Pokémon GO Fest 2025",
+        "Paris",
+        "2025",
+        "gofest2025paris",
+        "Pokémon GO Fest"
+      ],
+      "pokemon": [
+        "Inteleon",
+        "Zacian",
+        "Zamazenta",
+        "Charmander"
+      ],
+      "availability": "June 13th - June 15th 2025 September 13th-14th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "gofest2025paris",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-gotournewtaipeicity",
+      "displayName": "GO Tour New Taipei City",
+      "shortName": "New Taipei City 2025",
+      "type": "location",
+      "event": "Pokémon GO Tour",
+      "location": "New Taipei City",
+      "year": 2025,
+      "aliases": [
+        "GO Tour New Taipei City",
+        "New Taipei City 2025",
+        "Pokémon GO Tour",
+        "New Taipei City",
+        "2025",
+        "gotournewtaipeicity"
+      ],
+      "pokemon": [
+        "Reshiram",
+        "Zekrom",
+        "Kyurem"
+      ],
+      "availability": "February 21st - 23rd 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "gotournewtaipeicity",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-gotourunovalosangeles",
+      "displayName": "GO Tour Unova Los Angeles",
+      "shortName": "Unova Los Angeles 2025",
+      "type": "location",
+      "event": "Pokémon GO Tour",
+      "location": "Unova Los Angeles",
+      "year": 2025,
+      "aliases": [
+        "GO Tour Unova Los Angeles",
+        "Unova Los Angeles 2025",
+        "Pokémon GO Tour",
+        "Unova Los Angeles",
+        "2025",
+        "gotourunovalosangeles"
+      ],
+      "pokemon": [
+        "Reshiram",
+        "Zekrom",
+        "Kyurem"
+      ],
+      "availability": "February 21st - 23rd 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "gotourunovalosangeles",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-gowildareanagasaki",
+      "displayName": "GO Wild Area Nagasaki",
+      "shortName": "Nagasaki 2025",
+      "type": "location",
+      "event": "Pokémon GO Wild Area",
+      "location": "Nagasaki",
+      "year": 2025,
+      "aliases": [
+        "GO Wild Area Nagasaki",
+        "Nagasaki 2025",
+        "Pokémon GO Wild Area",
+        "Nagasaki",
+        "2025",
+        "gowildareanagasaki"
+      ],
+      "pokemon": [
+        "Cresselia",
+        "Darkrai",
+        "Bewear (Wilderness Cape)",
+        "Grimmsnarl",
+        "Ampharos"
+      ],
+      "availability": "November 7th - 9th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "gowildareanagasaki",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-jangheungwaterfestival",
+      "displayName": "Jangheung Water Festival",
+      "shortName": "Jangheung Water Festival 2025",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "Jangheung Water Festival",
+        "Jangheung Water Festival 2025",
+        "2025",
+        "jangheungwaterfestival"
+      ],
+      "pokemon": [
+        "Pikachu (Summer Style)",
+        "Lapras (Scarf)",
+        "Deerling (Summer Form)"
+      ],
+      "availability": "July 28th - August 3rd 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "jangheungwaterfestival",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-lottegiants",
+      "displayName": "Lotte Giants",
+      "shortName": "Lotte Giants 2025",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "Lotte Giants",
+        "Lotte Giants 2025",
+        "2025",
+        "lottegiants"
+      ],
+      "pokemon": [
+        "Pikachu"
+      ],
+      "availability": "June 19th - June 21st 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "lottegiants",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-megaevolutionparis",
+      "displayName": "Mega Evolution Paris",
+      "shortName": "Mega Evolution Paris 2025",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "Mega Evolution Paris",
+        "Mega Evolution Paris 2025",
+        "2025",
+        "megaevolutionparis"
+      ],
+      "pokemon": [
+        "Charmander"
+      ],
+      "availability": "September 13th-14th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "megaevolutionparis",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-megaevolutionparis2",
+      "displayName": "Mega Evolution Paris 2",
+      "shortName": "Mega Evolution Paris 2 2025",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "Mega Evolution Paris 2",
+        "Mega Evolution Paris 2 2025",
+        "2025",
+        "megaevolutionparis2"
+      ],
+      "pokemon": [
+        "Charmander"
+      ],
+      "availability": "September 13th-14th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "megaevolutionparis2",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-miamimarlins",
+      "displayName": "Miami Marlins",
+      "shortName": "Miami Marlins 2025",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "Miami Marlins",
+        "Miami Marlins 2025",
+        "2025",
+        "miamimarlins"
+      ],
+      "pokemon": [
+        "Pikachu"
+      ],
+      "availability": "July 18th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "miamimarlins",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-milwaukeebrewers",
+      "displayName": "Milwaukee Brewers",
+      "shortName": "Milwaukee Brewers 2025",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "Milwaukee Brewers",
+        "Milwaukee Brewers 2025",
+        "2025",
+        "milwaukeebrewers"
+      ],
+      "pokemon": [
+        "Pikachu"
+      ],
+      "availability": "July 25th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "milwaukeebrewers",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-minnesotatwins",
+      "displayName": "Minnesota Twins",
+      "shortName": "Minnesota Twins 2025",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "Minnesota Twins",
+        "Minnesota Twins 2025",
+        "2025",
+        "minnesotatwins"
+      ],
+      "pokemon": [
+        "Pikachu"
+      ],
+      "availability": "August 31st 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "minnesotatwins",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-newyorkmets",
+      "displayName": "New York Mets",
+      "shortName": "New York Mets 2025",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "New York Mets",
+        "New York Mets 2025",
+        "2025",
+        "newyorkmets"
+      ],
+      "pokemon": [
+        "Pikachu"
+      ],
+      "availability": "August 25th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "newyorkmets",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokelidfukuoka",
+      "displayName": "Pokelid Fukuoka",
+      "shortName": "Pokelid Fukuoka 2025",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "Pokelid Fukuoka",
+        "Pokelid Fukuoka 2025",
+        "2025",
+        "pokelidfukuoka"
+      ],
+      "pokemon": [
+        "Pikachu"
+      ],
+      "availability": "November 7th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokelidfukuoka",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokelidkagoshima",
+      "displayName": "Pokelid Kagoshima",
+      "shortName": "Pokelid Kagoshima 2025",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "Pokelid Kagoshima",
+        "Pokelid Kagoshima 2025",
+        "2025",
+        "pokelidkagoshima"
+      ],
+      "pokemon": [
+        "Pikachu"
+      ],
+      "availability": "November 7th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokelidkagoshima",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokelidmiyazaki",
+      "displayName": "Pokelid Miyazaki",
+      "shortName": "Pokelid Miyazaki 2025",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "Pokelid Miyazaki",
+        "Pokelid Miyazaki 2025",
+        "2025",
+        "pokelidmiyazaki"
+      ],
+      "pokemon": [
+        "Pikachu"
+      ],
+      "availability": "November 7th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokelidmiyazaki",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokelidnagasaki",
+      "displayName": "Pokelid Nagasaki",
+      "shortName": "Pokelid Nagasaki 2025",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "Pokelid Nagasaki",
+        "Pokelid Nagasaki 2025",
+        "2025",
+        "pokelidnagasaki"
+      ],
+      "pokemon": [
+        "Pikachu",
+        "Ampharos"
+      ],
+      "availability": "November 7th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokelidnagasaki",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokelidokinawa",
+      "displayName": "Pokelid Okinawa",
+      "shortName": "Pokelid Okinawa 2025",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "Pokelid Okinawa",
+        "Pokelid Okinawa 2025",
+        "2025",
+        "pokelidokinawa"
+      ],
+      "pokemon": [
+        "Pikachu"
+      ],
+      "availability": "November 7th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokelidokinawa",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokelidsaga",
+      "displayName": "Pokelid Saga",
+      "shortName": "Pokelid Saga 2025",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "Pokelid Saga",
+        "Pokelid Saga 2025",
+        "2025",
+        "pokelidsaga"
+      ],
+      "pokemon": [
+        "Pikachu"
+      ],
+      "availability": "November 7th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokelidsaga",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pokemongoatjejuisland",
+      "displayName": "Pokémon GO at Jeju Island",
+      "shortName": "at Jeju Island 2025",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "Pokémon GO at Jeju Island",
+        "at Jeju Island 2025",
+        "2025",
+        "pokemongoatjejuisland"
+      ],
+      "pokemon": [
+        "Pikachu (Blue Shirt (Citrus))"
+      ],
+      "availability": "October 2nd - 26th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokemongoatjejuisland",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-roadtrip2025berlin",
+      "displayName": "Road Trip 2025 Berlin",
+      "shortName": "Road Trip 2025 Berlin",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "Road Trip 2025 Berlin",
+        "2025",
+        "roadtrip2025berlin"
+      ],
+      "pokemon": [
+        "Pikachu (Summer Style)"
+      ],
+      "availability": "August 9th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "roadtrip2025berlin",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-roadtrip2025cologne",
+      "displayName": "Road Trip 2025 Cologne",
+      "shortName": "Road Trip 2025 Cologne",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "Road Trip 2025 Cologne",
+        "2025",
+        "roadtrip2025cologne"
+      ],
+      "pokemon": [
+        "Pikachu (Summer Style)"
+      ],
+      "availability": "August 20th - 24th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "roadtrip2025cologne",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-roadtrip2025london",
+      "displayName": "Road Trip 2025 London",
+      "shortName": "Road Trip 2025 London",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "Road Trip 2025 London",
+        "2025",
+        "roadtrip2025london"
+      ],
+      "pokemon": [
+        "Pikachu (Summer Style)"
+      ],
+      "availability": "July 19th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "roadtrip2025london",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-roadtrip2025manchester",
+      "displayName": "Road Trip 2025 Manchester",
+      "shortName": "Road Trip 2025 Manchester",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "Road Trip 2025 Manchester",
+        "2025",
+        "roadtrip2025manchester"
+      ],
+      "pokemon": [
+        "Pikachu (Summer Style)"
+      ],
+      "availability": "July 16th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "roadtrip2025manchester",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-roadtrip2025paris",
+      "displayName": "Road Trip 2025 Paris",
+      "shortName": "Road Trip 2025 Paris",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "Road Trip 2025 Paris",
+        "2025",
+        "roadtrip2025paris"
+      ],
+      "pokemon": [
+        "Pikachu (Summer Style)"
+      ],
+      "availability": "July 26th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "roadtrip2025paris",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-roadtrip2025thehague",
+      "displayName": "Road Trip 2025 The Hague",
+      "shortName": "Road Trip 2025 The Hague",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "Road Trip 2025 The Hague",
+        "2025",
+        "roadtrip2025thehague"
+      ],
+      "pokemon": [
+        "Pikachu (Summer Style)"
+      ],
+      "availability": "August 16th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "roadtrip2025thehague",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-roadtrip2025valencia",
+      "displayName": "Road Trip 2025 Valencia",
+      "shortName": "Road Trip 2025 Valencia",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "Road Trip 2025 Valencia",
+        "2025",
+        "roadtrip2025valencia"
+      ],
+      "pokemon": [
+        "Pikachu (Summer Style)"
+      ],
+      "availability": "August 2nd 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "roadtrip2025valencia",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-sanfranciscogiants",
+      "displayName": "San Francisco Giants",
+      "shortName": "San Francisco Giants 2025",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "San Francisco Giants",
+        "San Francisco Giants 2025",
+        "2025",
+        "sanfranciscogiants"
+      ],
+      "pokemon": [
+        "Pikachu"
+      ],
+      "availability": "August 29th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "sanfranciscogiants",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-seattlemariners",
+      "displayName": "Seattle Mariners",
+      "shortName": "Seattle Mariners 2025",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "Seattle Mariners",
+        "Seattle Mariners 2025",
+        "2025",
+        "seattlemariners"
+      ],
+      "pokemon": [
+        "Pikachu"
+      ],
+      "availability": "July 2nd 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "seattlemariners",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-springblossomfestival",
+      "displayName": "Spring Blossom Festival",
+      "shortName": "Spring Blossom Festival 2025",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "Spring Blossom Festival",
+        "Spring Blossom Festival 2025",
+        "2025",
+        "springblossomfestival"
+      ],
+      "pokemon": [
+        "Pikachu (Flower Hat)",
+        "Deerling"
+      ],
+      "availability": "March 30th - April 8th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "springblossomfestival",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-suitacity",
+      "displayName": "Suita City",
+      "shortName": "Suita City 2025",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "Suita City",
+        "Suita City 2025",
+        "2025",
+        "suitacity"
+      ],
+      "pokemon": [
+        "Pikachu"
+      ],
+      "availability": "May 29th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "suitacity",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-taipeichildren",
+      "displayName": "Taipei Children's Amusement Park",
+      "shortName": "Taipei Children's Amusement Park…",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "Taipei Children's Amusement Park",
+        "Taipei Children's Amusement Park…",
+        "2025",
+        "taipeichildren"
+      ],
+      "pokemon": [
+        "Lapras (Scarf)"
+      ],
+      "availability": "October 21st - November 16th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "taipeichildren",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-tampabayrays",
+      "displayName": "Tampa Bay Rays",
+      "shortName": "Tampa Bay Rays 2025",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "Tampa Bay Rays",
+        "Tampa Bay Rays 2025",
+        "2025",
+        "tampabayrays"
+      ],
+      "pokemon": [
+        "Pikachu"
+      ],
+      "availability": "July 20th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "tampabayrays",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-texasrangers",
+      "displayName": "Texas Rangers",
+      "shortName": "Texas Rangers 2025",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "Texas Rangers",
+        "Texas Rangers 2025",
+        "2025",
+        "texasrangers"
+      ],
+      "pokemon": [
+        "Pikachu"
+      ],
+      "availability": "September 7th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "texasrangers",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-washingtonnationals",
+      "displayName": "Washington Nationals",
+      "shortName": "Washington Nationals 2025",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "Washington Nationals",
+        "Washington Nationals 2025",
+        "2025",
+        "washingtonnationals"
+      ],
+      "pokemon": [
+        "Pikachu (Summer Style)"
+      ],
+      "availability": "August 5th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "washingtonnationals",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-2024pokemonworldchampionships",
+      "displayName": "2024 Pokémon World Championships",
+      "shortName": "2024 Pokémon World Championships",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2024,
+      "aliases": [
+        "2024 Pokémon World Championships",
+        "2024",
+        "2024pokemonworldchampionships",
+        "Worlds",
+        "WCS"
+      ],
+      "pokemon": [
+        "Pikachu (World Championships 2024)"
+      ],
+      "availability": "August 16th - 18th 2024",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "2024pokemonworldchampionships",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-airadventuresbali",
+      "displayName": "Air Adventures Bali",
+      "shortName": "Bali 2024",
+      "type": "location",
+      "event": "Pokémon Air Adventures",
+      "location": "Bali",
+      "year": 2024,
+      "aliases": [
+        "Air Adventures Bali",
+        "Bali 2024",
+        "Pokémon Air Adventures",
+        "Bali",
+        "2024",
+        "airadventuresbali"
+      ],
+      "pokemon": [
+        "Latias",
+        "Latios"
+      ],
+      "availability": "March 2nd - 3rd 2024",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "airadventuresbali",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-airadventuresjakarta",
+      "displayName": "Air Adventures Jakarta",
+      "shortName": "Jakarta 2024",
+      "type": "location",
+      "event": "Pokémon Air Adventures",
+      "location": "Jakarta",
+      "year": 2024,
+      "aliases": [
+        "Air Adventures Jakarta",
+        "Jakarta 2024",
+        "Pokémon Air Adventures",
+        "Jakarta",
+        "2024",
+        "airadventuresjakarta"
+      ],
+      "pokemon": [
+        "Latias",
+        "Latios",
+        "Eevee (Explorer Hat)"
+      ],
+      "availability": "September 21st - 22nd 2024",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "airadventuresjakarta",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-airadventuressurabaya",
+      "displayName": "Air Adventures Surabaya",
+      "shortName": "Surabaya 2024",
+      "type": "location",
+      "event": "Pokémon Air Adventures",
+      "location": "Surabaya",
+      "year": 2024,
+      "aliases": [
+        "Air Adventures Surabaya",
+        "Surabaya 2024",
+        "Pokémon Air Adventures",
+        "Surabaya",
+        "2024",
+        "airadventuressurabaya"
+      ],
+      "pokemon": [
+        "Latias",
+        "Latios"
+      ],
+      "availability": "May 11th - 12th 2024",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "airadventuressurabaya",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-airadventuresyogyakarta",
+      "displayName": "Air Adventures Yogyakarta",
+      "shortName": "Yogyakarta 2024",
+      "type": "location",
+      "event": "Pokémon Air Adventures",
+      "location": "Yogyakarta",
+      "year": 2024,
+      "aliases": [
+        "Air Adventures Yogyakarta",
+        "Yogyakarta 2024",
+        "Pokémon Air Adventures",
+        "Yogyakarta",
+        "2024",
+        "airadventuresyogyakarta"
+      ],
+      "pokemon": [
+        "Latias",
+        "Latios"
+      ],
+      "availability": "August 24th - 25th 2024",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "airadventuresyogyakarta",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-citysafarihongkong",
+      "displayName": "City Safari Hong Kong",
+      "shortName": "Hong Kong 2024",
+      "type": "location",
+      "event": "Pokémon GO City Safari",
+      "location": "Hong Kong",
+      "year": 2024,
+      "aliases": [
+        "City Safari Hong Kong",
+        "Hong Kong 2024",
+        "Pokémon GO City Safari",
+        "Hong Kong",
+        "2024",
+        "citysafarihongkong"
+      ],
+      "pokemon": [
+        "Eevee (Explorer Hat)"
+      ],
+      "availability": "December 7th - 8th 2024",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "citysafarihongkong",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-citysafarisaopaulo",
+      "displayName": "City Safari Sao Paulo",
+      "shortName": "Sao Paulo 2024",
+      "type": "location",
+      "event": "Pokémon GO City Safari",
+      "location": "Sao Paulo",
+      "year": 2024,
+      "aliases": [
+        "City Safari Sao Paulo",
+        "Sao Paulo 2024",
+        "Pokémon GO City Safari",
+        "Sao Paulo",
+        "2024",
+        "citysafarisaopaulo"
+      ],
+      "pokemon": [
+        "Eevee (Explorer Hat)"
+      ],
+      "availability": "December 7th - 8th 2024",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "citysafarisaopaulo",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-citysafaritainan",
+      "displayName": "City Safari Tainan",
+      "shortName": "Tainan 2024",
+      "type": "location",
+      "event": "Pokémon GO City Safari",
+      "location": "Tainan",
+      "year": 2024,
+      "aliases": [
+        "City Safari Tainan",
+        "Tainan 2024",
+        "Pokémon GO City Safari",
+        "Tainan",
+        "2024",
+        "citysafaritainan"
+      ],
+      "pokemon": [
+        "Eevee (Explorer Hat)"
+      ],
+      "availability": "May 11th - 12th 2024",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "citysafaritainan",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-gofestmadrid",
+      "displayName": "GO Fest Madrid",
+      "shortName": "Madrid 2024",
+      "type": "location",
+      "event": "Pokémon GO Fest",
+      "location": "Madrid",
+      "year": 2024,
+      "aliases": [
+        "GO Fest Madrid",
+        "Madrid 2024",
+        "Pokémon GO Fest",
+        "Madrid",
+        "2024",
+        "gofestmadrid"
+      ],
+      "pokemon": [
+        "Solgaleo",
+        "Lunala",
+        "Nihilego",
+        "Kartana",
+        "Guzzlord",
+        "Necrozma",
+        "Stakataka",
+        "Blacephalon"
+      ],
+      "availability": "June 14th - 16th 2024",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "gofestmadrid",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-gofestnewyorkcity2024",
+      "displayName": "GO Fest New York City 2024",
+      "shortName": "New York City 2024",
+      "type": "location",
+      "event": "Pokémon GO Fest 2024",
+      "location": "New York City",
+      "year": 2024,
+      "aliases": [
+        "GO Fest New York City 2024",
+        "New York City 2024",
+        "Pokémon GO Fest 2024",
+        "New York City",
+        "2024",
+        "gofestnewyorkcity2024",
+        "NYC",
+        "New York",
+        "Pokémon GO Fest"
+      ],
+      "pokemon": [
+        "Solgaleo",
+        "Lunala",
+        "Nihilego",
+        "Buzzwole",
+        "Kartana",
+        "Guzzlord",
+        "Necrozma",
+        "Blacephalon"
+      ],
+      "availability": "July 5th - 7th 2024",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "gofestnewyorkcity2024",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-gofestsendai",
+      "displayName": "GO Fest Sendai",
+      "shortName": "Sendai 2024",
+      "type": "location",
+      "event": "Pokémon GO Fest",
+      "location": "Sendai",
+      "year": 2024,
+      "aliases": [
+        "GO Fest Sendai",
+        "Sendai 2024",
+        "Pokémon GO Fest",
+        "Sendai",
+        "2024",
+        "gofestsendai"
+      ],
+      "pokemon": [
+        "Solgaleo",
+        "Lunala",
+        "Nihilego",
+        "Xurkitree",
+        "Kartana",
+        "Guzzlord",
+        "Necrozma",
+        "Stakataka"
+      ],
+      "availability": "May 30th 2024 - June 2nd 2024",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "gofestsendai",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-gotourlosangeles",
+      "displayName": "GO Tour Los Angeles",
+      "shortName": "Los Angeles 2024",
+      "type": "location",
+      "event": "Pokémon GO Tour",
+      "location": "Los Angeles",
+      "year": 2024,
+      "aliases": [
+        "GO Tour Los Angeles",
+        "Los Angeles 2024",
+        "Pokémon GO Tour",
+        "Los Angeles",
+        "2024",
+        "gotourlosangeles"
+      ],
+      "pokemon": [
+        "Dialga (Origin Forme)",
+        "Palkia (Origin Forme)",
+        "Dialga",
+        "Palkia"
+      ],
+      "availability": "February 17th - 18th 2024",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "gotourlosangeles",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-gowildareafukuoka",
+      "displayName": "GO Wild Area Fukuoka",
+      "shortName": "Fukuoka 2024",
+      "type": "location",
+      "event": "Pokémon GO Wild Area",
+      "location": "Fukuoka",
+      "year": 2024,
+      "aliases": [
+        "GO Wild Area Fukuoka",
+        "Fukuoka 2024",
+        "Pokémon GO Wild Area",
+        "Fukuoka",
+        "2024",
+        "gowildareafukuoka"
+      ],
+      "pokemon": [
+        "Dialga (Origin Forme)",
+        "Palkia (Origin Forme)",
+        "Toxtricity",
+        "Toxtricity (Low Key Form)"
+      ],
+      "availability": "November 16th - 17th 2024",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "gowildareafukuoka",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-mlbmariners",
+      "displayName": "MLB Mariners",
+      "shortName": "MLB Mariners 2024",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2024,
+      "aliases": [
+        "MLB Mariners",
+        "MLB Mariners 2024",
+        "2024",
+        "mlbmariners"
+      ],
+      "pokemon": [
+        "Pikachu"
+      ],
+      "availability": "September 12th 2024",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "mlbmariners",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-mlbmarlins",
+      "displayName": "MLB Marlins",
+      "shortName": "MLB Marlins 2024",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2024,
+      "aliases": [
+        "MLB Marlins",
+        "MLB Marlins 2024",
+        "2024",
+        "mlbmarlins"
+      ],
+      "pokemon": [
+        "Pikachu"
+      ],
+      "availability": "September 7th 2024",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "mlbmarlins",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-safarizoneincheon",
+      "displayName": "Safari Zone Incheon",
+      "shortName": "Safari Zone Incheon 2024",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": 2024,
+      "aliases": [
+        "Safari Zone Incheon",
+        "Safari Zone Incheon 2024",
+        "2024",
+        "safarizoneincheon"
+      ],
+      "pokemon": [
+        "Pikachu (Safari)",
+        "Skiddo"
+      ],
+      "availability": "September 27th - 29th 2024",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "safarizoneincheon",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-airadventuresjejuisland",
+      "displayName": "Air Adventures Jeju Island",
+      "shortName": "Jeju Island 2023",
+      "type": "location",
+      "event": "Pokémon Air Adventures",
+      "location": "Jeju Island",
+      "year": 2023,
+      "aliases": [
+        "Air Adventures Jeju Island",
+        "Jeju Island 2023",
+        "Pokémon Air Adventures",
+        "Jeju Island",
+        "2023",
+        "airadventuresjejuisland"
+      ],
+      "pokemon": [
+        "Latias",
+        "Latios"
+      ],
+      "availability": "July 28th - 30th 2023",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "airadventuresjejuisland",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-citysafaribarcelona",
+      "displayName": "City Safari Barcelona",
+      "shortName": "Barcelona 2023",
+      "type": "location",
+      "event": "Pokémon GO City Safari",
+      "location": "Barcelona",
+      "year": 2023,
+      "aliases": [
+        "City Safari Barcelona",
+        "Barcelona 2023",
+        "Pokémon GO City Safari",
+        "Barcelona",
+        "2023",
+        "citysafaribarcelona"
+      ],
+      "pokemon": [
+        "Eevee (Explorer Hat)"
+      ],
+      "availability": "October 13th - 14th 2023",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "citysafaribarcelona",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-citysafarimexicocity",
+      "displayName": "City Safari Mexico City",
+      "shortName": "Mexico City 2023",
+      "type": "location",
+      "event": "Pokémon GO City Safari",
+      "location": "Mexico City",
+      "year": 2023,
+      "aliases": [
+        "City Safari Mexico City",
+        "Mexico City 2023",
+        "Pokémon GO City Safari",
+        "Mexico City",
+        "2023",
+        "citysafarimexicocity"
+      ],
+      "pokemon": [
+        "Eevee (Explorer Hat)"
+      ],
+      "availability": "November 4th - 5th 2023",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "citysafarimexicocity",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-citysafariseoul",
+      "displayName": "City Safari Seoul",
+      "shortName": "Seoul 2023",
+      "type": "location",
+      "event": "Pokémon GO City Safari",
+      "location": "Seoul",
+      "year": 2023,
+      "aliases": [
+        "City Safari Seoul",
+        "Seoul 2023",
+        "Pokémon GO City Safari",
+        "Seoul",
+        "2023",
+        "citysafariseoul"
+      ],
+      "pokemon": [
+        "Eevee (Explorer Hat)"
+      ],
+      "availability": "October 7th - 8th 2023",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "citysafariseoul",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-gofestlondon",
+      "displayName": "GO Fest London",
+      "shortName": "London 2023",
+      "type": "location",
+      "event": "Pokémon GO Fest",
+      "location": "London",
+      "year": 2023,
+      "aliases": [
+        "GO Fest London",
+        "London 2023",
+        "Pokémon GO Fest",
+        "London",
+        "2023",
+        "gofestlondon"
+      ],
+      "pokemon": [
+        "Rayquaza",
+        "Cresselia",
+        "Xerneas",
+        "Yveltal"
+      ],
+      "availability": "August 4th - August 6th 2023",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "gofestlondon",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-gofestnewyorkcity",
+      "displayName": "GO Fest New York City",
+      "shortName": "New York City 2023",
+      "type": "location",
+      "event": "Pokémon GO Fest",
+      "location": "New York City",
+      "year": 2023,
+      "aliases": [
+        "GO Fest New York City",
+        "New York City 2023",
+        "Pokémon GO Fest",
+        "New York City",
+        "2023",
+        "gofestnewyorkcity",
+        "NYC",
+        "New York"
+      ],
+      "pokemon": [
+        "Rayquaza",
+        "Cresselia",
+        "Xerneas",
+        "Yveltal"
+      ],
+      "availability": "August 18th - August 20th 2023",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "gofestnewyorkcity",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-gofestosaka",
+      "displayName": "GO Fest Osaka",
+      "shortName": "Osaka 2023",
+      "type": "location",
+      "event": "Pokémon GO Fest",
+      "location": "Osaka",
+      "year": 2023,
+      "aliases": [
+        "GO Fest Osaka",
+        "Osaka 2023",
+        "Pokémon GO Fest",
+        "Osaka",
+        "2023",
+        "gofestosaka"
+      ],
+      "pokemon": [
+        "Rayquaza",
+        "Cresselia",
+        "Xerneas",
+        "Yveltal"
+      ],
+      "availability": "August 4th - August 6th 2023",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "gofestosaka",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-gotourlasvegas",
+      "displayName": "GO Tour Las Vegas",
+      "shortName": "Las Vegas 2023",
+      "type": "location",
+      "event": "Pokémon GO Tour",
+      "location": "Las Vegas",
+      "year": 2023,
+      "aliases": [
+        "GO Tour Las Vegas",
+        "Las Vegas 2023",
+        "Pokémon GO Tour",
+        "Las Vegas",
+        "2023",
+        "gotourlasvegas"
+      ],
+      "pokemon": [
+        "Kyogre",
+        "Groudon"
+      ],
+      "availability": "February 18th - 19th 2023",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "gotourlasvegas",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-busanfireworksfestival",
+      "displayName": "Busan Fireworks Festival",
+      "shortName": "Busan Fireworks Festival",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": null,
+      "aliases": [
+        "Busan Fireworks Festival",
+        "busanfireworksfestival"
+      ],
+      "pokemon": [],
+      "availability": "??",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "busanfireworksfestival",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-carfreeday",
+      "displayName": "Car Free Day",
+      "shortName": "Car Free Day",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": null,
+      "aliases": [
+        "Car Free Day",
+        "carfreeday"
+      ],
+      "pokemon": [
+        "Pikachu (Party Hat 2020)"
+      ],
+      "availability": "January 10th - February 211st",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "carfreeday",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-nflcardinals",
+      "displayName": "NFL Cardinals",
+      "shortName": "NFL Cardinals",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": null,
+      "aliases": [
+        "NFL Cardinals",
+        "nflcardinals"
+      ],
+      "pokemon": [
+        "Pikachu"
+      ],
+      "availability": "December 21st",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "nflcardinals",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "location-pyeongchangwinterfestival",
+      "displayName": "Pyeongchang Winter Festival",
+      "shortName": "Pyeongchang Winter Festival",
+      "type": "location",
+      "event": null,
+      "location": null,
+      "year": null,
+      "aliases": [
+        "Pyeongchang Winter Festival",
+        "pyeongchangwinterfestival"
+      ],
+      "pokemon": [
+        "Pikachu (Beanie)",
+        "Deerling (Winter Form)"
+      ],
+      "availability": "January 19th - January 25th",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pyeongchangwinterfestival",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "special-10thanniversarycelebration",
+      "displayName": "10th Anniversary Celebration",
+      "shortName": "10th Anniversary Celebration 2026",
+      "type": "special",
+      "event": "10th Anniversary Celebration",
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "10th Anniversary Celebration",
+        "10th Anniversary Celebration 2026",
+        "2026",
+        "10thanniversarycelebration"
+      ],
+      "pokemon": [
+        "Mewtwo"
+      ],
+      "availability": "August 13th 2026 - September 4th 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "10thanniversarycelebration",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "special-communityday2026",
+      "displayName": "Community Day 2026",
+      "shortName": "Community Day 2026",
+      "type": "special",
+      "event": "Community Day 2026",
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "Community Day 2026",
+        "2026",
+        "communityday2026"
+      ],
+      "pokemon": [
+        "Piplup",
+        "Grookey"
+      ],
+      "availability": "January 2026 - December 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "communityday2026",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "special-gofest2026global",
+      "displayName": "GO Fest 2026 Global",
+      "shortName": "GO Fest 2026 Global",
+      "type": "special",
+      "event": "GO Fest 2026 Global",
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "GO Fest 2026 Global",
+        "2026",
+        "gofest2026global",
+        "Pokémon GO Fest"
+      ],
+      "pokemon": [],
+      "availability": "July 12th - 13th 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "gofest2026global",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "special-gofest2026mewtwo",
+      "displayName": "GO Fest 2026 Mewtwo",
+      "shortName": "GO Fest 2026 Mewtwo",
+      "type": "special",
+      "event": "GO Fest 2026 Mewtwo",
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "GO Fest 2026 Mewtwo",
+        "2026",
+        "gofest2026mewtwo",
+        "Pokémon GO Fest"
+      ],
+      "pokemon": [],
+      "availability": "July 12th - 13th 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "gofest2026mewtwo",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "special-gotour2026diamond",
+      "displayName": "GO Tour 2026 Diamond",
+      "shortName": "GO Tour 2026 Diamond",
+      "type": "special",
+      "event": "GO Tour 2026 Diamond",
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "GO Tour 2026 Diamond",
+        "2026",
+        "gotour2026diamond"
+      ],
+      "pokemon": [
+        "Pikachu (Lucas Hat)",
+        "Pikachu (Dawn Hat)",
+        "Pikachu (Rei's Cap)",
+        "Pikachu (Akari's Kerchief)",
+        "Dialga",
+        "Dialga (Origin Forme)"
+      ],
+      "availability": "February 23rd - February 27th 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "gotour2026diamond",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "special-gotour2026gold",
+      "displayName": "GO Tour 2026 Gold",
+      "shortName": "GO Tour 2026 Gold",
+      "type": "special",
+      "event": "GO Tour 2026 Gold",
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "GO Tour 2026 Gold",
+        "2026",
+        "gotour2026gold"
+      ],
+      "pokemon": [
+        "Pikachu (Ethan Hat)",
+        "Pikachu (Lyra Hat)",
+        "Ho-Oh"
+      ],
+      "availability": "February 23rd - February 27th 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "gotour2026gold",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "special-gotour2026mega",
+      "displayName": "GO Tour 2026 Mega",
+      "shortName": "GO Tour 2026 Mega",
+      "type": "special",
+      "event": "GO Tour 2026 Mega",
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "GO Tour 2026 Mega",
+        "2026",
+        "gotour2026mega"
+      ],
+      "pokemon": [
+        "Venusaur",
+        "Charizard",
+        "Blastoise",
+        "Pidgeot",
+        "Victreebel",
+        "Kangaskhan",
+        "Scizor",
+        "Heracross",
+        "Tyranitar",
+        "Sceptile",
+        "Blaziken",
+        "Swampert",
+        "Gardevoir",
+        "Absol",
+        "Salamence",
+        "Metagross",
+        "Latias",
+        "Latios",
+        "Garchomp",
+        "Lucario",
+        "Gallade",
+        "Malamar"
+      ],
+      "availability": "February 23rd - February 27th 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "gotour2026mega",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "special-gotour2026pearl",
+      "displayName": "GO Tour 2026 Pearl",
+      "shortName": "GO Tour 2026 Pearl",
+      "type": "special",
+      "event": "GO Tour 2026 Pearl",
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "GO Tour 2026 Pearl",
+        "2026",
+        "gotour2026pearl"
+      ],
+      "pokemon": [
+        "Pikachu (Lucas Hat)",
+        "Pikachu (Dawn Hat)",
+        "Pikachu (Rei's Cap)",
+        "Pikachu (Akari's Kerchief)",
+        "Palkia",
+        "Palkia (Origin Forme)"
+      ],
+      "availability": "February 23rd - February 27th 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "gotour2026pearl",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "special-gotour2026ruby",
+      "displayName": "GO Tour 2026 Ruby",
+      "shortName": "GO Tour 2026 Ruby",
+      "type": "special",
+      "event": "GO Tour 2026 Ruby",
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "GO Tour 2026 Ruby",
+        "2026",
+        "gotour2026ruby"
+      ],
+      "pokemon": [
+        "Pikachu (Brendan Hat)",
+        "Pikachu (May Bow)",
+        "Groudon"
+      ],
+      "availability": "February 23rd - February 27th 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "gotour2026ruby",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "special-gotour2026sapphire",
+      "displayName": "GO Tour 2026 Sapphire",
+      "shortName": "GO Tour 2026 Sapphire",
+      "type": "special",
+      "event": "GO Tour 2026 Sapphire",
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "GO Tour 2026 Sapphire",
+        "2026",
+        "gotour2026sapphire"
+      ],
+      "pokemon": [
+        "Pikachu (Brendan Hat)",
+        "Pikachu (May Bow)",
+        "Kyogre"
+      ],
+      "availability": "February 23rd - February 27th 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "gotour2026sapphire",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "special-gotour2026silver",
+      "displayName": "GO Tour 2026 Silver",
+      "shortName": "GO Tour 2026 Silver",
+      "type": "special",
+      "event": "GO Tour 2026 Silver",
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "GO Tour 2026 Silver",
+        "2026",
+        "gotour2026silver"
+      ],
+      "pokemon": [
+        "Pikachu (Ethan Hat)",
+        "Pikachu (Lyra Hat)",
+        "Lugia"
+      ],
+      "availability": "February 23rd - February 27th 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "gotour2026silver",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "special-gotour2026x",
+      "displayName": "GO Tour 2026 X",
+      "shortName": "GO Tour 2026 X",
+      "type": "special",
+      "event": "GO Tour 2026 X",
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "GO Tour 2026 X",
+        "2026",
+        "gotour2026x"
+      ],
+      "pokemon": [
+        "Pikachu (Calem Hat)",
+        "Pikachu (Serena Hat)",
+        "Honedge",
+        "Xerneas"
+      ],
+      "availability": "February 23rd - February 27th 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "gotour2026x",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "special-gotour2026y",
+      "displayName": "GO Tour 2026 Y",
+      "shortName": "GO Tour 2026 Y",
+      "type": "special",
+      "event": "GO Tour 2026 Y",
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "GO Tour 2026 Y",
+        "2026",
+        "gotour2026y"
+      ],
+      "pokemon": [
+        "Pikachu (Calem Hat)",
+        "Pikachu (Serena Hat)",
+        "Honedge",
+        "Yveltal"
+      ],
+      "availability": "February 23rd - February 27th 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "gotour2026y",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "special-legopokemon",
+      "displayName": "LEGO Pokémon",
+      "shortName": "LEGO Pokémon 2026",
+      "type": "special",
+      "event": "LEGO Pokémon",
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "LEGO Pokémon",
+        "LEGO Pokémon 2026",
+        "2026",
+        "legopokemon"
+      ],
+      "pokemon": [
+        "Pikachu"
+      ],
+      "availability": "June 12th - 14th 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "legopokemon",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "special-pokemongoarraia2026",
+      "displayName": "Pokémon GO Arraia 2026",
+      "shortName": "Arraia 2026",
+      "type": "special",
+      "event": "Pokémon GO Arraia 2026",
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "Pokémon GO Arraia 2026",
+        "Arraia 2026",
+        "2026",
+        "pokemongoarraia2026"
+      ],
+      "pokemon": [
+        "Tauros (Paldean Form - Aqua Breed)"
+      ],
+      "availability": "June 23rd - June 30th 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokemongoarraia2026",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "special-pokemonpokopia",
+      "displayName": "Pokémon Pokopia",
+      "shortName": "Pokopia 2026",
+      "type": "special",
+      "event": "Pokémon Pokopia",
+      "location": null,
+      "year": 2026,
+      "aliases": [
+        "Pokémon Pokopia",
+        "Pokopia 2026",
+        "2026",
+        "pokemonpokopia"
+      ],
+      "pokemon": [
+        "Ditto (Pokopia Hat)",
+        "Ditto (Pokopia Cap)",
+        "Lapras",
+        "Snorlax",
+        "Dragonite"
+      ],
+      "availability": "March 10th - March 16th 2026",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokemonpokopia",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "special-10thanniversary",
+      "displayName": "10th Anniversary",
+      "shortName": "10th Anniversary 2025",
+      "type": "special",
+      "event": "10th Anniversary",
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "10th Anniversary",
+        "10th Anniversary 2025",
+        "2025",
+        "10thanniversary"
+      ],
+      "pokemon": [
+        "Gimmighoul (Roaming Form (10th Anniversary Coin))"
+      ],
+      "availability": "July 4th - July 6th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "10thanniversary",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "special-9thanniversary",
+      "displayName": "9th Anniversary",
+      "shortName": "9th Anniversary 2025",
+      "type": "special",
+      "event": "9th Anniversary",
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "9th Anniversary",
+        "9th Anniversary 2025",
+        "2025",
+        "9thanniversary"
+      ],
+      "pokemon": [
+        "Gimmighoul (Roaming Form (9th Anniversary Coin))"
+      ],
+      "availability": "July 1st - July 6th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "9thanniversary",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "special-ancientsrecoveredregice",
+      "displayName": "Ancients Recovered Regice",
+      "shortName": "Ancients Recovered Regice 2025",
+      "type": "special",
+      "event": "Ancients Recovered Regice",
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "Ancients Recovered Regice",
+        "Ancients Recovered Regice 2025",
+        "2025",
+        "ancientsrecoveredregice"
+      ],
+      "pokemon": [
+        "Regice"
+      ],
+      "availability": "June 23rd - June 29th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "ancientsrecoveredregice",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "special-ancientsrecoveredregidrago",
+      "displayName": "Ancients Recovered Regidrago",
+      "shortName": "Ancients Recovered Regidrago 2025",
+      "type": "special",
+      "event": "Ancients Recovered Regidrago",
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "Ancients Recovered Regidrago",
+        "Ancients Recovered Regidrago 2025",
+        "2025",
+        "ancientsrecoveredregidrago"
+      ],
+      "pokemon": [
+        "Regidrago"
+      ],
+      "availability": "June 23rd - June 29th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "ancientsrecoveredregidrago",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "special-ancientsrecoveredregieleki",
+      "displayName": "Ancients Recovered Regieleki",
+      "shortName": "Ancients Recovered Regieleki 2025",
+      "type": "special",
+      "event": "Ancients Recovered Regieleki",
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "Ancients Recovered Regieleki",
+        "Ancients Recovered Regieleki 2025",
+        "2025",
+        "ancientsrecoveredregieleki"
+      ],
+      "pokemon": [
+        "Regieleki"
+      ],
+      "availability": "June 23rd - June 29th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "ancientsrecoveredregieleki",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "special-ancientsrecoveredregigigas",
+      "displayName": "Ancients Recovered Regigigas",
+      "shortName": "Ancients Recovered Regigigas 2025",
+      "type": "special",
+      "event": "Ancients Recovered Regigigas",
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "Ancients Recovered Regigigas",
+        "Ancients Recovered Regigigas 2025",
+        "2025",
+        "ancientsrecoveredregigigas"
+      ],
+      "pokemon": [
+        "Regigigas"
+      ],
+      "availability": "June 23rd - June 29th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "ancientsrecoveredregigigas",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "special-ancientsrecoveredregirock",
+      "displayName": "Ancients Recovered Regirock",
+      "shortName": "Ancients Recovered Regirock 2025",
+      "type": "special",
+      "event": "Ancients Recovered Regirock",
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "Ancients Recovered Regirock",
+        "Ancients Recovered Regirock 2025",
+        "2025",
+        "ancientsrecoveredregirock"
+      ],
+      "pokemon": [
+        "Regirock"
+      ],
+      "availability": "June 23rd - June 29th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "ancientsrecoveredregirock",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "special-ancientsrecoveredregisteel",
+      "displayName": "Ancients Recovered Registeel",
+      "shortName": "Ancients Recovered Registeel 2025",
+      "type": "special",
+      "event": "Ancients Recovered Registeel",
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "Ancients Recovered Registeel",
+        "Ancients Recovered Registeel 2025",
+        "2025",
+        "ancientsrecoveredregisteel"
+      ],
+      "pokemon": [
+        "Registeel"
+      ],
+      "availability": "June 23rd - June 29th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "ancientsrecoveredregisteel",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "special-darkskies",
+      "displayName": "Dark Skies",
+      "shortName": "Dark Skies 2025",
+      "type": "special",
+      "event": "Dark Skies",
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "Dark Skies",
+        "Dark Skies 2025",
+        "2025",
+        "darkskies"
+      ],
+      "pokemon": [
+        "Bulbasaur",
+        "Venusaur",
+        "Charmander",
+        "Charizard",
+        "Squirtle",
+        "Blastoise",
+        "Caterpie",
+        "Butterfree",
+        "Machop",
+        "Machamp",
+        "Gastly",
+        "Gengar",
+        "Krabby",
+        "Kingler",
+        "Chansey",
+        "Lapras",
+        "Omanyte",
+        "Kabuto",
+        "Snorlax",
+        "Articuno",
+        "Zapdos",
+        "Moltres",
+        "Shuckle",
+        "Raikou",
+        "Entei",
+        "Suicune",
+        "Sableye",
+        "Wailmer",
+        "Beldum",
+        "Latias",
+        "Latios",
+        "Pidove",
+        "Drilbur",
+        "Darumaka",
+        "Trubbish",
+        "Cryogonal",
+        "Grookey",
+        "Rillaboom",
+        "Scorbunny",
+        "Cinderace",
+        "Sobble",
+        "Inteleon",
+        "Skwovet",
+        "Rookidee",
+        "Wooloo",
+        "Toxel",
+        "Toxtricity (Amped Form)",
+        "Toxtricity",
+        "Hatenna",
+        "Falinks"
+      ],
+      "availability": "August 18th - 24th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "darkskies",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "special-delightfuldays",
+      "displayName": "Delightful Days",
+      "shortName": "Delightful Days 2025",
+      "type": "special",
+      "event": "Delightful Days",
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "Delightful Days",
+        "Delightful Days 2025",
+        "2025",
+        "delightfuldays"
+      ],
+      "pokemon": [
+        "Articuno",
+        "Jangmo-o",
+        "Eevee",
+        "Rookidee",
+        "Zapdos",
+        "Lapras (Scarf)",
+        "Quaxly",
+        "Rillaboom",
+        "Cinderace",
+        "Inteleon",
+        "Corviknight"
+      ],
+      "availability": "June - September 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "delightfuldays",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "special-dualdestiny",
+      "displayName": "Dual Destiny",
+      "shortName": "Dual Destiny 2025",
+      "type": "special",
+      "event": "Dual Destiny",
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "Dual Destiny",
+        "Dual Destiny 2025",
+        "2025",
+        "dualdestiny"
+      ],
+      "pokemon": [
+        "Sprigatito",
+        "Ralts",
+        "Karrablast",
+        "Shelmet"
+      ],
+      "availability": "January 5th 2025 January 25th 2025 February 9th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "dualdestiny",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "special-festivalofcolors",
+      "displayName": "Festival of Colors",
+      "shortName": "Festival of Colors 2025",
+      "type": "special",
+      "event": "Festival of Colors",
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "Festival of Colors",
+        "Festival of Colors 2025",
+        "2025",
+        "festivalofcolors"
+      ],
+      "pokemon": [
+        "Pikachu (Saree)",
+        "Pikachu (Batik Shirt)"
+      ],
+      "availability": "March 4th - March 8th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "festivalofcolors",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "special-gofest2025zacian",
+      "displayName": "GO Fest 2025 Zacian",
+      "shortName": "GO Fest 2025 Zacian",
+      "type": "special",
+      "event": "GO Fest 2025 Zacian",
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "GO Fest 2025 Zacian",
+        "2025",
+        "gofest2025zacian",
+        "Pokémon GO Fest"
+      ],
+      "pokemon": [
+        "Zacian"
+      ],
+      "availability": "June 29th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "gofest2025zacian",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "special-gofest2025zamazenta",
+      "displayName": "GO Fest 2025 Zamazenta",
+      "shortName": "GO Fest 2025 Zamazenta",
+      "type": "special",
+      "event": "GO Fest 2025 Zamazenta",
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "GO Fest 2025 Zamazenta",
+        "2025",
+        "gofest2025zamazenta",
+        "Pokémon GO Fest"
+      ],
+      "pokemon": [
+        "Zamazenta"
+      ],
+      "availability": "July 28th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "gofest2025zamazenta",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "special-gotourenigma",
+      "displayName": "GO Tour Enigma",
+      "shortName": "GO Tour Enigma 2025",
+      "type": "special",
+      "event": "GO Tour Enigma",
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "GO Tour Enigma",
+        "GO Tour Enigma 2025",
+        "2025",
+        "gotourenigma"
+      ],
+      "pokemon": [
+        "Purrloin",
+        "Pidove",
+        "Boldore",
+        "Woobat",
+        "Timburr",
+        "Tympole",
+        "Sandile",
+        "Darumaka",
+        "Darmanitan",
+        "Scraggy",
+        "Sigilyph",
+        "Joltik",
+        "Ferroseed",
+        "Klink"
+      ],
+      "availability": "February 21st - 23rd 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "gotourenigma",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "special-gotourunovablack",
+      "displayName": "GO Tour Unova Black",
+      "shortName": "GO Tour Unova Black 2025",
+      "type": "special",
+      "event": "GO Tour Unova Black",
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "GO Tour Unova Black",
+        "GO Tour Unova Black 2025",
+        "2025",
+        "gotourunovablack"
+      ],
+      "pokemon": [
+        "Snivy",
+        "Tepig",
+        "Oshawott",
+        "Cobalion",
+        "Terrakion",
+        "Virizion",
+        "Tornadus (Therian Forme)",
+        "Reshiram",
+        "Zekrom",
+        "Landorus (Therian Forme)",
+        "Kyurem",
+        "Genesect"
+      ],
+      "availability": "March 1st - 2nd 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "gotourunovablack",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "special-gotourunovablackwhite",
+      "displayName": "GO Tour Unova Black White",
+      "shortName": "GO Tour Unova Black White 2025",
+      "type": "special",
+      "event": "GO Tour Unova Black White",
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "GO Tour Unova Black White",
+        "GO Tour Unova Black White 2025",
+        "2025",
+        "gotourunovablackwhite"
+      ],
+      "pokemon": [
+        "Kyurem (Black Kyurem)",
+        "Kyurem (White Kyurem)"
+      ],
+      "availability": "March 1st - 2nd 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "gotourunovablackwhite",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "special-gotourunovawhite",
+      "displayName": "GO Tour Unova White",
+      "shortName": "GO Tour Unova White 2025",
+      "type": "special",
+      "event": "GO Tour Unova White",
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "GO Tour Unova White",
+        "GO Tour Unova White 2025",
+        "2025",
+        "gotourunovawhite"
+      ],
+      "pokemon": [
+        "Snivy",
+        "Tepig",
+        "Oshawott",
+        "Cobalion",
+        "Terrakion",
+        "Virizion",
+        "Thundurus (Therian Forme)",
+        "Reshiram",
+        "Zekrom",
+        "Landorus (Therian Forme)",
+        "Kyurem",
+        "Genesect"
+      ],
+      "availability": "March 1st - 2nd 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "gotourunovawhite",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "special-gowildarea2025",
+      "displayName": "GO Wild Area 2025",
+      "shortName": "GO Wild Area 2025",
+      "type": "special",
+      "event": "GO Wild Area 2025",
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "GO Wild Area 2025",
+        "2025",
+        "gowildarea2025"
+      ],
+      "pokemon": [
+        "Cresselia",
+        "Darkrai",
+        "Bewear (Wilderness Cape)",
+        "Grimmsnarl"
+      ],
+      "availability": "November 15th - 16th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "gowildarea2025",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "special-megamewtwo",
+      "displayName": "Mega Mewtwo",
+      "shortName": "Mega Mewtwo 2025",
+      "type": "special",
+      "event": "Mega Mewtwo",
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "Mega Mewtwo",
+        "Mega Mewtwo 2025",
+        "2025",
+        "megamewtwo"
+      ],
+      "pokemon": [
+        "Mewtwo"
+      ],
+      "availability": "July 11th - July 12th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "megamewtwo",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "special-mewtwo",
+      "displayName": "Mewtwo",
+      "shortName": "Mewtwo 2025",
+      "type": "special",
+      "event": "Mewtwo",
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "Mewtwo",
+        "Mewtwo 2025",
+        "2025",
+        "mewtwo"
+      ],
+      "pokemon": [
+        "Mewtwo"
+      ],
+      "availability": "July 11th - July 12th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "mewtwo",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "special-mightandmastery",
+      "displayName": "Might and Mastery",
+      "shortName": "Might and Mastery 2025",
+      "type": "special",
+      "event": "Might and Mastery",
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "Might and Mastery",
+        "Might and Mastery 2025",
+        "2025",
+        "mightandmastery"
+      ],
+      "pokemon": [
+        "Fuecoco",
+        "Totodile",
+        "Vanillite",
+        "Pawmi",
+        "Machop",
+        "Meditite",
+        "Stunky",
+        "Mareanie",
+        "Charcadet"
+      ],
+      "availability": "March 8th 2025 March 22nd 2025 April 27th 2025 May 11th 2025 May 24th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "mightandmastery",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "special-pokemonastronomicalobservatory",
+      "displayName": "Pokémon Astronomical Observatory",
+      "shortName": "Astronomical Observatory 2025",
+      "type": "special",
+      "event": "Pokémon Astronomical Observatory",
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "Pokémon Astronomical Observatory",
+        "Astronomical Observatory 2025",
+        "2025",
+        "pokemonastronomicalobservatory"
+      ],
+      "pokemon": [
+        "Clefairy"
+      ],
+      "availability": "November 1st 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokemonastronomicalobservatory",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "special-pokemonconcierge",
+      "displayName": "Pokémon Concierge",
+      "shortName": "Concierge 2025",
+      "type": "special",
+      "event": "Pokémon Concierge",
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "Pokémon Concierge",
+        "Concierge 2025",
+        "2025",
+        "pokemonconcierge"
+      ],
+      "pokemon": [
+        "Psyduck (Swim Ring)"
+      ],
+      "availability": "September 9th - 14th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "pokemonconcierge",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "special-roadoflegends",
+      "displayName": "Road of Legends",
+      "shortName": "Road of Legends 2025",
+      "type": "special",
+      "event": "Road of Legends",
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "Road of Legends",
+        "Road of Legends 2025",
+        "2025",
+        "roadoflegends"
+      ],
+      "pokemon": [
+        "Beedrill",
+        "Pidgeot",
+        "Alakazam",
+        "Gengar",
+        "Pinsir",
+        "Aerodactyl",
+        "Articuno",
+        "Zapdos",
+        "Moltres",
+        "Ampharos",
+        "Raikou",
+        "Entei",
+        "Suicune",
+        "Tyranitar",
+        "Lugia",
+        "Ho-Oh",
+        "Sceptile",
+        "Blaziken",
+        "Swampert",
+        "Gardevoir",
+        "Salamence",
+        "Metagross",
+        "Regirock",
+        "Regice",
+        "Registeel",
+        "Latias",
+        "Latios",
+        "Kyogre",
+        "Groudon",
+        "Rayquaza",
+        "Deoxys",
+        "Deoxys (Attack Forme)",
+        "Deoxys (Defense Forme)",
+        "Deoxys (Speed Forme)",
+        "Garchomp",
+        "Lucario",
+        "Abomasnow",
+        "Uxie",
+        "Mesprit",
+        "Azelf",
+        "Dialga",
+        "Dialga (Origin Forme)",
+        "Palkia",
+        "Palkia (Origin Forme)",
+        "Heatran",
+        "Regigigas",
+        "Giratina",
+        "Giratina (Origin Forme)",
+        "Cresselia",
+        "Darkrai",
+        "Audino",
+        "Cobalion",
+        "Terrakion",
+        "Virizion",
+        "Tornadus",
+        "Tornadus (Therian Forme)",
+        "Thundurus",
+        "Thundurus (Therian Forme)",
+        "Reshiram",
+        "Zekrom",
+        "Landorus",
+        "Landorus (Therian Forme)",
+        "Kyurem",
+        "Genesect",
+        "Genesect (Shock Drive)",
+        "Genesect (Burn Drive)",
+        "Genesect (Chill Drive)",
+        "Genesect (Douse Drive)",
+        "Xerneas",
+        "Yveltal",
+        "Tapu Koko",
+        "Tapu Lele",
+        "Tapu Bulu",
+        "Tapu Fini",
+        "Solgaleo",
+        "Lunala",
+        "Nihilego",
+        "Buzzwole",
+        "Pheromosa",
+        "Xurkitree",
+        "Celesteela",
+        "Kartana",
+        "Guzzlord",
+        "Necrozma",
+        "Stakataka",
+        "Blacephalon",
+        "Zacian",
+        "Zamazenta",
+        "Regieleki",
+        "Regidrago",
+        "Enamorus",
+        "Enamorus (Therian Forme)"
+      ],
+      "availability": "July 6th - July 12th 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "roadoflegends",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "special-talesoftransformation",
+      "displayName": "Tales of Transformation",
+      "shortName": "Tales of Transformation 2025",
+      "type": "special",
+      "event": "Tales of Transformation",
+      "location": null,
+      "year": 2025,
+      "aliases": [
+        "Tales of Transformation",
+        "Tales of Transformation 2025",
+        "2025",
+        "talesoftransformation"
+      ],
+      "pokemon": [
+        "Cobalion",
+        "Flabébé (Red Flower)",
+        "Flabébé (Yellow Flower)",
+        "Flabébé (Orange Flower)",
+        "Flabébé (Blue Flower)",
+        "Flabébé (White Flower)",
+        "Solosis",
+        "Chikorita",
+        "Tepig",
+        "Totodile"
+      ],
+      "availability": "September 14th - December 2nd 2025",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "talesoftransformation",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "special-communityday2024",
+      "displayName": "Community Day 2024",
+      "shortName": "Community Day 2024",
+      "type": "special",
+      "event": "Community Day 2024",
+      "location": null,
+      "year": 2024,
+      "aliases": [
+        "Community Day 2024",
+        "2024",
+        "communityday2024"
+      ],
+      "pokemon": [
+        "Mankey",
+        "Bellsprout",
+        "Ponyta",
+        "Ponyta (Galarian Form)",
+        "Chansey",
+        "Porygon",
+        "Cyndaquil",
+        "Bagon",
+        "Beldum",
+        "Sewaddle",
+        "Tynamo",
+        "Goomy",
+        "Rowlet",
+        "Litten",
+        "Popplio",
+        "Bounsweet"
+      ],
+      "availability": "December 21st - 22nd 2024",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "communityday2024",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "special-gofest2024radiance",
+      "displayName": "GO Fest 2024 Radiance",
+      "shortName": "GO Fest 2024 Radiance",
+      "type": "special",
+      "event": "GO Fest 2024 Radiance",
+      "location": null,
+      "year": 2024,
+      "aliases": [
+        "GO Fest 2024 Radiance",
+        "2024",
+        "gofest2024radiance",
+        "Pokémon GO Fest"
+      ],
+      "pokemon": [
+        "Solgaleo"
+      ],
+      "availability": "July 14th 2024",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "gofest2024radiance",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "special-gofest2024umbra",
+      "displayName": "GO Fest 2024 Umbra",
+      "shortName": "GO Fest 2024 Umbra",
+      "type": "special",
+      "event": "GO Fest 2024 Umbra",
+      "location": null,
+      "year": 2024,
+      "aliases": [
+        "GO Fest 2024 Umbra",
+        "2024",
+        "gofest2024umbra",
+        "Pokémon GO Fest"
+      ],
+      "pokemon": [
+        "Lunala"
+      ],
+      "availability": "July 14th 2024",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "gofest2024umbra",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "special-gofest2024wormhole",
+      "displayName": "GO Fest 2024 Wormhole",
+      "shortName": "GO Fest 2024 Wormhole",
+      "type": "special",
+      "event": "GO Fest 2024 Wormhole",
+      "location": null,
+      "year": 2024,
+      "aliases": [
+        "GO Fest 2024 Wormhole",
+        "2024",
+        "gofest2024wormhole",
+        "Pokémon GO Fest"
+      ],
+      "pokemon": [
+        "Nihilego",
+        "Buzzwole",
+        "Pheromosa",
+        "Xurkitree",
+        "Celesteela",
+        "Kartana",
+        "Guzzlord",
+        "Necrozma",
+        "Stakataka",
+        "Blacephalon"
+      ],
+      "availability": "July 8th - 14th 2024",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "gofest2024wormhole",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "special-gofest2024wormholeradiance",
+      "displayName": "GO Fest 2024 Wormhole Radiance",
+      "shortName": "GO Fest 2024 Wormhole Radiance",
+      "type": "special",
+      "event": "GO Fest 2024 Wormhole Radiance",
+      "location": null,
+      "year": 2024,
+      "aliases": [
+        "GO Fest 2024 Wormhole Radiance",
+        "2024",
+        "gofest2024wormholeradiance",
+        "Pokémon GO Fest"
+      ],
+      "pokemon": [
+        "Necrozma (Dusk Mane)"
+      ],
+      "availability": "July 14th 2024",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "gofest2024wormholeradiance",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "special-gofest2024wormholeumbra",
+      "displayName": "GO Fest 2024 Wormhole Umbra",
+      "shortName": "GO Fest 2024 Wormhole Umbra",
+      "type": "special",
+      "event": "GO Fest 2024 Wormhole Umbra",
+      "location": null,
+      "year": 2024,
+      "aliases": [
+        "GO Fest 2024 Wormhole Umbra",
+        "2024",
+        "gofest2024wormholeumbra",
+        "Pokémon GO Fest"
+      ],
+      "pokemon": [
+        "Necrozma (Dawn Wings)"
+      ],
+      "availability": "July 14th 2024",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "gofest2024wormholeumbra",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "special-gowildarea2024",
+      "displayName": "GO Wild Area 2024",
+      "shortName": "GO Wild Area 2024",
+      "type": "special",
+      "event": "GO Wild Area 2024",
+      "location": null,
+      "year": 2024,
+      "aliases": [
+        "GO Wild Area 2024",
+        "2024",
+        "gowildarea2024"
+      ],
+      "pokemon": [
+        "Kyogre",
+        "Groudon",
+        "Dialga",
+        "Palkia",
+        "Toxtricity",
+        "Toxtricity (Low Key Form)"
+      ],
+      "availability": "November 23rd - 24th 2024",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "gowildarea2024",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "special-teaminstinct",
+      "displayName": "Team Instinct",
+      "shortName": "Team Instinct 2024",
+      "type": "special",
+      "event": "Team Instinct",
+      "location": null,
+      "year": 2024,
+      "aliases": [
+        "Team Instinct",
+        "Team Instinct 2024",
+        "2024",
+        "teaminstinct"
+      ],
+      "pokemon": [
+        "Elekid (Spark Accessory)",
+        "Bulbasaur",
+        "Charmander",
+        "Squirtle",
+        "Chikorita",
+        "Cyndaquil",
+        "Totodile",
+        "Treecko",
+        "Torchic",
+        "Mudkip",
+        "Turtwig",
+        "Chimchar",
+        "Piplup",
+        "Snivy",
+        "Tepig",
+        "Oshawott",
+        "Chespin",
+        "Fennekin",
+        "Froakie",
+        "Rowlet",
+        "Litten",
+        "Popplio",
+        "Grookey",
+        "Scorbunny",
+        "Sobble",
+        "Sprigatito",
+        "Fuecoco",
+        "Quaxly",
+        "Raticate (Party Hat)",
+        "Nidorino (Party Hat)",
+        "Grimer (Party Hat)",
+        "Gengar (Party Hat)",
+        "Wobbuffet (Party Hat)",
+        "Sandslash"
+      ],
+      "availability": "August 26th 2024 - August 30th",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "teaminstinct",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "special-teammystic",
+      "displayName": "Team Mystic",
+      "shortName": "Team Mystic 2024",
+      "type": "special",
+      "event": "Team Mystic",
+      "location": null,
+      "year": 2024,
+      "aliases": [
+        "Team Mystic",
+        "Team Mystic 2024",
+        "2024",
+        "teammystic"
+      ],
+      "pokemon": [
+        "Lapras (Blanche Accessory)",
+        "Bulbasaur",
+        "Charmander",
+        "Squirtle",
+        "Chikorita",
+        "Cyndaquil",
+        "Totodile",
+        "Treecko",
+        "Torchic",
+        "Mudkip",
+        "Turtwig",
+        "Chimchar",
+        "Piplup",
+        "Snivy",
+        "Tepig",
+        "Oshawott",
+        "Chespin",
+        "Fennekin",
+        "Froakie",
+        "Rowlet",
+        "Litten",
+        "Popplio",
+        "Grookey",
+        "Scorbunny",
+        "Sobble",
+        "Sprigatito",
+        "Fuecoco",
+        "Quaxly",
+        "Raticate (Party Hat)",
+        "Nidorino (Party Hat)",
+        "Grimer (Party Hat)",
+        "Gengar (Party Hat)",
+        "Wobbuffet (Party Hat)",
+        "Sandslash"
+      ],
+      "availability": "August 26th 2024 - August 30th",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "teammystic",
+        "retrievedAt": "2026-08-26"
+      }
+    },
+    {
+      "id": "special-teamvalor",
+      "displayName": "Team Valor",
+      "shortName": "Team Valor 2024",
+      "type": "special",
+      "event": "Team Valor",
+      "location": null,
+      "year": 2024,
+      "aliases": [
+        "Team Valor",
+        "Team Valor 2024",
+        "2024",
+        "teamvalor"
+      ],
+      "pokemon": [
+        "Ponyta (Candela Accessory)",
+        "Bulbasaur",
+        "Charmander",
+        "Squirtle",
+        "Chikorita",
+        "Cyndaquil",
+        "Totodile",
+        "Treecko",
+        "Torchic",
+        "Mudkip",
+        "Turtwig",
+        "Chimchar",
+        "Piplup",
+        "Snivy",
+        "Tepig",
+        "Oshawott",
+        "Chespin",
+        "Fennekin",
+        "Froakie",
+        "Rowlet",
+        "Litten",
+        "Popplio",
+        "Grookey",
+        "Scorbunny",
+        "Sobble",
+        "Sprigatito",
+        "Fuecoco",
+        "Quaxly",
+        "Raticate (Party Hat)",
+        "Nidorino (Party Hat)",
+        "Grimer (Party Hat)",
+        "Gengar (Party Hat)",
+        "Wobbuffet (Party Hat)",
+        "Sandslash"
+      ],
+      "availability": "August 26th 2024 - August 30th",
+      "status": "released",
+      "source": {
+        "catalogId": "serebii-backgrounds",
+        "assetKey": "teamvalor",
+        "retrievedAt": "2026-08-26"
+      }
+    }
+  ]
+}

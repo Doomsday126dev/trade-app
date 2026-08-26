@@ -1,0 +1,22 @@
+{
+  "accepted": {
+    "schemaVersion": 1,
+    "sourceCommit": "1111111111111111111111111111111111111111",
+    "files": [
+      "lc_known_city.png",
+      "sb_known_event.png"
+    ]
+  },
+  "current": [
+    "lc_known_city.png",
+    "lc_new_review_candidate.png"
+  ],
+  "expected": {
+    "added": [
+      "lc_new_review_candidate.png"
+    ],
+    "removed": [
+      "sb_known_event.png"
+    ]
+  }
+}
