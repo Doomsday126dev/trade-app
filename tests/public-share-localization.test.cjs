@@ -153,13 +153,13 @@ test('Japanese and German share chrome retains bounded responsive wrapping',()=>
   assert.match(html,/\.share-search-disclosure summary\{[^}]*min-height:48px/);
 });
 
-test('release 2026-08-26.68 is coherent and contains no active .66 assets',()=>{
+test('release 2026-08-26.69 is coherent and contains no active .66 assets',()=>{
   const worker=source('sw.js'),release=source('js/domain/clientRelease.js');
-  assert.match(html,/window\.__POGO_RELEASE_ID='2026-08-26\.68'/);
-  assert.match(worker,/const RELEASE='2026-08-26\.68'/);
-  assert.match(release,/RELEASE_ID='2026-08-26\.68'/);
+  assert.match(html,/window\.__POGO_RELEASE_ID='2026-08-26\.69'/);
+  assert.match(worker,/const RELEASE='2026-08-26\.69'/);
+  assert.match(release,/RELEASE_ID='2026-08-26\.69'/);
   const firstParty=[...html.matchAll(/<script\s+src="([^"]+)"/g)].map(match=>match[1]).filter(src=>!/^https?:/.test(src));
   assert.equal(firstParty.length,72);
-  for(const src of firstParty)assert.equal(new URL(src,'https://example.test').searchParams.get('v'),'2026-08-26.68');
+  for(const src of firstParty)assert.equal(new URL(src,'https://example.test').searchParams.get('v'),'2026-08-26.69');
   assert.doesNotMatch(`${html}\n${worker}\n${release}`,/2026-08-26\.66/);
 });
