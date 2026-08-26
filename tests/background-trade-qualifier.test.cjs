@@ -75,7 +75,7 @@ test('one qualifier flows through product rows, matching, board, and exports',()
   for(const marker of [
     'id="add-pmon-background"','function openBackgroundPicker','function setBackground(',
     'backgroundBadgeHtml(backgroundId','function renderShareView(username,type)',
-    'function computeTradeMatchSummary','matchesTradeIntent(intent,tradeHaveQualifier(it))',
+    'function computeTradeMatchSummary','matchesTradeIntent(want,offer)',
     'function setSpecialBackground','class="sb-row-background',
     "'Background ID','Background'",'backgroundDisplayName(e.backgroundId)',
     'function exportEntryNoteLabel','drawExportEntryNoteLabel'

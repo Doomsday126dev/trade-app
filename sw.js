@@ -47,6 +47,7 @@ const RELEASE_ASSETS=[
   'js/domain/favoriteCardInteractions.js',
   'js/domain/favoritePokemonBrowse.js',
   'js/domain/trainerDiscovery.js',
+  'js/domain/tradeListComparison.js',
   'js/domain/eventPresentation.js',
   'js/domain/publicSharePublication.js',
   'js/domain/trainerPreferences.js',

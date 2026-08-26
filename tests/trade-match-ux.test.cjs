@@ -20,13 +20,15 @@ test('trainer profile opens the reciprocal comparison instead of generic list ov
   assert.match(html,/tradeMatch\.editMyList/);
 });
 
-test('reciprocal matching binds actual entries to compatible intent and honest availability',()=>{
-  const source=block('function ownTradeInventoryAvailable','function tradeIntentFreeform');
-  assert.match(source,/managedOwnedDataCoordinator\?\.isHydratedFor\('inventory'/);
-  assert.match(source,/selectedTrainerRuntime\.username===them&&!!selectedTrainerRuntime\.publicData/);
-  assert.match(source,/protectedOwnerSession\(\)&&_pathLoadState\.have==='loaded'/);
-  assert.match(source,/matchesTradeIntent\(intent,tradeHaveQualifier\(it\)\)/);
-  assert.match(source,/return\{theyHaveYouWant,youHaveTheyWant,mirrors,availability\}/);
+test('reciprocal matching binds list wants to explicit Special Board offers',()=>{
+  const source=block('function tradeListWants','function tradeIntentFreeform');
+  assert.match(source,/OWNED_MY_LIST_TYPES/);
+  assert.match(source,/specialTradeBoard/);
+  assert.match(source,/Array\.isArray\(board\?\.lf\)/);
+  assert.match(source,/Array\.isArray\(board\?\.ft\)/);
+  assert.match(source,/tradeListComparisonDomain\.compareTradeLists/);
+  assert.match(source,/matchesTradeIntent\(want,offer\)/);
+  assert.doesNotMatch(source,/allData\.have|inventory|\bqty\b/);
 });
 
 test('comparison cards render extensible qualifiers and keep direction non-color-dependent',()=>{
@@ -40,13 +42,17 @@ test('comparison cards render extensible qualifiers and keep direction non-color
 });
 
 test('reciprocal view models and cards exclude retired inventory quantities',()=>{
-  const model=block('function tradeMatchEntry','function tradeIntentFreeform');
+  const model=block('function tradeListWants','function tradeIntentFreeform');
   const render=block('function renderTradeMatchSummary','function renderTradeMatchModal');
-  assert.match(model,/const\{key,name,gender,mirrorOnly,dn,no,backgroundId,shiny,lucky,xxl,xxs\}=it/);
-  assert.match(model,/tradeMatchEntry\(it,intent\)/);
-  assert.doesNotMatch(model,/theirQty|\.qty\b/);
+  assert.doesNotMatch(model,/theirQty|\.qty\b|allData\.have|inventory/i);
   assert.doesNotMatch(render,/diff-match-qty|theirQuantity|\bit\.qty\b/);
   assert.match(render,/diff-match-count/);
+  for(const locale of ['en','es','de','ja']){
+    const text=readFileSync(path.join(root,'js','i18n','locales',`${locale}.js`),'utf8');
+    const tradeBlock=text.slice(text.indexOf("'tradeMatch.title'"),text.indexOf("'data.loading'"));
+    assert.doesNotMatch(tradeBlock,/inventory|inventario|Inventar|\u6240\u6301/i);
+    assert.doesNotMatch(tradeBlock,/tradeMatch\.theirQuantity/);
+  }
 });
 
 test('edit-and-return comparison state is process-local and recomputes from current data',()=>{

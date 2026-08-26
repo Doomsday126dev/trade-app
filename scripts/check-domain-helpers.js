@@ -193,12 +193,12 @@ eq(auditTrainerNames(['Ace', ' ACE ']).summary.collisionGroups, 1, 'auditTrainer
 const { parsePri, priValue, entryGender } = domain.priorityValues;
 deepEq(
   parsePri('H[lucky][shiny][xxl](female)'),
-  { p: 'H', mod: 'F', lucky: true, xxl: true, xxs: false, shiny: true },
+  { p: 'H', mod: 'F', lucky: true, xxl: true, xxs: false, shiny: true, backgroundId: '' },
   'parsePri should parse bracket flags and gender modifier'
 );
 deepEq(
   parsePri('M(shiny f)'),
-  { p: 'M', mod: 'F', lucky: false, xxl: false, xxs: false, shiny: true },
+  { p: 'M', mod: 'F', lucky: false, xxl: false, xxs: false, shiny: true, backgroundId: '' },
   'parsePri should lift shiny out of modifier text'
 );
 eq(priValue('L', 'm', false, false, true, false), 'L[xxs](M)', 'priValue should serialize flags and modifier');
@@ -530,17 +530,17 @@ eq(
 );
 deepEq(
   haveEntryInfo(7),
-  { qty: 7, mirrorOnly: false, dontNeedBack: false, giveaway: false, note: '', mode: 'any' },
+  { qty: 7, mirrorOnly: false, dontNeedBack: false, giveaway: false, note: '', mode: 'any', backgroundId: '', shiny: false, lucky: false, xxl: false, xxs: false },
   'haveEntryInfo should preserve numeric entries as any mode'
 );
 deepEq(
   haveEntryInfo({ qty: 12, mirrorOnly: true, dontNeedBack: true }),
-  { qty: 12, mirrorOnly: true, dontNeedBack: false, giveaway: false, note: '', mode: 'mirror' },
+  { qty: 12, mirrorOnly: true, dontNeedBack: false, giveaway: false, note: '', mode: 'mirror', backgroundId: '', shiny: false, lucky: false, xxl: false, xxs: false },
   'haveEntryInfo should preserve mirror mode precedence over fair trade'
 );
 deepEq(
   haveEntryInfo({ qty: 1000, giveaway: true, note: 'x'.repeat(141) }),
-  { qty: 999, mirrorOnly: false, dontNeedBack: false, giveaway: true, note: 'x'.repeat(140), mode: 'giveaway' },
+  { qty: 999, mirrorOnly: false, dontNeedBack: false, giveaway: true, note: 'x'.repeat(140), mode: 'giveaway', backgroundId: '', shiny: false, lucky: false, xxl: false, xxs: false },
   'haveEntryInfo should clamp qty and note length'
 );
 deepEq(haveEntryValue(5, 0, { mode: 'mirror' }), { qty: 5, mirrorOnly: true }, 'haveEntryValue should preserve mirror shape');
