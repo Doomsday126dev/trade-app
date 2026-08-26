@@ -68,6 +68,6 @@
     ,'request.nameTooLong':'トレーナー名は32文字以内で入力してください。','request.noteTooLong':'メモは280文字以内で入力してください。'
     ,'app.preparing':'トレードリストを準備しています','app.preparingDetail':'この端末とログイン状態を安全に確認しています。確認が完了するまで、アカウントデータは表示されません。'
     ,'common.change':'変更','background.label':'背景','background.none':'背景の指定なし','background.choose':'背景を選ぶ','background.selected':'選択中の背景：{name}','background.badgeLabel':'{name} の背景','background.forPokemon':'{name} の背景','background.search':'背景を検索…','background.filters':'背景フィルター','background.relevant':'関連','background.all':'すべての背景','background.location':'場所','background.special':'特別・イベント','background.recent':'最近','background.choices':'背景の候補','background.noResults':'一致する背景がありません','background.notListed':'{name} の対象として登録されていません','background.showMore':'さらに表示','background.showing':'{total} 件中 {visible} 件を表示','myList.priorityOrFlagRequired':'優先度、背景、または「キラ」「色違い」「XXL」「XXS」のいずれかを選んでください。','myList.queueNeedsPriority':'キューを追加する前に、優先度、背景、またはフラグを1つ以上選んでください。'
-    ,'storage.listHydrationRequired':'保存済みリストをサーバーから読み込み中です。編集する前に完了するまでお待ちください。','storage.pendingListQuarantined':'古いリスト全体の保留中の変更は、新しいリストデータを上書きする可能性があるため、保存されましたが同期されませんでした。'
+    ,'storage.listHydrationRequired':'保存済みリストをサーバーから読み込み中です。編集する前に完了するまでお待ちください。','storage.pendingListQuarantined':'古いリスト全体の保留中の変更は、新しいリストデータを上書きする可能性があるため、保存されましたが同期されませんでした。','trainer.searchError':'トレーナー検索を完了できませんでした。もう一度お試しください。','trainer.retrySearch':'検索を再試行','trainer.viewAllFavorites':'お気に入りをすべて表示'
   });
 })(window);

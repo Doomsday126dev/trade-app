@@ -83,7 +83,7 @@ test('Up next selects the first non-expired event in each supported category',()
   assert.deepEqual(Array.from(events.UP_NEXT_CATEGORIES),['spotlight_hour','max_monday','raid_day','community_day']);
 });
 
-test('calendar is deterministic, marks multi-day occupancy, and drives date filtering',()=>{
+test('calendar marks meaningful starts while selected-date filtering retains multi-day occupancy',()=>{
   const events=loadDomain(),now=Date.parse('2026-08-09T12:00:00Z');
   const fixture=[
     {id:'multi',name:'Multi',start:'2026-08-10T10:00:00Z',end:'2026-08-12T18:00:00Z'},
@@ -91,9 +91,11 @@ test('calendar is deterministic, marks multi-day occupancy, and drives date filt
   ];
   const calendar=events.calendarMonth(fixture,{year:2026,month:7,now,timeZone:'UTC'});
   assert.equal(calendar.cells.length,42);
-  assert.equal(calendar.cells.find(cell=>cell.key==='2026-08-10').eventCount,1);
-  assert.equal(calendar.cells.find(cell=>cell.key==='2026-08-11').eventCount,1);
-  assert.equal(calendar.cells.find(cell=>cell.key==='2026-08-12').eventCount,2);
+  assert.equal(calendar.cells.find(cell=>cell.key==='2026-08-10').markerCount,1);
+  assert.equal(calendar.cells.find(cell=>cell.key==='2026-08-11').markerCount,0);
+  assert.equal(calendar.cells.find(cell=>cell.key==='2026-08-12').markerCount,1);
+  assert.equal(events.eventMarksDate(fixture[0],'2026-08-10',{timeZone:'UTC'}),true);
+  assert.equal(events.eventMarksDate(fixture[0],'2026-08-11',{timeZone:'UTC'}),false);
   assert.equal(calendar.cells.find(cell=>cell.key==='2026-08-09').today,true);
   const filtered=events.prepareEvents(fixture,{now,date:'2026-08-11',timeZone:'UTC'}).flatMap(section=>section.events);
   assert.deepEqual(Array.from(filtered,event=>event.id),['multi']);
@@ -119,7 +121,7 @@ test('calendar and overview interactions are keyboard reachable without count or
   assert.match(render,/pokemonNamesI18n\.speciesName\(\{no\},locale\)/);
   assert.match(render,/new Intl\.ListFormat\(locale,\{style:'short',type:'conjunction'\}\)/);
   assert.doesNotMatch(render,/event-up-next-sprite|spriteImg\(no,32/);
-  assert.match(render,/cell\.eventCount\?'<i aria-hidden="true"><\/i>'/);
+  assert.match(render,/cell\.markerCount\?'<i aria-hidden="true"><\/i>'/);
   assert.match(render,/renderEventSelectedDay\(events\)/);
   assert.match(render,/events\.onDate/);
   assert.match(render,/events\.noneOnDate/);

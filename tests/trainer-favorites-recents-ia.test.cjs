@@ -34,6 +34,8 @@ test('Find Trainer presents sibling discovery modes with a shared Recents column
   assert.ok(markup.indexOf('id="favorite-trainers-list"')<markup.indexOf('id="favorite-pokemon-browse"'));
   assert.ok(markup.indexOf('id="favorite-trainers"')<markup.indexOf('id="recent-trainers"'));
   assert.match(markup,/class="trainer-discovery-modes" role="tablist"/);
+  assert.match(markup,/id="trainer-favorites-preview"/);
+  assert.match(markup,/class="trainer-discovery-supporting"/);
   assert.doesNotMatch(markup,/trainer-history-tabs/);
   assert.match(html,/\.trainer-quick-grid,\.recent-trainer-list\{display:grid;grid-template-columns:minmax\(0,1fr\)/);
 });
@@ -59,7 +61,7 @@ test('default local organizer accepts 100 Favorites and rejects the 101st organi
 
 test('favorite filters remain scoped, multi-tag, keyboard-native buttons with non-color state',()=>{
   const render=html.slice(html.indexOf('async function renderTrainerQuickLists'),html.indexOf('function toggleTrainerFavorite'));
-  assert.match(render,/class="favorite-toolbar-search trainer-mode-search app-search-shell search-filter"/);
+  assert.match(html,/class="favorite-toolbar-search discovery-search-shell app-search-shell search-filter"/);
   assert.match(render,/aria-pressed="\$\{selected\}"/);
   assert.match(render,/favorite-filter-check/);
   assert.match(render,/favorite-filter-group/);
@@ -74,10 +76,20 @@ test('compact favorite rows preserve tags, Open Trainer, overflow, and optional 
   assert.match(render,/favoriteTagChips\(item,state\)/);
   assert.match(render,/favorite-card-add-tag/);
   assert.match(render,/favorite-card-open/);
+  assert.match(render,/class="trainer-quick-main favorite-card-primary" data-trainer-action="open"/);
   assert.match(render,/favorite-card-more[^>]+aria-haspopup="menu"/);
   assert.match(render,/favorite-card-menu" role="menu"/);
   assert.match(html,/touch-action:pan-y/);
   assert.match(html,/favorite-card-shell\.swipe-open/);
+});
+
+test('Trainers mode exposes a bounded clickable Favorites preview with a full-mode affordance',()=>{
+  const render=html.slice(html.indexOf('async function renderTrainerQuickLists'),html.indexOf('function toggleTrainerFavorite'));
+  assert.match(render,/state\.favorites\.slice\(0,4\)/);
+  assert.match(render,/trainer-favorites-preview-row card-row[^>]+data-trainer-action="open"/);
+  assert.match(render,/trainer\.viewAllFavorites/);
+  assert.match(render,/focusTrainerDiscoveryMode\('favorites'\)/);
+  assert.match(html,/trainer-discovery-content\[data-mode="favorites"\] #trainer-favorites-preview[^{]*\{display:none\}/);
 });
 
 test('Recent Trainers render as one native row action without nested competing controls',()=>{

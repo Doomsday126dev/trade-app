@@ -82,7 +82,8 @@ test('Find Trainer autocomplete uses the public directory while selected and Fav
   assert.doesNotMatch(browse,/allData\.loginDirectory|Object\.keys\(allData\.users|publicShares\/|\.listen\(/);
   assert.match(source,/trainerDiscoveryDomain\.fold\(name\)===trainerDiscoveryDomain\.fold\(value\)/);
   assert.match(source,/bestTrainerSuggestion\(Object\.keys\(allData\.loginDirectory\|\|\{\}\)/);
-  assert.match(source,/const resolved=resolvedTrainerSearchValue\(requested\)/);
+  assert.match(source,/resolved=resolvedTrainerSearchValue\(requested\)/);
+  assert.match(source,/catch\(error\)\{showTrainerSearchError\(\);return;\}/);
   assert.doesNotMatch(find,/allData\.users\?\.|wishlist\[|have\[/);
 });
 

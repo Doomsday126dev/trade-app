@@ -1693,8 +1693,10 @@ test.describe('visual smoke', () => {
       await expectOpens(()=>row.locator('.recent-trainer-chevron').click());
       await row.focus();await expectOpens(()=>page.keyboard.press('Enter'));
       await row.focus();await expectOpens(()=>page.keyboard.press('Space'));
+      await page.locator('[data-discovery-mode="favorites"]').click();
       await expectOpens(()=>page.locator('.favorite-card-open').click());
       expect(await page.evaluate(()=>window.__openedTrainer)).toBe('FavoriteOne');
+      await page.locator('[data-discovery-mode="trainers"]').click();
       expect(await row.locator('button,a,[role="button"]').count()).toBe(0);
       expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
     }
@@ -1714,7 +1716,8 @@ test.describe('visual smoke', () => {
     await expect(status).toBeHidden();
     await page.locator('#find-trainer-input').fill('Rec');
     await expect(status).toContainText(/.+/);
-    await expect(status).toBeHidden({timeout:2000});
+    await expect(page.locator('.trainer-suggestion')).toHaveCount(1);
+    await expect(status).not.toContainText(/Searching/i);
   });
 
   test('My List compact add controls stay responsive and keyboard reachable',async({page})=>{
@@ -2650,6 +2653,56 @@ test.describe('visual smoke', () => {
     await expect(page.locator('.trainer-suggestion').first()).not.toContainText('AlphaTrainer');
   });
 
+  test('trainer discovery search always settles and all discovery rows retain navigation ownership',async({page})=>{
+    await page.setViewportSize({width:1440,height:900});
+    await page.goto(`./?trainer-terminal-navigation=${Date.now()}`,{waitUntil:'domcontentloaded'});
+    await waitForStableLocalOrganizerStartup(page);
+    await isolateAuthenticatedMyListFixture(page,{username:'DiscoveryViewer',uid:'uid-discovery-viewer'});
+    await page.evaluate(async()=>{
+      const favorites=[{key:'mazer',displayName:'Mazer',tagIds:[],createdAt:1,updatedAt:1},{key:'maze-runner',displayName:'MazeRunner',tagIds:[],createdAt:2,updatedAt:2}];
+      const recent=[{key:'recent-one',displayName:'RecentOne',openedAt:Date.now()-60000}];
+      const state={version:3,schemaVersion:3,migrationVersion:3,owner:{uid:'uid-discovery-viewer',username:'DiscoveryViewer'},favorites,recent,snapshots:{},tags:{},syncState:'local-only',migration:{skippedFavorites:0,skippedRecents:0}};
+      ensureTrainerHistoryStore=()=>({read:()=>state,filterFavorites:({query=''})=>favorites.filter(item=>item.displayName.toLowerCase().includes(query.toLowerCase())),snapshotFor:()=>null,updateCanonicalName:()=>false});
+      allData=normalizeData({users:{DiscoveryViewer:{},Mazer:{},MazeRunner:{},RecentOne:{},BetaTrainer:{}},wishlist:{},dynamax:{},gmax:{},costumes:{}});
+      allData.loginDirectory={Mazer:{},MazeRunner:{},RecentOne:{},BetaTrainer:{}};
+      switchTab('find',{render:false});renderFindTrainer();await renderTrainerQuickLists();
+      window.__openedTrainer='';openTrainerPublicShare=async value=>{window.__openedTrainer=value;};
+    });
+    const input=page.locator('#find-trainer-input'),status=page.locator('#find-trainer-status');
+    await capturePass3(page,'trainer-discovery-idle-1440x900');
+    await input.fill('Mazer');
+    await expect(page.locator('.trainer-suggestion')).toHaveCount(2);
+    await expect(page.locator('.trainer-suggestion-name').first()).toHaveText('Mazer');
+    await expect(status).not.toContainText(/Searching/i);
+    await expect(status).toContainText(/exact/i);
+    await capturePass3(page,'trainer-discovery-exact-1440x900');
+    await input.fill('Maze');
+    await expect(page.locator('.trainer-suggestion')).toHaveCount(2);
+    await expect(status).not.toContainText(/Searching/i);
+    await capturePass3(page,'trainer-discovery-partial-1440x900');
+    await input.fill('Nobody');
+    await expect(page.locator('#find-trainer-recovery')).toBeVisible();
+    await expect(status).not.toContainText(/Searching/i);
+    await capturePass3(page,'trainer-discovery-empty-1440x900');
+    await page.evaluate(()=>{window.__trainerSuggestionOptions=trainerSuggestionOptions;trainerSuggestionOptions=()=>{throw new Error('fixture_failure');};});
+    await input.fill('Error');
+    await expect(page.locator('#find-trainer-retry')).toBeVisible();
+    await expect(status).not.toContainText(/Searching/i);
+    await capturePass3(page,'trainer-discovery-error-1440x900');
+    await page.evaluate(()=>{trainerSuggestionOptions=window.__trainerSuggestionOptions;const input=document.getElementById('find-trainer-input');input.value='Maze';queueTrainerSuggestions('Maze');input.value='Beta';queueTrainerSuggestions('Beta');});
+    await expect(page.locator('.trainer-suggestion')).toHaveCount(1);
+    await expect(page.locator('.trainer-suggestion-name')).toHaveText('BetaTrainer');
+    await expect(status).not.toContainText(/Searching/i);
+
+    const expectOpen=async(locator,name)=>{await page.evaluate(()=>{window.__openedTrainer='';});await locator.click();await expect.poll(()=>page.evaluate(()=>window.__openedTrainer)).toBe(name);};
+    await input.fill('Mazer');await expect(page.locator('.trainer-suggestion')).toHaveCount(2);
+    await expectOpen(page.locator('.trainer-suggestion').first(),'Mazer');
+    await expectOpen(page.locator('.trainer-favorites-preview-row').first(),'Mazer');
+    await expectOpen(page.locator('.recent-trainer-row').first(),'RecentOne');
+    await page.locator('[data-discovery-mode="favorites"]').click();
+    await expectOpen(page.locator('.favorite-card-primary').first(),'Mazer');
+  });
+
   test('trainer discovery keeps exact intent first and shows reciprocal hierarchy on mobile',async({page})=>{
     await page.setViewportSize({width:320,height:568});
     await page.goto(`./?trainer-ranking-ui=${Date.now()}`,{waitUntil:'domcontentloaded'});
@@ -2764,9 +2817,10 @@ test.describe('visual smoke', () => {
       switchTab('find',{render:false});renderFindTrainer();
       document.querySelectorAll('[data-discovery-panel]').forEach(panel=>{panel.style.minHeight='1100px';});
     });
-    const viewports=[{width:1440,height:900},{width:430,height:932},{width:390,height:844},{width:375,height:812},{width:320,height:568}];
+    const viewports=[{width:1728,height:1000},{width:1440,height:900},{width:430,height:932},{width:390,height:844},{width:375,height:812},{width:320,height:568}];
     for(const viewport of viewports){
       await page.setViewportSize(viewport);
+      const searchGeometry=[];
       for(const [mode,keyboard] of [['favorites',true],['pokemon',false],['trainers',false]]){
         const button=page.locator(`[data-discovery-mode="${mode}"]`);
         await button.focus();
@@ -2782,6 +2836,17 @@ test.describe('visual smoke', () => {
         expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
         if(mode==='trainers')await expect(page.locator('#find-trainer-input')).toBeFocused();
         if(mode==='pokemon')await expect(page.locator('#favorite-browse-input')).toBeFocused();
+        const selector=mode==='trainers'?'#find-trainer-input':mode==='favorites'?'#favorite-trainer-search':'#favorite-browse-input';
+        searchGeometry.push({mode,box:await page.locator(selector).boundingBox()});
+        await capturePass3(page,`trainer-discovery-${mode}-${viewport.width}x${viewport.height}`);
+      }
+      const reference=searchGeometry[0].box;
+      for(const item of searchGeometry.slice(1)){
+        const geometry=JSON.stringify(searchGeometry);
+        expect(Math.abs((item.box?.x||0)-(reference?.x||0)),geometry).toBeLessThanOrEqual(1);
+        expect(Math.abs((item.box?.y||0)-(reference?.y||0)),geometry).toBeLessThanOrEqual(1);
+        expect(Math.abs((item.box?.width||0)-(reference?.width||0)),geometry).toBeLessThanOrEqual(1);
+        expect(Math.abs((item.box?.height||0)-(reference?.height||0)),geometry).toBeLessThanOrEqual(1);
       }
     }
   });
@@ -3160,7 +3225,7 @@ test.describe('visual smoke', () => {
     expect(await sourceRow.locator('a,button,[role="button"]').count()).toBe(0);
     await sourceRow.focus();await expect(sourceRow).toBeFocused();
     for(const filter of await page.locator('.event-filter').all()){const box=await filter.boundingBox();expect(box?.height).toBeGreaterThanOrEqual(48);}
-    const calendarEventDay=page.locator('.event-calendar-day.has-events').first();await calendarEventDay.click();await expect(page.locator('.event-calendar-day.selected')).toHaveCount(1);await expect(page.locator('.event-selected-day')).toBeVisible();await expect(page.locator('.event-selected-day-row').first()).toBeVisible();await expect(page.locator('.event-calendar-clear')).toBeVisible();const emptyCalendarDay=page.locator('.event-calendar-day:not(.has-events)').first();await emptyCalendarDay.click();await expect(page.locator('.event-selected-day-empty')).toBeVisible();await page.locator('.event-calendar-clear').click();await expect(page.locator('.event-calendar-day.selected')).toHaveCount(0);await expect(page.locator('.event-selected-day')).toHaveCount(0);
+    const calendarEventDay=page.locator('.event-calendar-day.has-events').first();await calendarEventDay.click();await expect(page.locator('.event-calendar-day.selected')).toHaveCount(1);await expect(page.locator('.event-selected-day')).toBeVisible();await expect(page.locator('.event-selected-day-row').first()).toBeVisible();await expect(page.locator('.event-calendar-clear')).toBeVisible();await capturePass3(page,'events-calendar-selected-event-1440x900');const emptyCalendarDay=page.locator('.event-calendar-day:not(.has-events)').first();await emptyCalendarDay.click();await expect(page.locator('.event-selected-day-empty')).toBeVisible();await capturePass3(page,'events-calendar-selected-empty-1440x900');await page.locator('.event-calendar-clear').click();await expect(page.locator('.event-calendar-day.selected')).toHaveCount(0);await expect(page.locator('.event-selected-day')).toHaveCount(0);
     await page.locator('.event-filter[data-type="spotlight"]').click();await expect(page.locator('.event-card')).toHaveCount(1);await expect(page.locator('.event-card')).toContainText('Pikachu');
     await page.locator('.event-filter[data-type="raids"]').click();await expect(page.locator('.event-filter[data-type="raids"]')).toHaveAttribute('aria-pressed','true');
     await page.locator('.event-filter[data-type="gbl"]').click();await expect(page.locator('.events-state')).toContainText(/.+/);await expect(page.locator('.events-state-action')).toBeVisible();await page.locator('.events-state-action').click();await expect(page.locator('.event-filter[data-type="all"]')).toHaveAttribute('aria-pressed','true');
@@ -3168,7 +3233,7 @@ test.describe('visual smoke', () => {
     await page.evaluate(()=>{_eventData=null;_eventLoadState='loading';renderEventsOnly();});await expect(page.locator('#events-out')).toHaveAttribute('aria-busy','true');await expect(page.locator('.ui-state-loading')).toBeVisible();await capturePass3(page,'events-loading-mobile');
     await page.evaluate(()=>{_eventData={events:[],raids:[],fetchedAt:0};_eventLoadState='error';renderEventsOnly();});await expect(page.locator('.ui-state-unavailable')).toBeVisible();await expect(page.locator('.events-state-action')).toBeVisible();await capturePass3(page,'events-error-mobile');
     const viewports=[['en',320,640],['ja',375,700],['de',390,420],['es',430,760],['ja',390,300],['de',768,800],['es',1024,800],['en',1440,900],['en',1728,1000],['en',430,932],['ja',390,844],['de',375,812],['es',320,568]];
-    for(const [locale,width,height] of viewports){await page.setViewportSize({width,height});await page.evaluate(locale=>{changeInterfaceLocale(locale);_eventData=window.__eventTimelineFixture;_eventLoadState='ready';eventTypeFilter='all';eventCalendarDate='';renderEventsOnly();},locale);await expect(page.locator('.event-card').first()).toBeVisible();await expect(page.locator('.events-context-rail')).toBeVisible();const rowBox=await page.locator('.event-card').first().boundingBox();expect(rowBox?.height).toBeLessThan(width<=430?192:150);const summaryClamps=await page.locator('.event-card-summary').evaluateAll(nodes=>nodes.map(node=>getComputedStyle(node).webkitLineClamp));expect(summaryClamps.every(value=>value==='1')).toBe(true);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);}
+    for(const [locale,width,height] of viewports){await page.setViewportSize({width,height});await page.evaluate(locale=>{changeInterfaceLocale(locale);_eventData=window.__eventTimelineFixture;_eventLoadState='ready';eventTypeFilter='all';eventCalendarDate='';renderEventsOnly();},locale);await expect(page.locator('.event-card').first()).toBeVisible();await expect(page.locator('.events-context-rail')).toBeVisible();const rowBox=await page.locator('.event-card').first().boundingBox();expect(rowBox?.height).toBeLessThan(width<=430?192:150);const summaryClamps=await page.locator('.event-card-summary').evaluateAll(nodes=>nodes.map(node=>getComputedStyle(node).webkitLineClamp));expect(summaryClamps.every(value=>value==='1')).toBe(true);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);if([[1728,1000],[1440,900],[430,932],[390,844],[375,812],[320,568]].some(([w,h])=>w===width&&h===height))await capturePass3(page,`events-calendar-sparse-${width}x${height}`);}
   });
 
   test('main product tabs keep equivalent page headings on one left edge',async({page})=>{
