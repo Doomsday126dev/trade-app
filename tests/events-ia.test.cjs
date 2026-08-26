@@ -111,13 +111,19 @@ test('filters and loading empty filtered error offline states remain distinct',(
   assert.match(render,/events\.clearDate/);
 });
 
-test('calendar and overview interactions are keyboard reachable and reuse localized sprites',()=>{
+test('calendar and overview interactions are keyboard reachable without count or sprite clutter',()=>{
   const render=html.slice(html.indexOf('function setEventTypeFilter'),html.indexOf('function renderSchedule'));
   assert.match(render,/eventCalendarKeydown\(event,'\$\{cell\.key\}'\)/);
   assert.match(render,/\['Home','End'\]/);
   assert.match(render,/ArrowLeft:-1,ArrowRight:1,ArrowUp:-7,ArrowDown:7/);
   assert.match(render,/pokemonNamesI18n\.speciesName\(\{no\},locale\)/);
-  assert.match(render,/spriteImg\(no,32,'event-up-next-sprite'/);
+  assert.match(render,/new Intl\.ListFormat\(locale,\{style:'short',type:'conjunction'\}\)/);
+  assert.doesNotMatch(render,/event-up-next-sprite|spriteImg\(no,32/);
+  assert.match(render,/cell\.eventCount\?'<i aria-hidden="true"><\/i>'/);
+  assert.match(render,/renderEventSelectedDay\(events\)/);
+  assert.match(render,/events\.onDate/);
+  assert.match(render,/events\.noneOnDate/);
+  assert.match(render,/timing\.timeLabel/);
   assert.match(render,/jumpToEvent\(this\.dataset\.eventId\)/);
   assert.match(render,/card\.scrollIntoView/);
   assert.match(render,/card\.focus\(\{preventScroll:true\}\)/);

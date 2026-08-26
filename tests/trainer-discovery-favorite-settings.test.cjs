@@ -12,7 +12,7 @@ function store(){const window={};for(const file of ['js/domain/productLimits.js'
 
 test('Find Trainer uses one compact combobox with inline clear and no submit button',()=>{
   const block=html.slice(html.indexOf('<!-- FIND TRAINER'),html.indexOf('<!-- MY LIST'));
-  assert.match(block,/class="trainer-search-shell search-lookup"/);
+  assert.match(block,/class="trainer-search-shell trainer-mode-search search-lookup"/);
   assert.match(block,/role="combobox" aria-autocomplete="list"/);
   assert.match(block,/id="find-trainer-clear"/);
   assert.doesNotMatch(block,/id="find-trainer-button"/);
@@ -31,20 +31,33 @@ test('Favorites search updates only the results subtree and preserves its input 
   assert.match(render,/data-favorite-clear/);
 });
 
+test('Favorite Browse derives reciprocal hints from the canonical legacy inventory shape',()=>{
+  const render=html.slice(html.indexOf('function renderFavoriteBrowseResults'),html.indexOf('async function hydrateFavoriteBrowse'));
+  assert.match(render,/Object\.entries\(allData\.have\?\.\[cur\]\|\|\{\}\)/);
+  assert.match(render,/haveEntryInfo\(value\)\.qty>0/);
+  assert.match(render,/splitHaveKey\(key\)\.name/);
+  assert.doesNotMatch(render,/diffInventoryEntries/);
+});
+
 test('trainer search, Favorites, and Find by Pokémon are sibling discovery modes',()=>{
   const block=html.slice(html.indexOf('<!-- FIND TRAINER'),html.indexOf('<!-- MY LIST'));
-  const trainer=block.indexOf('class="trainer-search-shell search-lookup"');
+  const trainer=block.indexOf('class="trainer-search-shell trainer-mode-search search-lookup"');
   const favorites=block.indexOf('id="favorite-trainers"');
   const browse=block.indexOf('id="favorite-pokemon-browse"');
   const favoriteList=block.indexOf('id="favorite-trainers-list"');
   const recents=block.indexOf('id="recent-trainers"');
-  assert.ok(trainer>=0&&recents>trainer&&favorites>recents&&favoriteList>favorites&&browse>favoriteList);
+  assert.ok(trainer>=0&&favorites>trainer&&favoriteList>favorites&&browse>favoriteList&&recents>browse);
   assert.match(block,/class="trainer-discovery-modes"/);
+  assert.match(block,/class="trainer-discovery-workspace"/);
+  assert.match(block,/class="trainer-discovery-primary"/);
   assert.match(block,/focusTrainerDiscoveryMode\('trainers'\)/);
   assert.match(block,/focusTrainerDiscoveryMode\('favorites'\)/);
   assert.match(block,/focusTrainerDiscoveryMode\('pokemon'\)/);
-  assert.match(block,/id="favorite-browse-toggle" aria-expanded="false" aria-controls="favorite-browse-panel"/);
-  assert.match(block,/id="favorite-browse-panel" hidden/);
+  assert.doesNotMatch(block,/id="favorite-browse-toggle"|favorite-browse-disclosure/);
+  assert.match(block,/id="favorite-pokemon-browse"[^>]+data-expanded="true"/);
+  assert.match(block,/class="favorite-browse-content" id="favorite-browse-panel"/);
+  assert.doesNotMatch(block,/class="favorite-browse-panel"/);
+  assert.doesNotMatch(block,/id="favorite-browse-panel" hidden/);
   assert.match(block,/id="favorite-browse-input"[^>]*role="combobox" aria-autocomplete="list"/);
   assert.match(block,/id="favorite-browse-results" role="region" aria-live="polite"/);
   assert.match(block,/role="tab"[^>]+data-discovery-mode="trainers"[^>]+aria-selected="true" aria-current="true"/);
@@ -52,10 +65,8 @@ test('trainer search, Favorites, and Find by Pokémon are sibling discovery mode
   assert.equal((block.match(/id="find-trainer-input"/g)||[]).length,1);
   assert.match(html,/favoriteBrowseCatalog\(\)[\s\S]*rankAutocompleteItems/);
   assert.match(html,/favoriteBrowseState\.selected=\{name:item\.name,dn:item\.dn,no:item\.no\};favoriteBrowseState\.error=false;favoriteBrowseState\.expanded=true/);
-  const toggle=html.slice(html.indexOf('function toggleFavoriteBrowse()'),html.indexOf('function syncFavoriteBrowseClear'));
-  assert.match(toggle,/favoriteBrowseState\.expanded=!favoriteBrowseState\.expanded/);
-  assert.doesNotMatch(toggle,/invalidate|reset\(/);
   const focus=html.slice(html.indexOf('function setTrainerDiscoveryMode'),html.indexOf('function positionTrainerSuggestions'));
+  assert.match(focus,/content\.dataset\.mode=trainerDiscoveryMode/);
   assert.match(focus,/panel\.hidden=panel\.dataset\.discoveryPanel!==trainerDiscoveryMode/);
   assert.match(focus,/setAttribute\('aria-selected',String\(selected\)\)/);
   assert.match(focus,/focus\(\{preventScroll:true\}\)/);
@@ -65,6 +76,11 @@ test('trainer search, Favorites, and Find by Pokémon are sibling discovery mode
   const inputFocus=html.slice(inputFocusStart,html.indexOf('window.visualViewport',inputFocusStart));
   assert.match(inputFocus,/queueTrainerSuggestions/);
   assert.doesNotMatch(inputFocus,/scrollIntoView|scrollTo/);
+  assert.match(block,/class="trainer-search-shell trainer-mode-search search-lookup"/);
+  assert.match(html,/class="favorite-toolbar-search trainer-mode-search app-search-shell search-filter"/);
+  assert.match(block,/class="favorite-browse-search trainer-mode-search app-search-shell search-lookup"/);
+  assert.match(html,/\.trainer-discovery-workspace\{display:grid;grid-template-columns:/);
+  assert.match(html,/@media\(max-width:899px\)\{\.trainer-discovery-workspace\{grid-template-columns:minmax\(0,1fr\)/);
 });
 
 test('trainer suggestions suppress stale debounced renders and present reciprocal hierarchy',()=>{

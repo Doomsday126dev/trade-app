@@ -285,7 +285,7 @@ test.describe('visual smoke', () => {
     };
     await assertOperable('#ac-input');
     await openMainTab(page,'find');await assertOperable('#find-trainer-input');
-    await page.locator('#favorite-browse-toggle').click();await assertOperable('#favorite-browse-input');
+    await page.locator('[data-discovery-mode="pokemon"]').click();await assertOperable('#favorite-browse-input');
     await openMainTab(page,'schedule');await assertOperable('.event-filter-row');
     await page.evaluate(()=>openSettingsPanel('language',{route:false}));await assertOperable('#settings-modal .settings-modal-close');
     await page.evaluate(()=>closeModal('settings-modal',{route:false}));
@@ -1337,14 +1337,12 @@ test.describe('visual smoke', () => {
     });
 
     await page.evaluate(()=>applyTheme('dark'));
+    await page.locator('[data-discovery-mode="pokemon"]').click();
     await expect(page.locator('#favorite-pokemon-browse')).toBeVisible();
     expect(await page.evaluate(()=>document.getElementById('favorite-trainers').contains(document.getElementById('favorite-pokemon-browse')))).toBe(false);
     await expect(page.locator('.trainer-discovery-modes')).toBeVisible();
-    await expect(page.locator('#favorite-browse-toggle')).toHaveAttribute('aria-expanded','false');
-    await expect(page.locator('#favorite-browse-panel')).toBeHidden();
-    await captureFavoriteBrowse(page,'01-desktop-idle-collapsed');
-    await page.locator('#favorite-browse-toggle').click();
     await expect(page.locator('#favorite-browse-panel')).toBeVisible();
+    await captureFavoriteBrowse(page,'01-desktop-idle');
     await page.evaluate(()=>ensureFavoriteShareSessionCache().invalidate());
     await page.locator('#favorite-browse-input').fill('Palkia');
     await expect(page.locator('#favorite-browse-suggestions.open .ac-item').first()).toBeVisible();
@@ -1361,7 +1359,6 @@ test.describe('visual smoke', () => {
     await captureFavoriteBrowse(page,'06-dark-autocomplete-open');
     await page.keyboard.press('Enter');
     expect(await page.evaluate(()=>favoriteBrowseState.selected?.name)).toBe('Palkia');
-    await expect(page.locator('#favorite-browse-toggle')).toHaveAttribute('aria-expanded','true');
     await expect(page.locator('#favorite-browse-results')).toHaveAttribute('aria-busy','true');
     await expect(page.locator('.favorite-browse-progress')).toContainText(/3/);
     await expect(page.locator('.favorite-browse-row')).toHaveCount(2);
@@ -1379,13 +1376,6 @@ test.describe('visual smoke', () => {
     expect(afterRetry.TrainerGamma).toBe(beforeRetry.TrainerGamma+1);
     await expect(page.locator('.favorite-browse-partial')).toHaveCount(0);
     await captureFavoriteBrowse(page,'05-desktop-expanded-results');
-
-    const readsBeforeCollapse=await page.evaluate(()=>JSON.stringify(window.__favoriteBrowseFixture.reads));
-    await page.locator('#favorite-browse-toggle').click();
-    await expect(page.locator('#favorite-browse-panel')).toBeHidden();
-    await page.locator('#favorite-browse-toggle').click();
-    await expect(page.locator('.favorite-browse-row')).toHaveCount(3);
-    expect(await page.evaluate(()=>JSON.stringify(window.__favoriteBrowseFixture.reads))).toBe(readsBeforeCollapse);
 
     const readsBeforeTag=await page.evaluate(()=>JSON.stringify(window.__favoriteBrowseFixture.reads));
     await page.evaluate(()=>{window.__favoriteBrowseFixture.state.favorites[0].tagIds=['soon'];renderFavoriteBrowseResults();});
@@ -1422,9 +1412,9 @@ test.describe('visual smoke', () => {
 
     await page.evaluate(()=>{favoriteBrowseState.selected=null;favoriteBrowseState.expanded=false;document.getElementById('favorite-browse-input').value='';const trainerInput=document.getElementById('find-trainer-input');if(trainerInput)trainerInput.value='';resetSessionTransientUi('fixture_capture');renderFavoriteBrowseResults();});
     await page.setViewportSize({width:390,height:844});
-    await captureFavoriteBrowse(page,'02-mobile-idle-collapsed');
-    await page.locator('#favorite-browse-toggle').click();
-    await captureFavoriteBrowse(page,'03-mobile-expanded-before-selection');
+    await page.locator('[data-discovery-mode="pokemon"]').click();
+    await captureFavoriteBrowse(page,'02-mobile-idle');
+    await captureFavoriteBrowse(page,'03-mobile-before-selection');
     await page.evaluate(()=>{favoriteBrowseState.selected={name:'Palkia',dn:'Palkia',no:484};favoriteBrowseState.expanded=true;document.getElementById('favorite-browse-input').value='Palkia';renderFavoriteBrowseResults();});
     await expect(page.locator('.favorite-browse-row')).toHaveCount(3);
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
@@ -1437,7 +1427,7 @@ test.describe('visual smoke', () => {
     for(const {locale,width} of [{locale:'ja',width:320},{locale:'de',width:390},{locale:'es',width:430},{locale:'en',width:1440}]){
       await page.setViewportSize({width,height:844});
       await page.evaluate(locale=>changeInterfaceLocale(locale),locale);
-      await expect(page.locator('#favorite-browse-title')).toBeVisible();
+      await expect(page.locator('[data-discovery-mode="pokemon"]')).toBeVisible();
       await expect(page.locator('.favorite-browse-row')).toHaveCount(3);
       expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
       const openBox=await page.locator('.favorite-browse-open').first().boundingBox();
@@ -1641,7 +1631,7 @@ test.describe('visual smoke', () => {
     ];
     for(const [locale,width,height] of viewports){
       await page.setViewportSize({width,height});
-      await page.evaluate(async locale=>{changeInterfaceLocale(locale);await renderTrainerQuickLists();},locale);
+      await page.evaluate(async locale=>{changeInterfaceLocale(locale);setTrainerDiscoveryMode('favorites');await renderTrainerQuickLists();},locale);
       await expect(page.locator('#favorite-trainers h2')).toBeVisible();
       await expect(page.locator('#recent-trainers h2')).toBeVisible();
       const firstCard=page.locator('.favorite-card-shell').first();
@@ -3135,8 +3125,10 @@ test.describe('visual smoke', () => {
     await expect(page.locator('.event-filter[data-type="spotlight"]')).toBeVisible();
     await expect(page.locator('.events-context-rail')).toBeVisible();
     await expect(page.locator('.event-up-next-row')).toHaveCount(4);
-    await expect(page.locator('.event-up-next-sprite')).toHaveCount(4);
+    await expect(page.locator('.event-up-next-sprite')).toHaveCount(0);
+    await expect(page.locator('.event-up-next-pokemon-names').first()).toBeVisible();
     await expect(page.locator('.event-calendar-day.has-events').first()).toBeVisible();
+    await expect(page.locator('.event-calendar-day.has-events').first().locator('i')).toHaveText('');
     const cueRightEdges=await page.locator('a.event-card .event-card-cue').evaluateAll(nodes=>nodes.map(node=>Math.round(node.getBoundingClientRect().right)));
     expect(Math.max(...cueRightEdges)-Math.min(...cueRightEdges)).toBeLessThanOrEqual(2);
     await expect(page.locator('article.event-card .event-card-cue')).toHaveCount(0);
@@ -3146,13 +3138,16 @@ test.describe('visual smoke', () => {
       const container=document.getElementById('events-out').getBoundingClientRect();
       const timeline=document.querySelector('.events-timeline').getBoundingClientRect();
       const rail=document.querySelector('.events-context-rail').getBoundingClientRect();
-      return{headerLeft:header.left,containerLeft:container.left,containerRight:container.right,timelineLeft:timeline.left,timelineRight:timeline.right,timelineWidth:timeline.width,railLeft:rail.left,railRight:rail.right};
+      const style=getComputedStyle(document.querySelector('.events-context-rail'));
+      return{headerLeft:header.left,containerLeft:container.left,containerRight:container.right,timelineLeft:timeline.left,timelineRight:timeline.right,timelineWidth:timeline.width,railLeft:rail.left,railRight:rail.right,railPosition:style.position,railOverflowY:style.overflowY};
     });
     expect(Math.abs(desktopGeometry.headerLeft-desktopGeometry.containerLeft)).toBeLessThanOrEqual(1);
     expect(desktopGeometry.timelineWidth).toBeLessThanOrEqual(861);
     expect(Math.abs(desktopGeometry.timelineLeft-desktopGeometry.containerLeft)).toBeLessThanOrEqual(1);
     expect(desktopGeometry.railLeft).toBeGreaterThan(desktopGeometry.timelineRight);
     expect(desktopGeometry.railRight).toBeLessThanOrEqual(desktopGeometry.containerRight+1);
+    expect(desktopGeometry.railPosition).toBe('static');
+    expect(desktopGeometry.railOverflowY).toBe('visible');
     await capturePass3(page,`product-ui-events-${test.info().project.name}`);
     await page.setViewportSize({width:390,height:420});
     const filterGeometry=await page.locator('.event-filter-row').evaluate(node=>({clientWidth:node.clientWidth,scrollWidth:node.scrollWidth,tabIndex:node.tabIndex,edge:getComputedStyle(node.parentElement,'::after').display}));
@@ -3165,7 +3160,7 @@ test.describe('visual smoke', () => {
     expect(await sourceRow.locator('a,button,[role="button"]').count()).toBe(0);
     await sourceRow.focus();await expect(sourceRow).toBeFocused();
     for(const filter of await page.locator('.event-filter').all()){const box=await filter.boundingBox();expect(box?.height).toBeGreaterThanOrEqual(48);}
-    const calendarEventDay=page.locator('.event-calendar-day.has-events').first();await calendarEventDay.click();await expect(page.locator('.event-calendar-day.selected')).toHaveCount(1);await expect(page.locator('.event-calendar-clear')).toBeVisible();await page.locator('.event-calendar-clear').click();await expect(page.locator('.event-calendar-day.selected')).toHaveCount(0);
+    const calendarEventDay=page.locator('.event-calendar-day.has-events').first();await calendarEventDay.click();await expect(page.locator('.event-calendar-day.selected')).toHaveCount(1);await expect(page.locator('.event-selected-day')).toBeVisible();await expect(page.locator('.event-selected-day-row').first()).toBeVisible();await expect(page.locator('.event-calendar-clear')).toBeVisible();const emptyCalendarDay=page.locator('.event-calendar-day:not(.has-events)').first();await emptyCalendarDay.click();await expect(page.locator('.event-selected-day-empty')).toBeVisible();await page.locator('.event-calendar-clear').click();await expect(page.locator('.event-calendar-day.selected')).toHaveCount(0);await expect(page.locator('.event-selected-day')).toHaveCount(0);
     await page.locator('.event-filter[data-type="spotlight"]').click();await expect(page.locator('.event-card')).toHaveCount(1);await expect(page.locator('.event-card')).toContainText('Pikachu');
     await page.locator('.event-filter[data-type="raids"]').click();await expect(page.locator('.event-filter[data-type="raids"]')).toHaveAttribute('aria-pressed','true');
     await page.locator('.event-filter[data-type="gbl"]').click();await expect(page.locator('.events-state')).toContainText(/.+/);await expect(page.locator('.events-state-action')).toBeVisible();await page.locator('.events-state-action').click();await expect(page.locator('.event-filter[data-type="all"]')).toHaveAttribute('aria-pressed','true');

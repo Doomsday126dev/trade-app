@@ -215,12 +215,14 @@ test.describe('audit cross-browser contracts',()=>{
       allData.admins={CrossBrowserTrainer:true};
       document.getElementById('admin-tab').style.display='';
       switchTab('find');
+      setTrainerDiscoveryMode('trainers');
     });
     const transitions=[
       ['#nav-mylist','#nav-find'],
       ['#nav-find','#nav-events'],
       ['#nav-events','#admin-tab'],
-      ['#admin-tab','#find-trainer-input']
+      ['#admin-tab','#trainer-mode-trainers'],
+      ['#trainer-mode-trainers','#find-trainer-input']
     ];
     const keyboardTab=testInfo.project.name==='cross-webkit'?'Alt+Tab':'Tab';
     for(const [before,selector] of transitions){
@@ -459,7 +461,7 @@ test.describe('audit cross-browser contracts',()=>{
     });
     expect(legacyRoundTrip).toEqual({displayName:'Pikachu (Worlds 2025)',duplicateSelectable:0,storedKeys:['Pikachu Varsity Jacket']});
 
-    await page.evaluate(()=>{switchTab('find');toggleFavoriteBrowse();});
+    await page.evaluate(()=>{switchTab('find');setTrainerDiscoveryMode('pokemon');});
     const browse=page.locator('#favorite-browse-input');
     const catalogContract=await page.evaluate(()=>{
       const items=favoriteBrowseCatalog(),byId=id=>items.filter(item=>item.catalogId===id);
