@@ -45,9 +45,13 @@ test('relative precision is low cost and appropriate to the remaining interval',
   assert.doesNotMatch(html,/setInterval\([^)]*event|requestAnimationFrame\([^)]*event/i);
 });
 
-test('timeline uses one chronological column, native source rows, and shared primitives',()=>{
+test('timeline keeps one chronological column beside the calendar and Up next overview',()=>{
   const render=html.slice(html.indexOf('function setEventTypeFilter'),html.indexOf('function renderSchedule'));
+  assert.match(render,/class="events-layout"/);
   assert.match(render,/class="events-timeline"/);
+  assert.match(render,/class="events-context-rail"/);
+  assert.match(render,/class="event-rail-module event-calendar"/);
+  assert.match(render,/class="event-rail-module event-up-next"/);
   assert.match(render,/const tag=link\?'a':'article'/);
   assert.match(render,/class="event-card card-row/);
   assert.match(render,/target="_blank" rel="noopener noreferrer" aria-label=/);
@@ -58,6 +62,41 @@ test('timeline uses one chronological column, native source rows, and shared pri
   assert.match(html,/\.event-card\{[^}]*display:grid[^}]*grid-template-columns:minmax\(0,1fr\) 86px/);
   assert.match(html,/\.event-card-cue\{[^}]*width:86px/);
   assert.match(html,/\.event-card\{[^}]*min-height:92px/);
+  assert.match(html,/\.events-layout\{display:grid;grid-template-columns:minmax\(0,860px\) minmax\(270px,320px\)/);
+  assert.match(html,/@media\(max-width:1080px\)\{\.events-layout\{grid-template-columns:minmax\(0,1fr\)/);
+});
+
+test('Up next selects the first non-expired event in each supported category',()=>{
+  const events=loadDomain(),now=Date.parse('2026-08-09T12:00:00Z');
+  const fixture=[
+    {id:'spot-late',eventType:'pokemon-spotlight-hour',start:'2026-08-18T18:00:00Z',end:'2026-08-18T19:00:00Z'},
+    {id:'max',eventType:'max-mondays',start:'2026-08-10T18:00:00Z',end:'2026-08-10T19:00:00Z'},
+    {id:'raid',eventType:'raid-day',start:'2026-08-11T10:00:00Z',end:'2026-08-11T17:00:00Z'},
+    {id:'community',eventType:'community-day',start:'2026-08-12T14:00:00Z',end:'2026-08-12T17:00:00Z'},
+    {id:'spot-first',eventType:'pokemon-spotlight-hour',start:'2026-08-11T18:00:00Z',end:'2026-08-11T19:00:00Z'},
+    {id:'expired',eventType:'raid-day',start:'2026-08-08T10:00:00Z',end:'2026-08-08T17:00:00Z'},
+    {id:'other',eventType:'event',start:'2026-08-10T10:00:00Z',end:'2026-08-10T12:00:00Z'}
+  ];
+  assert.deepEqual(Array.from(events.upNextEvents(fixture,{now}),event=>[event.upNextCategory,event.id]),[
+    ['spotlight_hour','spot-first'],['max_monday','max'],['raid_day','raid'],['community_day','community']
+  ]);
+  assert.deepEqual(Array.from(events.UP_NEXT_CATEGORIES),['spotlight_hour','max_monday','raid_day','community_day']);
+});
+
+test('calendar is deterministic, marks multi-day occupancy, and drives date filtering',()=>{
+  const events=loadDomain(),now=Date.parse('2026-08-09T12:00:00Z');
+  const fixture=[
+    {id:'multi',name:'Multi',start:'2026-08-10T10:00:00Z',end:'2026-08-12T18:00:00Z'},
+    {id:'single',name:'Single',start:'2026-08-12T08:00:00Z',end:'2026-08-12T09:00:00Z'}
+  ];
+  const calendar=events.calendarMonth(fixture,{year:2026,month:7,now,timeZone:'UTC'});
+  assert.equal(calendar.cells.length,42);
+  assert.equal(calendar.cells.find(cell=>cell.key==='2026-08-10').eventCount,1);
+  assert.equal(calendar.cells.find(cell=>cell.key==='2026-08-11').eventCount,1);
+  assert.equal(calendar.cells.find(cell=>cell.key==='2026-08-12').eventCount,2);
+  assert.equal(calendar.cells.find(cell=>cell.key==='2026-08-09').today,true);
+  const filtered=events.prepareEvents(fixture,{now,date:'2026-08-11',timeZone:'UTC'}).flatMap(section=>section.events);
+  assert.deepEqual(Array.from(filtered,event=>event.id),['multi']);
 });
 
 test('filters and loading empty filtered error offline states remain distinct',()=>{
@@ -68,6 +107,20 @@ test('filters and loading empty filtered error offline states remain distinct',(
   for(const value of ['events.loading','events.emptyTitle','events.filteredEmptyTitle','events.errorTitle','events.offlineTitle','events.clearFilters','events.retry'])assert.match(render,new RegExp(value.replace('.','\\.')));
   assert.match(render,/out\.setAttribute\('aria-busy'/);
   assert.match(render,/setEventTypeFilter\('all'\)/);
+  assert.match(render,/eventCalendarDate/);
+  assert.match(render,/events\.clearDate/);
+});
+
+test('calendar and overview interactions are keyboard reachable and reuse localized sprites',()=>{
+  const render=html.slice(html.indexOf('function setEventTypeFilter'),html.indexOf('function renderSchedule'));
+  assert.match(render,/eventCalendarKeydown\(event,'\$\{cell\.key\}'\)/);
+  assert.match(render,/\['Home','End'\]/);
+  assert.match(render,/ArrowLeft:-1,ArrowRight:1,ArrowUp:-7,ArrowDown:7/);
+  assert.match(render,/pokemonNamesI18n\.speciesName\(\{no\},locale\)/);
+  assert.match(render,/spriteImg\(no,32,'event-up-next-sprite'/);
+  assert.match(render,/jumpToEvent\(this\.dataset\.eventId\)/);
+  assert.match(render,/card\.scrollIntoView/);
+  assert.match(render,/card\.focus\(\{preventScroll:true\}\)/);
 });
 
 test('event source and localization remain unchanged while Spotlight uses structured identity only',()=>{

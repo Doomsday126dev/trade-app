@@ -19,7 +19,7 @@ test('mobile dropdown uses visual viewport, supports upward placement, and keeps
   assert.match(html,/box\.dataset\.placement=above\?'above':'below'/);
   assert.match(html,/trainer-suggestions\[data-placement="above"\]/);
   assert.match(html,/\.trainer-suggestion\{min-height:48px;font-size:14px\}/);
-  assert.match(html,/scrollIntoView\?\.\(\{block:'center',behavior:'smooth'\}\)/);
+  assert.match(html,/box\?\.querySelector\('\.active'\)\?\.scrollIntoView\(\{block:'nearest'\}\)/);
 });
 
 test('combobox semantics and keyboard/touch selection remain intact',()=>{

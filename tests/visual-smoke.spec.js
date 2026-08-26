@@ -2707,15 +2707,18 @@ test.describe('visual smoke', () => {
     await waitForStableLocalOrganizerStartup(page);
     await isolateAuthenticatedMyListFixture(page,{username:'Doomsday126',uid:'uid-owner'});
     await page.evaluate(()=>{
-      const them='TrainerWithAnExceptionallyLongHandle123';
+      const them='TrainerWithAnExceptionallyLongHandle123',nyc='location-gofestnewyorkcity',osaka='location-gofestosaka';
       allData=normalizeData({
-        users:{Doomsday126:{authUid:'uid-owner',isOwner:true},[them]:{}},
+        users:{
+          Doomsday126:{authUid:'uid-owner',isOwner:true,specialTradeBoard:{lf:[],ft:[{name:'Pikachu',dn:'Pikachu',no:25,shiny:true,backgroundId:osaka,mirror:false,qty:26}]}},
+          [them]:{specialTradeBoard:{lf:[],ft:[{name:'Mew',dn:'Mew',no:151,shiny:true,backgroundId:nyc,mirror:false,qty:45},{name:'Heracross',dn:'Heracross',no:214,shiny:false,backgroundId:'',mirror:false,qty:57}]}}
+        },
         have:{Doomsday126:{'Pikachu::m':{qty:26},'Heracross::m':{qty:3}},[them]:{Mew:{qty:45},'Heracross::m':{qty:57}}},
-        wishlist:{Doomsday126:{Mew:'H[lucky][shiny][xxl](winter costume)',Heracross:'M(F)'},[them]:{Pikachu:'L[xxs](male)'}},
+        wishlist:{Doomsday126:{Mew:`H[shiny][bg:${nyc}]`,Heracross:'M(F)'},[them]:{Pikachu:`L[shiny][bg:${osaka}]`}},
         dynamax:{},gmax:{},costumes:{}
       });
       _pathLoadState={have:'loaded',wishlist:'loaded',dynamax:'loaded',gmax:'loaded',costumes:'loaded'};
-      selectedTrainerRuntime={username:them,publicData:normalizeData({users:{[them]:{}},wishlist:{[them]:{Pikachu:'L[xxs](male)'}}})};
+      selectedTrainerRuntime={username:them,publicData:normalizeData({users:{[them]:allData.users[them]},wishlist:{[them]:allData.wishlist[them]}})};
       document.getElementById('app').style.display='none';document.getElementById('share-view').classList.add('active');renderShareView(them,'wishlist');
     });
     await page.getByRole('button',{name:/Compare with My List/i}).click();
@@ -2725,26 +2728,26 @@ test.describe('visual smoke', () => {
     await expect(modal.locator('.diff-match-box.want')).toContainText('Mew');
     await expect(modal.locator('.diff-match-box.want')).toContainText('My priority: High');
     await expect(modal.locator('.diff-match-box.want')).toContainText('Shiny');
-    await expect(modal.locator('.diff-match-box.want')).toContainText('winter costume');
+    await expect(modal.locator('.diff-match-box.want')).toContainText('New York City');
     await expect(modal.locator('.diff-match-box.want')).not.toContainText('Heracross');
     await expect(modal.locator('.diff-match-box.give')).toContainText('Pikachu');
     await expect(modal.locator('.diff-match-box.give')).toContainText('Their priority: Low');
-    await expect(modal.locator('.diff-match-box.give')).toContainText('Extra Small');
-    await expect(modal.locator('.diff-match-box.give')).toContainText('Male');
+    await expect(modal.locator('.diff-match-box.give')).toContainText('Shiny');
+    await expect(modal.locator('.diff-match-box.give')).toContainText('Osaka');
     await expect(modal.locator('.diff-match-qty')).toHaveCount(0);
     await expect(modal.locator('.diff-match-box.want .diff-match-count')).toHaveText('1');
     await expect(modal.locator('.diff-match-box.give .diff-match-count')).toHaveText('1');
     expect(await modal.locator('.diff-match-chip[title]').evaluateAll(nodes=>nodes.every(node=>!/[×x]\d+/i.test(node.getAttribute('title')||'')))).toBe(true);
     await page.getByRole('button',{name:'Edit My List'}).click();
     await expect(page.locator('#trade-return-banner')).toBeVisible();
-    await page.evaluate(()=>{allData.wishlist.Doomsday126.Heracross='M(M)';renderMyList();});
+    await page.evaluate(()=>{allData.wishlist.Doomsday126.Heracross='M';renderMyList();});
     await page.getByRole('button',{name:'Return to matches'}).click();
     await expect(page.locator('#trade-match-modal .diff-match-box.want')).toContainText('Heracross');
     await capturePass3(page,'trade-match-detail-390x844');
     await page.evaluate(()=>{
       const them='TrainerWithAnExceptionallyLongHandle123';
       const names=['Bulbasaur','Ivysaur','Venusaur','Charmander','Charmeleon','Charizard','Squirtle','Wartortle','Blastoise','Caterpie','Metapod','Butterfree','Weedle','Kakuna','Beedrill','Pidgey'];
-      names.forEach((name,index)=>{allData.have[them][name]={qty:index%3+1};allData.wishlist.Doomsday126[name]=index%3===0?'H[shiny]':index%3===1?'M[xxl]':'L[xxs]';});
+      names.forEach((name,index)=>{allData.users[them].specialTradeBoard.ft.push({name,dn:name,no:index+1,shiny:false,backgroundId:'',mirror:false,qty:index%3+1});allData.wishlist.Doomsday126[name]=index%3===0?'H':index%3===1?'M':'L';});
       renderTradeMatchModal();
     });
     await expect(page.locator('#trade-match-modal .diff-match-qty')).toHaveCount(0);
@@ -2770,7 +2773,7 @@ test.describe('visual smoke', () => {
     await page.evaluate(()=>{
       allData=normalizeData({users:{DiscoveryScrollTester:{},TrainerAlpha:{},TrainerBeta:{}},wishlist:{TrainerAlpha:{Pikachu:'H'},TrainerBeta:{Eevee:'M'}},dynamax:{},gmax:{},costumes:{}});
       switchTab('find',{render:false});renderFindTrainer();
-      document.getElementById('recent-trainers').style.minHeight='1100px';
+      document.querySelectorAll('[data-discovery-panel]').forEach(panel=>{panel.style.minHeight='1100px';});
     });
     const viewports=[{width:1440,height:900},{width:430,height:932},{width:390,height:844},{width:375,height:812},{width:320,height:568}];
     for(const viewport of viewports){
@@ -2781,7 +2784,9 @@ test.describe('visual smoke', () => {
         await page.evaluate(()=>{const nav=document.querySelector('.trainer-discovery-modes');window.scrollTo(0,Math.max(0,scrollY+nav.getBoundingClientRect().top-Math.round(innerHeight*.2)));});
         const before=await page.evaluate(()=>scrollY);
         if(keyboard)await page.keyboard.press('Enter');else await button.click();
+        await expect(button).toHaveAttribute('aria-selected','true');
         await expect(button).toHaveAttribute('aria-current','true');
+        await expect(page.locator('.trainer-discovery-modes [aria-current="true"]')).toHaveCount(1);
         await page.waitForTimeout(80);
         const after=await page.evaluate(()=>scrollY);
         expect(Math.abs(after-before)).toBeLessThanOrEqual(1);
@@ -3115,18 +3120,24 @@ test.describe('visual smoke', () => {
       const now=Date.now(),hour=3600000,day=24*hour;
       const base=[
         {eventID:'active',name:'Raid Hour',eventType:'raid',start:new Date(now-hour).toISOString(),end:new Date(now+2*hour).toISOString(),link:'https://example.com/active'},
-        {eventID:'spotlight',name:'Structured Spotlight',eventType:'pokemon-spotlight-hour',start:new Date(now+2*hour).toISOString(),end:new Date(now+3*hour).toISOString(),link:'https://example.com/spotlight'},
-        {eventID:'soon',name:'Community Day',eventType:'community-day',start:new Date(now+day).toISOString(),end:new Date(now+day+3*hour).toISOString(),link:'https://example.com/soon'},
+        {eventID:'spotlight',name:'Pikachu Spotlight Hour',eventType:'pokemon-spotlight-hour',start:new Date(now+2*hour).toISOString(),end:new Date(now+3*hour).toISOString(),link:'https://example.com/spotlight'},
+        {eventID:'max',name:'Dynamax Bulbasaur during Max Monday',eventType:'max-mondays',start:new Date(now+6*hour).toISOString(),end:new Date(now+7*hour).toISOString(),link:'https://example.com/max'},
+        {eventID:'raid-day',name:'Rayquaza Raid Day',eventType:'raid-day',start:new Date(now+day).toISOString(),end:new Date(now+day+3*hour).toISOString(),link:'https://example.com/raid-day'},
+        {eventID:'soon',name:'Eevee Community Day',eventType:'community-day',start:new Date(now+2*day).toISOString(),end:new Date(now+2*day+3*hour).toISOString(),link:'https://example.com/soon'},
         {eventID:'later',name:'A deliberately long seasonal event title that must wrap without widening the timeline',eventType:'event',start:new Date(now+6*day).toISOString(),end:new Date(now+8*day).toISOString(),link:'https://example.com/later'}
       ];
       const extras=Array.from({length:25},(_,index)=>({eventID:`scale-${index}`,name:`Research Event ${index}`,eventType:'research',start:new Date(now+(index+9)*day).toISOString(),end:new Date(now+(index+9)*day+hour).toISOString()}));
-      window.__eventTimelineFixture={events:[...base,...extras],raids:[],fetchedAt:now};_eventData=window.__eventTimelineFixture;_eventLoadState='ready';eventTypeFilter='all';renderEventsOnly();
+      window.__eventTimelineFixture={events:[...base,...extras],raids:[],fetchedAt:now};_eventData=window.__eventTimelineFixture;_eventLoadState='ready';eventTypeFilter='all';eventCalendarDate='';eventCalendarAnchor=new Date(new Date(now).getFullYear(),new Date(now).getMonth(),1);renderEventsOnly();
     });
     await expect(page.locator('.event-group[data-group="now"]')).toBeVisible();await expect(page.locator('.event-group[data-group="soon"]')).toBeVisible();await expect(page.locator('.event-group[data-group="later"]')).toBeVisible();
     await expect(page.locator('.event-current-badge')).toBeVisible();await expect(page.locator('.event-card-relative').first()).toContainText(/.+/);
     await expect(page.locator('.event-card-date').first()).toContainText(String(new Date().getFullYear()));
     await expect(page.locator('.event-current-badge')).not.toContainText('●');
     await expect(page.locator('.event-filter[data-type="spotlight"]')).toBeVisible();
+    await expect(page.locator('.events-context-rail')).toBeVisible();
+    await expect(page.locator('.event-up-next-row')).toHaveCount(4);
+    await expect(page.locator('.event-up-next-sprite')).toHaveCount(4);
+    await expect(page.locator('.event-calendar-day.has-events').first()).toBeVisible();
     const cueRightEdges=await page.locator('a.event-card .event-card-cue').evaluateAll(nodes=>nodes.map(node=>Math.round(node.getBoundingClientRect().right)));
     expect(Math.max(...cueRightEdges)-Math.min(...cueRightEdges)).toBeLessThanOrEqual(2);
     await expect(page.locator('article.event-card .event-card-cue')).toHaveCount(0);
@@ -3135,12 +3146,14 @@ test.describe('visual smoke', () => {
       const header=document.querySelector('#tab-schedule .sched-hdr').getBoundingClientRect();
       const container=document.getElementById('events-out').getBoundingClientRect();
       const timeline=document.querySelector('.events-timeline').getBoundingClientRect();
-      return{headerLeft:header.left,containerLeft:container.left,containerRight:container.right,timelineLeft:timeline.left,timelineRight:timeline.right,timelineWidth:timeline.width};
+      const rail=document.querySelector('.events-context-rail').getBoundingClientRect();
+      return{headerLeft:header.left,containerLeft:container.left,containerRight:container.right,timelineLeft:timeline.left,timelineRight:timeline.right,timelineWidth:timeline.width,railLeft:rail.left,railRight:rail.right};
     });
     expect(Math.abs(desktopGeometry.headerLeft-desktopGeometry.containerLeft)).toBeLessThanOrEqual(1);
     expect(desktopGeometry.timelineWidth).toBeLessThanOrEqual(861);
-    expect(desktopGeometry.timelineLeft).toBeGreaterThan(desktopGeometry.headerLeft);
-    expect(Math.abs((desktopGeometry.timelineLeft-desktopGeometry.containerLeft)-(desktopGeometry.containerRight-desktopGeometry.timelineRight))).toBeLessThanOrEqual(1);
+    expect(Math.abs(desktopGeometry.timelineLeft-desktopGeometry.containerLeft)).toBeLessThanOrEqual(1);
+    expect(desktopGeometry.railLeft).toBeGreaterThan(desktopGeometry.timelineRight);
+    expect(desktopGeometry.railRight).toBeLessThanOrEqual(desktopGeometry.containerRight+1);
     await capturePass3(page,`product-ui-events-${test.info().project.name}`);
     await page.setViewportSize({width:390,height:420});
     const filterGeometry=await page.locator('.event-filter-row').evaluate(node=>({clientWidth:node.clientWidth,scrollWidth:node.scrollWidth,tabIndex:node.tabIndex,edge:getComputedStyle(node.parentElement,'::after').display}));
@@ -3153,14 +3166,15 @@ test.describe('visual smoke', () => {
     expect(await sourceRow.locator('a,button,[role="button"]').count()).toBe(0);
     await sourceRow.focus();await expect(sourceRow).toBeFocused();
     for(const filter of await page.locator('.event-filter').all()){const box=await filter.boundingBox();expect(box?.height).toBeGreaterThanOrEqual(48);}
-    await page.locator('.event-filter[data-type="spotlight"]').click();await expect(page.locator('.event-card')).toHaveCount(1);await expect(page.locator('.event-card')).toContainText('Structured Spotlight');
+    const calendarEventDay=page.locator('.event-calendar-day.has-events').first();await calendarEventDay.click();await expect(page.locator('.event-calendar-day.selected')).toHaveCount(1);await expect(page.locator('.event-calendar-clear')).toBeVisible();await page.locator('.event-calendar-clear').click();await expect(page.locator('.event-calendar-day.selected')).toHaveCount(0);
+    await page.locator('.event-filter[data-type="spotlight"]').click();await expect(page.locator('.event-card')).toHaveCount(1);await expect(page.locator('.event-card')).toContainText('Pikachu');
     await page.locator('.event-filter[data-type="raids"]').click();await expect(page.locator('.event-filter[data-type="raids"]')).toHaveAttribute('aria-pressed','true');
     await page.locator('.event-filter[data-type="gbl"]').click();await expect(page.locator('.events-state')).toContainText(/.+/);await expect(page.locator('.events-state-action')).toBeVisible();await page.locator('.events-state-action').click();await expect(page.locator('.event-filter[data-type="all"]')).toHaveAttribute('aria-pressed','true');
     await page.evaluate(()=>{_eventData={events:[],raids:[],fetchedAt:Date.now()};_eventLoadState='ready';renderEventsOnly();});await expect(page.locator('.events-state')).toBeVisible();await expect(page.locator('.events-state-action')).toHaveCount(0);
     await page.evaluate(()=>{_eventData=null;_eventLoadState='loading';renderEventsOnly();});await expect(page.locator('#events-out')).toHaveAttribute('aria-busy','true');await expect(page.locator('.ui-state-loading')).toBeVisible();await capturePass3(page,'events-loading-mobile');
     await page.evaluate(()=>{_eventData={events:[],raids:[],fetchedAt:0};_eventLoadState='error';renderEventsOnly();});await expect(page.locator('.ui-state-unavailable')).toBeVisible();await expect(page.locator('.events-state-action')).toBeVisible();await capturePass3(page,'events-error-mobile');
-    const viewports=[['en',320,640],['ja',375,700],['de',390,420],['es',430,760],['ja',390,300],['de',768,800],['es',1024,800],['en',1440,900],['en',430,932],['ja',390,844],['de',375,812],['es',320,568]];
-    for(const [locale,width,height] of viewports){await page.setViewportSize({width,height});await page.evaluate(locale=>{changeInterfaceLocale(locale);_eventData=window.__eventTimelineFixture;_eventLoadState='ready';eventTypeFilter='all';renderEventsOnly();},locale);await expect(page.locator('.event-card').first()).toBeVisible();const rowBox=await page.locator('.event-card').first().boundingBox();expect(rowBox?.height).toBeLessThan(width<=430?192:150);const summaryClamps=await page.locator('.event-card-summary').evaluateAll(nodes=>nodes.map(node=>getComputedStyle(node).webkitLineClamp));expect(summaryClamps.every(value=>value==='1')).toBe(true);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);}
+    const viewports=[['en',320,640],['ja',375,700],['de',390,420],['es',430,760],['ja',390,300],['de',768,800],['es',1024,800],['en',1440,900],['en',1728,1000],['en',430,932],['ja',390,844],['de',375,812],['es',320,568]];
+    for(const [locale,width,height] of viewports){await page.setViewportSize({width,height});await page.evaluate(locale=>{changeInterfaceLocale(locale);_eventData=window.__eventTimelineFixture;_eventLoadState='ready';eventTypeFilter='all';eventCalendarDate='';renderEventsOnly();},locale);await expect(page.locator('.event-card').first()).toBeVisible();await expect(page.locator('.events-context-rail')).toBeVisible();const rowBox=await page.locator('.event-card').first().boundingBox();expect(rowBox?.height).toBeLessThan(width<=430?192:150);const summaryClamps=await page.locator('.event-card-summary').evaluateAll(nodes=>nodes.map(node=>getComputedStyle(node).webkitLineClamp));expect(summaryClamps.every(value=>value==='1')).toBe(true);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);}
   });
 
   test('main product tabs keep equivalent page headings on one left edge',async({page})=>{

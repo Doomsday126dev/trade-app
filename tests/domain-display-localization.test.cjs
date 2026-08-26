@@ -251,7 +251,7 @@ test('event cache stays source-faithful and locale changes neither refetch nor r
   assert.match(fetchBlock,/localStorage\.setItem\(EVENT_CACHE_KEY,JSON\.stringify\(\{t:Date\.now\(\),data:_eventData\}\)\)/);
   assert.doesNotMatch(fetchBlock,/eventLabelsI18n|localizedTitle|pokemonDisplayName/);
   assert.doesNotMatch(change,/fetchPogoEvents|EVENT_CACHE_KEY|localStorage\.setItem/);
-  assert.match(html,/prepareEvents\(_eventData\.events\|\|\[\],\{filter:eventTypeFilter\}\)/);
+  assert.match(html,/prepareEvents\(allEvents,\{filter:eventTypeFilter,date:eventCalendarDate\}\)/);
   const badges=html.slice(html.indexOf('function eventBadgeForPokemon'),html.indexOf('function renderEventBanner'));
   const banner=html.slice(html.indexOf('function renderEventBanner'),html.indexOf('// ── POKÉBALL'));
   assert.match(badges,/eventLabelsI18n\.typeLabel/);

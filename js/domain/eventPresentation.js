@@ -2,6 +2,7 @@
   const root=global.PogoDomain=global.PogoDomain||{};
   const GROUPS=Object.freeze(['now','soon','later']);
   const TYPES=Object.freeze(['all','spotlight','raids','max','gbl','research','general']);
+  const UP_NEXT_CATEGORIES=Object.freeze(['spotlight_hour','max_monday','raid_day','community_day']);
   function dateOnly(value){return /^\d{4}-\d{2}-\d{2}$/.test(String(value||''));}
   function eventDate(value,endOfDay=false){
     if(dateOnly(value)){
@@ -27,11 +28,51 @@
     if(Number.isFinite(start)&&start-now<=soonWindow)return'soon';
     return'later';
   }
-  function prepareEvents(events,{now=Date.now(),filter='all',limit=60}={}){
+  function prepareEvents(events,{now=Date.now(),filter='all',date='',timeZone,limit=60}={}){
     const rows=(events||[]).map(event=>({...event,uiType:eventType(event),uiGroup:eventGroup(event,now)}))
-      .filter(event=>event.uiGroup!=='expired'&&(filter==='all'||event.uiType===filter))
+      .filter(event=>event.uiGroup!=='expired'&&(filter==='all'||event.uiType===filter)&&(!date||eventIntersectsDate(event,date,{timeZone})))
       .sort((a,b)=>eventDate(a.start)-eventDate(b.start)).slice(0,limit);
     return GROUPS.map(group=>({group,events:rows.filter(event=>event.uiGroup===group)})).filter(section=>section.events.length);
+  }
+  function normalizedEventKind(event){
+    return String(event?.eventType||'').trim().toLowerCase().replace(/[\s-]+/g,'_');
+  }
+  function upNextCategory(event){
+    const kind=normalizedEventKind(event);
+    if(kind==='pokemon_spotlight_hour'||kind==='spotlight_hour')return'spotlight_hour';
+    if(kind==='max_mondays'||kind==='max_monday')return'max_monday';
+    if(kind==='raid_day')return'raid_day';
+    if(kind==='community_day')return'community_day';
+    return'';
+  }
+  function upNextEvents(events,{now=Date.now()}={}){
+    const eligible=(events||[]).filter(event=>{
+      const end=eventDate(event?.end,dateOnly(event?.end)).getTime();
+      return upNextCategory(event)&&Number.isFinite(end)&&end>=now;
+    }).sort((a,b)=>eventDate(a.start)-eventDate(b.start));
+    return Object.freeze(UP_NEXT_CATEGORIES.map(category=>{
+      const event=eligible.find(candidate=>upNextCategory(candidate)===category);
+      return event?Object.freeze({...event,upNextCategory:category}):null;
+    }).filter(Boolean));
+  }
+  function eventIntersectsDate(event,dateKey,{timeZone}={}){
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(String(dateKey||'')))return false;
+    const start=eventDate(event?.start),end=eventDate(event?.end,dateOnly(event?.end));
+    if(!Number.isFinite(start.getTime()))return false;
+    const startKey=dateParts(start,timeZone),endKey=Number.isFinite(end.getTime())?dateParts(end,timeZone):startKey;
+    return dateKey>=startKey&&dateKey<=endKey;
+  }
+  function eventsOnDate(events,dateKey,options={}){return(events||[]).filter(event=>eventIntersectsDate(event,dateKey,options));}
+  function calendarMonth(events,{year,month,now=Date.now(),timeZone}={}){
+    const reference=new Date(now),safeYear=Number.isInteger(year)?year:reference.getFullYear(),safeMonth=Number.isInteger(month)&&month>=0&&month<=11?month:reference.getMonth();
+    const first=new Date(safeYear,safeMonth,1),gridStart=new Date(safeYear,safeMonth,1-first.getDay());
+    const today=dateParts(reference,timeZone),cells=[];
+    for(let index=0;index<42;index+=1){
+      const date=new Date(gridStart);date.setDate(gridStart.getDate()+index);
+      const key=dateParts(date,timeZone),matches=eventsOnDate(events,key,{timeZone});
+      cells.push(Object.freeze({key,day:date.getDate(),inMonth:date.getMonth()===safeMonth,today:key===today,eventCount:matches.length,eventIds:Object.freeze(matches.map(event=>String(event?.eventID||event?.id||event?.slug||'')))}));
+    }
+    return Object.freeze({year:safeYear,month:safeMonth,cells:Object.freeze(cells)});
   }
   function eventTimeLabel(event,{locale='en',timeZone}={}){
     const start=eventDate(event?.start),end=eventDate(event?.end,dateOnly(event?.end));
@@ -85,5 +126,5 @@
       return url.href;
     }catch{return'';}
   }
-  root.eventPresentation=Object.freeze({GROUPS,TYPES,dateOnly,eventDate,eventType,eventGroup,prepareEvents,eventTimeLabel,eventTiming,relativeDuration,safeHttpsUrl});
+  root.eventPresentation=Object.freeze({GROUPS,TYPES,UP_NEXT_CATEGORIES,dateOnly,eventDate,eventType,eventGroup,prepareEvents,normalizedEventKind,upNextCategory,upNextEvents,eventIntersectsDate,eventsOnDate,calendarMonth,eventTimeLabel,eventTiming,relativeDuration,safeHttpsUrl});
 })(window);
