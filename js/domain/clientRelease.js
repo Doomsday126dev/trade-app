@@ -1,6 +1,6 @@
 (function(global){
   const root=global.PogoDomain=global.PogoDomain||{};
-  const RELEASE_ID='2026-08-25.63';
+  const RELEASE_ID='2026-08-26.64';
   const TRAINER_DISCOVERY_API=Object.freeze(['fold','trainerSuggestions','bestTrainerSuggestion']);
 
   function trainerSearchControlState(domain){

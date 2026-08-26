@@ -2667,8 +2667,7 @@ test.describe('visual smoke', () => {
     await isolateAuthenticatedMyListFixture(page,{username:'Viewer',uid:'uid-viewer'});
     await page.evaluate(()=>{
       allData=normalizeData({
-        users:{Alpha:{},AlphaFriendWithAVeryLongHandle:{}},loginDirectory:{Alpha:{},AlphaFriendWithAVeryLongHandle:{}},
-        have:{Viewer:{Pikachu:{qty:1},Eevee:{qty:1}},Alpha:{Mew:{qty:1}},AlphaFriendWithAVeryLongHandle:{Bulbasaur:{qty:1}}},
+        users:{Viewer:{specialTradeBoard:{lf:[],ft:[{name:'Pikachu',dn:'Pikachu',no:25}]}},Alpha:{specialTradeBoard:{lf:[],ft:[]}},AlphaFriendWithAVeryLongHandle:{specialTradeBoard:{lf:[],ft:[]}}},loginDirectory:{Alpha:{},AlphaFriendWithAVeryLongHandle:{}},
         wishlist:{Viewer:{Mew:'H'},Alpha:{Pikachu:'H'},AlphaFriendWithAVeryLongHandle:{Pikachu:'H',Eevee:'M'}},dynamax:{},gmax:{},costumes:{}
       });
       switchTab('find',{render:false});renderFindTrainer();
@@ -2677,26 +2676,26 @@ test.describe('visual smoke', () => {
     await expect(page.locator('.trainer-suggestion')).toHaveCount(2);
     await expect(page.locator('.trainer-suggestion').first().locator('.trainer-suggestion-name')).toHaveText('Alpha');
     await capturePass3(page,'trainer-discovery-ranking-320x568');
-    await page.evaluate(()=>{selectedTrainerRuntime={username:'Alpha',publicData:normalizeData({users:{Alpha:{}},wishlist:{Alpha:{Pikachu:'H'}}})};document.getElementById('app').style.display='none';document.getElementById('share-view').classList.add('active');renderShareView('Alpha','wishlist');});
+    await page.evaluate(()=>{selectedTrainerRuntime={username:'Alpha',publicData:normalizeData({users:{Alpha:{specialTradeBoard:{lf:[],ft:[]}}},wishlist:{Alpha:{Pikachu:'H'}}})};document.getElementById('app').style.display='none';document.getElementById('share-view').classList.add('active');renderShareView('Alpha','wishlist');});
     await expect(page.locator('.share-match-overview')).toBeVisible();
     await expect(page.locator('.share-match-metric').nth(0)).toContainText('They Have My Wants');
-    await expect(page.locator('.share-match-metric').nth(0)).toContainText('Not shared');
+    await expect(page.locator('.share-match-metric').nth(0).locator('strong')).toHaveText('0');
     await expect(page.locator('.share-match-metric').nth(1)).toContainText('I Have Their Wants');
     await expect(page.locator('.share-match-metric').nth(1).locator('strong')).toHaveText('1');
     const scenarios=await page.evaluate(()=>{
-      const target='TrainerWithAnExceptionallyLongHandle123',inventory=names=>Object.fromEntries(names.map(name=>[name,{qty:1}])),wants=names=>Object.fromEntries(names.map(name=>[name,'H']));
-      const render=(theirHave,theirWants,myHave,myWants)=>{
-        allData=normalizeData({users:{Viewer:{},[target]:{}},have:{Viewer:inventory(myHave),[target]:inventory(theirHave)},wishlist:{Viewer:wants(myWants),[target]:wants(theirWants)},dynamax:{},gmax:{},costumes:{}});
-        selectedTrainerRuntime={username:target,publicData:normalizeData({users:{[target]:{}},wishlist:{[target]:wants(theirWants)}})};
+      const target='TrainerWithAnExceptionallyLongHandle123',offers=names=>names.map((name,index)=>({name,dn:name,no:index+1})),wants=names=>Object.fromEntries(names.map(name=>[name,'H']));
+      const render=(theirOffers,theirWants,myOffers,myWants)=>{
+        allData=normalizeData({users:{Viewer:{specialTradeBoard:{lf:[],ft:offers(myOffers)}},[target]:{specialTradeBoard:{lf:[],ft:offers(theirOffers)}}},wishlist:{Viewer:wants(myWants),[target]:wants(theirWants)},dynamax:{},gmax:{},costumes:{}});
+        selectedTrainerRuntime={username:target,publicData:normalizeData({users:{[target]:{specialTradeBoard:{lf:[],ft:offers(theirOffers)}}},wishlist:{[target]:wants(theirWants)}})};
         renderShareView(target,'wishlist');return[...document.querySelectorAll('.share-match-metric')].map(node=>({value:node.querySelector('strong')?.textContent||'',label:node.querySelector('span')?.textContent||'',status:node.querySelector('small')?.textContent||''}));
       };
       const many=Array.from({length:14},(_,index)=>`Wanted${index}`),owned=Array.from({length:12},(_,index)=>`Owned${index}`);
       return{none:render([],[],[],[]),they:render(['Mew'],[],[],['Mew']),mine:render([],['Pikachu'],['Pikachu'],[]),bothLarge:render(many,owned,owned,many)};
     });
     expect(scenarios.none).toEqual([]);
-    expect(scenarios.they).toEqual([]);
-    expect(scenarios.mine).toEqual([{value:'—',label:'They Have My Wants',status:'Not shared'},{value:'1',label:'I Have Their Wants',status:''}]);
-    expect(scenarios.bothLarge).toEqual([{value:'—',label:'They Have My Wants',status:'Not shared'},{value:'12',label:'I Have Their Wants',status:''}]);
+    expect(scenarios.they).toEqual([{value:'1',label:'They Have My Wants',status:''},{value:'0',label:'I Have Their Wants',status:''}]);
+    expect(scenarios.mine).toEqual([{value:'0',label:'They Have My Wants',status:''},{value:'1',label:'I Have Their Wants',status:''}]);
+    expect(scenarios.bothLarge).toEqual([{value:'14',label:'They Have My Wants',status:''},{value:'12',label:'I Have Their Wants',status:''}]);
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
     await capturePass3(page,'trainer-discovery-profile-320x568');
   });
