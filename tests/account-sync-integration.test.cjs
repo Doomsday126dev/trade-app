@@ -45,7 +45,7 @@ test('every account sync runtime module is versioned in HTML and included in the
     'js/domain/accountSyncModel.js','js/domain/accountSyncMerge.js','js/domain/accountSyncMigration.js','js/domain/accountSyncProduct.js',
     'js/data/accountSyncJournal.js','js/data/accountSyncRepository.js','js/data/accountSyncController.js','js/data/accountSyncRuntime.js'
   ];
-  for(const module of modules){assert.match(html,new RegExp(`<script src="${module.replaceAll('.','\\.')}\\?v=2026-08-26\\.67"></script>`),module);assert.ok(worker.includes(`'${module}'`),module);}
+  for(const module of modules){assert.match(html,new RegExp(`<script src="${module.replaceAll('.','\\.')}\\?v=2026-08-26\\.68"></script>`),module);assert.ok(worker.includes(`'${module}'`),module);}
 });
 
 test('canonical sync scope includes current product lanes and excludes retired inventory authorities',()=>{
