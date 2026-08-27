@@ -2851,6 +2851,52 @@ test.describe('visual smoke', () => {
     }
   });
 
+  test('trainer landing keeps search primary and shortcut sections balanced at every supported width',async({page})=>{
+    await page.goto(`./?trainer-landing-layout=${Date.now()}`,{waitUntil:'domcontentloaded'});
+    await waitForStableLocalOrganizerStartup(page);
+    await isolateAuthenticatedMyListFixture(page,{username:'DiscoveryLayoutTester',uid:'uid-discovery-layout'});
+    await openMainTab(page,'find');
+    await page.evaluate(async()=>{
+      const now=Date.now();
+      const favorites=['Ghyslaine','Irreneilable','ScoopskiPotat0','Zinniaxp'].map((displayName,index)=>({key:displayName.toLowerCase(),displayName,tagIds:[],createdAt:index+1,updatedAt:index+1}));
+      const recent=['Mazer','TrainerWithAnExceptionallyLongHandle123','KantoFriend','RaidPlanner','TradeBuddy'].map((displayName,index)=>({key:displayName.toLowerCase(),displayName,openedAt:now-index*3600000}));
+      const state={version:3,schemaVersion:3,migrationVersion:3,owner:{uid:'uid-discovery-layout',username:'DiscoveryLayoutTester'},favorites,recent,snapshots:{},tags:{},syncState:'synced',migration:{skippedFavorites:0,skippedRecents:0}};
+      const store={read:()=>state,filterFavorites:()=>state.favorites,favoriteFor:value=>state.favorites.find(item=>item.displayName===value)||null,updateCanonicalName:()=>false,snapshotFor:()=>null};
+      ensureTrainerHistoryStore=()=>store;
+      setTrainerDiscoveryMode('trainers');
+      await renderTrainerQuickLists();
+    });
+    const viewports=[{width:1728,height:1000},{width:1440,height:900},{width:1280,height:800},{width:1024,height:768},{width:768,height:900},{width:430,height:932},{width:390,height:844},{width:375,height:812},{width:320,height:568}];
+    for(const viewport of viewports){
+      await page.setViewportSize(viewport);
+      await page.evaluate(theme=>applyTheme(theme),viewport.width<900?'dark':'light');
+      await expect(page.locator('#find-trainer-input')).toBeVisible();
+      await expect(page.locator('.trainer-favorites-preview-row')).toHaveCount(4);
+      await expect(page.locator('.recent-trainer-row')).toHaveCount(5);
+      const geometry=await page.evaluate(()=>{
+        const rect=selector=>{const box=document.querySelector(selector).getBoundingClientRect();return{x:box.x,y:box.y,right:box.right,bottom:box.bottom,width:box.width,height:box.height};};
+        const mode=rect('.trainer-discovery-modes'),search=rect('.trainer-search-shell'),favorites=rect('#trainer-favorites-preview'),recents=rect('#recent-trainers');
+        return{mode,search,favorites,recents,overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth,modeLabels:[...document.querySelectorAll('.trainer-discovery-modes button')].map(button=>button.scrollWidth<=button.clientWidth)};
+      });
+      expect(geometry.overflow).toBe(false);
+      expect(geometry.modeLabels.every(Boolean)).toBe(true);
+      expect(Math.abs(geometry.search.x-geometry.mode.x)).toBeLessThanOrEqual(1);
+      expect(Math.abs(geometry.search.width-geometry.mode.width)).toBeLessThanOrEqual(1);
+      expect(geometry.search.width).toBeLessThanOrEqual(720.5);
+      expect(geometry.favorites.y).toBeGreaterThan(geometry.search.bottom);
+      if(viewport.width>=1100){
+        expect(Math.abs(geometry.favorites.y-geometry.recents.y)).toBeLessThanOrEqual(1);
+        expect(geometry.recents.x).toBeGreaterThan(geometry.favorites.right);
+      }else{
+        expect(geometry.recents.y).toBeGreaterThan(geometry.favorites.bottom);
+      }
+      for(const button of await page.locator('.trainer-discovery-modes button,.trainer-favorites-preview-row,.recent-trainer-row,.trainer-favorites-preview-action').all()){
+        const box=await button.boundingBox();if(box)expect(box.height).toBeGreaterThanOrEqual(44);
+      }
+      await capturePass3(page,`trainer-landing-${viewport.width}x${viewport.height}`);
+    }
+  });
+
   test('my list renders embedded search strings', async ({ page }) => {
     await signIn(page);
     await openMainTab(page, 'mylist');

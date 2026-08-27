@@ -27,7 +27,7 @@ function createStore(maxFavorites=100){
   });
 }
 
-test('Find Trainer presents sibling discovery modes with a shared Recents column',()=>{
+test('Find Trainer presents sibling discovery modes with balanced shortcut sections',()=>{
   const markup=html.slice(html.indexOf('<!-- FIND TRAINER'),html.indexOf('<!-- MY LIST'));
   assert.ok(markup.indexOf('id="find-trainer-input"')<markup.indexOf('id="favorite-trainers"'));
   assert.ok(markup.indexOf('id="favorite-trainers"')<markup.indexOf('id="favorite-trainers-list"'));
@@ -38,6 +38,12 @@ test('Find Trainer presents sibling discovery modes with a shared Recents column
   assert.match(markup,/class="trainer-discovery-supporting"/);
   assert.doesNotMatch(markup,/trainer-history-tabs/);
   assert.match(html,/\.trainer-quick-grid,\.recent-trainer-list\{display:grid;grid-template-columns:minmax\(0,1fr\)/);
+  assert.match(html,/\.trainer-discovery-workspace\{display:grid;grid-template-columns:minmax\(0,1fr\)/);
+  assert.match(html,/\.trainer-discovery-primary\{width:min\(100%,720px\)/);
+  assert.match(html,/@media\(min-width:1100px\)\{\.trainer-discovery-content\[data-mode="trainers"\] \.trainer-discovery-supporting\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+  assert.match(html,/\.trainer-discovery-content\[data-mode="trainers"\] \.trainer-support-section\{[^}]*border-top:1px solid var\(--border\)/);
+  assert.match(html,/\.trainer-favorites-preview-list\{[^}]*overflow:hidden[^}]*border:1px solid var\(--border\)[^}]*border-radius:var\(--radius-lg\)/);
+  assert.match(html,/\.trainer-favorites-preview-row:last-child\{border-bottom:0\}/);
 });
 
 test('Favorites retain exact local schema-v3 behavior through 0, 25, and 100 records',()=>{
