@@ -9,6 +9,7 @@ const schema=require('../scripts/performance/privacy-safe-observability.cjs');
 const root=path.resolve(__dirname,'..');
 const documentation=fs.readFileSync(path.join(root,'docs/PERFORMANCE-OBSERVABILITY.md'),'utf8');
 const performanceWorkflow=fs.readFileSync(path.join(root,'.github/workflows/frontend-performance.yml'),'utf8');
+const packageManifest=JSON.parse(fs.readFileSync(path.join(root,'package.json'),'utf8'));
 const productionSources=[
   fs.readFileSync(path.join(root,'index.html'),'utf8'),
   fs.readFileSync(path.join(root,'js/app/application.js'),'utf8'),
@@ -46,6 +47,10 @@ test('observability remains design-only with no production transport or persiste
 
 test('performance CI uses immutable reviewed action revisions',()=>{
   assert.match(performanceWorkflow,/actions\/checkout@d23441a48e516b6c34aea4fa41551a30e30af803/u);
-  assert.match(performanceWorkflow,/actions\/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020/u);
+  assert.match(performanceWorkflow,/actions\/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38/u);
   assert.doesNotMatch(performanceWorkflow,/uses:\s+actions\/(?:checkout|setup-node)@v\d/u);
+});
+
+test('constrained browser profiles run serially to avoid synthetic CPU contention',()=>{
+  assert.match(packageManifest.scripts['test:performance:browser'],/--workers=1(?:\s|$)/u);
 });
