@@ -40,7 +40,7 @@ test('Find Trainer presents sibling discovery modes with balanced shortcut secti
   assert.match(html,/\.trainer-quick-grid,\.recent-trainer-list\{display:grid;grid-template-columns:minmax\(0,1fr\)/);
   assert.match(html,/\.trainer-discovery-workspace\{display:grid;grid-template-columns:minmax\(0,1fr\)/);
   assert.match(html,/\.trainer-discovery-primary\{width:min\(100%,720px\)/);
-  assert.match(html,/@media\(min-width:1100px\)\{\.trainer-discovery-content\[data-mode="trainers"\] \.trainer-discovery-supporting\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+  assert.match(html,/@media\(min-width:768px\)\{\.trainer-discovery-content\[data-mode="trainers"\] \.trainer-discovery-supporting\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
   assert.match(html,/\.trainer-discovery-content\[data-mode="trainers"\] \.trainer-support-section\{[^}]*border-top:1px solid var\(--border\)/);
   assert.match(html,/\.trainer-favorites-preview-list\{[^}]*overflow:hidden[^}]*border:1px solid var\(--border\)[^}]*border-radius:var\(--radius-lg\)/);
   assert.match(html,/\.trainer-favorites-preview-row:last-child\{border-bottom:0\}/);

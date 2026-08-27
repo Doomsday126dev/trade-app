@@ -114,6 +114,8 @@ async function expectAutocompleteClears(page, inputSelector, dropdownSelector) {
 }
 
 async function waitForStableLocalOrganizerStartup(page) {
+  await page.waitForFunction(() => typeof window.__pogoEnsureFullApp === 'function');
+  await page.evaluate(() => window.__pogoEnsureFullApp('visual-smoke-test'));
   await page.waitForFunction(() => typeof openTrainerOrganizer === 'function' && _authStateKnown === true && window.__pogoStartup?.firebaseStartupSettledAt !== null);
   await page.evaluate(() => {
     resetTrainerOrganizerState();
@@ -1652,8 +1654,9 @@ test.describe('visual smoke', () => {
       expect(await firstCard.locator('.favorite-card-add-tag').evaluate(node=>node.parentElement?.classList.contains('favorite-card-footer'))).toBe(true);
       expect(await firstCard.locator('.favorite-card-tags .favorite-card-add-tag').count()).toBe(0);
       expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
-      if(width>=900){
-        const favoritesBox=await page.locator('#favorite-trainers').boundingBox(),recentsBox=await page.locator('#recent-trainers').boundingBox();
+      if(width>=768){
+        await page.evaluate(async()=>{setTrainerDiscoveryMode('trainers');await renderTrainerQuickLists();});
+        const favoritesBox=await page.locator('#trainer-favorites-preview').boundingBox(),recentsBox=await page.locator('#recent-trainers').boundingBox();
         expect(recentsBox?.x).toBeGreaterThan((favoritesBox?.x||0)+(favoritesBox?.width||0));
         expect(Math.abs((favoritesBox?.y||0)-(recentsBox?.y||0))).toBeLessThanOrEqual(2);
       }
@@ -2884,7 +2887,7 @@ test.describe('visual smoke', () => {
       expect(Math.abs(geometry.search.width-geometry.mode.width)).toBeLessThanOrEqual(1);
       expect(geometry.search.width).toBeLessThanOrEqual(720.5);
       expect(geometry.favorites.y).toBeGreaterThan(geometry.search.bottom);
-      if(viewport.width>=1100){
+      if(viewport.width>=768){
         expect(Math.abs(geometry.favorites.y-geometry.recents.y)).toBeLessThanOrEqual(1);
         expect(geometry.recents.x).toBeGreaterThan(geometry.favorites.right);
       }else{

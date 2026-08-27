@@ -9,6 +9,8 @@ async function captureReview(page,name){
 }
 
 async function waitForApp(page){
+  await page.waitForFunction(()=>typeof window.__pogoEnsureFullApp==='function');
+  await page.evaluate(()=>window.__pogoEnsureFullApp('cross-browser-test'));
   await page.waitForFunction(()=>typeof openSettingsPanel==='function'&&typeof syncSettingsRoute==='function'&&window.__pogoStartup?.firebaseStartupSettledAt!==null);
 }
 
@@ -380,18 +382,44 @@ test.describe('audit cross-browser contracts',()=>{
       await expect(page.locator('#toast')).toBeVisible();
       expect(await page.locator('#toast').getAttribute('role')).toBeNull();
       expect(await page.locator('#copy-feedback-fixture').getAttribute('aria-label')).toBe('Copy search');
-      await page.evaluate(()=>{showUpdateBanner();document.getElementById('sync-banner').hidden=false;});
+      await page.evaluate(()=>{showUndo('Stacked feedback');showUpdateBanner();document.getElementById('sync-banner').hidden=false;});
       for(const selector of ['.update-banner-btn','.update-banner-dismiss','.sync-banner-btn','.sync-banner-dismiss']){
         const box=await page.locator(selector).boundingBox();
         expect(box?.width,selector).toBeGreaterThanOrEqual(47.5);
         expect(box?.height,selector).toBeGreaterThanOrEqual(47.5);
       }
+      const feedbackGeometry=await page.locator('#feedback-stack').evaluate(stack=>{
+        const stackRect=stack.getBoundingClientRect();
+        const surfaces=[...stack.children].filter(node=>!node.hidden).map(node=>{
+          const rect=node.getBoundingClientRect();
+          return{id:node.id,top:rect.top,bottom:rect.bottom,left:rect.left,right:rect.right};
+        }).sort((a,b)=>a.top-b.top);
+        return{stack:{top:stackRect.top,bottom:stackRect.bottom,left:stackRect.left,right:stackRect.right},surfaces};
+      });
+      expect(feedbackGeometry.stack.left).toBeGreaterThanOrEqual(11.5);
+      expect(feedbackGeometry.stack.right).toBeLessThanOrEqual(width-11.5);
+      for(let index=1;index<feedbackGeometry.surfaces.length;index++){
+        expect(feedbackGeometry.surfaces[index].top-feedbackGeometry.surfaces[index-1].bottom).toBeGreaterThanOrEqual(7.5);
+      }
+      if(reviewDir)await captureReview(page,`feedback-stack-${width}x${height}`);
     }
   });
 
   test('A11Y-04 and A11Y-06 Login, skip navigation, and request access are keyboard semantic',async({page})=>{
+    await page.setViewportSize({width:320,height:568});
     await page.goto(`./?login-semantics=${Date.now()}`,{waitUntil:'domcontentloaded'});
     await waitForApp(page);
+    const loginGeometry=await page.evaluate(()=>{
+      const language=document.getElementById('login-language-trigger').getBoundingClientRect();
+      const card=document.querySelector('#login-pg .lcard').getBoundingClientRect();
+      return{language:language.toJSON(),card:card.toJSON(),overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth};
+    });
+    expect(loginGeometry.overflow).toBe(false);
+    expect(loginGeometry.language.right).toBeLessThanOrEqual(310.5);
+    expect(loginGeometry.card.left).toBeGreaterThanOrEqual(9.5);
+    expect(loginGeometry.card.right).toBeLessThanOrEqual(310.5);
+    expect(loginGeometry.card.top-loginGeometry.language.bottom).toBeGreaterThanOrEqual(9.5);
+    if(reviewDir)await captureReview(page,'login-composition-320x568');
     const username=page.getByRole('combobox',{name:'Username',exact:true});
     await expect(username).toHaveAttribute('id','login-user');
     await username.fill('Cross');
