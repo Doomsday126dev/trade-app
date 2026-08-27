@@ -58,7 +58,9 @@ test('service worker keeps exact release keys and retires old app-shell caches',
 test('service worker separates required release assets from optional runtime shell assets',()=>{
   assert.match(worker,/const REQUIRED_SHELL_URLS=\[/);
   assert.match(worker,/const OPTIONAL_SHELL_URLS=\[/);
-  assert.match(worker,/const INSTALL_CACHE=`\$\{SHELL_CACHE\}-installing`/);
+  assert.match(worker,/const INSTALL_FETCH_CONCURRENCY=8/);
+  assert.match(worker,/runBounded\(REQUIRED_SHELL_URLS,INSTALL_FETCH_CONCURRENCY/);
+  assert.doesNotMatch(worker,/INSTALL_CACHE|Required shell staging cache|staging\.put/);
   assert.match(worker,/if\(!response\?\.ok\)throw new Error/);
   assert.match(worker,/if\(complete\.some\(response=>!response\)\).*Refusing to activate/s);
   assert.doesNotMatch(worker,/catch\(e\)\{\/\* offline at install time; ok \*\//);
