@@ -523,3 +523,18 @@ test('randomized independent-field sequences converge for both delivery orders',
     assert.deepEqual(JSON.parse(JSON.stringify(ab.values)),JSON.parse(JSON.stringify(ba.values)));
   }
 });
+
+test('listener failure is explicit, deactivation unsubscribes, and a fresh controller resubscribes without a reconnect loop',async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),state=h.createMemoryJournalState(),journal=window.PogoTesting.accountSyncHarness.createMemoryJournal('uid-owner',state,h.clock);
+  let subscriptions=0,unsubscribes=0,currentHandlers=null;
+  const repository={ownerUid:'uid-owner',listenAccount(handlers){subscriptions++;currentHandlers=handlers;queueMicrotask(()=>handlers.onData({}));return()=>{unsubscribes++;};}};
+  const make=()=>window.PogoData.accountSyncController.createAccountSyncController({journal,repository,ownerUid:'uid-owner',enabled:true,writesEnabled:true,allowlistedUids:['uid-owner'],online:()=>true,clock:h.clock,crypto:webcrypto});
+  const first=make();await first.activate();await new Promise(resolve=>setTimeout(resolve,0));assert.equal((await first.snapshot()).state,'saved');
+  currentHandlers.onError(new Error('private listener detail'));await new Promise(resolve=>setTimeout(resolve,0));const failed=await first.snapshot();
+  assert.equal(failed.state,'sync-error');assert.equal(failed.listenerState,'failed');assert.equal(failed.listenerHealthy,false);assert.equal(failed.controllerHealthy,false);assert.equal(failed.lastError,'account-sync/listener-failed');assert.doesNotMatch(JSON.stringify(failed),/private listener detail/);assert.equal(subscriptions,1);
+  await first.deactivate();assert.equal(unsubscribes,1);
+  const second=make();await second.activate();await new Promise(resolve=>setTimeout(resolve,0));const healthy=await second.snapshot();
+  assert.equal(healthy.state,'saved');assert.equal(healthy.listenerState,'healthy');assert.equal(healthy.listenerHealthy,true);assert.equal(healthy.controllerHealthy,true);assert.equal(subscriptions,2);
+  currentHandlers.onError(new Error('again'));await new Promise(resolve=>setTimeout(resolve,0));assert.equal((await second.snapshot()).state,'sync-error');assert.equal(subscriptions,2);
+  await second.deactivate();assert.equal(unsubscribes,2);
+});

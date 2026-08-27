@@ -121,6 +121,19 @@ test('migration cannot become projection-ready when canonical meta commitment fa
   await assert.rejects(runtime.start(),error=>error.code==='account-sync/meta-conflict');assert.equal(runtime.projectionReady,false);
 });
 
+test('catalog projection failure remains a canonical error and never becomes projection-ready',async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),repositoryState=runtimeRepository(window,h),state=h.createMemoryJournalState(),runtime=createRuntime(window,h,repositoryState,state,async()=>source('device-projection-fail',{remote:{Pikachu:'H'}}),()=>false);
+  await assert.rejects(runtime.start(),error=>error.code==='account-sync/catalog-projection-unresolved');
+  const snapshot=await runtime.snapshot();assert.equal(runtime.projectionReady,false);assert.equal(snapshot.state,'sync-error');assert.equal(snapshot.lastError,'account-sync/catalog-projection-unresolved');assert.equal(snapshot.lastErrorCategory,'canonical');assert.equal(snapshot.runtimeHealthy,false);
+});
+
+test('tampered local migration completion evidence remains blocked across restart',async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),repositoryState=runtimeRepository(window,h),state=h.createMemoryJournalState(),read=async()=>source('device-evidence',{remote:{Pikachu:'H'}}),first=createRuntime(window,h,repositoryState,state,read);
+  await first.start();await first.stop();const completed=state.meta.get('migration-complete');state.meta.set('migration-complete',{...completed,sourceFingerprint:'f'.repeat(64)});
+  const restarted=createRuntime(window,h,repositoryState,state,read);await assert.rejects(restarted.start(),error=>error.code==='account-sync/migration-evidence-conflict');
+  const snapshot=await restarted.snapshot();assert.equal(restarted.projectionReady,false);assert.equal(snapshot.state,'sync-error');assert.equal(snapshot.lastError,'account-sync/migration-evidence-conflict');assert.equal(snapshot.lastErrorCategory,'migration');
+});
+
 test('migration never publishes a partial public projection and publishes one complete snapshot only after verification',async()=>{
   const window=load(),failedHarness=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),failedRepository=runtimeRepository(window,failedHarness),failedState=failedHarness.createMemoryJournalState(),partial=[];
   const apply=failedRepository.repository.applyOperation.bind(failedRepository.repository);let attempts=0;

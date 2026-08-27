@@ -7,19 +7,23 @@
     const owner=model.firebaseKey(ownerUid,128),allowlist=new Set((allowlistedUids||[]).map(String));
     if(!journal||!repository||!owner||journal.ownerUid!==owner||repository.ownerUid!==owner)throw new TypeError('Account sync controller owner binding is invalid');
     const eligible=enabled===true&&writesEnabled===true&&allowlist.has(owner);
-    let active=false,lifecycleEpoch=0,optimisticRevision=0,drainPromise=null,drainRequested=false,mutationPromise=Promise.resolve(),remoteAcceptPromise=Promise.resolve(),stateEmitPromise=Promise.resolve(),unsubscribe=null,retryTimer=null,lastError='',lastProjectionError='',lastSyncAt=0;
+    let active=false,lifecycleEpoch=0,optimisticRevision=0,drainPromise=null,drainRequested=false,mutationPromise=Promise.resolve(),remoteAcceptPromise=Promise.resolve(),stateEmitPromise=Promise.resolve(),unsubscribe=null,retryTimer=null,lastError='',lastErrorCategory='',lastProjectionError='',lastSyncAt=0,listenerState='inactive';
     const entities=new Map(),acceptedEntities=new Map();
     function key(type,id){return`${type}|${id}`;}
     function getEntity(type,id){return entities.get(key(type,id))||null;}
     function retryableFailure(value){return!/permission|forbidden|owner|schema|invalid|unauth/i.test(String(value?.code||value?.message||value||''));}
+    function safeErrorCode(value,fallback){const code=String(value?.code||value||'');return/^account-sync\/[a-z0-9-]{1,80}$/.test(code)?code:fallback;}
+    function setError(value,category,fallback){lastError=safeErrorCode(value,fallback);lastErrorCategory=category;}
+    function clearError(...categories){if(!categories.length||categories.includes(lastErrorCategory)){lastError='';lastErrorCategory='';}}
     function emit(){
       stateEmitPromise=stateEmitPromise.then(()=>snapshot()).then(state=>onState?.(state)).catch(()=>{});
       try{onEntities?.(Object.freeze([...entities.values()]));}catch{}
       return stateEmitPromise;
     }
     async function snapshot(){
-      const journalState=await journal.snapshot(),state=!eligible?'local-only':lastError||journalState.blockedCount?'sync-error':journalState.conflictCount?'conflict':journalState.recoveryCandidateCount?'review-required':!online()?'offline':journalState.pendingCount?'pending-sync':'saved';
-      return Object.freeze({state,eligible,active,online:online(),lastSyncAt,lastError,lastProjectionError,pendingCount:journalState.pendingCount,blockedCount:journalState.blockedCount,conflictCount:journalState.conflictCount,recoveryCandidateCount:journalState.recoveryCandidateCount,entityCount:entities.size,privateValuesExposed:false});
+      const journalState=await journal.snapshot(),listenerHealthy=!eligible||active&&['listening','healthy'].includes(listenerState),effectiveError=lastError||journalState.blockedErrorCode||'';
+      const state=!eligible?'local-only':journalState.conflictCount?'conflict':journalState.recoveryCandidateCount?'review-required':effectiveError||journalState.blockedCount||listenerState==='failed'?'sync-error':!active?'inactive':!online()?'offline':journalState.pendingCount||listenerState==='starting'?'pending-sync':'saved';
+      return Object.freeze({state,eligible,active,online:online(),listenerState,listenerHealthy,controllerHealthy:active&&listenerHealthy&&!effectiveError,lastSyncAt,lastError:effectiveError,lastErrorCategory:lastErrorCategory||(journalState.blockedCount?'blocked-operation':''),lastProjectionError,pendingCount:journalState.pendingCount,blockedCount:journalState.blockedCount,conflictCount:journalState.conflictCount,recoveryCandidateCount:journalState.recoveryCandidateCount,entityCount:entities.size,privateValuesExposed:false});
     }
     function accountEntities(value){
       const allowedCollections=new Set(['meta','tradeEntries','favorites','tags','migrations','recoveryCandidates']);
@@ -98,7 +102,7 @@
       if(!active||epoch!==lifecycleEpoch)return;
       acceptedEntities.clear();for(const [entityKey,entity] of accepted)acceptedEntities.set(entityKey,entity);
       await rebuildOptimisticEntities();
-      lastError='';emit();
+      clearError('listener','canonical');emit();
     }
     function serializeCanonical(task){
       const result=remoteAcceptPromise.then(task);
@@ -126,12 +130,17 @@
       if(!active||epoch!==lifecycleEpoch)return Object.freeze({ok:true,status:'inactive'});
       emit();
       if(!eligible)return Object.freeze({ok:true,status:'disabled'});
-      unsubscribe=repository.listenAccount({onData:value=>acceptRemote(value,epoch).catch(error=>{if(active&&epoch===lifecycleEpoch){lastError=String(error?.code||error?.message||'account-sync/listener-failed');emit();}}),onError:error=>{if(active&&epoch===lifecycleEpoch){lastError=String(error?.code||'account-sync/listener-failed');emit();}}});
+      listenerState='starting';
+      const subscription=repository.listenAccount({
+        onData:value=>acceptRemote(value,epoch).then(()=>{if(active&&epoch===lifecycleEpoch){listenerState='healthy';clearError('listener','canonical');emit();}}).catch(error=>{if(active&&epoch===lifecycleEpoch){listenerState='failed';setError(error,'canonical','account-sync/canonical-validation-failed');emit();}}),
+        onError:()=>{if(active&&epoch===lifecycleEpoch){listenerState='failed';setError('account-sync/listener-failed','listener','account-sync/listener-failed');emit();}}
+      });
+      unsubscribe=typeof subscription==='function'?subscription:null;if(listenerState==='starting')listenerState='listening';
       if(online())await drain();
       return Object.freeze({ok:true,status:active&&epoch===lifecycleEpoch?'active':'inactive'});
     }
     async function deactivate(){
-      lifecycleEpoch++;active=false;drainRequested=false;try{unsubscribe?.();}catch{}unsubscribe=null;clearTimeout(retryTimer);retryTimer=null;
+      lifecycleEpoch++;active=false;listenerState='inactive';drainRequested=false;try{unsubscribe?.();}catch{}unsubscribe=null;clearTimeout(retryTimer);retryTimer=null;
       await Promise.allSettled([mutationPromise,remoteAcceptPromise,drainPromise].filter(Boolean));
       await emit();
       return Object.freeze({ok:true,status:'inactive'});
@@ -168,9 +177,9 @@
       }
       const optimisticEntities=[...new Set(prepared.map(item=>item.entityKey))].map(entityKey=>working.get(entityKey));
       try{await journal.enqueueOperations(prepared.map(item=>item.operation),optimisticEntities);}
-      catch(error){lastError=String(error?.code||'account-sync/journal-write-failed');emit();return model.failure('account-sync/journal-write-failed','This change could not be saved on this device');}
+      catch(error){setError(error,'journal','account-sync/journal-write-failed');emit();return model.failure('account-sync/journal-write-failed','This change could not be saved on this device');}
       optimisticRevision++;for(const item of prepared)entities.set(item.entityKey,item.value);
-      lastError='';emit();
+      clearError('journal','blocked-operation');emit();
       if(online())drain();
       return Object.freeze({ok:true,status:'queued',count:prepared.length,operations:Object.freeze(prepared.map(item=>item.operation)),values:Object.freeze(prepared.map(item=>item.value))});
     }
@@ -197,18 +206,18 @@
           const accepted=await acceptCanonicalCurrent(result.value,record.operation);
           if(result.conflicts?.length)await journal.markConflict(record.operationId,result.conflicts);else await journal.acknowledge(record.operationId,accepted);
           await serializeCanonical(()=>rebuildOptimisticEntities());
-          lastSyncAt=Number(clock());lastError='';
+          lastSyncAt=Number(clock());clearError('blocked-operation');
           if(active&&epoch===lifecycleEpoch&&record.operation.entityType==='tradeEntry')await publishAcceptedProjection(record.operation);
           return true;
         }
         if(result.status==='conflict'||result.conflicts?.length){
           if(!Object.hasOwn(result,'current'))throw Object.assign(new Error('Canonical conflict response is incomplete'),{code:'account-sync/conflict-current-invalid'});
           await acceptCanonicalCurrent(result.current,record.operation);
-          await journal.markConflict(record.operationId,result.conflicts||[]);await serializeCanonical(()=>rebuildOptimisticEntities());lastError='';return true;
+          await journal.markConflict(record.operationId,result.conflicts||[]);await serializeCanonical(()=>rebuildOptimisticEntities());clearError('blocked-operation');return true;
         }
-        const retryable=retryableFailure(result.error),next=await journal.markAttempt(record.operationId,{retryable,errorCode:result.error?.code||'account-sync/rejected'});lastError=next.status==='blocked'?String(result.error?.code||'account-sync/rejected'):'';scheduleDrain(next.nextAttemptAt);return false;
+        const retryable=retryableFailure(result.error),code=safeErrorCode(result.error,'account-sync/rejected'),next=await journal.markAttempt(record.operationId,{retryable,errorCode:code});if(next.status==='blocked')lastErrorCategory='blocked-operation';scheduleDrain(next.nextAttemptAt);return false;
       }catch(error){
-        const next=await journal.markAttempt(record.operationId,{retryable:retryableFailure(error),errorCode:String(error?.code||'account-sync/network-failed')});lastError=next.status==='blocked'?String(error?.code||'account-sync/network-failed'):'';scheduleDrain(next.nextAttemptAt);return false;
+        const code=safeErrorCode(error,'account-sync/network-failed'),next=await journal.markAttempt(record.operationId,{retryable:retryableFailure(error),errorCode:code});if(next.status==='blocked')lastErrorCategory='blocked-operation';scheduleDrain(next.nextAttemptAt);return false;
       }finally{emit();}
     }
     async function drain(){
@@ -230,12 +239,13 @@
     async function retry(operationId){
       const blocked=(await journal.listOperations({statuses:['blocked']})).some(record=>record.operationId===operationId);
       if(!blocked)return model.failure('account-sync/retry-not-available','Only blocked sync changes can be retried');
-      lastError='';await journal.retryBlocked(operationId);emit();return drain();
+      clearError('blocked-operation');await journal.retryBlocked(operationId);emit();return drain();
     }
     async function retryBlocked(){
       const blocked=await journal.listOperations({statuses:['blocked']});
+      if(!blocked.length)return model.failure('account-sync/retry-empty','No retained sync change is available to retry');
       for(const record of blocked)await journal.retryBlocked(record.operationId);
-      lastError='';emit();await drain();return Object.freeze({ok:true,retried:blocked.length});
+      clearError('blocked-operation');emit();await drain();return Object.freeze({ok:true,retried:blocked.length});
     }
     async function conflictDetails(){
       const conflicts=await journal.listConflicts(),records=await journal.listOperations({statuses:['conflict']}),byOperation=new Map(records.map(record=>[record.operationId,record.operation]));
@@ -247,14 +257,14 @@
     }
     async function acceptConflict(conflictId){
       const resolved=await journal.resolveConflict(conflictId);if(!resolved)return model.failure('account-sync/conflict-missing','This sync conflict is no longer available');
-      lastError='';emit();return Object.freeze({ok:true,status:'accepted-account-value'});
+      clearError('blocked-operation');emit();return Object.freeze({ok:true,status:'accepted-account-value'});
     }
     async function reapplyConflict(conflictId){
       const details=(await conflictDetails()).find(item=>item.conflictId===conflictId),records=await journal.listOperations({statuses:['conflict']}),record=records.find(item=>item.operationId===String(conflictId||'').replace(/^conflict_/,''));
       if(!details||!record||record.operation.kind!=='patch'||!details.fields.length)return model.failure('account-sync/conflict-not-reapplicable','This conflict must be reviewed without retrying its original operation');
       const patch=Object.fromEntries(details.fields.map(field=>[field.path,field.deviceValue])),result=await patchEntity({entityType:details.entityType,entityId:details.entityId,patch});
       if(!result.ok)return result;
-      await journal.resolveConflict(conflictId);lastError='';emit();return Object.freeze({...result,status:'reapplied'});
+      await journal.resolveConflict(conflictId);clearError('blocked-operation');emit();return Object.freeze({...result,status:'reapplied'});
     }
     function activeEntities(type){return[...entities.values()].filter(entity=>(!type||entity.entityType===type)&&entity.deleted!==true);}
     function publicProjection(){return model.publicTradeProjection([...acceptedEntities.values()]);}

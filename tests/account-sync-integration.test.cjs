@@ -71,14 +71,18 @@ test('normal sync copy is understandable and never exposes raw revision or mutat
   const conflictFieldKeys=['fieldGender','fieldLucky','fieldXxl','fieldXxs','fieldShiny','fieldOrder','fieldQuantity','fieldNotes','fieldMirror'];
   for(const file of ['en','ja','es','de']){
     const locale=readFileSync(path.join(root,`js/i18n/locales/${file}.js`),'utf8');
-    for(const key of ['accountSync.saved','accountSync.saving','accountSync.offline','accountSync.conflict','accountSync.reviewRequired','accountSync.reviewRequiredDetail','accountSync.error','accountSync.retryPrompt'])assert.ok(locale.includes(`'${key}'`),`${file}:${key}`);
+    for(const key of ['accountSync.saved','accountSync.saving','accountSync.offline','accountSync.conflict','accountSync.reviewRequired','accountSync.reviewRequiredDetail','accountSync.error','accountSync.retrySavedChange','accountSync.restartSync','accountSync.reviewConflict','accountSync.recoveryRunning','accountSync.diagnostic'])assert.ok(locale.includes(`'${key}'`),`${file}:${key}`);
     for(const key of conflictFieldKeys)assert.ok(locale.includes(`'accountSync.${key}'`),`${file}:accountSync.${key}`);
     const copy=(locale.match(/'accountSync\.[^\n]+/)||[])[0]||'';assert.doesNotMatch(copy,/operationId|field revision|tombstone|RTDB|Firebase UID/i,file);
   }
   const status=html.slice(html.indexOf('function accountSyncPresentation()'),html.indexOf('function syncLabelForStatus'));
   assert.doesNotMatch(status,/operationId|revision|mutation/i);
-  const detail=html.slice(html.indexOf('async function openSyncDetail()'),html.indexOf('let _modalPrevFocus'));
-  assert.match(detail,/account\.state==='conflict'.*reviewAccountSyncConflicts/s);assert.doesNotMatch(detail,/\['sync-error','conflict'\]/);
+  const detail=html.slice(html.indexOf('async function openSyncDetail()'),html.indexOf('function accountSyncConflictFieldLabel'));
+  assert.match(detail,/account\.plan\.action!=='none'.*requestAccountSyncRecovery/s);assert.match(detail,/account\.plan\.action==='review-conflict'.*reviewAccountSyncConflicts/s);
+  assert.match(detail,/coordinator\.active.*coordinator\.recover/s);assert.match(detail,/performAccountSyncRecovery/);assert.doesNotMatch(detail,/retryBlocked/);
+  assert.match(html,/id="sync-pill"[^>]+onkeydown="if\(event\.key==='Enter'\|\|event\.key===' '\)/);
+  assert.match(html,/id="trainer-sync-diagnostic" hidden/);assert.match(html,/id="trainer-sync-recovery"[^>]+requestAccountSyncRecovery\(\)/);
+  assert.match(html,/onCanonicalEntities:entities=>currentSession\(\)\?applyAccountSyncCanonicalEntities\(entities\):false/);
   const fieldLabels=html.slice(html.indexOf('function accountSyncConflictFieldLabel'),html.indexOf('function accountSyncConflictValue'));
   for(const key of conflictFieldKeys)assert.ok(fieldLabels.includes(`accountSync.${key}`),key);
   assert.doesNotMatch(fieldLabels,/gender:'Gender'|sortOrder:'Order'|quantity:'Quantity'|note:'Notes'|mirror:'Mirror'/);

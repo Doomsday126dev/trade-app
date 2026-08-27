@@ -515,6 +515,39 @@ test.describe('audit cross-browser contracts',()=>{
     await expect(page.locator('#account-trigger')).toBeFocused();
   });
 
+  test('account sync recovery is keyboard operable and exposes only a bounded mobile diagnostic',async({page})=>{
+    await page.setViewportSize({width:1024,height:760});
+    await page.goto(`./?sync-recovery-a11y=${Date.now()}`,{waitUntil:'domcontentloaded'});
+    await waitForApp(page);await establishAccount(page,'DiagnosticOwner');
+    const initial=await page.evaluate(()=>{
+      auth={currentUser:{uid:'uid-sync-diagnostic'}};accountSyncEligibleUid='uid-sync-diagnostic';
+      managedAccountSyncRuntime={ownerUid:'uid-sync-diagnostic',projectionReady:false};
+      accountSyncUiState=Object.freeze({state:'sync-error',eligible:true,active:true,listenerState:'failed',listenerHealthy:false,controllerHealthy:false,pendingCount:0,blockedCount:0,conflictCount:0,recoveryCandidateCount:0,lastError:'account-sync/listener-failed',lastErrorCategory:'listener'});
+      accountSyncRecoveryState=Object.freeze({status:'idle',attempt:0,code:'account-sync/none'});_syncStatusCurrent='online';refreshSyncUi();
+      return{diagnostic:document.getElementById('trainer-sync-diagnostic').textContent,diagnosticHidden:document.getElementById('trainer-sync-diagnostic').hidden,recoveryHidden:document.getElementById('trainer-sync-recovery').hidden,recoveryLabel:document.getElementById('trainer-sync-recovery-label').textContent};
+    });
+    expect(initial.diagnosticHidden).toBe(false);expect(initial.recoveryHidden).toBe(false);expect(initial.recoveryLabel).toBe('Restart sync');expect(initial.diagnostic).toContain('account-sync/listener-failed');expect(initial.diagnostic).toContain('2026-08-26.70');expect(initial.diagnostic).not.toContain('DiagnosticOwner');expect(initial.diagnostic).not.toContain('uid-sync-diagnostic');
+    const pill=page.locator('#sync-pill');await pill.focus();await expect(pill).toBeFocused();
+    await page.evaluate(()=>{window.__syncActivationCount=0;openSyncDetail=()=>{window.__syncActivationCount++;};});
+    await page.keyboard.press('Enter');await page.keyboard.press('Space');expect(await page.evaluate(()=>window.__syncActivationCount)).toBe(2);
+    await page.setViewportSize({width:390,height:844});
+    const mobile=await page.evaluate(()=>({overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth,pill:document.getElementById('sync-pill').getBoundingClientRect().toJSON(),buttonDisabled:(accountSyncRecoveryState=Object.freeze({status:'running',attempt:1,code:'account-sync/recovery-running'}),refreshSyncUi(),document.getElementById('trainer-sync-recovery').disabled),busy:document.getElementById('sync-pill').getAttribute('aria-busy')}));
+    expect(mobile.overflow).toBe(false);expect(mobile.pill.width).toBeGreaterThanOrEqual(44);expect(mobile.pill.height).toBeGreaterThanOrEqual(44);expect(mobile.buttonDisabled).toBe(true);expect(mobile.busy).toBe('true');
+    const switched=await page.evaluate(async()=>{
+      let releaseSnapshot,snapshotRequested=false;
+      const snapshotGate=new Promise(resolve=>{releaseSnapshot=resolve;});
+      auth={currentUser:{uid:'uid-old-session'}};cur='OldSession';accountSyncEligibleUid='uid-old-session';
+      accountSyncUiState=Object.freeze({state:'sync-error',eligible:true,active:true,listenerState:'failed',listenerHealthy:false,controllerHealthy:false,pendingCount:0,blockedCount:0,conflictCount:0,recoveryCandidateCount:0,lastError:'account-sync/listener-failed',lastErrorCategory:'listener'});
+      managedAccountSyncRuntime={ownerUid:'uid-old-session',projectionReady:false,async snapshot(){snapshotRequested=true;await snapshotGate;return accountSyncUiState;}};
+      accountSyncRecoveryCoordinator=null;accountSyncRecoveryCoordinatorBinding='';accountSyncRecoveryState=Object.freeze({status:'idle',attempt:0,code:'account-sync/none'});
+      const pending=performAccountSyncRecovery();while(!snapshotRequested)await Promise.resolve();
+      auth={currentUser:{uid:'uid-new-session'}};cur='NewSession';releaseSnapshot();
+      const result=await pending;
+      return{resultCode:result.code,recoveryStatus:accountSyncRecoveryState.status};
+    });
+    expect(switched.resultCode).toBe('account-sync/session-changed');expect(switched.recoveryStatus).toBe('idle');
+  });
+
   test('review screenshots capture only the high-value corrected states',async({page},testInfo)=>{
     test.skip(!reviewDir,'Set CROSS_BROWSER_REVIEW_DIR to capture review evidence.');
     if(testInfo.project.name==='cross-chromium'){

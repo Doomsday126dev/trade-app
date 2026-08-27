@@ -45,7 +45,10 @@
       async resolveConflict(id){const item=state.conflicts.get(id);if(!item)return false;state.conflicts.set(id,{...item,resolved:true,resolvedAt:clock()});const record=state.operations.get(item.operationId);if(record?.status==='conflict')state.operations.set(item.operationId,{...record,status:'resolved',nextAttemptAt:0,lastErrorCode:'',updatedAt:clock()});return true;},
       async setMeta(key,value){state.meta.set(key,value);},async getMeta(key){return state.meta.get(key)??null;},
       async putRecoveryCandidate(item){own(item);state.recoveryCandidates.set(item.candidateId,item);},async listRecoveryCandidates(){return[...state.recoveryCandidates.values()];},
-      async snapshot(){return{ownerUid:owner,pendingCount:[...state.operations.values()].filter(item=>['pending','sending'].includes(item.status)).length,blockedCount:[...state.operations.values()].filter(item=>item.status==='blocked').length,conflictCount:[...state.conflicts.values()].filter(item=>!item.resolved).length,entityCount:state.entities.size,recoveryCandidateCount:state.recoveryCandidates.size};}
+      async snapshot(){
+        const blocked=[...state.operations.values()].filter(item=>item.status==='blocked'),codes=[...new Set(blocked.map(item=>String(item.lastErrorCode||'')).filter(code=>/^account-sync\/[a-z0-9-]{1,80}$/.test(code)))];
+        return{ownerUid:owner,pendingCount:[...state.operations.values()].filter(item=>['pending','sending'].includes(item.status)).length,blockedCount:blocked.length,blockedErrorCode:blocked.length?(codes.length===1?codes[0]:'account-sync/blocked-operation'):'',conflictCount:[...state.conflicts.values()].filter(item=>!item.resolved).length,entityCount:state.entities.size,recoveryCandidateCount:state.recoveryCandidates.size};
+      }
     });
   }
   function createDeterministicServer({ownerUid,clock=(()=>{let value=1000;return()=>++value;})()}={}){

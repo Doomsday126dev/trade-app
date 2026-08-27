@@ -43,7 +43,7 @@ test('the real IndexedDB journal survives reload, isolates owners, and keeps con
     return{ownerSnapshot,otherSnapshot,retried,conflictStatus,resolved,resolvedStatus,resolvedSnapshot};
   },{databaseName,conflictOperationId:prepared.conflictOperationId,conflictRecordId:prepared.conflictRecordId});
   assert.equal(after.ownerSnapshot.pendingCount,1);assert.equal(after.ownerSnapshot.conflictCount,1);
-  assert.deepEqual(after.otherSnapshot,{ownerUid:'uid-owner-b',pendingCount:0,blockedCount:0,conflictCount:0,entityCount:0,recoveryCandidateCount:0});
+  assert.deepEqual(after.otherSnapshot,{ownerUid:'uid-owner-b',pendingCount:0,blockedCount:0,blockedErrorCode:'',conflictCount:0,entityCount:0,recoveryCandidateCount:0});
   assert.equal(after.retried,false);assert.equal(after.conflictStatus,'conflict');assert.equal(after.resolved,true);assert.equal(after.resolvedStatus,'resolved');assert.equal(after.resolvedSnapshot.conflictCount,0);
 });
 
@@ -65,4 +65,44 @@ test('the real IndexedDB journal commits operation batches and optimistic entiti
     return{snapshot,operationCount:operations.length,entityCount:entities.length};
   },databaseName);
   assert.equal(result.snapshot.pendingCount,2);assert.equal(result.snapshot.entityCount,2);assert.equal(result.operationCount,2);assert.equal(result.entityCount,2);
+});
+
+test('a pre-.70 committed-entity acknowledgement block survives reload and reconciles idempotently under current source',async t=>{
+  const server=http.createServer((_request,response)=>{response.writeHead(200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store'});response.end('<!doctype html><title>Historical account sync recovery</title>');});
+  await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});
+  const browser=await chromium.launch({headless:true});
+  t.after(async()=>{await browser.close();await new Promise(resolve=>server.close(resolve));});
+  const page=await browser.newPage(),databaseName=`pogoAccountSync_historical_${Date.now()}`,url=`http://127.0.0.1:${server.address().port}/`;
+  const load=async files=>{for(const file of files)await page.addScriptTag({path:path.join(root,file)});};
+  await page.goto(url,{waitUntil:'domcontentloaded'});await load(['js/domain/accountSyncModel.js','js/domain/accountSyncMerge.js','js/data/accountSyncJournal.js']);
+  const retained=await page.evaluate(async databaseName=>{
+    const model=window.PogoDomain.accountSyncModel,merge=window.PogoDomain.accountSyncMerge,journal=window.PogoData.accountSyncJournal.createAccountSyncJournal({ownerUid:'uid-owner',databaseName});
+    const identity={surface:'my-list',lane:'wishlist',catalogId:'pokemon:960:base'},entityId=model.tradeEntryId(identity);
+    const operation=(await model.createOperation({operationId:'op_0000000000006900',ownerUid:'uid-owner',entityType:'tradeEntry',entityId,identity,kind:'add',baseGeneration:0,generation:1,baseFieldRevisions:{priority:0},patch:{priority:'H'},clientAt:69})).value;
+    const optimistic=merge.mergeOperation(null,operation,{acceptedAt:69}).value;
+    await journal.enqueueOperation(operation,optimistic);await journal.markAttempt(operation.operationId,{retryable:false,errorCode:'account-sync/committed-entity-invalid'});
+    const snapshot=await journal.snapshot();await journal.close();return{operation,entityId,snapshot};
+  },databaseName);
+  assert.equal(retained.snapshot.blockedCount,1);assert.equal(retained.snapshot.blockedErrorCode,'account-sync/committed-entity-invalid');assert.equal(retained.snapshot.pendingCount,0);
+
+  await page.reload({waitUntil:'domcontentloaded'});await load(['js/domain/accountSyncModel.js','js/domain/accountSyncMerge.js','js/data/accountSyncJournal.js','js/data/accountSyncController.js']);
+  const recovered=await page.evaluate(async({databaseName,operation})=>{
+    const merge=window.PogoDomain.accountSyncMerge,journal=window.PogoData.accountSyncJournal.createAccountSyncJournal({ownerUid:'uid-owner',databaseName}),canonical=merge.mergeOperation(null,operation,{acceptedAt:700}).value;
+    let applyCalls=0,unsubscribed=0;
+    const repository={
+      ownerUid:'uid-owner',
+      listenAccount({onData}){queueMicrotask(()=>onData({tradeEntries:{[canonical.entityId]:canonical}}));return()=>{unsubscribed++;};},
+      async applyOperation(replayed){applyCalls++;assertSame(replayed.operationId,operation.operationId);return{ok:true,status:'idempotent',value:canonical};}
+    };
+    function assertSame(actual,expected){if(actual!==expected)throw new Error('historical operation identity changed');}
+    const controller=window.PogoData.accountSyncController.createAccountSyncController({journal,repository,ownerUid:'uid-owner',enabled:true,writesEnabled:true,allowlistedUids:['uid-owner'],online:()=>true,clock:(()=>{let value=800;return()=>++value;})(),crypto:window.crypto});
+    await controller.activate();await new Promise(resolve=>setTimeout(resolve,0));
+    const before=await controller.snapshot(),result=await controller.retryBlocked(),after=await controller.snapshot(),acknowledged=await journal.listOperations({statuses:['acknowledged']}),active=controller.activeEntities('tradeEntry')[0];
+    await controller.deactivate();await journal.close();
+    await new Promise((resolve,reject)=>{const request=indexedDB.deleteDatabase(databaseName);request.onsuccess=resolve;request.onerror=()=>reject(request.error);request.onblocked=()=>reject(new Error('test database deletion blocked'));});
+    return{before,result,after,applyCalls,unsubscribed,acknowledged:acknowledged.length,priority:active?.values?.priority||''};
+  },{databaseName,operation:retained.operation});
+  assert.equal(recovered.before.state,'sync-error');assert.equal(recovered.before.blockedCount,1);assert.equal(recovered.before.lastError,'account-sync/committed-entity-invalid');
+  assert.equal(recovered.result.ok,true);assert.equal(recovered.result.retried,1);assert.equal(recovered.applyCalls,1);assert.equal(recovered.acknowledged,1);
+  assert.equal(recovered.after.state,'saved');assert.equal(recovered.after.blockedCount,0);assert.equal(recovered.after.lastError,'');assert.equal(recovered.after.listenerHealthy,true);assert.equal(recovered.priority,'H');assert.equal(recovered.unsubscribed,1);
 });

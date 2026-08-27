@@ -147,7 +147,9 @@
     async function listRecoveryCandidates(){return ownerRecords('recoveryCandidates');}
     async function snapshot(){
       const[operations,entities,conflicts,recoveryCandidates]=await Promise.all([ownerRecords('operations'),ownerRecords('entities'),ownerRecords('conflicts'),ownerRecords('recoveryCandidates')]);
-      return Object.freeze({ownerUid:owner,pendingCount:operations.filter(item=>['pending','sending'].includes(item.status)).length,blockedCount:operations.filter(item=>item.status==='blocked').length,conflictCount:conflicts.filter(item=>!item.resolved).length,entityCount:entities.length,recoveryCandidateCount:recoveryCandidates.length});
+      const blocked=operations.filter(item=>item.status==='blocked'),blockedCodes=[...new Set(blocked.map(item=>String(item.lastErrorCode||'')).filter(code=>/^account-sync\/[a-z0-9-]{1,80}$/.test(code)))];
+      const blockedErrorCode=blocked.length?(blockedCodes.length===1?blockedCodes[0]:'account-sync/blocked-operation'):'';
+      return Object.freeze({ownerUid:owner,pendingCount:operations.filter(item=>['pending','sending'].includes(item.status)).length,blockedCount:blocked.length,blockedErrorCode,conflictCount:conflicts.filter(item=>!item.resolved).length,entityCount:entities.length,recoveryCandidateCount:recoveryCandidates.length});
     }
     async function close(){
       if(closed)return;
