@@ -43,7 +43,7 @@ test('the real IndexedDB journal survives reload, isolates owners, and keeps con
     return{ownerSnapshot,otherSnapshot,retried,conflictStatus,resolved,resolvedStatus,resolvedSnapshot};
   },{databaseName,conflictOperationId:prepared.conflictOperationId,conflictRecordId:prepared.conflictRecordId});
   assert.equal(after.ownerSnapshot.pendingCount,1);assert.equal(after.ownerSnapshot.conflictCount,1);
-  assert.deepEqual(after.otherSnapshot,{ownerUid:'uid-owner-b',pendingCount:0,blockedCount:0,blockedErrorCode:'',conflictCount:0,entityCount:0,recoveryCandidateCount:0});
+  assert.deepEqual(after.otherSnapshot,{ownerUid:'uid-owner-b',pendingCount:0,blockedCount:0,recoverableBlockedCount:0,unsafeBlockedCount:0,blockedCategories:[],blockedErrorCode:'',conflictCount:0,entityCount:0,recoveryCandidateCount:0});
   assert.equal(after.retried,false);assert.equal(after.conflictStatus,'conflict');assert.equal(after.resolved,true);assert.equal(after.resolvedStatus,'resolved');assert.equal(after.resolvedSnapshot.conflictCount,0);
 });
 
@@ -83,7 +83,7 @@ test('a pre-.70 committed-entity acknowledgement block survives reload and recon
     await journal.enqueueOperation(operation,optimistic);await journal.markAttempt(operation.operationId,{retryable:false,errorCode:'account-sync/committed-entity-invalid'});
     const snapshot=await journal.snapshot();await journal.close();return{operation,entityId,snapshot};
   },databaseName);
-  assert.equal(retained.snapshot.blockedCount,1);assert.equal(retained.snapshot.blockedErrorCode,'account-sync/committed-entity-invalid');assert.equal(retained.snapshot.pendingCount,0);
+  assert.equal(retained.snapshot.blockedCount,1);assert.equal(retained.snapshot.recoverableBlockedCount,1);assert.equal(retained.snapshot.unsafeBlockedCount,0);assert.deepEqual(retained.snapshot.blockedCategories,['historical-acknowledgement']);assert.equal(retained.snapshot.blockedErrorCode,'account-sync/committed-entity-invalid');assert.equal(retained.snapshot.pendingCount,0);
 
   await page.reload({waitUntil:'domcontentloaded'});await load(['js/domain/accountSyncModel.js','js/domain/accountSyncMerge.js','js/data/accountSyncJournal.js','js/data/accountSyncController.js']);
   const recovered=await page.evaluate(async({databaseName,operation})=>{
@@ -105,4 +105,22 @@ test('a pre-.70 committed-entity acknowledgement block survives reload and recon
   assert.equal(recovered.before.state,'sync-error');assert.equal(recovered.before.blockedCount,1);assert.equal(recovered.before.lastError,'account-sync/committed-entity-invalid');
   assert.equal(recovered.result.ok,true);assert.equal(recovered.result.retried,1);assert.equal(recovered.applyCalls,1);assert.equal(recovered.acknowledged,1);
   assert.equal(recovered.after.state,'saved');assert.equal(recovered.after.blockedCount,0);assert.equal(recovered.after.lastError,'');assert.equal(recovered.after.listenerHealthy,true);assert.equal(recovered.priority,'H');assert.equal(recovered.unsubscribed,1);
+});
+
+test('the real IndexedDB journal classifies mixed blocked codes and preserves unsafe records byte for byte',async t=>{
+  const server=http.createServer((_request,response)=>{response.writeHead(200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store'});response.end('<!doctype html><title>Blocked account sync classification</title>');});
+  await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});
+  const browser=await chromium.launch({headless:true});t.after(async()=>{await browser.close();await new Promise(resolve=>server.close(resolve));});
+  const page=await browser.newPage(),databaseName=`pogoAccountSync_blocked_${Date.now()}`;await page.goto(`http://127.0.0.1:${server.address().port}/`,{waitUntil:'domcontentloaded'});await page.addScriptTag({path:path.join(root,'js/domain/accountSyncModel.js')});await page.addScriptTag({path:path.join(root,'js/data/accountSyncJournal.js')});
+  const result=await page.evaluate(async databaseName=>{
+    const model=window.PogoDomain.accountSyncModel,journal=window.PogoData.accountSyncJournal.createAccountSyncJournal({ownerUid:'uid-owner',databaseName});
+    const make=async(operationId,catalogId)=>{const identity={surface:'my-list',lane:'wishlist',catalogId},entityId=model.tradeEntryId(identity);return(await model.createOperation({operationId,ownerUid:'uid-owner',entityType:'tradeEntry',entityId,identity,kind:'add',baseGeneration:0,generation:1,baseFieldRevisions:{priority:0},patch:{priority:'H'},clientAt:10})).value;};
+    const safe=await make('op_0000000000007101','pokemon:safe'),unsafe=await make('op_0000000000007102','pokemon:unsafe');await journal.enqueueOperation(safe);await journal.enqueueOperation(unsafe);await journal.markAttempt(safe.operationId,{retryable:false,errorCode:'account-sync/network-failed'});await journal.markAttempt(unsafe.operationId,{retryable:false,errorCode:'account-sync/owner-mismatch'});
+    const beforeSnapshot=await journal.snapshot(),unsafeBefore=JSON.stringify((await journal.listOperations({statuses:['blocked']})).find(record=>record.operationId===unsafe.operationId));
+    const safeRetried=await journal.retryBlocked(safe.operationId),unsafeRetried=await journal.retryBlocked(unsafe.operationId),unsafeAfter=JSON.stringify((await journal.listOperations({statuses:['blocked']})).find(record=>record.operationId===unsafe.operationId)),afterSnapshot=await journal.snapshot();await journal.close();
+    await new Promise((resolve,reject)=>{const request=indexedDB.deleteDatabase(databaseName);request.onsuccess=resolve;request.onerror=()=>reject(request.error);request.onblocked=()=>reject(new Error('test database deletion blocked'));});
+    return{beforeSnapshot,safeRetried,unsafeRetried,unsafeBefore,unsafeAfter,afterSnapshot};
+  },databaseName);
+  assert.equal(result.beforeSnapshot.blockedCount,2);assert.equal(result.beforeSnapshot.recoverableBlockedCount,1);assert.equal(result.beforeSnapshot.unsafeBlockedCount,1);assert.deepEqual(result.beforeSnapshot.blockedCategories,['transient-transport','unsafe']);
+  assert.equal(result.safeRetried,true);assert.equal(result.unsafeRetried,false);assert.equal(result.unsafeAfter,result.unsafeBefore);assert.equal(result.afterSnapshot.pendingCount,1);assert.equal(result.afterSnapshot.blockedCount,1);assert.equal(result.afterSnapshot.unsafeBlockedCount,1);
 });

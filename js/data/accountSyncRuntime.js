@@ -6,12 +6,6 @@
   const MIGRATION_COMPLETE_META='migration-complete';
   const MIGRATION_RECORD_KEYS=Object.freeze(['schemaVersion','ownerUid','deviceMigrationId','sourceFingerprint','deviceInstallHash','createdAt','completedAt','seedCount','candidateCount','verified','legacyRetained']);
   const HISTORICAL_RETRY_CODE='account-sync/committed-entity-invalid';
-  const UNSAFE_RECOVERY_CODES=Object.freeze(new Set([
-    'account-sync/catalog-projection-unresolved','account-sync/canonical-validation-failed','account-sync/conflict-current-invalid',
-    'account-sync/idempotency-conflict','account-sync/migration-evidence-conflict','account-sync/owner-mismatch',
-    'account-sync/recovery-candidate-conflict','account-sync/remote-entity-invalid','account-sync/remote-entity-missing',
-    'account-sync/remote-revision-invalid','account-sync/remote-version-substitution'
-  ]));
 
   function count(value){const number=Number(value);return Number.isSafeInteger(number)&&number>0?number:0;}
   function diagnosticCode(value,fallback='account-sync/unknown'){
@@ -20,28 +14,33 @@
   function diagnosticCategory(value,fallback='runtime'){
     const category=String(value||'');return new Set(['blocked-operation','canonical','conflict','healthy','journal','listener','migration','offline','pending-sync','projection','retained-change','review-required','runtime','session','startup','unsafe-evidence']).has(category)?category:fallback;
   }
-  function unsafeRecoveryCode(code,blockedCount=0){
-    if(code===HISTORICAL_RETRY_CODE&&blockedCount>0)return false;
-    return UNSAFE_RECOVERY_CODES.has(code)||/^account-sync\/(?:schema|transition)-/.test(code);
+  function blockedEvidence(snapshot,blockedCount,code){
+    let recoverableBlockedCount=count(snapshot.recoverableBlockedCount),unsafeBlockedCount=count(snapshot.unsafeBlockedCount);
+    if(recoverableBlockedCount+unsafeBlockedCount!==blockedCount){
+      recoverableBlockedCount=0;unsafeBlockedCount=0;
+      if(blockedCount){if(model.blockedRetryCategory(code)!=='unsafe')recoverableBlockedCount=blockedCount;else unsafeBlockedCount=blockedCount;}
+    }
+    return Object.freeze({recoverableBlockedCount,unsafeBlockedCount});
   }
   function recoveryPlan({snapshot={},runtimePresent=false,projectionReady=false,sessionCurrent=true}={}){
     const pendingCount=count(snapshot.pendingCount),blockedCount=count(snapshot.blockedCount),conflictCount=count(snapshot.conflictCount),reviewCount=count(snapshot.recoveryCandidateCount),state=String(snapshot.state||'sync-error');
     const code=diagnosticCode(snapshot.lastError||snapshot.blockedErrorCode,blockedCount?'account-sync/blocked-operation':'account-sync/unknown');
-    if(!sessionCurrent||code==='account-sync/session-changed'||code==='account-sync/session-inactive')return Object.freeze({action:'none',category:'session',code:'account-sync/session-changed',pendingCount,blockedCount,conflictCount,reviewCount});
-    if(conflictCount||state==='conflict')return Object.freeze({action:'review-conflict',category:'conflict',code:'account-sync/conflict',pendingCount,blockedCount,conflictCount,reviewCount});
-    if(reviewCount||state==='review-required')return Object.freeze({action:'none',category:'review-required',code:'account-sync/review-required',pendingCount,blockedCount,conflictCount,reviewCount});
-    if(unsafeRecoveryCode(code,blockedCount)||snapshot.lastErrorCategory==='canonical')return Object.freeze({action:'none',category:'unsafe-evidence',code,pendingCount,blockedCount,conflictCount,reviewCount});
-    if(blockedCount)return Object.freeze({action:'retry-blocked',category:'retained-change',code,pendingCount,blockedCount,conflictCount,reviewCount});
-    if(state==='offline'||state==='pending-sync')return Object.freeze({action:'none',category:state,code:state==='offline'?'account-sync/offline':'account-sync/pending',pendingCount,blockedCount,conflictCount,reviewCount});
-    if(state==='sync-error'||state==='inactive'||!runtimePresent||!projectionReady||snapshot.active!==true||snapshot.listenerHealthy!==true||snapshot.controllerHealthy!==true)return Object.freeze({action:'restart-runtime',category:diagnosticCategory(snapshot.lastErrorCategory,!projectionReady?'projection':'runtime'),code,pendingCount,blockedCount,conflictCount,reviewCount});
-    return Object.freeze({action:'none',category:'healthy',code:'account-sync/healthy',pendingCount,blockedCount,conflictCount,reviewCount});
+    const{recoverableBlockedCount,unsafeBlockedCount}=blockedEvidence(snapshot,blockedCount,code),base={pendingCount,blockedCount,recoverableBlockedCount,unsafeBlockedCount,conflictCount,reviewCount};
+    if(!sessionCurrent||code==='account-sync/session-changed'||code==='account-sync/session-inactive')return Object.freeze({action:'none',category:'session',code:'account-sync/session-changed',...base});
+    if(model.unsafeRecoveryCode(snapshot.lastError||code)||snapshot.lastErrorCategory==='canonical'||snapshot.lastErrorCategory==='unsafe-evidence'||unsafeBlockedCount)return Object.freeze({action:'none',category:'unsafe-evidence',code,...base});
+    if(conflictCount||state==='conflict')return Object.freeze({action:'review-conflict',category:'conflict',code:'account-sync/conflict',...base});
+    if(reviewCount||state==='review-required')return Object.freeze({action:'none',category:'review-required',code:'account-sync/review-required',...base});
+    if(blockedCount&&recoverableBlockedCount===blockedCount&&snapshot.listenerHealthy===true&&snapshot.controllerHealthy===true)return Object.freeze({action:'retry-blocked',category:'retained-change',code,...base});
+    if(state==='offline'||state==='pending-sync'||['starting','listening'].includes(snapshot.listenerState))return Object.freeze({action:'none',category:state==='offline'?'offline':'pending-sync',code:state==='offline'?'account-sync/offline':'account-sync/pending',...base});
+    if(state==='sync-error'||state==='inactive'||!runtimePresent||!projectionReady||snapshot.active!==true||snapshot.listenerHealthy!==true||snapshot.controllerHealthy!==true)return Object.freeze({action:'restart-runtime',category:diagnosticCategory(snapshot.lastErrorCategory,!projectionReady?'projection':'runtime'),code,...base});
+    return Object.freeze({action:'none',category:'healthy',code:'account-sync/healthy',...base});
   }
   function healthySnapshot({snapshot={},runtimePresent=false,projectionReady=false,sessionCurrent=true}={}){
     return sessionCurrent&&runtimePresent&&projectionReady&&snapshot.state==='saved'&&snapshot.active===true&&snapshot.listenerHealthy===true&&snapshot.controllerHealthy===true&&!snapshot.lastError&&!count(snapshot.pendingCount)&&!count(snapshot.blockedCount)&&!count(snapshot.conflictCount)&&!count(snapshot.recoveryCandidateCount);
   }
   function sanitizedDiagnostic({snapshot={},runtimePresent=false,projectionReady=false,sessionCurrent=true,recoveryOutcome='idle',release='unknown'}={}){
     const plan=recoveryPlan({snapshot,runtimePresent,projectionReady,sessionCurrent}),outcome=/^(?:idle|running|recovered|failed|pending|review)$/.test(String(recoveryOutcome))?String(recoveryOutcome):'failed';
-    return Object.freeze({code:plan.code,category:plan.category,pendingCount:plan.pendingCount,blockedCount:plan.blockedCount,conflictCount:plan.conflictCount,reviewCount:plan.reviewCount,runtime:runtimePresent&&snapshot.active===true?'active':'inactive',listener:snapshot.listenerHealthy===true?'healthy':snapshot.listenerState==='failed'?'failed':'not-ready',projection:projectionReady?'ready':'not-ready',recoveryOutcome:outcome,release:/^\d{4}-\d{2}-\d{2}\.\d+$/.test(String(release))?String(release):'unknown'});
+    return Object.freeze({code:plan.code,category:plan.category,pendingCount:plan.pendingCount,blockedCount:plan.blockedCount,recoverableBlockedCount:plan.recoverableBlockedCount,unsafeBlockedCount:plan.unsafeBlockedCount,conflictCount:plan.conflictCount,reviewCount:plan.reviewCount,runtime:runtimePresent&&snapshot.active===true?'active':'inactive',listener:snapshot.listenerHealthy===true?'healthy':snapshot.listenerState==='failed'?'failed':'not-ready',projection:projectionReady?'ready':'not-ready',recoveryOutcome:outcome,release:/^\d{4}-\d{2}-\d{2}\.\d+$/.test(String(release))?String(release):'unknown'});
   }
   function createRecoveryCoordinator({capture,isCurrent,retryBlocked,restart,recapture,onProgress=()=>{}}={}){
     if(typeof capture!=='function'||typeof isCurrent!=='function'||typeof retryBlocked!=='function'||typeof restart!=='function'||typeof recapture!=='function')throw new TypeError('Account sync recovery coordinator dependencies are incomplete');
@@ -66,7 +65,15 @@
             if(healthySnapshot(context))return result(true,'recovered',plan,attempt,{code:'account-sync/recovered',retried});
             if(afterRetry.action==='restart-runtime'&&!afterRetry.pendingCount&&!afterRetry.blockedCount&&!afterRetry.conflictCount&&!afterRetry.reviewCount)context=await restart(context);
             else return result(false,afterRetry.category==='pending-sync'?'pending':afterRetry.action==='review-conflict'?'review':'failed',afterRetry,attempt,{retried});
-          }else context=await restart(context);
+          }else{
+            context=await restart(context);
+            if(!isCurrent(context))return result(false,'failed',plan,attempt,{code:'account-sync/session-changed',retried});
+            context=await recapture(context);const afterRestart=recoveryPlan(context);
+            if(afterRestart.action==='retry-blocked'){
+              const retriedResult=await retryBlocked(context);retried=count(retriedResult?.retried);
+              if(!retriedResult?.ok||!retried)return result(false,'failed',afterRestart,attempt,{code:retriedResult?.error?.code||'account-sync/retry-empty',retried});
+            }
+          }
           if(!isCurrent(context))return result(false,'failed',plan,attempt,{code:'account-sync/session-changed',retried});
           context=await recapture(context);
           if(healthySnapshot(context))return result(true,'recovered',plan,attempt,{code:'account-sync/recovered',retried});
@@ -92,7 +99,7 @@
   function createAccountSyncRuntime({
     ownerUid,username,journal,repository,enabled,writesEnabled,allowlistedUids,readMigrationSources,
     onState,onCanonicalEntities,onPublicProjection,onMigrationState,online=()=>global.navigator?.onLine!==false,
-    clock=()=>Date.now(),crypto=global.crypto
+    clock=()=>Date.now(),crypto=global.crypto,listenerReadyTimeoutMs=8000
   }={}){
     const owner=model.firebaseKey(ownerUid,128),name=model.exactText(username,64);
     if(!owner||!name||!journal||!repository||typeof readMigrationSources!=='function')throw new TypeError('Account sync runtime binding is invalid');
@@ -229,10 +236,12 @@
           if(!controller.eligible)return activated;
           migrationState='reading';const plan=await ensureMigration();requireRunning();projectionReady=true;
           if(onCanonicalEntities?.(Object.freeze(controller.activeEntities()))===false)throw Object.assign(new Error('Canonical account projection is unresolved'),{code:'account-sync/catalog-projection-unresolved'});
+          const listenerReady=await controller.waitForListenerReady({timeoutMs:listenerReadyTimeoutMs});requireRunning();
+          if(!listenerReady?.ok)throw Object.assign(new Error('The live account sync listener did not become ready'),{code:listenerReady?.error?.code||'account-sync/listener-failed'});
           await controller.publishAcceptedProjection(Object.freeze({kind:'migration-complete',deviceMigrationId:plan.deviceMigrationId}));requireRunning();
           startupError='';startupErrorCategory='';notifyState(await controller.snapshot());return Object.freeze({ok:true,status:'active',plan});
         }catch(error){
-          projectionReady=false;startupError=diagnosticCode(error,'account-sync/migration-failed');startupErrorCategory=startupError==='account-sync/catalog-projection-unresolved'?'canonical':migrationState==='activating'?'startup':'migration';
+          projectionReady=false;startupError=diagnosticCode(error,'account-sync/migration-failed');startupErrorCategory=startupError==='account-sync/catalog-projection-unresolved'?'canonical':/^account-sync\/listener-/.test(startupError)?'listener':migrationState==='activating'?'startup':'migration';
           if(!stopped){notifyMigration('blocked',{code:startupError});try{notifyState(await controller.snapshot());}catch{}}
           throw error;
         }

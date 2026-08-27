@@ -3163,6 +3163,10 @@ let accountSyncRuntimeGeneration=0;
 let accountSyncProjectionApplying=false;
 let accountSyncRecoveryCoordinator=null;
 let accountSyncRecoveryCoordinatorBinding='';
+let accountSyncRecoverySessionBinding=null;
+let accountSyncRecoveryCoordinatorGeneration=0;
+let accountSyncRecoveryCoordinatorRuntimeGeneration=-1;
+let accountSyncRecoveryStateBinding='';
 let accountSyncRecoveryState=Object.freeze({status:'idle',attempt:0,code:'account-sync/none'});
 const managedPublicSharePublication=publicSharePublicationDomain.createPublicSharePublicationGate();
 const managedTrainerPreferencesRepository=trainerPreferencesRepositoryData.createTrainerPreferencesRepository({enabled:false});
@@ -4521,6 +4525,7 @@ function sessionTransientCallback(callback){
 }
 function resetSessionTransientUi(reason='session_boundary'){
   _sessionTransientGeneration++;
+  if(typeof invalidateAccountSyncRecovery==='function')invalidateAccountSyncRecovery(reason);
   if(typeof e1ClientFoundationCanary!=='undefined'&&e1ClientFoundationCanary){e1ClientFoundationCanary.close();e1ClientFoundationCanary=null;}
   resetOwnedHydrationState();
 
@@ -4614,6 +4619,7 @@ function resetTransientUiBeforeSessionActivation(uid,username){
   return true;
 }
 function activateOwnedSession(uid,username){
+  invalidateAccountSyncRecovery('session_activation');
   resetTransientUiBeforeSessionActivation(uid,username);
   const result=managedSessionCache.activate({uid,username});
   if(!result.ok){
@@ -4639,6 +4645,7 @@ function storedSessionMatches(uid,username){
   return!!owner&&owner.uid===uid&&owner.username===username;
 }
 function suspendOwnedSession(reason='auth_loss'){
+  invalidateAccountSyncRecovery(reason);
   stopAccountSyncRuntime().catch(error=>console.warn('Account sync shutdown failed',String(error?.code||'unknown')));
   managedPublicSharePublication.invalidate(reason);
   activePublicShareHydrationToken=null;
@@ -4648,6 +4655,7 @@ function suspendOwnedSession(reason='auth_loss'){
   allData=getLocal();
 }
 function clearOwnedSession(){
+  invalidateAccountSyncRecovery('logout');
   stopAccountSyncRuntime().catch(error=>console.warn('Account sync shutdown failed',String(error?.code||'unknown')));
   managedPublicSharePublication.invalidate('logout');
   activePublicShareHydrationToken=null;
@@ -5613,7 +5621,8 @@ function accountSyncRetainedLegacyQueueEntries(key,item,username=cur){
 }
 function accountSyncMarkMutationBlocked(code='account-sync/not-ready',category='runtime'){
   const safeCode=accountSyncRuntimeData.diagnosticCode(code,'account-sync/not-ready');
-  const preservedState=['conflict','review-required'].includes(accountSyncUiState?.state)?accountSyncUiState.state:'sync-error';
+  const unsafe=accountSyncModel.unsafeRecoveryCode(safeCode)||['canonical','unsafe-evidence'].includes(String(category||''));
+  const preservedState=!unsafe&&['conflict','review-required'].includes(accountSyncUiState?.state)?accountSyncUiState.state:'sync-error';
   accountSyncUiState=Object.freeze({
     ...(accountSyncUiState||{}),state:preservedState,eligible:true,active:accountSyncUiState?.active===true,
     pendingCount:Number(accountSyncUiState?.pendingCount)||0,
@@ -5835,7 +5844,7 @@ async function ensureAccountSyncRuntime(){
   }
   if(!firebaseDataProtectionReady||!db||!uid||!username)return Object.freeze({ok:false,status:'not-ready'});
   if(managedAccountSyncRuntime?.ownerUid===uid){
-    try{accountSyncUiState=await managedAccountSyncRuntime.snapshot();refreshSyncUi();}
+    try{accountSyncUiState=await managedAccountSyncRuntime.snapshot();accountSyncClearStaleRecoveryPresentation();refreshSyncUi();}
     catch(error){accountSyncMarkMutationBlocked(error,'runtime');return Object.freeze({ok:false,status:'runtime-unhealthy'});}
     return accountSyncProjectionReady()?Object.freeze({ok:true,status:'active'}):Object.freeze({ok:false,status:'runtime-unhealthy'});
   }
@@ -5853,7 +5862,7 @@ async function ensureAccountSyncRuntime(){
     runtime=accountSyncRuntimeData.createAccountSyncRuntime({
       ownerUid:uid,username,journal,repository,enabled:ACCOUNT_SYNC_ROLLOUT.enabled,writesEnabled:ACCOUNT_SYNC_ROLLOUT.writesEnabled,allowlistedUids:[uid],
       readMigrationSources:accountSyncReadLegacySources,
-      onState:state=>{if(currentSession()){accountSyncUiState=state;refreshSyncUi();}},
+      onState:state=>{if(currentSession()){accountSyncUiState=state;accountSyncClearStaleRecoveryPresentation();refreshSyncUi();}},
       onCanonicalEntities:entities=>currentSession()?applyAccountSyncCanonicalEntities(entities):false,
       onPublicProjection:acceptedRows=>currentSession()?publishAccountSyncProjection(acceptedRows):Promise.reject(Object.assign(new Error('Account sync session changed before publication'),{code:'account-sync/session-changed'})),
       onMigrationState:detail=>{if(currentSession()){accountSyncMigrationState=detail.state;refreshSyncUi();}}
@@ -5862,7 +5871,7 @@ async function ensureAccountSyncRuntime(){
     try{
       const result=await runtime.start();
       if(!currentSession()){await runtime.stop();return Object.freeze({ok:false,status:'session-changed'});}
-      accountSyncUiState=await runtime.snapshot();refreshSyncUi();
+      accountSyncUiState=await runtime.snapshot();accountSyncClearStaleRecoveryPresentation();refreshSyncUi();
       if(!accountSyncProjectionReady())return Object.freeze({ok:false,status:'runtime-unhealthy'});
       retireMigratedLegacyListQueue();return result;
     }catch(error){
@@ -5887,28 +5896,58 @@ async function ensureAccountSyncRuntime(){
 function accountSyncRecoveryStatus(value){
   const status=String(value||'failed');return['idle','running','recovered','failed','pending','review'].includes(status)?status:'failed';
 }
+function accountSyncIdleRecoveryState(){return Object.freeze({status:'idle',attempt:0,code:'account-sync/none'});}
+function invalidateAccountSyncRecovery(_reason='session_changed'){
+  accountSyncRecoveryCoordinatorGeneration++;
+  accountSyncRecoveryCoordinator=null;accountSyncRecoveryCoordinatorBinding='';accountSyncRecoverySessionBinding=null;
+  accountSyncRecoveryCoordinatorRuntimeGeneration=-1;
+  accountSyncRecoveryStateBinding='';accountSyncRecoveryState=accountSyncIdleRecoveryState();
+}
+function accountSyncRecoveryBindingCurrent(binding){
+  return!!binding?.uid&&!!binding?.username&&binding.uid===auth?.currentUser?.uid&&binding.username===cur&&binding.sessionGeneration===_sessionTransientGeneration&&binding.coordinatorGeneration===accountSyncRecoveryCoordinatorGeneration;
+}
+function accountSyncRecoveryPresentationBinding(binding,runtimeGeneration=accountSyncRuntimeGeneration){
+  if(!binding)return'';
+  return`${binding.uid}\n${binding.username}\n${binding.sessionGeneration}\n${binding.coordinatorGeneration}\n${runtimeGeneration}`;
+}
+function accountSyncEffectiveRecoveryState(){
+  if(accountSyncRecoveryState.status==='idle')return accountSyncRecoveryState;
+  return accountSyncRecoveryStateBinding&&accountSyncRecoverySessionBinding&&accountSyncRecoveryStateBinding===accountSyncRecoveryPresentationBinding(accountSyncRecoverySessionBinding)&&accountSyncRecoveryBindingCurrent(accountSyncRecoverySessionBinding)?accountSyncRecoveryState:accountSyncIdleRecoveryState();
+}
+function accountSyncClearStaleRecoveryPresentation(){
+  const state=accountSyncEffectiveRecoveryState(),uid=auth?.currentUser?.uid||'',runtime=managedAccountSyncRuntime;
+  if(!['failed','pending','review'].includes(state.status))return false;
+  if(!accountSyncRuntimeData.healthySnapshot({snapshot:accountSyncUiState||{},runtimePresent:!!runtime&&runtime.ownerUid===uid,projectionReady:runtime?.projectionReady===true,sessionCurrent:!!uid&&!!cur}))return false;
+  accountSyncRecoveryState=accountSyncIdleRecoveryState();accountSyncRecoveryStateBinding='';return true;
+}
 async function accountSyncRecoveryContext(expectedBinding=null){
   const uid=auth?.currentUser?.uid||'',username=cur||'',runtime=managedAccountSyncRuntime;
-  const binding=expectedBinding||Object.freeze({uid,username});
+  const binding=expectedBinding||Object.freeze({uid,username,sessionGeneration:_sessionTransientGeneration,coordinatorGeneration:accountSyncRecoveryCoordinatorGeneration});
   const boundRuntime=runtime?.ownerUid===binding.uid?runtime:null;
+  const runtimeGeneration=accountSyncRuntimeGeneration;
   let snapshot=accountSyncUiState||{};
   if(boundRuntime){
     try{snapshot=await boundRuntime.snapshot();}
     catch(error){snapshot=Object.freeze({...snapshot,state:'sync-error',active:false,listenerHealthy:false,controllerHealthy:false,lastError:accountSyncRuntimeData.diagnosticCode(error,'account-sync/snapshot-failed'),lastErrorCategory:'runtime'});}
   }
-  const sessionCurrent=!!uid&&!!username&&binding.uid===uid&&binding.username===username&&auth?.currentUser?.uid===uid&&cur===username;
-  return Object.freeze({sessionBinding:binding,runtime:boundRuntime,snapshot,runtimePresent:!!boundRuntime,projectionReady:boundRuntime?.projectionReady===true,sessionCurrent});
+  const sessionCurrent=accountSyncRecoveryBindingCurrent(binding);
+  return Object.freeze({sessionBinding:binding,runtime:boundRuntime,runtimeGeneration,snapshot,runtimePresent:!!boundRuntime,projectionReady:boundRuntime?.projectionReady===true,sessionCurrent});
 }
 function accountSyncRecoveryContextCurrent(context){
-  const binding=context?.sessionBinding;return!!binding?.uid&&!!binding?.username&&binding.uid===auth?.currentUser?.uid&&binding.username===cur;
+  const binding=context?.sessionBinding;if(!accountSyncRecoveryBindingCurrent(binding))return false;
+  if(context?.runtime&&context.runtime!==managedAccountSyncRuntime)return false;
+  if(Number.isSafeInteger(context?.runtimeGeneration)&&context.runtimeGeneration!==accountSyncRuntimeGeneration)return false;
+  return true;
 }
 function accountSyncCurrentRecoveryPlan(){
   const runtime=managedAccountSyncRuntime,uid=auth?.currentUser?.uid||'';
   return accountSyncRuntimeData.recoveryPlan({snapshot:accountSyncUiState||{},runtimePresent:!!runtime&&runtime.ownerUid===uid,projectionReady:runtime?.projectionReady===true,sessionCurrent:!!uid&&!!cur&&(!accountSyncEligibleUid||accountSyncEligibleUid===uid)});
 }
 function getAccountSyncRecoveryCoordinator(){
-  const sessionBinding=Object.freeze({uid:auth?.currentUser?.uid||'',username:cur||''}),bindingKey=`${sessionBinding.uid}\n${sessionBinding.username}`;
-  if(accountSyncRecoveryCoordinator&&accountSyncRecoveryCoordinatorBinding===bindingKey)return accountSyncRecoveryCoordinator;
+  const uid=auth?.currentUser?.uid||'',username=cur||'',sessionGeneration=_sessionTransientGeneration;
+  if(accountSyncRecoveryCoordinator&&accountSyncRecoverySessionBinding&&accountSyncRecoveryBindingCurrent(accountSyncRecoverySessionBinding)&&accountSyncRecoveryCoordinatorRuntimeGeneration===accountSyncRuntimeGeneration&&accountSyncRecoverySessionBinding.uid===uid&&accountSyncRecoverySessionBinding.username===username&&accountSyncRecoverySessionBinding.sessionGeneration===sessionGeneration)return accountSyncRecoveryCoordinator;
+  const coordinatorGeneration=++accountSyncRecoveryCoordinatorGeneration,sessionBinding=Object.freeze({uid,username,sessionGeneration,coordinatorGeneration}),bindingKey=`${uid}\n${username}\n${sessionGeneration}\n${coordinatorGeneration}`;
+  accountSyncRecoveryCoordinatorRuntimeGeneration=accountSyncRuntimeGeneration;
   let coordinator=null;
   coordinator=accountSyncRuntimeData.createRecoveryCoordinator({
     capture:()=>accountSyncRecoveryContext(sessionBinding),
@@ -5918,28 +5957,32 @@ function getAccountSyncRecoveryCoordinator(){
       const binding=context.sessionBinding;
       if(!accountSyncRecoveryContextCurrent(context))throw Object.assign(new Error('Account sync session changed'),{code:'account-sync/session-changed'});
       await stopAccountSyncRuntime();
-      if(binding.uid!==auth?.currentUser?.uid||binding.username!==cur)throw Object.assign(new Error('Account sync session changed'),{code:'account-sync/session-changed'});
+      if(!accountSyncRecoveryBindingCurrent(binding))throw Object.assign(new Error('Account sync session changed'),{code:'account-sync/session-changed'});
       const started=await ensureAccountSyncRuntime();
       if(!started?.ok)throw Object.assign(new Error('Account sync restart did not become ready'),{code:accountSyncRuntimeData.diagnosticCode(started?.status,'account-sync/restart-failed')});
+      if(accountSyncRecoveryCoordinator!==coordinator||accountSyncRecoveryCoordinatorBinding!==bindingKey||!accountSyncRecoveryBindingCurrent(binding))throw Object.assign(new Error('Account sync session changed'),{code:'account-sync/session-changed'});
+      accountSyncRecoveryCoordinatorRuntimeGeneration=accountSyncRuntimeGeneration;
       return accountSyncRecoveryContext(binding);
     },
     recapture:context=>accountSyncRecoveryContext(context.sessionBinding),
     onProgress:detail=>{
-      if(accountSyncRecoveryCoordinator!==coordinator||accountSyncRecoveryCoordinatorBinding!==bindingKey||!accountSyncRecoveryContextCurrent({sessionBinding}))return;
+      if(accountSyncRecoveryCoordinator!==coordinator||accountSyncRecoveryCoordinatorBinding!==bindingKey||accountSyncRecoveryCoordinatorRuntimeGeneration!==accountSyncRuntimeGeneration||!accountSyncRecoveryContextCurrent({sessionBinding}))return;
       accountSyncRecoveryState=Object.freeze({status:accountSyncRecoveryStatus(detail?.status),attempt:Number(detail?.attempt)||0,action:String(detail?.action||'none'),category:String(detail?.category||'runtime'),code:accountSyncRuntimeData.diagnosticCode(detail?.code,detail?.status==='running'?'account-sync/recovery-running':'account-sync/recovery-failed')});
+      accountSyncRecoveryStateBinding=accountSyncRecoveryPresentationBinding(sessionBinding,accountSyncRecoveryCoordinatorRuntimeGeneration);
       refreshSyncUi();
     }
   });
-  accountSyncRecoveryCoordinator=coordinator;accountSyncRecoveryCoordinatorBinding=bindingKey;return coordinator;
+  accountSyncRecoveryCoordinator=coordinator;accountSyncRecoveryCoordinatorBinding=bindingKey;accountSyncRecoverySessionBinding=sessionBinding;return coordinator;
 }
 async function performAccountSyncRecovery(){
-  const sessionBinding=Object.freeze({uid:auth?.currentUser?.uid||'',username:cur||''}),coordinator=getAccountSyncRecoveryCoordinator(),result=await coordinator.recover();
-  if(!accountSyncRecoveryContextCurrent({sessionBinding}))return result;
+  const coordinator=getAccountSyncRecoveryCoordinator(),sessionBinding=accountSyncRecoverySessionBinding,result=await coordinator.recover();
+  if(accountSyncRecoveryCoordinator!==coordinator||accountSyncRecoverySessionBinding!==sessionBinding||accountSyncRecoveryCoordinatorRuntimeGeneration!==accountSyncRuntimeGeneration||!accountSyncRecoveryContextCurrent({sessionBinding}))return result;
   try{
     const context=await accountSyncRecoveryContext(sessionBinding);
     if(context.sessionCurrent)accountSyncUiState=context.snapshot;
   }catch{}
   accountSyncRecoveryState=Object.freeze({status:accountSyncRecoveryStatus(result.status),attempt:Number(result.attempt)||0,action:String(result.action||'none'),category:String(result.category||'runtime'),code:accountSyncRuntimeData.diagnosticCode(result.code,result.ok?'account-sync/recovered':'account-sync/recovery-failed')});
+  accountSyncRecoveryStateBinding=accountSyncRecoveryPresentationBinding(sessionBinding,accountSyncRecoveryCoordinatorRuntimeGeneration);
   refreshSyncUi();return result;
 }
 async function recordAccountSyncUnresolved(item,source='product-edit',runtime=managedAccountSyncRuntime){
@@ -11247,9 +11290,10 @@ async function saveAppearance(){
 let _syncStatusCurrent='';
 function accountSyncPresentation(){
   if(!accountSyncUiState?.eligible)return null;
+  accountSyncClearStaleRecoveryPresentation();
   const state=String(accountSyncUiState.state||'sync-error');
   const count=Math.max(0,Number(accountSyncUiState.pendingCount)||0)+Math.max(0,Number(accountSyncUiState.blockedCount)||0)+Math.max(0,Number(accountSyncUiState.conflictCount)||0)+Math.max(0,Number(accountSyncUiState.recoveryCandidateCount)||0);
-  const plan=accountSyncCurrentRecoveryPlan(),running=accountSyncRecoveryState.status==='running';
+  const recoveryState=accountSyncEffectiveRecoveryState(),plan=accountSyncCurrentRecoveryPlan(),running=recoveryState.status==='running';
   const presentation=running?{className:'syncing',labelKey:'accountSync.recoveryRunning',detailKey:'accountSync.recoveryRunningDetail'}:{
     saved:{className:'online',labelKey:'accountSync.saved',detailKey:'accountSync.savedDetail'},
     'pending-sync':{className:'syncing',labelKey:'accountSync.saving',detailKey:'accountSync.savingDetail'},
@@ -11312,8 +11356,9 @@ function refreshSyncUi(){
   const recovery=document.getElementById('trainer-sync-recovery'),recoveryLabel=document.getElementById('trainer-sync-recovery-label');
   if(account){
     const runtime=managedAccountSyncRuntime,uid=auth?.currentUser?.uid||'';
-    const diagnosticValue=accountSyncRuntimeData.sanitizedDiagnostic({snapshot:accountSyncUiState||{},runtimePresent:!!runtime&&runtime.ownerUid===uid,projectionReady:runtime?.projectionReady===true,sessionCurrent:!!uid&&!!cur,recoveryOutcome:accountSyncRecoveryState.status,release:clientReleaseDomain.RELEASE_ID});
-    const showDiagnostic=account.state==='sync-error'||['running','failed','pending','review'].includes(accountSyncRecoveryState.status);
+    const recoveryState=accountSyncEffectiveRecoveryState();
+    const diagnosticValue=accountSyncRuntimeData.sanitizedDiagnostic({snapshot:accountSyncUiState||{},runtimePresent:!!runtime&&runtime.ownerUid===uid,projectionReady:runtime?.projectionReady===true,sessionCurrent:!!uid&&!!cur,recoveryOutcome:recoveryState.status,release:clientReleaseDomain.RELEASE_ID});
+    const showDiagnostic=account.state==='sync-error'||['running','failed','pending','review'].includes(recoveryState.status);
     if(diagnostic){
       diagnostic.hidden=!showDiagnostic;
       diagnostic.textContent=showDiagnostic?i18nCore.t('accountSync.diagnostic',{
@@ -11431,6 +11476,8 @@ function accountSyncConflictItemName(detail){
   return entity?.values?.displayName||entity?.values?.label||i18nCore.t('accountSync.syncedItem');
 }
 async function reviewAccountSyncConflicts(){
+  const plan=accountSyncCurrentRecoveryPlan();
+  if(plan.category==='unsafe-evidence'||plan.action!=='review-conflict'){toast(i18nCore.t('accountSync.noSafeRecovery'),4500);return;}
   const runtime=managedAccountSyncRuntime,details=await runtime?.conflictDetails?.();
   if(!details?.length){toast(i18nCore.t('accountSync.noConflicts'),3500);return;}
   const rows=details.flatMap(detail=>detail.fields.map(field=>({key:`${accountSyncConflictItemName(detail)} · ${accountSyncConflictFieldLabel(field.path)}`,local:accountSyncConflictValue(field.path,field.deviceValue),remote:accountSyncConflictValue(field.path,field.accountValue)})));

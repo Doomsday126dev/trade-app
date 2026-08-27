@@ -120,6 +120,7 @@
     }
     async function retryBlocked(operationId){
       const key=recordKey(owner,operationId),record=await read('operations',key);if(!record||record.status!=='blocked')return false;
+      if(!model.blockedRetryEligible(record))return false;
       await write('operations',{...record,status:'pending',attempts:0,nextAttemptAt:Number(now()),lastErrorCode:'',updatedAt:Number(now())});return true;
     }
     async function putEntity(entity){
@@ -149,7 +150,9 @@
       const[operations,entities,conflicts,recoveryCandidates]=await Promise.all([ownerRecords('operations'),ownerRecords('entities'),ownerRecords('conflicts'),ownerRecords('recoveryCandidates')]);
       const blocked=operations.filter(item=>item.status==='blocked'),blockedCodes=[...new Set(blocked.map(item=>String(item.lastErrorCode||'')).filter(code=>/^account-sync\/[a-z0-9-]{1,80}$/.test(code)))];
       const blockedErrorCode=blocked.length?(blockedCodes.length===1?blockedCodes[0]:'account-sync/blocked-operation'):'';
-      return Object.freeze({ownerUid:owner,pendingCount:operations.filter(item=>['pending','sending'].includes(item.status)).length,blockedCount:blocked.length,blockedErrorCode,conflictCount:conflicts.filter(item=>!item.resolved).length,entityCount:entities.length,recoveryCandidateCount:recoveryCandidates.length});
+      const recoverableBlocked=blocked.filter(model.blockedRetryEligible),unsafeBlockedCount=blocked.length-recoverableBlocked.length;
+      const blockedCategories=[...new Set(blocked.map(item=>model.blockedRetryCategory(item.lastErrorCode)))].sort();
+      return Object.freeze({ownerUid:owner,pendingCount:operations.filter(item=>['pending','sending'].includes(item.status)).length,blockedCount:blocked.length,recoverableBlockedCount:recoverableBlocked.length,unsafeBlockedCount,blockedCategories:Object.freeze(blockedCategories),blockedErrorCode,conflictCount:conflicts.filter(item=>!item.resolved).length,entityCount:entities.length,recoveryCandidateCount:recoveryCandidates.length});
     }
     async function close(){
       if(closed)return;

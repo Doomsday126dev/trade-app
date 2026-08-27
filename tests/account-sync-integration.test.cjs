@@ -119,6 +119,35 @@ test('auth transitions invalidate stale sync starts before publishing account st
   assert.match(start,/if\(!currentSession\(\)\)\{await runtime\.stop\(\);return Object\.freeze\(\{ok:false,status:'session-changed'\}\);\}/);
 });
 
+test('recovery presentation is bound to session, coordinator, and runtime generations',()=>{
+  const reset=html.slice(html.indexOf('function resetSessionTransientUi'),html.indexOf('function resetTransientUiBeforeSessionActivation'));
+  const activation=html.slice(html.indexOf('function activateOwnedSession'),html.indexOf('function storedSessionMatches'));
+  const suspension=html.slice(html.indexOf('function suspendOwnedSession'),html.indexOf('function showSessionStorageNotices'));
+  const recovery=html.slice(html.indexOf('function accountSyncRecoveryStatus'),html.indexOf('async function recordAccountSyncUnresolved'));
+  assert.match(reset,/invalidateAccountSyncRecovery\(reason\)/);
+  assert.match(activation,/invalidateAccountSyncRecovery\('session_activation'\)/);
+  assert.match(suspension,/invalidateAccountSyncRecovery\(reason\)/);
+  assert.match(suspension,/invalidateAccountSyncRecovery\('logout'\)/);
+  assert.match(recovery,/accountSyncRecoveryPresentationBinding\(binding,runtimeGeneration=accountSyncRuntimeGeneration\)/);
+  assert.match(recovery,/binding\.uid.*binding\.username.*binding\.sessionGeneration.*binding\.coordinatorGeneration.*runtimeGeneration/s);
+  assert.match(recovery,/accountSyncRecoveryStateBinding===accountSyncRecoveryPresentationBinding\(accountSyncRecoverySessionBinding\)/);
+  assert.match(recovery,/accountSyncRecoveryCoordinatorRuntimeGeneration===accountSyncRuntimeGeneration/);
+  assert.match(recovery,/accountSyncRecoveryCoordinatorRuntimeGeneration!==accountSyncRuntimeGeneration/);
+  assert.match(recovery,/healthySnapshot\([^)]*accountSyncUiState/s);
+  assert.match(recovery,/accountSyncRecoveryState=accountSyncIdleRecoveryState\(\);accountSyncRecoveryStateBinding=''/);
+});
+
+test('unsafe canonical state outranks conflict presentation and conflict actions recheck authority',()=>{
+  assert.match(controller,/const state=!eligible\?'local-only':unsafeEvidence\?'sync-error':journalState\.conflictCount\?'conflict'/);
+  assert.match(controller,/listenerHealthy=!eligible\|\|active&&listenerState==='healthy'/);
+  assert.doesNotMatch(controller,/\['listening','healthy'\]\.includes\(listenerState\)/);
+  assert.match(controller,/async function acceptConflict\(conflictId\)\{\s*const authority=await snapshot\(\)/);
+  assert.match(controller,/async function reapplyConflict\(conflictId\)\{\s*const authority=await snapshot\(\)/);
+  const review=html.slice(html.indexOf('async function reviewAccountSyncConflicts'),html.indexOf('let _modalPrevFocus'));
+  assert.match(review,/const plan=accountSyncCurrentRecoveryPlan\(\)/);
+  assert.match(review,/plan\.category==='unsafe-evidence'\|\|plan\.action!=='review-conflict'/);
+});
+
 test('allowlisted mutations cannot fall through to legacy writers while canonical startup is pending',()=>{
   const authority=html.slice(html.indexOf('async function accountSyncMutationAuthority'),html.indexOf('function accountSyncProjectionReady'));
   assert.match(authority,/await ensureAccountSyncRuntime\(\)/);
