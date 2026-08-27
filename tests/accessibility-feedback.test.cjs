@@ -76,7 +76,7 @@ test('My List autocomplete exposes a named combobox and managed active option',(
 test('compact feedback is bounded, safe-area aware, nonblocking, and reduced-motion aware',()=>{
   assert.match(html,/\.toast,\.undo-toast\{[^}]*max-width:min\(480px,calc\(100vw - 24px\)\)[^}]*pointer-events:none/);
   assert.match(html,/\.undo-btn\{[^}]*pointer-events:auto/);
-  assert.match(html,/@media\(max-height:600px\)\{\.toast,\.undo-toast\{[^}]*bottom:calc\(8px \+ env\(safe-area-inset-bottom\)\)[^}]*max-height:calc\(100dvh/);
+  assert.match(html,/@media\(max-height:600px\)\{\.feedback-stack\{[^}]*bottom:calc\(8px \+ env\(safe-area-inset-bottom\)\)[^}]*max-height:calc\(100dvh/);
   assert.match(html,/@media\(prefers-reduced-motion:reduce\)/);
   assert.match(html,/\.update-banner\{[^}]*env\(safe-area-inset-bottom\)/);
   assert.match(html,/\.update-banner-btn\{[^}]*min-height:48px/);

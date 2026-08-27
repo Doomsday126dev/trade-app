@@ -116,7 +116,7 @@ async function expectAutocompleteClears(page, inputSelector, dropdownSelector) {
 async function waitForStableLocalOrganizerStartup(page) {
   await page.waitForFunction(() => typeof window.__pogoEnsureFullApp === 'function');
   await page.evaluate(() => window.__pogoEnsureFullApp('visual-smoke-test'));
-  await page.waitForFunction(() => typeof openTrainerOrganizer === 'function' && _authStateKnown === true && window.__pogoStartup?.firebaseStartupSettledAt !== null);
+  await page.waitForFunction(() => typeof openTrainerOrganizer === 'function' && window.__pogoStartup?.authStateKnownAt !== null && window.__pogoStartup?.firebaseStartupSettledAt !== null);
   await page.evaluate(() => {
     resetTrainerOrganizerState();
     localStorage.clear();
@@ -125,7 +125,9 @@ async function waitForStableLocalOrganizerStartup(page) {
 }
 
 async function isolateAuthenticatedMyListFixture(page,{username,uid}) {
-  await page.waitForFunction(() => _authStateKnown === true && window.__pogoStartup?.firebaseStartupSettledAt !== null && typeof managedSubscriptions?.unsubscribeByKey === 'function');
+  await page.waitForFunction(() => typeof window.__pogoEnsureFullApp === 'function');
+  await page.evaluate(() => window.__pogoEnsureFullApp('visual-authenticated-fixture'));
+  await page.waitForFunction(() => window.__pogoStartup?.authStateKnownAt !== null && window.__pogoStartup?.firebaseStartupSettledAt !== null && typeof managedSubscriptions?.unsubscribeByKey === 'function');
   await page.evaluate(({username,uid}) => {
     managedSubscriptions.unsubscribeByKey('public:loginDirectory');
     managedListenerLifecycle.deactivateSession('playwright_fixture');
@@ -1213,6 +1215,7 @@ test.describe('visual smoke', () => {
         const store=ensureTrainerHistoryStore();store.toggleFavorite('交換トレーナー');
         document.querySelectorAll('.page').forEach(node=>node.classList.remove('active'));
         document.getElementById('tab-find').classList.add('active');
+        setTrainerDiscoveryMode('favorites');
         applyTheme(theme);await renderTrainerQuickLists();
         window.__favoriteSearchInput=document.querySelector('.favorite-toolbar-search input');
         window.__favoriteSearchRenderCount=0;

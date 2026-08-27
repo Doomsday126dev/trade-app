@@ -94,7 +94,8 @@ test('Trainers mode exposes a bounded clickable Favorites preview with a full-mo
   assert.match(render,/state\.favorites\.slice\(0,4\)/);
   assert.match(render,/trainer-favorites-preview-row card-row[^>]+data-trainer-action="open"/);
   assert.match(render,/trainer\.viewAllFavorites/);
-  assert.match(render,/focusTrainerDiscoveryMode\('favorites'\)/);
+  assert.match(render,/data-favorite-action="show-favorites"/);
+  assert.match(html,/favoriteAction==='show-favorites'\)\{focusTrainerDiscoveryMode\('favorites'\)/);
   assert.match(html,/trainer-discovery-content\[data-mode="favorites"\] #trainer-favorites-preview[^{]*\{display:none\}/);
 });
 

@@ -4861,7 +4861,7 @@ function toggleFavoriteBrowse(){
 }
 function syncFavoriteBrowseClear(){const button=document.getElementById('favorite-browse-clear'),input=document.getElementById('favorite-browse-input');if(button)button.hidden=!input?.value;}
 function favoriteBrowseSuggestionHtml(item,index){
-  return`<button type="button" class="ac-item${index===favoriteBrowseState.focusIndex?' focused':''}" role="option" id="favorite-browse-option-${index}" aria-selected="${index===favoriteBrowseState.focusIndex}" onmousedown="event.preventDefault()" onclick="selectFavoriteBrowsePokemon(${index})">${item.no||item.spriteUrl?spriteImg(item.no,28,'ac-item-sprite',item.name,'',item.dn,{urlOverride:item.spriteUrl}):''}${item.no?`<span class="ac-item-no">#${item.no}</span>`:''}<span class="ac-item-name">${escHtml(item.dn)}</span></button>`;
+  return`<button type="button" class="ac-item${index===favoriteBrowseState.focusIndex?' focused':''}" role="option" id="favorite-browse-option-${index}" aria-selected="${index===favoriteBrowseState.focusIndex}" data-favorite-action="select-browse" data-favorite-index="${index}">${item.no||item.spriteUrl?spriteImg(item.no,28,'ac-item-sprite',item.name,'',item.dn,{urlOverride:item.spriteUrl}):''}${item.no?`<span class="ac-item-no">#${item.no}</span>`:''}<span class="ac-item-name">${escHtml(item.dn)}</span></button>`;
 }
 function favoriteBrowseInput(value){
   const input=document.getElementById('favorite-browse-input'),box=document.getElementById('favorite-browse-suggestions'),query=String(value||'').trim();
@@ -4925,7 +4925,7 @@ function renderFavoriteBrowseResults(){
     const backgrounds=(match.backgroundIds||[]).map(id=>backgroundBadgeHtml(id)).join('');
     return`<button type="button" class="favorite-browse-row" data-trainer="${trainer}" data-trainer-action="open" aria-label="${escAttr(i18nCore.t('trainer.openTrainerNamed',{trainer:match.displayName}))}"><span class="favorite-browse-main"><span class="favorite-browse-name">${escHtml(match.displayName)}</span><span class="favorite-browse-match"><strong>${i18nCore.formatNumber(match.iHaveTheirWants)}</strong> ${escHtml(i18nCore.t('trainer.iHaveTheirWants'))}</span><span class="favorite-browse-meta"><span class="favorite-browse-priority ${escAttr(match.priority)}">${escHtml(favoriteBrowsePriorityText(match.priority))}</span>${category?`<span>${escHtml(category)}</span>`:''}${backgrounds}</span>${match.tags.length?`<span class="favorite-browse-tags">${match.tags.map(label=>`<span class="favorite-card-tag chip chip-metadata">${escHtml(label)}</span>`).join('')}</span>`:''}</span><span class="favorite-browse-open btn btn-ghost" aria-hidden="true">${escHtml(i18nCore.t('trainer.openAction'))} ${uiIconMarkup('chevron-right','ui-icon ui-icon-sm')}</span></button>`;
   }).join('')}</div>`;
-  const footer=summary.checked?`<div class="favorite-browse-footer"><span>${escHtml(i18nCore.t('favoriteBrowse.checked'))}</span><button type="button" class="btn btn-ghost" onclick="refreshFavoriteBrowse()">${escHtml(i18nCore.t('favoriteBrowse.refresh'))}</button>${summary.failed?`<button type="button" class="btn btn-secondary" onclick="retryFavoriteBrowse()">${escHtml(i18nCore.t('favoriteBrowse.retry'))}</button>`:''}${incomplete?`<span class="favorite-browse-partial">${escHtml(i18nCore.t('favoriteBrowse.partial',{checked:i18nCore.formatNumber(summary.total-incomplete),total:i18nCore.formatNumber(summary.total),failed:i18nCore.formatNumber(incomplete)}))}</span>`:''}</div>`:'';
+  const footer=summary.checked?`<div class="favorite-browse-footer"><span>${escHtml(i18nCore.t('favoriteBrowse.checked'))}</span><button type="button" class="btn btn-ghost" data-favorite-action="refresh-browse">${escHtml(i18nCore.t('favoriteBrowse.refresh'))}</button>${summary.failed?`<button type="button" class="btn btn-secondary" data-favorite-action="retry-browse">${escHtml(i18nCore.t('favoriteBrowse.retry'))}</button>`:''}${incomplete?`<span class="favorite-browse-partial">${escHtml(i18nCore.t('favoriteBrowse.partial',{checked:i18nCore.formatNumber(summary.total-incomplete),total:i18nCore.formatNumber(summary.total),failed:i18nCore.formatNumber(incomplete)}))}</span>`:''}</div>`:'';
   output.removeAttribute('aria-busy');output.innerHTML=body+footer;
 }
 async function hydrateFavoriteBrowse({force=false,retry=false}={}){
@@ -4958,7 +4958,8 @@ function toggleFavoriteCardMenu(event,button){
 function openFavoriteTagsFromMenu(button,username){const trigger=button?.closest('.favorite-card-shell')?.querySelector('.favorite-card-more');openTrainerOrganizer(username,trigger);}
 function favoriteCardPointerDown(event){
   if(event.pointerType==='mouse'&&event.button!==0)return;
-  const card=event.currentTarget.closest('.favorite-card-shell');favoriteSwipeGesture={card,pointerId:event.pointerId,startX:event.clientX,startY:event.clientY,horizontal:false};
+  const card=event.target.closest?.('.favorite-card-surface')?.closest('.favorite-card-shell');if(!card)return;
+  favoriteSwipeGesture={card,pointerId:event.pointerId,startX:event.clientX,startY:event.clientY,horizontal:false};
 }
 function favoriteCardPointerMove(event){
   const gesture=favoriteSwipeGesture;if(!gesture||gesture.pointerId!==event.pointerId)return;
@@ -4990,18 +4991,37 @@ function setFavoriteSearch(value){
 function syncFavoriteSearchControl(){const input=document.getElementById('favorite-trainer-search'),clear=document.getElementById('favorite-trainer-search-clear');if(input&&input.value!==trainerOrganizerState.query)input.value=trainerOrganizerState.query;if(clear)clear.hidden=!trainerOrganizerState.query;}
 function clearFavoriteSearch(){trainerOrganizerState.query='';syncFavoriteSearchControl();renderTrainerQuickLists({favoritesOnly:true});document.getElementById('favorite-trainer-search')?.focus();}
 function favoriteTrainerAction(event){
-  const control=event.target.closest('[data-trainer-action]');if(!control)return;
+  const control=event.target.closest?.('[data-trainer-action],[data-favorite-action]');if(!control||!event.currentTarget.contains(control))return;
+  const favoriteAction=control.dataset.favoriteAction;
+  if(favoriteAction==='clear-filters'){clearFavoriteFilters();return;}
+  if(favoriteAction==='toggle-tag'){toggleFavoriteTagFilter(control.dataset.favoriteTagId||'');return;}
+  if(favoriteAction==='toggle-menu'){toggleFavoriteCardMenu(event,control);return;}
+  if(favoriteAction==='show-favorites'){focusTrainerDiscoveryMode('favorites');return;}
+  if(favoriteAction==='refresh-browse'){refreshFavoriteBrowse();return;}
+  if(favoriteAction==='retry-browse'){retryFavoriteBrowse();return;}
+  if(favoriteAction==='select-browse'){
+    const index=Number.parseInt(control.dataset.favoriteIndex||'',10);if(Number.isSafeInteger(index)&&index>=0)selectFavoriteBrowsePokemon(index);return;
+  }
   const action=control.dataset.trainerAction,username=control.closest('[data-trainer]')?.dataset.trainer||control.dataset.trainer||'';
   if(action==='open')openTrainerByName(username);
   else if(action==='organize')openTrainerOrganizer(username,control);
   else if(action==='organize-menu')openFavoriteTagsFromMenu(control,username);
   else if(action==='remove')removeTrainerFavorite(username);
 }
+function favoriteBrowsePointerDown(event){if(event.target.closest?.('[data-favorite-action="select-browse"]'))event.preventDefault();}
+document.getElementById('favorite-trainers-controls')?.addEventListener('click',favoriteTrainerAction);
 document.getElementById('favorite-trainers-list')?.addEventListener('click',favoriteTrainerAction);
 document.getElementById('recent-trainers')?.addEventListener('click',favoriteTrainerAction);
 document.getElementById('trainer-favorites-preview')?.addEventListener('click',favoriteTrainerAction);
 document.getElementById('favorite-browse-results')?.addEventListener('click',favoriteTrainerAction);
+document.getElementById('favorite-browse-suggestions')?.addEventListener('click',favoriteTrainerAction);
+document.getElementById('favorite-browse-suggestions')?.addEventListener('pointerdown',favoriteBrowsePointerDown);
+document.getElementById('favorite-trainers-list')?.addEventListener('pointerdown',favoriteCardPointerDown);
+document.getElementById('favorite-trainers-list')?.addEventListener('pointermove',favoriteCardPointerMove);
+document.getElementById('favorite-trainers-list')?.addEventListener('pointerup',favoriteCardPointerUp);
+document.getElementById('favorite-trainers-list')?.addEventListener('pointercancel',favoriteCardPointerCancel);
 function toggleFavoriteTagFilter(id){
+  if(!id)return;
   const selected=new Set(trainerOrganizerState.tagIds);selected.has(id)?selected.delete(id):selected.add(id);trainerOrganizerState.tagIds=[...selected].sort();renderTrainerQuickLists();
 }
 function clearFavoriteFilters(){trainerOrganizerState.query='';trainerOrganizerState.tagIds=[];syncFavoriteSearchControl();renderTrainerQuickLists();}
@@ -5013,17 +5033,17 @@ async function renderTrainerQuickLists({preserveFavoriteControls=false,favorites
   const activeTags=Object.values(state.tags||{}).sort((a,b)=>a.label.localeCompare(b.label,i18nCore.getLocale(),{sensitivity:'base'}));
   const filtered=store.filterFavorites({query:trainerOrganizerState.query,tagIds:trainerOrganizerState.tagIds});
   const filtersActive=!!(trainerOrganizerState.query||trainerOrganizerState.tagIds.length);
-  const toolbar=state.favorites.length?`<div class="favorite-toolbar"><button class="bghost btn btn-secondary" data-favorite-clear onclick="clearFavoriteFilters()"${filtersActive?'':' hidden'}>${escHtml(i18nCore.t('organizer.clearFilters'))}</button>${activeTags.length?`<div class="favorite-filter-group"><span class="favorite-filter-label">${escHtml(i18nCore.t('organizer.tags'))}</span><div class="favorite-filter-tags" aria-label="${escAttr(i18nCore.t('organizer.filterTags'))}">${activeTags.map(tag=>{const selected=trainerOrganizerState.tagIds.includes(tag.id);return`<button class="favorite-filter-chip chip chip-filter" aria-pressed="${selected}" onclick="toggleFavoriteTagFilter('${tag.id}')"><span class="favorite-filter-chip-surface"><span class="favorite-filter-check" aria-hidden="true">${selected?'✓':''}</span>${escHtml(tag.label)}</span></button>`;}).join('')}</div></div>`:''}</div>`:'';
+  const toolbar=state.favorites.length?`<div class="favorite-toolbar"><button class="bghost btn btn-secondary" data-favorite-clear data-favorite-action="clear-filters"${filtersActive?'':' hidden'}>${escHtml(i18nCore.t('organizer.clearFilters'))}</button>${activeTags.length?`<div class="favorite-filter-group"><span class="favorite-filter-label">${escHtml(i18nCore.t('organizer.tags'))}</span><div class="favorite-filter-tags" aria-label="${escAttr(i18nCore.t('organizer.filterTags'))}">${activeTags.map(tag=>{const selected=trainerOrganizerState.tagIds.includes(tag.id);return`<button class="favorite-filter-chip chip chip-filter" aria-pressed="${selected}" data-favorite-action="toggle-tag" data-favorite-tag-id="${escAttr(tag.id)}"><span class="favorite-filter-chip-surface"><span class="favorite-filter-check" aria-hidden="true">${selected?'✓':''}</span>${escHtml(tag.label)}</span></button>`;}).join('')}</div></div>`:''}</div>`:'';
   const favoritesHeading=`<div class="trainer-section-heading"><h2 class="trainer-quick-heading">${escHtml(i18nCore.t('trainer.favoritesTitle'))}</h2><span class="trainer-section-count">${state.favorites.length}</span></div>`;
   const items=filtered.map(item=>{const canonical=canonicalTrainerName(item.displayName);if(canonical!==item.displayName&&!accountSyncProjectionReady())store.updateCanonicalName(canonical);return{...item,displayName:canonical};});
   syncFavoriteSearchControl();if(!preserveFavoriteControls)favoritesControlsEl.innerHTML=`${favoritesHeading}${toolbar}`;
   favoritesListEl.innerHTML=items.length?`<div class="trainer-quick-grid">${items.map(item=>{
     const trainer=escAttr(item.displayName),hasTags=!!item.tagIds?.length,editLabel=i18nCore.t(hasTags?'organizer.editTagsFor':'organizer.addTagsFor',{trainer:item.displayName});
-    return`<article class="favorite-card-shell card-interactive" data-trainer="${trainer}"><div class="favorite-card-rail" aria-hidden="true"><button type="button" tabindex="-1" data-trainer-action="organize">+ ${escHtml(i18nCore.t('organizer.tags'))}</button><button type="button" tabindex="-1" onclick="toggleFavoriteCardMenu(event,this)">⋯</button></div><div class="favorite-card-surface" onpointerdown="favoriteCardPointerDown(event)" onpointermove="favoriteCardPointerMove(event)" onpointerup="favoriteCardPointerUp(event)" onpointercancel="favoriteCardPointerCancel()"><button type="button" class="trainer-quick-main favorite-card-primary" data-trainer-action="open" aria-label="${escAttr(i18nCore.t('trainer.openTrainerNamed',{trainer:item.displayName}))}"><span class="trainer-quick-name type-card">${escHtml(item.displayName)}</span>${hasTags?`<span class="favorite-card-tags">${favoriteTagChips(item,state)}</span>`:''}</button><div class="favorite-card-footer"><button type="button" class="favorite-card-open btn btn-ghost" data-trainer-action="open">${escHtml(i18nCore.t('trainer.openAction'))}</button><button type="button" class="favorite-card-add-tag btn btn-secondary" data-trainer-action="organize" aria-label="${escAttr(editLabel)}"><span aria-hidden="true">+</span> ${escHtml(i18nCore.t('organizer.tagAction'))}</button><button type="button" class="favorite-card-more btn btn-icon" aria-haspopup="menu" aria-label="${escAttr(i18nCore.t('organizer.moreActionsFor',{trainer:item.displayName}))}" onclick="toggleFavoriteCardMenu(event,this)">⋯</button></div><div class="favorite-card-menu" role="menu" hidden><button type="button" role="menuitem" data-trainer-action="organize-menu">${escHtml(i18nCore.t('organizer.editTags'))}</button><button type="button" role="menuitem" class="danger" data-trainer-action="remove">${escHtml(i18nCore.t('organizer.removeFavorite'))}</button></div></div></article>`;
+    return`<article class="favorite-card-shell card-interactive" data-trainer="${trainer}"><div class="favorite-card-rail" aria-hidden="true"><button type="button" tabindex="-1" data-trainer-action="organize">+ ${escHtml(i18nCore.t('organizer.tags'))}</button><button type="button" tabindex="-1" data-favorite-action="toggle-menu">⋯</button></div><div class="favorite-card-surface"><button type="button" class="trainer-quick-main favorite-card-primary" data-trainer-action="open" aria-label="${escAttr(i18nCore.t('trainer.openTrainerNamed',{trainer:item.displayName}))}"><span class="trainer-quick-name type-card">${escHtml(item.displayName)}</span>${hasTags?`<span class="favorite-card-tags">${favoriteTagChips(item,state)}</span>`:''}</button><div class="favorite-card-footer"><button type="button" class="favorite-card-open btn btn-ghost" data-trainer-action="open">${escHtml(i18nCore.t('trainer.openAction'))}</button><button type="button" class="favorite-card-add-tag btn btn-secondary" data-trainer-action="organize" aria-label="${escAttr(editLabel)}"><span aria-hidden="true">+</span> ${escHtml(i18nCore.t('organizer.tagAction'))}</button><button type="button" class="favorite-card-more btn btn-icon" aria-haspopup="menu" aria-label="${escAttr(i18nCore.t('organizer.moreActionsFor',{trainer:item.displayName}))}" data-favorite-action="toggle-menu">⋯</button></div><div class="favorite-card-menu" role="menu" hidden><button type="button" role="menuitem" data-trainer-action="organize-menu">${escHtml(i18nCore.t('organizer.editTags'))}</button><button type="button" role="menuitem" class="danger" data-trainer-action="remove">${escHtml(i18nCore.t('organizer.removeFavorite'))}</button></div></div></article>`;
   }).join('')}</div>`:emptyHtml(i18nCore.t(state.favorites.length?'organizer.noMatches':'organizer.noFavorites'),i18nCore.t(state.favorites.length?'organizer.noMatchesHelp':'organizer.noFavoritesHelp'),state.favorites.length?'search':'users');
   if(favoritesOnly)return;
   const previewItems=state.favorites.slice(0,4);
-  previewEl.innerHTML=`${favoritesHeading}${previewItems.length?`<div class="trainer-favorites-preview-list">${previewItems.map(item=>`<button type="button" class="trainer-favorites-preview-row card-row" data-trainer="${escAttr(item.displayName)}" data-trainer-action="open" aria-label="${escAttr(i18nCore.t('trainer.openTrainerNamed',{trainer:item.displayName}))}"><span class="trainer-quick-main"><span class="trainer-quick-name type-card">${escHtml(item.displayName)}</span></span><span class="recent-trainer-chevron" aria-hidden="true">${uiIconMarkup('chevron-right','ui-icon ui-icon-sm')}</span></button>`).join('')}</div><button type="button" class="trainer-favorites-preview-action" onclick="focusTrainerDiscoveryMode('favorites')">${escHtml(i18nCore.t('trainer.viewAllFavorites'))}</button>`:emptyHtml(i18nCore.t('organizer.noFavorites'),i18nCore.t('organizer.noFavoritesHelp'),'users')}`;
+  previewEl.innerHTML=`${favoritesHeading}${previewItems.length?`<div class="trainer-favorites-preview-list">${previewItems.map(item=>`<button type="button" class="trainer-favorites-preview-row card-row" data-trainer="${escAttr(item.displayName)}" data-trainer-action="open" aria-label="${escAttr(i18nCore.t('trainer.openTrainerNamed',{trainer:item.displayName}))}"><span class="trainer-quick-main"><span class="trainer-quick-name type-card">${escHtml(item.displayName)}</span></span><span class="recent-trainer-chevron" aria-hidden="true">${uiIconMarkup('chevron-right','ui-icon ui-icon-sm')}</span></button>`).join('')}</div><button type="button" class="trainer-favorites-preview-action" data-favorite-action="show-favorites">${escHtml(i18nCore.t('trainer.viewAllFavorites'))}</button>`:emptyHtml(i18nCore.t('organizer.noFavorites'),i18nCore.t('organizer.noFavoritesHelp'),'users')}`;
   const recentHeading=`<div class="trainer-section-heading"><h2 class="trainer-quick-heading">${escHtml(i18nCore.t('trainer.recentTitle'))}</h2>${state.recent.length?`<span class="trainer-section-count">${state.recent.length}</span>`:''}</div>`;
   recentEl.innerHTML=`${recentHeading}${state.recent.length?`<div class="recent-trainer-list">${state.recent.map(item=>`<button type="button" class="recent-trainer-row card-row" data-trainer="${escAttr(item.displayName)}" data-trainer-action="open" aria-label="${escAttr(i18nCore.t('trainer.openTrainerNamed',{trainer:item.displayName}))}"><span class="trainer-quick-main"><span class="trainer-quick-name recent-trainer-name type-card">${escHtml(item.displayName)}</span><span class="trainer-quick-meta recent-trainer-recency type-meta">${escHtml(trainerViewedText(item.openedAt))}</span></span><span class="recent-trainer-chevron" aria-hidden="true">${uiIconMarkup('chevron-right','ui-icon ui-icon-sm')}</span></button>`).join('')}</div>`:`${emptyHtml(i18nCore.t('trainer.noRecents'),i18nCore.t('trainer.noRecentsHelp'),'activity')}`}`;
   renderFavoriteBrowseResults();
@@ -11584,10 +11604,10 @@ function eventRelativeLabel(timing){
   const relative=i18nCore.formatRelativeTime(timing.relative.value,timing.relative.unit,{numeric:'always'});
   return i18nCore.t(timing.relative.kind==='ends'?'events.endsRelative':'events.startsRelative',{time:relative});
 }
-function eventStateHtml(kind,title,detail='',actionLabel='',onclick=''){
+function eventStateHtml(kind,title,detail='',actionLabel='',action=''){
   const state=stateHtml(stateModel(kind,{title,detail}));
-  const action=actionLabel&&onclick?`<button type="button" class="events-state-action btn btn-secondary" onclick="${onclick}">${escHtml(actionLabel)}</button>`:'';
-  return`<div class="events-state">${state}${action}</div>`;
+  const actionButton=actionLabel&&action?`<button type="button" class="events-state-action btn btn-secondary" data-event-action="${escAttr(action)}">${escHtml(actionLabel)}</button>`:'';
+  return`<div class="events-state">${state}${actionButton}</div>`;
 }
 function eventStableId(event){return eventLabelsI18n.eventId(event);}
 function setEventCalendarDate(date){
@@ -11628,13 +11648,13 @@ function renderEventCalendar(events){
   const locale=i18nCore.getLocale(),calendar=eventPresentationDomain.calendarMonth(events,{year:eventCalendarAnchor.getFullYear(),month:eventCalendarAnchor.getMonth()});
   const heading=new Intl.DateTimeFormat(locale,{month:'long',year:'numeric'}).format(new Date(calendar.year,calendar.month,1));
   const weekdays=Array.from({length:7},(_,index)=>new Intl.DateTimeFormat(locale,{weekday:'narrow'}).format(new Date(2026,7,2+index)));
-  return`<section class="event-rail-module event-calendar" aria-labelledby="event-calendar-title"><div class="event-rail-heading"><h2 id="event-calendar-title">${escHtml(i18nCore.t('events.calendar'))}</h2><div class="event-calendar-nav"><button type="button" onclick="moveEventCalendarMonth(-1)" aria-label="${escAttr(i18nCore.t('events.previousMonth'))}">${uiIconMarkup('chevron-left','ui-icon')}</button><button type="button" onclick="moveEventCalendarMonth(1)" aria-label="${escAttr(i18nCore.t('events.nextMonth'))}">${uiIconMarkup('chevron-right','ui-icon')}</button></div></div><div class="event-calendar-month">${escHtml(heading)}</div><div class="event-calendar-grid" role="grid" aria-label="${escAttr(heading)}">${weekdays.map(day=>`<span class="event-calendar-weekday" aria-hidden="true">${escHtml(day)}</span>`).join('')}${calendar.cells.map(cell=>{const selected=cell.key===eventCalendarDate,label=i18nCore.t('events.calendarDate',{date:new Intl.DateTimeFormat(locale,{dateStyle:'long'}).format(new Date(`${cell.key}T12:00:00`)),status:i18nCore.t(cell.markerCount?'events.calendarHasEvents':'events.calendarNoEvents')});return`<button type="button" class="event-calendar-day${cell.inMonth?'':' outside'}${cell.today?' today':''}${selected?' selected':''}${cell.markerCount?' has-events':''}" data-date="${cell.key}" role="gridcell" aria-selected="${selected}" aria-label="${escAttr(label)}" onclick="setEventCalendarDate('${cell.key}')" onkeydown="eventCalendarKeydown(event,'${cell.key}')"><span>${cell.day}</span>${cell.markerCount?'<i aria-hidden="true"></i>':''}</button>`;}).join('')}</div>${renderEventSelectedDay(events)}${eventCalendarDate?`<button type="button" class="event-calendar-clear" onclick="setEventCalendarDate('${eventCalendarDate}')">${escHtml(i18nCore.t('events.clearDate'))}</button>`:''}</section>`;
+  return`<section class="event-rail-module event-calendar" aria-labelledby="event-calendar-title"><div class="event-rail-heading"><h2 id="event-calendar-title">${escHtml(i18nCore.t('events.calendar'))}</h2><div class="event-calendar-nav"><button type="button" data-event-action="month" data-event-month-delta="-1" aria-label="${escAttr(i18nCore.t('events.previousMonth'))}">${uiIconMarkup('chevron-left','ui-icon')}</button><button type="button" data-event-action="month" data-event-month-delta="1" aria-label="${escAttr(i18nCore.t('events.nextMonth'))}">${uiIconMarkup('chevron-right','ui-icon')}</button></div></div><div class="event-calendar-month">${escHtml(heading)}</div><div class="event-calendar-grid" role="grid" aria-label="${escAttr(heading)}">${weekdays.map(day=>`<span class="event-calendar-weekday" aria-hidden="true">${escHtml(day)}</span>`).join('')}${calendar.cells.map(cell=>{const selected=cell.key===eventCalendarDate,label=i18nCore.t('events.calendarDate',{date:new Intl.DateTimeFormat(locale,{dateStyle:'long'}).format(new Date(`${cell.key}T12:00:00`)),status:i18nCore.t(cell.markerCount?'events.calendarHasEvents':'events.calendarNoEvents')});return`<button type="button" class="event-calendar-day${cell.inMonth?'':' outside'}${cell.today?' today':''}${selected?' selected':''}${cell.markerCount?' has-events':''}" data-event-action="date" data-date="${cell.key}" role="gridcell" aria-selected="${selected}" aria-label="${escAttr(label)}"><span>${cell.day}</span>${cell.markerCount?'<i aria-hidden="true"></i>':''}</button>`;}).join('')}</div>${renderEventSelectedDay(events)}${eventCalendarDate?`<button type="button" class="event-calendar-clear" data-event-action="clear-date" data-date="${eventCalendarDate}">${escHtml(i18nCore.t('events.clearDate'))}</button>`:''}</section>`;
 }
 function renderEventSelectedDay(events){
   if(!eventCalendarDate)return'';
   const locale=i18nCore.getLocale(),dateLabel=new Intl.DateTimeFormat(locale,{dateStyle:'long'}).format(new Date(`${eventCalendarDate}T12:00:00`));
   const matches=eventPresentationDomain.eventsOnDate(events,eventCalendarDate);
-  const rows=matches.map(event=>{const localized=eventLabelsI18n.localizeEvent(event,locale),timing=eventPresentationDomain.eventTiming(event,{locale}),id=eventStableId(event);return`<button type="button" class="event-selected-day-row" data-event-id="${escAttr(id)}" onclick="jumpToEvent(this.dataset.eventId)"><strong>${escHtml(localized.localizedTitle)}</strong><span>${escHtml(timing.timeLabel||timing.dateLabel)}</span></button>`;}).join('');
+  const rows=matches.map(event=>{const localized=eventLabelsI18n.localizeEvent(event,locale),timing=eventPresentationDomain.eventTiming(event,{locale}),id=eventStableId(event);return`<button type="button" class="event-selected-day-row" data-event-action="jump" data-event-id="${escAttr(id)}"><strong>${escHtml(localized.localizedTitle)}</strong><span>${escHtml(timing.timeLabel||timing.dateLabel)}</span></button>`;}).join('');
   return`<div class="event-selected-day" aria-live="polite"><h3>${escHtml(i18nCore.t('events.onDate',{date:dateLabel}))}</h3>${rows?`<div class="event-selected-day-list">${rows}</div>`:`<p class="event-selected-day-empty">${escHtml(i18nCore.t('events.noneOnDate',{date:dateLabel}))}</p>`}</div>`;
 }
 function renderEventFeaturedPokemonNames(event){
@@ -11646,7 +11666,7 @@ function renderEventFeaturedPokemonNames(event){
 function renderEventUpNext(events){
   const locale=i18nCore.getLocale(),items=eventPresentationDomain.upNextEvents(events);
   if(!items.length)return'';
-  return`<section class="event-rail-module event-up-next" aria-labelledby="event-up-next-title"><div class="event-rail-heading"><h2 id="event-up-next-title">${escHtml(i18nCore.t('events.upNext'))}</h2></div><div class="event-up-next-list">${items.map(event=>{const localized=eventLabelsI18n.localizeEvent(event,locale),timing=eventPresentationDomain.eventTiming(event,{locale}),relative=eventRelativeLabel(timing),id=eventStableId(event);return`<button type="button" class="event-up-next-row" data-event-id="${escAttr(id)}" onclick="jumpToEvent(this.dataset.eventId)"><span class="event-up-next-category">${escHtml(eventLabelsI18n.typeLabel(event.upNextCategory,locale))}</span><strong>${escHtml(localized.localizedTitle)}</strong>${renderEventFeaturedPokemonNames(event)}<span class="event-up-next-time">${escHtml(timing.dateLabel)}${timing.timeLabel?` · ${escHtml(timing.timeLabel)}`:''}${relative?` · ${escHtml(relative)}`:''}</span></button>`;}).join('')}</div></section>`;
+  return`<section class="event-rail-module event-up-next" aria-labelledby="event-up-next-title"><div class="event-rail-heading"><h2 id="event-up-next-title">${escHtml(i18nCore.t('events.upNext'))}</h2></div><div class="event-up-next-list">${items.map(event=>{const localized=eventLabelsI18n.localizeEvent(event,locale),timing=eventPresentationDomain.eventTiming(event,{locale}),relative=eventRelativeLabel(timing),id=eventStableId(event);return`<button type="button" class="event-up-next-row" data-event-action="jump" data-event-id="${escAttr(id)}"><span class="event-up-next-category">${escHtml(eventLabelsI18n.typeLabel(event.upNextCategory,locale))}</span><strong>${escHtml(localized.localizedTitle)}</strong>${renderEventFeaturedPokemonNames(event)}<span class="event-up-next-time">${escHtml(timing.dateLabel)}${timing.timeLabel?` · ${escHtml(timing.timeLabel)}`:''}${relative?` · ${escHtml(relative)}`:''}</span></button>`;}).join('')}</div></section>`;
 }
 function renderEventsRail(events){return`<aside class="events-context-rail" aria-label="${escAttr(i18nCore.t('events.context'))}">${renderEventCalendar(events)}${renderEventUpNext(events)}</aside>`;}
 function renderEventsLayout(timeline,events){return`<div class="events-layout"><div class="events-timeline">${timeline}</div>${renderEventsRail(events)}</div>`;}
@@ -11657,12 +11677,12 @@ function renderEventsOnly(){
   const out=document.getElementById('events-out');if(!out)return;
   out.setAttribute('aria-busy',String(_eventLoadState==='loading'||!_eventData));
   if(_eventLoadState==='loading'||!_eventData){out.innerHTML=eventStateHtml('loading',i18nCore.t('events.loading'));return;}
-  if(_eventLoadState==='offline'||navigator.onLine===false&&!(_eventData.events||[]).length){out.innerHTML=eventStateHtml('offline',i18nCore.t('events.offlineTitle'),i18nCore.t('events.offline'),i18nCore.t('events.retry'),'retryEvents()');return;}
-  if(_eventLoadState==='error'||!_eventData.fetchedAt&&!(_eventData.events||[]).length){out.innerHTML=eventStateHtml('unavailable',i18nCore.t('events.errorTitle'),i18nCore.t('events.error'),i18nCore.t('events.retry'),'retryEvents()');return;}
+  if(_eventLoadState==='offline'||navigator.onLine===false&&!(_eventData.events||[]).length){out.innerHTML=eventStateHtml('offline',i18nCore.t('events.offlineTitle'),i18nCore.t('events.offline'),i18nCore.t('events.retry'),'retry');return;}
+  if(_eventLoadState==='error'||!_eventData.fetchedAt&&!(_eventData.events||[]).length){out.innerHTML=eventStateHtml('unavailable',i18nCore.t('events.errorTitle'),i18nCore.t('events.error'),i18nCore.t('events.retry'),'retry');return;}
   const allEvents=_eventData.events||[],sections=eventPresentationDomain.prepareEvents(allEvents,{filter:eventTypeFilter,date:eventCalendarDate});
   const filters=[['all','events.filterAll'],['spotlight','events.filterSpotlight'],['raids','events.filterRaids'],['max','events.filterMax'],['gbl','events.filterGbl'],['research','events.filterResearch'],['general','events.filterGeneral']];
-  const filterHtml=`<div class="event-filter-scroll"><div class="event-filter-row" role="group" aria-label="${escAttr(i18nCore.t('events.filtersLabel'))}" tabindex="0" onscroll="this.parentElement.classList.toggle('is-at-end',this.scrollLeft+this.clientWidth>=this.scrollWidth-2)">${filters.map(([type,key])=>`<button class="event-filter chip chip-filter" data-type="${type}" aria-pressed="${eventTypeFilter===type}" onclick="setEventTypeFilter('${type}')" onkeydown="eventFilterKeydown(event,'${type}')">${escHtml(i18nCore.t(key))}</button>`).join('')}</div></div>`;
-  if(!sections.length){const filtered=eventTypeFilter!=='all'||!!eventCalendarDate,clear=eventCalendarDate?`setEventCalendarDate('${eventCalendarDate}')`:"setEventTypeFilter('all')";out.innerHTML=renderEventsLayout(`${filterHtml}${eventStateHtml('empty',i18nCore.t(filtered?'events.filteredEmptyTitle':'events.emptyTitle'),i18nCore.t(filtered?'events.filteredEmpty':'events.empty'),filtered?i18nCore.t(eventCalendarDate?'events.clearDate':'events.clearFilters'):'',filtered?clear:'')}`,allEvents);return;}
+  const filterHtml=`<div class="event-filter-scroll"><div class="event-filter-row" role="group" aria-label="${escAttr(i18nCore.t('events.filtersLabel'))}" tabindex="0">${filters.map(([type,key])=>`<button class="event-filter chip chip-filter" data-event-action="filter" data-type="${type}" aria-pressed="${eventTypeFilter===type}">${escHtml(i18nCore.t(key))}</button>`).join('')}</div></div>`;
+  if(!sections.length){const filtered=eventTypeFilter!=='all'||!!eventCalendarDate,clear=eventCalendarDate?'clear-date':'clear-filters';out.innerHTML=renderEventsLayout(`${filterHtml}${eventStateHtml('empty',i18nCore.t(filtered?'events.filteredEmptyTitle':'events.emptyTitle'),i18nCore.t(filtered?'events.filteredEmpty':'events.empty'),filtered?i18nCore.t(eventCalendarDate?'events.clearDate':'events.clearFilters'):'',filtered?clear:'')}`,allEvents);return;}
   const timeline=`${filterHtml}${sections.map(section=>`<section class="event-group" data-group="${section.group}" aria-labelledby="event-group-${section.group}"><div class="event-group-heading"><h2 class="event-group-title" id="event-group-${section.group}">${escHtml(eventGroupLabel(section.group))}</h2><span class="event-group-count" aria-label="${escAttr(i18nCore.t('events.eventCount',{count:i18nCore.formatNumber(section.events.length)}))}">${escHtml(i18nCore.formatNumber(section.events.length))}</span></div><div class="event-card-grid">${section.events.map(event=>{
     const locale=i18nCore.getLocale(),timing=eventPresentationDomain.eventTiming(event,{locale}),relative=eventRelativeLabel(timing);
     const localized=eventLabelsI18n.localizeEvent(event,locale),title=localized.localizedTitle||i18nCore.t('events.title'),link=eventPresentationDomain.safeHttpsUrl(event.link);
@@ -11672,6 +11692,28 @@ function renderEventsOnly(){
   }).join('')}</div></section>`).join('')}`;
   out.innerHTML=renderEventsLayout(timeline,allEvents);
 }
+function eventsAction(event){
+  const control=event.target.closest?.('[data-event-action]');if(!control||!event.currentTarget.contains(control))return;
+  const action=control.dataset.eventAction;
+  if(action==='filter'){setEventTypeFilter(control.dataset.type||'all');return;}
+  if(action==='date'||action==='clear-date'){setEventCalendarDate(control.dataset.date||eventCalendarDate);return;}
+  if(action==='month'){
+    const delta=Number.parseInt(control.dataset.eventMonthDelta||'',10);if(delta===-1||delta===1)moveEventCalendarMonth(delta);return;
+  }
+  if(action==='jump'){jumpToEvent(control.dataset.eventId||'');return;}
+  if(action==='retry'){retryEvents();return;}
+  if(action==='clear-filters')setEventTypeFilter('all');
+}
+function eventsKeydown(event){
+  const filter=event.target.closest?.('.event-filter');if(filter){eventFilterKeydown(event,filter.dataset.type||'all');return;}
+  const day=event.target.closest?.('.event-calendar-day');if(day)eventCalendarKeydown(event,day.dataset.date||'');
+}
+function eventsScroll(event){
+  const row=event.target.closest?.('.event-filter-row');if(row)row.parentElement?.classList.toggle('is-at-end',row.scrollLeft+row.clientWidth>=row.scrollWidth-2);
+}
+document.getElementById('events-out')?.addEventListener('click',eventsAction);
+document.getElementById('events-out')?.addEventListener('keydown',eventsKeydown);
+document.getElementById('events-out')?.addEventListener('scroll',eventsScroll,true);
 function renderSchedule(){
   if(TRAINER_FIRST_INTERIM_ENABLED){renderEventsOnly();return;}
   if(!schedAnchor)schedAnchor=startOfWeek(new Date());
