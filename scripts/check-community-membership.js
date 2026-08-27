@@ -4,7 +4,7 @@ const path = require('path');
 const vm = require('vm');
 
 const repoRoot = path.resolve(__dirname, '..');
-const html = fs.readFileSync(path.join(repoRoot, 'index.html'), 'utf8');
+const html = require('./lib/frontend-source.cjs').readFrontendSource(repoRoot);
 
 function fail(message) {
   throw new Error(message);

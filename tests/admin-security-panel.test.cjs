@@ -7,7 +7,7 @@ const path=require('node:path');
 const vm=require('node:vm');
 
 const root=path.join(__dirname,'..');
-const html=readFileSync(path.join(root,'index.html'),'utf8');
+const html=require('../scripts/lib/frontend-source.cjs').readFrontendSource(root);
 const locale=readFileSync(path.join(root,'js/i18n/locales/en.js'),'utf8');
 const securityDoc=readFileSync(path.join(root,'SECURITY-RULES.md'),'utf8');
 const candidatePath='tests/firebase/database.rules.narrow-read.json';

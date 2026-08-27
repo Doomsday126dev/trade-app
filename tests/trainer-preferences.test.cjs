@@ -106,12 +106,12 @@ test('local migration is deterministic, idempotent, and retains local state unti
 });
 
 test('Favorites rendering is read-only and history advances only through an explicit open action',()=>{
-  const html=readFileSync(path.join(__dirname,'..','index.html'),'utf8'),render=html.slice(html.indexOf('function renderTrainerQuickLists'),html.indexOf('function toggleTrainerFavorite'));
+  const html=require('../scripts/lib/frontend-source.cjs').readFrontendSource(path.join(__dirname,'..')),render=html.slice(html.indexOf('function renderTrainerQuickLists'),html.indexOf('function toggleTrainerFavorite'));
   assert.doesNotMatch(render,/rememberOpened|lastSeenShareVersion|writeDataPath|queueSync/);const opened=html.slice(html.indexOf('function rememberTrainerOpened'),html.indexOf('function publicShareSnapshotFromRuntime'));assert.match(opened,/rememberOpened/);
 });
 
 test('production page loads the preference candidate but keeps repository and UI inactive',()=>{
-  const html=readFileSync(path.join(__dirname,'..','index.html'),'utf8');assert.match(html,/js\/domain\/trainerPreferences\.js\?v=/);assert.match(html,/js\/domain\/trainerPreferenceSync\.js\?v=/);assert.match(html,/js\/data\/trainerPreferenceSyncQueue\.js\?v=/);assert.match(html,/SYNCED_TRAINER_PREFERENCES_ENABLED!==false/);assert.match(html,/createTrainerPreferencesRepository\(\{enabled:false\}\)/);assert.doesNotMatch(html,/managedTrainerPreferencesRepository\.(read|subscribe|mutate|finalize|merge)/);
+  const html=require('../scripts/lib/frontend-source.cjs').readFrontendSource(path.join(__dirname,'..'));assert.match(html,/js\/domain\/trainerPreferences\.js\?v=/);assert.match(html,/js\/domain\/trainerPreferenceSync\.js\?v=/);assert.match(html,/js\/data\/trainerPreferenceSyncQueue\.js\?v=/);assert.match(html,/SYNCED_TRAINER_PREFERENCES_ENABLED!==false/);assert.match(html,/createTrainerPreferencesRepository\(\{enabled:false\}\)/);assert.doesNotMatch(html,/managedTrainerPreferencesRepository\.(read|subscribe|mutate|finalize|merge)/);
 });
 
 test('repository never exposes direct Favorite writes and gates remaining exact writes',async()=>{
@@ -142,14 +142,14 @@ test('future sync UI remains hidden and exposes no functional action while disab
 });
 
 test('private organizer data is absent from public-share publication code',()=>{
-  const html=readFileSync(path.join(__dirname,'..','index.html'),'utf8');
+  const html=require('../scripts/lib/frontend-source.cjs').readFrontendSource(path.join(__dirname,'..'));
   const publication=html.slice(html.indexOf('function publicShareSnapshotForUser'),html.indexOf('function applyPublicShareSnapshot'));
   assert.doesNotMatch(publication,/trainerHistoryStore|tagIds|privateNote|\.note\b/);
   assert.match(html,/createTrainerPreferencesRepository\(\{enabled:false\}\)/);
 });
 
 test('local organizer storage has no network, logging, URL, clipboard, or export capability',()=>{
-  const store=readFileSync(path.join(__dirname,'..','js/data/trainerHistoryStore.js'),'utf8'),html=readFileSync(path.join(__dirname,'..','index.html'),'utf8');
+  const store=readFileSync(path.join(__dirname,'..','js/data/trainerHistoryStore.js'),'utf8'),html=require('../scripts/lib/frontend-source.cjs').readFrontendSource(path.join(__dirname,'..'));
   assert.doesNotMatch(store,/Firebase|firebase|fetch\(|XMLHttpRequest|writeDataPath|queueSync|console\.|location\.|URLSearchParams|copyText|clipboard|export/);
   assert.match(html,/let trainerHistoryStore=null/);
   assert.match(html,/function ensureTrainerHistoryStore\(\)/);
@@ -167,7 +167,7 @@ test('local organizer storage has no network, logging, URL, clipboard, or export
 });
 
 test('tag deletion is confirmed and stable IDs preserve assignments across rename',()=>{
-  const html=readFileSync(path.join(__dirname,'..','index.html'),'utf8'),deletion=html.slice(html.indexOf('function deleteLocalTrainerTag'),html.indexOf('function saveTrainerOrganizer'));
+  const html=require('../scripts/lib/frontend-source.cjs').readFrontendSource(path.join(__dirname,'..')),deletion=html.slice(html.indexOf('function deleteLocalTrainerTag'),html.indexOf('function saveTrainerOrganizer'));
   assert.match(deletion,/confirm\(i18nCore\.t\('organizer\.deleteConfirm'/);
   const value=domain(),created=value.createTag({tags:{}},'Raid',{tagId:'tag_stable',now:1});
   const renamed=value.renameTag({tags:created.tags},'tag_stable','レイド',{now:2});

@@ -3,9 +3,10 @@ const assert=require('node:assert/strict');
 const {readFileSync}=require('node:fs');
 const path=require('node:path');
 const vm=require('node:vm');
+const {readFrontendSource}=require('../scripts/lib/frontend-source.cjs');
 
 const root=path.join(__dirname,'..');
-const html=readFileSync(path.join(root,'index.html'),'utf8');
+const html=readFrontendSource(root);
 
 function emptyState(){
   const window={};

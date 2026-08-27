@@ -4,7 +4,7 @@ const {readFileSync}=require('node:fs');
 const path=require('node:path');
 
 const root=path.join(__dirname,'..');
-const html=readFileSync(path.join(root,'index.html'),'utf8');
+const html=require('../scripts/lib/frontend-source.cjs').readFrontendSource(root);
 const readiness=readFileSync(path.join(root,'docs/TRAINER-CHANGE-SUMMARY-READINESS.md'),'utf8');
 const shareVisibility=readFileSync(path.join(root,'js/domain/shareVisibility.js'),'utf8');
 const trainerPreferences=readFileSync(path.join(root,'js/domain/trainerPreferences.js'),'utf8');

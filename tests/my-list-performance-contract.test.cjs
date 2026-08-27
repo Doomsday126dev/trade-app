@@ -3,7 +3,7 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
 
-const html=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
+const html=require('../scripts/lib/frontend-source.cjs').readFrontendSource(path.join(__dirname,'..'));
 const source=html.slice(html.indexOf('function myListSourceMap('),html.indexOf('function confirmRemove('));
 
 test('My List caches locale-bound normalized view models and invalidates changed values',()=>{

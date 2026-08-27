@@ -5,7 +5,7 @@ const path=require('node:path');
 const vm=require('node:vm');
 
 const root=path.join(__dirname,'..');
-const html=readFileSync(path.join(root,'index.html'),'utf8');
+const html=require('../scripts/lib/frontend-source.cjs').readFrontendSource(root);
 const add=html.slice(html.indexOf('<div class="add-form'),html.indexOf('<div class="owner-share-notice"'));
 const toolbar=html.slice(html.indexOf('<div class="sec mylist-list-toolbar"'),html.indexOf('<div id="mylist-out">'));
 const prioritySource=readFileSync(path.join(root,'js/domain/priorityValues.js'),'utf8');

@@ -4,7 +4,7 @@ const {readFileSync}=require('node:fs');
 const path=require('node:path');
 
 const root=path.join(__dirname,'..');
-const html=readFileSync(path.join(root,'index.html'),'utf8');
+const html=require('../scripts/lib/frontend-source.cjs').readFrontendSource(root);
 const manifest=JSON.parse(readFileSync(path.join(root,'manifest.json'),'utf8'));
 const physicalSmoke=readFileSync(path.join(root,'docs/TRAINER-FIRST-PHYSICAL-SMOKE.md'),'utf8');
 const shareVisibility=readFileSync(path.join(root,'js/domain/shareVisibility.js'),'utf8');

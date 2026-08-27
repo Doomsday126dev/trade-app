@@ -20,6 +20,7 @@ const OWNED_CACHE_PATTERNS=[
 // commit, so we revalidate them with a network-first fetch — but we still want
 // them in the cache before the user first goes offline.
 const RELEASE_ASSETS=[
+  'css/app.css',
   'data.js',
   'js/domain/productLimits.js',
   'js/domain/priorities.js',
@@ -91,7 +92,8 @@ const RELEASE_ASSETS=[
   'js/data/accountSyncController.js',
   'js/data/accountSyncRuntime.js',
   'js/domain/cacheAdapters.js',
-  'js/ui/trainerTagPanel.js'
+  'js/ui/trainerTagPanel.js',
+  'js/app/application.js'
 ];
 const REQUIRED_SHELL_URLS=[
   `./index.html?v=${RELEASE}`,

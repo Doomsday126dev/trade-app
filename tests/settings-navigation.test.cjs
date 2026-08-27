@@ -4,7 +4,7 @@ const {readFileSync}=require('node:fs');
 const {join}=require('node:path');
 
 const root=join(__dirname,'..');
-const html=readFileSync(join(root,'index.html'),'utf8');
+const html=require('../scripts/lib/frontend-source.cjs').readFrontendSource(root);
 
 test('signed-in desktop Settings is a routed page with seven semantic destinations',()=>{
   assert.match(html,/const SETTINGS_DESKTOP_QUERY='\(min-width:768px\)'/);

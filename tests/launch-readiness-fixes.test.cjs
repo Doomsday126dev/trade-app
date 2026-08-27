@@ -5,7 +5,7 @@ const path=require('node:path');
 const vm=require('node:vm');
 
 const root=path.join(__dirname,'..');
-const html=readFileSync(path.join(root,'index.html'),'utf8');
+const html=require('../scripts/lib/frontend-source.cjs').readFrontendSource(root);
 const between=(start,end)=>{
   const from=html.indexOf(start),to=html.indexOf(end,from);
   assert.notEqual(from,-1,`missing ${start}`);assert.notEqual(to,-1,`missing ${end}`);
@@ -27,7 +27,7 @@ test('UX-01 order metadata is explicit, account-partitioned, and Firebase-schema
 });
 
 test('UX-01 exposes pointer and keyboard controls only in reorder mode',()=>{
-  const rows=between('function myListRowsHtml','function myListPrioritySectionHtml');
+  const rows=between('function myListRowHtml','function myListPrioritySectionHtml');
   assert.match(rows,/reorderMode\?`<button type="button" class="drag-handle"/);
   assert.match(rows,/onpointerdown="myListPointerStart\(event\)"/);
   assert.match(rows,/data-reorder-move="up"/);assert.match(rows,/data-reorder-move="down"/);

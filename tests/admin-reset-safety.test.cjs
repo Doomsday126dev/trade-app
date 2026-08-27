@@ -4,7 +4,7 @@ const fs=require('fs');
 const path=require('path');
 const vm=require('vm');
 
-const source=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8');
+const source=require('../scripts/lib/frontend-source.cjs').readFrontendSource(path.join(__dirname,'..'));
 function functionSource(name,nextName){
   const start=source.indexOf(`function ${name}(`);
   const end=source.indexOf(`function ${nextName}(`,start+1);

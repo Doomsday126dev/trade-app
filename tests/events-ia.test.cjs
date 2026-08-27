@@ -5,7 +5,7 @@ const {join}=require('node:path');
 const vm=require('node:vm');
 
 const root=join(__dirname,'..');
-const html=readFileSync(join(root,'index.html'),'utf8');
+const html=require('../scripts/lib/frontend-source.cjs').readFrontendSource(root);
 const domainSource=readFileSync(join(root,'js/domain/eventPresentation.js'),'utf8');
 
 function loadDomain(){

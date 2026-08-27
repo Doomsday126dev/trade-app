@@ -61,7 +61,7 @@ test('E.1 adapter exposes fixed operations and uses no root transaction', () => 
 test('E.1 proof is not wired into deployed callable exports or browser assets', () => {
   const index = fs.readFileSync(path.join(ROOT, 'functions/src/index.js'), 'utf8');
   assert.doesNotMatch(index, /firebaseDurableAuthAdapter|e1RuntimeAuthorization|repairAccountFoundation/);
-  const client = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+  const client = require('../scripts/lib/frontend-source.cjs').readFrontendSource(ROOT);
   for (const root of NEW_ROOTS) assert.doesNotMatch(client, new RegExp(`['\"]${root}(?:/|['\"])`));
 });
 

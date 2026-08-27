@@ -4,7 +4,7 @@ const {readFileSync}=require('node:fs');
 const path=require('node:path');
 
 const root=path.resolve(__dirname,'..');
-const html=readFileSync(path.join(root,'index.html'),'utf8');
+const html=require('../scripts/lib/frontend-source.cjs').readFrontendSource(root);
 
 test('A11Y-03 hidden transient actions are removed from layout and keyboard order',()=>{
   assert.match(html,/\[hidden\]\{display:none!important\}/);

@@ -4,7 +4,7 @@ const {readFileSync}=require('node:fs');
 const path=require('node:path');
 
 const root=path.join(__dirname,'..');
-const html=readFileSync(path.join(root,'index.html'),'utf8');
+const html=require('../scripts/lib/frontend-source.cjs').readFrontendSource(root);
 
 function between(start,end){
   const from=html.indexOf(start),to=html.indexOf(end,from);
@@ -54,7 +54,7 @@ test('Auth-only bootstrap starts in the head and reuses one Firebase app without
 });
 
 test('signed-out shell loads only fallback plus active locale and defers catalogs',()=>{
-  const loader=between('(function(){\n  const RELEASE_ID=window.__POGO_RELEASE_ID;','<template id="pogo-app-source">');
+  const loader=between('(function(){\n  const RELEASE_ID=window.__POGO_RELEASE_ID;','\n})();\n</script>');
   const early=between('window.__pogoEarlyAuth=','startPogoEarlyAuth().catch');
   assert.match(loader,/loadScript\(`js\/i18n\/locales\/en\.js/);
   assert.match(loader,/if\(normalized!==\'en\'\)await loadScript/);

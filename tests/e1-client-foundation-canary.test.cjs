@@ -460,7 +460,7 @@ test('close clears in-memory result and source has no persistent storage or dire
 });
 
 test('page integration exposes only an explicit operator constructor and closes it at every session boundary', () => {
-  const html = fs.readFileSync(path.resolve(__dirname, '../index.html'), 'utf8');
+  const html = require('../scripts/lib/frontend-source.cjs').readFrontendSource(path.resolve(__dirname,'..'));
   assert.match(html, /__pogoCreateGroupEClientFoundationCanary=async\(storedEnvelope\)=>/);
   assert.match(html,
     /const configuration=e1ClientFoundationCanaryService\.browserConfigurationFromStoredEnvelope\(storedEnvelope\);/);

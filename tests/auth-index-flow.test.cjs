@@ -1,11 +1,10 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { readFileSync } = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
+const { readFrontendSource } = require('../scripts/lib/frontend-source.cjs');
 
-const INDEX_PATH = path.join(__dirname, '..', 'index.html');
-const INDEX_SOURCE = readFileSync(INDEX_PATH, 'utf8');
+const INDEX_SOURCE = readFrontendSource(path.join(__dirname, '..'));
 
 function sourceBetween(start, end) {
   const startAt = INDEX_SOURCE.indexOf(start);

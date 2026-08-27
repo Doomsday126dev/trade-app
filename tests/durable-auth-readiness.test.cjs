@@ -5,7 +5,7 @@ const path=require('node:path');
 const vm=require('node:vm');
 
 const root=path.join(__dirname,'..');
-const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
+const html=require('../scripts/lib/frontend-source.cjs').readFrontendSource(root);
 const domainSource=fs.readFileSync(path.join(root,'js/domain/authenticationReadiness.js'),'utf8');
 
 function loadDomain(){

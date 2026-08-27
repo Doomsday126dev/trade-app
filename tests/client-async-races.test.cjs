@@ -4,7 +4,7 @@ const {readFileSync}=require('node:fs');
 const path=require('node:path');
 const vm=require('node:vm');
 
-const html=readFileSync(path.join(__dirname,'..','index.html'),'utf8');
+const html=require('../scripts/lib/frontend-source.cjs').readFrontendSource(path.join(__dirname,'..'));
 function between(start,end){const from=html.indexOf(start),to=html.indexOf(end,from);assert.notEqual(from,-1);assert.notEqual(to,-1);return html.slice(from,to);}
 function deferred(){let resolve,reject;const promise=new Promise((yes,no)=>{resolve=yes;reject=no;});return{promise,resolve,reject};}
 const response=data=>({ok:true,status:200,json:async()=>data});

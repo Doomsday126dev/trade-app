@@ -6,7 +6,7 @@ const vm=require('node:vm');
 
 const root=path.join(__dirname,'..');
 const source=file=>readFileSync(path.join(root,file),'utf8');
-const html=source('index.html');
+const html=require('../scripts/lib/frontend-source.cjs').readFrontendSource(root);
 
 function load(){
   const window={
@@ -159,7 +159,7 @@ test('release 2026-08-27.75 is coherent and contains no active .66 assets',()=>{
   assert.match(worker,/const RELEASE='2026-08-27\.75'/);
   assert.match(release,/RELEASE_ID='2026-08-27\.75'/);
   const firstParty=[...html.matchAll(/<script\s+src="([^"]+)"/g)].map(match=>match[1]).filter(src=>!/^https?:/.test(src));
-  assert.equal(firstParty.length,72);
+  assert.equal(firstParty.length,73);
   for(const src of firstParty)assert.equal(new URL(src,'https://example.test').searchParams.get('v'),'2026-08-27.75');
   assert.doesNotMatch(`${html}\n${worker}\n${release}`,/2026-08-26\.66/);
 });

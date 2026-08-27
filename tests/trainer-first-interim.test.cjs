@@ -4,7 +4,7 @@ const {readFileSync}=require('node:fs');
 const path=require('node:path');
 
 const root=path.join(__dirname,'..');
-const source=readFileSync(path.join(root,'index.html'),'utf8');
+const source=require('../scripts/lib/frontend-source.cjs').readFrontendSource(root);
 const locale=readFileSync(path.join(root,'js/i18n/locales/en.js'),'utf8');
 const manifest=JSON.parse(readFileSync(path.join(root,'manifest.json'),'utf8'));
 

@@ -25,7 +25,7 @@ assert.match(JSON.stringify(candidate.userPreferences),/trainerPreferencesConfig
 assert.match(candidate.userPreferences.$viewerUid['.read'],/trainerPreferencesConfig.*readsEnabled/);
 assert.equal(candidate.userPreferences.$viewerUid.favoriteTrainers['.write'],false);
 assert.equal(candidate.groups['.read'],false);assert.equal(candidate.groups['.write'],false);
-const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
+const html=require('./lib/frontend-source.cjs').readFrontendSource(root);
 assert.doesNotMatch(html,/shareActivationPlanning|trustedBackendContracts/);
 assert.match(html,/SYNCED_TRAINER_PREFERENCES_ENABLED!==false/);
 console.log(JSON.stringify({status:'share-additive-artifacts-ready',preferenceSyncActivationReady:false,activationBlockers:['favorite-callable-undeployed','favorite-canary-unapproved'],liveRootsPreserved:Object.keys(baseline).length,futureRootsInactive:futureRoots.length,baselineSha256:expectedBaseline,candidateSha256:expectedCandidate,productionReads:0,productionWrites:0},null,2));

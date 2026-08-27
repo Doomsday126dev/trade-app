@@ -5,7 +5,7 @@ const path=require('node:path');
 const vm=require('node:vm');
 
 const root=path.join(__dirname,'..');
-const source=readFileSync(path.join(root,'index.html'),'utf8');
+const source=require('../scripts/lib/frontend-source.cjs').readFrontendSource(root);
 
 function load(){
   const window={};

@@ -3,7 +3,7 @@ const assert=require('node:assert/strict');
 const {readFileSync}=require('node:fs');
 const path=require('node:path');
 const vm=require('node:vm');
-const html=readFileSync(path.join(__dirname,'..','index.html'),'utf8');
+const html=require('../scripts/lib/frontend-source.cjs').readFrontendSource(path.join(__dirname,'..'));
 
 function load({languages=['en-US'],storedLocale=''}={}){
   const values=new Map(storedLocale?[['pogoUiLocale:v1',storedLocale]]:[]);

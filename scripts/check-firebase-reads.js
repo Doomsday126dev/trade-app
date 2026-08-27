@@ -5,7 +5,7 @@ const path=require('node:path');
 const vm=require('node:vm');
 
 const root=path.join(__dirname,'..');
-const indexSource=readFileSync(path.join(root,'index.html'),'utf8');
+const indexSource=require('./lib/frontend-source.cjs').readFrontendSource(root);
 const registrySource=readFileSync(path.join(root,'js/data/firebaseReadRegistry.js'),'utf8');
 const window={};
 vm.runInNewContext(registrySource,{window});
@@ -156,7 +156,7 @@ for(const modulePath of moduleOrder){
   assert.ok(at>previous,`Read-boundary module load order is invalid at ${modulePath}`);
   previous=at;
 }
-assert.ok(previous<indexSource.indexOf('<script>\nlet initializeApp'),
-  'Read-boundary modules must load before the main inline script');
+assert.ok(previous<indexSource.indexOf('<script src="js/app/application.js?v='),
+  'Read-boundary modules must load before the signed-in application script');
 
 console.log(`Firebase read registry checks passed (${READ_SURFACES.length} surfaces; ${SOURCE_CALL_CONTRACT.directGetCount} get; ${SOURCE_CALL_CONTRACT.directOnValueCount} onValue).`);

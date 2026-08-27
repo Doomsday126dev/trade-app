@@ -271,7 +271,7 @@ test('protected writes and queue writes fail while no owner is active',()=>{
 });
 
 test('logout clears protected local state before identity and tolerates Firebase sign-out failure',()=>{
-  const source=readFileSync(path.join(__dirname,'..','index.html'),'utf8');
+  const source=require('../scripts/lib/frontend-source.cjs').readFrontendSource(path.join(__dirname,'..'));
   const block=source.slice(source.indexOf('function logout(){'),source.indexOf('// ── NAV',source.indexOf('function logout(){')));
   const listenerAt=block.indexOf("managedListenerLifecycle.deactivateSession('logout');");
   const cacheAt=block.indexOf('clearOwnedSession();');
@@ -283,7 +283,7 @@ test('logout clears protected local state before identity and tolerates Firebase
 });
 
 test('auth loss locks storage before authenticated identity is cleared',()=>{
-  const source=readFileSync(path.join(__dirname,'..','index.html'),'utf8');
+  const source=require('../scripts/lib/frontend-source.cjs').readFrontendSource(path.join(__dirname,'..'));
   const block=source.slice(source.indexOf('function bindAuthObserver(){'),source.indexOf('function waitForAuthState'));
   assert.ok(block.indexOf("managedListenerLifecycle.deactivateSession('auth_loss');")<block.indexOf("suspendOwnedSession('auth_loss');"));
   assert.ok(block.indexOf("suspendOwnedSession('auth_loss');")<block.indexOf("currentAuthUid=user?.uid||'';"));
@@ -292,7 +292,7 @@ test('auth loss locks storage before authenticated identity is cleared',()=>{
 });
 
 test('selected-trainer snapshots are runtime-only and never persisted',()=>{
-  const source=readFileSync(path.join(__dirname,'..','index.html'),'utf8');
+  const source=require('../scripts/lib/frontend-source.cjs').readFrontendSource(path.join(__dirname,'..'));
   const publicStart=source.indexOf('function onPublicShareSnapshot(username,snap){');
   const end=source.indexOf('function ensureShareViewSubscriptions(username){',publicStart);
   assert.ok(publicStart>=0&&end>publicStart);
