@@ -14,6 +14,8 @@
     "test:pages-release": "node --test tests/pages-deployment-control.test.cjs tests/service-worker-deployment-rollback.test.cjs tests/service-worker-atomic-install.test.cjs tests/service-worker-cache-lifecycle.test.cjs tests/service-worker-install-performance.test.cjs tests/service-worker-release.test.cjs tests/client-asset-versioning.test.cjs tests/frontend-asset-extraction.test.cjs tests/ui-readiness.test.cjs",
     "profile:service-worker-install": "node scripts/profile-service-worker-install.cjs",
     "profile:frontend-assets": "node scripts/profile-frontend-assets.cjs",
+    "test:performance:static": "node --test tests/frontend-asset-extraction.test.cjs tests/service-worker-install-performance.test.cjs tests/service-worker-atomic-install.test.cjs tests/service-worker-cache-lifecycle.test.cjs tests/performance-observability.test.cjs",
+    "test:performance:browser": "playwright test tests/startup-performance.spec.js tests/my-list-performance.spec.js --project=desktop",
     "check:pages-release": "node scripts/pages/validate-release.cjs --local && npm run test:pages-release && node scripts/check-domain-helpers.js && node scripts/check-community-membership.js && node scripts/check-global-identity-contract.js",
     "generate:pokemon-names": "node scripts/generate-pokemon-name-catalog.cjs",
     "generate:background-catalog": "node scripts/generate-background-catalog.cjs",

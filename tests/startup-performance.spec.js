@@ -1,10 +1,17 @@
 const {test,expect}=require('@playwright/test');
 
 const profiles=[
-  {name:'desktop',viewport:{width:1440,height:900},cpu:1},
-  {name:'mobile 390 at 4x CPU',viewport:{width:390,height:844},cpu:4},
-  {name:'mobile 320 at 6x CPU',viewport:{width:320,height:568},cpu:6}
+  {name:'desktop',viewport:{width:1440,height:900},cpu:1,budget:{auth:1000,shell:1500,protected:2000}},
+  {name:'mobile 390 at 4x CPU',viewport:{width:390,height:844},cpu:4,budget:{auth:1000,shell:3000,protected:3000}},
+  {name:'mobile 320 at 6x CPU',viewport:{width:320,height:568},cpu:6,budget:{auth:1500,shell:5000,protected:5000}}
 ];
+
+const SHELL_BUDGET={
+  documentDecodedBytes:140*1024,
+  firstPartyTransferredBytes:340*1024,
+  firstPartyDecodedBytes:340*1024,
+  firstPartyResourceCount:8
+};
 
 async function installFirebaseMocks(page,{appCheckFailure=false}={}){
   await page.route('https://static.cloudflareinsights.com/**',route=>route.abort('blockedbyclient'));
@@ -32,7 +39,7 @@ test.describe.configure({mode:'serial'});
 
 for(const profile of profiles){
   test(`${profile.name} keeps shell light and protected startup ordered`,async({browser})=>{
-    const context=await browser.newContext({viewport:profile.viewport,isMobile:profile.viewport.width<600,hasTouch:profile.viewport.width<600});
+    const context=await browser.newContext({viewport:profile.viewport,isMobile:profile.viewport.width<600,hasTouch:profile.viewport.width<600,serviceWorkers:'block'});
     const page=await context.newPage();
     const cdp=await context.newCDPSession(page);
     await cdp.send('Emulation.setCPUThrottlingRate',{rate:profile.cpu});
@@ -44,19 +51,30 @@ for(const profile of profiles){
     await page.goto(`./?startup-performance=${profile.cpu}-${Date.now()}`,{waitUntil:'domcontentloaded'});
     await page.waitForFunction(()=>window.__pogoShellReady===true);
     const shell=await page.evaluate(()=>{
-      const resources=performance.getEntriesByType('resource');
+      const resources=performance.getEntriesByType('resource'),navigation=performance.getEntriesByType('navigation')[0];
+      const firstParty=resources.filter(entry=>new URL(entry.name).origin===location.origin);
       return{
         authKnown:window.__pogoStartup.authStateKnownAt,
         interactive:window.__pogoStartup.shellInteractiveAt,
-        eagerFirstPartyScripts:resources.filter(entry=>entry.initiatorType==='script'&&new URL(entry.name).origin===location.origin).length,
+        documentDecodedBytes:navigation?.decodedBodySize||0,
+        firstPartyResourceCount:firstParty.length,
+        firstPartyTransferredBytes:firstParty.reduce((total,entry)=>total+(entry.transferSize||entry.encodedBodySize||0),0),
+        firstPartyDecodedBytes:firstParty.reduce((total,entry)=>total+(entry.decodedBodySize||0),0),
+        eagerFirstPartyScripts:firstParty.filter(entry=>entry.initiatorType==='script').length,
+        signedInApplicationLoaded:firstParty.some(entry=>/\/js\/app\/application\.js(?:\?|$)/.test(entry.name)),
         protectedRequested:window.__pogoStartup.protectedRequestedAt,
         appCheckStarted:window.__pogoStartup.appCheckStartedAt,
         appCheckResources:resources.filter(entry=>/firebase-app-check|recaptcha/.test(entry.name)).length
       };
     });
-    expect(shell.authKnown).toBeLessThan(2000);
-    if(profile.cpu===4)expect(shell.interactive).toBeLessThan(3000);
+    expect(shell.authKnown).toBeLessThan(profile.budget.auth);
+    expect(shell.interactive).toBeLessThan(profile.budget.shell);
+    expect(shell.documentDecodedBytes).toBeLessThanOrEqual(SHELL_BUDGET.documentDecodedBytes);
+    expect(shell.firstPartyResourceCount).toBeLessThanOrEqual(SHELL_BUDGET.firstPartyResourceCount);
+    expect(shell.firstPartyTransferredBytes).toBeLessThanOrEqual(SHELL_BUDGET.firstPartyTransferredBytes);
+    expect(shell.firstPartyDecodedBytes).toBeLessThanOrEqual(SHELL_BUDGET.firstPartyDecodedBytes);
     expect(shell.eagerFirstPartyScripts).toBe(0);
+    expect(shell.signedInApplicationLoaded).toBe(false);
     expect(shell.protectedRequested).toBeNull();
     expect(shell.appCheckStarted).toBeNull();
     expect(shell.appCheckResources).toBe(0);
@@ -73,14 +91,19 @@ for(const profile of profiles){
         appCheckStartedAfterRequest:window.__pogoStartup.appCheckStartedAt>=request,
         readyAfterAppCheck:firstReady>=window.__pogoStartup.appCheckReadyAt,
         appCheckImports:resources.filter(entry=>/firebase-app-check\.js/.test(entry.name)).length,
+        featureScriptCount:resources.filter(entry=>entry.initiatorType==='script'&&new URL(entry.name).origin===location.origin).length,
+        signedInApplicationLoaded:resources.some(entry=>/\/js\/app\/application\.js(?:\?|$)/.test(entry.name)),
         maxLongTask:Math.max(0,...window.__startupLongTasks)
       };
     });
-    if(profile.cpu===4)expect(protectedState.elapsed).toBeLessThan(3000);
+    expect(protectedState.elapsed).toBeLessThan(profile.budget.protected);
     expect(protectedState.appCheckStartedAfterRequest).toBe(true);
     expect(protectedState.readyAfterAppCheck).toBe(true);
     expect(protectedState.appCheckImports).toBe(1);
+    expect(protectedState.featureScriptCount).toBeLessThanOrEqual(75);
+    expect(protectedState.signedInApplicationLoaded).toBe(true);
     expect(protectedState.maxLongTask).toBeLessThanOrEqual(200);
+    console.log(`STARTUP_PERF ${JSON.stringify({profile:profile.name,shell,protected:protectedState})}`);
     await context.close();
   });
 }

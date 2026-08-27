@@ -43,8 +43,10 @@ test.describe('isolated My List scale profile',()=>{
       const measurement=await installListFixture(page,count);
       expect(measurement.rows).toBe(count<=180?count:120);
       expect(measurement.hydratedEditors).toBe(0);
-      expect(measurement.nodes).toBeLessThanOrEqual(Math.min(count,120)*19+1000);
-      expect(measurement.renderMs).toBeLessThan(600);
+      expect(measurement.nodes).toBeLessThanOrEqual(2500);
+      expect(measurement.controls).toBeLessThanOrEqual(1000);
+      expect(measurement.htmlBytes).toBeLessThanOrEqual(350*1024);
+      expect(measurement.renderMs).toBeLessThan(200);
       expect(measurement.progressive).toBe(count>180);
       await page.evaluate(()=>waitForMyListRender());
       expect(await page.locator('#mylist-out .myrow').count()).toBe(count);
@@ -52,7 +54,7 @@ test.describe('isolated My List scale profile',()=>{
         const start=performance.now();renderMyList('Synthetic Pokemon 0999',{reason:'filter'});
         return{ms:performance.now()-start,rows:[...document.querySelectorAll('#mylist-out .myrow')].filter(row=>!row.hidden).length};
       });
-      expect(filter.ms).toBeLessThan(150);
+      expect(filter.ms).toBeLessThan(75);
       expect(filter.rows).toBe(count===1000?1:0);
       const update=await page.evaluate(()=>{
         renderMyList();const first=document.querySelector('#mylist-out .myrow');
@@ -60,7 +62,7 @@ test.describe('isolated My List scale profile',()=>{
         const start=performance.now();renderMyList();
         return{ms:performance.now()-start,rows:document.querySelectorAll('#mylist-out .myrow').length};
       });
-      expect(update.rows).toBeLessThanOrEqual(count);expect(update.ms).toBeLessThan(200);
+      expect(update.rows).toBeLessThanOrEqual(count);expect(update.ms).toBeLessThan(100);
       await page.evaluate(()=>waitForMyListRender());
       await page.locator('#mylist-out .myrow-editor summary').first().click();
       await expect(page.locator('#mylist-out .myrow-editor-popover')).toHaveCount(1);
@@ -75,6 +77,10 @@ test.describe('isolated My List scale profile',()=>{
   test('120-row filtering and row edits stay within 4x CPU product budgets',async({page},testInfo)=>{
     test.skip(testInfo.project.name!=='desktop','One deterministic Chromium profile owns performance thresholds.');
     await page.route(url=>url.hostname.endsWith('.firebaseio.com')||url.hostname.endsWith('.firebasedatabase.app')||url.hostname.endsWith('googleapis.com'),route=>route.abort());
+    await page.addInitScript(()=>{
+      window.__myListLongTasks=[];
+      try{new PerformanceObserver(list=>window.__myListLongTasks.push(...list.getEntries().map(entry=>entry.duration))).observe({type:'longtask',buffered:true});}catch{}
+    });
     await page.goto(`./?my-list-budget=${Date.now()}`,{waitUntil:'domcontentloaded'});
     await page.waitForFunction(()=>typeof window.__pogoEnsureFullApp==='function');
     await page.evaluate(()=>window.__pogoEnsureFullApp('my-list-budget-test'));
@@ -82,6 +88,7 @@ test.describe('isolated My List scale profile',()=>{
     const client=await page.context().newCDPSession(page);
     await client.send('Emulation.setCPUThrottlingRate',{rate:4});
     await installListFixture(page,120);
+    await page.evaluate(()=>{window.__myListLongTasks=[];});
     const result=await page.evaluate(async()=>{
       const stable=document.querySelectorAll('#mylist-out .myrow')[1];
       const filterStart=performance.now();renderMyList('Synthetic Pokemon 0119',{reason:'filter'});const filterMs=performance.now()-filterStart;
@@ -94,12 +101,14 @@ test.describe('isolated My List scale profile',()=>{
       const input=document.getElementById('mylist-filter');
       for(const value of['S','Sy','Synthetic Pokemon 0007']){input.value=value;input.dispatchEvent(new Event('input',{bubbles:true}));}
       await new Promise(resolve=>setTimeout(resolve,MY_LIST_FILTER_DELAY_MS+40));
+      await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
       return{
         filterMs,clearMs,editMs,matched,
         stableRowPreserved:stable===[...document.querySelectorAll('#mylist-out .myrow')].find(row=>row.dataset.name===stable.dataset.name),
         changedRowReplaced:firstBefore!==firstAfter,
         latestQuery:window.__pogoMyListRenderState?.query,
-        visible:[...document.querySelectorAll('#mylist-out .myrow')].filter(row=>!row.hidden).length
+        visible:[...document.querySelectorAll('#mylist-out .myrow')].filter(row=>!row.hidden).length,
+        maxLongTask:Math.max(0,...window.__myListLongTasks)
       };
     });
     await client.send('Emulation.setCPUThrottlingRate',{rate:1});
@@ -108,6 +117,7 @@ test.describe('isolated My List scale profile',()=>{
     expect(result.clearMs).toBeLessThan(50);
     expect(result.editMs).toBeLessThan(100);
     expect(Math.max(result.filterMs,result.clearMs,result.editMs)).toBeLessThan(200);
+    expect(result.maxLongTask).toBeLessThanOrEqual(200);
     console.log(`MY_LIST_4X_BUDGET ${JSON.stringify(result)}`);
   });
 });

@@ -1,0 +1,52 @@
+name: Frontend performance budgets
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: frontend-performance-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  performance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@1e60f620b9541d49bfb7a018a162f8b3e019f631
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+      - name: Install deterministic Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Run static performance contracts
+        run: npm run test:performance:static
+      - name: Start local application server
+        run: |
+          python3 -m http.server 8878 --bind 127.0.0.1 > /tmp/pogo-performance-server.log 2>&1 &
+          for attempt in {1..30}; do
+            curl --fail --silent http://127.0.0.1:8878/ > /dev/null && exit 0
+            sleep 1
+          done
+          cat /tmp/pogo-performance-server.log
+          exit 1
+      - name: Run constrained browser budgets
+        env:
+          PLAYWRIGHT_BASE_URL: http://127.0.0.1:8878
+        run: npm run test:performance:browser
+      - name: Report deterministic profiles
+        run: |
+          npm run profile:frontend-assets
+          npm run profile:service-worker-install
