@@ -105,6 +105,11 @@
       const next={...record,attempts,status:blocked?'blocked':'pending',lastErrorCode:String(errorCode||''),nextAttemptAt:blocked?time:time+model.retryDelay(attempts-1),updatedAt:time};
       await write('operations',next);return next;
     }
+    async function retainBlocked(operationId,{errorCode='account-sync/network-failed'}={}){
+      const key=recordKey(owner,operationId),record=await read('operations',key);if(!record||record.status!=='blocked')return null;
+      const time=Number(now()),next={...record,attempts:record.attempts+1,status:'blocked',lastErrorCode:String(errorCode||'account-sync/network-failed'),nextAttemptAt:time,updatedAt:time};
+      await write('operations',next);return next;
+    }
     async function acknowledge(operationId,serverEntity){
       const key=recordKey(owner,operationId),record=await read('operations',key);if(!record)throw new Error('Operation is missing');
       const time=Number(now()),next={...record,status:'acknowledged',serverRevision:serverEntity?.revision||0,nextAttemptAt:0,updatedAt:time,lastErrorCode:''};
@@ -120,6 +125,7 @@
     }
     async function retryBlocked(operationId){
       const key=recordKey(owner,operationId),record=await read('operations',key);if(!record||record.status!=='blocked')return false;
+      if(!model.blockedRetryEligible(record))return false;
       await write('operations',{...record,status:'pending',attempts:0,nextAttemptAt:Number(now()),lastErrorCode:'',updatedAt:Number(now())});return true;
     }
     async function putEntity(entity){
@@ -147,7 +153,11 @@
     async function listRecoveryCandidates(){return ownerRecords('recoveryCandidates');}
     async function snapshot(){
       const[operations,entities,conflicts,recoveryCandidates]=await Promise.all([ownerRecords('operations'),ownerRecords('entities'),ownerRecords('conflicts'),ownerRecords('recoveryCandidates')]);
-      return Object.freeze({ownerUid:owner,pendingCount:operations.filter(item=>['pending','sending'].includes(item.status)).length,blockedCount:operations.filter(item=>item.status==='blocked').length,conflictCount:conflicts.filter(item=>!item.resolved).length,entityCount:entities.length,recoveryCandidateCount:recoveryCandidates.length});
+      const blocked=operations.filter(item=>item.status==='blocked'),blockedCodes=[...new Set(blocked.map(item=>String(item.lastErrorCode||'')).filter(code=>/^account-sync\/[a-z0-9-]{1,80}$/.test(code)))];
+      const blockedErrorCode=blocked.length?(blockedCodes.length===1?blockedCodes[0]:'account-sync/blocked-operation'):'';
+      const recoverableBlocked=blocked.filter(model.blockedRetryEligible),unsafeBlockedCount=blocked.length-recoverableBlocked.length;
+      const blockedCategories=[...new Set(blocked.map(item=>model.blockedRetryCategory(item.lastErrorCode)))].sort();
+      return Object.freeze({ownerUid:owner,pendingCount:operations.filter(item=>['pending','sending'].includes(item.status)).length,blockedCount:blocked.length,recoverableBlockedCount:recoverableBlocked.length,unsafeBlockedCount,blockedCategories:Object.freeze(blockedCategories),blockedErrorCode,conflictCount:conflicts.filter(item=>!item.resolved).length,entityCount:entities.length,recoveryCandidateCount:recoveryCandidates.length});
     }
     async function close(){
       if(closed)return;
@@ -155,7 +165,7 @@
       const pending=databasePromise;databasePromise=null;
       if(pending)(await pending).close();
     }
-    return Object.freeze({ownerUid:owner,enqueueOperation,enqueueOperations,listOperations,nextOperation,markAttempt,acknowledge,markConflict,retryBlocked,putEntity,deleteEntity,getEntity,listEntities,listConflicts,resolveConflict,setMeta,getMeta,putRecoveryCandidate,listRecoveryCandidates,snapshot,close,_remove:remove});
+    return Object.freeze({ownerUid:owner,enqueueOperation,enqueueOperations,listOperations,nextOperation,markAttempt,retainBlocked,acknowledge,markConflict,retryBlocked,putEntity,deleteEntity,getEntity,listEntities,listConflicts,resolveConflict,setMeta,getMeta,putRecoveryCandidate,listRecoveryCandidates,snapshot,close,_remove:remove});
   }
 
   root.accountSyncJournal=Object.freeze({STORE_NAMES,openDatabase,createAccountSyncJournal});

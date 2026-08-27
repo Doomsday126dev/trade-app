@@ -25,6 +25,10 @@ async function add(device,window,catalogId,values={},lane='wishlist',surface='my
 async function activeEntity(device,type='tradeEntry'){
   return device.controller.activeEntities(type)[0]||null;
 }
+async function persistedAddOperation(window,catalogId,operationId,clientAt=10){
+  const model=window.PogoDomain.accountSyncModel,binding=identity(window,catalogId),patch={priority:'H',variant:'',gender:'',lucky:false,xxl:false,xxs:false,shiny:false,backgroundId:'',sortOrder:0,quantity:1,note:'',mirror:false};
+  return(await model.createOperation({...binding,ownerUid:'uid-owner',kind:'add',baseGeneration:0,generation:1,baseFieldRevisions:Object.fromEntries(Object.keys(patch).map(field=>[field,0])),patch,clientAt,operationId})).value;
+}
 
 test('trade IDs bind surface, lane, and canonical catalog identity without mutable qualifiers',()=>{
   const window=load(),model=window.PogoDomain.accountSyncModel;
@@ -122,7 +126,7 @@ test('acknowledging an earlier mutation preserves a later optimistic edit on the
   let online=false,releaseSecond,notifySecond;const secondStarted=new Promise(resolve=>{notifySecond=resolve;}),secondGate=new Promise(resolve=>{releaseSecond=resolve;}),original=h.server.applyOperation.bind(h.server);let calls=0;
   const repository={...h.server,ownerUid:'uid-owner',listenAccount({onData}){queueMicrotask(()=>onData(h.server.snapshot()));return()=>{};},async applyOperation(operation){calls++;if(calls===2){notifySecond();await secondGate;}return original(operation);}};
   const controller=window.PogoData.accountSyncController.createAccountSyncController({journal,repository,ownerUid:'uid-owner',enabled:true,writesEnabled:true,allowlistedUids:['uid-owner'],online:()=>online,clock:h.clock,crypto:webcrypto});
-  await controller.activate();const added=await controller.addEntity({...identity(window,'pokemon:entei'),values:{priority:'H'}});
+  await controller.activate();assert.equal((await controller.waitForListenerReady({timeoutMs:1000})).ok,true);const added=await controller.addEntity({...identity(window,'pokemon:entei'),values:{priority:'H'}});
   await controller.patchEntity({entityType:'tradeEntry',entityId:added.value.entityId,patch:{priority:'L'}});online=true;const draining=controller.drain();await secondStarted;
   assert.equal(controller.getEntity('tradeEntry',added.value.entityId).values.priority,'L');
   releaseSecond();await draining;assert.equal(h.server.entities.get(`tradeEntry|${added.value.entityId}`).values.priority,'L');
@@ -133,7 +137,7 @@ test('public projection contains only acknowledged canonical entities while late
   let online=false,releaseSecond,notifySecond;const secondStarted=new Promise(resolve=>{notifySecond=resolve;}),secondGate=new Promise(resolve=>{releaseSecond=resolve;}),original=h.server.applyOperation.bind(h.server);let calls=0;
   const repository={...h.server,ownerUid:'uid-owner',listenAccount({onData}){queueMicrotask(()=>onData(h.server.snapshot()));return()=>{};},async applyOperation(operation){calls++;if(calls===2){notifySecond();await secondGate;}return original(operation);}};
   const controller=window.PogoData.accountSyncController.createAccountSyncController({journal,repository,ownerUid:'uid-owner',enabled:true,writesEnabled:true,allowlistedUids:['uid-owner'],online:()=>online,clock:h.clock,crypto:webcrypto,onProjection:value=>projections.push(value)});
-  await controller.activate();await add({controller},window,'pokemon:pikachu');await add({controller},window,'pokemon:rayquaza');online=true;const draining=controller.drain();await secondStarted;
+  await controller.activate();assert.equal((await controller.waitForListenerReady({timeoutMs:1000})).ok,true);await add({controller},window,'pokemon:pikachu');await add({controller},window,'pokemon:rayquaza');online=true;const draining=controller.drain();await secondStarted;
   assert.equal(controller.activeEntities('tradeEntry').length,2);assert.equal(projections.length,1);assert.deepEqual(Array.from(projections[0],entry=>entry.catalogId),['pokemon:pikachu']);assert.deepEqual(Array.from(controller.publicProjection(),entry=>entry.catalogId),['pokemon:pikachu']);
   releaseSecond();await draining;assert.deepEqual(Array.from(controller.publicProjection(),entry=>entry.catalogId).sort(),['pokemon:pikachu','pokemon:rayquaza']);
 });
@@ -205,6 +209,33 @@ test('permanent repository rejection blocks after one attempt instead of retryin
   h.advance(60_000);await a.controller.drain();assert.equal(h.server.attempts.filter(id=>id===queued.operation.operationId).length,1);assert.equal(h.server.entities.size,0);
 });
 
+test('blocked retry eligibility is exact, mixed unsafe evidence fails closed, and retained bytes do not change',async()=>{
+  const window=load(),model=window.PogoDomain.accountSyncModel,h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto});
+  assert.deepEqual(Array.from(model.SAFE_BLOCKED_RETRY_CODES),['account-sync/committed-entity-invalid','account-sync/network-failed','account-sync/transaction-aborted']);
+  for(const code of model.SAFE_BLOCKED_RETRY_CODES)assert.notEqual(model.blockedRetryCategory(code),'unsafe');
+  for(const code of ['account-sync/owner-mismatch','account-sync/schema-version-invalid','account-sync/remote-entity-invalid','account-sync/blocked-operation'])assert.equal(model.blockedRetryCategory(code),'unsafe');
+
+  const safeState=h.createMemoryJournalState(),safe=h.createDevice('safe',{state:safeState,online:false});await safe.start();
+  for(const [index,code] of model.SAFE_BLOCKED_RETRY_CODES.entries()){
+    const queued=await add(safe,window,`pokemon:safe-${index}`),record=safeState.operations.get(queued.operation.operationId);
+    Object.assign(record,{status:'blocked',attempts:6,lastErrorCode:code,nextAttemptAt:999999});
+  }
+  const safeBefore=await safe.controller.snapshot();assert.equal(safeBefore.recoverableBlockedCount,3);assert.equal(safeBefore.unsafeBlockedCount,0);
+  assert.deepEqual(Array.from(safeBefore.blockedCategories),['historical-acknowledgement','transient-transport']);
+  await safe.setOnline(true);const attemptsBefore=h.server.attempts.length;
+  const safeResult=await safe.controller.retryBlocked();assert.equal(safeResult.ok,true);assert.equal(safeResult.retried,3);
+  assert.equal(h.server.attempts.length-attemptsBefore,3);assert.equal((await safe.journal.listOperations({statuses:['acknowledged']})).length,3);assert.equal((await safe.journal.listOperations({statuses:['blocked']})).length,0);
+
+  const mixedState=h.createMemoryJournalState(),mixed=h.createDevice('mixed',{state:mixedState,online:false});await mixed.start();
+  const recoverable=await add(mixed,window,'pokemon:recoverable'),unsafeA=await add(mixed,window,'pokemon:unsafe-a'),unsafeB=await add(mixed,window,'pokemon:unsafe-b');
+  Object.assign(mixedState.operations.get(recoverable.operation.operationId),{status:'blocked',attempts:6,lastErrorCode:'account-sync/network-failed',nextAttemptAt:111});
+  Object.assign(mixedState.operations.get(unsafeA.operation.operationId),{status:'blocked',attempts:1,lastErrorCode:'account-sync/owner-mismatch',nextAttemptAt:222});
+  Object.assign(mixedState.operations.get(unsafeB.operation.operationId),{status:'blocked',attempts:1,lastErrorCode:'account-sync/schema-version-invalid',nextAttemptAt:333});
+  const before=JSON.stringify([...mixedState.operations.values()]),mixedSnapshot=await mixed.controller.snapshot(),mixedResult=await mixed.controller.retryBlocked(),after=JSON.stringify([...mixedState.operations.values()]);
+  assert.equal(mixedSnapshot.recoverableBlockedCount,1);assert.equal(mixedSnapshot.unsafeBlockedCount,2);assert.equal(mixedSnapshot.state,'sync-error');
+  assert.deepEqual(Array.from(mixedSnapshot.blockedCategories),['transient-transport','unsafe']);assert.equal(mixedResult.ok,false);assert.equal(mixedResult.error.code,'account-sync/retry-unsafe');assert.equal(after,before);
+});
+
 test('same-field conflicts remain recoverable evidence and cannot be retried as transient failures',async()=>{
   const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),a=h.createDevice('A'),b=h.createDevice('B');
   await a.start();await b.start();const added=await add(a,window,'pokemon:lugia');await h.settle();const id=added.value.entityId;
@@ -267,21 +298,112 @@ test('a rejected operation persists the exact server value before exposing or ac
   const added=await add(source,window,'pokemon:virizion');await h.settle();const id=added.value.entityId,base=h.server.entities.get(`tradeEntry|${id}`),priorityToken=model.fieldToken('priority');
   const accountOperation=await model.createOperation({ownerUid:'uid-owner',entityType:'tradeEntry',entityId:id,kind:'patch',patch:{priority:'M'},baseGeneration:base.generation,generation:base.generation,baseFieldRevisions:{priority:base.fieldRevisions[priorityToken]},clientAt:20_000,operationId:'op_conflict_server_0001'},{crypto:webcrypto});
   const accountValue=merge.mergeOperation(base,accountOperation.value,{acceptedAt:20_001}).value,state=h.createMemoryJournalState(),journal=window.PogoTesting.accountSyncHarness.createMemoryJournal('uid-owner',state,h.clock);
-  let online=false;
-  const repository=Object.freeze({ownerUid:'uid-owner',listenAccount(){return()=>{};},async applyOperation(operation){const result=merge.mergeOperation(accountValue,operation,{acceptedAt:20_002});return{ok:false,status:'conflict',error:result.error,conflicts:result.conflicts,current:accountValue};}});
+  let online=false,listenerHandlers=null;
+  const repository=Object.freeze({ownerUid:'uid-owner',listenAccount(handlers){listenerHandlers=handlers;return()=>{};},async applyOperation(operation){const result=merge.mergeOperation(accountValue,operation,{acceptedAt:20_002});return{ok:false,status:'conflict',error:result.error,conflicts:result.conflicts,current:accountValue};}});
   const controller=window.PogoData.accountSyncController.createAccountSyncController({journal,repository,ownerUid:'uid-owner',enabled:true,writesEnabled:true,allowlistedUids:['uid-owner'],online:()=>online,crypto:webcrypto,clock:h.clock});
-  await controller.activate();await controller.acceptRemote({tradeEntries:{[id]:base}});const losing=await controller.patchEntity({entityType:'tradeEntry',entityId:id,patch:{priority:'L'}});online=true;await controller.drain();
+  await controller.activate();listenerHandlers.onData({tradeEntries:{[id]:base}});assert.equal((await controller.waitForListenerReady({timeoutMs:1000})).ok,true);const losing=await controller.patchEntity({entityType:'tradeEntry',entityId:id,patch:{priority:'L'}});online=true;await controller.drain();
   const details=await controller.conflictDetails();assert.equal(details.length,1);assert.equal(details[0].fields[0].deviceValue,'L');assert.equal(details[0].fields[0].accountValue,'M');
   assert.equal(controller.getEntity('tradeEntry',id).values.priority,'M');assert.equal((await journal.getEntity('tradeEntry',id)).values.priority,'M');
   assert.equal((await controller.acceptConflict(details[0].conflictId)).ok,true);assert.equal(controller.getEntity('tradeEntry',id).values.priority,'M');
   assert.equal((await journal.listOperations({statuses:['resolved']}))[0].operationId,losing.operation.operationId);
 });
 
+test('listener attachment alone is pending, blocks product mutation, and becomes healthy only after accepted canonical data',async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),state=h.createMemoryJournalState(),journal=window.PogoTesting.accountSyncHarness.createMemoryJournal('uid-owner',state,h.clock);let handlers=null;
+  const repository={ownerUid:'uid-owner',listenAccount(value){handlers=value;return()=>{};},async applyOperation(){throw new Error('must not dispatch while listener is pending');}};
+  const controller=window.PogoData.accountSyncController.createAccountSyncController({journal,repository,ownerUid:'uid-owner',enabled:true,writesEnabled:true,allowlistedUids:['uid-owner'],online:()=>true,clock:h.clock,crypto:webcrypto});
+  await controller.activate();const attached=await controller.snapshot();
+  assert.equal(attached.listenerState,'listening');assert.equal(attached.listenerHealthy,false);assert.equal(attached.controllerHealthy,false);assert.equal(attached.state,'pending-sync');
+  const mutation=await controller.addEntity({...identity(window,'pokemon:pending-listener'),values:{priority:'H'}});assert.equal(mutation.ok,false);assert.equal(mutation.error.code,'account-sync/listener-not-ready');assert.equal(state.operations.size,0);
+  const ready=controller.waitForListenerReady({timeoutMs:1000});handlers.onData({});assert.equal((await ready).ok,true);const accepted=await controller.snapshot();assert.equal(accepted.listenerState,'healthy');assert.equal(accepted.listenerHealthy,true);assert.equal(accepted.controllerHealthy,true);assert.equal(accepted.state,'saved');
+});
+
+test('persisted pending and sending operations remain byte-identical until a current listener snapshot grants authority',async()=>{
+  const window=load(),merge=window.PogoDomain.accountSyncMerge,h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),state=h.createMemoryJournalState(),journal=window.PogoTesting.accountSyncHarness.createMemoryJournal('uid-owner',state,h.clock);
+  const pending=await persistedAddOperation(window,'pokemon:pending-proof','op_0000000000007201'),sending=await persistedAddOperation(window,'pokemon:sending-proof','op_0000000000007202');
+  await journal.enqueueOperations([pending,sending]);state.operations.get(sending.operationId).status='sending';
+  let handlers=null,applyCalls=0;const canonical=new Map(),repository={ownerUid:'uid-owner',listenAccount(value){handlers=value;return()=>{};},async applyOperation(operation){applyCalls++;const entity=merge.mergeOperation(canonical.get(operation.entityId)||null,operation,{acceptedAt:100+applyCalls}).value;canonical.set(operation.entityId,entity);return{ok:true,status:'applied',value:entity};}};
+  const controller=window.PogoData.accountSyncController.createAccountSyncController({journal,repository,ownerUid:'uid-owner',enabled:true,writesEnabled:true,allowlistedUids:['uid-owner'],online:()=>true,clock:h.clock,crypto:webcrypto});
+  const before=JSON.stringify([...state.operations.values()]);await controller.activate();await controller.drain();
+  assert.equal(applyCalls,0);assert.equal(JSON.stringify([...state.operations.values()]),before);assert.equal((await controller.snapshot()).listenerState,'listening');
+  const ready=controller.waitForListenerReady({timeoutMs:1000});handlers.onData({});assert.equal((await ready).ok,true);await controller.drain();
+  assert.equal(applyCalls,2);assert.equal((await journal.listOperations({statuses:['acknowledged']})).length,2);assert.deepEqual([...canonical.keys()].sort(),[pending.entityId,sending.entityId].sort());
+});
+
+test('listener timeout leaves a persisted operation byte-identical and makes no repository call',async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),state=h.createMemoryJournalState(),journal=window.PogoTesting.accountSyncHarness.createMemoryJournal('uid-owner',state,h.clock),operation=await persistedAddOperation(window,'pokemon:timeout-proof','op_0000000000007208');await journal.enqueueOperation(operation);
+  let applyCalls=0;const repository={ownerUid:'uid-owner',listenAccount(){return()=>{};},async applyOperation(){applyCalls++;throw new Error('must not dispatch without listener authority');}};
+  const controller=window.PogoData.accountSyncController.createAccountSyncController({journal,repository,ownerUid:'uid-owner',enabled:true,writesEnabled:true,allowlistedUids:['uid-owner'],online:()=>true,clock:h.clock,crypto:webcrypto});
+  const before=JSON.stringify([...state.operations.values()]);await controller.activate();const ready=await controller.waitForListenerReady({timeoutMs:5});await controller.drain();
+  assert.equal(ready.ok,false);assert.equal(ready.error.code,'account-sync/listener-timeout');assert.equal(applyCalls,0);assert.equal(JSON.stringify([...state.operations.values()]),before);assert.equal((await controller.snapshot()).listenerState,'failed');
+});
+
+test('listener error and late prior-epoch callbacks cannot mutate or arm a replacement session',async()=>{
+  const window=load(),merge=window.PogoDomain.accountSyncMerge,h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),state=h.createMemoryJournalState(),journal=window.PogoTesting.accountSyncHarness.createMemoryJournal('uid-owner',state,h.clock),operation=await persistedAddOperation(window,'pokemon:epoch-proof','op_0000000000007203');await journal.enqueueOperation(operation);
+  const listeners=[];let applyCalls=0;const repository={ownerUid:'uid-owner',listenAccount(value){listeners.push(value);return()=>{};},async applyOperation(value){applyCalls++;return{ok:true,status:'applied',value:merge.mergeOperation(null,value,{acceptedAt:200}).value};}};
+  const controller=window.PogoData.accountSyncController.createAccountSyncController({journal,repository,ownerUid:'uid-owner',enabled:true,writesEnabled:true,allowlistedUids:['uid-owner'],online:()=>true,clock:h.clock,crypto:webcrypto});
+  const before=JSON.stringify([...state.operations.values()]);await controller.activate();listeners[0].onError(new Error('private listener detail'));await Promise.resolve();await controller.drain();
+  assert.equal(applyCalls,0);assert.equal(JSON.stringify([...state.operations.values()]),before);assert.equal((await controller.snapshot()).listenerState,'failed');
+  await controller.deactivate();await controller.activate();listeners[0].onData({});await Promise.resolve();await controller.drain();
+  assert.equal(applyCalls,0);assert.equal(JSON.stringify([...state.operations.values()]),before);assert.equal((await controller.snapshot()).listenerState,'listening');
+  const ready=controller.waitForListenerReady({timeoutMs:1000});listeners[1].onData({});assert.equal((await ready).ok,true);await controller.drain();assert.equal(applyCalls,1);assert.equal((await journal.listOperations({statuses:['acknowledged']})).length,1);
+});
+
+test('listener authority loss during a multi-operation drain preserves ambiguous evidence and prevents the next call',async()=>{
+  const window=load(),merge=window.PogoDomain.accountSyncMerge,h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),state=h.createMemoryJournalState(),journal=window.PogoTesting.accountSyncHarness.createMemoryJournal('uid-owner',state,h.clock),first=await persistedAddOperation(window,'pokemon:mid-drain-a','op_0000000000007204'),second=await persistedAddOperation(window,'pokemon:mid-drain-b','op_0000000000007205');await journal.enqueueOperations([first,second]);
+  let handlers=null,applyCalls=0;const repository={ownerUid:'uid-owner',listenAccount(value){handlers=value;return()=>{};},async applyOperation(operation){applyCalls++;handlers.onError(new Error('listener lost'));return{ok:true,status:'applied',value:merge.mergeOperation(null,operation,{acceptedAt:300}).value};}};
+  const controller=window.PogoData.accountSyncController.createAccountSyncController({journal,repository,ownerUid:'uid-owner',enabled:true,writesEnabled:true,allowlistedUids:['uid-owner'],online:()=>true,clock:h.clock,crypto:webcrypto});
+  await controller.activate();const ready=controller.waitForListenerReady({timeoutMs:1000});handlers.onData({});assert.equal((await ready).ok,true);const before=JSON.stringify([...state.operations.values()]);await controller.drain();
+  assert.equal(applyCalls,1);assert.equal(JSON.stringify([...state.operations.values()]),before);assert.equal((await controller.snapshot()).listenerState,'failed');assert.equal((await journal.snapshot()).pendingCount,2);
+});
+
+test('an invalid listener callback cannot mint authority from a matching idempotent response',async()=>{
+  const window=load(),merge=window.PogoDomain.accountSyncMerge,h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),state=h.createMemoryJournalState(),journal=window.PogoTesting.accountSyncHarness.createMemoryJournal('uid-owner',state,h.clock),operation=await persistedAddOperation(window,'pokemon:invalid-listener-idempotent','op_0000000000007207'),canonical=merge.mergeOperation(null,operation,{acceptedAt:350}).value;
+  await journal.enqueueOperation(operation);await journal.markAttempt(operation.operationId,{retryable:false,errorCode:'account-sync/network-failed'});
+  let handlers=null,applyCalls=0;const repository={ownerUid:'uid-owner',listenAccount(value){handlers=value;return()=>{};},async applyOperation(){applyCalls++;handlers.onData({unexpected:{private:'invalid'}});return{ok:true,status:'idempotent',value:canonical};}};
+  const controller=window.PogoData.accountSyncController.createAccountSyncController({journal,repository,ownerUid:'uid-owner',enabled:true,writesEnabled:true,allowlistedUids:['uid-owner'],online:()=>true,clock:h.clock,crypto:webcrypto});
+  await controller.activate();const ready=controller.waitForListenerReady({timeoutMs:1000});handlers.onData({tradeEntries:{[canonical.entityId]:canonical}});assert.equal((await ready).ok,true);
+  const before=JSON.stringify([...state.operations.values()]),result=await controller.retryBlocked();await Promise.resolve();
+  assert.equal(result.ok,false);assert.equal(result.error.code,'account-sync/listener-authority-lost');assert.equal(result.retried,1);assert.equal(applyCalls,1);assert.equal(JSON.stringify([...state.operations.values()]),before);assert.equal((await journal.listOperations({statuses:['acknowledged']})).length,0);assert.equal((await controller.snapshot()).listenerState,'failed');
+});
+
+test('a stale pre-write listener snapshot cannot manufacture remote-entity-missing after dispatch',async()=>{
+  const window=load(),merge=window.PogoDomain.accountSyncMerge,h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),state=h.createMemoryJournalState(),journal=window.PogoTesting.accountSyncHarness.createMemoryJournal('uid-owner',state,h.clock);let online=false,handlers=null,applyCalls=0,canonical=null,releaseSecond,secondStarted;const secondGate=new Promise(resolve=>{releaseSecond=resolve;}),started=new Promise(resolve=>{secondStarted=resolve;});
+  const repository={ownerUid:'uid-owner',listenAccount(value){handlers=value;queueMicrotask(()=>handlers.onData({}));return()=>{};},async applyOperation(operation){applyCalls++;canonical=canonical||merge.mergeOperation(null,operation,{acceptedAt:400}).value;if(applyCalls===1)handlers.onData({});else{secondStarted();await secondGate;handlers.onData({tradeEntries:{[canonical.entityId]:canonical}});}return{ok:true,status:applyCalls===1?'applied':'idempotent',value:canonical};}};
+  const controller=window.PogoData.accountSyncController.createAccountSyncController({journal,repository,ownerUid:'uid-owner',enabled:true,writesEnabled:true,allowlistedUids:['uid-owner'],online:()=>online,clock:h.clock,crypto:webcrypto});
+  await controller.activate();assert.equal((await controller.waitForListenerReady({timeoutMs:1000})).ok,true);const queued=await controller.addEntity({...identity(window,'pokemon:stale-listener-proof'),values:{priority:'H'}});online=true;const draining=controller.drain();await started;
+  assert.equal((await journal.listOperations({statuses:['pending']}))[0].operationId,queued.operation.operationId);assert.notEqual((await controller.snapshot()).lastError,'account-sync/remote-entity-missing');
+  releaseSecond();await draining;await controller.drain();assert.equal(applyCalls,2);assert.equal((await journal.listOperations({statuses:['acknowledged']})).length,1);assert.notEqual((await controller.snapshot()).lastError,'account-sync/remote-entity-missing');
+});
+
+test('one retained retry action makes one deduplicated call and a failed call remains blocked without backoff',async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),state=h.createMemoryJournalState(),journal=window.PogoTesting.accountSyncHarness.createMemoryJournal('uid-owner',state,h.clock),operation=await persistedAddOperation(window,'pokemon:manual-once','op_0000000000007206');await journal.enqueueOperation(operation);await journal.markAttempt(operation.operationId,{retryable:false,errorCode:'account-sync/network-failed'});
+  let handlers=null,applyCalls=0,releaseCall,callStarted;const gate=new Promise(resolve=>{releaseCall=resolve;}),started=new Promise(resolve=>{callStarted=resolve;}),repository={ownerUid:'uid-owner',listenAccount(value){handlers=value;queueMicrotask(()=>handlers.onData({}));return()=>{};},async applyOperation(){applyCalls++;callStarted();await gate;throw Object.assign(new Error('network unavailable'),{code:'account-sync/network-failed'});}};
+  const controller=window.PogoData.accountSyncController.createAccountSyncController({journal,repository,ownerUid:'uid-owner',enabled:true,writesEnabled:true,allowlistedUids:['uid-owner'],online:()=>true,clock:h.clock,crypto:webcrypto});await controller.activate();assert.equal((await controller.waitForListenerReady({timeoutMs:1000})).ok,true);
+  const first=controller.retryBlocked(),second=controller.retryBlocked();assert.equal(first,second);await started;releaseCall();const result=await first,retained=(await journal.listOperations({statuses:['blocked']}))[0];
+  assert.equal(result.ok,false);assert.equal(result.retried,1);assert.equal(applyCalls,1);assert.equal(retained.operationId,operation.operationId);assert.equal(retained.attempts,2);assert.equal(retained.lastErrorCode,'account-sync/network-failed');
+  h.advance(60_000);await controller.drain();assert.equal(applyCalls,1);const emptyState=h.createMemoryJournalState(),emptyJournal=window.PogoTesting.accountSyncHarness.createMemoryJournal('uid-owner',emptyState,h.clock),empty=window.PogoData.accountSyncController.createAccountSyncController({journal:emptyJournal,repository:{...repository,ownerUid:'uid-owner'},ownerUid:'uid-owner',enabled:true,writesEnabled:true,allowlistedUids:['uid-owner'],online:()=>true,clock:h.clock,crypto:webcrypto});await empty.activate();await Promise.resolve();const noEligible=await empty.retryBlocked();assert.equal(noEligible.ok,false);assert.equal(noEligible.error.code,'account-sync/retry-empty');assert.equal(applyCalls,1);
+});
+
+test('pre-.70 estimated acknowledgement is preserved on substitution and a fresh controller hydrates the authoritative timestamp without mutation',async()=>{
+  const window=load(),model=window.PogoDomain.accountSyncModel,merge=window.PogoDomain.accountSyncMerge,h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),state=h.createMemoryJournalState(),journal=window.PogoTesting.accountSyncHarness.createMemoryJournal('uid-owner',state,h.clock);let handlers=null,applyCalls=0;
+  const repository={ownerUid:'uid-owner',listenAccount(value){handlers=value;queueMicrotask(()=>value.onData({}));return()=>{};},async applyOperation(operation){applyCalls++;return{ok:true,status:'applied',value:merge.mergeOperation(null,operation,{acceptedAt:69_001}).value};}};
+  const first=window.PogoData.accountSyncController.createAccountSyncController({journal,repository,ownerUid:'uid-owner',enabled:true,writesEnabled:true,allowlistedUids:['uid-owner'],online:()=>true,clock:h.clock,crypto:webcrypto});await first.activate();await first.waitForListenerReady({timeoutMs:1000});
+  const queued=await add({controller:first},window,'pokemon:wiglett');await first.drain();const estimated=structuredClone(first.getEntity('tradeEntry',queued.value.entityId)),actual=structuredClone(estimated);actual.createdAt+=500;actual.updatedAt+=500;
+  assert.equal((await journal.listOperations({statuses:['acknowledged']})).length,1);handlers.onData({tradeEntries:{[actual.entityId]:actual}});await new Promise(resolve=>setTimeout(resolve,0));
+  const failed=await first.snapshot();assert.equal(failed.lastError,'account-sync/remote-version-substitution');assert.equal(failed.lastErrorCategory,'unsafe-evidence');assert.equal(failed.state,'sync-error');assert.equal(model.canonicalJson(first.getEntity('tradeEntry',actual.entityId)),model.canonicalJson(estimated));assert.equal((await journal.listOperations({statuses:['acknowledged']})).length,1);
+  await first.deactivate();
+
+  let freshHandlers=null;const freshRepository={ownerUid:'uid-owner',listenAccount(value){freshHandlers=value;return()=>{};},async applyOperation(){throw new Error('fresh hydration must not mutate');}};
+  const fresh=window.PogoData.accountSyncController.createAccountSyncController({journal,repository:freshRepository,ownerUid:'uid-owner',enabled:true,writesEnabled:true,allowlistedUids:['uid-owner'],online:()=>true,clock:h.clock,crypto:webcrypto});await fresh.activate();const ready=fresh.waitForListenerReady({timeoutMs:1000});freshHandlers.onData({tradeEntries:{[actual.entityId]:actual}});assert.equal((await ready).ok,true);
+  assert.equal(model.canonicalJson(fresh.getEntity('tradeEntry',actual.entityId)),model.canonicalJson(actual));assert.equal((await fresh.snapshot()).state,'saved');assert.equal(applyCalls,1);
+});
+
 test('a conflict response missing its canonical current value fails closed',async()=>{
   const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),state=h.createMemoryJournalState(),journal=window.PogoTesting.accountSyncHarness.createMemoryJournal('uid-owner',state,h.clock);
-  let online=false;const repository=Object.freeze({ownerUid:'uid-owner',listenAccount(){return()=>{};},async applyOperation(){return{ok:false,status:'conflict',conflicts:['priority']};}});
+  let online=false,listenerHandlers=null;const repository=Object.freeze({ownerUid:'uid-owner',listenAccount(handlers){listenerHandlers=handlers;return()=>{};},async applyOperation(){return{ok:false,status:'conflict',conflicts:['priority']};}});
   const controller=window.PogoData.accountSyncController.createAccountSyncController({journal,repository,ownerUid:'uid-owner',enabled:true,writesEnabled:true,allowlistedUids:['uid-owner'],online:()=>online,crypto:webcrypto,clock:h.clock});
-  await controller.activate();const queued=await controller.addEntity({...identity(window,'pokemon:terrakion'),values:{priority:'H'}});online=true;await controller.drain();
+  await controller.activate();const ready=controller.waitForListenerReady({timeoutMs:1000});listenerHandlers.onData({});assert.equal((await ready).ok,true);const queued=await controller.addEntity({...identity(window,'pokemon:terrakion'),values:{priority:'H'}});online=true;await controller.drain();
   assert.equal((await journal.listConflicts()).length,0);assert.equal((await journal.listOperations({statuses:['pending']})).length,0);
   assert.equal((await journal.listOperations({statuses:['blocked']})).length,1);assert.equal((await controller.snapshot()).lastError,'account-sync/conflict-current-invalid');assert.equal(queued.ok,true);
 });
@@ -368,7 +490,7 @@ test('journal persistence failure leaves the current UI entity set unchanged',as
   const journal=window.PogoTesting.accountSyncHarness.createMemoryJournal('uid-owner',state,h.clock),original=journal.enqueueOperations;
   const failingJournal=Object.freeze({...journal,async enqueueOperations(){throw Object.assign(new Error('quota'),{code:'indexeddb/quota'});}});
   const controller=window.PogoData.accountSyncController.createAccountSyncController({journal:failingJournal,repository:h.server,ownerUid:'uid-owner',enabled:true,writesEnabled:true,allowlistedUids:['uid-owner'],online:()=>false,crypto:webcrypto,clock:h.clock});
-  await controller.activate();const result=await controller.addEntity({...identity(window,'pokemon:latios'),values:{priority:'H'}});
+  await controller.activate();assert.equal((await controller.waitForListenerReady({timeoutMs:1000})).ok,true);const result=await controller.addEntity({...identity(window,'pokemon:latios'),values:{priority:'H'}});
   assert.equal(result.ok,false);assert.equal(result.error.code,'account-sync/journal-write-failed');assert.equal(controller.activeEntities().length,0);assert.equal(state.operations.size,0);assert.equal(typeof original,'function');
 });
 
@@ -378,7 +500,7 @@ test('multi-entity product actions journal atomically before any optimistic stat
     assert.equal(operations.length,2);throw Object.assign(new Error('quota'),{code:'indexeddb/quota'});
   }});
   const controller=window.PogoData.accountSyncController.createAccountSyncController({journal:failingJournal,repository:h.server,ownerUid:'uid-owner',enabled:true,writesEnabled:true,allowlistedUids:['uid-owner'],online:()=>false,crypto:webcrypto,clock:h.clock});
-  await controller.activate();
+  await controller.activate();assert.equal((await controller.waitForListenerReady({timeoutMs:1000})).ok,true);
   const first=identity(window,'pokemon:latias'),second=identity(window,'pokemon:latios');
   const result=await controller.mutateBatch([
     {entityType:first.entityType,entityId:first.entityId,identity:first.identity,kind:'add',patch:{priority:'H'}},
@@ -401,15 +523,26 @@ test('an explicit drain joins an in-flight drain and includes work queued while 
   assert.equal(h.server.entities.size,2);assert.equal((await a.journal.snapshot()).pendingCount,0);
 });
 
+test('work queued after a drain observes an empty journal requests one final authorized pass',async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),state=h.createMemoryJournalState(),baseJournal=window.PogoTesting.accountSyncHarness.createMemoryJournal('uid-owner',state,h.clock);
+  let online=false,nextCalls=0,releaseEmpty,notifyEmpty;const emptyGate=new Promise(resolve=>{releaseEmpty=resolve;}),emptyObserved=new Promise(resolve=>{notifyEmpty=resolve;});
+  const journal=Object.freeze({...baseJournal,async nextOperation(options){const record=await baseJournal.nextOperation(options);if(++nextCalls===2&&!record){notifyEmpty();await emptyGate;}return record;}});
+  const controller=window.PogoData.accountSyncController.createAccountSyncController({journal,repository:h.server,ownerUid:'uid-owner',enabled:true,writesEnabled:true,allowlistedUids:['uid-owner'],online:()=>online,clock:h.clock,crypto:webcrypto});
+  await controller.activate();assert.equal((await controller.waitForListenerReady({timeoutMs:1000})).ok,true);
+  const first=await controller.addEntity({...identity(window,'pokemon:drain-final-a'),values:{priority:'H'}});online=true;const draining=controller.drain();await emptyObserved;
+  const second=await controller.addEntity({...identity(window,'pokemon:drain-final-b'),values:{priority:'M'}});releaseEmpty();await draining;await controller.drain();
+  assert.equal(first.ok,true);assert.equal(second.ok,true);assert.equal(h.server.entities.size,2);assert.equal((await journal.snapshot()).pendingCount,0);assert.equal(h.server.attempts.length,2);
+});
+
 test('auth deactivation joins an in-flight dispatch and suppresses old-session publication',async()=>{
   const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),state=h.createMemoryJournalState(),journal=window.PogoTesting.accountSyncHarness.createMemoryJournal('uid-owner',state,h.clock);
   let online=false,releaseDispatch,dispatchStarted;const started=new Promise(resolve=>{dispatchStarted=resolve;}),gate=new Promise(resolve=>{releaseDispatch=resolve;}),original=h.server.applyOperation.bind(h.server),projections=[];
   h.server.applyOperation=async operation=>{dispatchStarted();await gate;return original(operation);};
   const controller=window.PogoData.accountSyncController.createAccountSyncController({journal,repository:h.server,ownerUid:'uid-owner',enabled:true,writesEnabled:true,allowlistedUids:['uid-owner'],online:()=>online,crypto:webcrypto,clock:h.clock,onProjection:value=>projections.push(value)});
-  await controller.activate();const queued=await controller.addEntity({...identity(window,'pokemon:suicune'),values:{priority:'H'}});online=true;
+  await controller.activate();assert.equal((await controller.waitForListenerReady({timeoutMs:1000})).ok,true);const queued=await controller.addEntity({...identity(window,'pokemon:suicune'),values:{priority:'H'}});online=true;
   const draining=controller.drain();await started;const stopping=controller.deactivate();releaseDispatch();await Promise.all([draining,stopping]);
   assert.equal(h.server.entities.get(`tradeEntry|${queued.value.entityId}`).deleted,false);
-  assert.equal((await journal.snapshot()).pendingCount,0);assert.equal(projections.length,0);assert.equal((await controller.snapshot()).active,false);
+  assert.equal((await journal.snapshot()).pendingCount,1);assert.equal((await journal.listOperations({statuses:['pending']}))[0].operationId,queued.operation.operationId);assert.equal(projections.length,0);assert.equal((await controller.snapshot()).active,false);
 });
 
 test('private canonical acknowledgement gates public projection and publication failure never rolls it back',async()=>{
@@ -418,7 +551,7 @@ test('private canonical acknowledgement gates public projection and publication 
   await a.setOnline(true);await h.settle();assert.equal(a.projections.length,1);assert.equal(a.projections[0][0].entryId,queued.value.entityId);
   const state=h.createMemoryJournalState(),journal=window.PogoTesting.accountSyncHarness.createMemoryJournal('uid-owner',state,h.clock);
   let online=false;const controller=window.PogoData.accountSyncController.createAccountSyncController({journal,repository:h.server,ownerUid:'uid-owner',enabled:true,writesEnabled:true,allowlistedUids:['uid-owner'],online:()=>online,crypto:webcrypto,clock:h.clock,onProjection:async()=>{throw Object.assign(new Error('publication unavailable'),{code:'public-share/unavailable'});}});
-  await controller.activate();const second=await controller.addEntity({...identity(window,'pokemon:zekrom'),values:{priority:'M'}});online=true;await controller.drain();
+  await controller.activate();assert.equal((await controller.waitForListenerReady({timeoutMs:1000})).ok,true);const second=await controller.addEntity({...identity(window,'pokemon:zekrom'),values:{priority:'M'}});online=true;await controller.drain();
   assert.equal(second.ok,true);assert.equal(h.server.entities.get(`tradeEntry|${second.value.entityId}`).deleted,false);
   assert.equal((await controller.snapshot()).lastProjectionError,'public-share/unavailable');
 });
@@ -522,4 +655,19 @@ test('randomized independent-field sequences converge for both delivery orders',
     const ba=merge.mergeOperation(merge.mergeOperation(base,opB,{acceptedAt:2}).value,opA,{acceptedAt:3}).value;
     assert.deepEqual(JSON.parse(JSON.stringify(ab.values)),JSON.parse(JSON.stringify(ba.values)));
   }
+});
+
+test('listener failure is explicit, deactivation unsubscribes, and a fresh controller resubscribes without a reconnect loop',async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),state=h.createMemoryJournalState(),journal=window.PogoTesting.accountSyncHarness.createMemoryJournal('uid-owner',state,h.clock);
+  let subscriptions=0,unsubscribes=0,currentHandlers=null;
+  const repository={ownerUid:'uid-owner',listenAccount(handlers){subscriptions++;currentHandlers=handlers;queueMicrotask(()=>handlers.onData({}));return()=>{unsubscribes++;};}};
+  const make=()=>window.PogoData.accountSyncController.createAccountSyncController({journal,repository,ownerUid:'uid-owner',enabled:true,writesEnabled:true,allowlistedUids:['uid-owner'],online:()=>true,clock:h.clock,crypto:webcrypto});
+  const first=make();await first.activate();await new Promise(resolve=>setTimeout(resolve,0));assert.equal((await first.snapshot()).state,'saved');
+  currentHandlers.onError(new Error('private listener detail'));await new Promise(resolve=>setTimeout(resolve,0));const failed=await first.snapshot();
+  assert.equal(failed.state,'sync-error');assert.equal(failed.listenerState,'failed');assert.equal(failed.listenerHealthy,false);assert.equal(failed.controllerHealthy,false);assert.equal(failed.lastError,'account-sync/listener-failed');assert.doesNotMatch(JSON.stringify(failed),/private listener detail/);assert.equal(subscriptions,1);
+  await first.deactivate();assert.equal(unsubscribes,1);
+  const second=make();await second.activate();await new Promise(resolve=>setTimeout(resolve,0));const healthy=await second.snapshot();
+  assert.equal(healthy.state,'saved');assert.equal(healthy.listenerState,'healthy');assert.equal(healthy.listenerHealthy,true);assert.equal(healthy.controllerHealthy,true);assert.equal(subscriptions,2);
+  currentHandlers.onError(new Error('again'));await new Promise(resolve=>setTimeout(resolve,0));assert.equal((await second.snapshot()).state,'sync-error');assert.equal(subscriptions,2);
+  await second.deactivate();assert.equal(unsubscribes,2);
 });

@@ -7,19 +7,102 @@
     const owner=model.firebaseKey(ownerUid,128),allowlist=new Set((allowlistedUids||[]).map(String));
     if(!journal||!repository||!owner||journal.ownerUid!==owner||repository.ownerUid!==owner)throw new TypeError('Account sync controller owner binding is invalid');
     const eligible=enabled===true&&writesEnabled===true&&allowlist.has(owner);
-    let active=false,lifecycleEpoch=0,optimisticRevision=0,drainPromise=null,drainRequested=false,mutationPromise=Promise.resolve(),remoteAcceptPromise=Promise.resolve(),stateEmitPromise=Promise.resolve(),unsubscribe=null,retryTimer=null,lastError='',lastProjectionError='',lastSyncAt=0;
+    let active=false,lifecycleEpoch=0,listenerAuthorityVersion=0,optimisticRevision=0,drainPromise=null,drainRequested=false,manualRetryPromise=null,mutationPromise=Promise.resolve(),repositoryMutationPromise=Promise.resolve(),remoteAcceptPromise=Promise.resolve(),drainQueue=Promise.resolve(),stateEmitPromise=Promise.resolve(),unsubscribe=null,retryTimer=null,lastError='',lastErrorCategory='',lastProjectionError='',lastSyncAt=0,listenerState='inactive';
+    const listenerWaiters=new Set();
     const entities=new Map(),acceptedEntities=new Map();
     function key(type,id){return`${type}|${id}`;}
     function getEntity(type,id){return entities.get(key(type,id))||null;}
     function retryableFailure(value){return!/permission|forbidden|owner|schema|invalid|unauth/i.test(String(value?.code||value?.message||value||''));}
+    function safeErrorCode(value,fallback){const code=String(value?.code||value||'');return/^account-sync\/[a-z0-9-]{1,80}$/.test(code)?code:fallback;}
+    function setError(value,category,fallback){lastError=safeErrorCode(value,fallback);lastErrorCategory=category;}
+    function clearError(...categories){if(!categories.length||categories.includes(lastErrorCategory)){lastError='';lastErrorCategory='';}}
+    function settleListenerWaiters(result){
+      for(const waiter of listenerWaiters){clearTimeout(waiter.timer);waiter.resolve(result);}
+      listenerWaiters.clear();
+    }
+    function listenerFailure(code,message='The live account sync listener is not ready'){return model.failure(code,message);}
+    function listenerAuthorityError(){return Object.assign(new Error('The live account sync listener authority changed'),{code:'account-sync/listener-authority-lost'});}
+    function watchedWriteError(code,message){return Object.assign(new Error(message),{code});}
+    function closeListenerAuthority(nextState){listenerAuthorityVersion++;listenerState=nextState;clearTimeout(retryTimer);retryTimer=null;return listenerAuthorityVersion;}
+    function listenerAuthority(epoch=lifecycleEpoch){return active&&eligible&&online()&&epoch===lifecycleEpoch&&listenerState==='healthy'?Object.freeze({epoch,version:listenerAuthorityVersion}):null;}
+    function listenerAuthorityCurrent(binding){return!!binding&&active&&eligible&&online()&&binding.epoch===lifecycleEpoch&&binding.version===listenerAuthorityVersion&&listenerState==='healthy';}
+    function listenerLifecycleCurrent(binding){return!!binding&&active&&eligible&&binding.epoch===lifecycleEpoch;}
+    function watchedWriteAuthorityError(binding){
+      if(!listenerLifecycleCurrent(binding))return watchedWriteError('account-sync/session-changed','The account sync session changed during the watched write');
+      if(lastErrorCategory==='canonical'||model.unsafeRecoveryCode(lastError))return watchedWriteError(lastError||'account-sync/canonical-validation-failed','Canonical account sync evidence became unsafe during the watched write');
+      if(listenerState==='failed')return watchedWriteError(lastError||'account-sync/listener-failed','The live account sync listener failed during the watched write');
+      return listenerAuthorityError();
+    }
+    function serializeRepositoryMutation(task){
+      const result=repositoryMutationPromise.then(task);
+      repositoryMutationPromise=result.then(()=>undefined,()=>undefined);
+      return result;
+    }
+    function executeAuthorizedMutation(task,binding=listenerAuthority()){
+      return serializeRepositoryMutation(async()=>{
+        if(!listenerAuthorityCurrent(binding))return Object.freeze({started:false,current:false});
+        try{const value=await task();return Object.freeze({started:true,current:listenerAuthorityCurrent(binding),value});}
+        catch(error){return Object.freeze({started:true,current:listenerAuthorityCurrent(binding),error});}
+      });
+    }
+    async function requireWatchedWriteListener(binding,timeoutMs){
+      if(!listenerLifecycleCurrent(binding))throw watchedWriteAuthorityError(binding);
+      if(listenerState!=='healthy'){
+        const ready=await waitForListenerReady({timeoutMs});
+        if(!ready?.ok)throw watchedWriteAuthorityError(binding);
+      }
+      if(!listenerLifecycleCurrent(binding)||!listenerAuthority(binding.epoch))throw watchedWriteAuthorityError(binding);
+    }
+    function runAuthorizedWatchedMutation({write,reconcile,timeoutMs=8000}={}){
+      if(typeof write!=='function'||typeof reconcile!=='function')throw new TypeError('Watched mutation write and reconciliation callbacks are required');
+      const binding=listenerAuthority();
+      if(!binding)return Promise.reject(listenerAuthorityError());
+      return serializeRepositoryMutation(async()=>{
+        if(!listenerAuthorityCurrent(binding))throw watchedWriteAuthorityError(binding);
+        let result,writeError;
+        try{result=await write();}catch(error){writeError=error;}
+        await requireWatchedWriteListener(binding,timeoutMs);
+        let account;
+        try{account=await repository.readAccount();}
+        catch{throw watchedWriteError('account-sync/watched-write-unreconciled','The watched write could not be reconciled from canonical account data');}
+        await requireWatchedWriteListener(binding,timeoutMs);
+        await serializeCanonical(()=>acceptedSnapshot(account));
+        const proof=await reconcile(Object.freeze({account,result,writeError}));
+        if(!proof?.ok)throw watchedWriteError(proof?.error?.code||'account-sync/watched-write-unreconciled',proof?.error?.message||'The watched write could not be reconciled exactly');
+        await requireWatchedWriteListener(binding,timeoutMs);
+        return Object.freeze({ok:true,status:proof.status||result?.status||'reconciled',value:proof.value,writeErrorCode:safeErrorCode(writeError,'')});
+      });
+    }
+    function waitForListenerReady({timeoutMs=8000}={}){
+      if(!eligible)return Promise.resolve(Object.freeze({ok:true,status:'disabled'}));
+      if(!active)return Promise.resolve(listenerFailure('account-sync/session-inactive'));
+      if(listenerState==='healthy')return Promise.resolve(Object.freeze({ok:true,status:'healthy'}));
+      if(listenerState==='failed')return Promise.resolve(listenerFailure(lastError||'account-sync/listener-failed'));
+      const bounded=Math.min(30000,Math.max(1,Number(timeoutMs)||8000)),epoch=lifecycleEpoch;
+      return new Promise(resolve=>{
+        const waiter={resolve,timer:null};
+        waiter.timer=setTimeout(()=>{
+          if(!listenerWaiters.delete(waiter))return;
+          if(active&&epoch===lifecycleEpoch&&listenerState!=='healthy'){
+            closeListenerAuthority('failed');setError('account-sync/listener-timeout','listener','account-sync/listener-timeout');emit();
+          }
+          resolve(listenerFailure('account-sync/listener-timeout'));
+        },bounded);
+        listenerWaiters.add(waiter);
+      });
+    }
     function emit(){
       stateEmitPromise=stateEmitPromise.then(()=>snapshot()).then(state=>onState?.(state)).catch(()=>{});
       try{onEntities?.(Object.freeze([...entities.values()]));}catch{}
       return stateEmitPromise;
     }
     async function snapshot(){
-      const journalState=await journal.snapshot(),state=!eligible?'local-only':lastError||journalState.blockedCount?'sync-error':journalState.conflictCount?'conflict':journalState.recoveryCandidateCount?'review-required':!online()?'offline':journalState.pendingCount?'pending-sync':'saved';
-      return Object.freeze({state,eligible,active,online:online(),lastSyncAt,lastError,lastProjectionError,pendingCount:journalState.pendingCount,blockedCount:journalState.blockedCount,conflictCount:journalState.conflictCount,recoveryCandidateCount:journalState.recoveryCandidateCount,entityCount:entities.size,privateValuesExposed:false});
+      const journalState=await journal.snapshot(),listenerHealthy=!eligible||active&&listenerState==='healthy',effectiveError=lastError||journalState.blockedErrorCode||'';
+      const recoverableBlockedCount=Number(journalState.recoverableBlockedCount)||0,unsafeBlockedCount=Number(journalState.unsafeBlockedCount)||0;
+      const unsafeCurrent=lastErrorCategory==='canonical'||model.unsafeRecoveryCode(lastError),unsafeEvidence=unsafeCurrent||unsafeBlockedCount>0;
+      const state=!eligible?'local-only':unsafeEvidence?'sync-error':journalState.conflictCount?'conflict':journalState.recoveryCandidateCount?'review-required':journalState.blockedCount?'sync-error':!online()?'offline':journalState.pendingCount||['starting','listening'].includes(listenerState)?'pending-sync':effectiveError||listenerState==='failed'?'sync-error':!active?'inactive':'saved';
+      const effectiveCategory=unsafeEvidence?'unsafe-evidence':lastErrorCategory||(journalState.blockedCount?'blocked-operation':'');
+      return Object.freeze({state,eligible,active,online:online(),listenerState,listenerHealthy,controllerHealthy:active&&listenerHealthy&&!lastError&&!unsafeBlockedCount,lastSyncAt,lastError:effectiveError,lastErrorCategory:effectiveCategory,lastProjectionError,pendingCount:journalState.pendingCount,blockedCount:journalState.blockedCount,recoverableBlockedCount,unsafeBlockedCount,blockedCategories:Object.freeze([...(journalState.blockedCategories||[])]),conflictCount:journalState.conflictCount,recoveryCandidateCount:journalState.recoveryCandidateCount,entityCount:entities.size,privateValuesExposed:false});
     }
     function accountEntities(value){
       const allowedCollections=new Set(['meta','tradeEntries','favorites','tags','migrations','recoveryCandidates']);
@@ -98,7 +181,7 @@
       if(!active||epoch!==lifecycleEpoch)return;
       acceptedEntities.clear();for(const [entityKey,entity] of accepted)acceptedEntities.set(entityKey,entity);
       await rebuildOptimisticEntities();
-      lastError='';emit();
+      clearError('listener','canonical');emit();
     }
     function serializeCanonical(task){
       const result=remoteAcceptPromise.then(task);
@@ -108,17 +191,48 @@
     function acceptRemote(value,epoch=lifecycleEpoch){
       return serializeCanonical(()=>applyRemote(value,epoch));
     }
-    function acceptCanonicalCurrent(entity,binding){return serializeCanonical(()=>acceptCanonicalCurrentInternal(entity,binding));}
-    async function publishAcceptedProjection(operation){
+    async function acceptCanonicalResult(entity,operation,authority){
+      return serializeCanonical(async()=>{
+        if(listenerAuthorityCurrent(authority)){
+          const accepted=await acceptCanonicalCurrentInternal(entity,operation);
+          if(!listenerAuthorityCurrent(authority))throw listenerAuthorityError();
+          return Object.freeze({accepted,authority});
+        }
+        const observed=acceptedEntities.get(key(operation.entityType,operation.entityId))||null;
+        if(!active||model.canonicalJson(observed)!==model.canonicalJson(entity))throw listenerAuthorityError();
+        const nextAuthority=listenerAuthority();
+        if(!nextAuthority)throw listenerAuthorityError();
+        return Object.freeze({accepted:observed,authority:nextAuthority});
+      });
+    }
+    async function publishAcceptedProjection(operation,authority=listenerAuthority()){
       if(!active||!eligible||projectionAllowed()!==true||typeof onProjection!=='function')return Object.freeze({ok:true,status:'deferred'});
       try{
-        const projection=await serializeCanonical(()=>model.publicTradeProjection([...acceptedEntities.values()]));
-        await onProjection(projection,operation);lastProjectionError='';return Object.freeze({ok:true,status:'published',count:projection.length});
+        const projection=await serializeCanonical(()=>{if(!listenerAuthorityCurrent(authority))throw listenerAuthorityError();return model.publicTradeProjection([...acceptedEntities.values()]);});
+        const execution=await executeAuthorizedMutation(()=>onProjection(projection,operation),authority);
+        if(!execution.started||!execution.current)throw listenerAuthorityError();
+        if(execution.error)throw execution.error;
+        lastProjectionError='';return Object.freeze({ok:true,status:'published',count:projection.length});
       }catch(error){lastProjectionError=String(error?.code||error?.message||'account-sync/public-projection-failed');emit();return model.failure('account-sync/public-projection-failed','Private sync succeeded, but the public list projection is pending');}
+    }
+    function handleListenerData(value,epoch){
+      if(!active||epoch!==lifecycleEpoch)return;
+      const version=closeListenerAuthority('listening');
+      serializeCanonical(async()=>{
+        await applyRemote(value,epoch);
+        if(!active||epoch!==lifecycleEpoch||version!==listenerAuthorityVersion)return false;
+        listenerState='healthy';clearError('listener','canonical');return true;
+      }).then(accepted=>{
+        if(!accepted||!active||epoch!==lifecycleEpoch||version!==listenerAuthorityVersion||listenerState!=='healthy')return;
+        settleListenerWaiters(Object.freeze({ok:true,status:'healthy'}));emit();if(online())drain();
+      }).catch(error=>{
+        if(!active||epoch!==lifecycleEpoch||version!==listenerAuthorityVersion)return;
+        closeListenerAuthority('failed');setError(error,'canonical','account-sync/canonical-validation-failed');settleListenerWaiters(listenerFailure(lastError));emit();
+      });
     }
     async function activate(){
       if(active)return Object.freeze({ok:true,status:eligible?'active':'disabled'});
-      const epoch=++lifecycleEpoch;active=true;
+      const epoch=++lifecycleEpoch;active=true;if(eligible)closeListenerAuthority('starting');
       const localEntities=await journal.listEntities();
       if(!active||epoch!==lifecycleEpoch)return Object.freeze({ok:true,status:'inactive'});
       for(const entity of localEntities)entities.set(key(entity.entityType,entity.entityId),entity);
@@ -126,19 +240,25 @@
       if(!active||epoch!==lifecycleEpoch)return Object.freeze({ok:true,status:'inactive'});
       emit();
       if(!eligible)return Object.freeze({ok:true,status:'disabled'});
-      unsubscribe=repository.listenAccount({onData:value=>acceptRemote(value,epoch).catch(error=>{if(active&&epoch===lifecycleEpoch){lastError=String(error?.code||error?.message||'account-sync/listener-failed');emit();}}),onError:error=>{if(active&&epoch===lifecycleEpoch){lastError=String(error?.code||'account-sync/listener-failed');emit();}}});
-      if(online())await drain();
+      let subscription;
+      try{subscription=repository.listenAccount({
+        onData:value=>handleListenerData(value,epoch),
+        onError:()=>{if(active&&epoch===lifecycleEpoch){closeListenerAuthority('failed');setError('account-sync/listener-failed','listener','account-sync/listener-failed');settleListenerWaiters(listenerFailure(lastError));emit();}}
+      });}catch(error){
+        closeListenerAuthority('failed');setError(error,'listener','account-sync/listener-failed');settleListenerWaiters(listenerFailure(lastError));emit();throw Object.assign(new Error('Account sync listener failed to attach'),{code:lastError});
+      }
+      unsubscribe=typeof subscription==='function'?subscription:null;if(listenerState==='starting')listenerState='listening';
       return Object.freeze({ok:true,status:active&&epoch===lifecycleEpoch?'active':'inactive'});
     }
     async function deactivate(){
-      lifecycleEpoch++;active=false;drainRequested=false;try{unsubscribe?.();}catch{}unsubscribe=null;clearTimeout(retryTimer);retryTimer=null;
-      await Promise.allSettled([mutationPromise,remoteAcceptPromise,drainPromise].filter(Boolean));
+      lifecycleEpoch++;active=false;closeListenerAuthority('inactive');settleListenerWaiters(listenerFailure('account-sync/session-inactive'));try{unsubscribe?.();}catch{}unsubscribe=null;
+      await Promise.allSettled([mutationPromise,repositoryMutationPromise,remoteAcceptPromise,drainPromise,manualRetryPromise].filter(Boolean));
       await emit();
       return Object.freeze({ok:true,status:'inactive'});
     }
     function scheduleDrain(nextAttemptAt){
       clearTimeout(retryTimer);retryTimer=null;
-      if(!active||!eligible||!online()||!Number.isFinite(nextAttemptAt))return;
+      if(!active||!eligible||!online()||listenerState!=='healthy'||!Number.isFinite(nextAttemptAt))return;
       retryTimer=setTimeout(()=>{retryTimer=null;drain();},Math.max(0,nextAttemptAt-Number(clock())));
     }
     async function prepareMutation({entityType,entityId,identity,kind,patch={},migration=false},{working}){
@@ -160,6 +280,7 @@
       if(!eligible)return model.failure('account-sync/disabled','Cross-device sync is not enabled for this account');
       if(!active)return model.failure('account-sync/session-inactive','Cross-device sync session is not active');
       if(!Array.isArray(mutations)||!mutations.length)return Object.freeze({ok:true,status:'unchanged',count:0,operations:Object.freeze([]),values:Object.freeze([])});
+      if(listenerState!=='healthy')return model.failure('account-sync/listener-not-ready','The live account sync listener is not ready');
       const working=new Map(entities),prepared=[];
       for(const mutation of mutations){
         const result=await prepareMutation(mutation,{working});
@@ -168,10 +289,10 @@
       }
       const optimisticEntities=[...new Set(prepared.map(item=>item.entityKey))].map(entityKey=>working.get(entityKey));
       try{await journal.enqueueOperations(prepared.map(item=>item.operation),optimisticEntities);}
-      catch(error){lastError=String(error?.code||'account-sync/journal-write-failed');emit();return model.failure('account-sync/journal-write-failed','This change could not be saved on this device');}
+      catch(error){setError(error,'journal','account-sync/journal-write-failed');emit();return model.failure('account-sync/journal-write-failed','This change could not be saved on this device');}
       optimisticRevision++;for(const item of prepared)entities.set(item.entityKey,item.value);
-      lastError='';emit();
-      if(online())drain();
+      clearError('journal','blocked-operation');emit();
+      if(online()&&listenerState==='healthy')drain();
       return Object.freeze({ok:true,status:'queued',count:prepared.length,operations:Object.freeze(prepared.map(item=>item.operation)),values:Object.freeze(prepared.map(item=>item.value))});
     }
     function mutateBatch(mutations){
@@ -190,53 +311,103 @@
     function patchMigrationEntity({entityType,entityId,patch}){return buildMutation({entityType,entityId,kind:'patch',patch,migration:true});}
     function deleteMigrationEntity({entityType,entityId}){return buildMutation({entityType,entityId,kind:'delete',migration:true});}
     function deleteEntity({entityType,entityId}){return buildMutation({entityType,entityId,kind:'delete'});}
-    async function dispatch(record,epoch){
+    function dispatchResult({ok=false,called=false,progressed=false,errorCode=''}={}){return Object.freeze({ok,called,progressed,errorCode});}
+    async function recordDispatchFailure(record,error,{manual=false}={}){
+      const code=safeErrorCode(error,'account-sync/network-failed');
+      if(manual){
+        const retained=await journal.retainBlocked(record.operationId,{errorCode:code});
+        if(retained)lastErrorCategory='blocked-operation';
+        return dispatchResult({called:true,errorCode:code});
+      }
+      const next=await journal.markAttempt(record.operationId,{retryable:retryableFailure(error),errorCode:code});
+      if(next.status==='blocked')lastErrorCategory='blocked-operation';
+      scheduleDrain(next.nextAttemptAt);return dispatchResult({called:true,errorCode:code});
+    }
+    async function dispatch(record,epoch,{manual=false}={}){
+      const authority=listenerAuthority(epoch);
       try{
-        const result=await repository.applyOperation(record.operation);
+        const execution=await executeAuthorizedMutation(()=>repository.applyOperation(record.operation),authority);
+        if(!execution.started)return dispatchResult({errorCode:'account-sync/listener-not-ready'});
+        if(execution.error){
+          if(!execution.current)return dispatchResult({called:true,errorCode:'account-sync/listener-authority-lost'});
+          return recordDispatchFailure(record,execution.error,{manual});
+        }
+        const result=execution.value;
         if(result.ok){
-          const accepted=await acceptCanonicalCurrent(result.value,record.operation);
-          if(result.conflicts?.length)await journal.markConflict(record.operationId,result.conflicts);else await journal.acknowledge(record.operationId,accepted);
-          await serializeCanonical(()=>rebuildOptimisticEntities());
-          lastSyncAt=Number(clock());lastError='';
-          if(active&&epoch===lifecycleEpoch&&record.operation.entityType==='tradeEntry')await publishAcceptedProjection(record.operation);
-          return true;
+          const canonical=await acceptCanonicalResult(result.value,record.operation,authority);
+          if(!listenerAuthorityCurrent(canonical.authority))return dispatchResult({called:true,errorCode:'account-sync/listener-authority-lost'});
+          if(result.conflicts?.length)await journal.markConflict(record.operationId,result.conflicts);else await journal.acknowledge(record.operationId,canonical.accepted);
+          if(!listenerAuthorityCurrent(canonical.authority))return dispatchResult({called:true,errorCode:'account-sync/listener-authority-lost'});
+          await serializeCanonical(()=>{if(!listenerAuthorityCurrent(canonical.authority))throw listenerAuthorityError();return rebuildOptimisticEntities();});
+          lastSyncAt=Number(clock());clearError('blocked-operation');
+          if(active&&epoch===lifecycleEpoch&&record.operation.entityType==='tradeEntry')await publishAcceptedProjection(record.operation,canonical.authority);
+          return dispatchResult({ok:true,called:true,progressed:true});
         }
         if(result.status==='conflict'||result.conflicts?.length){
           if(!Object.hasOwn(result,'current'))throw Object.assign(new Error('Canonical conflict response is incomplete'),{code:'account-sync/conflict-current-invalid'});
-          await acceptCanonicalCurrent(result.current,record.operation);
-          await journal.markConflict(record.operationId,result.conflicts||[]);await serializeCanonical(()=>rebuildOptimisticEntities());lastError='';return true;
+          const canonical=await acceptCanonicalResult(result.current,record.operation,authority);
+          if(!listenerAuthorityCurrent(canonical.authority))return dispatchResult({called:true,errorCode:'account-sync/listener-authority-lost'});
+          await journal.markConflict(record.operationId,result.conflicts||[]);
+          await serializeCanonical(()=>{if(!listenerAuthorityCurrent(canonical.authority))throw listenerAuthorityError();return rebuildOptimisticEntities();});
+          clearError('blocked-operation');return dispatchResult({ok:true,called:true,progressed:true});
         }
-        const retryable=retryableFailure(result.error),next=await journal.markAttempt(record.operationId,{retryable,errorCode:result.error?.code||'account-sync/rejected'});lastError=next.status==='blocked'?String(result.error?.code||'account-sync/rejected'):'';scheduleDrain(next.nextAttemptAt);return false;
+        if(!execution.current)return dispatchResult({called:true,errorCode:'account-sync/listener-authority-lost'});
+        return recordDispatchFailure(record,result.error||'account-sync/rejected',{manual});
       }catch(error){
-        const next=await journal.markAttempt(record.operationId,{retryable:retryableFailure(error),errorCode:String(error?.code||'account-sync/network-failed')});lastError=next.status==='blocked'?String(error?.code||'account-sync/network-failed'):'';scheduleDrain(next.nextAttemptAt);return false;
+        if(error?.code==='account-sync/listener-authority-lost')return dispatchResult({called:true,errorCode:error.code});
+        return recordDispatchFailure(record,error,{manual});
       }finally{emit();}
     }
-    async function drain(){
-      if(!active||!eligible||!online())return;
+    function drain(){
       if(drainPromise){drainRequested=true;return drainPromise;}
+      if(!active||!eligible||!online()||listenerState!=='healthy')return Promise.resolve();
       const epoch=lifecycleEpoch;
-      drainPromise=(async()=>{
+      const current=drainQueue.then(async()=>{
+        if(!active||!eligible||!online()||epoch!==lifecycleEpoch||listenerState!=='healthy')return;
         do{
           drainRequested=false;
-          for(;;){const record=await journal.nextOperation();if(!record||!online()||!active||epoch!==lifecycleEpoch)break;const progressed=await dispatch(record,epoch);if(!progressed)break;}
-          const pending=await journal.listOperations({statuses:['pending','sending']});
-          if(pending.length)scheduleDrain(Math.min(...pending.map(record=>record.nextAttemptAt)));
-          else{clearTimeout(retryTimer);retryTimer=null;}
-        }while(drainRequested&&active&&epoch===lifecycleEpoch&&eligible&&online());
-      })();
-      try{return await drainPromise;}
-      finally{drainPromise=null;emit();}
+          for(;;){const record=await journal.nextOperation();if(!record||!online()||!active||epoch!==lifecycleEpoch||listenerState!=='healthy')break;const result=await dispatch(record,epoch);if(!result.progressed)break;}
+        }while(drainRequested&&active&&eligible&&online()&&epoch===lifecycleEpoch&&listenerState==='healthy');
+        const pending=await journal.listOperations({statuses:['pending','sending']});
+        if(pending.length&&listenerState==='healthy')scheduleDrain(Math.min(...pending.map(record=>record.nextAttemptAt)));
+        else{clearTimeout(retryTimer);retryTimer=null;}
+      });
+      drainQueue=current.catch(()=>{});drainPromise=current;
+      return current.finally(()=>{if(drainPromise===current)drainPromise=null;emit();});
     }
-    async function retry(operationId){
-      const blocked=(await journal.listOperations({statuses:['blocked']})).some(record=>record.operationId===operationId);
-      if(!blocked)return model.failure('account-sync/retry-not-available','Only blocked sync changes can be retried');
-      lastError='';await journal.retryBlocked(operationId);emit();return drain();
+    function retryFailure(code,message,retried=0){return Object.freeze({...model.failure(code,message),retried});}
+    function serializeManualRetry(task){
+      if(manualRetryPromise)return manualRetryPromise;
+      manualRetryPromise=(async()=>{if(drainPromise)await drainPromise;return task();})();
+      const result=manualRetryPromise;result.finally(()=>{if(manualRetryPromise===result)manualRetryPromise=null;}).catch(()=>{});return result;
     }
-    async function retryBlocked(){
+    async function performManualRetry(records){
+      if(listenerState!=='healthy')return retryFailure('account-sync/listener-not-ready','The live account sync listener is not ready');
+      let retried=0,firstError='';
+      for(const requested of records){
+        const record=(await journal.listOperations({statuses:['blocked']})).find(item=>item.operationId===requested.operationId);
+        if(!record||!model.blockedRetryEligible(record))continue;
+        const result=await dispatch(record,lifecycleEpoch,{manual:true});if(result.called)retried++;
+        if(!result.ok){firstError=firstError||result.errorCode||'account-sync/network-failed';if(listenerState!=='healthy')break;}
+      }
+      if(firstError)return retryFailure(firstError,'One or more retained sync changes remain safely retained',retried);
+      if(!retried)return retryFailure('account-sync/retry-not-available','This retained sync change is no longer available');
+      clearError('blocked-operation');emit();return Object.freeze({ok:true,retried});
+    }
+    function retry(operationId){return serializeManualRetry(async()=>{
+      const record=(await journal.listOperations({statuses:['blocked']})).find(item=>item.operationId===operationId);
+      if(!record)return retryFailure('account-sync/retry-not-available','Only blocked sync changes can be retried');
+      if(!model.blockedRetryEligible(record))return retryFailure('account-sync/retry-unsafe','This retained sync change requires review');
+      return performManualRetry([record]);
+    });}
+    function retryBlocked(){return serializeManualRetry(async()=>{
       const blocked=await journal.listOperations({statuses:['blocked']});
-      for(const record of blocked)await journal.retryBlocked(record.operationId);
-      lastError='';emit();await drain();return Object.freeze({ok:true,retried:blocked.length});
-    }
+      if(!blocked.length)return retryFailure('account-sync/retry-empty','No retained sync change is available to retry');
+      const recoverable=blocked.filter(model.blockedRetryEligible),unsafe=blocked.filter(record=>!model.blockedRetryEligible(record));
+      if(unsafe.length)return retryFailure('account-sync/retry-unsafe','One or more retained sync changes require review');
+      if(!recoverable.length)return retryFailure('account-sync/retry-empty','No retained sync change is available to retry');
+      return performManualRetry(recoverable);
+    });}
     async function conflictDetails(){
       const conflicts=await journal.listConflicts(),records=await journal.listOperations({statuses:['conflict']}),byOperation=new Map(records.map(record=>[record.operationId,record.operation]));
       return Object.freeze(conflicts.map(conflict=>{
@@ -246,19 +417,21 @@
       }));
     }
     async function acceptConflict(conflictId){
+      const authority=await snapshot();if(!authority.listenerHealthy||!authority.controllerHealthy||authority.lastErrorCategory==='unsafe-evidence')return model.failure('account-sync/conflict-baseline-unhealthy','Conflict resolution requires a healthy canonical account snapshot');
       const resolved=await journal.resolveConflict(conflictId);if(!resolved)return model.failure('account-sync/conflict-missing','This sync conflict is no longer available');
-      lastError='';emit();return Object.freeze({ok:true,status:'accepted-account-value'});
+      clearError('blocked-operation');emit();return Object.freeze({ok:true,status:'accepted-account-value'});
     }
     async function reapplyConflict(conflictId){
+      const authority=await snapshot();if(!authority.listenerHealthy||!authority.controllerHealthy||authority.lastErrorCategory==='unsafe-evidence')return model.failure('account-sync/conflict-baseline-unhealthy','Conflict resolution requires a healthy canonical account snapshot');
       const details=(await conflictDetails()).find(item=>item.conflictId===conflictId),records=await journal.listOperations({statuses:['conflict']}),record=records.find(item=>item.operationId===String(conflictId||'').replace(/^conflict_/,''));
       if(!details||!record||record.operation.kind!=='patch'||!details.fields.length)return model.failure('account-sync/conflict-not-reapplicable','This conflict must be reviewed without retrying its original operation');
       const patch=Object.fromEntries(details.fields.map(field=>[field.path,field.deviceValue])),result=await patchEntity({entityType:details.entityType,entityId:details.entityId,patch});
       if(!result.ok)return result;
-      await journal.resolveConflict(conflictId);lastError='';emit();return Object.freeze({...result,status:'reapplied'});
+      await journal.resolveConflict(conflictId);clearError('blocked-operation');emit();return Object.freeze({...result,status:'reapplied'});
     }
     function activeEntities(type){return[...entities.values()].filter(entity=>(!type||entity.entityType===type)&&entity.deleted!==true);}
     function publicProjection(){return model.publicTradeProjection([...acceptedEntities.values()]);}
-    return Object.freeze({ownerUid:owner,eligible,activate,deactivate,snapshot,getEntity,activeEntities,publicProjection,publishAcceptedProjection,mutateBatch,addEntity,patchEntity,addMigrationEntity,patchMigrationEntity,deleteMigrationEntity,deleteEntity,drain,retry,retryBlocked,conflictDetails,acceptConflict,reapplyConflict,acceptRemote});
+    return Object.freeze({ownerUid:owner,eligible,activate,deactivate,waitForListenerReady,snapshot,getEntity,activeEntities,publicProjection,publishAcceptedProjection,runAuthorizedWatchedMutation,mutateBatch,addEntity,patchEntity,addMigrationEntity,patchMigrationEntity,deleteMigrationEntity,deleteEntity,drain,retry,retryBlocked,conflictDetails,acceptConflict,reapplyConflict,acceptRemote});
   }
 
   root.accountSyncController=Object.freeze({createAccountSyncController});

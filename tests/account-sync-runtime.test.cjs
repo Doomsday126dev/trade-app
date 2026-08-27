@@ -26,24 +26,97 @@ function source(deviceInstallId,{remote={},local={},remoteBoard={lf:[],ft:[]},lo
   };
 }
 
-function runtimeRepository(window,h){
-  let meta=null;const migrations={},recoveryCandidates={};
+function runtimeRepository(window,h,{orders={}}={}){
+  let meta=null;const migrations={},recoveryCandidates={},listeners=new Set(),events=[],calls={createMigration:0,createRecoveryCandidate:0,updateMeta:0,readAccount:0};
+  const snapshot=()=>({...h.server.snapshot(),...(meta?{meta}:{}),migrations:{...migrations},recoveryCandidates:{...recoveryCandidates}});
+  function publish(value=snapshot()){for(const listener of listeners)listener.onData(value);}
+  function failListener(error=new Error('listener failed')){for(const listener of listeners)listener.onError?.(error);}
+  function publishDirect(method){
+    const order=orders[method]||'callback-before';
+    if(order==='callback-before')publish();
+    else if(order==='microtask')queueMicrotask(publish);
+    else if(order==='promise-before')setTimeout(publish,0);
+    else if(order==='silent')return;
+    else throw new Error(`unknown direct write order: ${order}`);
+  }
   const repository={
     ...h.server,ownerUid:'uid-owner',
-    async readAccount(){return{...h.server.snapshot(),...(meta?{meta}:{}),migrations:{...migrations},recoveryCandidates:{...recoveryCandidates}};},
-    async createMigration(record){if(migrations[record.deviceMigrationId])return window.PogoDomain.accountSyncModel.failure('account-sync/migration-exists','exists');migrations[record.deviceMigrationId]=record;return{ok:true,status:'created',value:record};},
-    async createRecoveryCandidate(record){if(recoveryCandidates[record.candidateId])return window.PogoDomain.accountSyncModel.failure('account-sync/recovery-candidate-exists','exists');recoveryCandidates[record.candidateId]=record;return{ok:true,status:'created',value:record};},
-    async updateMeta(patch){if(meta&&patch.initializedAt!==meta.initializedAt)return window.PogoDomain.accountSyncModel.failure('account-sync/meta-conflict','initializedAt changed');meta={...(meta||{}),...patch};return{ok:true,status:'updated',value:meta};}
+    listenAccount(handlers){listeners.add(handlers);const unsubscribe=h.server.listenAccount({onData:()=>handlers.onData(snapshot()),onError:handlers.onError});return()=>{listeners.delete(handlers);unsubscribe();};},
+    async readAccount(){calls.readAccount++;events.push('readAccount');return snapshot();},
+    async createMigration(record){calls.createMigration++;events.push('createMigration');if(migrations[record.deviceMigrationId])return window.PogoDomain.accountSyncModel.failure('account-sync/migration-exists','exists');migrations[record.deviceMigrationId]=record;publishDirect('createMigration');return{ok:true,status:'created',value:record};},
+    async createRecoveryCandidate(record){calls.createRecoveryCandidate++;events.push('createRecoveryCandidate');if(recoveryCandidates[record.candidateId])return window.PogoDomain.accountSyncModel.failure('account-sync/recovery-candidate-exists','exists');recoveryCandidates[record.candidateId]=record;publishDirect('createRecoveryCandidate');return{ok:true,status:'created',value:record};},
+    async updateMeta(patch){
+      calls.updateMeta++;events.push('updateMeta');if(meta&&patch.initializedAt!==meta.initializedAt)return window.PogoDomain.accountSyncModel.failure('account-sync/meta-conflict','initializedAt changed');
+      const timestamp=h.clock();meta={...(meta||{}),...patch,ownerUid:'uid-owner',schemaVersion:window.PogoDomain.accountSyncModel.SCHEMA_VERSION,initializedAt:meta?.initializedAt??timestamp,updatedAt:timestamp};
+      publishDirect('updateMeta');return{ok:true,status:'updated',value:meta};
+    }
   };
-  return{repository,get meta(){return meta;},migrations,recoveryCandidates};
+  return{repository,get meta(){return meta;},migrations,recoveryCandidates,calls,events,publish,failListener,snapshot};
 }
 
-function createRuntime(window,h,repositoryState,journalState,readMigrationSources,onCanonicalEntities=()=>{},onState=()=>{},onPublicProjection=async()=>({ok:true})){
+function createRuntime(window,h,repositoryState,journalState,readMigrationSources,onCanonicalEntities=()=>{},onState=()=>{},onPublicProjection=async()=>({ok:true}),options={}){
   const journal=window.PogoTesting.accountSyncHarness.createMemoryJournal('uid-owner',journalState,h.clock);
   return window.PogoData.accountSyncRuntime.createAccountSyncRuntime({
     ownerUid:'uid-owner',username:'Owner',journal,repository:repositoryState.repository,enabled:true,writesEnabled:true,allowlistedUids:['uid-owner'],
-    readMigrationSources,onCanonicalEntities,onState,onPublicProjection,clock:h.clock,crypto:webcrypto
+    readMigrationSources,onCanonicalEntities,onState,onPublicProjection,clock:h.clock,crypto:webcrypto,...options
   });
+}
+
+async function directWriteAttempt(method,{order='callback-before',configure}={}){
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),orders={[method]:order},repositoryState=runtimeRepository(window,h,{orders}),journalState=h.createMemoryJournalState();
+  const runtime=createRuntime(window,h,repositoryState,journalState,async()=>source(`device-${method}-${order}`,{remote:{Pikachu:'H'}}));
+  if(method==='createRecoveryCandidate'){
+    await runtime.start();
+    configure?.({window,h,repositoryState,journalState,runtime,original:repositoryState.repository[method].bind(repositoryState.repository)});
+    const operation=runtime.recordRecoveryCandidate({reason:'watched-write-test',entityType:'tradeEntry',entityId:'unresolved:test',identity:{unresolved:true},values:{unresolved:true},source:'test'});
+    return{window,h,repositoryState,journalState,runtime,operation};
+  }
+  configure?.({window,h,repositoryState,journalState,runtime,original:repositoryState.repository[method].bind(repositoryState.repository)});
+  return{window,h,repositoryState,journalState,runtime,operation:runtime.start()};
+}
+
+async function directWriteScenario(method,options){
+  const context=await directWriteAttempt(method,options);return{...context,result:await context.operation};
+}
+
+function installDirectWriteBehavior(method,behavior,{repositoryState,original}){
+  const repository=repositoryState.repository;
+  if(behavior==='response-lost')repository[method]=async value=>{await original(value);throw Object.assign(new Error('response lost'),{code:'account-sync/network-failed'});};
+  else if(behavior==='read-failure'){
+    const originalRead=repository.readAccount.bind(repository);let failNextRead=false;
+    repository[method]=async value=>{const result=await original(value);failNextRead=true;return result;};
+    repository.readAccount=async()=>{
+      if(!failNextRead)return originalRead();
+      failNextRead=false;repositoryState.calls.readAccount++;repositoryState.events.push('readAccount');
+      throw Object.assign(new Error('canonical read unavailable'),{code:'account-sync/network-failed'});
+    };
+  }
+  else if(behavior==='missing')repository[method]=async value=>{
+    repositoryState.calls[method]++;repositoryState.events.push(method);return{ok:true,status:method==='updateMeta'?'updated':'created',value};
+  };
+  else if(behavior==='divergent')repository[method]=async value=>{
+    if(method==='updateMeta'){
+      const result=await original(value);repositoryState.meta.featureVersion=999;repositoryState.publish();return result;
+    }
+    repositoryState.calls[method]++;repositoryState.events.push(method);
+    if(method==='createMigration')repositoryState.migrations[value.deviceMigrationId]={...value,sourceFingerprint:'f'.repeat(64)};
+    else repositoryState.recoveryCandidates[value.candidateId]={...value,values:{substituted:true}};
+    repositoryState.publish();return{ok:true,status:'created',value};
+  };
+  else if(behavior==='owner-mismatch'||behavior==='schema-mismatch')repository[method]=async value=>{
+    if(method==='updateMeta'){
+      const result=await original(value);repositoryState.meta[behavior==='owner-mismatch'?'ownerUid':'schemaVersion']=behavior==='owner-mismatch'?'uid-other':999;repositoryState.publish();return result;
+    }
+    repositoryState.calls[method]++;repositoryState.events.push(method);
+    const replacement={...value,[behavior==='owner-mismatch'?'ownerUid':'schemaVersion']:behavior==='owner-mismatch'?'uid-other':999};
+    if(method==='createMigration')repositoryState.migrations[value.deviceMigrationId]=replacement;
+    else repositoryState.recoveryCandidates[value.candidateId]=replacement;
+    repositoryState.publish();return{ok:true,status:'created',value};
+  };
+  else if(behavior==='unrelated-turnover')repository[method]=async value=>{repositoryState.publish();return original(value);};
+  else if(behavior==='listener-failure')repository[method]=async value=>{const result=await original(value);repositoryState.failListener();return result;};
+  else if(behavior==='malformed-listener')repository[method]=async value=>{const result=await original(value);repositoryState.publish({unexpected:{private:'invalid'}});return result;};
+  else throw new Error(`unknown direct write behavior: ${behavior}`);
 }
 
 test('first migration awaits every seed and a stale pre-sync second device cannot overwrite canonical state',async()=>{
@@ -106,12 +179,84 @@ test('simultaneous divergent first-sync tabs fail closed instead of overwriting 
   assert.equal([...losingState.conflicts.values()].length,1);assert.equal(winningRuntime.projectionReady,true);
 });
 
-test('startup hydrates the exact account read before projecting even when the listener has not emitted',async()=>{
+test('startup projects the exact account read but remains pending until the listener proves healthy',async()=>{
   const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),repositoryState=runtimeRepository(window,h),firstState=h.createMemoryJournalState();
   const read=async()=>source('device-hydrate-a',{remote:{Pikachu:'H'}}),first=createRuntime(window,h,repositoryState,firstState,read);await first.start();await first.stop();
-  const silent={repository:{...repositoryState.repository,listenAccount(){return()=>{};}}},projections=[],second=createRuntime(window,h,silent,h.createMemoryJournalState(),async()=>source('device-hydrate-b',{remote:{Pikachu:'H'}}),entities=>projections.push(entities));
-  const result=await second.start();assert.equal(result.ok,true);assert.equal(second.projectionReady,true);assert.equal(projections.at(-1).length,1);
-  assert.equal(projections.at(-1)[0].identity.catalogId,'pokemon:pikachu');
+  let handlers=null,sourceReads=0;const delayed={repository:{...repositoryState.repository,listenAccount(value){handlers=value;return()=>{};}}},projections=[],states=[],second=createRuntime(window,h,delayed,h.createMemoryJournalState(),async()=>{sourceReads++;return source('device-hydrate-b',{remote:{Pikachu:'H'}});},entities=>projections.push(entities),state=>states.push(state));
+  const starting=second.start();for(let index=0;!handlers&&index<100;index++)await new Promise(resolve=>setImmediate(resolve));
+  const pending=await second.snapshot();assert.equal(second.projectionReady,false);assert.equal(projections.length,0);assert.equal(sourceReads,0);
+  assert.equal(pending.listenerState,'listening');assert.equal(pending.listenerHealthy,false);assert.equal(pending.controllerHealthy,false);assert.equal(pending.state,'pending-sync');assert.equal(pending.runtimeHealthy,false);assert.equal(states.some(value=>value.state==='saved'),false);
+  handlers.onData(await delayed.repository.readAccount());const result=await starting,ready=await second.snapshot();assert.equal(result.ok,true);assert.equal(sourceReads,1);assert.equal(projections.length,1);assert.equal(projections[0][0].identity.catalogId,'pokemon:pikachu');assert.equal(ready.listenerHealthy,true);assert.equal(ready.controllerHealthy,true);assert.equal(ready.state,'saved');assert.equal(ready.runtimeHealthy,true);
+});
+
+for(const method of ['createMigration','createRecoveryCandidate','updateMeta']){
+  for(const order of ['callback-before','microtask','promise-before'])test(`${method} reconciles exactly when the watched callback order is ${order}`,async()=>{
+    const{repositoryState,runtime,result}=await directWriteScenario(method,{order});
+    if(order==='promise-before')await new Promise(resolve=>setTimeout(resolve,5));
+    const writeIndex=repositoryState.events.lastIndexOf(method),nextWrite=repositoryState.events.findIndex((event,index)=>index>writeIndex&&['createMigration','createRecoveryCandidate','updateMeta'].includes(event)),reconciliationEvents=repositoryState.events.slice(writeIndex+1,nextWrite<0?undefined:nextWrite),snapshot=await runtime.snapshot();
+    assert.equal(result.ok,true);assert.equal(repositoryState.calls[method],1);assert.equal(repositoryState.events[writeIndex+1],'readAccount');
+    assert.equal(reconciliationEvents.filter(event=>event==='readAccount').length,1);
+    assert.equal(snapshot.listenerState,'healthy');assert.equal(snapshot.listenerHealthy,true);assert.notEqual(snapshot.lastError,'account-sync/listener-authority-lost');
+  });
+}
+
+for(const method of ['createMigration','createRecoveryCandidate','updateMeta'])test(`${method} accepts an exact committed record after an ambiguous response without resending`,async()=>{
+  const{repositoryState,runtime,result}=await directWriteScenario(method,{configure:context=>installDirectWriteBehavior(method,'response-lost',context)});
+  assert.equal(result.ok,true);assert.equal(repositoryState.calls[method],1);assert.equal((await runtime.snapshot()).listenerHealthy,true);
+});
+
+for(const method of ['createMigration','createRecoveryCandidate','updateMeta'])test(`${method} fails closed after one bounded reconciliation read and never resends`,async()=>{
+  const context=await directWriteAttempt(method,{configure:value=>installDirectWriteBehavior(method,'read-failure',value)});
+  await assert.rejects(context.operation,error=>error.code==='account-sync/watched-write-unreconciled');
+  const writeIndex=context.repositoryState.events.lastIndexOf(method),afterWrite=context.repositoryState.events.slice(writeIndex+1);
+  assert.equal(context.repositoryState.calls[method],1);assert.equal(afterWrite.filter(event=>event==='readAccount').length,1);
+  if(method!=='createRecoveryCandidate')assert.equal(context.journalState.meta.has('migration-complete'),false);
+  else assert.equal(context.journalState.recoveryCandidates.size,1);
+});
+
+for(const method of ['createMigration','createRecoveryCandidate','updateMeta']){
+  const expectedCode={createMigration:'account-sync/migration-evidence-conflict',createRecoveryCandidate:'account-sync/recovery-candidate-conflict',updateMeta:'account-sync/meta-conflict'}[method];
+  for(const behavior of ['missing','divergent','owner-mismatch','schema-mismatch'])test(`${method} fails closed when canonical readback is ${behavior}`,async()=>{
+    const context=await directWriteAttempt(method,{configure:value=>installDirectWriteBehavior(method,behavior,value)});
+    await assert.rejects(context.operation,error=>error.code===expectedCode);
+    assert.equal(context.repositoryState.calls[method],1);if(method!=='createRecoveryCandidate')assert.equal(context.journalState.meta.has('migration-complete'),false);
+    if(method==='createRecoveryCandidate')assert.equal(context.journalState.recoveryCandidates.size,1);
+  });
+}
+
+for(const method of ['createMigration','createRecoveryCandidate','updateMeta'])test(`${method} permits unrelated valid same-session listener turnover only after exact readback`,async()=>{
+  const{repositoryState,result,runtime}=await directWriteScenario(method,{configure:context=>installDirectWriteBehavior(method,'unrelated-turnover',context)});
+  assert.equal(result.ok,true);assert.equal(repositoryState.calls[method],1);assert.equal((await runtime.snapshot()).listenerHealthy,true);
+});
+
+for(const method of ['createMigration','createRecoveryCandidate','updateMeta']){
+  for(const [behavior,code] of [['listener-failure','account-sync/listener-failed'],['malformed-listener','account-sync/remote-entity-invalid']])test(`${method} rejects ${behavior} during the watched write`,async()=>{
+    const context=await directWriteAttempt(method,{order:behavior==='malformed-listener'?'silent':'callback-before',configure:value=>installDirectWriteBehavior(method,behavior,value)});
+    await assert.rejects(context.operation,error=>error.code===code);
+    assert.equal(context.repositoryState.calls[method],1);if(method!=='createRecoveryCandidate')assert.equal(context.journalState.meta.has('migration-complete'),false);
+  });
+}
+
+for(const method of ['createMigration','createRecoveryCandidate','updateMeta'])test(`${method} cannot complete into a stopped replacement runtime`,async()=>{
+  let releaseWrite,notifyStarted;const writeGate=new Promise(resolve=>{releaseWrite=resolve;}),started=new Promise(resolve=>{notifyStarted=resolve;});
+  const context=await directWriteAttempt(method,{configure:({repositoryState,original})=>{repositoryState.repository[method]=async value=>{notifyStarted();await writeGate;return original(value);};}});
+  await started;const stopping=context.runtime.stop();await Promise.resolve();releaseWrite();
+  await assert.rejects(context.operation,error=>error.code==='account-sync/session-changed');await stopping;
+  assert.equal(context.repositoryState.calls[method],1);if(method!=='createRecoveryCandidate')assert.equal(context.journalState.meta.has('migration-complete'),false);
+});
+
+test('an initial listener timeout fails once without an automatic reconnect loop',async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),repositoryState=runtimeRepository(window,h),first=createRuntime(window,h,repositoryState,h.createMemoryJournalState(),async()=>source('device-timeout-a',{remote:{Pikachu:'H'}}));await first.start();await first.stop();
+  let subscriptions=0;const silent={repository:{...repositoryState.repository,listenAccount(){subscriptions++;return()=>{};}}},states=[],runtime=createRuntime(window,h,silent,h.createMemoryJournalState(),async()=>source('device-timeout-b',{remote:{Pikachu:'H'}}),()=>{},state=>states.push(state),async()=>({ok:true}),{listenerReadyTimeoutMs:20});
+  await assert.rejects(runtime.start(),error=>error.code==='account-sync/listener-timeout');await new Promise(resolve=>setTimeout(resolve,30));const failed=await runtime.snapshot();
+  assert.equal(subscriptions,1);assert.equal(runtime.projectionReady,false);assert.equal(failed.listenerState,'failed');assert.equal(failed.listenerHealthy,false);assert.equal(failed.controllerHealthy,false);assert.equal(failed.state,'sync-error');assert.equal(failed.lastError,'account-sync/listener-timeout');assert.equal(failed.lastErrorCategory,'listener');assert.equal(states.some(value=>value.state==='saved'),false);
+});
+
+test('a silent listener blocks migration source reads, seed replay, and every direct migration write',async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),repositoryState=runtimeRepository(window,h),state=h.createMemoryJournalState();let sourceReads=0,applyCalls=0,migrationWrites=0,candidateWrites=0,metaWrites=0;
+  const original=repositoryState.repository;const silent={repository:{...original,listenAccount(){return()=>{};},async applyOperation(value){applyCalls++;return original.applyOperation(value);},async createMigration(value){migrationWrites++;return original.createMigration(value);},async createRecoveryCandidate(value){candidateWrites++;return original.createRecoveryCandidate(value);},async updateMeta(value){metaWrites++;return original.updateMeta(value);}}};
+  const runtime=createRuntime(window,h,silent,state,async()=>{sourceReads++;return source('device-silent-migration',{remote:{Pikachu:'H'},queue:{queued:{kind:'my-list-update',path:'wishlist/Owner',data:{Pikachu:'M'}}}});},()=>{},()=>{},async()=>({ok:true}),{listenerReadyTimeoutMs:20});
+  await assert.rejects(runtime.start(),error=>error.code==='account-sync/listener-timeout');assert.equal(sourceReads,0);assert.equal(applyCalls,0);assert.equal(migrationWrites,0);assert.equal(candidateWrites,0);assert.equal(metaWrites,0);assert.equal(state.operations.size,0);assert.equal(state.entities.size,0);assert.equal(runtime.projectionReady,false);
 });
 
 test('migration cannot become projection-ready when canonical meta commitment fails',async()=>{
@@ -119,6 +264,19 @@ test('migration cannot become projection-ready when canonical meta commitment fa
   repositoryState.repository.updateMeta=async()=>window.PogoDomain.accountSyncModel.failure('account-sync/meta-conflict','meta rejected');
   const runtime=createRuntime(window,h,repositoryState,state,async()=>source('device-meta-fail',{remote:{Pikachu:'H'}}));
   await assert.rejects(runtime.start(),error=>error.code==='account-sync/meta-conflict');assert.equal(runtime.projectionReady,false);
+});
+
+test('catalog projection failure remains a canonical error and never becomes projection-ready',async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),repositoryState=runtimeRepository(window,h),state=h.createMemoryJournalState(),runtime=createRuntime(window,h,repositoryState,state,async()=>source('device-projection-fail',{remote:{Pikachu:'H'}}),()=>false);
+  await assert.rejects(runtime.start(),error=>error.code==='account-sync/catalog-projection-unresolved');
+  const snapshot=await runtime.snapshot();assert.equal(runtime.projectionReady,false);assert.equal(snapshot.state,'sync-error');assert.equal(snapshot.lastError,'account-sync/catalog-projection-unresolved');assert.equal(snapshot.lastErrorCategory,'canonical');assert.equal(snapshot.runtimeHealthy,false);
+});
+
+test('tampered local migration completion evidence remains blocked across restart',async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),repositoryState=runtimeRepository(window,h),state=h.createMemoryJournalState(),read=async()=>source('device-evidence',{remote:{Pikachu:'H'}}),first=createRuntime(window,h,repositoryState,state,read);
+  await first.start();await first.stop();const completed=state.meta.get('migration-complete');state.meta.set('migration-complete',{...completed,sourceFingerprint:'f'.repeat(64)});
+  const restarted=createRuntime(window,h,repositoryState,state,read);await assert.rejects(restarted.start(),error=>error.code==='account-sync/migration-evidence-conflict');
+  const snapshot=await restarted.snapshot();assert.equal(restarted.projectionReady,false);assert.equal(snapshot.state,'sync-error');assert.equal(snapshot.lastError,'account-sync/migration-evidence-conflict');assert.equal(snapshot.lastErrorCategory,'migration');
 });
 
 test('migration never publishes a partial public projection and publishes one complete snapshot only after verification',async()=>{

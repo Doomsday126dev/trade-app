@@ -5,6 +5,87 @@
   if(!model||!migration||!product||!controllerApi)throw new Error('Account sync runtime dependencies must load first');
   const MIGRATION_COMPLETE_META='migration-complete';
   const MIGRATION_RECORD_KEYS=Object.freeze(['schemaVersion','ownerUid','deviceMigrationId','sourceFingerprint','deviceInstallHash','createdAt','completedAt','seedCount','candidateCount','verified','legacyRetained']);
+  const META_RECORD_KEYS=Object.freeze(['schemaVersion','ownerUid','initialized','initializedAt','updatedAt','featureVersion']);
+  const HISTORICAL_RETRY_CODE='account-sync/committed-entity-invalid';
+
+  function count(value){const number=Number(value);return Number.isSafeInteger(number)&&number>0?number:0;}
+  function diagnosticCode(value,fallback='account-sync/unknown'){
+    const code=String(value?.code||value||'');return/^account-sync\/[a-z0-9-]{1,80}$/.test(code)?code:fallback;
+  }
+  function diagnosticCategory(value,fallback='runtime'){
+    const category=String(value||'');return new Set(['blocked-operation','canonical','conflict','healthy','journal','listener','migration','offline','pending-sync','projection','retained-change','review-required','runtime','session','startup','unsafe-evidence']).has(category)?category:fallback;
+  }
+  function blockedEvidence(snapshot,blockedCount,code){
+    let recoverableBlockedCount=count(snapshot.recoverableBlockedCount),unsafeBlockedCount=count(snapshot.unsafeBlockedCount);
+    if(recoverableBlockedCount+unsafeBlockedCount!==blockedCount){
+      recoverableBlockedCount=0;unsafeBlockedCount=0;
+      if(blockedCount){if(model.blockedRetryCategory(code)!=='unsafe')recoverableBlockedCount=blockedCount;else unsafeBlockedCount=blockedCount;}
+    }
+    return Object.freeze({recoverableBlockedCount,unsafeBlockedCount});
+  }
+  function recoveryPlan({snapshot={},runtimePresent=false,projectionReady=false,sessionCurrent=true}={}){
+    const pendingCount=count(snapshot.pendingCount),blockedCount=count(snapshot.blockedCount),conflictCount=count(snapshot.conflictCount),reviewCount=count(snapshot.recoveryCandidateCount),state=String(snapshot.state||'sync-error');
+    const code=diagnosticCode(snapshot.lastError||snapshot.blockedErrorCode,blockedCount?'account-sync/blocked-operation':'account-sync/unknown');
+    const{recoverableBlockedCount,unsafeBlockedCount}=blockedEvidence(snapshot,blockedCount,code),base={pendingCount,blockedCount,recoverableBlockedCount,unsafeBlockedCount,conflictCount,reviewCount};
+    if(!sessionCurrent||code==='account-sync/session-changed'||code==='account-sync/session-inactive')return Object.freeze({action:'none',category:'session',code:'account-sync/session-changed',...base});
+    if(model.unsafeRecoveryCode(snapshot.lastError||code)||snapshot.lastErrorCategory==='canonical'||snapshot.lastErrorCategory==='unsafe-evidence'||unsafeBlockedCount)return Object.freeze({action:'none',category:'unsafe-evidence',code,...base});
+    if(conflictCount||state==='conflict')return Object.freeze({action:'review-conflict',category:'conflict',code:'account-sync/conflict',...base});
+    if(reviewCount||state==='review-required')return Object.freeze({action:'none',category:'review-required',code:'account-sync/review-required',...base});
+    if(blockedCount&&recoverableBlockedCount===blockedCount&&snapshot.listenerHealthy===true&&snapshot.controllerHealthy===true)return Object.freeze({action:'retry-blocked',category:'retained-change',code,...base});
+    if(state==='offline'||state==='pending-sync'||['starting','listening'].includes(snapshot.listenerState))return Object.freeze({action:'none',category:state==='offline'?'offline':'pending-sync',code:state==='offline'?'account-sync/offline':'account-sync/pending',...base});
+    if(state==='sync-error'||state==='inactive'||!runtimePresent||!projectionReady||snapshot.active!==true||snapshot.listenerHealthy!==true||snapshot.controllerHealthy!==true)return Object.freeze({action:'restart-runtime',category:diagnosticCategory(snapshot.lastErrorCategory,!projectionReady?'projection':'runtime'),code,...base});
+    return Object.freeze({action:'none',category:'healthy',code:'account-sync/healthy',...base});
+  }
+  function healthySnapshot({snapshot={},runtimePresent=false,projectionReady=false,sessionCurrent=true}={}){
+    return sessionCurrent&&runtimePresent&&projectionReady&&snapshot.state==='saved'&&snapshot.active===true&&snapshot.listenerHealthy===true&&snapshot.controllerHealthy===true&&!snapshot.lastError&&!count(snapshot.pendingCount)&&!count(snapshot.blockedCount)&&!count(snapshot.conflictCount)&&!count(snapshot.recoveryCandidateCount);
+  }
+  function sanitizedDiagnostic({snapshot={},runtimePresent=false,projectionReady=false,sessionCurrent=true,recoveryOutcome='idle',release='unknown'}={}){
+    const plan=recoveryPlan({snapshot,runtimePresent,projectionReady,sessionCurrent}),outcome=/^(?:idle|running|recovered|failed|pending|review)$/.test(String(recoveryOutcome))?String(recoveryOutcome):'failed';
+    return Object.freeze({code:plan.code,category:plan.category,pendingCount:plan.pendingCount,blockedCount:plan.blockedCount,recoverableBlockedCount:plan.recoverableBlockedCount,unsafeBlockedCount:plan.unsafeBlockedCount,conflictCount:plan.conflictCount,reviewCount:plan.reviewCount,runtime:runtimePresent&&snapshot.active===true?'active':'inactive',listener:snapshot.listenerHealthy===true?'healthy':snapshot.listenerState==='failed'?'failed':'not-ready',projection:projectionReady?'ready':'not-ready',recoveryOutcome:outcome,release:/^\d{4}-\d{2}-\d{2}\.\d+$/.test(String(release))?String(release):'unknown'});
+  }
+  function createRecoveryCoordinator({capture,isCurrent,retryBlocked,restart,recapture,onProgress=()=>{}}={}){
+    if(typeof capture!=='function'||typeof isCurrent!=='function'||typeof retryBlocked!=='function'||typeof restart!=='function'||typeof recapture!=='function')throw new TypeError('Account sync recovery coordinator dependencies are incomplete');
+    let inFlight=null,attempts=0;
+    function publish(value){try{onProgress(Object.freeze(value));}catch{}}
+    function result(ok,status,plan,attempt,extra={}){return Object.freeze({ok,status,action:plan.action,category:plan.category,attempt,...extra,code:diagnosticCode(extra.code||plan.code)});}
+    function recover(){
+      if(inFlight)return inFlight;
+      const work=(async()=>{
+        let context,plan,attempt=0,retried=0;
+        try{
+          context=await capture();plan=recoveryPlan(context);
+          if(plan.action==='review-conflict')return result(false,'review',plan,attempt,{code:'account-sync/conflict'});
+          if(plan.action==='none')return result(false,'unavailable',plan,attempt);
+          attempt=++attempts;publish({status:'running',attempt,action:plan.action,category:plan.category});
+          if(!isCurrent(context))return result(false,'failed',plan,attempt,{code:'account-sync/session-changed'});
+          if(plan.action==='retry-blocked'){
+            const retriedResult=await retryBlocked(context);retried=count(retriedResult?.retried);
+            if(!retriedResult?.ok||!retried)return result(false,'failed',plan,attempt,{code:retriedResult?.error?.code||'account-sync/retry-empty',retried});
+            if(!isCurrent(context))return result(false,'failed',plan,attempt,{code:'account-sync/session-changed',retried});
+            context=await recapture(context);const afterRetry=recoveryPlan(context);
+            if(healthySnapshot(context))return result(true,'recovered',plan,attempt,{code:'account-sync/recovered',retried});
+            if(afterRetry.action==='restart-runtime'&&!afterRetry.pendingCount&&!afterRetry.blockedCount&&!afterRetry.conflictCount&&!afterRetry.reviewCount)context=await restart(context);
+            else return result(false,afterRetry.category==='pending-sync'?'pending':afterRetry.action==='review-conflict'?'review':'failed',afterRetry,attempt,{retried});
+          }else{
+            context=await restart(context);
+            if(!isCurrent(context))return result(false,'failed',plan,attempt,{code:'account-sync/session-changed',retried});
+            context=await recapture(context);const afterRestart=recoveryPlan(context);
+            if(afterRestart.action==='retry-blocked'){
+              const retriedResult=await retryBlocked(context);retried=count(retriedResult?.retried);
+              if(!retriedResult?.ok||!retried)return result(false,'failed',afterRestart,attempt,{code:retriedResult?.error?.code||'account-sync/retry-empty',retried});
+            }
+          }
+          if(!isCurrent(context))return result(false,'failed',plan,attempt,{code:'account-sync/session-changed',retried});
+          context=await recapture(context);
+          if(healthySnapshot(context))return result(true,'recovered',plan,attempt,{code:'account-sync/recovered',retried});
+          const after=recoveryPlan(context);return result(false,after.category==='pending-sync'?'pending':after.action==='review-conflict'?'review':'failed',after,attempt,{retried});
+        }catch(error){return result(false,'failed',plan||Object.freeze({action:'none',category:'runtime',code:'account-sync/recovery-failed'}),attempt,{code:diagnosticCode(error,'account-sync/recovery-failed'),retried});}
+      })();
+      inFlight=work.then(value=>{publish({status:value.status,attempt:value.attempt,action:value.action,category:value.category,code:value.code});return value;}).finally(()=>{inFlight=null;});
+      return inFlight;
+    }
+    return Object.freeze({recover,get active(){return!!inFlight;}});
+  }
 
   function migrationRecord(account,deviceMigrationId){return account?.migrations?.[deviceMigrationId]||null;}
   function flattenSeed(seed){
@@ -16,31 +97,62 @@
     if(model.integer(value.createdAt)===null||model.integer(value.completedAt)===null||value.completedAt<value.createdAt)return false;
     return['schemaVersion','ownerUid','deviceMigrationId','sourceFingerprint','deviceInstallHash','seedCount','candidateCount','verified','legacyRetained'].every(key=>value[key]===expected[key]);
   }
+  function compatibleRecoveryCandidate(value,expected){
+    if(!model.plainObject(value)||Object.keys(value).sort().join(',')!==Object.keys(expected).sort().join(',')||model.integer(value.createdAt)===null)return false;
+    const actualComparable={...value},expectedComparable={...expected};delete actualComparable.createdAt;delete expectedComparable.createdAt;
+    return model.canonicalJson(actualComparable)===model.canonicalJson(expectedComparable);
+  }
+  function compatibleMetaRecord(value,expected,previous){
+    if(!model.plainObject(value)||Object.keys(value).sort().join(',')!==[...META_RECORD_KEYS].sort().join(','))return false;
+    if(value.schemaVersion!==model.SCHEMA_VERSION||value.ownerUid!==expected.ownerUid||value.initialized!==true||value.featureVersion!==expected.featureVersion)return false;
+    const initializedAt=model.integer(value.initializedAt),updatedAt=model.integer(value.updatedAt);
+    if(initializedAt===null||updatedAt===null||updatedAt<initializedAt)return false;
+    const priorInitializedAt=model.integer(previous?.initializedAt);
+    return priorInitializedAt===null||initializedAt===priorInitializedAt;
+  }
   function createAccountSyncRuntime({
     ownerUid,username,journal,repository,enabled,writesEnabled,allowlistedUids,readMigrationSources,
     onState,onCanonicalEntities,onPublicProjection,onMigrationState,online=()=>global.navigator?.onLine!==false,
-    clock=()=>Date.now(),crypto=global.crypto
+    clock=()=>Date.now(),crypto=global.crypto,listenerReadyTimeoutMs=8000
   }={}){
     const owner=model.firebaseKey(ownerUid,128),name=model.exactText(username,64);
     if(!owner||!name||!journal||!repository||typeof readMigrationSources!=='function')throw new TypeError('Account sync runtime binding is invalid');
-    let projectionReady=false,stopped=false,startPromise=null,stopPromise=null,lastPlan=null;
-    function notifyState(state){if(!stopped)onState?.(Object.freeze({...state,migrationReady:projectionReady}));}
+    let projectionReady=false,stopped=false,startPromise=null,stopPromise=null,lastPlan=null,startupError='',startupErrorCategory='',migrationState='inactive';
+    function runtimeState(state){
+      const lastError=startupError||state.lastError||'',lastErrorCategory=startupErrorCategory||state.lastErrorCategory||'',currentState=lastError?'sync-error':state.state==='saved'&&!projectionReady?'pending-sync':state.state;
+      return Object.freeze({...state,state:currentState,lastError,lastErrorCategory,projectionReady,migrationReady:projectionReady,migrationState,runtimeHealthy:currentState==='saved'&&projectionReady&&state.controllerHealthy===true});
+    }
+    function notifyState(state){if(!stopped)onState?.(runtimeState(state));}
     const controller=controllerApi.createAccountSyncController({
       journal,repository,ownerUid:owner,enabled,writesEnabled,allowlistedUids,online,clock,crypto,
       onState:notifyState,
-      onEntities:entities=>{if(projectionReady&&!stopped)onCanonicalEntities?.(entities);},
+      onEntities:entities=>{
+        if(!projectionReady||stopped)return;
+        try{
+          if(onCanonicalEntities?.(entities)===false)throw Object.assign(new Error('Canonical account projection is unresolved'),{code:'account-sync/catalog-projection-unresolved'});
+        }catch(error){
+          projectionReady=false;startupError=diagnosticCode(error,'account-sync/catalog-projection-unresolved');startupErrorCategory='canonical';notifyMigration('blocked',{code:startupError});
+          Promise.resolve(controller.snapshot()).then(notifyState).catch(()=>{});
+        }
+      },
       onProjection:onPublicProjection,projectionAllowed:()=>projectionReady&&!stopped
     });
     function requireRunning(){if(stopped)throw Object.assign(new Error('Account sync runtime is closed'),{code:'account-sync/runtime-closed'});}
-    function notifyMigration(state,detail={}){onMigrationState?.(Object.freeze({state,...detail}));}
-    async function addSeed(seed){
+    function notifyMigration(state,detail={}){migrationState=state;onMigrationState?.(Object.freeze({state,...detail}));}
+    async function requireListenerAuthority(){
+      const ready=await controller.waitForListenerReady({timeoutMs:listenerReadyTimeoutMs});
       requireRunning();
+      if(!ready?.ok)throw Object.assign(new Error('The live account sync listener did not become ready'),{code:ready?.error?.code||'account-sync/listener-failed'});
+    }
+    async function addSeed(seed){
+      requireRunning();await requireListenerAuthority();
       const result=await controller.addMigrationEntity({entityType:seed.entityType,entityId:seed.entityId,identity:seed.identity,values:flattenSeed(seed)});
       requireRunning();
       if(!result.ok)throw Object.assign(new Error(result.error.message),{code:result.error.code});
+      await controller.drain();requireRunning();
     }
     async function replayMutation(mutation){
-      requireRunning();
+      requireRunning();await requireListenerAuthority();
       const result=mutation.kind==='patch'
         ?await controller.patchMigrationEntity({entityType:mutation.entityType,entityId:mutation.entityId,patch:mutation.patch})
         :mutation.kind==='delete'
@@ -48,6 +160,7 @@
           :model.failure('account-sync/migration-replay-invalid','Migration replay operation is invalid');
       requireRunning();
       if(!result.ok)throw Object.assign(new Error(result.error.message),{code:result.error.code});
+      await controller.drain();requireRunning();
     }
     async function putCandidate(raw){
       requireRunning();
@@ -56,14 +169,16 @@
       requireRunning();
       notifyState(await controller.snapshot());
       requireRunning();
-      const created=await repository.createRecoveryCandidate(candidate);
-      requireRunning();
-      if(created.ok)return created;
-      if(created.error?.code!=='account-sync/recovery-candidate-exists')throw Object.assign(new Error(created.error?.message||'Recovery candidate write failed'),{code:created.error?.code});
-      const account=await repository.readAccount(),existing=account?.recoveryCandidates?.[candidate.candidateId];
-      const comparable=value=>{const copy={...(value||{})};delete copy.createdAt;return copy;};
-      if(model.canonicalJson(comparable(existing))!==model.canonicalJson(comparable(candidate)))throw Object.assign(new Error('Existing recovery candidate differs'),{code:'account-sync/recovery-candidate-conflict'});
-      return Object.freeze({ok:true,status:'idempotent',value:existing});
+      const created=await controller.runAuthorizedWatchedMutation({
+        write:()=>repository.createRecoveryCandidate(candidate),
+        timeoutMs:listenerReadyTimeoutMs,
+        reconcile:({account,result})=>{
+          const existing=account?.recoveryCandidates?.[candidate.candidateId];
+          if(!compatibleRecoveryCandidate(existing,candidate))return model.failure('account-sync/recovery-candidate-conflict','Canonical recovery candidate evidence differs or is missing');
+          return Object.freeze({ok:true,status:result?.ok&&result.status==='created'?'created':'idempotent',value:existing});
+        }
+      });
+      requireRunning();return created;
     }
     async function ensureMigration(){
       requireRunning();
@@ -110,15 +225,16 @@
         record={schemaVersion:model.SCHEMA_VERSION,ownerUid:owner,deviceMigrationId:plan.deviceMigrationId,sourceFingerprint:plan.sourceFingerprint,deviceInstallHash,createdAt,completedAt:Number(clock()),seedCount:plan.verificationSeeds.length+(plan.verificationTombstones?.length||0),candidateCount:plan.recoveryCandidates.length,verified:true,legacyRetained:true};
         const verified=await migration.verifyMigration(plan,{canonicalEntities:[...Object.values(accountVerified?.tradeEntries||{}),...Object.values(accountVerified?.favorites||{}),...Object.values(accountVerified?.tags||{})],migrationRecord:record,recoveryCandidates:Object.values(accountVerified?.recoveryCandidates||{}),requireExact:true});
         if(!verified.ok)throw Object.assign(new Error(verified.error.message),{code:verified.error.code});
-        const created=await repository.createMigration(record);
-        requireRunning();
-        if(!created.ok){
-          if(created.error?.code!=='account-sync/migration-exists')throw Object.assign(new Error(created.error?.message||'Migration record write failed'),{code:created.error?.code});
-          accountVerified=await repository.readAccount();requireRunning();
-          const concurrent=migrationRecord(accountVerified,plan.deviceMigrationId);
-          if(!compatibleMigrationRecord(concurrent,record))throw Object.assign(new Error('Existing migration evidence differs'),{code:'account-sync/migration-evidence-conflict'});
-          record=concurrent;
-        }
+        const created=await controller.runAuthorizedWatchedMutation({
+          write:()=>repository.createMigration(record),
+          timeoutMs:listenerReadyTimeoutMs,
+          reconcile:({account,result})=>{
+            const existingRecord=migrationRecord(account,plan.deviceMigrationId);
+            if(!compatibleMigrationRecord(existingRecord,record))return model.failure('account-sync/migration-evidence-conflict','Canonical migration evidence differs or is missing');
+            return Object.freeze({ok:true,status:result?.ok&&result.status==='created'?'created':'idempotent',value:existingRecord});
+          }
+        });
+        requireRunning();record=created.value;
       }else if(existing.sourceFingerprint!==plan.sourceFingerprint||existing.verified!==true||existing.legacyRetained!==true){
         throw Object.assign(new Error('Persisted migration evidence does not match this device source'),{code:'account-sync/migration-evidence-conflict'});
       }
@@ -126,9 +242,15 @@
       requireRunning();
       if(!verified.ok)throw Object.assign(new Error(verified.error.message),{code:verified.error.code});
       if(accountBefore?.meta?.initialized!==true){
-        const meta=await repository.updateMeta({ownerUid:owner,initialized:true,initializedAt:accountBefore?.meta?.initializedAt??record.createdAt,featureVersion:model.SCHEMA_VERSION});
+        const expectedMeta={ownerUid:owner,initialized:true,initializedAt:accountBefore?.meta?.initializedAt??record.createdAt,featureVersion:model.SCHEMA_VERSION};
+        await controller.runAuthorizedWatchedMutation({
+          write:()=>repository.updateMeta(expectedMeta),
+          timeoutMs:listenerReadyTimeoutMs,
+          reconcile:({account})=>compatibleMetaRecord(account?.meta,expectedMeta,accountBefore?.meta)
+            ?Object.freeze({ok:true,status:'reconciled',value:account.meta})
+            :model.failure('account-sync/meta-conflict','Canonical account metadata differs or is incomplete')
+        });
         requireRunning();
-        if(!meta.ok)throw Object.assign(new Error(meta.error?.message||'Canonical sync metadata was not committed'),{code:meta.error?.code||'account-sync/meta-conflict'});
       }
       await journal.setMeta(MIGRATION_COMPLETE_META,{schemaVersion:model.SCHEMA_VERSION,ownerUid:owner,deviceMigrationId:record.deviceMigrationId,sourceFingerprint:record.sourceFingerprint,deviceInstallHash:record.deviceInstallHash,createdAt:record.createdAt,completedAt:record.completedAt,seedCount:record.seedCount,candidateCount:record.candidateCount,verified:true,legacyRetained:true});
       requireRunning();
@@ -138,13 +260,21 @@
     function start(){
       if(startPromise)return startPromise;
       startPromise=(async()=>{
-        requireRunning();
-        const activated=await controller.activate();
-        requireRunning();
-        if(!controller.eligible)return activated;
         try{
-          const plan=await ensureMigration();requireRunning();projectionReady=true;onCanonicalEntities?.(Object.freeze(controller.activeEntities()));await controller.publishAcceptedProjection(Object.freeze({kind:'migration-complete',deviceMigrationId:plan.deviceMigrationId}));requireRunning();notifyState(await controller.snapshot());return Object.freeze({ok:true,status:'active',plan});
-        }catch(error){if(!stopped)notifyMigration('blocked',{code:String(error?.code||'account-sync/migration-failed')});throw error;}
+          requireRunning();startupError='';startupErrorCategory='';migrationState='activating';
+          const activated=await controller.activate();requireRunning();
+          if(!controller.eligible)return activated;
+          const listenerReady=await controller.waitForListenerReady({timeoutMs:listenerReadyTimeoutMs});requireRunning();
+          if(!listenerReady?.ok)throw Object.assign(new Error('The live account sync listener did not become ready'),{code:listenerReady?.error?.code||'account-sync/listener-failed'});
+          migrationState='reading';const plan=await ensureMigration();requireRunning();projectionReady=true;
+          if(onCanonicalEntities?.(Object.freeze(controller.activeEntities()))===false)throw Object.assign(new Error('Canonical account projection is unresolved'),{code:'account-sync/catalog-projection-unresolved'});
+          await controller.publishAcceptedProjection(Object.freeze({kind:'migration-complete',deviceMigrationId:plan.deviceMigrationId}));requireRunning();
+          startupError='';startupErrorCategory='';notifyState(await controller.snapshot());return Object.freeze({ok:true,status:'active',plan});
+        }catch(error){
+          projectionReady=false;startupError=diagnosticCode(error,'account-sync/migration-failed');startupErrorCategory=startupError==='account-sync/catalog-projection-unresolved'?'canonical':/^account-sync\/listener-/.test(startupError)?'listener':migrationState==='activating'?'startup':'migration';
+          if(!stopped){notifyMigration('blocked',{code:startupError});try{notifyState(await controller.snapshot());}catch{}}
+          throw error;
+        }
       })();
       return startPromise;
     }
@@ -158,9 +288,9 @@
       stopPromise=(async()=>{await controller.deactivate();await startPromise?.catch(()=>{});await journal.close?.();return Object.freeze({ok:true,status:'closed'});})();
       return stopPromise;
     }
-    function snapshot(){return controller.snapshot();}
+    async function snapshot(){return runtimeState(await controller.snapshot());}
     return Object.freeze({ownerUid:owner,username:name,controller,start,stop,snapshot,recordRecoveryCandidate,retryBlocked:()=>controller.retryBlocked(),conflictDetails:()=>controller.conflictDetails(),acceptConflict:id=>controller.acceptConflict(id),reapplyConflict:id=>controller.reapplyConflict(id),get migrationPlan(){return lastPlan;},get projectionReady(){return projectionReady;}});
   }
 
-  root.accountSyncRuntime=Object.freeze({createAccountSyncRuntime});
+  root.accountSyncRuntime=Object.freeze({HISTORICAL_RETRY_CODE,diagnosticCode,diagnosticCategory,recoveryPlan,healthySnapshot,sanitizedDiagnostic,createRecoveryCoordinator,createAccountSyncRuntime});
 })(window);

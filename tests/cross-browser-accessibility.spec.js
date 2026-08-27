@@ -515,6 +515,64 @@ test.describe('audit cross-browser contracts',()=>{
     await expect(page.locator('#account-trigger')).toBeFocused();
   });
 
+  test('account sync recovery is keyboard operable and exposes only a bounded mobile diagnostic',async({page})=>{
+    await page.setViewportSize({width:1024,height:760});
+    await page.goto(`./?sync-recovery-a11y=${Date.now()}`,{waitUntil:'domcontentloaded'});
+    await waitForApp(page);await establishAccount(page,'DiagnosticOwner');
+    const initial=await page.evaluate(()=>{
+      auth={currentUser:{uid:'uid-sync-diagnostic'}};accountSyncEligibleUid='uid-sync-diagnostic';
+      managedAccountSyncRuntime={ownerUid:'uid-sync-diagnostic',projectionReady:false};
+      accountSyncUiState=Object.freeze({state:'sync-error',eligible:true,active:true,listenerState:'failed',listenerHealthy:false,controllerHealthy:false,pendingCount:0,blockedCount:0,conflictCount:0,recoveryCandidateCount:0,lastError:'account-sync/listener-failed',lastErrorCategory:'listener'});
+      accountSyncRecoveryState=Object.freeze({status:'idle',attempt:0,code:'account-sync/none'});_syncStatusCurrent='online';refreshSyncUi();
+      return{diagnostic:document.getElementById('trainer-sync-diagnostic').textContent,diagnosticHidden:document.getElementById('trainer-sync-diagnostic').hidden,recoveryHidden:document.getElementById('trainer-sync-recovery').hidden,recoveryLabel:document.getElementById('trainer-sync-recovery-label').textContent};
+    });
+    expect(initial.diagnosticHidden).toBe(false);expect(initial.recoveryHidden).toBe(false);expect(initial.recoveryLabel).toBe('Restart sync');expect(initial.diagnostic).toContain('account-sync/listener-failed');expect(initial.diagnostic).toContain('2026-08-26.70');expect(initial.diagnostic).not.toContain('DiagnosticOwner');expect(initial.diagnostic).not.toContain('uid-sync-diagnostic');
+    const pill=page.locator('#sync-pill');await pill.focus();await expect(pill).toBeFocused();
+    await page.evaluate(()=>{window.__syncActivationCount=0;openSyncDetail=()=>{window.__syncActivationCount++;};});
+    await page.keyboard.press('Enter');await page.keyboard.press('Space');expect(await page.evaluate(()=>window.__syncActivationCount)).toBe(2);
+    await page.setViewportSize({width:390,height:844});
+    const mobile=await page.evaluate(()=>{
+      getAccountSyncRecoveryCoordinator();
+      accountSyncRecoveryState=Object.freeze({status:'running',attempt:1,code:'account-sync/recovery-running'});
+      accountSyncRecoveryStateBinding=accountSyncRecoveryPresentationBinding(accountSyncRecoverySessionBinding);refreshSyncUi();
+      const bound={buttonDisabled:document.getElementById('trainer-sync-recovery').disabled,busy:document.getElementById('sync-pill').getAttribute('aria-busy'),status:accountSyncEffectiveRecoveryState().status};
+      accountSyncRuntimeGeneration++;refreshSyncUi();
+      return{overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth,pill:document.getElementById('sync-pill').getBoundingClientRect().toJSON(),bound,afterRuntimeReplacement:{buttonDisabled:document.getElementById('trainer-sync-recovery').disabled,busy:document.getElementById('sync-pill').getAttribute('aria-busy'),status:accountSyncEffectiveRecoveryState().status}};
+    });
+    expect(mobile.overflow).toBe(false);expect(mobile.pill.width).toBeGreaterThanOrEqual(44);expect(mobile.pill.height).toBeGreaterThanOrEqual(44);expect(mobile.bound).toEqual({buttonDisabled:true,busy:'true',status:'running'});expect(mobile.afterRuntimeReplacement).toEqual({buttonDisabled:false,busy:'false',status:'idle'});
+    const staleRuntimeProgress=await page.evaluate(async()=>{
+      let releaseRetry,retryStarted=false,replacementStops=0;
+      const retryGate=new Promise(resolve=>{releaseRetry=resolve;});
+      auth={currentUser:{uid:'uid-runtime-race'}};cur='RuntimeRace';accountSyncEligibleUid='uid-runtime-race';
+      const retained=Object.freeze({state:'sync-error',eligible:true,active:true,listenerState:'healthy',listenerHealthy:true,controllerHealthy:true,pendingCount:0,blockedCount:1,recoverableBlockedCount:1,unsafeBlockedCount:0,blockedCategories:['historical-acknowledgement'],blockedErrorCode:'account-sync/committed-entity-invalid',conflictCount:0,recoveryCandidateCount:0,lastError:'account-sync/committed-entity-invalid',lastErrorCategory:'blocked-operation'});
+      managedAccountSyncRuntime={ownerUid:'uid-runtime-race',projectionReady:true,async snapshot(){return retained;},async retryBlocked(){retryStarted=true;await retryGate;return{ok:true,retried:1};}};
+      accountSyncUiState=retained;invalidateAccountSyncRecovery('runtime_race_setup');
+      const pending=performAccountSyncRecovery();while(!retryStarted)await Promise.resolve();
+      const runningBinding=accountSyncRecoveryStateBinding;
+      accountSyncRuntimeGeneration++;
+      managedAccountSyncRuntime={ownerUid:'uid-runtime-race',projectionReady:true,async snapshot(){return{...retained,state:'saved',blockedCount:0,recoverableBlockedCount:0,blockedErrorCode:'',lastError:'',lastErrorCategory:''};},async stop(){replacementStops++;}};
+      accountSyncUiState=await managedAccountSyncRuntime.snapshot();releaseRetry();
+      const result=await pending;
+      return{resultCode:result.code,rawStatus:accountSyncRecoveryState.status,effectiveStatus:accountSyncEffectiveRecoveryState().status,bindingUnchanged:accountSyncRecoveryStateBinding===runningBinding,replacementStops};
+    });
+    expect(staleRuntimeProgress).toEqual({resultCode:'account-sync/session-changed',rawStatus:'running',effectiveStatus:'idle',bindingUnchanged:true,replacementStops:0});
+    const switched=await page.evaluate(async()=>{
+      let releaseSnapshot,snapshotRequested=false,oldStops=0,replacementStops=0;
+      const snapshotGate=new Promise(resolve=>{releaseSnapshot=resolve;});
+      auth={currentUser:{uid:'uid-old-session'}};cur='OldSession';accountSyncEligibleUid='uid-old-session';
+      accountSyncUiState=Object.freeze({state:'sync-error',eligible:true,active:true,listenerState:'failed',listenerHealthy:false,controllerHealthy:false,pendingCount:0,blockedCount:0,conflictCount:0,recoveryCandidateCount:0,lastError:'account-sync/listener-failed',lastErrorCategory:'listener'});
+      managedAccountSyncRuntime={ownerUid:'uid-old-session',projectionReady:false,async snapshot(){snapshotRequested=true;await snapshotGate;return accountSyncUiState;},async stop(){oldStops++;}};
+      invalidateAccountSyncRecovery('browser_race_setup');
+      const pending=performAccountSyncRecovery();while(!snapshotRequested)await Promise.resolve();
+      resetSessionTransientUi('browser_account_switch');auth={currentUser:{uid:'uid-new-session'}};cur='NewSession';accountSyncEligibleUid='uid-new-session';
+      managedAccountSyncRuntime={ownerUid:'uid-new-session',projectionReady:true,async snapshot(){return{state:'saved',eligible:true,active:true,listenerState:'healthy',listenerHealthy:true,controllerHealthy:true,pendingCount:0,blockedCount:0,conflictCount:0,recoveryCandidateCount:0};},async stop(){replacementStops++;}};
+      accountSyncUiState=await managedAccountSyncRuntime.snapshot();releaseSnapshot();
+      const result=await pending;
+      return{resultCode:result.code,recoveryStatus:accountSyncEffectiveRecoveryState().status,rawRecoveryStatus:accountSyncRecoveryState.status,oldStops,replacementStops,owner:managedAccountSyncRuntime.ownerUid};
+    });
+    expect(switched).toEqual({resultCode:'account-sync/session-changed',recoveryStatus:'idle',rawRecoveryStatus:'idle',oldStops:0,replacementStops:0,owner:'uid-new-session'});
+  });
+
   test('review screenshots capture only the high-value corrected states',async({page},testInfo)=>{
     test.skip(!reviewDir,'Set CROSS_BROWSER_REVIEW_DIR to capture review evidence.');
     if(testInfo.project.name==='cross-chromium'){

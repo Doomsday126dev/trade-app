@@ -8,6 +8,7 @@ const root=path.join(__dirname,'..');
 const html=readFileSync(path.join(root,'index.html'),'utf8');
 const worker=readFileSync(path.join(root,'sw.js'),'utf8');
 const controller=readFileSync(path.join(root,'js/data/accountSyncController.js'),'utf8');
+const runtime=readFileSync(path.join(root,'js/data/accountSyncRuntime.js'),'utf8');
 const product=readFileSync(path.join(root,'js/domain/accountSyncProduct.js'),'utf8');
 
 test('owner-only migration reads are explicitly registered in the Firebase source contract',()=>{
@@ -59,26 +60,50 @@ test('canonical sync scope includes current product lanes and excludes retired i
 
 test('private acknowledgement precedes public projection and projection excludes sync internals',()=>{
   const dispatch=controller.slice(controller.indexOf('async function dispatch'),controller.indexOf('async function drain'));
-  assert.ok(dispatch.indexOf('await repository.applyOperation')<dispatch.indexOf('await publishAcceptedProjection'));
-  assert.ok(dispatch.indexOf('await journal.acknowledge')<dispatch.indexOf('await publishAcceptedProjection'));
+  const apply=dispatch.indexOf('executeAuthorizedMutation(()=>repository.applyOperation'),acknowledge=dispatch.indexOf('await journal.acknowledge'),project=dispatch.indexOf('await publishAcceptedProjection');
+  assert.ok(apply>=0);assert.ok(acknowledge>=0);assert.ok(project>=0);assert.ok(apply<acknowledge);assert.ok(acknowledge<project);assert.match(dispatch,/listenerAuthorityCurrent\(canonical\.authority\).*await journal\.acknowledge/s);
   const publish=controller.slice(controller.indexOf('async function publishAcceptedProjection'),controller.indexOf('async function activate'));
-  assert.ok(publish.indexOf('model.publicTradeProjection')<publish.indexOf('await onProjection'));
+  const projection=publish.indexOf('model.publicTradeProjection'),publication=publish.indexOf('executeAuthorizedMutation(()=>onProjection');assert.ok(projection>=0);assert.ok(publication>=0);assert.ok(projection<publication);assert.match(publish,/listenerAuthorityCurrent\(authority\).*executeAuthorizedMutation\(\(\)=>onProjection/s);
   for(const privateField of ['fieldRevisions','fieldMutations','fieldMutationHashes','lifecycleMutation','operationId','recoveryCandidates','migrations'])assert.doesNotMatch(publish,new RegExp(`onProjection\\([^)]*${privateField}`));
   assert.match(controller,/catch\(error\)\{lastProjectionError=/);
+});
+
+test('entity, direct watched, and public projection writes retain operation-specific authority contracts',()=>{
+  const dispatch=controller.slice(controller.indexOf('async function dispatch'),controller.indexOf('async function drain'));
+  assert.match(dispatch,/executeAuthorizedMutation\(\(\)=>repository\.applyOperation/);
+  assert.match(dispatch,/acceptCanonicalResult\(result\.value,record\.operation,authority\)/);
+
+  const watched=controller.slice(controller.indexOf('function runAuthorizedWatchedMutation'),controller.indexOf('function waitForListenerReady'));
+  assert.match(watched,/const binding=listenerAuthority\(\)/);
+  assert.match(watched,/await repository\.readAccount\(\)/);
+  assert.match(watched,/acceptedSnapshot\(account\)/);
+  assert.match(watched,/await reconcile\(/);
+
+  assert.equal((runtime.match(/controller\.runAuthorizedWatchedMutation\(\{/g)||[]).length,3);
+  for(const method of ['createMigration','createRecoveryCandidate','updateMeta'])assert.match(runtime,new RegExp(`write:\\(\\)=>repository\\.${method}\\(`));
+  assert.doesNotMatch(runtime,/runAuthorizedMutation/);
+
+  const publish=controller.slice(controller.indexOf('async function publishAcceptedProjection'),controller.indexOf('function handleListenerData'));
+  assert.match(publish,/executeAuthorizedMutation\(\(\)=>onProjection/);
+  assert.doesNotMatch(publish,/readAccount|runAuthorizedWatchedMutation/);
 });
 
 test('normal sync copy is understandable and never exposes raw revision or mutation IDs',()=>{
   const conflictFieldKeys=['fieldGender','fieldLucky','fieldXxl','fieldXxs','fieldShiny','fieldOrder','fieldQuantity','fieldNotes','fieldMirror'];
   for(const file of ['en','ja','es','de']){
     const locale=readFileSync(path.join(root,`js/i18n/locales/${file}.js`),'utf8');
-    for(const key of ['accountSync.saved','accountSync.saving','accountSync.offline','accountSync.conflict','accountSync.reviewRequired','accountSync.reviewRequiredDetail','accountSync.error','accountSync.retryPrompt'])assert.ok(locale.includes(`'${key}'`),`${file}:${key}`);
+    for(const key of ['accountSync.saved','accountSync.saving','accountSync.offline','accountSync.conflict','accountSync.reviewRequired','accountSync.reviewRequiredDetail','accountSync.error','accountSync.retrySavedChange','accountSync.restartSync','accountSync.reviewConflict','accountSync.recoveryRunning','accountSync.diagnostic'])assert.ok(locale.includes(`'${key}'`),`${file}:${key}`);
     for(const key of conflictFieldKeys)assert.ok(locale.includes(`'accountSync.${key}'`),`${file}:accountSync.${key}`);
     const copy=(locale.match(/'accountSync\.[^\n]+/)||[])[0]||'';assert.doesNotMatch(copy,/operationId|field revision|tombstone|RTDB|Firebase UID/i,file);
   }
   const status=html.slice(html.indexOf('function accountSyncPresentation()'),html.indexOf('function syncLabelForStatus'));
   assert.doesNotMatch(status,/operationId|revision|mutation/i);
-  const detail=html.slice(html.indexOf('async function openSyncDetail()'),html.indexOf('let _modalPrevFocus'));
-  assert.match(detail,/account\.state==='conflict'.*reviewAccountSyncConflicts/s);assert.doesNotMatch(detail,/\['sync-error','conflict'\]/);
+  const detail=html.slice(html.indexOf('async function openSyncDetail()'),html.indexOf('function accountSyncConflictFieldLabel'));
+  assert.match(detail,/account\.plan\.action!=='none'.*requestAccountSyncRecovery/s);assert.match(detail,/account\.plan\.action==='review-conflict'.*reviewAccountSyncConflicts/s);
+  assert.match(detail,/coordinator\.active.*coordinator\.recover/s);assert.match(detail,/performAccountSyncRecovery/);assert.doesNotMatch(detail,/retryBlocked/);
+  assert.match(html,/id="sync-pill"[^>]+onkeydown="if\(event\.key==='Enter'\|\|event\.key===' '\)/);
+  assert.match(html,/id="trainer-sync-diagnostic" hidden/);assert.match(html,/id="trainer-sync-recovery"[^>]+requestAccountSyncRecovery\(\)/);
+  assert.match(html,/onCanonicalEntities:entities=>currentSession\(\)\?applyAccountSyncCanonicalEntities\(entities\):false/);
   const fieldLabels=html.slice(html.indexOf('function accountSyncConflictFieldLabel'),html.indexOf('function accountSyncConflictValue'));
   for(const key of conflictFieldKeys)assert.ok(fieldLabels.includes(`accountSync.${key}`),key);
   assert.doesNotMatch(fieldLabels,/gender:'Gender'|sortOrder:'Order'|quantity:'Quantity'|note:'Notes'|mirror:'Mirror'/);
@@ -113,6 +138,35 @@ test('auth transitions invalidate stale sync starts before publishing account st
   assert.match(start,/generation===accountSyncRuntimeGeneration/);
   assert.match(start,/auth\?\.currentUser\?\.uid===uid&&cur===username/);
   assert.match(start,/if\(!currentSession\(\)\)\{await runtime\.stop\(\);return Object\.freeze\(\{ok:false,status:'session-changed'\}\);\}/);
+});
+
+test('recovery presentation is bound to session, coordinator, and runtime generations',()=>{
+  const reset=html.slice(html.indexOf('function resetSessionTransientUi'),html.indexOf('function resetTransientUiBeforeSessionActivation'));
+  const activation=html.slice(html.indexOf('function activateOwnedSession'),html.indexOf('function storedSessionMatches'));
+  const suspension=html.slice(html.indexOf('function suspendOwnedSession'),html.indexOf('function showSessionStorageNotices'));
+  const recovery=html.slice(html.indexOf('function accountSyncRecoveryStatus'),html.indexOf('async function recordAccountSyncUnresolved'));
+  assert.match(reset,/invalidateAccountSyncRecovery\(reason\)/);
+  assert.match(activation,/invalidateAccountSyncRecovery\('session_activation'\)/);
+  assert.match(suspension,/invalidateAccountSyncRecovery\(reason\)/);
+  assert.match(suspension,/invalidateAccountSyncRecovery\('logout'\)/);
+  assert.match(recovery,/accountSyncRecoveryPresentationBinding\(binding,runtimeGeneration=accountSyncRuntimeGeneration\)/);
+  assert.match(recovery,/binding\.uid.*binding\.username.*binding\.sessionGeneration.*binding\.coordinatorGeneration.*runtimeGeneration/s);
+  assert.match(recovery,/accountSyncRecoveryStateBinding===accountSyncRecoveryPresentationBinding\(accountSyncRecoverySessionBinding\)/);
+  assert.match(recovery,/accountSyncRecoveryCoordinatorRuntimeGeneration===accountSyncRuntimeGeneration/);
+  assert.match(recovery,/accountSyncRecoveryCoordinatorRuntimeGeneration!==accountSyncRuntimeGeneration/);
+  assert.match(recovery,/healthySnapshot\([^)]*accountSyncUiState/s);
+  assert.match(recovery,/accountSyncRecoveryState=accountSyncIdleRecoveryState\(\);accountSyncRecoveryStateBinding=''/);
+});
+
+test('unsafe canonical state outranks conflict presentation and conflict actions recheck authority',()=>{
+  assert.match(controller,/const state=!eligible\?'local-only':unsafeEvidence\?'sync-error':journalState\.conflictCount\?'conflict'/);
+  assert.match(controller,/listenerHealthy=!eligible\|\|active&&listenerState==='healthy'/);
+  assert.doesNotMatch(controller,/\['listening','healthy'\]\.includes\(listenerState\)/);
+  assert.match(controller,/async function acceptConflict\(conflictId\)\{\s*const authority=await snapshot\(\)/);
+  assert.match(controller,/async function reapplyConflict\(conflictId\)\{\s*const authority=await snapshot\(\)/);
+  const review=html.slice(html.indexOf('async function reviewAccountSyncConflicts'),html.indexOf('let _modalPrevFocus'));
+  assert.match(review,/const plan=accountSyncCurrentRecoveryPlan\(\)/);
+  assert.match(review,/plan\.category==='unsafe-evidence'\|\|plan\.action!=='review-conflict'/);
 });
 
 test('allowlisted mutations cannot fall through to legacy writers while canonical startup is pending',()=>{

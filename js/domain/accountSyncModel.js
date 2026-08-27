@@ -7,6 +7,23 @@
   const TRADE_LANES=Object.freeze(['wishlist','dynamax','gmax','costumes','looking-for','for-trade']);
   const TRADE_FIELDS=Object.freeze(['priority','variant','gender','lucky','xxl','xxs','shiny','backgroundId','sortOrder','quantity','note','mirror']);
   const RETRY_DELAYS=Object.freeze([1000,2000,4000,8000,16000,30000]);
+  // Only the known pre-.70 acknowledgement case and exhausted transient
+  // repository failures may receive one explicit user-requested retry.
+  const SAFE_BLOCKED_RETRY_CODES=Object.freeze([
+    'account-sync/committed-entity-invalid',
+    'account-sync/network-failed',
+    'account-sync/transaction-aborted'
+  ]);
+  const SAFE_BLOCKED_RETRY_SET=new Set(SAFE_BLOCKED_RETRY_CODES);
+  const UNSAFE_RECOVERY_CODES=Object.freeze([
+    'account-sync/catalog-projection-unresolved','account-sync/canonical-validation-failed','account-sync/conflict-current-invalid',
+    'account-sync/idempotency-conflict','account-sync/migration-evidence-conflict','account-sync/owner-mismatch',
+    'account-sync/meta-conflict',
+    'account-sync/recovery-candidate-conflict','account-sync/remote-entity-invalid','account-sync/remote-entity-missing',
+    'account-sync/remote-revision-invalid','account-sync/remote-version-substitution','account-sync/listener-authority-lost',
+    'account-sync/watched-write-unreconciled'
+  ]);
+  const UNSAFE_RECOVERY_SET=new Set(UNSAFE_RECOVERY_CODES);
   const FIREBASE_KEY_FORBIDDEN=/[.#$\[\]/\u0000-\u001f\u007f]/u;
   const HEX_64=/^[a-f0-9]{64}$/;
 
@@ -159,11 +176,24 @@
     const count=Math.max(0,Number(attempts)||0);
     return RETRY_DELAYS[Math.min(count,RETRY_DELAYS.length-1)];
   }
+  function blockedRetryCategory(value){
+    const code=String(value||'');
+    if(code==='account-sync/committed-entity-invalid')return'historical-acknowledgement';
+    if(SAFE_BLOCKED_RETRY_SET.has(code))return'transient-transport';
+    return'unsafe';
+  }
+  function blockedRetryEligible(record){
+    return record?.status==='blocked'&&blockedRetryCategory(record.lastErrorCode)!=='unsafe';
+  }
+  function unsafeRecoveryCode(value){
+    const code=String(value||'');
+    return UNSAFE_RECOVERY_SET.has(code)||/^account-sync\/(?:schema|transition)-/.test(code);
+  }
 
   root.accountSyncModel=Object.freeze({
-    SCHEMA_VERSION,DATABASE_NAME,ENTITY_TYPES,TRADE_SURFACES,TRADE_LANES,TRADE_FIELDS,RETRY_DELAYS,
+    SCHEMA_VERSION,DATABASE_NAME,ENTITY_TYPES,TRADE_SURFACES,TRADE_LANES,TRADE_FIELDS,RETRY_DELAYS,SAFE_BLOCKED_RETRY_CODES,UNSAFE_RECOVERY_CODES,
     plainObject,integer,exactText,firebaseKey,stable,canonicalJson,base64Url,tradeEntryId,tagIdFromLegacy,newTagId,fieldToken,fieldMetadataPath,
     fieldPathValid,fieldValueValid,identityValid,entityPath,operationId,sha256Hex,canonicalOperationInput,
-    createOperation,verifyOperation,publicTradeProjection,retryDelay,failure
+    createOperation,verifyOperation,publicTradeProjection,retryDelay,blockedRetryCategory,blockedRetryEligible,unsafeRecoveryCode,failure
   });
 })(window);
