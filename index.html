@@ -10,6 +10,47 @@
 <link rel="icon" href="assets/tradeloop-icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="assets/tradeloop-icon-180.png">
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<script>
+window.__POGO_RELEASE_ID='2026-08-27.75';
+window.__pogoStartup=window.__pogoStartup||{documentStartAt:performance.now(),preAuthMarkupReady:null,preAuthPaintOpportunity:null,authSdkStartedAt:null,authStateKnownAt:null,loginShellRevealedAt:null,shellInteractiveAt:null,featureLoadStartedAt:null,featureScriptsReadyAt:null,protectedRequestedAt:null,appCheckStartedAt:null,appCheckReadyAt:null,protectedReadyAt:null,firebaseStartupSettledAt:null,catalogsReadyAt:null,signedInReadyAt:null};
+window.__POGO_FIREBASE_CONFIG=Object.freeze({
+  apiKey:'AIzaSyCazZNLj9_lEb1vUNUlrMe9hodqY_l34VU',
+  authDomain:'trade-list-a4297.firebaseapp.com',
+  databaseURL:'https://trade-list-a4297-default-rtdb.firebaseio.com',
+  projectId:'trade-list-a4297',
+  storageBucket:'trade-list-a4297.firebasestorage.app',
+  messagingSenderId:'1053781218847',
+  appId:'1:1053781218847:web:378b312470943152d9a72a',
+  measurementId:'G-0ZFL5NDQFP'
+});
+window.__pogoEarlyAuth={sdkPromise:null,app:null,auth:null,appMod:null,authMod:null,user:null,stateKnown:false,error:null};
+function startPogoEarlyAuth(){
+  var state=window.__pogoEarlyAuth;
+  if(state.sdkPromise)return state.sdkPromise;
+  window.__pogoStartup.authSdkStartedAt=performance.now();
+  try{performance.mark('pogo:auth-sdk-start')}catch{}
+  var base='https://www.gstatic.com/firebasejs/10.12.2';
+  state.sdkPromise=Promise.all([import(base+'/firebase-app.js'),import(base+'/firebase-auth.js')]).then(function(modules){
+    state.appMod=modules[0];state.authMod=modules[1];
+    state.app=state.appMod.initializeApp(window.__POGO_FIREBASE_CONFIG,'pogo');
+    state.auth=state.authMod.getAuth(state.app);
+    state.authMod.onAuthStateChanged(state.auth,function(user){
+      state.user=user||null;state.stateKnown=true;
+      window.__pogoStartup.authStateKnownAt=performance.now();
+      try{performance.mark('pogo:auth-state-known')}catch{}
+      if(!user)try{performance.mark('pogo:signed-out-auth-known')}catch{}
+      if(typeof window.__pogoHandleEarlyAuthState==='function')window.__pogoHandleEarlyAuthState(state.user);
+    });
+    return state;
+  }).catch(function(error){
+    state.error=error;
+    if(typeof window.__pogoHandleEarlyAuthFailure==='function')window.__pogoHandleEarlyAuthFailure(error);
+    throw error;
+  });
+  return state.sdkPromise;
+}
+startPogoEarlyAuth().catch(function(){/* The signed-out shell reports the safe error state after markup is available. */});
+</script>
 <style>
 :root,html[data-theme="dark"]{
   --bg:#111316;--bg2:#171a1f;--card:#1d2127;
@@ -2789,56 +2830,7 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
 <!-- PTR Indicator -->
 <div class="ptr-indicator" id="ptr-indicator" aria-hidden="true">↓</div>
 
-<script>
-window.__POGO_RELEASE_ID='2026-08-27.75';
-window.__pogoStartup=window.__pogoStartup||{preAuthMarkupReady:performance.now(),preAuthPaintOpportunity:null,authSdkStartedAt:null,authStateKnownAt:null,loginShellRevealedAt:performance.now(),appCheckStartedAt:null,appCheckReadyAt:null,firebaseStartupSettledAt:null,catalogsReadyAt:null,signedInReadyAt:null};
-window.__POGO_FIREBASE_CONFIG=Object.freeze({
-  apiKey:'AIzaSyCazZNLj9_lEb1vUNUlrMe9hodqY_l34VU',
-  authDomain:'trade-list-a4297.firebaseapp.com',
-  databaseURL:'https://trade-list-a4297-default-rtdb.firebaseio.com',
-  projectId:'trade-list-a4297',
-  storageBucket:'trade-list-a4297.firebasestorage.app',
-  messagingSenderId:'1053781218847',
-  appId:'1:1053781218847:web:378b312470943152d9a72a',
-  measurementId:'G-0ZFL5NDQFP'
-});
-window.__pogoEarlyAuth={sdkPromise:null,app:null,auth:null,appMod:null,authMod:null,user:null,stateKnown:false,error:null};
-function startPogoEarlyAuth(){
-  var state=window.__pogoEarlyAuth;
-  if(state.sdkPromise)return state.sdkPromise;
-  window.__pogoStartup.authSdkStartedAt=performance.now();
-  try{performance.mark('pogo:auth-sdk-start')}catch{}
-  var base='https://www.gstatic.com/firebasejs/10.12.2';
-  state.sdkPromise=Promise.all([import(base+'/firebase-app.js'),import(base+'/firebase-auth.js')]).then(function(modules){
-    state.appMod=modules[0];state.authMod=modules[1];
-    state.app=state.appMod.initializeApp(window.__POGO_FIREBASE_CONFIG,'pogo');
-    state.auth=state.authMod.getAuth(state.app);
-    state.authMod.onAuthStateChanged(state.auth,function(user){
-      state.user=user||null;state.stateKnown=true;
-      window.__pogoStartup.authStateKnownAt=performance.now();
-      try{performance.mark('pogo:auth-state-known')}catch{}
-      if(!user)try{performance.mark('pogo:signed-out-auth-known')}catch{}
-    });
-    return state;
-  }).catch(function(error){state.error=error;throw error;});
-  return state.sdkPromise;
-}
-try{performance.mark('pogo:preauth-markup-ready')}catch{}
-requestAnimationFrame(function(){
-  requestAnimationFrame(function(){
-    window.__pogoStartup.preAuthPaintOpportunity=performance.now();
-    try{performance.mark('pogo:preauth-paint-opportunity')}catch{}
-    startPogoEarlyAuth().catch(function(){/* Full startup renders the existing safe error state. */});
-  });
-});
-window.__pogoBootWatch=setTimeout(function(){
-  if(window.__pogoBootComplete)return;
-  var detail=document.getElementById('preauth-detail');
-  if(detail)detail.textContent='App scripts did not finish loading. Refresh once; if this stays, send this screenshot.';
-  var status=document.getElementById('preauth-pg');
-  if(status)status.setAttribute('aria-busy','false');
-},4000);
-</script>
+<template id="pogo-feature-assets">
 <script src="data.js?v=2026-08-27.75"></script>
 <script src="js/domain/productLimits.js?v=2026-08-27.75"></script>
 <script src="js/domain/priorities.js?v=2026-08-27.75"></script>
@@ -2911,7 +2903,193 @@ window.__pogoBootWatch=setTimeout(function(){
 <script src="js/data/accountSyncRuntime.js?v=2026-08-27.75"></script>
 <script src="js/domain/cacheAdapters.js?v=2026-08-27.75"></script>
 <script src="js/ui/trainerTagPanel.js?v=2026-08-27.75"></script>
+</template>
 <script>
+(function(){
+  const RELEASE_ID=window.__POGO_RELEASE_ID;
+  const SUPPORTED_LOCALES=Object.freeze(['en','ja','es','de']);
+  const SHELL_LOCALES=Object.freeze({
+    en:Object.freeze({'app.preparing':'Preparing your trade list','app.preparingDetail':'Checking this device and your sign-in safely. Your account data stays hidden until verification is complete.','account.language':'Language','account.languageSettings':'Language settings','login.subtitle':'NYC Community Trade List','login.disclaimer':'Unofficial community tool. Not affiliated with Niantic, Nintendo, or The Pokémon Company.','login.username':'Username','login.usernamePlaceholder':'Type or pick your username…','login.usernameSuggestions':'Username suggestions','login.pin':'PIN','login.pinPlaceholder':'6-digit PIN','login.signIn':'Sign in','login.newUserHelp':'New here? Request access first. An admin will provide a unique six-digit first-use PIN after approval.','login.existingUserHelp':'Already approved? Ask an admin for the identity-preserving PIN reset if needed.','login.trouble':'Having trouble signing in?','login.requestAccess':'Request access to join'}),
+    ja:Object.freeze({'app.preparing':'トレードリストを準備しています','app.preparingDetail':'この端末とログイン状態を安全に確認しています。確認が完了するまで、アカウントデータは表示されません。','account.language':'言語','account.languageSettings':'言語設定','login.subtitle':'NYC コミュニティ交換リスト','login.disclaimer':'非公式のコミュニティツールです。Niantic、Nintendo、株式会社ポケモンとは関係ありません。','login.username':'トレーナー名','login.usernamePlaceholder':'トレーナー名を入力または選択…','login.usernameSuggestions':'トレーナー名の候補','login.pin':'PIN','login.pinPlaceholder':'6桁のPIN','login.signIn':'ログイン','login.newUserHelp':'初めての方は、まず参加申請をしてください。承認後、管理者から初回用の6桁PINが届きます。','login.existingUserHelp':'承認済みでPINが必要な場合は、管理者に本人確認を保持したPIN再設定を依頼してください。','login.trouble':'ログインでお困りですか？','login.requestAccess':'参加を申請'}),
+    es:Object.freeze({'app.preparing':'Preparando tu lista de intercambios','app.preparingDetail':'Comprobando de forma segura este dispositivo y tu sesión. Los datos de tu cuenta permanecen ocultos hasta completar la verificación.','account.language':'Idioma','account.languageSettings':'Ajustes de idioma','login.subtitle':'Lista de intercambios de la comunidad de NYC','login.disclaimer':'Herramienta comunitaria no oficial. No está afiliada con Niantic, Nintendo ni The Pokémon Company.','login.username':'Nombre de Entrenador','login.usernamePlaceholder':'Escribe o elige tu nombre…','login.usernameSuggestions':'Sugerencias de nombres','login.pin':'PIN','login.pinPlaceholder':'PIN de 6 dígitos','login.signIn':'Iniciar sesión','login.newUserHelp':'¿Eres nuevo? Solicita acceso primero. Un administrador te dará un PIN inicial de seis dígitos tras aprobarte.','login.existingUserHelp':'¿Ya tienes acceso? Si lo necesitas, pide a un administrador un restablecimiento de PIN que conserve tu identidad.','login.trouble':'¿Problemas para iniciar sesión?','login.requestAccess':'Solicitar acceso'}),
+    de:Object.freeze({'app.preparing':'Deine Tauschliste wird vorbereitet','app.preparingDetail':'Dieses Gerät und deine Anmeldung werden sicher geprüft. Deine Kontodaten bleiben bis zum Abschluss der Prüfung verborgen.','account.language':'Sprache','account.languageSettings':'Spracheinstellungen','login.subtitle':'NYC-Community-Tauschliste','login.disclaimer':'Inoffizielles Community-Werkzeug. Keine Verbindung zu Niantic, Nintendo oder The Pokémon Company.','login.username':'Trainername','login.usernamePlaceholder':'Trainername eingeben oder auswählen…','login.usernameSuggestions':'Vorschläge für Trainernamen','login.pin':'PIN','login.pinPlaceholder':'6-stellige PIN','login.signIn':'Anmelden','login.newUserHelp':'Neu hier? Beantrage zuerst Zugang. Nach der Freigabe erhältst du von der Administration eine sechsstellige Erst-PIN.','login.existingUserHelp':'Bereits freigeschaltet? Bitte bei Bedarf um eine identitätserhaltende PIN-Zurücksetzung.','login.trouble':'Probleme bei der Anmeldung?','login.requestAccess':'Zugang beantragen'})
+  });
+  const loadedScripts=new Set();
+  let shellLocalePromise=null;
+  let featureLoadPromise=null;
+
+  window.__pogoStartup.preAuthMarkupReady=performance.now();
+  try{performance.mark('pogo:preauth-markup-ready')}catch{}
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    window.__pogoStartup.preAuthPaintOpportunity=performance.now();
+    try{performance.mark('pogo:preauth-paint-opportunity')}catch{}
+  }));
+  window.__pogoBootWatch=setTimeout(()=>{
+    if(window.__pogoBootComplete||window.__pogoShellReady)return;
+    const detail=document.getElementById('preauth-detail');
+    if(detail)detail.textContent='App scripts did not finish loading. Refresh once; if this stays, send this screenshot.';
+    document.getElementById('preauth-pg')?.setAttribute('aria-busy','false');
+  },4000);
+
+  function preferredLocale(){
+    let stored='';
+    try{stored=localStorage.getItem('pogoUiLocale:v1')||'';}catch{}
+    const candidates=[stored,...(navigator.languages||[]),navigator.language,'en'];
+    for(const candidate of candidates){
+      const normalized=String(candidate||'').toLowerCase().replaceAll('_','-');
+      const exact=SUPPORTED_LOCALES.find(locale=>locale===normalized);
+      if(exact)return exact;
+      const base=normalized.split('-')[0];
+      if(SUPPORTED_LOCALES.includes(base))return base;
+    }
+    return'en';
+  }
+  function absoluteScriptUrl(src){return new URL(src,document.baseURI).href;}
+  function loadScript(src,{ordered=false}={}){
+    const absolute=absoluteScriptUrl(src);
+    if(loadedScripts.has(absolute)||document.querySelector(`script[data-pogo-loaded="${CSS.escape(absolute)}"]`))return Promise.resolve();
+    loadedScripts.add(absolute);
+    return new Promise((resolve,reject)=>{
+      const script=document.createElement('script');
+      script.src=absolute;
+      script.async=!ordered;
+      script.dataset.pogoLoaded=absolute;
+      script.addEventListener('load',resolve,{once:true});
+      script.addEventListener('error',()=>{loadedScripts.delete(absolute);reject(Object.assign(new Error(`Failed to load ${new URL(absolute).pathname}`),{code:'startup/script-load-failed'}));},{once:true});
+      document.head.appendChild(script);
+    });
+  }
+  async function ensureLocale(locale=preferredLocale()){
+    const normalized=SUPPORTED_LOCALES.includes(String(locale||'').toLowerCase())?String(locale).toLowerCase():'en';
+    await loadScript(`js/i18n/locales/en.js?v=${RELEASE_ID}`,{ordered:true});
+    if(normalized!=='en')await loadScript(`js/i18n/locales/${normalized}.js?v=${RELEASE_ID}`,{ordered:true});
+    await loadScript(`js/i18n/core.js?v=${RELEASE_ID}`,{ordered:true});
+    return normalized;
+  }
+  function translateShell(){
+    const root=document.getElementById('login-pg');
+    if(!root)return;
+    const catalog=SHELL_LOCALES[preferredLocale()]||SHELL_LOCALES.en;
+    root.querySelectorAll('[data-i18n]').forEach(node=>{const value=catalog[node.dataset.i18n];if(value)node.textContent=value;});
+    root.querySelectorAll('[data-i18n-placeholder]').forEach(node=>{const value=catalog[node.dataset.i18nPlaceholder];if(value)node.placeholder=value;});
+    root.querySelectorAll('[data-i18n-aria-label]').forEach(node=>{const value=catalog[node.dataset.i18nAriaLabel];if(value)node.setAttribute('aria-label',value);});
+  }
+  function ensureShellLocale(){
+    if(!shellLocalePromise)shellLocalePromise=Promise.resolve().then(()=>{const locale=preferredLocale();translateShell();document.documentElement.lang=locale;return locale;});
+    return shellLocalePromise;
+  }
+  function revealSignedOutShell(){
+    const login=document.getElementById('login-pg');
+    const preauth=document.getElementById('preauth-pg');
+    if(preauth){preauth.style.display='none';preauth.setAttribute('aria-busy','false');}
+    if(login){
+      login.style.display='flex';
+      login.removeAttribute('data-bootstrap-pending');
+      login.setAttribute('aria-busy','false');
+      login.querySelectorAll('[data-bootstrap-disabled="true"]').forEach(control=>{control.disabled=false;delete control.dataset.bootstrapDisabled;});
+    }
+    window.__pogoShellReady=true;
+    window.__pogoStartup.loginShellRevealedAt=performance.now();
+    window.__pogoStartup.shellInteractiveAt=performance.now();
+    clearTimeout(window.__pogoBootWatch);
+    try{performance.mark('pogo:shell-interactive')}catch{}
+  }
+  function shellFailure(error){
+    console.warn('Signed-out shell initialization failed',String(error?.code||error?.message||'unknown'));
+    revealSignedOutShell();
+    const detail=document.getElementById('login-err');
+    if(detail)detail.textContent='The sign-in service is temporarily unavailable. Refresh and try again.';
+  }
+  function featureAssetSources(){
+    const template=document.getElementById('pogo-feature-assets');
+    if(!template)return[];
+    const locale=preferredLocale();
+    return Array.from(template.content.querySelectorAll('script[src]'),node=>node.getAttribute('src')).filter(src=>{
+      const match=src.match(/js\/i18n\/locales\/([a-z-]+)\.js/);
+      return!match||match[1]==='en'||match[1]===locale;
+    });
+  }
+  async function loadFeatureScripts(){
+    const pending=[];
+    for(const src of featureAssetSources()){
+      const absolute=absoluteScriptUrl(src);
+      if(loadedScripts.has(absolute))continue;
+      loadedScripts.add(absolute);
+      pending.push(new Promise((resolve,reject)=>{
+        const script=document.createElement('script');
+        script.src=absolute;
+        script.async=false;
+        script.dataset.pogoLoaded=absolute;
+        script.addEventListener('load',resolve,{once:true});
+        script.addEventListener('error',()=>{loadedScripts.delete(absolute);reject(Object.assign(new Error(`Failed to load ${new URL(absolute).pathname}`),{code:'startup/feature-load-failed'}));},{once:true});
+        document.head.appendChild(script);
+      }));
+    }
+    await Promise.all(pending);
+  }
+  function evaluateFeatureSource(){
+    const template=document.getElementById('pogo-app-source');
+    const source=template?.content.querySelector('#pogo-app-code')?.textContent||'';
+    if(!source)throw Object.assign(new Error('Application source is unavailable'),{code:'startup/source-missing'});
+    const script=document.createElement('script');
+    script.dataset.pogoRuntime='application';
+    script.textContent=source;
+    document.body.appendChild(script);
+    template.remove();
+  }
+  function ensureFullApp(reason='feature-request'){
+    if(featureLoadPromise)return featureLoadPromise;
+    window.__pogoStartup.featureLoadStartedAt=performance.now();
+    window.__pogoStartup.protectedRequestedAt=window.__pogoStartup.featureLoadStartedAt;
+    try{performance.mark('pogo:feature-load-start')}catch{}
+    featureLoadPromise=Promise.all([ensureShellLocale(),new Promise(resolve=>{
+      if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',resolve,{once:true});
+      else resolve();
+    })]).then(loadFeatureScripts).then(()=>{
+      window.__pogoStartup.featureScriptsReadyAt=performance.now();
+      try{performance.mark('pogo:feature-scripts-ready')}catch{}
+      evaluateFeatureSource();
+      return window.__pogoAppReadyPromise||true;
+    }).catch(error=>{featureLoadPromise=null;shellFailure(error);throw error;});
+    return featureLoadPromise;
+  }
+  function loadThenCall(name,args){
+    return ensureFullApp(name).then(()=>{
+      const action=window[name];
+      if(typeof action!=='function'||action===stubs[name])throw Object.assign(new Error(`${name} is unavailable`),{code:'startup/action-unavailable'});
+      return action(...args);
+    });
+  }
+  const stubs={
+    doLogin:(...args)=>loadThenCall('doLogin',args),
+    openSettingsPanel:(...args)=>loadThenCall('openSettingsPanel',args),
+    openLoginHealthCheck:(...args)=>loadThenCall('openLoginHealthCheck',args),
+    showRequestForm:(...args)=>loadThenCall('showRequestForm',args)
+  };
+  Object.assign(window,stubs,{
+    __pogoEnsureFullApp:ensureFullApp,
+    __pogoEnsureLocale:ensureLocale,
+    __pogoHandleEarlyAuthState:user=>{
+      ensureShellLocale().catch(()=>{}).finally(()=>{
+        if(user)ensureFullApp('restored-session').catch(()=>{});
+        else revealSignedOutShell();
+      });
+    },
+    __pogoHandleEarlyAuthFailure:shellFailure
+  });
+  const login=document.getElementById('login-pg');
+  const warm=event=>{
+    if(!event.target.closest?.('button,input,select,textarea'))return;
+    ensureFullApp('login-interaction').catch(()=>{});
+  };
+  login?.addEventListener('focusin',warm,{once:true});
+  login?.addEventListener('pointerdown',warm,{once:true,passive:true});
+  ensureShellLocale().catch(()=>{});
+  if(window.__pogoEarlyAuth?.stateKnown)window.__pogoHandleEarlyAuthState(window.__pogoEarlyAuth.user);
+  else if(window.__pogoEarlyAuth?.error)shellFailure(window.__pogoEarlyAuth.error);
+})();
+</script>
+<template id="pogo-app-source"><script type="text/plain" id="pogo-app-code">
 let initializeApp,getDatabase,ref,set,get,onValue,update,runTransaction,serverTimestamp,getAuth,signInWithEmailAndPassword,createUserWithEmailAndPassword,firebaseSignOut,updatePassword,deleteUser,onAuthStateChanged;
 let firebaseSdkPromise=null;
 let firebaseAppCheckSdkPromise=null;
@@ -7291,7 +7469,7 @@ function showConfig(){
   document.getElementById('login-pg').style.display='none';
   document.getElementById('app').style.display='none';
 }
-function showLogin(){
+function showLogin({preserveCredentials=false}={}){
   hidePreAuth();
   document.getElementById('config-pg').style.display='none';
   document.getElementById('login-pg').style.display='flex';
@@ -7300,7 +7478,7 @@ function showLogin(){
   document.getElementById('req-form-card').style.display='none';
   document.getElementById('login-pg').querySelector('.lcard').style.display='block';
   const pinInput=document.getElementById('login-pin');
-  if(pinInput)pinInput.value='';
+  if(pinInput&&!preserveCredentials)pinInput.value='';
   const err=document.getElementById('login-err');
   if(err)err.textContent='';
   const btn=document.getElementById('login-btn');
@@ -7454,8 +7632,9 @@ function renderInterimProductLabels(){
   const accountTrigger=document.getElementById('account-trigger');
   if(accountTrigger?.getAttribute('aria-expanded')==='true')accountTrigger.setAttribute('aria-label',i18nCore.t('account.closeMenu'));
 }
-function changeInterfaceLocale(locale){
+async function changeInterfaceLocale(locale){
   const scrollX=window.scrollX,scrollY=window.scrollY;
+  await window.__pogoEnsureLocale?.(locale);
   i18nCore.setLocale(locale);
   renderInterimProductLabels();
   updateAddBackgroundPresentation();
@@ -16909,7 +17088,7 @@ async function startFirebaseStartup(shareReq){
     await loadFirebaseSdk();
     setupFirebase(FIREBASE_URL);
     const restoredUser=await waitForAuthState();
-    if(!restoredUser&&!shareReq)showLogin();
+    if(!restoredUser&&!shareReq)showLogin({preserveCredentials:true});
     try{
       await ensureFirebaseDataProtection();
     }catch(error){
@@ -16919,6 +17098,8 @@ async function startFirebaseStartup(shareReq){
       else showBootError(error);
       return;
     }
+    window.__pogoStartup.protectedReadyAt=performance.now();
+    try{performance.mark('pogo:protected-ready')}catch{}
     startListener();
     flushSyncQueue();
     if(shareReq)await openShareViewFromRequest(shareReq);
@@ -16936,7 +17117,8 @@ async function startFirebaseStartup(shareReq){
 }
 
 // ── BOOT ──────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded',()=>{
+function bootPogoApp(){
+  if(window.__pogoBootComplete)return;
   try{
   renderInterimProductLabels();
   // The neutral pre-auth shell is already visible. Keep synchronous work here
@@ -16988,7 +17170,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   showSessionStorageNotices();
   // Check for read-only share view
   const shareReq=checkShareViewParam();
-  showPreAuth();
+  if(!window.__pogoShellReady)showPreAuth();
   if(parseSettingsRoute().matches)setTimeout(()=>syncSettingsRoute({captureScroll:false}),0);
   setSyncStatus('syncing');
   afterFirstPaint(()=>{
@@ -16996,14 +17178,20 @@ document.addEventListener('DOMContentLoaded',()=>{
     startFirebaseStartup(shareReq);
   });
   window.__pogoBootComplete=true;
+  clearTimeout(window.__pogoBootWatch);
   try{performance.mark('pogo:boot-wired')}catch{}
   setTimeout(()=>{if(!hasVisibleScreen())showBootError('No visible screen after startup');},2500);
   }catch(e){
     showBootError(e);
   }
+}
+window.__pogoAppReadyPromise=Promise.resolve().then(()=>{
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bootPogoApp,{once:true});
+  else bootPogoApp();
+  return true;
 });
 
-</script>
+</script></template>
 <!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "4fe630b31803492095d8b9f9d2487143"}'></script><!-- End Cloudflare Web Analytics -->
 </body>
 </html>
