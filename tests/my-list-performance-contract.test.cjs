@@ -32,7 +32,17 @@ test('large lists expose a bounded usable state before idle progressive completi
 
 test('keyed patching reuses unchanged rows and swipe ownership stays on the stable root',()=>{
   assert.match(source,/row\.dataset\.renderKey!==expectedKey/);
-  assert.match(source,/fragment\.append\(row\)/);
+  assert.match(source,/if\(!existing\.size\)/);
   assert.match(source,/grid\.replaceChildren\(fragment\)/);
+  assert.match(source,/if\(previous\)previous\.replaceWith\(row\)/);
+  assert.match(source,/if\(current!==row\)grid\.insertBefore\(row,current\|\|null\)/);
+  assert.match(source,/existing\.forEach\(row=>row\.remove\(\)\)/);
   assert.match(html,/const grid=document\.getElementById\('mylist-out'\)/);
+});
+
+test('derived search panels render after the immediate row patch and remain awaitable',()=>{
+  assert.match(source,/function scheduleMyListStringsRender\(generation\)/);
+  assert.match(source,/requestIdleCallback\(callback,\{timeout:120\}\)/);
+  assert.match(source,/generation!==myListStringsGeneration/);
+  assert.match(source,/Promise\.all\(\[myListRenderCompletePromise,myListAncillaryRenderPromise\]\)/);
 });

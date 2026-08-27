@@ -88,7 +88,12 @@ test.describe('isolated My List scale profile',()=>{
     const client=await page.context().newCDPSession(page);
     await client.send('Emulation.setCPUThrottlingRate',{rate:4});
     await installListFixture(page,120);
-    await page.evaluate(()=>{window.__myListLongTasks=[];});
+    await page.evaluate(()=>{
+      window.__myListLongTasks=[];
+      window.__myListStringRenderCalls=0;
+      const original=renderMyStrings;
+      renderMyStrings=(...args)=>{window.__myListStringRenderCalls++;return original(...args);};
+    });
     const result=await page.evaluate(async()=>{
       const stable=document.querySelectorAll('#mylist-out .myrow')[1];
       const filterStart=performance.now();renderMyList('Synthetic Pokemon 0119',{reason:'filter'});const filterMs=performance.now()-filterStart;
@@ -97,22 +102,27 @@ test.describe('isolated My List scale profile',()=>{
       const first=document.querySelector('#mylist-out .myrow'),firstBefore=first;
       allData.wishlist[cur][first.dataset.name]='M[shiny]';
       const editStart=performance.now();renderMyList();const editMs=performance.now()-editStart;
+      const stringRendersImmediatelyAfterEdit=window.__myListStringRenderCalls;
       const firstAfter=document.querySelector('#mylist-out .myrow');
       const input=document.getElementById('mylist-filter');
       for(const value of['S','Sy','Synthetic Pokemon 0007']){input.value=value;input.dispatchEvent(new Event('input',{bubbles:true}));}
       await new Promise(resolve=>setTimeout(resolve,MY_LIST_FILTER_DELAY_MS+40));
       await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+      await waitForMyListRender();
       return{
         filterMs,clearMs,editMs,matched,
         stableRowPreserved:stable===[...document.querySelectorAll('#mylist-out .myrow')].find(row=>row.dataset.name===stable.dataset.name),
         changedRowReplaced:firstBefore!==firstAfter,
+        stringRendersImmediatelyAfterEdit,
+        stringRendersAfterSettle:window.__myListStringRenderCalls,
         latestQuery:window.__pogoMyListRenderState?.query,
         visible:[...document.querySelectorAll('#mylist-out .myrow')].filter(row=>!row.hidden).length,
         maxLongTask:Math.max(0,...window.__myListLongTasks)
       };
     });
     await client.send('Emulation.setCPUThrottlingRate',{rate:1});
-    expect(result).toMatchObject({matched:1,stableRowPreserved:true,changedRowReplaced:true,latestQuery:'synthetic pokemon 0007',visible:1});
+    expect(result).toMatchObject({matched:1,stableRowPreserved:true,changedRowReplaced:true,stringRendersImmediatelyAfterEdit:0,latestQuery:'synthetic pokemon 0007',visible:1});
+    expect(result.stringRendersAfterSettle).toBeGreaterThan(0);
     expect(result.filterMs).toBeLessThan(50);
     expect(result.clearMs).toBeLessThan(50);
     expect(result.editMs).toBeLessThan(100);

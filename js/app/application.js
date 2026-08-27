@@ -402,8 +402,10 @@ const myListSourceMapCache=new Map();
 let myListFilterTimer=0;
 let myListFilterGeneration=0;
 let myListProgressiveGeneration=0;
+let myListStringsGeneration=0;
 let myListRenderState=null;
 let myListRenderCompletePromise=Promise.resolve();
+let myListAncillaryRenderPromise=Promise.resolve();
 let schedAnchor=null; // anchor date for week view (Sunday of week shown)
 let schedSelectedDate=null; // currently selected day (ISO YYYY-MM-DD)
 let voiceRecognition=null;
@@ -5903,10 +5905,12 @@ function resetMyListPerformanceState(){
   myListFilterTimer=0;
   myListFilterGeneration++;
   myListProgressiveGeneration++;
+  myListStringsGeneration++;
   myListViewModelCache.clear();
   myListSourceMapCache.clear();
   myListRenderState=null;
   myListRenderCompletePromise=Promise.resolve();
+  myListAncillaryRenderPromise=Promise.resolve();
 }
 function setMyList(t){
   myListType=t;
@@ -6354,15 +6358,25 @@ function myListNodeFromHtml(html){
 function patchMyListSectionRows(section,model,entries){
   const grid=section.querySelector('.mygrid');if(!grid)return;
   const existing=new Map([...grid.children].filter(row=>row.classList.contains('myrow')).map(row=>[row.dataset.name,row]));
-  const fragment=document.createDocumentFragment();
-  entries.forEach((entry,idx)=>{
-    const expectedKey=myListRowRenderKey(entry,idx,model.entries.length);
-    let row=existing.get(entry.name);
-    if(!row||row.dataset.renderKey!==expectedKey)row=myListNodeFromHtml(myListRowHtml(entry,idx,model.entries.length));
-    existing.delete(entry.name);fragment.append(row);
-  });
-  existing.forEach(row=>row.remove());
-  grid.replaceChildren(fragment);
+  if(!existing.size){
+    const fragment=document.createDocumentFragment();
+    entries.forEach((entry,idx)=>fragment.append(myListNodeFromHtml(myListRowHtml(entry,idx,model.entries.length))));
+    grid.replaceChildren(fragment);
+  }else{
+    entries.forEach((entry,idx)=>{
+      const expectedKey=myListRowRenderKey(entry,idx,model.entries.length);
+      const previous=existing.get(entry.name);
+      let row=previous;
+      if(!row||row.dataset.renderKey!==expectedKey){
+        row=myListNodeFromHtml(myListRowHtml(entry,idx,model.entries.length));
+        if(previous)previous.replaceWith(row);
+      }
+      existing.delete(entry.name);
+      const current=grid.children[idx];
+      if(current!==row)grid.insertBefore(row,current||null);
+    });
+    existing.forEach(row=>row.remove());
+  }
   section.dataset.rendered=String(entries.length);
   section.dataset.total=String(model.entries.length);
   applyTypeColors(section);
@@ -6436,7 +6450,18 @@ function scheduleProgressiveMyListRender(root,models,limits,generation,resolve){
   };
   schedule(run);
 }
-function waitForMyListRender(){return myListRenderCompletePromise;}
+function scheduleMyListStringsRender(generation){
+  const schedule=window.requestIdleCallback
+    ?callback=>window.requestIdleCallback(callback,{timeout:120})
+    :callback=>setTimeout(callback,16);
+  return new Promise(resolve=>schedule(()=>{
+    if(generation!==myListStringsGeneration){resolve(false);return;}
+    renderMyStrings();resolve(true);
+  }));
+}
+function waitForMyListRender(){
+  return Promise.all([myListRenderCompletePromise,myListAncillaryRenderPromise]).then(([complete])=>complete);
+}
 function renderMyList(filterVal,options={}){
   if(options.reason!=='filter'){
     clearTimeout(myListFilterTimer);myListFilterTimer=0;myListFilterGeneration++;
@@ -6478,7 +6503,8 @@ function renderMyList(filterVal,options={}){
       el.innerHTML=emptyHtml(i18nCore.t(`myList.empty.${myListCategoryKey(myListType)}Title`),i18nCore.t(`myList.empty.${myListCategoryKey(myListType)}Help`),'📋')+
         (alternative?`<div style="display:flex;justify-content:center;margin-top:10px"><button type="button" class="bghost" onclick="setMyList('${alternative}')" aria-label="${escAttr(i18nCore.t('myList.viewCategoryLabel',{category:myListCategoryLabel(alternative),count:i18nCore.formatNumber(alternativeCount)}))}">${escHtml(i18nCore.t('myList.viewCategory',{category:myListCategoryLabel(alternative),count:i18nCore.formatNumber(alternativeCount)}))}</button></div>`:'');
     }
-    if(!filterOnly){renderMyStrings();renderOwnerShareRepublishNotice();}
+    if(!filterOnly){myListStringsGeneration++;renderMyStrings();renderOwnerShareRepublishNotice();}
+    myListAncillaryRenderPromise=Promise.resolve(true);
     myListRenderState={context,q,snapshot};
     window.__pogoMyListRenderState={complete:true,rendered:0,total:0,query:q,usableAt:performance.now()};
     myListRenderCompletePromise=Promise.resolve(true);
@@ -6503,15 +6529,23 @@ function renderMyList(filterVal,options={}){
   root.dataset.rendered=String(rendered);root.dataset.total=String(renderedEntries.length);root.dataset.renderComplete=String(!progressive);
   window.__pogoMyListRenderState={complete:!progressive,rendered,total:renderedEntries.length,visible,query:q,usableAt:performance.now()};
   const shouldRenderStrings=!q&&(dataChanged||previous?.q);
-  if(!progressive&&shouldRenderStrings)renderMyStrings();
-  else if(q)root.querySelectorAll('[data-priority-search],[data-dex-search]').forEach(footer=>{footer.innerHTML='';});
+  if(q){
+    myListStringsGeneration++;
+    root.querySelectorAll('[data-priority-search],[data-dex-search]').forEach(footer=>{footer.innerHTML='';});
+  }
   if(!filterOnly)renderOwnerShareRepublishNotice();
   attachSwipeHandlers();
   if(progressive){
     myListRenderCompletePromise=new Promise(resolve=>scheduleProgressiveMyListRender(root,models,limits,generation,resolve));
-    if(shouldRenderStrings)myListRenderCompletePromise.then(completed=>{if(completed&&generation===myListProgressiveGeneration)renderMyStrings();});
   }
   else myListRenderCompletePromise=Promise.resolve(true);
+  if(shouldRenderStrings){
+    const stringsGeneration=++myListStringsGeneration;
+    myListAncillaryRenderPromise=myListRenderCompletePromise.then(completed=>{
+      if(!completed||generation!==myListProgressiveGeneration)return false;
+      return scheduleMyListStringsRender(stringsGeneration);
+    });
+  }else myListAncillaryRenderPromise=Promise.resolve(true);
   myListRenderState={context,q,snapshot,visibilityDom};
 }
 function confirmRemove(name,dn){
@@ -11417,6 +11451,7 @@ const TYPE_FETCH_CONCURRENCY=4;
 const TYPE_FETCH_TIMEOUT_MS=6000;
 const pokemonTypeInflight=new Map();
 const pokemonTypeQueue=[];
+const typeColorOwnedElements=new WeakSet();
 let pokemonTypeActive=0,typeColorObserver=null;
 function loadTypeCache(){try{pokemonTypes=JSON.parse(localStorage.getItem(TYPE_CACHE_KEY)||'{}')||{};}catch{pokemonTypes={};}}
 function saveTypeCache(){try{localStorage.setItem(TYPE_CACHE_KEY,JSON.stringify(pokemonTypes));}catch{}}
@@ -11464,14 +11499,19 @@ function applyTypeColorToElement(el){
 }
 function applyTypeColors(root=document){
   const rows=[...root.querySelectorAll('.myrow[data-dex],.pgrid .pc[data-dex]')];
-  if(typeof IntersectionObserver!=='function'){rows.forEach(applyTypeColorToElement);return;}
+  if(typeof IntersectionObserver!=='function'){
+    rows.forEach(row=>{if(!typeColorOwnedElements.has(row)){typeColorOwnedElements.add(row);applyTypeColorToElement(row);}});
+    return;
+  }
   if(!typeColorObserver)typeColorObserver=new IntersectionObserver(entries=>entries.forEach(entry=>{
       if(!entry.isIntersecting)return;
       typeColorObserver?.unobserve(entry.target);
       applyTypeColorToElement(entry.target);
     }),{rootMargin:'240px 0px'});
   rows.forEach(row=>{
+    if(typeColorOwnedElements.has(row))return;
     const dex=parseInt(row.dataset.dex);if(!dex)return;
+    typeColorOwnedElements.add(row);
     if(pokemonTypes[dex]!==undefined)applyTypeColorToElement(row);
     else typeColorObserver.observe(row);
   });
