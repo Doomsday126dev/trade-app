@@ -8,6 +8,7 @@ const root=path.join(__dirname,'..');
 const html=readFileSync(path.join(root,'index.html'),'utf8');
 const worker=readFileSync(path.join(root,'sw.js'),'utf8');
 const controller=readFileSync(path.join(root,'js/data/accountSyncController.js'),'utf8');
+const runtime=readFileSync(path.join(root,'js/data/accountSyncRuntime.js'),'utf8');
 const product=readFileSync(path.join(root,'js/domain/accountSyncProduct.js'),'utf8');
 
 test('owner-only migration reads are explicitly registered in the Firebase source contract',()=>{
@@ -65,6 +66,26 @@ test('private acknowledgement precedes public projection and projection excludes
   const projection=publish.indexOf('model.publicTradeProjection'),publication=publish.indexOf('executeAuthorizedMutation(()=>onProjection');assert.ok(projection>=0);assert.ok(publication>=0);assert.ok(projection<publication);assert.match(publish,/listenerAuthorityCurrent\(authority\).*executeAuthorizedMutation\(\(\)=>onProjection/s);
   for(const privateField of ['fieldRevisions','fieldMutations','fieldMutationHashes','lifecycleMutation','operationId','recoveryCandidates','migrations'])assert.doesNotMatch(publish,new RegExp(`onProjection\\([^)]*${privateField}`));
   assert.match(controller,/catch\(error\)\{lastProjectionError=/);
+});
+
+test('entity, direct watched, and public projection writes retain operation-specific authority contracts',()=>{
+  const dispatch=controller.slice(controller.indexOf('async function dispatch'),controller.indexOf('async function drain'));
+  assert.match(dispatch,/executeAuthorizedMutation\(\(\)=>repository\.applyOperation/);
+  assert.match(dispatch,/acceptCanonicalResult\(result\.value,record\.operation,authority\)/);
+
+  const watched=controller.slice(controller.indexOf('function runAuthorizedWatchedMutation'),controller.indexOf('function waitForListenerReady'));
+  assert.match(watched,/const binding=listenerAuthority\(\)/);
+  assert.match(watched,/await repository\.readAccount\(\)/);
+  assert.match(watched,/acceptedSnapshot\(account\)/);
+  assert.match(watched,/await reconcile\(/);
+
+  assert.equal((runtime.match(/controller\.runAuthorizedWatchedMutation\(\{/g)||[]).length,3);
+  for(const method of ['createMigration','createRecoveryCandidate','updateMeta'])assert.match(runtime,new RegExp(`write:\\(\\)=>repository\\.${method}\\(`));
+  assert.doesNotMatch(runtime,/runAuthorizedMutation/);
+
+  const publish=controller.slice(controller.indexOf('async function publishAcceptedProjection'),controller.indexOf('function handleListenerData'));
+  assert.match(publish,/executeAuthorizedMutation\(\(\)=>onProjection/);
+  assert.doesNotMatch(publish,/readAccount|runAuthorizedWatchedMutation/);
 });
 
 test('normal sync copy is understandable and never exposes raw revision or mutation IDs',()=>{

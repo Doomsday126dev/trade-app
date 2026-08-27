@@ -5,6 +5,7 @@
   if(!model||!migration||!product||!controllerApi)throw new Error('Account sync runtime dependencies must load first');
   const MIGRATION_COMPLETE_META='migration-complete';
   const MIGRATION_RECORD_KEYS=Object.freeze(['schemaVersion','ownerUid','deviceMigrationId','sourceFingerprint','deviceInstallHash','createdAt','completedAt','seedCount','candidateCount','verified','legacyRetained']);
+  const META_RECORD_KEYS=Object.freeze(['schemaVersion','ownerUid','initialized','initializedAt','updatedAt','featureVersion']);
   const HISTORICAL_RETRY_CODE='account-sync/committed-entity-invalid';
 
   function count(value){const number=Number(value);return Number.isSafeInteger(number)&&number>0?number:0;}
@@ -96,6 +97,19 @@
     if(model.integer(value.createdAt)===null||model.integer(value.completedAt)===null||value.completedAt<value.createdAt)return false;
     return['schemaVersion','ownerUid','deviceMigrationId','sourceFingerprint','deviceInstallHash','seedCount','candidateCount','verified','legacyRetained'].every(key=>value[key]===expected[key]);
   }
+  function compatibleRecoveryCandidate(value,expected){
+    if(!model.plainObject(value)||Object.keys(value).sort().join(',')!==Object.keys(expected).sort().join(',')||model.integer(value.createdAt)===null)return false;
+    const actualComparable={...value},expectedComparable={...expected};delete actualComparable.createdAt;delete expectedComparable.createdAt;
+    return model.canonicalJson(actualComparable)===model.canonicalJson(expectedComparable);
+  }
+  function compatibleMetaRecord(value,expected,previous){
+    if(!model.plainObject(value)||Object.keys(value).sort().join(',')!==[...META_RECORD_KEYS].sort().join(','))return false;
+    if(value.schemaVersion!==model.SCHEMA_VERSION||value.ownerUid!==expected.ownerUid||value.initialized!==true||value.featureVersion!==expected.featureVersion)return false;
+    const initializedAt=model.integer(value.initializedAt),updatedAt=model.integer(value.updatedAt);
+    if(initializedAt===null||updatedAt===null||updatedAt<initializedAt)return false;
+    const priorInitializedAt=model.integer(previous?.initializedAt);
+    return priorInitializedAt===null||initializedAt===priorInitializedAt;
+  }
   function createAccountSyncRuntime({
     ownerUid,username,journal,repository,enabled,writesEnabled,allowlistedUids,readMigrationSources,
     onState,onCanonicalEntities,onPublicProjection,onMigrationState,online=()=>global.navigator?.onLine!==false,
@@ -155,14 +169,16 @@
       requireRunning();
       notifyState(await controller.snapshot());
       requireRunning();
-      const created=await controller.runAuthorizedMutation(()=>repository.createRecoveryCandidate(candidate));
-      requireRunning();
-      if(created.ok)return created;
-      if(created.error?.code!=='account-sync/recovery-candidate-exists')throw Object.assign(new Error(created.error?.message||'Recovery candidate write failed'),{code:created.error?.code});
-      const account=await repository.readAccount(),existing=account?.recoveryCandidates?.[candidate.candidateId];
-      const comparable=value=>{const copy={...(value||{})};delete copy.createdAt;return copy;};
-      if(model.canonicalJson(comparable(existing))!==model.canonicalJson(comparable(candidate)))throw Object.assign(new Error('Existing recovery candidate differs'),{code:'account-sync/recovery-candidate-conflict'});
-      return Object.freeze({ok:true,status:'idempotent',value:existing});
+      const created=await controller.runAuthorizedWatchedMutation({
+        write:()=>repository.createRecoveryCandidate(candidate),
+        timeoutMs:listenerReadyTimeoutMs,
+        reconcile:({account,result})=>{
+          const existing=account?.recoveryCandidates?.[candidate.candidateId];
+          if(!compatibleRecoveryCandidate(existing,candidate))return model.failure('account-sync/recovery-candidate-conflict','Canonical recovery candidate evidence differs or is missing');
+          return Object.freeze({ok:true,status:result?.ok&&result.status==='created'?'created':'idempotent',value:existing});
+        }
+      });
+      requireRunning();return created;
     }
     async function ensureMigration(){
       requireRunning();
@@ -209,15 +225,16 @@
         record={schemaVersion:model.SCHEMA_VERSION,ownerUid:owner,deviceMigrationId:plan.deviceMigrationId,sourceFingerprint:plan.sourceFingerprint,deviceInstallHash,createdAt,completedAt:Number(clock()),seedCount:plan.verificationSeeds.length+(plan.verificationTombstones?.length||0),candidateCount:plan.recoveryCandidates.length,verified:true,legacyRetained:true};
         const verified=await migration.verifyMigration(plan,{canonicalEntities:[...Object.values(accountVerified?.tradeEntries||{}),...Object.values(accountVerified?.favorites||{}),...Object.values(accountVerified?.tags||{})],migrationRecord:record,recoveryCandidates:Object.values(accountVerified?.recoveryCandidates||{}),requireExact:true});
         if(!verified.ok)throw Object.assign(new Error(verified.error.message),{code:verified.error.code});
-        const created=await controller.runAuthorizedMutation(()=>repository.createMigration(record));
-        requireRunning();
-        if(!created.ok){
-          if(created.error?.code!=='account-sync/migration-exists')throw Object.assign(new Error(created.error?.message||'Migration record write failed'),{code:created.error?.code});
-          accountVerified=await repository.readAccount();requireRunning();
-          const concurrent=migrationRecord(accountVerified,plan.deviceMigrationId);
-          if(!compatibleMigrationRecord(concurrent,record))throw Object.assign(new Error('Existing migration evidence differs'),{code:'account-sync/migration-evidence-conflict'});
-          record=concurrent;
-        }
+        const created=await controller.runAuthorizedWatchedMutation({
+          write:()=>repository.createMigration(record),
+          timeoutMs:listenerReadyTimeoutMs,
+          reconcile:({account,result})=>{
+            const existingRecord=migrationRecord(account,plan.deviceMigrationId);
+            if(!compatibleMigrationRecord(existingRecord,record))return model.failure('account-sync/migration-evidence-conflict','Canonical migration evidence differs or is missing');
+            return Object.freeze({ok:true,status:result?.ok&&result.status==='created'?'created':'idempotent',value:existingRecord});
+          }
+        });
+        requireRunning();record=created.value;
       }else if(existing.sourceFingerprint!==plan.sourceFingerprint||existing.verified!==true||existing.legacyRetained!==true){
         throw Object.assign(new Error('Persisted migration evidence does not match this device source'),{code:'account-sync/migration-evidence-conflict'});
       }
@@ -225,9 +242,15 @@
       requireRunning();
       if(!verified.ok)throw Object.assign(new Error(verified.error.message),{code:verified.error.code});
       if(accountBefore?.meta?.initialized!==true){
-        const meta=await controller.runAuthorizedMutation(()=>repository.updateMeta({ownerUid:owner,initialized:true,initializedAt:accountBefore?.meta?.initializedAt??record.createdAt,featureVersion:model.SCHEMA_VERSION}));
+        const expectedMeta={ownerUid:owner,initialized:true,initializedAt:accountBefore?.meta?.initializedAt??record.createdAt,featureVersion:model.SCHEMA_VERSION};
+        await controller.runAuthorizedWatchedMutation({
+          write:()=>repository.updateMeta(expectedMeta),
+          timeoutMs:listenerReadyTimeoutMs,
+          reconcile:({account})=>compatibleMetaRecord(account?.meta,expectedMeta,accountBefore?.meta)
+            ?Object.freeze({ok:true,status:'reconciled',value:account.meta})
+            :model.failure('account-sync/meta-conflict','Canonical account metadata differs or is incomplete')
+        });
         requireRunning();
-        if(!meta.ok)throw Object.assign(new Error(meta.error?.message||'Canonical sync metadata was not committed'),{code:meta.error?.code||'account-sync/meta-conflict'});
       }
       await journal.setMeta(MIGRATION_COMPLETE_META,{schemaVersion:model.SCHEMA_VERSION,ownerUid:owner,deviceMigrationId:record.deviceMigrationId,sourceFingerprint:record.sourceFingerprint,deviceInstallHash:record.deviceInstallHash,createdAt:record.createdAt,completedAt:record.completedAt,seedCount:record.seedCount,candidateCount:record.candidateCount,verified:true,legacyRetained:true});
       requireRunning();

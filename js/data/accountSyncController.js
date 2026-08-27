@@ -22,9 +22,17 @@
     }
     function listenerFailure(code,message='The live account sync listener is not ready'){return model.failure(code,message);}
     function listenerAuthorityError(){return Object.assign(new Error('The live account sync listener authority changed'),{code:'account-sync/listener-authority-lost'});}
+    function watchedWriteError(code,message){return Object.assign(new Error(message),{code});}
     function closeListenerAuthority(nextState){listenerAuthorityVersion++;listenerState=nextState;clearTimeout(retryTimer);retryTimer=null;return listenerAuthorityVersion;}
     function listenerAuthority(epoch=lifecycleEpoch){return active&&eligible&&online()&&epoch===lifecycleEpoch&&listenerState==='healthy'?Object.freeze({epoch,version:listenerAuthorityVersion}):null;}
     function listenerAuthorityCurrent(binding){return!!binding&&active&&eligible&&online()&&binding.epoch===lifecycleEpoch&&binding.version===listenerAuthorityVersion&&listenerState==='healthy';}
+    function listenerLifecycleCurrent(binding){return!!binding&&active&&eligible&&binding.epoch===lifecycleEpoch;}
+    function watchedWriteAuthorityError(binding){
+      if(!listenerLifecycleCurrent(binding))return watchedWriteError('account-sync/session-changed','The account sync session changed during the watched write');
+      if(lastErrorCategory==='canonical'||model.unsafeRecoveryCode(lastError))return watchedWriteError(lastError||'account-sync/canonical-validation-failed','Canonical account sync evidence became unsafe during the watched write');
+      if(listenerState==='failed')return watchedWriteError(lastError||'account-sync/listener-failed','The live account sync listener failed during the watched write');
+      return listenerAuthorityError();
+    }
     function serializeRepositoryMutation(task){
       const result=repositoryMutationPromise.then(task);
       repositoryMutationPromise=result.then(()=>undefined,()=>undefined);
@@ -37,12 +45,33 @@
         catch(error){return Object.freeze({started:true,current:listenerAuthorityCurrent(binding),error});}
       });
     }
-    async function runAuthorizedMutation(task){
-      if(typeof task!=='function')throw new TypeError('Authorized mutation callback is required');
-      const execution=await executeAuthorizedMutation(task);
-      if(!execution.started||!execution.current)throw listenerAuthorityError();
-      if(execution.error)throw execution.error;
-      return execution.value;
+    async function requireWatchedWriteListener(binding,timeoutMs){
+      if(!listenerLifecycleCurrent(binding))throw watchedWriteAuthorityError(binding);
+      if(listenerState!=='healthy'){
+        const ready=await waitForListenerReady({timeoutMs});
+        if(!ready?.ok)throw watchedWriteAuthorityError(binding);
+      }
+      if(!listenerLifecycleCurrent(binding)||!listenerAuthority(binding.epoch))throw watchedWriteAuthorityError(binding);
+    }
+    function runAuthorizedWatchedMutation({write,reconcile,timeoutMs=8000}={}){
+      if(typeof write!=='function'||typeof reconcile!=='function')throw new TypeError('Watched mutation write and reconciliation callbacks are required');
+      const binding=listenerAuthority();
+      if(!binding)return Promise.reject(listenerAuthorityError());
+      return serializeRepositoryMutation(async()=>{
+        if(!listenerAuthorityCurrent(binding))throw watchedWriteAuthorityError(binding);
+        let result,writeError;
+        try{result=await write();}catch(error){writeError=error;}
+        await requireWatchedWriteListener(binding,timeoutMs);
+        let account;
+        try{account=await repository.readAccount();}
+        catch{throw watchedWriteError('account-sync/watched-write-unreconciled','The watched write could not be reconciled from canonical account data');}
+        await requireWatchedWriteListener(binding,timeoutMs);
+        await serializeCanonical(()=>acceptedSnapshot(account));
+        const proof=await reconcile(Object.freeze({account,result,writeError}));
+        if(!proof?.ok)throw watchedWriteError(proof?.error?.code||'account-sync/watched-write-unreconciled',proof?.error?.message||'The watched write could not be reconciled exactly');
+        await requireWatchedWriteListener(binding,timeoutMs);
+        return Object.freeze({ok:true,status:proof.status||result?.status||'reconciled',value:proof.value,writeErrorCode:safeErrorCode(writeError,'')});
+      });
     }
     function waitForListenerReady({timeoutMs=8000}={}){
       if(!eligible)return Promise.resolve(Object.freeze({ok:true,status:'disabled'}));
@@ -402,7 +431,7 @@
     }
     function activeEntities(type){return[...entities.values()].filter(entity=>(!type||entity.entityType===type)&&entity.deleted!==true);}
     function publicProjection(){return model.publicTradeProjection([...acceptedEntities.values()]);}
-    return Object.freeze({ownerUid:owner,eligible,activate,deactivate,waitForListenerReady,snapshot,getEntity,activeEntities,publicProjection,publishAcceptedProjection,runAuthorizedMutation,mutateBatch,addEntity,patchEntity,addMigrationEntity,patchMigrationEntity,deleteMigrationEntity,deleteEntity,drain,retry,retryBlocked,conflictDetails,acceptConflict,reapplyConflict,acceptRemote});
+    return Object.freeze({ownerUid:owner,eligible,activate,deactivate,waitForListenerReady,snapshot,getEntity,activeEntities,publicProjection,publishAcceptedProjection,runAuthorizedWatchedMutation,mutateBatch,addEntity,patchEntity,addMigrationEntity,patchMigrationEntity,deleteMigrationEntity,deleteEntity,drain,retry,retryBlocked,conflictDetails,acceptConflict,reapplyConflict,acceptRemote});
   }
 
   root.accountSyncController=Object.freeze({createAccountSyncController});
