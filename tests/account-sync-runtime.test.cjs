@@ -109,11 +109,11 @@ test('simultaneous divergent first-sync tabs fail closed instead of overwriting 
 test('startup projects the exact account read but remains pending until the listener proves healthy',async()=>{
   const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),repositoryState=runtimeRepository(window,h),firstState=h.createMemoryJournalState();
   const read=async()=>source('device-hydrate-a',{remote:{Pikachu:'H'}}),first=createRuntime(window,h,repositoryState,firstState,read);await first.start();await first.stop();
-  let handlers=null;const delayed={repository:{...repositoryState.repository,listenAccount(value){handlers=value;return()=>{};}}},projections=[],states=[],second=createRuntime(window,h,delayed,h.createMemoryJournalState(),async()=>source('device-hydrate-b',{remote:{Pikachu:'H'}}),entities=>projections.push(entities),state=>states.push(state));
-  const starting=second.start();for(let index=0;!projections.length&&index<100;index++)await new Promise(resolve=>setImmediate(resolve));
-  const pending=await second.snapshot();assert.equal(second.projectionReady,true);assert.equal(projections.at(-1).length,1);assert.equal(projections.at(-1)[0].identity.catalogId,'pokemon:pikachu');
+  let handlers=null,sourceReads=0;const delayed={repository:{...repositoryState.repository,listenAccount(value){handlers=value;return()=>{};}}},projections=[],states=[],second=createRuntime(window,h,delayed,h.createMemoryJournalState(),async()=>{sourceReads++;return source('device-hydrate-b',{remote:{Pikachu:'H'}});},entities=>projections.push(entities),state=>states.push(state));
+  const starting=second.start();for(let index=0;!handlers&&index<100;index++)await new Promise(resolve=>setImmediate(resolve));
+  const pending=await second.snapshot();assert.equal(second.projectionReady,false);assert.equal(projections.length,0);assert.equal(sourceReads,0);
   assert.equal(pending.listenerState,'listening');assert.equal(pending.listenerHealthy,false);assert.equal(pending.controllerHealthy,false);assert.equal(pending.state,'pending-sync');assert.equal(pending.runtimeHealthy,false);assert.equal(states.some(value=>value.state==='saved'),false);
-  handlers.onData(await delayed.repository.readAccount());const result=await starting,ready=await second.snapshot();assert.equal(result.ok,true);assert.equal(ready.listenerHealthy,true);assert.equal(ready.controllerHealthy,true);assert.equal(ready.state,'saved');assert.equal(ready.runtimeHealthy,true);
+  handlers.onData(await delayed.repository.readAccount());const result=await starting,ready=await second.snapshot();assert.equal(result.ok,true);assert.equal(sourceReads,1);assert.equal(projections.length,1);assert.equal(projections[0][0].identity.catalogId,'pokemon:pikachu');assert.equal(ready.listenerHealthy,true);assert.equal(ready.controllerHealthy,true);assert.equal(ready.state,'saved');assert.equal(ready.runtimeHealthy,true);
 });
 
 test('an initial listener timeout fails once without an automatic reconnect loop',async()=>{
@@ -121,6 +121,13 @@ test('an initial listener timeout fails once without an automatic reconnect loop
   let subscriptions=0;const silent={repository:{...repositoryState.repository,listenAccount(){subscriptions++;return()=>{};}}},states=[],runtime=createRuntime(window,h,silent,h.createMemoryJournalState(),async()=>source('device-timeout-b',{remote:{Pikachu:'H'}}),()=>{},state=>states.push(state),async()=>({ok:true}),{listenerReadyTimeoutMs:20});
   await assert.rejects(runtime.start(),error=>error.code==='account-sync/listener-timeout');await new Promise(resolve=>setTimeout(resolve,30));const failed=await runtime.snapshot();
   assert.equal(subscriptions,1);assert.equal(runtime.projectionReady,false);assert.equal(failed.listenerState,'failed');assert.equal(failed.listenerHealthy,false);assert.equal(failed.controllerHealthy,false);assert.equal(failed.state,'sync-error');assert.equal(failed.lastError,'account-sync/listener-timeout');assert.equal(failed.lastErrorCategory,'listener');assert.equal(states.some(value=>value.state==='saved'),false);
+});
+
+test('a silent listener blocks migration source reads, seed replay, and every direct migration write',async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),repositoryState=runtimeRepository(window,h),state=h.createMemoryJournalState();let sourceReads=0,applyCalls=0,migrationWrites=0,candidateWrites=0,metaWrites=0;
+  const original=repositoryState.repository;const silent={repository:{...original,listenAccount(){return()=>{};},async applyOperation(value){applyCalls++;return original.applyOperation(value);},async createMigration(value){migrationWrites++;return original.createMigration(value);},async createRecoveryCandidate(value){candidateWrites++;return original.createRecoveryCandidate(value);},async updateMeta(value){metaWrites++;return original.updateMeta(value);}}};
+  const runtime=createRuntime(window,h,silent,state,async()=>{sourceReads++;return source('device-silent-migration',{remote:{Pikachu:'H'},queue:{queued:{kind:'my-list-update',path:'wishlist/Owner',data:{Pikachu:'M'}}}});},()=>{},()=>{},async()=>({ok:true}),{listenerReadyTimeoutMs:20});
+  await assert.rejects(runtime.start(),error=>error.code==='account-sync/listener-timeout');assert.equal(sourceReads,0);assert.equal(applyCalls,0);assert.equal(migrationWrites,0);assert.equal(candidateWrites,0);assert.equal(metaWrites,0);assert.equal(state.operations.size,0);assert.equal(state.entities.size,0);assert.equal(runtime.projectionReady,false);
 });
 
 test('migration cannot become projection-ready when canonical meta commitment fails',async()=>{

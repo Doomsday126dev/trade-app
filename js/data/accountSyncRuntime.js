@@ -125,14 +125,20 @@
     });
     function requireRunning(){if(stopped)throw Object.assign(new Error('Account sync runtime is closed'),{code:'account-sync/runtime-closed'});}
     function notifyMigration(state,detail={}){migrationState=state;onMigrationState?.(Object.freeze({state,...detail}));}
-    async function addSeed(seed){
+    async function requireListenerAuthority(){
+      const ready=await controller.waitForListenerReady({timeoutMs:listenerReadyTimeoutMs});
       requireRunning();
+      if(!ready?.ok)throw Object.assign(new Error('The live account sync listener did not become ready'),{code:ready?.error?.code||'account-sync/listener-failed'});
+    }
+    async function addSeed(seed){
+      requireRunning();await requireListenerAuthority();
       const result=await controller.addMigrationEntity({entityType:seed.entityType,entityId:seed.entityId,identity:seed.identity,values:flattenSeed(seed)});
       requireRunning();
       if(!result.ok)throw Object.assign(new Error(result.error.message),{code:result.error.code});
+      await controller.drain();requireRunning();
     }
     async function replayMutation(mutation){
-      requireRunning();
+      requireRunning();await requireListenerAuthority();
       const result=mutation.kind==='patch'
         ?await controller.patchMigrationEntity({entityType:mutation.entityType,entityId:mutation.entityId,patch:mutation.patch})
         :mutation.kind==='delete'
@@ -140,6 +146,7 @@
           :model.failure('account-sync/migration-replay-invalid','Migration replay operation is invalid');
       requireRunning();
       if(!result.ok)throw Object.assign(new Error(result.error.message),{code:result.error.code});
+      await controller.drain();requireRunning();
     }
     async function putCandidate(raw){
       requireRunning();
@@ -148,7 +155,7 @@
       requireRunning();
       notifyState(await controller.snapshot());
       requireRunning();
-      const created=await repository.createRecoveryCandidate(candidate);
+      const created=await controller.runAuthorizedMutation(()=>repository.createRecoveryCandidate(candidate));
       requireRunning();
       if(created.ok)return created;
       if(created.error?.code!=='account-sync/recovery-candidate-exists')throw Object.assign(new Error(created.error?.message||'Recovery candidate write failed'),{code:created.error?.code});
@@ -202,7 +209,7 @@
         record={schemaVersion:model.SCHEMA_VERSION,ownerUid:owner,deviceMigrationId:plan.deviceMigrationId,sourceFingerprint:plan.sourceFingerprint,deviceInstallHash,createdAt,completedAt:Number(clock()),seedCount:plan.verificationSeeds.length+(plan.verificationTombstones?.length||0),candidateCount:plan.recoveryCandidates.length,verified:true,legacyRetained:true};
         const verified=await migration.verifyMigration(plan,{canonicalEntities:[...Object.values(accountVerified?.tradeEntries||{}),...Object.values(accountVerified?.favorites||{}),...Object.values(accountVerified?.tags||{})],migrationRecord:record,recoveryCandidates:Object.values(accountVerified?.recoveryCandidates||{}),requireExact:true});
         if(!verified.ok)throw Object.assign(new Error(verified.error.message),{code:verified.error.code});
-        const created=await repository.createMigration(record);
+        const created=await controller.runAuthorizedMutation(()=>repository.createMigration(record));
         requireRunning();
         if(!created.ok){
           if(created.error?.code!=='account-sync/migration-exists')throw Object.assign(new Error(created.error?.message||'Migration record write failed'),{code:created.error?.code});
@@ -218,7 +225,7 @@
       requireRunning();
       if(!verified.ok)throw Object.assign(new Error(verified.error.message),{code:verified.error.code});
       if(accountBefore?.meta?.initialized!==true){
-        const meta=await repository.updateMeta({ownerUid:owner,initialized:true,initializedAt:accountBefore?.meta?.initializedAt??record.createdAt,featureVersion:model.SCHEMA_VERSION});
+        const meta=await controller.runAuthorizedMutation(()=>repository.updateMeta({ownerUid:owner,initialized:true,initializedAt:accountBefore?.meta?.initializedAt??record.createdAt,featureVersion:model.SCHEMA_VERSION}));
         requireRunning();
         if(!meta.ok)throw Object.assign(new Error(meta.error?.message||'Canonical sync metadata was not committed'),{code:meta.error?.code||'account-sync/meta-conflict'});
       }
@@ -234,10 +241,10 @@
           requireRunning();startupError='';startupErrorCategory='';migrationState='activating';
           const activated=await controller.activate();requireRunning();
           if(!controller.eligible)return activated;
-          migrationState='reading';const plan=await ensureMigration();requireRunning();projectionReady=true;
-          if(onCanonicalEntities?.(Object.freeze(controller.activeEntities()))===false)throw Object.assign(new Error('Canonical account projection is unresolved'),{code:'account-sync/catalog-projection-unresolved'});
           const listenerReady=await controller.waitForListenerReady({timeoutMs:listenerReadyTimeoutMs});requireRunning();
           if(!listenerReady?.ok)throw Object.assign(new Error('The live account sync listener did not become ready'),{code:listenerReady?.error?.code||'account-sync/listener-failed'});
+          migrationState='reading';const plan=await ensureMigration();requireRunning();projectionReady=true;
+          if(onCanonicalEntities?.(Object.freeze(controller.activeEntities()))===false)throw Object.assign(new Error('Canonical account projection is unresolved'),{code:'account-sync/catalog-projection-unresolved'});
           await controller.publishAcceptedProjection(Object.freeze({kind:'migration-complete',deviceMigrationId:plan.deviceMigrationId}));requireRunning();
           startupError='';startupErrorCategory='';notifyState(await controller.snapshot());return Object.freeze({ok:true,status:'active',plan});
         }catch(error){

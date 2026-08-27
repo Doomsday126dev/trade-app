@@ -19,7 +19,7 @@
     'account-sync/catalog-projection-unresolved','account-sync/canonical-validation-failed','account-sync/conflict-current-invalid',
     'account-sync/idempotency-conflict','account-sync/migration-evidence-conflict','account-sync/owner-mismatch',
     'account-sync/recovery-candidate-conflict','account-sync/remote-entity-invalid','account-sync/remote-entity-missing',
-    'account-sync/remote-revision-invalid','account-sync/remote-version-substitution'
+    'account-sync/remote-revision-invalid','account-sync/remote-version-substitution','account-sync/listener-authority-lost'
   ]);
   const UNSAFE_RECOVERY_SET=new Set(UNSAFE_RECOVERY_CODES);
   const FIREBASE_KEY_FORBIDDEN=/[.#$\[\]/\u0000-\u001f\u007f]/u;

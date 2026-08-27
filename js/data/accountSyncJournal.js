@@ -105,6 +105,11 @@
       const next={...record,attempts,status:blocked?'blocked':'pending',lastErrorCode:String(errorCode||''),nextAttemptAt:blocked?time:time+model.retryDelay(attempts-1),updatedAt:time};
       await write('operations',next);return next;
     }
+    async function retainBlocked(operationId,{errorCode='account-sync/network-failed'}={}){
+      const key=recordKey(owner,operationId),record=await read('operations',key);if(!record||record.status!=='blocked')return null;
+      const time=Number(now()),next={...record,attempts:record.attempts+1,status:'blocked',lastErrorCode:String(errorCode||'account-sync/network-failed'),nextAttemptAt:time,updatedAt:time};
+      await write('operations',next);return next;
+    }
     async function acknowledge(operationId,serverEntity){
       const key=recordKey(owner,operationId),record=await read('operations',key);if(!record)throw new Error('Operation is missing');
       const time=Number(now()),next={...record,status:'acknowledged',serverRevision:serverEntity?.revision||0,nextAttemptAt:0,updatedAt:time,lastErrorCode:''};
@@ -160,7 +165,7 @@
       const pending=databasePromise;databasePromise=null;
       if(pending)(await pending).close();
     }
-    return Object.freeze({ownerUid:owner,enqueueOperation,enqueueOperations,listOperations,nextOperation,markAttempt,acknowledge,markConflict,retryBlocked,putEntity,deleteEntity,getEntity,listEntities,listConflicts,resolveConflict,setMeta,getMeta,putRecoveryCandidate,listRecoveryCandidates,snapshot,close,_remove:remove});
+    return Object.freeze({ownerUid:owner,enqueueOperation,enqueueOperations,listOperations,nextOperation,markAttempt,retainBlocked,acknowledge,markConflict,retryBlocked,putEntity,deleteEntity,getEntity,listEntities,listConflicts,resolveConflict,setMeta,getMeta,putRecoveryCandidate,listRecoveryCandidates,snapshot,close,_remove:remove});
   }
 
   root.accountSyncJournal=Object.freeze({STORE_NAMES,openDatabase,createAccountSyncJournal});

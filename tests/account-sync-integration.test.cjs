@@ -59,10 +59,10 @@ test('canonical sync scope includes current product lanes and excludes retired i
 
 test('private acknowledgement precedes public projection and projection excludes sync internals',()=>{
   const dispatch=controller.slice(controller.indexOf('async function dispatch'),controller.indexOf('async function drain'));
-  assert.ok(dispatch.indexOf('await repository.applyOperation')<dispatch.indexOf('await publishAcceptedProjection'));
-  assert.ok(dispatch.indexOf('await journal.acknowledge')<dispatch.indexOf('await publishAcceptedProjection'));
+  const apply=dispatch.indexOf('executeAuthorizedMutation(()=>repository.applyOperation'),acknowledge=dispatch.indexOf('await journal.acknowledge'),project=dispatch.indexOf('await publishAcceptedProjection');
+  assert.ok(apply>=0);assert.ok(acknowledge>=0);assert.ok(project>=0);assert.ok(apply<acknowledge);assert.ok(acknowledge<project);assert.match(dispatch,/listenerAuthorityCurrent\(canonical\.authority\).*await journal\.acknowledge/s);
   const publish=controller.slice(controller.indexOf('async function publishAcceptedProjection'),controller.indexOf('async function activate'));
-  assert.ok(publish.indexOf('model.publicTradeProjection')<publish.indexOf('await onProjection'));
+  const projection=publish.indexOf('model.publicTradeProjection'),publication=publish.indexOf('executeAuthorizedMutation(()=>onProjection');assert.ok(projection>=0);assert.ok(publication>=0);assert.ok(projection<publication);assert.match(publish,/listenerAuthorityCurrent\(authority\).*executeAuthorizedMutation\(\(\)=>onProjection/s);
   for(const privateField of ['fieldRevisions','fieldMutations','fieldMutationHashes','lifecycleMutation','operationId','recoveryCandidates','migrations'])assert.doesNotMatch(publish,new RegExp(`onProjection\\([^)]*${privateField}`));
   assert.match(controller,/catch\(error\)\{lastProjectionError=/);
 });

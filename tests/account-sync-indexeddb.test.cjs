@@ -107,6 +107,88 @@ test('a pre-.70 committed-entity acknowledgement block survives reload and recon
   assert.equal(recovered.after.state,'saved');assert.equal(recovered.after.blockedCount,0);assert.equal(recovered.after.lastError,'');assert.equal(recovered.after.listenerHealthy,true);assert.equal(recovered.priority,'H');assert.equal(recovered.unsubscribed,1);
 });
 
+test('persisted pending and sending operations stay byte-identical until a live listener snapshot is accepted',async t=>{
+  const server=http.createServer((_request,response)=>{response.writeHead(200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store'});response.end('<!doctype html><title>Listener authority persistence</title>');});
+  await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});
+  const browser=await chromium.launch({headless:true});
+  t.after(async()=>{await browser.close();await new Promise(resolve=>server.close(resolve));});
+  const page=await browser.newPage(),databaseName=`pogoAccountSync_listener_authority_${Date.now()}`,url=`http://127.0.0.1:${server.address().port}/`;
+  const load=async()=>{for(const file of ['js/domain/accountSyncModel.js','js/domain/accountSyncMerge.js','js/data/accountSyncJournal.js','js/data/accountSyncController.js'])await page.addScriptTag({path:path.join(root,file)});};
+  await page.goto(url,{waitUntil:'domcontentloaded'});await load();
+  const prepared=await page.evaluate(async databaseName=>{
+    const model=window.PogoDomain.accountSyncModel,journal=window.PogoData.accountSyncJournal.createAccountSyncJournal({ownerUid:'uid-owner',databaseName});
+    const make=async(operationId,catalogId)=>{const identity={surface:'my-list',lane:'wishlist',catalogId},entityId=model.tradeEntryId(identity);return(await model.createOperation({operationId,ownerUid:'uid-owner',entityType:'tradeEntry',entityId,identity,kind:'add',baseGeneration:0,generation:1,baseFieldRevisions:{priority:0},patch:{priority:'H'},clientAt:10})).value;};
+    const pending=await make('op_0000000000007201','pokemon:25:base'),sending=await make('op_0000000000007202','pokemon:133:base');
+    await journal.enqueueOperations([pending,sending]);
+    await new Promise((resolve,reject)=>{
+      const request=indexedDB.open(databaseName);request.onerror=()=>reject(request.error);request.onsuccess=()=>{
+        const database=request.result,transaction=database.transaction('operations','readwrite'),store=transaction.objectStore('operations'),read=store.get(`uid-owner|${sending.operationId}`);
+        read.onerror=()=>reject(read.error);read.onsuccess=()=>store.put({...read.result,status:'sending'});
+        transaction.oncomplete=()=>{database.close();resolve();};transaction.onerror=()=>reject(transaction.error);transaction.onabort=()=>reject(transaction.error);
+      };
+    });
+    const before=JSON.stringify(await journal.listOperations({statuses:['pending','sending']}));await journal.close();return{before};
+  },databaseName);
+
+  await page.reload({waitUntil:'domcontentloaded'});await load();
+  const result=await page.evaluate(async databaseName=>{
+    const merge=window.PogoDomain.accountSyncMerge,journal=window.PogoData.accountSyncJournal.createAccountSyncJournal({ownerUid:'uid-owner',databaseName});
+    let listener=null,applyCalls=0;const canonical=new Map();
+    const repository={
+      ownerUid:'uid-owner',
+      listenAccount({onData}){listener=onData;return()=>{};},
+      async applyOperation(operation){applyCalls++;const current=canonical.get(operation.entityId)||null,next=merge.mergeOperation(current,operation,{acceptedAt:100+applyCalls});if(!next.ok)throw new Error('canonical merge failed');canonical.set(operation.entityId,next.value);return{ok:true,status:'committed',value:next.value};}
+    };
+    const controller=window.PogoData.accountSyncController.createAccountSyncController({journal,repository,ownerUid:'uid-owner',enabled:true,writesEnabled:true,allowlistedUids:['uid-owner'],online:()=>true,clock:(()=>{let value=100;return()=>++value;})(),crypto:window.crypto});
+    await controller.activate();await controller.drain();
+    const beforeProof={applyCalls,records:JSON.stringify(await journal.listOperations({statuses:['pending','sending']})),state:await controller.snapshot()};
+    listener({});const listenerReady=await controller.waitForListenerReady();await controller.drain();
+    const acknowledged=await journal.listOperations({statuses:['acknowledged']}),after=await controller.snapshot();
+    await controller.deactivate();await journal.close();
+    await new Promise((resolve,reject)=>{const request=indexedDB.deleteDatabase(databaseName);request.onsuccess=resolve;request.onerror=()=>reject(request.error);request.onblocked=()=>reject(new Error('test database deletion blocked'));});
+    return{beforeProof,listenerReady,applyCalls,acknowledged:acknowledged.length,after};
+  },databaseName);
+  assert.equal(result.beforeProof.applyCalls,0);assert.equal(result.beforeProof.records,prepared.before);assert.equal(result.beforeProof.state.listenerState,'listening');assert.equal(result.beforeProof.state.listenerHealthy,false);
+  assert.equal(result.listenerReady.ok,true);assert.equal(result.listenerReady.status,'healthy');assert.equal(result.applyCalls,2);assert.equal(result.acknowledged,2);assert.equal(result.after.pendingCount,0);assert.equal(result.after.listenerHealthy,true);
+});
+
+test('a failed retained retry makes one call and remains blocked across another IndexedDB reload',async t=>{
+  const server=http.createServer((_request,response)=>{response.writeHead(200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store'});response.end('<!doctype html><title>Retained retry persistence</title>');});
+  await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});
+  const browser=await chromium.launch({headless:true});
+  t.after(async()=>{await browser.close();await new Promise(resolve=>server.close(resolve));});
+  const page=await browser.newPage(),databaseName=`pogoAccountSync_retained_retry_${Date.now()}`,url=`http://127.0.0.1:${server.address().port}/`;
+  const load=async()=>{for(const file of ['js/domain/accountSyncModel.js','js/domain/accountSyncMerge.js','js/data/accountSyncJournal.js','js/data/accountSyncController.js'])await page.addScriptTag({path:path.join(root,file)});};
+  await page.goto(url,{waitUntil:'domcontentloaded'});await load();
+  await page.evaluate(async databaseName=>{
+    const model=window.PogoDomain.accountSyncModel,journal=window.PogoData.accountSyncJournal.createAccountSyncJournal({ownerUid:'uid-owner',databaseName}),identity={surface:'my-list',lane:'wishlist',catalogId:'pokemon:960:base'},entityId=model.tradeEntryId(identity);
+    const operation=(await model.createOperation({operationId:'op_0000000000007301',ownerUid:'uid-owner',entityType:'tradeEntry',entityId,identity,kind:'add',baseGeneration:0,generation:1,baseFieldRevisions:{priority:0},patch:{priority:'H'},clientAt:10})).value;
+    await journal.enqueueOperation(operation);await journal.markAttempt(operation.operationId,{retryable:false,errorCode:'account-sync/network-failed'});await journal.close();
+  },databaseName);
+
+  await page.reload({waitUntil:'domcontentloaded'});await load();
+  const attempted=await page.evaluate(async databaseName=>{
+    const journal=window.PogoData.accountSyncJournal.createAccountSyncJournal({ownerUid:'uid-owner',databaseName});let applyCalls=0;
+    const repository={ownerUid:'uid-owner',listenAccount({onData}){queueMicrotask(()=>onData({}));return()=>{};},async applyOperation(){applyCalls++;throw Object.assign(new Error('temporary network failure'),{code:'account-sync/network-failed'});}};
+    const controller=window.PogoData.accountSyncController.createAccountSyncController({journal,repository,ownerUid:'uid-owner',enabled:true,writesEnabled:true,allowlistedUids:['uid-owner'],online:()=>true,clock:(()=>{let value=200;return()=>++value;})(),crypto:window.crypto});
+    await controller.activate();await controller.waitForListenerReady();const retry=await controller.retryBlocked(),record=(await journal.listOperations({statuses:['blocked']}))[0],after=await controller.snapshot();
+    await controller.deactivate();await journal.close();return{retry,applyCalls,record:JSON.stringify(record),attempts:record?.attempts,status:record?.status,nextAttemptAt:record?.nextAttemptAt,after};
+  },databaseName);
+  assert.equal(attempted.retry.ok,false);assert.equal(attempted.retry.retried,1);assert.equal(attempted.applyCalls,1);assert.equal(attempted.status,'blocked');assert.equal(attempted.attempts,2);assert.equal(attempted.after.pendingCount,0);assert.equal(attempted.after.blockedCount,1);
+
+  await page.reload({waitUntil:'domcontentloaded'});await load();
+  const reopened=await page.evaluate(async databaseName=>{
+    const journal=window.PogoData.accountSyncJournal.createAccountSyncJournal({ownerUid:'uid-owner',databaseName});let applyCalls=0;
+    const repository={ownerUid:'uid-owner',listenAccount({onData}){queueMicrotask(()=>onData({}));return()=>{};},async applyOperation(){applyCalls++;throw new Error('blocked records must not auto-dispatch');}};
+    const controller=window.PogoData.accountSyncController.createAccountSyncController({journal,repository,ownerUid:'uid-owner',enabled:true,writesEnabled:true,allowlistedUids:['uid-owner'],online:()=>true,clock:()=>10000,crypto:window.crypto});
+    await controller.activate();await controller.waitForListenerReady();await controller.drain();await new Promise(resolve=>setTimeout(resolve,20));const record=(await journal.listOperations({statuses:['blocked']}))[0],snapshot=await controller.snapshot();
+    await controller.deactivate();await journal.close();
+    await new Promise((resolve,reject)=>{const request=indexedDB.deleteDatabase(databaseName);request.onsuccess=resolve;request.onerror=()=>reject(request.error);request.onblocked=()=>reject(new Error('test database deletion blocked'));});
+    return{applyCalls,record:JSON.stringify(record),snapshot};
+  },databaseName);
+  assert.equal(reopened.applyCalls,0);assert.equal(reopened.record,attempted.record);assert.equal(reopened.snapshot.pendingCount,0);assert.equal(reopened.snapshot.blockedCount,1);
+});
+
 test('the real IndexedDB journal classifies mixed blocked codes and preserves unsafe records byte for byte',async t=>{
   const server=http.createServer((_request,response)=>{response.writeHead(200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store'});response.end('<!doctype html><title>Blocked account sync classification</title>');});
   await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});
