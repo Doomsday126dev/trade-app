@@ -16,7 +16,7 @@ function priorityString(start,count,locale='en'){
 }
 
 test('My List renders priority Pokémon immediately with scoped collapsed search actions',()=>{
-  assert.match(html,/function myListPrioritySectionHtml\(priority,entries\)/);
+  assert.match(html,/function myListPrioritySectionHtml\(priority,entries,renderedEntries=entries\)/);
   assert.match(html,/data-priority-search="\$\{priority\}"/);
   assert.match(html,/myListSearchActionHtml\(strs\[priority\]/);
   assert.match(html,/class="strbox mylist-search-raw"[^>]+hidden/);

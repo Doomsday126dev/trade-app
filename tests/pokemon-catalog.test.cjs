@@ -123,10 +123,12 @@ test('all twelve reported historical Pikachu keys remain owner-visible without r
     assert.ok(entry,name);
     assert.ok(entry.legacyAliases.includes(name),name);
   }
-  const ownerEntries=html.slice(html.indexOf('function currentListEntries('),html.indexOf('function myListEditorHtml('));
+  const viewModel=html.slice(html.indexOf('function myListViewModel('),html.indexOf('const MY_LIST_ORDER_PREFIX'));
+  const ownerEntries=html.slice(html.indexOf('function currentListEntries('),html.indexOf('function scheduleMyListFilter('));
   assert.match(ownerEntries,/Object\.entries\(list\)\.map\(\(\[name,val\]\)/);
-  assert.match(ownerEntries,/return\{\s*name,/);
-  assert.doesNotMatch(ownerEntries,/delete |queueSync|writeList|set\(ref/);
+  assert.match(ownerEntries,/return myListViewModel\(type,cur,name,val,srcMap\)/);
+  assert.match(viewModel,/const model=\{\s*name,dn,/);
+  assert.doesNotMatch(`${viewModel}\n${ownerEntries}`,/delete |queueSync|writeList|set\(ref/);
   assert.equal(JSON.stringify(stored),before);
 });
 
