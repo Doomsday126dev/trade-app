@@ -35,6 +35,8 @@ async function establishAccount(page,name='CrossBrowserTrainer'){
 }
 
 async function establishAccountDuringBoot(page,name='CrossBrowserTrainer'){
+  await page.waitForFunction(()=>typeof window.__pogoEnsureFullApp==='function');
+  await page.evaluate(()=>window.__pogoEnsureFullApp('cross-browser-boot-fixture'));
   await page.waitForFunction(()=>typeof syncSettingsRoute==='function'&&typeof syncPendingSettingsRouteAfterAuth==='function');
   await page.evaluate(username=>{
     cur=username;

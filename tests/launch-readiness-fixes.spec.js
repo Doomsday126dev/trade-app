@@ -3,6 +3,8 @@ const{test,expect}=require('@playwright/test');
 async function openFixture(page,{preserveOrder=false}={}){
   await page.route(url=>url.hostname.endsWith('.firebaseio.com')||url.hostname.endsWith('.firebasedatabase.app'),route=>route.abort());
   await page.goto(`./?launch-fixes=${Date.now()}`,{waitUntil:'domcontentloaded'});
+  await page.waitForFunction(()=>typeof window.__pogoEnsureFullApp==='function');
+  await page.evaluate(()=>window.__pogoEnsureFullApp('launch-readiness-fixture'));
   await page.waitForFunction(()=>typeof renderMyList==='function'&&_authStateKnown===true&&window.__pogoStartup?.firebaseStartupSettledAt!==null);
   await page.evaluate(preserveOrder=>{
     managedSubscriptions?.unsubscribeAll?.();managedListenerLifecycle?.deactivateSession?.('launch_fixes');
@@ -69,7 +71,10 @@ test('UX-01 historical, keyboard, desktop, pointer, priority, and reload orderin
 
   const orderRecord=await page.evaluate(()=>localStorage.getItem(myListOrderStorageKey('wishlist','LaunchTester')));
   expect(orderRecord).toContain('Pikachu');
-  await page.reload({waitUntil:'domcontentloaded'});await page.waitForFunction(()=>_authStateKnown===true&&typeof renderMyList==='function'&&window.__pogoStartup?.firebaseStartupSettledAt!==null);
+  await page.reload({waitUntil:'domcontentloaded'});
+  await page.waitForFunction(()=>typeof window.__pogoEnsureFullApp==='function');
+  await page.evaluate(()=>window.__pogoEnsureFullApp('launch-readiness-reload-fixture'));
+  await page.waitForFunction(()=>_authStateKnown===true&&typeof renderMyList==='function'&&window.__pogoStartup?.firebaseStartupSettledAt!==null);
   await page.waitForTimeout(500);
   await page.evaluate(()=>{
     managedSubscriptions?.unsubscribeAll?.();db=null;fbOn=false;cur='LaunchTester';auth={currentUser:{uid:'uid-launch-tester'}};currentAuthUid='uid-launch-tester';managedSessionCache.activate({uid:'uid-launch-tester',username:'LaunchTester'});
@@ -82,12 +87,12 @@ test('UX-01 historical, keyboard, desktop, pointer, priority, and reload orderin
 test('UX-01 touch path remains usable at compact widths',async({page})=>{
   for(const width of[320,375,390,430]){
     await page.setViewportSize({width,height:780});await openFixture(page);await page.locator('#mylist-reorder-toggle').click();
-    const result=await page.evaluate(pointerId=>{
+    const result=await page.evaluate(async pointerId=>{
       const source=document.querySelector('.myrow[data-name="Bulbasaur"] .drag-handle'),target=document.querySelector('.myrow[data-name="Pikachu"]'),box=target.getBoundingClientRect();
       const touchAction=getComputedStyle(source).touchAction,elementFromPoint=document.elementFromPoint.bind(document);
       document.elementFromPoint=()=>target;
       myListPointerStart({currentTarget:source,pointerType:'touch',pointerId,preventDefault(){}});
-      myListPointerMove({pointerId,clientX:box.left+2,clientY:box.top+2,preventDefault(){}});myListPointerEnd({pointerId});
+      myListPointerMove({pointerId,clientX:box.left+2,clientY:box.top+2,preventDefault(){}});await myListPointerEnd({pointerId});
       document.elementFromPoint=elementFromPoint;
       return{order:currentListEntries('wishlist').filter(entry=>entry.p==='H').map(entry=>entry.name),touchAction,bodyOverflow:getComputedStyle(document.body).overflowY};
     },width);

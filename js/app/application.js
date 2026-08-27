@@ -6374,6 +6374,12 @@ function patchMyListSections(root,models,limits){
     const rendered=model.entries.slice(0,limits.get(model.key)??model.entries.length);
     let section=root.querySelector(`:scope > [data-mylist-section="${model.key}"]`);
     if(!section)section=myListNodeFromHtml(myListSectionHtml(model,[]));
+    if(model.kind==='priority'){
+      const collapsed=isMyListPriorityCollapsed(model.priority);
+      section.classList.toggle('is-collapsed',collapsed);
+      section.querySelector('.mylist-priority-toggle')?.setAttribute('aria-expanded',String(!collapsed));
+      const body=section.querySelector('.mylist-priority-body');if(body)body.hidden=collapsed;
+    }
     const count=section.querySelector('.priority-count');
     if(count)count.textContent=i18nCore.t('myList.priorityPokemonCount',{count:i18nCore.formatNumber(model.entries.length)});
     patchMyListSectionRows(section,model,rendered);
@@ -7182,7 +7188,7 @@ function myListPointerEnd(e){
   if(!myListPointerDrag||myListPointerDrag.pointerId!==e.pointerId)return;
   const{sourceName,targetName}=myListPointerDrag;
   clearMyListPointerDrag();
-  reorderMyListEntry(sourceName,targetName);
+  return reorderMyListEntry(sourceName,targetName);
 }
 function myListPointerCancel(e){
   if(myListPointerDrag&&myListPointerDrag.pointerId===e.pointerId)clearMyListPointerDrag();
@@ -11670,6 +11676,10 @@ function renderEventUpNext(events){
 }
 function renderEventsRail(events){return`<aside class="events-context-rail" aria-label="${escAttr(i18nCore.t('events.context'))}">${renderEventCalendar(events)}${renderEventUpNext(events)}</aside>`;}
 function renderEventsLayout(timeline,events){return`<div class="events-layout"><div class="events-timeline">${timeline}</div>${renderEventsRail(events)}</div>`;}
+function syncEventFilterScrollState(row){
+  if(!row)return;
+  row.parentElement?.classList.toggle('is-at-end',row.scrollLeft+row.clientWidth>=row.scrollWidth-2);
+}
 async function retryEvents(){
   _eventData=null;_eventLoadState='loading';renderEventsOnly();await fetchPogoEvents(true);renderEventsOnly();
 }
@@ -11682,7 +11692,7 @@ function renderEventsOnly(){
   const allEvents=_eventData.events||[],sections=eventPresentationDomain.prepareEvents(allEvents,{filter:eventTypeFilter,date:eventCalendarDate});
   const filters=[['all','events.filterAll'],['spotlight','events.filterSpotlight'],['raids','events.filterRaids'],['max','events.filterMax'],['gbl','events.filterGbl'],['research','events.filterResearch'],['general','events.filterGeneral']];
   const filterHtml=`<div class="event-filter-scroll"><div class="event-filter-row" role="group" aria-label="${escAttr(i18nCore.t('events.filtersLabel'))}" tabindex="0">${filters.map(([type,key])=>`<button class="event-filter chip chip-filter" data-event-action="filter" data-type="${type}" aria-pressed="${eventTypeFilter===type}">${escHtml(i18nCore.t(key))}</button>`).join('')}</div></div>`;
-  if(!sections.length){const filtered=eventTypeFilter!=='all'||!!eventCalendarDate,clear=eventCalendarDate?'clear-date':'clear-filters';out.innerHTML=renderEventsLayout(`${filterHtml}${eventStateHtml('empty',i18nCore.t(filtered?'events.filteredEmptyTitle':'events.emptyTitle'),i18nCore.t(filtered?'events.filteredEmpty':'events.empty'),filtered?i18nCore.t(eventCalendarDate?'events.clearDate':'events.clearFilters'):'',filtered?clear:'')}`,allEvents);return;}
+  if(!sections.length){const filtered=eventTypeFilter!=='all'||!!eventCalendarDate,clear=eventCalendarDate?'clear-date':'clear-filters';out.innerHTML=renderEventsLayout(`${filterHtml}${eventStateHtml('empty',i18nCore.t(filtered?'events.filteredEmptyTitle':'events.emptyTitle'),i18nCore.t(filtered?'events.filteredEmpty':'events.empty'),filtered?i18nCore.t(eventCalendarDate?'events.clearDate':'events.clearFilters'):'',filtered?clear:'')}`,allEvents);syncEventFilterScrollState(out.querySelector('.event-filter-row'));return;}
   const timeline=`${filterHtml}${sections.map(section=>`<section class="event-group" data-group="${section.group}" aria-labelledby="event-group-${section.group}"><div class="event-group-heading"><h2 class="event-group-title" id="event-group-${section.group}">${escHtml(eventGroupLabel(section.group))}</h2><span class="event-group-count" aria-label="${escAttr(i18nCore.t('events.eventCount',{count:i18nCore.formatNumber(section.events.length)}))}">${escHtml(i18nCore.formatNumber(section.events.length))}</span></div><div class="event-card-grid">${section.events.map(event=>{
     const locale=i18nCore.getLocale(),timing=eventPresentationDomain.eventTiming(event,{locale}),relative=eventRelativeLabel(timing);
     const localized=eventLabelsI18n.localizeEvent(event,locale),title=localized.localizedTitle||i18nCore.t('events.title'),link=eventPresentationDomain.safeHttpsUrl(event.link);
@@ -11691,6 +11701,7 @@ function renderEventsOnly(){
     return`<${tag} class="event-card card-row ${section.group==='now'?'is-active':''}" data-event-id="${escAttr(localized.stableId)}"${linkAttrs}><div class="event-card-main"><div class="event-card-kicker">${section.group==='now'?`<span class="event-current-badge">${escHtml(i18nCore.t('events.nowBadge'))}</span>`:''}<span class="event-type-tag chip chip-status">${escHtml(localizedEventTypeLabel(event))}</span></div><h3 class="event-card-title type-card">${escHtml(title)}</h3><div class="event-card-time type-meta"><span class="event-card-date">${escHtml(timing.dateLabel)}</span>${timing.timeLabel?`<span class="event-card-time-separator" aria-hidden="true">·</span><span>${escHtml(timing.timeLabel)}</span>`:''}${relative?`<span class="event-card-time-separator" aria-hidden="true">·</span><span class="event-card-relative">${escHtml(relative)}</span>`:''}</div>${summary?`<div class="event-card-summary type-meta">${escHtml(summary)}</div>`:''}</div>${link?`<span class="event-card-cue"><span class="event-card-cue-label">${escHtml(i18nCore.t('events.details'))}</span>${uiIconMarkup('chevron-right','ui-icon event-card-cue-icon')}</span>`:''}</${tag}>`;
   }).join('')}</div></section>`).join('')}`;
   out.innerHTML=renderEventsLayout(timeline,allEvents);
+  syncEventFilterScrollState(out.querySelector('.event-filter-row'));
 }
 function eventsAction(event){
   const control=event.target.closest?.('[data-event-action]');if(!control||!event.currentTarget.contains(control))return;
@@ -11709,11 +11720,12 @@ function eventsKeydown(event){
   const day=event.target.closest?.('.event-calendar-day');if(day)eventCalendarKeydown(event,day.dataset.date||'');
 }
 function eventsScroll(event){
-  const row=event.target.closest?.('.event-filter-row');if(row)row.parentElement?.classList.toggle('is-at-end',row.scrollLeft+row.clientWidth>=row.scrollWidth-2);
+  const row=event.target.closest?.('.event-filter-row');if(row)syncEventFilterScrollState(row);
 }
 document.getElementById('events-out')?.addEventListener('click',eventsAction);
 document.getElementById('events-out')?.addEventListener('keydown',eventsKeydown);
 document.getElementById('events-out')?.addEventListener('scroll',eventsScroll,true);
+window.addEventListener('resize',()=>document.querySelectorAll('.event-filter-row').forEach(syncEventFilterScrollState));
 function renderSchedule(){
   if(TRAINER_FIRST_INTERIM_ENABLED){renderEventsOnly();return;}
   if(!schedAnchor)schedAnchor=startOfWeek(new Date());
@@ -14211,7 +14223,8 @@ function afterFirstPaint(task){
 function startBackgroundStartup(){
   initUpdateCheck();
   if('serviceWorker'in navigator&&location.protocol!=='file:'){
-    navigator.serviceWorker.register(`./sw.js?v=${window.__POGO_RELEASE_ID}`).then(reg=>{
+    const registration=window.__pogoServiceWorkerRegistration||navigator.serviceWorker.register(`./sw.js?v=${window.__POGO_RELEASE_ID}`);
+    registration.then(reg=>{
       reg.addEventListener('updatefound',()=>{
         const nw=reg.installing;if(!nw)return;
         nw.addEventListener('statechange',()=>{

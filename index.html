@@ -50,6 +50,12 @@ function startPogoEarlyAuth(){
   return state.sdkPromise;
 }
 startPogoEarlyAuth().catch(function(){/* The signed-out shell reports the safe error state after markup is available. */});
+if('serviceWorker'in navigator&&location.protocol!=='file:'){
+  window.__pogoServiceWorkerRegistration=navigator.serviceWorker.register(`./sw.js?v=${window.__POGO_RELEASE_ID}`);
+  window.__pogoServiceWorkerRegistration.catch(function(error){
+    console.warn('SW registration failed',error);
+  });
+}
 </script>
 <link rel="stylesheet" href="css/app.css?v=2026-08-27.71">
 </head>

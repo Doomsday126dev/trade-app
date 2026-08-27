@@ -7,6 +7,8 @@ const screenshotDir=process.env.BATCH_B_SCREENSHOT_DIR||'';
 async function openFixture(page){
   await page.route(url=>url.hostname.endsWith('.firebaseio.com')||url.hostname.endsWith('.firebasedatabase.app')||url.hostname.endsWith('googleapis.com'),route=>route.abort());
   await page.goto(`./?batch-b=${Date.now()}`,{waitUntil:'domcontentloaded'});
+  await page.waitForFunction(()=>typeof window.__pogoEnsureFullApp==='function');
+  await page.evaluate(()=>window.__pogoEnsureFullApp('batch-b-fixture'));
   await page.waitForFunction(()=>typeof renderMyList==='function'&&typeof openSettingsPanel==='function'&&_authStateKnown===true&&window.__pogoStartup?.firebaseStartupSettledAt!==null);
   return page.evaluate(()=>{
     managedSubscriptions?.unsubscribeAll?.();
