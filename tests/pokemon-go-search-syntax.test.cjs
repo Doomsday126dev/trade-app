@@ -103,14 +103,19 @@ test('1500-character warning boundary remains exact after localization',()=>{
 
 test('search-language override is device-local and regenerates every visible string surface',()=>{
   assert.match(html,/const POGO_SEARCH_LANGUAGE_KEY='pogoPokemonGoSearchLocale:v1'/);
+  assert.match(html,/const POGO_SEARCH_LANGUAGE_OVERRIDE_KEY='pogoPokemonGoSearchLocaleOverride:v1'/);
   assert.match(html,/id="settings-search-language-override"[^>]*onchange="togglePokemonGoSearchLocaleOverride\(this\.checked\)"/);
   assert.match(html,/id="settings-search-language-override-row" hidden/);
   assert.match(html,/id="settings-search-language"[^>]*onchange="changePokemonGoSearchLocale\(this\.value\)"/);
   const block=html.slice(html.indexOf('function pokemonGoSearchLanguagePreference'),html.indexOf('function saveSyncQueue'));
   assert.match(block,/lsGet\(POGO_SEARCH_LANGUAGE_KEY,null\)/);
+  assert.match(block,/lsGet\(POGO_SEARCH_LANGUAGE_OVERRIDE_KEY,false\)===true/);
+  assert.match(block,/if\(override&&pokemonGoSearchSyntaxDomain\.SUPPORTED_LOCALES\.includes\(value\)\)return value/);
   assert.match(block,/if\(value!==null\)lsRemove\(POGO_SEARCH_LANGUAGE_KEY\)/);
+  assert.match(block,/if\(override\)lsRemove\(POGO_SEARCH_LANGUAGE_OVERRIDE_KEY\)/);
   assert.match(block,/function togglePokemonGoSearchLocaleOverride\(enabled\)/);
-  assert.match(block,/if\(next==='follow-app'\)lsRemove\(POGO_SEARCH_LANGUAGE_KEY\)/);
+  assert.match(block,/if\(next==='follow-app'\)\{lsRemove\(POGO_SEARCH_LANGUAGE_KEY\);lsRemove\(POGO_SEARCH_LANGUAGE_OVERRIDE_KEY\);\}/);
+  assert.match(block,/lsSet\(POGO_SEARCH_LANGUAGE_OVERRIDE_KEY,true\)/);
   assert.match(block,/lsSet\(POGO_SEARCH_LANGUAGE_KEY,next\)/);
   assert.match(block,/checkbox\.checked=override/);
   assert.match(block,/row\.hidden=!override/);

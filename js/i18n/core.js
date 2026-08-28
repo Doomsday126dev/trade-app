@@ -32,8 +32,11 @@
   function createTranslator({catalogs={},pokemonCatalogs={},locale='en',fallbackLocale='en',onMissing}={}){
     let activeLocale=supportedLocale(locale);
     const fallback=supportedLocale(fallbackLocale);
-    const uiCatalogs={...catalogs};
-    const names={...pokemonCatalogs};
+    // Locale files are loaded on demand after the English shell. Keep the
+    // registries live so a locale registered later is immediately available
+    // without rebuilding every translator or eagerly loading all languages.
+    const uiCatalogs=catalogs||{};
+    const names=pokemonCatalogs||{};
     function catalogFor(collection,requested){
       const normalized=normalizeLocale(requested);
       return collection[normalized]||collection[normalized.split('-')[0]]||null;

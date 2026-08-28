@@ -2,6 +2,7 @@ const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const {readFileSync}=require('node:fs');
 const path=require('node:path');
+const vm=require('node:vm');
 
 const root=path.join(__dirname,'..');
 const html=require('../scripts/lib/frontend-source.cjs').readFrontendSource(root);
@@ -35,6 +36,35 @@ test('comparison cards render exact wanted qualifiers and three named sections',
   for(const token of ['bothWant','onlyIWant','onlyTheyWant','bothDirection','mineDirection','theirsDirection'])assert.match(source,new RegExp(`tradeMatch\\.${token}`));
   assert.doesNotMatch(source,/theyDirection|iDirection|possibleMirrors/);
   assert.match(source,/diff-match-qualifier/);
+});
+
+test('all three wanted sections reuse canonical localized search-string controls',()=>{
+  const source=block('function tradeMatchSearchItems','function renderTradeMatchModal');
+  assert.match(source,/stringFromSearchItems\(tradeMatchSearchItems\(entries\),\{locale:pokemonGoSearchLocale\(\)\}\)/);
+  assert.match(source,/myListSearchOptionHtml\(option,`trade-match-\$\{key\}`/);
+  assert.match(source,/showLimit:true/);
+  assert.match(source,/tradeMatch\.searchString/);
+  assert.equal((source.match(/box\('(both|mine|theirs)'/g)||[]).length,3);
+  assert.match(source,/tradeMatchSearchHtml\(items,cls/);
+});
+
+test('comparison search items include supported qualifiers and omit background metadata',()=>{
+  const source=block('function tradeMatchSearchItems','function tradeMatchSearchHtml');
+  const context={input:[{name:'Pikachu',no:25,mod:'costume',shiny:true,gender:'f',xxl:true,lucky:true,backgroundId:'go-fest-new-york'}]};
+  vm.runInNewContext(`
+    const OWNED_MY_LIST_TYPES=['wishlist'];
+    const listSource=()=>[];
+    const regionalFormTerm=()=>'';
+    const _nameToSpriteEntry=name=>({name,no:25});
+    const maxTypeForEntry=()=>null;
+    const dexSearchTerm=entry=>String(entry.no);
+    const entrySearchFilters=()=>['costume'];
+    ${source}
+    globalThis.output=tradeMatchSearchItems(input);
+  `,context);
+  const output=JSON.parse(JSON.stringify(context.output));
+  assert.deepEqual(output,[{term:'25',filters:['costume','shiny','female','xxl','lucky']}]);
+  assert.doesNotMatch(JSON.stringify(output),/background|go-fest/i);
 });
 
 test('wanted-set view models and cards exclude offers, mirrors, inventory, and quantities',()=>{

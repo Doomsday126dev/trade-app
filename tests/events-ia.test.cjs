@@ -50,8 +50,11 @@ test('timeline keeps one chronological column beside the calendar and Up next ov
   assert.match(render,/class="events-layout"/);
   assert.match(render,/class="events-timeline"/);
   assert.match(render,/class="events-context-rail"/);
-  assert.match(render,/class="event-rail-module event-calendar"/);
+  assert.match(render,/class="event-rail-module event-calendar event-calendar-\$\{escAttr\(variant\)\}"/);
   assert.match(render,/class="event-rail-module event-up-next"/);
+  assert.match(render,/class="event-calendar-legend"/);
+  assert.match(render,/events\.calendarLegend/);
+  assert.match(render,/details class="event-calendar-disclosure"/);
   assert.match(render,/const tag=link\?'a':'article'/);
   assert.match(render,/class="event-card card-row/);
   assert.match(render,/target="_blank" rel="noopener noreferrer" aria-label=/);
@@ -64,6 +67,9 @@ test('timeline keeps one chronological column beside the calendar and Up next ov
   assert.match(html,/\.event-card\{[^}]*min-height:92px/);
   assert.match(html,/\.events-layout\{display:grid;grid-template-columns:minmax\(0,860px\) minmax\(270px,320px\)/);
   assert.match(html,/@media\(max-width:1080px\)\{\.events-layout\{grid-template-columns:minmax\(0,1fr\)/);
+  assert.match(html,/@media\(max-width:767px\)\{\.events-layout\{gap:22px\}\.events-timeline\{grid-row:1\}\.events-context-rail\{grid-row:2/);
+  assert.match(html,/\.event-calendar-desktop\{display:none\}/);
+  assert.match(html,/\.event-calendar-disclosure\{display:block/);
 });
 
 test('Up next selects the first non-expired event in each supported category',()=>{
@@ -99,6 +105,16 @@ test('calendar marks meaningful starts while selected-date filtering retains mul
   assert.equal(calendar.cells.find(cell=>cell.key==='2026-08-09').today,true);
   const filtered=events.prepareEvents(fixture,{now,date:'2026-08-11',timeZone:'UTC'}).flatMap(section=>section.events);
   assert.deepEqual(Array.from(filtered,event=>event.id),['multi']);
+});
+
+test('calendar marker and selected-date state remain visually and semantically distinct',()=>{
+  const render=html.slice(html.indexOf('function renderEventCalendar'),html.indexOf('function renderEventSelectedDay'));
+  assert.match(render,/cell\.markerCount\?' has-events'/);
+  assert.match(render,/selected\?' selected'/);
+  assert.match(render,/aria-selected="\$\{selected\}"/);
+  assert.match(render,/events\.calendarHasEvents/);
+  assert.match(html,/\.event-calendar-day\.selected\{background:var\(--accent\)/);
+  assert.match(html,/\.event-calendar-day\.selected i\{background:#fff/);
 });
 
 test('filters and loading empty filtered error offline states remain distinct',()=>{

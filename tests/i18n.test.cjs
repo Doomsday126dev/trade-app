@@ -4,6 +4,7 @@ const {readFileSync}=require('node:fs');
 const path=require('node:path');
 const vm=require('node:vm');
 const html=require('../scripts/lib/frontend-source.cjs').readFrontendSource(path.join(__dirname,'..'));
+const applicationSource=readFileSync(path.join(__dirname,'..','js/app/application.js'),'utf8');
 
 function load({languages=['en-US'],storedLocale=''}={}){
   const values=new Map(storedLocale?[['pogoUiLocale:v1',storedLocale]]:[]);
@@ -21,6 +22,18 @@ test('English fallback works for future and region-specific locales',()=>{
   assert.equal(translator.t('hello'),'こんにちは');
   translator.setLocale('de-DE');
   assert.equal(translator.t('hello'),'Hello');
+});
+
+test('a locale registered after core startup becomes available without recreating the translator',()=>{
+  const window={navigator:{languages:['en'],language:'en'},localStorage:{getItem(){return null;},setItem(){}}};
+  window.window=window;
+  const context=vm.createContext({window});
+  for(const file of ['js/i18n/locales/en.js','js/i18n/core.js'])vm.runInContext(readFileSync(path.join(__dirname,'..',file),'utf8'),context);
+  assert.equal(window.PogoI18n.core.t('events.groupNow'),'Happening Now');
+  vm.runInContext(readFileSync(path.join(__dirname,'..','js/i18n/locales/ja.js'),'utf8'),context);
+  window.PogoI18n.core.setLocale('ja',{persist:false});
+  assert.equal(window.PogoI18n.core.t('events.groupNow'),'開催中');
+  assert.equal(window.PogoI18n.core.t('status.localOnlyTitle'),'端末内モード');
 });
 
 test('complete messages interpolate named parameters',()=>{
@@ -68,7 +81,7 @@ test('session ownership warnings use stable translation keys with English fallba
 test('English, Japanese, Spanish, and German expose the same UI key set',()=>{
   const {catalogs}=load();
   const expected=Object.keys(catalogs.en).sort();
-  assert.equal(expected.length,1228);
+  assert.equal(expected.length,1235);
   for(const locale of ['ja','es','de'])assert.deepEqual(Object.keys(catalogs[locale]).sort(),expected,locale);
 });
 
@@ -221,6 +234,53 @@ test('active Japanese, Spanish, and German labels are natural overrides rather t
   assert.equal(catalogs.es['account.signOut'],'Cerrar sesión');
   assert.equal(catalogs.de['account.languageSettings'],'Spracheinstellungen');
   for(const locale of ['en','ja','es','de'])assert.equal(Object.hasOwn(catalogs[locale],'pokemon.pikachu'),false);
+});
+
+test('active recovery, sharing, trainer-tag, and My List accessibility copy never falls back to English',()=>{
+  const {catalogs}=load();
+  const keys=[
+    'admin.loading','admin.securityTitle','data.ownedReadUnavailable',
+    'myList.confirmDelete','myList.dragEntry','myList.notesFor','myList.removeEntry','myList.selectEntry','myList.setPriority','myList.toggleFlag',
+    'share.anonymous.approved_viewers','share.anonymous.private','share.anonymous.public','share.approvedViewersTitle',
+    'share.mode.approved_viewers','share.mode.private','share.mode.public','share.ownerReadError','share.publicationPending',
+    'share.visibilityIncomplete','share.visibilityPrivate','share.visibilityPublic','share.visibilityRestricted','share.visibilityUnpublished',
+    'storage.cacheReset','storage.offlineRecoveryUnavailable','storage.pendingChangesDiscarded','storage.sessionOwnershipMismatch',
+    'trainer.changesTitle','trainer.migrationFailed','trainer.migrationReady','trainer.migrationVerifying','trainer.publicHint','trainer.publicInvalid',
+    'trainer.syncLoading','trainer.syncOffline','trainer.syncUnavailable','trainer.tagsAssign','trainer.tagsCreate','trainer.tagsDelete',
+    'trainer.tagsDialogLabel','trainer.tagsFilter','trainer.tagsFilterLabel','trainer.tagsRemove','trainer.tagsRename','trainer.tagsSearch','trainer.tagsTitle',
+    'accountSync.fieldLucky','myList.lucky','myList.luckyDex','myList.shinyDex','myList.xxlDex','myList.xxsDex'
+  ];
+  for(const key of keys){
+    for(const locale of ['ja','es','de'])assert.notEqual(catalogs[locale][key],catalogs.en[key],`${locale}:${key}`);
+  }
+});
+
+test('static translation attributes and literal renderer keys resolve in the canonical catalog',()=>{
+  const {catalogs}=load();
+  const attributeKeys=[...html.matchAll(/data-i18n(?:-placeholder|-aria-label|-title)?="([A-Za-z0-9_.-]+)"/g)].map(match=>match[1]);
+  const rendererKeys=[...applicationSource.matchAll(/i18nCore\.t\(['"`]([A-Za-z0-9_.-]+)['"`]/g)].map(match=>match[1]);
+  for(const key of new Set([...attributeKeys,...rendererKeys]))assert.ok(Object.hasOwn(catalogs.en,key),key);
+});
+
+test('dynamic product renderers do not reintroduce known English-only recovery copy',()=>{
+  const {catalogs}=load();
+  for(const key of [
+    'data.ownedReadUnavailable','share.publicationPending','storage.sessionOwnershipMismatch',
+    'trainer.migrationFailed','trainer.migrationVerifying','trainer.syncOffline','trainer.tagsFilterLabel'
+  ])assert.equal(applicationSource.includes(catalogs.en[key]),false,key);
+});
+
+test('pre-trusted dynamic product corrections have complete localized renderer keys',()=>{
+  const {catalogs}=load();
+  const keys=[
+    'events.calendarLegend','trainer.syncHydrating','trainer.syncHydratingHelp',
+    'trainer.profileLoading','trainer.profileLoadingHelp','tradeMatch.searchString'
+  ];
+  for(const key of keys){
+    for(const locale of ['en','ja','es','de'])assert.ok(String(catalogs[locale][key]||'').trim(),`${locale}:${key}`);
+    for(const locale of ['ja','es','de'])assert.notEqual(catalogs[locale][key],catalogs.en[key],`${locale}:${key}`);
+    assert.match(html,new RegExp(`i18nCore\\.t\\('${key.replaceAll('.','\\.')}'`));
+  }
 });
 
 test('Account & Security readiness copy is complete and localized',()=>{

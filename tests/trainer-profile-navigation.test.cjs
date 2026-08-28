@@ -16,9 +16,20 @@ test('new trainer navigation owns one top reset while profile rerenders preserve
   assert.match(source,/requestAnimationFrame\(\(\)=>requestAnimationFrame/);
   assert.match(source,/window\.scrollTo\(\{top:0,left:0,behavior:'auto'\}\)/);
   assert.match(source,/resetNewTrainerProfileScroll\(previousUsername,username\)/);
-  assert.equal((source.match(/resetNewTrainerProfileScroll\(/g)||[]).length,2);
+  assert.equal((source.match(/resetNewTrainerProfileScroll\(/g)||[]).length,3);
   assert.match(source,/_shareReturnScroll=\{x:window\.scrollX,y:window\.scrollY\}/);
   assert.match(source,/window\.scrollTo\(\{left:restore\.x,top:restore\.y,behavior:'auto'\}\)/);
+});
+
+test('trainer navigation renders a measurable shell before awaiting public data',()=>{
+  const open=block('async function openTrainerPublicShare','function renderSettings');
+  const shell=block('function enterShareLoadingShell','function enterShareView');
+  assert.ok(open.indexOf('enterShareLoadingShell(req.username,req.type)')<open.indexOf('await loadPublicShareData'));
+  assert.match(shell,/document\.getElementById\('share-view'\)\.classList\.add\('active'\)/);
+  assert.match(shell,/trainer\.profileLoading/);
+  assert.match(shell,/window\.__pogoTrainerProfileShellAt=performance\.now\(\)/);
+  assert.match(shell,/performance\.measure\('pogo:trainer-profile-shell'/);
+  assert.match(shell,/return window\.__pogoTrainerProfileShellAt-startedAt/);
 });
 
 test('shared-list mobile language control has text, accessible purpose, and touch target',()=>{
