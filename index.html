@@ -5669,6 +5669,35 @@ function accountSyncAuthorityCurrent(authority){
     authority.controller===authority.runtime?.controller&&accountSyncProjectionReady()
   );
 }
+async function accountSyncFavoriteReviewAuthority(){
+  if(ACCOUNT_SYNC_ROLLOUT.enabled!==true||ACCOUNT_SYNC_ROLLOUT.writesEnabled!==true)return Object.freeze({mode:'legacy'});
+  const uid=auth?.currentUser?.uid,username=cur;
+  if(!uid||!username)return Object.freeze({mode:'blocked',code:'account-sync/session-inactive'});
+  let eligible=false;
+  try{eligible=await accountSyncRolloutEligible(uid);}
+  catch(error){return Object.freeze({mode:'blocked',code:String(error?.code||'account-sync/rollout-check-failed')});}
+  if(uid!==auth?.currentUser?.uid||username!==cur)return Object.freeze({mode:'blocked',code:'account-sync/session-changed'});
+  if(!eligible)return Object.freeze({mode:'legacy'});
+  try{
+    const runtime=managedAccountSyncRuntime;
+    if(!runtime||runtime.ownerUid!==uid||!runtime.controller)return Object.freeze({mode:'blocked',code:'account-sync/review-not-ready'});
+    accountSyncUiState=await runtime.snapshot();accountSyncClearStaleRecoveryPresentation();refreshSyncUi();
+    if(uid!==auth?.currentUser?.uid||username!==cur||runtime!==managedAccountSyncRuntime)return Object.freeze({mode:'blocked',code:'account-sync/session-changed'});
+    const state=String(accountSyncUiState?.state||'inactive');
+    if(['review-required','saved'].includes(state)&&runtime.projectionReady===true&&accountSyncUiState?.active===true&&accountSyncUiState?.listenerHealthy===true&&accountSyncUiState?.controllerHealthy===true&&!Number(accountSyncUiState?.pendingCount)&&!Number(accountSyncUiState?.blockedCount)&&!Number(accountSyncUiState?.conflictCount))return Object.freeze({mode:'canonical-review',uid,username,runtime,controller:runtime.controller});
+    return Object.freeze({mode:'blocked',code:'account-sync/review-not-ready'});
+  }catch(error){return Object.freeze({mode:'blocked',code:String(error?.code||'account-sync/start-failed')});}
+}
+function accountSyncFavoriteReviewAuthorityCurrent(authority){
+  const state=String(accountSyncUiState?.state||'inactive');
+  return authority?.mode!=='canonical-review'||(
+    authority.uid===auth?.currentUser?.uid&&authority.username===cur&&
+    authority.runtime===managedAccountSyncRuntime&&authority.runtime?.ownerUid===authority.uid&&
+    authority.controller===authority.runtime?.controller&&authority.runtime?.projectionReady===true&&
+    accountSyncUiState?.active===true&&accountSyncUiState?.listenerHealthy===true&&accountSyncUiState?.controllerHealthy===true&&
+    !['sync-error','conflict','inactive'].includes(state)&&!Number(accountSyncUiState?.pendingCount)&&!Number(accountSyncUiState?.blockedCount)&&!Number(accountSyncUiState?.conflictCount)
+  );
+}
 function accountSyncProjectionReady(){
   const state=String(accountSyncUiState?.state||'inactive');
   return!!accountSyncEligibleUid&&accountSyncEligibleUid===auth?.currentUser?.uid&&managedAccountSyncRuntime?.projectionReady===true&&managedAccountSyncRuntime.ownerUid===accountSyncEligibleUid&&accountSyncUiState?.active===true&&accountSyncUiState?.listenerHealthy===true&&accountSyncUiState?.controllerHealthy===true&&!['sync-error','conflict','review-required','inactive'].includes(state);
@@ -7904,10 +7933,13 @@ async function renderTrainerQuickLists({preserveFavoriteControls=false,favorites
 function accountSyncFavoriteUid(username){
   return accountSyncProduct.exactFavoriteTargetUid(username,{users:allData.users||{},authIndex:allData.authIndex||{}});
 }
-async function recordUnresolvedFavorite(username,source,runtime=managedAccountSyncRuntime){
-  if(!runtime)return;
-  const displayName=String(username||'').normalize('NFC').trim();
-  await runtime.recordRecoveryCandidate({reason:'favorite-uid-unresolved',entityType:'favorite',entityId:`unresolved:${favoritePokemonBrowseDomain.trainerKey(displayName)}`,identity:{targetUidUnresolved:true},values:{displayName},source});
+async function completeUnresolvedFavoriteReview(username,runtime=managedAccountSyncRuntime){
+  if(!runtime?.listRecoveryCandidates||!runtime?.completeRecoveryReview)return accountSyncModel.failure('account-sync/runtime-unavailable','Cross-device sync runtime is unavailable');
+  const key=favoritePokemonBrowseDomain.trainerKey(username),candidates=await runtime.listRecoveryCandidates({unresolvedOnly:false});
+  const matches=candidates.filter(item=>item?.reason==='favorite-uid-unresolved'&&item?.entityType==='favorite'&&favoritePokemonBrowseDomain.trainerKey(item?.values?.displayName)===key);
+  if(!matches.length)return accountSyncModel.failure('account-sync/recovery-evidence-missing','Exact Favorite recovery evidence is unavailable');
+  for(const item of matches){if(item.resolved===true)continue;const result=await runtime.completeRecoveryReview(item.candidateId);if(!result?.ok)return result;}
+  return Object.freeze({ok:true,status:'resolved',count:matches.length});
 }
 async function queueFavoriteTags(username,tagIds){
   const store=ensureTrainerHistoryStore(),favorite=store?.favoriteFor(username);
@@ -7930,14 +7962,10 @@ async function toggleTrainerFavorite(username){
   let result;
   if(authority.mode==='canonical'){
     const targetUid=accountSyncFavoriteUid(username);
-    if(targetUid){
-      const queued=await authority.controller.addEntity({entityType:'favorite',entityId:targetUid,identity:{targetUid},values:{displayName:String(username||'').normalize('NFC').trim()}});
-      if(!queued?.ok||!accountSyncAuthorityCurrent(authority)){toast(i18nCore.t('organizer.saveFailed'));return;}
-      result={ok:true,state:store.read()};
-    }else{
-      result=store.saveFavoriteOrganization(username);
-      if(result.ok)await recordUnresolvedFavorite(username,'favorite-add',authority.runtime);
-    }
+    if(!targetUid){toast(i18nCore.t('organizer.favoriteSyncUnavailable',{trainer:username}),6000);return;}
+    const queued=await authority.controller.addEntity({entityType:'favorite',entityId:targetUid,identity:{targetUid},values:{displayName:String(username||'').normalize('NFC').trim()}});
+    if(!queued?.ok||!accountSyncAuthorityCurrent(authority)){toast(i18nCore.t('organizer.saveFailed'));return;}
+    result={ok:true,state:store.read()};
   }else result=store.saveFavoriteOrganization(username);
   if(!result.ok){toast(organizerMessage(result.code));return;}
   favoriteShareSessionCache?.syncFavorites(store.read().favorites);
@@ -7956,16 +7984,18 @@ function showFavoriteSavedPrompt(username){
 }
 async function removeTrainerFavorite(username){
   const store=ensureTrainerHistoryStore();if(!store?.isFavorite(username)||!confirm(i18nCore.t('organizer.removeConfirm',{trainer:username})))return;
-  const authority=await accountSyncMutationAuthority();
+  const favorite=store.favoriteFor(username),authority=favorite?.targetUid?await accountSyncMutationAuthority():await accountSyncFavoriteReviewAuthority();
   if(authority.mode==='blocked'){toast(i18nCore.t('organizer.saveFailed'));return;}
-  if(!accountSyncAuthorityCurrent(authority)){toast(i18nCore.t('organizer.saveFailed'));return;}
-  const favorite=store.favoriteFor(username);
+  if(authority.mode==='canonical-review'?!accountSyncFavoriteReviewAuthorityCurrent(authority):!accountSyncAuthorityCurrent(authority)){toast(i18nCore.t('organizer.saveFailed'));return;}
   if(authority.mode==='canonical'&&favorite?.targetUid){
     const queued=await authority.controller.deleteEntity({entityType:'favorite',entityId:favorite.targetUid});
     if(!queued?.ok||!accountSyncAuthorityCurrent(authority)){toast(i18nCore.t('organizer.saveFailed'));return;}
   }else{
-    store.toggleFavorite(username);
-    if(authority.mode==='canonical')await recordUnresolvedFavorite(username,'favorite-remove',authority.runtime);
+    if(authority.mode==='canonical-review'){
+      const reviewed=await completeUnresolvedFavoriteReview(username,authority.runtime);
+      if(!reviewed?.ok||!accountSyncFavoriteReviewAuthorityCurrent(authority)){toast(i18nCore.t('organizer.saveFailed'));return;}
+    }
+    const removed=store.toggleFavorite(username);if(!removed?.ok){toast(i18nCore.t('organizer.saveFailed'));return;}
   }
   favoriteShareSessionCache?.syncFavorites(store.read().favorites);toast(i18nCore.t('trainer.favoriteRemoved'));renderFavoriteBrowseResults();renderTrainerQuickLists();if(_activeShareView?.username===username)renderShareView(username,_activeShareView.type);
 }

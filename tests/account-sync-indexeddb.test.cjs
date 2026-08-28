@@ -47,6 +47,32 @@ test('the real IndexedDB journal survives reload, isolates owners, and keeps con
   assert.equal(after.retried,false);assert.equal(after.conflictStatus,'conflict');assert.equal(after.resolved,true);assert.equal(after.resolvedStatus,'resolved');assert.equal(after.resolvedSnapshot.conflictCount,0);
 });
 
+test('reviewed recovery evidence remains preserved locally without keeping the account in review-required',async t=>{
+  const server=http.createServer((_request,response)=>{response.writeHead(200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store'});response.end('<!doctype html><title>Recovery review persistence</title>');});
+  await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});
+  const browser=await chromium.launch({headless:true});
+  t.after(async()=>{await browser.close();await new Promise(resolve=>server.close(resolve));});
+  const page=await browser.newPage(),databaseName=`pogoAccountSync_reviewed_${Date.now()}`,url=`http://127.0.0.1:${server.address().port}/`;
+  const load=async()=>{await page.addScriptTag({path:path.join(root,'js/domain/accountSyncModel.js')});await page.addScriptTag({path:path.join(root,'js/data/accountSyncJournal.js')});};
+  await page.goto(url,{waitUntil:'domcontentloaded'});await load();
+  const prepared=await page.evaluate(async databaseName=>{
+    const journal=window.PogoData.accountSyncJournal.createAccountSyncJournal({ownerUid:'uid-owner',databaseName}),candidateId=`candidate_${'a'.repeat(64)}`;
+    await journal.putRecoveryCandidate({schemaVersion:1,ownerUid:'uid-owner',candidateId,reason:'favorite-uid-unresolved',entityType:'favorite',entityId:'unresolved:mazer',identity:{targetUidUnresolved:true},values:{displayName:'Mazer'},source:'favorite-add',createdAt:10,resolved:false});
+    const before=await journal.snapshot(),resolved=await journal.resolveRecoveryCandidate(candidateId),after=await journal.snapshot(),unresolved=await journal.listRecoveryCandidates(),all=await journal.listRecoveryCandidates({unresolvedOnly:false});
+    await journal.close();return{candidateId,before,resolved,after,unresolved,all};
+  },databaseName);
+  assert.equal(prepared.before.recoveryCandidateCount,1);assert.equal(prepared.resolved,true);assert.equal(prepared.after.recoveryCandidateCount,0);assert.equal(prepared.unresolved.length,0);
+  assert.equal(prepared.all.length,1);assert.equal(prepared.all[0].resolved,true);assert.ok(prepared.all[0].resolvedAt>0);
+
+  await page.reload({waitUntil:'domcontentloaded'});await load();
+  const reopened=await page.evaluate(async({databaseName,candidateId})=>{
+    const journal=window.PogoData.accountSyncJournal.createAccountSyncJournal({ownerUid:'uid-owner',databaseName}),snapshot=await journal.snapshot(),unresolved=await journal.listRecoveryCandidates(),all=await journal.listRecoveryCandidates({unresolvedOnly:false}),resolvedAgain=await journal.resolveRecoveryCandidate(candidateId);
+    await journal.close();await new Promise((resolve,reject)=>{const request=indexedDB.deleteDatabase(databaseName);request.onsuccess=resolve;request.onerror=()=>reject(request.error);request.onblocked=()=>reject(new Error('test database deletion blocked'));});
+    return{snapshot,unresolved,all,resolvedAgain};
+  },{databaseName,candidateId:prepared.candidateId});
+  assert.equal(reopened.snapshot.recoveryCandidateCount,0);assert.equal(reopened.unresolved.length,0);assert.equal(reopened.all.length,1);assert.equal(reopened.all[0].resolved,true);assert.equal(reopened.resolvedAgain,false);
+});
+
 test('real IndexedDB conflict acceptance publishes Saved before reporting success',async t=>{
   const server=http.createServer((_request,response)=>{response.writeHead(200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store'});response.end('<!doctype html><title>Account sync conflict acceptance</title>');});
   await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});

@@ -45,11 +45,13 @@
       async listConflicts(){return[...state.conflicts.values()].filter(item=>!item.resolved);},
       async resolveConflict(id){const item=state.conflicts.get(id);if(!item)return false;state.conflicts.set(id,{...item,resolved:true,resolvedAt:clock()});const record=state.operations.get(item.operationId);if(record?.status==='conflict')state.operations.set(item.operationId,{...record,status:'resolved',nextAttemptAt:0,lastErrorCode:'',updatedAt:clock()});return true;},
       async setMeta(key,value){state.meta.set(key,value);},async getMeta(key){return state.meta.get(key)??null;},
-      async putRecoveryCandidate(item){own(item);state.recoveryCandidates.set(item.candidateId,item);},async listRecoveryCandidates(){return[...state.recoveryCandidates.values()];},
+      async putRecoveryCandidate(item){own(item);state.recoveryCandidates.set(item.candidateId,item);},
+      async listRecoveryCandidates({unresolvedOnly=true}={}){return[...state.recoveryCandidates.values()].filter(item=>!unresolvedOnly||item.resolved!==true).sort((a,b)=>a.createdAt-b.createdAt||a.candidateId.localeCompare(b.candidateId));},
+      async resolveRecoveryCandidate(id){const item=state.recoveryCandidates.get(id);if(!item||item.resolved===true)return false;state.recoveryCandidates.set(id,{...item,resolved:true,resolvedAt:clock()});return true;},
       async snapshot(){
         const blocked=[...state.operations.values()].filter(item=>item.status==='blocked'),codes=[...new Set(blocked.map(item=>String(item.lastErrorCode||'')).filter(code=>/^account-sync\/[a-z0-9-]{1,80}$/.test(code)))];
         const recoverableBlocked=blocked.filter(model.blockedRetryEligible),blockedCategories=[...new Set(blocked.map(item=>model.blockedRetryCategory(item.lastErrorCode)))].sort();
-        return{ownerUid:owner,pendingCount:[...state.operations.values()].filter(item=>['pending','sending'].includes(item.status)).length,blockedCount:blocked.length,recoverableBlockedCount:recoverableBlocked.length,unsafeBlockedCount:blocked.length-recoverableBlocked.length,blockedCategories,blockedErrorCode:blocked.length?(codes.length===1?codes[0]:'account-sync/blocked-operation'):'',conflictCount:[...state.conflicts.values()].filter(item=>!item.resolved).length,entityCount:state.entities.size,recoveryCandidateCount:state.recoveryCandidates.size};
+        return{ownerUid:owner,pendingCount:[...state.operations.values()].filter(item=>['pending','sending'].includes(item.status)).length,blockedCount:blocked.length,recoverableBlockedCount:recoverableBlocked.length,unsafeBlockedCount:blocked.length-recoverableBlocked.length,blockedCategories,blockedErrorCode:blocked.length?(codes.length===1?codes[0]:'account-sync/blocked-operation'):'',conflictCount:[...state.conflicts.values()].filter(item=>!item.resolved).length,entityCount:state.entities.size,recoveryCandidateCount:[...state.recoveryCandidates.values()].filter(item=>item.resolved!==true).length};
       }
     });
   }

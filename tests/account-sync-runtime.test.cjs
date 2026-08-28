@@ -363,10 +363,14 @@ test('a queued full-profile Special Trade Board update replays exact adds edits 
 });
 
 test('a runtime recovery candidate immediately changes the published state from saved to review-required',async()=>{
-  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),repositoryState=runtimeRepository(window,h),states=[];
-  const runtime=createRuntime(window,h,repositoryState,h.createMemoryJournalState(),async()=>source('device-runtime-candidate'),()=>{},state=>states.push(state));await runtime.start();
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),repositoryState=runtimeRepository(window,h),journalState=h.createMemoryJournalState(),states=[];
+  const runtime=createRuntime(window,h,repositoryState,journalState,async()=>source('device-runtime-candidate'),()=>{},state=>states.push(state));await runtime.start();
   await runtime.recordRecoveryCandidate({reason:'catalog-identity-unresolved',entityType:'tradeEntry',entityId:'unresolved:my-list:wishlist:unknown',identity:{surface:'my-list',lane:'wishlist',unresolved:true},values:{displayName:'Unknown'},source:'product-edit'});
   assert.equal(states.at(-1).state,'review-required');assert.equal(states.at(-1).recoveryCandidateCount,1);assert.equal(states.at(-1).migrationReady,true);
+  const candidate=(await runtime.listRecoveryCandidates())[0],reviewed=await runtime.completeRecoveryReview(candidate.candidateId);
+  assert.equal(reviewed.ok,true);assert.equal(reviewed.status,'resolved');assert.equal(states.at(-1).state,'saved');assert.equal(states.at(-1).recoveryCandidateCount,0);
+  assert.equal((await runtime.listRecoveryCandidates()).length,0);assert.equal(journalState.recoveryCandidates.get(candidate.candidateId).resolved,true);
+  assert.equal(repositoryState.recoveryCandidates[candidate.candidateId].resolved,false);assert.equal(repositoryState.calls.createRecoveryCandidate,1);
 });
 
 async function firstStateSnapshot(state){
