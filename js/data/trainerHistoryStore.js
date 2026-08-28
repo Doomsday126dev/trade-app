@@ -177,10 +177,14 @@
         write(state);return{ok:true,created,state:read()};
       },
       replaceSyncedOrganization({favorites=[],tags={}}={}){
-        const state=read(),canonical=Array.isArray(favorites)?favorites:[],canonicalNames=new Set(canonical.map(item=>trainerRef(item.displayName).key));
-        const unresolved=state.favorites.filter(item=>!item.targetUid&&!canonicalNames.has(item.key));
-        state.tags=plainObject(tags);const activeTagIds=new Set(Object.keys(state.tags));
-        state.favorites=[...canonical,...unresolved.map(item=>({...item,tagIds:item.tagIds.filter(id=>activeTagIds.has(id))}))];
+        const state=read(),canonical=Array.isArray(favorites)?favorites:[];
+        // Once the account-sync listener is authoritative, this device-local
+        // projection must mirror it exactly. Older unresolved favorites remain
+        // available through the migration/recovery evidence; merging them back
+        // here would let a standalone PWA disagree with every other same-UID
+        // client while still reporting a healthy sync state.
+        state.tags=plainObject(tags);
+        state.favorites=canonical;
         return{ok:true,state:write(state)};
       },
       filterFavorites({query='',tagIds=[]}={}){

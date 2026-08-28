@@ -8,7 +8,7 @@ const root=path.join(__dirname,'..');
 const html=require('../scripts/lib/frontend-source.cjs').readFrontendSource(root);
 
 function memoryStorage(){const values=new Map();return{getItem:key=>values.get(key)||null,setItem:(key,value)=>values.set(key,String(value)),removeItem:key=>values.delete(key)};}
-function store(){const window={};for(const file of ['js/domain/productLimits.js','js/data/trainerHistoryStore.js'])vm.runInNewContext(readFileSync(path.join(root,file),'utf8'),{window});return window.PogoData.trainerHistoryStore.createTrainerHistoryStore({storage:memoryStorage(),identity:{uid:'uid-a',username:'TrainerA'},now:(()=>{let n=100;return()=>++n;})()});}
+function store({storage=memoryStorage(),identity={uid:'uid-a',username:'TrainerA'}}={}){const window={};for(const file of ['js/domain/productLimits.js','js/data/trainerHistoryStore.js'])vm.runInNewContext(readFileSync(path.join(root,file),'utf8'),{window});return window.PogoData.trainerHistoryStore.createTrainerHistoryStore({storage,identity,now:(()=>{let n=100;return()=>++n;})()});}
 
 test('Find Trainer uses one compact combobox with inline clear and no submit button',()=>{
   const block=html.slice(html.indexOf('<!-- FIND TRAINER'),html.indexOf('<!-- MY LIST'));
@@ -113,6 +113,45 @@ test('Favorite creation supports no organization and normalized tag reuse',()=>{
   const value=store(),empty=value.saveFavoriteOrganization('PlainTrainer'),first=value.ensureTag(' Trade Often '),duplicate=value.ensureTag('ＴＲＡＤＥ　ＯＦＴＥＮ');
   assert.equal(empty.ok,true);assert.deepEqual(Array.from(value.favoriteFor('PlainTrainer').tagIds),[]);assert.equal(value.favoriteFor('PlainTrainer').note,undefined);
   assert.equal(first.created,true);assert.equal(duplicate.created,false);assert.equal(duplicate.id,first.id);assert.equal(Object.keys(value.read().tags).length,1);
+});
+
+test('same-UID clients with separate storage converge to the exact canonical organization',()=>{
+  const browser=store({storage:memoryStorage()}),standalone=store({storage:memoryStorage()});
+  const browserTag=browser.ensureTag('Browser only'),standaloneTag=standalone.ensureTag('Standalone only');
+  browser.saveFavoriteOrganization('LocalBrowser',{tagIds:[browserTag.id]});
+  standalone.saveFavoriteOrganization('LocalStandalone',{tagIds:[standaloneTag.id]});
+  const canonicalTag={id:'tag_cloud',label:'Cloud',normalizedLabel:'cloud',createdAt:500,updatedAt:500};
+  const canonical={
+    tags:{tag_cloud:canonicalTag},
+    favorites:[{displayName:'Mazer',targetUid:'uid-mazer',tagIds:['tag_cloud'],createdAt:500,updatedAt:500}]
+  };
+  browser.replaceSyncedOrganization(canonical);
+  standalone.replaceSyncedOrganization(canonical);
+  assert.deepEqual(JSON.parse(JSON.stringify(browser.read())),JSON.parse(JSON.stringify(standalone.read())));
+  assert.deepEqual(Array.from(browser.read().favorites,item=>item.displayName),['Mazer']);
+  assert.deepEqual(Object.keys(browser.read().tags),['tag_cloud']);
+  assert.equal(browser.favoriteFor('LocalBrowser'),null);
+  assert.equal(standalone.favoriteFor('LocalStandalone'),null);
+
+  const otherAccount=store({storage:memoryStorage(),identity:{uid:'uid-b',username:'TrainerB'}});
+  otherAccount.saveFavoriteOrganization('PrivateToB');
+  assert.deepEqual(Array.from(otherAccount.read().favorites,item=>item.displayName),['PrivateToB']);
+});
+
+test('installed web app launches the canonical scoped standalone shell',()=>{
+  const manifest=JSON.parse(readFileSync(path.join(root,'manifest.json'),'utf8'));
+  assert.equal(manifest.start_url,'./');
+  assert.equal(manifest.scope,'./');
+  assert.equal(manifest.display,'standalone');
+});
+
+test('Favorites stay in a loading state until same-UID account-sync projection is authoritative',()=>{
+  const hydration=html.slice(html.indexOf('function accountSyncOrganizationHydrating'),html.indexOf('function accountSyncClone'));
+  const render=html.slice(html.indexOf('async function renderTrainerQuickLists'),html.indexOf('function accountSyncFavoriteUid'));
+  assert.match(hydration,/managedAccountSyncRuntime\?\.projectionReady!==true/);
+  assert.match(render,/if\(accountSyncOrganizationHydrating\(\)\)/);
+  assert.match(render,/trainer\.syncHydrating/);
+  assert.ok(render.indexOf('if(accountSyncOrganizationHydrating())')<render.indexOf('const state=store.read()'));
 });
 
 test('Favorite UI uses one compact tag organizer and makes removal destructive',()=>{

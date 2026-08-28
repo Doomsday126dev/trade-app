@@ -730,7 +730,7 @@ test.describe('visual smoke', () => {
 
   test('signed-in Settings stays bounded across supported locales and viewports',async({page})=>{
     const locales=['en','ja','es','de'];
-    const viewports=[[320,640],[375,700],[390,700],[430,760],[768,800],[1024,800],[1440,900],[390,420],[390,300]];
+    const viewports=[[320,568],[375,812],[390,844],[430,932],[768,800],[1024,800],[1440,900],[1728,1000],[390,420],[390,300]];
     for(const locale of locales){
       for(const [width,height] of viewports){
         await page.setViewportSize({width,height});
@@ -768,13 +768,14 @@ test.describe('visual smoke', () => {
   });
 
   test('language Settings keeps the search-language override subordinate, responsive, and device-local',async({page})=>{
-    const viewports=[[320,640],[375,700],[390,700],[430,760],[768,800],[1024,800],[1440,900]];
+    const viewports=[[320,568],[375,812],[390,844],[430,932],[768,800],[1024,800],[1440,900],[1728,1000]];
     for(const [width,height] of viewports){
       await page.setViewportSize({width,height});
       await page.goto(`./?language-settings=${width}-${Date.now()}`,{waitUntil:'domcontentloaded'});
       await waitForSettingsStartupReady(page);
       await page.evaluate(()=>{
         localStorage.removeItem('pogoPokemonGoSearchLocale:v1');
+        localStorage.removeItem('pogoPokemonGoSearchLocaleOverride:v1');
         changeInterfaceLocale('ja');
         openSettingsPanel('public');
       });
@@ -834,18 +835,24 @@ test.describe('visual smoke', () => {
       await page.keyboard.press('Escape');
     }
 
-    await page.evaluate(()=>localStorage.setItem('pogoPokemonGoSearchLocale:v1',JSON.stringify('en')));
-    await page.reload({waitUntil:'domcontentloaded'});
-    await waitForSettingsStartupReady(page);
-    await page.evaluate(()=>openSettingsPanel('public'));
-    await expect(page.locator('#settings-search-language-override')).toBeChecked();
-    await expect(page.locator('#settings-search-language')).toHaveValue('en');
-    await page.evaluate(()=>localStorage.setItem('pogoPokemonGoSearchLocale:v1',JSON.stringify('follow-app')));
+    await page.evaluate(()=>{
+      localStorage.setItem('pogoPokemonGoSearchLocale:v1',JSON.stringify('en'));
+      localStorage.removeItem('pogoPokemonGoSearchLocaleOverride:v1');
+    });
     await page.reload({waitUntil:'domcontentloaded'});
     await waitForSettingsStartupReady(page);
     await page.evaluate(()=>openSettingsPanel('public'));
     await expect(page.locator('#settings-search-language-override')).not.toBeChecked();
     expect(await page.evaluate(()=>localStorage.getItem('pogoPokemonGoSearchLocale:v1'))).toBeNull();
+    await page.evaluate(()=>{
+      localStorage.setItem('pogoPokemonGoSearchLocale:v1',JSON.stringify('en'));
+      localStorage.setItem('pogoPokemonGoSearchLocaleOverride:v1',JSON.stringify(true));
+    });
+    await page.reload({waitUntil:'domcontentloaded'});
+    await waitForSettingsStartupReady(page);
+    await page.evaluate(()=>openSettingsPanel('public'));
+    await expect(page.locator('#settings-search-language-override')).toBeChecked();
+    await expect(page.locator('#settings-search-language')).toHaveValue('en');
   });
 
   test('anonymous share and signed-out Settings use the full-width local Language layout',async({page})=>{
@@ -2721,6 +2728,34 @@ test.describe('visual smoke', () => {
     await expectOpen(page.locator('.favorite-card-primary').first(),'Mazer');
   });
 
+  test('trainer profile shell appears before a delayed public read and stays within the interaction budget',async({page})=>{
+    await page.setViewportSize({width:390,height:844});
+    await page.goto(`./?trainer-profile-shell=${Date.now()}`,{waitUntil:'domcontentloaded'});
+    await waitForStableLocalOrganizerStartup(page);
+    await isolateAuthenticatedMyListFixture(page,{username:'ProfileViewer',uid:'uid-profile-viewer'});
+    await page.evaluate(()=>{
+      allData=normalizeData({users:{ProfileViewer:{}},wishlist:{},dynamax:{},gmax:{},costumes:{}});
+      allData.loginDirectory={SlowTrainer:{ready:true}};
+      requireCompatibleTrainerSearch=()=>true;
+      loadPublicShareData=()=>new Promise(resolve=>{window.__resolveSlowTrainerProfile=resolve;});
+      window.__slowTrainerOpen=openTrainerPublicShare('SlowTrainer');
+    });
+    await expect(page.locator('#share-view')).toHaveClass(/active/);
+    await expect(page.locator('#share-hdr')).toContainText('SlowTrainer');
+    await expect(page.locator('#share-list-out .ui-state-loading')).toBeVisible();
+    const timing=await page.evaluate(()=>({
+      shellAt:window.__pogoTrainerProfileShellAt,
+      duration:performance.getEntriesByName('pogo:trainer-profile-shell').at(-1)?.duration??Infinity,
+      pending:typeof window.__resolveSlowTrainerProfile==='function'
+    }));
+    expect(timing.pending).toBe(true);
+    expect(timing.shellAt).toBeGreaterThan(0);
+    expect(timing.duration).toBeLessThanOrEqual(150);
+    expect(await page.evaluate(()=>window.scrollY)).toBe(0);
+    await page.evaluate(async()=>{window.__resolveSlowTrainerProfile({ok:false,status:'not_published'});await window.__slowTrainerOpen;});
+    await expect(page.locator('#share-list-out')).toContainText(/not published|unavailable/i);
+  });
+
   test('trainer discovery keeps exact intent first and shows reciprocal hierarchy on mobile',async({page})=>{
     await page.setViewportSize({width:320,height:568});
     await page.goto(`./?trainer-ranking-ui=${Date.now()}`,{waitUntil:'domcontentloaded'});
@@ -2799,6 +2834,19 @@ test.describe('visual smoke', () => {
     await expect(modal.locator('.diff-match-box.both .diff-match-count')).toHaveText('1');
     await expect(modal.locator('.diff-match-box.mine .diff-match-count')).toHaveText('1');
     await expect(modal.locator('.diff-match-box.theirs .diff-match-count')).toHaveText('2');
+    await expect(modal.locator('.trade-match-search')).toHaveCount(3);
+    await expect(modal.locator('.trade-match-search .cpbtn')).toHaveCount(3);
+    await expect(modal.locator('.trade-match-search .mylist-search-view')).toHaveCount(3);
+    const rawSearchStrings=await modal.locator('.trade-match-search .mylist-search-raw').allTextContents();
+    expect(rawSearchStrings).toHaveLength(3);
+    expect(rawSearchStrings.every(value=>value.trim().length>0)).toBe(true);
+    expect(rawSearchStrings.every(value=>!/New York|Osaka|location-gofest|bg:/i.test(value))).toBe(true);
+    expect(rawSearchStrings.every(value=>value.includes('!background'))).toBe(true);
+    await page.evaluate(()=>{window.__copiedTradeMatchSearch='';copyText=async value=>{window.__copiedTradeMatchSearch=value;};});
+    await modal.locator('.trade-match-search .cpbtn').first().click();
+    expect(await page.evaluate(()=>window.__copiedTradeMatchSearch)).toBe(rawSearchStrings[0]);
+    await modal.locator('.trade-match-search .mylist-search-view').first().click();
+    await expect(modal.locator('.trade-match-search .mylist-search-raw').first()).toBeVisible();
     expect(await modal.locator('.diff-match-chip[title]').evaluateAll(nodes=>nodes.every(node=>!/[×x]\d+/i.test(node.getAttribute('title')||'')))).toBe(true);
     await page.getByRole('button',{name:'Edit My List'}).click();
     await expect(page.locator('#trade-return-banner')).toBeVisible();
@@ -3034,7 +3082,7 @@ test.describe('visual smoke', () => {
     await expect(page.locator('.admin-maintenance-row').filter({hasText:'AdminFixture'}).getByRole('button')).toHaveCount(1);
   });
 
-  test('EVENT-01 and ADMIN-01 states render from the corrected runtime contracts',async({page})=>{
+  test('EVENT-01 error recovery remains available and retired Admin community UI stays absent',async({page})=>{
     await page.goto(`./?event-admin-corrections=${Date.now()}`,{waitUntil:'domcontentloaded'});
     await isolateAuthenticatedMyListFixture(page,{username:'Doomsday126',uid:'uid-event-admin-fixture'});
     await page.evaluate(()=>{
@@ -3050,11 +3098,10 @@ test.describe('visual smoke', () => {
       document.getElementById('tab-admin').classList.add('active');
       renderAdmin();setAdminSection('diagnostics');
     });
-    const diagnostic=page.locator('[data-community-diagnostic-state]');
-    await expect(diagnostic).toHaveAttribute('data-community-diagnostic-state','enabled-interim');
-    await expect(diagnostic).toContainText('Community filtering is enabled');
-    await diagnostic.scrollIntoViewIfNeeded();
-    await captureP1(page,'45-admin-diagnostic');
+    await expect(page.locator('[data-community-diagnostic-state], #community-migration-panel, .req-card-community, .approve-community-select')).toHaveCount(0);
+    await expect(page.locator('[data-admin-section="diagnostics"]')).not.toContainText(/Preview community|Prepare NYC|Prepare NJ|New Jersey/i);
+    await expect(page.locator('#security-panel')).toBeVisible();
+    await captureP1(page,'45-admin-current-diagnostics');
 
     await page.evaluate(()=>{
       document.querySelectorAll('.page').forEach(node=>node.classList.remove('active'));
@@ -3251,6 +3298,7 @@ test.describe('visual smoke', () => {
       const extras=Array.from({length:25},(_,index)=>({eventID:`scale-${index}`,name:`Research Event ${index}`,eventType:'research',start:new Date(now+(index+9)*day).toISOString(),end:new Date(now+(index+9)*day+hour).toISOString()}));
       window.__eventTimelineFixture={events:[...base,...extras],raids:[],fetchedAt:now};_eventData=window.__eventTimelineFixture;_eventLoadState='ready';eventTypeFilter='all';eventCalendarDate='';eventCalendarAnchor=new Date(new Date(now).getFullYear(),new Date(now).getMonth(),1);renderEventsOnly();
     });
+    await page.setViewportSize({width:1440,height:900});
     await expect(page.locator('.event-group[data-group="now"]')).toBeVisible();await expect(page.locator('.event-group[data-group="soon"]')).toBeVisible();await expect(page.locator('.event-group[data-group="later"]')).toBeVisible();
     await expect(page.locator('.event-current-badge')).toBeVisible();await expect(page.locator('.event-card-relative').first()).toContainText(/.+/);
     await expect(page.locator('.event-card-date').first()).toContainText(String(new Date().getFullYear()));
@@ -3281,8 +3329,16 @@ test.describe('visual smoke', () => {
     expect(desktopGeometry.railRight).toBeLessThanOrEqual(desktopGeometry.containerRight+1);
     expect(desktopGeometry.railPosition).toBe('static');
     expect(desktopGeometry.railOverflowY).toBe('visible');
+    await expect(page.locator('.event-calendar-desktop .event-calendar-legend')).toContainText(/.+/);
+    await expect(page.locator('.event-calendar-disclosure')).toBeHidden();
     await capturePass3(page,`product-ui-events-${test.info().project.name}`);
+    const calendarEventDay=page.locator('.event-calendar-desktop .event-calendar-day.has-events').first();await calendarEventDay.click();await expect(page.locator('.event-calendar-desktop .event-calendar-day.selected')).toHaveCount(1);await expect(page.locator('.event-calendar-desktop .event-selected-day')).toBeVisible();await expect(page.locator('.event-calendar-desktop .event-selected-day-row').first()).toBeVisible();await expect(page.locator('.event-calendar-desktop .event-calendar-clear')).toBeVisible();await capturePass3(page,'events-calendar-selected-event-1440x900');const emptyCalendarDay=page.locator('.event-calendar-desktop .event-calendar-day:not(.has-events)').first();await emptyCalendarDay.click();await expect(page.locator('.event-calendar-desktop .event-selected-day-empty')).toBeVisible();await capturePass3(page,'events-calendar-selected-empty-1440x900');await page.locator('.event-calendar-desktop .event-calendar-clear').click();await expect(page.locator('.event-calendar-day.selected')).toHaveCount(0);await expect(page.locator('.event-selected-day')).toHaveCount(0);
     await page.setViewportSize({width:390,height:420});
+    const mobileOrder=await page.evaluate(()=>{const timeline=document.querySelector('.events-timeline').getBoundingClientRect(),rail=document.querySelector('.events-context-rail').getBoundingClientRect();return{timelineTop:timeline.top,railTop:rail.top};});
+    expect(mobileOrder.timelineTop).toBeLessThan(mobileOrder.railTop);
+    await expect(page.locator('.event-calendar-desktop')).toBeHidden();
+    await expect(page.locator('.event-calendar-disclosure')).not.toHaveAttribute('open','');
+    await expect(page.locator('.event-up-next')).toBeVisible();
     const filterGeometry=await page.locator('.event-filter-row').evaluate(node=>({clientWidth:node.clientWidth,scrollWidth:node.scrollWidth,tabIndex:node.tabIndex,edge:getComputedStyle(node.parentElement,'::after').display}));
     expect(filterGeometry.scrollWidth).toBeGreaterThan(filterGeometry.clientWidth);
     expect(filterGeometry.tabIndex).toBe(0);
@@ -3293,7 +3349,6 @@ test.describe('visual smoke', () => {
     expect(await sourceRow.locator('a,button,[role="button"]').count()).toBe(0);
     await sourceRow.focus();await expect(sourceRow).toBeFocused();
     for(const filter of await page.locator('.event-filter').all()){const box=await filter.boundingBox();expect(box?.height).toBeGreaterThanOrEqual(48);}
-    const calendarEventDay=page.locator('.event-calendar-day.has-events').first();await calendarEventDay.click();await expect(page.locator('.event-calendar-day.selected')).toHaveCount(1);await expect(page.locator('.event-selected-day')).toBeVisible();await expect(page.locator('.event-selected-day-row').first()).toBeVisible();await expect(page.locator('.event-calendar-clear')).toBeVisible();await capturePass3(page,'events-calendar-selected-event-1440x900');const emptyCalendarDay=page.locator('.event-calendar-day:not(.has-events)').first();await emptyCalendarDay.click();await expect(page.locator('.event-selected-day-empty')).toBeVisible();await capturePass3(page,'events-calendar-selected-empty-1440x900');await page.locator('.event-calendar-clear').click();await expect(page.locator('.event-calendar-day.selected')).toHaveCount(0);await expect(page.locator('.event-selected-day')).toHaveCount(0);
     await page.locator('.event-filter[data-type="spotlight"]').click();await expect(page.locator('.event-card')).toHaveCount(1);await expect(page.locator('.event-card')).toContainText('Pikachu');
     await page.locator('.event-filter[data-type="raids"]').click();await expect(page.locator('.event-filter[data-type="raids"]')).toHaveAttribute('aria-pressed','true');
     await page.locator('.event-filter[data-type="gbl"]').click();await expect(page.locator('.events-state')).toContainText(/.+/);await expect(page.locator('.events-state-action')).toBeVisible();await page.locator('.events-state-action').click();await expect(page.locator('.event-filter[data-type="all"]')).toHaveAttribute('aria-pressed','true');
@@ -3301,7 +3356,8 @@ test.describe('visual smoke', () => {
     await page.evaluate(()=>{_eventData=null;_eventLoadState='loading';renderEventsOnly();});await expect(page.locator('#events-out')).toHaveAttribute('aria-busy','true');await expect(page.locator('.ui-state-loading')).toBeVisible();await capturePass3(page,'events-loading-mobile');
     await page.evaluate(()=>{_eventData={events:[],raids:[],fetchedAt:0};_eventLoadState='error';renderEventsOnly();});await expect(page.locator('.ui-state-unavailable')).toBeVisible();await expect(page.locator('.events-state-action')).toBeVisible();await capturePass3(page,'events-error-mobile');
     const viewports=[['en',320,640],['ja',375,700],['de',390,420],['es',430,760],['ja',390,300],['de',768,800],['es',1024,800],['en',1440,900],['en',1728,1000],['en',430,932],['ja',390,844],['de',375,812],['es',320,568]];
-    for(const [locale,width,height] of viewports){await page.setViewportSize({width,height});await page.evaluate(locale=>{changeInterfaceLocale(locale);_eventData=window.__eventTimelineFixture;_eventLoadState='ready';eventTypeFilter='all';eventCalendarDate='';renderEventsOnly();},locale);await expect(page.locator('.event-card').first()).toBeVisible();await expect(page.locator('.events-context-rail')).toBeVisible();const rowBox=await page.locator('.event-card').first().boundingBox();expect(rowBox?.height).toBeLessThan(width<=430?192:150);const summaryClamps=await page.locator('.event-card-summary').evaluateAll(nodes=>nodes.map(node=>getComputedStyle(node).webkitLineClamp));expect(summaryClamps.every(value=>value==='1')).toBe(true);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);if([[1728,1000],[1440,900],[430,932],[390,844],[375,812],[320,568]].some(([w,h])=>w===width&&h===height))await capturePass3(page,`events-calendar-sparse-${width}x${height}`);}
+    const localizedChrome={en:['Events','Events'],ja:['イベント','イベント'],de:['Events','Events'],es:['Eventos','Eventos']};
+    for(const [locale,width,height] of viewports){await page.setViewportSize({width,height});await page.evaluate(async locale=>{await changeInterfaceLocale(locale);_eventData=window.__eventTimelineFixture;_eventLoadState='ready';eventTypeFilter='all';eventCalendarDate='';renderEventsOnly();},locale);await expect(page.locator('.event-card').first()).toBeVisible();await expect(page.locator('.events-context-rail')).toBeVisible();await expect(page.locator('#events-title')).toHaveText(localizedChrome[locale][0]);await expect(page.locator('#nav-events .tab-short-label')).toHaveText(localizedChrome[locale][1]);const rowBox=await page.locator('.event-card').first().boundingBox();expect(rowBox?.height).toBeLessThan(width<=430?192:150);const summaryClamps=await page.locator('.event-card-summary').evaluateAll(nodes=>nodes.map(node=>getComputedStyle(node).webkitLineClamp));expect(summaryClamps.every(value=>value==='1')).toBe(true);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);if([[1728,1000],[1440,900],[430,932],[390,844],[375,812],[320,568]].some(([w,h])=>w===width&&h===height))await capturePass3(page,`events-calendar-sparse-${width}x${height}`);}
   });
 
   test('main product tabs keep equivalent page headings on one left edge',async({page})=>{

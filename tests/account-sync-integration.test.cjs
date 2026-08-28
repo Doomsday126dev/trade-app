@@ -42,11 +42,13 @@ test('cross-device sync is limited to one domain-separated owner hash and remain
 function accountSyncRolloutSource(source){return source.slice(source.indexOf('const ACCOUNT_SYNC_ROLLOUT='),source.indexOf('let managedAccountSyncRuntime='));}
 
 test('every account sync runtime module is versioned in HTML and included in the offline app shell',()=>{
+  const releaseId=html.match(/window\.__POGO_RELEASE_ID='([^']+)'/)?.[1];
+  assert.ok(releaseId,'active release id');
   const modules=[
     'js/domain/accountSyncModel.js','js/domain/accountSyncMerge.js','js/domain/accountSyncMigration.js','js/domain/accountSyncProduct.js',
     'js/data/accountSyncJournal.js','js/data/accountSyncRepository.js','js/data/accountSyncController.js','js/data/accountSyncRuntime.js'
   ];
-  for(const module of modules){assert.match(html,new RegExp(`<script src="${module.replaceAll('.','\\.')}\\?v=2026-08-27\\.75"></script>`),module);assert.ok(worker.includes(`'${module}'`),module);}
+  for(const module of modules){assert.match(html,new RegExp(`<script src="${module.replaceAll('.','\\.')}\\?v=${releaseId.replaceAll('.','\\.')}"></script>`),module);assert.ok(worker.includes(`'${module}'`),module);}
 });
 
 test('canonical sync scope includes current product lanes and excludes retired inventory authorities',()=>{

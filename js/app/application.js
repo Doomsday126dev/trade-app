@@ -263,8 +263,8 @@ let ownerPublicShareReview={generation:0,status:'idle',republishRequired:false,b
 
 const OWNER="Doomsday126";
 const APP_VERSION="4.6.38";
-const MULTI_COMMUNITY_ENABLED=true;
-const MULTI_COMMUNITY_OWNER_PREVIEW_AVAILABLE=true;
+const MULTI_COMMUNITY_ENABLED=false;
+const MULTI_COMMUNITY_OWNER_PREVIEW_AVAILABLE=false;
 const DEFAULT_COMMUNITY_ID='nyc';
 const DEFAULT_COMMUNITY_NAME='NYC';
 const COMMUNITY_VISIBILITIES=['private','inviteOnly','public'];
@@ -272,6 +272,7 @@ const SELECTED_COMMUNITY_KEY='pogoSelectedCommunityId_v1';
 const OWNER_COMMUNITY_PREVIEW_KEY='pogoOwnerCommunityPreview_v1';
 const OWNER_COMMUNITY_PREVIEW_SELECTED_KEY='pogoOwnerCommunityPreviewCommunity_v1';
 const POGO_SEARCH_LANGUAGE_KEY='pogoPokemonGoSearchLocale:v1';
+const POGO_SEARCH_LANGUAGE_OVERRIDE_KEY='pogoPokemonGoSearchLocaleOverride:v1';
 const SESSION_TTL=30*24*60*60*1000; // 30 days; refreshed on each activity so active users stay logged in
 const SPRITE_BASE="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/";
 const FIREBASE_URL=window.__POGO_FIREBASE_CONFIG.databaseURL;
@@ -1559,13 +1560,15 @@ function lastLoginTime(username,data){
 function lsGet(k,d){try{return JSON.parse(localStorage.getItem(k)??'null')??d}catch{return d}}
 function lsSet(k,v){localStorage.setItem(k,JSON.stringify(v))}
 function lsRemove(k){try{localStorage.removeItem(k)}catch{}}
-let _pokemonGoSearchOverrideDraft='en';
+let _pokemonGoSearchOverrideDraft=pokemonGoSearchSyntaxDomain.localeKey(i18nCore.getLocale());
 function pokemonGoSearchLanguagePreference(){
-  const value=lsGet(POGO_SEARCH_LANGUAGE_KEY,null);
-  if(pokemonGoSearchSyntaxDomain.SUPPORTED_LOCALES.includes(value))return value;
-  // .18 stored `follow-app`; missing, invalid, and that redundant value all
-  // migrate to the same keyless device-local default.
+  const value=lsGet(POGO_SEARCH_LANGUAGE_KEY,null),override=lsGet(POGO_SEARCH_LANGUAGE_OVERRIDE_KEY,false)===true;
+  if(override&&pokemonGoSearchSyntaxDomain.SUPPORTED_LOCALES.includes(value))return value;
+  // Older builds persisted a locale without recording whether the mismatch
+  // was intentional. Only the explicit override bit is reliable evidence, so
+  // ambiguous legacy values migrate to the interface-language default.
   if(value!==null)lsRemove(POGO_SEARCH_LANGUAGE_KEY);
+  if(override)lsRemove(POGO_SEARCH_LANGUAGE_OVERRIDE_KEY);
   return'follow-app';
 }
 function pokemonGoSearchLocale(){
@@ -1582,7 +1585,7 @@ function syncPokemonGoSearchLanguageControl(){
   const select=document.getElementById('settings-search-language');
   if(checkbox){checkbox.checked=override;checkbox.setAttribute('aria-expanded',String(override));}
   if(row)row.hidden=!override;
-  if(select){select.disabled=!override;select.value=override?preference:_pokemonGoSearchOverrideDraft;}
+  if(select){select.disabled=!override;select.value=override?preference:pokemonGoSearchSyntaxDomain.localeKey(i18nCore.getLocale());}
 }
 function rerenderPokemonGoSearchLanguageSurfaces(){
   if(cur){renderMyStrings();renderStrings();if(_activeDiff)renderDiffModal();if(_activeTradeMatch)renderTradeMatchModal();renderSafeTransferOutput();}
@@ -1590,8 +1593,8 @@ function rerenderPokemonGoSearchLanguageSurfaces(){
 }
 function changePokemonGoSearchLocale(value){
   const next=pokemonGoSearchSyntaxDomain.SUPPORTED_LOCALES.includes(value)?value:'follow-app';
-  if(next==='follow-app')lsRemove(POGO_SEARCH_LANGUAGE_KEY);
-  else{_pokemonGoSearchOverrideDraft=next;lsSet(POGO_SEARCH_LANGUAGE_KEY,next);}
+  if(next==='follow-app'){lsRemove(POGO_SEARCH_LANGUAGE_KEY);lsRemove(POGO_SEARCH_LANGUAGE_OVERRIDE_KEY);}
+  else{_pokemonGoSearchOverrideDraft=next;lsSet(POGO_SEARCH_LANGUAGE_OVERRIDE_KEY,true);lsSet(POGO_SEARCH_LANGUAGE_KEY,next);}
   syncPokemonGoSearchLanguageControl();
   rerenderPokemonGoSearchLanguageSurfaces();
   toast(i18nCore.t('settings.searchLanguageSaved'));
@@ -1599,12 +1602,14 @@ function changePokemonGoSearchLocale(value){
 function togglePokemonGoSearchLocaleOverride(enabled){
   if(enabled){
     const selected=document.getElementById('settings-search-language')?.value;
-    changePokemonGoSearchLocale(pokemonGoSearchSyntaxDomain.SUPPORTED_LOCALES.includes(selected)?selected:_pokemonGoSearchOverrideDraft);
+    const interfaceLocale=pokemonGoSearchSyntaxDomain.localeKey(i18nCore.getLocale());
+    changePokemonGoSearchLocale(pokemonGoSearchSyntaxDomain.SUPPORTED_LOCALES.includes(selected)?selected:(pokemonGoSearchSyntaxDomain.SUPPORTED_LOCALES.includes(_pokemonGoSearchOverrideDraft)?_pokemonGoSearchOverrideDraft:interfaceLocale));
     return;
   }
   const current=pokemonGoSearchLanguagePreference();
   if(current!=='follow-app')_pokemonGoSearchOverrideDraft=current;
   lsRemove(POGO_SEARCH_LANGUAGE_KEY);
+  lsRemove(POGO_SEARCH_LANGUAGE_OVERRIDE_KEY);
   syncPokemonGoSearchLanguageControl();
   rerenderPokemonGoSearchLanguageSurfaces();
   toast(i18nCore.t('settings.searchLanguageSaved'));
@@ -2439,8 +2444,8 @@ async function createMemberNow(username,pin,isAdmin=false,reqId='',opts={}){
   // fall back to today's behavior: owner approvals enroll into NYC by default;
   // non-owner admin approvals skip the community block entirely (matching the
   // rules-gated reality where only the owner can write community paths).
-  const requestedCommunityIds=Array.isArray(opts.communityIds)&&opts.communityIds.length?opts.communityIds:null;
-  const targetCommunityIds=requestedCommunityIds||(ownerCanUseCommunityTools()?[DEFAULT_COMMUNITY_ID]:[]);
+  const requestedCommunityIds=MULTI_COMMUNITY_ENABLED&&Array.isArray(opts.communityIds)&&opts.communityIds.length?opts.communityIds:null;
+  const targetCommunityIds=requestedCommunityIds||[];
   let communityUpdates={};
   if(targetCommunityIds.length){
     const built=targetedCommunityMembershipUpdates(username,user,targetCommunityIds,user.joined);
@@ -2800,6 +2805,12 @@ function accountSyncFavoriteReviewAuthorityCurrent(authority){
 function accountSyncProjectionReady(){
   const state=String(accountSyncUiState?.state||'inactive');
   return!!accountSyncEligibleUid&&accountSyncEligibleUid===auth?.currentUser?.uid&&managedAccountSyncRuntime?.projectionReady===true&&managedAccountSyncRuntime.ownerUid===accountSyncEligibleUid&&accountSyncUiState?.active===true&&accountSyncUiState?.listenerHealthy===true&&accountSyncUiState?.controllerHealthy===true&&!['sync-error','conflict','review-required','inactive'].includes(state);
+}
+function accountSyncOrganizationHydrating(){
+  const uid=auth?.currentUser?.uid,state=String(accountSyncUiState?.state||'inactive');
+  if(!uid||ACCOUNT_SYNC_ROLLOUT.enabled!==true)return false;
+  const bound=accountSyncEligibleUid===uid||managedAccountSyncRuntime?.ownerUid===uid;
+  return bound&&managedAccountSyncRuntime?.projectionReady!==true&&!['sync-error','conflict','review-required'].includes(state);
 }
 function accountSyncClone(value){
   if(value==null)return value;
@@ -3911,11 +3922,10 @@ function ensureShareViewSubscriptions(username){
 }
 async function openShareViewFromRequest(shareReq){
   if(!shareReq)return;
-  _pendingShareRequest=shareReq;
+  enterShareLoadingShell(shareReq.username,shareReq.type);
   const requestGeneration=++_publicShareRequestGeneration;
   const publicLoaded=await loadPublicShareData(shareReq.username,{requestGeneration});
   if(requestGeneration!==_publicShareRequestGeneration||publicLoaded.status==='stale')return;
-  ensureShareViewSubscriptions(shareReq.username);
   if(publicLoaded.ok&&allData.users?.[shareReq.username]){
     if(cur)rememberTrainerOpened(shareReq.username);
     enterShareView(shareReq.username,shareReq.type);
@@ -4521,9 +4531,10 @@ function renderInterimProductLabels(){
   ];
   navLabels.forEach(([id,labelKey,shortKey])=>{
     const el=document.getElementById(id);if(!el)return;
-    const text=i18nCore.t(labelKey),label=el.querySelector('.tab-label');
+    const text=i18nCore.t(labelKey),shortText=i18nCore.t(shortKey),label=el.querySelector('.tab-label'),shortLabel=el.querySelector('.tab-short-label');
     if(label)label.textContent=text;
-    el.dataset.short=i18nCore.t(shortKey);
+    if(shortLabel)shortLabel.textContent=shortText;
+    el.dataset.short=shortText;
     el.setAttribute('aria-label',text);
   });
   setText('find-trainer-title','trainer.findTitle');
@@ -5030,6 +5041,15 @@ function clearFavoriteFilters(){trainerOrganizerState.query='';trainerOrganizerS
 async function renderTrainerQuickLists({preserveFavoriteControls=false,favoritesOnly=false}={}){
   const store=ensureTrainerHistoryStore(),favoritesEl=document.getElementById('favorite-trainers'),favoritesControlsEl=document.getElementById('favorite-trainers-controls'),favoritesListEl=document.getElementById('favorite-trainers-list'),previewEl=document.getElementById('trainer-favorites-preview'),recentEl=document.getElementById('recent-trainers'),noteEl=document.getElementById('trainer-history-note');
   if(!store||!favoritesEl||!favoritesControlsEl||!favoritesListEl||!previewEl||!recentEl)return;
+  if(accountSyncOrganizationHydrating()){
+    const loading=stateHtml(stateModel('loading',{title:i18nCore.t('trainer.syncHydrating'),detail:i18nCore.t('trainer.syncHydratingHelp')}));
+    favoritesControlsEl.innerHTML=`<div class="trainer-section-heading"><h2 class="trainer-quick-heading">${escHtml(i18nCore.t('trainer.favoritesTitle'))}</h2><span class="trainer-section-count">—</span></div>`;
+    favoritesListEl.innerHTML=loading;
+    if(favoritesOnly)return;
+    previewEl.innerHTML=loading;
+    recentEl.innerHTML=loading;
+    return;
+  }
   const state=store.read();
   if(noteEl){noteEl.style.display='none';noteEl.textContent='';}
   const activeTags=Object.values(state.tags||{}).sort((a,b)=>a.label.localeCompare(b.label,i18nCore.getLocale(),{sensitivity:'base'}));
@@ -5255,15 +5275,15 @@ async function openTrainerPublicShare(value){
   const req=publicShareRequestFromInput(resolved);
   const status=document.getElementById('find-trainer-status');
   if(!req?.username){setTrainerRecovery(true);if(status)status.textContent=i18nCore.t('trainer.publicInvalid');return;}
+  enterShareLoadingShell(req.username,req.type);
   if(status)status.textContent=i18nCore.t('data.loading',{resource:i18nCore.t('trainer.findTitle')});
   const requestGeneration=++_publicShareRequestGeneration;
   let loaded;
   try{loaded=await loadPublicShareData(req.username,{requestGeneration});}
-  catch(error){if(requestGeneration===_publicShareRequestGeneration)showTrainerSearchError(status);return;}
+  catch(error){if(requestGeneration===_publicShareRequestGeneration){renderUnavailableShareView(req.username,i18nCore.t('trainer.sharedReadFailed'));showTrainerSearchError(status);}return;}
   if(requestGeneration!==_publicShareRequestGeneration||loaded.status==='stale')return;
-  ensureShareViewSubscriptions(req.username);
   if(loaded.ok&&allData.users?.[req.username]){setTrainerRecovery(false);rememberTrainerOpened(req.username);enterShareView(req.username,req.type);return;}
-  setTrainerRecovery(true);if(status)status.textContent=i18nCore.t(publicShareStatusMessageKey(loaded.status));
+  setTrainerRecovery(true);renderUnavailableShareView(req.username,i18nCore.t(publicShareStatusMessageKey(loaded.status)));if(status)status.textContent=i18nCore.t(publicShareStatusMessageKey(loaded.status));
 }
 function renderSettings(){renderInterimProductLabels();configureSettingsPanel(_settingsContext);}
 function showApp(){
@@ -8310,7 +8330,6 @@ function renderAdmin(){
   const memberList=document.getElementById('admin-member-list');if(!memberList)return;
   renderSecurityPanel();
   renderLoginAudit();
-  renderCommunityMigrationPanel();
   const iAmOwner=allData.users?.[cur]?.isOwner||cur===OWNER;
   const adminWrap=document.getElementById('nu-admin-wrap');
   const adminInput=document.getElementById('nu-admin');
@@ -8510,12 +8529,6 @@ function renderPendingRequests(){
   section.style.display='block';
   if(badge)badge.textContent=pending.length;
   if(adminNotif){adminNotif.style.display='inline-flex';adminNotif.textContent=pending.length;}
-  // Owner-only community picker for new approvals. Only renders when the
-  // current user satisfies ownerCanUseCommunityTools() AND at least one
-  // prepared non-default community exists. Default selection is NYC-only so
-  // that the single-click approval rhythm matches today's behavior.
-  const showCommunityPicker=ownerCanUseCommunityTools();
-  const preparedNonDefault=showCommunityPicker?preparedNonDefaultCommunities():[];
   // SEC-01: requests are anonymous persisted input. Build this surface with DOM
   // text nodes and listeners so no request field can become markup or code.
   listEl.replaceChildren(...pending.map(([id,r])=>{
@@ -8528,14 +8541,6 @@ function renderPendingRequests(){
     header.append(name,time);card.append(header);
     const note=document.createElement('div');note.className='req-card-note';note.textContent=r.note?`"${String(r.note)}"`:i18nCore.t('admin.noNote');
     if(!r.note)note.style.color='var(--border2)';card.append(note);
-    if(showCommunityPicker&&preparedNonDefault.length&&!needsRepair){
-      const picker=document.createElement('div');picker.className='req-card-community';
-      const label=document.createElement('label'),select=document.createElement('select');select.id=`approve-community-${id}`;select.className='approve-community-select';label.htmlFor=select.id;label.textContent=i18nCore.t('admin.enrollInto');
-      const option=(value,text,selected=false)=>{const node=document.createElement('option');node.value=value;node.textContent=text;node.selected=selected;return node;};
-      select.append(option(DEFAULT_COMMUNITY_ID,`${DEFAULT_COMMUNITY_NAME} only`,true));
-      preparedNonDefault.forEach(([cid,c])=>{const labelText=String(c?.name||cid);select.append(option(cid,`${labelText} only`),option(`${DEFAULT_COMMUNITY_ID},${cid}`,`${DEFAULT_COMMUNITY_NAME} + ${labelText}`));});
-      picker.append(label,select);card.append(picker);
-    }
     const actions=document.createElement('div');actions.className='req-actions';
     const approve=document.createElement('button');approve.type='button';approve.className='btn-approve';approve.textContent=needsRepair?`🔧 ${i18nCore.t('admin.createLogin')}`:`✅ ${i18nCore.t('admin.approve')}`;approve.addEventListener('click',()=>approveRequest(id,username));
     const deny=document.createElement('button');deny.type='button';deny.className='btn-deny';deny.textContent=`✗ ${i18nCore.t('admin.deny')}`;deny.addEventListener('click',()=>denyRequest(id));
@@ -8545,18 +8550,8 @@ function renderPendingRequests(){
 async function approveRequest(reqId,username){
   if(allData.users?.[username]){toast(i18nCore.t('admin.usernameExists'));return;}
   const pin=generatedFirstTimePin();
-  // Read the owner approval community picker for this card, if rendered.
-  // Format: comma-separated community ids (e.g. "nyc", "new-jersey", or
-  // "nyc,new-jersey"). Absent picker means today's default (no opts).
-  const pickerEl=document.getElementById(`approve-community-${reqId}`);
-  const pickerValue=String(pickerEl?.value||'').trim();
-  const opts={};
-  if(pickerValue){
-    const ids=pickerValue.split(',').map(s=>s.trim()).filter(Boolean);
-    if(ids.length)opts.communityIds=ids;
-  }
   try{
-    await createMemberNow(username,pin,false,reqId,opts);
+    await createMemberNow(username,pin,false,reqId);
   }catch(e){
     console.warn('Could not create login in Firebase',e);
     toast(i18nCore.t('admin.loginCreateFailed'),5000);
@@ -9307,6 +9302,31 @@ function tradeIntentQualifierTokens(intent){
 function tradeMatchMetric(label,items,available){
   return`<div class="share-match-metric ${available?'':'is-unavailable'}"><strong>${available?i18nCore.formatNumber(items.length):'—'}</strong><span>${escHtml(label)}</span>${available?'':`<small>${escHtml(i18nCore.t('tradeMatch.notShared'))}</small>`}</div>`;
 }
+function tradeMatchSearchItems(entries){
+  const dexHasRegional={};
+  for(const type of OWNED_MY_LIST_TYPES){
+    for(const source of listSource(type)){if(source?.no&&regionalFormTerm(source.name))dexHasRegional[source.no]=true;}
+  }
+  return(entries||[]).map(intent=>{
+    const source=_nameToSpriteEntry(intent.name),effective={...source,no:intent.no||source.no,maxType:maxTypeForEntry(source,intent.type)};
+    const term=dexSearchTerm(effective,dexHasRegional);if(!term)return null;
+    const filters=entrySearchFilters(effective,intent.mod||'');
+    const add=filter=>{if(filter&&!filters.includes(filter))filters.push(filter);};
+    if(intent.shiny)add('shiny');
+    if(intent.gender)add(intent.gender==='f'?'female':'male');
+    if(intent.xxl)add('xxl');
+    if(intent.xxs)add('xxs');
+    if(intent.lucky)add('lucky');
+    return{term,filters};
+  }).filter(Boolean);
+}
+function tradeMatchSearchHtml(entries,key,label,available){
+  if(!available||!entries.length)return'';
+  const value=stringFromSearchItems(tradeMatchSearchItems(entries),{locale:pokemonGoSearchLocale()});
+  if(!value)return'';
+  const option={value,levels:[],tooLong:strLenInfo(value).len>POGO_STR_LIMIT};
+  return`<div class="trade-match-search" aria-label="${escAttr(label)}">${myListSearchOptionHtml(option,`trade-match-${key}`,{label,showLimit:true})}</div>`;
+}
 function renderTradeMatchSummary(them){
   const m=computeTradeMatchSummary(them);
   const chip=(it,cls='')=>{
@@ -9317,16 +9337,17 @@ function renderTradeMatchSummary(them){
     return`<article class="diff-match-chip ${cls}" title="${escAttr(it.dn+gender)}">${img}<div class="diff-match-main"><span class="diff-match-name">${escHtml(it.dn)}${gender}</span>${qualifiers.length?`<span class="diff-match-qualifiers">${qualifiers.map(token=>`<span class="diff-match-qualifier ${escAttr(token.cls||'')}">${escHtml(token.label)}</span>`).join('')}</span>`:''}</div></article>`;
   };
   const box=(cls,title,direction,items,available,empty)=>`<section class="diff-match-box ${cls}" aria-labelledby="trade-match-${cls}-title">
-    <div class="diff-match-title" id="trade-match-${cls}-title">${title}<span class="diff-match-count">${available?i18nCore.formatNumber(items.length):'—'}</span></div>
+    <div class="diff-match-title" id="trade-match-${cls}-title">${escHtml(title)}<span class="diff-match-count">${available?i18nCore.formatNumber(items.length):'—'}</span></div>
     <p class="diff-match-direction">${escHtml(direction)}</p>
     ${!available?`<div class="diff-match-empty">${escHtml(i18nCore.t('tradeMatch.unavailableHelp'))}</div>`:items.length?`<div class="diff-match-list">${items.map((it,i)=>chip(it,i>=14?'extra':'')).join('')}${items.length>14?`<button type="button" class="diff-match-chip diff-match-more" data-more="${escAttr(i18nCore.t('tradeMatch.moreCount',{count:i18nCore.formatNumber(items.length-14)}))}" onclick="toggleTradeMatchSection(this)" aria-expanded="false">${escHtml(i18nCore.t('tradeMatch.moreCount',{count:i18nCore.formatNumber(items.length-14)}))}</button>`:''}</div>`:`<div class="diff-match-empty">${escHtml(empty)}</div>`}
+    ${tradeMatchSearchHtml(items,cls,i18nCore.t('tradeMatch.searchString',{section:title}),available)}
   </section>`;
   return`<div class="trade-match-intro"><strong>${escHtml(i18nCore.t('tradeMatch.summary'))}</strong><span>${escHtml(i18nCore.t('tradeMatch.intro',{trainer:them}))}</span></div>
     <div class="trade-match-overview" aria-label="${escAttr(i18nCore.t('tradeMatch.detailsLabel'))}">${tradeMatchMetric(i18nCore.t('tradeMatch.bothWant'),m.both,m.availability.wants)}${tradeMatchMetric(i18nCore.t('tradeMatch.onlyIWant'),m.onlyMine,m.availability.wants)}${tradeMatchMetric(i18nCore.t('tradeMatch.onlyTheyWant',{trainer:them}),m.onlyTheirs,m.availability.wants)}</div>
     <div class="diff-match-panel" aria-label="${escAttr(i18nCore.t('tradeMatch.detailsLabel'))}">
-    ${box('both',escHtml(i18nCore.t('tradeMatch.bothWant')),i18nCore.t('tradeMatch.bothDirection',{trainer:them}),m.both,m.availability.wants,i18nCore.t('tradeMatch.emptyBoth',{trainer:them}))}
-    ${box('mine',escHtml(i18nCore.t('tradeMatch.onlyIWant')),i18nCore.t('tradeMatch.mineDirection',{trainer:them}),m.onlyMine,m.availability.wants,i18nCore.t('tradeMatch.emptyMine',{trainer:them}))}
-    ${box('theirs',escHtml(i18nCore.t('tradeMatch.onlyTheyWant',{trainer:them})),i18nCore.t('tradeMatch.theirsDirection',{trainer:them}),m.onlyTheirs,m.availability.wants,i18nCore.t('tradeMatch.emptyTheirs',{trainer:them}))}
+    ${box('both',i18nCore.t('tradeMatch.bothWant'),i18nCore.t('tradeMatch.bothDirection',{trainer:them}),m.both,m.availability.wants,i18nCore.t('tradeMatch.emptyBoth',{trainer:them}))}
+    ${box('mine',i18nCore.t('tradeMatch.onlyIWant'),i18nCore.t('tradeMatch.mineDirection',{trainer:them}),m.onlyMine,m.availability.wants,i18nCore.t('tradeMatch.emptyMine',{trainer:them}))}
+    ${box('theirs',i18nCore.t('tradeMatch.onlyTheyWant',{trainer:them}),i18nCore.t('tradeMatch.theirsDirection',{trainer:them}),m.onlyTheirs,m.availability.wants,i18nCore.t('tradeMatch.emptyTheirs',{trainer:them}))}
   </div>`;
 }
 function renderTradeMatchModal(){
@@ -11161,8 +11182,29 @@ function checkShareViewParam(){
 }
 function resetNewTrainerProfileScroll(previousUsername,username){
   if(previousUsername===username)return false;
+  window.scrollTo({top:0,left:0,behavior:'auto'});
   requestAnimationFrame(()=>requestAnimationFrame(()=>window.scrollTo({top:0,left:0,behavior:'auto'})));
   return true;
+}
+function enterShareLoadingShell(username,type='wishlist'){
+  const previousUsername=_activeShareView?.username||'',startedAt=performance.now();
+  if(document.getElementById('app')?.style.display!=='none')_shareReturnScroll={x:window.scrollX,y:window.scrollY};
+  if(previousUsername!==username)clearShareViewSubscriptions();
+  _pendingShareRequest={username,type};
+  _activeShareView={username,type};
+  hidePreAuth();
+  document.getElementById('app').style.display='none';
+  document.getElementById('login-pg').style.display='none';
+  document.getElementById('config-pg').style.display='none';
+  document.getElementById('share-view').classList.add('active');
+  const hdr=document.getElementById('share-hdr');
+  if(hdr)hdr.innerHTML=`<div class="share-loading-avatar" aria-hidden="true">${escHtml(String(username||'?').slice(0,2).toUpperCase())}</div><div class="share-hdr-info"><div class="share-hdr-name">${escHtml(i18nCore.t('share.listTitle',{username}))}</div><div class="share-hdr-meta"><span class="meta-item">${escHtml(i18nCore.t('trainer.profileLoading'))}</span></div></div>`;
+  const tabs=document.getElementById('share-list-tabs');if(tabs)tabs.innerHTML='';
+  const out=document.getElementById('share-list-out');if(out)out.innerHTML=stateHtml(stateModel('loading',{title:i18nCore.t('trainer.profileLoading'),detail:i18nCore.t('trainer.profileLoadingHelp')}));
+  resetNewTrainerProfileScroll(previousUsername,username);
+  window.__pogoTrainerProfileShellAt=performance.now();
+  try{performance.measure('pogo:trainer-profile-shell',{start:startedAt,end:window.__pogoTrainerProfileShellAt});}catch{}
+  return window.__pogoTrainerProfileShellAt-startedAt;
 }
 function enterShareView(username,type){
   const previousUsername=_activeShareView?.username||'';
@@ -11690,11 +11732,12 @@ function jumpToEvent(eventId){
     card.focus({preventScroll:true});
   });
 }
-function renderEventCalendar(events){
+function renderEventCalendar(events,{variant='desktop'}={}){
   const locale=i18nCore.getLocale(),calendar=eventPresentationDomain.calendarMonth(events,{year:eventCalendarAnchor.getFullYear(),month:eventCalendarAnchor.getMonth()});
   const heading=new Intl.DateTimeFormat(locale,{month:'long',year:'numeric'}).format(new Date(calendar.year,calendar.month,1));
   const weekdays=Array.from({length:7},(_,index)=>new Intl.DateTimeFormat(locale,{weekday:'narrow'}).format(new Date(2026,7,2+index)));
-  return`<section class="event-rail-module event-calendar" aria-labelledby="event-calendar-title"><div class="event-rail-heading"><h2 id="event-calendar-title">${escHtml(i18nCore.t('events.calendar'))}</h2><div class="event-calendar-nav"><button type="button" data-event-action="month" data-event-month-delta="-1" aria-label="${escAttr(i18nCore.t('events.previousMonth'))}">${uiIconMarkup('chevron-left','ui-icon')}</button><button type="button" data-event-action="month" data-event-month-delta="1" aria-label="${escAttr(i18nCore.t('events.nextMonth'))}">${uiIconMarkup('chevron-right','ui-icon')}</button></div></div><div class="event-calendar-month">${escHtml(heading)}</div><div class="event-calendar-grid" role="grid" aria-label="${escAttr(heading)}">${weekdays.map(day=>`<span class="event-calendar-weekday" aria-hidden="true">${escHtml(day)}</span>`).join('')}${calendar.cells.map(cell=>{const selected=cell.key===eventCalendarDate,label=i18nCore.t('events.calendarDate',{date:new Intl.DateTimeFormat(locale,{dateStyle:'long'}).format(new Date(`${cell.key}T12:00:00`)),status:i18nCore.t(cell.markerCount?'events.calendarHasEvents':'events.calendarNoEvents')});return`<button type="button" class="event-calendar-day${cell.inMonth?'':' outside'}${cell.today?' today':''}${selected?' selected':''}${cell.markerCount?' has-events':''}" data-event-action="date" data-date="${cell.key}" role="gridcell" aria-selected="${selected}" aria-label="${escAttr(label)}"><span>${cell.day}</span>${cell.markerCount?'<i aria-hidden="true"></i>':''}</button>`;}).join('')}</div>${renderEventSelectedDay(events)}${eventCalendarDate?`<button type="button" class="event-calendar-clear" data-event-action="clear-date" data-date="${eventCalendarDate}">${escHtml(i18nCore.t('events.clearDate'))}</button>`:''}</section>`;
+  const titleId=`event-calendar-title-${variant}`;
+  return`<section class="event-rail-module event-calendar event-calendar-${escAttr(variant)}" aria-labelledby="${titleId}"><div class="event-rail-heading"><h2 id="${titleId}">${escHtml(i18nCore.t('events.calendar'))}</h2><div class="event-calendar-nav"><button type="button" data-event-action="month" data-event-month-delta="-1" aria-label="${escAttr(i18nCore.t('events.previousMonth'))}">${uiIconMarkup('chevron-left','ui-icon')}</button><button type="button" data-event-action="month" data-event-month-delta="1" aria-label="${escAttr(i18nCore.t('events.nextMonth'))}">${uiIconMarkup('chevron-right','ui-icon')}</button></div></div><div class="event-calendar-month">${escHtml(heading)}</div><div class="event-calendar-grid" role="grid" aria-label="${escAttr(heading)}">${weekdays.map(day=>`<span class="event-calendar-weekday" aria-hidden="true">${escHtml(day)}</span>`).join('')}${calendar.cells.map(cell=>{const selected=cell.key===eventCalendarDate,label=i18nCore.t('events.calendarDate',{date:new Intl.DateTimeFormat(locale,{dateStyle:'long'}).format(new Date(`${cell.key}T12:00:00`)),status:i18nCore.t(cell.markerCount?'events.calendarHasEvents':'events.calendarNoEvents')});return`<button type="button" class="event-calendar-day${cell.inMonth?'':' outside'}${cell.today?' today':''}${selected?' selected':''}${cell.markerCount?' has-events':''}" data-event-action="date" data-date="${cell.key}" role="gridcell" aria-selected="${selected}" aria-label="${escAttr(label)}"><span>${cell.day}</span>${cell.markerCount?'<i aria-hidden="true"></i>':''}</button>`;}).join('')}</div><div class="event-calendar-legend"><i aria-hidden="true"></i><span>${escHtml(i18nCore.t('events.calendarLegend'))}</span></div>${renderEventSelectedDay(events)}${eventCalendarDate?`<button type="button" class="event-calendar-clear" data-event-action="clear-date" data-date="${eventCalendarDate}">${escHtml(i18nCore.t('events.clearDate'))}</button>`:''}</section>`;
 }
 function renderEventSelectedDay(events){
   if(!eventCalendarDate)return'';
@@ -11714,7 +11757,7 @@ function renderEventUpNext(events){
   if(!items.length)return'';
   return`<section class="event-rail-module event-up-next" aria-labelledby="event-up-next-title"><div class="event-rail-heading"><h2 id="event-up-next-title">${escHtml(i18nCore.t('events.upNext'))}</h2></div><div class="event-up-next-list">${items.map(event=>{const localized=eventLabelsI18n.localizeEvent(event,locale),timing=eventPresentationDomain.eventTiming(event,{locale}),relative=eventRelativeLabel(timing),id=eventStableId(event);return`<button type="button" class="event-up-next-row" data-event-action="jump" data-event-id="${escAttr(id)}"><span class="event-up-next-category">${escHtml(eventLabelsI18n.typeLabel(event.upNextCategory,locale))}</span><strong>${escHtml(localized.localizedTitle)}</strong>${renderEventFeaturedPokemonNames(event)}<span class="event-up-next-time">${escHtml(timing.dateLabel)}${timing.timeLabel?` · ${escHtml(timing.timeLabel)}`:''}${relative?` · ${escHtml(relative)}`:''}</span></button>`;}).join('')}</div></section>`;
 }
-function renderEventsRail(events){return`<aside class="events-context-rail" aria-label="${escAttr(i18nCore.t('events.context'))}">${renderEventCalendar(events)}${renderEventUpNext(events)}</aside>`;}
+function renderEventsRail(events){return`<aside class="events-context-rail" aria-label="${escAttr(i18nCore.t('events.context'))}">${renderEventCalendar(events,{variant:'desktop'})}${renderEventUpNext(events)}<details class="event-calendar-disclosure"><summary>${uiIconMarkup('calendar','ui-icon ui-icon-sm')}<span>${escHtml(i18nCore.t('events.calendar'))}</span></summary>${renderEventCalendar(events,{variant:'mobile'})}</details></aside>`;}
 function renderEventsLayout(timeline,events){return`<div class="events-layout"><div class="events-timeline">${timeline}</div>${renderEventsRail(events)}</div>`;}
 function syncEventFilterScrollState(row){
   if(!row)return;
