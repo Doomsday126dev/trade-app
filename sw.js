@@ -28,6 +28,8 @@ const RELEASE_ASSETS=[
   'js/domain/username.js',
   'js/domain/requestAccess.js',
   'js/domain/backgroundCatalog.js',
+  'js/domain/backgroundVisual.js',
+  'js/domain/pokemonPrimaryTypes.js',
   'js/domain/priorityValues.js',
   'js/domain/scheduleDates.js',
   'js/domain/pokemonSearchTerms.js',

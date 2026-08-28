@@ -278,8 +278,16 @@ test('add, import, bulk, and delete UI state changes remain after the write-succ
   const firstBulkWrite=bulk.indexOf('if(!writeList(myListType,cur,list))return;');
   assert.ok(firstBulkWrite<bulk.indexOf("sel.value='';",firstBulkWrite));
   assert.ok(bulk.lastIndexOf('if(!writeList(myListType,cur,list))return;')<bulk.indexOf('undoStack=',bulk.lastIndexOf('if(!writeList(myListType,cur,list))return;')));
-  assert.ok(remove.indexOf('if(writeListItem(')<remove.indexOf('undoStack=pendingUndo;'));
-  assert.match(remove,/else row\.classList\.remove\('removing'\)/);
+  assert.match(remove,/if\(!await writeListItem\(myListType,cur,name,null\)\)/);
+  assert.doesNotMatch(remove,/writeList\(|undoStack|showUndo/);
+  assert.match(remove,/else document\.getElementById\('mylist-filter'\)\?\.focus\(\)/);
+  const confirmation=between('function confirmRemove(name,dn){','const canvasImageCache');
+  assert.match(confirmation,/if\(!confirm\(message\)\)return false/);
+  assert.match(confirmation,/removeEntry\(name\);\s*return true/);
+  assert.match(confirmation,/myList\.confirmRemove/);
+  assert.match(remove,/if\(row\)row\.style\.transform=''/);
+  const swipe=between('function swipeEnd(ev){','// ── PULL TO REFRESH');
+  assert.match(swipe,/!confirmRemove\(n,row\.dataset\.full\|\|n\)\)row\.style\.transform=''/);
 });
 
 test('another-client Pokemon remains unchanged when this client updates a different Pokemon',async()=>{

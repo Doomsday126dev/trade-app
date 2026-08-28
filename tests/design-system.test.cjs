@@ -144,15 +144,23 @@ test('obvious application chrome uses the shared icon system and dense rows disc
   const rows=html.slice(html.indexOf('function myListRowHtml'),html.indexOf('function myListPrioritySectionHtml'));
   const editor=html.slice(html.indexOf('function myListEditorHtml'),html.indexOf('function myListRowHtml'));
   assert.match(rows,/class="myrow-priority-quick"/);
+  assert.match(rows,/ontoggle="hydrateMyRowPriority\(this\)"/);
+  assert.match(html,/function hydrateMyRowPriority[\s\S]*?insertAdjacentHTML\('beforeend'/);
+  assert.doesNotMatch(rows,/class="myrow-priority-menu"/);
   assert.match(rows,/class="myrow-active-traits"/);
   assert.doesNotMatch(rows,/class="myrow-trait detail" title=/);
   assert.match(rows,/details class="myrow-editor"/);
   assert.match(rows,/summary class="myrow-edit"/);
-  for(const handler of ['setLucky','setShiny','setXxl','setXxs','setNotes','confirmRemove'])assert.match(editor,new RegExp(`${handler}\\(`));
+  for(const handler of ['setLucky','setShiny','setXxl','setXxs','setNotes'])assert.match(editor,new RegExp(`${handler}\\(`));
+  assert.doesNotMatch(editor,/confirmRemove\(/);
+  assert.match(rows,/class="myrow-remove"/);
+  assert.doesNotMatch(rows,/uiIconMarkup\('trash'/);
+  assert.match(css,/\.myrow-remove::before\{[^}]*mask:url\("data:image\/svg\+xml/);
+  assert.match(rows,/confirmRemove\('\$\{jsName\}','\$\{jsDn\}'\)/);
   assert.match(rows,/ontoggle="hydrateMyRowEditor\(this\)"/);
   assert.match(editor,/insertAdjacentHTML\('beforeend',myListEditorHtml\(entry\)\)/);
   assert.match(editor,/class="myrow-editor-title">\$\{escHtml\(dn\)\}/);
-  assert.match(css,/\.myrow-edit\{[^}]*min-width:48px/);
+  assert.match(css,/\.myrow-edit,\.myrow-remove\{[^}]*min-width:48px[^}]*min-height:44px/);
   assert.match(css,/\.myrow-editor-popover\{[^}]*position:absolute/);
   assert.doesNotMatch(css,/\.myrow\[data-full\]:has\(\.myrow-name:hover\)::(?:before|after)/);
   assert.doesNotMatch(css,/content:attr\(data-full\)/);
@@ -175,7 +183,7 @@ test('My List rows foreground collection identity while retaining fast editing',
   assert.match(css,/\.myrow-active-traits\{max-width:92px\}/);
   assert.match(css,/\.myrow-copy \.myrow-active-traits\{max-width:100%;gap:2px;flex-wrap:nowrap;overflow:hidden\}/);
   assert.match(css,/\.myrow-trait\.detail\{display:inline-flex;max-width:62px\}/);
-  assert.match(css,/\.myrow-edit\{width:var\(--control-min\);min-width:var\(--control-min\);height:var\(--control-min\);min-height:var\(--control-min\);padding:0\}/);
+  assert.match(css,/\.myrow-edit,\.myrow-remove\{width:var\(--control-min\);min-width:var\(--control-min\);height:var\(--control-min\);min-height:var\(--control-min\);padding:0\}/);
 });
 
 test('cards, priority, status, and empty-state primitives preserve semantic structure',()=>{

@@ -81,7 +81,7 @@ test('session ownership warnings use stable translation keys with English fallba
 test('English, Japanese, Spanish, and German expose the same UI key set',()=>{
   const {catalogs}=load();
   const expected=Object.keys(catalogs.en).sort();
-  assert.equal(expected.length,1235);
+  assert.equal(expected.length,1238);
   for(const locale of ['ja','es','de'])assert.deepEqual(Object.keys(catalogs[locale]).sort(),expected,locale);
 });
 
@@ -240,7 +240,7 @@ test('active recovery, sharing, trainer-tag, and My List accessibility copy neve
   const {catalogs}=load();
   const keys=[
     'admin.loading','admin.securityTitle','data.ownedReadUnavailable',
-    'myList.confirmDelete','myList.dragEntry','myList.notesFor','myList.removeEntry','myList.selectEntry','myList.setPriority','myList.toggleFlag',
+    'myList.confirmDelete','myList.confirmRemove','myList.dragEntry','myList.notesFor','myList.remove','myList.removeEntry','myList.selectEntry','myList.setPriority','myList.toggleFlag',
     'share.anonymous.approved_viewers','share.anonymous.private','share.anonymous.public','share.approvedViewersTitle',
     'share.mode.approved_viewers','share.mode.private','share.mode.public','share.ownerReadError','share.publicationPending',
     'share.visibilityIncomplete','share.visibilityPrivate','share.visibilityPublic','share.visibilityRestricted','share.visibilityUnpublished',

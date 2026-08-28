@@ -100,6 +100,21 @@ test('UX-01 touch path remains usable at compact widths',async({page})=>{
   }
 });
 
+test('UX-01 canceled swipe removal restores the row in place',async({page})=>{
+  await page.setViewportSize({width:320,height:780});await openFixture(page);
+  const row=page.locator('.myrow[data-name="Bulbasaur"]');
+  await expect(row).toBeVisible();
+  page.once('dialog',dialog=>dialog.dismiss());
+  await page.evaluate(()=>{
+    const target=document.querySelector('.myrow[data-name="Bulbasaur"] .myrow-name');
+    swipeStart({target,touches:[{clientX:180,clientY:200}]});
+    swipeMove({touches:[{clientX:70,clientY:200}],preventDefault(){}});
+    swipeEnd({});
+  });
+  await expect.poll(()=>row.evaluate(node=>node.style.transform)).toBe('');
+  await expect(row).toBeVisible();
+});
+
 test('A11Y-02 Special Board traverses deep results and supports keyboard, pointer, and query reset',async({page})=>{
   await openFixture(page);await page.evaluate(()=>openSpecialTradeBoard());
   const input=page.locator('#special-lf-ac'),options=page.locator('#special-lf-dd [role="option"]');
@@ -118,19 +133,18 @@ test('A11Y-02 Special Board traverses deep results and supports keyboard, pointe
   await expect(page.locator('#special-lf-sel')).not.toHaveValue('');
 });
 
-test('PERF-01 and PERF-02 keep decorative cold work bounded and lazy',async({page})=>{
+test('PERF-01 and PERF-02 keep decorative work local and bounded',async({page})=>{
   await openFixture(page);
-  await page.waitForFunction(()=>pokemonTypeActive===0&&_scaleDetectActive===0,null,{timeout:10_000});
+  await page.waitForFunction(()=>_scaleDetectActive===0,null,{timeout:10_000});
   const metrics=await page.evaluate(async()=>{
     const originalFetch=window.fetch,originalScaleRunner=_runSpriteScaleDetection;
-    let typeStarted=0,typeActive=0,typePeak=0;
-    window.fetch=async url=>{if(String(url).includes('pokeapi.co')){typeStarted++;typeActive++;typePeak=Math.max(typePeak,typeActive);await new Promise(resolve=>setTimeout(resolve,12));typeActive--;return{ok:true,json:async()=>({types:[{type:{name:'grass'}}]})};}return originalFetch(url);};
-    pokemonTypes={};pokemonTypeInflight.clear();pokemonTypeQueue.length=0;pokemonTypeActive=0;
+    let typeRequests=0;
+    window.fetch=async url=>{if(String(url).includes('pokeapi.co'))typeRequests++;return originalFetch(url);};
     document.getElementById('mylist-out').innerHTML='';
     const host=document.createElement('div');host.id='type-stress';host.style.cssText='position:fixed;inset:0;z-index:99999;overflow:auto;background:white';
     host.innerHTML=Array.from({length:1000},(_,index)=>`<div class="myrow" data-dex="${index+1}" style="height:58px"></div>`).join('');document.body.append(host);
-    const typeStartedAt=performance.now();applyTypeColors();await new Promise(resolve=>setTimeout(resolve,120));const initialTypes=typeStarted;
-    host.scrollTop=58*500;await new Promise(resolve=>setTimeout(resolve,120));const scrolledTypes=typeStarted,typeCpu=performance.now()-typeStartedAt;
+    const typeStartedAt=performance.now();applyTypeColors(host);const typeCpu=performance.now()-typeStartedAt;
+    const coloredTypes=host.querySelectorAll('.myrow[style*="--type-color"]').length;
 
     let opticalStarted=0,opticalActive=0,opticalPeak=0;
     _runSpriteScaleDetection=async url=>{opticalStarted++;opticalActive++;opticalPeak=Math.max(opticalPeak,opticalActive);await new Promise(resolve=>setTimeout(resolve,4));opticalActive--;spriteScaleCache[url]={scale:1,cx:.5,cy:.5,t:Date.now()};};
@@ -140,10 +154,9 @@ test('PERF-01 and PERF-02 keep decorative cold work bounded and lazy',async({pag
     await new Promise(resolve=>setTimeout(resolve,0));const loadedProbes=opticalStarted;
     await Promise.all(probes);
     host.remove();window.fetch=originalFetch;_runSpriteScaleDetection=originalScaleRunner;
-    return{initialTypes,scrolledTypes,typePeak,typeCpu,markupProbes,loadedProbes,opticalPeak,spriteCpu};
+    return{typeRequests,coloredTypes,typeCpu,markupProbes,loadedProbes,opticalPeak,spriteCpu};
   });
-  expect(metrics.initialTypes).toBeGreaterThan(0);expect(metrics.initialTypes).toBeLessThan(100);
-  expect(metrics.scrolledTypes).toBeGreaterThan(metrics.initialTypes);expect(metrics.scrolledTypes).toBeLessThan(200);
-  expect(metrics.typePeak).toBeLessThanOrEqual(4);expect(metrics.markupProbes).toBe(0);expect(metrics.loadedProbes).toBe(4);expect(metrics.opticalPeak).toBeLessThanOrEqual(4);
+  expect(metrics.typeRequests).toBe(0);expect(metrics.coloredTypes).toBe(1000);expect(metrics.typeCpu).toBeLessThan(50);
+  expect(metrics.markupProbes).toBe(0);expect(metrics.loadedProbes).toBe(4);expect(metrics.opticalPeak).toBeLessThanOrEqual(4);
   console.log(`LAUNCH_FIX_PERF ${JSON.stringify(metrics)}`);
 });

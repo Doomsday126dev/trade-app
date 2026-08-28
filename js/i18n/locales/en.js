@@ -1,7 +1,7 @@
 (function(global){
   const root=global.PogoLocales=global.PogoLocales||{};
   root.en=Object.freeze({
-    'trainer.discoveryModes':'Trainer discovery sections','trainer.modeTrainers':'Trainers','trainer.modeFavorites':'Favorites','trainer.modePokemon':'Find by Pokémon','trainer.noVisibleMatch':'No visible trainer matched this search.','trainer.exactMatch':'Exact trainer match','trainer.partialMatches':'{count} visible matches','trainer.match.exact':'Exact match','trainer.match.prefix':'Starts with your search','trainer.match.token_prefix':'Word starts with your search','trainer.match.substring':'Contains your search','trainer.match.fuzzy':'Possible typo match','trainer.theyHaveMyWants':'They Have My Wants','trainer.iHaveTheirWants':'I Have Their Wants','trainer.tradeUsefulness':'Reciprocal trade usefulness',
+    'trainer.discoveryModes':'Trainer discovery sections','trainer.modeTrainers':'Trainers','trainer.modeFavorites':'Favorites','trainer.modePokemon':'Find by Pokémon','trainer.favoritesDescription':'Organize saved trainers, tags, and quick access.','trainer.noVisibleMatch':'No visible trainer matched this search.','trainer.exactMatch':'Exact trainer match','trainer.partialMatches':'{count} visible matches','trainer.match.exact':'Exact match','trainer.match.prefix':'Starts with your search','trainer.match.token_prefix':'Word starts with your search','trainer.match.substring':'Contains your search','trainer.match.fuzzy':'Possible typo match','trainer.theyHaveMyWants':'They Have My Wants','trainer.iHaveTheirWants':'I Have Their Wants','trainer.tradeUsefulness':'Reciprocal trade usefulness',
     'tradeMatch.title':'Trade list comparison with {trainer}','tradeMatch.intro':'Compare your wanted list with {trainer}’s wanted list. Qualifiers must match exactly.','tradeMatch.summary':'Wanted-list comparison','tradeMatch.detailsLabel':'Wanted-list comparison details','tradeMatch.notShared':'List unavailable','tradeMatch.unavailableHelp':'Both current wanted lists must be available to compare them.','tradeMatch.bothWant':'Both Want','tradeMatch.onlyIWant':'Only I Want','tradeMatch.onlyTheyWant':'Only {trainer} Wants','tradeMatch.bothDirection':'You and {trainer} expressed the same wanted trade intent.','tradeMatch.mineDirection':'These wanted trade intents appear only on your list.','tradeMatch.theirsDirection':'These wanted trade intents appear only on {trainer}’s list.','tradeMatch.emptyBoth':'You and {trainer} have no exact wanted intents in common.','tradeMatch.emptyMine':'Every wanted intent on your list also appears on {trainer}’s list.','tradeMatch.emptyTheirs':'Every wanted intent on {trainer}’s list also appears on your list.','tradeMatch.moreCount':'+{count} more','tradeMatch.backToList':'Back to full list','tradeMatch.editMyList':'Edit My List','tradeMatch.returnTitle':'Comparing with {trainer}','tradeMatch.returnHelp':'Return when your edits are ready to recalculate the wanted-list comparison.','tradeMatch.returnAction':'Return to comparison',
     'data.loading':'Loading {resource}…',
     'data.empty':'No {resource} found.',
@@ -276,8 +276,10 @@
     'myList.setPriority':'Set {name} to {priority} priority',
     'myList.toggleFlag':'Toggle {flag} for {name}',
     'myList.notesFor':'Notes for {name}',
+    'myList.remove':'Remove',
     'myList.removeEntry':'Remove {name}',
-    'myList.confirmDelete':'Delete “{name}”? This entry has notes: “{notes}”',
+    'myList.confirmRemove':'Remove “{name}” from this list? This change will sync to your other devices.',
+    'myList.confirmDelete':'Remove “{name}” from this list? This entry has details: “{notes}”. This change will sync to your other devices.',
     'list.wishlist':'Trades',
     'list.dynamax':'Dynamax',
     'list.dynamaxShort':'Dmax',

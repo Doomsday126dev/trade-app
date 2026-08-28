@@ -299,6 +299,11 @@ if(!priorityValueDomain)throw new Error('Priority value helpers failed to load')
 const {entryGender,matchesTradeIntent,normalizeTradeQualifier,normalizeBackgroundId,parsePri,priValue}=priorityValueDomain;
 const backgroundCatalogDomain=window.PogoDomain?.backgroundCatalog;
 if(!backgroundCatalogDomain)throw new Error('Background catalog helpers failed to load');
+const backgroundVisualDomain=window.PogoDomain?.backgroundVisual;
+if(!backgroundVisualDomain)throw new Error('Background visual helpers failed to load');
+const pokemonPrimaryTypesDomain=window.PogoDomain?.pokemonPrimaryTypes;
+if(!pokemonPrimaryTypesDomain)throw new Error('Pokemon primary type data failed to load');
+const {primaryTypeForDex}=pokemonPrimaryTypesDomain;
 const scheduleDateDomain=window.PogoDomain?.scheduleDates;
 if(!scheduleDateDomain)throw new Error('Schedule date helpers failed to load');
 const {isoDate,parseIsoDate,todayIso,startOfWeek,addDays,fmtWeekRange,WKDS}=scheduleDateDomain;
@@ -410,7 +415,6 @@ let myListAncillaryRenderPromise=Promise.resolve();
 let schedAnchor=null; // anchor date for week view (Sunday of week shown)
 let schedSelectedDate=null; // currently selected day (ISO YYYY-MM-DD)
 let voiceRecognition=null;
-let pokemonTypes={};
 let entryTimestamps={}; // for conflict detection
 let _sessionTransientGeneration=0;
 const BACKUP_REMINDER_INTERVAL=7*24*60*60*1000; // 7 days
@@ -4537,8 +4541,7 @@ function renderInterimProductLabels(){
     el.dataset.short=shortText;
     el.setAttribute('aria-label',text);
   });
-  setText('find-trainer-title','trainer.findTitle');
-  setText('find-trainer-description','trainer.findDescription');
+  renderTrainerDiscoveryHeading();
   setText('find-trainer-button','trainer.findAction');
   setText('find-trainer-reload','app.reloadAction');
   const findInput=document.getElementById('find-trainer-input');
@@ -4697,6 +4700,15 @@ function closeTrainerSuggestions(){
   trainerSuggestionItems=[];trainerSuggestionIndex=-1;trainerSuggestionQuery='';
 }
 let trainerDiscoveryMode='trainers';
+function renderTrainerDiscoveryHeading(){
+  const copy={
+    trainers:['trainer.findTitle','trainer.findDescription'],
+    favorites:['trainer.favoritesTitle','trainer.favoritesDescription'],
+    pokemon:['favoriteBrowse.title','favoriteBrowse.description']
+  }[trainerDiscoveryMode]||['trainer.findTitle','trainer.findDescription'];
+  setText('find-trainer-title',copy[0]);
+  setText('find-trainer-description',copy[1]);
+}
 function setTrainerDiscoveryMode(mode){
   const allowed=['trainers','favorites','pokemon'];
   trainerDiscoveryMode=allowed.includes(mode)?mode:'trainers';
@@ -4709,6 +4721,7 @@ function setTrainerDiscoveryMode(mode){
     button.tabIndex=selected?0:-1;
   });
   document.querySelectorAll('[data-discovery-panel]').forEach(panel=>{panel.hidden=panel.dataset.discoveryPanel!==trainerDiscoveryMode;});
+  renderTrainerDiscoveryHeading();
   if(trainerDiscoveryMode==='pokemon'&&!favoriteBrowseState.expanded){favoriteBrowseState.expanded=true;syncFavoriteBrowseDisclosure();}
 }
 function focusTrainerDiscoveryMode(mode){
@@ -5046,7 +5059,7 @@ async function renderTrainerQuickLists({preserveFavoriteControls=false,favorites
     favoritesControlsEl.innerHTML=`<div class="trainer-section-heading"><h2 class="trainer-quick-heading">${escHtml(i18nCore.t('trainer.favoritesTitle'))}</h2><span class="trainer-section-count">—</span></div>`;
     favoritesListEl.innerHTML=loading;
     if(favoritesOnly)return;
-    previewEl.innerHTML=loading;
+    previewEl.hidden=false;previewEl.innerHTML=loading;
     recentEl.innerHTML=loading;
     return;
   }
@@ -5065,7 +5078,8 @@ async function renderTrainerQuickLists({preserveFavoriteControls=false,favorites
   }).join('')}</div>`:emptyHtml(i18nCore.t(state.favorites.length?'organizer.noMatches':'organizer.noFavorites'),i18nCore.t(state.favorites.length?'organizer.noMatchesHelp':'organizer.noFavoritesHelp'),state.favorites.length?'search':'users');
   if(favoritesOnly)return;
   const previewItems=state.favorites.slice(0,4);
-  previewEl.innerHTML=`${favoritesHeading}${previewItems.length?`<div class="trainer-favorites-preview-list">${previewItems.map(item=>`<button type="button" class="trainer-favorites-preview-row card-row" data-trainer="${escAttr(item.displayName)}" data-trainer-action="open" aria-label="${escAttr(i18nCore.t('trainer.openTrainerNamed',{trainer:item.displayName}))}"><span class="trainer-quick-main"><span class="trainer-quick-name type-card">${escHtml(item.displayName)}</span></span><span class="recent-trainer-chevron" aria-hidden="true">${uiIconMarkup('chevron-right','ui-icon ui-icon-sm')}</span></button>`).join('')}</div><button type="button" class="trainer-favorites-preview-action" data-favorite-action="show-favorites">${escHtml(i18nCore.t('trainer.viewAllFavorites'))}</button>`:emptyHtml(i18nCore.t('organizer.noFavorites'),i18nCore.t('organizer.noFavoritesHelp'),'users')}`;
+  previewEl.hidden=!previewItems.length;
+  previewEl.innerHTML=previewItems.length?`${favoritesHeading}<div class="trainer-favorites-preview-list">${previewItems.map(item=>`<button type="button" class="trainer-favorites-preview-row card-row" data-trainer="${escAttr(item.displayName)}" data-trainer-action="open" aria-label="${escAttr(i18nCore.t('trainer.openTrainerNamed',{trainer:item.displayName}))}"><span class="trainer-quick-main"><span class="trainer-quick-name type-card">${escHtml(item.displayName)}</span></span><span class="recent-trainer-chevron" aria-hidden="true">${uiIconMarkup('chevron-right','ui-icon ui-icon-sm')}</span></button>`).join('')}</div><button type="button" class="trainer-favorites-preview-action" data-favorite-action="show-favorites">${escHtml(i18nCore.t('trainer.viewAllFavorites'))}</button>`:'';
   const recentHeading=`<div class="trainer-section-heading"><h2 class="trainer-quick-heading">${escHtml(i18nCore.t('trainer.recentTitle'))}</h2>${state.recent.length?`<span class="trainer-section-count">${state.recent.length}</span>`:''}</div>`;
   recentEl.innerHTML=`${recentHeading}${state.recent.length?`<div class="recent-trainer-list">${state.recent.map(item=>`<button type="button" class="recent-trainer-row card-row" data-trainer="${escAttr(item.displayName)}" data-trainer-action="open" aria-label="${escAttr(i18nCore.t('trainer.openTrainerNamed',{trainer:item.displayName}))}"><span class="trainer-quick-main"><span class="trainer-quick-name recent-trainer-name type-card">${escHtml(item.displayName)}</span><span class="trainer-quick-meta recent-trainer-recency type-meta">${escHtml(trainerViewedText(item.openedAt))}</span></span><span class="recent-trainer-chevron" aria-hidden="true">${uiIconMarkup('chevron-right','ui-icon ui-icon-sm')}</span></button>`).join('')}</div>`:`${emptyHtml(i18nCore.t('trainer.noRecents'),i18nCore.t('trainer.noRecentsHelp'),'activity')}`}`;
   renderFavoriteBrowseResults();
@@ -5309,7 +5323,6 @@ function showApp(){
   document.getElementById('my-un').textContent=cur;
   document.getElementById('account-menu-name').textContent=cur;
   document.getElementById('settings-account-name').textContent=cur;
-  loadTypeCache();
   syncSpeedAddMode();
   ensureTrainerHistoryStore();
   const isAdmin=protectedOwnerSession();
@@ -5644,10 +5657,21 @@ const _recentBackgroundIds=[];
 function backgroundRecord(id){return backgroundCatalogDomain.get(id);}
 function backgroundDisplayName(id){return backgroundCatalogDomain.display(id)||id||'';}
 function backgroundShortLabel(id){return backgroundCatalogDomain.shortLabel(id)||id||'';}
+function backgroundVisual(id){return id?backgroundVisualDomain.resolve(id,backgroundRecord(id)):null;}
+function backgroundVisualClass(id){return backgroundVisualDomain.className(backgroundVisual(id));}
+function backgroundVisualStyle(id){return backgroundVisualDomain.style(backgroundVisual(id));}
+function backgroundVisualAttrs(id){
+  const visual=backgroundVisual(id);
+  return visual?`data-background-visual="${escAttr(visual.type)}" style="${escAttr(backgroundVisualDomain.style(visual))}"`:'';
+}
+function backgroundVisualMotifHtml(id,cls='background-card-motif'){
+  if(!id)return'';
+  return`<span class="${cls} ${backgroundVisualClass(id)}" ${backgroundVisualAttrs(id)} aria-hidden="true"></span>`;
+}
 function backgroundBadgeHtml(id,cls='background-badge'){
   if(!id)return'';
   const full=backgroundDisplayName(id),short=backgroundShortLabel(id);
-  return`<span class="${cls}" title="${escAttr(full)}" aria-label="${escAttr(i18nCore.t('background.badgeLabel',{name:full}))}">${escHtml(short)} <span aria-hidden="true">BG</span></span>`;
+  return`<span class="${cls} background-visual-label ${backgroundVisualClass(id)}" ${backgroundVisualAttrs(id)} title="${escAttr(full)}" aria-label="${escAttr(i18nCore.t('background.badgeLabel',{name:full}))}"><span class="background-visual-swatch" aria-hidden="true"></span><span class="background-visual-name">${escHtml(short)}</span><span class="background-badge-kind" aria-hidden="true">BG</span></span>`;
 }
 function updateAddBackgroundPresentation(){
   const id=normalizeBackgroundId(document.getElementById('add-pmon-background')?.value);
@@ -6241,10 +6265,7 @@ function myListEditorHtml(entry){
       <button class="flag-btn xxl-flag ${xxl?'on':''}" onclick="setXxl('${jsName}')" title="XXL" aria-pressed="${xxl}" aria-label="${escAttr(i18nCore.t('myList.toggleXxlFor',{name:dn}))}">XXL</button>
       <button class="flag-btn xxs-flag ${xxs?'on':''}" onclick="setXxs('${jsName}')" title="XXS" aria-pressed="${xxs}" aria-label="${escAttr(i18nCore.t('myList.toggleXxsFor',{name:dn}))}">XXS</button>
     </div>
-    <div class="myrow-editor-fields">
-      <input class="ni" type="text" value="${escAttr(mod)}" placeholder="${escAttr(i18nCore.t('myList.variantDetails'))}" onchange="setNotes('${jsName}',this.value)" aria-label="${escAttr(i18nCore.t('myList.notesFor',{name:dn}))}">
-      <button class="rm" onclick="confirmRemove('${jsName}','${jsDn}')" aria-label="${escAttr(i18nCore.t('myList.removeEntry',{name:dn}))}">×</button>
-    </div>
+    <div class="myrow-editor-fields"><input class="ni" type="text" value="${escAttr(mod)}" placeholder="${escAttr(i18nCore.t('myList.variantDetails'))}" onchange="setNotes('${jsName}',this.value)" aria-label="${escAttr(i18nCore.t('myList.notesFor',{name:dn}))}"></div>
     <button type="button" class="background-trigger" onclick="openBackgroundPicker({target:'entry',name:'${jsName}',pokemonName:'${jsDn}'})" aria-haspopup="dialog"><span class="background-trigger-copy">${escHtml(backgroundId?backgroundDisplayName(backgroundId):i18nCore.t('background.none'))}</span><span class="background-trigger-clear">${escHtml(backgroundId?i18nCore.t('common.change'):i18nCore.t('background.choose'))}</span></button>
   </div>`;
 }
@@ -6256,12 +6277,22 @@ function hydrateMyRowEditor(details){
   details.insertAdjacentHTML('beforeend',myListEditorHtml(entry));
   details.dataset.hydrated='true';
 }
+function hydrateMyRowPriority(details){
+  if(!details?.open||details.dataset.hydrated==='true')return;
+  const name=details.closest('.myrow')?.dataset.name;
+  const entry=currentListEntries(myListType).find(item=>item.name===name);
+  if(!entry)return;
+  const jsName=escAttr(entry.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r?\n/g,' '));
+  details.insertAdjacentHTML('beforeend',`<div class="myrow-priority-menu" role="group" aria-label="${escAttr(i18nCore.t('myList.priorityFor',{name:entry.dn}))}">${['H','M','L'].map(value=>`<button type="button" class="pb ${entry.p===value?'on '+value:''}" aria-pressed="${entry.p===value}" onclick="movePriority('${jsName}','${value}')">${value}</button>`).join('')}</div>`);
+  details.dataset.hydrated='true';
+}
 function myListRowRenderKey(entry,idx,count){
   return JSON.stringify([entry.rawValue,i18nCore.getLocale(),bulkMode,bulkSelected.has(entry.name),reorderMode,reorderMode?idx:null,reorderMode?count:null]);
 }
 function myListRowHtml(entry,idx,count){
     const{name,dn,p,mod,lucky,xxl,xxs,shiny,backgroundId,no}=entry;
     const jsName=escAttr(name.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r?\n/g,' '));
+    const jsDn=escAttr(String(dn).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r?\n/g,' '));
     const attrName=escAttr(name);
     const hasSprite=no||entry.spriteUrl||COSTUME_FORM_SPRITE_IDS[name]||GO_COSTUME_SPRITE_SLUGS[name];
     const crownHtml=maxCrownSvg(entry.maxType);
@@ -6276,8 +6307,9 @@ function myListRowHtml(entry,idx,count){
       mod?`<span class="myrow-trait detail">${escHtml(mod)}</span>`:''
     ].join('');
     const priorityIndex=idx,priorityCount=count;
-    return`<div class="myrow${isSel?' bulk-selected':''}" ${reorderMode&&!bulkMode?'draggable="true"':''} data-name="${attrName}" data-priority="${escAttr(p||'')}" data-dex="${no||''}" data-idx="${idx}" data-render-key="${escAttr(myListRowRenderKey(entry,idx,count))}" data-full="${escAttr(dn)}" aria-label="${escAttr(dn)}" ${clickHandler}
+    return`<div class="myrow${isSel?' bulk-selected':''}${backgroundId?` background-visual-card ${backgroundVisualClass(backgroundId)}`:''}" ${backgroundId?backgroundVisualAttrs(backgroundId):''} ${reorderMode&&!bulkMode?'draggable="true"':''} data-name="${attrName}" data-priority="${escAttr(p||'')}" data-dex="${no||''}" data-idx="${idx}" data-render-key="${escAttr(myListRowRenderKey(entry,idx,count))}" data-full="${escAttr(dn)}" aria-label="${escAttr(dn)}" ${clickHandler}
       ondragstart="dragStart(event)" ondragover="dragOver(event)" ondrop="dragDrop(event)" ondragend="dragEnd(event)">
+      ${backgroundVisualMotifHtml(backgroundId)}
       <input type="checkbox" class="bulk-chk" data-name="${attrName}" ${isSel?'checked':''} onclick="event.stopPropagation();toggleBulkSelection('${jsName}')" aria-label="${escAttr(i18nCore.t('myList.selectEntry',{name:dn}))}">
       ${reorderMode?`<button type="button" class="drag-handle" draggable="false" title="${escAttr(i18nCore.t('myList.reorderEntry',{name:dn}))}" aria-label="${escAttr(i18nCore.t('myList.reorderEntry',{name:dn}))}" onpointerdown="myListPointerStart(event)" onpointermove="myListPointerMove(event)" onpointerup="myListPointerEnd(event)" onpointercancel="myListPointerCancel(event)">${uiIconMarkup('grip','ui-icon')}</button><span class="myrow-reorder-controls"><button type="button" class="myrow-reorder-move" data-reorder-move="up" draggable="false" ${priorityIndex<=0?'disabled':''} aria-label="${escAttr(i18nCore.t('myList.moveUp',{name:dn}))}" onclick="event.stopPropagation();moveMyListEntry('${jsName}',-1)">${uiIconMarkup('chevron-down','ui-icon')}</button><button type="button" class="myrow-reorder-move" data-reorder-move="down" draggable="false" ${priorityIndex>=priorityCount-1?'disabled':''} aria-label="${escAttr(i18nCore.t('myList.moveDown',{name:dn}))}" onclick="event.stopPropagation();moveMyListEntry('${jsName}',1)">${uiIconMarkup('chevron-down','ui-icon')}</button></span>`:''}
       ${hasSprite?`<span class="myrow-sprite-wrap sprite-slot-list">${spriteImg(no,34,'myrow-sprite',name,'',dn,{urlOverride:entry.spriteUrl,catalogId:entry.catalogId})}${crownHtml}</span>`:crownHtml}
@@ -6286,10 +6318,11 @@ function myListRowHtml(entry,idx,count){
         ${activeTraits?`<div class="myrow-active-traits" aria-label="${escAttr(i18nCore.t('myList.currentFlags',{flags:[lucky&&i18nCore.t('myList.lucky'),shiny&&i18nCore.t('myList.shiny'),xxl&&'XXL',xxs&&'XXS',backgroundId&&i18nCore.t('background.badgeLabel',{name:backgroundDisplayName(backgroundId)}),mod].filter(Boolean).join(', ')}))}">${activeTraits}</div>`:''}
       </div>
       <div class="mctrl">
-        ${p?`<details class="myrow-priority-quick" onclick="event.stopPropagation()"><summary class="myrow-priority-chip ${p}" aria-label="${escAttr(i18nCore.t('myList.changePriorityFor',{name:dn,priority:i18nCore.t({'H':'priority.high','M':'priority.medium','L':'priority.low'}[p])}))}">${p}</summary><div class="myrow-priority-menu" role="group" aria-label="${escAttr(i18nCore.t('myList.priorityFor',{name:dn}))}">${['H','M','L'].map(value=>`<button type="button" class="pb ${p===value?'on '+value:''}" aria-pressed="${p===value}" onclick="movePriority('${jsName}','${value}')">${value}</button>`).join('')}</div></details>`:''}
+        ${p?`<details class="myrow-priority-quick" onclick="event.stopPropagation()" ontoggle="hydrateMyRowPriority(this)"><summary class="myrow-priority-chip ${p}" aria-label="${escAttr(i18nCore.t('myList.changePriorityFor',{name:dn,priority:i18nCore.t({'H':'priority.high','M':'priority.medium','L':'priority.low'}[p])}))}">${p}</summary></details>`:''}
         <details class="myrow-editor" onclick="event.stopPropagation()" ontoggle="hydrateMyRowEditor(this)">
           <summary class="myrow-edit" aria-label="${escAttr(i18nCore.t('myList.openMoreFor',{name:dn}))}" title="${escAttr(i18nCore.t('myList.openMoreFor',{name:dn}))}">${uiIconMarkup('sliders','ui-icon ui-icon-sm')}<span>${escHtml(i18nCore.t('myList.editEntry'))}</span></summary>
         </details>
+        <button type="button" class="myrow-remove" onclick="event.stopPropagation();confirmRemove('${jsName}','${jsDn}')" aria-label="${escAttr(i18nCore.t('myList.removeEntry',{name:dn}))}" title="${escAttr(i18nCore.t('myList.removeEntry',{name:dn}))}">${escHtml(i18nCore.t('myList.remove'))}</button>
       </div>
     </div>`;
 }
@@ -6571,8 +6604,12 @@ function renderMyList(filterVal,options={}){
 function confirmRemove(name,dn){
   const list=allData[myListType]?.[cur]||{};
   const{mod}=parsePri(list[name]||'');
-  if(mod&&!confirm(i18nCore.t('myList.confirmDelete',{name:dn,notes:mod})))return;
+  const message=mod
+    ?i18nCore.t('myList.confirmDelete',{name:dn,notes:mod})
+    :i18nCore.t('myList.confirmRemove',{name:dn});
+  if(!confirm(message))return false;
   removeEntry(name);
+  return true;
 }
 
 const canvasImageCache=new Map();
@@ -6888,6 +6925,27 @@ function drawExportEntryNoteLabel(ctx,e,x,y,w,h,{dark=false}={}){
   ctx.textAlign='left';
   ctx.textBaseline='alphabetic';
 }
+function drawExportBackgroundVisual(ctx,e,x,y,w,h,{dark=false,radius=8}={}){
+  const visual=backgroundVisual(e?.backgroundId);if(!visual)return;
+  ctx.save();
+  roundedRect(ctx,x,y,w,h,radius);ctx.clip();
+  const gradient=ctx.createLinearGradient(x,y,x+w,y+h);
+  gradient.addColorStop(0,visual.colorA);gradient.addColorStop(.55,visual.colorB);gradient.addColorStop(1,visual.colorC);
+  ctx.globalAlpha=dark ? .42 : .18;ctx.fillStyle=gradient;ctx.fillRect(x,y,w,h);
+  ctx.globalAlpha=dark ? .22 : .12;ctx.strokeStyle='#ffffff';ctx.lineWidth=1;
+  if(visual.pattern==='rings'){
+    for(let r=10;r<Math.max(w,h)*1.5;r+=15){ctx.beginPath();ctx.arc(x+w*.72,y+h*.38,r,0,Math.PI*2);ctx.stroke();}
+  }else if(visual.pattern==='constellation'){
+    const points=[[.16,.22],[.42,.34],[.72,.18],[.84,.62],[.55,.78],[.22,.66]];
+    ctx.beginPath();points.forEach(([px,py],index)=>index?ctx.lineTo(x+w*px,y+h*py):ctx.moveTo(x+w*px,y+h*py));ctx.stroke();
+    points.forEach(([px,py])=>{ctx.beginPath();ctx.arc(x+w*px,y+h*py,1.8,0,Math.PI*2);ctx.fillStyle='#fff';ctx.fill();});
+  }else if(visual.pattern==='prism'){
+    for(let offset=-h;offset<w;offset+=18){ctx.beginPath();ctx.moveTo(x+offset,y+h);ctx.lineTo(x+offset+h,y);ctx.stroke();}
+  }else{
+    ctx.beginPath();ctx.moveTo(x,y+h*.66);ctx.quadraticCurveTo(x+w*.26,y+h*.38,x+w*.5,y+h*.62);ctx.quadraticCurveTo(x+w*.72,y+h*.86,x+w,y+h*.43);ctx.lineTo(x+w,y+h);ctx.lineTo(x,y+h);ctx.closePath();ctx.fillStyle='#fff';ctx.fill();
+  }
+  ctx.restore();
+}
 // Family-clustering sort: groups Pokemon variants (Vivillon, Unown, Furfrou, regional forms)
 // together. Primary key = dex number, secondary = family-base name (strips parens/regional prefix),
 // tertiary = full name. So all dex 666 entries cluster, all "Vivillon (X)" stay together inside.
@@ -6985,6 +7043,7 @@ async function renderListImage(entries,type,username,style='classic'){
       const col=i%cols,row=Math.floor(i/cols);
       const x=frame+pad+col*(cellW+gap),cy=y+row*cellH;
       const sx=x+(cellW-sprSize)/2,sy=cy+(cellH-sprSize)/2;
+      drawExportBackgroundVisual(ctx,e,x+2,cy+2,cellW-4,cellH-4,{radius:7});
       const img=images.get(exportSpriteUrl(e));
       if(img)drawImageContain(ctx,img,sx,sy,sprSize,sprSize);
       else drawSpriteFallback(ctx,e,sx,sy,sprSize);
@@ -7099,6 +7158,7 @@ async function renderListImageCards(entries,type,username){
       // Card background
       ctx.fillStyle='#1e1e35';
       roundedRect(ctx,x,cy,cellW,cellH,8);ctx.fill();
+      drawExportBackgroundVisual(ctx,e,x,cy,cellW,cellH,{dark:true,radius:8});
       // Priority-coloured top stripe
       ctx.fillStyle=c;
       roundedRect(ctx,x,cy,cellW,3,2);ctx.fill();
@@ -7328,26 +7388,22 @@ async function setBackground(name,backgroundId){
 }
 async function removeEntry(name){
   if(!requireOwnedListHydration(myListType,cur))return;
-  const prevList={...(allData[myListType]?.[cur]||{})};
   const srcArr=listSource(myListType);
   const sourceEntry=srcArr.find(x=>x.name===name),dn=sourceEntry?pokemonDisplayName(sourceEntry):name;
-  const pendingUndo={type:myListType,username:cur,list:{...prevList},name:dn};
-  // Animate the row out
   const row=[...document.querySelectorAll('.myrow')].find(r=>r.dataset.name===name);
+  const focusTarget=row?.nextElementSibling?.querySelector('.myrow-edit,.myrow-remove')||row?.previousElementSibling?.querySelector('.myrow-edit,.myrow-remove');
+  const commitRemoval=async()=>{
+    if(!await writeListItem(myListType,cur,name,null)){row?.classList.remove('removing');if(row)row.style.transform='';return;}
+    announceMyListAction(i18nCore.t('myList.removed',{name:dn}));
+    requestAnimationFrame(()=>{
+      if(focusTarget?.isConnected)focusTarget.focus();
+      else document.getElementById('mylist-filter')?.focus();
+    });
+  };
   if(row){
     row.classList.add('removing');
-    setTimeout(sessionTransientCallback(async()=>{
-      if(await writeListItem(myListType,cur,name,null)){
-        undoStack=pendingUndo;
-        showUndo(dn);
-      }else row.classList.remove('removing');
-    }),220);
-  }else{
-    if(await writeListItem(myListType,cur,name,null)){
-      undoStack=pendingUndo;
-      showUndo(dn);
-    }
-  }
+    setTimeout(sessionTransientCallback(commitRemoval),220);
+  }else await commitRemoval();
 }
 
 // ── SEARCH STRINGS ────────────────────────────────────────────
@@ -9292,7 +9348,7 @@ function tradeIntentQualifierTokens(intent){
   if(intent.shiny)tokens.push({label:i18nCore.t('share.flagShiny')});
   if(intent.xxl)tokens.push({label:i18nCore.t('share.flagXxl')});
   if(intent.xxs)tokens.push({label:i18nCore.t('share.flagXxs')});
-  if(intent.backgroundId)tokens.push({label:i18nCore.t('background.badgeLabel',{name:backgroundDisplayName(intent.backgroundId)}),cls:'background'});
+  if(intent.backgroundId)tokens.push({label:i18nCore.t('background.badgeLabel',{name:backgroundDisplayName(intent.backgroundId)}),cls:'background',backgroundId:intent.backgroundId});
   const gender=entryGender(intent.mod);
   if(gender)tokens.push({label:i18nCore.t(gender==='f'?'share.flagFemale':'share.flagMale')});
   const detail=tradeIntentFreeform(intent.mod);
@@ -9333,8 +9389,8 @@ function renderTradeMatchSummary(them){
     const img=it.no?spriteImg(it.no,38,'',it.name,it.gender||'',it.dn):'<span aria-hidden="true">◌</span>';
     const gender=it.gender?` ${it.gender==='f'?'♀':'♂'}`:'';
     const qualifiers=tradeIntentQualifierTokens(it);
-    if(it.backgroundId&&!qualifiers.some(token=>token.cls==='background'))qualifiers.push({label:i18nCore.t('background.badgeLabel',{name:backgroundDisplayName(it.backgroundId)}),cls:'background'});
-    return`<article class="diff-match-chip ${cls}" title="${escAttr(it.dn+gender)}">${img}<div class="diff-match-main"><span class="diff-match-name">${escHtml(it.dn)}${gender}</span>${qualifiers.length?`<span class="diff-match-qualifiers">${qualifiers.map(token=>`<span class="diff-match-qualifier ${escAttr(token.cls||'')}">${escHtml(token.label)}</span>`).join('')}</span>`:''}</div></article>`;
+    if(it.backgroundId&&!qualifiers.some(token=>token.cls==='background'))qualifiers.push({label:i18nCore.t('background.badgeLabel',{name:backgroundDisplayName(it.backgroundId)}),cls:'background',backgroundId:it.backgroundId});
+    return`<article class="diff-match-chip ${cls}${it.backgroundId?` background-visual-card ${backgroundVisualClass(it.backgroundId)}`:''}" ${it.backgroundId?backgroundVisualAttrs(it.backgroundId):''} title="${escAttr(it.dn+gender)}">${backgroundVisualMotifHtml(it.backgroundId)}${img}<div class="diff-match-main"><span class="diff-match-name">${escHtml(it.dn)}${gender}</span>${qualifiers.length?`<span class="diff-match-qualifiers">${qualifiers.map(token=>token.backgroundId?backgroundBadgeHtml(token.backgroundId,'diff-match-qualifier background'):`<span class="diff-match-qualifier ${escAttr(token.cls||'')}">${escHtml(token.label)}</span>`).join('')}</span>`:''}</div></article>`;
   };
   const box=(cls,title,direction,items,available,empty)=>`<section class="diff-match-box ${cls}" aria-labelledby="trade-match-${cls}-title">
     <div class="diff-match-title" id="trade-match-${cls}-title">${escHtml(title)}<span class="diff-match-count">${available?i18nCore.formatNumber(items.length):'—'}</span></div>
@@ -9648,7 +9704,8 @@ function renderDiffModal(){
       priHtml=`<span class="diff-prio-badge ${theirs}" title="${escAttr(them)}: ${escAttr(priLabel(theirs))}">${theirs}</span>`;
     }
     const genderHtml=e.gender?`<span class="share-pcard-gender ${e.gender}" style="position:absolute;bottom:-2px;right:-2px">${e.gender==='f'?'♀':'♂'}</span>`:'';
-    return`<div class="diff-card${isMismatch?' has-mismatch':''}" title="${escAttr(e.dn)}">
+    return`<div class="diff-card${isMismatch?' has-mismatch':''}${e.backgroundId?` background-visual-card ${backgroundVisualClass(e.backgroundId)}`:''}" ${e.backgroundId?backgroundVisualAttrs(e.backgroundId):''} title="${escAttr(e.dn)}">
+      ${backgroundVisualMotifHtml(e.backgroundId)}
       <div class="diff-card-sprite-wrap">${e.no?spriteImg(e.no,26,'share-pcard-sprite',e.name,e.gender,e.dn):'🎮'}${genderHtml}</div>
       <div class="diff-card-info">
         <span class="diff-card-name">${escHtml(e.dn)}</span>
@@ -10717,11 +10774,12 @@ function renderSpecialBoard(){
       const display=pokemonDisplayName({name:e.name,no:e.no,displayName:e.dn||e.name});
       const backgroundId=normalizeBackgroundId(e.backgroundId),backgroundName=backgroundId?backgroundDisplayName(backgroundId):'';
       const backgroundLabel=backgroundId?backgroundShortLabel(backgroundId):'';
-      return`<div class="sb-row" data-idx="${i}">
+      return`<div class="sb-row${backgroundId?` background-visual-card ${backgroundVisualClass(backgroundId)}`:''}" ${backgroundId?backgroundVisualAttrs(backgroundId):''} data-idx="${i}">
+        ${backgroundVisualMotifHtml(backgroundId)}
         ${sprHtml}
         <span class="sb-row-name" title="${escAttr(display)}">${escHtml(display)}</span>
         ${qtyHtml}
-        <button type="button" class="sb-row-background ${backgroundId?'':'is-empty'}" onclick="openBackgroundPicker({target:'special',side:'${side}',index:${i},name:'${escAttr(e.name)}',pokemonName:'${escAttr(display)}'})" title="${escAttr(backgroundName||i18nCore.t('background.none'))}" aria-label="${escAttr(backgroundId?i18nCore.t('background.selected',{name:backgroundName}):i18nCore.t('background.choose'))}"><span class="background-trigger-copy">${backgroundId?escHtml(`${backgroundLabel} BG`):'◉'}</span></button>
+        <button type="button" class="sb-row-background ${backgroundId?'':'is-empty'}" onclick="openBackgroundPicker({target:'special',side:'${side}',index:${i},name:'${escAttr(e.name)}',pokemonName:'${escAttr(display)}'})" title="${escAttr(backgroundName||i18nCore.t('background.none'))}" aria-label="${escAttr(backgroundId?i18nCore.t('background.selected',{name:backgroundName}):i18nCore.t('background.choose'))}"><span class="background-trigger-copy">${backgroundId?`<span class="background-visual-swatch ${backgroundVisualClass(backgroundId)}" ${backgroundVisualAttrs(backgroundId)} aria-hidden="true"></span><span>${escHtml(backgroundLabel)}</span>`:'◉'}</span></button>
         <button class="sb-row-flag ${e.shiny?'on shiny':''}" onclick="toggleSpecialFlag('${side}',${i},'shiny')" title="✨ Shiny variant" aria-pressed="${!!e.shiny}">✨</button>
         <button class="sb-row-flag ${e.mirror?'on mirror':''}" onclick="toggleSpecialFlag('${side}',${i},'mirror')" title="🪞 Mirror-only (same Pokémon back)" aria-pressed="${!!e.mirror}">🪞</button>
         <input type="text" class="sb-row-note" maxlength="40" placeholder="note…" value="${escAttr(e.note||'')}" onchange="setSpecialNote('${side}',${i},this.value)" aria-label="Note">
@@ -11014,6 +11072,7 @@ async function renderSpecialBoardImage(board,username){
     entries.forEach((e,i)=>{
       const detailLabel=exportEntryNoteLabel({...e,mod:e.note||''});
       if(i%2===0){ctx.fillStyle='rgba(255,255,255,.025)';ctx.fillRect(xBase,y,colW,rowH-4);}
+      drawExportBackgroundVisual(ctx,e,xBase,y,colW,rowH-4,{dark:true,radius:5});
       const img=imgMap.get(e.name+(e.shiny?'_s':''));
       const sx=xBase+8,sy=y+(rowH-4-sprSize)/2;
       if(img)drawImageContain(ctx,img,sx,sy,sprSize,sprSize);
@@ -11057,6 +11116,7 @@ async function renderSpecialBoardImage(board,username){
       // Card background — subtle, helps visual grouping
       ctx.fillStyle='rgba(255,255,255,.03)';
       ctx.fillRect(cx,cy,gridCellW,gridCellH-6);
+      drawExportBackgroundVisual(ctx,e,cx,cy,gridCellW,gridCellH-6,{dark:true,radius:5});
       // Sprite centered horizontally near top
       const img=imgMap.get(e.name+(e.shiny?'_s':''));
       const sx=cx+(gridCellW-gridSprSize)/2,sy=cy+(showGridNames?6:Math.max(4,(gridCellH-6-gridSprSize)/2));
@@ -11332,7 +11392,8 @@ function renderShareView(username,type){
         const spriteHtml=e.no
           ?`<div class="share-pcard-sprite-wrap">${spriteImg(e.no,26,'share-pcard-sprite',e.name,e.gender,e.dn)}${e.gender?`<span class="share-pcard-gender ${e.gender}">${e.gender==='f'?'♀':'♂'}</span>`:''}</div>`
           :'<div class="share-pcard-sprite" style="display:flex;align-items:center;justify-content:center;background:var(--bg2);border-radius:var(--radius-sm)">🎮</div>';
-        return `<div class="share-pcard card-row" title="${escAttr(e.dn)}">
+        return `<div class="share-pcard card-row${e.backgroundId?` background-visual-card ${backgroundVisualClass(e.backgroundId)}`:''}" ${e.backgroundId?backgroundVisualAttrs(e.backgroundId):''} title="${escAttr(e.dn)}">
+          ${backgroundVisualMotifHtml(e.backgroundId)}
           ${spriteHtml}
           <div class="share-pcard-info">
             <span class="share-pcard-name">${escHtml(e.dn)}</span>
@@ -11386,7 +11447,7 @@ function swipeEnd(ev){
   if(!vert&&dx<-80){
     // Swipe left = delete
     row.style.transform='translateX(-100%)';
-    setTimeout(sessionTransientCallback(()=>{const n=row.dataset.name;if(n)confirmRemove(n,row.dataset.full||n);}),150);
+    setTimeout(sessionTransientCallback(()=>{const n=row.dataset.name;if(!n||!confirmRemove(n,row.dataset.full||n))row.style.transform='';}),150);
   }else if(!vert&&dx>80){
     // Swipe right = toggle bulk select
     row.style.transform='';
@@ -11487,76 +11548,14 @@ function toggleTheme(){
 }
 function initTheme(){applyTheme(lsGet('pogoTheme','auto'));}
 
-// ── POKEMON TYPE COLORS (#16) ─────────────────────────────────
-const TYPE_CACHE_KEY='pogoTypeCache_v1';
-const TYPE_FETCH_CONCURRENCY=4;
-const TYPE_FETCH_TIMEOUT_MS=6000;
-const pokemonTypeInflight=new Map();
-const pokemonTypeQueue=[];
-const typeColorOwnedElements=new WeakSet();
-let pokemonTypeActive=0,typeColorObserver=null;
-function loadTypeCache(){try{pokemonTypes=JSON.parse(localStorage.getItem(TYPE_CACHE_KEY)||'{}')||{};}catch{pokemonTypes={};}}
-function saveTypeCache(){try{localStorage.setItem(TYPE_CACHE_KEY,JSON.stringify(pokemonTypes));}catch{}}
-function _drainPokemonTypeQueue(){
-  while(pokemonTypeActive<TYPE_FETCH_CONCURRENCY&&pokemonTypeQueue.length){
-    const task=pokemonTypeQueue.shift();
-    pokemonTypeActive++;
-    _requestPokemonType(task.dexNum).then(result=>{
-      pokemonTypeActive--;
-      pokemonTypeInflight.delete(task.dexNum);
-      task.resolve(result);
-      _drainPokemonTypeQueue();
-    });
-  }
-}
-async function _requestPokemonType(dexNum){
-  const controller=typeof AbortController==='function'?new AbortController():null;
-  const timeout=controller?setTimeout(()=>controller.abort(),TYPE_FETCH_TIMEOUT_MS):null;
-  try{
-    const res=await fetch(`https://pokeapi.co/api/v2/pokemon/${dexNum}`,controller?{signal:controller.signal}:undefined);
-    if(!res.ok)throw new Error('not ok');
-    const data=await res.json();
-    const primary=data.types?.[0]?.type?.name||null;
-    if(primary){pokemonTypes[dexNum]=primary;saveTypeCache();}
-    return primary;
-  }catch{return null;}
-  finally{if(timeout)clearTimeout(timeout);}
-}
-function fetchPokemonType(dexNum){
-  if(!dexNum)return null;
-  if(pokemonTypes[dexNum]!==undefined)return Promise.resolve(pokemonTypes[dexNum]);
-  if(pokemonTypeInflight.has(dexNum))return pokemonTypeInflight.get(dexNum);
-  let resolveTask;
-  const pending=new Promise(resolve=>{resolveTask=resolve;});
-  pokemonTypeInflight.set(dexNum,pending);
-  pokemonTypeQueue.push({dexNum,resolve:resolveTask});
-  _drainPokemonTypeQueue();
-  return pending;
-}
+// ── POKEMON TYPE COLORS ───────────────────────────────────────
 function applyTypeColorToElement(el){
   const dex=parseInt(el?.dataset.dex);if(!dex)return;
-  const apply=type=>{if(type&&TYPE_COLORS[type]&&el.isConnected)el.style.setProperty('--type-color',TYPE_COLORS[type]);};
-  if(pokemonTypes[dex]!==undefined){apply(pokemonTypes[dex]);return;}
-  fetchPokemonType(dex).then(apply);
+  const type=primaryTypeForDex(dex);
+  if(type&&TYPE_COLORS[type])el.style.setProperty('--type-color',TYPE_COLORS[type]);
 }
 function applyTypeColors(root=document){
-  const rows=[...root.querySelectorAll('.myrow[data-dex],.pgrid .pc[data-dex]')];
-  if(typeof IntersectionObserver!=='function'){
-    rows.forEach(row=>{if(!typeColorOwnedElements.has(row)){typeColorOwnedElements.add(row);applyTypeColorToElement(row);}});
-    return;
-  }
-  if(!typeColorObserver)typeColorObserver=new IntersectionObserver(entries=>entries.forEach(entry=>{
-      if(!entry.isIntersecting)return;
-      typeColorObserver?.unobserve(entry.target);
-      applyTypeColorToElement(entry.target);
-    }),{rootMargin:'240px 0px'});
-  rows.forEach(row=>{
-    if(typeColorOwnedElements.has(row))return;
-    const dex=parseInt(row.dataset.dex);if(!dex)return;
-    typeColorOwnedElements.add(row);
-    if(pokemonTypes[dex]!==undefined)applyTypeColorToElement(row);
-    else typeColorObserver.observe(row);
-  });
+  root.querySelectorAll('.myrow[data-dex],.pgrid .pc[data-dex]').forEach(applyTypeColorToElement);
 }
 
 // ── TRADE SCHEDULE ──────────────────────────────────────────

@@ -68,7 +68,8 @@ test.describe('isolated My List scale profile',()=>{
       await expect(page.locator('#mylist-out .myrow-editor-popover')).toHaveCount(1);
       await expect(page.locator('#mylist-out .myrow-editor-popover .priority-choice')).toHaveCount(3);
       await expect(page.locator('#mylist-out .myrow-editor-popover .flag-btn')).toHaveCount(4);
-      await expect(page.locator('#mylist-out .myrow-editor-popover .rm')).toHaveCount(1);
+      await expect(page.locator('#mylist-out .myrow-editor-popover .rm')).toHaveCount(0);
+      await expect(page.locator('#mylist-out .myrow-remove')).toHaveCount(count);
       measurements.push({...measurement,filterMs:filter.ms,rowUpdateMs:update.ms});
     }
     console.log(`MY_LIST_PERF ${JSON.stringify(measurements)}`);
