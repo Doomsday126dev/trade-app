@@ -98,6 +98,17 @@ test('same-field first server-accepted edit wins and losing value is recoverable
   const reapplied=await b.controller.reapplyConflict(details[0].conflictId);await h.settle();assert.equal(reapplied.ok,true);assert.equal(h.server.entities.get(`tradeEntry|${id}`).values.priority,'L');assert.equal((await b.journal.listConflicts()).length,0);assert.equal((await b.journal.listOperations({statuses:['resolved']})).length,1);
 });
 
+test('duplicate offline adds become a fieldless lifecycle conflict that can only accept the canonical item',async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),a=h.createDevice('A',{online:false}),b=h.createDevice('B',{online:false});await a.start();await b.start();
+  const first=await add(a,window,'pokemon:wiglett',{priority:'L'}),second=await add(b,window,'pokemon:wiglett',{priority:'L'});assert.equal(first.value.entityId,second.value.entityId);
+  await a.setOnline(true);await h.settle();await b.setOnline(true);await h.settle();
+  const details=await b.controller.conflictDetails();assert.equal(details.length,1);assert.equal(details[0].code,'lifecycle-conflict');assert.equal(details[0].fields.length,0);
+  assert.equal((await b.controller.reapplyConflict(details[0].conflictId)).error.code,'account-sync/conflict-not-reapplicable');
+  assert.equal((await b.controller.acceptConflict(details[0].conflictId)).ok,true);await h.settle();
+  assert.equal((await b.journal.snapshot()).conflictCount,0);assert.equal((await b.controller.snapshot()).state,'saved');
+  assert.equal([...h.server.entities.values()].filter(entity=>!entity.deleted&&entity.identity.catalogId==='pokemon:wiglett').length,1);
+});
+
 test('one operation aggregates every same-field conflict and accepting account values removes its optimistic overlay',async()=>{
   const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),a=h.createDevice('A'),b=h.createDevice('B');await a.start();await b.start();const added=await add(a,window,'pokemon:zekrom',{note:'initial'});await h.settle();
   const id=added.value.entityId;a.online=false;b.online=false;

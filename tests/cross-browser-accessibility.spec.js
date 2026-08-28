@@ -573,6 +573,30 @@ test.describe('audit cross-browser contracts',()=>{
     expect(switched).toEqual({resultCode:'account-sync/session-changed',recoveryStatus:'idle',rawRecoveryStatus:'idle',oldStops:0,replacementStops:0,owner:'uid-new-session'});
   });
 
+  test('fieldless sync conflicts expose only canonical saved-copy acceptance',async({page})=>{
+    await page.setViewportSize({width:390,height:844});
+    await page.goto(`./?fieldless-sync-conflict=${Date.now()}`,{waitUntil:'domcontentloaded'});
+    await waitForApp(page);
+    await page.evaluate(()=>{
+      window.__fieldlessConflictActions=[];
+      const trigger=document.createElement('button');
+      trigger.id='fieldless-conflict-trigger';trigger.textContent='Review sync';document.body.appendChild(trigger);trigger.focus();
+      showConflictModal([{key:'Wiglett · Item state',local:'Earlier action on this device',remote:'Current saved item'}],null,()=>{window.__fieldlessConflictActions.push('saved');},{savedOnly:true});
+    });
+    const dialog=page.locator('.conflict-notice');
+    await expect(dialog).toHaveAttribute('role','alertdialog');
+    await expect(dialog.locator('.conflict-actions button')).toHaveCount(2);
+    await expect(dialog.locator('.conflict-actions .bsave')).toHaveCount(0);
+    await expect(dialog.locator('p')).toHaveText(await page.evaluate(()=>i18nCore.t('accountSync.savedOnlyConflictHelp')));
+    await expect(dialog.locator('.conflict-actions button').first()).toBeFocused();
+    await page.keyboard.press('Tab');
+    await page.keyboard.press('Enter');
+    await expect(dialog).toHaveCount(0);
+    await expect(page.locator('#fieldless-conflict-trigger')).toBeFocused();
+    expect(await page.evaluate(()=>window.__fieldlessConflictActions)).toEqual(['saved']);
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth>document.documentElement.clientWidth)).toBe(false);
+  });
+
   test('review screenshots capture only the high-value corrected states',async({page},testInfo)=>{
     test.skip(!reviewDir,'Set CROSS_BROWSER_REVIEW_DIR to capture review evidence.');
     if(testInfo.project.name==='cross-chromium'){
