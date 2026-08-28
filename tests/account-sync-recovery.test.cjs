@@ -134,7 +134,7 @@ test('the historical same-revision timestamp substitution stays diagnostic-only 
 });
 
 test('sanitized diagnostics bound unknown errors and contain no private values',()=>{
-  const api=load(),privateValue='owner@example.com/trainer/Pikachu/op_secret',diagnostic=api.sanitizedDiagnostic(context(state({lastError:privateValue,lastErrorCategory:privateValue}),{recoveryOutcome:'failed',release:'2026-08-27.72'}));
+  const api=load(),privateValue='owner@example.com/trainer/Pikachu/op_secret',diagnostic=api.sanitizedDiagnostic(context(state({lastError:privateValue,lastErrorCategory:privateValue}),{recoveryOutcome:'failed',release:'2026-08-27.73'}));
   assert.deepEqual(Object.keys(diagnostic),['code','category','pendingCount','blockedCount','recoverableBlockedCount','unsafeBlockedCount','conflictCount','reviewCount','runtime','listener','projection','recoveryOutcome','release']);
-  assert.equal(diagnostic.code,'account-sync/unknown');assert.equal(diagnostic.category,'projection');assert.equal(diagnostic.recoveryOutcome,'failed');assert.equal(diagnostic.release,'2026-08-27.72');assert.doesNotMatch(JSON.stringify(diagnostic),/owner@example|Pikachu|op_secret/);
+  assert.equal(diagnostic.code,'account-sync/unknown');assert.equal(diagnostic.category,'projection');assert.equal(diagnostic.recoveryOutcome,'failed');assert.equal(diagnostic.release,'2026-08-27.73');assert.doesNotMatch(JSON.stringify(diagnostic),/owner@example|Pikachu|op_secret/);
 });
