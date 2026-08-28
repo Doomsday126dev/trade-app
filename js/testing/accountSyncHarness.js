@@ -48,6 +48,12 @@
       async putRecoveryCandidate(item){own(item);state.recoveryCandidates.set(item.candidateId,item);},
       async listRecoveryCandidates({unresolvedOnly=true}={}){return[...state.recoveryCandidates.values()].filter(item=>!unresolvedOnly||item.resolved!==true).sort((a,b)=>a.createdAt-b.createdAt||a.candidateId.localeCompare(b.candidateId));},
       async resolveRecoveryCandidate(id){const item=state.recoveryCandidates.get(id);if(!item||item.resolved===true)return false;state.recoveryCandidates.set(id,{...item,resolved:true,resolvedAt:clock()});return true;},
+      async resolveRecoveryCandidates(ids){
+        if(!Array.isArray(ids)||!ids.length||new Set(ids).size!==ids.length)throw new TypeError('invalid recovery candidate review');
+        const expected=[...ids].sort(),unresolved=[...state.recoveryCandidates.values()].filter(item=>item.resolved!==true),actual=unresolved.map(item=>item.candidateId).sort();
+        if(actual.length!==expected.length||actual.some((id,index)=>id!==expected[index]))throw Object.assign(new Error('recovery candidate set changed'),{code:'account-sync/recovery-review-changed'});
+        const resolvedAt=clock();for(const item of unresolved)state.recoveryCandidates.set(item.candidateId,{...item,resolved:true,resolvedAt});return unresolved.length;
+      },
       async snapshot(){
         const blocked=[...state.operations.values()].filter(item=>item.status==='blocked'),codes=[...new Set(blocked.map(item=>String(item.lastErrorCode||'')).filter(code=>/^account-sync\/[a-z0-9-]{1,80}$/.test(code)))];
         const recoverableBlocked=blocked.filter(model.blockedRetryEligible),blockedCategories=[...new Set(blocked.map(item=>model.blockedRetryCategory(item.lastErrorCode)))].sort();

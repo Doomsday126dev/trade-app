@@ -33,7 +33,7 @@ function block(start,end){
 test('anonymous share catalogs have exact parity and natural share chrome',()=>{
   const window=load(),catalogs=window.PogoLocales;
   const keys=Object.keys(catalogs.en).sort();
-  assert.equal(keys.length,1238);
+  assert.equal(keys.length,1255);
   for(const locale of ['ja','es','de'])assert.deepEqual(Object.keys(catalogs[locale]).sort(),keys,locale);
   assert.equal(catalogs.ja['share.listTitle'],'{username} の交換リスト');
   assert.equal(catalogs.es['share.listTitle'],'Lista de intercambios de {username}');
@@ -41,8 +41,12 @@ test('anonymous share catalogs have exact parity and natural share chrome',()=>{
   for(const locale of ['en','ja','es','de'])assert.ok(catalogs[locale]['share.listTab']);
   for(const key of [
     'share.updated','share.entryCount.one','share.entryCount.other','share.copy',
-    'share.copied','share.viewSearch','share.hideSearch','share.copyFailed','share.combinedOptions','share.emptyTitle','share.flagShiny'
+    'share.copied','share.viewSearch','share.hideSearch','share.copyFailed','share.combinedOptions','share.emptyTitle','share.flagShiny',
+    'share.publicTryAgain','share.publicRetry','share.publicInvalid','share.publicInvalidHelp','share.publicCta','share.publicCtaAction'
   ])for(const locale of ['ja','es','de'])assert.notEqual(catalogs[locale][key],catalogs.en[key],`${locale}:${key}`);
+  for(const key of ['legal.footer','legal.sourceUse','legal.referenceUse','legal.backgroundUse']){
+    for(const locale of ['ja','es','de'])assert.notEqual(catalogs[locale][key],catalogs.en[key],`${locale}:${key}`);
+  }
 });
 
 test('share counts use locale plural rules and locale number formatting',()=>{
@@ -159,7 +163,7 @@ test('release 2026-08-28.77 is coherent and contains no active .66 assets',()=>{
   assert.match(worker,/const RELEASE='2026-08-28\.77'/);
   assert.match(release,/RELEASE_ID='2026-08-28\.77'/);
   const firstParty=[...html.matchAll(/<script\s+src="([^"]+)"/g)].map(match=>match[1]).filter(src=>!/^https?:/.test(src));
-  assert.equal(firstParty.length,75);
+  assert.equal(firstParty.length,76);
   for(const src of firstParty)assert.equal(new URL(src,'https://example.test').searchParams.get('v'),'2026-08-28.77');
   assert.doesNotMatch(`${html}\n${worker}\n${release}`,/2026-08-26\.66/);
 });

@@ -95,6 +95,7 @@ const RELEASE_ASSETS=[
   'js/data/accountSyncRuntime.js',
   'js/domain/cacheAdapters.js',
   'js/ui/trainerTagPanel.js',
+  'js/app/publicShareApp.js',
   'js/app/application.js'
 ];
 const REQUIRED_SHELL_URLS=[
@@ -108,7 +109,8 @@ const OPTIONAL_SHELL_URLS=[
   './assets/tradeloop-icon-96.png',
   './assets/tradeloop-icon-180.png',
   './assets/tradeloop-icon-192.png',
-  './assets/tradeloop-icon-512.png'
+  './assets/tradeloop-icon-512.png',
+  './assets/max-cloud.svg'
 ];
 const OPTIONAL_RUNTIME_PATHS=new Set(OPTIONAL_SHELL_URLS.filter(path=>!path.startsWith('./?')).map(path=>new URL(path,self.location.href).pathname));
 
@@ -116,10 +118,7 @@ const SPRITE_CACHE_LIMIT=400;
 const SPRITE_HOSTS=[
   'raw.githubusercontent.com',
   'images.weserv.nl',
-  'www.serebii.net',
-  'serebii.net',
-  'img.pokemondb.net',
-  'cdn08.net'
+  'img.pokemondb.net'
 ];
 
 async function runBounded(items,limit,work){

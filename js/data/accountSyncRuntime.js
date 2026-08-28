@@ -287,6 +287,15 @@
       requireRunning();const resolved=await journal.resolveRecoveryCandidate(candidateId);requireRunning();notifyState(await controller.snapshot());
       return Object.freeze({ok:true,status:resolved?'resolved':'not_found'});
     }
+    async function completeRecoveryReviews(candidateIds){
+      requireRunning();
+      const before=await controller.snapshot(),ids=Array.isArray(candidateIds)?[...candidateIds]:[];
+      if(!projectionReady||!before.active||!before.listenerHealthy||!before.controllerHealthy||before.state!=='review-required'||before.pendingCount||before.blockedCount||before.conflictCount||before.recoveryCandidateCount!==ids.length)return model.failure('account-sync/recovery-review-not-ready','Recovery review requires a healthy exact canonical account snapshot');
+      const resolved=await journal.resolveRecoveryCandidates(ids);requireRunning();
+      const after=await controller.snapshot();
+      if(resolved!==ids.length||after.recoveryCandidateCount!==0||after.state!=='saved')throw Object.assign(new Error('Recovery review did not reach the saved state'),{code:'account-sync/recovery-review-incomplete'});
+      notifyState(after);return Object.freeze({ok:true,status:'resolved',count:resolved});
+    }
     function stop(){
       if(stopPromise)return stopPromise;
       stopped=true;projectionReady=false;
@@ -294,7 +303,7 @@
       return stopPromise;
     }
     async function snapshot(){return runtimeState(await controller.snapshot());}
-    return Object.freeze({ownerUid:owner,username:name,controller,start,stop,snapshot,recordRecoveryCandidate,listRecoveryCandidates,completeRecoveryReview,retryBlocked:()=>controller.retryBlocked(),conflictDetails:()=>controller.conflictDetails(),acceptConflict:id=>controller.acceptConflict(id),reapplyConflict:id=>controller.reapplyConflict(id),get migrationPlan(){return lastPlan;},get projectionReady(){return projectionReady;}});
+    return Object.freeze({ownerUid:owner,username:name,controller,start,stop,snapshot,recordRecoveryCandidate,listRecoveryCandidates,completeRecoveryReview,completeRecoveryReviews,retryBlocked:()=>controller.retryBlocked(),conflictDetails:()=>controller.conflictDetails(),acceptConflict:id=>controller.acceptConflict(id),reapplyConflict:id=>controller.reapplyConflict(id),get migrationPlan(){return lastPlan;},get projectionReady(){return projectionReady;}});
   }
 
   root.accountSyncRuntime=Object.freeze({HISTORICAL_RETRY_CODE,diagnosticCode,diagnosticCategory,recoveryPlan,healthySnapshot,sanitizedDiagnostic,createRecoveryCoordinator,createAccountSyncRuntime});

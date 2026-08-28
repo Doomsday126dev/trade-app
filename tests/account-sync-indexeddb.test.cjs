@@ -73,6 +73,35 @@ test('reviewed recovery evidence remains preserved locally without keeping the a
   assert.equal(reopened.snapshot.recoveryCandidateCount,0);assert.equal(reopened.unresolved.length,0);assert.equal(reopened.all.length,1);assert.equal(reopened.all[0].resolved,true);assert.equal(reopened.resolvedAgain,false);
 });
 
+test('the real IndexedDB journal resolves only the exact recovery review set in one transaction',async t=>{
+  const server=http.createServer((_request,response)=>{response.writeHead(200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store'});response.end('<!doctype html><title>Atomic recovery review</title>');});
+  await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});
+  const browser=await chromium.launch({headless:true});
+  t.after(async()=>{await browser.close();await new Promise(resolve=>server.close(resolve));});
+  const page=await browser.newPage(),databaseName=`pogoAccountSync_recovery_batch_${Date.now()}`,url=`http://127.0.0.1:${server.address().port}/`;
+  const load=async()=>{await page.addScriptTag({path:path.join(root,'js/domain/accountSyncModel.js')});await page.addScriptTag({path:path.join(root,'js/data/accountSyncJournal.js')});};
+  await page.goto(url,{waitUntil:'domcontentloaded'});await load();
+  const prepared=await page.evaluate(async databaseName=>{
+    const journal=window.PogoData.accountSyncJournal.createAccountSyncJournal({ownerUid:'uid-owner',databaseName}),ids=['a','b','c'].map(value=>`candidate_${value.repeat(64)}`);
+    for(const [index,candidateId] of ids.entries())await journal.putRecoveryCandidate({schemaVersion:1,ownerUid:'uid-owner',candidateId,reason:'historical-device-value',entityType:'tradeEntry',entityId:`unresolved:${index}`,identity:{unresolved:true},values:{index},source:'owner-review',createdAt:10+index,resolved:false});
+    let incompleteCode='',duplicateName='';
+    try{await journal.resolveRecoveryCandidates(ids.slice(0,2));}catch(error){incompleteCode=error.code||'';}
+    try{await journal.resolveRecoveryCandidates([ids[0],ids[0],ids[2]]);}catch(error){duplicateName=error.name;}
+    const afterRejected=await journal.listRecoveryCandidates({unresolvedOnly:false}),resolved=await journal.resolveRecoveryCandidates(ids),after=await journal.listRecoveryCandidates({unresolvedOnly:false}),snapshot=await journal.snapshot();
+    await journal.close();return{ids,incompleteCode,duplicateName,afterRejected,resolved,after,snapshot};
+  },databaseName);
+  assert.equal(prepared.incompleteCode,'account-sync/recovery-review-changed');assert.equal(prepared.duplicateName,'TypeError');assert.ok(prepared.afterRejected.every(item=>item.resolved!==true));
+  assert.equal(prepared.resolved,3);assert.equal(prepared.snapshot.recoveryCandidateCount,0);assert.ok(prepared.after.every(item=>item.resolved===true));assert.equal(new Set(prepared.after.map(item=>item.resolvedAt)).size,1);
+
+  await page.reload({waitUntil:'domcontentloaded'});await load();
+  const reopened=await page.evaluate(async databaseName=>{
+    const journal=window.PogoData.accountSyncJournal.createAccountSyncJournal({ownerUid:'uid-owner',databaseName}),all=await journal.listRecoveryCandidates({unresolvedOnly:false}),snapshot=await journal.snapshot();
+    await journal.close();await new Promise((resolve,reject)=>{const request=indexedDB.deleteDatabase(databaseName);request.onsuccess=resolve;request.onerror=()=>reject(request.error);request.onblocked=()=>reject(new Error('test database deletion blocked'));});
+    return{all,snapshot};
+  },databaseName);
+  assert.equal(reopened.all.length,3);assert.ok(reopened.all.every(item=>item.resolved===true));assert.equal(reopened.snapshot.recoveryCandidateCount,0);
+});
+
 test('real IndexedDB conflict acceptance publishes Saved before reporting success',async t=>{
   const server=http.createServer((_request,response)=>{response.writeHead(200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store'});response.end('<!doctype html><title>Account sync conflict acceptance</title>');});
   await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});

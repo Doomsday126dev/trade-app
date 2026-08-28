@@ -373,6 +373,26 @@ test('a runtime recovery candidate immediately changes the published state from 
   assert.equal(repositoryState.recoveryCandidates[candidate.candidateId].resolved,false);assert.equal(repositoryState.calls.createRecoveryCandidate,1);
 });
 
+test('owner review atomically accepts the exact canonical account copy without replaying preserved candidates',async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),repositoryState=runtimeRepository(window,h),journalState=h.createMemoryJournalState(),states=[];
+  const runtime=createRuntime(window,h,repositoryState,journalState,async()=>source('device-exact-review',{remote:{Pikachu:'H'}}),()=>{},state=>states.push(state));await runtime.start();
+  for(const [index,name] of ['Wiglett','Mazer'].entries())await runtime.recordRecoveryCandidate({reason:'historical-device-value',entityType:index?'favorite':'tradeEntry',entityId:`unresolved:${name.toLowerCase()}`,identity:{displayName:name,unresolved:true},values:{displayName:name},source:'owner-review'});
+  const candidates=await runtime.listRecoveryCandidates(),ids=candidates.map(item=>item.candidateId).sort(),attemptsBefore=h.server.attempts.length;
+  assert.equal((await runtime.snapshot()).state,'review-required');assert.equal(candidates.length,2);
+
+  const incomplete=await runtime.completeRecoveryReviews(ids.slice(0,1));
+  assert.equal(incomplete.ok,false);assert.equal(incomplete.error.code,'account-sync/recovery-review-not-ready');
+  assert.equal((await runtime.listRecoveryCandidates()).length,2);assert.equal([...journalState.recoveryCandidates.values()].filter(item=>item.resolved===true).length,0);
+
+  const reviewed=await runtime.completeRecoveryReviews(ids),snapshot=await runtime.snapshot(),all=[...journalState.recoveryCandidates.values()];
+  assert.deepEqual(JSON.parse(JSON.stringify(reviewed)),{ok:true,status:'resolved',count:2});assert.equal(snapshot.state,'saved');assert.equal(snapshot.recoveryCandidateCount,0);
+  assert.equal(states.at(-1).state,'saved');assert.equal(new Set(all.map(item=>item.resolvedAt)).size,1);assert.ok(all.every(item=>item.resolved===true));
+  assert.ok(Object.values(repositoryState.recoveryCandidates).every(item=>item.resolved===false));assert.equal(repositoryState.calls.createRecoveryCandidate,2);assert.equal(h.server.attempts.length,attemptsBefore);
+
+  await runtime.stop();
+  await assert.rejects(runtime.completeRecoveryReviews(ids),error=>error.code==='account-sync/runtime-closed');
+});
+
 async function firstStateSnapshot(state){
   return{pendingCount:[...state.operations.values()].filter(record=>['pending','sending'].includes(record.status)).length};
 }

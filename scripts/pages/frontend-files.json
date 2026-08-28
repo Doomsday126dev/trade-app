@@ -83,6 +83,7 @@
     "js/data/accountSyncRuntime.js",
     "js/domain/cacheAdapters.js",
     "js/ui/trainerTagPanel.js",
+    "js/app/publicShareApp.js",
     "js/app/application.js"
   ],
   "assetFiles": [
@@ -90,6 +91,7 @@
     "assets/tradeloop-icon-96.png",
     "assets/tradeloop-icon-180.png",
     "assets/tradeloop-icon-192.png",
-    "assets/tradeloop-icon-512.png"
+    "assets/tradeloop-icon-512.png",
+    "assets/max-cloud.svg"
   ]
 }

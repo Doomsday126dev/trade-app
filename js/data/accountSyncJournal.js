@@ -158,6 +158,20 @@
       const key=recordKey(owner,id),record=await read('recoveryCandidates',key);if(!record||record.resolved===true)return false;
       await write('recoveryCandidates',{...record,resolved:true,resolvedAt:Number(now())});return true;
     }
+    async function resolveRecoveryCandidates(candidateIds){
+      if(!Array.isArray(candidateIds)||!candidateIds.length)throw new TypeError('Recovery candidate review is empty');
+      const ids=candidateIds.map(candidateId=>{
+        const id=model.firebaseKey(candidateId,700);if(!id||id!==candidateId)throw new TypeError('Recovery candidate ID is invalid');return id;
+      });
+      if(new Set(ids).size!==ids.length)throw new TypeError('Recovery candidate review contains duplicate IDs');
+      const expected=[...ids].sort(),db=await database(),transaction=db.transaction('recoveryCandidates','readwrite'),done=transactionDone(transaction),store=transaction.objectStore('recoveryCandidates'),index=store.index('ownerUid'),range=global.IDBKeyRange?.only?global.IDBKeyRange.only(owner):owner;
+      try{
+        const records=await requestResult(index.getAll(range)),unresolved=records.filter(item=>item.resolved!==true),actual=unresolved.map(item=>item.candidateId).sort();
+        if(actual.length!==expected.length||actual.some((id,index)=>id!==expected[index]))throw Object.assign(new Error('Recovery candidate set changed before review'),{code:'account-sync/recovery-review-changed'});
+        const time=Number(now());for(const record of unresolved)store.put({...record,resolved:true,resolvedAt:time});
+        await done;return unresolved.length;
+      }catch(error){try{transaction.abort();}catch{}await done.catch(()=>{});throw error;}
+    }
     async function snapshot(){
       const[operations,entities,conflicts,recoveryCandidates]=await Promise.all([ownerRecords('operations'),ownerRecords('entities'),ownerRecords('conflicts'),listRecoveryCandidates()]);
       const blocked=operations.filter(item=>item.status==='blocked'),blockedCodes=[...new Set(blocked.map(item=>String(item.lastErrorCode||'')).filter(code=>/^account-sync\/[a-z0-9-]{1,80}$/.test(code)))];
@@ -172,7 +186,7 @@
       const pending=databasePromise;databasePromise=null;
       if(pending)(await pending).close();
     }
-    return Object.freeze({ownerUid:owner,enqueueOperation,enqueueOperations,listOperations,nextOperation,markAttempt,retainBlocked,acknowledge,markConflict,retryBlocked,putEntity,deleteEntity,getEntity,listEntities,listConflicts,resolveConflict,setMeta,getMeta,putRecoveryCandidate,listRecoveryCandidates,resolveRecoveryCandidate,snapshot,close,_remove:remove});
+    return Object.freeze({ownerUid:owner,enqueueOperation,enqueueOperations,listOperations,nextOperation,markAttempt,retainBlocked,acknowledge,markConflict,retryBlocked,putEntity,deleteEntity,getEntity,listEntities,listConflicts,resolveConflict,setMeta,getMeta,putRecoveryCandidate,listRecoveryCandidates,resolveRecoveryCandidate,resolveRecoveryCandidates,snapshot,close,_remove:remove});
   }
 
   root.accountSyncJournal=Object.freeze({STORE_NAMES,openDatabase,createAccountSyncJournal});
