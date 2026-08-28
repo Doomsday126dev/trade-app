@@ -4,7 +4,7 @@ const {readFileSync}=require('node:fs');
 const path=require('node:path');
 const vm=require('node:vm');
 
-const source=readFileSync(path.join(__dirname,'..','index.html'),'utf8');
+const source=require('../scripts/lib/frontend-source.cjs').readFrontendSource(path.join(__dirname,'..'));
 
 function between(start,end){
   const from=source.indexOf(start),to=source.indexOf(end,from);
@@ -57,6 +57,7 @@ function transientHarness(){
     _safeTransferSelected:new Set(['TrainerB']),_qaSelected:{lf:new Set(['Pidgey']),ft:new Set()},
     _activeDiff:{username:'TrainerB'},_activeTradeMatch:{username:'TrainerB'},_swipeState:{},_ptrState:{},
     voiceRecognition:{aborted:false,abort(){this.aborted=true;}},resetTrainerOrganizerState(){},
+    closeTradeMatchModal(){context._activeTradeMatch=null;},
     resetOwnedHydrationState(){hydrationResets++;},
     resetFavoriteBrowseSession(){favoriteBrowseResets++;},trainerHistoryStore:{owner:'uid-a'},
     closeAddAutocomplete(){},
@@ -117,7 +118,7 @@ test('delayed removal and swipe callbacks are invalidated while conflict UI is r
   const cleanup=between("function resetSessionTransientUi(reason='session_boundary'){",'function resetTransientUiBeforeSessionActivation');
   const conflict=between('function showConflictModal','// ── IMPORT FROM SEARCH STRING');
   assert.match(callback,/generation!==_sessionTransientGeneration/);
-  assert.match(source,/setTimeout\(sessionTransientCallback\(\(\)=>\{\s*if\(writeListItem\([^)]*\)\)\{\s*undoStack=pendingUndo;\s*showUndo/);
+  assert.match(source,/setTimeout\(sessionTransientCallback\(async\(\)=>\{\s*if\(await writeListItem\([^)]*\)\)\{\s*undoStack=pendingUndo;\s*showUndo/);
   assert.match(source,/else row\.classList\.remove\('removing'\)/);
   assert.match(source,/setTimeout\(sessionTransientCallback\(\(\)=>\{const n=row\.dataset\.name/);
   assert.match(cleanup,/querySelectorAll\('\.conflict-notice'\).*el=>el\.remove\(\)/);
@@ -128,7 +129,7 @@ test('session cleanup resets modal, selection, filter, queue, and pending compar
   const block=between("function resetSessionTransientUi(reason='session_boundary'){",'function resetTransientUiBeforeSessionActivation');
   for(const required of [
     "document.querySelectorAll('.ov.open')",'bulkSelected.clear()','haveBulkSelected.clear()',
-    'addTray=[]','rpinTarget=null','_activeDiff=null','_activeTradeMatch=null',
+    'addTray=[]','rpinTarget=null','_activeDiff=null','closeTradeMatchModal(false)',
     "'mylist-filter'","'have-filter'",'_safeTransferSelected=null','voiceRecognition.abort()'
   ])assert.ok(block.includes(required),`Missing transient reset: ${required}`);
 });

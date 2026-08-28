@@ -28,7 +28,7 @@ function loadFrontendManifest(root,{manifestRoot=CONTROL_ROOT}={}){
   const file=path.join(manifestRoot,'scripts/pages/frontend-files.json');
   const manifest=JSON.parse(fs.readFileSync(file,'utf8'));
   if(manifest.schemaVersion!==1)fail('Unsupported frontend-files manifest schema');
-  const groups=['entryFiles','scriptFiles','assetFiles'];
+  const groups=['entryFiles','styleFiles','scriptFiles','assetFiles'];
   for(const group of groups)if(!Array.isArray(manifest[group]))fail(`Missing ${group}`);
   const files=groups.flatMap(group=>manifest[group]);
   if(unique(files).length!==files.length)fail('frontend-files manifest contains duplicate paths');
@@ -46,6 +46,10 @@ function loadFrontendManifest(root,{manifestRoot=CONTROL_ROOT}={}){
 function htmlScripts(html){
   return[...html.matchAll(/<script\s+[^>]*src="([^"]+)"/g)]
     .map(match=>match[1]).filter(src=>!/^https?:\/\//i.test(src));
+}
+function htmlStyles(html){
+  return[...html.matchAll(/<link\s+[^>]*rel="stylesheet"[^>]*href="([^"]+)"[^>]*>/g)]
+    .map(match=>match[1]).filter(href=>!/^https?:\/\//i.test(href));
 }
 function requireTrustedOrder(actual,expected,label){
   const length=Math.max(actual.length,expected.length);
@@ -96,8 +100,15 @@ function validateReleaseCoherence(root,{expectedReleaseId}={}){
     return url.pathname.replace(/^\/trade-app\//,'');
   });
   requireTrustedOrder(scriptPaths,allowlist.scriptFiles,'HTML first-party script order');
+  const styles=htmlStyles(html);
+  const stylePaths=styles.map(href=>{
+    const url=new URL(href,'https://example.test/trade-app/');
+    if(url.searchParams.get('v')!==releases.index)fail(`First-party stylesheet has a mixed or missing release: ${href}`);
+    return url.pathname.replace(/^\/trade-app\//,'');
+  });
+  requireTrustedOrder(stylePaths,allowlist.styleFiles,'HTML first-party stylesheet order');
   const precache=workerArray(worker,'RELEASE_ASSETS');
-  requireTrustedOrder(precache,allowlist.scriptFiles,'Service-worker release graph');
+  requireTrustedOrder(precache,[...allowlist.styleFiles,...allowlist.scriptFiles],'Service-worker release graph');
   const declaredAssets=manifestAssets(webManifest);
   for(const asset of declaredAssets)if(!allowlist.assetFiles.includes(asset))fail(`Web manifest asset is not allowlisted: ${asset}`);
   for(const required of ['index.html','manifest.json','sw.js','js/domain/clientRelease.js'])if(!allowlist.files.includes(required))fail(`Required runtime file omitted: ${required}`);

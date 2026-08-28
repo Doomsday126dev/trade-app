@@ -4,7 +4,7 @@ const {readFileSync}=require('node:fs');
 const path=require('node:path');
 const vm=require('node:vm');
 
-const html=readFileSync(path.join(__dirname,'..','index.html'),'utf8');
+const html=require('../scripts/lib/frontend-source.cjs').readFrontendSource(path.join(__dirname,'..'));
 function between(start,end){
   const from=html.indexOf(start),to=html.indexOf(end,from);
   assert.notEqual(from,-1);assert.notEqual(to,-1);

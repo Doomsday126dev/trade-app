@@ -5,7 +5,7 @@ const path=require('node:path');
 const vm=require('node:vm');
 
 const root=path.join(__dirname,'..');
-const html=readFileSync(path.join(root,'index.html'),'utf8');
+const html=require('../scripts/lib/frontend-source.cjs').readFrontendSource(root);
 const sw=readFileSync(path.join(root,'sw.js'),'utf8');
 const window={URL};
 vm.runInNewContext(readFileSync(path.join(root,'js/domain/spriteSlugs.js'),'utf8'),{window,URL});

@@ -4,7 +4,7 @@ const {readFileSync}=require('node:fs');
 const path=require('node:path');
 
 const root=path.join(__dirname,'..');
-const html=readFileSync(path.join(root,'index.html'),'utf8');
+const html=require('../scripts/lib/frontend-source.cjs').readFrontendSource(root);
 
 function between(start,end){
   const from=html.indexOf(start),to=html.indexOf(end,from);
@@ -30,17 +30,19 @@ test('the first paint uses stable local system fonts without a font-network depe
   assert.match(html,/--mono:ui-monospace,SFMono-Regular/);
 });
 
-test('startup waits for a paint opportunity before Firebase App Check and background work',()=>{
+test('startup keeps App Check and background work behind the protected feature request',()=>{
   assert.match(html,/function afterFirstPaint\(task\)[\s\S]+requestAnimationFrame\(\(\)=>requestAnimationFrame/);
-  const boot=between("document.addEventListener('DOMContentLoaded'",'</script>');
-  assert.match(boot,/showPreAuth\(\)[\s\S]+afterFirstPaint\(\(\)=>\{\s*startBackgroundStartup\(\);\s*startFirebaseStartup\(shareReq\)/);
+  const boot=between('function bootPogoApp(){','window.__pogoAppReadyPromise=');
+  assert.match(boot,/if\(!window\.__pogoShellReady\)showPreAuth\(\)[\s\S]+afterFirstPaint\(\(\)=>\{\s*startBackgroundStartup\(\);\s*startFirebaseStartup\(shareReq\)/);
   assert.doesNotMatch(boot,/\bbuildAcItems\(\);/);
   assert.doesNotMatch(boot,/\bloadTypeCache\(\);/);
   assert.doesNotMatch(boot,/if\(s&&allData\.users\?\.\[s\]\)\{cur=s;showApp\(\);\}/);
+  assert.match(html,/function ensureFullApp\(reason='feature-request'\)[\s\S]+protectedRequestedAt[\s\S]+loadFeatureScripts/);
+  assert.match(html,/<template id="pogo-feature-assets">[\s\S]+data\.js[\s\S]+<\/template>/);
 });
 
-test('Auth-only bootstrap reuses one Firebase app without exposing data or activating login controls',()=>{
-  const early=between('window.__pogoEarlyAuth=','try{performance.mark(\'pogo:preauth-markup-ready\')}');
+test('Auth-only bootstrap starts in the head and reuses one Firebase app without exposing data',()=>{
+  const early=between('window.__pogoEarlyAuth=','startPogoEarlyAuth().catch');
   assert.match(early,/firebase-app\.js[\s\S]+firebase-auth\.js/);
   assert.doesNotMatch(early,/firebase-database\.js|firebase-app-check\.js|ReCaptcha/);
   assert.match(early,/state\.user=user\|\|null;state\.stateKnown=true/);
@@ -49,6 +51,16 @@ test('Auth-only bootstrap reuses one Firebase app without exposing data or activ
   assert.match(html,/startPogoEarlyAuth\(\)[\s\S]+firebaseDatabaseHandle=getDatabase\(fbApp,url\)/);
   assert.match(html,/fbApp=early\?\.app\|\|initializeApp/);
   assert.match(html,/auth=early\?\.auth\|\|getAuth/);
+});
+
+test('signed-out shell loads only fallback plus active locale and defers catalogs',()=>{
+  const loader=between('(function(){\n  const RELEASE_ID=window.__POGO_RELEASE_ID;','\n})();\n</script>');
+  const early=between('window.__pogoEarlyAuth=','startPogoEarlyAuth().catch');
+  assert.match(loader,/loadScript\(`js\/i18n\/locales\/en\.js/);
+  assert.match(loader,/if\(normalized!==\'en\'\)await loadScript/);
+  assert.match(loader,/match\(\/js\\\/i18n\\\/locales/);
+  assert.match(loader,/ensureFullApp\('restored-session'\)/);
+  assert.doesNotMatch(early,/data\.js|pokemonNames|backgroundCatalog|accountSync|eventPresentation/);
 });
 
 test('cached private UI cannot replace pre-auth before Firebase Auth restoration',()=>{

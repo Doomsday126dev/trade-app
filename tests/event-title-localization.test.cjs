@@ -6,7 +6,7 @@ const vm=require('node:vm');
 
 const root=path.join(__dirname,'..');
 const source=file=>readFileSync(path.join(root,file),'utf8');
-const html=source('index.html');
+const html=require('../scripts/lib/frontend-source.cjs').readFrontendSource(root);
 const window={};window.window=window;
 const context=vm.createContext({window,Intl});
 for(const file of ['js/i18n/pokemonNames/catalog.js','js/i18n/pokemonNames/variants.js','js/i18n/pokemonNames/structuredForms.js','js/i18n/pokemonNames/core.js','js/i18n/eventLabels/currentTitles.js','js/i18n/eventLabels/core.js'])vm.runInContext(source(file),context,{filename:file});

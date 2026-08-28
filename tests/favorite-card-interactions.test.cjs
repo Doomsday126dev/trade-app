@@ -5,7 +5,7 @@ const path=require('node:path');
 const vm=require('node:vm');
 
 const root=path.join(__dirname,'..');
-const html=readFileSync(path.join(root,'index.html'),'utf8');
+const html=require('../scripts/lib/frontend-source.cjs').readFrontendSource(root);
 const window={};
 vm.runInNewContext(readFileSync(path.join(root,'js/domain/favoriteCardInteractions.js'),'utf8'),{window});
 const interactions=window.PogoDomain.favoriteCardInteractions;
@@ -42,6 +42,20 @@ test('cards use lightweight tag and overflow actions with keyboard parity',()=>{
   assert.match(html,/organizer\.addTagsFor/);
   assert.match(html,/organizer\.moreActionsFor/);
   assert.doesNotMatch(html,/class="favorite-card-action" onclick="openTrainerOrganizer/);
+});
+
+test('dynamic Favorite controls use stable delegated click and swipe ownership',()=>{
+  const handlers=html.slice(html.indexOf('function favoriteTrainerAction'),html.indexOf('function toggleFavoriteTagFilter'));
+  const render=html.slice(html.indexOf('async function renderTrainerQuickLists'),html.indexOf('function toggleTrainerFavorite'));
+  assert.match(handlers,/\[data-trainer-action\],\[data-favorite-action\]/);
+  for(const id of ['favorite-trainers-controls','favorite-trainers-list','recent-trainers','trainer-favorites-preview','favorite-browse-results','favorite-browse-suggestions']){
+    assert.match(handlers,new RegExp(`getElementById\\('${id}'\\)\\?\\.addEventListener\\('click',favoriteTrainerAction\\)`));
+  }
+  assert.match(handlers,/addEventListener\('pointerdown',favoriteCardPointerDown\)/);
+  assert.match(render,/data-favorite-action="toggle-tag"/);
+  assert.match(render,/data-favorite-action="toggle-menu"/);
+  assert.match(render,/data-favorite-action="show-favorites"/);
+  assert.doesNotMatch(render,/\son(?:click|pointerdown|pointermove|pointerup|pointercancel)="/);
 });
 
 test('ordinary Favorite cards are local bookmarks and cannot hydrate public shares',()=>{

@@ -5,7 +5,7 @@ const path=require('node:path');
 const vm=require('node:vm');
 
 const root=path.join(__dirname,'..');
-const html=readFileSync(path.join(root,'index.html'),'utf8');
+const html=require('../scripts/lib/frontend-source.cjs').readFrontendSource(root);
 
 function memoryStorage(){const values=new Map();return{getItem:key=>values.get(key)||null,setItem:(key,value)=>values.set(key,String(value)),removeItem:key=>values.delete(key)};}
 function store(){const window={};for(const file of ['js/domain/productLimits.js','js/data/trainerHistoryStore.js'])vm.runInNewContext(readFileSync(path.join(root,file),'utf8'),{window});return window.PogoData.trainerHistoryStore.createTrainerHistoryStore({storage:memoryStorage(),identity:{uid:'uid-a',username:'TrainerA'},now:(()=>{let n=100;return()=>++n;})()});}
@@ -21,7 +21,7 @@ test('Find Trainer uses one compact combobox with inline clear and no submit but
 });
 
 test('Favorites search is a stable shared-shell control outside the rendered results subtree',()=>{
-  const html=readFileSync(path.join(__dirname,'..','index.html'),'utf8');
+  const html=require('../scripts/lib/frontend-source.cjs').readFrontendSource(path.join(__dirname,'..'));
   const setter=html.slice(html.indexOf('function setFavoriteSearch'),html.indexOf('function favoriteTrainerAction'));
   const render=html.slice(html.indexOf('async function renderTrainerQuickLists'),html.indexOf('function toggleTrainerFavorite'));
   assert.match(setter,/renderTrainerQuickLists\(\{favoritesOnly:true\}\)/);

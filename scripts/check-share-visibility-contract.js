@@ -7,7 +7,7 @@ const baseline=JSON.parse(fs.readFileSync(path.join(root,'tests/firebase/databas
 const candidate=JSON.parse(fs.readFileSync(path.join(root,'tests/firebase/database.rules.share-visibility.json'),'utf8')).rules;
 const map=JSON.parse(fs.readFileSync(path.join(root,'tests/firebase/share-visibility-surface-map.json'),'utf8'));
 const emulator=fs.readFileSync(path.join(root,'tests/firebase/share-visibility-rules.test.cjs'),'utf8');
-const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
+const html=require('./lib/frontend-source.cjs').readFrontendSource(root);
 const releaseSource=fs.readFileSync(path.join(root,'js/domain/clientRelease.js'),'utf8');
 const releaseId=releaseSource.match(/RELEASE_ID='([^']+)'/)?.[1];
 const window={};vm.runInNewContext(fs.readFileSync(path.join(root,'js/data/firebaseReadRegistry.js'),'utf8'),{window});

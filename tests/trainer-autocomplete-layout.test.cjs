@@ -3,7 +3,7 @@ const assert=require('node:assert/strict');
 const {readFileSync}=require('node:fs');
 const path=require('node:path');
 
-const html=readFileSync(path.join(__dirname,'..','index.html'),'utf8');
+const html=require('../scripts/lib/frontend-source.cjs').readFrontendSource(path.join(__dirname,'..'));
 
 test('trainer suggestions are anchored to the combobox above surrounding content',()=>{
   assert.match(html,/class="[^"]*\btrainer-combobox\b[^"]*">[\s\S]*id="find-trainer-input"[\s\S]*id="find-trainer-suggestions"/);

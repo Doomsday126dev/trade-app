@@ -4,7 +4,7 @@ const {readFileSync}=require('node:fs');
 const path=require('node:path');
 
 const root=path.join(__dirname,'..');
-const html=readFileSync(path.join(root,'index.html'),'utf8');
+const html=require('../scripts/lib/frontend-source.cjs').readFrontendSource(root);
 const myList=html.slice(html.indexOf('<!-- MY LIST'),html.indexOf('<!-- HAVE'));
 const setMyList=html.slice(html.indexOf('function setMyList('),html.indexOf('function toggleAddAdvanced('));
 const renderMyList=html.slice(html.indexOf('function renderMyList('),html.indexOf('async function renderListImage('));

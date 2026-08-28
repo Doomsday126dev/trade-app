@@ -4,12 +4,12 @@ const {readFileSync}=require('node:fs');
 const path=require('node:path');
 
 const root=path.join(__dirname,'..');
-const html=readFileSync(path.join(root,'index.html'),'utf8');
+const html=require('../scripts/lib/frontend-source.cjs').readFrontendSource(root);
 const emptyState=readFileSync(path.join(root,'js/ui/emptyState.js'),'utf8');
 const shareVisibility=readFileSync(path.join(root,'js/domain/shareVisibility.js'),'utf8');
 const trainerPreferences=readFileSync(path.join(root,'js/domain/trainerPreferences.js'),'utf8');
 const locales=['en','ja','es','de'].map(locale=>readFileSync(path.join(root,`js/i18n/locales/${locale}.js`),'utf8'));
-const css=html.match(/<style>([\s\S]*?)<\/style>/)?.[1]||'';
+const css=readFileSync(path.join(root,'css/app.css'),'utf8');
 
 test('design tokens define the bounded spacing, container, radius, type, control, and focus systems',()=>{
   for(const [name,value] of Object.entries({
@@ -141,8 +141,8 @@ test('obvious application chrome uses the shared icon system and dense rows disc
   assert.match(html,/function myListSearchActionHtml[\s\S]*?uiIconMarkup\('copy'/);
   assert.match(html,/id="account-settings-action"[\s\S]*?ui-icon-settings/);
   assert.match(html,/function applyTheme[\s\S]*?uiIconMarkup\(effective==='dark'\?'moon':'sun'/);
-  const rows=html.slice(html.indexOf('function myListRowsHtml'),html.indexOf('function myListPrioritySectionHtml'));
-  const editor=html.slice(html.indexOf('function myListEditorHtml'),html.indexOf('function myListRowsHtml'));
+  const rows=html.slice(html.indexOf('function myListRowHtml'),html.indexOf('function myListPrioritySectionHtml'));
+  const editor=html.slice(html.indexOf('function myListEditorHtml'),html.indexOf('function myListRowHtml'));
   assert.match(rows,/class="myrow-priority-quick"/);
   assert.match(rows,/class="myrow-active-traits"/);
   assert.doesNotMatch(rows,/class="myrow-trait detail" title=/);
@@ -159,7 +159,7 @@ test('obvious application chrome uses the shared icon system and dense rows disc
 });
 
 test('My List rows foreground collection identity while retaining fast editing',()=>{
-  const rows=html.slice(html.indexOf('function myListRowsHtml'),html.indexOf('function myListPrioritySectionHtml'));
+  const rows=html.slice(html.indexOf('function myListRowHtml'),html.indexOf('function myListPrioritySectionHtml'));
   assert.match(rows,/uiIconMarkup\('grip','ui-icon'\)/);
   assert.match(rows,/myrow-sprite-wrap/);
   assert.match(rows,/class="myrow-name"/);

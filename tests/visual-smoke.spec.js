@@ -114,7 +114,9 @@ async function expectAutocompleteClears(page, inputSelector, dropdownSelector) {
 }
 
 async function waitForStableLocalOrganizerStartup(page) {
-  await page.waitForFunction(() => typeof openTrainerOrganizer === 'function' && _authStateKnown === true && window.__pogoStartup?.firebaseStartupSettledAt !== null);
+  await page.waitForFunction(() => typeof window.__pogoEnsureFullApp === 'function');
+  await page.evaluate(() => window.__pogoEnsureFullApp('visual-smoke-test'));
+  await page.waitForFunction(() => typeof openTrainerOrganizer === 'function' && window.__pogoStartup?.authStateKnownAt !== null && window.__pogoStartup?.firebaseStartupSettledAt !== null);
   await page.evaluate(() => {
     resetTrainerOrganizerState();
     localStorage.clear();
@@ -123,7 +125,9 @@ async function waitForStableLocalOrganizerStartup(page) {
 }
 
 async function isolateAuthenticatedMyListFixture(page,{username,uid}) {
-  await page.waitForFunction(() => _authStateKnown === true && window.__pogoStartup?.firebaseStartupSettledAt !== null && typeof managedSubscriptions?.unsubscribeByKey === 'function');
+  await page.waitForFunction(() => typeof window.__pogoEnsureFullApp === 'function');
+  await page.evaluate(() => window.__pogoEnsureFullApp('visual-authenticated-fixture'));
+  await page.waitForFunction(() => window.__pogoStartup?.authStateKnownAt !== null && window.__pogoStartup?.firebaseStartupSettledAt !== null && typeof managedSubscriptions?.unsubscribeByKey === 'function');
   await page.evaluate(({username,uid}) => {
     managedSubscriptions.unsubscribeByKey('public:loginDirectory');
     managedListenerLifecycle.deactivateSession('playwright_fixture');
@@ -168,7 +172,14 @@ async function installLocalOrganizerFixture(page) {
   });
 }
 
+async function waitForFullAppScripts(page,reason='visual-full-app-fixture') {
+  await page.waitForFunction(() => typeof window.__pogoEnsureFullApp === 'function');
+  await page.evaluate(reasonValue => window.__pogoEnsureFullApp(reasonValue),reason);
+  await page.waitForFunction(() => typeof openSettingsPanel === 'function' && typeof syncSettingsRoute === 'function');
+}
+
 async function waitForSettingsStartupReady(page) {
+  await waitForFullAppScripts(page,'visual-settings-fixture');
   await page.waitForFunction(() => (
     document.readyState === 'complete' &&
     typeof openSettingsPanel === 'function' &&
@@ -465,16 +476,16 @@ test.describe('visual smoke', () => {
 
   test('signed-out language control opens local Settings without a profile menu',async({page})=>{
     await page.goto(`./?signed-out-settings=${Date.now()}`,{waitUntil:'domcontentloaded'});
-    await waitForSettingsStartupReady(page);
     await expect(page.locator('#login-language-trigger')).toBeVisible();
+    await expect(page.locator('#login-language-trigger')).toBeEnabled();
     await expect(page.locator('#account-trigger')).toBeHidden();
     await page.locator('#login-language-trigger').click();
     await expect(page.locator('#settings-modal')).toBeVisible();
     await expect(page.locator('#settings-language')).toBeVisible();
+    await expect(page.locator('#settings-language')).toBeFocused();
     await expect(page.locator('#settings-account-summary')).toBeHidden();
     await page.keyboard.press('Escape');
     await expect(page.locator('#settings-modal')).toBeHidden();
-    await expect(page.locator('#login-language-trigger')).toBeFocused();
   });
 
   test('signed-in account menu opens Settings and restores focus on Escape',async({page})=>{
@@ -581,6 +592,8 @@ test.describe('visual smoke', () => {
     await page.route('https://www.gstatic.com/firebasejs/**',route=>route.abort());
     const sections=['profile','language','appearance','security','tools','data'];
     const establishSignedInBoot=async(username='SettingsBootTrainer')=>{
+      await page.waitForFunction(()=>typeof window.__pogoEnsureFullApp==='function');
+      await page.evaluate(()=>window.__pogoEnsureFullApp('visual-settings-boot-fixture'));
       await page.waitForFunction(()=>typeof syncSettingsRoute==='function'&&typeof syncPendingSettingsRouteAfterAuth==='function');
       await page.evaluate(name=>{
         cur=name;_authStateKnown=true;
@@ -639,7 +652,7 @@ test.describe('visual smoke', () => {
 
     await page.setViewportSize({width:1024,height:800});
     await page.goto(`./?settings-anonymous=${Date.now()}#settings/appearance`,{waitUntil:'domcontentloaded'});
-    await page.waitForFunction(()=>typeof syncSettingsRoute==='function');
+    await waitForFullAppScripts(page,'visual-anonymous-settings-fixture');
     await page.evaluate(()=>{cur=null;_authStateKnown=true;syncPendingSettingsRouteAfterAuth();});
     await expect(page).toHaveURL(/#settings$/);
     await expect(page.locator('[data-settings-section="language"]')).toBeVisible();
@@ -939,8 +952,7 @@ test.describe('visual smoke', () => {
 
   test('direct and reloaded Settings routes deliberately have no prior scroll snapshot',async({page})=>{
     await page.goto(`./?direct-settings=${Date.now()}#settings`,{waitUntil:'domcontentloaded'});
-    await page.waitForFunction(()=>typeof syncSettingsRoute==='function');
-    await page.waitForFunction(()=>_authStateKnown===true);
+    await waitForSettingsStartupReady(page);
     await page.evaluate(()=>syncSettingsRoute({captureScroll:false}));
     await expect(page.locator('#settings-modal')).toBeVisible();
     expect(await page.evaluate(()=>window.scrollY)).toBe(0);
@@ -949,13 +961,11 @@ test.describe('visual smoke', () => {
     expect(await page.evaluate(()=>window.scrollY)).toBe(0);
 
     await page.goto(`./?reload-settings=${Date.now()}#settings`,{waitUntil:'domcontentloaded'});
-    await page.waitForFunction(()=>typeof syncSettingsRoute==='function');
-    await page.waitForFunction(()=>_authStateKnown===true);
+    await waitForSettingsStartupReady(page);
     await page.evaluate(()=>syncSettingsRoute({captureScroll:false}));
     await expect(page.locator('#settings-modal')).toBeVisible();
     await page.reload({waitUntil:'domcontentloaded'});
-    await page.waitForFunction(()=>typeof syncSettingsRoute==='function');
-    await page.waitForFunction(()=>_authStateKnown===true);
+    await waitForSettingsStartupReady(page);
     await page.evaluate(()=>syncSettingsRoute({captureScroll:false}));
     await expect(page.locator('#settings-modal')).toBeVisible();
     await activeSettingsClose(page).click();
@@ -963,8 +973,7 @@ test.describe('visual smoke', () => {
     expect(await page.evaluate(()=>window.scrollY)).toBe(0);
 
     await page.goto(`./?legacy-settings=${Date.now()}`,{waitUntil:'domcontentloaded'});
-    await page.waitForFunction(()=>typeof syncSettingsRoute==='function');
-    await page.waitForFunction(()=>_authStateKnown===true);
+    await waitForSettingsStartupReady(page);
     await page.evaluate(()=>{
       history.replaceState({},'',`${location.pathname}?action=settings`);
       history.replaceState({},'',settingsRouteUrl(true));
@@ -1174,12 +1183,16 @@ test.describe('visual smoke', () => {
         document.querySelectorAll('.page').forEach(page=>page.classList.remove('active'));
         document.getElementById('tab-find').classList.add('active');
         managedPublicShareRepository=null;
+        setTrainerDiscoveryMode('trainers');
+        await renderTrainerQuickLists();
+        window.__trainerSearchWidth=document.querySelector('.trainer-search-shell')?.getBoundingClientRect().width||0;
+        setTrainerDiscoveryMode('favorites');
         await renderTrainerQuickLists();
       });
-      const search=page.locator('.trainer-search-shell'),favoritesSearch=page.locator('.favorite-toolbar-search'),card=page.locator('.favorite-card-shell').first();
+      const favoritesSearch=page.locator('.favorite-toolbar-search'),card=page.locator('.favorite-card-shell').first();
       await expect(card).toBeVisible();
-      const searchBox=await search.boundingBox(),favoriteSearchBox=await favoritesSearch.boundingBox();
-      expect(Math.abs((searchBox?.width||0)-(favoriteSearchBox?.width||0))).toBeLessThanOrEqual(1);
+      const trainerSearchWidth=await page.evaluate(()=>window.__trainerSearchWidth),favoriteSearchBox=await favoritesSearch.boundingBox();
+      expect(Math.abs(trainerSearchWidth-(favoriteSearchBox?.width||0))).toBeLessThanOrEqual(1);
       await expect(card.locator('.favorite-card-add-tag')).toBeVisible();
       await expect(card.locator('.favorite-card-more')).toBeVisible();
       await expect(card).not.toContainText('Organize tags');
@@ -1211,6 +1224,7 @@ test.describe('visual smoke', () => {
         const store=ensureTrainerHistoryStore();store.toggleFavorite('交換トレーナー');
         document.querySelectorAll('.page').forEach(node=>node.classList.remove('active'));
         document.getElementById('tab-find').classList.add('active');
+        setTrainerDiscoveryMode('favorites');
         applyTheme(theme);await renderTrainerQuickLists();
         window.__favoriteSearchInput=document.querySelector('.favorite-toolbar-search input');
         window.__favoriteSearchRenderCount=0;
@@ -1247,6 +1261,7 @@ test.describe('visual smoke', () => {
       document.querySelectorAll('.page').forEach(node=>node.classList.remove('active'));
       document.getElementById('tab-find').classList.add('active');
       managedPublicShareRepository=null;
+      setTrainerDiscoveryMode('favorites');
       await renderTrainerQuickLists();
     });
 
@@ -1458,7 +1473,7 @@ test.describe('visual smoke', () => {
         concurrency:4,maxFavorites:favoriteShareSessionCacheData.DEFAULT_MAX_FAVORITES,readDeadlineMs:25
       });
       favoriteBrowseState={selected:{name:'Cascoon',dn:'Cascoon',no:268},suggestions:[],focusIndex:-1,busy:false,error:false,generation:0,expanded:true};
-      switchTab('find',{render:false});document.getElementById('favorite-browse-input').value='Cascoon';syncFavoriteBrowseDisclosure();
+      switchTab('find',{render:false});setTrainerDiscoveryMode('pokemon');document.getElementById('favorite-browse-input').value='Cascoon';syncFavoriteBrowseDisclosure();
       const pending=hydrateFavoriteBrowse();
       await new Promise(resolve=>setTimeout(resolve,0));
       const loading=document.getElementById('favorite-browse-results').textContent;
@@ -1652,8 +1667,9 @@ test.describe('visual smoke', () => {
       expect(await firstCard.locator('.favorite-card-add-tag').evaluate(node=>node.parentElement?.classList.contains('favorite-card-footer'))).toBe(true);
       expect(await firstCard.locator('.favorite-card-tags .favorite-card-add-tag').count()).toBe(0);
       expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
-      if(width>=900){
-        const favoritesBox=await page.locator('#favorite-trainers').boundingBox(),recentsBox=await page.locator('#recent-trainers').boundingBox();
+      if(width>=768){
+        await page.evaluate(async()=>{setTrainerDiscoveryMode('trainers');await renderTrainerQuickLists();});
+        const favoritesBox=await page.locator('#trainer-favorites-preview').boundingBox(),recentsBox=await page.locator('#recent-trainers').boundingBox();
         expect(recentsBox?.x).toBeGreaterThan((favoritesBox?.x||0)+(favoritesBox?.width||0));
         expect(Math.abs((favoritesBox?.y||0)-(recentsBox?.y||0))).toBeLessThanOrEqual(2);
       }
@@ -2052,8 +2068,8 @@ test.describe('visual smoke', () => {
     await page.keyboard.press('Escape');
     await expect(longRow.locator('.myrow-editor-popover')).toBeHidden();
     await page.locator('#mylist-filter').fill('P-Tauros');
-    await expect(page.locator('.myrow')).toHaveCount(1);
-    await expect(page.locator('.myrow-name')).toHaveText('P-Tauros (Combat)');
+    await expect(page.locator('.myrow:not([hidden])')).toHaveCount(1);
+    await expect(page.locator('.myrow:not([hidden]) .myrow-name')).toHaveText('P-Tauros (Combat)');
     await page.locator('#mylist-filter').fill('');
     await expect(page.locator('.myrow')).toHaveCount(7);
     expect(await page.evaluate(()=>document.querySelectorAll('.myrow.swiping,.myrow-editor[open]').length)).toBe(0);
@@ -2073,7 +2089,7 @@ test.describe('visual smoke', () => {
           [other]:{specialTradeBoard:{lf:[],ft:[{name:'Rayquaza',dn:'Rayquaza',no:384,backgroundId:nyc,shiny:true,mirror:false,qty:1}]}}
         },
         have:{[user]:{},[other]:{}},
-        wishlist:{[user]:{Eevee:'M',Necrozma:`H[shiny][bg:${longBackground}]`},[other]:{Pikachu:'L'}},
+        wishlist:{[user]:{Eevee:'M',Necrozma:`H[shiny][bg:${longBackground}]`},[other]:{Pikachu:'L',Rayquaza:`H[shiny][bg:${nyc}]`}},
         dynamax:{},gmax:{},costumes:{}
       });
       writeList=(type,username,list)=>{
@@ -2151,18 +2167,18 @@ test.describe('visual smoke', () => {
     expect(exported.imageSize).toBeGreaterThan(1_000);
 
     const reciprocal=await page.evaluate(other=>{
-      const exact=computeTradeMatchSummary(other).theyHaveYouWant.length;
-      allData.users[other].specialTradeBoard.ft[0].backgroundId='location-gofestosaka';
-      const mismatch=computeTradeMatchSummary(other).theyHaveYouWant.length;
-      allData.users[other].specialTradeBoard.ft[0].backgroundId='location-gofestnewyorkcity';
+      const exact=computeTradeMatchSummary(other).both.filter(item=>item.name==='Rayquaza').length;
+      allData.wishlist[other].Rayquaza='H[shiny][bg:location-gofestosaka]';
+      const mismatch=computeTradeMatchSummary(other).both.filter(item=>item.name==='Rayquaza').length;
+      allData.wishlist[other].Rayquaza='H[shiny][bg:location-gofestnewyorkcity]';
       return{exact,mismatch};
     },'BackgroundPartner');
     expect(reciprocal).toEqual({exact:1,mismatch:0});
     await page.evaluate(()=>{_activeTradeMatch={them:'BackgroundPartner'};renderTradeMatchModal();});
-    await expect(page.locator('#trade-match-modal .background')).toContainText('GO Fest New York City');
+    await expect(page.locator('#trade-match-modal .diff-match-box.both .background')).toContainText('GO Fest New York City');
     await page.keyboard.press('Escape');
     await page.evaluate(()=>{allData.wishlist[cur].Rayquaza='M';_activeTradeMatch={them:'BackgroundPartner'};renderTradeMatchModal();});
-    await expect(page.locator('#trade-match-modal .background')).toContainText('GO Fest New York City');
+    await expect(page.locator('#trade-match-modal .diff-match-box.theirs .background')).toContainText('GO Fest New York City');
     await page.keyboard.press('Escape');
     await page.evaluate(({nyc})=>{allData.wishlist[cur].Rayquaza=`M[shiny][bg:${nyc}]`;renderMyList();},{nyc});
 
@@ -2588,7 +2604,7 @@ test.describe('visual smoke', () => {
     for(const [width,height] of viewports){
       await page.setViewportSize({width,height});
       await page.goto(`./?locale-layout=${width}-${height}-${Date.now()}`,{waitUntil:'domcontentloaded'});
-      await page.waitForFunction(()=>typeof changeInterfaceLocale==='function');
+      await waitForSettingsStartupReady(page);
       await page.waitForTimeout(350);
       for(const locale of ['ja','de']){
         await page.evaluate(value=>{
@@ -2610,6 +2626,8 @@ test.describe('visual smoke', () => {
     test(`find trainer suggestions stay visible at ${width}px`, async ({ page }) => {
       await page.setViewportSize({ width, height });
       await page.goto(`./?autocomplete-layout=${width}-${Date.now()}`, { waitUntil: 'domcontentloaded' });
+      await page.waitForFunction(() => typeof window.__pogoEnsureFullApp === 'function');
+      await page.evaluate(() => window.__pogoEnsureFullApp('visual-trainer-suggestions-fixture'));
       await page.waitForFunction(() => typeof renderTrainerSuggestions === 'function' && window.__pogoStartup?.firebaseStartupSettledAt !== null);
       await page.evaluate(() => {
         document.getElementById('login-pg').style.display='none';
@@ -2721,29 +2739,31 @@ test.describe('visual smoke', () => {
     await capturePass3(page,'trainer-discovery-ranking-320x568');
     await page.evaluate(()=>{selectedTrainerRuntime={username:'Alpha',publicData:normalizeData({users:{Alpha:{specialTradeBoard:{lf:[],ft:[]}}},wishlist:{Alpha:{Pikachu:'H'}}})};document.getElementById('app').style.display='none';document.getElementById('share-view').classList.add('active');renderShareView('Alpha','wishlist');});
     await expect(page.locator('.share-match-overview')).toBeVisible();
-    await expect(page.locator('.share-match-metric').nth(0)).toContainText('They Have My Wants');
+    await expect(page.locator('.share-match-metric').nth(0)).toContainText('Both Want');
     await expect(page.locator('.share-match-metric').nth(0).locator('strong')).toHaveText('0');
-    await expect(page.locator('.share-match-metric').nth(1)).toContainText('I Have Their Wants');
+    await expect(page.locator('.share-match-metric').nth(1)).toContainText('Only I Want');
     await expect(page.locator('.share-match-metric').nth(1).locator('strong')).toHaveText('1');
+    await expect(page.locator('.share-match-metric').nth(2)).toContainText('Only Alpha Wants');
+    await expect(page.locator('.share-match-metric').nth(2).locator('strong')).toHaveText('1');
     const scenarios=await page.evaluate(()=>{
-      const target='TrainerWithAnExceptionallyLongHandle123',offers=names=>names.map((name,index)=>({name,dn:name,no:index+1})),wants=names=>Object.fromEntries(names.map(name=>[name,'H']));
-      const render=(theirOffers,theirWants,myOffers,myWants)=>{
-        allData=normalizeData({users:{Viewer:{specialTradeBoard:{lf:[],ft:offers(myOffers)}},[target]:{specialTradeBoard:{lf:[],ft:offers(theirOffers)}}},wishlist:{Viewer:wants(myWants),[target]:wants(theirWants)},dynamax:{},gmax:{},costumes:{}});
-        selectedTrainerRuntime={username:target,publicData:normalizeData({users:{[target]:{specialTradeBoard:{lf:[],ft:offers(theirOffers)}}},wishlist:{[target]:wants(theirWants)}})};
+      const target='TrainerWithAnExceptionallyLongHandle123',wants=names=>Object.fromEntries(names.map(name=>[name,'H']));
+      const render=(theirWants,myWants)=>{
+        allData=normalizeData({users:{Viewer:{specialTradeBoard:{lf:[],ft:[]}},[target]:{specialTradeBoard:{lf:[],ft:[]}}},wishlist:{Viewer:wants(myWants),[target]:wants(theirWants)},dynamax:{},gmax:{},costumes:{}});
+        selectedTrainerRuntime={username:target,publicData:normalizeData({users:{[target]:{specialTradeBoard:{lf:[],ft:[]}}},wishlist:{[target]:wants(theirWants)}})};
         renderShareView(target,'wishlist');return[...document.querySelectorAll('.share-match-metric')].map(node=>({value:node.querySelector('strong')?.textContent||'',label:node.querySelector('span')?.textContent||'',status:node.querySelector('small')?.textContent||''}));
       };
-      const many=Array.from({length:14},(_,index)=>`Wanted${index}`),owned=Array.from({length:12},(_,index)=>`Owned${index}`);
-      return{none:render([],[],[],[]),they:render(['Mew'],[],[],['Mew']),mine:render([],['Pikachu'],['Pikachu'],[]),bothLarge:render(many,owned,owned,many)};
+      const shared=Array.from({length:14},(_,index)=>`Shared${index}`),mineOnly=Array.from({length:12},(_,index)=>`Mine${index}`),theirsOnly=Array.from({length:10},(_,index)=>`Theirs${index}`);
+      return{none:render([],[]),mine:render([],['Mew']),theirs:render(['Pikachu'],[]),bothLarge:render([...shared,...theirsOnly],[...shared,...mineOnly])};
     });
     expect(scenarios.none).toEqual([]);
-    expect(scenarios.they).toEqual([{value:'1',label:'They Have My Wants',status:''},{value:'0',label:'I Have Their Wants',status:''}]);
-    expect(scenarios.mine).toEqual([{value:'0',label:'They Have My Wants',status:''},{value:'1',label:'I Have Their Wants',status:''}]);
-    expect(scenarios.bothLarge).toEqual([{value:'14',label:'They Have My Wants',status:''},{value:'12',label:'I Have Their Wants',status:''}]);
+    expect(scenarios.mine).toEqual([{value:'0',label:'Both Want',status:''},{value:'1',label:'Only I Want',status:''},{value:'0',label:'Only TrainerWithAnExceptionallyLongHandle123 Wants',status:''}]);
+    expect(scenarios.theirs).toEqual([{value:'0',label:'Both Want',status:''},{value:'0',label:'Only I Want',status:''},{value:'1',label:'Only TrainerWithAnExceptionallyLongHandle123 Wants',status:''}]);
+    expect(scenarios.bothLarge).toEqual([{value:'14',label:'Both Want',status:''},{value:'12',label:'Only I Want',status:''},{value:'10',label:'Only TrainerWithAnExceptionallyLongHandle123 Wants',status:''}]);
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
     await capturePass3(page,'trainer-discovery-profile-320x568');
   });
 
-  test('reciprocal trade details preserve qualifiers, reject gender mismatch, and refresh after My List edits',async({page})=>{
+  test('wanted-list comparison preserves qualifiers, rejects gender mismatch, and refreshes after My List edits',async({page})=>{
     await page.setViewportSize({width:390,height:844});
     await page.goto(`./?trade-match-ux=${Date.now()}`,{waitUntil:'domcontentloaded'});
     await waitForStableLocalOrganizerStartup(page);
@@ -2756,7 +2776,7 @@ test.describe('visual smoke', () => {
           [them]:{specialTradeBoard:{lf:[],ft:[{name:'Mew',dn:'Mew',no:151,shiny:true,backgroundId:nyc,mirror:false,qty:45},{name:'Heracross',dn:'Heracross',no:214,shiny:false,backgroundId:'',mirror:false,qty:57}]}}
         },
         have:{Doomsday126:{'Pikachu::m':{qty:26},'Heracross::m':{qty:3}},[them]:{Mew:{qty:45},'Heracross::m':{qty:57}}},
-        wishlist:{Doomsday126:{Mew:`H[shiny][bg:${nyc}]`,Heracross:'M(F)'},[them]:{Pikachu:`L[shiny][bg:${osaka}]`}},
+        wishlist:{Doomsday126:{Mew:`H[shiny][bg:${nyc}]`,Heracross:'M(F)'},[them]:{Mew:`L[shiny][bg:${nyc}]`,Heracross:'H(M)',Pikachu:`L[shiny][bg:${osaka}]`}},
         dynamax:{},gmax:{},costumes:{}
       });
       _pathLoadState={have:'loaded',wishlist:'loaded',dynamax:'loaded',gmax:'loaded',costumes:'loaded'};
@@ -2766,34 +2786,35 @@ test.describe('visual smoke', () => {
     await page.getByRole('button',{name:/Compare with My List/i}).click();
     const modal=page.locator('#trade-match-modal');await expect(modal).toBeVisible();
     await expect(modal).toHaveAttribute('aria-labelledby','trade-match-title');
-    await expect(modal.locator('.diff-match-box.want .diff-match-chip')).toHaveCount(1);
-    await expect(modal.locator('.diff-match-box.want')).toContainText('Mew');
-    await expect(modal.locator('.diff-match-box.want')).toContainText('My priority: High');
-    await expect(modal.locator('.diff-match-box.want')).toContainText('Shiny');
-    await expect(modal.locator('.diff-match-box.want')).toContainText('New York City');
-    await expect(modal.locator('.diff-match-box.want')).not.toContainText('Heracross');
-    await expect(modal.locator('.diff-match-box.give')).toContainText('Pikachu');
-    await expect(modal.locator('.diff-match-box.give')).toContainText('Their priority: Low');
-    await expect(modal.locator('.diff-match-box.give')).toContainText('Shiny');
-    await expect(modal.locator('.diff-match-box.give')).toContainText('Osaka');
+    await expect(modal.locator('.diff-match-box.both .diff-match-chip')).toHaveCount(1);
+    await expect(modal.locator('.diff-match-box.both')).toContainText('Mew');
+    await expect(modal.locator('.diff-match-box.both')).toContainText('Shiny');
+    await expect(modal.locator('.diff-match-box.both')).toContainText('New York City');
+    await expect(modal.locator('.diff-match-box.both')).not.toContainText('Heracross');
+    await expect(modal.locator('.diff-match-box.theirs')).toContainText('Pikachu');
+    await expect(modal.locator('.diff-match-box.theirs')).toContainText('Shiny');
+    await expect(modal.locator('.diff-match-box.theirs')).toContainText('Osaka');
+    await expect(modal.locator('.diff-match-box.mine')).toContainText('Heracross');
     await expect(modal.locator('.diff-match-qty')).toHaveCount(0);
-    await expect(modal.locator('.diff-match-box.want .diff-match-count')).toHaveText('1');
-    await expect(modal.locator('.diff-match-box.give .diff-match-count')).toHaveText('1');
+    await expect(modal.locator('.diff-match-box.both .diff-match-count')).toHaveText('1');
+    await expect(modal.locator('.diff-match-box.mine .diff-match-count')).toHaveText('1');
+    await expect(modal.locator('.diff-match-box.theirs .diff-match-count')).toHaveText('2');
     expect(await modal.locator('.diff-match-chip[title]').evaluateAll(nodes=>nodes.every(node=>!/[×x]\d+/i.test(node.getAttribute('title')||'')))).toBe(true);
     await page.getByRole('button',{name:'Edit My List'}).click();
     await expect(page.locator('#trade-return-banner')).toBeVisible();
-    await page.evaluate(()=>{allData.wishlist.Doomsday126.Heracross='M';renderMyList();});
-    await page.getByRole('button',{name:'Return to matches'}).click();
-    await expect(page.locator('#trade-match-modal .diff-match-box.want')).toContainText('Heracross');
+    await page.evaluate(()=>{allData.wishlist.Doomsday126.Heracross='M(M)';renderMyList();});
+    await page.getByRole('button',{name:'Return to comparison'}).click();
+    await expect(page.locator('#trade-match-modal .diff-match-box.both')).toContainText('Heracross');
+    await expect(page.locator('#trade-match-modal .diff-match-box.both .diff-match-count')).toHaveText('2');
     await capturePass3(page,'trade-match-detail-390x844');
     await page.evaluate(()=>{
       const them='TrainerWithAnExceptionallyLongHandle123';
       const names=['Bulbasaur','Ivysaur','Venusaur','Charmander','Charmeleon','Charizard','Squirtle','Wartortle','Blastoise','Caterpie','Metapod','Butterfree','Weedle','Kakuna','Beedrill','Pidgey'];
-      names.forEach((name,index)=>{allData.users[them].specialTradeBoard.ft.push({name,dn:name,no:index+1,shiny:false,backgroundId:'',mirror:false,qty:index%3+1});allData.wishlist.Doomsday126[name]=index%3===0?'H':index%3===1?'M':'L';});
+      names.forEach((name,index)=>{const priority=index%3===0?'H':index%3===1?'M':'L';allData.wishlist.Doomsday126[name]=priority;allData.wishlist[them][name]=priority;});
       renderTradeMatchModal();
     });
     await expect(page.locator('#trade-match-modal .diff-match-qty')).toHaveCount(0);
-    await expect(page.locator('#trade-match-modal .diff-match-box.want .diff-match-more')).toBeVisible();
+    await expect(page.locator('#trade-match-modal .diff-match-box.both .diff-match-more')).toBeVisible();
     for(const viewport of [{width:1440,height:900},{width:430,height:932},{width:375,height:812},{width:320,height:568}]){
       await page.setViewportSize(viewport);
       await expect(page.locator('#trade-match-modal')).toBeVisible();
@@ -2884,7 +2905,7 @@ test.describe('visual smoke', () => {
       expect(Math.abs(geometry.search.width-geometry.mode.width)).toBeLessThanOrEqual(1);
       expect(geometry.search.width).toBeLessThanOrEqual(720.5);
       expect(geometry.favorites.y).toBeGreaterThan(geometry.search.bottom);
-      if(viewport.width>=1100){
+      if(viewport.width>=768){
         expect(Math.abs(geometry.favorites.y-geometry.recents.y)).toBeLessThanOrEqual(1);
         expect(geometry.recents.x).toBeGreaterThan(geometry.favorites.right);
       }else{
@@ -3099,6 +3120,7 @@ test.describe('visual smoke', () => {
       openTrainerByName=username=>{window.__openedTrainer=username;};
       document.querySelectorAll('.page').forEach(node=>node.classList.remove('active'));
       document.getElementById('tab-find').classList.add('active');
+      setTrainerDiscoveryMode('favorites');
       await renderTrainerQuickLists();
     },names);
     await expect(page.locator('.favorite-card-shell')).toHaveCount(names.length);

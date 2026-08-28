@@ -3,13 +3,15 @@ const assert=require('node:assert/strict');
 const {readFileSync}=require('node:fs');
 const path=require('node:path');
 const vm=require('node:vm');
+const {readFrontendSource}=require('../scripts/lib/frontend-source.cjs');
 
 const root=path.join(__dirname,'..');
-const html=readFileSync(path.join(root,'index.html'),'utf8');
+const documentHtml=readFileSync(path.join(root,'index.html'),'utf8');
+const html=readFrontendSource(root);
 const worker=readFileSync(path.join(root,'sw.js'),'utf8');
 const locale=readFileSync(path.join(root,'js/i18n/locales/en.js'),'utf8');
-const release=html.match(/window\.__POGO_RELEASE_ID='([^']+)'/)?.[1];
-const firstPartyScripts=[...html.matchAll(/<script\s+src="([^"]+)"/g)]
+const release=documentHtml.match(/window\.__POGO_RELEASE_ID='([^']+)'/)?.[1];
+const firstPartyScripts=[...documentHtml.matchAll(/<script\s+src="([^"]+)"/g)]
   .map(match=>match[1])
   .filter(src=>!/^https?:\/\//.test(src));
 
@@ -58,14 +60,16 @@ test('service worker keeps exact release keys and retires old app-shell caches',
 test('service worker separates required release assets from optional runtime shell assets',()=>{
   assert.match(worker,/const REQUIRED_SHELL_URLS=\[/);
   assert.match(worker,/const OPTIONAL_SHELL_URLS=\[/);
-  assert.match(worker,/const INSTALL_CACHE=`\$\{SHELL_CACHE\}-installing`/);
+  assert.match(worker,/const INSTALL_FETCH_CONCURRENCY=8/);
+  assert.match(worker,/runBounded\(REQUIRED_SHELL_URLS,INSTALL_FETCH_CONCURRENCY/);
+  assert.doesNotMatch(worker,/INSTALL_CACHE|Required shell staging cache|staging\.put/);
   assert.match(worker,/if\(!response\?\.ok\)throw new Error/);
   assert.match(worker,/if\(complete\.some\(response=>!response\)\).*Refusing to activate/s);
   assert.doesNotMatch(worker,/catch\(e\)\{\/\* offline at install time; ok \*\//);
 });
 
 test('viewport permits user zoom and does not impose a maximum scale',()=>{
-  const viewport=html.match(/<meta name="viewport" content="([^"]+)"/)?.[1]||'';
+  const viewport=documentHtml.match(/<meta name="viewport" content="([^"]+)"/)?.[1]||'';
   assert.match(viewport,/width=device-width/);
   assert.match(viewport,/initial-scale=1/);
   assert.doesNotMatch(viewport,/user-scalable\s*=\s*no/i);

@@ -95,7 +95,7 @@ test('mock adapter is local, deterministic, test-gated, and capability-free',()=
 });
 
 test('active UI exposes one local-only status surface and no sync or migration command',()=>{
-  const html=readFileSync(path.join(root,'index.html'),'utf8');
+  const html=require('../scripts/lib/frontend-source.cjs').readFrontendSource(root);
   const worker=readFileSync(path.join(root,'sw.js'),'utf8');
   assert.match(html,/id="trainer-sync-local-status"[^>]*role="status"[^>]*aria-live="polite"/);
   assert.match(html,/data-i18n="trainer\.syncState\.local-only"/);assert.match(html,/data-i18n="trainer\.syncStatus\.localOnlyDetail"/);
@@ -112,7 +112,7 @@ test('long German and Japanese sync labels retain key parity and overflow-safe p
   Object.assign(catalogs,window.PogoLocales);
   const keys=Object.keys(catalogs.en).sort();for(const locale of files.slice(1))assert.deepEqual(Object.keys(catalogs[locale]).sort(),keys);
   assert.ok(catalogs.de['trainer.syncConflict.tagRename.title'].length>20);assert.ok(catalogs.ja['trainer.syncDelete.cloud-and-device.consequence']);
-  assert.match(readFileSync(path.join(root,'index.html'),'utf8'),/\.trainer-sync-status-detail\{[^}]*overflow-wrap:anywhere/);
+  assert.match(require('../scripts/lib/frontend-source.cjs').readFrontendSource(root),/\.trainer-sync-status-detail\{[^}]*overflow-wrap:anywhere/);
 });
 
 test('user-created tags remain raw fixture values rather than translation keys',()=>{

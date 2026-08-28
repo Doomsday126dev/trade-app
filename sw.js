@@ -8,8 +8,8 @@
 const RELEASE='2026-08-27.75';
 const VERSION=`pogo-trades-${RELEASE}`;
 const SHELL_CACHE=`shell-${VERSION}`;
-const INSTALL_CACHE=`${SHELL_CACHE}-installing`;
 const SPRITE_CACHE=`sprites-${VERSION}`;
+const INSTALL_FETCH_CONCURRENCY=8;
 const CURRENT_CACHE_NAMES=new Set([SHELL_CACHE,SPRITE_CACHE]);
 const OWNED_CACHE_PATTERNS=[
   /^shell-pogo-trades-(?:v\d+|\d{4}-\d{2}-\d{2}\.\d+)(?:-installing)?$/,
@@ -20,6 +20,7 @@ const OWNED_CACHE_PATTERNS=[
 // commit, so we revalidate them with a network-first fetch — but we still want
 // them in the cache before the user first goes offline.
 const RELEASE_ASSETS=[
+  'css/app.css',
   'data.js',
   'js/domain/productLimits.js',
   'js/domain/priorities.js',
@@ -91,7 +92,8 @@ const RELEASE_ASSETS=[
   'js/data/accountSyncController.js',
   'js/data/accountSyncRuntime.js',
   'js/domain/cacheAdapters.js',
-  'js/ui/trainerTagPanel.js'
+  'js/ui/trainerTagPanel.js',
+  'js/app/application.js'
 ];
 const REQUIRED_SHELL_URLS=[
   `./index.html?v=${RELEASE}`,
@@ -118,37 +120,39 @@ const SPRITE_HOSTS=[
   'cdn08.net'
 ];
 
+async function runBounded(items,limit,work){
+  let nextIndex=0;
+  let firstFailure=null;
+  async function worker(){
+    while(!firstFailure&&nextIndex<items.length){
+      const index=nextIndex++;
+      try{await work(items[index],index);}catch(error){firstFailure||=error;}
+    }
+  }
+  const workerCount=Math.min(Math.max(1,limit),items.length);
+  await Promise.all(Array.from({length:workerCount},worker));
+  if(firstFailure)throw firstFailure;
+}
+
 async function cacheRequiredShell(){
   const existing=await caches.open(SHELL_CACHE);
   const existingRequired=await Promise.all(REQUIRED_SHELL_URLS.map(url=>existing.match(url)));
   const hadCompleteShell=existingRequired.every(Boolean);
-  await caches.delete(INSTALL_CACHE);
   if(hadCompleteShell)return;
   await caches.delete(SHELL_CACHE);
-  const staging=await caches.open(INSTALL_CACHE);
+  const candidate=await caches.open(SHELL_CACHE);
   try{
-    const responses=await Promise.all(REQUIRED_SHELL_URLS.map(async url=>{
+    await runBounded(REQUIRED_SHELL_URLS,INSTALL_FETCH_CONCURRENCY,async url=>{
       const response=await fetch(url,{cache:'reload'});
       if(!response?.ok)throw new Error(`Required shell asset failed: ${url} (${response?.status||'network'})`);
-      return[url,response];
-    }));
-    await Promise.all(responses.map(([url,response])=>staging.put(url,response.clone())));
-    const staged=await Promise.all(REQUIRED_SHELL_URLS.map(url=>staging.match(url)));
-    if(staged.some(response=>!response))throw new Error('Required shell staging cache is incomplete');
-    const shell=await caches.open(SHELL_CACHE);
-    await Promise.all(REQUIRED_SHELL_URLS.map(async url=>{
-      const response=await staging.match(url);
-      if(!response)throw new Error(`Required shell asset disappeared: ${url}`);
-      await shell.put(url,response);
-    }));
-    const complete=await Promise.all(REQUIRED_SHELL_URLS.map(url=>shell.match(url)));
+      await candidate.put(url,response);
+    });
+    const complete=await Promise.all(REQUIRED_SHELL_URLS.map(url=>candidate.match(url)));
     if(complete.some(response=>!response))throw new Error('Required shell cache is incomplete');
   }catch(error){
-    await caches.delete(INSTALL_CACHE);
     await caches.delete(SHELL_CACHE);
     throw error;
   }
-  await caches.delete(INSTALL_CACHE);
 }
 
 self.addEventListener('install',ev=>{
@@ -163,7 +167,7 @@ self.addEventListener('activate',ev=>{
     const shell=await caches.open(SHELL_CACHE);
     const complete=await Promise.all(REQUIRED_SHELL_URLS.map(url=>shell.match(url)));
     if(complete.some(response=>!response)){
-      await Promise.all([caches.delete(INSTALL_CACHE),caches.delete(SHELL_CACHE)]);
+      await caches.delete(SHELL_CACHE);
       throw new Error('Refusing to activate without a complete required shell');
     }
     const names=await caches.keys();

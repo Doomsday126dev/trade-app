@@ -3,7 +3,7 @@ const assert=require('node:assert/strict');
 const {readFileSync}=require('node:fs');
 const path=require('node:path');
 
-const source=readFileSync(path.join(__dirname,'..','index.html'),'utf8');
+const source=require('../scripts/lib/frontend-source.cjs').readFrontendSource(path.join(__dirname,'..'));
 
 test('production activates exact owned reads with legacy broad startup disabled',()=>{
   assert.match(source,/const TRAINER_FIRST_INTERIM_ENABLED=true;/);

@@ -5,7 +5,7 @@ const path=require('node:path');
 const vm=require('node:vm');
 const {webcrypto}=require('node:crypto');
 
-const source=readFileSync(path.join(__dirname,'..','index.html'),'utf8');
+const source=require('../scripts/lib/frontend-source.cjs').readFrontendSource(path.join(__dirname,'..'));
 function loadAccountSyncProduct(){
   const window={crypto:webcrypto,btoa:value=>Buffer.from(value,'binary').toString('base64')},context=vm.createContext({window,Uint8Array,unescape,encodeURIComponent,console});
   for(const file of ['js/domain/accountSyncModel.js','js/domain/accountSyncProduct.js'])vm.runInContext(readFileSync(path.join(__dirname,'..',file),'utf8'),context,{filename:file});

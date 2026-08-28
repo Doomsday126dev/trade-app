@@ -5,7 +5,7 @@ const {join}=require('node:path');
 const vm=require('node:vm');
 
 const root=join(__dirname,'..');
-const html=readFileSync(join(root,'index.html'),'utf8');
+const html=require('../scripts/lib/frontend-source.cjs').readFrontendSource(root);
 const domainSource=readFileSync(join(root,'js/domain/eventPresentation.js'),'utf8');
 
 function loadDomain(){
@@ -106,6 +106,7 @@ test('filters and loading empty filtered error offline states remain distinct',(
   assert.match(render,/role="group"[^>]+events\.filtersLabel/);
   assert.match(render,/\['spotlight','events\.filterSpotlight'\]/);
   assert.match(render,/aria-pressed="\$\{eventTypeFilter===type\}"/);
+  assert.match(render,/data-event-action="filter" data-type="\$\{type\}"/);
   for(const value of ['events.loading','events.emptyTitle','events.filteredEmptyTitle','events.errorTitle','events.offlineTitle','events.clearFilters','events.retry'])assert.match(render,new RegExp(value.replace('.','\\.')));
   assert.match(render,/out\.setAttribute\('aria-busy'/);
   assert.match(render,/setEventTypeFilter\('all'\)/);
@@ -115,7 +116,8 @@ test('filters and loading empty filtered error offline states remain distinct',(
 
 test('calendar and overview interactions are keyboard reachable without count or sprite clutter',()=>{
   const render=html.slice(html.indexOf('function setEventTypeFilter'),html.indexOf('function renderSchedule'));
-  assert.match(render,/eventCalendarKeydown\(event,'\$\{cell\.key\}'\)/);
+  assert.match(render,/data-event-action="date" data-date="\$\{cell\.key\}"/);
+  assert.match(render,/function eventsKeydown\(event\)[\s\S]*eventCalendarKeydown\(event,day\.dataset\.date/);
   assert.match(render,/\['Home','End'\]/);
   assert.match(render,/ArrowLeft:-1,ArrowRight:1,ArrowUp:-7,ArrowDown:7/);
   assert.match(render,/pokemonNamesI18n\.speciesName\(\{no\},locale\)/);
@@ -126,9 +128,21 @@ test('calendar and overview interactions are keyboard reachable without count or
   assert.match(render,/events\.onDate/);
   assert.match(render,/events\.noneOnDate/);
   assert.match(render,/timing\.timeLabel/);
-  assert.match(render,/jumpToEvent\(this\.dataset\.eventId\)/);
+  assert.match(render,/data-event-action="jump" data-event-id=/);
+  assert.match(render,/function eventsAction\(event\)[\s\S]*jumpToEvent\(control\.dataset\.eventId/);
   assert.match(render,/card\.scrollIntoView/);
   assert.match(render,/card\.focus\(\{preventScroll:true\}\)/);
+});
+
+test('Events dynamic controls use one stable delegated owner instead of inline handlers',()=>{
+  const render=html.slice(html.indexOf('function setEventTypeFilter'),html.indexOf('function renderSchedule'));
+  assert.match(render,/getElementById\('events-out'\)\?\.addEventListener\('click',eventsAction\)/);
+  assert.match(render,/getElementById\('events-out'\)\?\.addEventListener\('keydown',eventsKeydown\)/);
+  assert.match(render,/getElementById\('events-out'\)\?\.addEventListener\('scroll',eventsScroll,true\)/);
+  assert.match(render,/data-event-action="month" data-event-month-delta="-1"/);
+  assert.match(render,/data-event-action="\$\{escAttr\(action\)\}"/);
+  assert.match(render,/eventStateHtml\('offline',[\s\S]*'retry'\)/);
+  assert.doesNotMatch(render,/\son(?:click|keydown|scroll)="/);
 });
 
 test('event source and localization remain unchanged while Spotlight uses structured identity only',()=>{

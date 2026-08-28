@@ -4,7 +4,7 @@ const {readFileSync}=require('node:fs');
 const path=require('node:path');
 
 const root=path.join(__dirname,'..');
-const html=readFileSync(path.join(root,'index.html'),'utf8');
+const html=require('../scripts/lib/frontend-source.cjs').readFrontendSource(root);
 
 test('visual avatar picker uses the canonical catalog lazily and keeps string persistence',()=>{
   const picker=html.slice(html.indexOf('let avatarPickerEntriesCache'),html.indexOf('// Build a <img>'));
@@ -37,7 +37,7 @@ test('Legal and Attribution is user reachable, conservative, localized, and regi
 });
 
 test('normal My List rows are dense and progressive while reorder remains explicit',()=>{
-  const rows=html.slice(html.indexOf('function myListRowsHtml'),html.indexOf('function myListPrioritySectionHtml'));
+  const rows=html.slice(html.indexOf('function myListRowHtml'),html.indexOf('function myListPrioritySectionHtml'));
   assert.match(rows,/reorderMode&&!bulkMode\?'draggable="true"'/);assert.match(rows,/reorderMode\?`<button type="button" class="drag-handle"/);
   assert.match(rows,/class="myrow-priority-quick"/);assert.doesNotMatch(rows,/class="myrow-priority" role="group"/);
   assert.match(rows,/details class="myrow-editor"/);assert.match(html,/@media\(max-width:600px\)[^{]*\{[\s\S]*?\.myrow-priority-quick\{display:none\}/);
@@ -46,7 +46,7 @@ test('normal My List rows are dense and progressive while reorder remains explic
 
 test('priority moves are exact, announced, and do not reuse toggle-delete behavior',()=>{
   const move=html.slice(html.indexOf('function movePriority'),html.indexOf('function setPri'));
-  assert.match(move,/\['H','M','L'\]\.includes\(p\)/);assert.match(move,/current\.p===p/);assert.match(move,/priValue\(p,current\.mod,current\.lucky,current\.xxl,current\.xxs,current\.shiny\)/);
+  assert.match(move,/\['H','M','L'\]\.includes\(p\)/);assert.match(move,/current\.p===p/);assert.match(move,/priValue\(p,current\.mod,current\.lucky,current\.xxl,current\.xxs,current\.shiny,current\.backgroundId\)/);
   assert.match(move,/announceMyListAction/);assert.doesNotMatch(move,/delete list|confirm\(/);
   const editor=html.slice(html.indexOf('function myListEditorHtml'),html.indexOf('function hydrateMyRowEditor'));
   assert.match(editor,/myrow-priority-editor/);assert.match(editor,/movePriority/);
@@ -54,7 +54,7 @@ test('priority moves are exact, announced, and do not reuse toggle-delete behavi
 
 test('reorder persists explicit within-priority order without rewriting Firebase list data',()=>{
   const drop=html.slice(html.indexOf('function dragDrop'),html.indexOf('function announceMyListAction'));
-  assert.match(drop,/sourcePriority!==targetPriority/);assert.match(drop,/myList\.reorderWithinPriority/);assert.match(drop,/names\.splice\(si,1\);names\.splice\(ti,0,srcName\)/);assert.match(drop,/persistMyListOrder\(model,myListType,cur\)/);assert.doesNotMatch(drop,/writeList\(myListType,cur/);
+  assert.match(drop,/sourcePriority!==targetPriority/);assert.match(drop,/myList\.reorderWithinPriority/);assert.match(drop,/names\.splice\(si,1\);names\.splice\(ti,0,srcName\)/);assert.match(drop,/persistMyListOrder\(model,myListType,session\.username\)/);assert.doesNotMatch(drop,/writeList\(myListType,cur/);
 });
 
 test('Batch B adds no Firebase surface or new profile schema',()=>{

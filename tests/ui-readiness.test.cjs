@@ -3,9 +3,10 @@ const assert=require('node:assert/strict');
 const {readFileSync}=require('node:fs');
 const path=require('node:path');
 const vm=require('node:vm');
+const {readFrontendSource}=require('../scripts/lib/frontend-source.cjs');
 
 const root=path.join(__dirname,'..');
-const html=readFileSync(path.join(root,'index.html'),'utf8');
+const html=readFrontendSource(root);
 
 function emptyState(){
   const window={};
@@ -57,7 +58,14 @@ test('account and Settings controls expose 48px minimum touch targets',()=>{
   assert.match(html,/\.account-trigger\{[^}]*min-width:48px;min-height:48px/);
   assert.match(html,/\.account-action\{[^}]*min-height:48px/);
   assert.match(html,/\.local-settings-trigger\{[^}]*min-height:48px/);
+  assert.match(html,/\.trainer-sync-recovery\{[^}]*min-height:48px/);
   assert.match(html,/\.settings-modal-close\{[^}]*width:48px;height:48px;min-width:48px;min-height:48px/);
+});
+
+test('narrow login composition reserves space for language controls',()=>{
+  assert.match(html,/@media\(max-width:360px\)\{#login-pg,#config-pg\{[^}]*align-items:flex-start[^}]*padding:calc\(76px \+ env\(safe-area-inset-top\)\) 10px 16px/);
+  assert.match(html,/\.login-local-settings\{[^}]*top:calc\(10px \+ env\(safe-area-inset-top\)\)[^}]*right:10px/);
+  assert.match(html,/\.lcard\{padding:24px 14px 18px\}/);
 });
 
 test('favorite organizer trigger and sheet controls expose 48px touch targets',()=>{

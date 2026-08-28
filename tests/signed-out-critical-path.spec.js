@@ -69,12 +69,19 @@ test.describe('signed-out critical path',()=>{
     await page.route('https://www.gstatic.com/firebasejs/**',route=>route.abort());
   });
 
-  test('meaningful pre-auth status paints while the classic script graph is still blocked',async({page})=>{
-    let releaseData;
-    const blockedData=new Promise(resolve=>{releaseData=resolve;});
-    await page.route(/\/data\.js\?v=/,async route=>{
-      await blockedData;
-      await route.continue();
+  test('meaningful pre-auth status paints while Auth state is still pending',async({page})=>{
+    await page.route('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js',route=>route.fulfill({
+      contentType:'application/javascript',headers:{'access-control-allow-origin':'*'},
+      body:"export function initializeApp(config,name){return {config,name}}"
+    }));
+    let releaseAuth;
+    const blockedAuth=new Promise(resolve=>{releaseAuth=resolve;});
+    await page.route('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js',async route=>{
+      await blockedAuth;
+      await route.fulfill({
+        contentType:'application/javascript',headers:{'access-control-allow-origin':'*'},
+        body:"export function getAuth(app){return {app,currentUser:null}};export function onAuthStateChanged(auth,listener){queueMicrotask(()=>listener(null));return ()=>{}};"
+      });
     });
 
     const navigation=page.goto(`./?early-shell=${Date.now()}`,{waitUntil:'domcontentloaded'});
@@ -89,11 +96,11 @@ test.describe('signed-out critical path',()=>{
     await expect(page.locator('#app')).toBeHidden();
     expect(await page.evaluate(()=>typeof window.POGO_TRADE_DB)).toBe('undefined');
 
-    releaseData();
+    releaseAuth();
     await navigation;
   });
 
-  test('Auth-only bootstrap resolves while the initial login shell stays safely disabled',async({page})=>{
+  test('Auth-only bootstrap reveals an interactive shell without loading protected features',async({page})=>{
     await page.route('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js',route=>route.fulfill({
       contentType:'application/javascript',
       headers:{'access-control-allow-origin':'*'},
@@ -110,14 +117,20 @@ test.describe('signed-out critical path',()=>{
 
     const navigation=page.goto(`./?early-auth=${Date.now()}`,{waitUntil:'domcontentloaded'});
     await expect(page.locator('#login-pg')).toBeVisible({timeout:5_000});
-    await expect(page.locator('#login-pg')).toHaveAttribute('data-bootstrap-pending','true');
-    await expect(page.locator('#login-pg')).toHaveAttribute('aria-busy','true');
-    await expect(page.locator('#login-user')).toBeDisabled();
-    await expect(page.locator('#login-pin')).toBeDisabled();
-    await expect(page.locator('#login-btn')).toBeDisabled();
-    await expect(page.locator('#preauth-pg')).toBeVisible();
+    await page.waitForFunction(()=>window.__pogoShellReady===true);
+    await expect(page.locator('#login-pg')).not.toHaveAttribute('data-bootstrap-pending','true');
+    await expect(page.locator('#login-pg')).toHaveAttribute('aria-busy','false');
+    await expect(page.locator('#login-user')).toBeEnabled();
+    await expect(page.locator('#login-pin')).toBeEnabled();
+    await expect(page.locator('#login-btn')).toBeEnabled();
+    await expect(page.locator('#preauth-pg')).toBeHidden();
     await expect(page.locator('#app')).toBeHidden();
-    expect(await page.evaluate(()=>window.__pogoStartup.authStateKnownAt<window.__pogoStartup.firebaseStartupSettledAt||window.__pogoStartup.firebaseStartupSettledAt===null)).toBe(true);
+    expect(await page.evaluate(()=>({
+      db:typeof window.POGO_TRADE_DB,
+      featureStart:window.__pogoStartup.featureLoadStartedAt,
+      appCheckStart:window.__pogoStartup.appCheckStartedAt,
+      recaptcha:performance.getEntriesByType('resource').some(entry=>/recaptcha|firebase-app-check/.test(entry.name))
+    }))).toEqual({db:'undefined',featureStart:null,appCheckStart:null,recaptcha:false});
 
     releaseData();
     await navigation;
@@ -149,6 +162,7 @@ test.describe('signed-out critical path',()=>{
 
   test('App Check failure keeps the database client and listeners fail closed',async({page})=>{
     await page.goto(`./?app-check-failure=${Date.now()}`,{waitUntil:'domcontentloaded'});
+    await page.evaluate(()=>window.__pogoEnsureFullApp('app-check-contract-test'));
     await page.waitForFunction(()=>typeof ensureFirebaseDataProtection==='function'&&typeof startListener==='function');
     const result=await page.evaluate(async()=>{
       firebaseDataProtectionPromise=null;
@@ -217,9 +231,10 @@ test.describe('signed-out critical path',()=>{
   test('localized pre-auth copy resolves before the signed-in catalog path runs',async({page})=>{
     await page.addInitScript(()=>localStorage.setItem('pogoUiLocale:v1','de'));
     await page.goto(`./?localized-preauth=${Date.now()}`,{waitUntil:'domcontentloaded'});
-    await page.waitForFunction(()=>typeof window.PogoI18n?.core?.getLocale==='function');
-    expect(await page.evaluate(()=>window.PogoI18n.core.getLocale())).toBe('de');
-    await expect(page.locator('#preauth-title')).toHaveText('Deine Tauschliste wird vorbereitet');
+    await page.waitForFunction(()=>window.__pogoShellReady===true);
+    expect(await page.evaluate(()=>document.documentElement.lang)).toBe('de');
+    await expect(page.locator('#login-user')).toHaveAttribute('placeholder','Trainername eingeben oder auswählen…');
     expect(await page.evaluate(()=>window.__pogoStartup.catalogsReadyAt)).toBeNull();
+    expect(await page.evaluate(()=>typeof window.PogoI18n?.core)).toBe('undefined');
   });
 });

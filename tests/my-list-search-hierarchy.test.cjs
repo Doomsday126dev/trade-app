@@ -5,7 +5,7 @@ const vm=require('node:vm');
 const path=require('node:path');
 
 const root=path.join(__dirname,'..');
-const html=readFileSync(path.join(root,'index.html'),'utf8');
+const html=require('../scripts/lib/frontend-source.cjs').readFrontendSource(root);
 const sandbox={window:{}};sandbox.window.window=sandbox.window;
 vm.runInNewContext(readFileSync(path.join(root,'js/domain/pokemonGoSearchSyntax.js'),'utf8'),sandbox);
 vm.runInNewContext(readFileSync(path.join(root,'js/domain/searchStrings.js'),'utf8'),sandbox);
@@ -16,7 +16,7 @@ function priorityString(start,count,locale='en'){
 }
 
 test('My List renders priority Pokémon immediately with scoped collapsed search actions',()=>{
-  assert.match(html,/function myListPrioritySectionHtml\(priority,entries\)/);
+  assert.match(html,/function myListPrioritySectionHtml\(priority,entries,renderedEntries=entries\)/);
   assert.match(html,/data-priority-search="\$\{priority\}"/);
   assert.match(html,/myListSearchActionHtml\(strs\[priority\]/);
   assert.match(html,/class="strbox mylist-search-raw"[^>]+hidden/);

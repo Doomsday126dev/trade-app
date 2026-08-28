@@ -8,7 +8,7 @@ const root=path.join(__dirname,'..');
 const window={};
 vm.runInNewContext(readFileSync(path.join(root,'js/domain/publicSharePublication.js'),'utf8'),{window});
 const publication=window.PogoDomain.publicSharePublication;
-const source=readFileSync(path.join(root,'index.html'),'utf8');
+const source=require('../scripts/lib/frontend-source.cjs').readFrontendSource(root);
 
 function between(start,end){
   const from=source.indexOf(start),to=source.indexOf(end,from);

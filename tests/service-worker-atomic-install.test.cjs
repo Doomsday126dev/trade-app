@@ -33,10 +33,10 @@ function harness({failUrl='',timeoutUrl='',pendingUrl='',seedOld=true,seedCurren
   const context=vm.createContext({self,caches,URL,Promise,Map,Set,Error,Response:class{},Blob:class{},Uint8Array,atob:()=>'',
     fetch:async url=>{if(String(url)===pendingUrl)return new Promise((resolve,reject)=>{rejectPending=reject;});if(String(url)===timeoutUrl)throw Object.assign(new Error('timeout'),{code:'ETIMEDOUT'});if(String(url)===failUrl)return response(404);return response();}});
   vm.runInContext(source,context,{filename:'sw.js'});
-  const required=vm.runInContext('REQUIRED_SHELL_URLS',context),shellName=vm.runInContext('SHELL_CACHE',context),installName=vm.runInContext('INSTALL_CACHE',context);
+  const required=vm.runInContext('REQUIRED_SHELL_URLS',context),shellName=vm.runInContext('SHELL_CACHE',context);
   if(seedCurrent){const current=stores.get(shellName)||new MemoryCache();for(const url of required)current.values.set(url,response());stores.set(shellName,current);}
   async function dispatch(type,data){let pending;listeners.get(type)({data,waitUntil(value){pending=Promise.resolve(value);}});events.push(type);return pending;}
-  return{context,required,shellName,installName,stores,oldName,dispatch,rejectPending:error=>rejectPending?.(error),counts:()=>({skipWaiting,claims}),events};
+  return{context,required,shellName,stores,oldName,dispatch,rejectPending:error=>rejectPending?.(error),counts:()=>({skipWaiting,claims}),events};
 }
 
 test('pre-fix failure path swallowed addAll rejection and still requested activation',async()=>{
@@ -51,7 +51,6 @@ test('one required 404 rejects install, removes the incomplete new cache, and pr
   await assert.rejects(failed.dispatch('install'),/Required shell asset failed/);
   assert.equal(failed.counts().skipWaiting,0);
   assert.equal(failed.stores.has(failed.shellName),false);
-  assert.equal(failed.stores.has(failed.installName),false);
   assert.equal(failed.stores.has(failed.oldName),true);
 });
 
@@ -60,7 +59,6 @@ test('required timeout rejects a fresh install without leaving an empty active c
   await assert.rejects(failed.dispatch('install'),/timeout/);
   assert.equal(failed.counts().skipWaiting,0);
   assert.equal(failed.stores.has(failed.shellName),false);
-  assert.equal(failed.stores.has(failed.installName),false);
 });
 
 test('required timeout during an update leaves the old release authoritative',async()=>{
@@ -69,7 +67,6 @@ test('required timeout during an update leaves the old release authoritative',as
   assert.equal(failed.counts().skipWaiting,0);
   assert.equal(failed.stores.has(failed.oldName),true);
   assert.equal(failed.stores.has(failed.shellName),false);
-  assert.equal(failed.stores.has(failed.installName),false);
 });
 
 test('reloads during a pending update keep the old release authoritative',async()=>{
@@ -82,7 +79,6 @@ test('reloads during a pending update keep the old release authoritative',async(
   await assert.rejects(installing,/network dropped/);
   assert.equal(run.stores.has(run.oldName),true);
   assert.equal(run.stores.has(run.shellName),false);
-  assert.equal(run.stores.has(run.installName),false);
 });
 
 test('successful install creates a complete required shell before skipWaiting',async()=>{
@@ -91,8 +87,21 @@ test('successful install creates a complete required shell before skipWaiting',a
   assert.ok(cache);
   assert.equal(run.counts().skipWaiting,1);
   assert.equal((await Promise.all(run.required.map(url=>cache.match(url)))).every(Boolean),true);
-  assert.equal(run.stores.has(run.installName),false);
   assert.equal(run.stores.has(run.oldName),true);
+});
+
+test('a browser restart after an abandoned partial candidate rebuilds the same release from scratch',async()=>{
+  const probe=harness();
+  const run=harness();
+  const partial=new MemoryCache();
+  partial.values.set(probe.required[0],response(200,'partial-old-attempt'));
+  run.stores.set(run.shellName,partial);
+  await run.dispatch('install');
+  const rebuilt=run.stores.get(run.shellName);
+  assert.notEqual(rebuilt,partial);
+  assert.equal((await Promise.all(run.required.map(url=>rebuilt.match(url)))).every(Boolean),true);
+  assert.equal(run.stores.has(run.oldName),true);
+  assert.equal(run.counts().skipWaiting,1);
 });
 
 test('activation verifies completeness before deleting old caches or claiming clients',async()=>{

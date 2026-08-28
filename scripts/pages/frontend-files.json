@@ -5,6 +5,9 @@
     "manifest.json",
     "sw.js"
   ],
+  "styleFiles": [
+    "css/app.css"
+  ],
   "scriptFiles": [
     "data.js",
     "js/domain/productLimits.js",
@@ -77,7 +80,8 @@
     "js/data/accountSyncController.js",
     "js/data/accountSyncRuntime.js",
     "js/domain/cacheAdapters.js",
-    "js/ui/trainerTagPanel.js"
+    "js/ui/trainerTagPanel.js",
+    "js/app/application.js"
   ],
   "assetFiles": [
     "assets/tradeloop-icon.svg",

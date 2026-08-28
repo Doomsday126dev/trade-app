@@ -4,7 +4,7 @@ const {readFileSync}=require('node:fs');
 const path=require('node:path');
 
 const root=path.join(__dirname,'..');
-const html=readFileSync(path.join(root,'index.html'),'utf8');
+const html=require('../scripts/lib/frontend-source.cjs').readFrontendSource(root);
 
 function between(startMarker,endMarker){
   const start=html.indexOf(startMarker),end=html.indexOf(endMarker,start+startMarker.length);
@@ -32,7 +32,7 @@ test('SEC-01 approved-login result keeps persisted identity values out of HTML',
 });
 
 test('SEC-03 active trainer and Admin actions do not interpolate identity data into JavaScript',()=>{
-  const favorites=between('async function renderTrainerQuickLists()','function toggleTrainerFavorite(');
+  const favorites=between('async function renderTrainerQuickLists(','function toggleTrainerFavorite(');
   const admin=between('function adminUserRows()','async function repairAccount(');
   const share=between('function publicShareAction(event)','// Body — render in same style');
   const safeTransfer=between('function renderSafeTransferTrainers()','function toggleSafeTransferTrainer(');

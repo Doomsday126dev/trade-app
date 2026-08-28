@@ -174,7 +174,7 @@ test('cross-account and newer-schema migrations are rejected',()=>{
 });
 
 test('production activation routes cannot reach preference sync while disabled',()=>{
-  const html=readFileSync(path.join(root,'index.html'),'utf8'),sw=readFileSync(path.join(root,'sw.js'),'utf8'),visibility=readFileSync(path.join(root,'js/domain/shareVisibility.js'),'utf8');
+  const html=require('../scripts/lib/frontend-source.cjs').readFrontendSource(root),sw=readFileSync(path.join(root,'sw.js'),'utf8'),visibility=readFileSync(path.join(root,'js/domain/shareVisibility.js'),'utf8');
   assert.match(html,/SYNCED_TRAINER_PREFERENCES_ENABLED!==false/);
   assert.match(visibility,/SHARE_VISIBILITY_MODEL_ENABLED:false/);
   assert.match(html,/createTrainerPreferencesRepository\(\{enabled:false\}\)/);

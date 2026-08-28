@@ -4,7 +4,7 @@ const {readFileSync}=require('node:fs');
 const path=require('node:path');
 
 const root=path.resolve(__dirname,'..');
-const html=readFileSync(path.join(root,'index.html'),'utf8');
+const html=require('../scripts/lib/frontend-source.cjs').readFrontendSource(root);
 
 test('A11Y-03 hidden transient actions are removed from layout and keyboard order',()=>{
   assert.match(html,/\[hidden\]\{display:none!important\}/);
@@ -17,6 +17,7 @@ test('A11Y-03 hidden transient actions are removed from layout and keyboard orde
 
 test('feedback uses one polite announcer without making visual toasts live regions',()=>{
   assert.match(html,/id="feedback-status" role="status" aria-live="polite" aria-atomic="true"/);
+  assert.match(html,/class="feedback-stack" id="feedback-stack"/);
   assert.match(html,/class="toast" id="toast" aria-hidden="true" hidden/);
   assert.doesNotMatch(html,/class="toast" id="toast"[^>]*(?:role=|aria-live=)/);
   assert.match(html,/function announceFeedback\(message\)[\s\S]*_lastFeedbackAnnouncement[\s\S]*<800/);
@@ -75,12 +76,16 @@ test('My List autocomplete exposes a named combobox and managed active option',(
 test('compact feedback is bounded, safe-area aware, nonblocking, and reduced-motion aware',()=>{
   assert.match(html,/\.toast,\.undo-toast\{[^}]*max-width:min\(480px,calc\(100vw - 24px\)\)[^}]*pointer-events:none/);
   assert.match(html,/\.undo-btn\{[^}]*pointer-events:auto/);
-  assert.match(html,/@media\(max-height:600px\)\{\.toast,\.undo-toast\{[^}]*bottom:calc\(8px \+ env\(safe-area-inset-bottom\)\)[^}]*max-height:calc\(100dvh/);
+  assert.match(html,/@media\(max-height:600px\)\{\.feedback-stack\{[^}]*bottom:calc\(8px \+ env\(safe-area-inset-bottom\)\)[^}]*max-height:calc\(100dvh/);
   assert.match(html,/@media\(prefers-reduced-motion:reduce\)/);
   assert.match(html,/\.update-banner\{[^}]*env\(safe-area-inset-bottom\)/);
   assert.match(html,/\.update-banner-btn\{[^}]*min-height:48px/);
   assert.match(html,/\.update-banner-dismiss\{[^}]*width:48px[^}]*height:48px/);
   assert.match(html,/\.sync-banner-btn\{[^}]*min-height:48px/);
   assert.match(html,/\.sync-banner-dismiss\{[^}]*width:48px[^}]*height:48px/);
+  assert.match(html,/\.feedback-stack\{[^}]*flex-direction:column-reverse[^}]*gap:8px[^}]*pointer-events:none/);
+  assert.match(html,/\.feedback-stack \.update-banner\{[^}]*position:relative[^}]*pointer-events:auto/);
+  assert.match(html,/\.trainer-sync-recovery\{[^}]*min-height:48px/);
   assert.match(html,/function showUpdateBanner\(\)[\s\S]*announceFeedback\(banner\.querySelector\('strong'\)\?\.textContent\)/);
+  assert.match(html,/document\.getElementById\('feedback-stack'\)\|\|document\.body/);
 });

@@ -5,7 +5,7 @@ const path=require('node:path');
 const vm=require('node:vm');
 
 const root=path.join(__dirname,'..');
-const html=readFileSync(path.join(root,'index.html'),'utf8');
+const html=require('../scripts/lib/frontend-source.cjs').readFrontendSource(root);
 
 function loadRelativeTimeDomain(){
   const window={};
@@ -40,7 +40,7 @@ test('Find Trainer presents sibling discovery modes with balanced shortcut secti
   assert.match(html,/\.trainer-quick-grid,\.recent-trainer-list\{display:grid;grid-template-columns:minmax\(0,1fr\)/);
   assert.match(html,/\.trainer-discovery-workspace\{display:grid;grid-template-columns:minmax\(0,1fr\)/);
   assert.match(html,/\.trainer-discovery-primary\{width:min\(100%,720px\)/);
-  assert.match(html,/@media\(min-width:1100px\)\{\.trainer-discovery-content\[data-mode="trainers"\] \.trainer-discovery-supporting\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+  assert.match(html,/@media\(min-width:768px\)\{\.trainer-discovery-content\[data-mode="trainers"\] \.trainer-discovery-supporting\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
   assert.match(html,/\.trainer-discovery-content\[data-mode="trainers"\] \.trainer-support-section\{[^}]*border-top:1px solid var\(--border\)/);
   assert.match(html,/\.trainer-favorites-preview-list\{[^}]*overflow:hidden[^}]*border:1px solid var\(--border\)[^}]*border-radius:var\(--radius-lg\)/);
   assert.match(html,/\.trainer-favorites-preview-row:last-child\{border-bottom:0\}/);
@@ -94,7 +94,8 @@ test('Trainers mode exposes a bounded clickable Favorites preview with a full-mo
   assert.match(render,/state\.favorites\.slice\(0,4\)/);
   assert.match(render,/trainer-favorites-preview-row card-row[^>]+data-trainer-action="open"/);
   assert.match(render,/trainer\.viewAllFavorites/);
-  assert.match(render,/focusTrainerDiscoveryMode\('favorites'\)/);
+  assert.match(render,/data-favorite-action="show-favorites"/);
+  assert.match(html,/favoriteAction==='show-favorites'\)\{focusTrainerDiscoveryMode\('favorites'\)/);
   assert.match(html,/trainer-discovery-content\[data-mode="favorites"\] #trainer-favorites-preview[^{]*\{display:none\}/);
 });
 

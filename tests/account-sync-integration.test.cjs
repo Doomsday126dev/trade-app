@@ -5,7 +5,7 @@ const path=require('node:path');
 const vm=require('node:vm');
 
 const root=path.join(__dirname,'..');
-const html=readFileSync(path.join(root,'index.html'),'utf8');
+const html=require('../scripts/lib/frontend-source.cjs').readFrontendSource(root);
 const worker=readFileSync(path.join(root,'sw.js'),'utf8');
 const controller=readFileSync(path.join(root,'js/data/accountSyncController.js'),'utf8');
 const runtime=readFileSync(path.join(root,'js/data/accountSyncRuntime.js'),'utf8');

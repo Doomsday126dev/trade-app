@@ -63,7 +63,6 @@ function createHarness({fetchImpl=async()=>response(),cacheFactory=()=>new Memor
     required:vm.runInContext('REQUIRED_SHELL_URLS',context),
     release:vm.runInContext('RELEASE',context),
     shellName:vm.runInContext('SHELL_CACHE',context),
-    installName:vm.runInContext('INSTALL_CACHE',context),
     spriteName:vm.runInContext('SPRITE_CACHE',context),
     spriteLimit:vm.runInContext('SPRITE_CACHE_LIMIT',context),
     counts:()=>({claims,skipWaiting})
