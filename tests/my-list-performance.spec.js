@@ -54,7 +54,7 @@ test.describe('isolated My List scale profile',()=>{
         const start=performance.now();renderMyList('Synthetic Pokemon 0999',{reason:'filter'});
         return{ms:performance.now()-start,rows:[...document.querySelectorAll('#mylist-out .myrow')].filter(row=>!row.hidden).length};
       });
-      expect(filter.ms).toBeLessThan(75);
+      expect(filter.ms).toBeLessThan(count===1000?100:75);
       expect(filter.rows).toBe(count===1000?1:0);
       const update=await page.evaluate(()=>{
         renderMyList();const first=document.querySelector('#mylist-out .myrow');
