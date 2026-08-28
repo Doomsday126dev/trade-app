@@ -108,6 +108,7 @@ function runSourceWiringChecks() {
   const submitScheduledTrade = extractFunctionSource('submitScheduledTrade');
   const _logAcceptedTrade = extractFunctionSource('_logAcceptedTrade');
   const writeTrade = extractFunctionSource('writeTrade');
+  const renderAdmin = extractFunctionSource('renderAdmin');
   const renderCommunityMigrationPanel = extractFunctionSource('renderCommunityMigrationPanel');
   const memberCommunityOptions = extractFunctionSource('memberCommunityOptions');
   const currentCommunityIsSelectable = extractFunctionSource('currentCommunityIsSelectable');
@@ -118,14 +119,14 @@ function runSourceWiringChecks() {
 
   assertSourceIncludes(
     approveRequest,
-    'await createMemberNow(username,pin,false,reqId,opts);',
-    'approveRequest must route approvals through createMemberNow(username, pin, false, reqId, opts) with the owner-picker opts forwarded'
+    'await createMemberNow(username,pin,false,reqId);',
+    'approveRequest must use the current member-approval path without retired community picker state'
   );
 
   assertSourceIncludes(
     createMemberNow,
     'targetedCommunityMembershipUpdates(username,user,targetCommunityIds,user.joined)',
-    'createMemberNow must write community memberships through targetedCommunityMembershipUpdates, driven by the owner picker (with NYC-default fallback)'
+    'createMemberNow must retain the dormant targeted community write helper behind its feature gate'
   );
 
   assertSourceIncludes(
@@ -168,8 +169,8 @@ function runSourceWiringChecks() {
   );
 
   assert(
-    /\bconst\s+MULTI_COMMUNITY_ENABLED\s*=\s*true\s*;/.test(html),
-    'MULTI_COMMUNITY_ENABLED must be true for the trusted multi-community pilot'
+    /\bconst\s+MULTI_COMMUNITY_ENABLED\s*=\s*false\s*;/.test(html),
+    'MULTI_COMMUNITY_ENABLED must remain false while community product UI is retired'
   );
   assert(
     /\bconst\s+DEFAULT_COMMUNITY_ID\s*=\s*'nyc'\s*;/.test(html),
@@ -508,7 +509,15 @@ function runSourceWiringChecks() {
   assertSourceIncludes(
     renderCommunityMigrationPanel,
     'Pokémon lists and inventory stay user-global',
-    'owner preview UI must state the user-global Pokémon data invariant'
+    'dormant owner preview tooling must retain the user-global Pokémon data invariant'
+  );
+  assert(
+    !renderAdmin.includes('renderCommunityMigrationPanel()'),
+    'current Admin rendering must not expose the retired community migration panel'
+  );
+  assert(
+    !html.includes('id="community-migration-panel"'),
+    'current Admin markup must not contain the retired community migration panel'
   );
   assert(
     !/communities\/(?:\$\{[^}]+\}|[^`'"\s]+)\/(?:wishlist|dynamax|gmax|costumes|have)\b/.test(html),
@@ -527,8 +536,8 @@ function runSourceWiringChecks() {
   );
   assertSourceIncludes(
     createMemberNow,
-    'opts.communityIds',
-    'createMemberNow must consult opts.communityIds when the owner approval flow passes a target community list'
+    'MULTI_COMMUNITY_ENABLED&&Array.isArray(opts.communityIds)',
+    'createMemberNow must reject dormant community targeting unless the feature gate is explicitly enabled'
   );
   assertSourceIncludes(
     createMemberNow,
@@ -542,8 +551,8 @@ function runSourceWiringChecks() {
   );
   assertSourceIncludes(
     createMemberNow,
-    'ownerCanUseCommunityTools()?[DEFAULT_COMMUNITY_ID]:[]',
-    'createMemberNow must preserve today\'s behavior when opts.communityIds is absent: owner default to NYC, non-owner skip community writes'
+    'const targetCommunityIds=requestedCommunityIds||[];',
+    'createMemberNow must not silently enroll current approvals into a retired default community'
   );
   assertSourceIncludes(
     targetedCommunityMembershipUpdates,
@@ -555,35 +564,13 @@ function runSourceWiringChecks() {
     "id!==DEFAULT_COMMUNITY_ID",
     'targetedCommunityMembershipUpdates must skip validation for DEFAULT_COMMUNITY_ID (NYC is always allowed)'
   );
-  assertSourceIncludes(
-    approveRequest,
-    'approve-community-${reqId}',
-    'approveRequest must read the owner approval community picker by id'
+  assert(
+    !approveRequest.includes('approve-community-')&&!approveRequest.includes('opts.communityIds'),
+    'current approval action must not read or forward retired community-picker state'
   );
-  assertSourceIncludes(
-    approveRequest,
-    'opts.communityIds=ids',
-    'approveRequest must pass the selected community ids to createMemberNow via opts.communityIds'
-  );
-  assertSourceIncludes(
-    approveRequest,
-    'createMemberNow(username,pin,false,reqId,opts)',
-    'approveRequest must forward opts to createMemberNow as the fifth argument'
-  );
-  assertSourceIncludes(
-    renderPendingRequests,
-    'ownerCanUseCommunityTools()',
-    'renderPendingRequests must only render the community picker for the owner during the pilot'
-  );
-  assertSourceIncludes(
-    renderPendingRequests,
-    'approve-community-${id}',
-    'renderPendingRequests must give each pending-request picker a deterministic dom id'
-  );
-  assertSourceIncludes(
-    renderPendingRequests,
-    'preparedNonDefaultCommunities()',
-    'renderPendingRequests must source picker options from the prepared-non-default helper'
+  assert(
+    !renderPendingRequests.includes('approve-community-')&&!renderPendingRequests.includes('preparedNonDefaultCommunities()'),
+    'current pending-request UI must not render retired community choices'
   );
 }
 
