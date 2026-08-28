@@ -47,6 +47,30 @@ test('the real IndexedDB journal survives reload, isolates owners, and keeps con
   assert.equal(after.retried,false);assert.equal(after.conflictStatus,'conflict');assert.equal(after.resolved,true);assert.equal(after.resolvedStatus,'resolved');assert.equal(after.resolvedSnapshot.conflictCount,0);
 });
 
+test('real IndexedDB conflict acceptance publishes Saved before reporting success',async t=>{
+  const server=http.createServer((_request,response)=>{response.writeHead(200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store'});response.end('<!doctype html><title>Account sync conflict acceptance</title>');});
+  await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});
+  const browser=await chromium.launch({headless:true});
+  t.after(async()=>{await browser.close();await new Promise(resolve=>server.close(resolve));});
+  const page=await browser.newPage(),databaseName=`pogoAccountSync_conflict_acceptance_${Date.now()}`;
+  await page.goto(`http://127.0.0.1:${server.address().port}/`,{waitUntil:'domcontentloaded'});
+  for(const file of ['js/domain/accountSyncModel.js','js/domain/accountSyncMerge.js','js/data/accountSyncJournal.js','js/data/accountSyncController.js'])await page.addScriptTag({path:path.join(root,file)});
+  const result=await page.evaluate(async databaseName=>{
+    const model=window.PogoDomain.accountSyncModel,merge=window.PogoDomain.accountSyncMerge,journal=window.PogoData.accountSyncJournal.createAccountSyncJournal({ownerUid:'uid-owner',databaseName});
+    const identity={surface:'my-list',lane:'wishlist',catalogId:'pokemon:960:base'},entityId=model.tradeEntryId(identity),operation=(await model.createOperation({operationId:'op_0000000000007203',ownerUid:'uid-owner',entityType:'tradeEntry',entityId,identity,kind:'add',baseGeneration:0,generation:1,baseFieldRevisions:{priority:0},patch:{priority:'L'},clientAt:10})).value,canonical=merge.mergeOperation(null,operation,{acceptedAt:20}).value,conflictId=`conflict_${operation.operationId}`;
+    await journal.enqueueOperation(operation,canonical);await journal.markConflict(operation.operationId,[{conflictId,ownerUid:'uid-owner',entityType:'tradeEntry',entityId,operationId:operation.operationId,generation:1,code:'lifecycle-conflict',fields:[],createdAt:20,resolved:false}]);
+    let applyCalls=0;const states=[],repository={ownerUid:'uid-owner',listenAccount({onData}){queueMicrotask(()=>onData({tradeEntries:{[entityId]:canonical}}));return()=>{};},async applyOperation(){applyCalls++;throw new Error('resolved conflicts must not be resent');}};
+    const controller=window.PogoData.accountSyncController.createAccountSyncController({journal,repository,ownerUid:'uid-owner',enabled:true,writesEnabled:true,allowlistedUids:['uid-owner'],online:()=>true,onState:state=>states.push(state),clock:(()=>{let value=30;return()=>++value;})(),crypto:window.crypto});
+    await controller.activate();await controller.waitForListenerReady();const before=await controller.snapshot(),accepted=await controller.acceptConflict(conflictId),published=states.at(-1),after=await controller.snapshot();
+    await controller.deactivate();await journal.close();
+    await new Promise((resolve,reject)=>{const request=indexedDB.deleteDatabase(databaseName);request.onsuccess=resolve;request.onerror=()=>reject(request.error);request.onblocked=()=>reject(new Error('test database deletion blocked'));});
+    return{before,accepted,published,after,applyCalls};
+  },databaseName);
+  assert.equal(result.before.state,'conflict');assert.equal(result.before.conflictCount,1);
+  assert.equal(result.accepted.ok,true);assert.equal(result.published.state,'saved');assert.equal(result.published.conflictCount,0);
+  assert.equal(result.after.state,'saved');assert.equal(result.after.conflictCount,0);assert.equal(result.applyCalls,0);
+});
+
 test('the real IndexedDB journal commits operation batches and optimistic entities atomically',async t=>{
   const server=http.createServer((_request,response)=>{response.writeHead(200,{'content-type':'text/html'});response.end('<!doctype html><title>Atomic journal</title>');});
   await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});
