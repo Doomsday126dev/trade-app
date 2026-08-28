@@ -104,7 +104,8 @@ test('duplicate offline adds become a fieldless lifecycle conflict that can only
   await a.setOnline(true);await h.settle();await b.setOnline(true);await h.settle();
   const details=await b.controller.conflictDetails();assert.equal(details.length,1);assert.equal(details[0].code,'lifecycle-conflict');assert.equal(details[0].fields.length,0);
   assert.equal((await b.controller.reapplyConflict(details[0].conflictId)).error.code,'account-sync/conflict-not-reapplicable');
-  assert.equal((await b.controller.acceptConflict(details[0].conflictId)).ok,true);await h.settle();
+  const accepted=await b.controller.acceptConflict(details[0].conflictId);
+  assert.equal(accepted.ok,true);assert.equal(b.states.at(-1).state,'saved');await h.settle();
   assert.equal((await b.journal.snapshot()).conflictCount,0);assert.equal((await b.controller.snapshot()).state,'saved');
   assert.equal([...h.server.entities.values()].filter(entity=>!entity.deleted&&entity.identity.catalogId==='pokemon:wiglett').length,1);
 });

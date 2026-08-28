@@ -419,7 +419,7 @@
     async function acceptConflict(conflictId){
       const authority=await snapshot();if(!authority.listenerHealthy||!authority.controllerHealthy||authority.lastErrorCategory==='unsafe-evidence')return model.failure('account-sync/conflict-baseline-unhealthy','Conflict resolution requires a healthy canonical account snapshot');
       const resolved=await journal.resolveConflict(conflictId);if(!resolved)return model.failure('account-sync/conflict-missing','This sync conflict is no longer available');
-      clearError('blocked-operation');emit();return Object.freeze({ok:true,status:'accepted-account-value'});
+      clearError('blocked-operation');await emit();return Object.freeze({ok:true,status:'accepted-account-value'});
     }
     async function reapplyConflict(conflictId){
       const authority=await snapshot();if(!authority.listenerHealthy||!authority.controllerHealthy||authority.lastErrorCategory==='unsafe-evidence')return model.failure('account-sync/conflict-baseline-unhealthy','Conflict resolution requires a healthy canonical account snapshot');
@@ -427,7 +427,7 @@
       if(!details||!record||record.operation.kind!=='patch'||!details.fields.length)return model.failure('account-sync/conflict-not-reapplicable','This conflict must be reviewed without retrying its original operation');
       const patch=Object.fromEntries(details.fields.map(field=>[field.path,field.deviceValue])),result=await patchEntity({entityType:details.entityType,entityId:details.entityId,patch});
       if(!result.ok)return result;
-      await journal.resolveConflict(conflictId);clearError('blocked-operation');emit();return Object.freeze({...result,status:'reapplied'});
+      await journal.resolveConflict(conflictId);clearError('blocked-operation');await emit();return Object.freeze({...result,status:'reapplied'});
     }
     function activeEntities(type){return[...entities.values()].filter(entity=>(!type||entity.entityType===type)&&entity.deleted!==true);}
     function publicProjection(){return model.publicTradeProjection([...acceptedEntities.values()]);}
