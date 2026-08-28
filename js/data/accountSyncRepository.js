@@ -25,13 +25,25 @@
     }
     async function applyOperation(operation){
       assertOwner(operation);const verified=await model.verifyOperation(operation);if(!verified.ok)return verified;
-      const path=model.entityPath(owner,operation.entityType,operation.entityId);let finalMerge=null;
+      const path=model.entityPath(owner,operation.entityType,operation.entityId);let finalMerge=null,idempotentAbort=false;
       const transaction=await runTransaction(dbRef(path),current=>{
         const acceptedAt=Number(clock());
         finalMerge=merge.mergeOperation(current,operation,{acceptedAt});
+        if(finalMerge.ok&&finalMerge.status==='idempotent'){
+          idempotentAbort=true;
+          return;
+        }
         return finalMerge.ok?serverStamped(finalMerge.value,current):undefined;
       },{applyLocally:false});
       if(!transaction.committed){
+        if(idempotentAbort){
+          const canonicalSnapshot=await get(dbRef(path)),value=canonicalSnapshot.exists()?canonicalSnapshot.val():null;
+          const valid=merge.validateEntity(value,{ownerUid:owner,entityType:operation.entityType,entityId:operation.entityId});
+          if(!valid.ok)return model.failure('account-sync/committed-entity-invalid','Committed account sync data is invalid');
+          const proof=merge.mergeOperation(value,operation,{acceptedAt:Number(clock())});
+          if(!proof.ok||proof.status!=='idempotent')return model.failure('account-sync/idempotency-conflict','Canonical account sync data does not prove this operation was already committed');
+          return Object.freeze({ok:true,status:'idempotent',value,conflicts:Object.freeze([])});
+        }
         if(finalMerge?.conflicts?.length)return Object.freeze({ok:false,status:'conflict',error:finalMerge.error,conflicts:finalMerge.conflicts,current:transaction.snapshot?.val?.()||null});
         return model.failure('account-sync/transaction-aborted','Account sync transaction was not committed');
       }

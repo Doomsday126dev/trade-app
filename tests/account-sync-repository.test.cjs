@@ -19,16 +19,17 @@ function resolveServerTimestamps(value,time){
   if(value&&typeof value==='object')return Object.fromEntries(Object.entries(value).map(([key,item])=>[key,resolveServerTimestamps(item,time)]));
   return value;
 }
-function repositoryFixture(window,{transactionTimestampOffset=0}={}){
-  let current=null,serverTime=50_000,serverTimestampCalls=0,transactionCalls=0,getCalls=0,lastProposed=null,lastTransactionValue=null;
+function repositoryFixture(window,{transactionTimestampOffset=0,rejectNoOpWrite=false,canonicalReadOverride=null}={}){
+  let current=null,serverTime=50_000,serverTimestampCalls=0,transactionCalls=0,getCalls=0,abortedTransactions=0,lastProposed=null,lastTransactionValue=null;
   const snapshot=value=>({exists:()=>value!=null,val:()=>clone(value)});
   const repository=window.PogoData.accountSyncRepository.createAccountSyncRepository({
     database:{},ownerUid:'uid-owner',clock:()=>1,
-    ref:(_database,target)=>target,get:async()=>{getCalls++;return snapshot(current);},onValue:()=>()=>{},
+    ref:(_database,target)=>target,get:async()=>{getCalls++;const value=typeof canonicalReadOverride==='function'?canonicalReadOverride(clone(current),getCalls):current;return snapshot(value);},onValue:()=>()=>{},
     serverTimestamp:()=>{serverTimestampCalls++;return{'.sv':'timestamp'};},
     runTransaction:async(_target,update)=>{
       transactionCalls++;lastProposed=update(clone(current));
-      if(lastProposed===undefined)return{committed:false,snapshot:snapshot(current)};
+      if(lastProposed===undefined){abortedTransactions++;return{committed:false,snapshot:snapshot(current)};}
+      if(rejectNoOpWrite&&JSON.stringify(lastProposed)===JSON.stringify(current))throw Object.assign(new Error('permission_denied'),{code:'PERMISSION_DENIED'});
       current=resolveServerTimestamps(lastProposed,++serverTime);lastTransactionValue=clone(current);
       if(transactionTimestampOffset&&lastTransactionValue){
         for(const field of ['createdAt','updatedAt','deletedAt'])if(Number.isSafeInteger(lastTransactionValue[field]))lastTransactionValue[field]+=transactionTimestampOffset;
@@ -36,7 +37,7 @@ function repositoryFixture(window,{transactionTimestampOffset=0}={}){
       return{committed:true,snapshot:snapshot(lastTransactionValue)};
     }
   });
-  return{repository,get current(){return current;},get lastProposed(){return lastProposed;},get lastTransactionValue(){return lastTransactionValue;},get serverTimestampCalls(){return serverTimestampCalls;},get transactionCalls(){return transactionCalls;},get getCalls(){return getCalls;}};
+  return{repository,get current(){return current;},get lastProposed(){return lastProposed;},get lastTransactionValue(){return lastTransactionValue;},get serverTimestampCalls(){return serverTimestampCalls;},get transactionCalls(){return transactionCalls;},get getCalls(){return getCalls;},get abortedTransactions(){return abortedTransactions;}};
 }
 async function operation(window,{kind='add',baseGeneration=0,generation=1,baseFieldRevisions={priority:0},patch={priority:'H'},operationId='op_0000000000000001'}={}){
   return window.PogoDomain.accountSyncModel.createOperation({
@@ -68,9 +69,27 @@ test('repository acknowledges the canonical readback instead of a transaction ti
 });
 
 test('idempotent retry preserves the committed timestamp and does not request a new server timestamp',async()=>{
-  const window=load(),fixture=repositoryFixture(window),created=await operation(window);await fixture.repository.applyOperation(created.value);
+  const window=load(),fixture=repositoryFixture(window,{rejectNoOpWrite:true}),patch={priority:'L',variant:'',gender:'',lucky:false,xxl:false,xxs:false,shiny:false,backgroundId:'',sortOrder:42,quantity:1,note:'',mirror:false},baseFieldRevisions=Object.fromEntries(Object.keys(patch).map(field=>[field,0])),created=await operation(window,{patch,baseFieldRevisions});await fixture.repository.applyOperation(created.value);
   const timestampCalls=fixture.serverTimestampCalls,before=clone(fixture.current),retried=await fixture.repository.applyOperation(created.value);
   assert.equal(retried.ok,true);assert.equal(retried.status,'idempotent');assert.equal(fixture.serverTimestampCalls,timestampCalls);assert.deepEqual(fixture.current,before);
+  assert.equal(fixture.abortedTransactions,1);assert.equal(fixture.getCalls,2);
+});
+
+test('idempotent retry fails closed when the canonical proof no longer binds the exact operation',async()=>{
+  const substituteId='op_0000000000000009',substituteHash='b'.repeat(64),window=load(),fixture=repositoryFixture(window,{
+    rejectNoOpWrite:true,
+    canonicalReadOverride:(value,getCalls)=>getCalls===2?{
+      ...value,
+      lifecycleMutation:substituteId,
+      lifecycleMutationHash:substituteHash,
+      fieldMutations:{[window.PogoDomain.accountSyncModel.fieldToken('priority')]:substituteId},
+      fieldMutationHashes:{[window.PogoDomain.accountSyncModel.fieldToken('priority')]:substituteHash}
+    }:value
+  }),created=await operation(window);
+  await fixture.repository.applyOperation(created.value);
+  const retried=await fixture.repository.applyOperation(created.value);
+  assert.equal(retried.ok,false);assert.equal(retried.error.code,'account-sync/idempotency-conflict');
+  assert.equal(fixture.abortedTransactions,1);assert.equal(fixture.serverTimestampCalls,1);
 });
 
 test('account metadata initialization uses one server timestamp and preserves it on later updates',async()=>{
