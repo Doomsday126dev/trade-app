@@ -206,7 +206,27 @@ test('allowlisted mutations cannot fall through to legacy writers while canonica
   assert.ok(favoriteWrite.indexOf('await accountSyncMutationAuthority()')<favoriteWrite.indexOf('controller.addEntity'));
   assert.match(favoriteWrite,/authority\.mode==='blocked'/);
   assert.match(favoriteWrite,/authority\.controller\.addEntity/);
+  assert.match(favoriteWrite,/if\(!targetUid\)\{toast\(i18nCore\.t\('organizer\.favoriteSyncUnavailable'/);
+  assert.ok(favoriteWrite.indexOf('if(!targetUid)')<favoriteWrite.indexOf('authority.controller.addEntity'));
+  assert.doesNotMatch(favoriteWrite,/recordUnresolvedFavorite|saveFavoriteOrganization\(username\).*favorite-add/s);
   assert.doesNotMatch(favoriteWrite,/managedAccountSyncRuntime\?\.controller/);
+
+  const favoriteReview=html.slice(html.indexOf('async function accountSyncFavoriteReviewAuthority'),html.indexOf('function accountSyncProjectionReady'));
+  assert.match(favoriteReview,/\['review-required','saved'\]\.includes\(state\)/);assert.match(favoriteReview,/runtime\.projectionReady===true/);
+  assert.match(favoriteReview,/accountSyncUiState=await runtime\.snapshot\(\)/);assert.doesNotMatch(favoriteReview,/ensureAccountSyncRuntime\(\)/);
+  assert.match(favoriteReview,/listenerHealthy===true/);assert.match(favoriteReview,/controllerHealthy===true/);
+  assert.match(favoriteReview,/!Number\(accountSyncUiState\?\.pendingCount\).*!Number\(accountSyncUiState\?\.blockedCount\).*!Number\(accountSyncUiState\?\.conflictCount\)/s);
+
+  const favoriteRemove=html.slice(html.indexOf('async function removeTrainerFavorite'),html.indexOf('function organizerMessage'));
+  assert.match(favoriteRemove,/favorite\?\.targetUid\?await accountSyncMutationAuthority\(\):await accountSyncFavoriteReviewAuthority\(\)/);
+  assert.match(favoriteRemove,/authority\.mode==='canonical-review'.*completeUnresolvedFavoriteReview/s);
+  assert.match(favoriteRemove,/completeUnresolvedFavoriteReview[\s\S]*store\.toggleFavorite/);
+  assert.doesNotMatch(favoriteRemove,/recordRecoveryCandidate|controller\.addEntity/);
+
+  const favoriteReviewCompletion=html.slice(html.indexOf('async function completeUnresolvedFavoriteReview'),html.indexOf('async function queueFavoriteTags'));
+  assert.match(favoriteReviewCompletion,/listRecoveryCandidates\(\{unresolvedOnly:false\}\)/);
+  assert.match(favoriteReviewCompletion,/favorite-uid-unresolved/);assert.match(favoriteReviewCompletion,/entityType==='favorite'/);
+  assert.match(favoriteReviewCompletion,/recovery-evidence-missing/);assert.match(favoriteReviewCompletion,/if\(item\.resolved===true\)continue/);
 });
 
 test('canonical product mutations remain bound to the exact authenticated runtime captured before the write',()=>{

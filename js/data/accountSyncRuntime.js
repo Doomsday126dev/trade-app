@@ -282,6 +282,11 @@
       const createdAt=Number(clock()),digest=await model.sha256Hex(model.canonicalJson([model.SCHEMA_VERSION,'pogo-account-sync-runtime-recovery',owner,reason,entityType,entityId,identity,values,source]),crypto);
       return putCandidate({schemaVersion:model.SCHEMA_VERSION,ownerUid:owner,candidateId:`candidate_${digest}`,reason:String(reason||'runtime-unresolved').slice(0,64),entityType,entityId:String(entityId||'unresolved').slice(0,700),identity:identity||{unresolved:true},values:values||{unresolved:true},source:String(source||'runtime').slice(0,64),createdAt,resolved:false});
     }
+    async function listRecoveryCandidates(options){requireRunning();return Object.freeze(await journal.listRecoveryCandidates(options));}
+    async function completeRecoveryReview(candidateId){
+      requireRunning();const resolved=await journal.resolveRecoveryCandidate(candidateId);requireRunning();notifyState(await controller.snapshot());
+      return Object.freeze({ok:true,status:resolved?'resolved':'not_found'});
+    }
     function stop(){
       if(stopPromise)return stopPromise;
       stopped=true;projectionReady=false;
@@ -289,7 +294,7 @@
       return stopPromise;
     }
     async function snapshot(){return runtimeState(await controller.snapshot());}
-    return Object.freeze({ownerUid:owner,username:name,controller,start,stop,snapshot,recordRecoveryCandidate,retryBlocked:()=>controller.retryBlocked(),conflictDetails:()=>controller.conflictDetails(),acceptConflict:id=>controller.acceptConflict(id),reapplyConflict:id=>controller.reapplyConflict(id),get migrationPlan(){return lastPlan;},get projectionReady(){return projectionReady;}});
+    return Object.freeze({ownerUid:owner,username:name,controller,start,stop,snapshot,recordRecoveryCandidate,listRecoveryCandidates,completeRecoveryReview,retryBlocked:()=>controller.retryBlocked(),conflictDetails:()=>controller.conflictDetails(),acceptConflict:id=>controller.acceptConflict(id),reapplyConflict:id=>controller.reapplyConflict(id),get migrationPlan(){return lastPlan;},get projectionReady(){return projectionReady;}});
   }
 
   root.accountSyncRuntime=Object.freeze({HISTORICAL_RETRY_CODE,diagnosticCode,diagnosticCategory,recoveryPlan,healthySnapshot,sanitizedDiagnostic,createRecoveryCoordinator,createAccountSyncRuntime});

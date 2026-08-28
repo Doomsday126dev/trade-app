@@ -150,9 +150,16 @@
       requireOwner(candidate);const id=model.firebaseKey(candidate.candidateId,700);if(!id)throw new TypeError('Recovery candidate ID is invalid');
       return write('recoveryCandidates',{...candidate,key:recordKey(owner,id)});
     }
-    async function listRecoveryCandidates(){return ownerRecords('recoveryCandidates');}
+    async function listRecoveryCandidates({unresolvedOnly=true}={}){
+      return(await ownerRecords('recoveryCandidates')).filter(item=>!unresolvedOnly||item.resolved!==true).sort((a,b)=>a.createdAt-b.createdAt||a.candidateId.localeCompare(b.candidateId));
+    }
+    async function resolveRecoveryCandidate(candidateId){
+      const id=model.firebaseKey(candidateId,700);if(!id)throw new TypeError('Recovery candidate ID is invalid');
+      const key=recordKey(owner,id),record=await read('recoveryCandidates',key);if(!record||record.resolved===true)return false;
+      await write('recoveryCandidates',{...record,resolved:true,resolvedAt:Number(now())});return true;
+    }
     async function snapshot(){
-      const[operations,entities,conflicts,recoveryCandidates]=await Promise.all([ownerRecords('operations'),ownerRecords('entities'),ownerRecords('conflicts'),ownerRecords('recoveryCandidates')]);
+      const[operations,entities,conflicts,recoveryCandidates]=await Promise.all([ownerRecords('operations'),ownerRecords('entities'),ownerRecords('conflicts'),listRecoveryCandidates()]);
       const blocked=operations.filter(item=>item.status==='blocked'),blockedCodes=[...new Set(blocked.map(item=>String(item.lastErrorCode||'')).filter(code=>/^account-sync\/[a-z0-9-]{1,80}$/.test(code)))];
       const blockedErrorCode=blocked.length?(blockedCodes.length===1?blockedCodes[0]:'account-sync/blocked-operation'):'';
       const recoverableBlocked=blocked.filter(model.blockedRetryEligible),unsafeBlockedCount=blocked.length-recoverableBlocked.length;
@@ -165,7 +172,7 @@
       const pending=databasePromise;databasePromise=null;
       if(pending)(await pending).close();
     }
-    return Object.freeze({ownerUid:owner,enqueueOperation,enqueueOperations,listOperations,nextOperation,markAttempt,retainBlocked,acknowledge,markConflict,retryBlocked,putEntity,deleteEntity,getEntity,listEntities,listConflicts,resolveConflict,setMeta,getMeta,putRecoveryCandidate,listRecoveryCandidates,snapshot,close,_remove:remove});
+    return Object.freeze({ownerUid:owner,enqueueOperation,enqueueOperations,listOperations,nextOperation,markAttempt,retainBlocked,acknowledge,markConflict,retryBlocked,putEntity,deleteEntity,getEntity,listEntities,listConflicts,resolveConflict,setMeta,getMeta,putRecoveryCandidate,listRecoveryCandidates,resolveRecoveryCandidate,snapshot,close,_remove:remove});
   }
 
   root.accountSyncJournal=Object.freeze({STORE_NAMES,openDatabase,createAccountSyncJournal});
