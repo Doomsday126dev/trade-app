@@ -45,4 +45,3 @@ This combines a low-opacity deterministic motif behind the Pokemon area with the
 ## Future Reactivation Path for Artwork
 
 If approved artwork becomes available, add an optional repository-owned asset reference to reviewed catalog records. Keep the deterministic treatment as fallback, retain the stable IDs, and never make matching or stored user data depend on an image URL.
-
