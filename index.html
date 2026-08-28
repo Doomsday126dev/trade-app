@@ -11475,20 +11475,28 @@ function accountSyncConflictItemName(detail){
   const entity=managedAccountSyncRuntime?.controller.getEntity(detail.entityType,detail.entityId);
   return entity?.values?.displayName||entity?.values?.label||i18nCore.t('accountSync.syncedItem');
 }
+function accountSyncConflictReviewPlan(details){
+  const normalized=Array.isArray(details)?details:[];
+  const fieldless=normalized.filter(detail=>!Array.isArray(detail?.fields)||detail.fields.length===0);
+  return Object.freeze({fieldless:Object.freeze(fieldless),canReapply:normalized.length>0&&fieldless.length===0});
+}
 async function reviewAccountSyncConflicts(){
   const plan=accountSyncCurrentRecoveryPlan();
   if(plan.category==='unsafe-evidence'||plan.action!=='review-conflict'){toast(i18nCore.t('accountSync.noSafeRecovery'),4500);return;}
   const runtime=managedAccountSyncRuntime,details=await runtime?.conflictDetails?.();
   if(!details?.length){toast(i18nCore.t('accountSync.noConflicts'),3500);return;}
-  const rows=details.flatMap(detail=>detail.fields.map(field=>({key:`${accountSyncConflictItemName(detail)} · ${accountSyncConflictFieldLabel(field.path)}`,local:accountSyncConflictValue(field.path,field.deviceValue),remote:accountSyncConflictValue(field.path,field.accountValue)})));
+  const reviewPlan=accountSyncConflictReviewPlan(details);
+  const fieldRows=details.flatMap(detail=>(Array.isArray(detail.fields)?detail.fields:[]).map(field=>({key:`${accountSyncConflictItemName(detail)} · ${accountSyncConflictFieldLabel(field.path)}`,local:accountSyncConflictValue(field.path,field.deviceValue),remote:accountSyncConflictValue(field.path,field.accountValue)})));
+  const itemRows=reviewPlan.fieldless.map(detail=>({key:`${accountSyncConflictItemName(detail)} · ${i18nCore.t('accountSync.itemState')}`,local:i18nCore.t('accountSync.earlierDeviceAction'),remote:i18nCore.t('accountSync.currentSavedItem')}));
+  const rows=[...fieldRows,...itemRows];
   if(!rows.length){toast(i18nCore.t('accountSync.conflictDetail'),4500);return;}
-  showConflictModal(rows,async()=>{
+  showConflictModal(rows,reviewPlan.canReapply?async()=>{
     const results=await Promise.all(details.map(detail=>runtime.reapplyConflict(detail.conflictId)));
     toast(i18nCore.t(results.every(result=>result?.ok)?'accountSync.deviceValuesQueued':'accountSync.retryFailed'),4500);
-  },async()=>{
+  }:null,async()=>{
     const results=await Promise.all(details.map(detail=>runtime.acceptConflict(detail.conflictId)));
     toast(i18nCore.t(results.every(result=>result?.ok)?'accountSync.accountValuesAccepted':'accountSync.retryFailed'),4500);
-  });
+  },{savedOnly:!reviewPlan.canReapply});
 }
 let _modalPrevFocus=null;
 let _modalKeyHandler=null;
@@ -16506,24 +16514,26 @@ function checkConflict(type,username,localList,remoteList){
   });
   return conflicts;
 }
-function showConflictModal(conflicts,onLocal,onRemote){
+function showConflictModal(conflicts,onLocal,onRemote,{savedOnly=false}={}){
   const previousFocus=document.activeElement;
+  const canKeepDevice=typeof onLocal==='function'&&!savedOnly;
   const html=conflicts.slice(0,5).map(c=>`<div><strong>${escHtml(c.key)}</strong><br>${escHtml(i18nCore.t('conflict.onDevice'))}: <code>${escHtml(c.local)}</code><br>${escHtml(i18nCore.t('conflict.savedCopy'))}: <code>${escHtml(c.remote)}</code></div>`).join('');
   const more=conflicts.length>5?`<div style="margin-top:4px;color:var(--muted)">${escHtml(i18nCore.t('conflict.more',{count:conflicts.length-5}))}</div>`:'';
   const id='conflict-toast-'+Date.now();
+  const keepDeviceButton=canKeepDevice?`<button class="bsave" id="${id}-local">${escHtml(i18nCore.t('conflict.keepDevice'))}</button>`:'';
   const el=document.createElement('div');
   el.className='conflict-notice';el.setAttribute('role','alertdialog');el.setAttribute('aria-labelledby',`${id}-title`);el.setAttribute('aria-describedby',`${id}-help`);
   el.innerHTML=`<h2 id="${id}-title">${escHtml(i18nCore.t('conflict.title',{count:conflicts.length}))}</h2>
-    <p id="${id}-help">${escHtml(i18nCore.t('conflict.help'))}</p>
+    <p id="${id}-help">${escHtml(i18nCore.t(savedOnly?'accountSync.savedOnlyConflictHelp':'conflict.help'))}</p>
     <div class="conflict-preview">${html}${more}</div>
     <div class="conflict-actions">
       <button class="bghost" id="${id}-later">${escHtml(i18nCore.t('conflict.reviewLater'))}</button>
       <button class="bghost" id="${id}-remote">${escHtml(i18nCore.t('conflict.useSaved'))}</button>
-      <button class="bsave" id="${id}-local">${escHtml(i18nCore.t('conflict.keepDevice'))}</button>
+      ${keepDeviceButton}
     </div>`;
   document.body.appendChild(el);
   const close=()=>{el.remove();previousFocus?.focus?.({preventScroll:true});};
-  document.getElementById(`${id}-local`).onclick=()=>{onLocal();close();};
+  if(canKeepDevice)document.getElementById(`${id}-local`).onclick=()=>{onLocal();close();};
   document.getElementById(`${id}-remote`).onclick=()=>{onRemote();close();};
   document.getElementById(`${id}-later`).onclick=close;
   el.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();close();}});

@@ -169,6 +169,22 @@ test('unsafe canonical state outranks conflict presentation and conflict actions
   assert.match(review,/plan\.category==='unsafe-evidence'\|\|plan\.action!=='review-conflict'/);
 });
 
+test('fieldless lifecycle conflicts expose saved-copy-only review instead of a dead-end toast',()=>{
+  const review=html.slice(html.indexOf('async function reviewAccountSyncConflicts'),html.indexOf('let _modalPrevFocus'));
+  assert.match(review,/const reviewPlan=accountSyncConflictReviewPlan\(details\)/);
+  assert.match(review,/reviewPlan\.fieldless\.map/);
+  assert.match(review,/accountSync\.itemState/);
+  assert.match(review,/accountSync\.earlierDeviceAction/);
+  assert.match(review,/accountSync\.currentSavedItem/);
+  assert.match(review,/reviewPlan\.canReapply\?async\(\)=>/);
+  assert.match(review,/savedOnly:!reviewPlan\.canReapply/);
+  const modal=html.slice(html.indexOf('function showConflictModal'),html.indexOf('// ── IMPORT FROM SEARCH STRING'));
+  assert.match(modal,/\{savedOnly=false\}=\{\}/);
+  assert.match(modal,/const canKeepDevice=typeof onLocal==='function'&&!savedOnly/);
+  assert.match(modal,/canKeepDevice\?`<button[^`]+conflict\.keepDevice/);
+  assert.match(modal,/if\(canKeepDevice\)document\.getElementById/);
+});
+
 test('allowlisted mutations cannot fall through to legacy writers while canonical startup is pending',()=>{
   const authority=html.slice(html.indexOf('async function accountSyncMutationAuthority'),html.indexOf('function accountSyncProjectionReady'));
   assert.match(authority,/await ensureAccountSyncRuntime\(\)/);

@@ -68,8 +68,16 @@ test('session ownership warnings use stable translation keys with English fallba
 test('English, Japanese, Spanish, and German expose the same UI key set',()=>{
   const {catalogs}=load();
   const expected=Object.keys(catalogs.en).sort();
-  assert.equal(expected.length,1223);
+  assert.equal(expected.length,1227);
   for(const locale of ['ja','es','de'])assert.deepEqual(Object.keys(catalogs[locale]).sort(),expected,locale);
+});
+
+test('fieldless account-sync conflict recovery is complete in every supported locale',()=>{
+  const {catalogs}=load(),required=['accountSync.itemState','accountSync.earlierDeviceAction','accountSync.currentSavedItem','accountSync.savedOnlyConflictHelp'];
+  for(const key of required){
+    for(const locale of ['en','ja','es','de'])assert.ok(String(catalogs[locale][key]||'').trim(),`${locale}:${key}`);
+    for(const locale of ['ja','es','de'])assert.notEqual(catalogs[locale][key],catalogs.en[key],`${locale}:${key}`);
+  }
 });
 
 test('Browse Favorites states are complete and localized',()=>{
