@@ -11,38 +11,59 @@ const window={URL};
 vm.runInNewContext(readFileSync(path.join(root,'js/domain/spriteSlugs.js'),'utf8'),{window,URL});
 const sprites=window.PogoDomain.spriteSlugs;
 
-test('sprite provenance registry is unique, explicit, and free of stale hosts',()=>{
-  const ids=sprites.SPRITE_SOURCE_REGISTRY.map(source=>source.id);
+function applicationFunction(name,nextName){
+  const start=html.indexOf(`function ${name}`),end=html.indexOf(`function ${nextName}`,start);
+  assert.notEqual(start,-1,`Missing ${name}`);assert.notEqual(end,-1,`Missing ${nextName}`);
+  return html.slice(start,end);
+}
+
+test('runtime sprite registry contains only approved served sources',()=>{
+  const ids=Array.from(sprites.SPRITE_SOURCE_REGISTRY,source=>source.id);
+  assert.deepEqual(ids,['pokeapi','pokemondb-home','pokemondb-go','weserv']);
   assert.equal(new Set(ids).size,ids.length);
   for(const source of sprites.SPRITE_SOURCE_REGISTRY){assert.match(source.homepage,/^https:\/\//);assert.ok(source.role);assert.ok(source.hosts.length);}
-  assert.match(sw,/'cdn08\.net'/);assert.doesNotMatch(sw,/cdn08\.pokemongohub\.net|static\.pokemongohub\.net/);
+  for(const host of ['raw.githubusercontent.com','images.weserv.nl','img.pokemondb.net'])assert.match(sw,new RegExp(`'${host.replaceAll('.','\\.')}'`));
+  assert.doesNotMatch(sw,/cdn08|pokemongohub|serebii|PokeMiners/i);
 });
 
-test('catalog-first verified Pikachu mappings remain distinct and exact',()=>{
-  const expected={
-    PIKACHU_COSTUME_2020:'025-flying.png',PIKACHU_FLYING_5TH_ANNIV:'025-flying5th.png',PIKACHU_FLYING_OKINAWA:'025-okinawaballoons.png',
-    PIKACHU_FLYING_01:'025-flyinggreen.png',PIKACHU_FLYING_02:'025-flyingpurple.png',PIKACHU_FLYING_03:'img15561_5.png',PIKACHU_FLYING_04:'025-indballoon.png',
-    PIKACHU_WCS_2025:'025-worlds25.png',PIKACHU_ANNIVERSARY_2026:'025-willow.png'
-  };
-  const urls=[];
-  for(const [id,suffix] of Object.entries(expected)){
-    const mapping=sprites.canonicalSpriteOverride(`pokemon:25:costume:${id}`);
-    assert.ok(mapping);assert.ok(mapping.url.endsWith(suffix));urls.push(mapping.url);
-  }
-  assert.equal(new Set(urls.slice(0,7)).size,7);
-  assert.notEqual(sprites.canonicalSpriteOverride('pokemon:25:costume:PIKACHU_WCS_2025').url,sprites.canonicalSpriteOverride('pokemon:25:costume:PIKACHU_ANNIVERSARY_2026').url);
+test('runtime URL validation is path constrained and rejects removed research hosts',()=>{
+  const source=applicationFunction('isApprovedRuntimeSpriteUrl','canvasSafeSpriteUrl');
+  const approved=vm.runInNewContext(`(()=>{${source};return isApprovedRuntimeSpriteUrl;})()`,{
+    URL,document:{baseURI:'https://doomsday126dev.github.io/trade-app/'},location:{origin:'https://doomsday126dev.github.io'}
+  });
+  for(const value of [
+    'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png',
+    'https://img.pokemondb.net/sprites/home/normal/pikachu.png',
+    'https://images.weserv.nl/?url=img.pokemondb.net%2Fsprites%2Fhome%2Fnormal%2Fpikachu.png',
+    'assets/max-cloud.svg',
+    'https://doomsday126dev.github.io/trade-app/assets/max-cloud.svg'
+  ])assert.equal(approved(value),true,value);
+  for(const value of [
+    'https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/pikachu.png',
+    'https://raw.githubusercontent.com/another/repository/main/pikachu.png',
+    'https://www.serebii.net/pokemongo/pokemon/025.png',
+    'https://cdn08.net/pikachu.png',
+    'https://images.weserv.nl/?url=example.com%2Fsprites%2Fpikachu.png',
+    'https://doomsday126dev.github.io/trade-app/assets/other.svg',
+    ''
+  ])assert.equal(approved(value),false,value);
 });
 
-test('Detective identities have independent canonical records without false art claims',()=>{
-  const first=sprites.canonicalSpriteOverride('pokemon:25:standard:legacy:Pikachu%20(Detective)');
-  const second=sprites.canonicalSpriteOverride('pokemon:25:standard:legacy:Pikachu%20(Detective%202023)');
-  assert.ok(first);assert.ok(second);assert.notEqual(first,second);assert.equal(first.url,second.url);
+test('stored or guessed research URLs cannot enter the render or export chain',()=>{
+  assert.equal(Object.keys(sprites.CANONICAL_SPRITE_OVERRIDES).length,0);
+  assert.equal(sprites.canonicalSpriteOverride('pokemon:25:costume:PIKACHU_WCS_2025'),null);
+  const entry=applicationFunction('entrySpriteUrl','spriteUrl');
+  assert.match(entry,/if\(isApprovedRuntimeSpriteUrl\(storedUrl\)\)return storedUrl/);
+  assert.match(html,/const approvedOverride=isApprovedRuntimeSpriteUrl\(e\.spriteUrl\)\?e\.spriteUrl:''/);
+  assert.doesNotMatch(html,/const GO_COSTUME_SPRITE_SLUGS|POKEMINERS_SPRITE_BASE|SEREBII_SPRITE_BASE|cdn08\.net/);
 });
 
 test('unresolved costumes are marked and excluded from guessed costume aliases',()=>{
   for(const name of sprites.UNRESOLVED_SPRITE_KEYS)assert.equal(sprites.isUnresolvedSpriteKey(name),true);
-  const map=html.slice(html.indexOf('const GO_COSTUME_SPRITE_SLUGS='),html.indexOf('const EXTRA_COSTUME_ENTRIES='));
-  for(const name of sprites.UNRESOLVED_SPRITE_KEYS)assert.doesNotMatch(map,new RegExp(name.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));
+  const resolver=html.slice(html.indexOf('function spriteUrl'),html.indexOf('function spriteFallbackChain'));
+  assert.match(resolver,/if\(context\.unresolved\)/);
+  assert.match(resolver,/const plainName=String\(lookupName/);
+  assert.doesNotMatch(resolver,/pokemondbGoCostumeUrl\(key,[\s\S]*allowPattern:true/);
 });
 
 test('successful 1x1 placeholders enter the same bounded fallback path as errors',()=>{

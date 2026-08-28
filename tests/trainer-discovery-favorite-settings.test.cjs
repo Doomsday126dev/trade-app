@@ -71,6 +71,7 @@ test('trainer search, Favorites, and Find by Pokémon are sibling discovery mode
   assert.match(focus,/content\.dataset\.mode=trainerDiscoveryMode/);
   assert.match(focus,/panel\.hidden=panel\.dataset\.discoveryPanel!==trainerDiscoveryMode/);
   assert.match(focus,/setAttribute\('aria-selected',String\(selected\)\)/);
+  assert.match(focus,/renderTrainerDiscoveryHeading\(\)/);
   assert.match(focus,/focus\(\{preventScroll:true\}\)/);
   assert.doesNotMatch(focus,/scrollIntoView|scrollTo/);
   assert.match(focus,/\['ArrowLeft','ArrowRight','Home','End'\]/);
@@ -202,7 +203,7 @@ test('responsive contracts retain 48px targets, wrapping, and no parallel organi
 });
 
 test('release and safety boundaries remain coherent',()=>{
-  assert.match(html,/2026-08-28\.76/);assert.doesNotMatch(html,/2026-08-27\.75/);
+  assert.match(html,/2026-08-28\.77/);assert.doesNotMatch(html,/2026-08-28\.76/);
   assert.match(readFileSync(path.join(root,'js/domain/shareVisibility.js'),'utf8'),/SHARE_VISIBILITY_MODEL_ENABLED\s*:\s*false/);assert.match(html,/SYNCED_TRAINER_PREFERENCES_ENABLED!==false/);
   assert.doesNotMatch(html,/managedTrainerPreferencesRepository\.(?:mutate|write|save)/);
 });

@@ -1772,7 +1772,12 @@ test.describe('visual smoke', () => {
     await expect(page.locator('.myrow-editor-popover').first()).toBeVisible();
     await expect(page.locator('.myrow-editor-popover .flag-btn').first()).toBeVisible();
     await expect(page.locator('.myrow-editor-popover .ni').first()).toBeVisible();
-    await expect(page.locator('.myrow-editor-popover .rm').first()).toBeVisible();
+    await expect(page.locator('.myrow-editor-popover .rm')).toHaveCount(0);
+    const remove=page.locator('.myrow-remove').first();
+    await expect(remove).toBeVisible();
+    await expect(remove).toHaveAttribute('aria-label',/^Remove /);
+    const removeBox=await remove.boundingBox();
+    expect(removeBox?.width).toBeGreaterThanOrEqual(44);expect(removeBox?.height).toBeGreaterThanOrEqual(44);
     await page.keyboard.press('Escape');
     await expect(page.locator('.myrow-editor-popover').first()).toBeHidden();
     const searchBox=await page.locator('#ac-input').boundingBox(),addBox=await page.locator('.add-actions .bsave').boundingBox(),firstRow=await page.locator('.myrow').first().boundingBox();
@@ -2182,10 +2187,14 @@ test.describe('visual smoke', () => {
     },'BackgroundPartner');
     expect(reciprocal).toEqual({exact:1,mismatch:0});
     await page.evaluate(()=>{_activeTradeMatch={them:'BackgroundPartner'};renderTradeMatchModal();});
-    await expect(page.locator('#trade-match-modal .diff-match-box.both .background')).toContainText('GO Fest New York City');
+    const exactBackground=page.locator('#trade-match-modal .diff-match-box.both .background');
+    await expect(exactBackground).toContainText('New York City 2023');
+    await expect(exactBackground).toHaveAttribute('title','GO Fest New York City');
     await page.keyboard.press('Escape');
     await page.evaluate(()=>{allData.wishlist[cur].Rayquaza='M';_activeTradeMatch={them:'BackgroundPartner'};renderTradeMatchModal();});
-    await expect(page.locator('#trade-match-modal .diff-match-box.theirs .background')).toContainText('GO Fest New York City');
+    const offeredBackground=page.locator('#trade-match-modal .diff-match-box.theirs .background');
+    await expect(offeredBackground).toContainText('New York City 2023');
+    await expect(offeredBackground).toHaveAttribute('title','GO Fest New York City');
     await page.keyboard.press('Escape');
     await page.evaluate(({nyc})=>{allData.wishlist[cur].Rayquaza=`M[shiny][bg:${nyc}]`;renderMyList();},{nyc});
 
@@ -2204,7 +2213,7 @@ test.describe('visual smoke', () => {
 
     await page.evaluate(()=>{document.getElementById('share-view').classList.remove('active');document.getElementById('app').style.display='flex';document.querySelectorAll('.page').forEach(node=>node.classList.remove('active'));document.getElementById('tab-mylist').classList.add('active');renderMyList();});
     await expect(page.locator('#toast')).toBeHidden({timeout:5_000});
-    for(const viewport of [{width:1440,height:900},{width:430,height:932},{width:390,height:844},{width:375,height:812},{width:320,height:568}]){
+    for(const viewport of [{width:1728,height:1000},{width:1440,height:900},{width:430,height:932},{width:390,height:844},{width:375,height:812},{width:320,height:568}]){
       await page.setViewportSize(viewport);
       expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
       const badges=page.locator('.myrow .background-badge,.myrow .myrow-trait.background');

@@ -5,6 +5,8 @@ const path=require('node:path');
 
 const root=path.join(__dirname,'..');
 const html=require('../scripts/lib/frontend-source.cjs').readFrontendSource(root);
+const index=readFileSync(path.join(root,'index.html'),'utf8');
+const provenance=readFileSync(path.join(root,'docs/ASSET-DATA-PROVENANCE.md'),'utf8');
 
 test('visual avatar picker uses the canonical catalog lazily and keeps string persistence',()=>{
   const picker=html.slice(html.indexOf('let avatarPickerEntriesCache'),html.indexOf('// Build a <img>'));
@@ -25,15 +27,29 @@ test('legacy and unknown avatar values retain safe compatibility behavior',()=>{
   assert.match(lookup,/prev\.innerHTML=\(cur\|\|'\?'\)\.slice\(0,2\)\.toUpperCase\(\)/);
 });
 
-test('Legal and Attribution is user reachable, conservative, localized, and registry driven',()=>{
-  assert.match(html,/data-settings-target="legal"/);assert.match(html,/data-settings-section="legal"/);assert.match(html,/renderLegalSources\(\)/);
-  assert.match(html,/PoGo Trades is an unofficial fan-made tool and is not affiliated with, endorsed by, or sponsored by Scopely Explore/);
-  assert.match(html,/Pokémon, Pokémon GO, character names, images, and related marks are the property of their respective rights holders/);
-  assert.match(html,/SPRITE_SOURCE_REGISTRY\.map/);assert.match(html,/target="_blank" rel="noopener noreferrer"/);
-  assert.match(html,/https:\/\/github\.com\/Doomsday126dev\/trade-app\/issues/);
-  const legal=html.slice(html.indexOf('data-settings-section="legal"'),html.indexOf('</section>',html.indexOf('data-settings-section="legal"')));
+test('legal acknowledgements are a compact link-free footer surface, not a primary setting',()=>{
+  assert.doesNotMatch(index,/data-settings-target="legal"|data-settings-section="legal"/);
+  assert.doesNotMatch(html,/function renderLegalSources|renderLegalSources\(\)/);
+  assert.match(index,/id="app-legal-footer"/);assert.match(index,/onclick="openLegalAcknowledgements\(this\)"/);
+  assert.match(index,/<dialog class="legal-dialog" id="legal-dialog"/);
+  const start=index.indexOf('<dialog class="legal-dialog"'),end=index.indexOf('</dialog>',start);
+  const legal=index.slice(start,end);
+  assert.match(legal,/PokéAPI provides species, form, and sprite-repository inputs/);
+  assert.match(legal,/their artwork is not served by PoGo Trades/);
+  assert.match(legal,/original colors and patterns generated from catalog IDs/);
+  assert.match(legal,/not affiliated with, endorsed by, or sponsored by the rights holders/);
+  assert.doesNotMatch(legal,/<a\b|href=|https?:\/\//i);
   assert.doesNotMatch(legal,/licensed|authorized|fair use|official partner/i);
   assert.doesNotMatch(legal,/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i);
+});
+
+test('internal provenance distinguishes served assets from research-only sources',()=>{
+  assert.match(provenance,/Attribution does not substitute for permission/);
+  for(const source of ['PokéAPI','Pokémon Database','PokeMiners','Serebii','Pokémon GO Hub','Official Pokémon GO and Pokémon sources'])assert.match(provenance,new RegExp(source));
+  assert.match(provenance,/PokeMiners[\s\S]*\*\*REFERENCE ONLY\*\*/);
+  assert.match(provenance,/Serebii[\s\S]*\*\*REFERENCE ONLY\*\*/);
+  assert.match(provenance,/Pokémon GO Hub[\s\S]*\*\*REMOVE \/ DO NOT SERVE\*\*/);
+  assert.match(provenance,/Background cards use project-generated colors and patterns/);
 });
 
 test('normal My List rows are dense and progressive while reorder remains explicit',()=>{

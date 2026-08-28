@@ -6,6 +6,7 @@ const vm=require('node:vm');
 
 const root=path.join(__dirname,'..');
 const html=require('../scripts/lib/frontend-source.cjs').readFrontendSource(root);
+const primaryTypeSource=readFileSync(path.join(root,'js/domain/pokemonPrimaryTypes.js'),'utf8');
 const between=(start,end)=>{
   const from=html.indexOf(start),to=html.indexOf(end,from);
   assert.notEqual(from,-1,`missing ${start}`);assert.notEqual(to,-1,`missing ${end}`);
@@ -54,40 +55,29 @@ test('A11Y-02 Special Trade Board uses deep stable combobox focus',()=>{
   assert.match(special,/ev\.stopPropagation\(\);_closeSpecialAc\(side\)/);
 });
 
-function typeHarness(fetchImpl){
-  const storage=new Map(),context=vm.createContext({
-    pokemonTypes:{},fetch:fetchImpl,AbortController,setTimeout,clearTimeout,Promise,Map,Array,Object,Number,parseInt,
-    localStorage:{getItem:key=>storage.get(key)||null,setItem:(key,value)=>storage.set(key,String(value))},
-    TYPE_COLORS:{grass:'#0f0'},document:{querySelectorAll:()=>[]},IntersectionObserver:undefined
-  });
-  vm.runInContext(between("const TYPE_CACHE_KEY='pogoTypeCache_v1';",'// ── TRADE SCHEDULE'),context);
-  return context;
+function primaryTypeDomain(){
+  const context=vm.createContext({window:{}});
+  vm.runInContext(primaryTypeSource,context);
+  return context.window.PogoDomain.pokemonPrimaryTypes;
 }
 
-test('PERF-01 dedupes unresolved same-dex work and releases failed keys',async()=>{
-  let calls=0,release;
-  const context=typeHarness(()=>{calls++;return new Promise(resolve=>{release=resolve;});});
-  const promises=vm.runInContext('Array.from({length:100},()=>fetchPokemonType(25))',context);
-  await tick();assert.equal(calls,1);assert.ok(promises.every(promise=>promise===promises[0]));
-  release({ok:true,json:async()=>({types:[{type:{name:'electric'}}]})});
-  assert.deepEqual(await Promise.all(promises),Array(100).fill('electric'));
+test('PERF-01 primary-type accents use the complete repository-owned map with no cold network work',()=>{
+  const domain=primaryTypeDomain();
+  assert.equal(domain.schemaVersion,1);
+  assert.equal(domain.count,1025);
+  assert.equal(domain.types.length,1026);
+  assert.equal(domain.primaryTypeForDex(1),'grass');
+  assert.equal(domain.primaryTypeForDex(6),'fire');
+  assert.equal(domain.primaryTypeForDex(25),'electric');
+  assert.equal(domain.primaryTypeForDex(130),'water');
+  assert.equal(domain.primaryTypeForDex(1025),'poison');
+  for(const invalid of [0,-1,1.5,1026,'not-a-dex',null])assert.equal(domain.primaryTypeForDex(invalid),'');
+  assert.equal(new Set(domain.types.slice(1)).size,18);
 
-  let failures=0;
-  const failed=typeHarness(async()=>{failures++;throw new Error('offline');});
-  assert.equal(await vm.runInContext('fetchPokemonType(7)',failed),null);
-  assert.equal(await vm.runInContext('fetchPokemonType(7)',failed),null);
-  assert.equal(failures,2);
-});
-
-test('PERF-01 bounds 1,000 distinct requests to four active fetches',async()=>{
-  let active=0,peak=0,started=0;
-  const controls=[];
-  const context=typeHarness(()=>{started++;active++;peak=Math.max(peak,active);return new Promise(resolve=>controls.push(()=>{active--;resolve({ok:true,json:async()=>({types:[{type:{name:'grass'}}]})});}));});
-  const all=vm.runInContext('Promise.all(Array.from({length:1000},(_,index)=>fetchPokemonType(index+1)))',context);
-  await tick();assert.equal(started,4);assert.equal(peak,4);
-  while(started<1000||active){const batch=controls.splice(0);batch.forEach(resolve=>resolve());await tick();}
-  const values=await all;
-  assert.equal(values.length,1000);assert.equal(started,1000);assert.equal(peak,4);
+  const typeBlock=between('// ── POKEMON TYPE COLORS','// ── TRADE SCHEDULE');
+  assert.match(typeBlock,/primaryTypeForDex\(dex\)/);
+  assert.match(typeBlock,/\.myrow\[data-dex\],\.pgrid \.pc\[data-dex\]/);
+  assert.doesNotMatch(typeBlock,/fetch\(|localStorage|IntersectionObserver|pokeapi/i);
 });
 
 function spriteHarness(){

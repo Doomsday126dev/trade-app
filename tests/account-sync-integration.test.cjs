@@ -94,7 +94,7 @@ test('normal sync copy is understandable and never exposes raw revision or mutat
   const conflictFieldKeys=['fieldGender','fieldLucky','fieldXxl','fieldXxs','fieldShiny','fieldOrder','fieldQuantity','fieldNotes','fieldMirror'];
   for(const file of ['en','ja','es','de']){
     const locale=readFileSync(path.join(root,`js/i18n/locales/${file}.js`),'utf8');
-    for(const key of ['accountSync.saved','accountSync.saving','accountSync.offline','accountSync.conflict','accountSync.reviewRequired','accountSync.reviewRequiredDetail','accountSync.error','accountSync.retrySavedChange','accountSync.restartSync','accountSync.reviewConflict','accountSync.recoveryRunning','accountSync.diagnostic'])assert.ok(locale.includes(`'${key}'`),`${file}:${key}`);
+    for(const key of ['accountSync.saved','accountSync.saving','accountSync.offline','accountSync.conflict','accountSync.reviewRequired','accountSync.reviewRequiredDetail','accountSync.error','accountSync.retrySavedChange','accountSync.restartSync','accountSync.reviewConflict','accountSync.recoveryRunning','accountSync.diagnostic','accountSync.preservedReviewTitle','accountSync.preservedReviewDetail','accountSync.useSavedAccountCopy','accountSync.preservedReviewPrompt','accountSync.preservedReviewSucceeded','accountSync.preservedReviewFailed','accountSync.preservedReviewUnavailable'])assert.ok(locale.includes(`'${key}'`),`${file}:${key}`);
     for(const key of conflictFieldKeys)assert.ok(locale.includes(`'accountSync.${key}'`),`${file}:accountSync.${key}`);
     const copy=(locale.match(/'accountSync\.[^\n]+/)||[])[0]||'';assert.doesNotMatch(copy,/operationId|field revision|tombstone|RTDB|Firebase UID/i,file);
   }
@@ -105,6 +105,7 @@ test('normal sync copy is understandable and never exposes raw revision or mutat
   assert.match(detail,/coordinator\.active.*coordinator\.recover/s);assert.match(detail,/performAccountSyncRecovery/);assert.doesNotMatch(detail,/retryBlocked/);
   assert.match(html,/id="sync-pill"[^>]+onkeydown="if\(event\.key==='Enter'\|\|event\.key===' '\)/);
   assert.match(html,/id="trainer-sync-diagnostic" hidden/);assert.match(html,/id="trainer-sync-recovery"[^>]+requestAccountSyncRecovery\(\)/);
+  assert.match(html,/id="trainer-sync-preserved-review" hidden/);assert.match(html,/id="trainer-sync-preserved-review-action"[^>]+useSavedAccountCopyForPreservedReview\(\)/);
   assert.match(html,/onCanonicalEntities:entities=>currentSession\(\)\?applyAccountSyncCanonicalEntities\(entities\):false/);
   const fieldLabels=html.slice(html.indexOf('function accountSyncConflictFieldLabel'),html.indexOf('function accountSyncConflictValue'));
   for(const key of conflictFieldKeys)assert.ok(fieldLabels.includes(`accountSync.${key}`),key);
@@ -185,6 +186,20 @@ test('fieldless lifecycle conflicts expose saved-copy-only review instead of a d
   assert.match(modal,/const canKeepDevice=typeof onLocal==='function'&&!savedOnly/);
   assert.match(modal,/canKeepDevice\?`<button[^`]+conflict\.keepDevice/);
   assert.match(modal,/if\(canKeepDevice\)document\.getElementById/);
+});
+
+test('preserved device changes expose an exact owner-confirmed saved-copy review without replay or remote mutation',()=>{
+  const authority=html.slice(html.indexOf('async function accountSyncPreservedReviewAuthority'),html.indexOf('function accountSyncProjectionReady'));
+  assert.match(authority,/snapshot\.state!=='review-required'/);assert.match(authority,/runtime\.listRecoveryCandidates\(\)/);assert.match(authority,/candidates\.length!==Number\(snapshot\.recoveryCandidateCount\)/);
+  assert.match(authority,/candidate\?\.ownerUid!==authority\.uid/);assert.match(authority,/candidate\?\.resolved===true/);assert.match(authority,/sessionGeneration:_sessionTransientGeneration/);assert.match(authority,/runtimeGeneration:accountSyncRuntimeGeneration/);
+  const action=html.slice(html.indexOf('async function useSavedAccountCopyForPreservedReview'),html.indexOf('async function requestAccountSyncRecovery'));
+  assert.match(action,/confirm\(i18nCore\.t\('accountSync\.preservedReviewPrompt'/);assert.match(action,/accountSyncPreservedReviewAuthorityCurrent\(authority\)/);
+  assert.match(action,/authority\.runtime\.completeRecoveryReviews\(authority\.candidateIds\)/);assert.match(action,/accountSyncUiState\.state!=='saved'/);assert.match(action,/accountSyncUiState\.recoveryCandidateCount!==0/);
+  assert.match(action,/applyAccountSyncCanonicalEntities\(Object\.freeze\(authority\.controller\.activeEntities\(\)\)\)/);
+  assert.doesNotMatch(action,/retryBlocked|addEntity|updateEntity|removeEntity|mutateBatch|repository\.|writeList|writeSpecialBoard|toggleFavorite/);
+  const runtimeReview=runtime.slice(runtime.indexOf('async function completeRecoveryReviews'),runtime.indexOf('function stop'));
+  assert.match(runtimeReview,/before\.state!=='review-required'/);assert.match(runtimeReview,/before\.listenerHealthy/);assert.match(runtimeReview,/before\.controllerHealthy/);assert.match(runtimeReview,/before\.recoveryCandidateCount!==ids\.length/);
+  assert.match(runtimeReview,/journal\.resolveRecoveryCandidates\(ids\)/);assert.match(runtimeReview,/after\.state!=='saved'/);
 });
 
 test('allowlisted mutations cannot fall through to legacy writers while canonical startup is pending',()=>{

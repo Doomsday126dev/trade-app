@@ -299,6 +299,11 @@ if(!priorityValueDomain)throw new Error('Priority value helpers failed to load')
 const {entryGender,matchesTradeIntent,normalizeTradeQualifier,normalizeBackgroundId,parsePri,priValue}=priorityValueDomain;
 const backgroundCatalogDomain=window.PogoDomain?.backgroundCatalog;
 if(!backgroundCatalogDomain)throw new Error('Background catalog helpers failed to load');
+const backgroundVisualDomain=window.PogoDomain?.backgroundVisual;
+if(!backgroundVisualDomain)throw new Error('Background visual helpers failed to load');
+const pokemonPrimaryTypesDomain=window.PogoDomain?.pokemonPrimaryTypes;
+if(!pokemonPrimaryTypesDomain)throw new Error('Pokemon primary type data failed to load');
+const {primaryTypeForDex}=pokemonPrimaryTypesDomain;
 const scheduleDateDomain=window.PogoDomain?.scheduleDates;
 if(!scheduleDateDomain)throw new Error('Schedule date helpers failed to load');
 const {isoDate,parseIsoDate,todayIso,startOfWeek,addDays,fmtWeekRange,WKDS}=scheduleDateDomain;
@@ -410,7 +415,6 @@ let myListAncillaryRenderPromise=Promise.resolve();
 let schedAnchor=null; // anchor date for week view (Sunday of week shown)
 let schedSelectedDate=null; // currently selected day (ISO YYYY-MM-DD)
 let voiceRecognition=null;
-let pokemonTypes={};
 let entryTimestamps={}; // for conflict detection
 let _sessionTransientGeneration=0;
 const BACKUP_REMINDER_INTERVAL=7*24*60*60*1000; // 7 days
@@ -421,9 +425,8 @@ const TYPE_COLORS={normal:'#A8A878',fire:'#F08030',water:'#6890F0',electric:'#F8
 // ── SPRITES ───────────────────────────────────────────────────
 // Sprite cache to avoid repeated failed requests
 const spriteCache={};
-const SEREBII_GO_SPRITE_BASE='https://www.serebii.net/pokemongo/pokemon/';
 const IMAGE_PROXY_BASE='https://images.weserv.nl/?url=';
-const MAX_CLOUD_URL='https://cdn08.net/pokemongo/wiki/cloud.png';
+const MAX_CLOUD_URL='assets/max-cloud.svg';
 const MAX_TYPE_LABELS={dynamax:'Dynamax',gmax:'Gigantamax'};
 // ── GENDER DIFFERENCES ──────────────────────────────────────
 // Dex numbers where PokeAPI has a distinct /female/{id}.png sprite.
@@ -521,87 +524,20 @@ const COSTUME_FORM_SPRITE_IDS={
   "Ogerpon (Teal Mask)":1017,"Ogerpon (Wellspring Mask)":10272,
   "Ogerpon (Hearthflame Mask)":10273,"Ogerpon (Cornerstone Mask)":10274
 };
-// Pokémon GO costume sprites that PokeAPI does not carry. Serebii has the GO-specific art.
-const GO_COSTUME_SPRITE_SLUGS={
-  "Pikachu (Libre)":"libre","Pikachu (Rock Star)":"rockstar","Pikachu (Pop Star)":"popstar","Pikachu (Ph_D)":"phd",
-  "Pikachu (Santa)":"santa","Pikachu (Purple Party)":"party","Pikachu (Ash)":"ash","Pikachu (Witch)":"halloween",
-  "Pikachu (Summer)":"summer","Pikachu (Fragment)":"fragment","Pikachu (Flower Crown)":"flowers","Pikachu (Detective)":"detective",
-  "Pikachu (Straw)":"strawhat","Pikachu (Mimikyu)":"halloween2019","Pikachu (Winter 2019)":"beanie","Pikachu (Red Party)":"partyhat2020",
-  "Pikachu (Clone)":"clone","Pikachu (Safari)":"safari","Pikachu (Spring)":"flowerhat","Pikachu (Charizard)":"charizard","Pikachu (Umbreon)":"umbreon",
-  "Pikachu (Rayquaza)":"rayquaza","Pikachu (Lucario)":"lucario","Pikachu (Flying)":"flying","Pikachu (World)":"worldcap",
-  "Pikachu (Explorer)":"explorer","Pikachu (Holiday 2020)":"holiday2020","Pikachu (New Year)":"newyear",
-  "Pikachu (Meloetta Hat)":"gofest2021","Pikachu (Halloween 2021)":"halloween2021","Pikachu (Kariyushi Shirt)":"kariyushi",
-  "Pikachu (Fly Okinawa)":"okinawaballoons","Pikachu (Shaymin Flower)":"gracidea","Pikachu (TCG)":"tcg","Pikachu (Cake Hat)":"cake",
-  "Pikachu (Worlds 2022)":"worlds2022","Pikachu (Shaymin Scarf)":"shayminscarf","Pikachu (Top Hat)":"newyear2023",
-  "Pikachu (Green Shirt)":"greenshirt","Pikachu (Purple Shirt)":"purpleshirt","Pikachu (Jeju)":"jeju","Pikachu (Batik Shirt)":"indshirt",
-  "Pikachu (Brendan)":"brendan","Pikachu (May)":"may","Pikachu (Cherry Blossom)":"cherryblossoms","Pikachu (Detective 2023)":"detective",
-  "Pikachu (Halloween 2023)":"halloween2023","Pikachu (Holiday 2023)":"holidays2023","Pikachu (Captain)":"captain",
-  "Pikachu (Amethyst)":"amethyst","Pikachu (Worlds 2023)":"worlds23","Pikachu (Quartz)":"quartz","Pikachu (Malachite)":"malachite",
-  "Pikachu (Aquamarine)":"aquamarine","Pikachu (Pyrite)":"pyrite","Pikachu (Dawn)":"dawn","Pikachu (Lucas)":"lucas",
-  "Pikachu (Akari)":"akari","Pikachu (Rei)":"rei","Pikachu (Sun)":"sun","Pikachu (Moon)":"moon",
-  "Pikachu (Saree)":"saree","Pikachu (Hilbert)":"hilbert","Pikachu (Hilda)":"hilda","Pikachu (Nate)":"nate","Pikachu (Rosa)":"rosa",
-  "Pikachu (Kurta)":"kurta","Pikachu (Worlds 2024)":"worlds24","Pikachu (Spring 2023)":"cherryblossoms",
-  "Pikachu (GO Fest 2022)":"shayminscarf","Pikachu (Calem)":"calem","Pikachu (Serena)":"serena",
-  "Pikachu (Scuba)":"worlds24",
-  "Pikachu (Worlds 2025)":"worlds25","Pikachu (Timnas Indonesia)":"timnasindonesia","Pikachu (Red)":"red","Pikachu (Leaf)":"leaf",
-  "Pikachu (Ethan)":"ethan","Pikachu (Lyra)":"lyra","Pikachu (Baseball)":"baseball","Pikachu (Instinct)":"instinct",
-  "Pikachu (Mystic)":"mystic","Pikachu (Valor)":"valor","Pikachu (Marathon)":"marathon","Pikachu (Fossil)":"fossil",
-  "Pikachu (Flying 5th Anniversary)":"flying5th","Pikachu (Flying Green)":"flyinggreen","Pikachu (Flying Purple)":"flyingpurple",
-  "Pikachu (Indonesia Balloon)":"indballoon","Pikachu (Dapper) Monocle - Red":"monoclered","Pikachu (Dapper) Monocle - Blue":"monocleblue",
-  "Pikachu (Dapper) Monocle - Yellow":"monocleyellow","Pikachu (Dapper) Goggles - Red":"gogglesred",
-  "Pikachu (Dapper) Goggles - Blue":"gogglesblue","Pikachu (Dapper) Goggles - Yellow":"gogglesyellow",
-  "Pichu (Santa)":"santa","Pichu (Ash)":"ash","Pichu (Witch)":"halloween","Pichu (Summer)":"summer","Pichu (Flower Crown)":"flowers",
-  "Pichu (Winter)":"beanie","Pichu (Party)":"party","Pichu (New Year)":"newyear","Pichu (Cherry Blossom)":"cherryblossoms",
-  "Eevee (Flower Crown)":"flowers","Eevee (Holiday)":"holiday","Eevee (Red Party)":"partyhat","Eevee (Cherry Blossom)":"cherryblossoms",
-  "Eevee (Explorer)":"safari","Eevee (Sun)":"sun","Eevee (Moon)":"moon",
-  "Bulbasaur (Shedinja)":"halloween2019","Bulbasaur (Red Party)":"partyhat","Bulbasaur (Visor)":"pikachuvisor",
-  "Venusaur (Clone)":"clone","Squirtle (Sunglasses)":"sunglasses","Squirtle (Yamask)":"halloween2019","Squirtle (Red Party)":"partyhat",
-  "Squirtle (Visor)":"pikachuvisor","Blastoise (Clone)":"clone","Charmander (Cubone)":"halloween2019","Charmander (Red Party)":"partyhat",
-  "Charmander (Visor)":"pikachuvisor","Charizard (Clone)":"clone","Kirlia (Top Hat)":"tophat","Croagunk (Cap)":"backwardscap",
-  "Shinx (Top Hat)":"tophat","Smoochum (Bow)":"bow","Gengar (Mega Banette)":"halloween","Cubchoo (Bow)":"holiday2020",
-  "Delibird (Bow)":"holiday2020","Slowpoke (New Year)":"2020","Happiny (Flower Crown)":"flowercrown","Chansey (Flower Crown)":"flowercrown",
-  "Gardevoir (Meloetta Hat)":"gofest2021","Flygon (Meloetta Hat)":"gofest2021","G_ Ponyta (Meloetta Hat)":"gofest2021",
-  "G_ Zigzagoon (Meloetta Hat)":"gofest2021","Butterfree (Bow)":"fashionable","Sneasel (Hipster)":"fashionable","Blitzle (Collar)":"fashionable",
-  "Piplup (Halloween)":"halloween2021","Drifblim (Halloween)":"halloween2021","Turtwig (Lucas)":"lucas","Chimchar (Lucas)":"lucas",
-  "Piplup (Lucas)":"lucas","Turtwig (Dawn)":"dawn","Chimchar (Dawn)":"dawn","Piplup (Dawn)":"dawn",
-  "Spheal (Holiday)":"holiday","Glaceon (Holiday)":"holiday","Hoothoot (New Year)":"newyears","Lapras (Scarf)":"scarf",
-  "Snorlax (Cowboy Hat)":"cowboy","Vulpix (Halloween)":"spooky","Gengar (Spooky Hat)":"spooky","Pumpkaboo (Spooky)":"spooky",
-  "Duskull (Cempasuchil)":"crown","Cubone (Cempasuchil)":"crown","Lapras (Blanche)":"blanche","Elekid (Spark)":"spark",
-  "Ponyta (Candela)":"candela","Snorlax (Nightcap)":"nightcap","Aerodactyl (Satchel)":"satchel","Slowpoke (Detective)":"cowboy",
-  "Gengar (Halloween 2023)":"halloween2023","Dragonite (Bow)":"fashion","Wooper (Cap)":"fashion","Psyduck (Holiday 2023)":"holidays",
-  "Jigglypuff (Ribbon)":"ribbon","Cottonee (Flower Crown)":"flowercrown","Espeon (Scarf)":"scarf","Umbreon (Scarf)":"scarf",
-  "Grimer (Party Hat)":"partyhat","Slakoth (Night Cap)":"visor","Froakie (Halloween)":"halloween","Rowlet (Halloween)":"halloween",
-  "Snorlax (Studded Jacket)":"jacket","Dedenne (Holiday)":"holiday","Wooloo (Holiday)":"holiday","Minccino (Fashionable)":"fashionable",
-  "Gengar (Halloween 2022)":"halloween","Gengar (Halloween 2024)":"halloween2023",
-  "Togepi (Flower Crown)":"flowers","Togetic (Flower Crown)":"flowers","Togekiss (Flower Crown)":"flowers",
-  "Blissey (Flower Crown)":"flowercrown","Absol (Fashion)":"fashion",
-  // Gigantamax sprites — Serebii uses {dex}-gi.png for all Gmax forms
-  "Venusaur (Gigantamax)":"gi","Charizard (Gigantamax)":"gi","Blastoise (Gigantamax)":"gi",
-  "Butterfree (Gigantamax)":"gi","Pikachu (Gigantamax)":"gi","Meowth (Gigantamax)":"gi",
-  "Machamp (Gigantamax)":"gi","Gengar (Gigantamax)":"gi","Kingler (Gigantamax)":"gi",
-  "Lapras (Gigantamax)":"gi","Eevee (Gigantamax)":"gi","Snorlax (Gigantamax)":"gi",
-  "Garbodor (Gigantamax)":"gi","Melmetal (Gigantamax)":"gi","Rillaboom (Gigantamax)":"gi",
-  "Cinderace (Gigantamax)":"gi","Inteleon (Gigantamax)":"gi","Corviknight (Gigantamax)":"gi",
-  "Orbeetle (Gigantamax)":"gi","Drednaw (Gigantamax)":"gi","Coalossal (Gigantamax)":"gi",
-  "Flapple (Gigantamax)":"gi","Appletun (Gigantamax)":"gi","Sandaconda (Gigantamax)":"gi",
-  "Toxtricity (Gigantamax)":"gi","Centiskorch (Gigantamax)":"gi","Hatterene (Gigantamax)":"gi",
-  "Grimmsnarl (Gigantamax)":"gi","Alcremie (Gigantamax)":"gi","Duraludon (Gigantamax)":"gi",
-  "Urshifu (Gigantamax)":"gi"
-};
-const EXTRA_COSTUME_ENTRIES=[{"no":1,"name":"Bulbasaur Party Hat","displayName":"Bulbasaur Party Hat","spriteUrl":"https://cdn08.net/pokemongo/data/img9/img9011_5.png","users":{}},{"no":1,"name":"Bulbasaur Pikachu Visor","displayName":"Bulbasaur Pikachu Visor","spriteUrl":"https://cdn08.net/pokemongo/data/img9/img9850_5.png","users":{}},{"no":2,"name":"Ivysaur Party Hat","displayName":"Ivysaur Party Hat","spriteUrl":"https://cdn08.net/pokemongo/data/img22/img22923_5.png","users":{}},{"no":3,"name":"Venusaur Party Hat","displayName":"Venusaur Party Hat","spriteUrl":"https://cdn08.net/pokemongo/data/img22/img22924_5.png","users":{}},{"no":4,"name":"Charmander Party Hat","displayName":"Charmander Party Hat","spriteUrl":"https://cdn08.net/pokemongo/data/img9/img9009_5.png","users":{}},{"no":4,"name":"Charmander Pikachu Visor","displayName":"Charmander Pikachu Visor","spriteUrl":"https://cdn08.net/pokemongo/data/img9/img9851_5.png","users":{}},{"no":5,"name":"Charmeleon Party Hat","displayName":"Charmeleon Party Hat","spriteUrl":"https://cdn08.net/pokemongo/data/img13/img13664_5.png","users":{}},{"no":6,"name":"Charizard Party Hat","displayName":"Charizard Party Hat","spriteUrl":"https://cdn08.net/pokemongo/data/img13/img13665_5.png","users":{}},{"no":7,"name":"Squirtle Halloween","displayName":"Squirtle Halloween","spriteUrl":"https://cdn08.net/pokemongo/data/img7/img7985_5.png","users":{}},{"no":7,"name":"Squirtle Party Hat","displayName":"Squirtle Party Hat","spriteUrl":"https://cdn08.net/pokemongo/data/img9/img9010_5.png","users":{}},{"no":7,"name":"Squirtle Pikachu Visor","displayName":"Squirtle Pikachu Visor","spriteUrl":"https://cdn08.net/pokemongo/data/img9/img9852_5.png","users":{}},{"no":8,"name":"Wartortle Sunglasses","displayName":"Wartortle Sunglasses","spriteUrl":"https://cdn08.net/pokemongo/data/img6/img6435_5.png","users":{}},{"no":8,"name":"Wartortle Party Hat","displayName":"Wartortle Party Hat","spriteUrl":"https://cdn08.net/pokemongo/data/img15/img15559_5.png","users":{}},{"no":9,"name":"Blastoise Sunglasses","displayName":"Blastoise Sunglasses","spriteUrl":"https://cdn08.net/pokemongo/data/img6/img6436_5.png","users":{}},{"no":9,"name":"Blastoise Party Hat","displayName":"Blastoise Party Hat","spriteUrl":"https://cdn08.net/pokemongo/data/img15/img15560_5.png","users":{}},{"no":12,"name":"Butterfree Fashionable","displayName":"Butterfree Fashionable","spriteUrl":"https://cdn08.net/pokemongo/data/img12/img12279_5.png","users":{}},{"no":20,"name":"Raticate Party Hat","displayName":"Raticate Party Hat","spriteUrl":"https://cdn08.net/pokemongo/data/img8/img8507_5.png","users":{}},{"no":25,"name":"Pikachu Party Hat","displayName":"Pikachu Party Hat","spriteUrl":"https://cdn08.net/pokemongo/data/img6/img6439_5.png","users":{}},{"no":25,"name":"Pikachu Original Cap","displayName":"Pikachu Original Cap","spriteUrl":"https://cdn08.net/pokemongo/data/img6/img6440_5.png","users":{}},{"no":25,"name":"Pikachu Beanie","displayName":"Pikachu Beanie","spriteUrl":"https://cdn08.net/pokemongo/data/img6/img6445_5.png","users":{}},{"no":25,"name":"Pikachu Party Hat 2020","displayName":"Pikachu Party Hat 2020","spriteUrl":"https://cdn08.net/pokemongo/data/img9/img9012_5.png","users":{}},{"no":25,"name":"Pikachu (VS 2019)","displayName":"Pikachu (VS 2019)","spriteUrl":"https://cdn08.net/pokemongo/data/img9/img9111_5.png","users":{}},{"no":25,"name":"Pikachu Flower Hat","displayName":"Pikachu Flower Hat","spriteUrl":"https://cdn08.net/pokemongo/data/img9/img9186_5.png","users":{}},{"no":25,"name":"Pikachu Costume 2020","displayName":"Pikachu Costume 2020","spriteUrl":"https://cdn08.net/pokemongo/data/img9/img9765_5.png","users":{}},{"no":25,"name":"Pikachu Winter Carnival Outfit","displayName":"Pikachu Winter Carnival Outfit","spriteUrl":"https://cdn08.net/pokemongo/data/img10/img10750_5.png","users":{}},{"no":25,"name":"Pikachu Kariyushi","displayName":"Pikachu Kariyushi","spriteUrl":"https://cdn08.net/pokemongo/data/img11/img11858_5.png","users":{}},{"no":25,"name":"Pikachu GO Fest 2021","displayName":"Pikachu GO Fest 2021","spriteUrl":"https://cdn08.net/pokemongo/data/img11/img11861_5.png","users":{}},{"no":25,"name":"Pikachu Halloween Mischief","displayName":"Pikachu Halloween Mischief","spriteUrl":"https://cdn08.net/pokemongo/data/img12/img12366_5.png","users":{}},{"no":25,"name":"Pikachu Flying Okinawa","displayName":"Pikachu Flying Okinawa","spriteUrl":"https://cdn08.net/pokemongo/data/img13/img13371_5.png","users":{}},{"no":25,"name":"Pikachu Gracidea","displayName":"Pikachu Gracidea","spriteUrl":"https://cdn08.net/pokemongo/data/img13/img13508_5.png","users":{}},{"no":25,"name":"Pikachu Flying 01","displayName":"Pikachu Flying 01","spriteUrl":"https://cdn08.net/pokemongo/data/img14/img14025_5.png","users":{}},{"no":25,"name":"Pikachu Berry Shirt","displayName":"Pikachu Berry Shirt","spriteUrl":"https://cdn08.net/pokemongo/data/img14/img14026_5.png","users":{}},{"no":25,"name":"Pikachu Flying 02","displayName":"Pikachu Flying 02","spriteUrl":"https://cdn08.net/pokemongo/data/img14/img14027_5.png","users":{}},{"no":25,"name":"Pikachu Party Top Hat","displayName":"Pikachu Party Top Hat","spriteUrl":"https://cdn08.net/pokemongo/data/img14/img14495_5.png","users":{}},{"no":25,"name":"Pikachu May Bow","displayName":"Pikachu May Bow","spriteUrl":"https://cdn08.net/pokemongo/data/img14/img14734_5.png","users":{}},{"no":25,"name":"Pikachu Cherry Blossoms","displayName":"Pikachu Cherry Blossoms","spriteUrl":"https://cdn08.net/pokemongo/data/img15/img15087_5.png","users":{}},{"no":25,"name":"Pikachu Quartz Crown","displayName":"Pikachu Quartz Crown","spriteUrl":"https://cdn08.net/pokemongo/data/img15/img15539_5.png","users":{}},{"no":25,"name":"Pikachu Pyrite Crown","displayName":"Pikachu Pyrite Crown","spriteUrl":"https://cdn08.net/pokemongo/data/img15/img15540_5.png","users":{}},{"no":25,"name":"Pikachu Malachite Crown","displayName":"Pikachu Malachite Crown","spriteUrl":"https://cdn08.net/pokemongo/data/img15/img15541_5.png","users":{}},{"no":25,"name":"Pikachu Aquamarine Crown","displayName":"Pikachu Aquamarine Crown","spriteUrl":"https://cdn08.net/pokemongo/data/img15/img15542_5.png","users":{}},{"no":25,"name":"Pikachu Amethyst Crown","displayName":"Pikachu Amethyst Crown","spriteUrl":"https://cdn08.net/pokemongo/data/img15/img15543_5.png","users":{}},{"no":25,"name":"Pikachu Flying 03","displayName":"Pikachu Flying 03","spriteUrl":"https://cdn08.net/pokemongo/data/img15/img15561_5.png","users":{}},{"no":25,"name":"Pikachu Doctor","displayName":"Pikachu Doctor","spriteUrl":"https://cdn08.net/pokemongo/data/img15/img15801_5.png","users":{}},{"no":25,"name":"Pikachu Fall 2023","displayName":"Pikachu Fall 2023","spriteUrl":"https://cdn08.net/pokemongo/data/img17/img17091_5.png","users":{}},{"no":25,"name":"Pikachu Akari Kerchief","displayName":"Pikachu Akari Kerchief","spriteUrl":"https://cdn08.net/pokemongo/data/img17/img17809_5.png","users":{}},{"no":25,"name":"Pikachu Flying 04","displayName":"Pikachu Flying 04","spriteUrl":"https://cdn08.net/pokemongo/data/img17/img17925_5.png","users":{}},{"no":25,"name":"Pikachu Horizons","displayName":"Pikachu Horizons","spriteUrl":"https://cdn08.net/pokemongo/data/img18/img18478_5.png","users":{}},{"no":25,"name":"Pikachu Moon Crown","displayName":"Pikachu Moon Crown","spriteUrl":"https://cdn08.net/pokemongo/data/img18/img18937_5.png","users":{}},{"no":25,"name":"Pikachu Sun Crown","displayName":"Pikachu Sun Crown","spriteUrl":"https://cdn08.net/pokemongo/data/img18/img18938_5.png","users":{}},{"no":25,"name":"Pikachu Nate Visor","displayName":"Pikachu Nate Visor","spriteUrl":"https://cdn08.net/pokemongo/data/img21/img21245_5.png","users":{}},{"no":25,"name":"Pikachu Rosa Visor","displayName":"Pikachu Rosa Visor","spriteUrl":"https://cdn08.net/pokemongo/data/img21/img21246_5.png","users":{}},{"no":25,"name":"Dapper Pikachu Blue Accents","displayName":"Dapper Pikachu Blue Accents","spriteUrl":"https://cdn08.net/pokemongo/data/img22/img22550_5.png","users":{}},{"no":25,"name":"Dapper Pikachu Red Accents","displayName":"Dapper Pikachu Red Accents","spriteUrl":"https://cdn08.net/pokemongo/data/img22/img22551_5.png","users":{}},{"no":25,"name":"Dapper Pikachu Yellow Accents","displayName":"Dapper Pikachu Yellow Accents","spriteUrl":"https://cdn08.net/pokemongo/data/img22/img22552_5.png","users":{}},{"no":25,"name":"Formal Pikachu Blue Accents","displayName":"Formal Pikachu Blue Accents","spriteUrl":"https://cdn08.net/pokemongo/data/img22/img22553_5.png","users":{}},{"no":25,"name":"Formal Pikachu Red Accents","displayName":"Formal Pikachu Red Accents","spriteUrl":"https://cdn08.net/pokemongo/data/img22/img22554_5.png","users":{}},{"no":25,"name":"Formal Pikachu Yellow Accents","displayName":"Formal Pikachu Yellow Accents","spriteUrl":"https://cdn08.net/pokemongo/data/img22/img22555_5.png","users":{}},{"no":25,"name":"Pikachu Indonesia 2025","displayName":"Pikachu Indonesia 2025","spriteUrl":"https://cdn08.net/pokemongo/data/img23/img23241_5.png","users":{}},{"no":25,"name":"Pikachu Varsity Jacket","displayName":"Pikachu Varsity Jacket","spriteUrl":"https://cdn08.net/pokemongo/data/img23/img23279_5.png","users":{}},{"no":25,"name":"Pikachu Baseball Shirt","displayName":"Pikachu Baseball Shirt","spriteUrl":"https://cdn08.net/pokemongo/data/img24/img24949_5.png","users":{}},{"no":25,"name":"Pikachu Marathon Visor","displayName":"Pikachu Marathon Visor","spriteUrl":"https://cdn08.net/pokemongo/data/img25/img25327_5.png","users":{}},{"no":26,"name":"Raichu Santa Hat","displayName":"Raichu Santa Hat","spriteUrl":"https://cdn08.net/pokemongo/data/img6/img6446_5.png","users":{}},{"no":26,"name":"Raichu Witch Hat","displayName":"Raichu Witch Hat","spriteUrl":"https://cdn08.net/pokemongo/data/img6/img6447_5.png","users":{}},{"no":26,"name":"Raichu Party Hat","displayName":"Raichu Party Hat","spriteUrl":"https://cdn08.net/pokemongo/data/img6/img6448_5.png","users":{}},{"no":26,"name":"Raichu Original Cap","displayName":"Raichu Original Cap","spriteUrl":"https://cdn08.net/pokemongo/data/img6/img6449_5.png","users":{}},{"no":26,"name":"Raichu Summer Style","displayName":"Raichu Summer Style","spriteUrl":"https://cdn08.net/pokemongo/data/img6/img6450_5.png","users":{}},{"no":26,"name":"Raichu Flower Crown","displayName":"Raichu Flower Crown","spriteUrl":"https://cdn08.net/pokemongo/data/img6/img6451_5.png","users":{}},{"no":26,"name":"Raichu Fragment Cap","displayName":"Raichu Fragment Cap","spriteUrl":"https://cdn08.net/pokemongo/data/img6/img6452_5.png","users":{}},{"no":26,"name":"Raichu Detective","displayName":"Raichu Detective","spriteUrl":"https://cdn08.net/pokemongo/data/img6/img6453_5.png","users":{}},{"no":26,"name":"Raichu Beanie","displayName":"Raichu Beanie","spriteUrl":"https://cdn08.net/pokemongo/data/img6/img6454_5.png","users":{}},{"no":26,"name":"Raichu World Cap","displayName":"Raichu World Cap","spriteUrl":"https://cdn08.net/pokemongo/data/img10/img10117_5.png","users":{}},{"no":26,"name":"Raichu New Year","displayName":"Raichu New Year","spriteUrl":"https://cdn08.net/pokemongo/data/img10/img10754_5.png","users":{}},{"no":26,"name":"Raichu Cherry Blossoms","displayName":"Raichu Cherry Blossoms","spriteUrl":"https://cdn08.net/pokemongo/data/img15/img15090_5.png","users":{}},{"no":26,"name":"Raichu Holiday 2023","displayName":"Raichu Holiday 2023","spriteUrl":"https://cdn08.net/pokemongo/data/img17/img17486_5.png","users":{}},{"no":31,"name":"Nidoqueen Crown","displayName":"Nidoqueen Crown","spriteUrl":"https://cdn08.net/pokemongo/data/img22/img22507_5.png","users":{}},{"no":33,"name":"Nidorino Party Hat","displayName":"Nidorino Party Hat","spriteUrl":"https://cdn08.net/pokemongo/data/img9/img9013_5.png","users":{}},{"no":34,"name":"Nidoking Crown","displayName":"Nidoking Crown","spriteUrl":"https://cdn08.net/pokemongo/data/img22/img22508_5.png","users":{}},{"no":37,"name":"Vulpix Spooky Festival","displayName":"Vulpix Spooky Festival","spriteUrl":"https://cdn08.net/pokemongo/data/img14/img14129_5.png","users":{}},{"no":38,"name":"Ninetales Spooky Festival","displayName":"Ninetales Spooky Festival","spriteUrl":"https://cdn08.net/pokemongo/data/img14/img14130_5.png","users":{}},{"no":40,"name":"Wigglytuff Ribbon","displayName":"Wigglytuff Ribbon","spriteUrl":"https://cdn08.net/pokemongo/data/img17/img17681_5.png","users":{}},{"no":50,"name":"Diglett Fashionable Hat","displayName":"Diglett Fashionable Hat","spriteUrl":"https://cdn08.net/pokemongo/data/img13/img13940_5.png","users":{}},{"no":51,"name":"Dugtrio Fashionable Hat","displayName":"Dugtrio Fashionable Hat","spriteUrl":"https://cdn08.net/pokemongo/data/img13/img13939_5.png","users":{}},{"no":54,"name":"Psyduck Holiday Attire","displayName":"Psyduck Holiday Attire","spriteUrl":"https://cdn08.net/pokemongo/data/img17/img17487_5.png","users":{}},{"no":54,"name":"Psyduck Swim Ring","displayName":"Psyduck Swim Ring","spriteUrl":"https://cdn08.net/pokemongo/data/img23/img23558_5.png","users":{}},{"no":55,"name":"Golduck Holiday 2023","displayName":"Golduck Holiday 2023","spriteUrl":"https://cdn08.net/pokemongo/data/img17/img17488_5.png","users":{}},{"no":77,"name":"Ponyta Galarian GO Fest 2021","displayName":"Ponyta Galarian GO Fest 2021","spriteUrl":"https://cdn08.net/pokemongo/data/img11/img11860_5.png","users":{}},{"no":78,"name":"Rapidash Candela motif","displayName":"Rapidash Candela motif","spriteUrl":"https://cdn08.net/pokemongo/data/img15/img15253_5.png","users":{}},{"no":79,"name":"Slowpoke 2020","displayName":"Slowpoke 2020","spriteUrl":"https://cdn08.net/pokemongo/data/img10/img10756_5.png","users":{}},{"no":79,"name":"Slowpoke Hat","displayName":"Slowpoke Hat","spriteUrl":"https://cdn08.net/pokemongo/data/img17/img17010_5.png","users":{}},{"no":80,"name":"Slowpoke 2021","displayName":"Slowpoke 2021","spriteUrl":"https://cdn08.net/pokemongo/data/img10/img10757_5.png","users":{}},{"no":89,"name":"Muk Party Hat","displayName":"Muk Party Hat","spriteUrl":"https://cdn08.net/pokemongo/data/img19/img19612_5.png","users":{}},{"no":94,"name":"Gengar Party Hat","displayName":"Gengar Party Hat","spriteUrl":"https://cdn08.net/pokemongo/data/img9/img9014_5.png","users":{}},{"no":94,"name":"Gengar Halloween","displayName":"Gengar Halloween","spriteUrl":"https://cdn08.net/pokemongo/data/img10/img10214_5.png","users":{}},{"no":94,"name":"Gengar Spooky Festival","displayName":"Gengar Spooky Festival","spriteUrl":"https://cdn08.net/pokemongo/data/img14/img14128_5.png","users":{}},{"no":94,"name":"Gengar Fall 2023","displayName":"Gengar Fall 2023","spriteUrl":"https://cdn08.net/pokemongo/data/img17/img17092_5.png","users":{}},{"no":104,"name":"Cubone Cempasuchil Crown","displayName":"Cubone Cempasuchil Crown","spriteUrl":"https://cdn08.net/pokemongo/data/img17/img17165_5.png","users":{}},{"no":105,"name":"Marowak Cempasuchil Crown","displayName":"Marowak Cempasuchil Crown","spriteUrl":"https://cdn08.net/pokemongo/data/img17/img17167_5.png","users":{}},{"no":125,"name":"Electabuzz Spark motif","displayName":"Electabuzz Spark motif","spriteUrl":"https://cdn08.net/pokemongo/data/img15/img15174_5.png","users":{}},{"no":132,"name":"Ditto Yellow Party Hat","displayName":"Ditto Yellow Party Hat","spriteUrl":"https://cdn08.net/pokemongo/data/img25/img25014_5.png","users":{}},{"no":132,"name":"Ditto Blue Party Hat","displayName":"Ditto Blue Party Hat","spriteUrl":"https://cdn08.net/pokemongo/data/img25/img25015_5.png","users":{}},{"no":133,"name":"Eevee Party Hat","displayName":"Eevee Party Hat","spriteUrl":"https://cdn08.net/pokemongo/data/img9/img9015_5.png","users":{}},{"no":133,"name":"Eevee Holiday 2023","displayName":"Eevee Holiday 2023","spriteUrl":"https://cdn08.net/pokemongo/data/img14/img14496_5.png","users":{}},{"no":133,"name":"Eevee Cherry Blossoms","displayName":"Eevee Cherry Blossoms","spriteUrl":"https://cdn08.net/pokemongo/data/img15/img15086_5.png","users":{}},{"no":133,"name":"Eevee Moon Crown","displayName":"Eevee Moon Crown","spriteUrl":"https://cdn08.net/pokemongo/data/img18/img18939_5.png","users":{}},{"no":133,"name":"Eevee Sun Crown","displayName":"Eevee Sun Crown","spriteUrl":"https://cdn08.net/pokemongo/data/img18/img18940_5.png","users":{}},{"no":134,"name":"Vaporeon Flower Crown","displayName":"Vaporeon Flower Crown","spriteUrl":"https://cdn08.net/pokemongo/data/img6/img6467_5.png","users":{}},{"no":134,"name":"Vaporeon holiday 2023","displayName":"Vaporeon holiday 2023","spriteUrl":"https://cdn08.net/pokemongo/data/img14/img14501_5.png","users":{}},{"no":134,"name":"Vaporeon Cherry Blossoms","displayName":"Vaporeon Cherry Blossoms","spriteUrl":"https://cdn08.net/pokemongo/data/img15/img15091_5.png","users":{}},{"no":134,"name":"Vaporeon Explorer Hat","displayName":"Vaporeon Explorer Hat","spriteUrl":"https://cdn08.net/pokemongo/data/img15/img15755_5.png","users":{}},{"no":135,"name":"Jolteon Flower Crown","displayName":"Jolteon Flower Crown","spriteUrl":"https://cdn08.net/pokemongo/data/img6/img6468_5.png","users":{}},{"no":135,"name":"Jolteon Holiday 2023","displayName":"Jolteon Holiday 2023","spriteUrl":"https://cdn08.net/pokemongo/data/img14/img14502_5.png","users":{}},{"no":135,"name":"Jolteon Cherry Blossoms","displayName":"Jolteon Cherry Blossoms","spriteUrl":"https://cdn08.net/pokemongo/data/img15/img15092_5.png","users":{}},{"no":135,"name":"Jolteon Explorer Hat","displayName":"Jolteon Explorer Hat","spriteUrl":"https://cdn08.net/pokemongo/data/img15/img15756_5.png","users":{}},{"no":136,"name":"Flareon Flower Crown","displayName":"Flareon Flower Crown","spriteUrl":"https://cdn08.net/pokemongo/data/img6/img6469_5.png","users":{}},{"no":136,"name":"Flareon Holiday 2023","displayName":"Flareon Holiday 2023","spriteUrl":"https://cdn08.net/pokemongo/data/img14/img14503_5.png","users":{}},{"no":136,"name":"Flareon Cherry Blossoms","displayName":"Flareon Cherry Blossoms","spriteUrl":"https://cdn08.net/pokemongo/data/img15/img15093_5.png","users":{}},{"no":136,"name":"Flareon Explorer Hat","displayName":"Flareon Explorer Hat","spriteUrl":"https://cdn08.net/pokemongo/data/img15/img15757_5.png","users":{}},{"no":143,"name":"Snorlax Night Cap","displayName":"Snorlax Night Cap","spriteUrl":"https://cdn08.net/pokemongo/data/img15/img15591_5.png","users":{}},{"no":149,"name":"Dragonite Fashionable","displayName":"Dragonite Fashionable","spriteUrl":"https://cdn08.net/pokemongo/data/img17/img17243_5.png","users":{}},{"no":150,"name":"Mewtwo (Armored)","displayName":"Mewtwo (Armored)","spriteUrl":"https://cdn08.net/pokemongo/data/img6/img6601_5.png","users":{}},{"no":163,"name":"Hoothoot New Years","displayName":"Hoothoot New Years","spriteUrl":"https://cdn08.net/pokemongo/data/img12/img12618_5.png","users":{}},{"no":164,"name":"Noctowl New Years 2022","displayName":"Noctowl New Years 2022","spriteUrl":"https://cdn08.net/pokemongo/data/img14/img14506_5.png","users":{}},{"no":172,"name":"Pichu Original Cap","displayName":"Pichu Original Cap","spriteUrl":"https://cdn08.net/pokemongo/data/img6/img6458_5.png","users":{}},{"no":172,"name":"Pichu Beanie","displayName":"Pichu Beanie","spriteUrl":"https://cdn08.net/pokemongo/data/img6/img6459_5.png","users":{}},{"no":172,"name":"Pichu Cherry Blossoms","displayName":"Pichu Cherry Blossoms","spriteUrl":"https://cdn08.net/pokemongo/data/img15/img15088_5.png","users":{}},{"no":185,"name":"Sudowoodo Holiday 2025","displayName":"Sudowoodo Holiday 2025","spriteUrl":"https://cdn08.net/pokemongo/data/img24/img24236_5.png","users":{}},{"no":194,"name":"Wooper Fashionable","displayName":"Wooper Fashionable","spriteUrl":"https://cdn08.net/pokemongo/data/img17/img17244_5.png","users":{}},{"no":195,"name":"Quagsire Fashionable","displayName":"Quagsire Fashionable","spriteUrl":"https://cdn08.net/pokemongo/data/img17/img17245_5.png","users":{}},{"no":196,"name":"Espeon Flower Crown","displayName":"Espeon Flower Crown","spriteUrl":"https://cdn08.net/pokemongo/data/img6/img6470_5.png","users":{}},{"no":196,"name":"Espeon Holiday 2023","displayName":"Espeon Holiday 2023","spriteUrl":"https://cdn08.net/pokemongo/data/img14/img14504_5.png","users":{}},{"no":196,"name":"Espeon Cherry Blossoms","displayName":"Espeon Cherry Blossoms","spriteUrl":"https://cdn08.net/pokemongo/data/img15/img15094_5.png","users":{}},{"no":196,"name":"Espeon Explorer Hat","displayName":"Espeon Explorer Hat","spriteUrl":"https://cdn08.net/pokemongo/data/img15/img15758_5.png","users":{}},{"no":196,"name":"Espeon Day Scarf","displayName":"Espeon Day Scarf","spriteUrl":"https://cdn08.net/pokemongo/data/img18/img18941_5.png","users":{}},{"no":197,"name":"Umbreon Flower Crown","displayName":"Umbreon Flower Crown","spriteUrl":"https://cdn08.net/pokemongo/data/img6/img6471_5.png","users":{}},{"no":197,"name":"Umbreon Holiday 2023","displayName":"Umbreon Holiday 2023","spriteUrl":"https://cdn08.net/pokemongo/data/img14/img14497_5.png","users":{}},{"no":197,"name":"Umbreon Cherry Blossoms","displayName":"Umbreon Cherry Blossoms","spriteUrl":"https://cdn08.net/pokemongo/data/img15/img15095_5.png","users":{}},{"no":197,"name":"Umbreon Explorer Hat","displayName":"Umbreon Explorer Hat","spriteUrl":"https://cdn08.net/pokemongo/data/img15/img15759_5.png","users":{}},{"no":197,"name":"Umbreon Night Scarf","displayName":"Umbreon Night Scarf","spriteUrl":"https://cdn08.net/pokemongo/data/img18/img18942_5.png","users":{}},{"no":199,"name":"Slowking 2022","displayName":"Slowking 2022","spriteUrl":"https://cdn08.net/pokemongo/data/img12/img12619_5.png","users":{}},{"no":202,"name":"Wobbuffet Party Hat","displayName":"Wobbuffet Party Hat","spriteUrl":"https://cdn08.net/pokemongo/data/img8/img8508_5.png","users":{}},{"no":215,"name":"Sneasel Fashion","displayName":"Sneasel Fashion","spriteUrl":"https://cdn08.net/pokemongo/data/img12/img12281_5.png","users":{}},{"no":216,"name":"Teddiursa Witch Hat","displayName":"Teddiursa Witch Hat","spriteUrl":"https://cdn08.net/pokemongo/data/img23/img23912_5.png","users":{}},{"no":217,"name":"Ursaring Witch Hat","displayName":"Ursaring Witch Hat","spriteUrl":"https://cdn08.net/pokemongo/data/img23/img23913_5.png","users":{}},{"no":222,"name":"Galarian Corsola Pink Sunglasses","displayName":"Galarian Corsola Pink Sunglasses","spriteUrl":"https://cdn08.net/pokemongo/data/img25/img25145_5.png","users":{}},{"no":225,"name":"Delibird Holidays","displayName":"Delibird Holidays","spriteUrl":"https://cdn08.net/pokemongo/data/img10/img10751_5.png","users":{}},{"no":234,"name":"Stantler Holiday","displayName":"Stantler Holiday","spriteUrl":"https://cdn08.net/pokemongo/data/img8/img8467_5.png","users":{}},{"no":263,"name":"Zigzagoon Galarian GO Fest 2021","displayName":"Zigzagoon Galarian GO Fest 2021","spriteUrl":"https://cdn08.net/pokemongo/data/img11/img11859_5.png","users":{}},{"no":265,"name":"Wurmple Party","displayName":"Wurmple Party","spriteUrl":"https://cdn08.net/pokemongo/data/img8/img8509_5.png","users":{}},{"no":282,"name":"Gardevoir GO Fest 2021","displayName":"Gardevoir GO Fest 2021","spriteUrl":"https://cdn08.net/pokemongo/data/img11/img11862_5.png","users":{}},{"no":287,"name":"Slakoth Visor","displayName":"Slakoth Visor","spriteUrl":"https://cdn08.net/pokemongo/data/img19/img19337_5.png","users":{}},{"no":288,"name":"Vigoroth Visor","displayName":"Vigoroth Visor","spriteUrl":"https://cdn08.net/pokemongo/data/img19/img19338_5.png","users":{}},{"no":289,"name":"Slaking Visor","displayName":"Slaking Visor","spriteUrl":"https://cdn08.net/pokemongo/data/img19/img19339_5.png","users":{}},{"no":302,"name":"Sableye Halloween","displayName":"Sableye Halloween","spriteUrl":"https://cdn08.net/pokemongo/data/img10/img10213_5.png","users":{}},{"no":330,"name":"Flygon GO Fest 2021","displayName":"Flygon GO Fest 2021","spriteUrl":"https://cdn08.net/pokemongo/data/img11/img11863_5.png","users":{}},{"no":355,"name":"Duskull Cempasuchil Crown","displayName":"Duskull Cempasuchil Crown","spriteUrl":"https://cdn08.net/pokemongo/data/img14/img14133_5.png","users":{}},{"no":356,"name":"Dusclops Cempasuchil Crown","displayName":"Dusclops Cempasuchil Crown","spriteUrl":"https://cdn08.net/pokemongo/data/img14/img14134_5.png","users":{}},{"no":359,"name":"Absol Fashionable Costume","displayName":"Absol Fashionable Costume","spriteUrl":"https://cdn08.net/pokemongo/data/img13/img13938_5.png","users":{}},{"no":393,"name":"Piplup Halloween Mischief","displayName":"Piplup Halloween Mischief","spriteUrl":"https://cdn08.net/pokemongo/data/img12/img12365_5.png","users":{}},{"no":426,"name":"Drifblim Halloween Mischief","displayName":"Drifblim Halloween Mischief","spriteUrl":"https://cdn08.net/pokemongo/data/img12/img12367_5.png","users":{}},{"no":427,"name":"Buneary Flower Crown","displayName":"Buneary Flower Crown","spriteUrl":"https://cdn08.net/pokemongo/data/img9/img9176_5.png","users":{}},{"no":428,"name":"Lopunny Flower Crown","displayName":"Lopunny Flower Crown","spriteUrl":"https://cdn08.net/pokemongo/data/img13/img13141_5.png","users":{}},{"no":453,"name":"Croagunk Backwards Cap","displayName":"Croagunk Backwards Cap","spriteUrl":"https://cdn08.net/pokemongo/data/img10/img10121_5.png","users":{}},{"no":454,"name":"Toxicroak Backwards Cap","displayName":"Toxicroak Backwards Cap","spriteUrl":"https://cdn08.net/pokemongo/data/img13/img13937_5.png","users":{}},{"no":466,"name":"Electivire Spark motif","displayName":"Electivire Spark motif","spriteUrl":"https://cdn08.net/pokemongo/data/img15/img15175_5.png","users":{}},{"no":470,"name":"Leafeon Flower Crown","displayName":"Leafeon Flower Crown","spriteUrl":"https://cdn08.net/pokemongo/data/img6/img6517_5.png","users":{}},{"no":470,"name":"Leafeon Holiday 2023","displayName":"Leafeon Holiday 2023","spriteUrl":"https://cdn08.net/pokemongo/data/img14/img14499_5.png","users":{}},{"no":470,"name":"Leafeon Cherry Blossoms","displayName":"Leafeon Cherry Blossoms","spriteUrl":"https://cdn08.net/pokemongo/data/img15/img15096_5.png","users":{}},{"no":470,"name":"Leafeon Explorer Hat","displayName":"Leafeon Explorer Hat","spriteUrl":"https://cdn08.net/pokemongo/data/img15/img15761_5.png","users":{}},{"no":471,"name":"Glaceon Flower Crown","displayName":"Glaceon Flower Crown","spriteUrl":"https://cdn08.net/pokemongo/data/img6/img6518_5.png","users":{}},{"no":471,"name":"Glaceon Holiday 2023","displayName":"Glaceon Holiday 2023","spriteUrl":"https://cdn08.net/pokemongo/data/img14/img14500_5.png","users":{}},{"no":471,"name":"Glaceon Cherry Blossoms","displayName":"Glaceon Cherry Blossoms","spriteUrl":"https://cdn08.net/pokemongo/data/img15/img15097_5.png","users":{}},{"no":471,"name":"Glaceon Explorer Hat","displayName":"Glaceon Explorer Hat","spriteUrl":"https://cdn08.net/pokemongo/data/img15/img15760_5.png","users":{}},{"no":477,"name":"Dusknoir Cempasuchil Crown","displayName":"Dusknoir Cempasuchil Crown","spriteUrl":"https://cdn08.net/pokemongo/data/img14/img14135_5.png","users":{}},{"no":522,"name":"Blitzle Fashionable","displayName":"Blitzle Fashionable","spriteUrl":"https://cdn08.net/pokemongo/data/img12/img12280_5.png","users":{}},{"no":547,"name":"Whimsicott Flower Crown","displayName":"Whimsicott Flower Crown","spriteUrl":"https://cdn08.net/pokemongo/data/img18/img18565_5.png","users":{}},{"no":573,"name":"Cinccino Fashionable Costume","displayName":"Cinccino Fashionable Costume","spriteUrl":"https://cdn08.net/pokemongo/data/img21/img21480_5.png","users":{}},{"no":613,"name":"Cubchoo Holidays","displayName":"Cubchoo Holidays","spriteUrl":"https://cdn08.net/pokemongo/data/img10/img10752_5.png","users":{}},{"no":614,"name":"Beartic Holidays","displayName":"Beartic Holidays","spriteUrl":"https://cdn08.net/pokemongo/data/img14/img14505_5.png","users":{}},{"no":656,"name":"Froakie Witch Hat","displayName":"Froakie Witch Hat","spriteUrl":"https://cdn08.net/pokemongo/data/img20/img20674_5.png","users":{}},{"no":657,"name":"Frogadier Witch Hat","displayName":"Frogadier Witch Hat","spriteUrl":"https://cdn08.net/pokemongo/data/img20/img20726_5.png","users":{}},{"no":658,"name":"Greninja Witch Hat","displayName":"Greninja Witch Hat","spriteUrl":"https://cdn08.net/pokemongo/data/img20/img20727_5.png","users":{}},{"no":700,"name":"Sylveon Flower Crown","displayName":"Sylveon Flower Crown","spriteUrl":"https://cdn08.net/pokemongo/data/img11/img11454_5.png","users":{}},{"no":700,"name":"Sylveon Holiday","displayName":"Sylveon Holiday","spriteUrl":"https://cdn08.net/pokemongo/data/img14/img14498_5.png","users":{}},{"no":700,"name":"Sylveon Cherry Blossoms","displayName":"Sylveon Cherry Blossoms","spriteUrl":"https://cdn08.net/pokemongo/data/img15/img15098_5.png","users":{}},{"no":700,"name":"Sylveon Explorer Hat","displayName":"Sylveon Explorer Hat","spriteUrl":"https://cdn08.net/pokemongo/data/img15/img15762_5.png","users":{}},{"no":710,"name":"Pumpkaboo Average Size","displayName":"Pumpkaboo Average Size","spriteUrl":"https://cdn08.net/pokemongo/data/img14/img14138_5.png","users":{}},{"no":710,"name":"Pumpkaboo Super Size","displayName":"Pumpkaboo Super Size","spriteUrl":"https://cdn08.net/pokemongo/data/img14/img14144_5.png","users":{}},{"no":710,"name":"Gourgeist Small Size","displayName":"Gourgeist Small Size","spriteUrl":"https://cdn08.net/pokemongo/data/img14/img14145_5.png","users":{}},{"no":710,"name":"Pumpkaboo Small Size","displayName":"Pumpkaboo Small Size","spriteUrl":"https://cdn08.net/pokemongo/data/img14/img14146_5.png","users":{}},{"no":710,"name":"Pumpkaboo Large Size","displayName":"Pumpkaboo Large Size","spriteUrl":"https://cdn08.net/pokemongo/data/img14/img14149_5.png","users":{}},{"no":711,"name":"Gourgeist Super Size","displayName":"Gourgeist Super Size","spriteUrl":"https://cdn08.net/pokemongo/data/img14/img14132_5.png","users":{}},{"no":711,"name":"Gourgeist Average Size","displayName":"Gourgeist Average Size","spriteUrl":"https://cdn08.net/pokemongo/data/img14/img14143_5.png","users":{}},{"no":711,"name":"Gourgeist Large Size","displayName":"Gourgeist Large Size","spriteUrl":"https://cdn08.net/pokemongo/data/img14/img14147_5.png","users":{}},{"no":714,"name":"Noibat Headband","displayName":"Noibat Headband","spriteUrl":"https://cdn08.net/pokemongo/data/img23/img23915_5.png","users":{}},{"no":715,"name":"Noivern Headband","displayName":"Noivern Headband","spriteUrl":"https://cdn08.net/pokemongo/data/img23/img23916_5.png","users":{}},{"no":723,"name":"Dartrix Halloween","displayName":"Dartrix Halloween","spriteUrl":"https://cdn08.net/pokemongo/data/img20/img20728_5.png","users":{}},{"no":724,"name":"Decidueye Halloween","displayName":"Decidueye Halloween","spriteUrl":"https://cdn08.net/pokemongo/data/img20/img20729_5.png","users":{}},{"no":737,"name":"Charjabug Holiday 2025","displayName":"Charjabug Holiday 2025","spriteUrl":"https://cdn08.net/pokemongo/data/img24/img24238_5.png","users":{}},{"no":738,"name":"Vikavolt Holiday 2025","displayName":"Vikavolt Holiday 2025","spriteUrl":"https://cdn08.net/pokemongo/data/img24/img24306_5.png","users":{}},{"no":760,"name":"Bewear Wilderness Cape","displayName":"Bewear Wilderness Cape","spriteUrl":"https://cdn08.net/pokemongo/data/img23/img23848_5.png","users":{}},{"no":832,"name":"Dubwool Holiday Attire","displayName":"Dubwool Holiday Attire","spriteUrl":"https://cdn08.net/pokemongo/data/img21/img21321_5.png","users":{}},{"no":870,"name":"Falinks Train","displayName":"Falinks Train","spriteUrl":"https://cdn08.net/pokemongo/data/img22/img22556_5.png","users":{}},{"no":901,"name":"Ursaluna Witch Hat","displayName":"Ursaluna Witch Hat","spriteUrl":"https://cdn08.net/pokemongo/data/img23/img23914_5.png","users":{}},{"no":907,"name":"Floragato Hat With Likos Pin","displayName":"Floragato Hat With Likos Pin","spriteUrl":"https://cdn08.net/pokemongo/data/img21/img21801_5.png","users":{}},{"no":999,"name":"Gimmighoul 9th Anniversary Coin","displayName":"Gimmighoul 9th Anniversary Coin","spriteUrl":"https://cdn08.net/pokemongo/data/img22/img22922_5.png","users":{}}];
-// Additional form variants — Pokémon with procedural/random forms that PokeAPI doesn't carry.
-// Sourced from Serebii (proxied through images.weserv.nl in canvas-safe contexts).
+const EXTRA_COSTUME_ENTRIES=[{"no":1,"name":"Bulbasaur Party Hat","displayName":"Bulbasaur Party Hat","spriteUrl":"","users":{}},{"no":1,"name":"Bulbasaur Pikachu Visor","displayName":"Bulbasaur Pikachu Visor","spriteUrl":"","users":{}},{"no":2,"name":"Ivysaur Party Hat","displayName":"Ivysaur Party Hat","spriteUrl":"","users":{}},{"no":3,"name":"Venusaur Party Hat","displayName":"Venusaur Party Hat","spriteUrl":"","users":{}},{"no":4,"name":"Charmander Party Hat","displayName":"Charmander Party Hat","spriteUrl":"","users":{}},{"no":4,"name":"Charmander Pikachu Visor","displayName":"Charmander Pikachu Visor","spriteUrl":"","users":{}},{"no":5,"name":"Charmeleon Party Hat","displayName":"Charmeleon Party Hat","spriteUrl":"","users":{}},{"no":6,"name":"Charizard Party Hat","displayName":"Charizard Party Hat","spriteUrl":"","users":{}},{"no":7,"name":"Squirtle Halloween","displayName":"Squirtle Halloween","spriteUrl":"","users":{}},{"no":7,"name":"Squirtle Party Hat","displayName":"Squirtle Party Hat","spriteUrl":"","users":{}},{"no":7,"name":"Squirtle Pikachu Visor","displayName":"Squirtle Pikachu Visor","spriteUrl":"","users":{}},{"no":8,"name":"Wartortle Sunglasses","displayName":"Wartortle Sunglasses","spriteUrl":"","users":{}},{"no":8,"name":"Wartortle Party Hat","displayName":"Wartortle Party Hat","spriteUrl":"","users":{}},{"no":9,"name":"Blastoise Sunglasses","displayName":"Blastoise Sunglasses","spriteUrl":"","users":{}},{"no":9,"name":"Blastoise Party Hat","displayName":"Blastoise Party Hat","spriteUrl":"","users":{}},{"no":12,"name":"Butterfree Fashionable","displayName":"Butterfree Fashionable","spriteUrl":"","users":{}},{"no":20,"name":"Raticate Party Hat","displayName":"Raticate Party Hat","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Party Hat","displayName":"Pikachu Party Hat","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Original Cap","displayName":"Pikachu Original Cap","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Beanie","displayName":"Pikachu Beanie","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Party Hat 2020","displayName":"Pikachu Party Hat 2020","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu (VS 2019)","displayName":"Pikachu (VS 2019)","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Flower Hat","displayName":"Pikachu Flower Hat","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Costume 2020","displayName":"Pikachu Costume 2020","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Winter Carnival Outfit","displayName":"Pikachu Winter Carnival Outfit","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Kariyushi","displayName":"Pikachu Kariyushi","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu GO Fest 2021","displayName":"Pikachu GO Fest 2021","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Halloween Mischief","displayName":"Pikachu Halloween Mischief","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Flying Okinawa","displayName":"Pikachu Flying Okinawa","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Gracidea","displayName":"Pikachu Gracidea","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Flying 01","displayName":"Pikachu Flying 01","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Berry Shirt","displayName":"Pikachu Berry Shirt","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Flying 02","displayName":"Pikachu Flying 02","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Party Top Hat","displayName":"Pikachu Party Top Hat","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu May Bow","displayName":"Pikachu May Bow","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Cherry Blossoms","displayName":"Pikachu Cherry Blossoms","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Quartz Crown","displayName":"Pikachu Quartz Crown","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Pyrite Crown","displayName":"Pikachu Pyrite Crown","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Malachite Crown","displayName":"Pikachu Malachite Crown","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Aquamarine Crown","displayName":"Pikachu Aquamarine Crown","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Amethyst Crown","displayName":"Pikachu Amethyst Crown","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Flying 03","displayName":"Pikachu Flying 03","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Doctor","displayName":"Pikachu Doctor","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Fall 2023","displayName":"Pikachu Fall 2023","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Akari Kerchief","displayName":"Pikachu Akari Kerchief","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Flying 04","displayName":"Pikachu Flying 04","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Horizons","displayName":"Pikachu Horizons","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Moon Crown","displayName":"Pikachu Moon Crown","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Sun Crown","displayName":"Pikachu Sun Crown","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Nate Visor","displayName":"Pikachu Nate Visor","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Rosa Visor","displayName":"Pikachu Rosa Visor","spriteUrl":"","users":{}},{"no":25,"name":"Dapper Pikachu Blue Accents","displayName":"Dapper Pikachu Blue Accents","spriteUrl":"","users":{}},{"no":25,"name":"Dapper Pikachu Red Accents","displayName":"Dapper Pikachu Red Accents","spriteUrl":"","users":{}},{"no":25,"name":"Dapper Pikachu Yellow Accents","displayName":"Dapper Pikachu Yellow Accents","spriteUrl":"","users":{}},{"no":25,"name":"Formal Pikachu Blue Accents","displayName":"Formal Pikachu Blue Accents","spriteUrl":"","users":{}},{"no":25,"name":"Formal Pikachu Red Accents","displayName":"Formal Pikachu Red Accents","spriteUrl":"","users":{}},{"no":25,"name":"Formal Pikachu Yellow Accents","displayName":"Formal Pikachu Yellow Accents","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Indonesia 2025","displayName":"Pikachu Indonesia 2025","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Varsity Jacket","displayName":"Pikachu Varsity Jacket","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Baseball Shirt","displayName":"Pikachu Baseball Shirt","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Marathon Visor","displayName":"Pikachu Marathon Visor","spriteUrl":"","users":{}},{"no":26,"name":"Raichu Santa Hat","displayName":"Raichu Santa Hat","spriteUrl":"","users":{}},{"no":26,"name":"Raichu Witch Hat","displayName":"Raichu Witch Hat","spriteUrl":"","users":{}},{"no":26,"name":"Raichu Party Hat","displayName":"Raichu Party Hat","spriteUrl":"","users":{}},{"no":26,"name":"Raichu Original Cap","displayName":"Raichu Original Cap","spriteUrl":"","users":{}},{"no":26,"name":"Raichu Summer Style","displayName":"Raichu Summer Style","spriteUrl":"","users":{}},{"no":26,"name":"Raichu Flower Crown","displayName":"Raichu Flower Crown","spriteUrl":"","users":{}},{"no":26,"name":"Raichu Fragment Cap","displayName":"Raichu Fragment Cap","spriteUrl":"","users":{}},{"no":26,"name":"Raichu Detective","displayName":"Raichu Detective","spriteUrl":"","users":{}},{"no":26,"name":"Raichu Beanie","displayName":"Raichu Beanie","spriteUrl":"","users":{}},{"no":26,"name":"Raichu World Cap","displayName":"Raichu World Cap","spriteUrl":"","users":{}},{"no":26,"name":"Raichu New Year","displayName":"Raichu New Year","spriteUrl":"","users":{}},{"no":26,"name":"Raichu Cherry Blossoms","displayName":"Raichu Cherry Blossoms","spriteUrl":"","users":{}},{"no":26,"name":"Raichu Holiday 2023","displayName":"Raichu Holiday 2023","spriteUrl":"","users":{}},{"no":31,"name":"Nidoqueen Crown","displayName":"Nidoqueen Crown","spriteUrl":"","users":{}},{"no":33,"name":"Nidorino Party Hat","displayName":"Nidorino Party Hat","spriteUrl":"","users":{}},{"no":34,"name":"Nidoking Crown","displayName":"Nidoking Crown","spriteUrl":"","users":{}},{"no":37,"name":"Vulpix Spooky Festival","displayName":"Vulpix Spooky Festival","spriteUrl":"","users":{}},{"no":38,"name":"Ninetales Spooky Festival","displayName":"Ninetales Spooky Festival","spriteUrl":"","users":{}},{"no":40,"name":"Wigglytuff Ribbon","displayName":"Wigglytuff Ribbon","spriteUrl":"","users":{}},{"no":50,"name":"Diglett Fashionable Hat","displayName":"Diglett Fashionable Hat","spriteUrl":"","users":{}},{"no":51,"name":"Dugtrio Fashionable Hat","displayName":"Dugtrio Fashionable Hat","spriteUrl":"","users":{}},{"no":54,"name":"Psyduck Holiday Attire","displayName":"Psyduck Holiday Attire","spriteUrl":"","users":{}},{"no":54,"name":"Psyduck Swim Ring","displayName":"Psyduck Swim Ring","spriteUrl":"","users":{}},{"no":55,"name":"Golduck Holiday 2023","displayName":"Golduck Holiday 2023","spriteUrl":"","users":{}},{"no":77,"name":"Ponyta Galarian GO Fest 2021","displayName":"Ponyta Galarian GO Fest 2021","spriteUrl":"","users":{}},{"no":78,"name":"Rapidash Candela motif","displayName":"Rapidash Candela motif","spriteUrl":"","users":{}},{"no":79,"name":"Slowpoke 2020","displayName":"Slowpoke 2020","spriteUrl":"","users":{}},{"no":79,"name":"Slowpoke Hat","displayName":"Slowpoke Hat","spriteUrl":"","users":{}},{"no":80,"name":"Slowpoke 2021","displayName":"Slowpoke 2021","spriteUrl":"","users":{}},{"no":89,"name":"Muk Party Hat","displayName":"Muk Party Hat","spriteUrl":"","users":{}},{"no":94,"name":"Gengar Party Hat","displayName":"Gengar Party Hat","spriteUrl":"","users":{}},{"no":94,"name":"Gengar Halloween","displayName":"Gengar Halloween","spriteUrl":"","users":{}},{"no":94,"name":"Gengar Spooky Festival","displayName":"Gengar Spooky Festival","spriteUrl":"","users":{}},{"no":94,"name":"Gengar Fall 2023","displayName":"Gengar Fall 2023","spriteUrl":"","users":{}},{"no":104,"name":"Cubone Cempasuchil Crown","displayName":"Cubone Cempasuchil Crown","spriteUrl":"","users":{}},{"no":105,"name":"Marowak Cempasuchil Crown","displayName":"Marowak Cempasuchil Crown","spriteUrl":"","users":{}},{"no":125,"name":"Electabuzz Spark motif","displayName":"Electabuzz Spark motif","spriteUrl":"","users":{}},{"no":132,"name":"Ditto Yellow Party Hat","displayName":"Ditto Yellow Party Hat","spriteUrl":"","users":{}},{"no":132,"name":"Ditto Blue Party Hat","displayName":"Ditto Blue Party Hat","spriteUrl":"","users":{}},{"no":133,"name":"Eevee Party Hat","displayName":"Eevee Party Hat","spriteUrl":"","users":{}},{"no":133,"name":"Eevee Holiday 2023","displayName":"Eevee Holiday 2023","spriteUrl":"","users":{}},{"no":133,"name":"Eevee Cherry Blossoms","displayName":"Eevee Cherry Blossoms","spriteUrl":"","users":{}},{"no":133,"name":"Eevee Moon Crown","displayName":"Eevee Moon Crown","spriteUrl":"","users":{}},{"no":133,"name":"Eevee Sun Crown","displayName":"Eevee Sun Crown","spriteUrl":"","users":{}},{"no":134,"name":"Vaporeon Flower Crown","displayName":"Vaporeon Flower Crown","spriteUrl":"","users":{}},{"no":134,"name":"Vaporeon holiday 2023","displayName":"Vaporeon holiday 2023","spriteUrl":"","users":{}},{"no":134,"name":"Vaporeon Cherry Blossoms","displayName":"Vaporeon Cherry Blossoms","spriteUrl":"","users":{}},{"no":134,"name":"Vaporeon Explorer Hat","displayName":"Vaporeon Explorer Hat","spriteUrl":"","users":{}},{"no":135,"name":"Jolteon Flower Crown","displayName":"Jolteon Flower Crown","spriteUrl":"","users":{}},{"no":135,"name":"Jolteon Holiday 2023","displayName":"Jolteon Holiday 2023","spriteUrl":"","users":{}},{"no":135,"name":"Jolteon Cherry Blossoms","displayName":"Jolteon Cherry Blossoms","spriteUrl":"","users":{}},{"no":135,"name":"Jolteon Explorer Hat","displayName":"Jolteon Explorer Hat","spriteUrl":"","users":{}},{"no":136,"name":"Flareon Flower Crown","displayName":"Flareon Flower Crown","spriteUrl":"","users":{}},{"no":136,"name":"Flareon Holiday 2023","displayName":"Flareon Holiday 2023","spriteUrl":"","users":{}},{"no":136,"name":"Flareon Cherry Blossoms","displayName":"Flareon Cherry Blossoms","spriteUrl":"","users":{}},{"no":136,"name":"Flareon Explorer Hat","displayName":"Flareon Explorer Hat","spriteUrl":"","users":{}},{"no":143,"name":"Snorlax Night Cap","displayName":"Snorlax Night Cap","spriteUrl":"","users":{}},{"no":149,"name":"Dragonite Fashionable","displayName":"Dragonite Fashionable","spriteUrl":"","users":{}},{"no":150,"name":"Mewtwo (Armored)","displayName":"Mewtwo (Armored)","spriteUrl":"","users":{}},{"no":163,"name":"Hoothoot New Years","displayName":"Hoothoot New Years","spriteUrl":"","users":{}},{"no":164,"name":"Noctowl New Years 2022","displayName":"Noctowl New Years 2022","spriteUrl":"","users":{}},{"no":172,"name":"Pichu Original Cap","displayName":"Pichu Original Cap","spriteUrl":"","users":{}},{"no":172,"name":"Pichu Beanie","displayName":"Pichu Beanie","spriteUrl":"","users":{}},{"no":172,"name":"Pichu Cherry Blossoms","displayName":"Pichu Cherry Blossoms","spriteUrl":"","users":{}},{"no":185,"name":"Sudowoodo Holiday 2025","displayName":"Sudowoodo Holiday 2025","spriteUrl":"","users":{}},{"no":194,"name":"Wooper Fashionable","displayName":"Wooper Fashionable","spriteUrl":"","users":{}},{"no":195,"name":"Quagsire Fashionable","displayName":"Quagsire Fashionable","spriteUrl":"","users":{}},{"no":196,"name":"Espeon Flower Crown","displayName":"Espeon Flower Crown","spriteUrl":"","users":{}},{"no":196,"name":"Espeon Holiday 2023","displayName":"Espeon Holiday 2023","spriteUrl":"","users":{}},{"no":196,"name":"Espeon Cherry Blossoms","displayName":"Espeon Cherry Blossoms","spriteUrl":"","users":{}},{"no":196,"name":"Espeon Explorer Hat","displayName":"Espeon Explorer Hat","spriteUrl":"","users":{}},{"no":196,"name":"Espeon Day Scarf","displayName":"Espeon Day Scarf","spriteUrl":"","users":{}},{"no":197,"name":"Umbreon Flower Crown","displayName":"Umbreon Flower Crown","spriteUrl":"","users":{}},{"no":197,"name":"Umbreon Holiday 2023","displayName":"Umbreon Holiday 2023","spriteUrl":"","users":{}},{"no":197,"name":"Umbreon Cherry Blossoms","displayName":"Umbreon Cherry Blossoms","spriteUrl":"","users":{}},{"no":197,"name":"Umbreon Explorer Hat","displayName":"Umbreon Explorer Hat","spriteUrl":"","users":{}},{"no":197,"name":"Umbreon Night Scarf","displayName":"Umbreon Night Scarf","spriteUrl":"","users":{}},{"no":199,"name":"Slowking 2022","displayName":"Slowking 2022","spriteUrl":"","users":{}},{"no":202,"name":"Wobbuffet Party Hat","displayName":"Wobbuffet Party Hat","spriteUrl":"","users":{}},{"no":215,"name":"Sneasel Fashion","displayName":"Sneasel Fashion","spriteUrl":"","users":{}},{"no":216,"name":"Teddiursa Witch Hat","displayName":"Teddiursa Witch Hat","spriteUrl":"","users":{}},{"no":217,"name":"Ursaring Witch Hat","displayName":"Ursaring Witch Hat","spriteUrl":"","users":{}},{"no":222,"name":"Galarian Corsola Pink Sunglasses","displayName":"Galarian Corsola Pink Sunglasses","spriteUrl":"","users":{}},{"no":225,"name":"Delibird Holidays","displayName":"Delibird Holidays","spriteUrl":"","users":{}},{"no":234,"name":"Stantler Holiday","displayName":"Stantler Holiday","spriteUrl":"","users":{}},{"no":263,"name":"Zigzagoon Galarian GO Fest 2021","displayName":"Zigzagoon Galarian GO Fest 2021","spriteUrl":"","users":{}},{"no":265,"name":"Wurmple Party","displayName":"Wurmple Party","spriteUrl":"","users":{}},{"no":282,"name":"Gardevoir GO Fest 2021","displayName":"Gardevoir GO Fest 2021","spriteUrl":"","users":{}},{"no":287,"name":"Slakoth Visor","displayName":"Slakoth Visor","spriteUrl":"","users":{}},{"no":288,"name":"Vigoroth Visor","displayName":"Vigoroth Visor","spriteUrl":"","users":{}},{"no":289,"name":"Slaking Visor","displayName":"Slaking Visor","spriteUrl":"","users":{}},{"no":302,"name":"Sableye Halloween","displayName":"Sableye Halloween","spriteUrl":"","users":{}},{"no":330,"name":"Flygon GO Fest 2021","displayName":"Flygon GO Fest 2021","spriteUrl":"","users":{}},{"no":355,"name":"Duskull Cempasuchil Crown","displayName":"Duskull Cempasuchil Crown","spriteUrl":"","users":{}},{"no":356,"name":"Dusclops Cempasuchil Crown","displayName":"Dusclops Cempasuchil Crown","spriteUrl":"","users":{}},{"no":359,"name":"Absol Fashionable Costume","displayName":"Absol Fashionable Costume","spriteUrl":"","users":{}},{"no":393,"name":"Piplup Halloween Mischief","displayName":"Piplup Halloween Mischief","spriteUrl":"","users":{}},{"no":426,"name":"Drifblim Halloween Mischief","displayName":"Drifblim Halloween Mischief","spriteUrl":"","users":{}},{"no":427,"name":"Buneary Flower Crown","displayName":"Buneary Flower Crown","spriteUrl":"","users":{}},{"no":428,"name":"Lopunny Flower Crown","displayName":"Lopunny Flower Crown","spriteUrl":"","users":{}},{"no":453,"name":"Croagunk Backwards Cap","displayName":"Croagunk Backwards Cap","spriteUrl":"","users":{}},{"no":454,"name":"Toxicroak Backwards Cap","displayName":"Toxicroak Backwards Cap","spriteUrl":"","users":{}},{"no":466,"name":"Electivire Spark motif","displayName":"Electivire Spark motif","spriteUrl":"","users":{}},{"no":470,"name":"Leafeon Flower Crown","displayName":"Leafeon Flower Crown","spriteUrl":"","users":{}},{"no":470,"name":"Leafeon Holiday 2023","displayName":"Leafeon Holiday 2023","spriteUrl":"","users":{}},{"no":470,"name":"Leafeon Cherry Blossoms","displayName":"Leafeon Cherry Blossoms","spriteUrl":"","users":{}},{"no":470,"name":"Leafeon Explorer Hat","displayName":"Leafeon Explorer Hat","spriteUrl":"","users":{}},{"no":471,"name":"Glaceon Flower Crown","displayName":"Glaceon Flower Crown","spriteUrl":"","users":{}},{"no":471,"name":"Glaceon Holiday 2023","displayName":"Glaceon Holiday 2023","spriteUrl":"","users":{}},{"no":471,"name":"Glaceon Cherry Blossoms","displayName":"Glaceon Cherry Blossoms","spriteUrl":"","users":{}},{"no":471,"name":"Glaceon Explorer Hat","displayName":"Glaceon Explorer Hat","spriteUrl":"","users":{}},{"no":477,"name":"Dusknoir Cempasuchil Crown","displayName":"Dusknoir Cempasuchil Crown","spriteUrl":"","users":{}},{"no":522,"name":"Blitzle Fashionable","displayName":"Blitzle Fashionable","spriteUrl":"","users":{}},{"no":547,"name":"Whimsicott Flower Crown","displayName":"Whimsicott Flower Crown","spriteUrl":"","users":{}},{"no":573,"name":"Cinccino Fashionable Costume","displayName":"Cinccino Fashionable Costume","spriteUrl":"","users":{}},{"no":613,"name":"Cubchoo Holidays","displayName":"Cubchoo Holidays","spriteUrl":"","users":{}},{"no":614,"name":"Beartic Holidays","displayName":"Beartic Holidays","spriteUrl":"","users":{}},{"no":656,"name":"Froakie Witch Hat","displayName":"Froakie Witch Hat","spriteUrl":"","users":{}},{"no":657,"name":"Frogadier Witch Hat","displayName":"Frogadier Witch Hat","spriteUrl":"","users":{}},{"no":658,"name":"Greninja Witch Hat","displayName":"Greninja Witch Hat","spriteUrl":"","users":{}},{"no":700,"name":"Sylveon Flower Crown","displayName":"Sylveon Flower Crown","spriteUrl":"","users":{}},{"no":700,"name":"Sylveon Holiday","displayName":"Sylveon Holiday","spriteUrl":"","users":{}},{"no":700,"name":"Sylveon Cherry Blossoms","displayName":"Sylveon Cherry Blossoms","spriteUrl":"","users":{}},{"no":700,"name":"Sylveon Explorer Hat","displayName":"Sylveon Explorer Hat","spriteUrl":"","users":{}},{"no":710,"name":"Pumpkaboo Average Size","displayName":"Pumpkaboo Average Size","spriteUrl":"","users":{}},{"no":710,"name":"Pumpkaboo Super Size","displayName":"Pumpkaboo Super Size","spriteUrl":"","users":{}},{"no":710,"name":"Gourgeist Small Size","displayName":"Gourgeist Small Size","spriteUrl":"","users":{}},{"no":710,"name":"Pumpkaboo Small Size","displayName":"Pumpkaboo Small Size","spriteUrl":"","users":{}},{"no":710,"name":"Pumpkaboo Large Size","displayName":"Pumpkaboo Large Size","spriteUrl":"","users":{}},{"no":711,"name":"Gourgeist Super Size","displayName":"Gourgeist Super Size","spriteUrl":"","users":{}},{"no":711,"name":"Gourgeist Average Size","displayName":"Gourgeist Average Size","spriteUrl":"","users":{}},{"no":711,"name":"Gourgeist Large Size","displayName":"Gourgeist Large Size","spriteUrl":"","users":{}},{"no":714,"name":"Noibat Headband","displayName":"Noibat Headband","spriteUrl":"","users":{}},{"no":715,"name":"Noivern Headband","displayName":"Noivern Headband","spriteUrl":"","users":{}},{"no":723,"name":"Dartrix Halloween","displayName":"Dartrix Halloween","spriteUrl":"","users":{}},{"no":724,"name":"Decidueye Halloween","displayName":"Decidueye Halloween","spriteUrl":"","users":{}},{"no":737,"name":"Charjabug Holiday 2025","displayName":"Charjabug Holiday 2025","spriteUrl":"","users":{}},{"no":738,"name":"Vikavolt Holiday 2025","displayName":"Vikavolt Holiday 2025","spriteUrl":"","users":{}},{"no":760,"name":"Bewear Wilderness Cape","displayName":"Bewear Wilderness Cape","spriteUrl":"","users":{}},{"no":832,"name":"Dubwool Holiday Attire","displayName":"Dubwool Holiday Attire","spriteUrl":"","users":{}},{"no":870,"name":"Falinks Train","displayName":"Falinks Train","spriteUrl":"","users":{}},{"no":901,"name":"Ursaluna Witch Hat","displayName":"Ursaluna Witch Hat","spriteUrl":"","users":{}},{"no":907,"name":"Floragato Hat With Likos Pin","displayName":"Floragato Hat With Likos Pin","spriteUrl":"","users":{}},{"no":999,"name":"Gimmighoul 9th Anniversary Coin","displayName":"Gimmighoul 9th Anniversary Coin","spriteUrl":"","users":{}}];
+// Additional form identities. When no permitted exact artwork is available,
+// the resolver intentionally falls back to the species sprite.
 const EXTRA_FORM_ENTRIES=[
   // Spinda — 8 standard spot patterns in Pokémon GO + heart form
-  {no:327,name:"Spinda (Form 1)",displayName:"Spinda (Form 1)",spriteUrl:"https://www.serebii.net/pokemongo/pokemon/327.png",users:{}},
-  {no:327,name:"Spinda (Form 2)",displayName:"Spinda (Form 2)",spriteUrl:"https://www.serebii.net/pokemongo/pokemon/327-2.png",users:{}},
-  {no:327,name:"Spinda (Form 3)",displayName:"Spinda (Form 3)",spriteUrl:"https://www.serebii.net/pokemongo/pokemon/327-3.png",users:{}},
-  {no:327,name:"Spinda (Form 4)",displayName:"Spinda (Form 4)",spriteUrl:"https://www.serebii.net/pokemongo/pokemon/327-4.png",users:{}},
-  {no:327,name:"Spinda (Form 5)",displayName:"Spinda (Form 5)",spriteUrl:"https://www.serebii.net/pokemongo/pokemon/327-5.png",users:{}},
-  {no:327,name:"Spinda (Form 6)",displayName:"Spinda (Form 6)",spriteUrl:"https://www.serebii.net/pokemongo/pokemon/327-6.png",users:{}},
-  {no:327,name:"Spinda (Form 7)",displayName:"Spinda (Form 7)",spriteUrl:"https://www.serebii.net/pokemongo/pokemon/327-7.png",users:{}},
-  {no:327,name:"Spinda (Form 8)",displayName:"Spinda (Form 8)",spriteUrl:"https://www.serebii.net/pokemongo/pokemon/327-8.png",users:{}},
-  {no:327,name:"Spinda (Heart)",displayName:"Spinda (Heart)",spriteUrl:"https://www.serebii.net/pokemongo/pokemon/327-9.png",users:{}},
+  {no:327,name:"Spinda (Form 1)",displayName:"Spinda (Form 1)",spriteUrl:"",users:{}},
+  {no:327,name:"Spinda (Form 2)",displayName:"Spinda (Form 2)",spriteUrl:"",users:{}},
+  {no:327,name:"Spinda (Form 3)",displayName:"Spinda (Form 3)",spriteUrl:"",users:{}},
+  {no:327,name:"Spinda (Form 4)",displayName:"Spinda (Form 4)",spriteUrl:"",users:{}},
+  {no:327,name:"Spinda (Form 5)",displayName:"Spinda (Form 5)",spriteUrl:"",users:{}},
+  {no:327,name:"Spinda (Form 6)",displayName:"Spinda (Form 6)",spriteUrl:"",users:{}},
+  {no:327,name:"Spinda (Form 7)",displayName:"Spinda (Form 7)",spriteUrl:"",users:{}},
+  {no:327,name:"Spinda (Form 8)",displayName:"Spinda (Form 8)",spriteUrl:"",users:{}},
+  {no:327,name:"Spinda (Heart)",displayName:"Spinda (Heart)",spriteUrl:"",users:{}},
   ...SCATTERBUG_PATTERNS.map(pattern=>({no:664,name:`Scatterbug (${pattern})`,displayName:`Scatterbug (${pattern})`,spriteUrl:`${SPRITE_BASE}664.png`,users:{}})),
   ...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(ch=>({no:201,name:`Unown (${ch})`,displayName:`Unown (${ch})`,users:{}})),
   {no:201,name:"Unown (!)",displayName:"Unown (!)",users:{}},
@@ -656,13 +592,6 @@ const LEGENDARY_AVATAR_ENTRIES=[
   [1017,'Ogerpon (Teal Mask)'],[1017,'Ogerpon (Wellspring Mask)'],[1017,'Ogerpon (Hearthflame Mask)'],[1017,'Ogerpon (Cornerstone Mask)'],
   [1020,'Gouging Fire'],[1021,'Raging Bolt'],[1022,'Iron Boulder'],[1023,'Iron Crown'],[1024,'Terapagos'],[1025,'Pecharunt']
 ].map(([no,name,displayName])=>({no,name,displayName:displayName||name,users:{}}));
-const EXTRA_COSTUME_SPRITES=Object.fromEntries([...EXTRA_COSTUME_ENTRIES,...EXTRA_FORM_ENTRIES].map(e=>[e.name,e.spriteUrl]));
-function goCostumeSpriteUrl(no,name){
-  const slug=GO_COSTUME_SPRITE_SLUGS[name];
-  const dex=padDex(no);
-  if(!slug||!dex)return'';
-  return`${SEREBII_GO_SPRITE_BASE}${dex}-${slug}.png`;
-}
 const POKEMONDB_GO_SPRITE_BASE='https://img.pokemondb.net/sprites/go/normal/1x/';
 const POKEMONDB_GO_COSTUME_ALIASES={
   'Eevee Explorer Hat':['eevee-explorer-hat'],
@@ -762,11 +691,26 @@ function pokemondbGoCostumeUrls(name='',{allowPattern=true}={}){
 function pokemondbGoCostumeUrl(name='',options){
   return pokemondbGoCostumeUrls(name,options)[0]||'';
 }
+function isApprovedRuntimeSpriteUrl(url){
+  const value=String(url||'').trim();
+  if(!value)return false;
+  if(value==='assets/max-cloud.svg')return true;
+  let parsed;
+  try{parsed=new URL(value,document.baseURI);}catch{return false;}
+  if(parsed.hostname==='raw.githubusercontent.com')return parsed.pathname.startsWith('/PokeAPI/sprites/');
+  if(parsed.hostname==='img.pokemondb.net')return parsed.pathname.startsWith('/sprites/');
+  if(parsed.hostname==='images.weserv.nl'){
+    const target=parsed.searchParams.get('url')||'';
+    try{
+      const targetUrl=new URL(/^https?:\/\//.test(target)?target:`https://${target}`);
+      return targetUrl.hostname==='img.pokemondb.net'&&targetUrl.pathname.startsWith('/sprites/');
+    }catch{return false;}
+  }
+  return parsed.origin===location.origin&&parsed.pathname.endsWith('/assets/max-cloud.svg');
+}
 function canvasSafeSpriteUrl(url){
-  if(!url)return'';
-  // Proxy CORS-restricted hosts through images.weserv.nl for canvas export
-  const NEEDS_PROXY=[SEREBII_GO_SPRITE_BASE,'https://cdn08.net/',POKEMONDB_BASE,POKEMONDB_GO_SPRITE_BASE,POKEMINERS_BASE];
-  if(NEEDS_PROXY.some(prefix=>url.startsWith(prefix))){
+  if(!isApprovedRuntimeSpriteUrl(url))return'';
+  if(url.startsWith(POKEMONDB_BASE)||url.startsWith(POKEMONDB_GO_SPRITE_BASE)){
     return IMAGE_PROXY_BASE+encodeURIComponent(url.replace(/^https?:\/\//,''));
   }
   return url;
@@ -783,8 +727,9 @@ function spriteCatalogContext(no,name='',dn='',catalogId=''){
 function entrySpriteUrl(entry,nameOverride='',gender=''){
   const resolvedName=nameOverride||entry?.name||entry?.displayName||'';
   const context=spriteCatalogContext(entry?.no,resolvedName,entry?.displayName||resolvedName,entry?.catalogId);
-  if(context.override?.url)return context.override.url;
-  if(entry?.spriteUrl||entry?.sprite)return entry.spriteUrl||entry.sprite;
+  if(isApprovedRuntimeSpriteUrl(context.override?.url))return context.override.url;
+  const storedUrl=entry?.spriteUrl||entry?.sprite||'';
+  if(isApprovedRuntimeSpriteUrl(storedUrl))return storedUrl;
   if(!context.unresolved){
     for(const key of context.lookupKeys){
       const pdbGoCostume=pokemondbGoCostumeUrl(key,{allowPattern:false});
@@ -794,40 +739,17 @@ function entrySpriteUrl(entry,nameOverride='',gender=''){
   return spriteUrl(entry?.no,resolvedName,gender,entry?.displayName||resolvedName,context.catalogId);
 }
 // Resolves the BEST QUALITY sprite URL.
-// Priority: hand-curated costume URLs (cdn08 wiki) → PokemonDB HOME 3D renders →
-// PokeAPI form/regional/gender variants → PokeAPI base sprite.
+// Priority: verified Pokémon Database GO mappings, PokeAPI forms, Pokémon
+// Database HOME renders, then PokeAPI base art. Research-only sources never
+// enter the runtime URL chain.
 // The actual <img> uses spriteFallbackChain() for graceful 404 cascade.
-// All 28 Unown variants live on PokeMiners (Pokémon GO's actual 256×256 game
-// art), which is the ONLY source that has them all in a consistent style.
-// PokemonDB has clean HOME 3D renders for A-Z but no `unown-exclamation` /
-// `unown-question` (Pokémon HOME never included punctuation Unown), and using
-// it caused the ! / ? variants to fall back to a broken-image placeholder
-// that looked dramatically different from the letters. Niantic's internal
-// form IDs map A=11, B=12, … Z=36, !=37, ?=38.
-const UNOWN_POKEMINERS_FORM_IDS={
-  'Unown (A)':'11','Unown (B)':'12','Unown (C)':'13','Unown (D)':'14',
-  'Unown (E)':'15','Unown (F)':'16','Unown (G)':'17','Unown (H)':'18',
-  'Unown (I)':'19','Unown (J)':'20','Unown (K)':'21','Unown (L)':'22',
-  'Unown (M)':'23','Unown (N)':'24','Unown (O)':'25','Unown (P)':'26',
-  'Unown (Q)':'27','Unown (R)':'28','Unown (S)':'29','Unown (T)':'30',
-  'Unown (U)':'31','Unown (V)':'32','Unown (W)':'33','Unown (X)':'34',
-  'Unown (Y)':'35','Unown (Z)':'36',
-  'Unown (!)':'37','Unown (?)':'38'
-};
-function unownSpriteUrl(name){
-  const formId=UNOWN_POKEMINERS_FORM_IDS[name];
-  if(!formId)return'';
-  return`${POKEMINERS_BASE}pokemon_icon_201_${formId}.png`;
-}
-
 function spriteUrl(no,name,gender='',dn='',catalogId=''){
   const context=spriteCatalogContext(no,name,dn,catalogId);
-  if(context.override?.url)return context.override.url;
+  if(isApprovedRuntimeSpriteUrl(context.override?.url))return context.override.url;
   const lookupName=context.canonicalName||name;
   const compatibilityKeys=context.lookupKeys;
   if(context.unresolved){
     const plainName=String(lookupName||'').split(/\s*\(/)[0]||'Pikachu';
-    if(pokeminersHasDex(no))return pokeminersSpriteUrl(no,'00');
     return pokemondbSpriteUrl(plainName,plainName,gender)||`${SPRITE_BASE}${parseInt(no)}.png`;
   }
   // 1. Prefer PokémonDB's GO-specific costume art when we can infer a reliable costume URL.
@@ -837,41 +759,22 @@ function spriteUrl(no,name,gender='',dn='',catalogId=''){
     const pdbGoCostume=pokemondbGoCostumeUrl(key,{allowPattern:false});
     if(pdbGoCostume)return pdbGoCostume;
   }
-  // 2. Hand-curated costume sprite URLs (legacy fallback for oddball costumes not covered above)
-  for(const key of compatibilityKeys)if(EXTRA_COSTUME_SPRITES[key])return EXTRA_COSTUME_SPRITES[key];
-  // 3. Unown letters — PokeAPI's per-letter pixel sprites are inconsistently sized
-  //     (some are tiny, some span the full tile). PokemonDB hosts the Pokémon HOME
-  //     3D renders for all 28 forms at a consistent 128×128, so use those instead.
-  const unownUrl=compatibilityKeys.map(unownSpriteUrl).find(Boolean);
-  if(unownUrl)return unownUrl;
-  // 4. Serebii GO costume sprites (curated slug map → known-existing Serebii URL).
-  //    Must come BEFORE PokemonDB because PokemonDB doesn't have costume variants
-  //    (their HOME 3D sprites only cover base Pokémon and game forms, not GO costumes).
-  const goUrl=compatibilityKeys.map(key=>goCostumeSpriteUrl(no,key)).find(Boolean);
-  if(goUrl)return goUrl;
-  // 5. PokeAPI costume form variants (Vivillon, Furfrou — non-Pokemon-GO forms)
+  // 2. PokeAPI form variants (Unown, Vivillon, Furfrou, and game forms).
   const formKey=compatibilityKeys.find(key=>COSTUME_FORM_SPRITE_IDS[key]);
   if(formKey)return`${SPRITE_BASE}${COSTUME_FORM_SPRITE_IDS[formKey]}.png`;
-  // 6. PokeAPI regional form (Alolan, Galarian, Hisuian, Paldean) — but
+  // 3. PokeAPI regional form (Alolan, Galarian, Hisuian, Paldean) — but
   //    a few form IDs map to PokeAPI placeholder PNGs (200 OK, ~400 bytes,
   //    no real character art). For those we skip ahead so PokemonDB HOME wins.
   const regionalKey=compatibilityKeys.find(key=>REGIONAL_FORM_IDS[key]);
   if(regionalKey&&!POKEAPI_PLACEHOLDER_FORM_IDS.has(REGIONAL_FORM_IDS[regionalKey])){
     return`${SPRITE_BASE}${REGIONAL_FORM_IDS[regionalKey]}.png`;
   }
-  // 7. PokeAPI female sprite (Pyroar ♀, Pikachu ♀ tail, etc.) should outrank plain base art.
+  // 4. PokeAPI female sprite (Pyroar ♀, Pikachu ♀ tail, etc.) should outrank plain base art.
   if(gender==='f'){
     const fUrl=femaleSpriteUrl(no);
     if(fUrl)return fUrl;
   }
-  // 8. PokeMiners GO asset — preferred for plain Pokémon because it matches in-game art.
-  //    Skip for regional-prefix names (A-/G-/H-/P-) since their `no` points at
-  //    the BASE species and PokeMiners would return the wrong regional variant.
-  const isRegional=lookupName&&/^[AGHP]-/.test(lookupName);
-  const hasCuratedCostume=compatibilityKeys.some(key=>EXTRA_COSTUME_SPRITES[key]);
-  const pmBase=(!lookupName||!hasCuratedCostume)&&pokeminersHasDex(no)&&!isRegional?pokeminersSpriteUrl(no,'00'):'';
-  if(pmBase)return pmBase;
-  // 9. PokemonDB HOME 3D — fallback for game forms and anything PokeMiners doesn't expose cleanly
+  // 5. Pokémon Database HOME render, then PokeAPI base.
   const pdb=pokemondbSpriteUrl(lookupName,dn||lookupName,gender);
   if(pdb)return pdb;
   if(!no)return null;
@@ -882,34 +785,7 @@ function spriteUrl(no,name,gender='',dn='',catalogId=''){
 // ── EXTERNAL SPRITE SOURCES ───────────────────────────────────
 // PokemonDB hosts high-quality Pokémon HOME 3D renders with broad form/gender
 // coverage. URL pattern: img.pokemondb.net/sprites/home/normal/{slug}.png
-// PokeMiners hosts the actual Pokémon GO 256×256 game assets.
-// URL pattern: .../Images/Pokemon - 256x256/pokemon_icon_{dex3}_{form}.png
 const POKEMONDB_BASE='https://img.pokemondb.net/sprites/home/normal/';
-const POKEMINERS_BASE='https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/Pokemon%20-%20256x256/';
-// Dex numbers that don't exist in PokeMiners /Pokemon - 256x256/. Codex made
-// PokeMiners the preferred source for plain species, but gen 7/8/9 coverage
-// is ~2%/0%/0% — without this exclusion list every render of a Wooloo,
-// Sprigatito, etc. logs a 404 in the console and triggers the onerror cascade
-// before the actual sprite (PokemonDB HOME usually) loads. Enumerated by
-// scripted HEAD-check across dex 1..1025; refresh whenever PokeMiners updates.
-const POKEMINERS_MISSING_DEX=new Set([
-  201,386,412,413,421,422,423,479,487,492,550,555,585,586,641,642,645,646,647,648,649,666,669,670,671,676,681,697,703,708,
-  709,710,711,712,713,719,720,721,722,723,724,725,726,727,728,729,730,731,732,733,734,735,736,737,738,739,740,741,742,743,
-  744,745,746,747,748,749,750,751,752,753,754,755,756,757,758,759,760,761,762,763,764,765,766,767,768,769,770,771,772,773,
-  774,775,776,777,778,779,780,781,782,783,784,785,786,787,788,789,790,791,792,793,794,795,796,797,798,799,800,801,802,803,
-  804,805,806,807,810,811,812,813,814,815,816,817,818,819,820,821,822,823,824,825,826,827,828,829,830,831,832,833,834,835,
-  836,837,838,839,840,841,842,843,844,845,846,847,848,849,850,851,852,853,854,855,856,857,858,859,860,861,862,863,864,865,
-  866,867,868,869,870,871,872,873,874,875,876,877,878,879,880,881,882,883,884,885,886,887,888,889,890,891,892,893,894,895,
-  896,897,898,899,900,901,902,903,904,905,906,907,908,909,910,911,912,913,914,915,916,917,918,919,920,921,922,923,924,925,
-  926,927,928,929,930,931,932,933,934,935,936,937,938,939,940,941,942,943,944,945,946,947,948,949,950,951,952,953,954,955,
-  956,957,958,959,960,961,962,963,964,965,966,967,968,969,970,971,972,973,974,975,976,977,978,979,980,981,982,983,984,985,
-  986,987,988,989,990,991,992,993,994,995,996,997,998,999,1000,1001,1002,1003,1004,1005,1006,1007,1008,1009,1010,1011,1012,1013,1014,1015,
-  1016,1017,1018,1019,1020,1021,1022,1023,1024,1025
-]);
-function pokeminersHasDex(no){
-  const n=parseInt(no);
-  return Number.isFinite(n)&&n>0&&!POKEMINERS_MISSING_DEX.has(n);
-}
 // PokeAPI form IDs that return 200 OK with a ~400-byte placeholder PNG instead
 // of real sprite art (PokeAPI is inconsistent about which regional forms have
 // proper assets). Without skipping these, the resolver lands on the placeholder
@@ -922,22 +798,16 @@ function pokemondbSpriteUrl(name,dn,gender=''){
   const slug=pokemondbSlug(name,dn,gender);
   return slug?`${POKEMONDB_BASE}${slug}.png`:'';
 }
-function pokeminersSpriteUrl(no,formCode='00'){
-  const n=parseInt(no);if(!Number.isFinite(n))return'';
-  const padded=String(n).padStart(3,'0');
-  return`${POKEMINERS_BASE}pokemon_icon_${padded}_${formCode}.png`;
-}
 
 // Build a cascading fallback chain of sprite URLs.
 // Strategy:
-//   1. Custom mapped URL (PokeAPI form variants, Serebii GO costumes) - existing logic
-//   2. PokeAPI base dex (most common fallback for plain Pokémon)
-//   3. PokemonDB HOME 3D (best for form variants + gender, e.g. vivillon-garden, indeedee-female)
-//   4. PokeMiners (actual PoGo game art — exact Pokémon GO accuracy)
-//   5. Serebii GO sprite (final visual fallback, always exists for in-game Pokémon)
+//   1. Verified Pokémon Database GO mapping
+//   2. PokeAPI form/regional/gender variants
+//   3. Pokémon Database HOME render
+//   4. PokeAPI base dex
 function spriteFallbackChain(no,name,gender='',dn='',catalogId=''){
   const urls=[];
-  const push=u=>{if(u&&!urls.includes(u))urls.push(u);};
+  const push=u=>{if(isApprovedRuntimeSpriteUrl(u)&&!urls.includes(u))urls.push(u);};
   const context=spriteCatalogContext(no,name,dn,catalogId);
   push(context.override?.url);
   // Primary URL (from spriteUrl — uses GO costume slugs first now)
@@ -945,12 +815,9 @@ function spriteFallbackChain(no,name,gender='',dn='',catalogId=''){
   push(primary);
   const compatibilityKeys=context.lookupKeys;
   const safeName=context.unresolved?(String(context.canonicalName||name||'').split(/\s*\(/)[0]||'Pikachu'):(context.canonicalName||name);
-  // Exact GO costume aliases first, then legacy hand-curated URLs for edge cases.
+  // Exact GO costume aliases first.
   if(!context.unresolved)for(const key of compatibilityKeys)for(const u of pokemondbGoCostumeUrls(key,{allowPattern:false}))push(u);
-  if(!context.unresolved)for(const key of compatibilityKeys)push(EXTRA_COSTUME_SPRITES[key]);
-  // If this is a known GO costume, the Serebii URL is canonical — make sure it's tried explicitly
-  if(!context.unresolved)for(const key of compatibilityKeys)push(goCostumeSpriteUrl(no,key));
-  // Pattern-guessed PokemonDB GO filenames are helpful, but should not outrank known-good sources.
+  // Pattern-guessed Pokémon Database GO filenames are helpful, but should not outrank exact mappings.
   if(!context.unresolved)for(const key of compatibilityKeys)for(const u of pokemondbGoCostumeUrls(key,{allowPattern:true}))push(u);
   // PokeAPI specific form variants
   if(!context.unresolved)for(const key of compatibilityKeys){
@@ -958,9 +825,7 @@ function spriteFallbackChain(no,name,gender='',dn='',catalogId=''){
     if(COSTUME_FORM_SPRITE_IDS[key])push(`${SPRITE_BASE}${COSTUME_FORM_SPRITE_IDS[key]}.png`);
   }
   if(gender==='f')push(femaleSpriteUrl(no));
-  // PokeMiners GO art before HOME renders for plain Pokémon
-  if(pokeminersHasDex(no))push(pokeminersSpriteUrl(no,'00'));
-  // PokemonDB HOME for any non-costume Pokémon (form/regional/gender variants)
+  // Pokémon Database HOME for form/regional/gender variants.
   push(pokemondbSpriteUrl(safeName,context.unresolved?safeName:(dn||safeName),gender));
   if(gender==='f'){
     push(pokemondbSpriteUrl(safeName,context.unresolved?safeName:(dn||safeName),''));   // PokemonDB without -female suffix
@@ -972,8 +837,6 @@ function spriteFallbackChain(no,name,gender='',dn='',catalogId=''){
   if(dex){
     // PokeAPI canonical base dex (always exists)
     push(`${SPRITE_BASE}${parseInt(no)}.png`);
-    // Serebii GO base sprite as final visual fallback
-    push(`${SEREBII_GO_SPRITE_BASE}${dex}.png`);
   }
   return urls;
 }
@@ -983,7 +846,7 @@ function spriteFallbackChain(no,name,gender='',dn='',catalogId=''){
 // _v4 (4.6.15) — cache shape grew to { scale, cx, cy, t }. cx/cy are the
 // character bounding-box centre as a fraction of source dimensions; we use
 // them as transform-origin so scaling up doesn't drift the character off the
-// tile when the source isn't perfectly centred (PokeMiners art typically isn't).
+// tile when the source isn't perfectly centred.
 // Older _v3 caches lacked cx/cy and would have rendered the v4.6.13 "always
 // scale ≥ 1.4" floor with the wrong anchor — visible misalignment.
 const SPRITE_SCALE_CACHE_KEY='pogoSpriteScales_v4';
@@ -1023,21 +886,8 @@ function _saveScaleCache(){
 // Coarse default per source — used as fallback while detection runs (or fails on CORS).
 function spriteSourceScale(url){
   if(!url)return 1;
-  if(url.includes('cdn08.net'))return 1;
   if(url.includes('pokemondb.net'))return 1.1;
-  // PokeMiners 256×256 art has lots of transparent padding around the
-  // character — a 32px tile rendered at scale 1 makes small-bodied species
-  // (Cleffa, Igglybuff, Mime Jr.) look like dots. The alpha-detect path
-  // refines this to the true per-sprite value (1.0–2.2), but when detection
-  // is blocked (CORS, weserv rate-limit, offline), this is what the user
-  // sees. 1.6 is a reasonable centre that leaves big species like Heracross
-  // a little oversized but never illegible.
-  if(url.includes('PokeMiners'))return 1.6;
-  if(url.includes('serebii.net'))return 1.3;
   if(url.includes('weserv.nl')){
-    if(url.includes('serebii.net'))return 1.3;
-    if(url.includes('cdn08.net'))return 1;
-    if(url.includes('PokeMiners'))return 1.6;
     return 1.1;
   }
   if(/PokeAPI|pokeapi/.test(url))return 1.25;
@@ -1077,7 +927,7 @@ function _runSpriteScaleDetection(url){
     if(spriteScaleCache[url]===undefined){spriteScaleCache[url]={scale:spriteSourceScale(url),cx:0.5,cy:0.5,t:Date.now()};_saveScaleCache();}
     finish();
   },6000);
-  // Use weserv proxy to get CORS-friendly bytes even for Serebii/cdn08
+  // Use the approved proxy for CORS-friendly optical analysis.
   const proxiedUrl=url.startsWith('https://images.weserv.nl/')
     ?url
     :IMAGE_PROXY_BASE+encodeURIComponent(url.replace(/^https?:\/\//,''));
@@ -1116,19 +966,13 @@ function _runSpriteScaleDetection(url){
           scale=1;
         }
         // Character centroid as fraction of source — used as transform-origin
-        // so scaling around it doesn't drift the character. PokeMiners art
-        // typically has the character feet near the bottom of the canvas, so
-        // cx is near 0.5 but cy is often 0.6-0.8.
+        // so scaling around it doesn't drift the character.
         cx=((left+right+1)/2)/W;
         cy=((top+bottom+1)/2)/H;
       }
     }catch(e){
       // CORS or canvas error — keep default
     }
-    // PokeMiners URLs always need *some* upscale because the character occupies
-    // <50% of the 256×256 canvas. If detection got a too-low result (CORS error,
-    // proxy failure, shadow-edge confusion), floor it so we never render tiny.
-    if(url.includes('PokeMiners')&&scale<1.4)scale=1.4;
     spriteScaleCache[url]={
       scale:Math.round(scale*100)/100,
       cx:Math.round(cx*1000)/1000,
@@ -1175,12 +1019,7 @@ function _updateRenderedScale(url,entry){
 }
 function effectiveSpriteScale(url){
   const cached=spriteScaleCache[url];
-  let scale=cached?cached.scale:spriteSourceScale(url);
-  // Heal cached values that were pinned too low for PokeMiners art (the v4.6.12
-  // cache bump + the new in-detect floor catch most of these going forward,
-  // but a user with mid-flight cache entries gets the floor applied here too).
-  if(url&&url.includes('PokeMiners')&&scale<1.4)scale=1.4;
-  return scale;
+  return cached?cached.scale:spriteSourceScale(url);
 }
 // Pulls the cached character-centroid for a URL, falling back to image center
 // when detection hasn't run yet (or failed). Same shape as effectiveSpriteScale.
@@ -1194,10 +1033,10 @@ function spriteImg(no,size=40,cls='',name='',gender='',dn='',opts={}){
     ...(context.override?.url?[context.override.url]:[]),
     ...(opts?.urlOverride?[opts.urlOverride]:[]),
     ...spriteFallbackChain(no,name,gender,dn,context.catalogId)
-  ].filter((u,i,arr)=>u&&arr.indexOf(u)===i);
+  ].filter((u,i,arr)=>isApprovedRuntimeSpriteUrl(u)&&arr.indexOf(u)===i);
   if(!urls.length)return`<div class="pc-sprite-placeholder" style="width:${size}px;height:${size}px">🎮</div>`;
   const url=urls[0];
-  const isGo=url.includes('serebii.net')||url.includes('weserv.nl')||url.includes('/sprites/go/')||url.includes('PokeMiners')||url.includes('pogo_assets');
+  const isGo=url.includes('weserv.nl')||url.includes('/sprites/go/');
   const rendering=isGo?'auto':'pixelated';
   const optical=context.override||{};
   const rawScale=effectiveSpriteScale(url)*(Number(optical.opticalScale)||1);
@@ -1226,7 +1065,7 @@ function trySpriteFallback(img){
   img.dataset.fallbacks=fbs.join('|');
   img.dataset.srcKey=next;
   img.dataset.spriteValidated='';
-  if(next.includes('serebii.net'))img.style.imageRendering='auto';
+  img.style.imageRendering=next.includes('weserv.nl')||next.includes('/sprites/go/')?'auto':'pixelated';
   const cap=parseFloat(img.dataset.scaleCap||'');
   const opticalScale=parseFloat(img.dataset.opticalScale||'1')||1;
   const rawScale=effectiveSpriteScale(next)*opticalScale;
@@ -2801,6 +2640,23 @@ function accountSyncFavoriteReviewAuthorityCurrent(authority){
     accountSyncUiState?.active===true&&accountSyncUiState?.listenerHealthy===true&&accountSyncUiState?.controllerHealthy===true&&
     !['sync-error','conflict','inactive'].includes(state)&&!Number(accountSyncUiState?.pendingCount)&&!Number(accountSyncUiState?.blockedCount)&&!Number(accountSyncUiState?.conflictCount)
   );
+}
+async function accountSyncPreservedReviewAuthority(){
+  const authority=await accountSyncFavoriteReviewAuthority();
+  if(authority.mode!=='canonical-review')return authority;
+  const snapshot=accountSyncUiState||{},runtime=authority.runtime;
+  if(snapshot.state!=='review-required'||!Number(snapshot.recoveryCandidateCount)||typeof runtime.completeRecoveryReviews!=='function')return Object.freeze({mode:'blocked',code:'account-sync/recovery-review-not-ready'});
+  const candidates=await runtime.listRecoveryCandidates(),candidateIds=[];
+  if(!accountSyncFavoriteReviewAuthorityCurrent(authority)||candidates.length!==Number(snapshot.recoveryCandidateCount))return Object.freeze({mode:'blocked',code:'account-sync/recovery-review-changed'});
+  for(const candidate of candidates){
+    const candidateId=String(candidate?.candidateId||'');
+    if(candidate?.ownerUid!==authority.uid||candidate?.resolved===true||accountSyncModel.firebaseKey(candidateId,700)!==candidateId)return Object.freeze({mode:'blocked',code:'account-sync/recovery-review-invalid'});
+    candidateIds.push(candidateId);
+  }
+  return Object.freeze({...authority,candidateIds:Object.freeze(candidateIds.sort()),sessionGeneration:_sessionTransientGeneration,runtimeGeneration:accountSyncRuntimeGeneration});
+}
+function accountSyncPreservedReviewAuthorityCurrent(authority){
+  return authority?.mode==='canonical-review'&&authority.sessionGeneration===_sessionTransientGeneration&&authority.runtimeGeneration===accountSyncRuntimeGeneration&&accountSyncFavoriteReviewAuthorityCurrent(authority);
 }
 function accountSyncProjectionReady(){
   const state=String(accountSyncUiState?.state||'inactive');
@@ -4537,8 +4393,7 @@ function renderInterimProductLabels(){
     el.dataset.short=shortText;
     el.setAttribute('aria-label',text);
   });
-  setText('find-trainer-title','trainer.findTitle');
-  setText('find-trainer-description','trainer.findDescription');
+  renderTrainerDiscoveryHeading();
   setText('find-trainer-button','trainer.findAction');
   setText('find-trainer-reload','app.reloadAction');
   const findInput=document.getElementById('find-trainer-input');
@@ -4697,6 +4552,15 @@ function closeTrainerSuggestions(){
   trainerSuggestionItems=[];trainerSuggestionIndex=-1;trainerSuggestionQuery='';
 }
 let trainerDiscoveryMode='trainers';
+function renderTrainerDiscoveryHeading(){
+  const copy={
+    trainers:['trainer.findTitle','trainer.findDescription'],
+    favorites:['trainer.favoritesTitle','trainer.favoritesDescription'],
+    pokemon:['favoriteBrowse.title','favoriteBrowse.description']
+  }[trainerDiscoveryMode]||['trainer.findTitle','trainer.findDescription'];
+  setText('find-trainer-title',copy[0]);
+  setText('find-trainer-description',copy[1]);
+}
 function setTrainerDiscoveryMode(mode){
   const allowed=['trainers','favorites','pokemon'];
   trainerDiscoveryMode=allowed.includes(mode)?mode:'trainers';
@@ -4709,6 +4573,7 @@ function setTrainerDiscoveryMode(mode){
     button.tabIndex=selected?0:-1;
   });
   document.querySelectorAll('[data-discovery-panel]').forEach(panel=>{panel.hidden=panel.dataset.discoveryPanel!==trainerDiscoveryMode;});
+  renderTrainerDiscoveryHeading();
   if(trainerDiscoveryMode==='pokemon'&&!favoriteBrowseState.expanded){favoriteBrowseState.expanded=true;syncFavoriteBrowseDisclosure();}
 }
 function focusTrainerDiscoveryMode(mode){
@@ -5046,7 +4911,7 @@ async function renderTrainerQuickLists({preserveFavoriteControls=false,favorites
     favoritesControlsEl.innerHTML=`<div class="trainer-section-heading"><h2 class="trainer-quick-heading">${escHtml(i18nCore.t('trainer.favoritesTitle'))}</h2><span class="trainer-section-count">—</span></div>`;
     favoritesListEl.innerHTML=loading;
     if(favoritesOnly)return;
-    previewEl.innerHTML=loading;
+    previewEl.hidden=false;previewEl.innerHTML=loading;
     recentEl.innerHTML=loading;
     return;
   }
@@ -5065,7 +4930,8 @@ async function renderTrainerQuickLists({preserveFavoriteControls=false,favorites
   }).join('')}</div>`:emptyHtml(i18nCore.t(state.favorites.length?'organizer.noMatches':'organizer.noFavorites'),i18nCore.t(state.favorites.length?'organizer.noMatchesHelp':'organizer.noFavoritesHelp'),state.favorites.length?'search':'users');
   if(favoritesOnly)return;
   const previewItems=state.favorites.slice(0,4);
-  previewEl.innerHTML=`${favoritesHeading}${previewItems.length?`<div class="trainer-favorites-preview-list">${previewItems.map(item=>`<button type="button" class="trainer-favorites-preview-row card-row" data-trainer="${escAttr(item.displayName)}" data-trainer-action="open" aria-label="${escAttr(i18nCore.t('trainer.openTrainerNamed',{trainer:item.displayName}))}"><span class="trainer-quick-main"><span class="trainer-quick-name type-card">${escHtml(item.displayName)}</span></span><span class="recent-trainer-chevron" aria-hidden="true">${uiIconMarkup('chevron-right','ui-icon ui-icon-sm')}</span></button>`).join('')}</div><button type="button" class="trainer-favorites-preview-action" data-favorite-action="show-favorites">${escHtml(i18nCore.t('trainer.viewAllFavorites'))}</button>`:emptyHtml(i18nCore.t('organizer.noFavorites'),i18nCore.t('organizer.noFavoritesHelp'),'users')}`;
+  previewEl.hidden=!previewItems.length;
+  previewEl.innerHTML=previewItems.length?`${favoritesHeading}<div class="trainer-favorites-preview-list">${previewItems.map(item=>`<button type="button" class="trainer-favorites-preview-row card-row" data-trainer="${escAttr(item.displayName)}" data-trainer-action="open" aria-label="${escAttr(i18nCore.t('trainer.openTrainerNamed',{trainer:item.displayName}))}"><span class="trainer-quick-main"><span class="trainer-quick-name type-card">${escHtml(item.displayName)}</span></span><span class="recent-trainer-chevron" aria-hidden="true">${uiIconMarkup('chevron-right','ui-icon ui-icon-sm')}</span></button>`).join('')}</div><button type="button" class="trainer-favorites-preview-action" data-favorite-action="show-favorites">${escHtml(i18nCore.t('trainer.viewAllFavorites'))}</button>`:'';
   const recentHeading=`<div class="trainer-section-heading"><h2 class="trainer-quick-heading">${escHtml(i18nCore.t('trainer.recentTitle'))}</h2>${state.recent.length?`<span class="trainer-section-count">${state.recent.length}</span>`:''}</div>`;
   recentEl.innerHTML=`${recentHeading}${state.recent.length?`<div class="recent-trainer-list">${state.recent.map(item=>`<button type="button" class="recent-trainer-row card-row" data-trainer="${escAttr(item.displayName)}" data-trainer-action="open" aria-label="${escAttr(i18nCore.t('trainer.openTrainerNamed',{trainer:item.displayName}))}"><span class="trainer-quick-main"><span class="trainer-quick-name recent-trainer-name type-card">${escHtml(item.displayName)}</span><span class="trainer-quick-meta recent-trainer-recency type-meta">${escHtml(trainerViewedText(item.openedAt))}</span></span><span class="recent-trainer-chevron" aria-hidden="true">${uiIconMarkup('chevron-right','ui-icon ui-icon-sm')}</span></button>`).join('')}</div>`:`${emptyHtml(i18nCore.t('trainer.noRecents'),i18nCore.t('trainer.noRecentsHelp'),'activity')}`}`;
   renderFavoriteBrowseResults();
@@ -5309,7 +5175,6 @@ function showApp(){
   document.getElementById('my-un').textContent=cur;
   document.getElementById('account-menu-name').textContent=cur;
   document.getElementById('settings-account-name').textContent=cur;
-  loadTypeCache();
   syncSpeedAddMode();
   ensureTrainerHistoryStore();
   const isAdmin=protectedOwnerSession();
@@ -5644,10 +5509,21 @@ const _recentBackgroundIds=[];
 function backgroundRecord(id){return backgroundCatalogDomain.get(id);}
 function backgroundDisplayName(id){return backgroundCatalogDomain.display(id)||id||'';}
 function backgroundShortLabel(id){return backgroundCatalogDomain.shortLabel(id)||id||'';}
+function backgroundVisual(id){return id?backgroundVisualDomain.resolve(id,backgroundRecord(id)):null;}
+function backgroundVisualClass(id){return backgroundVisualDomain.className(backgroundVisual(id));}
+function backgroundVisualStyle(id){return backgroundVisualDomain.style(backgroundVisual(id));}
+function backgroundVisualAttrs(id){
+  const visual=backgroundVisual(id);
+  return visual?`data-background-visual="${escAttr(visual.type)}" style="${escAttr(backgroundVisualDomain.style(visual))}"`:'';
+}
+function backgroundVisualMotifHtml(id,cls='background-card-motif'){
+  if(!id)return'';
+  return`<span class="${cls} ${backgroundVisualClass(id)}" ${backgroundVisualAttrs(id)} aria-hidden="true"></span>`;
+}
 function backgroundBadgeHtml(id,cls='background-badge'){
   if(!id)return'';
   const full=backgroundDisplayName(id),short=backgroundShortLabel(id);
-  return`<span class="${cls}" title="${escAttr(full)}" aria-label="${escAttr(i18nCore.t('background.badgeLabel',{name:full}))}">${escHtml(short)} <span aria-hidden="true">BG</span></span>`;
+  return`<span class="${cls} background-visual-label ${backgroundVisualClass(id)}" ${backgroundVisualAttrs(id)} title="${escAttr(full)}" aria-label="${escAttr(i18nCore.t('background.badgeLabel',{name:full}))}"><span class="background-visual-swatch" aria-hidden="true"></span><span class="background-visual-name">${escHtml(short)}</span><span class="background-badge-kind" aria-hidden="true">BG</span></span>`;
 }
 function updateAddBackgroundPresentation(){
   const id=normalizeBackgroundId(document.getElementById('add-pmon-background')?.value);
@@ -6241,10 +6117,7 @@ function myListEditorHtml(entry){
       <button class="flag-btn xxl-flag ${xxl?'on':''}" onclick="setXxl('${jsName}')" title="XXL" aria-pressed="${xxl}" aria-label="${escAttr(i18nCore.t('myList.toggleXxlFor',{name:dn}))}">XXL</button>
       <button class="flag-btn xxs-flag ${xxs?'on':''}" onclick="setXxs('${jsName}')" title="XXS" aria-pressed="${xxs}" aria-label="${escAttr(i18nCore.t('myList.toggleXxsFor',{name:dn}))}">XXS</button>
     </div>
-    <div class="myrow-editor-fields">
-      <input class="ni" type="text" value="${escAttr(mod)}" placeholder="${escAttr(i18nCore.t('myList.variantDetails'))}" onchange="setNotes('${jsName}',this.value)" aria-label="${escAttr(i18nCore.t('myList.notesFor',{name:dn}))}">
-      <button class="rm" onclick="confirmRemove('${jsName}','${jsDn}')" aria-label="${escAttr(i18nCore.t('myList.removeEntry',{name:dn}))}">×</button>
-    </div>
+    <div class="myrow-editor-fields"><input class="ni" type="text" value="${escAttr(mod)}" placeholder="${escAttr(i18nCore.t('myList.variantDetails'))}" onchange="setNotes('${jsName}',this.value)" aria-label="${escAttr(i18nCore.t('myList.notesFor',{name:dn}))}"></div>
     <button type="button" class="background-trigger" onclick="openBackgroundPicker({target:'entry',name:'${jsName}',pokemonName:'${jsDn}'})" aria-haspopup="dialog"><span class="background-trigger-copy">${escHtml(backgroundId?backgroundDisplayName(backgroundId):i18nCore.t('background.none'))}</span><span class="background-trigger-clear">${escHtml(backgroundId?i18nCore.t('common.change'):i18nCore.t('background.choose'))}</span></button>
   </div>`;
 }
@@ -6256,14 +6129,24 @@ function hydrateMyRowEditor(details){
   details.insertAdjacentHTML('beforeend',myListEditorHtml(entry));
   details.dataset.hydrated='true';
 }
+function hydrateMyRowPriority(details){
+  if(!details?.open||details.dataset.hydrated==='true')return;
+  const name=details.closest('.myrow')?.dataset.name;
+  const entry=currentListEntries(myListType).find(item=>item.name===name);
+  if(!entry)return;
+  const jsName=escAttr(entry.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r?\n/g,' '));
+  details.insertAdjacentHTML('beforeend',`<div class="myrow-priority-menu" role="group" aria-label="${escAttr(i18nCore.t('myList.priorityFor',{name:entry.dn}))}">${['H','M','L'].map(value=>`<button type="button" class="pb ${entry.p===value?'on '+value:''}" aria-pressed="${entry.p===value}" onclick="movePriority('${jsName}','${value}')">${value}</button>`).join('')}</div>`);
+  details.dataset.hydrated='true';
+}
 function myListRowRenderKey(entry,idx,count){
   return JSON.stringify([entry.rawValue,i18nCore.getLocale(),bulkMode,bulkSelected.has(entry.name),reorderMode,reorderMode?idx:null,reorderMode?count:null]);
 }
 function myListRowHtml(entry,idx,count){
     const{name,dn,p,mod,lucky,xxl,xxs,shiny,backgroundId,no}=entry;
     const jsName=escAttr(name.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r?\n/g,' '));
+    const jsDn=escAttr(String(dn).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r?\n/g,' '));
     const attrName=escAttr(name);
-    const hasSprite=no||entry.spriteUrl||COSTUME_FORM_SPRITE_IDS[name]||GO_COSTUME_SPRITE_SLUGS[name];
+    const hasSprite=Boolean(no||isApprovedRuntimeSpriteUrl(entry.spriteUrl)||COSTUME_FORM_SPRITE_IDS[name]);
     const crownHtml=maxCrownSvg(entry.maxType);
     const isSel=bulkSelected.has(name);
     const clickHandler=bulkMode?`onclick="event.stopPropagation();toggleBulkSelection('${jsName}')"`:'';
@@ -6276,8 +6159,9 @@ function myListRowHtml(entry,idx,count){
       mod?`<span class="myrow-trait detail">${escHtml(mod)}</span>`:''
     ].join('');
     const priorityIndex=idx,priorityCount=count;
-    return`<div class="myrow${isSel?' bulk-selected':''}" ${reorderMode&&!bulkMode?'draggable="true"':''} data-name="${attrName}" data-priority="${escAttr(p||'')}" data-dex="${no||''}" data-idx="${idx}" data-render-key="${escAttr(myListRowRenderKey(entry,idx,count))}" data-full="${escAttr(dn)}" aria-label="${escAttr(dn)}" ${clickHandler}
+    return`<div class="myrow${isSel?' bulk-selected':''}${backgroundId?` background-visual-card ${backgroundVisualClass(backgroundId)}`:''}" ${backgroundId?backgroundVisualAttrs(backgroundId):''} ${reorderMode&&!bulkMode?'draggable="true"':''} data-name="${attrName}" data-priority="${escAttr(p||'')}" data-dex="${no||''}" data-idx="${idx}" data-render-key="${escAttr(myListRowRenderKey(entry,idx,count))}" data-full="${escAttr(dn)}" aria-label="${escAttr(dn)}" ${clickHandler}
       ondragstart="dragStart(event)" ondragover="dragOver(event)" ondrop="dragDrop(event)" ondragend="dragEnd(event)">
+      ${backgroundVisualMotifHtml(backgroundId)}
       <input type="checkbox" class="bulk-chk" data-name="${attrName}" ${isSel?'checked':''} onclick="event.stopPropagation();toggleBulkSelection('${jsName}')" aria-label="${escAttr(i18nCore.t('myList.selectEntry',{name:dn}))}">
       ${reorderMode?`<button type="button" class="drag-handle" draggable="false" title="${escAttr(i18nCore.t('myList.reorderEntry',{name:dn}))}" aria-label="${escAttr(i18nCore.t('myList.reorderEntry',{name:dn}))}" onpointerdown="myListPointerStart(event)" onpointermove="myListPointerMove(event)" onpointerup="myListPointerEnd(event)" onpointercancel="myListPointerCancel(event)">${uiIconMarkup('grip','ui-icon')}</button><span class="myrow-reorder-controls"><button type="button" class="myrow-reorder-move" data-reorder-move="up" draggable="false" ${priorityIndex<=0?'disabled':''} aria-label="${escAttr(i18nCore.t('myList.moveUp',{name:dn}))}" onclick="event.stopPropagation();moveMyListEntry('${jsName}',-1)">${uiIconMarkup('chevron-down','ui-icon')}</button><button type="button" class="myrow-reorder-move" data-reorder-move="down" draggable="false" ${priorityIndex>=priorityCount-1?'disabled':''} aria-label="${escAttr(i18nCore.t('myList.moveDown',{name:dn}))}" onclick="event.stopPropagation();moveMyListEntry('${jsName}',1)">${uiIconMarkup('chevron-down','ui-icon')}</button></span>`:''}
       ${hasSprite?`<span class="myrow-sprite-wrap sprite-slot-list">${spriteImg(no,34,'myrow-sprite',name,'',dn,{urlOverride:entry.spriteUrl,catalogId:entry.catalogId})}${crownHtml}</span>`:crownHtml}
@@ -6286,10 +6170,11 @@ function myListRowHtml(entry,idx,count){
         ${activeTraits?`<div class="myrow-active-traits" aria-label="${escAttr(i18nCore.t('myList.currentFlags',{flags:[lucky&&i18nCore.t('myList.lucky'),shiny&&i18nCore.t('myList.shiny'),xxl&&'XXL',xxs&&'XXS',backgroundId&&i18nCore.t('background.badgeLabel',{name:backgroundDisplayName(backgroundId)}),mod].filter(Boolean).join(', ')}))}">${activeTraits}</div>`:''}
       </div>
       <div class="mctrl">
-        ${p?`<details class="myrow-priority-quick" onclick="event.stopPropagation()"><summary class="myrow-priority-chip ${p}" aria-label="${escAttr(i18nCore.t('myList.changePriorityFor',{name:dn,priority:i18nCore.t({'H':'priority.high','M':'priority.medium','L':'priority.low'}[p])}))}">${p}</summary><div class="myrow-priority-menu" role="group" aria-label="${escAttr(i18nCore.t('myList.priorityFor',{name:dn}))}">${['H','M','L'].map(value=>`<button type="button" class="pb ${p===value?'on '+value:''}" aria-pressed="${p===value}" onclick="movePriority('${jsName}','${value}')">${value}</button>`).join('')}</div></details>`:''}
+        ${p?`<details class="myrow-priority-quick" onclick="event.stopPropagation()" ontoggle="hydrateMyRowPriority(this)"><summary class="myrow-priority-chip ${p}" aria-label="${escAttr(i18nCore.t('myList.changePriorityFor',{name:dn,priority:i18nCore.t({'H':'priority.high','M':'priority.medium','L':'priority.low'}[p])}))}">${p}</summary></details>`:''}
         <details class="myrow-editor" onclick="event.stopPropagation()" ontoggle="hydrateMyRowEditor(this)">
           <summary class="myrow-edit" aria-label="${escAttr(i18nCore.t('myList.openMoreFor',{name:dn}))}" title="${escAttr(i18nCore.t('myList.openMoreFor',{name:dn}))}">${uiIconMarkup('sliders','ui-icon ui-icon-sm')}<span>${escHtml(i18nCore.t('myList.editEntry'))}</span></summary>
         </details>
+        <button type="button" class="myrow-remove" onclick="event.stopPropagation();confirmRemove('${jsName}','${jsDn}')" aria-label="${escAttr(i18nCore.t('myList.removeEntry',{name:dn}))}" title="${escAttr(i18nCore.t('myList.removeEntry',{name:dn}))}">${escHtml(i18nCore.t('myList.remove'))}</button>
       </div>
     </div>`;
 }
@@ -6571,35 +6456,33 @@ function renderMyList(filterVal,options={}){
 function confirmRemove(name,dn){
   const list=allData[myListType]?.[cur]||{};
   const{mod}=parsePri(list[name]||'');
-  if(mod&&!confirm(i18nCore.t('myList.confirmDelete',{name:dn,notes:mod})))return;
+  const message=mod
+    ?i18nCore.t('myList.confirmDelete',{name:dn,notes:mod})
+    :i18nCore.t('myList.confirmRemove',{name:dn});
+  if(!confirm(message))return false;
   removeEntry(name);
+  return true;
 }
 
 const canvasImageCache=new Map();
 const canvasImageUsableCache=new WeakMap();
 function exportSpriteUrl(e){
-  return canvasSafeSpriteUrl(e.spriteUrl||(e.no?spriteUrl(e.no,e.spriteName,e.gender,e.dn):''));
+  return canvasSafeSpriteUrl(entrySpriteUrl(e,e.spriteName||e.name,e.gender));
 }
 // Build canvas-safe fallback chain for the export image
 // Uses the same multi-source cascade as inline images
 function exportSpriteFallbackUrls(e){
   const chain=spriteFallbackChain(e.no,e.spriteName||e.name,e.gender,e.dn);
-  // Insert custom spriteUrl override at the head if entry provides one (e.g., EXTRA_FORM_ENTRIES with Serebii URL)
-  if(e.spriteUrl)chain.unshift(e.spriteUrl);
+  // A stored override is useful only when it is on the reviewed runtime allowlist.
+  const approvedOverride=isApprovedRuntimeSpriteUrl(e.spriteUrl)?e.spriteUrl:'';
+  if(approvedOverride)chain.unshift(approvedOverride);
   const exactFormUrl=pokemondbSpriteUrl(e.spriteName||e.name,e.dn||e.name,e.gender);
-  if(e.spriteUrl&&exactFormUrl&&exactFormUrl!==e.spriteUrl){
+  if(approvedOverride&&exactFormUrl&&exactFormUrl!==approvedOverride){
     const i=chain.indexOf(exactFormUrl);
     if(i>=0)chain.splice(i,1);
     chain.splice(1,0,exactFormUrl);
   }
-  const urls=[...new Set(chain.filter(Boolean).map(canvasSafeSpriteUrl))];
-  if(e.spriteUrl&&e.spriteUrl.startsWith('https://cdn08.net/')){
-    const proxied=canvasSafeSpriteUrl(e.spriteUrl);
-    const i=urls.indexOf(proxied);
-    if(i>=0&&!urls.includes(e.spriteUrl))urls.splice(i+1,0,e.spriteUrl);
-    return urls.filter(u=>u===proxied||u===e.spriteUrl||(exactFormUrl&&u===canvasSafeSpriteUrl(exactFormUrl)));
-  }
-  return urls;
+  return[...new Set(chain.filter(Boolean).map(canvasSafeSpriteUrl).filter(Boolean))];
 }
 function loadCanvasImage(url){
   if(!url)return Promise.resolve(null);
@@ -6888,6 +6771,27 @@ function drawExportEntryNoteLabel(ctx,e,x,y,w,h,{dark=false}={}){
   ctx.textAlign='left';
   ctx.textBaseline='alphabetic';
 }
+function drawExportBackgroundVisual(ctx,e,x,y,w,h,{dark=false,radius=8}={}){
+  const visual=backgroundVisual(e?.backgroundId);if(!visual)return;
+  ctx.save();
+  roundedRect(ctx,x,y,w,h,radius);ctx.clip();
+  const gradient=ctx.createLinearGradient(x,y,x+w,y+h);
+  gradient.addColorStop(0,visual.colorA);gradient.addColorStop(.55,visual.colorB);gradient.addColorStop(1,visual.colorC);
+  ctx.globalAlpha=dark ? .42 : .18;ctx.fillStyle=gradient;ctx.fillRect(x,y,w,h);
+  ctx.globalAlpha=dark ? .22 : .12;ctx.strokeStyle='#ffffff';ctx.lineWidth=1;
+  if(visual.pattern==='rings'){
+    for(let r=10;r<Math.max(w,h)*1.5;r+=15){ctx.beginPath();ctx.arc(x+w*.72,y+h*.38,r,0,Math.PI*2);ctx.stroke();}
+  }else if(visual.pattern==='constellation'){
+    const points=[[.16,.22],[.42,.34],[.72,.18],[.84,.62],[.55,.78],[.22,.66]];
+    ctx.beginPath();points.forEach(([px,py],index)=>index?ctx.lineTo(x+w*px,y+h*py):ctx.moveTo(x+w*px,y+h*py));ctx.stroke();
+    points.forEach(([px,py])=>{ctx.beginPath();ctx.arc(x+w*px,y+h*py,1.8,0,Math.PI*2);ctx.fillStyle='#fff';ctx.fill();});
+  }else if(visual.pattern==='prism'){
+    for(let offset=-h;offset<w;offset+=18){ctx.beginPath();ctx.moveTo(x+offset,y+h);ctx.lineTo(x+offset+h,y);ctx.stroke();}
+  }else{
+    ctx.beginPath();ctx.moveTo(x,y+h*.66);ctx.quadraticCurveTo(x+w*.26,y+h*.38,x+w*.5,y+h*.62);ctx.quadraticCurveTo(x+w*.72,y+h*.86,x+w,y+h*.43);ctx.lineTo(x+w,y+h);ctx.lineTo(x,y+h);ctx.closePath();ctx.fillStyle='#fff';ctx.fill();
+  }
+  ctx.restore();
+}
 // Family-clustering sort: groups Pokemon variants (Vivillon, Unown, Furfrou, regional forms)
 // together. Primary key = dex number, secondary = family-base name (strips parens/regional prefix),
 // tertiary = full name. So all dex 666 entries cluster, all "Vivillon (X)" stay together inside.
@@ -6985,6 +6889,7 @@ async function renderListImage(entries,type,username,style='classic'){
       const col=i%cols,row=Math.floor(i/cols);
       const x=frame+pad+col*(cellW+gap),cy=y+row*cellH;
       const sx=x+(cellW-sprSize)/2,sy=cy+(cellH-sprSize)/2;
+      drawExportBackgroundVisual(ctx,e,x+2,cy+2,cellW-4,cellH-4,{radius:7});
       const img=images.get(exportSpriteUrl(e));
       if(img)drawImageContain(ctx,img,sx,sy,sprSize,sprSize);
       else drawSpriteFallback(ctx,e,sx,sy,sprSize);
@@ -7099,6 +7004,7 @@ async function renderListImageCards(entries,type,username){
       // Card background
       ctx.fillStyle='#1e1e35';
       roundedRect(ctx,x,cy,cellW,cellH,8);ctx.fill();
+      drawExportBackgroundVisual(ctx,e,x,cy,cellW,cellH,{dark:true,radius:8});
       // Priority-coloured top stripe
       ctx.fillStyle=c;
       roundedRect(ctx,x,cy,cellW,3,2);ctx.fill();
@@ -7328,26 +7234,22 @@ async function setBackground(name,backgroundId){
 }
 async function removeEntry(name){
   if(!requireOwnedListHydration(myListType,cur))return;
-  const prevList={...(allData[myListType]?.[cur]||{})};
   const srcArr=listSource(myListType);
   const sourceEntry=srcArr.find(x=>x.name===name),dn=sourceEntry?pokemonDisplayName(sourceEntry):name;
-  const pendingUndo={type:myListType,username:cur,list:{...prevList},name:dn};
-  // Animate the row out
   const row=[...document.querySelectorAll('.myrow')].find(r=>r.dataset.name===name);
+  const focusTarget=row?.nextElementSibling?.querySelector('.myrow-edit,.myrow-remove')||row?.previousElementSibling?.querySelector('.myrow-edit,.myrow-remove');
+  const commitRemoval=async()=>{
+    if(!await writeListItem(myListType,cur,name,null)){row?.classList.remove('removing');if(row)row.style.transform='';return;}
+    announceMyListAction(i18nCore.t('myList.removed',{name:dn}));
+    requestAnimationFrame(()=>{
+      if(focusTarget?.isConnected)focusTarget.focus();
+      else document.getElementById('mylist-filter')?.focus();
+    });
+  };
   if(row){
     row.classList.add('removing');
-    setTimeout(sessionTransientCallback(async()=>{
-      if(await writeListItem(myListType,cur,name,null)){
-        undoStack=pendingUndo;
-        showUndo(dn);
-      }else row.classList.remove('removing');
-    }),220);
-  }else{
-    if(await writeListItem(myListType,cur,name,null)){
-      undoStack=pendingUndo;
-      showUndo(dn);
-    }
-  }
+    setTimeout(sessionTransientCallback(commitRemoval),220);
+  }else await commitRemoval();
 }
 
 // ── SEARCH STRINGS ────────────────────────────────────────────
@@ -8651,6 +8553,7 @@ async function saveAppearance(){
 
 // ── UI HELPERS ────────────────────────────────────────────────
 let _syncStatusCurrent='';
+let accountSyncPreservedReviewRunning=false;
 function accountSyncPresentation(){
   if(!accountSyncUiState?.eligible)return null;
   accountSyncClearStaleRecoveryPresentation();
@@ -8717,6 +8620,7 @@ function refreshSyncUi(){
   }
   const diagnostic=document.getElementById('trainer-sync-diagnostic');
   const recovery=document.getElementById('trainer-sync-recovery'),recoveryLabel=document.getElementById('trainer-sync-recovery-label');
+  const preservedReview=document.getElementById('trainer-sync-preserved-review'),preservedReviewCount=document.getElementById('trainer-sync-preserved-review-count'),preservedReviewAction=document.getElementById('trainer-sync-preserved-review-action');
   if(account){
     const runtime=managedAccountSyncRuntime,uid=auth?.currentUser?.uid||'';
     const recoveryState=accountSyncEffectiveRecoveryState();
@@ -8735,9 +8639,14 @@ function refreshSyncUi(){
       if(showDiagnostic)recovery.setAttribute('aria-describedby','trainer-sync-diagnostic');else recovery.removeAttribute('aria-describedby');
       if(recoveryLabel)recoveryLabel.textContent=i18nCore.t(account.running?'accountSync.recoveryRunning':account.actionKey||'accountSync.restartSync');
     }
+    const canReview=account.state==='review-required'&&managedAccountSyncRuntime?.projectionReady===true&&accountSyncUiState?.active===true&&accountSyncUiState?.listenerHealthy===true&&accountSyncUiState?.controllerHealthy===true&&!Number(accountSyncUiState?.pendingCount)&&!Number(accountSyncUiState?.blockedCount)&&!Number(accountSyncUiState?.conflictCount)&&Number(accountSyncUiState?.recoveryCandidateCount)>0;
+    if(preservedReview){preservedReview.hidden=!canReview;if(preservedReviewCount)preservedReviewCount.textContent=i18nCore.t('accountSync.preservedReviewDetail',{count:i18nCore.formatNumber(accountSyncUiState?.recoveryCandidateCount||0)});}
+    if(preservedReviewAction){preservedReviewAction.disabled=accountSyncPreservedReviewRunning;preservedReviewAction.setAttribute('aria-busy',accountSyncPreservedReviewRunning?'true':'false');}
   }else{
     if(diagnostic){diagnostic.hidden=true;diagnostic.textContent='';}
     if(recovery){recovery.hidden=true;recovery.disabled=false;recovery.removeAttribute('aria-busy');recovery.removeAttribute('aria-describedby');}
+    if(preservedReview)preservedReview.hidden=true;
+    if(preservedReviewAction){preservedReviewAction.disabled=false;preservedReviewAction.removeAttribute('aria-busy');}
   }
 }
 function setSyncStatus(s){
@@ -8796,6 +8705,7 @@ async function reconnectAuth(){
 async function openSyncDetail(){
   const account=accountSyncPresentation();
   if(account){
+    if(account.state==='review-required'){openAccountSettingsSection('data');return;}
     if(account.plan.action!=='none'){await requestAccountSyncRecovery();return;}
     toast(i18nCore.t(account.detailKey,{count:i18nCore.formatNumber(account.count)}),4500);
     return;
@@ -8804,6 +8714,26 @@ async function openSyncDetail(){
   const q=Object.keys(syncQueue||{}).length;
   const key={online:'saveStatus.onlineDetail',syncing:'saveStatus.syncingDetail',offline:'saveStatus.offlineDetail',localOnly:'saveStatus.localOnlyDetail'}[s]||'saveStatus.unknownDetail';
   toast(i18nCore.t(key,{count:i18nCore.formatNumber(q),status:s}),4500);
+}
+async function useSavedAccountCopyForPreservedReview(){
+  if(accountSyncPreservedReviewRunning)return;
+  const authority=await accountSyncPreservedReviewAuthority();
+  if(authority.mode!=='canonical-review'){toast(i18nCore.t('accountSync.preservedReviewUnavailable'),4500);return;}
+  const count=authority.candidateIds.length;
+  if(!confirm(i18nCore.t('accountSync.preservedReviewPrompt',{count:i18nCore.formatNumber(count)})))return;
+  if(!accountSyncPreservedReviewAuthorityCurrent(authority)){toast(i18nCore.t('accountSync.preservedReviewUnavailable'),4500);return;}
+  accountSyncPreservedReviewRunning=true;refreshSyncUi();
+  try{
+    const result=await authority.runtime.completeRecoveryReviews(authority.candidateIds);
+    if(!result?.ok||!accountSyncPreservedReviewAuthorityCurrent(authority))throw Object.assign(new Error('Recovery review authority changed'),{code:result?.error?.code||'account-sync/session-changed'});
+    accountSyncUiState=await authority.runtime.snapshot();
+    if(!accountSyncPreservedReviewAuthorityCurrent(authority)||accountSyncUiState.state!=='saved'||accountSyncUiState.recoveryCandidateCount!==0||!applyAccountSyncCanonicalEntities(Object.freeze(authority.controller.activeEntities())))throw Object.assign(new Error('Saved account projection was not accepted'),{code:'account-sync/recovery-review-incomplete'});
+    refreshSyncUi();toast(i18nCore.t('accountSync.preservedReviewSucceeded',{count:i18nCore.formatNumber(result.count)}),4000);
+  }catch(error){
+    console.error('Account sync preserved review failed',accountSyncRuntimeData.diagnosticCode(error,'account-sync/recovery-review-failed'));
+    try{if(authority.runtime===managedAccountSyncRuntime)accountSyncUiState=await authority.runtime.snapshot();}catch{}
+    refreshSyncUi();toast(i18nCore.t('accountSync.preservedReviewFailed'),5000);
+  }finally{accountSyncPreservedReviewRunning=false;refreshSyncUi();}
 }
 async function requestAccountSyncRecovery(){
   const account=accountSyncPresentation();if(!account)return;
@@ -8872,7 +8802,7 @@ let _settingsContext='public';
 let _settingsScrollSnapshot=null;
 let _settingsSection='profile';
 let _pendingSettingsRouteSection=null;
-const SETTINGS_SECTIONS=Object.freeze(['profile','language','appearance','security','tools','data','legal']);
+const SETTINGS_SECTIONS=Object.freeze(['profile','language','appearance','security','tools','data']);
 const SETTINGS_DESKTOP_QUERY='(min-width:768px)';
 function accountMenuElements(){return{trigger:document.getElementById('account-trigger'),popover:document.getElementById('account-popover')};}
 function closeAccountMenu(restoreFocus=true){
@@ -8983,18 +8913,12 @@ function configureSettingsPanel(context='public'){
 }
 function selectSettingsSection(section='profile',options={}){
   if(!SETTINGS_SECTIONS.includes(section))section='profile';if(_settingsContext!=='account')section='language';const previous=_settingsSection;_settingsSection=section;
-  if(section==='legal')renderLegalSources();
   document.querySelectorAll('[data-settings-section]').forEach(panel=>{panel.hidden=panel.dataset.settingsSection!==section;const heading=panel.querySelector('h2');if(heading)heading.tabIndex=-1;});
   document.querySelectorAll('[data-settings-target]').forEach(button=>{const active=button.dataset.settingsTarget===section;button.setAttribute('aria-current',active?'page':'false');});
   const layout=document.getElementById('settings-layout');if(!options.keepList)layout?.classList.remove('mobile-list');
   const detail=document.getElementById('settings-detail');if(detail&&previous!==section&&options.resetScroll!==false)detail.scrollTop=0;
   if(_settingsContext==='account'&&options.updateHistory!==false&&document.getElementById('settings-modal')?.classList.contains('open'))writeSettingsRoute(section,{mode:options.historyMode||'push'});
   if(options.focus!==false)requestAnimationFrame(()=>document.querySelector(`[data-settings-section="${section}"] h2`)?.focus({preventScroll:true}));
-}
-function renderLegalSources(){
-  const list=document.getElementById('legal-source-list');if(!list||list.dataset.ready===i18nCore.getLocale())return;
-  list.innerHTML=SPRITE_SOURCE_REGISTRY.map(source=>`<li><a href="${escAttr(source.homepage)}" target="_blank" rel="noopener noreferrer">${escHtml(source.name)}</a><span>${escHtml(i18nCore.t(`legal.source.${source.id}`,{},source.role))}</span></li>`).join('');
-  list.dataset.ready=i18nCore.getLocale();
 }
 function showSettingsSectionList(options={}){
   if(matchMedia(SETTINGS_DESKTOP_QUERY).matches)return;
@@ -9292,7 +9216,7 @@ function tradeIntentQualifierTokens(intent){
   if(intent.shiny)tokens.push({label:i18nCore.t('share.flagShiny')});
   if(intent.xxl)tokens.push({label:i18nCore.t('share.flagXxl')});
   if(intent.xxs)tokens.push({label:i18nCore.t('share.flagXxs')});
-  if(intent.backgroundId)tokens.push({label:i18nCore.t('background.badgeLabel',{name:backgroundDisplayName(intent.backgroundId)}),cls:'background'});
+  if(intent.backgroundId)tokens.push({label:i18nCore.t('background.badgeLabel',{name:backgroundDisplayName(intent.backgroundId)}),cls:'background',backgroundId:intent.backgroundId});
   const gender=entryGender(intent.mod);
   if(gender)tokens.push({label:i18nCore.t(gender==='f'?'share.flagFemale':'share.flagMale')});
   const detail=tradeIntentFreeform(intent.mod);
@@ -9333,8 +9257,8 @@ function renderTradeMatchSummary(them){
     const img=it.no?spriteImg(it.no,38,'',it.name,it.gender||'',it.dn):'<span aria-hidden="true">◌</span>';
     const gender=it.gender?` ${it.gender==='f'?'♀':'♂'}`:'';
     const qualifiers=tradeIntentQualifierTokens(it);
-    if(it.backgroundId&&!qualifiers.some(token=>token.cls==='background'))qualifiers.push({label:i18nCore.t('background.badgeLabel',{name:backgroundDisplayName(it.backgroundId)}),cls:'background'});
-    return`<article class="diff-match-chip ${cls}" title="${escAttr(it.dn+gender)}">${img}<div class="diff-match-main"><span class="diff-match-name">${escHtml(it.dn)}${gender}</span>${qualifiers.length?`<span class="diff-match-qualifiers">${qualifiers.map(token=>`<span class="diff-match-qualifier ${escAttr(token.cls||'')}">${escHtml(token.label)}</span>`).join('')}</span>`:''}</div></article>`;
+    if(it.backgroundId&&!qualifiers.some(token=>token.cls==='background'))qualifiers.push({label:i18nCore.t('background.badgeLabel',{name:backgroundDisplayName(it.backgroundId)}),cls:'background',backgroundId:it.backgroundId});
+    return`<article class="diff-match-chip ${cls}${it.backgroundId?` background-visual-card ${backgroundVisualClass(it.backgroundId)}`:''}" ${it.backgroundId?backgroundVisualAttrs(it.backgroundId):''} title="${escAttr(it.dn+gender)}">${backgroundVisualMotifHtml(it.backgroundId)}${img}<div class="diff-match-main"><span class="diff-match-name">${escHtml(it.dn)}${gender}</span>${qualifiers.length?`<span class="diff-match-qualifiers">${qualifiers.map(token=>token.backgroundId?backgroundBadgeHtml(token.backgroundId,'diff-match-qualifier background'):`<span class="diff-match-qualifier ${escAttr(token.cls||'')}">${escHtml(token.label)}</span>`).join('')}</span>`:''}</div></article>`;
   };
   const box=(cls,title,direction,items,available,empty)=>`<section class="diff-match-box ${cls}" aria-labelledby="trade-match-${cls}-title">
     <div class="diff-match-title" id="trade-match-${cls}-title">${escHtml(title)}<span class="diff-match-count">${available?i18nCore.formatNumber(items.length):'—'}</span></div>
@@ -9648,7 +9572,8 @@ function renderDiffModal(){
       priHtml=`<span class="diff-prio-badge ${theirs}" title="${escAttr(them)}: ${escAttr(priLabel(theirs))}">${theirs}</span>`;
     }
     const genderHtml=e.gender?`<span class="share-pcard-gender ${e.gender}" style="position:absolute;bottom:-2px;right:-2px">${e.gender==='f'?'♀':'♂'}</span>`:'';
-    return`<div class="diff-card${isMismatch?' has-mismatch':''}" title="${escAttr(e.dn)}">
+    return`<div class="diff-card${isMismatch?' has-mismatch':''}${e.backgroundId?` background-visual-card ${backgroundVisualClass(e.backgroundId)}`:''}" ${e.backgroundId?backgroundVisualAttrs(e.backgroundId):''} title="${escAttr(e.dn)}">
+      ${backgroundVisualMotifHtml(e.backgroundId)}
       <div class="diff-card-sprite-wrap">${e.no?spriteImg(e.no,26,'share-pcard-sprite',e.name,e.gender,e.dn):'🎮'}${genderHtml}</div>
       <div class="diff-card-info">
         <span class="diff-card-name">${escHtml(e.dn)}</span>
@@ -10717,11 +10642,12 @@ function renderSpecialBoard(){
       const display=pokemonDisplayName({name:e.name,no:e.no,displayName:e.dn||e.name});
       const backgroundId=normalizeBackgroundId(e.backgroundId),backgroundName=backgroundId?backgroundDisplayName(backgroundId):'';
       const backgroundLabel=backgroundId?backgroundShortLabel(backgroundId):'';
-      return`<div class="sb-row" data-idx="${i}">
+      return`<div class="sb-row${backgroundId?` background-visual-card ${backgroundVisualClass(backgroundId)}`:''}" ${backgroundId?backgroundVisualAttrs(backgroundId):''} data-idx="${i}">
+        ${backgroundVisualMotifHtml(backgroundId)}
         ${sprHtml}
         <span class="sb-row-name" title="${escAttr(display)}">${escHtml(display)}</span>
         ${qtyHtml}
-        <button type="button" class="sb-row-background ${backgroundId?'':'is-empty'}" onclick="openBackgroundPicker({target:'special',side:'${side}',index:${i},name:'${escAttr(e.name)}',pokemonName:'${escAttr(display)}'})" title="${escAttr(backgroundName||i18nCore.t('background.none'))}" aria-label="${escAttr(backgroundId?i18nCore.t('background.selected',{name:backgroundName}):i18nCore.t('background.choose'))}"><span class="background-trigger-copy">${backgroundId?escHtml(`${backgroundLabel} BG`):'◉'}</span></button>
+        <button type="button" class="sb-row-background ${backgroundId?'':'is-empty'}" onclick="openBackgroundPicker({target:'special',side:'${side}',index:${i},name:'${escAttr(e.name)}',pokemonName:'${escAttr(display)}'})" title="${escAttr(backgroundName||i18nCore.t('background.none'))}" aria-label="${escAttr(backgroundId?i18nCore.t('background.selected',{name:backgroundName}):i18nCore.t('background.choose'))}"><span class="background-trigger-copy">${backgroundId?`<span class="background-visual-swatch ${backgroundVisualClass(backgroundId)}" ${backgroundVisualAttrs(backgroundId)} aria-hidden="true"></span><span>${escHtml(backgroundLabel)}</span>`:'◉'}</span></button>
         <button class="sb-row-flag ${e.shiny?'on shiny':''}" onclick="toggleSpecialFlag('${side}',${i},'shiny')" title="✨ Shiny variant" aria-pressed="${!!e.shiny}">✨</button>
         <button class="sb-row-flag ${e.mirror?'on mirror':''}" onclick="toggleSpecialFlag('${side}',${i},'mirror')" title="🪞 Mirror-only (same Pokémon back)" aria-pressed="${!!e.mirror}">🪞</button>
         <input type="text" class="sb-row-note" maxlength="40" placeholder="note…" value="${escAttr(e.note||'')}" onchange="setSpecialNote('${side}',${i},this.value)" aria-label="Note">
@@ -11014,6 +10940,7 @@ async function renderSpecialBoardImage(board,username){
     entries.forEach((e,i)=>{
       const detailLabel=exportEntryNoteLabel({...e,mod:e.note||''});
       if(i%2===0){ctx.fillStyle='rgba(255,255,255,.025)';ctx.fillRect(xBase,y,colW,rowH-4);}
+      drawExportBackgroundVisual(ctx,e,xBase,y,colW,rowH-4,{dark:true,radius:5});
       const img=imgMap.get(e.name+(e.shiny?'_s':''));
       const sx=xBase+8,sy=y+(rowH-4-sprSize)/2;
       if(img)drawImageContain(ctx,img,sx,sy,sprSize,sprSize);
@@ -11057,6 +10984,7 @@ async function renderSpecialBoardImage(board,username){
       // Card background — subtle, helps visual grouping
       ctx.fillStyle='rgba(255,255,255,.03)';
       ctx.fillRect(cx,cy,gridCellW,gridCellH-6);
+      drawExportBackgroundVisual(ctx,e,cx,cy,gridCellW,gridCellH-6,{dark:true,radius:5});
       // Sprite centered horizontally near top
       const img=imgMap.get(e.name+(e.shiny?'_s':''));
       const sx=cx+(gridCellW-gridSprSize)/2,sy=cy+(showGridNames?6:Math.max(4,(gridCellH-6-gridSprSize)/2));
@@ -11328,11 +11256,12 @@ function renderShareView(username,type){
         // Strip gender markers from mod display since we show ♂/♀ explicitly
         const modDisplay=String(e.mod||'').replace(/\b(female|male|f|m)\b/gi,'').replace(/\s+/g,' ').trim();
         const metaHtml=(modDisplay||flagsHtml)?`<div class="share-pcard-meta">${modDisplay?`<span class="share-pcard-mod">${escHtml(modDisplay)}</span>`:''}${flagsHtml}</div>`:'';
-        // Use female sprite when applicable; cascade through PokemonDB HOME / PokeMiners / Serebii
+        // Use female sprite when applicable and cascade through approved sprite fallbacks.
         const spriteHtml=e.no
           ?`<div class="share-pcard-sprite-wrap">${spriteImg(e.no,26,'share-pcard-sprite',e.name,e.gender,e.dn)}${e.gender?`<span class="share-pcard-gender ${e.gender}">${e.gender==='f'?'♀':'♂'}</span>`:''}</div>`
           :'<div class="share-pcard-sprite" style="display:flex;align-items:center;justify-content:center;background:var(--bg2);border-radius:var(--radius-sm)">🎮</div>';
-        return `<div class="share-pcard card-row" title="${escAttr(e.dn)}">
+        return `<div class="share-pcard card-row${e.backgroundId?` background-visual-card ${backgroundVisualClass(e.backgroundId)}`:''}" ${e.backgroundId?backgroundVisualAttrs(e.backgroundId):''} title="${escAttr(e.dn)}">
+          ${backgroundVisualMotifHtml(e.backgroundId)}
           ${spriteHtml}
           <div class="share-pcard-info">
             <span class="share-pcard-name">${escHtml(e.dn)}</span>
@@ -11386,7 +11315,7 @@ function swipeEnd(ev){
   if(!vert&&dx<-80){
     // Swipe left = delete
     row.style.transform='translateX(-100%)';
-    setTimeout(sessionTransientCallback(()=>{const n=row.dataset.name;if(n)confirmRemove(n,row.dataset.full||n);}),150);
+    setTimeout(sessionTransientCallback(()=>{const n=row.dataset.name;if(!n||!confirmRemove(n,row.dataset.full||n))row.style.transform='';}),150);
   }else if(!vert&&dx>80){
     // Swipe right = toggle bulk select
     row.style.transform='';
@@ -11487,76 +11416,14 @@ function toggleTheme(){
 }
 function initTheme(){applyTheme(lsGet('pogoTheme','auto'));}
 
-// ── POKEMON TYPE COLORS (#16) ─────────────────────────────────
-const TYPE_CACHE_KEY='pogoTypeCache_v1';
-const TYPE_FETCH_CONCURRENCY=4;
-const TYPE_FETCH_TIMEOUT_MS=6000;
-const pokemonTypeInflight=new Map();
-const pokemonTypeQueue=[];
-const typeColorOwnedElements=new WeakSet();
-let pokemonTypeActive=0,typeColorObserver=null;
-function loadTypeCache(){try{pokemonTypes=JSON.parse(localStorage.getItem(TYPE_CACHE_KEY)||'{}')||{};}catch{pokemonTypes={};}}
-function saveTypeCache(){try{localStorage.setItem(TYPE_CACHE_KEY,JSON.stringify(pokemonTypes));}catch{}}
-function _drainPokemonTypeQueue(){
-  while(pokemonTypeActive<TYPE_FETCH_CONCURRENCY&&pokemonTypeQueue.length){
-    const task=pokemonTypeQueue.shift();
-    pokemonTypeActive++;
-    _requestPokemonType(task.dexNum).then(result=>{
-      pokemonTypeActive--;
-      pokemonTypeInflight.delete(task.dexNum);
-      task.resolve(result);
-      _drainPokemonTypeQueue();
-    });
-  }
-}
-async function _requestPokemonType(dexNum){
-  const controller=typeof AbortController==='function'?new AbortController():null;
-  const timeout=controller?setTimeout(()=>controller.abort(),TYPE_FETCH_TIMEOUT_MS):null;
-  try{
-    const res=await fetch(`https://pokeapi.co/api/v2/pokemon/${dexNum}`,controller?{signal:controller.signal}:undefined);
-    if(!res.ok)throw new Error('not ok');
-    const data=await res.json();
-    const primary=data.types?.[0]?.type?.name||null;
-    if(primary){pokemonTypes[dexNum]=primary;saveTypeCache();}
-    return primary;
-  }catch{return null;}
-  finally{if(timeout)clearTimeout(timeout);}
-}
-function fetchPokemonType(dexNum){
-  if(!dexNum)return null;
-  if(pokemonTypes[dexNum]!==undefined)return Promise.resolve(pokemonTypes[dexNum]);
-  if(pokemonTypeInflight.has(dexNum))return pokemonTypeInflight.get(dexNum);
-  let resolveTask;
-  const pending=new Promise(resolve=>{resolveTask=resolve;});
-  pokemonTypeInflight.set(dexNum,pending);
-  pokemonTypeQueue.push({dexNum,resolve:resolveTask});
-  _drainPokemonTypeQueue();
-  return pending;
-}
+// ── POKEMON TYPE COLORS ───────────────────────────────────────
 function applyTypeColorToElement(el){
   const dex=parseInt(el?.dataset.dex);if(!dex)return;
-  const apply=type=>{if(type&&TYPE_COLORS[type]&&el.isConnected)el.style.setProperty('--type-color',TYPE_COLORS[type]);};
-  if(pokemonTypes[dex]!==undefined){apply(pokemonTypes[dex]);return;}
-  fetchPokemonType(dex).then(apply);
+  const type=primaryTypeForDex(dex);
+  if(type&&TYPE_COLORS[type])el.style.setProperty('--type-color',TYPE_COLORS[type]);
 }
 function applyTypeColors(root=document){
-  const rows=[...root.querySelectorAll('.myrow[data-dex],.pgrid .pc[data-dex]')];
-  if(typeof IntersectionObserver!=='function'){
-    rows.forEach(row=>{if(!typeColorOwnedElements.has(row)){typeColorOwnedElements.add(row);applyTypeColorToElement(row);}});
-    return;
-  }
-  if(!typeColorObserver)typeColorObserver=new IntersectionObserver(entries=>entries.forEach(entry=>{
-      if(!entry.isIntersecting)return;
-      typeColorObserver?.unobserve(entry.target);
-      applyTypeColorToElement(entry.target);
-    }),{rootMargin:'240px 0px'});
-  rows.forEach(row=>{
-    if(typeColorOwnedElements.has(row))return;
-    const dex=parseInt(row.dataset.dex);if(!dex)return;
-    typeColorOwnedElements.add(row);
-    if(pokemonTypes[dex]!==undefined)applyTypeColorToElement(row);
-    else typeColorObserver.observe(row);
-  });
+  root.querySelectorAll('.myrow[data-dex],.pgrid .pc[data-dex]').forEach(applyTypeColorToElement);
 }
 
 // ── TRADE SCHEDULE ──────────────────────────────────────────

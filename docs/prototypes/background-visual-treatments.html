@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Background visual treatment prototypes</title>
+<style>
+:root{color-scheme:dark;--page:#0d1117;--panel:#171c24;--card:#20262f;--line:#333b47;--text:#f8fafc;--muted:#aeb7c5;--accent:#8878ff}*{box-sizing:border-box}body{margin:0;background:var(--page);color:var(--text);font:15px/1.45 system-ui,sans-serif}main{width:min(1120px,calc(100% - 32px));margin:auto;padding:32px 0 56px}h1{font-size:28px;margin:0 0 8px}h2{font-size:20px;margin:0}.lede,.note{color:var(--muted)}.options{display:grid;gap:22px;margin-top:28px}.option{border-top:1px solid var(--line);padding-top:20px}.option-head{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:12px}.decision{border:1px solid #29b88a;color:#79e2bc;padding:5px 9px;border-radius:6px;font-weight:700}.surfaces{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:12px}.surface{min-width:0;background:var(--panel);border:1px solid var(--line);padding:12px;border-radius:8px}.surface-title{display:block;color:var(--muted);font-size:12px;margin-bottom:8px}.row{position:relative;isolation:isolate;display:flex;align-items:center;gap:10px;min-height:72px;padding:10px;border:1px solid #3a424e;border-radius:7px;background:var(--card);overflow:hidden}.sprite{position:relative;z-index:2;display:grid;place-items:center;width:48px;height:48px;border-radius:50%;background:#f6d54a;color:#332700;font-weight:900}.copy{position:relative;z-index:2;min-width:0}.name{display:block;font-weight:800}.qualifiers{display:flex;gap:5px;align-items:center;margin-top:6px}.badge{display:inline-flex;align-items:center;gap:5px;max-width:160px;min-height:25px;padding:3px 7px 3px 4px;border:1px solid #5b6680;border-radius:6px;background:#151a22;color:#dfe6f2;font-size:12px}.swatch{width:24px;height:17px;border-radius:5px;background:linear-gradient(145deg,#0ea5a4,#2563eb,#8b5cf6);border:1px solid #ffffff55}.art{align-self:stretch;width:78px;border-radius:6px;background:repeating-radial-gradient(circle at 68% 35%,#ffffff66 0 2px,transparent 3px 11px),linear-gradient(145deg,#0ea5a4,#2563eb,#8b5cf6)}.frame:before{content:"";position:absolute;z-index:0;inset:1px auto 1px 2px;width:96px;opacity:.27;background:radial-gradient(circle at 20% 24%,#fff 0 1px,transparent 2px),radial-gradient(circle at 67% 32%,#fff 0 1px,transparent 2px),linear-gradient(145deg,#0ea5a4,#2563eb,#8b5cf6)}.compare{min-height:54px}.export{background:#f7f8fb;color:#18202c}.export .badge{background:#fff;color:#18202c;border-color:#c4cad5}.export .name{color:#18202c}@media(max-width:760px){main{width:min(100% - 20px,430px);padding-top:20px}.surfaces{grid-template-columns:1fr}.option-head{align-items:flex-start;flex-direction:column}.row{min-height:68px}}
+</style>
+</head>
+<body>
+<main>
+  <h1>Pokemon GO background visual treatments</h1>
+  <p class="lede">Original local prototypes only. No official or mined background artwork is embedded, copied, or fetched.</p>
+  <div class="options">
+    <section class="option">
+      <div class="option-head"><h2>Option A: clipped art area</h2><span class="note">High identity, artwork-dependent</span></div>
+      <div class="surfaces">
+        <div class="surface"><span class="surface-title">My List / public list</span><div class="row"><span class="art" aria-hidden="true"></span><span class="sprite">025</span><span class="copy"><span class="name">Shiny Pikachu (Female)</span><span class="qualifiers"><span class="badge">NYC Background</span></span></span></div></div>
+        <div class="surface"><span class="surface-title">Compare / Special Board</span><div class="row compare"><span class="art" aria-hidden="true"></span><span class="sprite">384</span><span class="copy"><span class="name">Rayquaza</span><span class="badge">GO Fest 2026: New York</span></span></div></div>
+        <div class="surface"><span class="surface-title">Classic / card export</span><div class="row export"><span class="art" aria-hidden="true"></span><span class="sprite">800</span><span class="copy"><span class="name">Necrozma</span><span class="badge">GO Fest Background</span></span></div></div>
+      </div>
+    </section>
+    <section class="option">
+      <div class="option-head"><h2>Option B: compact thumbnail or swatch</h2><span class="note">Efficient, but visually quiet</span></div>
+      <div class="surfaces">
+        <div class="surface"><span class="surface-title">My List / public list</span><div class="row"><span class="sprite">025</span><span class="copy"><span class="name">Shiny Pikachu (Female)</span><span class="qualifiers"><span class="badge"><span class="swatch"></span>NYC 2026</span></span></span></div></div>
+        <div class="surface"><span class="surface-title">Compare / Special Board</span><div class="row compare"><span class="sprite">384</span><span class="copy"><span class="name">Rayquaza</span><span class="badge"><span class="swatch"></span>GO Fest 2026: New York</span></span></div></div>
+        <div class="surface"><span class="surface-title">Classic / card export</span><div class="row export"><span class="sprite">800</span><span class="copy"><span class="name">Necrozma</span><span class="badge"><span class="swatch"></span>GO Fest BG</span></span></div></div>
+      </div>
+    </section>
+    <section class="option">
+      <div class="option-head"><h2>Option C: original frame plus swatch</h2><span class="decision">Selected</span></div>
+      <div class="surfaces">
+        <div class="surface"><span class="surface-title">My List / public list</span><div class="row frame"><span class="sprite">025</span><span class="copy"><span class="name">Shiny Pikachu (Female)</span><span class="qualifiers"><span class="badge"><span class="swatch"></span>NYC 2026 <small>BG</small></span></span></span></div></div>
+        <div class="surface"><span class="surface-title">Compare / Special Board</span><div class="row frame compare"><span class="sprite">384</span><span class="copy"><span class="name">Rayquaza</span><span class="badge"><span class="swatch"></span>GO Fest 2026: New York</span></span></div></div>
+        <div class="surface"><span class="surface-title">Classic / card export</span><div class="row frame export"><span class="sprite">800</span><span class="copy"><span class="name">Necrozma</span><span class="badge"><span class="swatch"></span>GO Fest BG</span></span></div></div>
+      </div>
+    </section>
+  </div>
+</main>
+</body>
+</html>

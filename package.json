@@ -16,6 +16,7 @@
     "profile:frontend-assets": "node scripts/profile-frontend-assets.cjs",
     "test:performance:static": "node --test tests/frontend-asset-extraction.test.cjs tests/service-worker-install-performance.test.cjs tests/service-worker-atomic-install.test.cjs tests/service-worker-cache-lifecycle.test.cjs tests/performance-observability.test.cjs",
     "test:performance:browser": "playwright test tests/startup-performance.spec.js tests/my-list-performance.spec.js --project=desktop --workers=1",
+    "test:trusted-readiness": "node --test tests/background-visual.test.cjs tests/trainer-favorites-recents-ia.test.cjs tests/my-list-sync-safety.test.cjs && playwright test tests/trusted-readiness.spec.js --project=desktop --workers=1",
     "check:pages-release": "node scripts/pages/validate-release.cjs --local && npm run test:pages-release && node scripts/check-domain-helpers.js && node scripts/check-community-membership.js && node scripts/check-global-identity-contract.js",
     "generate:pokemon-names": "node scripts/generate-pokemon-name-catalog.cjs",
     "generate:background-catalog": "node scripts/generate-background-catalog.cjs",

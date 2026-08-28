@@ -95,8 +95,20 @@ test('Trainers mode exposes a bounded clickable Favorites preview with a full-mo
   assert.match(render,/trainer-favorites-preview-row card-row[^>]+data-trainer-action="open"/);
   assert.match(render,/trainer\.viewAllFavorites/);
   assert.match(render,/data-favorite-action="show-favorites"/);
+  assert.match(render,/previewEl\.hidden=!previewItems\.length/);
+  assert.match(render,/previewEl\.innerHTML=previewItems\.length\?/);
   assert.match(html,/favoriteAction==='show-favorites'\)\{focusTrainerDiscoveryMode\('favorites'\)/);
   assert.match(html,/trainer-discovery-content\[data-mode="favorites"\] #trainer-favorites-preview[^{]*\{display:none\}/);
+});
+
+test('each discovery mode owns a distinct localized purpose heading',()=>{
+  const mode=html.slice(html.indexOf('function renderTrainerDiscoveryHeading'),html.indexOf('function focusTrainerDiscoveryMode'));
+  assert.match(mode,/trainers:\['trainer\.findTitle','trainer\.findDescription'\]/);
+  assert.match(mode,/favorites:\['trainer\.favoritesTitle','trainer\.favoritesDescription'\]/);
+  assert.match(mode,/pokemon:\['favoriteBrowse\.title','favoriteBrowse\.description'\]/);
+  assert.match(mode,/setText\('find-trainer-title',copy\[0\]\)/);
+  assert.match(mode,/setText\('find-trainer-description',copy\[1\]\)/);
+  assert.match(html,/'trainer\.favoritesDescription'/);
 });
 
 test('Recent Trainers render as one native row action without nested competing controls',()=>{

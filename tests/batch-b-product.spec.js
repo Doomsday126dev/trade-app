@@ -59,7 +59,7 @@ test('dense My List keeps editing progressive and reorder explicit',async({page}
   await screenshot(page,`${testInfo.project.name}-my-list`);
 });
 
-test('avatar picker, Legal surface, and sprite fallback run without remote writes',async({page},testInfo)=>{
+test('avatar picker, compact Legal acknowledgement, and sprite fallback run without remote writes',async({page},testInfo)=>{
   const avatarCount=await openFixture(page);expect(avatarCount).toBeGreaterThan(800);
   await page.evaluate(()=>openSettingsPanel('account',{updateHistory:false,captureScroll:false}));
   await page.evaluate(()=>selectSettingsSection('profile',{focus:false,keepList:false,updateHistory:false}));
@@ -73,10 +73,13 @@ test('avatar picker, Legal surface, and sprite fallback run without remote write
   await expect(page.locator('#prof-av-input')).not.toHaveValue('');
   await page.locator('#prof-av-clear').click();
   await expect(page.locator('#prof-av-input')).toHaveValue('');
-  await page.evaluate(()=>selectSettingsSection('legal',{focus:false,updateHistory:false}));
-  await expect(page.locator('[data-settings-section="legal"]')).toBeVisible();
-  await expect(page.locator('#legal-source-list li')).toHaveCount(7);
-  await expect(page.locator('#legal-source-list a')).toHaveCount(7);
+  await page.evaluate(()=>closeModal('settings-modal',{route:false}));
+  await expect(page.locator('#app-legal-footer button')).toBeVisible();
+  await page.locator('#app-legal-footer button').click();
+  await expect(page.locator('#legal-dialog')).toBeVisible();
+  await expect(page.locator('#legal-dialog')).toContainText('Data & asset acknowledgements');
+  await expect(page.locator('#legal-dialog a')).toHaveCount(0);
+  await expect(page.locator('#legal-dialog')).not.toContainText(/https?:\/\//);
   const fallback=await page.evaluate(()=>{
     const next='data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="2" height="2"%3E%3C/svg%3E';
     const img=document.createElement('img');img.dataset.fallbacks=next;img.dataset.fallbackIndex='0';img.style.display='block';
