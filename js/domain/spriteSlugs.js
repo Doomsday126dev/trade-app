@@ -81,6 +81,42 @@
     return slug;
   }
 
+  const PUBLIC_VIVILLON_PATTERNS=Object.freeze([
+    'Archipelago','Continental','Elegant','Fancy','Garden','High Plains','Icy Snow','Jungle',
+    'Marine','Meadow','Modern','Monsoon','Ocean','Polar','Poké Ball','Poke Ball','River',
+    'Sandstorm','Savanna','Sun','Tundra'
+  ]);
+  const publicVivillonPatterns=new Map(PUBLIC_VIVILLON_PATTERNS.map(value=>[normalizeSpriteKey(value),value]));
+  function publicSpriteDisplayName(name=''){
+    const raw=String(name||'').normalize('NFKC').trim();
+    const pattern=publicVivillonPatterns.get(normalizeSpriteKey(raw));
+    return pattern?`Vivillon (${pattern==='Poke Ball'?'Poké Ball':pattern})`:raw;
+  }
+  function publicSpriteBaseName(name=''){
+    const display=publicSpriteDisplayName(name);
+    if(/^Vivillon\b/i.test(display))return'Vivillon';
+    if(/^Scatterbug\b/i.test(display))return'Scatterbug';
+    if(/^Unown\b/i.test(display))return'Unown';
+    const regional=display.match(/^[AGHP]-(.+)/i);
+    const withoutRegion=regional?regional[1]:display;
+    return withoutRegion.replace(/\s*\([^)]*\)\s*$/,'').trim()||display;
+  }
+  function publicSpriteUrls(name='',gender=''){
+    const display=publicSpriteDisplayName(name),base=publicSpriteBaseName(display),urls=[];
+    const push=(candidate,candidateGender='')=>{
+      const slug=pokemondbSlug(candidate,candidate,candidateGender);
+      const url=slug?`https://img.pokemondb.net/sprites/home/normal/${slug}.png`:'';
+      if(url&&spriteSourceForUrl(url)?.id==='pokemondb-home'&&!urls.includes(url))urls.push(url);
+    };
+    if(gender==='f')push(display,'f');
+    push(display);
+    if(base!==display){
+      if(gender==='f')push(base,'f');
+      push(base);
+    }
+    return Object.freeze(urls);
+  }
+
   root.spriteSlugs=Object.freeze({
     padDex,
     normalizeCostumeLookupKey,
@@ -93,6 +129,10 @@
     isUnresolvedSpriteKey,
     spriteSourceForUrl,
     REGIONAL_SLUG_MAP,
-    pokemondbSlug
+    pokemondbSlug,
+    PUBLIC_VIVILLON_PATTERNS,
+    publicSpriteDisplayName,
+    publicSpriteBaseName,
+    publicSpriteUrls
   });
 })(window);

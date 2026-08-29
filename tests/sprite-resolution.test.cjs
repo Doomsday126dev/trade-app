@@ -26,6 +26,14 @@ test('runtime sprite registry contains only approved served sources',()=>{
   assert.doesNotMatch(sw,/cdn08|pokemongohub|serebii|PokeMiners/i);
 });
 
+test('anonymous public shares resolve approved form-aware sprites without private catalog data',()=>{
+  assert.deepEqual(Array.from(sprites.publicSpriteUrls('Blipbug')),['https://img.pokemondb.net/sprites/home/normal/blipbug.png']);
+  assert.deepEqual(Array.from(sprites.publicSpriteUrls('Garden')),['https://img.pokemondb.net/sprites/home/normal/vivillon-garden.png','https://img.pokemondb.net/sprites/home/normal/vivillon.png']);
+  assert.deepEqual(Array.from(sprites.publicSpriteUrls('H-Avalugg')),['https://img.pokemondb.net/sprites/home/normal/avalugg-hisuian.png','https://img.pokemondb.net/sprites/home/normal/avalugg.png']);
+  assert.deepEqual(Array.from(sprites.publicSpriteUrls('Salandit','f')),['https://img.pokemondb.net/sprites/home/normal/salandit-female.png','https://img.pokemondb.net/sprites/home/normal/salandit.png']);
+  assert.equal(sprites.publicSpriteUrls('Garden').every(url=>sprites.spriteSourceForUrl(url)?.id==='pokemondb-home'),true);
+});
+
 test('runtime URL validation is path constrained and rejects removed research hosts',()=>{
   const source=applicationFunction('isApprovedRuntimeSpriteUrl','canvasSafeSpriteUrl');
   const approved=vm.runInNewContext(`(()=>{${source};return isApprovedRuntimeSpriteUrl;})()`,{

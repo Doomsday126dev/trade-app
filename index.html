@@ -1106,7 +1106,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
   async function loadPublicShareScripts(){
     const publicPaths=[
       'js/domain/backgroundCatalog.js','js/domain/backgroundVisual.js','js/domain/priorityValues.js',
-      'js/domain/publicSharePublication.js','js/utils/textSafety.js','js/services/firebaseAppCheck.js',
+      'js/domain/publicSharePublication.js','js/domain/spriteSlugs.js','js/utils/textSafety.js','js/services/firebaseAppCheck.js',
       'js/app/publicShareApp.js'
     ];
     for(const path of publicPaths)await loadScript(`${path}?v=${RELEASE_ID}`,{ordered:true});
