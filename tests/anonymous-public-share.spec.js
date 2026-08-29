@@ -22,6 +22,10 @@ async function installPublicFirebase(page,{exists=true}={}){
   page.on('request',request=>requests.push(request.url()));
   await page.route('**/sw.js*',route=>route.abort());
   await page.route('https://static.cloudflareinsights.com/**',route=>route.abort());
+  await page.route('https://img.pokemondb.net/**',route=>route.fulfill({
+    contentType:'image/svg+xml',
+    body:'<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><circle cx="16" cy="16" r="12" fill="#8b7cf6"/></svg>'
+  }));
   await page.route('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js',route=>route.fulfill({
     contentType:'application/javascript',headers:{'access-control-allow-origin':'*'},
     body:"export function initializeApp(config,name){globalThis.__publicFirebaseApp={config,name};return globalThis.__publicFirebaseApp}"
@@ -78,6 +82,9 @@ test.describe('anonymous public share bootstrap',()=>{
     await expect(page.locator('#share-list-out')).toContainText('Pikachu');
     await expect(page.locator('#share-list-out')).toContainText('Chicago 2026');
     await expect(page.locator('#share-list-out')).toContainText('Create your trade list');
+    await expect(page.locator('.public-share-pokemon-sprite')).toHaveCount(2);
+    await expect(page.locator('.public-share-pokemon-sprite').first()).toHaveAttribute('src',/img\.pokemondb\.net\/sprites\/home\/normal\/pikachu-female\.png/);
+    await expect(page.locator('.public-share-pokemon-mark')).toHaveCount(0);
     await assertPublicPrivacy(page);
     await page.locator('#app-legal-footer button').click();
     await expect(page.locator('#legal-dialog')).toBeVisible();

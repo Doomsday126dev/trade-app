@@ -68,6 +68,12 @@
     const{label,full,visual}=backgroundParts(id),className=global.PogoDomain.backgroundVisual.className(visual),style=global.PogoDomain.backgroundVisual.style(visual);
     return`<span class="share-pcard-flag background background-visual-label ${attr(className)}" style="${attr(style)}" title="${attr(full)}"><span class="background-visual-chip" aria-hidden="true"></span><span>${esc(label)}</span><span class="sr-only">${esc(t('background.label'))}</span></span>`;
   }
+  function spriteHtml(name,gender){
+    const urls=global.PogoDomain.spriteSlugs.publicSpriteUrls(name,gender);
+    if(!urls.length)return'<div class="public-share-pokemon-mark" aria-hidden="true"></div>';
+    const[src,...fallbacks]=urls;
+    return`<div class="share-pcard-sprite-wrap"><img class="share-pcard-sprite public-share-pokemon-sprite" src="${attr(src)}" data-public-sprite-fallbacks="${attr(fallbacks.join('|'))}" width="26" height="26" alt="" loading="lazy" decoding="async"></div>`;
+  }
   function entryCard(name,value){
     const model=entryModel(value),gender=global.PogoDomain.priorityValues.entryGender(model.mod);
     const cleanMod=model.mod.replace(/\b(female|male|f|m)\b/gi,'').replace(/\s+/g,' ').trim();
@@ -81,7 +87,7 @@
       backgroundBadge(model.backgroundId)
     ].filter(Boolean).join('');
     const visual=model.backgroundId?backgroundParts(model.backgroundId).visual:null;
-    return`<article class="share-pcard card-row ${visual?attr(global.PogoDomain.backgroundVisual.className(visual)):''}" ${visual?`style="${attr(global.PogoDomain.backgroundVisual.style(visual))}"`:''}><div class="public-share-pokemon-mark" aria-hidden="true">◉</div><div class="share-pcard-info"><span class="share-pcard-name">${esc(name)}</span>${cleanMod||flags?`<div class="share-pcard-meta">${cleanMod?`<span class="share-pcard-mod">${esc(cleanMod)}</span>`:''}${flags}</div>`:''}</div></article>`;
+    return`<article class="share-pcard card-row ${visual?attr(global.PogoDomain.backgroundVisual.className(visual)):''}" ${visual?`style="${attr(global.PogoDomain.backgroundVisual.style(visual))}"`:''}>${spriteHtml(name,gender)}<div class="share-pcard-info"><span class="share-pcard-name">${esc(name)}</span>${cleanMod||flags?`<div class="share-pcard-meta">${cleanMod?`<span class="share-pcard-mod">${esc(cleanMod)}</span>`:''}${flags}</div>`:''}</div></article>`;
   }
   function updatedLabel(timestamp){
     const value=Number(timestamp);
@@ -188,10 +194,19 @@
     if(control.dataset.publicShareAction==='retry')retry();
     if(control.dataset.publicShareAction==='list'){state.type=LIST_TYPES.includes(control.dataset.listType)?control.dataset.listType:'wishlist';renderTabs(state.snapshot);renderList(state.snapshot);}
   }
+  function handleSpriteError(event){
+    const image=event.target;
+    if(image?.tagName!=='IMG'||!image.classList.contains('public-share-pokemon-sprite'))return;
+    const fallbacks=(image.dataset.publicSpriteFallbacks||'').split('|').filter(Boolean),next=fallbacks.shift();
+    if(next){image.dataset.publicSpriteFallbacks=fallbacks.join('|');image.src=next;return;}
+    const fallback=document.createElement('span');fallback.className='public-share-pokemon-mark';fallback.setAttribute('aria-hidden','true');
+    image.closest('.share-pcard-sprite-wrap')?.replaceWith(fallback);
+  }
   async function start(request){
     if(state.status!=='idle')return;
     state.request=request;state.type=request?.type||'wishlist';state.status='loading';
     document.addEventListener('click',handleAction);
+    document.addEventListener('error',handleSpriteError,true);
     Object.assign(global,{openSettingsPanel:openLanguage,closeModal,changeInterfaceLocale:changeLocale,exitShareView:()=>{location.href=new URL('./',location.href).href;}});
     try{await readProjection();}
     catch(error){state.status='error';console.warn('Public share read failed',String(error?.code||'public-share/read-failed'));publicError(t('trainer.sharedReadFailed'));}
