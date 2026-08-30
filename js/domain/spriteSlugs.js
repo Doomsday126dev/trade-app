@@ -28,9 +28,8 @@
   ]);
   const CANONICAL_SPRITE_OVERRIDES=Object.freeze({});
   const UNRESOLVED_SPRITE_KEYS=Object.freeze([
-    'Pikachu (Halloween 2022)','Pikachu (Holiday 2022)',
-    'Pikachu (Victor)','Pikachu (Gloria)','Pikachu (Halloween 2024)',
-    'Pikachu (Holiday 2024)','Pikachu (GO Fest 2023)','Pikachu (GO Fest 2024)',
+    'Pikachu (Victor)','Pikachu (Gloria)',
+    'Pikachu (GO Fest 2023)','Pikachu (GO Fest 2024)',
     "Pikachu (Professor Willow's Assistant)",'Pikachu (Cosmog Spacesuit)','Pikachu (Worlds 2026)'
   ]);
   const unresolvedSpriteLookup=new Set(UNRESOLVED_SPRITE_KEYS.map(normalizeSpriteKey));

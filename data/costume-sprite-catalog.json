@@ -1073,8 +1073,21 @@
       "names": [
         "Pikachu (Fragment)"
       ],
-      "status": "unavailable",
-      "unavailableReason": "No exact, reviewed artwork is available from the approved sprite source."
+      "status": "exact",
+      "sourceFile": "pikachu-thunderbolt-cap.png",
+      "sourceFemaleFile": "pikachu-thunderbolt-cap-f.png",
+      "sourceLabel": "Thunderbolt Cap",
+      "sourcePage": "https://pokemondb.net/sprites/pikachu",
+      "assets": {
+        "default": "assets/sprites/go/pikachu-thunderbolt-cap.png",
+        "female": "assets/sprites/go/pikachu-thunderbolt-cap-f.png"
+      },
+      "sourceUrl": "https://img.pokemondb.net/sprites/go/normal/1x/pikachu-thunderbolt-cap.png",
+      "sourceFemaleUrl": "https://img.pokemondb.net/sprites/go/normal/1x/pikachu-thunderbolt-cap-f.png",
+      "sha256": {
+        "default": "e06f053fd9977d3dbd9037fdc9fdbbe32c36b438e73b7250a07a7cd788822219",
+        "female": "d6228ef2dc37f55ae7432ea8f8f76630fcf406d822c50edeea1ef0a8eec4265d"
+      }
     },
     {
       "no": 25,
@@ -1149,8 +1162,21 @@
       "names": [
         "Pikachu (Halloween 2022)"
       ],
-      "status": "unavailable",
-      "unavailableReason": "No exact, reviewed artwork is available from the approved sprite source."
+      "status": "exact",
+      "sourceFile": "pikachu-halloween-mischief.png",
+      "sourceFemaleFile": "pikachu-halloween-mischief-f.png",
+      "sourceLabel": "Halloween Mischief",
+      "sourcePage": "https://pokemondb.net/sprites/pikachu",
+      "assets": {
+        "default": "assets/sprites/go/pikachu-halloween-mischief.png",
+        "female": "assets/sprites/go/pikachu-halloween-mischief-f.png"
+      },
+      "sourceUrl": "https://img.pokemondb.net/sprites/go/normal/1x/pikachu-halloween-mischief.png",
+      "sourceFemaleUrl": "https://img.pokemondb.net/sprites/go/normal/1x/pikachu-halloween-mischief-f.png",
+      "sha256": {
+        "default": "b058fa28a81698943288ca501a2b957b6900ab791b894eb30368622a9ed5ab08",
+        "female": "81803dd1379dbc9cbb6c5485858e3ce1d4ebfa12fa4d04a4a4ce917f18dca84b"
+      }
     },
     {
       "no": 25,
@@ -1179,8 +1205,21 @@
       "names": [
         "Pikachu (Halloween 2024)"
       ],
-      "status": "unavailable",
-      "unavailableReason": "No exact, reviewed artwork is available from the approved sprite source."
+      "status": "exact",
+      "sourceFile": "pikachu-witch.png",
+      "sourceFemaleFile": "pikachu-witch-f.png",
+      "sourceLabel": "Witch Hat",
+      "sourcePage": "https://pokemondb.net/sprites/pikachu",
+      "assets": {
+        "default": "assets/sprites/go/pikachu-witch.png",
+        "female": "assets/sprites/go/pikachu-witch-f.png"
+      },
+      "sourceUrl": "https://img.pokemondb.net/sprites/go/normal/1x/pikachu-witch.png",
+      "sourceFemaleUrl": "https://img.pokemondb.net/sprites/go/normal/1x/pikachu-witch-f.png",
+      "sha256": {
+        "default": "8e0ed30a163807274a6b825b6b69682df7e3dd28bed8bd047aad8bb109c81493",
+        "female": "89702828550b34912bf21022b7cda18ce19abd66bd5428522d74598cacaf0969"
+      }
     },
     {
       "no": 25,
@@ -1251,8 +1290,21 @@
       "names": [
         "Pikachu (Holiday 2022)"
       ],
-      "status": "unavailable",
-      "unavailableReason": "No exact, reviewed artwork is available from the approved sprite source."
+      "status": "exact",
+      "sourceFile": "pikachu-holiday.png",
+      "sourceFemaleFile": "pikachu-holiday-f.png",
+      "sourceLabel": "Winter Carnival",
+      "sourcePage": "https://pokemondb.net/sprites/pikachu",
+      "assets": {
+        "default": "assets/sprites/go/pikachu-holiday.png",
+        "female": "assets/sprites/go/pikachu-holiday-f.png"
+      },
+      "sourceUrl": "https://img.pokemondb.net/sprites/go/normal/1x/pikachu-holiday.png",
+      "sourceFemaleUrl": "https://img.pokemondb.net/sprites/go/normal/1x/pikachu-holiday-f.png",
+      "sha256": {
+        "default": "bb8558ad7734213ab1234b98edbe21e8dc6288ec39a9f2d78ce951a52b3f23b6",
+        "female": "9e081c3353ddd2c9f9b48e8e4a710565f6b28d4c9b2f4531e85d151cbf63f853"
+      }
     },
     {
       "no": 25,
@@ -1280,8 +1332,21 @@
       "names": [
         "Pikachu (Holiday 2024)"
       ],
-      "status": "unavailable",
-      "unavailableReason": "No exact, reviewed artwork is available from the approved sprite source."
+      "status": "exact",
+      "sourceFile": "pikachu-holiday.png",
+      "sourceFemaleFile": "pikachu-holiday-f.png",
+      "sourceLabel": "Winter Carnival",
+      "sourcePage": "https://pokemondb.net/sprites/pikachu",
+      "assets": {
+        "default": "assets/sprites/go/pikachu-holiday.png",
+        "female": "assets/sprites/go/pikachu-holiday-f.png"
+      },
+      "sourceUrl": "https://img.pokemondb.net/sprites/go/normal/1x/pikachu-holiday.png",
+      "sourceFemaleUrl": "https://img.pokemondb.net/sprites/go/normal/1x/pikachu-holiday-f.png",
+      "sha256": {
+        "default": "bb8558ad7734213ab1234b98edbe21e8dc6288ec39a9f2d78ce951a52b3f23b6",
+        "female": "9e081c3353ddd2c9f9b48e8e4a710565f6b28d4c9b2f4531e85d151cbf63f853"
+      }
     },
     {
       "no": 25,
@@ -2468,8 +2533,21 @@
       "names": [
         "Raichu Fragment Cap"
       ],
-      "status": "unavailable",
-      "unavailableReason": "No exact, reviewed artwork is available from the approved sprite source."
+      "status": "exact",
+      "sourceFile": "raichu-thunderbolt-cap.png",
+      "sourceFemaleFile": "raichu-thunderbolt-cap-f.png",
+      "sourceLabel": "Thunderbolt Cap",
+      "sourcePage": "https://pokemondb.net/sprites/raichu",
+      "assets": {
+        "default": "assets/sprites/go/raichu-thunderbolt-cap.png",
+        "female": "assets/sprites/go/raichu-thunderbolt-cap-f.png"
+      },
+      "sourceUrl": "https://img.pokemondb.net/sprites/go/normal/1x/raichu-thunderbolt-cap.png",
+      "sourceFemaleUrl": "https://img.pokemondb.net/sprites/go/normal/1x/raichu-thunderbolt-cap-f.png",
+      "sha256": {
+        "default": "93f4dac128b54e47aeea41ad4eb8949141339ac8b24c3131c3bc33ba96519b1e",
+        "female": "5d1f6449d00784f24494fb2685f24aeb3c63131826df3ee8a23b5e67694e4039"
+      }
     },
     {
       "no": 26,
@@ -3008,8 +3086,17 @@
       "names": [
         "Gengar (Halloween 2024)"
       ],
-      "status": "unavailable",
-      "unavailableReason": "No exact, reviewed artwork is available from the approved sprite source."
+      "status": "exact",
+      "sourceFile": "gengar-spooky-festival.png",
+      "sourceLabel": "Spooky Festival",
+      "sourcePage": "https://pokemondb.net/sprites/gengar",
+      "assets": {
+        "default": "assets/sprites/go/gengar-spooky-festival.png"
+      },
+      "sourceUrl": "https://img.pokemondb.net/sprites/go/normal/1x/gengar-spooky-festival.png",
+      "sha256": {
+        "default": "b989f0ff4e6adfeb38782f08fdaf9047433e84a43fe0736d07dd44f0c14f1109"
+      }
     },
     {
       "no": 94,

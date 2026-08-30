@@ -17,10 +17,10 @@ const resolver=window.PogoDomain.costumeSpriteCatalog;
 
 test('reviewed catalog has complete local integrity evidence',()=>{
   assert.equal(catalog.entries.length,376);
-  assert.equal(catalog.entries.filter(entry=>entry.status==='exact').length,348);
-  assert.equal(catalog.entries.filter(entry=>entry.status==='unavailable').length,28);
+  assert.equal(catalog.entries.filter(entry=>entry.status==='exact').length,355);
+  assert.equal(catalog.entries.filter(entry=>entry.status==='unavailable').length,21);
   const assets=[...new Set(catalog.entries.flatMap(entry=>Object.values(entry.assets||{})))];
-  assert.equal(assets.length,458);
+  assert.equal(assets.length,462);
   for(const asset of assets)assert.ok(frontend.assetFiles.includes(asset),asset);
   assert.equal(runtime,runtimeSource(catalog));
   assert.doesNotMatch(runtime,/img\.pokemondb\.net|pokeminers|serebii|cdn08/i);
@@ -39,7 +39,7 @@ test('exact costumes resolve to distinct self-hosted art and gender variants',()
 });
 
 test('known costumes without reviewed art fail honestly instead of becoming base species',()=>{
-  for(const name of ['Pikachu (Cosmog Spacesuit)','Pikachu (Worlds 2026)','Pikachu (Fragment)','Noibat Headband']){
+  for(const name of ['Pikachu (Cosmog Spacesuit)','Pikachu (Worlds 2026)','Pikachu (Fossil)','Noibat Headband']){
     const result=resolver.resolution({name});
     assert.equal(result.knownVariant,true,name);
     assert.equal(result.status,'unavailable',name);
@@ -82,7 +82,24 @@ test('every selectable costume is reviewed before runtime fallback can reach bas
     assert.equal(result.knownVariant,true,`${entry.name} could fall through to base-species art`);
     statusCounts[result.status]++;
   }
-  assert.deepEqual(statusCounts,{exact:395,unavailable:28});
+  assert.deepEqual(statusCounts,{exact:402,unavailable:21});
+});
+
+test('reviewed event aliases resolve to their exact visual identity',()=>{
+  const expected=new Map([
+    ['Pikachu (Fragment)','pikachu-thunderbolt-cap-f.png'],
+    ['Raichu Fragment Cap','raichu-thunderbolt-cap-f.png'],
+    ['Pikachu (Halloween 2022)','pikachu-halloween-mischief-f.png'],
+    ['Pikachu (Halloween 2024)','pikachu-witch-f.png'],
+    ['Pikachu (Holiday 2022)','pikachu-holiday-f.png'],
+    ['Pikachu (Holiday 2024)','pikachu-holiday-f.png'],
+    ['Gengar (Halloween 2024)','gengar-spooky-festival.png']
+  ]);
+  for(const[name,file]of expected){
+    const result=resolver.resolution({name,gender:'f'});
+    assert.equal(result.status,'exact',name);
+    assert.match(result.urls[0],new RegExp(`${file.replaceAll('.','\\.')}$`),name);
+  }
 });
 
 test('the local reviewed asset graph remains lazy rather than joining shell precache',()=>{
