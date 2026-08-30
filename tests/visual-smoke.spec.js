@@ -280,7 +280,8 @@ test.describe('visual smoke', () => {
     const mapped=page.locator('.myrow').filter({hasText:'Pikachu (Worlds 2025)'});
     const unavailable=page.locator('.myrow').filter({hasText:'Pikachu (Worlds 2026)'});
     await expect(mapped.locator('img')).toHaveAttribute('src',/assets\/sprites\/go\/pikachu-world-champs-2025\.png/);
-    await expect(unavailable.locator('.pc-sprite-placeholder.known-unavailable')).toHaveAttribute('aria-label','Artwork unavailable for Pikachu (Worlds 2026)');
+    await expect(unavailable.locator('.pc-sprite-placeholder.known-unavailable')).toHaveAttribute('aria-label','Artwork not yet available for Pikachu (Worlds 2026)');
+    await expect(unavailable.locator('.pc-sprite-placeholder.known-unavailable')).toHaveAttribute('title','Artwork not yet available for Pikachu (Worlds 2026)');
     expect(await unavailable.locator('img').count()).toBe(0);
     for(const[name,file]of reviewedMappings){
       await expect(page.locator('.myrow').filter({hasText:name}).locator('img')).toHaveAttribute('src',new RegExp(`assets/sprites/go/${file.replaceAll('.','\\.')}`));
@@ -303,7 +304,8 @@ test.describe('visual smoke', () => {
     const boardUnavailable=page.locator('#special-lf-list .sb-row').filter({hasText:'Pikachu (Worlds 2026)'});
     await expect(boardMapped.locator('img')).toHaveAttribute('src',/assets\/sprites\/go\/pikachu-world-champs-2025\.png/);
     await expect(page.locator('#special-ft-list .sb-row').filter({hasText:'Gengar (Halloween 2024)'}).locator('img')).toHaveAttribute('src',/assets\/sprites\/go\/gengar-spooky-festival\.png/);
-    await expect(boardUnavailable.locator('.pc-sprite-placeholder.known-unavailable')).toHaveAttribute('aria-label','Artwork unavailable for Pikachu (Worlds 2026)');
+    await expect(boardUnavailable.locator('.pc-sprite-placeholder.known-unavailable')).toHaveAttribute('aria-label','Artwork not yet available for Pikachu (Worlds 2026)');
+    await expect(boardUnavailable.locator('.pc-sprite-placeholder.known-unavailable')).toHaveAttribute('title','Artwork not yet available for Pikachu (Worlds 2026)');
 
     for(const theme of ['dark','light']){
       await page.evaluate(value=>{document.documentElement.dataset.theme=value;},theme);
@@ -326,7 +328,9 @@ test.describe('visual smoke', () => {
     for(const[name,file]of reviewedMappings){
       await expect(page.locator('.share-pcard').filter({hasText:name}).locator('img')).toHaveAttribute('src',new RegExp(`assets/sprites/go/${file.replaceAll('.','\\.')}`));
     }
-    await expect(page.locator('.share-pcard').filter({hasText:'Pikachu (Worlds 2026)'}).locator('.pc-sprite-placeholder.known-unavailable')).toHaveAttribute('aria-label','Artwork unavailable for Pikachu (Worlds 2026)');
+    const shareUnavailable=page.locator('.share-pcard').filter({hasText:'Pikachu (Worlds 2026)'}).locator('.pc-sprite-placeholder.known-unavailable');
+    await expect(shareUnavailable).toHaveAttribute('aria-label','Artwork not yet available for Pikachu (Worlds 2026)');
+    await expect(shareUnavailable).toHaveAttribute('title','Artwork not yet available for Pikachu (Worlds 2026)');
   });
 
   test('consumer shell remains composed across themes and responsive widths',async({page})=>{

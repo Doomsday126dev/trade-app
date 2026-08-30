@@ -931,7 +931,7 @@ function spriteImg(no,size=40,cls='',name='',gender='',dn='',opts={}){
   if(!urls.length){
     const knownUnavailable=context.reviewed?.status==='unavailable';
     const label=i18nCore.t('sprite.artUnavailable',{name:dn||name||'Pokémon'});
-    return`<span class="pc-sprite-placeholder ${knownUnavailable?'known-unavailable':''} ${escAttr(cls)}" style="width:${size}px;height:${size}px" role="img" aria-label="${escAttr(label)}">?</span>`;
+    return`<span class="pc-sprite-placeholder ${knownUnavailable?'known-unavailable':''} ${escAttr(cls)}" style="width:${size}px;height:${size}px" role="img" aria-label="${escAttr(label)}" title="${escAttr(label)}">?</span>`;
   }
   const url=urls[0];
   const isGo=url.includes('weserv.nl')||url.includes('/sprites/go/');
