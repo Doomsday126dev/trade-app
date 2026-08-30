@@ -341,6 +341,17 @@ test('standalone restart resumes an interrupted stale-device review without repl
   assert.equal(repositoryState.calls.createRecoveryCandidate,1);assert.equal(repositoryState.calls.createMigration,2);assert.equal(h.server.attempts.length,attemptsBeforeRestart);
 });
 
+test('standalone migration accepts canonical drift when duplicate legacy snapshots are already preserved for review',async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),repositoryState=runtimeRepository(window,h);
+  const base=createRuntime(window,h,repositoryState,h.createMemoryJournalState(),async()=>source('device-canonical-base',{remote:{Pikachu:'H'}}));
+  await base.start();const current=base.controller.activeEntities()[0],patched=await base.controller.patchEntity({entityType:current.entityType,entityId:current.entityId,patch:{priority:'M'}});assert.equal(patched.ok,true);await base.controller.drain();await base.stop();
+
+  const attemptsBefore=h.server.attempts.length,journalState=h.createMemoryJournalState(),read=async()=>source('device-stale-duplicates',{remote:{Pikachu:'H'},local:{Pikachu:'H'}}),standalone=createRuntime(window,h,repositoryState,journalState,read),result=await standalone.start(),snapshot=await standalone.snapshot();
+  assert.equal(result.ok,true);assert.equal(standalone.projectionReady,true);assert.equal(snapshot.state,'review-required');assert.equal(snapshot.recoveryCandidateCount,1);
+  assert.equal(result.plan.verificationSeeds.length,0);assert.equal(result.plan.recoveryCandidates.length,1);assert.equal(result.plan.recoveryCandidates[0].reason,'legacy-after-canonical');
+  assert.equal(repositoryState.calls.createRecoveryCandidate,1);assert.equal(h.server.attempts.length,attemptsBefore);assert.equal(standalone.controller.activeEntities()[0].values.priority,'M');
+});
+
 test('stopping during migration source acquisition prevents later writes and projection',async()=>{
   const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),repositoryState=runtimeRepository(window,h),state=h.createMemoryJournalState(),projections=[];
   let releaseSource;const sourceGate=new Promise(resolve=>{releaseSource=resolve;});

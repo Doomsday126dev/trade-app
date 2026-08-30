@@ -149,7 +149,8 @@
       const key=canonicalKey(row),current=canonical.get(key),remote=remoteById.get(key),knownQueued=queued.has(`${row.identity.lane}\n${row.legacyName}`);
       if(knownQueued)continue;
       if(!input.canonicalInitialized&&!current&&!remote&&!seeds.has(key)){seeds.set(key,row);rememberSeed(row);continue;}
-      if((current&&!current.deleted&&model.canonicalJson(current.identity)===model.canonicalJson(row.identity)&&model.canonicalJson(current.values)===model.canonicalJson(row.values))||(remote&&model.canonicalJson(remote.identity)===model.canonicalJson(row.identity)&&model.canonicalJson(remote.values)===model.canonicalJson(row.values))){rememberSeed(row);continue;}
+      if(current&&!current.deleted&&model.canonicalJson(current.identity)===model.canonicalJson(row.identity)&&model.canonicalJson(current.values)===model.canonicalJson(row.values)){rememberSeed(row);continue;}
+      if(remote&&model.canonicalJson(remote.identity)===model.canonicalJson(row.identity)&&model.canonicalJson(remote.values)===model.canonicalJson(row.values))continue;
       recoveryCandidates.push(await candidate(ownerUid,input.canonicalInitialized?'stale-device-cache':'ambiguous-local-cache',row,sourceFingerprint));
     }
     for(const [queueKey,encoded] of queued){
