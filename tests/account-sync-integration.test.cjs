@@ -102,6 +102,7 @@ test('normal sync copy is understandable and never exposes raw revision or mutat
   assert.doesNotMatch(status,/operationId|revision|mutation/i);
   const detail=html.slice(html.indexOf('async function openSyncDetail()'),html.indexOf('function accountSyncConflictFieldLabel'));
   assert.match(detail,/account\.plan\.action!=='none'.*requestAccountSyncRecovery/s);assert.match(detail,/account\.plan\.action==='review-conflict'.*reviewAccountSyncConflicts/s);
+  assert.ok(detail.indexOf("account.plan.action!=='none'")<detail.indexOf("account.state==='review-required'"));
   assert.match(detail,/coordinator\.active.*coordinator\.recover/s);assert.match(detail,/performAccountSyncRecovery/);assert.doesNotMatch(detail,/retryBlocked/);
   assert.match(html,/id="sync-pill"[^>]+onkeydown="if\(event\.key==='Enter'\|\|event\.key===' '\)/);
   assert.match(html,/id="trainer-sync-diagnostic" hidden/);assert.match(html,/id="trainer-sync-recovery"[^>]+requestAccountSyncRecovery\(\)/);
@@ -189,6 +190,9 @@ test('fieldless lifecycle conflicts expose saved-copy-only review instead of a d
 });
 
 test('preserved device changes expose an exact owner-confirmed saved-copy review without replay or remote mutation',()=>{
+  const readiness=html.slice(html.indexOf('function accountSyncPreservedReviewReady'),html.indexOf('function accountSyncProjectionReady'));
+  assert.match(readiness,/runtime\?\.projectionReady===true/);assert.match(readiness,/runtime\.ownerUid===auth\?\.currentUser\?\.uid/);assert.match(readiness,/snapshot\?\.state==='review-required'/);
+  assert.match(readiness,/snapshot\?\.listenerHealthy===true/);assert.match(readiness,/snapshot\?\.controllerHealthy===true/);assert.match(readiness,/Number\(snapshot\?\.recoveryCandidateCount\)>0/);
   const authority=html.slice(html.indexOf('async function accountSyncPreservedReviewAuthority'),html.indexOf('function accountSyncProjectionReady'));
   assert.match(authority,/snapshot\.state!=='review-required'/);assert.match(authority,/runtime\.listRecoveryCandidates\(\)/);assert.match(authority,/candidates\.length!==Number\(snapshot\.recoveryCandidateCount\)/);
   assert.match(authority,/candidate\?\.ownerUid!==authority\.uid/);assert.match(authority,/candidate\?\.resolved===true/);assert.match(authority,/sessionGeneration:_sessionTransientGeneration/);assert.match(authority,/runtimeGeneration:accountSyncRuntimeGeneration/);
@@ -200,6 +204,10 @@ test('preserved device changes expose an exact owner-confirmed saved-copy review
   const runtimeReview=runtime.slice(runtime.indexOf('async function completeRecoveryReviews'),runtime.indexOf('function stop'));
   assert.match(runtimeReview,/before\.state!=='review-required'/);assert.match(runtimeReview,/before\.listenerHealthy/);assert.match(runtimeReview,/before\.controllerHealthy/);assert.match(runtimeReview,/before\.recoveryCandidateCount!==ids\.length/);
   assert.match(runtimeReview,/journal\.resolveRecoveryCandidates\(ids\)/);assert.match(runtimeReview,/after\.state!=='saved'/);
+  const recovery=html.slice(html.indexOf('function getAccountSyncRecoveryCoordinator'),html.indexOf('async function recordAccountSyncUnresolved'));
+  assert.match(recovery,/if\(!started\?\.ok&&!accountSyncPreservedReviewReady\(\)\)throw/);
+  const request=html.slice(html.indexOf('async function requestAccountSyncRecovery'),html.indexOf('function updateSyncUi'));
+  assert.match(request,/result\.category==='review-required'/);assert.match(request,/openAccountSettingsSection\('data'/);
 });
 
 test('allowlisted mutations cannot fall through to legacy writers while canonical startup is pending',()=>{

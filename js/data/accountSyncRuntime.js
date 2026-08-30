@@ -30,7 +30,9 @@
     if(!sessionCurrent||code==='account-sync/session-changed'||code==='account-sync/session-inactive')return Object.freeze({action:'none',category:'session',code:'account-sync/session-changed',...base});
     if(model.unsafeRecoveryCode(snapshot.lastError||code)||snapshot.lastErrorCategory==='canonical'||snapshot.lastErrorCategory==='unsafe-evidence'||unsafeBlockedCount)return Object.freeze({action:'none',category:'unsafe-evidence',code,...base});
     if(conflictCount||state==='conflict')return Object.freeze({action:'review-conflict',category:'conflict',code:'account-sync/conflict',...base});
-    if(reviewCount||state==='review-required')return Object.freeze({action:'none',category:'review-required',code:'account-sync/review-required',...base});
+    if(reviewCount||state==='review-required')return projectionReady
+      ?Object.freeze({action:'none',category:'review-required',code:'account-sync/review-required',...base})
+      :Object.freeze({action:'restart-runtime',category:'projection',code:'account-sync/review-not-ready',...base});
     if(blockedCount&&recoverableBlockedCount===blockedCount&&snapshot.listenerHealthy===true&&snapshot.controllerHealthy===true)return Object.freeze({action:'retry-blocked',category:'retained-change',code,...base});
     if(state==='offline'||state==='pending-sync'||['starting','listening'].includes(snapshot.listenerState))return Object.freeze({action:'none',category:state==='offline'?'offline':'pending-sync',code:state==='offline'?'account-sync/offline':'account-sync/pending',...base});
     if(state==='sync-error'||state==='inactive'||!runtimePresent||!projectionReady||snapshot.active!==true||snapshot.listenerHealthy!==true||snapshot.controllerHealthy!==true)return Object.freeze({action:'restart-runtime',category:diagnosticCategory(snapshot.lastErrorCategory,!projectionReady?'projection':'runtime'),code,...base});
@@ -65,7 +67,7 @@
             context=await recapture(context);const afterRetry=recoveryPlan(context);
             if(healthySnapshot(context))return result(true,'recovered',plan,attempt,{code:'account-sync/recovered',retried});
             if(afterRetry.action==='restart-runtime'&&!afterRetry.pendingCount&&!afterRetry.blockedCount&&!afterRetry.conflictCount&&!afterRetry.reviewCount)context=await restart(context);
-            else return result(false,afterRetry.category==='pending-sync'?'pending':afterRetry.action==='review-conflict'?'review':'failed',afterRetry,attempt,{retried});
+            else return result(false,afterRetry.category==='pending-sync'?'pending':['conflict','review-required'].includes(afterRetry.category)?'review':'failed',afterRetry,attempt,{retried});
           }else{
             context=await restart(context);
             if(!isCurrent(context))return result(false,'failed',plan,attempt,{code:'account-sync/session-changed',retried});
@@ -78,7 +80,7 @@
           if(!isCurrent(context))return result(false,'failed',plan,attempt,{code:'account-sync/session-changed',retried});
           context=await recapture(context);
           if(healthySnapshot(context))return result(true,'recovered',plan,attempt,{code:'account-sync/recovered',retried});
-          const after=recoveryPlan(context);return result(false,after.category==='pending-sync'?'pending':after.action==='review-conflict'?'review':'failed',after,attempt,{retried});
+          const after=recoveryPlan(context);return result(false,after.category==='pending-sync'?'pending':['conflict','review-required'].includes(after.category)?'review':'failed',after,attempt,{retried});
         }catch(error){return result(false,'failed',plan||Object.freeze({action:'none',category:'runtime',code:'account-sync/recovery-failed'}),attempt,{code:diagnosticCode(error,'account-sync/recovery-failed'),retried});}
       })();
       inFlight=work.then(value=>{publish({status:value.status,attempt:value.attempt,action:value.action,category:value.category,code:value.code});return value;}).finally(()=>{inFlight=null;});

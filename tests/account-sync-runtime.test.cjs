@@ -314,6 +314,33 @@ test('restart after canonical metadata commit but before the local completion ma
   assert.equal(restarted.projectionReady,true);assert.equal(projections.at(-1).length,1);
 });
 
+test('standalone restart resumes an interrupted stale-device review without replaying canonical evidence',async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),repositoryState=runtimeRepository(window,h);
+  const base=createRuntime(window,h,repositoryState,h.createMemoryJournalState(),async()=>source('device-cloud-base',{remote:{Pikachu:'H'}}));
+  await base.start();await base.stop();
+
+  const journalState=h.createMemoryJournalState(),read=async()=>source('device-standalone',{remote:{Pikachu:'H'},local:{Pikachu:'H',Mewtwo:'H'}});
+  const originalCreateMigration=repositoryState.repository.createMigration.bind(repositoryState.repository),originalReadAccount=repositoryState.repository.readAccount.bind(repositoryState.repository);
+  installDirectWriteBehavior('createMigration','read-failure',{repositoryState,original:originalCreateMigration});
+  const interrupted=createRuntime(window,h,repositoryState,journalState,read);
+  await assert.rejects(interrupted.start(),error=>error.code==='account-sync/watched-write-unreconciled');
+  const interruptedSnapshot=await interrupted.snapshot();
+  assert.equal(interrupted.projectionReady,false);assert.equal(interruptedSnapshot.recoveryCandidateCount,1);assert.equal(interruptedSnapshot.state,'sync-error');
+  assert.equal(Object.keys(repositoryState.recoveryCandidates).length,1);assert.equal(Object.values(repositoryState.recoveryCandidates)[0].reason,'stale-device-cache');
+  assert.equal(repositoryState.calls.createRecoveryCandidate,1);assert.equal(repositoryState.calls.createMigration,2);
+  await interrupted.stop();
+
+  repositoryState.repository.createMigration=originalCreateMigration;repositoryState.repository.readAccount=originalReadAccount;
+  const attemptsBeforeRestart=h.server.attempts.length,restarted=createRuntime(window,h,repositoryState,journalState,read),result=await restarted.start(),reviewSnapshot=await restarted.snapshot();
+  assert.equal(result.ok,true);assert.equal(restarted.projectionReady,true);assert.equal(reviewSnapshot.state,'review-required');assert.equal(reviewSnapshot.recoveryCandidateCount,1);
+  assert.equal(repositoryState.calls.createRecoveryCandidate,1);assert.equal(repositoryState.calls.createMigration,2);assert.equal(h.server.attempts.length,attemptsBeforeRestart);
+  assert.equal([...h.server.entities.values()].some(entity=>entity.identity.catalogId==='pokemon:mewtwo'),false);
+
+  const candidates=await restarted.listRecoveryCandidates(),reviewed=await restarted.completeRecoveryReviews(candidates.map(item=>item.candidateId)),saved=await restarted.snapshot();
+  assert.deepEqual(JSON.parse(JSON.stringify(reviewed)),{ok:true,status:'resolved',count:1});assert.equal(saved.state,'saved');assert.equal(saved.recoveryCandidateCount,0);
+  assert.equal(repositoryState.calls.createRecoveryCandidate,1);assert.equal(repositoryState.calls.createMigration,2);assert.equal(h.server.attempts.length,attemptsBeforeRestart);
+});
+
 test('stopping during migration source acquisition prevents later writes and projection',async()=>{
   const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),repositoryState=runtimeRepository(window,h),state=h.createMemoryJournalState(),projections=[];
   let releaseSource;const sourceGate=new Promise(resolve=>{releaseSource=resolve;});

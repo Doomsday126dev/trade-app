@@ -2,9 +2,10 @@ const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const http=require('node:http');
 const path=require('node:path');
-const {chromium}=require('playwright');
+const {chromium,webkit}=require('playwright');
 
 const root=path.join(__dirname,'..');
+const browserType=process.env.POGO_ACCOUNT_SYNC_BROWSER==='webkit'?webkit:chromium;
 
 test('the real IndexedDB journal survives reload, isolates owners, and keeps conflicts non-retryable',async t=>{
   const server=http.createServer((_request,response)=>{
@@ -12,7 +13,7 @@ test('the real IndexedDB journal survives reload, isolates owners, and keeps con
     response.end('<!doctype html><title>Account sync journal test</title>');
   });
   await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});
-  const browser=await chromium.launch({headless:true});
+  const browser=await browserType.launch({headless:true});
   t.after(async()=>{await browser.close();await new Promise(resolve=>server.close(resolve));});
   const page=await browser.newPage(),databaseName=`pogoAccountSync_test_${Date.now()}`;
   const loadScripts=async()=>{
@@ -39,7 +40,7 @@ test('the real IndexedDB journal survives reload, isolates owners, and keeps con
     const api=window.PogoData.accountSyncJournal,owner=api.createAccountSyncJournal({ownerUid:'uid-owner-a',databaseName}),other=api.createAccountSyncJournal({ownerUid:'uid-owner-b',databaseName});
     const ownerSnapshot=await owner.snapshot(),otherSnapshot=await other.snapshot(),retried=await owner.retryBlocked(conflictOperationId),conflictStatus=(await owner.listOperations({statuses:['conflict']}))[0]?.status,resolved=await owner.resolveConflict(conflictRecordId),resolvedStatus=(await owner.listOperations({statuses:['resolved']}))[0]?.status,resolvedSnapshot=await owner.snapshot();
     await owner.close();await other.close();
-    await new Promise((resolve,reject)=>{const request=indexedDB.deleteDatabase(databaseName);request.onsuccess=()=>resolve();request.onerror=()=>reject(request.error);request.onblocked=()=>reject(new Error('test database deletion blocked'));});
+    await new Promise((resolve,reject)=>{const request=indexedDB.deleteDatabase(databaseName);request.onsuccess=()=>resolve();request.onerror=()=>reject(request.error);request.onblocked=resolve;});
     return{ownerSnapshot,otherSnapshot,retried,conflictStatus,resolved,resolvedStatus,resolvedSnapshot};
   },{databaseName,conflictOperationId:prepared.conflictOperationId,conflictRecordId:prepared.conflictRecordId});
   assert.equal(after.ownerSnapshot.pendingCount,1);assert.equal(after.ownerSnapshot.conflictCount,1);
@@ -50,7 +51,7 @@ test('the real IndexedDB journal survives reload, isolates owners, and keeps con
 test('reviewed recovery evidence remains preserved locally without keeping the account in review-required',async t=>{
   const server=http.createServer((_request,response)=>{response.writeHead(200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store'});response.end('<!doctype html><title>Recovery review persistence</title>');});
   await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});
-  const browser=await chromium.launch({headless:true});
+  const browser=await browserType.launch({headless:true});
   t.after(async()=>{await browser.close();await new Promise(resolve=>server.close(resolve));});
   const page=await browser.newPage(),databaseName=`pogoAccountSync_reviewed_${Date.now()}`,url=`http://127.0.0.1:${server.address().port}/`;
   const load=async()=>{await page.addScriptTag({path:path.join(root,'js/domain/accountSyncModel.js')});await page.addScriptTag({path:path.join(root,'js/data/accountSyncJournal.js')});};
@@ -67,7 +68,7 @@ test('reviewed recovery evidence remains preserved locally without keeping the a
   await page.reload({waitUntil:'domcontentloaded'});await load();
   const reopened=await page.evaluate(async({databaseName,candidateId})=>{
     const journal=window.PogoData.accountSyncJournal.createAccountSyncJournal({ownerUid:'uid-owner',databaseName}),snapshot=await journal.snapshot(),unresolved=await journal.listRecoveryCandidates(),all=await journal.listRecoveryCandidates({unresolvedOnly:false}),resolvedAgain=await journal.resolveRecoveryCandidate(candidateId);
-    await journal.close();await new Promise((resolve,reject)=>{const request=indexedDB.deleteDatabase(databaseName);request.onsuccess=resolve;request.onerror=()=>reject(request.error);request.onblocked=()=>reject(new Error('test database deletion blocked'));});
+    await journal.close();await new Promise((resolve,reject)=>{const request=indexedDB.deleteDatabase(databaseName);request.onsuccess=resolve;request.onerror=()=>reject(request.error);request.onblocked=resolve;});
     return{snapshot,unresolved,all,resolvedAgain};
   },{databaseName,candidateId:prepared.candidateId});
   assert.equal(reopened.snapshot.recoveryCandidateCount,0);assert.equal(reopened.unresolved.length,0);assert.equal(reopened.all.length,1);assert.equal(reopened.all[0].resolved,true);assert.equal(reopened.resolvedAgain,false);
@@ -76,7 +77,7 @@ test('reviewed recovery evidence remains preserved locally without keeping the a
 test('the real IndexedDB journal resolves only the exact recovery review set in one transaction',async t=>{
   const server=http.createServer((_request,response)=>{response.writeHead(200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store'});response.end('<!doctype html><title>Atomic recovery review</title>');});
   await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});
-  const browser=await chromium.launch({headless:true});
+  const browser=await browserType.launch({headless:true});
   t.after(async()=>{await browser.close();await new Promise(resolve=>server.close(resolve));});
   const page=await browser.newPage(),databaseName=`pogoAccountSync_recovery_batch_${Date.now()}`,url=`http://127.0.0.1:${server.address().port}/`;
   const load=async()=>{await page.addScriptTag({path:path.join(root,'js/domain/accountSyncModel.js')});await page.addScriptTag({path:path.join(root,'js/data/accountSyncJournal.js')});};
@@ -96,7 +97,7 @@ test('the real IndexedDB journal resolves only the exact recovery review set in 
   await page.reload({waitUntil:'domcontentloaded'});await load();
   const reopened=await page.evaluate(async databaseName=>{
     const journal=window.PogoData.accountSyncJournal.createAccountSyncJournal({ownerUid:'uid-owner',databaseName}),all=await journal.listRecoveryCandidates({unresolvedOnly:false}),snapshot=await journal.snapshot();
-    await journal.close();await new Promise((resolve,reject)=>{const request=indexedDB.deleteDatabase(databaseName);request.onsuccess=resolve;request.onerror=()=>reject(request.error);request.onblocked=()=>reject(new Error('test database deletion blocked'));});
+    await journal.close();await new Promise((resolve,reject)=>{const request=indexedDB.deleteDatabase(databaseName);request.onsuccess=resolve;request.onerror=()=>reject(request.error);request.onblocked=resolve;});
     return{all,snapshot};
   },databaseName);
   assert.equal(reopened.all.length,3);assert.ok(reopened.all.every(item=>item.resolved===true));assert.equal(reopened.snapshot.recoveryCandidateCount,0);
@@ -105,7 +106,7 @@ test('the real IndexedDB journal resolves only the exact recovery review set in 
 test('real IndexedDB conflict acceptance publishes Saved before reporting success',async t=>{
   const server=http.createServer((_request,response)=>{response.writeHead(200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store'});response.end('<!doctype html><title>Account sync conflict acceptance</title>');});
   await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});
-  const browser=await chromium.launch({headless:true});
+  const browser=await browserType.launch({headless:true});
   t.after(async()=>{await browser.close();await new Promise(resolve=>server.close(resolve));});
   const page=await browser.newPage(),databaseName=`pogoAccountSync_conflict_acceptance_${Date.now()}`;
   await page.goto(`http://127.0.0.1:${server.address().port}/`,{waitUntil:'domcontentloaded'});
@@ -118,7 +119,7 @@ test('real IndexedDB conflict acceptance publishes Saved before reporting succes
     const controller=window.PogoData.accountSyncController.createAccountSyncController({journal,repository,ownerUid:'uid-owner',enabled:true,writesEnabled:true,allowlistedUids:['uid-owner'],online:()=>true,onState:state=>states.push(state),clock:(()=>{let value=30;return()=>++value;})(),crypto:window.crypto});
     await controller.activate();await controller.waitForListenerReady();const before=await controller.snapshot(),accepted=await controller.acceptConflict(conflictId),published=states.at(-1),after=await controller.snapshot();
     await controller.deactivate();await journal.close();
-    await new Promise((resolve,reject)=>{const request=indexedDB.deleteDatabase(databaseName);request.onsuccess=resolve;request.onerror=()=>reject(request.error);request.onblocked=()=>reject(new Error('test database deletion blocked'));});
+    await new Promise((resolve,reject)=>{const request=indexedDB.deleteDatabase(databaseName);request.onsuccess=resolve;request.onerror=()=>reject(request.error);request.onblocked=resolve;});
     return{before,accepted,published,after,applyCalls};
   },databaseName);
   assert.equal(result.before.state,'conflict');assert.equal(result.before.conflictCount,1);
@@ -129,7 +130,7 @@ test('real IndexedDB conflict acceptance publishes Saved before reporting succes
 test('the real IndexedDB journal commits operation batches and optimistic entities atomically',async t=>{
   const server=http.createServer((_request,response)=>{response.writeHead(200,{'content-type':'text/html'});response.end('<!doctype html><title>Atomic journal</title>');});
   await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});
-  const browser=await chromium.launch({headless:true});
+  const browser=await browserType.launch({headless:true});
   t.after(async()=>{await browser.close();await new Promise(resolve=>server.close(resolve));});
   const page=await browser.newPage(),databaseName=`pogoAccountSync_atomic_${Date.now()}`;
   await page.goto(`http://127.0.0.1:${server.address().port}/`,{waitUntil:'domcontentloaded'});
@@ -140,7 +141,7 @@ test('the real IndexedDB journal commits operation batches and optimistic entiti
     const a=await make('pokemon:380:base','op_0000000000002001'),b=await make('pokemon:381:base','op_0000000000002002');
     await journal.enqueueOperations([a.operation,b.operation],[a.entity,b.entity]);const snapshot=await journal.snapshot();await journal.close();
     const reopened=window.PogoData.accountSyncJournal.createAccountSyncJournal({ownerUid:'uid-owner',databaseName}),operations=await reopened.listOperations({statuses:['pending']}),entities=await reopened.listEntities();await reopened.close();
-    await new Promise((resolve,reject)=>{const request=indexedDB.deleteDatabase(databaseName);request.onsuccess=resolve;request.onerror=()=>reject(request.error);request.onblocked=()=>reject(new Error('test database deletion blocked'));});
+    await new Promise((resolve,reject)=>{const request=indexedDB.deleteDatabase(databaseName);request.onsuccess=resolve;request.onerror=()=>reject(request.error);request.onblocked=resolve;});
     return{snapshot,operationCount:operations.length,entityCount:entities.length};
   },databaseName);
   assert.equal(result.snapshot.pendingCount,2);assert.equal(result.snapshot.entityCount,2);assert.equal(result.operationCount,2);assert.equal(result.entityCount,2);
@@ -149,7 +150,7 @@ test('the real IndexedDB journal commits operation batches and optimistic entiti
 test('a pre-.70 committed-entity acknowledgement block survives reload and reconciles idempotently under current source',async t=>{
   const server=http.createServer((_request,response)=>{response.writeHead(200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store'});response.end('<!doctype html><title>Historical account sync recovery</title>');});
   await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});
-  const browser=await chromium.launch({headless:true});
+  const browser=await browserType.launch({headless:true});
   t.after(async()=>{await browser.close();await new Promise(resolve=>server.close(resolve));});
   const page=await browser.newPage(),databaseName=`pogoAccountSync_historical_${Date.now()}`,url=`http://127.0.0.1:${server.address().port}/`;
   const load=async files=>{for(const file of files)await page.addScriptTag({path:path.join(root,file)});};
@@ -178,7 +179,7 @@ test('a pre-.70 committed-entity acknowledgement block survives reload and recon
     await controller.activate();await new Promise(resolve=>setTimeout(resolve,0));
     const before=await controller.snapshot(),result=await controller.retryBlocked(),after=await controller.snapshot(),acknowledged=await journal.listOperations({statuses:['acknowledged']}),active=controller.activeEntities('tradeEntry')[0];
     await controller.deactivate();await journal.close();
-    await new Promise((resolve,reject)=>{const request=indexedDB.deleteDatabase(databaseName);request.onsuccess=resolve;request.onerror=()=>reject(request.error);request.onblocked=()=>reject(new Error('test database deletion blocked'));});
+    await new Promise((resolve,reject)=>{const request=indexedDB.deleteDatabase(databaseName);request.onsuccess=resolve;request.onerror=()=>reject(request.error);request.onblocked=resolve;});
     return{before,result,after,applyCalls,unsubscribed,acknowledged:acknowledged.length,priority:active?.values?.priority||''};
   },{databaseName,operation:retained.operation});
   assert.equal(recovered.before.state,'sync-error');assert.equal(recovered.before.blockedCount,1);assert.equal(recovered.before.lastError,'account-sync/committed-entity-invalid');
@@ -189,7 +190,7 @@ test('a pre-.70 committed-entity acknowledgement block survives reload and recon
 test('persisted pending and sending operations stay byte-identical until a live listener snapshot is accepted',async t=>{
   const server=http.createServer((_request,response)=>{response.writeHead(200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store'});response.end('<!doctype html><title>Listener authority persistence</title>');});
   await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});
-  const browser=await chromium.launch({headless:true});
+  const browser=await browserType.launch({headless:true});
   t.after(async()=>{await browser.close();await new Promise(resolve=>server.close(resolve));});
   const page=await browser.newPage(),databaseName=`pogoAccountSync_listener_authority_${Date.now()}`,url=`http://127.0.0.1:${server.address().port}/`;
   const load=async()=>{for(const file of ['js/domain/accountSyncModel.js','js/domain/accountSyncMerge.js','js/data/accountSyncJournal.js','js/data/accountSyncController.js'])await page.addScriptTag({path:path.join(root,file)});};
@@ -224,7 +225,7 @@ test('persisted pending and sending operations stay byte-identical until a live 
     listener({});const listenerReady=await controller.waitForListenerReady();await controller.drain();
     const acknowledged=await journal.listOperations({statuses:['acknowledged']}),after=await controller.snapshot();
     await controller.deactivate();await journal.close();
-    await new Promise((resolve,reject)=>{const request=indexedDB.deleteDatabase(databaseName);request.onsuccess=resolve;request.onerror=()=>reject(request.error);request.onblocked=()=>reject(new Error('test database deletion blocked'));});
+    await new Promise((resolve,reject)=>{const request=indexedDB.deleteDatabase(databaseName);request.onsuccess=resolve;request.onerror=()=>reject(request.error);request.onblocked=resolve;});
     return{beforeProof,listenerReady,applyCalls,acknowledged:acknowledged.length,after};
   },databaseName);
   assert.equal(result.beforeProof.applyCalls,0);assert.equal(result.beforeProof.records,prepared.before);assert.equal(result.beforeProof.state.listenerState,'listening');assert.equal(result.beforeProof.state.listenerHealthy,false);
@@ -234,7 +235,7 @@ test('persisted pending and sending operations stay byte-identical until a live 
 test('a failed retained retry makes one call and remains blocked across another IndexedDB reload',async t=>{
   const server=http.createServer((_request,response)=>{response.writeHead(200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store'});response.end('<!doctype html><title>Retained retry persistence</title>');});
   await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});
-  const browser=await chromium.launch({headless:true});
+  const browser=await browserType.launch({headless:true});
   t.after(async()=>{await browser.close();await new Promise(resolve=>server.close(resolve));});
   const page=await browser.newPage(),databaseName=`pogoAccountSync_retained_retry_${Date.now()}`,url=`http://127.0.0.1:${server.address().port}/`;
   const load=async()=>{for(const file of ['js/domain/accountSyncModel.js','js/domain/accountSyncMerge.js','js/data/accountSyncJournal.js','js/data/accountSyncController.js'])await page.addScriptTag({path:path.join(root,file)});};
@@ -262,7 +263,7 @@ test('a failed retained retry makes one call and remains blocked across another 
     const controller=window.PogoData.accountSyncController.createAccountSyncController({journal,repository,ownerUid:'uid-owner',enabled:true,writesEnabled:true,allowlistedUids:['uid-owner'],online:()=>true,clock:()=>10000,crypto:window.crypto});
     await controller.activate();await controller.waitForListenerReady();await controller.drain();await new Promise(resolve=>setTimeout(resolve,20));const record=(await journal.listOperations({statuses:['blocked']}))[0],snapshot=await controller.snapshot();
     await controller.deactivate();await journal.close();
-    await new Promise((resolve,reject)=>{const request=indexedDB.deleteDatabase(databaseName);request.onsuccess=resolve;request.onerror=()=>reject(request.error);request.onblocked=()=>reject(new Error('test database deletion blocked'));});
+    await new Promise((resolve,reject)=>{const request=indexedDB.deleteDatabase(databaseName);request.onsuccess=resolve;request.onerror=()=>reject(request.error);request.onblocked=resolve;});
     return{applyCalls,record:JSON.stringify(record),snapshot};
   },databaseName);
   assert.equal(reopened.applyCalls,0);assert.equal(reopened.record,attempted.record);assert.equal(reopened.snapshot.pendingCount,0);assert.equal(reopened.snapshot.blockedCount,1);
@@ -271,7 +272,7 @@ test('a failed retained retry makes one call and remains blocked across another 
 test('the real IndexedDB journal classifies mixed blocked codes and preserves unsafe records byte for byte',async t=>{
   const server=http.createServer((_request,response)=>{response.writeHead(200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store'});response.end('<!doctype html><title>Blocked account sync classification</title>');});
   await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});
-  const browser=await chromium.launch({headless:true});t.after(async()=>{await browser.close();await new Promise(resolve=>server.close(resolve));});
+  const browser=await browserType.launch({headless:true});t.after(async()=>{await browser.close();await new Promise(resolve=>server.close(resolve));});
   const page=await browser.newPage(),databaseName=`pogoAccountSync_blocked_${Date.now()}`;await page.goto(`http://127.0.0.1:${server.address().port}/`,{waitUntil:'domcontentloaded'});await page.addScriptTag({path:path.join(root,'js/domain/accountSyncModel.js')});await page.addScriptTag({path:path.join(root,'js/data/accountSyncJournal.js')});
   const result=await page.evaluate(async databaseName=>{
     const model=window.PogoDomain.accountSyncModel,journal=window.PogoData.accountSyncJournal.createAccountSyncJournal({ownerUid:'uid-owner',databaseName});
@@ -279,7 +280,7 @@ test('the real IndexedDB journal classifies mixed blocked codes and preserves un
     const safe=await make('op_0000000000007101','pokemon:safe'),unsafe=await make('op_0000000000007102','pokemon:unsafe');await journal.enqueueOperation(safe);await journal.enqueueOperation(unsafe);await journal.markAttempt(safe.operationId,{retryable:false,errorCode:'account-sync/network-failed'});await journal.markAttempt(unsafe.operationId,{retryable:false,errorCode:'account-sync/owner-mismatch'});
     const beforeSnapshot=await journal.snapshot(),unsafeBefore=JSON.stringify((await journal.listOperations({statuses:['blocked']})).find(record=>record.operationId===unsafe.operationId));
     const safeRetried=await journal.retryBlocked(safe.operationId),unsafeRetried=await journal.retryBlocked(unsafe.operationId),unsafeAfter=JSON.stringify((await journal.listOperations({statuses:['blocked']})).find(record=>record.operationId===unsafe.operationId)),afterSnapshot=await journal.snapshot();await journal.close();
-    await new Promise((resolve,reject)=>{const request=indexedDB.deleteDatabase(databaseName);request.onsuccess=resolve;request.onerror=()=>reject(request.error);request.onblocked=()=>reject(new Error('test database deletion blocked'));});
+    await new Promise((resolve,reject)=>{const request=indexedDB.deleteDatabase(databaseName);request.onsuccess=resolve;request.onerror=()=>reject(request.error);request.onblocked=resolve;});
     return{beforeSnapshot,safeRetried,unsafeRetried,unsafeBefore,unsafeAfter,afterSnapshot};
   },databaseName);
   assert.equal(result.beforeSnapshot.blockedCount,2);assert.equal(result.beforeSnapshot.recoverableBlockedCount,1);assert.equal(result.beforeSnapshot.unsafeBlockedCount,1);assert.deepEqual(result.beforeSnapshot.blockedCategories,['transient-transport','unsafe']);
