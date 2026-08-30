@@ -245,6 +245,15 @@ test.describe('visual smoke', () => {
   });
 
   test('reviewed and unavailable costume art stays honest across signed-in surfaces',async({page})=>{
+    const reviewedMappings=[
+      ['Pikachu (Fragment)','pikachu-thunderbolt-cap.png'],
+      ['Raichu Fragment Cap','raichu-thunderbolt-cap.png'],
+      ['Pikachu (Halloween 2022)','pikachu-halloween-mischief.png'],
+      ['Pikachu (Halloween 2024)','pikachu-witch.png'],
+      ['Pikachu (Holiday 2022)','pikachu-holiday.png'],
+      ['Pikachu (Holiday 2024)','pikachu-holiday.png'],
+      ['Gengar (Halloween 2024)','gengar-spooky-festival.png']
+    ];
     await page.goto(`./?costume-surface=${Date.now()}`,{waitUntil:'domcontentloaded'});
     await waitForStableLocalOrganizerStartup(page);
     await isolateAuthenticatedMyListFixture(page,{username:'CostumeSurfaceTester',uid:'uid-costume-surface'});
@@ -252,10 +261,18 @@ test.describe('visual smoke', () => {
       allData=normalizeData({
         users:{CostumeSurfaceTester:{specialTradeBoard:{
           lf:[{name:'Pikachu (Worlds 2026)',dn:'Pikachu (Worlds 2026)',no:25}],
-          ft:[{name:'Pikachu (Worlds 2025)',dn:'Pikachu (Worlds 2025)',no:25,qty:1}]
+          ft:[
+            {name:'Pikachu (Worlds 2025)',dn:'Pikachu (Worlds 2025)',no:25,qty:1},
+            {name:'Gengar (Halloween 2024)',dn:'Gengar (Halloween 2024)',no:94,qty:1}
+          ]
         }}},
         wishlist:{CostumeSurfaceTester:{}},dynamax:{CostumeSurfaceTester:{}},gmax:{CostumeSurfaceTester:{}},
-        costumes:{CostumeSurfaceTester:{'Pikachu (Worlds 2025)':'H','Pikachu (Worlds 2026)':'M'}}
+        costumes:{CostumeSurfaceTester:{
+          'Pikachu (Worlds 2025)':'H','Pikachu (Worlds 2026)':'M',
+          'Pikachu (Fragment)':'H','Raichu Fragment Cap':'H','Pikachu (Halloween 2022)':'H',
+          'Pikachu (Halloween 2024)':'M','Pikachu (Holiday 2022)':'M','Pikachu (Holiday 2024)':'L',
+          'Gengar (Halloween 2024)':'L'
+        }}
       });
       _pathLoadState={have:'loaded',wishlist:'loaded',dynamax:'loaded',gmax:'loaded',costumes:'loaded'};
       myListType='costumes';buildAcItems();renderMyList('');
@@ -265,12 +282,27 @@ test.describe('visual smoke', () => {
     await expect(mapped.locator('img')).toHaveAttribute('src',/assets\/sprites\/go\/pikachu-world-champs-2025\.png/);
     await expect(unavailable.locator('.pc-sprite-placeholder.known-unavailable')).toHaveAttribute('aria-label','Artwork unavailable for Pikachu (Worlds 2026)');
     expect(await unavailable.locator('img').count()).toBe(0);
+    for(const[name,file]of reviewedMappings){
+      await expect(page.locator('.myrow').filter({hasText:name}).locator('img')).toHaveAttribute('src',new RegExp(`assets/sprites/go/${file.replaceAll('.','\\.')}`));
+    }
     expect(await page.locator('.myrow img').evaluateAll(images=>images.some(image=>/\/pikachu(?:-female)?\.png$/.test(new URL(image.src).pathname)))).toBe(false);
+
+    const exported=await page.evaluate(async()=>{
+      window.__costumeMarkdown='';window.__costumeCsv='';
+      const originalCopy=copyText,originalCreate=URL.createObjectURL,originalClick=HTMLAnchorElement.prototype.click;
+      copyText=async value=>{window.__costumeMarkdown=String(value);};
+      URL.createObjectURL=blob=>{window.__costumeCsvPromise=blob.text().then(value=>{window.__costumeCsv=value;});return'blob:costume-surface';};
+      HTMLAnchorElement.prototype.click=function(){};
+      try{exportMyListMarkdown();exportMyListCSV();await window.__costumeCsvPromise;return{markdown:window.__costumeMarkdown,csv:window.__costumeCsv};}
+      finally{copyText=originalCopy;URL.createObjectURL=originalCreate;HTMLAnchorElement.prototype.click=originalClick;}
+    });
+    for(const[name]of reviewedMappings){expect(exported.markdown).toContain(name);expect(exported.csv).toContain(name);}
 
     await page.evaluate(()=>openSpecialTradeBoard());
     const boardMapped=page.locator('#special-ft-list .sb-row').filter({hasText:'Pikachu (Worlds 2025)'});
     const boardUnavailable=page.locator('#special-lf-list .sb-row').filter({hasText:'Pikachu (Worlds 2026)'});
     await expect(boardMapped.locator('img')).toHaveAttribute('src',/assets\/sprites\/go\/pikachu-world-champs-2025\.png/);
+    await expect(page.locator('#special-ft-list .sb-row').filter({hasText:'Gengar (Halloween 2024)'}).locator('img')).toHaveAttribute('src',/assets\/sprites\/go\/gengar-spooky-festival\.png/);
     await expect(boardUnavailable.locator('.pc-sprite-placeholder.known-unavailable')).toHaveAttribute('aria-label','Artwork unavailable for Pikachu (Worlds 2026)');
 
     for(const theme of ['dark','light']){
@@ -284,6 +316,17 @@ test.describe('visual smoke', () => {
         expect(geometry).toEqual({width:24,height:24,borderStyle:'dashed',overflow:false});
       }
     }
+
+    await page.keyboard.press('Escape');
+    await page.evaluate(()=>{
+      document.getElementById('app').style.display='none';
+      document.getElementById('share-view').classList.add('active');
+      renderShareView('CostumeSurfaceTester','costumes');
+    });
+    for(const[name,file]of reviewedMappings){
+      await expect(page.locator('.share-pcard').filter({hasText:name}).locator('img')).toHaveAttribute('src',new RegExp(`assets/sprites/go/${file.replaceAll('.','\\.')}`));
+    }
+    await expect(page.locator('.share-pcard').filter({hasText:'Pikachu (Worlds 2026)'}).locator('.pc-sprite-placeholder.known-unavailable')).toHaveAttribute('aria-label','Artwork unavailable for Pikachu (Worlds 2026)');
   });
 
   test('consumer shell remains composed across themes and responsive widths',async({page})=>{
