@@ -102,6 +102,49 @@ test('reviewed event aliases resolve to their exact visual identity',()=>{
   }
 });
 
+test('reviewed event aliases retain distinct canonical identity through serialization',()=>{
+  const productWindow={};
+  const context=vm.createContext({window:productWindow,Object,Map});
+  for(const file of ['data.js','js/domain/pokemonKeys.js']){
+    vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),context,{filename:file});
+  }
+  const pokemonCatalog=productWindow.PogoDomain.pokemonCatalog;
+  const expected=[
+    ['Pikachu (Fragment)',25,'pokemon:25:standard:legacy:Pikachu%20(Fragment)'],
+    ['Raichu Fragment Cap',26,'pokemon:26:standard:legacy:Raichu%20Fragment%20Cap'],
+    ['Pikachu (Halloween 2022)',25,'pokemon:25:standard:legacy:Pikachu%20(Halloween%202022)'],
+    ['Pikachu (Halloween 2024)',25,'pokemon:25:standard:legacy:Pikachu%20(Halloween%202024)'],
+    ['Pikachu (Holiday 2022)',25,'pokemon:25:standard:legacy:Pikachu%20(Holiday%202022)'],
+    ['Pikachu (Holiday 2024)',25,'pokemon:25:standard:legacy:Pikachu%20(Holiday%202024)'],
+    ['Gengar (Halloween 2024)',94,'pokemon:94:standard:legacy:Gengar%20(Halloween%202024)']
+  ];
+  const stored=expected.map(([name,no])=>({name,no,p:'H',mod:name}));
+  const firstPass=pokemonCatalog.canonicalizeEntries(stored);
+  const restored=JSON.parse(JSON.stringify(firstPass));
+  const secondPass=pokemonCatalog.canonicalizeEntries(restored);
+
+  assert.equal(firstPass.length,7);
+  assert.equal(secondPass.length,7);
+  assert.equal(new Set(secondPass.map(entry=>entry.catalogId)).size,7);
+  assert.deepEqual(
+    JSON.parse(JSON.stringify(secondPass.map(entry=>[entry.name,entry.no,entry.catalogId,entry.mod]))),
+    expected.map(([name,no,catalogId])=>[name,no,catalogId,name])
+  );
+
+  const holiday2022=secondPass.find(entry=>entry.name==='Pikachu (Holiday 2022)');
+  const holiday2024=secondPass.find(entry=>entry.name==='Pikachu (Holiday 2024)');
+  assert.notEqual(holiday2022.catalogId,holiday2024.catalogId);
+  assert.deepEqual(
+    Array.from(resolver.resolution({name:holiday2022.name}).urls),
+    Array.from(resolver.resolution({name:holiday2024.name}).urls)
+  );
+
+  const halloweenPikachu=resolver.resolution({name:'Pikachu (Halloween 2024)'}).urls[0];
+  const halloweenGengar=resolver.resolution({name:'Gengar (Halloween 2024)'}).urls[0];
+  assert.notEqual(halloweenPikachu,halloweenGengar);
+  assert.doesNotMatch(`${halloweenPikachu} ${halloweenGengar}`,/sprites\/pokemon\/(?:25|94)\.png/);
+});
+
 test('the local reviewed asset graph remains lazy rather than joining shell precache',()=>{
   const worker=fs.readFileSync(path.join(root,'sw.js'),'utf8');
   const releaseAssets=worker.match(/const RELEASE_ASSETS=\[([\s\S]*?)\n\];/)?.[1]||'';
