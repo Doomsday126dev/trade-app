@@ -144,11 +144,13 @@
     identity('pokemon:25:costume:beanie-2019','PIKACHU_BEANIE_2019','Pikachu (Winter 2019)',['Pikachu Beanie'],['Beanie Pikachu']),
     identity('pokemon:25:costume:PIKACHU_WINTER_2020','PIKACHU_WINTER_2020','Pikachu (Holiday 2020)',['Pikachu Winter Carnival Outfit'],['Winter Carnival Pikachu']),
     identity('pokemon:25:costume:PIKACHU_FLYING_03','PIKACHU_FLYING_03','Pikachu Flying 03',[],['Flying Orange Pikachu','Orange Balloons Pikachu']),
-    identity('pokemon:25:costume:PIKACHU_ANNIVERSARY_2026','PIKACHU_ANNIVERSARY_2026',"Pikachu (Professor Willow's Assistant)",[],["Professor Willow's assistant Pikachu","Willow's Assistant Pikachu"])
+    identity('pokemon:25:costume:PIKACHU_ANNIVERSARY_2026','PIKACHU_ANNIVERSARY_2026',"Pikachu (Professor Willow's Assistant)",[],["Professor Willow's assistant Pikachu","Willow's Assistant Pikachu"]),
+    identity('pokemon:25:costume:PIKACHU_PXP_2026','PIKACHU_PXP_2026','Pikachu (Cosmog Spacesuit)',['Cosmog-themed Spacesuit Pikachu'],['Cosmog Spacesuit Pikachu']),
+    identity('pokemon:25:costume:PIKACHU_WCS_2026','PIKACHU_WCS_2026','Pikachu (Worlds 2026)',['World Championships 2026 Pikachu'],['Worlds 2026 Pikachu'])
   ]);
 
   const UNRESOLVED_COSTUME_KEYS=Object.freeze([
-    'Pikachu (Sari)','Pikachu (Halloween 2022)','Pikachu (Holiday 2022)',
+    'Pikachu (Halloween 2022)','Pikachu (Holiday 2022)',
     'Pikachu (Victor)','Pikachu (Gloria)','Pikachu (Halloween 2024)',
     'Pikachu (Holiday 2024)','Pikachu (GO Fest 2023)','Pikachu (GO Fest 2024)'
   ]);
@@ -170,6 +172,22 @@
       users:{},
       goFormId:'PIKACHU_ANNIVERSARY_2026',
       goCostumeId:'PIKACHU_ANNIVERSARY_2026'
+    }),
+    Object.freeze({
+      no:25,
+      name:'Pikachu (Cosmog Spacesuit)',
+      displayName:'Pikachu (Cosmog Spacesuit)',
+      users:{},
+      goFormId:'PIKACHU_PXP_2026',
+      goCostumeId:'PIKACHU_PXP_2026'
+    }),
+    Object.freeze({
+      no:25,
+      name:'Pikachu (Worlds 2026)',
+      displayName:'Pikachu (Worlds 2026)',
+      users:{},
+      goFormId:'PIKACHU_WCS_2026',
+      goCostumeId:'PIKACHU_WCS_2026'
     })
   ]);
 

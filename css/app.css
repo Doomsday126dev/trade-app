@@ -214,7 +214,8 @@ input,select,textarea{font-family:var(--font);outline:none}
 .pokemon-sprite-slot img,.pc-sprite-wrap > img,.myrow-sprite-wrap > img,.have-row-sprite > img,.diff-card-sprite-wrap > img,.share-pcard-sprite-wrap > img,.offer-pkmn-display .sprite-wrap > img{width:100%!important;height:100%!important;max-width:100%;max-height:100%;object-fit:contain;object-position:center;display:block;flex:0 0 auto}
 .have-row-sprite,.diff-card-sprite-wrap,.share-pcard-sprite-wrap,.offer-pkmn-display .sprite-wrap{overflow:hidden}
 .pc-hdr > img.pc-sprite,.ac-item-sprite,.import-sprite,.sb-row-sprite{object-fit:contain;object-position:center;display:block}
-.pc-sprite-placeholder{width:40px;height:40px;flex-shrink:0;background:var(--bg2);border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;font-size:16px}
+.pc-sprite-placeholder{width:40px;height:40px;flex-shrink:0;background:var(--surface-subtle);border:1px solid var(--border2);border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;color:var(--muted);font:800 13px var(--mono)}
+.pc-sprite-placeholder.known-unavailable{border-style:dashed;color:var(--ac2)}
 .pc-info{flex:1;min-width:0}
 .pc-name{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pc-no{font-family:var(--mono);font-size:11px;color:var(--muted)}
@@ -977,9 +978,9 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
 .share-section-hdr .badge{font-size:12px}
 .share-section-count{margin-left:auto;color:var(--muted);font-size:11px}
 .share-pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;padding:var(--space-3)}
-.share-pcard{display:flex;align-items:center;gap:8px;padding:7px 9px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-md);font-size:12px;min-width:0;transition:.15s}
+.share-pcard{display:grid;grid-template-columns:34px minmax(0,1fr);align-items:center;gap:10px;min-height:52px;padding:7px 10px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-md);font-size:12px;min-width:0;transition:.15s}
 .share-pcard:hover{border-color:var(--border2);transform:translateY(-1px)}
-.share-pcard-sprite{width:26px;height:26px;flex-shrink:0;object-fit:contain;image-rendering:pixelated}
+.share-pcard-sprite{width:34px;height:34px;flex-shrink:0;object-fit:contain;image-rendering:auto;transition:transform .12s ease-out}
 .share-pcard-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
 /* Allow long Pokémon names like "Basculin (White Stripe)" to wrap to a second
    line instead of truncating to "Basculin (White…)" — keeps full identity visible. */
@@ -992,11 +993,11 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
 .share-pcard-flag.xxs{background:rgba(20,184,166,.18);color:var(--trait-xxs)}
 .share-pcard-flag.gender-f{background:rgba(236,72,153,.2);color:#ec4899}
 .share-pcard-flag.gender-m{background:rgba(59,130,246,.2);color:#3b82f6}
-.share-pcard-sprite-wrap{position:relative;flex-shrink:0;width:26px;height:26px}
+.share-pcard-sprite-wrap{position:relative;flex-shrink:0;width:34px;height:34px}
 .share-pcard-gender{position:absolute;bottom:-2px;right:-2px;background:var(--card);border-radius:50%;width:13px;height:13px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;border:1px solid var(--border2);line-height:1}
 .share-pcard-gender.f{color:#ec4899}
 .share-pcard-gender.m{color:#3b82f6}
-.public-share-avatar,.share-loading-avatar,.public-share-pokemon-mark{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;border:1px solid var(--border2);background:var(--surface-subtle);color:var(--ac2);font-weight:850}.public-share-avatar,.share-loading-avatar{width:52px;height:52px;border-radius:50%;font-size:15px}.public-share-pokemon-mark{width:26px;height:26px;border-radius:var(--radius-sm);font-size:11px}.public-share-empty{margin-block:18px}.public-share-spinner{animation:spin .9s linear infinite}.public-share-cta{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:18px 0 0;padding:12px 14px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--surface-subtle);color:var(--muted);font-size:12px}.public-share-cta .btn{flex:0 0 auto;min-height:44px}.public-share-language-only .language-follow-copy,.public-share-language-only .language-override-toggle,.public-share-language-only .language-override-help,.public-share-language-only .language-override-row{display:none!important}
+.public-share-avatar,.share-loading-avatar,.public-share-pokemon-mark{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;border:1px solid var(--border2);background:var(--surface-subtle);color:var(--ac2);font-weight:850}.public-share-avatar,.share-loading-avatar{width:52px;height:52px;border-radius:50%;font-size:15px}.public-share-pokemon-mark{width:34px;height:34px;border-radius:var(--radius-sm);font:800 13px var(--mono);color:var(--muted)}.public-share-pokemon-mark.known-unavailable{border-style:dashed;color:var(--ac2)}.public-share-empty{margin-block:18px}.public-share-spinner{animation:spin .9s linear infinite}.public-share-cta{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:18px 0 0;padding:12px 14px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--surface-subtle);color:var(--muted);font-size:12px}.public-share-cta .btn{flex:0 0 auto;min-height:44px}.public-share-language-only .language-follow-copy,.public-share-language-only .language-override-toggle,.public-share-language-only .language-override-help,.public-share-language-only .language-override-row{display:none!important}
 
 @media(max-width:600px){
   #share-view{padding:14px 10px 32px}
@@ -1008,8 +1009,9 @@ body.bulk-mode .myrow[draggable]{-webkit-user-drag:none}
   .share-list-tabs .ltab{min-height:48px;padding:5px 11px;font-size:12px}
   .share-section-hdr{padding:8px 12px}
   .share-pgrid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:5px;padding:8px}
-  .share-pcard{padding:6px 8px}
-  .share-pcard-sprite{width:24px;height:24px}
+  .share-pcard{grid-template-columns:32px minmax(0,1fr);padding:6px 8px}
+  .share-pcard-sprite{width:32px;height:32px}
+  .share-pcard-sprite-wrap,.public-share-pokemon-mark{width:32px;height:32px}
   .share-pcard-name{font-size:12px}
 }
 

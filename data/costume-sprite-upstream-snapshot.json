@@ -1,0 +1,3507 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-08-30T00:11:41.232Z",
+  "pages": [
+    {
+      "dex": 1,
+      "species": "Bulbasaur",
+      "url": "https://pokemondb.net/sprites/bulbasaur",
+      "files": [
+        {
+          "file": "bulbasaur-pikachu-cap.png",
+          "label": "Pikachu Cap"
+        },
+        {
+          "file": "bulbasaur-red-party-hat.png",
+          "label": "Red Party Hat"
+        },
+        {
+          "file": "bulbasaur-shedinja.png",
+          "label": "Shedinja Costume"
+        },
+        {
+          "file": "bulbasaur.png",
+          "label": "Bulbasaur"
+        }
+      ]
+    },
+    {
+      "dex": 2,
+      "species": "Ivysaur",
+      "url": "https://pokemondb.net/sprites/ivysaur",
+      "files": [
+        {
+          "file": "ivysaur-red-party-hat.png",
+          "label": "Red Party Hat"
+        },
+        {
+          "file": "ivysaur.png",
+          "label": "Ivysaur"
+        }
+      ]
+    },
+    {
+      "dex": 3,
+      "species": "Venusaur",
+      "url": "https://pokemondb.net/sprites/venusaur",
+      "files": [
+        {
+          "file": "venusaur-clone-f.png",
+          "label": "Clone · female"
+        },
+        {
+          "file": "venusaur-clone.png",
+          "label": "Clone · male"
+        },
+        {
+          "file": "venusaur-f.png",
+          "label": "Female · female"
+        },
+        {
+          "file": "venusaur-gigantamax.png",
+          "label": "Gigantamax"
+        },
+        {
+          "file": "venusaur-mega.png",
+          "label": "Mega Venusaur"
+        },
+        {
+          "file": "venusaur-red-party-hat-f.png",
+          "label": "Red Party Hat · female"
+        },
+        {
+          "file": "venusaur-red-party-hat.png",
+          "label": "Red Party Hat · male"
+        },
+        {
+          "file": "venusaur.png",
+          "label": "Male · male"
+        }
+      ]
+    },
+    {
+      "dex": 4,
+      "species": "Charmander",
+      "url": "https://pokemondb.net/sprites/charmander",
+      "files": [
+        {
+          "file": "charmander-cubone.png",
+          "label": "Cubone Costume"
+        },
+        {
+          "file": "charmander-pikachu-cap.png",
+          "label": "Pikachu Cap"
+        },
+        {
+          "file": "charmander-red-party-hat.png",
+          "label": "Red Party Hat"
+        },
+        {
+          "file": "charmander.png",
+          "label": "Charmander"
+        }
+      ]
+    },
+    {
+      "dex": 5,
+      "species": "Charmeleon",
+      "url": "https://pokemondb.net/sprites/charmeleon",
+      "files": [
+        {
+          "file": "charmeleon-red-party-hat.png",
+          "label": "Red Party Hat"
+        },
+        {
+          "file": "charmeleon.png",
+          "label": "Charmeleon"
+        }
+      ]
+    },
+    {
+      "dex": 6,
+      "species": "Charizard",
+      "url": "https://pokemondb.net/sprites/charizard",
+      "files": [
+        {
+          "file": "charizard-clone.png",
+          "label": "Clone"
+        },
+        {
+          "file": "charizard-gigantamax.png",
+          "label": "Gigantamax"
+        },
+        {
+          "file": "charizard-mega-x.png",
+          "label": "Mega Charizard X"
+        },
+        {
+          "file": "charizard-mega-y.png",
+          "label": "Mega Charizard Y"
+        },
+        {
+          "file": "charizard-red-party-hat.png",
+          "label": "Red Party Hat"
+        },
+        {
+          "file": "charizard.png",
+          "label": "Charizard"
+        }
+      ]
+    },
+    {
+      "dex": 7,
+      "species": "Squirtle",
+      "url": "https://pokemondb.net/sprites/squirtle",
+      "files": [
+        {
+          "file": "squirtle-pikachu-cap.png",
+          "label": "Pikachu Cap"
+        },
+        {
+          "file": "squirtle-red-party-hat.png",
+          "label": "Red Party Hat"
+        },
+        {
+          "file": "squirtle-sunglasses.png",
+          "label": "Sunglasses"
+        },
+        {
+          "file": "squirtle-yamask.png",
+          "label": "Yamask Costume"
+        },
+        {
+          "file": "squirtle.png",
+          "label": "Squirtle"
+        }
+      ]
+    },
+    {
+      "dex": 8,
+      "species": "Wartortle",
+      "url": "https://pokemondb.net/sprites/wartortle",
+      "files": [
+        {
+          "file": "wartortle-red-party-hat.png",
+          "label": "Red Party Hat"
+        },
+        {
+          "file": "wartortle-sunglasses.png",
+          "label": "Sunglasses"
+        },
+        {
+          "file": "wartortle.png",
+          "label": "Wartortle"
+        }
+      ]
+    },
+    {
+      "dex": 9,
+      "species": "Blastoise",
+      "url": "https://pokemondb.net/sprites/blastoise",
+      "files": [
+        {
+          "file": "blastoise-clone.png",
+          "label": "Clone"
+        },
+        {
+          "file": "blastoise-gigantamax.png",
+          "label": "Gigantamax"
+        },
+        {
+          "file": "blastoise-mega.png",
+          "label": "Mega Blastoise"
+        },
+        {
+          "file": "blastoise-red-party-hat.png",
+          "label": "Red Party Hat"
+        },
+        {
+          "file": "blastoise-sunglasses.png",
+          "label": "Sunglasses"
+        },
+        {
+          "file": "blastoise.png",
+          "label": "Blastoise"
+        }
+      ]
+    },
+    {
+      "dex": 12,
+      "species": "Butterfree",
+      "url": "https://pokemondb.net/sprites/butterfree",
+      "files": [
+        {
+          "file": "butterfree-f.png",
+          "label": "Female · female"
+        },
+        {
+          "file": "butterfree-fashion-f.png",
+          "label": "Fashion Week · female"
+        },
+        {
+          "file": "butterfree-fashion.png",
+          "label": "Fashion Week · male"
+        },
+        {
+          "file": "butterfree-gigantamax.png",
+          "label": "Gigantamax"
+        },
+        {
+          "file": "butterfree.png",
+          "label": "Male · male"
+        }
+      ]
+    },
+    {
+      "dex": 20,
+      "species": "Raticate",
+      "url": "https://pokemondb.net/sprites/raticate",
+      "files": [
+        {
+          "file": "raticate-alolan.png",
+          "label": "Alolan Raticate"
+        },
+        {
+          "file": "raticate-f.png",
+          "label": "Female · female"
+        },
+        {
+          "file": "raticate-party-hat-f.png",
+          "label": "Party Hat · female"
+        },
+        {
+          "file": "raticate-party-hat.png",
+          "label": "Party Hat · male"
+        },
+        {
+          "file": "raticate.png",
+          "label": "Male · male"
+        }
+      ]
+    },
+    {
+      "dex": 25,
+      "species": "Pikachu",
+      "url": "https://pokemondb.net/sprites/pikachu",
+      "files": [
+        {
+          "file": "pikachu-adventure-hat-f.png",
+          "label": "Adventure Hat · female"
+        },
+        {
+          "file": "pikachu-adventure-hat.png",
+          "label": "Adventure Hat · male"
+        },
+        {
+          "file": "pikachu-akari-kerchief-f.png",
+          "label": "Akari's kerchief · female"
+        },
+        {
+          "file": "pikachu-akari-kerchief.png",
+          "label": "Akari's kerchief · male"
+        },
+        {
+          "file": "pikachu-amethyst-crown-f.png",
+          "label": "Amethyst Crown · female"
+        },
+        {
+          "file": "pikachu-amethyst-crown.png",
+          "label": "Amethyst Crown · male"
+        },
+        {
+          "file": "pikachu-aquamarine-crown-f.png",
+          "label": "Aquamarine Crown · female"
+        },
+        {
+          "file": "pikachu-aquamarine-crown.png",
+          "label": "Aquamarine Crown · male"
+        },
+        {
+          "file": "pikachu-balloon4-f.png",
+          "label": "4th Anniversary Balloon · female"
+        },
+        {
+          "file": "pikachu-balloon4.png",
+          "label": "4th Anniversary Balloon · male"
+        },
+        {
+          "file": "pikachu-balloon5-f.png",
+          "label": "5th Anniversary Balloon · female"
+        },
+        {
+          "file": "pikachu-balloon5.png",
+          "label": "5th Anniversary Balloon · male"
+        },
+        {
+          "file": "pikachu-baseball-shirt-f.png",
+          "label": "Baseball Shirt · female"
+        },
+        {
+          "file": "pikachu-baseball-shirt.png",
+          "label": "Baseball Shirt · male"
+        },
+        {
+          "file": "pikachu-batik-shirt-f.png",
+          "label": "Batik Shirt · female"
+        },
+        {
+          "file": "pikachu-batik-shirt.png",
+          "label": "Batik Shirt · male"
+        },
+        {
+          "file": "pikachu-beanie-f.png",
+          "label": "Beanie Hat · female"
+        },
+        {
+          "file": "pikachu-beanie.png",
+          "label": "Beanie Hat · male"
+        },
+        {
+          "file": "pikachu-black-red-balloons-f.png",
+          "label": "Black & Red Balloons · female"
+        },
+        {
+          "file": "pikachu-black-red-balloons.png",
+          "label": "Black & Red Balloons · male"
+        },
+        {
+          "file": "pikachu-blue-tshirt-f.png",
+          "label": "Blue T-shirt (Citrus) · female"
+        },
+        {
+          "file": "pikachu-blue-tshirt.png",
+          "label": "Blue T-shirt (Citrus) · male"
+        },
+        {
+          "file": "pikachu-brendan-bandana-f.png",
+          "label": "Brendan's bandana · female"
+        },
+        {
+          "file": "pikachu-brendan-bandana.png",
+          "label": "Brendan's bandana · male"
+        },
+        {
+          "file": "pikachu-cake-f.png",
+          "label": "Cake Costume · female"
+        },
+        {
+          "file": "pikachu-cake.png",
+          "label": "Cake Costume · male"
+        },
+        {
+          "file": "pikachu-calem-hat-f.png",
+          "label": "Calem's hat · female"
+        },
+        {
+          "file": "pikachu-calem-hat.png",
+          "label": "Calem's hat · male"
+        },
+        {
+          "file": "pikachu-cap-f.png",
+          "label": "Original Cap · female"
+        },
+        {
+          "file": "pikachu-cap.png",
+          "label": "Original Cap · male"
+        },
+        {
+          "file": "pikachu-captain-f.png",
+          "label": "Cap's hat · female"
+        },
+        {
+          "file": "pikachu-captain.png",
+          "label": "Cap's hat · male"
+        },
+        {
+          "file": "pikachu-charizard-hat-f.png",
+          "label": "Charizard Hat · female"
+        },
+        {
+          "file": "pikachu-charizard-hat.png",
+          "label": "Charizard Hat · male"
+        },
+        {
+          "file": "pikachu-cherry-blossoms-f.png",
+          "label": "Cherry Blossoms adornment · female"
+        },
+        {
+          "file": "pikachu-cherry-blossoms.png",
+          "label": "Cherry Blossoms adornment · male"
+        },
+        {
+          "file": "pikachu-clone-f.png",
+          "label": "Clone · female"
+        },
+        {
+          "file": "pikachu-clone.png",
+          "label": "Clone · male"
+        },
+        {
+          "file": "pikachu-dapper-blue-f.png",
+          "label": "Dapper (Blue) · female"
+        },
+        {
+          "file": "pikachu-dapper-blue.png",
+          "label": "Dapper (Blue) · male"
+        },
+        {
+          "file": "pikachu-dapper-red-f.png",
+          "label": "Dapper (Red) · female"
+        },
+        {
+          "file": "pikachu-dapper-red.png",
+          "label": "Dapper (Red) · male"
+        },
+        {
+          "file": "pikachu-dapper-yellow-f.png",
+          "label": "Dapper (Yellow) · female"
+        },
+        {
+          "file": "pikachu-dapper-yellow.png",
+          "label": "Dapper (Yellow) · male"
+        },
+        {
+          "file": "pikachu-dawn-hat-f.png",
+          "label": "Dawn's Hat · female"
+        },
+        {
+          "file": "pikachu-dawn-hat.png",
+          "label": "Dawn's Hat · male"
+        },
+        {
+          "file": "pikachu-detective-f.png",
+          "label": "Detective Hat · female"
+        },
+        {
+          "file": "pikachu-detective.png",
+          "label": "Detective Hat · male"
+        },
+        {
+          "file": "pikachu-ethan-hat-f.png",
+          "label": "Ethan's hat · female"
+        },
+        {
+          "file": "pikachu-ethan-hat.png",
+          "label": "Ethan's hat · male"
+        },
+        {
+          "file": "pikachu-f.png",
+          "label": "Female · female"
+        },
+        {
+          "file": "pikachu-flower-f.png",
+          "label": "Flower Crown · female"
+        },
+        {
+          "file": "pikachu-flower-hat-f.png",
+          "label": "Flower Hat · female"
+        },
+        {
+          "file": "pikachu-flower-hat.png",
+          "label": "Flower Hat · male"
+        },
+        {
+          "file": "pikachu-flower.png",
+          "label": "Flower Crown · male"
+        },
+        {
+          "file": "pikachu-formal-blue-f.png",
+          "label": "Formal (Blue) · female"
+        },
+        {
+          "file": "pikachu-formal-blue.png",
+          "label": "Formal (Blue) · male"
+        },
+        {
+          "file": "pikachu-formal-red-f.png",
+          "label": "Formal (Red) · female"
+        },
+        {
+          "file": "pikachu-formal-red.png",
+          "label": "Formal (Red) · male"
+        },
+        {
+          "file": "pikachu-formal-yellow-f.png",
+          "label": "Formal (Yellow) · female"
+        },
+        {
+          "file": "pikachu-formal-yellow.png",
+          "label": "Formal (Yellow) · male"
+        },
+        {
+          "file": "pikachu-gigantamax.png",
+          "label": "Gigantamax"
+        },
+        {
+          "file": "pikachu-gracidea-f.png",
+          "label": "Gracidea Flower · female"
+        },
+        {
+          "file": "pikachu-gracidea.png",
+          "label": "Gracidea Flower · male"
+        },
+        {
+          "file": "pikachu-green-balloons-f.png",
+          "label": "Green Balloons · female"
+        },
+        {
+          "file": "pikachu-green-balloons.png",
+          "label": "Green Balloons · male"
+        },
+        {
+          "file": "pikachu-green-tshirt-f.png",
+          "label": "Green T-shirt (Berry) · female"
+        },
+        {
+          "file": "pikachu-green-tshirt.png",
+          "label": "Green T-shirt (Berry) · male"
+        },
+        {
+          "file": "pikachu-halloween-mischief-f.png",
+          "label": "Halloween Mischief · female"
+        },
+        {
+          "file": "pikachu-halloween-mischief.png",
+          "label": "Halloween Mischief · male"
+        },
+        {
+          "file": "pikachu-hilbert-hat-f.png",
+          "label": "Hilbert's hat · female"
+        },
+        {
+          "file": "pikachu-hilbert-hat.png",
+          "label": "Hilbert's hat · male"
+        },
+        {
+          "file": "pikachu-hilda-hat-f.png",
+          "label": "Hilda's hat · female"
+        },
+        {
+          "file": "pikachu-hilda-hat.png",
+          "label": "Hilda's hat · male"
+        },
+        {
+          "file": "pikachu-holiday-2023-f.png",
+          "label": "Holiday attire · female"
+        },
+        {
+          "file": "pikachu-holiday-2023.png",
+          "label": "Holiday attire · male"
+        },
+        {
+          "file": "pikachu-holiday-f.png",
+          "label": "Winter Carnival · female"
+        },
+        {
+          "file": "pikachu-holiday.png",
+          "label": "Winter Carnival · male"
+        },
+        {
+          "file": "pikachu-indonesia-f.png",
+          "label": "Indonesia football jersey · female"
+        },
+        {
+          "file": "pikachu-indonesia.png",
+          "label": "Indonesia football jersey · male"
+        },
+        {
+          "file": "pikachu-kariyushi-f.png",
+          "label": "Kariyushi · female"
+        },
+        {
+          "file": "pikachu-kariyushi.png",
+          "label": "Kariyushi · male"
+        },
+        {
+          "file": "pikachu-kurta.png",
+          "label": "Kurta"
+        },
+        {
+          "file": "pikachu-leaf-hat-f.png",
+          "label": "Leaf's hat · female"
+        },
+        {
+          "file": "pikachu-leaf-hat.png",
+          "label": "Leaf's hat · male"
+        },
+        {
+          "file": "pikachu-libre.png",
+          "label": "Pikachu Libre"
+        },
+        {
+          "file": "pikachu-lucario-hat-f.png",
+          "label": "Lucario Hat · female"
+        },
+        {
+          "file": "pikachu-lucario-hat.png",
+          "label": "Lucario Hat · male"
+        },
+        {
+          "file": "pikachu-lucas-hat-f.png",
+          "label": "Lucas's Hat · female"
+        },
+        {
+          "file": "pikachu-lucas-hat.png",
+          "label": "Lucas's Hat · male"
+        },
+        {
+          "file": "pikachu-lyra-hat-f.png",
+          "label": "Lyra's hat · female"
+        },
+        {
+          "file": "pikachu-lyra-hat.png",
+          "label": "Lyra's hat · male"
+        },
+        {
+          "file": "pikachu-malachite-crown-f.png",
+          "label": "Malachite Crown · female"
+        },
+        {
+          "file": "pikachu-malachite-crown.png",
+          "label": "Malachite Crown · male"
+        },
+        {
+          "file": "pikachu-may-bow-f.png",
+          "label": "May's bow · female"
+        },
+        {
+          "file": "pikachu-may-bow.png",
+          "label": "May's bow · male"
+        },
+        {
+          "file": "pikachu-meloetta-hat-f.png",
+          "label": "Meloetta Hat · female"
+        },
+        {
+          "file": "pikachu-meloetta-hat.png",
+          "label": "Meloetta Hat · male"
+        },
+        {
+          "file": "pikachu-mimikyu-f.png",
+          "label": "Mimikyu Costume · female"
+        },
+        {
+          "file": "pikachu-mimikyu.png",
+          "label": "Mimikyu Costume · male"
+        },
+        {
+          "file": "pikachu-moon-crown-f.png",
+          "label": "Moon Crown · female"
+        },
+        {
+          "file": "pikachu-moon-crown.png",
+          "label": "Moon Crown · male"
+        },
+        {
+          "file": "pikachu-nate-visor-f.png",
+          "label": "Nate's visor · female"
+        },
+        {
+          "file": "pikachu-nate-visor.png",
+          "label": "Nate's visor · male"
+        },
+        {
+          "file": "pikachu-new-year-hat-f.png",
+          "label": "New Year Hat · female"
+        },
+        {
+          "file": "pikachu-new-year-hat.png",
+          "label": "New Year Hat · male"
+        },
+        {
+          "file": "pikachu-okinawa-balloon-f.png",
+          "label": "Okinawa Balloon · female"
+        },
+        {
+          "file": "pikachu-okinawa-balloon.png",
+          "label": "Okinawa Balloon · male"
+        },
+        {
+          "file": "pikachu-orange-balloons-f.png",
+          "label": "Orange Balloons · female"
+        },
+        {
+          "file": "pikachu-orange-balloons.png",
+          "label": "Orange Balloons · male"
+        },
+        {
+          "file": "pikachu-party-hat-f.png",
+          "label": "Party Hat · female"
+        },
+        {
+          "file": "pikachu-party-hat.png",
+          "label": "Party Hat · male"
+        },
+        {
+          "file": "pikachu-party-top-hat-f.png",
+          "label": "Party Top Hat · female"
+        },
+        {
+          "file": "pikachu-party-top-hat.png",
+          "label": "Party Top Hat · male"
+        },
+        {
+          "file": "pikachu-phd.png",
+          "label": "Pikachu, Ph.D."
+        },
+        {
+          "file": "pikachu-popstar.png",
+          "label": "Pikachu Pop Star"
+        },
+        {
+          "file": "pikachu-purple-balloons-f.png",
+          "label": "Purple Balloons · female"
+        },
+        {
+          "file": "pikachu-purple-balloons.png",
+          "label": "Purple Balloons · male"
+        },
+        {
+          "file": "pikachu-purple-tshirt-f.png",
+          "label": "Purple T-shirt (Flower) · female"
+        },
+        {
+          "file": "pikachu-purple-tshirt.png",
+          "label": "Purple T-shirt (Flower) · male"
+        },
+        {
+          "file": "pikachu-pyrite-crown-f.png",
+          "label": "Pyrite Crown · female"
+        },
+        {
+          "file": "pikachu-pyrite-crown.png",
+          "label": "Pyrite Crown · male"
+        },
+        {
+          "file": "pikachu-quartz-crown-f.png",
+          "label": "Quartz Crown · female"
+        },
+        {
+          "file": "pikachu-quartz-crown.png",
+          "label": "Quartz Crown · male"
+        },
+        {
+          "file": "pikachu-rayquaza-hat-f.png",
+          "label": "Rayquaza Hat · female"
+        },
+        {
+          "file": "pikachu-rayquaza-hat.png",
+          "label": "Rayquaza Hat · male"
+        },
+        {
+          "file": "pikachu-red-hat-f.png",
+          "label": "Red hat · female"
+        },
+        {
+          "file": "pikachu-red-hat.png",
+          "label": "Red hat · male"
+        },
+        {
+          "file": "pikachu-red-party-hat-f.png",
+          "label": "Red Party Hat · female"
+        },
+        {
+          "file": "pikachu-red-party-hat.png",
+          "label": "Red Party Hat · male"
+        },
+        {
+          "file": "pikachu-rei-cap-f.png",
+          "label": "Rei's cap · female"
+        },
+        {
+          "file": "pikachu-rei-cap.png",
+          "label": "Rei's cap · male"
+        },
+        {
+          "file": "pikachu-rockstar.png",
+          "label": "Pikachu Rock Star"
+        },
+        {
+          "file": "pikachu-rosa-visor-f.png",
+          "label": "Rosa's visor · female"
+        },
+        {
+          "file": "pikachu-rosa-visor.png",
+          "label": "Rosa's visor · male"
+        },
+        {
+          "file": "pikachu-safari-hat-f.png",
+          "label": "Safari Hat · female"
+        },
+        {
+          "file": "pikachu-safari-hat.png",
+          "label": "Safari Hat · male"
+        },
+        {
+          "file": "pikachu-santa-f.png",
+          "label": "Santa Hat · female"
+        },
+        {
+          "file": "pikachu-santa.png",
+          "label": "Santa Hat · male"
+        },
+        {
+          "file": "pikachu-saree.png",
+          "label": "Saree"
+        },
+        {
+          "file": "pikachu-serena-hat-f.png",
+          "label": "Serena's hat · female"
+        },
+        {
+          "file": "pikachu-serena-hat.png",
+          "label": "Serena's hat · male"
+        },
+        {
+          "file": "pikachu-shaymin-f.png",
+          "label": "Shaymin scarf · female"
+        },
+        {
+          "file": "pikachu-shaymin.png",
+          "label": "Shaymin scarf · male"
+        },
+        {
+          "file": "pikachu-straw-hat-f.png",
+          "label": "Straw Hat · female"
+        },
+        {
+          "file": "pikachu-straw-hat.png",
+          "label": "Straw Hat · male"
+        },
+        {
+          "file": "pikachu-striped-tshirt-f.png",
+          "label": "Striped T-shirt · female"
+        },
+        {
+          "file": "pikachu-striped-tshirt.png",
+          "label": "Striped T-shirt · male"
+        },
+        {
+          "file": "pikachu-summer-f.png",
+          "label": "Summer Hat · female"
+        },
+        {
+          "file": "pikachu-summer.png",
+          "label": "Summer Hat · male"
+        },
+        {
+          "file": "pikachu-sun-crown-f.png",
+          "label": "Sun Crown · female"
+        },
+        {
+          "file": "pikachu-sun-crown.png",
+          "label": "Sun Crown · male"
+        },
+        {
+          "file": "pikachu-tcg-f.png",
+          "label": "TCG Hat · female"
+        },
+        {
+          "file": "pikachu-tcg.png",
+          "label": "TCG Hat · male"
+        },
+        {
+          "file": "pikachu-thunderbolt-cap-f.png",
+          "label": "Thunderbolt Cap · female"
+        },
+        {
+          "file": "pikachu-thunderbolt-cap.png",
+          "label": "Thunderbolt Cap · male"
+        },
+        {
+          "file": "pikachu-tricks-treats-f.png",
+          "label": "Tricks & Treats · female"
+        },
+        {
+          "file": "pikachu-tricks-treats.png",
+          "label": "Tricks & Treats · male"
+        },
+        {
+          "file": "pikachu-umbreon-hat-f.png",
+          "label": "Umbreon Hat · female"
+        },
+        {
+          "file": "pikachu-umbreon-hat.png",
+          "label": "Umbreon Hat · male"
+        },
+        {
+          "file": "pikachu-witch-f.png",
+          "label": "Witch Hat · female"
+        },
+        {
+          "file": "pikachu-witch.png",
+          "label": "Witch Hat · male"
+        },
+        {
+          "file": "pikachu-world-cap-f.png",
+          "label": "World Cap · female"
+        },
+        {
+          "file": "pikachu-world-cap.png",
+          "label": "World Cap · male"
+        },
+        {
+          "file": "pikachu-world-champs-2022-f.png",
+          "label": "World Championships 2022 · female"
+        },
+        {
+          "file": "pikachu-world-champs-2022.png",
+          "label": "World Championships 2022 · male"
+        },
+        {
+          "file": "pikachu-world-champs-2023-f.png",
+          "label": "World Championships 2023 · female"
+        },
+        {
+          "file": "pikachu-world-champs-2023.png",
+          "label": "World Championships 2023 · male"
+        },
+        {
+          "file": "pikachu-world-champs-2024-f.png",
+          "label": "World Championships 2024 · female"
+        },
+        {
+          "file": "pikachu-world-champs-2024.png",
+          "label": "World Championships 2024 · male"
+        },
+        {
+          "file": "pikachu-world-champs-2025-f.png",
+          "label": "World Champs 2025 · female"
+        },
+        {
+          "file": "pikachu-world-champs-2025.png",
+          "label": "World Champs 2025 · male"
+        },
+        {
+          "file": "pikachu.png",
+          "label": "Male · male"
+        }
+      ]
+    },
+    {
+      "dex": 26,
+      "species": "Raichu",
+      "url": "https://pokemondb.net/sprites/raichu",
+      "files": [
+        {
+          "file": "raichu-alolan.png",
+          "label": "Alolan Raichu"
+        },
+        {
+          "file": "raichu-beanie-f.png",
+          "label": "Beanie Hat · female"
+        },
+        {
+          "file": "raichu-beanie.png",
+          "label": "Beanie Hat · male"
+        },
+        {
+          "file": "raichu-cap-f.png",
+          "label": "Original Cap · female"
+        },
+        {
+          "file": "raichu-cap.png",
+          "label": "Original Cap · male"
+        },
+        {
+          "file": "raichu-cherry-blossoms-f.png",
+          "label": "Cherry Blossoms adornment · female"
+        },
+        {
+          "file": "raichu-cherry-blossoms.png",
+          "label": "Cherry Blossoms adornment · male"
+        },
+        {
+          "file": "raichu-detective-f.png",
+          "label": "Detective Hat · female"
+        },
+        {
+          "file": "raichu-detective.png",
+          "label": "Detective Hat · male"
+        },
+        {
+          "file": "raichu-f.png",
+          "label": "Female · female"
+        },
+        {
+          "file": "raichu-flower-f.png",
+          "label": "Flower Crown · female"
+        },
+        {
+          "file": "raichu-flower.png",
+          "label": "Flower Crown · male"
+        },
+        {
+          "file": "raichu-holiday-2023-f.png",
+          "label": "Holiday attire · female"
+        },
+        {
+          "file": "raichu-holiday-2023.png",
+          "label": "Holiday attire · male"
+        },
+        {
+          "file": "raichu-new-year-hat-f.png",
+          "label": "New Year Hat · female"
+        },
+        {
+          "file": "raichu-new-year-hat.png",
+          "label": "New Year Hat · male"
+        },
+        {
+          "file": "raichu-party-hat-f.png",
+          "label": "Party Hat · female"
+        },
+        {
+          "file": "raichu-party-hat.png",
+          "label": "Party Hat · male"
+        },
+        {
+          "file": "raichu-santa-f.png",
+          "label": "Santa Hat · female"
+        },
+        {
+          "file": "raichu-santa.png",
+          "label": "Santa Hat · male"
+        },
+        {
+          "file": "raichu-summer-f.png",
+          "label": "Summer Hat · female"
+        },
+        {
+          "file": "raichu-summer.png",
+          "label": "Summer Hat · male"
+        },
+        {
+          "file": "raichu-thunderbolt-cap-f.png",
+          "label": "Thunderbolt Cap · female"
+        },
+        {
+          "file": "raichu-thunderbolt-cap.png",
+          "label": "Thunderbolt Cap · male"
+        },
+        {
+          "file": "raichu-witch-f.png",
+          "label": "Witch Hat · female"
+        },
+        {
+          "file": "raichu-witch.png",
+          "label": "Witch Hat · male"
+        },
+        {
+          "file": "raichu-world-cap-f.png",
+          "label": "World Cap · female"
+        },
+        {
+          "file": "raichu-world-cap.png",
+          "label": "World Cap · male"
+        },
+        {
+          "file": "raichu.png",
+          "label": "Male · male"
+        }
+      ]
+    },
+    {
+      "dex": 31,
+      "species": "Nidoqueen",
+      "url": "https://pokemondb.net/sprites/nidoqueen",
+      "files": [
+        {
+          "file": "nidoqueen-crown.png",
+          "label": "Crown"
+        },
+        {
+          "file": "nidoqueen.png",
+          "label": "Nidoqueen"
+        }
+      ]
+    },
+    {
+      "dex": 33,
+      "species": "Nidorino",
+      "url": "https://pokemondb.net/sprites/nidorino",
+      "files": [
+        {
+          "file": "nidorino-red-party-hat.png",
+          "label": "Red Party Hat"
+        },
+        {
+          "file": "nidorino.png",
+          "label": "Nidorino"
+        }
+      ]
+    },
+    {
+      "dex": 34,
+      "species": "Nidoking",
+      "url": "https://pokemondb.net/sprites/nidoking",
+      "files": [
+        {
+          "file": "nidoking-crown.png",
+          "label": "Crown"
+        },
+        {
+          "file": "nidoking.png",
+          "label": "Nidoking"
+        }
+      ]
+    },
+    {
+      "dex": 37,
+      "species": "Vulpix",
+      "url": "https://pokemondb.net/sprites/vulpix",
+      "files": [
+        {
+          "file": "vulpix-alolan.png",
+          "label": "Alolan Vulpix"
+        },
+        {
+          "file": "vulpix-spooky-festival.png",
+          "label": "Spooky Festival"
+        },
+        {
+          "file": "vulpix.png",
+          "label": "Vulpix"
+        }
+      ]
+    },
+    {
+      "dex": 38,
+      "species": "Ninetales",
+      "url": "https://pokemondb.net/sprites/ninetales",
+      "files": [
+        {
+          "file": "ninetales-alolan.png",
+          "label": "Alolan Ninetales"
+        },
+        {
+          "file": "ninetales-spooky-festival.png",
+          "label": "Spooky Festival"
+        },
+        {
+          "file": "ninetales.png",
+          "label": "Ninetales"
+        }
+      ]
+    },
+    {
+      "dex": 39,
+      "species": "Jigglypuff",
+      "url": "https://pokemondb.net/sprites/jigglypuff",
+      "files": [
+        {
+          "file": "jigglypuff-ribbon.png",
+          "label": "Ribbon"
+        },
+        {
+          "file": "jigglypuff.png",
+          "label": "Jigglypuff"
+        }
+      ]
+    },
+    {
+      "dex": 40,
+      "species": "Wigglytuff",
+      "url": "https://pokemondb.net/sprites/wigglytuff",
+      "files": [
+        {
+          "file": "wigglytuff-ribbon.png",
+          "label": "Ribbon"
+        },
+        {
+          "file": "wigglytuff.png",
+          "label": "Wigglytuff"
+        }
+      ]
+    },
+    {
+      "dex": 50,
+      "species": "Diglett",
+      "url": "https://pokemondb.net/sprites/diglett",
+      "files": [
+        {
+          "file": "diglett-alolan.png",
+          "label": "Alolan Diglett"
+        },
+        {
+          "file": "diglett-bowler-hat.png",
+          "label": "Bowler Hat"
+        },
+        {
+          "file": "diglett.png",
+          "label": "Diglett"
+        }
+      ]
+    },
+    {
+      "dex": 51,
+      "species": "Dugtrio",
+      "url": "https://pokemondb.net/sprites/dugtrio",
+      "files": [
+        {
+          "file": "dugtrio-alolan.png",
+          "label": "Alolan Dugtrio"
+        },
+        {
+          "file": "dugtrio-bowler-hat.png",
+          "label": "Bowler Hat"
+        },
+        {
+          "file": "dugtrio.png",
+          "label": "Dugtrio"
+        }
+      ]
+    },
+    {
+      "dex": 54,
+      "species": "Psyduck",
+      "url": "https://pokemondb.net/sprites/psyduck",
+      "files": [
+        {
+          "file": "psyduck-concierge.png",
+          "label": "Swim ring"
+        },
+        {
+          "file": "psyduck-holiday-2023.png",
+          "label": "Holiday attire"
+        },
+        {
+          "file": "psyduck.png",
+          "label": "Psyduck"
+        }
+      ]
+    },
+    {
+      "dex": 55,
+      "species": "Golduck",
+      "url": "https://pokemondb.net/sprites/golduck",
+      "files": [
+        {
+          "file": "golduck-holiday-2023.png",
+          "label": "Holiday attire"
+        },
+        {
+          "file": "golduck.png",
+          "label": "Golduck"
+        }
+      ]
+    },
+    {
+      "dex": 77,
+      "species": "Ponyta",
+      "url": "https://pokemondb.net/sprites/ponyta",
+      "files": [
+        {
+          "file": "ponyta-candela-necklace.png",
+          "label": "Candela-themed necklace"
+        },
+        {
+          "file": "ponyta-galarian-meloetta-hat.png",
+          "label": "Galarian Meloetta Hat"
+        },
+        {
+          "file": "ponyta-galarian.png",
+          "label": "Galarian Ponyta"
+        },
+        {
+          "file": "ponyta.png",
+          "label": "Ponyta"
+        }
+      ]
+    },
+    {
+      "dex": 78,
+      "species": "Rapidash",
+      "url": "https://pokemondb.net/sprites/rapidash",
+      "files": [
+        {
+          "file": "rapidash-candela-necklace.png",
+          "label": "Candela-themed necklace"
+        },
+        {
+          "file": "rapidash-galarian.png",
+          "label": "Galarian Rapidash"
+        },
+        {
+          "file": "rapidash.png",
+          "label": "Rapidash"
+        }
+      ]
+    },
+    {
+      "dex": 79,
+      "species": "Slowpoke",
+      "url": "https://pokemondb.net/sprites/slowpoke",
+      "files": [
+        {
+          "file": "slowpoke-2020.png",
+          "label": "2020 Glasses"
+        },
+        {
+          "file": "slowpoke-detective.png",
+          "label": "Detective Hat"
+        },
+        {
+          "file": "slowpoke-galarian.png",
+          "label": "Galarian Slowpoke"
+        },
+        {
+          "file": "slowpoke.png",
+          "label": "Slowpoke"
+        }
+      ]
+    },
+    {
+      "dex": 80,
+      "species": "Slowbro",
+      "url": "https://pokemondb.net/sprites/slowbro",
+      "files": [
+        {
+          "file": "slowbro-2021.png",
+          "label": "2021 Glasses"
+        },
+        {
+          "file": "slowbro-galarian.png",
+          "label": "Galarian Slowbro"
+        },
+        {
+          "file": "slowbro-mega.png",
+          "label": "Mega Slowbro"
+        },
+        {
+          "file": "slowbro.png",
+          "label": "Slowbro"
+        }
+      ]
+    },
+    {
+      "dex": 88,
+      "species": "Grimer",
+      "url": "https://pokemondb.net/sprites/grimer",
+      "files": [
+        {
+          "file": "grimer-alolan.png",
+          "label": "Alolan Grimer"
+        },
+        {
+          "file": "grimer-party-hat.png",
+          "label": "Party Hat"
+        },
+        {
+          "file": "grimer.png",
+          "label": "Grimer"
+        }
+      ]
+    },
+    {
+      "dex": 89,
+      "species": "Muk",
+      "url": "https://pokemondb.net/sprites/muk",
+      "files": [
+        {
+          "file": "muk-alolan.png",
+          "label": "Alolan Muk"
+        },
+        {
+          "file": "muk-party-hat.png",
+          "label": "Party Hat"
+        },
+        {
+          "file": "muk.png",
+          "label": "Muk"
+        }
+      ]
+    },
+    {
+      "dex": 94,
+      "species": "Gengar",
+      "url": "https://pokemondb.net/sprites/gengar",
+      "files": [
+        {
+          "file": "gengar-banette.png",
+          "label": "Mega Banette Costume"
+        },
+        {
+          "file": "gengar-gigantamax.png",
+          "label": "Gigantamax"
+        },
+        {
+          "file": "gengar-mega.png",
+          "label": "Mega Gengar"
+        },
+        {
+          "file": "gengar-red-party-hat.png",
+          "label": "Red Party Hat"
+        },
+        {
+          "file": "gengar-spooky-festival.png",
+          "label": "Spooky Festival"
+        },
+        {
+          "file": "gengar-tricks-treats.png",
+          "label": "Tricks & Treats"
+        },
+        {
+          "file": "gengar.png",
+          "label": "Gengar"
+        }
+      ]
+    },
+    {
+      "dex": 104,
+      "species": "Cubone",
+      "url": "https://pokemondb.net/sprites/cubone",
+      "files": [
+        {
+          "file": "cubone-cempasuchil-crown.png",
+          "label": "Cempasúchil Crown"
+        },
+        {
+          "file": "cubone.png",
+          "label": "Cubone"
+        }
+      ]
+    },
+    {
+      "dex": 105,
+      "species": "Marowak",
+      "url": "https://pokemondb.net/sprites/marowak",
+      "files": [
+        {
+          "file": "marowak-alolan.png",
+          "label": "Alolan Marowak"
+        },
+        {
+          "file": "marowak-cempasuchil-crown.png",
+          "label": "Cempasúchil Crown"
+        },
+        {
+          "file": "marowak.png",
+          "label": "Marowak"
+        }
+      ]
+    },
+    {
+      "dex": 113,
+      "species": "Chansey",
+      "url": "https://pokemondb.net/sprites/chansey",
+      "files": [
+        {
+          "file": "chansey-flower.png",
+          "label": "Flower Crown"
+        },
+        {
+          "file": "chansey.png",
+          "label": "Chansey"
+        }
+      ]
+    },
+    {
+      "dex": 125,
+      "species": "Electabuzz",
+      "url": "https://pokemondb.net/sprites/electabuzz",
+      "files": [
+        {
+          "file": "electabuzz-spark-bracelet.png",
+          "label": "Spark-themed bracelet"
+        },
+        {
+          "file": "electabuzz.png",
+          "label": "Electabuzz"
+        }
+      ]
+    },
+    {
+      "dex": 131,
+      "species": "Lapras",
+      "url": "https://pokemondb.net/sprites/lapras",
+      "files": [
+        {
+          "file": "lapras-blanche-bow.png",
+          "label": "Blanche-themed bow"
+        },
+        {
+          "file": "lapras-gigantamax.png",
+          "label": "Gigantamax"
+        },
+        {
+          "file": "lapras-scarf.png",
+          "label": "Scarf"
+        },
+        {
+          "file": "lapras.png",
+          "label": "Lapras"
+        }
+      ]
+    },
+    {
+      "dex": 132,
+      "species": "Ditto",
+      "url": "https://pokemondb.net/sprites/ditto",
+      "files": [
+        {
+          "file": "ditto-cap.png",
+          "label": "Cap"
+        },
+        {
+          "file": "ditto-hat.png",
+          "label": "Hat"
+        },
+        {
+          "file": "ditto.png",
+          "label": "Ditto"
+        }
+      ]
+    },
+    {
+      "dex": 133,
+      "species": "Eevee",
+      "url": "https://pokemondb.net/sprites/eevee",
+      "files": [
+        {
+          "file": "eevee-cherry-blossoms-f.png",
+          "label": "Cherry Blossoms adornment · female"
+        },
+        {
+          "file": "eevee-cherry-blossoms.png",
+          "label": "Cherry Blossoms adornment · male"
+        },
+        {
+          "file": "eevee-explorer-hat-f.png",
+          "label": "Explorer Hat · female"
+        },
+        {
+          "file": "eevee-explorer-hat.png",
+          "label": "Explorer Hat · male"
+        },
+        {
+          "file": "eevee-f.png",
+          "label": "Female · female"
+        },
+        {
+          "file": "eevee-flower-f.png",
+          "label": "Flower Crown · female"
+        },
+        {
+          "file": "eevee-flower.png",
+          "label": "Flower Crown · male"
+        },
+        {
+          "file": "eevee-holiday-hat-f.png",
+          "label": "Holiday Hat · female"
+        },
+        {
+          "file": "eevee-holiday-hat.png",
+          "label": "Holiday Hat · male"
+        },
+        {
+          "file": "eevee-moon-crown-f.png",
+          "label": "Moon Crown · female"
+        },
+        {
+          "file": "eevee-moon-crown.png",
+          "label": "Moon Crown · male"
+        },
+        {
+          "file": "eevee-red-party-hat-f.png",
+          "label": "Red Party Hat · female"
+        },
+        {
+          "file": "eevee-red-party-hat.png",
+          "label": "Red Party Hat · male"
+        },
+        {
+          "file": "eevee-sun-crown-f.png",
+          "label": "Sun Crown · female"
+        },
+        {
+          "file": "eevee-sun-crown.png",
+          "label": "Sun Crown · male"
+        },
+        {
+          "file": "eevee.png",
+          "label": "Male · male"
+        }
+      ]
+    },
+    {
+      "dex": 134,
+      "species": "Vaporeon",
+      "url": "https://pokemondb.net/sprites/vaporeon",
+      "files": [
+        {
+          "file": "vaporeon-cherry-blossoms.png",
+          "label": "Cherry Blossoms adornment"
+        },
+        {
+          "file": "vaporeon-explorer-hat.png",
+          "label": "Explorer Hat"
+        },
+        {
+          "file": "vaporeon-flower.png",
+          "label": "Flower Crown"
+        },
+        {
+          "file": "vaporeon-holiday-hat.png",
+          "label": "Holiday Hat"
+        },
+        {
+          "file": "vaporeon.png",
+          "label": "Vaporeon"
+        }
+      ]
+    },
+    {
+      "dex": 135,
+      "species": "Jolteon",
+      "url": "https://pokemondb.net/sprites/jolteon",
+      "files": [
+        {
+          "file": "jolteon-cherry-blossoms.png",
+          "label": "Cherry Blossoms adornment"
+        },
+        {
+          "file": "jolteon-explorer-hat.png",
+          "label": "Explorer Hat"
+        },
+        {
+          "file": "jolteon-flower.png",
+          "label": "Flower Crown"
+        },
+        {
+          "file": "jolteon-holiday-hat.png",
+          "label": "Holiday Hat"
+        },
+        {
+          "file": "jolteon.png",
+          "label": "Jolteon"
+        }
+      ]
+    },
+    {
+      "dex": 136,
+      "species": "Flareon",
+      "url": "https://pokemondb.net/sprites/flareon",
+      "files": [
+        {
+          "file": "flareon-cherry-blossoms.png",
+          "label": "Cherry Blossoms adornment"
+        },
+        {
+          "file": "flareon-explorer-hat.png",
+          "label": "Explorer Hat"
+        },
+        {
+          "file": "flareon-flower.png",
+          "label": "Flower Crown"
+        },
+        {
+          "file": "flareon-holiday-hat.png",
+          "label": "Holiday Hat"
+        },
+        {
+          "file": "flareon.png",
+          "label": "Flareon"
+        }
+      ]
+    },
+    {
+      "dex": 142,
+      "species": "Aerodactyl",
+      "url": "https://pokemondb.net/sprites/aerodactyl",
+      "files": [
+        {
+          "file": "aerodactyl-mega.png",
+          "label": "Mega Aerodactyl"
+        },
+        {
+          "file": "aerodactyl-satchel.png",
+          "label": "Satchel"
+        },
+        {
+          "file": "aerodactyl.png",
+          "label": "Aerodactyl"
+        }
+      ]
+    },
+    {
+      "dex": 143,
+      "species": "Snorlax",
+      "url": "https://pokemondb.net/sprites/snorlax",
+      "files": [
+        {
+          "file": "snorlax-cowboy-hat.png",
+          "label": "Cowboy Hat"
+        },
+        {
+          "file": "snorlax-gigantamax.png",
+          "label": "Gigantamax"
+        },
+        {
+          "file": "snorlax-nightcap.png",
+          "label": "Nightcap"
+        },
+        {
+          "file": "snorlax-studded-jacket.png",
+          "label": "Studded Jacket"
+        },
+        {
+          "file": "snorlax.png",
+          "label": "Snorlax"
+        }
+      ]
+    },
+    {
+      "dex": 149,
+      "species": "Dragonite",
+      "url": "https://pokemondb.net/sprites/dragonite",
+      "files": [
+        {
+          "file": "dragonite-fashion.png",
+          "label": "Fashion Week"
+        },
+        {
+          "file": "dragonite-mega.png",
+          "label": "Mega Dragonite"
+        },
+        {
+          "file": "dragonite.png",
+          "label": "Dragonite"
+        }
+      ]
+    },
+    {
+      "dex": 150,
+      "species": "Mewtwo",
+      "url": "https://pokemondb.net/sprites/mewtwo",
+      "files": [
+        {
+          "file": "mewtwo-armored.png",
+          "label": "Armored Mewtwo"
+        },
+        {
+          "file": "mewtwo-mega-x.png",
+          "label": "Mega Mewtwo X"
+        },
+        {
+          "file": "mewtwo-mega-y.png",
+          "label": "Mega Mewtwo Y"
+        },
+        {
+          "file": "mewtwo.png",
+          "label": "Mewtwo"
+        }
+      ]
+    },
+    {
+      "dex": 163,
+      "species": "Hoothoot",
+      "url": "https://pokemondb.net/sprites/hoothoot",
+      "files": [
+        {
+          "file": "hoothoot-new-year-hat.png",
+          "label": "New Year Hat"
+        },
+        {
+          "file": "hoothoot.png",
+          "label": "Hoothoot"
+        }
+      ]
+    },
+    {
+      "dex": 164,
+      "species": "Noctowl",
+      "url": "https://pokemondb.net/sprites/noctowl",
+      "files": [
+        {
+          "file": "noctowl-new-year-hat.png",
+          "label": "New Year Hat"
+        },
+        {
+          "file": "noctowl.png",
+          "label": "Noctowl"
+        }
+      ]
+    },
+    {
+      "dex": 172,
+      "species": "Pichu",
+      "url": "https://pokemondb.net/sprites/pichu",
+      "files": [
+        {
+          "file": "pichu-beanie.png",
+          "label": "Beanie Hat"
+        },
+        {
+          "file": "pichu-cap.png",
+          "label": "Cap"
+        },
+        {
+          "file": "pichu-cherry-blossoms.png",
+          "label": "Cherry Blossoms adornment"
+        },
+        {
+          "file": "pichu-flower.png",
+          "label": "Flower Crown"
+        },
+        {
+          "file": "pichu-new-year-hat.png",
+          "label": "New Year Hat"
+        },
+        {
+          "file": "pichu-party-hat.png",
+          "label": "Party Hat"
+        },
+        {
+          "file": "pichu-santa.png",
+          "label": "Santa Hat"
+        },
+        {
+          "file": "pichu-summer.png",
+          "label": "Summer Hat"
+        },
+        {
+          "file": "pichu-thunderbolt-cap.png",
+          "label": "Thunderbolt Cap"
+        },
+        {
+          "file": "pichu-witch.png",
+          "label": "Witch Hat"
+        },
+        {
+          "file": "pichu.png",
+          "label": "Pichu"
+        }
+      ]
+    },
+    {
+      "dex": 175,
+      "species": "Togepi",
+      "url": "https://pokemondb.net/sprites/togepi",
+      "files": [
+        {
+          "file": "togepi-flower.png",
+          "label": "Flower Crown"
+        },
+        {
+          "file": "togepi.png",
+          "label": "Togepi"
+        }
+      ]
+    },
+    {
+      "dex": 176,
+      "species": "Togetic",
+      "url": "https://pokemondb.net/sprites/togetic",
+      "files": [
+        {
+          "file": "togetic-flower.png",
+          "label": "Flower Crown"
+        },
+        {
+          "file": "togetic.png",
+          "label": "Togetic"
+        }
+      ]
+    },
+    {
+      "dex": 185,
+      "species": "Sudowoodo",
+      "url": "https://pokemondb.net/sprites/sudowoodo",
+      "files": [
+        {
+          "file": "sudowoodo-f.png",
+          "label": "Female · female"
+        },
+        {
+          "file": "sudowoodo-holiday-2025-f.png",
+          "label": "Holiday 2025 · female"
+        },
+        {
+          "file": "sudowoodo-holiday-2025.png",
+          "label": "Holiday 2025 · male"
+        },
+        {
+          "file": "sudowoodo.png",
+          "label": "Male · male"
+        }
+      ]
+    },
+    {
+      "dex": 194,
+      "species": "Wooper",
+      "url": "https://pokemondb.net/sprites/wooper",
+      "files": [
+        {
+          "file": "wooper-beanie-f.png",
+          "label": "Beanie Hat · female"
+        },
+        {
+          "file": "wooper-beanie.png",
+          "label": "Beanie Hat · male"
+        },
+        {
+          "file": "wooper-f.png",
+          "label": "Female · female"
+        },
+        {
+          "file": "wooper-paldean.png",
+          "label": "Paldean Wooper"
+        },
+        {
+          "file": "wooper.png",
+          "label": "Male · male"
+        }
+      ]
+    },
+    {
+      "dex": 195,
+      "species": "Quagsire",
+      "url": "https://pokemondb.net/sprites/quagsire",
+      "files": [
+        {
+          "file": "quagsire-beanie-f.png",
+          "label": "Beanie Hat · female"
+        },
+        {
+          "file": "quagsire-beanie.png",
+          "label": "Beanie Hat · male"
+        },
+        {
+          "file": "quagsire-f.png",
+          "label": "Female · female"
+        },
+        {
+          "file": "quagsire.png",
+          "label": "Male · male"
+        }
+      ]
+    },
+    {
+      "dex": 196,
+      "species": "Espeon",
+      "url": "https://pokemondb.net/sprites/espeon",
+      "files": [
+        {
+          "file": "espeon-cherry-blossoms.png",
+          "label": "Cherry Blossoms adornment"
+        },
+        {
+          "file": "espeon-day-scarf.png",
+          "label": "Day Scarf"
+        },
+        {
+          "file": "espeon-explorer-hat.png",
+          "label": "Explorer Hat"
+        },
+        {
+          "file": "espeon-flower.png",
+          "label": "Flower Crown"
+        },
+        {
+          "file": "espeon-holiday-hat.png",
+          "label": "Holiday Hat"
+        },
+        {
+          "file": "espeon.png",
+          "label": "Espeon"
+        }
+      ]
+    },
+    {
+      "dex": 197,
+      "species": "Umbreon",
+      "url": "https://pokemondb.net/sprites/umbreon",
+      "files": [
+        {
+          "file": "umbreon-cherry-blossoms.png",
+          "label": "Cherry Blossoms adornment"
+        },
+        {
+          "file": "umbreon-explorer-hat.png",
+          "label": "Explorer Hat"
+        },
+        {
+          "file": "umbreon-flower.png",
+          "label": "Flower Crown"
+        },
+        {
+          "file": "umbreon-holiday-hat.png",
+          "label": "Holiday Hat"
+        },
+        {
+          "file": "umbreon-night-scarf.png",
+          "label": "Night Scarf"
+        },
+        {
+          "file": "umbreon.png",
+          "label": "Umbreon"
+        }
+      ]
+    },
+    {
+      "dex": 199,
+      "species": "Slowking",
+      "url": "https://pokemondb.net/sprites/slowking",
+      "files": [
+        {
+          "file": "slowking-2022.png",
+          "label": "2022 Glasses"
+        },
+        {
+          "file": "slowking-galarian.png",
+          "label": "Galarian Slowking"
+        },
+        {
+          "file": "slowking.png",
+          "label": "Slowking"
+        }
+      ]
+    },
+    {
+      "dex": 201,
+      "species": "Unown",
+      "url": "https://pokemondb.net/sprites/unown",
+      "files": [
+        {
+          "file": "unown-a.png",
+          "label": "A"
+        },
+        {
+          "file": "unown-b.png",
+          "label": "B"
+        },
+        {
+          "file": "unown-c.png",
+          "label": "C"
+        },
+        {
+          "file": "unown-d.png",
+          "label": "D"
+        },
+        {
+          "file": "unown-e.png",
+          "label": "E"
+        },
+        {
+          "file": "unown-em.png",
+          "label": "!"
+        },
+        {
+          "file": "unown-f.png",
+          "label": "F"
+        },
+        {
+          "file": "unown-g.png",
+          "label": "G"
+        },
+        {
+          "file": "unown-h.png",
+          "label": "H"
+        },
+        {
+          "file": "unown-i.png",
+          "label": "I"
+        },
+        {
+          "file": "unown-j.png",
+          "label": "J"
+        },
+        {
+          "file": "unown-k.png",
+          "label": "K"
+        },
+        {
+          "file": "unown-l.png",
+          "label": "L"
+        },
+        {
+          "file": "unown-m.png",
+          "label": "M"
+        },
+        {
+          "file": "unown-n.png",
+          "label": "N"
+        },
+        {
+          "file": "unown-o.png",
+          "label": "O"
+        },
+        {
+          "file": "unown-p.png",
+          "label": "P"
+        },
+        {
+          "file": "unown-q.png",
+          "label": "Q"
+        },
+        {
+          "file": "unown-qm.png",
+          "label": "?"
+        },
+        {
+          "file": "unown-r.png",
+          "label": "R"
+        },
+        {
+          "file": "unown-s.png",
+          "label": "S"
+        },
+        {
+          "file": "unown-t.png",
+          "label": "T"
+        },
+        {
+          "file": "unown-u.png",
+          "label": "U"
+        },
+        {
+          "file": "unown-v.png",
+          "label": "V"
+        },
+        {
+          "file": "unown-w.png",
+          "label": "W"
+        },
+        {
+          "file": "unown-x.png",
+          "label": "X"
+        },
+        {
+          "file": "unown-y.png",
+          "label": "Y"
+        },
+        {
+          "file": "unown-z.png",
+          "label": "Z"
+        }
+      ]
+    },
+    {
+      "dex": 202,
+      "species": "Wobbuffet",
+      "url": "https://pokemondb.net/sprites/wobbuffet",
+      "files": [
+        {
+          "file": "wobbuffet-f.png",
+          "label": "Female · female"
+        },
+        {
+          "file": "wobbuffet-party-hat-f.png",
+          "label": "Party Hat · female"
+        },
+        {
+          "file": "wobbuffet-party-hat.png",
+          "label": "Party Hat · male"
+        },
+        {
+          "file": "wobbuffet.png",
+          "label": "Male · male"
+        }
+      ]
+    },
+    {
+      "dex": 215,
+      "species": "Sneasel",
+      "url": "https://pokemondb.net/sprites/sneasel",
+      "files": [
+        {
+          "file": "sneasel-f.png",
+          "label": "Female · female"
+        },
+        {
+          "file": "sneasel-fashion-f.png",
+          "label": "Fashion Week · female"
+        },
+        {
+          "file": "sneasel-fashion.png",
+          "label": "Fashion Week · male"
+        },
+        {
+          "file": "sneasel-hisuian-f.png",
+          "label": "Hisuian Sneasel · female"
+        },
+        {
+          "file": "sneasel-hisuian.png",
+          "label": "Hisuian Sneasel · male"
+        },
+        {
+          "file": "sneasel.png",
+          "label": "Male · male"
+        }
+      ]
+    },
+    {
+      "dex": 216,
+      "species": "Teddiursa",
+      "url": "https://pokemondb.net/sprites/teddiursa",
+      "files": [
+        {
+          "file": "teddiursa.png",
+          "label": "Teddiursa"
+        }
+      ]
+    },
+    {
+      "dex": 217,
+      "species": "Ursaring",
+      "url": "https://pokemondb.net/sprites/ursaring",
+      "files": [
+        {
+          "file": "ursaring-f.png",
+          "label": "Female · female"
+        },
+        {
+          "file": "ursaring.png",
+          "label": "Male · male"
+        }
+      ]
+    },
+    {
+      "dex": 222,
+      "species": "Corsola",
+      "url": "https://pokemondb.net/sprites/corsola",
+      "files": [
+        {
+          "file": "corsola-galarian.png",
+          "label": "Galarian Corsola"
+        },
+        {
+          "file": "corsola.png",
+          "label": "Corsola"
+        }
+      ]
+    },
+    {
+      "dex": 225,
+      "species": "Delibird",
+      "url": "https://pokemondb.net/sprites/delibird",
+      "files": [
+        {
+          "file": "delibird-holiday.png",
+          "label": "Holiday"
+        },
+        {
+          "file": "delibird.png",
+          "label": "Delibird"
+        }
+      ]
+    },
+    {
+      "dex": 234,
+      "species": "Stantler",
+      "url": "https://pokemondb.net/sprites/stantler",
+      "files": [
+        {
+          "file": "stantler-bells.png",
+          "label": "Holiday"
+        },
+        {
+          "file": "stantler.png",
+          "label": "Stantler"
+        }
+      ]
+    },
+    {
+      "dex": 238,
+      "species": "Smoochum",
+      "url": "https://pokemondb.net/sprites/smoochum",
+      "files": [
+        {
+          "file": "smoochum-bow.png",
+          "label": "Bow"
+        },
+        {
+          "file": "smoochum.png",
+          "label": "Smoochum"
+        }
+      ]
+    },
+    {
+      "dex": 239,
+      "species": "Elekid",
+      "url": "https://pokemondb.net/sprites/elekid",
+      "files": [
+        {
+          "file": "elekid-spark-bracelet.png",
+          "label": "Spark-themed bracelet"
+        },
+        {
+          "file": "elekid.png",
+          "label": "Elekid"
+        }
+      ]
+    },
+    {
+      "dex": 242,
+      "species": "Blissey",
+      "url": "https://pokemondb.net/sprites/blissey",
+      "files": [
+        {
+          "file": "blissey-flower.png",
+          "label": "Flower Crown"
+        },
+        {
+          "file": "blissey.png",
+          "label": "Blissey"
+        }
+      ]
+    },
+    {
+      "dex": 263,
+      "species": "Zigzagoon",
+      "url": "https://pokemondb.net/sprites/zigzagoon",
+      "files": [
+        {
+          "file": "zigzagoon-galarian-meloetta-hat.png",
+          "label": "Galarian Meloetta Hat"
+        },
+        {
+          "file": "zigzagoon-galarian.png",
+          "label": "Galarian Zigzagoon"
+        },
+        {
+          "file": "zigzagoon.png",
+          "label": "Zigzagoon"
+        }
+      ]
+    },
+    {
+      "dex": 265,
+      "species": "Wurmple",
+      "url": "https://pokemondb.net/sprites/wurmple",
+      "files": [
+        {
+          "file": "wurmple-party-hat.png",
+          "label": "Party Hat"
+        },
+        {
+          "file": "wurmple.png",
+          "label": "Wurmple"
+        }
+      ]
+    },
+    {
+      "dex": 281,
+      "species": "Kirlia",
+      "url": "https://pokemondb.net/sprites/kirlia",
+      "files": [
+        {
+          "file": "kirlia-bowler-hat.png",
+          "label": "Bowler Hat"
+        },
+        {
+          "file": "kirlia.png",
+          "label": "Kirlia"
+        }
+      ]
+    },
+    {
+      "dex": 282,
+      "species": "Gardevoir",
+      "url": "https://pokemondb.net/sprites/gardevoir",
+      "files": [
+        {
+          "file": "gardevoir-mega.png",
+          "label": "Mega Gardevoir"
+        },
+        {
+          "file": "gardevoir-meloetta-hat.png",
+          "label": "Meloetta Hat"
+        },
+        {
+          "file": "gardevoir.png",
+          "label": "Gardevoir"
+        }
+      ]
+    },
+    {
+      "dex": 287,
+      "species": "Slakoth",
+      "url": "https://pokemondb.net/sprites/slakoth",
+      "files": [
+        {
+          "file": "slakoth-visor.png",
+          "label": "Visor"
+        },
+        {
+          "file": "slakoth.png",
+          "label": "Slakoth"
+        }
+      ]
+    },
+    {
+      "dex": 288,
+      "species": "Vigoroth",
+      "url": "https://pokemondb.net/sprites/vigoroth",
+      "files": [
+        {
+          "file": "vigoroth-visor.png",
+          "label": "Visor"
+        },
+        {
+          "file": "vigoroth.png",
+          "label": "Vigoroth"
+        }
+      ]
+    },
+    {
+      "dex": 289,
+      "species": "Slaking",
+      "url": "https://pokemondb.net/sprites/slaking",
+      "files": [
+        {
+          "file": "slaking-visor.png",
+          "label": "Visor"
+        },
+        {
+          "file": "slaking.png",
+          "label": "Slaking"
+        }
+      ]
+    },
+    {
+      "dex": 302,
+      "species": "Sableye",
+      "url": "https://pokemondb.net/sprites/sableye",
+      "files": [
+        {
+          "file": "sableye-litwick.png",
+          "label": "Litwick Hat"
+        },
+        {
+          "file": "sableye-mega.png",
+          "label": "Mega Sableye"
+        },
+        {
+          "file": "sableye.png",
+          "label": "Sableye"
+        }
+      ]
+    },
+    {
+      "dex": 330,
+      "species": "Flygon",
+      "url": "https://pokemondb.net/sprites/flygon",
+      "files": [
+        {
+          "file": "flygon-meloetta-hat.png",
+          "label": "Meloetta Hat"
+        },
+        {
+          "file": "flygon.png",
+          "label": "Flygon"
+        }
+      ]
+    },
+    {
+      "dex": 355,
+      "species": "Duskull",
+      "url": "https://pokemondb.net/sprites/duskull",
+      "files": [
+        {
+          "file": "duskull-cempasuchil-crown.png",
+          "label": "Cempasúchil Crown"
+        },
+        {
+          "file": "duskull.png",
+          "label": "Duskull"
+        }
+      ]
+    },
+    {
+      "dex": 356,
+      "species": "Dusclops",
+      "url": "https://pokemondb.net/sprites/dusclops",
+      "files": [
+        {
+          "file": "dusclops-cempasuchil-crown.png",
+          "label": "Cempasúchil Crown"
+        },
+        {
+          "file": "dusclops.png",
+          "label": "Dusclops"
+        }
+      ]
+    },
+    {
+      "dex": 359,
+      "species": "Absol",
+      "url": "https://pokemondb.net/sprites/absol",
+      "files": [
+        {
+          "file": "absol-fashion.png",
+          "label": "Fashion Week"
+        },
+        {
+          "file": "absol-mega.png",
+          "label": "Mega Absol"
+        },
+        {
+          "file": "absol.png",
+          "label": "Absol"
+        }
+      ]
+    },
+    {
+      "dex": 363,
+      "species": "Spheal",
+      "url": "https://pokemondb.net/sprites/spheal",
+      "files": [
+        {
+          "file": "spheal-holiday.png",
+          "label": "Holiday"
+        },
+        {
+          "file": "spheal.png",
+          "label": "Spheal"
+        }
+      ]
+    },
+    {
+      "dex": 387,
+      "species": "Turtwig",
+      "url": "https://pokemondb.net/sprites/turtwig",
+      "files": [
+        {
+          "file": "turtwig-dawn-hat.png",
+          "label": "Dawn's Hat"
+        },
+        {
+          "file": "turtwig-lucas-hat.png",
+          "label": "Lucas's Hat"
+        },
+        {
+          "file": "turtwig.png",
+          "label": "Turtwig"
+        }
+      ]
+    },
+    {
+      "dex": 390,
+      "species": "Chimchar",
+      "url": "https://pokemondb.net/sprites/chimchar",
+      "files": [
+        {
+          "file": "chimchar-dawn-hat.png",
+          "label": "Dawn's Hat"
+        },
+        {
+          "file": "chimchar-lucas-hat.png",
+          "label": "Lucas's Hat"
+        },
+        {
+          "file": "chimchar.png",
+          "label": "Chimchar"
+        }
+      ]
+    },
+    {
+      "dex": 393,
+      "species": "Piplup",
+      "url": "https://pokemondb.net/sprites/piplup",
+      "files": [
+        {
+          "file": "piplup-dawn-hat.png",
+          "label": "Dawn's Hat"
+        },
+        {
+          "file": "piplup-halloween-mischief.png",
+          "label": "Halloween Mischief"
+        },
+        {
+          "file": "piplup-lucas-hat.png",
+          "label": "Lucas's Hat"
+        },
+        {
+          "file": "piplup.png",
+          "label": "Piplup"
+        }
+      ]
+    },
+    {
+      "dex": 403,
+      "species": "Shinx",
+      "url": "https://pokemondb.net/sprites/shinx",
+      "files": [
+        {
+          "file": "shinx-bowler-hat-f.png",
+          "label": "Bowler Hat · female"
+        },
+        {
+          "file": "shinx-bowler-hat.png",
+          "label": "Bowler Hat · male"
+        },
+        {
+          "file": "shinx-f.png",
+          "label": "Female · female"
+        },
+        {
+          "file": "shinx.png",
+          "label": "Male · male"
+        }
+      ]
+    },
+    {
+      "dex": 413,
+      "species": "Wormadam",
+      "url": "https://pokemondb.net/sprites/wormadam",
+      "files": [
+        {
+          "file": "wormadam-plant.png",
+          "label": "Plant Cloak"
+        },
+        {
+          "file": "wormadam-sandy.png",
+          "label": "Sandy Cloak"
+        },
+        {
+          "file": "wormadam-trash.png",
+          "label": "Trash Cloak"
+        }
+      ]
+    },
+    {
+      "dex": 426,
+      "species": "Drifblim",
+      "url": "https://pokemondb.net/sprites/drifblim",
+      "files": [
+        {
+          "file": "drifblim-halloween-mischief.png",
+          "label": "Halloween Mischief"
+        },
+        {
+          "file": "drifblim.png",
+          "label": "Drifblim"
+        }
+      ]
+    },
+    {
+      "dex": 427,
+      "species": "Buneary",
+      "url": "https://pokemondb.net/sprites/buneary",
+      "files": [
+        {
+          "file": "buneary-flower.png",
+          "label": "Flower Crown"
+        },
+        {
+          "file": "buneary.png",
+          "label": "Buneary"
+        }
+      ]
+    },
+    {
+      "dex": 428,
+      "species": "Lopunny",
+      "url": "https://pokemondb.net/sprites/lopunny",
+      "files": [
+        {
+          "file": "lopunny-flower.png",
+          "label": "Flower Crown"
+        },
+        {
+          "file": "lopunny-mega.png",
+          "label": "Mega Lopunny"
+        },
+        {
+          "file": "lopunny.png",
+          "label": "Lopunny"
+        }
+      ]
+    },
+    {
+      "dex": 440,
+      "species": "Happiny",
+      "url": "https://pokemondb.net/sprites/happiny",
+      "files": [
+        {
+          "file": "happiny-flower.png",
+          "label": "Flower Crown"
+        },
+        {
+          "file": "happiny.png",
+          "label": "Happiny"
+        }
+      ]
+    },
+    {
+      "dex": 453,
+      "species": "Croagunk",
+      "url": "https://pokemondb.net/sprites/croagunk",
+      "files": [
+        {
+          "file": "croagunk-cap-f.png",
+          "label": "Backwards Cap · female"
+        },
+        {
+          "file": "croagunk-cap.png",
+          "label": "Backwards Cap · male"
+        },
+        {
+          "file": "croagunk-f.png",
+          "label": "Female · female"
+        },
+        {
+          "file": "croagunk.png",
+          "label": "Male · male"
+        }
+      ]
+    },
+    {
+      "dex": 454,
+      "species": "Toxicroak",
+      "url": "https://pokemondb.net/sprites/toxicroak",
+      "files": [
+        {
+          "file": "toxicroak-cap-f.png",
+          "label": "Cap · female"
+        },
+        {
+          "file": "toxicroak-cap.png",
+          "label": "Cap · male"
+        },
+        {
+          "file": "toxicroak-f.png",
+          "label": "Female · female"
+        },
+        {
+          "file": "toxicroak.png",
+          "label": "Male · male"
+        }
+      ]
+    },
+    {
+      "dex": 466,
+      "species": "Electivire",
+      "url": "https://pokemondb.net/sprites/electivire",
+      "files": [
+        {
+          "file": "electivire-spark-bracelet.png",
+          "label": "Spark-themed bracelet"
+        },
+        {
+          "file": "electivire.png",
+          "label": "Electivire"
+        }
+      ]
+    },
+    {
+      "dex": 468,
+      "species": "Togekiss",
+      "url": "https://pokemondb.net/sprites/togekiss",
+      "files": [
+        {
+          "file": "togekiss-flower.png",
+          "label": "Flower Crown"
+        },
+        {
+          "file": "togekiss.png",
+          "label": "Togekiss"
+        }
+      ]
+    },
+    {
+      "dex": 470,
+      "species": "Leafeon",
+      "url": "https://pokemondb.net/sprites/leafeon",
+      "files": [
+        {
+          "file": "leafeon-cherry-blossoms.png",
+          "label": "Cherry Blossoms adornment"
+        },
+        {
+          "file": "leafeon-explorer-hat.png",
+          "label": "Explorer Hat"
+        },
+        {
+          "file": "leafeon-flower.png",
+          "label": "Flower Crown"
+        },
+        {
+          "file": "leafeon-holiday-hat.png",
+          "label": "Holiday Hat"
+        },
+        {
+          "file": "leafeon.png",
+          "label": "Leafeon"
+        }
+      ]
+    },
+    {
+      "dex": 471,
+      "species": "Glaceon",
+      "url": "https://pokemondb.net/sprites/glaceon",
+      "files": [
+        {
+          "file": "glaceon-cherry-blossoms.png",
+          "label": "Cherry Blossoms adornment"
+        },
+        {
+          "file": "glaceon-explorer-hat.png",
+          "label": "Explorer Hat"
+        },
+        {
+          "file": "glaceon-flower.png",
+          "label": "Flower Crown"
+        },
+        {
+          "file": "glaceon-holiday-hat.png",
+          "label": "Holiday Hat"
+        },
+        {
+          "file": "glaceon-holiday.png",
+          "label": "Undersea Holiday"
+        },
+        {
+          "file": "glaceon.png",
+          "label": "Glaceon"
+        }
+      ]
+    },
+    {
+      "dex": 477,
+      "species": "Dusknoir",
+      "url": "https://pokemondb.net/sprites/dusknoir",
+      "files": [
+        {
+          "file": "dusknoir-cempasuchil-crown.png",
+          "label": "Cempasúchil Crown"
+        },
+        {
+          "file": "dusknoir.png",
+          "label": "Dusknoir"
+        }
+      ]
+    },
+    {
+      "dex": 522,
+      "species": "Blitzle",
+      "url": "https://pokemondb.net/sprites/blitzle",
+      "files": [
+        {
+          "file": "blitzle-fashion.png",
+          "label": "Fashion Week"
+        },
+        {
+          "file": "blitzle.png",
+          "label": "Blitzle"
+        }
+      ]
+    },
+    {
+      "dex": 546,
+      "species": "Cottonee",
+      "url": "https://pokemondb.net/sprites/cottonee",
+      "files": [
+        {
+          "file": "cottonee-flower.png",
+          "label": "Flower Crown"
+        },
+        {
+          "file": "cottonee.png",
+          "label": "Cottonee"
+        }
+      ]
+    },
+    {
+      "dex": 547,
+      "species": "Whimsicott",
+      "url": "https://pokemondb.net/sprites/whimsicott",
+      "files": [
+        {
+          "file": "whimsicott-flower.png",
+          "label": "Flower Crown"
+        },
+        {
+          "file": "whimsicott.png",
+          "label": "Whimsicott"
+        }
+      ]
+    },
+    {
+      "dex": 572,
+      "species": "Minccino",
+      "url": "https://pokemondb.net/sprites/minccino",
+      "files": [
+        {
+          "file": "minccino-fashion.png",
+          "label": "Fashion Week"
+        },
+        {
+          "file": "minccino.png",
+          "label": "Minccino"
+        }
+      ]
+    },
+    {
+      "dex": 573,
+      "species": "Cinccino",
+      "url": "https://pokemondb.net/sprites/cinccino",
+      "files": [
+        {
+          "file": "cinccino-fashion.png",
+          "label": "Fashion Week"
+        },
+        {
+          "file": "cinccino.png",
+          "label": "Cinccino"
+        }
+      ]
+    },
+    {
+      "dex": 613,
+      "species": "Cubchoo",
+      "url": "https://pokemondb.net/sprites/cubchoo",
+      "files": [
+        {
+          "file": "cubchoo-holiday.png",
+          "label": "Holiday"
+        },
+        {
+          "file": "cubchoo.png",
+          "label": "Cubchoo"
+        }
+      ]
+    },
+    {
+      "dex": 614,
+      "species": "Beartic",
+      "url": "https://pokemondb.net/sprites/beartic",
+      "files": [
+        {
+          "file": "beartic-holiday.png",
+          "label": "Holiday"
+        },
+        {
+          "file": "beartic.png",
+          "label": "Beartic"
+        }
+      ]
+    },
+    {
+      "dex": 656,
+      "species": "Froakie",
+      "url": "https://pokemondb.net/sprites/froakie",
+      "files": [
+        {
+          "file": "froakie-halloween.png",
+          "label": "Halloween"
+        },
+        {
+          "file": "froakie.png",
+          "label": "Froakie"
+        }
+      ]
+    },
+    {
+      "dex": 657,
+      "species": "Frogadier",
+      "url": "https://pokemondb.net/sprites/frogadier",
+      "files": [
+        {
+          "file": "frogadier-halloween.png",
+          "label": "Halloween"
+        },
+        {
+          "file": "frogadier.png",
+          "label": "Frogadier"
+        }
+      ]
+    },
+    {
+      "dex": 658,
+      "species": "Greninja",
+      "url": "https://pokemondb.net/sprites/greninja",
+      "files": [
+        {
+          "file": "greninja-halloween.png",
+          "label": "Halloween"
+        },
+        {
+          "file": "greninja.png",
+          "label": "Greninja"
+        }
+      ]
+    },
+    {
+      "dex": 666,
+      "species": "Vivillon",
+      "url": "https://pokemondb.net/sprites/vivillon",
+      "files": [
+        {
+          "file": "vivillon-archipelago.png",
+          "label": "Archipelago Pattern"
+        },
+        {
+          "file": "vivillon-continental.png",
+          "label": "Continental Pattern"
+        },
+        {
+          "file": "vivillon-elegant.png",
+          "label": "Elegant Pattern"
+        },
+        {
+          "file": "vivillon-fancy.png",
+          "label": "Fancy Pattern"
+        },
+        {
+          "file": "vivillon-garden.png",
+          "label": "Garden Pattern"
+        },
+        {
+          "file": "vivillon-high-plains.png",
+          "label": "High-plains Pattern"
+        },
+        {
+          "file": "vivillon-icy-snow.png",
+          "label": "Icy-snow Pattern"
+        },
+        {
+          "file": "vivillon-jungle.png",
+          "label": "Jungle Pattern"
+        },
+        {
+          "file": "vivillon-marine.png",
+          "label": "Marine Pattern"
+        },
+        {
+          "file": "vivillon-meadow.png",
+          "label": "Meadow Pattern"
+        },
+        {
+          "file": "vivillon-modern.png",
+          "label": "Modern Pattern"
+        },
+        {
+          "file": "vivillon-monsoon.png",
+          "label": "Monsoon Pattern"
+        },
+        {
+          "file": "vivillon-ocean.png",
+          "label": "Ocean Pattern"
+        },
+        {
+          "file": "vivillon-pokeball.png",
+          "label": "Pokeball Pattern"
+        },
+        {
+          "file": "vivillon-polar.png",
+          "label": "Polar Pattern"
+        },
+        {
+          "file": "vivillon-river.png",
+          "label": "River Pattern"
+        },
+        {
+          "file": "vivillon-sandstorm.png",
+          "label": "Sandstorm Pattern"
+        },
+        {
+          "file": "vivillon-savanna.png",
+          "label": "Savanna Pattern"
+        },
+        {
+          "file": "vivillon-sun.png",
+          "label": "Sun Pattern"
+        },
+        {
+          "file": "vivillon-tundra.png",
+          "label": "Tundra Pattern"
+        }
+      ]
+    },
+    {
+      "dex": 676,
+      "species": "Furfrou",
+      "url": "https://pokemondb.net/sprites/furfrou",
+      "files": [
+        {
+          "file": "furfrou-dandy.png",
+          "label": "Dandy Trim"
+        },
+        {
+          "file": "furfrou-debutante.png",
+          "label": "Debutante Trim"
+        },
+        {
+          "file": "furfrou-diamond.png",
+          "label": "Diamond Trim"
+        },
+        {
+          "file": "furfrou-heart.png",
+          "label": "Heart Trim"
+        },
+        {
+          "file": "furfrou-kabuki.png",
+          "label": "Kabuki Trim"
+        },
+        {
+          "file": "furfrou-la-reine.png",
+          "label": "La Reine Trim"
+        },
+        {
+          "file": "furfrou-matron.png",
+          "label": "Matron Trim"
+        },
+        {
+          "file": "furfrou-natural.png",
+          "label": "Natural Form"
+        },
+        {
+          "file": "furfrou-pharaoh.png",
+          "label": "Pharaoh Trim"
+        },
+        {
+          "file": "furfrou-star.png",
+          "label": "Star Trim"
+        }
+      ]
+    },
+    {
+      "dex": 700,
+      "species": "Sylveon",
+      "url": "https://pokemondb.net/sprites/sylveon",
+      "files": [
+        {
+          "file": "sylveon-cherry-blossoms.png",
+          "label": "Cherry Blossoms adornment"
+        },
+        {
+          "file": "sylveon-explorer-hat.png",
+          "label": "Explorer Hat"
+        },
+        {
+          "file": "sylveon-flower.png",
+          "label": "Flower Crown"
+        },
+        {
+          "file": "sylveon-holiday-hat.png",
+          "label": "Holiday Hat"
+        },
+        {
+          "file": "sylveon.png",
+          "label": "Sylveon"
+        }
+      ]
+    },
+    {
+      "dex": 702,
+      "species": "Dedenne",
+      "url": "https://pokemondb.net/sprites/dedenne",
+      "files": [
+        {
+          "file": "dedenne-holiday.png",
+          "label": "Holiday"
+        },
+        {
+          "file": "dedenne.png",
+          "label": "Dedenne"
+        }
+      ]
+    },
+    {
+      "dex": 710,
+      "species": "Pumpkaboo",
+      "url": "https://pokemondb.net/sprites/pumpkaboo",
+      "files": [
+        {
+          "file": "pumpkaboo-average-spooky-festival.png",
+          "label": "Spooky Festival - Average Size"
+        },
+        {
+          "file": "pumpkaboo-average.png",
+          "label": "Average Size"
+        },
+        {
+          "file": "pumpkaboo-large-spooky-festival.png",
+          "label": "Spooky Festival - Large Size"
+        },
+        {
+          "file": "pumpkaboo-large.png",
+          "label": "Large Size"
+        },
+        {
+          "file": "pumpkaboo-small-spooky-festival.png",
+          "label": "Spooky Festival - Small Size"
+        },
+        {
+          "file": "pumpkaboo-small.png",
+          "label": "Small Size"
+        },
+        {
+          "file": "pumpkaboo-super-spooky-festival.png",
+          "label": "Spooky Festival - Super Size"
+        },
+        {
+          "file": "pumpkaboo-super.png",
+          "label": "Super Size"
+        }
+      ]
+    },
+    {
+      "dex": 711,
+      "species": "Gourgeist",
+      "url": "https://pokemondb.net/sprites/gourgeist",
+      "files": [
+        {
+          "file": "gourgeist-average-spooky-festival.png",
+          "label": "Spooky Festival - Average Size"
+        },
+        {
+          "file": "gourgeist-average.png",
+          "label": "Average Size"
+        },
+        {
+          "file": "gourgeist-large-spooky-festival.png",
+          "label": "Spooky Festival - Large Size"
+        },
+        {
+          "file": "gourgeist-large.png",
+          "label": "Large Size"
+        },
+        {
+          "file": "gourgeist-small-spooky-festival.png",
+          "label": "Spooky Festival - Small Size"
+        },
+        {
+          "file": "gourgeist-small.png",
+          "label": "Small Size"
+        },
+        {
+          "file": "gourgeist-super-spooky-festival.png",
+          "label": "Spooky Festival - Super Size"
+        },
+        {
+          "file": "gourgeist-super.png",
+          "label": "Super Size"
+        }
+      ]
+    },
+    {
+      "dex": 714,
+      "species": "Noibat",
+      "url": "https://pokemondb.net/sprites/noibat",
+      "files": [
+        {
+          "file": "noibat.png",
+          "label": "Noibat"
+        }
+      ]
+    },
+    {
+      "dex": 715,
+      "species": "Noivern",
+      "url": "https://pokemondb.net/sprites/noivern",
+      "files": [
+        {
+          "file": "noivern.png",
+          "label": "Noivern"
+        }
+      ]
+    },
+    {
+      "dex": 722,
+      "species": "Rowlet",
+      "url": "https://pokemondb.net/sprites/rowlet",
+      "files": [
+        {
+          "file": "rowlet-halloween.png",
+          "label": "Halloween"
+        },
+        {
+          "file": "rowlet.png",
+          "label": "Rowlet"
+        }
+      ]
+    },
+    {
+      "dex": 723,
+      "species": "Dartrix",
+      "url": "https://pokemondb.net/sprites/dartrix",
+      "files": [
+        {
+          "file": "dartrix-halloween.png",
+          "label": "Halloween"
+        },
+        {
+          "file": "dartrix.png",
+          "label": "Dartrix"
+        }
+      ]
+    },
+    {
+      "dex": 724,
+      "species": "Decidueye",
+      "url": "https://pokemondb.net/sprites/decidueye",
+      "files": [
+        {
+          "file": "decidueye-halloween.png",
+          "label": "Halloween"
+        },
+        {
+          "file": "decidueye-hisuian.png",
+          "label": "Hisuian Decidueye"
+        },
+        {
+          "file": "decidueye.png",
+          "label": "Decidueye"
+        }
+      ]
+    },
+    {
+      "dex": 737,
+      "species": "Charjabug",
+      "url": "https://pokemondb.net/sprites/charjabug",
+      "files": [
+        {
+          "file": "charjabug-holiday-2025.png",
+          "label": "Holiday 2025"
+        },
+        {
+          "file": "charjabug.png",
+          "label": "Charjabug"
+        }
+      ]
+    },
+    {
+      "dex": 738,
+      "species": "Vikavolt",
+      "url": "https://pokemondb.net/sprites/vikavolt",
+      "files": [
+        {
+          "file": "vikavolt-holiday-2025.png",
+          "label": "Holiday 2025"
+        },
+        {
+          "file": "vikavolt.png",
+          "label": "Vikavolt"
+        }
+      ]
+    },
+    {
+      "dex": 741,
+      "species": "Oricorio",
+      "url": "https://pokemondb.net/sprites/oricorio",
+      "files": [
+        {
+          "file": "oricorio-baile.png",
+          "label": "Baile Style"
+        },
+        {
+          "file": "oricorio-pau.png",
+          "label": "Pa'u Style"
+        },
+        {
+          "file": "oricorio-pom-pom.png",
+          "label": "Pom-Pom Style"
+        },
+        {
+          "file": "oricorio-sensu.png",
+          "label": "Sensu Style"
+        }
+      ]
+    },
+    {
+      "dex": 760,
+      "species": "Bewear",
+      "url": "https://pokemondb.net/sprites/bewear",
+      "files": [
+        {
+          "file": "bewear-cape.png",
+          "label": "Wilderness Cape"
+        },
+        {
+          "file": "bewear.png",
+          "label": "Bewear"
+        }
+      ]
+    },
+    {
+      "dex": 831,
+      "species": "Wooloo",
+      "url": "https://pokemondb.net/sprites/wooloo",
+      "files": [
+        {
+          "file": "wooloo-holiday.png",
+          "label": "Holiday"
+        },
+        {
+          "file": "wooloo.png",
+          "label": "Wooloo"
+        }
+      ]
+    },
+    {
+      "dex": 832,
+      "species": "Dubwool",
+      "url": "https://pokemondb.net/sprites/dubwool",
+      "files": [
+        {
+          "file": "dubwool-holiday.png",
+          "label": "Holiday"
+        },
+        {
+          "file": "dubwool.png",
+          "label": "Dubwool"
+        }
+      ]
+    },
+    {
+      "dex": 870,
+      "species": "Falinks",
+      "url": "https://pokemondb.net/sprites/falinks",
+      "files": [
+        {
+          "file": "falinks-train.png",
+          "label": "Train"
+        },
+        {
+          "file": "falinks.png",
+          "label": "Falinks"
+        }
+      ]
+    },
+    {
+      "dex": 901,
+      "species": "Ursaluna",
+      "url": "https://pokemondb.net/sprites/ursaluna",
+      "files": [
+        {
+          "file": "ursaluna.png",
+          "label": "Ursaluna"
+        }
+      ]
+    },
+    {
+      "dex": 907,
+      "species": "Floragato",
+      "url": "https://pokemondb.net/sprites/floragato",
+      "files": [
+        {
+          "file": "floragato-likos-hat.png",
+          "label": "Likos's hat"
+        },
+        {
+          "file": "floragato.png",
+          "label": "Floragato"
+        }
+      ]
+    },
+    {
+      "dex": 999,
+      "species": "Gimmighoul",
+      "url": "https://pokemondb.net/sprites/gimmighoul",
+      "files": [
+        {
+          "file": "gimmighoul-coin.png",
+          "label": "9th anniversary coin"
+        },
+        {
+          "file": "gimmighoul.png",
+          "label": "Roaming Form"
+        }
+      ]
+    }
+  ]
+}

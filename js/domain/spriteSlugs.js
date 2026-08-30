@@ -23,24 +23,28 @@
   const SPRITE_SOURCE_REGISTRY=Object.freeze([
     Object.freeze({id:'pokeapi',name:'PokéAPI sprite repository',homepage:'https://pokeapi.co/',role:'Base, form, regional, and gender sprites',fallback:true,hosts:Object.freeze(['raw.githubusercontent.com'])}),
     Object.freeze({id:'pokemondb-home',name:'Pokémon Database',homepage:'https://pokemondb.net/',role:'Pokémon HOME form and gender fallback renders',fallback:true,hosts:Object.freeze(['img.pokemondb.net'])}),
-    Object.freeze({id:'pokemondb-go',name:'Pokémon Database GO sprites',homepage:'https://pokemondb.net/',role:'Exact mapped Pokémon GO costume sprites',fallback:true,hosts:Object.freeze(['img.pokemondb.net'])}),
-    Object.freeze({id:'weserv',name:'weserv.nl image proxy',homepage:'https://images.weserv.nl/',role:'CORS image proxy used only for local optical-bound detection and exports',fallback:false,hosts:Object.freeze(['images.weserv.nl'])})
+    Object.freeze({id:'pokemondb-go',name:'Pokémon Database GO sprites',homepage:'https://pokemondb.net/',role:'Reviewed source for self-hosted exact Pokémon GO costume sprites',fallback:false,hosts:Object.freeze([]),localPrefix:'assets/sprites/go/'}),
+    Object.freeze({id:'weserv',name:'weserv.nl image proxy',homepage:'https://images.weserv.nl/',role:'Legacy export transport restricted to validated Pokémon Database sprite targets',fallback:false,hosts:Object.freeze(['images.weserv.nl'])})
   ]);
   const CANONICAL_SPRITE_OVERRIDES=Object.freeze({});
   const UNRESOLVED_SPRITE_KEYS=Object.freeze([
-    'Pikachu (Sari)','Pikachu (Halloween 2022)','Pikachu (Holiday 2022)',
+    'Pikachu (Halloween 2022)','Pikachu (Holiday 2022)',
     'Pikachu (Victor)','Pikachu (Gloria)','Pikachu (Halloween 2024)',
-    'Pikachu (Holiday 2024)','Pikachu (GO Fest 2023)','Pikachu (GO Fest 2024)'
+    'Pikachu (Holiday 2024)','Pikachu (GO Fest 2023)','Pikachu (GO Fest 2024)',
+    "Pikachu (Professor Willow's Assistant)",'Pikachu (Cosmog Spacesuit)','Pikachu (Worlds 2026)'
   ]);
   const unresolvedSpriteLookup=new Set(UNRESOLVED_SPRITE_KEYS.map(normalizeSpriteKey));
   function canonicalSpriteOverride(catalogId=''){
     return CANONICAL_SPRITE_OVERRIDES[String(catalogId||'')]||null;
   }
   function isUnresolvedSpriteKey(value=''){
-    return unresolvedSpriteLookup.has(normalizeSpriteKey(value));
+    const reviewed=root.costumeSpriteCatalog?.resolution?.({name:value});
+    return reviewed?.knownVariant?reviewed.status==='unavailable':unresolvedSpriteLookup.has(normalizeSpriteKey(value));
   }
   function spriteSourceForUrl(value=''){
-    let host='';try{host=new URL(String(value||'')).hostname;}catch{return null;}
+    const raw=String(value||'').replace(/^\.\//,'');
+    if(raw.startsWith('assets/sprites/go/'))return SPRITE_SOURCE_REGISTRY.find(source=>source.id==='pokemondb-go')||null;
+    let host='';try{host=new URL(raw).hostname;}catch{return null;}
     return SPRITE_SOURCE_REGISTRY.find(source=>source.hosts.includes(host))||null;
   }
   const REGIONAL_SLUG_MAP={A:'alolan',G:'galarian',H:'hisuian',P:'paldean'};
@@ -101,13 +105,40 @@
     const withoutRegion=regional?regional[1]:display;
     return withoutRegion.replace(/\s*\([^)]*\)\s*$/,'').trim()||display;
   }
-  function publicSpriteUrls(name='',gender=''){
+  let publicDexDatabase=null,publicDexLookup=null;
+  function publicSpriteDex(name='',database=global.POGO_TRADE_DB){
+    const generated=root.publicPokemonDex?.dex?.(name)||0;
+    if(generated)return generated;
+    if(database!==publicDexDatabase||!publicDexLookup){
+      publicDexDatabase=database;publicDexLookup=new Map();
+      const add=entry=>{
+        const no=Number.parseInt(entry?.no,10);if(!Number.isInteger(no)||no<=0)return;
+        for(const label of [entry.name,entry.displayName])if(label)publicDexLookup.set(normalizeSpriteKey(label),no);
+      };
+      if(database&&typeof database==='object')for(const list of [database.wishlist,database.dynamax,database.gmax,database.gigantamax,database.costumes])for(const entry of Array.isArray(list)?list:[])add(entry);
+      for(const entry of root.pokemonCatalog?.verifiedMissingEntries||[])add(entry);
+    }
+    return publicDexLookup.get(normalizeSpriteKey(name))||0;
+  }
+  function publicSpriteUrls(name='',gender='',no=0){
     const display=publicSpriteDisplayName(name),base=publicSpriteBaseName(display),urls=[];
+    const reviewed=root.costumeSpriteCatalog?.resolution?.({names:[name,display],gender});
+    if(reviewed?.knownVariant)return reviewed.urls;
+    const dex=Number.parseInt(no,10);
+    const isPlainSpecies=normalizeSpriteKey(display)===normalizeSpriteKey(base);
+    const pushPokeapi=(candidateGender='')=>{
+      if(!Number.isInteger(dex)||dex<=0||!isPlainSpecies)return;
+      const genderPath=candidateGender==='f'?'female/':'';
+      const url=`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${genderPath}${dex}.png`;
+      if(spriteSourceForUrl(url)?.id==='pokeapi'&&!urls.includes(url))urls.push(url);
+    };
     const push=(candidate,candidateGender='')=>{
       const slug=pokemondbSlug(candidate,candidate,candidateGender);
       const url=slug?`https://img.pokemondb.net/sprites/home/normal/${slug}.png`:'';
       if(url&&spriteSourceForUrl(url)?.id==='pokemondb-home'&&!urls.includes(url))urls.push(url);
     };
+    if(gender==='f')pushPokeapi('f');
+    pushPokeapi();
     if(gender==='f')push(display,'f');
     push(display);
     if(base!==display){
@@ -133,6 +164,7 @@
     PUBLIC_VIVILLON_PATTERNS,
     publicSpriteDisplayName,
     publicSpriteBaseName,
+    publicSpriteDex,
     publicSpriteUrls
   });
 })(window);

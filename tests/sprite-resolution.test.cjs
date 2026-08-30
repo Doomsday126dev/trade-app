@@ -7,9 +7,15 @@ const vm=require('node:vm');
 const root=path.join(__dirname,'..');
 const html=require('../scripts/lib/frontend-source.cjs').readFrontendSource(root);
 const sw=readFileSync(path.join(root,'sw.js'),'utf8');
+const publicDexRuntime=readFileSync(path.join(root,'js/domain/publicPokemonDex.js'),'utf8');
+const opticalRuntime=readFileSync(path.join(root,'js/app/publicShareApp.js'),'utf8');
 const window={URL};
+vm.runInNewContext(publicDexRuntime,{window,URL,Object,Map});
 vm.runInNewContext(readFileSync(path.join(root,'js/domain/spriteSlugs.js'),'utf8'),{window,URL});
+vm.runInNewContext(readFileSync(path.join(root,'js/domain/costumeSpriteCatalog.js'),'utf8'),{window,URL,Object,Map});
 const sprites=window.PogoDomain.spriteSlugs;
+const dataWindow={};
+vm.runInNewContext(readFileSync(path.join(root,'data.js'),'utf8'),{window:dataWindow});
 
 function applicationFunction(name,nextName){
   const start=html.indexOf(`function ${name}`),end=html.indexOf(`function ${nextName}`,start);
@@ -21,17 +27,31 @@ test('runtime sprite registry contains only approved served sources',()=>{
   const ids=Array.from(sprites.SPRITE_SOURCE_REGISTRY,source=>source.id);
   assert.deepEqual(ids,['pokeapi','pokemondb-home','pokemondb-go','weserv']);
   assert.equal(new Set(ids).size,ids.length);
-  for(const source of sprites.SPRITE_SOURCE_REGISTRY){assert.match(source.homepage,/^https:\/\//);assert.ok(source.role);assert.ok(source.hosts.length);}
+  for(const source of sprites.SPRITE_SOURCE_REGISTRY){assert.match(source.homepage,/^https:\/\//);assert.ok(source.role);assert.ok(source.hosts.length||source.localPrefix);}
   for(const host of ['raw.githubusercontent.com','images.weserv.nl','img.pokemondb.net'])assert.match(sw,new RegExp(`'${host.replaceAll('.','\\.')}'`));
   assert.doesNotMatch(sw,/cdn08|pokemongohub|serebii|PokeMiners/i);
 });
 
 test('anonymous public shares resolve approved form-aware sprites without private catalog data',()=>{
+  assert.equal(window.PogoDomain.publicPokemonDex.size,937);
+  assert.doesNotMatch(publicDexRuntime,/Doomsday126|Ghyslaine|friendCode|"users"/);
+  assert.ok(Buffer.byteLength(publicDexRuntime)<30000,'public dex should stay compact');
   assert.deepEqual(Array.from(sprites.publicSpriteUrls('Blipbug')),['https://img.pokemondb.net/sprites/home/normal/blipbug.png']);
-  assert.deepEqual(Array.from(sprites.publicSpriteUrls('Garden')),['https://img.pokemondb.net/sprites/home/normal/vivillon-garden.png','https://img.pokemondb.net/sprites/home/normal/vivillon.png']);
+  assert.deepEqual(Array.from(sprites.publicSpriteUrls('Snom','',872)),[
+    'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/872.png',
+    'https://img.pokemondb.net/sprites/home/normal/snom.png'
+  ]);
+  assert.equal(sprites.publicSpriteDex('Snom',dataWindow.POGO_TRADE_DB),872);
+  assert.equal(window.PogoDomain.publicPokemonDex.dex('Snom'),872);
+  assert.equal(window.PogoDomain.publicPokemonDex.dex('Pikachu (Worlds 2026)'),25);
+  assert.deepEqual(Array.from(sprites.publicSpriteUrls('Garden')),['assets/sprites/go/vivillon-garden.png']);
   assert.deepEqual(Array.from(sprites.publicSpriteUrls('H-Avalugg')),['https://img.pokemondb.net/sprites/home/normal/avalugg-hisuian.png','https://img.pokemondb.net/sprites/home/normal/avalugg.png']);
   assert.deepEqual(Array.from(sprites.publicSpriteUrls('Salandit','f')),['https://img.pokemondb.net/sprites/home/normal/salandit-female.png','https://img.pokemondb.net/sprites/home/normal/salandit.png']);
-  assert.equal(sprites.publicSpriteUrls('Garden').every(url=>sprites.spriteSourceForUrl(url)?.id==='pokemondb-home'),true);
+  assert.equal(sprites.publicSpriteUrls('Garden').every(url=>sprites.spriteSourceForUrl(url)?.id==='pokemondb-go'),true);
+  assert.deepEqual(Array.from(sprites.publicSpriteUrls('Pikachu (Sari)')),['assets/sprites/go/pikachu-saree.png']);
+  assert.deepEqual(Array.from(sprites.publicSpriteUrls('Pikachu (Worlds 2025)','f')),['assets/sprites/go/pikachu-world-champs-2025-f.png','assets/sprites/go/pikachu-world-champs-2025.png']);
+  assert.deepEqual(Array.from(sprites.publicSpriteUrls('Pikachu (Worlds 2026)')),[]);
+  assert.equal(sprites.spriteSourceForUrl('assets/sprites/go/pikachu-world-champs-2025.png')?.id,'pokemondb-go');
 });
 
 test('runtime URL validation is path constrained and rejects removed research hosts',()=>{
@@ -44,7 +64,9 @@ test('runtime URL validation is path constrained and rejects removed research ho
     'https://img.pokemondb.net/sprites/home/normal/pikachu.png',
     'https://images.weserv.nl/?url=img.pokemondb.net%2Fsprites%2Fhome%2Fnormal%2Fpikachu.png',
     'assets/max-cloud.svg',
-    'https://doomsday126dev.github.io/trade-app/assets/max-cloud.svg'
+    'https://doomsday126dev.github.io/trade-app/assets/max-cloud.svg',
+    'assets/sprites/go/pikachu-world-champs-2025.png',
+    'https://doomsday126dev.github.io/trade-app/assets/sprites/go/pikachu-world-champs-2025.png'
   ])assert.equal(approved(value),true,value);
   for(const value of [
     'https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/pikachu.png',
@@ -61,17 +83,27 @@ test('stored or guessed research URLs cannot enter the render or export chain',(
   assert.equal(Object.keys(sprites.CANONICAL_SPRITE_OVERRIDES).length,0);
   assert.equal(sprites.canonicalSpriteOverride('pokemon:25:costume:PIKACHU_WCS_2025'),null);
   const entry=applicationFunction('entrySpriteUrl','spriteUrl');
+  assert.match(entry,/if\(reviewed\.knownVariant\)return reviewed\.urls\[0\]\|\|null/);
   assert.match(entry,/if\(isApprovedRuntimeSpriteUrl\(storedUrl\)\)return storedUrl/);
   assert.match(html,/const approvedOverride=isApprovedRuntimeSpriteUrl\(e\.spriteUrl\)\?e\.spriteUrl:''/);
-  assert.doesNotMatch(html,/const GO_COSTUME_SPRITE_SLUGS|POKEMINERS_SPRITE_BASE|SEREBII_SPRITE_BASE|cdn08\.net/);
+  assert.doesNotMatch(html,/const GO_COSTUME_SPRITE_SLUGS|POKEMONDB_GO_COSTUME_ALIASES|pokemondbGoCostumeUrl|POKEMINERS_SPRITE_BASE|SEREBII_SPRITE_BASE|cdn08\.net/);
 });
 
-test('unresolved costumes are marked and excluded from guessed costume aliases',()=>{
+test('unresolved costumes stop at the reviewed catalog boundary',()=>{
   for(const name of sprites.UNRESOLVED_SPRITE_KEYS)assert.equal(sprites.isUnresolvedSpriteKey(name),true);
   const resolver=html.slice(html.indexOf('function spriteUrl'),html.indexOf('function spriteFallbackChain'));
-  assert.match(resolver,/if\(context\.unresolved\)/);
-  assert.match(resolver,/const plainName=String\(lookupName/);
-  assert.doesNotMatch(resolver,/pokemondbGoCostumeUrl\(key,[\s\S]*allowPattern:true/);
+  assert.match(resolver,/if\(reviewed\.knownVariant\)return reviewed\.urls\[0\]\|\|null/);
+  assert.doesNotMatch(resolver,/plainName|allowPattern|pokemondbGoCostumeUrl/);
+  const fallback=html.slice(html.indexOf('function spriteFallbackChain'),html.indexOf('// ── PER-IMAGE'));
+  assert.match(fallback,/if\(reviewed\.knownVariant\)\{for\(const url of reviewed\.urls\)push\(url\);return urls;\}/);
+  const image=html.slice(html.indexOf('function spriteImg'),html.indexOf('function validateSpriteLoad'));
+  assert.match(image,/knownUnavailable=context\.reviewed\?\.status==='unavailable'/);
+  assert.match(image,/role="img" aria-label=/);
+  const board=html.slice(html.indexOf('function renderSpecialBoard'),html.indexOf('async function addSpecialEntry'));
+  assert.match(board,/spriteImg\(e\.no,24,'sb-row-sprite'/);
+  assert.doesNotMatch(board,/🎮/);
+  const exportFallback=html.slice(html.indexOf('function drawSpriteFallback'),html.indexOf('function maxCrownSvg'));
+  assert.match(exportFallback,/reviewed\.knownVariant\?'\?'/);
 });
 
 test('successful 1x1 placeholders enter the same bounded fallback path as errors',()=>{
@@ -87,4 +119,6 @@ test('shared slots and centralized optical metadata preserve source quality',()=
   for(const mapping of Object.values(sprites.CANONICAL_SPRITE_OVERRIDES)){assert.equal(typeof mapping.opticalScale,'number');assert.equal(typeof mapping.opticalOffsetX,'number');assert.equal(typeof mapping.opticalOffsetY,'number');}
   const resolver=html.slice(html.indexOf('function spriteUrl'),html.indexOf('// ── SESSION PERSISTENCE'));
   assert.doesNotMatch(resolver,/quality=|width=\d+&height=\d+/i);
+  assert.doesNotMatch(opticalRuntime,/images\.weserv\.nl/);
+  assert.match(opticalRuntime,/new URL\(url,document\.baseURI\)\.href/);
 });

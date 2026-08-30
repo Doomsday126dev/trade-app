@@ -45,9 +45,9 @@ test('reviewed duplicate inventory has the exact accepted relationship counts',(
   const groups=catalog.VERIFIED_IDENTITIES.filter(def=>def.aliases.length>1);
   const pairRelationships=groups.reduce((sum,def)=>sum+(def.aliases.length*(def.aliases.length-1))/2,0);
   const redundantRows=groups.reduce((sum,def)=>sum+def.aliases.length-1,0);
-  assert.equal(groups.length,46);
-  assert.equal(pairRelationships,48);
-  assert.equal(redundantRows,47);
+  assert.equal(groups.length,48);
+  assert.equal(pairRelationships,50);
+  assert.equal(redundantRows,49);
 });
 
 test('canonical IDs and aliases are unique and display-name independent',()=>{
@@ -82,6 +82,16 @@ test('Professor Willow Assistant is present and distinct from WCS 2025',()=>{
   assert.equal(selectablePikachu.filter(entry=>entry.catalogId===willow.catalogId).length,1);
 });
 
+test('the two Worlds 2026 Pikachu are selectable, distinct identities',()=>{
+  const spacesuit=catalog.resolveLegacyKey('Cosmog-themed Spacesuit Pikachu');
+  const worlds=catalog.resolveLegacyKey('World Championships 2026 Pikachu');
+  assert.equal(spacesuit.catalogId,'pokemon:25:costume:PIKACHU_PXP_2026');
+  assert.equal(worlds.catalogId,'pokemon:25:costume:PIKACHU_WCS_2026');
+  assert.notEqual(spacesuit.catalogId,worlds.catalogId);
+  assert.equal(selectablePikachu.filter(entry=>entry.catalogId===spacesuit.catalogId).length,1);
+  assert.equal(selectablePikachu.filter(entry=>entry.catalogId===worlds.catalogId).length,1);
+});
+
 test('all seven Flying Pikachu identities remain distinct',()=>{
   const keys=[
     'Pikachu (Flying)','Pikachu (Flying 5th Anniversary)','Pikachu (Fly Okinawa)',
@@ -92,11 +102,11 @@ test('all seven Flying Pikachu identities remain distinct',()=>{
   assert.equal(new Set(ids).size,7);
 });
 
-test('the nine unresolved rows remain separate and are never guessed as aliases',()=>{
-  assert.equal(catalog.UNRESOLVED_COSTUME_KEYS.length,9);
+test('the eight identity-unresolved rows remain separate and are never guessed as aliases',()=>{
+  assert.equal(catalog.UNRESOLVED_COSTUME_KEYS.length,8);
   const rows=selectablePikachu.filter(entry=>catalog.UNRESOLVED_COSTUME_KEYS.includes(entry.name));
-  assert.equal(rows.length,9);
-  assert.equal(new Set(rows.map(entry=>entry.catalogId)).size,9);
+  assert.equal(rows.length,8);
+  assert.equal(new Set(rows.map(entry=>entry.catalogId)).size,8);
   for(const key of catalog.UNRESOLVED_COSTUME_KEYS)assert.equal(catalog.resolveLegacyKey(key),null,key);
 });
 
@@ -195,7 +205,8 @@ test('Find by Pokemon keyboard contract traverses and scrolls the full rendered 
   assert.match(block,/scrollIntoView\(\{block:'nearest'\}\)/);
   assert.match(block,/event\.key==='Enter'/);
   assert.match(block,/event\.key==='Escape'/);
-  assert.match(block,/onclick="selectFavoriteBrowsePokemon\(\$\{index\}\)"/);
+  assert.match(block,/data-favorite-action="select-browse" data-favorite-index="\$\{index\}"/);
+  assert.match(html,/favoriteAction==='select-browse'/);
   assert.match(html,/\.favorite-browse-search \.ac-dropdown\{z-index:350\}/);
   assert.match(html,/\.ac-dropdown\{[^}]*overflow-y:auto/);
 });

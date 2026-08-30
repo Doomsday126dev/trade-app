@@ -244,6 +244,48 @@ test.describe('visual smoke', () => {
     },route=>route.abort());
   });
 
+  test('reviewed and unavailable costume art stays honest across signed-in surfaces',async({page})=>{
+    await page.goto(`./?costume-surface=${Date.now()}`,{waitUntil:'domcontentloaded'});
+    await waitForStableLocalOrganizerStartup(page);
+    await isolateAuthenticatedMyListFixture(page,{username:'CostumeSurfaceTester',uid:'uid-costume-surface'});
+    await page.evaluate(()=>{
+      allData=normalizeData({
+        users:{CostumeSurfaceTester:{specialTradeBoard:{
+          lf:[{name:'Pikachu (Worlds 2026)',dn:'Pikachu (Worlds 2026)',no:25}],
+          ft:[{name:'Pikachu (Worlds 2025)',dn:'Pikachu (Worlds 2025)',no:25,qty:1}]
+        }}},
+        wishlist:{CostumeSurfaceTester:{}},dynamax:{CostumeSurfaceTester:{}},gmax:{CostumeSurfaceTester:{}},
+        costumes:{CostumeSurfaceTester:{'Pikachu (Worlds 2025)':'H','Pikachu (Worlds 2026)':'M'}}
+      });
+      _pathLoadState={have:'loaded',wishlist:'loaded',dynamax:'loaded',gmax:'loaded',costumes:'loaded'};
+      myListType='costumes';buildAcItems();renderMyList('');
+    });
+    const mapped=page.locator('.myrow').filter({hasText:'Pikachu (Worlds 2025)'});
+    const unavailable=page.locator('.myrow').filter({hasText:'Pikachu (Worlds 2026)'});
+    await expect(mapped.locator('img')).toHaveAttribute('src',/assets\/sprites\/go\/pikachu-world-champs-2025\.png/);
+    await expect(unavailable.locator('.pc-sprite-placeholder.known-unavailable')).toHaveAttribute('aria-label','Artwork unavailable for Pikachu (Worlds 2026)');
+    expect(await unavailable.locator('img').count()).toBe(0);
+    expect(await page.locator('.myrow img').evaluateAll(images=>images.some(image=>/\/pikachu(?:-female)?\.png$/.test(new URL(image.src).pathname)))).toBe(false);
+
+    await page.evaluate(()=>openSpecialTradeBoard());
+    const boardMapped=page.locator('#special-ft-list .sb-row').filter({hasText:'Pikachu (Worlds 2025)'});
+    const boardUnavailable=page.locator('#special-lf-list .sb-row').filter({hasText:'Pikachu (Worlds 2026)'});
+    await expect(boardMapped.locator('img')).toHaveAttribute('src',/assets\/sprites\/go\/pikachu-world-champs-2025\.png/);
+    await expect(boardUnavailable.locator('.pc-sprite-placeholder.known-unavailable')).toHaveAttribute('aria-label','Artwork unavailable for Pikachu (Worlds 2026)');
+
+    for(const theme of ['dark','light']){
+      await page.evaluate(value=>{document.documentElement.dataset.theme=value;},theme);
+      for(const width of [320,390,1440]){
+        await page.setViewportSize({width,height:900});
+        const geometry=await boardUnavailable.locator('.pc-sprite-placeholder').evaluate(node=>({
+          width:node.getBoundingClientRect().width,height:node.getBoundingClientRect().height,
+          borderStyle:getComputedStyle(node).borderStyle,overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth
+        }));
+        expect(geometry).toEqual({width:24,height:24,borderStyle:'dashed',overflow:false});
+      }
+    }
+  });
+
   test('consumer shell remains composed across themes and responsive widths',async({page})=>{
     await page.goto(`./?consumer-shell=${Date.now()}`,{waitUntil:'domcontentloaded'});
     await waitForStableLocalOrganizerStartup(page);

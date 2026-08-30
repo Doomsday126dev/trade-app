@@ -333,6 +333,8 @@ const {_normGender,HAVE_KEY_SEP,splitHaveKey,joinHaveKey,totalQtyForName,haveEnt
 const spriteSlugsDomain=window.PogoDomain?.spriteSlugs;
 if(!spriteSlugsDomain)throw new Error('Sprite slug helpers failed to load');
 const {padDex,normalizeCostumeLookupKey,pokemondbGoSpeciesSlug,normalizeSpriteKey,SPRITE_SOURCE_REGISTRY,CANONICAL_SPRITE_OVERRIDES,UNRESOLVED_SPRITE_KEYS,canonicalSpriteOverride,isUnresolvedSpriteKey,spriteSourceForUrl,REGIONAL_SLUG_MAP,pokemondbSlug}=spriteSlugsDomain;
+const costumeSpriteCatalogDomain=window.PogoDomain?.costumeSpriteCatalog;
+if(!costumeSpriteCatalogDomain)throw new Error('Reviewed costume sprite catalog failed to load');
 const fuzzyTextDomain=window.PogoDomain?.fuzzyText;
 if(!fuzzyTextDomain)throw new Error('Fuzzy text helpers failed to load');
 const {_phoneticCode,_levenshtein}=fuzzyTextDomain;
@@ -524,7 +526,7 @@ const COSTUME_FORM_SPRITE_IDS={
   "Ogerpon (Teal Mask)":1017,"Ogerpon (Wellspring Mask)":10272,
   "Ogerpon (Hearthflame Mask)":10273,"Ogerpon (Cornerstone Mask)":10274
 };
-const EXTRA_COSTUME_ENTRIES=[{"no":1,"name":"Bulbasaur Party Hat","displayName":"Bulbasaur Party Hat","spriteUrl":"","users":{}},{"no":1,"name":"Bulbasaur Pikachu Visor","displayName":"Bulbasaur Pikachu Visor","spriteUrl":"","users":{}},{"no":2,"name":"Ivysaur Party Hat","displayName":"Ivysaur Party Hat","spriteUrl":"","users":{}},{"no":3,"name":"Venusaur Party Hat","displayName":"Venusaur Party Hat","spriteUrl":"","users":{}},{"no":4,"name":"Charmander Party Hat","displayName":"Charmander Party Hat","spriteUrl":"","users":{}},{"no":4,"name":"Charmander Pikachu Visor","displayName":"Charmander Pikachu Visor","spriteUrl":"","users":{}},{"no":5,"name":"Charmeleon Party Hat","displayName":"Charmeleon Party Hat","spriteUrl":"","users":{}},{"no":6,"name":"Charizard Party Hat","displayName":"Charizard Party Hat","spriteUrl":"","users":{}},{"no":7,"name":"Squirtle Halloween","displayName":"Squirtle Halloween","spriteUrl":"","users":{}},{"no":7,"name":"Squirtle Party Hat","displayName":"Squirtle Party Hat","spriteUrl":"","users":{}},{"no":7,"name":"Squirtle Pikachu Visor","displayName":"Squirtle Pikachu Visor","spriteUrl":"","users":{}},{"no":8,"name":"Wartortle Sunglasses","displayName":"Wartortle Sunglasses","spriteUrl":"","users":{}},{"no":8,"name":"Wartortle Party Hat","displayName":"Wartortle Party Hat","spriteUrl":"","users":{}},{"no":9,"name":"Blastoise Sunglasses","displayName":"Blastoise Sunglasses","spriteUrl":"","users":{}},{"no":9,"name":"Blastoise Party Hat","displayName":"Blastoise Party Hat","spriteUrl":"","users":{}},{"no":12,"name":"Butterfree Fashionable","displayName":"Butterfree Fashionable","spriteUrl":"","users":{}},{"no":20,"name":"Raticate Party Hat","displayName":"Raticate Party Hat","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Party Hat","displayName":"Pikachu Party Hat","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Original Cap","displayName":"Pikachu Original Cap","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Beanie","displayName":"Pikachu Beanie","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Party Hat 2020","displayName":"Pikachu Party Hat 2020","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu (VS 2019)","displayName":"Pikachu (VS 2019)","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Flower Hat","displayName":"Pikachu Flower Hat","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Costume 2020","displayName":"Pikachu Costume 2020","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Winter Carnival Outfit","displayName":"Pikachu Winter Carnival Outfit","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Kariyushi","displayName":"Pikachu Kariyushi","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu GO Fest 2021","displayName":"Pikachu GO Fest 2021","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Halloween Mischief","displayName":"Pikachu Halloween Mischief","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Flying Okinawa","displayName":"Pikachu Flying Okinawa","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Gracidea","displayName":"Pikachu Gracidea","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Flying 01","displayName":"Pikachu Flying 01","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Berry Shirt","displayName":"Pikachu Berry Shirt","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Flying 02","displayName":"Pikachu Flying 02","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Party Top Hat","displayName":"Pikachu Party Top Hat","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu May Bow","displayName":"Pikachu May Bow","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Cherry Blossoms","displayName":"Pikachu Cherry Blossoms","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Quartz Crown","displayName":"Pikachu Quartz Crown","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Pyrite Crown","displayName":"Pikachu Pyrite Crown","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Malachite Crown","displayName":"Pikachu Malachite Crown","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Aquamarine Crown","displayName":"Pikachu Aquamarine Crown","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Amethyst Crown","displayName":"Pikachu Amethyst Crown","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Flying 03","displayName":"Pikachu Flying 03","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Doctor","displayName":"Pikachu Doctor","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Fall 2023","displayName":"Pikachu Fall 2023","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Akari Kerchief","displayName":"Pikachu Akari Kerchief","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Flying 04","displayName":"Pikachu Flying 04","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Horizons","displayName":"Pikachu Horizons","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Moon Crown","displayName":"Pikachu Moon Crown","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Sun Crown","displayName":"Pikachu Sun Crown","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Nate Visor","displayName":"Pikachu Nate Visor","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Rosa Visor","displayName":"Pikachu Rosa Visor","spriteUrl":"","users":{}},{"no":25,"name":"Dapper Pikachu Blue Accents","displayName":"Dapper Pikachu Blue Accents","spriteUrl":"","users":{}},{"no":25,"name":"Dapper Pikachu Red Accents","displayName":"Dapper Pikachu Red Accents","spriteUrl":"","users":{}},{"no":25,"name":"Dapper Pikachu Yellow Accents","displayName":"Dapper Pikachu Yellow Accents","spriteUrl":"","users":{}},{"no":25,"name":"Formal Pikachu Blue Accents","displayName":"Formal Pikachu Blue Accents","spriteUrl":"","users":{}},{"no":25,"name":"Formal Pikachu Red Accents","displayName":"Formal Pikachu Red Accents","spriteUrl":"","users":{}},{"no":25,"name":"Formal Pikachu Yellow Accents","displayName":"Formal Pikachu Yellow Accents","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Indonesia 2025","displayName":"Pikachu Indonesia 2025","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Varsity Jacket","displayName":"Pikachu Varsity Jacket","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Baseball Shirt","displayName":"Pikachu Baseball Shirt","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Marathon Visor","displayName":"Pikachu Marathon Visor","spriteUrl":"","users":{}},{"no":26,"name":"Raichu Santa Hat","displayName":"Raichu Santa Hat","spriteUrl":"","users":{}},{"no":26,"name":"Raichu Witch Hat","displayName":"Raichu Witch Hat","spriteUrl":"","users":{}},{"no":26,"name":"Raichu Party Hat","displayName":"Raichu Party Hat","spriteUrl":"","users":{}},{"no":26,"name":"Raichu Original Cap","displayName":"Raichu Original Cap","spriteUrl":"","users":{}},{"no":26,"name":"Raichu Summer Style","displayName":"Raichu Summer Style","spriteUrl":"","users":{}},{"no":26,"name":"Raichu Flower Crown","displayName":"Raichu Flower Crown","spriteUrl":"","users":{}},{"no":26,"name":"Raichu Fragment Cap","displayName":"Raichu Fragment Cap","spriteUrl":"","users":{}},{"no":26,"name":"Raichu Detective","displayName":"Raichu Detective","spriteUrl":"","users":{}},{"no":26,"name":"Raichu Beanie","displayName":"Raichu Beanie","spriteUrl":"","users":{}},{"no":26,"name":"Raichu World Cap","displayName":"Raichu World Cap","spriteUrl":"","users":{}},{"no":26,"name":"Raichu New Year","displayName":"Raichu New Year","spriteUrl":"","users":{}},{"no":26,"name":"Raichu Cherry Blossoms","displayName":"Raichu Cherry Blossoms","spriteUrl":"","users":{}},{"no":26,"name":"Raichu Holiday 2023","displayName":"Raichu Holiday 2023","spriteUrl":"","users":{}},{"no":31,"name":"Nidoqueen Crown","displayName":"Nidoqueen Crown","spriteUrl":"","users":{}},{"no":33,"name":"Nidorino Party Hat","displayName":"Nidorino Party Hat","spriteUrl":"","users":{}},{"no":34,"name":"Nidoking Crown","displayName":"Nidoking Crown","spriteUrl":"","users":{}},{"no":37,"name":"Vulpix Spooky Festival","displayName":"Vulpix Spooky Festival","spriteUrl":"","users":{}},{"no":38,"name":"Ninetales Spooky Festival","displayName":"Ninetales Spooky Festival","spriteUrl":"","users":{}},{"no":40,"name":"Wigglytuff Ribbon","displayName":"Wigglytuff Ribbon","spriteUrl":"","users":{}},{"no":50,"name":"Diglett Fashionable Hat","displayName":"Diglett Fashionable Hat","spriteUrl":"","users":{}},{"no":51,"name":"Dugtrio Fashionable Hat","displayName":"Dugtrio Fashionable Hat","spriteUrl":"","users":{}},{"no":54,"name":"Psyduck Holiday Attire","displayName":"Psyduck Holiday Attire","spriteUrl":"","users":{}},{"no":54,"name":"Psyduck Swim Ring","displayName":"Psyduck Swim Ring","spriteUrl":"","users":{}},{"no":55,"name":"Golduck Holiday 2023","displayName":"Golduck Holiday 2023","spriteUrl":"","users":{}},{"no":77,"name":"Ponyta Galarian GO Fest 2021","displayName":"Ponyta Galarian GO Fest 2021","spriteUrl":"","users":{}},{"no":78,"name":"Rapidash Candela motif","displayName":"Rapidash Candela motif","spriteUrl":"","users":{}},{"no":79,"name":"Slowpoke 2020","displayName":"Slowpoke 2020","spriteUrl":"","users":{}},{"no":79,"name":"Slowpoke Hat","displayName":"Slowpoke Hat","spriteUrl":"","users":{}},{"no":80,"name":"Slowpoke 2021","displayName":"Slowpoke 2021","spriteUrl":"","users":{}},{"no":89,"name":"Muk Party Hat","displayName":"Muk Party Hat","spriteUrl":"","users":{}},{"no":94,"name":"Gengar Party Hat","displayName":"Gengar Party Hat","spriteUrl":"","users":{}},{"no":94,"name":"Gengar Halloween","displayName":"Gengar Halloween","spriteUrl":"","users":{}},{"no":94,"name":"Gengar Spooky Festival","displayName":"Gengar Spooky Festival","spriteUrl":"","users":{}},{"no":94,"name":"Gengar Fall 2023","displayName":"Gengar Fall 2023","spriteUrl":"","users":{}},{"no":104,"name":"Cubone Cempasuchil Crown","displayName":"Cubone Cempasuchil Crown","spriteUrl":"","users":{}},{"no":105,"name":"Marowak Cempasuchil Crown","displayName":"Marowak Cempasuchil Crown","spriteUrl":"","users":{}},{"no":125,"name":"Electabuzz Spark motif","displayName":"Electabuzz Spark motif","spriteUrl":"","users":{}},{"no":132,"name":"Ditto Yellow Party Hat","displayName":"Ditto Yellow Party Hat","spriteUrl":"","users":{}},{"no":132,"name":"Ditto Blue Party Hat","displayName":"Ditto Blue Party Hat","spriteUrl":"","users":{}},{"no":133,"name":"Eevee Party Hat","displayName":"Eevee Party Hat","spriteUrl":"","users":{}},{"no":133,"name":"Eevee Holiday 2023","displayName":"Eevee Holiday 2023","spriteUrl":"","users":{}},{"no":133,"name":"Eevee Cherry Blossoms","displayName":"Eevee Cherry Blossoms","spriteUrl":"","users":{}},{"no":133,"name":"Eevee Moon Crown","displayName":"Eevee Moon Crown","spriteUrl":"","users":{}},{"no":133,"name":"Eevee Sun Crown","displayName":"Eevee Sun Crown","spriteUrl":"","users":{}},{"no":134,"name":"Vaporeon Flower Crown","displayName":"Vaporeon Flower Crown","spriteUrl":"","users":{}},{"no":134,"name":"Vaporeon holiday 2023","displayName":"Vaporeon holiday 2023","spriteUrl":"","users":{}},{"no":134,"name":"Vaporeon Cherry Blossoms","displayName":"Vaporeon Cherry Blossoms","spriteUrl":"","users":{}},{"no":134,"name":"Vaporeon Explorer Hat","displayName":"Vaporeon Explorer Hat","spriteUrl":"","users":{}},{"no":135,"name":"Jolteon Flower Crown","displayName":"Jolteon Flower Crown","spriteUrl":"","users":{}},{"no":135,"name":"Jolteon Holiday 2023","displayName":"Jolteon Holiday 2023","spriteUrl":"","users":{}},{"no":135,"name":"Jolteon Cherry Blossoms","displayName":"Jolteon Cherry Blossoms","spriteUrl":"","users":{}},{"no":135,"name":"Jolteon Explorer Hat","displayName":"Jolteon Explorer Hat","spriteUrl":"","users":{}},{"no":136,"name":"Flareon Flower Crown","displayName":"Flareon Flower Crown","spriteUrl":"","users":{}},{"no":136,"name":"Flareon Holiday 2023","displayName":"Flareon Holiday 2023","spriteUrl":"","users":{}},{"no":136,"name":"Flareon Cherry Blossoms","displayName":"Flareon Cherry Blossoms","spriteUrl":"","users":{}},{"no":136,"name":"Flareon Explorer Hat","displayName":"Flareon Explorer Hat","spriteUrl":"","users":{}},{"no":143,"name":"Snorlax Night Cap","displayName":"Snorlax Night Cap","spriteUrl":"","users":{}},{"no":149,"name":"Dragonite Fashionable","displayName":"Dragonite Fashionable","spriteUrl":"","users":{}},{"no":150,"name":"Mewtwo (Armored)","displayName":"Mewtwo (Armored)","spriteUrl":"","users":{}},{"no":163,"name":"Hoothoot New Years","displayName":"Hoothoot New Years","spriteUrl":"","users":{}},{"no":164,"name":"Noctowl New Years 2022","displayName":"Noctowl New Years 2022","spriteUrl":"","users":{}},{"no":172,"name":"Pichu Original Cap","displayName":"Pichu Original Cap","spriteUrl":"","users":{}},{"no":172,"name":"Pichu Beanie","displayName":"Pichu Beanie","spriteUrl":"","users":{}},{"no":172,"name":"Pichu Cherry Blossoms","displayName":"Pichu Cherry Blossoms","spriteUrl":"","users":{}},{"no":185,"name":"Sudowoodo Holiday 2025","displayName":"Sudowoodo Holiday 2025","spriteUrl":"","users":{}},{"no":194,"name":"Wooper Fashionable","displayName":"Wooper Fashionable","spriteUrl":"","users":{}},{"no":195,"name":"Quagsire Fashionable","displayName":"Quagsire Fashionable","spriteUrl":"","users":{}},{"no":196,"name":"Espeon Flower Crown","displayName":"Espeon Flower Crown","spriteUrl":"","users":{}},{"no":196,"name":"Espeon Holiday 2023","displayName":"Espeon Holiday 2023","spriteUrl":"","users":{}},{"no":196,"name":"Espeon Cherry Blossoms","displayName":"Espeon Cherry Blossoms","spriteUrl":"","users":{}},{"no":196,"name":"Espeon Explorer Hat","displayName":"Espeon Explorer Hat","spriteUrl":"","users":{}},{"no":196,"name":"Espeon Day Scarf","displayName":"Espeon Day Scarf","spriteUrl":"","users":{}},{"no":197,"name":"Umbreon Flower Crown","displayName":"Umbreon Flower Crown","spriteUrl":"","users":{}},{"no":197,"name":"Umbreon Holiday 2023","displayName":"Umbreon Holiday 2023","spriteUrl":"","users":{}},{"no":197,"name":"Umbreon Cherry Blossoms","displayName":"Umbreon Cherry Blossoms","spriteUrl":"","users":{}},{"no":197,"name":"Umbreon Explorer Hat","displayName":"Umbreon Explorer Hat","spriteUrl":"","users":{}},{"no":197,"name":"Umbreon Night Scarf","displayName":"Umbreon Night Scarf","spriteUrl":"","users":{}},{"no":199,"name":"Slowking 2022","displayName":"Slowking 2022","spriteUrl":"","users":{}},{"no":202,"name":"Wobbuffet Party Hat","displayName":"Wobbuffet Party Hat","spriteUrl":"","users":{}},{"no":215,"name":"Sneasel Fashion","displayName":"Sneasel Fashion","spriteUrl":"","users":{}},{"no":216,"name":"Teddiursa Witch Hat","displayName":"Teddiursa Witch Hat","spriteUrl":"","users":{}},{"no":217,"name":"Ursaring Witch Hat","displayName":"Ursaring Witch Hat","spriteUrl":"","users":{}},{"no":222,"name":"Galarian Corsola Pink Sunglasses","displayName":"Galarian Corsola Pink Sunglasses","spriteUrl":"","users":{}},{"no":225,"name":"Delibird Holidays","displayName":"Delibird Holidays","spriteUrl":"","users":{}},{"no":234,"name":"Stantler Holiday","displayName":"Stantler Holiday","spriteUrl":"","users":{}},{"no":263,"name":"Zigzagoon Galarian GO Fest 2021","displayName":"Zigzagoon Galarian GO Fest 2021","spriteUrl":"","users":{}},{"no":265,"name":"Wurmple Party","displayName":"Wurmple Party","spriteUrl":"","users":{}},{"no":282,"name":"Gardevoir GO Fest 2021","displayName":"Gardevoir GO Fest 2021","spriteUrl":"","users":{}},{"no":287,"name":"Slakoth Visor","displayName":"Slakoth Visor","spriteUrl":"","users":{}},{"no":288,"name":"Vigoroth Visor","displayName":"Vigoroth Visor","spriteUrl":"","users":{}},{"no":289,"name":"Slaking Visor","displayName":"Slaking Visor","spriteUrl":"","users":{}},{"no":302,"name":"Sableye Halloween","displayName":"Sableye Halloween","spriteUrl":"","users":{}},{"no":330,"name":"Flygon GO Fest 2021","displayName":"Flygon GO Fest 2021","spriteUrl":"","users":{}},{"no":355,"name":"Duskull Cempasuchil Crown","displayName":"Duskull Cempasuchil Crown","spriteUrl":"","users":{}},{"no":356,"name":"Dusclops Cempasuchil Crown","displayName":"Dusclops Cempasuchil Crown","spriteUrl":"","users":{}},{"no":359,"name":"Absol Fashionable Costume","displayName":"Absol Fashionable Costume","spriteUrl":"","users":{}},{"no":393,"name":"Piplup Halloween Mischief","displayName":"Piplup Halloween Mischief","spriteUrl":"","users":{}},{"no":426,"name":"Drifblim Halloween Mischief","displayName":"Drifblim Halloween Mischief","spriteUrl":"","users":{}},{"no":427,"name":"Buneary Flower Crown","displayName":"Buneary Flower Crown","spriteUrl":"","users":{}},{"no":428,"name":"Lopunny Flower Crown","displayName":"Lopunny Flower Crown","spriteUrl":"","users":{}},{"no":453,"name":"Croagunk Backwards Cap","displayName":"Croagunk Backwards Cap","spriteUrl":"","users":{}},{"no":454,"name":"Toxicroak Backwards Cap","displayName":"Toxicroak Backwards Cap","spriteUrl":"","users":{}},{"no":466,"name":"Electivire Spark motif","displayName":"Electivire Spark motif","spriteUrl":"","users":{}},{"no":470,"name":"Leafeon Flower Crown","displayName":"Leafeon Flower Crown","spriteUrl":"","users":{}},{"no":470,"name":"Leafeon Holiday 2023","displayName":"Leafeon Holiday 2023","spriteUrl":"","users":{}},{"no":470,"name":"Leafeon Cherry Blossoms","displayName":"Leafeon Cherry Blossoms","spriteUrl":"","users":{}},{"no":470,"name":"Leafeon Explorer Hat","displayName":"Leafeon Explorer Hat","spriteUrl":"","users":{}},{"no":471,"name":"Glaceon Flower Crown","displayName":"Glaceon Flower Crown","spriteUrl":"","users":{}},{"no":471,"name":"Glaceon Holiday 2023","displayName":"Glaceon Holiday 2023","spriteUrl":"","users":{}},{"no":471,"name":"Glaceon Cherry Blossoms","displayName":"Glaceon Cherry Blossoms","spriteUrl":"","users":{}},{"no":471,"name":"Glaceon Explorer Hat","displayName":"Glaceon Explorer Hat","spriteUrl":"","users":{}},{"no":477,"name":"Dusknoir Cempasuchil Crown","displayName":"Dusknoir Cempasuchil Crown","spriteUrl":"","users":{}},{"no":522,"name":"Blitzle Fashionable","displayName":"Blitzle Fashionable","spriteUrl":"","users":{}},{"no":547,"name":"Whimsicott Flower Crown","displayName":"Whimsicott Flower Crown","spriteUrl":"","users":{}},{"no":573,"name":"Cinccino Fashionable Costume","displayName":"Cinccino Fashionable Costume","spriteUrl":"","users":{}},{"no":613,"name":"Cubchoo Holidays","displayName":"Cubchoo Holidays","spriteUrl":"","users":{}},{"no":614,"name":"Beartic Holidays","displayName":"Beartic Holidays","spriteUrl":"","users":{}},{"no":656,"name":"Froakie Witch Hat","displayName":"Froakie Witch Hat","spriteUrl":"","users":{}},{"no":657,"name":"Frogadier Witch Hat","displayName":"Frogadier Witch Hat","spriteUrl":"","users":{}},{"no":658,"name":"Greninja Witch Hat","displayName":"Greninja Witch Hat","spriteUrl":"","users":{}},{"no":700,"name":"Sylveon Flower Crown","displayName":"Sylveon Flower Crown","spriteUrl":"","users":{}},{"no":700,"name":"Sylveon Holiday","displayName":"Sylveon Holiday","spriteUrl":"","users":{}},{"no":700,"name":"Sylveon Cherry Blossoms","displayName":"Sylveon Cherry Blossoms","spriteUrl":"","users":{}},{"no":700,"name":"Sylveon Explorer Hat","displayName":"Sylveon Explorer Hat","spriteUrl":"","users":{}},{"no":710,"name":"Pumpkaboo Average Size","displayName":"Pumpkaboo Average Size","spriteUrl":"","users":{}},{"no":710,"name":"Pumpkaboo Super Size","displayName":"Pumpkaboo Super Size","spriteUrl":"","users":{}},{"no":710,"name":"Gourgeist Small Size","displayName":"Gourgeist Small Size","spriteUrl":"","users":{}},{"no":710,"name":"Pumpkaboo Small Size","displayName":"Pumpkaboo Small Size","spriteUrl":"","users":{}},{"no":710,"name":"Pumpkaboo Large Size","displayName":"Pumpkaboo Large Size","spriteUrl":"","users":{}},{"no":711,"name":"Gourgeist Super Size","displayName":"Gourgeist Super Size","spriteUrl":"","users":{}},{"no":711,"name":"Gourgeist Average Size","displayName":"Gourgeist Average Size","spriteUrl":"","users":{}},{"no":711,"name":"Gourgeist Large Size","displayName":"Gourgeist Large Size","spriteUrl":"","users":{}},{"no":714,"name":"Noibat Headband","displayName":"Noibat Headband","spriteUrl":"","users":{}},{"no":715,"name":"Noivern Headband","displayName":"Noivern Headband","spriteUrl":"","users":{}},{"no":723,"name":"Dartrix Halloween","displayName":"Dartrix Halloween","spriteUrl":"","users":{}},{"no":724,"name":"Decidueye Halloween","displayName":"Decidueye Halloween","spriteUrl":"","users":{}},{"no":737,"name":"Charjabug Holiday 2025","displayName":"Charjabug Holiday 2025","spriteUrl":"","users":{}},{"no":738,"name":"Vikavolt Holiday 2025","displayName":"Vikavolt Holiday 2025","spriteUrl":"","users":{}},{"no":760,"name":"Bewear Wilderness Cape","displayName":"Bewear Wilderness Cape","spriteUrl":"","users":{}},{"no":832,"name":"Dubwool Holiday Attire","displayName":"Dubwool Holiday Attire","spriteUrl":"","users":{}},{"no":870,"name":"Falinks Train","displayName":"Falinks Train","spriteUrl":"","users":{}},{"no":901,"name":"Ursaluna Witch Hat","displayName":"Ursaluna Witch Hat","spriteUrl":"","users":{}},{"no":907,"name":"Floragato Hat With Likos Pin","displayName":"Floragato Hat With Likos Pin","spriteUrl":"","users":{}},{"no":999,"name":"Gimmighoul 9th Anniversary Coin","displayName":"Gimmighoul 9th Anniversary Coin","spriteUrl":"","users":{}}];
+const EXTRA_COSTUME_ENTRIES=[{"no":1,"name":"Bulbasaur Party Hat","displayName":"Bulbasaur Party Hat","spriteUrl":"","users":{}},{"no":1,"name":"Bulbasaur Pikachu Visor","displayName":"Bulbasaur Pikachu Visor","spriteUrl":"","users":{}},{"no":2,"name":"Ivysaur Party Hat","displayName":"Ivysaur Party Hat","spriteUrl":"","users":{}},{"no":3,"name":"Venusaur Party Hat","displayName":"Venusaur Party Hat","spriteUrl":"","users":{}},{"no":4,"name":"Charmander Party Hat","displayName":"Charmander Party Hat","spriteUrl":"","users":{}},{"no":4,"name":"Charmander Pikachu Visor","displayName":"Charmander Pikachu Visor","spriteUrl":"","users":{}},{"no":5,"name":"Charmeleon Party Hat","displayName":"Charmeleon Party Hat","spriteUrl":"","users":{}},{"no":6,"name":"Charizard Party Hat","displayName":"Charizard Party Hat","spriteUrl":"","users":{}},{"no":7,"name":"Squirtle Halloween","displayName":"Squirtle Halloween","spriteUrl":"","users":{}},{"no":7,"name":"Squirtle Party Hat","displayName":"Squirtle Party Hat","spriteUrl":"","users":{}},{"no":7,"name":"Squirtle Pikachu Visor","displayName":"Squirtle Pikachu Visor","spriteUrl":"","users":{}},{"no":8,"name":"Wartortle Sunglasses","displayName":"Wartortle Sunglasses","spriteUrl":"","users":{}},{"no":8,"name":"Wartortle Party Hat","displayName":"Wartortle Party Hat","spriteUrl":"","users":{}},{"no":9,"name":"Blastoise Sunglasses","displayName":"Blastoise Sunglasses","spriteUrl":"","users":{}},{"no":9,"name":"Blastoise Party Hat","displayName":"Blastoise Party Hat","spriteUrl":"","users":{}},{"no":12,"name":"Butterfree Fashionable","displayName":"Butterfree Fashionable","spriteUrl":"","users":{}},{"no":20,"name":"Raticate Party Hat","displayName":"Raticate Party Hat","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Party Hat","displayName":"Pikachu Party Hat","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Original Cap","displayName":"Pikachu Original Cap","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Beanie","displayName":"Pikachu Beanie","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Party Hat 2020","displayName":"Pikachu Party Hat 2020","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu (VS 2019)","displayName":"Pikachu (VS 2019)","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Flower Hat","displayName":"Pikachu Flower Hat","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Costume 2020","displayName":"Pikachu Costume 2020","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Winter Carnival Outfit","displayName":"Pikachu Winter Carnival Outfit","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Kariyushi","displayName":"Pikachu Kariyushi","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu GO Fest 2021","displayName":"Pikachu GO Fest 2021","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Halloween Mischief","displayName":"Pikachu Halloween Mischief","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Flying Okinawa","displayName":"Pikachu Flying Okinawa","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Gracidea","displayName":"Pikachu Gracidea","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Flying 01","displayName":"Pikachu Flying 01","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Berry Shirt","displayName":"Pikachu Berry Shirt","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Flying 02","displayName":"Pikachu Flying 02","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Party Top Hat","displayName":"Pikachu Party Top Hat","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu May Bow","displayName":"Pikachu May Bow","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Cherry Blossoms","displayName":"Pikachu Cherry Blossoms","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Quartz Crown","displayName":"Pikachu Quartz Crown","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Pyrite Crown","displayName":"Pikachu Pyrite Crown","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Malachite Crown","displayName":"Pikachu Malachite Crown","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Aquamarine Crown","displayName":"Pikachu Aquamarine Crown","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Amethyst Crown","displayName":"Pikachu Amethyst Crown","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Flying 03","displayName":"Pikachu Flying 03","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Doctor","displayName":"Pikachu Doctor","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Fall 2023","displayName":"Pikachu Fall 2023","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Akari Kerchief","displayName":"Pikachu Akari Kerchief","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Flying 04","displayName":"Pikachu Flying 04","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Horizons","displayName":"Pikachu Horizons","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Moon Crown","displayName":"Pikachu Moon Crown","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Sun Crown","displayName":"Pikachu Sun Crown","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Nate Visor","displayName":"Pikachu Nate Visor","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Rosa Visor","displayName":"Pikachu Rosa Visor","spriteUrl":"","users":{}},{"no":25,"name":"Dapper Pikachu Blue Accents","displayName":"Dapper Pikachu Blue Accents","spriteUrl":"","users":{}},{"no":25,"name":"Dapper Pikachu Red Accents","displayName":"Dapper Pikachu Red Accents","spriteUrl":"","users":{}},{"no":25,"name":"Dapper Pikachu Yellow Accents","displayName":"Dapper Pikachu Yellow Accents","spriteUrl":"","users":{}},{"no":25,"name":"Formal Pikachu Blue Accents","displayName":"Formal Pikachu Blue Accents","spriteUrl":"","users":{}},{"no":25,"name":"Formal Pikachu Red Accents","displayName":"Formal Pikachu Red Accents","spriteUrl":"","users":{}},{"no":25,"name":"Formal Pikachu Yellow Accents","displayName":"Formal Pikachu Yellow Accents","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Indonesia 2025","displayName":"Pikachu Indonesia 2025","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Varsity Jacket","displayName":"Pikachu Varsity Jacket","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Baseball Shirt","displayName":"Pikachu Baseball Shirt","spriteUrl":"","users":{}},{"no":25,"name":"Pikachu Marathon Visor","displayName":"Pikachu Marathon Visor","spriteUrl":"","users":{}},{"no":26,"name":"Raichu Santa Hat","displayName":"Raichu Santa Hat","spriteUrl":"","users":{}},{"no":26,"name":"Raichu Witch Hat","displayName":"Raichu Witch Hat","spriteUrl":"","users":{}},{"no":26,"name":"Raichu Party Hat","displayName":"Raichu Party Hat","spriteUrl":"","users":{}},{"no":26,"name":"Raichu Original Cap","displayName":"Raichu Original Cap","spriteUrl":"","users":{}},{"no":26,"name":"Raichu Summer Style","displayName":"Raichu Summer Style","spriteUrl":"","users":{}},{"no":26,"name":"Raichu Flower Crown","displayName":"Raichu Flower Crown","spriteUrl":"","users":{}},{"no":26,"name":"Raichu Fragment Cap","displayName":"Raichu Fragment Cap","spriteUrl":"","users":{}},{"no":26,"name":"Raichu Detective","displayName":"Raichu Detective","spriteUrl":"","users":{}},{"no":26,"name":"Raichu Beanie","displayName":"Raichu Beanie","spriteUrl":"","users":{}},{"no":26,"name":"Raichu World Cap","displayName":"Raichu World Cap","spriteUrl":"","users":{}},{"no":26,"name":"Raichu New Year","displayName":"Raichu New Year","spriteUrl":"","users":{}},{"no":26,"name":"Raichu Cherry Blossoms","displayName":"Raichu Cherry Blossoms","spriteUrl":"","users":{}},{"no":26,"name":"Raichu Holiday 2023","displayName":"Raichu Holiday 2023","spriteUrl":"","users":{}},{"no":31,"name":"Nidoqueen Crown","displayName":"Nidoqueen Crown","spriteUrl":"","users":{}},{"no":33,"name":"Nidorino Party Hat","displayName":"Nidorino Party Hat","spriteUrl":"","users":{}},{"no":34,"name":"Nidoking Crown","displayName":"Nidoking Crown","spriteUrl":"","users":{}},{"no":37,"name":"Vulpix Spooky Festival","displayName":"Vulpix Spooky Festival","spriteUrl":"","users":{}},{"no":38,"name":"Ninetales Spooky Festival","displayName":"Ninetales Spooky Festival","spriteUrl":"","users":{}},{"no":40,"name":"Wigglytuff Ribbon","displayName":"Wigglytuff Ribbon","spriteUrl":"","users":{}},{"no":50,"name":"Diglett Fashionable Hat","displayName":"Diglett Fashionable Hat","spriteUrl":"","users":{}},{"no":51,"name":"Dugtrio Fashionable Hat","displayName":"Dugtrio Fashionable Hat","spriteUrl":"","users":{}},{"no":54,"name":"Psyduck Holiday Attire","displayName":"Psyduck Holiday Attire","spriteUrl":"","users":{}},{"no":54,"name":"Psyduck Swim Ring","displayName":"Psyduck Swim Ring","spriteUrl":"","users":{}},{"no":55,"name":"Golduck Holiday 2023","displayName":"Golduck Holiday 2023","spriteUrl":"","users":{}},{"no":77,"name":"Ponyta Galarian GO Fest 2021","displayName":"Ponyta Galarian GO Fest 2021","spriteUrl":"","users":{}},{"no":78,"name":"Rapidash Candela motif","displayName":"Rapidash Candela motif","spriteUrl":"","users":{}},{"no":79,"name":"Slowpoke 2020","displayName":"Slowpoke 2020","spriteUrl":"","users":{}},{"no":79,"name":"Slowpoke Hat","displayName":"Slowpoke Hat","spriteUrl":"","users":{}},{"no":80,"name":"Slowpoke 2021","displayName":"Slowpoke 2021","spriteUrl":"","users":{}},{"no":89,"name":"Muk Party Hat","displayName":"Muk Party Hat","spriteUrl":"","users":{}},{"no":94,"name":"Gengar Party Hat","displayName":"Gengar Party Hat","spriteUrl":"","users":{}},{"no":94,"name":"Gengar Halloween","displayName":"Gengar Halloween","spriteUrl":"","users":{}},{"no":94,"name":"Gengar Spooky Festival","displayName":"Gengar Spooky Festival","spriteUrl":"","users":{}},{"no":94,"name":"Gengar Fall 2023","displayName":"Gengar Fall 2023","spriteUrl":"","users":{}},{"no":104,"name":"Cubone Cempasuchil Crown","displayName":"Cubone Cempasuchil Crown","spriteUrl":"","users":{}},{"no":105,"name":"Marowak Cempasuchil Crown","displayName":"Marowak Cempasuchil Crown","spriteUrl":"","users":{}},{"no":125,"name":"Electabuzz Spark motif","displayName":"Electabuzz Spark motif","spriteUrl":"","users":{}},{"no":132,"name":"Ditto Yellow Party Hat","displayName":"Ditto Yellow Party Hat","spriteUrl":"","users":{}},{"no":132,"name":"Ditto Blue Party Hat","displayName":"Ditto Blue Party Hat","spriteUrl":"","users":{}},{"no":133,"name":"Eevee Party Hat","displayName":"Eevee Party Hat","spriteUrl":"","users":{}},{"no":133,"name":"Eevee Holiday 2023","displayName":"Eevee Holiday 2023","spriteUrl":"","users":{}},{"no":133,"name":"Eevee Cherry Blossoms","displayName":"Eevee Cherry Blossoms","spriteUrl":"","users":{}},{"no":133,"name":"Eevee Moon Crown","displayName":"Eevee Moon Crown","spriteUrl":"","users":{}},{"no":133,"name":"Eevee Sun Crown","displayName":"Eevee Sun Crown","spriteUrl":"","users":{}},{"no":134,"name":"Vaporeon Flower Crown","displayName":"Vaporeon Flower Crown","spriteUrl":"","users":{}},{"no":134,"name":"Vaporeon holiday 2023","displayName":"Vaporeon holiday 2023","spriteUrl":"","users":{}},{"no":134,"name":"Vaporeon Cherry Blossoms","displayName":"Vaporeon Cherry Blossoms","spriteUrl":"","users":{}},{"no":134,"name":"Vaporeon Explorer Hat","displayName":"Vaporeon Explorer Hat","spriteUrl":"","users":{}},{"no":135,"name":"Jolteon Flower Crown","displayName":"Jolteon Flower Crown","spriteUrl":"","users":{}},{"no":135,"name":"Jolteon Holiday 2023","displayName":"Jolteon Holiday 2023","spriteUrl":"","users":{}},{"no":135,"name":"Jolteon Cherry Blossoms","displayName":"Jolteon Cherry Blossoms","spriteUrl":"","users":{}},{"no":135,"name":"Jolteon Explorer Hat","displayName":"Jolteon Explorer Hat","spriteUrl":"","users":{}},{"no":136,"name":"Flareon Flower Crown","displayName":"Flareon Flower Crown","spriteUrl":"","users":{}},{"no":136,"name":"Flareon Holiday 2023","displayName":"Flareon Holiday 2023","spriteUrl":"","users":{}},{"no":136,"name":"Flareon Cherry Blossoms","displayName":"Flareon Cherry Blossoms","spriteUrl":"","users":{}},{"no":136,"name":"Flareon Explorer Hat","displayName":"Flareon Explorer Hat","spriteUrl":"","users":{}},{"no":143,"name":"Snorlax Night Cap","displayName":"Snorlax Night Cap","spriteUrl":"","users":{}},{"no":149,"name":"Dragonite Fashionable","displayName":"Dragonite Fashionable","spriteUrl":"","users":{}},{"no":150,"name":"Mewtwo (Armored)","displayName":"Mewtwo (Armored)","spriteUrl":"","users":{}},{"no":163,"name":"Hoothoot New Years","displayName":"Hoothoot New Years","spriteUrl":"","users":{}},{"no":164,"name":"Noctowl New Years 2022","displayName":"Noctowl New Years 2022","spriteUrl":"","users":{}},{"no":172,"name":"Pichu Original Cap","displayName":"Pichu Original Cap","spriteUrl":"","users":{}},{"no":172,"name":"Pichu Beanie","displayName":"Pichu Beanie","spriteUrl":"","users":{}},{"no":172,"name":"Pichu Cherry Blossoms","displayName":"Pichu Cherry Blossoms","spriteUrl":"","users":{}},{"no":185,"name":"Sudowoodo Holiday 2025","displayName":"Sudowoodo Holiday 2025","spriteUrl":"","users":{}},{"no":194,"name":"Wooper Fashionable","displayName":"Wooper Fashionable","spriteUrl":"","users":{}},{"no":195,"name":"Quagsire Fashionable","displayName":"Quagsire Fashionable","spriteUrl":"","users":{}},{"no":196,"name":"Espeon Flower Crown","displayName":"Espeon Flower Crown","spriteUrl":"","users":{}},{"no":196,"name":"Espeon Holiday 2023","displayName":"Espeon Holiday 2023","spriteUrl":"","users":{}},{"no":196,"name":"Espeon Cherry Blossoms","displayName":"Espeon Cherry Blossoms","spriteUrl":"","users":{}},{"no":196,"name":"Espeon Explorer Hat","displayName":"Espeon Explorer Hat","spriteUrl":"","users":{}},{"no":196,"name":"Espeon Day Scarf","displayName":"Espeon Day Scarf","spriteUrl":"","users":{}},{"no":197,"name":"Umbreon Flower Crown","displayName":"Umbreon Flower Crown","spriteUrl":"","users":{}},{"no":197,"name":"Umbreon Holiday 2023","displayName":"Umbreon Holiday 2023","spriteUrl":"","users":{}},{"no":197,"name":"Umbreon Cherry Blossoms","displayName":"Umbreon Cherry Blossoms","spriteUrl":"","users":{}},{"no":197,"name":"Umbreon Explorer Hat","displayName":"Umbreon Explorer Hat","spriteUrl":"","users":{}},{"no":197,"name":"Umbreon Night Scarf","displayName":"Umbreon Night Scarf","spriteUrl":"","users":{}},{"no":199,"name":"Slowking 2022","displayName":"Slowking 2022","spriteUrl":"","users":{}},{"no":202,"name":"Wobbuffet Party Hat","displayName":"Wobbuffet Party Hat","spriteUrl":"","users":{}},{"no":215,"name":"Sneasel Fashion","displayName":"Sneasel Fashion","spriteUrl":"","users":{}},{"no":216,"name":"Teddiursa Witch Hat","displayName":"Teddiursa Witch Hat","spriteUrl":"","users":{}},{"no":217,"name":"Ursaring Witch Hat","displayName":"Ursaring Witch Hat","spriteUrl":"","users":{}},{"no":222,"name":"Galarian Corsola Pink Sunglasses","displayName":"Galarian Corsola Pink Sunglasses","spriteUrl":"","users":{}},{"no":225,"name":"Delibird Holidays","displayName":"Delibird Holidays","spriteUrl":"","users":{}},{"no":234,"name":"Stantler Holiday","displayName":"Stantler Holiday","spriteUrl":"","users":{}},{"no":263,"name":"Zigzagoon Galarian GO Fest 2021","displayName":"Zigzagoon Galarian GO Fest 2021","spriteUrl":"","users":{}},{"no":265,"name":"Wurmple Party","displayName":"Wurmple Party","spriteUrl":"","users":{}},{"no":282,"name":"Gardevoir GO Fest 2021","displayName":"Gardevoir GO Fest 2021","spriteUrl":"","users":{}},{"no":287,"name":"Slakoth Visor","displayName":"Slakoth Visor","spriteUrl":"","users":{}},{"no":288,"name":"Vigoroth Visor","displayName":"Vigoroth Visor","spriteUrl":"","users":{}},{"no":289,"name":"Slaking Visor","displayName":"Slaking Visor","spriteUrl":"","users":{}},{"no":302,"name":"Sableye Halloween","displayName":"Sableye Halloween","spriteUrl":"","users":{}},{"no":330,"name":"Flygon GO Fest 2021","displayName":"Flygon GO Fest 2021","spriteUrl":"","users":{}},{"no":355,"name":"Duskull Cempasuchil Crown","displayName":"Duskull Cempasuchil Crown","spriteUrl":"","users":{}},{"no":356,"name":"Dusclops Cempasuchil Crown","displayName":"Dusclops Cempasuchil Crown","spriteUrl":"","users":{}},{"no":359,"name":"Absol Fashionable Costume","displayName":"Absol Fashionable Costume","spriteUrl":"","users":{}},{"no":393,"name":"Piplup Halloween Mischief","displayName":"Piplup Halloween Mischief","spriteUrl":"","users":{}},{"no":426,"name":"Drifblim Halloween Mischief","displayName":"Drifblim Halloween Mischief","spriteUrl":"","users":{}},{"no":427,"name":"Buneary Flower Crown","displayName":"Buneary Flower Crown","spriteUrl":"","users":{}},{"no":428,"name":"Lopunny Flower Crown","displayName":"Lopunny Flower Crown","spriteUrl":"","users":{}},{"no":453,"name":"Croagunk Backwards Cap","displayName":"Croagunk Backwards Cap","spriteUrl":"","users":{}},{"no":454,"name":"Toxicroak Backwards Cap","displayName":"Toxicroak Backwards Cap","spriteUrl":"","users":{}},{"no":466,"name":"Electivire Spark motif","displayName":"Electivire Spark motif","spriteUrl":"","users":{}},{"no":470,"name":"Leafeon Flower Crown","displayName":"Leafeon Flower Crown","spriteUrl":"","users":{}},{"no":470,"name":"Leafeon Holiday 2023","displayName":"Leafeon Holiday 2023","spriteUrl":"","users":{}},{"no":470,"name":"Leafeon Cherry Blossoms","displayName":"Leafeon Cherry Blossoms","spriteUrl":"","users":{}},{"no":470,"name":"Leafeon Explorer Hat","displayName":"Leafeon Explorer Hat","spriteUrl":"","users":{}},{"no":471,"name":"Glaceon Flower Crown","displayName":"Glaceon Flower Crown","spriteUrl":"","users":{}},{"no":471,"name":"Glaceon Holiday 2023","displayName":"Glaceon Holiday 2023","spriteUrl":"","users":{}},{"no":471,"name":"Glaceon Cherry Blossoms","displayName":"Glaceon Cherry Blossoms","spriteUrl":"","users":{}},{"no":471,"name":"Glaceon Explorer Hat","displayName":"Glaceon Explorer Hat","spriteUrl":"","users":{}},{"no":477,"name":"Dusknoir Cempasuchil Crown","displayName":"Dusknoir Cempasuchil Crown","spriteUrl":"","users":{}},{"no":522,"name":"Blitzle Fashionable","displayName":"Blitzle Fashionable","spriteUrl":"","users":{}},{"no":547,"name":"Whimsicott Flower Crown","displayName":"Whimsicott Flower Crown","spriteUrl":"","users":{}},{"no":573,"name":"Cinccino Fashionable Costume","displayName":"Cinccino Fashionable Costume","spriteUrl":"","users":{}},{"no":613,"name":"Cubchoo Holidays","displayName":"Cubchoo Holidays","spriteUrl":"","users":{}},{"no":614,"name":"Beartic Holidays","displayName":"Beartic Holidays","spriteUrl":"","users":{}},{"no":656,"name":"Froakie Witch Hat","displayName":"Froakie Witch Hat","spriteUrl":"","users":{}},{"no":657,"name":"Frogadier Witch Hat","displayName":"Frogadier Witch Hat","spriteUrl":"","users":{}},{"no":658,"name":"Greninja Witch Hat","displayName":"Greninja Witch Hat","spriteUrl":"","users":{}},{"no":700,"name":"Sylveon Flower Crown","displayName":"Sylveon Flower Crown","spriteUrl":"","users":{}},{"no":700,"name":"Sylveon Holiday","displayName":"Sylveon Holiday","spriteUrl":"","users":{}},{"no":700,"name":"Sylveon Cherry Blossoms","displayName":"Sylveon Cherry Blossoms","spriteUrl":"","users":{}},{"no":700,"name":"Sylveon Explorer Hat","displayName":"Sylveon Explorer Hat","spriteUrl":"","users":{}},{"no":710,"name":"Pumpkaboo Average Size","displayName":"Pumpkaboo Average Size","spriteUrl":"","users":{}},{"no":710,"name":"Pumpkaboo Super Size","displayName":"Pumpkaboo Super Size","spriteUrl":"","users":{}},{"no":711,"name":"Gourgeist Small Size","displayName":"Gourgeist Small Size","spriteUrl":"","users":{}},{"no":710,"name":"Pumpkaboo Small Size","displayName":"Pumpkaboo Small Size","spriteUrl":"","users":{}},{"no":710,"name":"Pumpkaboo Large Size","displayName":"Pumpkaboo Large Size","spriteUrl":"","users":{}},{"no":711,"name":"Gourgeist Super Size","displayName":"Gourgeist Super Size","spriteUrl":"","users":{}},{"no":711,"name":"Gourgeist Average Size","displayName":"Gourgeist Average Size","spriteUrl":"","users":{}},{"no":711,"name":"Gourgeist Large Size","displayName":"Gourgeist Large Size","spriteUrl":"","users":{}},{"no":714,"name":"Noibat Headband","displayName":"Noibat Headband","spriteUrl":"","users":{}},{"no":715,"name":"Noivern Headband","displayName":"Noivern Headband","spriteUrl":"","users":{}},{"no":723,"name":"Dartrix Halloween","displayName":"Dartrix Halloween","spriteUrl":"","users":{}},{"no":724,"name":"Decidueye Halloween","displayName":"Decidueye Halloween","spriteUrl":"","users":{}},{"no":737,"name":"Charjabug Holiday 2025","displayName":"Charjabug Holiday 2025","spriteUrl":"","users":{}},{"no":738,"name":"Vikavolt Holiday 2025","displayName":"Vikavolt Holiday 2025","spriteUrl":"","users":{}},{"no":760,"name":"Bewear Wilderness Cape","displayName":"Bewear Wilderness Cape","spriteUrl":"","users":{}},{"no":832,"name":"Dubwool Holiday Attire","displayName":"Dubwool Holiday Attire","spriteUrl":"","users":{}},{"no":870,"name":"Falinks Train","displayName":"Falinks Train","spriteUrl":"","users":{}},{"no":901,"name":"Ursaluna Witch Hat","displayName":"Ursaluna Witch Hat","spriteUrl":"","users":{}},{"no":907,"name":"Floragato Hat With Likos Pin","displayName":"Floragato Hat With Likos Pin","spriteUrl":"","users":{}},{"no":999,"name":"Gimmighoul 9th Anniversary Coin","displayName":"Gimmighoul 9th Anniversary Coin","spriteUrl":"","users":{}}];
 // Additional form identities. When no permitted exact artwork is available,
 // the resolver intentionally falls back to the species sprite.
 const EXTRA_FORM_ENTRIES=[
@@ -592,105 +594,6 @@ const LEGENDARY_AVATAR_ENTRIES=[
   [1017,'Ogerpon (Teal Mask)'],[1017,'Ogerpon (Wellspring Mask)'],[1017,'Ogerpon (Hearthflame Mask)'],[1017,'Ogerpon (Cornerstone Mask)'],
   [1020,'Gouging Fire'],[1021,'Raging Bolt'],[1022,'Iron Boulder'],[1023,'Iron Crown'],[1024,'Terapagos'],[1025,'Pecharunt']
 ].map(([no,name,displayName])=>({no,name,displayName:displayName||name,users:{}}));
-const POKEMONDB_GO_SPRITE_BASE='https://img.pokemondb.net/sprites/go/normal/1x/';
-const POKEMONDB_GO_COSTUME_ALIASES={
-  'Eevee Explorer Hat':['eevee-explorer-hat'],
-  'Eevee Flower Crown':['eevee-flower'],
-  'Eevee Holiday 2023':['eevee-holiday-hat'],
-  'Eevee Cherry Blossoms':['eevee-cherry-blossoms'],
-  'Eevee Moon Crown':['eevee-moon-crown'],
-  'Eevee Sun Crown':['eevee-sun-crown'],
-  'Vaporeon Flower Crown':['vaporeon-flower'],
-  'Vaporeon Holiday 2023':['vaporeon-holiday-hat'],
-  'Vaporeon Cherry Blossoms':['vaporeon-cherry-blossoms'],
-  'Vaporeon Explorer Hat':['vaporeon-explorer-hat'],
-  'Jolteon Flower Crown':['jolteon-flower'],
-  'Jolteon Holiday 2023':['jolteon-holiday-hat'],
-  'Jolteon Cherry Blossoms':['jolteon-cherry-blossoms'],
-  'Jolteon Explorer Hat':['jolteon-explorer-hat'],
-  'Flareon Flower Crown':['flareon-flower'],
-  'Flareon Holiday 2023':['flareon-holiday-hat'],
-  'Flareon Cherry Blossoms':['flareon-cherry-blossoms'],
-  'Flareon Explorer Hat':['flareon-explorer-hat'],
-  'Espeon Flower Crown':['espeon-flower'],
-  'Espeon Holiday 2023':['espeon-holiday-hat'],
-  'Espeon Cherry Blossoms':['espeon-cherry-blossoms'],
-  'Espeon Explorer Hat':['espeon-explorer-hat'],
-  'Espeon Day Scarf':['espeon-day-scarf'],
-  'Umbreon Flower Crown':['umbreon-flower'],
-  'Umbreon Holiday 2023':['umbreon-holiday-hat'],
-  'Umbreon Cherry Blossoms':['umbreon-cherry-blossoms'],
-  'Umbreon Explorer Hat':['umbreon-explorer-hat'],
-  'Umbreon Night Scarf':['umbreon-night-scarf'],
-  'Leafeon Flower Crown':['leafeon-flower'],
-  'Leafeon Holiday 2023':['leafeon-holiday-hat'],
-  'Leafeon Cherry Blossoms':['leafeon-cherry-blossoms'],
-  'Leafeon Explorer Hat':['leafeon-explorer-hat'],
-  'Glaceon Flower Crown':['glaceon-flower'],
-  'Glaceon Holiday 2023':['glaceon-holiday-hat'],
-  'Glaceon Cherry Blossoms':['glaceon-cherry-blossoms'],
-  'Glaceon Explorer Hat':['glaceon-explorer-hat'],
-  'Sylveon Flower Crown':['sylveon-flower'],
-  'Sylveon Holiday':['sylveon-holiday-hat'],
-  'Sylveon Cherry Blossoms':['sylveon-cherry-blossoms'],
-  'Sylveon Explorer Hat':['sylveon-explorer-hat']
-};
-const POKEMONDB_GO_COSTUME_ALIAS_LOOKUP=Object.fromEntries(
-  Object.entries(POKEMONDB_GO_COSTUME_ALIASES).map(([key,value])=>[normalizeCostumeLookupKey(key),value])
-);
-const POKEMONDB_GO_SUFFIX_PATTERNS=[
-  [/ Explorer Hat$/i,['explorer-hat']],
-  [/ Cherry Blossoms$/i,['cherry-blossoms']],
-  [/ Flower Crown$/i,['flower','flower-crown']],
-  [/ Holiday 20\d{2}$/i,['holiday-hat','holiday']],
-  [/ Holidays$/i,['holiday-hat','holiday']],
-  [/ Holiday$/i,['holiday-hat','holiday']],
-  [/ Day Scarf$/i,['day-scarf']],
-  [/ Night Scarf$/i,['night-scarf']],
-  [/ Scarf$/i,['scarf']],
-  [/ Ribbon$/i,['ribbon']],
-  [/ Fashionable Costume$/i,['fashionable-costume','fashionable']],
-  [/ Fashionable Hat$/i,['fashionable-hat','fashionable']],
-  [/ Fashionable$/i,['fashionable']],
-  [/ Party Hat 20\d{2}$/i,['party-hat-2020','party-hat']],
-  [/ Party Hat$/i,['party-hat']],
-  [/ Party Top Hat$/i,['party-top-hat','top-hat']],
-  [/ Original Cap$/i,['original-cap']],
-  [/ World Cap$/i,['world-cap']],
-  [/ Fragment Cap$/i,['fragment-cap']],
-  [/ Flower Hat$/i,['flower-hat','flower']],
-  [/ Moon Crown$/i,['moon-crown']],
-  [/ Sun Crown$/i,['sun-crown']],
-  [/ Cempasuchil Crown$/i,['cempasuchil-crown','crown']],
-  [/ Holiday Attire$/i,['holiday-attire','holiday']],
-  [/ Swim Ring$/i,['swim-ring']],
-  [/ Witch Hat$/i,['witch-hat']],
-  [/ Bow$/i,['bow']],
-  [/ Backwards Cap$/i,['backwards-cap','backwardscap']],
-  [/ Halloween Mischief$/i,['halloween-mischief','halloween']],
-  [/ Halloween$/i,['halloween']],
-  [/ Spooky Festival$/i,['spooky-festival','spooky']],
-  [/ Night Cap$/i,['night-cap','nightcap']]
-];
-function pokemondbGoCostumeUrls(name='',{allowPattern=true}={}){
-  const raw=String(name||'').trim();
-  if(!raw)return[];
-  const exact=POKEMONDB_GO_COSTUME_ALIAS_LOOKUP[normalizeCostumeLookupKey(raw)];
-  if(exact?.length)return exact.map(slug=>`${POKEMONDB_GO_SPRITE_BASE}${slug}.png`);
-  if(!allowPattern)return[];
-  for(const [pattern,suffixes] of POKEMONDB_GO_SUFFIX_PATTERNS){
-    const match=raw.match(pattern);
-    if(!match)continue;
-    const species=raw.slice(0,match.index).trim();
-    const speciesSlug=pokemondbGoSpeciesSlug(species);
-    if(!speciesSlug)continue;
-    return suffixes.map(suffix=>`${POKEMONDB_GO_SPRITE_BASE}${speciesSlug}-${suffix}.png`);
-  }
-  return[];
-}
-function pokemondbGoCostumeUrl(name='',options){
-  return pokemondbGoCostumeUrls(name,options)[0]||'';
-}
 function isApprovedRuntimeSpriteUrl(url){
   const value=String(url||'').trim();
   if(!value)return false;
@@ -706,11 +609,12 @@ function isApprovedRuntimeSpriteUrl(url){
       return targetUrl.hostname==='img.pokemondb.net'&&targetUrl.pathname.startsWith('/sprites/');
     }catch{return false;}
   }
-  return parsed.origin===location.origin&&parsed.pathname.endsWith('/assets/max-cloud.svg');
+  if(parsed.origin!==location.origin)return false;
+  return parsed.pathname.endsWith('/assets/max-cloud.svg')||/\/assets\/sprites\/go\/[a-z0-9-]+\.png$/i.test(parsed.pathname);
 }
 function canvasSafeSpriteUrl(url){
   if(!isApprovedRuntimeSpriteUrl(url))return'';
-  if(url.startsWith(POKEMONDB_BASE)||url.startsWith(POKEMONDB_GO_SPRITE_BASE)){
+  if(url.startsWith(POKEMONDB_BASE)){
     return IMAGE_PROXY_BASE+encodeURIComponent(url.replace(/^https?:\/\//,''));
   }
   return url;
@@ -721,21 +625,19 @@ function spriteCatalogContext(no,name='',dn='',catalogId=''){
   const decorated=pokemonCatalogDomain.decorateCatalogEntry({no:Number(no)||null,name:resolved?.canonicalKey||rawName,displayName:dn||rawName,catalogId:catalogId||resolved?.catalogId});
   const canonicalId=catalogId||resolved?.catalogId||decorated?.catalogId||'';
   const lookupKeys=[decorated?.name,...(decorated?.spriteLookupKeys||[]),rawName,dn].filter(Boolean);
-  const unresolved=lookupKeys.some(isUnresolvedSpriteKey);
-  return Object.freeze({catalogId:canonicalId,canonicalName:decorated?.name||rawName,lookupKeys:Object.freeze([...new Set(lookupKeys)]),unresolved,override:canonicalSpriteOverride(canonicalId)});
+  const uniqueLookupKeys=Object.freeze([...new Set(lookupKeys)]);
+  const reviewed=costumeSpriteCatalogDomain.resolve({names:uniqueLookupKeys});
+  const unresolved=reviewed?.status==='unavailable'||lookupKeys.some(isUnresolvedSpriteKey);
+  return Object.freeze({catalogId:canonicalId,canonicalName:decorated?.name||rawName,lookupKeys:uniqueLookupKeys,reviewed,unresolved,override:canonicalSpriteOverride(canonicalId)});
 }
 function entrySpriteUrl(entry,nameOverride='',gender=''){
   const resolvedName=nameOverride||entry?.name||entry?.displayName||'';
   const context=spriteCatalogContext(entry?.no,resolvedName,entry?.displayName||resolvedName,entry?.catalogId);
   if(isApprovedRuntimeSpriteUrl(context.override?.url))return context.override.url;
+  const reviewed=costumeSpriteCatalogDomain.resolution({names:context.lookupKeys,gender});
+  if(reviewed.knownVariant)return reviewed.urls[0]||null;
   const storedUrl=entry?.spriteUrl||entry?.sprite||'';
   if(isApprovedRuntimeSpriteUrl(storedUrl))return storedUrl;
-  if(!context.unresolved){
-    for(const key of context.lookupKeys){
-      const pdbGoCostume=pokemondbGoCostumeUrl(key,{allowPattern:false});
-      if(pdbGoCostume)return pdbGoCostume;
-    }
-  }
   return spriteUrl(entry?.no,resolvedName,gender,entry?.displayName||resolvedName,context.catalogId);
 }
 // Resolves the BEST QUALITY sprite URL.
@@ -746,35 +648,26 @@ function entrySpriteUrl(entry,nameOverride='',gender=''){
 function spriteUrl(no,name,gender='',dn='',catalogId=''){
   const context=spriteCatalogContext(no,name,dn,catalogId);
   if(isApprovedRuntimeSpriteUrl(context.override?.url))return context.override.url;
+  const reviewed=costumeSpriteCatalogDomain.resolution({names:context.lookupKeys,gender});
+  if(reviewed.knownVariant)return reviewed.urls[0]||null;
   const lookupName=context.canonicalName||name;
   const compatibilityKeys=context.lookupKeys;
-  if(context.unresolved){
-    const plainName=String(lookupName||'').split(/\s*\(/)[0]||'Pikachu';
-    return pokemondbSpriteUrl(plainName,plainName,gender)||`${SPRITE_BASE}${parseInt(no)}.png`;
-  }
-  // 1. Prefer PokémonDB's GO-specific costume art when we can infer a reliable costume URL.
-  //    It is clearer than many legacy wiki assets and fixes several Eeveelution costume mismatches.
-  //    Keep this to exact mappings only; broad suffix guesses belong in the fallback chain.
-  for(const key of compatibilityKeys){
-    const pdbGoCostume=pokemondbGoCostumeUrl(key,{allowPattern:false});
-    if(pdbGoCostume)return pdbGoCostume;
-  }
-  // 2. PokeAPI form variants (Unown, Vivillon, Furfrou, and game forms).
+  // 1. PokeAPI form variants (Unown, Vivillon, Furfrou, and game forms).
   const formKey=compatibilityKeys.find(key=>COSTUME_FORM_SPRITE_IDS[key]);
   if(formKey)return`${SPRITE_BASE}${COSTUME_FORM_SPRITE_IDS[formKey]}.png`;
-  // 3. PokeAPI regional form (Alolan, Galarian, Hisuian, Paldean) — but
+  // 2. PokeAPI regional form (Alolan, Galarian, Hisuian, Paldean) — but
   //    a few form IDs map to PokeAPI placeholder PNGs (200 OK, ~400 bytes,
   //    no real character art). For those we skip ahead so PokemonDB HOME wins.
   const regionalKey=compatibilityKeys.find(key=>REGIONAL_FORM_IDS[key]);
   if(regionalKey&&!POKEAPI_PLACEHOLDER_FORM_IDS.has(REGIONAL_FORM_IDS[regionalKey])){
     return`${SPRITE_BASE}${REGIONAL_FORM_IDS[regionalKey]}.png`;
   }
-  // 4. PokeAPI female sprite (Pyroar ♀, Pikachu ♀ tail, etc.) should outrank plain base art.
+  // 3. PokeAPI female sprite (Pyroar ♀, Pikachu ♀ tail, etc.) should outrank plain base art.
   if(gender==='f'){
     const fUrl=femaleSpriteUrl(no);
     if(fUrl)return fUrl;
   }
-  // 5. Pokémon Database HOME render, then PokeAPI base.
+  // 4. Pokémon Database HOME render, then PokeAPI base.
   const pdb=pokemondbSpriteUrl(lookupName,dn||lookupName,gender);
   if(pdb)return pdb;
   if(!no)return null;
@@ -801,7 +694,7 @@ function pokemondbSpriteUrl(name,dn,gender=''){
 
 // Build a cascading fallback chain of sprite URLs.
 // Strategy:
-//   1. Verified Pokémon Database GO mapping
+//   1. Reviewed, self-hosted Pokémon Database GO mapping
 //   2. PokeAPI form/regional/gender variants
 //   3. Pokémon Database HOME render
 //   4. PokeAPI base dex
@@ -810,25 +703,23 @@ function spriteFallbackChain(no,name,gender='',dn='',catalogId=''){
   const push=u=>{if(isApprovedRuntimeSpriteUrl(u)&&!urls.includes(u))urls.push(u);};
   const context=spriteCatalogContext(no,name,dn,catalogId);
   push(context.override?.url);
+  const reviewed=costumeSpriteCatalogDomain.resolution({names:context.lookupKeys,gender});
+  if(reviewed.knownVariant){for(const url of reviewed.urls)push(url);return urls;}
   // Primary URL (from spriteUrl — uses GO costume slugs first now)
   const primary=spriteUrl(no,name,gender,dn,context.catalogId);
   push(primary);
   const compatibilityKeys=context.lookupKeys;
-  const safeName=context.unresolved?(String(context.canonicalName||name||'').split(/\s*\(/)[0]||'Pikachu'):(context.canonicalName||name);
-  // Exact GO costume aliases first.
-  if(!context.unresolved)for(const key of compatibilityKeys)for(const u of pokemondbGoCostumeUrls(key,{allowPattern:false}))push(u);
-  // Pattern-guessed Pokémon Database GO filenames are helpful, but should not outrank exact mappings.
-  if(!context.unresolved)for(const key of compatibilityKeys)for(const u of pokemondbGoCostumeUrls(key,{allowPattern:true}))push(u);
+  const safeName=context.canonicalName||name;
   // PokeAPI specific form variants
-  if(!context.unresolved)for(const key of compatibilityKeys){
+  for(const key of compatibilityKeys){
     if(REGIONAL_FORM_IDS[key])push(`${SPRITE_BASE}${REGIONAL_FORM_IDS[key]}.png`);
     if(COSTUME_FORM_SPRITE_IDS[key])push(`${SPRITE_BASE}${COSTUME_FORM_SPRITE_IDS[key]}.png`);
   }
   if(gender==='f')push(femaleSpriteUrl(no));
   // Pokémon Database HOME for form/regional/gender variants.
-  push(pokemondbSpriteUrl(safeName,context.unresolved?safeName:(dn||safeName),gender));
+  push(pokemondbSpriteUrl(safeName,dn||safeName,gender));
   if(gender==='f'){
-    push(pokemondbSpriteUrl(safeName,context.unresolved?safeName:(dn||safeName),''));   // PokemonDB without -female suffix
+    push(pokemondbSpriteUrl(safeName,dn||safeName,''));   // PokemonDB without -female suffix
     if(primary&&primary.includes('/female/')&&no){
       push(`${SPRITE_BASE}${parseInt(no)}.png`); // PokeAPI base when /female/ 404s
     }
@@ -928,9 +819,12 @@ function _runSpriteScaleDetection(url){
     finish();
   },6000);
   // Use the approved proxy for CORS-friendly optical analysis.
-  const proxiedUrl=url.startsWith('https://images.weserv.nl/')
-    ?url
-    :IMAGE_PROXY_BASE+encodeURIComponent(url.replace(/^https?:\/\//,''));
+  const absoluteUrl=new URL(url,document.baseURI);
+  const proxiedUrl=absoluteUrl.origin===location.origin
+    ?absoluteUrl.href
+    :url.startsWith('https://images.weserv.nl/')
+      ?url
+      :IMAGE_PROXY_BASE+encodeURIComponent(url.replace(/^https?:\/\//,''));
   const img=new Image();
   img.crossOrigin='anonymous';
   img.onload=()=>{
@@ -1034,7 +928,11 @@ function spriteImg(no,size=40,cls='',name='',gender='',dn='',opts={}){
     ...(opts?.urlOverride?[opts.urlOverride]:[]),
     ...spriteFallbackChain(no,name,gender,dn,context.catalogId)
   ].filter((u,i,arr)=>isApprovedRuntimeSpriteUrl(u)&&arr.indexOf(u)===i);
-  if(!urls.length)return`<div class="pc-sprite-placeholder" style="width:${size}px;height:${size}px">🎮</div>`;
+  if(!urls.length){
+    const knownUnavailable=context.reviewed?.status==='unavailable';
+    const label=i18nCore.t('sprite.artUnavailable',{name:dn||name||'Pokémon'});
+    return`<span class="pc-sprite-placeholder ${knownUnavailable?'known-unavailable':''} ${escAttr(cls)}" style="width:${size}px;height:${size}px" role="img" aria-label="${escAttr(label)}">?</span>`;
+  }
   const url=urls[0];
   const isGo=url.includes('weserv.nl')||url.includes('/sprites/go/');
   const rendering=isGo?'auto':'pixelated';
@@ -6598,13 +6496,14 @@ function imageTrimBox(img){
   return box;
 }
 function drawSpriteFallback(ctx,e,x,y,size){
+  const reviewed=costumeSpriteCatalogDomain.resolution({names:[e?.spriteName||e?.name,e?.dn].filter(Boolean),gender:e?.gender});
   roundedRect(ctx,x,y,size,size,8);
   ctx.fillStyle='#eef2ff';ctx.fill();
-  ctx.strokeStyle='rgba(99,102,241,.22)';ctx.stroke();
+  ctx.strokeStyle=reviewed.knownVariant?'rgba(99,102,241,.5)':'rgba(99,102,241,.22)';ctx.stroke();
   ctx.fillStyle='#5b5ce2';
   ctx.font='700 15px Space Grotesk, sans-serif';
   ctx.textAlign='center';
-  ctx.fillText(String(e.dn||'?').slice(0,2).toUpperCase(),x+size/2,y+size/2+6);
+  ctx.fillText(reviewed.knownVariant?'?':String(e.dn||'?').slice(0,2).toUpperCase(),x+size/2,y+size/2+6);
   ctx.textAlign='left';
 }
 function maxCrownSvg(maxType){
@@ -10636,8 +10535,7 @@ function renderSpecialBoard(){
   ['lf','ft'].forEach(side=>{
     const el=document.getElementById(`special-${side}-list`);if(!el)return;
     el.innerHTML=board[side].map((e,i)=>{
-      const spr=entrySpriteUrl(e,e.name)||spriteUrl(e.no,e.name);
-      const sprHtml=spr?`<img class="sb-row-sprite" src="${escAttr(spr)}" alt="" loading="lazy">`:'<span class="sb-row-sprite" style="display:inline-block">🎮</span>';
+      const sprHtml=spriteImg(e.no,24,'sb-row-sprite',e.name,'',e.dn||e.name,{catalogId:e.catalogId,scaleCap:1});
       const qtyHtml=side==='ft'?`<input type="number" class="sb-row-qty" min="1" max="999" value="${e.qty||1}" onchange="setSpecialQty('${side}',${i},this.value)" aria-label="Quantity">`:'';
       const display=pokemonDisplayName({name:e.name,no:e.no,displayName:e.dn||e.name});
       const backgroundId=normalizeBackgroundId(e.backgroundId),backgroundName=backgroundId?backgroundDisplayName(backgroundId):'';
