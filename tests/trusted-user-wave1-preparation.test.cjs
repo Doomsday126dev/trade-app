@@ -26,7 +26,7 @@ test('Wave 1 artwork inventory distinguishes production .80 from the .82 source 
   });
   assert.deepEqual(inventory.sourceCandidate,{
     basedOnMainCommit:'fd4e399793642cc53fda6d634966f6ce73772847',
-    targetRelease:'2026-08-30.83',
+    targetRelease:'2026-08-30.84',
     canonicalRecords:376,
     exactArtworkRecords:355,
     pendingArtworkRecords:21,
@@ -83,7 +83,7 @@ test('Wave 1 kit covers all independent journeys, severity levels, cleanup, and 
   assert.match(results,/Do not prefill outcomes/);
   assert.match(results,/Not exercised/);
   const readme=fs.readFileSync(path.join(dir,'README.md'),'utf8');
-  for(const item of ['2026-08-30.83','21 pending reviewed costume artworks','42 background eligibility mappings','background artwork/source strategy','optional Special Trade Board background filter','account-isolation sync scenario not exercised','EN, JA, ES, and DE'])assert.match(readme,new RegExp(item));
+  for(const item of ['2026-08-30.84','21 pending reviewed costume artworks','42 background eligibility mappings','background artwork/source strategy','optional Special Trade Board background filter','account-isolation sync scenario not exercised','EN, JA, ES, and DE'])assert.match(readme,new RegExp(item));
   assert.match(readme,/3–5 trusted Pokémon GO traders/);
   assert.match(readme,/Provider linking, Google login, Discord login, and public beta remain outside this wave/);
   assert.match(checklist,/Pikachu \(Halloween 2024\)/);
