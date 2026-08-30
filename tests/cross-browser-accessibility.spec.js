@@ -603,6 +603,50 @@ test.describe('audit cross-browser contracts',()=>{
     expect(switched).toEqual({resultCode:'account-sync/session-changed',recoveryStatus:'idle',rawRecoveryStatus:'idle',oldStops:0,replacementStops:0,owner:'uid-new-session'});
   });
 
+  test('projection-incomplete preserved review exposes restart before saved-copy review',async({page})=>{
+    await page.setViewportSize({width:390,height:844});
+    await page.goto(`./?preserved-review-restart=${Date.now()}`,{waitUntil:'domcontentloaded'});
+    await waitForApp(page);await establishAccount(page,'StandaloneOwner');
+    const before=await page.evaluate(async()=>{
+      auth={currentUser:{uid:'uid-standalone-review'}};cur='StandaloneOwner';accountSyncEligibleUid='uid-standalone-review';
+      managedAccountSyncRuntime={ownerUid:'uid-standalone-review',projectionReady:false};
+      accountSyncUiState=Object.freeze({state:'review-required',eligible:true,active:true,listenerState:'healthy',listenerHealthy:true,controllerHealthy:true,pendingCount:0,blockedCount:0,conflictCount:0,recoveryCandidateCount:66,lastError:'',lastErrorCategory:''});
+      invalidateAccountSyncRecovery('standalone_review_setup');refreshSyncUi();
+      const plan=accountSyncCurrentRecoveryPlan();
+      window.__standaloneRecoveryRoute=[];requestAccountSyncRecovery=async()=>window.__standaloneRecoveryRoute.push('recover');openAccountSettingsSection=section=>window.__standaloneRecoveryRoute.push(`settings:${section}`);await openSyncDetail();
+      return{action:plan.action,category:plan.category,code:plan.code,recoveryHidden:document.getElementById('trainer-sync-recovery').hidden,recoveryLabel:document.getElementById('trainer-sync-recovery-label').textContent,reviewHidden:document.getElementById('trainer-sync-preserved-review').hidden,route:window.__standaloneRecoveryRoute};
+    });
+    expect(before).toEqual({action:'restart-runtime',category:'projection',code:'account-sync/review-not-ready',recoveryHidden:false,recoveryLabel:'Restart sync',reviewHidden:true,route:['recover']});
+
+    const after=await page.evaluate(async()=>{
+      managedAccountSyncRuntime.projectionReady=true;refreshSyncUi();await openSyncDetail();
+      const plan=accountSyncCurrentRecoveryPlan();
+      return{action:plan.action,category:plan.category,recoveryHidden:document.getElementById('trainer-sync-recovery').hidden,reviewHidden:document.getElementById('trainer-sync-preserved-review').hidden,reviewText:document.getElementById('trainer-sync-preserved-review-count').textContent,ready:accountSyncPreservedReviewReady(),route:window.__standaloneRecoveryRoute};
+    });
+    expect(after.action).toBe('none');expect(after.category).toBe('review-required');expect(after.recoveryHidden).toBe(true);expect(after.reviewHidden).toBe(false);expect(after.reviewText).toContain('66');expect(after.ready).toBe(true);expect(after.route).toEqual(['recover','settings:data']);
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth>document.documentElement.clientWidth)).toBe(false);
+  });
+
+  test('standalone-style browser contexts keep compatibility storage isolated',async({browser,page})=>{
+    await page.goto(`./?container-storage-a=${Date.now()}`,{waitUntil:'domcontentloaded'});
+    const absoluteUrl=page.url(),databaseName=`pogo_context_isolation_${Date.now()}`;
+    await page.evaluate(async databaseName=>{
+      localStorage.setItem('pogo-standalone-context','safari');
+      await new Promise((resolve,reject)=>{const request=indexedDB.open(databaseName,1);request.onupgradeneeded=()=>request.result.createObjectStore('state');request.onsuccess=()=>{const db=request.result,tx=db.transaction('state','readwrite');tx.objectStore('state').put('safari','owner');tx.oncomplete=()=>{db.close();resolve();};tx.onerror=()=>reject(tx.error);};request.onerror=()=>reject(request.error);});
+    },databaseName);
+    const standalone=await browser.newContext();
+    try{
+      const standalonePage=await standalone.newPage();await standalonePage.goto(absoluteUrl,{waitUntil:'domcontentloaded'});
+      const isolated=await standalonePage.evaluate(async databaseName=>{
+        const localBefore=localStorage.getItem('pogo-standalone-context'),databases=typeof indexedDB.databases==='function'?await indexedDB.databases():[];
+        localStorage.setItem('pogo-standalone-context','installed-app');
+        return{localBefore,databaseVisible:databases.some(item=>item.name===databaseName),localAfter:localStorage.getItem('pogo-standalone-context')};
+      },databaseName);
+      expect(isolated).toEqual({localBefore:null,databaseVisible:false,localAfter:'installed-app'});
+      expect(await page.evaluate(()=>localStorage.getItem('pogo-standalone-context'))).toBe('safari');
+    }finally{await standalone.close();}
+  });
+
   test('fieldless sync conflicts expose only canonical saved-copy acceptance',async({page})=>{
     await page.setViewportSize({width:390,height:844});
     await page.goto(`./?fieldless-sync-conflict=${Date.now()}`,{waitUntil:'domcontentloaded'});

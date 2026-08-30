@@ -46,6 +46,29 @@ test('recovery routing distinguishes retained writes, runtime failures, conflict
   assert.equal(api.recoveryPlan(context(healthy(),{projectionReady:true})).category,'healthy');
 });
 
+test('projection-incomplete preserved review routes to one runtime restart instead of a dead-end review',()=>{
+  const api=load(),snapshot=healthy({state:'review-required',recoveryCandidateCount:66});
+  const plan=api.recoveryPlan(context(snapshot,{projectionReady:false}));
+  assert.equal(plan.action,'restart-runtime');
+  assert.equal(plan.category,'projection');
+  assert.equal(plan.code,'account-sync/review-not-ready');
+  assert.equal(plan.reviewCount,66);
+});
+
+test('a bounded restart may restore projection authority and hand preserved candidates to owner review without replay',async()=>{
+  const api=load(),initial=context(healthy({state:'review-required',recoveryCandidateCount:66}),{projectionReady:false}),reviewReady=context(healthy({state:'review-required',recoveryCandidateCount:66}),{projectionReady:true});
+  let restarts=0,retries=0,recaptures=0;
+  const coordinator=api.createRecoveryCoordinator({
+    capture:async()=>initial,isCurrent:()=>true,
+    retryBlocked:async()=>{retries++;return{ok:false,retried:0};},
+    restart:async()=>{restarts++;return reviewReady;},
+    recapture:async()=>{recaptures++;return reviewReady;}
+  });
+  const result=await coordinator.recover();
+  assert.equal(result.ok,false);assert.equal(result.status,'review');assert.equal(result.category,'review-required');assert.equal(result.code,'account-sync/review-required');
+  assert.equal(restarts,1);assert.equal(retries,0);assert.equal(recaptures,2);assert.equal(reviewReady.snapshot.recoveryCandidateCount,66);
+});
+
 test('unsafe canonical evidence outranks conflicts, review candidates, and retained operations without erasing their counts',()=>{
   const api=load(),cases=[
     {name:'conflict plus malformed canonical',snapshot:healthy({state:'conflict',conflictCount:1,lastError:'account-sync/remote-entity-invalid',lastErrorCategory:'canonical'}),counts:{conflictCount:1,reviewCount:0,blockedCount:0}},

@@ -2556,6 +2556,9 @@ async function accountSyncPreservedReviewAuthority(){
 function accountSyncPreservedReviewAuthorityCurrent(authority){
   return authority?.mode==='canonical-review'&&authority.sessionGeneration===_sessionTransientGeneration&&authority.runtimeGeneration===accountSyncRuntimeGeneration&&accountSyncFavoriteReviewAuthorityCurrent(authority);
 }
+function accountSyncPreservedReviewReady(runtime=managedAccountSyncRuntime,snapshot=accountSyncUiState){
+  return runtime?.projectionReady===true&&runtime.ownerUid===auth?.currentUser?.uid&&snapshot?.state==='review-required'&&snapshot?.active===true&&snapshot?.listenerHealthy===true&&snapshot?.controllerHealthy===true&&!Number(snapshot?.pendingCount)&&!Number(snapshot?.blockedCount)&&!Number(snapshot?.conflictCount)&&Number(snapshot?.recoveryCandidateCount)>0;
+}
 function accountSyncProjectionReady(){
   const state=String(accountSyncUiState?.state||'inactive');
   return!!accountSyncEligibleUid&&accountSyncEligibleUid===auth?.currentUser?.uid&&managedAccountSyncRuntime?.projectionReady===true&&managedAccountSyncRuntime.ownerUid===accountSyncEligibleUid&&accountSyncUiState?.active===true&&accountSyncUiState?.listenerHealthy===true&&accountSyncUiState?.controllerHealthy===true&&!['sync-error','conflict','review-required','inactive'].includes(state);
@@ -2852,7 +2855,7 @@ function getAccountSyncRecoveryCoordinator(){
       await stopAccountSyncRuntime();
       if(!accountSyncRecoveryBindingCurrent(binding))throw Object.assign(new Error('Account sync session changed'),{code:'account-sync/session-changed'});
       const started=await ensureAccountSyncRuntime();
-      if(!started?.ok)throw Object.assign(new Error('Account sync restart did not become ready'),{code:accountSyncRuntimeData.diagnosticCode(started?.status,'account-sync/restart-failed')});
+      if(!started?.ok&&!accountSyncPreservedReviewReady())throw Object.assign(new Error('Account sync restart did not become ready'),{code:accountSyncRuntimeData.diagnosticCode(started?.status,'account-sync/restart-failed')});
       if(accountSyncRecoveryCoordinator!==coordinator||accountSyncRecoveryCoordinatorBinding!==bindingKey||!accountSyncRecoveryBindingCurrent(binding))throw Object.assign(new Error('Account sync session changed'),{code:'account-sync/session-changed'});
       accountSyncRecoveryCoordinatorRuntimeGeneration=accountSyncRuntimeGeneration;
       return accountSyncRecoveryContext(binding);
@@ -8538,7 +8541,7 @@ function refreshSyncUi(){
       if(showDiagnostic)recovery.setAttribute('aria-describedby','trainer-sync-diagnostic');else recovery.removeAttribute('aria-describedby');
       if(recoveryLabel)recoveryLabel.textContent=i18nCore.t(account.running?'accountSync.recoveryRunning':account.actionKey||'accountSync.restartSync');
     }
-    const canReview=account.state==='review-required'&&managedAccountSyncRuntime?.projectionReady===true&&accountSyncUiState?.active===true&&accountSyncUiState?.listenerHealthy===true&&accountSyncUiState?.controllerHealthy===true&&!Number(accountSyncUiState?.pendingCount)&&!Number(accountSyncUiState?.blockedCount)&&!Number(accountSyncUiState?.conflictCount)&&Number(accountSyncUiState?.recoveryCandidateCount)>0;
+    const canReview=accountSyncPreservedReviewReady();
     if(preservedReview){preservedReview.hidden=!canReview;if(preservedReviewCount)preservedReviewCount.textContent=i18nCore.t('accountSync.preservedReviewDetail',{count:i18nCore.formatNumber(accountSyncUiState?.recoveryCandidateCount||0)});}
     if(preservedReviewAction){preservedReviewAction.disabled=accountSyncPreservedReviewRunning;preservedReviewAction.setAttribute('aria-busy',accountSyncPreservedReviewRunning?'true':'false');}
   }else{
@@ -8604,8 +8607,9 @@ async function reconnectAuth(){
 async function openSyncDetail(){
   const account=accountSyncPresentation();
   if(account){
-    if(account.state==='review-required'){openAccountSettingsSection('data');return;}
+    if(account.plan.action==='review-conflict'){await reviewAccountSyncConflicts();return;}
     if(account.plan.action!=='none'){await requestAccountSyncRecovery();return;}
+    if(account.state==='review-required'){openAccountSettingsSection('data');return;}
     toast(i18nCore.t(account.detailKey,{count:i18nCore.formatNumber(account.count)}),4500);
     return;
   }
@@ -8645,7 +8649,10 @@ async function requestAccountSyncRecovery(){
   const result=await performAccountSyncRecovery();
   if(result.ok){toast(i18nCore.t('accountSync.recoverySucceeded'),3500);return result;}
   if(result.status==='pending'){toast(i18nCore.t('accountSync.recoveryPending'),4500);return result;}
-  if(result.status==='review'){toast(i18nCore.t('accountSync.reviewConflict'),3500);await reviewAccountSyncConflicts();return result;}
+  if(result.status==='review'){
+    if(result.category==='review-required'){openAccountSettingsSection('data');toast(i18nCore.t('accountSync.reviewRequiredDetail'),3500);return result;}
+    toast(i18nCore.t('accountSync.reviewConflict'),3500);await reviewAccountSyncConflicts();return result;
+  }
   toast(i18nCore.t('accountSync.recoveryFailed'),5000);return result;
 }
 function accountSyncConflictFieldLabel(path){
