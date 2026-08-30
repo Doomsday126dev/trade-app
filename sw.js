@@ -40,7 +40,10 @@ const RELEASE_ASSETS=[
   'js/domain/scheduleEventRules.js',
   'js/domain/scheduleTradeRules.js',
   'js/domain/pokemonKeys.js',
+  'js/domain/publicPokemonDex.js',
   'js/domain/spriteSlugs.js',
+  'js/domain/costumeSpriteCatalog.js',
+  'js/ui/spriteOptical.js',
   'js/domain/fuzzyText.js',
   'js/domain/autocompleteText.js',
   'js/domain/autocompleteMatching.js',
@@ -188,6 +191,7 @@ self.addEventListener('message',ev=>{
 });
 
 function isSpriteRequest(url){
+  if(url.origin===self.location.origin&&/\/assets\/sprites\/go\/[a-z0-9-]+\.png$/i.test(url.pathname))return true;
   if(!SPRITE_HOSTS.includes(url.hostname))return false;
   // Restrict to image-like requests
   return /\.(png|jpe?g|gif|webp|svg)$/i.test(url.pathname)||url.pathname.includes('/sprites/')||url.searchParams.has('url');

@@ -52,12 +52,14 @@ function deepEq(actual, expected, message) {
   'js/domain/scheduleEventRules.js',
   'js/domain/scheduleTradeRules.js',
   'js/domain/pokemonKeys.js',
+  'js/domain/publicPokemonDex.js',
   'js/domain/fuzzyText.js',
   'js/domain/autocompleteText.js',
   'js/domain/autocompleteMatching.js',
   'js/domain/autocompleteRanking.js',
   'js/domain/relativeTime.js',
   'js/domain/spriteSlugs.js',
+  'js/domain/costumeSpriteCatalog.js',
   'js/utils/textSafety.js',
   'js/ui/stringPanels.js',
   'js/ui/emptyState.js'
@@ -83,12 +85,14 @@ assert(domain.searchStrings, 'searchStrings namespace should exist');
 assert(domain.scheduleEventRules, 'scheduleEventRules namespace should exist');
 assert(domain.scheduleTradeRules, 'scheduleTradeRules namespace should exist');
 assert(domain.pokemonKeys, 'pokemonKeys namespace should exist');
+assert(domain.publicPokemonDex, 'publicPokemonDex namespace should exist');
 assert(domain.fuzzyText, 'fuzzyText namespace should exist');
 assert(domain.autocompleteText, 'autocompleteText namespace should exist');
 assert(domain.autocompleteMatching, 'autocompleteMatching namespace should exist');
 assert(domain.autocompleteRanking, 'autocompleteRanking namespace should exist');
 assert(domain.relativeTime, 'relativeTime namespace should exist');
 assert(domain.spriteSlugs, 'spriteSlugs namespace should exist');
+assert(domain.costumeSpriteCatalog, 'costumeSpriteCatalog namespace should exist');
 assert(utils.textSafety, 'textSafety namespace should exist');
 assert(ui.stringHtml, 'stringHtml namespace should exist');
 assert(ui.stringPanels, 'stringPanels namespace should exist');

@@ -1,4 +1,5 @@
 const {test,expect}=require('@playwright/test');
+const path=require('node:path');
 
 const publicProjection=Object.freeze({
   version:1,
@@ -17,14 +18,25 @@ const publicProjection=Object.freeze({
   updatedAt:1_788_000_000_000
 });
 
-async function installPublicFirebase(page,{exists=true}={}){
+const paddedSpritePath=path.join(__dirname,'..','assets','sprites','go','pikachu-world-champs-2025.png');
+const regularSprite='<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><circle cx="16" cy="16" r="12" fill="#8b7cf6"/></svg>';
+
+async function installPublicFirebase(page,{exists=true,projection=publicProjection}={}){
   const requests=[];
   page.on('request',request=>requests.push(request.url()));
   await page.route('**/sw.js*',route=>route.abort());
   await page.route('https://static.cloudflareinsights.com/**',route=>route.abort());
-  await page.route('https://img.pokemondb.net/**',route=>route.fulfill({
+  const spriteResponse=route=>{
+    const padded=route.request().url().includes('snom.png')||route.request().url().includes('/872.png');
+    if(padded)return route.fulfill({path:paddedSpritePath,contentType:'image/png',headers:{'access-control-allow-origin':'*','cross-origin-resource-policy':'cross-origin'}});
+    return route.fulfill({contentType:'image/svg+xml',headers:{'access-control-allow-origin':'*','cross-origin-resource-policy':'cross-origin'},body:regularSprite});
+  };
+  await page.route('https://img.pokemondb.net/**',spriteResponse);
+  await page.route('https://images.weserv.nl/**',spriteResponse);
+  await page.route('https://raw.githubusercontent.com/PokeAPI/sprites/**',route=>route.fulfill({
     contentType:'image/svg+xml',
-    body:'<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><circle cx="16" cy="16" r="12" fill="#8b7cf6"/></svg>'
+    headers:{'access-control-allow-origin':'*','cross-origin-resource-policy':'cross-origin'},
+    body:regularSprite
   }));
   await page.route('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js',route=>route.fulfill({
     contentType:'application/javascript',headers:{'access-control-allow-origin':'*'},
@@ -38,7 +50,7 @@ async function installPublicFirebase(page,{exists=true}={}){
   }));
   await page.route('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js',route=>route.fulfill({
     contentType:'application/javascript',headers:{'access-control-allow-origin':'*'},
-    body:`const projection=${JSON.stringify(publicProjection)};
+    body:`const projection=${JSON.stringify(projection)};
       export function getDatabase(){return{kind:'public-database'}}
       export function ref(_database,path){return{path}}
       export async function get(target){
@@ -83,7 +95,7 @@ test.describe('anonymous public share bootstrap',()=>{
     await expect(page.locator('#share-list-out')).toContainText('Chicago 2026');
     await expect(page.locator('#share-list-out')).toContainText('Create your trade list');
     await expect(page.locator('.public-share-pokemon-sprite')).toHaveCount(2);
-    await expect(page.locator('.public-share-pokemon-sprite').first()).toHaveAttribute('src',/img\.pokemondb\.net\/sprites\/home\/normal\/pikachu-female\.png/);
+    await expect(page.locator('.public-share-pokemon-sprite').first()).toHaveAttribute('src',/raw\.githubusercontent\.com\/PokeAPI\/sprites\/master\/sprites\/pokemon\/other\/home\/female\/25\.png/);
     await expect(page.locator('.public-share-pokemon-mark')).toHaveCount(0);
     await assertPublicPrivacy(page);
     await page.locator('#app-legal-footer button').click();
@@ -107,6 +119,41 @@ test.describe('anonymous public share bootstrap',()=>{
     await expect(page.locator('.public-share-cta')).toBeVisible();
     await assertPublicPrivacy(page);
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
+  });
+
+  test('costume art stays exact and transparent-canvas sprites normalize without shifting cards',async({page})=>{
+    const projection={...publicProjection,lists:{
+      ...publicProjection.lists,
+      wishlist:{
+        Snom:{p:'H'},
+        'Pikachu (Worlds 2025)':{p:'M'},
+        'Pikachu (Worlds 2026)':{p:'L'}
+      }
+    }};
+    const requests=await installPublicFirebase(page,{projection});
+    await page.goto('./?view=PublicTrainer&list=wishlist',{waitUntil:'domcontentloaded'});
+
+    const snom=page.locator('.share-pcard').filter({hasText:'Snom'});
+    const worlds2025=page.locator('.share-pcard').filter({hasText:'Pikachu (Worlds 2025)'});
+    const worlds2026=page.locator('.share-pcard').filter({hasText:'Pikachu (Worlds 2026)'});
+    await expect(snom.locator('img')).toHaveAttribute('data-optical-ready','true');
+    const geometry=await snom.evaluate(card=>({
+      cardHeight:card.getBoundingClientRect().height,
+      column:card.querySelector('.share-pcard-sprite-wrap').getBoundingClientRect().width,
+      scale:Number(card.querySelector('img').style.transform.match(/[\d.]+/)?.[0]||1)
+    }));
+    expect(geometry.cardHeight).toBeGreaterThanOrEqual(52);
+    expect(geometry.column).toBeGreaterThanOrEqual(32);
+    expect(geometry.column).toBeLessThanOrEqual(34);
+    expect(geometry.scale).toBeGreaterThanOrEqual(1);
+    expect(requests.some(url=>/raw\.githubusercontent\.com\/PokeAPI\/sprites\/master\/sprites\/pokemon\/other\/home\/872\.png/.test(url))).toBe(true);
+
+    await expect(worlds2025.locator('img')).toHaveAttribute('src',/assets\/sprites\/go\/pikachu-world-champs-2025\.png/);
+    await expect(worlds2025.locator('img')).toHaveAttribute('data-optical-ready','true');
+    expect(await worlds2025.locator('img').evaluate(image=>Number(image.style.transform.match(/[\d.]+/)?.[0]||1))).toBeGreaterThan(1.5);
+    await expect(worlds2026.locator('.public-share-pokemon-mark.known-unavailable')).toHaveText('?');
+    await expect(worlds2026.locator('img')).toHaveCount(0);
+    expect(await page.locator('.public-share-pokemon-sprite').evaluateAll(images=>images.some(image=>/\/pikachu(?:-female)?\.png$/.test(new URL(image.src).pathname)))).toBe(false);
   });
 
   test('invalid links fail publicly without requesting Firebase',async({page})=>{

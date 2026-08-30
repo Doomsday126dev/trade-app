@@ -69,10 +69,12 @@
     return`<span class="share-pcard-flag background background-visual-label ${attr(className)}" style="${attr(style)}" title="${attr(full)}"><span class="background-visual-chip" aria-hidden="true"></span><span>${esc(label)}</span><span class="sr-only">${esc(t('background.label'))}</span></span>`;
   }
   function spriteHtml(name,gender){
-    const urls=global.PogoDomain.spriteSlugs.publicSpriteUrls(name,gender);
-    if(!urls.length)return'<div class="public-share-pokemon-mark" aria-hidden="true"></div>';
+    const sprites=global.PogoDomain.spriteSlugs;
+    const urls=sprites.publicSpriteUrls(name,gender,sprites.publicSpriteDex(name));
+    const reviewed=global.PogoDomain.costumeSpriteCatalog.resolution({name,gender});
+    if(!urls.length)return`<div class="public-share-pokemon-mark ${reviewed.knownVariant?'known-unavailable':''}" aria-hidden="true">?</div>`;
     const[src,...fallbacks]=urls;
-    return`<div class="share-pcard-sprite-wrap"><img class="share-pcard-sprite public-share-pokemon-sprite" src="${attr(src)}" data-public-sprite-fallbacks="${attr(fallbacks.join('|'))}" width="26" height="26" alt="" loading="lazy" decoding="async"></div>`;
+    return`<div class="share-pcard-sprite-wrap"><img class="share-pcard-sprite public-share-pokemon-sprite" src="${attr(src)}" data-src-key="${attr(src)}" data-optical-sprite data-public-sprite-fallbacks="${attr(fallbacks.join('|'))}" width="34" height="34" alt="" loading="lazy" decoding="async"></div>`;
   }
   function entryCard(name,value){
     const model=entryModel(value),gender=global.PogoDomain.priorityValues.entryGender(model.mod);
@@ -121,6 +123,7 @@
       return`<section class="share-section card-content"><div class="share-section-hdr"><span class="badge ${priority}"><span class="prio-mark">${priority}</span>${esc(t(PRIORITY_KEYS[priority]))}</span><span class="share-section-count">${esc(core().formatPlural('share.entryCount',entries.length))}</span></div><div class="share-pgrid">${entries.map(([name,value])=>entryCard(name,value)).join('')}</div></section>`;
     }).join('');
     out.innerHTML=sections+ctaHtml();
+    global.PogoUi.spriteOptical.observe(out);
   }
   function ctaHtml(){return`<aside class="public-share-cta"><span>${esc(t('share.publicCta'))}</span><a class="btn btn-secondary" href="./">${esc(t('share.publicCtaAction'))}</a></aside>`;}
   function render(){
@@ -198,8 +201,8 @@
     const image=event.target;
     if(image?.tagName!=='IMG'||!image.classList.contains('public-share-pokemon-sprite'))return;
     const fallbacks=(image.dataset.publicSpriteFallbacks||'').split('|').filter(Boolean),next=fallbacks.shift();
-    if(next){image.dataset.publicSpriteFallbacks=fallbacks.join('|');image.src=next;return;}
-    const fallback=document.createElement('span');fallback.className='public-share-pokemon-mark';fallback.setAttribute('aria-hidden','true');
+    if(next){image.dataset.publicSpriteFallbacks=fallbacks.join('|');image.dataset.srcKey=next;image.dataset.opticalReady='';image.style.transform='';image.src=next;return;}
+    const fallback=document.createElement('span');fallback.className='public-share-pokemon-mark';fallback.setAttribute('aria-hidden','true');fallback.textContent='?';
     image.closest('.share-pcard-sprite-wrap')?.replaceWith(fallback);
   }
   async function start(request){
@@ -207,6 +210,7 @@
     state.request=request;state.type=request?.type||'wishlist';state.status='loading';
     document.addEventListener('click',handleAction);
     document.addEventListener('error',handleSpriteError,true);
+    global.PogoUi.spriteOptical.observe(document);
     Object.assign(global,{openSettingsPanel:openLanguage,closeModal,changeInterfaceLocale:changeLocale,exitShareView:()=>{location.href=new URL('./',location.href).href;}});
     try{await readProjection();}
     catch(error){state.status='error';console.warn('Public share read failed',String(error?.code||'public-share/read-failed'));publicError(t('trainer.sharedReadFailed'));}

@@ -1,8 +1,10 @@
 # Asset and Data Provenance
 
-Last reviewed: 2026-08-28
+Last reviewed: 2026-08-29
 
 This document records the source boundary for data and visual assets used by PoGo Trades. It is an engineering policy record, not legal advice.
+
+Following a source site's reuse or hosting instructions does not create a blanket license to Pokémon intellectual property. Pokémon Support's current public answer asks projects not to use or associate Pokémon characters, names, or designs with a project. There is therefore no zero-risk way to promise complete costume artwork while also claiming universal rights-holder permission. This repository's controls are a conservative provenance and source-site-compliance boundary, not a representation of legal authorization.
 
 ## Policy
 
@@ -24,16 +26,16 @@ Researching names, dates, eligibility, or catalog mappings is different from cop
 ### Pokémon Database
 
 - URLs: https://pokemondb.net/about ; https://pokemondb.net/sprites ; https://img.pokemondb.net/sprites/
-- Use: selected Pokémon HOME form/gender fallbacks and exact or conservatively inferred Pokémon GO costume sprite filenames.
-- Copy/serve/reference: the browser requests sprite files from `img.pokemondb.net/sprites/`; no Pokémon Database prose, page layout, or database content is copied.
-- Stated position: the site's About page says its written content, displayed data, and design generally may not be reused, while official Pokémon artwork and sprites are not its creations and may be used. The sprite gallery provides direct image-use markup.
+- Use: selected Pokémon HOME form/gender fallbacks and a reviewed catalog of exact Pokémon GO costume sprites.
+- Copy/serve/reference: reviewed GO sprite files are saved under `assets/sprites/go/` and served by PoGo Trades, following the sprite gallery's request to self-host images instead of consuming its bandwidth. The app does not copy Pokémon Database prose, page layout, or data presentation. HOME fallbacks remain constrained runtime references while their broader replacement is evaluated separately.
+- Stated position: the site's About page says its written content, displayed data, and design generally may not be reused, while official Pokémon artwork and sprites are not its creations. Its sprite gallery explicitly offers website use and asks users either to use its linked code or save images to their own hosting.
 - Underlying IP: the Pokémon imagery is owned by the relevant Pokémon rights holders, not PoGo Trades or Pokémon Database.
-- Decision: **KEEP** for sprite-path use only. Do not copy Pokémon Database text, tables, data presentation, or design.
+- Decision: **KEEP** for reviewed sprite files and constrained fallback paths only. Do not copy Pokémon Database text, tables, data presentation, or design. Never infer a costume filename at runtime.
 
 ### weserv.nl image proxy
 
 - URLs: https://images.weserv.nl/ ; https://github.com/weserv/images
-- Use: CORS-compatible transport for Pokémon Database sprites during local optical-bound detection and exports.
+- Use: legacy CORS-compatible transport for validated Pokémon Database targets in signed-in export/canvas paths. Public-share optical sizing uses direct CORS-readable or self-hosted sources and does not use this proxy.
 - Copy/serve/reference: no independent artwork comes from weserv.nl. Runtime validation accepts a proxy URL only when its decoded target is `img.pokemondb.net/sprites/`.
 - Stated position: open-source image proxy service/software; it does not grant rights to proxied source material.
 - Underlying IP: unchanged from the constrained Pokémon Database target.
@@ -79,17 +81,21 @@ Researching names, dates, eligibility, or catalog mappings is different from cop
 
 ### Official Pokémon GO and Pokémon sources
 
-- URLs: https://pokemongolive.com/ ; https://www.pokemon.com/us/legal/terms-of-use ; https://www.pokemon.com/us/legal/information
+- URLs: https://pokemongolive.com/ ; https://www.pokemon.com/uk/news/pokemon-gos-2026-pokemon-world-championships-event ; https://support.pokemon.com/hc/en-us/articles/360000634094-Can-I-use-Pok%C3%A9mon-images-or-materials ; https://www.pokemon.com/us/legal/terms-of-use ; https://www.pokemon.com/us/legal/information
 - Use: official terminology and confirmation of ambiguous or recent events/backgrounds.
 - Copy/serve/reference: reference only. No official announcement prose or background artwork is copied or served by this feature.
-- Stated position: official terms reserve the protected content and marks and do not provide a general reuse license for product assets.
+- Stated position: official terms reserve the protected content and marks and do not provide a general reuse license for product assets. Pokémon Support's January 2026 answer says it cannot review reuse requests and asks projects not to use or associate Pokémon IP with a project.
 - Underlying IP: The Pokémon Company group, Nintendo, Niantic/Scopely, and other applicable rights holders.
 - Decision: **REFERENCE ONLY**.
 
 ## Enforcement
 
-- `isApprovedRuntimeSpriteUrl()` accepts only exact approved hosts and path prefixes, plus repository-owned `assets/max-cloud.svg`.
+- `data/costume-sprite-catalog.json` records every reviewed exact mapping, local asset path, and SHA-256 digest. `js/domain/costumeSpriteCatalog.js` is generated from that manifest and fails closed for known variants without exact art.
+- `js/domain/publicPokemonDex.js` is generated from the public catalog labels and contains only normalized names and dex numbers. It lets anonymous shares select CORS-readable base-species art without loading account-oriented `data.js` or any trainer fields.
+- `isApprovedRuntimeSpriteUrl()` accepts only exact approved hosts and path prefixes, reviewed local `assets/sprites/go/*.png`, plus repository-owned `assets/max-cloud.svg`.
 - The weserv proxy target is decoded and independently checked against the Pokémon Database sprite path.
-- `sw.js` caches sprite requests only from the same approved runtime hosts.
-- Unknown, legacy, or stored third-party URLs fail closed and fall through to an approved base/form sprite or the local placeholder treatment.
+- `sw.js` lazily caches reviewed local sprites and sprite requests from the approved runtime hosts; the 458 local files are not added to startup precache.
+- Known costumes without exact reviewed art stop at the neutral placeholder. They never masquerade as the base species. Unknown ordinary species/forms may still use the approved base/form fallback chain.
+- `.github/workflows/sprite-catalog-freshness.yml` performs a monthly, read-only inventory comparison. It reports upstream additions/removals but never downloads or publishes unreviewed artwork automatically.
+- The two confirmed 2026 identities, `PIKACHU_PXP_2026` (Cosmog-themed spacesuit) and `PIKACHU_WCS_2026` (World Championships 2026), are present in the catalog but intentionally remain neutral placeholders until exact artwork appears at an approved source and is reviewed.
 - Background cards use project-generated colors and patterns derived from canonical IDs; source artwork is neither fetched nor embedded.
