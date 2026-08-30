@@ -214,6 +214,16 @@ const trainerPreferenceSyncDomain=window.PogoDomain?.trainerPreferenceSync;
 if(!trainerPreferenceSyncDomain||trainerPreferenceSyncDomain.preferenceSyncPresentation({state:'synced'}).state!=='local-only')throw new Error('Disabled trainer-preference sync contract failed to load safely');
 const authenticationReadinessDomain=window.PogoDomain?.authenticationReadiness;
 if(!authenticationReadinessDomain||authenticationReadinessDomain.DURABLE_AUTH_PROVIDERS_ENABLED!==false)throw new Error('Disabled authentication readiness contract failed to load safely');
+const PROVIDER_LINKING_DEVELOPMENT_ENABLED=window.__POGO_PROVIDER_LINKING_DEV__===true;
+const authProviderRegistryDomain=window.PogoDomain?.authProviderRegistry;
+const providerContinuationStateDomain=window.PogoDomain?.providerContinuationState;
+const accountLinkingModelDomain=window.PogoDomain?.accountLinkingModel;
+const accountLinkingControllerDomain=window.PogoDomain?.accountLinkingController;
+if(PROVIDER_LINKING_DEVELOPMENT_ENABLED&&(!authProviderRegistryDomain||!providerContinuationStateDomain||!accountLinkingModelDomain||!accountLinkingControllerDomain))throw new Error('Provider-linking foundation failed to load');
+const providerLinkingRegistry=PROVIDER_LINKING_DEVELOPMENT_ENABLED?authProviderRegistryDomain.createAuthProviderRegistry({
+  developmentEnabled:true,
+  configuredProviders:Array.isArray(window.__POGO_PROVIDER_LINKING_CONFIGURED__)?window.__POGO_PROVIDER_LINKING_CONFIGURED__:[]
+}):null;
 const trainerPreferencesRepositoryData=window.PogoData?.trainerPreferencesRepository;
 if(!trainerPreferencesRepositoryData)throw new Error('Trainer-preference repository failed to load');
 const trainerPreferenceSyncQueueData=window.PogoData?.trainerPreferenceSyncQueue;
@@ -1209,11 +1219,12 @@ function bindAuthObserver(){
       allData=runtimeDataWithSelectedTrainer(getLocal());
     }
     currentAuthUid=user?.uid||'';
+    if(document.getElementById('settings-modal')?.classList.contains('open'))renderConnectedAccounts();
     if(user){
       const rememberedUsername=cur||checkSession();
       if(rememberedUsername&&storedSessionMatches(user.uid,rememberedUsername)){
         try{
-          activateOwnedSession(user.uid,rememberedUsername);
+          if(!ownedSessionAlreadyActive(user.uid,rememberedUsername))activateOwnedSession(user.uid,rememberedUsername);
           cur=rememberedUsername;
         }catch(error){
           managedListenerLifecycle.deactivateSession('identity_mismatch');
@@ -1483,6 +1494,10 @@ function activateOwnedSession(uid,username){
 }
 function storedSessionMatches(uid,username){
   const owner=managedSessionCache.snapshot().cacheOwner;
+  return!!owner&&owner.uid===uid&&owner.username===username;
+}
+function ownedSessionAlreadyActive(uid,username){
+  const owner=managedSessionCache.snapshot().activeOwner;
   return!!owner&&owner.uid===uid&&owner.username===username;
 }
 function suspendOwnedSession(reason='auth_loss'){
@@ -8796,6 +8811,25 @@ function applySettingsPresentation(){
   if(pageMode){overlay.removeAttribute('role');overlay.removeAttribute('aria-modal');}
   else{overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');}
 }
+const PROVIDER_LINKING_STATUS_KEYS=Object.freeze({
+  connected:'security.connected','not-connected':'security.notConnected',connecting:'security.connecting',
+  'waiting-browser':'security.waitingBrowser','needs-attention':'security.needsAttention',reauthenticate:'security.reauthenticate',
+  disconnecting:'security.disconnecting',unavailable:'security.unavailable'
+});
+function renderConnectedAccounts(){
+  const methods=providerLinkingRegistry?providerLinkingRegistry.methods({providerData:auth?.currentUser?.providerData||[],usernamePinAvailable:!!cur}):[
+    {key:'username-pin',visible:true,state:cur?'connected':'unavailable',detailKey:'security.usernamePinHelp'}
+  ];
+  for(const method of methods){
+    const row=document.querySelector(`#settings-account-security [data-provider="${method.key}"]`);if(!row)continue;
+    row.hidden=!method.visible;row.dataset.providerState=method.state;
+    const detail=row.querySelector('[data-provider-detail]');if(detail)detail.textContent=i18nCore.t(method.detailKey);
+    const status=row.querySelector('[data-provider-status]'),label=row.querySelector('[data-provider-status-label]'),icon=row.querySelector('[data-provider-status-icon]');
+    status?.classList.toggle('is-active',method.state==='connected');
+    if(label)label.textContent=i18nCore.t(PROVIDER_LINKING_STATUS_KEYS[method.state]||'security.needsAttention');
+    if(icon)icon.textContent=method.state==='connected'?'✓':method.state==='connecting'||method.state==='disconnecting'||method.state==='waiting-browser'?'…':'○';
+  }
+}
 function configureSettingsPanel(context='public'){
   _settingsContext=context==='account'&&cur?'account':'public';
   document.querySelectorAll('.settings-account-only').forEach(el=>{el.hidden=_settingsContext!=='account';});
@@ -8804,6 +8838,7 @@ function configureSettingsPanel(context='public'){
   if(description)description.textContent=i18nCore.t(_settingsContext==='account'?'settings.description':'settings.publicDescription');
   const name=document.getElementById('settings-account-name');if(name)name.textContent=cur||'';
   const securityName=document.getElementById('settings-security-name');if(securityName)securityName.textContent=cur||'';
+  renderConnectedAccounts();
   const language=document.getElementById('settings-language');if(language)language.value=i18nCore.getLocale();
   const release=document.getElementById('settings-release-id');if(release)release.textContent=i18nCore.t('settings.release',{release:clientReleaseDomain.RELEASE_ID});
   syncPokemonGoSearchLanguageControl();

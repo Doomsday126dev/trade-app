@@ -812,14 +812,13 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
         <div class="account-security-intro"><h2 id="settings-account-security-heading" data-i18n="security.title">Account &amp; Security</h2><p data-i18n="security.description">Manage how you sign in to this trainer account.</p></div>
         <div class="settings-profile-card card-row"><div class="av" aria-hidden="true">#</div><div class="settings-profile-copy"><span data-i18n="settings.currentIdentity">Current account</span><strong class="settings-identity-value" id="settings-security-name">—</strong></div></div>
         <div class="settings-security-pin"><div class="settings-section-heading"><h3 data-i18n="settings.pinTitle">Update PIN</h3><p data-i18n="settings.pinSummary">Your six-digit PIN remains the active sign-in method.</p></div><div class="settings-form"><div class="field"><label for="np1" data-i18n="profile.newPin">New PIN</label><input class="field-control" type="password" id="np1" autocomplete="new-password" data-i18n-placeholder="profile.newPinPlaceholder" placeholder="New 6-digit PIN" maxlength="6" inputmode="numeric"></div><div class="field"><label for="np2" data-i18n="profile.confirmPin">Confirm PIN</label><input class="field-control" type="password" id="np2" autocomplete="new-password" data-i18n-placeholder="profile.confirmPinPlaceholder" placeholder="Confirm" maxlength="6" inputmode="numeric"></div><div class="settings-form-status" id="pin-err" role="status" aria-live="polite"></div><div class="settings-form-actions"><button class="bpri btn btn-primary" onclick="savePinSettings()" data-i18n="settings.pinSave">Update PIN</button></div></div></div>
-        <div class="settings-section-heading"><h3 data-i18n="settings.signInOptions">Sign-in options</h3></div>
+        <div class="settings-section-heading"><h3 data-i18n="security.connectedAccounts">Connected accounts</h3><p data-i18n="security.connectedAccountsHelp">Authentication methods connected to this trainer account.</p></div>
         <div class="account-security-methods" role="list" data-i18n-aria-label="security.methodsLabel" aria-label="Sign-in methods">
-          <div class="account-security-method" role="listitem" data-provider="google"><span class="account-security-provider-icon" aria-hidden="true">G</span><div class="account-security-copy"><strong data-i18n="security.google">Google</strong><span data-i18n="security.futureUnavailable">Provider linking is not available yet.</span></div><span class="account-security-status"><span aria-hidden="true">○</span><span data-i18n="security.notLinked">Not linked</span></span></div>
-          <div class="account-security-method" role="listitem" data-provider="email"><span class="account-security-provider-icon" aria-hidden="true">@</span><div class="account-security-copy"><strong data-i18n="security.email">Email</strong><span data-i18n="security.emailPlanned">Verified email-link migration is planned for a later rollout.</span></div><span class="account-security-status"><span aria-hidden="true">○</span><span data-i18n="security.notLinked">Not linked</span></span></div>
-          <div class="account-security-method" role="listitem" data-provider="discord"><span class="account-security-provider-icon" aria-hidden="true">D</span><div class="account-security-copy"><strong data-i18n="security.discord">Discord</strong><span data-i18n="security.futureUnavailable">Provider linking is not available yet.</span></div><span class="account-security-status"><span aria-hidden="true">○</span><span data-i18n="security.notLinked">Not linked</span></span></div>
-          <div class="account-security-method" role="listitem" data-provider="legacy-pin"><span class="account-security-provider-icon" aria-hidden="true">#</span><div class="account-security-copy"><strong data-i18n="security.legacyPin">Legacy PIN</strong><span data-i18n="security.legacyPinHelp">This remains your active production sign-in method.</span></div><span class="account-security-status is-active"><span aria-hidden="true">✓</span><span data-i18n="security.active">Active</span></span></div>
+          <div class="account-security-method" role="listitem" data-provider="username-pin"><span class="account-security-provider-icon" aria-hidden="true">#</span><div class="account-security-copy"><strong data-i18n="security.usernamePin">Username and PIN</strong><span data-provider-detail data-i18n="security.usernamePinHelp">Your existing sign-in remains connected to this Firebase account.</span></div><span class="account-security-status is-active" data-provider-status><span data-provider-status-icon aria-hidden="true">✓</span><span data-provider-status-label data-i18n="security.connected">Connected</span></span></div>
+          <div class="account-security-method account-security-provider-development" role="listitem" data-provider="google" hidden><span class="account-security-provider-icon" aria-hidden="true">G</span><div class="account-security-copy"><strong data-i18n="security.google">Google</strong><span data-provider-detail data-i18n="security.providerDevelopmentOnly">Available only in development after provider configuration.</span></div><span class="account-security-status" data-provider-status><span data-provider-status-icon aria-hidden="true">○</span><span data-provider-status-label data-i18n="security.unavailable">Unavailable</span></span></div>
+          <div class="account-security-method account-security-provider-development" role="listitem" data-provider="discord" hidden><span class="account-security-provider-icon" aria-hidden="true">D</span><div class="account-security-copy"><strong data-i18n="security.discord">Discord</strong><span data-provider-detail data-i18n="security.providerDevelopmentOnly">Available only in development after provider configuration.</span></div><span class="account-security-status" data-provider-status><span data-provider-status-icon aria-hidden="true">○</span><span data-provider-status-label data-i18n="security.unavailable">Unavailable</span></span></div>
         </div>
-        <p class="account-security-notice" role="status" aria-live="polite" data-i18n="security.disabledNotice">No provider linking, unlinking, or migration action is enabled in this release.</p>
+        <p class="account-security-notice" role="status" aria-live="polite" data-i18n="security.foundationNotice">Additional sign-in providers are not enabled in this release.</p>
         <button class="settings-tool" id="settings-logout" onclick="logout()"><span aria-hidden="true">↪</span><span data-i18n="settings.logoutAction">Sign out</span></button>
           </section>
           <section class="settings-section settings-account-only" data-settings-section="tools" aria-labelledby="settings-tools-heading"><div class="settings-section-heading"><h2 id="settings-tools-heading" data-i18n="settings.sectionTools">Tools</h2><p data-i18n="settings.toolsSummary">Open occasional list and app utilities.</p></div><div class="settings-tool-list">
@@ -940,6 +939,10 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
 <script src="js/domain/trainerPreferences.js?v=2026-08-30.84"></script>
 <script src="js/domain/trainerPreferenceSync.js?v=2026-08-30.84"></script>
 <script src="js/domain/authenticationReadiness.js?v=2026-08-30.84"></script>
+<script src="js/domain/authProviderRegistry.js?v=2026-08-30.84" data-pogo-provider-development></script>
+<script src="js/domain/providerContinuationState.js?v=2026-08-30.84" data-pogo-provider-development></script>
+<script src="js/domain/accountLinkingModel.js?v=2026-08-30.84" data-pogo-provider-development></script>
+<script src="js/domain/accountLinkingController.js?v=2026-08-30.84" data-pogo-provider-development></script>
 <script src="js/domain/loginDirectory.js?v=2026-08-30.84"></script>
 <script src="js/utils/textSafety.js?v=2026-08-30.84"></script>
 <script src="js/ui/stringPanels.js?v=2026-08-30.84"></script>
@@ -1082,10 +1085,12 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
     const template=document.getElementById('pogo-feature-assets');
     if(!template)return[];
     const locale=preferredLocale();
-    return Array.from(template.content.querySelectorAll('script[src]'),node=>node.getAttribute('src')).filter(src=>{
+    return Array.from(template.content.querySelectorAll('script[src]')).filter(node=>{
+      if(node.hasAttribute('data-pogo-provider-development')&&window.__POGO_PROVIDER_LINKING_DEV__!==true)return false;
+      const src=node.getAttribute('src');
       const match=src.match(/js\/i18n\/locales\/([a-z-]+)\.js/);
       return!match||match[1]==='en'||match[1]===locale;
-    });
+    }).map(node=>node.getAttribute('src'));
   }
   async function loadFeatureScripts(){
     const pending=[];

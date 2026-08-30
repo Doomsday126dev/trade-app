@@ -171,12 +171,12 @@ test('inline tag creation selects new or normalized-existing tags and has scoped
   assert.match(html,/onkeydown="trainerTagInputKeydown\(event\)"/);
 });
 
-test('Settings exposes seven semantic sections with desktop and mobile navigation',()=>{
-  for(const section of ['profile','language','appearance','security','tools','data','legal']){assert.match(html,new RegExp(`data-settings-target="${section}"`));assert.match(html,new RegExp(`data-settings-section="${section}"`));}
+test('Settings exposes six semantic sections with desktop and mobile navigation',()=>{
+  for(const section of ['profile','language','appearance','security','tools','data']){assert.match(html,new RegExp(`data-settings-target="${section}"`));assert.match(html,new RegExp(`data-settings-section="${section}"`));}
   assert.match(html,/function selectSettingsSection/);assert.match(html,/function showSettingsSectionList/);
   assert.match(html,/settings-layout\.mobile-list \.settings-detail\{display:none\}/);
   assert.match(html,/settingsDetailIsOpenOnMobile/);
-  assert.match(html,/const SETTINGS_SECTIONS=Object\.freeze\(\['profile','language','appearance','security','tools','data','legal'\]\)/);
+  assert.match(html,/const SETTINGS_SECTIONS=Object\.freeze\(\['profile','language','appearance','security','tools','data'\]\)/);
   assert.match(html,/function parseSettingsRoute/);
   assert.match(html,/settings-page-mode/);
   for(const tool of ['inventory','import','export','safe-transfer','shortcuts','health','backup'])assert.match(html,new RegExp(`openSettingsTool\\('${tool}'\\)`));
@@ -203,7 +203,7 @@ test('responsive contracts retain 48px targets, wrapping, and no parallel organi
 });
 
 test('release and safety boundaries remain coherent',()=>{
-  assert.match(html,/2026-08-28\.77/);assert.doesNotMatch(html,/2026-08-28\.76/);
+  assert.match(html,/2026-08-30\.84/);assert.doesNotMatch(html,/2026-08-29\.83/);
   assert.match(readFileSync(path.join(root,'js/domain/shareVisibility.js'),'utf8'),/SHARE_VISIBILITY_MODEL_ENABLED\s*:\s*false/);assert.match(html,/SYNCED_TRAINER_PREFERENCES_ENABLED!==false/);
   assert.doesNotMatch(html,/managedTrainerPreferencesRepository\.(?:mutate|write|save)/);
 });
