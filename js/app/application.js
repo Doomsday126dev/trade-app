@@ -928,7 +928,11 @@ function spriteImg(no,size=40,cls='',name='',gender='',dn='',opts={}){
     ...(opts?.urlOverride?[opts.urlOverride]:[]),
     ...spriteFallbackChain(no,name,gender,dn,context.catalogId)
   ].filter((u,i,arr)=>isApprovedRuntimeSpriteUrl(u)&&arr.indexOf(u)===i);
-  if(!urls.length)return`<div class="pc-sprite-placeholder" style="width:${size}px;height:${size}px">🎮</div>`;
+  if(!urls.length){
+    const knownUnavailable=context.reviewed?.status==='unavailable';
+    const label=i18nCore.t('sprite.artUnavailable',{name:dn||name||'Pokémon'});
+    return`<span class="pc-sprite-placeholder ${knownUnavailable?'known-unavailable':''} ${escAttr(cls)}" style="width:${size}px;height:${size}px" role="img" aria-label="${escAttr(label)}">?</span>`;
+  }
   const url=urls[0];
   const isGo=url.includes('weserv.nl')||url.includes('/sprites/go/');
   const rendering=isGo?'auto':'pixelated';
@@ -6492,13 +6496,14 @@ function imageTrimBox(img){
   return box;
 }
 function drawSpriteFallback(ctx,e,x,y,size){
+  const reviewed=costumeSpriteCatalogDomain.resolution({names:[e?.spriteName||e?.name,e?.dn].filter(Boolean),gender:e?.gender});
   roundedRect(ctx,x,y,size,size,8);
   ctx.fillStyle='#eef2ff';ctx.fill();
-  ctx.strokeStyle='rgba(99,102,241,.22)';ctx.stroke();
+  ctx.strokeStyle=reviewed.knownVariant?'rgba(99,102,241,.5)':'rgba(99,102,241,.22)';ctx.stroke();
   ctx.fillStyle='#5b5ce2';
   ctx.font='700 15px Space Grotesk, sans-serif';
   ctx.textAlign='center';
-  ctx.fillText(String(e.dn||'?').slice(0,2).toUpperCase(),x+size/2,y+size/2+6);
+  ctx.fillText(reviewed.knownVariant?'?':String(e.dn||'?').slice(0,2).toUpperCase(),x+size/2,y+size/2+6);
   ctx.textAlign='left';
 }
 function maxCrownSvg(maxType){
@@ -10530,8 +10535,7 @@ function renderSpecialBoard(){
   ['lf','ft'].forEach(side=>{
     const el=document.getElementById(`special-${side}-list`);if(!el)return;
     el.innerHTML=board[side].map((e,i)=>{
-      const spr=entrySpriteUrl(e,e.name)||spriteUrl(e.no,e.name);
-      const sprHtml=spr?`<img class="sb-row-sprite" src="${escAttr(spr)}" alt="" loading="lazy">`:'<span class="sb-row-sprite" style="display:inline-block">🎮</span>';
+      const sprHtml=spriteImg(e.no,24,'sb-row-sprite',e.name,'',e.dn||e.name,{catalogId:e.catalogId,scaleCap:1});
       const qtyHtml=side==='ft'?`<input type="number" class="sb-row-qty" min="1" max="999" value="${e.qty||1}" onchange="setSpecialQty('${side}',${i},this.value)" aria-label="Quantity">`:'';
       const display=pokemonDisplayName({name:e.name,no:e.no,displayName:e.dn||e.name});
       const backgroundId=normalizeBackgroundId(e.backgroundId),backgroundName=backgroundId?backgroundDisplayName(backgroundId):'';

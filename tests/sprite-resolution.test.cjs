@@ -96,6 +96,14 @@ test('unresolved costumes stop at the reviewed catalog boundary',()=>{
   assert.doesNotMatch(resolver,/plainName|allowPattern|pokemondbGoCostumeUrl/);
   const fallback=html.slice(html.indexOf('function spriteFallbackChain'),html.indexOf('// ── PER-IMAGE'));
   assert.match(fallback,/if\(reviewed\.knownVariant\)\{for\(const url of reviewed\.urls\)push\(url\);return urls;\}/);
+  const image=html.slice(html.indexOf('function spriteImg'),html.indexOf('function validateSpriteLoad'));
+  assert.match(image,/knownUnavailable=context\.reviewed\?\.status==='unavailable'/);
+  assert.match(image,/role="img" aria-label=/);
+  const board=html.slice(html.indexOf('function renderSpecialBoard'),html.indexOf('async function addSpecialEntry'));
+  assert.match(board,/spriteImg\(e\.no,24,'sb-row-sprite'/);
+  assert.doesNotMatch(board,/🎮/);
+  const exportFallback=html.slice(html.indexOf('function drawSpriteFallback'),html.indexOf('function maxCrownSvg'));
+  assert.match(exportFallback,/reviewed\.knownVariant\?'\?'/);
 });
 
 test('successful 1x1 placeholders enter the same bounded fallback path as errors',()=>{

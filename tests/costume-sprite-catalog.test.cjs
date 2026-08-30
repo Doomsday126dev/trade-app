@@ -16,9 +16,9 @@ vm.runInNewContext(runtime,{window,Object,Map});
 const resolver=window.PogoDomain.costumeSpriteCatalog;
 
 test('reviewed catalog has complete local integrity evidence',()=>{
-  assert.equal(catalog.entries.length,377);
+  assert.equal(catalog.entries.length,376);
   assert.equal(catalog.entries.filter(entry=>entry.status==='exact').length,348);
-  assert.equal(catalog.entries.filter(entry=>entry.status==='unavailable').length,29);
+  assert.equal(catalog.entries.filter(entry=>entry.status==='unavailable').length,28);
   const assets=[...new Set(catalog.entries.flatMap(entry=>Object.values(entry.assets||{})))];
   assert.equal(assets.length,458);
   for(const asset of assets)assert.ok(frontend.assetFiles.includes(asset),asset);
@@ -60,6 +60,15 @@ test('every selectable costume is reviewed before runtime fallback can reach bas
   const extras=JSON.parse(extraMatch[1]);
   const pokemonCatalog=productWindow.PogoDomain.pokemonCatalog;
   const reviewedCatalog=productWindow.PogoDomain.costumeSpriteCatalog;
+  const reviewedIdentityRecords=new Map();
+  for(const record of catalog.entries){
+    const catalogIds=[...new Set(record.names.map(name=>pokemonCatalog.resolveLegacyKey(name)?.catalogId).filter(Boolean))];
+    assert.ok(catalogIds.length<=1,`${record.names[0]} mixes canonical costume identities`);
+    for(const catalogId of catalogIds){
+      assert.equal(reviewedIdentityRecords.has(catalogId),false,`${catalogId} is split across reviewed catalog records`);
+      reviewedIdentityRecords.set(catalogId,record);
+    }
+  }
   const selectable=pokemonCatalog.canonicalizeEntries([
     ...productWindow.POGO_TRADE_DB.costumes,
     ...extras,

@@ -152,6 +152,7 @@ test.describe('anonymous public share bootstrap',()=>{
     await expect(worlds2025.locator('img')).toHaveAttribute('data-optical-ready','true');
     expect(await worlds2025.locator('img').evaluate(image=>Number(image.style.transform.match(/[\d.]+/)?.[0]||1))).toBeGreaterThan(1.5);
     await expect(worlds2026.locator('.public-share-pokemon-mark.known-unavailable')).toHaveText('?');
+    await expect(worlds2026.locator('.public-share-pokemon-mark.known-unavailable')).toHaveAttribute('aria-label','Artwork unavailable for Pikachu (Worlds 2026)');
     await expect(worlds2026.locator('img')).toHaveCount(0);
     expect(await page.locator('.public-share-pokemon-sprite').evaluateAll(images=>images.some(image=>/\/pikachu(?:-female)?\.png$/.test(new URL(image.src).pathname)))).toBe(false);
   });

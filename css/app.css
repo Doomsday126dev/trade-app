@@ -214,7 +214,8 @@ input,select,textarea{font-family:var(--font);outline:none}
 .pokemon-sprite-slot img,.pc-sprite-wrap > img,.myrow-sprite-wrap > img,.have-row-sprite > img,.diff-card-sprite-wrap > img,.share-pcard-sprite-wrap > img,.offer-pkmn-display .sprite-wrap > img{width:100%!important;height:100%!important;max-width:100%;max-height:100%;object-fit:contain;object-position:center;display:block;flex:0 0 auto}
 .have-row-sprite,.diff-card-sprite-wrap,.share-pcard-sprite-wrap,.offer-pkmn-display .sprite-wrap{overflow:hidden}
 .pc-hdr > img.pc-sprite,.ac-item-sprite,.import-sprite,.sb-row-sprite{object-fit:contain;object-position:center;display:block}
-.pc-sprite-placeholder{width:40px;height:40px;flex-shrink:0;background:var(--bg2);border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;font-size:16px}
+.pc-sprite-placeholder{width:40px;height:40px;flex-shrink:0;background:var(--surface-subtle);border:1px solid var(--border2);border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;color:var(--muted);font:800 13px var(--mono)}
+.pc-sprite-placeholder.known-unavailable{border-style:dashed;color:var(--ac2)}
 .pc-info{flex:1;min-width:0}
 .pc-name{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pc-no{font-family:var(--mono);font-size:11px;color:var(--muted)}

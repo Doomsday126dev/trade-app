@@ -1487,7 +1487,8 @@
     {
       "no": 25,
       "names": [
-        "Pikachu (Marathon)"
+        "Pikachu (Marathon)",
+        "Pikachu Marathon Visor"
       ],
       "status": "unavailable",
       "unavailableReason": "No exact, reviewed artwork is available from the approved sprite source."
@@ -2377,14 +2378,6 @@
         "default": "48305d371f49abfafe4e48fb46ef2680bd665db00ca419c47fbec9e5db3a8ef1",
         "female": "0d796965a28a64a26c3cb2e7f41355fa8cf0946a038487b49b582e94b7aba856"
       }
-    },
-    {
-      "no": 25,
-      "names": [
-        "Pikachu Marathon Visor"
-      ],
-      "status": "unavailable",
-      "unavailableReason": "No exact, reviewed artwork is available from the approved sprite source."
     },
     {
       "no": 26,
