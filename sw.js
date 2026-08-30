@@ -43,7 +43,6 @@ const RELEASE_ASSETS=[
   'js/domain/publicPokemonDex.js',
   'js/domain/spriteSlugs.js',
   'js/domain/costumeSpriteCatalog.js',
-  'js/ui/spriteOptical.js',
   'js/domain/fuzzyText.js',
   'js/domain/autocompleteText.js',
   'js/domain/autocompleteMatching.js',

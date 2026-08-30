@@ -8,7 +8,7 @@ const root=path.join(__dirname,'..');
 const html=require('../scripts/lib/frontend-source.cjs').readFrontendSource(root);
 const sw=readFileSync(path.join(root,'sw.js'),'utf8');
 const publicDexRuntime=readFileSync(path.join(root,'js/domain/publicPokemonDex.js'),'utf8');
-const opticalRuntime=readFileSync(path.join(root,'js/ui/spriteOptical.js'),'utf8');
+const opticalRuntime=readFileSync(path.join(root,'js/app/publicShareApp.js'),'utf8');
 const window={URL};
 vm.runInNewContext(publicDexRuntime,{window,URL,Object,Map});
 vm.runInNewContext(readFileSync(path.join(root,'js/domain/spriteSlugs.js'),'utf8'),{window,URL});
@@ -112,5 +112,5 @@ test('shared slots and centralized optical metadata preserve source quality',()=
   const resolver=html.slice(html.indexOf('function spriteUrl'),html.indexOf('// ── SESSION PERSISTENCE'));
   assert.doesNotMatch(resolver,/quality=|width=\d+&height=\d+/i);
   assert.doesNotMatch(opticalRuntime,/images\.weserv\.nl/);
-  assert.match(opticalRuntime,/new URL\(value,document\.baseURI\)\.href/);
+  assert.match(opticalRuntime,/new URL\(url,document\.baseURI\)\.href/);
 });
