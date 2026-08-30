@@ -2,7 +2,7 @@
 
 ## Cohort
 
-Invite 3–5 trusted Pokémon GO traders. Test accepted production release `2026-08-29.80`; do not use a preview branch. Each tester should use their own disposable test entries and avoid deleting anything they care about.
+Invite 3–5 trusted Pokémon GO traders. Test accepted production release `2026-08-30.81`; do not use a preview branch. Each tester should use their own disposable test entries and avoid deleting anything they care about.
 
 ## What Testers Receive
 
@@ -19,6 +19,7 @@ Do not demonstrate the journeys first. Give only login/access help that is neces
 4. Classify every finding with [`SEVERITY-RUBRIC.md`](SEVERITY-RUBRIC.md).
 5. Stop and preserve evidence for P0. Escalate P1 before adding more testers. Batch P2/P3 for review.
 6. Confirm the tester removes disposable data when finished.
+7. Across the wave, exercise EN, JA, ES, and DE where practical; record untested locales honestly rather than inferring coverage.
 
 ## Exit Review
 
@@ -28,7 +29,7 @@ Wave 1 is complete when 3–5 testers have recorded outcomes for all practical j
 
 These are not Wave 1 blockers unless a tester encounters a concrete product failure:
 
-- 28 pending reviewed costume artworks on the `.80` baseline
+- 21 pending reviewed costume artworks on the `.81` baseline
 - 42 background eligibility mappings
 - background artwork/source strategy
 - optional Special Trade Board background filter

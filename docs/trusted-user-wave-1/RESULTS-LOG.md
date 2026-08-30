@@ -37,6 +37,7 @@ Fill after testing. Use `Not exercised` rather than inferring a pass.
 | Export |  |  |  |
 | Second-device convergence |  |  |  |
 | Mapped/ordinary/pending artwork |  |  |  |
+| EN/JA/ES/DE language coverage |  |  |  |
 
 ## Wave Decision
 

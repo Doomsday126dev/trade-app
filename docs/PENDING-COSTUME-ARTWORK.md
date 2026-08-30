@@ -1,6 +1,8 @@
 # Pending Costume Artwork
 
-Release `2026-08-29.80` has 28 canonical costume identities with honest placeholders. They remain valid list entries; only their exact reviewed artwork is pending. The machine-readable source of truth is [`data/pending-costume-artwork.json`](../data/pending-costume-artwork.json).
+Production release `2026-08-29.80` contains 28 canonical costume identities with honest placeholders. After merged PR #44, the source candidate for release `2026-08-30.81` contains 21. The seven resolved identities are exact reviewed artwork records in source and are no longer part of this inventory.
+
+All 21 remaining identities are valid list entries; only their exact reviewed artwork is pending. The machine-readable source of truth is [`data/pending-costume-artwork.json`](../data/pending-costume-artwork.json), which records both the production baseline and the source candidate.
 
 ## Review Policy
 
@@ -10,7 +12,7 @@ Release `2026-08-29.80` has 28 canonical costume identities with honest placehol
 - Do not guess among multiple forms or sizes.
 - Newly detected artwork requires review before publication.
 
-## Classification
+## Source Candidate Classification
 
 | Category | Count | Meaning |
 | --- | ---: | --- |
@@ -18,7 +20,7 @@ Release `2026-08-29.80` has 28 canonical costume identities with honest placehol
 | Accepted source missing | 0 | No remaining entry fits this category after the current mapping audit. |
 | Mapping ambiguous | 5 | Candidate art exists, but the stored identity does not identify one exact variant. |
 | Restricted source only | 7 | Research material identifies art that is not approved for copying or serving. |
-| Review pending | 7 | A deterministic accepted-source mapping is isolated in draft PR #44. |
+| Review pending | 0 | No accepted deterministic mapping remains awaiting review in this inventory. |
 
 ## Inventory
 
@@ -26,14 +28,9 @@ Release `2026-08-29.80` has 28 canonical costume identities with honest placehol
 | --- | --- | --- | --- |
 | Pikachu (Cosmog Spacesuit) | Newly announced | Not found in accepted snapshot | Recheck accepted source after refresh. |
 | Pikachu (Fossil) | Newly announced | Not found in accepted snapshot | Recheck exact Excavator identity. |
-| Pikachu (Fragment) | Review pending | Thunderbolt Cap accepted in PR #44 | Review PR independently. |
 | Pikachu (Gloria) | Mapping ambiguous | Multiple research variants rejected | Obtain authoritative variant evidence. |
 | Pikachu (GO Fest 2023) | Mapping ambiguous | Five research variants rejected | Split the generic identity safely. |
 | Pikachu (GO Fest 2024) | Mapping ambiguous | Moon/Sun candidates rejected | Resolve which tiara the stored row means. |
-| Pikachu (Halloween 2022) | Review pending | Halloween Mischief accepted in PR #44 | Review PR independently. |
-| Pikachu (Halloween 2024) | Review pending | Witch Hat accepted in PR #44 | Review PR independently. |
-| Pikachu (Holiday 2022) | Review pending | Winter Carnival accepted in PR #44 | Review PR independently. |
-| Pikachu (Holiday 2024) | Review pending | Winter Carnival accepted in PR #44 | Review PR independently. |
 | Pikachu (Instinct) | Newly announced | Not found in accepted snapshot | Recheck Team Instinct hat. |
 | Pikachu (Jeju) | Restricted source only | Research-only candidate rejected | Wait for an accepted source. |
 | Pikachu (Marathon) | Newly announced | Not found in accepted snapshot | Recheck 2026 visor. |
@@ -42,8 +39,6 @@ Release `2026-08-29.80` has 28 canonical costume identities with honest placehol
 | Pikachu (Valor) | Newly announced | Not found in accepted snapshot | Recheck Team Valor hat. |
 | Pikachu (Victor) | Mapping ambiguous | Multiple research variants rejected | Obtain authoritative variant evidence. |
 | Pikachu (Worlds 2026) | Newly announced | Not found in accepted snapshot | Recheck Worlds 2026 art. |
-| Raichu Fragment Cap | Review pending | Thunderbolt Cap accepted in PR #44 | Review PR independently. |
-| Gengar (Halloween 2024) | Review pending | Spooky Festival accepted in PR #44 | Review PR independently. |
 | Teddiursa Witch Hat | Restricted source only | Research-only candidate rejected | Wait for an accepted source. |
 | Ursaring Witch Hat | Restricted source only | Research-only candidate rejected | Wait for an accepted source. |
 | Galarian Corsola Pink Sunglasses | Newly announced | Not found in accepted snapshot | Recheck 2026 sunglasses art. |

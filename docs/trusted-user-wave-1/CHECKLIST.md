@@ -31,10 +31,12 @@ Find these three types in My List or a public share:
 
 | Case | Suggested example | Result | What did the visual communicate? |
 | --- | --- | --- | --- |
-| Mapped costume | Pikachu (Witch) or another costume with exact art |  |  |
+| Mapped costume | Pikachu (Halloween 2024) or another costume with exact art |  |  |
 | Ordinary Pokémon | Pikachu, Eevee, or another base Pokémon |  |  |
 | Pending artwork | Pikachu (Worlds 2026) |  |  |
 
 For the pending-artwork case, did the `?` and its tooltip/accessibility label clearly mean **artwork not yet available**, rather than unknown Pokémon, broken image, or invalid entry?
+
+Where practical, switch the interface among EN, JA, ES, and DE during these journeys. Record which languages you actually exercised; do not infer results for the others.
 
 Before finishing, remove disposable entries, Favorites/tags, and Special Trade Board items you created.

@@ -1,15 +1,26 @@
 {
   "schemaVersion": 1,
-  "baselineRelease": "2026-08-29.80",
-  "lastReviewedDate": "2026-08-29",
+  "lastReviewedDate": "2026-08-30",
   "maintenanceConcept": "pending-reviewed-artwork",
-  "baseline": {
+  "productionBaseline": {
+    "release": "2026-08-29.80",
     "canonicalRecords": 376,
     "exactArtworkRecords": 348,
     "pendingArtworkRecords": 28,
     "selectableRows": 423,
     "exactSelectableRows": 395,
     "placeholderRows": 28,
+    "unknownOrBaseSpeciesFallthrough": 0
+  },
+  "sourceCandidate": {
+    "basedOnMainCommit": "fd4e399793642cc53fda6d634966f6ce73772847",
+    "targetRelease": "2026-08-30.81",
+    "canonicalRecords": 376,
+    "exactArtworkRecords": 355,
+    "pendingArtworkRecords": 21,
+    "selectableRows": 423,
+    "exactSelectableRows": 402,
+    "placeholderRows": 21,
     "unknownOrBaseSpeciesFallthrough": 0
   },
   "reasonCategories": [
@@ -59,17 +70,6 @@
       "lastReviewedDate": "2026-08-29"
     },
     {
-      "canonicalCostumeId": "pokemon:25:standard:legacy:Pikachu%20(Fragment)",
-      "displayIdentity": "Pikachu (Fragment)",
-      "species": { "dex": 25, "name": "Pikachu" },
-      "currentStatus": "pending-reviewed-artwork",
-      "reasonCategory": "review-pending",
-      "acceptedSourcesChecked": ["pokemon-db-go-sprites", "pokemon-go-event-announcements"],
-      "candidate": { "exactImageFound": true, "sourceId": "pokemon-db-go-sprites", "identifier": "pikachu-thunderbolt-cap", "decision": "accepted-for-separate-pr", "reason": "Thunderbolt Project identity evidence deterministically maps Fragment to the reviewed Thunderbolt Cap files in draft PR #44." },
-      "nextReviewAction": "Review draft PR #44 independently; do not block Wave 1.",
-      "lastReviewedDate": "2026-08-29"
-    },
-    {
       "canonicalCostumeId": "pokemon:25:standard:legacy:Pikachu%20(Gloria)",
       "displayIdentity": "Pikachu (Gloria)",
       "species": { "dex": 25, "name": "Pikachu" },
@@ -100,50 +100,6 @@
       "acceptedSourcesChecked": ["pokemon-db-go-sprites", "pokemon-go-event-announcements"],
       "candidate": { "exactImageFound": true, "sourceId": "pokemon-db-go-sprites", "identifier": "moon-tiara / sun-tiara", "decision": "rejected", "reason": "Two accepted exact variants exist, while the stored identity is generic." },
       "nextReviewAction": "Split or migrate the generic identity only after a safe compatibility design identifies the intended tiara.",
-      "lastReviewedDate": "2026-08-29"
-    },
-    {
-      "canonicalCostumeId": "pokemon:25:standard:legacy:Pikachu%20(Halloween%202022)",
-      "displayIdentity": "Pikachu (Halloween 2022)",
-      "species": { "dex": 25, "name": "Pikachu" },
-      "currentStatus": "pending-reviewed-artwork",
-      "reasonCategory": "review-pending",
-      "acceptedSourcesChecked": ["pokemon-db-go-sprites", "pokemon-go-event-announcements"],
-      "candidate": { "exactImageFound": true, "sourceId": "pokemon-db-go-sprites", "identifier": "pikachu-halloween-mischief", "decision": "accepted-for-separate-pr", "reason": "Official 2022 event identity and accepted artwork form a deterministic alias in draft PR #44." },
-      "nextReviewAction": "Review draft PR #44 independently; do not block Wave 1.",
-      "lastReviewedDate": "2026-08-29"
-    },
-    {
-      "canonicalCostumeId": "pokemon:25:standard:legacy:Pikachu%20(Halloween%202024)",
-      "displayIdentity": "Pikachu (Halloween 2024)",
-      "species": { "dex": 25, "name": "Pikachu" },
-      "currentStatus": "pending-reviewed-artwork",
-      "reasonCategory": "review-pending",
-      "acceptedSourcesChecked": ["pokemon-db-go-sprites", "pokemon-go-event-announcements"],
-      "candidate": { "exactImageFound": true, "sourceId": "pokemon-db-go-sprites", "identifier": "pikachu-witch", "decision": "accepted-for-separate-pr", "reason": "Official 2024 event identity deterministically maps to Witch Hat artwork in draft PR #44." },
-      "nextReviewAction": "Review draft PR #44 independently; do not block Wave 1.",
-      "lastReviewedDate": "2026-08-29"
-    },
-    {
-      "canonicalCostumeId": "pokemon:25:standard:legacy:Pikachu%20(Holiday%202022)",
-      "displayIdentity": "Pikachu (Holiday 2022)",
-      "species": { "dex": 25, "name": "Pikachu" },
-      "currentStatus": "pending-reviewed-artwork",
-      "reasonCategory": "review-pending",
-      "acceptedSourcesChecked": ["pokemon-db-go-sprites", "pokemon-go-event-announcements"],
-      "candidate": { "exactImageFound": true, "sourceId": "pokemon-db-go-sprites", "identifier": "pikachu-holiday", "decision": "accepted-for-separate-pr", "reason": "Official 2022 event identity deterministically maps to Winter Carnival artwork in draft PR #44." },
-      "nextReviewAction": "Review draft PR #44 independently; do not block Wave 1.",
-      "lastReviewedDate": "2026-08-29"
-    },
-    {
-      "canonicalCostumeId": "pokemon:25:standard:legacy:Pikachu%20(Holiday%202024)",
-      "displayIdentity": "Pikachu (Holiday 2024)",
-      "species": { "dex": 25, "name": "Pikachu" },
-      "currentStatus": "pending-reviewed-artwork",
-      "reasonCategory": "review-pending",
-      "acceptedSourcesChecked": ["pokemon-db-go-sprites", "pokemon-go-event-announcements"],
-      "candidate": { "exactImageFound": true, "sourceId": "pokemon-db-go-sprites", "identifier": "pikachu-holiday", "decision": "accepted-for-separate-pr", "reason": "Official 2024 event identity deterministically maps to Winter Carnival artwork in draft PR #44." },
-      "nextReviewAction": "Review draft PR #44 independently; do not block Wave 1.",
       "lastReviewedDate": "2026-08-29"
     },
     {
@@ -232,28 +188,6 @@
       "acceptedSourcesChecked": ["pokemon-db-go-sprites", "pokemon-go-event-announcements"],
       "candidate": { "exactImageFound": false, "decision": "not-found", "reason": "The announced Worlds 2026 costume is absent from the accepted artwork snapshot." },
       "nextReviewAction": "Recheck for an exact Worlds 2026 asset after source refresh.",
-      "lastReviewedDate": "2026-08-29"
-    },
-    {
-      "canonicalCostumeId": "pokemon:26:standard:legacy:Raichu%20Fragment%20Cap",
-      "displayIdentity": "Raichu Fragment Cap",
-      "species": { "dex": 26, "name": "Raichu" },
-      "currentStatus": "pending-reviewed-artwork",
-      "reasonCategory": "review-pending",
-      "acceptedSourcesChecked": ["pokemon-db-go-sprites", "pokemon-go-event-announcements"],
-      "candidate": { "exactImageFound": true, "sourceId": "pokemon-db-go-sprites", "identifier": "raichu-thunderbolt-cap", "decision": "accepted-for-separate-pr", "reason": "Thunderbolt Project identity evidence deterministically maps Fragment Cap to reviewed Thunderbolt Cap files in draft PR #44." },
-      "nextReviewAction": "Review draft PR #44 independently; do not block Wave 1.",
-      "lastReviewedDate": "2026-08-29"
-    },
-    {
-      "canonicalCostumeId": "pokemon:94:standard:legacy:Gengar%20(Halloween%202024)",
-      "displayIdentity": "Gengar (Halloween 2024)",
-      "species": { "dex": 94, "name": "Gengar" },
-      "currentStatus": "pending-reviewed-artwork",
-      "reasonCategory": "review-pending",
-      "acceptedSourcesChecked": ["pokemon-db-go-sprites", "pokemon-go-event-announcements"],
-      "candidate": { "exactImageFound": true, "sourceId": "pokemon-db-go-sprites", "identifier": "gengar-spooky-festival", "decision": "accepted-for-separate-pr", "reason": "Official 2024 event identity deterministically maps to Spooky Festival artwork in draft PR #44." },
-      "nextReviewAction": "Review draft PR #44 independently; do not block Wave 1.",
       "lastReviewedDate": "2026-08-29"
     },
     {
