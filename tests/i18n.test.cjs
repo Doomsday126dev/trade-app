@@ -81,8 +81,20 @@ test('session ownership warnings use stable translation keys with English fallba
 test('English, Japanese, Spanish, and German expose the same UI key set',()=>{
   const {catalogs}=load();
   const expected=Object.keys(catalogs.en).sort();
-  assert.equal(expected.length,1256);
+  assert.equal(expected.length,1270);
   for(const locale of ['ja','es','de'])assert.deepEqual(Object.keys(catalogs[locale]).sort(),expected,locale);
+});
+
+test('Connected Accounts states are complete and localized',()=>{
+  const {catalogs}=load(),required=[
+    'security.connectedAccounts','security.connectedAccountsHelp','security.usernamePin','security.usernamePinHelp',
+    'security.connected','security.notConnected','security.connecting','security.waitingBrowser','security.needsAttention',
+    'security.reauthenticate','security.disconnecting','security.unavailable','security.providerDevelopmentOnly','security.foundationNotice'
+  ];
+  for(const key of required){
+    for(const locale of['en','ja','es','de'])assert.ok(String(catalogs[locale][key]||'').trim(),`${locale}:${key}`);
+    for(const locale of['ja','es','de'])assert.notEqual(catalogs[locale][key],catalogs.en[key],`${locale}:${key}`);
+  }
 });
 
 test('fieldless account-sync conflict recovery is complete in every supported locale',()=>{

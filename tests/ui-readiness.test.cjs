@@ -180,21 +180,22 @@ test('local preferences stay clearly device-local and expose no enabled sync con
   assert.doesNotMatch(html,/id="settings-(?:sync|save)-preferences"/);
 });
 
-test('Account & Security remains an informational account-only readiness surface',()=>{
+test('Account & Security exposes a dormant provider-neutral Connected Accounts surface',()=>{
   const start=html.indexOf('id="settings-account-security-heading"');
   const end=html.indexOf('</section>',start);
   assert.ok(start>0&&end>start);
   const panel=html.slice(start,end);
   const methods=panel.slice(panel.indexOf('class="account-security-methods"'),panel.indexOf('class="account-security-notice"'));
   assert.match(html,/account-security-panel settings-account-only/);
-  assert.match(panel,/data-provider="google"/);
-  assert.match(panel,/data-provider="email"/);
-  assert.match(panel,/data-provider="discord"/);
-  assert.match(panel,/data-provider="legacy-pin"/);
+  assert.match(panel,/data-provider="username-pin"/);
+  assert.match(panel,/data-provider="google" hidden/);
+  assert.match(panel,/data-provider="discord" hidden/);
+  assert.doesNotMatch(panel,/data-provider="(?:email|legacy-pin)"/);
   assert.doesNotMatch(methods,/<button|onclick=|href=|data-action=/);
   assert.match(panel,/id="settings-logout" onclick="logout\(\)"/);
   assert.match(html,/\.account-security-method\{[^}]*min-height:56px/);
   assert.match(html,/DURABLE_AUTH_PROVIDERS_ENABLED!==false/);
+  assert.match(html,/PROVIDER_LINKING_DEVELOPMENT_ENABLED=window\.__POGO_PROVIDER_LINKING_DEV__===true/);
 });
 
 test('favorite organizer saves tag changes immediately and clears stale deleted-tag filters',()=>{

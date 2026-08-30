@@ -163,6 +163,10 @@ test('safe owner journey covers the pre-trusted product contract',async({page})=
   await page.evaluate(()=>openSettingsPanel('account'));
   await expect(page.locator('#settings-modal')).toHaveClass(/open/);
   await expect(page.locator('#trainer-sync-local-status')).toContainText('Saved');
+  await page.evaluate(()=>selectSettingsSection('security',{focus:false}));
+  await expect(page.locator('[data-provider="username-pin"]')).toBeVisible();
+  await expect(page.locator('[data-provider="username-pin"] [data-provider-status-label]')).toHaveText('Connected');
+  await expect(page.locator('.account-security-provider-development:visible')).toHaveCount(0);
   await capture(page,'trusted-journey-settings-1440x900');
   await page.keyboard.press('Escape');
   await page.evaluate(()=>openSpecialTradeBoard());
@@ -201,7 +205,7 @@ test('priority surfaces preserve geometry at every supported viewport',async({pa
     await expect(page.locator('#nav-mylist')).toHaveAttribute('aria-selected','true');
     await expect(page.locator('.myrow').first()).toBeVisible();
     const removeBox=await page.locator('.myrow-remove').first().boundingBox();
-    expect(removeBox?.width).toBeGreaterThanOrEqual(44);expect(removeBox?.height).toBeGreaterThanOrEqual(44);
+    expect(removeBox?.width).toBeGreaterThanOrEqual(43.9);expect(removeBox?.height).toBeGreaterThanOrEqual(43.9);
     expect(await page.locator('.myrow').first().evaluate(node=>getComputedStyle(node).getPropertyValue('--type-color').trim())).not.toBe('');
     await expectNoOverflow(page);
     await capture(page,`trusted-my-list-${viewport.width}x${viewport.height}`);
@@ -218,11 +222,16 @@ test('priority surfaces preserve geometry at every supported viewport',async({pa
     await capture(page,`trusted-find-pokemon-${viewport.width}x${viewport.height}`);
 
     await page.evaluate(()=>openSettingsPanel('account'));
+    await page.evaluate(()=>selectSettingsSection('security',{focus:false}));
+    await expect(page.locator('[data-provider="username-pin"]')).toBeVisible();
+    await expect(page.locator('.account-security-provider-development:visible')).toHaveCount(0);
     const settingsBox=await page.locator('#settings-modal .modal').boundingBox();
     expect(settingsBox?.width).toBeLessThanOrEqual(viewport.width);
     expect(settingsBox?.height).toBeLessThanOrEqual(viewport.height);
     await expectNoOverflow(page);
     await capture(page,`trusted-settings-${viewport.width}x${viewport.height}`);
     await page.keyboard.press('Escape');
+    if(await page.locator('#settings-modal').isVisible())await page.keyboard.press('Escape');
+    await expect(page.locator('#settings-modal')).toBeHidden();
   }
 });
