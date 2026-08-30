@@ -1,6 +1,6 @@
 # Pending Costume Artwork
 
-Production release `2026-08-29.80` contains 28 canonical costume identities with honest placeholders. After merged PR #44, the source candidate for release `2026-08-30.82` contains 21. The seven resolved identities are exact reviewed artwork records in source and are no longer part of this inventory.
+Production release `2026-08-29.80` contains 28 canonical costume identities with honest placeholders. After merged PR #44, the source candidate for release `2026-08-30.83` contains 21. The seven resolved identities are exact reviewed artwork records in source and are no longer part of this inventory.
 
 All 21 remaining identities are valid list entries; only their exact reviewed artwork is pending. The machine-readable source of truth is [`data/pending-costume-artwork.json`](../data/pending-costume-artwork.json), which records both the production baseline and the source candidate.
 

@@ -14,7 +14,7 @@
   },
   "sourceCandidate": {
     "basedOnMainCommit": "fd4e399793642cc53fda6d634966f6ce73772847",
-    "targetRelease": "2026-08-30.82",
+    "targetRelease": "2026-08-30.83",
     "canonicalRecords": 376,
     "exactArtworkRecords": 355,
     "pendingArtworkRecords": 21,
