@@ -10,6 +10,7 @@ const documentHtml=readFileSync(path.join(root,'index.html'),'utf8');
 const html=readFrontendSource(root);
 const worker=readFileSync(path.join(root,'sw.js'),'utf8');
 const locale=readFileSync(path.join(root,'js/i18n/locales/en.js'),'utf8');
+const inventory=JSON.parse(readFileSync(path.join(root,'scripts/pages/frontend-files.json'),'utf8'));
 const release=documentHtml.match(/window\.__POGO_RELEASE_ID='([^']+)'/)?.[1];
 const firstPartyScripts=[...documentHtml.matchAll(/<script\s+src="([^"]+)"/g)]
   .map(match=>match[1])
@@ -34,7 +35,8 @@ test('every first-party JavaScript URL uses the current release identifier',()=>
   assert.equal(loadDomain(['js/domain/clientRelease.js']).clientRelease.RELEASE_ID,release);
   assert.ok(html.includes("serviceWorker.register(`./sw.js?v=${window.__POGO_RELEASE_ID}`)"));
   assert.match(worker,new RegExp(`const RELEASE='${release.replaceAll('.','\\.')}';`));
-  const requested=firstPartyScripts.map(src=>new URL(src,'https://example.test/').pathname.slice(1));
+  const developmentOnly=new Set(inventory.developmentOnlyScriptFiles);
+  const requested=firstPartyScripts.map(src=>new URL(src,'https://example.test/').pathname.slice(1)).filter(file=>!developmentOnly.has(file));
   assert.deepEqual(workerArray('RELEASE_ASSETS').filter(path=>path.endsWith('.js')),requested);
   assert.deepEqual(workerArray('LAZY_RELEASE_ASSETS'),['js/domain/specialTradeBoardExport.js']);
   assert.equal(requested.includes('js/domain/specialTradeBoardExport.js'),false);

@@ -7,6 +7,7 @@ const root=path.join(__dirname,'..');
 const read=file=>readFileSync(path.join(root,file),'utf8');
 const html=read('index.html'),application=read('js/app/application.js'),worker=read('sw.js');
 const inventory=JSON.parse(read('scripts/pages/frontend-files.json'));
+const releaseAssets=new Set([...worker.matchAll(/^\s+'([^']+)',?$/gm)].map(match=>match[1]));
 
 test('production Connected Accounts exposes username and PIN while providers stay hidden and inert',()=>{
   const start=html.indexOf('id="settings-account-security"'),end=html.indexOf('</section>',start),panel=html.slice(start,end);
@@ -14,14 +15,15 @@ test('production Connected Accounts exposes username and PIN while providers sta
   assert.match(panel,/data-provider="username-pin"/);assert.match(panel,/data-provider="username-pin"[\s\S]*data-i18n="security\.connected"/);
   for(const provider of['google','discord'])assert.match(panel,new RegExp(`account-security-provider-development[^>]+data-provider="${provider}" hidden`));
   assert.doesNotMatch(panel,/data-provider="email"|data-provider="legacy-pin"/);
-  const methods=panel.slice(panel.indexOf('class="account-security-methods"'),panel.indexOf('class="account-security-notice"'));
-  assert.doesNotMatch(methods,/<button|onclick=|href=|data-action=/);
+  const primary=panel.slice(panel.indexOf('data-provider="username-pin"'),panel.indexOf('data-provider="google"'));
+  assert.doesNotMatch(primary,/<button|onclick=|href=|data-action=/);
+  assert.match(panel,/data-provider="google" hidden[\s\S]*data-provider-action[^>]+onclick="handleGoogleAccountAction\(\)" hidden/);
 });
 
-test('provider foundation stays in the development-only lazy feature graph',()=>{
-  const files=['js/domain/authProviderRegistry.js','js/domain/providerContinuationState.js','js/domain/accountLinkingModel.js','js/domain/accountLinkingController.js'];
+test('provider implementation stays in the development-only lazy feature graph',()=>{
+  const files=['js/domain/authProviderRegistry.js','js/domain/providerContinuationState.js','js/domain/accountLinkingModel.js','js/domain/accountLinkingController.js','js/domain/providerOnboardingModel.js','js/services/googleAuthAdapter.js'];
   const template=html.slice(html.indexOf('<template id="pogo-feature-assets">'),html.indexOf('</template>'));
-  for(const file of files){assert.match(template,new RegExp(`${file.replace(/[.]/g,'\\.')}[^>]+data-pogo-provider-development`));assert.ok(inventory.scriptFiles.includes(file));assert.match(worker,new RegExp(`'${file.replace(/[.]/g,'\\.')}'`));}
+  for(const file of files){assert.match(template,new RegExp(`${file.replace(/[.]/g,'\\.')}[^>]+data-pogo-provider-development`));assert.ok(inventory.scriptFiles.includes(file));assert.ok(inventory.developmentOnlyScriptFiles.includes(file));assert.equal(releaseAssets.has(file),false);}
   const preTemplate=html.slice(0,html.indexOf('<template id="pogo-feature-assets">'));
   for(const file of files)assert.equal(preTemplate.includes(file),false,file);
   assert.match(html,/node\.hasAttribute\('data-pogo-provider-development'\)&&window\.__POGO_PROVIDER_LINKING_DEV__!==true/);
@@ -29,11 +31,12 @@ test('provider foundation stays in the development-only lazy feature graph',()=>
   assert.match(application,/providerLinkingRegistry=PROVIDER_LINKING_DEVELOPMENT_ENABLED\?/);
 });
 
-test('development flag controls visibility but never makes provider rows actionable',()=>{
+test('development flag and configured-provider gate control Google actions',()=>{
   assert.match(application,/window\.__POGO_PROVIDER_LINKING_DEV__===true/);
   assert.match(application,/configuredProviders:Array\.isArray\(window\.__POGO_PROVIDER_LINKING_CONFIGURED__/);
-  const registry=read('js/domain/authProviderRegistry.js');
-  assert.match(registry,/actionable:false/);assert.doesNotMatch(application,/linkWithPopup|linkWithRedirect|unlink\(/);
+  const registry=read('js/domain/authProviderRegistry.js'),adapter=read('js/services/googleAuthAdapter.js');
+  assert.match(registry,/actionable:available/);assert.match(adapter,/linkWithPopup\(user,googleProvider\(\)\)/);assert.match(html,/configured\.includes\('google'\)/);
+  assert.doesNotMatch(adapter,/linkWithRedirect|signInWithRedirect/);
 });
 
 test('same-UID providerData callbacks preserve the active owned session',()=>{
@@ -46,7 +49,8 @@ test('same-UID providerData callbacks preserve the active owned session',()=>{
 test('Connected Accounts runtime renders only sanitized states and translated copy',()=>{
   const render=application.slice(application.indexOf('const PROVIDER_LINKING_STATUS_KEYS'),application.indexOf('function configureSettingsPanel'));
   for(const state of['connected','not-connected','connecting','waiting-browser','needs-attention','reauthenticate','disconnecting','unavailable'])assert.match(render,new RegExp(state));
-  assert.match(render,/i18nCore\.t\(/);assert.doesNotMatch(render,/\.uid|email|displayName|accessToken|refreshToken|error\.message/);
+  assert.match(render,/i18nCore\.t\(/);assert.doesNotMatch(render,/email|displayName|accessToken|refreshToken|error\.message/);
+  assert.doesNotMatch(render,/textContent\s*=.*(?:uid|providerId)/);
 });
 
 test('all supported locales provide the provider-linking state vocabulary',()=>{

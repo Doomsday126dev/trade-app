@@ -42,7 +42,7 @@ function accountFixture(uid,handle){
     tags:{nyc:{label:'NYC'},friends:{label:'Friends'}},
     specialTradeBoard:{lf:[{name:'Armored Mewtwo',background:'nyc'}],ft:[{name:'Clone Pikachu',gender:'female'}]},
     journal:{ownerUid:uid,generation:7,pending:[],blocked:[]},
-    migration:{generation:'migration-84',reviewedEvidenceCount:66,activeEvidenceCount:0,completed:true},
+    migration:{generation:'migration-84',recoveryEvidence:Array.from({length:66},(_,index)=>({candidateId:`reviewed-${index+1}`,resolved:true})),reviewedEvidenceCount:66,activeEvidenceCount:0,completed:true},
     listener:{ownerUid:uid,generation:11,healthy:true},
     publicShare:{shareId:handle,username:handle,friendCode:'0000 1111 2222'},
     trainer:{handle,displayName:handle,avatar:'Mewtwo'}
@@ -55,6 +55,7 @@ function boundaryFor(account){
     journalOwner:account.journal.ownerUid,
     journalGeneration:account.journal.generation,
     migrationGeneration:account.migration.generation,
+    recoveryEvidenceFingerprint:digest(account.migration.recoveryEvidence),
     reviewedEvidenceCount:account.migration.reviewedEvidenceCount,
     activeEvidenceCount:account.migration.activeEvidenceCount,
     listenerAuthority:`${account.listener.ownerUid}:${account.listener.generation}:${account.listener.healthy}`,
@@ -138,10 +139,10 @@ test('production registry exposes only the connected username and PIN method',()
   ]);
 });
 
-test('development providers remain inert even after configuration',()=>{
+test('configured development providers are actionable while production remains inert',()=>{
   const {authProviderRegistry}=loadDomains();
   const registry=authProviderRegistry.createAuthProviderRegistry({developmentEnabled:true,configuredProviders:['google','discord']});
-  assert.deepEqual(clone(registry.methods().slice(1).map(item=>[item.visible,item.available,item.actionable,item.state])),[[true,true,false,'not-connected'],[true,true,false,'not-connected']]);
+  assert.deepEqual(clone(registry.methods().slice(1).map(item=>[item.visible,item.available,item.actionable,item.state])),[[true,true,true,'not-connected'],[true,true,true,'not-connected']]);
 });
 
 test('username and PIN user links a provider without changing Firebase UID',async()=>{
@@ -342,4 +343,10 @@ test('account-boundary mutation during linking fails closed',async()=>{
   const h=createHarness();h.behavior.linkDeferred=deferred();const pending=h.controller.linkPopup('google');await waitFor(()=>h.calls.includes('link:google'));
   h.accounts.get('uid-a').trainer.handle='Provider Name';h.behavior.linkDeferred.resolve();
   await expectCode(pending,'provider-link/account-boundary-changed-trainer-identity-fingerprint');
+});
+
+test('exact reviewed recovery evidence cannot change during linking even when counts stay equal',async()=>{
+  const h=createHarness();h.behavior.linkDeferred=deferred();const pending=h.controller.linkPopup('google');await waitFor(()=>h.calls.includes('link:google'));
+  h.accounts.get('uid-a').migration.recoveryEvidence[0].candidateId='rewritten-with-same-count';h.behavior.linkDeferred.resolve();
+  await expectCode(pending,'provider-link/account-boundary-changed-recovery-evidence-fingerprint');
 });
