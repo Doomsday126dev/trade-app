@@ -29,9 +29,9 @@ test('Account & Security is informational, account-only, and has no provider but
   const panel=html.slice(start,end);
   const methods=panel.slice(panel.indexOf('class="account-security-methods"'),panel.indexOf('class="account-security-notice"'));
   assert.match(panel,/data-provider="google"/);
-  assert.match(panel,/data-provider="email"/);
+  assert.match(panel,/data-provider="username-pin"/);
   assert.match(panel,/data-provider="discord"/);
-  assert.match(panel,/data-provider="legacy-pin"/);
+  assert.doesNotMatch(panel,/data-provider="(?:email|legacy-pin)"/);
   assert.doesNotMatch(methods,/<button|onclick=|href=|data-action=/);
   assert.match(panel,/id="settings-logout" onclick="logout\(\)"/);
   assert.match(html,/account-security-panel settings-account-only/);
