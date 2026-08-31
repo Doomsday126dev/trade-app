@@ -46,8 +46,6 @@ test('all background surfaces use exact artwork or an honest compact label',()=>
     'class="share-pcard card-row${',
     'class="diff-card${',
     'class="diff-match-chip ',
-    'class="sb-row${',
-    'specialTradeBoardExportDomain.badgeTokens',
     'drawExportEntryNoteLabel'
   ])assert.ok(source.includes(contract),`missing background contract: ${contract}`);
   assert.match(source,/backgroundShortLabel\(e\.backgroundId\)/);
@@ -58,6 +56,8 @@ test('all background surfaces use exact artwork or an honest compact label',()=>
   const combined=`${source}\n${share}\n${visualSource}\n${css}`;
   assert.doesNotMatch(combined,/background-pattern-|drawExportBackgroundVisual/);
   assert.doesNotMatch(visualSource,/hashString|PALETTES|PATTERNS|linear-gradient/);
+  const board=source.slice(source.indexOf('function renderSpecialBoard()'),source.indexOf('// ── READ-ONLY SHARE VIEW'));
+  assert.doesNotMatch(board,/sb-row-background|setSpecialBackground|backgroundImageMap|drawBackgroundArtwork/);
   assert.ok(inventory.scriptFiles.includes('js/domain/backgroundVisual.js'));
   assert.ok(inventory.lazyScriptFiles.includes('js/domain/specialTradeBoardExport.js'));
   assert.match(sw,/'js\/domain\/backgroundVisual\.js'/);

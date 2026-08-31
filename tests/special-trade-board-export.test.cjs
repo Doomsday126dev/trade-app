@@ -62,51 +62,13 @@ test('layout is content-sized for 1/1, 9/1, dense, and single-lane boards',()=>{
   assert.equal(nineOne.sections[1].bottom,nineOne.sections[1].cards[0].y+nineOne.cardHeight);
 });
 
-test('qualifier tokens cover required Board combinations without inventing artwork',()=>{
+test('export domain owns only content-derived dense geometry',()=>{
   const domain=loadDomain();
-  const tokens=domain.badgeTokens({shiny:true,lucky:true,mirror:true,qty:3,note:'Needs room'}, {backgroundLabel:'Chicago 2026',gender:'f'});
-  assert.deepEqual(Array.from(tokens,token=>[token.kind,token.label,token.marker||'']),[
-    ['shiny','Shiny','sparkles'],['gender','Female','f'],['lucky','Lucky','lucky'],['note','Needs room','']
-  ]);
-  assert.deepEqual(Array.from(domain.badgeTokens({}, {backgroundLabel:'New York City'}),token=>token.label),[]);
-  assert.equal(tokens.some(token=>['background','mirror','quantity'].includes(token.kind)),false);
-  assert.deepEqual(Array.from(domain.badgeTokens({note:'Female'}, {gender:'f'}),token=>token.label),['Female']);
-  assert.deepEqual(Array.from(domain.badgeTokens({lucky:true,note:'Lucky'}),token=>token.label),['Lucky']);
+  assert.equal(domain.schemaVersion,2);
+  assert.deepEqual(Object.keys(domain).sort(),['buildLayout','columnsFor','metrics','schemaVersion']);
 });
 
-test('badge geometry never crosses the card and reports bounded overflow',()=>{
-  const domain=loadDomain();
-  const tokens=domain.badgeTokens({shiny:true,lucky:true,mirror:true,qty:12,note:'A deliberately long qualifier note'}, {backgroundLabel:'Chicago 2026',gender:'f'});
-  const x=8,y=58,width=80;
-  const plan=domain.layoutBadgeRows(tokens,{x,y,width,measure:value=>String(value).length*4.4});
-  assert.ok(plan.placements.length>0);
-  assert.ok(plan.rows<=1);
-  for(const placement of plan.placements){
-    assert.ok(placement.x>=x);
-    assert.ok(placement.x+placement.width<=x+width+0.01);
-    assert.ok(placement.y>=y);
-    assert.ok(placement.y+placement.height<=y+13);
-  }
-  for(let index=1;index<plan.placements.length;index++){
-    const previous=plan.placements[index-1],current=plan.placements[index];
-    if(previous.row===current.row)assert.ok(previous.x+previous.width<=current.x);
-  }
-  assert.ok(plan.hiddenCount>=1);
-  const overflow=plan.placements.find(placement=>placement.token.kind==='overflow');
-  if(overflow)assert.match(overflow.label,/^\+\d+$/);
-});
-
-test('compact marker semantics do not depend on font glyphs',()=>{
-  const domain=loadDomain();
-  const tokens=domain.badgeTokens({shiny:true,lucky:true,mirror:true,qty:2},{backgroundLabel:'Chicago 2026',gender:'m'});
-  assert.deepEqual(Array.from(tokens.filter(token=>token.marker),token=>[token.kind,token.marker]),[
-    ['shiny','sparkles'],['gender','m'],['lucky','lucky']
-  ]);
-  assert.equal(tokens.some(token=>token.symbol),false);
-  assert.equal(tokens.some(token=>['background','mirror','quantity'].includes(token.kind)),false);
-});
-
-test('canvas renderer uses the accepted sprite resolver and pure geometry contract',()=>{
+test('canvas renderer uses reviewed sprites with only sparkle and vector gender markers',()=>{
   const source=readFileSync(path.join(root,'js','app','application.js'),'utf8');
   const start=source.indexOf('async function renderSpecialBoardImage');
   const end=source.indexOf('// ── READ-ONLY SHARE VIEW',start);
@@ -116,17 +78,30 @@ test('canvas renderer uses the accepted sprite resolver and pure geometry contra
   assert.match(renderer,/specialTradeBoardExportDomain\.buildLayout\(drawableBoard\)/);
   assert.match(renderer,/drawSparkleCluster/);
   assert.match(renderer,/drawGenderMarker/);
-  assert.match(renderer,/drawBackgroundArtwork/);
-  assert.match(renderer,/backgroundImageMap\.get\(id\)/);
+  const genderMarker=renderer.slice(renderer.indexOf('const drawGenderMarker'),renderer.indexOf('const drawEntryMarkers'));
+  assert.match(genderMarker,/ctx\.arc/);
+  assert.match(genderMarker,/ctx\.moveTo/);
+  assert.match(genderMarker,/ctx\.lineTo/);
+  assert.doesNotMatch(genderMarker,/fillText|['"]F['"]|['"]M['"]/);
   assert.match(renderer,/filter\(entry=>imgMap\.has\(boardEntryImageKey\(entry\)\)\)/);
-  assert.match(renderer,/backgroundImageMap\.has\(normalizeBackgroundId\(e\.backgroundId\)\)/);
   assert.match(source,/const mappedHome=/);
   assert.match(source,/other\/home\/\$\{id\}\.png/);
   assert.match(source,/const highQuality=\[\.\.\.mappedHome,\.\.\.publicSpriteUrls/);
   assert.doesNotMatch(renderer,/drawWrappedText\(ctx,e\.dn\|\|e\.name/);
   assert.match(renderer,/exportSpriteFallbackUrls/);
   assert.match(renderer,/drawImageContain/);
-  assert.doesNotMatch(renderer,/drawSpriteFallback|Artwork pending|backgroundShortLabel|· BG/);
-  assert.doesNotMatch(renderer,/drawMirrorMarker|drawQuantityMarker|entry\.mirror|entry\.qty/);
+  assert.doesNotMatch(renderer,/drawSpriteFallback|Artwork pending|backgroundShortLabel|· BG|backgroundId|backgroundImageMap|drawBackgroundArtwork/);
+  assert.doesNotMatch(renderer,/drawMirrorMarker|drawQuantityMarker|drawLuckyMarker|entry\.mirror|entry\.qty|entry\.lucky|e\.note|entry\.note/);
   assert.doesNotMatch(renderer,/drawExportBackgroundVisual|background-pattern|linearGradient|createPattern|hashString/);
+});
+
+test('Board editor presents only artwork, gender, Shiny, and removal controls',()=>{
+  const source=readFileSync(path.join(root,'js','app','application.js'),'utf8');
+  const start=source.indexOf('function renderSpecialBoard()');
+  const end=source.indexOf('async function clearSpecialBoard()',start);
+  const editor=source.slice(start,end);
+  assert.match(editor,/sb-row-gender/);
+  assert.match(editor,/toggleSpecialFlag\('\$\{side\}',\$\{i\},'shiny'\)/);
+  assert.match(editor,/sb-row-rm/);
+  assert.doesNotMatch(editor,/sb-row-background|setSpecialBackground|sb-row-note|setSpecialNote|sb-row-qty|setSpecialQty|mirror/);
 });

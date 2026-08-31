@@ -5460,7 +5460,6 @@ function backgroundContextCurrentId(){
   const context=_backgroundPickerContext||{};
   if(context.target==='add')return normalizeBackgroundId(document.getElementById('add-pmon-background')?.value);
   if(context.target==='entry')return parsePri(allData[myListType]?.[cur]?.[context.name]||'').backgroundId;
-  if(context.target==='special')return normalizeBackgroundId(getSpecialBoard()?.[context.side]?.[context.index]?.backgroundId);
   return'';
 }
 function openBackgroundPicker(context){
@@ -5533,7 +5532,6 @@ function selectBackground(value){
     const hidden=document.getElementById('add-pmon-background');if(hidden)hidden.value=id;
     updateAddBackgroundPresentation();renderAddTray();
   }else if(context.target==='entry')setBackground(context.name,id);
-  else if(context.target==='special')setSpecialBackground(context.side,context.index,id);
   closeBackgroundPicker();
 }
 document.addEventListener('click',e=>{
@@ -10448,8 +10446,7 @@ async function copyShareLink(){
 
 // ── SPECIAL TRADE BOARD ──────────────────────────────────────
 // Manually-curated LF/FT board for one-off special trades. Persisted under
-// the user record so it survives reloads + syncs to Firebase. Image export
-// renders a 9DB-style two-column board with ✨ shiny / 🪞 mirror markers.
+// the user record so it survives reloads + syncs to Firebase.
 function getSpecialBoard(){
   const b=allData.users?.[cur]?.specialTradeBoard;
   return accountSyncClone({lf:Array.isArray(b?.lf)?b.lf:[],ft:Array.isArray(b?.ft)?b.ft:[]});
@@ -10477,7 +10474,7 @@ function _specialAllItems(){
       const key=e?.catalogId||pokemonCatalogDomain.catalogKey(e?.name);
       if(!e?.name||seen.has(key))return;
       seen.add(key);
-      const item={name:e.name,dn:pokemonDisplayName(e),canonicalDn:e.displayName||e.name,no:e.no||null,spriteUrl:entrySpriteUrl(e,e.name),catalogId:key,legacyAliases:e.legacyAliases,searchAliases:e.searchAliases};
+      const item={name:e.name,dn:pokemonDisplayName(e),canonicalDn:e.displayName||e.name,no:e.no||null,spriteUrl:entrySpriteUrl(e,e.name),catalogId:key,gender:['f','m'].includes(e.gender)?e.gender:'',legacyAliases:e.legacyAliases,searchAliases:e.searchAliases};
       item.search=normalizeAcText(pokemonSearchLabels(e).join(' '));
       out.push(item);
     });
@@ -10561,19 +10558,14 @@ function renderSpecialBoard(){
     const el=document.getElementById(`special-${side}-list`);if(!el)return;
     el.innerHTML=board[side].map((e,i)=>{
       const sprHtml=spriteImg(e.no,24,'sb-row-sprite',e.name,'',e.dn||e.name,{catalogId:e.catalogId,scaleCap:1});
-      const qtyHtml=side==='ft'?`<input type="number" class="sb-row-qty" min="1" max="999" value="${e.qty||1}" onchange="setSpecialQty('${side}',${i},this.value)" aria-label="Quantity">`:'';
       const display=pokemonDisplayName({name:e.name,no:e.no,displayName:e.dn||e.name});
-      const backgroundId=normalizeBackgroundId(e.backgroundId),backgroundName=backgroundId?backgroundDisplayName(backgroundId):'',backgroundArtwork=backgroundVisual(backgroundId);
-      const backgroundLabel=backgroundId?backgroundShortLabel(backgroundId):'';
-      return`<div class="sb-row${backgroundId?` background-visual-card ${backgroundVisualClass(backgroundId)}`:''}" ${backgroundId?backgroundVisualAttrs(backgroundId):''} data-idx="${i}">
-        ${backgroundVisualMotifHtml(backgroundId)}
+      const gender=['f','m'].includes(e.gender)?e.gender:'';
+      const genderHtml=gender?`<span class="sb-row-gender ${gender==='f'?'is-female':'is-male'}" aria-label="${gender==='f'?'Female':'Male'}"><span aria-hidden="true">${gender==='f'?'♀︎':'♂︎'}</span></span>`:'';
+      return`<div class="sb-row" data-idx="${i}">
         ${sprHtml}
         <span class="sb-row-name" title="${escAttr(display)}">${escHtml(display)}</span>
-        ${qtyHtml}
-        <button type="button" class="sb-row-background ${backgroundId?'':'is-empty'}" onclick="openBackgroundPicker({target:'special',side:'${side}',index:${i},name:'${escAttr(e.name)}',pokemonName:'${escAttr(display)}'})" title="${escAttr(backgroundName||i18nCore.t('background.none'))}" aria-label="${escAttr(backgroundId?i18nCore.t('background.selected',{name:backgroundName}):i18nCore.t('background.choose'))}"><span class="background-trigger-copy">${backgroundId?`${backgroundArtwork?`<span class="background-visual-swatch ${backgroundVisualDomain.className(backgroundArtwork)}" ${backgroundVisualAttrs(backgroundId)} aria-hidden="true"></span>`:''}<span>${escHtml(backgroundLabel)}</span><span class="background-badge-kind" aria-hidden="true">BG</span>`:'◉'}</span></button>
+        ${genderHtml}
         <button class="sb-row-flag ${e.shiny?'on shiny':''}" onclick="toggleSpecialFlag('${side}',${i},'shiny')" title="✨ Shiny variant" aria-pressed="${!!e.shiny}">✨</button>
-        <button class="sb-row-flag ${e.mirror?'on mirror':''}" onclick="toggleSpecialFlag('${side}',${i},'mirror')" title="🪞 Mirror-only (same Pokémon back)" aria-pressed="${!!e.mirror}">🪞</button>
-        <input type="text" class="sb-row-note" maxlength="40" placeholder="note…" value="${escAttr(e.note||'')}" onchange="setSpecialNote('${side}',${i},this.value)" aria-label="Note">
         <button class="sb-row-rm" onclick="removeSpecialEntry('${side}',${i})" title="Remove" aria-label="Remove">×</button>
       </div>`;
     }).join('');
@@ -10585,10 +10577,10 @@ async function addSpecialEntry(side){
   const items=_ensureSpecialAcItems();
   const it=items.find(x=>x.name===name);if(!it){toast(i18nCore.t('specialBoard.notFound'));return;}
   const board=getSpecialBoard();
-  // Avoid exact duplicates on same side (same name + same shiny + same mirror)
+  // Keep one visual entry per Pokémon variation on each side.
   if(board[side].some(e=>e.name===name))toast(i18nCore.t('specialBoard.alreadyOnSide'));
   else{
-    const entry={name:it.name,dn:it.canonicalDn||it.name,no:it.no||null,shiny:false,mirror:false,backgroundId:'',note:'',qty:side==='ft'?1:undefined};
+    const entry={name:it.name,dn:it.canonicalDn||it.name,no:it.no||null,shiny:false,gender:['f','m'].includes(it.gender)?it.gender:''};
     board[side].push(entry);
     if(!await writeSpecialBoard(board))return;
   }
@@ -10607,26 +10599,6 @@ async function toggleSpecialFlag(side,idx,flag){
   const board=getSpecialBoard();
   const e=board[side][idx];if(!e)return;
   e[flag]=!e[flag];
-  if(!await writeSpecialBoard(board))return;
-  renderSpecialBoard();
-}
-async function setSpecialNote(side,idx,note){
-  const board=getSpecialBoard();
-  const e=board[side][idx];if(!e)return;
-  e.note=String(note||'').trim().slice(0,40);
-  if(!await writeSpecialBoard(board))renderSpecialBoard();
-}
-async function setSpecialQty(side,idx,val){
-  const board=getSpecialBoard();
-  const e=board[side][idx];if(!e)return;
-  e.qty=Math.max(1,Math.min(999,parseInt(val)||1));
-  if(!await writeSpecialBoard(board))return;
-  renderSpecialBoard();
-}
-async function setSpecialBackground(side,idx,backgroundId){
-  const board=getSpecialBoard();
-  const e=board[side]?.[idx];if(!e)return;
-  e.backgroundId=normalizeBackgroundId(backgroundId);
   if(!await writeSpecialBoard(board))return;
   renderSpecialBoard();
 }
@@ -10658,8 +10630,9 @@ function _buildQuickAddCandidates(side){
         const items=_ensureSpecialAcItems();
         const ac=items.find(x=>x.name===name);
         const intent=parsePri(value);
-        if(ac)out.push({...ac,backgroundId:intent.backgroundId,shiny:intent.shiny});
-        else if(sp.no)out.push({name,dn:pokemonDisplayName({...sp,name:sp.name||name,displayName:sp.displayName||name}),no:sp.no,spriteUrl:entrySpriteUrl(sp,name),backgroundId:intent.backgroundId,shiny:intent.shiny});
+        const gender=intent.gender||entryGender(intent.mod||'');
+        if(ac)out.push({...ac,gender,shiny:intent.shiny});
+        else if(sp.no)out.push({name,dn:pokemonDisplayName({...sp,name:sp.name||name,displayName:sp.displayName||name}),no:sp.no,spriteUrl:entrySpriteUrl(sp,name),gender,shiny:intent.shiny});
       });
     });
     out.sort((a,b)=>(parseInt(a.no)||9999)-(parseInt(b.no)||9999)||a.dn.localeCompare(b.dn));
@@ -10674,7 +10647,7 @@ function _buildQuickAddCandidates(side){
     const{name,gender}=splitHaveKey(key);
     if(onBoard.has(name))return; // dedupe by base name (board doesn't track gender separately)
     const e=_nameToSpriteEntry(name);
-    out.push({name,dn:pokemonDisplayName({...e,name:e.name||name,displayName:e.displayName||name}),no:e.no||null,_qty:info.qty,_gender:gender,spriteUrl:entrySpriteUrl(e,name,gender),backgroundId:info.backgroundId,shiny:info.shiny});
+    out.push({name,dn:pokemonDisplayName({...e,name:e.name||name,displayName:e.displayName||name}),no:e.no||null,_qty:info.qty,gender,spriteUrl:entrySpriteUrl(e,name,gender),shiny:info.shiny});
   });
   // Sort: highest qty first, then by dex
   out.sort((a,b)=>(b._qty||0)-(a._qty||0)||(parseInt(a.no)||9999)-(parseInt(b.no)||9999));
@@ -10713,14 +10686,13 @@ function closeQuickAdd(side){
 function renderQuickAddGrid(side,filterStr){
   const grid=document.getElementById(`${side}-qa-grid`);if(!grid)return;
   const q=String(filterStr||'').toLowerCase().trim();
-  const cands=(_qaCandidatesCache[side]||[]).filter(c=>!q||(c.dn||c.name).toLowerCase().includes(q)||String(c.no||'').includes(q)||backgroundDisplayName(c.backgroundId).toLowerCase().includes(q));
+  const cands=(_qaCandidatesCache[side]||[]).filter(c=>!q||(c.dn||c.name).toLowerCase().includes(q)||String(c.no||'').includes(q));
   grid.innerHTML=cands.map(c=>{
     const sel=_qaSelected[side].has(c.name);
     const spr=c.spriteUrl||spriteUrl(c.no,c.name);
-    const qtyTag=side==='ft'&&c._qty?`<span style="position:absolute;bottom:1px;right:3px;font-size:8px;color:var(--ac2);font-weight:700;font-family:var(--mono)">×${c._qty}</span>`:'';
     return`<button type="button" class="sb-qa-chip ${sel?'sel':''}" data-name="${escAttr(c.name)}" onclick="toggleQuickAddPick('${side}','${escAttr(c.name)}')" title="${escAttr(c.dn||c.name)}">
       ${spr?`<img src="${escAttr(spr)}" alt="" loading="lazy">`:'<span style="font-size:22px">🎮</span>'}
-      <span class="sb-qa-chip-name">${escHtml(c.dn||c.name)}</span>${qtyTag}
+      <span class="sb-qa-chip-name">${escHtml(c.dn||c.name)}</span>
     </button>`;
   }).join('');
 }
@@ -10764,8 +10736,7 @@ async function commitQuickAdd(side){
     if(!it)return;
     board[side].push({
       name:it.name,dn:it.dn,no:it.no||null,
-      shiny:!!it.shiny,mirror:false,backgroundId:normalizeBackgroundId(it.backgroundId),note:'',
-      qty:side==='ft'?(it._qty||1):undefined
+      shiny:!!it.shiny,gender:['f','m'].includes(it.gender)?it.gender:''
     });
     added++;
   });
@@ -10810,20 +10781,13 @@ async function renderSpecialBoardImage(board,username){
   await ensureSpecialTradeBoardExportDomain();
   const sourceBoard={lf:Array.isArray(board?.lf)?board.lf:[],ft:Array.isArray(board?.ft)?board.ft:[]};
   const allEntries=[...sourceBoard.lf,...sourceBoard.ft];
-  const boardEntryImageKey=e=>[e.catalogId||'',e.name,e.spriteName||'',e.dn||'',e.shiny?'s':'n',e.gender||entryGender(e.note||e.mod||'')].join('|');
+  const boardEntryGender=e=>['f','m'].includes(e?.gender)?e.gender:entryGender(e?.mod||'');
+  const boardEntryImageKey=e=>[e.catalogId||'',e.name,e.spriteName||'',e.dn||'',e.shiny?'s':'n',boardEntryGender(e)].join('|');
   const imgMap=new Map();
   await Promise.all(allEntries.map(async e=>{
     const urls=exportSpriteFallbackUrls({...e,spriteUrl:entrySpriteUrl(e,e.name)});
     const img=await loadCanvasImageWithFallback(urls);
     if(img)imgMap.set(boardEntryImageKey(e),img);
-  }));
-  const backgroundImageMap=new Map();
-  const backgroundIds=[...new Set(allEntries.map(e=>normalizeBackgroundId(e.backgroundId)).filter(Boolean))];
-  await Promise.all(backgroundIds.map(async id=>{
-    const visual=backgroundVisual(id);
-    if(!visual?.assetUrl)return;
-    const img=await loadCanvasImage(visual.assetUrl);
-    if(img&&canvasImageHasVisiblePixels(img))backgroundImageMap.set(id,img);
   }));
   const drawableBoard={
     lf:sourceBoard.lf.filter(entry=>imgMap.has(boardEntryImageKey(entry))),
@@ -10877,46 +10841,31 @@ async function renderSpecialBoardImage(board,username){
   };
   const drawGenderMarker=(gender,x,y)=>{
     const female=gender==='f';
-    ctx.save();ctx.beginPath();ctx.arc(x,y,5,0,Math.PI*2);ctx.fillStyle=female?'#be185d':'#1d4ed8';ctx.fill();
-    ctx.strokeStyle=female?'#f9a8d4':'#93c5fd';ctx.lineWidth=.8;ctx.stroke();
-    ctx.fillStyle='#fff';ctx.font='800 6px Arial, sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(female?'F':'M',x,y+.3);
+    ctx.save();ctx.strokeStyle=female?'#f472b6':'#60a5fa';ctx.lineWidth=1.6;ctx.lineCap='round';ctx.lineJoin='round';
+    ctx.beginPath();ctx.arc(x,y-2.5,3.2,0,Math.PI*2);ctx.stroke();
+    ctx.beginPath();
+    if(female){
+      ctx.moveTo(x,y+.8);ctx.lineTo(x,y+7);
+      ctx.moveTo(x-2.6,y+4.2);ctx.lineTo(x+2.6,y+4.2);
+    }else{
+      ctx.moveTo(x+2.2,y-4.7);ctx.lineTo(x+6.8,y-9.3);
+      ctx.moveTo(x+3.4,y-9.3);ctx.lineTo(x+6.8,y-9.3);ctx.lineTo(x+6.8,y-5.9);
+    }
+    ctx.stroke();
     ctx.restore();
-  };
-  const drawLuckyMarker=(x,y)=>{
-    ctx.save();ctx.beginPath();ctx.moveTo(x+1,y-5);ctx.lineTo(x-3,y+1);ctx.lineTo(x,y+1);ctx.lineTo(x-2,y+6);ctx.lineTo(x+4,y-1);ctx.lineTo(x+1,y-1);ctx.closePath();
-    ctx.fillStyle='#facc15';ctx.shadowColor='rgba(250,204,21,.55)';ctx.shadowBlur=2;ctx.fill();ctx.restore();
-  };
-  const drawImageCover=(img,x,y,w,h)=>{
-    const iw=img.naturalWidth||1,ih=img.naturalHeight||1,scale=Math.max(w/iw,h/ih),dw=iw*scale,dh=ih*scale;
-    ctx.drawImage(img,x+(w-dw)/2,y+(h-dh)/2,dw,dh);
-  };
-  const drawBackgroundArtwork=(entry,x,y,w,h)=>{
-    const id=normalizeBackgroundId(entry.backgroundId),art=backgroundImageMap.get(id);
-    if(!art)return false;
-    ctx.save();roundedRect(ctx,x,y,w,h,6);ctx.clip();
-    drawImageCover(art,x,y,w,h);
-    ctx.restore();
-    ctx.strokeStyle='rgba(255,255,255,.34)';ctx.lineWidth=.8;roundedRect(ctx,x+.4,y+.4,w-.8,h-.8,6);ctx.stroke();
-    return true;
   };
   const drawEntryMarkers=(entry,x,y,w,gender)=>{
     if(entry.shiny)drawSparkleCluster(x+w-8,y+7);
-    if(gender==='f'||gender==='m')drawGenderMarker(gender,x+w-8,y+19);
-    if(entry.lucky)drawLuckyMarker(x+7,y+7);
+    if(gender==='f'||gender==='m')drawGenderMarker(gender,x+w/2,y+61);
   };
   const drawGridSection=(entries,xBase,startY)=>{
     entries.forEach((e,index)=>{
       const col=index%gridCols,row=Math.floor(index/gridCols);
       const cx=xBase+col*(gridCellW+gridGap),cy=startY+row*(gridCellH+gridGap);
       ctx.save();
-      const gender=e.gender||entryGender(e.note||e.mod||'');
-      const tokens=specialTradeBoardExportDomain.badgeTokens(e,{gender});
-      const note=tokens.find(token=>token.kind==='note')?.label||'';
-      const hasBackgroundArtwork=backgroundImageMap.has(normalizeBackgroundId(e.backgroundId)),spriteSize=hasBackgroundArtwork?44:gridSprSize;
-      if(hasBackgroundArtwork)drawBackgroundArtwork(e,cx+2,cy+1,gridCellW-4,gridCellH-2);
-      const sx=cx+(gridCellW-spriteSize)/2,sy=cy+(hasBackgroundArtwork?3:6),img=imgMap.get(boardEntryImageKey(e));
-      drawImageContain(ctx,img,sx,sy,spriteSize,spriteSize);
-      if(!hasBackgroundArtwork&&note)drawCenteredFittedText(ctx,note,cx+gridCellW/2,cy+67,gridCellW-6,{weight:650,max:6,min:4,color:'#cbd5e1'});
+      const gender=boardEntryGender(e);
+      const sx=cx+(gridCellW-gridSprSize)/2,sy=cy+4,img=imgMap.get(boardEntryImageKey(e));
+      drawImageContain(ctx,img,sx,sy,gridSprSize,gridSprSize);
       drawEntryMarkers(e,cx,cy,gridCellW,gender);
       ctx.restore();
     });

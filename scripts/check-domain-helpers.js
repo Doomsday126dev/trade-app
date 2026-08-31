@@ -829,9 +829,9 @@ eq(pokemondbSlug('P-Tauros (Aqua)', 'P-Tauros (Aqua)'), 'tauros-paldean-aqua', '
 eq(pokemondbSlug("G-Farfetch'd", "G-Farfetch'd"), 'farfetchd-galarian', 'pokemondbSlug should strip apostrophe in regional name');
 eq(pokemondbSlug('G-Mr_ Mime', 'G-Mr. Mime'), 'mr-mime-galarian', 'pokemondbSlug should drop period in regional name (dn precedence)');
 
-// Basculin: synthetic quirk-trigger path + real-data over-match guard
+// Basculin: bare colour and real catalog labels resolve to the reviewed striped asset.
 eq(pokemondbSlug('Basculin (Red)', 'Basculin (Red)'), 'basculin-red-striped', 'pokemondbSlug should apply basculin striped quirk for bare colour');
-eq(pokemondbSlug('Basculin (Red Stripe)', 'Basculin (Red Stripe)'), 'basculin-red-stripe', 'pokemondbSlug should NOT over-match real-data Red Stripe (quirk dead)');
+eq(pokemondbSlug('Basculin (Red Stripe)', 'Basculin (Red Stripe)'), 'basculin-red-striped', 'pokemondbSlug should resolve the real-data Red Stripe label');
 
 // Flabébé: real flower quirk + over-match guard
 eq(pokemondbSlug('Flabébé (Red Flower)', 'Flabébé (Red Flower)'), 'flabebe-red', 'pokemondbSlug should drop -flower for Flabebe');

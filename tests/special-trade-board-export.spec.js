@@ -14,7 +14,7 @@ async function loadExporter(page){
   await page.waitForFunction(()=>typeof renderSpecialBoardImage==='function');
 }
 
-test('Special Trade Board PNG is content-sized, nonblank, and omits unavailable artwork',async({page})=>{
+test('Special Trade Board PNG is content-sized and ignores retired metadata and unavailable artwork',async({page})=>{
   await loadExporter(page);
   const fixture={
     lf:[
@@ -25,10 +25,11 @@ test('Special Trade Board PNG is content-sized, nonblank, and omits unavailable 
       {name:'Eevee',dn:'Eevee',no:133,backgroundId:'location-gofestnewyorkcity',gender:'f'},
       {name:'Mewtwo',dn:'Mewtwo',no:150,backgroundId:'special-gofest2024wormhole',lucky:true},
       {name:'Basculin (White Stripe)',dn:'Basculin (White Stripe)',no:550,mirror:true},
-      {name:'Avalugg (Hisuian Form)',dn:'Avalugg (Hisuian Form)',no:713,note:'Long qualifier note'},
-      {name:'Jigglypuff (Ribbon)',dn:'Jigglypuff (Ribbon)',no:39,shiny:true,gender:'f'}
+      {name:'Avalugg (Hisuian Form)',dn:'Avalugg (Hisuian Form)',no:713,note:'Retired qualifier'},
+      {name:'Jigglypuff (Ribbon)',dn:'Jigglypuff (Ribbon)',no:39,shiny:true,gender:'f'},
+      {name:'Oricorio (Sensu)',dn:'Oricorio (Sensu Style)',no:741,gender:'m'}
     ],
-    ft:[{name:'Pikachu (Saree)',dn:'Pikachu (Saree)',no:25,qty:2,lucky:true,backgroundId:'location-gofest2026chicago'}]
+    ft:[{name:'Dondozo',dn:'Dondozo',no:977,qty:2,lucky:true,backgroundId:'location-gofest2026chicago',note:'Retired metadata',mirror:true}]
   };
   const result=await page.evaluate(async board=>{
     const fallbackCalls=[],imageCalls=[];
@@ -54,4 +55,39 @@ test('Special Trade Board PNG is content-sized, nonblank, and omits unavailable 
   expect(result.colorCount).toBeGreaterThan(8);
   expect(result.imageCalls).toBeGreaterThan(0);
   expect(result.fallbackCalls).toEqual([]);
+});
+
+test('Special Trade Board editor stays compact and touch-safe without retired controls',async({page})=>{
+  await loadExporter(page);
+  await page.evaluate(()=>{
+    cur='BoardTester';
+    allData.users=allData.users||{};
+    allData.users[cur]={specialTradeBoard:{
+      lf:[{name:'Eevee',dn:'Eevee',no:133,gender:'f',shiny:true,backgroundId:'location-gofest2026chicago',mirror:true,note:'Retired note'}],
+      ft:[{name:'Mewtwo',dn:'Mewtwo',no:150,gender:'m',qty:12,lucky:true}]
+    }};
+    openSpecialTradeBoard();
+  });
+  for(const viewport of [{width:1440,height:900},{width:430,height:932},{width:390,height:844},{width:375,height:812},{width:320,height:568}]){
+    await page.setViewportSize(viewport);
+    const modal=page.locator('#special-board-modal .special-board-modal');
+    await expect(modal).toBeVisible();
+    await expect(page.locator('#special-board-modal .sb-row')).toHaveCount(2);
+    await expect(page.locator('#special-board-modal .sb-row-gender')).toHaveCount(2);
+    await expect(page.locator('#special-board-modal .sb-row-background,#special-board-modal .sb-row-note,#special-board-modal .sb-row-qty')).toHaveCount(0);
+    await expect(page.locator('#special-board-modal [title*="Mirror"]')).toHaveCount(0);
+    const geometry=await page.evaluate(()=>{
+      const modal=document.querySelector('#special-board-modal .special-board-modal'),bounds=modal.getBoundingClientRect();
+      const targets=[...modal.querySelectorAll('.special-board-add-row button,.sb-row button,.special-board-modal .mact button')].map(node=>{
+        const box=node.getBoundingClientRect();return{width:box.width,height:box.height};
+      });
+      return{left:bounds.left,right:bounds.right,top:bounds.top,bottom:bounds.bottom,targets,overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth};
+    });
+    expect(geometry.overflow).toBe(false);
+    expect(geometry.left).toBeGreaterThanOrEqual(0);
+    expect(geometry.right).toBeLessThanOrEqual(viewport.width+1);
+    expect(geometry.top).toBeGreaterThanOrEqual(0);
+    expect(geometry.bottom).toBeLessThanOrEqual(viewport.height+1);
+    expect(geometry.targets.every(target=>target.width>=44&&target.height>=44)).toBe(true);
+  }
 });

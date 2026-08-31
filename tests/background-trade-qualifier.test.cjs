@@ -71,15 +71,16 @@ test('legacy Have numbers stay numeric and structured qualifiers preserve canoni
   });
 });
 
-test('one qualifier flows through product rows, matching, board, and exports',()=>{
+test('one qualifier flows through product rows, matching, and list exports',()=>{
   for(const marker of [
     'id="add-pmon-background"','function openBackgroundPicker','function setBackground(',
     'backgroundBadgeHtml(backgroundId','function renderShareView(username,type)',
     'function computeTradeMatchSummary','tradeListComparisonDomain.compareWantedLists',
-    'function setSpecialBackground','class="sb-row-background',
     "'Background ID','Background'",'backgroundDisplayName(e.backgroundId)',
     'function exportEntryNoteLabel','drawExportEntryNoteLabel'
   ])assert.ok(html.includes(marker),`missing ${marker}`);
+  const board=html.slice(html.indexOf('function renderSpecialBoard()'),html.indexOf('// ── READ-ONLY SHARE VIEW'));
+  assert.doesNotMatch(board,/setSpecialBackground|sb-row-background|backgroundImageMap|drawBackgroundArtwork/);
 });
 
 test('picker is released-only, keyboard-usable, relevant-first, and incrementally rendered',()=>{

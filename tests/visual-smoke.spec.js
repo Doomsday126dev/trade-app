@@ -2288,7 +2288,9 @@ test.describe('visual smoke', () => {
     await page.evaluate(({nyc})=>{allData.wishlist[cur].Rayquaza=`M[shiny][bg:${nyc}]`;renderMyList();},{nyc});
 
     await page.evaluate(()=>openSpecialTradeBoard());
-    await expect(page.locator('#special-ft-list .sb-row-background')).toContainText('Fountains Abbey Estate 2026');
+    await expect(page.locator('#special-board-modal .sb-row-background')).toHaveCount(0);
+    await expect(page.locator('#special-board-modal .sb-row-note')).toHaveCount(0);
+    await expect(page.locator('#special-board-modal .sb-row-qty')).toHaveCount(0);
     await page.evaluate(()=>closeModal('special-board-modal'));
 
     await page.evaluate(({nyc,longBackground})=>{
