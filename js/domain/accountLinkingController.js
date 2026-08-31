@@ -61,7 +61,7 @@
         notify({status:'connecting',operation:'link',providerKey,code:'',retryable:false});
         const result=await withLease(context,()=>providerAdapter.linkCurrentUser({providerKey,flow:'popup'}));
         await verifyUnchanged(context,result);
-        activeAuthority=null;lastRetry=null;return notify({status:'connected',operation:'link',providerKey,code:'',retryable:false});
+        activeAuthority=null;lastRetry=null;return notify({status:'connected',operation:'link',providerKey,code:result?.status==='already-linked'?'provider-link/already-connected':'',retryable:false});
       }catch(error){return failState(error,context,()=>linkPopup(providerKey));}
     }
     async function beginRedirect(providerKey,{returnRoute='#settings/security'}={}){

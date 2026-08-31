@@ -189,7 +189,19 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
       <input class="field-control" type="password" id="login-pin" data-i18n-placeholder="login.pinPlaceholder" placeholder="6-digit PIN" maxlength="6" inputmode="numeric" autocomplete="current-password" disabled data-bootstrap-disabled="true">
     </div>
     <button type="button" class="lbtn btn btn-primary" id="login-btn" onclick="doLogin()" data-i18n="login.signIn" disabled data-bootstrap-disabled="true">Sign in</button>
+    <div class="provider-login-option" id="google-login-option" hidden>
+      <div class="provider-login-divider"><span data-i18n="login.or">or</span></div>
+      <button type="button" class="provider-login-button btn" id="google-login-button" onclick="continueWithGoogle()" data-i18n="login.continueGoogle" disabled data-bootstrap-disabled="true">Continue with Google</button>
+    </div>
     <div class="err" id="login-err" role="alert" aria-live="assertive" aria-atomic="true"></div>
+    <section class="provider-onboarding" id="google-onboarding" aria-labelledby="google-onboarding-title" hidden>
+      <h2 id="google-onboarding-title" data-i18n="providerOnboarding.title">Finish setting up PoGo Trades</h2>
+      <p data-i18n="providerOnboarding.description">Google verified your sign-in. Choose your trainer handle explicitly; Google profile details are never used as your trainer identity.</p>
+      <div class="field"><label for="google-onboarding-handle" data-i18n="providerOnboarding.handle">Trainer handle</label><input class="field-control" id="google-onboarding-handle" type="text" autocomplete="off" autocapitalize="none" maxlength="32" data-i18n-placeholder="providerOnboarding.handlePlaceholder" placeholder="Your Pokemon GO trainer name"></div>
+      <div class="field"><label for="google-onboarding-friend-code" data-i18n="providerOnboarding.friendCode">Friend Code (optional)</label><input class="field-control" id="google-onboarding-friend-code" type="text" inputmode="numeric" autocomplete="off" maxlength="16" placeholder="0000 0000 0000"></div>
+      <div class="provider-onboarding-actions"><button type="button" class="btn btn-primary" onclick="checkGoogleOnboarding()" data-i18n="providerOnboarding.check">Check handle</button><button type="button" class="btn" onclick="cancelGoogleOnboarding()" data-i18n="providerOnboarding.cancel">Cancel</button></div>
+      <p class="provider-onboarding-status" id="google-onboarding-status" role="status" aria-live="polite"></p>
+    </section>
     <div class="lnote"><span data-i18n="login.newUserHelp">New here? Request access first. An admin will provide a unique six-digit first-use PIN after approval.</span><br><span data-i18n="login.existingUserHelp">Already approved? Ask an admin for the identity-preserving PIN reset if needed.</span></div>
     <button type="button" class="login-help-link" onclick="openLoginHealthCheck()" data-i18n="login.trouble" disabled data-bootstrap-disabled="true">Having trouble signing in?</button>
     <button type="button" class="req-link" onclick="showRequestForm()" data-i18n="login.requestAccess" disabled data-bootstrap-disabled="true">Request access to join</button>
@@ -858,7 +870,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
         <div class="settings-section-heading"><h3 data-i18n="security.connectedAccounts">Connected accounts</h3><p data-i18n="security.connectedAccountsHelp">Authentication methods connected to this trainer account.</p></div>
         <div class="account-security-methods" role="list" data-i18n-aria-label="security.methodsLabel" aria-label="Sign-in methods">
           <div class="account-security-method" role="listitem" data-provider="username-pin"><span class="account-security-provider-icon" aria-hidden="true">#</span><div class="account-security-copy"><strong data-i18n="security.usernamePin">Username and PIN</strong><span data-provider-detail data-i18n="security.usernamePinHelp">Your existing sign-in remains connected to this Firebase account.</span></div><span class="account-security-status is-active" data-provider-status><span data-provider-status-icon aria-hidden="true">✓</span><span data-provider-status-label data-i18n="security.connected">Connected</span></span></div>
-          <div class="account-security-method account-security-provider-development" role="listitem" data-provider="google" hidden><span class="account-security-provider-icon" aria-hidden="true">G</span><div class="account-security-copy"><strong data-i18n="security.google">Google</strong><span data-provider-detail data-i18n="security.providerDevelopmentOnly">Available only in development after provider configuration.</span></div><span class="account-security-status" data-provider-status><span data-provider-status-icon aria-hidden="true">○</span><span data-provider-status-label data-i18n="security.unavailable">Unavailable</span></span></div>
+          <div class="account-security-method account-security-provider-development" role="listitem" data-provider="google" hidden><span class="account-security-provider-icon" aria-hidden="true">G</span><div class="account-security-copy"><strong data-i18n="security.google">Google</strong><span data-provider-detail data-i18n="security.providerDevelopmentOnly">Available only in development after provider configuration.</span></div><div class="account-security-method-actions"><span class="account-security-status" data-provider-status><span data-provider-status-icon aria-hidden="true">○</span><span data-provider-status-label data-i18n="security.unavailable">Unavailable</span></span><button type="button" class="account-security-action btn" data-provider-action onclick="handleGoogleAccountAction()" hidden></button></div></div>
           <div class="account-security-method account-security-provider-development" role="listitem" data-provider="discord" hidden><span class="account-security-provider-icon" aria-hidden="true">D</span><div class="account-security-copy"><strong data-i18n="security.discord">Discord</strong><span data-provider-detail data-i18n="security.providerDevelopmentOnly">Available only in development after provider configuration.</span></div><span class="account-security-status" data-provider-status><span data-provider-status-icon aria-hidden="true">○</span><span data-provider-status-label data-i18n="security.unavailable">Unavailable</span></span></div>
         </div>
         <p class="account-security-notice" role="status" aria-live="polite" data-i18n="security.foundationNotice">Additional sign-in providers are not enabled in this release.</p>
@@ -986,6 +998,8 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
 <script src="js/domain/providerContinuationState.js?v=2026-08-31.86" data-pogo-provider-development></script>
 <script src="js/domain/accountLinkingModel.js?v=2026-08-31.86" data-pogo-provider-development></script>
 <script src="js/domain/accountLinkingController.js?v=2026-08-31.86" data-pogo-provider-development></script>
+<script src="js/domain/providerOnboardingModel.js?v=2026-08-31.86" data-pogo-provider-development></script>
+<script src="js/services/googleAuthAdapter.js?v=2026-08-31.86" data-pogo-provider-development></script>
 <script src="js/domain/loginDirectory.js?v=2026-08-31.86"></script>
 <script src="js/utils/textSafety.js?v=2026-08-31.86"></script>
 <script src="js/ui/stringPanels.js?v=2026-08-31.86"></script>
@@ -1034,6 +1048,12 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
     ja:Object.freeze({'app.preparing':'トレードリストを準備しています','app.preparingDetail':'この端末とログイン状態を安全に確認しています。確認が完了するまで、アカウントデータは表示されません。','account.language':'言語','account.languageSettings':'言語設定','login.subtitle':'NYC コミュニティ交換リスト','login.disclaimer':'非公式のコミュニティツールです。Niantic、Nintendo、株式会社ポケモンとは関係ありません。','login.username':'トレーナー名','login.usernamePlaceholder':'トレーナー名を入力または選択…','login.usernameSuggestions':'トレーナー名の候補','login.pin':'PIN','login.pinPlaceholder':'6桁のPIN','login.signIn':'ログイン','login.newUserHelp':'初めての方は、まず参加申請をしてください。承認後、管理者から初回用の6桁PINが届きます。','login.existingUserHelp':'承認済みでPINが必要な場合は、管理者に本人確認を保持したPIN再設定を依頼してください。','login.trouble':'ログインでお困りですか？','login.requestAccess':'参加を申請','legal.footer':'非公式ファン制作ツール · 法的情報と謝辞','legal.title':'法的情報と謝辞','legal.sourcesTitle':'データと素材について','legal.sourceUse':'PokéAPI は種族・フォルム・スプライトリポジトリの情報を提供します。Pokémon Database は一部の Pokémon HOME と Pokémon GO の表示画像に使用します。','legal.referenceUse':'PokeMiners、Serebii、Pokémon GO Hub、Pokémon GO 公式発表はカタログ情報の調査にのみ使用し、それらの画像は PoGo Trades から配信しません。','legal.backgroundUse':'背景修飾は、その背景に正確に対応する承認済み画像がある場合を除き、ラベルで表示します。','legal.rights':'Pokémon、Pokémon GO、キャラクター名、画像および関連商標は、それぞれの権利者に帰属します。','legal.unofficial':'PoGo Trades は非公式のファン制作ツールであり、権利者との提携、推奨、スポンサー関係はありません。','common.close':'閉じる','common.done':'完了'}),
     es:Object.freeze({'app.preparing':'Preparando tu lista de intercambios','app.preparingDetail':'Comprobando de forma segura este dispositivo y tu sesión. Los datos de tu cuenta permanecen ocultos hasta completar la verificación.','account.language':'Idioma','account.languageSettings':'Ajustes de idioma','login.subtitle':'Lista de intercambios de la comunidad de NYC','login.disclaimer':'Herramienta comunitaria no oficial. No está afiliada con Niantic, Nintendo ni The Pokémon Company.','login.username':'Nombre de Entrenador','login.usernamePlaceholder':'Escribe o elige tu nombre…','login.usernameSuggestions':'Sugerencias de nombres','login.pin':'PIN','login.pinPlaceholder':'PIN de 6 dígitos','login.signIn':'Iniciar sesión','login.newUserHelp':'¿Eres nuevo? Solicita acceso primero. Un administrador te dará un PIN inicial de seis dígitos tras aprobarte.','login.existingUserHelp':'¿Ya tienes acceso? Si lo necesitas, pide a un administrador un restablecimiento de PIN que conserve tu identidad.','login.trouble':'¿Problemas para iniciar sesión?','login.requestAccess':'Solicitar acceso','legal.footer':'Herramienta no oficial de fans · Aviso legal y agradecimientos','legal.title':'Aviso legal y agradecimientos','legal.sourcesTitle':'Agradecimientos de datos y recursos','legal.sourceUse':'PokéAPI aporta datos de especies y formas, y recursos del repositorio de sprites. Pokémon Database aporta algunas imágenes alternativas de Pokémon HOME y Pokémon GO.','legal.referenceUse':'PokeMiners, Serebii, Pokémon GO Hub y los anuncios oficiales de Pokémon GO se usan solo para investigar metadatos del catálogo; PoGo Trades no sirve sus imágenes.','legal.backgroundUse':'Los fondos se muestran como etiquetas salvo que exista una imagen exacta y aprobada para ese fondo.','legal.rights':'Pokémon, Pokémon GO, los nombres de personajes, las imágenes y las marcas relacionadas pertenecen a sus respectivos titulares.','legal.unofficial':'PoGo Trades es una herramienta no oficial creada por fans y no está afiliada, respaldada ni patrocinada por los titulares de derechos.','common.close':'Cerrar','common.done':'Listo'}),
     de:Object.freeze({'app.preparing':'Deine Tauschliste wird vorbereitet','app.preparingDetail':'Dieses Gerät und deine Anmeldung werden sicher geprüft. Deine Kontodaten bleiben bis zum Abschluss der Prüfung verborgen.','account.language':'Sprache','account.languageSettings':'Spracheinstellungen','login.subtitle':'NYC-Community-Tauschliste','login.disclaimer':'Inoffizielles Community-Werkzeug. Keine Verbindung zu Niantic, Nintendo oder The Pokémon Company.','login.username':'Trainername','login.usernamePlaceholder':'Trainername eingeben oder auswählen…','login.usernameSuggestions':'Vorschläge für Trainernamen','login.pin':'PIN','login.pinPlaceholder':'6-stellige PIN','login.signIn':'Anmelden','login.newUserHelp':'Neu hier? Beantrage zuerst Zugang. Nach der Freigabe erhältst du von der Administration eine sechsstellige Erst-PIN.','login.existingUserHelp':'Bereits freigeschaltet? Bitte bei Bedarf um eine identitätserhaltende PIN-Zurücksetzung.','login.trouble':'Probleme bei der Anmeldung?','login.requestAccess':'Zugang beantragen','legal.footer':'Inoffizielles Fan-Projekt · Rechtliches & Danksagungen','legal.title':'Rechtliches & Danksagungen','legal.sourcesTitle':'Daten- und Ressourcennachweise','legal.sourceUse':'PokéAPI liefert Arten-, Form- und Sprite-Repository-Daten. Pokémon Database liefert ausgewählte visuelle Fallbacks für Pokémon HOME und Pokémon GO.','legal.referenceUse':'PokeMiners, Serebii, Pokémon GO Hub und offizielle Pokémon-GO-Ankündigungen dienen nur der Katalogrecherche; deren Grafiken werden nicht von PoGo Trades ausgeliefert.','legal.backgroundUse':'Hintergründe werden als Kennzeichnung angezeigt, sofern keine exakt passende, freigegebene Grafik vorliegt.','legal.rights':'Pokémon, Pokémon GO, Charakternamen, Bilder und zugehörige Marken sind Eigentum ihrer jeweiligen Rechteinhaber.','legal.unofficial':'PoGo Trades ist ein inoffizielles Fan-Projekt und ist weder mit den Rechteinhabern verbunden noch von ihnen unterstützt oder gesponsert.','common.close':'Schließen','common.done':'Fertig'})
+  });
+  const GOOGLE_SHELL_LOCALES=Object.freeze({
+    en:Object.freeze({'login.or':'or','login.continueGoogle':'Continue with Google'}),
+    ja:Object.freeze({'login.or':'または','login.continueGoogle':'Google で続行'}),
+    es:Object.freeze({'login.or':'o','login.continueGoogle':'Continuar con Google'}),
+    de:Object.freeze({'login.or':'oder','login.continueGoogle':'Mit Google fortfahren'})
   });
   const loadedScripts=new Set();
   let shellLocalePromise=null;
@@ -1091,7 +1111,8 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
   function translateShell(){
     const roots=['login-pg','app-legal-footer','legal-dialog'].map(id=>document.getElementById(id)).filter(Boolean);
     if(!roots.length)return;
-    const catalog=SHELL_LOCALES[preferredLocale()]||SHELL_LOCALES.en;
+    const locale=preferredLocale();
+    const catalog={...(SHELL_LOCALES[locale]||SHELL_LOCALES.en),...(GOOGLE_SHELL_LOCALES[locale]||GOOGLE_SHELL_LOCALES.en)};
     for(const root of roots){
       root.querySelectorAll('[data-i18n]').forEach(node=>{const value=catalog[node.dataset.i18n];if(value)node.textContent=value;});
       root.querySelectorAll('[data-i18n-placeholder]').forEach(node=>{const value=catalog[node.dataset.i18nPlaceholder];if(value)node.placeholder=value;});
@@ -1111,6 +1132,9 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
       login.removeAttribute('data-bootstrap-pending');
       login.setAttribute('aria-busy','false');
       login.querySelectorAll('[data-bootstrap-disabled="true"]').forEach(control=>{control.disabled=false;delete control.dataset.bootstrapDisabled;});
+      const configured=Array.isArray(window.__POGO_PROVIDER_LINKING_CONFIGURED__)?window.__POGO_PROVIDER_LINKING_CONFIGURED__:[];
+      const googleOption=document.getElementById('google-login-option');
+      if(googleOption)googleOption.hidden=!(window.__POGO_PROVIDER_LINKING_DEV__===true&&configured.includes('google'));
     }
     window.__pogoShellReady=true;
     window.__pogoStartup.loginShellRevealedAt=performance.now();
@@ -1222,6 +1246,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
   }
   const stubs={
     doLogin:(...args)=>loadThenCall('doLogin',args),
+    continueWithGoogle:(...args)=>loadThenCall('continueWithGoogle',args),
     openSettingsPanel:(...args)=>loadThenCall('openSettingsPanel',args),
     openLoginHealthCheck:(...args)=>loadThenCall('openLoginHealthCheck',args),
     showRequestForm:(...args)=>loadThenCall('showRequestForm',args)

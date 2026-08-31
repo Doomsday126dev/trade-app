@@ -22,7 +22,7 @@
       if(key==='username-pin')return Object.freeze({visible:true,available:true,actionable:false,reason:'production-access-method'});
       if(!developmentEnabled)return Object.freeze({visible:false,available:false,actionable:false,reason:'production-hidden'});
       const available=configured.has(key);
-      return Object.freeze({visible:true,available,actionable:false,reason:available?'development-adapter-required':'provider-unconfigured'});
+      return Object.freeze({visible:true,available,actionable:available,reason:available?'development-configured':'provider-unconfigured'});
     }
     function methods({providerData=[],usernamePinAvailable=true,linkedExternalProviders={},operationStates={}}={}){
       const ids=providerIds(providerData),external=externalLinks(linkedExternalProviders);

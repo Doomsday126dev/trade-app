@@ -54,6 +54,8 @@
     "js/domain/providerContinuationState.js",
     "js/domain/accountLinkingModel.js",
     "js/domain/accountLinkingController.js",
+    "js/domain/providerOnboardingModel.js",
+    "js/services/googleAuthAdapter.js",
     "js/domain/loginDirectory.js",
     "js/utils/textSafety.js",
     "js/ui/stringPanels.js",
@@ -94,6 +96,14 @@
   ],
   "lazyScriptFiles": [
     "js/domain/specialTradeBoardExport.js"
+  ],
+  "developmentOnlyScriptFiles": [
+    "js/domain/authProviderRegistry.js",
+    "js/domain/providerContinuationState.js",
+    "js/domain/accountLinkingModel.js",
+    "js/domain/accountLinkingController.js",
+    "js/domain/providerOnboardingModel.js",
+    "js/services/googleAuthAdapter.js"
   ],
   "assetFiles": [
     "assets/tradeloop-icon.svg",

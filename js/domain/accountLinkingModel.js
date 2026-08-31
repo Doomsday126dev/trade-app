@@ -24,7 +24,7 @@
     return authTime>0&&authTime<=time&&time-authTime<=maxAgeMs;
   }
   function boundary(value){
-    const fields=['accountDataFingerprint','journalOwner','journalGeneration','migrationGeneration','reviewedEvidenceCount','activeEvidenceCount','listenerAuthority','publicIdentityFingerprint','trainerIdentityFingerprint'];
+    const fields=['accountDataFingerprint','journalOwner','journalGeneration','migrationGeneration','recoveryEvidenceFingerprint','reviewedEvidenceCount','activeEvidenceCount','listenerAuthority','publicIdentityFingerprint','trainerIdentityFingerprint'];
     const out={};for(const field of fields)out[field]=value?.[field];
     if(typeof out.accountDataFingerprint!=='string'||!out.accountDataFingerprint)throw failure('provider-link/account-boundary-invalid');
     return Object.freeze(out);
