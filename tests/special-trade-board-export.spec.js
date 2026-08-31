@@ -14,7 +14,7 @@ async function loadExporter(page){
   await page.waitForFunction(()=>typeof renderSpecialBoardImage==='function');
 }
 
-test('Special Trade Board PNG is content-sized, nonblank, and preserves exact sprite fallbacks',async({page})=>{
+test('Special Trade Board PNG is content-sized, nonblank, and omits unavailable artwork',async({page})=>{
   await loadExporter(page);
   const fixture={
     lf:[
@@ -37,7 +37,8 @@ test('Special Trade Board PNG is content-sized, nonblank, and preserves exact sp
     drawImageContain=(ctx,image,...args)=>{imageCalls.push([image.naturalWidth,image.naturalHeight]);return originalImage(ctx,image,...args);};
     try{
       const blob=await renderSpecialBoardImage(board,'FixtureTrainer');
-      const layout=PogoDomain.specialTradeBoardExport.buildLayout(board);
+      const drawableBoard={...board,lf:board.lf.filter(entry=>entry.name!=='Pikachu (Worlds 2026)')};
+      const layout=PogoDomain.specialTradeBoardExport.buildLayout(drawableBoard);
       const bitmap=await createImageBitmap(blob),canvas=document.createElement('canvas');
       canvas.width=bitmap.width;canvas.height=bitmap.height;
       const context=canvas.getContext('2d',{willReadFrequently:true});context.drawImage(bitmap,0,0);
@@ -52,6 +53,5 @@ test('Special Trade Board PNG is content-sized, nonblank, and preserves exact sp
   expect(result.bytes).toBeGreaterThan(20_000);
   expect(result.colorCount).toBeGreaterThan(8);
   expect(result.imageCalls).toBeGreaterThan(0);
-  expect(result.fallbackCalls).toContain('Pikachu (Worlds 2026)');
-  expect(result.fallbackCalls).not.toContain('Pikachu (Saree)');
+  expect(result.fallbackCalls).toEqual([]);
 });

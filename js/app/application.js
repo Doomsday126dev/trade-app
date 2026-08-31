@@ -10808,7 +10808,29 @@ function ensureSpecialTradeBoardExportDomain(){
 }
 async function renderSpecialBoardImage(board,username){
   await ensureSpecialTradeBoardExportDomain();
-  const layout=specialTradeBoardExportDomain.buildLayout(board);
+  const sourceBoard={lf:Array.isArray(board?.lf)?board.lf:[],ft:Array.isArray(board?.ft)?board.ft:[]};
+  const allEntries=[...sourceBoard.lf,...sourceBoard.ft];
+  const boardEntryImageKey=e=>[e.catalogId||'',e.name,e.spriteName||'',e.dn||'',e.shiny?'s':'n',e.gender||entryGender(e.note||e.mod||'')].join('|');
+  const imgMap=new Map();
+  await Promise.all(allEntries.map(async e=>{
+    const urls=exportSpriteFallbackUrls({...e,spriteUrl:entrySpriteUrl(e,e.name)});
+    const img=await loadCanvasImageWithFallback(urls);
+    if(img)imgMap.set(boardEntryImageKey(e),img);
+  }));
+  const backgroundImageMap=new Map();
+  const backgroundIds=[...new Set(allEntries.map(e=>normalizeBackgroundId(e.backgroundId)).filter(Boolean))];
+  await Promise.all(backgroundIds.map(async id=>{
+    const visual=backgroundVisual(id);
+    if(!visual?.assetUrl)return;
+    const img=await loadCanvasImage(visual.assetUrl);
+    if(img&&canvasImageHasVisiblePixels(img))backgroundImageMap.set(id,img);
+  }));
+  const drawableBoard={
+    lf:sourceBoard.lf.filter(entry=>imgMap.has(boardEntryImageKey(entry))),
+    ft:sourceBoard.ft.filter(entry=>imgMap.has(boardEntryImageKey(entry)))
+  };
+  if(!drawableBoard.lf.length&&!drawableBoard.ft.length)throw new Error('No reviewed artwork is available for this board export');
+  const layout=specialTradeBoardExportDomain.buildLayout(drawableBoard);
   const W=layout.width,pad=layout.padding,headerH=layout.headerHeight,footerH=layout.footerHeight;
   const gridCols=layout.columns,gridGap=layout.cardGap,gridCellH=layout.cardHeight,gridSprSize=48,sectionHdrH=layout.sectionHeaderHeight;
   const gridCellW=layout.cardWidth;
@@ -10834,24 +10856,6 @@ async function renderSpecialBoardImage(board,username){
   ctx.fillText(`Generated ${date}`,W-pad,20);
   ctx.fillText(`${layout.entryCount} entries`,W-pad,37);
   ctx.textAlign='left';
-
-  // Pre-load all sprite images
-  const allEntries=[...board.lf,...board.ft];
-  const boardEntryImageKey=e=>[e.name,e.shiny?'s':'n',e.gender||entryGender(e.note||e.mod||'')].join('|');
-  const imgMap=new Map();
-  await Promise.all(allEntries.map(async e=>{
-    const urls=exportSpriteFallbackUrls({...e,spriteUrl:entrySpriteUrl(e,e.name)});
-    const img=await loadCanvasImageWithFallback(urls);
-    if(img)imgMap.set(boardEntryImageKey(e),img);
-  }));
-  const backgroundImageMap=new Map();
-  const backgroundIds=[...new Set(allEntries.map(e=>normalizeBackgroundId(e.backgroundId)).filter(Boolean))];
-  await Promise.all(backgroundIds.map(async id=>{
-    const visual=backgroundVisual(id);
-    if(!visual?.assetUrl)return;
-    const img=await loadCanvasImage(visual.assetUrl);
-    if(img&&canvasImageHasVisiblePixels(img))backgroundImageMap.set(id,img);
-  }));
 
   // ── Geometry-owned section and card rendering ───────────────
   const drawSectionHeader=(label,count,color,x,y,w)=>{
@@ -10882,50 +10886,23 @@ async function renderSpecialBoardImage(board,username){
     ctx.save();ctx.beginPath();ctx.moveTo(x+1,y-5);ctx.lineTo(x-3,y+1);ctx.lineTo(x,y+1);ctx.lineTo(x-2,y+6);ctx.lineTo(x+4,y-1);ctx.lineTo(x+1,y-1);ctx.closePath();
     ctx.fillStyle='#facc15';ctx.shadowColor='rgba(250,204,21,.55)';ctx.shadowBlur=2;ctx.fill();ctx.restore();
   };
-  const drawMirrorMarker=(x,y)=>{
-    ctx.save();ctx.strokeStyle='#67e8f9';ctx.fillStyle='#67e8f9';ctx.lineWidth=1.2;ctx.lineCap='round';
-    ctx.beginPath();ctx.moveTo(x-4,y-2);ctx.lineTo(x+4,y-2);ctx.stroke();
-    ctx.beginPath();ctx.moveTo(x+4,y-2);ctx.lineTo(x+1.5,y-4);ctx.lineTo(x+1.5,y);ctx.closePath();ctx.fill();
-    ctx.beginPath();ctx.moveTo(x+4,y+2);ctx.lineTo(x-4,y+2);ctx.stroke();
-    ctx.beginPath();ctx.moveTo(x-4,y+2);ctx.lineTo(x-1.5,y);ctx.lineTo(x-1.5,y+4);ctx.closePath();ctx.fill();ctx.restore();
-  };
-  const drawQuantityMarker=(value,x,y)=>{
-    const label=`x${Math.max(2,Math.floor(Number(value)||2))}`;
-    ctx.save();ctx.font='800 6px Space Grotesk, sans-serif';const width=Math.max(15,ctx.measureText(label).width+7);
-    roundedRect(ctx,x-width/2,y-5,width,10,5);ctx.fillStyle='rgba(91,70,145,.96)';ctx.fill();
-    ctx.fillStyle='#ede9fe';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(label,x,y+.2);ctx.restore();
-  };
   const drawImageCover=(img,x,y,w,h)=>{
     const iw=img.naturalWidth||1,ih=img.naturalHeight||1,scale=Math.max(w/iw,h/ih),dw=iw*scale,dh=ih*scale;
     ctx.drawImage(img,x+(w-dw)/2,y+(h-dh)/2,dw,dh);
   };
-  const drawBackgroundFrame=(entry,x,y,w,h,note)=>{
-    const id=normalizeBackgroundId(entry.backgroundId),record=backgroundCatalogDomain.get(id),art=backgroundImageMap.get(id);
-    const location=record?.type==='location',accent=location?'#38bdf8':'#a78bfa';
-    const footerHeight=note?22:15,footerY=y+h-footerHeight;
+  const drawBackgroundArtwork=(entry,x,y,w,h)=>{
+    const id=normalizeBackgroundId(entry.backgroundId),art=backgroundImageMap.get(id);
+    if(!art)return false;
     ctx.save();roundedRect(ctx,x,y,w,h,6);ctx.clip();
-    if(art)drawImageCover(art,x,y,w,footerY-y);
-    else{
-      ctx.fillStyle=location?'#102838':'#251a38';ctx.fillRect(x,y,w,footerY-y);
-      ctx.save();ctx.globalAlpha=.2;ctx.strokeStyle=accent;ctx.lineWidth=.8;
-      roundedRect(ctx,x+7,y+8,w-14,Math.max(17,footerY-y-14),4);ctx.stroke();
-      ctx.beginPath();ctx.arc(x+w-15,y+15,3,0,Math.PI*2);ctx.stroke();
-      ctx.beginPath();ctx.moveTo(x+10,footerY-7);ctx.lineTo(x+22,footerY-18);ctx.lineTo(x+31,footerY-10);ctx.lineTo(x+41,footerY-21);ctx.lineTo(x+w-8,footerY-7);ctx.stroke();ctx.restore();
-    }
-    ctx.fillStyle='rgba(7,11,17,.9)';ctx.fillRect(x,footerY,w,footerHeight);
-    ctx.fillStyle=accent;ctx.fillRect(x,footerY,2,footerHeight);
+    drawImageCover(art,x,y,w,h);
     ctx.restore();
-    ctx.strokeStyle=art?'rgba(255,255,255,.34)':`${accent}88`;ctx.lineWidth=.8;roundedRect(ctx,x+.4,y+.4,w-.8,h-.8,6);ctx.stroke();
-    const label=`${backgroundShortLabel(id)||'Background'} · BG`;
-    drawCenteredFittedText(ctx,label,x+w/2,footerY+(note?8:10),w-8,{weight:750,max:6,min:4,color:'#f8fafc'});
-    if(note)drawCenteredFittedText(ctx,note,x+w/2,footerY+17,w-8,{weight:650,max:5,min:4,color:'#cbd5e1'});
+    ctx.strokeStyle='rgba(255,255,255,.34)';ctx.lineWidth=.8;roundedRect(ctx,x+.4,y+.4,w-.8,h-.8,6);ctx.stroke();
+    return true;
   };
   const drawEntryMarkers=(entry,x,y,w,gender)=>{
     if(entry.shiny)drawSparkleCluster(x+w-8,y+7);
     if(gender==='f'||gender==='m')drawGenderMarker(gender,x+w-8,y+19);
     if(entry.lucky)drawLuckyMarker(x+7,y+7);
-    if(entry.mirror)drawMirrorMarker(x+7,y+19);
-    if(Number(entry.qty)>1)drawQuantityMarker(entry.qty,x+w/2,y+6);
   };
   const drawGridSection=(entries,xBase,startY)=>{
     entries.forEach((e,index)=>{
@@ -10933,20 +10910,13 @@ async function renderSpecialBoardImage(board,username){
       const cx=xBase+col*(gridCellW+gridGap),cy=startY+row*(gridCellH+gridGap);
       ctx.save();
       const gender=e.gender||entryGender(e.note||e.mod||'');
-      const tokens=specialTradeBoardExportDomain.badgeTokens(e,{backgroundLabel:e.backgroundId?backgroundShortLabel(e.backgroundId):'',gender});
+      const tokens=specialTradeBoardExportDomain.badgeTokens(e,{gender});
       const note=tokens.find(token=>token.kind==='note')?.label||'';
-      const hasBackground=Boolean(normalizeBackgroundId(e.backgroundId)),spriteSize=hasBackground?44:gridSprSize;
-      if(hasBackground)drawBackgroundFrame(e,cx+2,cy+1,gridCellW-4,gridCellH-2,note);
-      const sx=cx+(gridCellW-spriteSize)/2,sy=cy+(hasBackground?3:6),img=imgMap.get(boardEntryImageKey(e));
-      if(img)drawImageContain(ctx,img,sx,sy,spriteSize,spriteSize);
-      else{
-        drawSpriteFallback(ctx,e,sx,sy,spriteSize);
-        ctx.save();ctx.font='700 6px Space Grotesk, sans-serif';ctx.fillStyle='#c7d2fe';ctx.textAlign='center';
-        const pending=String(e.dn||e.name||'Artwork pending').replace(/^Pikachu\s*/i,'').trim()||'Artwork pending';
-        drawWrappedText(ctx,pending,cx+gridCellW/2,cy+(hasBackground?50:58),gridCellW-4,7,hasBackground?1:2);
-        ctx.restore();
-      }
-      if(!hasBackground&&note)drawCenteredFittedText(ctx,note,cx+gridCellW/2,cy+67,gridCellW-6,{weight:650,max:6,min:4,color:'#cbd5e1'});
+      const hasBackgroundArtwork=backgroundImageMap.has(normalizeBackgroundId(e.backgroundId)),spriteSize=hasBackgroundArtwork?44:gridSprSize;
+      if(hasBackgroundArtwork)drawBackgroundArtwork(e,cx+2,cy+1,gridCellW-4,gridCellH-2);
+      const sx=cx+(gridCellW-spriteSize)/2,sy=cy+(hasBackgroundArtwork?3:6),img=imgMap.get(boardEntryImageKey(e));
+      drawImageContain(ctx,img,sx,sy,spriteSize,spriteSize);
+      if(!hasBackgroundArtwork&&note)drawCenteredFittedText(ctx,note,cx+gridCellW/2,cy+67,gridCellW-6,{weight:650,max:6,min:4,color:'#cbd5e1'});
       drawEntryMarkers(e,cx,cy,gridCellW,gender);
       ctx.restore();
     });
@@ -10954,7 +10924,7 @@ async function renderSpecialBoardImage(board,username){
 
   layout.sections.forEach(section=>{
     drawSectionHeader(section.label,section.count,section.accent,section.header.x,section.header.y,section.header.width);
-    drawGridSection(board[section.id],section.header.x,section.header.y+sectionHdrH+layout.sectionHeaderGap);
+    drawGridSection(drawableBoard[section.id],section.header.x,section.header.y+sectionHdrH+layout.sectionHeaderGap);
   });
 
   // Footer

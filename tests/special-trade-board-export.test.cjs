@@ -66,10 +66,10 @@ test('qualifier tokens cover required Board combinations without inventing artwo
   const domain=loadDomain();
   const tokens=domain.badgeTokens({shiny:true,lucky:true,mirror:true,qty:3,note:'Needs room'}, {backgroundLabel:'Chicago 2026',gender:'f'});
   assert.deepEqual(Array.from(tokens,token=>[token.kind,token.label,token.marker||'']),[
-    ['background','Chicago 2026 · BG',''],['shiny','Shiny','sparkles'],['gender','Female','f'],['lucky','Lucky','lucky'],['mirror','Mirror','mirror'],['quantity','×3',''],['note','Needs room','']
+    ['shiny','Shiny','sparkles'],['gender','Female','f'],['lucky','Lucky','lucky'],['note','Needs room','']
   ]);
-  assert.deepEqual(Array.from(domain.badgeTokens({}, {backgroundLabel:'New York City'}),token=>token.label),['New York City · BG']);
-  assert.deepEqual(Array.from(domain.badgeTokens({}, {backgroundLabel:'GO Wild Area'}),token=>token.label),['GO Wild Area · BG']);
+  assert.deepEqual(Array.from(domain.badgeTokens({}, {backgroundLabel:'New York City'}),token=>token.label),[]);
+  assert.equal(tokens.some(token=>['background','mirror','quantity'].includes(token.kind)),false);
   assert.deepEqual(Array.from(domain.badgeTokens({note:'Female'}, {gender:'f'}),token=>token.label),['Female']);
   assert.deepEqual(Array.from(domain.badgeTokens({lucky:true,note:'Lucky'}),token=>token.label),['Lucky']);
 });
@@ -77,7 +77,7 @@ test('qualifier tokens cover required Board combinations without inventing artwo
 test('badge geometry never crosses the card and reports bounded overflow',()=>{
   const domain=loadDomain();
   const tokens=domain.badgeTokens({shiny:true,lucky:true,mirror:true,qty:12,note:'A deliberately long qualifier note'}, {backgroundLabel:'Chicago 2026',gender:'f'});
-  const x=8,y=58,width=120;
+  const x=8,y=58,width=80;
   const plan=domain.layoutBadgeRows(tokens,{x,y,width,measure:value=>String(value).length*4.4});
   assert.ok(plan.placements.length>0);
   assert.ok(plan.rows<=1);
@@ -100,10 +100,10 @@ test('compact marker semantics do not depend on font glyphs',()=>{
   const domain=loadDomain();
   const tokens=domain.badgeTokens({shiny:true,lucky:true,mirror:true,qty:2},{backgroundLabel:'Chicago 2026',gender:'m'});
   assert.deepEqual(Array.from(tokens.filter(token=>token.marker),token=>[token.kind,token.marker]),[
-    ['shiny','sparkles'],['gender','m'],['lucky','lucky'],['mirror','mirror']
+    ['shiny','sparkles'],['gender','m'],['lucky','lucky']
   ]);
   assert.equal(tokens.some(token=>token.symbol),false);
-  assert.equal(tokens.find(token=>token.kind==='background').label,'Chicago 2026 · BG');
+  assert.equal(tokens.some(token=>['background','mirror','quantity'].includes(token.kind)),false);
 });
 
 test('canvas renderer uses the accepted sprite resolver and pure geometry contract',()=>{
@@ -113,19 +113,20 @@ test('canvas renderer uses the accepted sprite resolver and pure geometry contra
   const renderer=source.slice(start,end);
   assert.match(source,/function ensureSpecialTradeBoardExportDomain\(\)/);
   assert.match(source,/specialTradeBoardExport\.js\?v=\$\{encodeURIComponent\(window\.__POGO_RELEASE_ID\|\|''\)\}/);
-  assert.match(renderer,/specialTradeBoardExportDomain\.buildLayout\(board\)/);
+  assert.match(renderer,/specialTradeBoardExportDomain\.buildLayout\(drawableBoard\)/);
   assert.match(renderer,/drawSparkleCluster/);
   assert.match(renderer,/drawGenderMarker/);
-  assert.match(renderer,/drawBackgroundFrame/);
+  assert.match(renderer,/drawBackgroundArtwork/);
   assert.match(renderer,/backgroundImageMap\.get\(id\)/);
-  assert.match(renderer,/const label=`\$\{backgroundShortLabel\(id\)\|\|'Background'\} · BG`/);
+  assert.match(renderer,/filter\(entry=>imgMap\.has\(boardEntryImageKey\(entry\)\)\)/);
+  assert.match(renderer,/backgroundImageMap\.has\(normalizeBackgroundId\(e\.backgroundId\)\)/);
   assert.match(source,/const mappedHome=/);
   assert.match(source,/other\/home\/\$\{id\}\.png/);
   assert.match(source,/const highQuality=\[\.\.\.mappedHome,\.\.\.publicSpriteUrls/);
   assert.doesNotMatch(renderer,/drawWrappedText\(ctx,e\.dn\|\|e\.name/);
   assert.match(renderer,/exportSpriteFallbackUrls/);
   assert.match(renderer,/drawImageContain/);
-  assert.match(renderer,/drawSpriteFallback/);
-  assert.match(renderer,/backgroundShortLabel\(e\.backgroundId\)/);
+  assert.doesNotMatch(renderer,/drawSpriteFallback|Artwork pending|backgroundShortLabel|· BG/);
+  assert.doesNotMatch(renderer,/drawMirrorMarker|drawQuantityMarker|entry\.mirror|entry\.qty/);
   assert.doesNotMatch(renderer,/drawExportBackgroundVisual|background-pattern|linearGradient|createPattern|hashString/);
 });

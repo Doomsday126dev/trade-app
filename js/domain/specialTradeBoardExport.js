@@ -74,14 +74,11 @@
     });
   }
 
-  function badgeTokens(entry,{backgroundLabel='',gender=''}={}){
+  function badgeTokens(entry,{gender=''}={}){
     const tokens=[];
-    if(backgroundLabel)tokens.push(Object.freeze({kind:'background',label:`${backgroundLabel} · BG`}));
     if(entry?.shiny)tokens.push(Object.freeze({kind:'shiny',label:'Shiny',marker:'sparkles'}));
     if(gender==='f'||gender==='m')tokens.push(Object.freeze({kind:'gender',label:gender==='f'?'Female':'Male',marker:gender}));
     if(entry?.lucky)tokens.push(Object.freeze({kind:'lucky',label:'Lucky',marker:'lucky'}));
-    if(entry?.mirror)tokens.push(Object.freeze({kind:'mirror',label:'Mirror',marker:'mirror'}));
-    if(Number(entry?.qty)>1)tokens.push(Object.freeze({kind:'quantity',label:`×${Math.floor(Number(entry.qty))}`}));
     const note=String(entry?.note||'').replace(/\s+/g,' ').trim();
     const semanticNote=(entry?.shiny&&/^shiny$/i.test(note))
       ||(entry?.lucky&&/^lucky$/i.test(note))
