@@ -172,6 +172,8 @@ test('safe owner journey covers the pre-trusted product contract',async({page})=
   await page.evaluate(()=>openSpecialTradeBoard());
   await expect(page.locator('#special-lf-list .sb-row')).toHaveCount(1);
   await expect(page.locator('#special-lf-list .background-visual-card')).toHaveCount(1);
+  await expect(page.locator('#special-lf-list .sb-row-background')).toContainText('New York City');
+  await expect(page.locator('#special-lf-list .background-card-motif')).toHaveCount(0);
   await capture(page,'trusted-journey-special-board-1440x900');
   await page.keyboard.press('Escape');
 

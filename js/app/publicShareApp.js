@@ -149,7 +149,7 @@
   function backgroundBadge(id){
     if(!id)return'';
     const{label,full,visual}=backgroundParts(id),className=global.PogoDomain.backgroundVisual.className(visual),style=global.PogoDomain.backgroundVisual.style(visual);
-    return`<span class="share-pcard-flag background background-visual-label ${attr(className)}" style="${attr(style)}" title="${attr(full)}"><span class="background-visual-chip" aria-hidden="true"></span><span>${esc(label)}</span><span class="sr-only">${esc(t('background.label'))}</span></span>`;
+    return`<span class="share-pcard-flag background background-visual-label ${attr(className)}" style="${attr(style)}" title="${attr(full)}">${visual?'<span class="background-visual-swatch" aria-hidden="true"></span>':''}<span>${esc(label)}</span><span class="background-badge-kind" aria-hidden="true">BG</span><span class="sr-only">${esc(t('background.label'))}</span></span>`;
   }
   function spriteHtml(name,gender){
     const sprites=global.PogoDomain.spriteSlugs;

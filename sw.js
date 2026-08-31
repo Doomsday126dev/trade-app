@@ -104,9 +104,15 @@ const RELEASE_ASSETS=[
   'js/app/publicShareApp.js',
   'js/app/application.js'
 ];
+// Required for complete offline feature support, but intentionally omitted
+// from the startup script graph and loaded only when its feature is used.
+const LAZY_RELEASE_ASSETS=[
+  'js/domain/specialTradeBoardExport.js'
+];
 const REQUIRED_SHELL_URLS=[
   `./index.html?v=${RELEASE}`,
-  ...RELEASE_ASSETS.map(path=>`./${path}?v=${RELEASE}`)
+  ...RELEASE_ASSETS.map(path=>`./${path}?v=${RELEASE}`),
+  ...LAZY_RELEASE_ASSETS.map(path=>`./${path}?v=${RELEASE}`)
 ];
 const OPTIONAL_SHELL_URLS=[
   `./?v=${RELEASE}`,

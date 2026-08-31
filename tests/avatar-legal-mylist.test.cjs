@@ -36,7 +36,7 @@ test('legal acknowledgements are a compact link-free footer surface, not a prima
   const legal=index.slice(start,end);
   assert.match(legal,/PokéAPI provides species, form, and sprite-repository inputs/);
   assert.match(legal,/their artwork is not served by PoGo Trades/);
-  assert.match(legal,/original colors and patterns generated from catalog IDs/);
+  assert.match(legal,/shown as labels unless exact, approved artwork is available/);
   assert.match(legal,/not affiliated with, endorsed by, or sponsored by the rights holders/);
   assert.doesNotMatch(legal,/<a\b|href=|https?:\/\//i);
   assert.doesNotMatch(legal,/licensed|authorized|fair use|official partner/i);
@@ -49,7 +49,7 @@ test('internal provenance distinguishes served assets from research-only sources
   assert.match(provenance,/PokeMiners[\s\S]*\*\*REFERENCE ONLY\*\*/);
   assert.match(provenance,/Serebii[\s\S]*\*\*REFERENCE ONLY\*\*/);
   assert.match(provenance,/Pokémon GO Hub[\s\S]*\*\*REMOVE \/ DO NOT SERVE\*\*/);
-  assert.match(provenance,/Background cards use project-generated colors and patterns/);
+  assert.match(provenance,/Background qualifiers use honest compact labels/);
 });
 
 test('normal My List rows are dense and progressive while reorder remains explicit',()=>{
