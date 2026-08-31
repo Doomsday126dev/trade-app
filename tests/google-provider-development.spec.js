@@ -14,6 +14,17 @@ async function mockSignedOutAuth(page){
 }
 
 test.describe('development-only Google entry point',()=>{
+  test('public privacy notice loads without Firebase Auth or provider modules',async({page})=>{
+    const requested=[];page.on('request',request=>requested.push(new URL(request.url()).pathname));
+    await page.goto('/?legal=privacy');
+    await expect(page.locator('#privacy-pg')).toBeVisible();
+    await expect(page.locator('#privacy-title')).toHaveText('Privacy notice');
+    await expect(page.locator('#login-pg')).toBeHidden();
+    await expect(page.locator('#privacy-google')).toBeVisible();
+    expect(requested.some(path=>path.includes('/firebase-auth.js'))).toBe(false);
+    expect(requested.some(path=>path.endsWith('/js/services/googleAuthAdapter.js'))).toBe(false);
+  });
+
   test('ordinary production shell keeps Google absent',async({page})=>{
     const requested=[];page.on('request',request=>requested.push(new URL(request.url()).pathname));
     await mockSignedOutAuth(page);await page.goto('/');

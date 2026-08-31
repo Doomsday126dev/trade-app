@@ -1,9 +1,13 @@
 # Google Provider Configuration and Owner Canary
 
-Status: future human/cloud procedure. The implementation branch does not enable
-Google, change Firebase configuration, deploy a release, or run this canary.
-Production remains `2026-08-30.84` until a separately reviewed release is
-authorized.
+Status: owner-canary preparation. Production remains the accepted
+`2026-08-31.86` privacy-notice release and the Firebase Google provider remains
+disabled pending the explicit production authentication-boundary confirmation.
+Google Auth Platform is configured as External/Testing with exactly the owner
+as its sole test user. Its web client uses only the reviewed localhost,
+Firebase-hosting, and GitHub Pages origins plus the exact Firebase Auth redirect.
+The public privacy notice at `?legal=privacy` is deployed and verified on desktop
+and mobile without starting Firebase.
 
 ## Implemented boundary
 

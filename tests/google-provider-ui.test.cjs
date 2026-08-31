@@ -17,6 +17,14 @@ test('ordinary production startup exposes no Google action or provider module',(
   assert.match(html,/data-provider="google" hidden/);
 });
 
+test('public privacy notice is standalone and discloses the Google identity boundary',()=>{
+  assert.match(html,/window\.__pogoPrivacyRequest=parsePogoPrivacyRequest\(\)/);
+  assert.match(html,/if\(!window\.__pogoPublicShareRequest&&!window\.__pogoPrivacyRequest\)/);
+  assert.match(html,/id="privacy-pg"[^>]+hidden/);
+  for(const disclosure of['does not use an email address, display name, photo, or name similarity','requests no additional Google API scopes','does not separately copy, log, or store Google OAuth access or refresh tokens','does not sell personal information'])assert.match(html,new RegExp(disclosure));
+  assert.match(html,/if\(window\.__pogoPrivacyRequest\)[\s\S]+revealPrivacyNotice/);
+});
+
 test('Google implementation modules are inventoried but omitted from the production shell cache',()=>{
   for(const file of['js/domain/providerOnboardingModel.js','js/services/googleAuthAdapter.js']){
     assert.match(html,new RegExp(`${file.replaceAll('.','\\.')}[^>]+data-pogo-provider-development`));
