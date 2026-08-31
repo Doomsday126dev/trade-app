@@ -15,6 +15,11 @@ const firstPartyScripts=[...documentHtml.matchAll(/<script\s+src="([^"]+)"/g)]
   .map(match=>match[1])
   .filter(src=>!/^https?:\/\//.test(src));
 
+function workerArray(name){
+  const body=worker.match(new RegExp(`const ${name}=\\[([\\s\\S]*?)\\n\\];`))?.[1]||'';
+  return[...body.matchAll(/'([^']+)'/g)].map(match=>match[1]);
+}
+
 function loadDomain(files){
   const window={};
   const context=vm.createContext({window,URL});
@@ -29,9 +34,11 @@ test('every first-party JavaScript URL uses the current release identifier',()=>
   assert.equal(loadDomain(['js/domain/clientRelease.js']).clientRelease.RELEASE_ID,release);
   assert.ok(html.includes("serviceWorker.register(`./sw.js?v=${window.__POGO_RELEASE_ID}`)"));
   assert.match(worker,new RegExp(`const RELEASE='${release.replaceAll('.','\\.')}';`));
-  const precached=[...worker.matchAll(/^\s+'([^']+\.js)',?$/gm)].map(match=>match[1]);
   const requested=firstPartyScripts.map(src=>new URL(src,'https://example.test/').pathname.slice(1));
-  assert.deepEqual(precached,requested);
+  assert.deepEqual(workerArray('RELEASE_ASSETS').filter(path=>path.endsWith('.js')),requested);
+  assert.deepEqual(workerArray('LAZY_RELEASE_ASSETS'),['js/domain/specialTradeBoardExport.js']);
+  assert.equal(requested.includes('js/domain/specialTradeBoardExport.js'),false);
+  assert.match(html,/specialTradeBoardExport\.js\?v=\$\{encodeURIComponent\(window\.__POGO_RELEASE_ID\|\|''\)\}/);
 });
 
 test('release changes produce different critical module and cache keys',()=>{
@@ -59,7 +66,9 @@ test('service worker keeps exact release keys and retires old app-shell caches',
 
 test('service worker separates required release assets from optional runtime shell assets',()=>{
   assert.match(worker,/const REQUIRED_SHELL_URLS=\[/);
+  assert.match(worker,/const LAZY_RELEASE_ASSETS=\[/);
   assert.match(worker,/const OPTIONAL_SHELL_URLS=\[/);
+  assert.match(worker,/\.\.\.LAZY_RELEASE_ASSETS\.map\(path=>`\.\/\$\{path\}\?v=\$\{RELEASE\}`\)/);
   assert.match(worker,/const INSTALL_FETCH_CONCURRENCY=8/);
   assert.match(worker,/runBounded\(REQUIRED_SHELL_URLS,INSTALL_FETCH_CONCURRENCY/);
   assert.doesNotMatch(worker,/INSTALL_CACHE|Required shell staging cache|staging\.put/);

@@ -92,6 +92,9 @@
     "js/app/publicShareApp.js",
     "js/app/application.js"
   ],
+  "lazyScriptFiles": [
+    "js/domain/specialTradeBoardExport.js"
+  ],
   "assetFiles": [
     "assets/tradeloop-icon.svg",
     "assets/tradeloop-icon-96.png",

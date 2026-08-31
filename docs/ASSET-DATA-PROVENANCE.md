@@ -1,6 +1,6 @@
 # Asset and Data Provenance
 
-Last reviewed: 2026-08-29
+Last reviewed: 2026-08-30
 
 This document records the source boundary for data and visual assets used by PoGo Trades. It is an engineering policy record, not legal advice.
 
@@ -43,10 +43,10 @@ Researching names, dates, eligibility, or catalog mappings is different from cop
 
 ### Repository-owned interface assets
 
-- URLs: local files under `assets/`, including `assets/max-cloud.svg` and generated background visual tokens in app code.
-- Use: interface decoration, fallback cloud treatment, and catalog-ID-derived background colors/patterns.
-- Copy/serve/reference: created and served by this repository; no third-party Pokémon GO background artwork is embedded.
-- Stated position: project-authored visual treatment. It may describe Pokémon-related concepts without copying official background artwork.
+- URLs: local files under `assets/`, including `assets/max-cloud.svg`.
+- Use: interface decoration and fallback cloud treatment. Background qualifiers remain text unless a reviewed exact-ID artwork mapping is added to the approved local registry.
+- Copy/serve/reference: created and served by this repository; no third-party Pokémon GO background artwork is embedded and no generated pattern is presented as a real background.
+- Stated position: project-authored interface treatment. It may describe Pokémon-related concepts without copying or imitating official background artwork.
 - Underlying IP: Pokémon names and related marks remain with their respective owners.
 - Decision: **KEEP**.
 
@@ -98,4 +98,4 @@ Researching names, dates, eligibility, or catalog mappings is different from cop
 - Known costumes without exact reviewed art stop at the neutral placeholder. They never masquerade as the base species. Unknown ordinary species/forms may still use the approved base/form fallback chain.
 - `.github/workflows/sprite-catalog-freshness.yml` performs a monthly, read-only inventory comparison. It reports upstream additions/removals but never downloads or publishes unreviewed artwork automatically.
 - The two confirmed 2026 identities, `PIKACHU_PXP_2026` (Cosmog-themed spacesuit) and `PIKACHU_WCS_2026` (World Championships 2026), are present in the catalog but intentionally remain neutral placeholders until exact artwork appears at an approved source and is reviewed.
-- Background cards use project-generated colors and patterns derived from canonical IDs; source artwork is neither fetched nor embedded.
+- Background qualifiers use honest compact labels. Exact artwork can appear only through the reviewed canonical-ID registry; the registry is currently empty, so generated pseudo-background representations and exact-art mismatches are both zero.

@@ -311,6 +311,8 @@ const backgroundCatalogDomain=window.PogoDomain?.backgroundCatalog;
 if(!backgroundCatalogDomain)throw new Error('Background catalog helpers failed to load');
 const backgroundVisualDomain=window.PogoDomain?.backgroundVisual;
 if(!backgroundVisualDomain)throw new Error('Background visual helpers failed to load');
+let specialTradeBoardExportDomain=window.PogoDomain?.specialTradeBoardExport||null;
+let specialTradeBoardExportDomainPromise=null;
 const pokemonPrimaryTypesDomain=window.PogoDomain?.pokemonPrimaryTypes;
 if(!pokemonPrimaryTypesDomain)throw new Error('Pokemon primary type data failed to load');
 const {primaryTypeForDex}=pokemonPrimaryTypesDomain;
@@ -342,7 +344,7 @@ if(!pokemonKeysDomain)throw new Error('Pokemon key helpers failed to load');
 const {_normGender,HAVE_KEY_SEP,splitHaveKey,joinHaveKey,totalQtyForName,haveEntryInfo,haveEntryValue}=pokemonKeysDomain;
 const spriteSlugsDomain=window.PogoDomain?.spriteSlugs;
 if(!spriteSlugsDomain)throw new Error('Sprite slug helpers failed to load');
-const {padDex,normalizeCostumeLookupKey,pokemondbGoSpeciesSlug,normalizeSpriteKey,SPRITE_SOURCE_REGISTRY,CANONICAL_SPRITE_OVERRIDES,UNRESOLVED_SPRITE_KEYS,canonicalSpriteOverride,isUnresolvedSpriteKey,spriteSourceForUrl,REGIONAL_SLUG_MAP,pokemondbSlug}=spriteSlugsDomain;
+const {padDex,normalizeCostumeLookupKey,pokemondbGoSpeciesSlug,normalizeSpriteKey,SPRITE_SOURCE_REGISTRY,CANONICAL_SPRITE_OVERRIDES,UNRESOLVED_SPRITE_KEYS,canonicalSpriteOverride,isUnresolvedSpriteKey,spriteSourceForUrl,REGIONAL_SLUG_MAP,pokemondbSlug,publicSpriteUrls}=spriteSlugsDomain;
 const costumeSpriteCatalogDomain=window.PogoDomain?.costumeSpriteCatalog;
 if(!costumeSpriteCatalogDomain)throw new Error('Reviewed costume sprite catalog failed to load');
 const fuzzyTextDomain=window.PogoDomain?.fuzzyText;
@@ -5425,21 +5427,21 @@ const _recentBackgroundIds=[];
 function backgroundRecord(id){return backgroundCatalogDomain.get(id);}
 function backgroundDisplayName(id){return backgroundCatalogDomain.display(id)||id||'';}
 function backgroundShortLabel(id){return backgroundCatalogDomain.shortLabel(id)||id||'';}
-function backgroundVisual(id){return id?backgroundVisualDomain.resolve(id,backgroundRecord(id)):null;}
+function backgroundVisual(id){return id?backgroundVisualDomain.resolve(id):null;}
 function backgroundVisualClass(id){return backgroundVisualDomain.className(backgroundVisual(id));}
-function backgroundVisualStyle(id){return backgroundVisualDomain.style(backgroundVisual(id));}
 function backgroundVisualAttrs(id){
   const visual=backgroundVisual(id);
-  return visual?`data-background-visual="${escAttr(visual.type)}" style="${escAttr(backgroundVisualDomain.style(visual))}"`:'';
+  return visual?`data-background-artwork-id="${escAttr(visual.id)}" style="${escAttr(backgroundVisualDomain.style(visual))}"`:'';
 }
 function backgroundVisualMotifHtml(id,cls='background-card-motif'){
-  if(!id)return'';
-  return`<span class="${cls} ${backgroundVisualClass(id)}" ${backgroundVisualAttrs(id)} aria-hidden="true"></span>`;
+  const visual=backgroundVisual(id);
+  if(!visual)return'';
+  return`<span class="${cls} ${backgroundVisualDomain.className(visual)}" ${backgroundVisualAttrs(id)} aria-hidden="true"></span>`;
 }
 function backgroundBadgeHtml(id,cls='background-badge'){
   if(!id)return'';
-  const full=backgroundDisplayName(id),short=backgroundShortLabel(id);
-  return`<span class="${cls} background-visual-label ${backgroundVisualClass(id)}" ${backgroundVisualAttrs(id)} title="${escAttr(full)}" aria-label="${escAttr(i18nCore.t('background.badgeLabel',{name:full}))}"><span class="background-visual-swatch" aria-hidden="true"></span><span class="background-visual-name">${escHtml(short)}</span><span class="background-badge-kind" aria-hidden="true">BG</span></span>`;
+  const full=backgroundDisplayName(id),short=backgroundShortLabel(id),visual=backgroundVisual(id);
+  return`<span class="${cls} background-visual-label ${backgroundVisualClass(id)}" ${backgroundVisualAttrs(id)} title="${escAttr(full)}" aria-label="${escAttr(i18nCore.t('background.badgeLabel',{name:full}))}">${visual?'<span class="background-visual-swatch" aria-hidden="true"></span>':''}<span class="background-visual-name">${escHtml(short)}</span><span class="background-badge-kind" aria-hidden="true">BG</span></span>`;
 }
 function updateAddBackgroundPresentation(){
   const id=normalizeBackgroundId(document.getElementById('add-pmon-background')?.value);
@@ -5458,7 +5460,6 @@ function backgroundContextCurrentId(){
   const context=_backgroundPickerContext||{};
   if(context.target==='add')return normalizeBackgroundId(document.getElementById('add-pmon-background')?.value);
   if(context.target==='entry')return parsePri(allData[myListType]?.[cur]?.[context.name]||'').backgroundId;
-  if(context.target==='special')return normalizeBackgroundId(getSpecialBoard()?.[context.side]?.[context.index]?.backgroundId);
   return'';
 }
 function openBackgroundPicker(context){
@@ -5531,7 +5532,6 @@ function selectBackground(value){
     const hidden=document.getElementById('add-pmon-background');if(hidden)hidden.value=id;
     updateAddBackgroundPresentation();renderAddTray();
   }else if(context.target==='entry')setBackground(context.name,id);
-  else if(context.target==='special')setSpecialBackground(context.side,context.index,id);
   closeBackgroundPicker();
 }
 document.addEventListener('click',e=>{
@@ -6389,16 +6389,20 @@ function exportSpriteUrl(e){
 // Uses the same multi-source cascade as inline images
 function exportSpriteFallbackUrls(e){
   const chain=spriteFallbackChain(e.no,e.spriteName||e.name,e.gender,e.dn);
+  const context=spriteCatalogContext(e.no,e.spriteName||e.name,e.dn||e.name,e.catalogId);
+  const reviewed=costumeSpriteCatalogDomain.resolution({names:context.lookupKeys,gender:e.gender});
+  const regionalPrefix=Object.freeze({alolan:'A',galarian:'G',hisuian:'H',paldean:'P'});
+  const compatibilityKeys=[...context.lookupKeys];
+  for(const value of [e.spriteName,e.name,e.dn]){
+    const match=String(value||'').match(/^(.+?)\s*\((Alolan|Galarian|Hisuian|Paldean)\s+Forme?\)$/i);
+    if(match)compatibilityKeys.push(`${regionalPrefix[match[2].toLowerCase()]}-${match[1].trim()}`);
+  }
+  const mappedHome=reviewed?.knownVariant?[]:[...new Set(compatibilityKeys.flatMap(key=>[COSTUME_FORM_SPRITE_IDS[key],REGIONAL_FORM_IDS[key]]).filter(Boolean))]
+    .map(id=>`${SPRITE_BASE}other/home/${id}.png`);
+  const highQuality=[...mappedHome,...publicSpriteUrls(e.spriteName||e.name,e.gender,e.no)];
   // A stored override is useful only when it is on the reviewed runtime allowlist.
   const approvedOverride=isApprovedRuntimeSpriteUrl(e.spriteUrl)?e.spriteUrl:'';
-  if(approvedOverride)chain.unshift(approvedOverride);
-  const exactFormUrl=pokemondbSpriteUrl(e.spriteName||e.name,e.dn||e.name,e.gender);
-  if(approvedOverride&&exactFormUrl&&exactFormUrl!==approvedOverride){
-    const i=chain.indexOf(exactFormUrl);
-    if(i>=0)chain.splice(i,1);
-    chain.splice(1,0,exactFormUrl);
-  }
-  return[...new Set(chain.filter(Boolean).map(canvasSafeSpriteUrl).filter(Boolean))];
+  return[...new Set([...highQuality,approvedOverride,...chain].filter(Boolean).map(canvasSafeSpriteUrl).filter(Boolean))];
 }
 function loadCanvasImage(url){
   if(!url)return Promise.resolve(null);
@@ -6688,27 +6692,6 @@ function drawExportEntryNoteLabel(ctx,e,x,y,w,h,{dark=false}={}){
   ctx.textAlign='left';
   ctx.textBaseline='alphabetic';
 }
-function drawExportBackgroundVisual(ctx,e,x,y,w,h,{dark=false,radius=8}={}){
-  const visual=backgroundVisual(e?.backgroundId);if(!visual)return;
-  ctx.save();
-  roundedRect(ctx,x,y,w,h,radius);ctx.clip();
-  const gradient=ctx.createLinearGradient(x,y,x+w,y+h);
-  gradient.addColorStop(0,visual.colorA);gradient.addColorStop(.55,visual.colorB);gradient.addColorStop(1,visual.colorC);
-  ctx.globalAlpha=dark ? .42 : .18;ctx.fillStyle=gradient;ctx.fillRect(x,y,w,h);
-  ctx.globalAlpha=dark ? .22 : .12;ctx.strokeStyle='#ffffff';ctx.lineWidth=1;
-  if(visual.pattern==='rings'){
-    for(let r=10;r<Math.max(w,h)*1.5;r+=15){ctx.beginPath();ctx.arc(x+w*.72,y+h*.38,r,0,Math.PI*2);ctx.stroke();}
-  }else if(visual.pattern==='constellation'){
-    const points=[[.16,.22],[.42,.34],[.72,.18],[.84,.62],[.55,.78],[.22,.66]];
-    ctx.beginPath();points.forEach(([px,py],index)=>index?ctx.lineTo(x+w*px,y+h*py):ctx.moveTo(x+w*px,y+h*py));ctx.stroke();
-    points.forEach(([px,py])=>{ctx.beginPath();ctx.arc(x+w*px,y+h*py,1.8,0,Math.PI*2);ctx.fillStyle='#fff';ctx.fill();});
-  }else if(visual.pattern==='prism'){
-    for(let offset=-h;offset<w;offset+=18){ctx.beginPath();ctx.moveTo(x+offset,y+h);ctx.lineTo(x+offset+h,y);ctx.stroke();}
-  }else{
-    ctx.beginPath();ctx.moveTo(x,y+h*.66);ctx.quadraticCurveTo(x+w*.26,y+h*.38,x+w*.5,y+h*.62);ctx.quadraticCurveTo(x+w*.72,y+h*.86,x+w,y+h*.43);ctx.lineTo(x+w,y+h);ctx.lineTo(x,y+h);ctx.closePath();ctx.fillStyle='#fff';ctx.fill();
-  }
-  ctx.restore();
-}
 // Family-clustering sort: groups Pokemon variants (Vivillon, Unown, Furfrou, regional forms)
 // together. Primary key = dex number, secondary = family-base name (strips parens/regional prefix),
 // tertiary = full name. So all dex 666 entries cluster, all "Vivillon (X)" stay together inside.
@@ -6806,7 +6789,6 @@ async function renderListImage(entries,type,username,style='classic'){
       const col=i%cols,row=Math.floor(i/cols);
       const x=frame+pad+col*(cellW+gap),cy=y+row*cellH;
       const sx=x+(cellW-sprSize)/2,sy=cy+(cellH-sprSize)/2;
-      drawExportBackgroundVisual(ctx,e,x+2,cy+2,cellW-4,cellH-4,{radius:7});
       const img=images.get(exportSpriteUrl(e));
       if(img)drawImageContain(ctx,img,sx,sy,sprSize,sprSize);
       else drawSpriteFallback(ctx,e,sx,sy,sprSize);
@@ -6921,7 +6903,6 @@ async function renderListImageCards(entries,type,username){
       // Card background
       ctx.fillStyle='#1e1e35';
       roundedRect(ctx,x,cy,cellW,cellH,8);ctx.fill();
-      drawExportBackgroundVisual(ctx,e,x,cy,cellW,cellH,{dark:true,radius:8});
       // Priority-coloured top stripe
       ctx.fillStyle=c;
       roundedRect(ctx,x,cy,cellW,3,2);ctx.fill();
@@ -10465,8 +10446,7 @@ async function copyShareLink(){
 
 // ── SPECIAL TRADE BOARD ──────────────────────────────────────
 // Manually-curated LF/FT board for one-off special trades. Persisted under
-// the user record so it survives reloads + syncs to Firebase. Image export
-// renders a 9DB-style two-column board with ✨ shiny / 🪞 mirror markers.
+// the user record so it survives reloads + syncs to Firebase.
 function getSpecialBoard(){
   const b=allData.users?.[cur]?.specialTradeBoard;
   return accountSyncClone({lf:Array.isArray(b?.lf)?b.lf:[],ft:Array.isArray(b?.ft)?b.ft:[]});
@@ -10494,7 +10474,7 @@ function _specialAllItems(){
       const key=e?.catalogId||pokemonCatalogDomain.catalogKey(e?.name);
       if(!e?.name||seen.has(key))return;
       seen.add(key);
-      const item={name:e.name,dn:pokemonDisplayName(e),canonicalDn:e.displayName||e.name,no:e.no||null,spriteUrl:entrySpriteUrl(e,e.name),catalogId:key,legacyAliases:e.legacyAliases,searchAliases:e.searchAliases};
+      const item={name:e.name,dn:pokemonDisplayName(e),canonicalDn:e.displayName||e.name,no:e.no||null,spriteUrl:entrySpriteUrl(e,e.name),catalogId:key,gender:['f','m'].includes(e.gender)?e.gender:'',legacyAliases:e.legacyAliases,searchAliases:e.searchAliases};
       item.search=normalizeAcText(pokemonSearchLabels(e).join(' '));
       out.push(item);
     });
@@ -10578,19 +10558,14 @@ function renderSpecialBoard(){
     const el=document.getElementById(`special-${side}-list`);if(!el)return;
     el.innerHTML=board[side].map((e,i)=>{
       const sprHtml=spriteImg(e.no,24,'sb-row-sprite',e.name,'',e.dn||e.name,{catalogId:e.catalogId,scaleCap:1});
-      const qtyHtml=side==='ft'?`<input type="number" class="sb-row-qty" min="1" max="999" value="${e.qty||1}" onchange="setSpecialQty('${side}',${i},this.value)" aria-label="Quantity">`:'';
       const display=pokemonDisplayName({name:e.name,no:e.no,displayName:e.dn||e.name});
-      const backgroundId=normalizeBackgroundId(e.backgroundId),backgroundName=backgroundId?backgroundDisplayName(backgroundId):'';
-      const backgroundLabel=backgroundId?backgroundShortLabel(backgroundId):'';
-      return`<div class="sb-row${backgroundId?` background-visual-card ${backgroundVisualClass(backgroundId)}`:''}" ${backgroundId?backgroundVisualAttrs(backgroundId):''} data-idx="${i}">
-        ${backgroundVisualMotifHtml(backgroundId)}
+      const gender=['f','m'].includes(e.gender)?e.gender:'';
+      const genderHtml=gender?`<span class="sb-row-gender ${gender==='f'?'is-female':'is-male'}" aria-label="${gender==='f'?'Female':'Male'}"><span aria-hidden="true">${gender==='f'?'♀︎':'♂︎'}</span></span>`:'';
+      return`<div class="sb-row" data-idx="${i}">
         ${sprHtml}
         <span class="sb-row-name" title="${escAttr(display)}">${escHtml(display)}</span>
-        ${qtyHtml}
-        <button type="button" class="sb-row-background ${backgroundId?'':'is-empty'}" onclick="openBackgroundPicker({target:'special',side:'${side}',index:${i},name:'${escAttr(e.name)}',pokemonName:'${escAttr(display)}'})" title="${escAttr(backgroundName||i18nCore.t('background.none'))}" aria-label="${escAttr(backgroundId?i18nCore.t('background.selected',{name:backgroundName}):i18nCore.t('background.choose'))}"><span class="background-trigger-copy">${backgroundId?`<span class="background-visual-swatch ${backgroundVisualClass(backgroundId)}" ${backgroundVisualAttrs(backgroundId)} aria-hidden="true"></span><span>${escHtml(backgroundLabel)}</span>`:'◉'}</span></button>
+        ${genderHtml}
         <button class="sb-row-flag ${e.shiny?'on shiny':''}" onclick="toggleSpecialFlag('${side}',${i},'shiny')" title="✨ Shiny variant" aria-pressed="${!!e.shiny}">✨</button>
-        <button class="sb-row-flag ${e.mirror?'on mirror':''}" onclick="toggleSpecialFlag('${side}',${i},'mirror')" title="🪞 Mirror-only (same Pokémon back)" aria-pressed="${!!e.mirror}">🪞</button>
-        <input type="text" class="sb-row-note" maxlength="40" placeholder="note…" value="${escAttr(e.note||'')}" onchange="setSpecialNote('${side}',${i},this.value)" aria-label="Note">
         <button class="sb-row-rm" onclick="removeSpecialEntry('${side}',${i})" title="Remove" aria-label="Remove">×</button>
       </div>`;
     }).join('');
@@ -10602,10 +10577,10 @@ async function addSpecialEntry(side){
   const items=_ensureSpecialAcItems();
   const it=items.find(x=>x.name===name);if(!it){toast(i18nCore.t('specialBoard.notFound'));return;}
   const board=getSpecialBoard();
-  // Avoid exact duplicates on same side (same name + same shiny + same mirror)
+  // Keep one visual entry per Pokémon variation on each side.
   if(board[side].some(e=>e.name===name))toast(i18nCore.t('specialBoard.alreadyOnSide'));
   else{
-    const entry={name:it.name,dn:it.canonicalDn||it.name,no:it.no||null,shiny:false,mirror:false,backgroundId:'',note:'',qty:side==='ft'?1:undefined};
+    const entry={name:it.name,dn:it.canonicalDn||it.name,no:it.no||null,shiny:false,gender:['f','m'].includes(it.gender)?it.gender:''};
     board[side].push(entry);
     if(!await writeSpecialBoard(board))return;
   }
@@ -10624,26 +10599,6 @@ async function toggleSpecialFlag(side,idx,flag){
   const board=getSpecialBoard();
   const e=board[side][idx];if(!e)return;
   e[flag]=!e[flag];
-  if(!await writeSpecialBoard(board))return;
-  renderSpecialBoard();
-}
-async function setSpecialNote(side,idx,note){
-  const board=getSpecialBoard();
-  const e=board[side][idx];if(!e)return;
-  e.note=String(note||'').trim().slice(0,40);
-  if(!await writeSpecialBoard(board))renderSpecialBoard();
-}
-async function setSpecialQty(side,idx,val){
-  const board=getSpecialBoard();
-  const e=board[side][idx];if(!e)return;
-  e.qty=Math.max(1,Math.min(999,parseInt(val)||1));
-  if(!await writeSpecialBoard(board))return;
-  renderSpecialBoard();
-}
-async function setSpecialBackground(side,idx,backgroundId){
-  const board=getSpecialBoard();
-  const e=board[side]?.[idx];if(!e)return;
-  e.backgroundId=normalizeBackgroundId(backgroundId);
   if(!await writeSpecialBoard(board))return;
   renderSpecialBoard();
 }
@@ -10675,8 +10630,9 @@ function _buildQuickAddCandidates(side){
         const items=_ensureSpecialAcItems();
         const ac=items.find(x=>x.name===name);
         const intent=parsePri(value);
-        if(ac)out.push({...ac,backgroundId:intent.backgroundId,shiny:intent.shiny});
-        else if(sp.no)out.push({name,dn:pokemonDisplayName({...sp,name:sp.name||name,displayName:sp.displayName||name}),no:sp.no,spriteUrl:entrySpriteUrl(sp,name),backgroundId:intent.backgroundId,shiny:intent.shiny});
+        const gender=intent.gender||entryGender(intent.mod||'');
+        if(ac)out.push({...ac,gender,shiny:intent.shiny});
+        else if(sp.no)out.push({name,dn:pokemonDisplayName({...sp,name:sp.name||name,displayName:sp.displayName||name}),no:sp.no,spriteUrl:entrySpriteUrl(sp,name),gender,shiny:intent.shiny});
       });
     });
     out.sort((a,b)=>(parseInt(a.no)||9999)-(parseInt(b.no)||9999)||a.dn.localeCompare(b.dn));
@@ -10691,7 +10647,7 @@ function _buildQuickAddCandidates(side){
     const{name,gender}=splitHaveKey(key);
     if(onBoard.has(name))return; // dedupe by base name (board doesn't track gender separately)
     const e=_nameToSpriteEntry(name);
-    out.push({name,dn:pokemonDisplayName({...e,name:e.name||name,displayName:e.displayName||name}),no:e.no||null,_qty:info.qty,_gender:gender,spriteUrl:entrySpriteUrl(e,name,gender),backgroundId:info.backgroundId,shiny:info.shiny});
+    out.push({name,dn:pokemonDisplayName({...e,name:e.name||name,displayName:e.displayName||name}),no:e.no||null,_qty:info.qty,gender,spriteUrl:entrySpriteUrl(e,name,gender),shiny:info.shiny});
   });
   // Sort: highest qty first, then by dex
   out.sort((a,b)=>(b._qty||0)-(a._qty||0)||(parseInt(a.no)||9999)-(parseInt(b.no)||9999));
@@ -10730,14 +10686,13 @@ function closeQuickAdd(side){
 function renderQuickAddGrid(side,filterStr){
   const grid=document.getElementById(`${side}-qa-grid`);if(!grid)return;
   const q=String(filterStr||'').toLowerCase().trim();
-  const cands=(_qaCandidatesCache[side]||[]).filter(c=>!q||(c.dn||c.name).toLowerCase().includes(q)||String(c.no||'').includes(q)||backgroundDisplayName(c.backgroundId).toLowerCase().includes(q));
+  const cands=(_qaCandidatesCache[side]||[]).filter(c=>!q||(c.dn||c.name).toLowerCase().includes(q)||String(c.no||'').includes(q));
   grid.innerHTML=cands.map(c=>{
     const sel=_qaSelected[side].has(c.name);
     const spr=c.spriteUrl||spriteUrl(c.no,c.name);
-    const qtyTag=side==='ft'&&c._qty?`<span style="position:absolute;bottom:1px;right:3px;font-size:8px;color:var(--ac2);font-weight:700;font-family:var(--mono)">×${c._qty}</span>`:'';
     return`<button type="button" class="sb-qa-chip ${sel?'sel':''}" data-name="${escAttr(c.name)}" onclick="toggleQuickAddPick('${side}','${escAttr(c.name)}')" title="${escAttr(c.dn||c.name)}">
       ${spr?`<img src="${escAttr(spr)}" alt="" loading="lazy">`:'<span style="font-size:22px">🎮</span>'}
-      <span class="sb-qa-chip-name">${escHtml(c.dn||c.name)}</span>${qtyTag}
+      <span class="sb-qa-chip-name">${escHtml(c.dn||c.name)}</span>
     </button>`;
   }).join('');
 }
@@ -10781,8 +10736,7 @@ async function commitQuickAdd(side){
     if(!it)return;
     board[side].push({
       name:it.name,dn:it.dn,no:it.no||null,
-      shiny:!!it.shiny,mirror:false,backgroundId:normalizeBackgroundId(it.backgroundId),note:'',
-      qty:side==='ft'?(it._qty||1):undefined
+      shiny:!!it.shiny,gender:['f','m'].includes(it.gender)?it.gender:''
     });
     added++;
   });
@@ -10806,36 +10760,45 @@ async function exportSpecialBoardImage(){
     else toast(i18nCore.t(delivery==='shared'?'specialBoard.ready':'specialBoard.exported'));
   }catch(e){console.error(e);toast(i18nCore.t('export.failed'));}
 }
+function ensureSpecialTradeBoardExportDomain(){
+  if(specialTradeBoardExportDomain)return Promise.resolve(specialTradeBoardExportDomain);
+  if(specialTradeBoardExportDomainPromise)return specialTradeBoardExportDomainPromise;
+  specialTradeBoardExportDomainPromise=new Promise((resolve,reject)=>{
+    const script=document.createElement('script');
+    script.src=`js/domain/specialTradeBoardExport.js?v=${encodeURIComponent(window.__POGO_RELEASE_ID||'')}`;
+    script.async=false;
+    script.addEventListener('load',()=>{
+      specialTradeBoardExportDomain=window.PogoDomain?.specialTradeBoardExport||null;
+      if(specialTradeBoardExportDomain)resolve(specialTradeBoardExportDomain);
+      else reject(new Error('Special Trade Board export helpers failed to initialize'));
+    },{once:true});
+    script.addEventListener('error',()=>reject(new Error('Special Trade Board export helpers failed to load')),{once:true});
+    document.head.appendChild(script);
+  }).catch(error=>{specialTradeBoardExportDomainPromise=null;throw error;});
+  return specialTradeBoardExportDomainPromise;
+}
 async function renderSpecialBoardImage(board,username){
-  const W=620,pad=14,headerH=64,footerH=22;
-  // Always export as a stacked grid so boards with 50+ entries stay shareable
-  // while small boards do not waste a wide empty column.
-  const totalBoardEntries=board.lf.length+board.ft.length;
-  const isDense=true;
-  const ultraDense=totalBoardEntries>42;
-  const showGridNames=totalBoardEntries<=24;
-  // List-layout sizing
-  const colGap=10,rowH=64,sprSize=44;
-  const cols=2;
-  const colW=(W-pad*2-colGap)/cols;
-  // Grid-layout sizing (used when isDense)
-  const gridCols=ultraDense?5:4,gridGap=7,gridCellH=ultraDense?58:74,gridSprSize=ultraDense?42:50,sectionGap=12,sectionHdrH=32;
-  const gridFullW=W-pad*2;
-  const gridCellW=(gridFullW-(gridCols-1)*gridGap)/gridCols;
-  const gridRowsFor=n=>Math.ceil(Math.max(n,0)/gridCols);
-  const sectionHeight=n=>n?sectionHdrH+6+gridRowsFor(n)*gridCellH:0;
-  // Compute total body height
-  let bodyH;
-  if(isDense){
-    const lfBody=sectionHeight(board.lf.length);
-    const ftBody=sectionHeight(board.ft.length);
-    bodyH=lfBody+ftBody+(lfBody&&ftBody?sectionGap:0);
-    bodyH=Math.max(bodyH,sectionHdrH+6+gridCellH);
-  }else{
-    const maxRows=Math.max(board.lf.length,board.ft.length,1);
-    bodyH=Math.max(maxRows,1)*rowH+38;
-  }
-  const H=headerH+bodyH+footerH+pad*2;
+  await ensureSpecialTradeBoardExportDomain();
+  const sourceBoard={lf:Array.isArray(board?.lf)?board.lf:[],ft:Array.isArray(board?.ft)?board.ft:[]};
+  const allEntries=[...sourceBoard.lf,...sourceBoard.ft];
+  const boardEntryGender=e=>['f','m'].includes(e?.gender)?e.gender:entryGender(e?.mod||'');
+  const boardEntryImageKey=e=>[e.catalogId||'',e.name,e.spriteName||'',e.dn||'',e.shiny?'s':'n',boardEntryGender(e)].join('|');
+  const imgMap=new Map();
+  await Promise.all(allEntries.map(async e=>{
+    const urls=exportSpriteFallbackUrls({...e,spriteUrl:entrySpriteUrl(e,e.name)});
+    const img=await loadCanvasImageWithFallback(urls);
+    if(img)imgMap.set(boardEntryImageKey(e),img);
+  }));
+  const drawableBoard={
+    lf:sourceBoard.lf.filter(entry=>imgMap.has(boardEntryImageKey(entry))),
+    ft:sourceBoard.ft.filter(entry=>imgMap.has(boardEntryImageKey(entry)))
+  };
+  if(!drawableBoard.lf.length&&!drawableBoard.ft.length)throw new Error('No reviewed artwork is available for this board export');
+  const layout=specialTradeBoardExportDomain.buildLayout(drawableBoard);
+  const W=layout.width,pad=layout.padding,headerH=layout.headerHeight,footerH=layout.footerHeight;
+  const gridCols=layout.columns,gridGap=layout.cardGap,gridCellH=layout.cardHeight,gridSprSize=48,sectionHdrH=layout.sectionHeaderHeight;
+  const gridCellW=layout.cardWidth;
+  const H=layout.height;
   const scale=2;
   const canvas=document.createElement('canvas');
   canvas.width=W*scale;canvas.height=H*scale;
@@ -10846,195 +10809,117 @@ async function renderSpecialBoardImage(board,username){
   // Background
   ctx.fillStyle='#0f1419';ctx.fillRect(0,0,W,H);
 
-  // Header bar with gradient
-  const headerGrad=ctx.createLinearGradient(0,0,W,0);
-  headerGrad.addColorStop(0,'#1e293b');headerGrad.addColorStop(1,'#334155');
-  ctx.fillStyle=headerGrad;ctx.fillRect(0,0,W,headerH);
+  // Compact product header.
+  ctx.fillStyle='#171e29';ctx.fillRect(0,0,W,headerH);
   ctx.fillStyle='#6366f1';ctx.fillRect(0,headerH-2,W,2);
-  // Title
-  drawCenteredFittedText(ctx,`${username} — Special Trade Board`,W/2,28,W-pad*2,{max:21,min:14,color:'#ffffff'});
+  drawFittedText(ctx,'Special Trade Board',pad,21,W-250,{max:18,min:14,color:'#ffffff'});
+  ctx.font='650 9px Space Grotesk, sans-serif';ctx.fillStyle='rgba(255,255,255,.62)';
+  ctx.fillText(String(username||''),pad,38);
   const date=new Date().toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
-  ctx.font='600 12px Space Grotesk, sans-serif';
-  ctx.fillStyle='rgba(255,255,255,.7)';ctx.textAlign='center';
-  ctx.fillText(`Generated ${date}`,W/2,48);
+  ctx.font='600 9px Space Grotesk, sans-serif';ctx.fillStyle='rgba(255,255,255,.5)';ctx.textAlign='right';
+  ctx.fillText(`Generated ${date}`,W-pad,20);
+  ctx.fillText(`${layout.entryCount} entries`,W-pad,37);
   ctx.textAlign='left';
 
-  // Pre-load all sprite images
-  const allEntries=[...board.lf,...board.ft];
-  const imgMap=new Map();
-  await Promise.all(allEntries.map(async e=>{
-    const urls=exportSpriteFallbackUrls({...e,spriteUrl:entrySpriteUrl(e,e.name)});
-    const img=await loadCanvasImageWithFallback(urls);
-    if(img)imgMap.set(e.name+(e.shiny?'_s':''),img);
-  }));
-
-  // ── Helpers used by both layouts ────────────────────────────
-  const drawSectionHeader=(label,color,bgColor,accentBar,x,y,w)=>{
-    ctx.fillStyle=bgColor;ctx.fillRect(x,y,w,32);
-    ctx.fillStyle=accentBar;ctx.fillRect(x,y,3,32);
-    ctx.font='700 14px Space Grotesk, sans-serif';ctx.fillStyle=color;
-    ctx.fillText(label,x+12,y+21);
+  // ── Geometry-owned section and card rendering ───────────────
+  const drawSectionHeader=(label,count,color,x,y,w)=>{
+    roundedRect(ctx,x,y,w,sectionHdrH,5);ctx.fillStyle='#171e29';ctx.fill();
+    roundedRect(ctx,x,y,4,sectionHdrH,2);ctx.fillStyle=color;ctx.fill();
+    ctx.font='750 11px Space Grotesk, sans-serif';ctx.fillStyle='#f1f5f9';
+    ctx.fillText(label,x+11,y+15);
+    ctx.font='700 9px Space Grotesk, sans-serif';ctx.fillStyle='rgba(255,255,255,.52)';ctx.textAlign='right';
+    ctx.fillText(String(count),x+w-10,y+15);ctx.textAlign='left';
   };
-  const drawListSide=(entries,xBase,startY)=>{
-    let y=startY;
-    entries.forEach((e,i)=>{
-      const detailLabel=exportEntryNoteLabel({...e,mod:e.note||''});
-      if(i%2===0){ctx.fillStyle='rgba(255,255,255,.025)';ctx.fillRect(xBase,y,colW,rowH-4);}
-      drawExportBackgroundVisual(ctx,e,xBase,y,colW,rowH-4,{dark:true,radius:5});
-      const img=imgMap.get(e.name+(e.shiny?'_s':''));
-      const sx=xBase+8,sy=y+(rowH-4-sprSize)/2;
-      if(img)drawImageContain(ctx,img,sx,sy,sprSize,sprSize);
-      if(e.shiny){ctx.fillStyle='rgba(244,114,182,.95)';ctx.font='600 14px Space Grotesk, sans-serif';ctx.fillText('✨',sx+sprSize-12,sy+14);}
-      const nameX=sx+sprSize+10;
-      ctx.font='600 14px Space Grotesk, sans-serif';ctx.fillStyle='#f1f5f9';
-      const dn=e.dn||e.name;
-      const qtyStr=e.qty&&e.qty>1?`  ×${e.qty}`:'';
-      const nameStr=dn+qtyStr;
-      const maxNameW=colW-(nameX-xBase)-12;
-      let truncated=nameStr;
-      if(ctx.measureText(truncated).width>maxNameW){
-        while(truncated.length>4&&ctx.measureText(truncated+'…').width>maxNameW)truncated=truncated.slice(0,-1);
-        truncated+='…';
-      }
-      ctx.fillText(truncated,nameX,y+22);
-      let badgeX=nameX;const badgeY=y+38;
-      ctx.font='600 10px Space Grotesk, sans-serif';
-      if(e.shiny){const w=42;ctx.fillStyle='rgba(244,114,182,.22)';ctx.fillRect(badgeX,badgeY-10,w,16);ctx.fillStyle='#f472b6';ctx.fillText('SHINY',badgeX+5,badgeY+1);badgeX+=w+4;}
-      if(e.mirror){const w=46;ctx.fillStyle='rgba(56,189,248,.22)';ctx.fillRect(badgeX,badgeY-10,w,16);ctx.fillStyle='#38bdf8';ctx.fillText('MIRROR',badgeX+5,badgeY+1);badgeX+=w+4;}
-      if(detailLabel){
-        ctx.fillStyle='rgba(255,255,255,.55)';ctx.font='500 11px Space Grotesk, sans-serif';
-        let noteStr=detailLabel;const maxNoteW=colW-(badgeX-xBase)-10;
-        if(ctx.measureText(noteStr).width>maxNoteW){
-          while(noteStr.length>3&&ctx.measureText(noteStr+'…').width>maxNoteW)noteStr=noteStr.slice(0,-1);
-          noteStr+='…';
-        }
-        ctx.fillText(noteStr,badgeX,badgeY+1);
-      }
-      y+=rowH;
-    });
+  const drawStarburst=(x,y,outerRadius,innerRadius,color)=>{
+    ctx.beginPath();
+    for(let point=0;point<8;point++){
+      const angle=-Math.PI/2+point*Math.PI/4,radius=point%2?innerRadius:outerRadius;
+      const px=x+Math.cos(angle)*radius,py=y+Math.sin(angle)*radius;
+      if(point===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);
+    }
+    ctx.closePath();ctx.fillStyle=color;ctx.fill();
   };
-  const drawGridSection=(entries,xBase,startY,fullW)=>{
-    // Dense grid. Names are kept for small boards; large boards become a clean
-    // sprite sheet with only compact badges so 50-60 entries still fit.
-    let row=0,col=0;
-    entries.forEach(e=>{
-      const detailLabel=exportEntryNoteLabel({...e,mod:e.note||''});
-      const cx=xBase+col*(gridCellW+gridGap);
-      const cy=startY+row*gridCellH;
-      // Card background — subtle, helps visual grouping
-      ctx.fillStyle='rgba(255,255,255,.03)';
-      ctx.fillRect(cx,cy,gridCellW,gridCellH-6);
-      drawExportBackgroundVisual(ctx,e,cx,cy,gridCellW,gridCellH-6,{dark:true,radius:5});
-      // Sprite centered horizontally near top
-      const img=imgMap.get(e.name+(e.shiny?'_s':''));
-      const sx=cx+(gridCellW-gridSprSize)/2,sy=cy+(showGridNames?6:Math.max(4,(gridCellH-6-gridSprSize)/2));
-      if(img)drawImageContain(ctx,img,sx,sy,gridSprSize,gridSprSize);
-      // Shiny corner sparkle (top-right of sprite)
-      if(e.shiny){
-        ctx.fillStyle='rgba(244,114,182,.95)';
-        ctx.font='600 16px Space Grotesk, sans-serif';
-        ctx.fillText('✨',sx+gridSprSize-12,sy+14);
+  const drawShinySparkles=(x,y)=>{
+    ctx.save();
+    drawStarburst(x,y,4.8,1.15,'#f8fafc');
+    drawStarburst(x+6,y+2,2.4,.65,'#67e8f9');
+    ctx.restore();
+  };
+  const drawGenderMarker=(gender,x,y)=>{
+    const female=gender==='f',color=female?'#f472b6':'#60a5fa';
+    ctx.save();
+    roundedRect(ctx,x-7,y-7,14,14,4);ctx.fillStyle='rgba(15,20,25,.94)';ctx.fill();
+    ctx.strokeStyle=color;ctx.lineWidth=.8;ctx.stroke();
+    ctx.strokeStyle=color;ctx.lineWidth=1.3;ctx.lineCap='round';ctx.lineJoin='round';
+    ctx.beginPath();
+    if(female){
+      ctx.arc(x,y-2.1,2.35,0,Math.PI*2);
+      ctx.moveTo(x,y+.25);ctx.lineTo(x,y+4.8);
+      ctx.moveTo(x-1.9,y+3.1);ctx.lineTo(x+1.9,y+3.1);
+    }else{
+      ctx.arc(x-1.35,y+1.35,2.35,0,Math.PI*2);
+      ctx.moveTo(x+.35,y-.35);ctx.lineTo(x+4.35,y-4.35);
+      ctx.moveTo(x+1.9,y-4.35);ctx.lineTo(x+4.35,y-4.35);ctx.lineTo(x+4.35,y-1.9);
+    }
+    ctx.stroke();
+    ctx.restore();
+  };
+  const spriteMaskCache=new WeakMap();
+  const spriteMask=(img,w)=>{
+    if(spriteMaskCache.has(img))return spriteMaskCache.get(img);
+    const canvas=document.createElement('canvas');
+    canvas.width=Math.ceil(w);canvas.height=gridSprSize+8;
+    const maskCtx=canvas.getContext('2d',{willReadFrequently:true});
+    drawImageContain(maskCtx,img,(w-gridSprSize)/2,4,gridSprSize,gridSprSize);
+    const mask={data:maskCtx.getImageData(0,0,canvas.width,canvas.height).data,width:canvas.width,height:canvas.height};
+    spriteMaskCache.set(img,mask);
+    return mask;
+  };
+  const markerRectHasSprite=(mask,left,top,right,bottom)=>{
+    const minX=Math.max(0,Math.ceil(left)),maxX=Math.min(mask.width-1,Math.floor(right));
+    const minY=Math.max(0,Math.ceil(top)),maxY=Math.min(mask.height-1,Math.floor(bottom));
+    for(let py=minY;py<=maxY;py++)for(let px=minX;px<=maxX;px++)if(mask.data[(py*mask.width+px)*4+3]>10)return true;
+    return false;
+  };
+  const shinyMarkerY=(img,w)=>{
+    try{
+      const mask=spriteMask(img,w),markerX=w-11;
+      for(let markerY=7;markerY>=1;markerY--){
+        const mainCollision=markerRectHasSprite(mask,markerX-4.8,markerY-4.8,markerX+4.8,markerY+4.8);
+        const accentCollision=markerRectHasSprite(mask,markerX+3.6,markerY-.4,markerX+8.4,markerY+4.4);
+        if(!mainCollision&&!accentCollision)return markerY;
       }
-      // Mirror corner badge (top-left of sprite) — small "M" dot
-      if(e.mirror){
-        ctx.fillStyle='rgba(56,189,248,.95)';
-        ctx.beginPath();ctx.arc(sx+6,sy+8,7,0,Math.PI*2);ctx.fill();
-        ctx.fillStyle='#0f1419';ctx.font='800 9px Space Grotesk, sans-serif';
-        ctx.textAlign='center';ctx.fillText('M',sx+6,sy+11);ctx.textAlign='left';
-      }
-      if(!showGridNames){
-        if(e.qty&&e.qty>1){
-          const q=`×${e.qty}`;
-          ctx.font='800 10px Space Grotesk, sans-serif';
-          const qw=ctx.measureText(q).width+10;
-          ctx.fillStyle='rgba(167,139,250,.92)';
-          ctx.fillRect(cx+gridCellW-qw-5,cy+5,qw,16);
-          ctx.fillStyle='#10101a';
-          ctx.textAlign='center';
-          ctx.fillText(q,cx+gridCellW-qw/2-5,cy+17);
-          ctx.textAlign='left';
-        }
-        if(detailLabel){
-          let compact=detailLabel;ctx.font='800 8px Space Grotesk, sans-serif';
-          while(compact.length>3&&ctx.measureText(compact).width>gridCellW-8)compact=compact.slice(0,-1);
-          if(compact!==detailLabel)compact=compact.trim()+'…';
-          ctx.fillStyle='rgba(15,23,42,.88)';ctx.fillRect(cx+3,cy+gridCellH-20,gridCellW-6,13);
-          ctx.fillStyle='#ffffff';ctx.textAlign='center';ctx.fillText(compact,cx+gridCellW/2,cy+gridCellH-10);ctx.textAlign='left';
-        }
-        col++;
-        if(col>=gridCols){col=0;row++;}
-        return;
-      }
-      // Name (centered, truncated)
-      ctx.font='600 10px Space Grotesk, sans-serif';
-      ctx.fillStyle='#e2e8f0';
-      ctx.textAlign='center';
-      const dn=e.dn||e.name;
-      let truncated=dn;const maxNameW=gridCellW-6;
-      if(ctx.measureText(truncated).width>maxNameW){
-        while(truncated.length>3&&ctx.measureText(truncated+'…').width>maxNameW)truncated=truncated.slice(0,-1);
-        truncated+='…';
-      }
-      ctx.fillText(truncated,cx+gridCellW/2,sy+gridSprSize+12);
-      // Qty (FT only)
-      if(e.qty&&e.qty>1){
-        ctx.font='700 10px Space Grotesk, sans-serif';
-        ctx.fillStyle='#a78bfa';
-        ctx.fillText(`×${e.qty}`,cx+gridCellW/2,sy+gridSprSize+24);
-      }
-      // Note (below qty, tiny, italic, muted)
-      if(detailLabel){
-        ctx.font='500 9px Space Grotesk, sans-serif';
-        ctx.fillStyle='rgba(255,255,255,.45)';
-        let noteStr=detailLabel;
-        if(ctx.measureText(noteStr).width>maxNameW){
-          while(noteStr.length>3&&ctx.measureText(noteStr+'…').width>maxNameW)noteStr=noteStr.slice(0,-1);
-          noteStr+='…';
-        }
-        const noteY=e.qty&&e.qty>1?sy+gridSprSize+34:sy+gridSprSize+24;
-        ctx.fillText(noteStr,cx+gridCellW/2,noteY);
-      }
-      ctx.textAlign='left';
-      col++;
-      if(col>=gridCols){col=0;row++;}
+    }catch{}
+    return 1;
+  };
+  const drawEntryMarkers=(entry,x,y,w,gender,img)=>{
+    if(entry.shiny)drawShinySparkles(x+w-11,y+shinyMarkerY(img,w));
+    if(gender==='f'||gender==='m')drawGenderMarker(gender,x+w/2,y+61);
+  };
+  const drawGridSection=(entries,xBase,startY)=>{
+    entries.forEach((e,index)=>{
+      const col=index%gridCols,row=Math.floor(index/gridCols);
+      const cx=xBase+col*(gridCellW+gridGap),cy=startY+row*(gridCellH+gridGap);
+      ctx.save();
+      const gender=boardEntryGender(e);
+      const sx=cx+(gridCellW-gridSprSize)/2,sy=cy+4,img=imgMap.get(boardEntryImageKey(e));
+      drawImageContain(ctx,img,sx,sy,gridSprSize,gridSprSize);
+      drawEntryMarkers(e,cx,cy,gridCellW,gender,img);
+      ctx.restore();
     });
   };
 
-  // ── Branch on layout ────────────────────────────────────────
-  const colY=headerH+pad;
-  if(isDense){
-    // STACKED: LF section on top, FT section below — each as a dense grid
-    const fullW=W-pad*2;
-    const sectionX=pad;
-    let curY=colY;
-    if(board.lf.length){
-      drawSectionHeader(`🔍 Looking For · ${board.lf.length}`,'#c7d2fe','rgba(99,102,241,.18)','#a5b4fc',sectionX,curY,fullW);
-      curY+=sectionHdrH+6;
-      drawGridSection(board.lf,sectionX,curY,fullW);
-      curY+=gridRowsFor(board.lf.length)*gridCellH;
-    }
-    if(board.ft.length){
-      if(board.lf.length)curY+=sectionGap-6;
-      drawSectionHeader(`🤝 For Trade · ${board.ft.length}`,'#a7f3d0','rgba(16,185,129,.18)','#34d399',sectionX,curY,fullW);
-      curY+=sectionHdrH+6;
-      drawGridSection(board.ft,sectionX,curY,fullW);
-    }
-  }else{
-    // SIDE-BY-SIDE list layout (compact mode for small boards)
-    const lfX=pad,ftX=pad+colW+colGap;
-    drawSectionHeader(`🔍 Looking For · ${board.lf.length}`,'#c7d2fe','rgba(99,102,241,.18)','#a5b4fc',lfX,colY,colW);
-    drawSectionHeader(`🤝 For Trade · ${board.ft.length}`,'#a7f3d0','rgba(16,185,129,.18)','#34d399',ftX,colY,colW);
-    drawListSide(board.lf,lfX,colY+38);
-    drawListSide(board.ft,ftX,colY+38);
-  }
+  layout.sections.forEach(section=>{
+    drawSectionHeader(section.label,section.count,section.accent,section.header.x,section.header.y,section.header.width);
+    drawGridSection(drawableBoard[section.id],section.header.x,section.header.y+sectionHdrH+layout.sectionHeaderGap);
+  });
 
   // Footer
   const footY=H-footerH;
-  ctx.fillStyle='rgba(15,20,25,.95)';ctx.fillRect(0,footY,W,footerH);
-  ctx.fillStyle='rgba(255,255,255,.4)';
-  ctx.font='500 10px Space Grotesk, sans-serif';
-  ctx.textAlign='center';
-  ctx.fillText('PoGo Trades',W/2,footY+14);
+  ctx.fillStyle='#0f1419';ctx.fillRect(0,footY,W,footerH);
+  ctx.fillStyle='rgba(148,163,184,.18)';ctx.fillRect(pad,footY,W-pad*2,1);
+  ctx.fillStyle='rgba(255,255,255,.38)';ctx.font='600 8px Space Grotesk, sans-serif';ctx.textAlign='right';
+  ctx.fillText('PoGo Trades',W-pad,footY+12);
   ctx.textAlign='left';
 
   return new Promise(res=>canvas.toBlob(b=>res(b),'image/png'));
@@ -14098,7 +13983,7 @@ Object.assign(window,{
   setShiny,startTour,tourNext,tourPrev,skipTour,finishTour,
   // Special Trade Board
   openSpecialTradeBoard,specialAcSearch,specialAcSelect,specialAcKeydown,
-  addSpecialEntry,removeSpecialEntry,toggleSpecialFlag,setSpecialNote,setSpecialQty,
+  addSpecialEntry,removeSpecialEntry,toggleSpecialFlag,
   clearSpecialBoard,exportSpecialBoardImage,
   // Quick-add bulk picker for the Special Trade Board
   openQuickAdd,closeQuickAdd,filterQuickAdd,toggleQuickAddPick,qaSelectAll,commitQuickAdd

@@ -12,36 +12,29 @@ function loadVisualDomain(){
   return window.PogoDomain.backgroundVisual;
 }
 
-test('background visuals are stable, local, and derived from canonical IDs',()=>{
+test('background artwork fails closed unless an exact canonical ID is approved',()=>{
   const visuals=loadVisualDomain();
-  const record={type:'location'};
-  const first=visuals.resolve('location-gofestnewyorkcity',record);
-  const second=visuals.resolve('location-gofestnewyorkcity',record);
-  const other=visuals.resolve('location-gofestosaka',record);
+  assert.equal(visuals.schemaVersion,2);
+  assert.equal(visuals.resolve('location-gofest2026chicago'),null);
+  assert.equal(visuals.resolve('special-go-wild-area-global'),null);
+  assert.equal(visuals.resolve('not valid'),null);
+  assert.equal(visuals.resolve(''),null);
+  assert.equal(visuals.className(null),'');
+  assert.equal(visuals.style(null),'');
 
-  assert.deepEqual(JSON.parse(JSON.stringify(first)),JSON.parse(JSON.stringify(second)));
-  assert.notDeepEqual(JSON.parse(JSON.stringify(first)),JSON.parse(JSON.stringify(other)));
-  assert.match(first.id,/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
-  assert.ok(visuals.patterns.includes(first.pattern));
-  assert.match(visuals.style(first),/^--background-visual-a:#[0-9a-f]{6};--background-visual-b:#[0-9a-f]{6};--background-visual-c:#[0-9a-f]{6}$/);
-  assert.doesNotMatch(JSON.stringify(first),/https?:|url\(|data:/i);
+  for(const [id,visual] of Object.entries(visuals.approvedArtwork)){
+    assert.equal(visuals.resolve(id),visual);
+    assert.equal(visual.id,id);
+    assert.match(visual.assetUrl,/^(?:assets\/|https:\/\/)/);
+    assert.equal(visuals.className(visual),'background-artwork-exact');
+    assert.match(visuals.style(visual),/^--background-artwork:url\("[^"]+"\)$/);
+  }
 });
 
-test('special and location visuals use distinct, bounded presentation contracts',()=>{
-  const visuals=loadVisualDomain();
-  const location=visuals.resolve('location-gofestnewyorkcity',{type:'location'});
-  const special=visuals.resolve('special-go-wild-area-global',{type:'special'});
-
-  assert.equal(location.type,'location');
-  assert.equal(special.type,'special');
-  assert.match(visuals.className(location),/^background-visual-location background-pattern-/);
-  assert.match(visuals.className(special),/^background-visual-special background-pattern-/);
-  assert.equal(visuals.resolve('not valid',{type:'location'}),null);
-  assert.equal(visuals.resolve('',{type:'location'}),null);
-});
-
-test('background visual treatment reaches every supported product surface and export',()=>{
+test('all background surfaces use exact artwork or an honest compact label',()=>{
   const source=readFileSync(path.join(root,'js','app','application.js'),'utf8');
+  const share=readFileSync(path.join(root,'js','app','publicShareApp.js'),'utf8');
+  const visualSource=readFileSync(path.join(root,'js','domain','backgroundVisual.js'),'utf8');
   const css=readFileSync(path.join(root,'css','app.css'),'utf8');
   const inventory=JSON.parse(readFileSync(path.join(root,'scripts','pages','frontend-files.json'),'utf8'));
   const sw=readFileSync(path.join(root,'sw.js'),'utf8');
@@ -49,20 +42,39 @@ test('background visual treatment reaches every supported product surface and ex
   for(const contract of [
     'function backgroundVisualMotifHtml',
     'function backgroundBadgeHtml',
-    'function drawExportBackgroundVisual',
     'class="myrow${',
     'class="share-pcard card-row${',
     'class="diff-card${',
     'class="diff-match-chip ',
-    'class="sb-row${'
-  ])assert.ok(source.includes(contract),`missing visual contract: ${contract}`);
-  assert.match(source,/drawExportBackgroundVisual\(ctx,e,[^\n]+\{dark:true/);
-  const editor=source.slice(source.indexOf('function myListEditorHtml('),source.indexOf('function hydrateMyRowEditor('));
-  assert.match(editor,/const jsDn=escAttr\(String\(dn\)/);
-  assert.match(editor,/openBackgroundPicker\(\{target:'entry',name:'\$\{jsName\}',pokemonName:'\$\{jsDn\}'\}\)/);
-  assert.match(css,/\.background-visual-card\{/);
-  assert.match(css,/\.background-visual-swatch\{/);
-  assert.match(css,/\.background-pattern-(?:horizon|rings|prism|constellation)/);
+    'drawExportEntryNoteLabel'
+  ])assert.ok(source.includes(contract),`missing background contract: ${contract}`);
+  assert.match(source,/backgroundShortLabel\(e\.backgroundId\)/);
+  assert.match(share,/background-badge-kind[^>]*aria-hidden="true">BG/);
+  assert.match(css,/\.background-artwork-exact/);
+  assert.match(css,/var\(--background-artwork\)/);
+
+  const combined=`${source}\n${share}\n${visualSource}\n${css}`;
+  assert.doesNotMatch(combined,/background-pattern-|drawExportBackgroundVisual/);
+  assert.doesNotMatch(visualSource,/hashString|PALETTES|PATTERNS|linear-gradient/);
+  const board=source.slice(source.indexOf('function renderSpecialBoard()'),source.indexOf('// ── READ-ONLY SHARE VIEW'));
+  assert.doesNotMatch(board,/sb-row-background|setSpecialBackground|backgroundImageMap|drawBackgroundArtwork/);
   assert.ok(inventory.scriptFiles.includes('js/domain/backgroundVisual.js'));
+  assert.ok(inventory.lazyScriptFiles.includes('js/domain/specialTradeBoardExport.js'));
   assert.match(sw,/'js\/domain\/backgroundVisual\.js'/);
+  assert.match(sw,/'js\/domain\/specialTradeBoardExport\.js'/);
+});
+
+test('localized legal copy describes the exact-art-or-label contract',()=>{
+  const expectations={
+    en:'Background qualifiers are shown as labels unless exact, approved artwork is available for that background.',
+    ja:'背景修飾は、その背景に正確に対応する承認済み画像がある場合を除き、ラベルで表示します。',
+    es:'Los fondos se muestran como etiquetas salvo que exista una imagen exacta y aprobada para ese fondo.',
+    de:'Hintergründe werden als Kennzeichnung angezeigt, sofern keine exakt passende, freigegebene Grafik vorliegt.'
+  };
+  const index=readFileSync(path.join(root,'index.html'),'utf8');
+  for(const [locale,copy] of Object.entries(expectations)){
+    assert.ok(index.includes(copy),`missing bootstrap ${locale} background contract`);
+    assert.ok(readFileSync(path.join(root,'js','i18n','locales',`${locale}.js`),'utf8').includes(copy),`missing ${locale} background contract`);
+  }
+  assert.doesNotMatch(index,/catalog ID.*(?:color|pattern)|colores y patrones|独自の色とパターン|HintergrÃ/i);
 });

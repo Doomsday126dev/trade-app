@@ -120,11 +120,13 @@ test('My List drag order and priority moves journal canonical sortOrder before l
   assert.match(move,/writeList\(myListType,cur,list,\{orderModel:model\}\)/);assert.ok(move.indexOf('writeList')<move.indexOf('persistMyListOrder'));
 });
 
-test('Special Trade Board edits mutate a detached copy and restore UI after journal failure',()=>{
+test('Special Trade Board edits mutate a detached copy and render only after journal success',()=>{
   const read=html.slice(html.indexOf('function getSpecialBoard()'),html.indexOf('async function writeSpecialBoard'));
   assert.match(read,/accountSyncClone\(\{lf:/);assert.doesNotMatch(read,/return\{lf:Array\.isArray\(b\?\.lf\)\?b\.lf/);
-  const note=html.slice(html.indexOf('async function setSpecialNote'),html.indexOf('async function setSpecialQty'));
-  assert.match(note,/if\(!await writeSpecialBoard\(board\)\)renderSpecialBoard\(\)/);
+  for(const [start,end] of [['async function removeSpecialEntry','async function toggleSpecialFlag'],['async function toggleSpecialFlag','async function clearSpecialBoard']]){
+    const action=html.slice(html.indexOf(start),html.indexOf(end));
+    assert.match(action,/if\(!await writeSpecialBoard\(board\)\)return;\s*renderSpecialBoard\(\)/);
+  }
 });
 
 test('tag creation and Favorite assignment are journaled as one atomic product action',()=>{
