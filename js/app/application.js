@@ -10864,9 +10864,36 @@ async function renderSpecialBoardImage(board,username){
     ctx.stroke();
     ctx.restore();
   };
-  const drawEntryMarkers=(entry,x,y,w,gender)=>{
-    // The 5px section gap keeps this cluster clear of every alpha-trimmed sprite.
-    if(entry.shiny)drawShinySparkles(x+w-11,y+1);
+  const spriteMaskCache=new WeakMap();
+  const spriteMask=(img,w)=>{
+    if(spriteMaskCache.has(img))return spriteMaskCache.get(img);
+    const canvas=document.createElement('canvas');
+    canvas.width=Math.ceil(w);canvas.height=gridSprSize+8;
+    const maskCtx=canvas.getContext('2d',{willReadFrequently:true});
+    drawImageContain(maskCtx,img,(w-gridSprSize)/2,4,gridSprSize,gridSprSize);
+    const mask={data:maskCtx.getImageData(0,0,canvas.width,canvas.height).data,width:canvas.width,height:canvas.height};
+    spriteMaskCache.set(img,mask);
+    return mask;
+  };
+  const markerRectHasSprite=(mask,left,top,right,bottom)=>{
+    const minX=Math.max(0,Math.ceil(left)),maxX=Math.min(mask.width-1,Math.floor(right));
+    const minY=Math.max(0,Math.ceil(top)),maxY=Math.min(mask.height-1,Math.floor(bottom));
+    for(let py=minY;py<=maxY;py++)for(let px=minX;px<=maxX;px++)if(mask.data[(py*mask.width+px)*4+3]>10)return true;
+    return false;
+  };
+  const shinyMarkerY=(img,w)=>{
+    try{
+      const mask=spriteMask(img,w),markerX=w-11;
+      for(let markerY=7;markerY>=1;markerY--){
+        const mainCollision=markerRectHasSprite(mask,markerX-4.8,markerY-4.8,markerX+4.8,markerY+4.8);
+        const accentCollision=markerRectHasSprite(mask,markerX+3.6,markerY-.4,markerX+8.4,markerY+4.4);
+        if(!mainCollision&&!accentCollision)return markerY;
+      }
+    }catch{}
+    return 1;
+  };
+  const drawEntryMarkers=(entry,x,y,w,gender,img)=>{
+    if(entry.shiny)drawShinySparkles(x+w-11,y+shinyMarkerY(img,w));
     if(gender==='f'||gender==='m')drawGenderMarker(gender,x+w/2,y+61);
   };
   const drawGridSection=(entries,xBase,startY)=>{
@@ -10877,7 +10904,7 @@ async function renderSpecialBoardImage(board,username){
       const gender=boardEntryGender(e);
       const sx=cx+(gridCellW-gridSprSize)/2,sy=cy+4,img=imgMap.get(boardEntryImageKey(e));
       drawImageContain(ctx,img,sx,sy,gridSprSize,gridSprSize);
-      drawEntryMarkers(e,cx,cy,gridCellW,gender);
+      drawEntryMarkers(e,cx,cy,gridCellW,gender,img);
       ctx.restore();
     });
   };

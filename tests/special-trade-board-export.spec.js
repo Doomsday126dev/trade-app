@@ -46,7 +46,13 @@ test('Special Trade Board PNG is content-sized and ignores retired metadata and 
       const pixels=context.getImageData(0,0,bitmap.width,bitmap.height).data;
       const colors=new Set();
       for(let index=0;index<pixels.length;index+=Math.max(4,Math.floor(pixels.length/3000/4)*4))colors.add(`${pixels[index]},${pixels[index+1]},${pixels[index+2]},${pixels[index+3]}`);
-      return{width:bitmap.width,height:bitmap.height,expectedHeight:layout.height*2,bytes:blob.size,colorCount:colors.size,fallbackCalls,imageCalls:imageCalls.length};
+      const lfSection=layout.sections.find(section=>section.id==='lf');
+      const markerColor=name=>{
+        const index=drawableBoard.lf.findIndex(entry=>entry.name===name),card=lfSection.cards[index];
+        const markerY=name==='Pikachu (Saree)'?7:2;
+        return Array.from(context.getImageData(Math.round((card.x+card.width-11)*2),Math.round((card.y+markerY)*2),1,1).data);
+      };
+      return{width:bitmap.width,height:bitmap.height,expectedHeight:layout.height*2,bytes:blob.size,colorCount:colors.size,fallbackCalls,imageCalls:imageCalls.length,pikachuMarker:markerColor('Pikachu (Saree)'),jigglypuffMarker:markerColor('Jigglypuff (Ribbon)')};
     }finally{drawSpriteFallback=originalFallback;drawImageContain=originalImage;}
   },fixture);
   expect(result.width).toBe(1440);
@@ -55,6 +61,8 @@ test('Special Trade Board PNG is content-sized and ignores retired metadata and 
   expect(result.colorCount).toBeGreaterThan(8);
   expect(result.imageCalls).toBeGreaterThan(0);
   expect(result.fallbackCalls).toEqual([]);
+  expect(result.pikachuMarker).toEqual([248,250,252,255]);
+  expect(result.jigglypuffMarker).toEqual([248,250,252,255]);
 });
 
 test('Special Trade Board editor stays compact and touch-safe without retired controls',async({page})=>{

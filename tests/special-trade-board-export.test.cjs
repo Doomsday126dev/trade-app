@@ -80,7 +80,9 @@ test('canvas renderer uses reviewed sprites with unambiguous starbursts and alig
   assert.match(renderer,/drawStarburst/);
   assert.doesNotMatch(renderer,/drawDiamond|shadowBlur/);
   assert.match(renderer,/drawStarburst\(x\+6,y\+2,2\.4,\.65,'#67e8f9'\)/);
-  assert.match(renderer,/drawShinySparkles\(x\+w-11,y\+1\)/);
+  assert.match(renderer,/const shinyMarkerY=/);
+  assert.match(renderer,/for\(let markerY=7;markerY>=1;markerY--\)/);
+  assert.match(renderer,/drawShinySparkles\(x\+w-11,y\+shinyMarkerY\(img,w\)\)/);
   assert.doesNotMatch(renderer,/drawStarburst\(x-5\.2,y\+4\.4/);
   assert.match(renderer,/drawGenderMarker/);
   const genderMarker=renderer.slice(renderer.indexOf('const drawGenderMarker'),renderer.indexOf('const drawEntryMarkers'));
