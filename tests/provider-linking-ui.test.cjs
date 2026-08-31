@@ -48,13 +48,13 @@ test('same-UID providerData callbacks preserve the active owned session',()=>{
 
 test('Connected Accounts runtime renders only sanitized states and translated copy',()=>{
   const render=application.slice(application.indexOf('const PROVIDER_LINKING_STATUS_KEYS'),application.indexOf('function configureSettingsPanel'));
-  for(const state of['connected','not-connected','connecting','waiting-browser','needs-attention','reauthenticate','disconnecting','unavailable'])assert.match(render,new RegExp(state));
+  for(const state of['connected','not-connected','connecting','prepared','waiting-browser','needs-attention','reauthenticate','disconnecting','unavailable'])assert.match(render,new RegExp(state));
   assert.match(render,/i18nCore\.t\(/);assert.doesNotMatch(render,/email|displayName|accessToken|refreshToken|error\.message/);
   assert.doesNotMatch(render,/textContent\s*=.*(?:uid|providerId)/);
 });
 
 test('all supported locales provide the provider-linking state vocabulary',()=>{
-  const keys=['connectedAccounts','connectedAccountsHelp','usernamePin','usernamePinHelp','connected','notConnected','connecting','waitingBrowser','needsAttention','reauthenticate','disconnecting','unavailable','providerDevelopmentOnly','foundationNotice'];
+  const keys=['connectedAccounts','connectedAccountsHelp','usernamePin','usernamePinHelp','connected','notConnected','connecting','googleReady','googleReadyHelp','waitingBrowser','needsAttention','reauthenticate','disconnecting','unavailable','providerDevelopmentOnly','foundationNotice'];
   for(const locale of['en','ja','es','de']){const source=read(`js/i18n/locales/${locale}.js`);for(const key of keys)assert.match(source,new RegExp(`'security\\.${key}'`),`${locale}:${key}`);}
 });
 

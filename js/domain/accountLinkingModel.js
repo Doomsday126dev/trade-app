@@ -1,7 +1,7 @@
 (function(global){
   const root=global.PogoDomain=global.PogoDomain||{};
   const RECENT_AUTH_MAX_AGE_MS=10*60*1000;
-  const STATES=Object.freeze(['idle','connecting','waiting-browser','connected','collision','canceled','blocked','reauthenticate','disconnecting','disconnected','unavailable']);
+  const STATES=Object.freeze(['idle','connecting','prepared','waiting-browser','connected','collision','canceled','blocked','reauthenticate','disconnecting','disconnected','unavailable']);
   const OPERATIONS=Object.freeze(['link','sign-in','reauthenticate','unlink']);
   const COLLISION_CODES=new Set(['auth/credential-already-in-use','auth/account-exists-with-different-credential','provider/subject-already-linked','provider-link/collision']);
   const CANCELED_CODES=new Set(['auth/popup-closed-by-user','auth/cancelled-popup-request','provider-link/canceled']);

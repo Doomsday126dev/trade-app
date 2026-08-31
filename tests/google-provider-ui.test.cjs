@@ -60,7 +60,9 @@ test('signed-out Google account resolution uses exact UID mappings and no profil
 
 test('Connected Accounts presents all required safe states and actions',()=>{
   const surface=app.slice(app.indexOf('const GOOGLE_PROVIDER_STATE'),app.indexOf('function configureSettingsPanel'));
-  for(const value of['already-connected','collision','popup-blocked','canceled','recent-auth-required','network-failed','auth-lifecycle-changed','connecting','disconnecting','reauthenticate','retry','disconnect','connect'])assert.match(surface,new RegExp(value));
+  for(const value of['already-connected','collision','popup-blocked','canceled','recent-auth-required','network-failed','auth-lifecycle-changed','connecting','prepared','disconnecting','reauthenticate','retry','disconnect','continue','connect'])assert.match(surface,new RegExp(value));
+  assert.match(surface,/controller\.prepareLinkPopup\('google'\)/);
+  assert.match(surface,/controller\.completeLinkPopup\('google'\)/);
   assert.doesNotMatch(surface,/error\.message|accessToken|refreshToken|displayName|\.email/);
 });
 
@@ -72,7 +74,7 @@ test('Google unlink requires an exact usable Username and PIN account record',()
 });
 
 test('all supported locales contain Google, onboarding, and recovery copy',()=>{
-  const keys=['login.continueGoogle','security.connect','security.disconnect','security.retry','security.googleConnected','security.googleAlreadyConnected','security.googleCollision','security.googlePopupBlocked','security.googleCanceled','security.googleReauthRequired','security.googleNetworkFailed','security.googleNeedsAttention','providerOnboarding.title','providerOnboarding.description','providerOnboarding.handle','providerOnboarding.check','providerOnboarding.cancel'];
+  const keys=['login.continueGoogle','security.connect','security.disconnect','security.retry','security.googleReady','security.googleReadyHelp','security.googleConnected','security.googleAlreadyConnected','security.googleCollision','security.googlePopupBlocked','security.googleCanceled','security.googleReauthRequired','security.googleNetworkFailed','security.googleNeedsAttention','providerOnboarding.title','providerOnboarding.description','providerOnboarding.handle','providerOnboarding.check','providerOnboarding.cancel'];
   for(const locale of['en','ja','es','de']){const source=read(`js/i18n/locales/${locale}.js`);for(const key of keys)assert.match(source,new RegExp(`'${key.replaceAll('.','\\.')}'`),`${locale}:${key}`);}
 });
 

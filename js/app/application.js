@@ -1300,7 +1300,7 @@ function ensureProviderLinkingController(){
     registry:providerLinkingRegistry,continuation,
     authSession:Object.freeze({snapshot:providerAuthSnapshot}),
     providerAdapter:createGoogleProviderAdapter(),
-    accountBoundary:Object.freeze({snapshot:providerAccountBoundarySnapshot})
+    accountBoundary:Object.freeze({snapshot:uid=>withTimeout(providerAccountBoundarySnapshot(uid),8000,'Google account safety check timed out','provider-link/account-boundary-timeout')})
   });
   providerOnboardingController=providerOnboardingModelDomain.createProviderOnboardingModel({
     authoritySnapshot:providerAuthSnapshot,
@@ -8991,7 +8991,7 @@ function applySettingsPresentation(){
 }
 const PROVIDER_LINKING_STATUS_KEYS=Object.freeze({
   connected:'security.connected','not-connected':'security.notConnected',connecting:'security.connecting',
-  'waiting-browser':'security.waitingBrowser','needs-attention':'security.needsAttention',reauthenticate:'security.reauthenticate',
+  prepared:'security.googleReady','waiting-browser':'security.waitingBrowser','needs-attention':'security.needsAttention',reauthenticate:'security.reauthenticate',
   disconnecting:'security.disconnecting',unavailable:'security.unavailable'
 });
 const GOOGLE_PROVIDER_STATE=Object.freeze({
@@ -9001,6 +9001,7 @@ const GOOGLE_PROVIDER_STATE=Object.freeze({
   'provider-link/canceled':Object.freeze({state:'needs-attention',labelKey:'security.googleCanceled',detailKey:'security.googleCanceledHelp'}),
   'provider-link/recent-auth-required':Object.freeze({state:'reauthenticate',labelKey:'security.googleReauthRequired',detailKey:'security.googleReauthHelp'}),
   'provider-link/network-failed':Object.freeze({state:'needs-attention',labelKey:'security.googleNetworkFailed',detailKey:'security.googleRetryHelp'}),
+  'provider-link/account-boundary-timeout':Object.freeze({state:'needs-attention',labelKey:'security.googleNeedsAttention',detailKey:'security.googleBoundaryHelp'}),
   'provider-link/auth-lifecycle-changed':Object.freeze({state:'needs-attention',labelKey:'security.googleNeedsAttention',detailKey:'security.googleLifecycleHelp'}),
   'provider-link/account-boundary-invalid':Object.freeze({state:'needs-attention',labelKey:'security.googleNeedsAttention',detailKey:'security.googleBoundaryHelp'})
 });
@@ -9010,11 +9011,11 @@ function googleProviderPresentation(method,controllerState){
   const state=override?.state||(active?.status==='disconnected'?'not-connected':active?.status)||method.state;
   const linked=method.linked===true;
   const busy=['connecting','waiting-browser','disconnecting'].includes(state);
-  const action=busy?'':state==='reauthenticate'?'reauthenticate':active?.retryable?'retry':linked?'disconnect':'connect';
+  const action=busy?'':state==='prepared'?'continue':state==='reauthenticate'?'reauthenticate':active?.retryable?'retry':linked?'disconnect':'connect';
   return Object.freeze({
     state,labelKey:override?.labelKey||PROVIDER_LINKING_STATUS_KEYS[state]||(linked?'security.connected':'security.notConnected'),
-    detailKey:override?.detailKey||(linked?'security.googleConnected':'security.googleAvailable'),
-    action,actionKey:{connect:'security.connect',disconnect:'security.disconnect',retry:'security.retry',reauthenticate:'security.reauthenticate'}[action]||'',
+    detailKey:override?.detailKey||(state==='prepared'?'security.googleReadyHelp':linked?'security.googleConnected':'security.googleAvailable'),
+    action,actionKey:{connect:'security.connect',continue:'login.continueGoogle',disconnect:'security.disconnect',retry:'security.retry',reauthenticate:'security.reauthenticate'}[action]||'',
     disabled:busy||state==='unavailable'||state==='collision'||active?.code==='provider-link/collision'
   });
 }
@@ -9024,7 +9025,7 @@ function usernamePinAccessUsable(){
 }
 function renderConnectedAccounts(){
   const controllerState=providerLinkingController?.snapshot?.()||null;
-  const operationStates=controllerState?.providerKey?{[controllerState.providerKey]:['connected','connecting','waiting-browser','reauthenticate','disconnecting'].includes(controllerState.status)?controllerState.status:'needs-attention'}:{};
+  const operationStates=controllerState?.providerKey?{[controllerState.providerKey]:['connected','connecting','prepared','waiting-browser','reauthenticate','disconnecting'].includes(controllerState.status)?controllerState.status:'needs-attention'}:{};
   const usernamePinAvailable=usernamePinAccessUsable();
   const methods=providerLinkingRegistry?providerLinkingRegistry.methods({providerData:auth?.currentUser?.providerData||[],usernamePinAvailable,operationStates}):[
     {key:'username-pin',visible:true,state:usernamePinAvailable?'connected':'unavailable',detailKey:'security.usernamePinHelp'}
@@ -9048,6 +9049,7 @@ async function handleGoogleAccountAction(){
   const button=document.querySelector('[data-provider="google"] [data-provider-action]');if(button)button.disabled=true;
   try{
     const state=controller.snapshot(),linked=(auth?.currentUser?.providerData||[]).some(item=>item?.providerId==='google.com');
+    if(state.status==='prepared')return await controller.completeLinkPopup('google');
     if(state.status==='reauthenticate'){
       await controller.reauthenticate('google');
       if(providerPendingAction==='unlink')return await controller.unlink('google',{usernamePinAvailable:usernamePinAccessUsable()});
@@ -9059,7 +9061,7 @@ async function handleGoogleAccountAction(){
       const result=await controller.unlink('google',{usernamePinAvailable:usernamePinAccessUsable()});
       providerPendingAction=null;return result;
     }
-    providerPendingAction=null;return await controller.linkPopup('google');
+    providerPendingAction=null;return await controller.prepareLinkPopup('google');
   }catch(error){
     if(error?.code!=='provider-link/recent-auth-required')providerPendingAction=null;
     return null;

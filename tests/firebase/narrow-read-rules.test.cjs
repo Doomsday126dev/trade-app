@@ -109,6 +109,15 @@ test('auth index reads are exact to the authenticated UID and cannot be enumerat
   await fails(db('GET','authIndex',undefined,TOKENS.ordinary,{orderBy:'"$key"',limitToFirst:'1'}),'auth index query');
 });
 
+test('recovery review fingerprints remain private and writable only beneath the exact owner auth index',async()=>{
+  const fingerprint='a'.repeat(64),marker={schemaVersion:1,kind:'recovery-review-acceptance',ownerUid:IDS.ordinary,trainerUsername:NAMES.ordinary,evidenceFingerprint:fingerprint,candidateCount:66,acceptedAt:100};
+  const ownPath=`authIndex/${IDS.ordinary}/accountSyncRecoveryReviews/${fingerprint}`,foreignPath=`authIndex/${IDS.other}/accountSyncRecoveryReviews/${fingerprint}`;
+  await succeeds(db('PUT',ownPath,marker,TOKENS.ordinary),'owner recovery review marker');
+  const read=await succeeds(db('GET',ownPath,undefined,TOKENS.ordinary),'owner recovery review marker read');assert.equal(parse(read).candidateCount,66);
+  await fails(db('GET',ownPath,undefined,TOKENS.other),'foreign recovery review marker read');
+  await fails(db('PUT',foreignPath,{...marker,ownerUid:IDS.other,trainerUsername:NAMES.other},TOKENS.ordinary),'foreign recovery review marker write');
+});
+
 test('missing inconsistent spoofed and case-variant identity bindings fail closed',async()=>{
   await fails(db('GET','users/UnboundTrainer',undefined,TOKENS.ordinary),'inconsistent user binding');
   await fails(db('GET',`users/${NAMES.ordinary.toLowerCase()}`,undefined,TOKENS.ordinary),'case variant');

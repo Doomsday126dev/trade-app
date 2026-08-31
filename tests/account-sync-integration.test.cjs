@@ -21,12 +21,16 @@ test('owner-only migration reads are explicitly registered in the Firebase sourc
     path:'wishlist/{currentUsername} + dynamax/{currentUsername} + gmax/{currentUsername} + costumes/{currentUsername} + users/{currentUsername}',
     method:'get',breadth:'exact',ownerScope:'session',audience:'owner',consumers:['account_sync_migration'],status:'transitional'
   });
-  assert.equal(SOURCE_CALL_CONTRACT.directGetCount,14);
+  assert.equal(SOURCE_CALL_CONTRACT.directGetCount,17);
   assert.equal(SOURCE_CALL_CONTRACT.needles.find(item=>item.text==='get(ref(db,path))')?.count,2);
   assert.equal(SOURCE_CALL_CONTRACT.needles.find(item=>item.text.includes('Reading account sync migration source timed out'))?.count,1);
   const source=html.slice(html.indexOf('async function accountSyncReadLegacySources'),html.indexOf('function accountSyncEncodedPriority'));
   assert.match(source,/const paths=\[\.\.\.OWNED_MY_LIST_TYPES\.map\(type=>`\$\{type\}\/\$\{username\}`\),`users\/\$\{username\}`\]/);
   assert.match(source,/paths\.map\(path=>withTimeout\(get\(ref\(db,path\)\),8000/);
+  const review=READ_SURFACES.find(surface=>surface.id==='account_sync_recovery_review_read');
+  assert.deepEqual(JSON.parse(JSON.stringify(review)),{
+    id:'account_sync_recovery_review_read',path:'authIndex/{currentUid}/accountSyncRecoveryReviews/{evidenceFingerprint}',method:'get',breadth:'exact',ownerScope:'session',audience:'owner',consumers:['account_sync_recovery_review'],status:'retained'
+  });
 });
 
 test('cross-device sync is limited to one domain-separated owner hash and remains inert for every other account',()=>{
@@ -83,7 +87,9 @@ test('entity, direct watched, and public projection writes retain operation-spec
 
   assert.equal((runtime.match(/controller\.runAuthorizedWatchedMutation\(\{/g)||[]).length,3);
   for(const method of ['createMigration','createRecoveryCandidate','updateMeta'])assert.match(runtime,new RegExp(`write:\\(\\)=>repository\\.${method}\\(`));
-  assert.doesNotMatch(runtime,/runAuthorizedMutation/);
+  assert.equal((runtime.match(/controller\.runAuthorizedMutation\(/g)||[]).length,2);
+  assert.match(runtime,/controller\.runAuthorizedMutation\(\(\)=>repository\.readRecoveryReviewAcceptance\(evidence\.record\)\)/);
+  assert.match(runtime,/controller\.runAuthorizedMutation\(\(\)=>repository\.createRecoveryReviewAcceptance\(evidence\.record\)\)/);
 
   const publish=controller.slice(controller.indexOf('async function publishAcceptedProjection'),controller.indexOf('function handleListenerData'));
   assert.match(publish,/executeAuthorizedMutation\(\(\)=>onProjection/);

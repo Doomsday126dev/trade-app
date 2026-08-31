@@ -6,7 +6,7 @@
     google:Object.freeze({key:'google',providerId:'google.com',labelKey:'security.google',detailKey:'security.providerDevelopmentOnly',source:'firebase-provider-data'}),
     discord:Object.freeze({key:'discord',providerId:'discord.com',labelKey:'security.discord',detailKey:'security.providerDevelopmentOnly',source:'private-provider-link'})
   });
-  const METHOD_STATES=Object.freeze(['connected','not-connected','connecting','waiting-browser','needs-attention','reauthenticate','disconnecting','unavailable']);
+  const METHOD_STATES=Object.freeze(['connected','not-connected','connecting','prepared','waiting-browser','needs-attention','reauthenticate','disconnecting','unavailable']);
 
   function providerIds(providerData){
     return new Set((Array.isArray(providerData)?providerData:[]).map(item=>String(item?.providerId||'')).filter(Boolean));

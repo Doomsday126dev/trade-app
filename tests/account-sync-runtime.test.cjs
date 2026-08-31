@@ -27,7 +27,7 @@ function source(deviceInstallId,{remote={},local={},remoteBoard={lf:[],ft:[]},lo
 }
 
 function runtimeRepository(window,h,{orders={}}={}){
-  let meta=null;const migrations={},recoveryCandidates={},listeners=new Set(),events=[],calls={createMigration:0,createRecoveryCandidate:0,updateMeta:0,readAccount:0};
+  let meta=null;const migrations={},recoveryCandidates={},recoveryReviewAcceptances={},listeners=new Set(),events=[],calls={createMigration:0,createRecoveryCandidate:0,readRecoveryReviewAcceptance:0,createRecoveryReviewAcceptance:0,updateMeta:0,readAccount:0};
   const snapshot=()=>({...h.server.snapshot(),...(meta?{meta}:{}),migrations:{...migrations},recoveryCandidates:{...recoveryCandidates}});
   function publish(value=snapshot()){for(const listener of listeners)listener.onData(value);}
   function failListener(error=new Error('listener failed')){for(const listener of listeners)listener.onError?.(error);}
@@ -45,13 +45,23 @@ function runtimeRepository(window,h,{orders={}}={}){
     async readAccount(){calls.readAccount++;events.push('readAccount');return snapshot();},
     async createMigration(record){calls.createMigration++;events.push('createMigration');if(migrations[record.deviceMigrationId])return window.PogoDomain.accountSyncModel.failure('account-sync/migration-exists','exists');migrations[record.deviceMigrationId]=record;publishDirect('createMigration');return{ok:true,status:'created',value:record};},
     async createRecoveryCandidate(record){calls.createRecoveryCandidate++;events.push('createRecoveryCandidate');if(recoveryCandidates[record.candidateId])return window.PogoDomain.accountSyncModel.failure('account-sync/recovery-candidate-exists','exists');recoveryCandidates[record.candidateId]=record;publishDirect('createRecoveryCandidate');return{ok:true,status:'created',value:record};},
+    async readRecoveryReviewAcceptance(record){
+      calls.readRecoveryReviewAcceptance++;events.push('readRecoveryReviewAcceptance');const value=recoveryReviewAcceptances[record.evidenceFingerprint]||null;
+      if(value&&(value.ownerUid!==record.ownerUid||value.trainerUsername!==record.trainerUsername||value.candidateCount!==record.candidateCount))return window.PogoDomain.accountSyncModel.failure('account-sync/recovery-review-acceptance-conflict','conflict');
+      return{ok:true,status:value?'found':'missing',value};
+    },
+    async createRecoveryReviewAcceptance(record){
+      calls.createRecoveryReviewAcceptance++;events.push('createRecoveryReviewAcceptance');const prior=recoveryReviewAcceptances[record.evidenceFingerprint];
+      if(prior&&(prior.ownerUid!==record.ownerUid||prior.trainerUsername!==record.trainerUsername||prior.candidateCount!==record.candidateCount))return window.PogoDomain.accountSyncModel.failure('account-sync/recovery-review-acceptance-conflict','conflict');
+      recoveryReviewAcceptances[record.evidenceFingerprint]=prior||record;return{ok:true,status:prior?'idempotent':'created',value:recoveryReviewAcceptances[record.evidenceFingerprint]};
+    },
     async updateMeta(patch){
       calls.updateMeta++;events.push('updateMeta');if(meta&&patch.initializedAt!==meta.initializedAt)return window.PogoDomain.accountSyncModel.failure('account-sync/meta-conflict','initializedAt changed');
       const timestamp=h.clock();meta={...(meta||{}),...patch,ownerUid:'uid-owner',schemaVersion:window.PogoDomain.accountSyncModel.SCHEMA_VERSION,initializedAt:meta?.initializedAt??timestamp,updatedAt:timestamp};
       publishDirect('updateMeta');return{ok:true,status:'updated',value:meta};
     }
   };
-  return{repository,get meta(){return meta;},migrations,recoveryCandidates,calls,events,publish,failListener,snapshot};
+  return{repository,get meta(){return meta;},migrations,recoveryCandidates,recoveryReviewAcceptances,calls,events,publish,failListener,snapshot};
 }
 
 function createRuntime(window,h,repositoryState,journalState,readMigrationSources,onCanonicalEntities=()=>{},onState=()=>{},onPublicProjection=async()=>({ok:true}),options={}){
@@ -409,6 +419,7 @@ test('a runtime recovery candidate immediately changes the published state from 
   assert.equal(reviewed.ok,true);assert.equal(reviewed.status,'resolved');assert.equal(states.at(-1).state,'saved');assert.equal(states.at(-1).recoveryCandidateCount,0);
   assert.equal((await runtime.listRecoveryCandidates()).length,0);assert.equal(journalState.recoveryCandidates.get(candidate.candidateId).resolved,true);
   assert.equal(repositoryState.recoveryCandidates[candidate.candidateId].resolved,false);assert.equal(repositoryState.calls.createRecoveryCandidate,1);
+  assert.equal(repositoryState.calls.createRecoveryReviewAcceptance,1);assert.equal(Object.keys(repositoryState.recoveryReviewAcceptances).length,1);
 });
 
 test('owner review atomically accepts the exact canonical account copy without replaying preserved candidates',async()=>{
@@ -421,14 +432,47 @@ test('owner review atomically accepts the exact canonical account copy without r
   const incomplete=await runtime.completeRecoveryReviews(ids.slice(0,1));
   assert.equal(incomplete.ok,false);assert.equal(incomplete.error.code,'account-sync/recovery-review-not-ready');
   assert.equal((await runtime.listRecoveryCandidates()).length,2);assert.equal([...journalState.recoveryCandidates.values()].filter(item=>item.resolved===true).length,0);
+  const duplicate=await runtime.completeRecoveryReviews([ids[0],ids[0]]);
+  assert.equal(duplicate.ok,false);assert.equal(duplicate.error.code,'account-sync/recovery-review-changed');assert.equal(repositoryState.calls.createRecoveryReviewAcceptance,0);
 
   const reviewed=await runtime.completeRecoveryReviews(ids),snapshot=await runtime.snapshot(),all=[...journalState.recoveryCandidates.values()];
   assert.deepEqual(JSON.parse(JSON.stringify(reviewed)),{ok:true,status:'resolved',count:2});assert.equal(snapshot.state,'saved');assert.equal(snapshot.recoveryCandidateCount,0);
   assert.equal(states.at(-1).state,'saved');assert.equal(new Set(all.map(item=>item.resolvedAt)).size,1);assert.ok(all.every(item=>item.resolved===true));
   assert.ok(Object.values(repositoryState.recoveryCandidates).every(item=>item.resolved===false));assert.equal(repositoryState.calls.createRecoveryCandidate,2);assert.equal(h.server.attempts.length,attemptsBefore);
+  assert.equal(repositoryState.calls.createRecoveryReviewAcceptance,1);assert.equal(Object.keys(repositoryState.recoveryReviewAcceptances).length,1);
 
   await runtime.stop();
   await assert.rejects(runtime.completeRecoveryReviews(ids),error=>error.code==='account-sync/runtime-closed');
+});
+
+test('an exact reviewed recovery set is backfilled once and inherited by a clean browser journal',async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),repositoryState=runtimeRepository(window,h);
+  const baseline=createRuntime(window,h,repositoryState,h.createMemoryJournalState(),async()=>source('device-review-baseline',{remote:{Pikachu:'H'}}));await baseline.start();await baseline.stop();
+
+  const reviewedState=h.createMemoryJournalState(),reviewSource=async()=>source('device-review-original',{remote:{Pikachu:'M'}}),original=createRuntime(window,h,repositoryState,reviewedState,reviewSource);await original.start();
+  const preserved=[...reviewedState.recoveryCandidates.values()];assert.equal(preserved.length,1);assert.equal((await original.snapshot()).state,'review-required');
+  reviewedState.recoveryCandidates.set(preserved[0].candidateId,{...preserved[0],resolved:true,resolvedAt:h.clock()});await original.stop();
+  assert.equal(Object.keys(repositoryState.recoveryReviewAcceptances).length,0);
+
+  const upgraded=createRuntime(window,h,repositoryState,reviewedState,reviewSource),upgradedResult=await upgraded.start();
+  assert.equal(upgradedResult.ok,true);assert.equal((await upgraded.snapshot()).state,'saved');assert.equal(Object.keys(repositoryState.recoveryReviewAcceptances).length,1);await upgraded.stop();
+
+  const cleanState=h.createMemoryJournalState(),clean=createRuntime(window,h,repositoryState,cleanState,async()=>source('device-review-clean',{remote:{Pikachu:'M'}})),cleanResult=await clean.start();
+  assert.equal(cleanResult.ok,true);assert.equal((await clean.snapshot()).state,'saved');assert.equal((await clean.listRecoveryCandidates()).length,0);
+  const inherited=await clean.listRecoveryCandidates({unresolvedOnly:false});assert.equal(inherited.length,1);assert.equal(inherited[0].resolved,true);await clean.stop();
+
+  const changed=createRuntime(window,h,repositoryState,h.createMemoryJournalState(),async()=>source('device-review-changed',{remote:{Pikachu:'L'}}));await changed.start();
+  assert.equal((await changed.snapshot()).state,'review-required');assert.equal((await changed.listRecoveryCandidates()).length,1);assert.equal(Object.keys(repositoryState.recoveryReviewAcceptances).length,1);await changed.stop();
+});
+
+test('a conflicting recovery acceptance marker fails closed without resolving clean-profile evidence',async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),repositoryState=runtimeRepository(window,h);
+  const baseline=createRuntime(window,h,repositoryState,h.createMemoryJournalState(),async()=>source('device-conflict-baseline',{remote:{Pikachu:'H'}}));await baseline.start();await baseline.stop();
+  const first=createRuntime(window,h,repositoryState,h.createMemoryJournalState(),async()=>source('device-conflict-review',{remote:{Pikachu:'M'}}));await first.start();const ids=(await first.listRecoveryCandidates()).map(value=>value.candidateId);await first.completeRecoveryReviews(ids);await first.stop();
+  const marker=Object.values(repositoryState.recoveryReviewAcceptances)[0];repositoryState.recoveryReviewAcceptances[marker.evidenceFingerprint]={...marker,candidateCount:marker.candidateCount+1};
+  const cleanState=h.createMemoryJournalState(),clean=createRuntime(window,h,repositoryState,cleanState,async()=>source('device-conflict-clean',{remote:{Pikachu:'M'}}));
+  await assert.rejects(clean.start(),error=>error.code==='account-sync/recovery-review-acceptance-conflict');assert.equal(clean.projectionReady,false);
+  assert.equal([...cleanState.recoveryCandidates.values()].filter(value=>value.resolved!==true).length,1);await clean.stop();
 });
 
 async function firstStateSnapshot(state){

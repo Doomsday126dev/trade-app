@@ -14,7 +14,8 @@
   function createAccountLinkingController({registry,continuation,authSession,providerAdapter,accountBoundary,lease=createSharedOperationLease(),clock=()=>Date.now()}={}){
     if(!registry||!continuation||!authSession?.snapshot||!providerAdapter||!accountBoundary?.snapshot)throw new TypeError('Account linking controller dependencies are incomplete');
     let state=Object.freeze({status:'idle',operation:'',providerKey:'',code:'',retryable:false});
-    let generation=0,lastRetry=null,activeAuthority=null;
+    const PREPARED_LINK_TTL_MS=2*60*1000;
+    let generation=0,lastRetry=null,activeAuthority=null,preparedLink=null;
     const listeners=new Set();
     const notify=next=>{state=Object.freeze({...next});for(const listener of listeners)listener(state);return state;};
     const currentAuthority=()=>model.authority(authSession.snapshot());
@@ -25,7 +26,7 @@
       const availability=registry.availability(providerKey);if(!availability.available)throw model.failure('provider-link/provider-unavailable','unavailable');
       const session=currentAuthority(),ownerBinding=await continuation.ownerBinding(session.uid),lifecycleBinding=await continuation.lifecycleBinding(`${session.uid}\0${session.lifecycleId}`);
       const before=model.boundary(await accountBoundary.snapshot(session.uid));
-      return Object.freeze({operation,providerKey,session,ownerBinding,lifecycleBinding,before,generation:++generation});
+      return Object.freeze({operation,providerKey,session,ownerBinding,lifecycleBinding,before,generation:++generation,preparedAt:clock()});
     }
     function requireCurrent(context,result){
       let current;try{current=currentAuthority();}catch{throw model.failure('provider-link/auth-lifecycle-changed');}
@@ -48,21 +49,43 @@
       let current;try{current=currentAuthority();}catch{return model.failure('provider-link/auth-lifecycle-changed');}
       return context.generation!==generation||!model.authorityCurrent(context.session,current)?model.failure('provider-link/auth-lifecycle-changed'):error;
     }
-    function failState(error,context,retry){
+    function failState(error,context,retry,{retainAuthority=false}={}){
       const failure=contextualError(error,context),classified=model.classify(failure);lastRetry=classified.retryable?retry:null;
-      activeAuthority=null;
+      activeAuthority=retainAuthority?context?.session||null:null;
       notify({status:classified.state,operation:context?.operation||'',providerKey:context?.providerKey||'',code:classified.code,retryable:classified.retryable});
       const outgoing=model.failure(classified.code,classified.state);outgoing.cause=failure;throw outgoing;
     }
-    async function linkPopup(providerKey){
-      let context;
+    async function prepareLinkPopup(providerKey){
+      let context={operation:'link',providerKey};
       try{
-        context=await capture('link',providerKey);activeAuthority=context.session;lastRetry=()=>linkPopup(providerKey);
+        notify({status:'connecting',operation:'link',providerKey,code:'',retryable:false});
+        preparedLink=null;activeAuthority=null;lastRetry=null;
+        context=await capture('link',providerKey);activeAuthority=context.session;
+        preparedLink=context;
+        return notify({status:'prepared',operation:'link',providerKey,code:'',retryable:false});
+      }catch(error){preparedLink=null;return failState(error,context,()=>prepareLinkPopup(providerKey));}
+    }
+    function preparedLinkContext(providerKey){
+      const context=preparedLink;
+      if(!context||context.operation!=='link'||context.providerKey!==providerKey)throw model.failure('provider-link/preparation-required');
+      if(clock()-context.preparedAt>PREPARED_LINK_TTL_MS){preparedLink=null;activeAuthority=null;throw model.failure('provider-link/preparation-expired');}
+      requireCurrent(context);return context;
+    }
+    async function completeLinkPopup(providerKey){
+      let context={operation:'link',providerKey};
+      try{
+        context=preparedLinkContext(providerKey);
         notify({status:'connecting',operation:'link',providerKey,code:'',retryable:false});
         const result=await withLease(context,()=>providerAdapter.linkCurrentUser({providerKey,flow:'popup'}));
         await verifyUnchanged(context,result);
-        activeAuthority=null;lastRetry=null;return notify({status:'connected',operation:'link',providerKey,code:result?.status==='already-linked'?'provider-link/already-connected':'',retryable:false});
-      }catch(error){return failState(error,context,()=>linkPopup(providerKey));}
+        preparedLink=null;activeAuthority=null;lastRetry=null;
+        return notify({status:'connected',operation:'link',providerKey,code:result?.status==='already-linked'?'provider-link/already-connected':'',retryable:false});
+      }catch(error){
+        const classified=model.classify(contextualError(error,context));
+        const retryPrepared=!!preparedLink&&['provider-link/popup-blocked','provider-link/canceled','provider-link/network-failed'].includes(classified.code);
+        if(!retryPrepared)preparedLink=null;
+        return failState(error,context,retryPrepared?()=>completeLinkPopup(providerKey):()=>prepareLinkPopup(providerKey),{retainAuthority:retryPrepared});
+      }
     }
     async function beginRedirect(providerKey,{returnRoute='#settings/security'}={}){
       let context;
@@ -147,13 +170,13 @@
       if(!activeAuthority)return false;
       let current;try{current=currentAuthority();}catch{current=null;}
       if(model.authorityCurrent(activeAuthority,current))return false;
-      generation++;continuation.cancel();activeAuthority=null;lastRetry=null;
+      generation++;continuation.cancel();activeAuthority=null;preparedLink=null;lastRetry=null;
       notify({status:'blocked',operation:state.operation,providerKey:state.providerKey,code:'provider-link/auth-lifecycle-changed',retryable:false});return true;
     }
-    function cancel(){generation++;continuation.cancel();activeAuthority=null;lastRetry=null;return notify({status:'canceled',operation:state.operation,providerKey:state.providerKey,code:'provider-link/canceled',retryable:true});}
+    function cancel(){generation++;continuation.cancel();activeAuthority=null;preparedLink=null;lastRetry=null;return notify({status:'canceled',operation:state.operation,providerKey:state.providerKey,code:'provider-link/canceled',retryable:true});}
     function retry(){if(!lastRetry)throw model.failure('provider-link/retry-unavailable');return lastRetry();}
     function subscribe(listener){listeners.add(listener);listener(state);return()=>listeners.delete(listener);}
-    return Object.freeze({snapshot:()=>state,subscribe,linkPopup,beginRedirect,resumeRedirect,reauthenticate,unlink,signIn,resumeSignInRedirect,observeAuth,cancel,retry});
+    return Object.freeze({snapshot:()=>state,subscribe,prepareLinkPopup,completeLinkPopup,beginRedirect,resumeRedirect,reauthenticate,unlink,signIn,resumeSignInRedirect,observeAuth,cancel,retry});
   }
 
   root.accountLinkingController=Object.freeze({createSharedOperationLease,createAccountLinkingController});

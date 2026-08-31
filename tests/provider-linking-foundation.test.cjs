@@ -130,6 +130,11 @@ async function expectCode(promise,expected){
   await assert.rejects(promise,error=>{assert.equal(error.code,expected);return true;});
 }
 
+async function prepareAndComplete(controller,providerKey='google'){
+  await controller.prepareLinkPopup(providerKey);
+  return controller.completeLinkPopup(providerKey);
+}
+
 test('production registry exposes only the connected username and PIN method',()=>{
   const {authProviderRegistry}=loadDomains();
   const registry=authProviderRegistry.createAuthProviderRegistry();
@@ -147,12 +152,12 @@ test('configured development providers are actionable while production remains i
 
 test('username and PIN user links a provider without changing Firebase UID',async()=>{
   const h=createHarness();const uid=h.auth.snapshot().uid;
-  const result=await h.controller.linkPopup('google');
+  const result=await prepareAndComplete(h.controller);
   assert.equal(result.status,'connected');assert.equal(h.auth.snapshot().uid,uid);
 });
 
 test('linked provider appears through Firebase providerData',async()=>{
-  const h=createHarness();await h.controller.linkPopup('google');
+  const h=createHarness();await prepareAndComplete(h.controller);
   const google=h.registry.methods({providerData:h.auth.snapshot().providerData}).find(item=>item.key==='google');
   assert.equal(google.linked,true);assert.equal(google.state,'connected');
 });
@@ -165,33 +170,66 @@ for(const [label,selector]of[
   ['trainer identity',account=>account.trainer]
 ])test(`${label} remains byte-for-byte unchanged after same-UID linking`,async()=>{
   const h=createHarness(),before=clone(selector(h.accounts.get('uid-a')));
-  await h.controller.linkPopup('google');
+  await prepareAndComplete(h.controller);
   assert.deepEqual(selector(h.accounts.get('uid-a')),before);
 });
 
 test('linking an already-linked provider is idempotent',async()=>{
   const h=createHarness({providerOwners:[['google','uid-a']]});
   h.auth.snapshot().providerData.push({providerId:'google.com'});
-  const before=h.auth.snapshot().providerData.length,result=await h.controller.linkPopup('google');
+  const before=h.auth.snapshot().providerData.length,result=await prepareAndComplete(h.controller);
   assert.equal(result.status,'connected');assert.equal(h.auth.snapshot().providerData.length,before);
 });
 
 test('provider credential collision preserves UID A, UID B, and both datasets',async()=>{
   const h=createHarness({providerOwners:[['google','uid-b']]}),a=clone(h.accounts.get('uid-a')),b=clone(h.accounts.get('uid-b'));
-  await expectCode(h.controller.linkPopup('google'),'provider-link/collision');
+  await h.controller.prepareLinkPopup('google');
+  await expectCode(h.controller.completeLinkPopup('google'),'provider-link/collision');
   assert.equal(h.auth.snapshot().uid,'uid-a');assert.deepEqual(h.accounts.get('uid-a'),a);assert.deepEqual(h.accounts.get('uid-b'),b);assert.equal(h.providerOwners.get('google'),'uid-b');
 });
 
 test('popup cancellation is explicit and retryable',async()=>{
   const h=createHarness();h.behavior.linkError='auth/popup-closed-by-user';
-  await expectCode(h.controller.linkPopup('google'),'provider-link/canceled');
+  await h.controller.prepareLinkPopup('google');
+  await expectCode(h.controller.completeLinkPopup('google'),'provider-link/canceled');
   assert.equal(h.controller.snapshot().status,'canceled');assert.equal(h.controller.snapshot().retryable,true);
 });
 
 test('popup blocking is explicit and retryable',async()=>{
   const h=createHarness();h.behavior.linkError='auth/popup-blocked';
-  await expectCode(h.controller.linkPopup('google'),'provider-link/popup-blocked');
+  await h.controller.prepareLinkPopup('google');
+  await expectCode(h.controller.completeLinkPopup('google'),'provider-link/popup-blocked');
   assert.equal(h.controller.snapshot().status,'blocked');assert.equal(h.controller.snapshot().retryable,true);
+});
+
+test('prepared linking invokes the popup adapter synchronously on the second click',async()=>{
+  const h=createHarness();h.behavior.linkDeferred=deferred();
+  await h.controller.prepareLinkPopup('google');
+  assert.equal(h.calls.includes('link:google'),false);
+  const pending=h.controller.completeLinkPopup('google');
+  assert.equal(h.calls.includes('link:google'),true);
+  h.behavior.linkDeferred.resolve();await pending;
+});
+
+test('popup retry reuses a still-current prepared context',async()=>{
+  const h=createHarness();h.behavior.linkError='auth/popup-blocked';
+  await h.controller.prepareLinkPopup('google');
+  await expectCode(h.controller.completeLinkPopup('google'),'provider-link/popup-blocked');
+  h.behavior.linkError='';
+  assert.equal((await h.controller.retry()).status,'connected');
+  assert.equal(h.calls.filter(item=>item==='link:google').length,2);
+});
+
+test('expired preparation fails before the popup adapter is invoked',async()=>{
+  const h=createHarness();await h.controller.prepareLinkPopup('google');h.advance(2*60_000+1);
+  await expectCode(h.controller.completeLinkPopup('google'),'provider-link/preparation-expired');
+  assert.equal(h.calls.includes('link:google'),false);
+});
+
+test('changed Auth lifecycle invalidates preparation before the popup opens',async()=>{
+  const h=createHarness();await h.controller.prepareLinkPopup('google');h.auth.update({lifecycleId:'life-a-replaced'});
+  await expectCode(h.controller.completeLinkPopup('google'),'provider-link/auth-lifecycle-changed');
+  assert.equal(h.calls.includes('link:google'),false);
 });
 
 test('redirect continuation links successfully in the same storage owner',async()=>{
@@ -217,13 +255,13 @@ test('consumed redirect continuation cannot be replayed',async()=>{
 });
 
 test('sign-out while a link is in flight invalidates the operation',async()=>{
-  const h=createHarness();h.behavior.linkDeferred=deferred();const pending=h.controller.linkPopup('google');await waitFor(()=>h.calls.includes('link:google'));
+  const h=createHarness();h.behavior.linkDeferred=deferred();await h.controller.prepareLinkPopup('google');const pending=h.controller.completeLinkPopup('google');await waitFor(()=>h.calls.includes('link:google'));
   h.auth.replace(null);h.behavior.linkDeferred.resolve();
   await expectCode(pending,'provider-link/auth-lifecycle-changed');
 });
 
 test('same UID with a replaced Auth lifecycle invalidates the operation',async()=>{
-  const h=createHarness();h.behavior.linkDeferred=deferred();const pending=h.controller.linkPopup('google');await waitFor(()=>h.calls.includes('link:google'));
+  const h=createHarness();h.behavior.linkDeferred=deferred();await h.controller.prepareLinkPopup('google');const pending=h.controller.completeLinkPopup('google');await waitFor(()=>h.calls.includes('link:google'));
   h.auth.update({lifecycleId:'life-a-replaced'});h.behavior.linkDeferred.resolve();
   await expectCode(pending,'provider-link/auth-lifecycle-changed');
 });
@@ -231,8 +269,9 @@ test('same UID with a replaced Auth lifecycle invalidates the operation',async()
 test('two contexts share a lease and only one link operation reaches the adapter',async()=>{
   const h=createHarness();h.behavior.linkDeferred=deferred();
   const second=h.domains.accountLinkingController.createAccountLinkingController({registry:h.registry,continuation:h.continuation,authSession:h.auth,providerAdapter:h.adapter,accountBoundary:h.accountBoundary,lease:h.lease,clock:()=>h.now});
-  const firstPending=h.controller.linkPopup('google');await waitFor(()=>h.calls.includes('link:google'));
-  await expectCode(second.linkPopup('google'),'provider-link/operation-in-progress');
+  await h.controller.prepareLinkPopup('google');await second.prepareLinkPopup('google');
+  const firstPending=h.controller.completeLinkPopup('google');await waitFor(()=>h.calls.includes('link:google'));
+  await expectCode(second.completeLinkPopup('google'),'provider-link/operation-in-progress');
   h.behavior.linkDeferred.resolve();await firstPending;
   assert.equal(h.calls.filter(item=>item==='link:google').length,1);
 });
@@ -276,17 +315,17 @@ test('separate storage context cannot consume another context continuation',asyn
 });
 
 test('same-UID link preserves healthy listener authority',async()=>{
-  const h=createHarness(),before=clone(h.accounts.get('uid-a').listener);await h.controller.linkPopup('google');
+  const h=createHarness(),before=clone(h.accounts.get('uid-a').listener);await prepareAndComplete(h.controller);
   assert.deepEqual(h.accounts.get('uid-a').listener,before);
 });
 
 test('same-UID link does not rerun migration or change journal ownership and generation',async()=>{
-  const h=createHarness(),before=clone({migration:h.accounts.get('uid-a').migration,journal:h.accounts.get('uid-a').journal});await h.controller.linkPopup('google');
+  const h=createHarness(),before=clone({migration:h.accounts.get('uid-a').migration,journal:h.accounts.get('uid-a').journal});await prepareAndComplete(h.controller);
   assert.deepEqual({migration:h.accounts.get('uid-a').migration,journal:h.accounts.get('uid-a').journal},before);
 });
 
 test('.84 reviewed stale evidence remains reviewed and inactive',async()=>{
-  const h=createHarness();await h.controller.linkPopup('google');
+  const h=createHarness();await prepareAndComplete(h.controller);
   assert.equal(h.accounts.get('uid-a').migration.reviewedEvidenceCount,66);assert.equal(h.accounts.get('uid-a').migration.activeEvidenceCount,0);
 });
 
@@ -340,13 +379,13 @@ test('malformed, wrong-provider, and wrong-operation continuations are rejected'
 });
 
 test('account-boundary mutation during linking fails closed',async()=>{
-  const h=createHarness();h.behavior.linkDeferred=deferred();const pending=h.controller.linkPopup('google');await waitFor(()=>h.calls.includes('link:google'));
+  const h=createHarness();h.behavior.linkDeferred=deferred();await h.controller.prepareLinkPopup('google');const pending=h.controller.completeLinkPopup('google');await waitFor(()=>h.calls.includes('link:google'));
   h.accounts.get('uid-a').trainer.handle='Provider Name';h.behavior.linkDeferred.resolve();
   await expectCode(pending,'provider-link/account-boundary-changed-trainer-identity-fingerprint');
 });
 
 test('exact reviewed recovery evidence cannot change during linking even when counts stay equal',async()=>{
-  const h=createHarness();h.behavior.linkDeferred=deferred();const pending=h.controller.linkPopup('google');await waitFor(()=>h.calls.includes('link:google'));
+  const h=createHarness();h.behavior.linkDeferred=deferred();await h.controller.prepareLinkPopup('google');const pending=h.controller.completeLinkPopup('google');await waitFor(()=>h.calls.includes('link:google'));
   h.accounts.get('uid-a').migration.recoveryEvidence[0].candidateId='rewritten-with-same-count';h.behavior.linkDeferred.resolve();
   await expectCode(pending,'provider-link/account-boundary-changed-recovery-evidence-fingerprint');
 });

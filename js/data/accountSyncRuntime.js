@@ -6,6 +6,7 @@
   const MIGRATION_COMPLETE_META='migration-complete';
   const MIGRATION_RECORD_KEYS=Object.freeze(['schemaVersion','ownerUid','deviceMigrationId','sourceFingerprint','deviceInstallHash','createdAt','completedAt','seedCount','candidateCount','verified','legacyRetained']);
   const META_RECORD_KEYS=Object.freeze(['schemaVersion','ownerUid','initialized','initializedAt','updatedAt','featureVersion']);
+  const RECOVERY_REVIEW_KIND='recovery-review-acceptance';
   const HISTORICAL_RETRY_CODE='account-sync/committed-entity-invalid';
 
   function count(value){const number=Number(value);return Number.isSafeInteger(number)&&number>0?number:0;}
@@ -182,6 +183,39 @@
       });
       requireRunning();return created;
     }
+    function recoveryEvidenceComparable(value){return{schemaVersion:value.schemaVersion,ownerUid:value.ownerUid,candidateId:value.candidateId,reason:value.reason,entityType:value.entityType,entityId:value.entityId,identity:value.identity,values:value.values,source:value.source};}
+    async function recoveryReviewEvidence(candidates){
+      const values=[...candidates].sort((a,b)=>String(a?.candidateId||'').localeCompare(String(b?.candidateId||'')));
+      if(!values.length)return null;
+      const ids=new Set();
+      for(const value of values){
+        if(value?.schemaVersion!==model.SCHEMA_VERSION||value?.ownerUid!==owner||!/^candidate_[a-f0-9]{64}$/.test(String(value?.candidateId||''))||ids.has(value.candidateId)||!model.plainObject(value.identity)||!model.plainObject(value.values))throw Object.assign(new Error('Recovery review evidence is invalid'),{code:'account-sync/recovery-review-evidence-invalid'});
+        ids.add(value.candidateId);
+      }
+      const evidenceFingerprint=await model.sha256Hex(model.canonicalJson([model.SCHEMA_VERSION,'pogo-account-sync-recovery-review',owner,values.map(recoveryEvidenceComparable)]),crypto);
+      return Object.freeze({candidates:Object.freeze(values),record:Object.freeze({schemaVersion:model.SCHEMA_VERSION,kind:RECOVERY_REVIEW_KIND,ownerUid:owner,trainerUsername:name,evidenceFingerprint,candidateCount:values.length,acceptedAt:Number(clock())})});
+    }
+    async function readRecoveryReviewAcceptance(evidence){
+      const result=await controller.runAuthorizedMutation(()=>repository.readRecoveryReviewAcceptance(evidence.record));
+      if(!result?.ok)throw Object.assign(new Error(result?.error?.message||'Recovery review acceptance could not be read'),{code:result?.error?.code||'account-sync/recovery-review-acceptance-unreconciled'});
+      return result.value;
+    }
+    async function persistRecoveryReviewAcceptance(evidence){
+      const result=await controller.runAuthorizedMutation(()=>repository.createRecoveryReviewAcceptance(evidence.record));
+      if(!result?.ok)throw Object.assign(new Error(result?.error?.message||'Recovery review acceptance could not be saved'),{code:result?.error?.code||'account-sync/recovery-review-acceptance-unreconciled'});
+      return result.value;
+    }
+    async function synchronizeRecoveryReviewAcceptance(){
+      requireRunning();
+      const candidates=await journal.listRecoveryCandidates({unresolvedOnly:false}),evidence=await recoveryReviewEvidence(candidates);
+      requireRunning();if(!evidence)return Object.freeze({ok:true,status:'empty',count:0});
+      const unresolved=evidence.candidates.filter(value=>value.resolved!==true),accepted=await readRecoveryReviewAcceptance(evidence);requireRunning();
+      if(!unresolved.length){if(!accepted)await persistRecoveryReviewAcceptance(evidence);return Object.freeze({ok:true,status:accepted?'current':'published',count:evidence.candidates.length});}
+      if(!accepted)return Object.freeze({ok:true,status:'review-required',count:unresolved.length});
+      const resolved=await journal.resolveRecoveryCandidates(unresolved.map(value=>value.candidateId));requireRunning();
+      if(resolved!==unresolved.length)throw Object.assign(new Error('Recovery review acceptance did not match the local candidate set'),{code:'account-sync/recovery-review-changed'});
+      notifyState(await controller.snapshot());return Object.freeze({ok:true,status:'inherited',count:resolved});
+    }
     async function ensureMigration(){
       requireRunning();
       notifyMigration('reading');
@@ -268,7 +302,7 @@
           if(!controller.eligible)return activated;
           const listenerReady=await controller.waitForListenerReady({timeoutMs:listenerReadyTimeoutMs});requireRunning();
           if(!listenerReady?.ok)throw Object.assign(new Error('The live account sync listener did not become ready'),{code:listenerReady?.error?.code||'account-sync/listener-failed'});
-          migrationState='reading';const plan=await ensureMigration();requireRunning();projectionReady=true;
+          migrationState='reading';const plan=await ensureMigration();requireRunning();await synchronizeRecoveryReviewAcceptance();requireRunning();projectionReady=true;
           if(onCanonicalEntities?.(Object.freeze(controller.activeEntities()))===false)throw Object.assign(new Error('Canonical account projection is unresolved'),{code:'account-sync/catalog-projection-unresolved'});
           await controller.publishAcceptedProjection(Object.freeze({kind:'migration-complete',deviceMigrationId:plan.deviceMigrationId}));requireRunning();
           startupError='';startupErrorCategory='';notifyState(await controller.snapshot());return Object.freeze({ok:true,status:'active',plan});
@@ -286,6 +320,8 @@
     }
     async function listRecoveryCandidates(options){requireRunning();return Object.freeze(await journal.listRecoveryCandidates(options));}
     async function completeRecoveryReview(candidateId){
+      requireRunning();const candidates=await journal.listRecoveryCandidates({unresolvedOnly:false}),evidence=await recoveryReviewEvidence(candidates),unresolved=candidates.filter(value=>value.resolved!==true);
+      if(evidence&&unresolved.length===1&&unresolved[0].candidateId===candidateId)await persistRecoveryReviewAcceptance(evidence);
       requireRunning();const resolved=await journal.resolveRecoveryCandidate(candidateId);requireRunning();notifyState(await controller.snapshot());
       return Object.freeze({ok:true,status:resolved?'resolved':'not_found'});
     }
@@ -293,6 +329,11 @@
       requireRunning();
       const before=await controller.snapshot(),ids=Array.isArray(candidateIds)?[...candidateIds]:[];
       if(!projectionReady||!before.active||!before.listenerHealthy||!before.controllerHealthy||before.state!=='review-required'||before.pendingCount||before.blockedCount||before.conflictCount||before.recoveryCandidateCount!==ids.length)return model.failure('account-sync/recovery-review-not-ready','Recovery review requires a healthy exact canonical account snapshot');
+      const evidence=await recoveryReviewEvidence(await journal.listRecoveryCandidates({unresolvedOnly:false}));
+      if(!evidence)return model.failure('account-sync/recovery-review-not-ready','Recovery review evidence is unavailable');
+      const expectedIds=evidence.candidates.filter(value=>value.resolved!==true).map(value=>value.candidateId).sort(),reviewIds=ids.map(value=>String(value||'')).sort();
+      if(new Set(reviewIds).size!==reviewIds.length||reviewIds.some((value,index)=>value!==expectedIds[index]))return model.failure('account-sync/recovery-review-changed','Recovery candidate set changed before review');
+      await persistRecoveryReviewAcceptance(evidence);requireRunning();
       const resolved=await journal.resolveRecoveryCandidates(ids);requireRunning();
       const after=await controller.snapshot();
       if(resolved!==ids.length||after.recoveryCandidateCount!==0||after.state!=='saved')throw Object.assign(new Error('Recovery review did not reach the saved state'),{code:'account-sync/recovery-review-incomplete'});
