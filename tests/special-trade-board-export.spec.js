@@ -11,7 +11,7 @@ async function loadExporter(page){
   await page.goto(`./?board-export=${Date.now()}`,{waitUntil:'domcontentloaded'});
   await page.waitForFunction(()=>typeof window.__pogoEnsureFullApp==='function');
   await page.evaluate(()=>window.__pogoEnsureFullApp('special-board-export-test'));
-  await page.waitForFunction(()=>typeof renderSpecialBoardImage==='function');
+  await page.waitForFunction(()=>typeof renderSpecialBoardImage==='function'&&window.__pogoStartup?.firebaseStartupSettledAt!==null);
 }
 
 test('Special Trade Board PNG is content-sized and ignores retired metadata and unavailable artwork',async({page})=>{

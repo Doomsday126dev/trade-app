@@ -68,7 +68,7 @@ test('export domain owns only content-derived dense geometry',()=>{
   assert.deepEqual(Object.keys(domain).sort(),['buildLayout','columnsFor','metrics','schemaVersion']);
 });
 
-test('canvas renderer uses reviewed sprites with only sparkle and vector gender markers',()=>{
+test('canvas renderer uses reviewed sprites with unambiguous starbursts and aligned vector gender badges',()=>{
   const source=readFileSync(path.join(root,'js','app','application.js'),'utf8');
   const start=source.indexOf('async function renderSpecialBoardImage');
   const end=source.indexOf('// ── READ-ONLY SHARE VIEW',start);
@@ -76,9 +76,12 @@ test('canvas renderer uses reviewed sprites with only sparkle and vector gender 
   assert.match(source,/function ensureSpecialTradeBoardExportDomain\(\)/);
   assert.match(source,/specialTradeBoardExport\.js\?v=\$\{encodeURIComponent\(window\.__POGO_RELEASE_ID\|\|''\)\}/);
   assert.match(renderer,/specialTradeBoardExportDomain\.buildLayout\(drawableBoard\)/);
-  assert.match(renderer,/drawSparkleCluster/);
+  assert.match(renderer,/drawShinySparkles/);
+  assert.match(renderer,/drawStarburst/);
+  assert.doesNotMatch(renderer,/drawDiamond|shadowBlur/);
   assert.match(renderer,/drawGenderMarker/);
   const genderMarker=renderer.slice(renderer.indexOf('const drawGenderMarker'),renderer.indexOf('const drawEntryMarkers'));
+  assert.match(genderMarker,/roundedRect\(ctx,x-7,y-7,14,14,4\)/);
   assert.match(genderMarker,/ctx\.arc/);
   assert.match(genderMarker,/ctx\.moveTo/);
   assert.match(genderMarker,/ctx\.lineTo/);

@@ -10830,32 +10830,42 @@ async function renderSpecialBoardImage(board,username){
     ctx.font='700 9px Space Grotesk, sans-serif';ctx.fillStyle='rgba(255,255,255,.52)';ctx.textAlign='right';
     ctx.fillText(String(count),x+w-10,y+15);ctx.textAlign='left';
   };
-  const drawDiamond=(x,y,r,color)=>{
-    ctx.beginPath();ctx.moveTo(x,y-r);ctx.lineTo(x+r*.58,y);ctx.lineTo(x,y+r);ctx.lineTo(x-r*.58,y);ctx.closePath();
-    ctx.fillStyle=color;ctx.fill();
+  const drawStarburst=(x,y,outerRadius,innerRadius,color)=>{
+    ctx.beginPath();
+    for(let point=0;point<8;point++){
+      const angle=-Math.PI/2+point*Math.PI/4,radius=point%2?innerRadius:outerRadius;
+      const px=x+Math.cos(angle)*radius,py=y+Math.sin(angle)*radius;
+      if(point===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);
+    }
+    ctx.closePath();ctx.fillStyle=color;ctx.fill();
   };
-  const drawSparkleCluster=(x,y)=>{
-    ctx.save();ctx.shadowColor='rgba(103,232,249,.7)';ctx.shadowBlur=2;
-    drawDiamond(x,y,4,'#ecfeff');drawDiamond(x-5,y+4,1.8,'#67e8f9');drawDiamond(x+4,y+5,1.4,'#a5f3fc');
+  const drawShinySparkles=(x,y)=>{
+    ctx.save();
+    drawStarburst(x,y,4.8,1.15,'#f8fafc');
+    drawStarburst(x-5.2,y+4.4,2.4,.65,'#67e8f9');
     ctx.restore();
   };
   const drawGenderMarker=(gender,x,y)=>{
-    const female=gender==='f';
-    ctx.save();ctx.strokeStyle=female?'#f472b6':'#60a5fa';ctx.lineWidth=1.6;ctx.lineCap='round';ctx.lineJoin='round';
-    ctx.beginPath();ctx.arc(x,y-2.5,3.2,0,Math.PI*2);ctx.stroke();
+    const female=gender==='f',color=female?'#f472b6':'#60a5fa';
+    ctx.save();
+    roundedRect(ctx,x-7,y-7,14,14,4);ctx.fillStyle='rgba(15,20,25,.94)';ctx.fill();
+    ctx.strokeStyle=color;ctx.lineWidth=.8;ctx.stroke();
+    ctx.strokeStyle=color;ctx.lineWidth=1.3;ctx.lineCap='round';ctx.lineJoin='round';
     ctx.beginPath();
     if(female){
-      ctx.moveTo(x,y+.8);ctx.lineTo(x,y+7);
-      ctx.moveTo(x-2.6,y+4.2);ctx.lineTo(x+2.6,y+4.2);
+      ctx.arc(x,y-2.1,2.35,0,Math.PI*2);
+      ctx.moveTo(x,y+.25);ctx.lineTo(x,y+4.8);
+      ctx.moveTo(x-1.9,y+3.1);ctx.lineTo(x+1.9,y+3.1);
     }else{
-      ctx.moveTo(x+2.2,y-4.7);ctx.lineTo(x+6.8,y-9.3);
-      ctx.moveTo(x+3.4,y-9.3);ctx.lineTo(x+6.8,y-9.3);ctx.lineTo(x+6.8,y-5.9);
+      ctx.arc(x-1.35,y+1.35,2.35,0,Math.PI*2);
+      ctx.moveTo(x+.35,y-.35);ctx.lineTo(x+4.35,y-4.35);
+      ctx.moveTo(x+1.9,y-4.35);ctx.lineTo(x+4.35,y-4.35);ctx.lineTo(x+4.35,y-1.9);
     }
     ctx.stroke();
     ctx.restore();
   };
   const drawEntryMarkers=(entry,x,y,w,gender)=>{
-    if(entry.shiny)drawSparkleCluster(x+w-8,y+7);
+    if(entry.shiny)drawShinySparkles(x+w-8,y+7);
     if(gender==='f'||gender==='m')drawGenderMarker(gender,x+w/2,y+61);
   };
   const drawGridSection=(entries,xBase,startY)=>{
