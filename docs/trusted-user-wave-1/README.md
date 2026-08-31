@@ -2,7 +2,7 @@
 
 ## Cohort
 
-Invite 3–5 trusted Pokémon GO traders. Test accepted production release `2026-08-31.85`; do not use a preview branch. Each tester should use their own disposable test entries and avoid deleting anything they care about.
+Invite 3–5 trusted Pokémon GO traders. Test accepted production release `2026-08-31.86`; do not use a preview branch. Each tester should use their own disposable test entries and avoid deleting anything they care about.
 
 ## What Testers Receive
 

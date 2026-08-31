@@ -556,7 +556,7 @@ test.describe('audit cross-browser contracts',()=>{
       accountSyncRecoveryState=Object.freeze({status:'idle',attempt:0,code:'account-sync/none'});_syncStatusCurrent='online';refreshSyncUi();
       return{diagnostic:document.getElementById('trainer-sync-diagnostic').textContent,diagnosticHidden:document.getElementById('trainer-sync-diagnostic').hidden,recoveryHidden:document.getElementById('trainer-sync-recovery').hidden,recoveryLabel:document.getElementById('trainer-sync-recovery-label').textContent};
     });
-    expect(initial.diagnosticHidden).toBe(false);expect(initial.recoveryHidden).toBe(false);expect(initial.recoveryLabel).toBe('Restart sync');expect(initial.diagnostic).toContain('account-sync/listener-failed');expect(initial.diagnostic).toContain('2026-08-31.85');expect(initial.diagnostic).not.toContain('DiagnosticOwner');expect(initial.diagnostic).not.toContain('uid-sync-diagnostic');
+    expect(initial.diagnosticHidden).toBe(false);expect(initial.recoveryHidden).toBe(false);expect(initial.recoveryLabel).toBe('Restart sync');expect(initial.diagnostic).toContain('account-sync/listener-failed');expect(initial.diagnostic).toContain('2026-08-31.86');expect(initial.diagnostic).not.toContain('DiagnosticOwner');expect(initial.diagnostic).not.toContain('uid-sync-diagnostic');
     const pill=page.locator('#sync-pill');await pill.focus();await expect(pill).toBeFocused();
     await page.evaluate(()=>{window.__syncActivationCount=0;openSyncDetail=()=>{window.__syncActivationCount++;};});
     await page.keyboard.press('Enter');await page.keyboard.press('Space');expect(await page.evaluate(()=>window.__syncActivationCount)).toBe(2);

@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="assets/tradeloop-icon-180.png">
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 <script>
-window.__POGO_RELEASE_ID='2026-08-31.85';
+window.__POGO_RELEASE_ID='2026-08-31.86';
 window.__pogoStartup=window.__pogoStartup||{documentStartAt:performance.now(),preAuthMarkupReady:null,preAuthPaintOpportunity:null,authSdkStartedAt:null,authStateKnownAt:null,loginShellRevealedAt:null,shellInteractiveAt:null,featureLoadStartedAt:null,featureScriptsReadyAt:null,protectedRequestedAt:null,appCheckStartedAt:null,appCheckReadyAt:null,protectedReadyAt:null,firebaseStartupSettledAt:null,catalogsReadyAt:null,signedInReadyAt:null};
 window.__POGO_FIREBASE_CONFIG=Object.freeze({
   apiKey:'AIzaSyCazZNLj9_lEb1vUNUlrMe9hodqY_l34VU',
@@ -32,6 +32,11 @@ function parsePogoPublicShareRequest(){
   return Object.freeze({username:usernameValid?username:'',type:typeValid?type:'wishlist',valid:usernameValid&&typeValid});
 }
 window.__pogoPublicShareRequest=parsePogoPublicShareRequest();
+function parsePogoPrivacyRequest(){
+  var params=new URLSearchParams(location.search);
+  return params.get('legal')==='privacy';
+}
+window.__pogoPrivacyRequest=parsePogoPrivacyRequest();
 window.__pogoEarlyAuth={sdkPromise:null,app:null,auth:null,appMod:null,authMod:null,user:null,stateKnown:false,error:null};
 function startPogoEarlyAuth(){
   var state=window.__pogoEarlyAuth;
@@ -58,7 +63,7 @@ function startPogoEarlyAuth(){
   });
   return state.sdkPromise;
 }
-if(!window.__pogoPublicShareRequest){
+if(!window.__pogoPublicShareRequest&&!window.__pogoPrivacyRequest){
   startPogoEarlyAuth().catch(function(){/* The signed-out shell reports the safe error state after markup is available. */});
 }
 if('serviceWorker'in navigator&&location.protocol!=='file:'){
@@ -68,7 +73,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
   });
 }
 </script>
-<link rel="stylesheet" href="css/app.css?v=2026-08-31.85">
+<link rel="stylesheet" href="css/app.css?v=2026-08-31.86">
 </head>
 <body>
 <svg aria-hidden="true" width="0" height="0" style="position:absolute;overflow:hidden">
@@ -103,6 +108,44 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
 
 <a class="skip-link" href="#main-content" data-i18n="common.skipToContent">Skip to main content</a>
 <main id="main-content" tabindex="-1">
+
+<article id="privacy-pg" class="privacy-page ui-container ui-container-standard" lang="en" aria-labelledby="privacy-title" hidden>
+  <header class="privacy-page-header">
+    <a class="privacy-brand" href="./" aria-label="Return to PoGo Trades"><img class="brand-mark lg" src="assets/tradeloop-icon.svg" alt="" aria-hidden="true"><span>PoGo Trades</span></a>
+    <a class="btn btn-secondary" href="./">Back to app</a>
+  </header>
+  <div class="privacy-page-intro">
+    <p class="privacy-eyebrow">Privacy</p>
+    <h1 id="privacy-title">Privacy notice</h1>
+    <p class="privacy-updated">Last updated August 31, 2026</p>
+    <p>PoGo Trades is an unofficial community tool for managing and sharing Pokemon GO trade lists. This notice explains the information the app uses and the choices available to you.</p>
+  </div>
+  <section aria-labelledby="privacy-information">
+    <h2 id="privacy-information">Information used by the app</h2>
+    <p>Account operation may use a Firebase account identifier, authentication methods, trainer handle, friend code, avatar choice, private trade lists, Favorites, tags, Special Trade Board entries, and synchronization or recovery metadata. Device storage keeps the local copy and retry journal needed for offline use and safe cross-device synchronization.</p>
+  </section>
+  <section aria-labelledby="privacy-google">
+    <h2 id="privacy-google">Google sign-in and account linking</h2>
+    <p>When you choose Google, Firebase Authentication receives the Google identity needed to authenticate you and may make basic Google profile fields available to the authentication session. PoGo Trades links Google only to the exact Firebase account you are already using. It does not use an email address, display name, photo, or name similarity to select or merge trainer accounts, and those Google profile fields do not overwrite your trainer identity.</p>
+    <p>PoGo Trades requests no additional Google API scopes. Firebase Authentication manages its own signed-in session data; PoGo Trades does not separately copy, log, or store Google OAuth access or refresh tokens in trade-list data, localStorage, or the app's IndexedDB records.</p>
+  </section>
+  <section aria-labelledby="privacy-storage">
+    <h2 id="privacy-storage">Storage and sharing</h2>
+    <p>Private account data is stored in Firebase and on your device so the app can work offline and synchronize safely. A public trade list contains only the trainer and list information you deliberately publish. PoGo Trades does not sell personal information.</p>
+  </section>
+  <section aria-labelledby="privacy-services">
+    <h2 id="privacy-services">Service providers</h2>
+    <p>Google Firebase provides authentication and data synchronization, GitHub Pages delivers the website, and Cloudflare Web Analytics supplies aggregate site-usage measurements. These services may receive standard request, browser, and page-URL metadata. PoGo Trades does not send private list contents or typed search queries as custom analytics events.</p>
+  </section>
+  <section aria-labelledby="privacy-choices">
+    <h2 id="privacy-choices">Your choices</h2>
+    <p>You can keep using Username and PIN, disconnect Google when another usable sign-in method remains, control what you publish, clear local site data through your browser, or request correction or deletion of account data. Recovery evidence may be retained long enough to protect against data loss and resolve synchronization failures.</p>
+  </section>
+  <section aria-labelledby="privacy-contact">
+    <h2 id="privacy-contact">Contact</h2>
+    <p>For privacy questions or an account-data request, email <a href="mailto:amitya126@gmail.com">amitya126@gmail.com</a>.</p>
+  </section>
+</article>
 
 <!-- CONFIG -->
 <div id="config-pg" style="display:none">
@@ -892,94 +935,94 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
   </dialog>
  </main>
 
-<footer class="app-legal-footer" id="app-legal-footer"><button type="button" onclick="openLegalAcknowledgements(this)" data-i18n="legal.footer">Unofficial fan-made tool · Legal &amp; acknowledgements</button></footer>
+<footer class="app-legal-footer" id="app-legal-footer"><button type="button" onclick="openLegalAcknowledgements(this)" data-i18n="legal.footer">Unofficial fan-made tool · Legal &amp; acknowledgements</button><span aria-hidden="true">·</span><a href="?legal=privacy">Privacy</a></footer>
 
 <!-- PTR Indicator -->
 <div class="ptr-indicator" id="ptr-indicator" aria-hidden="true">↓</div>
 
 <template id="pogo-feature-assets">
-<script src="data.js?v=2026-08-31.85"></script>
-<script src="js/domain/productLimits.js?v=2026-08-31.85"></script>
-<script src="js/domain/priorities.js?v=2026-08-31.85"></script>
-<script src="js/ui/badges.js?v=2026-08-31.85"></script>
-<script src="js/domain/username.js?v=2026-08-31.85"></script>
-<script src="js/domain/requestAccess.js?v=2026-08-31.85"></script>
-<script src="js/domain/backgroundCatalog.js?v=2026-08-31.85"></script>
-<script src="js/domain/backgroundVisual.js?v=2026-08-31.85"></script>
-<script src="js/domain/pokemonPrimaryTypes.js?v=2026-08-31.85"></script>
-<script src="js/domain/priorityValues.js?v=2026-08-31.85"></script>
-<script src="js/domain/scheduleDates.js?v=2026-08-31.85"></script>
-<script src="js/domain/pokemonSearchTerms.js?v=2026-08-31.85"></script>
-<script src="js/domain/pokemonEntryRules.js?v=2026-08-31.85"></script>
-<script src="js/domain/pokemonGoSearchSyntax.js?v=2026-08-31.85"></script>
-<script src="js/domain/searchStrings.js?v=2026-08-31.85"></script>
-<script src="js/ui/stringHtml.js?v=2026-08-31.85"></script>
-<script src="js/domain/scheduleEventRules.js?v=2026-08-31.85"></script>
-<script src="js/domain/scheduleTradeRules.js?v=2026-08-31.85"></script>
-<script src="js/domain/pokemonKeys.js?v=2026-08-31.85"></script>
-<script src="js/domain/publicPokemonDex.js?v=2026-08-31.85"></script>
-<script src="js/domain/spriteSlugs.js?v=2026-08-31.85"></script>
-<script src="js/domain/costumeSpriteCatalog.js?v=2026-08-31.85"></script>
-<script src="js/domain/fuzzyText.js?v=2026-08-31.85"></script>
-<script src="js/domain/autocompleteText.js?v=2026-08-31.85"></script>
-<script src="js/domain/autocompleteMatching.js?v=2026-08-31.85"></script>
-<script src="js/domain/autocompleteRanking.js?v=2026-08-31.85"></script>
-<script src="js/domain/relativeTime.js?v=2026-08-31.85"></script>
-<script src="js/domain/clientRelease.js?v=2026-08-31.85"></script>
-<script src="js/domain/favoriteCardInteractions.js?v=2026-08-31.85"></script>
-<script src="js/domain/favoritePokemonBrowse.js?v=2026-08-31.85"></script>
-<script src="js/domain/trainerDiscovery.js?v=2026-08-31.85"></script>
-<script src="js/domain/tradeListComparison.js?v=2026-08-31.85"></script>
-<script src="js/domain/eventPresentation.js?v=2026-08-31.85"></script>
-<script src="js/domain/publicSharePublication.js?v=2026-08-31.85"></script>
-<script src="js/domain/accountSyncModel.js?v=2026-08-31.85"></script>
-<script src="js/domain/accountSyncMerge.js?v=2026-08-31.85"></script>
-<script src="js/domain/accountSyncMigration.js?v=2026-08-31.85"></script>
-<script src="js/domain/accountSyncProduct.js?v=2026-08-31.85"></script>
-<script src="js/domain/trainerPreferences.js?v=2026-08-31.85"></script>
-<script src="js/domain/trainerPreferenceSync.js?v=2026-08-31.85"></script>
-<script src="js/domain/authenticationReadiness.js?v=2026-08-31.85"></script>
-<script src="js/domain/authProviderRegistry.js?v=2026-08-31.85" data-pogo-provider-development></script>
-<script src="js/domain/providerContinuationState.js?v=2026-08-31.85" data-pogo-provider-development></script>
-<script src="js/domain/accountLinkingModel.js?v=2026-08-31.85" data-pogo-provider-development></script>
-<script src="js/domain/accountLinkingController.js?v=2026-08-31.85" data-pogo-provider-development></script>
-<script src="js/domain/loginDirectory.js?v=2026-08-31.85"></script>
-<script src="js/utils/textSafety.js?v=2026-08-31.85"></script>
-<script src="js/ui/stringPanels.js?v=2026-08-31.85"></script>
-<script src="js/ui/emptyState.js?v=2026-08-31.85"></script>
-<script src="js/i18n/locales/en.js?v=2026-08-31.85"></script>
-<script src="js/i18n/locales/ja.js?v=2026-08-31.85"></script>
-<script src="js/i18n/locales/es.js?v=2026-08-31.85"></script>
-<script src="js/i18n/locales/de.js?v=2026-08-31.85"></script>
-<script src="js/i18n/pokemonNames/catalog.js?v=2026-08-31.85"></script>
-<script src="js/i18n/pokemonNames/variants.js?v=2026-08-31.85"></script>
-<script src="js/i18n/pokemonNames/structuredForms.js?v=2026-08-31.85"></script>
-<script src="js/i18n/pokemonNames/core.js?v=2026-08-31.85"></script>
-<script src="js/i18n/eventLabels/currentTitles.js?v=2026-08-31.85"></script>
-<script src="js/i18n/eventLabels/core.js?v=2026-08-31.85"></script>
-<script src="js/i18n/core.js?v=2026-08-31.85"></script>
-<script src="js/services/firebaseClient.js?v=2026-08-31.85"></script>
-<script src="js/services/firebaseAppCheck.js?v=2026-08-31.85"></script>
-<script src="js/services/e1ClientFoundationCanary.js?v=2026-08-31.85"></script>
-<script src="js/data/subscriptionManager.js?v=2026-08-31.85"></script>
-<script src="js/data/listenerLifecycle.js?v=2026-08-31.85"></script>
-<script src="js/data/sessionCacheBoundary.js?v=2026-08-31.85"></script>
-<script src="js/data/firebaseReadRegistry.js?v=2026-08-31.85"></script>
-<script src="js/data/currentUserRepository.js?v=2026-08-31.85"></script>
-<script src="js/data/ownedDataCoordinator.js?v=2026-08-31.85"></script>
-<script src="js/data/publicShareRepository.js?v=2026-08-31.85"></script>
-<script src="js/data/trainerHistoryStore.js?v=2026-08-31.85"></script>
-<script src="js/data/favoriteShareSessionCache.js?v=2026-08-31.85"></script>
-<script src="js/data/trainerPreferencesRepository.js?v=2026-08-31.85"></script>
-<script src="js/data/trainerPreferenceSyncQueue.js?v=2026-08-31.85"></script>
-<script src="js/data/accountSyncJournal.js?v=2026-08-31.85"></script>
-<script src="js/data/accountSyncRepository.js?v=2026-08-31.85"></script>
-<script src="js/data/accountSyncController.js?v=2026-08-31.85"></script>
-<script src="js/data/accountSyncRuntime.js?v=2026-08-31.85"></script>
-<script src="js/domain/cacheAdapters.js?v=2026-08-31.85"></script>
-<script src="js/ui/trainerTagPanel.js?v=2026-08-31.85"></script>
-<script src="js/app/publicShareApp.js?v=2026-08-31.85"></script>
-<script src="js/app/application.js?v=2026-08-31.85"></script>
+<script src="data.js?v=2026-08-31.86"></script>
+<script src="js/domain/productLimits.js?v=2026-08-31.86"></script>
+<script src="js/domain/priorities.js?v=2026-08-31.86"></script>
+<script src="js/ui/badges.js?v=2026-08-31.86"></script>
+<script src="js/domain/username.js?v=2026-08-31.86"></script>
+<script src="js/domain/requestAccess.js?v=2026-08-31.86"></script>
+<script src="js/domain/backgroundCatalog.js?v=2026-08-31.86"></script>
+<script src="js/domain/backgroundVisual.js?v=2026-08-31.86"></script>
+<script src="js/domain/pokemonPrimaryTypes.js?v=2026-08-31.86"></script>
+<script src="js/domain/priorityValues.js?v=2026-08-31.86"></script>
+<script src="js/domain/scheduleDates.js?v=2026-08-31.86"></script>
+<script src="js/domain/pokemonSearchTerms.js?v=2026-08-31.86"></script>
+<script src="js/domain/pokemonEntryRules.js?v=2026-08-31.86"></script>
+<script src="js/domain/pokemonGoSearchSyntax.js?v=2026-08-31.86"></script>
+<script src="js/domain/searchStrings.js?v=2026-08-31.86"></script>
+<script src="js/ui/stringHtml.js?v=2026-08-31.86"></script>
+<script src="js/domain/scheduleEventRules.js?v=2026-08-31.86"></script>
+<script src="js/domain/scheduleTradeRules.js?v=2026-08-31.86"></script>
+<script src="js/domain/pokemonKeys.js?v=2026-08-31.86"></script>
+<script src="js/domain/publicPokemonDex.js?v=2026-08-31.86"></script>
+<script src="js/domain/spriteSlugs.js?v=2026-08-31.86"></script>
+<script src="js/domain/costumeSpriteCatalog.js?v=2026-08-31.86"></script>
+<script src="js/domain/fuzzyText.js?v=2026-08-31.86"></script>
+<script src="js/domain/autocompleteText.js?v=2026-08-31.86"></script>
+<script src="js/domain/autocompleteMatching.js?v=2026-08-31.86"></script>
+<script src="js/domain/autocompleteRanking.js?v=2026-08-31.86"></script>
+<script src="js/domain/relativeTime.js?v=2026-08-31.86"></script>
+<script src="js/domain/clientRelease.js?v=2026-08-31.86"></script>
+<script src="js/domain/favoriteCardInteractions.js?v=2026-08-31.86"></script>
+<script src="js/domain/favoritePokemonBrowse.js?v=2026-08-31.86"></script>
+<script src="js/domain/trainerDiscovery.js?v=2026-08-31.86"></script>
+<script src="js/domain/tradeListComparison.js?v=2026-08-31.86"></script>
+<script src="js/domain/eventPresentation.js?v=2026-08-31.86"></script>
+<script src="js/domain/publicSharePublication.js?v=2026-08-31.86"></script>
+<script src="js/domain/accountSyncModel.js?v=2026-08-31.86"></script>
+<script src="js/domain/accountSyncMerge.js?v=2026-08-31.86"></script>
+<script src="js/domain/accountSyncMigration.js?v=2026-08-31.86"></script>
+<script src="js/domain/accountSyncProduct.js?v=2026-08-31.86"></script>
+<script src="js/domain/trainerPreferences.js?v=2026-08-31.86"></script>
+<script src="js/domain/trainerPreferenceSync.js?v=2026-08-31.86"></script>
+<script src="js/domain/authenticationReadiness.js?v=2026-08-31.86"></script>
+<script src="js/domain/authProviderRegistry.js?v=2026-08-31.86" data-pogo-provider-development></script>
+<script src="js/domain/providerContinuationState.js?v=2026-08-31.86" data-pogo-provider-development></script>
+<script src="js/domain/accountLinkingModel.js?v=2026-08-31.86" data-pogo-provider-development></script>
+<script src="js/domain/accountLinkingController.js?v=2026-08-31.86" data-pogo-provider-development></script>
+<script src="js/domain/loginDirectory.js?v=2026-08-31.86"></script>
+<script src="js/utils/textSafety.js?v=2026-08-31.86"></script>
+<script src="js/ui/stringPanels.js?v=2026-08-31.86"></script>
+<script src="js/ui/emptyState.js?v=2026-08-31.86"></script>
+<script src="js/i18n/locales/en.js?v=2026-08-31.86"></script>
+<script src="js/i18n/locales/ja.js?v=2026-08-31.86"></script>
+<script src="js/i18n/locales/es.js?v=2026-08-31.86"></script>
+<script src="js/i18n/locales/de.js?v=2026-08-31.86"></script>
+<script src="js/i18n/pokemonNames/catalog.js?v=2026-08-31.86"></script>
+<script src="js/i18n/pokemonNames/variants.js?v=2026-08-31.86"></script>
+<script src="js/i18n/pokemonNames/structuredForms.js?v=2026-08-31.86"></script>
+<script src="js/i18n/pokemonNames/core.js?v=2026-08-31.86"></script>
+<script src="js/i18n/eventLabels/currentTitles.js?v=2026-08-31.86"></script>
+<script src="js/i18n/eventLabels/core.js?v=2026-08-31.86"></script>
+<script src="js/i18n/core.js?v=2026-08-31.86"></script>
+<script src="js/services/firebaseClient.js?v=2026-08-31.86"></script>
+<script src="js/services/firebaseAppCheck.js?v=2026-08-31.86"></script>
+<script src="js/services/e1ClientFoundationCanary.js?v=2026-08-31.86"></script>
+<script src="js/data/subscriptionManager.js?v=2026-08-31.86"></script>
+<script src="js/data/listenerLifecycle.js?v=2026-08-31.86"></script>
+<script src="js/data/sessionCacheBoundary.js?v=2026-08-31.86"></script>
+<script src="js/data/firebaseReadRegistry.js?v=2026-08-31.86"></script>
+<script src="js/data/currentUserRepository.js?v=2026-08-31.86"></script>
+<script src="js/data/ownedDataCoordinator.js?v=2026-08-31.86"></script>
+<script src="js/data/publicShareRepository.js?v=2026-08-31.86"></script>
+<script src="js/data/trainerHistoryStore.js?v=2026-08-31.86"></script>
+<script src="js/data/favoriteShareSessionCache.js?v=2026-08-31.86"></script>
+<script src="js/data/trainerPreferencesRepository.js?v=2026-08-31.86"></script>
+<script src="js/data/trainerPreferenceSyncQueue.js?v=2026-08-31.86"></script>
+<script src="js/data/accountSyncJournal.js?v=2026-08-31.86"></script>
+<script src="js/data/accountSyncRepository.js?v=2026-08-31.86"></script>
+<script src="js/data/accountSyncController.js?v=2026-08-31.86"></script>
+<script src="js/data/accountSyncRuntime.js?v=2026-08-31.86"></script>
+<script src="js/domain/cacheAdapters.js?v=2026-08-31.86"></script>
+<script src="js/ui/trainerTagPanel.js?v=2026-08-31.86"></script>
+<script src="js/app/publicShareApp.js?v=2026-08-31.86"></script>
+<script src="js/app/application.js?v=2026-08-31.86"></script>
 
 </template>
 <script>
@@ -1149,6 +1192,19 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
     }).catch(error=>{featureLoadPromise=null;shellFailure(error);throw error;});
     return featureLoadPromise;
   }
+  function revealPrivacyNotice(){
+    const privacy=document.getElementById('privacy-pg');
+    document.getElementById('login-pg')?.setAttribute('hidden','');
+    document.getElementById('config-pg')?.setAttribute('hidden','');
+    const app=document.getElementById('app');
+    if(app)app.style.display='none';
+    if(privacy)privacy.hidden=false;
+    document.title='Privacy notice - PoGo Trades';
+    window.__pogoShellReady=true;
+    window.__pogoStartup.shellInteractiveAt=performance.now();
+    clearTimeout(window.__pogoBootWatch);
+    try{performance.mark('pogo:privacy-ready')}catch{}
+  }
   function loadThenCall(name,args){
     return ensureFullApp(name).then(()=>{
       const action=window[name];
@@ -1183,6 +1239,11 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
     },
     __pogoHandleEarlyAuthFailure:shellFailure
   });
+  if(window.__pogoPrivacyRequest){
+    if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',revealPrivacyNotice,{once:true});
+    else revealPrivacyNotice();
+    return;
+  }
   if(window.__pogoPublicShareRequest){
     ensurePublicShareApp().catch(error=>{
       console.warn('Public share initialization failed',String(error?.code||'public-share/unavailable'));
