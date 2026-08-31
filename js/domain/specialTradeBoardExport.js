@@ -2,15 +2,15 @@
   const root=global.PogoDomain=global.PogoDomain||{};
   const METRICS=Object.freeze({
     width:720,
-    padding:16,
-    headerHeight:54,
-    footerHeight:18,
-    sectionHeaderHeight:30,
-    sectionHeaderGap:7,
-    sectionGap:14,
-    cardHeight:94,
-    cardGap:8,
-    bottomPadding:14
+    padding:14,
+    headerHeight:50,
+    footerHeight:16,
+    sectionHeaderHeight:22,
+    sectionHeaderGap:5,
+    sectionGap:8,
+    cardHeight:70,
+    cardGap:4,
+    bottomPadding:10
   });
 
   function finiteCount(value){
@@ -19,7 +19,8 @@
   }
 
   function columnsFor(lfCount,ftCount){
-    return Math.max(finiteCount(lfCount),finiteCount(ftCount))<=3?3:4;
+    finiteCount(lfCount);finiteCount(ftCount);
+    return 9;
   }
 
   function laneEntries(board,lane){
@@ -76,10 +77,10 @@
   function badgeTokens(entry,{backgroundLabel='',gender=''}={}){
     const tokens=[];
     if(backgroundLabel)tokens.push(Object.freeze({kind:'background',label:`${backgroundLabel} · BG`}));
-    if(entry?.shiny)tokens.push(Object.freeze({kind:'shiny',label:'Shiny'}));
-    if(gender==='f'||gender==='m')tokens.push(Object.freeze({kind:'gender',label:gender==='f'?'♀':'♂'}));
-    if(entry?.lucky)tokens.push(Object.freeze({kind:'lucky',label:'Lucky'}));
-    if(entry?.mirror)tokens.push(Object.freeze({kind:'mirror',label:'Mirror'}));
+    if(entry?.shiny)tokens.push(Object.freeze({kind:'shiny',label:'✦',symbol:true}));
+    if(gender==='f'||gender==='m')tokens.push(Object.freeze({kind:'gender',label:gender==='f'?'♀':'♂',symbol:true}));
+    if(entry?.lucky)tokens.push(Object.freeze({kind:'lucky',label:'⚡',symbol:true}));
+    if(entry?.mirror)tokens.push(Object.freeze({kind:'mirror',label:'↔',symbol:true}));
     if(Number(entry?.qty)>1)tokens.push(Object.freeze({kind:'quantity',label:`×${Math.floor(Number(entry.qty))}`}));
     const note=String(entry?.note||'').replace(/\s+/g,' ').trim();
     const semanticNote=(entry?.shiny&&/^shiny$/i.test(note))
@@ -98,7 +99,17 @@
     return clipped?`${clipped}…`:'…';
   }
 
-  function layoutBadgeRows(tokens,{x=0,y=0,width,rowHeight=17,badgeHeight=14,gap=4,maxRows=2,measure}={}){
+  function truncateTokenLabel(token,maxWidth,measure){
+    const source=String(token?.label||'').replace(/\s+/g,' ').trim();
+    const suffix=token?.kind==='background'&&source.endsWith(' · BG')?' · BG':'';
+    if(!suffix)return truncateLabel(source,maxWidth,measure);
+    if(measure(source)<=maxWidth)return source;
+    let core=source.slice(0,-suffix.length).trimEnd();
+    while(core.length>1&&measure(`${core}…${suffix}`)>maxWidth)core=core.slice(0,-1).trimEnd();
+    return core?`${core}…${suffix}`:`BG`;
+  }
+
+  function layoutBadgeRows(tokens,{x=0,y=0,width,rowHeight=15,badgeHeight=13,gap=3,maxRows=1,measure}={}){
     const safeTokens=Array.isArray(tokens)?tokens:[];
     const measureText=typeof measure==='function'?measure:value=>String(value||'').length*5;
     const left=Number(x)||0,top=Number(y)||0,safeWidth=Math.max(0,Number(width)||0),right=left+safeWidth;
@@ -106,18 +117,22 @@
     let row=0,cursor=left,hidden=0;
     for(let index=0;index<safeTokens.length;index++){
       const token=safeTokens[index]||{};
-      const maxTokenWidth=Math.min(safeWidth,token.kind==='background'?96:72);
-      let desired=Math.min(maxTokenWidth,measureText(String(token.label||''))+12);
+      const symbol=token.symbol===true;
+      const maxByKind=token.kind==='background'?70:token.kind==='note'?70:token.kind==='quantity'?24:token.kind==='overflow'?24:symbol?18:54;
+      const maxTokenWidth=Math.min(safeWidth,maxByKind);
+      const horizontalPadding=symbol?4:10;
+      let desired=Math.min(maxTokenWidth,measureText(String(token.label||''))+horizontalPadding);
       if(cursor+desired>right&&row+1<maxRows){row++;cursor=left;}
       const available=Math.min(maxTokenWidth,right-cursor);
-      if(available<22){hidden=safeTokens.length-index;break;}
-      const label=truncateLabel(token.label,Math.max(1,available-12),measureText);
+      const minimumWidth=symbol?8:token.kind==='quantity'?18:22;
+      if(available<minimumWidth){hidden=safeTokens.length-index;break;}
+      const label=truncateTokenLabel(token,Math.max(1,available-horizontalPadding),measureText);
       const placement=Object.freeze({
         token,
         label,
         x:cursor,
         y:top+row*rowHeight,
-        width:Math.min(available,measureText(label)+12),
+        width:Math.min(available,measureText(label)+horizontalPadding),
         height:badgeHeight,
         row
       });

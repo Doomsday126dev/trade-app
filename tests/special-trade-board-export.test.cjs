@@ -50,14 +50,14 @@ test('layout is content-sized for 1/1, 9/1, dense, and single-lane boards',()=>{
   for(const fixture of fixtures)assertBounded(domain.buildLayout(fixture));
 
   const compact=domain.buildLayout(fixtures[0]);
-  assert.equal(compact.columns,3);
+  assert.equal(compact.columns,9);
   assert.equal(compact.entryCount,2);
   assert.deepEqual(Array.from(compact.sections,section=>section.rows),[1,1]);
 
   const nineOne=domain.buildLayout(fixtures[1]);
-  assert.equal(nineOne.columns,4);
+  assert.equal(nineOne.columns,9);
   assert.equal(nineOne.entryCount,10);
-  assert.deepEqual(Array.from(nineOne.sections,section=>section.rows),[3,1]);
+  assert.deepEqual(Array.from(nineOne.sections,section=>section.rows),[1,1]);
   assert.equal(nineOne.sections[1].cards.length,1);
   assert.equal(nineOne.sections[1].bottom,nineOne.sections[1].cards[0].y+nineOne.cardHeight);
 });
@@ -66,33 +66,46 @@ test('qualifier tokens cover required Board combinations without inventing artwo
   const domain=loadDomain();
   const tokens=domain.badgeTokens({shiny:true,lucky:true,mirror:true,qty:3,note:'Needs room'}, {backgroundLabel:'Chicago 2026',gender:'f'});
   assert.deepEqual(Array.from(tokens,token=>[token.kind,token.label]),[
-    ['background','Chicago 2026 · BG'],['shiny','Shiny'],['gender','♀'],['lucky','Lucky'],['mirror','Mirror'],['quantity','×3'],['note','Needs room']
+    ['background','Chicago 2026 · BG'],['shiny','✦'],['gender','♀'],['lucky','⚡'],['mirror','↔'],['quantity','×3'],['note','Needs room']
   ]);
   assert.deepEqual(Array.from(domain.badgeTokens({}, {backgroundLabel:'New York City'}),token=>token.label),['New York City · BG']);
   assert.deepEqual(Array.from(domain.badgeTokens({}, {backgroundLabel:'GO Wild Area'}),token=>token.label),['GO Wild Area · BG']);
   assert.deepEqual(Array.from(domain.badgeTokens({note:'Female'}, {gender:'f'}),token=>token.label),['♀']);
-  assert.deepEqual(Array.from(domain.badgeTokens({lucky:true,note:'Lucky'}),token=>token.label),['Lucky']);
+  assert.deepEqual(Array.from(domain.badgeTokens({lucky:true,note:'Lucky'}),token=>token.label),['⚡']);
 });
 
 test('badge geometry never crosses the card and reports bounded overflow',()=>{
   const domain=loadDomain();
   const tokens=domain.badgeTokens({shiny:true,lucky:true,mirror:true,qty:12,note:'A deliberately long qualifier note'}, {backgroundLabel:'Chicago 2026',gender:'f'});
-  const x=8,y=62,width=150;
+  const x=8,y=58,width=120;
   const plan=domain.layoutBadgeRows(tokens,{x,y,width,measure:value=>String(value).length*4.4});
   assert.ok(plan.placements.length>0);
-  assert.ok(plan.rows<=2);
+  assert.ok(plan.rows<=1);
   for(const placement of plan.placements){
     assert.ok(placement.x>=x);
     assert.ok(placement.x+placement.width<=x+width+0.01);
     assert.ok(placement.y>=y);
-    assert.ok(placement.y+placement.height<=y+31);
+    assert.ok(placement.y+placement.height<=y+13);
   }
   for(let index=1;index<plan.placements.length;index++){
     const previous=plan.placements[index-1],current=plan.placements[index];
     if(previous.row===current.row)assert.ok(previous.x+previous.width<=current.x);
   }
   assert.ok(plan.hiddenCount>=1);
-  assert.match(plan.placements.at(-1).label,/^\+\d+$/);
+  const overflow=plan.placements.find(placement=>placement.token.kind==='overflow');
+  if(overflow)assert.match(overflow.label,/^\+\d+$/);
+});
+
+test('compact visual markers remain visible beside an honest background label',()=>{
+  const domain=loadDomain();
+  const tokens=domain.badgeTokens({shiny:true,lucky:true,qty:2},{backgroundLabel:'Chicago 2026'});
+  const markers=tokens.filter(token=>token.symbol||token.kind==='quantity');
+  const details=tokens.filter(token=>!token.symbol&&token.kind!=='quantity');
+  const markerPlan=domain.layoutBadgeRows(markers,{x:0,y:0,width:122,measure:value=>String(value).length*4.2});
+  const detailPlan=domain.layoutBadgeRows(details,{x:0,y:0,width:122,measure:value=>String(value).length*4.2});
+  assert.deepEqual(Array.from(markerPlan.placements,placement=>placement.label),['✦','⚡','×2']);
+  assert.deepEqual(Array.from(detailPlan.placements,placement=>placement.label),['Chicago… · BG']);
+  assert.equal(markerPlan.hiddenCount+detailPlan.hiddenCount,0);
 });
 
 test('canvas renderer uses the accepted sprite resolver and pure geometry contract',()=>{
@@ -104,6 +117,8 @@ test('canvas renderer uses the accepted sprite resolver and pure geometry contra
   assert.match(source,/specialTradeBoardExport\.js\?v=\$\{encodeURIComponent\(window\.__POGO_RELEASE_ID\|\|''\)\}/);
   assert.match(renderer,/specialTradeBoardExportDomain\.buildLayout\(board\)/);
   assert.match(renderer,/specialTradeBoardExportDomain\.layoutBadgeRows/);
+  assert.match(renderer,/tokens\.filter\(token=>token\.symbol\|\|token\.kind==='quantity'\)/);
+  assert.doesNotMatch(renderer,/drawWrappedText\(ctx,e\.dn\|\|e\.name/);
   assert.match(renderer,/exportSpriteFallbackUrls/);
   assert.match(renderer,/drawImageContain/);
   assert.match(renderer,/drawSpriteFallback/);
