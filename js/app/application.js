@@ -10842,7 +10842,7 @@ async function renderSpecialBoardImage(board,username){
   const drawShinySparkles=(x,y)=>{
     ctx.save();
     drawStarburst(x,y,4.8,1.15,'#f8fafc');
-    drawStarburst(x-5.2,y+4.4,2.4,.65,'#67e8f9');
+    drawStarburst(x+6,y+2,2.4,.65,'#67e8f9');
     ctx.restore();
   };
   const drawGenderMarker=(gender,x,y)=>{
@@ -10865,7 +10865,8 @@ async function renderSpecialBoardImage(board,username){
     ctx.restore();
   };
   const drawEntryMarkers=(entry,x,y,w,gender)=>{
-    if(entry.shiny)drawShinySparkles(x+w-8,y+7);
+    // The 5px section gap keeps this cluster clear of every alpha-trimmed sprite.
+    if(entry.shiny)drawShinySparkles(x+w-11,y+1);
     if(gender==='f'||gender==='m')drawGenderMarker(gender,x+w/2,y+61);
   };
   const drawGridSection=(entries,xBase,startY)=>{
