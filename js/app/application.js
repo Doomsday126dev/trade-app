@@ -344,7 +344,7 @@ if(!pokemonKeysDomain)throw new Error('Pokemon key helpers failed to load');
 const {_normGender,HAVE_KEY_SEP,splitHaveKey,joinHaveKey,totalQtyForName,haveEntryInfo,haveEntryValue}=pokemonKeysDomain;
 const spriteSlugsDomain=window.PogoDomain?.spriteSlugs;
 if(!spriteSlugsDomain)throw new Error('Sprite slug helpers failed to load');
-const {padDex,normalizeCostumeLookupKey,pokemondbGoSpeciesSlug,normalizeSpriteKey,SPRITE_SOURCE_REGISTRY,CANONICAL_SPRITE_OVERRIDES,UNRESOLVED_SPRITE_KEYS,canonicalSpriteOverride,isUnresolvedSpriteKey,spriteSourceForUrl,REGIONAL_SLUG_MAP,pokemondbSlug}=spriteSlugsDomain;
+const {padDex,normalizeCostumeLookupKey,pokemondbGoSpeciesSlug,normalizeSpriteKey,SPRITE_SOURCE_REGISTRY,CANONICAL_SPRITE_OVERRIDES,UNRESOLVED_SPRITE_KEYS,canonicalSpriteOverride,isUnresolvedSpriteKey,spriteSourceForUrl,REGIONAL_SLUG_MAP,pokemondbSlug,publicSpriteUrls}=spriteSlugsDomain;
 const costumeSpriteCatalogDomain=window.PogoDomain?.costumeSpriteCatalog;
 if(!costumeSpriteCatalogDomain)throw new Error('Reviewed costume sprite catalog failed to load');
 const fuzzyTextDomain=window.PogoDomain?.fuzzyText;
@@ -6391,16 +6391,20 @@ function exportSpriteUrl(e){
 // Uses the same multi-source cascade as inline images
 function exportSpriteFallbackUrls(e){
   const chain=spriteFallbackChain(e.no,e.spriteName||e.name,e.gender,e.dn);
+  const context=spriteCatalogContext(e.no,e.spriteName||e.name,e.dn||e.name,e.catalogId);
+  const reviewed=costumeSpriteCatalogDomain.resolution({names:context.lookupKeys,gender:e.gender});
+  const regionalPrefix=Object.freeze({alolan:'A',galarian:'G',hisuian:'H',paldean:'P'});
+  const compatibilityKeys=[...context.lookupKeys];
+  for(const value of [e.spriteName,e.name,e.dn]){
+    const match=String(value||'').match(/^(.+?)\s*\((Alolan|Galarian|Hisuian|Paldean)\s+Forme?\)$/i);
+    if(match)compatibilityKeys.push(`${regionalPrefix[match[2].toLowerCase()]}-${match[1].trim()}`);
+  }
+  const mappedHome=reviewed?.knownVariant?[]:[...new Set(compatibilityKeys.flatMap(key=>[COSTUME_FORM_SPRITE_IDS[key],REGIONAL_FORM_IDS[key]]).filter(Boolean))]
+    .map(id=>`${SPRITE_BASE}other/home/${id}.png`);
+  const highQuality=[...mappedHome,...publicSpriteUrls(e.spriteName||e.name,e.gender,e.no)];
   // A stored override is useful only when it is on the reviewed runtime allowlist.
   const approvedOverride=isApprovedRuntimeSpriteUrl(e.spriteUrl)?e.spriteUrl:'';
-  if(approvedOverride)chain.unshift(approvedOverride);
-  const exactFormUrl=pokemondbSpriteUrl(e.spriteName||e.name,e.dn||e.name,e.gender);
-  if(approvedOverride&&exactFormUrl&&exactFormUrl!==approvedOverride){
-    const i=chain.indexOf(exactFormUrl);
-    if(i>=0)chain.splice(i,1);
-    chain.splice(1,0,exactFormUrl);
-  }
-  return[...new Set(chain.filter(Boolean).map(canvasSafeSpriteUrl).filter(Boolean))];
+  return[...new Set([...highQuality,approvedOverride,...chain].filter(Boolean).map(canvasSafeSpriteUrl).filter(Boolean))];
 }
 function loadCanvasImage(url){
   if(!url)return Promise.resolve(null);
@@ -10833,11 +10837,20 @@ async function renderSpecialBoardImage(board,username){
 
   // Pre-load all sprite images
   const allEntries=[...board.lf,...board.ft];
+  const boardEntryImageKey=e=>[e.name,e.shiny?'s':'n',e.gender||entryGender(e.note||e.mod||'')].join('|');
   const imgMap=new Map();
   await Promise.all(allEntries.map(async e=>{
     const urls=exportSpriteFallbackUrls({...e,spriteUrl:entrySpriteUrl(e,e.name)});
     const img=await loadCanvasImageWithFallback(urls);
-    if(img)imgMap.set(e.name+(e.shiny?'_s':''),img);
+    if(img)imgMap.set(boardEntryImageKey(e),img);
+  }));
+  const backgroundImageMap=new Map();
+  const backgroundIds=[...new Set(allEntries.map(e=>normalizeBackgroundId(e.backgroundId)).filter(Boolean))];
+  await Promise.all(backgroundIds.map(async id=>{
+    const visual=backgroundVisual(id);
+    if(!visual?.assetUrl)return;
+    const img=await loadCanvasImage(visual.assetUrl);
+    if(img&&canvasImageHasVisiblePixels(img))backgroundImageMap.set(id,img);
   }));
 
   // ── Geometry-owned section and card rendering ───────────────
@@ -10849,53 +10862,92 @@ async function renderSpecialBoardImage(board,username){
     ctx.font='700 9px Space Grotesk, sans-serif';ctx.fillStyle='rgba(255,255,255,.52)';ctx.textAlign='right';
     ctx.fillText(String(count),x+w-10,y+15);ctx.textAlign='left';
   };
-  const badgeColors=Object.freeze({
-    background:['rgba(99,102,241,.2)','#c7d2fe'],shiny:['rgba(244,114,182,.18)','#f9a8d4'],
-    gender:['rgba(236,72,153,.17)','#f9a8d4'],lucky:['rgba(250,204,21,.16)','#fde68a'],
-    mirror:['rgba(56,189,248,.17)','#7dd3fc'],quantity:['rgba(167,139,250,.18)','#c4b5fd'],
-    note:['rgba(148,163,184,.13)','#cbd5e1'],overflow:['rgba(148,163,184,.13)','#cbd5e1']
-  });
-  const drawCardBadges=(tokens,x,y,w,{center=false}={})=>{
-    ctx.font='750 7px Space Grotesk, sans-serif';
-    const plan=specialTradeBoardExportDomain.layoutBadgeRows(tokens,{x:0,y,width:w,measure:text=>ctx.measureText(text).width});
-    const usedWidth=plan.placements.length?Math.max(...plan.placements.map(placement=>placement.x+placement.width)):0;
-    const offset=x+(center?Math.max(0,(w-usedWidth)/2):0);
-    plan.placements.forEach(placement=>{
-      const colors=badgeColors[placement.token.kind]||badgeColors.note;
-      const placementX=placement.x+offset;
-      if(placement.token.symbol){
-        ctx.save();
-        ctx.fillStyle=colors[1];ctx.textAlign='center';ctx.textBaseline='middle';
-        ctx.font=`800 ${placement.token.kind==='shiny'?12:10}px Space Grotesk, sans-serif`;
-        if(placement.token.kind==='shiny'){ctx.shadowColor='rgba(244,114,182,.75)';ctx.shadowBlur=3;}
-        ctx.fillText(placement.label,placementX+placement.width/2,placement.y+placement.height/2+.5);
-        ctx.restore();
-        return;
-      }
-      roundedRect(ctx,placementX,placement.y,placement.width,placement.height,6);ctx.fillStyle=colors[0];ctx.fill();
-      ctx.fillStyle=colors[1];ctx.textBaseline='middle';ctx.fillText(placement.label,placementX+5,placement.y+placement.height/2+.5);ctx.textBaseline='alphabetic';
-    });
+  const drawDiamond=(x,y,r,color)=>{
+    ctx.beginPath();ctx.moveTo(x,y-r);ctx.lineTo(x+r*.58,y);ctx.lineTo(x,y+r);ctx.lineTo(x-r*.58,y);ctx.closePath();
+    ctx.fillStyle=color;ctx.fill();
+  };
+  const drawSparkleCluster=(x,y)=>{
+    ctx.save();ctx.shadowColor='rgba(103,232,249,.7)';ctx.shadowBlur=2;
+    drawDiamond(x,y,4,'#ecfeff');drawDiamond(x-5,y+4,1.8,'#67e8f9');drawDiamond(x+4,y+5,1.4,'#a5f3fc');
+    ctx.restore();
+  };
+  const drawGenderMarker=(gender,x,y)=>{
+    const female=gender==='f';
+    ctx.save();ctx.beginPath();ctx.arc(x,y,5,0,Math.PI*2);ctx.fillStyle=female?'#be185d':'#1d4ed8';ctx.fill();
+    ctx.strokeStyle=female?'#f9a8d4':'#93c5fd';ctx.lineWidth=.8;ctx.stroke();
+    ctx.fillStyle='#fff';ctx.font='800 6px Arial, sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(female?'F':'M',x,y+.3);
+    ctx.restore();
+  };
+  const drawLuckyMarker=(x,y)=>{
+    ctx.save();ctx.beginPath();ctx.moveTo(x+1,y-5);ctx.lineTo(x-3,y+1);ctx.lineTo(x,y+1);ctx.lineTo(x-2,y+6);ctx.lineTo(x+4,y-1);ctx.lineTo(x+1,y-1);ctx.closePath();
+    ctx.fillStyle='#facc15';ctx.shadowColor='rgba(250,204,21,.55)';ctx.shadowBlur=2;ctx.fill();ctx.restore();
+  };
+  const drawMirrorMarker=(x,y)=>{
+    ctx.save();ctx.strokeStyle='#67e8f9';ctx.fillStyle='#67e8f9';ctx.lineWidth=1.2;ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(x-4,y-2);ctx.lineTo(x+4,y-2);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(x+4,y-2);ctx.lineTo(x+1.5,y-4);ctx.lineTo(x+1.5,y);ctx.closePath();ctx.fill();
+    ctx.beginPath();ctx.moveTo(x+4,y+2);ctx.lineTo(x-4,y+2);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(x-4,y+2);ctx.lineTo(x-1.5,y);ctx.lineTo(x-1.5,y+4);ctx.closePath();ctx.fill();ctx.restore();
+  };
+  const drawQuantityMarker=(value,x,y)=>{
+    const label=`x${Math.max(2,Math.floor(Number(value)||2))}`;
+    ctx.save();ctx.font='800 6px Space Grotesk, sans-serif';const width=Math.max(15,ctx.measureText(label).width+7);
+    roundedRect(ctx,x-width/2,y-5,width,10,5);ctx.fillStyle='rgba(91,70,145,.96)';ctx.fill();
+    ctx.fillStyle='#ede9fe';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(label,x,y+.2);ctx.restore();
+  };
+  const drawImageCover=(img,x,y,w,h)=>{
+    const iw=img.naturalWidth||1,ih=img.naturalHeight||1,scale=Math.max(w/iw,h/ih),dw=iw*scale,dh=ih*scale;
+    ctx.drawImage(img,x+(w-dw)/2,y+(h-dh)/2,dw,dh);
+  };
+  const drawBackgroundFrame=(entry,x,y,w,h,note)=>{
+    const id=normalizeBackgroundId(entry.backgroundId),record=backgroundCatalogDomain.get(id),art=backgroundImageMap.get(id);
+    const location=record?.type==='location',accent=location?'#38bdf8':'#a78bfa';
+    const footerHeight=note?22:15,footerY=y+h-footerHeight;
+    ctx.save();roundedRect(ctx,x,y,w,h,6);ctx.clip();
+    if(art)drawImageCover(art,x,y,w,footerY-y);
+    else{
+      ctx.fillStyle=location?'#102838':'#251a38';ctx.fillRect(x,y,w,footerY-y);
+      ctx.save();ctx.globalAlpha=.2;ctx.strokeStyle=accent;ctx.lineWidth=.8;
+      roundedRect(ctx,x+7,y+8,w-14,Math.max(17,footerY-y-14),4);ctx.stroke();
+      ctx.beginPath();ctx.arc(x+w-15,y+15,3,0,Math.PI*2);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(x+10,footerY-7);ctx.lineTo(x+22,footerY-18);ctx.lineTo(x+31,footerY-10);ctx.lineTo(x+41,footerY-21);ctx.lineTo(x+w-8,footerY-7);ctx.stroke();ctx.restore();
+    }
+    ctx.fillStyle='rgba(7,11,17,.9)';ctx.fillRect(x,footerY,w,footerHeight);
+    ctx.fillStyle=accent;ctx.fillRect(x,footerY,2,footerHeight);
+    ctx.restore();
+    ctx.strokeStyle=art?'rgba(255,255,255,.34)':`${accent}88`;ctx.lineWidth=.8;roundedRect(ctx,x+.4,y+.4,w-.8,h-.8,6);ctx.stroke();
+    const label=`${backgroundShortLabel(id)||'Background'} · BG`;
+    drawCenteredFittedText(ctx,label,x+w/2,footerY+(note?8:10),w-8,{weight:750,max:6,min:4,color:'#f8fafc'});
+    if(note)drawCenteredFittedText(ctx,note,x+w/2,footerY+17,w-8,{weight:650,max:5,min:4,color:'#cbd5e1'});
+  };
+  const drawEntryMarkers=(entry,x,y,w,gender)=>{
+    if(entry.shiny)drawSparkleCluster(x+w-8,y+7);
+    if(gender==='f'||gender==='m')drawGenderMarker(gender,x+w-8,y+19);
+    if(entry.lucky)drawLuckyMarker(x+7,y+7);
+    if(entry.mirror)drawMirrorMarker(x+7,y+19);
+    if(Number(entry.qty)>1)drawQuantityMarker(entry.qty,x+w/2,y+6);
   };
   const drawGridSection=(entries,xBase,startY)=>{
     entries.forEach((e,index)=>{
       const col=index%gridCols,row=Math.floor(index/gridCols);
       const cx=xBase+col*(gridCellW+gridGap),cy=startY+row*(gridCellH+gridGap);
       ctx.save();
-      const sx=cx+(gridCellW-gridSprSize)/2,sy=cy+6,img=imgMap.get(e.name+(e.shiny?'_s':''));
-      if(img)drawImageContain(ctx,img,sx,sy,gridSprSize,gridSprSize);
-      else{
-        drawSpriteFallback(ctx,e,sx,sy,gridSprSize);
-        ctx.save();ctx.font='700 6px Space Grotesk, sans-serif';ctx.fillStyle='#c7d2fe';ctx.textAlign='center';
-        const pending=String(e.dn||e.name||'Artwork pending').replace(/^Pikachu\s*/i,'').trim()||'Artwork pending';
-        drawWrappedText(ctx,pending,cx+gridCellW/2,cy+58,gridCellW-4,7,2);
-        ctx.restore();
-      }
       const gender=e.gender||entryGender(e.note||e.mod||'');
       const tokens=specialTradeBoardExportDomain.badgeTokens(e,{backgroundLabel:e.backgroundId?backgroundShortLabel(e.backgroundId):'',gender});
-      const markers=tokens.filter(token=>token.symbol||token.kind==='quantity');
-      const details=tokens.filter(token=>!token.symbol&&token.kind!=='quantity');
-      drawCardBadges(markers,cx+2,cy+2,gridCellW-4,{center:true});
-      if(img)drawCardBadges(details,cx+2,cy+55,gridCellW-4,{center:true});
+      const note=tokens.find(token=>token.kind==='note')?.label||'';
+      const hasBackground=Boolean(normalizeBackgroundId(e.backgroundId)),spriteSize=hasBackground?44:gridSprSize;
+      if(hasBackground)drawBackgroundFrame(e,cx+2,cy+1,gridCellW-4,gridCellH-2,note);
+      const sx=cx+(gridCellW-spriteSize)/2,sy=cy+(hasBackground?3:6),img=imgMap.get(boardEntryImageKey(e));
+      if(img)drawImageContain(ctx,img,sx,sy,spriteSize,spriteSize);
+      else{
+        drawSpriteFallback(ctx,e,sx,sy,spriteSize);
+        ctx.save();ctx.font='700 6px Space Grotesk, sans-serif';ctx.fillStyle='#c7d2fe';ctx.textAlign='center';
+        const pending=String(e.dn||e.name||'Artwork pending').replace(/^Pikachu\s*/i,'').trim()||'Artwork pending';
+        drawWrappedText(ctx,pending,cx+gridCellW/2,cy+(hasBackground?50:58),gridCellW-4,7,hasBackground?1:2);
+        ctx.restore();
+      }
+      if(!hasBackground&&note)drawCenteredFittedText(ctx,note,cx+gridCellW/2,cy+67,gridCellW-6,{weight:650,max:6,min:4,color:'#cbd5e1'});
+      drawEntryMarkers(e,cx,cy,gridCellW,gender);
       ctx.restore();
     });
   };

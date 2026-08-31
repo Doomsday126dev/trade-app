@@ -50,12 +50,12 @@ test('layout is content-sized for 1/1, 9/1, dense, and single-lane boards',()=>{
   for(const fixture of fixtures)assertBounded(domain.buildLayout(fixture));
 
   const compact=domain.buildLayout(fixtures[0]);
-  assert.equal(compact.columns,9);
+  assert.equal(compact.columns,12);
   assert.equal(compact.entryCount,2);
   assert.deepEqual(Array.from(compact.sections,section=>section.rows),[1,1]);
 
   const nineOne=domain.buildLayout(fixtures[1]);
-  assert.equal(nineOne.columns,9);
+  assert.equal(nineOne.columns,12);
   assert.equal(nineOne.entryCount,10);
   assert.deepEqual(Array.from(nineOne.sections,section=>section.rows),[1,1]);
   assert.equal(nineOne.sections[1].cards.length,1);
@@ -65,13 +65,13 @@ test('layout is content-sized for 1/1, 9/1, dense, and single-lane boards',()=>{
 test('qualifier tokens cover required Board combinations without inventing artwork',()=>{
   const domain=loadDomain();
   const tokens=domain.badgeTokens({shiny:true,lucky:true,mirror:true,qty:3,note:'Needs room'}, {backgroundLabel:'Chicago 2026',gender:'f'});
-  assert.deepEqual(Array.from(tokens,token=>[token.kind,token.label]),[
-    ['background','Chicago 2026 · BG'],['shiny','✦'],['gender','♀'],['lucky','⚡'],['mirror','↔'],['quantity','×3'],['note','Needs room']
+  assert.deepEqual(Array.from(tokens,token=>[token.kind,token.label,token.marker||'']),[
+    ['background','Chicago 2026 · BG',''],['shiny','Shiny','sparkles'],['gender','Female','f'],['lucky','Lucky','lucky'],['mirror','Mirror','mirror'],['quantity','×3',''],['note','Needs room','']
   ]);
   assert.deepEqual(Array.from(domain.badgeTokens({}, {backgroundLabel:'New York City'}),token=>token.label),['New York City · BG']);
   assert.deepEqual(Array.from(domain.badgeTokens({}, {backgroundLabel:'GO Wild Area'}),token=>token.label),['GO Wild Area · BG']);
-  assert.deepEqual(Array.from(domain.badgeTokens({note:'Female'}, {gender:'f'}),token=>token.label),['♀']);
-  assert.deepEqual(Array.from(domain.badgeTokens({lucky:true,note:'Lucky'}),token=>token.label),['⚡']);
+  assert.deepEqual(Array.from(domain.badgeTokens({note:'Female'}, {gender:'f'}),token=>token.label),['Female']);
+  assert.deepEqual(Array.from(domain.badgeTokens({lucky:true,note:'Lucky'}),token=>token.label),['Lucky']);
 });
 
 test('badge geometry never crosses the card and reports bounded overflow',()=>{
@@ -96,16 +96,14 @@ test('badge geometry never crosses the card and reports bounded overflow',()=>{
   if(overflow)assert.match(overflow.label,/^\+\d+$/);
 });
 
-test('compact visual markers remain visible beside an honest background label',()=>{
+test('compact marker semantics do not depend on font glyphs',()=>{
   const domain=loadDomain();
-  const tokens=domain.badgeTokens({shiny:true,lucky:true,qty:2},{backgroundLabel:'Chicago 2026'});
-  const markers=tokens.filter(token=>token.symbol||token.kind==='quantity');
-  const details=tokens.filter(token=>!token.symbol&&token.kind!=='quantity');
-  const markerPlan=domain.layoutBadgeRows(markers,{x:0,y:0,width:122,measure:value=>String(value).length*4.2});
-  const detailPlan=domain.layoutBadgeRows(details,{x:0,y:0,width:122,measure:value=>String(value).length*4.2});
-  assert.deepEqual(Array.from(markerPlan.placements,placement=>placement.label),['✦','⚡','×2']);
-  assert.deepEqual(Array.from(detailPlan.placements,placement=>placement.label),['Chicago… · BG']);
-  assert.equal(markerPlan.hiddenCount+detailPlan.hiddenCount,0);
+  const tokens=domain.badgeTokens({shiny:true,lucky:true,mirror:true,qty:2},{backgroundLabel:'Chicago 2026',gender:'m'});
+  assert.deepEqual(Array.from(tokens.filter(token=>token.marker),token=>[token.kind,token.marker]),[
+    ['shiny','sparkles'],['gender','m'],['lucky','lucky'],['mirror','mirror']
+  ]);
+  assert.equal(tokens.some(token=>token.symbol),false);
+  assert.equal(tokens.find(token=>token.kind==='background').label,'Chicago 2026 · BG');
 });
 
 test('canvas renderer uses the accepted sprite resolver and pure geometry contract',()=>{
@@ -116,12 +114,18 @@ test('canvas renderer uses the accepted sprite resolver and pure geometry contra
   assert.match(source,/function ensureSpecialTradeBoardExportDomain\(\)/);
   assert.match(source,/specialTradeBoardExport\.js\?v=\$\{encodeURIComponent\(window\.__POGO_RELEASE_ID\|\|''\)\}/);
   assert.match(renderer,/specialTradeBoardExportDomain\.buildLayout\(board\)/);
-  assert.match(renderer,/specialTradeBoardExportDomain\.layoutBadgeRows/);
-  assert.match(renderer,/tokens\.filter\(token=>token\.symbol\|\|token\.kind==='quantity'\)/);
+  assert.match(renderer,/drawSparkleCluster/);
+  assert.match(renderer,/drawGenderMarker/);
+  assert.match(renderer,/drawBackgroundFrame/);
+  assert.match(renderer,/backgroundImageMap\.get\(id\)/);
+  assert.match(renderer,/const label=`\$\{backgroundShortLabel\(id\)\|\|'Background'\} · BG`/);
+  assert.match(source,/const mappedHome=/);
+  assert.match(source,/other\/home\/\$\{id\}\.png/);
+  assert.match(source,/const highQuality=\[\.\.\.mappedHome,\.\.\.publicSpriteUrls/);
   assert.doesNotMatch(renderer,/drawWrappedText\(ctx,e\.dn\|\|e\.name/);
   assert.match(renderer,/exportSpriteFallbackUrls/);
   assert.match(renderer,/drawImageContain/);
   assert.match(renderer,/drawSpriteFallback/);
   assert.match(renderer,/backgroundShortLabel\(e\.backgroundId\)/);
-  assert.doesNotMatch(renderer,/drawExportBackgroundVisual|background-pattern|linearGradient|createPattern/);
+  assert.doesNotMatch(renderer,/drawExportBackgroundVisual|background-pattern|linearGradient|createPattern|hashString/);
 });

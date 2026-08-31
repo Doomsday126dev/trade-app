@@ -20,7 +20,7 @@
 
   function columnsFor(lfCount,ftCount){
     finiteCount(lfCount);finiteCount(ftCount);
-    return 9;
+    return 12;
   }
 
   function laneEntries(board,lane){
@@ -77,10 +77,10 @@
   function badgeTokens(entry,{backgroundLabel='',gender=''}={}){
     const tokens=[];
     if(backgroundLabel)tokens.push(Object.freeze({kind:'background',label:`${backgroundLabel} · BG`}));
-    if(entry?.shiny)tokens.push(Object.freeze({kind:'shiny',label:'✦',symbol:true}));
-    if(gender==='f'||gender==='m')tokens.push(Object.freeze({kind:'gender',label:gender==='f'?'♀':'♂',symbol:true}));
-    if(entry?.lucky)tokens.push(Object.freeze({kind:'lucky',label:'⚡',symbol:true}));
-    if(entry?.mirror)tokens.push(Object.freeze({kind:'mirror',label:'↔',symbol:true}));
+    if(entry?.shiny)tokens.push(Object.freeze({kind:'shiny',label:'Shiny',marker:'sparkles'}));
+    if(gender==='f'||gender==='m')tokens.push(Object.freeze({kind:'gender',label:gender==='f'?'Female':'Male',marker:gender}));
+    if(entry?.lucky)tokens.push(Object.freeze({kind:'lucky',label:'Lucky',marker:'lucky'}));
+    if(entry?.mirror)tokens.push(Object.freeze({kind:'mirror',label:'Mirror',marker:'mirror'}));
     if(Number(entry?.qty)>1)tokens.push(Object.freeze({kind:'quantity',label:`×${Math.floor(Number(entry.qty))}`}));
     const note=String(entry?.note||'').replace(/\s+/g,' ').trim();
     const semanticNote=(entry?.shiny&&/^shiny$/i.test(note))
@@ -117,14 +117,14 @@
     let row=0,cursor=left,hidden=0;
     for(let index=0;index<safeTokens.length;index++){
       const token=safeTokens[index]||{};
-      const symbol=token.symbol===true;
-      const maxByKind=token.kind==='background'?70:token.kind==='note'?70:token.kind==='quantity'?24:token.kind==='overflow'?24:symbol?18:54;
+      const marker=Boolean(token.marker);
+      const maxByKind=token.kind==='background'?70:token.kind==='note'?70:token.kind==='quantity'?24:token.kind==='overflow'?24:marker?18:54;
       const maxTokenWidth=Math.min(safeWidth,maxByKind);
-      const horizontalPadding=symbol?4:10;
+      const horizontalPadding=marker?4:10;
       let desired=Math.min(maxTokenWidth,measureText(String(token.label||''))+horizontalPadding);
       if(cursor+desired>right&&row+1<maxRows){row++;cursor=left;}
       const available=Math.min(maxTokenWidth,right-cursor);
-      const minimumWidth=symbol?8:token.kind==='quantity'?18:22;
+      const minimumWidth=marker?8:token.kind==='quantity'?18:22;
       if(available<minimumWidth){hidden=safeTokens.length-index;break;}
       const label=truncateTokenLabel(token,Math.max(1,available-horizontalPadding),measureText);
       const placement=Object.freeze({

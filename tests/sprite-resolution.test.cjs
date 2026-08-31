@@ -46,6 +46,8 @@ test('anonymous public shares resolve approved form-aware sprites without privat
   assert.equal(window.PogoDomain.publicPokemonDex.dex('Pikachu (Worlds 2026)'),25);
   assert.deepEqual(Array.from(sprites.publicSpriteUrls('Garden')),['assets/sprites/go/vivillon-garden.png']);
   assert.deepEqual(Array.from(sprites.publicSpriteUrls('H-Avalugg')),['https://img.pokemondb.net/sprites/home/normal/avalugg-hisuian.png','https://img.pokemondb.net/sprites/home/normal/avalugg.png']);
+  assert.equal(sprites.pokemondbSlug('Basculin (White Stripe)','Basculin (White Stripe)'),'basculin-white-striped');
+  assert.equal(sprites.pokemondbSlug('Avalugg (Hisuian Form)','Avalugg (Hisuian Form)'),'avalugg-hisuian');
   assert.deepEqual(Array.from(sprites.publicSpriteUrls('Salandit','f')),['https://img.pokemondb.net/sprites/home/normal/salandit-female.png','https://img.pokemondb.net/sprites/home/normal/salandit.png']);
   assert.equal(sprites.publicSpriteUrls('Garden').every(url=>sprites.spriteSourceForUrl(url)?.id==='pokemondb-go'),true);
   assert.deepEqual(Array.from(sprites.publicSpriteUrls('Pikachu (Sari)')),['assets/sprites/go/pikachu-saree.png']);
@@ -86,6 +88,7 @@ test('stored or guessed research URLs cannot enter the render or export chain',(
   assert.match(entry,/if\(reviewed\.knownVariant\)return reviewed\.urls\[0\]\|\|null/);
   assert.match(entry,/if\(isApprovedRuntimeSpriteUrl\(storedUrl\)\)return storedUrl/);
   assert.match(html,/const approvedOverride=isApprovedRuntimeSpriteUrl\(e\.spriteUrl\)\?e\.spriteUrl:''/);
+  assert.match(html,/other\/home\/\$\{id\}\.png/);
   assert.doesNotMatch(html,/const GO_COSTUME_SPRITE_SLUGS|POKEMONDB_GO_COSTUME_ALIASES|pokemondbGoCostumeUrl|POKEMINERS_SPRITE_BASE|SEREBII_SPRITE_BASE|cdn08\.net/);
 });
 

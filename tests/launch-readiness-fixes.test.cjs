@@ -86,10 +86,10 @@ function spriteHarness(){
     set src(value){this._src=value;active++;peak=Math.max(peak,active);instances.push(this);}
     fail(){active--;this.onerror?.();}
   }
-  const storage=new Map(),document={querySelectorAll:()=>[],createElement:()=>({getContext:()=>null})};
+  const storage=new Map(),origin='https://app.example',document={baseURI:`${origin}/`,querySelectorAll:()=>[],createElement:()=>({getContext:()=>null})};
   const context=vm.createContext({
     localStorage:{getItem:key=>storage.get(key)||null,setItem:(key,value)=>storage.set(key,String(value))},
-    Image:FakeImage,document,IMAGE_PROXY_BASE:'https://images.weserv.nl/?url=',setTimeout,clearTimeout,Date,Math,JSON,Promise,Map,Array,Object,Number,parseFloat
+    Image:FakeImage,document,location:{origin},URL,IMAGE_PROXY_BASE:'https://images.weserv.nl/?url=',setTimeout,clearTimeout,Date,Math,JSON,Promise,Map,Array,Object,Number,parseFloat
   });
   vm.runInContext(between("const SPRITE_SCALE_CACHE_KEY='pogoSpriteScales_v4';",'// ── SESSION PERSISTENCE'),context);
   return{context,instances,get peak(){return peak;},get active(){return active;}};

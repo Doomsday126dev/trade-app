@@ -63,6 +63,7 @@
       // "Vivillon (Garden)" → "vivillon garden"
       s=s.replace(/\s*\(([^)]+)\)\s*/,' $1 ');
     }
+    s=s.replace(/\b(alolan|galarian|hisuian|paldean)\s+forme?\b/gi,'$1');
     // Normalize: lowercase, strip accents, replace special chars
     let slug=s.toLowerCase()
       .normalize('NFD').replace(/[̀-ͯ]/g,'')  // strip accents é→e
@@ -74,7 +75,7 @@
       .replace(/^-|-$/g,'');
     // PokemonDB HOME naming quirks (verified against actual URLs)
     slug=slug
-      .replace(/^basculin-(red|blue|white)$/,'basculin-$1-striped')           // Basculin needs "-striped"
+      .replace(/^basculin-(red|blue|white)(?:-(?:stripe|striped))?$/,'basculin-$1-striped') // Basculin needs "-striped"
       .replace(/^flabebe-(red|yellow|orange|blue|white)-flower$/,'flabebe-$1')// Flabébé drops " Flower"
       .replace(/^oricorio-pa-u$/,'oricorio-pau')                              // Pa'u → pau
       .replace(/^shellos-pink$/,'shellos-west')                               // PokemonDB uses sea names
