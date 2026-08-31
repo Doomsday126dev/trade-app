@@ -104,4 +104,6 @@ test('Board editor presents only artwork, gender, Shiny, and removal controls',(
   assert.match(editor,/toggleSpecialFlag\('\$\{side\}',\$\{i\},'shiny'\)/);
   assert.match(editor,/sb-row-rm/);
   assert.doesNotMatch(editor,/sb-row-background|setSpecialBackground|sb-row-note|setSpecialNote|sb-row-qty|setSpecialQty|mirror/);
+  const globals=source.slice(source.indexOf('Object.assign(window,{'));
+  assert.doesNotMatch(globals,/setSpecialBackground|setSpecialNote|setSpecialQty/);
 });

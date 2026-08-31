@@ -13945,7 +13945,7 @@ Object.assign(window,{
   setShiny,startTour,tourNext,tourPrev,skipTour,finishTour,
   // Special Trade Board
   openSpecialTradeBoard,specialAcSearch,specialAcSelect,specialAcKeydown,
-  addSpecialEntry,removeSpecialEntry,toggleSpecialFlag,setSpecialNote,setSpecialQty,
+  addSpecialEntry,removeSpecialEntry,toggleSpecialFlag,
   clearSpecialBoard,exportSpecialBoardImage,
   // Quick-add bulk picker for the Special Trade Board
   openQuickAdd,closeQuickAdd,filterQuickAdd,toggleQuickAddPick,qaSelectAll,commitQuickAdd
