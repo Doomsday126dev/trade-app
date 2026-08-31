@@ -39,6 +39,22 @@ function repositoryFixture(window,{transactionTimestampOffset=0,rejectNoOpWrite=
   });
   return{repository,get current(){return current;},get lastProposed(){return lastProposed;},get lastTransactionValue(){return lastTransactionValue;},get serverTimestampCalls(){return serverTimestampCalls;},get transactionCalls(){return transactionCalls;},get getCalls(){return getCalls;},get abortedTransactions(){return abortedTransactions;}};
 }
+function recoveryReviewRecord(overrides={}){return{schemaVersion:1,kind:'recovery-review-acceptance',ownerUid:'uid-owner',trainerUsername:'Owner',evidenceFingerprint:'a'.repeat(64),candidateCount:66,acceptedAt:100,...overrides};}
+function recoveryReviewFixture(window,{initial=null,throwAfterCommit=false}={}){
+  const values=new Map(initial?[[`authIndex/uid-owner/accountSyncRecoveryReviews/${initial.evidenceFingerprint}`,clone(initial)]]:[]);let transactionCalls=0,getCalls=0,lastTarget='';
+  const snapshot=value=>({exists:()=>value!=null,val:()=>clone(value)});
+  const repository=window.PogoData.accountSyncRepository.createAccountSyncRepository({
+    database:{},ownerUid:'uid-owner',clock:()=>1,ref:(_database,target)=>target,onValue:()=>()=>{},serverTimestamp:()=>({'.sv':'timestamp'}),
+    get:async target=>{getCalls++;return snapshot(values.get(target)??null);},
+    runTransaction:async(target,update)=>{
+      transactionCalls++;lastTarget=target;const next=update(clone(values.get(target)??null));
+      if(next===undefined)return{committed:false,snapshot:snapshot(values.get(target)??null)};
+      values.set(target,clone(next));if(throwAfterCommit)throw Object.assign(new Error('response lost'),{code:'NETWORK_ERROR'});
+      return{committed:true,snapshot:snapshot(next)};
+    }
+  });
+  return{repository,values,get transactionCalls(){return transactionCalls;},get getCalls(){return getCalls;},get lastTarget(){return lastTarget;}};
+}
 async function operation(window,{kind='add',baseGeneration=0,generation=1,baseFieldRevisions={priority:0},patch={priority:'H'},operationId='op_0000000000000001'}={}){
   return window.PogoDomain.accountSyncModel.createOperation({
     ownerUid:'uid-owner',entityType:'tradeEntry',entityId:'te_WzEsInBvZ28tYWNjb3VudC10cmFkZS1lbnRyeSIsIm15LWxpc3QiLCJ3aXNobGlzdCIsInBva2Vtb246cGlrYWNodSJd',
@@ -107,4 +123,21 @@ test('invalid create-only evidence IDs fail before any parent-path transaction',
   assert.equal(migration.ok,false);assert.equal(migration.error.code,'account-sync/migration-id-invalid');
   assert.equal(candidate.ok,false);assert.equal(candidate.error.code,'account-sync/recovery-candidate-id-invalid');
   assert.equal(fixture.transactionCalls,before);
+});
+
+test('recovery review acceptance stores only a bounded exact fingerprint record and is idempotent',async()=>{
+  const window=load(),fixture=recoveryReviewFixture(window),record=recoveryReviewRecord(),created=await fixture.repository.createRecoveryReviewAcceptance(record);
+  assert.equal(created.ok,true);assert.equal(created.status,'created');assert.equal(fixture.lastTarget,`authIndex/uid-owner/accountSyncRecoveryReviews/${record.evidenceFingerprint}`);
+  assert.deepEqual(Object.keys(created.value).sort(),['acceptedAt','candidateCount','evidenceFingerprint','kind','ownerUid','schemaVersion','trainerUsername']);
+  assert.doesNotMatch(JSON.stringify(created.value),/Pikachu|wishlist|provider|token/i);
+  const retried=await fixture.repository.createRecoveryReviewAcceptance({...record,acceptedAt:999});
+  assert.equal(retried.ok,true);assert.equal(retried.status,'idempotent');assert.equal(retried.value.acceptedAt,100);
+  const read=await fixture.repository.readRecoveryReviewAcceptance({...record,acceptedAt:999});assert.equal(read.ok,true);assert.equal(read.status,'found');
+});
+
+test('recovery review acceptance reconciles a lost response and rejects malformed or changed evidence',async()=>{
+  const window=load(),record=recoveryReviewRecord(),lost=recoveryReviewFixture(window,{throwAfterCommit:true}),reconciled=await lost.repository.createRecoveryReviewAcceptance(record);
+  assert.equal(reconciled.ok,true);assert.equal(reconciled.status,'idempotent');assert.equal(lost.transactionCalls,1);assert.equal(lost.getCalls,1);
+  const changed=await lost.repository.readRecoveryReviewAcceptance({...record,candidateCount:65});assert.equal(changed.ok,false);assert.equal(changed.error.code,'account-sync/recovery-review-acceptance-conflict');
+  const invalid=await lost.repository.createRecoveryReviewAcceptance({...record,evidenceFingerprint:'bad'});assert.equal(invalid.ok,false);assert.equal(invalid.error.code,'account-sync/recovery-review-acceptance-invalid');assert.equal(lost.transactionCalls,1);
 });

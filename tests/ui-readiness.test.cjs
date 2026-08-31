@@ -180,7 +180,7 @@ test('local preferences stay clearly device-local and expose no enabled sync con
   assert.doesNotMatch(html,/id="settings-(?:sync|save)-preferences"/);
 });
 
-test('Account & Security exposes a dormant provider-neutral Connected Accounts surface',()=>{
+test('Account & Security keeps production providers hidden while development actions remain gated',()=>{
   const start=html.indexOf('id="settings-account-security-heading"');
   const end=html.indexOf('</section>',start);
   assert.ok(start>0&&end>start);
@@ -191,7 +191,9 @@ test('Account & Security exposes a dormant provider-neutral Connected Accounts s
   assert.match(panel,/data-provider="google" hidden/);
   assert.match(panel,/data-provider="discord" hidden/);
   assert.doesNotMatch(panel,/data-provider="(?:email|legacy-pin)"/);
-  assert.doesNotMatch(methods,/<button|onclick=|href=|data-action=/);
+  const primary=methods.slice(methods.indexOf('data-provider="username-pin"'),methods.indexOf('data-provider="google"'));
+  assert.doesNotMatch(primary,/<button|onclick=|href=|data-action=/);
+  assert.match(methods,/data-provider="google" hidden[\s\S]*data-provider-action[^>]+hidden/);
   assert.match(panel,/id="settings-logout" onclick="logout\(\)"/);
   assert.match(html,/\.account-security-method\{[^}]*min-height:56px/);
   assert.match(html,/DURABLE_AUTH_PROVIDERS_ENABLED!==false/);

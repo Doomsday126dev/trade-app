@@ -6,7 +6,7 @@
     google:Object.freeze({key:'google',providerId:'google.com',labelKey:'security.google',detailKey:'security.providerDevelopmentOnly',source:'firebase-provider-data'}),
     discord:Object.freeze({key:'discord',providerId:'discord.com',labelKey:'security.discord',detailKey:'security.providerDevelopmentOnly',source:'private-provider-link'})
   });
-  const METHOD_STATES=Object.freeze(['connected','not-connected','connecting','waiting-browser','needs-attention','reauthenticate','disconnecting','unavailable']);
+  const METHOD_STATES=Object.freeze(['connected','not-connected','connecting','prepared','waiting-browser','needs-attention','reauthenticate','disconnecting','unavailable']);
 
   function providerIds(providerData){
     return new Set((Array.isArray(providerData)?providerData:[]).map(item=>String(item?.providerId||'')).filter(Boolean));
@@ -22,7 +22,7 @@
       if(key==='username-pin')return Object.freeze({visible:true,available:true,actionable:false,reason:'production-access-method'});
       if(!developmentEnabled)return Object.freeze({visible:false,available:false,actionable:false,reason:'production-hidden'});
       const available=configured.has(key);
-      return Object.freeze({visible:true,available,actionable:false,reason:available?'development-adapter-required':'provider-unconfigured'});
+      return Object.freeze({visible:true,available,actionable:available,reason:available?'development-configured':'provider-unconfigured'});
     }
     function methods({providerData=[],usernamePinAvailable=true,linkedExternalProviders={},operationStates={}}={}){
       const ids=providerIds(providerData),external=externalLinks(linkedExternalProviders);

@@ -93,8 +93,9 @@ It does not import provider profile fields or change trainer/public identity.
 - Reads Google linkage from Firebase `providerData` (`google.com`).
 - Reserves Discord as a future private provider link.
 - Makes only username/PIN visible in production.
-- Development rows remain non-actionable even when a local configuration flag
-  marks an adapter available.
+- Production rows remain hidden and non-actionable. A development row becomes
+  actionable only when both the explicit development flag and its configured
+  provider key are present.
 
 ### `providerContinuationState.js`
 
@@ -113,8 +114,8 @@ It does not import provider profile fields or change trainer/public identity.
 
 - Captures exact UID/lifecycle authority and recent-auth state.
 - Fingerprints account data, journal owner/generation, migration generation,
-  reviewed/active recovery evidence, listener authority, public identity, and
-  trainer identity.
+  exact recovery evidence plus reviewed/active counts, listener authority,
+  public identity, and trainer identity.
 - Classifies collisions, cancellation, popup blocking, recent-auth requests,
   and fail-closed errors without exposing raw provider errors.
 - Rejects unlinking username/PIN, an absent provider, or the final usable
@@ -138,7 +139,8 @@ It does not import provider profile fields or change trainer/public identity.
   idempotent ownership because a client-only lease is not a cross-device
   authority boundary.
 
-No production provider adapter or action is instantiated in this phase.
+The Google implementation branch adds a development-only adapter and action.
+Ordinary production startup still skips those modules and controls.
 
 ## Existing-user link contract
 

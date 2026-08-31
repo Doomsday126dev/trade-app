@@ -30,6 +30,9 @@ function loadFrontendManifest(root,{manifestRoot=CONTROL_ROOT}={}){
   if(manifest.schemaVersion!==1)fail('Unsupported frontend-files manifest schema');
   const groups=['entryFiles','styleFiles','scriptFiles','lazyScriptFiles','assetFiles'];
   for(const group of groups)if(!Array.isArray(manifest[group]))fail(`Missing ${group}`);
+  if(!Array.isArray(manifest.developmentOnlyScriptFiles))fail('Missing developmentOnlyScriptFiles');
+  if(unique(manifest.developmentOnlyScriptFiles).length!==manifest.developmentOnlyScriptFiles.length)fail('developmentOnlyScriptFiles contains duplicate paths');
+  for(const filePath of manifest.developmentOnlyScriptFiles)if(!manifest.scriptFiles.includes(filePath))fail(`Development-only script is not in scriptFiles: ${filePath}`);
   const files=groups.flatMap(group=>manifest[group]);
   if(unique(files).length!==files.length)fail('frontend-files manifest contains duplicate paths');
   for(const filePath of files){
@@ -108,7 +111,9 @@ function validateReleaseCoherence(root,{expectedReleaseId}={}){
   });
   requireTrustedOrder(stylePaths,allowlist.styleFiles,'HTML first-party stylesheet order');
   const precache=workerArray(worker,'RELEASE_ASSETS');
-  requireTrustedOrder(precache,[...allowlist.styleFiles,...allowlist.scriptFiles],'Service-worker release graph');
+  const developmentOnly=new Set(allowlist.developmentOnlyScriptFiles);
+  const requiredScripts=allowlist.scriptFiles.filter(file=>!developmentOnly.has(file));
+  requireTrustedOrder(precache,[...allowlist.styleFiles,...requiredScripts],'Service-worker release graph');
   const lazyPrecache=workerArray(worker,'LAZY_RELEASE_ASSETS');
   requireTrustedOrder(lazyPrecache,allowlist.lazyScriptFiles,'Service-worker lazy release graph');
   const declaredAssets=manifestAssets(webManifest);

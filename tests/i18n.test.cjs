@@ -81,14 +81,14 @@ test('session ownership warnings use stable translation keys with English fallba
 test('English, Japanese, Spanish, and German expose the same UI key set',()=>{
   const {catalogs}=load();
   const expected=Object.keys(catalogs.en).sort();
-  assert.equal(expected.length,1270);
+  assert.equal(expected.length,1304);
   for(const locale of ['ja','es','de'])assert.deepEqual(Object.keys(catalogs[locale]).sort(),expected,locale);
 });
 
 test('Connected Accounts states are complete and localized',()=>{
   const {catalogs}=load(),required=[
     'security.connectedAccounts','security.connectedAccountsHelp','security.usernamePin','security.usernamePinHelp',
-    'security.connected','security.notConnected','security.connecting','security.waitingBrowser','security.needsAttention',
+    'security.connected','security.notConnected','security.connecting','security.googleReady','security.googleReadyHelp','security.waitingBrowser','security.needsAttention',
     'security.reauthenticate','security.disconnecting','security.unavailable','security.providerDevelopmentOnly','security.foundationNotice'
   ];
   for(const key of required){

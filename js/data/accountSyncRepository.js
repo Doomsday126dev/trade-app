@@ -2,6 +2,8 @@
   const root=global.PogoData=global.PogoData||{};
   const model=global.PogoDomain?.accountSyncModel,merge=global.PogoDomain?.accountSyncMerge;
   if(!model||!merge)throw new Error('Account sync model and merge engine must load before the repository');
+  const RECOVERY_REVIEW_KIND='recovery-review-acceptance';
+  const RECOVERY_REVIEW_KEYS=Object.freeze(['schemaVersion','kind','ownerUid','trainerUsername','evidenceFingerprint','candidateCount','acceptedAt']);
 
   function createAccountSyncRepository({database,ref,get,onValue,runTransaction,serverTimestamp,ownerUid,clock=()=>Date.now()}={}){
     const owner=model.firebaseKey(ownerUid,128);
@@ -69,6 +71,41 @@
       if(!/^candidate_[a-f0-9]{64}$/.test(id))return Promise.resolve(model.failure('account-sync/recovery-candidate-id-invalid','Recovery candidate ID is invalid'));
       return createOnly(`recoveryCandidates/${id}`,record,'account-sync/recovery-candidate-exists');
     }
+    function validRecoveryReviewAcceptance(value,expected=value){
+      if(!model.plainObject(value)||Object.keys(value).sort().join(',')!==[...RECOVERY_REVIEW_KEYS].sort().join(','))return false;
+      const fingerprint=String(expected?.evidenceFingerprint||''),username=model.exactText(expected?.trainerUsername,64);
+      return value.schemaVersion===model.SCHEMA_VERSION&&value.kind===RECOVERY_REVIEW_KIND&&value.ownerUid===owner&&value.ownerUid===expected?.ownerUid&&
+        value.trainerUsername===username&&value.trainerUsername===expected?.trainerUsername&&/^[a-f0-9]{64}$/.test(fingerprint)&&value.evidenceFingerprint===fingerprint&&
+        Number.isSafeInteger(value.candidateCount)&&value.candidateCount>0&&value.candidateCount===expected?.candidateCount&&Number.isSafeInteger(value.acceptedAt)&&value.acceptedAt>=0;
+    }
+    function recoveryReviewPath(record){return`authIndex/${owner}/accountSyncRecoveryReviews/${String(record?.evidenceFingerprint||'')}`;}
+    async function readRecoveryReviewAcceptance(expected){
+      assertOwner(expected);
+      if(!validRecoveryReviewAcceptance(expected))return model.failure('account-sync/recovery-review-acceptance-invalid','Recovery review acceptance is invalid');
+      const snapshot=await get(dbRef(recoveryReviewPath(expected)));
+      if(!snapshot.exists())return Object.freeze({ok:true,status:'missing',value:null});
+      const value=snapshot.val();
+      return validRecoveryReviewAcceptance(value,expected)
+        ?Object.freeze({ok:true,status:'found',value})
+        :model.failure('account-sync/recovery-review-acceptance-conflict','Recovery review acceptance differs from the exact evidence set');
+    }
+    async function createRecoveryReviewAcceptance(record){
+      assertOwner(record);
+      if(!validRecoveryReviewAcceptance(record))return model.failure('account-sync/recovery-review-acceptance-invalid','Recovery review acceptance is invalid');
+      const target=dbRef(recoveryReviewPath(record));let result=null,writeError=null;
+      try{result=await runTransaction(target,current=>current==null?record:undefined,{applyLocally:false});}catch(error){writeError=error;}
+      if(result?.committed){
+        const value=result.snapshot.val();
+        return validRecoveryReviewAcceptance(value,record)
+          ?Object.freeze({ok:true,status:'created',value})
+          :model.failure('account-sync/recovery-review-acceptance-conflict','Committed recovery review acceptance is invalid');
+      }
+      let snapshot;
+      try{snapshot=await get(target);}catch{return model.failure('account-sync/recovery-review-acceptance-unreconciled','Recovery review acceptance could not be reconciled');}
+      const value=snapshot.exists()?snapshot.val():null;
+      if(validRecoveryReviewAcceptance(value,record))return Object.freeze({ok:true,status:'idempotent',value,writeErrorCode:String(writeError?.code||'')});
+      return model.failure('account-sync/recovery-review-acceptance-conflict','Recovery review acceptance differs from the exact evidence set');
+    }
     async function updateMeta(patch){
       assertOwner(patch);const allowed=['schemaVersion','ownerUid','initialized','initializedAt','updatedAt','featureVersion'];
       if(Object.keys(patch).some(key=>!allowed.includes(key)))return model.failure('account-sync/meta-invalid','Account sync metadata contains unknown fields');
@@ -79,7 +116,7 @@
       },{applyLocally:false});
       return result.committed?Object.freeze({ok:true,status:'updated',value:result.snapshot.val()}):model.failure('account-sync/meta-conflict','Account sync metadata update was rejected');
     }
-    return Object.freeze({ownerUid:owner,accountPath,readAccount,listenAccount,applyOperation,createMigration,createRecoveryCandidate,updateMeta});
+    return Object.freeze({ownerUid:owner,accountPath,readAccount,listenAccount,applyOperation,createMigration,createRecoveryCandidate,readRecoveryReviewAcceptance,createRecoveryReviewAcceptance,updateMeta});
   }
 
   root.accountSyncRepository=Object.freeze({createAccountSyncRepository});

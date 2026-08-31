@@ -23,6 +23,7 @@
     {id:'owned_gmax_live',path:'gmax/{currentUsername}',method:'onValue',breadth:'exact',ownerScope:'session',audience:'owner',consumers:['my_list'],status:'transitional'},
     {id:'owned_costumes_live',path:'costumes/{currentUsername}',method:'onValue',breadth:'exact',ownerScope:'session',audience:'owner',consumers:['my_list'],status:'transitional'},
     {id:'account_sync_migration_reads',path:'wishlist/{currentUsername} + dynamax/{currentUsername} + gmax/{currentUsername} + costumes/{currentUsername} + users/{currentUsername}',method:'get',breadth:'exact',ownerScope:'session',audience:'owner',consumers:['account_sync_migration'],status:'transitional'},
+    {id:'account_sync_recovery_review_read',path:'authIndex/{currentUid}/accountSyncRecoveryReviews/{evidenceFingerprint}',method:'get',breadth:'exact',ownerScope:'session',audience:'owner',consumers:['account_sync_recovery_review'],status:'retained'},
     {id:'owned_inventory_live',path:'have/{currentUsername}',method:'onValue',breadth:'exact',ownerScope:'session',audience:'owner',consumers:['inventory'],status:'planned_retirement'},
     {id:'owned_auth_index_live',path:'authIndex/{currentUid}',method:'onValue',breadth:'exact',ownerScope:'session',audience:'owner',consumers:['login_freshness'],status:'transitional'},
     {id:'owned_memberships_live',path:'userCommunities/{currentUid}',method:'onValue',breadth:'exact',ownerScope:'session',audience:'owner',consumers:['community_switcher'],status:'planned_retirement'},
@@ -40,13 +41,15 @@
     {id:'candidate_preference_recents_live',path:'userPreferences/{viewerUid}/recentTrainerSlots',method:'onValue',breadth:'exact',ownerScope:'session',audience:'owner',consumers:['future_synced_preferences'],status:'candidate_inactive'},
     {id:'candidate_preference_history_live',path:'userPreferences/{viewerUid}/trainerHistory',method:'onValue',breadth:'exact',ownerScope:'session',audience:'owner',consumers:['future_synced_preferences'],status:'candidate_inactive'},
     {id:'login_identity_reads',path:'users/{username} + authIndex/{uid}',method:'get',breadth:'exact',ownerScope:'session',audience:'owner_or_admin',consumers:['login','account_binding'],status:'retained'},
+    {id:'provider_account_resolution_reads',path:'authIndex/{providerUid} + users/{resolvedUsername}',method:'get',breadth:'exact',ownerScope:'session',audience:'owner',consumers:['provider_sign_in'],status:'candidate_inactive'},
+    {id:'provider_onboarding_handle_read',path:'loginDirectory/{candidateUsername}',method:'get',breadth:'exact',ownerScope:'session',audience:'authenticated',consumers:['provider_onboarding'],status:'candidate_inactive'},
     {id:'admin_verification_reads',path:'users/{username} + loginDirectory/{username}',method:'get',breadth:'exact',ownerScope:'legacyAdmin',audience:'admin',consumers:['account_repair','member_creation'],status:'transitional'},
     {id:'community_verification_reads',path:'communities/{communityId}',method:'get',breadth:'exact',ownerScope:'legacyAdmin',audience:'admin',consumers:['community_admin'],status:'planned_retirement'},
     {id:'health_check_read',path:'users or loginDirectory',method:'get',breadth:'dynamic',ownerScope:'legacyAdmin',audience:'anonymous_or_authenticated',consumers:['health_check'],status:'transitional'}
   ].map(freezeEntry));
 
   const SOURCE_CALL_CONTRACT=Object.freeze({
-    directGetCount:14,
+    directGetCount:17,
     directOnValueCount:0,
     managedListenCount:1,
     repositoryFiles:Object.freeze([
@@ -67,8 +70,10 @@
       })
     ]),
     needles:Object.freeze([
-      Object.freeze({text:'get(ref(db,`users/${username}`))',count:2}),
+      Object.freeze({text:'get(ref(db,`users/${username}`))',count:3}),
       Object.freeze({text:'get(ref(db,`loginDirectory/${username}`))',count:2}),
+      Object.freeze({text:'get(ref(db,`authIndex/${expectedUid}`))',count:1}),
+      Object.freeze({text:'get(ref(db,`loginDirectory/${handle}`))',count:1}),
       Object.freeze({text:'get(ref(db,`communities/${id}/memberUsernames/${username}`))',count:1}),
       Object.freeze({text:'get(indexRef)',count:1}),
       Object.freeze({text:'get(ref(db,`users/${username}/authUid`))',count:1}),

@@ -73,6 +73,13 @@
         return Object.freeze({ok:true,status:proof.status||result?.status||'reconciled',value:proof.value,writeErrorCode:safeErrorCode(writeError,'')});
       });
     }
+    async function runAuthorizedMutation(task){
+      if(typeof task!=='function')throw new TypeError('Authorized mutation callback is required');
+      const binding=listenerAuthority(),execution=await executeAuthorizedMutation(task,binding);
+      if(!execution.started||!execution.current)throw listenerAuthorityError();
+      if(execution.error)throw execution.error;
+      return execution.value;
+    }
     function waitForListenerReady({timeoutMs=8000}={}){
       if(!eligible)return Promise.resolve(Object.freeze({ok:true,status:'disabled'}));
       if(!active)return Promise.resolve(listenerFailure('account-sync/session-inactive'));
@@ -431,7 +438,7 @@
     }
     function activeEntities(type){return[...entities.values()].filter(entity=>(!type||entity.entityType===type)&&entity.deleted!==true);}
     function publicProjection(){return model.publicTradeProjection([...acceptedEntities.values()]);}
-    return Object.freeze({ownerUid:owner,eligible,activate,deactivate,waitForListenerReady,snapshot,getEntity,activeEntities,publicProjection,publishAcceptedProjection,runAuthorizedWatchedMutation,mutateBatch,addEntity,patchEntity,addMigrationEntity,patchMigrationEntity,deleteMigrationEntity,deleteEntity,drain,retry,retryBlocked,conflictDetails,acceptConflict,reapplyConflict,acceptRemote});
+    return Object.freeze({ownerUid:owner,eligible,activate,deactivate,waitForListenerReady,snapshot,getEntity,activeEntities,publicProjection,publishAcceptedProjection,runAuthorizedMutation,runAuthorizedWatchedMutation,mutateBatch,addEntity,patchEntity,addMigrationEntity,patchMigrationEntity,deleteMigrationEntity,deleteEntity,drain,retry,retryBlocked,conflictDetails,acceptConflict,reapplyConflict,acceptRemote});
   }
 
   root.accountSyncController=Object.freeze({createAccountSyncController});
