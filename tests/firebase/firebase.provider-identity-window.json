@@ -1,0 +1,9 @@
+{
+  "database": { "rules": "database.rules.provider-identity-window.json" },
+  "emulators": {
+    "auth": { "port": 9499 },
+    "database": { "port": 9410 },
+    "ui": { "enabled": false },
+    "singleProjectMode": true
+  }
+}
