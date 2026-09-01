@@ -16,7 +16,9 @@ The UID is an authorization boundary, not a public identifier. Public URLs remai
 
 ## Owner publication
 
-The authenticated browser builds the existing public-share snapshot, validates it locally, then performs one RTDB transaction at `trainerShares/{session.uid}`. Candidate Rules require `auth.uid == $ownerUid` and a strict projection schema.
+Provider-only publication is derived only from accepted canonical account-sync rows plus the canonical UID-rooted `accountSync/{uid}/profile`. It does not use the legacy username-rooted local-share snapshot. The authenticated browser validates that combined snapshot, persists an owner-partitioned pending record in IndexedDB, then awaits one RTDB transaction and one exact readback at `trainerShares/{session.uid}`. Candidate Rules require `auth.uid == $ownerUid` and a strict projection schema.
+
+The pending record is stored as `provider-publication-pending-v1` and contains only the owner UID, canonical public rows, a domain-separated SHA-256 fingerprint, schema version, and queue time. It is written before the network attempt and removed only after exact committed content is read back. A changed session, UID, or runtime generation cannot clear another lifecycle's pending publication.
 
 The stored record contains only:
 
@@ -41,7 +43,9 @@ Publication remains blocked until all of these are true:
 - the independent browser development gate is true;
 - the snapshot passes the existing public projection validator.
 
-There is no publication before account certification and no write to `authIndex`, `loginDirectory`, `users`, `publicShares`, or `shareDirectory`.
+Canonical add, edit, delete, and provider-profile mutations request publication only after the private mutation is accepted. An exact content match is reconciled without allocating another `shareVersion`; changed content advances the version transactionally. A temporary public-write failure never rolls back the private account edit. The durable pending publication retries on reconnect, authenticated startup/PWA reopen, and explicit share or retry actions.
+
+There is no publication before account certification and no provider-only write to `authIndex`, `loginDirectory`, `users`, `publicShares`, or `shareDirectory`.
 
 ## Anonymous resolution
 
@@ -58,6 +62,12 @@ The read sequence is fixed and bounded:
 Missing handle claims and missing projections both return `SHARE_NOT_FOUND`. Split, stale, malformed, oversized, or conflicting state fails closed.
 
 The authority receives no RTDB writer credential. Its public projection read is intentionally anonymous and therefore depends on the candidate Rules granting exact child reads while denying parent enumeration.
+
+## Threat model and known-UID residual
+
+The projection is intentionally public and strictly sanitized. Candidate Rules allow an anonymous party that already knows an owner's Firebase UID to read the exact `trainerShares/{uid}` child directly. Parent and root enumeration remain denied, but the UID itself is not treated as a secret once independently known.
+
+This residual is accepted for the candidate architecture. App Check and the callable gateway provide handle resolution, bounded request validation, replay resistance, and anti-abuse controls; they are not a confidentiality boundary and are not claimed as the exclusive read path. The exact-child Rules path is safe only because the projection cannot contain email, provider subject, token, credential, canonical account metadata, local journal state, private tags, migration evidence, or any other private field.
 
 ## Legacy compatibility
 
@@ -93,11 +103,15 @@ The emulator-only candidate Rules prove:
 - exact legacy `publicShares/{username}` remains readable;
 - browser Firestore access to canonical identity remains denied.
 
+Browser, authority, and gateway validators share the same top-level/profile/entry allowlists, four list types, priority values, string bounds, background-ID grammar, timestamp constraints, 2,000-entry aggregate limit, and 512 KiB service boundary. Dynamic Pokemon keys named `__proto__`, `prototype`, or `constructor` are rejected at every boundary, and sanitized dictionaries use null prototypes.
+
+Realtime Database Rules cannot express a cross-list aggregate child count or serialized-byte limit. The candidate Rules enforce every per-node field and length constraint, while the browser refuses an oversized write and both anonymous service boundaries fail closed if a malicious owner bypasses the browser. This is an explicit Rules limitation, not a claim of exact aggregate enforcement.
+
 Production Rules are intentionally not changed by this PR.
 
 ## Emulator limitations
 
-Auth and RTDB Rules tests use the Firebase emulators and real Rules evaluation. Firestore authority tests use the Firestore emulator and the production adapter. Provider popup behavior and Firebase App Check token minting cannot be faithfully produced by the local emulators, so those boundaries use injected adapters while asserting exact callable options, request shape, gate behavior, and absence of Auth/UID forwarding.
+Auth and RTDB Rules tests use the Firebase emulators and real Rules evaluation, including anonymous exact known-UID reads and denied parent enumeration. Firestore authority tests use the Firestore emulator and the production adapter. Provider popup behavior and Firebase App Check token minting cannot be faithfully produced by the local emulators, so those boundaries use injected adapters while asserting exact callable options, request shape, gate behavior, and absence of Auth/UID forwarding.
 
 ## Rollout boundary
 
