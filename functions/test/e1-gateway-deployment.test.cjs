@@ -75,6 +75,11 @@ function candidateManifest(overrides = {}) {
     sourceCommitSha: TEST_SOURCE_SHA,
     sourceFiles,
     sourceFingerprint: sourceFingerprint(sourceFiles),
+    expectedExports: [
+      'readE1AccountFoundation',
+      'createE1ProviderAccountFoundation',
+      'reserveE1TrainerHandle'
+    ],
     ...overrides
   };
 }
@@ -555,7 +560,11 @@ test('D2 enable and restoration use the canonical immutable source and only appr
   assert.equal(enabled.sourceCommitSha, restored.sourceCommitSha);
   assert.equal(enabled.sourceFingerprint, manifest.sourceFingerprint);
   assert.equal(enabled.sourceFingerprint, restored.sourceFingerprint);
-  assert.deepEqual(enabled.functions, ['readE1AccountFoundation', 'reserveE1TrainerHandle']);
+  assert.deepEqual(enabled.functions, [
+    'readE1AccountFoundation',
+    'createE1ProviderAccountFoundation',
+    'reserveE1TrainerHandle'
+  ]);
   assert.deepEqual(enabled.functions, restored.functions);
   assert.equal(enabled.authorityUrl, restored.authorityUrl);
   assert.equal(enabled.authorityAudience, restored.authorityAudience);
@@ -776,6 +785,7 @@ function authorityServiceFixture(reserveEnabled = false) {
       serviceAccountName: 'e1-identity-authority-runtime@trade-list-a4297.iam.gserviceaccount.com',
       containers: [{ image: `us-central1-docker.pkg.dev/project/authority@sha256:${'a'.repeat(64)}`, env: [
         ['READ_ACCOUNT_FOUNDATION_ENABLED', false], ['RESERVE_HANDLE_ENABLED', reserveEnabled],
+        ['CREATE_PROVIDER_ACCOUNT_ENABLED', false],
         ['REPAIR_FOUNDATION_ENABLED', false], ['APPLY_MIGRATION_ENABLED', false],
         ['FREEZE_CONFLICT_ENABLED', false]
       ].map(([name, value]) => ({ name, value: String(value) })) }]
@@ -901,7 +911,7 @@ test('authority IAM preserves exact sole Run invoker isolation', () => {
   }
 });
 
-test('mocked D3 continuation deployment enables only reserve plus gateway', () => {
+test('mocked D3 continuation deployment enables only reserve plus gateway while provider creation stays disabled', () => {
   const manifest = candidateManifest();
   const plan = createDeploymentPlan({
     action: 'enable-group-d3', expectedSha: HEAD, explicitSource: manifest.sourceRoot, mode: 'plan',
@@ -942,13 +952,13 @@ test('mocked D3 continuation deployment enables only reserve plus gateway', () =
   verifyAuthorityService(plan, authority, true);
   const replacements = calls.filter((args) => args[0] === 'run' && args[1] === 'services' && args[2] === 'replace');
   assert.equal(replacements.length, 2);
-  assert.equal(calls.filter((args) => args[0] === 'functions' && args[1] === 'deploy').length, 2);
+  assert.equal(calls.filter((args) => args[0] === 'functions' && args[1] === 'deploy').length, 3);
   assert.equal(calls.some((args) => args.includes('functions/.local')), false);
   const enabled = authorityReplacement(authorityServiceFixture(false), true);
   const values = Object.fromEntries(enabled.spec.template.spec.containers[0].env.map((entry) => [entry.name, entry.value]));
   assert.equal(values.RESERVE_HANDLE_ENABLED, 'true');
   assert.deepEqual(Object.entries(values).filter(([name]) => name !== 'RESERVE_HANDLE_ENABLED')
-    .map(([, value]) => value), ['false', 'false', 'false', 'false']);
+    .map(([, value]) => value), ['false', 'false', 'false', 'false', 'false']);
 });
 
 test('clean-start D3 execution preserves the original gateway-only deploy behavior', () => {
@@ -970,7 +980,7 @@ test('clean-start D3 execution preserves the original gateway-only deploy behavi
     throw new Error(`clean-start invoked an unexpected command: ${args.join(' ')}`);
   };
   executePlan(plan, { spawn });
-  assert.equal(calls.filter((args) => args[0] === 'functions' && args[1] === 'deploy').length, 2);
+  assert.equal(calls.filter((args) => args[0] === 'functions' && args[1] === 'deploy').length, 3);
   assert.equal(calls.some((args) => args[0] === 'run'), false);
 });
 
@@ -1024,7 +1034,7 @@ test('mocked D3 continuation deployment restores gateway and authority after ena
     .map((entry) => [entry.name, entry.value])).RESERVE_HANDLE_ENABLED, 'false');
   assert.equal(gatewayEnabled, false);
   assert.equal(calls.filter((args) => args[0] === 'run' && args[1] === 'services' && args[2] === 'replace').length, 4);
-  assert.equal(deploymentAttempts, 3);
+  assert.equal(deploymentAttempts, 4);
 });
 
 test('authority gate-only replacement rejects immutable image drift', () => {
@@ -1168,9 +1178,9 @@ test('Group E authority replacement enables only read and restore strips private
   const enabled = authorityReplacement(authorityServiceFixture(false), true, plan);
   const enabledEnv = Object.fromEntries(enabled.spec.template.spec.containers[0].env.map((entry) => [entry.name, entry.value]));
   assert.equal(enabledEnv.READ_ACCOUNT_FOUNDATION_ENABLED, 'true');
-  assert.deepEqual(Object.fromEntries(['RESERVE_HANDLE_ENABLED','REPAIR_FOUNDATION_ENABLED','APPLY_MIGRATION_ENABLED',
+  assert.deepEqual(Object.fromEntries(['CREATE_PROVIDER_ACCOUNT_ENABLED','RESERVE_HANDLE_ENABLED','REPAIR_FOUNDATION_ENABLED','APPLY_MIGRATION_ENABLED',
     'FREEZE_CONFLICT_ENABLED'].map((name) => [name, enabledEnv[name]])), {
-    RESERVE_HANDLE_ENABLED:'false',REPAIR_FOUNDATION_ENABLED:'false',APPLY_MIGRATION_ENABLED:'false',FREEZE_CONFLICT_ENABLED:'false'
+    CREATE_PROVIDER_ACCOUNT_ENABLED:'false',RESERVE_HANDLE_ENABLED:'false',REPAIR_FOUNDATION_ENABLED:'false',APPLY_MIGRATION_ENABLED:'false',FREEZE_CONFLICT_ENABLED:'false'
   });
   assert.equal(enabledEnv.GROUP_E_CLIENT_MODE, 'synthetic-canary');
   const restored = authorityReplacement(enabled, false, plan);

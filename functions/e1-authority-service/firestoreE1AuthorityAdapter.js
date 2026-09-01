@@ -2,12 +2,14 @@
 
 const RATE_LIMIT_OPERATIONS = new Set([
   'readAccountFoundation',
+  'createProviderAccountFoundation',
   'reserveTrainerHandle',
   'repairAccountFoundation',
   'applyMigrationManifest',
   'freezeIdentityConflict'
 ]);
 const MUTATION_OPERATIONS = new Set([
+  'createProviderAccountFoundation',
   'reserveTrainerHandle',
   'repairAccountFoundation',
   'applyMigrationManifest',
@@ -28,6 +30,9 @@ function createFirestoreE1AuthorityAdapter({ firestore, now = () => Date.now() }
 
   const accountRef = (uid) => firestore.doc(`accounts/${uid}`);
   const handleRef = (handleKey) => firestore.doc(`trainerHandles/${handleKey}`);
+  const providerRef = (uid, provider) => firestore.doc(`accounts/${uid}/providers/${provider}`);
+  const providerSubjectRef = (providerSubjectKey) => firestore.doc(`providerSubjects/${providerSubjectKey}`);
+  const providerCreationCertificationRef = () => firestore.doc('authorityConfig/providerAccountCreation');
   const operationRef = (uid, requestId) => firestore.doc(`operationRequests/${uid}/requests/${requestId}`);
   const migrationRef = (uid, requestId) => firestore.doc(`identityMigrations/${uid}/operations/${requestId}`);
   const conflictRef = (uid, requestId) => firestore.doc(`identityConflicts/${uid}/events/${requestId}`);
@@ -114,6 +119,24 @@ function createFirestoreE1AuthorityAdapter({ firestore, now = () => Date.now() }
     };
   }
 
+  function providerAccountDocument(input, timestamp) {
+    return {
+      schemaVersion: 1,
+      uid: input.uid,
+      canonicalTrainerName: input.canonicalTrainerName,
+      normalizedTrainerName: input.normalizedTrainerName,
+      handleKey: input.handleKey,
+      identityKind: 'provider_only',
+      legacyAccessConfigured: false,
+      legacyUsername: null,
+      legacyAuthVersion: null,
+      status: 'active',
+      revision: 1,
+      createdAt: timestamp,
+      updatedAt: timestamp
+    };
+  }
+
   function handleDocument(input, timestamp) {
     return {
       schemaVersion: 1,
@@ -124,6 +147,31 @@ function createFirestoreE1AuthorityAdapter({ firestore, now = () => Date.now() }
       revision: 1,
       claimedAt: timestamp,
       updatedAt: timestamp
+    };
+  }
+
+  function accountProviderDocument(input, timestamp) {
+    return {
+      schemaVersion: 1,
+      provider: input.providerKey,
+      providerId: input.providerId,
+      providerSubjectKey: input.providerSubjectKey,
+      state: 'linked',
+      linkedAt: timestamp,
+      updatedAt: timestamp,
+      revision: 1
+    };
+  }
+
+  function providerSubjectDocument(input, timestamp) {
+    return {
+      schemaVersion: 1,
+      uid: input.uid,
+      provider: input.providerKey,
+      providerId: input.providerId,
+      providerSubjectKey: input.providerSubjectKey,
+      linkedAt: timestamp,
+      revision: 1
     };
   }
 
@@ -160,9 +208,100 @@ function createFirestoreE1AuthorityAdapter({ firestore, now = () => Date.now() }
       data.normalizedTrainerName === input.normalizedTrainerName && data.state === 'active' && data.revision === 1;
   }
 
+  function exactProviderAccount(data, input) {
+    return data?.schemaVersion === 1 && data.uid === input.uid && data.handleKey === input.handleKey &&
+      data.canonicalTrainerName === input.canonicalTrainerName && data.normalizedTrainerName === input.normalizedTrainerName &&
+      data.identityKind === 'provider_only' && data.legacyAccessConfigured === false && data.legacyUsername === null &&
+      data.legacyAuthVersion === null && data.status === 'active' && data.revision === 1;
+  }
+
+  function exactAccountProvider(data, input) {
+    return data?.schemaVersion === 1 && data.provider === input.providerKey && data.providerId === input.providerId &&
+      data.providerSubjectKey === input.providerSubjectKey && data.state === 'linked' && data.revision === 1 &&
+      Number.isSafeInteger(data.linkedAt) && Number.isSafeInteger(data.updatedAt) && data.updatedAt >= data.linkedAt;
+  }
+
+  function exactProviderSubject(data, input) {
+    return data?.schemaVersion === 1 && data.uid === input.uid && data.provider === input.providerKey &&
+      data.providerId === input.providerId && data.providerSubjectKey === input.providerSubjectKey && data.revision === 1 &&
+      Number.isSafeInteger(data.linkedAt);
+  }
+
+  function validProviderCreationCertification(data, timestamp) {
+    return data?.schemaVersion === 1 && data.state === 'certified' && data.normalizationVersion === 1 &&
+      data.legacyNamespaceCoverageCertified === true && Number.isSafeInteger(data.activeLegacyHandleCount) &&
+      data.activeLegacyHandleCount >= 0 && data.certifiedHandleCount === data.activeLegacyHandleCount &&
+      HASH.test(data.coverageDigest || '') && Number.isSafeInteger(data.certifiedAt) && data.certifiedAt <= timestamp &&
+      Number.isSafeInteger(data.expiresAt) && data.expiresAt > timestamp;
+  }
+
   async function readAccountFoundation(uid) {
     const snapshot = await accountRef(uid).get();
     return snapshot.exists ? Object.freeze(snapshot.data()) : null;
+  }
+
+  async function readProviderAccountFoundation(input) {
+    const refs = [accountRef(input.uid), handleRef(input.handleKey), providerRef(input.uid, input.providerKey),
+      providerSubjectRef(input.providerSubjectKey)];
+    const [account, handle, provider, subject] = await Promise.all(refs.map((ref) => ref.get()));
+    if (![account, handle, provider, subject].every((snapshot) => snapshot.exists)) return null;
+    if (!exactProviderAccount(account.data(), input) || !exactHandle(handle.data(), input) ||
+        !exactAccountProvider(provider.data(), input) || !exactProviderSubject(subject.data(), input) ||
+        provider.data().linkedAt !== subject.data().linkedAt) fail('e1/provider-foundation-conflict');
+    return Object.freeze({
+      status: 'created',
+      canonicalTrainerName: input.canonicalTrainerName,
+      normalizedTrainerName: input.normalizedTrainerName,
+      handleKey: input.handleKey,
+      identityKind: 'provider_only',
+      revision: 1
+    });
+  }
+
+  async function createProviderAccountFoundation(input, { replayOnly = false } = {}) {
+    return firestore.runTransaction(async (transaction) => {
+      const refs = [
+        providerCreationCertificationRef(),
+        accountRef(input.uid),
+        handleRef(input.handleKey),
+        providerRef(input.uid, input.providerKey),
+        providerSubjectRef(input.providerSubjectKey),
+        operationRef(input.uid, input.requestId)
+      ];
+      const [certification, account, handle, provider, subject, request] =
+        await Promise.all(refs.map((ref) => transaction.get(ref)));
+      const prior = replay(request, input.fingerprint, 'createProviderAccountFoundation', replayOnly);
+      if (prior) {
+        if (!account.exists || !handle.exists || !provider.exists || !subject.exists ||
+            !exactProviderAccount(account.data(), input) || !exactHandle(handle.data(), input) ||
+            !exactAccountProvider(provider.data(), input) || !exactProviderSubject(subject.data(), input) ||
+            provider.data().linkedAt !== subject.data().linkedAt) fail('e1/provider-foundation-conflict');
+        return prior;
+      }
+      const timestamp = now();
+      if (!certification.exists || !validProviderCreationCertification(certification.data(), timestamp)) {
+        fail('e1/legacy-namespace-not-certified');
+      }
+      if (account.exists) fail('e1/account-conflict');
+      if (handle.exists) fail('e1/handle-conflict');
+      if (provider.exists) fail('e1/provider-foundation-conflict');
+      if (subject.exists) fail(subject.data()?.uid === input.uid ? 'e1/provider-foundation-conflict' : 'e1/provider-subject-conflict');
+
+      const result = {
+        status: 'created',
+        canonicalTrainerName: input.canonicalTrainerName,
+        normalizedTrainerName: input.normalizedTrainerName,
+        handleKey: input.handleKey,
+        identityKind: 'provider_only',
+        revision: 1
+      };
+      transaction.create(refs[1], providerAccountDocument(input, timestamp));
+      transaction.create(refs[2], handleDocument(input, timestamp));
+      transaction.create(refs[3], accountProviderDocument(input, timestamp));
+      transaction.create(refs[4], providerSubjectDocument(input, timestamp));
+      transaction.create(refs[5], operationDocument('createProviderAccountFoundation', input, result, timestamp));
+      return Object.freeze(result);
+    });
   }
 
   async function reserveTrainerHandle(input, { replayOnly = false } = {}) {
@@ -283,9 +422,11 @@ function createFirestoreE1AuthorityAdapter({ firestore, now = () => Date.now() }
   return Object.freeze({
     applyMigrationManifest,
     consumeRateLimit,
+    createProviderAccountFoundation,
     freezeIdentityConflict,
     operationRequestExists,
     readAccountFoundation,
+    readProviderAccountFoundation,
     repairAccountFoundation,
     reserveTrainerHandle
   });

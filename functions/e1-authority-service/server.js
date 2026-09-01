@@ -24,6 +24,7 @@ const {
 
 const GATES = Object.freeze([
   'READ_ACCOUNT_FOUNDATION_ENABLED',
+  'CREATE_PROVIDER_ACCOUNT_ENABLED',
   'RESERVE_HANDLE_ENABLED',
   'REPAIR_FOUNDATION_ENABLED',
   'APPLY_MIGRATION_ENABLED',
@@ -32,6 +33,7 @@ const GATES = Object.freeze([
 const MUTATION_GATES = Object.freeze(GATES.slice(1));
 const RATE_LIMITS = Object.freeze({
   readAccountFoundation: Object.freeze({ limit: 60, windowMs: 15 * 60 * 1000 }),
+  createProviderAccountFoundation: Object.freeze({ limit: 3, windowMs: 24 * 60 * 60 * 1000 }),
   reserveTrainerHandle: Object.freeze({ limit: 5, windowMs: 15 * 60 * 1000 }),
   repairAccountFoundation: Object.freeze({ limit: 3, windowMs: 24 * 60 * 60 * 1000 }),
   applyMigrationManifest: Object.freeze({ limit: 10, windowMs: 60 * 1000 }),
@@ -45,6 +47,9 @@ const REQUEST_ID = /^[A-Za-z0-9][A-Za-z0-9._:-]{7,127}$/;
 const SHA256 = /^[a-f0-9]{64}$/;
 const SAFE_ATTEMPT_HASH = /^[a-f0-9]{16}$/;
 const MAX_REQUEST_BYTES = 4096;
+const PROVIDER_ACCOUNT_CLIENT_RELEASE = '2026-08-31.86';
+const PROVIDER_AUTH_MAX_AGE_MS = 10 * 60 * 1000;
+const PROVIDER_SUBJECT = /^[A-Za-z0-9_-]{1,512}$/u;
 const FROZEN_STATUSES = new Set(['frozen', 'blocked', 'conflict', 'conflict-frozen']);
 const MIGRATION_DECISIONS = new Set(['eligible', 'exact-already-migrated']);
 const CONFLICT_REASONS = new Set(['legacy-binding-conflict', 'handle-owner-conflict', 'migration-manifest-conflict']);
@@ -187,6 +192,7 @@ function loadConfiguration(env = process.env, now = () => Date.now()) {
   return Object.freeze({
     ...configuration,
     readAccountFoundationEnabled: env.READ_ACCOUNT_FOUNDATION_ENABLED === 'true',
+    createProviderAccountEnabled: env.CREATE_PROVIDER_ACCOUNT_ENABLED === 'true',
     reserveTrainerHandleEnabled: env.RESERVE_HANDLE_ENABLED === 'true',
     repairAccountFoundationEnabled,
     applyMigrationManifestEnabled,
@@ -310,7 +316,18 @@ async function verifyFirebaseIdToken(configuration, firebaseIdToken, verifier, n
       claims.iss !== `https://securetoken.google.com/${configuration.projectId}` || decodedClaims.iss !== claims.iss ||
       !Number.isFinite(claims.exp) || claims.exp <= nowSeconds || decodedClaims.exp !== claims.exp ||
       !Number.isFinite(claims.auth_time) || decodedClaims.auth_time !== claims.auth_time) fail('AUTH_INVALID');
-  return Object.freeze({ uid });
+  const firebase = claims.firebase;
+  const decodedFirebase = decodedClaims.firebase;
+  const signInProvider = firebase?.sign_in_provider;
+  const identities = firebase?.identities;
+  if ((firebase !== undefined || decodedFirebase !== undefined) &&
+      JSON.stringify(firebase) !== JSON.stringify(decodedFirebase)) fail('AUTH_INVALID');
+  return Object.freeze({
+    uid,
+    authTime: claims.auth_time * 1000,
+    signInProvider: typeof signInProvider === 'string' ? signInProvider : null,
+    identities: identities && typeof identities === 'object' && !Array.isArray(identities) ? identities : null
+  });
 }
 
 async function verifyOperatorAccessToken(configuration, accessToken, fetchImpl = fetch) {
@@ -500,6 +517,104 @@ function exactReserveRequest(body) {
   return Object.freeze({ requestId: body.requestId, handle });
 }
 
+function providerRequestFingerprint(input) {
+  return hashParts([
+    1,
+    'createProviderAccountFoundation',
+    input.uid,
+    input.requestId,
+    input.normalizedTrainerName,
+    input.handleKey,
+    input.lifecycleId,
+    input.clientRelease
+  ]);
+}
+
+function providerOperationFingerprint(input) {
+  return hashParts([
+    1,
+    'createProviderAccountFoundation',
+    input.uid,
+    input.requestId,
+    input.normalizedTrainerName,
+    input.handleKey,
+    input.providerId,
+    input.providerSubjectKey,
+    input.authTime,
+    input.lifecycleId,
+    input.clientRelease
+  ]);
+}
+
+function providerSubjectHash(configuration, providerId, subject) {
+  return crypto.createHmac('sha256', configuration.operatorSubjectHash)
+    .update(`provider-subject-v1\0${providerId}\0${subject}`, 'utf8').digest('hex');
+}
+
+function verifiedGoogleProviderIdentity(configuration, verifiedToken, timestamp) {
+  const subjects = verifiedToken?.identities?.['google.com'];
+  if (verifiedToken?.signInProvider !== 'google.com' || !Array.isArray(subjects) || subjects.length !== 1 ||
+      !PROVIDER_SUBJECT.test(subjects[0] || '') || !Number.isSafeInteger(verifiedToken.authTime) ||
+      verifiedToken.authTime > timestamp || timestamp - verifiedToken.authTime > PROVIDER_AUTH_MAX_AGE_MS) {
+    fail('PROVIDER_IDENTITY_REQUIRED');
+  }
+  const subjectHash = providerSubjectHash(configuration, 'google.com', subjects[0]);
+  return Object.freeze({
+    providerKey: 'google',
+    providerId: 'google.com',
+    providerSubjectKey: `v1_google_${subjectHash}`,
+    authTime: verifiedToken.authTime
+  });
+}
+
+async function verifyCurrentGoogleProviderIdentity(configuration, firebaseIdToken, verifiedToken, fetchImpl = fetch, timestamp = Date.now()) {
+  const provider = verifiedGoogleProviderIdentity(configuration, verifiedToken, timestamp);
+  const expectedSubject = verifiedToken.identities['google.com'][0];
+  let response;
+  try {
+    response = await fetchImpl(`https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${encodeURIComponent(configuration.firebaseWebApiKey)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idToken: firebaseIdToken })
+    });
+  } catch {
+    fail('INTERNAL_ERROR');
+  }
+  if (!response?.ok) fail(response?.status >= 500 ? 'INTERNAL_ERROR' : 'PROVIDER_IDENTITY_REQUIRED');
+  let payload;
+  try { payload = await response.json(); } catch { fail('INTERNAL_ERROR'); }
+  const users = payload?.users;
+  const account = Array.isArray(users) && users.length === 1 ? users[0] : null;
+  const googleProviders = Array.isArray(account?.providerUserInfo)
+    ? account.providerUserInfo.filter((candidate) => candidate?.providerId === 'google.com')
+    : [];
+  if (account?.localId !== verifiedToken.uid || account?.disabled === true || googleProviders.length !== 1 ||
+      googleProviders[0].federatedId !== expectedSubject) fail('PROVIDER_IDENTITY_REQUIRED');
+  return provider;
+}
+
+function exactProviderCreateRequest(body) {
+  exactFields(body, [
+    'schemaVersion', 'requestId', 'requestedHandle', 'lifecycleId', 'clientRelease', 'idempotencyFingerprint'
+  ]);
+  if (body.schemaVersion !== 1 || !REQUEST_ID.test(body.requestId || '') ||
+      typeof body.lifecycleId !== 'string' || !/^auth-[1-9][0-9]{0,9}$/u.test(body.lifecycleId) ||
+      body.clientRelease !== PROVIDER_ACCOUNT_CLIENT_RELEASE || !SHA256.test(body.idempotencyFingerprint || '') ||
+      typeof body.requestedHandle !== 'string') fail('REQUEST_INVALID');
+  let handle;
+  try { handle = normalizeHandle(body.requestedHandle); } catch (error) {
+    if (error instanceof HandleValidationError) fail('REQUEST_INVALID');
+    throw error;
+  }
+  return Object.freeze({
+    requestId: body.requestId,
+    lifecycleId: body.lifecycleId,
+    clientRelease: body.clientRelease,
+    idempotencyFingerprint: body.idempotencyFingerprint,
+    handle
+  });
+}
+
 function verifiedLegacyFoundation(uid, requestedHandle, legacy) {
   if (legacy?.status === 'mapping-incomplete') fail('MAPPING_INCOMPLETE');
   if (legacy?.status === 'mapping-conflict') fail('MAPPING_CONFLICT');
@@ -672,6 +787,9 @@ function createHandler(configuration, dependencies = {}) {
   const probe = dependencies.runtimeProbe || ((config) => runtimeProbe(config, fetchImpl));
   const verifyToken = dependencies.verifyFirebaseIdToken ||
     ((config, token) => verifyFirebaseIdToken(config, token, dependencies.firebaseTokenVerifier));
+  const verifyCurrentProvider = dependencies.verifyCurrentGoogleProviderIdentity ||
+    ((config, token, verifiedToken, timestamp) =>
+      verifyCurrentGoogleProviderIdentity(config, token, verifiedToken, fetchImpl, timestamp));
   const verifyOperator = dependencies.verifyOperatorAccessToken || ((config, token) => verifyOperatorAccessToken(config, token, fetchImpl));
   const readAccount = dependencies.readAccountDocument || ((config, uid) => readAccountDocument(config, uid, fetchImpl));
   const legacyReader = dependencies.legacyReader || createVerifiedLegacyMappingReader({
@@ -686,6 +804,14 @@ function createHandler(configuration, dependencies = {}) {
   const reserveHandle = dependencies.reserveTrainerHandle || (async (input, options) => {
     authorityStore ||= createDefaultAuthorityStore(configuration);
     return authorityStore.reserveTrainerHandle(input, options);
+  });
+  const createProviderAccount = dependencies.createProviderAccountFoundation || (async (input, options) => {
+    authorityStore ||= createDefaultAuthorityStore(configuration);
+    return authorityStore.createProviderAccountFoundation(input, options);
+  });
+  const readProviderAccount = dependencies.readProviderAccountFoundation || (async (input) => {
+    authorityStore ||= createDefaultAuthorityStore(configuration);
+    return authorityStore.readProviderAccountFoundation(input);
   });
   const repairFoundation = dependencies.repairAccountFoundation || (async (input, options) => {
     authorityStore ||= createDefaultAuthorityStore(configuration);
@@ -858,6 +984,99 @@ function createHandler(configuration, dependencies = {}) {
         };
         const [status, code] = mapping[error?.code] || [500, 'INTERNAL_ERROR'];
         log(configuration, 'readLegacyMappingReadiness', code.toLowerCase(), startedAt, callerHash ? { uidHash: callerHash } : {});
+        return json(response, status, { code });
+      }
+    }
+    if (url.pathname === '/v1/create-provider-account-foundation') {
+      let callerHash;
+      let handleHash;
+      try {
+        if (request.method !== 'POST') fail('METHOD_NOT_ALLOWED');
+        if (!configuration.createProviderAccountEnabled) fail('E1_NOT_ENABLED');
+        const providerRequest = exactProviderCreateRequest(await parseBody(request));
+        const firebaseIdToken = firebaseTokenHeader(request);
+        const verifiedToken = await verifyToken(configuration, firebaseIdToken);
+        const uid = verifiedToken.uid;
+        callerHash = uidHash(configuration, uid);
+        handleHash = handleCorrelationHash(configuration, providerRequest.handle.handleKey);
+        const provider = await verifyCurrentProvider(configuration, firebaseIdToken, verifiedToken, now());
+        const baseInput = Object.freeze({
+          uid,
+          requestId: providerRequest.requestId,
+          canonicalTrainerName: providerRequest.handle.display,
+          normalizedTrainerName: providerRequest.handle.normalized,
+          handleKey: providerRequest.handle.handleKey,
+          lifecycleId: providerRequest.lifecycleId,
+          clientRelease: providerRequest.clientRelease,
+          ...provider
+        });
+        if (providerRequest.idempotencyFingerprint !== providerRequestFingerprint(baseInput)) fail('REQUEST_INVALID');
+        const input = Object.freeze({ ...baseInput, fingerprint: providerOperationFingerprint(baseInput) });
+        const replayOnly = await operationRequestExists({
+          operation: 'createProviderAccountFoundation', uid, requestId: providerRequest.requestId
+        });
+        if (!replayOnly) {
+          await limitOperation('createProviderAccountFoundation', callerHash,
+            rateAttemptHash('createProviderAccountFoundation', callerHash,
+              [providerRequest.requestId, providerRequest.handle.handleKey, provider.providerSubjectKey]));
+        }
+        let result;
+        let reconciled = false;
+        try {
+          result = await createProviderAccount(input, { replayOnly });
+        } catch (error) {
+          const expected = new Set([
+            'e1/replay-mismatch', 'e1/replay-not-found', 'e1/legacy-namespace-not-certified',
+            'e1/account-conflict', 'e1/handle-conflict', 'e1/provider-foundation-conflict',
+            'e1/provider-subject-conflict'
+          ]);
+          if (expected.has(error?.code)) throw error;
+          result = await readProviderAccount(input);
+          if (!result) throw error;
+          reconciled = true;
+        }
+        if (result?.status !== 'created' || result.handleKey !== input.handleKey ||
+            result.canonicalTrainerName !== input.canonicalTrainerName || result.identityKind !== 'provider_only') {
+          fail('INTERNAL_ERROR');
+        }
+        const code = result.replay === true ? 'IDEMPOTENT' : reconciled ? 'RECONCILED' : 'SUCCESS';
+        log(configuration, 'createProviderAccountFoundation', code.toLowerCase(), startedAt, {
+          uidHash: callerHash,
+          handleHash,
+          provider: 'google',
+          replayClass: result.replay === true ? 'exact-replay' : reconciled ? 'exact-readback' : 'first-write'
+        });
+        return json(response, 200, {
+          code,
+          foundation: {
+            schemaVersion: 1,
+            canonicalTrainerName: result.canonicalTrainerName,
+            normalizedTrainerName: result.normalizedTrainerName,
+            handleKey: result.handleKey,
+            legacyUsername: null,
+            identityKind: 'provider_only',
+            legacyAccessConfigured: false,
+            status: 'active',
+            revision: result.revision || 1
+          }
+        });
+      } catch (error) {
+        const mapping = {
+          E1_NOT_ENABLED: [503, 'E1_NOT_ENABLED'], AUTH_REQUIRED: [401, 'AUTH_REQUIRED'], AUTH_INVALID: [401, 'AUTH_INVALID'],
+          PROVIDER_IDENTITY_REQUIRED: [403, 'PROVIDER_IDENTITY_REQUIRED'], REQUEST_INVALID: [400, 'REQUEST_INVALID'],
+          REQUEST_TOO_LARGE: [413, 'REQUEST_INVALID'], METHOD_NOT_ALLOWED: [405, 'METHOD_NOT_ALLOWED'],
+          'e1/legacy-namespace-not-certified': [503, 'NAMESPACE_NOT_CERTIFIED'],
+          'e1/account-conflict': [409, 'ACCOUNT_EXISTS'], 'e1/handle-conflict': [409, 'HANDLE_CONFLICT'],
+          'e1/provider-foundation-conflict': [409, 'FOUNDATION_CONFLICT'],
+          'e1/provider-subject-conflict': [409, 'PROVIDER_CONFLICT'],
+          'e1/replay-mismatch': [409, 'REQUEST_INVALID'], 'e1/replay-not-found': [409, 'REQUEST_INVALID'],
+          'e1/rate-limit-exceeded': [429, 'RATE_LIMITED']
+        };
+        const [status, code] = mapping[error?.code] || [500, 'INTERNAL_ERROR'];
+        log(configuration, 'createProviderAccountFoundation', code.toLowerCase(), startedAt, {
+          ...(callerHash ? { uidHash: callerHash } : {}),
+          ...(handleHash ? { handleHash } : {})
+        });
         return json(response, status, { code });
       }
     }
@@ -1150,6 +1369,9 @@ module.exports = Object.freeze({
   loadConfiguration,
   migrationManifestFingerprint,
   observedLegacyFingerprint,
+  providerOperationFingerprint,
+  providerRequestFingerprint,
+  providerSubjectHash,
   readAccountDocument,
   proofAttemptHash,
   groupEAttemptHash,
@@ -1162,6 +1384,8 @@ module.exports = Object.freeze({
   sourceMappingFingerprint,
   start,
   verifiedLegacyFoundation,
+  verifiedGoogleProviderIdentity,
+  verifyCurrentGoogleProviderIdentity,
   verifyFirebaseIdToken,
   verifyOperatorAccessToken
 });

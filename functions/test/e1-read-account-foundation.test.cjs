@@ -136,7 +136,12 @@ test('Firebase Admin verification accepts a valid token and rejects missing malf
   await assert.rejects(() => verifyFirebaseIdToken(configuration, firebaseToken({ aud: 'wrong-project' }), verifier({ aud: 'wrong-project' })), /AUTH_INVALID/);
   await assert.rejects(() => verifyFirebaseIdToken(configuration, firebaseToken({ exp: NOW_SECONDS - 1 }), verifier({ exp: NOW_SECONDS - 1 }), () => NOW_SECONDS * 1000), /AUTH_INVALID/);
   await assert.rejects(() => verifyFirebaseIdToken(configuration, firebaseToken(), verifier({}, new Error('signature rejected'))), /AUTH_INVALID/);
-  assert.deepEqual(await verifyFirebaseIdToken(configuration, firebaseToken(), verifier({}, null, calls), () => NOW_SECONDS * 1000), { uid: UID });
+  assert.deepEqual(await verifyFirebaseIdToken(configuration, firebaseToken(), verifier({}, null, calls), () => NOW_SECONDS * 1000), {
+    uid: UID,
+    authTime: (NOW_SECONDS - 60) * 1000,
+    signInProvider: null,
+    identities: null
+  });
   assert.deepEqual(calls, [{ token: firebaseToken(), checkRevoked: false }]);
   assert.doesNotMatch(verifyFirebaseIdToken.toString(), /accounts:lookup|firebaseWebApiKey|user_id/u);
 });

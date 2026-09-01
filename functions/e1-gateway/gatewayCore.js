@@ -19,6 +19,7 @@ const { DATABASE_ID: GROUP_E_DATABASE_ID } = require('./groupEControlStore');
 
 const AUTHORITY_PATHS = Object.freeze({
   readAccountFoundation: '/v1/read-account-foundation',
+  createProviderAccountFoundation: '/v1/create-provider-account-foundation',
   reserveTrainerHandle: '/v1/reserve-trainer-handle'
 });
 const REQUEST_ID = /^[A-Za-z0-9][A-Za-z0-9._:-]{7,127}$/u;
@@ -141,10 +142,18 @@ function exactRequest(operation, value, readProofMode = false, groupEMode = fals
   if (operation === 'readAccountFoundation' && groupEMode) return validateSignedRequest(value);
   const fields = operation === 'readAccountFoundation'
     ? (readProofMode ? ['proofAttemptId', 'schemaVersion'] : ['schemaVersion'])
-    : ['requestId', 'requestedHandle', 'schemaVersion'];
+    : operation === 'createProviderAccountFoundation'
+      ? ['clientRelease', 'idempotencyFingerprint', 'lifecycleId', 'requestId', 'requestedHandle', 'schemaVersion']
+      : ['requestId', 'requestedHandle', 'schemaVersion'];
   if (!exactFields(value, fields) || value.schemaVersion !== 1) fail('REQUEST_INVALID');
   if (operation === 'reserveTrainerHandle' && (!REQUEST_ID.test(value.requestId || '') ||
       typeof value.requestedHandle !== 'string' || !value.requestedHandle || value.requestedHandle.length > 128)) {
+    fail('REQUEST_INVALID');
+  }
+  if (operation === 'createProviderAccountFoundation' && (!REQUEST_ID.test(value.requestId || '') ||
+      typeof value.requestedHandle !== 'string' || !value.requestedHandle || value.requestedHandle.length > 128 ||
+      !/^auth-[1-9][0-9]{0,9}$/u.test(value.lifecycleId || '') ||
+      !/^\d{4}-\d{2}-\d{2}\.\d+$/u.test(value.clientRelease || '') || !HASH.test(value.idempotencyFingerprint || ''))) {
     fail('REQUEST_INVALID');
   }
   if (operation === 'readAccountFoundation' && readProofMode && !PROOF_ATTEMPT_ID.test(value.proofAttemptId || '')) {
@@ -180,7 +189,8 @@ function validateGroupEBoundary(request, body, groupE, now) {
 function verifyCallableBoundary(operation, request, readProofMode = false, groupE = { enabled: false }, now = Date.now()) {
   if (!request.auth?.uid) fail('AUTH_REQUIRED');
   if (!request.app?.appId) fail('APP_CHECK_REQUIRED');
-  if ((operation === 'reserveTrainerHandle' || operation === 'readAccountFoundation' && groupE.enabled) &&
+  if ((operation === 'reserveTrainerHandle' || operation === 'createProviderAccountFoundation' ||
+      operation === 'readAccountFoundation' && groupE.enabled) &&
       request.app.alreadyConsumed === true) fail('APP_CHECK_REPLAYED');
   const body = exactRequest(operation, request.data, readProofMode, groupE.enabled);
   const admission = operation === 'readAccountFoundation' && groupE.enabled

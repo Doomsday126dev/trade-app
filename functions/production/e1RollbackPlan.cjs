@@ -4,6 +4,7 @@ const DISABLED_GATES = Object.freeze({
   CLIENT_FOUNDATION_USE_ENABLED: false,
   GATEWAY_INVOCATION_ENABLED: false,
   READ_ACCOUNT_FOUNDATION_ENABLED: false,
+  CREATE_PROVIDER_ACCOUNT_ENABLED: false,
   RESERVE_HANDLE_ENABLED: false,
   REPAIR_FOUNDATION_ENABLED: false,
   APPLY_MIGRATION_ENABLED: false,
@@ -27,6 +28,7 @@ function rollbackState(overrides = {}) {
     throw new Error('e1/rollback-gate-invalid');
   }
   if (state.GATEWAY_INVOCATION_ENABLED || state.CLIENT_FOUNDATION_USE_ENABLED ||
+      state.CREATE_PROVIDER_ACCOUNT_ENABLED ||
       state.RESERVE_HANDLE_ENABLED || state.REPAIR_FOUNDATION_ENABLED ||
       state.APPLY_MIGRATION_ENABLED || state.FREEZE_CONFLICT_ENABLED) {
     throw new Error('e1/rollback-not-contained');

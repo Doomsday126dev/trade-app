@@ -8,7 +8,7 @@ Use a **dedicated, private identity-authority service backed by a dedicated name
 
 The authority service is a separate trust domain, source artifact, Cloud Run service, and service account. The ordinary callable gateway receives a Firebase ID token and App Check token, invokes the private authority service using its own Google-signed service identity, and forwards the original Firebase ID token separately. The authority service verifies the Firebase token again and derives the UID from it. It never accepts an owner UID for user operations.
 
-The authority service uses its own Firestore credential only against a named `phase-e-identity` database. Staging uses a database-resource IAM condition on `roles/datastore.user`; it grants data-plane authority within that one database but no project/database administration. Firestore IAM does not constrain individual documents or fixed operations, so the service boundary, transaction contracts, private invocation boundary, and deployment controls enforce the five-operation API. This broader in-database role is a residual risk to review before production.
+The authority service uses its own Firestore credential only against a named `phase-e-identity` database. Staging uses a database-resource IAM condition on `roles/datastore.user`; it grants data-plane authority within that one database but no project/database administration. Firestore IAM does not constrain individual documents or fixed operations, so the service boundary, transaction contracts, private invocation boundary, and deployment controls enforce the fixed-operation API. The current source candidate has six operations; deployed `.86` revisions retain the historical five-operation inventory. This broader in-database role is a residual risk to review before production.
 
 Legacy identity verification uses the caller's Firebase ID token against exact RTDB REST paths. Existing RTDB Rules authorize the exact `authIndex/{uid}` and reciprocal `users/{username}` reads. Neither the ordinary runtime nor the authority service receives `firebasedatabase.instances.get` or `firebasedatabase.instances.update`.
 
@@ -36,7 +36,7 @@ Residual risk: compromise of the identity-authority service itself can create or
 | --- | --- | --- |
 | Browser | Firebase ID token; current RTDB exact reads allowed by Rules | Firestore identity access, operator access, broad RTDB access |
 | Ordinary application Functions | Invoke only the private authority service; no data role | Firestore/RTDB data IAM, authority service-account impersonation, token minting |
-| E.1 identity-authority service | Fixed five-operation API; conditionally scoped `roles/datastore.user` on the exact named Firestore database | Project/database admin; RTDB IAM; Auth user administration; generic data API export |
+| E.1 identity-authority service | Fixed six-operation source API; conditionally scoped `roles/datastore.user` on the exact named Firestore database | Project/database admin; RTDB IAM; Auth user administration; generic data API export |
 | Offline migration operator | Temporary invocation of operator endpoints with reviewed manifest hash | Standing runtime role; arbitrary browser use; automatic account merge |
 | Config operator | Temporary exact config operation after separate approval | Runtime data role; migration authority |
 | Deployer/build identities | Deploy/act-as/build only for their reviewed artifact | Datastore data access and runtime invocation unless separately required |
@@ -45,13 +45,14 @@ For private Cloud Run service-to-service calls, the gateway places its Google OI
 
 ## Fixed authority API
 
-The local prototype exposes only:
+The source candidate exposes only:
 
 1. `readAccountFoundation`: exact caller UID; redacted result.
-2. `reserveTrainerHandle`: caller UID from verified token; canonical handle and request ID only.
-3. `repairAccountFoundation`: caller UID from verified token; handle derived from reciprocal legacy binding, never request input.
-4. `applyMigrationManifest`: separately authenticated operator; reviewed UID/handle manifest and SHA-256 fingerprint.
-5. `freezeIdentityConflict`: separately authenticated operator; bounded reason code and request ID.
+2. `createProviderAccountFoundation`: current Google-linked caller; atomic provider-only account, handle, provider-subject, and idempotency foundation after namespace certification.
+3. `reserveTrainerHandle`: caller UID from verified token; canonical handle and request ID only.
+4. `repairAccountFoundation`: caller UID from verified token; handle derived from reciprocal legacy binding, never request input.
+5. `applyMigrationManifest`: separately authenticated operator; reviewed UID/handle manifest and SHA-256 fingerprint.
+6. `freezeIdentityConflict`: separately authenticated operator; bounded reason code and request ID.
 
 There is no generic read, write, set, update, delete, list, query, collection, document, ref, path, bulk, merge, UID-reassignment, or token-minting operation.
 
@@ -129,7 +130,7 @@ The authority service would still need instance-wide RTDB write authority. Compr
 
 Ordinary Functions have no datastore role. Their compromise yields only the ability to invoke fixed user endpoints with a valid user token. They cannot forge a UID, invoke operator endpoints, access Firestore directly, or access RTDB through IAM. The service re-verifies the user token and derives the UID. A bounded legacy-mapping reader is still required before `reserveTrainerHandle` can be activated; the authority runtime is not granted broad RTDB access and currently fails closed when no approved mediator is injected.
 
-The authority service credential can affect data in the named identity database, so service compromise remains serious. Database-level IAM isolation, a five-operation API, separate deployment, max-instance limits, idempotency, redacted logging, and no generic SDK export materially reduce exposure. App Check remains a future gateway requirement; it is not part of the private staging shell.
+The authority service credential can affect data in the named identity database, so service compromise remains serious. Database-level IAM isolation, a six-operation source API, separate deployment, max-instance limits, idempotency, redacted logging, and no generic SDK export materially reduce exposure. App Check remains a future gateway requirement; it is not part of the private staging shell.
 
 ### E. Cloud SQL PostgreSQL with stored procedures
 

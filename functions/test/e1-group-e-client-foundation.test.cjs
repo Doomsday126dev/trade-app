@@ -296,14 +296,35 @@ test('normal and Group C modes remain isolated from signed Group E admission', (
     { GROUP_E_WINDOW_START: '2030-01-01T12:00:00Z' })), /GROUP_E_CONFIGURATION_INVALID/);
 });
 
-test('Group E runtime exports no provider-linking route or broad control-plane write adapter', () => {
+test('Group E runtime denies provider account creation and exposes no broad control-plane write adapter', async () => {
+  const fixture = createFixture();
+  const configuration = loadGatewayConfiguration(gatewayEnvironment(fixture));
+  const { store } = seededStore(fixture);
+  let calls = 0;
+  const createRequest = callable(fixture, 'A', {
+    data: {
+      schemaVersion: 1,
+      requestId: 'provider-request-1',
+      requestedHandle: 'Trainer',
+      lifecycleId: 'auth-1',
+      clientRelease: '2026-08-31.86',
+      idempotencyFingerprint: 'a'.repeat(64)
+    }
+  });
+  await assert.rejects(createGatewayOperation('createProviderAccountFoundation', configuration, {
+    controlStore: store,
+    invokeAuthority: async () => { calls++; return { status: 500, payload: { code: 'UNEXPECTED' } }; },
+    now: () => fixture.NOW,
+    structuredLog() {}
+  })(createRequest), /GROUP_E_OPERATION_DENIED/);
+  assert.equal(calls, 0);
   const runtime = [fs.readFileSync(path.resolve(__dirname, '../e1-gateway/index.js'), 'utf8'),
     fs.readFileSync(path.resolve(__dirname, '../e1-gateway/gatewayCore.js'), 'utf8'),
     fs.readFileSync(path.resolve(__dirname, '../e1-authority-service/server.js'), 'utf8')].join('\n');
   assert.doesNotMatch(runtime, /providerLink|linkProvider|unlinkProvider|provider-link/u);
   assert.deepEqual([...fs.readFileSync(path.resolve(__dirname, '../e1-gateway/index.js'), 'utf8')
     .matchAll(/exports\.([A-Za-z0-9_]+)\s*=/gu)].map((match) => match[1]),
-  ['readE1AccountFoundation', 'reserveE1TrainerHandle']);
+  ['readE1AccountFoundation', 'createE1ProviderAccountFoundation', 'reserveE1TrainerHandle']);
   const controlModule = require('../e1-gateway/groupEControlStore');
   assert.equal(controlModule.createRun, undefined);
   assert.equal(controlModule.createReconciliation, undefined);

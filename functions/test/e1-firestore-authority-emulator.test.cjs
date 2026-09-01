@@ -58,6 +58,37 @@ function handleDocument(request, timestamp = 1, uid = request.uid) {
   };
 }
 
+function providerInput(uid, trainerName, requestId, subjectLabel = uid) {
+  const handle = canonicalHandle(trainerName);
+  return {
+    uid,
+    ...handle,
+    requestId,
+    providerKey: 'google',
+    providerId: 'google.com',
+    providerSubjectKey: `v1_google_${crypto.createHash('sha256').update(subjectLabel).digest('hex')}`,
+    authTime: 900,
+    lifecycleId: 'auth-1',
+    clientRelease: '2026-08-31.86',
+    fingerprint: crypto.createHash('sha256').update(`provider:${uid}:${handle.handleKey}:${requestId}:${subjectLabel}`).digest('hex')
+  };
+}
+
+async function certifyProviderCreation(overrides = {}) {
+  await firestore.doc('authorityConfig/providerAccountCreation').set({
+    schemaVersion: 1,
+    state: 'certified',
+    normalizationVersion: 1,
+    legacyNamespaceCoverageCertified: true,
+    activeLegacyHandleCount: 58,
+    certifiedHandleCount: 58,
+    coverageDigest: 'c'.repeat(64),
+    certifiedAt: 1,
+    expiresAt: 10_000,
+    ...overrides
+  });
+}
+
 async function clearFirestore() {
   const response = await fetch(`http://${FIRESTORE_HOST}/emulator/v1/projects/${PROJECT_ID}/databases/(default)/documents`, { method: 'DELETE' });
   assert.ok(response.ok, await response.text());
@@ -290,6 +321,156 @@ test('freezing a reviewed handle conflict records bounded evidence without mutat
     'createdAt', 'fingerprint', 'manifestFingerprint', 'manifestId', 'reasonCode', 'reviewedAt',
     'reviewerDecision', 'schemaVersion', 'sourceMappingFingerprint', 'status', 'uid'
   ]);
+});
+
+test('provider creation atomically writes canonical account handle provider reverse claim and operation evidence', async () => {
+  await certifyProviderCreation();
+  const request = providerInput('firebase_provider_a', 'ProviderTrainer', 'request-provider-create-a');
+  const result = await adapter.createProviderAccountFoundation(request);
+  assert.equal(result.status, 'created');
+  const snapshots = await Promise.all([
+    firestore.doc(`accounts/${request.uid}`).get(),
+    firestore.doc(`trainerHandles/${request.handleKey}`).get(),
+    firestore.doc(`accounts/${request.uid}/providers/google`).get(),
+    firestore.doc(`providerSubjects/${request.providerSubjectKey}`).get(),
+    firestore.doc(`operationRequests/${request.uid}/requests/${request.requestId}`).get()
+  ]);
+  assert.ok(snapshots.every((snapshot) => snapshot.exists));
+  assert.equal(snapshots[0].data().identityKind, 'provider_only');
+  assert.equal(snapshots[0].data().legacyAccessConfigured, false);
+  assert.equal(snapshots[0].data().legacyUsername, null);
+  assert.equal(snapshots[2].data().providerSubjectKey, request.providerSubjectKey);
+  assert.equal(snapshots[3].data().uid, request.uid);
+  assert.equal(snapshots[4].data().operation, 'createProviderAccountFoundation');
+});
+
+test('missing stale malformed or incomplete namespace certification blocks provider creation without partial writes', async () => {
+  const variants = [
+    null,
+    { state: 'pending' },
+    { legacyNamespaceCoverageCertified: false },
+    { certifiedHandleCount: 57 },
+    { coverageDigest: 'bad' },
+    { expiresAt: 1 }
+  ];
+  for (let index = 0; index < variants.length; index += 1) {
+    await clearFirestore();
+    if (variants[index]) await certifyProviderCreation(variants[index]);
+    const request = providerInput(`firebase_provider_cert_${index}`, `CertTrainer${index}`, `request-provider-cert-${index}`);
+    await assert.rejects(adapter.createProviderAccountFoundation(request),
+      (error) => error?.code === 'e1/legacy-namespace-not-certified');
+    assert.equal((await firestore.doc(`accounts/${request.uid}`).get()).exists, false);
+    assert.equal((await firestore.doc(`trainerHandles/${request.handleKey}`).get()).exists, false);
+    assert.equal((await firestore.doc(`operationRequests/${request.uid}/requests/${request.requestId}`).get()).exists, false);
+  }
+});
+
+test('identical provider creation replay returns the recorded result and changed evidence is rejected', async () => {
+  await certifyProviderCreation();
+  const request = providerInput('firebase_provider_replay', 'ProviderReplay', 'request-provider-replay');
+  assert.equal((await adapter.createProviderAccountFoundation(request)).status, 'created');
+  assert.equal((await adapter.createProviderAccountFoundation(request)).replay, true);
+  await assert.rejects(adapter.createProviderAccountFoundation({ ...request, fingerprint: 'f'.repeat(64) }),
+    (error) => error?.code === 'e1/replay-mismatch');
+});
+
+test('provider replay validates all canonical records and rejects deleted or altered evidence', async () => {
+  await certifyProviderCreation();
+  const request = providerInput('firebase_provider_integrity', 'ProviderIntegrity', 'request-provider-integrity');
+  await adapter.createProviderAccountFoundation(request);
+  await firestore.doc(`accounts/${request.uid}/providers/google`).update({ state: 'pending' });
+  await assert.rejects(adapter.createProviderAccountFoundation(request),
+    (error) => error?.code === 'e1/provider-foundation-conflict');
+});
+
+test('same UID cannot create a second provider account or claim a second handle', async () => {
+  await certifyProviderCreation();
+  const first = providerInput('firebase_provider_single', 'SingleIdentity', 'request-provider-single-a');
+  await adapter.createProviderAccountFoundation(first);
+  const second = providerInput(first.uid, 'SecondIdentity', 'request-provider-single-b');
+  await assert.rejects(adapter.createProviderAccountFoundation(second), (error) => error?.code === 'e1/account-conflict');
+  assert.equal((await firestore.doc(`trainerHandles/${second.handleKey}`).get()).exists, false);
+});
+
+test('legacy-only handle hold blocks provider claim without requiring an RTDB read', async () => {
+  await certifyProviderCreation();
+  const request = providerInput('firebase_provider_legacy_hold', 'LegacyHeld', 'request-provider-legacy-hold');
+  await firestore.doc(`trainerHandles/${request.handleKey}`).set({
+    schemaVersion: 1,
+    canonicalTrainerName: request.canonicalTrainerName,
+    normalizedTrainerName: request.normalizedTrainerName,
+    state: 'legacy_hold',
+    revision: 1
+  });
+  await assert.rejects(adapter.createProviderAccountFoundation(request), (error) => error?.code === 'e1/handle-conflict');
+  assert.equal((await firestore.doc(`accounts/${request.uid}`).get()).exists, false);
+});
+
+test('provider subject already owned by another UID cannot be rebound', async () => {
+  await certifyProviderCreation();
+  const owner = providerInput('firebase_provider_subject_owner', 'SubjectOwner', 'request-provider-subject-owner', 'shared-subject');
+  await adapter.createProviderAccountFoundation(owner);
+  const challenger = providerInput('firebase_provider_subject_challenger', 'SubjectChallenger', 'request-provider-subject-challenger', 'shared-subject');
+  await assert.rejects(adapter.createProviderAccountFoundation(challenger),
+    (error) => error?.code === 'e1/provider-subject-conflict');
+  assert.equal((await firestore.doc(`accounts/${challenger.uid}`).get()).exists, false);
+});
+
+test('two provider UIDs racing for one handle produce one complete foundation and no partial loser', async () => {
+  await certifyProviderCreation();
+  const first = providerInput('firebase_provider_race_a', 'ProviderRace', 'request-provider-race-a');
+  const second = providerInput('firebase_provider_race_b', 'ProviderRace', 'request-provider-race-b');
+  const settled = await Promise.allSettled([
+    adapter.createProviderAccountFoundation(first),
+    adapter.createProviderAccountFoundation(second)
+  ]);
+  assert.equal(settled.filter((entry) => entry.status === 'fulfilled').length, 1);
+  assert.equal(settled.filter((entry) => entry.status === 'rejected' && entry.reason?.code === 'e1/handle-conflict').length, 1);
+  const winner = settled[0].status === 'fulfilled' ? first : second;
+  const loser = winner.uid === first.uid ? second : first;
+  assert.equal((await firestore.doc(`accounts/${winner.uid}`).get()).exists, true);
+  assert.equal((await firestore.doc(`accounts/${loser.uid}`).get()).exists, false);
+  assert.equal((await firestore.doc(`providerSubjects/${loser.providerSubjectKey}`).get()).exists, false);
+});
+
+test('two tabs for one UID create at most one account and only the winning request evidence', async () => {
+  await certifyProviderCreation();
+  const first = providerInput('firebase_provider_tabs', 'ProviderTabs', 'request-provider-tabs-a');
+  const second = providerInput(first.uid, first.canonicalTrainerName, 'request-provider-tabs-b', 'same-subject');
+  first.providerSubjectKey = second.providerSubjectKey;
+  const settled = await Promise.allSettled([
+    adapter.createProviderAccountFoundation(first),
+    adapter.createProviderAccountFoundation(second)
+  ]);
+  assert.equal(settled.filter((entry) => entry.status === 'fulfilled').length, 1);
+  assert.equal(settled.filter((entry) => entry.status === 'rejected').length, 1);
+  const requestSnapshots = await Promise.all([
+    firestore.doc(`operationRequests/${first.uid}/requests/${first.requestId}`).get(),
+    firestore.doc(`operationRequests/${second.uid}/requests/${second.requestId}`).get()
+  ]);
+  assert.equal(requestSnapshots.filter((snapshot) => snapshot.exists).length, 1);
+});
+
+test('exact provider foundation readback accepts complete state and rejects partial or conflicting state', async () => {
+  await certifyProviderCreation();
+  const request = providerInput('firebase_provider_readback', 'ProviderReadback', 'request-provider-readback');
+  assert.equal(await adapter.readProviderAccountFoundation(request), null);
+  await adapter.createProviderAccountFoundation(request);
+  assert.equal((await adapter.readProviderAccountFoundation(request)).identityKind, 'provider_only');
+  await firestore.doc(`providerSubjects/${request.providerSubjectKey}`).update({ uid: 'firebase_other_owner' });
+  await assert.rejects(adapter.readProviderAccountFoundation(request),
+    (error) => error?.code === 'e1/provider-foundation-conflict');
+});
+
+test('provider creation writes no RTDB-shaped identity or product roots', async () => {
+  await certifyProviderCreation();
+  const request = providerInput('firebase_provider_roots', 'ProviderRoots', 'request-provider-roots');
+  await adapter.createProviderAccountFoundation(request);
+  const roots = (await firestore.listCollections()).map((collection) => collection.id).sort();
+  assert.deepEqual(roots, ['accounts', 'authorityConfig', 'operationRequests', 'providerSubjects', 'trainerHandles']);
+  for (const forbidden of ['authIndex', 'loginDirectory', 'users', 'accountSync', 'publicShares']) {
+    assert.equal(roots.includes(forbidden), false);
+  }
 });
 
 test('browser-authenticated Firestore REST access remains denied by the locked ruleset', async () => {

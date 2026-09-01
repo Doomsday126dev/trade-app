@@ -71,7 +71,7 @@ test('staging target guard rejects production ambiguity mismatches and absent re
   assert.throws(() => guardE1Target({ ...valid, operationGates: { ...valid.operationGates, READ_ACCOUNT_FOUNDATION_ENABLED: 'invalid' } }, { privateInputPath: fixture(), now: Date.parse('2030-01-01T13:00:00Z') }), (error) => error.reasons.includes('operation_gate_not_false'));
 });
 
-test('staging activation guard permits exactly one reviewed mutation gate and always rejects reserve activation', () => {
+test('staging activation guard permits exactly one reviewed legacy mutation gate and rejects unapproved identity activation', () => {
   const repair = {
     ...valid,
     operationGates: { ...valid.operationGates, REPAIR_FOUNDATION_ENABLED: 'true' }
@@ -90,5 +90,11 @@ test('staging activation guard permits exactly one reviewed mutation gate and al
     operationGates: { ...valid.operationGates, RESERVE_HANDLE_ENABLED: 'true' }
   }, {
     privateInputPath: fixture(), now: Date.parse('2030-01-01T13:00:00Z'), allowedMutationGate: 'RESERVE_HANDLE_ENABLED'
+  }), (error) => error.reasons.includes('operation_gate_activation_invalid'));
+  assert.throws(() => guardE1Target({
+    ...valid,
+    operationGates: { ...valid.operationGates, CREATE_PROVIDER_ACCOUNT_ENABLED: 'true' }
+  }, {
+    privateInputPath: fixture(), now: Date.parse('2030-01-01T13:00:00Z'), allowedMutationGate: 'CREATE_PROVIDER_ACCOUNT_ENABLED'
   }), (error) => error.reasons.includes('operation_gate_activation_invalid'));
 });
