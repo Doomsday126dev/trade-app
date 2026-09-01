@@ -102,9 +102,14 @@ test('private writer enforces 0600 and refuses replacement', () => {
 });
 
 test('dry run creates exact documents and restart skips verified work', async () => {
-  const { manifest } = classifySnapshot(fixture(), metadata());
-  const stored = new Map();
+  const source = fixture();
+  const { manifest } = classifySnapshot(source, metadata());
+  const stored = new Map([
+    ...Object.entries(source.accounts).map(([id, value]) => [`accounts/${id}`, structuredClone(value)]),
+    ...Object.entries(source.trainerHandles).map(([id, value]) => [`trainerHandles/${id}`, structuredClone(value)])
+  ]);
   const adapter = {
+    async readDocument(target) { return stored.has(target) ? stored.get(target) : null; },
     async verify() {},
     async createOnly(record, documents) {
       for (const [target, document] of Object.entries(documents)) {
@@ -125,23 +130,52 @@ test('dry run creates exact documents and restart skips verified work', async ()
   });
   const result = await runManifest(manifest, adapter, { timestamp: 100, progress });
   assert.ok(result.skipped >= 2);
-  assert.equal(stored.size, 5);
+  assert.equal(stored.size, 7);
   assert.match(result.coverageDigest, /^[a-f0-9]{64}$/u);
 });
 
 test('ambiguous transport gets one readback and is never blindly resent', async () => {
-  const { manifest } = classifySnapshot(fixture(), metadata());
+  const source = fixture();
+  const { manifest } = classifySnapshot(source, metadata());
+  const stored = new Map([
+    ...Object.entries(source.accounts).map(([id, value]) => [`accounts/${id}`, structuredClone(value)]),
+    ...Object.entries(source.trainerHandles).map(([id, value]) => [`trainerHandles/${id}`, structuredClone(value)])
+  ]);
   let sends = 0;
   const adapter = {
+    async readDocument(target) { return stored.get(target) || null; },
     async verify() {},
     async createOnly(record, documents) {
       sends += 1;
-      this.documents = documents;
+      for (const [target, value] of Object.entries(documents)) stored.set(target, structuredClone(value));
       throw Object.assign(new Error('lost response'), { code: 'transport_ambiguous' });
     },
-    async readback(record, documents) { return JSON.stringify(documents) === JSON.stringify(this.documents); }
+    async readback(record, documents) {
+      return Object.entries(documents).every(([target, value]) => JSON.stringify(stored.get(target)) === JSON.stringify(value));
+    }
   };
   await runManifest(manifest, adapter, { timestamp: 100 });
+  assert.equal(sends, 2);
+});
+
+test('create-only 409 receives one exact readback and reconciles without a resend', async () => {
+  const source = fixture();
+  const { manifest } = classifySnapshot(source, metadata());
+  const stored = new Map([
+    ...Object.entries(source.accounts).map(([id, value]) => [`accounts/${id}`, structuredClone(value)]),
+    ...Object.entries(source.trainerHandles).map(([id, value]) => [`trainerHandles/${id}`, structuredClone(value)])
+  ]);
+  let sends = 0;
+  const adapter = {
+    async readDocument(target) { return stored.get(target) || null; },
+    async verify() {},
+    async createOnly(record, documents) {
+      sends += 1;
+      for (const [target, value] of Object.entries(documents)) stored.set(target, structuredClone(value));
+      throw Object.assign(new Error('precondition'), { status: 409 });
+    }
+  };
+  await runManifest(manifest, adapter);
   assert.equal(sends, 2);
 });
 

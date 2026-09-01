@@ -14,6 +14,8 @@ const CLASSES = Object.freeze([
   'MALFORMED'
 ]);
 const WRITABLE_CLASSES = new Set(['MIGRATE_RECIPROCAL_IDENTITY', 'CREATE_LEGACY_HANDLE_HOLD']);
+const TARGET_STATES = Object.freeze({ ALL_ABSENT: 'ALL_ABSENT', ALL_EXACT: 'ALL_EXACT',
+  PARTIAL_OR_DIFFERENT: 'PARTIAL_OR_DIFFERENT' });
 
 function stableJson(value) {
   if (Array.isArray(value)) return `[${value.map(stableJson).join(',')}]`;
@@ -290,6 +292,43 @@ function expectedDocuments(record, timestamp) {
   return {};
 }
 
+function operationId(manifest, record) {
+  return keyedDigest(manifest.manifestDigest, [record.classification, record.uid || null, record.handleKey || null]);
+}
+
+function progressEntry(documents) {
+  return Object.freeze({ state: 'verified', documentsDigest: sha256(documents) });
+}
+
+function progressVerified(value, documents) {
+  return value === 'verified' || (value?.state === 'verified' && value.documentsDigest === sha256(documents));
+}
+
+async function readExpectedDocuments(adapter, documents) {
+  const targets = Object.keys(documents);
+  if (typeof adapter.readDocuments === 'function') return adapter.readDocuments(targets);
+  if (typeof adapter.readDocument === 'function') {
+    return Object.fromEntries(await Promise.all(targets.map(async (target) => [target, await adapter.readDocument(target)])));
+  }
+  throw new Error('document_reader_required');
+}
+
+function classifyTargetState(observed, expected) {
+  const targets = Object.keys(expected);
+  if (targets.every((target) => observed[target] === null || observed[target] === undefined)) return TARGET_STATES.ALL_ABSENT;
+  if (targets.every((target) => stableJson(observed[target]) === stableJson(expected[target]))) return TARGET_STATES.ALL_EXACT;
+  return TARGET_STATES.PARTIAL_OR_DIFFERENT;
+}
+
+async function verifyRecordExact(record, documents, adapter) {
+  if (!Object.keys(documents).length) {
+    await adapter.verify(record);
+    return;
+  }
+  const observed = await readExpectedDocuments(adapter, documents);
+  if (classifyTargetState(observed, documents) !== TARGET_STATES.ALL_EXACT) throw new Error('verified_progress_not_exact');
+}
+
 async function runManifest(manifest, adapter, options = {}) {
   if (sha256(Object.fromEntries(Object.entries(manifest).filter(([key]) => key !== 'manifestDigest'))) !== manifest.manifestDigest) {
     throw new Error('manifest_digest_mismatch');
@@ -303,30 +342,46 @@ async function runManifest(manifest, adapter, options = {}) {
   let processed = 0;
   let skipped = 0;
   for (const record of manifest.records) {
-    const operationId = keyedDigest(manifest.manifestDigest, [record.classification, record.uid || null,
-      record.handleKey || null]);
-    if (progress.get(operationId) === 'verified') { skipped += 1; continue; }
+    const id = operationId(manifest, record);
+    const documents = record.expectedResult || expectedDocuments(record, options.timestamp || 1);
+    if (progressVerified(progress.get(id), documents)) {
+      await verifyRecordExact(record, documents, adapter);
+      skipped += 1;
+      continue;
+    }
     if (!WRITABLE_CLASSES.has(record.classification) || record.operation === 'VERIFY_ONLY') {
-      await adapter.verify(record);
-      progress.set(operationId, 'verified');
+      await verifyRecordExact(record, documents, adapter);
+      progress.set(id, progressEntry(documents));
+      await options.checkpoint?.(progress, { operationId: id, record, reconciled: true });
       processed += 1;
+      await options.afterCheckpoint?.({ operationId: id, record });
       if (options.interruptAfter && processed === options.interruptAfter) {
         throw Object.assign(new Error('simulated_interruption'), { progress });
       }
       continue;
     }
-    const documents = record.expectedResult || expectedDocuments(record, options.timestamp || 1);
-    let outcome;
-    try { outcome = await adapter.createOnly(record, documents); }
-    catch (error) {
-      if (error?.code !== 'transport_ambiguous') throw error;
-      outcome = 'ambiguous';
+    let observed = await readExpectedDocuments(adapter, documents);
+    let state = classifyTargetState(observed, documents);
+    let sent = false;
+    if (state === TARGET_STATES.PARTIAL_OR_DIFFERENT) throw new Error('manifest_target_partial_or_different');
+    if (state === TARGET_STATES.ALL_ABSENT) {
+      try {
+        await adapter.createOnly(record, documents);
+        sent = true;
+      } catch (error) {
+        const reconcilable = error?.code === 'transport_ambiguous' || [409, 412].includes(error?.status);
+        if (!reconcilable) throw error;
+      }
+      observed = await readExpectedDocuments(adapter, documents);
+      state = classifyTargetState(observed, documents);
+      if (state !== TARGET_STATES.ALL_EXACT) throw new Error('create_only_reconciliation_conflict');
+      await options.afterCommitBeforeCheckpoint?.({ operationId: id, record, sent });
     }
-    const exact = await adapter.readback(record, documents);
-    if (!exact) throw new Error(outcome === 'ambiguous' ? 'ambiguous_readback_failed' : 'exact_readback_failed');
-    progress.set(operationId, 'verified');
-    writes += Object.keys(documents).length;
+    progress.set(id, progressEntry(documents));
+    await options.checkpoint?.(progress, { operationId: id, record, reconciled: !sent });
+    writes += sent ? Object.keys(documents).length : 0;
     processed += 1;
+    await options.afterCheckpoint?.({ operationId: id, record });
     if (options.interruptAfter && processed === options.interruptAfter) throw Object.assign(new Error('simulated_interruption'), { progress });
   }
   return Object.freeze({ processed, skipped, writes, progress, coverageDigest: sha256([...progress.entries()].sort()) });
@@ -334,5 +389,6 @@ async function runManifest(manifest, adapter, options = {}) {
 
 module.exports = {
   CLASSES, stableJson, sha256, keyedDigest, classifySnapshot, publicReport, writePrivateJson,
-  expectedDocuments, runManifest
+  TARGET_STATES, expectedDocuments, operationId, progressEntry, progressVerified, readExpectedDocuments,
+  classifyTargetState, runManifest
 };

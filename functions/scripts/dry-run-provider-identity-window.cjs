@@ -29,6 +29,11 @@ function createAdapter(snapshot) {
   return {
     store,
     sends,
+    async readDocument(target) { return store.has(target) ? structuredClone(store.get(target)) : null; },
+    async readDocuments(targets) {
+      return Object.fromEntries(targets.map((target) =>
+        [target, store.has(target) ? structuredClone(store.get(target)) : null]));
+    },
     async verify(record) {
       if (record.classification === 'UNPAIRED_AUTHINDEX_REVIEW') return;
       if (record.classification === 'ALREADY_CANONICAL') {
@@ -103,6 +108,7 @@ async function run(argv = process.argv.slice(2)) {
   };
   const report = {
     schemaVersion: 1,
+    resumeProofLevel: 'in-memory-unit-simulation',
     manifestDigest: manifest.manifestDigest,
     initialCanonicalDigest,
     operationCounts: manifest.operationCounts,
@@ -128,6 +134,7 @@ async function run(argv = process.argv.slice(2)) {
   writePrivateJson(path.resolve(options.output), report);
   console.log(JSON.stringify({
     ready: report.ready,
+    resumeProofLevel: report.resumeProofLevel,
     operationCounts: report.operationCounts,
     simulatedFirestoreCreates: report.simulatedFirestoreCreates,
     simulatedRtdbWrites: 0,
