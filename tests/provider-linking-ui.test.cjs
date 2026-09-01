@@ -21,7 +21,7 @@ test('production Connected Accounts exposes username and PIN while providers sta
 });
 
 test('provider implementation stays in the development-only lazy feature graph',()=>{
-  const files=['js/domain/authProviderRegistry.js','js/domain/providerContinuationState.js','js/domain/accountLinkingModel.js','js/domain/accountLinkingController.js','js/domain/providerOnboardingModel.js','js/services/googleAuthAdapter.js'];
+  const files=['js/domain/authProviderRegistry.js','js/domain/providerContinuationState.js','js/domain/accountLinkingModel.js','js/domain/accountLinkingController.js','js/domain/providerOnboardingModel.js','js/services/googleAuthAdapter.js','js/services/providerAccountFoundation.js'];
   const template=html.slice(html.indexOf('<template id="pogo-feature-assets">'),html.indexOf('</template>'));
   for(const file of files){assert.match(template,new RegExp(`${file.replace(/[.]/g,'\\.')}[^>]+data-pogo-provider-development`));assert.ok(inventory.scriptFiles.includes(file));assert.ok(inventory.developmentOnlyScriptFiles.includes(file));assert.equal(releaseAssets.has(file),false);}
   const preTemplate=html.slice(0,html.indexOf('<template id="pogo-feature-assets">'));

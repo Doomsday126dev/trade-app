@@ -129,6 +129,61 @@ function installDirectWriteBehavior(method,behavior,{repositoryState,original}){
   else throw new Error(`unknown direct write behavior: ${behavior}`);
 }
 
+test('provider-only account initializes an empty UID partition without reading or writing legacy migration evidence',async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto});
+  const repositoryState=runtimeRepository(window,h),journalState=h.createMemoryJournalState(),published=[];let legacyReads=0;
+  const runtime=createRuntime(window,h,repositoryState,journalState,async()=>{legacyReads++;throw new Error('must not read legacy');},
+    ()=>{},()=>{},async(rows,operation)=>{published.push({rows,operation});return{ok:true};},{initializationKind:'provider-only'});
+  const result=await runtime.start();
+  assert.equal(result.ok,true);assert.equal(result.plan.initializationKind,'provider-only');assert.equal(result.plan.resumed,false);
+  assert.equal(legacyReads,0);assert.equal(repositoryState.calls.updateMeta,1);assert.equal(repositoryState.calls.createMigration,0);
+  assert.equal(repositoryState.calls.createRecoveryCandidate,0);assert.equal(journalState.meta.has('migration-complete'),false);
+  assert.equal(repositoryState.meta.initialized,true);assert.equal(runtime.projectionReady,true);
+  assert.equal(published.length,1);assert.equal(published[0].rows.length,0);assert.equal(published[0].operation.kind,'provider-account-initialized');
+});
+
+test('provider-only restart resumes exact metadata without duplicate initialization or migration',async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto});
+  const repositoryState=runtimeRepository(window,h),firstState=h.createMemoryJournalState(),secondState=h.createMemoryJournalState();
+  const first=createRuntime(window,h,repositoryState,firstState,undefined,()=>{},()=>{},async()=>({ok:true}),{initializationKind:'provider-only'});
+  await first.start();await first.stop();
+  const second=createRuntime(window,h,repositoryState,secondState,undefined,()=>{},()=>{},async()=>({ok:true}),{initializationKind:'provider-only'});
+  const result=await second.start();
+  assert.equal(result.plan.resumed,true);assert.equal(repositoryState.calls.updateMeta,1);
+  assert.equal(repositoryState.calls.createMigration,0);assert.equal(Object.keys(repositoryState.migrations).length,0);
+});
+
+test('provider-only initialization rejects partial canonical entities and never publishes them',async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto});
+  const operation=await window.PogoDomain.accountSyncModel.createOperation({ownerUid:'uid-owner',entityType:'tag',entityId:'tag_partial',
+    kind:'add',baseGeneration:0,generation:1,baseFieldRevisions:{label:0},patch:{label:'stale'},
+    identity:{tagId:'tag_partial'},clientAt:h.clock()},{crypto:webcrypto});
+  assert.equal(operation.ok,true);await h.server.applyOperation(operation.value);
+  const repositoryState=runtimeRepository(window,h),journalState=h.createMemoryJournalState();let publications=0;
+  const runtime=createRuntime(window,h,repositoryState,journalState,undefined,()=>{},()=>{},async()=>{publications++;return{ok:true};},{initializationKind:'provider-only'});
+  await assert.rejects(runtime.start(),error=>error.code==='account-sync/provider-initialization-conflict');
+  assert.equal(repositoryState.calls.updateMeta,0);assert.equal(publications,0);assert.equal(runtime.projectionReady,false);
+});
+
+test('provider-only initialization cannot reactivate a retained legacy migration marker',async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto});
+  const repositoryState=runtimeRepository(window,h),journalState=h.createMemoryJournalState();
+  journalState.meta.set('migration-complete',{schemaVersion:1,ownerUid:'uid-owner',verified:true,legacyRetained:true});
+  const runtime=createRuntime(window,h,repositoryState,journalState,undefined,()=>{},()=>{},async()=>({ok:true}),{initializationKind:'provider-only'});
+  await assert.rejects(runtime.start(),error=>error.code==='account-sync/provider-initialization-conflict');
+  assert.equal(repositoryState.calls.updateMeta,0);assert.equal(repositoryState.calls.createMigration,0);
+});
+
+test('provider-only initialization accepts an exact committed metadata write after a lost response without resending',async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto});
+  const repositoryState=runtimeRepository(window,h),journalState=h.createMemoryJournalState();
+  const original=repositoryState.repository.updateMeta.bind(repositoryState.repository);
+  repositoryState.repository.updateMeta=async value=>{await original(value);throw Object.assign(new Error('response lost'),{code:'account-sync/network-failed'});};
+  const runtime=createRuntime(window,h,repositoryState,journalState,undefined,()=>{},()=>{},async()=>({ok:true}),{initializationKind:'provider-only'});
+  const result=await runtime.start();
+  assert.equal(result.ok,true);assert.equal(repositoryState.calls.updateMeta,1);assert.equal(runtime.projectionReady,true);
+});
+
 test('first migration awaits every seed and a stale pre-sync second device cannot overwrite canonical state',async()=>{
   const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),repositoryState=runtimeRepository(window,h),firstState=h.createMemoryJournalState(),projections=[];
   const first=createRuntime(window,h,repositoryState,firstState,async()=>source('device-a',{remote:{Pikachu:'H',Rayquaza:'M'}}),entities=>projections.push(entities));

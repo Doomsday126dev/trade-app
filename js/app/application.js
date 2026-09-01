@@ -228,7 +228,8 @@ const accountLinkingModelDomain=window.PogoDomain?.accountLinkingModel;
 const accountLinkingControllerDomain=window.PogoDomain?.accountLinkingController;
 const providerOnboardingModelDomain=window.PogoDomain?.providerOnboardingModel;
 const googleAuthAdapterService=window.PogoServices?.googleAuthAdapter;
-if(PROVIDER_LINKING_DEVELOPMENT_ENABLED&&(!authProviderRegistryDomain||!providerContinuationStateDomain||!accountLinkingModelDomain||!accountLinkingControllerDomain||!providerOnboardingModelDomain||!googleAuthAdapterService))throw new Error('Provider-linking implementation failed to load');
+const providerAccountFoundationService=window.PogoServices?.providerAccountFoundation;
+if(PROVIDER_LINKING_DEVELOPMENT_ENABLED&&(!authProviderRegistryDomain||!providerContinuationStateDomain||!accountLinkingModelDomain||!accountLinkingControllerDomain||!providerOnboardingModelDomain||!googleAuthAdapterService||!providerAccountFoundationService))throw new Error('Provider-linking implementation failed to load');
 const providerLinkingRegistry=PROVIDER_LINKING_DEVELOPMENT_ENABLED?authProviderRegistryDomain.createAuthProviderRegistry({
   developmentEnabled:true,
   configuredProviders:Array.isArray(window.__POGO_PROVIDER_LINKING_CONFIGURED__)?window.__POGO_PROVIDER_LINKING_CONFIGURED__:[]
@@ -409,6 +410,10 @@ let providerAuthLifecycleUid='';
 let providerAuthRecentAt=0;
 let providerGoogleAccountResolution=null;
 let providerPendingAction=null;
+let providerAccountFoundationClient=null;
+let providerIdentityResolutionPromise=null;
+let providerIdentityResolutionBinding='';
+let activeCanonicalIdentity=null;
 let e1ClientFoundationCanary=null;
 let firebaseDatabaseHandle=null,firebaseDataProtectionReady=false;
 let allData={};
@@ -1250,11 +1255,51 @@ async function providerAccountBoundarySnapshot(uid){
     trainerIdentityFingerprint:await providerBoundaryFingerprint({username:cur,avatarPokemon:profile.avatarPokemon||'',friendCode:profile.friendCode||'',bio:profile.bio||''})
   });
 }
+function providerFailure(code,state='blocked'){
+  const error=new Error(code);error.code=code;error.state=state;return error;
+}
+function ensureProviderAccountFoundationClient(){
+  if(!PROVIDER_LINKING_DEVELOPMENT_ENABLED||!providerAccountFoundationService)throw providerFailure('provider-account/unavailable');
+  if(providerAccountFoundationClient)return providerAccountFoundationClient;
+  if(!fbApp||!auth)throw providerFailure('provider-account/dependencies-invalid');
+  providerAccountFoundationClient=providerAccountFoundationService.createProviderAccountClient({
+    firebaseApp:fbApp,auth,firebaseAppCheckReady,getLifecycleSnapshot:providerAuthSnapshot,
+    importFunctionsSdk:()=>import('https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js'),
+    storage:localStorage
+  });
+  return providerAccountFoundationClient;
+}
+function providerOnlyIdentityActive(uid=auth?.currentUser?.uid){
+  return PROVIDER_LINKING_DEVELOPMENT_ENABLED===true&&!!uid&&activeCanonicalIdentity?.uid===uid&&
+    activeCanonicalIdentity.identityKind==='provider_only'&&activeCanonicalIdentity.legacyAccessConfigured===false;
+}
+function validCanonicalFoundation(value,uid){
+  return!!uid&&value?.status==='active'&&value.schemaVersion===1&&
+    providerOnboardingModelDomain.HANDLE_PATTERN.test(String(value.canonicalTrainerName||''))&&
+    ['provider_only','legacy_migrated'].includes(value.identityKind)&&
+    value.legacyAccessConfigured===(value.identityKind==='legacy_migrated')&&
+    (value.identityKind==='provider_only'?value.legacyUsername===null:value.legacyUsername===value.canonicalTrainerName);
+}
 async function resolveGoogleAccountBinding(uid){
   const expectedUid=String(uid||'');
   if(!expectedUid||auth?.currentUser?.uid!==expectedUid)throw accountLinkingModelDomain.failure('provider-link/auth-lifecycle-changed');
   await ensureFirebaseDataProtection();
   if(auth?.currentUser?.uid!==expectedUid)throw accountLinkingModelDomain.failure('provider-link/auth-lifecycle-changed');
+  const canonical=await ensureProviderAccountFoundationClient().read();
+  if(auth?.currentUser?.uid!==expectedUid)throw accountLinkingModelDomain.failure('provider-link/auth-lifecycle-changed');
+  if(canonical.status==='ready'){
+    const foundation=canonical.foundation,username=String(foundation?.canonicalTrainerName||'');
+    if(!validCanonicalFoundation(foundation,expectedUid))throw accountLinkingModelDomain.failure('provider-link/account-resolution-invalid');
+    if(foundation.identityKind==='provider_only')return Object.freeze({status:'existing',uid:expectedUid,username,foundation});
+    const indexSnapshot=await withTimeout(get(ref(db,`authIndex/${expectedUid}`)),5000,'Resolving legacy account timed out','provider-link/account-resolution-timeout');
+    const indexRecord=indexSnapshot.exists()?indexSnapshot.val():null;
+    if(!indexRecord||String(indexRecord.username||'')!==username)throw accountLinkingModelDomain.failure('provider-link/account-resolution-invalid');
+    const userSnapshot=await withTimeout(get(ref(db,`users/${username}`)),5000,'Verifying legacy account timed out','provider-link/account-resolution-timeout');
+    const userRecord=userSnapshot.exists()?userSnapshot.val():null;
+    if(!userRecord||userRecord.authUid!==expectedUid)throw accountLinkingModelDomain.failure('provider-link/account-resolution-invalid');
+    return Object.freeze({status:'existing',uid:expectedUid,username,foundation,userRecord:Object.freeze({...userRecord}),indexRecord:Object.freeze({...indexRecord})});
+  }
+  if(canonical.status!=='missing')throw accountLinkingModelDomain.failure('provider-link/account-resolution-invalid');
   const indexSnapshot=await withTimeout(get(ref(db,`authIndex/${expectedUid}`)),5000,'Resolving Google account timed out','provider-link/account-resolution-timeout');
   if(!indexSnapshot.exists())return Object.freeze({status:'unlinked',uid:expectedUid});
   const indexRecord=indexSnapshot.val()||{},username=String(indexRecord.username||'').trim();
@@ -1263,15 +1308,15 @@ async function resolveGoogleAccountBinding(uid){
   const userRecord=userSnapshot.exists()?userSnapshot.val():null;
   if(!userRecord||userRecord.authUid!==expectedUid)throw accountLinkingModelDomain.failure('provider-link/account-resolution-invalid');
   if(auth?.currentUser?.uid!==expectedUid)throw accountLinkingModelDomain.failure('provider-link/auth-lifecycle-changed');
-  return Object.freeze({status:'existing',uid:expectedUid,username,userRecord:Object.freeze({...userRecord}),indexRecord:Object.freeze({...indexRecord})});
+  throw accountLinkingModelDomain.failure('provider-link/legacy-migration-required');
 }
 async function checkGoogleOnboardingHandle(handle,binding){
   const authority=providerAuthSnapshot();
   if(!authority||authority.uid!==binding?.uid||authority.lifecycleId!==binding?.lifecycleId)return Object.freeze({available:false,code:'provider-onboarding/auth-lifecycle-changed'});
-  await ensureFirebaseDataProtection();
-  const snapshot=await withTimeout(get(ref(db,`loginDirectory/${handle}`)),5000,'Checking trainer handle timed out','provider-onboarding/handle-check-timeout');
+  try{providerAccountFoundationService.normalizeHandle(handle);}
+  catch{return Object.freeze({available:false,code:'provider-onboarding/handle-unavailable'});}
   if(providerAuthSnapshot()?.lifecycleId!==binding.lifecycleId)return Object.freeze({available:false,code:'provider-onboarding/auth-lifecycle-changed'});
-  return snapshot.exists()?Object.freeze({available:false,code:'provider-onboarding/handle-unavailable'}):Object.freeze({available:true,code:'provider-onboarding/secure-claim-required'});
+  return Object.freeze({available:true,code:'provider-onboarding/final-authority-required'});
 }
 function createGoogleProviderAdapter(){
   const google=googleAuthAdapterService.createGoogleAuthAdapter({
@@ -1304,7 +1349,10 @@ function ensureProviderLinkingController(){
   });
   providerOnboardingController=providerOnboardingModelDomain.createProviderOnboardingModel({
     authoritySnapshot:providerAuthSnapshot,
-    checkHandle:checkGoogleOnboardingHandle
+    checkHandle:checkGoogleOnboardingHandle,
+    createAccount:({handle})=>ensureProviderAccountFoundationClient().create({requestedHandle:handle}),
+    reconcileAccount:()=>ensureProviderAccountFoundationClient().reconcilePending(),
+    storage:localStorage
   });
   providerLinkingUnsubscribe=providerLinkingController.subscribe(()=>{
     if(document.getElementById('settings-modal')?.classList.contains('open'))renderConnectedAccounts();
@@ -1312,13 +1360,23 @@ function ensureProviderLinkingController(){
   return providerLinkingController;
 }
 async function activateGoogleResolvedAccount(resolution){
-  const authority=providerAuthSnapshot(),uid=resolution?.uid,username=resolution?.username;
-  if(!authority||authority.uid!==uid||resolution?.status!=='existing'||!username||resolution.userRecord?.authUid!==uid)throw accountLinkingModelDomain.failure('provider-link/account-resolution-invalid');
+  const authority=providerAuthSnapshot(),uid=resolution?.uid,username=resolution?.username,foundation=resolution?.foundation;
+  const providerOnly=foundation?.identityKind==='provider_only'&&foundation?.legacyAccessConfigured===false;
+  if(!authority||authority.uid!==uid||resolution?.status!=='existing'||!username||!validCanonicalFoundation(foundation,uid)||
+    (!providerOnly&&(resolution.userRecord?.authUid!==uid||resolution.indexRecord?.username!==username))){
+    throw accountLinkingModelDomain.failure('provider-link/account-resolution-invalid');
+  }
   activateOwnedSession(uid,username);
+  activeCanonicalIdentity=Object.freeze({uid,username,identityKind:foundation.identityKind,
+    legacyAccessConfigured:foundation.legacyAccessConfigured,legacyUsername:foundation.legacyUsername,handleKey:foundation.handleKey});
   cur=username;currentAuthUid=uid;stampSession(username);
   const local=getLocal();
-  local.users[username]=normalizedUserRecord(username,local.users?.[username],resolution.userRecord);
-  local.authIndex[uid]={...resolution.indexRecord,username};
+  const userRecord=providerOnly?{
+    identityKind:'provider_only',legacyAccessConfigured:false,legacyUsername:null,
+    friendCode:String(resolution.profile?.friendCode||local.users?.[username]?.friendCode||'').trim()
+  }:resolution.userRecord;
+  local.users[username]=normalizedUserRecord(username,local.users?.[username],userRecord);
+  if(!providerOnly)local.authIndex[uid]={...resolution.indexRecord,username};
   saveLocal(local);allData=runtimeDataWithSelectedTrainer(local);
   ensureProtectedSubscriptions();
   await ensureAccountSyncRuntime();
@@ -1327,7 +1385,9 @@ async function activateGoogleResolvedAccount(resolution){
 }
 function showGoogleOnboarding(){
   const section=document.getElementById('google-onboarding');if(!section)return;
+  if(providerOnboardingController?.snapshot().status==='onboarding-required')providerOnboardingController.startHandleChoice();
   section.hidden=false;
+  syncGoogleOnboardingUi();
   document.getElementById('google-onboarding-handle')?.focus();
 }
 function hideGoogleOnboarding(){const section=document.getElementById('google-onboarding');if(section)section.hidden=true;}
@@ -1335,19 +1395,54 @@ function providerUiMessage(code){return i18nCore.t({
   'provider-link/collision':'security.googleCollision','provider-link/popup-blocked':'security.googlePopupBlocked',
   'provider-link/canceled':'security.googleCanceled','provider-link/recent-auth-required':'security.googleReauthRequired',
   'provider-link/network-failed':'security.googleNetworkFailed','provider-link/redirect-disabled':'security.googlePopupOnly',
-  'provider-link/onboarding-required':'security.googleOnboardingRequired'
+  'provider-link/onboarding-required':'security.googleOnboardingRequired',
+  'provider-link/legacy-migration-required':'security.googleLegacyMigrationRequired',
+  'provider-account/namespace-not-certified':'security.googleCreationNotReady',
+  'provider-account/handle-conflict':'security.googleHandleUnavailable',
+  'provider-account/ambiguous-result':'security.googleCreationVerifying',
+  'provider-account/pending-reconciliation':'security.googleCreationVerifying'
 }[code]||'security.googleNeedsAttention');}
+function syncGoogleOnboardingUi(){
+  const state=providerOnboardingController?.snapshot?.()||{status:'idle',handle:'',code:''};
+  const input=document.getElementById('google-onboarding-handle'),friendCode=document.getElementById('google-onboarding-friend-code');
+  const button=document.getElementById('google-onboarding-submit'),status=document.getElementById('google-onboarding-status');
+  const busy=['checking-account','checking-availability','creating','verifying'].includes(state.status);
+  if(input){if(state.handle&&!input.value)input.value=state.handle;input.disabled=busy;}
+  if(friendCode)friendCode.disabled=busy;
+  if(button){
+    button.disabled=busy;
+    const pending=!!ensureProviderAccountFoundationClient().pending();
+    const key=state.status==='ready-to-create'?'providerOnboarding.create':
+      (state.status==='ambiguous-result'||state.status==='retryable-failure'&&pending)?'providerOnboarding.verify':'providerOnboarding.check';
+    button.textContent=i18nCore.t(key);
+  }
+  if(status){
+    const key={
+      'checking-availability':'providerOnboarding.checking','ready-to-create':'providerOnboarding.ready',
+      creating:'providerOnboarding.creating',verifying:'providerOnboarding.verifying',
+      'ambiguous-result':'security.googleCreationVerifying','handle-unavailable':'security.googleHandleUnavailable',
+      'blocked-conflict':'security.googleNeedsAttention'
+    }[state.status];
+    if(key)status.textContent=i18nCore.t(key);
+  }
+  return state;
+}
+function beginGoogleOnboarding(){
+  const resumed=providerOnboardingController.begin({providerKey:'google'});
+  if(resumed.status==='checking-account')providerOnboardingController.resolveAccount({status:'unlinked'});
+  showGoogleOnboarding();
+  return providerOnboardingController.snapshot();
+}
 async function continueWithGoogle(){
   const button=document.getElementById('google-login-button'),error=document.getElementById('login-err');
   if(button)button.disabled=true;if(error)error.textContent='';
+  providerPendingAction='google-sign-in';
   try{
     const controller=ensureProviderLinkingController();
     if(!controller)throw accountLinkingModelDomain.failure('provider-link/provider-unavailable','unavailable');
     const result=await controller.signIn('google',{flow:'popup'});
     if(result.code==='provider-link/onboarding-required'){
-      providerOnboardingController.begin({providerKey:'google'});
-      providerOnboardingController.resolveAccount({status:'unlinked'});
-      showGoogleOnboarding();
+      beginGoogleOnboarding();
       if(error)error.textContent=i18nCore.t('security.googleOnboardingRequired');
       return result;
     }
@@ -1356,22 +1451,59 @@ async function continueWithGoogle(){
   }catch(cause){
     if(error)error.textContent=providerUiMessage(cause?.code);
     return null;
-  }finally{if(button)button.disabled=false;}
+  }finally{if(providerPendingAction==='google-sign-in')providerPendingAction=null;if(button)button.disabled=false;}
 }
 async function checkGoogleOnboarding(){
   const input=document.getElementById('google-onboarding-handle'),status=document.getElementById('google-onboarding-status');
+  const friendCode=String(document.getElementById('google-onboarding-friend-code')?.value||'').trim();
   try{
-    const next=await providerOnboardingController.chooseHandle(input?.value||'');
-    if(next.status==='confirm-profile'){
-      providerOnboardingController.confirmProfile({friendCode:document.getElementById('google-onboarding-friend-code')?.value||''});
-      if(status)status.textContent=i18nCore.t('security.googleSecureClaimRequired');
-    }else if(status)status.textContent=i18nCore.t('security.googleHandleUnavailable');
-  }catch(error){if(status)status.textContent=providerUiMessage(error?.code);}
+    let state=providerOnboardingController.snapshot(),result=null;
+    if(state.status==='onboarding-required')state=providerOnboardingController.startHandleChoice();
+    const pending=!!ensureProviderAccountFoundationClient().pending();
+    if(['choosing-handle','handle-unavailable'].includes(state.status)||state.status==='retryable-failure'&&!pending){
+      state=await providerOnboardingController.chooseHandle(input?.value||'');
+      if(state.status==='ready-to-create'){
+        providerOnboardingController.confirmProfile({friendCode});
+        syncGoogleOnboardingUi();
+        return state;
+      }
+    }else if(state.status==='ready-to-create'){
+      providerOnboardingController.confirmProfile({friendCode});
+      result=await providerOnboardingController.create();
+    }else if(['ambiguous-result','retryable-failure'].includes(state.status)&&pending){
+      result=await providerOnboardingController.reconcile();
+    }
+    if(result?.status==='account-ready'){
+      const resolution=Object.freeze({status:'existing',uid:auth.currentUser.uid,
+        username:result.foundation.canonicalTrainerName,foundation:result.foundation,profile:Object.freeze({friendCode})});
+      providerGoogleAccountResolution=resolution;hideGoogleOnboarding();return activateGoogleResolvedAccount(resolution);
+    }
+    syncGoogleOnboardingUi();return state;
+  }catch(error){syncGoogleOnboardingUi();if(status)status.textContent=providerUiMessage(error?.code);return null;}
 }
 async function cancelGoogleOnboarding(){
   providerOnboardingController?.cancel();providerGoogleAccountResolution=null;hideGoogleOnboarding();
   if(auth?.currentUser&&typeof firebaseSignOut==='function')await firebaseSignOut(auth);
   showLogin({preserveCredentials:true});
+}
+
+async function resumeGoogleIdentityAfterAuth(uid){
+  const authority=providerAuthSnapshot(),binding=`${uid}\n${authority?.lifecycleId||''}`;
+  if(!authority||authority.uid!==uid)return null;
+  if(providerIdentityResolutionPromise&&providerIdentityResolutionBinding===binding)return providerIdentityResolutionPromise;
+  const pending=(async()=>{
+    try{
+      ensureProviderLinkingController();
+      const resolution=await resolveGoogleAccountBinding(uid);providerGoogleAccountResolution=resolution;
+      if(resolution.status==='existing')return activateGoogleResolvedAccount(resolution);
+      showLogin({preserveCredentials:true});beginGoogleOnboarding();return Object.freeze({status:'onboarding-required'});
+    }catch(error){
+      showLogin({preserveCredentials:true});const target=document.getElementById('login-err');if(target)target.textContent=providerUiMessage(error?.code);return null;
+    }
+  })();
+  providerIdentityResolutionBinding=binding;providerIdentityResolutionPromise=pending;
+  try{return await pending;}
+  finally{if(providerIdentityResolutionPromise===pending){providerIdentityResolutionPromise=null;providerIdentityResolutionBinding='';}}
 }
 
 let _authObserverBound=false;
@@ -1421,6 +1553,14 @@ function bindAuthObserver(){
     if(document.getElementById('settings-modal')?.classList.contains('open'))renderConnectedAccounts();
     if(user){
       const rememberedUsername=cur||checkSession();
+      const rememberedIdentity=rememberedUsername?getLocal().users?.[rememberedUsername]:null;
+      const googleLinked=(user.providerData||[]).some(item=>item?.providerId==='google.com');
+      if(PROVIDER_LINKING_DEVELOPMENT_ENABLED&&googleLinked&&providerPendingAction!=='google-sign-in'&&
+        activeCanonicalIdentity?.uid!==user.uid&&(!rememberedUsername||rememberedIdentity?.identityKind==='provider_only')){
+        if(_authDropTimer){clearTimeout(_authDropTimer);_authDropTimer=null;}
+        resumeGoogleIdentityAfterAuth(user.uid);
+        return;
+      }
       if(rememberedUsername&&storedSessionMatches(user.uid,rememberedUsername)){
         try{
           if(!ownedSessionAlreadyActive(user.uid,rememberedUsername))activateOwnedSession(user.uid,rememberedUsername);
@@ -1578,6 +1718,8 @@ function resetSessionTransientUi(reason='session_boundary'){
   _sessionTransientGeneration++;
   if(typeof invalidateAccountSyncRecovery==='function')invalidateAccountSyncRecovery(reason);
   if(typeof e1ClientFoundationCanary!=='undefined'&&e1ClientFoundationCanary){e1ClientFoundationCanary.close();e1ClientFoundationCanary=null;}
+  if(providerAccountFoundationClient){providerAccountFoundationClient.close();providerAccountFoundationClient=null;}
+  providerIdentityResolutionPromise=null;providerIdentityResolutionBinding='';activeCanonicalIdentity=null;
   resetOwnedHydrationState();
 
   if(typeof trainerSuggestionTimer!=='undefined')clearTimeout(trainerSuggestionTimer);
@@ -2620,6 +2762,7 @@ const ACCOUNT_SYNC_DEVICE_KEY_PREFIX='pogoAccountSyncDevice_v1';
 async function accountSyncRolloutEligible(uid=auth?.currentUser?.uid){
   const owner=accountSyncModel.firebaseKey(uid,128);
   if(!owner||ACCOUNT_SYNC_ROLLOUT.enabled!==true||ACCOUNT_SYNC_ROLLOUT.writesEnabled!==true)return false;
+  if(providerOnlyIdentityActive(owner))return true;
   const digest=await accountSyncModel.sha256Hex(accountSyncModel.canonicalJson([accountSyncModel.SCHEMA_VERSION,'pogo-account-sync-rollout-owner',owner]));
   return ACCOUNT_SYNC_ROLLOUT.allowlistedUidHashes.includes(digest);
 }
@@ -2909,6 +3052,7 @@ function applyAccountSyncCanonicalEntities(entities){
   }finally{accountSyncProjectionApplying=false;}
 }
 async function publishAccountSyncProjection(acceptedRows){
+  if(providerOnlyIdentityActive())return Object.freeze({ok:true,status:'deferred-provider-public-projection'});
   const projected=accountSyncProduct.projectAcceptedPublicRows({rows:acceptedRows,catalogEntryForId:accountSyncCatalogEntryForId,encodePriority:accountSyncEncodedPriority});
   if(projected.unresolved.length)throw Object.assign(new Error('Accepted public projection could not be resolved'),{code:'account-sync/public-projection-unresolved'});
   const source=accountSyncClone(getLocal());
@@ -2963,6 +3107,7 @@ async function ensureAccountSyncRuntime(){
   if(accountSyncRuntimeStartPromise||managedAccountSyncRuntime)await stopAccountSyncRuntime();
   if(uid!==auth?.currentUser?.uid||username!==cur)return Object.freeze({ok:false,status:'session-changed'});
   const generation=++accountSyncRuntimeGeneration;
+  const initializationKind=providerOnlyIdentityActive(uid)?'provider-only':'legacy-migration';
   accountSyncEligibleUid=uid;
   const startPromise=(async()=>{
     const journal=accountSyncJournalData.createAccountSyncJournal({ownerUid:uid});
@@ -2971,6 +3116,7 @@ async function ensureAccountSyncRuntime(){
     const currentSession=()=>generation===accountSyncRuntimeGeneration&&managedAccountSyncRuntime===runtime&&auth?.currentUser?.uid===uid&&cur===username;
     runtime=accountSyncRuntimeData.createAccountSyncRuntime({
       ownerUid:uid,username,journal,repository,enabled:ACCOUNT_SYNC_ROLLOUT.enabled,writesEnabled:ACCOUNT_SYNC_ROLLOUT.writesEnabled,allowlistedUids:[uid],
+      initializationKind,
       readMigrationSources:accountSyncReadLegacySources,
       onState:state=>{if(currentSession()){accountSyncUiState=state;accountSyncClearStaleRecoveryPresentation();refreshSyncUi();}},
       onCanonicalEntities:entities=>currentSession()?applyAccountSyncCanonicalEntities(entities):false,
@@ -2983,7 +3129,7 @@ async function ensureAccountSyncRuntime(){
       if(!currentSession()){await runtime.stop();return Object.freeze({ok:false,status:'session-changed'});}
       accountSyncUiState=await runtime.snapshot();accountSyncClearStaleRecoveryPresentation();refreshSyncUi();
       if(!accountSyncProjectionReady())return Object.freeze({ok:false,status:'runtime-unhealthy'});
-      retireMigratedLegacyListQueue();return result;
+      if(initializationKind==='legacy-migration')retireMigratedLegacyListQueue();return result;
     }catch(error){
       if(currentSession()){
         let failedState={};try{failedState=await runtime.snapshot();}catch{}
@@ -3297,6 +3443,11 @@ function canonicalUsernameInput(raw=''){
 }
 function normalizedUserRecord(username,prev={},data={}){
   const merged={friendCode:'',joined:Date.now(),lastSeen:null,lastUpdated:null,pinHashed:false,...prev,...data};
+  if(merged.identityKind==='provider_only'||merged.legacyAccessConfigured===false){
+    merged.identityKind='provider_only';merged.legacyAccessConfigured=false;merged.legacyUsername=null;
+    delete merged.authVersion;delete merged.authEmail;delete merged.authUid;delete merged.pin;delete merged.pinHashed;
+    return merged;
+  }
   merged.authVersion=authVersionForUser(merged);
   if(!merged.authEmail)merged.authEmail=authEmail(username,merged.authVersion);
   return merged;
@@ -3741,6 +3892,7 @@ function ensureOwnedExactSubscriptions(){
 function ensureListSubscribed(type){
   if(!db)return;
   if(!['wishlist','dynamax','gmax','costumes'].includes(type))return;
+  if(providerOnlyIdentityActive())return;
   if(ownedExactReadsEnabled()){
     const result=managedOwnedDataCoordinator?.subscribeList(type);
     if(!result?.ok)_onOwnedDataError();
@@ -3752,6 +3904,7 @@ function ensureProtectedSubscriptions(){
   if(!firebaseDataProtectionReady||!db||!auth?.currentUser)return;
   const active=managedListenerLifecycle.activateSession({uid:auth.currentUser.uid,username:cur});
   if(!active.ok)return;
+  if(providerOnlyIdentityActive())return;
   if(ownedExactReadsEnabled()){
     ensureOwnedExactSubscriptions();
     // Retained broad collections are owner-only and start on demand in Admin.
@@ -5311,7 +5464,7 @@ function showApp(){
   attachPullToRefresh();
   initAddAdvanced();
   // Subscribe to my own pending-decrements queue (counterparties' trade-accepts)
-  subscribeMyPendingDecrements();
+  if(!providerOnlyIdentityActive())subscribeMyPendingDecrements();
   // First-time user tour (#25)
   maybeStartTour();
   // PWA shortcut handling: deep-link via ?action=add|browse|strings
@@ -9027,12 +9180,13 @@ function renderConnectedAccounts(){
   const controllerState=providerLinkingController?.snapshot?.()||null;
   const operationStates=controllerState?.providerKey?{[controllerState.providerKey]:['connected','connecting','prepared','waiting-browser','reauthenticate','disconnecting'].includes(controllerState.status)?controllerState.status:'needs-attention'}:{};
   const usernamePinAvailable=usernamePinAccessUsable();
+  const pinPanel=document.getElementById('settings-security-pin-panel');if(pinPanel)pinPanel.hidden=!usernamePinAvailable;
   const methods=providerLinkingRegistry?providerLinkingRegistry.methods({providerData:auth?.currentUser?.providerData||[],usernamePinAvailable,operationStates}):[
     {key:'username-pin',visible:true,state:usernamePinAvailable?'connected':'unavailable',detailKey:'security.usernamePinHelp'}
   ];
   for(const method of methods){
     const row=document.querySelector(`#settings-account-security [data-provider="${method.key}"]`);if(!row)continue;
-    const presentation=method.key==='google'?googleProviderPresentation(method,controllerState):Object.freeze({state:method.state,labelKey:PROVIDER_LINKING_STATUS_KEYS[method.state],detailKey:method.detailKey,action:'',actionKey:'',disabled:true});
+    const presentation=method.key==='google'?googleProviderPresentation(method,controllerState):Object.freeze({state:method.state,labelKey:PROVIDER_LINKING_STATUS_KEYS[method.state],detailKey:method.key==='username-pin'&&!usernamePinAvailable?'security.usernamePinNotConfigured':method.detailKey,action:'',actionKey:'',disabled:true});
     row.hidden=!method.visible;row.dataset.providerState=presentation.state;
     const detail=row.querySelector('[data-provider-detail]');if(detail)detail.textContent=i18nCore.t(presentation.detailKey);
     const status=row.querySelector('[data-provider-status]'),label=row.querySelector('[data-provider-status-label]'),icon=row.querySelector('[data-provider-status-icon]');

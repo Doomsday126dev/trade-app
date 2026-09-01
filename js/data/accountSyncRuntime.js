@@ -8,6 +8,7 @@
   const META_RECORD_KEYS=Object.freeze(['schemaVersion','ownerUid','initialized','initializedAt','updatedAt','featureVersion']);
   const RECOVERY_REVIEW_KIND='recovery-review-acceptance';
   const HISTORICAL_RETRY_CODE='account-sync/committed-entity-invalid';
+  const INITIALIZATION_KINDS=Object.freeze(['legacy-migration','provider-only']);
 
   function count(value){const number=Number(value);return Number.isSafeInteger(number)&&number>0?number:0;}
   function diagnosticCode(value,fallback='account-sync/unknown'){
@@ -116,10 +117,11 @@
   function createAccountSyncRuntime({
     ownerUid,username,journal,repository,enabled,writesEnabled,allowlistedUids,readMigrationSources,
     onState,onCanonicalEntities,onPublicProjection,onMigrationState,online=()=>global.navigator?.onLine!==false,
-    clock=()=>Date.now(),crypto=global.crypto,listenerReadyTimeoutMs=8000
+    clock=()=>Date.now(),crypto=global.crypto,listenerReadyTimeoutMs=8000,initializationKind='legacy-migration'
   }={}){
     const owner=model.firebaseKey(ownerUid,128),name=model.exactText(username,64);
-    if(!owner||!name||!journal||!repository||typeof readMigrationSources!=='function')throw new TypeError('Account sync runtime binding is invalid');
+    if(!owner||!name||!journal||!repository||!INITIALIZATION_KINDS.includes(initializationKind)||
+      initializationKind==='legacy-migration'&&typeof readMigrationSources!=='function')throw new TypeError('Account sync runtime binding is invalid');
     let projectionReady=false,stopped=false,startPromise=null,stopPromise=null,lastPlan=null,startupError='',startupErrorCategory='',migrationState='inactive';
     function runtimeState(state){
       const lastError=startupError||state.lastError||'',lastErrorCategory=startupErrorCategory||state.lastErrorCategory||'',currentState=lastError?'sync-error':state.state==='saved'&&!projectionReady?'pending-sync':state.state;
@@ -216,6 +218,43 @@
       if(resolved!==unresolved.length)throw Object.assign(new Error('Recovery review acceptance did not match the local candidate set'),{code:'account-sync/recovery-review-changed'});
       notifyState(await controller.snapshot());return Object.freeze({ok:true,status:'inherited',count:resolved});
     }
+    function providerInitializationContaminated(account){
+      return['tradeEntries','favorites','tags','migrations','recoveryCandidates','recoveryReviewAcceptances']
+        .some(key=>model.plainObject(account?.[key])&&Object.keys(account[key]).length>0);
+    }
+    async function ensureProviderInitialization(){
+      requireRunning();notifyMigration('reading');
+      const accountBefore=await repository.readAccount(),legacyCompletion=await journal.getMeta(MIGRATION_COMPLETE_META);
+      requireRunning();await controller.acceptRemote(accountBefore);requireRunning();
+      if(legacyCompletion||providerInitializationContaminated(accountBefore))throw Object.assign(
+        new Error('Provider-only account contains legacy or partial canonical evidence'),
+        {code:'account-sync/provider-initialization-conflict'}
+      );
+      const existingMeta=accountBefore?.meta;
+      if(existingMeta?.initialized===true){
+        const expected={ownerUid:owner,featureVersion:model.SCHEMA_VERSION};
+        if(!compatibleMetaRecord(existingMeta,expected,existingMeta))throw Object.assign(
+          new Error('Provider-only canonical metadata is malformed'),{code:'account-sync/meta-conflict'}
+        );
+        lastPlan=Object.freeze({ok:true,schemaVersion:model.SCHEMA_VERSION,ownerUid:owner,
+          initializationKind:'provider-only',resumed:true,sourceDeletionAllowed:false,deviceMigrationId:null});
+        notifyMigration('verified',{initializationKind:'provider-only',resumed:true});return lastPlan;
+      }
+      if(existingMeta&&Object.keys(existingMeta).length)throw Object.assign(
+        new Error('Provider-only canonical metadata is partial'),{code:'account-sync/meta-conflict'}
+      );
+      const expectedMeta={ownerUid:owner,initialized:true,initializedAt:Number(clock()),featureVersion:model.SCHEMA_VERSION};
+      await controller.runAuthorizedWatchedMutation({
+        write:()=>repository.updateMeta(expectedMeta),timeoutMs:listenerReadyTimeoutMs,
+        reconcile:({account})=>compatibleMetaRecord(account?.meta,expectedMeta,existingMeta)
+          ?Object.freeze({ok:true,status:'reconciled',value:account.meta})
+          :model.failure('account-sync/meta-conflict','Canonical provider account metadata differs or is incomplete')
+      });
+      requireRunning();
+      lastPlan=Object.freeze({ok:true,schemaVersion:model.SCHEMA_VERSION,ownerUid:owner,
+        initializationKind:'provider-only',resumed:false,sourceDeletionAllowed:false,deviceMigrationId:null});
+      notifyMigration('verified',{initializationKind:'provider-only',resumed:false});return lastPlan;
+    }
     async function ensureMigration(){
       requireRunning();
       notifyMigration('reading');
@@ -302,9 +341,12 @@
           if(!controller.eligible)return activated;
           const listenerReady=await controller.waitForListenerReady({timeoutMs:listenerReadyTimeoutMs});requireRunning();
           if(!listenerReady?.ok)throw Object.assign(new Error('The live account sync listener did not become ready'),{code:listenerReady?.error?.code||'account-sync/listener-failed'});
-          migrationState='reading';const plan=await ensureMigration();requireRunning();await synchronizeRecoveryReviewAcceptance();requireRunning();projectionReady=true;
+          migrationState='reading';const plan=initializationKind==='provider-only'?await ensureProviderInitialization():await ensureMigration();requireRunning();
+          if(initializationKind==='legacy-migration')await synchronizeRecoveryReviewAcceptance();requireRunning();projectionReady=true;
           if(onCanonicalEntities?.(Object.freeze(controller.activeEntities()))===false)throw Object.assign(new Error('Canonical account projection is unresolved'),{code:'account-sync/catalog-projection-unresolved'});
-          await controller.publishAcceptedProjection(Object.freeze({kind:'migration-complete',deviceMigrationId:plan.deviceMigrationId}));requireRunning();
+          await controller.publishAcceptedProjection(initializationKind==='provider-only'
+            ?Object.freeze({kind:'provider-account-initialized'})
+            :Object.freeze({kind:'migration-complete',deviceMigrationId:plan.deviceMigrationId}));requireRunning();
           startupError='';startupErrorCategory='';notifyState(await controller.snapshot());return Object.freeze({ok:true,status:'active',plan});
         }catch(error){
           projectionReady=false;startupError=diagnosticCode(error,'account-sync/migration-failed');startupErrorCategory=startupError==='account-sync/catalog-projection-unresolved'?'canonical':/^account-sync\/listener-/.test(startupError)?'listener':migrationState==='activating'?'startup':'migration';

@@ -56,6 +56,7 @@
     "js/domain/accountLinkingController.js",
     "js/domain/providerOnboardingModel.js",
     "js/services/googleAuthAdapter.js",
+    "js/services/providerAccountFoundation.js",
     "js/domain/loginDirectory.js",
     "js/utils/textSafety.js",
     "js/ui/stringPanels.js",
@@ -103,7 +104,8 @@
     "js/domain/accountLinkingModel.js",
     "js/domain/accountLinkingController.js",
     "js/domain/providerOnboardingModel.js",
-    "js/services/googleAuthAdapter.js"
+    "js/services/googleAuthAdapter.js",
+    "js/services/providerAccountFoundation.js"
   ],
   "assetFiles": [
     "assets/tradeloop-icon.svg",

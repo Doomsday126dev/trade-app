@@ -12,7 +12,7 @@
     "test:sec02-inventory": "node --test tests/sec02-request-inventory.test.cjs tests/request-access-contract.test.cjs",
     "test:account-sync": "node --test tests/account-sync-domain.test.cjs tests/account-sync-product.test.cjs tests/account-sync-repository.test.cjs tests/account-sync-integration.test.cjs tests/account-sync-runtime.test.cjs tests/account-sync-recovery.test.cjs tests/account-sync-indexeddb.test.cjs",
     "test:provider-linking-foundation": "node --test tests/provider-linking-foundation.test.cjs tests/provider-linking-ui.test.cjs",
-    "test:google-provider": "node --test tests/provider-linking-foundation.test.cjs tests/provider-linking-ui.test.cjs tests/google-auth-adapter.test.cjs tests/provider-onboarding-model.test.cjs tests/google-provider-ui.test.cjs",
+    "test:google-provider": "node --test tests/provider-linking-foundation.test.cjs tests/provider-linking-ui.test.cjs tests/google-auth-adapter.test.cjs tests/provider-onboarding-model.test.cjs tests/provider-account-foundation.test.cjs tests/provider-account-application-integration.test.cjs tests/google-provider-ui.test.cjs",
     "test:pages-release": "node --test tests/pages-deployment-control.test.cjs tests/service-worker-deployment-rollback.test.cjs tests/service-worker-atomic-install.test.cjs tests/service-worker-cache-lifecycle.test.cjs tests/service-worker-install-performance.test.cjs tests/service-worker-release.test.cjs tests/client-asset-versioning.test.cjs tests/frontend-asset-extraction.test.cjs tests/ui-readiness.test.cjs tests/public-share-localization.test.cjs tests/provider-privacy.test.cjs",
     "profile:service-worker-install": "node scripts/profile-service-worker-install.cjs",
     "profile:frontend-assets": "node scripts/profile-frontend-assets.cjs",
