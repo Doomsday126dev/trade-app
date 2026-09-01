@@ -217,7 +217,6 @@ const publicSharePublicationDomain=window.PogoDomain?.publicSharePublication;
 if(!publicSharePublicationDomain)throw new Error('Public-share publication helpers failed to load');
 const providerPublicProjectionDomain=window.PogoDomain?.providerPublicProjection;
 const providerPublicShareGatewayService=window.PogoServices?.providerPublicShareGateway;
-if(!providerPublicProjectionDomain||!providerPublicShareGatewayService)throw new Error('Provider public-share foundation failed to load');
 const trainerPreferencesDomain=window.PogoDomain?.trainerPreferences;
 if(!trainerPreferencesDomain||trainerPreferencesDomain.SYNCED_TRAINER_PREFERENCES_ENABLED!==false)throw new Error('Disabled trainer-preference helpers failed to load safely');
 const trainerPreferenceSyncDomain=window.PogoDomain?.trainerPreferenceSync;
@@ -233,6 +232,8 @@ const PROVIDER_CAPABILITIES=providerCapabilitiesDomain.resolveProviderCapabiliti
   requested:window.__POGO_PROVIDER_CAPABILITIES__,floor:window.__POGO_PROVIDER_ACCOUNT_COMPATIBILITY_FLOOR__
 });
 const PROVIDER_MODULES_ENABLED=providerCapabilitiesDomain.providerModulesRequired(PROVIDER_CAPABILITIES);
+const PROVIDER_PUBLIC_MODULES_ENABLED=PROVIDER_CAPABILITIES.providerPublicReadSupport||PROVIDER_CAPABILITIES.providerPublicWriteSupport;
+if(PROVIDER_PUBLIC_MODULES_ENABLED&&(!providerPublicProjectionDomain||!providerPublicShareGatewayService))throw new Error('Provider public-share foundation failed to load');
 const authProviderRegistryDomain=window.PogoDomain?.authProviderRegistry;
 const providerContinuationStateDomain=window.PogoDomain?.providerContinuationState;
 const accountLinkingModelDomain=window.PogoDomain?.accountLinkingModel;

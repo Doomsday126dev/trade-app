@@ -236,9 +236,10 @@
     await appCheckSdk.getToken(result.instance,false);
     diagnostics.events.push('app-check-ready');
     global.__pogoStartup.appCheckReadyAt=performance.now();
-    if(global.PogoServices.providerPublicShareGateway.DEFAULT_ENABLED){
+    const providerPublicShareGateway=global.PogoServices.providerPublicShareGateway;
+    if(providerPublicShareGateway?.DEFAULT_ENABLED===true){
       diagnostics.readPaths.push('gateway:trainer-handle');diagnostics.events.push('read:gateway:trainer-handle');
-      const client=global.PogoServices.providerPublicShareGateway.createProviderPublicShareClient({
+      const client=providerPublicShareGateway.createProviderPublicShareClient({
         firebaseApp:app,enabled:true,
         firebaseAppCheckReady:async()=>result,
         importFunctionsSdk:()=>import(`${FIREBASE_SDK}/firebase-functions.js`)

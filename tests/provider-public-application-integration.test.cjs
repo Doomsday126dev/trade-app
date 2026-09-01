@@ -26,6 +26,9 @@ test('provider-only publication is blocked when its independent development gate
   const immediate=section('async function publishPublicShareNow','async function writeUser(u,data)');
   assert.match(`${queued}\n${immediate}`,/provider-public\/projection-disabled/);
   assert.match(app,/window\.__POGO_PROVIDER_PUBLIC_PROJECTION_DEV__===true/);
+  assert.match(html,/providerPublicProjection\.js[^>]+data-pogo-provider-public-development/);
+  assert.match(html,/providerPublicShareGateway\.js[^>]+data-pogo-provider-public-development/);
+  assert.match(html,/data-pogo-provider-public-development[\s\S]+__POGO_PROVIDER_PUBLIC_PROJECTION_DEV__/);
 });
 
 test('trainer search and direct share URLs resolve provider handles first then retain exact legacy fallback',()=>{
