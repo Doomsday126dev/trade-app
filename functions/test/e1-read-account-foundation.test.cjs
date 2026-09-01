@@ -7,6 +7,7 @@ const {
   GATES,
   createHandler,
   loadConfiguration,
+  verifyCurrentLinkedGoogleProviderIdentity,
   verifyFirebaseIdToken
 } = require('../e1-authority-service/server');
 const { STAGING: EXPECTED } = require('../e1-authority-service/e1TargetContracts');
@@ -132,7 +133,7 @@ function enabledHandler(overrides = {}) {
       calls.legacy.push(input);
       return { status: 'ready', username: TRAINER, legacyAuthVersion: 1 };
     }),
-    verifyCurrentGoogleProviderIdentity: overrides.verifyCurrentGoogleProviderIdentity || (async (_configuration, token, identity) => {
+    verifyCurrentLinkedGoogleProviderIdentity: overrides.verifyCurrentLinkedGoogleProviderIdentity || (async (_configuration, token, identity) => {
       calls.providerChecks.push({ token, identity });
       return { providerKey: 'google', providerId: 'google.com', providerSubjectKey: `v1_google_${'c'.repeat(64)}`,
         providerSubjectKeyVersion: 1, authTime: identity.authTime };
@@ -264,6 +265,63 @@ test('provider-only return requires current Google evidence and an exact recipro
   assert.equal(calls.providerChecks.length, 1);
   assert.equal(calls.providerReads.length, 1);
   assert.equal(calls.legacy.length, 0);
+});
+
+test('returning provider reads accept old auth_time and refreshed-token sessions without a reauthentication loop', async () => {
+  const exact = {
+    schemaVersion: 1, canonicalTrainerName: TRAINER, normalizedTrainerName: NORMALIZED_TRAINER,
+    handleKey: HANDLE_KEY, identityKind: 'provider_only', legacyAccessConfigured: false,
+    legacyUsername: null, status: 'active', revision: 1
+  };
+  for (const ageMs of [11 * 60 * 1000, 60 * 60 * 1000, 7 * 24 * 60 * 60 * 1000]) {
+    const identity = { uid: UID, authTime: NOW_SECONDS * 1000 - ageMs, signInProvider: 'google.com',
+      identities: { 'google.com': ['provider-subject'] } };
+    const instance = enabledHandler({
+      document: providerFirestoreDocument(),
+      verifyFirebaseIdToken: async () => identity,
+      verifyCurrentLinkedGoogleProviderIdentity: (configuration, token, verified) =>
+        verifyCurrentLinkedGoogleProviderIdentity(configuration, token, verified, async () => ({
+          ok: true, status: 200, async json() { return { users: [{ localId: UID, disabled: false,
+            providerUserInfo: [{ providerId: 'google.com', federatedId: 'provider-subject' }] }] }; }
+        })),
+      readProviderAccountFoundation: async (input) => { instance.calls.providerReads.push(input); return exact; }
+    });
+    const result = await invoke(instance.handler, { token: `refreshed-id-token-age-${ageMs}` });
+    assert.equal(result.status, 200, `auth_time age ${ageMs}`);
+    assert.equal(result.body.code, 'SUCCESS');
+    assert.equal(instance.calls.providerReads.length, 1);
+  }
+});
+
+test('returning provider read fails when Google is removed rebound disabled or attached to another UID', async () => {
+  const exact = {
+    schemaVersion: 1, canonicalTrainerName: TRAINER, normalizedTrainerName: NORMALIZED_TRAINER,
+    handleKey: HANDLE_KEY, identityKind: 'provider_only', legacyAccessConfigured: false,
+    legacyUsername: null, status: 'active', revision: 1
+  };
+  const accounts = [
+    { localId: UID, providerUserInfo: [] },
+    { localId: UID, providerUserInfo: [{ providerId: 'google.com', federatedId: 'rebound-subject' }] },
+    { localId: UID, disabled: true, providerUserInfo: [{ providerId: 'google.com', federatedId: 'provider-subject' }] },
+    { localId: 'another-firebase-uid', providerUserInfo: [{ providerId: 'google.com', federatedId: 'provider-subject' }] }
+  ];
+  for (const account of accounts) {
+    const identity = { uid: UID, authTime: NOW_SECONDS * 1000 - 7 * 24 * 60 * 60 * 1000,
+      signInProvider: 'google.com', identities: { 'google.com': ['provider-subject'] } };
+    const instance = enabledHandler({
+      document: providerFirestoreDocument(),
+      verifyFirebaseIdToken: async () => identity,
+      verifyCurrentLinkedGoogleProviderIdentity: (configuration, token, verified) =>
+        verifyCurrentLinkedGoogleProviderIdentity(configuration, token, verified, async () => ({
+          ok: true, status: 200, async json() { return { users: [account] }; }
+        })),
+      readProviderAccountFoundation: async () => exact
+    });
+    const result = await invoke(instance.handler, { token: 'current-id-token' });
+    assert.equal(result.status, 403);
+    assert.equal(result.body.code, 'PROVIDER_IDENTITY_REQUIRED');
+    assert.equal(instance.calls.providerReads.length, 0);
+  }
 });
 
 test('account-only provider state fails closed and never falls back to a legacy mapping', async () => {

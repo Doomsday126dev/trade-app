@@ -43,8 +43,14 @@ test.describe('development-only Google entry point',()=>{
 
   test('explicit configured development gate reveals a localized 48px Google action without overflow',async({page})=>{
     await page.addInitScript(()=>{
-      window.__POGO_PROVIDER_LINKING_DEV__=true;
-      window.__POGO_PROVIDER_LINKING_CONFIGURED__=['google'];
+      window.__POGO_PROVIDER_CAPABILITIES__={
+        providerAccountCompatibility:true,
+        googlePublicEntry:true,
+        googleExistingAccountLinking:true,
+        providerAccountCreation:true,
+        providerPublicReadSupport:false,
+        providerPublicWriteSupport:false
+      };
       localStorage.setItem('pogoUiLocale:v1','de');
     });
     await mockSignedOutAuth(page);await page.goto('/');

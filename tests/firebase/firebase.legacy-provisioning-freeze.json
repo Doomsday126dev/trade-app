@@ -1,0 +1,11 @@
+{
+  "database": {
+    "rules": "database.rules.legacy-provisioning-freeze.json"
+  },
+  "emulators": {
+    "auth": { "port": 9799 },
+    "database": { "port": 9700 },
+    "ui": { "enabled": false },
+    "singleProjectMode": true
+  }
+}

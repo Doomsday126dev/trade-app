@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "stage": "pre-first-provider-account",
+  "providerAccountsExist": false,
+  "compatibilityIrreversible": false,
+  "requiredProviderSubjectKeyVersions": [],
+  "compatibleAuthoritySourceFingerprints": []
+}

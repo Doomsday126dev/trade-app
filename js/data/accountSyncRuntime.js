@@ -157,8 +157,8 @@
       if(!valid.ok)throw Object.assign(new Error('Canonical provider profile is invalid'),{code:'account-sync/profile-invalid'});
       return valid.value;
     }
-    function notifyProviderProfile(profile,{pending=false}={}){
-      const projected=Object.freeze({...profile,...model.profileValues(profile),pending});
+    function notifyProviderProfile(profile,{pending=false,resolution=''}={}){
+      const projected=Object.freeze({...profile,...model.profileValues(profile),pending,...(resolution?{resolution}: {})});
       if(onProviderProfile?.(projected)===false)throw Object.assign(new Error('Provider profile projection is unresolved'),{code:'account-sync/profile-projection-unresolved'});
     }
     async function acceptProviderAccountProfile(account){
@@ -171,17 +171,19 @@
     }
     async function flushProviderProfile(pending){
       requireRunning();
+      let resolution='';
       const result=await controller.runAuthorizedWatchedMutation({
         write:()=>repository.writeProfile(pending.values,{baseRevision:pending.baseRevision}),timeoutMs:listenerReadyTimeoutMs,
         reconcile:({account})=>{
           const valid=model.validateProfileRecord(account?.profile,{ownerUid:owner});
-          return valid.ok&&model.canonicalJson(model.profileValues(valid.value))===model.canonicalJson(pending.values)
-            ?Object.freeze({ok:true,status:'reconciled',value:valid.value})
-            :model.failure('account-sync/profile-conflict','Canonical provider profile differs or is missing');
+          if(!valid.ok)return model.failure('account-sync/profile-conflict','Canonical provider profile differs or is missing');
+          if(model.canonicalJson(model.profileValues(valid.value))===model.canonicalJson(pending.values))return Object.freeze({ok:true,status:'reconciled',value:valid.value});
+          if(valid.value.revision>pending.baseRevision){resolution='canonical-won';return Object.freeze({ok:true,status:resolution,value:valid.value});}
+          return model.failure('account-sync/profile-conflict','Canonical provider profile differs or is missing');
         }
       });
       requireRunning();providerProfile=exactProviderProfile(result.value);profileReady=true;providerProfilePending=null;
-      await journal.removeMeta(PROVIDER_PROFILE_PENDING_META);requireRunning();notifyProviderProfile(providerProfile);return providerProfile;
+      await journal.removeMeta(PROVIDER_PROFILE_PENDING_META);requireRunning();notifyProviderProfile(providerProfile,{resolution});return providerProfile;
     }
     async function ensureProviderProfile(){
       requireRunning();
@@ -195,6 +197,10 @@
         if(!pending){providerProfile=canonical;profileReady=true;notifyProviderProfile(canonical);return canonical;}
         if(model.canonicalJson(model.profileValues(canonical))===model.canonicalJson(pending.values)){
           providerProfile=canonical;profileReady=true;providerProfilePending=null;await journal.removeMeta(PROVIDER_PROFILE_PENDING_META);notifyProviderProfile(canonical);return canonical;
+        }
+        if(canonical.revision>pending.baseRevision){
+          providerProfile=canonical;profileReady=true;providerProfilePending=null;await journal.removeMeta(PROVIDER_PROFILE_PENDING_META);
+          notifyProviderProfile(canonical,{resolution:'canonical-won'});return canonical;
         }
       }
       let queued=pending;

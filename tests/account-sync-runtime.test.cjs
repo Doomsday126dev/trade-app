@@ -177,6 +177,50 @@ test('provider onboarding persists the submitted friend code before publication 
   assert.equal(runtime.profileReady,true);assert.equal(runtime.projectionReady,true);assert.equal(publications.length,1);assert.equal(profiles.at(-1).pending,false);
 });
 
+test('identity committed before any profile journal can recover on a clean device with an empty canonical profile',async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),repositoryState=runtimeRepository(window,h),cleanState=h.createMemoryJournalState(),profiles=[];
+  const runtime=createRuntime(window,h,repositoryState,cleanState,undefined,()=>{},()=>{},async()=>({ok:true}),{
+    initializationKind:'provider-only',onProviderProfile:value=>{profiles.push(value);return true;}
+  });
+  const result=await runtime.start();
+  assert.equal(result.ok,true);assert.equal(repositoryState.profile.friendCode,'');assert.equal(repositoryState.profile.bio,'');
+  assert.equal(cleanState.meta.has('provider-profile-pending-v1'),false);assert.equal(profiles.at(-1).pending,false);
+});
+
+test('committed provider profile with a lost network response reconciles and clears its owner journal',async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),repositoryState=runtimeRepository(window,h),journalState=h.createMemoryJournalState();
+  const runtime=createRuntime(window,h,repositoryState,journalState,undefined,()=>{},()=>{},async()=>({ok:true}),{initializationKind:'provider-only'});
+  await runtime.start();const original=repositoryState.repository.writeProfile.bind(repositoryState.repository);
+  repositoryState.repository.writeProfile=async(...args)=>{await original(...args);throw Object.assign(new Error('response lost'),{code:'account-sync/network-failed'});};
+  const result=await runtime.updateProviderProfile({bio:'Committed before response loss'});
+  assert.equal(result.ok,true);assert.equal(repositoryState.profile.bio,'Committed before response loss');
+  assert.equal(journalState.meta.has('provider-profile-pending-v1'),false);assert.equal(runtime.providerProfile.revision,2);
+});
+
+test('clean second device canonical profile wins over a first device stale local journal without a retry loop',async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),repositoryState=runtimeRepository(window,h),firstState=h.createMemoryJournalState();
+  const first=createRuntime(window,h,repositoryState,firstState,undefined,()=>{},()=>{},async()=>({ok:true}),{initializationKind:'provider-only'});
+  await first.start();const original=repositoryState.repository.writeProfile.bind(repositoryState.repository);
+  repositoryState.repository.writeProfile=async()=>{throw Object.assign(new Error('first device offline'),{code:'account-sync/network-failed'});};
+  const pending=await first.updateProviderProfile({bio:'First device pending'});
+  assert.equal(pending.ok,false);assert.equal(firstState.meta.has('provider-profile-pending-v1'),true);await first.stop();
+
+  repositoryState.repository.writeProfile=original;
+  const secondState=h.createMemoryJournalState(),second=createRuntime(window,h,repositoryState,secondState,undefined,()=>{},()=>{},async()=>({ok:true}),{initializationKind:'provider-only'});
+  await second.start();const secondEdit=await second.updateProviderProfile({bio:'Second device canonical'});
+  assert.equal(secondEdit.ok,true);assert.equal(repositoryState.profile.revision,2);await second.stop();
+
+  const resolutions=[],writesBefore=repositoryState.calls.writeProfile;
+  const reopened=createRuntime(window,h,repositoryState,firstState,undefined,()=>{},()=>{},async()=>({ok:true}),{
+    initializationKind:'provider-only',onProviderProfile:value=>{resolutions.push(value.resolution||'');return true;}
+  });
+  const recovered=await reopened.start();
+  assert.equal(recovered.ok,true);assert.equal(reopened.providerProfile.bio,'Second device canonical');
+  assert.equal(resolutions.includes('canonical-won'),true);assert.equal(firstState.meta.has('provider-profile-pending-v1'),false);
+  assert.equal(repositoryState.calls.writeProfile,writesBefore);
+  assert.equal((await reopened.retryProviderProfile()).status,'unchanged');assert.equal(repositoryState.calls.writeProfile,writesBefore);
+});
+
 test('provider profile edits hydrate on a clean sign-in restart without legacy migration writes',async()=>{
   const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),repositoryState=runtimeRepository(window,h),firstState=h.createMemoryJournalState(),firstProfiles=[];
   const first=createRuntime(window,h,repositoryState,firstState,undefined,()=>{},()=>{},async()=>({ok:true}),{

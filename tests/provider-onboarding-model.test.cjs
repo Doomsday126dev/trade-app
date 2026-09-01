@@ -11,14 +11,14 @@ function storage(){const values=new Map();return{getItem:key=>values.get(key)||n
 function foundation(handle='TrainerNew'){return{status:'active',identityKind:'provider_only',legacyAccessConfigured:false,legacyUsername:null,canonicalTrainerName:handle};}
 function deferred(){let resolve;const promise=new Promise(done=>{resolve=done;});return{promise,resolve};}
 function harness(options={}){
-  const domain=load();let authority={uid:'uid-new',lifecycleId:'auth-1'},checks=[];const store=options.storage||storage();
+  const domain=load();let authority={uid:'uid-new',lifecycleId:'auth-1'},checks=[],createInputs=[];const store=options.storage||storage();
   const model=domain.createProviderOnboardingModel({
     authoritySnapshot:()=>authority,storage:store,
     checkHandle:async(handle,binding)=>{checks.push({handle,binding});if(options.checkError)throw options.checkError;return options.handleResult||{available:true};},
-    createAccount:options.withCreate===false?undefined:async input=>options.createResult||{status:'account-ready',foundation:foundation(input.handle)},
+    createAccount:options.withCreate===false?undefined:async input=>{createInputs.push(input);return options.createResult||{status:'account-ready',foundation:foundation(input.handle)};},
     reconcileAccount:options.withReconcile===false?undefined:async input=>options.reconcileResult||{status:'account-ready',foundation:foundation(input.handle)}
   });
-  return{domain,model,checks,store,setAuthority:value=>{authority=value;}};
+  return{domain,model,checks,createInputs,store,setAuthority:value=>{authority=value;}};
 }
 async function beginChoice(model){await model.begin({providerKey:'google'});model.resolveAccount({status:'missing'});model.startHandleChoice();}
 
@@ -36,8 +36,19 @@ test('new Google user chooses a handle explicitly and reaches account ready only
   assert.equal(h.model.resolveAccount({status:'missing'}).status,'onboarding-required');
   assert.equal(h.model.startHandleChoice().status,'choosing-handle');
   assert.equal((await h.model.chooseHandle('  TrainerNew  ')).status,'ready-to-create');
-  h.model.confirmProfile({friendCode:'0000 1111 2222'});
-  assert.equal((await h.model.create()).status,'account-ready');
+  h.model.confirmProfile({friendCode:'000011112222'});
+  const result=await h.model.create();
+  assert.equal(result.status,'account-ready');assert.equal(result.initialProfile.friendCode,'0000 1111 2222');
+  assert.equal(h.createInputs[0].profile.friendCode,'0000 1111 2222');
+});
+
+test('invalid optional profile data fails before identity dispatch',async()=>{
+  const h=harness();await beginChoice(h.model);await h.model.chooseHandle('TrainerNew');
+  assert.throws(()=>h.model.confirmProfile({friendCode:'1234 5678'}),error=>error.code==='provider-onboarding/profile-invalid');
+  assert.equal(h.createInputs.length,0);
+  await assert.rejects(h.model.create(),error=>error.code==='provider-onboarding/profile-invalid');
+  assert.equal(h.createInputs.length,0);h.model.confirmProfile({});await h.model.create();
+  assert.equal(h.createInputs.length,1);assert.equal(h.createInputs[0].profile.friendCode,'');
 });
 
 test('Google profile email and avatar cannot silently become the trainer identity or durable state',async()=>{
@@ -97,6 +108,7 @@ test('close and reopen before dispatch restores the chosen ready handle without 
   const second=harness({storage:store});const restored=await second.model.begin({providerKey:'google'});
   assert.equal(restored.status,'ready-to-create');assert.equal(restored.handle,'TrainerNew');
   assert.doesNotMatch([...store.values.values()].join('\n'),/0000 1111 2222|private draft/);
+  assert.equal(first.createInputs.length,0);assert.equal(second.createInputs.length,0);
 });
 
 test('continuation persists only a versioned UID digest and clears cross-account or legacy raw-UID state',async()=>{

@@ -22,15 +22,21 @@ and mobile without starting Firebase.
   fail-closed states.
 - The adapter requests no additional Google scopes and never returns or stores
   OAuth access or refresh tokens.
-- Production UI remains Username/PIN only unless both development gates are set
-  before startup:
+- Production UI remains Username/PIN only unless the reviewed canary capabilities
+  are set before startup:
 
 ```js
-window.__POGO_PROVIDER_LINKING_DEV__ = true;
-window.__POGO_PROVIDER_LINKING_CONFIGURED__ = ['google'];
+window.__POGO_PROVIDER_CAPABILITIES__ = {
+  providerAccountCompatibility: true,
+  googlePublicEntry: true,
+  googleExistingAccountLinking: true,
+  providerAccountCreation: true,
+  providerPublicReadSupport: false,
+  providerPublicWriteSupport: false
+};
 ```
 
-These flags expose the local/canary UI; they do not configure Firebase.
+These capabilities expose the local/canary UI; they do not configure Firebase.
 They are client-side visibility gates, not an authorization boundary. Never
 rely on them to restrict a publicly deployed provider canary.
 
@@ -113,10 +119,13 @@ Never create or attach that user through browser-only writes or email matching.
 This section defines a future reviewed change window. Do not execute it as part
 of source review.
 
-1. Keep `CREATE_PROVIDER_ACCOUNT_ENABLED=false`. Freeze all new legacy
-   account/handle provisioning and record the reviewed freeze ID, activation
-   time, and exact 64-character provisioning-contract digest. The freeze must
-   remain active throughout inventory and canary work.
+1. Keep every provider capability false. Review the generated legacy
+   provisioning candidate and exact 64-character contract digest. Publish its
+   Rules-visible enforcement projection first; verify new `users`,
+   `loginDirectory`, and request approvals are denied while existing login and
+   same-handle repair still work. Only then activate the canonical Firestore
+   freeze with the identical freeze ID and digest. The freeze must remain active
+   throughout inventory and canary work.
 2. Inventory the complete active legacy namespace after freeze activation.
    Backfill or hold every active handle in Firestore. Re-run the inventory and
    require exact active/certified equality; current production evidence is only
@@ -141,21 +150,27 @@ of source review.
    profile hydration, and public-projection evidence passes may an explicitly
    approved owner-controlled disposable canary enable one bounded creation
    window.
-7. Disable creation immediately if the freeze is released, certification
+7. To release, invalidate provider creation certification first, mark the
+   canonical freeze released second, and release the Rules-visible enforcement
+   projection last. Disable creation immediately if the freeze is released, certification
    expires, a digest/count changes, HMAC key evidence changes, or any canonical
    readback is incomplete. Preserve evidence for review; never repair by email,
    profile, or handle inference.
 
-For HMAC rotation after accounts exist, first disable creation and retain the
-old key. Deploy dual-version read/migration support, migrate every reciprocal
-provider record and subject claim with exact readback, then activate the new
-version. Remove the old key only after complete verification. There is no
-single-key in-place rotation path.
+For HMAC rotation after accounts exist, first disable creation and retain every
+required prior version in the reviewed key ring. Returning reads accept the
+active and declared prior versions while creation uses only the active version.
+Remove an old version from the compatibility floor only after every reciprocal
+provider record has been migrated and read back exactly.
 
 ## Rollback
 
-1. Remove the owner-only development flags or revert the canary build first.
-2. Disable Google in Firebase Authentication, Sign-in method.
+1. Before the first provider-only account, all provider capabilities and Google
+   may be disabled.
+2. After the first provider-only account, hide public entry and disable creation
+   and public writes, but preserve account compatibility, authority reads, the
+   required HMAC key versions, account sync, and existing public-share reads.
+   Do not disable Google in Firebase Authentication after this point.
 3. Do not unlink existing users, delete Firebase users, move data, or rewrite
    account-sync journals as part of rollback.
 4. Preserve the prior authorized-domain and API-key restrictions. Remove an

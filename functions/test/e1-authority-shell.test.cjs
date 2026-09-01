@@ -46,6 +46,8 @@ test('shell configuration is explicit and all authority gates fail closed', () =
     operatorSubjectHash: 'b'.repeat(64),
     providerSubjectHmacKey: '',
     providerSubjectHmacKeyVersion: '',
+    providerSubjectHmacKeys: [],
+    providerAccountCompatibilityRequired: false,
     revision: 'local',
     readAccountFoundationEnabled: false,
     createProviderAccountEnabled: false,

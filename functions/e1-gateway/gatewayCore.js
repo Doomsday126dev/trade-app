@@ -143,7 +143,8 @@ function exactRequest(operation, value, readProofMode = false, groupEMode = fals
   const fields = operation === 'readAccountFoundation'
     ? (readProofMode ? ['proofAttemptId', 'schemaVersion'] : ['schemaVersion'])
     : operation === 'createProviderAccountFoundation'
-      ? ['clientRelease', 'idempotencyFingerprint', 'lifecycleId', 'requestId', 'requestedHandle', 'schemaVersion']
+      ? ['clientRelease', 'idempotencyFingerprint', 'lifecycleId', 'providerAccountProtocolVersion', 'requestId',
+        'requestedHandle', 'schemaVersion']
       : ['requestId', 'requestedHandle', 'schemaVersion'];
   if (!exactFields(value, fields) || value.schemaVersion !== 1) fail('REQUEST_INVALID');
   if (operation === 'reserveTrainerHandle' && (!REQUEST_ID.test(value.requestId || '') ||
@@ -151,6 +152,7 @@ function exactRequest(operation, value, readProofMode = false, groupEMode = fals
     fail('REQUEST_INVALID');
   }
   if (operation === 'createProviderAccountFoundation' && (!REQUEST_ID.test(value.requestId || '') ||
+      value.providerAccountProtocolVersion !== 1 ||
       typeof value.requestedHandle !== 'string' || !value.requestedHandle || value.requestedHandle.length > 128 ||
       !/^auth-[1-9][0-9]{0,9}$/u.test(value.lifecycleId || '') ||
       !/^\d{4}-\d{2}-\d{2}\.\d+$/u.test(value.clientRelease || '') || !HASH.test(value.idempotencyFingerprint || ''))) {

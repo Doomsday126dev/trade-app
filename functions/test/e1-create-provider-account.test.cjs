@@ -5,13 +5,16 @@ const assert = require('node:assert/strict');
 const { Readable } = require('node:stream');
 const {
   GATES,
+  PROVIDER_ACCOUNT_PROTOCOL_VERSION,
   createHandler,
+  linkedGoogleProviderIdentity,
   loadConfiguration,
   providerOperationFingerprint,
   providerRequestFingerprint,
   providerSubjectHash,
-  verifiedGoogleProviderIdentity,
-  verifyCurrentGoogleProviderIdentity
+  recentGoogleProviderIdentity,
+  verifyCurrentLinkedGoogleProviderIdentity,
+  verifyRecentGoogleProviderAuthentication
 } = require('../e1-authority-service/server');
 const { STAGING: EXPECTED } = require('../e1-authority-service/e1TargetContracts');
 const { normalizeHandle } = require('../e1-authority-service/handleNormalization');
@@ -64,10 +67,12 @@ function requestBody(overrides = {}) {
     normalizedTrainerName: handle.normalized,
     handleKey: handle.handleKey,
     lifecycleId: overrides.lifecycleId || LIFECYCLE_ID,
-    clientRelease: overrides.clientRelease || CLIENT_RELEASE
+    clientRelease: overrides.clientRelease || CLIENT_RELEASE,
+    providerAccountProtocolVersion: overrides.providerAccountProtocolVersion || PROVIDER_ACCOUNT_PROTOCOL_VERSION
   };
   return {
     schemaVersion: 1,
+    providerAccountProtocolVersion: model.providerAccountProtocolVersion,
     requestId: model.requestId,
     requestedHandle: handle.display,
     lifecycleId: model.lifecycleId,
@@ -108,9 +113,9 @@ function harness(overrides = {}) {
       if (token !== TOKEN) throw Object.assign(new Error('AUTH_INVALID'), { code: 'AUTH_INVALID' });
       return verifiedToken();
     },
-    async verifyCurrentGoogleProviderIdentity(config, token, identity, timestamp) {
+    async verifyRecentGoogleProviderAuthentication(config, token, identity, timestamp) {
       calls.providerChecks.push({ token, uid: identity.uid, timestamp });
-      return verifiedGoogleProviderIdentity(config, identity, timestamp);
+      return recentGoogleProviderIdentity(config, identity, timestamp);
     },
     async readLegacyBinding(input) { calls.legacy.push(input); throw new Error('legacy reader must remain unused'); },
     async operationRequestExists(input) { calls.presence.push(input); return false; },
@@ -159,6 +164,38 @@ test('provider-subject key configuration is optional while inactive but mandator
   assert.equal(providerSubjectHash(first,'google.com',SUBJECT),providerSubjectHash(first,'google.com',SUBJECT));
   assert.notEqual(providerSubjectHash(first,'google.com',SUBJECT),providerSubjectHash(second,'google.com',SUBJECT));
   assert.notEqual(providerSubjectHash(first,'google.com',SUBJECT),providerSubjectHash(first,'discord.com',SUBJECT));
+  const noKey={...inactive,READ_ACCOUNT_FOUNDATION_ENABLED:'true',PROVIDER_ACCOUNT_COMPATIBILITY_REQUIRED:'true'};
+  assert.throws(()=>loadConfiguration(noKey),/E1_CONFIGURATION_MISMATCH/u);
+  assert.throws(()=>loadConfiguration({...environment(),PROVIDER_ACCOUNT_COMPATIBILITY_REQUIRED:'true',READ_ACCOUNT_FOUNDATION_ENABLED:'false'}),
+    /E1_CONFIGURATION_MISMATCH/u);
+});
+
+test('reviewed HMAC rotation retains prior read keys while creation binds only the active version',()=>{
+  const configuration=loadConfiguration(environment({
+    PROVIDER_SUBJECT_HMAC_KEY:'synthetic-provider-subject-key-material-0002',
+    PROVIDER_SUBJECT_HMAC_KEY_VERSION:'2',
+    PROVIDER_SUBJECT_HMAC_PREVIOUS_KEY_VERSIONS:'1',
+    PROVIDER_SUBJECT_HMAC_KEY_V1:PROVIDER_HMAC_KEY,
+    READ_ACCOUNT_FOUNDATION_ENABLED:'true',
+    PROVIDER_ACCOUNT_COMPATIBILITY_REQUIRED:'true'
+  }));
+  const linked=linkedGoogleProviderIdentity(configuration,verifiedToken());
+  assert.deepEqual(linked.providerSubjectCandidates.map(value=>value.providerSubjectKeyVersion),[2,1]);
+  assert.notEqual(linked.providerSubjectCandidates[0].providerSubjectKey,linked.providerSubjectCandidates[1].providerSubjectKey);
+  const recent=recentGoogleProviderIdentity(configuration,verifiedToken(),NOW);
+  assert.equal(recent.providerSubjectKeyVersion,2);
+  assert.equal(Object.hasOwn(recent,'providerSubjectCandidates'),false);
+  assert.throws(()=>loadConfiguration(environment({
+    PROVIDER_SUBJECT_HMAC_KEY:'synthetic-provider-subject-key-material-0002',
+    PROVIDER_SUBJECT_HMAC_KEY_VERSION:'2',
+    PROVIDER_SUBJECT_HMAC_PREVIOUS_KEY_VERSIONS:'1'
+  })),/E1_CONFIGURATION_MISMATCH/u);
+  assert.throws(()=>loadConfiguration(environment({
+    PROVIDER_SUBJECT_HMAC_KEY:PROVIDER_HMAC_KEY,
+    PROVIDER_SUBJECT_HMAC_KEY_VERSION:'1',
+    PROVIDER_SUBJECT_HMAC_PREVIOUS_KEY_VERSIONS:'2',
+    PROVIDER_SUBJECT_HMAC_KEY_V2:'synthetic-provider-subject-key-material-0002'
+  })),/E1_CONFIGURATION_MISMATCH/u);
 });
 
 test('exact request rejects client UID provider fields unknown fields and malformed lifecycle evidence', async () => {
@@ -194,24 +231,39 @@ test('verified token UID is the sole account owner and raw provider subject neve
   assert.equal(calls.legacy.length, 0);
 });
 
-test('missing invalid non-Google ambiguous and stale provider evidence all fail before rate limit or transaction', async () => {
+test('missing invalid non-Google and ambiguous provider evidence fails before rate limit or transaction', async () => {
   const variants = [
-    null,
-    verifiedToken({ signInProvider: 'password' }),
-    verifiedToken({ identities: null }),
-    verifiedToken({ identities: { 'google.com': [SUBJECT, 'second-subject'] } }),
-    verifiedToken({ authTime: NOW - (10 * 60 * 1000) - 1 })
+    [null, 'PROVIDER_IDENTITY_REQUIRED'],
+    [verifiedToken({ signInProvider: 'password' }), 'RECENT_PROVIDER_AUTH_REQUIRED'],
+    [verifiedToken({ identities: null }), 'PROVIDER_IDENTITY_REQUIRED'],
+    [verifiedToken({ identities: { 'google.com': [SUBJECT, 'second-subject'] } }), 'PROVIDER_IDENTITY_REQUIRED']
   ];
-  for (const value of variants) {
+  for (const [value, expectedCode] of variants) {
     const { handler, calls } = harness({
       async verifyFirebaseIdToken() { return value || { uid: UID }; }
     });
     const result = await invoke(handler);
     assert.equal(result.status, 403);
-    assert.equal(result.body.code, 'PROVIDER_IDENTITY_REQUIRED');
+    assert.equal(result.body.code, expectedCode);
     assert.equal(calls.rate.length, 0);
     assert.equal(calls.create.length, 0);
   }
+});
+
+test('provider creation accepts one-minute Google auth and rejects eleven-minute auth before writes', async () => {
+  const recent = harness();
+  const accepted = await invoke(recent.handler);
+  assert.equal(accepted.status, 200);
+  assert.equal(recent.calls.create.length, 1);
+
+  const stale = harness({
+    async verifyFirebaseIdToken() { return verifiedToken({ authTime: NOW - 11 * 60 * 1000 }); }
+  });
+  const rejected = await invoke(stale.handler);
+  assert.equal(rejected.status, 403);
+  assert.equal(rejected.body.code, 'RECENT_PROVIDER_AUTH_REQUIRED');
+  assert.equal(stale.calls.rate.length, 0);
+  assert.equal(stale.calls.create.length, 0);
 });
 
 test('first create consumes bounded quota while exact replay bypasses quota and passes replayOnly', async () => {
@@ -291,13 +343,15 @@ test('response is provider-only and contains no UID provider subject email token
   assert.doesNotMatch(serialized, /firebase_uid|google-provider-subject|private@example|verified-google-token|pin/i);
 });
 
-test('provider identity verifier accepts exactly one recent Google subject and hashes by provider domain', () => {
+test('linked identity and recent authentication are distinct provider contracts', () => {
   const configuration = loadConfiguration(environment());
-  const value = verifiedGoogleProviderIdentity(configuration, verifiedToken(), NOW);
+  const value = linkedGoogleProviderIdentity(configuration, verifiedToken({ authTime: NOW - 7 * 24 * 60 * 60 * 1000 }));
   assert.equal(value.providerKey, 'google');
   assert.equal(value.providerId, 'google.com');
   assert.match(value.providerSubjectKey, /^v1_google_[a-f0-9]{64}$/u);
   assert.notEqual(providerSubjectHash(configuration, 'google.com', SUBJECT), providerSubjectHash(configuration, 'discord.com', SUBJECT));
+  assert.throws(() => recentGoogleProviderIdentity(configuration,
+    verifiedToken({ authTime: NOW - 11 * 60 * 1000 }), NOW), /RECENT_PROVIDER_AUTH_REQUIRED/u);
 });
 
 test('current Firebase account lookup requires the same still-linked Google subject without persisting profile fields', async () => {
@@ -318,39 +372,45 @@ test('current Firebase account lookup requires the same still-linked Google subj
       }
     };
   };
-  const result = await verifyCurrentGoogleProviderIdentity(configuration, TOKEN, verifiedToken(), fetchImpl, NOW);
+  const result = await verifyCurrentLinkedGoogleProviderIdentity(configuration, TOKEN, verifiedToken(), fetchImpl);
   assert.equal(result.providerSubjectKey, `v1_google_${providerSubjectHash(configuration, 'google.com', SUBJECT)}`);
   assert.equal(requests.length, 1);
   assert.deepEqual(JSON.parse(requests[0].options.body), { idToken: TOKEN });
   assert.equal(JSON.stringify(result).includes('ignored@example.test'), false);
 });
 
-test('provider removed or rebound before commit fails before rate limit and Firestore transaction', async () => {
-  for (const providerUserInfo of [
-    [],
-    [{ providerId: 'google.com', federatedId: 'different-subject' }],
-    [{ providerId: 'password', federatedId: 'ignored@example.test' }]
+test('provider removed rebound disabled or wrong UID before commit fails before rate limit and Firestore transaction', async () => {
+  for (const [account, expectedCode] of [
+    [{ localId: UID, providerUserInfo: [] }, 'PROVIDER_IDENTITY_REQUIRED'],
+    [{ localId: UID, providerUserInfo: [{ providerId: 'google.com', federatedId: 'different-subject' }] }, 'PROVIDER_IDENTITY_REQUIRED'],
+    [{ localId: UID, providerUserInfo: [{ providerId: 'password', federatedId: 'ignored@example.test' }] }, 'PROVIDER_IDENTITY_REQUIRED'],
+    [{ localId: UID, disabled: true, providerUserInfo: [{ providerId: 'google.com', federatedId: SUBJECT }] }, 'PROVIDER_IDENTITY_REQUIRED'],
+    [{ localId: 'different-firebase-uid', providerUserInfo: [{ providerId: 'google.com', federatedId: SUBJECT }] }, 'PROVIDER_IDENTITY_REQUIRED']
   ]) {
     const instance = harness({
-      async verifyCurrentGoogleProviderIdentity(configuration, token, identity, timestamp) {
-        return verifyCurrentGoogleProviderIdentity(configuration, token, identity, async () => ({
+      async verifyRecentGoogleProviderAuthentication(configuration, token, identity, timestamp) {
+        return verifyRecentGoogleProviderAuthentication(configuration, token, identity, async () => ({
           ok: true,
           status: 200,
-          async json() { return { users: [{ localId: UID, providerUserInfo }] }; }
+          async json() { return { users: [account] }; }
         }), timestamp);
       }
     });
     const result = await invoke(instance.handler);
     assert.equal(result.status, 403);
-    assert.equal(result.body.code, 'PROVIDER_IDENTITY_REQUIRED');
+    assert.equal(result.body.code, expectedCode);
     assert.equal(instance.calls.rate.length, 0);
     assert.equal(instance.calls.create.length, 0);
   }
 });
 
-test('unsupported method and oversized or stale-release requests fail closed', async () => {
+test('protocol 1 works across routine Pages releases while unsupported protocol and malformed release fail closed', async () => {
   const { handler, calls } = harness();
   assert.equal((await invoke(handler, { method: 'GET' })).status, 405);
-  assert.equal((await invoke(handler, { body: requestBody({ clientRelease: '2026-08-31.85' }) })).body.code, 'REQUEST_INVALID');
-  assert.equal(calls.create.length, 0);
+  for (const clientRelease of ['2026-09-01.87', '2026-09-02.88', '2027-01-15.120']) {
+    assert.equal((await invoke(handler, { body: requestBody({ clientRelease }) })).body.code, 'SUCCESS');
+  }
+  assert.equal((await invoke(handler, { body: requestBody({ providerAccountProtocolVersion: 2 }) })).body.code, 'REQUEST_INVALID');
+  assert.equal((await invoke(handler, { body: requestBody({ clientRelease: 'not-a-release' }) })).body.code, 'REQUEST_INVALID');
+  assert.equal(calls.create.length, 3);
 });

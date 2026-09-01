@@ -30,10 +30,12 @@ const {
   inactiveEnvironmentValid,
   inactiveServiceSpec,
   providerSubjectKeyEnvironmentValid,
+  providerSubjectKeyVersions,
   run,
   verifyAuthorityIam,
   verifyAuthorityService
 } = require('../scripts/deploy-e1-production-authority.cjs');
+const { validateCompatibilityFloor } = require('../production/providerAccountCompatibilityFloor.cjs');
 
 const REPO_ROOT = execFileSync('git', ['-C', __dirname, 'rev-parse', '--show-toplevel'], { encoding: 'utf8' }).trim();
 const HEAD = execFileSync('git', ['-C', REPO_ROOT, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
@@ -299,6 +301,69 @@ test('provider-subject HMAC deployment contract permits inactive absence and req
   const absentButEnabled=serviceFixture();
   absentButEnabled.spec.template.spec.containers[0].env.find(entry=>entry.name==='CREATE_PROVIDER_ACCOUNT_ENABLED').value='true';
   assert.throws(()=>verifyAuthorityService(plan,absentButEnabled,{requireInactive:false}),/runtime-or-inactive-state-invalid/u);
+});
+
+test('post-first compatibility floor rejects missing keys wrong versions pre-provider source and disabled reads',()=>{
+  const plan=planFixture();
+  const postFloor=(fingerprint=plan.sourceFingerprint,versions=[1])=>validateCompatibilityFloor({
+    schemaVersion:1,stage:'post-first-provider-account',providerAccountsExist:true,compatibilityIrreversible:true,
+    requiredProviderSubjectKeyVersions:versions,compatibleAuthoritySourceFingerprints:[fingerprint]
+  });
+  const compatible=serviceFixture(),container=compatible.spec.template.spec.containers[0];
+  container.env.find(entry=>entry.name==='READ_ACCOUNT_FOUNDATION_ENABLED').value='true';
+  container.env.find(entry=>entry.name==='PROVIDER_ACCOUNT_COMPATIBILITY_REQUIRED').value='true';
+  container.env.push({name:PROVIDER_SUBJECT_KEY_CONTRACT.keyEnvironmentName,
+    valueFrom:{secretKeyRef:{name:PROVIDER_SUBJECT_KEY_CONTRACT.secretName,key:'1'}}},
+  {name:PROVIDER_SUBJECT_KEY_CONTRACT.versionEnvironmentName,value:'1'});
+  assert.deepEqual([...providerSubjectKeyVersions(container)],[1]);
+  assert.equal(verifyAuthorityService(plan,compatible,{compatibilityFloor:postFloor()}),true);
+
+  const missing=structuredClone(compatible);
+  missing.spec.template.spec.containers[0].env=missing.spec.template.spec.containers[0].env
+    .filter(entry=>entry.name!==PROVIDER_SUBJECT_KEY_CONTRACT.keyEnvironmentName);
+  assert.throws(()=>verifyAuthorityService(plan,missing,{compatibilityFloor:postFloor()}),/runtime-or-inactive-state-invalid/u);
+  const wrong=structuredClone(compatible);
+  const wrongContainer=wrong.spec.template.spec.containers[0];
+  wrongContainer.env.find(entry=>entry.name===PROVIDER_SUBJECT_KEY_CONTRACT.keyEnvironmentName).valueFrom.secretKeyRef.key='2';
+  wrongContainer.env.find(entry=>entry.name===PROVIDER_SUBJECT_KEY_CONTRACT.versionEnvironmentName).value='2';
+  assert.throws(()=>verifyAuthorityService(plan,wrong,{compatibilityFloor:postFloor()}),/runtime-or-inactive-state-invalid/u);
+  const noRead=structuredClone(compatible);
+  noRead.spec.template.spec.containers[0].env.find(entry=>entry.name==='READ_ACCOUNT_FOUNDATION_ENABLED').value='false';
+  assert.throws(()=>verifyAuthorityService(plan,noRead,{compatibilityFloor:postFloor()}),/runtime-or-inactive-state-invalid/u);
+  assert.throws(()=>verifyAuthorityService(plan,compatible,{compatibilityFloor:postFloor('f'.repeat(64))}),
+    /runtime-or-inactive-state-invalid/u);
+});
+
+test('post-first rotation requires every floor version and accepts active plus reviewed prior secret references',()=>{
+  const plan=planFixture(),service=serviceFixture(),container=service.spec.template.spec.containers[0];
+  container.env.find(entry=>entry.name==='READ_ACCOUNT_FOUNDATION_ENABLED').value='true';
+  container.env.find(entry=>entry.name==='PROVIDER_ACCOUNT_COMPATIBILITY_REQUIRED').value='true';
+  container.env.push(
+    {name:PROVIDER_SUBJECT_KEY_CONTRACT.keyEnvironmentName,
+      valueFrom:{secretKeyRef:{name:PROVIDER_SUBJECT_KEY_CONTRACT.secretName,key:'2'}}},
+    {name:PROVIDER_SUBJECT_KEY_CONTRACT.versionEnvironmentName,value:'2'},
+    {name:PROVIDER_SUBJECT_KEY_CONTRACT.previousVersionsEnvironmentName,value:'1'},
+    {name:`${PROVIDER_SUBJECT_KEY_CONTRACT.previousKeyEnvironmentPrefix}1`,
+      valueFrom:{secretKeyRef:{name:PROVIDER_SUBJECT_KEY_CONTRACT.secretName,key:'1'}}}
+  );
+  const floor=validateCompatibilityFloor({schemaVersion:1,stage:'post-first-provider-account',providerAccountsExist:true,
+    compatibilityIrreversible:true,requiredProviderSubjectKeyVersions:[1,2],
+    compatibleAuthoritySourceFingerprints:[plan.sourceFingerprint]});
+  assert.deepEqual([...providerSubjectKeyVersions(container)],[2,1]);
+  assert.equal(verifyAuthorityService(plan,service,{compatibilityFloor:floor}),true);
+  const invalidOrder=structuredClone(service),invalidContainer=invalidOrder.spec.template.spec.containers[0];
+  invalidContainer.env.find(entry=>entry.name===PROVIDER_SUBJECT_KEY_CONTRACT.versionEnvironmentName).value='1';
+  invalidContainer.env.find(entry=>entry.name===PROVIDER_SUBJECT_KEY_CONTRACT.keyEnvironmentName)
+    .valueFrom.secretKeyRef.key='1';
+  invalidContainer.env.find(entry=>entry.name===PROVIDER_SUBJECT_KEY_CONTRACT.previousVersionsEnvironmentName).value='2';
+  invalidContainer.env.find(entry=>entry.name===`${PROVIDER_SUBJECT_KEY_CONTRACT.previousKeyEnvironmentPrefix}1`).name=
+    `${PROVIDER_SUBJECT_KEY_CONTRACT.previousKeyEnvironmentPrefix}2`;
+  invalidContainer.env.find(entry=>entry.name===`${PROVIDER_SUBJECT_KEY_CONTRACT.previousKeyEnvironmentPrefix}2`)
+    .valueFrom.secretKeyRef.key='2';
+  assert.throws(()=>verifyAuthorityService(plan,invalidOrder,{compatibilityFloor:floor}),
+    /runtime-or-inactive-state-invalid/u);
+  container.env=container.env.filter(entry=>entry.name!==`${PROVIDER_SUBJECT_KEY_CONTRACT.previousKeyEnvironmentPrefix}1`);
+  assert.throws(()=>verifyAuthorityService(plan,service,{compatibilityFloor:floor}),/runtime-or-inactive-state-invalid/u);
 });
 
 test('legacy authority preflight accepts only an absent or false read proof mode', () => {

@@ -4,7 +4,8 @@
   const READ_CALLABLE='readE1AccountFoundation';
   const CREATE_CALLABLE='createE1ProviderAccountFoundation';
   const CLIENT_RELEASE='2026-08-31.86';
-  const STORAGE_KEY='pogoProviderAccountOperation:v1';
+  const PROVIDER_ACCOUNT_PROTOCOL_VERSION=1;
+  const STORAGE_KEY='pogoProviderAccountOperation:v2';
   const HANDLE_KEY=/^v1_[a-f0-9]{2,512}$/;
   const SHA256=/^[a-f0-9]{64}$/;
   const REQUEST_ID=/^[A-Za-z0-9][A-Za-z0-9._:-]{7,127}$/;
@@ -14,7 +15,7 @@
   const RESERVED_HANDLES=new Set(['admin','administrator','firebase','pogo trades','pogotrades','support','system']);
   const OPERATION_FIELDS=Object.freeze([
     'schemaVersion','uidDigest','requestId','requestedHandle','normalizedTrainerName','handleKey','lifecycleId',
-    'clientRelease','idempotencyFingerprint','phase'
+    'providerAccountProtocolVersion','clientRelease','idempotencyFingerprint','phase'
   ]);
   const READ_FOUNDATION_FIELDS=Object.freeze([
     'canonicalTrainerName','handleKey','identityKind','legacyAccessConfigured','legacyUsername',
@@ -50,8 +51,8 @@
     return hex(await cryptoImpl.subtle.digest('SHA-256',new TextEncoder().encode(value)));
   }
   async function requestFingerprint(input,cryptoImpl=global.crypto){
-    return sha256(JSON.stringify([1,'createProviderAccountFoundation',input.uid,input.requestId,input.normalizedTrainerName,
-      input.handleKey,input.lifecycleId,input.clientRelease]),cryptoImpl);
+    return sha256(JSON.stringify([1,'createProviderAccountFoundation',input.providerAccountProtocolVersion,input.uid,input.requestId,
+      input.normalizedTrainerName,input.handleKey,input.lifecycleId]),cryptoImpl);
   }
   function validateReadFoundation(value){
     if(!exactFields(value,READ_FOUNDATION_FIELDS)||value.schemaVersion!==1||!String(value.canonicalTrainerName||'')||
@@ -92,10 +93,12 @@
     const direct=String(error?.code||'');return DEFINITE_CODES.has(direct)?direct:'';
   }
   function createProviderAccountClient({firebaseApp,auth,firebaseAppCheckReady,getLifecycleSnapshot,importFunctionsSdk,
-    storage=global.localStorage,cryptoImpl=global.crypto,timeoutMs=15000,clientRelease=CLIENT_RELEASE}={}){
+    storage=global.localStorage,cryptoImpl=global.crypto,timeoutMs=15000,clientRelease=CLIENT_RELEASE,
+    providerAccountProtocolVersion=PROVIDER_ACCOUNT_PROTOCOL_VERSION}={}){
     if(!firebaseApp||!auth||typeof firebaseAppCheckReady!=='function'||typeof getLifecycleSnapshot!=='function'||
       typeof importFunctionsSdk!=='function'||!storage||typeof storage.getItem!=='function'||typeof storage.setItem!=='function'||
-      !/^\d{4}-\d{2}-\d{2}\.\d+$/.test(clientRelease)||!Number.isInteger(timeoutMs)||timeoutMs<1000||timeoutMs>30000){
+      !/^\d{4}-\d{2}-\d{2}\.\d+$/.test(clientRelease)||providerAccountProtocolVersion!==PROVIDER_ACCOUNT_PROTOCOL_VERSION||
+      !Number.isInteger(timeoutMs)||timeoutMs<1000||timeoutMs>30000){
       fail('provider-account/dependencies-invalid');
     }
     let generation=0;
@@ -109,6 +112,7 @@
       let value=null;try{value=JSON.parse(storage.getItem(STORAGE_KEY)||'null');}catch{}
       return exactFields(value,OPERATION_FIELDS)&&value.schemaVersion===1&&SHA256.test(value.uidDigest||'')&&
         REQUEST_ID.test(value.requestId||'')&&HANDLE_KEY.test(value.handleKey||'')&&SHA256.test(value.idempotencyFingerprint||'')&&
+        value.providerAccountProtocolVersion===PROVIDER_ACCOUNT_PROTOCOL_VERSION&&
         ['prepared','dispatched','ambiguous','complete'].includes(value.phase)?Object.freeze(value):null;
     }
     function saveOperation(value){storage.setItem(STORAGE_KEY,JSON.stringify(value));return Object.freeze({...value});}
@@ -153,14 +157,14 @@
     async function prepare(rawHandle,expected){
       const handle=normalizeHandle(rawHandle),digest=await uidDigest(expected.uid),stored=loadOperation();
       if(stored&&stored.uidDigest===digest&&stored.requestedHandle===handle.display&&
-        stored.lifecycleId===expected.lifecycleId&&stored.clientRelease===clientRelease)return stored;
+        stored.lifecycleId===expected.lifecycleId&&stored.providerAccountProtocolVersion===providerAccountProtocolVersion)return stored;
       if(stored&&['dispatched','ambiguous'].includes(stored.phase))fail('provider-account/pending-reconciliation','ambiguous');
       const requestId=typeof cryptoImpl.randomUUID==='function'?cryptoImpl.randomUUID():fail('provider-account/crypto-unavailable');
       const input={uid:expected.uid,requestId,normalizedTrainerName:handle.normalized,handleKey:handle.handleKey,
-        lifecycleId:expected.lifecycleId,clientRelease};
+        lifecycleId:expected.lifecycleId,providerAccountProtocolVersion};
       const operation={schemaVersion:1,uidDigest:digest,requestId,requestedHandle:handle.display,
         normalizedTrainerName:handle.normalized,handleKey:handle.handleKey,lifecycleId:expected.lifecycleId,
-        clientRelease,idempotencyFingerprint:await requestFingerprint(input,cryptoImpl),phase:'prepared'};
+        providerAccountProtocolVersion,clientRelease,idempotencyFingerprint:await requestFingerprint(input,cryptoImpl),phase:'prepared'};
       return saveOperation(operation);
     }
     async function create({requestedHandle}={}){
@@ -168,7 +172,8 @@
       if(['dispatched','ambiguous','complete'].includes(operation.phase))return reconcile(operation);
       const dispatched=saveOperation({...operation,phase:'dispatched'});
       const body={schemaVersion:1,requestId:dispatched.requestId,requestedHandle:dispatched.requestedHandle,
-        lifecycleId:dispatched.lifecycleId,clientRelease:dispatched.clientRelease,
+        providerAccountProtocolVersion:dispatched.providerAccountProtocolVersion,lifecycleId:dispatched.lifecycleId,
+        clientRelease:dispatched.clientRelease,
         idempotencyFingerprint:dispatched.idempotencyFingerprint};
       let response;
       try{
@@ -191,7 +196,8 @@
   }
 
   root.providerAccountFoundation=Object.freeze({
-    CLIENT_RELEASE,CREATE_CALLABLE,READ_CALLABLE,REGION,STORAGE_KEY,createProviderAccountClient,normalizeHandle,
+    CLIENT_RELEASE,CREATE_CALLABLE,PROVIDER_ACCOUNT_PROTOCOL_VERSION,READ_CALLABLE,REGION,STORAGE_KEY,
+    createProviderAccountClient,normalizeHandle,
     requestFingerprint,validateCreateResponse,validateReadResponse
   });
 })(window);

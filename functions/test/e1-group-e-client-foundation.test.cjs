@@ -306,6 +306,7 @@ test('Group E runtime denies provider account creation and exposes no broad cont
   const createRequest = callable(fixture, 'A', {
     data: {
       schemaVersion: 1,
+      providerAccountProtocolVersion: 1,
       requestId: 'provider-request-1',
       requestedHandle: 'Trainer',
       lifecycleId: 'auth-1',

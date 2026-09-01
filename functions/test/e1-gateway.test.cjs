@@ -51,6 +51,7 @@ test('production gateway requires Auth App Check exact request shape and rejects
   })), /APP_CHECK_REPLAYED/);
   const providerRequest = {
     schemaVersion: 1,
+    providerAccountProtocolVersion: 1,
     requestId: 'provider-request-1',
     requestedHandle: 'Trainer',
     lifecycleId: 'auth-1',
@@ -140,6 +141,7 @@ test('gateway preserves the namespace precondition but never trusts the same cod
   });
   const body = {
     schemaVersion: 1,
+    providerAccountProtocolVersion: 1,
     requestId: 'provider-request-1',
     requestedHandle: 'Trainer',
     lifecycleId: 'auth-1',

@@ -12,6 +12,16 @@
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 <script>
 window.__POGO_RELEASE_ID='2026-08-31.86';
+window.__POGO_PROVIDER_ACCOUNT_COMPATIBILITY_FLOOR__=Object.freeze({schemaVersion:1,providerAccountsExist:false});
+window.__POGO_PROVIDER_CAPABILITIES__=Object.freeze({
+  providerAccountCompatibility:window.__POGO_PROVIDER_CAPABILITIES__?.providerAccountCompatibility===true,
+  googlePublicEntry:window.__POGO_PROVIDER_CAPABILITIES__?.googlePublicEntry===true,
+  googleExistingAccountLinking:window.__POGO_PROVIDER_CAPABILITIES__?.googleExistingAccountLinking===true,
+  providerAccountCreation:window.__POGO_PROVIDER_CAPABILITIES__?.providerAccountCreation===true,
+  providerPublicReadSupport:window.__POGO_PROVIDER_CAPABILITIES__?.providerPublicReadSupport===true,
+  providerPublicWriteSupport:window.__POGO_PROVIDER_CAPABILITIES__?.providerPublicWriteSupport===true
+});
+window.__POGO_LEGACY_PROVISIONING_ENFORCEMENT__=false;
 window.__pogoStartup=window.__pogoStartup||{documentStartAt:performance.now(),preAuthMarkupReady:null,preAuthPaintOpportunity:null,authSdkStartedAt:null,authStateKnownAt:null,loginShellRevealedAt:null,shellInteractiveAt:null,featureLoadStartedAt:null,featureScriptsReadyAt:null,protectedRequestedAt:null,appCheckStartedAt:null,appCheckReadyAt:null,protectedReadyAt:null,firebaseStartupSettledAt:null,catalogsReadyAt:null,signedInReadyAt:null};
 window.__POGO_FIREBASE_CONFIG=Object.freeze({
   apiKey:'AIzaSyCazZNLj9_lEb1vUNUlrMe9hodqY_l34VU',
@@ -994,13 +1004,13 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
 <script src="js/domain/trainerPreferences.js?v=2026-08-31.86"></script>
 <script src="js/domain/trainerPreferenceSync.js?v=2026-08-31.86"></script>
 <script src="js/domain/authenticationReadiness.js?v=2026-08-31.86"></script>
-<script src="js/domain/authProviderRegistry.js?v=2026-08-31.86" data-pogo-provider-development></script>
-<script src="js/domain/providerContinuationState.js?v=2026-08-31.86" data-pogo-provider-development></script>
-<script src="js/domain/accountLinkingModel.js?v=2026-08-31.86" data-pogo-provider-development></script>
-<script src="js/domain/accountLinkingController.js?v=2026-08-31.86" data-pogo-provider-development></script>
-<script src="js/domain/providerOnboardingModel.js?v=2026-08-31.86" data-pogo-provider-development></script>
-<script src="js/services/googleAuthAdapter.js?v=2026-08-31.86" data-pogo-provider-development></script>
-<script src="js/services/providerAccountFoundation.js?v=2026-08-31.86" data-pogo-provider-development></script>
+<script src="js/domain/authProviderRegistry.js?v=2026-08-31.86" data-pogo-provider-capability></script>
+<script src="js/domain/providerContinuationState.js?v=2026-08-31.86" data-pogo-provider-capability></script>
+<script src="js/domain/accountLinkingModel.js?v=2026-08-31.86" data-pogo-provider-capability></script>
+<script src="js/domain/accountLinkingController.js?v=2026-08-31.86" data-pogo-provider-capability></script>
+<script src="js/domain/providerOnboardingModel.js?v=2026-08-31.86" data-pogo-provider-capability></script>
+<script src="js/services/googleAuthAdapter.js?v=2026-08-31.86" data-pogo-provider-capability></script>
+<script src="js/services/providerAccountFoundation.js?v=2026-08-31.86" data-pogo-provider-capability></script>
 <script src="js/domain/loginDirectory.js?v=2026-08-31.86"></script>
 <script src="js/utils/textSafety.js?v=2026-08-31.86"></script>
 <script src="js/ui/stringPanels.js?v=2026-08-31.86"></script>
@@ -1060,6 +1070,23 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
   let shellLocalePromise=null;
   let featureLoadPromise=null;
   let publicShareLoadPromise=null;
+
+  function providerCapabilities(){
+    const requested=window.__POGO_PROVIDER_CAPABILITIES__||{};
+    const providerAccountsExist=window.__POGO_PROVIDER_ACCOUNT_COMPATIBILITY_FLOOR__?.providerAccountsExist===true;
+    return Object.freeze({
+      providerAccountCompatibility:providerAccountsExist||requested.providerAccountCompatibility===true,
+      googlePublicEntry:requested.googlePublicEntry===true,
+      googleExistingAccountLinking:requested.googleExistingAccountLinking===true,
+      providerAccountCreation:requested.providerAccountCreation===true,
+      providerPublicReadSupport:providerAccountsExist||requested.providerPublicReadSupport===true,
+      providerPublicWriteSupport:requested.providerPublicWriteSupport===true
+    });
+  }
+  function providerModulesRequired(){
+    const value=providerCapabilities();
+    return value.providerAccountCompatibility||value.googlePublicEntry||value.googleExistingAccountLinking||value.providerAccountCreation;
+  }
 
   window.__pogoStartup.preAuthMarkupReady=performance.now();
   try{performance.mark('pogo:preauth-markup-ready')}catch{}
@@ -1133,9 +1160,8 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
       login.removeAttribute('data-bootstrap-pending');
       login.setAttribute('aria-busy','false');
       login.querySelectorAll('[data-bootstrap-disabled="true"]').forEach(control=>{control.disabled=false;delete control.dataset.bootstrapDisabled;});
-      const configured=Array.isArray(window.__POGO_PROVIDER_LINKING_CONFIGURED__)?window.__POGO_PROVIDER_LINKING_CONFIGURED__:[];
       const googleOption=document.getElementById('google-login-option');
-      if(googleOption)googleOption.hidden=!(window.__POGO_PROVIDER_LINKING_DEV__===true&&configured.includes('google'));
+      if(googleOption)googleOption.hidden=!providerCapabilities().googlePublicEntry;
     }
     window.__pogoShellReady=true;
     window.__pogoStartup.loginShellRevealedAt=performance.now();
@@ -1154,7 +1180,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
     if(!template)return[];
     const locale=preferredLocale();
     return Array.from(template.content.querySelectorAll('script[src]')).filter(node=>{
-      if(node.hasAttribute('data-pogo-provider-development')&&window.__POGO_PROVIDER_LINKING_DEV__!==true)return false;
+      if(node.hasAttribute('data-pogo-provider-capability')&&!providerModulesRequired())return false;
       const src=node.getAttribute('src');
       const match=src.match(/js\/i18n\/locales\/([a-z-]+)\.js/);
       return!match||match[1]==='en'||match[1]===locale;

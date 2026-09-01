@@ -68,5 +68,5 @@ test('provider account client is present only in the development-gated asset set
   const asset='js/services/providerAccountFoundation.js';
   assert.ok(manifest.scriptFiles.includes(asset));
   assert.ok(manifest.developmentOnlyScriptFiles.includes(asset));
-  assert.match(html,/data-pogo-provider-development/);
+  assert.match(html,/data-pogo-provider-capability/);
 });

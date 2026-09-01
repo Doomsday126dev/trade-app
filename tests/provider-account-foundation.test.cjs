@@ -128,6 +128,7 @@ test('new account dispatch uses limited-use App Check and certifies with one exa
   assert.deepEqual(h.calls.map(value=>value.name),['createE1ProviderAccountFoundation','readE1AccountFoundation']);
   assert.equal(h.calls[0].options.limitedUseAppCheckTokens,true);assert.equal(h.calls[1].options,undefined);
   assert.equal(h.calls[0].body.requestId,UUID);assert.equal(h.calls[0].body.lifecycleId,'auth-1');
+  assert.equal(h.calls[0].body.providerAccountProtocolVersion,1);
   assert.equal(Object.hasOwn(h.calls[0].body,'uid'),false);assert.equal(Object.hasOwn(h.calls[0].body,'provider'),false);
   assert.match(h.calls[0].body.idempotencyFingerprint,/^[a-f0-9]{64}$/);assert.deepEqual(h.tokens,[true,false]);
 });
@@ -177,8 +178,8 @@ test('uncertified namespace stays deterministic through authority gateway browse
     now:()=>NOW,
     async verifyFirebaseIdToken(){return{uid:'uid-new',authTime:NOW-1000,signInProvider:'google.com',
       identities:{'google.com':['synthetic-subject']}};},
-    async verifyCurrentGoogleProviderIdentity(){return{providerKey:'google',providerId:'google.com',
-      providerSubjectKey:`v1_google_${'c'.repeat(64)}`};},
+    async verifyRecentGoogleProviderAuthentication(){return{providerKey:'google',providerId:'google.com',
+      providerSubjectKey:`v1_google_${'c'.repeat(64)}`,providerSubjectKeyVersion:1,authTime:NOW-1000};},
     async operationRequestExists(){return false;},async consumeRateLimit(){return{allowed:true,consumed:true};},
     async createProviderAccountFoundation(){counts.authorityTransactions+=1;
       throw Object.assign(new Error('namespace unavailable'),{code:'e1/legacy-namespace-not-certified'});},

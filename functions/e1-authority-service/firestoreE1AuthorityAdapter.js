@@ -280,12 +280,20 @@ function createFirestoreE1AuthorityAdapter({ firestore, now = () => Date.now() }
   }
 
   async function readProviderAccountFoundation(input) {
-    const refs = [accountRef(input.uid), handleRef(input.handleKey), providerRef(input.uid, input.providerKey),
-      providerSubjectRef(input.providerSubjectKey)];
-    const [account, handle, provider, subject] = await Promise.all(refs.map((ref) => ref.get()));
-    if (![account, handle, provider, subject].every((snapshot) => snapshot.exists)) return null;
+    const refs = [accountRef(input.uid), handleRef(input.handleKey), providerRef(input.uid, input.providerKey)];
+    const [account, handle, provider] = await Promise.all(refs.map((ref) => ref.get()));
+    if (![account, handle, provider].every((snapshot) => snapshot.exists)) return null;
+    const candidates = Array.isArray(input.providerSubjectCandidates) && input.providerSubjectCandidates.length
+      ? input.providerSubjectCandidates
+      : [{ providerSubjectKey: input.providerSubjectKey, providerSubjectKeyVersion: input.providerSubjectKeyVersion }];
+    const matched = candidates.find((candidate) => provider.data()?.providerSubjectKey === candidate.providerSubjectKey &&
+      provider.data()?.providerSubjectKeyVersion === candidate.providerSubjectKeyVersion);
+    if (!matched) fail('e1/provider-foundation-conflict');
+    const exactInput = { ...input, ...matched };
+    const subject = await providerSubjectRef(matched.providerSubjectKey).get();
+    if (!subject.exists) return null;
     if (!exactProviderAccount(account.data(), input) || !exactHandle(handle.data(), input) ||
-        !exactAccountProvider(provider.data(), input) || !exactProviderSubject(subject.data(), input) ||
+        !exactAccountProvider(provider.data(), exactInput) || !exactProviderSubject(subject.data(), exactInput) ||
         provider.data().linkedAt !== subject.data().linkedAt) fail('e1/provider-foundation-conflict');
     const data = account.data();
     return Object.freeze({

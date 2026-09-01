@@ -47,7 +47,9 @@ const REQUEST_ID = /^[A-Za-z0-9][A-Za-z0-9._:-]{7,127}$/;
 const SHA256 = /^[a-f0-9]{64}$/;
 const SAFE_ATTEMPT_HASH = /^[a-f0-9]{16}$/;
 const MAX_REQUEST_BYTES = 4096;
-const PROVIDER_ACCOUNT_CLIENT_RELEASE = '2026-08-31.86';
+const PROVIDER_ACCOUNT_PROTOCOL_VERSION = 1;
+const SUPPORTED_PROVIDER_ACCOUNT_PROTOCOL_VERSIONS = Object.freeze(new Set([PROVIDER_ACCOUNT_PROTOCOL_VERSION]));
+const CLIENT_RELEASE = /^\d{4}-\d{2}-\d{2}\.\d+$/u;
 const PROVIDER_AUTH_MAX_AGE_MS = 10 * 60 * 1000;
 const PROVIDER_SUBJECT = /^[A-Za-z0-9_-]{1,512}$/u;
 const FROZEN_STATUSES = new Set(['frozen', 'blocked', 'conflict', 'conflict-frozen']);
@@ -159,7 +161,42 @@ function groupEConfiguration(env, configuration, gates, readProof, now) {
     cohortDigest: env.GROUP_E_COHORT_DIGEST, runId: env.GROUP_E_RUN_ID, keyId: env.GROUP_E_KEY_ID });
 }
 
+function providerSubjectKeyRing(env) {
+  const activeKey = env.PROVIDER_SUBJECT_HMAC_KEY || '';
+  const activeVersion = env.PROVIDER_SUBJECT_HMAC_KEY_VERSION || '';
+  const previousValue = env.PROVIDER_SUBJECT_HMAC_PREVIOUS_KEY_VERSIONS || '';
+  const previousVersions = previousValue ? previousValue.split(',') : [];
+  const validVersion = (value) => /^[1-9][0-9]{0,3}$/u.test(value);
+  const validKey = (value) => Buffer.byteLength(value || '', 'utf8') >= 32 && Buffer.byteLength(value, 'utf8') <= 256;
+  const activeConfigured = validVersion(activeVersion) && validKey(activeKey);
+  if ((activeKey || activeVersion) && !activeConfigured) fail('E1_CONFIGURATION_MISMATCH');
+  if (previousVersions.length && !activeConfigured) fail('E1_CONFIGURATION_MISMATCH');
+  if (previousVersions.some((version) => !validVersion(version)) ||
+      new Set(previousVersions).size !== previousVersions.length || previousVersions.includes(activeVersion) ||
+      previousVersions.some((version) => Number(version) >= Number(activeVersion)) ||
+      previousVersions.some((version, index) => index > 0 && Number(version) <= Number(previousVersions[index - 1]))) {
+    fail('E1_CONFIGURATION_MISMATCH');
+  }
+  const declaredPrevious = new Set(previousVersions.map((version) => `PROVIDER_SUBJECT_HMAC_KEY_V${version}`));
+  const observedPrevious = Object.keys(env).filter((name) => /^PROVIDER_SUBJECT_HMAC_KEY_V[1-9][0-9]{0,3}$/u.test(name));
+  if (observedPrevious.some((name) => !declaredPrevious.has(name)) || declaredPrevious.size !== observedPrevious.length) {
+    fail('E1_CONFIGURATION_MISMATCH');
+  }
+  const previous = previousVersions.map((version) => {
+    const key = env[`PROVIDER_SUBJECT_HMAC_KEY_V${version}`] || '';
+    if (!validKey(key)) fail('E1_CONFIGURATION_MISMATCH');
+    return Object.freeze({ version: Number(version), key });
+  });
+  return Object.freeze(activeConfigured
+    ? [Object.freeze({ version: Number(activeVersion), key: activeKey }), ...previous]
+    : previous);
+}
+
 function loadConfiguration(env = process.env, now = () => Date.now()) {
+  const providerSubjectHmacKeys = providerSubjectKeyRing(env);
+  const providerAccountCompatibilityRequired = env.PROVIDER_ACCOUNT_COMPATIBILITY_REQUIRED === 'true';
+  if (env.PROVIDER_ACCOUNT_COMPATIBILITY_REQUIRED !== undefined &&
+      !['true', 'false'].includes(env.PROVIDER_ACCOUNT_COMPATIBILITY_REQUIRED)) fail('E1_CONFIGURATION_MISMATCH');
   const configuration = {
     environment: env.APP_ENVIRONMENT,
     projectId: env.FIREBASE_PROJECT_ID,
@@ -174,6 +211,8 @@ function loadConfiguration(env = process.env, now = () => Date.now()) {
     operatorSubjectHash: env.EXPECTED_OPERATOR_SUBJECT_HASH,
     providerSubjectHmacKey: env.PROVIDER_SUBJECT_HMAC_KEY || '',
     providerSubjectHmacKeyVersion: env.PROVIDER_SUBJECT_HMAC_KEY_VERSION || '',
+    providerSubjectHmacKeys,
+    providerAccountCompatibilityRequired,
     revision: env.K_REVISION || 'local'
   };
   try { validateTarget(configuration); } catch { fail('E1_CONFIGURATION_MISMATCH'); }
@@ -181,19 +220,20 @@ function loadConfiguration(env = process.env, now = () => Date.now()) {
   if (!SHA256.test(configuration.operatorEmailHash || '') || !SHA256.test(configuration.operatorSubjectHash || '')) {
     fail('E1_CONFIGURATION_MISMATCH');
   }
-  const providerKeyConfigured = Buffer.byteLength(configuration.providerSubjectHmacKey, 'utf8') >= 32 &&
-    Buffer.byteLength(configuration.providerSubjectHmacKey, 'utf8') <= 256 &&
-    /^[1-9][0-9]{0,3}$/u.test(configuration.providerSubjectHmacKeyVersion);
-  if ((configuration.providerSubjectHmacKey || configuration.providerSubjectHmacKeyVersion) && !providerKeyConfigured) {
-    fail('E1_CONFIGURATION_MISMATCH');
-  }
+  const providerKeyConfigured = providerSubjectHmacKeys.length > 0 &&
+    providerSubjectHmacKeys[0].version === Number(configuration.providerSubjectHmacKeyVersion);
   try { validatedTarget({ environment: configuration.environment, projectId: configuration.projectId, databaseUrl: configuration.rtdbDatabaseUrl }); }
   catch { fail('E1_CONFIGURATION_MISMATCH'); }
   if (GATES.some((gate) => !['true', 'false'].includes(env[gate])) ||
       MUTATION_GATES.filter((gate) => env[gate] === 'true').length > 1) {
     fail('E1_OPERATION_GATE_INVALID');
   }
-  if (env.CREATE_PROVIDER_ACCOUNT_ENABLED === 'true' && !providerKeyConfigured) fail('E1_CONFIGURATION_MISMATCH');
+  if ((env.CREATE_PROVIDER_ACCOUNT_ENABLED === 'true' || providerAccountCompatibilityRequired) && !providerKeyConfigured) {
+    fail('E1_CONFIGURATION_MISMATCH');
+  }
+  if (providerAccountCompatibilityRequired && env.READ_ACCOUNT_FOUNDATION_ENABLED !== 'true') {
+    fail('E1_CONFIGURATION_MISMATCH');
+  }
   const repairAccountFoundationEnabled = env.REPAIR_FOUNDATION_ENABLED === 'true';
   const applyMigrationManifestEnabled = env.APPLY_MIGRATION_ENABLED === 'true';
   const readProof = readProofConfiguration(env, configuration, env, now);
@@ -538,12 +578,12 @@ function providerRequestFingerprint(input) {
   return hashParts([
     1,
     'createProviderAccountFoundation',
+    input.providerAccountProtocolVersion,
     input.uid,
     input.requestId,
     input.normalizedTrainerName,
     input.handleKey,
-    input.lifecycleId,
-    input.clientRelease
+    input.lifecycleId
   ]);
 }
 
@@ -551,6 +591,7 @@ function providerOperationFingerprint(input) {
   return hashParts([
     1,
     'createProviderAccountFoundation',
+    input.providerAccountProtocolVersion,
     input.uid,
     input.requestId,
     input.normalizedTrainerName,
@@ -558,37 +599,44 @@ function providerOperationFingerprint(input) {
     input.providerId,
     input.providerSubjectKey,
     input.authTime,
-    input.lifecycleId,
-    input.clientRelease
+    input.lifecycleId
   ]);
 }
 
-function providerSubjectHash(configuration, providerId, subject) {
-  if (Buffer.byteLength(configuration.providerSubjectHmacKey || '', 'utf8') < 32 ||
-      !/^[1-9][0-9]{0,3}$/u.test(configuration.providerSubjectHmacKeyVersion || '')) fail('PROVIDER_KEY_UNAVAILABLE');
-  return crypto.createHmac('sha256', configuration.providerSubjectHmacKey)
-    .update(`provider-subject\0v${configuration.providerSubjectHmacKeyVersion}\0${providerId}\0${subject}`, 'utf8').digest('hex');
+function providerSubjectHash(configuration, providerId, subject, keyVersion = Number(configuration.providerSubjectHmacKeyVersion)) {
+  const key = configuration.providerSubjectHmacKeys?.find((candidate) => candidate.version === Number(keyVersion));
+  if (!key) fail('PROVIDER_KEY_UNAVAILABLE');
+  return crypto.createHmac('sha256', key.key)
+    .update(`provider-subject\0v${key.version}\0${providerId}\0${subject}`, 'utf8').digest('hex');
 }
 
-function verifiedGoogleProviderIdentity(configuration, verifiedToken, timestamp) {
+function linkedGoogleProviderIdentity(configuration, verifiedToken) {
   const subjects = verifiedToken?.identities?.['google.com'];
-  if (verifiedToken?.signInProvider !== 'google.com' || !Array.isArray(subjects) || subjects.length !== 1 ||
-      !PROVIDER_SUBJECT.test(subjects[0] || '') || !Number.isSafeInteger(verifiedToken.authTime) ||
-      verifiedToken.authTime > timestamp || timestamp - verifiedToken.authTime > PROVIDER_AUTH_MAX_AGE_MS) {
+  if (!Array.isArray(subjects) || subjects.length !== 1 || !PROVIDER_SUBJECT.test(subjects[0] || '') ||
+      !Number.isSafeInteger(verifiedToken?.authTime)) {
     fail('PROVIDER_IDENTITY_REQUIRED');
   }
-  const subjectHash = providerSubjectHash(configuration, 'google.com', subjects[0]);
-  return Object.freeze({
-    providerKey: 'google',
-    providerId: 'google.com',
-    providerSubjectKey: `v${configuration.providerSubjectHmacKeyVersion}_google_${subjectHash}`,
-    providerSubjectKeyVersion: Number(configuration.providerSubjectHmacKeyVersion),
-    authTime: verifiedToken.authTime
-  });
+  if (!configuration.providerSubjectHmacKeys?.length) fail('PROVIDER_KEY_UNAVAILABLE');
+  const candidates = configuration.providerSubjectHmacKeys.map(({ version }) => Object.freeze({
+    providerSubjectKey: `v${version}_google_${providerSubjectHash(configuration, 'google.com', subjects[0], version)}`,
+    providerSubjectKeyVersion: version
+  }));
+  return Object.freeze({providerKey:'google',providerId:'google.com',...candidates[0],
+    providerSubjectCandidates:Object.freeze(candidates),authTime:verifiedToken.authTime});
 }
 
-async function verifyCurrentGoogleProviderIdentity(configuration, firebaseIdToken, verifiedToken, fetchImpl = fetch, timestamp = Date.now()) {
-  const provider = verifiedGoogleProviderIdentity(configuration, verifiedToken, timestamp);
+function recentGoogleProviderIdentity(configuration, verifiedToken, timestamp) {
+  const provider = linkedGoogleProviderIdentity(configuration, verifiedToken);
+  if (verifiedToken.signInProvider !== 'google.com' || !Number.isSafeInteger(timestamp) ||
+      provider.authTime > timestamp || timestamp - provider.authTime > PROVIDER_AUTH_MAX_AGE_MS) {
+    fail('RECENT_PROVIDER_AUTH_REQUIRED');
+  }
+  return Object.freeze({providerKey:provider.providerKey,providerId:provider.providerId,
+    providerSubjectKey:provider.providerSubjectKey,providerSubjectKeyVersion:provider.providerSubjectKeyVersion,
+    authTime:provider.authTime});
+}
+
+async function verifyCurrentGoogleAccount(configuration, firebaseIdToken, verifiedToken, provider, fetchImpl) {
   const expectedSubject = verifiedToken.identities['google.com'][0];
   let response;
   try {
@@ -613,13 +661,26 @@ async function verifyCurrentGoogleProviderIdentity(configuration, firebaseIdToke
   return provider;
 }
 
+async function verifyCurrentLinkedGoogleProviderIdentity(configuration, firebaseIdToken, verifiedToken, fetchImpl = fetch) {
+  const provider = linkedGoogleProviderIdentity(configuration, verifiedToken);
+  return verifyCurrentGoogleAccount(configuration, firebaseIdToken, verifiedToken, provider, fetchImpl);
+}
+
+async function verifyRecentGoogleProviderAuthentication(configuration, firebaseIdToken, verifiedToken, fetchImpl = fetch,
+  timestamp = Date.now()) {
+  const provider = recentGoogleProviderIdentity(configuration, verifiedToken, timestamp);
+  return verifyCurrentGoogleAccount(configuration, firebaseIdToken, verifiedToken, provider, fetchImpl);
+}
+
 function exactProviderCreateRequest(body) {
   exactFields(body, [
-    'schemaVersion', 'requestId', 'requestedHandle', 'lifecycleId', 'clientRelease', 'idempotencyFingerprint'
+    'schemaVersion', 'providerAccountProtocolVersion', 'requestId', 'requestedHandle', 'lifecycleId', 'clientRelease',
+    'idempotencyFingerprint'
   ]);
-  if (body.schemaVersion !== 1 || !REQUEST_ID.test(body.requestId || '') ||
+  if (body.schemaVersion !== 1 || !SUPPORTED_PROVIDER_ACCOUNT_PROTOCOL_VERSIONS.has(body.providerAccountProtocolVersion) ||
+      !REQUEST_ID.test(body.requestId || '') ||
       typeof body.lifecycleId !== 'string' || !/^auth-[1-9][0-9]{0,9}$/u.test(body.lifecycleId) ||
-      body.clientRelease !== PROVIDER_ACCOUNT_CLIENT_RELEASE || !SHA256.test(body.idempotencyFingerprint || '') ||
+      !CLIENT_RELEASE.test(body.clientRelease || '') || !SHA256.test(body.idempotencyFingerprint || '') ||
       typeof body.requestedHandle !== 'string') fail('REQUEST_INVALID');
   let handle;
   try { handle = normalizeHandle(body.requestedHandle); } catch (error) {
@@ -628,6 +689,7 @@ function exactProviderCreateRequest(body) {
   }
   return Object.freeze({
     requestId: body.requestId,
+    providerAccountProtocolVersion: body.providerAccountProtocolVersion,
     lifecycleId: body.lifecycleId,
     clientRelease: body.clientRelease,
     idempotencyFingerprint: body.idempotencyFingerprint,
@@ -807,9 +869,12 @@ function createHandler(configuration, dependencies = {}) {
   const probe = dependencies.runtimeProbe || ((config) => runtimeProbe(config, fetchImpl));
   const verifyToken = dependencies.verifyFirebaseIdToken ||
     ((config, token) => verifyFirebaseIdToken(config, token, dependencies.firebaseTokenVerifier));
-  const verifyCurrentProvider = dependencies.verifyCurrentGoogleProviderIdentity ||
+  const verifyCurrentLinkedProvider = dependencies.verifyCurrentLinkedGoogleProviderIdentity ||
+    ((config, token, verifiedToken) =>
+      verifyCurrentLinkedGoogleProviderIdentity(config, token, verifiedToken, fetchImpl));
+  const verifyRecentProviderAuthentication = dependencies.verifyRecentGoogleProviderAuthentication ||
     ((config, token, verifiedToken, timestamp) =>
-      verifyCurrentGoogleProviderIdentity(config, token, verifiedToken, fetchImpl, timestamp));
+      verifyRecentGoogleProviderAuthentication(config, token, verifiedToken, fetchImpl, timestamp));
   const verifyOperator = dependencies.verifyOperatorAccessToken || ((config, token) => verifyOperatorAccessToken(config, token, fetchImpl));
   const readAccount = dependencies.readAccountDocument || ((config, uid) => readAccountDocument(config, uid, fetchImpl));
   const legacyReader = dependencies.legacyReader || createVerifiedLegacyMappingReader({
@@ -958,7 +1023,7 @@ function createHandler(configuration, dependencies = {}) {
         }
         if (foundation.status !== 'active') fail('INTERNAL_ERROR');
         if (foundation.identityKind === 'provider_only') {
-          const provider = await verifyCurrentProvider(configuration, firebaseIdToken, verifiedToken, now());
+          const provider = await verifyCurrentLinkedProvider(configuration, firebaseIdToken, verifiedToken);
           const exact = await readProviderAccount(Object.freeze({ uid, ...foundation, ...provider }));
           if (!exact) fail('FOUNDATION_CONFLICT');
           foundation = exact;
@@ -1040,9 +1105,10 @@ function createHandler(configuration, dependencies = {}) {
         const uid = verifiedToken.uid;
         callerHash = uidHash(configuration, uid);
         handleHash = handleCorrelationHash(configuration, providerRequest.handle.handleKey);
-        const provider = await verifyCurrentProvider(configuration, firebaseIdToken, verifiedToken, now());
+        const provider = await verifyRecentProviderAuthentication(configuration, firebaseIdToken, verifiedToken, now());
         const baseInput = Object.freeze({
           uid,
+          providerAccountProtocolVersion: providerRequest.providerAccountProtocolVersion,
           requestId: providerRequest.requestId,
           canonicalTrainerName: providerRequest.handle.display,
           normalizedTrainerName: providerRequest.handle.normalized,
@@ -1105,7 +1171,8 @@ function createHandler(configuration, dependencies = {}) {
       } catch (error) {
         const mapping = {
           E1_NOT_ENABLED: [503, 'E1_NOT_ENABLED'], AUTH_REQUIRED: [401, 'AUTH_REQUIRED'], AUTH_INVALID: [401, 'AUTH_INVALID'],
-          PROVIDER_IDENTITY_REQUIRED: [403, 'PROVIDER_IDENTITY_REQUIRED'], REQUEST_INVALID: [400, 'REQUEST_INVALID'],
+          PROVIDER_IDENTITY_REQUIRED: [403, 'PROVIDER_IDENTITY_REQUIRED'],
+          RECENT_PROVIDER_AUTH_REQUIRED: [403, 'RECENT_PROVIDER_AUTH_REQUIRED'], REQUEST_INVALID: [400, 'REQUEST_INVALID'],
           REQUEST_TOO_LARGE: [413, 'REQUEST_INVALID'], METHOD_NOT_ALLOWED: [405, 'METHOD_NOT_ALLOWED'],
           'e1/legacy-namespace-not-certified': [412, 'NAMESPACE_NOT_CERTIFIED'],
           'e1/account-conflict': [409, 'ACCOUNT_EXISTS'], 'e1/handle-conflict': [409, 'HANDLE_CONFLICT'],
@@ -1404,7 +1471,9 @@ if (require.main === module) start();
 module.exports = Object.freeze({
   FORBIDDEN_PROJECT_PERMISSIONS,
   GATES,
+  PROVIDER_ACCOUNT_PROTOCOL_VERSION,
   RATE_LIMITS,
+  SUPPORTED_PROVIDER_ACCOUNT_PROTOCOL_VERSIONS,
   assertRuntimeDependencies,
   createHandler,
   conflictManifestFingerprint,
@@ -1426,8 +1495,10 @@ module.exports = Object.freeze({
   sourceMappingFingerprint,
   start,
   verifiedLegacyFoundation,
-  verifiedGoogleProviderIdentity,
-  verifyCurrentGoogleProviderIdentity,
+  linkedGoogleProviderIdentity,
+  recentGoogleProviderIdentity,
+  verifyCurrentLinkedGoogleProviderIdentity,
+  verifyRecentGoogleProviderAuthentication,
   verifyFirebaseIdToken,
   verifyOperatorAccessToken
 });

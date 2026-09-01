@@ -59,6 +59,27 @@ its pending operation, presents the existing creation-not-ready state, and does
 zero reconciliation reads or creation retries. Arbitrary authority 5xx payloads
 remain generic unavailability.
 
+The Firestore authority document is the canonical freeze state. Candidate RTDB
+Rules consume an exact Rules-visible enforcement projection of those same seven
+fields; that projection cannot certify or enable provider creation. Activation
+is ordered Rules projection first, canonical Firestore freeze second. Release is
+ordered provider-certification invalidation and canonical release first, Rules
+projection release second. A stale projection can therefore deny legacy
+creation longer, but it cannot permit provider creation or create a split-brain
+window. `scripts/build-legacy-provisioning-freeze-candidate.cjs` binds the exact
+candidate Rules, guarded paths, source policy version, and release order to the
+reviewed `provisioningContractDigest`.
+
+While active, candidate Rules deny new or deleted `users/{username}` and
+`loginDirectory/{username}` records, deny request transitions to `approved`,
+and deny handle-changing repair even for Admin. Existing records may be updated
+only while preserving their exact `authUid`, so existing login, same-handle
+profile changes, and same-UID PIN/Auth repair continue without creating new UID
+ownership. A malformed enforcement projection is frozen, not open. The browser
+performs the same check before Auth provisioning and again before the atomic RTDB
+update, but Rules are the security boundary. No freeze is activated by these
+source changes.
+
 Production currently has 58 active legacy handles, 8 protected Firestore
 handles, and 50 missing protections. No freeze, certification, hold, or backfill
 is created by these draft PRs, so creation remains disabled.
@@ -73,7 +94,8 @@ The provider route requires:
 - exactly one recent `google.com` subject in verified token claims;
 - a current Firebase Auth account lookup confirming that the same Google subject remains linked immediately before creation;
 - a current Auth lifecycle identifier;
-- release `2026-08-31.86` compatibility evidence;
+- supported `providerAccountProtocolVersion: 1`; the Pages release is retained
+  only as bounded diagnostic metadata;
 - App Check at the callable gateway;
 - a bounded request ID and idempotency fingerprint;
 - an available canonical UID, handle, and provider subject;
@@ -84,18 +106,27 @@ authority uses only the dedicated `PROVIDER_SUBJECT_HMAC_KEY` and explicit
 `PROVIDER_SUBJECT_HMAC_KEY_VERSION`; it never reuses an operator identity hash.
 The derivation is domain-separated by purpose, key version, and provider domain,
 and durable provider records include the numeric key version. Deployment guards
-permit both values to be absent while creation is false. If configured, the key
+permit both values to be absent only before the first provider-only account,
+while creation and compatibility are both false. After the first account,
+returning-account compatibility requires the key even when creation is false.
+If configured, the key
 must be an exact Secret Manager reference named
 `e1-provider-subject-hmac-key`, its secret version must equal the bounded numeric
 version environment value, and plaintext or partial configuration is rejected.
-Creation cannot be enabled without both values. This task creates no secret.
+Creation cannot be enabled without both values. A reviewed key ring may retain
+declared prior versions during rotation; returning reads try the active version
+and then those prior versions, while creation always writes the active version.
+This task creates no secret.
 
-Before rotation, disable creation and retain the old key. Add support for the
-old and new versions, migrate every provider-subject reverse claim and reciprocal
-provider record with exact readback, then make the new version active. Remove
-the old key only after every existing account verifies under the new key. Because
-no real provider-only account exists yet, version 1 can be established before
-first enablement without migration.
+Before rotation, disable creation and retain the old key in the declared prior
+version set. Add the new active version, migrate every provider-subject reverse
+claim and reciprocal provider record with exact readback, then remove the old
+version only after every existing account verifies under the new key. The
+source-controlled post-first-account floor rejects a deployment or rollback
+that omits a required version, disables returning reads, or selects authority
+source predating provider compatibility. Because no real provider-only account
+exists yet, version 1 can be established before first enablement without
+migration.
 
 Identical operation evidence returns the stored result. Reusing a request ID
 with changed evidence fails. A lost response triggers one exact canonical
@@ -127,7 +158,14 @@ The digest is recomputed from the current authenticated UID before resume. Raw
 UID, email, provider subject, token, credentials, friend code, avatar, and other
 profile data are absent; stale or cross-owner evidence is cleared.
 
-Before exact certification there is no owned session, account-sync runtime, legacy migration, protected-list subscription, favorites/tag hydration, Special Board hydration, or public publication. Closing the browser resumes the bounded onboarding state. Cancel signs out but does not delete the Firebase Auth user. Orphan Auth-user cleanup is a future operator policy, never an automatic client action.
+Before exact certification there is no owned session, account-sync runtime,
+legacy migration, protected-list subscription, favorites/tag hydration, Special
+Board hydration, or public publication. Optional profile values are normalized
+and validated before identity dispatch; invalid values cannot create a
+foundation. The normalized profile is carried only in the successful in-memory
+handoff and is never placed in the onboarding continuation. Closing the browser
+resumes the bounded onboarding state without profile fields. Cancel signs out
+but does not delete the Firebase Auth user.
 
 ## UID-rooted provider profile
 
@@ -148,9 +186,16 @@ After foundation certification, provider-only startup initializes or reads this
 profile before public projection is ready. The submitted onboarding friend code
 is normalized and persisted there. Profile edits use the same transaction. A
 transient failure leaves owner-partitioned `provider-profile-pending-v1`
-evidence in the existing account-sync IndexedDB journal and retries after clean
-browser, second-device, PWA, or sign-out/sign-in startup. The committed identity
-foundation is never resent or rolled back. Provider-only profile and activity
+evidence in the existing account-sync IndexedDB journal. That evidence is
+strictly device-local: it retries after reopening that same browser/PWA profile,
+but a clean second device cannot see or retry it. If identity committed before
+the first profile journal write, any clean device initializes an empty canonical
+profile and the owner may complete optional details later. If another device
+advances canonical profile revision while a local edit is pending, canonical
+state wins, the stale local record is cleared once, and no permanent retry loop
+is created. A committed write with a lost response is accepted only after exact
+canonical readback. The committed identity foundation is never resent or rolled
+back. Provider-only profile and activity
 paths are barred from `users/{username}`, `loginDirectory/{username}`, and
 `authIndex/{uid}`; nonessential last-seen activity remains device-local.
 
