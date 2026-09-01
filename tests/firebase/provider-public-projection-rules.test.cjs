@@ -122,6 +122,16 @@ test('projection schema rejects private fields incomplete markers malformed entr
   await fails(db('PUT', `trainerShares/${IDS.owner}`, invalidEntry, TOKENS.owner), 'invalid entry priority');
   const oversizedKey = projection({ lists: { wishlist: { ['x'.repeat(201)]: { p: 'H' } }, dynamax: {}, gmax: {}, costumes: {} } });
   await fails(db('PUT', `trainerShares/${IDS.owner}`, oversizedKey, TOKENS.owner), 'oversized Pokemon key');
+  for (const key of ['__proto__', 'prototype', 'constructor']) {
+    const dangerous = projection({
+      lists: JSON.parse(`{"wishlist":{"${key}":{"p":"H"}},"dynamax":{},"gmax":{},"costumes":{}}`)
+    });
+    await fails(db('PUT', `trainerShares/${IDS.owner}`, dangerous, TOKENS.owner), `dangerous Pokemon key ${key}`);
+  }
+  const invalidBackground = projection({
+    lists: { wishlist: { Pikachu: { p: 'H', backgroundId: 'Chicago 2026' } }, dynamax: {}, gmax: {}, costumes: {} }
+  });
+  await fails(db('PUT', `trainerShares/${IDS.owner}`, invalidBackground, TOKENS.owner), 'invalid background ID');
 });
 
 test('updates are monotonic and cannot change canonical trainer name or initial publication time', async () => {

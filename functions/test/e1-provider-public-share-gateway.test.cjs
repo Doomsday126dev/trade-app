@@ -105,6 +105,17 @@ test('gateway rejects mismatched handles private fields malformed entries and ov
   }), 'ProviderTrainer'), /AUTHORITY_RESPONSE_INVALID/u);
 });
 
+test('gateway rejects dangerous public-list dictionary names', () => {
+  for (const key of ['__proto__', 'prototype', 'constructor']) {
+    const result = publicResult({
+      lists: JSON.parse(`{"wishlist":{"${key}":{"p":"H"}},"dynamax":{},"gmax":{},"costumes":{}}`)
+    });
+    assert.throws(() => validateProviderPublicShareResponse(result, 'ProviderTrainer'),
+      /AUTHORITY_RESPONSE_INVALID/u, key);
+  }
+  assert.equal({}.polluted, undefined);
+});
+
 test('authority invoker uses only server OIDC for anonymous reads and omits the browser bearer token', async () => {
   const calls = [];
   const configuration = loadGatewayConfiguration(environment());

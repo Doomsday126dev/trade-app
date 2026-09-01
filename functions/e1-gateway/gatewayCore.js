@@ -331,9 +331,14 @@ const PUBLIC_ENTRY_FIELDS = Object.freeze(['backgroundId', 'lucky', 'mod', 'p', 
 const PUBLIC_PRIORITIES = new Set(['H', 'M', 'L']);
 const PUBLIC_BACKGROUND_ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
 const PUBLIC_CONTROL = /[\u0000-\u001f\u007f]/u;
+const PUBLIC_DANGEROUS_KEYS = new Set(['__proto__', 'prototype', 'constructor']);
 
 function publicString(value, max, { empty = true } = {}) {
   return typeof value === 'string' && !PUBLIC_CONTROL.test(value) && value.length <= max && (empty || value.length > 0);
+}
+
+function publicDynamicKey(value, max) {
+  return publicString(value, max, { empty: false }) && !PUBLIC_DANGEROUS_KEYS.has(value);
 }
 
 function optionalPublicFields(value, fields) {
@@ -378,12 +383,12 @@ function validateProviderPublicShareResponse(payload, expectedTrainerHandle = ''
       !publicString(profile.discord, 40) || !publicString(profile.avatarPokemon, 80) ||
       !Number.isSafeInteger(profile.lastUpdated) || profile.lastUpdated < 0) fail('AUTHORITY_RESPONSE_INVALID');
   let entryCount = 0;
-  const lists = {};
+  const lists = Object.create(null);
   for (const type of PUBLIC_LIST_TYPES) {
-    lists[type] = {};
+    lists[type] = Object.create(null);
     for (const [name, entry] of Object.entries(share.lists[type])) {
       entryCount += 1;
-      if (entryCount > 2000 || !publicString(name, 200, { empty: false }) || !publicEntry(entry)) {
+      if (entryCount > 2000 || !publicDynamicKey(name, 200) || !publicEntry(entry)) {
         fail('AUTHORITY_RESPONSE_INVALID');
       }
       lists[type][name] = entry && typeof entry === 'object' ? Object.freeze({ ...entry }) : entry;

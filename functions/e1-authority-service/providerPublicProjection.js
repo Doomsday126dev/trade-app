@@ -10,6 +10,7 @@ const ENTRY_FIELDS = Object.freeze(['backgroundId', 'lucky', 'mod', 'p', 'shiny'
 const PRIORITIES = new Set(['H', 'M', 'L']);
 const BACKGROUND_ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
 const CONTROL = /[\u0000-\u001f\u007f]/u;
+const DANGEROUS_KEYS = new Set(['__proto__', 'prototype', 'constructor']);
 const MAX_PROJECTION_BYTES = 512 * 1024;
 const MAX_TOTAL_ENTRIES = 2000;
 
@@ -34,6 +35,10 @@ function projectionFields(value) {
 
 function safeString(value, max, { empty = true } = {}) {
   return typeof value === 'string' && !CONTROL.test(value) && value.length <= max && (empty || value.length > 0);
+}
+
+function safeDynamicKey(value, max) {
+  return safeString(value, max, { empty: false }) && !DANGEROUS_KEYS.has(value);
 }
 
 function safeTimestamp(value, { positive = false } = {}) {
@@ -69,25 +74,26 @@ function sanitizeProviderPublicProjection(value, { trainerName } = {}) {
       !safeString(profile.avatarPokemon, 80) || !safeTimestamp(profile.lastUpdated)) return null;
 
   let entryCount = 0;
-  const lists = {};
+  const lists = Object.create(null);
   for (const type of LIST_TYPES) {
     const source = value.lists?.[type] || {};
     if (!plainObject(source)) return null;
     const entries = Object.entries(source);
     entryCount += entries.length;
     if (entryCount > MAX_TOTAL_ENTRIES) return null;
-    lists[type] = {};
+    lists[type] = Object.create(null);
     for (const [name, entry] of entries) {
-      if (!safeString(name, 200, { empty: false }) || !validEntry(entry)) return null;
+      if (!safeDynamicKey(name, 200) || !validEntry(entry)) return null;
       lists[type][name] = plainObject(entry) ? { ...entry } : entry;
     }
+    Object.freeze(lists[type]);
   }
 
   return Object.freeze({
     version: 1,
     username: value.trainerName,
     profile: Object.freeze({ ...profile }),
-    lists: Object.freeze(Object.fromEntries(LIST_TYPES.map((type) => [type, Object.freeze(lists[type])]))),
+    lists: Object.freeze(lists),
     publishedListTypes: Object.freeze([...LIST_TYPES]),
     updatedAt: value.updatedAt
   });

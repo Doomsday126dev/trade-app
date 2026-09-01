@@ -26,6 +26,11 @@ function publicSnapshot(overrides={}){
   };
 }
 
+function snapshotWithDynamicKey(key){
+  const lists=JSON.parse(`{"wishlist":{"${key}":{"p":"H"}},"dynamax":{},"gmax":{},"costumes":{}}`);
+  return publicSnapshot({lists});
+}
+
 test('provider publication creates the strict UID-rooted stored projection without private identity metadata',()=>{
   const domain=load();
   const next=domain.nextProjection(publicSnapshot(),null,{trainerName:'ProviderTrainer',now:200});
@@ -71,4 +76,36 @@ test('malformed existing state blocks overwrite instead of silently resetting pu
   const domain=load();
   assert.throws(()=>domain.nextProjection(publicSnapshot(),{shareVersion:9},{trainerName:'ProviderTrainer',now:200}),
     error=>error.code==='provider-public/existing-projection-invalid');
+});
+
+test('exact stored content reconciles without allocating another share version',()=>{
+  const domain=load(),snapshot=publicSnapshot();
+  const stored=domain.nextProjection(snapshot,null,{trainerName:'ProviderTrainer',now:200});
+  assert.equal(domain.projectionContentMatches(snapshot,stored,{trainerName:'ProviderTrainer'}),true);
+  assert.equal(domain.projectionContentMatches(publicSnapshot({lists:{...snapshot.lists,wishlist:{Pikachu:{p:'M'}}}}),stored,{trainerName:'ProviderTrainer'}),false);
+});
+
+test('dangerous dynamic property names fail closed in browser and authority sanitizers',()=>{
+  const domain=load();
+  for(const key of ['__proto__','prototype','constructor']){
+    const snapshot=snapshotWithDynamicKey(key);
+    assert.equal(domain.publicSnapshotStatus(snapshot,{trainerName:'ProviderTrainer'}).ok,false,key);
+    const stored={...domain.nextProjection(publicSnapshot(),null,{trainerName:'ProviderTrainer',now:200}),lists:snapshot.lists};
+    assert.equal(domain.storedProjectionStatus(stored,{trainerName:'ProviderTrainer'}).ok,false,key);
+    assert.equal(sanitizeProviderPublicProjection(stored,{trainerName:'ProviderTrainer'}),null,key);
+  }
+  const valid=domain.publicSnapshotStatus(publicSnapshot(),{trainerName:'ProviderTrainer'});
+  assert.equal(Object.getPrototypeOf(valid.snapshot.lists.wishlist),null);
+  assert.equal({}.polluted,undefined);
+});
+
+test('browser and authority reject a projection above the shared 512 KiB boundary',()=>{
+  const domain=load(),wishlist={};
+  for(let index=0;index<1500;index++)wishlist[`${'x'.repeat(190)}${String(index).padStart(4,'0')}`]={p:'H',mod:'m'.repeat(200)};
+  const snapshot=publicSnapshot({lists:{wishlist,dynamax:{},gmax:{},costumes:{}}});
+  assert.equal(domain.publicSnapshotStatus(snapshot,{trainerName:'ProviderTrainer'}).ok,false);
+  const stored={schemaVersion:1,shareVersion:1,trainerName:'ProviderTrainer',profile:snapshot.profile,
+    lists:snapshot.lists,publishedListTypes:{wishlist:true,dynamax:true,gmax:true,costumes:true},publishedAt:100,updatedAt:100};
+  assert.equal(domain.storedProjectionStatus(stored,{trainerName:'ProviderTrainer'}).ok,false);
+  assert.equal(sanitizeProviderPublicProjection(stored,{trainerName:'ProviderTrainer'}),null);
 });

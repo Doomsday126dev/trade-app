@@ -138,14 +138,14 @@
           "$listType": {
             ".validate": "($listType === 'wishlist' || $listType === 'dynamax' || $listType === 'gmax' || $listType === 'costumes') && newData.hasChildren()",
             "$pokemonKey": {
-              ".validate": "$pokemonKey.length > 0 && $pokemonKey.length <= 200 && ((newData.isString() && newData.val().length > 0 && newData.val().length <= 512) || newData.hasChildren(['p']))",
+              ".validate": "$pokemonKey.length > 0 && $pokemonKey.length <= 200 && $pokemonKey !== '__proto__' && $pokemonKey !== 'prototype' && $pokemonKey !== 'constructor' && ((newData.isString() && newData.val().length > 0 && newData.val().length <= 512) || newData.hasChildren(['p']))",
               "p": { ".validate": "newData.val() === 'H' || newData.val() === 'M' || newData.val() === 'L'" },
               "mod": { ".validate": "newData.isString() && newData.val().length <= 200" },
               "lucky": { ".validate": "newData.isBoolean()" },
               "shiny": { ".validate": "newData.isBoolean()" },
               "xxl": { ".validate": "newData.isBoolean()" },
               "xxs": { ".validate": "newData.isBoolean()" },
-              "backgroundId": { ".validate": "newData.isString() && newData.val().length <= 120" },
+              "backgroundId": { ".validate": "newData.isString() && (newData.val() === '' || newData.val().matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)) && newData.val().length <= 120" },
               "$other": { ".validate": false }
             }
           }
