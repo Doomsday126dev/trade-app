@@ -44,6 +44,8 @@ test('shell configuration is explicit and all authority gates fail closed', () =
     firebaseWebApiKey: 'synthetic-firebase-web-api-key-for-tests',
     operatorEmailHash: 'a'.repeat(64),
     operatorSubjectHash: 'b'.repeat(64),
+    providerSubjectHmacKey: '',
+    providerSubjectHmacKeyVersion: '',
     revision: 'local',
     readAccountFoundationEnabled: false,
     createProviderAccountEnabled: false,

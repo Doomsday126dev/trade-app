@@ -1,10 +1,9 @@
 # Google Provider Configuration and Owner Canary
 
-Status: owner-canary preparation. Production remains the accepted
-`2026-08-31.86` privacy-notice release and the Firebase Google provider remains
-disabled pending the explicit production authentication-boundary confirmation.
-Google Auth Platform is configured as External/Testing with exactly the owner
-as its sole test user. Its web client uses only the reviewed localhost,
+Status: owner-restricted provider preparation. Production remains the accepted
+`2026-08-31.86` privacy-notice release, and Google remains publicly hidden.
+Google Auth Platform is External/Testing with exactly the owner as its sole test
+user. Its web client uses only the reviewed localhost,
 Firebase-hosting, and GitHub Pages origins plus the exact Firebase Auth redirect.
 The public privacy notice at `?legal=privacy` is deployed and verified on desktop
 and mobile without starting Firebase.
@@ -104,9 +103,54 @@ owner canary is still required before any production exposure.
 ## New-user boundary
 
 A Google UID with no reciprocal PoGo Trades mapping may choose and check a
-trainer handle in development. Account creation remains disabled until a
-server-authoritative, atomic handle-claim operation exists and is reviewed.
+trainer handle in development. A source/emulator candidate now provides the
+server-authoritative atomic foundation operation, but account creation remains
+disabled until every pre-enable step below receives a separate operator review.
 Never create or attach that user through browser-only writes or email matching.
+
+## Provider-only pre-enable procedure
+
+This section defines a future reviewed change window. Do not execute it as part
+of source review.
+
+1. Keep `CREATE_PROVIDER_ACCOUNT_ENABLED=false`. Freeze all new legacy
+   account/handle provisioning and record the reviewed freeze ID, activation
+   time, and exact 64-character provisioning-contract digest. The freeze must
+   remain active throughout inventory and canary work.
+2. Inventory the complete active legacy namespace after freeze activation.
+   Backfill or hold every active handle in Firestore. Re-run the inventory and
+   require exact active/certified equality; current production evidence is only
+   8 protected out of 58, so it is not eligible.
+3. Review candidate Rules and provisioning source, then write the exact schema-1
+   `authorityConfig/legacyProvisioningFreeze` record and exact schema-2
+   `authorityConfig/providerAccountCreation` certification. Bind the same freeze
+   ID and provisioning digest, normalization version 1, 64-character coverage
+   digest, post-freeze inventory timestamp, certified count, certification time,
+   and short expiry. Extra fields or matching counts with mismatched epoch
+   evidence are invalid.
+4. Create a dedicated Secret Manager key only in that separately approved task.
+   Bind `PROVIDER_SUBJECT_HMAC_KEY` to the exact
+   `e1-provider-subject-hmac-key` secret version and set the identical bounded
+   numeric `PROVIDER_SUBJECT_HMAC_KEY_VERSION`. Never supply plaintext. An
+   inactive authority may omit both values; creation may not be enabled without
+   both.
+5. Deploy the authority and gateway inactive first. Verify all mutation and
+   publication gates remain false, authority IAM remains gateway-only, Google
+   remains owner-restricted, and no real provider-only account exists.
+6. Run the synthetic canary. Only after exact source, Rules, reconciliation,
+   profile hydration, and public-projection evidence passes may an explicitly
+   approved owner-controlled disposable canary enable one bounded creation
+   window.
+7. Disable creation immediately if the freeze is released, certification
+   expires, a digest/count changes, HMAC key evidence changes, or any canonical
+   readback is incomplete. Preserve evidence for review; never repair by email,
+   profile, or handle inference.
+
+For HMAC rotation after accounts exist, first disable creation and retain the
+old key. Deploy dual-version read/migration support, migrate every reciprocal
+provider record and subject claim with exact readback, then activate the new
+version. Remove the old key only after complete verification. There is no
+single-key in-place rotation path.
 
 ## Rollback
 

@@ -22,7 +22,46 @@ operationRequests/{uid}/requests/{requestId}
 
 The account records `identityKind: provider_only`, `legacyAccessConfigured: false`, and `legacyUsername: null`. No email, display name, avatar, raw provider subject, ID token, credential, PIN, or synthetic legacy identity is stored.
 
-The transaction also reads the exact expiring namespace certification document. It fails before writes unless every active legacy handle is collision-protected.
+The transaction also reads `authorityConfig/legacyProvisioningFreeze` and
+`authorityConfig/providerAccountCreation` in the same transaction. It fails
+before writes unless both exact records prove that every active legacy handle
+was inventoried after a still-active provisioning freeze.
+
+## Namespace freeze and certification
+
+The selected pre-enable model is a bounded legacy-provisioning freeze. The
+freeze record has exactly these fields:
+
+```text
+schemaVersion, state, provisioningModel, freezeId,
+provisioningContractDigest, activatedAt, releasedAt
+```
+
+It is valid only while `state == active`, `releasedAt == null`, the model is
+`bounded-legacy-provisioning-freeze`, and the 64-character provisioning-contract
+digest is bound to a reviewed freeze ID. The certification record has exactly:
+
+```text
+schemaVersion, state, provisioningModel, freezeId,
+provisioningContractDigest, normalizationVersion,
+legacyNamespaceCoverageCertified, activeLegacyHandleCount,
+certifiedHandleCount, coverageDigest, inventoryCapturedAt,
+certifiedAt, expiresAt
+```
+
+Certification schema 2 requires normalization version 1, the same freeze ID
+and provisioning-contract digest, a 64-character coverage digest, equal active
+and certified counts, inventory captured no earlier than freeze activation,
+and a current expiry. Missing, extra, stale, mismatched, released, or malformed
+evidence returns HTTP 412 with `NAMESPACE_NOT_CERTIFIED`. The gateway maps that
+single pre-write condition to Firebase `failed-precondition`; the browser clears
+its pending operation, presents the existing creation-not-ready state, and does
+zero reconciliation reads or creation retries. Arbitrary authority 5xx payloads
+remain generic unavailability.
+
+Production currently has 58 active legacy handles, 8 protected Firestore
+handles, and 50 missing protections. No freeze, certification, hold, or backfill
+is created by these draft PRs, so creation remains disabled.
 
 ## Authority contract
 
@@ -40,7 +79,27 @@ The provider route requires:
 - an available canonical UID, handle, and provider subject;
 - current full-namespace certification.
 
-The raw Google subject is HMAC-derived before durable input or logging. Identical operation evidence returns the stored result. Reusing a request ID with changed evidence fails. A lost response triggers one exact canonical readback; the client and authority never blindly resend an ambiguous creation.
+The raw Google subject is HMAC-derived before durable input or logging. The
+authority uses only the dedicated `PROVIDER_SUBJECT_HMAC_KEY` and explicit
+`PROVIDER_SUBJECT_HMAC_KEY_VERSION`; it never reuses an operator identity hash.
+The derivation is domain-separated by purpose, key version, and provider domain,
+and durable provider records include the numeric key version. Deployment guards
+permit both values to be absent while creation is false. If configured, the key
+must be an exact Secret Manager reference named
+`e1-provider-subject-hmac-key`, its secret version must equal the bounded numeric
+version environment value, and plaintext or partial configuration is rejected.
+Creation cannot be enabled without both values. This task creates no secret.
+
+Before rotation, disable creation and retain the old key. Add support for the
+old and new versions, migrate every provider-subject reverse claim and reciprocal
+provider record with exact readback, then make the new version active. Remove
+the old key only after every existing account verifies under the new key. Because
+no real provider-only account exists yet, version 1 can be established before
+first enablement without migration.
+
+Identical operation evidence returns the stored result. Reusing a request ID
+with changed evidence fails. A lost response triggers one exact canonical
+readback; the client and authority never blindly resend an ambiguous creation.
 
 The current-provider lookup uses Firebase Auth's ID-token-bound `accounts:lookup` endpoint and the existing Web API key. It requires no Auth administrator role and discards returned email, name, avatar, and all unrelated profile fields.
 
@@ -59,13 +118,52 @@ Existing linked-provider accounts therefore do not create again or rerun migrati
 
 ## Onboarding and abandoned flows
 
-The durable model includes checking, handle choice, advisory availability, ready, creating, verifying, account ready, retryable failure, ambiguous reconciliation, blocked conflict, and canceled states. Stored continuation data contains only bounded request metadata and hashes. It excludes UID, email, provider subject, token, credentials, friend code, and profile data.
+The durable model includes checking, handle choice, advisory availability,
+ready, creating, verifying, account ready, retryable failure, ambiguous
+reconciliation, blocked conflict, and canceled states. The
+`pogoProviderOnboarding:v2` continuation stores schema version, versioned SHA-256
+UID digest, Auth lifecycle, provider key, state, handle, and public error code.
+The digest is recomputed from the current authenticated UID before resume. Raw
+UID, email, provider subject, token, credentials, friend code, avatar, and other
+profile data are absent; stale or cross-owner evidence is cleared.
 
 Before exact certification there is no owned session, account-sync runtime, legacy migration, protected-list subscription, favorites/tag hydration, Special Board hydration, or public publication. Closing the browser resumes the bounded onboarding state. Cancel signs out but does not delete the Firebase Auth user. Orphan Auth-user cleanup is a future operator policy, never an automatic client action.
 
+## UID-rooted provider profile
+
+Provider-only mutable profile data lives only at
+`accountSync/{uid}/profile`. Its exact schema is:
+
+```text
+schemaVersion, ownerUid, friendCode, bio, discord, avatarPokemon,
+revision, createdAt, lastUpdated
+```
+
+Candidate RTDB Rules authorize only `auth.uid == uid`, deny deletion and unknown
+fields, bound every value, preserve `ownerUid` and `createdAt`, and require a
+one-step revision increase plus monotonic server timestamp. Production Rules are
+unchanged by this task.
+
+After foundation certification, provider-only startup initializes or reads this
+profile before public projection is ready. The submitted onboarding friend code
+is normalized and persisted there. Profile edits use the same transaction. A
+transient failure leaves owner-partitioned `provider-profile-pending-v1`
+evidence in the existing account-sync IndexedDB journal and retries after clean
+browser, second-device, PWA, or sign-out/sign-in startup. The committed identity
+foundation is never resent or rolled back. Provider-only profile and activity
+paths are barred from `users/{username}`, `loginDirectory/{username}`, and
+`authIndex/{uid}`; nonessential last-seen activity remains device-local.
+
+Username/PIN accounts retain the existing legacy profile compatibility path.
+
 ## Account sync and access methods
 
-After certification, one runtime starts under `accountSync/{uid}` with `initializationKind: provider-only`. It creates an empty canonical state when appropriate, does not read legacy username lists, does not create migration evidence, and does not retire legacy queues.
+After certification, one runtime starts under `accountSync/{uid}` with
+`initializationKind: provider-only`. It creates an empty canonical state when
+appropriate, hydrates the UID-rooted profile, does not read legacy username
+lists, does not create migration evidence, and removes rather than flushes any
+provider-only legacy identity queue entry. Account activation fails closed if
+the canonical profile/runtime cannot become ready.
 
 Settings presents:
 

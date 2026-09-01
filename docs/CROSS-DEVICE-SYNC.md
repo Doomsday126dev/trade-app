@@ -7,13 +7,14 @@ Cross-device sync is an owner-only private-state layer for the existing account 
 Realtime Database stores canonical private state below `accountSync/{firebaseUid}`:
 
 - `meta`
+- `profile` for provider-only friend code, bio, Discord label, and avatar choice
 - `tradeEntries/{entryId}`
 - `favorites/{targetUid}`
 - `tags/{tagId}`
 - `migrations/{deviceMigrationId}`
 - `recoveryCandidates/{candidateId}`
 
-The Firebase UID is both the account partition and immutable `ownerUid`. Rules permit only `auth.uid === $uid`, deny account-root replacement and enumeration, and validate each fixed entity field together with its revision and mutation evidence.
+The Firebase UID is both the account partition and immutable `ownerUid`. Rules permit only `auth.uid === $uid`, deny account-root replacement and enumeration, and validate each fixed entity field together with its revision and mutation evidence. The provider profile has an exact field allowlist, bounded text, immutable owner/creation evidence, and monotonic revision/timestamp updates.
 
 Trade entry identity is derived from schema, surface, lane, and canonical Pokemon catalog identity. Priority, variant, gender, Lucky, Shiny, XXL/XXS, `backgroundId`, row order, quantity, note, and mirror are mutable fields. Moving an entry to another lane or changing catalog identity is delete plus add.
 
@@ -26,6 +27,12 @@ Each browser keeps an owner-partitioned IndexedDB database named `pogoAccountSyn
 An operation and its optimistic entity state are committed atomically before the product UI changes. A journal failure leaves the visible product state unchanged. Product edits contain a random stable operation ID, exact target, generation, base field revisions, absolute patch, canonical input hash, and client timestamp. First-run migration seeds and safe legacy-queue replays instead use a deterministic ID derived from their complete canonical mutation input and a fixed diagnostic client timestamp; identical simultaneous tabs therefore converge idempotently, while divergent snapshots conflict and block migration rather than overwriting either source.
 
 Transient failures retry after 1, 2, 4, 8, 16, and 30 seconds, then remain at bounded 30-second intervals until the automatic-attempt limit. Exhausted or non-retryable work becomes `blocked`; it is retained for explicit retry. Same-field conflicts are not retried as transport failures.
+
+Provider profile changes use the same owner-partitioned journal through
+`provider-profile-pending-v1`. Startup reads or initializes the canonical
+profile and resolves the pending value before marking provider-only projection
+ready. A lost profile response reconciles the exact value and revision; it does
+not resend the already-committed provider identity foundation.
 
 ## Merge Contract
 
@@ -61,6 +68,7 @@ Synced:
 - Special Trade Board LF/FT entries, including quantity, note, mirror, Shiny, background, and order
 - Favorites keyed by an exact forward-and-reverse resolved target UID
 - private Favorite tags and assignments
+- provider-only friend code, bio, Discord label, and avatar choice
 
 Device-local:
 

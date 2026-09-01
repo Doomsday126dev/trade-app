@@ -1,7 +1,8 @@
 # Client State and Storage Inventory
 
-This inventory describes active production client state for release candidate
-`2026-08-05.45`. Browser storage is device-local. It is not cross-device sync and
+This inventory describes active production client state for release
+`2026-08-31.86` plus disabled development-only provider-account candidates.
+Browser storage is device-local. It is not cross-device sync and
 does not establish account ownership; Firebase Auth plus the reciprocal legacy
 identity mapping remain authoritative.
 
@@ -15,6 +16,11 @@ identity mapping remain authoritative.
 | `pogoTrainerHistory_v1:<encoded UID>` | Schema/version/migration 3; exact UID and username | Favorites, Recents, private tags, opened public-list snapshots | Store object and Browse cache are detached at logout/switch; the UID partition remains so returning A recovers A, while B cannot read it | Future schema fails closed; malformed records normalize; 100 Favorites, 6 Recents, 24 tags, 24 tag references/Favorite, 40-code-point labels, snapshots only for current Recents and at most 512 KiB each | Private local organization and public-list snapshots |
 | `pogoListSnapshots_v1` | Viewer buckets keyed by encoded Firebase UID plus username | Public trainer change summaries | Signed-out sessions cannot write/read a bucket; another account gets a different bucket | Invalid root resets in memory; legacy unpartitioned snapshots are not adopted; 100 trainers per list type, 2,000 list entries per snapshot | Public-list history associated with a local viewer |
 | `pogoActivityLog_v1` | Device-local per-trainer activity map | List-write activity sparklines | Retained device-wide; it does not unlock account data | Invalid root becomes empty; only valid recent events retained; 60 days, 500 events/trainer, 200 trainers | Low-sensitivity interaction metadata |
+| `pogoProviderOnboarding:v2` | Disabled provider onboarding; schema 2 with versioned SHA-256 UID digest, Auth lifecycle, provider key, state, handle, and public code | Created only by the development-gated Google new-user flow | Exact digest/lifecycle/provider must match the current Firebase user; stale, cross-owner, malformed, completed, or canceled evidence is cleared | Exact field set; no raw UID, email, provider subject, token, credential, friend code, avatar, bio, or other profile value | Bounded identifying workflow metadata |
+| `pogoProviderAccountOperation:v1` | Disabled authority request journal; versioned UID digest, request/fingerprint, normalized handle, lifecycle, client release, and phase | Prevents blind resend and permits one exact reconciliation after an ambiguous transport result | Definite pre-write failures, including namespace-not-certified, clear it; lifecycle/owner mismatch fails closed | Exact fields and bounded hashes/IDs; no raw UID, provider subject, email, token, credential, or profile | Sensitive operation metadata, no credential |
+
+The provider rows above remain dormant unless the provider development gates are
+present before bootstrap. They do not describe publicly active production UI.
 
 `pogoTrainerPreferenceSync_v1:<encoded UID>` is a dormant schema contract, not an
 active key: the production client does not construct its queue and synchronized
@@ -64,6 +70,12 @@ matching service-worker caches, and registrations within the app scope.
 - My List category, filters, autocomplete, bulk selections, organizer drafts,
   dialogs, swipe state, copy/undo feedback, and Settings route scroll state are
   transient. The centralized session reset clears or invalidates them.
+- Provider-only profile retry evidence uses the existing UID-partitioned
+  account-sync IndexedDB journal metadata key `provider-profile-pending-v1`.
+  It contains only the four normalized profile values, base revision, owner UID,
+  and queue timestamp; another UID partition cannot read it. Successful exact
+  write/reconciliation removes it. The canonical cross-device profile is
+  `accountSync/{uid}/profile`, not local storage.
 - String diffs, sprite fallback state, performance samples, and Pokemon catalog
   indexes are page-memory caches. Their inputs are finite/current-page data.
 

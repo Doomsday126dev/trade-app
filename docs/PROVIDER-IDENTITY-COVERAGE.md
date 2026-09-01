@@ -50,13 +50,27 @@ The zero conflict and split-pair counts are equality proofs computed inside the 
 
 New provider account creation must remain disabled. A Firestore-only availability check cannot yet prove that a requested handle is absent from all 58 active legacy handles because 50 have no Firestore handle claim.
 
-The selected protection is option A: exact Stage 3 backfill or immutable collision-hold claims for every active legacy handle, followed by an expiring certification document at `authorityConfig/providerAccountCreation`. The authority transaction requires:
+The selected protection is option A: freeze new legacy account/handle
+provisioning, record that reviewed epoch at
+`authorityConfig/legacyProvisioningFreeze`, then create exact backfill or
+immutable collision-hold claims for every active legacy handle. Only an
+inventory captured after freeze activation may support the expiring
+`authorityConfig/providerAccountCreation` certification. The authority
+transaction requires:
 
-- `state == certified`;
-- normalization version 1;
-- `legacyNamespaceCoverageCertified == true`;
+- an exact active freeze record with schema 1, model
+  `bounded-legacy-provisioning-freeze`, reviewed `freezeId`, 64-character
+  `provisioningContractDigest`, activation time, and null release time;
+- an exact certification record with schema 2 and the same model, freeze ID,
+  and provisioning-contract digest;
+- normalization version 1 and `legacyNamespaceCoverageCertified == true`;
 - `certifiedHandleCount == activeLegacyHandleCount`;
 - a 64-character coverage digest;
-- a current certification window.
+- inventory captured at or after freeze activation;
+- certification after inventory and a current expiry.
 
-Missing, stale, malformed, or incomplete certification blocks the transaction before any account, handle, provider, subject, or operation record is created. No runtime list permission and no RTDB writer role is added.
+Missing, extra, stale, malformed, released, or mismatched freeze/certification
+evidence blocks the transaction before any account, handle, provider, subject,
+or operation record is created. Matching aggregate counts without matching epoch
+evidence are insufficient. No production freeze, backfill, certification,
+runtime list permission, or RTDB writer role is added by this work.

@@ -64,6 +64,19 @@ ordinary authenticated user can currently read the proposed private nodes.
 No global identity data may be seeded until narrow production reads are live
 and that isolation has been verified.
 
+## Emulator-only account-sync provider profile candidate
+
+`database.rules.account-sync.json` adds the exact owner-only
+`accountSync/{uid}/profile` contract to the isolated account-sync fixture.
+`database.rules.sec02-production.json` is a generated combined candidate, not a
+deployed Rules file. The profile accepts only schema version, owner UID, friend
+code, bio, Discord label, avatar choice, revision, creation time, and update
+time. It denies cross-owner access, deletion, unknown fields, forged ownership,
+out-of-bounds values, stale revisions, and timestamp rollback.
+
+The Rules test uses only demo project `demo-pogo-sec02-production`. Production
+Rules remain unchanged; do not run `firebase deploy` with either candidate.
+
 ## Emulator-only trainer-share visibility contract
 
 `database.rules.share-visibility.json` is deterministically rebased on the live

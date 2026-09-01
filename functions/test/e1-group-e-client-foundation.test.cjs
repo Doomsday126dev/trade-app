@@ -7,6 +7,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { GATES, createHandler, loadConfiguration } = require('../e1-authority-service/server');
 const { PRODUCTION } = require('../e1-authority-service/e1TargetContracts');
+const { normalizeHandle } = require('../e1-authority-service/handleNormalization');
 const { createAuthorityInvoker, createGatewayOperation, loadGatewayConfiguration } = require('../e1-gateway/gatewayCore');
 const { controlPaths, createGroupEControlStore } = require('../e1-gateway/groupEControlStore');
 const { createAdmissionReceipt, responseBinding } = require('../e1-gateway/groupEAdmission');
@@ -260,9 +261,10 @@ test('authority validates exact receipt, headers, UID and reciprocal trainer bef
 
 test('authority terminal outcomes retain safe correlation and never expose raw attempts', async () => {
   const fixture = createFixture();
+  const canonical = normalizeHandle(fixture.TRAINER.A);
   const account = (status) => ({ fields: { schemaVersion: { integerValue: '1' }, uid: { stringValue: fixture.UID.A },
-    trainerName: { stringValue: fixture.TRAINER.A }, normalizedTrainerName: { stringValue: fixture.TRAINER.A.toLowerCase() },
-    handleKey: { stringValue: `v1_${'a'.repeat(64)}` }, legacyUsername: { stringValue: fixture.TRAINER.A },
+    trainerName: { stringValue: fixture.TRAINER.A }, normalizedTrainerName: { stringValue: canonical.normalized },
+    handleKey: { stringValue: canonical.handleKey }, legacyUsername: { stringValue: fixture.TRAINER.A },
     status: { stringValue: status }, revision: { integerValue: '1' }, createdAt: { integerValue: '1' },
     updatedAt: { integerValue: '2' } } });
   for (const [document, status, outcome] of [[null, 200, 'not_initialized'], [account('active'), 200, 'success'],
