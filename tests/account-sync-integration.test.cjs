@@ -85,8 +85,9 @@ test('entity, direct watched, and public projection writes retain operation-spec
   assert.match(watched,/acceptedSnapshot\(account\)/);
   assert.match(watched,/await reconcile\(/);
 
-  assert.equal((runtime.match(/controller\.runAuthorizedWatchedMutation\(\{/g)||[]).length,3);
+  assert.equal((runtime.match(/controller\.runAuthorizedWatchedMutation\(\{/g)||[]).length,4);
   for(const method of ['createMigration','createRecoveryCandidate','updateMeta'])assert.match(runtime,new RegExp(`write:\\(\\)=>repository\\.${method}\\(`));
+  assert.match(runtime,/async function ensureProviderInitialization\(\)[\s\S]*write:\(\)=>repository\.updateMeta\(expectedMeta\)/);
   assert.equal((runtime.match(/controller\.runAuthorizedMutation\(/g)||[]).length,2);
   assert.match(runtime,/controller\.runAuthorizedMutation\(\(\)=>repository\.readRecoveryReviewAcceptance\(evidence\.record\)\)/);
   assert.match(runtime,/controller\.runAuthorizedMutation\(\(\)=>repository\.createRecoveryReviewAcceptance\(evidence\.record\)\)/);
