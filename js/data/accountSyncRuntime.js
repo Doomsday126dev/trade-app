@@ -303,20 +303,23 @@
       if(resolved!==unresolved.length)throw Object.assign(new Error('Recovery review acceptance did not match the local candidate set'),{code:'account-sync/recovery-review-changed'});
       notifyState(await controller.snapshot());return Object.freeze({ok:true,status:'inherited',count:resolved});
     }
-    function providerInitializationContaminated(account){
-      return['tradeEntries','favorites','tags','migrations','recoveryCandidates','recoveryReviewAcceptances']
+    function providerInitializationContaminated(account,{initialized=false}={}){
+      const forbidden=initialized
+        ?['migrations','recoveryCandidates','recoveryReviewAcceptances']
+        :['tradeEntries','favorites','tags','migrations','recoveryCandidates','recoveryReviewAcceptances'];
+      return forbidden
         .some(key=>model.plainObject(account?.[key])&&Object.keys(account[key]).length>0);
     }
     async function ensureProviderInitialization(){
       requireRunning();notifyMigration('reading');
       const accountBefore=await repository.readAccount(),legacyCompletion=await journal.getMeta(MIGRATION_COMPLETE_META);
       requireRunning();await controller.acceptRemote(accountBefore);requireRunning();
-      if(legacyCompletion||providerInitializationContaminated(accountBefore))throw Object.assign(
-        new Error('Provider-only account contains legacy or partial canonical evidence'),
-        {code:'account-sync/provider-initialization-conflict'}
-      );
       const existingMeta=accountBefore?.meta;
       if(existingMeta?.initialized===true){
+        if(legacyCompletion||providerInitializationContaminated(accountBefore,{initialized:true}))throw Object.assign(
+          new Error('Provider-only account contains legacy migration or recovery evidence'),
+          {code:'account-sync/provider-initialization-conflict'}
+        );
         const expected={ownerUid:owner,featureVersion:model.SCHEMA_VERSION};
         if(!compatibleMetaRecord(existingMeta,expected,existingMeta))throw Object.assign(
           new Error('Provider-only canonical metadata is malformed'),{code:'account-sync/meta-conflict'}
@@ -325,6 +328,10 @@
           initializationKind:'provider-only',resumed:true,sourceDeletionAllowed:false,deviceMigrationId:null});
         notifyMigration('verified',{initializationKind:'provider-only',resumed:true});return lastPlan;
       }
+      if(legacyCompletion||providerInitializationContaminated(accountBefore))throw Object.assign(
+        new Error('Provider-only account contains legacy or partial canonical evidence'),
+        {code:'account-sync/provider-initialization-conflict'}
+      );
       if(existingMeta&&Object.keys(existingMeta).length)throw Object.assign(
         new Error('Provider-only canonical metadata is partial'),{code:'account-sync/meta-conflict'}
       );

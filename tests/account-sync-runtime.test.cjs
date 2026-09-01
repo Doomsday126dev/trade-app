@@ -195,6 +195,22 @@ test('provider profile edits hydrate on a clean sign-in restart without legacy m
   assert.equal(restored.at(-1).avatarPokemon,'pokemon:150:base');assert.equal(repositoryState.calls.writeProfile,2);assert.equal(repositoryState.calls.createMigration,0);
 });
 
+test('provider-only restart accepts legitimate canonical entries after exact initialization',async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),repositoryState=runtimeRepository(window,h),journalState=h.createMemoryJournalState(),publications=[];
+  const first=createRuntime(window,h,repositoryState,journalState,undefined,()=>{},()=>{},async rows=>{publications.push(rows);return{ok:true,status:'published'};},{
+    initializationKind:'provider-only',initialProviderProfile:{friendCode:'000011112222'}
+  });
+  await first.start();
+  const identity={surface:'my-list',lane:'wishlist',catalogId:'pokemon:pikachu'},entityId=window.PogoDomain.accountSyncModel.tradeEntryId(identity);
+  const queued=await first.controller.addEntity({entityType:'tradeEntry',entityId,identity,values:{priority:'H'}});
+  assert.equal(queued.ok,true);await first.controller.drain();assert.equal(h.server.entities.size,1);await first.stop();
+
+  const restarted=createRuntime(window,h,repositoryState,journalState,undefined,()=>{},()=>{},async rows=>{publications.push(rows);return{ok:true,status:'published'};},{initializationKind:'provider-only'});
+  const result=await restarted.start();
+  assert.equal(result.ok,true);assert.equal(restarted.projectionReady,true);assert.equal(restarted.controller.activeEntities('tradeEntry').length,1);
+  assert.equal(repositoryState.calls.updateMeta,1);assert.ok(publications.length>=3);await restarted.stop();
+});
+
 test('a transient provider profile edit remains durable and retries once after PWA restart',async()=>{
   const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),repositoryState=runtimeRepository(window,h),journalState=h.createMemoryJournalState();
   const first=createRuntime(window,h,repositoryState,journalState,undefined,()=>{},()=>{},async()=>({ok:true}),{initializationKind:'provider-only'});
