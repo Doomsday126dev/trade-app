@@ -266,6 +266,7 @@ let accountSyncRuntimeStartPromise=null;
 let accountSyncRuntimeStartBinding='';
 let accountSyncRuntimeStopPromise=null;
 let accountSyncRuntimeGeneration=0;
+let accountSyncInitialProviderProfile={};
 let accountSyncProjectionApplying=false;
 let accountSyncRecoveryCoordinator=null;
 let accountSyncRecoveryCoordinatorBinding='';
@@ -1061,7 +1062,12 @@ function unsafeWholeListQueueEntry(path,item={}){
   return sessionCacheBoundaryData.isWholeListReplacementPath(path)||
     sessionCacheBoundaryData.isWholeListReplacementPath(item?.path);
 }
+function providerOnlyLegacyWritePath(path,username=cur,uid=auth?.currentUser?.uid){
+  const target=String(path||''),name=String(username||''),owner=String(uid||'');
+  return providerOnlyIdentityActive(owner)&&((name&&(target===`users/${name}`||target.startsWith(`users/${name}/`)||target===`loginDirectory/${name}`||target.startsWith(`loginDirectory/${name}/`)))||(owner&&(target===`authIndex/${owner}`||target.startsWith(`authIndex/${owner}/`))));
+}
 function queueSync(path,data){
+  if(providerOnlyLegacyWritePath(path))return false;
   const item={kind:'set',path,data,ts:Date.now()};
   if(unsafeWholeListQueueEntry(path,item)){
     const quarantined=managedSessionCache.quarantineQueueEntry(path,item);
@@ -1144,6 +1150,10 @@ async function flushSyncQueue(){
   const entries=Object.entries(syncQueue);
   let permanentDrops=0;
   for(const[path,item] of entries){
+    if(providerOnlyLegacyWritePath(item?.path||path)){
+      if(queueItemIsCurrent(path,item))delete syncQueue[path];
+      continue;
+    }
     if(canonicalOwnsLegacy&&(accountSyncMigratedLegacyQueueItem(item,cur)||accountSyncQueuedProfileBoardItem(item,cur)))continue;
     const owner=managedSessionCache.snapshot().activeOwner;
     const classification=sessionCacheBoundaryData.queueEntryClassification(path,item,owner);
@@ -1195,6 +1205,7 @@ async function flushSyncQueue(){
   if(permanentDrops>0){
     toast(i18nCore.t('storage.editsDidNotSync',{count:i18nCore.formatNumber(permanentDrops)}),5000);
   }
+  saveSyncQueue();
   if(!Object.keys(syncQueue).length)showSyncDot(false);
   else syncFlushTimer=setTimeout(flushSyncQueue,5000);
   refreshSyncUi();
@@ -1372,14 +1383,19 @@ async function activateGoogleResolvedAccount(resolution){
   cur=username;currentAuthUid=uid;stampSession(username);
   const local=getLocal();
   const userRecord=providerOnly?{
-    identityKind:'provider_only',legacyAccessConfigured:false,legacyUsername:null,
-    friendCode:String(resolution.profile?.friendCode||local.users?.[username]?.friendCode||'').trim()
+    identityKind:'provider_only',legacyAccessConfigured:false,legacyUsername:null
   }:resolution.userRecord;
   local.users[username]=normalizedUserRecord(username,local.users?.[username],userRecord);
   if(!providerOnly)local.authIndex[uid]={...resolution.indexRecord,username};
   saveLocal(local);allData=runtimeDataWithSelectedTrainer(local);
+  if(providerOnly)retireProviderOnlyLegacyQueue(username,uid);
   ensureProtectedSubscriptions();
-  await ensureAccountSyncRuntime();
+  accountSyncInitialProviderProfile=providerOnly?resolution.profile||{}:{};
+  const runtimeResult=await ensureAccountSyncRuntime();
+  if(providerOnly&&(!runtimeResult?.ok||managedAccountSyncRuntime?.ownerUid!==uid||
+    managedAccountSyncRuntime.profileReady!==true||!accountSyncProjectionReady())){
+    throw accountLinkingModelDomain.failure('provider-link/account-sync-not-ready');
+  }
   showApp();
   return Object.freeze({status:'opened',uid,username});
 }
@@ -1427,8 +1443,8 @@ function syncGoogleOnboardingUi(){
   }
   return state;
 }
-function beginGoogleOnboarding(){
-  const resumed=providerOnboardingController.begin({providerKey:'google'});
+async function beginGoogleOnboarding(){
+  const resumed=await providerOnboardingController.begin({providerKey:'google'});
   if(resumed.status==='checking-account')providerOnboardingController.resolveAccount({status:'unlinked'});
   showGoogleOnboarding();
   return providerOnboardingController.snapshot();
@@ -1442,7 +1458,7 @@ async function continueWithGoogle(){
     if(!controller)throw accountLinkingModelDomain.failure('provider-link/provider-unavailable','unavailable');
     const result=await controller.signIn('google',{flow:'popup'});
     if(result.code==='provider-link/onboarding-required'){
-      beginGoogleOnboarding();
+      await beginGoogleOnboarding();
       if(error)error.textContent=i18nCore.t('security.googleOnboardingRequired');
       return result;
     }
@@ -2386,6 +2402,9 @@ async function republishOwnPublicShare(){
 
 async function writeUser(u,data){
   const preserveLegacyBoard=await accountSyncPreserveLegacyBoard(u);
+  if(u===cur&&providerOnlyIdentityActive()){
+    const s=getLocal();s.users[u]=normalizedUserRecord(u,s.users[u],data);saveLocal(s);syncFromLocal();return;
+  }
   const s=getLocal();s.users[u]=normalizedUserRecord(u,s.users[u],data);
   if(canWriteLoginDirectoryNow())s.loginDirectory[u]=normalizedLoginDirectoryRecord(u,s.users[u],s.loginDirectory[u]);
   saveLocal(s);
@@ -2402,6 +2421,9 @@ function canWriteLoginDirectoryNow(){
 }
 async function writeUserNow(u,data){
   const preserveLegacyBoard=await accountSyncPreserveLegacyBoard(u);
+  if(u===cur&&providerOnlyIdentityActive()){
+    const s=getLocal();s.users[u]=normalizedUserRecord(u,s.users[u],data);saveLocal(s);syncFromLocal();return;
+  }
   const s=getLocal();s.users[u]=normalizedUserRecord(u,s.users[u],data);
   if(auth?.currentUser?.email===authEmailForUser(u,s.users[u])){
     s.users[u].authEmail=authEmailForUser(u,s.users[u]);
@@ -2836,7 +2858,8 @@ function accountSyncMarkMutationBlocked(code='account-sync/not-ready',category='
   refreshSyncUi();
 }
 async function accountSyncMutationAuthority(){
-  if(ACCOUNT_SYNC_ROLLOUT.enabled!==true||ACCOUNT_SYNC_ROLLOUT.writesEnabled!==true)return Object.freeze({mode:'legacy'});
+  if(ACCOUNT_SYNC_ROLLOUT.enabled!==true||ACCOUNT_SYNC_ROLLOUT.writesEnabled!==true)return providerOnlyIdentityActive()
+    ?Object.freeze({mode:'blocked',code:'account-sync/provider-runtime-disabled'}):Object.freeze({mode:'legacy'});
   const uid=auth?.currentUser?.uid,username=cur;
   if(!uid||!username){
     if(accountSyncEligibleUid)return Object.freeze({mode:'blocked',code:'account-sync/session-inactive'});
@@ -2918,7 +2941,7 @@ function accountSyncPreservedReviewReady(runtime=managedAccountSyncRuntime,snaps
 }
 function accountSyncProjectionReady(){
   const state=String(accountSyncUiState?.state||'inactive');
-  return!!accountSyncEligibleUid&&accountSyncEligibleUid===auth?.currentUser?.uid&&managedAccountSyncRuntime?.projectionReady===true&&managedAccountSyncRuntime.ownerUid===accountSyncEligibleUid&&accountSyncUiState?.active===true&&accountSyncUiState?.listenerHealthy===true&&accountSyncUiState?.controllerHealthy===true&&!['sync-error','conflict','review-required','inactive'].includes(state);
+  return!!accountSyncEligibleUid&&accountSyncEligibleUid===auth?.currentUser?.uid&&managedAccountSyncRuntime?.projectionReady===true&&managedAccountSyncRuntime?.profileReady===true&&managedAccountSyncRuntime.ownerUid===accountSyncEligibleUid&&accountSyncUiState?.active===true&&accountSyncUiState?.listenerHealthy===true&&accountSyncUiState?.controllerHealthy===true&&!['sync-error','conflict','review-required','inactive'].includes(state);
 }
 function accountSyncOrganizationHydrating(){
   const uid=auth?.currentUser?.uid,state=String(accountSyncUiState?.state||'inactive');
@@ -3077,17 +3100,23 @@ function retireMigratedLegacyListQueue(){
   }
   if(changed){syncQueue=nextQueue;saveSyncQueue();showSyncDot(!!Object.keys(syncQueue).length);}
 }
+function retireProviderOnlyLegacyQueue(username=cur,uid=auth?.currentUser?.uid){
+  let changed=false;const nextQueue={...syncQueue};
+  for(const[key,item]of Object.entries(nextQueue))if(providerOnlyLegacyWritePath(item?.path||key,username,uid)){delete nextQueue[key];changed=true;}
+  if(changed){syncQueue=nextQueue;saveSyncQueue();showSyncDot(!!Object.keys(syncQueue).length);}
+}
 function stopAccountSyncRuntime(){
   if(accountSyncRuntimeStopPromise)return accountSyncRuntimeStopPromise;
   accountSyncRuntimeGeneration++;
   const runtime=managedAccountSyncRuntime,pending=accountSyncRuntimeStartPromise;
-  managedAccountSyncRuntime=null;accountSyncRuntimeStartPromise=null;accountSyncRuntimeStartBinding='';accountSyncEligibleUid='';accountSyncCanonicalEntities=[];
+  managedAccountSyncRuntime=null;accountSyncRuntimeStartPromise=null;accountSyncRuntimeStartBinding='';accountSyncEligibleUid='';accountSyncCanonicalEntities=[];accountSyncInitialProviderProfile={};
   const stopping=(async()=>{if(runtime)await runtime.stop();else await pending?.catch(()=>{});})();
   accountSyncRuntimeStopPromise=stopping;
   return stopping.finally(()=>{if(accountSyncRuntimeStopPromise===stopping)accountSyncRuntimeStopPromise=null;});
 }
 async function ensureAccountSyncRuntime(){
   const uid=auth?.currentUser?.uid,username=cur;
+  const initialProviderProfile=accountSyncClone(accountSyncInitialProviderProfile||{});
   const eligible=await accountSyncRolloutEligible(uid);
   if(accountSyncRuntimeStopPromise)await accountSyncRuntimeStopPromise;
   if(uid!==auth?.currentUser?.uid||username!==cur)return Object.freeze({ok:false,status:'session-changed'});
@@ -3117,9 +3146,11 @@ async function ensureAccountSyncRuntime(){
     runtime=accountSyncRuntimeData.createAccountSyncRuntime({
       ownerUid:uid,username,journal,repository,enabled:ACCOUNT_SYNC_ROLLOUT.enabled,writesEnabled:ACCOUNT_SYNC_ROLLOUT.writesEnabled,allowlistedUids:[uid],
       initializationKind,
+      initialProviderProfile:initializationKind==='provider-only'?initialProviderProfile:{},
       readMigrationSources:accountSyncReadLegacySources,
       onState:state=>{if(currentSession()){accountSyncUiState=state;accountSyncClearStaleRecoveryPresentation();refreshSyncUi();}},
       onCanonicalEntities:entities=>currentSession()?applyAccountSyncCanonicalEntities(entities):false,
+      onProviderProfile:profile=>currentSession()?applyAccountSyncProviderProfile(profile):false,
       onPublicProjection:acceptedRows=>currentSession()?publishAccountSyncProjection(acceptedRows):Promise.reject(Object.assign(new Error('Account sync session changed before publication'),{code:'account-sync/session-changed'})),
       onMigrationState:detail=>{if(currentSession()){accountSyncMigrationState=detail.state;refreshSyncUi();}}
     });
@@ -3127,6 +3158,7 @@ async function ensureAccountSyncRuntime(){
     try{
       const result=await runtime.start();
       if(!currentSession()){await runtime.stop();return Object.freeze({ok:false,status:'session-changed'});}
+      accountSyncInitialProviderProfile={};
       accountSyncUiState=await runtime.snapshot();accountSyncClearStaleRecoveryPresentation();refreshSyncUi();
       if(!accountSyncProjectionReady())return Object.freeze({ok:false,status:'runtime-unhealthy'});
       if(initializationKind==='legacy-migration')retireMigratedLegacyListQueue();return result;
@@ -3352,8 +3384,10 @@ async function writeListSerialized(type,u,requested,{base,orderModel,session}={}
   s.users[u]={...s.users[u],lastUpdated:now,lastSeen:now};
   saveLocal(s);
   if(fbOn&&db){
-    queueSync(`users/${u}/lastUpdated`,now);
-    queueSync(`users/${u}/lastSeen`,now);
+    if(!providerOnlyIdentityActive()){
+      queueSync(`users/${u}/lastUpdated`,now);
+      queueSync(`users/${u}/lastSeen`,now);
+    }
     if(u===cur)requestPublicSharePublication('owned_list_edit',s,u);
   }
   syncFromLocal();
@@ -3391,7 +3425,7 @@ async function bumpLastSeen(){
   if(!s.users[cur])return;
   s.users[cur]={...s.users[cur],lastSeen:now};
   saveLocal(s);
-  if(fbOn&&db)queueSync(`users/${cur}/lastSeen`,now);
+  if(fbOn&&db&&!providerOnlyIdentityActive())queueSync(`users/${cur}/lastSeen`,now);
 }
 function syncFromLocal(){allData=runtimeDataWithSelectedTrainer(getLocal());refreshAll();}
 function showSkeletonsIfEmpty(){
@@ -8761,6 +8795,12 @@ function updateFcDisplay(){
   if(picker)picker.innerHTML=wallpaperPickerHtml(ud.wallpaper||'mono');
   updateAvatarPreview(ud.avatarPokemon||'');
 }
+function applyAccountSyncProviderProfile(profile){
+  if(!cur||!providerOnlyIdentityActive()||managedAccountSyncRuntime?.ownerUid!==auth?.currentUser?.uid)return false;
+  const values=accountSyncModel.normalizeProfileValues(accountSyncModel.profileValues(profile));if(!values.ok)return false;
+  const s=getLocal();s.users[cur]=normalizedUserRecord(cur,s.users?.[cur],{...values.value,identityKind:'provider_only',legacyAccessConfigured:false,legacyUsername:null});
+  saveLocal(s);allData=runtimeDataWithSelectedTrainer(s);queueRefreshAll('account-sync:provider-profile');return true;
+}
 async function saveProfile(){
   const fc=document.getElementById('fc-inp').value.trim();
   const bio=document.getElementById('prof-bio')?.value.trim()||'';
@@ -8769,8 +8809,15 @@ async function saveProfile(){
   const err=document.getElementById('profile-err');err.textContent='';
   if(fc&&!validateFc(fc)){err.textContent=i18nCore.t('profile.friendCodeInvalid');return;}
   const upd={friendCode:fc,bio,discord,avatarPokemon};
-  await writeUser(cur,upd);
-  requestPublicSharePublication('share_profile_update',getLocal(),cur);
+  if(providerOnlyIdentityActive()){
+    const runtime=managedAccountSyncRuntime;
+    if(!runtime||runtime.ownerUid!==auth?.currentUser?.uid||runtime.profileReady!==true){err.textContent=i18nCore.t('accountSync.errorDetail');return;}
+    const result=await runtime.updateProviderProfile(upd);
+    if(!result.ok&&result.error?.code!=='account-sync/profile-pending'){err.textContent=i18nCore.t('accountSync.errorDetail');return;}
+  }else{
+    await writeUser(cur,upd);
+    requestPublicSharePublication('share_profile_update',getLocal(),cur);
+  }
   updateFcDisplay();
   // Update topbar avatar
   const topAv=document.getElementById('top-av');
@@ -12470,8 +12517,10 @@ async function writeHave(username,inv,opts={}){
   saveLocal(s);
   if(fbOn&&db){
     queueSync(`have/${username}`,inv);
-    queueSync(`users/${username}/lastUpdated`,now);
-    queueSync(`users/${username}/lastSeen`,now);
+    if(!providerOnlyIdentityActive()){
+      queueSync(`users/${username}/lastUpdated`,now);
+      queueSync(`users/${username}/lastSeen`,now);
+    }
   }
   refreshAfterHaveWrite(username,opts.refresh||'all');
   return true;

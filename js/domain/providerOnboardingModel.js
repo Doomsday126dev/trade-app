@@ -7,7 +7,8 @@
   ]);
   const HANDLE_PATTERN=/^[^.#$\/\[\]\u0000-\u001f\u007f]{2,64}$/;
   const STORAGE_KEY='pogoProviderOnboarding:v2';
-  const PERSISTED_FIELDS=Object.freeze(['schemaVersion','uid','lifecycleId','providerKey','status','handle','code']);
+  const UID_DIGEST_VERSION='sha256-v1';
+  const PERSISTED_FIELDS=Object.freeze(['schemaVersion','uidDigestVersion','uidDigest','lifecycleId','providerKey','status','handle','code']);
 
   function failure(code,state='blocked'){const error=new Error(code);error.code=code;error.state=state;return error;}
   function cleanHandle(value){
@@ -25,8 +26,16 @@
     const keys=value&&typeof value==='object'&&!Array.isArray(value)?Object.keys(value).sort():[];
     const expected=[...fields].sort();return keys.length===expected.length&&keys.every((key,index)=>key===expected[index]);
   }
+  function utf8Bytes(value){
+    const encoded=unescape(encodeURIComponent(String(value)));return Uint8Array.from(encoded,character=>character.charCodeAt(0));
+  }
+  async function digestUid(uid,cryptoImpl=global.crypto){
+    if(typeof cryptoImpl?.subtle?.digest!=='function')throw failure('provider-onboarding/digest-unavailable','canceled');
+    const digest=await cryptoImpl.subtle.digest('SHA-256',utf8Bytes(`pogo-provider-onboarding\0${UID_DIGEST_VERSION}\0${uid}`));
+    return Array.from(new Uint8Array(digest),byte=>byte.toString(16).padStart(2,'0')).join('');
+  }
   function createProviderOnboardingModel({authoritySnapshot,checkHandle,createAccount,reconcileAccount,
-    storage=global.localStorage,storageKey=STORAGE_KEY}={}){
+    storage=global.localStorage,storageKey=STORAGE_KEY,crypto=global.crypto}={}){
     if(typeof authoritySnapshot!=='function'||typeof checkHandle!=='function'||!storage||
       typeof storage.getItem!=='function'||typeof storage.setItem!=='function'){
       throw new TypeError('Provider onboarding dependencies are incomplete');
@@ -34,14 +43,14 @@
     let binding=null,profile=null,state=Object.freeze({status:'idle',providerKey:'',handle:'',code:''});
     function persisted(){
       let value=null;try{value=JSON.parse(storage.getItem(storageKey)||'null');}catch{}
-      return exactFields(value,PERSISTED_FIELDS)&&value.schemaVersion===1&&STATES.includes(value.status)&&
-        typeof value.uid==='string'&&value.uid&&/^auth-[1-9][0-9]{0,9}$/.test(value.lifecycleId||'')&&
+      return exactFields(value,PERSISTED_FIELDS)&&value.schemaVersion===2&&value.uidDigestVersion===UID_DIGEST_VERSION&&/^[a-f0-9]{64}$/.test(value.uidDigest||'')&&STATES.includes(value.status)&&
+        /^auth-[1-9][0-9]{0,9}$/.test(value.lifecycleId||'')&&
         typeof value.providerKey==='string'&&typeof value.handle==='string'&&typeof value.code==='string'?value:null;
     }
     function save(next){
       state=Object.freeze({...next});
       if(binding&&state.status!=='idle'){
-        try{storage.setItem(storageKey,JSON.stringify({schemaVersion:1,uid:binding.uid,lifecycleId:binding.lifecycleId,
+        try{storage.setItem(storageKey,JSON.stringify({schemaVersion:2,uidDigestVersion:UID_DIGEST_VERSION,uidDigest:binding.uidDigest,lifecycleId:binding.lifecycleId,
           providerKey:state.providerKey,status:state.status,handle:state.handle,code:state.code}));}catch{}
       }
       return state;
@@ -52,10 +61,12 @@
       if(!authorityCurrent(binding,current))throw failure('provider-onboarding/auth-lifecycle-changed','canceled');
       return current;
     }
-    function begin({providerKey='google'}={}){
-      binding=authority(authoritySnapshot());profile=null;
+    async function begin({providerKey='google'}={}){
+      const initial=authority(authoritySnapshot()),uidDigest=await digestUid(initial.uid,crypto),current=authority(authoritySnapshot());
+      if(!authorityCurrent(initial,current))throw failure('provider-onboarding/auth-lifecycle-changed','canceled');
+      binding=Object.freeze({...current,uidDigest});profile=null;
       const key=String(providerKey||''),prior=persisted();
-      if(prior&&prior.uid===binding.uid&&prior.lifecycleId===binding.lifecycleId&&prior.providerKey===key){
+      if(prior&&prior.uidDigest===binding.uidDigest&&prior.lifecycleId===binding.lifecycleId&&prior.providerKey===key){
         const status=['creating','verifying','ambiguous-result'].includes(prior.status)?'ambiguous-result':
           prior.status==='account-ready'?'checking-account':prior.status;
         return save({status,providerKey:key,handle:prior.handle,code:status==='ambiguous-result'?'provider-onboarding/ambiguous-result':prior.code});
@@ -143,6 +154,6 @@
   }
 
   root.providerOnboardingModel=Object.freeze({
-    STATES,HANDLE_PATTERN,STORAGE_KEY,cleanHandle,authority,authorityCurrent,createProviderOnboardingModel
+    STATES,HANDLE_PATTERN,STORAGE_KEY,UID_DIGEST_VERSION,cleanHandle,authority,authorityCurrent,digestUid,createProviderOnboardingModel
   });
 })(window);

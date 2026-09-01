@@ -30,7 +30,20 @@ test('provider-only activation creates no legacy identity projection and starts 
   assert.match(source,/legacyAccessConfigured:false,legacyUsername:null/);
   assert.match(source,/if\(!providerOnly\)local\.authIndex\[uid\]/);
   assert.ok(source.indexOf('activeCanonicalIdentity=')<source.indexOf('ensureAccountSyncRuntime()'));
+  assert.match(source,/providerOnly&&\(!runtimeResult\?\.ok[\s\S]+managedAccountSyncRuntime\.profileReady!==true[\s\S]+!accountSyncProjectionReady\(\)\)/);
   assert.doesNotMatch(source,/(?:set|update|push)\(ref\(db,`(?:authIndex|loginDirectory|users)\//);
+});
+
+test('provider-only profile and activity writes are barred from every legacy identity queue',()=>{
+  const queue=section('function providerOnlyLegacyWritePath','function queueItemIsCurrent');
+  assert.match(queue,/target===`users\/\$\{name\}`/);assert.match(queue,/target===`loginDirectory\/\$\{name\}`/);
+  assert.match(queue,/target===`authIndex\/\$\{owner\}`/);assert.match(queue,/if\(providerOnlyLegacyWritePath\(path\)\)return false/);
+  const flush=section('async function flushSyncQueue','function showSyncDot');
+  assert.match(flush,/if\(providerOnlyLegacyWritePath\(item\?\.path\|\|path\)\)[\s\S]+delete syncQueue\[path\]/);
+  const listWrite=section('async function writeListSerialized','async function writeListItem');
+  assert.match(listWrite,/if\(!providerOnlyIdentityActive\(\)\)\{[\s\S]+users\/\$\{u\}\/lastUpdated[\s\S]+users\/\$\{u\}\/lastSeen/);
+  const profileWrite=section('async function saveProfile','async function savePinSettings');
+  assert.match(profileWrite,/if\(providerOnlyIdentityActive\(\)\)[\s\S]+runtime\.updateProviderProfile\(upd\)[\s\S]+else\{[\s\S]+writeUser\(cur,upd\)/);
 });
 
 test('provider-only sessions skip legacy protected list and pending-decrement subscriptions',()=>{
