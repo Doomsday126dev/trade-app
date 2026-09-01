@@ -1301,7 +1301,7 @@ function ensureProviderPublicShareClient(){
   if(managedProviderPublicShareClient)return managedProviderPublicShareClient;
   if(!fbApp)throw providerFailure('provider-public/dependencies-invalid');
   managedProviderPublicShareClient=providerPublicShareGatewayService.createProviderPublicShareClient({
-    firebaseApp:fbApp,firebaseAppCheckReady,enabled:true,
+    firebaseApp:fbApp,auth,firebaseAppCheckReady,enabled:true,
     importFunctionsSdk:()=>import('https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js')
   });
   return managedProviderPublicShareClient;
@@ -1782,6 +1782,9 @@ function resetSessionTransientUi(reason='session_boundary'){
   if(typeof e1ClientFoundationCanary!=='undefined'&&e1ClientFoundationCanary){e1ClientFoundationCanary.close();e1ClientFoundationCanary=null;}
   if(providerAccountFoundationClient){providerAccountFoundationClient.close();providerAccountFoundationClient=null;}
   providerIdentityResolutionPromise=null;providerIdentityResolutionBinding='';activeCanonicalIdentity=null;
+  if(typeof providerTrainerDirectory!=='undefined')providerTrainerDirectory=new Map();
+  if(typeof providerTrainerDirectoryRequests!=='undefined')providerTrainerDirectoryRequests=new Map();
+  if(typeof providerTrainerDirectoryBinding!=='undefined')providerTrainerDirectoryBinding='';
   resetOwnedHydrationState();
 
   if(typeof trainerSuggestionTimer!=='undefined')clearTimeout(trainerSuggestionTimer);
@@ -3145,14 +3148,33 @@ function accountSyncCatalogIdentity(type,name,raw={}){
 function accountSyncOrdersSnapshot(){
   return Object.fromEntries(OWNED_MY_LIST_TYPES.map(type=>[type,readMyListOrder(type,cur)||{priorities:{H:[],M:[],L:[],U:[]}}]));
 }
-function accountSyncExactFavoriteUid(displayName,raw={},account={}){
+async function resolveCanonicalFavoriteIdentity(displayName,expectedTargetUid=''){
+  if(!PROVIDER_CAPABILITIES.providerPublicReadSupport||!auth?.currentUser?.uid)return null;
+  const result=await ensureProviderPublicShareClient()?.resolveFavorite?.({trainerHandle:displayName,expectedTargetUid});
+  return result?.ok?Object.freeze({targetUid:result.targetUid,canonicalTrainerName:result.canonicalTrainerName}):null;
+}
+function resolveLegacyFavoriteIdentity(displayName,expectedTargetUid=''){
+  const canonicalTrainerName=String(displayName||'').normalize('NFC').trim();
+  const targetUid=accountSyncProduct.exactFavoriteTargetUid(canonicalTrainerName,{users:allData.users||{},authIndex:allData.authIndex||{}});
+  if(!targetUid||expectedTargetUid&&targetUid!==expectedTargetUid)return null;
+  return Object.freeze({targetUid,canonicalTrainerName});
+}
+async function resolveFavoriteIdentityForSession(displayName,expectedTargetUid=''){
+  return PROVIDER_CAPABILITIES.providerPublicReadSupport
+    ?resolveCanonicalFavoriteIdentity(displayName,expectedTargetUid)
+    :resolveLegacyFavoriteIdentity(displayName,expectedTargetUid);
+}
+async function accountSyncExactFavoriteUid(displayName,raw={},account={}){
   const candidate=accountSyncModel.firebaseKey(raw?.targetUid,128);
+  let expected='';
   if(candidate){
     const canonical=account?.favorites?.[candidate]||managedAccountSyncRuntime?.controller.getEntity('favorite',candidate);
-    if(canonical?.identity?.targetUid===candidate&&canonical?.values?.displayName===displayName)return candidate;
-    if(allData.users?.[displayName]?.authUid===candidate&&allData.authIndex?.[candidate]?.username===displayName)return candidate;
+    if(canonical?.identity?.targetUid===candidate&&canonical?.values?.displayName===displayName)expected=candidate;
+    else if(allData.users?.[displayName]?.authUid===candidate&&allData.authIndex?.[candidate]?.username===displayName)expected=candidate;
   }
-  return accountSyncProduct.exactFavoriteTargetUid(displayName,{users:allData.users,authIndex:allData.authIndex});
+  expected||=accountSyncProduct.exactFavoriteTargetUid(displayName,{users:allData.users,authIndex:allData.authIndex})||'';
+  try{return(await resolveFavoriteIdentityForSession(displayName,expected))?.targetUid||null;}
+  catch{return null;}
 }
 async function accountSyncReadLegacySources({account}={}){
   const uid=auth?.currentUser?.uid,username=cur;
@@ -4936,6 +4958,9 @@ let trainerSuggestionItems=[];
 let trainerSuggestionIndex=-1;
 let trainerSuggestionQuery='';
 let trainerSuggestionGeneration=0;
+let providerTrainerDirectory=new Map();
+let providerTrainerDirectoryRequests=new Map();
+let providerTrainerDirectoryBinding='';
 let eventTypeFilter='all';
 let eventCalendarDate='';
 let eventCalendarAnchor=new Date(new Date().getFullYear(),new Date().getMonth(),1);
@@ -4959,8 +4984,24 @@ function ensureFavoriteShareSessionCache(){
   const uid=auth?.currentUser?.uid;
   if(!uid||!cur||!managedPublicShareRepository)return null;
   if(!favoriteShareSessionCache){
+    const favoriteRepository=Object.freeze({
+      async read(displayName,{targetUid=''}={}){
+        if(!targetUid)return managedPublicShareRepository.read(displayName);
+        let identity;
+        try{identity=await resolveFavoriteIdentityForSession(displayName,targetUid);}
+        catch(error){return{ok:false,error:{code:String(error?.code||'favorite-identity/unavailable')}};}
+        if(!identity)return{ok:false,error:{code:'favorite-identity/not-found'}};
+        if(!PROVIDER_CAPABILITIES.providerPublicReadSupport)return managedPublicShareRepository.read(identity.canonicalTrainerName);
+        let provider;
+        try{provider=await ensureProviderPublicShareClient().read(identity.canonicalTrainerName);}
+        catch(error){return{ok:false,error:{code:String(error?.code||'provider-public/unavailable')}};}
+        if(provider?.ok)return{ok:true,value:provider.snapshot};
+        if(provider?.status!=='not_found')return{ok:false,error:{code:`provider-public/${provider?.status||'unavailable'}`}};
+        return managedPublicShareRepository.read(identity.canonicalTrainerName);
+      }
+    });
     favoriteShareSessionCache=favoriteShareSessionCacheData.createFavoriteShareSessionCache({
-      repository:managedPublicShareRepository,
+      repository:favoriteRepository,
       validateProjection:publicSharePublicationDomain.publicShareProjectionStatus,
       projectSnapshot:favoritePokemonBrowseDomain.projectSnapshot,
       concurrency:4,maxFavorites:favoriteShareSessionCacheData.DEFAULT_MAX_FAVORITES
@@ -5095,6 +5136,45 @@ function trainerSearchFocused(input){
 }
 window.visualViewport?.addEventListener('resize',()=>document.getElementById('find-trainer-suggestions')?.classList.contains('open')&&positionTrainerSuggestions());
 window.visualViewport?.addEventListener('scroll',()=>document.getElementById('find-trainer-suggestions')?.classList.contains('open')&&positionTrainerSuggestions());
+function providerTrainerDirectorySession(){
+  const uid=auth?.currentUser?.uid||'';
+  return PROVIDER_CAPABILITIES.providerPublicReadSupport&&uid?`${uid}:${_sessionTransientGeneration}`:'';
+}
+function rememberProviderTrainerHandles(handles=[]){
+  for(const name of handles){const display=String(name||'').normalize('NFKC').trim(),key=trainerDiscoveryDomain.fold(display);if(display&&key)providerTrainerDirectory.set(key,display);}
+}
+async function loadProviderTrainerDirectoryQuery(query){
+  const binding=providerTrainerDirectorySession();if(!binding)return;
+  if(providerTrainerDirectoryBinding!==binding){providerTrainerDirectory=new Map();providerTrainerDirectoryRequests=new Map();providerTrainerDirectoryBinding=binding;}
+  const normalized=trainerDiscoveryDomain.fold(query),key=normalized||'__initial__';
+  if(providerTrainerDirectoryRequests.has(key))return providerTrainerDirectoryRequests.get(key);
+  const pending=(async()=>{
+    const client=ensureProviderPublicShareClient();if(!client?.listDirectory)return;
+    let cursor=null,pages=0;
+    do{
+      const result=await client.listDirectory({query:normalized,cursor,pageSize:25});
+      if(providerTrainerDirectorySession()!==binding)throw providerFailure('provider-public/session-changed');
+      if(!result?.ok){if(result?.status==='disabled')return;throw providerFailure('provider-public/directory-unavailable');}
+      rememberProviderTrainerHandles(result.handles);cursor=result.nextCursor;pages++;
+    }while(cursor&&normalized&&pages<2);
+  })().catch(error=>{providerTrainerDirectoryRequests.delete(key);throw error;});
+  providerTrainerDirectoryRequests.set(key,pending);return pending;
+}
+async function ensureProviderTrainerDirectory(value){
+  if(!providerTrainerDirectorySession())return;
+  const folded=trainerDiscoveryDomain.fold(value),characters=Array.from(folded);
+  if(characters.length<2)return;
+  const prefix=characters.slice(0,2).join('');
+  await Promise.allSettled([...new Set(['',prefix,folded])].map(query=>loadProviderTrainerDirectoryQuery(query)));
+}
+function combinedTrainerDirectoryNames(){
+  const names=new Map();
+  Object.keys(allData.loginDirectory||{}).forEach(name=>names.set(trainerDiscoveryDomain.fold(name),name));
+  providerTrainerDirectory.forEach((name,key)=>names.set(key,name));
+  const state=ensureTrainerHistoryStore()?.read?.();
+  [...(state?.favorites||[]),...(state?.recent||[])].forEach(item=>{const name=String(item?.displayName||'').trim();if(name)names.set(trainerDiscoveryDomain.fold(name),name);});
+  return[...names.values()];
+}
 function trainerSuggestionOptions(){
   const store=ensureTrainerHistoryStore(),state=store?.read?.();
   return{
@@ -5105,7 +5185,7 @@ function trainerSuggestionOptions(){
 }
 function rankedTrainerSuggestions(value){
   if(!requireCompatibleTrainerSearch())return[];
-  return trainerDiscoveryDomain.trainerSuggestions(Object.keys(allData.loginDirectory||{}),value,trainerSuggestionOptions());
+  return trainerDiscoveryDomain.trainerSuggestions(combinedTrainerDirectoryNames(),value,trainerSuggestionOptions());
 }
 function trainerSuggestionHtml(item,index){
   const highlighted=item.matchStart>=0?`${escHtml(item.name.slice(0,item.matchStart))}<mark>${escHtml(item.name.slice(item.matchStart,item.matchStart+item.matchLength))}</mark>${escHtml(item.name.slice(item.matchStart+item.matchLength))}`:escHtml(item.name);
@@ -5127,8 +5207,8 @@ function renderTrainerSuggestions(value,generation=trainerSuggestionGeneration){
   box.innerHTML=trainerSuggestionItems.map(trainerSuggestionHtml).join('');box.classList.add('open');document.querySelector('.trainer-search-shell')?.classList.add('suggestions-open');positionTrainerSuggestions();input.setAttribute('aria-expanded','true');
   input.setAttribute('aria-activedescendant','trainer-suggestion-0');if(status)status.textContent=i18nCore.t(trainerSuggestionItems[0].matchType==='exact'?'trainer.exactMatch':'trainer.partialMatches',{count:i18nCore.formatNumber(trainerSuggestionItems.length)});
 }
-function settleTrainerSuggestions(value,generation){
-  try{renderTrainerSuggestions(value,generation);}
+async function settleTrainerSuggestions(value,generation){
+  try{await ensureProviderTrainerDirectory(value);renderTrainerSuggestions(value,generation);}
   catch(error){
     const input=document.getElementById('find-trainer-input'),status=document.getElementById('find-trainer-status');
     if(generation!==trainerSuggestionGeneration||trainerDiscoveryDomain.fold(input?.value)!==trainerDiscoveryDomain.fold(value))return;
@@ -5156,7 +5236,7 @@ function selectTrainerSuggestion(index){
   const input=document.getElementById('find-trainer-input');if(input)input.value=item.name;syncTrainerSearchClear(item.name);
   closeTrainerSuggestions();openTrainerPublicShare(item.name);
 }
-function trainerSearchKeydown(event){
+async function trainerSearchKeydown(event){
   if(!requireCompatibleTrainerSearch()){event.preventDefault();return;}
   if(event.key==='ArrowDown'||event.key==='ArrowUp'){
     if(trainerSuggestionQuery!==trainerDiscoveryDomain.fold(event.currentTarget.value))renderTrainerSuggestions(event.currentTarget.value);
@@ -5169,7 +5249,12 @@ function trainerSearchKeydown(event){
   if(event.key==='Enter'){
     event.preventDefault();clearTimeout(trainerSuggestionTimer);
     let best;
-    try{best=trainerDiscoveryDomain.bestTrainerSuggestion(Object.keys(allData.loginDirectory||{}),event.currentTarget.value,trainerSuggestionOptions());}
+    try{
+      let lookup=event.currentTarget.value;
+      try{const parsed=new URL(String(lookup||''),location.href);lookup=parsed.searchParams.get('view')||lookup;}catch{}
+      await ensureProviderTrainerDirectory(lookup);
+      best=trainerDiscoveryDomain.bestTrainerSuggestion(combinedTrainerDirectoryNames(),event.currentTarget.value,trainerSuggestionOptions());
+    }
     catch(error){showTrainerSearchError();return;}
     if(best){event.currentTarget.value=best.name;closeTrainerSuggestions();openTrainerPublicShare(best.name);}
     else openTrainerPublicShare(event.currentTarget.value);
@@ -5366,7 +5451,7 @@ function favoriteTrainerAction(event){
     const index=Number.parseInt(control.dataset.favoriteIndex||'',10);if(Number.isSafeInteger(index)&&index>=0)selectFavoriteBrowsePokemon(index);return;
   }
   const action=control.dataset.trainerAction,username=control.closest('[data-trainer]')?.dataset.trainer||control.dataset.trainer||'';
-  if(action==='open')openTrainerByName(username);
+  if(action==='open')openFavoriteTrainerByName(username);
   else if(action==='organize')openTrainerOrganizer(username,control);
   else if(action==='organize-menu')openFavoriteTagsFromMenu(control,username);
   else if(action==='remove')removeTrainerFavorite(username);
@@ -5421,8 +5506,9 @@ async function renderTrainerQuickLists({preserveFavoriteControls=false,favorites
   recentEl.innerHTML=`${recentHeading}${state.recent.length?`<div class="recent-trainer-list">${state.recent.map(item=>`<button type="button" class="recent-trainer-row card-row" data-trainer="${escAttr(item.displayName)}" data-trainer-action="open" aria-label="${escAttr(i18nCore.t('trainer.openTrainerNamed',{trainer:item.displayName}))}"><span class="trainer-quick-main"><span class="trainer-quick-name recent-trainer-name type-card">${escHtml(item.displayName)}</span><span class="trainer-quick-meta recent-trainer-recency type-meta">${escHtml(trainerViewedText(item.openedAt))}</span></span><span class="recent-trainer-chevron" aria-hidden="true">${uiIconMarkup('chevron-right','ui-icon ui-icon-sm')}</span></button>`).join('')}</div>`:`${emptyHtml(i18nCore.t('trainer.noRecents'),i18nCore.t('trainer.noRecentsHelp'),'activity')}`}`;
   renderFavoriteBrowseResults();
 }
-function accountSyncFavoriteUid(username){
-  return accountSyncProduct.exactFavoriteTargetUid(username,{users:allData.users||{},authIndex:allData.authIndex||{}});
+async function accountSyncFavoriteIdentity(username){
+  const expected=accountSyncProduct.exactFavoriteTargetUid(username,{users:allData.users||{},authIndex:allData.authIndex||{}})||'';
+  return resolveFavoriteIdentityForSession(username,expected);
 }
 async function completeUnresolvedFavoriteReview(username,runtime=managedAccountSyncRuntime){
   if(!runtime?.listRecoveryCandidates||!runtime?.completeRecoveryReview)return accountSyncModel.failure('account-sync/runtime-unavailable','Cross-device sync runtime is unavailable');
@@ -5452,9 +5538,11 @@ async function toggleTrainerFavorite(username){
   if(!accountSyncAuthorityCurrent(authority)){toast(i18nCore.t('organizer.saveFailed'));return;}
   let result;
   if(authority.mode==='canonical'){
-    const targetUid=accountSyncFavoriteUid(username);
-    if(!targetUid){toast(i18nCore.t('organizer.favoriteSyncUnavailable',{trainer:username}),6000);return;}
-    const queued=await authority.controller.addEntity({entityType:'favorite',entityId:targetUid,identity:{targetUid},values:{displayName:String(username||'').normalize('NFC').trim()}});
+    let identity;
+    try{identity=await accountSyncFavoriteIdentity(username);}catch{}
+    if(!identity){toast(i18nCore.t('organizer.favoriteSyncUnavailable',{trainer:username}),6000);return;}
+    const targetUid=identity.targetUid,displayName=identity.canonicalTrainerName;
+    const queued=await authority.controller.addEntity({entityType:'favorite',entityId:targetUid,identity:{targetUid},values:{displayName}});
     if(!queued?.ok||!accountSyncAuthorityCurrent(authority)){toast(i18nCore.t('organizer.saveFailed'));return;}
     result={ok:true,state:store.read()};
   }else result=store.saveFavoriteOrganization(username);
@@ -5468,6 +5556,16 @@ async function toggleTrainerFavorite(username){
     catch(error){if(error?.code!=='favorite-cache/session-changed')console.warn('Could not update active Favorite Browse index',error);}
     renderFavoriteBrowseResults();
   }
+}
+async function openFavoriteTrainerByName(username){
+  const favorite=ensureTrainerHistoryStore()?.favoriteFor?.(username);
+  if(favorite?.targetUid){
+    let identity;
+    try{identity=await resolveFavoriteIdentityForSession(favorite.displayName,favorite.targetUid);}catch{}
+    if(!identity){toast(i18nCore.t('organizer.favoriteSyncUnavailable',{trainer:favorite.displayName}),6000);return;}
+    return openTrainerByName(identity.canonicalTrainerName);
+  }
+  return openTrainerByName(username);
 }
 function showFavoriteSavedPrompt(username){
   const prompt=document.getElementById('favorite-saved-prompt'),message=document.getElementById('favorite-saved-message'),button=document.getElementById('favorite-saved-organize');if(!prompt||!message||!button)return;
@@ -5598,7 +5696,7 @@ function openTrainerByName(username){
 function publicShareRequestFromInput(value){
   const raw=String(value||'').trim();
   if(!raw)return null;
-  const canonical=value=>Object.keys(allData.loginDirectory||{}).find(name=>trainerDiscoveryDomain.fold(name)===trainerDiscoveryDomain.fold(value))||String(value||'').trim();
+  const canonical=value=>combinedTrainerDirectoryNames().find(name=>trainerDiscoveryDomain.fold(name)===trainerDiscoveryDomain.fold(value))||String(value||'').trim();
   try{
     const url=new URL(raw,location.href);
     const username=url.searchParams.get('view');
@@ -5611,14 +5709,19 @@ function resolvedTrainerSearchValue(value){
   if(!requireCompatibleTrainerSearch())return'';
   const raw=String(value||'').trim();if(!raw)return raw;
   try{const url=new URL(raw,location.href);if(url.searchParams.get('view'))return raw;}catch{}
-  return trainerDiscoveryDomain.bestTrainerSuggestion(Object.keys(allData.loginDirectory||{}),raw,trainerSuggestionOptions())?.name||raw;
+  return trainerDiscoveryDomain.bestTrainerSuggestion(combinedTrainerDirectoryNames(),raw,trainerSuggestionOptions())?.name||raw;
 }
 async function openTrainerPublicShare(value){
   if(!requireCompatibleTrainerSearch())return;
   clearTimeout(trainerSuggestionTimer);
   const requested=value||document.getElementById('find-trainer-input')?.value;
   let resolved;
-  try{resolved=resolvedTrainerSearchValue(requested);}
+  try{
+    let lookup=requested;
+    try{const parsed=new URL(String(requested||''),location.href);lookup=parsed.searchParams.get('view')||requested;}catch{}
+    await ensureProviderTrainerDirectory(lookup);
+    resolved=resolvedTrainerSearchValue(requested);
+  }
   catch(error){showTrainerSearchError();return;}
   const input=document.getElementById('find-trainer-input');
   if(input&&resolved&&!String(resolved).includes('?view='))input.value=resolved;

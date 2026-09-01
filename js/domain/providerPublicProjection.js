@@ -6,6 +6,7 @@
   const REQUIRED_STORED_FIELDS=Object.freeze(STORED_FIELDS.filter(field=>field!=='lists'));
   const PUBLIC_FIELDS=Object.freeze(['lists','profile','publishedListTypes','updatedAt','username','version']);
   const PROFILE_FIELDS=Object.freeze(['avatarPokemon','bio','discord','friendCode','lastUpdated']);
+  const PROFILE_TEXT_LIMITS=Object.freeze({friendCode:14,bio:120,discord:40,avatarPokemon:120});
   const ENTRY_FIELDS=Object.freeze(['backgroundId','lucky','mod','p','shiny','xxl','xxs']);
   const PRIORITIES=new Set(['H','M','L']);
   const BACKGROUND_ID=/^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
@@ -65,8 +66,9 @@
     return Object.freeze(lists);
   }
   function validProfile(value){
-    return exact(value,PROFILE_FIELDS)&&safeString(value.friendCode,32)&&safeString(value.bio,120)&&
-      safeString(value.discord,40)&&safeString(value.avatarPokemon,80)&&safeTime(value.lastUpdated);
+    return exact(value,PROFILE_FIELDS)&&safeString(value.friendCode,PROFILE_TEXT_LIMITS.friendCode)&&
+      safeString(value.bio,PROFILE_TEXT_LIMITS.bio)&&safeString(value.discord,PROFILE_TEXT_LIMITS.discord)&&
+      safeString(value.avatarPokemon,PROFILE_TEXT_LIMITS.avatarPokemon)&&safeTime(value.lastUpdated);
   }
   function publicSnapshotStatus(value,{trainerName}={}){
     const expected=String(trainerName||'').trim(),lists=exact(value,PUBLIC_FIELDS)?validatedLists(value.lists):null;
@@ -115,5 +117,5 @@
     const content=value=>({username:value.username,profile:value.profile,lists:value.lists,publishedListTypes:value.publishedListTypes});
     return canonical(content(incoming.snapshot))===canonical(content(stored.snapshot));
   }
-  root.providerPublicProjection=Object.freeze({DANGEROUS_KEYS,LIST_TYPES,MAX_PROJECTION_BYTES,PUBLIC_FIELDS,REQUIRED_STORED_FIELDS,STORED_FIELDS,nextProjection,projectionContentMatches,publicSnapshotStatus,storedProjectionStatus});
+  root.providerPublicProjection=Object.freeze({DANGEROUS_KEYS,LIST_TYPES,MAX_PROJECTION_BYTES,PROFILE_TEXT_LIMITS,PUBLIC_FIELDS,REQUIRED_STORED_FIELDS,STORED_FIELDS,nextProjection,projectionContentMatches,publicSnapshotStatus,storedProjectionStatus});
 })(window);

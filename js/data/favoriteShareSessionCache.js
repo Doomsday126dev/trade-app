@@ -24,7 +24,7 @@
     maxFavorites=Math.max(0,Number(maxFavorites)||DEFAULT_MAX_FAVORITES);
     readDeadlineMs=Math.max(1,Number(readDeadlineMs)||DEFAULT_READ_DEADLINE_MS);
     let activeIdentity='',generation=0,activeReads=0;
-    let records=new Map(),inflight=new Map(),physicalReads=new Map(),readEpochs=new Map(),candidateKeys=new Set(),queue=[],activeEntries=new Set();
+    let records=new Map(),inflight=new Map(),physicalReads=new Map(),readEpochs=new Map(),candidateKeys=new Set(),candidateBindings=new Map(),queue=[],activeEntries=new Set();
     const queueBlocked=Object.freeze({ok:false,error:Object.freeze({code:'favorite-cache/queue-blocked'})});
 
     function pump(){
@@ -57,24 +57,33 @@
     function activate(identity){
       const next=identityKey(identity);
       if(next===activeIdentity)return false;
-      cancelQueued();activeIdentity=next;generation++;records=new Map();inflight=new Map();physicalReads=new Map();readEpochs=new Map();candidateKeys=new Set();
+      cancelQueued();activeIdentity=next;generation++;records=new Map();inflight=new Map();physicalReads=new Map();readEpochs=new Map();candidateKeys=new Set();candidateBindings=new Map();
       return true;
     }
     function requireActive(){if(!activeIdentity)throw new Error('Favorite-share cache session is inactive');}
+    function bindCandidate(key,targetUid){
+      if(candidateBindings.has(key)&&candidateBindings.get(key)!==targetUid){
+        records.delete(key);inflight.delete(key);physicalReads.delete(key);
+        readEpochs.set(key,(readEpochs.get(key)||0)+1);
+      }
+      candidateBindings.set(key,targetUid);
+    }
     function syncFavorites(favorites=[]){
       requireActive();
       const unique=new Map();
       for(const favorite of favorites||[]){
-        const displayName=normalizedText(favorite?.displayName),key=trainerKey(favorite?.key||displayName);
-        if(displayName&&key&&!unique.has(key))unique.set(key,{key,displayName});
+        const displayName=normalizedText(favorite?.displayName),key=trainerKey(favorite?.key||displayName),targetUid=normalizedText(favorite?.targetUid);
+        if(displayName&&key&&!unique.has(key))unique.set(key,{key,displayName,targetUid});
       }
       if(unique.size>maxFavorites)throw new RangeError(`Favorite-share cache supports at most ${maxFavorites} candidates`);
       candidateKeys=new Set(unique.keys());
       for(const key of records.keys())if(!candidateKeys.has(key))records.delete(key);
+      for(const key of candidateBindings.keys())if(!candidateKeys.has(key))candidateBindings.delete(key);
+      for(const favorite of unique.values())bindCandidate(favorite.key,favorite.targetUid);
       return[...unique.values()];
     }
     function unavailableRecord(favorite,status,retryable,error=null){
-      return Object.freeze({trainerKey:favorite.key,displayName:favorite.displayName,status,fetchedAt:Number(now()),updatedAt:null,entries:Object.freeze([]),listSnapshot:null,retryable,error:error?Object.freeze({code:String(error.code||'read-failed')}):null});
+      return Object.freeze({trainerKey:favorite.key,displayName:favorite.displayName,targetUid:favorite.targetUid||'',status,fetchedAt:Number(now()),updatedAt:null,entries:Object.freeze([]),listSnapshot:null,retryable,error:error?Object.freeze({code:String(error.code||'read-failed')}):null});
     }
     function projectFavorite(favorite,result){
       if(!result?.ok)return unavailableRecord(favorite,'transport_error',retryableReadError(result?.error),result?.error);
@@ -82,7 +91,7 @@
       if(!projection?.ok)return unavailableRecord(favorite,String(projection?.status||'projection_unsupported'),false);
       const snapshot=projection.snapshot;
       return Object.freeze({
-        trainerKey:favorite.key,displayName:favorite.displayName,status:projection.status,
+        trainerKey:favorite.key,displayName:favorite.displayName,targetUid:favorite.targetUid||'',status:projection.status,
         fetchedAt:Number(now()),updatedAt:Number(snapshot.updatedAt||0)||null,
         entries:Object.freeze(projectSnapshot(snapshot)),
         listSnapshot:Object.freeze({lists:snapshot.lists,updatedAt:Number(snapshot.updatedAt||0)||null}),
@@ -93,7 +102,7 @@
       let state=physicalReads.get(favorite.key);
       if(!state){state={primary:null,replacement:null};physicalReads.set(favorite.key,state);}
       const slot=replacement?'replacement':'primary';
-      const task=schedule(()=>Promise.resolve().then(()=>repository.read(favorite.displayName)).catch(error=>({ok:false,error:{code:String(error?.code||'firebase/read-failed')}})));
+      const task=schedule(()=>Promise.resolve().then(()=>repository.read(favorite.displayName,{targetUid:favorite.targetUid||''})).catch(error=>({ok:false,error:{code:String(error?.code||'firebase/read-failed')}})));
       const entry={task,replacement};state[slot]=entry;
       const clear=()=>{
         if(state[slot]===entry)state[slot]=null;
@@ -125,10 +134,11 @@
     }
     function readFavorite(favorite,{force=false}={}){
       requireActive();
-      const normalized={key:trainerKey(favorite?.key||favorite?.displayName),displayName:normalizedText(favorite?.displayName)};
+      const normalized={key:trainerKey(favorite?.key||favorite?.displayName),displayName:normalizedText(favorite?.displayName),targetUid:normalizedText(favorite?.targetUid)};
       if(!normalized.key||!normalized.displayName)return Promise.reject(new TypeError('Favorite candidate requires a trainer name'));
       if(!candidateKeys.has(normalized.key)&&candidateKeys.size>=maxFavorites)return Promise.reject(new RangeError(`Favorite-share cache supports at most ${maxFavorites} candidates`));
       candidateKeys.add(normalized.key);
+      bindCandidate(normalized.key,normalized.targetUid);
       if(!force&&records.has(normalized.key))return Promise.resolve(records.get(normalized.key));
       if(inflight.has(normalized.key))return inflight.get(normalized.key);
       const token=generation,retrying=force&&records.get(normalized.key)?.retryable;
@@ -163,7 +173,7 @@
       return Object.freeze({records:Object.freeze(hydrated),summary:summary(syncFavorites(favorites))});
     }
     function summary(favorites=[]){
-      const candidates=(favorites||[]).map(item=>({key:trainerKey(item.key||item.displayName),displayName:item.displayName}));
+      const candidates=(favorites||[]).map(item=>({key:trainerKey(item.key||item.displayName),displayName:item.displayName,targetUid:normalizedText(item?.targetUid)}));
       const values=candidates.map(item=>records.get(item.key)).filter(Boolean);
       return Object.freeze({
         total:candidates.length,checked:values.length,
@@ -180,7 +190,7 @@
       if(!favorites){records.clear();return;}
       for(const favorite of favorites)records.delete(trainerKey(favorite?.key||favorite?.displayName));
     }
-    function reset(){cancelQueued();activeIdentity='';generation++;records=new Map();inflight=new Map();physicalReads=new Map();readEpochs=new Map();candidateKeys=new Set();}
+    function reset(){cancelQueued();activeIdentity='';generation++;records=new Map();inflight=new Map();physicalReads=new Map();readEpochs=new Map();candidateKeys=new Set();candidateBindings=new Map();}
     function peek(favorite){return records.get(trainerKey(favorite?.key||favorite?.displayName))||null;}
     function snapshot(){
       const physicalReferences=[...physicalReads.values()].reduce((count,state)=>count+Number(!!state.primary)+Number(!!state.replacement),0);

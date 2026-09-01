@@ -126,10 +126,10 @@
         ".validate": "!newData.exists() || (newData.hasChildren(['schemaVersion', 'shareVersion', 'trainerName', 'profile', 'publishedListTypes', 'publishedAt', 'updatedAt']) && newData.child('schemaVersion').val() === 1 && newData.child('shareVersion').isNumber() && ((!data.exists() && newData.child('shareVersion').val() === 1) || (data.exists() && newData.child('shareVersion').val() === data.child('shareVersion').val() + 1)) && newData.child('trainerName').isString() && newData.child('trainerName').val().length > 0 && newData.child('trainerName').val().length <= 64 && (!data.exists() || newData.child('trainerName').val() === data.child('trainerName').val()) && newData.child('publishedAt').isNumber() && newData.child('publishedAt').val() > 0 && (!data.exists() || newData.child('publishedAt').val() === data.child('publishedAt').val()) && newData.child('updatedAt').isNumber() && newData.child('updatedAt').val() >= newData.child('publishedAt').val() && (!data.exists() || newData.child('updatedAt').val() > data.child('updatedAt').val()) && newData.child('updatedAt').val() <= now + 300000)",
         "profile": {
           ".validate": "newData.hasChildren(['friendCode', 'bio', 'discord', 'avatarPokemon', 'lastUpdated'])",
-          "friendCode": { ".validate": "newData.isString() && newData.val().length <= 32" },
+          "friendCode": { ".validate": "newData.isString() && newData.val().length <= 14" },
           "bio": { ".validate": "newData.isString() && newData.val().length <= 120" },
           "discord": { ".validate": "newData.isString() && newData.val().length <= 40" },
-          "avatarPokemon": { ".validate": "newData.isString() && newData.val().length <= 80" },
+          "avatarPokemon": { ".validate": "newData.isString() && newData.val().length <= 120" },
           "lastUpdated": { ".validate": "newData.isNumber() && newData.val() >= 0" },
           "$other": { ".validate": false }
         },

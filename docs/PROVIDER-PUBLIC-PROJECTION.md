@@ -1,6 +1,6 @@
 # Provider-Only Public Projection
 
-Status: source and emulator candidate stacked on the Firestore-first provider-account work. Both runtime gates are false by default. Production remains `2026-08-31.86`; production Rules, IAM, data, and provider visibility are unchanged.
+Status: source and emulator candidate stacked on the Firestore-first provider-account work. Every provider capability and backend operation gate is false by default, and the source-controlled compatibility floor still records that no provider-only account exists. Production remains `2026-08-31.86`; production Rules, IAM, data, and provider visibility are unchanged.
 
 ## Decision
 
@@ -13,6 +13,13 @@ trainerShares/{auth.uid}
 The UID is an authorization boundary, not a public identifier. Public URLs remain handle-based. A fixed callable sends the exact handle to the private E.1 authority, which resolves the canonical pair in Firestore and reads only the corresponding public projection. The response never includes the owner UID.
 
 `trainerHandles/{handleKey}` in the E.1 Firestore database remains the sole handle authority. `shareDirectory` is not read, written, activated, or exposed by this flow. Older disabled future-share source remains outside the runtime path and is not a second authority.
+
+The same authority now supplies two additional fixed operations for signed-in product use:
+
+- a bounded, UID-free canonical trainer directory; and
+- an exact Favorite identity resolver that returns a target UID only to an authenticated app user.
+
+Neither operation exposes a collection name, arbitrary query shape, email, provider subject, profile, or private account field.
 
 ## Owner publication
 
@@ -40,7 +47,7 @@ Publication remains blocked until all of these are true:
 - the canonical Firestore account is certified;
 - the session UID still matches Firebase Auth;
 - the provider-only identity is active;
-- the independent browser development gate is true;
+- the independent browser `providerPublicWriteSupport` capability is true;
 - the snapshot passes the existing public projection validator.
 
 Canonical add, edit, delete, and provider-profile mutations request publication only after the private mutation is accepted. An exact content match is reconciled without allocating another `shareVersion`; changed content advances the version transactionally. A temporary public-write failure never rolls back the private account edit. The durable pending publication retries on reconnect, authenticated startup/PWA reopen, and explicit share or retry actions.
@@ -71,22 +78,58 @@ This residual is accepted for the candidate architecture. App Check and the call
 
 ## Legacy compatibility
 
-Provider resolution runs first only while the source-only browser gate is enabled. An exact legacy `publicShares/{username}` lookup remains the compatibility fallback for existing URLs and existing Username/PIN users.
+Provider resolution runs first only while provider public-read support is active. An exact legacy `publicShares/{username}` lookup remains the compatibility fallback for existing URLs and existing Username/PIN users.
 
 The fallback does not infer identity from email, profile, avatar, or display name. A provider gateway failure is bounded and does not widen the RTDB query.
 
+Before the first provider-only account, provider reads may be fully disabled. Legacy Favorites continue to use the existing exact reciprocal `users` and `authIndex` UID binding. Once provider accounts exist, the compatibility floor forces provider account support and provider public reads on even if public entry, linking, creation, and public writes are disabled.
+
+## Canonical trainer discovery
+
+`listE1TrainerDirectory` is a fixed Firebase callable protected by Firebase Auth, limited-use App Check, replay rejection, and a durable per-caller rate limit. The private authority accepts either an empty initial query or a normalized two-to-64-character prefix, a page size from 1 through 25, and either `null` or an authority-signed, query-bound cursor. It performs only the fixed `trainerHandles` query and validates each result against the exact reciprocal active `accounts/{uid}` record before returning canonical trainer names. UIDs and all other metadata are removed before the response crosses the authority boundary.
+
+An empty query returns only the first bounded page and never returns a continuation cursor. Nonempty prefix queries can return signed continuation cursors. The browser loads a bounded initial sample plus the current two-character and full prefixes, at most two pages for each nonempty query. It combines those legitimately returned candidates with legacy `loginDirectory` names and local Favorites/Recents, deduplicates by normalized canonical handle, then applies the existing exact, prefix, token-prefix, substring, and conservative typo ranking locally. This is bounded candidate discovery, not a claim that an arbitrary substring search enumerates the full canonical namespace.
+
+Anonymous users cannot call the directory operation, and browser Firestore access remains denied. No generic Firestore query or parent/database enumeration endpoint exists.
+
+## Favorite identity
+
+The chosen compatibility strategy is **A**: the existing Favorite schema retains `targetUid`, and `resolveE1FavoriteTrainerIdentity` returns that exact UID only to a signed-in, App-Checked app session. The authority normalizes one handle, verifies its exact `trainerHandles` and reciprocal active account pair, rate-limits the caller, and returns only:
+
+```text
+targetUid
+canonicalTrainerName
+```
+
+New Favorites bind the canonical entity ID to that UID. Existing Favorites send their stored UID as `expectedTargetUid`; a handle rebound or collision returns a conflict instead of redirecting the Favorite. Migration, Favorite creation, Favorite opening, share hydration, and Find by Pokemon use the same session-aware resolver. The Favorite share cache includes the target UID in its binding and invalidates cached or in-flight work if that UID changes. The per-user resolver window permits one complete 100-Favorite hydration plus one explicit refresh while remaining bounded by Auth, App Check, replay protection, and the rolling rate limit.
+
+When provider reads are legitimately off before the first provider-only account, the same product paths use the exact reciprocal legacy UID resolver. They do not trust a handle-only public-share lookup. Anonymous public-share responses remain UID-free, and UIDs are never displayed or serialized into a public share.
+
 ## Gates and rollback
 
-Two independent gates are required:
+The backend public-read path retains two independently false-by-default deployment gates:
 
 ```text
 READ_PROVIDER_PUBLIC_SHARE_ENABLED=false
 PROVIDER_PUBLIC_PROJECTION_ENABLED=false
 ```
 
-The browser source additionally defaults `__POGO_PROVIDER_PUBLIC_PROJECTION_DEV__` to false. Historical Group C and Group E flows require the new gates to remain false. Deployment helpers explicitly restore both backend gates to false, and the common rollback plan includes the authority gate.
+The browser uses six explicit capabilities:
 
-Rollback is gate-only: disable the browser, gateway, and authority read paths. Existing `trainerShares` records may remain as inert public projections for review; no legacy mapping or canonical identity must be deleted.
+```text
+providerAccountCompatibility=false
+googlePublicEntry=false
+googleExistingAccountLinking=false
+providerAccountCreation=false
+providerPublicReadSupport=false
+providerPublicWriteSupport=false
+```
+
+The source-controlled `providerAccountsExist` compatibility floor is false before the first provider-only account. After that point it irreversibly forces `providerAccountCompatibility` and `providerPublicReadSupport` true while leaving public Google entry, linking, creation, and public writes independently controllable. The standalone anonymous share client observes the same floor, so hiding Google or disabling enrollment cannot strand an existing provider public URL.
+
+Historical Group C and Group E flows require the candidate backend gates to remain false. Deployment helpers explicitly restore those gates to false, and no production floor or capability is changed in this PR.
+
+Pre-first-account rollback may disable the provider stack completely. Post-first-account rollback may disable new entry, linking, creation, and public writes, but must preserve compatible authority source, provider account reads, the HMAC key ring, and provider public reads. Existing `trainerShares` records may remain available; no legacy mapping or canonical identity is deleted.
 
 ## Candidate Rules contract
 
@@ -103,7 +146,7 @@ The emulator-only candidate Rules prove:
 - exact legacy `publicShares/{username}` remains readable;
 - browser Firestore access to canonical identity remains denied.
 
-Browser, authority, and gateway validators share the same top-level/profile/entry allowlists, four list types, priority values, string bounds, background-ID grammar, timestamp constraints, 2,000-entry aggregate limit, and 512 KiB service boundary. Dynamic Pokemon keys named `__proto__`, `prototype`, or `constructor` are rejected at every boundary, and sanitized dictionaries use null prototypes.
+Browser, authority, and gateway validators share the same top-level/profile/entry allowlists, four list types, priority values, canonical profile limits (`friendCode` 14, `bio` 120, `discord` 40, `avatarPokemon` 120), background-ID grammar, timestamp constraints, 2,000-entry aggregate limit, and 512 KiB service boundary. Invalid canonical profile values fail closed; no boundary silently truncates them. Dynamic Pokemon keys named `__proto__`, `prototype`, or `constructor` are rejected at every boundary, and sanitized dictionaries use null prototypes.
 
 Realtime Database Rules cannot express a cross-list aggregate child count or serialized-byte limit. The candidate Rules enforce every per-node field and length constraint, while the browser refuses an oversized write and both anonymous service boundaries fail closed if a malicious owner bypasses the browser. This is an explicit Rules limitation, not a claim of exact aggregate enforcement.
 

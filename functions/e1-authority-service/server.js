@@ -13,7 +13,7 @@ const {
   groupESubjectHash
 } = require('./readRateLimiters');
 const { validateTarget } = require('./e1TargetContracts');
-const { HandleValidationError, normalizeHandle } = require('./handleNormalization');
+const { HandleValidationError, fold: foldHandle, normalizeHandle } = require('./handleNormalization');
 const { createVerifiedLegacyMappingReader, validatedTarget } = require('./rtdbVerifiedLegacyMappingReader');
 const { createPublicTrainerShareReader } = require('./rtdbPublicTrainerShareReader');
 const { sanitizeProviderPublicProjection } = require('./providerPublicProjection');
@@ -42,6 +42,8 @@ const MUTATION_GATES = Object.freeze([
 ]);
 const RATE_LIMITS = Object.freeze({
   readAccountFoundation: Object.freeze({ limit: 60, windowMs: 15 * 60 * 1000 }),
+  listTrainerDirectory: Object.freeze({ limit: 30, windowMs: 15 * 60 * 1000 }),
+  resolveFavoriteTrainerIdentity: Object.freeze({ limit: 240, windowMs: 15 * 60 * 1000 }),
   createProviderAccountFoundation: Object.freeze({ limit: 3, windowMs: 24 * 60 * 60 * 1000 }),
   reserveTrainerHandle: Object.freeze({ limit: 5, windowMs: 15 * 60 * 1000 }),
   repairAccountFoundation: Object.freeze({ limit: 3, windowMs: 24 * 60 * 60 * 1000 }),
@@ -61,6 +63,9 @@ const SUPPORTED_PROVIDER_ACCOUNT_PROTOCOL_VERSIONS = Object.freeze(new Set([PROV
 const CLIENT_RELEASE = /^\d{4}-\d{2}-\d{2}\.\d+$/u;
 const PROVIDER_AUTH_MAX_AGE_MS = 10 * 60 * 1000;
 const PROVIDER_SUBJECT = /^[A-Za-z0-9_-]{1,512}$/u;
+const DIRECTORY_QUERY_ALLOWED = /^[\p{L}\p{N} _.'-]*$/u;
+const DIRECTORY_QUERY_UNSAFE = /[\u0000-\u001f\u007f\u200b-\u200f\u202a-\u202e\u2060-\u206f\ufeff]/u;
+const DIRECTORY_CURSOR_PART = /^[A-Za-z0-9_-]+$/u;
 const FROZEN_STATUSES = new Set(['frozen', 'blocked', 'conflict', 'conflict-frozen']);
 const MIGRATION_DECISIONS = new Set(['eligible', 'exact-already-migrated']);
 const CONFLICT_REASONS = new Set(['legacy-binding-conflict', 'handle-owner-conflict', 'migration-manifest-conflict']);
@@ -719,6 +724,82 @@ function exactProviderPublicShareRequest(body) {
   }
 }
 
+function normalizeDirectoryQuery(value) {
+  const display = String(value ?? '').normalize('NFKC').trim();
+  const length = Array.from(display).length;
+  if (length > 64 || display && length < 2 || !DIRECTORY_QUERY_ALLOWED.test(display) ||
+      DIRECTORY_QUERY_UNSAFE.test(display)) fail('REQUEST_INVALID');
+  return foldHandle(display);
+}
+
+function compareNormalizedHandles(left, right) {
+  const a = Array.from(left);
+  const b = Array.from(right);
+  const length = Math.min(a.length, b.length);
+  for (let index = 0; index < length; index += 1) {
+    const difference = a[index].codePointAt(0) - b[index].codePointAt(0);
+    if (difference) return difference;
+  }
+  return a.length - b.length;
+}
+
+function directoryCursorMac(configuration, payload) {
+  return crypto.createHmac('sha256', configuration.operatorSubjectHash)
+    .update(`${configuration.projectId}\0trainer-directory-cursor-v1\0${payload}`, 'utf8').digest('base64url');
+}
+
+function encodeDirectoryCursor(configuration, normalizedQuery, afterNormalized) {
+  if (!normalizedQuery || !afterNormalized) return null;
+  const payload = Buffer.from(JSON.stringify({ v: 1, q: normalizedQuery, a: afterNormalized }), 'utf8').toString('base64url');
+  return `${payload}.${directoryCursorMac(configuration, payload)}`;
+}
+
+function decodeDirectoryCursor(configuration, value, normalizedQuery) {
+  if (value === null) return '';
+  if (typeof value !== 'string' || value.length > 1024) fail('REQUEST_INVALID');
+  const parts = value.split('.');
+  if (parts.length !== 2 || !parts.every((part) => DIRECTORY_CURSOR_PART.test(part))) fail('REQUEST_INVALID');
+  const expected = directoryCursorMac(configuration, parts[0]);
+  const actualBytes = Buffer.from(parts[1], 'utf8');
+  const expectedBytes = Buffer.from(expected, 'utf8');
+  if (actualBytes.length !== expectedBytes.length || !crypto.timingSafeEqual(actualBytes, expectedBytes)) fail('REQUEST_INVALID');
+  let decoded;
+  try { decoded = JSON.parse(Buffer.from(parts[0], 'base64url').toString('utf8')); }
+  catch { fail('REQUEST_INVALID'); }
+  exactFields(decoded, ['a', 'q', 'v']);
+  if (decoded.v !== 1 || decoded.q !== normalizedQuery || typeof decoded.a !== 'string' ||
+      !decoded.a.startsWith(normalizedQuery) || normalizeDirectoryQuery(decoded.a) !== decoded.a) fail('REQUEST_INVALID');
+  return decoded.a;
+}
+
+function exactTrainerDirectoryRequest(configuration, body) {
+  exactFields(body, ['cursor', 'pageSize', 'query', 'schemaVersion']);
+  if (body.schemaVersion !== 1 || !Number.isSafeInteger(body.pageSize) || body.pageSize < 1 || body.pageSize > 25 ||
+      typeof body.query !== 'string') fail('REQUEST_INVALID');
+  const normalizedQuery = normalizeDirectoryQuery(body.query);
+  if (!normalizedQuery && body.cursor !== null) fail('REQUEST_INVALID');
+  return Object.freeze({
+    normalizedQuery,
+    afterNormalized: decodeDirectoryCursor(configuration, body.cursor, normalizedQuery),
+    pageSize: body.pageSize
+  });
+}
+
+function exactFavoriteIdentityRequest(body) {
+  exactFields(body, ['expectedTargetUid', 'schemaVersion', 'trainerHandle']);
+  if (body.schemaVersion !== 1 || typeof body.trainerHandle !== 'string' ||
+      typeof body.expectedTargetUid !== 'string' || body.expectedTargetUid && !UID.test(body.expectedTargetUid)) {
+    fail('REQUEST_INVALID');
+  }
+  let handle;
+  try { handle = normalizeHandle(body.trainerHandle); }
+  catch (error) {
+    if (error instanceof HandleValidationError) fail('REQUEST_INVALID');
+    throw error;
+  }
+  return Object.freeze({ handle, expectedTargetUid: body.expectedTargetUid });
+}
+
 function verifiedLegacyFoundation(uid, requestedHandle, legacy) {
   if (legacy?.status === 'mapping-incomplete') fail('MAPPING_INCOMPLETE');
   if (legacy?.status === 'mapping-conflict') fail('MAPPING_CONFLICT');
@@ -930,6 +1011,10 @@ function createHandler(configuration, dependencies = {}) {
   const readPublicIdentity = dependencies.readPublicShareIdentity || (async (input) => {
     authorityStore ||= createDefaultAuthorityStore(configuration);
     return authorityStore.readPublicShareIdentity(input);
+  });
+  const listDirectory = dependencies.listTrainerDirectory || (async (input) => {
+    authorityStore ||= createDefaultAuthorityStore(configuration);
+    return authorityStore.listTrainerDirectory(input);
   });
   const readPublicShare = dependencies.readPublicTrainerShare || ((ownerUid) => publicShareReader.read(ownerUid));
   const repairFoundation = dependencies.repairAccountFoundation || (async (input, options) => {
@@ -1168,6 +1253,108 @@ function createHandler(configuration, dependencies = {}) {
         const [status, code] = mapping[error?.code] || [500, 'INTERNAL_ERROR'];
         log(configuration, 'readProviderPublicShare', code.toLowerCase(), startedAt,
           handleHash ? { handleHash } : {});
+        return json(response, status, { code });
+      }
+    }
+    if (url.pathname === '/v1/list-trainer-directory') {
+      let callerHash;
+      try {
+        if (request.method !== 'POST') fail('METHOD_NOT_ALLOWED');
+        if (!configuration.readProviderPublicShareEnabled) fail('E1_NOT_ENABLED');
+        const directoryRequest = exactTrainerDirectoryRequest(configuration, await parseBody(request));
+        const firebaseIdToken = firebaseTokenHeader(request);
+        const { uid } = await verifyToken(configuration, firebaseIdToken);
+        callerHash = uidHash(configuration, uid);
+        await limitOperation('listTrainerDirectory', callerHash,
+          rateAttemptHash('listTrainerDirectory', callerHash, [directoryRequest.normalizedQuery,
+            directoryRequest.afterNormalized, directoryRequest.pageSize]));
+        const result = await listDirectory(directoryRequest);
+        if (!result || !Array.isArray(result.handles) || result.handles.length > directoryRequest.pageSize ||
+            result.handles.some((entry) => typeof entry?.canonicalTrainerName !== 'string' ||
+              typeof entry?.normalizedTrainerName !== 'string') ||
+            !(result.nextAfterNormalized === null || typeof result.nextAfterNormalized === 'string')) fail('INTERNAL_ERROR');
+        let previous = directoryRequest.afterNormalized;
+        for (const entry of result.handles) {
+          let canonical;
+          try { canonical = normalizeHandle(entry.canonicalTrainerName); }
+          catch { fail('INTERNAL_ERROR'); }
+          if (canonical.normalized !== entry.normalizedTrainerName ||
+              directoryRequest.normalizedQuery && !entry.normalizedTrainerName.startsWith(directoryRequest.normalizedQuery) ||
+              previous && compareNormalizedHandles(entry.normalizedTrainerName, previous) <= 0) fail('INTERNAL_ERROR');
+          previous = entry.normalizedTrainerName;
+        }
+        if (result.nextAfterNormalized !== null &&
+            (!result.handles.length || result.nextAfterNormalized !== result.handles.at(-1).normalizedTrainerName)) {
+          fail('INTERNAL_ERROR');
+        }
+        const handles = result.handles.map((entry) => entry.canonicalTrainerName);
+        const nextCursor = directoryRequest.normalizedQuery
+          ? encodeDirectoryCursor(configuration, directoryRequest.normalizedQuery, result.nextAfterNormalized)
+          : null;
+        log(configuration, 'listTrainerDirectory', 'success', startedAt, {
+          uidHash: callerHash, resultCount: handles.length, hasNextPage: nextCursor !== null
+        });
+        return json(response, 200, { code: 'SUCCESS', directory: { version: 1, handles, nextCursor } });
+      } catch (error) {
+        const mapping = {
+          E1_NOT_ENABLED: [503, 'E1_NOT_ENABLED'], AUTH_REQUIRED: [401, 'AUTH_REQUIRED'], AUTH_INVALID: [401, 'AUTH_INVALID'],
+          REQUEST_INVALID: [400, 'REQUEST_INVALID'], REQUEST_TOO_LARGE: [413, 'REQUEST_INVALID'],
+          METHOD_NOT_ALLOWED: [405, 'METHOD_NOT_ALLOWED'], 'e1/rate-limit-exceeded': [429, 'RATE_LIMITED'],
+          'e1/directory-input-invalid': [400, 'REQUEST_INVALID'],
+          'e1/directory-identity-conflict': [409, 'DIRECTORY_IDENTITY_CONFLICT']
+        };
+        const [status, code] = mapping[error?.code] || [500, 'INTERNAL_ERROR'];
+        log(configuration, 'listTrainerDirectory', code.toLowerCase(), startedAt,
+          callerHash ? { uidHash: callerHash } : {});
+        return json(response, status, { code });
+      }
+    }
+    if (url.pathname === '/v1/resolve-favorite-trainer-identity') {
+      let callerHash;
+      let handleHash;
+      try {
+        if (request.method !== 'POST') fail('METHOD_NOT_ALLOWED');
+        if (!configuration.readProviderPublicShareEnabled) fail('E1_NOT_ENABLED');
+        const favoriteRequest = exactFavoriteIdentityRequest(await parseBody(request));
+        const firebaseIdToken = firebaseTokenHeader(request);
+        const { uid } = await verifyToken(configuration, firebaseIdToken);
+        callerHash = uidHash(configuration, uid);
+        handleHash = handleCorrelationHash(configuration, favoriteRequest.handle.handleKey);
+        await limitOperation('resolveFavoriteTrainerIdentity', callerHash,
+          rateAttemptHash('resolveFavoriteTrainerIdentity', callerHash,
+            [favoriteRequest.handle.handleKey, favoriteRequest.expectedTargetUid]));
+        const identity = await readPublicIdentity({
+          canonicalTrainerName: favoriteRequest.handle.display,
+          normalizedTrainerName: favoriteRequest.handle.normalized,
+          handleKey: favoriteRequest.handle.handleKey
+        });
+        if (!identity) {
+          log(configuration, 'resolveFavoriteTrainerIdentity', 'not_found', startedAt,
+            { uidHash: callerHash, handleHash });
+          return json(response, 200, { code: 'TARGET_NOT_FOUND' });
+        }
+        if (favoriteRequest.expectedTargetUid && favoriteRequest.expectedTargetUid !== identity.ownerUid) {
+          fail('FAVORITE_IDENTITY_CONFLICT');
+        }
+        log(configuration, 'resolveFavoriteTrainerIdentity', 'success', startedAt,
+          { uidHash: callerHash, handleHash });
+        return json(response, 200, { code: 'SUCCESS', favorite: {
+          version: 1,
+          targetUid: identity.ownerUid,
+          canonicalTrainerName: identity.canonicalTrainerName
+        } });
+      } catch (error) {
+        const mapping = {
+          E1_NOT_ENABLED: [503, 'E1_NOT_ENABLED'], AUTH_REQUIRED: [401, 'AUTH_REQUIRED'], AUTH_INVALID: [401, 'AUTH_INVALID'],
+          REQUEST_INVALID: [400, 'REQUEST_INVALID'], REQUEST_TOO_LARGE: [413, 'REQUEST_INVALID'],
+          METHOD_NOT_ALLOWED: [405, 'METHOD_NOT_ALLOWED'], FAVORITE_IDENTITY_CONFLICT: [409, 'FAVORITE_IDENTITY_CONFLICT'],
+          'e1/public-identity-conflict': [409, 'FAVORITE_IDENTITY_CONFLICT'],
+          'e1/rate-limit-exceeded': [429, 'RATE_LIMITED']
+        };
+        const [status, code] = mapping[error?.code] || [500, 'INTERNAL_ERROR'];
+        log(configuration, 'resolveFavoriteTrainerIdentity', code.toLowerCase(), startedAt, {
+          ...(callerHash ? { uidHash: callerHash } : {}), ...(handleHash ? { handleHash } : {})
+        });
         return json(response, status, { code });
       }
     }
@@ -1559,6 +1746,10 @@ module.exports = Object.freeze({
   migrationManifestFingerprint,
   observedLegacyFingerprint,
   providerOperationFingerprint,
+  decodeDirectoryCursor,
+  encodeDirectoryCursor,
+  exactFavoriteIdentityRequest,
+  exactTrainerDirectoryRequest,
   exactProviderPublicShareRequest,
   providerRequestFingerprint,
   providerSubjectHash,

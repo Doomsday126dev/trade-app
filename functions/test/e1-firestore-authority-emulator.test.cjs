@@ -569,6 +569,38 @@ test('public handle lookup rejects split stale or malformed canonical identity i
     (error) => error?.code === 'e1/public-identity-conflict');
 });
 
+test('trainer directory performs bounded deterministic Firestore prefix pages without exposing identity metadata', async () => {
+  await certifyProviderCreation();
+  for (const request of [
+    providerInput('firebase_directory_alpha', 'AlphaOne', 'request-directory-alpha'),
+    providerInput('firebase_directory_alpine', 'Alpine', 'request-directory-alpine'),
+    providerInput('firebase_directory_beta', 'BetaOne', 'request-directory-beta')
+  ]) await adapter.createProviderAccountFoundation(request);
+
+  const first = await adapter.listTrainerDirectory({ normalizedQuery: 'al', afterNormalized: '', pageSize: 1 });
+  assert.deepEqual(first.handles, [{ canonicalTrainerName: 'AlphaOne', normalizedTrainerName: 'alphaone' }]);
+  assert.equal(first.nextAfterNormalized, 'alphaone');
+  const second = await adapter.listTrainerDirectory({
+    normalizedQuery: 'al', afterNormalized: first.nextAfterNormalized, pageSize: 1
+  });
+  assert.deepEqual(second.handles, [{ canonicalTrainerName: 'Alpine', normalizedTrainerName: 'alpine' }]);
+  assert.equal(second.nextAfterNormalized, null);
+  const exact = await adapter.listTrainerDirectory({ normalizedQuery: 'alphaone', afterNormalized: '', pageSize: 25 });
+  assert.deepEqual(exact.handles, [{ canonicalTrainerName: 'AlphaOne', normalizedTrainerName: 'alphaone' }]);
+  assert.doesNotMatch(JSON.stringify({ first, second, exact }), /firebase_|uid|email|providerSubject/iu);
+});
+
+test('trainer directory rejects a nonreciprocal canonical handle instead of returning a stale candidate', async () => {
+  await certifyProviderCreation();
+  const request = providerInput('firebase_directory_conflict', 'BrokenDirectory', 'request-directory-conflict');
+  await adapter.createProviderAccountFoundation(request);
+  await firestore.doc(`accounts/${request.uid}`).update({ handleKey: 'v1_conflicting' });
+  await assert.rejects(
+    adapter.listTrainerDirectory({ normalizedQuery: 'brokendirectory', afterNormalized: '', pageSize: 25 }),
+    (error) => error?.code === 'e1/directory-identity-conflict'
+  );
+});
+
 test('browser-authenticated Firestore REST access remains denied by the locked ruleset', async () => {
   const signup = await fetch(`http://${AUTH_HOST}/identitytoolkit.googleapis.com/v1/accounts:signUp?key=fake`, {
     method: 'POST',

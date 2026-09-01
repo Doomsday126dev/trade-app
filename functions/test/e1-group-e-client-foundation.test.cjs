@@ -330,6 +330,7 @@ test('Group E runtime denies provider account creation and exposes no broad cont
   assert.deepEqual([...fs.readFileSync(path.resolve(__dirname, '../e1-gateway/index.js'), 'utf8')
     .matchAll(/exports\.([A-Za-z0-9_]+)\s*=/gu)].map((match) => match[1]),
   ['readE1AccountFoundation', 'readE1ProviderPublicShare',
+    'listE1TrainerDirectory', 'resolveE1FavoriteTrainerIdentity',
     'createE1ProviderAccountFoundation', 'reserveE1TrainerHandle']);
   const controlModule = require('../e1-gateway/groupEControlStore');
   assert.equal(controlModule.createRun, undefined);

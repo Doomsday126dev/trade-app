@@ -59,6 +59,8 @@ const ALLOWED_EXPORT_INVENTORIES = Object.freeze([
   Object.freeze([
     'readE1AccountFoundation',
     'readE1ProviderPublicShare',
+    'listE1TrainerDirectory',
+    'resolveE1FavoriteTrainerIdentity',
     'createE1ProviderAccountFoundation',
     'reserveE1TrainerHandle'
   ])

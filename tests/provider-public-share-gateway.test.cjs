@@ -13,8 +13,11 @@ function share(username='ProviderTrainer'){
     publishedListTypes:['wishlist','dynamax','gmax','costumes'],updatedAt:100};
 }
 
-function load(enabled=false){
-  const window={__POGO_PROVIDER_PUBLIC_PROJECTION_DEV__:enabled};window.window=window;
+function load(enabled=false,{providerAccountsExist=false}={}){
+  const window={
+    __POGO_PROVIDER_CAPABILITIES__:{providerPublicReadSupport:enabled,providerPublicWriteSupport:false},
+    __POGO_PROVIDER_ACCOUNT_COMPATIBILITY_FLOOR__:{schemaVersion:1,providerAccountsExist}
+  };window.window=window;
   const context=vm.createContext({window,console,setTimeout,clearTimeout});
   for(const file of ['js/domain/publicSharePublication.js','js/domain/providerPublicProjection.js','js/services/providerPublicShareGateway.js']){
     vm.runInContext(readFileSync(path.join(root,file),'utf8'),context,{filename:file});
@@ -24,13 +27,14 @@ function load(enabled=false){
 
 function harness({enabled=true,result={code:'SUCCESS',share:share()}}={}){
   const service=load(enabled),calls=[];
+  const auth={currentUser:{uid:'firebaseCallerUid123'}};
   const sdk={
     getFunctions:(app,region)=>{calls.push({kind:'functions',app,region});return{app,region};},
     httpsCallable:(_functions,name,options)=>async body=>{calls.push({kind:'callable',name,options,body});return{data:result};}
   };
-  const client=service.createProviderPublicShareClient({firebaseApp:{name:'public'},enabled,
+  const client=service.createProviderPublicShareClient({firebaseApp:{name:'public'},auth,enabled,
     firebaseAppCheckReady:async()=>({ok:true,instance:{kind:'app-check'}}),importFunctionsSdk:async()=>sdk,timeoutMs:2000});
-  return{service,client,calls};
+  return{service,client,calls,auth};
 }
 
 test('provider public gateway is dormant by default and performs no SDK or App Check work',async()=>{
@@ -39,6 +43,11 @@ test('provider public gateway is dormant by default and performs no SDK or App C
     importFunctionsSdk:async()=>{touched=true;},timeoutMs:2000});
   assert.deepEqual(plain(await client.read('ProviderTrainer')),{ok:false,status:'disabled'});
   assert.equal(touched,false);assert.equal(service.DEFAULT_ENABLED,false);
+});
+
+test('post-first-account compatibility floor keeps anonymous provider shares readable when enrollment flags are off',()=>{
+  assert.equal(load(false,{providerAccountsExist:true}).DEFAULT_ENABLED,true);
+  assert.equal(load(false,{providerAccountsExist:false}).DEFAULT_ENABLED,false);
 });
 
 test('anonymous exact-handle lookup uses a limited-use App Check callable and sends no UID or Auth evidence',async()=>{
@@ -71,4 +80,39 @@ test('not-found and temporary failures remain bounded fallback outcomes',async()
 
 test('invalid trainer input is rejected before App Check or network work',async()=>{
   const h=harness();assert.deepEqual(plain(await h.client.read('bad/name')),{ok:false,status:'invalid'});assert.equal(h.calls.length,0);
+});
+
+test('authenticated directory lookup sends a bounded fixed request and returns only canonical handles',async()=>{
+  const h=harness({result:{code:'SUCCESS',directory:{version:1,handles:['Provider A','Provider B'],nextCursor:'next-cursor'}}});
+  assert.deepEqual(plain(await h.client.listDirectory({query:'pr',pageSize:25,cursor:null})),{
+    ok:true,handles:['Provider A','Provider B'],nextCursor:'next-cursor'
+  });
+  assert.deepEqual(plain(h.calls[1]),{kind:'callable',name:'listE1TrainerDirectory',
+    options:{limitedUseAppCheckTokens:true},body:{schemaVersion:1,query:'pr',pageSize:25,cursor:null}});
+  assert.doesNotMatch(JSON.stringify(h.calls),/collection|path|ownerUid|email|providerSubject/i);
+  assert.throws(()=>h.service.directoryResponse({code:'SUCCESS',directory:{version:1,handles:['Unrelated'],nextCursor:null}},25,'pr'),
+    error=>error.code==='provider-public/directory-response-invalid');
+  assert.doesNotThrow(()=>h.service.directoryResponse({code:'SUCCESS',directory:{version:1,handles:['Zulu','Éclair'],nextCursor:null}},25,''));
+});
+
+test('Favorite resolver returns minimum exact identity and binds an existing UID against silent redirect',async()=>{
+  const h=harness({result:{code:'SUCCESS',favorite:{version:1,targetUid:'firebaseTargetUid456',canonicalTrainerName:'ProviderTrainer'}}});
+  assert.deepEqual(plain(await h.client.resolveFavorite({trainerHandle:'providertrainer',expectedTargetUid:'firebaseTargetUid456'})),{
+    ok:true,targetUid:'firebaseTargetUid456',canonicalTrainerName:'ProviderTrainer'
+  });
+  assert.deepEqual(plain(h.calls[1]),{kind:'callable',name:'resolveE1FavoriteTrainerIdentity',
+    options:{limitedUseAppCheckTokens:true},body:{schemaVersion:1,trainerHandle:'providertrainer',expectedTargetUid:'firebaseTargetUid456'}});
+  assert.throws(()=>h.service.favoriteResponse({code:'SUCCESS',favorite:{version:1,targetUid:'differentTargetUid789',canonicalTrainerName:'ProviderTrainer'}},
+    'ProviderTrainer','firebaseTargetUid456'),error=>error.code==='provider-public/favorite-response-invalid');
+});
+
+test('directory and Favorite operations require a stable authenticated session before App Check or network work',async()=>{
+  const service=load(true);let touched=false;
+  const auth={currentUser:null};
+  const client=service.createProviderPublicShareClient({firebaseApp:{},auth,enabled:true,timeoutMs:2000,
+    firebaseAppCheckReady:async()=>{touched=true;return{ok:true,instance:{}};},
+    importFunctionsSdk:async()=>{touched=true;return{};}});
+  await assert.rejects(client.listDirectory({query:'pr'}),error=>error.code==='provider-public/auth-required');
+  await assert.rejects(client.resolveFavorite({trainerHandle:'ProviderTrainer'}),error=>error.code==='provider-public/auth-required');
+  assert.equal(touched,false);
 });

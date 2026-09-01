@@ -69,6 +69,37 @@ test('one newly added Favorite requires at most one additional exact read',async
   await cache.hydrate(added);assert.equal(reads,5);
 });
 
+test('Favorite hydration forwards the stable target UID and invalidates a cached projection when that binding changes',async()=>{
+  const calls=[];const cache=loadCache({read:async(name,options)=>{calls.push({name,options});return{ok:true,value:share(name)};}});
+  cache.activate({uid:'owner-uid',username:'Owner'});
+  const first={key:'provider',displayName:'ProviderTrainer',targetUid:'firebaseTargetUid456'};
+  await cache.readFavorite(first);
+  assert.equal(calls.length,1);
+  assert.equal(calls[0].name,'ProviderTrainer');
+  assert.equal(calls[0].options.targetUid,'firebaseTargetUid456');
+  cache.syncFavorites([{...first,targetUid:'differentTargetUid789'}]);
+  assert.equal(cache.peek(first),null);
+  await cache.readFavorite({...first,targetUid:'differentTargetUid789'});
+  assert.equal(calls.at(-1).options.targetUid,'differentTargetUid789');
+});
+
+test('a target UID change cannot reuse or repopulate an in-flight read for the old identity',async()=>{
+  const pending=[],calls=[];
+  const cache=loadCache({read:(name,options)=>new Promise(resolve=>{calls.push({name,options});pending.push(resolve);})});
+  cache.activate({uid:'owner-uid',username:'Owner'});
+  const original={key:'provider',displayName:'ProviderTrainer',targetUid:'firebaseTargetUid456'};
+  const first=cache.readFavorite(original);await flush();
+  const rebound={...original,targetUid:'differentTargetUid789'};
+  const second=cache.readFavorite(rebound);await flush();
+  assert.equal(calls.length,2);
+  assert.equal(calls[0].options.targetUid,'firebaseTargetUid456');
+  assert.equal(calls[1].options.targetUid,'differentTargetUid789');
+  pending[0]({ok:true,value:share('ProviderTrainer')});await first;
+  assert.equal(cache.peek(rebound),null);
+  pending[1]({ok:true,value:share('ProviderTrainer')});await second;
+  assert.equal(cache.peek(rebound).targetUid,'differentTargetUid789');
+});
+
 test('20, 21, 50, and 100 Favorites stay within the product limit and concurrency never exceeds four',async()=>{
   for(const count of [20,21,50,100]){
   let active=0,maxActive=0,reads=0;const releases=[];

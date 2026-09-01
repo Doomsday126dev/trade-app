@@ -20,6 +20,8 @@ const { DATABASE_ID: GROUP_E_DATABASE_ID } = require('./groupEControlStore');
 const AUTHORITY_PATHS = Object.freeze({
   readAccountFoundation: '/v1/read-account-foundation',
   readProviderPublicShare: '/v1/read-provider-public-share',
+  listTrainerDirectory: '/v1/list-trainer-directory',
+  resolveFavoriteTrainerIdentity: '/v1/resolve-favorite-trainer-identity',
   createProviderAccountFoundation: '/v1/create-provider-account-foundation',
   reserveTrainerHandle: '/v1/reserve-trainer-handle'
 });
@@ -151,15 +153,27 @@ function exactRequest(operation, value, readProofMode = false, groupEMode = fals
     ? (readProofMode ? ['proofAttemptId', 'schemaVersion'] : ['schemaVersion'])
     : operation === 'readProviderPublicShare'
       ? ['schemaVersion', 'trainerHandle']
-    : operation === 'createProviderAccountFoundation'
-      ? ['clientRelease', 'idempotencyFingerprint', 'lifecycleId', 'providerAccountProtocolVersion', 'requestId',
-        'requestedHandle', 'schemaVersion']
-      : ['requestId', 'requestedHandle', 'schemaVersion'];
+      : operation === 'listTrainerDirectory'
+        ? ['cursor', 'pageSize', 'query', 'schemaVersion']
+        : operation === 'resolveFavoriteTrainerIdentity'
+          ? ['expectedTargetUid', 'schemaVersion', 'trainerHandle']
+          : operation === 'createProviderAccountFoundation'
+            ? ['clientRelease', 'idempotencyFingerprint', 'lifecycleId', 'providerAccountProtocolVersion', 'requestId',
+              'requestedHandle', 'schemaVersion']
+            : ['requestId', 'requestedHandle', 'schemaVersion'];
   if (!exactFields(value, fields) || value.schemaVersion !== 1) fail('REQUEST_INVALID');
   if (operation === 'readProviderPublicShare' &&
       (typeof value.trainerHandle !== 'string' || !value.trainerHandle || value.trainerHandle.length > 128)) {
     fail('REQUEST_INVALID');
   }
+  if (operation === 'listTrainerDirectory' && (typeof value.query !== 'string' || value.query.length > 128 ||
+      !Number.isSafeInteger(value.pageSize) || value.pageSize < 1 || value.pageSize > 25 ||
+      !(value.cursor === null || typeof value.cursor === 'string' && value.cursor.length <= 1024))) {
+    fail('REQUEST_INVALID');
+  }
+  if (operation === 'resolveFavoriteTrainerIdentity' &&
+      (typeof value.trainerHandle !== 'string' || !value.trainerHandle || value.trainerHandle.length > 128 ||
+       typeof value.expectedTargetUid !== 'string' || value.expectedTargetUid.length > 128)) fail('REQUEST_INVALID');
   if (operation === 'reserveTrainerHandle' && (!REQUEST_ID.test(value.requestId || '') ||
       typeof value.requestedHandle !== 'string' || !value.requestedHandle || value.requestedHandle.length > 128)) {
     fail('REQUEST_INVALID');
@@ -205,7 +219,8 @@ function verifyCallableBoundary(operation, request, readProofMode = false, group
   const publicRead = operation === 'readProviderPublicShare';
   if (!publicRead && !request.auth?.uid) fail('AUTH_REQUIRED');
   if (!request.app?.appId) fail('APP_CHECK_REQUIRED');
-  if ((publicRead || operation === 'reserveTrainerHandle' || operation === 'createProviderAccountFoundation' ||
+  if ((publicRead || operation === 'listTrainerDirectory' || operation === 'resolveFavoriteTrainerIdentity' ||
+      operation === 'reserveTrainerHandle' || operation === 'createProviderAccountFoundation' ||
       operation === 'readAccountFoundation' && groupE.enabled) &&
       request.app.alreadyConsumed === true) fail('APP_CHECK_REPLAYED');
   const body = exactRequest(operation, request.data, readProofMode, groupE.enabled);
@@ -273,7 +288,8 @@ function createGatewayOperation(operation, configuration, dependencies = {}) {
   }
   return async function gatewayOperation(request) {
     if (!configuration.gatewayEnabled) fail('GATEWAY_NOT_ENABLED');
-    if (operation === 'readProviderPublicShare' && !configuration.providerPublicProjectionEnabled) {
+    if (['readProviderPublicShare', 'listTrainerDirectory', 'resolveFavoriteTrainerIdentity'].includes(operation) &&
+        !configuration.providerPublicProjectionEnabled) {
       fail('GATEWAY_NOT_ENABLED');
     }
     if (configuration.groupE.enabled && operation !== 'readAccountFoundation') fail('GROUP_E_OPERATION_DENIED');
@@ -319,14 +335,23 @@ function createGatewayOperation(operation, configuration, dependencies = {}) {
           result.payload.admissionReceiptDigest !== receipt.receiptDigest ||
           result.payload.subjectBinding !== expectedSubject) fail('AUTHORITY_RESPONSE_INVALID');
     }
-    return operation === 'readProviderPublicShare'
-      ? validateProviderPublicShareResponse(result.payload, boundary.body.trainerHandle)
-      : result.payload;
+    if (operation === 'readProviderPublicShare') {
+      return validateProviderPublicShareResponse(result.payload, boundary.body.trainerHandle);
+    }
+    if (operation === 'listTrainerDirectory') {
+      return validateTrainerDirectoryResponse(result.payload, boundary.body.pageSize, boundary.body.query);
+    }
+    if (operation === 'resolveFavoriteTrainerIdentity') {
+      return validateFavoriteIdentityResponse(result.payload, boundary.body.trainerHandle,
+        boundary.body.expectedTargetUid);
+    }
+    return result.payload;
   };
 }
 
 const PUBLIC_LIST_TYPES = Object.freeze(['wishlist', 'dynamax', 'gmax', 'costumes']);
 const PUBLIC_PROFILE_FIELDS = Object.freeze(['avatarPokemon', 'bio', 'discord', 'friendCode', 'lastUpdated']);
+const PUBLIC_PROFILE_LIMITS = Object.freeze({ friendCode: 14, bio: 120, discord: 40, avatarPokemon: 120 });
 const PUBLIC_ENTRY_FIELDS = Object.freeze(['backgroundId', 'lucky', 'mod', 'p', 'shiny', 'xxl', 'xxs']);
 const PUBLIC_PRIORITIES = new Set(['H', 'M', 'L']);
 const PUBLIC_BACKGROUND_ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
@@ -361,6 +386,56 @@ function foldedPublicHandle(value) {
   return String(value || '').normalize('NFKC').trim().toLocaleLowerCase('en-US');
 }
 
+function comparePublicHandles(left, right) {
+  const a = Array.from(left);
+  const b = Array.from(right);
+  const length = Math.min(a.length, b.length);
+  for (let index = 0; index < length; index += 1) {
+    const difference = a[index].codePointAt(0) - b[index].codePointAt(0);
+    if (difference) return difference;
+  }
+  return a.length - b.length;
+}
+
+function validPublicHandle(value) {
+  return publicString(value, 64, { empty: false }) && !/[.#$\[\]\/]/u.test(value) &&
+    foldedPublicHandle(value).length > 0;
+}
+
+function validateTrainerDirectoryResponse(payload, pageSize = 25, expectedQuery = '') {
+  if (!Number.isSafeInteger(pageSize) || pageSize < 1 || pageSize > 25 ||
+      !exactFields(payload, ['code', 'directory']) || payload.code !== 'SUCCESS' ||
+      !exactFields(payload.directory, ['handles', 'nextCursor', 'version']) || payload.directory.version !== 1 ||
+      !Array.isArray(payload.directory.handles) || payload.directory.handles.length > pageSize ||
+      !(payload.directory.nextCursor === null || publicString(payload.directory.nextCursor, 1024, { empty: false }))) {
+    fail('AUTHORITY_RESPONSE_INVALID');
+  }
+  const folded = payload.directory.handles.map((handle) => validPublicHandle(handle) ? foldedPublicHandle(handle) : '');
+  const prefix = foldedPublicHandle(expectedQuery);
+  if (folded.some((value) => !value) || new Set(folded).size !== folded.length ||
+      prefix && folded.some((value) => !value.startsWith(prefix)) ||
+      folded.some((value, index) => index > 0 && comparePublicHandles(folded[index - 1], value) >= 0)) {
+    fail('AUTHORITY_RESPONSE_INVALID');
+  }
+  return Object.freeze({ code: 'SUCCESS', directory: Object.freeze({
+    version: 1,
+    handles: Object.freeze([...payload.directory.handles]),
+    nextCursor: payload.directory.nextCursor
+  }) });
+}
+
+function validateFavoriteIdentityResponse(payload, expectedTrainerHandle = '', expectedTargetUid = '') {
+  if (exactFields(payload, ['code']) && payload.code === 'TARGET_NOT_FOUND') return Object.freeze({ code: payload.code });
+  const favorite = payload?.favorite;
+  if (!exactFields(payload, ['code', 'favorite']) || payload.code !== 'SUCCESS' ||
+      !exactFields(favorite, ['canonicalTrainerName', 'targetUid', 'version']) || favorite.version !== 1 ||
+      !validPublicHandle(favorite.canonicalTrainerName) ||
+      foldedPublicHandle(favorite.canonicalTrainerName) !== foldedPublicHandle(expectedTrainerHandle) ||
+      !/^[A-Za-z0-9_-]{6,128}$/u.test(favorite.targetUid || '') ||
+      expectedTargetUid && favorite.targetUid !== expectedTargetUid) fail('AUTHORITY_RESPONSE_INVALID');
+  return Object.freeze({ code: 'SUCCESS', favorite: Object.freeze({ ...favorite }) });
+}
+
 function validateProviderPublicShareResponse(payload, expectedTrainerHandle = '') {
   if (exactFields(payload, ['code']) && payload.code === 'SHARE_NOT_FOUND') return Object.freeze({ code: payload.code });
   if (!exactFields(payload, ['code', 'share']) || payload.code !== 'SUCCESS' ||
@@ -379,8 +454,10 @@ function validateProviderPublicShareResponse(payload, expectedTrainerHandle = ''
     fail('AUTHORITY_RESPONSE_INVALID');
   }
   const profile = share.profile;
-  if (!publicString(profile.friendCode, 32) || !publicString(profile.bio, 120) ||
-      !publicString(profile.discord, 40) || !publicString(profile.avatarPokemon, 80) ||
+  if (!publicString(profile.friendCode, PUBLIC_PROFILE_LIMITS.friendCode) ||
+      !publicString(profile.bio, PUBLIC_PROFILE_LIMITS.bio) ||
+      !publicString(profile.discord, PUBLIC_PROFILE_LIMITS.discord) ||
+      !publicString(profile.avatarPokemon, PUBLIC_PROFILE_LIMITS.avatarPokemon) ||
       !Number.isSafeInteger(profile.lastUpdated) || profile.lastUpdated < 0) fail('AUTHORITY_RESPONSE_INVALID');
   let entryCount = 0;
   const lists = Object.create(null);
@@ -423,6 +500,8 @@ module.exports = Object.freeze({
   parseGroupEBindings,
   proofAttemptHash,
   validateGroupEBoundary,
+  validateFavoriteIdentityResponse,
   validateProviderPublicShareResponse,
+  validateTrainerDirectoryResponse,
   verifyCallableBoundary
 });

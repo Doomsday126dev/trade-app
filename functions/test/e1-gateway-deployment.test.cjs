@@ -78,6 +78,8 @@ function candidateManifest(overrides = {}) {
     expectedExports: [
       'readE1AccountFoundation',
       'readE1ProviderPublicShare',
+      'listE1TrainerDirectory',
+      'resolveE1FavoriteTrainerIdentity',
       'createE1ProviderAccountFoundation',
       'reserveE1TrainerHandle'
     ],
@@ -566,6 +568,8 @@ test('D2 enable and restoration use the canonical immutable source and only appr
   assert.deepEqual(enabled.functions, [
     'readE1AccountFoundation',
     'readE1ProviderPublicShare',
+    'listE1TrainerDirectory',
+    'resolveE1FavoriteTrainerIdentity',
     'createE1ProviderAccountFoundation',
     'reserveE1TrainerHandle'
   ]);

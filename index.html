@@ -37,7 +37,7 @@ function parsePogoPublicShareRequest(){
   var params=new URLSearchParams(location.search),raw=params.get('view');
   if(raw===null)return null;
   var username=String(raw||'').trim(),type=String(params.get('list')||'wishlist').trim().toLowerCase();
-  var usernameValid=/^[^.#$\/\[\]\u0000-\u001f\u007f]{2,32}$/.test(username);
+  var usernameValid=/^[^.#$\/\[\]\u0000-\u001f\u007f]{2,64}$/.test(username);
   var typeValid=['wishlist','dynamax','gmax','costumes'].includes(type);
   return Object.freeze({username:usernameValid?username:'',type:typeValid?type:'wishlist',valid:usernameValid&&typeValid});
 }

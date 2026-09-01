@@ -109,3 +109,20 @@ test('browser and authority reject a projection above the shared 512 KiB boundar
   assert.equal(domain.storedProjectionStatus(stored,{trainerName:'ProviderTrainer'}).ok,false);
   assert.equal(sanitizeProviderPublicProjection(stored,{trainerName:'ProviderTrainer'}),null);
 });
+
+test('browser and authority enforce the exact canonical profile text limits without truncation',()=>{
+  const domain=load();
+  assert.deepEqual(JSON.parse(JSON.stringify(domain.PROFILE_TEXT_LIMITS)),
+    {friendCode:14,bio:120,discord:40,avatarPokemon:120});
+  const exact=publicSnapshot({profile:{friendCode:'1'.repeat(14),bio:'b'.repeat(120),discord:'d'.repeat(40),
+    avatarPokemon:'a'.repeat(120),lastUpdated:100}});
+  assert.equal(domain.publicSnapshotStatus(exact).ok,true);
+  const stored=domain.nextProjection(exact,null,{trainerName:'ProviderTrainer',now:200});
+  assert.ok(sanitizeProviderPublicProjection(stored,{trainerName:'ProviderTrainer'}));
+  for(const[field,max]of Object.entries(domain.PROFILE_TEXT_LIMITS)){
+    const invalid=publicSnapshot({profile:{...exact.profile,[field]:'x'.repeat(max+1)}});
+    assert.equal(domain.publicSnapshotStatus(invalid).ok,false,field);
+    assert.throws(()=>domain.nextProjection(invalid,null,{trainerName:'ProviderTrainer',now:200}),
+      error=>error.code==='provider-public/projection-invalid',field);
+  }
+});

@@ -122,7 +122,7 @@ test.describe('anonymous public share bootstrap',()=>{
   });
 
   test('provider-only public share resolves through the anonymous callable without Auth or RTDB fallback',async({page})=>{
-    await page.addInitScript(()=>{window.__POGO_PROVIDER_PUBLIC_PROJECTION_DEV__=true;});
+    await page.addInitScript(()=>{window.__POGO_PROVIDER_CAPABILITIES__={providerPublicReadSupport:true};});
     const requests=await installPublicFirebase(page,{exists:false});
     await page.route('https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js',route=>route.fulfill({
       contentType:'application/javascript',headers:{'access-control-allow-origin':'*'},

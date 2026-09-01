@@ -46,14 +46,15 @@ test('exact no-change reconciliation is current and hydration waits for provider
   assert.match(copy,/publicSharePublicationCurrent\(result\)/);
 });
 
-test('provider-only publication is blocked when its independent development gate is off',()=>{
+test('provider-only publication is blocked when its independent public-write capability is off',()=>{
   const queued=section('function queueHydratedPublicShareSnapshot','function requestPublicSharePublication');
   const immediate=section('async function publishPublicShareNow','async function writeUser(u,data)');
   assert.match(`${queued}\n${immediate}`,/provider-public\/projection-disabled/);
-  assert.match(app,/window\.__POGO_PROVIDER_PUBLIC_PROJECTION_DEV__===true/);
-  assert.match(html,/providerPublicProjection\.js[^>]+data-pogo-provider-public-development/);
-  assert.match(html,/providerPublicShareGateway\.js[^>]+data-pogo-provider-public-development/);
-  assert.match(html,/data-pogo-provider-public-development[\s\S]+__POGO_PROVIDER_PUBLIC_PROJECTION_DEV__/);
+  assert.match(app,/PROVIDER_CAPABILITIES\.providerPublicWriteSupport/);
+  assert.match(html,/providerPublicProjection\.js[^>]+data-pogo-provider-public-capability/);
+  assert.match(html,/providerPublicShareGateway\.js[^>]+data-pogo-provider-public-capability/);
+  assert.match(html,/data-pogo-provider-public-capability[\s\S]+providerPublicWriteSupport/);
+  assert.doesNotMatch(`${app}\n${html}`,/__POGO_PROVIDER_PUBLIC_PROJECTION_DEV__/);
 });
 
 test('trainer search and direct share URLs resolve provider handles first then retain exact legacy fallback',()=>{
@@ -74,4 +75,5 @@ test('new provider projection assets are versioned and production release remain
     assert.ok(manifest.scriptFiles.includes(file),file);assert.match(html,new RegExp(file.replaceAll('/','\\/')+'\\?v=2026-08-31\\.86'));
   }
   assert.match(html,/window\.__POGO_RELEASE_ID=['"]2026-08-31\.86['"]/);
+  assert.match(html,/usernameValid=\/\^\[\^\.\#\$\\\/\\\[\\\]\\u0000-\\u001f\\u007f\]\{2,64\}\$\//);
 });

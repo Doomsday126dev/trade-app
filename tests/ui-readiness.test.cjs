@@ -149,7 +149,7 @@ test('Find Trainer preserves public-only reads and distinct projection states',(
   const repository=readFileSync(path.join(root,'js/data/publicShareRepository.js'),'utf8');
   const cache=readFileSync(path.join(root,'js/data/favoriteShareSessionCache.js'),'utf8');
   assert.match(repository,/read:username=>client\.read\(`publicShares\/\$\{shareUsername\(username\)\}`\)/);
-  assert.match(cache,/repository\.read\(favorite\.displayName\)/);
+  assert.match(cache,/repository\.read\(favorite\.displayName,\{targetUid:favorite\.targetUid\|\|''\}\)/);
   assert.match(html,/publicShares\/\$\{username\}/);
   assert.match(html,/projection_incomplete.*trainer\.shareNeedsRepublishing/);
   assert.match(html,/projection_unsupported.*trainer\.sharedMalformed/);
@@ -165,7 +165,7 @@ test('Browse Favorites is Favorite-scoped, memory-only, and free of broad remote
   assert.match(setup,/concurrency:4,maxFavorites:favoriteShareSessionCacheData\.DEFAULT_MAX_FAVORITES/);
   assert.match(cache,/DEFAULT_MAX_FAVORITES=global\.PogoDomain\?\.productLimits\?\.MAX_FAVORITES/);
   assert.match(cache,/DEFAULT_READ_DEADLINE_MS=5000/);
-  assert.match(cache,/let records=new Map\(\),inflight=new Map\(\),physicalReads=new Map\(\),readEpochs=new Map\(\),candidateKeys=new Set\(\),queue=\[\],activeEntries=new Set\(\)/);
+  assert.match(cache,/let records=new Map\(\),inflight=new Map\(\),physicalReads=new Map\(\),readEpochs=new Map\(\),candidateKeys=new Set\(\),candidateBindings=new Map\(\),queue=\[\],activeEntries=new Set\(\)/);
   assert.match(cache,/validateProjection\(result\.value,\{username:favorite\.displayName\}\)/);
   assert.doesNotMatch(`${cache}\n${domain}`,/localStorage|sessionStorage|indexedDB|onValue|\.listen\(|publicShares\/|loginDirectory|private.?note|set\s*\(\s*ref|update\s*\(\s*ref/i);
   assert.doesNotMatch(`${setup}\n${browse}`,/Object\.keys\(allData\.loginDirectory|managedPublicShareRepository\.listen|publicShares\/|queueSync|publishPublicShare/);

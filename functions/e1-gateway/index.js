@@ -42,6 +42,8 @@ function callable(operation, consumeAppCheckToken) {
         PUBLIC_IDENTITY_CONFLICT: ['failed-precondition', 'Public identity is unavailable'],
         PUBLIC_SHARE_INVALID: ['failed-precondition', 'Public share is invalid'],
         PUBLIC_SHARE_UNAVAILABLE: ['unavailable', 'Public share is unavailable'],
+        DIRECTORY_IDENTITY_CONFLICT: ['failed-precondition', 'Trainer directory identity is unavailable'],
+        FAVORITE_IDENTITY_CONFLICT: ['failed-precondition', 'Favorite trainer identity changed'],
         GROUP_E_ADMISSION_CONSUMED: ['already-exists', 'Admission already consumed'],
         GROUP_E_CAPABILITY_EXPIRED: ['permission-denied', 'Admission expired'],
         GROUP_E_BOUNDARY_INVALID: ['permission-denied', 'Admission denied'],
@@ -56,5 +58,7 @@ function callable(operation, consumeAppCheckToken) {
 
 exports.readE1AccountFoundation = callable('readAccountFoundation', configuration.groupE.enabled);
 exports.readE1ProviderPublicShare = callable('readProviderPublicShare', true);
+exports.listE1TrainerDirectory = callable('listTrainerDirectory', true);
+exports.resolveE1FavoriteTrainerIdentity = callable('resolveFavoriteTrainerIdentity', true);
 exports.createE1ProviderAccountFoundation = callable('createProviderAccountFoundation', true);
 exports.reserveE1TrainerHandle = callable('reserveTrainerHandle', true);

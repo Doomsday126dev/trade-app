@@ -6,6 +6,7 @@ const TOP_LEVEL_FIELDS = Object.freeze([
 ]);
 const REQUIRED_TOP_LEVEL_FIELDS = Object.freeze(TOP_LEVEL_FIELDS.filter((field) => field !== 'lists'));
 const PROFILE_FIELDS = Object.freeze(['avatarPokemon', 'bio', 'discord', 'friendCode', 'lastUpdated']);
+const PROFILE_TEXT_LIMITS = Object.freeze({ friendCode: 14, bio: 120, discord: 40, avatarPokemon: 120 });
 const ENTRY_FIELDS = Object.freeze(['backgroundId', 'lucky', 'mod', 'p', 'shiny', 'xxl', 'xxs']);
 const PRIORITIES = new Set(['H', 'M', 'L']);
 const BACKGROUND_ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
@@ -70,8 +71,11 @@ function sanitizeProviderPublicProjection(value, { trainerName } = {}) {
       !optionalFields(value.lists || {}, LIST_TYPES) || !exactFields(value.profile, PROFILE_FIELDS)) return null;
 
   const profile = value.profile;
-  if (!safeString(profile.friendCode, 32) || !safeString(profile.bio, 120) || !safeString(profile.discord, 40) ||
-      !safeString(profile.avatarPokemon, 80) || !safeTimestamp(profile.lastUpdated)) return null;
+  if (!safeString(profile.friendCode, PROFILE_TEXT_LIMITS.friendCode) ||
+      !safeString(profile.bio, PROFILE_TEXT_LIMITS.bio) ||
+      !safeString(profile.discord, PROFILE_TEXT_LIMITS.discord) ||
+      !safeString(profile.avatarPokemon, PROFILE_TEXT_LIMITS.avatarPokemon) ||
+      !safeTimestamp(profile.lastUpdated)) return null;
 
   let entryCount = 0;
   const lists = Object.create(null);
@@ -105,6 +109,7 @@ module.exports = Object.freeze({
   MAX_PROJECTION_BYTES,
   MAX_TOTAL_ENTRIES,
   PROFILE_FIELDS,
+  PROFILE_TEXT_LIMITS,
   REQUIRED_TOP_LEVEL_FIELDS,
   TOP_LEVEL_FIELDS,
   sanitizeProviderPublicProjection

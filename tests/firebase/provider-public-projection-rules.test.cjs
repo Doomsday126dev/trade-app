@@ -134,6 +134,18 @@ test('projection schema rejects private fields incomplete markers malformed entr
   await fails(db('PUT', `trainerShares/${IDS.owner}`, invalidBackground, TOKENS.owner), 'invalid background ID');
 });
 
+test('profile fields enforce the exact canonical text limits without truncation', async () => {
+  const profile = { friendCode: '1'.repeat(14), bio: '', discord: '', avatarPokemon: 'a'.repeat(120), lastUpdated: 100 };
+  await succeeds(db('PUT', `trainerShares/${IDS.owner}`, projection({ profile }), TOKENS.owner),
+    'canonical profile boundary');
+  await fails(db('PUT', `trainerShares/${IDS.owner}`, projection({
+    shareVersion: 2, updatedAt: 101, profile: { ...profile, friendCode: '1'.repeat(15) }
+  }), TOKENS.owner), 'overlong canonical friend code');
+  await fails(db('PUT', `trainerShares/${IDS.owner}`, projection({
+    shareVersion: 2, updatedAt: 101, profile: { ...profile, avatarPokemon: 'a'.repeat(121) }
+  }), TOKENS.owner), 'overlong canonical avatar');
+});
+
 test('updates are monotonic and cannot change canonical trainer name or initial publication time', async () => {
   await succeeds(db('PUT', `trainerShares/${IDS.owner}`, projection(), TOKENS.owner), 'initial projection');
   await succeeds(db('PUT', `trainerShares/${IDS.owner}`, projection({ shareVersion: 2, updatedAt: 101 }), TOKENS.owner),
