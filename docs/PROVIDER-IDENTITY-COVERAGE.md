@@ -74,3 +74,20 @@ evidence blocks the transaction before any account, handle, provider, subject,
 or operation record is created. Matching aggregate counts without matching epoch
 evidence are insufficient. No production freeze, backfill, certification,
 runtime list permission, or RTDB writer role is added by this work.
+
+## Live operator safety contract
+
+The live operator uses the same exported authority path,
+`authorityConfig/providerAccountCreation`, as the authority transaction. Each
+verified manifest operation is recorded immediately in a sealed, fsynced local
+progress ledger. A restart rereads every recorded target and reconciles an exact
+post-commit result without resending; partial, different, or unmanifested state
+stops the window.
+
+The local dry run remains an in-memory resume simulation. Process-crash safety
+is proved separately with a persistent store and progress ledger across isolated
+child processes, including post-commit/pre-checkpoint and committed ambiguous
+responses. Certification never consumes the dry-run report. It requires a
+sealed live completion artifact built from a fresh post-freeze inventory, exact
+manifest and progress coverage, matching active Firestore and RTDB freezes, and
+zero conflict, malformed, or partial records.

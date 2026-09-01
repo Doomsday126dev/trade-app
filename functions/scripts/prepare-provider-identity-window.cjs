@@ -45,10 +45,25 @@ function documentId(document) {
   return String(document.name || '').split('/').at(-1);
 }
 
-async function jsonFetch(url, token) {
-  const response = await fetch(url, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' } });
+async function jsonFetch(url, token, options = {}) {
+  const response = await fetch(url, { ...options,
+    headers: { Authorization: `Bearer ${token}`, Accept: 'application/json',
+      'Content-Type': 'application/json', ...(options.headers || {}) } });
   if (!response.ok) throw new Error(`read_failed:${response.status}:${new URL(url).hostname}`);
   return response.json();
+}
+
+function relativeDocumentPath(document) {
+  return String(document.name || '').split('/documents/').at(-1);
+}
+
+async function readCollectionGroup(token, collectionId) {
+  const url = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/${FIRESTORE_DATABASE}/documents:runQuery`;
+  const payload = await jsonFetch(url, token, { method: 'POST', body: JSON.stringify({ structuredQuery: {
+    from: [{ collectionId, allDescendants: true }]
+  } }) });
+  return Object.fromEntries((payload || []).filter((row) => row.document).map((row) =>
+    [relativeDocumentPath(row.document), documentData(row.document)]));
 }
 
 async function readRtdb(token) {
@@ -86,10 +101,11 @@ async function readCollection(token, collection) {
 }
 
 async function readProduction(token) {
-  const [rtdb, accounts, trainerHandles] = await Promise.all([
-    readRtdb(token), readCollection(token, 'accounts'), readCollection(token, 'trainerHandles')
+  const [rtdb, accounts, trainerHandles, operationRequests, identityMigrations] = await Promise.all([
+    readRtdb(token), readCollection(token, 'accounts'), readCollection(token, 'trainerHandles'),
+    readCollectionGroup(token, 'requests'), readCollectionGroup(token, 'operations')
   ]);
-  return { ...rtdb, accounts, trainerHandles };
+  return { ...rtdb, accounts, trainerHandles, operationRequests, identityMigrations };
 }
 
 function privateDirectory(directory) {
@@ -155,7 +171,7 @@ async function run(argv = process.argv.slice(2), dependencies = {}) {
   return { snapshot, manifest, report, files: { snapshotPath, manifestPath, reportPath } };
 }
 
-module.exports = { parseArgs, scalar, documentData, readRtdb, readCollection, readProduction, run };
+module.exports = { parseArgs, scalar, documentData, readRtdb, readCollection, readCollectionGroup, readProduction, run };
 
 if (require.main === module) run().catch((error) => {
   console.error(`provider identity preparation failed: ${error.message}`);
