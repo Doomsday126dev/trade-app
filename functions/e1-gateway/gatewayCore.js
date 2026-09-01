@@ -19,6 +19,9 @@ const { DATABASE_ID: GROUP_E_DATABASE_ID } = require('./groupEControlStore');
 
 const AUTHORITY_PATHS = Object.freeze({
   readAccountFoundation: '/v1/read-account-foundation',
+  readProviderPublicShare: '/v1/read-provider-public-share',
+  listTrainerDirectory: '/v1/list-trainer-directory',
+  resolveFavoriteTrainerIdentity: '/v1/resolve-favorite-trainer-identity',
   createProviderAccountFoundation: '/v1/create-provider-account-foundation',
   reserveTrainerHandle: '/v1/reserve-trainer-handle'
 });
@@ -72,6 +75,7 @@ function groupEConfiguration(env, configuration) {
   }
   if (mode !== GROUP_E_MODE || configuration.environment !== 'production' ||
       configuration.projectId !== GROUP_E_PROJECT_ID || !configuration.gatewayEnabled || configuration.readProofMode ||
+      configuration.providerPublicProjectionEnabled ||
       !HASH.test(env.GROUP_E_COHORT_DIGEST || '') || !UUID_V4.test(env.GROUP_E_RUN_ID || '') ||
       !HASH.test(env.GROUP_E_RUN_MANIFEST_DIGEST || '') || !HASH.test(env.GROUP_E_KEY_ID || '') ||
       !HASH.test(env.GROUP_E_FIREBASE_APP_ID_HASH || '') || env.GROUP_E_CONTROL_DATABASE_ID !== GROUP_E_DATABASE_ID ||
@@ -105,7 +109,8 @@ function loadGatewayConfiguration(env = process.env) {
     appCheckEnforcementMode: env.APP_CHECK_ENFORCEMENT_MODE,
     debugTokensAllowed: env.APP_CHECK_DEBUG_TOKENS_ALLOWED === 'true',
     rateLimitPolicy: env.E1_RATE_LIMIT_POLICY,
-    readProofMode: env.READ_PROOF_MODE === 'true'
+    readProofMode: env.READ_PROOF_MODE === 'true',
+    providerPublicProjectionEnabled: env.PROVIDER_PUBLIC_PROJECTION_ENABLED === 'true'
   };
   let authority;
   try { authority = new URL(configuration.authorityUrl); } catch { fail('GATEWAY_CONFIGURATION_INVALID'); }
@@ -118,7 +123,11 @@ function loadGatewayConfiguration(env = process.env) {
       !['true', 'false'].includes(env.GATEWAY_INVOCATION_ENABLED) ||
       !['true', 'false'].includes(env.APP_CHECK_DEBUG_TOKENS_ALLOWED) ||
       !['true', 'false'].includes(env.READ_PROOF_MODE) ||
-      (configuration.readProofMode && !configuration.gatewayEnabled)) fail('GATEWAY_CONFIGURATION_INVALID');
+      (env.PROVIDER_PUBLIC_PROJECTION_ENABLED !== undefined &&
+        !['true', 'false'].includes(env.PROVIDER_PUBLIC_PROJECTION_ENABLED)) ||
+      (configuration.readProofMode && (!configuration.gatewayEnabled || configuration.providerPublicProjectionEnabled))) {
+    fail('GATEWAY_CONFIGURATION_INVALID');
+  }
   if (configuration.environment === 'production' &&
       (configuration.projectId !== GROUP_E_PROJECT_ID || configuration.region !== 'us-central1' ||
        configuration.gatewayServiceAccount !== 'e1-authority-gateway@trade-list-a4297.iam.gserviceaccount.com' ||
@@ -142,11 +151,29 @@ function exactRequest(operation, value, readProofMode = false, groupEMode = fals
   if (operation === 'readAccountFoundation' && groupEMode) return validateSignedRequest(value);
   const fields = operation === 'readAccountFoundation'
     ? (readProofMode ? ['proofAttemptId', 'schemaVersion'] : ['schemaVersion'])
-    : operation === 'createProviderAccountFoundation'
-      ? ['clientRelease', 'idempotencyFingerprint', 'lifecycleId', 'providerAccountProtocolVersion', 'requestId',
-        'requestedHandle', 'schemaVersion']
-      : ['requestId', 'requestedHandle', 'schemaVersion'];
+    : operation === 'readProviderPublicShare'
+      ? ['schemaVersion', 'trainerHandle']
+      : operation === 'listTrainerDirectory'
+        ? ['cursor', 'pageSize', 'query', 'schemaVersion']
+        : operation === 'resolveFavoriteTrainerIdentity'
+          ? ['expectedTargetUid', 'schemaVersion', 'trainerHandle']
+          : operation === 'createProviderAccountFoundation'
+            ? ['clientRelease', 'idempotencyFingerprint', 'lifecycleId', 'providerAccountProtocolVersion', 'requestId',
+              'requestedHandle', 'schemaVersion']
+            : ['requestId', 'requestedHandle', 'schemaVersion'];
   if (!exactFields(value, fields) || value.schemaVersion !== 1) fail('REQUEST_INVALID');
+  if (operation === 'readProviderPublicShare' &&
+      (typeof value.trainerHandle !== 'string' || !value.trainerHandle || value.trainerHandle.length > 128)) {
+    fail('REQUEST_INVALID');
+  }
+  if (operation === 'listTrainerDirectory' && (typeof value.query !== 'string' || value.query.length > 128 ||
+      !Number.isSafeInteger(value.pageSize) || value.pageSize < 1 || value.pageSize > 25 ||
+      !(value.cursor === null || typeof value.cursor === 'string' && value.cursor.length <= 1024))) {
+    fail('REQUEST_INVALID');
+  }
+  if (operation === 'resolveFavoriteTrainerIdentity' &&
+      (typeof value.trainerHandle !== 'string' || !value.trainerHandle || value.trainerHandle.length > 128 ||
+       typeof value.expectedTargetUid !== 'string' || value.expectedTargetUid.length > 128)) fail('REQUEST_INVALID');
   if (operation === 'reserveTrainerHandle' && (!REQUEST_ID.test(value.requestId || '') ||
       typeof value.requestedHandle !== 'string' || !value.requestedHandle || value.requestedHandle.length > 128)) {
     fail('REQUEST_INVALID');
@@ -189,9 +216,11 @@ function validateGroupEBoundary(request, body, groupE, now) {
 }
 
 function verifyCallableBoundary(operation, request, readProofMode = false, groupE = { enabled: false }, now = Date.now()) {
-  if (!request.auth?.uid) fail('AUTH_REQUIRED');
+  const publicRead = operation === 'readProviderPublicShare';
+  if (!publicRead && !request.auth?.uid) fail('AUTH_REQUIRED');
   if (!request.app?.appId) fail('APP_CHECK_REQUIRED');
-  if ((operation === 'reserveTrainerHandle' || operation === 'createProviderAccountFoundation' ||
+  if ((publicRead || operation === 'listTrainerDirectory' || operation === 'resolveFavoriteTrainerIdentity' ||
+      operation === 'reserveTrainerHandle' || operation === 'createProviderAccountFoundation' ||
       operation === 'readAccountFoundation' && groupE.enabled) &&
       request.app.alreadyConsumed === true) fail('APP_CHECK_REPLAYED');
   const body = exactRequest(operation, request.data, readProofMode, groupE.enabled);
@@ -199,9 +228,9 @@ function verifyCallableBoundary(operation, request, readProofMode = false, group
     ? validateGroupEBoundary(request, body, groupE, now)
     : null;
   return Object.freeze({
-    uid: request.auth.uid,
+    uid: publicRead ? null : request.auth.uid,
     appId: request.app.appId,
-    firebaseIdToken: firebaseIdToken(request),
+    firebaseIdToken: publicRead ? null : firebaseIdToken(request),
     body,
     proofAttemptHash: operation === 'readAccountFoundation' && readProofMode
       ? proofAttemptHash(request.data.proofAttemptId)
@@ -225,7 +254,7 @@ function createAuthorityInvoker(configuration, { fetchImpl = fetch, getOidcToken
       headers: {
         'Content-Type': 'application/json',
         'X-Serverless-Authorization': `Bearer ${oidcToken}`,
-        'X-Firebase-ID-Token': boundary.firebaseIdToken,
+        ...(boundary.firebaseIdToken ? { 'X-Firebase-ID-Token': boundary.firebaseIdToken } : {}),
         'X-E1-Rate-Limit-Policy': configuration.rateLimitPolicy,
         ...(receipt ? {
           'X-E1-Client-Mode': GROUP_E_MODE,
@@ -259,6 +288,10 @@ function createGatewayOperation(operation, configuration, dependencies = {}) {
   }
   return async function gatewayOperation(request) {
     if (!configuration.gatewayEnabled) fail('GATEWAY_NOT_ENABLED');
+    if (['readProviderPublicShare', 'listTrainerDirectory', 'resolveFavoriteTrainerIdentity'].includes(operation) &&
+        !configuration.providerPublicProjectionEnabled) {
+      fail('GATEWAY_NOT_ENABLED');
+    }
     if (configuration.groupE.enabled && operation !== 'readAccountFoundation') fail('GROUP_E_OPERATION_DENIED');
     const at = now();
     const boundary = verifyCallableBoundary(operation, request, configuration.readProofMode, configuration.groupE, at);
@@ -302,8 +335,152 @@ function createGatewayOperation(operation, configuration, dependencies = {}) {
           result.payload.admissionReceiptDigest !== receipt.receiptDigest ||
           result.payload.subjectBinding !== expectedSubject) fail('AUTHORITY_RESPONSE_INVALID');
     }
+    if (operation === 'readProviderPublicShare') {
+      return validateProviderPublicShareResponse(result.payload, boundary.body.trainerHandle);
+    }
+    if (operation === 'listTrainerDirectory') {
+      return validateTrainerDirectoryResponse(result.payload, boundary.body.pageSize, boundary.body.query);
+    }
+    if (operation === 'resolveFavoriteTrainerIdentity') {
+      return validateFavoriteIdentityResponse(result.payload, boundary.body.trainerHandle,
+        boundary.body.expectedTargetUid);
+    }
     return result.payload;
   };
+}
+
+const PUBLIC_LIST_TYPES = Object.freeze(['wishlist', 'dynamax', 'gmax', 'costumes']);
+const PUBLIC_PROFILE_FIELDS = Object.freeze(['avatarPokemon', 'bio', 'discord', 'friendCode', 'lastUpdated']);
+const PUBLIC_PROFILE_LIMITS = Object.freeze({ friendCode: 14, bio: 120, discord: 40, avatarPokemon: 120 });
+const PUBLIC_ENTRY_FIELDS = Object.freeze(['backgroundId', 'lucky', 'mod', 'p', 'shiny', 'xxl', 'xxs']);
+const PUBLIC_PRIORITIES = new Set(['H', 'M', 'L']);
+const PUBLIC_BACKGROUND_ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
+const PUBLIC_CONTROL = /[\u0000-\u001f\u007f]/u;
+const PUBLIC_DANGEROUS_KEYS = new Set(['__proto__', 'prototype', 'constructor']);
+
+function publicString(value, max, { empty = true } = {}) {
+  return typeof value === 'string' && !PUBLIC_CONTROL.test(value) && value.length <= max && (empty || value.length > 0);
+}
+
+function publicDynamicKey(value, max) {
+  return publicString(value, max, { empty: false }) && !PUBLIC_DANGEROUS_KEYS.has(value);
+}
+
+function optionalPublicFields(value, fields) {
+  return !!value && typeof value === 'object' && !Array.isArray(value) &&
+    Object.keys(value).every((key) => fields.includes(key));
+}
+
+function publicEntry(value) {
+  if (typeof value === 'string') return publicString(value, 512, { empty: false });
+  if (!optionalPublicFields(value, PUBLIC_ENTRY_FIELDS) || !PUBLIC_PRIORITIES.has(value.p)) return false;
+  if (Object.hasOwn(value, 'mod') && !publicString(value.mod, 200)) return false;
+  for (const field of ['lucky', 'shiny', 'xxl', 'xxs']) {
+    if (Object.hasOwn(value, field) && typeof value[field] !== 'boolean') return false;
+  }
+  return !Object.hasOwn(value, 'backgroundId') || value.backgroundId === '' ||
+    publicString(value.backgroundId, 120, { empty: false }) && PUBLIC_BACKGROUND_ID.test(value.backgroundId);
+}
+
+function foldedPublicHandle(value) {
+  return String(value || '').normalize('NFKC').trim().toLocaleLowerCase('en-US');
+}
+
+function comparePublicHandles(left, right) {
+  const a = Array.from(left);
+  const b = Array.from(right);
+  const length = Math.min(a.length, b.length);
+  for (let index = 0; index < length; index += 1) {
+    const difference = a[index].codePointAt(0) - b[index].codePointAt(0);
+    if (difference) return difference;
+  }
+  return a.length - b.length;
+}
+
+function validPublicHandle(value) {
+  return publicString(value, 64, { empty: false }) && !/[.#$\[\]\/]/u.test(value) &&
+    foldedPublicHandle(value).length > 0;
+}
+
+function validateTrainerDirectoryResponse(payload, pageSize = 25, expectedQuery = '') {
+  if (!Number.isSafeInteger(pageSize) || pageSize < 1 || pageSize > 25 ||
+      !exactFields(payload, ['code', 'directory']) || payload.code !== 'SUCCESS' ||
+      !exactFields(payload.directory, ['handles', 'nextCursor', 'version']) || payload.directory.version !== 1 ||
+      !Array.isArray(payload.directory.handles) || payload.directory.handles.length > pageSize ||
+      !(payload.directory.nextCursor === null || publicString(payload.directory.nextCursor, 1024, { empty: false }))) {
+    fail('AUTHORITY_RESPONSE_INVALID');
+  }
+  const folded = payload.directory.handles.map((handle) => validPublicHandle(handle) ? foldedPublicHandle(handle) : '');
+  const prefix = foldedPublicHandle(expectedQuery);
+  if (folded.some((value) => !value) || new Set(folded).size !== folded.length ||
+      prefix && folded.some((value) => !value.startsWith(prefix)) ||
+      folded.some((value, index) => index > 0 && comparePublicHandles(folded[index - 1], value) >= 0)) {
+    fail('AUTHORITY_RESPONSE_INVALID');
+  }
+  return Object.freeze({ code: 'SUCCESS', directory: Object.freeze({
+    version: 1,
+    handles: Object.freeze([...payload.directory.handles]),
+    nextCursor: payload.directory.nextCursor
+  }) });
+}
+
+function validateFavoriteIdentityResponse(payload, expectedTrainerHandle = '', expectedTargetUid = '') {
+  if (exactFields(payload, ['code']) && payload.code === 'TARGET_NOT_FOUND') return Object.freeze({ code: payload.code });
+  const favorite = payload?.favorite;
+  if (!exactFields(payload, ['code', 'favorite']) || payload.code !== 'SUCCESS' ||
+      !exactFields(favorite, ['canonicalTrainerName', 'targetUid', 'version']) || favorite.version !== 1 ||
+      !validPublicHandle(favorite.canonicalTrainerName) ||
+      foldedPublicHandle(favorite.canonicalTrainerName) !== foldedPublicHandle(expectedTrainerHandle) ||
+      !/^[A-Za-z0-9_-]{6,128}$/u.test(favorite.targetUid || '') ||
+      expectedTargetUid && favorite.targetUid !== expectedTargetUid) fail('AUTHORITY_RESPONSE_INVALID');
+  return Object.freeze({ code: 'SUCCESS', favorite: Object.freeze({ ...favorite }) });
+}
+
+function validateProviderPublicShareResponse(payload, expectedTrainerHandle = '') {
+  if (exactFields(payload, ['code']) && payload.code === 'SHARE_NOT_FOUND') return Object.freeze({ code: payload.code });
+  if (!exactFields(payload, ['code', 'share']) || payload.code !== 'SUCCESS' ||
+      Buffer.byteLength(JSON.stringify(payload)) > 512 * 1024) {
+    fail('AUTHORITY_RESPONSE_INVALID');
+  }
+  const share = payload.share;
+  if (!exactFields(share, ['lists', 'profile', 'publishedListTypes', 'updatedAt', 'username', 'version']) ||
+      share.version !== 1 || !publicString(share.username, 64, { empty: false }) ||
+      foldedPublicHandle(share.username) !== foldedPublicHandle(expectedTrainerHandle) ||
+      !Number.isSafeInteger(share.updatedAt) || share.updatedAt < 1 ||
+      !exactFields(share.profile, PUBLIC_PROFILE_FIELDS) || !exactFields(share.lists, PUBLIC_LIST_TYPES) ||
+      !Array.isArray(share.publishedListTypes) || share.publishedListTypes.length !== PUBLIC_LIST_TYPES.length ||
+      !PUBLIC_LIST_TYPES.every((type, index) => share.publishedListTypes[index] === type &&
+        share.lists[type] && typeof share.lists[type] === 'object' && !Array.isArray(share.lists[type]))) {
+    fail('AUTHORITY_RESPONSE_INVALID');
+  }
+  const profile = share.profile;
+  if (!publicString(profile.friendCode, PUBLIC_PROFILE_LIMITS.friendCode) ||
+      !publicString(profile.bio, PUBLIC_PROFILE_LIMITS.bio) ||
+      !publicString(profile.discord, PUBLIC_PROFILE_LIMITS.discord) ||
+      !publicString(profile.avatarPokemon, PUBLIC_PROFILE_LIMITS.avatarPokemon) ||
+      !Number.isSafeInteger(profile.lastUpdated) || profile.lastUpdated < 0) fail('AUTHORITY_RESPONSE_INVALID');
+  let entryCount = 0;
+  const lists = Object.create(null);
+  for (const type of PUBLIC_LIST_TYPES) {
+    lists[type] = Object.create(null);
+    for (const [name, entry] of Object.entries(share.lists[type])) {
+      entryCount += 1;
+      if (entryCount > 2000 || !publicDynamicKey(name, 200) || !publicEntry(entry)) {
+        fail('AUTHORITY_RESPONSE_INVALID');
+      }
+      lists[type][name] = entry && typeof entry === 'object' ? Object.freeze({ ...entry }) : entry;
+    }
+    Object.freeze(lists[type]);
+  }
+  const sanitized = Object.freeze({
+    version: 1,
+    username: share.username,
+    profile: Object.freeze({ ...profile }),
+    lists: Object.freeze(lists),
+    publishedListTypes: Object.freeze([...PUBLIC_LIST_TYPES]),
+    updatedAt: share.updatedAt
+  });
+  return Object.freeze({ code: 'SUCCESS', share: sanitized });
 }
 
 function groupEAttemptHash(attemptId) {
@@ -323,5 +500,8 @@ module.exports = Object.freeze({
   parseGroupEBindings,
   proofAttemptHash,
   validateGroupEBoundary,
+  validateFavoriteIdentityResponse,
+  validateProviderPublicShareResponse,
+  validateTrainerDirectoryResponse,
   verifyCallableBoundary
 });

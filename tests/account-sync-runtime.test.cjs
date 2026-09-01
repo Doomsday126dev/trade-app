@@ -4,9 +4,11 @@ const {readFileSync}=require('node:fs');
 const path=require('node:path');
 const vm=require('node:vm');
 const {webcrypto}=require('node:crypto');
+const {sanitizeProviderPublicProjection}=require('../functions/e1-authority-service/providerPublicProjection');
 
 const root=path.join(__dirname,'..');
 const files=[
+  'js/domain/publicSharePublication.js','js/domain/providerPublicProjection.js',
   'js/domain/accountSyncModel.js','js/domain/accountSyncMerge.js','js/domain/accountSyncMigration.js','js/domain/accountSyncProduct.js',
   'js/data/accountSyncController.js','js/data/accountSyncRuntime.js','js/testing/accountSyncHarness.js'
 ];
@@ -267,6 +269,72 @@ test('a transient provider profile edit remains durable and retries once after P
   const reopened=createRuntime(window,h,repositoryState,journalState,undefined,()=>{},()=>{},async()=>({ok:true}),{initializationKind:'provider-only'});
   const result=await reopened.start();
   assert.equal(result.ok,true);assert.equal(repositoryState.profile.bio,'Retry after restart');assert.equal(repositoryState.profile.revision,2);assert.equal(journalState.meta.has('provider-profile-pending-v1'),false);assert.equal(repositoryState.calls.writeProfile,2);
+});
+
+test('provider public projection failure remains owner-durable and retries on authenticated restart',async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),repositoryState=runtimeRepository(window,h),journalState=h.createMemoryJournalState();
+  let attempts=0;
+  const first=createRuntime(window,h,repositoryState,journalState,undefined,()=>{},()=>{},async()=>{
+    attempts++;throw Object.assign(new Error('temporary publication failure'),{code:'provider-public/write-timeout'});
+  },{initializationKind:'provider-only'});
+  const initial=await first.start();assert.equal(initial.ok,true);assert.equal(attempts,1);
+  assert.equal(journalState.meta.has('provider-publication-pending-v1'),true);await first.stop();
+  const reopened=createRuntime(window,h,repositoryState,journalState,undefined,()=>{},()=>{},async()=>{
+    attempts++;return{ok:true,status:'published',shareVersion:1};
+  },{initializationKind:'provider-only'});
+  const resumed=await reopened.start();assert.equal(resumed.ok,true);assert.equal(attempts,2);
+  assert.equal(journalState.meta.has('provider-publication-pending-v1'),false);assert.equal(reopened.publicProjectionPending,false);
+});
+
+test('provider profile edit republishes canonical rows without rolling back the private profile',async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),repositoryState=runtimeRepository(window,h),journalState=h.createMemoryJournalState(),publications=[];
+  const runtime=createRuntime(window,h,repositoryState,journalState,undefined,()=>{},()=>{},async(rows,operation)=>{
+    publications.push({rows,operation});return{ok:true,status:'published'};
+  },{initializationKind:'provider-only'});
+  await runtime.start();const result=await runtime.updateProviderProfile({bio:'Canonical profile update'});
+  assert.equal(result.ok,true);assert.equal(repositoryState.profile.bio,'Canonical profile update');
+  assert.equal(publications.length,2);assert.equal(publications.at(-1).operation.kind,'provider-profile-update');
+});
+
+test('stopped provider runtime cannot clear a pending publication completed by a stale session',async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),repositoryState=runtimeRepository(window,h),journalState=h.createMemoryJournalState();
+  let release,entered;const waiting=new Promise(resolve=>{entered=resolve;}),gate=new Promise(resolve=>{release=resolve;});
+  const runtime=createRuntime(window,h,repositoryState,journalState,undefined,()=>{},()=>{},async()=>{entered();await gate;return{ok:true,status:'published'};},{initializationKind:'provider-only'});
+  const starting=runtime.start();await waiting;const stopping=runtime.stop();release();
+  await assert.rejects(starting,error=>error.code==='account-sync/runtime-closed');await stopping;
+  assert.equal(journalState.meta.has('provider-publication-pending-v1'),true);
+});
+
+test('provider canonical add edit delete and retry publish exact monotonic anonymous projections',async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),repositoryState=runtimeRepository(window,h),journalState=h.createMemoryJournalState(),domain=window.PogoDomain.providerPublicProjection;
+  let stored=null,failNext=false,writes=0;
+  const publish=async rows=>{
+    if(failNext){failNext=false;throw Object.assign(new Error('temporary RTDB failure'),{code:'provider-public/write-timeout'});}
+    const wishlist={};
+    for(const row of rows){
+      if(row.surface!=='my-list'||row.lane!=='wishlist')continue;
+      const raw=String(row.catalogId).split(':').at(-1),name=raw.charAt(0).toUpperCase()+raw.slice(1);
+      wishlist[name]={p:row.priority||'H',...(row.shiny?{shiny:true}:{})};
+    }
+    const profile=repositoryState.profile,snapshot={version:1,username:'Owner',profile:{friendCode:profile.friendCode,bio:profile.bio,discord:profile.discord,avatarPokemon:profile.avatarPokemon,lastUpdated:profile.lastUpdated},lists:{wishlist,dynamax:{},gmax:{},costumes:{}},publishedListTypes:['wishlist','dynamax','gmax','costumes'],updatedAt:profile.lastUpdated};
+    if(stored&&domain.projectionContentMatches(snapshot,stored,{trainerName:'Owner'}))return{ok:true,status:'reconciled',shareVersion:stored.shareVersion};
+    stored=domain.nextProjection(snapshot,stored,{trainerName:'Owner',now:h.clock()});writes++;
+    return{ok:true,status:'published',shareVersion:stored.shareVersion};
+  };
+  const runtime=createRuntime(window,h,repositoryState,journalState,undefined,()=>{},()=>{},publish,{initializationKind:'provider-only'});
+  await runtime.start();assert.equal(stored.shareVersion,1);assert.equal(writes,1);
+  const identity={surface:'my-list',lane:'wishlist',catalogId:'pokemon:pikachu'},entityId=window.PogoDomain.accountSyncModel.tradeEntryId(identity);
+  assert.equal((await runtime.controller.addEntity({entityType:'tradeEntry',entityId,identity,values:{priority:'H'}})).ok,true);await runtime.controller.drain();
+  assert.equal(stored.shareVersion,2);assert.equal(sanitizeProviderPublicProjection(stored,{trainerName:'Owner'}).lists.wishlist.Pikachu.p,'H');
+  assert.equal((await runtime.controller.patchEntity({entityType:'tradeEntry',entityId,patch:{priority:'M'}})).ok,true);await runtime.controller.drain();
+  assert.equal(stored.shareVersion,3);assert.equal(sanitizeProviderPublicProjection(stored,{trainerName:'Owner'}).lists.wishlist.Pikachu.p,'M');
+  assert.equal((await runtime.controller.deleteEntity({entityType:'tradeEntry',entityId})).ok,true);await runtime.controller.drain();
+  assert.equal(stored.shareVersion,4);assert.deepEqual(Object.keys(sanitizeProviderPublicProjection(stored,{trainerName:'Owner'}).lists.wishlist),[]);
+  await runtime.publishCurrentProjection();assert.equal(stored.shareVersion,4);assert.equal(writes,4);
+  const eevee={surface:'my-list',lane:'wishlist',catalogId:'pokemon:eevee'},eeveeId=window.PogoDomain.accountSyncModel.tradeEntryId(eevee);failNext=true;
+  assert.equal((await runtime.controller.addEntity({entityType:'tradeEntry',entityId:eeveeId,identity:eevee,values:{priority:'L'}})).ok,true);await runtime.controller.drain();
+  assert.equal(h.server.entities.size,2);assert.equal(stored.shareVersion,4);assert.equal(journalState.meta.has('provider-publication-pending-v1'),true);
+  const retried=await runtime.retryPublicProjection();assert.equal(retried.ok,true);assert.equal(stored.shareVersion,5);assert.equal(stored.lists.wishlist.Eevee.p,'L');assert.equal(journalState.meta.has('provider-publication-pending-v1'),false);
 });
 
 test('provider-only initialization rejects partial canonical entities and never publishes them',async()=>{

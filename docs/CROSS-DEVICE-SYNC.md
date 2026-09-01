@@ -34,6 +34,14 @@ profile and resolves the pending value before marking provider-only projection
 ready. A lost profile response reconciles the exact value and revision; it does
 not resend the already-committed provider identity foundation.
 
+Provider-only public publication has a separate owner-partitioned journal entry,
+`provider-publication-pending-v1`. It fingerprints the exact accepted canonical
+trade rows before attempting the UID-rooted public write. The entry survives a
+failed write, browser restart, or PWA reopen and is cleared only after exact
+transaction/readback reconciliation for the same authenticated runtime
+lifecycle. Newer canonical rows supersede older unpublished rows; state cannot
+cross account or session boundaries.
+
 ## Merge Contract
 
 Server transactions validate the operation hash and merge against one logical entity:
@@ -81,7 +89,7 @@ Retired `have`, inventory, offer, trade, decrement, scheduling, and community wo
 
 ## Projection And Privacy
 
-Only an acknowledged private canonical entity can update the product projection. The existing publication gate then derives the public share using active product values only. Operation IDs, field revisions, mutation hashes, tombstones, tags, migration records, recovery candidates, and local journal details are excluded. A publication failure cannot roll back private canonical state.
+Only an acknowledged private canonical entity can update the product projection. For provider-only accounts, the public share is derived from accepted canonical trade rows and the hydrated UID-rooted profile; it never derives from a legacy username-rooted snapshot. Operation IDs, field revisions, mutation hashes, tombstones, tags, migration records, recovery candidates, and local journal details are excluded. A publication failure cannot roll back private canonical state and remains durably pending for retry.
 
 ## Rollout And Rollback
 

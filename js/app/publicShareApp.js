@@ -236,6 +236,24 @@
     await appCheckSdk.getToken(result.instance,false);
     diagnostics.events.push('app-check-ready');
     global.__pogoStartup.appCheckReadyAt=performance.now();
+    const providerPublicShareGateway=global.PogoServices.providerPublicShareGateway;
+    if(providerPublicShareGateway?.DEFAULT_ENABLED===true){
+      diagnostics.readPaths.push('gateway:trainer-handle');diagnostics.events.push('read:gateway:trainer-handle');
+      const client=providerPublicShareGateway.createProviderPublicShareClient({
+        firebaseApp:app,enabled:true,
+        firebaseAppCheckReady:async()=>result,
+        importFunctionsSdk:()=>import(`${FIREBASE_SDK}/firebase-functions.js`)
+      });
+      const provider=await client.read(request.username);
+      if(provider.ok){
+        state.snapshot=provider.snapshot;
+        state.type=LIST_TYPES.includes(request.type)?request.type:'wishlist';
+        state.status='ready';render();
+        global.__pogoShellReady=true;global.__pogoBootComplete=true;
+        global.__pogoStartup.protectedReadyAt=performance.now();
+        clearTimeout(global.__pogoBootWatch);return;
+      }
+    }
     const path=`publicShares/${request.username}`;
     diagnostics.readPaths.push(path);diagnostics.events.push(`read:${path}`);
     const snapshot=await databaseSdk.get(databaseSdk.ref(databaseSdk.getDatabase(app),path));

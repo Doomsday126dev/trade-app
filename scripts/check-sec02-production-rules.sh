@@ -4,9 +4,12 @@ set -euo pipefail
 if [[ -x "$PWD/.firebase-local/jdk/Contents/Home/bin/java" ]]; then
   export JAVA_HOME="$PWD/.firebase-local/jdk/Contents/Home"
   export PATH="$JAVA_HOME/bin:$PATH"
+elif [[ -x "/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home/bin/java" ]]; then
+  export JAVA_HOME="/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home"
+  export PATH="$JAVA_HOME/bin:$PATH"
 fi
-if ! command -v java >/dev/null 2>&1 || ! java -version >/dev/null 2>&1; then
-  echo "SEC-02 production Rules checks require Java JDK 11 or newer." >&2
+if ! command -v java >/dev/null 2>&1 || ! java -version 2>&1 | head -1 | grep -Eq 'version "(2[1-9]|[3-9][0-9])'; then
+  echo "SEC-02 production Rules checks require Java JDK 21 or newer." >&2
   exit 1
 fi
 if [[ -x "$PWD/.firebase-local/bin/firebase" ]]; then

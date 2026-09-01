@@ -121,7 +121,7 @@ test('asset versioning does not change public-share or Firebase behavior',()=>{
   const repository=readFileSync(path.join(root,'js/data/publicShareRepository.js'),'utf8');
   const favoriteCache=readFileSync(path.join(root,'js/data/favoriteShareSessionCache.js'),'utf8');
   assert.match(repository,/client\.read\(`publicShares\/\$\{shareUsername\(username\)\}`\)/);
-  assert.match(favoriteCache,/repository\.read\(favorite\.displayName\)/);
+  assert.match(favoriteCache,/repository\.read\(favorite\.displayName,\{targetUid:favorite\.targetUid\|\|''\}\)/);
   assert.match(html,/publicShares\/\$\{username\}/);
   assert.doesNotMatch(worker,/firebaseio.*cache\.put|firebasedatabase.*cache\.put/);
   assert.match(worker,/if\(isFirebase\(url\)\)return/);

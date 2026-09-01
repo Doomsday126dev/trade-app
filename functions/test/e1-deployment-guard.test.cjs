@@ -69,6 +69,7 @@ test('staging target guard rejects production ambiguity mismatches and absent re
   assert.throws(() => guardE1Target({ ...valid, rtdbDatabaseUrl: 'https://trade-list-a4297.firebaseio.com' }, { privateInputPath: fixture(), now: Date.parse('2030-01-01T13:00:00Z') }), (error) => error.reasons.includes('rtdb_database_mismatch'));
   assert.throws(() => guardE1Target({ ...valid, operationGates: { ...valid.operationGates, RESERVE_HANDLE_ENABLED: 'true' } }, { privateInputPath: fixture(), now: Date.parse('2030-01-01T13:00:00Z') }), (error) => error.reasons.includes('operation_gate_not_false'));
   assert.throws(() => guardE1Target({ ...valid, operationGates: { ...valid.operationGates, READ_ACCOUNT_FOUNDATION_ENABLED: 'invalid' } }, { privateInputPath: fixture(), now: Date.parse('2030-01-01T13:00:00Z') }), (error) => error.reasons.includes('operation_gate_not_false'));
+  assert.throws(() => guardE1Target({ ...valid, operationGates: { ...valid.operationGates, READ_PROVIDER_PUBLIC_SHARE_ENABLED: 'true' } }, { privateInputPath: fixture(), now: Date.parse('2030-01-01T13:00:00Z') }), (error) => error.reasons.includes('operation_gate_not_false'));
 });
 
 test('staging activation guard permits exactly one reviewed legacy mutation gate and rejects unapproved identity activation', () => {

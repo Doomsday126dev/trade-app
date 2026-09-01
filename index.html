@@ -37,7 +37,7 @@ function parsePogoPublicShareRequest(){
   var params=new URLSearchParams(location.search),raw=params.get('view');
   if(raw===null)return null;
   var username=String(raw||'').trim(),type=String(params.get('list')||'wishlist').trim().toLowerCase();
-  var usernameValid=/^[^.#$\/\[\]\u0000-\u001f\u007f]{2,32}$/.test(username);
+  var usernameValid=/^[^.#$\/\[\]\u0000-\u001f\u007f]{2,64}$/.test(username);
   var typeValid=['wishlist','dynamax','gmax','costumes'].includes(type);
   return Object.freeze({username:usernameValid?username:'',type:typeValid?type:'wishlist',valid:usernameValid&&typeValid});
 }
@@ -997,6 +997,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
 <script src="js/domain/tradeListComparison.js?v=2026-08-31.86"></script>
 <script src="js/domain/eventPresentation.js?v=2026-08-31.86"></script>
 <script src="js/domain/publicSharePublication.js?v=2026-08-31.86"></script>
+<script src="js/domain/providerPublicProjection.js?v=2026-08-31.86" data-pogo-provider-public-capability></script>
 <script src="js/domain/accountSyncModel.js?v=2026-08-31.86"></script>
 <script src="js/domain/accountSyncMerge.js?v=2026-08-31.86"></script>
 <script src="js/domain/accountSyncMigration.js?v=2026-08-31.86"></script>
@@ -1028,6 +1029,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
 <script src="js/i18n/core.js?v=2026-08-31.86"></script>
 <script src="js/services/firebaseClient.js?v=2026-08-31.86"></script>
 <script src="js/services/firebaseAppCheck.js?v=2026-08-31.86"></script>
+<script src="js/services/providerPublicShareGateway.js?v=2026-08-31.86" data-pogo-provider-public-capability></script>
 <script src="js/services/e1ClientFoundationCanary.js?v=2026-08-31.86"></script>
 <script src="js/data/subscriptionManager.js?v=2026-08-31.86"></script>
 <script src="js/data/listenerLifecycle.js?v=2026-08-31.86"></script>
@@ -1181,6 +1183,10 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
     const locale=preferredLocale();
     return Array.from(template.content.querySelectorAll('script[src]')).filter(node=>{
       if(node.hasAttribute('data-pogo-provider-capability')&&!providerModulesRequired())return false;
+      if(node.hasAttribute('data-pogo-provider-public-capability')){
+        const capabilities=providerCapabilities();
+        if(!capabilities.providerPublicReadSupport&&!capabilities.providerPublicWriteSupport)return false;
+      }
       const src=node.getAttribute('src');
       const match=src.match(/js\/i18n\/locales\/([a-z-]+)\.js/);
       return!match||match[1]==='en'||match[1]===locale;
@@ -1207,8 +1213,11 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
   async function loadPublicShareScripts(){
     const publicPaths=[
       'js/domain/backgroundCatalog.js','js/domain/backgroundVisual.js','js/domain/priorityValues.js',
-      'js/domain/publicSharePublication.js','js/domain/publicPokemonDex.js','js/domain/spriteSlugs.js','js/domain/costumeSpriteCatalog.js',
+      'js/domain/publicSharePublication.js',
+      ...(providerCapabilities().providerPublicReadSupport?['js/domain/providerPublicProjection.js']:[]),
+      'js/domain/publicPokemonDex.js','js/domain/spriteSlugs.js','js/domain/costumeSpriteCatalog.js',
       'js/utils/textSafety.js','js/services/firebaseAppCheck.js',
+      ...(providerCapabilities().providerPublicReadSupport?['js/services/providerPublicShareGateway.js']:[]),
       'js/app/publicShareApp.js'
     ];
     for(const path of publicPaths)await loadScript(`${path}?v=${RELEASE_ID}`,{ordered:true});

@@ -11,6 +11,8 @@
   const INITIALIZATION_KINDS=Object.freeze(['legacy-migration','provider-only']);
   const PROVIDER_PROFILE_PENDING_META='provider-profile-pending-v1';
   const PROFILE_PENDING_KEYS=Object.freeze(['schemaVersion','ownerUid','values','baseRevision','queuedAt']);
+  const PROVIDER_PUBLICATION_PENDING_META='provider-publication-pending-v1';
+  const PUBLICATION_PENDING_KEYS=Object.freeze(['schemaVersion','ownerUid','rows','fingerprint','queuedAt']);
 
   function count(value){const number=Number(value);return Number.isSafeInteger(number)&&number>0?number:0;}
   function diagnosticCode(value,fallback='account-sync/unknown'){
@@ -124,7 +126,7 @@
     const owner=model.firebaseKey(ownerUid,128),name=model.exactText(username,64);
     if(!owner||!name||!journal||!repository||!INITIALIZATION_KINDS.includes(initializationKind)||
       initializationKind==='legacy-migration'&&typeof readMigrationSources!=='function')throw new TypeError('Account sync runtime binding is invalid');
-    let projectionReady=false,profileReady=initializationKind!=='provider-only',providerProfile=null,providerProfilePending=null,profileMutationPromise=Promise.resolve(),stopped=false,startPromise=null,stopPromise=null,lastPlan=null,startupError='',startupErrorCategory='',migrationState='inactive';
+    let projectionReady=false,profileReady=initializationKind!=='provider-only',providerProfile=null,providerProfilePending=null,publicProjectionPending=null,profileMutationPromise=Promise.resolve(),publicProjectionPromise=Promise.resolve(),stopped=false,startPromise=null,stopPromise=null,lastPlan=null,startupError='',startupErrorCategory='',migrationState='inactive';
     function runtimeState(state){
       const lastError=startupError||state.lastError||'',lastErrorCategory=startupErrorCategory||state.lastErrorCategory||'',currentState=lastError?'sync-error':state.state==='saved'&&!projectionReady?'pending-sync':state.state;
       return Object.freeze({...state,state:currentState,lastError,lastErrorCategory,projectionReady,profileReady,migrationReady:projectionReady,migrationState,runtimeHealthy:currentState==='saved'&&projectionReady&&profileReady&&state.controllerHealthy===true});
@@ -143,7 +145,8 @@
         }
       },
       onAccount:account=>acceptProviderAccountProfile(account),
-      onProjection:onPublicProjection,projectionAllowed:()=>projectionReady&&!stopped
+      onProjection:initializationKind==='provider-only'?queueProviderPublicProjection:onPublicProjection,
+      projectionAllowed:()=>projectionReady&&!stopped
     });
     function requireRunning(){if(stopped)throw Object.assign(new Error('Account sync runtime is closed'),{code:'account-sync/runtime-closed'});}
     function notifyMigration(state,detail={}){migrationState=state;onMigrationState?.(Object.freeze({state,...detail}));}
@@ -160,6 +163,63 @@
     function notifyProviderProfile(profile,{pending=false,resolution=''}={}){
       const projected=Object.freeze({...profile,...model.profileValues(profile),pending,...(resolution?{resolution}: {})});
       if(onProviderProfile?.(projected)===false)throw Object.assign(new Error('Provider profile projection is unresolved'),{code:'account-sync/profile-projection-unresolved'});
+    }
+    function normalizedPublicRows(value){
+      if(!Array.isArray(value))return null;
+      const required=['entryId','surface','lane','catalogId'],allowed=new Set([...required,...model.TRADE_FIELDS]),rows=[];
+      for(const row of value){
+        const keys=model.plainObject(row)?Object.keys(row):[];
+        if(required.some(key=>!Object.hasOwn(row,key))||keys.some(key=>!allowed.has(key)))return null;
+        const entityId=model.firebaseKey(row.entryId,700),identity={surface:row.surface,lane:row.lane,catalogId:row.catalogId};
+        if(!entityId||!model.identityValid('tradeEntry',entityId,identity)||model.TRADE_FIELDS.some(field=>Object.hasOwn(row,field)&&!model.fieldValueValid('tradeEntry',field,row[field])))return null;
+        rows.push(Object.freeze({entryId:entityId,...model.stable(identity),...model.stable(Object.fromEntries(model.TRADE_FIELDS.filter(field=>Object.hasOwn(row,field)).map(field=>[field,row[field]])))}));
+      }
+      return Object.freeze(rows);
+    }
+    async function pendingPublicationRecord(value){
+      const keys=model.plainObject(value)?Object.keys(value).sort():[],expected=[...PUBLICATION_PENDING_KEYS].sort(),rows=normalizedPublicRows(value?.rows),queuedAt=model.integer(value?.queuedAt);
+      if(keys.length!==expected.length||keys.some((key,index)=>key!==expected[index])||value.schemaVersion!==model.SCHEMA_VERSION||value.ownerUid!==owner||!rows||queuedAt===null||!/^[a-f0-9]{64}$/.test(String(value.fingerprint||'')))return null;
+      const fingerprint=await model.sha256Hex(model.canonicalJson([model.SCHEMA_VERSION,'pogo-provider-publication',owner,rows]),crypto);
+      return fingerprint===value.fingerprint?Object.freeze({...value,rows}):null;
+    }
+    async function createPendingPublication(rows){
+      const normalized=normalizedPublicRows(rows);
+      if(!normalized)throw Object.assign(new Error('Provider public projection rows are invalid'),{code:'account-sync/public-projection-invalid'});
+      const fingerprint=await model.sha256Hex(model.canonicalJson([model.SCHEMA_VERSION,'pogo-provider-publication',owner,normalized]),crypto);
+      return Object.freeze({schemaVersion:model.SCHEMA_VERSION,ownerUid:owner,rows:normalized,fingerprint,queuedAt:Number(clock())});
+    }
+    async function flushProviderPublicProjection(pending,operation={kind:'provider-publication-retry'}){
+      requireRunning();
+      if(typeof onPublicProjection!=='function')throw Object.assign(new Error('Provider public projection writer is unavailable'),{code:'account-sync/public-projection-unavailable'});
+      const result=await onPublicProjection(pending.rows,operation);requireRunning();
+      if(!result?.ok)throw Object.assign(new Error(result?.error?.message||'Provider public projection failed'),{code:result?.error?.code||'account-sync/public-projection-failed'});
+      const stored=await pendingPublicationRecord(await journal.getMeta(PROVIDER_PUBLICATION_PENDING_META));requireRunning();
+      if(!stored||stored.fingerprint!==pending.fingerprint)throw Object.assign(new Error('Provider public projection pending state changed'),{code:'account-sync/public-projection-pending-changed'});
+      await journal.removeMeta(PROVIDER_PUBLICATION_PENDING_META);requireRunning();publicProjectionPending=null;
+      return Object.freeze({...result,ok:true,status:result.status||'published'});
+    }
+    function queueProviderPublicProjection(rows,operation){
+      const work=publicProjectionPromise.then(async()=>{
+        requireRunning();const created=await createPendingPublication(rows),storedValue=await journal.getMeta(PROVIDER_PUBLICATION_PENDING_META),stored=storedValue==null?null:await pendingPublicationRecord(storedValue);requireRunning();
+        if(storedValue!=null&&!stored)throw Object.assign(new Error('Pending provider publication evidence is invalid'),{code:'account-sync/public-projection-pending-invalid'});
+        const pending=stored?.fingerprint===created.fingerprint?stored:created;
+        await journal.setMeta(PROVIDER_PUBLICATION_PENDING_META,pending);requireRunning();publicProjectionPending=pending;
+        return flushProviderPublicProjection(pending,operation);
+      });
+      publicProjectionPromise=work.then(()=>undefined,()=>undefined);return work;
+    }
+    function retryPublicProjection(){
+      const work=publicProjectionPromise.then(async()=>{
+        requireRunning();const storedValue=publicProjectionPending||await journal.getMeta(PROVIDER_PUBLICATION_PENDING_META);
+        if(storedValue==null)return Object.freeze({ok:true,status:'unchanged'});
+        const stored=await pendingPublicationRecord(storedValue);requireRunning();
+        if(!stored)throw Object.assign(new Error('Pending provider publication evidence is invalid'),{code:'account-sync/public-projection-pending-invalid'});
+        publicProjectionPending=stored;return flushProviderPublicProjection(stored);
+      });
+      publicProjectionPromise=work.then(()=>undefined,()=>undefined);return work;
+    }
+    function publishCurrentProjection(kind='explicit-share'){
+      requireRunning();return controller.publishAcceptedProjection(Object.freeze({kind}));
     }
     async function acceptProviderAccountProfile(account){
       if(initializationKind!=='provider-only')return;
@@ -222,7 +282,11 @@
         if(!providerProfilePending&&model.canonicalJson(normalized.value)===model.canonicalJson(model.profileValues(providerProfile)))return Object.freeze({ok:true,status:'unchanged',value:providerProfile});
         const pending=Object.freeze({schemaVersion:model.SCHEMA_VERSION,ownerUid:owner,values:normalized.value,baseRevision:providerProfilePending?.baseRevision??providerProfile.revision,queuedAt:Number(clock())});
         await journal.setMeta(PROVIDER_PROFILE_PENDING_META,pending);requireRunning();providerProfilePending=pending;notifyProviderProfile({...providerProfile,...pending.values},{pending:true});
-        try{return Object.freeze({ok:true,status:'updated',value:await flushProviderProfile(pending)});}
+        try{
+          const value=await flushProviderProfile(pending);
+          if(projectionReady)await controller.publishAcceptedProjection(Object.freeze({kind:'provider-profile-update'}));
+          return Object.freeze({ok:true,status:'updated',value});
+        }
         catch(error){notifyState(await controller.snapshot());return Object.freeze({...model.failure('account-sync/profile-pending','Provider profile change is saved on this device and will retry'),causeCode:diagnosticCode(error,'account-sync/network-failed')});}
       });
       profileMutationPromise=work.then(()=>undefined,()=>undefined);return work;
@@ -231,7 +295,9 @@
       const work=profileMutationPromise.then(async()=>{
         requireRunning();const stored=providerProfilePending||pendingProfileRecord(await journal.getMeta(PROVIDER_PROFILE_PENDING_META));
         if(!stored)return Object.freeze({ok:true,status:'unchanged',value:providerProfile});
-        return Object.freeze({ok:true,status:'updated',value:await flushProviderProfile(stored)});
+        const value=await flushProviderProfile(stored);
+        if(projectionReady)await controller.publishAcceptedProjection(Object.freeze({kind:'provider-profile-update'}));
+        return Object.freeze({ok:true,status:'updated',value});
       });
       profileMutationPromise=work.then(()=>undefined,()=>undefined);return work;
     }
@@ -487,8 +553,8 @@
       return stopPromise;
     }
     async function snapshot(){return runtimeState(await controller.snapshot());}
-    return Object.freeze({ownerUid:owner,username:name,controller,start,stop,snapshot,updateProviderProfile,retryProviderProfile,recordRecoveryCandidate,listRecoveryCandidates,completeRecoveryReview,completeRecoveryReviews,retryBlocked:()=>controller.retryBlocked(),conflictDetails:()=>controller.conflictDetails(),acceptConflict:id=>controller.acceptConflict(id),reapplyConflict:id=>controller.reapplyConflict(id),get migrationPlan(){return lastPlan;},get providerProfile(){return providerProfile;},get profileReady(){return profileReady;},get projectionReady(){return projectionReady;}});
+    return Object.freeze({ownerUid:owner,username:name,controller,start,stop,snapshot,updateProviderProfile,retryProviderProfile,retryPublicProjection,publishCurrentProjection,recordRecoveryCandidate,listRecoveryCandidates,completeRecoveryReview,completeRecoveryReviews,retryBlocked:()=>controller.retryBlocked(),conflictDetails:()=>controller.conflictDetails(),acceptConflict:id=>controller.acceptConflict(id),reapplyConflict:id=>controller.reapplyConflict(id),get migrationPlan(){return lastPlan;},get providerProfile(){return providerProfile;},get profileReady(){return profileReady;},get publicProjectionPending(){return!!publicProjectionPending;},get projectionReady(){return projectionReady;}});
   }
 
-  root.accountSyncRuntime=Object.freeze({HISTORICAL_RETRY_CODE,PROVIDER_PROFILE_PENDING_META,diagnosticCode,diagnosticCategory,recoveryPlan,healthySnapshot,sanitizedDiagnostic,createRecoveryCoordinator,createAccountSyncRuntime});
+  root.accountSyncRuntime=Object.freeze({HISTORICAL_RETRY_CODE,PROVIDER_PROFILE_PENDING_META,PROVIDER_PUBLICATION_PENDING_META,diagnosticCode,diagnosticCategory,recoveryPlan,healthySnapshot,sanitizedDiagnostic,createRecoveryCoordinator,createAccountSyncRuntime});
 })(window);

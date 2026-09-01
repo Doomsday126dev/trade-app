@@ -50,6 +50,7 @@ test('shell configuration is explicit and all authority gates fail closed', () =
     providerAccountCompatibilityRequired: false,
     revision: 'local',
     readAccountFoundationEnabled: false,
+    readProviderPublicShareEnabled: false,
     createProviderAccountEnabled: false,
     reserveTrainerHandleEnabled: false,
     repairAccountFoundationEnabled: false,
@@ -81,6 +82,7 @@ test('shell configuration is explicit and all authority gates fail closed', () =
     REPAIR_FOUNDATION_ENABLED: 'true', APPLY_MIGRATION_ENABLED: 'true'
   })), /E1_OPERATION_GATE_INVALID/);
   assert.throws(() => loadConfiguration(environment({ READ_ACCOUNT_FOUNDATION_ENABLED: undefined })), /E1_OPERATION_GATE_INVALID/);
+  assert.throws(() => loadConfiguration(environment({ READ_PROVIDER_PUBLIC_SHARE_ENABLED: undefined })), /E1_OPERATION_GATE_INVALID/);
 });
 
 test('startup dependency check requires Firestore even while reserve remains disabled', () => {

@@ -203,7 +203,7 @@ test('responsive contracts retain 48px targets, wrapping, and no parallel organi
 });
 
 test('release and safety boundaries remain coherent',()=>{
-  assert.match(html,/2026-08-30\.84/);assert.doesNotMatch(html,/2026-08-29\.83/);
+  assert.match(html,/2026-08-31\.86/);assert.doesNotMatch(html,/2026-08-30\.85/);
   assert.match(readFileSync(path.join(root,'js/domain/shareVisibility.js'),'utf8'),/SHARE_VISIBILITY_MODEL_ENABLED\s*:\s*false/);assert.match(html,/SYNCED_TRAINER_PREFERENCES_ENABLED!==false/);
   assert.doesNotMatch(html,/managedTrainerPreferencesRepository\.(?:mutate|write|save)/);
 });

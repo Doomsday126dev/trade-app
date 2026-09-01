@@ -107,6 +107,8 @@ test('Group C proof mode is production-only exact bounded and mutation-gate fail
     /E1_READ_PROOF_CONFIGURATION_INVALID/);
   assert.throws(() => loadConfiguration(proofEnvironment({ RESERVE_HANDLE_ENABLED: 'true' }), () => NOW),
     /E1_READ_PROOF_CONFIGURATION_INVALID/);
+  assert.throws(() => loadConfiguration(proofEnvironment({ READ_PROVIDER_PUBLIC_SHARE_ENABLED: 'true' }), () => NOW),
+    /E1_READ_PROOF_CONFIGURATION_INVALID/);
   assert.throws(() => loadConfiguration({
     ...proofEnvironment(),
     APP_ENVIRONMENT: 'staging',

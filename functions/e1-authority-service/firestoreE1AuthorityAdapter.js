@@ -1,7 +1,11 @@
 'use strict';
 
+const { normalizeHandle } = require('./handleNormalization');
+
 const RATE_LIMIT_OPERATIONS = new Set([
   'readAccountFoundation',
+  'listTrainerDirectory',
+  'resolveFavoriteTrainerIdentity',
   'createProviderAccountFoundation',
   'reserveTrainerHandle',
   'repairAccountFoundation',
@@ -309,6 +313,78 @@ function createFirestoreE1AuthorityAdapter({ firestore, now = () => Date.now() }
     });
   }
 
+  async function readPublicShareIdentity(input) {
+    const handle = await handleRef(input.handleKey).get();
+    if (!handle.exists) return null;
+    const handleData = handle.data();
+    const uid = handleData?.uid;
+    let canonicalHandle;
+    try { canonicalHandle = normalizeHandle(handleData?.canonicalTrainerName); }
+    catch { fail('e1/public-identity-conflict'); }
+    if (handleData?.schemaVersion !== 1 || typeof uid !== 'string' || !uid || uid.includes('/') ||
+        canonicalHandle.handleKey !== input.handleKey || canonicalHandle.normalized !== input.normalizedTrainerName ||
+        handleData.normalizedTrainerName !== input.normalizedTrainerName ||
+        handleData.state !== 'active' || handleData.revision !== 1) fail('e1/public-identity-conflict');
+    const account = await accountRef(uid).get();
+    if (!account.exists) fail('e1/public-identity-conflict');
+    const accountData = account.data();
+    if (accountData?.schemaVersion !== 1 || accountData.uid !== uid || accountData.handleKey !== input.handleKey ||
+        accountData.canonicalTrainerName !== canonicalHandle.display ||
+        accountData.normalizedTrainerName !== input.normalizedTrainerName || accountData.status !== 'active') {
+      fail('e1/public-identity-conflict');
+    }
+    return Object.freeze({ ownerUid: uid, canonicalTrainerName: canonicalHandle.display });
+  }
+
+  async function listTrainerDirectory({ normalizedQuery, afterNormalized = '', pageSize }) {
+    if (typeof firestore.collection !== 'function' || typeof normalizedQuery !== 'string' ||
+        typeof afterNormalized !== 'string' || !Number.isSafeInteger(pageSize) || pageSize < 1 || pageSize > 25 ||
+        afterNormalized && (!normalizedQuery || !afterNormalized.startsWith(normalizedQuery))) {
+      fail('e1/directory-input-invalid');
+    }
+    let query = firestore.collection('trainerHandles').orderBy('normalizedTrainerName');
+    if (normalizedQuery) {
+      query = afterNormalized ? query.startAfter(afterNormalized) : query.startAt(normalizedQuery);
+      query = query.endAt(`${normalizedQuery}\uf8ff`);
+    } else if (afterNormalized) {
+      fail('e1/directory-input-invalid');
+    }
+    const snapshot = await query.limit(pageSize + 1).get();
+    const documents = snapshot.docs || [];
+    const selected = documents.slice(0, pageSize);
+    const accounts = await Promise.all(selected.map((document) => {
+      const uid = document.data()?.uid;
+      if (typeof uid !== 'string' || !uid || uid.includes('/')) fail('e1/directory-identity-conflict');
+      return accountRef(uid).get();
+    }));
+    const handles = selected.map((document, index) => {
+      const handleData = document.data();
+      const account = accounts[index];
+      if (!account.exists) fail('e1/directory-identity-conflict');
+      let canonical;
+      try { canonical = normalizeHandle(handleData?.canonicalTrainerName); }
+      catch { fail('e1/directory-identity-conflict'); }
+      const accountData = account.data();
+      if (document.id !== canonical.handleKey || handleData?.schemaVersion !== 1 ||
+          handleData.normalizedTrainerName !== canonical.normalized || handleData.state !== 'active' ||
+          handleData.revision !== 1 || accountData?.schemaVersion !== 1 || accountData.uid !== handleData.uid ||
+          accountData.handleKey !== canonical.handleKey || accountData.canonicalTrainerName !== canonical.display ||
+          accountData.normalizedTrainerName !== canonical.normalized || accountData.status !== 'active') {
+        fail('e1/directory-identity-conflict');
+      }
+      return Object.freeze({
+        canonicalTrainerName: canonical.display,
+        normalizedTrainerName: canonical.normalized
+      });
+    });
+    return Object.freeze({
+      handles: Object.freeze(handles),
+      nextAfterNormalized: documents.length > pageSize && handles.length
+        ? handles.at(-1).normalizedTrainerName
+        : null
+    });
+  }
+
   async function createProviderAccountFoundation(input, { replayOnly = false } = {}) {
     return firestore.runTransaction(async (transaction) => {
       const refs = [
@@ -479,6 +555,8 @@ function createFirestoreE1AuthorityAdapter({ firestore, now = () => Date.now() }
     freezeIdentityConflict,
     operationRequestExists,
     readAccountFoundation,
+    listTrainerDirectory,
+    readPublicShareIdentity,
     readProviderAccountFoundation,
     repairAccountFoundation,
     reserveTrainerHandle

@@ -4,6 +4,9 @@ set -euo pipefail
 if [[ -x "$PWD/.firebase-local/jdk/Contents/Home/bin/java" ]]; then
   export JAVA_HOME="$PWD/.firebase-local/jdk/Contents/Home"
   export PATH="$JAVA_HOME/bin:$PATH"
+elif [[ -x "/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home/bin/java" ]]; then
+  export JAVA_HOME="/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home"
+  export PATH="$JAVA_HOME/bin:$PATH"
 fi
 if ! command -v java >/dev/null 2>&1 || ! java -version >/dev/null 2>&1; then
   echo "E.1 Firestore authority proof requires Java JDK 11 or newer." >&2

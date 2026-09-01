@@ -77,6 +77,9 @@ function candidateManifest(overrides = {}) {
     sourceFingerprint: sourceFingerprint(sourceFiles),
     expectedExports: [
       'readE1AccountFoundation',
+      'readE1ProviderPublicShare',
+      'listE1TrainerDirectory',
+      'resolveE1FavoriteTrainerIdentity',
       'createE1ProviderAccountFoundation',
       'reserveE1TrainerHandle'
     ],
@@ -388,6 +391,8 @@ test('Group C enable and restoration use one fingerprint source and differ only 
     assert.match(restoreArgs.find((value) => value.startsWith('--set-env-vars=')), /GATEWAY_INVOCATION_ENABLED=false/u);
     assert.match(enableArgs.find((value) => value.startsWith('--set-env-vars=')), /READ_PROOF_MODE=true/u);
     assert.match(restoreArgs.find((value) => value.startsWith('--set-env-vars=')), /READ_PROOF_MODE=false/u);
+    assert.match(enableArgs.find((value) => value.startsWith('--set-env-vars=')),
+      /PROVIDER_PUBLIC_PROJECTION_ENABLED=false/u);
     assert.ok(enableArgs.includes(`--source=${staging}`));
   } finally { fs.rmSync(staging, { recursive: true, force: true }); }
 });
@@ -562,6 +567,9 @@ test('D2 enable and restoration use the canonical immutable source and only appr
   assert.equal(enabled.sourceFingerprint, restored.sourceFingerprint);
   assert.deepEqual(enabled.functions, [
     'readE1AccountFoundation',
+    'readE1ProviderPublicShare',
+    'listE1TrainerDirectory',
+    'resolveE1FavoriteTrainerIdentity',
     'createE1ProviderAccountFoundation',
     'reserveE1TrainerHandle'
   ]);
@@ -785,6 +793,7 @@ function authorityServiceFixture(reserveEnabled = false) {
       serviceAccountName: 'e1-identity-authority-runtime@trade-list-a4297.iam.gserviceaccount.com',
       containers: [{ image: `us-central1-docker.pkg.dev/project/authority@sha256:${'a'.repeat(64)}`, env: [
         ['READ_ACCOUNT_FOUNDATION_ENABLED', false], ['RESERVE_HANDLE_ENABLED', reserveEnabled],
+        ['READ_PROVIDER_PUBLIC_SHARE_ENABLED', false],
         ['CREATE_PROVIDER_ACCOUNT_ENABLED', false],
         ['REPAIR_FOUNDATION_ENABLED', false], ['APPLY_MIGRATION_ENABLED', false],
         ['FREEZE_CONFLICT_ENABLED', false]
@@ -944,7 +953,8 @@ test('mocked D3 continuation deployment enables only reserve plus gateway while 
     if (args[0] === 'functions' && args[1] === 'deploy') return { status: 0, stdout: '', stderr: '' };
     if (args[0] === 'functions' && args[1] === 'describe') return { status: 0, stderr: '', stdout: JSON.stringify({
       serviceConfig: { serviceAccountEmail: 'e1-authority-gateway@trade-list-a4297.iam.gserviceaccount.com',
-        environmentVariables: { GATEWAY_INVOCATION_ENABLED: String(plan.gateEnabled), READ_PROOF_MODE: 'false' } }
+        environmentVariables: { GATEWAY_INVOCATION_ENABLED: String(plan.gateEnabled), READ_PROOF_MODE: 'false',
+          PROVIDER_PUBLIC_PROJECTION_ENABLED: 'false' } }
     }) };
     throw new Error(`unexpected mocked command: ${args.join(' ')}`);
   };
@@ -952,13 +962,13 @@ test('mocked D3 continuation deployment enables only reserve plus gateway while 
   verifyAuthorityService(plan, authority, true);
   const replacements = calls.filter((args) => args[0] === 'run' && args[1] === 'services' && args[2] === 'replace');
   assert.equal(replacements.length, 2);
-  assert.equal(calls.filter((args) => args[0] === 'functions' && args[1] === 'deploy').length, 3);
+  assert.equal(calls.filter((args) => args[0] === 'functions' && args[1] === 'deploy').length, plan.functions.length);
   assert.equal(calls.some((args) => args.includes('functions/.local')), false);
   const enabled = authorityReplacement(authorityServiceFixture(false), true);
   const values = Object.fromEntries(enabled.spec.template.spec.containers[0].env.map((entry) => [entry.name, entry.value]));
   assert.equal(values.RESERVE_HANDLE_ENABLED, 'true');
   assert.deepEqual(Object.entries(values).filter(([name]) => name !== 'RESERVE_HANDLE_ENABLED')
-    .map(([, value]) => value), ['false', 'false', 'false', 'false', 'false']);
+    .map(([, value]) => value), ['false', 'false', 'false', 'false', 'false', 'false']);
 });
 
 test('clean-start D3 execution preserves the original gateway-only deploy behavior', () => {
@@ -975,12 +985,13 @@ test('clean-start D3 execution preserves the original gateway-only deploy behavi
     if (args[0] === 'functions' && args[1] === 'deploy') return { status: 0, stdout: '', stderr: '' };
     if (args[0] === 'functions' && args[1] === 'describe') return { status: 0, stderr: '', stdout: JSON.stringify({
       serviceConfig: { serviceAccountEmail: 'e1-authority-gateway@trade-list-a4297.iam.gserviceaccount.com',
-        environmentVariables: { GATEWAY_INVOCATION_ENABLED: 'true', READ_PROOF_MODE: 'false' } }
+        environmentVariables: { GATEWAY_INVOCATION_ENABLED: 'true', READ_PROOF_MODE: 'false',
+          PROVIDER_PUBLIC_PROJECTION_ENABLED: 'false' } }
     }) };
     throw new Error(`clean-start invoked an unexpected command: ${args.join(' ')}`);
   };
   executePlan(plan, { spawn });
-  assert.equal(calls.filter((args) => args[0] === 'functions' && args[1] === 'deploy').length, 3);
+  assert.equal(calls.filter((args) => args[0] === 'functions' && args[1] === 'deploy').length, plan.functions.length);
   assert.equal(calls.some((args) => args[0] === 'run'), false);
 });
 
@@ -1025,7 +1036,8 @@ test('mocked D3 continuation deployment restores gateway and authority after ena
     }
     if (args[0] === 'functions' && args[1] === 'describe') return { status: 0, stderr: '', stdout: JSON.stringify({
       serviceConfig: { serviceAccountEmail: 'e1-authority-gateway@trade-list-a4297.iam.gserviceaccount.com',
-        environmentVariables: { GATEWAY_INVOCATION_ENABLED: String(gatewayEnabled), READ_PROOF_MODE: 'false' } }
+        environmentVariables: { GATEWAY_INVOCATION_ENABLED: String(gatewayEnabled), READ_PROOF_MODE: 'false',
+          PROVIDER_PUBLIC_PROJECTION_ENABLED: 'false' } }
     }) };
     throw new Error(`unexpected mocked command: ${args.join(' ')}`);
   };
@@ -1034,7 +1046,7 @@ test('mocked D3 continuation deployment restores gateway and authority after ena
     .map((entry) => [entry.name, entry.value])).RESERVE_HANDLE_ENABLED, 'false');
   assert.equal(gatewayEnabled, false);
   assert.equal(calls.filter((args) => args[0] === 'run' && args[1] === 'services' && args[2] === 'replace').length, 4);
-  assert.equal(deploymentAttempts, 4);
+  assert.equal(deploymentAttempts, plan.functions.length + 1);
 });
 
 test('authority gate-only replacement rejects immutable image drift', () => {
@@ -1178,9 +1190,9 @@ test('Group E authority replacement enables only read and restore strips private
   const enabled = authorityReplacement(authorityServiceFixture(false), true, plan);
   const enabledEnv = Object.fromEntries(enabled.spec.template.spec.containers[0].env.map((entry) => [entry.name, entry.value]));
   assert.equal(enabledEnv.READ_ACCOUNT_FOUNDATION_ENABLED, 'true');
-  assert.deepEqual(Object.fromEntries(['CREATE_PROVIDER_ACCOUNT_ENABLED','RESERVE_HANDLE_ENABLED','REPAIR_FOUNDATION_ENABLED','APPLY_MIGRATION_ENABLED',
+  assert.deepEqual(Object.fromEntries(['READ_PROVIDER_PUBLIC_SHARE_ENABLED','CREATE_PROVIDER_ACCOUNT_ENABLED','RESERVE_HANDLE_ENABLED','REPAIR_FOUNDATION_ENABLED','APPLY_MIGRATION_ENABLED',
     'FREEZE_CONFLICT_ENABLED'].map((name) => [name, enabledEnv[name]])), {
-    CREATE_PROVIDER_ACCOUNT_ENABLED:'false',RESERVE_HANDLE_ENABLED:'false',REPAIR_FOUNDATION_ENABLED:'false',APPLY_MIGRATION_ENABLED:'false',FREEZE_CONFLICT_ENABLED:'false'
+    READ_PROVIDER_PUBLIC_SHARE_ENABLED:'false',CREATE_PROVIDER_ACCOUNT_ENABLED:'false',RESERVE_HANDLE_ENABLED:'false',REPAIR_FOUNDATION_ENABLED:'false',APPLY_MIGRATION_ENABLED:'false',FREEZE_CONFLICT_ENABLED:'false'
   });
   assert.equal(enabledEnv.GROUP_E_CLIENT_MODE, 'synthetic-canary');
   const restored = authorityReplacement(enabled, false, plan);

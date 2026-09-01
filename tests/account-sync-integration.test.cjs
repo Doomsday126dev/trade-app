@@ -240,8 +240,10 @@ test('allowlisted mutations cannot fall through to legacy writers while canonica
   assert.ok(favoriteWrite.indexOf('await accountSyncMutationAuthority()')<favoriteWrite.indexOf('controller.addEntity'));
   assert.match(favoriteWrite,/authority\.mode==='blocked'/);
   assert.match(favoriteWrite,/authority\.controller\.addEntity/);
-  assert.match(favoriteWrite,/if\(!targetUid\)\{toast\(i18nCore\.t\('organizer\.favoriteSyncUnavailable'/);
-  assert.ok(favoriteWrite.indexOf('if(!targetUid)')<favoriteWrite.indexOf('authority.controller.addEntity'));
+  assert.match(favoriteWrite,/identity=await accountSyncFavoriteIdentity\(username\)/);
+  assert.match(favoriteWrite,/if\(!identity\)\{toast\(i18nCore\.t\('organizer\.favoriteSyncUnavailable'/);
+  assert.match(favoriteWrite,/const targetUid=identity\.targetUid,displayName=identity\.canonicalTrainerName/);
+  assert.ok(favoriteWrite.indexOf('if(!identity)')<favoriteWrite.indexOf('authority.controller.addEntity'));
   assert.doesNotMatch(favoriteWrite,/recordUnresolvedFavorite|saveFavoriteOrganization\(username\).*favorite-add/s);
   assert.doesNotMatch(favoriteWrite,/managedAccountSyncRuntime\?\.controller/);
 
