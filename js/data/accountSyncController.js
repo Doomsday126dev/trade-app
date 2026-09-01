@@ -3,7 +3,7 @@
   const model=global.PogoDomain?.accountSyncModel,merge=global.PogoDomain?.accountSyncMerge;
   if(!model||!merge)throw new Error('Account sync model and merge engine must load before the controller');
 
-  function createAccountSyncController({journal,repository,ownerUid,enabled=false,writesEnabled=false,allowlistedUids=[],online=()=>global.navigator?.onLine!==false,onState,onEntities,onProjection,projectionAllowed=()=>true,clock=()=>Date.now(),crypto=global.crypto}={}){
+  function createAccountSyncController({journal,repository,ownerUid,enabled=false,writesEnabled=false,allowlistedUids=[],online=()=>global.navigator?.onLine!==false,onState,onEntities,onAccount,onProjection,projectionAllowed=()=>true,clock=()=>Date.now(),crypto=global.crypto}={}){
     const owner=model.firebaseKey(ownerUid,128),allowlist=new Set((allowlistedUids||[]).map(String));
     if(!journal||!repository||!owner||journal.ownerUid!==owner||repository.ownerUid!==owner)throw new TypeError('Account sync controller owner binding is invalid');
     const eligible=enabled===true&&writesEnabled===true&&allowlist.has(owner);
@@ -112,7 +112,7 @@
       return Object.freeze({state,eligible,active,online:online(),listenerState,listenerHealthy,controllerHealthy:active&&listenerHealthy&&!lastError&&!unsafeBlockedCount,lastSyncAt,lastError:effectiveError,lastErrorCategory:effectiveCategory,lastProjectionError,pendingCount:journalState.pendingCount,blockedCount:journalState.blockedCount,recoverableBlockedCount,unsafeBlockedCount,blockedCategories:Object.freeze([...(journalState.blockedCategories||[])]),conflictCount:journalState.conflictCount,recoveryCandidateCount:journalState.recoveryCandidateCount,entityCount:entities.size,privateValuesExposed:false});
     }
     function accountEntities(value){
-      const allowedCollections=new Set(['meta','tradeEntries','favorites','tags','migrations','recoveryCandidates']);
+      const allowedCollections=new Set(['meta','profile','tradeEntries','favorites','tags','migrations','recoveryCandidates']);
       if(value!=null&&!model.plainObject(value))throw Object.assign(new Error('Canonical account sync data is invalid'),{code:'account-sync/remote-entity-invalid'});
       if(Object.keys(value||{}).some(collectionName=>!allowedCollections.has(collectionName)))throw Object.assign(new Error('Canonical account sync data is invalid'),{code:'account-sync/remote-entity-invalid'});
       const out=[];
@@ -188,6 +188,7 @@
       if(!active||epoch!==lifecycleEpoch)return;
       acceptedEntities.clear();for(const [entityKey,entity] of accepted)acceptedEntities.set(entityKey,entity);
       await rebuildOptimisticEntities();
+      await onAccount?.(value);
       clearError('listener','canonical');emit();
     }
     function serializeCanonical(task){

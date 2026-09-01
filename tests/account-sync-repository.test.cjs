@@ -20,13 +20,14 @@ function resolveServerTimestamps(value,time){
   return value;
 }
 function repositoryFixture(window,{transactionTimestampOffset=0,rejectNoOpWrite=false,canonicalReadOverride=null}={}){
-  let current=null,serverTime=50_000,serverTimestampCalls=0,transactionCalls=0,getCalls=0,abortedTransactions=0,lastProposed=null,lastTransactionValue=null;
+  let current=null,serverTime=50_000,serverTimestampCalls=0,transactionCalls=0,getCalls=0,abortedTransactions=0,lastProposed=null,lastTransactionValue=null,lastTransactionTarget='',lastGetTarget='';
   const snapshot=value=>({exists:()=>value!=null,val:()=>clone(value)});
   const repository=window.PogoData.accountSyncRepository.createAccountSyncRepository({
     database:{},ownerUid:'uid-owner',clock:()=>1,
-    ref:(_database,target)=>target,get:async()=>{getCalls++;const value=typeof canonicalReadOverride==='function'?canonicalReadOverride(clone(current),getCalls):current;return snapshot(value);},onValue:()=>()=>{},
+    ref:(_database,target)=>target,get:async target=>{getCalls++;lastGetTarget=target;const value=typeof canonicalReadOverride==='function'?canonicalReadOverride(clone(current),getCalls):current;return snapshot(value);},onValue:()=>()=>{},
     serverTimestamp:()=>{serverTimestampCalls++;return{'.sv':'timestamp'};},
-    runTransaction:async(_target,update)=>{
+    runTransaction:async(target,update)=>{
+      lastTransactionTarget=target;
       transactionCalls++;lastProposed=update(clone(current));
       if(lastProposed===undefined){abortedTransactions++;return{committed:false,snapshot:snapshot(current)};}
       if(rejectNoOpWrite&&JSON.stringify(lastProposed)===JSON.stringify(current))throw Object.assign(new Error('permission_denied'),{code:'PERMISSION_DENIED'});
@@ -37,7 +38,7 @@ function repositoryFixture(window,{transactionTimestampOffset=0,rejectNoOpWrite=
       return{committed:true,snapshot:snapshot(lastTransactionValue)};
     }
   });
-  return{repository,get current(){return current;},get lastProposed(){return lastProposed;},get lastTransactionValue(){return lastTransactionValue;},get serverTimestampCalls(){return serverTimestampCalls;},get transactionCalls(){return transactionCalls;},get getCalls(){return getCalls;},get abortedTransactions(){return abortedTransactions;}};
+  return{repository,get current(){return current;},get lastProposed(){return lastProposed;},get lastTransactionValue(){return lastTransactionValue;},get lastTransactionTarget(){return lastTransactionTarget;},get lastGetTarget(){return lastGetTarget;},get serverTimestampCalls(){return serverTimestampCalls;},get transactionCalls(){return transactionCalls;},get getCalls(){return getCalls;},get abortedTransactions(){return abortedTransactions;}};
 }
 function recoveryReviewRecord(overrides={}){return{schemaVersion:1,kind:'recovery-review-acceptance',ownerUid:'uid-owner',trainerUsername:'Owner',evidenceFingerprint:'a'.repeat(64),candidateCount:66,acceptedAt:100,...overrides};}
 function recoveryReviewFixture(window,{initial=null,throwAfterCommit=false}={}){
@@ -114,6 +115,29 @@ test('account metadata initialization uses one server timestamp and preserves it
   assert.equal(fixture.lastProposed.initializedAt,fixture.lastProposed.updatedAt);
   const second=await fixture.repository.updateMeta({ownerUid:'uid-owner',initialized:true,initializedAt:999,featureVersion:1});
   assert.equal(second.ok,true);assert.equal(second.value.initializedAt,50_001);assert.equal(second.value.updatedAt,50_002);
+});
+
+test('provider profile writes use the exact UID-rooted path and reconcile idempotently with server timestamps',async()=>{
+  const window=load(),fixture=repositoryFixture(window),created=await fixture.repository.writeProfile({friendCode:'000011112222',bio:'Available',discord:'trainer.126',avatarPokemon:'pokemon:150:base'},{baseRevision:0});
+  assert.equal(created.ok,true);assert.equal(created.status,'updated');assert.equal(created.value.revision,1);
+  assert.equal(created.value.friendCode,'0000 1111 2222');assert.equal(created.value.createdAt,50_001);assert.equal(created.value.lastUpdated,50_001);
+  assert.equal(fixture.lastTransactionTarget,'accountSync/uid-owner/profile');
+  assert.deepEqual(Object.keys(created.value).sort(),['avatarPokemon','bio','createdAt','discord','friendCode','lastUpdated','ownerUid','revision','schemaVersion']);
+
+  const retried=await fixture.repository.writeProfile({friendCode:'0000 1111 2222',bio:'Available',discord:'trainer.126',avatarPokemon:'pokemon:150:base'},{baseRevision:1});
+  assert.equal(retried.ok,true);assert.equal(retried.status,'idempotent');assert.equal(retried.value.revision,1);assert.equal(fixture.lastGetTarget,'accountSync/uid-owner/profile');
+
+  const updated=await fixture.repository.writeProfile({friendCode:'0000 1111 2222',bio:'Available evenings',discord:'trainer.126',avatarPokemon:'pokemon:150:base'},{baseRevision:1});
+  assert.equal(updated.ok,true);assert.equal(updated.status,'updated');assert.equal(updated.value.revision,2);assert.equal(updated.value.createdAt,50_001);assert.equal(updated.value.lastUpdated,50_002);
+});
+
+test('provider profile writes reject unknown fields and stale revisions without changing canonical state',async()=>{
+  const window=load(),fixture=repositoryFixture(window);await fixture.repository.writeProfile({friendCode:'000011112222'},{baseRevision:0});
+  const before=clone(fixture.current),transactions=fixture.transactionCalls;
+  const invalid=await fixture.repository.writeProfile({friendCode:'0000 1111 2222',privateNote:'secret'},{baseRevision:1});
+  assert.equal(invalid.ok,false);assert.equal(invalid.error.code,'account-sync/profile-invalid');assert.equal(fixture.transactionCalls,transactions);
+  const stale=await fixture.repository.writeProfile({friendCode:'0000 1111 2222',bio:'stale'},{baseRevision:0});
+  assert.equal(stale.ok,false);assert.equal(stale.error.code,'account-sync/profile-conflict');assert.deepEqual(fixture.current,before);
 });
 
 test('invalid create-only evidence IDs fail before any parent-path transaction',async()=>{

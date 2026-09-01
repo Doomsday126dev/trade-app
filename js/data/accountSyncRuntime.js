@@ -9,13 +9,15 @@
   const RECOVERY_REVIEW_KIND='recovery-review-acceptance';
   const HISTORICAL_RETRY_CODE='account-sync/committed-entity-invalid';
   const INITIALIZATION_KINDS=Object.freeze(['legacy-migration','provider-only']);
+  const PROVIDER_PROFILE_PENDING_META='provider-profile-pending-v1';
+  const PROFILE_PENDING_KEYS=Object.freeze(['schemaVersion','ownerUid','values','baseRevision','queuedAt']);
 
   function count(value){const number=Number(value);return Number.isSafeInteger(number)&&number>0?number:0;}
   function diagnosticCode(value,fallback='account-sync/unknown'){
     const code=String(value?.code||value||'');return/^account-sync\/[a-z0-9-]{1,80}$/.test(code)?code:fallback;
   }
   function diagnosticCategory(value,fallback='runtime'){
-    const category=String(value||'');return new Set(['blocked-operation','canonical','conflict','healthy','journal','listener','migration','offline','pending-sync','projection','retained-change','review-required','runtime','session','startup','unsafe-evidence']).has(category)?category:fallback;
+    const category=String(value||'');return new Set(['blocked-operation','canonical','conflict','healthy','journal','listener','migration','offline','pending-sync','profile','projection','retained-change','review-required','runtime','session','startup','unsafe-evidence']).has(category)?category:fallback;
   }
   function blockedEvidence(snapshot,blockedCount,code){
     let recoverableBlockedCount=count(snapshot.recoverableBlockedCount),unsafeBlockedCount=count(snapshot.unsafeBlockedCount);
@@ -116,16 +118,16 @@
   }
   function createAccountSyncRuntime({
     ownerUid,username,journal,repository,enabled,writesEnabled,allowlistedUids,readMigrationSources,
-    onState,onCanonicalEntities,onPublicProjection,onMigrationState,online=()=>global.navigator?.onLine!==false,
+    onState,onCanonicalEntities,onProviderProfile,onPublicProjection,onMigrationState,initialProviderProfile={},online=()=>global.navigator?.onLine!==false,
     clock=()=>Date.now(),crypto=global.crypto,listenerReadyTimeoutMs=8000,initializationKind='legacy-migration'
   }={}){
     const owner=model.firebaseKey(ownerUid,128),name=model.exactText(username,64);
     if(!owner||!name||!journal||!repository||!INITIALIZATION_KINDS.includes(initializationKind)||
       initializationKind==='legacy-migration'&&typeof readMigrationSources!=='function')throw new TypeError('Account sync runtime binding is invalid');
-    let projectionReady=false,stopped=false,startPromise=null,stopPromise=null,lastPlan=null,startupError='',startupErrorCategory='',migrationState='inactive';
+    let projectionReady=false,profileReady=initializationKind!=='provider-only',providerProfile=null,providerProfilePending=null,profileMutationPromise=Promise.resolve(),stopped=false,startPromise=null,stopPromise=null,lastPlan=null,startupError='',startupErrorCategory='',migrationState='inactive';
     function runtimeState(state){
       const lastError=startupError||state.lastError||'',lastErrorCategory=startupErrorCategory||state.lastErrorCategory||'',currentState=lastError?'sync-error':state.state==='saved'&&!projectionReady?'pending-sync':state.state;
-      return Object.freeze({...state,state:currentState,lastError,lastErrorCategory,projectionReady,migrationReady:projectionReady,migrationState,runtimeHealthy:currentState==='saved'&&projectionReady&&state.controllerHealthy===true});
+      return Object.freeze({...state,state:currentState,lastError,lastErrorCategory,projectionReady,profileReady,migrationReady:projectionReady,migrationState,runtimeHealthy:currentState==='saved'&&projectionReady&&profileReady&&state.controllerHealthy===true});
     }
     function notifyState(state){if(!stopped)onState?.(runtimeState(state));}
     const controller=controllerApi.createAccountSyncController({
@@ -140,10 +142,93 @@
           Promise.resolve(controller.snapshot()).then(notifyState).catch(()=>{});
         }
       },
+      onAccount:account=>acceptProviderAccountProfile(account),
       onProjection:onPublicProjection,projectionAllowed:()=>projectionReady&&!stopped
     });
     function requireRunning(){if(stopped)throw Object.assign(new Error('Account sync runtime is closed'),{code:'account-sync/runtime-closed'});}
     function notifyMigration(state,detail={}){migrationState=state;onMigrationState?.(Object.freeze({state,...detail}));}
+    function pendingProfileRecord(value){
+      const keys=model.plainObject(value)?Object.keys(value).sort():[],expected=[...PROFILE_PENDING_KEYS].sort(),normalized=model.normalizeProfileValues(value?.values),baseRevision=model.integer(value?.baseRevision),queuedAt=model.integer(value?.queuedAt);
+      return keys.length===expected.length&&keys.every((key,index)=>key===expected[index])&&value.schemaVersion===model.SCHEMA_VERSION&&value.ownerUid===owner&&normalized.ok&&model.canonicalJson(normalized.value)===model.canonicalJson(value.values)&&baseRevision!==null&&queuedAt!==null
+        ?Object.freeze({...value,values:normalized.value}):null;
+    }
+    function exactProviderProfile(value){
+      const valid=model.validateProfileRecord(value,{ownerUid:owner});
+      if(!valid.ok)throw Object.assign(new Error('Canonical provider profile is invalid'),{code:'account-sync/profile-invalid'});
+      return valid.value;
+    }
+    function notifyProviderProfile(profile,{pending=false}={}){
+      const projected=Object.freeze({...profile,...model.profileValues(profile),pending});
+      if(onProviderProfile?.(projected)===false)throw Object.assign(new Error('Provider profile projection is unresolved'),{code:'account-sync/profile-projection-unresolved'});
+    }
+    async function acceptProviderAccountProfile(account){
+      if(initializationKind!=='provider-only')return;
+      if(account?.profile==null){
+        if(profileReady)throw Object.assign(new Error('Canonical provider profile disappeared'),{code:'account-sync/profile-missing'});
+        return;
+      }
+      const profile=exactProviderProfile(account.profile);providerProfile=profile;profileReady=true;notifyProviderProfile(profile);
+    }
+    async function flushProviderProfile(pending){
+      requireRunning();
+      const result=await controller.runAuthorizedWatchedMutation({
+        write:()=>repository.writeProfile(pending.values,{baseRevision:pending.baseRevision}),timeoutMs:listenerReadyTimeoutMs,
+        reconcile:({account})=>{
+          const valid=model.validateProfileRecord(account?.profile,{ownerUid:owner});
+          return valid.ok&&model.canonicalJson(model.profileValues(valid.value))===model.canonicalJson(pending.values)
+            ?Object.freeze({ok:true,status:'reconciled',value:valid.value})
+            :model.failure('account-sync/profile-conflict','Canonical provider profile differs or is missing');
+        }
+      });
+      requireRunning();providerProfile=exactProviderProfile(result.value);profileReady=true;providerProfilePending=null;
+      await journal.removeMeta(PROVIDER_PROFILE_PENDING_META);requireRunning();notifyProviderProfile(providerProfile);return providerProfile;
+    }
+    async function ensureProviderProfile(){
+      requireRunning();
+      const account=await repository.readAccount(),storedPending=await journal.getMeta(PROVIDER_PROFILE_PENDING_META);requireRunning();
+      await controller.acceptRemote(account);requireRunning();
+      const pending=storedPending==null?null:pendingProfileRecord(storedPending);
+      if(storedPending!=null&&!pending)throw Object.assign(new Error('Pending provider profile evidence is invalid'),{code:'account-sync/profile-pending-invalid'});
+      providerProfilePending=pending;
+      if(account?.profile!=null){
+        const canonical=exactProviderProfile(account.profile);
+        if(!pending){providerProfile=canonical;profileReady=true;notifyProviderProfile(canonical);return canonical;}
+        if(model.canonicalJson(model.profileValues(canonical))===model.canonicalJson(pending.values)){
+          providerProfile=canonical;profileReady=true;providerProfilePending=null;await journal.removeMeta(PROVIDER_PROFILE_PENDING_META);notifyProviderProfile(canonical);return canonical;
+        }
+      }
+      let queued=pending;
+      if(!queued){
+        const normalized=model.normalizeProfileValues(initialProviderProfile);
+        if(!normalized.ok)throw Object.assign(new Error(normalized.error.message),{code:normalized.error.code});
+        queued=Object.freeze({schemaVersion:model.SCHEMA_VERSION,ownerUid:owner,values:normalized.value,baseRevision:account?.profile?.revision||0,queuedAt:Number(clock())});
+        await journal.setMeta(PROVIDER_PROFILE_PENDING_META,queued);requireRunning();providerProfilePending=queued;
+      }
+      return flushProviderProfile(queued);
+    }
+    function updateProviderProfile(patch={}){
+      const work=profileMutationPromise.then(async()=>{
+        requireRunning();
+        if(initializationKind!=='provider-only'||!profileReady||!providerProfile)return model.failure('account-sync/profile-not-ready','Provider profile is not ready');
+        if(!model.plainObject(patch)||Object.keys(patch).some(key=>!model.PROFILE_VALUE_FIELDS.includes(key)))return model.failure('account-sync/profile-invalid','Provider profile edit contains unknown fields');
+        const baseValues=providerProfilePending?.values||model.profileValues(providerProfile),normalized=model.normalizeProfileValues({...baseValues,...patch});
+        if(!normalized.ok)return normalized;
+        if(!providerProfilePending&&model.canonicalJson(normalized.value)===model.canonicalJson(model.profileValues(providerProfile)))return Object.freeze({ok:true,status:'unchanged',value:providerProfile});
+        const pending=Object.freeze({schemaVersion:model.SCHEMA_VERSION,ownerUid:owner,values:normalized.value,baseRevision:providerProfilePending?.baseRevision??providerProfile.revision,queuedAt:Number(clock())});
+        await journal.setMeta(PROVIDER_PROFILE_PENDING_META,pending);requireRunning();providerProfilePending=pending;notifyProviderProfile({...providerProfile,...pending.values},{pending:true});
+        try{return Object.freeze({ok:true,status:'updated',value:await flushProviderProfile(pending)});}
+        catch(error){notifyState(await controller.snapshot());return Object.freeze({...model.failure('account-sync/profile-pending','Provider profile change is saved on this device and will retry'),causeCode:diagnosticCode(error,'account-sync/network-failed')});}
+      });
+      profileMutationPromise=work.then(()=>undefined,()=>undefined);return work;
+    }
+    function retryProviderProfile(){
+      const work=profileMutationPromise.then(async()=>{
+        requireRunning();const stored=providerProfilePending||pendingProfileRecord(await journal.getMeta(PROVIDER_PROFILE_PENDING_META));
+        if(!stored)return Object.freeze({ok:true,status:'unchanged',value:providerProfile});
+        return Object.freeze({ok:true,status:'updated',value:await flushProviderProfile(stored)});
+      });
+      profileMutationPromise=work.then(()=>undefined,()=>undefined);return work;
+    }
     async function requireListenerAuthority(){
       const ready=await controller.waitForListenerReady({timeoutMs:listenerReadyTimeoutMs});
       requireRunning();
@@ -342,6 +427,7 @@
           const listenerReady=await controller.waitForListenerReady({timeoutMs:listenerReadyTimeoutMs});requireRunning();
           if(!listenerReady?.ok)throw Object.assign(new Error('The live account sync listener did not become ready'),{code:listenerReady?.error?.code||'account-sync/listener-failed'});
           migrationState='reading';const plan=initializationKind==='provider-only'?await ensureProviderInitialization():await ensureMigration();requireRunning();
+          if(initializationKind==='provider-only'){migrationState='profile';await ensureProviderProfile();requireRunning();}
           if(initializationKind==='legacy-migration')await synchronizeRecoveryReviewAcceptance();requireRunning();projectionReady=true;
           if(onCanonicalEntities?.(Object.freeze(controller.activeEntities()))===false)throw Object.assign(new Error('Canonical account projection is unresolved'),{code:'account-sync/catalog-projection-unresolved'});
           await controller.publishAcceptedProjection(initializationKind==='provider-only'
@@ -349,7 +435,7 @@
             :Object.freeze({kind:'migration-complete',deviceMigrationId:plan.deviceMigrationId}));requireRunning();
           startupError='';startupErrorCategory='';notifyState(await controller.snapshot());return Object.freeze({ok:true,status:'active',plan});
         }catch(error){
-          projectionReady=false;startupError=diagnosticCode(error,'account-sync/migration-failed');startupErrorCategory=startupError==='account-sync/catalog-projection-unresolved'?'canonical':/^account-sync\/listener-/.test(startupError)?'listener':migrationState==='activating'?'startup':'migration';
+          projectionReady=false;startupError=diagnosticCode(error,'account-sync/migration-failed');startupErrorCategory=startupError==='account-sync/catalog-projection-unresolved'?'canonical':/^account-sync\/listener-/.test(startupError)?'listener':/^account-sync\/profile-/.test(startupError)?'profile':migrationState==='activating'?'startup':'migration';
           if(!stopped){notifyMigration('blocked',{code:startupError});try{notifyState(await controller.snapshot());}catch{}}
           throw error;
         }
@@ -388,8 +474,8 @@
       return stopPromise;
     }
     async function snapshot(){return runtimeState(await controller.snapshot());}
-    return Object.freeze({ownerUid:owner,username:name,controller,start,stop,snapshot,recordRecoveryCandidate,listRecoveryCandidates,completeRecoveryReview,completeRecoveryReviews,retryBlocked:()=>controller.retryBlocked(),conflictDetails:()=>controller.conflictDetails(),acceptConflict:id=>controller.acceptConflict(id),reapplyConflict:id=>controller.reapplyConflict(id),get migrationPlan(){return lastPlan;},get projectionReady(){return projectionReady;}});
+    return Object.freeze({ownerUid:owner,username:name,controller,start,stop,snapshot,updateProviderProfile,retryProviderProfile,recordRecoveryCandidate,listRecoveryCandidates,completeRecoveryReview,completeRecoveryReviews,retryBlocked:()=>controller.retryBlocked(),conflictDetails:()=>controller.conflictDetails(),acceptConflict:id=>controller.acceptConflict(id),reapplyConflict:id=>controller.reapplyConflict(id),get migrationPlan(){return lastPlan;},get providerProfile(){return providerProfile;},get profileReady(){return profileReady;},get projectionReady(){return projectionReady;}});
   }
 
-  root.accountSyncRuntime=Object.freeze({HISTORICAL_RETRY_CODE,diagnosticCode,diagnosticCategory,recoveryPlan,healthySnapshot,sanitizedDiagnostic,createRecoveryCoordinator,createAccountSyncRuntime});
+  root.accountSyncRuntime=Object.freeze({HISTORICAL_RETRY_CODE,PROVIDER_PROFILE_PENDING_META,diagnosticCode,diagnosticCategory,recoveryPlan,healthySnapshot,sanitizedDiagnostic,createRecoveryCoordinator,createAccountSyncRuntime});
 })(window);

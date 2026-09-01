@@ -44,7 +44,7 @@
       async listEntities(){return[...state.entities.values()];},
       async listConflicts(){return[...state.conflicts.values()].filter(item=>!item.resolved);},
       async resolveConflict(id){const item=state.conflicts.get(id);if(!item)return false;state.conflicts.set(id,{...item,resolved:true,resolvedAt:clock()});const record=state.operations.get(item.operationId);if(record?.status==='conflict')state.operations.set(item.operationId,{...record,status:'resolved',nextAttemptAt:0,lastErrorCode:'',updatedAt:clock()});return true;},
-      async setMeta(key,value){state.meta.set(key,value);},async getMeta(key){return state.meta.get(key)??null;},
+      async setMeta(key,value){state.meta.set(key,value);},async getMeta(key){return state.meta.get(key)??null;},async removeMeta(key){state.meta.delete(key);},
       async putRecoveryCandidate(item){own(item);state.recoveryCandidates.set(item.candidateId,item);},
       async listRecoveryCandidates({unresolvedOnly=true}={}){return[...state.recoveryCandidates.values()].filter(item=>!unresolvedOnly||item.resolved!==true).sort((a,b)=>a.createdAt-b.createdAt||a.candidateId.localeCompare(b.candidateId));},
       async resolveRecoveryCandidate(id){const item=state.recoveryCandidates.get(id);if(!item||item.resolved===true)return false;state.recoveryCandidates.set(id,{...item,resolved:true,resolvedAt:clock()});return true;},

@@ -30,6 +30,40 @@
             ".validate": false
           }
         },
+        "profile": {
+          ".write": "auth != null && auth.uid === $uid && newData.exists()",
+          ".validate": "newData.hasChildren(['schemaVersion','ownerUid','friendCode','bio','discord','avatarPokemon','revision','createdAt','lastUpdated']) && newData.child('schemaVersion').val() === 1 && newData.child('ownerUid').val() === $uid && newData.child('friendCode').isString() && (newData.child('friendCode').val() === '' || newData.child('friendCode').val().matches(/^[0-9]{4} [0-9]{4} [0-9]{4}$/)) && newData.child('bio').isString() && newData.child('bio').val().length <= 120 && newData.child('discord').isString() && newData.child('discord').val().length <= 40 && newData.child('avatarPokemon').isString() && newData.child('avatarPokemon').val().length <= 120 && newData.child('revision').isNumber() && newData.child('revision').val() >= 1 && newData.child('revision').val() % 1 === 0 && newData.child('createdAt').isNumber() && newData.child('createdAt').val() >= 0 && newData.child('createdAt').val() % 1 === 0 && newData.child('lastUpdated').isNumber() && newData.child('lastUpdated').val() >= newData.child('createdAt').val() && newData.child('lastUpdated').val() <= now + 60000 && (!data.exists() || (newData.child('schemaVersion').val() === data.child('schemaVersion').val() && newData.child('ownerUid').val() === data.child('ownerUid').val() && newData.child('createdAt').val() === data.child('createdAt').val() && newData.child('revision').val() === data.child('revision').val() + 1 && newData.child('lastUpdated').val() >= data.child('lastUpdated').val()))",
+          "schemaVersion": {
+            ".validate": "newData.val() === 1"
+          },
+          "ownerUid": {
+            ".validate": "newData.val() === $uid"
+          },
+          "friendCode": {
+            ".validate": "newData.isString() && (newData.val() === '' || newData.val().matches(/^[0-9]{4} [0-9]{4} [0-9]{4}$/))"
+          },
+          "bio": {
+            ".validate": "newData.isString() && newData.val().length <= 120"
+          },
+          "discord": {
+            ".validate": "newData.isString() && newData.val().length <= 40"
+          },
+          "avatarPokemon": {
+            ".validate": "newData.isString() && newData.val().length <= 120"
+          },
+          "revision": {
+            ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() % 1 === 0"
+          },
+          "createdAt": {
+            ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() % 1 === 0"
+          },
+          "lastUpdated": {
+            ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() % 1 === 0"
+          },
+          "$other": {
+            ".validate": false
+          }
+        },
         "tradeEntries": {
           "$entityId": {
             ".write": "auth != null && auth.uid === $uid && newData.exists()",

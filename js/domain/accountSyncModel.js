@@ -6,6 +6,9 @@
   const TRADE_SURFACES=Object.freeze(['my-list','special-board']);
   const TRADE_LANES=Object.freeze(['wishlist','dynamax','gmax','costumes','looking-for','for-trade']);
   const TRADE_FIELDS=Object.freeze(['priority','variant','gender','lucky','xxl','xxs','shiny','backgroundId','sortOrder','quantity','note','mirror']);
+  const PROFILE_VALUE_FIELDS=Object.freeze(['friendCode','bio','discord','avatarPokemon']);
+  const PROFILE_RECORD_FIELDS=Object.freeze(['schemaVersion','ownerUid',...PROFILE_VALUE_FIELDS,'revision','createdAt','lastUpdated']);
+  const PROFILE_TEXT_LIMITS=Object.freeze({friendCode:14,bio:120,discord:40,avatarPokemon:120});
   const RETRY_DELAYS=Object.freeze([1000,2000,4000,8000,16000,30000]);
   // Only the known pre-.70 acknowledgement case and exhausted transient
   // repository failures may receive one explicit user-requested retry.
@@ -25,6 +28,7 @@
   ]);
   const UNSAFE_RECOVERY_SET=new Set(UNSAFE_RECOVERY_CODES);
   const FIREBASE_KEY_FORBIDDEN=/[.#$\[\]/\u0000-\u001f\u007f]/u;
+  const PROFILE_UNSAFE_TEXT=/[\u0000-\u001f\u007f-\u009f\u200b-\u200f\u202a-\u202e\u2060\u2066-\u2069\ufeff]/u;
   const HEX_64=/^[a-f0-9]{64}$/;
 
   function failure(code,message,detail){
@@ -39,6 +43,34 @@
   function firebaseKey(value,max=512){
     const text=exactText(value,max);
     return text&&!FIREBASE_KEY_FORBIDDEN.test(text)&&text!=='.'&&text!=='..'?text:'';
+  }
+  function profileText(value,max){
+    const text=String(value??'').normalize('NFC').trim();
+    return Array.from(text).length<=max&&!PROFILE_UNSAFE_TEXT.test(text)?text:null;
+  }
+  function normalizeFriendCode(value){
+    const text=profileText(value,PROFILE_TEXT_LIMITS.friendCode);
+    if(text===null)return null;
+    if(!text)return'';
+    if(!/^[0-9 -]+$/.test(text))return null;
+    const digits=text.replace(/[ -]/g,'');
+    return/^[0-9]{12}$/.test(digits)?digits.replace(/(\d{4})(?=\d)/g,'$1 '):null;
+  }
+  function normalizeProfileValues(value={}){
+    if(!plainObject(value)||Object.keys(value).some(key=>!PROFILE_VALUE_FIELDS.includes(key)))return failure('account-sync/profile-invalid','Provider profile contains unknown fields');
+    const normalized={friendCode:normalizeFriendCode(value.friendCode),bio:profileText(value.bio,PROFILE_TEXT_LIMITS.bio),discord:profileText(value.discord,PROFILE_TEXT_LIMITS.discord),avatarPokemon:profileText(value.avatarPokemon,PROFILE_TEXT_LIMITS.avatarPokemon)};
+    if(Object.values(normalized).some(item=>item===null))return failure('account-sync/profile-invalid','Provider profile contains an invalid value');
+    return Object.freeze({ok:true,value:Object.freeze(normalized)});
+  }
+  function profileValues(value={}){
+    return Object.freeze(Object.fromEntries(PROFILE_VALUE_FIELDS.map(key=>[key,value?.[key]??''])));
+  }
+  function validateProfileRecord(value,{ownerUid}={}){
+    const owner=firebaseKey(ownerUid,128),keys=plainObject(value)?Object.keys(value).sort():[],expected=[...PROFILE_RECORD_FIELDS].sort();
+    if(!owner||keys.length!==expected.length||keys.some((key,index)=>key!==expected[index]))return failure('account-sync/profile-invalid','Provider profile record shape is invalid');
+    const normalized=normalizeProfileValues(profileValues(value)),revision=integer(value.revision,1),createdAt=integer(value.createdAt),lastUpdated=integer(value.lastUpdated);
+    if(!normalized.ok||value.schemaVersion!==SCHEMA_VERSION||value.ownerUid!==owner||revision===null||createdAt===null||lastUpdated===null||lastUpdated<createdAt||canonicalJson(normalized.value)!==canonicalJson(profileValues(value)))return failure('account-sync/profile-invalid','Provider profile record is invalid');
+    return Object.freeze({ok:true,value:Object.freeze({...value,...normalized.value})});
   }
   function stable(value){
     if(Array.isArray(value))return value.map(stable);
@@ -191,9 +223,9 @@
   }
 
   root.accountSyncModel=Object.freeze({
-    SCHEMA_VERSION,DATABASE_NAME,ENTITY_TYPES,TRADE_SURFACES,TRADE_LANES,TRADE_FIELDS,RETRY_DELAYS,SAFE_BLOCKED_RETRY_CODES,UNSAFE_RECOVERY_CODES,
+    SCHEMA_VERSION,DATABASE_NAME,ENTITY_TYPES,TRADE_SURFACES,TRADE_LANES,TRADE_FIELDS,PROFILE_VALUE_FIELDS,PROFILE_RECORD_FIELDS,PROFILE_TEXT_LIMITS,RETRY_DELAYS,SAFE_BLOCKED_RETRY_CODES,UNSAFE_RECOVERY_CODES,
     plainObject,integer,exactText,firebaseKey,stable,canonicalJson,base64Url,tradeEntryId,tagIdFromLegacy,newTagId,fieldToken,fieldMetadataPath,
-    fieldPathValid,fieldValueValid,identityValid,entityPath,operationId,sha256Hex,canonicalOperationInput,
+    fieldPathValid,fieldValueValid,identityValid,entityPath,normalizeFriendCode,normalizeProfileValues,profileValues,validateProfileRecord,operationId,sha256Hex,canonicalOperationInput,
     createOperation,verifyOperation,publicTradeProjection,retryDelay,blockedRetryCategory,blockedRetryEligible,unsafeRecoveryCode,failure
   });
 })(window);
