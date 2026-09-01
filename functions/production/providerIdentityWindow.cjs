@@ -140,8 +140,25 @@ function classifySnapshot(snapshot, metadata) {
 
   const expectedTimestamp = Date.parse(metadata.capturedAt);
   if (!Number.isSafeInteger(expectedTimestamp)) throw new Error('invalid_capture_timestamp');
+  const manifestId = `provider-window-${metadata.capturedAt.replace(/[^0-9A-Za-z]/gu, '').slice(0, 24)}`;
   const exactRecords = records.map((record) => {
-    if (WRITABLE_CLASSES.has(record.classification)) {
+    if (record.classification === 'MIGRATE_RECIPROCAL_IDENTITY') {
+      const reviewedAt = metadata.capturedAt;
+      const operationId = `migration-${record.sourceMappingFingerprint.slice(0, 24)}`;
+      const reviewerDecision = 'eligible';
+      const manifestFingerprint = sha256([
+        1, manifestId, record.uid, record.canonicalTrainerName, record.normalizedTrainerName, record.handleKey,
+        record.legacyAuthVersion, record.sourceMappingFingerprint, reviewerDecision, reviewedAt
+      ]);
+      const fingerprint = sha256([1, 'applyMigrationManifest', record.uid, operationId, manifestFingerprint]);
+      const enriched = { ...record, manifestId, operationId, reviewerDecision, reviewedAt,
+        manifestFingerprint, fingerprint,
+        targetPaths: [...record.targetPaths,
+          `operationRequests/${record.uid}/requests/${operationId}`,
+          `identityMigrations/${record.uid}/operations/${operationId}`] };
+      return { ...enriched, expectedResult: expectedDocuments(enriched, expectedTimestamp) };
+    }
+    if (record.classification === 'CREATE_LEGACY_HANDLE_HOLD') {
       return { ...record, expectedResult: expectedDocuments(record, expectedTimestamp) };
     }
     if (record.classification === 'ALREADY_CANONICAL') {
@@ -237,6 +254,7 @@ function writePrivateJson(file, value) {
 
 function expectedDocuments(record, timestamp) {
   if (record.classification === 'MIGRATE_RECIPROCAL_IDENTITY') {
+    const result = { status: 'migrated', handleKey: record.handleKey, revision: 1 };
     return {
       [record.targetPaths[0]]: {
         schemaVersion: 1, uid: record.uid, canonicalTrainerName: record.canonicalTrainerName,
@@ -249,6 +267,17 @@ function expectedDocuments(record, timestamp) {
         schemaVersion: 1, uid: record.uid, canonicalTrainerName: record.canonicalTrainerName,
         normalizedTrainerName: record.normalizedTrainerName, state: 'active', revision: 1,
         claimedAt: timestamp, updatedAt: timestamp
+      },
+      [record.targetPaths[2]]: {
+        schemaVersion: 1, operation: 'applyMigrationManifest', fingerprint: record.fingerprint,
+        result, createdAt: timestamp
+      },
+      [record.targetPaths[3]]: {
+        schemaVersion: 1, uid: record.uid, handleKey: record.handleKey,
+        operation: 'applyMigrationManifest', fingerprint: record.fingerprint,
+        sourceMappingFingerprint: record.sourceMappingFingerprint, manifestId: record.manifestId,
+        manifestFingerprint: record.manifestFingerprint, reviewerDecision: record.reviewerDecision,
+        reviewedAt: record.reviewedAt, status: 'complete', createdAt: timestamp
       }
     };
   }

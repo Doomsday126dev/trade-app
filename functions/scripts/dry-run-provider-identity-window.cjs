@@ -106,7 +106,7 @@ async function run(argv = process.argv.slice(2)) {
     manifestDigest: manifest.manifestDigest,
     initialCanonicalDigest,
     operationCounts: manifest.operationCounts,
-    simulatedFirestoreCreates: manifest.operationCounts.MIGRATE_RECIPROCAL_IDENTITY * 2 +
+    simulatedFirestoreCreates: manifest.operationCounts.MIGRATE_RECIPROCAL_IDENTITY * 4 +
       manifest.records.filter((record) => record.operation === 'CREATE_HANDLE_HOLD').length,
     simulatedRtdbWrites: 0,
     completedOperations: restarted.progress.size,

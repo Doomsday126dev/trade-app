@@ -125,7 +125,7 @@ test('dry run creates exact documents and restart skips verified work', async ()
   });
   const result = await runManifest(manifest, adapter, { timestamp: 100, progress });
   assert.ok(result.skipped >= 2);
-  assert.equal(stored.size, 3);
+  assert.equal(stored.size, 5);
   assert.match(result.coverageDigest, /^[a-f0-9]{64}$/u);
 });
 
@@ -155,7 +155,10 @@ test('expected documents use accepted canonical migration and hold schemas', () 
   const { manifest } = classifySnapshot(fixture(), metadata());
   const migration = manifest.records.find((record) => record.classification === 'MIGRATE_RECIPROCAL_IDENTITY');
   const hold = manifest.records.find((record) => record.classification === 'CREATE_LEGACY_HANDLE_HOLD');
-  assert.equal(Object.keys(expectedDocuments(migration, 123)).length, 2);
+  const migrationDocuments = expectedDocuments(migration, 123);
+  assert.equal(Object.keys(migrationDocuments).length, 4);
+  assert.equal(migrationDocuments[migration.targetPaths[2]].operation, 'applyMigrationManifest');
+  assert.equal(migrationDocuments[migration.targetPaths[3]].status, 'complete');
   assert.deepEqual(Object.values(expectedDocuments(hold, 123))[0], {
     schemaVersion: 1, canonicalTrainerName: 'HoldOnly', normalizedTrainerName: 'holdonly',
     state: 'legacy_hold', revision: 1
