@@ -172,11 +172,19 @@ function loadConfiguration(env = process.env, now = () => Date.now()) {
     firebaseWebApiKey: env.FIREBASE_WEB_API_KEY,
     operatorEmailHash: env.EXPECTED_OPERATOR_EMAIL_HASH,
     operatorSubjectHash: env.EXPECTED_OPERATOR_SUBJECT_HASH,
+    providerSubjectHmacKey: env.PROVIDER_SUBJECT_HMAC_KEY || '',
+    providerSubjectHmacKeyVersion: env.PROVIDER_SUBJECT_HMAC_KEY_VERSION || '',
     revision: env.K_REVISION || 'local'
   };
   try { validateTarget(configuration); } catch { fail('E1_CONFIGURATION_MISMATCH'); }
   if (!/^[A-Za-z0-9_-]{20,128}$/.test(configuration.firebaseWebApiKey || '')) fail('E1_CONFIGURATION_MISMATCH');
   if (!SHA256.test(configuration.operatorEmailHash || '') || !SHA256.test(configuration.operatorSubjectHash || '')) {
+    fail('E1_CONFIGURATION_MISMATCH');
+  }
+  const providerKeyConfigured = Buffer.byteLength(configuration.providerSubjectHmacKey, 'utf8') >= 32 &&
+    Buffer.byteLength(configuration.providerSubjectHmacKey, 'utf8') <= 256 &&
+    /^[1-9][0-9]{0,3}$/u.test(configuration.providerSubjectHmacKeyVersion);
+  if ((configuration.providerSubjectHmacKey || configuration.providerSubjectHmacKeyVersion) && !providerKeyConfigured) {
     fail('E1_CONFIGURATION_MISMATCH');
   }
   try { validatedTarget({ environment: configuration.environment, projectId: configuration.projectId, databaseUrl: configuration.rtdbDatabaseUrl }); }
@@ -185,6 +193,7 @@ function loadConfiguration(env = process.env, now = () => Date.now()) {
       MUTATION_GATES.filter((gate) => env[gate] === 'true').length > 1) {
     fail('E1_OPERATION_GATE_INVALID');
   }
+  if (env.CREATE_PROVIDER_ACCOUNT_ENABLED === 'true' && !providerKeyConfigured) fail('E1_CONFIGURATION_MISMATCH');
   const repairAccountFoundationEnabled = env.REPAIR_FOUNDATION_ENABLED === 'true';
   const applyMigrationManifestEnabled = env.APPLY_MIGRATION_ENABLED === 'true';
   const readProof = readProofConfiguration(env, configuration, env, now);
@@ -470,36 +479,44 @@ function firestoreScalar(fields, name) {
   if (Object.hasOwn(value, 'integerValue')) return Number(value.integerValue);
   if (Object.hasOwn(value, 'doubleValue')) return Number(value.doubleValue);
   if (Object.hasOwn(value, 'timestampValue')) return value.timestampValue;
+  if (Object.hasOwn(value, 'booleanValue')) return value.booleanValue;
+  if (Object.hasOwn(value, 'nullValue')) return null;
   return undefined;
 }
 
-function redactFoundationDocument(document) {
+function redactFoundationDocument(document, expectedUid) {
   const fields = document?.fields;
+  const uid = firestoreScalar(fields, 'uid');
   const schemaVersion = firestoreScalar(fields, 'schemaVersion');
   const canonicalTrainerName = firestoreScalar(fields, 'canonicalTrainerName') ?? firestoreScalar(fields, 'trainerName');
   const normalizedTrainerName = firestoreScalar(fields, 'normalizedTrainerName');
   const handleKey = firestoreScalar(fields, 'handleKey');
   const legacyUsername = firestoreScalar(fields, 'legacyUsername');
+  const declaredIdentityKind = firestoreScalar(fields, 'identityKind');
+  const declaredLegacyAccess = firestoreScalar(fields, 'legacyAccessConfigured');
   const status = firestoreScalar(fields, 'status');
   const revision = firestoreScalar(fields, 'revision');
-  const createdAt = firestoreScalar(fields, 'createdAt');
-  const updatedAt = firestoreScalar(fields, 'updatedAt');
-  if (schemaVersion !== 1 || typeof canonicalTrainerName !== 'string' || !canonicalTrainerName ||
+  let normalized;
+  try { normalized = normalizeHandle(canonicalTrainerName); } catch { fail('INTERNAL_ERROR'); }
+  const legacyCompatible = typeof legacyUsername === 'string' && legacyUsername === canonicalTrainerName &&
+    (declaredIdentityKind === undefined || declaredIdentityKind === 'legacy_migrated') &&
+    (declaredLegacyAccess === undefined || declaredLegacyAccess === true);
+  const providerOnly = legacyUsername === null && declaredIdentityKind === 'provider_only' && declaredLegacyAccess === false;
+  if (schemaVersion !== 1 || uid !== expectedUid || typeof canonicalTrainerName !== 'string' || !canonicalTrainerName ||
       typeof normalizedTrainerName !== 'string' || !normalizedTrainerName || !HANDLE_KEY.test(handleKey || '') ||
-      typeof status !== 'string' || (!Number.isFinite(createdAt) && typeof createdAt !== 'string') ||
-      (!Number.isFinite(updatedAt) && typeof updatedAt !== 'string') ||
-      (legacyUsername !== undefined && typeof legacyUsername !== 'string') ||
-      (revision !== undefined && (!Number.isSafeInteger(revision) || revision < 0))) fail('INTERNAL_ERROR');
+      normalized.normalized !== normalizedTrainerName || normalized.handleKey !== handleKey ||
+      typeof status !== 'string' || (!legacyCompatible && !providerOnly) ||
+      !Number.isSafeInteger(revision) || revision < 1) fail('INTERNAL_ERROR');
   return Object.freeze({
     schemaVersion,
     canonicalTrainerName,
     normalizedTrainerName,
     handleKey,
-    legacyUsername: legacyUsername ?? null,
+    identityKind: providerOnly ? 'provider_only' : 'legacy_migrated',
+    legacyAccessConfigured: !providerOnly,
+    legacyUsername,
     status,
-    revision: revision ?? null,
-    createdAt,
-    updatedAt
+    revision
   });
 }
 
@@ -547,8 +564,10 @@ function providerOperationFingerprint(input) {
 }
 
 function providerSubjectHash(configuration, providerId, subject) {
-  return crypto.createHmac('sha256', configuration.operatorSubjectHash)
-    .update(`provider-subject-v1\0${providerId}\0${subject}`, 'utf8').digest('hex');
+  if (Buffer.byteLength(configuration.providerSubjectHmacKey || '', 'utf8') < 32 ||
+      !/^[1-9][0-9]{0,3}$/u.test(configuration.providerSubjectHmacKeyVersion || '')) fail('PROVIDER_KEY_UNAVAILABLE');
+  return crypto.createHmac('sha256', configuration.providerSubjectHmacKey)
+    .update(`provider-subject\0v${configuration.providerSubjectHmacKeyVersion}\0${providerId}\0${subject}`, 'utf8').digest('hex');
 }
 
 function verifiedGoogleProviderIdentity(configuration, verifiedToken, timestamp) {
@@ -562,7 +581,8 @@ function verifiedGoogleProviderIdentity(configuration, verifiedToken, timestamp)
   return Object.freeze({
     providerKey: 'google',
     providerId: 'google.com',
-    providerSubjectKey: `v1_google_${subjectHash}`,
+    providerSubjectKey: `v${configuration.providerSubjectHmacKeyVersion}_google_${subjectHash}`,
+    providerSubjectKeyVersion: Number(configuration.providerSubjectHmacKeyVersion),
     authTime: verifiedToken.authTime
   });
 }
@@ -894,7 +914,8 @@ function createHandler(configuration, dependencies = {}) {
           }
         }
         const firebaseIdToken = firebaseTokenHeader(request);
-        const { uid } = await verifyToken(configuration, firebaseIdToken);
+        const verifiedToken = await verifyToken(configuration, firebaseIdToken);
+        const { uid } = verifiedToken;
         groupEUid = configuration.groupEClientMode ? uid : undefined;
         if (configuration.groupEClientMode) {
           const slotIndex = configuration.groupE.bindings.findIndex((binding) =>
@@ -930,12 +951,25 @@ function createHandler(configuration, dependencies = {}) {
           log(configuration, 'readAccountFoundation', 'not_initialized', startedAt, logFields());
           return json(response, 200, { ...canaryEnvelope, code: 'FOUNDATION_NOT_INITIALIZED' });
         }
-        const foundation = redactFoundationDocument(document);
+        let foundation = redactFoundationDocument(document, uid);
         if (FROZEN_STATUSES.has(foundation.status)) {
           log(configuration, 'readAccountFoundation', 'frozen', startedAt, logFields());
           return json(response, 423, { ...canaryEnvelope, code: 'ACCOUNT_FROZEN', foundation });
         }
         if (foundation.status !== 'active') fail('INTERNAL_ERROR');
+        if (foundation.identityKind === 'provider_only') {
+          const provider = await verifyCurrentProvider(configuration, firebaseIdToken, verifiedToken, now());
+          const exact = await readProviderAccount(Object.freeze({ uid, ...foundation, ...provider }));
+          if (!exact) fail('FOUNDATION_CONFLICT');
+          foundation = exact;
+        } else {
+          const requestedHandle = normalizeHandle(foundation.canonicalTrainerName);
+          const legacy = verifiedLegacyFoundation(uid, requestedHandle,
+            await readLegacyBinding({ verifiedUid: uid, firebaseIdToken }));
+          if (legacy.canonicalTrainerName !== foundation.canonicalTrainerName ||
+              legacy.normalizedTrainerName !== foundation.normalizedTrainerName || legacy.handleKey !== foundation.handleKey ||
+              legacy.legacyUsername !== foundation.legacyUsername) fail('FOUNDATION_CONFLICT');
+        }
         log(configuration, 'readAccountFoundation', 'success', startedAt, logFields());
         return json(response, 200, { ...canaryEnvelope, code: 'SUCCESS', foundation });
       } catch (error) {
@@ -943,7 +977,9 @@ function createHandler(configuration, dependencies = {}) {
           'E1_READ_PROOF_SUBJECT_DENIED', 'E1_READ_PROOF_EXPIRED', 'E1_READ_PROOF_MAPPING_NOT_READY',
           'E1_READ_PROOF_MAPPING_DENIED', 'E1_READ_PROOF_MAPPING_UNAVAILABLE', 'E1_GROUP_E_BOUNDARY_INVALID',
           'E1_GROUP_E_SUBJECT_DENIED', 'E1_GROUP_E_RECEIPT_INVALID', 'E1_GROUP_E_RECEIPT_MISMATCH',
-          'E1_GROUP_E_MAPPING_NOT_READY', 'E1_GROUP_E_MAPPING_UNAVAILABLE'].includes(error?.code)
+          'E1_GROUP_E_MAPPING_NOT_READY', 'E1_GROUP_E_MAPPING_UNAVAILABLE', 'PROVIDER_IDENTITY_REQUIRED',
+          'PROVIDER_KEY_UNAVAILABLE', 'FOUNDATION_CONFLICT', 'MAPPING_INCOMPLETE', 'MAPPING_CONFLICT',
+          'MAPPING_PERMISSION_DENIED', 'MAPPING_UNAVAILABLE', 'e1/provider-foundation-conflict'].includes(error?.code)
           ? error.code : 'INTERNAL_ERROR';
         const status = code === 'E1_NOT_ENABLED' ? 503 : code === 'AUTH_REQUIRED' || code === 'AUTH_INVALID' ? 401 :
           code === 'REQUEST_TOO_LARGE' ? 413 : code === 'METHOD_NOT_ALLOWED' ? 405 : code === 'REQUEST_INVALID' ? 400 :
@@ -951,8 +987,13 @@ function createHandler(configuration, dependencies = {}) {
               'E1_GROUP_E_BOUNDARY_INVALID', 'E1_GROUP_E_RECEIPT_INVALID', 'E1_GROUP_E_RECEIPT_MISMATCH'].includes(code) ? 403 :
               ['E1_READ_PROOF_MAPPING_NOT_READY', 'E1_GROUP_E_MAPPING_NOT_READY'].includes(code) ? 409 :
                 ['E1_READ_PROOF_EXPIRED', 'E1_READ_PROOF_MAPPING_UNAVAILABLE', 'E1_GROUP_E_MAPPING_UNAVAILABLE'].includes(code) ? 503 :
-            error?.code === 'e1/rate-limit-exceeded' ? 429 : 500;
-        const responseCode = error?.code === 'e1/rate-limit-exceeded' ? 'RATE_LIMITED' : code;
+            code === 'PROVIDER_IDENTITY_REQUIRED' ? 403 :
+              ['FOUNDATION_CONFLICT', 'MAPPING_INCOMPLETE', 'MAPPING_CONFLICT', 'e1/provider-foundation-conflict'].includes(code) ? 409 :
+                ['PROVIDER_KEY_UNAVAILABLE', 'MAPPING_UNAVAILABLE'].includes(code) ? 503 :
+                  code === 'MAPPING_PERMISSION_DENIED' ? 403 : error?.code === 'e1/rate-limit-exceeded' ? 429 : 500;
+        const responseCode = error?.code === 'e1/rate-limit-exceeded' ? 'RATE_LIMITED' :
+          ['MAPPING_INCOMPLETE', 'MAPPING_CONFLICT', 'MAPPING_PERMISSION_DENIED', 'MAPPING_UNAVAILABLE',
+            'e1/provider-foundation-conflict'].includes(code) ? 'FOUNDATION_CONFLICT' : code;
         log(configuration, 'readAccountFoundation', responseCode.toLowerCase(), startedAt, logFields());
         return json(response, status, { code: responseCode === 'REQUEST_TOO_LARGE' ? 'REQUEST_INVALID' : responseCode });
       }
@@ -1035,7 +1076,8 @@ function createHandler(configuration, dependencies = {}) {
           if (!result) throw error;
           reconciled = true;
         }
-        if (result?.status !== 'created' || result.handleKey !== input.handleKey ||
+        const exactResultStatus = result?.status === 'created' || reconciled && result?.status === 'active';
+        if (!exactResultStatus || result.handleKey !== input.handleKey ||
             result.canonicalTrainerName !== input.canonicalTrainerName || result.identityKind !== 'provider_only') {
           fail('INTERNAL_ERROR');
         }
@@ -1065,7 +1107,7 @@ function createHandler(configuration, dependencies = {}) {
           E1_NOT_ENABLED: [503, 'E1_NOT_ENABLED'], AUTH_REQUIRED: [401, 'AUTH_REQUIRED'], AUTH_INVALID: [401, 'AUTH_INVALID'],
           PROVIDER_IDENTITY_REQUIRED: [403, 'PROVIDER_IDENTITY_REQUIRED'], REQUEST_INVALID: [400, 'REQUEST_INVALID'],
           REQUEST_TOO_LARGE: [413, 'REQUEST_INVALID'], METHOD_NOT_ALLOWED: [405, 'METHOD_NOT_ALLOWED'],
-          'e1/legacy-namespace-not-certified': [503, 'NAMESPACE_NOT_CERTIFIED'],
+          'e1/legacy-namespace-not-certified': [412, 'NAMESPACE_NOT_CERTIFIED'],
           'e1/account-conflict': [409, 'ACCOUNT_EXISTS'], 'e1/handle-conflict': [409, 'HANDLE_CONFLICT'],
           'e1/provider-foundation-conflict': [409, 'FOUNDATION_CONFLICT'],
           'e1/provider-subject-conflict': [409, 'PROVIDER_CONFLICT'],

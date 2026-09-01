@@ -44,6 +44,11 @@ const GROUP_E_PRIVATE_ENVIRONMENT = Object.freeze([
   'GROUP_E_WINDOW_START',
   'GROUP_E_WINDOW_END'
 ]);
+const PROVIDER_SUBJECT_KEY_CONTRACT = Object.freeze({
+  keyEnvironmentName: 'PROVIDER_SUBJECT_HMAC_KEY',
+  versionEnvironmentName: 'PROVIDER_SUBJECT_HMAC_KEY_VERSION',
+  secretName: 'e1-provider-subject-hmac-key'
+});
 
 function argumentsMap(argv) {
   return Object.fromEntries(argv.map((argument) => {
@@ -72,6 +77,22 @@ function inactiveEnvironmentValid(env, options = {}) {
   });
 }
 
+function providerSubjectKeyEnvironmentValid(container, { creationEnabled = false } = {}) {
+  const entries = Array.isArray(container?.env) ? container.env : [];
+  const keys = entries.filter((entry) => entry?.name === PROVIDER_SUBJECT_KEY_CONTRACT.keyEnvironmentName);
+  const versions = entries.filter((entry) => entry?.name === PROVIDER_SUBJECT_KEY_CONTRACT.versionEnvironmentName);
+  if (!keys.length && !versions.length) return !creationEnabled;
+  if (keys.length !== 1 || versions.length !== 1) return false;
+  const key = keys[0], version = versions[0], value = String(version.value ?? '');
+  const secret = key.valueFrom?.secretKeyRef;
+  return Object.keys(key).sort().join(',') === 'name,valueFrom' &&
+    Object.keys(version).sort().join(',') === 'name,value' &&
+    Object.keys(key.valueFrom || {}).sort().join(',') === 'secretKeyRef' &&
+    Object.keys(secret || {}).sort().join(',') === 'key,name' &&
+    secret.name === PROVIDER_SUBJECT_KEY_CONTRACT.secretName && secret.key === value &&
+    /^[1-9][0-9]{0,3}$/u.test(value);
+}
+
 function verifyAuthorityIam(plan, spawn) {
   const policy = gcloudJson(spawn, ['run', 'services', 'get-iam-policy', plan.target.service,
     `--project=${plan.target.projectId}`, `--region=${plan.target.region}`], 'authority-iam');
@@ -95,6 +116,7 @@ function verifyAuthorityService(plan, service, options = {}) {
       service?.spec?.template?.spec?.serviceAccountName !== plan.target.runtimeServiceAccount ||
       !Array.isArray(containers) || containers.length !== 1 || !/@sha256:[a-f0-9]{64}$/u.test(container?.image || '') ||
       !ready || (options.requireInactive !== false && !inactiveEnvironmentValid(env, options)) ||
+      !providerSubjectKeyEnvironmentValid(container, { creationEnabled: env.CREATE_PROVIDER_ACCOUNT_ENABLED === 'true' }) ||
       (options.allowPrivateEnvironment !== true && (
         GROUP_E_PRIVATE_ENVIRONMENT.some((name) => env[name] !== undefined && env[name] !== '') ||
         Object.keys(env).some((name) => name.startsWith('GROUP_E_') &&
@@ -293,6 +315,7 @@ module.exports = Object.freeze({
   AUTHORITY_GATES,
   DEPLOY_CONFIRMATION,
   GROUP_E_PRIVATE_ENVIRONMENT,
+  PROVIDER_SUBJECT_KEY_CONTRACT,
   REQUIRED_INACTIVE_ENVIRONMENT,
   argumentsMap,
   buildAuthority,
@@ -300,6 +323,7 @@ module.exports = Object.freeze({
   environment,
   executePlan,
   inactiveEnvironmentValid,
+  providerSubjectKeyEnvironmentValid,
   inactiveServiceSpec,
   replaceAuthority,
   run,

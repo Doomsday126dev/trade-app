@@ -14,6 +14,10 @@ const { STAGING: EXPECTED } = require('../e1-authority-service/e1TargetContracts
 const UID = 'syntheticE1Uid123';
 const API_KEY = 'synthetic-firebase-web-api-key-for-tests';
 const NOW_SECONDS = 1_800_000_000;
+const TRAINER = 'SyntheticTrainer';
+const NORMALIZED_TRAINER = 'synthetictrainer';
+const HANDLE_KEY = `v1_${Buffer.from(NORMALIZED_TRAINER, 'utf8').toString('hex')}`;
+const PROVIDER_HMAC_KEY = 'synthetic-provider-subject-key-material-0001';
 
 function environment(overrides = {}) {
   return {
@@ -28,6 +32,8 @@ function environment(overrides = {}) {
     FIREBASE_WEB_API_KEY: API_KEY,
     EXPECTED_OPERATOR_EMAIL_HASH: 'a'.repeat(64),
     EXPECTED_OPERATOR_SUBJECT_HASH: 'b'.repeat(64),
+    PROVIDER_SUBJECT_HMAC_KEY: PROVIDER_HMAC_KEY,
+    PROVIDER_SUBJECT_HMAC_KEY_VERSION: '1',
     ...Object.fromEntries(GATES.map((gate) => [gate, 'false'])),
     ...overrides
   };
@@ -85,10 +91,12 @@ function firestoreDocument(overrides = {}) {
   const fields = {
     schemaVersion: { integerValue: '1' },
     uid: { stringValue: UID },
-    trainerName: { stringValue: 'SyntheticTrainer' },
-    normalizedTrainerName: { stringValue: 'synthetictrainer' },
-    handleKey: { stringValue: `v1_${'a'.repeat(64)}` },
-    legacyUsername: { stringValue: 'legacy-synthetic' },
+    canonicalTrainerName: { stringValue: TRAINER },
+    normalizedTrainerName: { stringValue: NORMALIZED_TRAINER },
+    handleKey: { stringValue: HANDLE_KEY },
+    identityKind: { stringValue: 'legacy_migrated' },
+    legacyAccessConfigured: { booleanValue: true },
+    legacyUsername: { stringValue: TRAINER },
     status: { stringValue: 'active' },
     revision: { integerValue: '7' },
     createdAt: { integerValue: '1700000000000' },
@@ -101,13 +109,37 @@ function firestoreDocument(overrides = {}) {
   return { name: `projects/${EXPECTED.projectId}/databases/${EXPECTED.databaseId}/documents/accounts/${UID}`, fields };
 }
 
+function providerFirestoreDocument(overrides = {}) {
+  return firestoreDocument({
+    identityKind: { stringValue: 'provider_only' },
+    legacyAccessConfigured: { booleanValue: false },
+    legacyUsername: { nullValue: 'NULL_VALUE' },
+    revision: { integerValue: '1' },
+    ...overrides
+  });
+}
+
 function enabledHandler(overrides = {}) {
-  const calls = { reads: [], writes: [], logs: [] };
+  const calls = { reads: [], writes: [], legacy: [], providerChecks: [], providerReads: [], logs: [] };
   const handler = createHandler(loadConfiguration(environment({ READ_ACCOUNT_FOUNDATION_ENABLED: 'true' })), {
-    verifyFirebaseIdToken: overrides.verifyFirebaseIdToken || (async () => ({ uid: UID })),
+    verifyFirebaseIdToken: overrides.verifyFirebaseIdToken || (async () => ({ uid: UID, authTime: NOW_SECONDS * 1000 - 60_000,
+      signInProvider: null, identities: null })),
     readAccountDocument: overrides.readAccountDocument || (async (_configuration, uid) => {
       calls.reads.push(uid);
       return overrides.document === undefined ? null : overrides.document;
+    }),
+    readLegacyBinding: overrides.readLegacyBinding || (async (input) => {
+      calls.legacy.push(input);
+      return { status: 'ready', username: TRAINER, legacyAuthVersion: 1 };
+    }),
+    verifyCurrentGoogleProviderIdentity: overrides.verifyCurrentGoogleProviderIdentity || (async (_configuration, token, identity) => {
+      calls.providerChecks.push({ token, identity });
+      return { providerKey: 'google', providerId: 'google.com', providerSubjectKey: `v1_google_${'c'.repeat(64)}`,
+        providerSubjectKeyVersion: 1, authTime: identity.authTime };
+    }),
+    readProviderAccountFoundation: overrides.readProviderAccountFoundation || (async (input) => {
+      calls.providerReads.push(input);
+      return null;
     }),
     consumeRateLimit: overrides.consumeRateLimit || (async () => ({ allowed: true, consumed: true })),
     structuredLog: (_configuration, operation, outcome, _startedAt, extra) => calls.logs.push({ operation, outcome, extra })
@@ -191,19 +223,60 @@ test('existing active foundation returns only the approved redacted fields', asy
     code: 'SUCCESS',
     foundation: {
       schemaVersion: 1,
-      canonicalTrainerName: 'SyntheticTrainer',
-      normalizedTrainerName: 'synthetictrainer',
-      handleKey: `v1_${'a'.repeat(64)}`,
-      legacyUsername: 'legacy-synthetic',
+      canonicalTrainerName: TRAINER,
+      normalizedTrainerName: NORMALIZED_TRAINER,
+      handleKey: HANDLE_KEY,
+      identityKind: 'legacy_migrated',
+      legacyAccessConfigured: true,
+      legacyUsername: TRAINER,
       status: 'active',
-      revision: 7,
-      createdAt: 1700000000000,
-      updatedAt: 1700000001000
+      revision: 7
     }
   });
   const serialized = JSON.stringify(result);
   assert.doesNotMatch(serialized, /providerSubjects|migrationEvidence|internalFingerprint|secret-provider/);
   assert.deepEqual(calls.reads, [UID]);
+  assert.equal(calls.legacy.length, 1);
+  assert.equal(calls.providerReads.length, 0);
+});
+
+test('provider-only return requires current Google evidence and an exact reciprocal Firestore foundation', async () => {
+  const exact = {
+    schemaVersion: 1,
+    canonicalTrainerName: TRAINER,
+    normalizedTrainerName: NORMALIZED_TRAINER,
+    handleKey: HANDLE_KEY,
+    identityKind: 'provider_only',
+    legacyAccessConfigured: false,
+    legacyUsername: null,
+    status: 'active',
+    revision: 1
+  };
+  const { handler, calls } = enabledHandler({
+    document: providerFirestoreDocument(),
+    verifyFirebaseIdToken: async () => ({ uid: UID, authTime: NOW_SECONDS * 1000 - 60_000,
+      signInProvider: 'google.com', identities: { 'google.com': ['provider-subject'] } }),
+    readProviderAccountFoundation: async (input) => { calls.providerReads.push(input); return exact; }
+  });
+  const result = await invoke(handler);
+  assert.equal(result.status, 200);
+  assert.deepEqual(result.body, { code: 'SUCCESS', foundation: exact });
+  assert.equal(calls.providerChecks.length, 1);
+  assert.equal(calls.providerReads.length, 1);
+  assert.equal(calls.legacy.length, 0);
+});
+
+test('account-only provider state fails closed and never falls back to a legacy mapping', async () => {
+  const { handler, calls } = enabledHandler({
+    document: providerFirestoreDocument(),
+    verifyFirebaseIdToken: async () => ({ uid: UID, authTime: NOW_SECONDS * 1000 - 60_000,
+      signInProvider: 'google.com', identities: { 'google.com': ['provider-subject'] } })
+  });
+  const result = await invoke(handler);
+  assert.equal(result.status, 409);
+  assert.deepEqual(result.body, { code: 'FOUNDATION_CONFLICT' });
+  assert.equal(calls.providerReads.length, 1);
+  assert.equal(calls.legacy.length, 0);
 });
 
 test('frozen and blocked foundations remain redacted and never trigger repair or mutation', async () => {

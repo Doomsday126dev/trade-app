@@ -133,6 +133,27 @@ test('gateway uses Google OIDC serverless authorization and forwards the subject
   assert.equal(JSON.stringify(calls).includes('service-account-key'), false);
 });
 
+test('gateway preserves the namespace precondition but never trusts the same code from a generic 5xx response', async () => {
+  const configuration = loadGatewayConfiguration(productionEnvironment({ GATEWAY_INVOCATION_ENABLED: 'true' }));
+  const precondition = createGatewayOperation('createProviderAccountFoundation', configuration, {
+    invokeAuthority: async () => ({ status: 412, payload: { code: 'NAMESPACE_NOT_CERTIFIED' } })
+  });
+  const body = {
+    schemaVersion: 1,
+    requestId: 'provider-request-1',
+    requestedHandle: 'Trainer',
+    lifecycleId: 'auth-1',
+    clientRelease: '2026-08-31.86',
+    idempotencyFingerprint: 'a'.repeat(64)
+  };
+  await assert.rejects(precondition(request(body)), (error) => error?.code === 'NAMESPACE_NOT_CERTIFIED');
+
+  const unavailable = createGatewayOperation('createProviderAccountFoundation', configuration, {
+    invokeAuthority: async () => ({ status: 503, payload: { code: 'NAMESPACE_NOT_CERTIFIED' } })
+  });
+  await assert.rejects(unavailable(request(body)), (error) => error?.code === 'AUTHORITY_UNAVAILABLE');
+});
+
 test('gateway forwards only the original callable bearer token and never substitutes decoded Auth or App Check context', () => {
   const boundary = verifyCallableBoundary('readAccountFoundation', request(undefined, {
     auth: { uid: 'firebase_uid_gateway', token: { uid: 'decoded-context-must-not-be-forwarded' } },

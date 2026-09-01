@@ -23,11 +23,13 @@ const {
 } = require('../production/e1AuthorityDeploymentPlan.cjs');
 const {
   GROUP_E_PRIVATE_ENVIRONMENT,
+  PROVIDER_SUBJECT_KEY_CONTRACT,
   REQUIRED_INACTIVE_ENVIRONMENT,
   argumentsMap,
   executePlan,
   inactiveEnvironmentValid,
   inactiveServiceSpec,
+  providerSubjectKeyEnvironmentValid,
   run,
   verifyAuthorityIam,
   verifyAuthorityService
@@ -272,6 +274,33 @@ test('authority service and IAM verification fail closed on public runtime or in
   }
 });
 
+test('provider-subject HMAC deployment contract permits inactive absence and requires an exact versioned secret reference before creation',()=>{
+  const plan=planFixture(),inactive=serviceFixture(),container=inactive.spec.template.spec.containers[0];
+  assert.equal(providerSubjectKeyEnvironmentValid(container),true);
+  const key={name:PROVIDER_SUBJECT_KEY_CONTRACT.keyEnvironmentName,
+    valueFrom:{secretKeyRef:{name:PROVIDER_SUBJECT_KEY_CONTRACT.secretName,key:'1'}}};
+  const version={name:PROVIDER_SUBJECT_KEY_CONTRACT.versionEnvironmentName,value:'1'};
+  container.env.push(key,version);
+  assert.equal(providerSubjectKeyEnvironmentValid(container),true);assert.equal(verifyAuthorityService(plan,inactive),true);
+
+  const enabled=structuredClone(inactive);
+  enabled.spec.template.spec.containers[0].env.find(entry=>entry.name==='CREATE_PROVIDER_ACCOUNT_ENABLED').value='true';
+  assert.equal(verifyAuthorityService(plan,enabled,{requireInactive:false}),true);
+
+  for(const mutate of[
+    value=>{value.spec.template.spec.containers[0].env=value.spec.template.spec.containers[0].env.filter(entry=>entry.name!==PROVIDER_SUBJECT_KEY_CONTRACT.versionEnvironmentName);},
+    value=>{const entry=value.spec.template.spec.containers[0].env.find(item=>item.name===PROVIDER_SUBJECT_KEY_CONTRACT.keyEnvironmentName);delete entry.valueFrom;entry.value='plaintext-is-forbidden';},
+    value=>{value.spec.template.spec.containers[0].env.find(item=>item.name===PROVIDER_SUBJECT_KEY_CONTRACT.versionEnvironmentName).value='2';},
+    value=>{value.spec.template.spec.containers[0].env.find(item=>item.name===PROVIDER_SUBJECT_KEY_CONTRACT.keyEnvironmentName).valueFrom.secretKeyRef.name='wrong-secret';}
+  ]){
+    const malformed=structuredClone(inactive);mutate(malformed);
+    assert.throws(()=>verifyAuthorityService(plan,malformed),/runtime-or-inactive-state-invalid/u);
+  }
+  const absentButEnabled=serviceFixture();
+  absentButEnabled.spec.template.spec.containers[0].env.find(entry=>entry.name==='CREATE_PROVIDER_ACCOUNT_ENABLED').value='true';
+  assert.throws(()=>verifyAuthorityService(plan,absentButEnabled,{requireInactive:false}),/runtime-or-inactive-state-invalid/u);
+});
+
 test('legacy authority preflight accepts only an absent or false read proof mode', () => {
   const plan = planFixture();
   const absent = serviceFixture();
@@ -311,6 +340,9 @@ test('inactive authority replacement preserves unrelated configuration and strip
   container.env = container.env.filter((entry) => entry.name !== 'READ_PROOF_MODE');
   container.env.push({ name: 'GROUP_E_RUN_ID', value: 'private-run' });
   container.env.push({ name: 'GROUP_E_FUTURE_PRIVATE_VALUE', value: 'private-future' });
+  container.env.push({ name: PROVIDER_SUBJECT_KEY_CONTRACT.keyEnvironmentName,
+    valueFrom: { secretKeyRef: { name: PROVIDER_SUBJECT_KEY_CONTRACT.secretName, key: '1' } } });
+  container.env.push({ name: PROVIDER_SUBJECT_KEY_CONTRACT.versionEnvironmentName, value: '1' });
   assert.throws(() => verifyAuthorityService(plan, service), /runtime-or-inactive-state-invalid/u);
   const replacement = inactiveServiceSpec(plan, service, `${plan.target.imageUri}@${NEXT_IMAGE_DIGEST}`);
   const next = replacement.spec.template.spec.containers[0];
@@ -320,6 +352,13 @@ test('inactive authority replacement preserves unrelated configuration and strip
   });
   assert.equal(next.env.some((entry) => GROUP_E_PRIVATE_ENVIRONMENT.includes(entry.name)), false);
   assert.equal(next.env.some((entry) => entry.name.startsWith('GROUP_E_') && entry.name !== 'GROUP_E_CLIENT_MODE'), false);
+  assert.deepEqual(next.env.find(entry=>entry.name===PROVIDER_SUBJECT_KEY_CONTRACT.keyEnvironmentName),{
+    name:PROVIDER_SUBJECT_KEY_CONTRACT.keyEnvironmentName,
+    valueFrom:{secretKeyRef:{name:PROVIDER_SUBJECT_KEY_CONTRACT.secretName,key:'1'}}
+  });
+  assert.deepEqual(next.env.find(entry=>entry.name===PROVIDER_SUBJECT_KEY_CONTRACT.versionEnvironmentName),{
+    name:PROVIDER_SUBJECT_KEY_CONTRACT.versionEnvironmentName,value:'1'
+  });
   assert.deepEqual(next.env.filter((entry) => entry.name === 'READ_PROOF_MODE'), [
     { name: 'READ_PROOF_MODE', value: 'false' }
   ]);
@@ -372,8 +411,8 @@ test('authority helper source contains no IAM mutation command and gateway pin r
   const helper = fs.readFileSync(path.resolve(__dirname, '../scripts/deploy-e1-production-authority.cjs'), 'utf8');
   assert.doesNotMatch(helper, /add-iam-policy-binding|remove-iam-policy-binding|set-iam-policy/u);
   const gateway = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../production/e1-gateway-source-manifest.json'), 'utf8'));
-  assert.equal(gateway.sourceCommitSha, COMMIT_A_SOURCE_SHA);
-  assert.equal(gateway.sourceFingerprint, '6efaab14358355cd2afc8a790a2cace4ae13f394f095f34a5b9c4adf2c8a5258');
+  assert.equal(gateway.sourceCommitSha, '129b7ad7dbf33a5bc0126aec20e2412eb08774a1');
+  assert.equal(gateway.sourceFingerprint, '666afda7de8aa299a1281214b8cda4a6c0c9002f3b7c84f2c8e8eaeedc2603d5');
   assert.deepEqual(gateway.sourceFiles.map((file) => file.path), [
     'gatewayCore.js', 'groupEAdmission.js', 'groupEControlStore.js', 'index.js', 'package-lock.json', 'package.json'
   ]);

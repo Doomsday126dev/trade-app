@@ -23,6 +23,7 @@ const SUBJECT = 'google-provider-subject-001';
 const REQUEST_ID = 'request-provider-0001';
 const LIFECYCLE_ID = 'auth-7';
 const CLIENT_RELEASE = '2026-08-31.86';
+const PROVIDER_HMAC_KEY = 'synthetic-provider-subject-key-material-0001';
 
 function environment(overrides = {}) {
   return {
@@ -37,6 +38,8 @@ function environment(overrides = {}) {
     FIREBASE_WEB_API_KEY: 'synthetic-firebase-web-api-key-for-tests',
     EXPECTED_OPERATOR_EMAIL_HASH: 'a'.repeat(64),
     EXPECTED_OPERATOR_SUBJECT_HASH: 'b'.repeat(64),
+    PROVIDER_SUBJECT_HMAC_KEY: PROVIDER_HMAC_KEY,
+    PROVIDER_SUBJECT_HMAC_KEY_VERSION: '1',
     ...Object.fromEntries(GATES.map((gate) => [gate, 'false'])),
     ...overrides
   };
@@ -140,6 +143,24 @@ test('provider creation gate is false by default and fails before parsing Auth o
   assert.equal(calls, 0);
 });
 
+test('provider-subject key configuration is optional while inactive but mandatory and versioned for creation',()=>{
+  const inactive=environment();delete inactive.PROVIDER_SUBJECT_HMAC_KEY;delete inactive.PROVIDER_SUBJECT_HMAC_KEY_VERSION;
+  assert.equal(loadConfiguration(inactive).createProviderAccountEnabled,false);
+  assert.throws(()=>loadConfiguration({...inactive,CREATE_PROVIDER_ACCOUNT_ENABLED:'true'}),/E1_CONFIGURATION_MISMATCH/u);
+  for(const malformed of[
+    {...inactive,PROVIDER_SUBJECT_HMAC_KEY:'short',PROVIDER_SUBJECT_HMAC_KEY_VERSION:'1'},
+    {...inactive,PROVIDER_SUBJECT_HMAC_KEY:PROVIDER_HMAC_KEY},
+    {...inactive,PROVIDER_SUBJECT_HMAC_KEY_VERSION:'1'},
+    {...inactive,PROVIDER_SUBJECT_HMAC_KEY:PROVIDER_HMAC_KEY,PROVIDER_SUBJECT_HMAC_KEY_VERSION:'0'}
+  ])assert.throws(()=>loadConfiguration(malformed),/E1_CONFIGURATION_MISMATCH/u);
+  const first=loadConfiguration(environment()),second=loadConfiguration(environment({
+    PROVIDER_SUBJECT_HMAC_KEY:'synthetic-provider-subject-key-material-0002',PROVIDER_SUBJECT_HMAC_KEY_VERSION:'2'
+  }));
+  assert.equal(providerSubjectHash(first,'google.com',SUBJECT),providerSubjectHash(first,'google.com',SUBJECT));
+  assert.notEqual(providerSubjectHash(first,'google.com',SUBJECT),providerSubjectHash(second,'google.com',SUBJECT));
+  assert.notEqual(providerSubjectHash(first,'google.com',SUBJECT),providerSubjectHash(first,'discord.com',SUBJECT));
+});
+
 test('exact request rejects client UID provider fields unknown fields and malformed lifecycle evidence', async () => {
   const { handler, calls } = harness();
   for (const body of [
@@ -231,7 +252,7 @@ test('lost transaction response performs one exact readback and accepts only a c
 
 test('known conflicts never invoke reconciliation and preserve precise public outcomes', async () => {
   const cases = [
-    ['e1/legacy-namespace-not-certified', 503, 'NAMESPACE_NOT_CERTIFIED'],
+    ['e1/legacy-namespace-not-certified', 412, 'NAMESPACE_NOT_CERTIFIED'],
     ['e1/account-conflict', 409, 'ACCOUNT_EXISTS'],
     ['e1/handle-conflict', 409, 'HANDLE_CONFLICT'],
     ['e1/provider-subject-conflict', 409, 'PROVIDER_CONFLICT'],

@@ -17,8 +17,8 @@
     'clientRelease','idempotencyFingerprint','phase'
   ]);
   const READ_FOUNDATION_FIELDS=Object.freeze([
-    'canonicalTrainerName','createdAt','handleKey','legacyUsername','normalizedTrainerName','revision',
-    'schemaVersion','status','updatedAt'
+    'canonicalTrainerName','handleKey','identityKind','legacyAccessConfigured','legacyUsername',
+    'normalizedTrainerName','revision','schemaVersion','status'
   ]);
   const CREATE_FOUNDATION_FIELDS=Object.freeze([
     'canonicalTrainerName','handleKey','identityKind','legacyAccessConfigured','legacyUsername',
@@ -53,17 +53,17 @@
     return sha256(JSON.stringify([1,'createProviderAccountFoundation',input.uid,input.requestId,input.normalizedTrainerName,
       input.handleKey,input.lifecycleId,input.clientRelease]),cryptoImpl);
   }
-  function validTime(value){return Number.isSafeInteger(value)&&value>=0||typeof value==='string'&&Number.isFinite(Date.parse(value));}
   function validateReadFoundation(value){
     if(!exactFields(value,READ_FOUNDATION_FIELDS)||value.schemaVersion!==1||!String(value.canonicalTrainerName||'')||
       !String(value.normalizedTrainerName||'')||!HANDLE_KEY.test(value.handleKey||'')||
-      value.legacyUsername!==null&&typeof value.legacyUsername!=='string'||value.status!=='active'||
-      value.revision!==null&&(!Number.isSafeInteger(value.revision)||value.revision<0)||
-      !validTime(value.createdAt)||!validTime(value.updatedAt))fail('provider-account/response-invalid');
-    return Object.freeze({...value,
-      identityKind:value.legacyUsername===null?'provider_only':'legacy_migrated',
-      legacyAccessConfigured:value.legacyUsername!==null
-    });
+      value.status!=='active'||!Number.isSafeInteger(value.revision)||value.revision<1)fail('provider-account/response-invalid');
+    let normalized;try{normalized=normalizeHandle(value.canonicalTrainerName);}catch{fail('provider-account/response-invalid');}
+    if(normalized.normalized!==value.normalizedTrainerName||normalized.handleKey!==value.handleKey||
+      value.identityKind==='provider_only'&&(value.legacyAccessConfigured!==false||value.legacyUsername!==null)||
+      value.identityKind==='legacy_migrated'&&(value.legacyAccessConfigured!==true||
+        typeof value.legacyUsername!=='string'||!value.legacyUsername)||
+      !new Set(['provider_only','legacy_migrated']).has(value.identityKind))fail('provider-account/response-invalid');
+    return Object.freeze({...value});
   }
   function validateReadResponse(value){
     if(exactFields(value,['code'])&&value.code==='FOUNDATION_NOT_INITIALIZED')return Object.freeze({status:'missing'});

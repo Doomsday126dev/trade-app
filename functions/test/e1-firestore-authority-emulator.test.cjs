@@ -67,6 +67,7 @@ function providerInput(uid, trainerName, requestId, subjectLabel = uid) {
     providerKey: 'google',
     providerId: 'google.com',
     providerSubjectKey: `v1_google_${crypto.createHash('sha256').update(subjectLabel).digest('hex')}`,
+    providerSubjectKeyVersion: 1,
     authTime: 900,
     lifecycleId: 'auth-1',
     clientRelease: '2026-08-31.86',
@@ -75,15 +76,28 @@ function providerInput(uid, trainerName, requestId, subjectLabel = uid) {
 }
 
 async function certifyProviderCreation(overrides = {}) {
-  await firestore.doc('authorityConfig/providerAccountCreation').set({
+  await firestore.doc('authorityConfig/legacyProvisioningFreeze').set({
     schemaVersion: 1,
+    state: 'active',
+    provisioningModel: 'bounded-legacy-provisioning-freeze',
+    freezeId: 'legacy-freeze-synthetic-0001',
+    provisioningContractDigest: 'd'.repeat(64),
+    activatedAt: 100,
+    releasedAt: null
+  });
+  await firestore.doc('authorityConfig/providerAccountCreation').set({
+    schemaVersion: 2,
     state: 'certified',
+    provisioningModel: 'bounded-legacy-provisioning-freeze',
+    freezeId: 'legacy-freeze-synthetic-0001',
+    provisioningContractDigest: 'd'.repeat(64),
     normalizationVersion: 1,
     legacyNamespaceCoverageCertified: true,
     activeLegacyHandleCount: 58,
     certifiedHandleCount: 58,
     coverageDigest: 'c'.repeat(64),
-    certifiedAt: 1,
+    inventoryCapturedAt: 200,
+    certifiedAt: 300,
     expiresAt: 10_000,
     ...overrides
   });
@@ -346,16 +360,29 @@ test('provider creation atomically writes canonical account handle provider reve
 
 test('missing stale malformed or incomplete namespace certification blocks provider creation without partial writes', async () => {
   const variants = [
-    null,
-    { state: 'pending' },
-    { legacyNamespaceCoverageCertified: false },
-    { certifiedHandleCount: 57 },
-    { coverageDigest: 'bad' },
-    { expiresAt: 1 }
+    async () => {},
+    async () => { await certifyProviderCreation({ state: 'pending' }); },
+    async () => { await certifyProviderCreation({ legacyNamespaceCoverageCertified: false }); },
+    async () => { await certifyProviderCreation({ certifiedHandleCount: 57 }); },
+    async () => { await certifyProviderCreation({ coverageDigest: 'bad' }); },
+    async () => { await certifyProviderCreation({ unexpectedEvidence: true }); },
+    async () => { await certifyProviderCreation({ expiresAt: 1 }); },
+    async () => { await certifyProviderCreation({ normalizationVersion: 2 }); },
+    async () => { await certifyProviderCreation({ freezeId: 'legacy-freeze-another-0002' }); },
+    async () => { await certifyProviderCreation({ provisioningContractDigest: 'e'.repeat(64) }); },
+    async () => { await certifyProviderCreation({ inventoryCapturedAt: 99 }); },
+    async () => {
+      await certifyProviderCreation();
+      await firestore.doc('authorityConfig/legacyProvisioningFreeze').update({ state: 'released', releasedAt: 900 });
+    },
+    async () => {
+      await certifyProviderCreation();
+      await firestore.doc('authorityConfig/legacyProvisioningFreeze').update({ unexpectedEvidence: true });
+    }
   ];
   for (let index = 0; index < variants.length; index += 1) {
     await clearFirestore();
-    if (variants[index]) await certifyProviderCreation(variants[index]);
+    await variants[index]();
     const request = providerInput(`firebase_provider_cert_${index}`, `CertTrainer${index}`, `request-provider-cert-${index}`);
     await assert.rejects(adapter.createProviderAccountFoundation(request),
       (error) => error?.code === 'e1/legacy-namespace-not-certified');
@@ -456,10 +483,50 @@ test('exact provider foundation readback accepts complete state and rejects part
   const request = providerInput('firebase_provider_readback', 'ProviderReadback', 'request-provider-readback');
   assert.equal(await adapter.readProviderAccountFoundation(request), null);
   await adapter.createProviderAccountFoundation(request);
-  assert.equal((await adapter.readProviderAccountFoundation(request)).identityKind, 'provider_only');
-  await firestore.doc(`providerSubjects/${request.providerSubjectKey}`).update({ uid: 'firebase_other_owner' });
-  await assert.rejects(adapter.readProviderAccountFoundation(request),
-    (error) => error?.code === 'e1/provider-foundation-conflict');
+  assert.deepEqual(await adapter.readProviderAccountFoundation(request), {
+    schemaVersion: 1,
+    canonicalTrainerName: request.canonicalTrainerName,
+    normalizedTrainerName: request.normalizedTrainerName,
+    handleKey: request.handleKey,
+    identityKind: 'provider_only',
+    legacyAccessConfigured: false,
+    legacyUsername: null,
+    status: 'active',
+    revision: 1
+  });
+});
+
+test('every missing or conflicting reciprocal provider record fails closed', async () => {
+  const variants = [
+    ['account document only', async (request) => {
+      await firestore.doc(`trainerHandles/${request.handleKey}`).delete();
+      await firestore.doc(`accounts/${request.uid}/providers/google`).delete();
+      await firestore.doc(`providerSubjects/${request.providerSubjectKey}`).delete();
+    }, 'missing'],
+    ['missing handle', async (request) => firestore.doc(`trainerHandles/${request.handleKey}`).delete(), 'missing'],
+    ['handle owned by another UID', async (request) => firestore.doc(`trainerHandles/${request.handleKey}`).update({ uid: 'firebase_other_owner' }), 'conflict'],
+    ['mismatched normalized handle', async (request) => firestore.doc(`accounts/${request.uid}`).update({ normalizedTrainerName: 'another' }), 'conflict'],
+    ['mismatched handle key', async (request) => firestore.doc(`accounts/${request.uid}`).update({ handleKey: `v1_${'e'.repeat(64)}` }), 'conflict'],
+    ['missing provider document', async (request) => firestore.doc(`accounts/${request.uid}/providers/google`).delete(), 'missing'],
+    ['provider not linked', async (request) => firestore.doc(`accounts/${request.uid}/providers/google`).update({ state: 'pending' }), 'conflict'],
+    ['missing provider subject', async (request) => firestore.doc(`providerSubjects/${request.providerSubjectKey}`).delete(), 'missing'],
+    ['provider subject owned by another UID', async (request) => firestore.doc(`providerSubjects/${request.providerSubjectKey}`).update({ uid: 'firebase_other_owner' }), 'conflict'],
+    ['linked timestamps differ', async (request) => firestore.doc(`providerSubjects/${request.providerSubjectKey}`).update({ linkedAt: 999 }), 'conflict'],
+    ['malformed identity kind', async (request) => firestore.doc(`accounts/${request.uid}`).update({ identityKind: 'legacy_migrated' }), 'conflict'],
+    ['malformed legacy flag', async (request) => firestore.doc(`accounts/${request.uid}`).update({ legacyAccessConfigured: true }), 'conflict'],
+    ['provider key version differs', async (request) => firestore.doc(`accounts/${request.uid}/providers/google`).update({ providerSubjectKeyVersion: 2 }), 'conflict']
+  ];
+  for (let index = 0; index < variants.length; index += 1) {
+    const [label, mutate, outcome] = variants[index];
+    await clearFirestore();
+    await certifyProviderCreation();
+    const request = providerInput(`firebase_provider_exact_${index}`, `ProviderExact${index}`, `request-provider-exact-${index}`);
+    await adapter.createProviderAccountFoundation(request);
+    await mutate(request);
+    if (outcome === 'missing') assert.equal(await adapter.readProviderAccountFoundation(request), null, label);
+    else await assert.rejects(adapter.readProviderAccountFoundation(request),
+      (error) => error?.code === 'e1/provider-foundation-conflict', label);
+  }
 });
 
 test('provider creation writes no RTDB-shaped identity or product roots', async () => {
