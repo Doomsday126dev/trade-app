@@ -221,7 +221,7 @@ No PIN is invented. Google unlink remains blocked while it is the sole usable me
 
 ## Public product boundary
 
-PR A deliberately defers provider-only public publication. The stacked PR B activates the existing UID-share architecture with these constraints:
+PR A deliberately defers provider-only public publication. The stacked PR B implements the source and emulator candidate, still disabled by default, with these constraints:
 
 - owner publication is `trainerShares/{auth.uid}`;
 - Firestore `trainerHandles` remains the only handle authority;
@@ -229,6 +229,8 @@ PR A deliberately defers provider-only public publication. The stacked PR B acti
 - anonymous clients never receive the owner UID or private account metadata;
 - exact legacy `publicShares/{username}` URLs remain a fallback;
 - no browser or server writes a second handle directory.
+
+The authority and gateway gates are independently false by default. The full read, write, Rules, privacy, compatibility, and rollback contract is in `docs/PROVIDER-PUBLIC-PROJECTION.md`.
 
 ## Rollout and rollback
 

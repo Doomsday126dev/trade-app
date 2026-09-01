@@ -38,4 +38,4 @@ Username/PIN authentication keeps its current reciprocal RTDB evidence and migra
 
 A new Google user creates only Firestore account, handle, provider, subject, and operation records. The browser cannot write those records, and the authority never writes `authIndex`, `loginDirectory`, or `users`.
 
-Private sync is already UID-rooted. Public sharing is the remaining product dependency and is intentionally separated into the stacked `identity/provider-public-projection` draft PR.
+Private sync is already UID-rooted. The stacked `identity/provider-public-projection` draft implements the remaining public dependency as an inactive UID-rooted projection plus a fixed Firestore-handle gateway. It does not activate `shareDirectory`, write legacy identity mappings, or expose owner UIDs.

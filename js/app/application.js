@@ -215,6 +215,9 @@ const eventPresentationDomain=window.PogoDomain?.eventPresentation;
 if(!eventPresentationDomain)throw new Error('Event presentation helpers failed to load');
 const publicSharePublicationDomain=window.PogoDomain?.publicSharePublication;
 if(!publicSharePublicationDomain)throw new Error('Public-share publication helpers failed to load');
+const providerPublicProjectionDomain=window.PogoDomain?.providerPublicProjection;
+const providerPublicShareGatewayService=window.PogoServices?.providerPublicShareGateway;
+if(!providerPublicProjectionDomain||!providerPublicShareGatewayService)throw new Error('Provider public-share foundation failed to load');
 const trainerPreferencesDomain=window.PogoDomain?.trainerPreferences;
 if(!trainerPreferencesDomain||trainerPreferencesDomain.SYNCED_TRAINER_PREFERENCES_ENABLED!==false)throw new Error('Disabled trainer-preference helpers failed to load safely');
 const trainerPreferenceSyncDomain=window.PogoDomain?.trainerPreferenceSync;
@@ -259,6 +262,7 @@ let managedFirebaseClient=null;
 let managedCurrentUserRepository=null;
 let managedOwnedDataCoordinator=null;
 let managedPublicShareRepository=null;
+let managedProviderPublicShareClient=null;
 let trainerHistoryStore=null;
 let favoriteShareSessionCache=null;
 // Source-controlled rollout boundary. Only the reviewed owner canary hash is
@@ -426,7 +430,7 @@ let activeCanonicalIdentity=null;
 let e1ClientFoundationCanary=null;
 let firebaseDatabaseHandle=null,firebaseDataProtectionReady=false;
 let allData={};
-let selectedTrainerRuntime={username:'',publicData:null};
+let selectedTrainerRuntime={username:'',publicData:null,source:''};
 let browseFilter='ALL',browseList='wishlist',staleFilter=0;
 let browseFlagFilters={lucky:false,xxl:false,xxs:false,shiny:false};
 let myListType='wishlist',strListType='wishlist';
@@ -1288,9 +1292,24 @@ function ensureProviderAccountFoundationClient(){
   });
   return providerAccountFoundationClient;
 }
+function ensureProviderPublicShareClient(){
+  if(!(PROVIDER_CAPABILITIES.providerPublicReadSupport||PROVIDER_CAPABILITIES.providerPublicWriteSupport))return null;
+  if(managedProviderPublicShareClient)return managedProviderPublicShareClient;
+  if(!fbApp)throw providerFailure('provider-public/dependencies-invalid');
+  managedProviderPublicShareClient=providerPublicShareGatewayService.createProviderPublicShareClient({
+    firebaseApp:fbApp,firebaseAppCheckReady,enabled:true,
+    importFunctionsSdk:()=>import('https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js')
+  });
+  return managedProviderPublicShareClient;
+}
 function providerOnlyIdentityActive(uid=auth?.currentUser?.uid){
   return PROVIDER_CAPABILITIES.providerAccountCompatibility===true&&!!uid&&activeCanonicalIdentity?.uid===uid&&
     activeCanonicalIdentity.identityKind==='provider_only'&&activeCanonicalIdentity.legacyAccessConfigured===false;
+}
+function providerPublicProjectionSession(username=cur){
+  const uid=auth?.currentUser?.uid;
+  return PROVIDER_CAPABILITIES.providerPublicWriteSupport&&providerOnlyIdentityActive(uid)&&
+    activeCanonicalIdentity?.username===username?Object.freeze({uid,username}):null;
 }
 function validCanonicalFoundation(value,uid){
   return!!uid&&value?.status==='active'&&value.schemaVersion===1&&
@@ -2326,12 +2345,42 @@ function notePublicSharePublicationBlocked(result,trigger){
   _lastPublicShareBlockedNotice=fingerprint;
   console.warn('Public-share publication blocked',{code,trigger});
 }
+async function writeProviderPublicShareSnapshot(session,snapshot){
+  if(!session||session.uid!==auth?.currentUser?.uid||session.username!==cur||!db){
+    throw providerFailure('provider-public/session-changed');
+  }
+  const path=`trainerShares/${session.uid}`;
+  const transaction=await withTimeout(runTransaction(ref(db,path),current=>{
+    if(session.uid!==auth?.currentUser?.uid||session.username!==cur)return;
+    return providerPublicProjectionDomain.nextProjection(snapshot,current,{trainerName:session.username});
+  }),8000,'Publishing provider share timed out','provider-public/write-timeout');
+  if(!transaction?.committed||session.uid!==auth?.currentUser?.uid||session.username!==cur){
+    throw providerFailure('provider-public/session-changed');
+  }
+  delete syncQueue[`publicShares/${session.username}`];
+  delete syncQueue[path];
+  saveSyncQueue();
+  if(!Object.keys(syncQueue).length)showSyncDot(false);
+  return{ok:true,status:'published',source:'provider'};
+}
 function queueHydratedPublicShareSnapshot(source,username,trigger){
   if(!fbOn||!db||!username||!auth?.currentUser){
     return{ok:false,error:{code:'share-publication/offline',message:'Firebase session is unavailable'}};
   }
   const built=publicShareSnapshotForUser(username,source,trigger);
   if(!built.ok){notePublicSharePublicationBlocked(built,trigger);return built;}
+  const providerSession=providerPublicProjectionSession(username);
+  if(providerOnlyIdentityActive()&&!providerSession){
+    const blocked={ok:false,error:{code:'provider-public/projection-disabled',message:'Provider public projection is not enabled'}};
+    notePublicSharePublicationBlocked(blocked,trigger);return blocked;
+  }
+  if(providerSession){
+    writeProviderPublicShareSnapshot(providerSession,built.snapshot).catch(error=>{
+      console.warn('Provider public-share publication failed',String(error?.code||'provider-public/write-failed'));
+      setSyncStatus('offline');
+    });
+    return{ok:true,status:'queued',source:'provider'};
+  }
   queueSync(`publicShares/${username}`,built.snapshot);
   return{ok:true,status:'queued'};
 }
@@ -2361,6 +2410,11 @@ async function publishPublicShareNow(username=cur,trigger='explicit_share'){
   const built=publicShareSnapshotForUser(username,allData,trigger);
   if(!built.ok){notePublicSharePublicationBlocked(built,trigger);return built;}
   if(fbOn&&db&&auth?.currentUser){
+    const providerSession=providerPublicProjectionSession(username);
+    if(providerOnlyIdentityActive()&&!providerSession){
+      return{ok:false,error:{code:'provider-public/projection-disabled',message:'Provider public projection is not enabled'}};
+    }
+    if(providerSession)return writeProviderPublicShareSnapshot(providerSession,built.snapshot);
     await withTimeout(set(ref(db,`publicShares/${username}`),built.snapshot),8000,'Publishing share link timed out','db/public-share-timeout');
     delete syncQueue[`publicShares/${username}`];
     saveSyncQueue();
@@ -2391,10 +2445,11 @@ async function inspectOwnPublicShareAfterHydration(token=activePublicShareHydrat
   const generation=token.generation;
   let status;
   try{
-    const result=await managedPublicShareRepository.read(token.username);
+    const providerSession=providerPublicProjectionSession(token.username);
+    const result=providerSession?await ensureProviderPublicShareClient().read(token.username):await managedPublicShareRepository.read(token.username);
     if(!publicShareSessionMatches(token.username)||activePublicShareHydrationToken?.generation!==generation)return{ok:false,status:'stale'};
     if(!result.ok)status={status:'transport_error',republishRequired:true};
-    else status=publicSharePublicationDomain.ownerProjectionReview(result.value,{username:token.username});
+    else status=publicSharePublicationDomain.ownerProjectionReview(providerSession?result.snapshot:result.value,{username:token.username});
   }catch(error){status={status:'transport_error',republishRequired:true};}
   if(!publicShareSessionMatches(token.username)||activePublicShareHydrationToken?.generation!==generation)return{ok:false,status:'stale'};
   ownerPublicShareReview={generation,status:status.status,republishRequired:!!status.republishRequired,busy:false};
@@ -4028,13 +4083,13 @@ function selectedTrainerData(username){
   const clean=String(username||'').trim();
   if(!clean)return null;
   if(selectedTrainerRuntime.username!==clean){
-    selectedTrainerRuntime={username:clean,publicData:null};
+    selectedTrainerRuntime={username:clean,publicData:null,source:''};
   }
   if(!selectedTrainerRuntime.publicData)selectedTrainerRuntime.publicData=normalizeData({});
   return selectedTrainerRuntime.publicData;
 }
 function clearSelectedTrainerData(){
-  selectedTrainerRuntime={username:'',publicData:null};
+  selectedTrainerRuntime={username:'',publicData:null,source:''};
 }
 function runtimeDataWithSelectedTrainer(source){
   const base=normalizeData(source||{});
@@ -4051,6 +4106,18 @@ function runtimeDataWithSelectedTrainer(source){
 async function loadPublicShareData(username,{requestGeneration=null}={}){
   if(!db||!username)return{ok:false,status:'transport_error'};
   try{
+    if(PROVIDER_CAPABILITIES.providerPublicReadSupport){
+      const provider=await ensureProviderPublicShareClient().read(username);
+      if(requestGeneration!==null&&requestGeneration!==_publicShareRequestGeneration)return{ok:false,status:'stale'};
+      if(provider.ok){
+        const canonicalUsername=provider.snapshot.username;
+        const s=selectedTrainerData(canonicalUsername);
+        if(!applyPublicShareSnapshot(s,provider.snapshot))return{ok:false,status:'projection_unsupported'};
+        selectedTrainerRuntime.source='provider';
+        allData=runtimeDataWithSelectedTrainer(getLocal());setSyncStatus('online');return{...provider,username:canonicalUsername};
+      }
+      if(!['not_found','unavailable','disabled'].includes(provider.status))return{ok:false,status:'projection_unsupported'};
+    }
     const snap=await get(ref(db,`publicShares/${username}`));
     if(requestGeneration!==null&&requestGeneration!==_publicShareRequestGeneration)return{ok:false,status:'stale'};
     if(!snap.exists())return{ok:false,status:'not_published'};
@@ -4058,6 +4125,7 @@ async function loadPublicShareData(username,{requestGeneration=null}={}){
     if(!projection.ok)return projection;
     const s=selectedTrainerData(username);
     if(!applyPublicShareSnapshot(s,projection.snapshot))return{ok:false,status:'projection_unsupported'};
+    selectedTrainerRuntime.source='legacy';
     allData=runtimeDataWithSelectedTrainer(getLocal());
     setSyncStatus('online');
     return projection;
@@ -4098,7 +4166,7 @@ function clearShareViewSubscriptions(){
 function onPublicShareSnapshot(username,snap){
   const projection=publicSharePublicationDomain.publicShareProjectionStatus(snap.exists()?snap.val():null,{username});
   if(!projection.ok){
-    selectedTrainerRuntime={username,publicData:null};
+    selectedTrainerRuntime={username,publicData:null,source:''};
     allData=runtimeDataWithSelectedTrainer(getLocal());
     if(document.getElementById('share-view')?.classList.contains('active')&&_activeShareView?.username===username){
       renderUnavailableShareView(username,i18nCore.t(publicShareStatusMessageKey(projection.status)));
@@ -4107,6 +4175,7 @@ function onPublicShareSnapshot(username,snap){
   }
   const s=selectedTrainerData(username);
   if(!applyPublicShareSnapshot(s,projection.snapshot))return;
+  selectedTrainerRuntime.source='legacy';
   allData=runtimeDataWithSelectedTrainer(getLocal());
   setSyncStatus('online');
   if(document.getElementById('share-view')?.classList.contains('active')&&_activeShareView?.username===username){
@@ -4116,6 +4185,11 @@ function onPublicShareSnapshot(username,snap){
 function ensureShareViewSubscriptions(username){
   if(!db||!username)return false;
   selectedTrainerData(username);
+  if(selectedTrainerRuntime.source==='provider'){
+    managedListenerLifecycle.clearSelectedTrainer('provider_projection_one_shot');
+    managedListenerLifecycle.clearAuthenticatedShareListeners();
+    return true;
+  }
   const publicPath=`publicShares/${username}`;
   const publicResult=managedListenerLifecycle.subscribeSelectedTrainer({
     username,path:publicPath,key:`share:${username}:public`,
@@ -4138,9 +4212,10 @@ async function openShareViewFromRequest(shareReq){
   const requestGeneration=++_publicShareRequestGeneration;
   const publicLoaded=await loadPublicShareData(shareReq.username,{requestGeneration});
   if(requestGeneration!==_publicShareRequestGeneration||publicLoaded.status==='stale')return;
-  if(publicLoaded.ok&&allData.users?.[shareReq.username]){
-    if(cur)rememberTrainerOpened(shareReq.username);
-    enterShareView(shareReq.username,shareReq.type);
+  const loadedUsername=publicLoaded.username||publicLoaded.snapshot?.username||shareReq.username;
+  if(publicLoaded.ok&&allData.users?.[loadedUsername]){
+    if(cur)rememberTrainerOpened(loadedUsername);
+    enterShareView(loadedUsername,shareReq.type);
     return;
   }
   renderUnavailableShareView(shareReq.username,i18nCore.t(publicShareStatusMessageKey(publicLoaded.status)));
@@ -5504,7 +5579,11 @@ async function openTrainerPublicShare(value){
   try{loaded=await loadPublicShareData(req.username,{requestGeneration});}
   catch(error){if(requestGeneration===_publicShareRequestGeneration){renderUnavailableShareView(req.username,i18nCore.t('trainer.sharedReadFailed'));showTrainerSearchError(status);}return;}
   if(requestGeneration!==_publicShareRequestGeneration||loaded.status==='stale')return;
-  if(loaded.ok&&allData.users?.[req.username]){setTrainerRecovery(false);rememberTrainerOpened(req.username);enterShareView(req.username,req.type);return;}
+  const loadedUsername=loaded.username||loaded.snapshot?.username||req.username;
+  if(loaded.ok&&allData.users?.[loadedUsername]){
+    if(input)input.value=loadedUsername;
+    setTrainerRecovery(false);rememberTrainerOpened(loadedUsername);enterShareView(loadedUsername,req.type);return;
+  }
   setTrainerRecovery(true);renderUnavailableShareView(req.username,i18nCore.t(publicShareStatusMessageKey(loaded.status)));if(status)status.textContent=i18nCore.t(publicShareStatusMessageKey(loaded.status));
 }
 function renderSettings(){renderInterimProductLabels();configureSettingsPanel(_settingsContext);}

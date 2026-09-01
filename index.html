@@ -997,6 +997,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
 <script src="js/domain/tradeListComparison.js?v=2026-08-31.86"></script>
 <script src="js/domain/eventPresentation.js?v=2026-08-31.86"></script>
 <script src="js/domain/publicSharePublication.js?v=2026-08-31.86"></script>
+<script src="js/domain/providerPublicProjection.js?v=2026-08-31.86"></script>
 <script src="js/domain/accountSyncModel.js?v=2026-08-31.86"></script>
 <script src="js/domain/accountSyncMerge.js?v=2026-08-31.86"></script>
 <script src="js/domain/accountSyncMigration.js?v=2026-08-31.86"></script>
@@ -1028,6 +1029,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
 <script src="js/i18n/core.js?v=2026-08-31.86"></script>
 <script src="js/services/firebaseClient.js?v=2026-08-31.86"></script>
 <script src="js/services/firebaseAppCheck.js?v=2026-08-31.86"></script>
+<script src="js/services/providerPublicShareGateway.js?v=2026-08-31.86"></script>
 <script src="js/services/e1ClientFoundationCanary.js?v=2026-08-31.86"></script>
 <script src="js/data/subscriptionManager.js?v=2026-08-31.86"></script>
 <script src="js/data/listenerLifecycle.js?v=2026-08-31.86"></script>
@@ -1207,8 +1209,8 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
   async function loadPublicShareScripts(){
     const publicPaths=[
       'js/domain/backgroundCatalog.js','js/domain/backgroundVisual.js','js/domain/priorityValues.js',
-      'js/domain/publicSharePublication.js','js/domain/publicPokemonDex.js','js/domain/spriteSlugs.js','js/domain/costumeSpriteCatalog.js',
-      'js/utils/textSafety.js','js/services/firebaseAppCheck.js',
+      'js/domain/publicSharePublication.js','js/domain/providerPublicProjection.js','js/domain/publicPokemonDex.js','js/domain/spriteSlugs.js','js/domain/costumeSpriteCatalog.js',
+      'js/utils/textSafety.js','js/services/firebaseAppCheck.js','js/services/providerPublicShareGateway.js',
       'js/app/publicShareApp.js'
     ];
     for(const path of publicPaths)await loadScript(`${path}?v=${RELEASE_ID}`,{ordered:true});

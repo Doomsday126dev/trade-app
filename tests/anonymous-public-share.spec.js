@@ -4,7 +4,7 @@ const path=require('node:path');
 const publicProjection=Object.freeze({
   version:1,
   username:'PublicTrainer',
-  profile:Object.freeze({friendCode:'1234 5678 9012',bio:'Public trade notes only.',discord:'public-trainer',lastUpdated:1_788_000_000_000}),
+  profile:Object.freeze({friendCode:'1234 5678 9012',bio:'Public trade notes only.',discord:'public-trainer',avatarPokemon:'',lastUpdated:1_788_000_000_000}),
   lists:Object.freeze({
     wishlist:Object.freeze({
       Pikachu:Object.freeze({p:'H',mod:'female',shiny:true,backgroundId:'location-gofest2026chicago'}),
@@ -119,6 +119,36 @@ test.describe('anonymous public share bootstrap',()=>{
     await expect(page.locator('.public-share-cta')).toBeVisible();
     await assertPublicPrivacy(page);
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
+  });
+
+  test('provider-only public share resolves through the anonymous callable without Auth or RTDB fallback',async({page})=>{
+    await page.addInitScript(()=>{window.__POGO_PROVIDER_PUBLIC_PROJECTION_DEV__=true;});
+    const requests=await installPublicFirebase(page,{exists:false});
+    await page.route('https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js',route=>route.fulfill({
+      contentType:'application/javascript',headers:{'access-control-allow-origin':'*'},
+      body:`const projection=${JSON.stringify(publicProjection)};
+        export function getFunctions(app,region){return{app,region}}
+        export function httpsCallable(_functions,name,options){return async body=>{
+          globalThis.__providerPublicCall={name,options,body};return{data:{code:'SUCCESS',share:projection}};
+        }}`
+    }));
+    await page.goto('./?view=PublicTrainer&list=wishlist',{waitUntil:'domcontentloaded'});
+    await expect(page.locator('#share-view')).toBeVisible();
+    await expect(page.locator('#share-hdr')).toContainText('PublicTrainer');
+    await expect(page.locator('#share-list-out')).toContainText('Pikachu');
+    const evidence=await page.evaluate(()=>({
+      call:window.__providerPublicCall,
+      reads:window.__publicShareReads||[],
+      diagnostics:window.__pogoPublicShareDiagnostics,
+      authLoaded:performance.getEntriesByType('resource').some(entry=>/firebase-auth\.js/.test(entry.name))
+    }));
+    expect(evidence.call).toEqual({name:'readE1ProviderPublicShare',options:{limitedUseAppCheckTokens:true},
+      body:{schemaVersion:1,trainerHandle:'PublicTrainer'}});
+    expect(JSON.stringify(evidence.call)).not.toMatch(/uid|idToken|authorization|email|credential/i);
+    expect(evidence.reads).toEqual([]);
+    expect(evidence.diagnostics.readPaths).toEqual(['gateway:trainer-handle']);
+    expect(evidence.authLoaded).toBe(false);
+    expect(requests.some(url=>/firebase-auth\.js/.test(url))).toBe(false);
   });
 
   test('costume art stays exact and transparent-canvas sprites normalize without shifting cards',async({page})=>{
