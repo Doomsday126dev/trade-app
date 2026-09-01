@@ -7,7 +7,7 @@ const os = require('node:os');
 const path = require('node:path');
 const { PRODUCTION, STAGING, validateRtdbTarget, validateTarget } = require('../e1-authority-service/e1TargetContracts');
 const { EXCLUDED_PERMISSIONS, OPERATION_PERMISSIONS, PERMISSIONS, verifyPermissionInventory } = require('../production/e1CustomRole.cjs');
-const { DISABLED_GATES, rollbackState } = require('../production/e1RollbackPlan.cjs');
+const { DISABLED_GATES, POST_FIRST_PROVIDER_GATES, rollbackState } = require('../production/e1RollbackPlan.cjs');
 const { ALLOWED_OPERATIONS, guardProductionTarget } = require('../production/e1ProductionDeploymentGuard.cjs');
 const {
   DATABASE_ID: GROUP_E_CONTROL_DATABASE_ID,
@@ -187,6 +187,22 @@ test('rollback disables every activation path while preserving legacy username P
   assert.equal(result.authorityRecordsDeleted, false);
   assert.equal(result.orderedActions.at(-1), 'remove-gateway-run-invoker-for-emergency-containment');
   assert.throws(() => rollbackState({ GATEWAY_INVOCATION_ENABLED: true }), /rollback-not-contained/);
+});
+
+test('post-first rollback disables enrollment but cannot disable returning provider compatibility',()=>{
+  const floor={schemaVersion:1,stage:'post-first-provider-account',providerAccountsExist:true,compatibilityIrreversible:true,
+    requiredProviderSubjectKeyVersions:[1],compatibleAuthoritySourceFingerprints:['f'.repeat(64)]};
+  const result=rollbackState({}, {compatibilityFloor:floor});
+  assert.deepEqual(result.gates,POST_FIRST_PROVIDER_GATES);
+  assert.equal(result.providerAccountCompatibilityRequired,true);
+  assert.equal(result.providerSubjectKeysRetained,true);
+  assert.equal(result.googlePublicEntryEnabled,false);
+  assert.equal(result.providerAccountCreationEnabled,false);
+  assert.equal(result.providerPublicReadSupport,true);
+  assert.equal(result.providerPublicWriteSupport,false);
+  for(const gate of['CLIENT_FOUNDATION_USE_ENABLED','GATEWAY_INVOCATION_ENABLED','READ_ACCOUNT_FOUNDATION_ENABLED']){
+    assert.throws(()=>rollbackState({[gate]:false},{compatibilityFloor:floor}),/provider-compatibility-required/u);
+  }
 });
 
 test('Group E control plane remains an exact deny-all planned resource with narrow database-conditioned IAM', () => {

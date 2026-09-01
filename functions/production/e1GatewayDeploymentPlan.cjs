@@ -53,6 +53,10 @@ const ACTION_CONFIRMATIONS = Object.freeze({
   'restore-group-e': GROUP_E_RESTORE_CONFIRMATION
 });
 const D3_MODES = Object.freeze(['clean-start', 'continuation']);
+const ALLOWED_EXPORT_INVENTORIES = Object.freeze([
+  Object.freeze(['readE1AccountFoundation', 'reserveE1TrainerHandle']),
+  Object.freeze(['readE1AccountFoundation', 'createE1ProviderAccountFoundation', 'reserveE1TrainerHandle'])
+]);
 const HASH = /^[a-f0-9]{64}$/u;
 const D3_REVISION = /^e1-identity-authority-[0-9]{5}-[a-z0-9]{3}$/u;
 const D3_IMAGE_DIGEST = /^sha256:[a-f0-9]{64}$/u;
@@ -138,7 +142,7 @@ function verifyManifestShape(manifest) {
       manifest.sourceRoot !== 'functions/e1-gateway' || !/^[0-9a-f]{40}$/u.test(manifest.sourceCommitSha || '') ||
       !/^[0-9a-f]{64}$/u.test(manifest.sourceFingerprint || '') || !Array.isArray(manifest.sourceFiles) ||
       manifest.sourceFiles.length !== 6 || manifest.entrypointFile !== 'index.js' ||
-      !sameValues(manifest.expectedExports, ['readE1AccountFoundation', 'reserveE1TrainerHandle']) ||
+      !ALLOWED_EXPORT_INVENTORIES.some((inventory) => sameValues(manifest.expectedExports, inventory)) ||
       manifest.runtime !== 'nodejs22' || manifest.runtimeServiceAccount !==
         'e1-authority-gateway@trade-list-a4297.iam.gserviceaccount.com' ||
       Object.hasOwn(manifest, 'authorityUrl') || Object.hasOwn(manifest, 'authorityAudience') ||

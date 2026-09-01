@@ -49,6 +49,23 @@ test('production gateway requires Auth App Check exact request shape and rejects
   assert.throws(() => verifyCallableBoundary('reserveTrainerHandle', request({ schemaVersion: 1, requestId: 'request-gateway-1', requestedHandle: 'Trainer' }, {
     app: { appId: 'production-app-id', alreadyConsumed: true }
   })), /APP_CHECK_REPLAYED/);
+  const providerRequest = {
+    schemaVersion: 1,
+    providerAccountProtocolVersion: 1,
+    requestId: 'provider-request-1',
+    requestedHandle: 'Trainer',
+    lifecycleId: 'auth-1',
+    clientRelease: '2026-08-31.86',
+    idempotencyFingerprint: 'a'.repeat(64)
+  };
+  assert.equal(verifyCallableBoundary('createProviderAccountFoundation', request(providerRequest)).uid,
+    'firebase_uid_gateway');
+  assert.throws(() => verifyCallableBoundary('createProviderAccountFoundation', request(providerRequest, {
+    app: { appId: 'production-app-id', alreadyConsumed: true }
+  })), /APP_CHECK_REPLAYED/);
+  assert.throws(() => verifyCallableBoundary('createProviderAccountFoundation', request({
+    ...providerRequest, uid: 'browser-supplied-uid'
+  })), /REQUEST_INVALID/);
   const groupE={enabled:true,bindings:[{uidHash:'0'.repeat(64)},{uidHash:'1'.repeat(64)}]};
   assert.throws(()=>verifyCallableBoundary('readAccountFoundation',request({schemaVersion:1,
     attemptId:'123e4567-e89b-42d3-a456-426614174000'},{app:{appId:'production-app-id',alreadyConsumed:true}}),false,groupE),
@@ -117,6 +134,28 @@ test('gateway uses Google OIDC serverless authorization and forwards the subject
   assert.equal(JSON.stringify(calls).includes('service-account-key'), false);
 });
 
+test('gateway preserves the namespace precondition but never trusts the same code from a generic 5xx response', async () => {
+  const configuration = loadGatewayConfiguration(productionEnvironment({ GATEWAY_INVOCATION_ENABLED: 'true' }));
+  const precondition = createGatewayOperation('createProviderAccountFoundation', configuration, {
+    invokeAuthority: async () => ({ status: 412, payload: { code: 'NAMESPACE_NOT_CERTIFIED' } })
+  });
+  const body = {
+    schemaVersion: 1,
+    providerAccountProtocolVersion: 1,
+    requestId: 'provider-request-1',
+    requestedHandle: 'Trainer',
+    lifecycleId: 'auth-1',
+    clientRelease: '2026-08-31.86',
+    idempotencyFingerprint: 'a'.repeat(64)
+  };
+  await assert.rejects(precondition(request(body)), (error) => error?.code === 'NAMESPACE_NOT_CERTIFIED');
+
+  const unavailable = createGatewayOperation('createProviderAccountFoundation', configuration, {
+    invokeAuthority: async () => ({ status: 503, payload: { code: 'NAMESPACE_NOT_CERTIFIED' } })
+  });
+  await assert.rejects(unavailable(request(body)), (error) => error?.code === 'AUTHORITY_UNAVAILABLE');
+});
+
 test('gateway forwards only the original callable bearer token and never substitutes decoded Auth or App Check context', () => {
   const boundary = verifyCallableBoundary('readAccountFoundation', request(undefined, {
     auth: { uid: 'firebase_uid_gateway', token: { uid: 'decoded-context-must-not-be-forwarded' } },
@@ -174,12 +213,17 @@ test('proof attempt schema fails closed outside Group C and for malformed IDs or
   assert.throws(() => loadGatewayConfiguration(productionEnvironment({ READ_PROOF_MODE: 'true' })), /GATEWAY_CONFIGURATION_INVALID/);
 });
 
-test('gateway exports only the two reviewed public operations and delegates durable quota to authority', () => {
+test('gateway exports only the three reviewed operations and delegates durable quota to authority', () => {
   const source = fs.readFileSync(path.resolve(__dirname, '../e1-gateway/index.js'), 'utf8');
   const exported = [...source.matchAll(/exports\.([A-Za-z0-9_]+)\s*=/gu)].map((match) => match[1]);
-  assert.deepEqual(exported, ['readE1AccountFoundation', 'reserveE1TrainerHandle']);
+  assert.deepEqual(exported, [
+    'readE1AccountFoundation',
+    'createE1ProviderAccountFoundation',
+    'reserveE1TrainerHandle'
+  ]);
   assert.match(source, /enforceAppCheck:\s*configuration\.appCheckEnforcementMode === 'enforced'/u);
   assert.match(source, /serviceAccount:\s*configuration\.gatewayServiceAccount/u);
+  assert.match(source, /callable\('createProviderAccountFoundation', true\)/u);
   assert.match(source, /callable\('reserveTrainerHandle', true\)/u);
   assert.match(source, /callable\('readAccountFoundation', configuration\.groupE\.enabled\)/u);
   assert.doesNotMatch(source, /firebase-admin|Firestore|Database|serviceAccountTokenCreator|private_key/u);

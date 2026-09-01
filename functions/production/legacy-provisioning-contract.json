@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "provisioningModel": "bounded-legacy-provisioning-freeze",
+  "clientPolicyVersion": 1,
+  "candidateRulesSha256": "b8dba9429476828bd4410d6bc2e19d22e69e8124f6e248283b1fc76204b6dff2",
+  "guardedPaths": [
+    "users/{username}",
+    "loginDirectory/{username}",
+    "requests/{requestId}:approved",
+    "authIndex/{uid}"
+  ],
+  "activePolicy": {
+    "newHandleCreate": false,
+    "existingRecordUpdate": true,
+    "existingRecordDelete": false,
+    "requestApproval": false,
+    "identityPreservingAuthIndex": true
+  },
+  "releaseProtocol": [
+    "invalidate-provider-certification",
+    "publish-released-freeze-record",
+    "legacy-creation-may-resume"
+  ],
+  "provisioningContractDigest": "20c440c56a2fa3f723f3f6f2ad1bf30a9307e7f098c92a65b86f08ae6bcac59b"
+}

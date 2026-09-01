@@ -20,6 +20,7 @@ function classList(seed=[]){
 function transientHarness(){
   let favoriteBrowseResets=0;
   let hydrationResets=0;
+  let providerClientCloses=0;
   const elements={
     'undo-toast':{id:'undo-toast',hidden:false,textContent:'',classList:classList(['show']),setAttribute(){}},
     'undo-msg':{textContent:'Removed Pidgey'},
@@ -58,6 +59,10 @@ function transientHarness(){
     _activeDiff:{username:'TrainerB'},_activeTradeMatch:{username:'TrainerB'},_swipeState:{},_ptrState:{},
     voiceRecognition:{aborted:false,abort(){this.aborted=true;}},resetTrainerOrganizerState(){},
     closeTradeMatchModal(){context._activeTradeMatch=null;},
+    e1ClientFoundationCanary:null,
+    providerAccountFoundationClient:{close(){providerClientCloses++;}},
+    providerIdentityResolutionPromise:{pending:true},providerIdentityResolutionBinding:'uid-a:auth-1',
+    activeCanonicalIdentity:{uid:'uid-a',identityKind:'provider_only'},
     resetOwnedHydrationState(){hydrationResets++;},
     resetFavoriteBrowseSession(){favoriteBrowseResets++;},trainerHistoryStore:{owner:'uid-a'},
     closeAddAutocomplete(){},
@@ -65,7 +70,8 @@ function transientHarness(){
   });
   vm.runInContext(between('function sessionTransientCallback','function activateOwnedSession'),context);
   return{context,elements,conflictToast,selected,checked,cleared,
-    favoriteBrowseResets:()=>favoriteBrowseResets,hydrationResets:()=>hydrationResets};
+    favoriteBrowseResets:()=>favoriteBrowseResets,hydrationResets:()=>hydrationResets,
+    providerClientCloses:()=>providerClientCloses};
 }
 
 test('logout clears session transient state before listeners, cache, identity, and Firebase sign-out',()=>{
@@ -160,6 +166,11 @@ test('runtime cleanup removes User A undo, toast, modal, selection, and queued U
   assert.equal(vm.runInContext('addTray.length',h.context),0);
   assert.equal(vm.runInContext('bulkSelected.size',h.context),0);
   assert.equal(h.hydrationResets(),1);
+  assert.equal(h.providerClientCloses(),1);
+  assert.equal(vm.runInContext('providerAccountFoundationClient',h.context),null);
+  assert.equal(vm.runInContext('providerIdentityResolutionPromise',h.context),null);
+  assert.equal(vm.runInContext('providerIdentityResolutionBinding',h.context),'');
+  assert.equal(vm.runInContext('activeCanonicalIdentity',h.context),null);
 });
 
 test('runtime generation guard suppresses callbacks captured before cleanup',()=>{

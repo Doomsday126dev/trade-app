@@ -13,9 +13,14 @@ const {
   stagePinnedSource,
   verifyStagedSource
 } = require('../production/e1AuthorityDeploymentPlan.cjs');
+const {
+  assertProviderCompatibilityDeployment,
+  loadCompatibilityFloor
+} = require('../production/providerAccountCompatibilityFloor.cjs');
 
 const AUTHORITY_GATES = Object.freeze([
   'READ_ACCOUNT_FOUNDATION_ENABLED',
+  'CREATE_PROVIDER_ACCOUNT_ENABLED',
   'RESERVE_HANDLE_ENABLED',
   'REPAIR_FOUNDATION_ENABLED',
   'APPLY_MIGRATION_ENABLED',
@@ -23,10 +28,12 @@ const AUTHORITY_GATES = Object.freeze([
 ]);
 const REQUIRED_INACTIVE_ENVIRONMENT = Object.freeze({
   READ_ACCOUNT_FOUNDATION_ENABLED: 'false',
+  CREATE_PROVIDER_ACCOUNT_ENABLED: 'false',
   RESERVE_HANDLE_ENABLED: 'false',
   REPAIR_FOUNDATION_ENABLED: 'false',
   APPLY_MIGRATION_ENABLED: 'false',
   FREEZE_CONFLICT_ENABLED: 'false',
+  PROVIDER_ACCOUNT_COMPATIBILITY_REQUIRED: 'false',
   READ_PROOF_MODE: 'false',
   GROUP_E_CLIENT_MODE: 'disabled'
 });
@@ -42,6 +49,13 @@ const GROUP_E_PRIVATE_ENVIRONMENT = Object.freeze([
   'GROUP_E_WINDOW_START',
   'GROUP_E_WINDOW_END'
 ]);
+const PROVIDER_SUBJECT_KEY_CONTRACT = Object.freeze({
+  keyEnvironmentName: 'PROVIDER_SUBJECT_HMAC_KEY',
+  versionEnvironmentName: 'PROVIDER_SUBJECT_HMAC_KEY_VERSION',
+  previousVersionsEnvironmentName: 'PROVIDER_SUBJECT_HMAC_PREVIOUS_KEY_VERSIONS',
+  previousKeyEnvironmentPrefix: 'PROVIDER_SUBJECT_HMAC_KEY_V',
+  secretName: 'e1-provider-subject-hmac-key'
+});
 
 function argumentsMap(argv) {
   return Object.fromEntries(argv.map((argument) => {
@@ -62,12 +76,62 @@ function environment(container) {
 }
 
 function inactiveEnvironmentValid(env, options = {}) {
-  return Object.entries(REQUIRED_INACTIVE_ENVIRONMENT).every(([name, value]) => {
+  const floor = options.compatibilityFloor || loadCompatibilityFloor();
+  const required = floor.providerAccountsExist ? {
+    ...REQUIRED_INACTIVE_ENVIRONMENT,
+    READ_ACCOUNT_FOUNDATION_ENABLED: 'true',
+    PROVIDER_ACCOUNT_COMPATIBILITY_REQUIRED: 'true'
+  } : REQUIRED_INACTIVE_ENVIRONMENT;
+  return Object.entries(required).every(([name, value]) => {
     if (name === 'READ_PROOF_MODE' && options.allowLegacyMissingReadProofMode === true && env[name] === undefined) {
       return true;
     }
     return env[name] === value;
   });
+}
+
+function providerSubjectKeyVersions(container) {
+  const entries = Array.isArray(container?.env) ? container.env : [];
+  const keys = entries.filter((entry) => entry?.name === PROVIDER_SUBJECT_KEY_CONTRACT.keyEnvironmentName);
+  const versions = entries.filter((entry) => entry?.name === PROVIDER_SUBJECT_KEY_CONTRACT.versionEnvironmentName);
+  const previousLists = entries.filter((entry) => entry?.name === PROVIDER_SUBJECT_KEY_CONTRACT.previousVersionsEnvironmentName);
+  const previousVersions = previousLists.length === 1 && String(previousLists[0].value || '')
+    ? String(previousLists[0].value).split(',') : [];
+  const previousNames = new Set(previousVersions.map((version) => `${PROVIDER_SUBJECT_KEY_CONTRACT.previousKeyEnvironmentPrefix}${version}`));
+  const previousKeys = entries.filter((entry) => /^PROVIDER_SUBJECT_HMAC_KEY_V[1-9][0-9]{0,3}$/u.test(entry?.name || ''));
+  if (previousLists.length > 1 || previousVersions.some((version) => !/^[1-9][0-9]{0,3}$/u.test(version)) ||
+      new Set(previousVersions).size !== previousVersions.length ||
+      previousVersions.some((version) => Number(version) >= Number(versions[0]?.value)) ||
+      previousVersions.some((version, index) => index > 0 && Number(version) <= Number(previousVersions[index - 1])) ||
+      previousKeys.length !== previousNames.size || previousKeys.some((entry) => !previousNames.has(entry.name))) return null;
+  if (!keys.length && !versions.length) return previousVersions.length ? null : Object.freeze([]);
+  if (keys.length !== 1 || versions.length !== 1) return null;
+  const key = keys[0], version = versions[0], value = String(version.value ?? '');
+  const secret = key.valueFrom?.secretKeyRef;
+  const activeValid = Object.keys(key).sort().join(',') === 'name,valueFrom' &&
+    Object.keys(version).sort().join(',') === 'name,value' &&
+    Object.keys(key.valueFrom || {}).sort().join(',') === 'secretKeyRef' &&
+    Object.keys(secret || {}).sort().join(',') === 'key,name' &&
+    secret.name === PROVIDER_SUBJECT_KEY_CONTRACT.secretName && secret.key === value &&
+    /^[1-9][0-9]{0,3}$/u.test(value);
+  if (!activeValid || previousVersions.includes(value)) return null;
+  for (const previousKey of previousKeys) {
+    const previousVersion = previousKey.name.slice(PROVIDER_SUBJECT_KEY_CONTRACT.previousKeyEnvironmentPrefix.length);
+    const previousSecret = previousKey.valueFrom?.secretKeyRef;
+    if (Object.keys(previousKey).sort().join(',') !== 'name,valueFrom' ||
+        Object.keys(previousKey.valueFrom || {}).sort().join(',') !== 'secretKeyRef' ||
+        Object.keys(previousSecret || {}).sort().join(',') !== 'key,name' ||
+        previousSecret.name !== PROVIDER_SUBJECT_KEY_CONTRACT.secretName || previousSecret.key !== previousVersion) return null;
+  }
+  return Object.freeze([Number(value), ...previousVersions.map(Number)]);
+}
+
+function providerSubjectKeyEnvironmentValid(container, { creationEnabled = false, compatibilityFloor } = {}) {
+  const versions = providerSubjectKeyVersions(container);
+  if (!versions) return false;
+  const floor = compatibilityFloor || loadCompatibilityFloor();
+  if ((creationEnabled || floor.providerAccountsExist) && !versions.length) return false;
+  return floor.requiredProviderSubjectKeyVersions.every((version) => versions.includes(version));
 }
 
 function verifyAuthorityIam(plan, spawn) {
@@ -87,16 +151,25 @@ function verifyAuthorityService(plan, service, options = {}) {
   const containers = service?.spec?.template?.spec?.containers;
   const container = containers?.[0];
   const env = environment(container);
+  const compatibilityFloor = options.compatibilityFloor || loadCompatibilityFloor();
+  const keyVersions = providerSubjectKeyVersions(container);
   const ready = (service?.status?.conditions || []).some((condition) =>
     condition.type === 'Ready' && String(condition.status) === 'True');
   if (service?.metadata?.name !== plan.target.service || service?.status?.url !== plan.target.origin ||
       service?.spec?.template?.spec?.serviceAccountName !== plan.target.runtimeServiceAccount ||
       !Array.isArray(containers) || containers.length !== 1 || !/@sha256:[a-f0-9]{64}$/u.test(container?.image || '') ||
-      !ready || (options.requireInactive !== false && !inactiveEnvironmentValid(env, options)) ||
+      !ready || (options.requireInactive !== false && !inactiveEnvironmentValid(env, { ...options, compatibilityFloor })) ||
+      !providerSubjectKeyEnvironmentValid(container, { creationEnabled: env.CREATE_PROVIDER_ACCOUNT_ENABLED === 'true', compatibilityFloor }) ||
       (options.allowPrivateEnvironment !== true && (
         GROUP_E_PRIVATE_ENVIRONMENT.some((name) => env[name] !== undefined && env[name] !== '') ||
         Object.keys(env).some((name) => name.startsWith('GROUP_E_') &&
           name !== 'GROUP_E_CLIENT_MODE' && !GROUP_E_PRIVATE_ENVIRONMENT.includes(name))))) {
+    throw new Error('e1/authority-runtime-or-inactive-state-invalid');
+  }
+  try {
+    assertProviderCompatibilityDeployment({ floor: compatibilityFloor, authoritySourceFingerprint: plan.sourceFingerprint,
+      environment: env, availableKeyVersions: keyVersions });
+  } catch {
     throw new Error('e1/authority-runtime-or-inactive-state-invalid');
   }
   if (options.expectedImage && container.image !== options.expectedImage) {
@@ -106,6 +179,7 @@ function verifyAuthorityService(plan, service, options = {}) {
 }
 
 function inactiveServiceSpec(plan, service, image) {
+  const compatibilityFloor = loadCompatibilityFloor();
   verifyAuthorityService(plan, service, {
     allowLegacyMissingReadProofMode: true,
     allowPrivateEnvironment: true
@@ -126,20 +200,25 @@ function inactiveServiceSpec(plan, service, image) {
   container.image = image;
   delete container.command;
   delete container.args;
+  const requiredEnvironment = compatibilityFloor.providerAccountsExist ? {
+    ...REQUIRED_INACTIVE_ENVIRONMENT,
+    READ_ACCOUNT_FOUNDATION_ENABLED: 'true',
+    PROVIDER_ACCOUNT_COMPATIBILITY_REQUIRED: 'true'
+  } : REQUIRED_INACTIVE_ENVIRONMENT;
   const originalNames = new Set((container.env || []).map((entry) => entry.name));
-  if (Object.keys(REQUIRED_INACTIVE_ENVIRONMENT)
+  if (Object.keys(requiredEnvironment)
     .some((name) => name !== 'READ_PROOF_MODE' && !originalNames.has(name))) {
     throw new Error('e1/authority-required-inactive-environment-missing');
   }
   container.env = (container.env || []).flatMap((entry) => {
     if (entry.name.startsWith('GROUP_E_') && entry.name !== 'GROUP_E_CLIENT_MODE') return [];
-    if (Object.hasOwn(REQUIRED_INACTIVE_ENVIRONMENT, entry.name)) {
-      return [{ name: entry.name, value: REQUIRED_INACTIVE_ENVIRONMENT[entry.name] }];
+    if (Object.hasOwn(requiredEnvironment, entry.name)) {
+      return [{ name: entry.name, value: requiredEnvironment[entry.name] }];
     }
     return [entry];
   });
   if (!originalNames.has('READ_PROOF_MODE')) {
-    container.env.push({ name: 'READ_PROOF_MODE', value: REQUIRED_INACTIVE_ENVIRONMENT.READ_PROOF_MODE });
+    container.env.push({ name: 'READ_PROOF_MODE', value: requiredEnvironment.READ_PROOF_MODE });
   }
   const fakeReady = { ...replacement, status: { url: plan.target.origin, conditions: [{ type: 'Ready', status: 'True' }] } };
   verifyAuthorityService(plan, fakeReady, { expectedImage: image });
@@ -291,6 +370,7 @@ module.exports = Object.freeze({
   AUTHORITY_GATES,
   DEPLOY_CONFIRMATION,
   GROUP_E_PRIVATE_ENVIRONMENT,
+  PROVIDER_SUBJECT_KEY_CONTRACT,
   REQUIRED_INACTIVE_ENVIRONMENT,
   argumentsMap,
   buildAuthority,
@@ -298,6 +378,8 @@ module.exports = Object.freeze({
   environment,
   executePlan,
   inactiveEnvironmentValid,
+  providerSubjectKeyVersions,
+  providerSubjectKeyEnvironmentValid,
   inactiveServiceSpec,
   replaceAuthority,
   run,

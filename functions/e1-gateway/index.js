@@ -33,6 +33,12 @@ function callable(operation, consumeAppCheckToken) {
         APP_CHECK_REPLAYED: ['permission-denied', 'App Check token already consumed'],
         REQUEST_INVALID: ['invalid-argument', 'Invalid request'],
         RATE_LIMITED: ['resource-exhausted', 'Too many requests'],
+        NAMESPACE_NOT_CERTIFIED: ['failed-precondition', 'Account creation is not ready'],
+        PROVIDER_IDENTITY_REQUIRED: ['permission-denied', 'Verified Google sign-in required'],
+        ACCOUNT_EXISTS: ['already-exists', 'Account already exists'],
+        HANDLE_CONFLICT: ['already-exists', 'Trainer handle is unavailable'],
+        PROVIDER_CONFLICT: ['already-exists', 'Provider is already connected'],
+        FOUNDATION_CONFLICT: ['failed-precondition', 'Account foundation conflict'],
         GROUP_E_ADMISSION_CONSUMED: ['already-exists', 'Admission already consumed'],
         GROUP_E_CAPABILITY_EXPIRED: ['permission-denied', 'Admission expired'],
         GROUP_E_BOUNDARY_INVALID: ['permission-denied', 'Admission denied'],
@@ -40,10 +46,11 @@ function callable(operation, consumeAppCheckToken) {
         GATEWAY_NOT_ENABLED: ['unavailable', 'Service unavailable']
       };
       const [code, message] = mapping[error?.code] || ['unavailable', 'Service unavailable'];
-      throw new HttpsError(code, message);
+      throw new HttpsError(code, message, { code: String(error?.code || 'SERVICE_UNAVAILABLE') });
     }
   });
 }
 
 exports.readE1AccountFoundation = callable('readAccountFoundation', configuration.groupE.enabled);
+exports.createE1ProviderAccountFoundation = callable('createProviderAccountFoundation', true);
 exports.reserveE1TrainerHandle = callable('reserveTrainerHandle', true);

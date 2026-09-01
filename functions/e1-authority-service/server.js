@@ -24,6 +24,7 @@ const {
 
 const GATES = Object.freeze([
   'READ_ACCOUNT_FOUNDATION_ENABLED',
+  'CREATE_PROVIDER_ACCOUNT_ENABLED',
   'RESERVE_HANDLE_ENABLED',
   'REPAIR_FOUNDATION_ENABLED',
   'APPLY_MIGRATION_ENABLED',
@@ -32,6 +33,7 @@ const GATES = Object.freeze([
 const MUTATION_GATES = Object.freeze(GATES.slice(1));
 const RATE_LIMITS = Object.freeze({
   readAccountFoundation: Object.freeze({ limit: 60, windowMs: 15 * 60 * 1000 }),
+  createProviderAccountFoundation: Object.freeze({ limit: 3, windowMs: 24 * 60 * 60 * 1000 }),
   reserveTrainerHandle: Object.freeze({ limit: 5, windowMs: 15 * 60 * 1000 }),
   repairAccountFoundation: Object.freeze({ limit: 3, windowMs: 24 * 60 * 60 * 1000 }),
   applyMigrationManifest: Object.freeze({ limit: 10, windowMs: 60 * 1000 }),
@@ -45,6 +47,11 @@ const REQUEST_ID = /^[A-Za-z0-9][A-Za-z0-9._:-]{7,127}$/;
 const SHA256 = /^[a-f0-9]{64}$/;
 const SAFE_ATTEMPT_HASH = /^[a-f0-9]{16}$/;
 const MAX_REQUEST_BYTES = 4096;
+const PROVIDER_ACCOUNT_PROTOCOL_VERSION = 1;
+const SUPPORTED_PROVIDER_ACCOUNT_PROTOCOL_VERSIONS = Object.freeze(new Set([PROVIDER_ACCOUNT_PROTOCOL_VERSION]));
+const CLIENT_RELEASE = /^\d{4}-\d{2}-\d{2}\.\d+$/u;
+const PROVIDER_AUTH_MAX_AGE_MS = 10 * 60 * 1000;
+const PROVIDER_SUBJECT = /^[A-Za-z0-9_-]{1,512}$/u;
 const FROZEN_STATUSES = new Set(['frozen', 'blocked', 'conflict', 'conflict-frozen']);
 const MIGRATION_DECISIONS = new Set(['eligible', 'exact-already-migrated']);
 const CONFLICT_REASONS = new Set(['legacy-binding-conflict', 'handle-owner-conflict', 'migration-manifest-conflict']);
@@ -154,7 +161,42 @@ function groupEConfiguration(env, configuration, gates, readProof, now) {
     cohortDigest: env.GROUP_E_COHORT_DIGEST, runId: env.GROUP_E_RUN_ID, keyId: env.GROUP_E_KEY_ID });
 }
 
+function providerSubjectKeyRing(env) {
+  const activeKey = env.PROVIDER_SUBJECT_HMAC_KEY || '';
+  const activeVersion = env.PROVIDER_SUBJECT_HMAC_KEY_VERSION || '';
+  const previousValue = env.PROVIDER_SUBJECT_HMAC_PREVIOUS_KEY_VERSIONS || '';
+  const previousVersions = previousValue ? previousValue.split(',') : [];
+  const validVersion = (value) => /^[1-9][0-9]{0,3}$/u.test(value);
+  const validKey = (value) => Buffer.byteLength(value || '', 'utf8') >= 32 && Buffer.byteLength(value, 'utf8') <= 256;
+  const activeConfigured = validVersion(activeVersion) && validKey(activeKey);
+  if ((activeKey || activeVersion) && !activeConfigured) fail('E1_CONFIGURATION_MISMATCH');
+  if (previousVersions.length && !activeConfigured) fail('E1_CONFIGURATION_MISMATCH');
+  if (previousVersions.some((version) => !validVersion(version)) ||
+      new Set(previousVersions).size !== previousVersions.length || previousVersions.includes(activeVersion) ||
+      previousVersions.some((version) => Number(version) >= Number(activeVersion)) ||
+      previousVersions.some((version, index) => index > 0 && Number(version) <= Number(previousVersions[index - 1]))) {
+    fail('E1_CONFIGURATION_MISMATCH');
+  }
+  const declaredPrevious = new Set(previousVersions.map((version) => `PROVIDER_SUBJECT_HMAC_KEY_V${version}`));
+  const observedPrevious = Object.keys(env).filter((name) => /^PROVIDER_SUBJECT_HMAC_KEY_V[1-9][0-9]{0,3}$/u.test(name));
+  if (observedPrevious.some((name) => !declaredPrevious.has(name)) || declaredPrevious.size !== observedPrevious.length) {
+    fail('E1_CONFIGURATION_MISMATCH');
+  }
+  const previous = previousVersions.map((version) => {
+    const key = env[`PROVIDER_SUBJECT_HMAC_KEY_V${version}`] || '';
+    if (!validKey(key)) fail('E1_CONFIGURATION_MISMATCH');
+    return Object.freeze({ version: Number(version), key });
+  });
+  return Object.freeze(activeConfigured
+    ? [Object.freeze({ version: Number(activeVersion), key: activeKey }), ...previous]
+    : previous);
+}
+
 function loadConfiguration(env = process.env, now = () => Date.now()) {
+  const providerSubjectHmacKeys = providerSubjectKeyRing(env);
+  const providerAccountCompatibilityRequired = env.PROVIDER_ACCOUNT_COMPATIBILITY_REQUIRED === 'true';
+  if (env.PROVIDER_ACCOUNT_COMPATIBILITY_REQUIRED !== undefined &&
+      !['true', 'false'].includes(env.PROVIDER_ACCOUNT_COMPATIBILITY_REQUIRED)) fail('E1_CONFIGURATION_MISMATCH');
   const configuration = {
     environment: env.APP_ENVIRONMENT,
     projectId: env.FIREBASE_PROJECT_ID,
@@ -167,6 +209,10 @@ function loadConfiguration(env = process.env, now = () => Date.now()) {
     firebaseWebApiKey: env.FIREBASE_WEB_API_KEY,
     operatorEmailHash: env.EXPECTED_OPERATOR_EMAIL_HASH,
     operatorSubjectHash: env.EXPECTED_OPERATOR_SUBJECT_HASH,
+    providerSubjectHmacKey: env.PROVIDER_SUBJECT_HMAC_KEY || '',
+    providerSubjectHmacKeyVersion: env.PROVIDER_SUBJECT_HMAC_KEY_VERSION || '',
+    providerSubjectHmacKeys,
+    providerAccountCompatibilityRequired,
     revision: env.K_REVISION || 'local'
   };
   try { validateTarget(configuration); } catch { fail('E1_CONFIGURATION_MISMATCH'); }
@@ -174,11 +220,19 @@ function loadConfiguration(env = process.env, now = () => Date.now()) {
   if (!SHA256.test(configuration.operatorEmailHash || '') || !SHA256.test(configuration.operatorSubjectHash || '')) {
     fail('E1_CONFIGURATION_MISMATCH');
   }
+  const providerKeyConfigured = providerSubjectHmacKeys.length > 0 &&
+    providerSubjectHmacKeys[0].version === Number(configuration.providerSubjectHmacKeyVersion);
   try { validatedTarget({ environment: configuration.environment, projectId: configuration.projectId, databaseUrl: configuration.rtdbDatabaseUrl }); }
   catch { fail('E1_CONFIGURATION_MISMATCH'); }
   if (GATES.some((gate) => !['true', 'false'].includes(env[gate])) ||
       MUTATION_GATES.filter((gate) => env[gate] === 'true').length > 1) {
     fail('E1_OPERATION_GATE_INVALID');
+  }
+  if ((env.CREATE_PROVIDER_ACCOUNT_ENABLED === 'true' || providerAccountCompatibilityRequired) && !providerKeyConfigured) {
+    fail('E1_CONFIGURATION_MISMATCH');
+  }
+  if (providerAccountCompatibilityRequired && env.READ_ACCOUNT_FOUNDATION_ENABLED !== 'true') {
+    fail('E1_CONFIGURATION_MISMATCH');
   }
   const repairAccountFoundationEnabled = env.REPAIR_FOUNDATION_ENABLED === 'true';
   const applyMigrationManifestEnabled = env.APPLY_MIGRATION_ENABLED === 'true';
@@ -187,6 +241,7 @@ function loadConfiguration(env = process.env, now = () => Date.now()) {
   return Object.freeze({
     ...configuration,
     readAccountFoundationEnabled: env.READ_ACCOUNT_FOUNDATION_ENABLED === 'true',
+    createProviderAccountEnabled: env.CREATE_PROVIDER_ACCOUNT_ENABLED === 'true',
     reserveTrainerHandleEnabled: env.RESERVE_HANDLE_ENABLED === 'true',
     repairAccountFoundationEnabled,
     applyMigrationManifestEnabled,
@@ -310,7 +365,18 @@ async function verifyFirebaseIdToken(configuration, firebaseIdToken, verifier, n
       claims.iss !== `https://securetoken.google.com/${configuration.projectId}` || decodedClaims.iss !== claims.iss ||
       !Number.isFinite(claims.exp) || claims.exp <= nowSeconds || decodedClaims.exp !== claims.exp ||
       !Number.isFinite(claims.auth_time) || decodedClaims.auth_time !== claims.auth_time) fail('AUTH_INVALID');
-  return Object.freeze({ uid });
+  const firebase = claims.firebase;
+  const decodedFirebase = decodedClaims.firebase;
+  const signInProvider = firebase?.sign_in_provider;
+  const identities = firebase?.identities;
+  if ((firebase !== undefined || decodedFirebase !== undefined) &&
+      JSON.stringify(firebase) !== JSON.stringify(decodedFirebase)) fail('AUTH_INVALID');
+  return Object.freeze({
+    uid,
+    authTime: claims.auth_time * 1000,
+    signInProvider: typeof signInProvider === 'string' ? signInProvider : null,
+    identities: identities && typeof identities === 'object' && !Array.isArray(identities) ? identities : null
+  });
 }
 
 async function verifyOperatorAccessToken(configuration, accessToken, fetchImpl = fetch) {
@@ -453,36 +519,44 @@ function firestoreScalar(fields, name) {
   if (Object.hasOwn(value, 'integerValue')) return Number(value.integerValue);
   if (Object.hasOwn(value, 'doubleValue')) return Number(value.doubleValue);
   if (Object.hasOwn(value, 'timestampValue')) return value.timestampValue;
+  if (Object.hasOwn(value, 'booleanValue')) return value.booleanValue;
+  if (Object.hasOwn(value, 'nullValue')) return null;
   return undefined;
 }
 
-function redactFoundationDocument(document) {
+function redactFoundationDocument(document, expectedUid) {
   const fields = document?.fields;
+  const uid = firestoreScalar(fields, 'uid');
   const schemaVersion = firestoreScalar(fields, 'schemaVersion');
   const canonicalTrainerName = firestoreScalar(fields, 'canonicalTrainerName') ?? firestoreScalar(fields, 'trainerName');
   const normalizedTrainerName = firestoreScalar(fields, 'normalizedTrainerName');
   const handleKey = firestoreScalar(fields, 'handleKey');
   const legacyUsername = firestoreScalar(fields, 'legacyUsername');
+  const declaredIdentityKind = firestoreScalar(fields, 'identityKind');
+  const declaredLegacyAccess = firestoreScalar(fields, 'legacyAccessConfigured');
   const status = firestoreScalar(fields, 'status');
   const revision = firestoreScalar(fields, 'revision');
-  const createdAt = firestoreScalar(fields, 'createdAt');
-  const updatedAt = firestoreScalar(fields, 'updatedAt');
-  if (schemaVersion !== 1 || typeof canonicalTrainerName !== 'string' || !canonicalTrainerName ||
+  let normalized;
+  try { normalized = normalizeHandle(canonicalTrainerName); } catch { fail('INTERNAL_ERROR'); }
+  const legacyCompatible = typeof legacyUsername === 'string' && legacyUsername === canonicalTrainerName &&
+    (declaredIdentityKind === undefined || declaredIdentityKind === 'legacy_migrated') &&
+    (declaredLegacyAccess === undefined || declaredLegacyAccess === true);
+  const providerOnly = legacyUsername === null && declaredIdentityKind === 'provider_only' && declaredLegacyAccess === false;
+  if (schemaVersion !== 1 || uid !== expectedUid || typeof canonicalTrainerName !== 'string' || !canonicalTrainerName ||
       typeof normalizedTrainerName !== 'string' || !normalizedTrainerName || !HANDLE_KEY.test(handleKey || '') ||
-      typeof status !== 'string' || (!Number.isFinite(createdAt) && typeof createdAt !== 'string') ||
-      (!Number.isFinite(updatedAt) && typeof updatedAt !== 'string') ||
-      (legacyUsername !== undefined && typeof legacyUsername !== 'string') ||
-      (revision !== undefined && (!Number.isSafeInteger(revision) || revision < 0))) fail('INTERNAL_ERROR');
+      normalized.normalized !== normalizedTrainerName || normalized.handleKey !== handleKey ||
+      typeof status !== 'string' || (!legacyCompatible && !providerOnly) ||
+      !Number.isSafeInteger(revision) || revision < 1) fail('INTERNAL_ERROR');
   return Object.freeze({
     schemaVersion,
     canonicalTrainerName,
     normalizedTrainerName,
     handleKey,
-    legacyUsername: legacyUsername ?? null,
+    identityKind: providerOnly ? 'provider_only' : 'legacy_migrated',
+    legacyAccessConfigured: !providerOnly,
+    legacyUsername,
     status,
-    revision: revision ?? null,
-    createdAt,
-    updatedAt
+    revision
   });
 }
 
@@ -498,6 +572,129 @@ function exactReserveRequest(body) {
     throw error;
   }
   return Object.freeze({ requestId: body.requestId, handle });
+}
+
+function providerRequestFingerprint(input) {
+  return hashParts([
+    1,
+    'createProviderAccountFoundation',
+    input.providerAccountProtocolVersion,
+    input.uid,
+    input.requestId,
+    input.normalizedTrainerName,
+    input.handleKey,
+    input.lifecycleId
+  ]);
+}
+
+function providerOperationFingerprint(input) {
+  return hashParts([
+    1,
+    'createProviderAccountFoundation',
+    input.providerAccountProtocolVersion,
+    input.uid,
+    input.requestId,
+    input.normalizedTrainerName,
+    input.handleKey,
+    input.providerId,
+    input.providerSubjectKey,
+    input.authTime,
+    input.lifecycleId
+  ]);
+}
+
+function providerSubjectHash(configuration, providerId, subject, keyVersion = Number(configuration.providerSubjectHmacKeyVersion)) {
+  const key = configuration.providerSubjectHmacKeys?.find((candidate) => candidate.version === Number(keyVersion));
+  if (!key) fail('PROVIDER_KEY_UNAVAILABLE');
+  return crypto.createHmac('sha256', key.key)
+    .update(`provider-subject\0v${key.version}\0${providerId}\0${subject}`, 'utf8').digest('hex');
+}
+
+function linkedGoogleProviderIdentity(configuration, verifiedToken) {
+  const subjects = verifiedToken?.identities?.['google.com'];
+  if (!Array.isArray(subjects) || subjects.length !== 1 || !PROVIDER_SUBJECT.test(subjects[0] || '') ||
+      !Number.isSafeInteger(verifiedToken?.authTime)) {
+    fail('PROVIDER_IDENTITY_REQUIRED');
+  }
+  if (!configuration.providerSubjectHmacKeys?.length) fail('PROVIDER_KEY_UNAVAILABLE');
+  const candidates = configuration.providerSubjectHmacKeys.map(({ version }) => Object.freeze({
+    providerSubjectKey: `v${version}_google_${providerSubjectHash(configuration, 'google.com', subjects[0], version)}`,
+    providerSubjectKeyVersion: version
+  }));
+  return Object.freeze({providerKey:'google',providerId:'google.com',...candidates[0],
+    providerSubjectCandidates:Object.freeze(candidates),authTime:verifiedToken.authTime});
+}
+
+function recentGoogleProviderIdentity(configuration, verifiedToken, timestamp) {
+  const provider = linkedGoogleProviderIdentity(configuration, verifiedToken);
+  if (verifiedToken.signInProvider !== 'google.com' || !Number.isSafeInteger(timestamp) ||
+      provider.authTime > timestamp || timestamp - provider.authTime > PROVIDER_AUTH_MAX_AGE_MS) {
+    fail('RECENT_PROVIDER_AUTH_REQUIRED');
+  }
+  return Object.freeze({providerKey:provider.providerKey,providerId:provider.providerId,
+    providerSubjectKey:provider.providerSubjectKey,providerSubjectKeyVersion:provider.providerSubjectKeyVersion,
+    authTime:provider.authTime});
+}
+
+async function verifyCurrentGoogleAccount(configuration, firebaseIdToken, verifiedToken, provider, fetchImpl) {
+  const expectedSubject = verifiedToken.identities['google.com'][0];
+  let response;
+  try {
+    response = await fetchImpl(`https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${encodeURIComponent(configuration.firebaseWebApiKey)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idToken: firebaseIdToken })
+    });
+  } catch {
+    fail('INTERNAL_ERROR');
+  }
+  if (!response?.ok) fail(response?.status >= 500 ? 'INTERNAL_ERROR' : 'PROVIDER_IDENTITY_REQUIRED');
+  let payload;
+  try { payload = await response.json(); } catch { fail('INTERNAL_ERROR'); }
+  const users = payload?.users;
+  const account = Array.isArray(users) && users.length === 1 ? users[0] : null;
+  const googleProviders = Array.isArray(account?.providerUserInfo)
+    ? account.providerUserInfo.filter((candidate) => candidate?.providerId === 'google.com')
+    : [];
+  if (account?.localId !== verifiedToken.uid || account?.disabled === true || googleProviders.length !== 1 ||
+      googleProviders[0].federatedId !== expectedSubject) fail('PROVIDER_IDENTITY_REQUIRED');
+  return provider;
+}
+
+async function verifyCurrentLinkedGoogleProviderIdentity(configuration, firebaseIdToken, verifiedToken, fetchImpl = fetch) {
+  const provider = linkedGoogleProviderIdentity(configuration, verifiedToken);
+  return verifyCurrentGoogleAccount(configuration, firebaseIdToken, verifiedToken, provider, fetchImpl);
+}
+
+async function verifyRecentGoogleProviderAuthentication(configuration, firebaseIdToken, verifiedToken, fetchImpl = fetch,
+  timestamp = Date.now()) {
+  const provider = recentGoogleProviderIdentity(configuration, verifiedToken, timestamp);
+  return verifyCurrentGoogleAccount(configuration, firebaseIdToken, verifiedToken, provider, fetchImpl);
+}
+
+function exactProviderCreateRequest(body) {
+  exactFields(body, [
+    'schemaVersion', 'providerAccountProtocolVersion', 'requestId', 'requestedHandle', 'lifecycleId', 'clientRelease',
+    'idempotencyFingerprint'
+  ]);
+  if (body.schemaVersion !== 1 || !SUPPORTED_PROVIDER_ACCOUNT_PROTOCOL_VERSIONS.has(body.providerAccountProtocolVersion) ||
+      !REQUEST_ID.test(body.requestId || '') ||
+      typeof body.lifecycleId !== 'string' || !/^auth-[1-9][0-9]{0,9}$/u.test(body.lifecycleId) ||
+      !CLIENT_RELEASE.test(body.clientRelease || '') || !SHA256.test(body.idempotencyFingerprint || '') ||
+      typeof body.requestedHandle !== 'string') fail('REQUEST_INVALID');
+  let handle;
+  try { handle = normalizeHandle(body.requestedHandle); } catch (error) {
+    if (error instanceof HandleValidationError) fail('REQUEST_INVALID');
+    throw error;
+  }
+  return Object.freeze({
+    requestId: body.requestId,
+    providerAccountProtocolVersion: body.providerAccountProtocolVersion,
+    lifecycleId: body.lifecycleId,
+    clientRelease: body.clientRelease,
+    idempotencyFingerprint: body.idempotencyFingerprint,
+    handle
+  });
 }
 
 function verifiedLegacyFoundation(uid, requestedHandle, legacy) {
@@ -672,6 +869,12 @@ function createHandler(configuration, dependencies = {}) {
   const probe = dependencies.runtimeProbe || ((config) => runtimeProbe(config, fetchImpl));
   const verifyToken = dependencies.verifyFirebaseIdToken ||
     ((config, token) => verifyFirebaseIdToken(config, token, dependencies.firebaseTokenVerifier));
+  const verifyCurrentLinkedProvider = dependencies.verifyCurrentLinkedGoogleProviderIdentity ||
+    ((config, token, verifiedToken) =>
+      verifyCurrentLinkedGoogleProviderIdentity(config, token, verifiedToken, fetchImpl));
+  const verifyRecentProviderAuthentication = dependencies.verifyRecentGoogleProviderAuthentication ||
+    ((config, token, verifiedToken, timestamp) =>
+      verifyRecentGoogleProviderAuthentication(config, token, verifiedToken, fetchImpl, timestamp));
   const verifyOperator = dependencies.verifyOperatorAccessToken || ((config, token) => verifyOperatorAccessToken(config, token, fetchImpl));
   const readAccount = dependencies.readAccountDocument || ((config, uid) => readAccountDocument(config, uid, fetchImpl));
   const legacyReader = dependencies.legacyReader || createVerifiedLegacyMappingReader({
@@ -686,6 +889,14 @@ function createHandler(configuration, dependencies = {}) {
   const reserveHandle = dependencies.reserveTrainerHandle || (async (input, options) => {
     authorityStore ||= createDefaultAuthorityStore(configuration);
     return authorityStore.reserveTrainerHandle(input, options);
+  });
+  const createProviderAccount = dependencies.createProviderAccountFoundation || (async (input, options) => {
+    authorityStore ||= createDefaultAuthorityStore(configuration);
+    return authorityStore.createProviderAccountFoundation(input, options);
+  });
+  const readProviderAccount = dependencies.readProviderAccountFoundation || (async (input) => {
+    authorityStore ||= createDefaultAuthorityStore(configuration);
+    return authorityStore.readProviderAccountFoundation(input);
   });
   const repairFoundation = dependencies.repairAccountFoundation || (async (input, options) => {
     authorityStore ||= createDefaultAuthorityStore(configuration);
@@ -768,7 +979,8 @@ function createHandler(configuration, dependencies = {}) {
           }
         }
         const firebaseIdToken = firebaseTokenHeader(request);
-        const { uid } = await verifyToken(configuration, firebaseIdToken);
+        const verifiedToken = await verifyToken(configuration, firebaseIdToken);
+        const { uid } = verifiedToken;
         groupEUid = configuration.groupEClientMode ? uid : undefined;
         if (configuration.groupEClientMode) {
           const slotIndex = configuration.groupE.bindings.findIndex((binding) =>
@@ -804,12 +1016,25 @@ function createHandler(configuration, dependencies = {}) {
           log(configuration, 'readAccountFoundation', 'not_initialized', startedAt, logFields());
           return json(response, 200, { ...canaryEnvelope, code: 'FOUNDATION_NOT_INITIALIZED' });
         }
-        const foundation = redactFoundationDocument(document);
+        let foundation = redactFoundationDocument(document, uid);
         if (FROZEN_STATUSES.has(foundation.status)) {
           log(configuration, 'readAccountFoundation', 'frozen', startedAt, logFields());
           return json(response, 423, { ...canaryEnvelope, code: 'ACCOUNT_FROZEN', foundation });
         }
         if (foundation.status !== 'active') fail('INTERNAL_ERROR');
+        if (foundation.identityKind === 'provider_only') {
+          const provider = await verifyCurrentLinkedProvider(configuration, firebaseIdToken, verifiedToken);
+          const exact = await readProviderAccount(Object.freeze({ uid, ...foundation, ...provider }));
+          if (!exact) fail('FOUNDATION_CONFLICT');
+          foundation = exact;
+        } else {
+          const requestedHandle = normalizeHandle(foundation.canonicalTrainerName);
+          const legacy = verifiedLegacyFoundation(uid, requestedHandle,
+            await readLegacyBinding({ verifiedUid: uid, firebaseIdToken }));
+          if (legacy.canonicalTrainerName !== foundation.canonicalTrainerName ||
+              legacy.normalizedTrainerName !== foundation.normalizedTrainerName || legacy.handleKey !== foundation.handleKey ||
+              legacy.legacyUsername !== foundation.legacyUsername) fail('FOUNDATION_CONFLICT');
+        }
         log(configuration, 'readAccountFoundation', 'success', startedAt, logFields());
         return json(response, 200, { ...canaryEnvelope, code: 'SUCCESS', foundation });
       } catch (error) {
@@ -817,7 +1042,9 @@ function createHandler(configuration, dependencies = {}) {
           'E1_READ_PROOF_SUBJECT_DENIED', 'E1_READ_PROOF_EXPIRED', 'E1_READ_PROOF_MAPPING_NOT_READY',
           'E1_READ_PROOF_MAPPING_DENIED', 'E1_READ_PROOF_MAPPING_UNAVAILABLE', 'E1_GROUP_E_BOUNDARY_INVALID',
           'E1_GROUP_E_SUBJECT_DENIED', 'E1_GROUP_E_RECEIPT_INVALID', 'E1_GROUP_E_RECEIPT_MISMATCH',
-          'E1_GROUP_E_MAPPING_NOT_READY', 'E1_GROUP_E_MAPPING_UNAVAILABLE'].includes(error?.code)
+          'E1_GROUP_E_MAPPING_NOT_READY', 'E1_GROUP_E_MAPPING_UNAVAILABLE', 'PROVIDER_IDENTITY_REQUIRED',
+          'PROVIDER_KEY_UNAVAILABLE', 'FOUNDATION_CONFLICT', 'MAPPING_INCOMPLETE', 'MAPPING_CONFLICT',
+          'MAPPING_PERMISSION_DENIED', 'MAPPING_UNAVAILABLE', 'e1/provider-foundation-conflict'].includes(error?.code)
           ? error.code : 'INTERNAL_ERROR';
         const status = code === 'E1_NOT_ENABLED' ? 503 : code === 'AUTH_REQUIRED' || code === 'AUTH_INVALID' ? 401 :
           code === 'REQUEST_TOO_LARGE' ? 413 : code === 'METHOD_NOT_ALLOWED' ? 405 : code === 'REQUEST_INVALID' ? 400 :
@@ -825,8 +1052,13 @@ function createHandler(configuration, dependencies = {}) {
               'E1_GROUP_E_BOUNDARY_INVALID', 'E1_GROUP_E_RECEIPT_INVALID', 'E1_GROUP_E_RECEIPT_MISMATCH'].includes(code) ? 403 :
               ['E1_READ_PROOF_MAPPING_NOT_READY', 'E1_GROUP_E_MAPPING_NOT_READY'].includes(code) ? 409 :
                 ['E1_READ_PROOF_EXPIRED', 'E1_READ_PROOF_MAPPING_UNAVAILABLE', 'E1_GROUP_E_MAPPING_UNAVAILABLE'].includes(code) ? 503 :
-            error?.code === 'e1/rate-limit-exceeded' ? 429 : 500;
-        const responseCode = error?.code === 'e1/rate-limit-exceeded' ? 'RATE_LIMITED' : code;
+            code === 'PROVIDER_IDENTITY_REQUIRED' ? 403 :
+              ['FOUNDATION_CONFLICT', 'MAPPING_INCOMPLETE', 'MAPPING_CONFLICT', 'e1/provider-foundation-conflict'].includes(code) ? 409 :
+                ['PROVIDER_KEY_UNAVAILABLE', 'MAPPING_UNAVAILABLE'].includes(code) ? 503 :
+                  code === 'MAPPING_PERMISSION_DENIED' ? 403 : error?.code === 'e1/rate-limit-exceeded' ? 429 : 500;
+        const responseCode = error?.code === 'e1/rate-limit-exceeded' ? 'RATE_LIMITED' :
+          ['MAPPING_INCOMPLETE', 'MAPPING_CONFLICT', 'MAPPING_PERMISSION_DENIED', 'MAPPING_UNAVAILABLE',
+            'e1/provider-foundation-conflict'].includes(code) ? 'FOUNDATION_CONFLICT' : code;
         log(configuration, 'readAccountFoundation', responseCode.toLowerCase(), startedAt, logFields());
         return json(response, status, { code: responseCode === 'REQUEST_TOO_LARGE' ? 'REQUEST_INVALID' : responseCode });
       }
@@ -858,6 +1090,102 @@ function createHandler(configuration, dependencies = {}) {
         };
         const [status, code] = mapping[error?.code] || [500, 'INTERNAL_ERROR'];
         log(configuration, 'readLegacyMappingReadiness', code.toLowerCase(), startedAt, callerHash ? { uidHash: callerHash } : {});
+        return json(response, status, { code });
+      }
+    }
+    if (url.pathname === '/v1/create-provider-account-foundation') {
+      let callerHash;
+      let handleHash;
+      try {
+        if (request.method !== 'POST') fail('METHOD_NOT_ALLOWED');
+        if (!configuration.createProviderAccountEnabled) fail('E1_NOT_ENABLED');
+        const providerRequest = exactProviderCreateRequest(await parseBody(request));
+        const firebaseIdToken = firebaseTokenHeader(request);
+        const verifiedToken = await verifyToken(configuration, firebaseIdToken);
+        const uid = verifiedToken.uid;
+        callerHash = uidHash(configuration, uid);
+        handleHash = handleCorrelationHash(configuration, providerRequest.handle.handleKey);
+        const provider = await verifyRecentProviderAuthentication(configuration, firebaseIdToken, verifiedToken, now());
+        const baseInput = Object.freeze({
+          uid,
+          providerAccountProtocolVersion: providerRequest.providerAccountProtocolVersion,
+          requestId: providerRequest.requestId,
+          canonicalTrainerName: providerRequest.handle.display,
+          normalizedTrainerName: providerRequest.handle.normalized,
+          handleKey: providerRequest.handle.handleKey,
+          lifecycleId: providerRequest.lifecycleId,
+          clientRelease: providerRequest.clientRelease,
+          ...provider
+        });
+        if (providerRequest.idempotencyFingerprint !== providerRequestFingerprint(baseInput)) fail('REQUEST_INVALID');
+        const input = Object.freeze({ ...baseInput, fingerprint: providerOperationFingerprint(baseInput) });
+        const replayOnly = await operationRequestExists({
+          operation: 'createProviderAccountFoundation', uid, requestId: providerRequest.requestId
+        });
+        if (!replayOnly) {
+          await limitOperation('createProviderAccountFoundation', callerHash,
+            rateAttemptHash('createProviderAccountFoundation', callerHash,
+              [providerRequest.requestId, providerRequest.handle.handleKey, provider.providerSubjectKey]));
+        }
+        let result;
+        let reconciled = false;
+        try {
+          result = await createProviderAccount(input, { replayOnly });
+        } catch (error) {
+          const expected = new Set([
+            'e1/replay-mismatch', 'e1/replay-not-found', 'e1/legacy-namespace-not-certified',
+            'e1/account-conflict', 'e1/handle-conflict', 'e1/provider-foundation-conflict',
+            'e1/provider-subject-conflict'
+          ]);
+          if (expected.has(error?.code)) throw error;
+          result = await readProviderAccount(input);
+          if (!result) throw error;
+          reconciled = true;
+        }
+        const exactResultStatus = result?.status === 'created' || reconciled && result?.status === 'active';
+        if (!exactResultStatus || result.handleKey !== input.handleKey ||
+            result.canonicalTrainerName !== input.canonicalTrainerName || result.identityKind !== 'provider_only') {
+          fail('INTERNAL_ERROR');
+        }
+        const code = result.replay === true ? 'IDEMPOTENT' : reconciled ? 'RECONCILED' : 'SUCCESS';
+        log(configuration, 'createProviderAccountFoundation', code.toLowerCase(), startedAt, {
+          uidHash: callerHash,
+          handleHash,
+          provider: 'google',
+          replayClass: result.replay === true ? 'exact-replay' : reconciled ? 'exact-readback' : 'first-write'
+        });
+        return json(response, 200, {
+          code,
+          foundation: {
+            schemaVersion: 1,
+            canonicalTrainerName: result.canonicalTrainerName,
+            normalizedTrainerName: result.normalizedTrainerName,
+            handleKey: result.handleKey,
+            legacyUsername: null,
+            identityKind: 'provider_only',
+            legacyAccessConfigured: false,
+            status: 'active',
+            revision: result.revision || 1
+          }
+        });
+      } catch (error) {
+        const mapping = {
+          E1_NOT_ENABLED: [503, 'E1_NOT_ENABLED'], AUTH_REQUIRED: [401, 'AUTH_REQUIRED'], AUTH_INVALID: [401, 'AUTH_INVALID'],
+          PROVIDER_IDENTITY_REQUIRED: [403, 'PROVIDER_IDENTITY_REQUIRED'],
+          RECENT_PROVIDER_AUTH_REQUIRED: [403, 'RECENT_PROVIDER_AUTH_REQUIRED'], REQUEST_INVALID: [400, 'REQUEST_INVALID'],
+          REQUEST_TOO_LARGE: [413, 'REQUEST_INVALID'], METHOD_NOT_ALLOWED: [405, 'METHOD_NOT_ALLOWED'],
+          'e1/legacy-namespace-not-certified': [412, 'NAMESPACE_NOT_CERTIFIED'],
+          'e1/account-conflict': [409, 'ACCOUNT_EXISTS'], 'e1/handle-conflict': [409, 'HANDLE_CONFLICT'],
+          'e1/provider-foundation-conflict': [409, 'FOUNDATION_CONFLICT'],
+          'e1/provider-subject-conflict': [409, 'PROVIDER_CONFLICT'],
+          'e1/replay-mismatch': [409, 'REQUEST_INVALID'], 'e1/replay-not-found': [409, 'REQUEST_INVALID'],
+          'e1/rate-limit-exceeded': [429, 'RATE_LIMITED']
+        };
+        const [status, code] = mapping[error?.code] || [500, 'INTERNAL_ERROR'];
+        log(configuration, 'createProviderAccountFoundation', code.toLowerCase(), startedAt, {
+          ...(callerHash ? { uidHash: callerHash } : {}),
+          ...(handleHash ? { handleHash } : {})
+        });
         return json(response, status, { code });
       }
     }
@@ -1143,13 +1471,18 @@ if (require.main === module) start();
 module.exports = Object.freeze({
   FORBIDDEN_PROJECT_PERMISSIONS,
   GATES,
+  PROVIDER_ACCOUNT_PROTOCOL_VERSION,
   RATE_LIMITS,
+  SUPPORTED_PROVIDER_ACCOUNT_PROTOCOL_VERSIONS,
   assertRuntimeDependencies,
   createHandler,
   conflictManifestFingerprint,
   loadConfiguration,
   migrationManifestFingerprint,
   observedLegacyFingerprint,
+  providerOperationFingerprint,
+  providerRequestFingerprint,
+  providerSubjectHash,
   readAccountDocument,
   proofAttemptHash,
   groupEAttemptHash,
@@ -1162,6 +1495,10 @@ module.exports = Object.freeze({
   sourceMappingFingerprint,
   start,
   verifiedLegacyFoundation,
+  linkedGoogleProviderIdentity,
+  recentGoogleProviderIdentity,
+  verifyCurrentLinkedGoogleProviderIdentity,
+  verifyRecentGoogleProviderAuthentication,
   verifyFirebaseIdToken,
   verifyOperatorAccessToken
 });

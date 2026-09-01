@@ -260,6 +260,15 @@ Initial load and a true Auth/account replacement still take the full activation
 path. This distinction prevents providerData callbacks from rerunning migration,
 republishing stale local state, or reactivating reviewed evidence.
 
+Provider onboarding validates and normalizes optional profile values before the
+identity request is dispatched. The normalized value is an in-memory handoff,
+not continuation storage. Once a profile edit enters
+`provider-profile-pending-v1`, its retry evidence is durable only inside that
+device's owner-partitioned IndexedDB. A different device reads canonical profile
+state; it cannot inherit another device's pending journal. If canonical revision
+advances first, canonical wins and the stale local pending record is cleared
+without an unbounded retry loop.
+
 ## Connected Accounts UI
 
 Settings includes a provider-neutral Connected Accounts section. Production
@@ -269,10 +278,12 @@ renders only:
 Username and PIN    Connected
 ```
 
-Google and Discord rows are hidden unless the explicit local development flag
-`window.__POGO_PROVIDER_LINKING_DEV__ === true` is set before feature loading.
-The four provider-foundation modules are also skipped by the ordinary feature
-loader unless that flag is set, preserving the production startup budget. Even
+Google and Discord rows are hidden unless an explicit provider capability
+requires them. Existing-account compatibility, public Google entry, existing
+account linking, account creation, public reads, and public writes are separate
+gates. Provider implementation modules are skipped by the ordinary feature
+loader unless an interactive provider capability requires them, preserving the
+production startup budget. Even
 then the rows have no button and remain non-actionable. State labels cover
 Connected, Not connected, Connecting, Waiting for browser, Needs attention,
 Reauthenticate, Disconnecting, and Unavailable. Copy is localized in English,

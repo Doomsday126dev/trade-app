@@ -16,12 +16,14 @@ const EXPECTED = Object.freeze({
   runtimeServiceAccount: 'e1-identity-authority-runtime@trainer-hub-staging-37ib4wct.iam.gserviceaccount.com'
 });
 const REQUIRED_FALSE_GATES = Object.freeze([
+  'CREATE_PROVIDER_ACCOUNT_ENABLED',
   'RESERVE_HANDLE_ENABLED',
   'REPAIR_FOUNDATION_ENABLED',
   'APPLY_MIGRATION_ENABLED',
   'FREEZE_CONFLICT_ENABLED'
 ]);
-const ACTIVATABLE_MUTATION_GATES = new Set(REQUIRED_FALSE_GATES.filter((gate) => gate !== 'RESERVE_HANDLE_ENABLED'));
+const ACTIVATABLE_MUTATION_GATES = new Set(REQUIRED_FALSE_GATES.filter((gate) =>
+  !['CREATE_PROVIDER_ACCOUNT_ENABLED', 'RESERVE_HANDLE_ENABLED'].includes(gate)));
 
 function activeWindow(value, now) {
   const start = Date.parse(value?.startAt);

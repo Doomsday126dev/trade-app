@@ -146,6 +146,7 @@
     }
     async function setMeta(key,value){const name=model.firebaseKey(key,180);if(!name)throw new TypeError('Meta key is invalid');return write('meta',{key:recordKey(owner,name),ownerUid:owner,name,value});}
     async function getMeta(key){return(await read('meta',recordKey(owner,key)))?.value??null;}
+    async function removeMeta(key){const name=model.firebaseKey(key,180);if(!name)throw new TypeError('Meta key is invalid');return remove('meta',recordKey(owner,name));}
     async function putRecoveryCandidate(candidate){
       requireOwner(candidate);const id=model.firebaseKey(candidate.candidateId,700);if(!id)throw new TypeError('Recovery candidate ID is invalid');
       return write('recoveryCandidates',{...candidate,key:recordKey(owner,id)});
@@ -186,7 +187,7 @@
       const pending=databasePromise;databasePromise=null;
       if(pending)(await pending).close();
     }
-    return Object.freeze({ownerUid:owner,enqueueOperation,enqueueOperations,listOperations,nextOperation,markAttempt,retainBlocked,acknowledge,markConflict,retryBlocked,putEntity,deleteEntity,getEntity,listEntities,listConflicts,resolveConflict,setMeta,getMeta,putRecoveryCandidate,listRecoveryCandidates,resolveRecoveryCandidate,resolveRecoveryCandidates,snapshot,close,_remove:remove});
+    return Object.freeze({ownerUid:owner,enqueueOperation,enqueueOperations,listOperations,nextOperation,markAttempt,retainBlocked,acknowledge,markConflict,retryBlocked,putEntity,deleteEntity,getEntity,listEntities,listConflicts,resolveConflict,setMeta,getMeta,removeMeta,putRecoveryCandidate,listRecoveryCandidates,resolveRecoveryCandidate,resolveRecoveryCandidates,snapshot,close,_remove:remove});
   }
 
   root.accountSyncJournal=Object.freeze({STORE_NAMES,openDatabase,createAccountSyncJournal});

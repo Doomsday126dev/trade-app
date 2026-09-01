@@ -43,6 +43,9 @@ function favorite(owner,target=IDS.other){
 function tag(owner){
   const id='tag_example';return{id,record:{schemaVersion:1,ownerUid:owner,entityType:'tag',entityId:id,identity:{tagId:id},generation:1,revision:1,deleted:false,createdAt:100,updatedAt:100,values:{label:'Local'},fieldRevisions:{f_bGFiZWw:1},fieldMutations:{f_bGFiZWw:'op_0000000000000001'},fieldMutationHashes:{f_bGFiZWw:HASH_A},lifecycleMutation:'op_0000000000000001',lifecycleMutationHash:HASH_A}};
 }
+function profile(owner,overrides={}){
+  return{schemaVersion:1,ownerUid:owner,friendCode:'0000 1111 2222',bio:'Available',discord:'trainer.126',avatarPokemon:'pokemon:150:base',revision:1,createdAt:100,lastUpdated:100,...overrides};
+}
 
 before(async()=>{await createUser('owner');await createUser('other');});
 beforeEach(async()=>{await succeeds(db('PUT','',null,'emulator-owner'),'clear fixture');});
@@ -54,6 +57,22 @@ test('only the exact authenticated owner may read an account and collection enum
   await denied(db('GET',`accountSync/${IDS.owner}`,undefined,TOKENS.other),'cross-owner read');
   await denied(db('GET','accountSync',undefined,TOKENS.owner),'parent enumeration');
   await denied(db('GET',`accountSync/${IDS.owner}`,undefined),'anonymous read');
+});
+
+test('provider profile is exact-owner only bounded and revision-monotonic',async()=>{
+  const path=`accountSync/${IDS.owner}/profile`,created=profile(IDS.owner);
+  await succeeds(db('PUT',path,created,TOKENS.owner),'owner profile create');
+  await succeeds(db('GET',path,undefined,TOKENS.owner),'owner profile read');
+  await denied(db('GET',path,undefined,TOKENS.other),'cross-owner profile read');
+  await denied(db('PUT',path,profile(IDS.owner,{revision:2,lastUpdated:101}),TOKENS.other),'cross-owner profile write');
+  await denied(db('PUT',path,{...created,privateNote:'secret'},TOKENS.owner),'unknown private profile field');
+  await denied(db('PUT',path,{...created,bio:'x'.repeat(121)},TOKENS.owner),'oversized profile field');
+  await denied(db('PUT',path,{...created,ownerUid:IDS.other},TOKENS.owner),'forged profile owner');
+  const updated={...created,bio:'Available evenings',revision:2,lastUpdated:101};
+  await succeeds(db('PUT',path,updated,TOKENS.owner),'monotonic profile update');
+  await denied(db('PUT',path,{...updated,bio:'same revision replacement'},TOKENS.owner),'profile same revision replacement');
+  await denied(db('PUT',path,{...updated,bio:'revision jump',revision:4,lastUpdated:102},TOKENS.owner),'profile revision jump');
+  await denied(db('DELETE',path,undefined,TOKENS.owner),'profile physical deletion');
 });
 
 test('entity writes reject forged ownership parent replacement unknown fields and malformed metadata',async()=>{

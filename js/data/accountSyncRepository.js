@@ -14,6 +14,7 @@
     const dbRef=path=>ref(database,path);
     function assertOwner(value){if(value?.ownerUid!==owner)throw Object.assign(new Error('Account sync owner mismatch'),{code:'account-sync/owner-mismatch'});}
     async function readAccount(){const snapshot=await get(dbRef(accountPath));return snapshot.exists()?snapshot.val():null;}
+    async function readProfile(){const snapshot=await get(dbRef(`${accountPath}/profile`));return snapshot.exists()?snapshot.val():null;}
     function listenAccount({onData,onError}={}){
       if(typeof onData!=='function')throw new TypeError('Account sync listener requires onData');
       return onValue(dbRef(accountPath),snapshot=>onData(snapshot.exists()?snapshot.val():null,snapshot),onError);
@@ -116,7 +117,28 @@
       },{applyLocally:false});
       return result.committed?Object.freeze({ok:true,status:'updated',value:result.snapshot.val()}):model.failure('account-sync/meta-conflict','Account sync metadata update was rejected');
     }
-    return Object.freeze({ownerUid:owner,accountPath,readAccount,listenAccount,applyOperation,createMigration,createRecoveryCandidate,readRecoveryReviewAcceptance,createRecoveryReviewAcceptance,updateMeta});
+    async function writeProfile(values,{baseRevision=0}={}){
+      const normalized=model.normalizeProfileValues(values),base=model.integer(baseRevision);
+      if(!normalized.ok||base===null)return model.failure('account-sync/profile-invalid','Provider profile write is invalid');
+      const target=dbRef(`${accountPath}/profile`);let abortCode='account-sync/profile-conflict',same=false;
+      const result=await runTransaction(target,current=>{
+        if(current==null){
+          if(base!==0)return;
+          const timestamp=serverTimestamp();
+          return{schemaVersion:model.SCHEMA_VERSION,ownerUid:owner,...normalized.value,revision:1,createdAt:timestamp,lastUpdated:timestamp};
+        }
+        const valid=model.validateProfileRecord(current,{ownerUid:owner});
+        if(!valid.ok){abortCode='account-sync/profile-invalid';return;}
+        if(model.canonicalJson(model.profileValues(valid.value))===model.canonicalJson(normalized.value)){same=true;return;}
+        if(valid.value.revision!==base)return;
+        return{...valid.value,...normalized.value,revision:valid.value.revision+1,lastUpdated:serverTimestamp()};
+      },{applyLocally:false});
+      const snapshot=result.committed?result.snapshot:await get(target),value=snapshot.exists()?snapshot.val():null,valid=model.validateProfileRecord(value,{ownerUid:owner});
+      if(!valid.ok)return model.failure(abortCode,'Canonical provider profile is invalid or missing');
+      if(model.canonicalJson(model.profileValues(valid.value))!==model.canonicalJson(normalized.value))return model.failure('account-sync/profile-conflict','Canonical provider profile changed on another device');
+      return Object.freeze({ok:true,status:result.committed?'updated':same?'idempotent':'reconciled',value:valid.value});
+    }
+    return Object.freeze({ownerUid:owner,accountPath,readAccount,readProfile,listenAccount,applyOperation,createMigration,createRecoveryCandidate,readRecoveryReviewAcceptance,createRecoveryReviewAcceptance,updateMeta,writeProfile});
   }
 
   root.accountSyncRepository=Object.freeze({createAccountSyncRepository});

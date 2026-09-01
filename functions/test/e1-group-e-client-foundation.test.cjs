@@ -7,6 +7,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { GATES, createHandler, loadConfiguration } = require('../e1-authority-service/server');
 const { PRODUCTION } = require('../e1-authority-service/e1TargetContracts');
+const { normalizeHandle } = require('../e1-authority-service/handleNormalization');
 const { createAuthorityInvoker, createGatewayOperation, loadGatewayConfiguration } = require('../e1-gateway/gatewayCore');
 const { controlPaths, createGroupEControlStore } = require('../e1-gateway/groupEControlStore');
 const { createAdmissionReceipt, responseBinding } = require('../e1-gateway/groupEAdmission');
@@ -260,9 +261,10 @@ test('authority validates exact receipt, headers, UID and reciprocal trainer bef
 
 test('authority terminal outcomes retain safe correlation and never expose raw attempts', async () => {
   const fixture = createFixture();
+  const canonical = normalizeHandle(fixture.TRAINER.A);
   const account = (status) => ({ fields: { schemaVersion: { integerValue: '1' }, uid: { stringValue: fixture.UID.A },
-    trainerName: { stringValue: fixture.TRAINER.A }, normalizedTrainerName: { stringValue: fixture.TRAINER.A.toLowerCase() },
-    handleKey: { stringValue: `v1_${'a'.repeat(64)}` }, legacyUsername: { stringValue: fixture.TRAINER.A },
+    trainerName: { stringValue: fixture.TRAINER.A }, normalizedTrainerName: { stringValue: canonical.normalized },
+    handleKey: { stringValue: canonical.handleKey }, legacyUsername: { stringValue: fixture.TRAINER.A },
     status: { stringValue: status }, revision: { integerValue: '1' }, createdAt: { integerValue: '1' },
     updatedAt: { integerValue: '2' } } });
   for (const [document, status, outcome] of [[null, 200, 'not_initialized'], [account('active'), 200, 'success'],
@@ -296,14 +298,36 @@ test('normal and Group C modes remain isolated from signed Group E admission', (
     { GROUP_E_WINDOW_START: '2030-01-01T12:00:00Z' })), /GROUP_E_CONFIGURATION_INVALID/);
 });
 
-test('Group E runtime exports no provider-linking route or broad control-plane write adapter', () => {
+test('Group E runtime denies provider account creation and exposes no broad control-plane write adapter', async () => {
+  const fixture = createFixture();
+  const configuration = loadGatewayConfiguration(gatewayEnvironment(fixture));
+  const { store } = seededStore(fixture);
+  let calls = 0;
+  const createRequest = callable(fixture, 'A', {
+    data: {
+      schemaVersion: 1,
+      providerAccountProtocolVersion: 1,
+      requestId: 'provider-request-1',
+      requestedHandle: 'Trainer',
+      lifecycleId: 'auth-1',
+      clientRelease: '2026-08-31.86',
+      idempotencyFingerprint: 'a'.repeat(64)
+    }
+  });
+  await assert.rejects(createGatewayOperation('createProviderAccountFoundation', configuration, {
+    controlStore: store,
+    invokeAuthority: async () => { calls++; return { status: 500, payload: { code: 'UNEXPECTED' } }; },
+    now: () => fixture.NOW,
+    structuredLog() {}
+  })(createRequest), /GROUP_E_OPERATION_DENIED/);
+  assert.equal(calls, 0);
   const runtime = [fs.readFileSync(path.resolve(__dirname, '../e1-gateway/index.js'), 'utf8'),
     fs.readFileSync(path.resolve(__dirname, '../e1-gateway/gatewayCore.js'), 'utf8'),
     fs.readFileSync(path.resolve(__dirname, '../e1-authority-service/server.js'), 'utf8')].join('\n');
   assert.doesNotMatch(runtime, /providerLink|linkProvider|unlinkProvider|provider-link/u);
   assert.deepEqual([...fs.readFileSync(path.resolve(__dirname, '../e1-gateway/index.js'), 'utf8')
     .matchAll(/exports\.([A-Za-z0-9_]+)\s*=/gu)].map((match) => match[1]),
-  ['readE1AccountFoundation', 'reserveE1TrainerHandle']);
+  ['readE1AccountFoundation', 'createE1ProviderAccountFoundation', 'reserveE1TrainerHandle']);
   const controlModule = require('../e1-gateway/groupEControlStore');
   assert.equal(controlModule.createRun, undefined);
   assert.equal(controlModule.createReconciliation, undefined);

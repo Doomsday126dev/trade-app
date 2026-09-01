@@ -23,15 +23,19 @@ const {
 } = require('../production/e1AuthorityDeploymentPlan.cjs');
 const {
   GROUP_E_PRIVATE_ENVIRONMENT,
+  PROVIDER_SUBJECT_KEY_CONTRACT,
   REQUIRED_INACTIVE_ENVIRONMENT,
   argumentsMap,
   executePlan,
   inactiveEnvironmentValid,
   inactiveServiceSpec,
+  providerSubjectKeyEnvironmentValid,
+  providerSubjectKeyVersions,
   run,
   verifyAuthorityIam,
   verifyAuthorityService
 } = require('../scripts/deploy-e1-production-authority.cjs');
+const { validateCompatibilityFloor } = require('../production/providerAccountCompatibilityFloor.cjs');
 
 const REPO_ROOT = execFileSync('git', ['-C', __dirname, 'rev-parse', '--show-toplevel'], { encoding: 'utf8' }).trim();
 const HEAD = execFileSync('git', ['-C', REPO_ROOT, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
@@ -272,6 +276,96 @@ test('authority service and IAM verification fail closed on public runtime or in
   }
 });
 
+test('provider-subject HMAC deployment contract permits inactive absence and requires an exact versioned secret reference before creation',()=>{
+  const plan=planFixture(),inactive=serviceFixture(),container=inactive.spec.template.spec.containers[0];
+  assert.equal(providerSubjectKeyEnvironmentValid(container),true);
+  const key={name:PROVIDER_SUBJECT_KEY_CONTRACT.keyEnvironmentName,
+    valueFrom:{secretKeyRef:{name:PROVIDER_SUBJECT_KEY_CONTRACT.secretName,key:'1'}}};
+  const version={name:PROVIDER_SUBJECT_KEY_CONTRACT.versionEnvironmentName,value:'1'};
+  container.env.push(key,version);
+  assert.equal(providerSubjectKeyEnvironmentValid(container),true);assert.equal(verifyAuthorityService(plan,inactive),true);
+
+  const enabled=structuredClone(inactive);
+  enabled.spec.template.spec.containers[0].env.find(entry=>entry.name==='CREATE_PROVIDER_ACCOUNT_ENABLED').value='true';
+  assert.equal(verifyAuthorityService(plan,enabled,{requireInactive:false}),true);
+
+  for(const mutate of[
+    value=>{value.spec.template.spec.containers[0].env=value.spec.template.spec.containers[0].env.filter(entry=>entry.name!==PROVIDER_SUBJECT_KEY_CONTRACT.versionEnvironmentName);},
+    value=>{const entry=value.spec.template.spec.containers[0].env.find(item=>item.name===PROVIDER_SUBJECT_KEY_CONTRACT.keyEnvironmentName);delete entry.valueFrom;entry.value='plaintext-is-forbidden';},
+    value=>{value.spec.template.spec.containers[0].env.find(item=>item.name===PROVIDER_SUBJECT_KEY_CONTRACT.versionEnvironmentName).value='2';},
+    value=>{value.spec.template.spec.containers[0].env.find(item=>item.name===PROVIDER_SUBJECT_KEY_CONTRACT.keyEnvironmentName).valueFrom.secretKeyRef.name='wrong-secret';}
+  ]){
+    const malformed=structuredClone(inactive);mutate(malformed);
+    assert.throws(()=>verifyAuthorityService(plan,malformed),/runtime-or-inactive-state-invalid/u);
+  }
+  const absentButEnabled=serviceFixture();
+  absentButEnabled.spec.template.spec.containers[0].env.find(entry=>entry.name==='CREATE_PROVIDER_ACCOUNT_ENABLED').value='true';
+  assert.throws(()=>verifyAuthorityService(plan,absentButEnabled,{requireInactive:false}),/runtime-or-inactive-state-invalid/u);
+});
+
+test('post-first compatibility floor rejects missing keys wrong versions pre-provider source and disabled reads',()=>{
+  const plan=planFixture();
+  const postFloor=(fingerprint=plan.sourceFingerprint,versions=[1])=>validateCompatibilityFloor({
+    schemaVersion:1,stage:'post-first-provider-account',providerAccountsExist:true,compatibilityIrreversible:true,
+    requiredProviderSubjectKeyVersions:versions,compatibleAuthoritySourceFingerprints:[fingerprint]
+  });
+  const compatible=serviceFixture(),container=compatible.spec.template.spec.containers[0];
+  container.env.find(entry=>entry.name==='READ_ACCOUNT_FOUNDATION_ENABLED').value='true';
+  container.env.find(entry=>entry.name==='PROVIDER_ACCOUNT_COMPATIBILITY_REQUIRED').value='true';
+  container.env.push({name:PROVIDER_SUBJECT_KEY_CONTRACT.keyEnvironmentName,
+    valueFrom:{secretKeyRef:{name:PROVIDER_SUBJECT_KEY_CONTRACT.secretName,key:'1'}}},
+  {name:PROVIDER_SUBJECT_KEY_CONTRACT.versionEnvironmentName,value:'1'});
+  assert.deepEqual([...providerSubjectKeyVersions(container)],[1]);
+  assert.equal(verifyAuthorityService(plan,compatible,{compatibilityFloor:postFloor()}),true);
+
+  const missing=structuredClone(compatible);
+  missing.spec.template.spec.containers[0].env=missing.spec.template.spec.containers[0].env
+    .filter(entry=>entry.name!==PROVIDER_SUBJECT_KEY_CONTRACT.keyEnvironmentName);
+  assert.throws(()=>verifyAuthorityService(plan,missing,{compatibilityFloor:postFloor()}),/runtime-or-inactive-state-invalid/u);
+  const wrong=structuredClone(compatible);
+  const wrongContainer=wrong.spec.template.spec.containers[0];
+  wrongContainer.env.find(entry=>entry.name===PROVIDER_SUBJECT_KEY_CONTRACT.keyEnvironmentName).valueFrom.secretKeyRef.key='2';
+  wrongContainer.env.find(entry=>entry.name===PROVIDER_SUBJECT_KEY_CONTRACT.versionEnvironmentName).value='2';
+  assert.throws(()=>verifyAuthorityService(plan,wrong,{compatibilityFloor:postFloor()}),/runtime-or-inactive-state-invalid/u);
+  const noRead=structuredClone(compatible);
+  noRead.spec.template.spec.containers[0].env.find(entry=>entry.name==='READ_ACCOUNT_FOUNDATION_ENABLED').value='false';
+  assert.throws(()=>verifyAuthorityService(plan,noRead,{compatibilityFloor:postFloor()}),/runtime-or-inactive-state-invalid/u);
+  assert.throws(()=>verifyAuthorityService(plan,compatible,{compatibilityFloor:postFloor('f'.repeat(64))}),
+    /runtime-or-inactive-state-invalid/u);
+});
+
+test('post-first rotation requires every floor version and accepts active plus reviewed prior secret references',()=>{
+  const plan=planFixture(),service=serviceFixture(),container=service.spec.template.spec.containers[0];
+  container.env.find(entry=>entry.name==='READ_ACCOUNT_FOUNDATION_ENABLED').value='true';
+  container.env.find(entry=>entry.name==='PROVIDER_ACCOUNT_COMPATIBILITY_REQUIRED').value='true';
+  container.env.push(
+    {name:PROVIDER_SUBJECT_KEY_CONTRACT.keyEnvironmentName,
+      valueFrom:{secretKeyRef:{name:PROVIDER_SUBJECT_KEY_CONTRACT.secretName,key:'2'}}},
+    {name:PROVIDER_SUBJECT_KEY_CONTRACT.versionEnvironmentName,value:'2'},
+    {name:PROVIDER_SUBJECT_KEY_CONTRACT.previousVersionsEnvironmentName,value:'1'},
+    {name:`${PROVIDER_SUBJECT_KEY_CONTRACT.previousKeyEnvironmentPrefix}1`,
+      valueFrom:{secretKeyRef:{name:PROVIDER_SUBJECT_KEY_CONTRACT.secretName,key:'1'}}}
+  );
+  const floor=validateCompatibilityFloor({schemaVersion:1,stage:'post-first-provider-account',providerAccountsExist:true,
+    compatibilityIrreversible:true,requiredProviderSubjectKeyVersions:[1,2],
+    compatibleAuthoritySourceFingerprints:[plan.sourceFingerprint]});
+  assert.deepEqual([...providerSubjectKeyVersions(container)],[2,1]);
+  assert.equal(verifyAuthorityService(plan,service,{compatibilityFloor:floor}),true);
+  const invalidOrder=structuredClone(service),invalidContainer=invalidOrder.spec.template.spec.containers[0];
+  invalidContainer.env.find(entry=>entry.name===PROVIDER_SUBJECT_KEY_CONTRACT.versionEnvironmentName).value='1';
+  invalidContainer.env.find(entry=>entry.name===PROVIDER_SUBJECT_KEY_CONTRACT.keyEnvironmentName)
+    .valueFrom.secretKeyRef.key='1';
+  invalidContainer.env.find(entry=>entry.name===PROVIDER_SUBJECT_KEY_CONTRACT.previousVersionsEnvironmentName).value='2';
+  invalidContainer.env.find(entry=>entry.name===`${PROVIDER_SUBJECT_KEY_CONTRACT.previousKeyEnvironmentPrefix}1`).name=
+    `${PROVIDER_SUBJECT_KEY_CONTRACT.previousKeyEnvironmentPrefix}2`;
+  invalidContainer.env.find(entry=>entry.name===`${PROVIDER_SUBJECT_KEY_CONTRACT.previousKeyEnvironmentPrefix}2`)
+    .valueFrom.secretKeyRef.key='2';
+  assert.throws(()=>verifyAuthorityService(plan,invalidOrder,{compatibilityFloor:floor}),
+    /runtime-or-inactive-state-invalid/u);
+  container.env=container.env.filter(entry=>entry.name!==`${PROVIDER_SUBJECT_KEY_CONTRACT.previousKeyEnvironmentPrefix}1`);
+  assert.throws(()=>verifyAuthorityService(plan,service,{compatibilityFloor:floor}),/runtime-or-inactive-state-invalid/u);
+});
+
 test('legacy authority preflight accepts only an absent or false read proof mode', () => {
   const plan = planFixture();
   const absent = serviceFixture();
@@ -311,6 +405,9 @@ test('inactive authority replacement preserves unrelated configuration and strip
   container.env = container.env.filter((entry) => entry.name !== 'READ_PROOF_MODE');
   container.env.push({ name: 'GROUP_E_RUN_ID', value: 'private-run' });
   container.env.push({ name: 'GROUP_E_FUTURE_PRIVATE_VALUE', value: 'private-future' });
+  container.env.push({ name: PROVIDER_SUBJECT_KEY_CONTRACT.keyEnvironmentName,
+    valueFrom: { secretKeyRef: { name: PROVIDER_SUBJECT_KEY_CONTRACT.secretName, key: '1' } } });
+  container.env.push({ name: PROVIDER_SUBJECT_KEY_CONTRACT.versionEnvironmentName, value: '1' });
   assert.throws(() => verifyAuthorityService(plan, service), /runtime-or-inactive-state-invalid/u);
   const replacement = inactiveServiceSpec(plan, service, `${plan.target.imageUri}@${NEXT_IMAGE_DIGEST}`);
   const next = replacement.spec.template.spec.containers[0];
@@ -320,6 +417,13 @@ test('inactive authority replacement preserves unrelated configuration and strip
   });
   assert.equal(next.env.some((entry) => GROUP_E_PRIVATE_ENVIRONMENT.includes(entry.name)), false);
   assert.equal(next.env.some((entry) => entry.name.startsWith('GROUP_E_') && entry.name !== 'GROUP_E_CLIENT_MODE'), false);
+  assert.deepEqual(next.env.find(entry=>entry.name===PROVIDER_SUBJECT_KEY_CONTRACT.keyEnvironmentName),{
+    name:PROVIDER_SUBJECT_KEY_CONTRACT.keyEnvironmentName,
+    valueFrom:{secretKeyRef:{name:PROVIDER_SUBJECT_KEY_CONTRACT.secretName,key:'1'}}
+  });
+  assert.deepEqual(next.env.find(entry=>entry.name===PROVIDER_SUBJECT_KEY_CONTRACT.versionEnvironmentName),{
+    name:PROVIDER_SUBJECT_KEY_CONTRACT.versionEnvironmentName,value:'1'
+  });
   assert.deepEqual(next.env.filter((entry) => entry.name === 'READ_PROOF_MODE'), [
     { name: 'READ_PROOF_MODE', value: 'false' }
   ]);
@@ -372,8 +476,8 @@ test('authority helper source contains no IAM mutation command and gateway pin r
   const helper = fs.readFileSync(path.resolve(__dirname, '../scripts/deploy-e1-production-authority.cjs'), 'utf8');
   assert.doesNotMatch(helper, /add-iam-policy-binding|remove-iam-policy-binding|set-iam-policy/u);
   const gateway = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../production/e1-gateway-source-manifest.json'), 'utf8'));
-  assert.equal(gateway.sourceCommitSha, COMMIT_A_SOURCE_SHA);
-  assert.equal(gateway.sourceFingerprint, '6efaab14358355cd2afc8a790a2cace4ae13f394f095f34a5b9c4adf2c8a5258');
+  assert.equal(gateway.sourceCommitSha, '129b7ad7dbf33a5bc0126aec20e2412eb08774a1');
+  assert.equal(gateway.sourceFingerprint, '666afda7de8aa299a1281214b8cda4a6c0c9002f3b7c84f2c8e8eaeedc2603d5');
   assert.deepEqual(gateway.sourceFiles.map((file) => file.path), [
     'gatewayCore.js', 'groupEAdmission.js', 'groupEControlStore.js', 'index.js', 'package-lock.json', 'package.json'
   ]);

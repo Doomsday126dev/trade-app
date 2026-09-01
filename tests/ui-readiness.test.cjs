@@ -197,7 +197,7 @@ test('Account & Security keeps production providers hidden while development act
   assert.match(panel,/id="settings-logout" onclick="logout\(\)"/);
   assert.match(html,/\.account-security-method\{[^}]*min-height:56px/);
   assert.match(html,/DURABLE_AUTH_PROVIDERS_ENABLED!==false/);
-  assert.match(html,/PROVIDER_LINKING_DEVELOPMENT_ENABLED=window\.__POGO_PROVIDER_LINKING_DEV__===true/);
+  assert.match(html,/PROVIDER_CAPABILITIES=providerCapabilitiesDomain\.resolveProviderCapabilities/);
 });
 
 test('favorite organizer saves tag changes immediately and clears stale deleted-tag filters',()=>{

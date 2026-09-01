@@ -2,23 +2,40 @@
 
 const RATE_LIMIT_OPERATIONS = new Set([
   'readAccountFoundation',
+  'createProviderAccountFoundation',
   'reserveTrainerHandle',
   'repairAccountFoundation',
   'applyMigrationManifest',
   'freezeIdentityConflict'
 ]);
 const MUTATION_OPERATIONS = new Set([
+  'createProviderAccountFoundation',
   'reserveTrainerHandle',
   'repairAccountFoundation',
   'applyMigrationManifest',
   'freezeIdentityConflict'
 ]);
 const HASH = /^[a-f0-9]{16,64}$/;
+const HASH_64 = /^[a-f0-9]{64}$/;
+const LEGACY_PROVISIONING_FREEZE_FIELDS = Object.freeze([
+  'schemaVersion','state','provisioningModel','freezeId','provisioningContractDigest','activatedAt','releasedAt'
+]);
+const PROVIDER_CREATION_CERTIFICATION_FIELDS = Object.freeze([
+  'schemaVersion','state','provisioningModel','freezeId','provisioningContractDigest','normalizationVersion',
+  'legacyNamespaceCoverageCertified','activeLegacyHandleCount','certifiedHandleCount','coverageDigest',
+  'inventoryCapturedAt','certifiedAt','expiresAt'
+]);
 
 function fail(code) {
   const error = new Error(code);
   error.code = code;
   throw error;
+}
+
+function exactFields(value, fields) {
+  const keys = value && typeof value === 'object' && !Array.isArray(value) ? Object.keys(value).sort() : [];
+  const expected = [...fields].sort();
+  return keys.length === expected.length && keys.every((key, index) => key === expected[index]);
 }
 
 function createFirestoreE1AuthorityAdapter({ firestore, now = () => Date.now() } = {}) {
@@ -28,6 +45,10 @@ function createFirestoreE1AuthorityAdapter({ firestore, now = () => Date.now() }
 
   const accountRef = (uid) => firestore.doc(`accounts/${uid}`);
   const handleRef = (handleKey) => firestore.doc(`trainerHandles/${handleKey}`);
+  const providerRef = (uid, provider) => firestore.doc(`accounts/${uid}/providers/${provider}`);
+  const providerSubjectRef = (providerSubjectKey) => firestore.doc(`providerSubjects/${providerSubjectKey}`);
+  const providerCreationCertificationRef = () => firestore.doc('authorityConfig/providerAccountCreation');
+  const legacyProvisioningFreezeRef = () => firestore.doc('authorityConfig/legacyProvisioningFreeze');
   const operationRef = (uid, requestId) => firestore.doc(`operationRequests/${uid}/requests/${requestId}`);
   const migrationRef = (uid, requestId) => firestore.doc(`identityMigrations/${uid}/operations/${requestId}`);
   const conflictRef = (uid, requestId) => firestore.doc(`identityConflicts/${uid}/events/${requestId}`);
@@ -105,9 +126,29 @@ function createFirestoreE1AuthorityAdapter({ firestore, now = () => Date.now() }
       canonicalTrainerName: input.canonicalTrainerName,
       normalizedTrainerName: input.normalizedTrainerName,
       handleKey: input.handleKey,
+      identityKind: 'legacy_migrated',
+      legacyAccessConfigured: true,
       legacyUsername: input.legacyUsername,
       legacyAuthVersion: input.legacyAuthVersion,
       status,
+      revision: 1,
+      createdAt: timestamp,
+      updatedAt: timestamp
+    };
+  }
+
+  function providerAccountDocument(input, timestamp) {
+    return {
+      schemaVersion: 1,
+      uid: input.uid,
+      canonicalTrainerName: input.canonicalTrainerName,
+      normalizedTrainerName: input.normalizedTrainerName,
+      handleKey: input.handleKey,
+      identityKind: 'provider_only',
+      legacyAccessConfigured: false,
+      legacyUsername: null,
+      legacyAuthVersion: null,
+      status: 'active',
       revision: 1,
       createdAt: timestamp,
       updatedAt: timestamp
@@ -124,6 +165,33 @@ function createFirestoreE1AuthorityAdapter({ firestore, now = () => Date.now() }
       revision: 1,
       claimedAt: timestamp,
       updatedAt: timestamp
+    };
+  }
+
+  function accountProviderDocument(input, timestamp) {
+    return {
+      schemaVersion: 1,
+      provider: input.providerKey,
+      providerId: input.providerId,
+      providerSubjectKey: input.providerSubjectKey,
+      providerSubjectKeyVersion: input.providerSubjectKeyVersion,
+      state: 'linked',
+      linkedAt: timestamp,
+      updatedAt: timestamp,
+      revision: 1
+    };
+  }
+
+  function providerSubjectDocument(input, timestamp) {
+    return {
+      schemaVersion: 1,
+      uid: input.uid,
+      provider: input.providerKey,
+      providerId: input.providerId,
+      providerSubjectKey: input.providerSubjectKey,
+      providerSubjectKeyVersion: input.providerSubjectKeyVersion,
+      linkedAt: timestamp,
+      revision: 1
     };
   }
 
@@ -151,18 +219,142 @@ function createFirestoreE1AuthorityAdapter({ firestore, now = () => Date.now() }
   function exactAccount(data, input) {
     return data?.schemaVersion === 1 && data.uid === input.uid && data.handleKey === input.handleKey &&
       data.canonicalTrainerName === input.canonicalTrainerName && data.normalizedTrainerName === input.normalizedTrainerName &&
+      (data.identityKind === undefined || data.identityKind === 'legacy_migrated') &&
+      (data.legacyAccessConfigured === undefined || data.legacyAccessConfigured === true) &&
       data.legacyUsername === input.legacyUsername && data.legacyAuthVersion === input.legacyAuthVersion &&
       data.status === 'active' && data.revision === 1;
   }
 
   function exactHandle(data, input) {
     return data?.schemaVersion === 1 && data.uid === input.uid && data.canonicalTrainerName === input.canonicalTrainerName &&
-      data.normalizedTrainerName === input.normalizedTrainerName && data.state === 'active' && data.revision === 1;
+      data.normalizedTrainerName === input.normalizedTrainerName && data.state === 'active' && data.revision === 1 &&
+      Number.isSafeInteger(data.claimedAt) && Number.isSafeInteger(data.updatedAt) && data.updatedAt >= data.claimedAt;
+  }
+
+  function exactProviderAccount(data, input) {
+    return data?.schemaVersion === 1 && data.uid === input.uid && data.handleKey === input.handleKey &&
+      data.canonicalTrainerName === input.canonicalTrainerName && data.normalizedTrainerName === input.normalizedTrainerName &&
+      data.identityKind === 'provider_only' && data.legacyAccessConfigured === false && data.legacyUsername === null &&
+      data.legacyAuthVersion === null && data.status === 'active' && data.revision === 1 &&
+      Number.isSafeInteger(data.createdAt) && Number.isSafeInteger(data.updatedAt) && data.updatedAt >= data.createdAt;
+  }
+
+  function exactAccountProvider(data, input) {
+    return data?.schemaVersion === 1 && data.provider === input.providerKey && data.providerId === input.providerId &&
+      data.providerSubjectKey === input.providerSubjectKey && data.state === 'linked' && data.revision === 1 &&
+      data.providerSubjectKeyVersion === input.providerSubjectKeyVersion &&
+      Number.isSafeInteger(data.linkedAt) && Number.isSafeInteger(data.updatedAt) && data.updatedAt >= data.linkedAt;
+  }
+
+  function exactProviderSubject(data, input) {
+    return data?.schemaVersion === 1 && data.uid === input.uid && data.provider === input.providerKey &&
+      data.providerId === input.providerId && data.providerSubjectKey === input.providerSubjectKey && data.revision === 1 &&
+      data.providerSubjectKeyVersion === input.providerSubjectKeyVersion &&
+      Number.isSafeInteger(data.linkedAt);
+  }
+
+  function validLegacyProvisioningFreeze(data, timestamp) {
+    return exactFields(data, LEGACY_PROVISIONING_FREEZE_FIELDS) && data.schemaVersion === 1 && data.state === 'active' &&
+      data.provisioningModel === 'bounded-legacy-provisioning-freeze' &&
+      typeof data.freezeId === 'string' && /^legacy-freeze-[A-Za-z0-9._:-]{8,96}$/.test(data.freezeId) &&
+      HASH_64.test(data.provisioningContractDigest || '') && Number.isSafeInteger(data.activatedAt) &&
+      data.activatedAt <= timestamp && data.releasedAt === null;
+  }
+
+  function validProviderCreationCertification(data, freeze, timestamp) {
+    return exactFields(data, PROVIDER_CREATION_CERTIFICATION_FIELDS) && data.schemaVersion === 2 &&
+      data.state === 'certified' && data.normalizationVersion === 1 &&
+      data.provisioningModel === 'bounded-legacy-provisioning-freeze' && data.freezeId === freeze?.freezeId &&
+      data.provisioningContractDigest === freeze?.provisioningContractDigest &&
+      data.legacyNamespaceCoverageCertified === true && Number.isSafeInteger(data.activeLegacyHandleCount) &&
+      data.activeLegacyHandleCount >= 0 && data.certifiedHandleCount === data.activeLegacyHandleCount &&
+      HASH_64.test(data.coverageDigest || '') && Number.isSafeInteger(data.inventoryCapturedAt) &&
+      data.inventoryCapturedAt >= freeze.activatedAt && Number.isSafeInteger(data.certifiedAt) &&
+      data.certifiedAt >= data.inventoryCapturedAt && data.certifiedAt <= timestamp &&
+      Number.isSafeInteger(data.expiresAt) && data.expiresAt > timestamp;
   }
 
   async function readAccountFoundation(uid) {
     const snapshot = await accountRef(uid).get();
     return snapshot.exists ? Object.freeze(snapshot.data()) : null;
+  }
+
+  async function readProviderAccountFoundation(input) {
+    const refs = [accountRef(input.uid), handleRef(input.handleKey), providerRef(input.uid, input.providerKey)];
+    const [account, handle, provider] = await Promise.all(refs.map((ref) => ref.get()));
+    if (![account, handle, provider].every((snapshot) => snapshot.exists)) return null;
+    const candidates = Array.isArray(input.providerSubjectCandidates) && input.providerSubjectCandidates.length
+      ? input.providerSubjectCandidates
+      : [{ providerSubjectKey: input.providerSubjectKey, providerSubjectKeyVersion: input.providerSubjectKeyVersion }];
+    const matched = candidates.find((candidate) => provider.data()?.providerSubjectKey === candidate.providerSubjectKey &&
+      provider.data()?.providerSubjectKeyVersion === candidate.providerSubjectKeyVersion);
+    if (!matched) fail('e1/provider-foundation-conflict');
+    const exactInput = { ...input, ...matched };
+    const subject = await providerSubjectRef(matched.providerSubjectKey).get();
+    if (!subject.exists) return null;
+    if (!exactProviderAccount(account.data(), input) || !exactHandle(handle.data(), input) ||
+        !exactAccountProvider(provider.data(), exactInput) || !exactProviderSubject(subject.data(), exactInput) ||
+        provider.data().linkedAt !== subject.data().linkedAt) fail('e1/provider-foundation-conflict');
+    const data = account.data();
+    return Object.freeze({
+      schemaVersion: 1,
+      canonicalTrainerName: data.canonicalTrainerName,
+      normalizedTrainerName: data.normalizedTrainerName,
+      handleKey: data.handleKey,
+      identityKind: 'provider_only',
+      legacyAccessConfigured: false,
+      legacyUsername: null,
+      status: 'active',
+      revision: data.revision
+    });
+  }
+
+  async function createProviderAccountFoundation(input, { replayOnly = false } = {}) {
+    return firestore.runTransaction(async (transaction) => {
+      const refs = [
+        legacyProvisioningFreezeRef(),
+        providerCreationCertificationRef(),
+        accountRef(input.uid),
+        handleRef(input.handleKey),
+        providerRef(input.uid, input.providerKey),
+        providerSubjectRef(input.providerSubjectKey),
+        operationRef(input.uid, input.requestId)
+      ];
+      const [freeze, certification, account, handle, provider, subject, request] =
+        await Promise.all(refs.map((ref) => transaction.get(ref)));
+      const prior = replay(request, input.fingerprint, 'createProviderAccountFoundation', replayOnly);
+      if (prior) {
+        if (!account.exists || !handle.exists || !provider.exists || !subject.exists ||
+            !exactProviderAccount(account.data(), input) || !exactHandle(handle.data(), input) ||
+            !exactAccountProvider(provider.data(), input) || !exactProviderSubject(subject.data(), input) ||
+            provider.data().linkedAt !== subject.data().linkedAt) fail('e1/provider-foundation-conflict');
+        return prior;
+      }
+      const timestamp = now();
+      if (!freeze.exists || !validLegacyProvisioningFreeze(freeze.data(), timestamp) || !certification.exists ||
+          !validProviderCreationCertification(certification.data(), freeze.data(), timestamp)) {
+        fail('e1/legacy-namespace-not-certified');
+      }
+      if (account.exists) fail('e1/account-conflict');
+      if (handle.exists) fail('e1/handle-conflict');
+      if (provider.exists) fail('e1/provider-foundation-conflict');
+      if (subject.exists) fail(subject.data()?.uid === input.uid ? 'e1/provider-foundation-conflict' : 'e1/provider-subject-conflict');
+
+      const result = {
+        status: 'created',
+        canonicalTrainerName: input.canonicalTrainerName,
+        normalizedTrainerName: input.normalizedTrainerName,
+        handleKey: input.handleKey,
+        identityKind: 'provider_only',
+        revision: 1
+      };
+      transaction.create(refs[2], providerAccountDocument(input, timestamp));
+      transaction.create(refs[3], handleDocument(input, timestamp));
+      transaction.create(refs[4], accountProviderDocument(input, timestamp));
+      transaction.create(refs[5], providerSubjectDocument(input, timestamp));
+      transaction.create(refs[6], operationDocument('createProviderAccountFoundation', input, result, timestamp));
+      return Object.freeze(result);
+    });
   }
 
   async function reserveTrainerHandle(input, { replayOnly = false } = {}) {
@@ -283,9 +475,11 @@ function createFirestoreE1AuthorityAdapter({ firestore, now = () => Date.now() }
   return Object.freeze({
     applyMigrationManifest,
     consumeRateLimit,
+    createProviderAccountFoundation,
     freezeIdentityConflict,
     operationRequestExists,
     readAccountFoundation,
+    readProviderAccountFoundation,
     repairAccountFoundation,
     reserveTrainerHandle
   });

@@ -26,6 +26,7 @@ export AUTHORITY_SERVICE_NAME="$SERVICE"
 export AUTHORITY_RUNTIME_SERVICE_ACCOUNT="$RUNTIME_SA"
 export RTDB_DATABASE_URL="$RTDB_URL"
 export READ_ACCOUNT_FOUNDATION_ENABLED="true"
+export CREATE_PROVIDER_ACCOUNT_ENABLED="false"
 export RESERVE_HANDLE_ENABLED="false"
 export REPAIR_FOUNDATION_ENABLED="false"
 export APPLY_MIGRATION_ENABLED="false"
@@ -61,13 +62,13 @@ SPEC="$TEMP_DIR/service.json"
 
 gcloud run services describe "$SERVICE" --project="$PROJECT" --region="$REGION" --format=json >"$BEFORE"
 node - "$BEFORE" "$SPEC" "$RUNTIME_SA" \
-  "$READ_ACCOUNT_FOUNDATION_ENABLED" "$RESERVE_HANDLE_ENABLED" "$REPAIR_FOUNDATION_ENABLED" \
+  "$READ_ACCOUNT_FOUNDATION_ENABLED" "$CREATE_PROVIDER_ACCOUNT_ENABLED" "$RESERVE_HANDLE_ENABLED" "$REPAIR_FOUNDATION_ENABLED" \
   "$APPLY_MIGRATION_ENABLED" "$FREEZE_CONFLICT_ENABLED" \
   "${REPAIR_APPROVAL_WINDOW_START:-}" "${REPAIR_APPROVAL_WINDOW_END:-}" "${APPROVED_MIGRATION_MANIFEST_IDS:-}" <<'NODE'
 const fs = require('node:fs');
 const [input, output, runtimeServiceAccount, ...values] = process.argv.slice(2);
-const gateValues = values.slice(0, 5);
-const [repairWindowStart, repairWindowEnd, approvedMigrationManifestIds] = values.slice(5);
+const gateValues = values.slice(0, 6);
+const [repairWindowStart, repairWindowEnd, approvedMigrationManifestIds] = values.slice(6);
 const service = JSON.parse(fs.readFileSync(input, 'utf8'));
 if (service?.spec?.template?.spec?.serviceAccountName !== runtimeServiceAccount) throw new Error('runtime identity mismatch');
 if (service?.metadata?.name !== 'e1-identity-authority') throw new Error('service mismatch');
@@ -75,7 +76,7 @@ delete service.status;
 for (const key of ['creationTimestamp', 'generation', 'resourceVersion', 'selfLink', 'uid']) delete service.metadata?.[key];
 const containers = service.spec?.template?.spec?.containers || [];
 if (containers.length !== 1 || !String(containers[0].image || '').includes('@sha256:')) throw new Error('immutable image required');
-const gates = ['READ_ACCOUNT_FOUNDATION_ENABLED', 'RESERVE_HANDLE_ENABLED', 'REPAIR_FOUNDATION_ENABLED', 'APPLY_MIGRATION_ENABLED', 'FREEZE_CONFLICT_ENABLED'];
+const gates = ['READ_ACCOUNT_FOUNDATION_ENABLED', 'CREATE_PROVIDER_ACCOUNT_ENABLED', 'RESERVE_HANDLE_ENABLED', 'REPAIR_FOUNDATION_ENABLED', 'APPLY_MIGRATION_ENABLED', 'FREEZE_CONFLICT_ENABLED'];
 const environment = containers[0].env || (containers[0].env = []);
 for (const [index, name] of gates.entries()) {
   const entry = environment.find((candidate) => candidate.name === name);
@@ -102,7 +103,7 @@ gcloud run services describe "$SERVICE" --project="$PROJECT" --region="$REGION" 
   const service = JSON.parse(fs.readFileSync(0, "utf8"));
   const container = service.spec.template.spec.containers[0];
   const environment = Object.fromEntries(container.env.map((entry) => [entry.name, entry.value]));
-  const gates = ["READ_ACCOUNT_FOUNDATION_ENABLED", "RESERVE_HANDLE_ENABLED", "REPAIR_FOUNDATION_ENABLED", "APPLY_MIGRATION_ENABLED", "FREEZE_CONFLICT_ENABLED"];
+  const gates = ["READ_ACCOUNT_FOUNDATION_ENABLED", "CREATE_PROVIDER_ACCOUNT_ENABLED", "RESERVE_HANDLE_ENABLED", "REPAIR_FOUNDATION_ENABLED", "APPLY_MIGRATION_ENABLED", "FREEZE_CONFLICT_ENABLED"];
   process.stdout.write(`${JSON.stringify({
     revision: service.status.latestReadyRevisionName,
     traffic: service.status.traffic,

@@ -286,3 +286,22 @@ test('the real IndexedDB journal classifies mixed blocked codes and preserves un
   assert.equal(result.beforeSnapshot.blockedCount,2);assert.equal(result.beforeSnapshot.recoverableBlockedCount,1);assert.equal(result.beforeSnapshot.unsafeBlockedCount,1);assert.deepEqual(result.beforeSnapshot.blockedCategories,['transient-transport','unsafe']);
   assert.equal(result.safeRetried,true);assert.equal(result.unsafeRetried,false);assert.equal(result.unsafeAfter,result.unsafeBefore);assert.equal(result.afterSnapshot.pendingCount,1);assert.equal(result.afterSnapshot.blockedCount,1);assert.equal(result.afterSnapshot.unsafeBlockedCount,1);
 });
+
+test('provider profile pending evidence survives a real IndexedDB reopen and stays owner-partitioned',async t=>{
+  const server=http.createServer((_request,response)=>{response.writeHead(200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store'});response.end('<!doctype html><title>Provider profile pending persistence</title>');});
+  await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});
+  const browser=await browserType.launch({headless:true});t.after(async()=>{await browser.close();await new Promise(resolve=>server.close(resolve));});
+  const page=await browser.newPage(),databaseName=`pogoAccountSync_profile_pending_${Date.now()}`,url=`http://127.0.0.1:${server.address().port}/`,pending={schemaVersion:1,ownerUid:'uid-owner',values:{friendCode:'0000 1111 2222',bio:'Retry me',discord:'',avatarPokemon:''},baseRevision:1,queuedAt:100};
+  const load=async()=>{await page.addScriptTag({path:path.join(root,'js/domain/accountSyncModel.js')});await page.addScriptTag({path:path.join(root,'js/data/accountSyncJournal.js')});};
+  await page.goto(url,{waitUntil:'domcontentloaded'});await load();
+  await page.evaluate(async({databaseName,pending})=>{const journal=window.PogoData.accountSyncJournal.createAccountSyncJournal({ownerUid:'uid-owner',databaseName});await journal.setMeta('provider-profile-pending-v1',pending);await journal.close();},{databaseName,pending});
+  await page.reload({waitUntil:'domcontentloaded'});await load();
+  const reopened=await page.evaluate(async databaseName=>{
+    const owner=window.PogoData.accountSyncJournal.createAccountSyncJournal({ownerUid:'uid-owner',databaseName}),other=window.PogoData.accountSyncJournal.createAccountSyncJournal({ownerUid:'uid-other',databaseName});
+    const ownerValue=await owner.getMeta('provider-profile-pending-v1'),otherValue=await other.getMeta('provider-profile-pending-v1');await owner.removeMeta('provider-profile-pending-v1');await owner.close();await other.close();return{ownerValue,otherValue};
+  },databaseName);
+  assert.deepEqual(reopened.ownerValue,pending);assert.equal(reopened.otherValue,null);
+  await page.reload({waitUntil:'domcontentloaded'});await load();
+  const cleared=await page.evaluate(async databaseName=>{const journal=window.PogoData.accountSyncJournal.createAccountSyncJournal({ownerUid:'uid-owner',databaseName}),value=await journal.getMeta('provider-profile-pending-v1');await journal.close();await new Promise((resolve,reject)=>{const request=indexedDB.deleteDatabase(databaseName);request.onsuccess=resolve;request.onerror=()=>reject(request.error);request.onblocked=resolve;});return value;},databaseName);
+  assert.equal(cleared,null);
+});

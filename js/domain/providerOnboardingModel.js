@@ -1,59 +1,179 @@
 (function(global){
   const root=global.PogoDomain=global.PogoDomain||{};
-  const STATES=Object.freeze(['idle','resolving-account','existing-account','choose-handle','confirm-profile','ready-to-create','creating','complete','blocked','canceled']);
-  const HANDLE_PATTERN=/^[^.#$\/\[\]\u0000-\u001f\u007f]{2,32}$/;
+  const STATES=Object.freeze([
+    'idle','checking-account','onboarding-required','choosing-handle','checking-availability','handle-unavailable',
+    'ready-to-create','creating','verifying','account-ready','retryable-failure','ambiguous-result',
+    'blocked-conflict','canceled'
+  ]);
+  const HANDLE_PATTERN=/^[^.#$\/\[\]\u0000-\u001f\u007f]{2,64}$/;
+  const STORAGE_KEY='pogoProviderOnboarding:v2';
+  const UID_DIGEST_VERSION='sha256-v1';
+  const PERSISTED_FIELDS=Object.freeze(['schemaVersion','uidDigestVersion','uidDigest','lifecycleId','providerKey','status','handle','code']);
 
-  function failure(code){const error=new Error(code);error.code=code;return error;}
+  function failure(code,state='blocked'){const error=new Error(code);error.code=code;error.state=state;return error;}
   function cleanHandle(value){
-    const handle=String(value||'').trim();
-    if(!HANDLE_PATTERN.test(handle))throw failure('provider-onboarding/handle-invalid');
+    const handle=String(value||'').normalize('NFKC').trim();
+    if(!HANDLE_PATTERN.test(handle))throw failure('provider-onboarding/handle-invalid','handle-unavailable');
     return handle;
+  }
+  function normalizeOnboardingProfile(value={}){
+    if(!value||typeof value!=='object'||Array.isArray(value))return null;
+    const friendCode=String(value.friendCode||'').normalize('NFC').trim();
+    if(friendCode&&!/^[0-9 -]+$/.test(friendCode))return null;
+    const digits=friendCode.replace(/[ -]/g,'');
+    if(friendCode&&!/^[0-9]{12}$/.test(digits))return null;
+    const avatarPokemon=String(value.avatarPokemon||'').normalize('NFC').trim(),bio=String(value.bio||'').normalize('NFC').trim();
+    if(Array.from(avatarPokemon).length>120||Array.from(bio).length>120||/[\u0000-\u001f\u007f-\u009f\u200b-\u200f\u202a-\u202e\u2060\u2066-\u2069\ufeff]/u.test(avatarPokemon+bio))return null;
+    return Object.freeze({friendCode:digits?digits.replace(/(\d{4})(?=\d)/g,'$1 '):'',avatarPokemon,bio,discord:''});
   }
   function authority(value){
     const uid=String(value?.uid||''),lifecycleId=String(value?.lifecycleId||'');
-    if(!uid||!lifecycleId)throw failure('provider-onboarding/authority-invalid');
+    if(!uid||!/^auth-[1-9][0-9]{0,9}$/.test(lifecycleId))throw failure('provider-onboarding/authority-invalid','canceled');
     return Object.freeze({uid,lifecycleId});
   }
   function authorityCurrent(expected,current){return!!expected&&!!current&&expected.uid===current.uid&&expected.lifecycleId===current.lifecycleId;}
-  function createProviderOnboardingModel({authoritySnapshot,checkHandle,createAccount}={}){
-    if(typeof authoritySnapshot!=='function'||typeof checkHandle!=='function')throw new TypeError('Provider onboarding dependencies are incomplete');
-    let binding=null,state=Object.freeze({status:'idle',providerKey:'',handle:'',code:''});
-    const set=next=>(state=Object.freeze({...next}));
-    const requireCurrent=()=>{const current=authority(authoritySnapshot());if(!authorityCurrent(binding,current))throw failure('provider-onboarding/auth-lifecycle-changed');return current;};
-    function begin({providerKey='google'}={}){
-      binding=authority(authoritySnapshot());
-      return set({status:'resolving-account',providerKey:String(providerKey||''),handle:'',code:''});
+  function exactFields(value,fields){
+    const keys=value&&typeof value==='object'&&!Array.isArray(value)?Object.keys(value).sort():[];
+    const expected=[...fields].sort();return keys.length===expected.length&&keys.every((key,index)=>key===expected[index]);
+  }
+  function utf8Bytes(value){
+    const encoded=unescape(encodeURIComponent(String(value)));return Uint8Array.from(encoded,character=>character.charCodeAt(0));
+  }
+  async function digestUid(uid,cryptoImpl=global.crypto){
+    if(typeof cryptoImpl?.subtle?.digest!=='function')throw failure('provider-onboarding/digest-unavailable','canceled');
+    const digest=await cryptoImpl.subtle.digest('SHA-256',utf8Bytes(`pogo-provider-onboarding\0${UID_DIGEST_VERSION}\0${uid}`));
+    return Array.from(new Uint8Array(digest),byte=>byte.toString(16).padStart(2,'0')).join('');
+  }
+  function createProviderOnboardingModel({authoritySnapshot,checkHandle,createAccount,reconcileAccount,normalizeProfile,
+    storage=global.localStorage,storageKey=STORAGE_KEY,crypto=global.crypto}={}){
+    if(typeof authoritySnapshot!=='function'||typeof checkHandle!=='function'||!storage||
+      typeof storage.getItem!=='function'||typeof storage.setItem!=='function'){
+      throw new TypeError('Provider onboarding dependencies are incomplete');
+    }
+    let binding=null,profile=null,profileInvalid=false,state=Object.freeze({status:'idle',providerKey:'',handle:'',code:''});
+    function normalizedProfile(value){
+      const result=typeof normalizeProfile==='function'?normalizeProfile(value):null;
+      const normalized=typeof normalizeProfile==='function'?(result?.ok===true?result.value:null):normalizeOnboardingProfile(value);
+      if(!normalized)throw failure('provider-onboarding/profile-invalid','ready-to-create');
+      return Object.freeze({...normalized});
+    }
+    function persisted(){
+      let value=null;try{value=JSON.parse(storage.getItem(storageKey)||'null');}catch{}
+      return exactFields(value,PERSISTED_FIELDS)&&value.schemaVersion===2&&value.uidDigestVersion===UID_DIGEST_VERSION&&/^[a-f0-9]{64}$/.test(value.uidDigest||'')&&STATES.includes(value.status)&&
+        /^auth-[1-9][0-9]{0,9}$/.test(value.lifecycleId||'')&&
+        typeof value.providerKey==='string'&&typeof value.handle==='string'&&typeof value.code==='string'?value:null;
+    }
+    function save(next){
+      state=Object.freeze({...next});
+      if(binding&&state.status!=='idle'){
+        try{storage.setItem(storageKey,JSON.stringify({schemaVersion:2,uidDigestVersion:UID_DIGEST_VERSION,uidDigest:binding.uidDigest,lifecycleId:binding.lifecycleId,
+          providerKey:state.providerKey,status:state.status,handle:state.handle,code:state.code}));}catch{}
+      }
+      return state;
+    }
+    function clear(){try{storage.removeItem(storageKey);}catch{}}
+    function requireCurrent(){
+      const current=authority(authoritySnapshot());
+      if(!authorityCurrent(binding,current))throw failure('provider-onboarding/auth-lifecycle-changed','canceled');
+      return current;
+    }
+    async function begin({providerKey='google'}={}){
+      const initial=authority(authoritySnapshot()),uidDigest=await digestUid(initial.uid,crypto),current=authority(authoritySnapshot());
+      if(!authorityCurrent(initial,current))throw failure('provider-onboarding/auth-lifecycle-changed','canceled');
+      binding=Object.freeze({...current,uidDigest});profile=null;profileInvalid=false;
+      const key=String(providerKey||''),prior=persisted();
+      if(prior&&prior.uidDigest===binding.uidDigest&&prior.lifecycleId===binding.lifecycleId&&prior.providerKey===key){
+        const status=['creating','verifying','ambiguous-result'].includes(prior.status)?'ambiguous-result':
+          prior.status==='account-ready'?'checking-account':prior.status;
+        return save({status,providerKey:key,handle:prior.handle,code:status==='ambiguous-result'?'provider-onboarding/ambiguous-result':prior.code});
+      }
+      clear();return save({status:'checking-account',providerKey:key,handle:'',code:''});
     }
     function resolveAccount(result={}){
       requireCurrent();
-      if(result.status==='existing'&&result.username)return set({status:'existing-account',providerKey:state.providerKey,handle:String(result.username),code:''});
-      if(result.status==='unlinked')return set({status:'choose-handle',providerKey:state.providerKey,handle:'',code:''});
-      throw failure('provider-onboarding/account-resolution-invalid');
+      if(result.status==='existing'&&(result.foundation?.canonicalTrainerName||result.username)){
+        clear();return save({status:'account-ready',providerKey:state.providerKey,
+          handle:String(result.foundation?.canonicalTrainerName||result.username),code:'',foundation:result.foundation||null});
+      }
+      if(['missing','unlinked'].includes(result.status))return save({status:'onboarding-required',providerKey:state.providerKey,handle:state.handle,code:''});
+      throw failure('provider-onboarding/account-resolution-invalid','blocked-conflict');
+    }
+    function startHandleChoice(){
+      requireCurrent();
+      if(!['onboarding-required','handle-unavailable','retryable-failure','choosing-handle'].includes(state.status))throw failure('provider-onboarding/state-invalid');
+      return save({status:'choosing-handle',providerKey:state.providerKey,handle:state.handle,code:''});
     }
     async function chooseHandle(rawHandle){
-      requireCurrent();const handle=cleanHandle(rawHandle),result=await checkHandle(handle,binding);
       requireCurrent();
-      if(result?.available!==true)return set({status:'blocked',providerKey:state.providerKey,handle,code:String(result?.code||'provider-onboarding/handle-unavailable')});
-      return set({status:'confirm-profile',providerKey:state.providerKey,handle,code:''});
+      if(!['choosing-handle','handle-unavailable','retryable-failure'].includes(state.status))throw failure('provider-onboarding/state-invalid');
+      const handle=cleanHandle(rawHandle);save({status:'checking-availability',providerKey:state.providerKey,handle,code:''});
+      let result;
+      try{result=await checkHandle(handle,binding);}catch(error){
+        requireCurrent();return save({status:'retryable-failure',providerKey:state.providerKey,handle,
+          code:String(error?.code||'provider-onboarding/availability-failed')});
+      }
+      requireCurrent();
+      if(result?.available!==true)return save({status:'handle-unavailable',providerKey:state.providerKey,handle,
+        code:String(result?.code||'provider-onboarding/handle-unavailable')});
+      return save({status:'ready-to-create',providerKey:state.providerKey,handle,code:''});
     }
     function confirmProfile({friendCode='',avatarPokemon='',bio=''}={}){
-      requireCurrent();
-      if(state.status!=='confirm-profile')throw failure('provider-onboarding/state-invalid');
-      const profile=Object.freeze({friendCode:String(friendCode||'').trim(),avatarPokemon:String(avatarPokemon||'').trim(),bio:String(bio||'').trim()});
-      state=Object.freeze({...state,status:'ready-to-create',profile});return state;
+      requireCurrent();if(state.status!=='ready-to-create')throw failure('provider-onboarding/state-invalid');
+      profile=null;profileInvalid=true;
+      profile=normalizedProfile({friendCode,avatarPokemon,bio,discord:''});profileInvalid=false;
+      return state;
+    }
+    function classifyCreationFailure(error){
+      const code=String(error?.code||'provider-onboarding/creation-failed'),kind=String(error?.state||'');
+      if(kind==='ambiguous'||/ambiguous|pending-reconciliation/.test(code))return['ambiguous-result','provider-onboarding/ambiguous-result'];
+      if(kind==='handle-unavailable'||/handle-(?:conflict|unavailable)/.test(code))return['handle-unavailable',code];
+      if(kind==='retryable'||/timeout|network|unavailable|app-check/.test(code))return['retryable-failure',code];
+      return['blocked-conflict',code];
+    }
+    function exactCreatedFoundation(result){
+      const foundation=result?.foundation;
+      return result?.status==='account-ready'&&foundation?.status==='active'&&foundation.identityKind==='provider_only'&&
+        foundation.legacyAccessConfigured===false&&foundation.legacyUsername===null&&
+        foundation.canonicalTrainerName===state.handle;
+    }
+    async function finishCreation(work,initialProfile=null){
+      requireCurrent();save({...state,status:'creating',code:''});
+      let result;
+      try{result=await work();requireCurrent();}
+      catch(error){
+        requireCurrent();const[status,code]=classifyCreationFailure(error);save({...state,status,code});throw error;
+      }
+      save({...state,status:'verifying',code:''});
+      if(!exactCreatedFoundation(result)){
+        const error=failure('provider-onboarding/creation-result-invalid','blocked-conflict');
+        save({...state,status:'blocked-conflict',code:error.code});throw error;
+      }
+      clear();return save({...state,status:'account-ready',code:'',foundation:result.foundation,
+        ...(initialProfile?{initialProfile}: {})});
     }
     async function create(){
       requireCurrent();
       if(state.status!=='ready-to-create'||typeof createAccount!=='function')throw failure('provider-onboarding/creation-unavailable');
-      set({...state,status:'creating'});
-      const result=await createAccount(Object.freeze({uid:binding.uid,lifecycleId:binding.lifecycleId,providerKey:state.providerKey,handle:state.handle,profile:state.profile}));
-      requireCurrent();
-      if(result?.uid!==binding.uid||result?.handle!==state.handle)throw failure('provider-onboarding/creation-result-invalid');
-      return set({...state,status:'complete',code:''});
+      if(profileInvalid)throw failure('provider-onboarding/profile-invalid','ready-to-create');
+      const initialProfile=normalizedProfile(profile||{});
+      const input=Object.freeze({uid:binding.uid,lifecycleId:binding.lifecycleId,providerKey:state.providerKey,
+        handle:state.handle,profile:initialProfile});
+      return finishCreation(()=>createAccount(input),initialProfile);
     }
-    function cancel(){binding=null;return set({status:'canceled',providerKey:state.providerKey,handle:'',code:'provider-onboarding/canceled'});}
-    return Object.freeze({snapshot:()=>state,begin,resolveAccount,chooseHandle,confirmProfile,create,cancel});
+    async function reconcile(){
+      requireCurrent();
+      if(!['ambiguous-result','retryable-failure'].includes(state.status)||typeof reconcileAccount!=='function')throw failure('provider-onboarding/reconciliation-unavailable');
+      return finishCreation(()=>reconcileAccount(Object.freeze({uid:binding.uid,lifecycleId:binding.lifecycleId,
+        providerKey:state.providerKey,handle:state.handle})));
+    }
+    function cancel(){
+      const providerKey=state.providerKey;binding=null;profile=null;profileInvalid=false;clear();
+      state=Object.freeze({status:'canceled',providerKey,handle:'',code:'provider-onboarding/canceled'});return state;
+    }
+    return Object.freeze({snapshot:()=>state,begin,resolveAccount,startHandleChoice,chooseHandle,confirmProfile,create,reconcile,cancel});
   }
 
-  root.providerOnboardingModel=Object.freeze({STATES,HANDLE_PATTERN,cleanHandle,authority,authorityCurrent,createProviderOnboardingModel});
+  root.providerOnboardingModel=Object.freeze({
+    STATES,HANDLE_PATTERN,STORAGE_KEY,UID_DIGEST_VERSION,cleanHandle,normalizeOnboardingProfile,authority,authorityCurrent,digestUid,createProviderOnboardingModel
+  });
 })(window);

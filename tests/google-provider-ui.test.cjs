@@ -11,7 +11,7 @@ const releaseAssets=new Set([...worker.matchAll(/^\s+'([^']+)',?$/gm)].map(match
 
 test('ordinary production startup exposes no Google action or provider module',()=>{
   assert.match(html,/id="google-login-option" hidden/);
-  assert.match(html,/googleOption\.hidden=\!\(window\.__POGO_PROVIDER_LINKING_DEV__===true&&configured\.includes\('google'\)\)/);
+  assert.match(html,/googleOption\.hidden=!providerCapabilities\(\)\.googlePublicEntry/);
   const beforeTemplate=html.slice(0,html.indexOf('<template id="pogo-feature-assets">'));
   assert.equal(beforeTemplate.includes('googleAuthAdapter.js'),false);assert.equal(beforeTemplate.includes('providerOnboardingModel.js'),false);
   assert.match(html,/data-provider="google" hidden/);
@@ -27,7 +27,7 @@ test('public privacy notice is standalone and discloses the Google identity boun
 
 test('Google implementation modules are inventoried but omitted from the production shell cache',()=>{
   for(const file of['js/domain/providerOnboardingModel.js','js/services/googleAuthAdapter.js']){
-    assert.match(html,new RegExp(`${file.replaceAll('.','\\.')}[^>]+data-pogo-provider-development`));
+    assert.match(html,new RegExp(`${file.replaceAll('.','\\.')}[^>]+data-pogo-provider-capability`));
     assert.ok(inventory.scriptFiles.includes(file));assert.ok(inventory.developmentOnlyScriptFiles.includes(file));assert.equal(releaseAssets.has(file),false);
   }
 });

@@ -20,22 +20,23 @@ test('production Connected Accounts exposes username and PIN while providers sta
   assert.match(panel,/data-provider="google" hidden[\s\S]*data-provider-action[^>]+onclick="handleGoogleAccountAction\(\)" hidden/);
 });
 
-test('provider implementation stays in the development-only lazy feature graph',()=>{
-  const files=['js/domain/authProviderRegistry.js','js/domain/providerContinuationState.js','js/domain/accountLinkingModel.js','js/domain/accountLinkingController.js','js/domain/providerOnboardingModel.js','js/services/googleAuthAdapter.js'];
+test('provider implementation stays in the capability-gated lazy feature graph',()=>{
+  const files=['js/domain/authProviderRegistry.js','js/domain/providerContinuationState.js','js/domain/accountLinkingModel.js','js/domain/accountLinkingController.js','js/domain/providerOnboardingModel.js','js/services/googleAuthAdapter.js','js/services/providerAccountFoundation.js'];
   const template=html.slice(html.indexOf('<template id="pogo-feature-assets">'),html.indexOf('</template>'));
-  for(const file of files){assert.match(template,new RegExp(`${file.replace(/[.]/g,'\\.')}[^>]+data-pogo-provider-development`));assert.ok(inventory.scriptFiles.includes(file));assert.ok(inventory.developmentOnlyScriptFiles.includes(file));assert.equal(releaseAssets.has(file),false);}
+  for(const file of files){assert.match(template,new RegExp(`${file.replace(/[.]/g,'\\.')}[^>]+data-pogo-provider-capability`));assert.ok(inventory.scriptFiles.includes(file));assert.ok(inventory.developmentOnlyScriptFiles.includes(file));assert.equal(releaseAssets.has(file),false);}
   const preTemplate=html.slice(0,html.indexOf('<template id="pogo-feature-assets">'));
   for(const file of files)assert.equal(preTemplate.includes(file),false,file);
-  assert.match(html,/node\.hasAttribute\('data-pogo-provider-development'\)&&window\.__POGO_PROVIDER_LINKING_DEV__!==true/);
-  assert.match(application,/if\(PROVIDER_LINKING_DEVELOPMENT_ENABLED&&\(!authProviderRegistryDomain/);
-  assert.match(application,/providerLinkingRegistry=PROVIDER_LINKING_DEVELOPMENT_ENABLED\?/);
+  assert.match(html,/node\.hasAttribute\('data-pogo-provider-capability'\)&&!providerModulesRequired\(\)/);
+  assert.match(application,/if\(PROVIDER_MODULES_ENABLED&&\(!authProviderRegistryDomain/);
+  assert.match(application,/providerLinkingRegistry=PROVIDER_MODULES_ENABLED\?/);
 });
 
-test('development flag and configured-provider gate control Google actions',()=>{
-  assert.match(application,/window\.__POGO_PROVIDER_LINKING_DEV__===true/);
-  assert.match(application,/configuredProviders:Array\.isArray\(window\.__POGO_PROVIDER_LINKING_CONFIGURED__/);
+test('independent capability policy controls Google actions',()=>{
+  assert.match(application,/resolveProviderCapabilities/);
+  assert.match(application,/PROVIDER_CAPABILITIES\.googleExistingAccountLinking/);
+  assert.match(application,/PROVIDER_CAPABILITIES\.providerAccountCreation/);
   const registry=read('js/domain/authProviderRegistry.js'),adapter=read('js/services/googleAuthAdapter.js');
-  assert.match(registry,/actionable:available/);assert.match(adapter,/linkWithPopup\(user,googleProvider\(\)\)/);assert.match(html,/configured\.includes\('google'\)/);
+  assert.match(registry,/actionable:available/);assert.match(adapter,/linkWithPopup\(user,googleProvider\(\)\)/);assert.match(html,/providerCapabilities\(\)\.googlePublicEntry/);
   assert.doesNotMatch(adapter,/linkWithRedirect|signInWithRedirect/);
 });
 

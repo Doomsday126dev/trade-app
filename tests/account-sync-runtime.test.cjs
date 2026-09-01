@@ -27,8 +27,8 @@ function source(deviceInstallId,{remote={},local={},remoteBoard={lf:[],ft:[]},lo
 }
 
 function runtimeRepository(window,h,{orders={}}={}){
-  let meta=null;const migrations={},recoveryCandidates={},recoveryReviewAcceptances={},listeners=new Set(),events=[],calls={createMigration:0,createRecoveryCandidate:0,readRecoveryReviewAcceptance:0,createRecoveryReviewAcceptance:0,updateMeta:0,readAccount:0};
-  const snapshot=()=>({...h.server.snapshot(),...(meta?{meta}:{}),migrations:{...migrations},recoveryCandidates:{...recoveryCandidates}});
+  let meta=null,profile=null;const migrations={},recoveryCandidates={},recoveryReviewAcceptances={},listeners=new Set(),events=[],calls={createMigration:0,createRecoveryCandidate:0,readRecoveryReviewAcceptance:0,createRecoveryReviewAcceptance:0,updateMeta:0,writeProfile:0,readAccount:0};
+  const snapshot=()=>({...h.server.snapshot(),...(meta?{meta}:{}),...(profile?{profile}:{}),migrations:{...migrations},recoveryCandidates:{...recoveryCandidates}});
   function publish(value=snapshot()){for(const listener of listeners)listener.onData(value);}
   function failListener(error=new Error('listener failed')){for(const listener of listeners)listener.onError?.(error);}
   function publishDirect(method){
@@ -43,6 +43,7 @@ function runtimeRepository(window,h,{orders={}}={}){
     ...h.server,ownerUid:'uid-owner',
     listenAccount(handlers){listeners.add(handlers);const unsubscribe=h.server.listenAccount({onData:()=>handlers.onData(snapshot()),onError:handlers.onError});return()=>{listeners.delete(handlers);unsubscribe();};},
     async readAccount(){calls.readAccount++;events.push('readAccount');return snapshot();},
+    async readProfile(){return profile;},
     async createMigration(record){calls.createMigration++;events.push('createMigration');if(migrations[record.deviceMigrationId])return window.PogoDomain.accountSyncModel.failure('account-sync/migration-exists','exists');migrations[record.deviceMigrationId]=record;publishDirect('createMigration');return{ok:true,status:'created',value:record};},
     async createRecoveryCandidate(record){calls.createRecoveryCandidate++;events.push('createRecoveryCandidate');if(recoveryCandidates[record.candidateId])return window.PogoDomain.accountSyncModel.failure('account-sync/recovery-candidate-exists','exists');recoveryCandidates[record.candidateId]=record;publishDirect('createRecoveryCandidate');return{ok:true,status:'created',value:record};},
     async readRecoveryReviewAcceptance(record){
@@ -59,9 +60,17 @@ function runtimeRepository(window,h,{orders={}}={}){
       calls.updateMeta++;events.push('updateMeta');if(meta&&patch.initializedAt!==meta.initializedAt)return window.PogoDomain.accountSyncModel.failure('account-sync/meta-conflict','initializedAt changed');
       const timestamp=h.clock();meta={...(meta||{}),...patch,ownerUid:'uid-owner',schemaVersion:window.PogoDomain.accountSyncModel.SCHEMA_VERSION,initializedAt:meta?.initializedAt??timestamp,updatedAt:timestamp};
       publishDirect('updateMeta');return{ok:true,status:'updated',value:meta};
+    },
+    async writeProfile(values,{baseRevision=0}={}){
+      calls.writeProfile++;events.push('writeProfile');const model=window.PogoDomain.accountSyncModel,normalized=model.normalizeProfileValues(values);
+      if(!normalized.ok)return normalized;
+      if(profile&&model.canonicalJson(model.profileValues(profile))===model.canonicalJson(normalized.value))return{ok:true,status:'idempotent',value:profile};
+      if((profile?.revision||0)!==baseRevision)return model.failure('account-sync/profile-conflict','conflict');
+      const timestamp=h.clock();profile={schemaVersion:model.SCHEMA_VERSION,ownerUid:'uid-owner',...normalized.value,revision:(profile?.revision||0)+1,createdAt:profile?.createdAt??timestamp,lastUpdated:timestamp};
+      publishDirect('writeProfile');return{ok:true,status:'updated',value:profile};
     }
   };
-  return{repository,get meta(){return meta;},migrations,recoveryCandidates,recoveryReviewAcceptances,calls,events,publish,failListener,snapshot};
+  return{repository,get meta(){return meta;},get profile(){return profile;},set profile(value){profile=value;},migrations,recoveryCandidates,recoveryReviewAcceptances,calls,events,publish,failListener,snapshot};
 }
 
 function createRuntime(window,h,repositoryState,journalState,readMigrationSources,onCanonicalEntities=()=>{},onState=()=>{},onPublicProjection=async()=>({ok:true}),options={}){
@@ -128,6 +137,168 @@ function installDirectWriteBehavior(method,behavior,{repositoryState,original}){
   else if(behavior==='malformed-listener')repository[method]=async value=>{const result=await original(value);repositoryState.publish({unexpected:{private:'invalid'}});return result;};
   else throw new Error(`unknown direct write behavior: ${behavior}`);
 }
+
+test('provider-only account initializes an empty UID partition without reading or writing legacy migration evidence',async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto});
+  const repositoryState=runtimeRepository(window,h),journalState=h.createMemoryJournalState(),published=[];let legacyReads=0;
+  const runtime=createRuntime(window,h,repositoryState,journalState,async()=>{legacyReads++;throw new Error('must not read legacy');},
+    ()=>{},()=>{},async(rows,operation)=>{published.push({rows,operation});return{ok:true};},{initializationKind:'provider-only'});
+  const result=await runtime.start();
+  assert.equal(result.ok,true);assert.equal(result.plan.initializationKind,'provider-only');assert.equal(result.plan.resumed,false);
+  assert.equal(legacyReads,0);assert.equal(repositoryState.calls.updateMeta,1);assert.equal(repositoryState.calls.createMigration,0);
+  assert.equal(repositoryState.calls.createRecoveryCandidate,0);assert.equal(journalState.meta.has('migration-complete'),false);
+  assert.equal(repositoryState.meta.initialized,true);assert.equal(repositoryState.calls.writeProfile,1);assert.equal(repositoryState.profile.friendCode,'');
+  assert.equal(journalState.meta.has('provider-profile-pending-v1'),false);assert.equal(runtime.profileReady,true);assert.equal(runtime.projectionReady,true);
+  assert.equal(published.length,1);assert.equal(published[0].rows.length,0);assert.equal(published[0].operation.kind,'provider-account-initialized');
+});
+
+test('provider-only restart resumes exact metadata without duplicate initialization or migration',async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto});
+  const repositoryState=runtimeRepository(window,h),firstState=h.createMemoryJournalState(),secondState=h.createMemoryJournalState();
+  const first=createRuntime(window,h,repositoryState,firstState,undefined,()=>{},()=>{},async()=>({ok:true}),{initializationKind:'provider-only'});
+  await first.start();await first.stop();
+  const second=createRuntime(window,h,repositoryState,secondState,undefined,()=>{},()=>{},async()=>({ok:true}),{initializationKind:'provider-only'});
+  const result=await second.start();
+  assert.equal(result.plan.resumed,true);assert.equal(repositoryState.calls.updateMeta,1);assert.equal(repositoryState.calls.writeProfile,1);
+  assert.equal(repositoryState.calls.createMigration,0);assert.equal(Object.keys(repositoryState.migrations).length,0);
+});
+
+test('provider onboarding persists the submitted friend code before publication becomes ready',async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),repositoryState=runtimeRepository(window,h),journalState=h.createMemoryJournalState(),profiles=[],publications=[];
+  let releaseWrite,enteredWrite;const entered=new Promise(resolve=>{enteredWrite=resolve;}),gate=new Promise(resolve=>{releaseWrite=resolve;}),original=repositoryState.repository.writeProfile.bind(repositoryState.repository);
+  repositoryState.repository.writeProfile=async(...args)=>{enteredWrite();await gate;return original(...args);};
+  const runtime=createRuntime(window,h,repositoryState,journalState,undefined,()=>{},()=>{},async rows=>{publications.push(rows);return{ok:true};},{
+    initializationKind:'provider-only',initialProviderProfile:{friendCode:'000011112222'},onProviderProfile:value=>{profiles.push(value);return true;}
+  });
+  const starting=runtime.start();await entered;
+  assert.equal(runtime.profileReady,false);assert.equal(runtime.projectionReady,false);assert.equal(publications.length,0);
+  releaseWrite();const result=await starting;
+  assert.equal(result.ok,true);assert.equal(repositoryState.profile.friendCode,'0000 1111 2222');assert.equal(runtime.providerProfile.friendCode,'0000 1111 2222');
+  assert.equal(runtime.profileReady,true);assert.equal(runtime.projectionReady,true);assert.equal(publications.length,1);assert.equal(profiles.at(-1).pending,false);
+});
+
+test('identity committed before any profile journal can recover on a clean device with an empty canonical profile',async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),repositoryState=runtimeRepository(window,h),cleanState=h.createMemoryJournalState(),profiles=[];
+  const runtime=createRuntime(window,h,repositoryState,cleanState,undefined,()=>{},()=>{},async()=>({ok:true}),{
+    initializationKind:'provider-only',onProviderProfile:value=>{profiles.push(value);return true;}
+  });
+  const result=await runtime.start();
+  assert.equal(result.ok,true);assert.equal(repositoryState.profile.friendCode,'');assert.equal(repositoryState.profile.bio,'');
+  assert.equal(cleanState.meta.has('provider-profile-pending-v1'),false);assert.equal(profiles.at(-1).pending,false);
+});
+
+test('committed provider profile with a lost network response reconciles and clears its owner journal',async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),repositoryState=runtimeRepository(window,h),journalState=h.createMemoryJournalState();
+  const runtime=createRuntime(window,h,repositoryState,journalState,undefined,()=>{},()=>{},async()=>({ok:true}),{initializationKind:'provider-only'});
+  await runtime.start();const original=repositoryState.repository.writeProfile.bind(repositoryState.repository);
+  repositoryState.repository.writeProfile=async(...args)=>{await original(...args);throw Object.assign(new Error('response lost'),{code:'account-sync/network-failed'});};
+  const result=await runtime.updateProviderProfile({bio:'Committed before response loss'});
+  assert.equal(result.ok,true);assert.equal(repositoryState.profile.bio,'Committed before response loss');
+  assert.equal(journalState.meta.has('provider-profile-pending-v1'),false);assert.equal(runtime.providerProfile.revision,2);
+});
+
+test('clean second device canonical profile wins over a first device stale local journal without a retry loop',async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),repositoryState=runtimeRepository(window,h),firstState=h.createMemoryJournalState();
+  const first=createRuntime(window,h,repositoryState,firstState,undefined,()=>{},()=>{},async()=>({ok:true}),{initializationKind:'provider-only'});
+  await first.start();const original=repositoryState.repository.writeProfile.bind(repositoryState.repository);
+  repositoryState.repository.writeProfile=async()=>{throw Object.assign(new Error('first device offline'),{code:'account-sync/network-failed'});};
+  const pending=await first.updateProviderProfile({bio:'First device pending'});
+  assert.equal(pending.ok,false);assert.equal(firstState.meta.has('provider-profile-pending-v1'),true);await first.stop();
+
+  repositoryState.repository.writeProfile=original;
+  const secondState=h.createMemoryJournalState(),second=createRuntime(window,h,repositoryState,secondState,undefined,()=>{},()=>{},async()=>({ok:true}),{initializationKind:'provider-only'});
+  await second.start();const secondEdit=await second.updateProviderProfile({bio:'Second device canonical'});
+  assert.equal(secondEdit.ok,true);assert.equal(repositoryState.profile.revision,2);await second.stop();
+
+  const resolutions=[],writesBefore=repositoryState.calls.writeProfile;
+  const reopened=createRuntime(window,h,repositoryState,firstState,undefined,()=>{},()=>{},async()=>({ok:true}),{
+    initializationKind:'provider-only',onProviderProfile:value=>{resolutions.push(value.resolution||'');return true;}
+  });
+  const recovered=await reopened.start();
+  assert.equal(recovered.ok,true);assert.equal(reopened.providerProfile.bio,'Second device canonical');
+  assert.equal(resolutions.includes('canonical-won'),true);assert.equal(firstState.meta.has('provider-profile-pending-v1'),false);
+  assert.equal(repositoryState.calls.writeProfile,writesBefore);
+  assert.equal((await reopened.retryProviderProfile()).status,'unchanged');assert.equal(repositoryState.calls.writeProfile,writesBefore);
+});
+
+test('provider profile edits hydrate on a clean sign-in restart without legacy migration writes',async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),repositoryState=runtimeRepository(window,h),firstState=h.createMemoryJournalState(),firstProfiles=[];
+  const first=createRuntime(window,h,repositoryState,firstState,undefined,()=>{},()=>{},async()=>({ok:true}),{
+    initializationKind:'provider-only',initialProviderProfile:{friendCode:'000011112222'},onProviderProfile:value=>{firstProfiles.push(value);return true;}
+  });
+  await first.start();const edited=await first.updateProviderProfile({bio:'Available evenings',discord:'trainer.126',avatarPokemon:'pokemon:150:base'});
+  assert.equal(edited.ok,true);assert.equal(repositoryState.profile.revision,2);assert.equal(repositoryState.profile.bio,'Available evenings');assert.equal(firstState.meta.has('provider-profile-pending-v1'),false);
+  await first.stop();
+
+  const cleanState=h.createMemoryJournalState(),restored=[];
+  const second=createRuntime(window,h,repositoryState,cleanState,undefined,()=>{},()=>{},async()=>({ok:true}),{
+    initializationKind:'provider-only',onProviderProfile:value=>{restored.push(value);return true;}
+  });
+  const resumed=await second.start();
+  assert.equal(resumed.ok,true);assert.equal(second.providerProfile.friendCode,'0000 1111 2222');assert.equal(second.providerProfile.bio,'Available evenings');assert.equal(second.providerProfile.discord,'trainer.126');
+  assert.equal(restored.at(-1).avatarPokemon,'pokemon:150:base');assert.equal(repositoryState.calls.writeProfile,2);assert.equal(repositoryState.calls.createMigration,0);
+});
+
+test('provider-only restart accepts legitimate canonical entries after exact initialization',async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),repositoryState=runtimeRepository(window,h),journalState=h.createMemoryJournalState(),publications=[];
+  const first=createRuntime(window,h,repositoryState,journalState,undefined,()=>{},()=>{},async rows=>{publications.push(rows);return{ok:true,status:'published'};},{
+    initializationKind:'provider-only',initialProviderProfile:{friendCode:'000011112222'}
+  });
+  await first.start();
+  const identity={surface:'my-list',lane:'wishlist',catalogId:'pokemon:pikachu'},entityId=window.PogoDomain.accountSyncModel.tradeEntryId(identity);
+  const queued=await first.controller.addEntity({entityType:'tradeEntry',entityId,identity,values:{priority:'H'}});
+  assert.equal(queued.ok,true);await first.controller.drain();assert.equal(h.server.entities.size,1);await first.stop();
+
+  const restarted=createRuntime(window,h,repositoryState,journalState,undefined,()=>{},()=>{},async rows=>{publications.push(rows);return{ok:true,status:'published'};},{initializationKind:'provider-only'});
+  const result=await restarted.start();
+  assert.equal(result.ok,true);assert.equal(restarted.projectionReady,true);assert.equal(restarted.controller.activeEntities('tradeEntry').length,1);
+  assert.equal(repositoryState.calls.updateMeta,1);assert.ok(publications.length>=3);await restarted.stop();
+});
+
+test('a transient provider profile edit remains durable and retries once after PWA restart',async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),repositoryState=runtimeRepository(window,h),journalState=h.createMemoryJournalState();
+  const first=createRuntime(window,h,repositoryState,journalState,undefined,()=>{},()=>{},async()=>({ok:true}),{initializationKind:'provider-only'});
+  await first.start();const original=repositoryState.repository.writeProfile.bind(repositoryState.repository);let failedCalls=0;
+  repositoryState.repository.writeProfile=async()=>{failedCalls++;throw Object.assign(new Error('temporary network failure'),{code:'account-sync/network-failed'});};
+  const pending=await first.updateProviderProfile({bio:'Retry after restart'});
+  assert.equal(pending.ok,false);assert.equal(pending.error.code,'account-sync/profile-pending');assert.equal(failedCalls,1);assert.equal(journalState.meta.has('provider-profile-pending-v1'),true);assert.equal(repositoryState.profile.bio,'');
+  await first.stop();repositoryState.repository.writeProfile=original;
+
+  const reopened=createRuntime(window,h,repositoryState,journalState,undefined,()=>{},()=>{},async()=>({ok:true}),{initializationKind:'provider-only'});
+  const result=await reopened.start();
+  assert.equal(result.ok,true);assert.equal(repositoryState.profile.bio,'Retry after restart');assert.equal(repositoryState.profile.revision,2);assert.equal(journalState.meta.has('provider-profile-pending-v1'),false);assert.equal(repositoryState.calls.writeProfile,2);
+});
+
+test('provider-only initialization rejects partial canonical entities and never publishes them',async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto});
+  const operation=await window.PogoDomain.accountSyncModel.createOperation({ownerUid:'uid-owner',entityType:'tag',entityId:'tag_partial',
+    kind:'add',baseGeneration:0,generation:1,baseFieldRevisions:{label:0},patch:{label:'stale'},
+    identity:{tagId:'tag_partial'},clientAt:h.clock()},{crypto:webcrypto});
+  assert.equal(operation.ok,true);await h.server.applyOperation(operation.value);
+  const repositoryState=runtimeRepository(window,h),journalState=h.createMemoryJournalState();let publications=0;
+  const runtime=createRuntime(window,h,repositoryState,journalState,undefined,()=>{},()=>{},async()=>{publications++;return{ok:true};},{initializationKind:'provider-only'});
+  await assert.rejects(runtime.start(),error=>error.code==='account-sync/provider-initialization-conflict');
+  assert.equal(repositoryState.calls.updateMeta,0);assert.equal(publications,0);assert.equal(runtime.projectionReady,false);
+});
+
+test('provider-only initialization cannot reactivate a retained legacy migration marker',async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto});
+  const repositoryState=runtimeRepository(window,h),journalState=h.createMemoryJournalState();
+  journalState.meta.set('migration-complete',{schemaVersion:1,ownerUid:'uid-owner',verified:true,legacyRetained:true});
+  const runtime=createRuntime(window,h,repositoryState,journalState,undefined,()=>{},()=>{},async()=>({ok:true}),{initializationKind:'provider-only'});
+  await assert.rejects(runtime.start(),error=>error.code==='account-sync/provider-initialization-conflict');
+  assert.equal(repositoryState.calls.updateMeta,0);assert.equal(repositoryState.calls.createMigration,0);
+});
+
+test('provider-only initialization accepts an exact committed metadata write after a lost response without resending',async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto});
+  const repositoryState=runtimeRepository(window,h),journalState=h.createMemoryJournalState();
+  const original=repositoryState.repository.updateMeta.bind(repositoryState.repository);
+  repositoryState.repository.updateMeta=async value=>{await original(value);throw Object.assign(new Error('response lost'),{code:'account-sync/network-failed'});};
+  const runtime=createRuntime(window,h,repositoryState,journalState,undefined,()=>{},()=>{},async()=>({ok:true}),{initializationKind:'provider-only'});
+  const result=await runtime.start();
+  assert.equal(result.ok,true);assert.equal(repositoryState.calls.updateMeta,1);assert.equal(runtime.projectionReady,true);
+});
 
 test('first migration awaits every seed and a stale pre-sync second device cannot overwrite canonical state',async()=>{
   const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),repositoryState=runtimeRepository(window,h),firstState=h.createMemoryJournalState(),projections=[];

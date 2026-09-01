@@ -19,6 +19,31 @@ function load(){
 function identity(window,catalogId,lane='wishlist',surface='my-list'){
   const value={surface,lane,catalogId};return{entityType:'tradeEntry',entityId:window.PogoDomain.accountSyncModel.tradeEntryId(value),identity:value};
 }
+
+test('provider profiles normalize only the exact bounded UID-rooted value contract',()=>{
+  const window=load(),model=window.PogoDomain.accountSyncModel;
+  const normalized=model.normalizeProfileValues({friendCode:'000011112222',bio:'  Available downtown  ',discord:'trainer.126',avatarPokemon:'pokemon:150:base'});
+  assert.equal(normalized.ok,true);
+  assert.deepEqual(JSON.parse(JSON.stringify(normalized.value)),{friendCode:'0000 1111 2222',bio:'Available downtown',discord:'trainer.126',avatarPokemon:'pokemon:150:base'});
+  assert.equal(model.normalizeProfileValues({friendCode:'0000 1111 2222',privateNote:'no'}).error.code,'account-sync/profile-invalid');
+  assert.equal(model.normalizeProfileValues({bio:'line one\nline two'}).error.code,'account-sync/profile-invalid');
+  assert.equal(model.normalizeProfileValues({bio:`safe\u202Ehidden`}).error.code,'account-sync/profile-invalid');
+  assert.equal(model.normalizeProfileValues({friendCode:'1234 5678'}).error.code,'account-sync/profile-invalid');
+});
+
+test('provider profile records require exact ownership fields timestamps and monotonic revision metadata',()=>{
+  const window=load(),model=window.PogoDomain.accountSyncModel,record={
+    schemaVersion:1,ownerUid:'uid-owner',friendCode:'0000 1111 2222',bio:'Available',discord:'',avatarPokemon:'pokemon:150:base',revision:2,createdAt:100,lastUpdated:101
+  };
+  assert.equal(model.validateProfileRecord(record,{ownerUid:'uid-owner'}).ok,true);
+  for(const malformed of [
+    {...record,ownerUid:'uid-other'},
+    {...record,revision:0},
+    {...record,lastUpdated:99},
+    {...record,privateNote:'no'},
+    {...record,bio:'x'.repeat(121)}
+  ])assert.equal(model.validateProfileRecord(malformed,{ownerUid:'uid-owner'}).error.code,'account-sync/profile-invalid');
+});
 async function add(device,window,catalogId,values={},lane='wishlist',surface='my-list'){
   return device.controller.addEntity({...identity(window,catalogId,lane,surface),values:{priority:'H',variant:'',gender:'',lucky:false,xxl:false,xxs:false,shiny:false,backgroundId:'',sortOrder:0,quantity:1,note:'',mirror:false,...values}});
 }
