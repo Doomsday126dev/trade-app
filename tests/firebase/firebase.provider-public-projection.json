@@ -1,0 +1,9 @@
+{
+  "database": { "rules": "database.rules.provider-public-projection.json" },
+  "emulators": {
+    "auth": { "port": 9309 },
+    "database": { "port": 9210 },
+    "ui": { "enabled": false },
+    "singleProjectMode": true
+  }
+}

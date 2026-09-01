@@ -1,5 +1,7 @@
 'use strict';
 
+const { normalizeHandle } = require('./handleNormalization');
+
 const RATE_LIMIT_OPERATIONS = new Set([
   'readAccountFoundation',
   'createProviderAccountFoundation',
@@ -309,6 +311,29 @@ function createFirestoreE1AuthorityAdapter({ firestore, now = () => Date.now() }
     });
   }
 
+  async function readPublicShareIdentity(input) {
+    const handle = await handleRef(input.handleKey).get();
+    if (!handle.exists) return null;
+    const handleData = handle.data();
+    const uid = handleData?.uid;
+    let canonicalHandle;
+    try { canonicalHandle = normalizeHandle(handleData?.canonicalTrainerName); }
+    catch { fail('e1/public-identity-conflict'); }
+    if (handleData?.schemaVersion !== 1 || typeof uid !== 'string' || !uid || uid.includes('/') ||
+        canonicalHandle.handleKey !== input.handleKey || canonicalHandle.normalized !== input.normalizedTrainerName ||
+        handleData.normalizedTrainerName !== input.normalizedTrainerName ||
+        handleData.state !== 'active' || handleData.revision !== 1) fail('e1/public-identity-conflict');
+    const account = await accountRef(uid).get();
+    if (!account.exists) fail('e1/public-identity-conflict');
+    const accountData = account.data();
+    if (accountData?.schemaVersion !== 1 || accountData.uid !== uid || accountData.handleKey !== input.handleKey ||
+        accountData.canonicalTrainerName !== canonicalHandle.display ||
+        accountData.normalizedTrainerName !== input.normalizedTrainerName || accountData.status !== 'active') {
+      fail('e1/public-identity-conflict');
+    }
+    return Object.freeze({ ownerUid: uid, canonicalTrainerName: canonicalHandle.display });
+  }
+
   async function createProviderAccountFoundation(input, { replayOnly = false } = {}) {
     return firestore.runTransaction(async (transaction) => {
       const refs = [
@@ -479,6 +504,7 @@ function createFirestoreE1AuthorityAdapter({ firestore, now = () => Date.now() }
     freezeIdentityConflict,
     operationRequestExists,
     readAccountFoundation,
+    readPublicShareIdentity,
     readProviderAccountFoundation,
     repairAccountFoundation,
     reserveTrainerHandle

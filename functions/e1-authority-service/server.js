@@ -15,6 +15,8 @@ const {
 const { validateTarget } = require('./e1TargetContracts');
 const { HandleValidationError, normalizeHandle } = require('./handleNormalization');
 const { createVerifiedLegacyMappingReader, validatedTarget } = require('./rtdbVerifiedLegacyMappingReader');
+const { createPublicTrainerShareReader } = require('./rtdbPublicTrainerShareReader');
+const { sanitizeProviderPublicProjection } = require('./providerPublicProjection');
 const {
   attemptHash: groupEAdmissionAttemptHash,
   responseBinding: groupEAdmissionResponseBinding,
@@ -24,13 +26,20 @@ const {
 
 const GATES = Object.freeze([
   'READ_ACCOUNT_FOUNDATION_ENABLED',
+  'READ_PROVIDER_PUBLIC_SHARE_ENABLED',
   'CREATE_PROVIDER_ACCOUNT_ENABLED',
   'RESERVE_HANDLE_ENABLED',
   'REPAIR_FOUNDATION_ENABLED',
   'APPLY_MIGRATION_ENABLED',
   'FREEZE_CONFLICT_ENABLED'
 ]);
-const MUTATION_GATES = Object.freeze(GATES.slice(1));
+const MUTATION_GATES = Object.freeze([
+  'CREATE_PROVIDER_ACCOUNT_ENABLED',
+  'RESERVE_HANDLE_ENABLED',
+  'REPAIR_FOUNDATION_ENABLED',
+  'APPLY_MIGRATION_ENABLED',
+  'FREEZE_CONFLICT_ENABLED'
+]);
 const RATE_LIMITS = Object.freeze({
   readAccountFoundation: Object.freeze({ limit: 60, windowMs: 15 * 60 * 1000 }),
   createProviderAccountFoundation: Object.freeze({ limit: 3, windowMs: 24 * 60 * 60 * 1000 }),
@@ -111,6 +120,7 @@ function readProofConfiguration(env, configuration, gates, now) {
   const end = Date.parse(env.READ_PROOF_WINDOW_END);
   const at = now();
   if (configuration.environment !== 'production' || gates.READ_ACCOUNT_FOUNDATION_ENABLED !== 'true' ||
+      gates.READ_PROVIDER_PUBLIC_SHARE_ENABLED !== 'false' ||
       MUTATION_GATES.some((gate) => gates[gate] !== 'false') || !SHA256.test(env.READ_PROOF_SUBJECT_UID_HASH || '') ||
       !SHA256.test(env.READ_PROOF_SUBJECT_TRAINER_HASH || '') || !Number.isFinite(start) || !Number.isFinite(end) ||
       start >= end || end - start > 8 * 60 * 60 * 1000 || !Number.isSafeInteger(at) || at < start || at >= end) {
@@ -152,7 +162,8 @@ function groupEConfiguration(env, configuration, gates, readProof, now) {
     return Object.freeze({ enabled: false, mode, bindings: Object.freeze([]), cohortDigest: null, runId: null, keyId: null });
   }
   if (mode !== GROUP_E_MODE || configuration.environment !== 'production' || readProof.enabled ||
-      gates.READ_ACCOUNT_FOUNDATION_ENABLED !== 'true' || MUTATION_GATES.some((gate) => gates[gate] !== 'false') ||
+      gates.READ_ACCOUNT_FOUNDATION_ENABLED !== 'true' || gates.READ_PROVIDER_PUBLIC_SHARE_ENABLED !== 'false' ||
+      MUTATION_GATES.some((gate) => gates[gate] !== 'false') ||
       !SHA256.test(env.GROUP_E_COHORT_DIGEST || '') || !PROOF_ATTEMPT_ID.test(env.GROUP_E_RUN_ID || '') ||
       !SHA256.test(env.GROUP_E_KEY_ID || '') || env.GROUP_E_WINDOW_START || env.GROUP_E_WINDOW_END) {
     fail('E1_GROUP_E_CONFIGURATION_INVALID');
@@ -241,6 +252,7 @@ function loadConfiguration(env = process.env, now = () => Date.now()) {
   return Object.freeze({
     ...configuration,
     readAccountFoundationEnabled: env.READ_ACCOUNT_FOUNDATION_ENABLED === 'true',
+    readProviderPublicShareEnabled: env.READ_PROVIDER_PUBLIC_SHARE_ENABLED === 'true',
     createProviderAccountEnabled: env.CREATE_PROVIDER_ACCOUNT_ENABLED === 'true',
     reserveTrainerHandleEnabled: env.RESERVE_HANDLE_ENABLED === 'true',
     repairAccountFoundationEnabled,
@@ -697,6 +709,16 @@ function exactProviderCreateRequest(body) {
   });
 }
 
+function exactProviderPublicShareRequest(body) {
+  exactFields(body, ['schemaVersion', 'trainerHandle']);
+  if (body.schemaVersion !== 1 || typeof body.trainerHandle !== 'string') fail('REQUEST_INVALID');
+  try { return normalizeHandle(body.trainerHandle); }
+  catch (error) {
+    if (error instanceof HandleValidationError) fail('REQUEST_INVALID');
+    throw error;
+  }
+}
+
 function verifiedLegacyFoundation(uid, requestedHandle, legacy) {
   if (legacy?.status === 'mapping-incomplete') fail('MAPPING_INCOMPLETE');
   if (legacy?.status === 'mapping-conflict') fail('MAPPING_CONFLICT');
@@ -884,6 +906,13 @@ function createHandler(configuration, dependencies = {}) {
     fetchImpl,
     onEvent: dependencies.legacyReadEvent
   });
+  const publicShareReader = dependencies.publicShareReader || createPublicTrainerShareReader({
+    environment: configuration.environment,
+    projectId: configuration.projectId,
+    databaseUrl: configuration.rtdbDatabaseUrl,
+    fetchImpl,
+    onEvent: dependencies.publicShareReadEvent
+  });
   const readLegacyBinding = dependencies.readLegacyBinding || ((input) => legacyReader.readVerifiedLegacyMapping(input));
   let authorityStore = dependencies.authorityStore;
   const reserveHandle = dependencies.reserveTrainerHandle || (async (input, options) => {
@@ -898,6 +927,11 @@ function createHandler(configuration, dependencies = {}) {
     authorityStore ||= createDefaultAuthorityStore(configuration);
     return authorityStore.readProviderAccountFoundation(input);
   });
+  const readPublicIdentity = dependencies.readPublicShareIdentity || (async (input) => {
+    authorityStore ||= createDefaultAuthorityStore(configuration);
+    return authorityStore.readPublicShareIdentity(input);
+  });
+  const readPublicShare = dependencies.readPublicTrainerShare || ((ownerUid) => publicShareReader.read(ownerUid));
   const repairFoundation = dependencies.repairAccountFoundation || (async (input, options) => {
     authorityStore ||= createDefaultAuthorityStore(configuration);
     return authorityStore.repairAccountFoundation(input, options);
@@ -1090,6 +1124,50 @@ function createHandler(configuration, dependencies = {}) {
         };
         const [status, code] = mapping[error?.code] || [500, 'INTERNAL_ERROR'];
         log(configuration, 'readLegacyMappingReadiness', code.toLowerCase(), startedAt, callerHash ? { uidHash: callerHash } : {});
+        return json(response, status, { code });
+      }
+    }
+    if (url.pathname === '/v1/read-provider-public-share') {
+      let handleHash;
+      try {
+        if (request.method !== 'POST') fail('METHOD_NOT_ALLOWED');
+        if (!configuration.readProviderPublicShareEnabled) fail('E1_NOT_ENABLED');
+        const handle = exactProviderPublicShareRequest(await parseBody(request));
+        handleHash = handleCorrelationHash(configuration, handle.handleKey);
+        const identity = await readPublicIdentity({
+          canonicalTrainerName: handle.display,
+          normalizedTrainerName: handle.normalized,
+          handleKey: handle.handleKey
+        });
+        if (!identity) {
+          log(configuration, 'readProviderPublicShare', 'not_found', startedAt, { handleHash });
+          return json(response, 200, { code: 'SHARE_NOT_FOUND' });
+        }
+        const share = await readPublicShare(identity.ownerUid);
+        if (share?.status === 'not-found') {
+          log(configuration, 'readProviderPublicShare', 'not_found', startedAt, { handleHash });
+          return json(response, 200, { code: 'SHARE_NOT_FOUND' });
+        }
+        if (share?.status === 'permission-denied') fail('PUBLIC_SHARE_PERMISSION_DENIED');
+        if (share?.status !== 'ready') fail('PUBLIC_SHARE_UNAVAILABLE');
+        const projection = sanitizeProviderPublicProjection(share.value, {
+          trainerName: identity.canonicalTrainerName
+        });
+        if (!projection) fail('PUBLIC_SHARE_INVALID');
+        log(configuration, 'readProviderPublicShare', 'success', startedAt, { handleHash });
+        return json(response, 200, { code: 'SUCCESS', share: projection });
+      } catch (error) {
+        const mapping = {
+          E1_NOT_ENABLED: [503, 'E1_NOT_ENABLED'], REQUEST_INVALID: [400, 'REQUEST_INVALID'],
+          REQUEST_TOO_LARGE: [413, 'REQUEST_INVALID'], METHOD_NOT_ALLOWED: [405, 'METHOD_NOT_ALLOWED'],
+          PUBLIC_SHARE_PERMISSION_DENIED: [503, 'PUBLIC_SHARE_UNAVAILABLE'],
+          PUBLIC_SHARE_UNAVAILABLE: [503, 'PUBLIC_SHARE_UNAVAILABLE'],
+          PUBLIC_SHARE_INVALID: [409, 'PUBLIC_SHARE_INVALID'],
+          'e1/public-identity-conflict': [409, 'PUBLIC_IDENTITY_CONFLICT']
+        };
+        const [status, code] = mapping[error?.code] || [500, 'INTERNAL_ERROR'];
+        log(configuration, 'readProviderPublicShare', code.toLowerCase(), startedAt,
+          handleHash ? { handleHash } : {});
         return json(response, status, { code });
       }
     }
@@ -1481,6 +1559,7 @@ module.exports = Object.freeze({
   migrationManifestFingerprint,
   observedLegacyFingerprint,
   providerOperationFingerprint,
+  exactProviderPublicShareRequest,
   providerRequestFingerprint,
   providerSubjectHash,
   readAccountDocument,

@@ -408,6 +408,7 @@ test('restore confirmation and disabled plan remain independent of expired JIT a
     CLIENT_FOUNDATION_USE_ENABLED: false,
     GATEWAY_INVOCATION_ENABLED: false,
     READ_ACCOUNT_FOUNDATION_ENABLED: false,
+    READ_PROVIDER_PUBLIC_SHARE_ENABLED: false,
     CREATE_PROVIDER_ACCOUNT_ENABLED: false,
     RESERVE_HANDLE_ENABLED: false,
     REPAIR_FOUNDATION_ENABLED: false,

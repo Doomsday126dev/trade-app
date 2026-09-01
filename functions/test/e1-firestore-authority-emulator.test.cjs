@@ -540,6 +540,35 @@ test('provider creation writes no RTDB-shaped identity or product roots', async 
   }
 });
 
+test('public handle lookup resolves only an exact active Firestore handle and reciprocal account pair', async () => {
+  await certifyProviderCreation();
+  const request = providerInput('firebase_provider_public', 'ProviderPublic', 'request-provider-public');
+  assert.equal(await adapter.readPublicShareIdentity(request), null);
+  await adapter.createProviderAccountFoundation(request);
+  assert.deepEqual(await adapter.readPublicShareIdentity({
+    canonicalTrainerName: 'providerpublic',
+    normalizedTrainerName: request.normalizedTrainerName,
+    handleKey: request.handleKey
+  }), {
+    ownerUid: request.uid,
+    canonicalTrainerName: request.canonicalTrainerName
+  });
+});
+
+test('public handle lookup rejects split stale or malformed canonical identity instead of exposing a UID', async () => {
+  await certifyProviderCreation();
+  const request = providerInput('firebase_provider_public_conflict', 'ProviderConflict', 'request-provider-public-conflict');
+  await adapter.createProviderAccountFoundation(request);
+  await firestore.doc(`accounts/${request.uid}`).update({ handleKey: 'v1_conflicting' });
+  await assert.rejects(adapter.readPublicShareIdentity(request),
+    (error) => error?.code === 'e1/public-identity-conflict');
+
+  await firestore.doc(`accounts/${request.uid}`).update({ handleKey: request.handleKey });
+  await firestore.doc(`trainerHandles/${request.handleKey}`).update({ uid: 'firebase_other_owner' });
+  await assert.rejects(adapter.readPublicShareIdentity(request),
+    (error) => error?.code === 'e1/public-identity-conflict');
+});
+
 test('browser-authenticated Firestore REST access remains denied by the locked ruleset', async () => {
   const signup = await fetch(`http://${AUTH_HOST}/identitytoolkit.googleapis.com/v1/accounts:signUp?key=fake`, {
     method: 'POST',

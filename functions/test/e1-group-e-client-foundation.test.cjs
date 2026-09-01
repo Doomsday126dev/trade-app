@@ -295,6 +295,8 @@ test('normal and Group C modes remain isolated from signed Group E admission', (
   assert.throws(() => loadGatewayConfiguration(gatewayEnvironment(fixture, { READ_PROOF_MODE: 'true' })),
     /GROUP_E_CONFIGURATION_INVALID/);
   assert.throws(() => loadGatewayConfiguration(gatewayEnvironment(fixture,
+    { PROVIDER_PUBLIC_PROJECTION_ENABLED: 'true' })), /GROUP_E_CONFIGURATION_INVALID/);
+  assert.throws(() => loadGatewayConfiguration(gatewayEnvironment(fixture,
     { GROUP_E_WINDOW_START: '2030-01-01T12:00:00Z' })), /GROUP_E_CONFIGURATION_INVALID/);
 });
 
@@ -327,7 +329,8 @@ test('Group E runtime denies provider account creation and exposes no broad cont
   assert.doesNotMatch(runtime, /providerLink|linkProvider|unlinkProvider|provider-link/u);
   assert.deepEqual([...fs.readFileSync(path.resolve(__dirname, '../e1-gateway/index.js'), 'utf8')
     .matchAll(/exports\.([A-Za-z0-9_]+)\s*=/gu)].map((match) => match[1]),
-  ['readE1AccountFoundation', 'createE1ProviderAccountFoundation', 'reserveE1TrainerHandle']);
+  ['readE1AccountFoundation', 'readE1ProviderPublicShare',
+    'createE1ProviderAccountFoundation', 'reserveE1TrainerHandle']);
   const controlModule = require('../e1-gateway/groupEControlStore');
   assert.equal(controlModule.createRun, undefined);
   assert.equal(controlModule.createReconciliation, undefined);

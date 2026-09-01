@@ -134,8 +134,8 @@ function environment(container) {
 }
 
 const AUTHORITY_GATES = Object.freeze([
-  'READ_ACCOUNT_FOUNDATION_ENABLED', 'CREATE_PROVIDER_ACCOUNT_ENABLED', 'RESERVE_HANDLE_ENABLED', 'REPAIR_FOUNDATION_ENABLED',
-  'APPLY_MIGRATION_ENABLED', 'FREEZE_CONFLICT_ENABLED'
+  'READ_ACCOUNT_FOUNDATION_ENABLED', 'READ_PROVIDER_PUBLIC_SHARE_ENABLED', 'CREATE_PROVIDER_ACCOUNT_ENABLED',
+  'RESERVE_HANDLE_ENABLED', 'REPAIR_FOUNDATION_ENABLED', 'APPLY_MIGRATION_ENABLED', 'FREEZE_CONFLICT_ENABLED'
 ]);
 
 const GATEWAY_APP_CHECK_ROLE = 'roles/firebaseappcheck.tokenVerifier';
@@ -297,6 +297,7 @@ function deployGateway(plan, stagedSource, options = {}) {
     const env = service?.serviceConfig?.environmentVariables || {};
     if (service?.serviceConfig?.serviceAccountEmail !== plan.runtimeServiceAccount ||
         env.GATEWAY_INVOCATION_ENABLED !== String(plan.gateEnabled) || env.READ_PROOF_MODE !== 'false' ||
+        env.PROVIDER_PUBLIC_PROJECTION_ENABLED !== 'false' ||
         (env.GROUP_E_CLIENT_MODE || 'disabled') !== (plan.groupEClientMode || 'disabled') ||
         (plan.groupEClientMode === 'synthetic-canary' &&
           (env.GROUP_E_RUN_ID !== plan.groupERunId || env.GROUP_E_RUN_MANIFEST_DIGEST !== plan.groupERunManifestDigest ||

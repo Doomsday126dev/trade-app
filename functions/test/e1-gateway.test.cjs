@@ -213,17 +213,19 @@ test('proof attempt schema fails closed outside Group C and for malformed IDs or
   assert.throws(() => loadGatewayConfiguration(productionEnvironment({ READ_PROOF_MODE: 'true' })), /GATEWAY_CONFIGURATION_INVALID/);
 });
 
-test('gateway exports only the three reviewed operations and delegates durable quota to authority', () => {
+test('gateway exports only the four reviewed operations and delegates durable quota to authority', () => {
   const source = fs.readFileSync(path.resolve(__dirname, '../e1-gateway/index.js'), 'utf8');
   const exported = [...source.matchAll(/exports\.([A-Za-z0-9_]+)\s*=/gu)].map((match) => match[1]);
   assert.deepEqual(exported, [
     'readE1AccountFoundation',
+    'readE1ProviderPublicShare',
     'createE1ProviderAccountFoundation',
     'reserveE1TrainerHandle'
   ]);
   assert.match(source, /enforceAppCheck:\s*configuration\.appCheckEnforcementMode === 'enforced'/u);
   assert.match(source, /serviceAccount:\s*configuration\.gatewayServiceAccount/u);
   assert.match(source, /callable\('createProviderAccountFoundation', true\)/u);
+  assert.match(source, /callable\('readProviderPublicShare', true\)/u);
   assert.match(source, /callable\('reserveTrainerHandle', true\)/u);
   assert.match(source, /callable\('readAccountFoundation', configuration\.groupE\.enabled\)/u);
   assert.doesNotMatch(source, /firebase-admin|Firestore|Database|serviceAccountTokenCreator|private_key/u);

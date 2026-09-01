@@ -55,7 +55,13 @@ const ACTION_CONFIRMATIONS = Object.freeze({
 const D3_MODES = Object.freeze(['clean-start', 'continuation']);
 const ALLOWED_EXPORT_INVENTORIES = Object.freeze([
   Object.freeze(['readE1AccountFoundation', 'reserveE1TrainerHandle']),
-  Object.freeze(['readE1AccountFoundation', 'createE1ProviderAccountFoundation', 'reserveE1TrainerHandle'])
+  Object.freeze(['readE1AccountFoundation', 'createE1ProviderAccountFoundation', 'reserveE1TrainerHandle']),
+  Object.freeze([
+    'readE1AccountFoundation',
+    'readE1ProviderPublicShare',
+    'createE1ProviderAccountFoundation',
+    'reserveE1TrainerHandle'
+  ])
 ]);
 const HASH = /^[a-f0-9]{64}$/u;
 const D3_REVISION = /^e1-identity-authority-[0-9]{5}-[a-z0-9]{3}$/u;
@@ -454,6 +460,7 @@ function deploymentArguments(plan, functionName, stagedSource) {
     `E1_GATEWAY_SERVICE_ACCOUNT=${manifest.runtimeServiceAccount}`,
     `GATEWAY_INVOCATION_ENABLED=${plan.gateEnabled}`,
     `READ_PROOF_MODE=${plan.readProofMode}`,
+    'PROVIDER_PUBLIC_PROJECTION_ENABLED=false',
     `GROUP_E_CLIENT_MODE=${plan.groupEClientMode}`,
     ...(plan.groupEClientMode === 'synthetic-canary' ? [
       `GROUP_E_SUBJECT_BINDINGS=${plan.groupEBindings}`,

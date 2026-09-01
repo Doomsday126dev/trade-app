@@ -33,6 +33,7 @@ export AUTHORITY_SERVICE_NAME="$SERVICE"
 export AUTHORITY_RUNTIME_SERVICE_ACCOUNT="$RUNTIME_SA"
 export RTDB_DATABASE_URL="$RTDB_URL"
 export READ_ACCOUNT_FOUNDATION_ENABLED="true"
+export READ_PROVIDER_PUBLIC_SHARE_ENABLED="false"
 export CREATE_PROVIDER_ACCOUNT_ENABLED="false"
 export RESERVE_HANDLE_ENABLED="false"
 export REPAIR_FOUNDATION_ENABLED="false"
@@ -127,7 +128,8 @@ gcloud run services describe "$SERVICE" \
     for (const [name, value] of [
       ["EXPECTED_PROJECT_NUMBER", "391359988648"],
       ["EXPECTED_OPERATOR_EMAIL_HASH", operatorEmailHash],
-      ["EXPECTED_OPERATOR_SUBJECT_HASH", operatorSubjectHash]
+      ["EXPECTED_OPERATOR_SUBJECT_HASH", operatorSubjectHash],
+      ["READ_PROVIDER_PUBLIC_SHARE_ENABLED", "false"]
     ]) {
       const current = environment.find((entry) => entry.name === name);
       if (current) current.value = value;
