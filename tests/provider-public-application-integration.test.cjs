@@ -5,6 +5,7 @@ const path=require('node:path');
 
 const root=path.join(__dirname,'..');
 const app=readFileSync(path.join(root,'js/app/application.js'),'utf8');
+const runtime=readFileSync(path.join(root,'js/data/accountSyncRuntime.js'),'utf8');
 const publicApp=readFileSync(path.join(root,'js/app/publicShareApp.js'),'utf8');
 const html=readFileSync(path.join(root,'index.html'),'utf8');
 const manifest=JSON.parse(readFileSync(path.join(root,'scripts/pages/frontend-files.json'),'utf8'));
@@ -16,9 +17,33 @@ function section(start,end){
 
 test('provider-only publication writes only the authenticated UID-rooted projection transaction',()=>{
   const source=section('async function writeProviderPublicShareSnapshot','function queueHydratedPublicShareSnapshot');
-  assert.match(source,/trainerShares\/\$\{session\.uid\}/);assert.match(source,/runTransaction\(ref\(db,path\)/);
-  assert.match(source,/session\.uid!==auth\?\.currentUser\?\.uid/);
+  assert.match(source,/trainerShares\/\$\{session\.uid\}/);assert.match(source,/runTransaction\(target/);assert.match(source,/get\(target\)/);
+  assert.match(source,/providerPublicProjectionSessionMatches\(session\)/);
   assert.doesNotMatch(source,/set\(ref\(db,`publicShares|runTransaction\(ref\(db,`publicShares|authIndex|loginDirectory|users\//);
+});
+
+test('canonical provider publication is awaited durable and never reported as deferred success',()=>{
+  const publish=section('async function publishAccountSyncProjection','function retireMigratedLegacyListQueue');
+  const queued=section('function queueHydratedPublicShareSnapshot','function requestPublicSharePublication');
+  const explicit=section('async function publishPublicShareNow','function ownerShareNoticeKey');
+  assert.doesNotMatch(publish,/deferred-provider-public-projection/);
+  assert.match(publish,/await .*writeProviderPublicShareSnapshot|retryPublicProjection/);
+  assert.doesNotMatch(queued,/writeProviderPublicShareSnapshot\([^;]+\)\.catch\(/s);
+  assert.ok(queued.indexOf('runtime.publishCurrentProjection')<queued.indexOf('publicShareSnapshotForUser'));
+  assert.ok(explicit.indexOf('runtime.publishCurrentProjection')<explicit.indexOf('publicShareSnapshotForUser'));
+  assert.match(runtime,/provider-publication-pending-v1/);
+});
+
+test('exact no-change reconciliation is current and hydration waits for provider publication settlement',()=>{
+  const status=section('function publicSharePublicationCurrent','async function writeProviderPublicShareSnapshot');
+  const hydration=section('function _onOwnedDataSnapshot','function _onOwnedDataError');
+  const republish=section('async function republishOwnPublicShare','async function writeUser(u,data)');
+  const copy=section('async function copyShareLink','function getSpecialBoard');
+  assert.match(status,/status==='published'\|\|result\.status==='reconciled'/);
+  assert.match(hydration,/typeof pendingPublication\?\.then==='function'/);
+  assert.ok(hydration.indexOf('pendingPublication.then')<hydration.indexOf('inspectOwnPublicShareAfterHydration'));
+  assert.match(republish,/publicSharePublicationCurrent\(result\)/);
+  assert.match(copy,/publicSharePublicationCurrent\(result\)/);
 });
 
 test('provider-only publication is blocked when its independent development gate is off',()=>{

@@ -52,10 +52,13 @@ test('provider-only sessions skip legacy protected list and pending-decrement su
   assert.match(app,/if\(!providerOnlyIdentityActive\(\)\)subscribeMyPendingDecrements\(\)/);
 });
 
-test('provider-only account sync uses explicit initialization without legacy migration retirement',()=>{
+test('provider-only account sync uses explicit initialization and canonical publication without legacy migration retirement',()=>{
   assert.match(app,/const initializationKind=providerOnlyIdentityActive\(uid\)\?'provider-only':'legacy-migration'/);
   assert.match(app,/if\(initializationKind==='legacy-migration'\)retireMigratedLegacyListQueue\(\)/);
-  assert.match(app,/deferred-provider-public-projection/);
+  const publication=section('async function publishAccountSyncProjection','function retireMigratedLegacyListQueue');
+  assert.match(publication,/providerAccountSyncPublicSnapshot\(acceptedRows,session\)/);
+  assert.match(publication,/await writeProviderPublicShareSnapshot\(session,snapshot\)/);
+  assert.doesNotMatch(app,/deferred-provider-public-projection/);
 });
 
 test('Google-only Settings hides PIN controls and labels legacy access as not configured',()=>{

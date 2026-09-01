@@ -1224,7 +1224,10 @@ async function flushSyncQueue(){
   refreshSyncUi();
 }
 function showSyncDot(show){document.getElementById('sqd')?.classList.toggle('show',show);refreshSyncUi();}
-window.addEventListener('online',()=>{if(fbOn)flushSyncQueue();managedAccountSyncRuntime?.controller?.drain?.();});
+window.addEventListener('online',()=>{
+  if(fbOn)flushSyncQueue();managedAccountSyncRuntime?.controller?.drain?.();
+  managedAccountSyncRuntime?.retryPublicProjection?.().catch(error=>console.warn('Provider public-share retry remains pending',String(error?.code||'unknown')));
+});
 function noteProviderAuthState(user){
   const uid=String(user?.uid||'');
   if(uid!==providerAuthLifecycleUid){
@@ -1310,7 +1313,12 @@ function providerOnlyIdentityActive(uid=auth?.currentUser?.uid){
 function providerPublicProjectionSession(username=cur){
   const uid=auth?.currentUser?.uid;
   return PROVIDER_CAPABILITIES.providerPublicWriteSupport&&providerOnlyIdentityActive(uid)&&
-    activeCanonicalIdentity?.username===username?Object.freeze({uid,username}):null;
+    activeCanonicalIdentity?.username===username?Object.freeze({uid,username,sessionGeneration:_sessionTransientGeneration,runtimeGeneration:accountSyncRuntimeGeneration}):null;
+}
+function providerPublicProjectionSessionMatches(session){
+  return!!session&&session.uid===auth?.currentUser?.uid&&session.username===cur&&
+    session.sessionGeneration===_sessionTransientGeneration&&session.runtimeGeneration===accountSyncRuntimeGeneration&&
+    managedAccountSyncRuntime?.ownerUid===session.uid&&managedAccountSyncRuntime?.username===session.username;
 }
 function validCanonicalFoundation(value,uid){
   return!!uid&&value?.status==='active'&&value.schemaVersion===1&&
@@ -2346,42 +2354,58 @@ function notePublicSharePublicationBlocked(result,trigger){
   _lastPublicShareBlockedNotice=fingerprint;
   console.warn('Public-share publication blocked',{code,trigger});
 }
+function publicSharePublicationCurrent(result){
+  return result?.ok===true&&(result.status==='published'||result.status==='reconciled');
+}
 async function writeProviderPublicShareSnapshot(session,snapshot){
-  if(!session||session.uid!==auth?.currentUser?.uid||session.username!==cur||!db){
-    throw providerFailure('provider-public/session-changed');
-  }
+  if(!providerPublicProjectionSessionMatches(session)||!db)throw providerFailure('provider-public/session-changed');
   const path=`trainerShares/${session.uid}`;
-  const transaction=await withTimeout(runTransaction(ref(db,path),current=>{
-    if(session.uid!==auth?.currentUser?.uid||session.username!==cur)return;
-    return providerPublicProjectionDomain.nextProjection(snapshot,current,{trainerName:session.username});
-  }),8000,'Publishing provider share timed out','provider-public/write-timeout');
-  if(!transaction?.committed||session.uid!==auth?.currentUser?.uid||session.username!==cur){
-    throw providerFailure('provider-public/session-changed');
+  const target=ref(db,path);let transaction=null,transactionError=null,exactAbort=false;
+  try{
+    transaction=await withTimeout(runTransaction(target,current=>{
+      if(!providerPublicProjectionSessionMatches(session))return;
+      if(current!=null&&providerPublicProjectionDomain.projectionContentMatches(snapshot,current,{trainerName:session.username})){
+        exactAbort=true;return;
+      }
+      return providerPublicProjectionDomain.nextProjection(snapshot,current,{trainerName:session.username});
+    }),8000,'Publishing provider share timed out','provider-public/write-timeout');
+  }catch(error){transactionError=error;}
+  if(!providerPublicProjectionSessionMatches(session))throw providerFailure('provider-public/session-changed');
+  let remote;
+  try{
+    const readback=await withTimeout(get(target),8000,'Reconciling provider share timed out','provider-public/readback-timeout');
+    if(!providerPublicProjectionSessionMatches(session))throw providerFailure('provider-public/session-changed');
+    remote=readback.exists()?readback.val():null;
+  }catch(error){throw transactionError||error;}
+  const status=providerPublicProjectionDomain.storedProjectionStatus(remote,{trainerName:session.username});
+  if(!status.ok||!providerPublicProjectionDomain.projectionContentMatches(snapshot,remote,{trainerName:session.username})){
+    throw transactionError||providerFailure('provider-public/reconciliation-failed');
+  }
+  if(!transaction?.committed&&!exactAbort&&transactionError==null){
+    throw providerFailure('provider-public/transaction-aborted');
   }
   delete syncQueue[`publicShares/${session.username}`];
   delete syncQueue[path];
   saveSyncQueue();
   if(!Object.keys(syncQueue).length)showSyncDot(false);
-  return{ok:true,status:'published',source:'provider'};
+  return{ok:true,status:transaction?.committed?'published':'reconciled',source:'provider',shareVersion:remote.shareVersion};
 }
 function queueHydratedPublicShareSnapshot(source,username,trigger){
   if(!fbOn||!db||!username||!auth?.currentUser){
     return{ok:false,error:{code:'share-publication/offline',message:'Firebase session is unavailable'}};
   }
-  const built=publicShareSnapshotForUser(username,source,trigger);
-  if(!built.ok){notePublicSharePublicationBlocked(built,trigger);return built;}
   const providerSession=providerPublicProjectionSession(username);
   if(providerOnlyIdentityActive()&&!providerSession){
     const blocked={ok:false,error:{code:'provider-public/projection-disabled',message:'Provider public projection is not enabled'}};
     notePublicSharePublicationBlocked(blocked,trigger);return blocked;
   }
   if(providerSession){
-    writeProviderPublicShareSnapshot(providerSession,built.snapshot).catch(error=>{
-      console.warn('Provider public-share publication failed',String(error?.code||'provider-public/write-failed'));
-      setSyncStatus('offline');
-    });
-    return{ok:true,status:'queued',source:'provider'};
+    const runtime=managedAccountSyncRuntime;
+    if(!runtime||runtime.ownerUid!==providerSession.uid)return{ok:false,error:{code:'provider-public/runtime-unavailable',message:'Provider account sync is unavailable'}};
+    return runtime.publishCurrentProjection(trigger);
   }
+  const built=publicShareSnapshotForUser(username,source,trigger);
+  if(!built.ok){notePublicSharePublicationBlocked(built,trigger);return built;}
   queueSync(`publicShares/${username}`,built.snapshot);
   return{ok:true,status:'queued'};
 }
@@ -2408,14 +2432,18 @@ async function publishPublicShareNow(username=cur,trigger='explicit_share'){
   const requested=managedPublicSharePublication.request(activePublicShareHydrationToken,trigger);
   if(!requested.ok){notePublicSharePublicationBlocked(requested,trigger);return requested;}
   if(requested.status==='pending')return requested;
-  const built=publicShareSnapshotForUser(username,allData,trigger);
-  if(!built.ok){notePublicSharePublicationBlocked(built,trigger);return built;}
   if(fbOn&&db&&auth?.currentUser){
     const providerSession=providerPublicProjectionSession(username);
     if(providerOnlyIdentityActive()&&!providerSession){
       return{ok:false,error:{code:'provider-public/projection-disabled',message:'Provider public projection is not enabled'}};
     }
-    if(providerSession)return writeProviderPublicShareSnapshot(providerSession,built.snapshot);
+    if(providerSession){
+      const runtime=managedAccountSyncRuntime;
+      if(!runtime||runtime.ownerUid!==providerSession.uid)return{ok:false,error:{code:'provider-public/runtime-unavailable',message:'Provider account sync is unavailable'}};
+      return await runtime.publishCurrentProjection(trigger);
+    }
+    const built=publicShareSnapshotForUser(username,allData,trigger);
+    if(!built.ok){notePublicSharePublicationBlocked(built,trigger);return built;}
     await withTimeout(set(ref(db,`publicShares/${username}`),built.snapshot),8000,'Publishing share link timed out','db/public-share-timeout');
     delete syncQueue[`publicShares/${username}`];
     saveSyncQueue();
@@ -2462,7 +2490,7 @@ async function republishOwnPublicShare(){
   ownerPublicShareReview={...ownerPublicShareReview,busy:true};renderOwnerShareRepublishNotice();
   try{
     const result=await publishPublicShareNow(token.username,'explicit_share');
-    if(!result.ok||result.status!=='published')throw new Error(result.error?.code||result.status||'publication_failed');
+    if(!publicSharePublicationCurrent(result))throw new Error(result.error?.code||result.status||'publication_failed');
     const verified=await inspectOwnPublicShareAfterHydration(token);
     if(!verified.ok||verified.republishRequired)throw new Error('share-publication/verification-failed');
     toast(i18nCore.t('share.ownerRepublishSuccess'),3500);
@@ -3184,8 +3212,28 @@ function applyAccountSyncCanonicalEntities(entities){
     return true;
   }finally{accountSyncProjectionApplying=false;}
 }
+function providerAccountSyncPublicSnapshot(acceptedRows,session){
+  const projected=accountSyncProduct.projectAcceptedPublicRows({rows:acceptedRows,catalogEntryForId:accountSyncCatalogEntryForId,encodePriority:accountSyncEncodedPriority});
+  if(projected.unresolved.length)throw Object.assign(new Error('Accepted public projection could not be resolved'),{code:'account-sync/public-projection-unresolved'});
+  const runtime=managedAccountSyncRuntime,profile=runtime?.providerProfile,validProfile=accountSyncModel.validateProfileRecord(profile,{ownerUid:session.uid});
+  if(!providerPublicProjectionSessionMatches(session)||!validProfile.ok)throw providerFailure('provider-public/profile-not-ready');
+  const values=accountSyncModel.profileValues(validProfile.value),snapshot={
+    version:1,username:session.username,
+    profile:{...values,avatarPokemon:String(values.avatarPokemon||'').slice(0,80),lastUpdated:validProfile.value.lastUpdated},
+    lists:Object.fromEntries(OWNED_MY_LIST_TYPES.map(type=>[type,accountSyncClone(projected.lists[type])])),
+    publishedListTypes:[...OWNED_MY_LIST_TYPES],updatedAt:Math.max(1,Number(validProfile.value.lastUpdated)||Date.now())
+  };
+  const strict=providerPublicProjectionDomain.publicSnapshotStatus(snapshot,{trainerName:session.username});
+  if(!strict.ok)throw providerFailure('provider-public/projection-invalid');
+  return strict.snapshot;
+}
 async function publishAccountSyncProjection(acceptedRows){
-  if(providerOnlyIdentityActive())return Object.freeze({ok:true,status:'deferred-provider-public-projection'});
+  if(providerOnlyIdentityActive()){
+    const session=providerPublicProjectionSession(cur);
+    if(!session)throw providerFailure('provider-public/projection-disabled');
+    const snapshot=providerAccountSyncPublicSnapshot(acceptedRows,session);
+    return await writeProviderPublicShareSnapshot(session,snapshot);
+  }
   const projected=accountSyncProduct.projectAcceptedPublicRows({rows:acceptedRows,catalogEntryForId:accountSyncCatalogEntryForId,encodePriority:accountSyncEncodedPriority});
   if(projected.unresolved.length)throw Object.assign(new Error('Accepted public projection could not be resolved'),{code:'account-sync/public-projection-unresolved'});
   const source=accountSyncClone(getLocal());
@@ -3996,7 +4044,12 @@ function _onOwnedDataSnapshot({surface,path,value}){
     const marked=managedPublicSharePublication.markLoaded(activePublicShareHydrationToken,surface);
     if(marked.ok&&marked.ready){
       const pendingPublication=flushPendingPublicSharePublication();
-      if(pendingPublication?.status!=='queued')inspectOwnPublicShareAfterHydration(activePublicShareHydrationToken);
+      if(typeof pendingPublication?.then==='function'){
+        pendingPublication.then(
+          result=>{if(result?.status!=='queued')inspectOwnPublicShareAfterHydration(activePublicShareHydrationToken);},
+          ()=>inspectOwnPublicShareAfterHydration(activePublicShareHydrationToken)
+        );
+      }else if(pendingPublication?.status!=='queued')inspectOwnPublicShareAfterHydration(activePublicShareHydrationToken);
     }
   }
   _pathLoadState[path]='loaded';
@@ -4076,7 +4129,7 @@ function startListener(){
   // data subscribes after Firebase Auth is present.
   subscribePath('loginDirectory');
   ensureProtectedSubscriptions();
-  ensureAccountSyncRuntime().catch(error=>console.warn('Account sync startup failed',String(error?.code||'unknown')));
+  ensureAccountSyncRuntime().then(()=>managedAccountSyncRuntime?.retryPublicProjection?.()).catch(error=>console.warn('Account sync startup failed',String(error?.code||'unknown')));
   // Other list types loaded lazily when tabs are visited
   return true;
 }
@@ -11024,7 +11077,7 @@ async function copyShareLink(){
   }
   toast(i18nCore.t('export.shareCopiedUpdating'),3500);
   publishPublicShareNow(cur,'explicit_share').then(result=>{
-    if(result?.status==='published'){
+    if(publicSharePublicationCurrent(result)){
       toast(i18nCore.t('share.publicationUpdated'),3500);
       inspectOwnPublicShareAfterHydration(activePublicShareHydrationToken);
     }
