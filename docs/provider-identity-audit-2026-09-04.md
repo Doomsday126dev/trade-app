@@ -157,16 +157,25 @@ No actual key, IAM change, API enablement, deployment, or rollback occurred.
 - A dedicated narrow PR workflow runs the operator suite without a browser,
   Firebase credentials, npm dependency installation, or deployment.
 
-No full sync, Pages release, UI/Playwright, sprite, Events, Group E, Discord, or
-complete Functions suite was run. The full future sequence simulation requested
-in phase 10 remains blocked by R1-R4; isolated helper successes are not a substitute.
+No broad suite was manually invoked. The repository's existing automatic PR
+workflow did start performance checks on push: static checks completed and browser
+budgets began before run `33918152122` was canceled. This was not required audit
+coverage and is recorded as a test-economy exception. No full sync, Pages release,
+sprites, Events, Group E, Discord or complete Functions suite was run.
+The full future sequence simulation requested in phase 10 remains blocked by
+R1-R4; isolated helper successes are not a substitute.
+
+Focused CI run `33918152100` passed on code commit
+`f5367fe9f27df0f5f4b9848a4959d40ae6d66ddf`. The follow-up report-only commit
+does not change executable source and skips CI to avoid retriggering the broad job.
 
 ## L. PR #63
 
 Update only the existing `ops/provider-identity-production-window` branch.
 Keep draft, unmerged. No ready/merge action is authorized by this audit result.
-Final commit and remote verification are recorded in the PR description and
-task closeout. Old private preparation evidence is not rewritten.
+Code correction commit: `f5367fe9f27df0f5f4b9848a4959d40ae6d66ddf`.
+Final report-only commit and remote verification are recorded in the PR
+description and task closeout. Old private preparation evidence is not rewritten.
 
 ## M. Repository and Production
 
