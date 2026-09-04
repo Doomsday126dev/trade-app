@@ -12,8 +12,10 @@ const contractPath=path.join(root,'functions/production/legacy-provisioning-cont
 const check=process.argv.includes('--check');
 const rules=structuredClone(JSON.parse(fs.readFileSync(sourcePath,'utf8')));
 const isAdmin="auth != null && root.child('admins').child(auth.uid).val() === true";
-const released="root.child('legacyProvisioningFreeze').child('schemaVersion').val() === 1 && root.child('legacyProvisioningFreeze').child('state').val() === 'released' && root.child('legacyProvisioningFreeze').child('provisioningModel').val() === 'bounded-legacy-provisioning-freeze' && root.child('legacyProvisioningFreeze').child('releasedAt').isNumber()";
-const creationOpen=`(!root.child('legacyProvisioningFreeze').exists() || (${released}))`;
+const f="root.child('legacyProvisioningFreeze')";
+const released=`(${f}.child('schemaVersion').val() === 1 || ${f}.child('schemaVersion').val() === 2) && ${f}.child('state').val() === 'released' && ${f}.child('provisioningModel').val() === 'bounded-legacy-provisioning-freeze' && ${f}.child('releasedAt').isNumber()`;
+const expired=`${f}.child('schemaVersion').val() === 2 && ${f}.child('state').val() === 'active' && ${f}.child('provisioningModel').val() === 'bounded-legacy-provisioning-freeze' && ${f}.child('activatedAt').isNumber() && ${f}.child('activatedAt').val() > 0 && ${f}.child('expiresAt').isNumber() && ${f}.child('expiresAt').val() === ${f}.child('activatedAt').val() + 2100000 && now >= ${f}.child('expiresAt').val()`;
+const creationOpen=`(!${f}.exists() || (${released}) || (${expired}))`;
 const existingOnly="data.exists() && newData.exists()";
 const sameAuthUid="newData.child('authUid').val() === data.child('authUid').val()";
 
@@ -30,7 +32,9 @@ const rendered=`${JSON.stringify(rules,null,2)}\n`;
 const policy={
   schemaVersion:1,
   provisioningModel:'bounded-legacy-provisioning-freeze',
-  clientPolicyVersion:1,
+  clientPolicyVersion:2,
+  freezeSchemaVersion:2,
+  immutableHardExpiryMs:2100000,
   candidateRulesSha256:crypto.createHash('sha256').update(rendered).digest('hex'),
   guardedPaths:['users/{username}','loginDirectory/{username}','requests/{requestId}:approved','authIndex/{uid}'],
   activePolicy:{newHandleCreate:false,existingRecordUpdate:true,existingRecordDelete:false,requestApproval:false,identityPreservingAuthIndex:true},

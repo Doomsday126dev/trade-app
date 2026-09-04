@@ -91,14 +91,17 @@
     const expected=[...fields].sort();return keys.length===expected.length&&keys.every((key,index)=>key===expected[index]);
   }
   function validLegacyFreeze(value){
-    return exactFields(value,LEGACY_FREEZE_FIELDS)&&value.schemaVersion===1&&['active','released'].includes(value.state)&&
+    const timed=value?.schemaVersion===2;
+    return exactFields(value,timed?[...LEGACY_FREEZE_FIELDS,'expiresAt']:LEGACY_FREEZE_FIELDS)&&[1,2].includes(value.schemaVersion)&&['active','released'].includes(value.state)&&
       value.provisioningModel===LEGACY_FREEZE_MODEL&&LEGACY_FREEZE_ID.test(value.freezeId||'')&&
       SHA256.test(value.provisioningContractDigest||'')&&Number.isSafeInteger(value.activatedAt)&&value.activatedAt>=0&&
+      (!timed||(Number.isSafeInteger(value.expiresAt)&&value.expiresAt===value.activatedAt+35*60*1000))&&
       (value.state==='active'?value.releasedAt===null:Number.isSafeInteger(value.releasedAt)&&value.releasedAt>=value.activatedAt);
   }
-  function legacyCreationDecision(value){
+  function legacyCreationDecision(value,at=Date.now()){
     if(value==null)return Object.freeze({ok:true,status:'pre-freeze'});
     if(!validLegacyFreeze(value))return Object.freeze({ok:false,status:'blocked',code:'legacy-provisioning/freeze-invalid'});
+    if(value.schemaVersion===2&&value.expiresAt<=at)return Object.freeze({ok:true,status:'expired',freezeId:value.freezeId});
     return value.state==='released'
       ?Object.freeze({ok:true,status:'released',freezeId:value.freezeId})
       :Object.freeze({ok:false,status:'frozen',code:'legacy-provisioning/frozen',freezeId:value.freezeId});
@@ -113,11 +116,11 @@
     return Object.freeze({ok:true,status:'identity-preserving'});
   }
   function certificationMatches(value,certification,at=Date.now()){
-    return validLegacyFreeze(value)&&value.state==='active'&&certification&&typeof certification==='object'&&!Array.isArray(certification)&&
+    return validLegacyFreeze(value)&&value.state==='active'&&value.schemaVersion===2&&value.expiresAt>at&&certification&&typeof certification==='object'&&!Array.isArray(certification)&&
       certification.schemaVersion===2&&certification.state==='certified'&&certification.provisioningModel===LEGACY_FREEZE_MODEL&&
       certification.freezeId===value.freezeId&&certification.provisioningContractDigest===value.provisioningContractDigest&&
       certification.legacyNamespaceCoverageCertified===true&&Number.isSafeInteger(certification.activeLegacyHandleCount)&&
-      certification.certifiedHandleCount===certification.activeLegacyHandleCount&&Number.isSafeInteger(certification.expiresAt)&&certification.expiresAt>at;
+      certification.certifiedHandleCount===certification.activeLegacyHandleCount&&Number.isSafeInteger(certification.expiresAt)&&certification.expiresAt>at&&certification.expiresAt<=value.expiresAt;
   }
 
   root.authenticationReadiness=Object.freeze({

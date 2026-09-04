@@ -73,6 +73,7 @@ function buildPlan(options) {
     executionBlockers: ['provider-window-deployment-executor-not-qualified',
       'dedicated-secret-and-iam-command-sequence-not-qualified'],
     source: { commit: options.sourceCommit, tree: options.sourceTree },
+    ...(options.runtimeContract ? { runtimeContract: options.runtimeContract } : {}),
     providerAccountsExist: false,
     authority: {
       service: AUTHORITY_SERVICE,

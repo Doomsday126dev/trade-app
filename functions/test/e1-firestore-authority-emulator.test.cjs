@@ -77,12 +77,13 @@ function providerInput(uid, trainerName, requestId, subjectLabel = uid) {
 
 async function certifyProviderCreation(overrides = {}) {
   await firestore.doc('authorityConfig/legacyProvisioningFreeze').set({
-    schemaVersion: 1,
+    schemaVersion: 2,
     state: 'active',
     provisioningModel: 'bounded-legacy-provisioning-freeze',
     freezeId: 'legacy-freeze-synthetic-0001',
     provisioningContractDigest: 'd'.repeat(64),
     activatedAt: 100,
+    expiresAt: 2100100,
     releasedAt: null
   });
   await firestore.doc('authorityConfig/providerAccountCreation').set({
@@ -371,6 +372,11 @@ test('missing stale malformed or incomplete namespace certification blocks provi
     async () => { await certifyProviderCreation({ freezeId: 'legacy-freeze-another-0002' }); },
     async () => { await certifyProviderCreation({ provisioningContractDigest: 'e'.repeat(64) }); },
     async () => { await certifyProviderCreation({ inventoryCapturedAt: 99 }); },
+    async () => { await certifyProviderCreation({ expiresAt: 2100101 }); },
+    async () => {
+      await certifyProviderCreation();
+      await firestore.doc('authorityConfig/legacyProvisioningFreeze').update({ expiresAt: 2100101 });
+    },
     async () => {
       await certifyProviderCreation();
       await firestore.doc('authorityConfig/legacyProvisioningFreeze').update({ state: 'released', releasedAt: 900 });
@@ -390,6 +396,15 @@ test('missing stale malformed or incomplete namespace certification blocks provi
     assert.equal((await firestore.doc(`trainerHandles/${request.handleKey}`).get()).exists, false);
     assert.equal((await firestore.doc(`operationRequests/${request.uid}/requests/${request.requestId}`).get()).exists, false);
   }
+});
+
+test('expired uncleaned freeze denies server provider admission without mutating identity', async () => {
+  await certifyProviderCreation();
+  const expiredAdapter = createFirestoreE1AuthorityAdapter({ firestore, now: () => 2100100 });
+  const request = providerInput('firebase_expiry_test', 'ExpiryTrainer', 'request-expiry-test');
+  await assert.rejects(expiredAdapter.createProviderAccountFoundation(request),
+    (error) => error.code === 'e1/legacy-namespace-not-certified');
+  assert.equal((await firestore.doc(`accounts/${request.uid}`).get()).exists, false);
 });
 
 test('identical provider creation replay returns the recorded result and changed evidence is rejected', async () => {
