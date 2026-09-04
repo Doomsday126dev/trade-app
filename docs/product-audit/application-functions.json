@@ -1,0 +1,4154 @@
+[
+  {
+    "name": "firebaseSdkReady",
+    "line": 8
+  },
+  {
+    "name": "loadFirebaseSdk",
+    "line": 9
+  },
+  {
+    "name": "loadFirebaseAppCheckSdk",
+    "line": 48
+  },
+  {
+    "name": "appCheckStageTimeout",
+    "line": 66
+  },
+  {
+    "name": "startFirebaseAppCheck",
+    "line": 77
+  },
+  {
+    "name": "firebaseAppCheckReady",
+    "line": 99
+  },
+  {
+    "name": "activateFirebaseDataClient",
+    "line": 106
+  },
+  {
+    "name": "ensureFirebaseDataProtection",
+    "line": 125
+  },
+  {
+    "name": "uiIconMarkup",
+    "line": 394
+  },
+  {
+    "name": "uiIconNode",
+    "line": 398
+  },
+  {
+    "name": "femaleSpriteUrl",
+    "line": 507
+  },
+  {
+    "name": "isApprovedRuntimeSpriteUrl",
+    "line": 645
+  },
+  {
+    "name": "canvasSafeSpriteUrl",
+    "line": 663
+  },
+  {
+    "name": "spriteCatalogContext",
+    "line": 670
+  },
+  {
+    "name": "entrySpriteUrl",
+    "line": 681
+  },
+  {
+    "name": "spriteUrl",
+    "line": 696
+  },
+  {
+    "name": "pokemondbSpriteUrl",
+    "line": 738
+  },
+  {
+    "name": "spriteFallbackChain",
+    "line": 749
+  },
+  {
+    "name": "_trimScaleCache",
+    "line": 805
+  },
+  {
+    "name": "_saveScaleCache",
+    "line": 812
+  },
+  {
+    "name": "spriteSourceScale",
+    "line": 826
+  },
+  {
+    "name": "_drainSpriteScaleQueue",
+    "line": 836
+  },
+  {
+    "name": "detectSpriteScale",
+    "line": 850
+  },
+  {
+    "name": "_runSpriteScaleDetection",
+    "line": 861
+  },
+  {
+    "name": "_spriteTransform",
+    "line": 940
+  },
+  {
+    "name": "_updateRenderedScale",
+    "line": 948
+  },
+  {
+    "name": "effectiveSpriteScale",
+    "line": 962
+  },
+  {
+    "name": "effectiveSpriteOrigin",
+    "line": 968
+  },
+  {
+    "name": "spriteImg",
+    "line": 972
+  },
+  {
+    "name": "validateSpriteLoad",
+    "line": 999
+  },
+  {
+    "name": "trySpriteFallback",
+    "line": 1007
+  },
+  {
+    "name": "checkSession",
+    "line": 1046
+  },
+  {
+    "name": "stampSession",
+    "line": 1058
+  },
+  {
+    "name": "refreshSession",
+    "line": 1066
+  },
+  {
+    "name": "unsafeWholeListQueueEntry",
+    "line": 1073
+  },
+  {
+    "name": "providerOnlyLegacyWritePath",
+    "line": 1078
+  },
+  {
+    "name": "queueSync",
+    "line": 1082
+  },
+  {
+    "name": "queueItemIsCurrent",
+    "line": 1106
+  },
+  {
+    "name": "queueMyListUpdate",
+    "line": 1107
+  },
+  {
+    "name": "flushSyncQueue",
+    "line": 1147
+  },
+  {
+    "name": "showSyncDot",
+    "line": 1226
+  },
+  {
+    "name": "noteProviderAuthState",
+    "line": 1231
+  },
+  {
+    "name": "noteProviderReauthentication",
+    "line": 1241
+  },
+  {
+    "name": "providerAuthSnapshot",
+    "line": 1244
+  },
+  {
+    "name": "providerBoundaryFingerprint",
+    "line": 1256
+  },
+  {
+    "name": "providerAccountBoundarySnapshot",
+    "line": 1259
+  },
+  {
+    "name": "providerFailure",
+    "line": 1285
+  },
+  {
+    "name": "ensureProviderAccountFoundationClient",
+    "line": 1288
+  },
+  {
+    "name": "ensureProviderPublicShareClient",
+    "line": 1299
+  },
+  {
+    "name": "providerOnlyIdentityActive",
+    "line": 1309
+  },
+  {
+    "name": "providerPublicProjectionSession",
+    "line": 1313
+  },
+  {
+    "name": "providerPublicProjectionSessionMatches",
+    "line": 1318
+  },
+  {
+    "name": "validCanonicalFoundation",
+    "line": 1323
+  },
+  {
+    "name": "resolveGoogleAccountBinding",
+    "line": 1330
+  },
+  {
+    "name": "checkGoogleOnboardingHandle",
+    "line": 1360
+  },
+  {
+    "name": "createGoogleProviderAdapter",
+    "line": 1368
+  },
+  {
+    "name": "ensureProviderLinkingController",
+    "line": 1387
+  },
+  {
+    "name": "activateGoogleResolvedAccount",
+    "line": 1413
+  },
+  {
+    "name": "showGoogleOnboarding",
+    "line": 1442
+  },
+  {
+    "name": "hideGoogleOnboarding",
+    "line": 1449
+  },
+  {
+    "name": "providerUiMessage",
+    "line": 1450
+  },
+  {
+    "name": "syncGoogleOnboardingUi",
+    "line": 1461
+  },
+  {
+    "name": "beginGoogleOnboarding",
+    "line": 1486
+  },
+  {
+    "name": "continueWithGoogle",
+    "line": 1493
+  },
+  {
+    "name": "checkGoogleOnboarding",
+    "line": 1515
+  },
+  {
+    "name": "cancelGoogleOnboarding",
+    "line": 1544
+  },
+  {
+    "name": "resumeGoogleIdentityAfterAuth",
+    "line": 1550
+  },
+  {
+    "name": "warnLocalOnlyMode",
+    "line": 1575
+  },
+  {
+    "name": "bindAuthObserver",
+    "line": 1591
+  },
+  {
+    "name": "waitForAuthState",
+    "line": 1678
+  },
+  {
+    "name": "hashPin",
+    "line": 1693
+  },
+  {
+    "name": "verifyPin",
+    "line": 1697
+  },
+  {
+    "name": "isSixDigitPin",
+    "line": 1703
+  },
+  {
+    "name": "lastLoginTime",
+    "line": 1704
+  },
+  {
+    "name": "lsGet",
+    "line": 1709
+  },
+  {
+    "name": "lsSet",
+    "line": 1710
+  },
+  {
+    "name": "lsRemove",
+    "line": 1711
+  },
+  {
+    "name": "pokemonGoSearchLanguagePreference",
+    "line": 1713
+  },
+  {
+    "name": "pokemonGoSearchLocale",
+    "line": 1723
+  },
+  {
+    "name": "syncPokemonGoSearchLanguageControl",
+    "line": 1727
+  },
+  {
+    "name": "rerenderPokemonGoSearchLanguageSurfaces",
+    "line": 1739
+  },
+  {
+    "name": "changePokemonGoSearchLocale",
+    "line": 1743
+  },
+  {
+    "name": "togglePokemonGoSearchLocaleOverride",
+    "line": 1751
+  },
+  {
+    "name": "saveSyncQueue",
+    "line": 1766
+  },
+  {
+    "name": "sessionTransientCallback",
+    "line": 1771
+  },
+  {
+    "name": "resetSessionTransientUi",
+    "line": 1779
+  },
+  {
+    "name": "resetTransientUiBeforeSessionActivation",
+    "line": 1870
+  },
+  {
+    "name": "activateOwnedSession",
+    "line": 1879
+  },
+  {
+    "name": "storedSessionMatches",
+    "line": 1901
+  },
+  {
+    "name": "ownedSessionAlreadyActive",
+    "line": 1905
+  },
+  {
+    "name": "suspendOwnedSession",
+    "line": 1909
+  },
+  {
+    "name": "clearOwnedSession",
+    "line": 1919
+  },
+  {
+    "name": "showSessionStorageNotices",
+    "line": 1929
+  },
+  {
+    "name": "communityRoleForUser",
+    "line": 1943
+  },
+  {
+    "name": "strongerCommunityRole",
+    "line": 1948
+  },
+  {
+    "name": "normalizeCommunityId",
+    "line": 1952
+  },
+  {
+    "name": "normalizeCommunityRecord",
+    "line": 1956
+  },
+  {
+    "name": "ensureCommunityModel",
+    "line": 1994
+  },
+  {
+    "name": "defaultCommunityMembershipUpdates",
+    "line": 2018
+  },
+  {
+    "name": "applyDefaultCommunityMembershipLocal",
+    "line": 2036
+  },
+  {
+    "name": "targetedCommunityMembershipUpdates",
+    "line": 2066
+  },
+  {
+    "name": "applyTargetedCommunityMembershipLocal",
+    "line": 2096
+  },
+  {
+    "name": "memberCommunityOptions",
+    "line": 2127
+  },
+  {
+    "name": "currentCommunityIsSelectable",
+    "line": 2154
+  },
+  {
+    "name": "getCurrentCommunityId",
+    "line": 2158
+  },
+  {
+    "name": "setCurrentCommunityId",
+    "line": 2163
+  },
+  {
+    "name": "getCommunityMemberUsernames",
+    "line": 2178
+  },
+  {
+    "name": "isUserInCommunity",
+    "line": 2183
+  },
+  {
+    "name": "filterUsersBySelectedCommunity",
+    "line": 2187
+  },
+  {
+    "name": "canManageCommunity",
+    "line": 2192
+  },
+  {
+    "name": "recordCommunityId",
+    "line": 2197
+  },
+  {
+    "name": "recordBelongsToSelectedCommunity",
+    "line": 2200
+  },
+  {
+    "name": "renderMemberCommunitySwitcher",
+    "line": 2204
+  },
+  {
+    "name": "normalizeData",
+    "line": 2236
+  },
+  {
+    "name": "initLocal",
+    "line": 2250
+  },
+  {
+    "name": "getLocal",
+    "line": 2253
+  },
+  {
+    "name": "perfTime",
+    "line": 2260
+  },
+  {
+    "name": "perfRecord",
+    "line": 2269
+  },
+  {
+    "name": "perfStats",
+    "line": 2275
+  },
+  {
+    "name": "saveLocal",
+    "line": 2292
+  },
+  {
+    "name": "publicShareSessionMatches",
+    "line": 2313
+  },
+  {
+    "name": "publicShareSnapshotForUser",
+    "line": 2318
+  },
+  {
+    "name": "applyPublicShareSnapshot",
+    "line": 2330
+  },
+  {
+    "name": "notePublicSharePublicationBlocked",
+    "line": 2353
+  },
+  {
+    "name": "publicSharePublicationCurrent",
+    "line": 2360
+  },
+  {
+    "name": "writeProviderPublicShareSnapshot",
+    "line": 2363
+  },
+  {
+    "name": "queueHydratedPublicShareSnapshot",
+    "line": 2396
+  },
+  {
+    "name": "requestPublicSharePublication",
+    "line": 2415
+  },
+  {
+    "name": "flushPendingPublicSharePublication",
+    "line": 2424
+  },
+  {
+    "name": "publishPublicShareNow",
+    "line": 2430
+  },
+  {
+    "name": "ownerShareNoticeKey",
+    "line": 2459
+  },
+  {
+    "name": "renderOwnerShareRepublishNotice",
+    "line": 2466
+  },
+  {
+    "name": "inspectOwnPublicShareAfterHydration",
+    "line": 2473
+  },
+  {
+    "name": "republishOwnPublicShare",
+    "line": 2491
+  },
+  {
+    "name": "writeUser",
+    "line": 2508
+  },
+  {
+    "name": "canWriteLoginDirectoryNow",
+    "line": 2523
+  },
+  {
+    "name": "writeUserNow",
+    "line": 2527
+  },
+  {
+    "name": "writeUserStrict",
+    "line": 2557
+  },
+  {
+    "name": "bindAuthUserNow",
+    "line": 2570
+  },
+  {
+    "name": "repairMemberAccount",
+    "line": 2588
+  },
+  {
+    "name": "createMemberNow",
+    "line": 2659
+  },
+  {
+    "name": "generatedFirstTimePin",
+    "line": 2741
+  },
+  {
+    "name": "firstTimeLoginMessage",
+    "line": 2744
+  },
+  {
+    "name": "repairMissingAuthMetadata",
+    "line": 2754
+  },
+  {
+    "name": "provisionFirebaseAuthForTrainer",
+    "line": 2777
+  },
+  {
+    "name": "readLegacyProvisioningFreeze",
+    "line": 2797
+  },
+  {
+    "name": "deleteProvisionedFirebaseAuthForTrainer",
+    "line": 2802
+  },
+  {
+    "name": "assertLegacyProvisioningCreationAllowed",
+    "line": 2810
+  },
+  {
+    "name": "provisionFreshFirebaseAuthForTrainer",
+    "line": 2815
+  },
+  {
+    "name": "authVersionCandidates",
+    "line": 2829
+  },
+  {
+    "name": "signInWithAuthVersionScan",
+    "line": 2842
+  },
+  {
+    "name": "isRecoverableAuthIndexError",
+    "line": 2856
+  },
+  {
+    "name": "authIndexError",
+    "line": 2860
+  },
+  {
+    "name": "syncOwnAuthIndex",
+    "line": 2865
+  },
+  {
+    "name": "ensureLoginDirectoryPublished",
+    "line": 2901
+  },
+  {
+    "name": "accountSyncRolloutEligible",
+    "line": 2925
+  },
+  {
+    "name": "accountSyncMigratedLegacyQueueItem",
+    "line": 2932
+  },
+  {
+    "name": "accountSyncQueuedProfileBoardItem",
+    "line": 2938
+  },
+  {
+    "name": "accountSyncProfileFields",
+    "line": 2941
+  },
+  {
+    "name": "accountSyncPreserveLegacyBoard",
+    "line": 2944
+  },
+  {
+    "name": "queueAccountSyncProfileFields",
+    "line": 2952
+  },
+  {
+    "name": "acknowledgeAccountSyncProfileFields",
+    "line": 2966
+  },
+  {
+    "name": "accountSyncRetainedLegacyQueueEntries",
+    "line": 2975
+  },
+  {
+    "name": "accountSyncMarkMutationBlocked",
+    "line": 2983
+  },
+  {
+    "name": "accountSyncMutationAuthority",
+    "line": 3001
+  },
+  {
+    "name": "accountSyncAuthorityCurrent",
+    "line": 3027
+  },
+  {
+    "name": "accountSyncFavoriteReviewAuthority",
+    "line": 3034
+  },
+  {
+    "name": "accountSyncFavoriteReviewAuthorityCurrent",
+    "line": 3053
+  },
+  {
+    "name": "accountSyncPreservedReviewAuthority",
+    "line": 3063
+  },
+  {
+    "name": "accountSyncPreservedReviewAuthorityCurrent",
+    "line": 3077
+  },
+  {
+    "name": "accountSyncPreservedReviewReady",
+    "line": 3080
+  },
+  {
+    "name": "accountSyncProjectionReady",
+    "line": 3083
+  },
+  {
+    "name": "accountSyncOrganizationHydrating",
+    "line": 3087
+  },
+  {
+    "name": "accountSyncClone",
+    "line": 3093
+  },
+  {
+    "name": "accountSyncDeviceInstallId",
+    "line": 3097
+  },
+  {
+    "name": "buildAccountSyncCatalogIndex",
+    "line": 3107
+  },
+  {
+    "name": "accountSyncCatalogEntryForId",
+    "line": 3130
+  },
+  {
+    "name": "accountSyncCatalogEntryForName",
+    "line": 3135
+  },
+  {
+    "name": "accountSyncCatalogIdentity",
+    "line": 3143
+  },
+  {
+    "name": "accountSyncOrdersSnapshot",
+    "line": 3148
+  },
+  {
+    "name": "resolveCanonicalFavoriteIdentity",
+    "line": 3151
+  },
+  {
+    "name": "resolveLegacyFavoriteIdentity",
+    "line": 3156
+  },
+  {
+    "name": "resolveFavoriteIdentityForSession",
+    "line": 3162
+  },
+  {
+    "name": "accountSyncExactFavoriteUid",
+    "line": 3167
+  },
+  {
+    "name": "accountSyncReadLegacySources",
+    "line": 3179
+  },
+  {
+    "name": "accountSyncEncodedPriority",
+    "line": 3203
+  },
+  {
+    "name": "applyAccountSyncCanonicalEntities",
+    "line": 3211
+  },
+  {
+    "name": "providerAccountSyncPublicSnapshot",
+    "line": 3237
+  },
+  {
+    "name": "publishAccountSyncProjection",
+    "line": 3252
+  },
+  {
+    "name": "retireMigratedLegacyListQueue",
+    "line": 3270
+  },
+  {
+    "name": "retireProviderOnlyLegacyQueue",
+    "line": 3283
+  },
+  {
+    "name": "stopAccountSyncRuntime",
+    "line": 3288
+  },
+  {
+    "name": "ensureAccountSyncRuntime",
+    "line": 3297
+  },
+  {
+    "name": "accountSyncRecoveryStatus",
+    "line": 3364
+  },
+  {
+    "name": "accountSyncIdleRecoveryState",
+    "line": 3367
+  },
+  {
+    "name": "invalidateAccountSyncRecovery",
+    "line": 3368
+  },
+  {
+    "name": "accountSyncRecoveryBindingCurrent",
+    "line": 3374
+  },
+  {
+    "name": "accountSyncRecoveryPresentationBinding",
+    "line": 3377
+  },
+  {
+    "name": "accountSyncEffectiveRecoveryState",
+    "line": 3381
+  },
+  {
+    "name": "accountSyncClearStaleRecoveryPresentation",
+    "line": 3385
+  },
+  {
+    "name": "accountSyncRecoveryContext",
+    "line": 3391
+  },
+  {
+    "name": "accountSyncRecoveryContextCurrent",
+    "line": 3404
+  },
+  {
+    "name": "accountSyncCurrentRecoveryPlan",
+    "line": 3410
+  },
+  {
+    "name": "getAccountSyncRecoveryCoordinator",
+    "line": 3414
+  },
+  {
+    "name": "performAccountSyncRecovery",
+    "line": 3445
+  },
+  {
+    "name": "recordAccountSyncUnresolved",
+    "line": 3456
+  },
+  {
+    "name": "applyAccountSyncTradeMutations",
+    "line": 3460
+  },
+  {
+    "name": "writeAccountSyncList",
+    "line": 3467
+  },
+  {
+    "name": "writeAccountSyncSpecialBoard",
+    "line": 3475
+  },
+  {
+    "name": "resetOwnedHydrationState",
+    "line": 3483
+  },
+  {
+    "name": "requireOwnedListHydration",
+    "line": 3487
+  },
+  {
+    "name": "listEntryValuesEqual",
+    "line": 3502
+  },
+  {
+    "name": "queueListEntryDiff",
+    "line": 3506
+  },
+  {
+    "name": "writeList",
+    "line": 3521
+  },
+  {
+    "name": "writeListSerialized",
+    "line": 3527
+  },
+  {
+    "name": "writeListItem",
+    "line": 3577
+  },
+  {
+    "name": "refreshAddPokemonChoices",
+    "line": 3586
+  },
+  {
+    "name": "bumpLastSeen",
+    "line": 3597
+  },
+  {
+    "name": "syncFromLocal",
+    "line": 3610
+  },
+  {
+    "name": "showSkeletonsIfEmpty",
+    "line": 3611
+  },
+  {
+    "name": "authEmail",
+    "line": 3622
+  },
+  {
+    "name": "authVersionFromEmail",
+    "line": 3627
+  },
+  {
+    "name": "authVersionForUser",
+    "line": 3631
+  },
+  {
+    "name": "authEmailForUser",
+    "line": 3635
+  },
+  {
+    "name": "normalizedLoginDirectoryRecord",
+    "line": 3638
+  },
+  {
+    "name": "knownLoginUsernames",
+    "line": 3645
+  },
+  {
+    "name": "canonicalUsernameInput",
+    "line": 3648
+  },
+  {
+    "name": "normalizedUserRecord",
+    "line": 3658
+  },
+  {
+    "name": "withTimeout",
+    "line": 3669
+  },
+  {
+    "name": "firebaseAuthConfigured",
+    "line": 3680
+  },
+  {
+    "name": "firebaseConfig",
+    "line": 3681
+  },
+  {
+    "name": "setupFirebase",
+    "line": 3693
+  },
+  {
+    "name": "ensureFirebaseIdentity",
+    "line": 3705
+  },
+  {
+    "name": "connectFirebase",
+    "line": 3792
+  },
+  {
+    "name": "applyDataPath",
+    "line": 3809
+  },
+  {
+    "name": "applyQueuedData",
+    "line": 3822
+  },
+  {
+    "name": "mergeRemoteData",
+    "line": 3829
+  },
+  {
+    "name": "_onSubSnapshot",
+    "line": 3874
+  },
+  {
+    "name": "startManagedSnapshotListener",
+    "line": 3953
+  },
+  {
+    "name": "subscribePath",
+    "line": 3975
+  },
+  {
+    "name": "retryLoginDirectory",
+    "line": 4009
+  },
+  {
+    "name": "protectedOwnerSession",
+    "line": 4013
+  },
+  {
+    "name": "subscribeLegacyAdminPath",
+    "line": 4017
+  },
+  {
+    "name": "startLegacyAdminReads",
+    "line": 4032
+  },
+  {
+    "name": "stopLegacyAdminReads",
+    "line": 4037
+  },
+  {
+    "name": "ownedExactReadsEnabled",
+    "line": 4040
+  },
+  {
+    "name": "_onOwnedDataSnapshot",
+    "line": 4044
+  },
+  {
+    "name": "_onOwnedDataError",
+    "line": 4090
+  },
+  {
+    "name": "ensureOwnedExactSubscriptions",
+    "line": 4099
+  },
+  {
+    "name": "ensureListSubscribed",
+    "line": 4111
+  },
+  {
+    "name": "ensureProtectedSubscriptions",
+    "line": 4122
+  },
+  {
+    "name": "startListener",
+    "line": 4148
+  },
+  {
+    "name": "selectedTrainerData",
+    "line": 4158
+  },
+  {
+    "name": "clearSelectedTrainerData",
+    "line": 4167
+  },
+  {
+    "name": "runtimeDataWithSelectedTrainer",
+    "line": 4170
+  },
+  {
+    "name": "loadPublicShareData",
+    "line": 4182
+  },
+  {
+    "name": "loadShareViewData",
+    "line": 4213
+  },
+  {
+    "name": "renderUnavailableShareView",
+    "line": 4216
+  },
+  {
+    "name": "publicShareStatusMessageKey",
+    "line": 4230
+  },
+  {
+    "name": "clearShareViewSubscriptions",
+    "line": 4237
+  },
+  {
+    "name": "onPublicShareSnapshot",
+    "line": 4242
+  },
+  {
+    "name": "ensureShareViewSubscriptions",
+    "line": 4261
+  },
+  {
+    "name": "openShareViewFromRequest",
+    "line": 4285
+  },
+  {
+    "name": "subscribeMyPendingDecrements",
+    "line": 4302
+  },
+  {
+    "name": "skipFirebase",
+    "line": 4313
+  },
+  {
+    "name": "healthRow",
+    "line": 4315
+  },
+  {
+    "name": "renderHealthRows",
+    "line": 4318
+  },
+  {
+    "name": "setLoginHealthCopyStatus",
+    "line": 4334
+  },
+  {
+    "name": "safeVisibleLoginError",
+    "line": 4340
+  },
+  {
+    "name": "loginLocalCacheSummary",
+    "line": 4345
+  },
+  {
+    "name": "safeReportValue",
+    "line": 4353
+  },
+  {
+    "name": "buildLoginHealthReport",
+    "line": 4357
+  },
+  {
+    "name": "copyLoginHealthReport",
+    "line": 4377
+  },
+  {
+    "name": "ensureFirebaseForHealth",
+    "line": 4390
+  },
+  {
+    "name": "serviceWorkerHealth",
+    "line": 4396
+  },
+  {
+    "name": "openLoginHealthCheck",
+    "line": 4411
+  },
+  {
+    "name": "runLoginHealthCheck",
+    "line": 4416
+  },
+  {
+    "name": "clearLoginLocalCache",
+    "line": 4545
+  },
+  {
+    "name": "doLogin",
+    "line": 4576
+  },
+  {
+    "name": "logout",
+    "line": 4687
+  },
+  {
+    "name": "hasVisibleScreen",
+    "line": 4710
+  },
+  {
+    "name": "hidePreAuth",
+    "line": 4716
+  },
+  {
+    "name": "completeLoginBootstrap",
+    "line": 4720
+  },
+  {
+    "name": "showPreAuth",
+    "line": 4730
+  },
+  {
+    "name": "showBootError",
+    "line": 4743
+  },
+  {
+    "name": "showConfig",
+    "line": 4760
+  },
+  {
+    "name": "showLogin",
+    "line": 4766
+  },
+  {
+    "name": "loginUserSuggestionsShouldOpen",
+    "line": 4784
+  },
+  {
+    "name": "populateLoginUsers",
+    "line": 4788
+  },
+  {
+    "name": "renderLoginUserSuggestions",
+    "line": 4802
+  },
+  {
+    "name": "hideLoginUserSuggestions",
+    "line": 4836
+  },
+  {
+    "name": "selectLoginUser",
+    "line": 4842
+  },
+  {
+    "name": "selectLoginUserByIndex",
+    "line": 4848
+  },
+  {
+    "name": "loginUserKeydown",
+    "line": 4852
+  },
+  {
+    "name": "setText",
+    "line": 4877
+  },
+  {
+    "name": "applyTranslationAttributes",
+    "line": 4881
+  },
+  {
+    "name": "renderInterimProductLabels",
+    "line": 4887
+  },
+  {
+    "name": "changeInterfaceLocale",
+    "line": 4929
+  },
+  {
+    "name": "resetTrainerOrganizerState",
+    "line": 4973
+  },
+  {
+    "name": "ensureTrainerHistoryStore",
+    "line": 4977
+  },
+  {
+    "name": "ensureFavoriteShareSessionCache",
+    "line": 4983
+  },
+  {
+    "name": "resetFavoriteBrowseSession",
+    "line": 5013
+  },
+  {
+    "name": "trainerSearchCompatibility",
+    "line": 5021
+  },
+  {
+    "name": "reloadCompatibleClient",
+    "line": 5026
+  },
+  {
+    "name": "requireCompatibleTrainerSearch",
+    "line": 5039
+  },
+  {
+    "name": "renderFindTrainer",
+    "line": 5059
+  },
+  {
+    "name": "closeTrainerSuggestions",
+    "line": 5073
+  },
+  {
+    "name": "renderTrainerDiscoveryHeading",
+    "line": 5081
+  },
+  {
+    "name": "setTrainerDiscoveryMode",
+    "line": 5090
+  },
+  {
+    "name": "focusTrainerDiscoveryMode",
+    "line": 5105
+  },
+  {
+    "name": "trainerDiscoveryModeKeydown",
+    "line": 5117
+  },
+  {
+    "name": "positionTrainerSuggestions",
+    "line": 5125
+  },
+  {
+    "name": "trainerSearchFocused",
+    "line": 5134
+  },
+  {
+    "name": "providerTrainerDirectorySession",
+    "line": 5139
+  },
+  {
+    "name": "rememberProviderTrainerHandles",
+    "line": 5143
+  },
+  {
+    "name": "loadProviderTrainerDirectoryQuery",
+    "line": 5146
+  },
+  {
+    "name": "ensureProviderTrainerDirectory",
+    "line": 5163
+  },
+  {
+    "name": "combinedTrainerDirectoryNames",
+    "line": 5170
+  },
+  {
+    "name": "trainerSuggestionOptions",
+    "line": 5178
+  },
+  {
+    "name": "rankedTrainerSuggestions",
+    "line": 5186
+  },
+  {
+    "name": "trainerSuggestionHtml",
+    "line": 5190
+  },
+  {
+    "name": "renderTrainerSuggestions",
+    "line": 5196
+  },
+  {
+    "name": "settleTrainerSuggestions",
+    "line": 5210
+  },
+  {
+    "name": "showTrainerSearchError",
+    "line": 5218
+  },
+  {
+    "name": "setTrainerRecovery",
+    "line": 5219
+  },
+  {
+    "name": "syncTrainerSearchClear",
+    "line": 5220
+  },
+  {
+    "name": "clearTrainerSearch",
+    "line": 5221
+  },
+  {
+    "name": "focusTrainerSearch",
+    "line": 5222
+  },
+  {
+    "name": "retryTrainerSearch",
+    "line": 5223
+  },
+  {
+    "name": "queueTrainerSuggestions",
+    "line": 5224
+  },
+  {
+    "name": "selectTrainerSuggestion",
+    "line": 5233
+  },
+  {
+    "name": "trainerSearchKeydown",
+    "line": 5239
+  },
+  {
+    "name": "trainerViewedText",
+    "line": 5265
+  },
+  {
+    "name": "canonicalTrainerName",
+    "line": 5272
+  },
+  {
+    "name": "favoriteTagChips",
+    "line": 5277
+  },
+  {
+    "name": "favoriteBrowseCatalog",
+    "line": 5280
+  },
+  {
+    "name": "closeFavoriteBrowseSuggestions",
+    "line": 5292
+  },
+  {
+    "name": "syncFavoriteBrowseDisclosure",
+    "line": 5298
+  },
+  {
+    "name": "toggleFavoriteBrowse",
+    "line": 5304
+  },
+  {
+    "name": "syncFavoriteBrowseClear",
+    "line": 5310
+  },
+  {
+    "name": "favoriteBrowseSuggestionHtml",
+    "line": 5311
+  },
+  {
+    "name": "favoriteBrowseInput",
+    "line": 5314
+  },
+  {
+    "name": "favoriteBrowseKeydown",
+    "line": 5325
+  },
+  {
+    "name": "clearFavoriteBrowse",
+    "line": 5338
+  },
+  {
+    "name": "selectFavoriteBrowsePokemon",
+    "line": 5342
+  },
+  {
+    "name": "favoriteBrowseEmpty",
+    "line": 5348
+  },
+  {
+    "name": "favoriteBrowseCategoryText",
+    "line": 5349
+  },
+  {
+    "name": "favoriteBrowsePriorityText",
+    "line": 5353
+  },
+  {
+    "name": "renderFavoriteBrowseResults",
+    "line": 5354
+  },
+  {
+    "name": "hydrateFavoriteBrowse",
+    "line": 5379
+  },
+  {
+    "name": "refreshFavoriteBrowse",
+    "line": 5392
+  },
+  {
+    "name": "retryFavoriteBrowse",
+    "line": 5393
+  },
+  {
+    "name": "closeFavoriteCardActions",
+    "line": 5394
+  },
+  {
+    "name": "openFavoriteSwipeActions",
+    "line": 5401
+  },
+  {
+    "name": "toggleFavoriteCardMenu",
+    "line": 5402
+  },
+  {
+    "name": "openFavoriteTagsFromMenu",
+    "line": 5406
+  },
+  {
+    "name": "favoriteCardPointerDown",
+    "line": 5407
+  },
+  {
+    "name": "favoriteCardPointerMove",
+    "line": 5412
+  },
+  {
+    "name": "favoriteCardPointerUp",
+    "line": 5418
+  },
+  {
+    "name": "favoriteCardPointerCancel",
+    "line": 5425
+  },
+  {
+    "name": "setFavoriteSearch",
+    "line": 5434
+  },
+  {
+    "name": "syncFavoriteSearchControl",
+    "line": 5439
+  },
+  {
+    "name": "clearFavoriteSearch",
+    "line": 5440
+  },
+  {
+    "name": "favoriteTrainerAction",
+    "line": 5441
+  },
+  {
+    "name": "favoriteBrowsePointerDown",
+    "line": 5459
+  },
+  {
+    "name": "toggleFavoriteTagFilter",
+    "line": 5471
+  },
+  {
+    "name": "clearFavoriteFilters",
+    "line": 5475
+  },
+  {
+    "name": "renderTrainerQuickLists",
+    "line": 5476
+  },
+  {
+    "name": "accountSyncFavoriteIdentity",
+    "line": 5509
+  },
+  {
+    "name": "completeUnresolvedFavoriteReview",
+    "line": 5513
+  },
+  {
+    "name": "queueFavoriteTags",
+    "line": 5521
+  },
+  {
+    "name": "toggleTrainerFavorite",
+    "line": 5533
+  },
+  {
+    "name": "openFavoriteTrainerByName",
+    "line": 5560
+  },
+  {
+    "name": "showFavoriteSavedPrompt",
+    "line": 5570
+  },
+  {
+    "name": "removeTrainerFavorite",
+    "line": 5574
+  },
+  {
+    "name": "organizerMessage",
+    "line": 5591
+  },
+  {
+    "name": "trainerOrganizerChanged",
+    "line": 5592
+  },
+  {
+    "name": "renderTrainerOrganizer",
+    "line": 5599
+  },
+  {
+    "name": "toggleTrainerOrganizerTag",
+    "line": 5607
+  },
+  {
+    "name": "openTrainerOrganizer",
+    "line": 5615
+  },
+  {
+    "name": "closeTrainerOrganizer",
+    "line": 5619
+  },
+  {
+    "name": "showTrainerTagCreator",
+    "line": 5620
+  },
+  {
+    "name": "hideTrainerTagCreator",
+    "line": 5621
+  },
+  {
+    "name": "createLocalTrainerTag",
+    "line": 5622
+  },
+  {
+    "name": "trainerTagInputKeydown",
+    "line": 5653
+  },
+  {
+    "name": "renameLocalTrainerTag",
+    "line": 5654
+  },
+  {
+    "name": "deleteLocalTrainerTag",
+    "line": 5672
+  },
+  {
+    "name": "rememberTrainerOpened",
+    "line": 5682
+  },
+  {
+    "name": "publicShareSnapshotFromRuntime",
+    "line": 5687
+  },
+  {
+    "name": "openTrainerByName",
+    "line": 5692
+  },
+  {
+    "name": "publicShareRequestFromInput",
+    "line": 5696
+  },
+  {
+    "name": "resolvedTrainerSearchValue",
+    "line": 5708
+  },
+  {
+    "name": "openTrainerPublicShare",
+    "line": 5714
+  },
+  {
+    "name": "renderSettings",
+    "line": 5746
+  },
+  {
+    "name": "showApp",
+    "line": 5747
+  },
+  {
+    "name": "activeTabName",
+    "line": 5820
+  },
+  {
+    "name": "renderActiveTab",
+    "line": 5824
+  },
+  {
+    "name": "queueRenderActiveTab",
+    "line": 5835
+  },
+  {
+    "name": "queueRefreshAll",
+    "line": 5843
+  },
+  {
+    "name": "refreshBadgesAndLightChrome",
+    "line": 5851
+  },
+  {
+    "name": "switchTab",
+    "line": 5854
+  },
+  {
+    "name": "openLegacyInventoryTool",
+    "line": 5870
+  },
+  {
+    "name": "refreshAll",
+    "line": 5871
+  },
+  {
+    "name": "userBadge",
+    "line": 5884
+  },
+  {
+    "name": "pokemonDisplayName",
+    "line": 5894
+  },
+  {
+    "name": "pokemonSearchLabels",
+    "line": 5897
+  },
+  {
+    "name": "pokemonEntryForLegacyKey",
+    "line": 5900
+  },
+  {
+    "name": "pokemonListValueForCanonicalName",
+    "line": 5903
+  },
+  {
+    "name": "addPokemonEntryAliases",
+    "line": 5908
+  },
+  {
+    "name": "localizedPokemonEntry",
+    "line": 5912
+  },
+  {
+    "name": "comparePokemonLabels",
+    "line": 5915
+  },
+  {
+    "name": "buildAcItems",
+    "line": 5918
+  },
+  {
+    "name": "closeAddAutocomplete",
+    "line": 5931
+  },
+  {
+    "name": "acSearch",
+    "line": 5937
+  },
+  {
+    "name": "acSelect",
+    "line": 5993
+  },
+  {
+    "name": "acKeydown",
+    "line": 5999
+  },
+  {
+    "name": "acUpdateFocus",
+    "line": 6007
+  },
+  {
+    "name": "isInAddTray",
+    "line": 6016
+  },
+  {
+    "name": "addToTrayFromAc",
+    "line": 6017
+  },
+  {
+    "name": "removeFromAddTray",
+    "line": 6026
+  },
+  {
+    "name": "clearAddTray",
+    "line": 6032
+  },
+  {
+    "name": "renderAddTray",
+    "line": 6038
+  },
+  {
+    "name": "confirmAddTray",
+    "line": 6072
+  },
+  {
+    "name": "backgroundRecord",
+    "line": 6101
+  },
+  {
+    "name": "backgroundDisplayName",
+    "line": 6102
+  },
+  {
+    "name": "backgroundShortLabel",
+    "line": 6103
+  },
+  {
+    "name": "backgroundVisual",
+    "line": 6104
+  },
+  {
+    "name": "backgroundVisualClass",
+    "line": 6105
+  },
+  {
+    "name": "backgroundVisualAttrs",
+    "line": 6106
+  },
+  {
+    "name": "backgroundVisualMotifHtml",
+    "line": 6110
+  },
+  {
+    "name": "backgroundBadgeHtml",
+    "line": 6115
+  },
+  {
+    "name": "updateAddBackgroundPresentation",
+    "line": 6120
+  },
+  {
+    "name": "backgroundContextPokemonName",
+    "line": 6127
+  },
+  {
+    "name": "backgroundContextCurrentId",
+    "line": 6133
+  },
+  {
+    "name": "openBackgroundPicker",
+    "line": 6139
+  },
+  {
+    "name": "closeBackgroundPicker",
+    "line": 6150
+  },
+  {
+    "name": "backgroundSearchChanged",
+    "line": 6155
+  },
+  {
+    "name": "setBackgroundFilter",
+    "line": 6156
+  },
+  {
+    "name": "showMoreBackgrounds",
+    "line": 6157
+  },
+  {
+    "name": "renderBackgroundPicker",
+    "line": 6158
+  },
+  {
+    "name": "backgroundPickerKeydown",
+    "line": 6188
+  },
+  {
+    "name": "selectBackground",
+    "line": 6202
+  },
+  {
+    "name": "showUndo",
+    "line": 6221
+  },
+  {
+    "name": "hideUndo",
+    "line": 6236
+  },
+  {
+    "name": "doUndo",
+    "line": 6246
+  },
+  {
+    "name": "formatFc",
+    "line": 6257
+  },
+  {
+    "name": "validateFc",
+    "line": 6271
+  },
+  {
+    "name": "setFilter",
+    "line": 6276
+  },
+  {
+    "name": "setBrowseList",
+    "line": 6282
+  },
+  {
+    "name": "setStaleFilter",
+    "line": 6292
+  },
+  {
+    "name": "activeUsers",
+    "line": 6299
+  },
+  {
+    "name": "renderBrowse",
+    "line": 6305
+  },
+  {
+    "name": "_renderBrowseInner",
+    "line": 6306
+  },
+  {
+    "name": "resetMyListCategoryForAccountBoundary",
+    "line": 6383
+  },
+  {
+    "name": "resetMyListPerformanceState",
+    "line": 6389
+  },
+  {
+    "name": "setMyList",
+    "line": 6401
+  },
+  {
+    "name": "myListCategoryKey",
+    "line": 6425
+  },
+  {
+    "name": "myListCategoryLabel",
+    "line": 6426
+  },
+  {
+    "name": "myListCategoryCount",
+    "line": 6427
+  },
+  {
+    "name": "updateMyListCategoryChrome",
+    "line": 6428
+  },
+  {
+    "name": "populatedMyListAlternative",
+    "line": 6437
+  },
+  {
+    "name": "toggleAddAdvanced",
+    "line": 6442
+  },
+  {
+    "name": "initAddAdvanced",
+    "line": 6451
+  },
+  {
+    "name": "syncSpeedAddMode",
+    "line": 6461
+  },
+  {
+    "name": "toggleSpeedAddMode",
+    "line": 6472
+  },
+  {
+    "name": "setAddPri",
+    "line": 6478
+  },
+  {
+    "name": "addEntry",
+    "line": 6491
+  },
+  {
+    "name": "allCostumeEntries",
+    "line": 6526
+  },
+  {
+    "name": "maxTradeEntries",
+    "line": 6530
+  },
+  {
+    "name": "listSource",
+    "line": 6539
+  },
+  {
+    "name": "spriteSourceIndex",
+    "line": 6553
+  },
+  {
+    "name": "costumeBaseName",
+    "line": 6569
+  },
+  {
+    "name": "spriteEntryForListItem",
+    "line": 6577
+  },
+  {
+    "name": "priorityFamilySort",
+    "line": 6588
+  },
+  {
+    "name": "myListSourceMap",
+    "line": 6593
+  },
+  {
+    "name": "myListViewModel",
+    "line": 6599
+  },
+  {
+    "name": "myListOrderPriorityKey",
+    "line": 6629
+  },
+  {
+    "name": "myListOrderStorageKey",
+    "line": 6630
+  },
+  {
+    "name": "readMyListOrder",
+    "line": 6635
+  },
+  {
+    "name": "applyExplicitMyListOrder",
+    "line": 6647
+  },
+  {
+    "name": "currentMyListOrderModel",
+    "line": 6658
+  },
+  {
+    "name": "persistMyListOrder",
+    "line": 6664
+  },
+  {
+    "name": "currentListEntries",
+    "line": 6671
+  },
+  {
+    "name": "scheduleMyListFilter",
+    "line": 6688
+  },
+  {
+    "name": "myListEditorHtml",
+    "line": 6697
+  },
+  {
+    "name": "hydrateMyRowEditor",
+    "line": 6714
+  },
+  {
+    "name": "hydrateMyRowPriority",
+    "line": 6722
+  },
+  {
+    "name": "myListRowRenderKey",
+    "line": 6731
+  },
+  {
+    "name": "myListRowHtml",
+    "line": 6734
+  },
+  {
+    "name": "myListRowsHtml",
+    "line": 6771
+  },
+  {
+    "name": "myListPriorityCollapseKey",
+    "line": 6774
+  },
+  {
+    "name": "isMyListPriorityCollapsed",
+    "line": 6778
+  },
+  {
+    "name": "setMyListPriorityCollapsed",
+    "line": 6782
+  },
+  {
+    "name": "toggleMyListPrioritySection",
+    "line": 6793
+  },
+  {
+    "name": "expandMyListPrioritiesReceivingEntries",
+    "line": 6796
+  },
+  {
+    "name": "myListPrioritySectionHtml",
+    "line": 6805
+  },
+  {
+    "name": "myListDexGroups",
+    "line": 6822
+  },
+  {
+    "name": "myListDexSectionHtml",
+    "line": 6830
+  },
+  {
+    "name": "myListSectionModels",
+    "line": 6838
+  },
+  {
+    "name": "myListSectionHtml",
+    "line": 6845
+  },
+  {
+    "name": "myListNodeFromHtml",
+    "line": 6850
+  },
+  {
+    "name": "patchMyListSectionRows",
+    "line": 6853
+  },
+  {
+    "name": "patchMyListSections",
+    "line": 6879
+  },
+  {
+    "name": "applyMyListVisibilityFilter",
+    "line": 6898
+  },
+  {
+    "name": "syncMyListFilteredEmpty",
+    "line": 6914
+  },
+  {
+    "name": "scheduleProgressiveMyListRender",
+    "line": 6922
+  },
+  {
+    "name": "scheduleMyListStringsRender",
+    "line": 6948
+  },
+  {
+    "name": "waitForMyListRender",
+    "line": 6957
+  },
+  {
+    "name": "renderMyList",
+    "line": 6960
+  },
+  {
+    "name": "confirmRemove",
+    "line": 7046
+  },
+  {
+    "name": "exportSpriteUrl",
+    "line": 7059
+  },
+  {
+    "name": "exportSpriteFallbackUrls",
+    "line": 7064
+  },
+  {
+    "name": "loadCanvasImage",
+    "line": 7081
+  },
+  {
+    "name": "loadCanvasImageWithFallback",
+    "line": 7095
+  },
+  {
+    "name": "canvasImageHasVisiblePixels",
+    "line": 7102
+  },
+  {
+    "name": "roundedRect",
+    "line": 7132
+  },
+  {
+    "name": "drawWrappedText",
+    "line": 7142
+  },
+  {
+    "name": "drawImageContain",
+    "line": 7160
+  },
+  {
+    "name": "imageTrimBox",
+    "line": 7169
+  },
+  {
+    "name": "drawSpriteFallback",
+    "line": 7194
+  },
+  {
+    "name": "maxCrownSvg",
+    "line": 7205
+  },
+  {
+    "name": "maxMarkForEntry",
+    "line": 7211
+  },
+  {
+    "name": "canvasBlob",
+    "line": 7215
+  },
+  {
+    "name": "downloadBlob",
+    "line": 7218
+  },
+  {
+    "name": "shouldUseNativeImageShare",
+    "line": 7225
+  },
+  {
+    "name": "deliverImageBlob",
+    "line": 7234
+  },
+  {
+    "name": "drawFittedText",
+    "line": 7250
+  },
+  {
+    "name": "drawCenteredFittedText",
+    "line": 7261
+  },
+  {
+    "name": "scatterbugPatternLabel",
+    "line": 7274
+  },
+  {
+    "name": "spindaExportPatternLabel",
+    "line": 7279
+  },
+  {
+    "name": "exportEntryNoteLabel",
+    "line": 7289
+  },
+  {
+    "name": "drawScatterbugExportLabel",
+    "line": 7323
+  },
+  {
+    "name": "drawExportEntryNoteLabel",
+    "line": 7346
+  },
+  {
+    "name": "_familyBase",
+    "line": 7372
+  },
+  {
+    "name": "_familySort",
+    "line": 7379
+  },
+  {
+    "name": "renderListImage",
+    "line": 7388
+  },
+  {
+    "name": "renderListImageCards",
+    "line": 7508
+  },
+  {
+    "name": "exportMyListImage",
+    "line": 7623
+  },
+  {
+    "name": "dragStart",
+    "line": 7647
+  },
+  {
+    "name": "dragOver",
+    "line": 7654
+  },
+  {
+    "name": "dragDrop",
+    "line": 7660
+  },
+  {
+    "name": "reorderMyListEntry",
+    "line": 7667
+  },
+  {
+    "name": "moveMyListEntry",
+    "line": 7692
+  },
+  {
+    "name": "clearMyListPointerDrag",
+    "line": 7699
+  },
+  {
+    "name": "myListPointerStart",
+    "line": 7703
+  },
+  {
+    "name": "myListPointerMove",
+    "line": 7711
+  },
+  {
+    "name": "myListPointerEnd",
+    "line": 7719
+  },
+  {
+    "name": "myListPointerCancel",
+    "line": 7725
+  },
+  {
+    "name": "announceMyListAction",
+    "line": 7728
+  },
+  {
+    "name": "toggleReorderMode",
+    "line": 7732
+  },
+  {
+    "name": "movePriority",
+    "line": 7739
+  },
+  {
+    "name": "dragEnd",
+    "line": 7755
+  },
+  {
+    "name": "setPri",
+    "line": 7761
+  },
+  {
+    "name": "setNotes",
+    "line": 7776
+  },
+  {
+    "name": "_setFlags",
+    "line": 7782
+  },
+  {
+    "name": "setLucky",
+    "line": 7796
+  },
+  {
+    "name": "setXxl",
+    "line": 7797
+  },
+  {
+    "name": "setXxs",
+    "line": 7798
+  },
+  {
+    "name": "setShiny",
+    "line": 7799
+  },
+  {
+    "name": "setBackground",
+    "line": 7800
+  },
+  {
+    "name": "removeEntry",
+    "line": 7807
+  },
+  {
+    "name": "buildStrings",
+    "line": 7828
+  },
+  {
+    "name": "myListSearchLabel",
+    "line": 7891
+  },
+  {
+    "name": "toggleMyListSearchString",
+    "line": 7896
+  },
+  {
+    "name": "toggleMyListMoreCombinations",
+    "line": 7904
+  },
+  {
+    "name": "myListSearchActionHtml",
+    "line": 7911
+  },
+  {
+    "name": "myListSearchOptionHtml",
+    "line": 7918
+  },
+  {
+    "name": "renderMyStrings",
+    "line": 7921
+  },
+  {
+    "name": "copyText",
+    "line": 7958
+  },
+  {
+    "name": "copyStr",
+    "line": 7972
+  },
+  {
+    "name": "setStrList",
+    "line": 7994
+  },
+  {
+    "name": "toggleStrUser",
+    "line": 8002
+  },
+  {
+    "name": "toggleComboStrings",
+    "line": 8019
+  },
+  {
+    "name": "renderStrings",
+    "line": 8024
+  },
+  {
+    "name": "_renderStringsInner",
+    "line": 8025
+  },
+  {
+    "name": "canUseBackupTools",
+    "line": 8078
+  },
+  {
+    "name": "guardBackupTool",
+    "line": 8081
+  },
+  {
+    "name": "exportData",
+    "line": 8087
+  },
+  {
+    "name": "renderSecurityPanel",
+    "line": 8103
+  },
+  {
+    "name": "loginAuditRows",
+    "line": 8122
+  },
+  {
+    "name": "renderLoginAudit",
+    "line": 8144
+  },
+  {
+    "name": "ownerCanUseCommunityTools",
+    "line": 8171
+  },
+  {
+    "name": "communityFeatureDiagnostic",
+    "line": 8174
+  },
+  {
+    "name": "ownerCommunityPreviewOn",
+    "line": 8182
+  },
+  {
+    "name": "preparedPreviewCommunities",
+    "line": 8185
+  },
+  {
+    "name": "ownerPreviewCommunityId",
+    "line": 8195
+  },
+  {
+    "name": "ownerPreviewCommunityRecord",
+    "line": 8201
+  },
+  {
+    "name": "ownerPreviewCommunityName",
+    "line": 8204
+  },
+  {
+    "name": "setOwnerPreviewCommunityId",
+    "line": 8209
+  },
+  {
+    "name": "setOwnerCommunityPreview",
+    "line": 8222
+  },
+  {
+    "name": "ownerPreviewCommunityMemberUsernames",
+    "line": 8232
+  },
+  {
+    "name": "ownerPreviewAllowsUser",
+    "line": 8238
+  },
+  {
+    "name": "selectedCommunityMemberUsernames",
+    "line": 8242
+  },
+  {
+    "name": "readScopeMemberUsernames",
+    "line": 8247
+  },
+  {
+    "name": "readScopeAllowsUser",
+    "line": 8250
+  },
+  {
+    "name": "browseAllowedUsers",
+    "line": 8254
+  },
+  {
+    "name": "stringsAllowedUsers",
+    "line": 8261
+  },
+  {
+    "name": "inventoryBrowseAllowedUsers",
+    "line": 8265
+  },
+  {
+    "name": "scheduleAllowedUsers",
+    "line": 8272
+  },
+  {
+    "name": "renderOwnerBrowsePreviewBanner",
+    "line": 8276
+  },
+  {
+    "name": "renderOwnerStringsPreviewBanner",
+    "line": 8288
+  },
+  {
+    "name": "renderOwnerInventoryPreviewBanner",
+    "line": 8300
+  },
+  {
+    "name": "renderOwnerSchedulePreviewBanner",
+    "line": 8312
+  },
+  {
+    "name": "guardOwnerPreviewTrainer",
+    "line": 8324
+  },
+  {
+    "name": "guardReadScopeTrainer",
+    "line": 8329
+  },
+  {
+    "name": "offerInReadScope",
+    "line": 8335
+  },
+  {
+    "name": "buildDefaultCommunityMigration",
+    "line": 8343
+  },
+  {
+    "name": "validateNonDefaultCommunityId",
+    "line": 8371
+  },
+  {
+    "name": "buildNonDefaultCommunityPreparation",
+    "line": 8380
+  },
+  {
+    "name": "preparedNonDefaultCommunities",
+    "line": 8412
+  },
+  {
+    "name": "validatePreparedNonDefaultCommunityId",
+    "line": 8417
+  },
+  {
+    "name": "buildNonDefaultCommunityMemberAssignment",
+    "line": 8424
+  },
+  {
+    "name": "buildNonDefaultCommunityMemberRemoval",
+    "line": 8450
+  },
+  {
+    "name": "setNonDefaultCommunityPrepStatus",
+    "line": 8473
+  },
+  {
+    "name": "setCommunityMemberToolStatus",
+    "line": 8478
+  },
+  {
+    "name": "nonDefaultCommunityMemberToolInput",
+    "line": 8483
+  },
+  {
+    "name": "communityPreviewStats",
+    "line": 8489
+  },
+  {
+    "name": "renderCommunityMigrationPanel",
+    "line": 8515
+  },
+  {
+    "name": "prepareDefaultCommunity",
+    "line": 8626
+  },
+  {
+    "name": "prepareNonDefaultCommunity",
+    "line": 8649
+  },
+  {
+    "name": "assignNonDefaultCommunityMember",
+    "line": 8683
+  },
+  {
+    "name": "removeNonDefaultCommunityMember",
+    "line": 8710
+  },
+  {
+    "name": "repairLoginDirectory",
+    "line": 8737
+  },
+  {
+    "name": "repairLoginDirectories",
+    "line": 8747
+  },
+  {
+    "name": "setAdminSection",
+    "line": 8763
+  },
+  {
+    "name": "adminRelativeTime",
+    "line": 8772
+  },
+  {
+    "name": "adminUserRows",
+    "line": 8775
+  },
+  {
+    "name": "adminUserAction",
+    "line": 8794
+  },
+  {
+    "name": "renderAdmin",
+    "line": 8803
+  },
+  {
+    "name": "repairAccount",
+    "line": 8851
+  },
+  {
+    "name": "toggleAdmin",
+    "line": 8881
+  },
+  {
+    "name": "addUser",
+    "line": 8889
+  },
+  {
+    "name": "establishedAccountResetBlocked",
+    "line": 8910
+  },
+  {
+    "name": "establishedAccountResetMessage",
+    "line": 8913
+  },
+  {
+    "name": "openReset",
+    "line": 8916
+  },
+  {
+    "name": "confirmReset",
+    "line": 8927
+  },
+  {
+    "name": "showRequestForm",
+    "line": 8949
+  },
+  {
+    "name": "hideRequestForm",
+    "line": 8953
+  },
+  {
+    "name": "submitRequest",
+    "line": 8962
+  },
+  {
+    "name": "renderPendingRequests",
+    "line": 8994
+  },
+  {
+    "name": "approveRequest",
+    "line": 9024
+  },
+  {
+    "name": "copyApprovedLogin",
+    "line": 9056
+  },
+  {
+    "name": "denyRequest",
+    "line": 9064
+  },
+  {
+    "name": "updateFcDisplay",
+    "line": 9071
+  },
+  {
+    "name": "applyAccountSyncProviderProfile",
+    "line": 9088
+  },
+  {
+    "name": "saveProfile",
+    "line": 9094
+  },
+  {
+    "name": "savePinSettings",
+    "line": 9124
+  },
+  {
+    "name": "saveAppearance",
+    "line": 9135
+  },
+  {
+    "name": "accountSyncPresentation",
+    "line": 9142
+  },
+  {
+    "name": "syncLabelForStatus",
+    "line": 9163
+  },
+  {
+    "name": "refreshSyncUi",
+    "line": 9173
+  },
+  {
+    "name": "setSyncStatus",
+    "line": 9237
+  },
+  {
+    "name": "showSyncBanner",
+    "line": 9256
+  },
+  {
+    "name": "hideSyncBanner",
+    "line": 9263
+  },
+  {
+    "name": "dismissSyncBanner",
+    "line": 9267
+  },
+  {
+    "name": "reconnectAuth",
+    "line": 9271
+  },
+  {
+    "name": "openSyncDetail",
+    "line": 9290
+  },
+  {
+    "name": "useSavedAccountCopyForPreservedReview",
+    "line": 9304
+  },
+  {
+    "name": "requestAccountSyncRecovery",
+    "line": 9324
+  },
+  {
+    "name": "accountSyncConflictFieldLabel",
+    "line": 9341
+  },
+  {
+    "name": "accountSyncConflictValue",
+    "line": 9349
+  },
+  {
+    "name": "accountSyncConflictItemName",
+    "line": 9355
+  },
+  {
+    "name": "accountSyncConflictReviewPlan",
+    "line": 9360
+  },
+  {
+    "name": "reviewAccountSyncConflicts",
+    "line": 9365
+  },
+  {
+    "name": "accountMenuElements",
+    "line": 9396
+  },
+  {
+    "name": "closeAccountMenu",
+    "line": 9397
+  },
+  {
+    "name": "openAccountMenu",
+    "line": 9403
+  },
+  {
+    "name": "toggleAccountMenu",
+    "line": 9409
+  },
+  {
+    "name": "settingsRouteHash",
+    "line": 9414
+  },
+  {
+    "name": "parseSettingsRoute",
+    "line": 9415
+  },
+  {
+    "name": "settingsRouteUrl",
+    "line": 9421
+  },
+  {
+    "name": "writeSettingsRoute",
+    "line": 9426
+  },
+  {
+    "name": "adoptDirectSettingsRoute",
+    "line": 9436
+  },
+  {
+    "name": "settingsRouteKey",
+    "line": 9446
+  },
+  {
+    "name": "captureSettingsScrollSnapshot",
+    "line": 9451
+  },
+  {
+    "name": "validSettingsScrollSnapshot",
+    "line": 9455
+  },
+  {
+    "name": "preserveSettingsScrollSnapshot",
+    "line": 9463
+  },
+  {
+    "name": "restoreAndClearSettingsScrollSnapshot",
+    "line": 9466
+  },
+  {
+    "name": "settingsUsesPageMode",
+    "line": 9475
+  },
+  {
+    "name": "applySettingsPresentation",
+    "line": 9476
+  },
+  {
+    "name": "googleProviderPresentation",
+    "line": 9498
+  },
+  {
+    "name": "usernamePinAccessUsable",
+    "line": 9512
+  },
+  {
+    "name": "renderConnectedAccounts",
+    "line": 9516
+  },
+  {
+    "name": "handleGoogleAccountAction",
+    "line": 9537
+  },
+  {
+    "name": "configureSettingsPanel",
+    "line": 9562
+  },
+  {
+    "name": "selectSettingsSection",
+    "line": 9584
+  },
+  {
+    "name": "showSettingsSectionList",
+    "line": 9593
+  },
+  {
+    "name": "settingsDetailIsOpenOnMobile",
+    "line": 9601
+  },
+  {
+    "name": "openSettingsPanel",
+    "line": 9602
+  },
+  {
+    "name": "openAccountSettingsSection",
+    "line": 9619
+  },
+  {
+    "name": "closeSettingsRoute",
+    "line": 9622
+  },
+  {
+    "name": "syncSettingsRoute",
+    "line": 9628
+  },
+  {
+    "name": "syncPendingSettingsRouteAfterAuth",
+    "line": 9650
+  },
+  {
+    "name": "openSettingsTool",
+    "line": 9654
+  },
+  {
+    "name": "openModal",
+    "line": 9668
+  },
+  {
+    "name": "closeModal",
+    "line": 9702
+  },
+  {
+    "name": "announceFeedback",
+    "line": 9714
+  },
+  {
+    "name": "toast",
+    "line": 9729
+  },
+  {
+    "name": "openActiveShareComparison",
+    "line": 9753
+  },
+  {
+    "name": "openDiffModal",
+    "line": 9757
+  },
+  {
+    "name": "closeDiffModal",
+    "line": 9765
+  },
+  {
+    "name": "setDiffListType",
+    "line": 9769
+  },
+  {
+    "name": "computeTrainerDiff",
+    "line": 9774
+  },
+  {
+    "name": "diffSectionEntries",
+    "line": 9805
+  },
+  {
+    "name": "diffSectionSearchString",
+    "line": 9811
+  },
+  {
+    "name": "copyDiffSearch",
+    "line": 9816
+  },
+  {
+    "name": "openTradeMatchModal",
+    "line": 9821
+  },
+  {
+    "name": "closeTradeMatchModal",
+    "line": 9830
+  },
+  {
+    "name": "tradeListWants",
+    "line": 9838
+  },
+  {
+    "name": "ownTradeListsAvailable",
+    "line": 9854
+  },
+  {
+    "name": "trainerTradeListsAvailable",
+    "line": 9862
+  },
+  {
+    "name": "computeTradeMatchSummary",
+    "line": 9866
+  },
+  {
+    "name": "tradeIntentFreeform",
+    "line": 9876
+  },
+  {
+    "name": "tradeIntentQualifierTokens",
+    "line": 9881
+  },
+  {
+    "name": "tradeMatchMetric",
+    "line": 9896
+  },
+  {
+    "name": "tradeMatchSearchItems",
+    "line": 9899
+  },
+  {
+    "name": "tradeMatchSearchHtml",
+    "line": 9917
+  },
+  {
+    "name": "renderTradeMatchSummary",
+    "line": 9924
+  },
+  {
+    "name": "renderTradeMatchModal",
+    "line": 9947
+  },
+  {
+    "name": "toggleTradeMatchSection",
+    "line": 9978
+  },
+  {
+    "name": "renderTradeComparisonReturn",
+    "line": 9985
+  },
+  {
+    "name": "editMyListFromTradeMatch",
+    "line": 9991
+  },
+  {
+    "name": "returnToTradeComparison",
+    "line": 10000
+  },
+  {
+    "name": "safeTransferPreferenceKey",
+    "line": 10015
+  },
+  {
+    "name": "_safeTransferAllTrainers",
+    "line": 10031
+  },
+  {
+    "name": "_loadSafeTransferDefault",
+    "line": 10038
+  },
+  {
+    "name": "openSafeTransferModal",
+    "line": 10045
+  },
+  {
+    "name": "renderSafeTransferTrainers",
+    "line": 10070
+  },
+  {
+    "name": "toggleSafeTransferTrainer",
+    "line": 10090
+  },
+  {
+    "name": "setAllSafeTransferTrainers",
+    "line": 10097
+  },
+  {
+    "name": "saveSafeTransferAsDefault",
+    "line": 10107
+  },
+  {
+    "name": "toggleSafeTransferPrefilter",
+    "line": 10113
+  },
+  {
+    "name": "_safeTransferPrefilterEnabled",
+    "line": 10117
+  },
+  {
+    "name": "_safeTransferAllDex",
+    "line": 10125
+  },
+  {
+    "name": "computeSafeTransferString",
+    "line": 10133
+  },
+  {
+    "name": "renderSafeTransferOutput",
+    "line": 10166
+  },
+  {
+    "name": "copySafeTransferString",
+    "line": 10197
+  },
+  {
+    "name": "renderDiffModal",
+    "line": 10209
+  },
+  {
+    "name": "loadActivityLog",
+    "line": 10305
+  },
+  {
+    "name": "recordActivityEvent",
+    "line": 10311
+  },
+  {
+    "name": "buildSparkline",
+    "line": 10328
+  },
+  {
+    "name": "sparklineHtml",
+    "line": 10340
+  },
+  {
+    "name": "readCachedEventRecord",
+    "line": 10367
+  },
+  {
+    "name": "eventRequestFailureKind",
+    "line": 10375
+  },
+  {
+    "name": "fetchPogoEvents",
+    "line": 10383
+  },
+  {
+    "name": "currentEvents",
+    "line": 10424
+  },
+  {
+    "name": "eventBadgeForPokemon",
+    "line": 10432
+  },
+  {
+    "name": "renderEventBanner",
+    "line": 10457
+  },
+  {
+    "name": "pokeballLoader",
+    "line": 10481
+  },
+  {
+    "name": "applyWallpaper",
+    "line": 10497
+  },
+  {
+    "name": "effectiveTheme",
+    "line": 10501
+  },
+  {
+    "name": "applyWallpaperForTheme",
+    "line": 10502
+  },
+  {
+    "name": "selectWallpaper",
+    "line": 10503
+  },
+  {
+    "name": "wallpaperPickerHtml",
+    "line": 10510
+  },
+  {
+    "name": "detectVariantFamily",
+    "line": 10540
+  },
+  {
+    "name": "familyVariantEntries",
+    "line": 10549
+  },
+  {
+    "name": "openAddAllVariantsModal",
+    "line": 10570
+  },
+  {
+    "name": "closeAddAllVariants",
+    "line": 10603
+  },
+  {
+    "name": "confirmAddAllVariants",
+    "line": 10604
+  },
+  {
+    "name": "currentAddFlags",
+    "line": 10619
+  },
+  {
+    "name": "openAddShownResultsModal",
+    "line": 10629
+  },
+  {
+    "name": "closeAddShownResults",
+    "line": 10668
+  },
+  {
+    "name": "confirmAddShownResults",
+    "line": 10669
+  },
+  {
+    "name": "getAppVersion",
+    "line": 10701
+  },
+  {
+    "name": "checkForUpdate",
+    "line": 10711
+  },
+  {
+    "name": "initUpdateCheck",
+    "line": 10722
+  },
+  {
+    "name": "showUpdateBanner",
+    "line": 10728
+  },
+  {
+    "name": "reloadForUpdate",
+    "line": 10745
+  },
+  {
+    "name": "triggerInstall",
+    "line": 10762
+  },
+  {
+    "name": "whatsNewVisibleEntries",
+    "line": 10809
+  },
+  {
+    "name": "whatsNewNotifiableEntries",
+    "line": 10813
+  },
+  {
+    "name": "whatsNewLatestVersion",
+    "line": 10816
+  },
+  {
+    "name": "_maxSemver",
+    "line": 10823
+  },
+  {
+    "name": "getWhatsNewSeen",
+    "line": 10835
+  },
+  {
+    "name": "checkWhatsNew",
+    "line": 10842
+  },
+  {
+    "name": "openWhatsNew",
+    "line": 10849
+  },
+  {
+    "name": "closeWhatsNew",
+    "line": 10867
+  },
+  {
+    "name": "avatarOptionEntries",
+    "line": 10871
+  },
+  {
+    "name": "avatarEntryForCatalogId",
+    "line": 10879
+  },
+  {
+    "name": "avatarEntryForName",
+    "line": 10880
+  },
+  {
+    "name": "updateAvatarPreview",
+    "line": 10889
+  },
+  {
+    "name": "openAvatarPicker",
+    "line": 10907
+  },
+  {
+    "name": "closeAvatarPicker",
+    "line": 10911
+  },
+  {
+    "name": "renderAvatarPicker",
+    "line": 10915
+  },
+  {
+    "name": "avatarPickerKeydown",
+    "line": 10922
+  },
+  {
+    "name": "selectAvatarOption",
+    "line": 10931
+  },
+  {
+    "name": "clearAvatarSelection",
+    "line": 10935
+  },
+  {
+    "name": "_avatarImgHtml",
+    "line": 10943
+  },
+  {
+    "name": "userAvatarHtml",
+    "line": 10947
+  },
+  {
+    "name": "loadSnapshots",
+    "line": 10964
+  },
+  {
+    "name": "snapshotViewerKey",
+    "line": 10970
+  },
+  {
+    "name": "viewerSnapshotBucket",
+    "line": 10974
+  },
+  {
+    "name": "saveSnapshot",
+    "line": 10984
+  },
+  {
+    "name": "computeSnapshotDiff",
+    "line": 10999
+  },
+  {
+    "name": "resetStringDiffCache",
+    "line": 11014
+  },
+  {
+    "name": "registerStringDiff",
+    "line": 11015
+  },
+  {
+    "name": "diffDisplayNames",
+    "line": 11020
+  },
+  {
+    "name": "diffValueSummary",
+    "line": 11025
+  },
+  {
+    "name": "diffLineHtml",
+    "line": 11038
+  },
+  {
+    "name": "diffDetailsHtml",
+    "line": 11047
+  },
+  {
+    "name": "markSnapshotSeen",
+    "line": 11063
+  },
+  {
+    "name": "stringDiffSectionHtml",
+    "line": 11064
+  },
+  {
+    "name": "closeStringDiffDetails",
+    "line": 11071
+  },
+  {
+    "name": "openStringDiffDetails",
+    "line": 11072
+  },
+  {
+    "name": "toggleExportMenu",
+    "line": 11105
+  },
+  {
+    "name": "toolsMenuKeydown",
+    "line": 11117
+  },
+  {
+    "name": "_closeExportOnOutside",
+    "line": 11123
+  },
+  {
+    "name": "closeExportMenu",
+    "line": 11127
+  },
+  {
+    "name": "exportMyListMarkdown",
+    "line": 11132
+  },
+  {
+    "name": "exportMyListCSV",
+    "line": 11154
+  },
+  {
+    "name": "copyShareLink",
+    "line": 11172
+  },
+  {
+    "name": "getSpecialBoard",
+    "line": 11198
+  },
+  {
+    "name": "writeSpecialBoard",
+    "line": 11202
+  },
+  {
+    "name": "_specialAllItems",
+    "line": 11217
+  },
+  {
+    "name": "_ensureSpecialAcItems",
+    "line": 11233
+  },
+  {
+    "name": "_closeSpecialAc",
+    "line": 11234
+  },
+  {
+    "name": "specialAcSearch",
+    "line": 11242
+  },
+  {
+    "name": "specialAcSelect",
+    "line": 11265
+  },
+  {
+    "name": "specialAcKeydown",
+    "line": 11273
+  },
+  {
+    "name": "_paintSpecialAcFocus",
+    "line": 11285
+  },
+  {
+    "name": "openSpecialTradeBoard",
+    "line": 11293
+  },
+  {
+    "name": "renderSpecialBoard",
+    "line": 11303
+  },
+  {
+    "name": "addSpecialEntry",
+    "line": 11322
+  },
+  {
+    "name": "removeSpecialEntry",
+    "line": 11340
+  },
+  {
+    "name": "toggleSpecialFlag",
+    "line": 11346
+  },
+  {
+    "name": "clearSpecialBoard",
+    "line": 11353
+  },
+  {
+    "name": "_buildQuickAddCandidates",
+    "line": 11366
+  },
+  {
+    "name": "openQuickAdd",
+    "line": 11404
+  },
+  {
+    "name": "closeQuickAdd",
+    "line": 11428
+  },
+  {
+    "name": "renderQuickAddGrid",
+    "line": 11434
+  },
+  {
+    "name": "filterQuickAdd",
+    "line": 11447
+  },
+  {
+    "name": "toggleQuickAddPick",
+    "line": 11448
+  },
+  {
+    "name": "qaSelectAll",
+    "line": 11455
+  },
+  {
+    "name": "_updateQuickAddCount",
+    "line": 11467
+  },
+  {
+    "name": "commitQuickAdd",
+    "line": 11474
+  },
+  {
+    "name": "exportSpecialBoardImage",
+    "line": 11500
+  },
+  {
+    "name": "ensureSpecialTradeBoardExportDomain",
+    "line": 11511
+  },
+  {
+    "name": "renderSpecialBoardImage",
+    "line": 11528
+  },
+  {
+    "name": "checkShareViewParam",
+    "line": 11677
+  },
+  {
+    "name": "resetNewTrainerProfileScroll",
+    "line": 11684
+  },
+  {
+    "name": "enterShareLoadingShell",
+    "line": 11690
+  },
+  {
+    "name": "enterShareView",
+    "line": 11710
+  },
+  {
+    "name": "exitShareView",
+    "line": 11724
+  },
+  {
+    "name": "publicShareListLabel",
+    "line": 11738
+  },
+  {
+    "name": "publicSharePriorityLabel",
+    "line": 11741
+  },
+  {
+    "name": "publicSharePriorityBadge",
+    "line": 11744
+  },
+  {
+    "name": "publicShareUpdatedLabel",
+    "line": 11748
+  },
+  {
+    "name": "publicShareAction",
+    "line": 11753
+  },
+  {
+    "name": "renderShareView",
+    "line": 11761
+  },
+  {
+    "name": "attachSwipeHandlers",
+    "line": 11853
+  },
+  {
+    "name": "swipeStart",
+    "line": 11862
+  },
+  {
+    "name": "swipeMove",
+    "line": 11868
+  },
+  {
+    "name": "swipeEnd",
+    "line": 11884
+  },
+  {
+    "name": "attachPullToRefresh",
+    "line": 11908
+  },
+  {
+    "name": "ptrStart",
+    "line": 11914
+  },
+  {
+    "name": "ptrMove",
+    "line": 11919
+  },
+  {
+    "name": "ptrEnd",
+    "line": 11934
+  },
+  {
+    "name": "skeletonRows",
+    "line": 11956
+  },
+  {
+    "name": "showSkeletonMyList",
+    "line": 11957
+  },
+  {
+    "name": "applyTheme",
+    "line": 11963
+  },
+  {
+    "name": "setSettingsTheme",
+    "line": 11976
+  },
+  {
+    "name": "syncAppearanceControls",
+    "line": 11977
+  },
+  {
+    "name": "toggleTheme",
+    "line": 11985
+  },
+  {
+    "name": "initTheme",
+    "line": 11990
+  },
+  {
+    "name": "applyTypeColorToElement",
+    "line": 11993
+  },
+  {
+    "name": "applyTypeColors",
+    "line": 11998
+  },
+  {
+    "name": "dailyEventBonuses",
+    "line": 12005
+  },
+  {
+    "name": "setManualBonus",
+    "line": 12030
+  },
+  {
+    "name": "tradesOnDate",
+    "line": 12040
+  },
+  {
+    "name": "scheduledTradeOtherUsers",
+    "line": 12047
+  },
+  {
+    "name": "schedulePreviewAllowsTrade",
+    "line": 12054
+  },
+  {
+    "name": "visibleTradesOnDate",
+    "line": 12061
+  },
+  {
+    "name": "tradeCountsForDay",
+    "line": 12064
+  },
+  {
+    "name": "visibleTradeCountsForDay",
+    "line": 12067
+  },
+  {
+    "name": "writeTrade",
+    "line": 12071
+  },
+  {
+    "name": "navigateSchedWeek",
+    "line": 12081
+  },
+  {
+    "name": "navigateSchedToday",
+    "line": 12086
+  },
+  {
+    "name": "selectSchedDay",
+    "line": 12091
+  },
+  {
+    "name": "setEventTypeFilter",
+    "line": 12096
+  },
+  {
+    "name": "eventFilterKeydown",
+    "line": 12100
+  },
+  {
+    "name": "openEventDetails",
+    "line": 12106
+  },
+  {
+    "name": "eventTypeLabel",
+    "line": 12110
+  },
+  {
+    "name": "localizedEventTypeLabel",
+    "line": 12113
+  },
+  {
+    "name": "localizedEventBonuses",
+    "line": 12118
+  },
+  {
+    "name": "eventGroupLabel",
+    "line": 12125
+  },
+  {
+    "name": "eventRelativeLabel",
+    "line": 12128
+  },
+  {
+    "name": "eventStateHtml",
+    "line": 12135
+  },
+  {
+    "name": "eventStableId",
+    "line": 12140
+  },
+  {
+    "name": "setEventCalendarDate",
+    "line": 12141
+  },
+  {
+    "name": "moveEventCalendarMonth",
+    "line": 12145
+  },
+  {
+    "name": "eventCalendarKeydown",
+    "line": 12150
+  },
+  {
+    "name": "jumpToEvent",
+    "line": 12164
+  },
+  {
+    "name": "renderEventCalendar",
+    "line": 12175
+  },
+  {
+    "name": "renderEventSelectedDay",
+    "line": 12182
+  },
+  {
+    "name": "renderEventFeaturedPokemonNames",
+    "line": 12189
+  },
+  {
+    "name": "renderEventUpNext",
+    "line": 12195
+  },
+  {
+    "name": "renderEventsRail",
+    "line": 12200
+  },
+  {
+    "name": "renderEventsLayout",
+    "line": 12201
+  },
+  {
+    "name": "syncEventFilterScrollState",
+    "line": 12202
+  },
+  {
+    "name": "retryEvents",
+    "line": 12206
+  },
+  {
+    "name": "renderEventsOnly",
+    "line": 12209
+  },
+  {
+    "name": "eventsAction",
+    "line": 12229
+  },
+  {
+    "name": "eventsKeydown",
+    "line": 12241
+  },
+  {
+    "name": "eventsScroll",
+    "line": 12245
+  },
+  {
+    "name": "renderSchedule",
+    "line": 12252
+  },
+  {
+    "name": "reservedTrades",
+    "line": 12292
+  },
+  {
+    "name": "visibleReservedTrades",
+    "line": 12300
+  },
+  {
+    "name": "renderReservedSection",
+    "line": 12303
+  },
+  {
+    "name": "renderReservedCard",
+    "line": 12318
+  },
+  {
+    "name": "scheduleReservedTrade",
+    "line": 12353
+  },
+  {
+    "name": "markReservedTraded",
+    "line": 12360
+  },
+  {
+    "name": "cancelReservedTrade",
+    "line": 12374
+  },
+  {
+    "name": "renderSchedDayDetail",
+    "line": 12380
+  },
+  {
+    "name": "renderTradeCard",
+    "line": 12468
+  },
+  {
+    "name": "markTradeComplete",
+    "line": 12504
+  },
+  {
+    "name": "cancelScheduledTrade",
+    "line": 12509
+  },
+  {
+    "name": "openScheduleModal",
+    "line": 12557
+  },
+  {
+    "name": "closeScheduleModal",
+    "line": 12640
+  },
+  {
+    "name": "adjustSchedRegularCount",
+    "line": 12641
+  },
+  {
+    "name": "selectSchedType",
+    "line": 12646
+  },
+  {
+    "name": "submitScheduledTrade",
+    "line": 12652
+  },
+  {
+    "name": "updateScheduleNotif",
+    "line": 12710
+  },
+  {
+    "name": "cycleInventoryGender",
+    "line": 12741
+  },
+  {
+    "name": "setHaveEntry",
+    "line": 12766
+  },
+  {
+    "name": "isMirrorOnlyHave",
+    "line": 12771
+  },
+  {
+    "name": "isDontNeedBackHave",
+    "line": 12774
+  },
+  {
+    "name": "isGiveawayHave",
+    "line": 12777
+  },
+  {
+    "name": "queueRenderMyHave",
+    "line": 12781
+  },
+  {
+    "name": "refreshAfterHaveWrite",
+    "line": 12785
+  },
+  {
+    "name": "writeHave",
+    "line": 12797
+  },
+  {
+    "name": "setHaveView",
+    "line": 12819
+  },
+  {
+    "name": "setHaveSubTab",
+    "line": 12827
+  },
+  {
+    "name": "toggleHaveMatchOnly",
+    "line": 12832
+  },
+  {
+    "name": "buildHaveAcItems",
+    "line": 12839
+  },
+  {
+    "name": "haveAcSearch",
+    "line": 12854
+  },
+  {
+    "name": "haveAcSelect",
+    "line": 12873
+  },
+  {
+    "name": "haveAcKeydown",
+    "line": 12880
+  },
+  {
+    "name": "updateHaveAcFocus",
+    "line": 12888
+  },
+  {
+    "name": "setHaveAddMode",
+    "line": 12891
+  },
+  {
+    "name": "setHaveAddGender",
+    "line": 12902
+  },
+  {
+    "name": "addInventoryEntry",
+    "line": 12909
+  },
+  {
+    "name": "editInventoryNote",
+    "line": 12937
+  },
+  {
+    "name": "updateInventoryQty",
+    "line": 12948
+  },
+  {
+    "name": "setInventoryQty",
+    "line": 12956
+  },
+  {
+    "name": "toggleInventoryMirror",
+    "line": 12963
+  },
+  {
+    "name": "cycleInventoryMode",
+    "line": 12971
+  },
+  {
+    "name": "toggleHaveBulkMode",
+    "line": 12983
+  },
+  {
+    "name": "toggleHaveBulkSelection",
+    "line": 12997
+  },
+  {
+    "name": "updateHaveBulkCount",
+    "line": 13004
+  },
+  {
+    "name": "bulkHaveSetMode",
+    "line": 13008
+  },
+  {
+    "name": "bulkHaveAdjustQty",
+    "line": 13025
+  },
+  {
+    "name": "bulkHaveDelete",
+    "line": 13040
+  },
+  {
+    "name": "removeInventoryEntry",
+    "line": 13051
+  },
+  {
+    "name": "_nameToSpriteEntry",
+    "line": 13056
+  },
+  {
+    "name": "renderMyHave",
+    "line": 13065
+  },
+  {
+    "name": "exportLegacyInventoryCsv",
+    "line": 13167
+  },
+  {
+    "name": "openIncomingOffersModal",
+    "line": 13179
+  },
+  {
+    "name": "closeIncomingOffersModal",
+    "line": 13216
+  },
+  {
+    "name": "entryWantedByCur",
+    "line": 13217
+  },
+  {
+    "name": "entryWantedByOther",
+    "line": 13231
+  },
+  {
+    "name": "queueRenderHaveBrowse",
+    "line": 13244
+  },
+  {
+    "name": "makeHaveBrowseContext",
+    "line": 13248
+  },
+  {
+    "name": "haveBrowseItemsForTrainer",
+    "line": 13286
+  },
+  {
+    "name": "sortHaveBrowseItems",
+    "line": 13302
+  },
+  {
+    "name": "haveBrowseTrainerSummary",
+    "line": 13319
+  },
+  {
+    "name": "renderHaveBrowseItemCard",
+    "line": 13335
+  },
+  {
+    "name": "hydrateHaveTrainerCard",
+    "line": 13357
+  },
+  {
+    "name": "sortHaveTrainerInventory",
+    "line": 13371
+  },
+  {
+    "name": "toggleHaveTrainerCard",
+    "line": 13382
+  },
+  {
+    "name": "renderHaveBrowse",
+    "line": 13387
+  },
+  {
+    "name": "_renderHaveBrowseInner",
+    "line": 13390
+  },
+  {
+    "name": "offerKey",
+    "line": 13530
+  },
+  {
+    "name": "offersForItem",
+    "line": 13531
+  },
+  {
+    "name": "countOffersForItem",
+    "line": 13539
+  },
+  {
+    "name": "totalOffersForRecipient",
+    "line": 13540
+  },
+  {
+    "name": "submitOffer",
+    "line": 13543
+  },
+  {
+    "name": "withdrawOffer",
+    "line": 13566
+  },
+  {
+    "name": "markOfferTraded",
+    "line": 13577
+  },
+  {
+    "name": "_acceptItemDetails",
+    "line": 13584
+  },
+  {
+    "name": "openAcceptModal",
+    "line": 13605
+  },
+  {
+    "name": "closeAcceptModal",
+    "line": 13632
+  },
+  {
+    "name": "_updateAcceptQtyHint",
+    "line": 13633
+  },
+  {
+    "name": "adjustAcceptQty",
+    "line": 13642
+  },
+  {
+    "name": "clampAcceptQty",
+    "line": 13649
+  },
+  {
+    "name": "maxAcceptQty",
+    "line": 13656
+  },
+  {
+    "name": "confirmAcceptTrade",
+    "line": 13661
+  },
+  {
+    "name": "_logAcceptedTrade",
+    "line": 13726
+  },
+  {
+    "name": "_writePendingDecrement",
+    "line": 13762
+  },
+  {
+    "name": "_applyPendingDecrements",
+    "line": 13820
+  },
+  {
+    "name": "_bidderLiveQty",
+    "line": 13891
+  },
+  {
+    "name": "renderOfferList",
+    "line": 13899
+  },
+  {
+    "name": "offerSelectedKeys",
+    "line": 13950
+  },
+  {
+    "name": "offerItemsLine",
+    "line": 13953
+  },
+  {
+    "name": "buildOfferMessage",
+    "line": 13960
+  },
+  {
+    "name": "refreshOfferMessage",
+    "line": 13977
+  },
+  {
+    "name": "toggleOfferPickChip",
+    "line": 13983
+  },
+  {
+    "name": "markOfferMessageEdited",
+    "line": 13987
+  },
+  {
+    "name": "openOfferModal",
+    "line": 13991
+  },
+  {
+    "name": "closeOfferModal",
+    "line": 14104
+  },
+  {
+    "name": "submitOfferAction",
+    "line": 14105
+  },
+  {
+    "name": "copyOfferMessage",
+    "line": 14142
+  },
+  {
+    "name": "toggleBulkMode",
+    "line": 14145
+  },
+  {
+    "name": "toggleBulkSelection",
+    "line": 14160
+  },
+  {
+    "name": "updateBulkCount",
+    "line": 14169
+  },
+  {
+    "name": "bulkSetPri",
+    "line": 14173
+  },
+  {
+    "name": "bulkToggleFlag",
+    "line": 14187
+  },
+  {
+    "name": "bulkDelete",
+    "line": 14211
+  },
+  {
+    "name": "fuzzyMatchPokemon",
+    "line": 14230
+  },
+  {
+    "name": "startVoiceInput",
+    "line": 14258
+  },
+  {
+    "name": "toggleFlagFilter",
+    "line": 14356
+  },
+  {
+    "name": "entryMatchesFlagFilters",
+    "line": 14366
+  },
+  {
+    "name": "recordBackup",
+    "line": 14373
+  },
+  {
+    "name": "renderBackupReminder",
+    "line": 14374
+  },
+  {
+    "name": "checkConflict",
+    "line": 14393
+  },
+  {
+    "name": "showConflictModal",
+    "line": 14403
+  },
+  {
+    "name": "openImport",
+    "line": 14433
+  },
+  {
+    "name": "setImportPri",
+    "line": 14448
+  },
+  {
+    "name": "parseImportString",
+    "line": 14456
+  },
+  {
+    "name": "toggleImportRow",
+    "line": 14546
+  },
+  {
+    "name": "toggleSelectAll",
+    "line": 14550
+  },
+  {
+    "name": "updateImportCount",
+    "line": 14560
+  },
+  {
+    "name": "backToStep1",
+    "line": 14565
+  },
+  {
+    "name": "confirmImport",
+    "line": 14569
+  },
+  {
+    "name": "isTypingTarget",
+    "line": 14580
+  },
+  {
+    "name": "anyOpenModal",
+    "line": 14587
+  },
+  {
+    "name": "_focusActiveTabSearch",
+    "line": 14590
+  },
+  {
+    "name": "_handleGlobalShortcut",
+    "line": 14602
+  },
+  {
+    "name": "startTour",
+    "line": 14643
+  },
+  {
+    "name": "renderTourStep",
+    "line": 14648
+  },
+  {
+    "name": "tourNext",
+    "line": 14660
+  },
+  {
+    "name": "tourPrev",
+    "line": 14664
+  },
+  {
+    "name": "finishTour",
+    "line": 14668
+  },
+  {
+    "name": "skipTour",
+    "line": 14673
+  },
+  {
+    "name": "maybeStartTour",
+    "line": 14677
+  },
+  {
+    "name": "afterFirstPaint",
+    "line": 14743
+  },
+  {
+    "name": "startBackgroundStartup",
+    "line": 14749
+  },
+  {
+    "name": "startFirebaseStartup",
+    "line": 14765
+  },
+  {
+    "name": "bootPogoApp",
+    "line": 14799
+  }
+]
