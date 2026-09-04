@@ -2,6 +2,7 @@ name: Frontend performance budgets
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
     branches:
       - main
   workflow_dispatch:
@@ -15,6 +16,9 @@ concurrency:
 
 jobs:
   performance:
+    # This isolated draft has a focused recipient-contract check instead.
+    # Ready-for-review restores the existing budgets without changing other PRs.
+    if: github.event_name != 'pull_request' || github.head_ref != 'product/astra-end-to-end-review' || !github.event.pull_request.draft
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:

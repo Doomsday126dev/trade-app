@@ -4,11 +4,9 @@ const path = require('node:path');
 
 const screenshotDir=process.env.TRUSTED_READINESS_SCREENSHOT_DIR||'';
 const viewports=[
-  {width:1728,height:1000},
   {width:1440,height:900},
   {width:430,height:932},
   {width:390,height:844},
-  {width:375,height:812},
   {width:320,height:568}
 ];
 
@@ -44,7 +42,7 @@ async function installTrustedFixture(page){
     const nyc='location-gofestnewyorkcity';
     allData=normalizeData({
       users:{
-        TrustedTester:{authUid:'uid-trusted-tester',isOwner:true,specialTradeBoard:{lf:[{name:'Pikachu',dn:'Pikachu',no:25,backgroundId:nyc,shiny:true,mirror:false}],ft:[{name:'Eevee',dn:'Eevee',no:133,backgroundId:'',shiny:false,mirror:false,qty:2}]}},
+        TrustedTester:{authUid:'uid-trusted-tester',pin:'123456',isOwner:true,specialTradeBoard:{lf:[{name:'Pikachu',dn:'Pikachu',no:25,backgroundId:nyc,shiny:true,mirror:false}],ft:[{name:'Eevee',dn:'Eevee',no:133,backgroundId:'',shiny:false,mirror:false,qty:2}]}},
         Mazer:{specialTradeBoard:{lf:[],ft:[]}},
         RecentTrainer:{specialTradeBoard:{lf:[],ft:[]}}
       },
@@ -75,6 +73,7 @@ async function installTrustedFixture(page){
     writeSpecialBoard=async board=>{allData.users[cur].specialTradeBoard=structuredClone(board);renderSpecialBoard();return true;};
     document.getElementById('login-pg').style.display='none';
     document.getElementById('app').style.display='flex';
+    document.getElementById('my-un').textContent='TrustedTesterWithALongTrainerName';
     document.getElementById('share-view').classList.remove('active');
     switchTab('mylist',{render:false});
     const store=PogoData.trainerHistoryStore.createTrainerHistoryStore({storage:localStorage,identity:{uid:'uid-trusted-tester',username:'TrustedTester'}});

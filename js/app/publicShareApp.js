@@ -205,8 +205,36 @@
       if(!entries.length)return'';
       return`<section class="share-section card-content"><div class="share-section-hdr"><span class="badge ${priority}"><span class="prio-mark">${priority}</span>${esc(t(PRIORITY_KEYS[priority]))}</span><span class="share-section-count">${esc(core().formatPlural('share.entryCount',entries.length))}</span></div><div class="share-pgrid">${entries.map(([name,value])=>entryCard(name,value)).join('')}</div></section>`;
     }).join('');
-    out.innerHTML=sections+ctaHtml();
+    out.innerHTML=searchHtml(list)+sections+ctaHtml();
     spriteOptical.observe(out);
+  }
+  function searchHtml(list){
+    const names=Object.keys(list),helper=global.PogoDomain.searchStrings;
+    const numbers=names.map(name=>global.PogoDomain.spriteSlugs.publicSpriteDex(name));
+    const complete=numbers.every(number=>Number.isInteger(number)&&number>0);
+    const value=complete?helper.dexStringFromNumbers(numbers,{locale:core().getLocale()}):'';
+    const tooLong=value.length>helper.POGO_STR_LIMIT;
+    const label=t('share.copySearchAria',{label:listLabel(state.type)});
+    return`<div class="public-share-search">
+      <button type="button" class="btn btn-primary" data-public-share-action="copy-search" data-copy="${attr(value)}" ${!value||tooLong?'disabled':''}><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-copy"></use></svg><span>${esc(label)}</span></button>
+      <span id="public-share-copy-status" role="status" aria-live="polite"></span>
+      ${!complete?`<p>${esc(t('share.searchUnresolved'))}</p>`:tooLong?`<p>${esc(t('strings.tooLongForPokemonGo'))}</p>`:''}
+      ${value?`<details class="share-search-disclosure"><summary>${esc(t('share.viewSearch'))}<span class="sr-only">: ${esc(listLabel(state.type))}</span></summary><p>${esc(t('share.searchScope'))}</p><textarea readonly aria-label="${attr(label)}" class="strbox" rows="3">${esc(value)}</textarea></details>`:''}
+    </div>`;
+  }
+  async function copySearch(control){
+    const value=control.dataset.copy;if(!value||control.disabled)return;
+    const status=document.getElementById('public-share-copy-status');
+    try{
+      await global.navigator.clipboard.writeText(value);
+      if(status?.isConnected)status.textContent=t('share.copySuccess');
+    }catch{
+      if(!status?.isConnected)return;
+      status.textContent=t('strings.copyFailed');
+      const disclosure=control.parentElement.querySelector('details');
+      if(disclosure)disclosure.open=true;
+      const field=disclosure?.querySelector('textarea');field?.focus();field?.select();
+    }
   }
   function ctaHtml(){return`<aside class="public-share-cta"><span>${esc(t('share.publicCta'))}</span><a class="btn btn-secondary" href="./">${esc(t('share.publicCtaAction'))}</a></aside>`;}
   function render(){
@@ -288,6 +316,17 @@
     document.getElementById(id)?.classList.remove('open');document.body.classList.remove('modal-open');
     document.getElementById('share-language-trigger')?.focus();
   }
+  function handleModalKey(event){
+    const modal=document.getElementById('settings-modal');
+    if(!modal?.classList.contains('open'))return;
+    if(event.key==='Escape'){event.preventDefault();closeModal('settings-modal');return;}
+    if(event.key!=='Tab')return;
+    const controls=[...modal.querySelectorAll('button,select,input,a[href],[tabindex="0"]')]
+      .filter(node=>!node.disabled&&node.getClientRects().length);
+    const first=controls[0],last=controls.at(-1);
+    if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}
+    else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}
+  }
   async function changeLocale(locale){
     await global.__pogoEnsureLocale(locale);core().setLocale(locale);translate(document);
     if(state.snapshot)render();
@@ -296,6 +335,7 @@
   function handleAction(event){
     const control=event.target.closest('[data-public-share-action]');if(!control)return;
     if(control.dataset.publicShareAction==='retry')retry();
+    if(control.dataset.publicShareAction==='copy-search')void copySearch(control);
     if(control.dataset.publicShareAction==='list'){state.type=LIST_TYPES.includes(control.dataset.listType)?control.dataset.listType:'wishlist';renderTabs(state.snapshot);renderList(state.snapshot);}
   }
   function handleSpriteError(event){
@@ -310,6 +350,7 @@
     if(state.status!=='idle')return;
     state.request=request;state.type=request?.type||'wishlist';state.status='loading';
     document.addEventListener('click',handleAction);
+    document.addEventListener('keydown',handleModalKey);
     document.addEventListener('error',handleSpriteError,true);
     spriteOptical.observe(document);
     Object.assign(global,{openSettingsPanel:openLanguage,closeModal,changeInterfaceLocale:changeLocale,exitShareView:()=>{location.href=new URL('./',location.href).href;}});

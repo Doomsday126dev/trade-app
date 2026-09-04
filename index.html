@@ -1213,6 +1213,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
   async function loadPublicShareScripts(){
     const publicPaths=[
       'js/domain/backgroundCatalog.js','js/domain/backgroundVisual.js','js/domain/priorityValues.js',
+      'js/domain/pokemonGoSearchSyntax.js','js/domain/searchStrings.js',
       'js/domain/publicSharePublication.js',
       ...(providerCapabilities().providerPublicReadSupport?['js/domain/providerPublicProjection.js']:[]),
       'js/domain/publicPokemonDex.js','js/domain/spriteSlugs.js','js/domain/costumeSpriteCatalog.js',
