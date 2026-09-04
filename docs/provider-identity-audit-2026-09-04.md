@@ -1,5 +1,11 @@
 # Independent Provider Identity Launch Audit
 
+Follow-up implementation and qualification status:
+[Provider identity operator correction](provider-identity-operator-qualification-2026-09-04.md).
+The corrections below are preserved. The follow-up adds run capabilities,
+durable recovery and expiry plus executor groundwork, but does not close all
+production-pipeline qualification gaps. Both production CLIs remain blocked.
+
 ## A. Verdict
 
 ASTRA AUDIT COMPLETE - PR #63 CORRECTED BUT NOT MERGED
