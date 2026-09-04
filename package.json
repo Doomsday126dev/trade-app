@@ -75,7 +75,7 @@
     "check:share-visibility-rules": "bash scripts/check-share-visibility-rules.sh",
     "check:provider-public-projection-rules": "bash scripts/check-provider-public-projection-rules.sh",
     "check:provider-identity-window-rules": "bash scripts/check-provider-identity-window-rules.sh",
-    "test:provider-identity-window": "node --test tests/provider-identity-window.test.cjs functions/test/provider-identity-deployment-plan.test.cjs functions/test/provider-identity-live-operator.test.cjs",
+    "test:provider-identity-window": "node --test tests/provider-identity-window.test.cjs functions/test/provider-identity-deployment-plan.test.cjs functions/test/provider-identity-live-operator.test.cjs functions/test/provider-identity-audit-reproductions.test.cjs",
     "check:narrow-read-contract": "node scripts/check-narrow-read-contract.js",
     "check:narrow-read-rules": "bash scripts/check-narrow-read-rules.sh",
     "check:durable-auth-runtime": "node --test tests/durable-auth-runtime-readiness.test.cjs functions/test/e1-runtime-authorization.test.cjs functions/test/e1-deployment-guard.test.cjs",

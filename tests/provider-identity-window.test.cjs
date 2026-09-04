@@ -92,7 +92,7 @@ test('public report contains keyed digests and no raw identities', () => {
 });
 
 test('private writer enforces 0600 and refuses replacement', () => {
-  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'provider-window-'));
+  const directory = fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()), 'provider-window-'));
   const file = path.join(directory, 'manifest.json');
   try {
     writePrivateJson(file, { private: true });

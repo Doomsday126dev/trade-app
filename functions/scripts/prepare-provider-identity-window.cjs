@@ -5,6 +5,7 @@ const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 const { execFileSync } = require('node:child_process');
+const { privateDirectory, readPrivate } = require('../production/providerIdentityPrivateFiles.cjs');
 const {
   sha256, classifySnapshot, publicReport, writePrivateJson
 } = require('../production/providerIdentityWindow.cjs');
@@ -108,13 +109,6 @@ async function readProduction(token) {
   return { ...rtdb, accounts, trainerHandles, operationRequests, identityMigrations };
 }
 
-function privateDirectory(directory) {
-  const resolved = path.resolve(directory);
-  fs.mkdirSync(resolved, { recursive: true, mode: 0o700 });
-  fs.chmodSync(resolved, 0o700);
-  return resolved;
-}
-
 function gitValue(args) {
   return execFileSync('git', args, { encoding: 'utf8' }).trim();
 }
@@ -124,7 +118,7 @@ async function run(argv = process.argv.slice(2), dependencies = {}) {
   const outputDirectory = privateDirectory(options.outputDirectory || '');
   const capturedAt = options.capturedAt || new Date().toISOString();
   let snapshot;
-  if (options.fixture) snapshot = JSON.parse(fs.readFileSync(path.resolve(options.fixture), 'utf8'));
+  if (options.fixture) snapshot = JSON.parse(readPrivate(options.fixture));
   else {
     if (!options.allowProductionRead || options.confirmProject !== PROJECT_ID ||
         options.confirmFirestoreDatabase !== FIRESTORE_DATABASE || options.confirmRtdbUrl !== RTDB_URL) {

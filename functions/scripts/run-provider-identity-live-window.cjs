@@ -4,11 +4,12 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const {
-  sha256, stableJson, runManifest, operationId, progressEntry, progressVerified,
+  sha256, stableJson, runManifest, validateManifest, validateManifestSource, operationId, progressEntry, progressVerified,
   readExpectedDocuments, classifyTargetState, TARGET_STATES
 } = require('../production/providerIdentityWindow.cjs');
 const { readProduction } = require('./prepare-provider-identity-window.cjs');
 const { AUTHORITY_CONFIG_PATHS } = require('../production/providerIdentityAuthorityContract.cjs');
+const { privatePath, readPrivate, atomicWrite } = require('../production/providerIdentityPrivateFiles.cjs');
 
 const PROJECT_ID = 'trade-list-a4297';
 const FIRESTORE_DATABASE = 'phase-e-identity';
@@ -16,6 +17,7 @@ const RTDB_URL = 'https://trade-list-a4297-default-rtdb.firebaseio.com';
 const APPROVAL = 'APPROVE LIVE IDENTITY PREP WINDOW';
 const MUTATING_ACTIONS = new Set(['activate-freeze', 'apply-manifest', 'create-certification',
   'invalidate-certification', 'release-freeze']);
+const ACTIONS = new Set([...MUTATING_ACTIONS, 'verify-freeze', 'verify-certification']);
 
 function parseArgs(argv) {
   const options = {};
@@ -34,7 +36,7 @@ function requireTarget(options) {
 
 function requireApproval(options) {
   if (!options.execute) return;
-  const approval = fs.readFileSync(path.resolve(options.approvalFile), 'utf8').trim();
+  const approval = readPrivate(options.approvalFile).trim();
   if (approval !== APPROVAL) throw new Error('live_approval_missing');
   const mode = fs.statSync(path.resolve(options.approvalFile)).mode & 0o777;
   if (mode !== 0o600) throw new Error('approval_file_permissions_invalid');
@@ -56,13 +58,14 @@ function encode(value) {
 function decode(value) {
   if (!value || typeof value !== 'object') return undefined;
   if (Object.hasOwn(value, 'stringValue')) return value.stringValue;
+  if (Object.hasOwn(value, 'timestampValue')) return value.timestampValue;
   if (Object.hasOwn(value, 'booleanValue')) return value.booleanValue;
   if (Object.hasOwn(value, 'integerValue')) return Number(value.integerValue);
   if (Object.hasOwn(value, 'doubleValue')) return Number(value.doubleValue);
   if (Object.hasOwn(value, 'nullValue')) return null;
   if (value.mapValue) return Object.fromEntries(Object.entries(value.mapValue.fields || {}).map(([key, item]) => [key, decode(item)]));
   if (value.arrayValue) return (value.arrayValue.values || []).map(decode);
-  return undefined;
+  throw new Error('firestore_value_unsupported');
 }
 
 function fields(value) {
@@ -77,34 +80,22 @@ function exact(actual, expected) {
   return stableJson(actual) === stableJson(expected);
 }
 
-function atomicWrite(file, value) {
-  const resolved = path.resolve(file);
-  fs.mkdirSync(path.dirname(resolved), { recursive: true, mode: 0o700 });
-  fs.chmodSync(path.dirname(resolved), 0o700);
-  const temporary = `${resolved}.tmp-${process.pid}-${Date.now()}`;
-  const descriptor = fs.openSync(temporary, fs.constants.O_WRONLY | fs.constants.O_CREAT |
-    fs.constants.O_EXCL | (fs.constants.O_NOFOLLOW || 0), 0o600);
-  try {
-    fs.writeFileSync(descriptor, `${JSON.stringify(value, null, 2)}\n`);
-    fs.fsyncSync(descriptor);
-  } finally { fs.closeSync(descriptor); }
-  fs.renameSync(temporary, resolved);
-  fs.chmodSync(resolved, 0o600);
-  const directory = fs.openSync(path.dirname(resolved), fs.constants.O_RDONLY);
-  try { fs.fsyncSync(directory); } finally { fs.closeSync(directory); }
-}
-
-function createProductionAdapter(token) {
-  const firestoreRoot = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/${FIRESTORE_DATABASE}`;
+function createProductionAdapter(token, fetcher = fetch) {
+  const resourceRoot = `projects/${PROJECT_ID}/databases/${FIRESTORE_DATABASE}`;
+  const firestoreRoot = `https://firestore.googleapis.com/v1/${resourceRoot}`;
   const headers = { Authorization: `Bearer ${token}`, 'X-Goog-User-Project': PROJECT_ID,
     'Content-Type': 'application/json' };
   async function request(url, options = {}) {
-    let response;
-    try { response = await fetch(url, { ...options, headers: { ...headers, ...(options.headers || {}) } }); }
-    catch (error) { throw Object.assign(error, { code: 'transport_ambiguous' }); }
-    const body = await response.text();
-    if (!response.ok) throw Object.assign(new Error(`http_${response.status}`), { status: response.status, body });
-    return body ? JSON.parse(body) : null;
+    try {
+      const response = await fetcher(url, { signal: AbortSignal.timeout(30000), ...options,
+        headers: { ...headers, ...(options.headers || {}) } });
+      const body = await response.text();
+      if (!response.ok) throw Object.assign(new Error(`http_${response.status}`), { status: response.status });
+      return body ? JSON.parse(body) : null;
+    } catch (error) {
+      if (error.status) throw error;
+      throw Object.assign(new Error('transport_ambiguous'), { code: 'transport_ambiguous' });
+    }
   }
   async function readDocument(target) {
     try { return documentData(await request(`${firestoreRoot}/documents/${target}`)); }
@@ -112,12 +103,15 @@ function createProductionAdapter(token) {
   }
   async function commitCreateOnly(documents) {
     const writes = Object.entries(documents).map(([target, value]) => ({
-      update: { name: `${firestoreRoot}/documents/${target}`, fields: fields(value) },
+      update: { name: `${resourceRoot}/documents/${target}`, fields: fields(value) },
       currentDocument: { exists: false }
     }));
     return request(`${firestoreRoot}/documents:commit`, { method: 'POST', body: JSON.stringify({ writes }) });
   }
   async function createExactDocument(target, value) {
+    const initial = await readDocument(target);
+    if (exact(initial, value)) return;
+    if (initial !== null) throw new Error('create_only_conflict');
     try { await commitCreateOnly({ [target]: value }); }
     catch (error) {
       if (![409, 412].includes(error.status) && error.code !== 'transport_ambiguous') throw error;
@@ -130,7 +124,7 @@ function createProductionAdapter(token) {
     const existing = await request(`${firestoreRoot}/documents/${target}`);
     if (!exact(documentData(existing), current)) throw new Error('update_precondition_changed');
     await request(`${firestoreRoot}/documents:commit`, { method: 'POST', body: JSON.stringify({ writes: [{
-      update: { name: `${firestoreRoot}/documents/${target}`, fields: fields(next) },
+      update: { name: `${resourceRoot}/documents/${target}`, fields: fields(next) },
       currentDocument: { updateTime: existing.updateTime }
     }] }) });
     if (!exact(await readDocument(target), next)) throw new Error('exact_readback_failed');
@@ -139,12 +133,13 @@ function createProductionAdapter(token) {
     const existing = await request(`${firestoreRoot}/documents/${target}`);
     if (!exact(documentData(existing), expected)) throw new Error('delete_precondition_changed');
     await request(`${firestoreRoot}/documents:commit`, { method: 'POST', body: JSON.stringify({ writes: [{
-      delete: `${firestoreRoot}/documents/${target}`, currentDocument: { updateTime: existing.updateTime }
+      delete: `${resourceRoot}/documents/${target}`, currentDocument: { updateTime: existing.updateTime }
     }] }) });
     if (await readDocument(target)) throw new Error('delete_readback_failed');
   }
   async function readRtdb(target) {
-    const response = await fetch(`${RTDB_URL}/${target}.json`, {
+    const response = await fetcher(`${RTDB_URL}/${target}.json`, {
+      signal: AbortSignal.timeout(30000),
       headers: { Authorization: `Bearer ${token}`, 'X-Firebase-ETag': 'true' }
     });
     if (!response.ok) throw new Error(`rtdb_read_${response.status}`);
@@ -153,7 +148,9 @@ function createProductionAdapter(token) {
   async function writeRtdbExact(target, current, next) {
     const observed = await readRtdb(target);
     if (!exact(observed.value, current)) throw new Error('rtdb_precondition_changed');
-    const response = await fetch(`${RTDB_URL}/${target}.json`, {
+    if (!observed.etag) throw new Error('rtdb_etag_missing');
+    const response = await fetcher(`${RTDB_URL}/${target}.json`, {
+      signal: AbortSignal.timeout(30000),
       method: 'PUT', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json',
         'if-match': observed.etag }, body: JSON.stringify(next)
     });
@@ -195,9 +192,9 @@ function progressLedger(manifest, progress) {
 }
 
 function loadProgress(file, manifest) {
-  const resolved = path.resolve(file);
+  const resolved = privatePath(file, { missing: true });
   if (!fs.existsSync(resolved)) return { progress: new Map(), ledger: progressLedger(manifest, new Map()) };
-  const ledger = JSON.parse(fs.readFileSync(resolved, 'utf8'));
+  const ledger = JSON.parse(readPrivate(resolved));
   if (ledger.schemaVersion !== 1 || ledger.ledgerType !== 'provider-identity-operation-progress-v1' ||
       ledger.manifestDigest !== manifest.manifestDigest || unsignedDigest(ledger, 'ledgerDigest') !== ledger.ledgerDigest ||
       !ledger.operations || typeof ledger.operations !== 'object' || Array.isArray(ledger.operations)) {
@@ -221,6 +218,7 @@ function writeProgress(file, manifest, progress) {
 }
 
 function freezeDocuments(manifest, activatedAt) {
+  if (!Number.isSafeInteger(Number(activatedAt)) || Number(activatedAt) <= 0) throw new Error('freeze_timestamp_invalid');
   const freezeId = `legacy-freeze-${manifest.manifestDigest.slice(0, 16)}`;
   return {
     freezeId,
@@ -259,17 +257,25 @@ async function activateFreeze(adapter, active) {
 }
 
 async function releaseFreeze(adapter, active, releasedAt) {
+  if (await adapter.readDocument(AUTHORITY_CONFIG_PATHS.providerAccountCreation)) {
+    throw new Error('certification_must_be_invalidated_before_release');
+  }
   const firestore = await adapter.readDocument(AUTHORITY_CONFIG_PATHS.legacyProvisioningFreeze);
   const rtdb = (await adapter.readRtdb('legacyProvisioningFreeze')).value;
   const existingReleased = [firestore, rtdb].find((value) => value?.state === 'released');
   const released = existingReleased || { ...active, state: 'released', releasedAt: Number(releasedAt) };
+  if (!Number.isSafeInteger(released.releasedAt) || released.releasedAt < active.activatedAt) {
+    throw new Error('freeze_release_timestamp_invalid');
+  }
   if (!exact({ ...released, state: 'active', releasedAt: null }, active)) throw new Error('freeze_release_conflict');
   const states = [freezeState(firestore, active, released), freezeState(rtdb, active, released)];
-  if (states.includes('ABSENT') || states.includes('DIFFERENT')) throw new Error('freeze_release_conflict');
+  if (states.includes('DIFFERENT')) throw new Error('freeze_release_conflict');
   if (states[0] === 'ACTIVE') await adapter.updateExactDocument(AUTHORITY_CONFIG_PATHS.legacyProvisioningFreeze, active, released);
   if (states[1] === 'ACTIVE') await adapter.writeRtdbExact('legacyProvisioningFreeze', active, released);
-  if (!exact(await adapter.readDocument(AUTHORITY_CONFIG_PATHS.legacyProvisioningFreeze), released) ||
-      !exact((await adapter.readRtdb('legacyProvisioningFreeze')).value, released)) throw new Error('freeze_release_readback_failed');
+  if (!exact(await adapter.readDocument(AUTHORITY_CONFIG_PATHS.legacyProvisioningFreeze), states[0] === 'ABSENT' ? null : released) ||
+      !exact((await adapter.readRtdb('legacyProvisioningFreeze')).value, states[1] === 'ABSENT' ? null : released)) {
+    throw new Error('freeze_release_readback_failed');
+  }
   return { released, firestore: states[0], rtdb: states[1] };
 }
 
@@ -295,22 +301,13 @@ function expectedNamespace(manifest, progress, collection) {
 }
 
 function expectedNestedNamespace(manifest, progress, prefix) {
-  const expected = {};
+  const expected = structuredClone(manifest.source.namespaceBaselines?.[prefix] || {});
   for (const record of manifest.records) {
     const documents = record.expectedResult || {};
     if (!progressVerified(progress.get(operationId(manifest, record)), documents)) continue;
     for (const [target, value] of Object.entries(documents)) if (target.startsWith(`${prefix}/`)) expected[target] = value;
   }
   return expected;
-}
-
-function currentManifestNestedNamespace(manifest, current, prefix) {
-  const manifestUids = new Set(manifest.records.filter((record) => record.classification === 'MIGRATE_RECIPROCAL_IDENTITY')
-    .map((record) => record.uid));
-  return Object.fromEntries(Object.entries(current[prefix] || {}).filter(([target]) => {
-    const parts = target.split('/');
-    return parts[0] === prefix && manifestUids.has(parts[1]);
-  }));
 }
 
 function verifyProgressAwareDrift(manifest, current, progress) {
@@ -323,7 +320,8 @@ function verifyProgressAwareDrift(manifest, current, progress) {
     }
   }
   for (const collection of ['operationRequests', 'identityMigrations']) {
-    if (!exact(currentManifestNestedNamespace(manifest, current, collection),
+    if (!manifest.source.namespaceBaselines) throw new Error('manifest_namespace_baseline_missing');
+    if (!exact(current[collection] || {},
       expectedNestedNamespace(manifest, progress, collection))) {
       throw new Error(`unexpected_namespace_drift:${collection}`);
     }
@@ -400,13 +398,18 @@ function verifyCompletionArtifact(completion, manifest, active, ledger, current)
       completion.completeProtectedHandleCount !== manifest.expectedInitialCounts.activeHandles ||
       completion.coverageDigest !== coverageDigest(manifest, current) ||
       completion.conflictCount !== 0 || completion.malformedCount !== 0 || completion.partialRecordCount !== 0 ||
-      completion.inventoryCapturedAt < active.activatedAt) throw new Error('live_completion_invalid');
+      !Number.isSafeInteger(completion.inventoryCapturedAt) ||
+      completion.inventoryCapturedAt <= active.activatedAt ||
+      completion.inventoryCapturedAt > Date.now()) throw new Error('live_completion_invalid');
   const rebuilt = buildCompletionArtifact(manifest, active, ledger, current, completion.inventoryCapturedAt);
   if (!exact(completion, rebuilt)) throw new Error('live_completion_stale');
 }
 
 function certificationFromCompletion(manifest, active, completion, certifiedAt) {
   const now = Number(certifiedAt);
+  if (!Number.isSafeInteger(now) || now < completion.inventoryCapturedAt || now > Date.now()) {
+    throw new Error('certification_timestamp_invalid');
+  }
   return {
     schemaVersion: 2, state: 'certified', normalizationVersion: 1,
     provisioningModel: 'bounded-legacy-provisioning-freeze', freezeId: active.freezeId,
@@ -421,24 +424,59 @@ function certificationFromCompletion(manifest, active, completion, certifiedAt) 
   };
 }
 
+function certificationIntent(manifest, active, completion, certification) {
+  const value = { schemaVersion: 1, manifestDigest: manifest.manifestDigest,
+    completionDigest: completion.artifactDigest, freezeId: active.freezeId, certification };
+  return { ...value, intentDigest: sha256(value) };
+}
+
+function loadCertificationIntent(file, manifest) {
+  const intent = JSON.parse(readPrivate(file));
+  if (intent.schemaVersion !== 1 || intent.manifestDigest !== manifest.manifestDigest ||
+      unsignedDigest(intent, 'intentDigest') !== intent.intentDigest ||
+      intent.freezeId !== freezeDocuments(manifest, 1).freezeId ||
+      intent.certification?.freezeId !== intent.freezeId ||
+      !/^[a-f0-9]{64}$/u.test(intent.completionDigest || '')) throw new Error('certification_intent_invalid');
+  return intent;
+}
+
+async function invalidateCertification(adapter, expected) {
+  const existing = await adapter.readDocument(AUTHORITY_CONFIG_PATHS.providerAccountCreation);
+  if (!existing) return;
+  if (!expected || !exact(existing, expected)) throw new Error('certification_invalidation_conflict');
+  await adapter.deleteExactDocument(AUTHORITY_CONFIG_PATHS.providerAccountCreation, expected);
+}
+
 async function run(argv = process.argv.slice(2), dependencies = {}) {
   const options = parseArgs(argv);
   requireTarget(options);
-  if (!options.action) throw new Error('action_required');
+  if (!ACTIONS.has(options.action)) throw new Error('unsupported_action');
+  // Audit containment, not a substitute for the outstanding window capability,
+  // provenance, deployment, and emergency-closeout qualification. No CLI bypass.
+  if (options.execute && !dependencies.adapter) throw new Error('live_window_audit_blocked');
   if (MUTATING_ACTIONS.has(options.action)) requireApproval(options);
-  const manifest = JSON.parse(fs.readFileSync(path.resolve(options.manifest), 'utf8'));
-  const unsigned = Object.fromEntries(Object.entries(manifest).filter(([key]) => key !== 'manifestDigest'));
-  if (sha256(unsigned) !== manifest.manifestDigest) throw new Error('manifest_digest_mismatch');
+  const manifest = JSON.parse(readPrivate(options.manifest));
+  validateManifest(manifest);
   const token = (dependencies.env || process.env)[options.accessTokenEnv || 'GCLOUD_ACCESS_TOKEN'];
   if (!token && options.execute) throw new Error('access_token_missing');
   const activatedAt = Number(options.activatedAt || Date.now());
   const { freezeId } = freezeDocuments(manifest, activatedAt);
   if (!options.execute) {
     console.log(JSON.stringify({ action: options.action, execute: false, productionWrites: 0,
-      manifestDigest: manifest.manifestDigest, freezeId, requiredApproval: APPROVAL }));
+      manifestDigest: manifest.manifestDigest, freezeId, executionQualified: false,
+      blocker: 'live_window_audit_blocked' }));
     return { dryRun: true };
   }
   const adapter = dependencies.adapter || createProductionAdapter(token);
+  if (['apply-manifest', 'create-certification', 'verify-certification'].includes(options.action)) {
+    validateManifestSource(manifest, JSON.parse(readPrivate(options.snapshot)));
+  }
+  const inputPaths = [options.manifest, options.snapshot, options.approvalFile].filter(Boolean);
+  const outputPaths = [options.progressFile, options.completionFile, options.certificationFile].filter(Boolean);
+  if (new Set([...inputPaths, ...outputPaths]).size !== inputPaths.length + outputPaths.length) {
+    throw new Error('operator_artifact_path_collision');
+  }
+  for (const file of outputPaths) privatePath(file, { missing: true });
 
   if (options.action === 'activate-freeze') {
     const [firestore, rtdb] = await Promise.all([
@@ -452,7 +490,11 @@ async function run(argv = process.argv.slice(2), dependencies = {}) {
     const active = activeFreezeForManifest(manifest, observed, activatedAt);
     await verifyActiveFreeze(adapter, active);
   } else if (options.action === 'apply-manifest') {
-    const progressFile = path.resolve(options.progressFile);
+    const progressFile = privatePath(options.progressFile, { missing: true });
+    privatePath(options.completionFile, { missing: true });
+    const observedFreeze = await adapter.readDocument(AUTHORITY_CONFIG_PATHS.legacyProvisioningFreeze);
+    const active = activeFreezeForManifest(manifest, observedFreeze, activatedAt);
+    await verifyActiveFreeze(adapter, active);
     const loaded = loadProgress(progressFile, manifest);
     const progress = loaded.progress;
     const checkpoint = async (value) => writeProgress(progressFile, manifest, value);
@@ -461,6 +503,7 @@ async function run(argv = process.argv.slice(2), dependencies = {}) {
     verifyProgressAwareDrift(manifest, before, progress);
     const result = await runManifest(manifest, adapter, {
       progress, expectedSourceMappingFingerprint: manifest.sourceMappingFingerprint, checkpoint,
+      beforeCommit: async () => verifyActiveFreeze(adapter, active),
       afterCommitBeforeCheckpoint: dependencies.afterCommitBeforeCheckpoint,
       afterCheckpoint: dependencies.afterCheckpoint
     });
@@ -468,13 +511,11 @@ async function run(argv = process.argv.slice(2), dependencies = {}) {
     if (result.progress.size !== manifest.records.length) throw new Error('manifest_progress_incomplete');
     const current = await (dependencies.readProduction || readProduction)(token);
     verifyProgressAwareDrift(manifest, current, result.progress);
-    const observedFreeze = await adapter.readDocument(AUTHORITY_CONFIG_PATHS.legacyProvisioningFreeze);
-    const active = activeFreezeForManifest(manifest, observedFreeze, activatedAt);
     await verifyActiveFreeze(adapter, active);
     const completion = buildCompletionArtifact(manifest, active, ledger, current,
       Number(options.inventoryCapturedAt || Date.now()));
     verifyCompletionArtifact(completion, manifest, active, ledger, current);
-    atomicWrite(path.resolve(options.completionFile), completion);
+    atomicWrite(options.completionFile, completion);
   } else if (options.action === 'create-certification') {
     if (options.dryRunReport) throw new Error('dry_run_report_not_certification_authority');
     const { progress, ledger } = loadProgress(path.resolve(options.progressFile), manifest);
@@ -485,30 +526,45 @@ async function run(argv = process.argv.slice(2), dependencies = {}) {
     const observedFreeze = await adapter.readDocument(AUTHORITY_CONFIG_PATHS.legacyProvisioningFreeze);
     const active = activeFreezeForManifest(manifest, observedFreeze, activatedAt);
     await verifyActiveFreeze(adapter, active);
-    const completion = JSON.parse(fs.readFileSync(path.resolve(options.completionFile), 'utf8'));
+    const completion = JSON.parse(readPrivate(options.completionFile));
     verifyCompletionArtifact(completion, manifest, active, ledger, current);
     const now = Number(options.certifiedAt || Date.now());
     if (now < completion.inventoryCapturedAt) throw new Error('certification_precedes_inventory');
-    const certification = certificationFromCompletion(manifest, active, completion, now);
+    privatePath(options.certificationFile, { missing: true });
+    let certification;
+    if (fs.existsSync(options.certificationFile)) {
+      const intent = loadCertificationIntent(options.certificationFile, manifest);
+      if (intent.completionDigest !== completion.artifactDigest || !exact(intent.certification,
+        certificationFromCompletion(manifest, active, completion, intent.certification.certifiedAt))) {
+        throw new Error('certification_intent_conflict');
+      }
+      certification = intent.certification;
+    } else {
+      certification = certificationFromCompletion(manifest, active, completion, now);
+      atomicWrite(options.certificationFile, certificationIntent(manifest, active, completion, certification));
+    }
+    if (certification.expiresAt <= (dependencies.now?.() ?? Date.now())) throw new Error('certification_expired');
     await adapter.createExactDocument(AUTHORITY_CONFIG_PATHS.providerAccountCreation, certification);
   } else if (options.action === 'verify-certification') {
     const { progress, ledger } = loadProgress(path.resolve(options.progressFile), manifest);
     if (progress.size !== manifest.records.length) throw new Error('manifest_progress_incomplete');
+    await preflightManifest(manifest, adapter, progress, async () => { throw new Error('certification_progress_incomplete'); });
     const current = await (dependencies.readProduction || readProduction)(token);
     verifyProgressAwareDrift(manifest, current, progress);
     const observedFreeze = await adapter.readDocument(AUTHORITY_CONFIG_PATHS.legacyProvisioningFreeze);
     const active = activeFreezeForManifest(manifest, observedFreeze, activatedAt);
     await verifyActiveFreeze(adapter, active);
-    const completion = JSON.parse(fs.readFileSync(path.resolve(options.completionFile), 'utf8'));
+    const completion = JSON.parse(readPrivate(options.completionFile));
     verifyCompletionArtifact(completion, manifest, active, ledger, current);
     const certification = await adapter.readDocument(AUTHORITY_CONFIG_PATHS.providerAccountCreation);
     if (!certification || !exact(certification, certificationFromCompletion(manifest, active, completion,
-      certification.certifiedAt)) || certification.certifiedAt < completion.inventoryCapturedAt) {
+      certification.certifiedAt)) || certification.certifiedAt < completion.inventoryCapturedAt ||
+      certification.expiresAt <= (dependencies.now?.() ?? Date.now())) {
       throw new Error('certification_not_exact');
     }
   } else if (options.action === 'invalidate-certification') {
-    const existing = await adapter.readDocument(AUTHORITY_CONFIG_PATHS.providerAccountCreation);
-    if (existing) await adapter.deleteExactDocument(AUTHORITY_CONFIG_PATHS.providerAccountCreation, existing);
+    const intent = loadCertificationIntent(options.certificationFile, manifest);
+    await invalidateCertification(adapter, intent.certification);
   } else if (options.action === 'release-freeze') {
     const [firestore, rtdb] = await Promise.all([
       adapter.readDocument(AUTHORITY_CONFIG_PATHS.legacyProvisioningFreeze),
@@ -527,7 +583,8 @@ module.exports = {
   APPROVAL, parseArgs, requireTarget, requireApproval, encode, decode, exact, atomicWrite,
   createProductionAdapter, progressLedger, loadProgress, writeProgress, freezeDocuments, freezeState,
   activateFreeze, releaseFreeze, verifyActiveFreeze, verifyProgressAwareDrift, preflightManifest,
-  buildCompletionArtifact, verifyCompletionArtifact, certificationFromCompletion, run
+  buildCompletionArtifact, verifyCompletionArtifact, certificationFromCompletion, run,
+  certificationIntent, loadCertificationIntent, invalidateCertification
 };
 if (require.main === module) run().catch((error) => {
   console.error(`provider identity live operator failed: ${error.message}`);

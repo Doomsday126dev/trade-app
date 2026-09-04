@@ -5,14 +5,16 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
+const temporaryRoot = fs.realpathSync(os.tmpdir());
 const { test } = require('node:test');
 const { normalizeHandle } = require('../e1-authority-service/handleNormalization.js');
 const { AUTHORITY_CONFIG_PATHS } = require('../production/providerIdentityAuthorityContract.cjs');
-const { sha256, classifySnapshot, runManifest } = require('../production/providerIdentityWindow.cjs');
+const { sha256, classifySnapshot, runManifest, validateManifest, validateManifestSource } = require('../production/providerIdentityWindow.cjs');
 const {
   APPROVAL, parseArgs, requireTarget, requireApproval, encode, decode, exact, atomicWrite,
   progressLedger, loadProgress, writeProgress, freezeDocuments, activateFreeze, releaseFreeze,
-  verifyProgressAwareDrift, buildCompletionArtifact, verifyCompletionArtifact, run
+  verifyProgressAwareDrift, buildCompletionArtifact, verifyCompletionArtifact, run,
+  createProductionAdapter, certificationIntent, invalidateCertification
 } = require('../scripts/run-provider-identity-live-window.cjs');
 
 function sourceFixture() {
@@ -109,8 +111,265 @@ test('production target requires every exact identifier', () => {
   assert.throws(() => requireTarget({ ...exactTarget, confirmProject: 'other' }), /production_target_not_confirmed/u);
 });
 
+test('REST adapter uses resource names, create-only preconditions, and does not resend exact creates', async () => {
+  const documents = new Map();
+  const writes = [];
+  const root = 'projects/trade-list-a4297/databases/phase-e-identity/documents/';
+  const adapter = createProductionAdapter('synthetic', async (url, options) => {
+    if (url.endsWith(':commit')) {
+      const batch = JSON.parse(options.body).writes;
+      for (const write of batch) {
+        const name = write.update?.name || write.delete;
+        assert.ok(name.startsWith(root));
+        assert.ok(!name.includes('https:'));
+        assert.ok(write.currentDocument);
+        writes.push(write);
+        if (write.delete) documents.delete(name);
+        else documents.set(name, { ...write.update, updateTime: '2026-09-01T00:00:00Z' });
+      }
+      return new Response('{}');
+    }
+    const name = url.split('/v1/')[1];
+    return documents.has(name) ? new Response(JSON.stringify(documents.get(name))) : new Response('', { status: 404 });
+  });
+  await adapter.createExactDocument('accounts/synthetic', { count: 1 });
+  await adapter.createExactDocument('accounts/synthetic', { count: 1 });
+  assert.equal(writes.length, 1);
+  assert.deepEqual(writes[0].currentDocument, { exists: false });
+  await adapter.updateExactDocument('accounts/synthetic', { count: 1 }, { count: 2 });
+  await adapter.deleteExactDocument('accounts/synthetic', { count: 2 });
+  assert.equal(writes.length, 3);
+});
+
+test('response-body loss after commit reconciles without a duplicate create', async () => {
+  let document = null, sends = 0;
+  const adapter = createProductionAdapter('synthetic', async (url, options) => {
+    if (url.endsWith(':commit')) {
+      sends += 1;
+      document = JSON.parse(options.body).writes[0].update;
+      return { ok: true, text: async () => { throw new Error('connection reset during body'); } };
+    }
+    return document ? new Response(JSON.stringify(document)) : new Response('', { status: 404 });
+  });
+  await adapter.createExactDocument('accounts/synthetic', { uid: 'synthetic' });
+  assert.equal(sends, 1);
+});
+
+test('apply CLI refuses absent freeze and invalid output paths before a single identity send', async () => {
+  const value = await certificationFixture();
+  try {
+    const args = [...value.args];
+    args[args.indexOf('create-certification')] = 'apply-manifest';
+    value.adapter.documents.delete(AUTHORITY_CONFIG_PATHS.legacyProvisioningFreeze);
+    value.adapter.state.rtdbFreeze = null;
+    const before = value.adapter.state.writes;
+    await assert.rejects(run(args, { adapter: value.adapter, env: { GCLOUD_ACCESS_TOKEN: 'synthetic' } }), /freeze_not_exact_active/);
+    assert.equal(value.adapter.state.writes, before);
+    value.adapter.documents.set(AUTHORITY_CONFIG_PATHS.legacyProvisioningFreeze, value.active);
+    value.adapter.state.rtdbFreeze = value.active;
+    args[args.indexOf('--completion-file') + 1] = value.files.manifestFile;
+    await assert.rejects(run(args, { adapter: value.adapter, env: { GCLOUD_ACCESS_TOKEN: 'synthetic' } }), /path_collision/);
+    assert.equal(value.adapter.state.writes, before);
+  } finally { fs.rmSync(value.directory, { recursive: true, force: true }); }
+});
+
+test('invalidation refuses a foreign certification and release cannot bypass invalidation', async () => {
+  const { manifest, source } = manifestFixture();
+  const adapter = fakeAdapter(source);
+  const active = freezeDocuments(manifest, 100).active;
+  const owned = { schemaVersion: 2, freezeId: active.freezeId, coverageDigest: 'a'.repeat(64) };
+  const foreign = { ...owned, freezeId: 'another-window' };
+  adapter.documents.set(AUTHORITY_CONFIG_PATHS.providerAccountCreation, foreign);
+  adapter.documents.set(AUTHORITY_CONFIG_PATHS.legacyProvisioningFreeze, active);
+  adapter.state.rtdbFreeze = active;
+  await assert.rejects(invalidateCertification(adapter, owned), /invalidation_conflict/);
+  await assert.rejects(releaseFreeze(adapter, active, 200), /must_be_invalidated/);
+  assert.equal(adapter.state.writes, 0);
+  adapter.documents.set(AUTHORITY_CONFIG_PATHS.providerAccountCreation, owned);
+  await invalidateCertification(adapter, owned);
+  await invalidateCertification(adapter, owned);
+  await releaseFreeze(adapter, active, 200);
+  assert.equal(adapter.state.writes, 3);
+});
+
+test('private artifacts reject traversal, symlinked parents, hardlinks and permissive directories', () => {
+  const { privatePath, readPrivate } = require('../production/providerIdentityPrivateFiles.cjs');
+  const directory = fs.mkdtempSync(path.join(temporaryRoot, 'provider-path-'));
+  try {
+    const file = path.join(directory, 'artifact.json');
+    atomicWrite(file, { synthetic: true });
+    assert.throws(() => privatePath(`${directory}/../${path.basename(directory)}/artifact.json`), /canonical/);
+    const link = path.join(directory, 'alias');
+    fs.symlinkSync(directory, link);
+    assert.throws(() => readPrivate(path.join(link, 'artifact.json')), /symlink/);
+    fs.linkSync(file, path.join(directory, 'hardlink.json'));
+    assert.throws(() => atomicWrite(file, {}), /permissions_invalid/);
+    fs.unlinkSync(path.join(directory, 'hardlink.json'));
+    fs.chmodSync(directory, 0o755);
+    assert.throws(() => atomicWrite(file, {}), /directory_permissions/);
+    assert.equal(fs.statSync(directory).mode & 0o777, 0o755);
+  } finally { fs.rmSync(directory, { recursive: true, force: true }); }
+});
+
+test('unrelated UID metadata drift cannot be omitted from namespace certification', async () => {
+  const { manifest, source } = manifestFixture();
+  const adapter = fakeAdapter(source), progress = new Map();
+  await runManifest(manifest, adapter, { progress });
+  const current = currentFrom(adapter, source);
+  current.identityMigrations['identityMigrations/unmanifested/operations/foreign'] = { status: 'complete' };
+  assert.throws(() => verifyProgressAwareDrift(manifest, current, progress), /namespace_drift:identityMigrations/);
+});
+
+test('manifest schema and exact write paths remain enforced after a digest is recomputed', () => {
+  const { manifest } = manifestFixture();
+  const edited = structuredClone(manifest);
+  const record = edited.records.find((r) => r.classification === 'MIGRATE_RECIPROCAL_IDENTITY');
+  const original = record.targetPaths[0];
+  record.targetPaths[0] = 'accounts/another-owner';
+  record.expectedResult[record.targetPaths[0]] = record.expectedResult[original];
+  delete record.expectedResult[original];
+  edited.manifestDigest = sha256(Object.fromEntries(Object.entries(edited).filter(([key]) => key !== 'manifestDigest')));
+  assert.throws(() => validateManifest(edited), /targets_invalid/);
+});
+
+test('self-consistent replacement mapping cannot be substituted for the bound source snapshot', () => {
+  const { manifest, source } = manifestFixture();
+  const changed = structuredClone(source);
+  changed.users.Migrate.authUid = 'another-owner';
+  changed.authIndex['another-owner'] = changed.authIndex['uid-migrate'];
+  delete changed.authIndex['uid-migrate'];
+  const alteredManifest = classifySnapshot(changed, manifest.source).manifest;
+  assert.doesNotThrow(() => validateManifest(alteredManifest));
+  assert.throws(() => validateManifestSource(alteredManifest, source), /snapshot_mapping_invalid/);
+});
+
+test('two-store transition matrix refuses foreign and malformed states without mutations', async () => {
+  const { manifest, source } = manifestFixture();
+  const active = freezeDocuments(manifest, 100).active;
+  const released = { ...active, state: 'released', releasedAt: 200 };
+  const states = { absent: null, active, released, foreign: { ...active, freezeId: 'foreign' },
+    malformed: { state: 'active' } };
+  for (const [leftName, left] of Object.entries(states)) for (const [rightName, right] of Object.entries(states)) {
+    for (const action of ['activate', 'release']) {
+      const adapter = fakeAdapter(source);
+      if (left) adapter.documents.set(AUTHORITY_CONFIG_PATHS.legacyProvisioningFreeze, left);
+      adapter.state.rtdbFreeze = right;
+      const allowed = action === 'activate' ? ['absent', 'active'] : ['absent', 'active', 'released'];
+      const operation = action === 'activate' ? activateFreeze(adapter, active) : releaseFreeze(adapter, active, 200);
+      if (allowed.includes(leftName) && allowed.includes(rightName)) await operation;
+      else {
+        await assert.rejects(operation, /freeze_(activation|release)_conflict/);
+        assert.equal(adapter.state.writes, 0);
+      }
+    }
+  }
+});
+
+test('duplicate legacy UID references and divergent auth versions block classification', () => {
+  const { manifest, source } = manifestFixture();
+  const duplicate = structuredClone(source);
+  duplicate.users.HoldOnly.authUid = 'uid-migrate';
+  const classified = classifySnapshot(duplicate, manifest.source);
+  assert.equal(classified.manifest.operationCounts.BLOCKED_CONFLICT, 2);
+  const changed = structuredClone(source);
+  changed.loginDirectory.Migrate.authVersion = 2;
+  assert.equal(classifySnapshot(changed, manifest.source).manifest.operationCounts.BLOCKED_CONFLICT, 1);
+});
+
+test('inventory digests survive private JSON serialization when Auth fields are absent', () => {
+  const source = { authIndex: { synthetic: { username: undefined, authVersion: undefined } },
+    values: [undefined, 1] };
+  assert.equal(sha256(source), sha256(JSON.parse(JSON.stringify(source))));
+});
+
+test('invalid freeze and completion timestamps cannot authorize certification', async () => {
+  const value = await certificationFixture();
+  try {
+    for (const timestamp of [NaN, Infinity, 0, -1, 1.5]) assert.throws(() => freezeDocuments(value.manifest, timestamp), /timestamp_invalid/);
+    for (const timestamp of [null, value.active.activatedAt, Date.now() + 100000, 1.5]) {
+      const changed = { ...value.completion, inventoryCapturedAt: timestamp };
+      changed.artifactDigest = sha256(Object.fromEntries(Object.entries(changed).filter(([key]) => key !== 'artifactDigest')));
+      assert.throws(() => verifyCompletionArtifact(changed, value.manifest, value.active, value.ledger, value.current), /completion_invalid/);
+    }
+  } finally { fs.rmSync(value.directory, { recursive: true, force: true }); }
+});
+
+test('full CLI persists exact state across six real SIGKILL boundaries', () => {
+  const child = path.join(__dirname, 'fixtures/provider-identity-cli-restart-child.cjs');
+  for (const mode of ['before-commit', 'transport-no-commit', 'lost-response', 'after-commit', 'after-checkpoint', 'between-records']) {
+    const directory = fs.mkdtempSync(path.join(temporaryRoot, `provider-cli-${mode}-`));
+    try {
+      const { manifest, source } = manifestFixture();
+      const active = freezeDocuments(manifest, Date.now() - 10000).active;
+      const initial = { ...Object.fromEntries(Object.entries(source.accounts).map(([id, value]) => [`accounts/${id}`, value])),
+        ...Object.fromEntries(Object.entries(source.trainerHandles).map(([id, value]) => [`trainerHandles/${id}`, value])) };
+      atomicWrite(path.join(directory, 'manifest.json'), manifest);
+      atomicWrite(path.join(directory, 'snapshot.json'), source);
+      atomicWrite(path.join(directory, 'store.json'), { source, documents: {
+        ...initial, [AUTHORITY_CONFIG_PATHS.legacyProvisioningFreeze]: active }, rtdbFreeze: active, sends: {} });
+      fs.writeFileSync(path.join(directory, 'approval.txt'), APPROVAL, { mode: 0o600 });
+      const interrupted = spawnSync(process.execPath, [child, directory, mode], { encoding: 'utf8' });
+      assert.equal(interrupted.signal, 'SIGKILL', `${mode}: ${interrupted.stderr}`);
+      const interruptedStore = JSON.parse(fs.readFileSync(path.join(directory, 'store.json')));
+      const committedBefore = manifest.records.filter((r) => r.operation !== 'VERIFY_ONLY' && r.targetPaths &&
+        r.targetPaths.every((target) => interruptedStore.documents[target]));
+      const resumed = spawnSync(process.execPath, [child, directory, 'resume'], { encoding: 'utf8' });
+      assert.equal(resumed.status, 0, `${mode}: ${resumed.stderr}`);
+      const final = JSON.parse(fs.readFileSync(path.join(directory, 'store.json')));
+      for (const record of committedBefore) {
+        const key = record.targetPaths.join('|');
+        assert.equal(final.sends[key], interruptedStore.sends[key], 'committed exact operation must not resend');
+      }
+      assert.ok(Object.entries(initial).every(([target, value]) => exact(final.documents[target], value)));
+      const completion = JSON.parse(fs.readFileSync(path.join(directory, 'completion.json')));
+      assert.equal(completion.completeProtectedHandleCount, 3);
+      assert.equal(completion.completedOperationCount, manifest.records.length);
+      const sends = Object.values(final.sends).reduce((a, b) => a + b, 0);
+      assert.equal(sends, mode === 'transport-no-commit' ? 3 : 2);
+    } finally { fs.rmSync(directory, { recursive: true, force: true }); }
+  }
+});
+
+test('full CLI safely stops on truncated or modified progress and post-checkpoint store drift', () => {
+  const child = path.join(__dirname, 'fixtures/provider-identity-cli-restart-child.cjs');
+  for (const mode of ['truncated', 'modified', 'store-drift', 'already-exact']) {
+    const directory = fs.mkdtempSync(path.join(temporaryRoot, `provider-cli-${mode}-`));
+    try {
+      const { manifest, source } = manifestFixture();
+      const active = freezeDocuments(manifest, Date.now() - 10000).active;
+      atomicWrite(path.join(directory, 'manifest.json'), manifest);
+      atomicWrite(path.join(directory, 'snapshot.json'), source);
+      atomicWrite(path.join(directory, 'store.json'), { source, documents: {
+        ...Object.fromEntries(Object.entries(source.accounts).map(([id, value]) => [`accounts/${id}`, value])),
+        ...Object.fromEntries(Object.entries(source.trainerHandles).map(([id, value]) => [`trainerHandles/${id}`, value])),
+        [AUTHORITY_CONFIG_PATHS.legacyProvisioningFreeze]: active }, rtdbFreeze: active, sends: {} });
+      fs.writeFileSync(path.join(directory, 'approval.txt'), APPROVAL, { mode: 0o600 });
+      assert.equal(spawnSync(process.execPath, [child, directory, 'resume'], { encoding: 'utf8' }).status, 0);
+      const storePath = path.join(directory, 'store.json');
+      const progressPath = path.join(directory, 'progress.json');
+      const before = JSON.parse(fs.readFileSync(storePath));
+      if (mode === 'truncated') fs.writeFileSync(progressPath, '{');
+      if (mode === 'modified') {
+        const ledger = JSON.parse(fs.readFileSync(progressPath));
+        ledger.ledgerDigest = '0'.repeat(64);
+        atomicWrite(progressPath, ledger);
+      }
+      if (mode === 'store-drift') {
+        const changed = structuredClone(before);
+        changed.documents['accounts/uid-migrate'].uid = 'wrong-owner';
+        atomicWrite(storePath, changed);
+      }
+      if (mode === 'already-exact') fs.unlinkSync(progressPath);
+      const result = spawnSync(process.execPath, [child, directory, 'resume'], { encoding: 'utf8' });
+      assert.equal(result.status, mode === 'already-exact' ? 0 : 1, result.stderr);
+      const after = JSON.parse(fs.readFileSync(storePath));
+      assert.deepEqual(after.sends, before.sends);
+    } finally { fs.rmSync(directory, { recursive: true, force: true }); }
+  }
+});
+
 test('every live mutation requires the exact private approval artifact', () => {
-  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'provider-approval-'));
+  const directory = fs.mkdtempSync(path.join(temporaryRoot, 'provider-approval-'));
   const approval = path.join(directory, 'approval.txt');
   try {
     fs.writeFileSync(approval, `${APPROVAL}\n`, { mode: 0o600 });
@@ -135,6 +394,13 @@ test('CLI defaults to zero-write planning until execute is explicit', () => {
   assert.equal(options.action, 'apply-manifest');
 });
 
+test('unqualified production CLI cannot consume approval or reach a production request', async () => {
+  const args = ['--action', 'activate-freeze', '--execute', '--confirm-project', 'trade-list-a4297',
+    '--confirm-firestore-database', 'phase-e-identity', '--confirm-rtdb-url',
+    'https://trade-list-a4297-default-rtdb.firebaseio.com', '--approval-file', '/does-not-exist'];
+  await assert.rejects(run(args), /live_window_audit_blocked/);
+});
+
 test('operator certification path is the exact authority adapter contract', () => {
   const authoritySource = fs.readFileSync(path.join(__dirname, '../e1-authority-service/firestoreE1AuthorityAdapter.js'), 'utf8');
   const operatorSource = fs.readFileSync(path.join(__dirname, '../scripts/run-provider-identity-live-window.cjs'), 'utf8');
@@ -147,7 +413,7 @@ test('operator certification path is the exact authority adapter contract', () =
 test('durable progress is sealed, private, and replaced after each verified operation', async () => {
   const { manifest, source } = manifestFixture();
   const adapter = fakeAdapter(source);
-  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'provider-progress-'));
+  const directory = fs.mkdtempSync(path.join(temporaryRoot, 'provider-progress-'));
   const file = path.join(directory, 'progress.json');
   let checkpoints = 0;
   try {
@@ -167,7 +433,7 @@ test('durable progress is sealed, private, and replaced after each verified oper
 test('separate processes recover post-commit, post-checkpoint, and committed ambiguous interruptions', () => {
   const child = path.join(__dirname, 'fixtures/provider-identity-restart-child.cjs');
   for (const [mode, crashCode] of [['after-commit', 81], ['after-checkpoint', 82], ['ambiguous', 81]]) {
-    const directory = fs.mkdtempSync(path.join(os.tmpdir(), `provider-process-${mode}-`));
+    const directory = fs.mkdtempSync(path.join(temporaryRoot, `provider-process-${mode}-`));
     try {
       const { manifest, source } = manifestFixture();
       const manifestFile = path.join(directory, 'manifest.json');
@@ -229,25 +495,28 @@ test('freeze activation resumes either partial store and exact activation is ide
   await assert.rejects(activateFreeze(conflict, active), /freeze_activation_conflict/u);
 });
 
-test('freeze release resumes either partial store, never reactivates, and rejects absence or conflict', async () => {
+test('freeze release resumes partial activation or release and never reactivates', async () => {
   const { manifest, source } = manifestFixture();
   const active = freezeDocuments(manifest, 100).active;
   const released = { ...active, state: 'released', releasedAt: 200 };
   for (const [firestore, rtdb, expectedWrites] of [
-    [active, active, 2], [released, active, 1], [active, released, 1], [released, released, 0]
+    [active, active, 2], [released, active, 1], [active, released, 1], [released, released, 0],
+    [null, active, 1], [active, null, 1], [null, null, 0]
   ]) {
     const adapter = fakeAdapter(source);
     adapter.documents.set(AUTHORITY_CONFIG_PATHS.legacyProvisioningFreeze, structuredClone(firestore));
     adapter.state.rtdbFreeze = structuredClone(rtdb);
     await releaseFreeze(adapter, active, 200);
     assert.equal(adapter.state.writes, expectedWrites);
-    assert.equal((await adapter.readDocument(AUTHORITY_CONFIG_PATHS.legacyProvisioningFreeze)).state, 'released');
+    assert.equal((await adapter.readDocument(AUTHORITY_CONFIG_PATHS.legacyProvisioningFreeze))?.state ?? null,
+      firestore ? 'released' : null);
   }
-  for (const [firestore, rtdb] of [[null, active], [active, null], [{ ...active, freezeId: 'wrong' }, active]]) {
+  for (const [firestore, rtdb] of [[{ ...active, freezeId: 'wrong' }, active],
+    [{ ...released, releasedAt: 201 }, released], [{ ...released, releasedAt: null }, active]]) {
     const adapter = fakeAdapter(source);
     if (firestore) adapter.documents.set(AUTHORITY_CONFIG_PATHS.legacyProvisioningFreeze, structuredClone(firestore));
     adapter.state.rtdbFreeze = structuredClone(rtdb);
-    await assert.rejects(releaseFreeze(adapter, active, 200), /freeze_release_conflict/u);
+    await assert.rejects(releaseFreeze(adapter, active, 200), /freeze_release_(conflict|timestamp_invalid)/u);
   }
 });
 
@@ -291,7 +560,7 @@ test('freeze transitions recover after either store mutation is interrupted', as
 });
 
 async function certificationFixture() {
-  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'provider-certification-'));
+  const directory = fs.mkdtempSync(path.join(temporaryRoot, 'provider-certification-'));
   const { manifest, source } = manifestFixture();
   const adapter = fakeAdapter(source);
   const progress = new Map();
@@ -300,21 +569,26 @@ async function certificationFixture() {
   adapter.documents.set(AUTHORITY_CONFIG_PATHS.legacyProvisioningFreeze, structuredClone(active));
   adapter.state.rtdbFreeze = structuredClone(active);
   const manifestFile = path.join(directory, 'manifest.json');
+  const snapshotFile = path.join(directory, 'snapshot.json');
   const progressFile = path.join(directory, 'progress.json');
   const completionFile = path.join(directory, 'completion.json');
+  const certificationFile = path.join(directory, 'certification-intent.json');
   const approvalFile = path.join(directory, 'approval.txt');
   atomicWrite(manifestFile, manifest);
+  atomicWrite(snapshotFile, source);
   const ledger = writeProgress(progressFile, manifest, progress);
   const current = currentFrom(adapter, source);
   const completion = buildCompletionArtifact(manifest, active, ledger, current, active.activatedAt + 1);
   atomicWrite(completionFile, completion);
   fs.writeFileSync(approvalFile, `${APPROVAL}\n`, { mode: 0o600 });
   const args = ['--action', 'create-certification', '--manifest', manifestFile, '--progress-file', progressFile,
+    '--snapshot', snapshotFile,
+    '--certification-file', certificationFile,
     '--completion-file', completionFile, '--approval-file', approvalFile, '--confirm-project', 'trade-list-a4297',
     '--confirm-firestore-database', 'phase-e-identity', '--confirm-rtdb-url',
     'https://trade-list-a4297-default-rtdb.firebaseio.com', '--certified-at', String(active.activatedAt + 2), '--execute'];
   return { directory, manifest, source, adapter, progress, active, ledger, current, completion, files: {
-    manifestFile, progressFile, completionFile, approvalFile }, args };
+    manifestFile, progressFile, completionFile, approvalFile, certificationFile }, args };
 }
 
 test('live completion artifact is sealed to final inventory, progress, coverage, and post-freeze time', async () => {
@@ -330,7 +604,7 @@ test('live completion artifact is sealed to final inventory, progress, coverage,
 test('certification creates and verifies only the shared authority document from live completion evidence', async () => {
   const value = await certificationFixture();
   try {
-    const dependencies = { adapter: value.adapter, env: { GCLOUD_ACCESS_TOKEN: 'test' },
+    const dependencies = { adapter: value.adapter, env: { GCLOUD_ACCESS_TOKEN: 'test' }, now: () => value.active.activatedAt + 3,
       readProduction: async () => currentFrom(value.adapter, value.source) };
     const before = value.adapter.state.writes;
     await run(value.args, dependencies);

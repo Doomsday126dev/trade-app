@@ -4,6 +4,7 @@ const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 const { normalizeHandle } = require('../e1-authority-service/handleNormalization.js');
+const { privatePath } = require('./providerIdentityPrivateFiles.cjs');
 
 const CLASSES = Object.freeze([
   'ALREADY_CANONICAL',
@@ -18,9 +19,10 @@ const TARGET_STATES = Object.freeze({ ALL_ABSENT: 'ALL_ABSENT', ALL_EXACT: 'ALL_
   PARTIAL_OR_DIFFERENT: 'PARTIAL_OR_DIFFERENT' });
 
 function stableJson(value) {
-  if (Array.isArray(value)) return `[${value.map(stableJson).join(',')}]`;
+  if (Array.isArray(value)) return `[${value.map((item) => stableJson(item) ?? 'null').join(',')}]`;
   if (value && typeof value === 'object') {
-    return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${stableJson(value[key])}`).join(',')}}`;
+    return `{${Object.keys(value).sort().filter((key) => value[key] !== undefined)
+      .map((key) => `${JSON.stringify(key)}:${stableJson(value[key])}`).join(',')}}`;
   }
   return JSON.stringify(value);
 }
@@ -71,6 +73,12 @@ function classifySnapshot(snapshot, metadata) {
   const activeHandles = [...new Set([...Object.keys(users), ...Object.keys(loginDirectory)])].sort();
   const reciprocalUids = new Set();
   const malformedHandles = new Set();
+  const uidReferences = new Map();
+  for (const user of Object.values(users)) {
+    if (typeof user?.authUid === 'string' && user.authUid) {
+      uidReferences.set(user.authUid, (uidReferences.get(user.authUid) || 0) + 1);
+    }
+  }
 
   for (const canonicalTrainerName of activeHandles) {
     let normalized;
@@ -99,6 +107,12 @@ function classifySnapshot(snapshot, metadata) {
     }
 
     const uid = typeof user.authUid === 'string' && user.authUid ? user.authUid : null;
+    if (uid && (!/^[A-Za-z0-9:_-]{1,128}$/u.test(uid) || uidReferences.get(uid) !== 1)) {
+      records.push({ classification: 'BLOCKED_CONFLICT', canonicalTrainerName,
+        normalizedTrainerName: normalized.normalized, handleKey: normalized.handleKey,
+        reason: 'invalid_or_duplicate_uid' });
+      continue;
+    }
     const authRecord = uid ? authIndex[uid] : null;
     const reciprocal = Boolean(uid && authRecord && authRecord.username === canonicalTrainerName);
     const expected = {
@@ -113,6 +127,12 @@ function classifySnapshot(snapshot, metadata) {
 
     if (reciprocal) {
       reciprocalUids.add(uid);
+      if (!Number.isSafeInteger(expected.legacyAuthVersion) || expected.legacyAuthVersion < 1 ||
+          (authRecord.authVersion !== undefined && directory.authVersion !== undefined &&
+           Number(authRecord.authVersion) !== Number(directory.authVersion))) {
+        records.push({ classification: 'BLOCKED_CONFLICT', ...expected, reason: 'legacy_auth_version_conflict' });
+        continue;
+      }
       if (exactCanonical(account, handle, expected)) {
         records.push({ classification: 'ALREADY_CANONICAL', operation: 'VERIFY_ONLY', ...expected,
           targetPaths: [`accounts/${uid}`, `trainerHandles/${normalized.handleKey}`],
@@ -190,7 +210,9 @@ function classifySnapshot(snapshot, metadata) {
       capturedAt: metadata.capturedAt,
       sourceDigests: metadata.sourceDigests,
       currentRulesDigest: metadata.currentRulesDigest,
-      provisioningContractDigest: metadata.provisioningContractDigest
+      provisioningContractDigest: metadata.provisioningContractDigest,
+      namespaceBaselines: Object.fromEntries(['operationRequests', 'identityMigrations'].map((root) =>
+        [root, structuredClone(snapshot[root] || {})]))
     },
     expectedInitialCounts: {
       authIndex: Object.keys(authIndex).length,
@@ -245,13 +267,16 @@ function publicReport(manifest, runKey) {
 }
 
 function writePrivateJson(file, value) {
-  const directory = path.dirname(path.resolve(file));
-  fs.mkdirSync(directory, { recursive: true, mode: 0o700 });
-  fs.chmodSync(directory, 0o700);
+  privatePath(file, { missing: true });
+  const directory = path.dirname(file);
   const flags = fs.constants.O_WRONLY | fs.constants.O_CREAT | fs.constants.O_EXCL | (fs.constants.O_NOFOLLOW || 0);
   const fd = fs.openSync(file, flags, 0o600);
-  try { fs.writeFileSync(fd, `${JSON.stringify(value, null, 2)}\n`); } finally { fs.closeSync(fd); }
-  fs.chmodSync(file, 0o600);
+  try {
+    fs.writeFileSync(fd, `${JSON.stringify(value, null, 2)}\n`);
+    fs.fsyncSync(fd);
+  } finally { fs.closeSync(fd); }
+  const parent = fs.openSync(directory, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW);
+  try { fs.fsyncSync(parent); } finally { fs.closeSync(parent); }
 }
 
 function expectedDocuments(record, timestamp) {
@@ -330,10 +355,7 @@ async function verifyRecordExact(record, documents, adapter) {
 }
 
 async function runManifest(manifest, adapter, options = {}) {
-  if (sha256(Object.fromEntries(Object.entries(manifest).filter(([key]) => key !== 'manifestDigest'))) !== manifest.manifestDigest) {
-    throw new Error('manifest_digest_mismatch');
-  }
-  if (manifest.operationCounts.BLOCKED_CONFLICT || manifest.operationCounts.MALFORMED) throw new Error('manifest_blocked');
+  validateManifest(manifest);
   if (options.expectedSourceMappingFingerprint &&
       options.expectedSourceMappingFingerprint !== manifest.sourceMappingFingerprint) throw new Error('source_evidence_changed');
 
@@ -366,6 +388,7 @@ async function runManifest(manifest, adapter, options = {}) {
     if (state === TARGET_STATES.PARTIAL_OR_DIFFERENT) throw new Error('manifest_target_partial_or_different');
     if (state === TARGET_STATES.ALL_ABSENT) {
       try {
+        if (options.beforeCommit) await options.beforeCommit(record, documents);
         await adapter.createOnly(record, documents);
         sent = true;
       } catch (error) {
@@ -387,8 +410,73 @@ async function runManifest(manifest, adapter, options = {}) {
   return Object.freeze({ processed, skipped, writes, progress, coverageDigest: sha256([...progress.entries()].sort()) });
 }
 
+function validateManifest(manifest) {
+  if (sha256(Object.fromEntries(Object.entries(manifest).filter(([key]) => key !== 'manifestDigest'))) !== manifest.manifestDigest) {
+    throw new Error('manifest_digest_mismatch');
+  }
+  if (manifest.schemaVersion !== 1 || manifest.manifestType !== 'provider-identity-production-window-v1' ||
+      !Array.isArray(manifest.records) || !manifest.records.length) throw new Error('manifest_schema_invalid');
+  const counts = Object.fromEntries(CLASSES.map((name) => [name, manifest.records.filter((r) => r.classification === name).length]));
+  if (stableJson(counts) !== stableJson(manifest.operationCounts)) throw new Error('manifest_counts_invalid');
+  if (counts.BLOCKED_CONFLICT || counts.MALFORMED) throw new Error('manifest_blocked');
+  const handles = new Set(), uids = new Set(), targets = new Set();
+  for (const record of manifest.records) {
+    if (!CLASSES.includes(record.classification)) throw new Error('manifest_class_invalid');
+    if (record.classification === 'UNPAIRED_AUTHINDEX_REVIEW') {
+      if (record.operation !== 'PRESERVE_ONLY' || record.targetPaths || record.expectedResult) throw new Error('unpaired_write_forbidden');
+      continue;
+    }
+    const normalized = normalizeHandle(record.canonicalTrainerName);
+    if (normalized.normalized !== record.normalizedTrainerName || normalized.handleKey !== record.handleKey ||
+        handles.has(record.handleKey)) throw new Error('manifest_handle_invalid');
+    handles.add(record.handleKey);
+    if (record.classification !== 'CREATE_LEGACY_HANDLE_HOLD') {
+      if (!/^[A-Za-z0-9:_-]{1,128}$/u.test(record.uid || '') || uids.has(record.uid)) throw new Error('manifest_uid_invalid');
+      uids.add(record.uid);
+    }
+    const allowed = record.classification === 'CREATE_LEGACY_HANDLE_HOLD' ? [`trainerHandles/${record.handleKey}`] :
+      [`accounts/${record.uid}`, `trainerHandles/${record.handleKey}`];
+    if (record.classification === 'MIGRATE_RECIPROCAL_IDENTITY') {
+      if (record.operation !== 'CREATE_ACCOUNT_AND_HANDLE' ||
+          record.sourceMappingFingerprint !== sourceFingerprint(record) ||
+          record.operationId !== `migration-${record.sourceMappingFingerprint.slice(0, 24)}`) throw new Error('manifest_migration_invalid');
+      allowed.push(`operationRequests/${record.uid}/requests/${record.operationId}`,
+        `identityMigrations/${record.uid}/operations/${record.operationId}`);
+    } else if (record.classification === 'ALREADY_CANONICAL' && record.operation !== 'VERIFY_ONLY') {
+      throw new Error('canonical_write_forbidden');
+    }
+    if (stableJson(allowed) !== stableJson(record.targetPaths) ||
+        stableJson([...allowed].sort()) !== stableJson(Object.keys(record.expectedResult || {}).sort())) {
+      throw new Error('manifest_targets_invalid');
+    }
+    for (const target of allowed) {
+      if (targets.has(target)) throw new Error('manifest_target_duplicate');
+      targets.add(target);
+    }
+    if (WRITABLE_CLASSES.has(record.classification) && stableJson(record.expectedResult) !==
+        stableJson(expectedDocuments(record, Date.parse(manifest.source.capturedAt)))) throw new Error('manifest_documents_invalid');
+    if (record.classification === 'ALREADY_CANONICAL' && !exactCanonical(
+      record.expectedResult[allowed[0]], record.expectedResult[allowed[1]], record)) throw new Error('canonical_identity_invalid');
+  }
+  if (handles.size !== manifest.expectedInitialCounts.activeHandles) throw new Error('manifest_coverage_invalid');
+}
+
+function validateManifestSource(manifest, snapshot) {
+  validateManifest(manifest);
+  for (const root of ['authIndex', 'users', 'loginDirectory', 'accounts', 'trainerHandles']) {
+    if (sha256(snapshot[root] || {}) !== manifest.source.sourceDigests?.[root]) throw new Error('manifest_snapshot_digest_invalid');
+  }
+  const rebuilt = classifySnapshot(snapshot, manifest.source).manifest;
+  if (stableJson(rebuilt.records) !== stableJson(manifest.records) ||
+      stableJson(rebuilt.expectedInitialCounts) !== stableJson(manifest.expectedInitialCounts) ||
+      rebuilt.sourceMappingFingerprint !== manifest.sourceMappingFingerprint ||
+      stableJson(rebuilt.source.namespaceBaselines) !== stableJson(manifest.source.namespaceBaselines)) {
+    throw new Error('manifest_snapshot_mapping_invalid');
+  }
+}
+
 module.exports = {
   CLASSES, stableJson, sha256, keyedDigest, classifySnapshot, publicReport, writePrivateJson,
   TARGET_STATES, expectedDocuments, operationId, progressEntry, progressVerified, readExpectedDocuments,
-  classifyTargetState, runManifest
+  classifyTargetState, runManifest, validateManifest, validateManifestSource
 };

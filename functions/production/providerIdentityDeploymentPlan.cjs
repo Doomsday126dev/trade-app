@@ -69,6 +69,9 @@ function buildPlan(options) {
   const plan = {
     schemaVersion: 1,
     planType: 'provider-identity-inactive-deployment-v1',
+    executionReady: false,
+    executionBlockers: ['provider-window-deployment-executor-not-qualified',
+      'dedicated-secret-and-iam-command-sequence-not-qualified'],
     source: { commit: options.sourceCommit, tree: options.sourceTree },
     providerAccountsExist: false,
     authority: {
@@ -80,6 +83,7 @@ function buildPlan(options) {
       runtimeServiceAccount: AUTHORITY_SERVICE_ACCOUNT,
       target: `next-inactive-revision-for-${authority.sourceFingerprint.slice(0, 12)}`,
       environment: { ...DISABLED_AUTHORITY_GATES,
+        READ_PROOF_MODE: 'false', GROUP_E_CLIENT_MODE: 'disabled',
         PROVIDER_SUBJECT_HMAC_KEY_VERSION: '1', PROVIDER_ACCOUNT_COMPATIBILITY_REQUIRED: 'false' },
       secretReference: { environmentVariable: 'PROVIDER_SUBJECT_HMAC_KEY', secret: SECRET_NAME, version: '1' }
     },
