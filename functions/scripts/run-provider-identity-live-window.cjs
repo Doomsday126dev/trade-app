@@ -143,7 +143,12 @@ function createProductionAdapter(token, fetcher = fetch) {
       headers: { Authorization: `Bearer ${token}`, 'X-Firebase-ETag': 'true' }
     });
     if (!response.ok) throw new Error(`rtdb_read_${response.status}`);
-    return { value: await response.json(), etag: response.headers.get('etag') };
+    let value = await response.json();
+    // RTDB deletes null-valued children, unlike Firestore. Canonicalize only
+    // this wire-level representation; all other freeze fields remain exact.
+    if (target === 'legacyProvisioningFreeze' && value?.state === 'active' &&
+        !Object.hasOwn(value, 'releasedAt')) value = { ...value, releasedAt: null };
+    return { value, etag: response.headers.get('etag') };
   }
   async function writeRtdbExact(target, current, next) {
     const observed = await readRtdb(target);

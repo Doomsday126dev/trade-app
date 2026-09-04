@@ -6,7 +6,7 @@ const { sha256, stableJson } = require('./providerIdentityWindow.cjs');
 const { atomicWrite, readPrivate, privateDirectory } = require('./providerIdentityPrivateFiles.cjs');
 const { EXPECTED_GATEWAYS, DISABLED_AUTHORITY_GATES, DISABLED_GATEWAY_GATES } = require('./providerIdentityDeploymentPlan.cjs');
 const { validatePlan, stageSource, verifyStage, assertInactive, privateGcloud } = require('./providerIdentityInfrastructure.cjs');
-const { TARGET } = require('./providerIdentityRun.cjs');
+const { TARGET, exclusive } = require('./providerIdentityRun.cjs');
 
 const REGION = 'us-central1';
 const SERVICE = 'e1-identity-authority';
@@ -50,6 +50,23 @@ class ProviderDeploymentExecutor {
   }
   call(args) { return privateGcloud(args, undefined, this.spawn); }
   jsonFile(name, value) { const file = path.join(this.directory, name); atomicWrite(file, value); return file; }
+  receipt(name, value) {
+    const file = this.store.file(`deployment/${name}-ownership.json`);
+    if (value !== undefined) {
+      const bound = { runId: this.store.request().runId, planDigest: this.plan.planDigest, value };
+      if (fs.existsSync(file)) {
+        if (!same(this.store.read(`deployment/${name}-ownership.json`), bound)) throw new Error('infrastructure_ownership_conflict');
+      } else exclusive(file, this.store.seal(bound));
+      return value;
+    }
+    if (!fs.existsSync(file)) return null;
+    const bound = this.store.read(`deployment/${name}-ownership.json`);
+    if (bound.runId !== this.store.request().runId || bound.planDigest !== this.plan.planDigest) throw new Error('infrastructure_ownership_conflict');
+    return bound.value;
+  }
+  assertOwned(name, observed) {
+    if (!same(this.receipt(name), observed)) throw new Error('infrastructure_ownership_conflict');
+  }
   async inspect() {
     const before = this.call(['run', 'services', 'describe', SERVICE, `--region=${REGION}`]);
     if (!same(before, this.contract.authorityBefore)) throw new Error('authority_baseline_changed');
@@ -87,12 +104,15 @@ class ProviderDeploymentExecutor {
   }
   async deployRules() {
     const current = await this.rules.read();
-    if (current.bytes === this.contract.rulesCandidate) return;
+    if (current.bytes === this.contract.rulesCandidate) { this.assertOwned('rules', current); return; }
     if (current.bytes !== this.contract.rulesRollback || sha256(current.bytes) !== this.plan.rules.currentDigest) throw new Error('rules_precondition_changed');
     const freeze = await this.freezeState();
     if (freeze.firestore || freeze.rtdb) throw new Error('rules_deploy_freeze_active');
-    await this.rules.replace(current, this.contract.rulesCandidate);
-    if ((await this.rules.read()).bytes !== this.contract.rulesCandidate) throw new Error('rules_readback_changed');
+    const result = await this.rules.replace(current, this.contract.rulesCandidate);
+    const observed = await this.rules.read();
+    if (observed.bytes !== this.contract.rulesCandidate || !same(result, observed)) throw new Error('rules_readback_changed');
+    this.receipt('rules', observed);
+    return result;
   }
   async buildAuthority() {
     const source = this.source('authority');
@@ -123,13 +143,14 @@ class ProviderDeploymentExecutor {
         after.metadata?.name !== SERVICE) throw new Error('authority_versioned_secret_invalid');
     config.container.image = built.image;
     const file = this.jsonFile('authority-spec.json', after);
-    this.call(['run', 'services', 'replace', file, `--region=${REGION}`,
+    const created = this.call(['run', 'services', 'replace', file, `--region=${REGION}`,
       `--impersonate-service-account=e1-authority-deployer@${TARGET.projectId}.iam.gserviceaccount.com`]);
     const observed = this.call(['run', 'services', 'describe', SERVICE, `--region=${REGION}`]);
-    if (!same(observed.spec?.template?.spec, after.spec.template.spec) || observed.status?.traffic?.length !== 1 ||
+    if (!same(created, observed) || !same(observed.spec?.template?.spec, after.spec.template.spec) || observed.status?.traffic?.length !== 1 ||
         observed.status.traffic[0].percent !== 100 || observed.status.traffic[0].revisionName !== observed.status.latestReadyRevisionName) {
       throw new Error('authority_deployment_readback_invalid');
     }
+    this.receipt('authority', observed);
     return { revision: observed.status.latestReadyRevisionName, image: built.image };
   }
   gatewayArgs(name, source, environment, runtime) {
@@ -144,11 +165,12 @@ class ProviderDeploymentExecutor {
   async deployGateway(plan, name) {
     if (!same(plan, this.plan) || !EXPECTED_GATEWAYS.includes(name)) throw new Error('gateway_plan_changed');
     const environment = { ...this.contract.gatewayEnvironment, ...plan.gateways.environment };
-    this.call(this.gatewayArgs(name, this.source('gateways'), environment, this.contract.gatewayRuntime));
+    const created = this.call(this.gatewayArgs(name, this.source('gateways'), environment, this.contract.gatewayRuntime));
     const observed = this.call(['functions', 'describe', name, '--gen2', `--region=${REGION}`]);
-    if (observed.buildConfig?.entryPoint !== name || observed.buildConfig?.runtime !== this.contract.gatewayRuntime ||
+    if (!same(created, observed) || observed.buildConfig?.entryPoint !== name || observed.buildConfig?.runtime !== this.contract.gatewayRuntime ||
         observed.serviceConfig?.serviceAccountEmail !== plan.gateways.runtimeServiceAccount ||
         !same(observed.serviceConfig?.environmentVariables, environment)) throw new Error('gateway_deployment_readback_invalid');
+    this.receipt(`gateway-${name}`, observed);
     return { name, revision: observed.serviceConfig.revision, sourceFingerprint: plan.gateways.sourceFingerprint };
   }
   async verify(plan) {
@@ -164,28 +186,64 @@ class ProviderDeploymentExecutor {
   }
   async restoreRules(before) {
     const current = await this.rules.read();
-    if (current.bytes === before.rulesBytes) return;
+    if (current.bytes === before.rulesBytes && current.etag === before.rulesEtag) return;
+    const restored = this.receipt('rules-restored');
+    if (restored && same(restored, current)) return;
+    this.assertOwned('rules', current);
     if (current.bytes !== this.contract.rulesCandidate || sha256(before.rulesBytes) !== this.plan.rules.rollbackDigest) throw new Error('rules_rollback_conflict');
     await this.rules.replace(current, before.rulesBytes);
-    if ((await this.rules.read()).bytes !== before.rulesBytes) throw new Error('rules_rollback_unverified');
+    const observed = await this.rules.read();
+    if (observed.bytes !== before.rulesBytes) throw new Error('rules_rollback_unverified');
+    this.receipt('rules-restored', observed);
   }
   async restoreAuthority(before) {
+    const current = this.call(['run', 'services', 'describe', SERVICE, `--region=${REGION}`]);
+    if (same(current, before.authority) || same(current, this.receipt('authority-restored'))) return;
+    this.assertOwned('authority', current);
     this.call(['run', 'services', 'update-traffic', SERVICE, `--region=${REGION}`,
       `--to-revisions=${before.authority.status.latestReadyRevisionName}=100`]);
     const observed = this.call(['run', 'services', 'describe', SERVICE, `--region=${REGION}`]);
     if (observed.status?.traffic?.length !== 1 || observed.status.traffic[0].revisionName !== before.authority.status.latestReadyRevisionName ||
         observed.status.traffic[0].percent !== 100) throw new Error('authority_rollback_unverified');
+    this.receipt('authority-restored', observed);
   }
   async restoreGateway(before, name) {
     const rollback = this.contract.gatewayRollback[name];
+    const list = this.call(['functions', 'list', `--regions=${REGION}`, `--filter=name:/${name}`]);
+    const current = list.find((v) => v.name?.endsWith(`/functions/${name}`)) || null;
+    if (same(current, before.gateways[name]) || same(current, this.receipt(`gateway-${name}-restored`))) return;
+    this.assertOwned(`gateway-${name}`, current);
     if (!before.gateways[name] && rollback === null) {
-      const list = this.call(['functions', 'list', `--regions=${REGION}`, `--filter=name:/${name}`]);
-      if (list.some((v) => v.name?.endsWith(`/functions/${name}`))) this.call(['functions', 'delete', name, '--gen2', `--region=${REGION}`]);
+      this.call(['functions', 'delete', name, '--gen2', `--region=${REGION}`]);
+      const remaining = this.call(['functions', 'list', `--regions=${REGION}`, `--filter=name:/${name}`]);
+      if (remaining.some((v) => v.name?.endsWith(`/functions/${name}`))) throw new Error('gateway_rollback_unverified');
+      this.receipt(`gateway-${name}-restored`, null);
       return;
     }
     this.call(this.gatewayArgs(name, rollback.sourceUri, rollback.environment, rollback.runtime));
     const observed = this.call(['functions', 'describe', name, '--gen2', `--region=${REGION}`]);
     if (!same(observed.serviceConfig?.environmentVariables, rollback.environment) || observed.buildConfig?.entryPoint !== name) throw new Error('gateway_rollback_unverified');
+    this.receipt(`gateway-${name}-restored`, observed);
+  }
+  async inspectInactive() {
+    const authority = this.call(['run', 'services', 'describe', SERVICE, `--region=${REGION}`]);
+    const c = configuration(authority);
+    delete c.environment.PROVIDER_SUBJECT_HMAC_KEY;
+    for (const [key, value] of Object.entries(c.environment)) {
+      if ((key.endsWith('_ENABLED') && value !== 'false') ||
+          (key === 'GROUP_E_CLIENT_MODE' && value !== 'disabled')) throw new Error('authority_gate_active');
+    }
+    const gateways = {};
+    for (const name of EXPECTED_GATEWAYS) {
+      const list = this.call(['functions', 'list', `--regions=${REGION}`, `--filter=name:/${name}`]);
+      const observed = list.find((v) => v.name?.endsWith(`/functions/${name}`)) || null;
+      if (observed) {
+        assertInactive({ environment: observed.serviceConfig?.environmentVariables }, DISABLED_GATEWAY_GATES);
+        if (observed.serviceConfig.serviceAccountEmail !== this.plan.gateways.runtimeServiceAccount) throw new Error('gateway_runtime_changed');
+      }
+      gateways[name] = observed;
+    }
+    return { authority, gateways, rules: await this.rules.read() };
   }
 }
 

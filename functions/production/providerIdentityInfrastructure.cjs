@@ -148,6 +148,8 @@ class Infrastructure {
   owned(secret) {
     if (!secret || !same(secret.labels, { 'provider-window': this.store.request().runId }) ||
         !same(secret.replication, { automatic: {} })) throw new Error('foreign_secret_configuration');
+    const recorded = this.journal().secretOwned;
+    if (recorded && !same(recorded, secret)) throw new Error('foreign_secret_configuration');
   }
   async prepare() {
     let value = this.journal();
@@ -166,7 +168,9 @@ class Infrastructure {
     let secret = await this.commands.secret();
     if (secret && !this.journal().steps.secret?.intent) throw new Error('foreign_preexisting_secret');
     if (!secret) await this.intent('secret', async () => {
-      await this.commands.createSecret(this.store.request().runId); this.owned(await this.commands.secret());
+      await this.commands.createSecret(this.store.request().runId);
+      const observed = await this.commands.secret(); this.owned(observed);
+      const journal = this.journal(); journal.secretOwned = observed; this.save(journal);
     });
     secret = await this.commands.secret(); this.owned(secret);
     const versions = await this.commands.versions();
@@ -186,6 +190,7 @@ class Infrastructure {
       } finally { key.fill(0); material.fill(0); }
       const current = await this.commands.versions();
       if (current.length !== 1 || !current[0].name.endsWith('/versions/1') || current[0].state !== 'ENABLED') throw new Error('secret_version_unverified');
+      const journal = this.journal(); journal.versionOwned = current; this.save(journal);
     });
     const policy = await this.commands.policy();
     if ((policy.bindings || []).length && !same({ version: policy.version || 1, bindings: policy.bindings }, POLICY)) throw new Error('foreign_secret_iam');
@@ -215,9 +220,10 @@ class Infrastructure {
       ...(journal.steps.rules?.intent ? [['rollback-rules', () => this.deployment.restoreRules(journal.before.deployment)]] : [])
     ];
     for (const [name, action] of attempts) {
-      try { await this.intent(name, action, true); } catch { failures.push(name); }
+      try { await this.intent(name, action, true); } catch (error) { failures.push({ name, code: error.message }); }
     }
-    if (failures.length) throw new Error('infrastructure_restoration_incomplete');
+    if (failures.length) throw new Error(failures.every((v) => v.code === 'infrastructure_ownership_conflict') ?
+      'infrastructure_ownership_conflict' : 'infrastructure_restoration_incomplete');
   }
   async cleanup(blocked) {
     const journal = this.journal();
@@ -229,7 +235,14 @@ class Infrastructure {
       await this.noProviderUse();
       const secret = await this.commands.secret();
       if (secret) {
+        if (!journal.secretOwned) throw new Error('foreign_secret_configuration');
         this.owned(secret);
+        const versions = await this.commands.versions();
+        if (!Array.isArray(versions) || versions.length > 1 || versions.some((v) =>
+          !journal.steps.version?.intent || !v.name.endsWith('/versions/1') || v.state !== 'ENABLED')) {
+          throw new Error('secret_version_conflict');
+        }
+        if (versions.length && !same(versions, journal.versionOwned)) throw new Error('secret_version_conflict');
         const policy = await this.commands.policy();
         if ((policy.bindings || []).length && !same({ version: policy.version || 1, bindings: policy.bindings }, POLICY)) throw new Error('foreign_secret_iam');
         await this.intent('rollback-secret', async () => {

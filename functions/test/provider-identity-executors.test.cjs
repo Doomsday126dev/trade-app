@@ -80,6 +80,7 @@ function deploymentFixture(t, fault) {
       assert.equal(current.bytes, read().rules);
       const state = read(); state.rules = bytes; save(state);
       if (fault === 'rules-response-lost' && bytes === rulesCandidate) throw new Error('rules_response_lost');
+      return { bytes: read().rules, etag: sha256(read().rules) };
     } };
   const executor = new ProviderDeploymentExecutor({ repo, store, plan, rules, spawn,
     providerUsage: async () => ({ accounts: 0, providers: 0, subjects: 0 }), freezeState: async () => ({ firestore: null, rtdb: null }) });
@@ -112,7 +113,11 @@ test('six-export command executor stages exact source and verifies inactive auth
 test('authority build, deployment, wrong-image and Rules-response failures remain restorable', async (t) => {
   for (const fault of ['builds submit', 'run services replace', 'wrong-image', 'rules-response-lost']) await t.test(fault, async (st) => {
     const v = deploymentFixture(st, fault), before = await v.executor.inspect();
-    if (fault === 'rules-response-lost') await assert.rejects(v.executor.deployRules());
+    if (fault === 'rules-response-lost') {
+      await assert.rejects(v.executor.deployRules());
+      await assert.rejects(v.executor.restoreRules(before), /ownership_conflict/);
+      return;
+    }
     else {
       await v.executor.deployRules();
       if (fault === 'builds submit') {
@@ -126,7 +131,8 @@ test('authority build, deployment, wrong-image and Rules-response failures remai
         return;
       }
       await v.executor.buildAuthority(); await assert.rejects(v.executor.deployAuthority());
-      await v.executor.restoreAuthority(before);
+      if (fault === 'wrong-image') await assert.rejects(v.executor.restoreAuthority(before), /ownership_conflict/);
+      else await v.executor.restoreAuthority(before);
     }
     await v.executor.restoreRules(before); assert.equal(v.read().rules, before.rulesBytes);
   });

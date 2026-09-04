@@ -17,7 +17,7 @@ permissions:
 jobs:
   operator:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
@@ -32,5 +32,7 @@ jobs:
         run: node --test functions/test/provider-identity-orchestrator.test.cjs functions/test/provider-identity-executors.test.cjs
       - name: Freeze expiry client policy
         run: node --test tests/legacy-provisioning-freeze.test.cjs
+      - name: Concrete persistent command pipeline
+        run: node --test functions/test/provider-identity-pipeline.test.cjs
       - name: Patch hygiene
         run: git diff --check origin/main...HEAD

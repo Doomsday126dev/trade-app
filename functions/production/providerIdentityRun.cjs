@@ -18,7 +18,8 @@ const NORMAL_MS = 25 * 60 * 1000;
 const RESTORE_MS = 10 * 60 * 1000;
 const PHASES = Object.freeze(['PREPARED', 'INFRASTRUCTURE_READY', 'FREEZE_ACTIVATING', 'FROZEN',
   'MANIFEST_APPLYING', 'COVERAGE_VERIFIED', 'CERTIFICATION_CREATED', 'ZERO_WRITE_VERIFIED', 'RESTORING',
-  'CERTIFICATION_INVALIDATED', 'FREEZE_RELEASED', 'PRIVILEGES_CLEANED', 'CLOSED_HEALTHY', 'CLOSED_BLOCKED_RESTORED']);
+  'CERTIFICATION_INVALIDATED', 'FREEZE_RELEASED', 'PRIVILEGES_CLEANED', 'CLOSED_HEALTHY', 'CLOSED_BLOCKED_RESTORED',
+  'CLOSED_BLOCKED_MANUAL_INFRA_REVIEW']);
 const HASH = /^[a-f0-9]{64}$/u;
 const same = (a, b) => stableJson(a) === stableJson(b);
 const fail = (code) => { throw new Error(code); };
@@ -199,7 +200,12 @@ class RunStore {
     let ledger = this.authorize('restoration', 'closeout', this.binding(), now);
     if (ledger.state.phase !== 'PRIVILEGES_CLEANED' || evidence.certificationAbsent !== true ||
         evidence.freezesInactive !== true || evidence.gatesFalse !== true || evidence.temporaryIamAbsent !== true) fail('closeout_unsafe');
-    const phase = ledger.state.reason ? 'CLOSED_BLOCKED_RESTORED' : 'CLOSED_HEALTHY';
+    const manual = ledger.state.manualItems || [];
+    if (!Array.isArray(manual) || manual.some((v) => !v || typeof v.component !== 'string' ||
+        typeof v.code !== 'string') || (manual.length && (!ledger.state.reason ||
+        evidence.provisioningRestored !== true || evidence.operationsDrained !== true))) fail('manual_closeout_unsafe');
+    const phase = manual.length ? 'CLOSED_BLOCKED_MANUAL_INFRA_REVIEW' :
+      ledger.state.reason ? 'CLOSED_BLOCKED_RESTORED' : 'CLOSED_HEALTHY';
     const value = { schemaVersion: 1, ...evidence, ...ledger.state, phase, terminal: true, endedAt: now,
       transitionChainDigest: sha256(ledger), request: this.request() };
     if (fs.existsSync(this.file('closeout.json'))) {
@@ -215,7 +221,10 @@ class RunStore {
     if (value.transitionChainDigest !== sha256(ledger) || value.request.digest !== this.request().digest ||
         value.runId !== ledger.state.runId || value.manifestDigest !== ledger.state.manifestDigest ||
         value.certificationAbsent !== true || value.freezesInactive !== true || value.gatesFalse !== true ||
-        value.temporaryIamAbsent !== true || !value.terminal || !['CLOSED_HEALTHY', 'CLOSED_BLOCKED_RESTORED'].includes(value.phase)) {
+        value.temporaryIamAbsent !== true || !value.terminal || !['CLOSED_HEALTHY', 'CLOSED_BLOCKED_RESTORED',
+          'CLOSED_BLOCKED_MANUAL_INFRA_REVIEW'].includes(value.phase) ||
+        (value.phase === 'CLOSED_BLOCKED_MANUAL_INFRA_REVIEW' && (!value.manualItems?.length ||
+          value.provisioningRestored !== true || value.operationsDrained !== true))) {
       fail('closeout_conflict');
     }
     return this.append(ledger, { ...ledger.state, terminal: true, phase: value.phase, lastVerifiedState: value }, 'closeout', value.endedAt);

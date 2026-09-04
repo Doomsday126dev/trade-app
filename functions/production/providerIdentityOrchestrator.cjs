@@ -117,7 +117,10 @@ async function orchestrate({ store, manifest, snapshot, plan, actualProvenance, 
           verifyProgressAwareDrift(manifest, await cloud.inventory(), progress);
           await runManifest(manifest, adapter, { progress, checkpoint: save,
             beforeCommit: async () => { await guard('execution', 'apply-manifest'); await frozen(); },
-            afterCommitBeforeCheckpoint: async () => checkpoint('identity:committed'),
+            afterCommitBeforeCheckpoint: async ({ record }) => {
+              await checkpoint('identity:committed');
+              await checkpoint(`identity:committed:${record.classification}`);
+            },
             afterCheckpoint: async () => checkpoint('identity:checkpoint') });
         });
         const completion = await step('execution', 'verify-coverage', async () => {
@@ -162,10 +165,23 @@ async function orchestrate({ store, manifest, snapshot, plan, actualProvenance, 
       if (active) await releaseFreeze(adapter, active, await now());
     });
     await transition('FREEZE_RELEASED');
+    const infrastructureStep = async (action, operation) => {
+      try { await step('restoration', action, operation); }
+      catch (error) {
+        // Only an executor-classified ownership/compatibility conflict can
+        // become manual review. Transport failures still require restoration.
+        const items = cloud.manualReview && await cloud.manualReview(action, error);
+        if (!Array.isArray(items) || !items.length) throw error;
+        const event = store.ledger();
+        store.append(event, { ...event.state, reason: event.state.reason || 'infrastructure_manual_review',
+          manualItems: [...(event.state.manualItems || []), ...items], pending: null },
+        'manual-infrastructure-review', await now());
+      }
+    };
     if (store.ledger().state.reason) {
-      await step('restoration', 'restore-infrastructure', () => cloud.restore(plan, store, guard, checkpoint));
+      await infrastructureStep('restore-infrastructure', () => cloud.restore(plan, store, guard, checkpoint));
     }
-    await step('restoration', 'cleanup-privileges', () => cloud.cleanup(plan, store, guard, checkpoint));
+    await infrastructureStep('cleanup-privileges', () => cloud.cleanup(plan, store, guard, checkpoint));
     await transition('PRIVILEGES_CLEANED');
     const evidence = await step('restoration', 'verify-restored', async () => {
       const state = await cloud.closeoutEvidence(manifest);

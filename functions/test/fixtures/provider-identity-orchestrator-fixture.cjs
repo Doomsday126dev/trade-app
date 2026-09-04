@@ -180,7 +180,7 @@ function runtime(directory, injection = {}) {
         finalIdentityCoverage: Object.keys(current.trainerHandles).length, accountCount: Object.keys(current.accounts).length };
     }
   };
-  return { store, manifest, snapshot: source, plan, actualProvenance: operator, cloud, adapter, checkpoint, read, save, injection };
+  return { store, manifest, snapshot: source, plan, actualProvenance: operator, cloud, adapter, checkpoint, read, save, injection, spawn };
 }
 
 module.exports = { fixture, runtime };
