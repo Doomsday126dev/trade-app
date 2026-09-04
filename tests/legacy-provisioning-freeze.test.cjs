@@ -17,9 +17,29 @@ test('legacy creation is open before activation and fail-closed for active or ma
 });
 
 test('release reopens legacy creation and immediately invalidates provider certification',()=>{
-  const model=load(),active=freeze(),released=freeze({state:'released',releasedAt:200});
+  const model=load(),active=freeze({schemaVersion:2,expiresAt:2100100}),released={...active,state:'released',releasedAt:200};
   assert.equal(model.certificationMatches(active,certification(),500),true);
   assert.equal(model.legacyCreationDecision(released).ok,true);assert.equal(model.certificationMatches(released,certification(),500),false);
+});
+
+test('hard expiry restores provisioning and invalidates provider admission without cleanup',()=>{
+  const model=load(),active=freeze({schemaVersion:2,expiresAt:2100100});
+  assert.equal(model.legacyCreationDecision(active,2100099).ok,false);
+  assert.equal(model.legacyCreationDecision(active,2100100).status,'expired');
+  assert.equal(model.certificationMatches(active,certification({expiresAt:2100200}),2100100),false);
+  assert.equal(model.certificationMatches(freeze(),certification(),500),false);
+  assert.equal(model.legacyCreationDecision({...active,expiresAt:1},2100100).ok,false);
+});
+
+test('RTDB wire records without a null releasedAt field preserve freeze and hard-expiry semantics',()=>{
+  const model=load(),wire=freeze({schemaVersion:2,expiresAt:2100100});delete wire.releasedAt;
+  assert.equal(model.legacyCreationDecision(wire,500).code,'legacy-provisioning/frozen');
+  assert.equal(model.certificationMatches(wire,certification(),500),true);
+  assert.equal(model.legacyCreationDecision(wire,2100100).status,'expired');
+  assert.equal(model.certificationMatches(wire,certification(),2100100),false);
+  assert.equal(model.legacyCreationDecision({...wire,state:'released'},2100100).code,'legacy-provisioning/freeze-invalid');
+  assert.equal(model.legacyCreationDecision({...wire,foreign:true},2100100).code,'legacy-provisioning/freeze-invalid');
+  assert.equal(Object.hasOwn(wire,'releasedAt'),false);
 });
 
 test('repair policy permits only an existing exact-handle identity repair',()=>{

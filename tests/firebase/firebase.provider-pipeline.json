@@ -1,0 +1,11 @@
+{
+  "database": { "rules": "database.rules.provider-identity-window.json" },
+  "firestore": { "rules": "firestore.rules.e1-authority" },
+  "emulators": {
+    "auth": { "port": 9499 },
+    "database": { "port": 9410 },
+    "firestore": { "port": 9411 },
+    "ui": { "enabled": false },
+    "singleProjectMode": true
+  }
+}

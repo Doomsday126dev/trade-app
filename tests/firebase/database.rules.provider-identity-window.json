@@ -607,6 +607,76 @@
     "legacyProvisioningFreeze": {
       ".read": "auth != null && root.child('admins').child(auth.uid).val() === true",
       ".write": false
+    },
+    "trainerShares": {
+      "$ownerUid": {
+        ".read": true,
+        ".write": "auth != null && auth.uid === $ownerUid",
+        ".validate": "!newData.exists() || (newData.hasChildren(['schemaVersion', 'shareVersion', 'trainerName', 'profile', 'publishedListTypes', 'publishedAt', 'updatedAt']) && newData.child('schemaVersion').val() === 1 && newData.child('shareVersion').isNumber() && ((!data.exists() && newData.child('shareVersion').val() === 1) || (data.exists() && newData.child('shareVersion').val() === data.child('shareVersion').val() + 1)) && newData.child('trainerName').isString() && newData.child('trainerName').val().length > 0 && newData.child('trainerName').val().length <= 64 && (!data.exists() || newData.child('trainerName').val() === data.child('trainerName').val()) && newData.child('publishedAt').isNumber() && newData.child('publishedAt').val() > 0 && (!data.exists() || newData.child('publishedAt').val() === data.child('publishedAt').val()) && newData.child('updatedAt').isNumber() && newData.child('updatedAt').val() >= newData.child('publishedAt').val() && (!data.exists() || newData.child('updatedAt').val() > data.child('updatedAt').val()) && newData.child('updatedAt').val() <= now + 300000)",
+        "profile": {
+          ".validate": "newData.hasChildren(['friendCode', 'bio', 'discord', 'avatarPokemon', 'lastUpdated'])",
+          "friendCode": {
+            ".validate": "newData.isString() && newData.val().length <= 14"
+          },
+          "bio": {
+            ".validate": "newData.isString() && newData.val().length <= 120"
+          },
+          "discord": {
+            ".validate": "newData.isString() && newData.val().length <= 40"
+          },
+          "avatarPokemon": {
+            ".validate": "newData.isString() && newData.val().length <= 120"
+          },
+          "lastUpdated": {
+            ".validate": "newData.isNumber() && newData.val() >= 0"
+          },
+          "$other": {
+            ".validate": false
+          }
+        },
+        "lists": {
+          ".validate": "newData.hasChildren()",
+          "$listType": {
+            ".validate": "($listType === 'wishlist' || $listType === 'dynamax' || $listType === 'gmax' || $listType === 'costumes') && newData.hasChildren()",
+            "$pokemonKey": {
+              ".validate": "$pokemonKey.length > 0 && $pokemonKey.length <= 200 && $pokemonKey !== '__proto__' && $pokemonKey !== 'prototype' && $pokemonKey !== 'constructor' && ((newData.isString() && newData.val().length > 0 && newData.val().length <= 512) || newData.hasChildren(['p']))",
+              "p": {
+                ".validate": "newData.val() === 'H' || newData.val() === 'M' || newData.val() === 'L'"
+              },
+              "mod": {
+                ".validate": "newData.isString() && newData.val().length <= 200"
+              },
+              "lucky": {
+                ".validate": "newData.isBoolean()"
+              },
+              "shiny": {
+                ".validate": "newData.isBoolean()"
+              },
+              "xxl": {
+                ".validate": "newData.isBoolean()"
+              },
+              "xxs": {
+                ".validate": "newData.isBoolean()"
+              },
+              "backgroundId": {
+                ".validate": "newData.isString() && (newData.val() === '' || newData.val().matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)) && newData.val().length <= 120"
+              },
+              "$other": {
+                ".validate": false
+              }
+            }
+          }
+        },
+        "publishedListTypes": {
+          ".validate": "newData.hasChildren(['wishlist', 'dynamax', 'gmax', 'costumes'])",
+          "$listType": {
+            ".validate": "($listType === 'wishlist' || $listType === 'dynamax' || $listType === 'gmax' || $listType === 'costumes') && newData.val() === true"
+          }
+        },
+        "$other": {
+          ".validate": "$other === 'schemaVersion' || $other === 'shareVersion' || $other === 'trainerName' || $other === 'publishedAt' || $other === 'updatedAt'"
+        }
+      }
     }
   }
 }

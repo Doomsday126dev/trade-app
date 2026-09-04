@@ -1,8 +1,10 @@
 {
   "schemaVersion": 1,
   "provisioningModel": "bounded-legacy-provisioning-freeze",
-  "clientPolicyVersion": 1,
-  "candidateRulesSha256": "b8dba9429476828bd4410d6bc2e19d22e69e8124f6e248283b1fc76204b6dff2",
+  "clientPolicyVersion": 2,
+  "freezeSchemaVersion": 2,
+  "immutableHardExpiryMs": 2100000,
+  "candidateRulesSha256": "4842135f4f6f448635f59684ea9c01c8a4e25bc5d19103bf6d179be41f6abaac",
   "guardedPaths": [
     "users/{username}",
     "loginDirectory/{username}",
@@ -21,5 +23,5 @@
     "publish-released-freeze-record",
     "legacy-creation-may-resume"
   ],
-  "provisioningContractDigest": "20c440c56a2fa3f723f3f6f2ad1bf30a9307e7f098c92a65b86f08ae6bcac59b"
+  "provisioningContractDigest": "77c4f3bb77e6d87d86bf80afb5dcde4151e764a784c7262fedfc19785d66733b"
 }

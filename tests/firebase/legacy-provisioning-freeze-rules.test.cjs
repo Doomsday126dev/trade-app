@@ -5,7 +5,8 @@ const PROJECT_ID=process.env.POGO_RULES_PROJECT_ID||'demo-pogo-legacy-provisioni
 const DATABASE_HOST=process.env.FIREBASE_DATABASE_EMULATOR_HOST||'127.0.0.1:9700';
 const AUTH_HOST=process.env.FIREBASE_AUTH_EMULATOR_HOST||'127.0.0.1:9799';
 const NAMESPACE=`${PROJECT_ID}-default-rtdb`,TOKENS={},IDS={},now=1700000000000;
-const freeze=(overrides={})=>({schemaVersion:1,state:'active',provisioningModel:'bounded-legacy-provisioning-freeze',freezeId:'legacy-freeze-review-0001',provisioningContractDigest:'a'.repeat(64),activatedAt:now,releasedAt:null,...overrides});
+const activationTime=Date.now();
+const freeze=(overrides={})=>({schemaVersion:2,state:'active',provisioningModel:'bounded-legacy-provisioning-freeze',freezeId:'legacy-freeze-review-0001',provisioningContractDigest:'a'.repeat(64),activatedAt:activationTime,expiresAt:activationTime+2100000,releasedAt:null,...overrides});
 const user=(uid,overrides={})=>({authUid:uid,authEmail:'trainer@example.test',authVersion:1,friendCode:'',isAdmin:false,isOwner:false,...overrides});
 const directory=(overrides={})=>({authReady:true,authVersion:1,approvedAt:now,...overrides});
 const requestRecord=(status='pending')=>({username:'NewTrainer',note:'',requestedAt:now,status});
@@ -79,4 +80,16 @@ test('same-handle legacy race loses atomically while provider certification may 
   ]);
   assert.equal(attempts.every(result=>[400,401,403].includes(result.status)),true);
   const result=await db('GET','loginDirectory/RaceTrainer');assert.equal(result.body,'null');
+});
+
+test('server hard expiry restores legacy provisioning without operator cleanup',async()=>{
+  const activatedAt=Date.now()-2101000;
+  await succeeds(db('PUT','legacyProvisioningFreeze',freeze({activatedAt,expiresAt:activatedAt+2100000}),'emulator-owner'),'expired freeze');
+  await succeeds(db('PATCH','',{'users/AfterExpiry':user('uid-expired'),'loginDirectory/AfterExpiry':directory()},TOKENS.admin),'expiry create');
+  await denied(db('PATCH','legacyProvisioningFreeze',{expiresAt:Date.now()+2100000},TOKENS.admin),'client cannot extend expiry');
+});
+
+test('malformed hard expiry cannot reopen provisioning',async()=>{
+  await succeeds(db('PUT','legacyProvisioningFreeze',freeze({expiresAt:1}),'emulator-owner'),'invalid expiry');
+  await denied(db('PATCH','',{'users/BadExpiry':user('uid-bad'),'loginDirectory/BadExpiry':directory()},TOKENS.admin),'invalid expiry blocked');
 });

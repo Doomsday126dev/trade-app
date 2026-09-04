@@ -1,0 +1,38 @@
+name: Provider identity operator audit
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'functions/production/providerIdentity*'
+      - 'functions/scripts/*provider-identity*'
+      - 'functions/test/*provider-identity*'
+      - 'functions/test/fixtures/provider-identity*'
+      - 'tests/provider-identity-window.test.cjs'
+      - '.github/workflows/provider-identity-audit.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  operator:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: 22
+      - name: Focused operator and starting-commit reproduction tests
+        run: npm run test:provider-identity-window
+      - name: Durable approval and failure-path rehearsal
+        run: node --test functions/test/provider-identity-orchestrator.test.cjs functions/test/provider-identity-executors.test.cjs
+      - name: Freeze expiry client policy
+        run: node --test tests/legacy-provisioning-freeze.test.cjs
+      - name: Concrete persistent command pipeline
+        run: node --test functions/test/provider-identity-pipeline.test.cjs
+      - name: Patch hygiene
+        run: git diff --check origin/main...HEAD

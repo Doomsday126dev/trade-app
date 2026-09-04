@@ -22,7 +22,7 @@ const MUTATION_OPERATIONS = new Set([
 const HASH = /^[a-f0-9]{16,64}$/;
 const HASH_64 = /^[a-f0-9]{64}$/;
 const LEGACY_PROVISIONING_FREEZE_FIELDS = Object.freeze([
-  'schemaVersion','state','provisioningModel','freezeId','provisioningContractDigest','activatedAt','releasedAt'
+  'schemaVersion','state','provisioningModel','freezeId','provisioningContractDigest','activatedAt','releasedAt','expiresAt'
 ]);
 const PROVIDER_CREATION_CERTIFICATION_FIELDS = Object.freeze([
   'schemaVersion','state','provisioningModel','freezeId','provisioningContractDigest','normalizationVersion',
@@ -258,11 +258,13 @@ function createFirestoreE1AuthorityAdapter({ firestore, now = () => Date.now() }
   }
 
   function validLegacyProvisioningFreeze(data, timestamp) {
-    return exactFields(data, LEGACY_PROVISIONING_FREEZE_FIELDS) && data.schemaVersion === 1 && data.state === 'active' &&
+    return exactFields(data, LEGACY_PROVISIONING_FREEZE_FIELDS) && data.schemaVersion === 2 && data.state === 'active' &&
       data.provisioningModel === 'bounded-legacy-provisioning-freeze' &&
       typeof data.freezeId === 'string' && /^legacy-freeze-[A-Za-z0-9._:-]{8,96}$/.test(data.freezeId) &&
       HASH_64.test(data.provisioningContractDigest || '') && Number.isSafeInteger(data.activatedAt) &&
-      data.activatedAt <= timestamp && data.releasedAt === null;
+      data.activatedAt > 0 && data.activatedAt <= timestamp && data.releasedAt === null &&
+      Number.isSafeInteger(data.expiresAt) && data.expiresAt === data.activatedAt + 35 * 60 * 1000 &&
+      data.expiresAt > timestamp;
   }
 
   function validProviderCreationCertification(data, freeze, timestamp) {
@@ -275,7 +277,8 @@ function createFirestoreE1AuthorityAdapter({ firestore, now = () => Date.now() }
       HASH_64.test(data.coverageDigest || '') && Number.isSafeInteger(data.inventoryCapturedAt) &&
       data.inventoryCapturedAt >= freeze.activatedAt && Number.isSafeInteger(data.certifiedAt) &&
       data.certifiedAt >= data.inventoryCapturedAt && data.certifiedAt <= timestamp &&
-      Number.isSafeInteger(data.expiresAt) && data.expiresAt > timestamp;
+      Number.isSafeInteger(data.expiresAt) && data.expiresAt > timestamp && data.expiresAt <= freeze.expiresAt &&
+      data.expiresAt <= data.certifiedAt + 15 * 60 * 1000;
   }
 
   async function readAccountFoundation(uid) {
