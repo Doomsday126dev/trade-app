@@ -1,5 +1,8 @@
 # Provider Identity Operator Correction And Qualification
 
+Current integration follow-up: [Provider identity pipeline integration](provider-identity-pipeline-integration-2026-09-04.md).
+The following report remains historical evidence for the previous correction.
+
 ## A. Verdict
 
 PROVIDER IDENTITY OPERATOR CORRECTED - MERGE BLOCKED
