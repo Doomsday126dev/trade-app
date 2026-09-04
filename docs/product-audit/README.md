@@ -269,7 +269,7 @@ No storage migration, dead-record purge, auth refactor or broad source rewrite w
 
 ## M. Test Inventory
 
-All 183 existing test/spec files are listed in [test-suites.csv](test-suites.csv), with one primary class, action, and survivor/rationale. [test-declarations.csv](test-declarations.csv) enumerates 2,129 parsed declaration sites including this draft's additions; loops may create more runtime cases. This is **not** a claim that 2,129 tests ran. [package-commands.csv](package-commands.csv) covers 112 scripts across packages; [validation-entrypoints.csv](validation-entrypoints.csv) covers 45 check/audit/review tools; fixtures/configs remain in the structural source inventory.
+All 183 existing test/spec files are listed in [test-suites.csv](test-suites.csv), with one primary class, action, and survivor/rationale. [test-declarations.csv](test-declarations.csv) enumerates 2,129 parsed declaration sites including this draft's additions; loops may create more runtime cases. This is **not** a claim that 2,129 tests ran. [package-commands.csv](package-commands.csv) covers 112 scripts across packages; [validation-entrypoints.csv](validation-entrypoints.csv) covers 45 check/audit/review tools. Fixtures/configuration remain preserved in the repository; the structural source inventory indexes executable/text source files, not every asset or configuration file.
 
 | Primary suite class | Files |
 |---|---:|
