@@ -91,6 +91,8 @@
     const expected=[...fields].sort();return keys.length===expected.length&&keys.every((key,index)=>key===expected[index]);
   }
   function validLegacyFreeze(value){
+    // RTDB omits null children; Firestore retains releasedAt: null.
+    if(value?.state==='active'&&!Object.prototype.hasOwnProperty.call(value,'releasedAt'))value={...value,releasedAt:null};
     const timed=value?.schemaVersion===2;
     return exactFields(value,timed?[...LEGACY_FREEZE_FIELDS,'expiresAt']:LEGACY_FREEZE_FIELDS)&&[1,2].includes(value.schemaVersion)&&['active','released'].includes(value.state)&&
       value.provisioningModel===LEGACY_FREEZE_MODEL&&LEGACY_FREEZE_ID.test(value.freezeId||'')&&

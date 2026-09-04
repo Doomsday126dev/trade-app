@@ -31,6 +31,17 @@ test('hard expiry restores provisioning and invalidates provider admission witho
   assert.equal(model.legacyCreationDecision({...active,expiresAt:1},2100100).ok,false);
 });
 
+test('RTDB wire records without a null releasedAt field preserve freeze and hard-expiry semantics',()=>{
+  const model=load(),wire=freeze({schemaVersion:2,expiresAt:2100100});delete wire.releasedAt;
+  assert.equal(model.legacyCreationDecision(wire,500).code,'legacy-provisioning/frozen');
+  assert.equal(model.certificationMatches(wire,certification(),500),true);
+  assert.equal(model.legacyCreationDecision(wire,2100100).status,'expired');
+  assert.equal(model.certificationMatches(wire,certification(),2100100),false);
+  assert.equal(model.legacyCreationDecision({...wire,state:'released'},2100100).code,'legacy-provisioning/freeze-invalid');
+  assert.equal(model.legacyCreationDecision({...wire,foreign:true},2100100).code,'legacy-provisioning/freeze-invalid');
+  assert.equal(Object.hasOwn(wire,'releasedAt'),false);
+});
+
 test('repair policy permits only an existing exact-handle identity repair',()=>{
   const model=load(),record={authUid:'uid-old'};
   assert.equal(model.existingIdentityRepairDecision({freeze:freeze(),existingHandle:'Trainer',targetHandle:'Trainer',existingRecord:record,nextRecord:{authUid:'uid-old'}}).ok,true);

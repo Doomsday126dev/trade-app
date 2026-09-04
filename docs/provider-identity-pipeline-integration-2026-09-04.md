@@ -88,7 +88,9 @@ Verified sequence:
 
 This found and fixed a real wire-format mismatch: RTDB removes null children,
 while Firestore retains `releasedAt: null`. The REST adapter now canonicalizes
-only an omitted active-freeze `releasedAt` field. Other identity, timestamp,
+only an omitted active-freeze `releasedAt` field. The browser freeze policy
+applies the same normalization, including the hard-expiry decision; its focused
+regression and the emulator's actual wire record are checked. Other identity, timestamp,
 digest and freeze fields retain exact comparison.
 
 The real production Rules release transport and complete CLI boundary wiring
@@ -155,8 +157,8 @@ Passing local commands:
   run before two additional classification checkpoints; focused CI rechecks
   the committed checkpoint additions.
 - `node --test functions/test/provider-identity-pipeline.test.cjs`: 45 tests.
-- `node --test tests/legacy-provisioning-freeze.test.cjs`: 6 tests.
-- `node --check`: 14 changed JavaScript files; `git diff --check`: passed.
+- `node --test tests/legacy-provisioning-freeze.test.cjs`: 7 tests.
+- `node --check`: 16 changed JavaScript files; `git diff --check`: passed.
 
 Integrated emulator command (one passing test):
 

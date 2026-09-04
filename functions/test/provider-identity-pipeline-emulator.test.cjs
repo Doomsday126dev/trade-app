@@ -5,6 +5,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
+const vm = require('node:vm');
 const { execFileSync } = require('node:child_process');
 const { initializeApp, deleteApp } = require('firebase-admin/app');
 const { getFirestore } = require('firebase-admin/firestore');
@@ -93,6 +94,12 @@ test('concrete pipeline uses real Rules, REST identity writes, server clock, inv
     },
     async frozen(active) {
       assert.deepEqual((await adapter.readRtdb('legacyProvisioningFreeze')).value, active);
+      const raw = await (await db('GET', 'legacyProvisioningFreeze')).json();
+      const window = {}; window.window = window;
+      vm.runInContext(fs.readFileSync(path.resolve(__dirname, '../../js/domain/authenticationReadiness.js'), 'utf8'), vm.createContext({ window }));
+      assert.equal(Object.hasOwn(raw, 'releasedAt'), false);
+      assert.equal(window.PogoDomain.legacyProvisioningFreeze.legacyCreationDecision(raw, lastTime).status, 'frozen');
+      assert.equal(window.PogoDomain.legacyProvisioningFreeze.legacyCreationDecision(raw, raw.expiresAt).status, 'expired');
       assert.equal(active.expiresAt - active.activatedAt, 2100000);
       await probe('FrozenProbe', false);
       assert.ok((await db('GET', 'loginDirectory/Trainer00', undefined, null)).ok);
