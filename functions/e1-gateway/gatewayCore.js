@@ -353,7 +353,8 @@ const PUBLIC_LIST_TYPES = Object.freeze(['wishlist', 'dynamax', 'gmax', 'costume
 const PUBLIC_PROFILE_FIELDS = Object.freeze(['avatarPokemon', 'bio', 'discord', 'friendCode', 'lastUpdated']);
 const PUBLIC_PROFILE_LIMITS = Object.freeze({ friendCode: 14, bio: 120, discord: 40, avatarPokemon: 120 });
 const PUBLIC_ENTRY_FIELDS = Object.freeze(['backgroundId', 'lucky', 'mod', 'p', 'shiny', 'xxl', 'xxs']);
-const PUBLIC_PRIORITIES = new Set(['H', 'M', 'L']);
+const PUBLIC_PRIORITIES = new Set(['', 'H', 'M', 'L']);
+const PUBLIC_DECLARATION_FIELDS = Object.freeze(['intent','category','name','p','mod','gender','backgroundId','note','lucky','shiny','xxl','xxs']);
 const PUBLIC_BACKGROUND_ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
 const PUBLIC_CONTROL = /[\u0000-\u001f\u007f]/u;
 const PUBLIC_DANGEROUS_KEYS = new Set(['__proto__', 'prototype', 'constructor']);
@@ -443,8 +444,10 @@ function validateProviderPublicShareResponse(payload, expectedTrainerHandle = ''
     fail('AUTHORITY_RESPONSE_INVALID');
   }
   const share = payload.share;
-  if (!exactFields(share, ['lists', 'profile', 'publishedListTypes', 'updatedAt', 'username', 'version']) ||
-      share.version !== 1 || !publicString(share.username, 64, { empty: false }) ||
+  const fields = ['lists', 'profile', 'publishedListTypes', 'updatedAt', 'username', 'version'];
+  if (share?.version === 2) fields.push('declarations', 'declarationCount');
+  if (!exactFields(share, fields) ||
+      ![1, 2].includes(share.version) || !publicString(share.username, 64, { empty: false }) ||
       foldedPublicHandle(share.username) !== foldedPublicHandle(expectedTrainerHandle) ||
       !Number.isSafeInteger(share.updatedAt) || share.updatedAt < 1 ||
       !exactFields(share.profile, PUBLIC_PROFILE_FIELDS) || !exactFields(share.lists, PUBLIC_LIST_TYPES) ||
@@ -472,8 +475,22 @@ function validateProviderPublicShareResponse(payload, expectedTrainerHandle = ''
     }
     Object.freeze(lists[type]);
   }
+  let declarations;
+  if (share.version === 2) {
+    if (!Array.isArray(share.declarations) || share.declarations.length > 2000 ||
+        share.declarationCount !== share.declarations.length) fail('AUTHORITY_RESPONSE_INVALID');
+    declarations = share.declarations.map(entry => {
+      if (!exactFields(entry, PUBLIC_DECLARATION_FIELDS) || !['lf','ft'].includes(entry.intent) ||
+          !PUBLIC_LIST_TYPES.includes(entry.category) || !publicDynamicKey(entry.name, 200) ||
+          !PUBLIC_PRIORITIES.has(entry.p) || !['','m','f'].includes(entry.gender) ||
+          ['mod','backgroundId','note'].some(key => !publicString(entry[key], 160)) ||
+          ['lucky','shiny','xxl','xxs'].some(key => typeof entry[key] !== 'boolean')) fail('AUTHORITY_RESPONSE_INVALID');
+      return Object.freeze(Object.fromEntries(PUBLIC_DECLARATION_FIELDS.map(key => [key, entry[key]])));
+    });
+  }
   const sanitized = Object.freeze({
-    version: 1,
+    version: share.version,
+    ...(declarations ? { declarations: Object.freeze(declarations), declarationCount: declarations.length } : {}),
     username: share.username,
     profile: Object.freeze({ ...profile }),
     lists: Object.freeze(lists),

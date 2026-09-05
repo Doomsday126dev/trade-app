@@ -33,29 +33,10 @@ test('Board edit planning changes only intended fields and does not target new r
   assert.equal(current[0].values.shiny||current[1].values.shiny,true);
 });
 
-test('duplicate consolidation cannot remove the public representation and is otherwise exact, session-gated and idempotent',async()=>{
+test('physical duplicate cleanup has no active function or UI export before product rollout',()=>{
   const source=readFileSync(path.join(root,'js/app/application.js'),'utf8');
-  for(const mode of ['public-loss','cancel','legacy','changed-session','changed-data','different-values','accepted']){
-    const w=load(),api=w.PogoDomain.accountSyncProduct,model=w.PogoDomain.accountSyncModel,calls=[];
-    const survivor={name:'Pikachu',ref:mode==='public-loss'?{surface:'special-board',side:'lf',name:'Pikachu'}:{surface:'my-list',type:'wishlist',name:'Pikachu'}};
-    const duplicate={name:'Pikachu',ref:mode==='public-loss'?{surface:'my-list',type:'wishlist',name:'Pikachu'}:{surface:'special-board',side:'lf',name:'Pikachu'}};
-    let projection={entries:[survivor],duplicates:[{survivor,duplicate}]};
-    const retainedIdentity={surface:'my-list',lane:'wishlist',catalogId:'Pikachu'},losingIdentity={surface:'special-board',lane:'looking-for',catalogId:'Pikachu'};
-    const retained=active({entityId:model.tradeEntryId(retainedIdentity),identity:retainedIdentity,values:api.tradeValues({priority:'H'})});
-    const losing=active({entityId:model.tradeEntryId(losingIdentity),identity:losingIdentity,values:api.tradeValues({priority:mode==='different-values'?'M':'H',sortOrder:5})});
-    const context={productDeclarations:()=>projection,confirm:()=>mode!=='cancel',
-      accountSyncMutationAuthority:async()=>{if(mode==='changed-data')projection={...projection,entries:[]};return{mode:mode==='legacy'?'legacy':'canonical',controller:{}};},
-      accountSyncAuthorityCurrent:()=>mode!=='changed-session',accountSyncCatalogIdentity:()=>({catalogId:'Pikachu'}),
-      accountSyncCanonicalEntities:[retained,losing],accountSyncModel:model,toast:()=>{},i18nCore:{t:key=>key},renderMyList:()=>{},
-      applyAccountSyncTradeMutations:async mutations=>{calls.push(...mutations);projection={entries:[survivor],duplicates:[]};return{ok:true};}};
-    vm.runInNewContext(source.slice(source.indexOf('async function consolidateIntentDuplicates('),source.indexOf('const MY_LIST_TYPES=')),context);
-    await context.consolidateIntentDuplicates();
-    assert.equal(calls.length,mode==='accepted'?1:0,mode);
-    if(mode==='accepted'){
-      assert.equal(calls[0].kind,'delete');assert.equal(calls[0].entityId,losing.entityId);assert.notEqual(calls[0].entityId,retained.entityId);
-      await context.consolidateIntentDuplicates();assert.equal(calls.length,1);
-    }
-  }
+  assert.doesNotMatch(source,/consolidateIntentDuplicates/);
+  assert.match(source,/Physical consolidation is intentionally unavailable/);
 });
 
 test('Board projection round-trips every supported qualifier without losing priority or gender',()=>{

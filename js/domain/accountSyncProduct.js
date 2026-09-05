@@ -116,7 +116,15 @@
   function projectTradeEntities({entities=[],catalogEntryForId,encodePriority}={}){
     if(typeof catalogEntryForId!=='function'||typeof encodePriority!=='function')throw new TypeError('Trade projection adapters are incomplete');
     const lists=Object.fromEntries(MY_LIST_LANES.map(lane=>[lane,{}])),orders=Object.fromEntries(MY_LIST_LANES.map(lane=>[lane,{priorities:{H:[],M:[],L:[],U:[]}}]));
-    const board={lf:[],ft:[]},unresolved=[];
+    const board={lf:[],ft:[]},intentDeclarations=[],unresolved=[];
+    // Editable copies use existing My List intent lanes; originals stay intact.
+    for(const entity of entities||[])if(entity?.entityType==='tradeEntry'&&!entity.deleted&&entity.identity?.surface==='my-list'&&['looking-for','for-trade'].includes(entity.identity.lane)){
+      const catalog=catalogEntryForId(entity.identity.catalogId,entity.identity);
+      if(!catalog?.name){unresolved.push({entityId:entity.entityId,reason:'catalog-projection-unresolved'});continue;}
+      const values=tradeValues(entity.values);
+      intentDeclarations.push({name:catalog.name,no:catalog.no||null,side:entity.identity.lane==='looking-for'?'lf':'ft',entityId:entity.entityId,catalogId:entity.identity.catalogId,deleted:entity.deleted===true,p:values.priority,mod:values.variant,gender:values.gender,backgroundId:values.backgroundId,note:values.note,lucky:values.lucky,shiny:values.shiny,xxl:values.xxl,xxs:values.xxs,mirror:values.mirror,qty:values.quantity,sortOrder:values.sortOrder});
+    }
+    intentDeclarations.sort((a,b)=>a.sortOrder-b.sortOrder||a.entityId.localeCompare(b.entityId));
     const active=(entities||[]).filter(entity=>entity?.entityType==='tradeEntry'&&entity.deleted!==true).sort((a,b)=>(a.values?.sortOrder??0)-(b.values?.sortOrder??0)||a.entityId.localeCompare(b.entityId));
     for(const entity of active){
       const catalog=catalogEntryForId(entity.identity.catalogId,entity.identity)||null;
@@ -131,7 +139,7 @@
         if(side)board[side].push({name,dn:catalog.displayName||name,no:catalog.no||null,p:values.priority,mod:values.variant,gender:values.gender,lucky:values.lucky,xxl:values.xxl,xxs:values.xxs,shiny:values.shiny,mirror:values.mirror,backgroundId:values.backgroundId,note:values.note,...(side==='ft'?{qty:values.quantity}:{})});
       }
     }
-    return Object.freeze({lists,orders,board,unresolved:Object.freeze(unresolved)});
+    return Object.freeze({lists,orders,board,intentDeclarations,unresolved:Object.freeze(unresolved)});
   }
   function projectAcceptedPublicRows({rows=[],catalogEntryForId,encodePriority}={}){
     if(!Array.isArray(rows))throw new TypeError('Accepted public trade projection is invalid');

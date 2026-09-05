@@ -28,3 +28,10 @@ test('deep browser inventories and provider operator are never selected merely b
   const plan=select(['tests/my-list-performance.spec.js','tests/provider-privacy.spec.js','tests/provider-identity-operator.test.cjs']);
   assert.equal(plan.browser.length,0);assert.equal(plan.node.length,1);
 });
+test('public payload changes select only their owning server and emulator checks with prerequisites',()=>{
+  const plan=select(['functions/e1-authority-service/providerPublicProjection.js','tests/firebase/database.rules.provider-public-projection.json']);
+  assert.equal(plan.functions,true);assert.equal(plan.rules,true);
+  assert.equal(plan.commands.length,2);
+  assert.ok(!plan.commands.some(([,args])=>args.includes('check:contract')));
+  assert.ok(!plan.node.some(file=>file.startsWith('tests/firebase/')));
+});

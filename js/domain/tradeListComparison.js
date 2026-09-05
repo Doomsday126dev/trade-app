@@ -69,9 +69,17 @@
   }
   function unifyDeclarations(entries=[],options={}){
     const exact=new Map(),catalog=new Map(),duplicates=[],reviews=[];
+    const sourceRank=entry=>entry.ref?.surface==='my-list'?(entry.ref.managed?1:0):2;
     for(const entry of entries){
       const key=declarationKey(entry,options),prior=exact.get(key);
-      if(prior){prior.aliases.push(entry);duplicates.push({survivor:prior,duplicate:entry});continue;}
+      if(prior){
+        if(sourceRank(entry)<sourceRank(prior)){
+          const original={...prior,aliases:[]};
+          Object.assign(prior,entry,{aliases:[...prior.aliases,original],declarationKey:key});
+          duplicates.push({survivor:prior,duplicate:original});
+        }else{prior.aliases.push(entry);duplicates.push({survivor:prior,duplicate:entry});}
+        continue;
+      }
       const record={...entry,aliases:[],declarationKey:key};exact.set(key,record);
       const name=(options.nameKey||defaultNameKey)(entry.name);
       const collisionKey=JSON.stringify([entry.intent||'lf',name,entry.type||'wishlist']);

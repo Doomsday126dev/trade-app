@@ -31,6 +31,7 @@ function sourceRows(){
   const database=window.POGO_TRADE_DB||{};
   for(const list of [database.wishlist,database.dynamax,database.gmax,database.costumes])for(const entry of Array.isArray(list)?list:[])add(entry);
   for(const entry of window.PogoDomain?.pokemonCatalog?.verifiedMissingEntries||[])add(entry);
+  for(const entry of window.PogoDomain?.pokemonCatalog?.legendaryEntries||[])add(entry);
   return [...byName.values()].sort((a,b)=>a.name.localeCompare(b.name,'en',{sensitivity:'base'})||a.no-b.no);
 }
 

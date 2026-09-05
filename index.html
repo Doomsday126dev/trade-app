@@ -763,7 +763,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
       <button type="button" data-share-mode="text" aria-pressed="false" onclick="setProductShareMode('text')" data-i18n="product.text">Text</button>
     </div>
     <section id="product-share-link">
-      <p data-i18n="product.linkScope">Public link: existing categorized Looking For records only. Board-origin entries and For Trade are included in Image and Text.</p>
+      <p data-i18n="product.linkScope">Public link includes Looking For and For Trade declarations.</p>
       <button type="button" class="btn btn-primary" onclick="copyShareLink()" data-i18n="product.publishCopy">Publish and copy link</button>
       <p id="share-link-status" role="status" aria-live="polite"></p>
       <input id="share-public-url" class="field-control" readonly data-i18n-aria-label="product.link" aria-label="Link">

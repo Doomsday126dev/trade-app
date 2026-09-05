@@ -1,5 +1,5 @@
 const { test, expect } = require('@playwright/test');
-const { mkdirSync } = require('node:fs');
+const { mkdirSync, writeFileSync } = require('node:fs');
 const path = require('node:path');
 
 const screenshotDir=process.env.TRUSTED_READINESS_SCREENSHOT_DIR||'';
@@ -72,6 +72,22 @@ async function installTrustedFixture(page){
     };
     requireOwnedListHydration=()=>true;
     writeSpecialBoard=async board=>{allData.users[cur].specialTradeBoard=structuredClone(board);renderSpecialBoard();return true;};
+    accountSyncCanonicalEntities=[];
+    const controller={mutateBatch:async mutations=>{
+      for(const mutation of mutations){
+        let entity=accountSyncCanonicalEntities.find(item=>item.entityId===mutation.entityId);
+        if(mutation.kind==='add'){
+          entity={entityType:'tradeEntry',entityId:mutation.entityId,identity:mutation.identity,values:structuredClone(mutation.patch),deleted:false};
+          accountSyncCanonicalEntities.push(entity);
+        }else if(mutation.kind==='patch')Object.assign(entity.values,mutation.patch);
+        else if(mutation.kind==='delete')entity.deleted=true;
+      }
+      const projection=accountSyncProduct.projectTradeEntities({entities:accountSyncCanonicalEntities,catalogEntryForId:accountSyncCatalogEntryForId,encodePriority:accountSyncEncodedPriority});
+      allData.users[cur].intentDeclarations=structuredClone(projection.intentDeclarations);
+      return{ok:true};
+    }};
+    accountSyncMutationAuthority=async()=>({mode:'canonical',uid:auth.currentUser.uid,username:cur,controller});
+    accountSyncAuthorityCurrent=()=>true;
     document.getElementById('login-pg').style.display='none';
     document.getElementById('app').style.display='flex';
     document.getElementById('my-un').textContent='TrustedTesterWithALongTrainerName';
@@ -106,10 +122,11 @@ test('approved intent, More and Share paths preserve one canonical declaration v
   await expect(page.locator('[data-intent-row="Pikachu"]')).toBeVisible();
   expect(await page.evaluate(()=>parsePri(allData.wishlist[cur].Pikachu).p)).toBe('H');
   await page.locator('[data-intent-row="Pikachu"] select').first().selectOption('L');
-  await expect.poll(()=>page.evaluate(()=>allData.users[cur].specialTradeBoard.ft.find(e=>e.name==='Pikachu').p)).toBe('L');
+  await expect.poll(()=>page.evaluate(()=>allData.users[cur].intentDeclarations.find(e=>e.name==='Pikachu').p)).toBe('L');
+  expect(await page.evaluate(()=>JSON.stringify(allData.users[cur].specialTradeBoard))).toBe(original);
   await page.evaluate(()=>openSpecialTradeBoard());
   const before=await page.evaluate(()=>JSON.stringify(allData.users[cur].specialTradeBoard));
-  await page.locator('#special-ft-list input').first().uncheck();
+  await page.locator('#special-ft-list label').filter({hasText:'Eevee'}).locator('input').uncheck();
   expect(await page.evaluate(()=>getSpecialBoard().ft.some(e=>e.name==='Eevee'))).toBe(false);
   expect(await page.evaluate(()=>JSON.stringify(allData.users[cur].specialTradeBoard))).toBe(before);
   await page.keyboard.press('Escape');
@@ -147,6 +164,34 @@ test('approved intent, More and Share paths preserve one canonical declaration v
   }
 });
 
+test('legacy editing retains originals and Board PNG consumes the deduplicated unified selection',async({page})=>{
+  await page.goto('./?product-board-completion');await installTrustedFixture(page);
+  await page.evaluate(()=>{allData.users[cur].specialTradeBoard.lf[0].p='H';setMyListIntent('ft');});
+  const original=await page.evaluate(()=>JSON.stringify(allData.users[cur].specialTradeBoard));
+  page.once('dialog',dialog=>dialog.accept());
+  await page.locator('[data-intent-row="Eevee"]').getByRole('button',{name:'Enable editing'}).click();
+  await expect(page.locator('[data-intent-row="Eevee"] select').first()).toBeVisible();
+  await expect(page.locator('[data-intent-row="Eevee"]')).toHaveCount(1);
+  await page.evaluate(()=>openSpecialTradeBoard());
+  await expect(page.locator('#special-lf-list .sb-row')).toHaveCount(4);
+  await expect(page.locator('#special-ft-list .sb-row')).toHaveCount(1);
+  const result=await page.evaluate(async()=>{
+    const board=getSpecialBoard(),before=JSON.stringify(allData.users[cur].specialTradeBoard);
+    const blob=await renderSpecialBoardImage(board,cur);
+    const bitmap=await createImageBitmap(blob),canvas=document.createElement('canvas');
+    canvas.width=bitmap.width;canvas.height=bitmap.height;
+    const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.drawImage(bitmap,0,0);
+    const pixels=ctx.getImageData(0,0,canvas.width,canvas.height).data,colors=new Set();
+    for(let i=0;i<pixels.length;i+=400)colors.add(pixels.slice(i,i+4).join(','));
+    return{lf:board.lf.length,ft:board.ft.length,width:canvas.width,height:canvas.height,
+      colors:colors.size,data:canvas.toDataURL('image/png'),before,after:JSON.stringify(allData.users[cur].specialTradeBoard)};
+  });
+  expect(result.lf).toBe(4);expect(result.ft).toBe(1);
+  expect(result.width).toBe(1440);expect(result.height).toBeGreaterThan(100);expect(result.colors).toBeGreaterThan(8);
+  expect(result.before).toBe(original);expect(result.after).toBe(original);
+  if(screenshotDir){mkdirSync(screenshotDir,{recursive:true});writeFileSync(path.join(screenshotDir,'unified-board-export.png'),Buffer.from(result.data.split(',')[1],'base64'));}
+});
+
 test('publication state is persistent and copying never precedes confirmed publication',async({page})=>{
   await page.goto('./?product-publication');await installTrustedFixture(page);
   await page.evaluate(()=>{
@@ -173,6 +218,7 @@ test('empty flag search sets never emit a prefilter-only search block',async({pa
   await page.goto('./?product-search');await installTrustedFixture(page);
   const values=await page.evaluate(()=>{
     allData.wishlist[cur]={Pikachu:'H'};allData.costumes[cur]={'Pikachu (Worlds 2025)':'H'};
+    allData.users[cur].specialTradeBoard={lf:[],ft:[]};allData.users[cur].intentDeclarations=[];
     return{normal:buildStrings('wishlist',cur),costume:buildStrings('costumes',cur)};
   });
   expect(Object.keys(values.normal)).toEqual(['H']);

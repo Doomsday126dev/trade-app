@@ -116,6 +116,25 @@ test('gateway rejects dangerous public-list dictionary names', () => {
   assert.equal({}.polluted, undefined);
 });
 
+test('gateway preserves explicit LF/FT v2 and rejects incomplete or private declarations', () => {
+  const entry = { intent: 'ft', category: 'wishlist', name: 'Mewtwo', p: '', mod: '', gender: '',
+    backgroundId: '', note: 'Declared trade', lucky: false, shiny: true, xxl: false, xxs: false };
+  const result = publicResult({ version: 2, declarations: [entry], declarationCount: 1 });
+  const validated = validateProviderPublicShareResponse(result, 'ProviderTrainer');
+  assert.equal(validated.share.version, 2);
+  assert.deepEqual(validated.share.declarations, [entry]);
+  assert.equal(Object.isFrozen(validated.share.declarations[0]), true);
+  for (const changes of [
+    { declarationCount: 2 },
+    { declarations: [{ ...entry, aliasProvenance: 'private' }] },
+    { declarations: [{ ...entry, intent: 'owned' }] },
+    { declarations: [{ ...entry, gender: 'unknown' }] },
+    { version: 3 }
+  ]) {
+    assert.throws(() => validateProviderPublicShareResponse({ code: 'SUCCESS', share: { ...result.share, ...changes } }, 'ProviderTrainer'), /AUTHORITY_RESPONSE_INVALID/u);
+  }
+});
+
 test('authority invoker uses only server OIDC for anonymous reads and omits the browser bearer token', async () => {
   const calls = [];
   const configuration = loadGatewayConfiguration(environment());

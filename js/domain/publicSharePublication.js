@@ -38,6 +38,31 @@
     if(!Array.isArray(value))return[];
     return REQUIRED_LIST_SURFACES.filter(type=>value.includes(type));
   }
+  const DECLARATION_FIELDS=Object.freeze(['intent','category','name','p','mod','gender','backgroundId','note','lucky','shiny','xxl','xxs']);
+  function publicDeclarations(entries,{strict=false}={}){
+    if(!Array.isArray(entries)||entries.length>2000)throw new TypeError('Invalid public declarations');
+    return entries.map(entry=>{
+      if(!plainObject(entry)||strict&&(Object.keys(entry).length!==DECLARATION_FIELDS.length||Object.keys(entry).some(key=>!DECLARATION_FIELDS.includes(key))))throw new TypeError('Invalid public declaration fields');
+      const item={};
+      for(const key of DECLARATION_FIELDS){
+        if(['lucky','shiny','xxl','xxs'].includes(key)){
+          if(strict&&typeof entry[key]!=='boolean')throw new TypeError('Invalid public flag');
+          item[key]=entry[key]===true;
+        }else{
+          const value=entry[key]??'';
+          if(typeof value!=='string'||value.length>(key==='name'?200:160)||/[\u0000-\u001f\u007f]/u.test(value))throw new TypeError('Invalid public text');
+          item[key]=value;
+        }
+      }
+      if(!['lf','ft'].includes(item.intent)||!REQUIRED_LIST_SURFACES.includes(item.category)||!item.name.trim()||['__proto__','constructor','prototype'].includes(item.name)||!['','H','M','L'].includes(item.p)||!['','m','f'].includes(item.gender))throw new TypeError('Invalid public declaration');
+      return item;
+    });
+  }
+  function intentEntries(snapshot,intent='lf',category){
+    if(snapshot?.version===2)return(snapshot.declarations||[]).filter(entry=>entry.intent===intent&&(!category||entry.category===category));
+    if(intent!=='lf')return[];
+    return REQUIRED_LIST_SURFACES.filter(type=>!category||type===category).flatMap(type=>Object.entries(snapshot?.lists?.[type]||{}).map(([name,value])=>({name,value,intent:'lf',category:type})));
+  }
   function projectionLists(snapshot){
     if(plainObject(snapshot?.lists))return{container:snapshot.lists,shape:'current'};
     const hasLegacy=Object.values(LIST_ALIASES).flat().some(key=>plainObject(snapshot?.[key]));
@@ -79,18 +104,23 @@
     if(!source&&publishedTypes.length!==REQUIRED_LIST_SURFACES.length){
       return{ok:false,status:'projection_incomplete',rejectionCounts:{missing_list_projection:1}};
     }
-    if(snapshot.version!==1&&source?.shape!=='legacy'){
+    if(snapshot.version!==1&&snapshot.version!==2&&source?.shape!=='legacy'){
       return{ok:false,status:'projection_unsupported',rejectionCounts:{unsupported_version:1}};
     }
     const normalized=normalizeProjectionEntries(source?.container||{},{strictCategories:source?.shape==='current'});
     const rejected=Object.values(normalized.rejectionCounts).reduce((count,value)=>count+value,0);
     if(rejected)return{ok:false,status:'projection_unsupported',rejectionCounts:normalized.rejectionCounts};
-    const entryCount=REQUIRED_LIST_SURFACES.reduce((count,type)=>count+Object.keys(normalized.lists[type]).length,0);
+    let declarations;
+    if(snapshot.version===2){
+      try{declarations=publicDeclarations(snapshot.declarations??[],{strict:true});}catch{return{ok:false,status:'projection_unsupported'};}
+      if(snapshot.declarationCount!==declarations.length)return{ok:false,status:'projection_incomplete'};
+    }
+    const entryCount=declarations?declarations.length:REQUIRED_LIST_SURFACES.reduce((count,type)=>count+Object.keys(normalized.lists[type]).length,0);
     return{
       ok:true,status:entryCount?'published':'published_empty',entryCount,
       shape:source?.shape||'current',rejectionCounts:normalized.rejectionCounts,
       snapshot:{
-        version:1,username:snapshotUsername,profile:normalizedPublicProfile(snapshot.profile),
+        version:declarations?2:1,...(declarations?{declarations,declarationCount:declarations.length}:{}),username:snapshotUsername,profile:normalizedPublicProfile(snapshot.profile),
         lists:normalized.lists,publishedListTypes:[...REQUIRED_LIST_SURFACES],
         updatedAt:Number(snapshot.updatedAt||0)||null
       }
@@ -202,7 +232,7 @@
     return Object.freeze({activate,markLoaded,markFailed,request,authorize,consumePending,invalidate,snapshot});
   }
 
-  function buildPublicShareSnapshot({gate,token,trigger,username,source,now=Date.now()}={}){
+  function buildPublicShareSnapshot({gate,token,trigger,username,source,declarations,now=Date.now()}={}){
     if(!gate||typeof gate.authorize!=='function')throw new TypeError('Public-share snapshot requires a publication gate');
     const authorization=gate.authorize(token,trigger);if(!authorization.ok)return authorization;
     const cleanUsername=String(username||'').trim();
@@ -218,8 +248,17 @@
       lists[type]={...(list||{})};
     }
     const profile=plainObject(source.users?.[cleanUsername])?source.users[cleanUsername]:{};
+    let unified;
+    if(declarations!==undefined){
+      try{unified=publicDeclarations(declarations);}catch{return errorResult('share-publication/declarations-invalid','Public declarations could not be represented');}
+      // Compatibility LF fields are secondary. V2 readers use the lossless array.
+      for(const type of REQUIRED_LIST_SURFACES)lists[type]=Object.create(null);
+      for(const entry of unified)if(entry.intent==='lf'&&!Object.hasOwn(lists[entry.category],entry.name)){
+        lists[entry.category][entry.name]={p:entry.p,mod:entry.mod,lucky:entry.lucky,shiny:entry.shiny,xxl:entry.xxl,xxs:entry.xxs,backgroundId:entry.backgroundId};
+      }
+    }
     return{ok:true,status:'ready',snapshot:{
-      version:1,
+      version:unified?2:1,...(unified?{declarations:unified,declarationCount:unified.length}:{}),
       username:cleanUsername,
       profile:normalizedPublicProfile(profile),
       lists,
@@ -230,6 +269,6 @@
 
   root.publicSharePublication=Object.freeze({
     REQUIRED_LIST_SURFACES,REQUIRED_SOURCE_SURFACES,ALLOWED_TRIGGERS,LIST_ALIASES,
-    publicShareProjectionStatus,ownerProjectionReview,createPublicSharePublicationGate,buildPublicShareSnapshot
+    DECLARATION_FIELDS,publicDeclarations,intentEntries,publicShareProjectionStatus,ownerProjectionReview,createPublicSharePublicationGate,buildPublicShareSnapshot
   });
 })(window);

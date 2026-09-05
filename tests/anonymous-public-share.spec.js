@@ -86,6 +86,40 @@ async function assertPublicPrivacy(page){
 }
 
 test.describe('anonymous public share bootstrap',()=>{
+  test('unified LF and FT are distinct, localized and copy only visible category species',async({page})=>{
+    const declaration=(intent,name,p='',extra={})=>({intent,name,category:'wishlist',p,mod:'',gender:'',backgroundId:'',note:'',lucky:false,shiny:false,xxl:false,xxs:false,...extra});
+    const declarations=[declaration('lf','Pikachu','H'),declaration('lf','Eevee','', {gender:'f',note:'Public note'}),declaration('ft','Mewtwo','L'),declaration('ft','Mewtwo','M',{shiny:true}),declaration('ft','Charmander','H',{category:'dynamax'})];
+    await installPublicFirebase(page,{projection:{...publicProjection,version:2,declarations,declarationCount:declarations.length}});
+    await page.addInitScript(()=>Object.defineProperty(navigator,'clipboard',{value:{writeText:async text=>{window.__unifiedCopy=text;}}}));
+    await page.goto('./?view=PublicTrainer&list=wishlist');
+    for(const [width,locale] of [[320,'en'],[390,'ja'],[430,'es'],[1440,'de']]){
+      await page.setViewportSize({width,height:900});
+      await page.locator('#share-language-trigger').click();await page.locator('#settings-language').selectOption(locale);await page.keyboard.press('Escape');
+      for(const intent of ['lf','ft']){
+        await page.locator(`[data-public-share-action="intent"][data-intent="${intent}"]`).click();
+        await expect(page.locator('.share-pcard')).toHaveCount(2);
+        const expected=await page.evaluate(({intent,locale})=>PogoDomain.searchStrings.dexStringFromNumbers(intent==='lf'?[25,133]:[150],{locale}),{intent,locale});
+        await page.locator('[data-public-share-action="copy-search"]').click();
+        expect(await page.evaluate(()=>window.__unifiedCopy)).toBe(expected);
+        expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+        expect(await page.evaluate(()=>{
+          const button=document.querySelector('[data-public-share-action="copy-friend"]').getBoundingClientRect();
+          const meta=document.querySelector('.share-hdr-meta').getBoundingClientRect();
+          const header=document.querySelector('#share-hdr').getBoundingClientRect();
+          return button.top>=meta.bottom&&button.right<=header.right&&meta.right<=header.right;
+        })).toBe(true);
+        if(process.env.TRUSTED_READINESS_SCREENSHOT_DIR){
+          fs.mkdirSync(process.env.TRUSTED_READINESS_SCREENSHOT_DIR,{recursive:true});
+          await page.screenshot({path:path.join(process.env.TRUSTED_READINESS_SCREENSHOT_DIR,`unified-public-${intent}-${width}-${locale}.png`)});
+        }
+      }
+    }
+    await page.locator('[data-list-type="dynamax"]').click();
+    await expect(page.locator('.share-pcard')).toHaveCount(1);
+    await page.locator('[data-public-share-action="intent"][data-intent="lf"]').click();
+    await expect(page.locator('[data-public-share-action="copy-search"]')).toHaveCount(0);
+    await assertPublicPrivacy(page);
+  });
   test('unprioritized entries remain neutral and friend-code copy needs no account',async({page})=>{
     await installPublicFirebase(page,{projection:{...publicProjection,lists:{...publicProjection.lists,wishlist:{Pikachu:'L',Eevee:'[shiny]'}}}});
     await page.addInitScript(()=>Object.defineProperty(navigator,'clipboard',{value:{writeText:async text=>{window.__friendCodeCopy=text;}}}));

@@ -67,7 +67,7 @@ test('share counts use locale plural rules and locale number formatting',()=>{
 });
 
 test('share renderer routes dynamic chrome through i18n without changing priority identity',()=>{
-  const render=block('function renderShareView(username,type){','// ── SWIPE GESTURES');
+  const render=block('function renderShareView(username,type,intent){','// ── SWIPE GESTURES');
   for(const key of [
     'share.listTitle','share.listTab','share.emptyTitle','share.emptyHelp','share.entryCount',
     'share.flagFemale','share.flagMale','share.flagLucky','share.flagShiny','share.flagXxl','share.flagXxs'

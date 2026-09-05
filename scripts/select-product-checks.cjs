@@ -11,21 +11,28 @@ function select(files){
   const product=any(/^(?:index\.html|css\/|js\/)/);
   if(product){add(PRODUCT);browser.add('tests/trusted-readiness.spec.js');browser.add('tests/anonymous-public-share.spec.js');}
   if(any(/^js\/(?:data\/accountSync|domain\/accountSync|app\/application\.js)/))add(SYNC);
+  if(any(/^(?:js\/domain\/(?:pokemonKeys|publicPokemonDex)\.js|scripts\/generate-public-sprite-dex\.cjs)$/))add(['tests/pokemon-catalog.test.cjs','tests/sprite-resolution.test.cjs']);
   if(any(/^js\/(?:app\/|domain\/publicShare|services\/providerPublic|data\/(?:publicShare|trainerShare))/)){add(PRIVACY);browser.add('tests/anonymous-public-share.spec.js');}
   if(any(/^(?:sw\.js|index\.html|js\/domain\/clientRelease|release\/|scripts\/pages\/)/))add(['tests/client-asset-versioning.test.cjs','tests/frontend-asset-extraction.test.cjs','tests/service-worker-release.test.cjs']);
-  if(any(/^(?:functions\/|js\/(?:services\/(?:googleAuth|provider)|domain\/provider))/)){
+  const publicContract=file=>['functions/e1-authority-service/providerPublicProjection.js','functions/e1-gateway/gatewayCore.js','functions/test/e1-provider-public-share-gateway.test.cjs','js/domain/providerPublicProjection.js','tests/firebase/database.rules.provider-public-projection.json'].includes(file);
+  if(files.some(publicContract)){
+    add(['tests/provider-public-projection.test.cjs','tests/provider-public-application-integration.test.cjs']);
+    commands.push([process.execPath,['--test','functions/test/e1-provider-public-share.test.cjs','functions/test/e1-provider-public-share-gateway.test.cjs']]);
+  }
+  if(files.some(file=>!publicContract(file)&&/^(?:functions\/|js\/(?:services\/(?:googleAuth|provider)|domain\/provider))/.test(file))){
     add(['tests/provider-linking-foundation.test.cjs','tests/provider-account-foundation.test.cjs','tests/provider-privacy.test.cjs']);
     // An unfamiliar backend change does not silently receive UI-only coverage.
     commands.push(['npm',['--prefix','functions','run','check:contract']]);
   }
   if(any(/firestore.*rules/))commands.push(['npm',['run','check:e1-firestore-authority']]);
-  if(any(/database.*rules|SECURITY-RULES|build-sec02-production-rules/))commands.push(['npm',['run','check:sec02-production-rules']]);
+  if(files.includes('tests/firebase/database.rules.provider-public-projection.json'))commands.push(['bash',['scripts/check-provider-public-projection-rules.sh']]);
+  if(files.some(file=>!publicContract(file)&&/database.*rules|SECURITY-RULES|build-sec02-production-rules/.test(file)))commands.push(['npm',['run','check:sec02-production-rules']]);
   if(any(/^\.github\/workflows\/frontend-performance\.yml$/))add(['tests/performance-observability.test.cjs']);
   for(const file of files){
-    if(/^tests\/[\w/-]+\.test\.cjs$/.test(file)&&existsSync(file)&&!file.includes('operator'))node.add(file);
+    if(/^tests\/[\w/-]+\.test\.cjs$/.test(file)&&existsSync(file)&&!file.includes('operator')&&!file.startsWith('tests/firebase/'))node.add(file);
     if(/^tests\/[\w/-]+\.spec\.js$/.test(file)&&existsSync(file)&&!/(performance|provider)/i.test(file))browser.add(file);
   }
-  return{node:[...node].sort(),browser:[...browser].sort(),commands,sensitive:any(/accountSync|functions\/|rules|provider/i),
+  return{node:[...node].sort(),browser:[...browser].sort(),commands,functions:commands.some(([command,args])=>args.some(arg=>arg.startsWith('functions'))),rules:commands.some(([command,args])=>args.some(arg=>/rules|firestore-authority/.test(arg))),sensitive:any(/accountSync|functions\/|rules|provider/i),
     performance:any(/^(?:index\.html|css\/|js\/|sw\.js|data\.js|data\/|package(?:-lock)?\.json|playwright\.config\.js|scripts\/performance\/|tests\/.*performance|\.github\/workflows\/frontend-performance\.yml)/),
     syntax:files.filter(file=>/\.(?:c?js|mjs)$/.test(file)&&existsSync(file))};
 }
@@ -39,7 +46,7 @@ if(require.main===module){
   const files=execFileSync('git',['diff','--name-only','--diff-filter=ACMR',base,'HEAD'],{encoding:'utf8'}).trim().split('\n').filter(Boolean);
   const plan=select(files);console.log(JSON.stringify(plan,null,2));
   if(process.argv.includes('--plan')){
-    if(process.env.GITHUB_OUTPUT)appendFileSync(process.env.GITHUB_OUTPUT,`browser=${plan.browser.length>0}\nperformance=${plan.performance}\n`);
+    if(process.env.GITHUB_OUTPUT)appendFileSync(process.env.GITHUB_OUTPUT,`browser=${plan.browser.length>0}\nperformance=${plan.performance}\nfunctions=${plan.functions}\nrules=${plan.rules}\n`);
   }else if(process.argv.includes('--browser')){
     if(plan.browser.length)run(process.execPath,['node_modules/@playwright/test/cli.js','test',...plan.browser,'--project=desktop','--workers=1']);
   }else{

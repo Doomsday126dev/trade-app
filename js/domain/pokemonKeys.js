@@ -271,7 +271,57 @@
     haveEntryInfo,
     haveEntryValue
   });
+  const legendaryEntries=[
+    [144,'Articuno'],[144,'G-Articuno','Galarian Articuno'],[145,'Zapdos'],[145,'G-Zapdos','Galarian Zapdos'],[146,'Moltres'],[146,'G-Moltres','Galarian Moltres'],[150,'Mewtwo'],[151,'Mew'],
+    [243,'Raikou'],[244,'Entei'],[245,'Suicune'],[249,'Lugia'],[250,'Ho-Oh'],[251,'Celebi'],
+    [377,'Regirock'],[378,'Regice'],[379,'Registeel'],[380,'Latias'],[381,'Latios'],[382,'Kyogre'],[383,'Groudon'],[384,'Rayquaza'],[385,'Jirachi'],
+    // Deoxys — Normal + Attack/Defense/Speed Forme (all tradeable in GO)
+    [386,'Deoxys (Normal)'],[386,'Deoxys (Attack)'],[386,'Deoxys (Defense)'],[386,'Deoxys (Speed)'],
+    [480,'Uxie'],[481,'Mesprit'],[482,'Azelf'],
+    // Sinnoh creation trio — Dialga & Palkia got Hisuian Origin Formes; Giratina has Altered + Origin
+    [483,'Dialga'],[483,'Dialga (Origin)'],
+    [484,'Palkia'],[484,'Palkia (Origin)'],
+    [485,'Heatran'],[486,'Regigigas'],
+    [487,'Giratina (Altered)'],[487,'Giratina (Origin)'],
+    [488,'Cresselia'],[489,'Phione'],[490,'Manaphy'],[491,'Darkrai'],
+    [492,'Shaymin (Land)'],[492,'Shaymin (Sky)'],
+    [493,'Arceus'],
+    [638,'Cobalion'],[639,'Terrakion'],[640,'Virizion'],
+    // Kami trio — Incarnate + Therian
+    [641,'Tornadus (Incarnate)'],[641,'Tornadus (Therian)'],
+    [642,'Thundurus (Incarnate)'],[642,'Thundurus (Therian)'],
+    [643,'Reshiram'],[644,'Zekrom'],
+    [645,'Landorus (Incarnate)'],[645,'Landorus (Therian)'],
+    [646,'Kyurem'],
+    [647,'Keldeo (Ordinary)'],[647,'Keldeo (Resolute)'],
+    [648,'Meloetta'],[649,'Genesect'],
+    [716,'Xerneas'],[717,'Yveltal'],
+    // Zygarde — 10% / 50% / Complete
+    [718,'Zygarde (50%)'],[718,'Zygarde (10%)'],[718,'Zygarde (Complete)'],
+    [719,'Diancie'],
+    [720,'Hoopa (Confined)'],[720,'Hoopa (Unbound)'],
+    [721,'Volcanion'],
+    [772,'Type: Null'],[773,'Silvally'],[785,'Tapu Koko'],[786,'Tapu Lele'],[787,'Tapu Bulu'],[788,'Tapu Fini'],[789,'Cosmog'],[790,'Cosmoem'],[791,'Solgaleo'],[792,'Lunala'],[793,'Nihilego'],[794,'Buzzwole'],[795,'Pheromosa'],[796,'Xurkitree'],[797,'Celesteela'],[798,'Kartana'],[799,'Guzzlord'],
+    // Necrozma — base + fused Dusk Mane (Solgaleo) / Dawn Wings (Lunala)
+    [800,'Necrozma'],[800,'Necrozma (Dusk Mane)'],[800,'Necrozma (Dawn Wings)'],
+    [801,'Magearna'],[802,'Marshadow'],
+    // Ultra Beasts released after Marshadow (Ultra Sun / Ultra Moon batch)
+    [803,'Poipole'],[804,'Naganadel'],[805,'Stakataka'],[806,'Blacephalon'],
+    [807,'Zeraora'],[808,'Meltan'],[809,'Melmetal'],
+    // Zacian / Zamazenta — Hero + Crowned forms
+    [888,'Zacian (Hero)'],[888,'Zacian (Crowned)'],
+    [889,'Zamazenta (Hero)'],[889,'Zamazenta (Crowned)'],
+    [890,'Eternatus'],[891,'Kubfu'],[892,'Urshifu'],[893,'Zarude'],[894,'Regieleki'],[895,'Regidrago'],[896,'Glastrier'],[897,'Spectrier'],
+    // Calyrex — base + Ice Rider (Glastrier-fused) / Shadow Rider (Spectrier-fused)
+    [898,'Calyrex'],[898,'Calyrex (Ice Rider)'],[898,'Calyrex (Shadow Rider)'],
+    [905,'Enamorus (Incarnate)'],[905,'Enamorus (Therian)'],
+    [1001,'Wo-Chien'],[1002,'Chien-Pao'],[1003,'Ting-Lu'],[1004,'Chi-Yu'],[1007,'Koraidon'],[1008,'Miraidon'],[1009,'Walking Wake'],[1010,'Iron Leaves'],[1014,'Okidogi'],[1015,'Munkidori'],[1016,'Fezandipiti'],
+    // Ogerpon — four masks
+    [1017,'Ogerpon (Teal Mask)'],[1017,'Ogerpon (Wellspring Mask)'],[1017,'Ogerpon (Hearthflame Mask)'],[1017,'Ogerpon (Cornerstone Mask)'],
+    [1020,'Gouging Fire'],[1021,'Raging Bolt'],[1022,'Iron Boulder'],[1023,'Iron Crown'],[1024,'Terapagos'],[1025,'Pecharunt']
+  ].map(([no,name,displayName])=>({no,name,displayName:displayName||name,users:{}}));
   root.pokemonCatalog=Object.freeze({
+    legendaryEntries,
     VERIFIED_IDENTITIES,
     UNRESOLVED_COSTUME_KEYS,
     verifiedMissingEntries,

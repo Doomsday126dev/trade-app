@@ -237,9 +237,9 @@ test('only confirmed list and profile changes request automatic publication',()=
   const profile=between('async function saveProfile(){','// ── UI HELPERS');
   assert.doesNotMatch(writeUser,/publicShare|requestPublicSharePublication/);
   assert.equal((writeList.match(/requestPublicSharePublication\('owned_list_edit'/g)||[]).length,1);
-  assert.equal((canonicalAck.match(/requestPublicSharePublication\('owned_list_edit'/g)||[]).length,1);
+  assert.match(canonicalAck,/publicShareSnapshotForUser\(cur,source,'owned_list_edit'\)/);
   assert.match(canonicalAck,/projectAcceptedPublicRows\(\{rows:acceptedRows/);
-  assert.match(canonicalAck,/requestPublicSharePublication\('owned_list_edit',source,cur\)/);
+  assert.match(canonicalAck,/await writeVerifiedLegacyPublicSnapshot\(cur,built.snapshot\)/);
   assert.doesNotMatch(canonicalAck,/activeEntities|applyAccountSyncCanonicalEntities/);
   assert.match(profile,/requestPublicSharePublication\('share_profile_update'/);
 });
@@ -252,6 +252,8 @@ test('publication is constrained to the active trainer public-share path',()=>{
   assert.match(sessionMatch,/activePublicShareHydrationToken\.uid===auth\.currentUser\.uid/);
   assert.match(sessionMatch,/activePublicShareHydrationToken\.username===username/);
   assert.match(queue,/queueSync\(`publicShares\/\$\{username\}`/);
-  assert.match(publish,/set\(ref\(db,`publicShares\/\$\{username\}`\)/);
+  assert.match(publish,/const target=ref\(db,`publicShares\/\$\{username\}`\)/);
+  assert.match(publish,/await withTimeout\(set\(target,snapshot\)/);
+  assert.match(publish,/await withTimeout\(get\(target\)/);
   assert.doesNotMatch(`${queue}\n${publish}`,/wishlist\/\$\{username\}|have\/\$\{username\}|users\/\$\{username\}/);
 });

@@ -26,6 +26,15 @@ jobs:
       - run: npm ci --ignore-scripts
       - id: selection
         run: node scripts/select-product-checks.cjs --plan
+      - name: Owning Functions test dependencies
+        if: steps.selection.outputs.functions == 'true'
+        run: npm ci --prefix functions --ignore-scripts
+      - name: Local Rules emulator Java
+        if: steps.selection.outputs.rules == 'true'
+        run: |
+          test -x "$JAVA_HOME_21_X64/bin/java"
+          echo "JAVA_HOME=$JAVA_HOME_21_X64" >> "$GITHUB_ENV"
+          echo "$JAVA_HOME_21_X64/bin" >> "$GITHUB_PATH"
       - name: Syntax, hygiene and changed-area contracts
         run: node scripts/select-product-checks.cjs
       - if: steps.selection.outputs.browser == 'true'
