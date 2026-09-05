@@ -214,7 +214,8 @@ test('canonical and private values remain outside interface translation',()=>{
 
 test('retired trade-offer surfaces stay classified and unreachable in trainer-first mode',()=>{
   assert.match(html,/const TRAINER_FIRST_INTERIM_ENABLED=true/);
-  assert.match(html,/id="accept-offer-modal"/);
+  assert.doesNotMatch(html,/id="accept-offer-modal"/);
+  assert.doesNotMatch(html,/function openOfferModal\(/);
   const interim=readFileSync(path.join(__dirname,'trainer-first-interim.test.cjs'),'utf8');
   assert.match(interim,/retired records remain present and no deletion migration is introduced/);
 });

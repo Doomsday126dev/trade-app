@@ -1,11 +1,12 @@
 (function(global){
   const root=global.PogoLocales=global.PogoLocales||{};
   root.de=Object.freeze({...root.en,
-    'phase2.scope':'Umfang','phase2.full':'Gesamte Liste','phase2.top':'Top-Wünsche','phase2.selected':'Ausgewählte Einträge','phase2.copyText':'Text kopieren','phase2.selection':'Auswahl','phase2.boardPreset':'Board-Auswahl verwenden','phase2.clearSelection':'Auswahl löschen','phase2.edit':'Tauschwunsch','phase2.topWant':'Top-Wunsch','phase2.legacyTools':'Erweiterte Listenwerkzeuge','phase2.select':'{name} auswählen','phase2.chooseSide':'Wähle Gesucht oder Angeboten.','phase2.invalid':'Prüfe die ausgewählten Details.','phase2.changed':'Die Liste wurde geändert. Schließe und öffne diesen Eintrag erneut.','phase2.legacyGender':'Dieser ältere Eintrag speichert das Geschlecht in den Variantendetails. Bearbeite es dort.','phase2.collision':'Auf dieser Seite besteht bereits ein anderer Eintrag. Bearbeite ihn; nichts wurde überschrieben.',
+    'wants.title':'Gesucht','wants.search':'Pokémon-GO-Suche','wants.searchScope':'Suchumfang','wants.filtered':'Gefilterte Gesuche','wants.linkScope':'Der öffentliche Link enthält deine gesamte Wunschliste.',
+    'phase2.scope':'Umfang','phase2.full':'Gesamte Liste','phase2.top':'Top-Wünsche','phase2.selected':'Ausgewählte Einträge','phase2.copyText':'Text kopieren','phase2.selection':'Auswahl','phase2.boardPreset':'Board-Auswahl verwenden','phase2.clearSelection':'Auswahl löschen','phase2.edit':"Gesuch bearbeiten",'phase2.topWant':'Top-Wunsch','phase2.legacyTools':'Erweiterte Listenwerkzeuge','phase2.select':'{name} auswählen','phase2.chooseSide':'Wähle Gesucht oder Angeboten.','phase2.invalid':'Prüfe die ausgewählten Details.','phase2.changed':'Die Liste wurde geändert. Schließe und öffne diesen Eintrag erneut.','phase2.legacyGender':'Dieser ältere Eintrag speichert das Geschlecht in den Variantendetails. Bearbeite es dort.','phase2.collision':'Auf dieser Seite besteht bereits ein anderer Eintrag. Bearbeite ihn; nichts wurde überschrieben.',
     'contextSearch.species':'Vorfilter nur nach Art',
     'contextSearch.current':'{side} suchen · {category} (aktueller Filter)',
     'contextSearch.selection':'Ausgewählte Einträge suchen',
-    'contextSearch.warning':'Sucht nach Pokémon-Arten und schließt bereits getauschte Pokémon aus. Formen, Kostüme, Hintergründe, Schillernd-Status und weitere Details manuell prüfen. Ergebnisse belegen weder Besitz noch Tauschbarkeit oder sicheres Verschicken.',
+    'contextSearch.warning':"Nur ein Arten-Vorfilter. Prüfe genaue Varianten und Tauschfähigkeit in Pokémon GO; keine Suchanfrage zum sicheren Verschicken.",
     'contextSearch.empty':'Keine Einträge in dieser Auswahl.',
     'contextSearch.unknown':'Unbekannter Eintrag',
     'contextSearch.unresolved':'Keine Artensuche möglich: manuell prüfen.',

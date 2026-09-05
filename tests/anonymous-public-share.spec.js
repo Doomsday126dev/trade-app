@@ -86,7 +86,7 @@ async function assertPublicPrivacy(page){
 }
 
 test.describe('anonymous public share bootstrap',()=>{
-  test('unified LF and FT are distinct, localized and copy only visible category species',async({page})=>{
+  test('legacy FT remains inert while public wants copy is localized and scoped',async({page})=>{
     const declaration=(intent,name,p='',extra={})=>({intent,name,category:'wishlist',p,mod:'',gender:'',backgroundId:'',note:'',lucky:false,shiny:false,xxl:false,xxs:false,...extra});
     const declarations=[declaration('lf','Pikachu','H'),declaration('lf','Eevee','', {gender:'f',note:'Public note'}),declaration('ft','Mewtwo','L'),declaration('ft','Mewtwo','M',{shiny:true}),declaration('ft','Charmander','H',{category:'dynamax'})];
     await installPublicFirebase(page,{projection:{...publicProjection,version:2,declarations,declarationCount:declarations.length}});
@@ -95,11 +95,10 @@ test.describe('anonymous public share bootstrap',()=>{
     for(const [width,locale] of [[320,'en'],[390,'ja'],[430,'es'],[1440,'de']]){
       await page.setViewportSize({width,height:900});
       await page.locator('#share-language-trigger').click();await page.locator('#settings-language').selectOption(locale);await page.keyboard.press('Escape');
-      for(const intent of ['lf','ft']){
-        await page.locator(`[data-public-share-action="intent"][data-intent="${intent}"]`).click();
+      for(const intent of ['lf']){
+        await expect(page.locator('[data-public-share-action="intent"]')).toHaveCount(0);
         await expect(page.locator('.share-pcard')).toHaveCount(2);
         const expected=await page.evaluate(({intent,locale})=>PogoDomain.searchStrings.contextualSearchPlan((intent==='lf'?[25,133]:[150]).map(no=>({no})),{locale}).parts[0],{intent,locale});
-        await page.locator('.contextual-search > summary').click();
         await page.locator('[data-contextual-copy]').click();
         expect(await page.evaluate(()=>window.__unifiedCopy)).toBe(expected);
         expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
@@ -115,10 +114,8 @@ test.describe('anonymous public share bootstrap',()=>{
         }
       }
     }
-    await page.locator('[data-list-type="dynamax"]').click();
-    await expect(page.locator('.share-pcard')).toHaveCount(1);
-    await page.locator('[data-public-share-action="intent"][data-intent="lf"]').click();
-    await expect(page.locator('[data-contextual-copy]')).toHaveCount(0);
+    await expect(page.locator('[data-list-type="dynamax"]')).toHaveCount(0);
+    await expect(page.locator('#share-list-out')).not.toContainText('Mewtwo');
     await assertPublicPrivacy(page);
   });
   test('unprioritized entries remain neutral and friend-code copy needs no account',async({page})=>{
@@ -156,7 +153,6 @@ test.describe('anonymous public share bootstrap',()=>{
       await expect(page.locator('#share-language-trigger')).toBeFocused();
       const expected=await page.evaluate(locale=>PogoDomain.searchStrings.contextualSearchPlan([25,133].map(no=>({no})),{locale}).parts[0],locale);
       await expect(copy).toHaveAttribute('data-contextual-copy',expected);
-      await page.locator('.contextual-search > summary').click();
       await copy.click();
       expect(await page.evaluate(()=>window.__copiedSearch)).toBe(expected);
       await expect(page.locator('.contextual-copy-status')).not.toBeEmpty();
@@ -167,7 +163,6 @@ test.describe('anonymous public share bootstrap',()=>{
     await page.locator('[data-list-type="costumes"]').click();
     await expect(copy).toHaveAttribute('data-contextual-copy',await page.evaluate(()=>PogoDomain.searchStrings.contextualSearchPlan([25].map(no=>({no})),{locale:'de'}).parts[0]));
     await page.evaluate(()=>{window.__denyCopy=true;});
-    await page.locator('.contextual-search > summary').click();
     await copy.click();
     await expect(page.locator('.contextual-search')).toHaveAttribute('open','');
     await expect(page.locator('.contextual-search textarea')).toBeFocused();
@@ -185,7 +180,6 @@ test.describe('anonymous public share bootstrap',()=>{
       await page.addInitScript(value=>{if(value)localStorage.setItem('pogoUiLocale:v1',value);},saved);
       await installPublicFirebase(page);
       await page.goto('./?view=PublicTrainer&list=wishlist');
-      await page.locator('.contextual-search > summary').click();
       await expect(page.locator('[data-contextual-copy]')).toBeVisible();
       expect(await page.evaluate(()=>PogoI18n.core.getLocale())).toBe(expected);
       expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
@@ -216,7 +210,8 @@ test.describe('anonymous public share bootstrap',()=>{
     await expect(page.locator('#share-hdr')).toContainText('1234 5678 9012');
     await expect(page.locator('#share-hdr')).toContainText('Public trade notes only.');
     await expect(page.locator('#share-list-out')).toContainText('Pikachu');
-    await expect(page.locator('#share-list-out')).toContainText('Chicago 2026');
+    await expect(page.locator('#share-list-out')).not.toContainText('Chicago 2026');
+    await expect(page.locator('.background-badge-kind')).toHaveCount(0);
     await expect(page.locator('#share-list-out')).toContainText('Create your trade list');
     await expect(page.locator('.public-share-pokemon-sprite')).toHaveCount(2);
     await expect(page.locator('.public-share-pokemon-sprite').first()).toHaveAttribute('src',/raw\.githubusercontent\.com\/PokeAPI\/sprites\/master\/sprites\/pokemon\/other\/home\/female\/25\.png/);

@@ -1,11 +1,12 @@
 (function(global){
   const root=global.PogoLocales=global.PogoLocales||{};
   root.es=Object.freeze({...root.en,
-    'phase2.scope':'Alcance','phase2.full':'Lista completa','phase2.top':'Más buscados','phase2.selected':'Entradas seleccionadas','phase2.copyText':'Copiar texto','phase2.selection':'Selección','phase2.boardPreset':'Usar selección del tablero','phase2.clearSelection':'Borrar selección','phase2.edit':'Intención de intercambio','phase2.topWant':'Más buscado','phase2.legacyTools':'Herramientas avanzadas','phase2.select':'Seleccionar {name}','phase2.chooseSide':'Elige Busco u Ofrezco.','phase2.invalid':'Revisa los detalles seleccionados.','phase2.changed':'La lista cambió. Cierra y vuelve a abrir esta entrada.','phase2.legacyGender':'Esta entrada antigua guarda el género en los detalles de variante. Edítalo allí.','phase2.collision':'Ya existe otra declaración en este lado. Edita esa entrada; no se sobrescribió nada.',
+    'wants.title':'Busco','wants.search':'Búsqueda de Pokémon GO','wants.searchScope':'Ámbito de búsqueda','wants.filtered':'Deseados filtrados','wants.linkScope':'El enlace público incluye toda tu lista de deseados.',
+    'phase2.scope':'Alcance','phase2.full':'Lista completa','phase2.top':'Más buscados','phase2.selected':'Entradas seleccionadas','phase2.copyText':'Copiar texto','phase2.selection':'Selección','phase2.boardPreset':'Usar selección del tablero','phase2.clearSelection':'Borrar selección','phase2.edit':"Editar deseado",'phase2.topWant':'Más buscado','phase2.legacyTools':'Herramientas avanzadas','phase2.select':'Seleccionar {name}','phase2.chooseSide':'Elige Busco u Ofrezco.','phase2.invalid':'Revisa los detalles seleccionados.','phase2.changed':'La lista cambió. Cierra y vuelve a abrir esta entrada.','phase2.legacyGender':'Esta entrada antigua guarda el género en los detalles de variante. Edítalo allí.','phase2.collision':'Ya existe otra declaración en este lado. Edita esa entrada; no se sobrescribió nada.',
     'contextSearch.species':'Prefiltro solo por especie',
     'contextSearch.current':'Buscar {side} · {category} (filtro actual)',
     'contextSearch.selection':'Buscar entradas seleccionadas',
-    'contextSearch.warning':'Busca especies y excluye Pokémon ya intercambiados. Comprueba manualmente formas, disfraces, fondos, estado variocolor y otros detalles. No demuestra posesión, elegibilidad para intercambiar ni seguridad al transferir.',
+    'contextSearch.warning':"Solo prefiltro por especie. Comprueba las variantes exactas y si se pueden intercambiar en Pokémon GO; no es una búsqueda para transferir con seguridad.",
     'contextSearch.empty':'No hay entradas en este ámbito.',
     'contextSearch.unknown':'Entrada desconocida',
     'contextSearch.unresolved':'Sin búsqueda por especie: comprobar manualmente.',
