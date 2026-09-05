@@ -77,6 +77,20 @@ deleting them would enlarge this bounded frontend release into storage work.
 
 ## Qualification and next direction
 
+PR #73 merged as `3f47948ff199a98813f143d45cc1b76fa885e7f2` and `.91`
+deployed successfully in run `33998061181`. Its served manifest and 87 script
+release graph matched the approved artifact. Production-served fixture journeys
+passed 42 affected checks without ordinary-user writes.
+
+Closeout found a separate search-language override could retain the old query
+because the My List cache keyed only on interface locale. The `.92` correction
+includes game-search locale in the cache key and refreshes on preference change.
+It replaces obsolete Phase 1 LF/FT/BG browser expectations with wants-only
+filter/priority/selection/copy and EN/JA/ES/DE override checks. No data or layout
+changes accompany that correction. The normal-browser connector timed out, so
+the automated production smoke is not evidence of a newly inspected real-account
+session. Final deployment evidence is recorded in the PR closeout.
+
 Focused qualification covers scope/copy failures, v1/v2 anonymous privacy,
 canonical mutation and IndexedDB reopen, exact-art selector gating, localization,
 Board image export, navigation and responsive layouts. Existing release and

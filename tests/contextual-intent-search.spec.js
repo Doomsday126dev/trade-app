@@ -1,65 +1,52 @@
 const {test,expect}=require('@playwright/test');
-const fs=require('node:fs');
-const path=require('node:path');
 async function fixture(page){
-  await page.route('https://**/*',route=>route.abort());
+  const runtimeOrigin=new URL(process.env.PLAYWRIGHT_BASE_URL||'http://localhost:4174').origin;
+  await page.route('https://**/*',route=>new URL(route.request().url()).origin===runtimeOrigin?route.continue():route.abort());
   await page.route('**/sw.js*',route=>route.abort());
-  await page.addInitScript(()=>Object.defineProperty(navigator,'clipboard',{value:{writeText:async text=>{window.__contextCopy=text;}}}));
-  await page.goto('./?contextual-search-fixture');
+  await page.addInitScript(()=>Object.defineProperty(navigator,'clipboard',{value:{writeText:async text=>{window.__copied=text;}}}));
+  await page.goto('./?wants-search-fixture');
   await page.waitForFunction(()=>typeof __pogoEnsureFullApp==='function');
-  await page.evaluate(()=>__pogoEnsureFullApp('contextual-search-fixture'));
+  await page.evaluate(()=>__pogoEnsureFullApp('wants-search-fixture'));
   await page.waitForFunction(()=>typeof renderMyList==='function');
   await page.evaluate(()=>{
-    db=null;fbOn=false;managedFirebaseClient=null;
+    db=null;fbOn=false;managedFirebaseClient=null;managedAccountSyncRuntime=null;accountSyncUiState=null;
     cur='SearchFixture';auth={currentUser:{uid:'synthetic-search-fixture'}};
-    managedAccountSyncRuntime=null;accountSyncUiState=null;
-    allData=normalizeData({users:{SearchFixture:{authUid:'synthetic-search-fixture',isOwner:true,specialTradeBoard:{lf:[],ft:[{name:'Eevee',no:133,shiny:true,note:'retain fixture note'}]}}},wishlist:{SearchFixture:{Pikachu:'H[shiny][bg:location-gofest2026chicago]',Snom:'M','Unmapped Fixture':'L'}},dynamax:{SearchFixture:{}},gmax:{SearchFixture:{}},costumes:{SearchFixture:{}}});
+    allData=normalizeData({users:{SearchFixture:{authUid:'synthetic-search-fixture',specialTradeBoard:{lf:[],ft:[{name:'Eevee',no:133}]}}},wishlist:{SearchFixture:{Pikachu:'H[shiny][bg:location-gofest2026chicago]',Snom:'M','Unmapped Fixture':'L'}},dynamax:{SearchFixture:{}},gmax:{SearchFixture:{}},costumes:{SearchFixture:{}}});
     _pathLoadState={wishlist:'loaded',dynamax:'loaded',gmax:'loaded',costumes:'loaded'};
-    document.getElementById('login-pg').style.display='none';
-    document.getElementById('app').style.display='flex';
-    switchTab('mylist',{render:false});myListType='wishlist';myListIntent='lf';renderMyList();
-    window.__contextBefore=JSON.stringify(allData);
+    document.getElementById('login-pg').style.display='none';document.getElementById('app').style.display='flex';
+    switchTab('mylist',{render:false});renderMyList();
+    window.__before=JSON.stringify(allData);window.__copied='';copyText=async value=>{window.__copied=value;};
   });
 }
-test('current intent, filter, selection, locale and Board searches are read-only',async({page})=>{
+test('visible wants search follows filtering, top priority and persistent selection without writes',async({page})=>{
   await fixture(page);
-  for(const width of [320,390,1440]){
-    await page.setViewportSize({width,height:900});
-    const panel=page.locator('#mylist-contextual-search');
-    await panel.locator('summary').first().click();
-    await expect(panel).toContainText('Species-only prefilter');
-    await expect(panel).toContainText('1 entries cannot be included');
-    await panel.locator('[data-contextual-copy]').click();
-    expect(await page.evaluate(()=>__contextCopy)).toBe('!traded&25,872');
-    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
-    if(process.env.PHASE1_SCREENSHOTS){fs.mkdirSync(process.env.PHASE1_SCREENSHOTS,{recursive:true});await page.screenshot({path:path.join(process.env.PHASE1_SCREENSHOTS,`mylist-search-${width}.png`)});}
-    await panel.locator('summary').first().click();
-  }
-  await page.locator('#mylist-filter').fill('Snom');
-  await expect(page.locator('#mylist-contextual-search textarea')).toHaveValue('!traded&872');
-  await page.locator('#mylist-filter').fill('Chicago');
-  await expect(page.locator('#mylist-contextual-search textarea')).toHaveValue('!traded&25');
-  await page.locator('#mylist-filter').fill('');
-  await page.evaluate(()=>{toggleBulkMode();toggleBulkSelection('Pikachu');openSelectedIntentSearch();});
-  await expect(page.locator('#selected-contextual-search textarea')).toHaveValue('!traded&25');
-  await expect(page.locator('#selected-contextual-search')).not.toContainText('Snom');
-  await page.evaluate(()=>changePokemonGoSearchLocale('ja'));
-  await expect(page.locator('#selected-contextual-search textarea')).toHaveValue('!こうかん&25');
-  await page.evaluate(()=>{toggleBulkMode();setMyListIntent('ft');});
-  await expect(page.locator('#mylist-contextual-search textarea')).toHaveValue('!こうかん&133');
-  await page.evaluate(()=>openSpecialTradeBoard());
-  await expect(page.locator('#board-contextual-search textarea')).toHaveValue('!こうかん&25,133,872');
-  await page.locator('#special-ft-list input').uncheck();
-  await expect(page.locator('#board-contextual-search textarea')).toHaveValue('!こうかん&25,872');
-  expect(await page.evaluate(()=>JSON.stringify(allData))).toBe(await page.evaluate(()=>__contextBefore));
+  const panel=page.locator('#combined-search');
+  await expect(panel.locator('[data-contextual-copy]')).toBeVisible();
+  await expect(panel.locator('textarea')).toHaveValue('!traded&25,872');
+  await expect(panel).toContainText('Unmapped Fixture');
+  await expect(panel).not.toContainText('Chicago');
+  await page.locator('#combined-filter').fill('Snom');
+  await expect(panel.locator('textarea')).toHaveValue('!traded&872');
+  await page.locator('#combined-filter').fill('');
+  await page.locator('#combined-list input').first().check();
+  await page.locator('#wants-search-scope').selectOption('selected');
+  await expect(panel.locator('textarea')).toHaveValue('!traded&25');
+  await page.locator('#combined-filter').fill('Snom');
+  await expect(panel.locator('textarea')).toHaveValue('!traded&25');
+  await page.locator('#combined-filter').fill('');
+  await page.locator('#wants-search-scope').selectOption('top');
+  await expect(panel.locator('textarea')).toHaveValue('!traded&25');
+  await panel.locator('[data-contextual-copy]').click();
+  expect(await page.evaluate(()=>__copied)).toBe('!traded&25');
+  expect(await page.evaluate(()=>JSON.stringify(allData))).toBe(await page.evaluate(()=>__before));
 });
-test('reciprocal searches preserve give/receive directions without loading another account',async({page})=>{
+test('wants search localizes game terms and empty filters offer no misleading copy',async({page})=>{
   await fixture(page);
-  await page.evaluate(()=>{
-    selectedTrainerRuntime={...selectedTrainerRuntime,username:'SyntheticRecipient',publicData:normalizeData({users:{SyntheticRecipient:{publicDeclarations:[{name:'Eevee',category:'wishlist',intent:'lf',shiny:true},{name:'Pikachu',category:'wishlist',intent:'ft',shiny:true,backgroundId:'location-gofest2026chicago'}]}}})};
-    document.body.insertAdjacentHTML('beforeend',renderTradeMatchSummary('SyntheticRecipient'));
-  });
-  await expect(page.locator('[data-contextual-direction="i-offer"] textarea')).toHaveValue('!traded&133');
-  await expect(page.locator('[data-contextual-direction="they-offer"] textarea')).toHaveValue('!traded&25');
-  expect(await page.evaluate(()=>JSON.stringify(allData))).toBe(await page.evaluate(()=>__contextBefore));
+  for(const [locale,term] of [['en','!traded'],['ja','!こうかん'],['es','!intercambiados'],['de','!getauscht']]){
+    await page.evaluate(locale=>changePokemonGoSearchLocale(locale),locale);
+    await expect(page.locator('#combined-search textarea')).toHaveValue(`${term}&25,872`);
+  }
+  await page.locator('#combined-filter').fill('No matching entry');
+  await expect(page.locator('#combined-search [data-contextual-copy]')).toHaveCount(0);
+  expect(await page.evaluate(()=>JSON.stringify(allData))).toBe(await page.evaluate(()=>__before));
 });
