@@ -158,13 +158,14 @@ test('Japanese and German share chrome retains bounded responsive wrapping',()=>
   assert.match(html,/\.share-search-disclosure summary\{[^}]*min-height:48px/);
 });
 
-test('release 2026-08-31.86 is coherent and contains no active .66 assets',()=>{
+test('current release is coherent and contains no active .66 assets',()=>{
   const worker=source('sw.js'),release=source('js/domain/clientRelease.js');
-  assert.match(html,/window\.__POGO_RELEASE_ID='2026-08-31\.86'/);
-  assert.match(worker,/const RELEASE='2026-08-31\.86'/);
-  assert.match(release,/RELEASE_ID='2026-08-31\.86'/);
+  const releaseId=release.match(/RELEASE_ID='(\d{4}-\d{2}-\d{2}\.\d+)'/)?.[1];
+  assert.ok(releaseId,'client release must declare a valid release ID');
+  assert.equal(html.match(/window\.__POGO_RELEASE_ID='([^']+)'/)?.[1],releaseId);
+  assert.equal(worker.match(/const RELEASE='([^']+)'/)?.[1],releaseId);
   const firstParty=[...html.matchAll(/<script\s+src="([^"]+)"/g)].map(match=>match[1]).filter(src=>!/^https?:/.test(src));
   assert.equal(firstParty.length,87);
-  for(const src of firstParty)assert.equal(new URL(src,'https://example.test').searchParams.get('v'),'2026-08-31.86');
+  for(const src of firstParty)assert.equal(new URL(src,'https://example.test').searchParams.get('v'),releaseId);
   assert.doesNotMatch(`${html}\n${worker}\n${release}`,/2026-08-26\.66/);
 });

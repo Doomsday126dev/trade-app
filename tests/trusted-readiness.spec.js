@@ -133,10 +133,16 @@ test('approved intent, More and Share paths preserve one canonical declaration v
   for(const viewport of viewports){
     await page.setViewportSize(viewport);await page.evaluate(()=>switchTab('mylist'));
     await expectNoOverflow(page);await capture(page,`approved-for-trade-${viewport.width}`);
-    await page.locator('[data-intent-row="Eevee"]').scrollIntoViewIfNeeded();
-    const row=page.locator('[data-intent-row="Eevee"]'),label=row.locator('.intent-row-main');
-    const sprite=await row.locator('img').first().boundingBox(),nameBox=await label.boundingBox();
-    expect(sprite.x).toBeLessThan(nameBox.x);
+    // Reacquire the row if a pending render replaces it during viewport changes.
+    await expect(async()=>{
+      const row=page.locator('[data-intent-row="Eevee"]');
+      await row.scrollIntoViewIfNeeded();
+      const bounds=await row.evaluate(el=>({
+        spriteX:el.querySelector('img').getBoundingClientRect().x,
+        nameX:el.querySelector('.intent-row-main').getBoundingClientRect().x
+      }));
+      expect(bounds.spriteX).toBeLessThan(bounds.nameX);
+    }).toPass({timeout:5000});
     await capture(page,`approved-entries-${viewport.width}`);
     if(viewport.width<700)expect(await page.locator('#nav-more .tab-label').evaluate(el=>el.getBoundingClientRect().width)).toBeGreaterThan(10);
     await page.locator('#nav-more').click();await expect(page.locator('#tab-more')).toBeVisible();
