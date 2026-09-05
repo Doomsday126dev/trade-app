@@ -8969,9 +8969,8 @@ function renderAdmin(){
   setAdminSection(adminSection);
 }
 
-// Remains off until the dedicated backend and designated synthetic live account
-// pass deployment qualification. This gate is presentation, never authorization.
-function legacyPinResetAvailable(){return false;}
+// The dedicated backend independently enforces the pinned owner and identity boundary.
+function legacyPinResetAvailable(){return protectedOwnerSession();}
 async function callLegacyPinReset(data){
   try{
     const sdk=await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js');

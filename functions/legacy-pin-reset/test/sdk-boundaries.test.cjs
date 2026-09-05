@@ -9,6 +9,13 @@ const { guardEnvelope } = require('../envelope');
 const { initializeApp, deleteApp } = require('firebase-admin/app');
 const { getAuth } = require('firebase-admin/auth');
 
+test('pinned query parser safely handles constructor-shaped untrusted values', () => {
+  const qs = require('qs');
+  assert.equal(require('qs/package.json').version, '6.16.0');
+  const parsed = qs.parse('x%5Bconstructor%5D%5BisBuffer%5D=y', { plainObjects: true });
+  assert.doesNotThrow(() => qs.stringify(parsed));
+});
+
 test('installed Admin verifier rejects foreign project, issuer and malformed subjects without network', async () => {
   const app = initializeApp({ projectId: 'trade-list-a4297' }, 'reset-token-audit'), auth = getAuth(app);
   const now = Math.floor(Date.now() / 1000), base = { aud: 'trade-list-a4297', iss: 'https://securetoken.google.com/trade-list-a4297', sub: 'owner', iat: now, exp: now + 3600, auth_time: now };

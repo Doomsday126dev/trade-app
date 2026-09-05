@@ -27,11 +27,11 @@ test('owner Admin reset, masked PINs, lost-response reconciliation and mobile la
     allData.users={Doomsday126:{authUid:'reset-owner',isAdmin:true},Trainer:{authUid:'reset-target',authEmail:'trainer@pogotrades.nyc',authVersion:1}};
     allData.loginDirectory={Trainer:{authReady:true,authVersion:1}};
     callLegacyPinReset=data=>window.resetFixtureTransport(data);
-    legacyPinResetAvailable=()=>true;
     document.getElementById('login-pg').style.display='none';document.getElementById('app').style.display='flex';
     switchTab('admin',{render:false});renderAdmin();setAdminSection('maintenance');
   });
   expect(await page.evaluate(()=>protectedOwnerSession())).toBe(true);
+  expect(await page.evaluate(()=>legacyPinResetAvailable())).toBe(true);
   const dialog=page.getByRole('dialog',{name:'Reset PIN'});
   await page.locator('[data-admin-user-action="reset-existing"][data-username="Trainer"]').click();
   await expect(dialog.getByLabel('New PIN',{exact:true})).toBeEnabled();
@@ -78,5 +78,6 @@ test('owner Admin reset, masked PINs, lost-response reconciliation and mobile la
   await page.evaluate(()=>switchTab('mylist',{render:false}));
   await expect(dialog).toHaveCount(0);
   await page.evaluate(()=>{cur='Trainer';renderAdmin();openExistingPinReset('Trainer');});
+  expect(await page.evaluate(()=>legacyPinResetAvailable())).toBe(false);
   await expect(dialog).toHaveCount(0);await expect(page.locator('[data-admin-user-action="reset-existing"]')).toHaveCount(0);
 });

@@ -15,7 +15,7 @@ const save = (name, value) => { fs.mkdirSync(ROOT, { recursive: true, mode: 0o70
 const read = name => JSON.parse(fs.readFileSync(path.join(ROOT, name), 'utf8'));
 let operator;
 async function api(url, method = 'GET', body, token = operator, allow = [], extraHeaders = {}) {
-  const r = await fetch(url, { method, redirect: 'error', headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}), 'Content-Type': 'application/json', ...extraHeaders }, body: body === undefined ? undefined : JSON.stringify(body), signal: AbortSignal.timeout(30000) });
+  const r = await fetch(url, { method, redirect: 'error', headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}), ...(token && token === operator ? { 'X-Goog-User-Project': PROJECT } : {}), 'Content-Type': 'application/json', ...extraHeaders }, body: body === undefined ? undefined : JSON.stringify(body), signal: AbortSignal.timeout(30000) });
   const value = await r.json().catch(() => null);
   if (!r.ok && !allow.includes(r.status)) throw new Error(`${method} ${new URL(url).hostname} returned ${r.status}`);
   return { status: r.status, value };
@@ -82,12 +82,17 @@ async function provision() {
 async function synthetic() {
   assert.equal((await api(`${DB}/users/${SYNTHETIC}.json`)).value, null, 'Synthetic username must be unused');
   assert.equal((await api(`${DB}/loginDirectory/${SYNTHETIC}.json`)).value, null, 'Synthetic directory must be unused');
-  const uid = `synthetic-pin-reset-${crypto.randomUUID()}`;
+  const existing = fs.existsSync(path.join(ROOT, 'synthetic-private.json')) ? read('synthetic-private.json') : null;
+  const uid = existing?.uid || `synthetic-pin-reset-${crypto.randomUUID()}`;
   const oldPin = String(crypto.randomInt(1000000)).padStart(6, '0');
   let newPin; do { newPin = String(crypto.randomInt(1000000)).padStart(6, '0'); } while (newPin === oldPin);
-  const target = { username: SYNTHETIC, uid, email: `${SYNTHETIC.toLowerCase()}@pogotrades.nyc`, oldPin, newPin };
+  const target = existing || { username: SYNTHETIC, uid, email: `${SYNTHETIC.toLowerCase()}@pogotrades.nyc`, oldPin, newPin };
+  assert.equal(target.username, SYNTHETIC);
+  assert.match(uid, /^synthetic-pin-reset-[a-f0-9-]{36}$/);
   save('synthetic-private.json', target);
-  await api('https://identitytoolkit.googleapis.com/v1/accounts:signUp', 'POST', { targetProjectId: PROJECT, localId: uid, email: target.email, password: oldPin, displayName: 'SYNTHETIC PIN RESET TEST ONLY' });
+  const prior = await api(`https://identitytoolkit.googleapis.com/v1/projects/${PROJECT}/accounts:lookup`, 'POST', { localId: [uid] });
+  assert.equal(prior.value.users?.length || 0, 0, 'Existing synthetic Auth state requires explicit reconciliation, never recreation');
+  await api(`https://identitytoolkit.googleapis.com/v1/projects/${PROJECT}/accounts`, 'POST', { localId: uid, email: target.email, password: target.oldPin, displayName: 'SYNTHETIC PIN RESET TEST ONLY' });
   const now = Date.now();
   const records = {
     [`users/${SYNTHETIC}`]: { authUid: uid, authEmail: target.email, authVersion: 1, joined: now, lastSeen: now, isAdmin: false, isOwner: false, bio: 'SYNTHETIC AUTH/RECOVERY TEST. Not a real trainer.' },
