@@ -1,6 +1,7 @@
 const {test,expect}=require('@playwright/test');
 async function fixture(page){
-  await page.route('https://**/*',route=>route.abort());
+  const runtimeOrigin=new URL(process.env.PLAYWRIGHT_BASE_URL||'http://localhost:4174').origin;
+  await page.route('https://**/*',route=>new URL(route.request().url()).origin===runtimeOrigin?route.continue():route.abort());
   await page.route('**/sw.js*',route=>route.abort());
   await page.goto('./?phase2-fixture');
   await page.waitForFunction(()=>typeof __pogoEnsureFullApp==='function');
@@ -58,6 +59,33 @@ test('both-side add is one canonical batch, failed save retains the draft',async
   expect(mutations.map(x=>x.identity.lane)).toEqual(['looking-for','for-trade']);
   expect(mutations.every(x=>x.values.shiny)).toBe(true);
   expect(mutations[0].entityId).not.toBe(mutations[1].entityId);
+});
+test('unchanged rows retain keyboard focus and an open selection search stays scoped',async({page})=>{
+  await fixture(page);
+  const result=await page.evaluate(()=>{
+    const row=document.querySelector('#combined-list .combined-row'),button=row.querySelector('button');
+    button.focus();renderMyList();
+    const stable=document.querySelector('#combined-list .combined-row')===row&&document.activeElement===button;
+    selectCombinedGroup(0,true);
+    document.getElementById('combined-search').innerHTML=contextualIntentSearchHtml(productScopeEntries('selected'),i18nCore.t('contextSearch.selection'));
+    const before=document.getElementById('combined-search').textContent;
+    selectCombinedGroup(0,false);
+    return{stable,before,after:document.getElementById('combined-search').textContent,empty:i18nCore.t('contextSearch.empty')};
+  });
+  expect(result.stable).toBe(true);expect(result.before).not.toBe(result.after);expect(result.after).toContain(result.empty);
+});
+test('a remotely changed declaration blocks a stale editor without submitting mutations',async({page})=>{
+  await fixture(page);
+  await page.evaluate(()=>{
+    accountSyncCanonicalEntities=[];accountSyncMutationAuthority=async()=>({mode:'canonical',controller:{}});accountSyncAuthorityCurrent=()=>true;
+    window.__writes=0;applyAccountSyncTradeMutations=async()=>{__writes++;return{ok:true};};openCombinedEditor();
+  });
+  await page.locator('#combined-name').fill('Charmander');
+  await page.evaluate(()=>{allData.wishlist[cur].Snom='H';});
+  await page.locator('#combined-save').click();
+  await expect(page.locator('#combined-editor-modal')).toBeVisible();
+  expect(await page.evaluate(()=>__writes)).toBe(0);
+  await expect(page.locator('#combined-error')).not.toBeEmpty();
 });
 test('responsive navigation and editor fit',async({page})=>{
   await fixture(page);

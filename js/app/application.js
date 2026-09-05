@@ -450,21 +450,36 @@ function renderCombinedList(model=productDeclarations()){
   const groups=combinedGroups(model),valid=new Set(groups.flat().map(productSelectionKey));
   for(const key of combinedSelection)if(!valid.has(key))combinedSelection.delete(key);
   const visible=groups.map((entries,index)=>({entries,index})).filter(({entries})=>!query||normalizeAcText(entries.map(productShareDescription).join(' ')).includes(query));
-  host.innerHTML=visible.slice(0,combinedLimit).map(({entries,index})=>{
+  const previous=new Map([...host.querySelectorAll(':scope > .combined-row')].map(row=>[row.dataset.key,row]));
+  const nodes=visible.slice(0,combinedLimit).map(({entries,index})=>{
     const e=entries[0],selected=entries.every(x=>combinedSelection.has(productSelectionKey(x)));
-    return`<article class="combined-row">
+    const key=combinedKey(e),signature=JSON.stringify([i18nCore.getLocale(),entries]);
+    let row=previous.get(key);
+    if(row?.dataset.signature===signature){row.querySelector('input').checked=selected;return row;}
+    const template=document.createElement('template');
+    template.innerHTML=`<article class="combined-row">
       <input type="checkbox" aria-label="${escAttr(i18nCore.t('phase2.select',{name:e.dn}))}" data-group="${escAttr(combinedKey(e))}" ${selected?'checked':''} onchange="selectCombinedGroup(this.dataset.group,this.checked)">
-      ${spriteImg(e.no,44,'',e.name,e.gender||'',e.dn)}
+      ${e.no?spriteImg(e.no,44,'',e.name,e.gender||'',e.dn):'<span aria-hidden="true"></span>'}
       <button class="combined-entry" type="button" data-group="${escAttr(combinedKey(e))}" onclick="openCombinedEditor(this.dataset.group)"><strong>${escHtml(e.dn)}</strong><span>${escHtml([e.shiny?i18nCore.t('share.flagShiny'):'',e.gender==='f'?'♀':e.gender==='m'?'♂':'',e.mod,e.backgroundId?backgroundDisplayName(e.backgroundId):'',e.lucky?i18nCore.t('myList.lucky'):'',e.xxl?'XXL':'',e.xxs?'XXS':'',e.note].filter(Boolean).join(' · '))}</span></button>
-      <div class="combined-sides">${['lf','ft'].map(side=>entries.some(x=>x.intent===side)?`<span class="combined-${side}">${escHtml(i18nCore.t('product.'+side))}${side==='lf'&&entries.some(x=>x.intent===side&&x.p==='H')?' · '+escHtml(i18nCore.t('phase2.topWant')):''}</span>`:'').join('')}</div></article>`;
-  }).join('')||`<p class="empty">${escHtml(i18nCore.t('contextSearch.empty'))}</p>`;
+      <div class="combined-sides">${['lf','ft'].map(side=>entries.some(x=>x.intent===side)?`<span class="combined-${side}">${escHtml(i18nCore.t(side==='lf'?'product.lf':'product.ft'))}${side==='lf'&&entries.some(x=>x.intent===side&&x.p==='H')?' · '+escHtml(i18nCore.t('phase2.topWant')):''}</span>`:'').join('')}</div></article>`;
+    row=template.content.firstElementChild;row.dataset.key=key;row.dataset.signature=signature;return row;
+  });
+  nodes.forEach((row,index)=>{if(host.children[index]!==row)host.insertBefore(row,host.children[index]||null);});
+  while(host.children.length>nodes.length)host.lastElementChild.remove();
+  if(!nodes.length)host.innerHTML=`<p class="empty">${escHtml(i18nCore.t('contextSearch.empty'))}</p>`;
   if(visible.length>combinedLimit)host.insertAdjacentHTML('beforeend',`<button type="button" class="btn btn-secondary" onclick="combinedLimit+=120;renderCombinedList()">${escHtml(i18nCore.t('common.showMore'))}</button>`);
   document.getElementById('combined-selected-count').textContent=String(combinedSelection.size);
+  refreshCombinedSearch(model);
+}
+function refreshCombinedSearch(model=productDeclarations()){
+  const host=document.getElementById('combined-search');
+  if(host?.childElementCount)host.innerHTML=contextualIntentSearchHtml(model.entries.filter(e=>combinedSelection.has(productSelectionKey(e))),i18nCore.t('contextSearch.selection'));
 }
 function selectCombinedGroup(index,selected){
   const group=typeof index==='string'?combinedGroups().find(g=>combinedKey(g[0])===index):combinedGroups()[index];
   for(const entry of group||[]){const key=productSelectionKey(entry);if(selected)combinedSelection.add(key);else combinedSelection.delete(key);}
   document.getElementById('combined-selected-count').textContent=String(combinedSelection.size);
+  refreshCombinedSearch();
 }
 function useBoardSelection(){
   combinedSelection=new Set([...getSpecialBoard().lf,...getSpecialBoard().ft].map(productSelectionKey));
@@ -6001,7 +6016,7 @@ function refreshProductShare(){
   document.getElementById('share-link-status').textContent='';
   document.getElementById('share-public-url').value='';publicLinkAttempt++;
   const preview=document.getElementById('product-share-preview');
-  preview.innerHTML=['lf','ft'].map(side=>`<section><h4>${escHtml(i18nCore.t('product.'+side))}</h4><ul>${productShareSnapshot.filter(e=>e.intent===side).map(e=>`<li>${escHtml(productShareDescription(e))}</li>`).join('')||`<li>${escHtml(i18nCore.t('contextSearch.empty'))}</li>`}</ul></section>`).join('');
+  preview.innerHTML=['lf','ft'].map(side=>`<section><h4>${escHtml(i18nCore.t(side==='lf'?'product.lf':'product.ft'))}</h4><ul>${productShareSnapshot.filter(e=>e.intent===side).map(e=>`<li>${escHtml(productShareDescription(e))}</li>`).join('')||`<li>${escHtml(i18nCore.t('contextSearch.empty'))}</li>`}</ul></section>`).join('');
   document.querySelector('[data-share-mode="link"]').hidden=productShareScope!=='full';
   setProductShareMode(productShareScope==='full'?'link':'image');
 }
@@ -6017,7 +6032,7 @@ function productShareSnapshotCurrent(){
 }
 async function copyProductShareText(){
   if(!productShareSnapshotCurrent()){refreshProductShare();toast(i18nCore.t('share.publicationPending'));return;}
-  const text=[cur,...['lf','ft'].flatMap(side=>['',i18nCore.t('product.'+side),...productShareSnapshot.filter(e=>e.intent===side).map(e=>'- '+productShareDescription(e))])].join('\n');
+  const text=[cur,...['lf','ft'].flatMap(side=>['',i18nCore.t(side==='lf'?'product.lf':'product.ft'),...productShareSnapshot.filter(e=>e.intent===side).map(e=>'- '+productShareDescription(e))])].join('\n');
   try{await copyText(text);toast(i18nCore.t('export.markdownCopied'));}catch{toast(i18nCore.t('strings.copyFailed'));}
 }
 async function exportProductShareImage(){
