@@ -266,9 +266,9 @@ let managedPublicShareRepository=null;
 let managedProviderPublicShareClient=null;
 let trainerHistoryStore=null;
 let favoriteShareSessionCache=null;
-// Source-controlled rollout boundary. Only the reviewed owner canary hash is
-// eligible; every other account remains on the existing local/legacy path.
-const ACCOUNT_SYNC_ROLLOUT=Object.freeze({enabled:true,writesEnabled:true,allowlistedUidHashes:Object.freeze(['eb5f8130f7def5bab89d84e339e8f46787a33222ff407aa56b1807a835b180c1']),featureVersion:1});
+// Enrollment can pause without removing authority from initialized accounts.
+const ACCOUNT_SYNC_ROLLOUT=Object.freeze({enabled:true,writesEnabled:true,normalEnrollmentEnabled:true,featureVersion:1});
+const ACCOUNT_SYNC_CANARY=Object.freeze({uidHashes:Object.freeze(['eb5f8130f7def5bab89d84e339e8f46787a33222ff407aa56b1807a835b180c1'])});
 let managedAccountSyncRuntime=null;
 let accountSyncEligibleUid='';
 let accountSyncUiState=null;
@@ -2895,11 +2895,24 @@ async function ensureLoginDirectoryPublished(){
 const OWNED_MY_LIST_TYPES=Object.freeze(['wishlist','dynamax','gmax','costumes']);
 const ACCOUNT_SYNC_DEVICE_KEY_PREFIX='pogoAccountSyncDevice_v1';
 async function accountSyncRolloutEligible(uid=auth?.currentUser?.uid){
-  const owner=accountSyncModel.firebaseKey(uid,128);
-  if(!owner||ACCOUNT_SYNC_ROLLOUT.enabled!==true||ACCOUNT_SYNC_ROLLOUT.writesEnabled!==true)return false;
+  const user=auth?.currentUser,owner=user?.uid,username=cur,generation=_sessionTransientGeneration;
+  const reject=code=>{throw Object.assign(new Error('Account sync identity or session is not ready'),{code});};
+  if(!owner||uid!==owner)return reject('account-sync/identity-auth-required');
+  if(ACCOUNT_SYNC_ROLLOUT.enabled!==true||ACCOUNT_SYNC_ROLLOUT.writesEnabled!==true)return false;
   if(providerOnlyIdentityActive(owner))return true;
+  if(!db||!firebaseDataProtectionReady||!username||accountSyncModel.firebaseKey(username,64)!==username||accountSyncModel.firebaseKey(owner,128)!==owner)return reject('account-sync/identity-not-ready');
+  const indexRecord=(await withTimeout(get(ref(db,`authIndex/${owner}`)),8000)).val();
+  const userAuthUid=(await withTimeout(get(ref(db,`users/${username}/authUid`)),8000)).val();
+  const account=(await withTimeout(get(ref(db,`accountSync/${owner}`)),8000)).val();
+  if(auth?.currentUser!==user||cur!==username||generation!==_sessionTransientGeneration)return reject('account-sync/session-changed');
+  const result=accountSyncProduct.normalSyncEligibility({authenticatedUid:owner,username,indexRecord,userAuthUid,account,enrollmentEnabled:ACCOUNT_SYNC_ROLLOUT.normalEnrollmentEnabled});
+  if(!result.ok)return reject(result.error.code);
+  return true;
+}
+async function accountSyncCanaryMember(uid=auth?.currentUser?.uid){
+  const owner=accountSyncModel.firebaseKey(uid,128);if(!owner)return false;
   const digest=await accountSyncModel.sha256Hex(accountSyncModel.canonicalJson([accountSyncModel.SCHEMA_VERSION,'pogo-account-sync-rollout-owner',owner]));
-  return ACCOUNT_SYNC_ROLLOUT.allowlistedUidHashes.includes(digest);
+  return ACCOUNT_SYNC_CANARY.uidHashes.includes(digest);
 }
 function accountSyncMigratedLegacyQueueItem(item,username=cur){
   const name=String(username||''),path=String(item?.path||'');
@@ -3149,12 +3162,14 @@ async function accountSyncExactFavoriteUid(displayName,raw={},account={}){
   catch{return null;}
 }
 async function accountSyncReadLegacySources({account}={}){
-  const uid=auth?.currentUser?.uid,username=cur;
+  const user=auth?.currentUser,uid=user?.uid,username=cur,generation=_sessionTransientGeneration;
   if(!uid||!username||!db)throw Object.assign(new Error('Account sync source session is unavailable'),{code:'account-sync/source-session-unavailable'});
   const paths=[...OWNED_MY_LIST_TYPES.map(type=>`${type}/${username}`),`users/${username}`];
   const snapshots=await Promise.all(paths.map(path=>withTimeout(get(ref(db,path)),8000,'Reading account sync migration source timed out','account-sync/source-read-timeout')));
+  if(auth?.currentUser!==user||cur!==username||generation!==_sessionTransientGeneration)throw Object.assign(new Error('Account sync source session changed'),{code:'account-sync/session-changed'});
   const remoteLists={};OWNED_MY_LIST_TYPES.forEach((type,index)=>{remoteLists[type]=snapshots[index].exists()?snapshots[index].val():{};});
   const remoteProfile=snapshots.at(-1).exists()?snapshots.at(-1).val():{};
+  if(remoteProfile?.authUid!==uid)throw Object.assign(new Error('Legacy migration source identity changed'),{code:'account-sync/identity-pair-invalid'});
   const local=getLocal(),history=ensureTrainerHistoryStore()?.read()||{favorites:[],tags:{}};
   const localLists=Object.fromEntries(OWNED_MY_LIST_TYPES.map(type=>[type,accountSyncClone(local[type]?.[username]||{})]));
   const localBoard=accountSyncClone(local.users?.[username]?.specialTradeBoard||{lf:[],ft:[]});
@@ -3271,11 +3286,13 @@ function stopAccountSyncRuntime(){
   return stopping.finally(()=>{if(accountSyncRuntimeStopPromise===stopping)accountSyncRuntimeStopPromise=null;});
 }
 async function ensureAccountSyncRuntime(){
-  const uid=auth?.currentUser?.uid,username=cur;
+  const authUser=auth?.currentUser,uid=authUser?.uid,username=cur,sessionGeneration=_sessionTransientGeneration;
+  const bindingCurrent=()=>auth?.currentUser===authUser&&cur===username&&sessionGeneration===_sessionTransientGeneration;
+  if(!uid||!username)return Object.freeze({ok:false,status:'not-ready'});
   const initialProviderProfile=accountSyncClone(accountSyncInitialProviderProfile||{});
   const eligible=await accountSyncRolloutEligible(uid);
   if(accountSyncRuntimeStopPromise)await accountSyncRuntimeStopPromise;
-  if(uid!==auth?.currentUser?.uid||username!==cur)return Object.freeze({ok:false,status:'session-changed'});
+  if(!bindingCurrent())return Object.freeze({ok:false,status:'session-changed'});
   if(!eligible){
     if(managedAccountSyncRuntime)await stopAccountSyncRuntime();
     accountSyncUiState=Object.freeze({state:'local-only',eligible:false,active:false,pendingCount:0,blockedCount:0,conflictCount:0});refreshSyncUi();
@@ -3290,7 +3307,7 @@ async function ensureAccountSyncRuntime(){
   const binding=`${uid}\n${username}`;
   if(accountSyncRuntimeStartPromise&&accountSyncRuntimeStartBinding===binding)return accountSyncRuntimeStartPromise;
   if(accountSyncRuntimeStartPromise||managedAccountSyncRuntime)await stopAccountSyncRuntime();
-  if(uid!==auth?.currentUser?.uid||username!==cur)return Object.freeze({ok:false,status:'session-changed'});
+  if(!bindingCurrent())return Object.freeze({ok:false,status:'session-changed'});
   const generation=++accountSyncRuntimeGeneration;
   const initializationKind=providerOnlyIdentityActive(uid)?'provider-only':'legacy-migration';
   accountSyncEligibleUid=uid;
@@ -3298,9 +3315,9 @@ async function ensureAccountSyncRuntime(){
     const journal=accountSyncJournalData.createAccountSyncJournal({ownerUid:uid});
     const repository=accountSyncRepositoryData.createAccountSyncRepository({database:db,ref,get,onValue,runTransaction,serverTimestamp,ownerUid:uid});
     let runtime=null;
-    const currentSession=()=>generation===accountSyncRuntimeGeneration&&managedAccountSyncRuntime===runtime&&auth?.currentUser?.uid===uid&&cur===username;
+    const currentSession=()=>generation===accountSyncRuntimeGeneration&&managedAccountSyncRuntime===runtime&&bindingCurrent();
     runtime=accountSyncRuntimeData.createAccountSyncRuntime({
-      ownerUid:uid,username,journal,repository,enabled:ACCOUNT_SYNC_ROLLOUT.enabled,writesEnabled:ACCOUNT_SYNC_ROLLOUT.writesEnabled,allowlistedUids:[uid],
+      ownerUid:uid,username,journal,repository,enabled:ACCOUNT_SYNC_ROLLOUT.enabled,writesEnabled:ACCOUNT_SYNC_ROLLOUT.writesEnabled,admitted:true,sessionCurrent:currentSession,
       initializationKind,
       initialProviderProfile:initializationKind==='provider-only'?initialProviderProfile:{},
       readMigrationSources:accountSyncReadLegacySources,

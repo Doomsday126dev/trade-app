@@ -1,6 +1,6 @@
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
-const {select}=require('../scripts/select-product-checks.cjs');
+const {select,qualifiedReviewBase}=require('../scripts/select-product-checks.cjs');
 test('documentation-only PR avoids browser, Functions and sync suites',()=>{
   const plan=select(['docs/product-audit/README.md']);assert.equal(plan.browser.length,0);assert.equal(plan.commands.length,0);assert.equal(plan.node.length,1);
 });
@@ -34,4 +34,14 @@ test('public payload changes select only their owning server and emulator checks
   assert.equal(plan.commands.length,2);
   assert.ok(!plan.commands.some(([,args])=>args.includes('check:contract')));
   assert.ok(!plan.node.some(file=>file.startsWith('tests/firebase/')));
+});
+test('incremental qualification inherits only a successful predecessor on unchanged ancestry',()=>{
+  const base='a'.repeat(40),previous='b'.repeat(40);
+  assert.equal(qualifiedReviewBase({base,previous,passed:true,isAncestor:()=>true}),previous);
+  for(const options of [{passed:false,isAncestor:()=>true},{passed:true,isAncestor:()=>false},{passed:true,previous:'invalid',isAncestor:()=>true}])assert.equal(qualifiedReviewBase({base,previous,...options}),base);
+});
+test('normal eligibility edits select exact admission and Chromium proof without unrelated artwork or backend suites',()=>{
+  const plan=select(['js/app/application.js','js/data/accountSyncRuntime.js','tests/account-sync-eligibility.test.cjs']);
+  assert.ok(plan.node.includes('tests/account-sync-eligibility.test.cjs'));assert.ok(plan.browser.includes('tests/normal-sync-product.spec.js'));
+  assert.equal(plan.commands.length,0);assert.ok(!plan.node.some(file=>/sprite|events|catalog/.test(file)));
 });

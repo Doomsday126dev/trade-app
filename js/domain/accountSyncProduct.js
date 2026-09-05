@@ -16,6 +16,24 @@
   const LIST_QUALIFIER_FIELDS=Object.freeze(['priority','variant','lucky','xxl','xxs','shiny','backgroundId']);
 
   function plain(value){return model.plainObject(value)?value:{};}
+  function normalSyncEligibility({authenticatedUid,username,indexRecord,userAuthUid,account,enrollmentEnabled=true}={}){
+    const reject=code=>model.failure(`account-sync/${code}`,'Normal account sync evidence is not valid');
+    if(typeof authenticatedUid!=='string'||!authenticatedUid||model.firebaseKey(authenticatedUid,128)!==authenticatedUid)return reject('identity-auth-required');
+    if(typeof username!=='string'||!username||model.firebaseKey(username,64)!==username||model.exactText(username,64)!==username)return reject('identity-name-invalid');
+    if(!model.plainObject(indexRecord)||typeof indexRecord.username!=='string'||indexRecord.username!==username||typeof userAuthUid!=='string'||userAuthUid!==authenticatedUid)return reject('identity-pair-invalid');
+    const state=canonicalSyncState(account,authenticatedUid);
+    if(!state.ok)return state;
+    if(!state.initialized&&enrollmentEnabled!==true)return reject('enrollment-disabled');
+    return Object.freeze({ok:true,initialized:state.initialized,kind:state.initialized?'resume':'legacy-migration'});
+  }
+  function canonicalSyncState(account,ownerUid){
+    const reject=()=>model.failure('account-sync/schema-owner-invalid','Canonical account metadata is incompatible');
+    if(account!=null&&!model.plainObject(account))return reject();
+    const meta=account?.meta;
+    if(meta==null)return Object.freeze({ok:true,initialized:false});
+    if(!model.plainObject(meta)||Object.keys(meta).sort().join(',')!=='featureVersion,initialized,initializedAt,ownerUid,schemaVersion,updatedAt'||meta.ownerUid!==ownerUid||meta.schemaVersion!==model.SCHEMA_VERSION||meta.featureVersion!==model.SCHEMA_VERSION||meta.initialized!==true||model.integer(meta.initializedAt)===null||model.integer(meta.updatedAt)===null||meta.updatedAt<meta.initializedAt)return reject();
+    return Object.freeze({ok:true,initialized:true});
+  }
   function safeInteger(value,fallback=0,min=0,max=100000){
     return Number.isSafeInteger(value)&&value>=min&&value<=max?value:fallback;
   }
@@ -180,6 +198,6 @@
 
   root.accountSyncProduct=Object.freeze({
     MY_LIST_LANES,SPECIAL_BOARD_LANES,DEVICE_LOCAL_STATE,TRADE_DEFAULTS,LIST_QUALIFIER_FIELDS,tradeValues,listQualifierValues,rebaseListEdit,listRows,specialBoardRows,
-    changedFields,planTradeMutations,projectTradeEntities,projectAcceptedPublicRows,organizerProjection,favoritePatch,favoriteTagPatch,exactFavoriteTargetUid
+    changedFields,planTradeMutations,projectTradeEntities,projectAcceptedPublicRows,organizerProjection,favoritePatch,favoriteTagPatch,exactFavoriteTargetUid,normalSyncEligibility,canonicalSyncState
   });
 })(window);

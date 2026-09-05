@@ -2,7 +2,7 @@ const {execFileSync,spawnSync}=require('node:child_process');
 const {existsSync,appendFileSync}=require('node:fs');
 
 const PRODUCT=['tests/trade-list-comparison.test.cjs','tests/account-sync-product.test.cjs','tests/i18n.test.cjs','tests/public-share-localization.test.cjs','tests/pokemon-go-search-syntax.test.cjs'];
-const SYNC=['tests/account-sync-domain.test.cjs','tests/account-sync-product.test.cjs','tests/account-sync-repository.test.cjs','tests/account-sync-runtime.test.cjs','tests/my-list-sync-safety.test.cjs'];
+const SYNC=['tests/account-sync-domain.test.cjs','tests/account-sync-eligibility.test.cjs','tests/account-sync-product.test.cjs','tests/account-sync-repository.test.cjs','tests/account-sync-runtime.test.cjs','tests/account-sync-recovery.test.cjs','tests/my-list-sync-safety.test.cjs'];
 const PRIVACY=['tests/public-share-publication.test.cjs','tests/provider-privacy.test.cjs','tests/share-visibility-client.test.cjs'];
 function select(files){
   const node=new Set(['tests/product-check-selection.test.cjs']),browser=new Set(),commands=[];
@@ -10,7 +10,7 @@ function select(files){
   const add=tests=>tests.forEach(file=>node.add(file));
   const product=any(/^(?:index\.html|css\/|js\/)/);
   if(product){add(PRODUCT);browser.add('tests/trusted-readiness.spec.js');browser.add('tests/anonymous-public-share.spec.js');}
-  if(any(/^js\/(?:data\/accountSync|domain\/accountSync|app\/application\.js)/))add(SYNC);
+  if(any(/^js\/(?:data\/accountSync|domain\/accountSync|app\/application\.js)/)){add(SYNC);browser.add('tests/normal-sync-product.spec.js');}
   if(any(/^(?:js\/domain\/(?:pokemonKeys|publicPokemonDex)\.js|scripts\/generate-public-sprite-dex\.cjs)$/))add(['tests/pokemon-catalog.test.cjs','tests/sprite-resolution.test.cjs']);
   if(any(/^js\/(?:app\/|domain\/publicShare|services\/providerPublic|data\/(?:publicShare|trainerShare))/)){add(PRIVACY);browser.add('tests/anonymous-public-share.spec.js');}
   if(any(/^(?:sw\.js|index\.html|js\/domain\/clientRelease|release\/|scripts\/pages\/)/))add(['tests/client-asset-versioning.test.cjs','tests/frontend-asset-extraction.test.cjs','tests/service-worker-release.test.cjs']);
@@ -40,9 +40,24 @@ function run(command,args){
   const result=spawnSync(command,args,{stdio:'inherit'});if(result.error)throw result.error;
   if(result.status!==0)process.exit(result.status||1);
 }
+function qualifiedReviewBase({base,previous,passed=false,isAncestor}){
+  return /^[a-f0-9]{40}$/.test(previous||'')&&passed&&isAncestor(base,previous)&&isAncestor(previous,'HEAD')?previous:base;
+}
+function reviewBase(base){
+  const previous=process.env.PRODUCT_PREVIOUS_SHA,repo=process.env.GITHUB_REPOSITORY;
+  if(!/^[a-f0-9]{40}$/.test(previous||'')||!repo||!process.env.GH_TOKEN)return base;
+  try{
+    // Only inherit a successful exact-head run of this workflow, never a failed
+    // predecessor or rewritten history. Ready-for-review still checks the full PR.
+    const result=JSON.parse(execFileSync('gh',['api',`repos/${repo}/actions/workflows/product-review.yml/runs?head_sha=${previous}&status=success&per_page=1`],{encoding:'utf8',timeout:15000}));
+    const passed=result.workflow_runs?.some(run=>run.head_sha===previous&&run.conclusion==='success');
+    return qualifiedReviewBase({base,previous,passed,isAncestor:(a,b)=>spawnSync('git',['merge-base','--is-ancestor',a,b]).status===0});
+  }catch{return base;}
+}
 if(require.main===module){
-  const base=process.env.PRODUCT_BASE_SHA;
-  if(!/^[a-f0-9]{40}$/.test(base||''))throw new Error('PRODUCT_BASE_SHA must be an exact base commit');
+  const requestedBase=process.env.PRODUCT_BASE_SHA;
+  if(!/^[a-f0-9]{40}$/.test(requestedBase||''))throw new Error('PRODUCT_BASE_SHA must be an exact base commit');
+  const base=reviewBase(requestedBase);console.log(`Qualified comparison base: ${base}`);
   const files=execFileSync('git',['diff','--name-only','--diff-filter=ACMR',base,'HEAD'],{encoding:'utf8'}).trim().split('\n').filter(Boolean);
   const plan=select(files);console.log(JSON.stringify(plan,null,2));
   if(process.argv.includes('--plan')){
@@ -56,4 +71,4 @@ if(require.main===module){
     for(const [command,args]of plan.commands)run(command,args);
   }
 }
-module.exports={select};
+module.exports={select,qualifiedReviewBase};

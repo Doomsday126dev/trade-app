@@ -2,15 +2,15 @@
 
 ## Current Product Completion
 
-Read [the current A-M completion report](completion.md) first. It supersedes prior release-gap and migration recommendations below.
+Read [the current A-N completion report](completion.md) first. It supersedes prior release-gap and migration recommendations below.
 
 Unified LF/FT publication, anonymous search, priority presets, reciprocal public Compare and non-destructive legacy editing are implemented in draft. Existing public URLs and LF-only snapshots remain readable. Board remains curation/export; exact aliases display once and original storage stays intact.
 
-**Release blocker:** existing username/PIN accounts outside the account-sync allowlist cannot create new canonical FT/unprioritized declarations or enable editing for legacy Board-only entries. The draft fails closed instead of expanding rollout or writing an unsynchronized fallback. This needs a qualified non-canary write path before general product release.
+**Normal legacy sync eligibility is qualified:** healthy Username/PIN accounts no longer require historical canary membership for canonical FT/unprioritized declarations or Enable editing. Exact reciprocal identity, migration/readback, recovery and listener health remain required. No unsynchronized fallback exists. The draft is ready for owner review, not deployed.
 
 **Physical duplicate migration is AFTER PRODUCT ROLLOUT and is not a release blocker.** No destructive consolidation is exposed or performed.
 
-Focused evidence: 378 Node checks, 14 owning Functions checks, nine local Rules checks and 17 targeted Chromium scenarios passed. No full historical matrix, provider operator, Group E or all-browser run. No merge/deployment or live identity/provider change; main, PR #63 and production .86 remain unchanged.
+Current correction: 245 focused Node checks and two isolated Chromium scenarios passed, including persistent IndexedDB, second-device conflict and preservation of 66 reviewed recovery records. Previous accepted product evidence remains linked in the completion report. No full historical matrix, provider operator, Group E or all-browser run. No merge/deployment or live identity/provider change; main, PR #63 and production .86 remain unchanged.
 
 The [earlier approved implementation](approved-implementation.md) and original audit below are historical context, not current approval requests.
 

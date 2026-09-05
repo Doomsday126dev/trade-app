@@ -5,6 +5,7 @@ on:
     types: [opened, synchronize, reopened, ready_for_review]
 permissions:
   contents: read
+  actions: read
 concurrency:
   group: product-review-${{ github.event.pull_request.number }}
   cancel-in-progress: true
@@ -14,6 +15,8 @@ jobs:
     timeout-minutes: 15
     env:
       PRODUCT_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+      PRODUCT_PREVIOUS_SHA: ${{ github.event.action == 'synchronize' && github.event.before || '' }}
+      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
