@@ -139,26 +139,26 @@ test('password transport never retries 503 or lost HTTP responses and cannot sel
   }
   assert.throws(() => createPasswordUpdater({ projectId: 'trade-list-a4297', emulatorHost: '127.0.0.1:9399' }));
 });
-test('LAUNCH BLOCKER: identity repair after final read still mutates the previously bound UID', async () => {
+test('control-plane bypass of enforced Rules is detected as ambiguous, never repaired by reset', async () => {
   const f = fixture(), input = await resetRequest(f), update = f.adapter.updatePassword;
   f.adapter.updatePassword = async (...args) => {
-    // A different privileged writer does not participate in this ledger lock.
+    // Deliberately bypass the Rules tested in legacy-identity-guard.test.cjs.
     f.evidence.users.Trainer.authUid = 'new-binding-uid';
     f.evidence.authIndex['trainer-uid'].username = 'Other';
     await update(...args);
   };
   assert.equal((await f.service.run(context, input)).status, 'ambiguous');
-  assert.equal(f.mutations(), 1, 'Reproduces the blocker, NOT a passing pre-mutation safety guarantee');
+  assert.equal(f.mutations(), 1, 'This is a control-plane bypass diagnostic, not an exclusion proof');
   await assert.rejects(f.service.run(context, { ...input, requestId: randomUUID() }));
 });
-test('LAUNCH BLOCKER: same UID deleted and recreated by another writer is detected only after password update', async () => {
+test('control-plane Auth recreation bypass is ambiguous; application writers must lack create/delete IAM', async () => {
   const f = fixture(), input = await resetRequest(f), update = f.adapter.updatePassword;
   f.adapter.updatePassword = async (...args) => {
     f.user.metadata.creationTime = '2026-09-05T00:00:00Z';
     await update(...args);
   };
   assert.equal((await f.service.run(context, input)).status, 'ambiguous');
-  assert.equal(f.mutations(), 1, 'A UID match alone cannot prevent an account-incarnation race');
+  assert.equal(f.mutations(), 1, 'Deployment must prove denied create/delete; no read can fence a project owner');
 });
 test('Unicode compatibility aliases in legacy identity roots fail closed', async () => {
   for (const root of ['users', 'loginDirectory', 'authIndex']) {

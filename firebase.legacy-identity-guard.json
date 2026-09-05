@@ -1,0 +1,12 @@
+{
+  "database": {
+    "instance": "trade-list-a4297-default-rtdb",
+    "rules": "tests/firebase/database.rules.legacy-identity-guard.json"
+  },
+  "emulators": {
+    "auth": { "host": "127.0.0.1", "port": 9499 },
+    "database": { "host": "127.0.0.1", "port": 9500 },
+    "ui": { "enabled": false },
+    "singleProjectMode": true
+  }
+}

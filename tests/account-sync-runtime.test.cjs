@@ -774,7 +774,7 @@ test('same-UID PIN reset preserves canonical data and reviewed66 across Auth emu
       loginDirectory:{Owner:{authReady:true,authVersion:1}},authIndex:{'reset-admin-uid':{username:'Doomsday126'},'uid-owner':{username:'Owner'}}};
     const products={lf:['Pikachu'],ft:['Eevee'],unprioritized:['Snom'],board:{lf:['Pikachu'],ft:['Eevee']},favorites:['Mazer'],tags:{Mazer:['NYC']},profile:{trainer:'Owner'},publicShare:{ownerUid:'uid-owner'}};
     const before=JSON.stringify({canonical:h.server.snapshot(),recovery:repositoryState.recoveryCandidates,evidence,products});
-    const migrationBefore=JSON.stringify(repositoryState.migrations);
+    const migrationBefore=JSON.stringify(repositoryState.migrations),metaBefore=repositoryState.calls.updateMeta;
     const links=(await admin.getUser('uid-owner')).providerData,attempts=h.server.attempts.length,migrations=repositoryState.calls.createMigration;
     let value={schemaVersion:1,records:[]},generation=1;
     const journal=createJournal({read:async()=>({value:structuredClone(value),generation}),compareAndSwap:async(expected,next)=>{assert.equal(expected,generation);value=structuredClone(next);generation++;}});
@@ -796,9 +796,16 @@ test('same-UID PIN reset preserves canonical data and reviewed66 across Auth emu
     assert.equal((await clean.listRecoveryCandidates({unresolvedOnly:false})).length,66);await clean.stop();
     assert.equal(JSON.stringify({canonical:h.server.snapshot(),recovery:repositoryState.recoveryCandidates,evidence,products}),before);
     assert.equal(h.server.attempts.length,attempts);
-    await t.test('strict no-new-migration-evidence gate on clean-device adoption',{
-      todo:'Existing runtime enrolls a new device by writing another migration receipt; outside PIN-reset correction scope'
-    },()=>assert.equal(repositoryState.calls.createMigration,migrations));
+    await t.test('clean-device receipt is additive evidence, not a destructive migration',()=>{
+      const previous=JSON.parse(migrationBefore);
+      for(const [id,receipt] of Object.entries(previous))assert.deepEqual(JSON.parse(JSON.stringify(repositoryState.migrations[id])),receipt);
+      const added=Object.entries(repositoryState.migrations).filter(([id])=>!Object.hasOwn(previous,id));
+      assert.equal(repositoryState.calls.createMigration,migrations+1);assert.equal(added.length,1);
+      assert.equal(added[0][1].ownerUid,'uid-owner');assert.equal(added[0][1].seedCount,0);
+      assert.equal(added[0][1].verified,true);assert.equal(added[0][1].legacyRetained,true);
+      assert.equal(repositoryState.calls.updateMeta,metaBefore);
+      assert.equal(h.server.attempts.length,attempts);
+    });
     assert.equal((await reset.run(caller,input)).status,'completed');
   }finally{await deleteApp(app);}
 });

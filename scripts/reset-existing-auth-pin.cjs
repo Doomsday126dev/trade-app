@@ -52,6 +52,7 @@ function parseArgs(argv){
   return options;
 }
 function validateOptions(options,env=process.env){
+  if(options.apply)throw resetError('reset/cli-retired','Use the owner Admin same-UID reset endpoint; standalone credential writes are retired');
   for(const key of ['username','projectId','databaseId','databaseUrl','confirmProject','confirmDatabase','identityReport']){
     if(!String(options[key]||'').trim())throw resetError('reset/missing-required-option',`Missing required option: ${key}`);
   }
@@ -152,32 +153,8 @@ async function executeReset({adapter,options,env=process.env,emit=()=>{}}){
     wishlistCount:before.redacted.wishlistCount,communityCount:before.redacted.communityCount,
     privateReportVerified:!!identityGate.reportHash,rollback:'previous-password-unrecoverable'
   };
-  if(!validated.apply){emit({...summary,status:'dry-run-ready',writes:0});return{ok:true,status:'dry-run-ready',writes:0,before:before.redacted};}
-  let authUpdated=false;
-  try{
-    await adapter.updateAuthPassword(before.private.uid,validated.pin);
-    authUpdated=true;
-    await adapter.updateAppPin(validated.username,hashPin(validated.pin));
-  }catch(error){
-    const code=authUpdated?'reset/partial-auth-updated-app-pin-failed':'reset/auth-password-update-failed';
-    emit({...summary,status:'failed',code,writes:authUpdated?1:0});
-    throw resetError(code,authUpdated?'Auth password changed, but app PIN metadata did not; manual review is required':'Auth password was not changed',null);
-  }
-  const after=await collectBaseline(adapter,validated.username);
-  const expectedPinHash=hashPin(validated.pin);
-  const postflight={
-    uidPreserved:before.private.uid===after.private.uid,
-    emailPreserved:before.private.email===after.private.email,
-    authVersionPreserved:before.private.user.authVersion===after.private.user.authVersion,
-    userDeltaApproved:approvedUserDelta(before.private.user,after.private.user,expectedPinHash),
-    protectedBaselinesPreserved:unchangedProtectedBaselines(before.redacted,after.redacted)
-  };
-  if(Object.values(postflight).some(value=>value!==true)){
-    const error=resetError('reset/postflight-mismatch','Postflight verification found an unapproved data change',postflight);
-    emit({...summary,status:'failed',code:error.code,writes:2});throw error;
-  }
-  emit({...summary,status:'applied-and-verified',writes:2});
-  return{ok:true,status:'applied-and-verified',writes:2,before:before.redacted,after:after.redacted};
+  emit({...summary,status:'dry-run-ready',writes:0});
+  return{ok:true,status:'dry-run-ready',writes:0,before:before.redacted};
 }
 async function createAdminAdapter(options){
   let appModule,authModule,databaseModule;
@@ -197,8 +174,6 @@ async function createAdminAdapter(options){
       }
       return matches;
     },
-    updateAuthPassword:(uid,password)=>auth.updateUser(uid,{password}),
-    updateAppPin:(username,pin)=>database.ref(`users/${username}`).update({pin,pinHashed:true}),
     close:()=>appModule.deleteApp(app)
   };
 }

@@ -1,5 +1,24 @@
 # Final Same-UID PIN Reset Security Review
 
+## Coordination Correction, 2026-09-05
+
+The review below is the historical `8c341cb` no-go. The current fix makes
+established client identity bindings immutable at the RTDB Rules boundary and
+removes all application identity-recreation capabilities from the retired SDK
+principal. See [OWNERSHIP_BOUNDARY.md](OWNERSHIP_BOUNDARY.md). Real Rules tests
+now attempt the formerly unsafe remap inside the final-read/mutation interval
+and assert its rejection while the reset completes for the original UID.
+The two in-memory root-override diagnostics are retained: they bypass enforcement
+by construction and do not constitute application-writer safety evidence.
+
+The focused clean-device test now checks additive receipt semantics: previous
+receipts remain unchanged, one new receipt has zero seeds, canonical mutation
+attempts and meta initialization do not increase, and reviewed66 stays inactive.
+Live IAM denial, deployed endpoint and synthetic credential proof remain gates;
+source tests alone do not authorize an operational go verdict.
+
+## Historical Review
+
 Reviewed input: `9209409c03429793291c2b164495072d92e80c89`.
 Date: 2026-09-05. Branch: `feat/same-uid-pin-reset`.
 Experimental context management reports enabled. The active model/Ultra effort

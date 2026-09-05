@@ -56,8 +56,10 @@ test('deployment plan has no product write/create/delete or provider runtime aut
   assert.equal(plan.runtimePermissions.secret.bindingScope, 'this-secret-only');
   assert.equal(plan.runtimePermissions.journal.object, 'legacy-pin-reset/v1/ledger.json');
   assert.equal(plan.runtimePermissions.journal.publicAccessPrevention, 'enforced');
-  assert.equal(plan.state, 'audit-blocked-not-deployed');
-  assert.ok(plan.blockingFindings.includes('unfenced-external-identity-writer'));
+  assert.equal(plan.identityBoundary.mode, 'immutable-bindings-v1');
+  assert.deepEqual(plan.identityBoundary.legacySdkReplacementPermissions, ['firebaseauth.users.get', 'firebasedatabase.instances.get']);
+  assert.ok(plan.identityBoundary.legacySdkRemoveProjectRoles.includes('roles/iam.serviceAccountTokenCreator'));
+  for(const permission of plan.identityBoundary.prohibitedApplicationPermissions)assert.ok(!plan.runtimePermissions.project.includes(permission));
 });
 test('missing GCS generation cannot degrade the ledger to an unconditional write', async () => {
   let downloads = 0;

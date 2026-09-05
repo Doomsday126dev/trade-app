@@ -1,10 +1,14 @@
 # Owner-Assisted Same-UID PIN Reset
 
-Status: **AUDIT BLOCKED, DO NOT DEPLOY**. The independent review reproduced an
-unfenced external identity-writer race; the final password call can run after
-identity ownership/incarnation changes. The clean-device no-new-migration-
-evidence gate also fails. See [SECURITY_REVIEW.md](SECURITY_REVIEW.md). Earlier
-local passes below are historical evidence, not launch certification.
+Status: **coordination corrected; live IAM and synthetic qualification pending**.
+See [OWNERSHIP_BOUNDARY.md](OWNERSHIP_BOUNDARY.md) for the enforced exclusion
+contract. Deployment must install the guarded Rules and remove the retired
+SDK account's identity-write and impersonation privileges before enabling reset.
+The clean-device contract permits one additive receipt, never canonical reseeding
+or reactivation of the 66 reviewed recovery records.
+
+The remainder records the original implementation and historical qualification;
+the ownership boundary and final deployment record supersede its old launch gates.
 
 Production `.87` and the friend's
 account are unchanged. The new Admin action is disabled in source. No deployed
