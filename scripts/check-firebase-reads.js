@@ -1,15 +1,29 @@
 const assert=require('node:assert/strict');
-const {readFileSync,readdirSync}=require('node:fs');
+const {readFileSync}=require('node:fs');
 const {createHash}=require('node:crypto');
 const path=require('node:path');
 const vm=require('node:vm');
 
-const root=path.join(__dirname,'..');
+const controlRoot=path.join(__dirname,'..');
+const root=path.resolve(process.env.FIREBASE_READ_SOURCE_DIR||controlRoot);
 const indexSource=require('./lib/frontend-source.cjs').readFrontendSource(root);
-const registrySource=readFileSync(path.join(root,'js/data/firebaseReadRegistry.js'),'utf8');
+const registrySource=readFileSync(path.join(controlRoot,'js/data/firebaseReadRegistry.js'),'utf8');
 const window={};
 vm.runInNewContext(registrySource,{window});
 const {READ_SURFACES,SOURCE_CALL_CONTRACT}=window.PogoData.firebaseReadRegistry;
+const {collectReadSites,reconcileReadSites,expressionKey}=require('./lib/firebase-read-sites.cjs');
+const inventory=reconcileReadSites(collectReadSites(root),SOURCE_CALL_CONTRACT.directReadSites,SOURCE_CALL_CONTRACT.readHandlerHashes);
+const repositoryInventory=collectReadSites(root,{repository:true});
+assert.deepEqual(repositoryInventory.map(site=>[site.file,expressionKey(site.expression)]),
+  Array.from(SOURCE_CALL_CONTRACT.repositoryCalls,site=>[site.file,expressionKey(site.expression)]),
+  'Repository read sites changed; review exact calls, not just file membership');
+assert.equal(inventory.filter(site=>site.operation==='get').length,SOURCE_CALL_CONTRACT.directGetCount);
+for(const site of inventory){
+  assert.ok(READ_SURFACES.some(surface=>surface.id===site.surfaceId),`Unregistered surface for ${site.handler}`);
+  for(const field of ['normalizedPath','executionSurface','featureGate','audience','ownerScope','consumer','status','classification','justification']){
+    assert.ok(typeof site[field]==='string'&&site[field].length>0&&!site[field].includes('UNKNOWN'),`Read site lacks ${field}: ${site.handler}`);
+  }
+}
 
 const requiredFields=['id','path','method','breadth','ownerScope','audience','consumers','status'];
 const validScopes=new Set(['public','session','screen','selectedTrainer','legacyAdmin']);
@@ -30,13 +44,6 @@ function directCallCount(name){
   return[...indexSource.matchAll(new RegExp(`(^|[^\\w$.])${name}\\s*\\(`,'gm'))].length;
 }
 function occurrenceCount(needle){return indexSource.split(needle).length-1;}
-function jsFiles(directory){
-  return readdirSync(directory,{withFileTypes:true}).flatMap(entry=>{
-    const target=path.join(directory,entry.name);
-    if(entry.isDirectory())return jsFiles(target);
-    return entry.isFile()&&entry.name.endsWith('.js')?[target]:[];
-  });
-}
 function sourceBetween(start,end){
   const startAt=indexSource.indexOf(start);
   const endAt=indexSource.indexOf(end,startAt);
@@ -63,10 +70,7 @@ for(const handlerContract of SOURCE_CALL_CONTRACT.unchangedHandlerBlocks){
     `Existing Firebase snapshot behavior changed at ${handlerContract.start}`);
 }
 
-const repositoryCallFiles=jsFiles(path.join(root,'js'))
-  .filter(file=>/client\.(?:read|listen)\s*\(/.test(readFileSync(file,'utf8')))
-  .map(file=>path.relative(root,file).split(path.sep).join('/'))
-  .sort();
+const repositoryCallFiles=[...new Set(repositoryInventory.map(site=>site.file))].sort();
 assert.deepEqual(repositoryCallFiles,Array.from(SOURCE_CALL_CONTRACT.repositoryFiles).sort(),
   'A repository Firebase read/listen call was added outside the registered data-access files');
 
@@ -159,4 +163,5 @@ for(const modulePath of moduleOrder){
 assert.ok(previous<indexSource.indexOf('<script src="js/app/application.js?v='),
   'Read-boundary modules must load before the signed-in application script');
 
-console.log(`Firebase read registry checks passed (${READ_SURFACES.length} surfaces; ${SOURCE_CALL_CONTRACT.directGetCount} get; ${SOURCE_CALL_CONTRACT.directOnValueCount} onValue).`);
+if(process.argv.includes('--inventory'))console.log(JSON.stringify({schemaVersion:1,directReads:inventory,managedListenerCount:SOURCE_CALL_CONTRACT.managedListenCount,repositoryReads:repositoryInventory,repositoryFiles:SOURCE_CALL_CONTRACT.repositoryFiles},null,2));
+else console.log(`Firebase read registry checks passed (${READ_SURFACES.length} surfaces; ${SOURCE_CALL_CONTRACT.directGetCount} get; ${SOURCE_CALL_CONTRACT.directOnValueCount} onValue).`);

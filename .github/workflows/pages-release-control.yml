@@ -107,7 +107,7 @@ jobs:
             target/tests/trainer-preferences.test.cjs
           node target/scripts/check-domain-helpers.js
           node target/scripts/check-community-membership.js
-          node target/scripts/check-firebase-reads.js
+          FIREBASE_READ_SOURCE_DIR=target node control/scripts/check-firebase-reads.js
           node target/scripts/check-global-identity-contract.js
           node --check target/data.js
           node --check target/sw.js
@@ -123,7 +123,7 @@ jobs:
           PAGES_RUNTIME_RELEASE_ID: ${{ inputs.runtime_release_id }}
           PAGES_RUNTIME_RELEASE_TAG: ${{ inputs.runtime_release_tag }}
           PAGES_SOURCE_DIR: ${{ github.workspace }}/control
-        run: node --test control/tests/pages-deployment-control.test.cjs control/tests/service-worker-deployment-rollback.test.cjs
+        run: node --test control/tests/pages-deployment-control.test.cjs control/tests/service-worker-deployment-rollback.test.cjs control/tests/firebase-read-contract.test.cjs
       - name: Define unique artifact name
         id: names
         run: echo "artifact_name=github-pages-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_OUTPUT"

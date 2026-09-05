@@ -24,6 +24,12 @@ runtime_source_sha  = exact tag target and build checkout
 
 The control selector and runtime release tag must not be the same tag. Runtime tags and used control-selector tags are immutable.
 
+Firebase read validation follows the same separation: the immutable control owns
+the reviewed registry/checker, while `FIREBASE_READ_SOURCE_DIR` selects runtime
+bytes to inspect. Correcting validation metadata never replaces tagged frontend
+files in the artifact. Per-site and handler contracts must match the selected
+runtime; historical runtime tags do not move to accommodate a validator correction.
+
 ## Architecture
 
 The production path is deliberately split across three immutable source identities:
