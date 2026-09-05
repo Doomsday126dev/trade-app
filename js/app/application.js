@@ -1692,6 +1692,7 @@ function syncPokemonGoSearchLanguageControl(){
   if(select){select.disabled=!override;select.value=override?preference:pokemonGoSearchSyntaxDomain.localeKey(i18nCore.getLocale());}
 }
 function rerenderPokemonGoSearchLanguageSurfaces(){
+  if(cur){renderIntentEntries(document.getElementById('mylist-filter')?.value||'');if(document.getElementById('selected-contextual-search')?.textContent)renderSelectedIntentSearch();if(document.getElementById('special-board-modal')?.classList.contains('open'))renderBoardContextualSearch();}
   if(cur){renderMyStrings();renderStrings();if(_activeDiff)renderDiffModal();if(_activeTradeMatch)renderTradeMatchModal();renderSafeTransferOutput();}
   if(_activeShareView?.username)renderShareView(_activeShareView.username,_activeShareView.type);
 }
@@ -1732,6 +1733,7 @@ function sessionTransientCallback(callback){
   };
 }
 function resetSessionTransientUi(reason='session_boundary'){
+  for(const id of ['mylist-contextual-search','selected-contextual-search','board-contextual-search'])document.getElementById(id)?.replaceChildren();
   _sessionTransientGeneration++;
   if(typeof closeExistingPinReset==='function')closeExistingPinReset();
   if(typeof invalidateAccountSyncRecovery==='function')invalidateAccountSyncRecovery(reason);
@@ -6491,18 +6493,30 @@ function renderIntentEntries(query='',model=productDeclarations()){
     if(!entry.ref.managed)return`<article class="intent-row" data-intent-row="${escAttr(entry.name)}">${spriteImg(entry.no,42,'',entry.name,entry.gender||'',entry.dn)}<div class="intent-row-main"><strong>${escHtml(entry.dn)}</strong><span>${escHtml([entry.p?priLabel(entry.p):i18nCore.t('product.other'),entry.mod,entry.note].filter(Boolean).join(' · '))}</span></div><button class="btn btn-secondary" type="button" onclick="enableIntentEditing('${side}',${index})">${escHtml(i18nCore.t('product.enableEditing'))}</button></article>`;
     return`<article class="intent-row" data-intent-row="${escAttr(entry.name)}">${spriteImg(entry.no,42,'',entry.name,entry.gender||'',entry.dn)}<div class="intent-row-main"><strong>${escHtml(entry.dn)}</strong><span>${escHtml([entry.mod,entry.note,entry.backgroundId?backgroundDisplayName(entry.backgroundId):''].filter(Boolean).join(' · '))}</span></div><select aria-label="${escAttr(i18nCore.t('myList.priorityFor',{name:entry.dn}))}" onchange="editIntentEntry('${side}',${index},'p',this.value)">${['','H','M','L'].map(p=>`<option value="${p}" ${p===entry.p?'selected':''}>${escHtml(p?priLabel(p):i18nCore.t('product.other'))}</option>`).join('')}</select><button type="button" class="btn btn-ghost" aria-label="${escAttr(i18nCore.t('share.flagShiny'))}" aria-pressed="${!!entry.shiny}" onclick="editIntentEntry('${side}',${index},'shiny',${!entry.shiny})">${uiIconMarkup('sparkles','ui-icon')}</button><button type="button" class="btn btn-ghost" aria-label="${escAttr(i18nCore.t('myList.removeEntry',{name:entry.dn}))}" onclick="removeIntentEntry('${side}',${index})">${uiIconMarkup('trash','ui-icon')}</button>${intentDetailsHtml(entry)}</article>`;
   }).join('')||(myListIntent==='ft'?`<p class="empty">${escHtml(i18nCore.t('product.emptyOffers'))}</p>`:'');
-  if(myListIntent==='ft'){
-    const numbers=rows.map(e=>Number(e.no)).filter(n=>Number.isInteger(n)&&n>0);
-    if(numbers.length===rows.length&&numbers.length)host.insertAdjacentHTML('beforeend',`<button class="btn btn-secondary" type="button" onclick="copyIntentSearch()">${escHtml(i18nCore.t('share.copySearchAria',{label:i18nCore.t('product.ft')}))}</button>`);
-  }
+  const visibleLegacy=filter&&myListIntent==='lf'?new Set(currentListEntries(myListType,filter,model).map(e=>e.name)):null;
+  const scoped=model.entries.filter(e=>e.intent===myListIntent&&e.category===myListType&&(!filter||(e.ref.surface==='my-list'&&!e.ref.managed?visibleLegacy?.has(e.name):normalizeAcText(e.dn).includes(filter))));
+  const searchHost=document.getElementById('mylist-contextual-search');
+  if(searchHost)searchHost.innerHTML=contextualIntentSearchHtml(scoped,i18nCore.t('contextSearch.current',{side:i18nCore.t(`product.${myListIntent}`),category:myListCategoryLabel(myListType)}));
+  const selectedHost=document.getElementById('selected-contextual-search');
+  if(selectedHost?.textContent){if(bulkMode)renderSelectedIntentSearch();else selectedHost.replaceChildren();}
 }
-async function copyIntentSearch(){
-  const filter=normalizeAcText(document.getElementById('mylist-filter')?.value||'');
-  const entries=productDeclarations().entries.filter(e=>e.intent===myListIntent&&e.category===myListType&&(!filter||normalizeAcText(e.dn).includes(filter))),numbers=entries.map(e=>Number(e.no));
-  if(!numbers.length||numbers.some(n=>!Number.isInteger(n)||n<1))return;
-  const text=dexStringFromNumbers(numbers,{locale:pokemonGoSearchLocale()});
-  if(text.length>POGO_STR_LIMIT){toast(i18nCore.t('strings.tooLongForPokemonGo'));return;}
-  try{await copyText(text);toast(i18nCore.t('share.copySuccess'));}catch{toast(i18nCore.t('strings.copyFailed'));}
+function contextualIntentSearchHtml(entries,title){
+  const plan=searchStringDomain.contextualSearchPlan(entries.map(entry=>({...entry,backgroundLabel:entry.backgroundId?i18nCore.t('background.badgeLabel',{name:backgroundDisplayName(entry.backgroundId)}):''})),{locale:pokemonGoSearchLocale()});
+  return window.PogoUi.stringHtml.contextualSearchHtml(plan,{t:i18nCore.t,title});
+}
+function copyIntentSearch(){
+  const panel=document.querySelector('#mylist-contextual-search details');if(panel){panel.open=true;panel.querySelector('summary').focus();}
+}
+function openSelectedIntentSearch(){
+  renderSelectedIntentSearch();
+  const panel=document.querySelector('#selected-contextual-search details');if(panel){panel.open=true;panel.querySelector('summary').focus();panel.scrollIntoView({block:'nearest'});}
+}
+function renderSelectedIntentSearch(){
+  const entries=productDeclarations().entries.filter(entry=>[entry,...entry.aliases].some(e=>e.ref?.surface==='my-list'&&!e.ref.managed&&e.ref.type===myListType&&bulkSelected.has(e.ref.name)));
+  const host=document.getElementById('selected-contextual-search');if(!host)return;
+  const wasOpen=host.querySelector('details')?.open;
+  host.innerHTML=contextualIntentSearchHtml(entries,i18nCore.t('contextSearch.selection'));
+  host.querySelector('details').open=!!wasOpen;
 }
 function intentDetailsHtml(entry){
   const side=entry.ref.side,index=`'${entry.ref.index}'`;
@@ -10125,11 +10139,8 @@ function tradeMatchSearchItems(entries){
   }).filter(Boolean);
 }
 function tradeMatchSearchHtml(entries,key,label,available){
-  if(!available||!entries.length)return'';
-  const value=stringFromSearchItems(tradeMatchSearchItems(entries),{locale:pokemonGoSearchLocale()});
-  if(!value)return'';
-  const option={value,levels:[],tooLong:strLenInfo(value).len>POGO_STR_LIMIT};
-  return`<div class="trade-match-search" aria-label="${escAttr(label)}">${myListSearchOptionHtml(option,`trade-match-${key}`,{label,showLimit:true})}</div>`;
+  if(!available)return'';
+  return`<div class="trade-match-search" data-contextual-direction="${escAttr(key)}">${contextualIntentSearchHtml(entries,label)}</div>`;
 }
 function renderTradeMatchSummary(them){
   const m=computeTradeMatchSummary(them);
@@ -11511,10 +11522,16 @@ function openSpecialTradeBoard(){
 }
 function toggleBoardSelection(key,selected){
   if(selected)boardHiddenKeys.delete(key);else boardHiddenKeys.add(key);
+  renderBoardContextualSearch();
+}
+function renderBoardContextualSearch(){
+  const host=document.getElementById('board-contextual-search');if(!host)return;
+  const board=getSpecialBoard();host.innerHTML=contextualIntentSearchHtml([...board.lf,...board.ft],i18nCore.t('contextSearch.selection'));
 }
 function renderSpecialBoard(){
   if(boardCurationOwner!==cur){boardCurationOwner=cur;boardHiddenKeys=new Set();}
   const entries=productDeclarations().entries;
+  renderBoardContextualSearch();
   for(const side of ['lf','ft']){
     const el=document.getElementById(`special-${side}-list`);if(!el)continue;
     el.innerHTML=entries.filter(e=>e.intent===side).map(e=>`<label class="sb-row"><input type="checkbox" data-key="${escAttr(e.declarationKey)}" ${boardHiddenKeys.has(e.declarationKey)?'':'checked'} onchange="toggleBoardSelection(this.dataset.key,this.checked)">${spriteImg(e.no,34,'sb-row-sprite',e.name,e.gender||'',e.dn)}<span class="sb-row-name">${escHtml(e.dn)}</span>${e.shiny?'<span aria-label="'+escAttr(i18nCore.t('share.flagShiny'))+'">✨</span>':''}</label>`).join('');
@@ -11997,7 +12014,6 @@ function renderShareView(username,type,intent){
     out.innerHTML=emptyHtml(i18nCore.t('share.emptyTitle'),i18nCore.t('share.emptyHelp'),'📋');
     return;
   }
-  const strs=buildStrings(type,username,intent);
   // Build grouped visual + strings
   const srcArr=listSource(type);
   const dispMap={},noMap={};
@@ -12042,8 +12058,7 @@ function renderShareView(username,type,intent){
       }).join('')}</div>
     </div>`;
   });
-  if(strs)html+=strLevelsHtml(strs,{t:i18nCore.t,formatNumber:i18nCore.formatNumber,priorityLabel:publicSharePriorityLabel,searchLocale:pokemonGoSearchLocale()});
-  out.innerHTML=html;
+  out.innerHTML=contextualIntentSearchHtml(list,i18nCore.t('contextSearch.current',{side:i18nCore.t(`product.${intent}`),category:publicShareListLabel(type)}))+html;
 }
 
 // ── SWIPE GESTURES (#12) ─────────────────────────────────────
@@ -14365,6 +14380,7 @@ function toggleBulkSelection(name){
   updateBulkCount();
 }
 function updateBulkCount(){
+  const search=document.getElementById('selected-contextual-search');if(search)search.innerHTML='';
   const el=document.getElementById('bulk-count');
   if(el)el.textContent=i18nCore.t('bulk.selected',{count:i18nCore.formatNumber(bulkSelected.size)});
 }
@@ -14881,7 +14897,7 @@ function maybeStartTour(){
 
 // ── EXPOSE ────────────────────────────────────────────────────
 Object.assign(window,{
-  setMyListIntent,editIntentEntry,removeIntentEntry,enableIntentEditing,copyIntentSearch,
+  setMyListIntent,editIntentEntry,removeIntentEntry,enableIntentEditing,copyIntentSearch,openSelectedIntentSearch,
   openProductShare,setProductShareMode,toggleBoardSelection,
   openImport,setImportPri,parseImportString,toggleImportRow,toggleSelectAll,backToStep1,confirmImport,
   setFilter,setBrowseList,setMyList,setStaleFilter,switchTab,openLegacyInventoryTool,clearTrainerSearch,focusTrainerSearch,

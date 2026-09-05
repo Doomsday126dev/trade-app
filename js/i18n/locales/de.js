@@ -1,6 +1,17 @@
 (function(global){
   const root=global.PogoLocales=global.PogoLocales||{};
   root.de=Object.freeze({...root.en,
+    'contextSearch.species':'Vorfilter nur nach Art',
+    'contextSearch.current':'{side} suchen · {category} (aktueller Filter)',
+    'contextSearch.selection':'Ausgewählte Einträge suchen',
+    'contextSearch.warning':'Sucht nach Pokémon-Arten und schließt bereits getauschte Pokémon aus. Formen, Kostüme, Hintergründe, Schillernd-Status und weitere Details manuell prüfen. Ergebnisse belegen weder Besitz noch Tauschbarkeit oder sicheres Verschicken.',
+    'contextSearch.empty':'Keine Einträge in dieser Auswahl.',
+    'contextSearch.unknown':'Unbekannter Eintrag',
+    'contextSearch.unresolved':'Keine Artensuche möglich: manuell prüfen.',
+    'contextSearch.unresolvedCount':'{count} Einträge können nicht in die Artensuche aufgenommen werden. Sie bleiben zur manuellen Prüfung aufgelistet.',
+    'contextSearch.split':'Alle {count} Teile einzeln ausführen. Jeder hält die unterstützte Suchlänge ein.',
+    'contextSearch.copyPart':'Suche {part} von {total} kopieren',
+    'contextSearch.manual':'Manuelle Prüfung · {count} Einträge',
     'product.lf':"Gesucht",
     'product.note':"Notiz",'product.gender':"Geschlecht",
     'product.ft':"Zum Tausch",

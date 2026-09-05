@@ -1,6 +1,17 @@
 (function(global){
   const root=global.PogoLocales=global.PogoLocales||{};
   root.en=Object.freeze({
+    'contextSearch.species':"Species-only prefilter",
+    'contextSearch.current':"Search {side} · {category} (current filter)",
+    'contextSearch.selection':"Search selected entries",
+    'contextSearch.warning':"Finds species and excludes already-traded Pokémon. Check exact forms, costumes, backgrounds, shiny status and other details manually. Results do not prove ownership, trade eligibility or safe transfer.",
+    'contextSearch.empty':"No entries in this scope.",
+    'contextSearch.unknown':"Unknown entry",
+    'contextSearch.unresolved':"No species query: check manually.",
+    'contextSearch.unresolvedCount':"{count} entries cannot be included in a species query. They remain listed for manual checking.",
+    'contextSearch.split':"Run all {count} parts separately. Each stays within the supported search length.",
+    'contextSearch.copyPart':"Copy search {part} of {total}",
+    'contextSearch.manual':"Manual verification · {count} entries",
     'product.lf':"Looking For",
     'product.note':"Note",'product.gender':"Gender",
     'product.ft':"For Trade",
