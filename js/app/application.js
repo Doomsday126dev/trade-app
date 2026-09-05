@@ -478,7 +478,7 @@ function refreshCombinedSearch(model=productDeclarations()){
   const scope=document.getElementById('wants-search-scope')?.value||'filtered';
   const query=normalizeAcText(document.getElementById('combined-filter')?.value||'');
   const entries=model.entries.filter(e=>scope==='selected'?combinedSelection.has(productSelectionKey(e)):scope==='top'?e.p==='H':!query||normalizeAcText(productShareDescription(e)).includes(query));
-  const signature=JSON.stringify([i18nCore.getLocale(),entries]);
+  const signature=JSON.stringify([i18nCore.getLocale(),pokemonGoSearchLocale(),entries]);
   if(host.dataset.signature===signature)return;
   host.dataset.signature=signature;
   host.innerHTML=contextualIntentSearchHtml(entries,i18nCore.t('wants.search'));
@@ -1828,6 +1828,7 @@ function syncPokemonGoSearchLanguageControl(){
   if(select){select.disabled=!override;select.value=override?preference:pokemonGoSearchSyntaxDomain.localeKey(i18nCore.getLocale());}
 }
 function rerenderPokemonGoSearchLanguageSurfaces(){
+  if(cur)refreshCombinedSearch();
   if(cur){renderIntentEntries(document.getElementById('mylist-filter')?.value||'');if(document.getElementById('selected-contextual-search')?.textContent)renderSelectedIntentSearch();if(document.getElementById('special-board-modal')?.classList.contains('open'))renderBoardContextualSearch();}
   if(cur){renderMyStrings();renderStrings();if(_activeDiff)renderDiffModal();if(_activeTradeMatch)renderTradeMatchModal();renderSafeTransferOutput();}
   if(_activeShareView?.username)renderShareView(_activeShareView.username,_activeShareView.type);
