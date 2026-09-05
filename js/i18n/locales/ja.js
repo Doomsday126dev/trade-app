@@ -1,6 +1,17 @@
 (function(global){
   const root=global.PogoLocales=global.PogoLocales||{};
   root.ja=Object.freeze({...root.en,
+    'contextSearch.species':'ポケモンの種類のみの絞り込み',
+    'contextSearch.current':'{side}を検索 · {category}（現在の絞り込み）',
+    'contextSearch.selection':'選択した項目の検索',
+    'contextSearch.warning':'ポケモンの種類で絞り込み、交換済みを除外します。フォルム、衣装、背景、色違いなどは手動で確認してください。所持、交換可否、博士に送ってよいかは判定しません。',
+    'contextSearch.empty':'この範囲に項目はありません。',
+    'contextSearch.unknown':'不明な項目',
+    'contextSearch.unresolved':'種類を検索できません。手動で確認してください。',
+    'contextSearch.unresolvedCount':'{count}件は種類の検索に含められません。手動確認用の一覧には残ります。',
+    'contextSearch.split':'全{count}件の検索文字列を個別に実行してください。それぞれ対応する文字数内に収まります。',
+    'contextSearch.copyPart':'検索をコピー {part}/{total}',
+    'contextSearch.manual':'手動確認 · {count}件',
     'product.lf':"探している",
     'product.note':"メモ",'product.gender':"性別",
     'product.ft':"交換に出せる",

@@ -96,5 +96,25 @@
     return{len,cls};
   }
 
-  root.searchStrings=Object.freeze({PREFILTER,POGO_STR_LIMIT,dexNumbersFromSearchItems,dexStringFromNumbers,stringFromSearchItems,stringParts,searchPartSort,combineStrings,combinedStringOptions,myListSearchPlan,strLenInfo});
+  // A deliberately broad species prefilter. Exact declaration identity stays in
+  // the review list; unsupported entries never disappear into numeric parsing.
+  function contextualSearchPlan(entries=[],options={}){
+    const locale=syntax.localeKey(options.locale),limit=Math.min(POGO_STR_LIMIT,Math.max(32,Number(options.limit)||POGO_STR_LIMIT));
+    const manual=entries.map(entry=>{
+      const raw=entry.no,number=(typeof raw==='number'||typeof raw==='string'&&/^\d+$/.test(raw))?Number(raw):NaN;
+      const no=Number.isSafeInteger(number)&&number>0&&number<=9999?number:null;
+      return{...entry,no,unresolved:no===null};
+    });
+    const numbers=syntax.uniqueDexNumbers(manual.filter(e=>!e.unresolved).map(e=>e.no));
+    const query=dexNumbers=>syntax.serializeQuery({profile:'canonical',excludeTraded:true,dexNumbers},locale);
+    const parts=[];let pending=[];
+    for(const no of numbers){
+      if(pending.length&&query([...pending,no]).length>limit){parts.push(query(pending));pending=[];}
+      pending.push(no);
+    }
+    if(pending.length)parts.push(query(pending));
+    return{locale,limit,parts,manual,total:manual.length,unresolved:manual.filter(e=>e.unresolved).length,speciesOnly:true};
+  }
+
+  root.searchStrings=Object.freeze({PREFILTER,POGO_STR_LIMIT,dexNumbersFromSearchItems,dexStringFromNumbers,stringFromSearchItems,stringParts,searchPartSort,combineStrings,combinedStringOptions,myListSearchPlan,strLenInfo,contextualSearchPlan});
 })(window);

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "state": "coordination-fixed-awaiting-live-qualification",
+  "state": "production-qualified-2026-09-05.88",
   "blockingFindings": [],
   "identityBoundary": {
     "mode": "immutable-bindings-v1",

@@ -1,6 +1,17 @@
 (function(global){
   const root=global.PogoLocales=global.PogoLocales||{};
   root.es=Object.freeze({...root.en,
+    'contextSearch.species':'Prefiltro solo por especie',
+    'contextSearch.current':'Buscar {side} · {category} (filtro actual)',
+    'contextSearch.selection':'Buscar entradas seleccionadas',
+    'contextSearch.warning':'Busca especies y excluye Pokémon ya intercambiados. Comprueba manualmente formas, disfraces, fondos, estado variocolor y otros detalles. No demuestra posesión, elegibilidad para intercambiar ni seguridad al transferir.',
+    'contextSearch.empty':'No hay entradas en este ámbito.',
+    'contextSearch.unknown':'Entrada desconocida',
+    'contextSearch.unresolved':'Sin búsqueda por especie: comprobar manualmente.',
+    'contextSearch.unresolvedCount':'{count} entradas no se pueden incluir en la búsqueda por especie. Siguen en la lista de comprobación manual.',
+    'contextSearch.split':'Ejecuta las {count} partes por separado. Cada una respeta la longitud de búsqueda admitida.',
+    'contextSearch.copyPart':'Copiar búsqueda {part} de {total}',
+    'contextSearch.manual':'Comprobación manual · {count} entradas',
     'product.lf':"Busco",
     'product.note':"Nota",'product.gender':"Género",
     'product.ft':"Ofrezco",

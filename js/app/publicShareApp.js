@@ -210,19 +210,9 @@
     spriteOptical.observe(out);
   }
   function searchHtml(list){
-    const names=list.map(entry=>entry.name),helper=global.PogoDomain.searchStrings;
-    if(!names.length)return'';
-    const numbers=names.map(name=>global.PogoDomain.spriteSlugs.publicSpriteDex(name));
-    const complete=numbers.every(number=>Number.isInteger(number)&&number>0);
-    const value=complete?helper.dexStringFromNumbers(numbers,{locale:core().getLocale()}):'';
-    const tooLong=value.length>helper.POGO_STR_LIMIT;
-    const label=t('share.copySearchAria',{label:listLabel(state.type)});
-    return`<div class="public-share-search">
-      <button type="button" class="btn btn-primary" data-public-share-action="copy-search" data-copy="${attr(value)}" ${!value||tooLong?'disabled':''}><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-copy"></use></svg><span>${esc(label)}</span></button>
-      <span id="public-share-copy-status" role="status" aria-live="polite"></span>
-      ${!complete?`<p>${esc(t('share.searchUnresolved'))}</p>`:tooLong?`<p>${esc(t('strings.tooLongForPokemonGo'))}</p>`:''}
-      ${value?`<details class="share-search-disclosure"><summary>${esc(t('share.viewSearch'))}<span class="sr-only">: ${esc(listLabel(state.type))}</span></summary><p>${esc(t('share.searchScope'))}</p><textarea readonly aria-label="${attr(label)}" class="strbox" rows="3">${esc(value)}</textarea></details>`:''}
-    </div>`;
+    const entries=list.map(entry=>({...entryModel(entry.value??entry),...entry,no:global.PogoDomain.spriteSlugs.publicSpriteDex(entry.name),category:state.type}));
+    const plan=global.PogoDomain.searchStrings.contextualSearchPlan(entries,{locale:core().getLocale()});
+    return global.PogoUi.stringHtml.contextualSearchHtml(plan,{t,title:t('contextSearch.current',{side:t(`product.${state.intent}`),category:listLabel(state.type)})});
   }
   async function copySearch(control){
     const value=control.dataset.copy;if(!value||control.disabled)return;
