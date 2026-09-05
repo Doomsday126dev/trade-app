@@ -118,6 +118,7 @@
   "homepage": "https://github.com/Doomsday126dev/trade-app#readme",
   "devDependencies": {
     "@playwright/test": "^1.60.0",
+    "acorn": "8.18.0",
     "yaml": "^2.8.3"
   }
 }
