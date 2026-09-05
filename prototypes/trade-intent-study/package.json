@@ -1,0 +1,6 @@
+{
+  "name": "pogo-trades-design-study",
+  "private": true,
+  "type": "module",
+  "scripts": { "test": "node --test model.test.js" }
+}

@@ -1,0 +1,1574 @@
+[
+  {
+    "file": "POKEAPI-LICENSE.md",
+    "sha256": "1c04595dc662981c20956ae4251dfa7b62b475c345eddf98bc9b904cb2373f2c"
+  },
+  {
+    "file": "absol-fashion.png",
+    "sha256": "36fc88c7013fd512342936d9c0b0af0e45a0d261510765d5f17ac382db41e4dd"
+  },
+  {
+    "file": "aerodactyl-satchel.png",
+    "sha256": "009a7cac8388203f15e4c48cbea735d177bf1abb49e067cd99cae1a0a5bb4702"
+  },
+  {
+    "file": "beartic-holiday.png",
+    "sha256": "5c8e19a9e06615aa363c42fe94e266377df3eeec9024cff640d3211c7d1a1ecb"
+  },
+  {
+    "file": "bewear-cape.png",
+    "sha256": "130e46ec7f768c7703b3641bef14e698251119d06b702ea832c7ce7b032d3269"
+  },
+  {
+    "file": "blastoise-clone.png",
+    "sha256": "c61762dca9f583ba8766fceef578a4207d7b73c2aeeb92f89228f68b0fc43036"
+  },
+  {
+    "file": "blastoise-red-party-hat.png",
+    "sha256": "965bdc5d1ee4a18c1fc9e169580bc624a35069f07ee148c71b6b5510c69a08d9"
+  },
+  {
+    "file": "blastoise-sunglasses.png",
+    "sha256": "958e1d0d77f82691daa33d8f420e967573ea9196d11fb2c5f80b35026ea0bef4"
+  },
+  {
+    "file": "blissey-flower.png",
+    "sha256": "d1c8aed507a1f5807a8e83a88768b6717042d960a3c2ad1288664cc35894bea4"
+  },
+  {
+    "file": "blitzle-fashion.png",
+    "sha256": "5ff667ea122fc777bd8968d42e82195bdef8dc1b91e0675b5c521d2886d8f84a"
+  },
+  {
+    "file": "bulbasaur-pikachu-cap.png",
+    "sha256": "f46717e3bcb1c19d7ad1ded65bf666929e89c6f586dc459e1b320706aa280a44"
+  },
+  {
+    "file": "bulbasaur-red-party-hat.png",
+    "sha256": "8e9b4c91610f31b6efa09306543c1a2f5b16a1b67d72e8899e26c77a1cfe2f51"
+  },
+  {
+    "file": "bulbasaur-shedinja.png",
+    "sha256": "4282e0aa9446ffc116e6ac52d6e102c057fbe0e465c2c5fe98333312baf1f2f4"
+  },
+  {
+    "file": "buneary-flower.png",
+    "sha256": "1e587f9b77d672225350927bacff9e6d5b0e4fb92f7e0437a255e0b285f2af10"
+  },
+  {
+    "file": "butterfree-fashion.png",
+    "sha256": "e5c6214507c886dd71f6af063ee3ed6c118e9469dcc037e9f5f73ffd9a7125de"
+  },
+  {
+    "file": "chansey-flower.png",
+    "sha256": "a5bd433b3a873d779c76089b6b07d90126d8e92f9e2405e16b45b59578400611"
+  },
+  {
+    "file": "charizard-clone.png",
+    "sha256": "5c2e49a423fc3f78b866f0335308e4d913c92b0cd3efe5e48be77a6387f31d92"
+  },
+  {
+    "file": "charizard-red-party-hat.png",
+    "sha256": "85803f6085c5cbc07e260cd7a998c08dbbb01e84df6952398b77ed5d4b324e68"
+  },
+  {
+    "file": "charjabug-holiday-2025.png",
+    "sha256": "4b58bbd782bc50728ec9123397dce216a8dcbad4d4f59413d76c04a4402af13b"
+  },
+  {
+    "file": "charmander-cubone.png",
+    "sha256": "780da3d58d979e562966aac68e5791af83da0811f45b7ccb79470db4abb0cf02"
+  },
+  {
+    "file": "charmander-pikachu-cap.png",
+    "sha256": "482907992c38661942443adc74534dfc80833f6a096e4cc91607aee3d1cfcdb9"
+  },
+  {
+    "file": "charmander-red-party-hat.png",
+    "sha256": "748996494acbccee7fa997f1e92dd483e2935b586fc98af5c09bbf165d00c252"
+  },
+  {
+    "file": "charmeleon-red-party-hat.png",
+    "sha256": "e776cf6c03a36fbe9d91d1ba1f7c8c398f9abf82773a967fd62322ecff7c677f"
+  },
+  {
+    "file": "chimchar-dawn-hat.png",
+    "sha256": "eb1112af505f59811b3f3eb4d1b03aac9f302bd89b9cba956ebb84a900d99615"
+  },
+  {
+    "file": "chimchar-lucas-hat.png",
+    "sha256": "6c10d986ea32b360a2c296d692f0392cab28a4b7a198cbb642a9525df8ed0714"
+  },
+  {
+    "file": "cinccino-fashion.png",
+    "sha256": "6610470ce55c4cec66f74970e60aa20a5dbd295fdc0943701b4771700613dc3d"
+  },
+  {
+    "file": "cottonee-flower.png",
+    "sha256": "e9a46a72f1f8fe2d73d92d092df559883422b5476d0dd2fbacff593421c33919"
+  },
+  {
+    "file": "croagunk-cap.png",
+    "sha256": "2dc05481d94cc3c855ded1304c4aeb4532e3d624f44b1f74419b33be342a61a0"
+  },
+  {
+    "file": "cubchoo-holiday.png",
+    "sha256": "de5daeb523fe77dd3ca164b204e3a7bad2601ce469cebb41cbbe56e90fefe4d4"
+  },
+  {
+    "file": "cubone-cempasuchil-crown.png",
+    "sha256": "3f667bb784ab5598a0572023169285d4b944c139887692b212cd9faa7864986b"
+  },
+  {
+    "file": "dartrix-halloween.png",
+    "sha256": "2ea2d391102d963d8f37e07e9b956d8b960612d88cbd7f86f3e56b3fb87261de"
+  },
+  {
+    "file": "decidueye-halloween.png",
+    "sha256": "a6e669d9a0c491ced162a7808c312f7d4f7bdef80cea0a645814dbc7a6a577de"
+  },
+  {
+    "file": "dedenne-holiday.png",
+    "sha256": "afa1c7ab9d24b8df59c18dc9bab1429d6073dcfe9e59781ad623df5df0d646b8"
+  },
+  {
+    "file": "delibird-holiday.png",
+    "sha256": "51964e725e3e6f98d07b75a15645929779207a478774e3a909eba1caee7740a8"
+  },
+  {
+    "file": "diglett-bowler-hat.png",
+    "sha256": "593ffcaf35b1b53e00004d38f577bc0e4cd80637696e0656f092ed09160584b6"
+  },
+  {
+    "file": "ditto-cap.png",
+    "sha256": "621d9405945bfc9ceb6719db8e074ce62a1bbc5e8991b5b641c177e4bb0fc304"
+  },
+  {
+    "file": "ditto-hat.png",
+    "sha256": "1d497029ca9d3800c4c6f09a6111b0f57690349f6d5780b6dba9a5d36059fa4b"
+  },
+  {
+    "file": "dragonite-fashion.png",
+    "sha256": "e809000c34886b4369eeee2f0aa1d15cecf0f108b270b15e63fc22e410813237"
+  },
+  {
+    "file": "drifblim-halloween-mischief.png",
+    "sha256": "9c438470a2dc8a8d99ac422c2595e465460a9db02a8c39ac85def5b2c38305c5"
+  },
+  {
+    "file": "dubwool-holiday.png",
+    "sha256": "b41976fbdfe7b75a842d185d84cf95a3351ec091016f4517561d6f2b0c6ff03c"
+  },
+  {
+    "file": "dugtrio-bowler-hat.png",
+    "sha256": "5ae8a44bf8bef1ec9e1bd55ae176cede59ddf55a806d734a41e8a0496607414d"
+  },
+  {
+    "file": "dusclops-cempasuchil-crown.png",
+    "sha256": "caf10572027843f29677e2749e3288c590ee556fcdf0cd9b8ab074f5580cb690"
+  },
+  {
+    "file": "dusknoir-cempasuchil-crown.png",
+    "sha256": "1f4a2e6d82e020eb68ec3a31ae1b4207a316a29efd66175d0db2bc1470db545f"
+  },
+  {
+    "file": "duskull-cempasuchil-crown.png",
+    "sha256": "7a38e82666268fabf9f769331c928d9357b8ede2a4d021715ab5fa923e945571"
+  },
+  {
+    "file": "eevee-cherry-blossoms.png",
+    "sha256": "426d30207cf59c5de1bc065af7a859bb47326b5a482dce75ed3683c6a1d6e208"
+  },
+  {
+    "file": "eevee-explorer-hat.png",
+    "sha256": "993c2f6f24e3854bb720d80667c828aba93ad9f7c293199ba60d2d6d7ee4315b"
+  },
+  {
+    "file": "eevee-flower.png",
+    "sha256": "1e552af73d3a52538d276173bc94b1c8f116623bd62f4af9f35776882a588ec0"
+  },
+  {
+    "file": "eevee-holiday-hat.png",
+    "sha256": "8fad400042f13a71701d12b396abc915cd32bf3a2eb286ec2773dd9dcc8cc77f"
+  },
+  {
+    "file": "eevee-moon-crown.png",
+    "sha256": "8e9ba4cfd8aac09e63329dbd47998f2e39358d6996ab2fee6b4e3e0967206c8e"
+  },
+  {
+    "file": "eevee-red-party-hat.png",
+    "sha256": "fbacc71d42061d67711050f06f85354e4781ea2a2fb64ee56aef5e7a2e8c41dd"
+  },
+  {
+    "file": "eevee-sun-crown.png",
+    "sha256": "fecb05ebcb26bb6203b02d7d1ce80565714d3f5f65ffc07b8d4ed26e0520e84c"
+  },
+  {
+    "file": "electabuzz-spark-bracelet.png",
+    "sha256": "77d23649c08bc0a17d4e741d6c364575f947ca2cece420ed28d0f3c4cc07d558"
+  },
+  {
+    "file": "electivire-spark-bracelet.png",
+    "sha256": "b45f92a9cc8f8ae9cb397d8043d242c6446adfcfb310197b4915cc69f1f70260"
+  },
+  {
+    "file": "elekid-spark-bracelet.png",
+    "sha256": "e8396b4f7592a466374862dbaef543bbd24ddb158e0172d919f17d3c1bd01712"
+  },
+  {
+    "file": "espeon-cherry-blossoms.png",
+    "sha256": "4b8b98e09d9a75b8e8160c4ddc12ac9a1731cfcdb6bd1989a0b18a875cd7e92f"
+  },
+  {
+    "file": "espeon-day-scarf.png",
+    "sha256": "f4b5cb0c09788a50fac0dd6694902bdce7b0ba644abfb847e39502f1ce67de25"
+  },
+  {
+    "file": "espeon-explorer-hat.png",
+    "sha256": "8c2a3436c0a08111c7e7fca9af06d187c76cedf5d48f6d374a2e08a719be8f09"
+  },
+  {
+    "file": "espeon-flower.png",
+    "sha256": "bcf7468f00246d8419b750bddf3c3e1665099615f898bb244f25d5de05c83a01"
+  },
+  {
+    "file": "espeon-holiday-hat.png",
+    "sha256": "30420a3b3adae198640e05e8cb262a0d938885fadd9467759e5c933291f6fe91"
+  },
+  {
+    "file": "falinks-train.png",
+    "sha256": "5acdbf7ee468b3f2e102823da800ab3bb0c6b4fe31f816f4b23c3a89dd1a5844"
+  },
+  {
+    "file": "flareon-cherry-blossoms.png",
+    "sha256": "e058d6c4943e8cede7cddf515891571763a3bb618bd076d2590b7cc358d25a65"
+  },
+  {
+    "file": "flareon-explorer-hat.png",
+    "sha256": "6700ee0b4a356dd463dce55cff1e14b8e12b25a397244abf9d07e0c1b7906af2"
+  },
+  {
+    "file": "flareon-flower.png",
+    "sha256": "7016c9751289fa8f166497c3fd6577623e05f8c3b5105a15541ea45a1a3e3e8d"
+  },
+  {
+    "file": "flareon-holiday-hat.png",
+    "sha256": "4cf688ad5d95d933600f37d00f866f530154193a042e85891df2d96416ccd6cb"
+  },
+  {
+    "file": "floragato-likos-hat.png",
+    "sha256": "cf50aed84461a2c4736a0d1a93ef31ede18f0598190ee26dc9b85f6a4db06118"
+  },
+  {
+    "file": "flygon-meloetta-hat.png",
+    "sha256": "957e3450d2e203d7896c923109fe9aab95ecdbac35112ab02c8523388620f092"
+  },
+  {
+    "file": "froakie-halloween.png",
+    "sha256": "b84cde9e9710324ef3b0429bf2bdd19c7d6de119a784f3fc6801f53d8a5ab002"
+  },
+  {
+    "file": "frogadier-halloween.png",
+    "sha256": "02bddc348d675b9e698abcc8d61e1bc23228f679fa025655424783f43f50152f"
+  },
+  {
+    "file": "furfrou-dandy.png",
+    "sha256": "8ed8fcb970494d9f5e8a07506e3805d5a93980db78a101f29e46b20f368c597d"
+  },
+  {
+    "file": "furfrou-debutante.png",
+    "sha256": "71128dadd2df3e27759689104e864e75a8f8bb10e7e7f88796e07e6d6a2bc7db"
+  },
+  {
+    "file": "furfrou-diamond.png",
+    "sha256": "019e7cbd478df221db891f8a6545b956aab510ba458bde340dcff7d5bc93b910"
+  },
+  {
+    "file": "furfrou-heart.png",
+    "sha256": "6d99419dc5701c7a535d4c4d802e514af5ca21fe160576bade52002dc7ef7228"
+  },
+  {
+    "file": "furfrou-kabuki.png",
+    "sha256": "8d6771c35ff882736e5bb5922ee7cacb83a85f6c693236bfee33bc4576619de6"
+  },
+  {
+    "file": "furfrou-la-reine.png",
+    "sha256": "c9c37064e0a69a484385e4c22320571277ea840d4bc3958f33151bd54b7b0396"
+  },
+  {
+    "file": "furfrou-matron.png",
+    "sha256": "249b9e547aa9eb18af494e318f4b098682f54541abde24635b652e119e7c7c6e"
+  },
+  {
+    "file": "furfrou-pharaoh.png",
+    "sha256": "3c44e8fcb470b9fb6d287c716eb2b684261d0b894c3f5afd0c3a9984dbe4c93f"
+  },
+  {
+    "file": "furfrou-star.png",
+    "sha256": "d6d8ba4e7f08bb46ba494ce1fd82f8fc34d33c33881f84c81ce126a443ce3a63"
+  },
+  {
+    "file": "gardevoir-meloetta-hat.png",
+    "sha256": "b4a353cbfadcae870ba37351aa2d5418a176d90ab2fbda4aae0b4160ae68fb6f"
+  },
+  {
+    "file": "gengar-banette.png",
+    "sha256": "d8f96dadf93df8e8e9fa19a61e94f97d4e9f7defa5779a722bff5da345eb86bf"
+  },
+  {
+    "file": "gengar-red-party-hat.png",
+    "sha256": "6e71384111a92d70ab034c3483574b7bd335773329fd2422d384a370d27ab9be"
+  },
+  {
+    "file": "gengar-spooky-festival.png",
+    "sha256": "b989f0ff4e6adfeb38782f08fdaf9047433e84a43fe0736d07dd44f0c14f1109"
+  },
+  {
+    "file": "gengar-tricks-treats.png",
+    "sha256": "00feb8077dd5919eb83d74a5854045c7a39d64e2830bab9a4457541088758b28"
+  },
+  {
+    "file": "gimmighoul-coin.png",
+    "sha256": "32a1bd6c37dc7dd6ee1c4c0e91af04ddccac92416ad9ed5c76745328f415804d"
+  },
+  {
+    "file": "glaceon-cherry-blossoms.png",
+    "sha256": "4adf20a2c6ad9097f4c883a451da0424ab593dfeff1b5f8c1d7b9900d79f4b1a"
+  },
+  {
+    "file": "glaceon-explorer-hat.png",
+    "sha256": "c0ab73cf8cd8f342ec48a9abcf14e5ad182930ac2f30ad865efbbe12b65575ef"
+  },
+  {
+    "file": "glaceon-flower.png",
+    "sha256": "8f4599d1323b9cf557d3189406598d4360b5cfaf0bfe545e801c2496b717332b"
+  },
+  {
+    "file": "glaceon-holiday-hat.png",
+    "sha256": "ea1bbfe8af4a42d64f9cba2f4ce5403dfbf8da2fb56749bcbb2ed857828d7e12"
+  },
+  {
+    "file": "glaceon-holiday.png",
+    "sha256": "6ddf2ddecb868cb72e578d758f9e19414cbdb9349ea9692a923971f0c6a34bcc"
+  },
+  {
+    "file": "golduck-holiday-2023.png",
+    "sha256": "eb110433849d60a62e9ee248a62265769553e2c416a476be7609f5c7bc4c0391"
+  },
+  {
+    "file": "gourgeist-average.png",
+    "sha256": "6af6eeb945cb40a6b02bce4b0a7a577d637013e7e3bf59493a35b485e7310742"
+  },
+  {
+    "file": "gourgeist-large.png",
+    "sha256": "bd6411be8ea0c9483b0607d21807f89e41ac5de08040521cce44f1d96858db32"
+  },
+  {
+    "file": "gourgeist-small.png",
+    "sha256": "cb09ce7dd9613c77ed5edf6fa5905a9c669f70236d99bcfafb6477ca469805ef"
+  },
+  {
+    "file": "gourgeist-super.png",
+    "sha256": "36720a092160722e0ce16fca3dd101cc5c92e142def27337323074deb3657d26"
+  },
+  {
+    "file": "greninja-halloween.png",
+    "sha256": "cdd81514061c713a46e4a80ad4f3fafbd57e52c4a5df2ba74cefb8899d4d09f7"
+  },
+  {
+    "file": "grimer-party-hat.png",
+    "sha256": "851095ce574078f6c80f29ec9c4f3f7c6c70a47f4c9a70a78f8599371742fc00"
+  },
+  {
+    "file": "happiny-flower.png",
+    "sha256": "486ad95a8ab452752ae171301182e9f39f3feeaa9aaed9b3479102a4a3ffe920"
+  },
+  {
+    "file": "home-1-shiny.png",
+    "sha256": "0fa83268f0f13c6bccd9c9ab62ac04bf4fa9b6ad2b0a2921e8be5658252bb27c"
+  },
+  {
+    "file": "home-1.png",
+    "sha256": "c7cb8e9545e13ab399506fb5fb1f68112be9fff2b68d0ac3ff3b1f531b9c5c38"
+  },
+  {
+    "file": "home-129-shiny.png",
+    "sha256": "ad34e292ab035f06baeb2f04355dfc47fdef1c4a7a2090ba9d1daba16e04d38e"
+  },
+  {
+    "file": "home-129.png",
+    "sha256": "366c709d6446ad0bdd8151b6b448030b6ec6872ccfd327d8bb1a47cb1c6b29b8"
+  },
+  {
+    "file": "home-131-shiny.png",
+    "sha256": "167b9306a22df86e98c3b0f6b5514c86255c04249670e2f3d524c31557fe1c99"
+  },
+  {
+    "file": "home-131.png",
+    "sha256": "9aa02ff66c5fed806a8ca74f7374d33cc5cb95a47a709156c756611d24598550"
+  },
+  {
+    "file": "home-133-shiny.png",
+    "sha256": "7438a3aaaf03f3ac75c6654e57eaaa1ed05320b88b089f23b8a23ca1d1f84188"
+  },
+  {
+    "file": "home-133.png",
+    "sha256": "78febefb2aba3614b96528455e9c90242cc025d0eb392ee3a43256671962655f"
+  },
+  {
+    "file": "home-143-shiny.png",
+    "sha256": "b7faa18a78cf551b95a7eadae63a03773011ffe75eb3def0a9030a7bd46fb6ee"
+  },
+  {
+    "file": "home-143.png",
+    "sha256": "40ae73f6fd804026ae8e6a61e931cfd5c8b4594d81e492e9dbf445c8d2e497eb"
+  },
+  {
+    "file": "home-150-shiny.png",
+    "sha256": "cd6f623651c914847244af565b552b848c8595f2dd3f09ba40f83296e23e0f94"
+  },
+  {
+    "file": "home-150.png",
+    "sha256": "e9dc9acae7c82b705fb06460b0a51c7c28ec2bf8ef4854482b0befbb73f5c97c"
+  },
+  {
+    "file": "home-175-shiny.png",
+    "sha256": "b3b24dac3c2e0cae0a34026bd35ce8ce18ef5bf8b1f23f37d6f8e99a7dfb55c6"
+  },
+  {
+    "file": "home-175.png",
+    "sha256": "31366852e67c99c4f479c8f9d051dba19f8ea298f4001c592daabcbb9e6c6af0"
+  },
+  {
+    "file": "home-201-shiny.png",
+    "sha256": "ae83a62af7ff5ee55899d6dc1f81e3d3cc142dc931c73e6f7ee8cacc3df9516d"
+  },
+  {
+    "file": "home-201.png",
+    "sha256": "379f700b3b8f32685f569a90ccc945741b3000aaa5509e35ea6bd14ac08b70c8"
+  },
+  {
+    "file": "home-25-shiny.png",
+    "sha256": "a13a878c89c78a0eba119f76033041178e7f8ef046a950f1a797eb4a0fe8527b"
+  },
+  {
+    "file": "home-25.png",
+    "sha256": "6a9305fbd6f02345153567f4142faf019380b1a1c839cfa3f2349cc36d536a40"
+  },
+  {
+    "file": "home-280-shiny.png",
+    "sha256": "7c29ca10fcd6341b8082d8756d8c93c227d260be9f61952d22cad4dee28858ed"
+  },
+  {
+    "file": "home-280.png",
+    "sha256": "e27328a4aae1a66e40dadd6fc0e3423129ca67f53e3515c6f87abacb2b75e9ee"
+  },
+  {
+    "file": "home-302-shiny.png",
+    "sha256": "b4eac8c3d5c993cf592b92e79ffed65daec2d2fbff6c3cc1ef83733a6f784eab"
+  },
+  {
+    "file": "home-302.png",
+    "sha256": "cf65ad6dbc33ba199d236d6a745c5d647239e058a0a619881734c2f5da202e47"
+  },
+  {
+    "file": "home-384-shiny.png",
+    "sha256": "2071cb0759cc320c963c68531df991c2b75d7c82742a5d4db7ed43af791216fb"
+  },
+  {
+    "file": "home-384.png",
+    "sha256": "d76391ef2e636f97285d9bff03574f0973ffe5e2d0b5ba819129dd887630fc58"
+  },
+  {
+    "file": "home-39-shiny.png",
+    "sha256": "719486298417cb98b2cfbfcad76275d1f46cfa0dafbd1bddb5775a9c0574f4cc"
+  },
+  {
+    "file": "home-39.png",
+    "sha256": "8514f906e321d304f785429716983a83c40d7a1cd39a10fcb324ba146816cd04"
+  },
+  {
+    "file": "home-4-shiny.png",
+    "sha256": "934ecb98b47345393bbe6e51ce82a3f0d140bc77b9aaed02c674598e87ef6bdd"
+  },
+  {
+    "file": "home-4.png",
+    "sha256": "c6d932596f03ef73dec2ba27f728e085db63f27b9f9617d60b3e7690061eee93"
+  },
+  {
+    "file": "home-479-shiny.png",
+    "sha256": "165319783836ef70dfb982b9f1c5ea933760701a64b82c45f96c6cde28486d04"
+  },
+  {
+    "file": "home-479.png",
+    "sha256": "26c7ffc15425f4ba1ffe927c934dd0057ec5a6b0d57152c7c3f44f9b2c15f376"
+  },
+  {
+    "file": "home-54-shiny.png",
+    "sha256": "7a44ad6c356a4630d2e2dedd84058198c7728e60ac4c95ab04cde8227b905e32"
+  },
+  {
+    "file": "home-54.png",
+    "sha256": "89669dd7f33c87dce7dd58f4f11dfbc4e55a14cb51c9b540a4ca9eccb92e1e9b"
+  },
+  {
+    "file": "home-7-shiny.png",
+    "sha256": "0f55993dca551f8daf2926c50d546fd3dace27657760b1b135eabde4e2e67855"
+  },
+  {
+    "file": "home-7.png",
+    "sha256": "d63efd7617e6fba9d2c9505c69891da692fda30999b3edc79ca0fecc18d19480"
+  },
+  {
+    "file": "home-757-shiny.png",
+    "sha256": "2de6116e05b68f6d812f26ab2db5781c4a15d7abfc0586755d4a6ce83a8dd2ca"
+  },
+  {
+    "file": "home-757.png",
+    "sha256": "fc9dea8b9bdd8ef65b457d5a76204f7f8b283fbc1e609c319362206b119ecbab"
+  },
+  {
+    "file": "home-872-shiny.png",
+    "sha256": "7001b0b6154faf83d7df76d72016041112e64be2de8e661a88f5b2eea2719df3"
+  },
+  {
+    "file": "home-872.png",
+    "sha256": "c088094a5be6a2f805680f733792fce717beb58cd36e95c42de6676e827c8736"
+  },
+  {
+    "file": "home-94-shiny.png",
+    "sha256": "402e400c0e49515626704bf08ff043506d2b786b258754775dd652d6b8f0ce93"
+  },
+  {
+    "file": "home-94.png",
+    "sha256": "33c68a1f380d80d89c4ea1505a7d6d2a10358665a18acb3fd3e069a091659744"
+  },
+  {
+    "file": "hoothoot-new-year-hat.png",
+    "sha256": "9e14d1bb52b7abc1839de1afa73895568f8b7e420c3b54917195ca96a9bc95da"
+  },
+  {
+    "file": "icons.svg",
+    "sha256": "0e0c440950a8f089bb909e5dcebeb00dcf20dd401ae3f2fbc7463af7ab0d6846"
+  },
+  {
+    "file": "ivysaur-red-party-hat.png",
+    "sha256": "64036286022f1390604993176620af6174482aee69e17a374c12d73bad07489e"
+  },
+  {
+    "file": "jigglypuff-ribbon.png",
+    "sha256": "a62d0e0030720508536c5c98b718954286f9f7e42cc90076eed15f3d58718631"
+  },
+  {
+    "file": "jolteon-cherry-blossoms.png",
+    "sha256": "68a3427e4a3efe5dd1319b051bcce3e44083ad8ae782758ffbd4bb7d8d481ef7"
+  },
+  {
+    "file": "jolteon-explorer-hat.png",
+    "sha256": "0ed32d87c8fa94fe9c954c4c27f49cd53c7b9daeb312e5f20b6acc3f12a47b40"
+  },
+  {
+    "file": "jolteon-flower.png",
+    "sha256": "679d3ef2d461b8b05bf7dbd6505b927677cf04b0d47ef9e7a49ea9a8893f983d"
+  },
+  {
+    "file": "jolteon-holiday-hat.png",
+    "sha256": "c2989058b30650f7051d5f679a4612996847137c99a50b6ed68c9ac1853501d4"
+  },
+  {
+    "file": "kirlia-bowler-hat.png",
+    "sha256": "08cce856e58a7879549278ec54a3a83f01f4fb2d01ffe546c8fc646759e8a51f"
+  },
+  {
+    "file": "lapras-blanche-bow.png",
+    "sha256": "22499ee188c2d2250029924ff0ce9fa663205f923e7b75a4ac254d400433aa52"
+  },
+  {
+    "file": "lapras-scarf.png",
+    "sha256": "9210cbac3440dc90465af12f796790c9c803d759d2f94ad03fdb65c26e9f3459"
+  },
+  {
+    "file": "leafeon-cherry-blossoms.png",
+    "sha256": "7d916b8bf581e435a194009439badf46c51e05d32f99f0d94a7cca5c73a468cf"
+  },
+  {
+    "file": "leafeon-explorer-hat.png",
+    "sha256": "b55c1acc1cb645a3ba55f2fa92cfe1fe469f4ba44651a057e2136473a7ad018f"
+  },
+  {
+    "file": "leafeon-flower.png",
+    "sha256": "3d3476b354f122a2e77e2aa09b4b1f9dfd77d3e44bcbfa53808e5cbd9a76b6e8"
+  },
+  {
+    "file": "leafeon-holiday-hat.png",
+    "sha256": "dd4fe8868d71c84e2f7c9621908f1386917df7d7f6ae862e3c42981a9071a525"
+  },
+  {
+    "file": "lopunny-flower.png",
+    "sha256": "b3cf5ffbb0baa6d44046510eceb1f2c6c8b3723cd4dd68ba26ac0b3b5599c1a5"
+  },
+  {
+    "file": "marowak-cempasuchil-crown.png",
+    "sha256": "e0ca34dfddf0cc4024f665564c3be79771714ed7cb123503ef116db13bbd1e73"
+  },
+  {
+    "file": "mewtwo-armored.png",
+    "sha256": "82e4c00dd3c919ad9a9ef0cb8f5f5ec5ea005754c0b01629aea44c3f8beb4146"
+  },
+  {
+    "file": "minccino-fashion.png",
+    "sha256": "710f2d0855ff517f1cd0efd500c2173c7f570dd0a48b4ee573fecb4252fda583"
+  },
+  {
+    "file": "muk-party-hat.png",
+    "sha256": "63d0f1c8fdabf99ae5ffe6955708379dd7d626f05f988122d5794b0a23956124"
+  },
+  {
+    "file": "nidoking-crown.png",
+    "sha256": "f53697268ec64e75473fe94f3b82dd2e2ce767cce8dd2db15f22860e5bf1a879"
+  },
+  {
+    "file": "nidoqueen-crown.png",
+    "sha256": "0640a41baf3d1b33460fb6aa2c76915a01b95c1800ce108d4bcaed25f9cd3345"
+  },
+  {
+    "file": "nidorino-red-party-hat.png",
+    "sha256": "f5b539b98d656dc0b8bb9baef04c7d120b80cbc3360f5ed6af172658571fb7ab"
+  },
+  {
+    "file": "ninetales-spooky-festival.png",
+    "sha256": "f698047f6656a4fb87f45e446d97f23828473a2ff99231c5430ea4d50db6ca67"
+  },
+  {
+    "file": "noctowl-new-year-hat.png",
+    "sha256": "60499a66eefd2c837ac714f92648e841f4d49c04d0ec7ae5d32afa4491ef9af5"
+  },
+  {
+    "file": "oricorio-baile.png",
+    "sha256": "92416825b4303f974657d9404c3ee0d5f6b00f362a2acc26cb2e8a109a624bdb"
+  },
+  {
+    "file": "oricorio-pau.png",
+    "sha256": "62c66d86dfd9827147e888a1a26eb1d977f6aac340fada2a86375ee2cd6b2528"
+  },
+  {
+    "file": "oricorio-pom-pom.png",
+    "sha256": "89d7de927b9f450453d4b4e53cd202bbb95a4756c96e66bc2dc2851ed56a3b1d"
+  },
+  {
+    "file": "oricorio-sensu.png",
+    "sha256": "277f84cb96a32af06f1d02cb8e8bdb194c3edbb050798c29276e1e16c778dc92"
+  },
+  {
+    "file": "pichu-beanie.png",
+    "sha256": "a5aeb808fb43bdb256876339a0382f660ebb24c3c243c8b55ecf5e478bd02893"
+  },
+  {
+    "file": "pichu-cap.png",
+    "sha256": "760b4169dbbb463b90133744d055f65a8dcc41add976b65d21cb14b4df02016e"
+  },
+  {
+    "file": "pichu-cherry-blossoms.png",
+    "sha256": "d6c8b8f5490234fe9084eca430239e807cbe4012dc9b9da78c24f69b3680cf38"
+  },
+  {
+    "file": "pichu-flower.png",
+    "sha256": "c3ad27f16998a15277958a3ea24bc95bf38938f245a4e2e498f95689c1243bb7"
+  },
+  {
+    "file": "pichu-new-year-hat.png",
+    "sha256": "40d27a2cd179f86a3e6b12a64b05b6d2eff525bf9954b4f6f0be31aa42085a5e"
+  },
+  {
+    "file": "pichu-party-hat.png",
+    "sha256": "63f194b79078cc667ed01df5c2d54bb4b133ad0e8d1aea7301344169b9fd7c66"
+  },
+  {
+    "file": "pichu-santa.png",
+    "sha256": "90dc492664eeb921d0dd0355c00416224ac353fb0d07fa1dcab948ba8e085981"
+  },
+  {
+    "file": "pichu-summer.png",
+    "sha256": "11a7b6fa8eeea91d2b0ef1dfe7d14251f1e8d1101cdbe41805b77b992f5cd008"
+  },
+  {
+    "file": "pichu-witch.png",
+    "sha256": "70ce58c7aae074ad4bd19eee3ddf538b0eda8e50a8faf5dd9efd28e1f9f56c3b"
+  },
+  {
+    "file": "pikachu-adventure-hat.png",
+    "sha256": "fd896e77901762f1fb6a4af12c2282e00e82f6f79cf3622bc4ecb8fcef68e47b"
+  },
+  {
+    "file": "pikachu-akari-kerchief.png",
+    "sha256": "cd727d2f3dfe3bad2f647dea00a34a70a6c1a7b978533ecf9bc7ccc7dea8f83c"
+  },
+  {
+    "file": "pikachu-amethyst-crown.png",
+    "sha256": "489c4f6592b2e0769416220e6ce923cd2864abad632510f414fa2acc70d67a23"
+  },
+  {
+    "file": "pikachu-aquamarine-crown.png",
+    "sha256": "54baf1daa0aade9ca3a2751324ed6c7b561b8e6a0f98d09c44f6def6bf97cfc3"
+  },
+  {
+    "file": "pikachu-balloon4.png",
+    "sha256": "80ab275eb00e20d530d4dc5ac0d5ca9161894dcb8a3ce37415af588a8b9c9e2d"
+  },
+  {
+    "file": "pikachu-balloon5.png",
+    "sha256": "66701244ef3faa21a115b9e6e19975c9fb2b80d61bc348a7c178b16a7d827a59"
+  },
+  {
+    "file": "pikachu-baseball-shirt.png",
+    "sha256": "3bb2caf0ae6b92b8d49fdc6be551b70e9389c18841d8ef78897dd9aac3f9426a"
+  },
+  {
+    "file": "pikachu-batik-shirt.png",
+    "sha256": "24a174442d4787eb533761a56be87dbd4b497ba2037cc695a6e464d77e48fce7"
+  },
+  {
+    "file": "pikachu-beanie.png",
+    "sha256": "d92baee1ea8d818c4c495c80616cde845f0e213296429b50b13a631bbd4d3ec6"
+  },
+  {
+    "file": "pikachu-black-red-balloons.png",
+    "sha256": "aad7897ae606a872b39a0b78371a6a38cccb8f9f3d6a2c5882e7e6ff909c739d"
+  },
+  {
+    "file": "pikachu-brendan-bandana.png",
+    "sha256": "f941274ef71da8e56340cebe88346e9a6c37476dd0779d882170a07476b7a386"
+  },
+  {
+    "file": "pikachu-cake.png",
+    "sha256": "173380fe2e5e6dba9da1fcdf24c6e390d1ca51938c9a168d05cfe9820057199b"
+  },
+  {
+    "file": "pikachu-calem-hat.png",
+    "sha256": "4c1d637b173528edaad7de2ddf1a1792f939c36ad7fd312aad10d1e0556425bb"
+  },
+  {
+    "file": "pikachu-cap.png",
+    "sha256": "1139a78e64212445b67754b031de568f2e83d91f9f8a7337787a800863a118b4"
+  },
+  {
+    "file": "pikachu-captain.png",
+    "sha256": "051cd62fa4d6fea0f432dd0b394bc76ad94813a116a8933d0d8ec10435f20227"
+  },
+  {
+    "file": "pikachu-charizard-hat.png",
+    "sha256": "8b1ee3ceb2b86dc0f84a1aad3415deda685f579427cca4fcaff38d97cfc0ddd4"
+  },
+  {
+    "file": "pikachu-cherry-blossoms.png",
+    "sha256": "9bce68e7740749d2733b7c33ea84444f0044b71cb8cd96b5f47c085774fc7bfb"
+  },
+  {
+    "file": "pikachu-clone.png",
+    "sha256": "fcd196efa3bbeac578cfe0629eb6d13ed415f308fb441073946c87c69f1a1b6a"
+  },
+  {
+    "file": "pikachu-dapper-blue.png",
+    "sha256": "f38758b2ffd1d68cb85825ec46b5152f4a9fa479382f057f82a45cb3c7ad6d3b"
+  },
+  {
+    "file": "pikachu-dapper-red.png",
+    "sha256": "ffcbb41d702869eb5ddd2efb8260014315d623d66344085ce342b59ba1c237f5"
+  },
+  {
+    "file": "pikachu-dapper-yellow.png",
+    "sha256": "417aacf7256521fc260afbc124ea7a6b4d7b63ad164093e77ea91d382790d9e1"
+  },
+  {
+    "file": "pikachu-dawn-hat.png",
+    "sha256": "559c257881a7bdf3e25dd7ae220924de77500a45f8051745444a9912e54a9cc9"
+  },
+  {
+    "file": "pikachu-detective.png",
+    "sha256": "ee572ae0527d003a36b2532d5b5925f73ffe34522cd1377a03dac57f727d28b3"
+  },
+  {
+    "file": "pikachu-ethan-hat.png",
+    "sha256": "fbe9ce0f686cd623608f684f0e4ab95cdb2fc70f42033c19beef27a6c13e5f49"
+  },
+  {
+    "file": "pikachu-flower-hat.png",
+    "sha256": "6b90b3955f5de018cd9679eee6c502fa3c5588c6f7c4f3800c00bb93b8c52f58"
+  },
+  {
+    "file": "pikachu-flower.png",
+    "sha256": "3f6cec02d3ea76c2b8d4526030bdc150fea8027b34d513b2c614aadda41ad073"
+  },
+  {
+    "file": "pikachu-formal-blue.png",
+    "sha256": "7080682bb136822e073ac75b9815899f99ff25684ca048bef9017881ed9eb1f1"
+  },
+  {
+    "file": "pikachu-formal-red.png",
+    "sha256": "be9ea9bb95f667c2a3d43f0d188fe591f684ed0784f6f489104e29b3428b5cea"
+  },
+  {
+    "file": "pikachu-formal-yellow.png",
+    "sha256": "daf58cc732624c015ddbfe8c1eb9b3eb3f204a7cd96f3870d3aba3e864433186"
+  },
+  {
+    "file": "pikachu-gracidea.png",
+    "sha256": "44077e9c3f81b1bd75f9c6970bc66be952c02c74aca4fdb0868ea0572e58b9eb"
+  },
+  {
+    "file": "pikachu-green-balloons.png",
+    "sha256": "9d16119083dc4a4ce8d649b2e89d1217138ea26ac8bb474aee0f3ebe53a81937"
+  },
+  {
+    "file": "pikachu-green-tshirt.png",
+    "sha256": "5df6ceb49c27075659a72e8a4f4ca02af51965daf754a95a1aae6c148512c019"
+  },
+  {
+    "file": "pikachu-halloween-mischief.png",
+    "sha256": "b058fa28a81698943288ca501a2b957b6900ab791b894eb30368622a9ed5ab08"
+  },
+  {
+    "file": "pikachu-hilbert-hat.png",
+    "sha256": "44f1b90c3542d80a1a902302597ae4b2d99700c9e61d1a6c06cd78ab4363f3ed"
+  },
+  {
+    "file": "pikachu-hilda-hat.png",
+    "sha256": "7d15bf731ed0a813589157279470df0df87d0ff2093c000fcfe48fda99258f51"
+  },
+  {
+    "file": "pikachu-holiday-2023.png",
+    "sha256": "d0dca76792bd0673e98455dc6e8dbf2d153d9587a0b0a50a5300937bb5078898"
+  },
+  {
+    "file": "pikachu-holiday.png",
+    "sha256": "bb8558ad7734213ab1234b98edbe21e8dc6288ec39a9f2d78ce951a52b3f23b6"
+  },
+  {
+    "file": "pikachu-indonesia.png",
+    "sha256": "8982d157b3bd070c72dad6ffa54b3cb47c5bf858231183e17cfb59104d014b45"
+  },
+  {
+    "file": "pikachu-kariyushi.png",
+    "sha256": "7ffd2b05eccfe5414d9145322de9e87875f9cb12b945ac6abb412b61f4db0f4a"
+  },
+  {
+    "file": "pikachu-kurta.png",
+    "sha256": "cb10b344e2a829f274175439b060639e9ce5972ff1760933409219ac43ff99f5"
+  },
+  {
+    "file": "pikachu-leaf-hat.png",
+    "sha256": "3cf9b226cef3e419a5cfb51928825cef2436eaaf02efe3ed319b77157c2fccb1"
+  },
+  {
+    "file": "pikachu-libre.png",
+    "sha256": "e5c6a03eb70fdfe3a655c78c6feae0be387df8b9b97ccfb5c40859f0735dff82"
+  },
+  {
+    "file": "pikachu-lucario-hat.png",
+    "sha256": "1da63450de5e3dfaff3f2a22c99e7b73933306f14f667c2adfd4cdb096658757"
+  },
+  {
+    "file": "pikachu-lucas-hat.png",
+    "sha256": "b1401602a058ee75bd5d3f498b59565c0e5b4fb751b6b828697dd20c51166da1"
+  },
+  {
+    "file": "pikachu-lyra-hat.png",
+    "sha256": "39104f1027a9a4a89211edec75e23ca72d79df1df83d2e76368265c97a5070ac"
+  },
+  {
+    "file": "pikachu-malachite-crown.png",
+    "sha256": "dca28aaaf13ddbe5a0e36add6d66622aa14ab448a3e412927ec85511b81d9ba7"
+  },
+  {
+    "file": "pikachu-may-bow.png",
+    "sha256": "1afd914651a2c88f5c64e75376b9937be1302290991bd2c470dd9584a7f2378e"
+  },
+  {
+    "file": "pikachu-meloetta-hat.png",
+    "sha256": "88ceca4d72c196cea3d8bda3ca1348661e161601e1cbebc43f67011b9c4b4e56"
+  },
+  {
+    "file": "pikachu-mimikyu.png",
+    "sha256": "a3732d4237ee28aea56139acf0e3fd1817cb774abfe00b715812dcb398f187fd"
+  },
+  {
+    "file": "pikachu-moon-crown.png",
+    "sha256": "acca4fb49072e6d3b5c0cefce0dab98f2ffacabb53aea984cb989b44367e79fd"
+  },
+  {
+    "file": "pikachu-nate-visor.png",
+    "sha256": "2f36f00049ef7616477073c2e20bd818d04e583c49ad160c56d18f8ad8454cc9"
+  },
+  {
+    "file": "pikachu-new-year-hat.png",
+    "sha256": "540c402af92e562abae6840f7b763f8454354397c5db677ec21fd7f95075f86d"
+  },
+  {
+    "file": "pikachu-okinawa-balloon.png",
+    "sha256": "4bb1fd8b9e799d6004f1fd1115c00cf197d39d7a6beb10a0a31ef648d8654122"
+  },
+  {
+    "file": "pikachu-orange-balloons.png",
+    "sha256": "48305d371f49abfafe4e48fb46ef2680bd665db00ca419c47fbec9e5db3a8ef1"
+  },
+  {
+    "file": "pikachu-party-hat.png",
+    "sha256": "c03aa23460125148eea2e072cea6ffa0ba135ccacf3a15596cd04bd06dcbf55d"
+  },
+  {
+    "file": "pikachu-party-top-hat.png",
+    "sha256": "ca529f3a5db95f5b931855dae38a12aa99cad8f42e4979064d9c69a975ac6f81"
+  },
+  {
+    "file": "pikachu-phd.png",
+    "sha256": "566d2db61000c6b37837d76e3a248204f71c4211aba97829aab2b9b0b464e122"
+  },
+  {
+    "file": "pikachu-popstar.png",
+    "sha256": "a03b138885dddfe81b29461578f428dcd8baef7949e5cb546c9964d9ac8416e3"
+  },
+  {
+    "file": "pikachu-purple-balloons.png",
+    "sha256": "e4b50ac7b8cedd3918f1da63d8ff5049ffa03dafc3981faf4f0f18a4fb036485"
+  },
+  {
+    "file": "pikachu-purple-tshirt.png",
+    "sha256": "fde3785bad8cb0cf100cdc193e111c7ad41ff003e0a73db8a78a7f9352da7cd3"
+  },
+  {
+    "file": "pikachu-pyrite-crown.png",
+    "sha256": "4eb937d9a17df10fdce3bd44e646ac263ccb27d5457f2bbb06b4f0752f9b36d5"
+  },
+  {
+    "file": "pikachu-quartz-crown.png",
+    "sha256": "f042f7a03c2f752b2b38d30cd3d9c8510a035468c4df5445676d247503cc2f31"
+  },
+  {
+    "file": "pikachu-rayquaza-hat.png",
+    "sha256": "2924ecacbd086b81d86ccd7d3b5a9ad3f1908abe2df088c9bba8a42b10b1f6a5"
+  },
+  {
+    "file": "pikachu-red-hat.png",
+    "sha256": "e194894590efe30eb695d5244f10a33356d6f45683ff178c6ccff6b677fe435b"
+  },
+  {
+    "file": "pikachu-red-party-hat.png",
+    "sha256": "d2287c81853276bcaa57c3302aaab6fdf5b31429180700573c23b6f69ac35cec"
+  },
+  {
+    "file": "pikachu-rei-cap.png",
+    "sha256": "9a681b0cd1b2ae39d51047a6c375ba7f5ed5b4ebea3e174df1d57d171359227e"
+  },
+  {
+    "file": "pikachu-rockstar.png",
+    "sha256": "b499af91376474bd9ec2d40f2d13ccc6ede79df65d2fa537f25cae4bc56c38be"
+  },
+  {
+    "file": "pikachu-rosa-visor.png",
+    "sha256": "1409cd40f802f0808ea93e96205b86abd57659dbeba83f70f29a88ec2efc1a8f"
+  },
+  {
+    "file": "pikachu-safari-hat.png",
+    "sha256": "4a0d81deeebc6035dfad25c97da14880e2f3cadda786d1e8d76a9d103943d8da"
+  },
+  {
+    "file": "pikachu-santa.png",
+    "sha256": "91029c21de5fa8f4cd8f6694322cc150d9eaf2ac312629dd8fff0cf2966af63b"
+  },
+  {
+    "file": "pikachu-saree.png",
+    "sha256": "c1c9bd4c94fdaf4ba4682d93ef8fed0d11041b0d6f577a2e6eb84fc8ac7110dd"
+  },
+  {
+    "file": "pikachu-serena-hat.png",
+    "sha256": "fd4806939d51dc4814d27fe150425e019e0d28af0f00d1d6b6aa17081566bbc2"
+  },
+  {
+    "file": "pikachu-shaymin.png",
+    "sha256": "e4c863bd4bf2081d226e2330dc2d7d40b90c9ba1853f66e2a2a2f0a3ecc2e1c9"
+  },
+  {
+    "file": "pikachu-straw-hat.png",
+    "sha256": "043a07e7931fe68d84e7f1de0989428c144201a2734921deda87596e390ff2bc"
+  },
+  {
+    "file": "pikachu-summer.png",
+    "sha256": "b3f87a18dbda0c89b58dcf7face6c8d7a5d762753a2dbf156ab1a96beff3a68b"
+  },
+  {
+    "file": "pikachu-sun-crown.png",
+    "sha256": "e8a5133e2d2b75a98b87c8e4ef4e6005a98e45343ec99b7dbf732fef1ddd5900"
+  },
+  {
+    "file": "pikachu-tcg.png",
+    "sha256": "c8e4a836d53aa47305cbd8d5732ab4df52403156d174f1836ddcfe2a8725e673"
+  },
+  {
+    "file": "pikachu-thunderbolt-cap.png",
+    "sha256": "e06f053fd9977d3dbd9037fdc9fdbbe32c36b438e73b7250a07a7cd788822219"
+  },
+  {
+    "file": "pikachu-tricks-treats.png",
+    "sha256": "c8d30b47ad8e8eb8a1c718f39f419c9549c55b720cb13d65ca2dad59be7e78ab"
+  },
+  {
+    "file": "pikachu-umbreon-hat.png",
+    "sha256": "cf7b8c41861a5259c9aca6f85079d3140b2de4228565a82d333109750035fdcc"
+  },
+  {
+    "file": "pikachu-witch.png",
+    "sha256": "8e0ed30a163807274a6b825b6b69682df7e3dd28bed8bd047aad8bb109c81493"
+  },
+  {
+    "file": "pikachu-world-cap.png",
+    "sha256": "22cc7b61c039bd853fd996d07f38560bf3ea7f9c213f36d3357201c21744e52b"
+  },
+  {
+    "file": "pikachu-world-champs-2022.png",
+    "sha256": "6d5f1ec61c41d90db65e3b63bbc432a1dd2fa0a2b965bc2d6e0ae7df430dc7d0"
+  },
+  {
+    "file": "pikachu-world-champs-2023.png",
+    "sha256": "215923094ebe33ea981231165ec626afcd961a71669216a6c7f6b3f986d4f961"
+  },
+  {
+    "file": "pikachu-world-champs-2024.png",
+    "sha256": "550f897a615d0611f7301e2f0aa804ddb8ec39676ea61b6b354c4859ccdf11c2"
+  },
+  {
+    "file": "pikachu-world-champs-2025.png",
+    "sha256": "1dbc3b907152916f84bb159928b34b54dd273e9e512ac6a054c28ceb07aed630"
+  },
+  {
+    "file": "piplup-dawn-hat.png",
+    "sha256": "39d1e14f03576a425cebcad4f9e337506c50f42501ac0578c9a19e96bf2029f6"
+  },
+  {
+    "file": "piplup-halloween-mischief.png",
+    "sha256": "d7702de602ef2410c3e66d849de242c4fd5a150e9e609784fce792f9c341fa46"
+  },
+  {
+    "file": "piplup-lucas-hat.png",
+    "sha256": "5c6e8783731dff3c7dcbce9212e7dc311b4f5490757963cc6353ef267f6f5cf3"
+  },
+  {
+    "file": "pokemonGoSearchSyntax.js",
+    "sha256": "d423885f6c4c2169c43a56a51ded80e0f69334090a18051647f0210a7a6813d2"
+  },
+  {
+    "file": "ponyta-candela-necklace.png",
+    "sha256": "5445c6f9cc6ad97e5fbe6718d1cac946b692cd98bb2ed36a5469cda98ec106b3"
+  },
+  {
+    "file": "ponyta-galarian-meloetta-hat.png",
+    "sha256": "190f5a3695db52a13bbc44f5b7fdae835b20f2d636f03c6f160f5648be897e18"
+  },
+  {
+    "file": "psyduck-concierge.png",
+    "sha256": "3ba69dd1fd4689323460f78fcd2263fc898893e4ad97967d7d79a6b7ca84a845"
+  },
+  {
+    "file": "psyduck-holiday-2023.png",
+    "sha256": "a82e6bcb7665a6564b355127c574d0ccd7b7db7b138d7df90d5e7857de02f206"
+  },
+  {
+    "file": "pumpkaboo-average.png",
+    "sha256": "a5c7d54a500d6d1bc7c9f90725b442262a4b4839056261db5832e66ee6b21782"
+  },
+  {
+    "file": "pumpkaboo-large.png",
+    "sha256": "cc26b3865de10b039b13cee85b1dcb1a1b1dd114d384e340fd7d6dd3b60312f4"
+  },
+  {
+    "file": "pumpkaboo-small.png",
+    "sha256": "a738f31f9a176f364411c591a560f29862eab47d6ae829050450e11e0fbb62b0"
+  },
+  {
+    "file": "pumpkaboo-super.png",
+    "sha256": "5dfc7f84a48f9f3c7d94ae84a125c6a6acc47c90a8c4d5a4fad673f03ecb44fb"
+  },
+  {
+    "file": "quagsire-beanie.png",
+    "sha256": "8e87b1a0e92ea9ee6a4eecb4b4840f0c26698f8ed8473559eaf21feda2dd786f"
+  },
+  {
+    "file": "raichu-beanie.png",
+    "sha256": "faf547ad04a94daa1bcb915962d43720919c00c65e4c61f37019a7574df3f105"
+  },
+  {
+    "file": "raichu-cap.png",
+    "sha256": "716653b57b2b1b295e7faff40c04a971b412cf759275efe32121f53ee9adb7eb"
+  },
+  {
+    "file": "raichu-cherry-blossoms.png",
+    "sha256": "9184755b5849e5f9825ebd822bff291b42685ade5f7f90bc509ebfad98124076"
+  },
+  {
+    "file": "raichu-detective.png",
+    "sha256": "66b8d3974c70e800586e2c1bb6b8da1be9f7ae86c9d97769defa916c395f7281"
+  },
+  {
+    "file": "raichu-flower.png",
+    "sha256": "3cb1acef9df52528ff0f3165481a00678015270efab3b614509dc36303366917"
+  },
+  {
+    "file": "raichu-holiday-2023.png",
+    "sha256": "8d57cbf0b8870df4b66f90a938dd7354694a4fa2e2483f21b0bb439b1e5c0070"
+  },
+  {
+    "file": "raichu-new-year-hat.png",
+    "sha256": "ef8820538010bebd1a4eb3d1cff08053b9967c43b9c7c93f8fe623c1bf7ee7ae"
+  },
+  {
+    "file": "raichu-party-hat.png",
+    "sha256": "9a757ba0ecc08506e1bcf801ed62ec34acaf06a9d245a238520fab49c30aa06a"
+  },
+  {
+    "file": "raichu-santa.png",
+    "sha256": "fd6ceebd822993665943823eb2faba1e2833e078e4aa26d6fca23d0eabf0838e"
+  },
+  {
+    "file": "raichu-summer.png",
+    "sha256": "f7a8da40f626283f8aac93634e19f979f1ae95bec7ca4a771d85b067f0dab205"
+  },
+  {
+    "file": "raichu-thunderbolt-cap.png",
+    "sha256": "93f4dac128b54e47aeea41ad4eb8949141339ac8b24c3131c3bc33ba96519b1e"
+  },
+  {
+    "file": "raichu-witch.png",
+    "sha256": "2370dca4f8e4bff20f75fcac9b519f881f0ed1d0e9a6cdc4c6f9aed15b37dd1c"
+  },
+  {
+    "file": "raichu-world-cap.png",
+    "sha256": "1bae4cd88e773b76a92c849b71a15b7ccf62db8a36e25eaa2ac467f4bf851d49"
+  },
+  {
+    "file": "rapidash-candela-necklace.png",
+    "sha256": "9a035b71ba6426e9c2c9d812627058e5314e7ea01ecbe0e8c98697fd228de851"
+  },
+  {
+    "file": "raticate-party-hat.png",
+    "sha256": "dddd9844dc27045a7cef9e6dbedbb31da308fed49fbc4f10d205b95e07e11d97"
+  },
+  {
+    "file": "rowlet-halloween.png",
+    "sha256": "a49a083ed0cf099bbf4c96527b5516dfd225e4c63c1abcbd1a553e6e93134572"
+  },
+  {
+    "file": "sableye-litwick.png",
+    "sha256": "f17c0a918a887840b48984dd47db636cac05e8bbb2d76205c5d744561689a43c"
+  },
+  {
+    "file": "shinx-bowler-hat.png",
+    "sha256": "ecebd90a47d3388e36b22cd0068e464560c9208c829b0e02a4040ccec993e4c6"
+  },
+  {
+    "file": "slaking-visor.png",
+    "sha256": "1035d4352492eeb35818ee0eac0a7ae32d93f0502750aed6e24a729ab6d541b8"
+  },
+  {
+    "file": "slakoth-visor.png",
+    "sha256": "387b9d737b920be3ca93cb2dfb2d6cbce395c304608ad485f2f579fe49b2e836"
+  },
+  {
+    "file": "slowbro-2021.png",
+    "sha256": "e825de0caee681983e3799bd2f64d173e1ebb4fa47d084bac02ccf51a6209710"
+  },
+  {
+    "file": "slowking-2022.png",
+    "sha256": "0424b61a710d795ad36253b8951eec7e762bb1b67293c5482ed5014087a13190"
+  },
+  {
+    "file": "slowpoke-2020.png",
+    "sha256": "5114fd0a9e54c34aa83501cd655a508af4dfdc4a78aaa485cad9bb90be5c732f"
+  },
+  {
+    "file": "slowpoke-detective.png",
+    "sha256": "aafafb8df9b51b443ed2ce2fff12704a4950106e4c75fed1a0c856e5f0d3b3aa"
+  },
+  {
+    "file": "smoochum-bow.png",
+    "sha256": "d214da38c4b0ac6a06b28e70da990ad66351005746dee51de4b4290087fb1925"
+  },
+  {
+    "file": "sneasel-fashion.png",
+    "sha256": "358508305e9064f69381bfa7402d66831bde4f4d3c478155458e700c46727fce"
+  },
+  {
+    "file": "snorlax-cowboy-hat.png",
+    "sha256": "38249091aae8dce5a057dd69b3cf1848538bb5bcc5196a3d16c5d1bcce5732c6"
+  },
+  {
+    "file": "snorlax-nightcap.png",
+    "sha256": "5e1af15da29d95ba82ca90d0f2e0fbcd66c6965a96686ad40be46a1a7d4b4f88"
+  },
+  {
+    "file": "snorlax-studded-jacket.png",
+    "sha256": "8f9e85f24d7b1105bceb3bea7872f2b1381cdfad202ca6b4c83071fb5e041bcb"
+  },
+  {
+    "file": "spheal-holiday.png",
+    "sha256": "df2b5c17c1970e0a4bbe435231c35191f2ae8ac3066a7d843fb25a56ca61b7d8"
+  },
+  {
+    "file": "squirtle-pikachu-cap.png",
+    "sha256": "116877bb393f04baad763e225c0613379ef34951ae39c5c4696b9e25c1f23b18"
+  },
+  {
+    "file": "squirtle-red-party-hat.png",
+    "sha256": "154f3eeae851dd79fa81240188c5f83afdf1b4ea02ade824fc0e16a3e6f55045"
+  },
+  {
+    "file": "squirtle-sunglasses.png",
+    "sha256": "20d3affbb65d5aa57bd391ec90cd62d38d7b06422ce618e6dc68390d1cfa564e"
+  },
+  {
+    "file": "squirtle-yamask.png",
+    "sha256": "52f6ccf1f260b68fa94d7d075437304b15629e25310f85b739f3c2cbd2f510d1"
+  },
+  {
+    "file": "stantler-bells.png",
+    "sha256": "cc8d5d1556a290d6a4181401047c493d1b6772092b807dcd42e029fd081230b4"
+  },
+  {
+    "file": "sudowoodo-holiday-2025.png",
+    "sha256": "ca837a71aba5a94f72a56ed3e4fb1c8b70c939893401a317b444f5b4a047c02e"
+  },
+  {
+    "file": "sylveon-cherry-blossoms.png",
+    "sha256": "3982769ee332df0147a7aafaa2fb59fb3b4926173d7d03a8c77a8d0619e8ab88"
+  },
+  {
+    "file": "sylveon-explorer-hat.png",
+    "sha256": "613eda46109fb7289d7dcbaf86be88b2126a6b2cdefe767279c1b6f09ed86c94"
+  },
+  {
+    "file": "sylveon-flower.png",
+    "sha256": "2f36ece07781205a98dcb6152852748059556cd7601bd100aafcae6a3ca0490e"
+  },
+  {
+    "file": "sylveon-holiday-hat.png",
+    "sha256": "ee7b066a8a79c10ea62fd010fa1b446082f010d5d344dc02f66a924d23c87fa9"
+  },
+  {
+    "file": "togekiss-flower.png",
+    "sha256": "5794d0adb10ab29ff95ba0511826155296c97a5d2270ec94b2c58355a8cdd23e"
+  },
+  {
+    "file": "togepi-flower.png",
+    "sha256": "8b0cb897d24ebe8cb937cab1de13e66cfb03874fb17b29cefb1878b9a6d16556"
+  },
+  {
+    "file": "togetic-flower.png",
+    "sha256": "e340b1841ab8cfc5a8c25cbd6526d16126245e3cfa92a7b8b4dcad8b143af1e7"
+  },
+  {
+    "file": "toxicroak-cap.png",
+    "sha256": "369bcc5e34f578e5e3ced3e023aa3442fbd77270e9e944297589a8d9dd099f9d"
+  },
+  {
+    "file": "turtwig-dawn-hat.png",
+    "sha256": "ed651e1d13f3b10d93993c5713fd8837afaa2f574840aa369719643347dd1702"
+  },
+  {
+    "file": "turtwig-lucas-hat.png",
+    "sha256": "76a39229f786b5402636a17b4c80d1ce5111dea8f520263c700e2ba5d24927df"
+  },
+  {
+    "file": "umbreon-cherry-blossoms.png",
+    "sha256": "cb99ab17d93cd9c537f4eca72f5134ac0cc220c8b4ab88d1527622d311ef43fe"
+  },
+  {
+    "file": "umbreon-explorer-hat.png",
+    "sha256": "db444d930d47ef512c1409b4258d0eda17492fcc77736668c67d9184ac493fc6"
+  },
+  {
+    "file": "umbreon-flower.png",
+    "sha256": "3ecf91474bb6b8c882049e2eb6bc12e7e4400c686b03aeac5b09ba10405b509a"
+  },
+  {
+    "file": "umbreon-holiday-hat.png",
+    "sha256": "80cf601a364c4da31f85941058eaa72b9881e88a13f8fd9339598169ddec7df3"
+  },
+  {
+    "file": "umbreon-night-scarf.png",
+    "sha256": "91192266aea539fb0e90a0e2a7fc4c316202725f53e8848a627cb1c932d1bb94"
+  },
+  {
+    "file": "unown-a.png",
+    "sha256": "a7e1d3d53deedc255e91021d0ce2e857d79bbed26ae3b6e33198a59ac42f0c6e"
+  },
+  {
+    "file": "unown-b.png",
+    "sha256": "fb0d3c298e5303e5ef884dccf17dc9086e0adf9777c337403fd2e1fad2b5b052"
+  },
+  {
+    "file": "unown-c.png",
+    "sha256": "95c6d097ff0372fad879e7caf583ae3a03f710acc9e51e0f40241341f2b0be64"
+  },
+  {
+    "file": "unown-d.png",
+    "sha256": "110ff5933ff6cd3b1f1ff043d9462ae50bf541f04672de6621aa7ef4d8f30f65"
+  },
+  {
+    "file": "unown-e.png",
+    "sha256": "419ec6fcbee4cf1fecce344e79502caa12d8bd47cfb1dc36ef316c3c5e7ace5e"
+  },
+  {
+    "file": "unown-em.png",
+    "sha256": "9b7d1122bfd8c69a6e6d342279e9fa62ed0a897ac920efc5302ea371e7369927"
+  },
+  {
+    "file": "unown-f.png",
+    "sha256": "923c36b5baf099f1243e02b1a0cb4603a234d9daef75d5d6693f4d058442636a"
+  },
+  {
+    "file": "unown-g.png",
+    "sha256": "e1e1bea417f28186ef9d8ad95e38ad8ced309d1f62099c4f17994a04ed061e3f"
+  },
+  {
+    "file": "unown-h.png",
+    "sha256": "0fe3a4f409c3f032b8fee547f6b04640e4729dd2c5aaed1f878ed118da0a5aca"
+  },
+  {
+    "file": "unown-i.png",
+    "sha256": "940978f0ee59d9652e569c40ec22e9df11046f00e725bc2026fa1cc280174d45"
+  },
+  {
+    "file": "unown-j.png",
+    "sha256": "d178945340b496ffe67a23c37c06ccea90b38ad45aa9dee0f968d8ac6b85aa57"
+  },
+  {
+    "file": "unown-k.png",
+    "sha256": "d199234c249910a1e7f15d9d75abbb5a5b24f65884a2c0c93596693d1b7539b3"
+  },
+  {
+    "file": "unown-l.png",
+    "sha256": "05c1448bae2be2ff88e4f41b9d6c73595ae9a279f103444b820e16bac70a8c89"
+  },
+  {
+    "file": "unown-m.png",
+    "sha256": "cf4ec25bb6b8928858f0eb289fdfb4fe1f38811c5c5530914f1f73dfe3e376f1"
+  },
+  {
+    "file": "unown-n.png",
+    "sha256": "a79bef1fefe6293ac99a1d8d3c52880c8496d90c12ac4332817f2b2c83b71cd0"
+  },
+  {
+    "file": "unown-o.png",
+    "sha256": "f5d9debb61487f62f633565c361a9e1c36a13db59f3128019788eb038d62a452"
+  },
+  {
+    "file": "unown-p.png",
+    "sha256": "4612d2254f331424593d8af40771bdcffddb82652ee43cdb4c491d1bc0357316"
+  },
+  {
+    "file": "unown-q.png",
+    "sha256": "382d30272dd48c1fbad9459851d3cf0a21a0af149ef8d0db78df2deb0a5473c1"
+  },
+  {
+    "file": "unown-qm.png",
+    "sha256": "38623b23001c40353def1882a2f07a5e6560f0202a9e439fd22d69177140c53a"
+  },
+  {
+    "file": "unown-r.png",
+    "sha256": "99e559b91cbefa8521f62cde33afcdf9cc25a112ae270a6b13e88abbde25bb13"
+  },
+  {
+    "file": "unown-s.png",
+    "sha256": "48f863cdce336f4129bb6450e3b907585a9aa3224b03061f0b3d0107076211b0"
+  },
+  {
+    "file": "unown-t.png",
+    "sha256": "a9eb343d2e518f6a7a291cd2da6d17d261952f70c4f397832699e09e8737344c"
+  },
+  {
+    "file": "unown-u.png",
+    "sha256": "081ebdbcbb74a5a1f819a35ecf9630cdf7d6a7929f49259cfd568bb0750b852b"
+  },
+  {
+    "file": "unown-v.png",
+    "sha256": "ecf0014c01841fcc84d8cbe5fdbf42c6d0bf86c94c850509e8f5644a191327e5"
+  },
+  {
+    "file": "unown-w.png",
+    "sha256": "921105c4b35e34c0c7502b09f94c6a9e867cad58c8aa0a4d03312e0dd8357165"
+  },
+  {
+    "file": "unown-x.png",
+    "sha256": "e4fcbd998be74435bea0ca74158aab5289e7301dd73e262cb8166e8adbec9d7e"
+  },
+  {
+    "file": "unown-y.png",
+    "sha256": "9676f66ac26383536e511283cd74f9e13316b29ed3c72128990f78da2f9dda5b"
+  },
+  {
+    "file": "unown-z.png",
+    "sha256": "d7af616bfa5dfcf58084e50a21c08889306751d17b3f8c93b41ba9beadc8cd4f"
+  },
+  {
+    "file": "vaporeon-cherry-blossoms.png",
+    "sha256": "8551b63b4fb8574899871af419c36d33eefa7f5edcab55679976dc5a2c1c506b"
+  },
+  {
+    "file": "vaporeon-explorer-hat.png",
+    "sha256": "e4155da0d0ff51f60146167391d034a15c3f8b45936223494d09f1fa3709ff55"
+  },
+  {
+    "file": "vaporeon-flower.png",
+    "sha256": "1931775d43078b27b19c72a35d4bead917e7c39edc7b28b9e02ab762f82fd2ac"
+  },
+  {
+    "file": "vaporeon-holiday-hat.png",
+    "sha256": "4c1f4f807e27f07adbad150e00e8d40428f077e607664a48cde478403b0d3265"
+  },
+  {
+    "file": "venusaur-clone.png",
+    "sha256": "25962d02d2c9b96ad04e065d28062ff74e9188f81bee5c1a091083fa926a1a7c"
+  },
+  {
+    "file": "venusaur-red-party-hat.png",
+    "sha256": "ddde1802dbc1a5b6c73fe041a6e3966cb656ad704ad0cdbfbe1401e671f93ee3"
+  },
+  {
+    "file": "vigoroth-visor.png",
+    "sha256": "9d50a5f25b40701eb15ea8d85a05a493ced4051b7b35d89bbe66f347c041c0f4"
+  },
+  {
+    "file": "vikavolt-holiday-2025.png",
+    "sha256": "17792bc2b89847cf5c8aedf3c367ff37fe044a67842c2ac42153c5aa3d413223"
+  },
+  {
+    "file": "vivillon-archipelago.png",
+    "sha256": "4728f39d9e8ce97153438a2cec42d4e197767b5440b6e781628dfd0126e4e2c9"
+  },
+  {
+    "file": "vivillon-continental.png",
+    "sha256": "ae0d388510462bdbb4479888f8f498ed36fbeea3ce98b6fa919694d3551060cd"
+  },
+  {
+    "file": "vivillon-elegant.png",
+    "sha256": "5149a07f6b20f32ba861ac1982268d9e031c6e2359d1b2010c0314b0d3caecc2"
+  },
+  {
+    "file": "vivillon-fancy.png",
+    "sha256": "26bbce1893c1ea5349e17f3f9f2c34e854a19f3901ba87f4ca527f2d676cd061"
+  },
+  {
+    "file": "vivillon-garden.png",
+    "sha256": "ca8cc8f9d6c17aea73d0559ad11c150e516eb9e7027febdf1149737f1729de13"
+  },
+  {
+    "file": "vivillon-high-plains.png",
+    "sha256": "c400844dd414b72090ae9060fc2b7bcf1d3a9c8dcc0ccf41c6a7fe696fbbf3ce"
+  },
+  {
+    "file": "vivillon-icy-snow.png",
+    "sha256": "848e7c88b060e95b1e13c09f251ae220f8886e6cdbeba3f1975c161763fd8198"
+  },
+  {
+    "file": "vivillon-jungle.png",
+    "sha256": "7e8d086216da2e14f8a6176c1dbb311ba03fb401ddbe11910ff41317b7773ac5"
+  },
+  {
+    "file": "vivillon-marine.png",
+    "sha256": "3b3ba25f9fc10a64896ff7b57848f3ce154d6ea713a281fd61534cd96100eab8"
+  },
+  {
+    "file": "vivillon-meadow.png",
+    "sha256": "9d8d303afce20e4ead841cb5c06b5161b969994776b41bed807122a833cbea5b"
+  },
+  {
+    "file": "vivillon-modern.png",
+    "sha256": "2e9c24dbbc68d507229562d2817f96940bf12f3c84ec0a90b3e9bdf7a416c2fb"
+  },
+  {
+    "file": "vivillon-monsoon.png",
+    "sha256": "139ee7cb3e48ff3f9c35daf0f3ce065f8c25bccb039b9d0e8f18d49c059c15ab"
+  },
+  {
+    "file": "vivillon-ocean.png",
+    "sha256": "475043da0d5ddd2ef98ec338a32fa578bc149409b8f13e7b9ac09b47c4bd24d2"
+  },
+  {
+    "file": "vivillon-pokeball.png",
+    "sha256": "64740552d9044f93ea2a34e4d412c6dc4af624f0be1d087641519dd7d1690b08"
+  },
+  {
+    "file": "vivillon-polar.png",
+    "sha256": "963b0664355d35a030389aaeff71ff0f512990ddb26e69e78e79ce5e4df48ba4"
+  },
+  {
+    "file": "vivillon-river.png",
+    "sha256": "e77026da7fb29a2c43ff99b0fd7caa4d6493e8f4d0e5009d2355b49b6833f198"
+  },
+  {
+    "file": "vivillon-sandstorm.png",
+    "sha256": "1edc3dc22a4da990520d76f4eb9027f67d54cded74ce4ced3a4578ead6e844d7"
+  },
+  {
+    "file": "vivillon-savanna.png",
+    "sha256": "9bccaab5189da8cabba9700fa65d6dda5dc260847969ccca56b35755c44a266f"
+  },
+  {
+    "file": "vivillon-sun.png",
+    "sha256": "4784582eea94ac02f093ae140ffd71d136ec4d15244771a32599029d842268b4"
+  },
+  {
+    "file": "vivillon-tundra.png",
+    "sha256": "cc39cb5530b758208eb559035ff08cd71a7ad7f266ff6c1c82035917fd897afd"
+  },
+  {
+    "file": "vulpix-spooky-festival.png",
+    "sha256": "4527025972d8397fd3ad8c96c63a97e2b86bd969112e1fcb78e63b04e42268fd"
+  },
+  {
+    "file": "wartortle-red-party-hat.png",
+    "sha256": "9941039a3e9d3b6b2f71e1076bc1f6958a2225bdf8003f6d48ce4881388baa6d"
+  },
+  {
+    "file": "wartortle-sunglasses.png",
+    "sha256": "bd3bd55b13ef9aa97864a1482de59db327b3a5f01c1a1779a0ee0c2571c076f1"
+  },
+  {
+    "file": "whimsicott-flower.png",
+    "sha256": "afcd041e871bd4d2731861c2a1572f03221aec17036e6097c25ebeb40460b318"
+  },
+  {
+    "file": "wigglytuff-ribbon.png",
+    "sha256": "6dd324861f3691cf73233fabaaad63c1ff9a36575f8399b7b16e2d7cf1ea7b06"
+  },
+  {
+    "file": "wobbuffet-party-hat.png",
+    "sha256": "8925e9757c29d34f8f2cea7db5f3e9419151888645ffba65d5b8b01b4d08a038"
+  },
+  {
+    "file": "wooloo-holiday.png",
+    "sha256": "48188cb5708f5ec14909c3a65f4c1ed841930ea5be5df9bde6524b5a2ecbc27d"
+  },
+  {
+    "file": "wooper-beanie.png",
+    "sha256": "1cbf358f0fb5a07c375590a941ca3078b6efd209f8802ec35908ecfec4677a09"
+  },
+  {
+    "file": "wormadam-plant.png",
+    "sha256": "816affacde100fd0930fdad3bb11b8bf34cb16da6fcc1147ed1f178ec3d9a483"
+  },
+  {
+    "file": "wormadam-sandy.png",
+    "sha256": "35a6bfe0b3e7af08210a5d22049e0926a5fefaa583e1b050e9b4f1ca3d6d6587"
+  },
+  {
+    "file": "wormadam-trash.png",
+    "sha256": "ef02eacc7e7475283222f875d009768c90e7365690cb9640a4f9d150f032c102"
+  },
+  {
+    "file": "wurmple-party-hat.png",
+    "sha256": "abe696a963dda0e5365e1fdf79b52659c6bbe6554e8c66edf9953e3887c76ac4"
+  },
+  {
+    "file": "zigzagoon-galarian-meloetta-hat.png",
+    "sha256": "3d2cf6256b796ac83b19bbe6a0f6cc1652d7082f971fffc73b1d45a1f63c039e"
+  }
+]

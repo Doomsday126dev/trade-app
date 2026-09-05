@@ -1,0 +1,39 @@
+{
+  "viewports": [
+    320,
+    390,
+    430,
+    1440
+  ],
+  "states": [
+    "list",
+    "people",
+    "match/mira",
+    "public",
+    "session",
+    "large",
+    "special",
+    "empty",
+    "concepts"
+  ],
+  "passed": [
+    "36 route/viewport checks",
+    "add/edit both intents",
+    "duplicate declarations merge sides",
+    "base shiny editor retains base variant",
+    "Max detail control retains qualification",
+    "search filter",
+    "row/grid switch",
+    "selection scope",
+    "image preview pixel check/download",
+    "text copy",
+    "anonymous local subset",
+    "contextual query copy",
+    "session does not mutate list",
+    "coordination retains exact qualifiers and edited context",
+    "300-entry paging",
+    "three IA routes"
+  ],
+  "consoleErrors": [],
+  "externalRequests": []
+}

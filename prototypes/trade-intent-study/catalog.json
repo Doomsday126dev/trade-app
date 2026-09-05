@@ -1,0 +1,3526 @@
+[
+  {
+    "id": "costume-0",
+    "no": 1,
+    "name": "Bulbasaur (Red Party)",
+    "art": "vendor/bulbasaur-red-party-hat.png",
+    "costume": true,
+    "form": "Red Party Hat",
+    "source": "https://pokemondb.net/sprites/bulbasaur"
+  },
+  {
+    "id": "costume-1",
+    "no": 1,
+    "name": "Bulbasaur (Shedinja)",
+    "art": "vendor/bulbasaur-shedinja.png",
+    "costume": true,
+    "form": "Shedinja Costume",
+    "source": "https://pokemondb.net/sprites/bulbasaur"
+  },
+  {
+    "id": "costume-2",
+    "no": 1,
+    "name": "Bulbasaur (Visor)",
+    "art": "vendor/bulbasaur-pikachu-cap.png",
+    "costume": true,
+    "form": "Pikachu Cap",
+    "source": "https://pokemondb.net/sprites/bulbasaur"
+  },
+  {
+    "id": "costume-3",
+    "no": 2,
+    "name": "Ivysaur Party Hat",
+    "art": "vendor/ivysaur-red-party-hat.png",
+    "costume": true,
+    "form": "Red Party Hat",
+    "source": "https://pokemondb.net/sprites/ivysaur"
+  },
+  {
+    "id": "costume-4",
+    "no": 3,
+    "name": "Venusaur (Clone)",
+    "art": "vendor/venusaur-clone.png",
+    "costume": true,
+    "form": "Clone",
+    "source": "https://pokemondb.net/sprites/venusaur"
+  },
+  {
+    "id": "costume-5",
+    "no": 3,
+    "name": "Venusaur Party Hat",
+    "art": "vendor/venusaur-red-party-hat.png",
+    "costume": true,
+    "form": "Red Party Hat",
+    "source": "https://pokemondb.net/sprites/venusaur"
+  },
+  {
+    "id": "costume-6",
+    "no": 4,
+    "name": "Charmander (Cubone)",
+    "art": "vendor/charmander-cubone.png",
+    "costume": true,
+    "form": "Cubone Costume",
+    "source": "https://pokemondb.net/sprites/charmander"
+  },
+  {
+    "id": "costume-7",
+    "no": 4,
+    "name": "Charmander (Red Party)",
+    "art": "vendor/charmander-red-party-hat.png",
+    "costume": true,
+    "form": "Red Party Hat",
+    "source": "https://pokemondb.net/sprites/charmander"
+  },
+  {
+    "id": "costume-8",
+    "no": 4,
+    "name": "Charmander (Visor)",
+    "art": "vendor/charmander-pikachu-cap.png",
+    "costume": true,
+    "form": "Pikachu Cap",
+    "source": "https://pokemondb.net/sprites/charmander"
+  },
+  {
+    "id": "costume-9",
+    "no": 5,
+    "name": "Charmeleon Party Hat",
+    "art": "vendor/charmeleon-red-party-hat.png",
+    "costume": true,
+    "form": "Red Party Hat",
+    "source": "https://pokemondb.net/sprites/charmeleon"
+  },
+  {
+    "id": "costume-10",
+    "no": 6,
+    "name": "Charizard (Clone)",
+    "art": "vendor/charizard-clone.png",
+    "costume": true,
+    "form": "Clone",
+    "source": "https://pokemondb.net/sprites/charizard"
+  },
+  {
+    "id": "costume-11",
+    "no": 6,
+    "name": "Charizard Party Hat",
+    "art": "vendor/charizard-red-party-hat.png",
+    "costume": true,
+    "form": "Red Party Hat",
+    "source": "https://pokemondb.net/sprites/charizard"
+  },
+  {
+    "id": "costume-12",
+    "no": 7,
+    "name": "Squirtle (Red Party)",
+    "art": "vendor/squirtle-red-party-hat.png",
+    "costume": true,
+    "form": "Red Party Hat",
+    "source": "https://pokemondb.net/sprites/squirtle"
+  },
+  {
+    "id": "costume-13",
+    "no": 7,
+    "name": "Squirtle (Sunglasses)",
+    "art": "vendor/squirtle-sunglasses.png",
+    "costume": true,
+    "form": "Sunglasses",
+    "source": "https://pokemondb.net/sprites/squirtle"
+  },
+  {
+    "id": "costume-14",
+    "no": 7,
+    "name": "Squirtle (Visor)",
+    "art": "vendor/squirtle-pikachu-cap.png",
+    "costume": true,
+    "form": "Pikachu Cap",
+    "source": "https://pokemondb.net/sprites/squirtle"
+  },
+  {
+    "id": "costume-15",
+    "no": 7,
+    "name": "Squirtle (Yamask)",
+    "art": "vendor/squirtle-yamask.png",
+    "costume": true,
+    "form": "Yamask Costume",
+    "source": "https://pokemondb.net/sprites/squirtle"
+  },
+  {
+    "id": "costume-16",
+    "no": 8,
+    "name": "Wartortle Party Hat",
+    "art": "vendor/wartortle-red-party-hat.png",
+    "costume": true,
+    "form": "Red Party Hat",
+    "source": "https://pokemondb.net/sprites/wartortle"
+  },
+  {
+    "id": "costume-17",
+    "no": 8,
+    "name": "Wartortle Sunglasses",
+    "art": "vendor/wartortle-sunglasses.png",
+    "costume": true,
+    "form": "Sunglasses",
+    "source": "https://pokemondb.net/sprites/wartortle"
+  },
+  {
+    "id": "costume-18",
+    "no": 9,
+    "name": "Blastoise (Clone)",
+    "art": "vendor/blastoise-clone.png",
+    "costume": true,
+    "form": "Clone",
+    "source": "https://pokemondb.net/sprites/blastoise"
+  },
+  {
+    "id": "costume-19",
+    "no": 9,
+    "name": "Blastoise Party Hat",
+    "art": "vendor/blastoise-red-party-hat.png",
+    "costume": true,
+    "form": "Red Party Hat",
+    "source": "https://pokemondb.net/sprites/blastoise"
+  },
+  {
+    "id": "costume-20",
+    "no": 9,
+    "name": "Blastoise Sunglasses",
+    "art": "vendor/blastoise-sunglasses.png",
+    "costume": true,
+    "form": "Sunglasses",
+    "source": "https://pokemondb.net/sprites/blastoise"
+  },
+  {
+    "id": "costume-21",
+    "no": 12,
+    "name": "Butterfree (Bow)",
+    "art": "vendor/butterfree-fashion.png",
+    "costume": true,
+    "form": "Fashion Week",
+    "source": "https://pokemondb.net/sprites/butterfree"
+  },
+  {
+    "id": "costume-22",
+    "no": 20,
+    "name": "Raticate Party Hat",
+    "art": "vendor/raticate-party-hat.png",
+    "costume": true,
+    "form": "Party Hat",
+    "source": "https://pokemondb.net/sprites/raticate"
+  },
+  {
+    "id": "costume-23",
+    "no": 25,
+    "name": "Pikachu (5th Anniversary)",
+    "art": "vendor/pikachu-balloon5.png",
+    "costume": true,
+    "form": "5th Anniversary Balloon",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-24",
+    "no": 25,
+    "name": "Pikachu (Akari)",
+    "art": "vendor/pikachu-akari-kerchief.png",
+    "costume": true,
+    "form": "Akari's kerchief",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-25",
+    "no": 25,
+    "name": "Pikachu (Amethyst)",
+    "art": "vendor/pikachu-amethyst-crown.png",
+    "costume": true,
+    "form": "Amethyst Crown",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-26",
+    "no": 25,
+    "name": "Pikachu (Aquamarine)",
+    "art": "vendor/pikachu-aquamarine-crown.png",
+    "costume": true,
+    "form": "Aquamarine Crown",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-27",
+    "no": 25,
+    "name": "Pikachu (Ash)",
+    "art": "vendor/pikachu-cap.png",
+    "costume": true,
+    "form": "Original Cap",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-28",
+    "no": 25,
+    "name": "Pikachu (Baseball)",
+    "art": "vendor/pikachu-baseball-shirt.png",
+    "costume": true,
+    "form": "Baseball Shirt",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-29",
+    "no": 25,
+    "name": "Pikachu (Batik Shirt)",
+    "art": "vendor/pikachu-batik-shirt.png",
+    "costume": true,
+    "form": "Batik Shirt",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-30",
+    "no": 25,
+    "name": "Pikachu (Brendan)",
+    "art": "vendor/pikachu-brendan-bandana.png",
+    "costume": true,
+    "form": "Brendan's bandana",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-31",
+    "no": 25,
+    "name": "Pikachu (Cake Hat)",
+    "art": "vendor/pikachu-cake.png",
+    "costume": true,
+    "form": "Cake Costume",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-32",
+    "no": 25,
+    "name": "Pikachu (Calem)",
+    "art": "vendor/pikachu-calem-hat.png",
+    "costume": true,
+    "form": "Calem's hat",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-33",
+    "no": 25,
+    "name": "Pikachu (Captain)",
+    "art": "vendor/pikachu-captain.png",
+    "costume": true,
+    "form": "Cap's hat",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-34",
+    "no": 25,
+    "name": "Pikachu (Charizard)",
+    "art": "vendor/pikachu-charizard-hat.png",
+    "costume": true,
+    "form": "Charizard Hat",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-35",
+    "no": 25,
+    "name": "Pikachu (Cherry Blossom)",
+    "art": "vendor/pikachu-cherry-blossoms.png",
+    "costume": true,
+    "form": "Cherry Blossoms adornment",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-36",
+    "no": 25,
+    "name": "Pikachu (Clone)",
+    "art": "vendor/pikachu-clone.png",
+    "costume": true,
+    "form": "Clone",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-37",
+    "no": 25,
+    "name": "Pikachu (Dapper) Goggles - Blue",
+    "art": "vendor/pikachu-dapper-blue.png",
+    "costume": true,
+    "form": "Dapper (Blue)",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-38",
+    "no": 25,
+    "name": "Pikachu (Dapper) Goggles - Red",
+    "art": "vendor/pikachu-dapper-red.png",
+    "costume": true,
+    "form": "Dapper (Red)",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-39",
+    "no": 25,
+    "name": "Pikachu (Dapper) Goggles - Yellow",
+    "art": "vendor/pikachu-dapper-yellow.png",
+    "costume": true,
+    "form": "Dapper (Yellow)",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-40",
+    "no": 25,
+    "name": "Pikachu (Dapper) Monocle - Blue",
+    "art": "vendor/pikachu-formal-blue.png",
+    "costume": true,
+    "form": "Formal (Blue)",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-41",
+    "no": 25,
+    "name": "Pikachu (Dapper) Monocle - Red",
+    "art": "vendor/pikachu-formal-red.png",
+    "costume": true,
+    "form": "Formal (Red)",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-42",
+    "no": 25,
+    "name": "Pikachu (Dapper) Monocle - Yellow",
+    "art": "vendor/pikachu-formal-yellow.png",
+    "costume": true,
+    "form": "Formal (Yellow)",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-43",
+    "no": 25,
+    "name": "Pikachu (Dawn)",
+    "art": "vendor/pikachu-dawn-hat.png",
+    "costume": true,
+    "form": "Dawn's Hat",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-44",
+    "no": 25,
+    "name": "Pikachu (Detective)",
+    "art": "vendor/pikachu-detective.png",
+    "costume": true,
+    "form": "Detective Hat",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-45",
+    "no": 25,
+    "name": "Pikachu (Ethan)",
+    "art": "vendor/pikachu-ethan-hat.png",
+    "costume": true,
+    "form": "Ethan's hat",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-46",
+    "no": 25,
+    "name": "Pikachu (Explorer)",
+    "art": "vendor/pikachu-adventure-hat.png",
+    "costume": true,
+    "form": "Adventure Hat",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-47",
+    "no": 25,
+    "name": "Pikachu (Flower Crown)",
+    "art": "vendor/pikachu-flower.png",
+    "costume": true,
+    "form": "Flower Crown",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-48",
+    "no": 25,
+    "name": "Pikachu (Fly Okinawa)",
+    "art": "vendor/pikachu-okinawa-balloon.png",
+    "costume": true,
+    "form": "Okinawa Balloon",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-49",
+    "no": 25,
+    "name": "Pikachu (Flying Green)",
+    "art": "vendor/pikachu-green-balloons.png",
+    "costume": true,
+    "form": "Green Balloons",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-50",
+    "no": 25,
+    "name": "Pikachu (Flying Purple)",
+    "art": "vendor/pikachu-purple-balloons.png",
+    "costume": true,
+    "form": "Purple Balloons",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-51",
+    "no": 25,
+    "name": "Pikachu (Flying)",
+    "art": "vendor/pikachu-balloon4.png",
+    "costume": true,
+    "form": "4th Anniversary Balloon",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-52",
+    "no": 25,
+    "name": "Pikachu (Fragment)",
+    "art": "vendor/pikachu-thunderbolt-cap.png",
+    "costume": true,
+    "form": "Thunderbolt Cap",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-53",
+    "no": 25,
+    "name": "Pikachu (Green Shirt)",
+    "art": "vendor/pikachu-green-tshirt.png",
+    "costume": true,
+    "form": "Green T-shirt (Berry)",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-54",
+    "no": 25,
+    "name": "Pikachu (Halloween 2021)",
+    "art": "vendor/pikachu-halloween-mischief.png",
+    "costume": true,
+    "form": "Halloween Mischief",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-55",
+    "no": 25,
+    "name": "Pikachu (Halloween 2022)",
+    "art": "vendor/pikachu-halloween-mischief.png",
+    "costume": true,
+    "form": "Halloween Mischief",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-56",
+    "no": 25,
+    "name": "Pikachu (Halloween 2023)",
+    "art": "vendor/pikachu-tricks-treats.png",
+    "costume": true,
+    "form": "Tricks & Treats",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-57",
+    "no": 25,
+    "name": "Pikachu (Halloween 2024)",
+    "art": "vendor/pikachu-witch.png",
+    "costume": true,
+    "form": "Witch Hat",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-58",
+    "no": 25,
+    "name": "Pikachu (Hilbert)",
+    "art": "vendor/pikachu-hilbert-hat.png",
+    "costume": true,
+    "form": "Hilbert's hat",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-59",
+    "no": 25,
+    "name": "Pikachu (Hilda)",
+    "art": "vendor/pikachu-hilda-hat.png",
+    "costume": true,
+    "form": "Hilda's hat",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-60",
+    "no": 25,
+    "name": "Pikachu (Holiday 2020)",
+    "art": "vendor/pikachu-holiday.png",
+    "costume": true,
+    "form": "Winter Carnival",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-61",
+    "no": 25,
+    "name": "Pikachu (Holiday 2022)",
+    "art": "vendor/pikachu-holiday.png",
+    "costume": true,
+    "form": "Winter Carnival",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-62",
+    "no": 25,
+    "name": "Pikachu (Holiday 2023)",
+    "art": "vendor/pikachu-holiday-2023.png",
+    "costume": true,
+    "form": "Holiday attire",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-63",
+    "no": 25,
+    "name": "Pikachu (Holiday 2024)",
+    "art": "vendor/pikachu-holiday.png",
+    "costume": true,
+    "form": "Winter Carnival",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-64",
+    "no": 25,
+    "name": "Pikachu (Indonesia Balloon)",
+    "art": "vendor/pikachu-black-red-balloons.png",
+    "costume": true,
+    "form": "Black & Red Balloons",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-65",
+    "no": 25,
+    "name": "Pikachu (Kariyushi Shirt)",
+    "art": "vendor/pikachu-kariyushi.png",
+    "costume": true,
+    "form": "Kariyushi",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-66",
+    "no": 25,
+    "name": "Pikachu (Kurta)",
+    "art": "vendor/pikachu-kurta.png",
+    "costume": true,
+    "form": "Kurta",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-67",
+    "no": 25,
+    "name": "Pikachu (Leaf)",
+    "art": "vendor/pikachu-leaf-hat.png",
+    "costume": true,
+    "form": "Leaf's hat",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-68",
+    "no": 25,
+    "name": "Pikachu (Libre)",
+    "art": "vendor/pikachu-libre.png",
+    "costume": true,
+    "form": "Pikachu Libre",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-69",
+    "no": 25,
+    "name": "Pikachu (Lucario)",
+    "art": "vendor/pikachu-lucario-hat.png",
+    "costume": true,
+    "form": "Lucario Hat",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-70",
+    "no": 25,
+    "name": "Pikachu (Lucas)",
+    "art": "vendor/pikachu-lucas-hat.png",
+    "costume": true,
+    "form": "Lucas's Hat",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-71",
+    "no": 25,
+    "name": "Pikachu (Lyra)",
+    "art": "vendor/pikachu-lyra-hat.png",
+    "costume": true,
+    "form": "Lyra's hat",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-72",
+    "no": 25,
+    "name": "Pikachu (Malachite)",
+    "art": "vendor/pikachu-malachite-crown.png",
+    "costume": true,
+    "form": "Malachite Crown",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-73",
+    "no": 25,
+    "name": "Pikachu (May)",
+    "art": "vendor/pikachu-may-bow.png",
+    "costume": true,
+    "form": "May's bow",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-74",
+    "no": 25,
+    "name": "Pikachu (Meloetta Hat)",
+    "art": "vendor/pikachu-meloetta-hat.png",
+    "costume": true,
+    "form": "Meloetta Hat",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-75",
+    "no": 25,
+    "name": "Pikachu (Mimikyu)",
+    "art": "vendor/pikachu-mimikyu.png",
+    "costume": true,
+    "form": "Mimikyu Costume",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-76",
+    "no": 25,
+    "name": "Pikachu (Moon)",
+    "art": "vendor/pikachu-moon-crown.png",
+    "costume": true,
+    "form": "Moon Crown",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-77",
+    "no": 25,
+    "name": "Pikachu (Nate)",
+    "art": "vendor/pikachu-nate-visor.png",
+    "costume": true,
+    "form": "Nate's visor",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-78",
+    "no": 25,
+    "name": "Pikachu (New Year)",
+    "art": "vendor/pikachu-new-year-hat.png",
+    "costume": true,
+    "form": "New Year Hat",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-79",
+    "no": 25,
+    "name": "Pikachu (Ph_D)",
+    "art": "vendor/pikachu-phd.png",
+    "costume": true,
+    "form": "Pikachu, Ph.D.",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-80",
+    "no": 25,
+    "name": "Pikachu (Pop Star)",
+    "art": "vendor/pikachu-popstar.png",
+    "costume": true,
+    "form": "Pikachu Pop Star",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-81",
+    "no": 25,
+    "name": "Pikachu (Purple Party)",
+    "art": "vendor/pikachu-party-hat.png",
+    "costume": true,
+    "form": "Party Hat",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-82",
+    "no": 25,
+    "name": "Pikachu (Purple Shirt)",
+    "art": "vendor/pikachu-purple-tshirt.png",
+    "costume": true,
+    "form": "Purple T-shirt (Flower)",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-83",
+    "no": 25,
+    "name": "Pikachu (Pyrite)",
+    "art": "vendor/pikachu-pyrite-crown.png",
+    "costume": true,
+    "form": "Pyrite Crown",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-84",
+    "no": 25,
+    "name": "Pikachu (Quartz)",
+    "art": "vendor/pikachu-quartz-crown.png",
+    "costume": true,
+    "form": "Quartz Crown",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-85",
+    "no": 25,
+    "name": "Pikachu (Rayquaza)",
+    "art": "vendor/pikachu-rayquaza-hat.png",
+    "costume": true,
+    "form": "Rayquaza Hat",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-86",
+    "no": 25,
+    "name": "Pikachu (Red Party)",
+    "art": "vendor/pikachu-red-party-hat.png",
+    "costume": true,
+    "form": "Red Party Hat",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-87",
+    "no": 25,
+    "name": "Pikachu (Red)",
+    "art": "vendor/pikachu-red-hat.png",
+    "costume": true,
+    "form": "Red hat",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-88",
+    "no": 25,
+    "name": "Pikachu (Rei)",
+    "art": "vendor/pikachu-rei-cap.png",
+    "costume": true,
+    "form": "Rei's cap",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-89",
+    "no": 25,
+    "name": "Pikachu (Rock Star)",
+    "art": "vendor/pikachu-rockstar.png",
+    "costume": true,
+    "form": "Pikachu Rock Star",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-90",
+    "no": 25,
+    "name": "Pikachu (Rosa)",
+    "art": "vendor/pikachu-rosa-visor.png",
+    "costume": true,
+    "form": "Rosa's visor",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-91",
+    "no": 25,
+    "name": "Pikachu (Safari)",
+    "art": "vendor/pikachu-safari-hat.png",
+    "costume": true,
+    "form": "Safari Hat",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-92",
+    "no": 25,
+    "name": "Pikachu (Santa)",
+    "art": "vendor/pikachu-santa.png",
+    "costume": true,
+    "form": "Santa Hat",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-93",
+    "no": 25,
+    "name": "Pikachu (Saree)",
+    "art": "vendor/pikachu-saree.png",
+    "costume": true,
+    "form": "Saree",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-94",
+    "no": 25,
+    "name": "Pikachu (Scuba)",
+    "art": "vendor/pikachu-world-champs-2024.png",
+    "costume": true,
+    "form": "World Championships 2024",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-95",
+    "no": 25,
+    "name": "Pikachu (Serena)",
+    "art": "vendor/pikachu-serena-hat.png",
+    "costume": true,
+    "form": "Serena's hat",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-96",
+    "no": 25,
+    "name": "Pikachu (Shaymin Flower)",
+    "art": "vendor/pikachu-gracidea.png",
+    "costume": true,
+    "form": "Gracidea Flower",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-97",
+    "no": 25,
+    "name": "Pikachu (Shaymin Scarf)",
+    "art": "vendor/pikachu-shaymin.png",
+    "costume": true,
+    "form": "Shaymin scarf",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-98",
+    "no": 25,
+    "name": "Pikachu (Spring)",
+    "art": "vendor/pikachu-flower-hat.png",
+    "costume": true,
+    "form": "Flower Hat",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-99",
+    "no": 25,
+    "name": "Pikachu (Straw)",
+    "art": "vendor/pikachu-straw-hat.png",
+    "costume": true,
+    "form": "Straw Hat",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-100",
+    "no": 25,
+    "name": "Pikachu (Summer)",
+    "art": "vendor/pikachu-summer.png",
+    "costume": true,
+    "form": "Summer Hat",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-101",
+    "no": 25,
+    "name": "Pikachu (Sun)",
+    "art": "vendor/pikachu-sun-crown.png",
+    "costume": true,
+    "form": "Sun Crown",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-102",
+    "no": 25,
+    "name": "Pikachu (TCG)",
+    "art": "vendor/pikachu-tcg.png",
+    "costume": true,
+    "form": "TCG Hat",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-103",
+    "no": 25,
+    "name": "Pikachu (Timnas Indonesia)",
+    "art": "vendor/pikachu-indonesia.png",
+    "costume": true,
+    "form": "Indonesia football jersey",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-104",
+    "no": 25,
+    "name": "Pikachu (Top Hat)",
+    "art": "vendor/pikachu-party-top-hat.png",
+    "costume": true,
+    "form": "Party Top Hat",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-105",
+    "no": 25,
+    "name": "Pikachu (Umbreon)",
+    "art": "vendor/pikachu-umbreon-hat.png",
+    "costume": true,
+    "form": "Umbreon Hat",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-106",
+    "no": 25,
+    "name": "Pikachu (Winter 2019)",
+    "art": "vendor/pikachu-beanie.png",
+    "costume": true,
+    "form": "Beanie Hat",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-107",
+    "no": 25,
+    "name": "Pikachu (Witch)",
+    "art": "vendor/pikachu-witch.png",
+    "costume": true,
+    "form": "Witch Hat",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-108",
+    "no": 25,
+    "name": "Pikachu (World)",
+    "art": "vendor/pikachu-world-cap.png",
+    "costume": true,
+    "form": "World Cap",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-109",
+    "no": 25,
+    "name": "Pikachu (Worlds 2022)",
+    "art": "vendor/pikachu-world-champs-2022.png",
+    "costume": true,
+    "form": "World Championships 2022",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-110",
+    "no": 25,
+    "name": "Pikachu (Worlds 2023)",
+    "art": "vendor/pikachu-world-champs-2023.png",
+    "costume": true,
+    "form": "World Championships 2023",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-111",
+    "no": 25,
+    "name": "Pikachu (Worlds 2025)",
+    "art": "vendor/pikachu-world-champs-2025.png",
+    "costume": true,
+    "form": "World Champs 2025",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-112",
+    "no": 25,
+    "name": "Pikachu Flying 03",
+    "art": "vendor/pikachu-orange-balloons.png",
+    "costume": true,
+    "form": "Orange Balloons",
+    "source": "https://pokemondb.net/sprites/pikachu"
+  },
+  {
+    "id": "costume-113",
+    "no": 26,
+    "name": "Raichu Beanie",
+    "art": "vendor/raichu-beanie.png",
+    "costume": true,
+    "form": "Beanie Hat",
+    "source": "https://pokemondb.net/sprites/raichu"
+  },
+  {
+    "id": "costume-114",
+    "no": 26,
+    "name": "Raichu Cherry Blossoms",
+    "art": "vendor/raichu-cherry-blossoms.png",
+    "costume": true,
+    "form": "Cherry Blossoms adornment",
+    "source": "https://pokemondb.net/sprites/raichu"
+  },
+  {
+    "id": "costume-115",
+    "no": 26,
+    "name": "Raichu Detective",
+    "art": "vendor/raichu-detective.png",
+    "costume": true,
+    "form": "Detective Hat",
+    "source": "https://pokemondb.net/sprites/raichu"
+  },
+  {
+    "id": "costume-116",
+    "no": 26,
+    "name": "Raichu Flower Crown",
+    "art": "vendor/raichu-flower.png",
+    "costume": true,
+    "form": "Flower Crown",
+    "source": "https://pokemondb.net/sprites/raichu"
+  },
+  {
+    "id": "costume-117",
+    "no": 26,
+    "name": "Raichu Fragment Cap",
+    "art": "vendor/raichu-thunderbolt-cap.png",
+    "costume": true,
+    "form": "Thunderbolt Cap",
+    "source": "https://pokemondb.net/sprites/raichu"
+  },
+  {
+    "id": "costume-118",
+    "no": 26,
+    "name": "Raichu Holiday 2023",
+    "art": "vendor/raichu-holiday-2023.png",
+    "costume": true,
+    "form": "Holiday attire",
+    "source": "https://pokemondb.net/sprites/raichu"
+  },
+  {
+    "id": "costume-119",
+    "no": 26,
+    "name": "Raichu New Year",
+    "art": "vendor/raichu-new-year-hat.png",
+    "costume": true,
+    "form": "New Year Hat",
+    "source": "https://pokemondb.net/sprites/raichu"
+  },
+  {
+    "id": "costume-120",
+    "no": 26,
+    "name": "Raichu Original Cap",
+    "art": "vendor/raichu-cap.png",
+    "costume": true,
+    "form": "Original Cap",
+    "source": "https://pokemondb.net/sprites/raichu"
+  },
+  {
+    "id": "costume-121",
+    "no": 26,
+    "name": "Raichu Party Hat",
+    "art": "vendor/raichu-party-hat.png",
+    "costume": true,
+    "form": "Party Hat",
+    "source": "https://pokemondb.net/sprites/raichu"
+  },
+  {
+    "id": "costume-122",
+    "no": 26,
+    "name": "Raichu Santa Hat",
+    "art": "vendor/raichu-santa.png",
+    "costume": true,
+    "form": "Santa Hat",
+    "source": "https://pokemondb.net/sprites/raichu"
+  },
+  {
+    "id": "costume-123",
+    "no": 26,
+    "name": "Raichu Summer Style",
+    "art": "vendor/raichu-summer.png",
+    "costume": true,
+    "form": "Summer Hat",
+    "source": "https://pokemondb.net/sprites/raichu"
+  },
+  {
+    "id": "costume-124",
+    "no": 26,
+    "name": "Raichu Witch Hat",
+    "art": "vendor/raichu-witch.png",
+    "costume": true,
+    "form": "Witch Hat",
+    "source": "https://pokemondb.net/sprites/raichu"
+  },
+  {
+    "id": "costume-125",
+    "no": 26,
+    "name": "Raichu World Cap",
+    "art": "vendor/raichu-world-cap.png",
+    "costume": true,
+    "form": "World Cap",
+    "source": "https://pokemondb.net/sprites/raichu"
+  },
+  {
+    "id": "costume-126",
+    "no": 31,
+    "name": "Nidoqueen Crown",
+    "art": "vendor/nidoqueen-crown.png",
+    "costume": true,
+    "form": "Crown",
+    "source": "https://pokemondb.net/sprites/nidoqueen"
+  },
+  {
+    "id": "costume-127",
+    "no": 33,
+    "name": "Nidorino Party Hat",
+    "art": "vendor/nidorino-red-party-hat.png",
+    "costume": true,
+    "form": "Red Party Hat",
+    "source": "https://pokemondb.net/sprites/nidorino"
+  },
+  {
+    "id": "costume-128",
+    "no": 34,
+    "name": "Nidoking Crown",
+    "art": "vendor/nidoking-crown.png",
+    "costume": true,
+    "form": "Crown",
+    "source": "https://pokemondb.net/sprites/nidoking"
+  },
+  {
+    "id": "costume-129",
+    "no": 37,
+    "name": "Vulpix (Halloween)",
+    "art": "vendor/vulpix-spooky-festival.png",
+    "costume": true,
+    "form": "Spooky Festival",
+    "source": "https://pokemondb.net/sprites/vulpix"
+  },
+  {
+    "id": "costume-130",
+    "no": 38,
+    "name": "Ninetales Spooky Festival",
+    "art": "vendor/ninetales-spooky-festival.png",
+    "costume": true,
+    "form": "Spooky Festival",
+    "source": "https://pokemondb.net/sprites/ninetales"
+  },
+  {
+    "id": "costume-131",
+    "no": 39,
+    "name": "Jigglypuff (Ribbon)",
+    "art": "vendor/jigglypuff-ribbon.png",
+    "costume": true,
+    "form": "Ribbon",
+    "source": "https://pokemondb.net/sprites/jigglypuff"
+  },
+  {
+    "id": "costume-132",
+    "no": 40,
+    "name": "Wigglytuff Ribbon",
+    "art": "vendor/wigglytuff-ribbon.png",
+    "costume": true,
+    "form": "Ribbon",
+    "source": "https://pokemondb.net/sprites/wigglytuff"
+  },
+  {
+    "id": "costume-133",
+    "no": 50,
+    "name": "Diglett Fashionable Hat",
+    "art": "vendor/diglett-bowler-hat.png",
+    "costume": true,
+    "form": "Bowler Hat",
+    "source": "https://pokemondb.net/sprites/diglett"
+  },
+  {
+    "id": "costume-134",
+    "no": 51,
+    "name": "Dugtrio Fashionable Hat",
+    "art": "vendor/dugtrio-bowler-hat.png",
+    "costume": true,
+    "form": "Bowler Hat",
+    "source": "https://pokemondb.net/sprites/dugtrio"
+  },
+  {
+    "id": "costume-135",
+    "no": 54,
+    "name": "Psyduck (Holiday 2023)",
+    "art": "vendor/psyduck-holiday-2023.png",
+    "costume": true,
+    "form": "Holiday attire",
+    "source": "https://pokemondb.net/sprites/psyduck"
+  },
+  {
+    "id": "costume-136",
+    "no": 54,
+    "name": "Psyduck Swim Ring",
+    "art": "vendor/psyduck-concierge.png",
+    "costume": true,
+    "form": "Swim ring",
+    "source": "https://pokemondb.net/sprites/psyduck"
+  },
+  {
+    "id": "costume-137",
+    "no": 55,
+    "name": "Golduck Holiday 2023",
+    "art": "vendor/golduck-holiday-2023.png",
+    "costume": true,
+    "form": "Holiday attire",
+    "source": "https://pokemondb.net/sprites/golduck"
+  },
+  {
+    "id": "costume-138",
+    "no": 77,
+    "name": "G_ Ponyta (Meloetta Hat)",
+    "art": "vendor/ponyta-galarian-meloetta-hat.png",
+    "costume": true,
+    "form": "Galarian Meloetta Hat",
+    "source": "https://pokemondb.net/sprites/ponyta"
+  },
+  {
+    "id": "costume-139",
+    "no": 77,
+    "name": "Ponyta (Candela)",
+    "art": "vendor/ponyta-candela-necklace.png",
+    "costume": true,
+    "form": "Candela-themed necklace",
+    "source": "https://pokemondb.net/sprites/ponyta"
+  },
+  {
+    "id": "costume-140",
+    "no": 78,
+    "name": "Rapidash Candela motif",
+    "art": "vendor/rapidash-candela-necklace.png",
+    "costume": true,
+    "form": "Candela-themed necklace",
+    "source": "https://pokemondb.net/sprites/rapidash"
+  },
+  {
+    "id": "costume-141",
+    "no": 79,
+    "name": "Slowpoke (Detective)",
+    "art": "vendor/slowpoke-detective.png",
+    "costume": true,
+    "form": "Detective Hat",
+    "source": "https://pokemondb.net/sprites/slowpoke"
+  },
+  {
+    "id": "costume-142",
+    "no": 79,
+    "name": "Slowpoke (New Year)",
+    "art": "vendor/slowpoke-2020.png",
+    "costume": true,
+    "form": "2020 Glasses",
+    "source": "https://pokemondb.net/sprites/slowpoke"
+  },
+  {
+    "id": "costume-143",
+    "no": 80,
+    "name": "Slowpoke 2021",
+    "art": "vendor/slowbro-2021.png",
+    "costume": true,
+    "form": "2021 Glasses",
+    "source": "https://pokemondb.net/sprites/slowbro"
+  },
+  {
+    "id": "costume-144",
+    "no": 88,
+    "name": "Grimer (Party Hat)",
+    "art": "vendor/grimer-party-hat.png",
+    "costume": true,
+    "form": "Party Hat",
+    "source": "https://pokemondb.net/sprites/grimer"
+  },
+  {
+    "id": "costume-145",
+    "no": 89,
+    "name": "Muk Party Hat",
+    "art": "vendor/muk-party-hat.png",
+    "costume": true,
+    "form": "Party Hat",
+    "source": "https://pokemondb.net/sprites/muk"
+  },
+  {
+    "id": "costume-146",
+    "no": 94,
+    "name": "Gengar (Halloween 2023)",
+    "art": "vendor/gengar-tricks-treats.png",
+    "costume": true,
+    "form": "Tricks & Treats",
+    "source": "https://pokemondb.net/sprites/gengar"
+  },
+  {
+    "id": "costume-147",
+    "no": 94,
+    "name": "Gengar (Halloween 2024)",
+    "art": "vendor/gengar-spooky-festival.png",
+    "costume": true,
+    "form": "Spooky Festival",
+    "source": "https://pokemondb.net/sprites/gengar"
+  },
+  {
+    "id": "costume-148",
+    "no": 94,
+    "name": "Gengar (Mega Banette)",
+    "art": "vendor/gengar-banette.png",
+    "costume": true,
+    "form": "Mega Banette Costume",
+    "source": "https://pokemondb.net/sprites/gengar"
+  },
+  {
+    "id": "costume-149",
+    "no": 94,
+    "name": "Gengar (Spooky Hat)",
+    "art": "vendor/gengar-spooky-festival.png",
+    "costume": true,
+    "form": "Spooky Festival",
+    "source": "https://pokemondb.net/sprites/gengar"
+  },
+  {
+    "id": "costume-150",
+    "no": 94,
+    "name": "Gengar Party Hat",
+    "art": "vendor/gengar-red-party-hat.png",
+    "costume": true,
+    "form": "Red Party Hat",
+    "source": "https://pokemondb.net/sprites/gengar"
+  },
+  {
+    "id": "costume-151",
+    "no": 104,
+    "name": "Cubone (Cempasuchil)",
+    "art": "vendor/cubone-cempasuchil-crown.png",
+    "costume": true,
+    "form": "Cempasúchil Crown",
+    "source": "https://pokemondb.net/sprites/cubone"
+  },
+  {
+    "id": "costume-152",
+    "no": 105,
+    "name": "Marowak Cempasuchil Crown",
+    "art": "vendor/marowak-cempasuchil-crown.png",
+    "costume": true,
+    "form": "Cempasúchil Crown",
+    "source": "https://pokemondb.net/sprites/marowak"
+  },
+  {
+    "id": "costume-153",
+    "no": 113,
+    "name": "Chansey (Flower Crown)",
+    "art": "vendor/chansey-flower.png",
+    "costume": true,
+    "form": "Flower Crown",
+    "source": "https://pokemondb.net/sprites/chansey"
+  },
+  {
+    "id": "costume-154",
+    "no": 125,
+    "name": "Electabuzz Spark motif",
+    "art": "vendor/electabuzz-spark-bracelet.png",
+    "costume": true,
+    "form": "Spark-themed bracelet",
+    "source": "https://pokemondb.net/sprites/electabuzz"
+  },
+  {
+    "id": "costume-155",
+    "no": 131,
+    "name": "Lapras (Blanche)",
+    "art": "vendor/lapras-blanche-bow.png",
+    "costume": true,
+    "form": "Blanche-themed bow",
+    "source": "https://pokemondb.net/sprites/lapras"
+  },
+  {
+    "id": "costume-156",
+    "no": 131,
+    "name": "Lapras (Scarf)",
+    "art": "vendor/lapras-scarf.png",
+    "costume": true,
+    "form": "Scarf",
+    "source": "https://pokemondb.net/sprites/lapras"
+  },
+  {
+    "id": "costume-157",
+    "no": 132,
+    "name": "Ditto Blue Party Hat",
+    "art": "vendor/ditto-cap.png",
+    "costume": true,
+    "form": "Cap",
+    "source": "https://pokemondb.net/sprites/ditto"
+  },
+  {
+    "id": "costume-158",
+    "no": 132,
+    "name": "Ditto Yellow Party Hat",
+    "art": "vendor/ditto-hat.png",
+    "costume": true,
+    "form": "Hat",
+    "source": "https://pokemondb.net/sprites/ditto"
+  },
+  {
+    "id": "costume-159",
+    "no": 133,
+    "name": "Eevee (Cherry Blossom)",
+    "art": "vendor/eevee-cherry-blossoms.png",
+    "costume": true,
+    "form": "Cherry Blossoms adornment",
+    "source": "https://pokemondb.net/sprites/eevee"
+  },
+  {
+    "id": "costume-160",
+    "no": 133,
+    "name": "Eevee (Explorer)",
+    "art": "vendor/eevee-explorer-hat.png",
+    "costume": true,
+    "form": "Explorer Hat",
+    "source": "https://pokemondb.net/sprites/eevee"
+  },
+  {
+    "id": "costume-161",
+    "no": 133,
+    "name": "Eevee (Flower Crown)",
+    "art": "vendor/eevee-flower.png",
+    "costume": true,
+    "form": "Flower Crown",
+    "source": "https://pokemondb.net/sprites/eevee"
+  },
+  {
+    "id": "costume-162",
+    "no": 133,
+    "name": "Eevee (Holiday)",
+    "art": "vendor/eevee-holiday-hat.png",
+    "costume": true,
+    "form": "Holiday Hat",
+    "source": "https://pokemondb.net/sprites/eevee"
+  },
+  {
+    "id": "costume-163",
+    "no": 133,
+    "name": "Eevee (Moon)",
+    "art": "vendor/eevee-moon-crown.png",
+    "costume": true,
+    "form": "Moon Crown",
+    "source": "https://pokemondb.net/sprites/eevee"
+  },
+  {
+    "id": "costume-164",
+    "no": 133,
+    "name": "Eevee (Red Party)",
+    "art": "vendor/eevee-red-party-hat.png",
+    "costume": true,
+    "form": "Red Party Hat",
+    "source": "https://pokemondb.net/sprites/eevee"
+  },
+  {
+    "id": "costume-165",
+    "no": 133,
+    "name": "Eevee (Sun)",
+    "art": "vendor/eevee-sun-crown.png",
+    "costume": true,
+    "form": "Sun Crown",
+    "source": "https://pokemondb.net/sprites/eevee"
+  },
+  {
+    "id": "costume-166",
+    "no": 134,
+    "name": "Vaporeon Cherry Blossoms",
+    "art": "vendor/vaporeon-cherry-blossoms.png",
+    "costume": true,
+    "form": "Cherry Blossoms adornment",
+    "source": "https://pokemondb.net/sprites/vaporeon"
+  },
+  {
+    "id": "costume-167",
+    "no": 134,
+    "name": "Vaporeon Explorer Hat",
+    "art": "vendor/vaporeon-explorer-hat.png",
+    "costume": true,
+    "form": "Explorer Hat",
+    "source": "https://pokemondb.net/sprites/vaporeon"
+  },
+  {
+    "id": "costume-168",
+    "no": 134,
+    "name": "Vaporeon Flower Crown",
+    "art": "vendor/vaporeon-flower.png",
+    "costume": true,
+    "form": "Flower Crown",
+    "source": "https://pokemondb.net/sprites/vaporeon"
+  },
+  {
+    "id": "costume-169",
+    "no": 134,
+    "name": "Vaporeon holiday 2023",
+    "art": "vendor/vaporeon-holiday-hat.png",
+    "costume": true,
+    "form": "Holiday Hat",
+    "source": "https://pokemondb.net/sprites/vaporeon"
+  },
+  {
+    "id": "costume-170",
+    "no": 135,
+    "name": "Jolteon Cherry Blossoms",
+    "art": "vendor/jolteon-cherry-blossoms.png",
+    "costume": true,
+    "form": "Cherry Blossoms adornment",
+    "source": "https://pokemondb.net/sprites/jolteon"
+  },
+  {
+    "id": "costume-171",
+    "no": 135,
+    "name": "Jolteon Explorer Hat",
+    "art": "vendor/jolteon-explorer-hat.png",
+    "costume": true,
+    "form": "Explorer Hat",
+    "source": "https://pokemondb.net/sprites/jolteon"
+  },
+  {
+    "id": "costume-172",
+    "no": 135,
+    "name": "Jolteon Flower Crown",
+    "art": "vendor/jolteon-flower.png",
+    "costume": true,
+    "form": "Flower Crown",
+    "source": "https://pokemondb.net/sprites/jolteon"
+  },
+  {
+    "id": "costume-173",
+    "no": 135,
+    "name": "Jolteon Holiday 2023",
+    "art": "vendor/jolteon-holiday-hat.png",
+    "costume": true,
+    "form": "Holiday Hat",
+    "source": "https://pokemondb.net/sprites/jolteon"
+  },
+  {
+    "id": "costume-174",
+    "no": 136,
+    "name": "Flareon Cherry Blossoms",
+    "art": "vendor/flareon-cherry-blossoms.png",
+    "costume": true,
+    "form": "Cherry Blossoms adornment",
+    "source": "https://pokemondb.net/sprites/flareon"
+  },
+  {
+    "id": "costume-175",
+    "no": 136,
+    "name": "Flareon Explorer Hat",
+    "art": "vendor/flareon-explorer-hat.png",
+    "costume": true,
+    "form": "Explorer Hat",
+    "source": "https://pokemondb.net/sprites/flareon"
+  },
+  {
+    "id": "costume-176",
+    "no": 136,
+    "name": "Flareon Flower Crown",
+    "art": "vendor/flareon-flower.png",
+    "costume": true,
+    "form": "Flower Crown",
+    "source": "https://pokemondb.net/sprites/flareon"
+  },
+  {
+    "id": "costume-177",
+    "no": 136,
+    "name": "Flareon Holiday 2023",
+    "art": "vendor/flareon-holiday-hat.png",
+    "costume": true,
+    "form": "Holiday Hat",
+    "source": "https://pokemondb.net/sprites/flareon"
+  },
+  {
+    "id": "costume-178",
+    "no": 142,
+    "name": "Aerodactyl (Satchel)",
+    "art": "vendor/aerodactyl-satchel.png",
+    "costume": true,
+    "form": "Satchel",
+    "source": "https://pokemondb.net/sprites/aerodactyl"
+  },
+  {
+    "id": "costume-179",
+    "no": 143,
+    "name": "Snorlax (Cowboy Hat)",
+    "art": "vendor/snorlax-cowboy-hat.png",
+    "costume": true,
+    "form": "Cowboy Hat",
+    "source": "https://pokemondb.net/sprites/snorlax"
+  },
+  {
+    "id": "costume-180",
+    "no": 143,
+    "name": "Snorlax (Nightcap)",
+    "art": "vendor/snorlax-nightcap.png",
+    "costume": true,
+    "form": "Nightcap",
+    "source": "https://pokemondb.net/sprites/snorlax"
+  },
+  {
+    "id": "costume-181",
+    "no": 143,
+    "name": "Snorlax (Studded Jacket)",
+    "art": "vendor/snorlax-studded-jacket.png",
+    "costume": true,
+    "form": "Studded Jacket",
+    "source": "https://pokemondb.net/sprites/snorlax"
+  },
+  {
+    "id": "costume-182",
+    "no": 149,
+    "name": "Dragonite (Bow)",
+    "art": "vendor/dragonite-fashion.png",
+    "costume": true,
+    "form": "Fashion Week",
+    "source": "https://pokemondb.net/sprites/dragonite"
+  },
+  {
+    "id": "costume-183",
+    "no": 150,
+    "name": "Mewtwo (Armored)",
+    "art": "vendor/mewtwo-armored.png",
+    "costume": true,
+    "form": "Armored Mewtwo",
+    "source": "https://pokemondb.net/sprites/mewtwo"
+  },
+  {
+    "id": "costume-184",
+    "no": 163,
+    "name": "Hoothoot (New Year)",
+    "art": "vendor/hoothoot-new-year-hat.png",
+    "costume": true,
+    "form": "New Year Hat",
+    "source": "https://pokemondb.net/sprites/hoothoot"
+  },
+  {
+    "id": "costume-185",
+    "no": 164,
+    "name": "Noctowl New Years 2022",
+    "art": "vendor/noctowl-new-year-hat.png",
+    "costume": true,
+    "form": "New Year Hat",
+    "source": "https://pokemondb.net/sprites/noctowl"
+  },
+  {
+    "id": "costume-186",
+    "no": 172,
+    "name": "Pichu (Ash)",
+    "art": "vendor/pichu-cap.png",
+    "costume": true,
+    "form": "Cap",
+    "source": "https://pokemondb.net/sprites/pichu"
+  },
+  {
+    "id": "costume-187",
+    "no": 172,
+    "name": "Pichu (Cherry Blossom)",
+    "art": "vendor/pichu-cherry-blossoms.png",
+    "costume": true,
+    "form": "Cherry Blossoms adornment",
+    "source": "https://pokemondb.net/sprites/pichu"
+  },
+  {
+    "id": "costume-188",
+    "no": 172,
+    "name": "Pichu (Flower Crown)",
+    "art": "vendor/pichu-flower.png",
+    "costume": true,
+    "form": "Flower Crown",
+    "source": "https://pokemondb.net/sprites/pichu"
+  },
+  {
+    "id": "costume-189",
+    "no": 172,
+    "name": "Pichu (New Year)",
+    "art": "vendor/pichu-new-year-hat.png",
+    "costume": true,
+    "form": "New Year Hat",
+    "source": "https://pokemondb.net/sprites/pichu"
+  },
+  {
+    "id": "costume-190",
+    "no": 172,
+    "name": "Pichu (Party)",
+    "art": "vendor/pichu-party-hat.png",
+    "costume": true,
+    "form": "Party Hat",
+    "source": "https://pokemondb.net/sprites/pichu"
+  },
+  {
+    "id": "costume-191",
+    "no": 172,
+    "name": "Pichu (Santa)",
+    "art": "vendor/pichu-santa.png",
+    "costume": true,
+    "form": "Santa Hat",
+    "source": "https://pokemondb.net/sprites/pichu"
+  },
+  {
+    "id": "costume-192",
+    "no": 172,
+    "name": "Pichu (Summer)",
+    "art": "vendor/pichu-summer.png",
+    "costume": true,
+    "form": "Summer Hat",
+    "source": "https://pokemondb.net/sprites/pichu"
+  },
+  {
+    "id": "costume-193",
+    "no": 172,
+    "name": "Pichu (Winter)",
+    "art": "vendor/pichu-beanie.png",
+    "costume": true,
+    "form": "Beanie Hat",
+    "source": "https://pokemondb.net/sprites/pichu"
+  },
+  {
+    "id": "costume-194",
+    "no": 172,
+    "name": "Pichu (Witch)",
+    "art": "vendor/pichu-witch.png",
+    "costume": true,
+    "form": "Witch Hat",
+    "source": "https://pokemondb.net/sprites/pichu"
+  },
+  {
+    "id": "costume-195",
+    "no": 175,
+    "name": "Togepi (Flower Crown)",
+    "art": "vendor/togepi-flower.png",
+    "costume": true,
+    "form": "Flower Crown",
+    "source": "https://pokemondb.net/sprites/togepi"
+  },
+  {
+    "id": "costume-196",
+    "no": 176,
+    "name": "Togetic (Flower Crown)",
+    "art": "vendor/togetic-flower.png",
+    "costume": true,
+    "form": "Flower Crown",
+    "source": "https://pokemondb.net/sprites/togetic"
+  },
+  {
+    "id": "costume-197",
+    "no": 185,
+    "name": "Sudowoodo Holiday 2025",
+    "art": "vendor/sudowoodo-holiday-2025.png",
+    "costume": true,
+    "form": "Holiday 2025",
+    "source": "https://pokemondb.net/sprites/sudowoodo"
+  },
+  {
+    "id": "costume-198",
+    "no": 194,
+    "name": "Wooper (Cap)",
+    "art": "vendor/wooper-beanie.png",
+    "costume": true,
+    "form": "Beanie Hat",
+    "source": "https://pokemondb.net/sprites/wooper"
+  },
+  {
+    "id": "costume-199",
+    "no": 195,
+    "name": "Quagsire Fashionable",
+    "art": "vendor/quagsire-beanie.png",
+    "costume": true,
+    "form": "Beanie Hat",
+    "source": "https://pokemondb.net/sprites/quagsire"
+  },
+  {
+    "id": "costume-200",
+    "no": 196,
+    "name": "Espeon (Scarf)",
+    "art": "vendor/espeon-day-scarf.png",
+    "costume": true,
+    "form": "Day Scarf",
+    "source": "https://pokemondb.net/sprites/espeon"
+  },
+  {
+    "id": "costume-201",
+    "no": 196,
+    "name": "Espeon Cherry Blossoms",
+    "art": "vendor/espeon-cherry-blossoms.png",
+    "costume": true,
+    "form": "Cherry Blossoms adornment",
+    "source": "https://pokemondb.net/sprites/espeon"
+  },
+  {
+    "id": "costume-202",
+    "no": 196,
+    "name": "Espeon Explorer Hat",
+    "art": "vendor/espeon-explorer-hat.png",
+    "costume": true,
+    "form": "Explorer Hat",
+    "source": "https://pokemondb.net/sprites/espeon"
+  },
+  {
+    "id": "costume-203",
+    "no": 196,
+    "name": "Espeon Flower Crown",
+    "art": "vendor/espeon-flower.png",
+    "costume": true,
+    "form": "Flower Crown",
+    "source": "https://pokemondb.net/sprites/espeon"
+  },
+  {
+    "id": "costume-204",
+    "no": 196,
+    "name": "Espeon Holiday 2023",
+    "art": "vendor/espeon-holiday-hat.png",
+    "costume": true,
+    "form": "Holiday Hat",
+    "source": "https://pokemondb.net/sprites/espeon"
+  },
+  {
+    "id": "costume-205",
+    "no": 197,
+    "name": "Umbreon (Scarf)",
+    "art": "vendor/umbreon-night-scarf.png",
+    "costume": true,
+    "form": "Night Scarf",
+    "source": "https://pokemondb.net/sprites/umbreon"
+  },
+  {
+    "id": "costume-206",
+    "no": 197,
+    "name": "Umbreon Cherry Blossoms",
+    "art": "vendor/umbreon-cherry-blossoms.png",
+    "costume": true,
+    "form": "Cherry Blossoms adornment",
+    "source": "https://pokemondb.net/sprites/umbreon"
+  },
+  {
+    "id": "costume-207",
+    "no": 197,
+    "name": "Umbreon Explorer Hat",
+    "art": "vendor/umbreon-explorer-hat.png",
+    "costume": true,
+    "form": "Explorer Hat",
+    "source": "https://pokemondb.net/sprites/umbreon"
+  },
+  {
+    "id": "costume-208",
+    "no": 197,
+    "name": "Umbreon Flower Crown",
+    "art": "vendor/umbreon-flower.png",
+    "costume": true,
+    "form": "Flower Crown",
+    "source": "https://pokemondb.net/sprites/umbreon"
+  },
+  {
+    "id": "costume-209",
+    "no": 197,
+    "name": "Umbreon Holiday 2023",
+    "art": "vendor/umbreon-holiday-hat.png",
+    "costume": true,
+    "form": "Holiday Hat",
+    "source": "https://pokemondb.net/sprites/umbreon"
+  },
+  {
+    "id": "costume-210",
+    "no": 199,
+    "name": "Slowking 2022",
+    "art": "vendor/slowking-2022.png",
+    "costume": true,
+    "form": "2022 Glasses",
+    "source": "https://pokemondb.net/sprites/slowking"
+  },
+  {
+    "id": "costume-211",
+    "no": 201,
+    "name": "Unown (!)",
+    "art": "vendor/unown-em.png",
+    "costume": false,
+    "form": "!",
+    "source": "https://pokemondb.net/sprites/unown"
+  },
+  {
+    "id": "costume-212",
+    "no": 201,
+    "name": "Unown (?)",
+    "art": "vendor/unown-qm.png",
+    "costume": false,
+    "form": "?",
+    "source": "https://pokemondb.net/sprites/unown"
+  },
+  {
+    "id": "costume-213",
+    "no": 201,
+    "name": "Unown (A)",
+    "art": "vendor/unown-a.png",
+    "costume": false,
+    "form": "A",
+    "source": "https://pokemondb.net/sprites/unown"
+  },
+  {
+    "id": "costume-214",
+    "no": 201,
+    "name": "Unown (B)",
+    "art": "vendor/unown-b.png",
+    "costume": false,
+    "form": "B",
+    "source": "https://pokemondb.net/sprites/unown"
+  },
+  {
+    "id": "costume-215",
+    "no": 201,
+    "name": "Unown (C)",
+    "art": "vendor/unown-c.png",
+    "costume": false,
+    "form": "C",
+    "source": "https://pokemondb.net/sprites/unown"
+  },
+  {
+    "id": "costume-216",
+    "no": 201,
+    "name": "Unown (D)",
+    "art": "vendor/unown-d.png",
+    "costume": false,
+    "form": "D",
+    "source": "https://pokemondb.net/sprites/unown"
+  },
+  {
+    "id": "costume-217",
+    "no": 201,
+    "name": "Unown (E)",
+    "art": "vendor/unown-e.png",
+    "costume": false,
+    "form": "E",
+    "source": "https://pokemondb.net/sprites/unown"
+  },
+  {
+    "id": "costume-218",
+    "no": 201,
+    "name": "Unown (F)",
+    "art": "vendor/unown-f.png",
+    "costume": false,
+    "form": "F",
+    "source": "https://pokemondb.net/sprites/unown"
+  },
+  {
+    "id": "costume-219",
+    "no": 201,
+    "name": "Unown (G)",
+    "art": "vendor/unown-g.png",
+    "costume": false,
+    "form": "G",
+    "source": "https://pokemondb.net/sprites/unown"
+  },
+  {
+    "id": "costume-220",
+    "no": 201,
+    "name": "Unown (H)",
+    "art": "vendor/unown-h.png",
+    "costume": false,
+    "form": "H",
+    "source": "https://pokemondb.net/sprites/unown"
+  },
+  {
+    "id": "costume-221",
+    "no": 201,
+    "name": "Unown (I)",
+    "art": "vendor/unown-i.png",
+    "costume": false,
+    "form": "I",
+    "source": "https://pokemondb.net/sprites/unown"
+  },
+  {
+    "id": "costume-222",
+    "no": 201,
+    "name": "Unown (J)",
+    "art": "vendor/unown-j.png",
+    "costume": false,
+    "form": "J",
+    "source": "https://pokemondb.net/sprites/unown"
+  },
+  {
+    "id": "costume-223",
+    "no": 201,
+    "name": "Unown (K)",
+    "art": "vendor/unown-k.png",
+    "costume": false,
+    "form": "K",
+    "source": "https://pokemondb.net/sprites/unown"
+  },
+  {
+    "id": "costume-224",
+    "no": 201,
+    "name": "Unown (L)",
+    "art": "vendor/unown-l.png",
+    "costume": false,
+    "form": "L",
+    "source": "https://pokemondb.net/sprites/unown"
+  },
+  {
+    "id": "costume-225",
+    "no": 201,
+    "name": "Unown (M)",
+    "art": "vendor/unown-m.png",
+    "costume": false,
+    "form": "M",
+    "source": "https://pokemondb.net/sprites/unown"
+  },
+  {
+    "id": "costume-226",
+    "no": 201,
+    "name": "Unown (N)",
+    "art": "vendor/unown-n.png",
+    "costume": false,
+    "form": "N",
+    "source": "https://pokemondb.net/sprites/unown"
+  },
+  {
+    "id": "costume-227",
+    "no": 201,
+    "name": "Unown (O)",
+    "art": "vendor/unown-o.png",
+    "costume": false,
+    "form": "O",
+    "source": "https://pokemondb.net/sprites/unown"
+  },
+  {
+    "id": "costume-228",
+    "no": 201,
+    "name": "Unown (P)",
+    "art": "vendor/unown-p.png",
+    "costume": false,
+    "form": "P",
+    "source": "https://pokemondb.net/sprites/unown"
+  },
+  {
+    "id": "costume-229",
+    "no": 201,
+    "name": "Unown (Q)",
+    "art": "vendor/unown-q.png",
+    "costume": false,
+    "form": "Q",
+    "source": "https://pokemondb.net/sprites/unown"
+  },
+  {
+    "id": "costume-230",
+    "no": 201,
+    "name": "Unown (R)",
+    "art": "vendor/unown-r.png",
+    "costume": false,
+    "form": "R",
+    "source": "https://pokemondb.net/sprites/unown"
+  },
+  {
+    "id": "costume-231",
+    "no": 201,
+    "name": "Unown (S)",
+    "art": "vendor/unown-s.png",
+    "costume": false,
+    "form": "S",
+    "source": "https://pokemondb.net/sprites/unown"
+  },
+  {
+    "id": "costume-232",
+    "no": 201,
+    "name": "Unown (T)",
+    "art": "vendor/unown-t.png",
+    "costume": false,
+    "form": "T",
+    "source": "https://pokemondb.net/sprites/unown"
+  },
+  {
+    "id": "costume-233",
+    "no": 201,
+    "name": "Unown (U)",
+    "art": "vendor/unown-u.png",
+    "costume": false,
+    "form": "U",
+    "source": "https://pokemondb.net/sprites/unown"
+  },
+  {
+    "id": "costume-234",
+    "no": 201,
+    "name": "Unown (V)",
+    "art": "vendor/unown-v.png",
+    "costume": false,
+    "form": "V",
+    "source": "https://pokemondb.net/sprites/unown"
+  },
+  {
+    "id": "costume-235",
+    "no": 201,
+    "name": "Unown (W)",
+    "art": "vendor/unown-w.png",
+    "costume": false,
+    "form": "W",
+    "source": "https://pokemondb.net/sprites/unown"
+  },
+  {
+    "id": "costume-236",
+    "no": 201,
+    "name": "Unown (X)",
+    "art": "vendor/unown-x.png",
+    "costume": false,
+    "form": "X",
+    "source": "https://pokemondb.net/sprites/unown"
+  },
+  {
+    "id": "costume-237",
+    "no": 201,
+    "name": "Unown (Y)",
+    "art": "vendor/unown-y.png",
+    "costume": false,
+    "form": "Y",
+    "source": "https://pokemondb.net/sprites/unown"
+  },
+  {
+    "id": "costume-238",
+    "no": 201,
+    "name": "Unown (Z)",
+    "art": "vendor/unown-z.png",
+    "costume": false,
+    "form": "Z",
+    "source": "https://pokemondb.net/sprites/unown"
+  },
+  {
+    "id": "costume-239",
+    "no": 202,
+    "name": "Wobbuffet Party Hat",
+    "art": "vendor/wobbuffet-party-hat.png",
+    "costume": true,
+    "form": "Party Hat",
+    "source": "https://pokemondb.net/sprites/wobbuffet"
+  },
+  {
+    "id": "costume-240",
+    "no": 215,
+    "name": "Sneasel (Hipster)",
+    "art": "vendor/sneasel-fashion.png",
+    "costume": true,
+    "form": "Fashion Week",
+    "source": "https://pokemondb.net/sprites/sneasel"
+  },
+  {
+    "id": "costume-241",
+    "no": 225,
+    "name": "Delibird (Bow)",
+    "art": "vendor/delibird-holiday.png",
+    "costume": true,
+    "form": "Holiday",
+    "source": "https://pokemondb.net/sprites/delibird"
+  },
+  {
+    "id": "costume-242",
+    "no": 234,
+    "name": "Stantler Holiday",
+    "art": "vendor/stantler-bells.png",
+    "costume": true,
+    "form": "Holiday",
+    "source": "https://pokemondb.net/sprites/stantler"
+  },
+  {
+    "id": "costume-243",
+    "no": 238,
+    "name": "Smoochum (Bow)",
+    "art": "vendor/smoochum-bow.png",
+    "costume": true,
+    "form": "Bow",
+    "source": "https://pokemondb.net/sprites/smoochum"
+  },
+  {
+    "id": "costume-244",
+    "no": 239,
+    "name": "Elekid (Spark)",
+    "art": "vendor/elekid-spark-bracelet.png",
+    "costume": true,
+    "form": "Spark-themed bracelet",
+    "source": "https://pokemondb.net/sprites/elekid"
+  },
+  {
+    "id": "costume-245",
+    "no": 242,
+    "name": "Blissey (Flower Crown)",
+    "art": "vendor/blissey-flower.png",
+    "costume": true,
+    "form": "Flower Crown",
+    "source": "https://pokemondb.net/sprites/blissey"
+  },
+  {
+    "id": "costume-246",
+    "no": 263,
+    "name": "G_ Zigzagoon (Meloetta Hat)",
+    "art": "vendor/zigzagoon-galarian-meloetta-hat.png",
+    "costume": true,
+    "form": "Galarian Meloetta Hat",
+    "source": "https://pokemondb.net/sprites/zigzagoon"
+  },
+  {
+    "id": "costume-247",
+    "no": 265,
+    "name": "Wurmple Party",
+    "art": "vendor/wurmple-party-hat.png",
+    "costume": true,
+    "form": "Party Hat",
+    "source": "https://pokemondb.net/sprites/wurmple"
+  },
+  {
+    "id": "costume-248",
+    "no": 281,
+    "name": "Kirlia (Top Hat)",
+    "art": "vendor/kirlia-bowler-hat.png",
+    "costume": true,
+    "form": "Bowler Hat",
+    "source": "https://pokemondb.net/sprites/kirlia"
+  },
+  {
+    "id": "costume-249",
+    "no": 282,
+    "name": "Gardevoir (Meloetta Hat)",
+    "art": "vendor/gardevoir-meloetta-hat.png",
+    "costume": true,
+    "form": "Meloetta Hat",
+    "source": "https://pokemondb.net/sprites/gardevoir"
+  },
+  {
+    "id": "costume-250",
+    "no": 287,
+    "name": "Slakoth Visor",
+    "art": "vendor/slakoth-visor.png",
+    "costume": true,
+    "form": "Visor",
+    "source": "https://pokemondb.net/sprites/slakoth"
+  },
+  {
+    "id": "costume-251",
+    "no": 288,
+    "name": "Vigoroth Visor",
+    "art": "vendor/vigoroth-visor.png",
+    "costume": true,
+    "form": "Visor",
+    "source": "https://pokemondb.net/sprites/vigoroth"
+  },
+  {
+    "id": "costume-252",
+    "no": 289,
+    "name": "Slaking Visor",
+    "art": "vendor/slaking-visor.png",
+    "costume": true,
+    "form": "Visor",
+    "source": "https://pokemondb.net/sprites/slaking"
+  },
+  {
+    "id": "costume-253",
+    "no": 302,
+    "name": "Sableye Halloween",
+    "art": "vendor/sableye-litwick.png",
+    "costume": true,
+    "form": "Litwick Hat",
+    "source": "https://pokemondb.net/sprites/sableye"
+  },
+  {
+    "id": "costume-254",
+    "no": 330,
+    "name": "Flygon (Meloetta Hat)",
+    "art": "vendor/flygon-meloetta-hat.png",
+    "costume": true,
+    "form": "Meloetta Hat",
+    "source": "https://pokemondb.net/sprites/flygon"
+  },
+  {
+    "id": "costume-255",
+    "no": 355,
+    "name": "Duskull (Cempasuchil)",
+    "art": "vendor/duskull-cempasuchil-crown.png",
+    "costume": true,
+    "form": "Cempasúchil Crown",
+    "source": "https://pokemondb.net/sprites/duskull"
+  },
+  {
+    "id": "costume-256",
+    "no": 356,
+    "name": "Dusclops Cempasuchil Crown",
+    "art": "vendor/dusclops-cempasuchil-crown.png",
+    "costume": true,
+    "form": "Cempasúchil Crown",
+    "source": "https://pokemondb.net/sprites/dusclops"
+  },
+  {
+    "id": "costume-257",
+    "no": 359,
+    "name": "Absol (Fashion)",
+    "art": "vendor/absol-fashion.png",
+    "costume": true,
+    "form": "Fashion Week",
+    "source": "https://pokemondb.net/sprites/absol"
+  },
+  {
+    "id": "costume-258",
+    "no": 363,
+    "name": "Spheal (Holiday)",
+    "art": "vendor/spheal-holiday.png",
+    "costume": true,
+    "form": "Holiday",
+    "source": "https://pokemondb.net/sprites/spheal"
+  },
+  {
+    "id": "costume-259",
+    "no": 387,
+    "name": "Turtwig (Dawn)",
+    "art": "vendor/turtwig-dawn-hat.png",
+    "costume": true,
+    "form": "Dawn's Hat",
+    "source": "https://pokemondb.net/sprites/turtwig"
+  },
+  {
+    "id": "costume-260",
+    "no": 387,
+    "name": "Turtwig (Lucas)",
+    "art": "vendor/turtwig-lucas-hat.png",
+    "costume": true,
+    "form": "Lucas's Hat",
+    "source": "https://pokemondb.net/sprites/turtwig"
+  },
+  {
+    "id": "costume-261",
+    "no": 390,
+    "name": "Chimchar (Dawn)",
+    "art": "vendor/chimchar-dawn-hat.png",
+    "costume": true,
+    "form": "Dawn's Hat",
+    "source": "https://pokemondb.net/sprites/chimchar"
+  },
+  {
+    "id": "costume-262",
+    "no": 390,
+    "name": "Chimchar (Lucas)",
+    "art": "vendor/chimchar-lucas-hat.png",
+    "costume": true,
+    "form": "Lucas's Hat",
+    "source": "https://pokemondb.net/sprites/chimchar"
+  },
+  {
+    "id": "costume-263",
+    "no": 393,
+    "name": "Piplup (Dawn)",
+    "art": "vendor/piplup-dawn-hat.png",
+    "costume": true,
+    "form": "Dawn's Hat",
+    "source": "https://pokemondb.net/sprites/piplup"
+  },
+  {
+    "id": "costume-264",
+    "no": 393,
+    "name": "Piplup (Halloween)",
+    "art": "vendor/piplup-halloween-mischief.png",
+    "costume": true,
+    "form": "Halloween Mischief",
+    "source": "https://pokemondb.net/sprites/piplup"
+  },
+  {
+    "id": "costume-265",
+    "no": 393,
+    "name": "Piplup (Lucas)",
+    "art": "vendor/piplup-lucas-hat.png",
+    "costume": true,
+    "form": "Lucas's Hat",
+    "source": "https://pokemondb.net/sprites/piplup"
+  },
+  {
+    "id": "costume-266",
+    "no": 403,
+    "name": "Shinx (Top Hat)",
+    "art": "vendor/shinx-bowler-hat.png",
+    "costume": true,
+    "form": "Bowler Hat",
+    "source": "https://pokemondb.net/sprites/shinx"
+  },
+  {
+    "id": "costume-267",
+    "no": 413,
+    "name": "Wormadam (Plant)",
+    "art": "vendor/wormadam-plant.png",
+    "costume": true,
+    "form": "Plant Cloak",
+    "source": "https://pokemondb.net/sprites/wormadam"
+  },
+  {
+    "id": "costume-268",
+    "no": 413,
+    "name": "Wormadam (Sandy)",
+    "art": "vendor/wormadam-sandy.png",
+    "costume": true,
+    "form": "Sandy Cloak",
+    "source": "https://pokemondb.net/sprites/wormadam"
+  },
+  {
+    "id": "costume-269",
+    "no": 413,
+    "name": "Wormadam (Trash)",
+    "art": "vendor/wormadam-trash.png",
+    "costume": true,
+    "form": "Trash Cloak",
+    "source": "https://pokemondb.net/sprites/wormadam"
+  },
+  {
+    "id": "costume-270",
+    "no": 426,
+    "name": "Drifblim (Halloween)",
+    "art": "vendor/drifblim-halloween-mischief.png",
+    "costume": true,
+    "form": "Halloween Mischief",
+    "source": "https://pokemondb.net/sprites/drifblim"
+  },
+  {
+    "id": "costume-271",
+    "no": 427,
+    "name": "Buneary Flower Crown",
+    "art": "vendor/buneary-flower.png",
+    "costume": true,
+    "form": "Flower Crown",
+    "source": "https://pokemondb.net/sprites/buneary"
+  },
+  {
+    "id": "costume-272",
+    "no": 428,
+    "name": "Lopunny Flower Crown",
+    "art": "vendor/lopunny-flower.png",
+    "costume": true,
+    "form": "Flower Crown",
+    "source": "https://pokemondb.net/sprites/lopunny"
+  },
+  {
+    "id": "costume-273",
+    "no": 440,
+    "name": "Happiny (Flower Crown)",
+    "art": "vendor/happiny-flower.png",
+    "costume": true,
+    "form": "Flower Crown",
+    "source": "https://pokemondb.net/sprites/happiny"
+  },
+  {
+    "id": "costume-274",
+    "no": 453,
+    "name": "Croagunk (Cap)",
+    "art": "vendor/croagunk-cap.png",
+    "costume": true,
+    "form": "Backwards Cap",
+    "source": "https://pokemondb.net/sprites/croagunk"
+  },
+  {
+    "id": "costume-275",
+    "no": 454,
+    "name": "Toxicroak Backwards Cap",
+    "art": "vendor/toxicroak-cap.png",
+    "costume": true,
+    "form": "Cap",
+    "source": "https://pokemondb.net/sprites/toxicroak"
+  },
+  {
+    "id": "costume-276",
+    "no": 466,
+    "name": "Electivire Spark motif",
+    "art": "vendor/electivire-spark-bracelet.png",
+    "costume": true,
+    "form": "Spark-themed bracelet",
+    "source": "https://pokemondb.net/sprites/electivire"
+  },
+  {
+    "id": "costume-277",
+    "no": 468,
+    "name": "Togekiss (Flower Crown)",
+    "art": "vendor/togekiss-flower.png",
+    "costume": true,
+    "form": "Flower Crown",
+    "source": "https://pokemondb.net/sprites/togekiss"
+  },
+  {
+    "id": "costume-278",
+    "no": 470,
+    "name": "Leafeon Cherry Blossoms",
+    "art": "vendor/leafeon-cherry-blossoms.png",
+    "costume": true,
+    "form": "Cherry Blossoms adornment",
+    "source": "https://pokemondb.net/sprites/leafeon"
+  },
+  {
+    "id": "costume-279",
+    "no": 470,
+    "name": "Leafeon Explorer Hat",
+    "art": "vendor/leafeon-explorer-hat.png",
+    "costume": true,
+    "form": "Explorer Hat",
+    "source": "https://pokemondb.net/sprites/leafeon"
+  },
+  {
+    "id": "costume-280",
+    "no": 470,
+    "name": "Leafeon Flower Crown",
+    "art": "vendor/leafeon-flower.png",
+    "costume": true,
+    "form": "Flower Crown",
+    "source": "https://pokemondb.net/sprites/leafeon"
+  },
+  {
+    "id": "costume-281",
+    "no": 470,
+    "name": "Leafeon Holiday 2023",
+    "art": "vendor/leafeon-holiday-hat.png",
+    "costume": true,
+    "form": "Holiday Hat",
+    "source": "https://pokemondb.net/sprites/leafeon"
+  },
+  {
+    "id": "costume-282",
+    "no": 471,
+    "name": "Glaceon (Holiday)",
+    "art": "vendor/glaceon-holiday.png",
+    "costume": true,
+    "form": "Undersea Holiday",
+    "source": "https://pokemondb.net/sprites/glaceon"
+  },
+  {
+    "id": "costume-283",
+    "no": 471,
+    "name": "Glaceon Cherry Blossoms",
+    "art": "vendor/glaceon-cherry-blossoms.png",
+    "costume": true,
+    "form": "Cherry Blossoms adornment",
+    "source": "https://pokemondb.net/sprites/glaceon"
+  },
+  {
+    "id": "costume-284",
+    "no": 471,
+    "name": "Glaceon Explorer Hat",
+    "art": "vendor/glaceon-explorer-hat.png",
+    "costume": true,
+    "form": "Explorer Hat",
+    "source": "https://pokemondb.net/sprites/glaceon"
+  },
+  {
+    "id": "costume-285",
+    "no": 471,
+    "name": "Glaceon Flower Crown",
+    "art": "vendor/glaceon-flower.png",
+    "costume": true,
+    "form": "Flower Crown",
+    "source": "https://pokemondb.net/sprites/glaceon"
+  },
+  {
+    "id": "costume-286",
+    "no": 471,
+    "name": "Glaceon Holiday 2023",
+    "art": "vendor/glaceon-holiday-hat.png",
+    "costume": true,
+    "form": "Holiday Hat",
+    "source": "https://pokemondb.net/sprites/glaceon"
+  },
+  {
+    "id": "costume-287",
+    "no": 477,
+    "name": "Dusknoir Cempasuchil Crown",
+    "art": "vendor/dusknoir-cempasuchil-crown.png",
+    "costume": true,
+    "form": "Cempasúchil Crown",
+    "source": "https://pokemondb.net/sprites/dusknoir"
+  },
+  {
+    "id": "costume-288",
+    "no": 522,
+    "name": "Blitzle (Collar)",
+    "art": "vendor/blitzle-fashion.png",
+    "costume": true,
+    "form": "Fashion Week",
+    "source": "https://pokemondb.net/sprites/blitzle"
+  },
+  {
+    "id": "costume-289",
+    "no": 546,
+    "name": "Cottonee (Flower Crown)",
+    "art": "vendor/cottonee-flower.png",
+    "costume": true,
+    "form": "Flower Crown",
+    "source": "https://pokemondb.net/sprites/cottonee"
+  },
+  {
+    "id": "costume-290",
+    "no": 547,
+    "name": "Whimsicott Flower Crown",
+    "art": "vendor/whimsicott-flower.png",
+    "costume": true,
+    "form": "Flower Crown",
+    "source": "https://pokemondb.net/sprites/whimsicott"
+  },
+  {
+    "id": "costume-291",
+    "no": 572,
+    "name": "Minccino (Fashionable)",
+    "art": "vendor/minccino-fashion.png",
+    "costume": true,
+    "form": "Fashion Week",
+    "source": "https://pokemondb.net/sprites/minccino"
+  },
+  {
+    "id": "costume-292",
+    "no": 573,
+    "name": "Cinccino Fashionable Costume",
+    "art": "vendor/cinccino-fashion.png",
+    "costume": true,
+    "form": "Fashion Week",
+    "source": "https://pokemondb.net/sprites/cinccino"
+  },
+  {
+    "id": "costume-293",
+    "no": 613,
+    "name": "Cubchoo (Bow)",
+    "art": "vendor/cubchoo-holiday.png",
+    "costume": true,
+    "form": "Holiday",
+    "source": "https://pokemondb.net/sprites/cubchoo"
+  },
+  {
+    "id": "costume-294",
+    "no": 614,
+    "name": "Beartic Holidays",
+    "art": "vendor/beartic-holiday.png",
+    "costume": true,
+    "form": "Holiday",
+    "source": "https://pokemondb.net/sprites/beartic"
+  },
+  {
+    "id": "costume-295",
+    "no": 656,
+    "name": "Froakie (Halloween)",
+    "art": "vendor/froakie-halloween.png",
+    "costume": true,
+    "form": "Halloween",
+    "source": "https://pokemondb.net/sprites/froakie"
+  },
+  {
+    "id": "costume-296",
+    "no": 657,
+    "name": "Frogadier Witch Hat",
+    "art": "vendor/frogadier-halloween.png",
+    "costume": true,
+    "form": "Halloween",
+    "source": "https://pokemondb.net/sprites/frogadier"
+  },
+  {
+    "id": "costume-297",
+    "no": 658,
+    "name": "Greninja Witch Hat",
+    "art": "vendor/greninja-halloween.png",
+    "costume": true,
+    "form": "Halloween",
+    "source": "https://pokemondb.net/sprites/greninja"
+  },
+  {
+    "id": "costume-298",
+    "no": 666,
+    "name": "Archipelago",
+    "art": "vendor/vivillon-archipelago.png",
+    "costume": true,
+    "form": "Archipelago Pattern",
+    "source": "https://pokemondb.net/sprites/vivillon"
+  },
+  {
+    "id": "costume-299",
+    "no": 666,
+    "name": "Continental",
+    "art": "vendor/vivillon-continental.png",
+    "costume": true,
+    "form": "Continental Pattern",
+    "source": "https://pokemondb.net/sprites/vivillon"
+  },
+  {
+    "id": "costume-300",
+    "no": 666,
+    "name": "Elegant",
+    "art": "vendor/vivillon-elegant.png",
+    "costume": true,
+    "form": "Elegant Pattern",
+    "source": "https://pokemondb.net/sprites/vivillon"
+  },
+  {
+    "id": "costume-301",
+    "no": 666,
+    "name": "Fancy",
+    "art": "vendor/vivillon-fancy.png",
+    "costume": true,
+    "form": "Fancy Pattern",
+    "source": "https://pokemondb.net/sprites/vivillon"
+  },
+  {
+    "id": "costume-302",
+    "no": 666,
+    "name": "Garden",
+    "art": "vendor/vivillon-garden.png",
+    "costume": true,
+    "form": "Garden Pattern",
+    "source": "https://pokemondb.net/sprites/vivillon"
+  },
+  {
+    "id": "costume-303",
+    "no": 666,
+    "name": "High Plains",
+    "art": "vendor/vivillon-high-plains.png",
+    "costume": true,
+    "form": "High-plains Pattern",
+    "source": "https://pokemondb.net/sprites/vivillon"
+  },
+  {
+    "id": "costume-304",
+    "no": 666,
+    "name": "Icy Snow",
+    "art": "vendor/vivillon-icy-snow.png",
+    "costume": true,
+    "form": "Icy-snow Pattern",
+    "source": "https://pokemondb.net/sprites/vivillon"
+  },
+  {
+    "id": "costume-305",
+    "no": 666,
+    "name": "Jungle",
+    "art": "vendor/vivillon-jungle.png",
+    "costume": true,
+    "form": "Jungle Pattern",
+    "source": "https://pokemondb.net/sprites/vivillon"
+  },
+  {
+    "id": "costume-306",
+    "no": 666,
+    "name": "Marine",
+    "art": "vendor/vivillon-marine.png",
+    "costume": true,
+    "form": "Marine Pattern",
+    "source": "https://pokemondb.net/sprites/vivillon"
+  },
+  {
+    "id": "costume-307",
+    "no": 666,
+    "name": "Meadow",
+    "art": "vendor/vivillon-meadow.png",
+    "costume": true,
+    "form": "Meadow Pattern",
+    "source": "https://pokemondb.net/sprites/vivillon"
+  },
+  {
+    "id": "costume-308",
+    "no": 666,
+    "name": "Modern",
+    "art": "vendor/vivillon-modern.png",
+    "costume": true,
+    "form": "Modern Pattern",
+    "source": "https://pokemondb.net/sprites/vivillon"
+  },
+  {
+    "id": "costume-309",
+    "no": 666,
+    "name": "Monsoon",
+    "art": "vendor/vivillon-monsoon.png",
+    "costume": true,
+    "form": "Monsoon Pattern",
+    "source": "https://pokemondb.net/sprites/vivillon"
+  },
+  {
+    "id": "costume-310",
+    "no": 666,
+    "name": "Ocean",
+    "art": "vendor/vivillon-ocean.png",
+    "costume": true,
+    "form": "Ocean Pattern",
+    "source": "https://pokemondb.net/sprites/vivillon"
+  },
+  {
+    "id": "costume-311",
+    "no": 666,
+    "name": "Poké Ball",
+    "art": "vendor/vivillon-pokeball.png",
+    "costume": true,
+    "form": "Pokeball Pattern",
+    "source": "https://pokemondb.net/sprites/vivillon"
+  },
+  {
+    "id": "costume-312",
+    "no": 666,
+    "name": "Polar",
+    "art": "vendor/vivillon-polar.png",
+    "costume": true,
+    "form": "Polar Pattern",
+    "source": "https://pokemondb.net/sprites/vivillon"
+  },
+  {
+    "id": "costume-313",
+    "no": 666,
+    "name": "River",
+    "art": "vendor/vivillon-river.png",
+    "costume": true,
+    "form": "River Pattern",
+    "source": "https://pokemondb.net/sprites/vivillon"
+  },
+  {
+    "id": "costume-314",
+    "no": 666,
+    "name": "Sandstorm",
+    "art": "vendor/vivillon-sandstorm.png",
+    "costume": true,
+    "form": "Sandstorm Pattern",
+    "source": "https://pokemondb.net/sprites/vivillon"
+  },
+  {
+    "id": "costume-315",
+    "no": 666,
+    "name": "Savanna",
+    "art": "vendor/vivillon-savanna.png",
+    "costume": true,
+    "form": "Savanna Pattern",
+    "source": "https://pokemondb.net/sprites/vivillon"
+  },
+  {
+    "id": "costume-316",
+    "no": 666,
+    "name": "Sun",
+    "art": "vendor/vivillon-sun.png",
+    "costume": true,
+    "form": "Sun Pattern",
+    "source": "https://pokemondb.net/sprites/vivillon"
+  },
+  {
+    "id": "costume-317",
+    "no": 666,
+    "name": "Tundra",
+    "art": "vendor/vivillon-tundra.png",
+    "costume": true,
+    "form": "Tundra Pattern",
+    "source": "https://pokemondb.net/sprites/vivillon"
+  },
+  {
+    "id": "costume-318",
+    "no": 676,
+    "name": "Furfrou (Dandy)",
+    "art": "vendor/furfrou-dandy.png",
+    "costume": false,
+    "form": "Dandy Trim",
+    "source": "https://pokemondb.net/sprites/furfrou"
+  },
+  {
+    "id": "costume-319",
+    "no": 676,
+    "name": "Furfrou (Debutante)",
+    "art": "vendor/furfrou-debutante.png",
+    "costume": false,
+    "form": "Debutante Trim",
+    "source": "https://pokemondb.net/sprites/furfrou"
+  },
+  {
+    "id": "costume-320",
+    "no": 676,
+    "name": "Furfrou (Diamond)",
+    "art": "vendor/furfrou-diamond.png",
+    "costume": false,
+    "form": "Diamond Trim",
+    "source": "https://pokemondb.net/sprites/furfrou"
+  },
+  {
+    "id": "costume-321",
+    "no": 676,
+    "name": "Furfrou (Heart)",
+    "art": "vendor/furfrou-heart.png",
+    "costume": false,
+    "form": "Heart Trim",
+    "source": "https://pokemondb.net/sprites/furfrou"
+  },
+  {
+    "id": "costume-322",
+    "no": 676,
+    "name": "Furfrou (Kabuki)",
+    "art": "vendor/furfrou-kabuki.png",
+    "costume": false,
+    "form": "Kabuki Trim",
+    "source": "https://pokemondb.net/sprites/furfrou"
+  },
+  {
+    "id": "costume-323",
+    "no": 676,
+    "name": "Furfrou (La Reine)",
+    "art": "vendor/furfrou-la-reine.png",
+    "costume": false,
+    "form": "La Reine Trim",
+    "source": "https://pokemondb.net/sprites/furfrou"
+  },
+  {
+    "id": "costume-324",
+    "no": 676,
+    "name": "Furfrou (Matron)",
+    "art": "vendor/furfrou-matron.png",
+    "costume": false,
+    "form": "Matron Trim",
+    "source": "https://pokemondb.net/sprites/furfrou"
+  },
+  {
+    "id": "costume-325",
+    "no": 676,
+    "name": "Furfrou (Pharaoh)",
+    "art": "vendor/furfrou-pharaoh.png",
+    "costume": false,
+    "form": "Pharaoh Trim",
+    "source": "https://pokemondb.net/sprites/furfrou"
+  },
+  {
+    "id": "costume-326",
+    "no": 676,
+    "name": "Furfrou (Star)",
+    "art": "vendor/furfrou-star.png",
+    "costume": false,
+    "form": "Star Trim",
+    "source": "https://pokemondb.net/sprites/furfrou"
+  },
+  {
+    "id": "costume-327",
+    "no": 700,
+    "name": "Sylveon Cherry Blossoms",
+    "art": "vendor/sylveon-cherry-blossoms.png",
+    "costume": true,
+    "form": "Cherry Blossoms adornment",
+    "source": "https://pokemondb.net/sprites/sylveon"
+  },
+  {
+    "id": "costume-328",
+    "no": 700,
+    "name": "Sylveon Explorer Hat",
+    "art": "vendor/sylveon-explorer-hat.png",
+    "costume": true,
+    "form": "Explorer Hat",
+    "source": "https://pokemondb.net/sprites/sylveon"
+  },
+  {
+    "id": "costume-329",
+    "no": 700,
+    "name": "Sylveon Flower Crown",
+    "art": "vendor/sylveon-flower.png",
+    "costume": true,
+    "form": "Flower Crown",
+    "source": "https://pokemondb.net/sprites/sylveon"
+  },
+  {
+    "id": "costume-330",
+    "no": 700,
+    "name": "Sylveon Holiday",
+    "art": "vendor/sylveon-holiday-hat.png",
+    "costume": true,
+    "form": "Holiday Hat",
+    "source": "https://pokemondb.net/sprites/sylveon"
+  },
+  {
+    "id": "costume-331",
+    "no": 702,
+    "name": "Dedenne (Holiday)",
+    "art": "vendor/dedenne-holiday.png",
+    "costume": true,
+    "form": "Holiday",
+    "source": "https://pokemondb.net/sprites/dedenne"
+  },
+  {
+    "id": "costume-332",
+    "no": 710,
+    "name": "Pumpkaboo Average Size",
+    "art": "vendor/pumpkaboo-average.png",
+    "costume": false,
+    "form": "Average Size",
+    "source": "https://pokemondb.net/sprites/pumpkaboo"
+  },
+  {
+    "id": "costume-333",
+    "no": 710,
+    "name": "Pumpkaboo Large Size",
+    "art": "vendor/pumpkaboo-large.png",
+    "costume": false,
+    "form": "Large Size",
+    "source": "https://pokemondb.net/sprites/pumpkaboo"
+  },
+  {
+    "id": "costume-334",
+    "no": 710,
+    "name": "Pumpkaboo Small Size",
+    "art": "vendor/pumpkaboo-small.png",
+    "costume": false,
+    "form": "Small Size",
+    "source": "https://pokemondb.net/sprites/pumpkaboo"
+  },
+  {
+    "id": "costume-335",
+    "no": 710,
+    "name": "Pumpkaboo Super Size",
+    "art": "vendor/pumpkaboo-super.png",
+    "costume": false,
+    "form": "Super Size",
+    "source": "https://pokemondb.net/sprites/pumpkaboo"
+  },
+  {
+    "id": "costume-336",
+    "no": 711,
+    "name": "Gourgeist Average Size",
+    "art": "vendor/gourgeist-average.png",
+    "costume": true,
+    "form": "Average Size",
+    "source": "https://pokemondb.net/sprites/gourgeist"
+  },
+  {
+    "id": "costume-337",
+    "no": 711,
+    "name": "Gourgeist Large Size",
+    "art": "vendor/gourgeist-large.png",
+    "costume": true,
+    "form": "Large Size",
+    "source": "https://pokemondb.net/sprites/gourgeist"
+  },
+  {
+    "id": "costume-338",
+    "no": 711,
+    "name": "Gourgeist Small Size",
+    "art": "vendor/gourgeist-small.png",
+    "costume": true,
+    "form": "Small Size",
+    "source": "https://pokemondb.net/sprites/gourgeist"
+  },
+  {
+    "id": "costume-339",
+    "no": 711,
+    "name": "Gourgeist Super Size",
+    "art": "vendor/gourgeist-super.png",
+    "costume": true,
+    "form": "Super Size",
+    "source": "https://pokemondb.net/sprites/gourgeist"
+  },
+  {
+    "id": "costume-340",
+    "no": 722,
+    "name": "Rowlet (Halloween)",
+    "art": "vendor/rowlet-halloween.png",
+    "costume": true,
+    "form": "Halloween",
+    "source": "https://pokemondb.net/sprites/rowlet"
+  },
+  {
+    "id": "costume-341",
+    "no": 723,
+    "name": "Dartrix Halloween",
+    "art": "vendor/dartrix-halloween.png",
+    "costume": true,
+    "form": "Halloween",
+    "source": "https://pokemondb.net/sprites/dartrix"
+  },
+  {
+    "id": "costume-342",
+    "no": 724,
+    "name": "Decidueye Halloween",
+    "art": "vendor/decidueye-halloween.png",
+    "costume": true,
+    "form": "Halloween",
+    "source": "https://pokemondb.net/sprites/decidueye"
+  },
+  {
+    "id": "costume-343",
+    "no": 737,
+    "name": "Charjabug Holiday 2025",
+    "art": "vendor/charjabug-holiday-2025.png",
+    "costume": true,
+    "form": "Holiday 2025",
+    "source": "https://pokemondb.net/sprites/charjabug"
+  },
+  {
+    "id": "costume-344",
+    "no": 738,
+    "name": "Vikavolt Holiday 2025",
+    "art": "vendor/vikavolt-holiday-2025.png",
+    "costume": true,
+    "form": "Holiday 2025",
+    "source": "https://pokemondb.net/sprites/vikavolt"
+  },
+  {
+    "id": "costume-345",
+    "no": 741,
+    "name": "Oricorio (Baile)",
+    "art": "vendor/oricorio-baile.png",
+    "costume": true,
+    "form": "Baile Style",
+    "source": "https://pokemondb.net/sprites/oricorio"
+  },
+  {
+    "id": "costume-346",
+    "no": 741,
+    "name": "Oricorio (Pa'u)",
+    "art": "vendor/oricorio-pau.png",
+    "costume": true,
+    "form": "Pa'u Style",
+    "source": "https://pokemondb.net/sprites/oricorio"
+  },
+  {
+    "id": "costume-347",
+    "no": 741,
+    "name": "Oricorio (Pom-Pom)",
+    "art": "vendor/oricorio-pom-pom.png",
+    "costume": true,
+    "form": "Pom-Pom Style",
+    "source": "https://pokemondb.net/sprites/oricorio"
+  },
+  {
+    "id": "costume-348",
+    "no": 741,
+    "name": "Oricorio (Sensu)",
+    "art": "vendor/oricorio-sensu.png",
+    "costume": true,
+    "form": "Sensu Style",
+    "source": "https://pokemondb.net/sprites/oricorio"
+  },
+  {
+    "id": "costume-349",
+    "no": 760,
+    "name": "Bewear Wilderness Cape",
+    "art": "vendor/bewear-cape.png",
+    "costume": true,
+    "form": "Wilderness Cape",
+    "source": "https://pokemondb.net/sprites/bewear"
+  },
+  {
+    "id": "costume-350",
+    "no": 831,
+    "name": "Wooloo (Holiday)",
+    "art": "vendor/wooloo-holiday.png",
+    "costume": true,
+    "form": "Holiday",
+    "source": "https://pokemondb.net/sprites/wooloo"
+  },
+  {
+    "id": "costume-351",
+    "no": 832,
+    "name": "Dubwool Holiday Attire",
+    "art": "vendor/dubwool-holiday.png",
+    "costume": true,
+    "form": "Holiday",
+    "source": "https://pokemondb.net/sprites/dubwool"
+  },
+  {
+    "id": "costume-352",
+    "no": 870,
+    "name": "Falinks Train",
+    "art": "vendor/falinks-train.png",
+    "costume": true,
+    "form": "Train",
+    "source": "https://pokemondb.net/sprites/falinks"
+  },
+  {
+    "id": "costume-353",
+    "no": 907,
+    "name": "Floragato Hat With Likos Pin",
+    "art": "vendor/floragato-likos-hat.png",
+    "costume": true,
+    "form": "Likos's hat",
+    "source": "https://pokemondb.net/sprites/floragato"
+  },
+  {
+    "id": "costume-354",
+    "no": 999,
+    "name": "Gimmighoul 9th Anniversary Coin",
+    "art": "vendor/gimmighoul-coin.png",
+    "costume": true,
+    "form": "9th anniversary coin",
+    "source": "https://pokemondb.net/sprites/gimmighoul"
+  },
+  {
+    "id": "base-1",
+    "no": 1,
+    "name": "Bulbasaur",
+    "shiny": false,
+    "art": "vendor/home-1.png",
+    "source": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/1.png"
+  },
+  {
+    "id": "base-1-shiny",
+    "no": 1,
+    "name": "Bulbasaur",
+    "shiny": true,
+    "art": "vendor/home-1-shiny.png",
+    "source": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/1.png"
+  },
+  {
+    "id": "base-4",
+    "no": 4,
+    "name": "Charmander",
+    "shiny": false,
+    "art": "vendor/home-4.png",
+    "source": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/4.png"
+  },
+  {
+    "id": "base-4-shiny",
+    "no": 4,
+    "name": "Charmander",
+    "shiny": true,
+    "art": "vendor/home-4-shiny.png",
+    "source": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/4.png"
+  },
+  {
+    "id": "base-7",
+    "no": 7,
+    "name": "Squirtle",
+    "shiny": false,
+    "art": "vendor/home-7.png",
+    "source": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/7.png"
+  },
+  {
+    "id": "base-7-shiny",
+    "no": 7,
+    "name": "Squirtle",
+    "shiny": true,
+    "art": "vendor/home-7-shiny.png",
+    "source": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/7.png"
+  },
+  {
+    "id": "base-25",
+    "no": 25,
+    "name": "Pikachu",
+    "shiny": false,
+    "art": "vendor/home-25.png",
+    "source": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/25.png"
+  },
+  {
+    "id": "base-25-shiny",
+    "no": 25,
+    "name": "Pikachu",
+    "shiny": true,
+    "art": "vendor/home-25-shiny.png",
+    "source": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/25.png"
+  },
+  {
+    "id": "base-39",
+    "no": 39,
+    "name": "Jigglypuff",
+    "shiny": false,
+    "art": "vendor/home-39.png",
+    "source": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/39.png"
+  },
+  {
+    "id": "base-39-shiny",
+    "no": 39,
+    "name": "Jigglypuff",
+    "shiny": true,
+    "art": "vendor/home-39-shiny.png",
+    "source": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/39.png"
+  },
+  {
+    "id": "base-54",
+    "no": 54,
+    "name": "Psyduck",
+    "shiny": false,
+    "art": "vendor/home-54.png",
+    "source": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/54.png"
+  },
+  {
+    "id": "base-54-shiny",
+    "no": 54,
+    "name": "Psyduck",
+    "shiny": true,
+    "art": "vendor/home-54-shiny.png",
+    "source": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/54.png"
+  },
+  {
+    "id": "base-94",
+    "no": 94,
+    "name": "Gengar",
+    "shiny": false,
+    "art": "vendor/home-94.png",
+    "source": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/94.png"
+  },
+  {
+    "id": "base-94-shiny",
+    "no": 94,
+    "name": "Gengar",
+    "shiny": true,
+    "art": "vendor/home-94-shiny.png",
+    "source": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/94.png"
+  },
+  {
+    "id": "base-129",
+    "no": 129,
+    "name": "Magikarp",
+    "shiny": false,
+    "art": "vendor/home-129.png",
+    "source": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/129.png"
+  },
+  {
+    "id": "base-129-shiny",
+    "no": 129,
+    "name": "Magikarp",
+    "shiny": true,
+    "art": "vendor/home-129-shiny.png",
+    "source": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/129.png"
+  },
+  {
+    "id": "base-131",
+    "no": 131,
+    "name": "Lapras",
+    "shiny": false,
+    "art": "vendor/home-131.png",
+    "source": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/131.png"
+  },
+  {
+    "id": "base-131-shiny",
+    "no": 131,
+    "name": "Lapras",
+    "shiny": true,
+    "art": "vendor/home-131-shiny.png",
+    "source": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/131.png"
+  },
+  {
+    "id": "base-133",
+    "no": 133,
+    "name": "Eevee",
+    "shiny": false,
+    "art": "vendor/home-133.png",
+    "source": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/133.png"
+  },
+  {
+    "id": "base-133-shiny",
+    "no": 133,
+    "name": "Eevee",
+    "shiny": true,
+    "art": "vendor/home-133-shiny.png",
+    "source": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/133.png"
+  },
+  {
+    "id": "base-143",
+    "no": 143,
+    "name": "Snorlax",
+    "shiny": false,
+    "art": "vendor/home-143.png",
+    "source": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/143.png"
+  },
+  {
+    "id": "base-143-shiny",
+    "no": 143,
+    "name": "Snorlax",
+    "shiny": true,
+    "art": "vendor/home-143-shiny.png",
+    "source": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/143.png"
+  },
+  {
+    "id": "base-150",
+    "no": 150,
+    "name": "Mewtwo",
+    "shiny": false,
+    "art": "vendor/home-150.png",
+    "source": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/150.png"
+  },
+  {
+    "id": "base-150-shiny",
+    "no": 150,
+    "name": "Mewtwo",
+    "shiny": true,
+    "art": "vendor/home-150-shiny.png",
+    "source": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/150.png"
+  },
+  {
+    "id": "base-175",
+    "no": 175,
+    "name": "Togepi",
+    "shiny": false,
+    "art": "vendor/home-175.png",
+    "source": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/175.png"
+  },
+  {
+    "id": "base-175-shiny",
+    "no": 175,
+    "name": "Togepi",
+    "shiny": true,
+    "art": "vendor/home-175-shiny.png",
+    "source": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/175.png"
+  },
+  {
+    "id": "base-201",
+    "no": 201,
+    "name": "Unown",
+    "shiny": false,
+    "art": "vendor/home-201.png",
+    "source": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/201.png"
+  },
+  {
+    "id": "base-201-shiny",
+    "no": 201,
+    "name": "Unown",
+    "shiny": true,
+    "art": "vendor/home-201-shiny.png",
+    "source": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/201.png"
+  },
+  {
+    "id": "base-280",
+    "no": 280,
+    "name": "Ralts",
+    "shiny": false,
+    "art": "vendor/home-280.png",
+    "source": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/280.png"
+  },
+  {
+    "id": "base-280-shiny",
+    "no": 280,
+    "name": "Ralts",
+    "shiny": true,
+    "art": "vendor/home-280-shiny.png",
+    "source": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/280.png"
+  },
+  {
+    "id": "base-302",
+    "no": 302,
+    "name": "Sableye",
+    "shiny": false,
+    "art": "vendor/home-302.png",
+    "source": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/302.png"
+  },
+  {
+    "id": "base-302-shiny",
+    "no": 302,
+    "name": "Sableye",
+    "shiny": true,
+    "art": "vendor/home-302-shiny.png",
+    "source": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/302.png"
+  },
+  {
+    "id": "base-384",
+    "no": 384,
+    "name": "Rayquaza",
+    "shiny": false,
+    "art": "vendor/home-384.png",
+    "source": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/384.png"
+  },
+  {
+    "id": "base-384-shiny",
+    "no": 384,
+    "name": "Rayquaza",
+    "shiny": true,
+    "art": "vendor/home-384-shiny.png",
+    "source": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/384.png"
+  },
+  {
+    "id": "base-479",
+    "no": 479,
+    "name": "Rotom",
+    "shiny": false,
+    "art": "vendor/home-479.png",
+    "source": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/479.png"
+  },
+  {
+    "id": "base-479-shiny",
+    "no": 479,
+    "name": "Rotom",
+    "shiny": true,
+    "art": "vendor/home-479-shiny.png",
+    "source": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/479.png"
+  },
+  {
+    "id": "base-757",
+    "no": 757,
+    "name": "Salandit",
+    "shiny": false,
+    "art": "vendor/home-757.png",
+    "source": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/757.png"
+  },
+  {
+    "id": "base-757-shiny",
+    "no": 757,
+    "name": "Salandit",
+    "shiny": true,
+    "art": "vendor/home-757-shiny.png",
+    "source": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/757.png"
+  },
+  {
+    "id": "base-872",
+    "no": 872,
+    "name": "Snom",
+    "shiny": false,
+    "art": "vendor/home-872.png",
+    "source": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/872.png"
+  },
+  {
+    "id": "base-872-shiny",
+    "no": 872,
+    "name": "Snom",
+    "shiny": true,
+    "art": "vendor/home-872-shiny.png",
+    "source": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/872.png"
+  },
+  {
+    "id": "worlds-2026",
+    "no": 25,
+    "name": "Pikachu (Worlds 2026)",
+    "costume": true,
+    "form": "Worlds 2026",
+    "art": null,
+    "source": "Repository pending-artwork catalog"
+  }
+]
