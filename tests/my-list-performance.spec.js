@@ -94,10 +94,14 @@ test.describe('isolated My List scale profile',()=>{
       window.__myListStringRenderCalls=0;
       const original=renderMyStrings;
       renderMyStrings=(...args)=>{window.__myListStringRenderCalls++;return original(...args);};
+      window.__declarationBuildCalls=0;
+      const originalDeclarations=productDeclarations;
+      productDeclarations=(...args)=>{window.__declarationBuildCalls++;return originalDeclarations(...args);};
     });
     const result=await page.evaluate(async()=>{
       const stable=document.querySelectorAll('#mylist-out .myrow')[1];
       const filterStart=performance.now();renderMyList('Synthetic Pokemon 0119',{reason:'filter'});const filterMs=performance.now()-filterStart;
+      const filterDeclarationBuilds=window.__declarationBuildCalls;
       const matched=[...document.querySelectorAll('#mylist-out .myrow')].filter(row=>!row.hidden).length;
       const clearStart=performance.now();renderMyList('',{reason:'filter'});const clearMs=performance.now()-clearStart;
       const first=document.querySelector('#mylist-out .myrow'),firstBefore=first;
@@ -111,7 +115,7 @@ test.describe('isolated My List scale profile',()=>{
       await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
       await waitForMyListRender();
       return{
-        filterMs,clearMs,editMs,matched,
+        filterMs,clearMs,editMs,matched,filterDeclarationBuilds,
         stableRowPreserved:stable===[...document.querySelectorAll('#mylist-out .myrow')].find(row=>row.dataset.name===stable.dataset.name),
         changedRowReplaced:firstBefore!==firstAfter,
         stringRendersImmediatelyAfterEdit,
@@ -124,6 +128,7 @@ test.describe('isolated My List scale profile',()=>{
     await client.send('Emulation.setCPUThrottlingRate',{rate:1});
     expect(result).toMatchObject({matched:1,stableRowPreserved:true,changedRowReplaced:true,stringRendersImmediatelyAfterEdit:0,latestQuery:'synthetic pokemon 0007',visible:1});
     expect(result.stringRendersAfterSettle).toBeGreaterThan(0);
+    expect(result.filterDeclarationBuilds).toBe(1);
     expect(result.filterMs).toBeLessThan(50);
     expect(result.clearMs).toBeLessThan(50);
     expect(result.editMs).toBeLessThan(100);

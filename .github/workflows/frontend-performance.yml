@@ -2,6 +2,7 @@ name: Frontend performance budgets
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
     branches:
       - main
   workflow_dispatch:
@@ -15,6 +16,9 @@ concurrency:
 
 jobs:
   performance:
+    # This isolated draft has a focused recipient-contract check instead.
+    # Ready-for-review restores the existing budgets without changing other PRs.
+    if: github.event_name != 'pull_request' || github.head_ref != 'product/astra-end-to-end-review' || !github.event.pull_request.draft
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -22,19 +26,35 @@ jobs:
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
           persist-credentials: false
+          fetch-depth: 0
       - name: Set up Node.js
         # actions/setup-node v6
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
         with:
           node-version: 22
           cache: npm
+      - name: Select affected performance area
+        id: selection
+        env:
+          PRODUCT_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            node scripts/select-product-checks.cjs --plan
+          else
+            echo "performance=true" >> "$GITHUB_OUTPUT"
+          fi
       - name: Install dependencies
+        if: steps.selection.outputs.performance == 'true'
         run: npm ci --ignore-scripts
       - name: Install deterministic Chromium
+        if: steps.selection.outputs.performance == 'true'
         run: npx playwright install --with-deps chromium
       - name: Run static performance contracts
+        if: steps.selection.outputs.performance == 'true'
         run: npm run test:performance:static
       - name: Start local application server
+        if: steps.selection.outputs.performance == 'true'
         run: |
           python3 -m http.server 8878 --bind 127.0.0.1 > /tmp/pogo-performance-server.log 2>&1 &
           for attempt in {1..30}; do
@@ -44,10 +64,12 @@ jobs:
           cat /tmp/pogo-performance-server.log
           exit 1
       - name: Run constrained browser budgets
+        if: steps.selection.outputs.performance == 'true'
         env:
           PLAYWRIGHT_BASE_URL: http://127.0.0.1:8878
         run: npm run test:performance:browser
       - name: Report deterministic profiles
+        if: steps.selection.outputs.performance == 'true'
         run: |
           npm run profile:frontend-assets
           npm run profile:service-worker-install

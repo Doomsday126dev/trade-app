@@ -1,5 +1,6 @@
 const {test,expect}=require('@playwright/test');
 const path=require('node:path');
+const fs=require('node:fs');
 
 const publicProjection=Object.freeze({
   version:1,
@@ -85,6 +86,125 @@ async function assertPublicPrivacy(page){
 }
 
 test.describe('anonymous public share bootstrap',()=>{
+  test('unified LF and FT are distinct, localized and copy only visible category species',async({page})=>{
+    const declaration=(intent,name,p='',extra={})=>({intent,name,category:'wishlist',p,mod:'',gender:'',backgroundId:'',note:'',lucky:false,shiny:false,xxl:false,xxs:false,...extra});
+    const declarations=[declaration('lf','Pikachu','H'),declaration('lf','Eevee','', {gender:'f',note:'Public note'}),declaration('ft','Mewtwo','L'),declaration('ft','Mewtwo','M',{shiny:true}),declaration('ft','Charmander','H',{category:'dynamax'})];
+    await installPublicFirebase(page,{projection:{...publicProjection,version:2,declarations,declarationCount:declarations.length}});
+    await page.addInitScript(()=>Object.defineProperty(navigator,'clipboard',{value:{writeText:async text=>{window.__unifiedCopy=text;}}}));
+    await page.goto('./?view=PublicTrainer&list=wishlist');
+    for(const [width,locale] of [[320,'en'],[390,'ja'],[430,'es'],[1440,'de']]){
+      await page.setViewportSize({width,height:900});
+      await page.locator('#share-language-trigger').click();await page.locator('#settings-language').selectOption(locale);await page.keyboard.press('Escape');
+      for(const intent of ['lf','ft']){
+        await page.locator(`[data-public-share-action="intent"][data-intent="${intent}"]`).click();
+        await expect(page.locator('.share-pcard')).toHaveCount(2);
+        const expected=await page.evaluate(({intent,locale})=>PogoDomain.searchStrings.dexStringFromNumbers(intent==='lf'?[25,133]:[150],{locale}),{intent,locale});
+        await page.locator('[data-public-share-action="copy-search"]').click();
+        expect(await page.evaluate(()=>window.__unifiedCopy)).toBe(expected);
+        expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+        expect(await page.evaluate(()=>{
+          const button=document.querySelector('[data-public-share-action="copy-friend"]').getBoundingClientRect();
+          const meta=document.querySelector('.share-hdr-meta').getBoundingClientRect();
+          const header=document.querySelector('#share-hdr').getBoundingClientRect();
+          return button.top>=meta.bottom&&button.right<=header.right&&meta.right<=header.right;
+        })).toBe(true);
+        if(process.env.TRUSTED_READINESS_SCREENSHOT_DIR){
+          fs.mkdirSync(process.env.TRUSTED_READINESS_SCREENSHOT_DIR,{recursive:true});
+          await page.screenshot({path:path.join(process.env.TRUSTED_READINESS_SCREENSHOT_DIR,`unified-public-${intent}-${width}-${locale}.png`)});
+        }
+      }
+    }
+    await page.locator('[data-list-type="dynamax"]').click();
+    await expect(page.locator('.share-pcard')).toHaveCount(1);
+    await page.locator('[data-public-share-action="intent"][data-intent="lf"]').click();
+    await expect(page.locator('[data-public-share-action="copy-search"]')).toHaveCount(0);
+    await assertPublicPrivacy(page);
+  });
+  test('unprioritized entries remain neutral and friend-code copy needs no account',async({page})=>{
+    await installPublicFirebase(page,{projection:{...publicProjection,lists:{...publicProjection.lists,wishlist:{Pikachu:'L',Eevee:'[shiny]'}}}});
+    await page.addInitScript(()=>Object.defineProperty(navigator,'clipboard',{value:{writeText:async text=>{window.__friendCodeCopy=text;}}}));
+    await page.goto('./?view=PublicTrainer&list=wishlist');
+    const neutral=page.locator('.share-section').filter({hasText:'Other entries'});
+    await expect(neutral).toContainText('Eevee');await expect(neutral).not.toContainText('Pikachu');
+    await expect(page.locator('.share-section').filter({hasText:'Low'})).toContainText('Pikachu');
+    await page.getByRole('button',{name:'Copy friend code'}).click();
+    expect(await page.evaluate(()=>window.__friendCodeCopy)).toBe('123456789012');
+    await assertPublicPrivacy(page);
+  });
+  test('viewer locale, category and clipboard behavior use the canonical search on the anonymous route',async({page})=>{
+    await page.addInitScript(()=>{
+      localStorage.setItem('pogoUiLocale:v1','ja');
+      Object.defineProperty(navigator,'clipboard',{value:{writeText:async value=>{
+        if(window.__denyCopy)throw new Error('clipboard-denied');
+        window.__copiedSearch=value;
+      }}});
+    });
+    const projection={...publicProjection,language:'de',lists:{...publicProjection.lists,
+      dynamax:{Charmander:{p:'H'}},costumes:{'Pikachu (Worlds 2025)':{p:'H'}}}};
+    await installPublicFirebase(page,{projection});
+    await page.goto('./?view=PublicTrainer&list=wishlist');
+    const copy=page.locator('[data-public-share-action="copy-search"]');
+    for(const locale of ['ja','en','es','de']){
+      await page.locator('#share-language-trigger').click();
+      await page.locator('#settings-language').selectOption(locale);
+      await page.locator('#settings-modal button:visible').first().focus();
+      await page.keyboard.press('Shift+Tab');
+      expect(await page.evaluate(()=>document.getElementById('settings-modal').contains(document.activeElement))).toBe(true);
+      await page.keyboard.press('Escape');
+      await expect(page.locator('#settings-modal')).not.toHaveClass(/open/);
+      await expect(page.locator('#share-language-trigger')).toBeFocused();
+      const expected=await page.evaluate(locale=>PogoDomain.searchStrings.dexStringFromNumbers([25,133],{locale}),locale);
+      await expect(copy).toHaveAttribute('data-copy',expected);
+      await copy.click();
+      expect(await page.evaluate(()=>window.__copiedSearch)).toBe(expected);
+      await expect(page.locator('#public-share-copy-status')).not.toBeEmpty();
+      expect(await copy.innerText()).not.toContain('share.');
+    }
+    await page.locator('[data-list-type="dynamax"]').click();
+    await expect(copy).toHaveAttribute('data-copy',await page.evaluate(()=>PogoDomain.searchStrings.dexStringFromNumbers([4],{locale:'de'})));
+    await page.locator('[data-list-type="costumes"]').click();
+    await expect(copy).toHaveAttribute('data-copy',await page.evaluate(()=>PogoDomain.searchStrings.dexStringFromNumbers([25],{locale:'de'})));
+    await page.evaluate(()=>{window.__denyCopy=true;});
+    await copy.click();
+    await expect(page.locator('.public-share-search details')).toHaveAttribute('open','');
+    await expect(page.locator('.public-share-search textarea')).toBeFocused();
+    expect(await page.locator('.public-share-search textarea').evaluate(node=>node.selectionEnd-node.selectionStart)).toBeGreaterThan(0);
+    await assertPublicPrivacy(page);
+  });
+
+  test('locale fallback and four responsive sizes preserve a usable public action',async({browser})=>{
+    for(const [saved,browserLocale,expected,width,height] of [
+      ['', 'ja-JP','ja',320,568],['es','de-DE','es',390,844],
+      ['fr','de-DE','de',430,932],['','fr-FR','en',1440,900]
+    ]){
+      const context=await browser.newContext({locale:browserLocale,viewport:{width,height}});
+      const page=await context.newPage();
+      await page.addInitScript(value=>{if(value)localStorage.setItem('pogoUiLocale:v1',value);},saved);
+      await installPublicFirebase(page);
+      await page.goto('./?view=PublicTrainer&list=wishlist');
+      await expect(page.locator('[data-public-share-action="copy-search"]')).toBeVisible();
+      expect(await page.evaluate(()=>PogoI18n.core.getLocale())).toBe(expected);
+      expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+      const box=await page.locator('[data-public-share-action="copy-search"]').boundingBox();
+      expect(box.height).toBeGreaterThanOrEqual(44);
+      if(process.env.PRODUCT_AUDIT_SCREENSHOT_DIR){
+        for(const sprite of await page.locator('.public-share-pokemon-sprite').all())await expect(sprite).toHaveAttribute('data-optical-ready','true');
+        fs.mkdirSync(process.env.PRODUCT_AUDIT_SCREENSHOT_DIR,{recursive:true});
+        await page.screenshot({path:path.join(process.env.PRODUCT_AUDIT_SCREENSHOT_DIR,`public-${width}-${expected}.png`),fullPage:true});
+      }
+      await context.close();
+    }
+  });
+
+  test('empty categories offer no search and unknown entries never silently disappear from a query',async({page})=>{
+    await installPublicFirebase(page,{projection:{...publicProjection,lists:{...publicProjection.lists,wishlist:{'Unmapped Event Form':{p:'H'}}}}});
+    await page.goto('./?view=PublicTrainer&list=wishlist');
+    await expect(page.locator('[data-public-share-action="copy-search"]')).toBeDisabled();
+    await expect(page.locator('.public-share-search')).toContainText('could not be identified');
+    await page.goto('./?view=PublicTrainer&list=gmax');
+    await expect(page.locator('.public-share-empty')).toBeVisible();
+    await expect(page.locator('[data-public-share-action="copy-search"]')).toHaveCount(0);
+  });
   test('direct signed-out link renders only the public projection after App Check',async({page})=>{
     const requests=await installPublicFirebase(page);
     await page.goto('./?view=PublicTrainer&list=wishlist',{waitUntil:'domcontentloaded'});

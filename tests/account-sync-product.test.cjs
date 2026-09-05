@@ -18,6 +18,36 @@ function active(row,values=row.values){
     fieldRevisions:Object.fromEntries(fields.map(field=>[tokens[field],1])),fieldMutations:Object.fromEntries(fields.map(field=>[tokens[field],'op_0000000000000001'])),fieldMutationHashes:Object.fromEntries(fields.map(field=>[tokens[field],'a'.repeat(64)])),lifecycleMutation:'op_0000000000000001',lifecycleMutationHash:'a'.repeat(64)};
 }
 
+test('Board edit planning changes only intended fields and does not target new remote entries',async()=>{
+  const w=load(),api=w.PogoDomain.accountSyncProduct,model=w.PogoDomain.accountSyncModel;
+  const base={lf:[],ft:[{name:'Pikachu',p:'H',shiny:false}]},desired={lf:[],ft:[{name:'Pikachu',p:'M',shiny:false}]};
+  const current=api.specialBoardRows({board:{lf:[],ft:[{name:'Pikachu',p:'H',shiny:true},{name:'Eevee'}]},catalogIdForBoardEntry:({entry})=>entry.name}).rows.map(row=>active(row));
+  const calls=[],source=readFileSync(path.join(root,'js/app/application.js'),'utf8');
+  const context={accountSyncProduct:api,accountSyncModel:model,accountSyncCanonicalEntities:current,managedAccountSyncRuntime:{controller:{}},
+    accountSyncCatalogIdentity:(_type,name)=>({catalogId:name}),accountSyncAuthorityCurrent:()=>true,
+    applyAccountSyncTradeMutations:async mutations=>{calls.push(...mutations);return{ok:true};}};
+  vm.runInNewContext(source.slice(source.indexOf('async function writeAccountSyncSpecialBoard('),source.indexOf('function resetOwnedHydrationState(')),context);
+  assert.equal((await context.writeAccountSyncSpecialBoard(desired,{baseBoard:base})).ok,true);
+  assert.equal(calls.length,1);assert.equal(calls[0].kind,'patch');
+  assert.deepEqual(JSON.parse(JSON.stringify(calls[0].patch)),{priority:'M'});
+  assert.equal(current[0].values.shiny||current[1].values.shiny,true);
+});
+
+test('physical duplicate cleanup has no active function or UI export before product rollout',()=>{
+  const source=readFileSync(path.join(root,'js/app/application.js'),'utf8');
+  assert.doesNotMatch(source,/consolidateIntentDuplicates/);
+  assert.match(source,/Physical consolidation is intentionally unavailable/);
+});
+
+test('Board projection round-trips every supported qualifier without losing priority or gender',()=>{
+  const api=load().PogoDomain.accountSyncProduct;
+  const board={lf:[{name:'Pikachu',p:'M',mod:'Antique',gender:'f',lucky:true,xxl:true,xxs:false,shiny:true,backgroundId:'chicago',note:'retain',mirror:true}],ft:[{name:'Eevee',p:'L',gender:'m',qty:3,note:'older quantity retained'}]};
+  const rows=api.specialBoardRows({board,catalogIdForBoardEntry:({entry})=>entry.name}).rows;
+  const projected=api.projectTradeEntities({entities:rows.map(row=>active(row)),catalogEntryForId:id=>({name:id}),encodePriority:()=>''});
+  const roundTrip=api.specialBoardRows({board:projected.board,catalogIdForBoardEntry:({entry})=>entry.name}).rows;
+  assert.deepEqual(JSON.parse(JSON.stringify(roundTrip)),JSON.parse(JSON.stringify(rows)));
+});
+
 test('My List rows use canonical catalog identity and preserve structured qualifiers and order',()=>{
   const api=load().PogoDomain.accountSyncProduct;
   const result=api.listRows({

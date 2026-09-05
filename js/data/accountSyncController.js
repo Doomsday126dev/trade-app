@@ -3,10 +3,11 @@
   const model=global.PogoDomain?.accountSyncModel,merge=global.PogoDomain?.accountSyncMerge;
   if(!model||!merge)throw new Error('Account sync model and merge engine must load before the controller');
 
-  function createAccountSyncController({journal,repository,ownerUid,enabled=false,writesEnabled=false,allowlistedUids=[],online=()=>global.navigator?.onLine!==false,onState,onEntities,onAccount,onProjection,projectionAllowed=()=>true,clock=()=>Date.now(),crypto=global.crypto}={}){
+  function createAccountSyncController({journal,repository,ownerUid,enabled=false,writesEnabled=false,admitted,allowlistedUids=[],sessionCurrent=()=>true,online=()=>global.navigator?.onLine!==false,onState,onEntities,onAccount,onProjection,projectionAllowed=()=>true,clock=()=>Date.now(),crypto=global.crypto}={}){
     const owner=model.firebaseKey(ownerUid,128),allowlist=new Set((allowlistedUids||[]).map(String));
     if(!journal||!repository||!owner||journal.ownerUid!==owner||repository.ownerUid!==owner)throw new TypeError('Account sync controller owner binding is invalid');
-    const eligible=enabled===true&&writesEnabled===true&&allowlist.has(owner);
+    // The app supplies verified admission; retain the old constructor for isolated fixtures.
+    const eligible=enabled===true&&writesEnabled===true&&(admitted===undefined?allowlist.has(owner):admitted===true);
     let active=false,lifecycleEpoch=0,listenerAuthorityVersion=0,optimisticRevision=0,drainPromise=null,drainRequested=false,manualRetryPromise=null,mutationPromise=Promise.resolve(),repositoryMutationPromise=Promise.resolve(),remoteAcceptPromise=Promise.resolve(),drainQueue=Promise.resolve(),stateEmitPromise=Promise.resolve(),unsubscribe=null,retryTimer=null,lastError='',lastErrorCategory='',lastProjectionError='',lastSyncAt=0,listenerState='inactive';
     const listenerWaiters=new Set();
     const entities=new Map(),acceptedEntities=new Map();
@@ -24,9 +25,9 @@
     function listenerAuthorityError(){return Object.assign(new Error('The live account sync listener authority changed'),{code:'account-sync/listener-authority-lost'});}
     function watchedWriteError(code,message){return Object.assign(new Error(message),{code});}
     function closeListenerAuthority(nextState){listenerAuthorityVersion++;listenerState=nextState;clearTimeout(retryTimer);retryTimer=null;return listenerAuthorityVersion;}
-    function listenerAuthority(epoch=lifecycleEpoch){return active&&eligible&&online()&&epoch===lifecycleEpoch&&listenerState==='healthy'?Object.freeze({epoch,version:listenerAuthorityVersion}):null;}
-    function listenerAuthorityCurrent(binding){return!!binding&&active&&eligible&&online()&&binding.epoch===lifecycleEpoch&&binding.version===listenerAuthorityVersion&&listenerState==='healthy';}
-    function listenerLifecycleCurrent(binding){return!!binding&&active&&eligible&&binding.epoch===lifecycleEpoch;}
+    function listenerAuthority(epoch=lifecycleEpoch){return sessionCurrent()&&active&&eligible&&online()&&epoch===lifecycleEpoch&&listenerState==='healthy'?Object.freeze({epoch,version:listenerAuthorityVersion}):null;}
+    function listenerAuthorityCurrent(binding){return sessionCurrent()&&!!binding&&active&&eligible&&online()&&binding.epoch===lifecycleEpoch&&binding.version===listenerAuthorityVersion&&listenerState==='healthy';}
+    function listenerLifecycleCurrent(binding){return sessionCurrent()&&!!binding&&active&&eligible&&binding.epoch===lifecycleEpoch;}
     function watchedWriteAuthorityError(binding){
       if(!listenerLifecycleCurrent(binding))return watchedWriteError('account-sync/session-changed','The account sync session changed during the watched write');
       if(lastErrorCategory==='canonical'||model.unsafeRecoveryCode(lastError))return watchedWriteError(lastError||'account-sync/canonical-validation-failed','Canonical account sync evidence became unsafe during the watched write');
@@ -104,7 +105,7 @@
       return stateEmitPromise;
     }
     async function snapshot(){
-      const journalState=await journal.snapshot(),listenerHealthy=!eligible||active&&listenerState==='healthy',effectiveError=lastError||journalState.blockedErrorCode||'';
+      const journalState=await journal.snapshot(),listenerHealthy=sessionCurrent()&&(!eligible||active&&listenerState==='healthy'),effectiveError=!sessionCurrent()?'account-sync/session-changed':lastError||journalState.blockedErrorCode||'';
       const recoverableBlockedCount=Number(journalState.recoverableBlockedCount)||0,unsafeBlockedCount=Number(journalState.unsafeBlockedCount)||0;
       const unsafeCurrent=lastErrorCategory==='canonical'||model.unsafeRecoveryCode(lastError),unsafeEvidence=unsafeCurrent||unsafeBlockedCount>0;
       const state=!eligible?'local-only':unsafeEvidence?'sync-error':journalState.conflictCount?'conflict':journalState.recoveryCandidateCount?'review-required':journalState.blockedCount?'sync-error':!online()?'offline':journalState.pendingCount||['starting','listening'].includes(listenerState)?'pending-sync':effectiveError||listenerState==='failed'?'sync-error':!active?'inactive':'saved';
@@ -220,6 +221,7 @@
         const execution=await executeAuthorizedMutation(()=>onProjection(projection,operation),authority);
         if(!execution.started||!execution.current)throw listenerAuthorityError();
         if(execution.error)throw execution.error;
+        if(execution.value?.ok===false||['pending','queued','deferred'].includes(execution.value?.status))throw new Error('account-sync/public-projection-not-confirmed');
         lastProjectionError='';return Object.freeze({ok:true,status:'published',count:projection.length});
       }catch(error){lastProjectionError=String(error?.code||error?.message||'account-sync/public-projection-failed');emit();return model.failure('account-sync/public-projection-failed','Private sync succeeded, but the public list projection is pending');}
     }

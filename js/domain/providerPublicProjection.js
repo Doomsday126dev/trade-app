@@ -8,7 +8,7 @@
   const PROFILE_FIELDS=Object.freeze(['avatarPokemon','bio','discord','friendCode','lastUpdated']);
   const PROFILE_TEXT_LIMITS=Object.freeze({friendCode:14,bio:120,discord:40,avatarPokemon:120});
   const ENTRY_FIELDS=Object.freeze(['backgroundId','lucky','mod','p','shiny','xxl','xxs']);
-  const PRIORITIES=new Set(['H','M','L']);
+  const PRIORITIES=new Set(['','H','M','L']);
   const BACKGROUND_ID=/^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
   const CONTROL=/[\u0000-\u001f\u007f]/u;
   const MAX_PROJECTION_BYTES=512*1024;
@@ -25,7 +25,7 @@
     return keys.length===expected.length&&keys.every((key,index)=>key===expected[index]);
   }
   function optional(value,fields){return plain(value)&&Object.keys(value).every(key=>fields.includes(key));}
-  function storedFields(value){return optional(value,STORED_FIELDS)&&REQUIRED_STORED_FIELDS.every(field=>Object.hasOwn(value,field));}
+  function storedFields(value){return optional(value,value?.schemaVersion===2?[...STORED_FIELDS,'declarations','declarationCount']:STORED_FIELDS)&&REQUIRED_STORED_FIELDS.every(field=>Object.hasOwn(value,field));}
   function safeString(value,max,{empty=true}={}){return typeof value==='string'&&!CONTROL.test(value)&&value.length<=max&&(empty||value.length>0);}
   function safeTime(value,{positive=false}={}){return Number.isSafeInteger(value)&&value>=(positive?1:0);}
   function serializedBytes(value){
@@ -71,25 +71,28 @@
       safeString(value.avatarPokemon,PROFILE_TEXT_LIMITS.avatarPokemon)&&safeTime(value.lastUpdated);
   }
   function publicSnapshotStatus(value,{trainerName}={}){
-    const expected=String(trainerName||'').trim(),lists=exact(value,PUBLIC_FIELDS)?validatedLists(value.lists):null;
-    if(serializedBytes(value)>MAX_PROJECTION_BYTES||!lists||value.version!==1||!safeString(value.username,64,{empty:false})||expected&&value.username!==expected||
+    const expected=String(trainerName||'').trim(),unified=value?.version===2,lists=exact(value,unified?[...PUBLIC_FIELDS,'declarations','declarationCount']:PUBLIC_FIELDS)?validatedLists(value.lists):null;
+    let declarations;
+    if(unified){try{declarations=root.publicSharePublication.publicDeclarations(value.declarations??[],{strict:true});}catch{return Object.freeze({ok:false,status:'projection_unsupported'});}
+      if(value.declarationCount!==declarations.length)return Object.freeze({ok:false,status:'projection_unsupported'});}
+    if(serializedBytes(value)>MAX_PROJECTION_BYTES||!lists||![1,2].includes(value.version)||!safeString(value.username,64,{empty:false})||expected&&value.username!==expected||
       !validProfile(value.profile)||!safeTime(value.updatedAt,{positive:true})||!Array.isArray(value.publishedListTypes)||
       value.publishedListTypes.length!==LIST_TYPES.length||!LIST_TYPES.every((type,index)=>value.publishedListTypes[index]===type)){
       return Object.freeze({ok:false,status:'projection_unsupported'});
     }
-    const snapshot=Object.freeze({version:1,username:value.username,profile:Object.freeze({...value.profile}),lists,
+    const snapshot=Object.freeze({version:unified?2:1,...(unified?{declarations,declarationCount:declarations.length}:{}),username:value.username,profile:Object.freeze({...value.profile}),lists,
       publishedListTypes:Object.freeze([...LIST_TYPES]),updatedAt:value.updatedAt});
-    const entryCount=LIST_TYPES.reduce((count,type)=>count+Object.keys(lists[type]).length,0);
+    const entryCount=unified?declarations.length:LIST_TYPES.reduce((count,type)=>count+Object.keys(lists[type]).length,0);
     return Object.freeze({ok:true,status:entryCount?'published':'published_empty',entryCount,snapshot});
   }
   function storedProjectionStatus(value,{trainerName}={}){
     const expected=String(trainerName||'').trim(),lists=storedFields(value)?validatedLists(value.lists):null;
-    if(serializedBytes(value)>MAX_PROJECTION_BYTES||!lists||value.schemaVersion!==1||!Number.isSafeInteger(value.shareVersion)||value.shareVersion<1||
+    if(serializedBytes(value)>MAX_PROJECTION_BYTES||!lists||![1,2].includes(value.schemaVersion)||!Number.isSafeInteger(value.shareVersion)||value.shareVersion<1||
       !safeString(value.trainerName,64,{empty:false})||expected&&value.trainerName!==expected||
       !validProfile(value.profile)||!safeTime(value.publishedAt,{positive:true})||!safeTime(value.updatedAt,{positive:true})||
       value.updatedAt<value.publishedAt||!exact(value.publishedListTypes,LIST_TYPES)||
       !LIST_TYPES.every(type=>value.publishedListTypes[type]===true))return Object.freeze({ok:false,status:'projection_unsupported'});
-    return publicSnapshotStatus({version:1,username:value.trainerName,profile:{...value.profile},lists,
+    return publicSnapshotStatus({version:value.schemaVersion,...(value.schemaVersion===2?{declarations:value.declarations??[],declarationCount:value.declarationCount}:{}),username:value.trainerName,profile:{...value.profile},lists,
       publishedListTypes:[...LIST_TYPES],updatedAt:value.updatedAt},{trainerName:expected});
   }
   function nextProjection(snapshot,current,{trainerName,now=Date.now()}={}){
@@ -100,7 +103,7 @@
     if(currentStatus&&!currentStatus.ok)throw Object.assign(new Error('provider-public/existing-projection-invalid'),{code:'provider-public/existing-projection-invalid'});
     const priorVersion=current?.shareVersion||0,publishedAt=current?.publishedAt||now,updatedAt=Math.max(now,(current?.updatedAt||0)+1);
     const profile={...normalized.snapshot.profile,lastUpdated:Number(normalized.snapshot.profile.lastUpdated||0)||0};
-    const next={schemaVersion:1,shareVersion:priorVersion+1,trainerName:expected,profile,
+    const next={schemaVersion:normalized.snapshot.version,...(normalized.snapshot.version===2?{declarations:normalized.snapshot.declarations,declarationCount:normalized.snapshot.declarationCount}:{}),shareVersion:priorVersion+1,trainerName:expected,profile,
       lists:Object.fromEntries(LIST_TYPES.map(type=>[type,{...normalized.snapshot.lists[type]}])),
       publishedListTypes:Object.fromEntries(LIST_TYPES.map(type=>[type,true])),publishedAt,updatedAt};
     if(serializedBytes(next)>MAX_PROJECTION_BYTES)throw Object.assign(new Error('provider-public/projection-oversized'),{code:'provider-public/projection-oversized'});
@@ -114,7 +117,7 @@
   function projectionContentMatches(snapshot,current,{trainerName}={}){
     const incoming=publicSnapshotStatus(snapshot,{trainerName}),stored=storedProjectionStatus(current,{trainerName});
     if(!incoming.ok||!stored.ok)return false;
-    const content=value=>({username:value.username,profile:value.profile,lists:value.lists,publishedListTypes:value.publishedListTypes});
+    const content=value=>({version:value.version,username:value.username,profile:value.profile,lists:value.lists,publishedListTypes:value.publishedListTypes,...(value.version===2?{declarations:value.declarations}: {})});
     return canonical(content(incoming.snapshot))===canonical(content(stored.snapshot));
   }
   root.providerPublicProjection=Object.freeze({DANGEROUS_KEYS,LIST_TYPES,MAX_PROJECTION_BYTES,PROFILE_TEXT_LIMITS,PUBLIC_FIELDS,REQUIRED_STORED_FIELDS,STORED_FIELDS,nextProjection,projectionContentMatches,publicSnapshotStatus,storedProjectionStatus});

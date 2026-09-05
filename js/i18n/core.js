@@ -61,7 +61,8 @@
   }
 
   const missing=[];
-  const initialLocale=supportedLocale(readStoredLocale()||detectBrowserLocale());
+  const storedLocale=readStoredLocale(),storedBase=normalizeLocale(storedLocale).split('-')[0];
+  const initialLocale=storedLocale&&SUPPORTED_LOCALES.includes(storedBase)?storedBase:detectBrowserLocale();
   const translator=createTranslator({catalogs:global.PogoLocales||{},locale:initialLocale,fallbackLocale:'en',onMissing:item=>missing.push(item)});
   function setLocale(value,{persist=true,storage=global.localStorage}={}){
     const locale=translator.setLocale(value);

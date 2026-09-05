@@ -114,12 +114,6 @@ test('Settings routing owns one transient route-scoped scroll snapshot',()=>{
   assert.doesNotMatch(lifecycle,/(firebase|userPreferences|publicShares|fetch\(|WebSocket|localStorage|sessionStorage)/i);
 });
 
-test('relocated Settings retains local locale controls and exposes no preference writes',()=>{
-  assert.match(html,/id="settings-language" onchange="changeInterfaceLocale\(this\.value\)"/);
-  assert.match(html,/class="settings-section local-preferences-panel settings-account-only"/);
-  assert.doesNotMatch(html,/function (?:openSettingsPanel|changeInterfaceLocale)[\s\S]{0,800}(?:firebaseSet|firebaseUpdate|managedTrainerPreferencesRepository\.write)/);
-});
-
 test('standard states distinguish loading, offline, authorization, stale, and update-required UI',()=>{
   const ui=emptyState();
   for(const kind of ['loading','offline','retrying','unavailable','permission_denied','signed_out','empty','stale','update_required'])assert.equal(ui.stateModel(kind).kind,kind);
@@ -172,6 +166,7 @@ test('Browse Favorites is Favorite-scoped, memory-only, and free of broad remote
 });
 
 test('local preferences stay clearly device-local and expose no enabled sync control',()=>{
+  assert.doesNotMatch(html,/function (?:openSettingsPanel|changeInterfaceLocale)[\s\S]{0,800}(?:firebaseSet|firebaseUpdate|managedTrainerPreferencesRepository\.write)/);
   assert.match(html,/class="settings-section local-preferences-panel settings-account-only"/);
   assert.match(html,/id="trainer-sync-local-status"[^>]*role="status"[^>]*aria-live="polite"/);
   assert.match(html,/data-i18n="trainer\.syncState\.local-only"/);
@@ -242,7 +237,7 @@ test('localized Admin and dialog surfaces preserve bounded responsive geometry',
   for(const marker of [
     'data-i18n="admin.pendingRequests"','data-i18n="settings.profileGroupTrainer"',
     'data-i18n="settings.profileGroupPokemonGo"','data-i18n="settings.profileGroupAbout"',
-    "i18nCore.t('safeTransfer.limitWarning'",'data-i18n="specialBoard.description"'
+    "i18nCore.t('safeTransfer.limitWarning'",'data-i18n="product.board"'
   ])assert.ok(html.includes(marker),marker);
   assert.match(html,/\.admin-member-row\{display:grid/);
   assert.match(html,/@media\(max-width:600px\)\{\.admin-header/);

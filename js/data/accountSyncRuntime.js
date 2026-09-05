@@ -119,7 +119,7 @@
     return priorInitializedAt===null||initializedAt===priorInitializedAt;
   }
   function createAccountSyncRuntime({
-    ownerUid,username,journal,repository,enabled,writesEnabled,allowlistedUids,readMigrationSources,
+    ownerUid,username,journal,repository,enabled,writesEnabled,admitted,allowlistedUids,sessionCurrent=()=>true,readMigrationSources,
     onState,onCanonicalEntities,onProviderProfile,onPublicProjection,onMigrationState,initialProviderProfile={},online=()=>global.navigator?.onLine!==false,
     clock=()=>Date.now(),crypto=global.crypto,listenerReadyTimeoutMs=8000,initializationKind='legacy-migration'
   }={}){
@@ -133,7 +133,7 @@
     }
     function notifyState(state){if(!stopped)onState?.(runtimeState(state));}
     const controller=controllerApi.createAccountSyncController({
-      journal,repository,ownerUid:owner,enabled,writesEnabled,allowlistedUids,online,clock,crypto,
+      journal,repository,ownerUid:owner,enabled,writesEnabled,admitted,allowlistedUids,sessionCurrent,online,clock,crypto,
       onState:notifyState,
       onEntities:entities=>{
         if(!projectionReady||stopped)return;
@@ -144,11 +144,21 @@
           Promise.resolve(controller.snapshot()).then(notifyState).catch(()=>{});
         }
       },
-      onAccount:account=>acceptProviderAccountProfile(account),
+      onAccount:account=>{
+        requireRunning();
+        if(initializationKind==='legacy-migration'){
+          const state=product.canonicalSyncState(account,owner);
+          if(!state.ok||projectionReady&&!state.initialized)throw Object.assign(new Error('Canonical metadata changed or is incompatible'),{code:'account-sync/schema-owner-invalid'});
+        }
+        return acceptProviderAccountProfile(account);
+      },
       onProjection:initializationKind==='provider-only'?queueProviderPublicProjection:onPublicProjection,
       projectionAllowed:()=>projectionReady&&!stopped
     });
-    function requireRunning(){if(stopped)throw Object.assign(new Error('Account sync runtime is closed'),{code:'account-sync/runtime-closed'});}
+    function requireRunning(){
+      if(stopped)throw Object.assign(new Error('Account sync runtime is closed'),{code:'account-sync/runtime-closed'});
+      if(!sessionCurrent())throw Object.assign(new Error('Account sync session changed'),{code:'account-sync/session-changed'});
+    }
     function notifyMigration(state,detail={}){migrationState=state;onMigrationState?.(Object.freeze({state,...detail}));}
     function pendingProfileRecord(value){
       const keys=model.plainObject(value)?Object.keys(value).sort():[],expected=[...PROFILE_PENDING_KEYS].sort(),normalized=model.normalizeProfileValues(value?.values),baseRevision=model.integer(value?.baseRevision),queuedAt=model.integer(value?.queuedAt);

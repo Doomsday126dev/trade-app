@@ -1,0 +1,5 @@
+"file","category","action","rationale"
+".github/workflows/deploy-pages.yml","CRITICAL CONTRACT","KEEP","Pinned immutable release and rollback controls are not product-audit cleanup."
+".github/workflows/frontend-performance.yml","SCHEDULED/DEEP ONLY","KEEP","Retain performance on ready PRs; focused public-share check substitutes only for this draft audit."
+".github/workflows/pages-release-control.yml","CRITICAL CONTRACT","KEEP","Pinned immutable release and rollback controls are not product-audit cleanup."
+".github/workflows/sprite-catalog-freshness.yml","SCHEDULED/DEEP ONLY","KEEP","Upstream freshness is scheduled review, not automatic permission to import artwork."

@@ -33,7 +33,8 @@ test('runtime sprite registry contains only approved served sources',()=>{
 });
 
 test('anonymous public shares resolve approved form-aware sprites without private catalog data',()=>{
-  assert.equal(window.PogoDomain.publicPokemonDex.size,937);
+  assert.equal(window.PogoDomain.publicPokemonDex.dex('Mewtwo'),150);
+  assert.equal(window.PogoDomain.publicPokemonDex.dex('Mew'),151);
   assert.doesNotMatch(publicDexRuntime,/Doomsday126|Ghyslaine|friendCode|"users"/);
   assert.ok(Buffer.byteLength(publicDexRuntime)<30000,'public dex should stay compact');
   assert.deepEqual(Array.from(sprites.publicSpriteUrls('Blipbug')),['https://img.pokemondb.net/sprites/home/normal/blipbug.png']);
@@ -103,7 +104,7 @@ test('unresolved costumes stop at the reviewed catalog boundary',()=>{
   assert.match(image,/knownUnavailable=context\.reviewed\?\.status==='unavailable'/);
   assert.match(image,/role="img" aria-label=/);
   const board=html.slice(html.indexOf('function renderSpecialBoard'),html.indexOf('async function addSpecialEntry'));
-  assert.match(board,/spriteImg\(e\.no,24,'sb-row-sprite'/);
+  assert.match(board,/spriteImg\(e\.no,\d+,'sb-row-sprite',e\.name,e\.gender/);
   assert.doesNotMatch(board,/🎮/);
   const exportFallback=html.slice(html.indexOf('function drawSpriteFallback'),html.indexOf('function maxCrownSvg'));
   assert.match(exportFallback,/reviewed\.knownVariant\?'\?'/);

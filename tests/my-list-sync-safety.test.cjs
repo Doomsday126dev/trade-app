@@ -132,6 +132,7 @@ function queueRuntimeHarness({setAdapter=async()=>{},updateAdapter=async()=>{},s
   const boundary=window.PogoData.sessionCacheBoundary;
   Object.assign(context,{
     sessionCacheBoundaryData:boundary,
+    providerOnlyIdentityActive:()=>false,
     managedSessionCache:{
       snapshot:()=>({activeOwner:{uid:'uid-a',username:'TrainerA'}}),
       quarantineQueueEntry:()=>({ok:true})
@@ -191,6 +192,7 @@ function mutationHarness({queueResult={ok:true,status:'queued',changed:1},initia
   const context={
     fbOn:true,db:{},auth:{currentUser:{uid:'uid-a'}},
     requireOwnedListHydration:()=>true,
+    providerOnlyIdentityActive:()=>false,
     accountSyncMutationAuthority:authority,
     accountSyncProduct,
     parsePri:value=>{const raw=String(value||'');if(raw.startsWith('{')){const parsed=JSON.parse(raw);return{p:parsed.priority||'',mod:parsed.variant||'',lucky:parsed.lucky===true,xxl:parsed.xxl===true,xxs:parsed.xxs===true,shiny:parsed.shiny===true,backgroundId:parsed.backgroundId||''};}return{p:['H','M','L'].includes(raw.charAt(0))?raw.charAt(0):'',mod:'',lucky:false,xxl:false,xxs:false,shiny:false,backgroundId:''};},

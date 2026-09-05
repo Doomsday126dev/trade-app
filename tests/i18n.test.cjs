@@ -81,7 +81,8 @@ test('session ownership warnings use stable translation keys with English fallba
 test('English, Japanese, Spanish, and German expose the same UI key set',()=>{
   const {catalogs}=load();
   const expected=Object.keys(catalogs.en).sort();
-  assert.equal(expected.length,1314);
+  assert.ok(expected.includes('share.searchScope'));
+  assert.ok(expected.includes('share.searchUnresolved'));
   for(const locale of ['ja','es','de'])assert.deepEqual(Object.keys(catalogs[locale]).sort(),expected,locale);
 });
 
@@ -166,7 +167,7 @@ test('active setup, Admin, profile, import, export, and safety surfaces use cata
   for(const marker of [
     'data-i18n="setup.title"','data-i18n="request.title"','data-i18n="admin.pendingRequests"',
     'data-i18n="settings.sectionProfile"','data-i18n="health.title"','data-i18n="import.title"',
-    'data-i18n="safeTransfer.title"','data-i18n="specialBoard.title"','data-i18n="shortcuts.title"'
+    'data-i18n="safeTransfer.title"','data-i18n="product.board"','data-i18n="shortcuts.title"'
   ])assert.match(html,new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));
 });
 

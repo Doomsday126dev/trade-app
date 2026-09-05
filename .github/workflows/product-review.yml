@@ -1,0 +1,47 @@
+name: Changed-area product contracts
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: product-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  public-share:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      PRODUCT_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+      PRODUCT_PREVIOUS_SHA: ${{ github.event.action == 'synchronize' && github.event.before || '' }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - id: selection
+        run: node scripts/select-product-checks.cjs --plan
+      - name: Owning Functions test dependencies
+        if: steps.selection.outputs.functions == 'true'
+        run: npm ci --prefix functions --ignore-scripts
+      - name: Local Rules emulator Java
+        if: steps.selection.outputs.rules == 'true'
+        run: |
+          test -x "$JAVA_HOME_21_X64/bin/java"
+          echo "JAVA_HOME=$JAVA_HOME_21_X64" >> "$GITHUB_ENV"
+          echo "$JAVA_HOME_21_X64/bin" >> "$GITHUB_PATH"
+      - name: Syntax, hygiene and changed-area contracts
+        run: node scripts/select-product-checks.cjs
+      - if: steps.selection.outputs.browser == 'true'
+        run: npx playwright install --with-deps chromium
+      - name: Affected Chromium journeys
+        if: steps.selection.outputs.browser == 'true'
+        run: node scripts/select-product-checks.cjs --browser

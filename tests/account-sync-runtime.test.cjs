@@ -467,7 +467,8 @@ for(const method of ['createMigration','createRecoveryCandidate','updateMeta']){
   const expectedCode={createMigration:'account-sync/migration-evidence-conflict',createRecoveryCandidate:'account-sync/recovery-candidate-conflict',updateMeta:'account-sync/meta-conflict'}[method];
   for(const behavior of ['missing','divergent','owner-mismatch','schema-mismatch'])test(`${method} fails closed when canonical readback is ${behavior}`,async()=>{
     const context=await directWriteAttempt(method,{configure:value=>installDirectWriteBehavior(method,behavior,value)});
-    await assert.rejects(context.operation,error=>error.code===expectedCode);
+    const code=method==='updateMeta'&&behavior!=='missing'?'account-sync/schema-owner-invalid':expectedCode;
+    await assert.rejects(context.operation,error=>error.code===code);
     assert.equal(context.repositoryState.calls[method],1);if(method!=='createRecoveryCandidate')assert.equal(context.journalState.meta.has('migration-complete'),false);
     if(method==='createRecoveryCandidate')assert.equal(context.journalState.recoveryCandidates.size,1);
   });
@@ -717,3 +718,44 @@ test('a conflicting recovery acceptance marker fails closed without resolving cl
 async function firstStateSnapshot(state){
   return{pendingCount:[...state.operations.values()].filter(record=>['pending','sending'].includes(record.status)).length};
 }
+
+test('normal enrollment preserves all 66 reviewed stale records inactive across restart and clean-device adoption',async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),repositoryState=runtimeRepository(window,h);
+  const normal={admitted:true,allowlistedUids:[]},remote=Object.fromEntries(Array.from({length:66},(_,i)=>[`Pokemon${i}`,'H'])),stale=Object.fromEntries(Object.keys(remote).map(name=>[name,'M']));
+  const make=(state,read)=>createRuntime(window,h,repositoryState,state,read,undefined,undefined,undefined,normal);
+  const baseline=make(h.createMemoryJournalState(),async()=>source('normal-baseline',{remote}));await baseline.start();await baseline.stop();
+  const state=h.createMemoryJournalState(),reviewed=make(state,async()=>source('normal-reviewed',{remote:stale}));await reviewed.start();
+  assert.equal((await reviewed.snapshot()).state,'review-required');
+  const ids=(await reviewed.listRecoveryCandidates()).map(value=>value.candidateId);assert.equal(ids.length,66);
+  assert.equal((await reviewed.completeRecoveryReviews(ids)).ok,true);await reviewed.stop();
+  const canonical=JSON.stringify(h.server.snapshot()),preserved=JSON.stringify(repositoryState.recoveryCandidates),attempts=h.server.attempts.length,receipts=repositoryState.calls.createMigration;
+  const reopened=make(state,async()=>{throw new Error('completed migration must not reread legacy');});await reopened.start();
+  assert.equal((await reopened.snapshot()).state,'saved');assert.equal((await reopened.listRecoveryCandidates()).length,0);
+  assert.equal((await reopened.listRecoveryCandidates({unresolvedOnly:false})).length,66);assert.equal(repositoryState.calls.createMigration,receipts);await reopened.stop();
+  const second=make(h.createMemoryJournalState(),async()=>source('normal-second',{remote:stale}));await second.start();
+  assert.equal((await second.snapshot()).state,'saved');assert.equal((await second.listRecoveryCandidates()).length,0);
+  assert.equal((await second.listRecoveryCandidates({unresolvedOnly:false})).length,66);
+  assert.equal(JSON.stringify(repositoryState.recoveryCandidates),preserved);assert.equal(JSON.stringify(h.server.snapshot()),canonical);assert.equal(h.server.attempts.length,attempts);assert.equal(repositoryState.calls.updateMeta,1);await second.stop();
+});
+
+test('normal runtime rejects same-UID session replacement during source acquisition before any write',async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),repositoryState=runtimeRepository(window,h);let current=true;
+  const runtime=createRuntime(window,h,repositoryState,h.createMemoryJournalState(),async()=>{current=false;return source('replaced',{remote:{Pikachu:'H'}});},undefined,undefined,undefined,{admitted:true,allowlistedUids:[],sessionCurrent:()=>current});
+  await assert.rejects(runtime.start(),error=>error.code==='account-sync/session-changed');assert.equal(h.server.attempts.length,0);assert.equal(repositoryState.calls.createMigration,0);assert.equal(runtime.projectionReady,false);await runtime.stop();
+});
+
+test('normal second-device adoption shares canonical state and retains the existing same-field conflict boundary',async()=>{
+  const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),repositoryState=runtimeRepository(window,h);let onlineA=true,onlineB=true;
+  const make=(id,online)=>createRuntime(window,h,repositoryState,h.createMemoryJournalState(),async()=>source(id,{remote:{Pikachu:'H'}}),undefined,undefined,undefined,{admitted:true,allowlistedUids:[],online});
+  const a=make('normal-conflict-a',()=>onlineA);await a.start();
+  const b=make('normal-conflict-b',()=>onlineB);await b.start();
+  assert.equal(repositoryState.calls.updateMeta,1);assert.equal(h.server.entities.size,1);
+  const entry=[...h.server.entities.values()][0];assert.equal(b.controller.getEntity('tradeEntry',entry.entityId).values.priority,'H');
+  onlineA=false;onlineB=false;
+  await a.controller.patchEntity({entityType:'tradeEntry',entityId:entry.entityId,patch:{priority:'M'}});
+  await b.controller.patchEntity({entityType:'tradeEntry',entityId:entry.entityId,patch:{priority:'L'}});
+  onlineA=true;await a.controller.drain();onlineB=true;await b.controller.drain();
+  const details=await b.controller.conflictDetails();assert.equal(details.length,1);assert.equal(details[0].fields[0].deviceValue,'L');assert.equal(details[0].fields[0].accountValue,'M');
+  assert.equal((await b.snapshot()).state,'conflict');assert.equal(h.server.entities.get(`tradeEntry|${entry.entityId}`).values.priority,'M');
+  assert.equal((await b.controller.acceptConflict(details[0].conflictId)).ok,true);assert.equal((await b.snapshot()).state,'saved');await a.stop();await b.stop();
+});

@@ -61,5 +61,41 @@
     });
   }
 
-  root.tradeListComparison=Object.freeze({FLAG_KEYS,cleanEntry,qualifierKey,wantedIntentKey,compareWantedLists});
+  // Compatibility is referential: no new Pokemon records or inferred offers.
+  // Board rows come first to retain the owner's existing board order.
+  function declarationKey(entry,options={}){
+    return JSON.stringify([entry.intent||'lf',wantedIntentKey(entry,options),
+      entry.p||'',entry.note||'',entry.mirror===true,entry.qty??1]);
+  }
+  function unifyDeclarations(entries=[],options={}){
+    const exact=new Map(),catalog=new Map(),duplicates=[],reviews=[];
+    const sourceRank=entry=>entry.ref?.surface==='my-list'?(entry.ref.managed?1:0):2;
+    for(const entry of entries){
+      const key=declarationKey(entry,options),prior=exact.get(key);
+      if(prior){
+        if(sourceRank(entry)<sourceRank(prior)){
+          const original={...prior,aliases:[]};
+          Object.assign(prior,entry,{aliases:[...prior.aliases,original],declarationKey:key});
+          duplicates.push({survivor:prior,duplicate:original});
+        }else{prior.aliases.push(entry);duplicates.push({survivor:prior,duplicate:entry});}
+        continue;
+      }
+      const record={...entry,aliases:[],declarationKey:key};exact.set(key,record);
+      const name=(options.nameKey||defaultNameKey)(entry.name);
+      const collisionKey=JSON.stringify([entry.intent||'lf',name,entry.type||'wishlist']);
+      const group=catalog.get(collisionKey)||[];group.push(record);catalog.set(collisionKey,group);
+    }
+    for(const group of catalog.values())if(group.length>1)reviews.push(group);
+    return{entries:[...exact.values()],duplicates,reviews};
+  }
+  function compareDeclarations({mine=[],theirs=[],offersAvailable=false}={},options={}){
+    const myWants=mine.filter(e=>e.intent==='lf'),theirWants=theirs.filter(e=>e.intent==='lf');
+    const overlap=compareWantedLists({myWants,theirWants},options);
+    const intersection=(wants,offers)=>compareWantedLists({myWants:wants,theirWants:offers},options).both;
+    return{...overlap,offersAvailable,
+      theyOffer:offersAvailable?intersection(myWants,theirs.filter(e=>e.intent==='ft')):[],
+      iOffer:offersAvailable?intersection(theirWants,mine.filter(e=>e.intent==='ft')):[]};
+  }
+
+  root.tradeListComparison=Object.freeze({FLAG_KEYS,cleanEntry,qualifierKey,wantedIntentKey,compareWantedLists,declarationKey,unifyDeclarations,compareDeclarations});
 })(window);

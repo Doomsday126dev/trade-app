@@ -67,6 +67,16 @@ function projection(overrides = {}) {
     ...overrides
   };
 }
+test('unified public declarations allow LF/FT but reject provenance and count overflow',async()=>{
+  const entry={intent:'ft',category:'wishlist',name:'Pikachu',p:'',mod:'',gender:'f',backgroundId:'chicago',note:'Public',lucky:false,shiny:true,xxl:false,xxs:false};
+  const value=projection({schemaVersion:2,declarationCount:1,declarations:[entry]});
+  await succeeds(db('PUT',`trainerShares/${IDS.owner}`,value,TOKENS.owner),'unified owner projection');
+  const read=await succeeds(db('GET',`trainerShares/${IDS.owner}`),'anonymous unified projection');
+  assert.equal(JSON.parse(read.body).declarations[0].intent,'ft');
+  await fails(db('PUT',`trainerShares/${IDS.owner}`,{...value,shareVersion:2,updatedAt:101,declarationCount:2001},TOKENS.owner),'count limit');
+  await fails(db('PUT',`trainerShares/${IDS.owner}`,{...value,shareVersion:2,updatedAt:101,schemaVersion:1},TOKENS.owner),'v1 cannot carry v2 declarations');
+  await fails(db('PUT',`trainerShares/${IDS.owner}`,{...value,shareVersion:2,updatedAt:101,declarations:[{...entry,ownerUid:'private'}]},TOKENS.owner),'private provenance');
+});
 
 async function clear() {
   await succeeds(db('PUT', '', null, 'emulator-owner'), 'clear fixture');

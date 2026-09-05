@@ -1,0 +1,99 @@
+{
+  "baseline": "794f8dbe08ee30a7de29ca73013b5ad77070ad44",
+  "trackedFiles": 1034,
+  "suites": 183,
+  "declarations": 2129,
+  "note": "Declarations are parsed source sites, not executed test cases; loops may expand them. Classifications are suite-primary and recommendations, not deletion authorization.",
+  "byCategory": {
+    "CRITICAL CONTRACT": 110,
+    "PRIVATE/MANUAL": 6,
+    "SCHEDULED/DEEP ONLY": 10,
+    "IMPLEMENTATION-DETAIL": 14,
+    "RETIRED-FEATURE": 2,
+    "HIGH-VALUE REGRESSION": 26,
+    "USEFUL FOCUSED": 14,
+    "DUPLICATE COVERAGE": 1
+  },
+  "byAction": {
+    "KEEP": 170,
+    "MOVE TO DEEP/NIGHTLY": 10,
+    "CONSOLIDATE": 3
+  },
+  "workflows": 4,
+  "packageCommands": 112,
+  "validationEntrypoints": 45,
+  "largestSources": [
+    {
+      "file": "js/app/application.js",
+      "lines": 14872,
+      "bytes": 898001,
+      "area": "js"
+    },
+    {
+      "file": "css/app.css",
+      "lines": 1979,
+      "bytes": 273122,
+      "area": "css"
+    },
+    {
+      "file": "functions/e1-authority-service/server.js",
+      "lines": 1775,
+      "bytes": 93634,
+      "area": "functions"
+    },
+    {
+      "file": "js/i18n/pokemonNames/variants.js",
+      "lines": 1534,
+      "bytes": 39589,
+      "area": "js"
+    },
+    {
+      "file": "scripts/check-community-membership.js",
+      "lines": 1533,
+      "bytes": 63914,
+      "area": "scripts"
+    },
+    {
+      "file": "index.html",
+      "lines": 1336,
+      "bytes": 135491,
+      "area": "index.html"
+    },
+    {
+      "file": "functions/production/e1ProductionClientFoundationExecution.cjs",
+      "lines": 1285,
+      "bytes": 65820,
+      "area": "functions"
+    },
+    {
+      "file": "functions/production/e1ProductionThirdMutationGuard.cjs",
+      "lines": 1195,
+      "bytes": 67007,
+      "area": "functions"
+    },
+    {
+      "file": "scripts/check-domain-helpers.js",
+      "lines": 929,
+      "bytes": 58854,
+      "area": "scripts"
+    },
+    {
+      "file": "functions/e1-gateway/groupEAdmission.js",
+      "lines": 619,
+      "bytes": 32068,
+      "area": "functions"
+    },
+    {
+      "file": "functions/production/e1ProductionSecondMutationGuard.cjs",
+      "lines": 586,
+      "bytes": 31259,
+      "area": "functions"
+    },
+    {
+      "file": "functions/e1-authority-service/firestoreE1AuthorityAdapter.js",
+      "lines": 567,
+      "bytes": 28973,
+      "area": "functions"
+    }
+  ]
+}

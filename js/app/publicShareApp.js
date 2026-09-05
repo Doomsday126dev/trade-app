@@ -5,9 +5,9 @@
   const APP_CHECK_SITE_KEY='6Lc6-X8tAAAAAI-MY4WdeI8RV-njpbiFX5mFjDbz';
   const LIST_TYPES=Object.freeze(['wishlist','dynamax','gmax','costumes']);
   const LIST_KEYS=Object.freeze({wishlist:'list.wishlist',dynamax:'list.dynamax',gmax:'list.gigantamax',costumes:'list.others'});
-  const PRIORITY_KEYS=Object.freeze({H:'priority.high',M:'priority.medium',L:'priority.low'});
+  const PRIORITY_KEYS=Object.freeze({H:'priority.high',M:'priority.medium',L:'priority.low',U:'product.other'});
   const diagnostics={mode:'anonymous-public-share',authSdkRequested:false,privateReads:0,readPaths:[],events:[]};
-  const state={request:null,snapshot:null,type:'wishlist',status:'idle'};
+  const state={request:null,snapshot:null,type:'wishlist',intent:'lf',status:'idle'};
   const spriteOptical=(()=>{
     const CACHE_KEY='pogoPublicSpriteOptical_v1',TARGET_FILL=0.78,MAX_SCALE=2.8,MAX_CACHE_ENTRIES=500,CONCURRENCY=2;
     const queue=[],inflight=new Map();let active=0,cache={};
@@ -134,7 +134,7 @@
     const parsed=typeof raw.value==='string'?global.PogoDomain.priorityValues.parsePri(raw.value):encoded;
     const p=String(raw.p||parsed.p||'').toUpperCase();
     return{
-      p:PRIORITY_KEYS[p]?p:'L',mod:String(raw.mod??parsed.mod??'').trim(),
+      p:['H','M','L'].includes(p)?p:'U',mod:String(raw.mod??parsed.mod??'').trim(),
       lucky:raw.lucky===true||parsed.lucky===true,shiny:raw.shiny===true||parsed.shiny===true,
       xxl:raw.xxl===true||parsed.xxl===true,xxs:raw.xxs===true||parsed.xxs===true,
       backgroundId:global.PogoDomain.priorityValues.normalizeBackgroundId(raw.backgroundId||parsed.backgroundId||'')
@@ -160,7 +160,7 @@
     return`<div class="share-pcard-sprite-wrap"><img class="share-pcard-sprite public-share-pokemon-sprite" src="${attr(src)}" data-src-key="${attr(src)}" data-optical-sprite data-public-sprite-fallbacks="${attr(fallbacks.join('|'))}" width="34" height="34" alt="" loading="lazy" decoding="async"></div>`;
   }
   function entryCard(name,value){
-    const model=entryModel(value),gender=global.PogoDomain.priorityValues.entryGender(model.mod);
+    const model=entryModel(value),gender=value?.gender||global.PogoDomain.priorityValues.entryGender(model.mod);
     const cleanMod=model.mod.replace(/\b(female|male|f|m)\b/gi,'').replace(/\s+/g,' ').trim();
     const flags=[
       gender==='f'?`<span class="share-pcard-flag gender-f" title="${attr(t('share.flagFemale'))}">♀</span>`:'',
@@ -172,7 +172,7 @@
       backgroundBadge(model.backgroundId)
     ].filter(Boolean).join('');
     const visual=model.backgroundId?backgroundParts(model.backgroundId).visual:null;
-    return`<article class="share-pcard card-row ${visual?attr(global.PogoDomain.backgroundVisual.className(visual)):''}" ${visual?`style="${attr(global.PogoDomain.backgroundVisual.style(visual))}"`:''}>${spriteHtml(name,gender)}<div class="share-pcard-info"><span class="share-pcard-name">${esc(name)}</span>${cleanMod||flags?`<div class="share-pcard-meta">${cleanMod?`<span class="share-pcard-mod">${esc(cleanMod)}</span>`:''}${flags}</div>`:''}</div></article>`;
+    return`<article class="share-pcard card-row ${visual?attr(global.PogoDomain.backgroundVisual.className(visual)):''}" ${visual?`style="${attr(global.PogoDomain.backgroundVisual.style(visual))}"`:''}>${spriteHtml(name,gender)}<div class="share-pcard-info"><span class="share-pcard-name">${esc(name)}</span>${cleanMod||flags?`<div class="share-pcard-meta">${cleanMod?`<span class="share-pcard-mod">${esc(cleanMod)}</span>`:''}${flags}</div>`:''}${value?.note?`<p class="share-pcard-mod">${esc(value.note)}</p>`:''}</div></article>`;
   }
   function updatedLabel(timestamp){
     const value=Number(timestamp);
@@ -187,26 +187,56 @@
     header.innerHTML=`<div class="av public-share-avatar" aria-hidden="true">${esc(initials(username))}</div><div class="share-hdr-info"><div class="share-hdr-name">${esc(t('share.listTitle',{username}))}</div><div class="share-hdr-meta">${profile.friendCode?`<span class="meta-item">🎮 <code>${esc(profile.friendCode)}</code></span>`:''}${profile.discord?`<span class="meta-item">${esc(profile.discord)}</span>`:''}<span class="meta-item">📅 ${esc(updatedLabel(profile.lastUpdated||snapshot.updatedAt))}</span></div>${profile.bio?`<div class="share-hdr-bio">${esc(profile.bio)}</div>`:''}</div>`;
   }
   function renderTabs(snapshot){
-    const counts=Object.fromEntries(LIST_TYPES.map(type=>[type,Object.keys(snapshot.lists[type]||{}).length]));
+    if(snapshot.profile?.friendCode&&!document.querySelector('[data-public-share-action="copy-friend"]'))document.querySelector('#share-hdr .share-hdr-info')?.insertAdjacentHTML('beforeend',`<div class="share-profile-actions"><button type="button" class="btn btn-secondary" data-public-share-action="copy-friend" aria-live="polite">${esc(t('product.copyFriend'))}</button></div>`);
+    const counts=Object.fromEntries(LIST_TYPES.map(type=>[type,global.PogoDomain.publicSharePublication.intentEntries(snapshot,state.intent,type).length]));
     const visible=LIST_TYPES.filter(type=>counts[type]||type===state.type);
     const tabs=document.getElementById('share-list-tabs');
-    if(tabs)tabs.innerHTML=visible.map(type=>`<button type="button" class="ltab ${type===state.type?'active':''}" data-public-share-action="list" data-list-type="${type}" aria-pressed="${type===state.type}">${esc(t('share.listTab',{label:listLabel(type),count:core().formatNumber(counts[type])}))}</button>`).join('');
+    if(tabs)tabs.innerHTML=(snapshot.version===2?`<div class="public-intent-tabs" role="group" aria-label="${attr(t('product.intent'))}">${['lf','ft'].map(intent=>`<button type="button" class="ltab ${intent===state.intent?'active':''}" data-public-share-action="intent" data-intent="${intent}" aria-pressed="${intent===state.intent}">${esc(t(`product.${intent}`))}</button>`).join('')}</div>`:'')+visible.map(type=>`<button type="button" class="ltab ${type===state.type?'active':''}" data-public-share-action="list" data-list-type="${type}" aria-pressed="${type===state.type}">${esc(t('share.listTab',{label:listLabel(type),count:core().formatNumber(counts[type])}))}</button>`).join('');
   }
   function renderList(snapshot){
-    const list=snapshot.lists[state.type]||{},groups={H:[],M:[],L:[]};
-    for(const [name,value] of Object.entries(list))groups[entryModel(value).p].push([name,value]);
+    const list=global.PogoDomain.publicSharePublication.intentEntries(snapshot,state.intent,state.type),groups={H:[],M:[],L:[],U:[]};
+    for(const entry of list){const value=entry.value??entry;groups[entryModel(value).p].push([entry.name,value]);}
     const out=document.getElementById('share-list-out');if(!out)return;
-    if(!Object.keys(list).length){
+    if(!list.length){
       out.innerHTML=`<div class="empty public-share-empty"><div class="empty-icon" aria-hidden="true">📋</div><h3>${esc(t('share.emptyTitle'))}</h3><p>${esc(t('share.emptyHelp'))}</p></div>${ctaHtml()}`;
       return;
     }
-    const sections=['H','M','L'].map(priority=>{
-      const entries=groups[priority].sort((a,b)=>a[0].localeCompare(b[0],core().getLocale(),{sensitivity:'base'}));
+    const sections=['H','M','L','U'].map(priority=>{
+      const entries=groups[priority];
       if(!entries.length)return'';
-      return`<section class="share-section card-content"><div class="share-section-hdr"><span class="badge ${priority}"><span class="prio-mark">${priority}</span>${esc(t(PRIORITY_KEYS[priority]))}</span><span class="share-section-count">${esc(core().formatPlural('share.entryCount',entries.length))}</span></div><div class="share-pgrid">${entries.map(([name,value])=>entryCard(name,value)).join('')}</div></section>`;
+      return`<section class="share-section card-content"><div class="share-section-hdr"><span class="badge ${priority}">${priority==='U'?'':`<span class="prio-mark">${priority}</span>`}${esc(t(PRIORITY_KEYS[priority]))}</span><span class="share-section-count">${esc(core().formatPlural('share.entryCount',entries.length))}</span></div><div class="share-pgrid">${entries.map(([name,value])=>entryCard(name,value)).join('')}</div></section>`;
     }).join('');
-    out.innerHTML=sections+ctaHtml();
+    out.innerHTML=searchHtml(list)+sections+ctaHtml();
     spriteOptical.observe(out);
+  }
+  function searchHtml(list){
+    const names=list.map(entry=>entry.name),helper=global.PogoDomain.searchStrings;
+    if(!names.length)return'';
+    const numbers=names.map(name=>global.PogoDomain.spriteSlugs.publicSpriteDex(name));
+    const complete=numbers.every(number=>Number.isInteger(number)&&number>0);
+    const value=complete?helper.dexStringFromNumbers(numbers,{locale:core().getLocale()}):'';
+    const tooLong=value.length>helper.POGO_STR_LIMIT;
+    const label=t('share.copySearchAria',{label:listLabel(state.type)});
+    return`<div class="public-share-search">
+      <button type="button" class="btn btn-primary" data-public-share-action="copy-search" data-copy="${attr(value)}" ${!value||tooLong?'disabled':''}><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-copy"></use></svg><span>${esc(label)}</span></button>
+      <span id="public-share-copy-status" role="status" aria-live="polite"></span>
+      ${!complete?`<p>${esc(t('share.searchUnresolved'))}</p>`:tooLong?`<p>${esc(t('strings.tooLongForPokemonGo'))}</p>`:''}
+      ${value?`<details class="share-search-disclosure"><summary>${esc(t('share.viewSearch'))}<span class="sr-only">: ${esc(listLabel(state.type))}</span></summary><p>${esc(t('share.searchScope'))}</p><textarea readonly aria-label="${attr(label)}" class="strbox" rows="3">${esc(value)}</textarea></details>`:''}
+    </div>`;
+  }
+  async function copySearch(control){
+    const value=control.dataset.copy;if(!value||control.disabled)return;
+    const status=document.getElementById('public-share-copy-status');
+    try{
+      await global.navigator.clipboard.writeText(value);
+      if(status?.isConnected)status.textContent=t('share.copySuccess');
+    }catch{
+      if(!status?.isConnected)return;
+      status.textContent=t('strings.copyFailed');
+      const disclosure=control.parentElement.querySelector('details');
+      if(disclosure)disclosure.open=true;
+      const field=disclosure?.querySelector('textarea');field?.focus();field?.select();
+    }
   }
   function ctaHtml(){return`<aside class="public-share-cta"><span>${esc(t('share.publicCta'))}</span><a class="btn btn-secondary" href="./">${esc(t('share.publicCtaAction'))}</a></aside>`;}
   function render(){
@@ -288,6 +318,17 @@
     document.getElementById(id)?.classList.remove('open');document.body.classList.remove('modal-open');
     document.getElementById('share-language-trigger')?.focus();
   }
+  function handleModalKey(event){
+    const modal=document.getElementById('settings-modal');
+    if(!modal?.classList.contains('open'))return;
+    if(event.key==='Escape'){event.preventDefault();closeModal('settings-modal');return;}
+    if(event.key!=='Tab')return;
+    const controls=[...modal.querySelectorAll('button,select,input,a[href],[tabindex="0"]')]
+      .filter(node=>!node.disabled&&node.getClientRects().length);
+    const first=controls[0],last=controls.at(-1);
+    if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}
+    else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}
+  }
   async function changeLocale(locale){
     await global.__pogoEnsureLocale(locale);core().setLocale(locale);translate(document);
     if(state.snapshot)render();
@@ -296,7 +337,10 @@
   function handleAction(event){
     const control=event.target.closest('[data-public-share-action]');if(!control)return;
     if(control.dataset.publicShareAction==='retry')retry();
+    if(control.dataset.publicShareAction==='copy-search')void copySearch(control);
+    if(control.dataset.publicShareAction==='copy-friend')void Promise.resolve().then(()=>global.navigator.clipboard.writeText(state.snapshot.profile.friendCode.replace(/\D/g,''))).then(()=>{control.textContent=t('share.copySuccess');},()=>{control.textContent=t('strings.copyFailed');});
     if(control.dataset.publicShareAction==='list'){state.type=LIST_TYPES.includes(control.dataset.listType)?control.dataset.listType:'wishlist';renderTabs(state.snapshot);renderList(state.snapshot);}
+    if(control.dataset.publicShareAction==='intent'){state.intent=control.dataset.intent==='ft'?'ft':'lf';renderTabs(state.snapshot);renderList(state.snapshot);}
   }
   function handleSpriteError(event){
     const image=event.target;
@@ -310,6 +354,7 @@
     if(state.status!=='idle')return;
     state.request=request;state.type=request?.type||'wishlist';state.status='loading';
     document.addEventListener('click',handleAction);
+    document.addEventListener('keydown',handleModalKey);
     document.addEventListener('error',handleSpriteError,true);
     spriteOptical.observe(document);
     Object.assign(global,{openSettingsPanel:openLanguage,closeModal,changeInterfaceLocale:changeLocale,exitShareView:()=>{location.href=new URL('./',location.href).href;}});

@@ -66,7 +66,32 @@ test('offers, inventory, and quantities cannot influence wanted-list comparison'
   assert.deepEqual(JSON.parse(JSON.stringify(noisy)),JSON.parse(JSON.stringify(baseline)));
 });
 
-test('the comparison module contains no retired inventory or quantity contract',()=>{
-  const source=readFileSync(path.join(root,'js/domain/tradeListComparison.js'),'utf8');
-  assert.doesNotMatch(source,/inventory|\bqty\b|quantity|offer|mirror/i);
+test('unified declarations retain exact duplicates as references without mutating input',()=>{
+  const board={name:'Pikachu',intent:'lf',type:'wishlist',p:'H',shiny:true,note:'',key:'board:lf:0'},list={...board,key:'list:wishlist:Pikachu'};
+  const source=[board,list,{name:'Eevee',intent:'ft',type:'wishlist',qty:2,note:'keep',mirror:true,key:'board:ft:0'}],before=JSON.stringify(source);
+  const first=comparison.unifyDeclarations(source),second=comparison.unifyDeclarations(source);
+  assert.equal(first.entries.length,2);assert.equal(first.duplicates.length,1);
+  assert.equal(first.entries[0].key,board.key);assert.equal(first.entries[0].aliases[0].key,list.key);
+  assert.equal(first.entries[1].qty,2);assert.equal(first.entries[1].mirror,true);assert.equal(first.entries[1].note,'keep');
+  assert.equal(JSON.stringify(first),JSON.stringify(second));assert.equal(JSON.stringify(source),before);
+  assert.equal(comparison.unifyDeclarations(first.entries.map(({aliases,...e})=>e)).duplicates.length,0);
+});
+
+test('differing metadata is reviewable and never guessed away during compatibility',()=>{
+  const base={name:'Pikachu',intent:'lf',type:'wishlist',key:'base'};
+  for(const changed of [{p:'L'},{shiny:true},{gender:'f'},{mod:'costume'},{note:'keep'},{backgroundId:'chicago'},{mirror:true},{qty:2},{lucky:true},{xxl:true},{xxs:true}]){
+    const result=comparison.unifyDeclarations([base,{...base,...changed,key:'other'}]);
+    assert.equal(result.entries.length,2,JSON.stringify(changed));assert.equal(result.reviews.length,1);assert.equal(result.duplicates.length,0);
+  }
+  assert.equal(comparison.unifyDeclarations([base,{...base,intent:'ft'}]).reviews.length,0);
+});
+
+test('reciprocal results require explicit exact For Trade declarations',()=>{
+  const want={name:'Pikachu',intent:'lf',type:'wishlist',gender:'f',shiny:true};
+  const mine=[want,{name:'Eevee',intent:'ft',type:'wishlist'}],theirs=[{...want,intent:'ft'},{name:'Eevee',intent:'lf',type:'wishlist'}];
+  const result=comparison.compareDeclarations({mine,theirs,offersAvailable:true});
+  assert.equal(result.theyOffer.length,1);assert.equal(result.iOffer.length,1);assert.equal(result.both.length,0);
+  assert.equal(comparison.compareDeclarations({mine,theirs,offersAvailable:false}).theyOffer.length,0);
+  assert.equal(comparison.compareDeclarations({mine,theirs:[{...want,gender:'m',intent:'ft'}],offersAvailable:true}).theyOffer.length,0);
+  assert.equal(comparison.compareDeclarations({mine,theirs:[want],offersAvailable:true}).theyOffer.length,0);
 });

@@ -16,6 +16,24 @@
   const LIST_QUALIFIER_FIELDS=Object.freeze(['priority','variant','lucky','xxl','xxs','shiny','backgroundId']);
 
   function plain(value){return model.plainObject(value)?value:{};}
+  function normalSyncEligibility({authenticatedUid,username,indexRecord,userAuthUid,account,enrollmentEnabled=true}={}){
+    const reject=code=>model.failure(`account-sync/${code}`,'Normal account sync evidence is not valid');
+    if(typeof authenticatedUid!=='string'||!authenticatedUid||model.firebaseKey(authenticatedUid,128)!==authenticatedUid)return reject('identity-auth-required');
+    if(typeof username!=='string'||!username||model.firebaseKey(username,64)!==username||model.exactText(username,64)!==username)return reject('identity-name-invalid');
+    if(!model.plainObject(indexRecord)||typeof indexRecord.username!=='string'||indexRecord.username!==username||typeof userAuthUid!=='string'||userAuthUid!==authenticatedUid)return reject('identity-pair-invalid');
+    const state=canonicalSyncState(account,authenticatedUid);
+    if(!state.ok)return state;
+    if(!state.initialized&&enrollmentEnabled!==true)return reject('enrollment-disabled');
+    return Object.freeze({ok:true,initialized:state.initialized,kind:state.initialized?'resume':'legacy-migration'});
+  }
+  function canonicalSyncState(account,ownerUid){
+    const reject=()=>model.failure('account-sync/schema-owner-invalid','Canonical account metadata is incompatible');
+    if(account!=null&&!model.plainObject(account))return reject();
+    const meta=account?.meta;
+    if(meta==null)return Object.freeze({ok:true,initialized:false});
+    if(!model.plainObject(meta)||Object.keys(meta).sort().join(',')!=='featureVersion,initialized,initializedAt,ownerUid,schemaVersion,updatedAt'||meta.ownerUid!==ownerUid||meta.schemaVersion!==model.SCHEMA_VERSION||meta.featureVersion!==model.SCHEMA_VERSION||meta.initialized!==true||model.integer(meta.initializedAt)===null||model.integer(meta.updatedAt)===null||meta.updatedAt<meta.initializedAt)return reject();
+    return Object.freeze({ok:true,initialized:true});
+  }
   function safeInteger(value,fallback=0,min=0,max=100000){
     return Number.isSafeInteger(value)&&value>=min&&value<=max?value:fallback;
   }
@@ -116,7 +134,15 @@
   function projectTradeEntities({entities=[],catalogEntryForId,encodePriority}={}){
     if(typeof catalogEntryForId!=='function'||typeof encodePriority!=='function')throw new TypeError('Trade projection adapters are incomplete');
     const lists=Object.fromEntries(MY_LIST_LANES.map(lane=>[lane,{}])),orders=Object.fromEntries(MY_LIST_LANES.map(lane=>[lane,{priorities:{H:[],M:[],L:[],U:[]}}]));
-    const board={lf:[],ft:[]},unresolved=[];
+    const board={lf:[],ft:[]},intentDeclarations=[],unresolved=[];
+    // Editable copies use existing My List intent lanes; originals stay intact.
+    for(const entity of entities||[])if(entity?.entityType==='tradeEntry'&&!entity.deleted&&entity.identity?.surface==='my-list'&&['looking-for','for-trade'].includes(entity.identity.lane)){
+      const catalog=catalogEntryForId(entity.identity.catalogId,entity.identity);
+      if(!catalog?.name){unresolved.push({entityId:entity.entityId,reason:'catalog-projection-unresolved'});continue;}
+      const values=tradeValues(entity.values);
+      intentDeclarations.push({name:catalog.name,no:catalog.no||null,side:entity.identity.lane==='looking-for'?'lf':'ft',entityId:entity.entityId,catalogId:entity.identity.catalogId,deleted:entity.deleted===true,p:values.priority,mod:values.variant,gender:values.gender,backgroundId:values.backgroundId,note:values.note,lucky:values.lucky,shiny:values.shiny,xxl:values.xxl,xxs:values.xxs,mirror:values.mirror,qty:values.quantity,sortOrder:values.sortOrder});
+    }
+    intentDeclarations.sort((a,b)=>a.sortOrder-b.sortOrder||a.entityId.localeCompare(b.entityId));
     const active=(entities||[]).filter(entity=>entity?.entityType==='tradeEntry'&&entity.deleted!==true).sort((a,b)=>(a.values?.sortOrder??0)-(b.values?.sortOrder??0)||a.entityId.localeCompare(b.entityId));
     for(const entity of active){
       const catalog=catalogEntryForId(entity.identity.catalogId,entity.identity)||null;
@@ -128,10 +154,10 @@
         orders[entity.identity.lane].priorities[values.priority||'U'].push(name);
       }else if(entity.identity.surface==='special-board'){
         const side=entity.identity.lane==='looking-for'?'lf':entity.identity.lane==='for-trade'?'ft':'';
-        if(side)board[side].push({name,dn:catalog.displayName||name,no:catalog.no||null,shiny:values.shiny,mirror:values.mirror,backgroundId:values.backgroundId,note:values.note,...(side==='ft'?{qty:values.quantity}:{})});
+        if(side)board[side].push({name,dn:catalog.displayName||name,no:catalog.no||null,p:values.priority,mod:values.variant,gender:values.gender,lucky:values.lucky,xxl:values.xxl,xxs:values.xxs,shiny:values.shiny,mirror:values.mirror,backgroundId:values.backgroundId,note:values.note,...(side==='ft'?{qty:values.quantity}:{})});
       }
     }
-    return Object.freeze({lists,orders,board,unresolved:Object.freeze(unresolved)});
+    return Object.freeze({lists,orders,board,intentDeclarations,unresolved:Object.freeze(unresolved)});
   }
   function projectAcceptedPublicRows({rows=[],catalogEntryForId,encodePriority}={}){
     if(!Array.isArray(rows))throw new TypeError('Accepted public trade projection is invalid');
@@ -172,6 +198,6 @@
 
   root.accountSyncProduct=Object.freeze({
     MY_LIST_LANES,SPECIAL_BOARD_LANES,DEVICE_LOCAL_STATE,TRADE_DEFAULTS,LIST_QUALIFIER_FIELDS,tradeValues,listQualifierValues,rebaseListEdit,listRows,specialBoardRows,
-    changedFields,planTradeMutations,projectTradeEntities,projectAcceptedPublicRows,organizerProjection,favoritePatch,favoriteTagPatch,exactFavoriteTargetUid
+    changedFields,planTradeMutations,projectTradeEntities,projectAcceptedPublicRows,organizerProjection,favoritePatch,favoriteTagPatch,exactFavoriteTargetUid,normalSyncEligibility,canonicalSyncState
   });
 })(window);
