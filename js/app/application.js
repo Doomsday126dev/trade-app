@@ -435,6 +435,8 @@ let selectedTrainerRuntime={username:'',publicData:null,source:''};
 let browseFilter='ALL',browseList='wishlist',staleFilter=0;
 let browseFlagFilters={lucky:false,xxl:false,xxs:false,shiny:false};
 let myListType='wishlist',strListType='wishlist';
+let myListIntent='lf';
+let boardHiddenKeys=new Set(),boardCurationOwner='';
 let _lastAuthenticatedIdentityUid='';
 let rpinTarget=null;
 let syncQueue={},syncFlushTimer=null;
@@ -3472,12 +3474,14 @@ async function writeAccountSyncList(type,list,{orderModel,authority}={}){
   const mutations=accountSyncProduct.planTradeMutations({currentEntities:accountSyncCanonicalEntities,desiredRows:rows.rows,scope:{surface:'my-list',lanes:[type]}});
   return applyAccountSyncTradeMutations(mutations,controller);
 }
-async function writeAccountSyncSpecialBoard(board,{authority}={}){
+async function writeAccountSyncSpecialBoard(board,{authority,baseBoard}={}){
   const runtime=authority?.runtime||managedAccountSyncRuntime,controller=authority?.controller||runtime?.controller;
   if(authority&&!accountSyncAuthorityCurrent(authority))return accountSyncModel.failure('account-sync/session-changed','Cross-device sync session changed');
   const rows=accountSyncProduct.specialBoardRows({board,catalogIdForBoardEntry:({entry})=>accountSyncCatalogIdentity('wishlist',entry?.name,entry)?.catalogId||''});
   if(rows.unresolved.length){for(const item of rows.unresolved)await recordAccountSyncUnresolved(item,'special-board-edit',runtime);return Object.freeze({ok:false,error:{code:'account-sync/catalog-identity-unresolved'}});}
-  const mutations=accountSyncProduct.planTradeMutations({currentEntities:accountSyncCanonicalEntities,desiredRows:rows.rows,scope:{surface:'special-board',lanes:['looking-for','for-trade']}});
+  const before=baseBoard?accountSyncProduct.specialBoardRows({board:baseBoard,catalogIdForBoardEntry:({entry})=>accountSyncCatalogIdentity('wishlist',entry?.name,entry)?.catalogId||''}):null;
+  if(before?.unresolved.length)return Object.freeze({ok:false,error:{code:'account-sync/catalog-identity-unresolved'}});
+  const mutations=accountSyncProduct.planTradeMutations({currentEntities:before?before.rows:accountSyncCanonicalEntities,desiredRows:rows.rows,scope:{surface:'special-board',lanes:['looking-for','for-trade']}});
   return applyAccountSyncTradeMutations(mutations,controller);
 }
 function resetOwnedHydrationState(){
@@ -4888,7 +4892,7 @@ function renderInterimProductLabels(){
   document.documentElement.lang=i18nCore.getLocale();
   applyTranslationAttributes();
   const navLabels=[
-    ['nav-mylist','nav.myList','nav.myListShort'],['nav-find','nav.findTrainer','nav.findTrainerShort'],
+    ['nav-mylist','nav.myList','nav.myList'],['nav-find','trainer.modeTrainers','trainer.modeTrainers'],
     ['nav-events','nav.events','nav.eventsShort'],['nav-inventory','nav.legacyInventory','nav.legacyInventoryShort'],
     ['admin-tab','nav.admin','nav.adminShort']
   ];
@@ -5082,7 +5086,7 @@ function renderTrainerDiscoveryHeading(){
   const copy={
     trainers:['trainer.findTitle','trainer.findDescription'],
     favorites:['trainer.favoritesTitle','trainer.favoritesDescription'],
-    pokemon:['favoriteBrowse.title','favoriteBrowse.description']
+    pokemon:['favoriteBrowse.title','product.savedScope']
   }[trainerDiscoveryMode]||['trainer.findTitle','trainer.findDescription'];
   setText('find-trainer-title',copy[0]);
   setText('find-trainer-description',copy[1]);
@@ -5371,7 +5375,7 @@ function renderFavoriteBrowseResults(){
   else body=`<div class="favorite-browse-summary"><span class="favorite-browse-pokemon">${escHtml(selected.dn)}</span><span class="favorite-browse-count">${escHtml(i18nCore.formatPlural('favoriteBrowse.results',matches.length,{pokemon:selected.dn}))}</span></div><div class="favorite-browse-results">${matches.map(match=>{
     const category=favoriteBrowseCategoryText(match.categories),trainer=escAttr(match.displayName);
     const backgrounds=(match.backgroundIds||[]).map(id=>backgroundBadgeHtml(id)).join('');
-    return`<button type="button" class="favorite-browse-row" data-trainer="${trainer}" data-trainer-action="open" aria-label="${escAttr(i18nCore.t('trainer.openTrainerNamed',{trainer:match.displayName}))}"><span class="favorite-browse-main"><span class="favorite-browse-name">${escHtml(match.displayName)}</span><span class="favorite-browse-match"><strong>${i18nCore.formatNumber(match.iHaveTheirWants)}</strong> ${escHtml(i18nCore.t('trainer.iHaveTheirWants'))}</span><span class="favorite-browse-meta"><span class="favorite-browse-priority ${escAttr(match.priority)}">${escHtml(favoriteBrowsePriorityText(match.priority))}</span>${category?`<span>${escHtml(category)}</span>`:''}${backgrounds}</span>${match.tags.length?`<span class="favorite-browse-tags">${match.tags.map(label=>`<span class="favorite-card-tag chip chip-metadata">${escHtml(label)}</span>`).join('')}</span>`:''}</span><span class="favorite-browse-open btn btn-ghost" aria-hidden="true">${escHtml(i18nCore.t('trainer.openAction'))} ${uiIconMarkup('chevron-right','ui-icon ui-icon-sm')}</span></button>`;
+    return`<button type="button" class="favorite-browse-row" data-trainer="${trainer}" data-trainer-action="open" aria-label="${escAttr(i18nCore.t('trainer.openTrainerNamed',{trainer:match.displayName}))}"><span class="favorite-browse-main"><span class="favorite-browse-name">${escHtml(match.displayName)}</span><span class="favorite-browse-match"><strong>${i18nCore.formatNumber(match.iHaveTheirWants)}</strong> ${escHtml(i18nCore.t('product.matchingWants'))}</span><span class="favorite-browse-meta"><span class="favorite-browse-priority ${escAttr(match.priority)}">${escHtml(favoriteBrowsePriorityText(match.priority))}</span>${category?`<span>${escHtml(category)}</span>`:''}${backgrounds}</span>${match.tags.length?`<span class="favorite-browse-tags">${match.tags.map(label=>`<span class="favorite-card-tag chip chip-metadata">${escHtml(label)}</span>`).join('')}</span>`:''}</span><span class="favorite-browse-open btn btn-ghost" aria-hidden="true">${escHtml(i18nCore.t('trainer.openAction'))} ${uiIconMarkup('chevron-right','ui-icon ui-icon-sm')}</span></button>`;
   }).join('')}</div>`;
   const footer=summary.checked?`<div class="favorite-browse-footer"><span>${escHtml(i18nCore.t('favoriteBrowse.checked'))}</span><button type="button" class="btn btn-ghost" data-favorite-action="refresh-browse">${escHtml(i18nCore.t('favoriteBrowse.refresh'))}</button>${summary.failed?`<button type="button" class="btn btn-secondary" data-favorite-action="retry-browse">${escHtml(i18nCore.t('favoriteBrowse.retry'))}</button>`:''}${incomplete?`<span class="favorite-browse-partial">${escHtml(i18nCore.t('favoriteBrowse.partial',{checked:i18nCore.formatNumber(summary.total-incomplete),total:i18nCore.formatNumber(summary.total),failed:i18nCore.formatNumber(incomplete)}))}</span>`:''}</div>`:'';
   output.removeAttribute('aria-busy');output.innerHTML=body+footer;
@@ -5859,13 +5863,23 @@ function switchTab(t,opts={}){
   if(previous==='admin'&&t!=='admin')stopLegacyAdminReads('admin_closed');
   document.querySelectorAll('.tab').forEach(b=>{b.classList.remove('active');b.setAttribute('aria-selected','false');});
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  const tabBtn=document.querySelector(`[data-tab="${t}"]`);
+  const tabBtn=document.querySelector(`[data-tab="${['schedule','admin'].includes(t)?'more':t}"]`);
   const page=document.getElementById(`tab-${t}`);
   if(!page)return;
   if(tabBtn){tabBtn.classList.add('active');tabBtn.setAttribute('aria-selected','true');}
   page.classList.add('active');
+  if(t==='more')document.getElementById('more-admin-link')?.toggleAttribute('hidden',!protectedOwnerSession());
   window.scrollTo(0,0);
   if(opts.render!==false)queueRenderActiveTab(t);
+}
+function openProductShare(mode='link'){
+  openModal('product-share-modal');setProductShareMode(mode);
+}
+function setProductShareMode(mode){
+  for(const name of ['link','image','text']){
+    document.getElementById(`product-share-${name}`).hidden=name!==mode;
+    document.querySelector(`[data-share-mode="${name}"]`)?.setAttribute('aria-pressed',String(name===mode));
+  }
 }
 function openLegacyInventoryTool(){closeAccountMenu(false);switchTab('have');}
 function refreshAll(){
@@ -5917,7 +5931,7 @@ function comparePokemonLabels(a,b){
 }
 function buildAcItems(){
   const arr=listSource(myListType);
-  const existing=new Set(Object.keys(allData[myListType]?.[cur]||{}).map(pokemonCatalogDomain.catalogKey));
+  const existing=new Set(productDeclarations().entries.filter(e=>e.intent===myListIntent).map(e=>accountSyncCatalogIdentity(e.ref.type||'wishlist',e.name,e)?.catalogId||pokemonCatalogDomain.catalogKey(e.name)));
   const seen=new Set();acItems=[];
   arr.forEach(e=>{
     const key=e.catalogId||pokemonCatalogDomain.catalogKey(e.name);
@@ -5940,7 +5954,7 @@ function acSearch(q){
   const dd=document.getElementById('ac-dropdown');
   if(!q||q.length<1){closeAddAutocomplete();return;}
   const arr=listSource(myListType);
-  const existing=new Set(Object.keys(allData[myListType]?.[cur]||{}).map(pokemonCatalogDomain.catalogKey));
+  const existing=new Set(productDeclarations().entries.filter(e=>e.intent===myListIntent).map(e=>accountSyncCatalogIdentity(e.ref.type||'wishlist',e.name,e)?.catalogId||pokemonCatalogDomain.catalogKey(e.name)));
   acFiltered=rankAutocompleteItems(acItems,q);
   const existingItems=arr
     .filter(e=>existing.has(e.catalogId||pokemonCatalogDomain.catalogKey(e.name)))
@@ -5954,13 +5968,13 @@ function acSearch(q){
   // Detect if user is searching for a Pokemon family with multiple variants
   const family=detectVariantFamily(q);
   const remainingVariantCount=family?familyVariantEntries(family.key).filter(e=>!Object.prototype.hasOwnProperty.call(allData[myListType]?.[cur]||{},e.name)).length:0;
-  const familyBanner=(family&&remainingVariantCount>1)
+  const familyBanner=(myListIntent==='lf'&&family&&remainingVariantCount>1)
     ?`<div class="ac-family-banner" onmousedown="event.preventDefault();openAddAllVariantsModal('${family.key}')" role="button" tabindex="0">
         <span style="flex:1">✨ Add all <strong>${remainingVariantCount}</strong> remaining ${escHtml(family.label)} variants</span>
         <span style="font-size:11px;color:var(--accent);font-weight:700">→</span>
       </div>`
     :'';
-  const shownBanner=acFiltered.length>1
+  const shownBanner=myListIntent==='lf'&&acFiltered.length>1
     ?`<div class="ac-family-banner" onmousedown="event.preventDefault();openAddShownResultsModal()" role="button" tabindex="0">
         <span style="flex:1">⚡ Add all <strong>${acFiltered.length}</strong> shown results</span>
         <span style="font-size:11px;color:var(--accent);font-weight:700">→</span>
@@ -6016,7 +6030,7 @@ function acUpdateFocus(){
 function isInAddTray(name){return addTray.some(x=>x.name===name);}
 function addToTrayFromAc(idx){
   const e=acFiltered[idx];if(!e?.name)return;
-  const existing=allData[myListType]?.[cur]||{};
+  const existing=Object.fromEntries(productDeclarations().entries.filter(e=>e.intent===myListIntent).map(e=>[e.name,true]));
   if(existing[e.name]){toast(i18nCore.t('myList.alreadyListed'));return;}
   if(isInAddTray(e.name)){toast(i18nCore.t('myList.alreadyQueued'));return;}
   addTray.push({name:e.name,dn:e.dn||e.name,no:e.no||null,spriteUrl:e.spriteUrl||''});
@@ -6037,7 +6051,7 @@ function clearAddTray(){
 }
 function renderAddTray(){
   const el=document.getElementById('add-tray');if(!el)return;
-  const existing=allData[myListType]?.[cur]||{};
+  const existing=Object.fromEntries(productDeclarations().entries.filter(e=>e.intent===myListIntent).map(e=>[e.name,true]));
   addTray=addTray.filter(x=>x?.name&&!existing[x.name]);
   if(!addTray.length){el.hidden=true;el.innerHTML='';return;}
   const pri=document.getElementById('add-pmon-pri')?.value||'';
@@ -6073,6 +6087,12 @@ async function confirmAddTray(){
   if(!addTray.length){toast(i18nCore.t('myList.queueEmpty'));return;}
   const pri=document.getElementById('add-pmon-pri')?.value||'';
   const flags=currentAddFlags();
+  if(myListIntent==='ft'){
+    const board=getStoredSpecialBoard();
+    for(const entry of addTray){const row=intentBoardEntry(entry.name,{p:pri,mod:flags.notes,gender:entryGender(flags.notes),lucky:flags.lucky,xxl:flags.xxl,xxs:flags.xxs,shiny:flags.shiny,backgroundId:flags.backgroundId});if(!board.ft.some(e=>e.name===row.name))board.ft.push(row);}
+    if(await writeSpecialBoard(board)){addTray=[];renderAddTray();buildAcItems();renderMyList();}
+    return;
+  }
   if(!pri&&!flags.lucky&&!flags.xxl&&!flags.xxs&&!flags.shiny&&!flags.backgroundId){toast(i18nCore.t('myList.queueNeedsPriority'));return;}
   const list={...(allData[myListType]?.[cur]||{})};
   let added=0;
@@ -6381,6 +6401,7 @@ function _renderBrowseInner(){
 
 // ── MY LIST ───────────────────────────────────────────────────
 function resetMyListCategoryForAccountBoundary(){
+  myListIntent='lf';boardHiddenKeys=new Set();boardCurationOwner='';publicLinkAttempt++;
   myListType='wishlist';
   addTray=[];
   myListCollapsedPrioritySections.clear();
@@ -6421,10 +6442,124 @@ function setMyList(t){
   buildAcItems();renderMyList();
 }
 
+function productDeclarations(username=cur){
+  const data=username!==cur&&selectedTrainerRuntime.username===username&&selectedTrainerRuntime.publicData?selectedTrainerRuntime.publicData:allData;
+  const entries=[],profile=data.users?.[username]||{},board=profile.specialTradeBoard||{};
+  for(const side of ['lf','ft'])for(const [index,raw] of (board[side]||[]).entries()){
+    if(!raw?.name)continue;
+    const source=accountSyncCatalogEntryForName('wishlist',raw.name)||{name:raw.name,no:raw.no},type=maxTypeForEntry(source,'wishlist')||'wishlist';
+    entries.push({...raw,intent:side,type:['dynamax','gmax'].includes(type)?type:'wishlist',category:['dynamax','gmax'].includes(type)?type:'wishlist',p:raw.p||raw.priority||'',mod:raw.mod||raw.variant||'',gender:raw.gender||entryGender(raw.mod||raw.variant||''),
+      dn:pokemonDisplayName({...source,name:raw.name}),no:raw.no||source.no,key:`board:${side}:${index}`,ref:{surface:'special-board',side,index,name:raw.name}});
+  }
+  for(const type of OWNED_MY_LIST_TYPES)for(const [name,value] of Object.entries(data[type]?.[username]||{})){
+    const parsed=parsePri(value),source=accountSyncCatalogEntryForName(type,name)||{name,no:null};
+    entries.push({...parsed,intent:'lf',name,type:type==='costumes'?'wishlist':type,category:type,gender:entryGender(parsed.mod),dn:pokemonDisplayName({...source,name}),no:source.no,key:`list:${type}:${name}`,ref:{surface:'my-list',type,name}});
+  }
+  return tradeListComparisonDomain.unifyDeclarations(entries,{nameKey:pokemonCatalogDomain.catalogKey,normalizeQualifier:normalizeTradeQualifier});
+}
+function setMyListIntent(intent){
+  myListIntent=intent==='ft'?'ft':'lf';
+  bulkMode=false;reorderMode=false;addTray=[];myListRenderState=null;
+  setMyList(myListType);
+}
+function intentBoardEntry(name,fields={}){
+  const boardName=myListType==='dynamax'?(maxTradeEntries('dynamax').find(e=>e.spriteName===name)?.name||name):name;
+  const source=accountSyncCatalogEntryForName('wishlist',boardName)||{name:boardName,no:null};
+  return{name:boardName,dn:pokemonDisplayName(source),no:source.no,note:'',...fields};
+}
+function renderIntentEntries(query=''){
+  const host=document.getElementById('intent-entries');if(!host)return;
+  const model=productDeclarations(),filter=normalizeAcText(query);
+  document.querySelectorAll('[data-list-intent]').forEach(button=>{
+    const active=button.dataset.listIntent===myListIntent;button.setAttribute('aria-pressed',String(active));button.classList.toggle('active',active);
+  });
+  document.getElementById('tab-mylist')?.classList.toggle('intent-for-trade',myListIntent==='ft');
+  const rows=model.entries.filter(entry=>entry.intent===myListIntent&&entry.category===myListType&&entry.ref.surface==='special-board'&&(!filter||normalizeAcText(entry.dn).includes(filter)));
+  const reviews=model.reviews.filter(group=>group[0].intent===myListIntent);
+  const review=document.getElementById('intent-review');
+  if(review){
+    review.hidden=!model.duplicates.length&&!reviews.length;
+    review.innerHTML=`${model.duplicates.length?`<p>${escHtml(i18nCore.t('product.identical',{count:model.duplicates.length}))}</p>`:''}${reviews.length?`<details><summary>${escHtml(i18nCore.t('product.review',{count:reviews.length}))}</summary><p>${escHtml(i18nCore.t('product.reviewHelp'))}</p>${reviews.map(group=>`<p>${escHtml(group[0].dn)}: ${group.map(e=>escHtml([e.p,e.mod,e.gender,e.shiny?i18nCore.t('share.flagShiny'):'',e.backgroundId,e.note].filter(Boolean).join(' · ')||i18nCore.t('product.other'))).join(' / ')}</p>`).join('')}</details>`:''}`;
+  }
+  host.innerHTML=rows.map(entry=>{
+    const side=entry.ref.side,index=entry.ref.index;
+    return`<article class="intent-row" data-intent-row="${escAttr(entry.name)}">${spriteImg(entry.no,42,'',entry.name,entry.gender||'',entry.dn)}<div class="intent-row-main"><strong>${escHtml(entry.dn)}</strong><span>${escHtml([entry.mod,entry.note,entry.backgroundId?backgroundDisplayName(entry.backgroundId):''].filter(Boolean).join(' · '))}</span></div><select aria-label="${escAttr(i18nCore.t('myList.priorityFor',{name:entry.dn}))}" onchange="editIntentEntry('${side}',${index},'p',this.value)">${['','H','M','L'].map(p=>`<option value="${p}" ${p===entry.p?'selected':''}>${escHtml(p?priLabel(p):i18nCore.t('product.other'))}</option>`).join('')}</select><button type="button" class="btn btn-ghost" aria-label="${escAttr(i18nCore.t('share.flagShiny'))}" aria-pressed="${!!entry.shiny}" onclick="editIntentEntry('${side}',${index},'shiny',${!entry.shiny})">${uiIconMarkup('sparkles','ui-icon')}</button><button type="button" class="btn btn-ghost" aria-label="${escAttr(i18nCore.t('myList.removeEntry',{name:entry.dn}))}" onclick="removeIntentEntry('${side}',${index})">${uiIconMarkup('trash','ui-icon')}</button>${intentDetailsHtml(entry)}</article>`;
+  }).join('')||(myListIntent==='ft'?`<p class="empty">${escHtml(i18nCore.t('product.emptyOffers'))}</p>`:'');
+  if(myListIntent==='ft'){
+    const numbers=rows.map(e=>Number(e.no)).filter(n=>Number.isInteger(n)&&n>0);
+    if(numbers.length===rows.length&&numbers.length)host.insertAdjacentHTML('beforeend',`<button class="btn btn-secondary" type="button" onclick="copyIntentSearch()">${escHtml(i18nCore.t('share.copySearchAria',{label:i18nCore.t('product.ft')}))}</button>`);
+  }
+}
+async function copyIntentSearch(){
+  const filter=normalizeAcText(document.getElementById('mylist-filter')?.value||'');
+  const entries=productDeclarations().entries.filter(e=>e.intent===myListIntent&&e.category===myListType&&(!filter||normalizeAcText(e.dn).includes(filter))),numbers=entries.map(e=>Number(e.no));
+  if(!numbers.length||numbers.some(n=>!Number.isInteger(n)||n<1))return;
+  const text=dexStringFromNumbers(numbers,{locale:pokemonGoSearchLocale()});
+  if(text.length>POGO_STR_LIMIT){toast(i18nCore.t('strings.tooLongForPokemonGo'));return;}
+  try{await copyText(text);toast(i18nCore.t('share.copySuccess'));}catch{toast(i18nCore.t('strings.copyFailed'));}
+}
+function intentDetailsHtml(entry){
+  const side=entry.ref.side,index=entry.ref.index;
+  const input=(field,key)=>`<label>${escHtml(i18nCore.t(key))}<input class="field-control" maxlength="160" value="${escAttr(entry[field]||'')}" onchange="editIntentEntry('${side}',${index},'${field}',this.value)"></label>`;
+  return`<details class="intent-details"><summary>${escHtml(i18nCore.t('myList.flagsAndDetails'))}</summary><div class="intent-fields">
+    ${input('mod','myList.variantDetails')}${input('note','product.note')}
+    <label>${escHtml(i18nCore.t('product.gender'))}<select onchange="editIntentEntry('${side}',${index},'gender',this.value)">${['','f','m'].map(g=>`<option value="${g}" ${g===entry.gender?'selected':''}>${g==='f'?'♀':g==='m'?'♂':'—'}</option>`).join('')}</select></label>
+    <label>${escHtml(i18nCore.t('background.label'))}<select onchange="editIntentEntry('${side}',${index},'backgroundId',this.value)"><option value="">—</option>${entry.backgroundId?`<option selected value="${escAttr(entry.backgroundId)}">${escHtml(backgroundDisplayName(entry.backgroundId))}</option>`:''}</select></label>
+    ${['lucky','xxl','xxs'].map(flag=>`<label><input type="checkbox" ${entry[flag]?'checked':''} onchange="editIntentEntry('${side}',${index},'${flag}',this.checked)">${escHtml(i18nCore.t({lucky:'myList.lucky',xxl:'share.flagXxl',xxs:'share.flagXxs'}[flag]))}</label>`).join('')}
+    </div></details>`;
+}
+async function editIntentEntry(side,index,field,value){
+  const fields={p:'priority',shiny:'shiny',mod:'variant',gender:'gender',note:'note',backgroundId:'backgroundId',lucky:'lucky',xxl:'xxl',xxs:'xxs'};
+  if(!fields[field]||!accountSyncModel.fieldValueValid('tradeEntry',fields[field],value))return;
+  const board=getStoredSpecialBoard(),entry=board[side]?.[index];if(!entry)return;
+  const username=cur,uid=auth?.currentUser?.uid,authority=await accountSyncMutationAuthority();
+  if(username!==cur||uid!==auth?.currentUser?.uid)return;
+  if(authority.mode==='canonical'){
+    const catalog=accountSyncCatalogIdentity('wishlist',entry.name,entry);if(!catalog||!accountSyncAuthorityCurrent(authority))return;
+    const entityId=accountSyncModel.tradeEntryId({surface:'special-board',lane:side==='lf'?'looking-for':'for-trade',catalogId:catalog.catalogId});
+    const result=await applyAccountSyncTradeMutations([{kind:'patch',entityType:'tradeEntry',entityId,patch:{[fields[field]]:value}}],authority.controller);
+    if(!result?.ok)toast(i18nCore.t('storage.offlineRecoveryUnavailable'));
+    renderMyList();return;
+  }
+  entry[field]=value;
+  if(await writeSpecialBoard(board))renderMyList();
+}
+async function removeIntentEntry(side,index){
+  const board=getStoredSpecialBoard();if(!board[side]?.[index])return;
+  if(!confirm(i18nCore.t('product.removeConfirm',{name:board[side][index].dn||board[side][index].name})))return;
+  board[side].splice(index,1);
+  if(await writeSpecialBoard(board))renderMyList();
+}
+async function consolidateIntentDuplicates(){
+  const model=productDeclarations();if(!model.duplicates.length)return;
+  // The current public contract publishes My List rows, not Board-origin rows.
+  // Do not remove the only published representation during compatibility review.
+  if(model.duplicates.some(({survivor,duplicate})=>survivor.ref.surface==='special-board'&&duplicate.ref.surface==='my-list')){toast(i18nCore.t('product.combineUnavailable'),6000);return;}
+  if(!confirm(i18nCore.t('product.combineConfirm')))return;
+  const fingerprint=JSON.stringify(model.entries),authority=await accountSyncMutationAuthority();
+  if(authority.mode!=='canonical'||!accountSyncAuthorityCurrent(authority)||JSON.stringify(productDeclarations().entries)!==fingerprint){toast(i18nCore.t('product.combineUnavailable'),6000);return;}
+  const ids=new Set();
+  for(const {survivor,duplicate} of model.duplicates){
+    const ref=duplicate.ref,lane=ref.surface==='my-list'?ref.type:(ref.side==='lf'?'looking-for':'for-trade');
+    const catalog=accountSyncCatalogIdentity(ref.type||'wishlist',ref.name,duplicate);
+    if(!catalog?.catalogId){toast(i18nCore.t('product.combineUnavailable'));return;}
+    const entityId=accountSyncModel.tradeEntryId({surface:ref.surface,lane,catalogId:catalog.catalogId});
+    const survivorRef=survivor.ref,survivorCatalog=accountSyncCatalogIdentity(survivorRef.type||'wishlist',survivorRef.name,survivor);
+    if(!survivorCatalog){toast(i18nCore.t('product.combineUnavailable'));return;}
+    const survivorId=accountSyncModel.tradeEntryId({surface:survivorRef.surface,lane:survivorRef.type||(survivorRef.side==='lf'?'looking-for':'for-trade'),catalogId:survivorCatalog.catalogId});
+    const losing=accountSyncCanonicalEntities.find(e=>e.entityId===entityId&&!e.deleted),retained=accountSyncCanonicalEntities.find(e=>e.entityId===survivorId&&!e.deleted);
+    if(entityId===survivorId||!losing||!retained||accountSyncModel.canonicalJson({...losing.values,sortOrder:0})!==accountSyncModel.canonicalJson({...retained.values,sortOrder:0})){toast(i18nCore.t('product.combineUnavailable'));return;}
+    ids.add(entityId);
+  }
+  const result=await applyAccountSyncTradeMutations([...ids].map(entityId=>({kind:'delete',entityType:'tradeEntry',entityId})),authority.controller);
+  if(!result?.ok){toast(i18nCore.t('product.combineUnavailable'));return;}
+  renderMyList();
+}
+
 const MY_LIST_TYPES=['wishlist','dynamax','gmax','costumes'];
 function myListCategoryKey(type){return type==='costumes'?'others':type==='gmax'?'gigantamax':type;}
 function myListCategoryLabel(type){return i18nCore.t(`list.${myListCategoryKey(type)}`);}
-function myListCategoryCount(type){return Object.keys(allData[type]?.[cur]||{}).length;}
+function myListCategoryCount(type){return productDeclarations().entries.filter(e=>e.intent===myListIntent&&e.category===type).length;}
 function updateMyListCategoryChrome(){
   document.querySelectorAll('#tab-mylist .mylist-type-tabs .ltab').forEach(button=>{
     const type=button.dataset.mylistType,count=myListCategoryCount(type),active=type===myListType;
@@ -6498,8 +6633,16 @@ async function addEntry(){
   const shiny=!!document.getElementById('add-pmon-shiny')?.checked;
   const backgroundId=normalizeBackgroundId(document.getElementById('add-pmon-background')?.value);
   if(!name){toast(i18nCore.t('myList.selectPokemon'));return;}
-  if(!pri&&!lucky&&!xxl&&!xxs&&!shiny&&!backgroundId){toast(i18nCore.t('myList.priorityOrFlagRequired'));return;}
   const dn=acItems.find(x=>x.name===name)?.dn||name;
+  if(myListIntent==='ft'||(!pri&&!lucky&&!xxl&&!xxs&&!shiny&&!backgroundId)){
+    const board=getStoredSpecialBoard(),side=myListIntent,source=_nameToSpriteEntry(name);
+    const entry=intentBoardEntry(name,{p:pri,mod:notes,gender:entryGender(notes)||source.gender||'',lucky,xxl,xxs,shiny,backgroundId});
+    if(productDeclarations().entries.some(e=>e.intent===side&&pokemonCatalogDomain.catalogKey(e.name)===pokemonCatalogDomain.catalogKey(entry.name))){toast(i18nCore.t('specialBoard.alreadyOnSide'));return;}
+    board[side].push(entry);
+    if(!await writeSpecialBoard(board))return;
+    document.getElementById('ac-input').value='';document.getElementById('add-pmon-sel').value='';
+    renderMyList();toast(i18nCore.t('myList.added',{name:dn}));return;
+  }
   const list={...(allData[myListType]?.[cur]||{})};
   list[name]=priValue(pri,notes,lucky,xxl,xxs,shiny,backgroundId);
   if(!await writeList(myListType,cur,list))return;
@@ -6682,7 +6825,8 @@ function currentListEntries(type=myListType,filterVal=''){
     try{parsed=JSON.parse(key);}catch{continue;}
     if(parsed[0]===type&&parsed[1]===cur&&parsed[2]===locale&&!activeKeys.has(key))myListViewModelCache.delete(key);
   }
-  return applyExplicitMyListOrder(entries,type,cur);
+  const aliases=new Set(productDeclarations().duplicates.filter(x=>x.duplicate.ref.surface==='my-list'&&x.duplicate.ref.type===type).map(x=>x.duplicate.name));
+  return applyExplicitMyListOrder(entries,type,cur).filter(entry=>!aliases.has(entry.name));
 }
 
 function scheduleMyListFilter(value){
@@ -6962,6 +7106,7 @@ function renderMyList(filterVal,options={}){
     clearTimeout(myListFilterTimer);myListFilterTimer=0;myListFilterGeneration++;
   }
   const q=normalizeAcText(filterVal??document.getElementById('mylist-filter')?.value??'');
+  renderIntentEntries(q);
   const list=allData[myListType]?.[cur]||{};
   const el=document.getElementById('mylist-out');if(!el)return;
   const allEntries=currentListEntries(myListType),entries=q?allEntries.filter(entry=>entry.search.includes(q)):allEntries;
@@ -6973,13 +7118,14 @@ function renderMyList(filterVal,options={}){
   const generation=myListProgressiveGeneration;
   if(!filterOnly)renderTradeComparisonReturn();
 
-  const count=Object.keys(list).length;
+  const visibleDeclarations=productDeclarations().entries.filter(e=>e.intent===myListIntent&&e.category===myListType);
+  const count=visibleDeclarations.length;
   document.getElementById('tab-mylist')?.classList.toggle('has-list-content',count>0);
   const category=myListCategoryLabel(myListType);
   updateMyListCategoryChrome();
   const categoryName=document.getElementById('mylist-category-name');if(categoryName)categoryName.textContent=category;
   const countEl=document.getElementById('mylist-count');
-  if(countEl)countEl.textContent=i18nCore.t(q?'myList.filteredCategoryCount':'myList.categoryCount',q?{visible:i18nCore.formatNumber(entries.length),total:i18nCore.formatNumber(count)}:{count:i18nCore.formatNumber(count)});
+  if(countEl)countEl.textContent=i18nCore.t(q?'myList.filteredCategoryCount':'myList.categoryCount',q?{visible:i18nCore.formatNumber(visibleDeclarations.filter(e=>normalizeAcText(e.dn).includes(q)).length),total:i18nCore.formatNumber(count)}:{count:i18nCore.formatNumber(count)});
 
   let root=el.querySelector(':scope > .mylist-priority-sections');
   if(filterOnly&&previous?.visibilityDom&&root?.dataset.renderComplete==='true'){
@@ -6992,7 +7138,8 @@ function renderMyList(filterVal,options={}){
   }
 
   if(!entries.length){
-    if(q)el.innerHTML=emptyHtml(i18nCore.t('myList.noMatchesInCategory',{category}),i18nCore.t('myList.clearFilter'));
+    if(visibleDeclarations.some(e=>!q||normalizeAcText(e.dn).includes(q)))el.innerHTML='';
+    else if(q)el.innerHTML=emptyHtml(i18nCore.t('myList.noMatchesInCategory',{category}),i18nCore.t('myList.clearFilter'));
     else{
       const alternative=populatedMyListAlternative(),alternativeCount=alternative?myListCategoryCount(alternative):0;
       el.innerHTML=emptyHtml(i18nCore.t(`myList.empty.${myListCategoryKey(myListType)}Title`),i18nCore.t(`myList.empty.${myListCategoryKey(myListType)}Help`),'📋')+
@@ -7390,7 +7537,7 @@ async function renderListImage(entries,type,username,style='classic'){
   const W=560,frame=0,pad=6,gap=0,cols=6;
   const cellW=(W-frame*2-pad*2-gap*(cols-1))/cols,cellH=72,sprSize=68;
   // Cluster variants from same family together within each priority group
-  const groupDefs=['H','M','L'].map(p=>({p,label:priLabel(p),entries:entries.filter(e=>e.p===p).sort(_familySort)}));
+  const groupDefs=['H','M','L',''].map(p=>({p,label:p?priLabel(p):i18nCore.t('product.other'),entries:entries.filter(e=>(e.p||'')===p).sort(_familySort)}));
   const groups=groupDefs.filter(g=>g.entries.length);
   const headerH=64,groupTitleH=28,sectionPad=4,sectionGap=0,bottomPad=12;
   let H=frame+headerH+bottomPad;
@@ -7508,7 +7655,7 @@ async function renderListImage(entries,type,username,style='classic'){
 async function renderListImageCards(entries,type,username){
   const W=560,frame=12,pad=0,gap=6,cols=8;
   const cellW=(W-frame*2-(cols-1)*gap)/cols,cellH=cellW,sprSize=Math.floor(cellW-12);
-  const groupDefs=['H','M','L'].map(p=>({p,label:priLabel(p),entries:entries.filter(e=>e.p===p).sort(_familySort)}));
+  const groupDefs=['H','M','L',''].map(p=>({p,label:p?priLabel(p):i18nCore.t('product.other'),entries:entries.filter(e=>(e.p||'')===p).sort(_familySort)}));
   const groups=groupDefs.filter(g=>g.entries.length);
   const headerH=64,groupTitleH=26,sectionGap=12,bottomPad=16;
   let H=headerH+bottomPad;
@@ -7623,11 +7770,12 @@ async function renderListImageCards(entries,type,username){
 async function exportMyListImage(style='classic'){
   const btn=document.querySelector('.image-btn');
   const old=btn?.textContent;
-  const entries=currentListEntries(myListType).filter(e=>e.p&&PRI[e.p]);
-  if(!entries.length){toast(i18nCore.t('export.priorityRequired'));return;}
+  const entries=productDeclarations().entries.filter(e=>e.intent===myListIntent&&e.category===myListType);
+  if(!entries.length){toast(i18nCore.t('export.entriesRequired'));return;}
   try{
     if(btn){btn.disabled=true;btn.textContent=i18nCore.t('export.buildingImage');}
-    const blob=await renderListImage(entries,myListType,cur,style);
+    const intentLabel=i18nCore.t(myListIntent==='ft'?'product.ft':'product.lf');
+    const blob=await renderListImage(entries,myListType,cur+' · '+intentLabel,style);
     const styleTag=style==='cards'?'-darkcards':'';
     const filename=`pogo-${safeFilePart(cur)}-${safeFilePart(listLabel(myListType))}${styleTag}-${new Date().toISOString().slice(0,10)}.png`;
     const delivery=await deliverImageBlob(blob,filename,`${cur}'s ${listLabel(myListType)} List`);
@@ -7850,10 +7998,10 @@ function buildStrings(type,username){
       if(!byP[p].length)return;
       out[p]=dexStringFromNumbers(byP[p],searchOptions);
     });
-    const luckyStr=dexStringFromNumbers(luckyDex,searchOptions);if(luckyStr)out.LUCKY=luckyStr;
-    const shinyStr=dexStringFromNumbers(shinyDex,searchOptions);if(shinyStr)out.SHINY=shinyStr;
-    const xxlStr=dexStringFromNumbers(xxlDex,searchOptions);if(xxlStr)out.XXL=xxlStr;
-    const xxsStr=dexStringFromNumbers(xxsDex,searchOptions);if(xxsStr)out.XXS=xxsStr;
+    if(luckyDex.length)out.LUCKY=dexStringFromNumbers(luckyDex,searchOptions);
+    if(shinyDex.length)out.SHINY=dexStringFromNumbers(shinyDex,searchOptions);
+    if(xxlDex.length)out.XXL=dexStringFromNumbers(xxlDex,searchOptions);
+    if(xxsDex.length)out.XXS=dexStringFromNumbers(xxsDex,searchOptions);
     return Object.keys(out).length?out:null;
   }
   const srcArr=listSource(type);
@@ -7881,10 +8029,10 @@ function buildStrings(type,username){
     if(!byP[p].length)return;
     out[p]=stringFromSearchItems(byP[p],searchOptions);
   });
-  const luckyStr=stringFromSearchItems(luckyItems,searchOptions);if(luckyStr)out.LUCKY=luckyStr;
-  const shinyStr=stringFromSearchItems(shinyItems,searchOptions);if(shinyStr)out.SHINY=shinyStr;
-  const xxlStr=stringFromSearchItems(xxlItems,searchOptions);if(xxlStr)out.XXL=xxlStr;
-  const xxsStr=stringFromSearchItems(xxsItems,searchOptions);if(xxsStr)out.XXS=xxsStr;
+  if(luckyItems.length)out.LUCKY=stringFromSearchItems(luckyItems,searchOptions);
+  if(shinyItems.length)out.SHINY=stringFromSearchItems(shinyItems,searchOptions);
+  if(xxlItems.length)out.XXL=stringFromSearchItems(xxlItems,searchOptions);
+  if(xxsItems.length)out.XXS=stringFromSearchItems(xxsItems,searchOptions);
   return Object.keys(out).length?out:null;
 }
 
@@ -7920,7 +8068,7 @@ function myListSearchOptionHtml(option,key,{label=myListSearchLabel(option.level
 }
 function renderMyStrings(){
   const el=document.getElementById('my-strings-out');if(!el)return;
-  const strs=buildStrings(myListType,cur);
+  const strs=myListIntent==='ft'?null:buildStrings(myListType,cur);
   const heading=document.querySelector('.my-string-heading');
   document.querySelectorAll('[data-priority-search],[data-dex-search]').forEach(footer=>{footer.innerHTML='';});
   if(!strs){if(heading)heading.hidden=true;el.innerHTML='';return;}
@@ -9867,7 +10015,8 @@ function computeTradeMatchSummary(them){
   const myAvailable=ownTradeListsAvailable(),theirAvailable=trainerTradeListsAvailable(them);
   const availability={wants:myAvailable&&theirAvailable};
   if(!availability.wants)return{both:[],onlyMine:[],onlyTheirs:[],availability};
-  const result=tradeListComparisonDomain.compareWantedLists({myWants:tradeListWants(cur),theirWants:tradeListWants(them)},{
+  const offersAvailable=availability.wants&&!(selectedTrainerRuntime.username===them&&selectedTrainerRuntime.publicData)&&Object.hasOwn(allData.users?.[them]||{},'specialTradeBoard');
+  const result=tradeListComparisonDomain.compareDeclarations({mine:productDeclarations(cur).entries,theirs:productDeclarations(them).entries,offersAvailable},{
     nameKey:pokemonCatalogDomain.catalogKey,
     normalizeQualifier:normalizeTradeQualifier
   });
@@ -9887,7 +10036,7 @@ function tradeIntentQualifierTokens(intent){
   if(intent.xxl)tokens.push({label:i18nCore.t('share.flagXxl')});
   if(intent.xxs)tokens.push({label:i18nCore.t('share.flagXxs')});
   if(intent.backgroundId)tokens.push({label:i18nCore.t('background.badgeLabel',{name:backgroundDisplayName(intent.backgroundId)}),cls:'background',backgroundId:intent.backgroundId});
-  const gender=entryGender(intent.mod);
+  const gender=intent.gender||entryGender(intent.mod);
   if(gender)tokens.push({label:i18nCore.t(gender==='f'?'share.flagFemale':'share.flagMale')});
   const detail=tradeIntentFreeform(intent.mod);
   if(detail)tokens.push({label:detail});
@@ -9939,6 +10088,7 @@ function renderTradeMatchSummary(them){
   return`<div class="trade-match-intro"><strong>${escHtml(i18nCore.t('tradeMatch.summary'))}</strong><span>${escHtml(i18nCore.t('tradeMatch.intro',{trainer:them}))}</span></div>
     <div class="trade-match-overview" aria-label="${escAttr(i18nCore.t('tradeMatch.detailsLabel'))}">${tradeMatchMetric(i18nCore.t('tradeMatch.bothWant'),m.both,m.availability.wants)}${tradeMatchMetric(i18nCore.t('tradeMatch.onlyIWant'),m.onlyMine,m.availability.wants)}${tradeMatchMetric(i18nCore.t('tradeMatch.onlyTheyWant',{trainer:them}),m.onlyTheirs,m.availability.wants)}</div>
     <div class="diff-match-panel" aria-label="${escAttr(i18nCore.t('tradeMatch.detailsLabel'))}">
+    ${m.offersAvailable?box('they-offer',i18nCore.t('product.theyOffer'),i18nCore.t('product.offerScope'),m.theyOffer,true,i18nCore.t('trainer.noVisibleMatch'))+box('i-offer',i18nCore.t('product.iOffer'),i18nCore.t('product.offerScope'),m.iOffer,true,i18nCore.t('trainer.noVisibleMatch')):`<p>${escHtml(i18nCore.t('product.offersUnavailable'))}</p>`}
     ${box('both',i18nCore.t('tradeMatch.bothWant'),i18nCore.t('tradeMatch.bothDirection',{trainer:them}),m.both,m.availability.wants,i18nCore.t('tradeMatch.emptyBoth',{trainer:them}))}
     ${box('mine',i18nCore.t('tradeMatch.onlyIWant'),i18nCore.t('tradeMatch.mineDirection',{trainer:them}),m.onlyMine,m.availability.wants,i18nCore.t('tradeMatch.emptyMine',{trainer:them}))}
     ${box('theirs',i18nCore.t('tradeMatch.onlyTheyWant',{trainer:them}),i18nCore.t('tradeMatch.theirsDirection',{trainer:them}),m.onlyTheirs,m.availability.wants,i18nCore.t('tradeMatch.emptyTheirs',{trainer:them}))}
@@ -11129,83 +11279,83 @@ function closeExportMenu(){
   document.getElementById('export-menu-btn')?.setAttribute('aria-expanded','false');
   document.removeEventListener('click',_closeExportOnOutside);
 }
-function exportMyListMarkdown(){
-  const entries=currentListEntries(myListType).filter(e=>e.p&&PRI[e.p]);
-  if(!entries.length){toast(i18nCore.t('export.priorityRequired'));return;}
-  const groups={H:[],M:[],L:[]};
-  entries.forEach(e=>{if(groups[e.p])groups[e.p].push(e);});
-  const ud=allData.users?.[cur]||{};
-  let md=`## ${cur}'s ${listLabel(myListType)} List\n\n`;
-  if(ud.friendCode)md+=`**Friend Code:** \`${ud.friendCode}\`\n`;
-  if(ud.bio)md+=`*${ud.bio}*\n`;
-  if(ud.discord)md+=`**Discord:** ${ud.discord}\n`;
-  md+=`\n_${entries.length} entries · Updated ${new Date().toLocaleDateString()}_\n\n`;
-  ['H','M','L'].forEach(p=>{
-    if(!groups[p].length)return;
-    md+=`### ${priLabel(p)} Priority (${groups[p].length})\n`;
-    groups[p].forEach(e=>{
-      const flags=[e.lucky?'⚡ Lucky':'',e.shiny?'✨ Shiny':'',e.xxl?'XXL':'',e.xxs?'XXS':'',e.backgroundId?`🖼 ${backgroundDisplayName(e.backgroundId)} BG`:''].filter(Boolean).join(' · ');
-      md+=`- ${e.dn}${e.mod?` *(${e.mod})*`:''}${flags?` — ${flags}`:''}\n`;
-    });
-    md+='\n';
-  });
-  copyText(md).then(()=>toast(i18nCore.t('export.markdownCopied')));
+function productTextRows(){
+  return productDeclarations().entries.map(e=>({
+    intent:i18nCore.t(e.intent==='ft'?'product.ft':'product.lf'),name:e.dn,no:e.no||'',priority:e.p||'',
+    shiny:e.shiny===true,lucky:e.lucky===true,xxl:e.xxl===true,xxs:e.xxs===true,gender:e.gender||'',variant:e.mod||'',backgroundId:e.backgroundId||'',background:e.backgroundId?backgroundDisplayName(e.backgroundId):'',note:e.note||''
+  }));
+}
+async function exportMyListMarkdown(){
+  const entries=productTextRows();if(!entries.length){toast(i18nCore.t('export.entriesRequired'));return;}
+  const profile=allData.users?.[cur]||{};
+  const text=['## '+cur,...[profile.friendCode,profile.discord,profile.bio].filter(Boolean),...['lf','ft'].flatMap(side=>{
+    const label=i18nCore.t(side==='ft'?'product.ft':'product.lf'),rows=entries.filter(e=>e.intent===label);
+    return rows.length?['','### '+label,...rows.map(e=>'- '+[e.name,e.priority,e.shiny?'✨':'',e.gender==='f'?'♀':e.gender==='m'?'♂':'',e.lucky?i18nCore.t('myList.lucky'):'',e.xxl?'XXL':'',e.xxs?'XXS':'',e.variant,e.background,e.note].filter(Boolean).join(' · '))]:[];
+  })].join('\n');
+  try{await copyText(text);toast(i18nCore.t('export.markdownCopied'));}catch{toast(i18nCore.t('strings.copyFailed'));}
 }
 function exportMyListCSV(){
-  const entries=currentListEntries(myListType);
-  if(!entries.length){toast(i18nCore.t('export.entriesRequired'));return;}
-  const rows=[['Name','Dex','Priority','Lucky','Shiny','XXL','XXS','Background ID','Background','Notes']];
-  entries.forEach(e=>{
-    rows.push([e.dn,e.no||'',e.p||'',e.lucky?'Y':'',e.shiny?'Y':'',e.xxl?'Y':'',e.xxs?'Y':'',e.backgroundId||'',e.backgroundId?backgroundDisplayName(e.backgroundId):'',e.mod||'']);
-  });
-  const csv=rows.map(r=>r.map(c=>{
-    const s=String(c||'');
-    return /[",\n]/.test(s)?`"${s.replace(/"/g,'""')}"`:s;
-  }).join(',')).join('\n');
-  const blob=new Blob([csv],{type:'text/csv'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url;a.download=`pogo-${safeFilePart(cur)}-${safeFilePart(listLabel(myListType))}-${new Date().toISOString().slice(0,10)}.csv`;
-  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+  const entries=productTextRows();if(!entries.length){toast(i18nCore.t('export.entriesRequired'));return;}
+  const cell=value=>{
+    let text=String(value??'');
+    if(/^[=+@-]/.test(text))text="'"+text;
+    return '"'+text.replace(/"/g,'""')+'"';
+  };
+  const rows=[Object.keys(entries[0]),...entries.map(e=>Object.values(e))];
+  const csv=rows.map(row=>row.map(cell).join(',')).join('\n');
+  const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  const a=document.createElement('a');a.href=url;a.download=`pogo-${safeFilePart(cur)}-lf-ft.csv`;
+  document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
   toast(i18nCore.t('export.csvDownloaded'));
 }
+let publicLinkAttempt=0;
+function linkPublicationStatus(key,options={}){
+  const node=document.getElementById('share-link-status');
+  if(node){node.textContent=i18nCore.t(key);node.dataset.state=options.state||key;}
+}
 async function copyShareLink(){
-  const url=`${location.origin}${location.pathname}?view=${encodeURIComponent(cur)}&list=${myListType}`;
+  const username=cur,uid=String(auth?.currentUser?.uid||''),attempt=++publicLinkAttempt;
+  const current=()=>attempt===publicLinkAttempt&&username===cur&&uid===String(auth?.currentUser?.uid||'');
+  const url=`${location.origin}${location.pathname}?view=${encodeURIComponent(username)}&list=${myListType}`;
+  linkPublicationStatus('product.publishing');
+  const input=document.getElementById('share-public-url');if(input)input.value=url;
   try{
-    await copyText(url);
-  }catch(e){
-    console.warn('Could not copy share link',e);
-    toast(i18nCore.t('export.shareCopyFailed'),6000);
-    return;
-  }
-  toast(i18nCore.t('export.shareCopiedUpdating'),3500);
-  publishPublicShareNow(cur,'explicit_share').then(result=>{
-    if(publicSharePublicationCurrent(result)){
-      toast(i18nCore.t('share.publicationUpdated'),3500);
-      inspectOwnPublicShareAfterHydration(activePublicShareHydrationToken);
+    const result=await publishPublicShareNow(username,'explicit_share');
+    if(!current())return;
+    if(!publicSharePublicationCurrent(result)){
+      linkPublicationStatus(result?.status==='pending'?'share.publicationPending':'product.publishFailed');return;
     }
-    else if(result?.status==='pending')toast(i18nCore.t('share.publicationPending'),6000);
-    else toast(i18nCore.t('share.publicationNotReady'),6000);
-  }).catch(e=>{
-    console.warn('Could not publish public share snapshot',e);
-    toast(i18nCore.t('export.shareCopiedPublishFailed'),7000);
-  });
+    linkPublicationStatus('product.published');
+    try{
+      await copyText(url);
+      if(current())linkPublicationStatus('product.publishedCopied');
+    }catch{
+      if(current()){linkPublicationStatus('product.publishedCopyFailed');input?.focus();input?.select();}
+    }
+  }catch(error){
+    if(current())linkPublicationStatus('product.publishFailed');
+  }
 }
 
 // ── SPECIAL TRADE BOARD ──────────────────────────────────────
-// Manually-curated LF/FT board for one-off special trades. Persisted under
-// the user record so it survives reloads + syncs to Firebase.
-function getSpecialBoard(){
+// Legacy records remain readable; the Board UI only selects declaration references.
+function getStoredSpecialBoard(){
   const b=allData.users?.[cur]?.specialTradeBoard;
   return accountSyncClone({lf:Array.isArray(b?.lf)?b.lf:[],ft:Array.isArray(b?.ft)?b.ft:[]});
 }
+function getSpecialBoard(){
+  if(boardCurationOwner!==cur){boardCurationOwner=cur;boardHiddenKeys=new Set();}
+  const entries=productDeclarations().entries.filter(e=>!boardHiddenKeys.has(e.declarationKey));
+  return{lf:entries.filter(e=>e.intent==='lf'),ft:entries.filter(e=>e.intent==='ft')};
+}
 async function writeSpecialBoard(board){
   const session={uid:String(auth?.currentUser?.uid||''),username:cur};
+  const baseBoard=getStoredSpecialBoard();
   const authority=await accountSyncMutationAuthority();
   if(session.username!==cur||session.uid!==String(auth?.currentUser?.uid||''))return false;
   if(authority.mode==='blocked'){toast(i18nCore.t('storage.offlineRecoveryUnavailable'),5000);return false;}
   if(authority.mode==='canonical'){
-    const result=await writeAccountSyncSpecialBoard(board,{authority});
+    const result=await writeAccountSyncSpecialBoard(board,{authority,baseBoard});
     if(!result?.ok||!accountSyncAuthorityCurrent(authority)){toast(i18nCore.t('storage.offlineRecoveryUnavailable'),5000);return false;}
     return true;
   }
@@ -11291,33 +11441,18 @@ function _paintSpecialAcFocus(side){
 }
 
 function openSpecialTradeBoard(){
-  openModal('special-board-modal');
-  // Reset add-form state
-  ['lf','ft'].forEach(s=>{
-    document.getElementById(`special-${s}-ac`).value='';
-    document.getElementById(`special-${s}-sel`).value='';
-    _closeSpecialAc(s);
-  });
-  renderSpecialBoard();
+  openModal('special-board-modal');renderSpecialBoard();
+}
+function toggleBoardSelection(key,selected){
+  if(selected)boardHiddenKeys.delete(key);else boardHiddenKeys.add(key);
 }
 function renderSpecialBoard(){
-  const board=getSpecialBoard();
-  ['lf','ft'].forEach(side=>{
-    const el=document.getElementById(`special-${side}-list`);if(!el)return;
-    el.innerHTML=board[side].map((e,i)=>{
-      const sprHtml=spriteImg(e.no,24,'sb-row-sprite',e.name,'',e.dn||e.name,{catalogId:e.catalogId,scaleCap:1});
-      const display=pokemonDisplayName({name:e.name,no:e.no,displayName:e.dn||e.name});
-      const gender=['f','m'].includes(e.gender)?e.gender:'';
-      const genderHtml=gender?`<span class="sb-row-gender ${gender==='f'?'is-female':'is-male'}" aria-label="${gender==='f'?'Female':'Male'}"><span aria-hidden="true">${gender==='f'?'♀︎':'♂︎'}</span></span>`:'';
-      return`<div class="sb-row" data-idx="${i}">
-        ${sprHtml}
-        <span class="sb-row-name" title="${escAttr(display)}">${escHtml(display)}</span>
-        ${genderHtml}
-        <button class="sb-row-flag ${e.shiny?'on shiny':''}" onclick="toggleSpecialFlag('${side}',${i},'shiny')" title="✨ Shiny variant" aria-pressed="${!!e.shiny}">✨</button>
-        <button class="sb-row-rm" onclick="removeSpecialEntry('${side}',${i})" title="Remove" aria-label="Remove">×</button>
-      </div>`;
-    }).join('');
-  });
+  if(boardCurationOwner!==cur){boardCurationOwner=cur;boardHiddenKeys=new Set();}
+  const entries=productDeclarations().entries;
+  for(const side of ['lf','ft']){
+    const el=document.getElementById(`special-${side}-list`);if(!el)continue;
+    el.innerHTML=entries.filter(e=>e.intent===side).map(e=>`<label class="sb-row"><input type="checkbox" data-key="${escAttr(e.declarationKey)}" ${boardHiddenKeys.has(e.declarationKey)?'':'checked'} onchange="toggleBoardSelection(this.dataset.key,this.checked)">${spriteImg(e.no,34,'sb-row-sprite',e.name,e.gender||'',e.dn)}<span class="sb-row-name">${escHtml(e.dn)}</span>${e.shiny?'<span aria-label="'+escAttr(i18nCore.t('share.flagShiny'))+'">✨</span>':''}</label>`).join('');
+  }
 }
 async function addSpecialEntry(side){
   const name=document.getElementById(`special-${side}-sel`).value;
@@ -14683,6 +14818,8 @@ function maybeStartTour(){
 
 // ── EXPOSE ────────────────────────────────────────────────────
 Object.assign(window,{
+  setMyListIntent,editIntentEntry,removeIntentEntry,consolidateIntentDuplicates,copyIntentSearch,
+  openProductShare,setProductShareMode,toggleBoardSelection,
   openImport,setImportPri,parseImportString,toggleImportRow,toggleSelectAll,backToStep1,confirmImport,
   setFilter,setBrowseList,setMyList,setStaleFilter,switchTab,openLegacyInventoryTool,clearTrainerSearch,focusTrainerSearch,
   doLogin,logout,connectFirebase,skipFirebase,openLoginHealthCheck,runLoginHealthCheck,clearLoginLocalCache,selectLoginUserByIndex,
@@ -14732,11 +14869,7 @@ Object.assign(window,{
   // Shiny + tour + shortcuts
   setShiny,startTour,tourNext,tourPrev,skipTour,finishTour,
   // Special Trade Board
-  openSpecialTradeBoard,specialAcSearch,specialAcSelect,specialAcKeydown,
-  addSpecialEntry,removeSpecialEntry,toggleSpecialFlag,
-  clearSpecialBoard,exportSpecialBoardImage,
-  // Quick-add bulk picker for the Special Trade Board
-  openQuickAdd,closeQuickAdd,filterQuickAdd,toggleQuickAddPick,qaSelectAll,commitQuickAdd,
+  openSpecialTradeBoard,exportSpecialBoardImage,
   continueWithGoogle,checkGoogleOnboarding,cancelGoogleOnboarding,handleGoogleAccountAction
 });
 

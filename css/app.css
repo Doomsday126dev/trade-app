@@ -1976,3 +1976,49 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
 @media(max-height:600px){.feedback-stack{bottom:calc(8px + env(safe-area-inset-bottom));max-height:calc(100dvh - 16px - env(safe-area-inset-top) - env(safe-area-inset-bottom));overflow:auto}}
 .mylist-list-actions{display:inline-flex;align-items:center;gap:8px;margin-right:auto}.mylist-list-actions .mylist-reorder-toggle{margin-right:0}.mylist-list-tools{min-height:44px}
 @media(max-width:600px){#tab-mylist .mylist-list-actions{width:100%;justify-content:space-between;margin-right:0}}
+:root{--product-nav-height:64px}
+.intent-tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin:12px 0 16px}
+.intent-tabs button{min-height:48px;flex:1;padding:10px 12px;background:none;border:0;border-bottom:3px solid transparent;color:var(--muted);font:inherit;font-weight:700;white-space:normal}
+.intent-tabs button[aria-pressed="true"]{color:var(--text);border-bottom-color:var(--accent,#7867ee)}
+.intent-row{display:grid;grid-template-columns:48px minmax(0,1fr) minmax(80px,130px) 44px 44px;align-items:center;gap:8px;min-height:72px;border-bottom:1px solid var(--border);padding:8px 0}
+.intent-row-main{min-width:0;display:flex;flex-direction:column;gap:4px;overflow-wrap:anywhere}
+.intent-row>img,.intent-row>.sprite-fallback{grid-column:1;grid-row:1}
+.intent-row-main{grid-column:2;grid-row:1}
+.intent-row>select{grid-column:3;grid-row:1}
+.intent-row>button:nth-of-type(1){grid-column:4;grid-row:1}
+.intent-row>button:nth-of-type(2){grid-column:5;grid-row:1}
+.intent-row-main span{font-size:12px;color:var(--muted)}
+.intent-details{grid-column:1/-1;font-size:13px}
+.intent-details summary{min-height:44px;padding:12px 4px;color:var(--muted)}
+.intent-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding-bottom:12px}
+.intent-fields label{min-width:0;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.intent-fields .field-control{min-width:0;width:100%;min-height:44px}
+.intent-row select{min-height:44px;max-width:100%;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:6px}
+.intent-row .btn{padding:8px;width:44px;height:44px}
+.intent-row button[aria-pressed="true"]{color:#73dce5}
+.intent-review{padding:12px 0;border-block:1px solid var(--border);font-size:14px;overflow-wrap:anywhere}
+.intent-review summary{min-height:44px;padding:12px 0}
+.intent-for-trade #mylist-out,.intent-for-trade #mylist-reorder-toggle{display:none}
+.more-destinations,.share-format-actions{display:flex;gap:12px;flex-wrap:wrap}
+.more-destinations .btn{min-height:52px;justify-content:flex-start}
+.share-format-actions[hidden],#product-share-link[hidden]{display:none}
+.product-share-modal{width:560px;max-width:calc(100vw - 24px)}
+.product-share-modal section{padding:12px 0;overflow-wrap:anywhere}
+#share-public-url{width:100%;min-width:0}
+.tabs #admin-tab{display:none!important}
+#tab-mylist.intent-for-trade .mylist-list-tools{display:none}
+.badge.U{color:var(--muted);background:transparent}
+@media(max-width:700px){
+  #app>.tabs{position:fixed;bottom:0;left:0;right:0;top:auto;z-index:120;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));height:calc(var(--product-nav-height) + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);background:var(--bg,#101417);border-top:1px solid var(--border)}
+  #app>.tabs .tab{min-width:0;padding:6px 2px;white-space:normal;gap:3px}
+  #app>.tabs .tab-label{display:block;position:static;width:auto;height:auto;overflow:visible;clip:auto;white-space:normal;font-size:12px;line-height:1.2}
+  #app>.tabs .tab-short-label{display:none}
+  #app{padding-bottom:calc(var(--product-nav-height) + env(safe-area-inset-bottom))}
+  .intent-row{grid-template-columns:40px minmax(0,1fr) 44px 44px;gap:4px}
+  .intent-row select{grid-column:2;grid-row:2;width:100%}
+  .intent-row>button:nth-of-type(1){grid-column:3}
+  .intent-row>button:nth-of-type(2){grid-column:4}
+  .intent-row-main{font-size:14px}
+  .more-destinations{flex-direction:column}
+  #tab-mylist .journey-guidance{display:none}
+}

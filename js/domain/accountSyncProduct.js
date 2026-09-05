@@ -128,7 +128,7 @@
         orders[entity.identity.lane].priorities[values.priority||'U'].push(name);
       }else if(entity.identity.surface==='special-board'){
         const side=entity.identity.lane==='looking-for'?'lf':entity.identity.lane==='for-trade'?'ft':'';
-        if(side)board[side].push({name,dn:catalog.displayName||name,no:catalog.no||null,shiny:values.shiny,mirror:values.mirror,backgroundId:values.backgroundId,note:values.note,...(side==='ft'?{qty:values.quantity}:{})});
+        if(side)board[side].push({name,dn:catalog.displayName||name,no:catalog.no||null,p:values.priority,mod:values.variant,gender:values.gender,lucky:values.lucky,xxl:values.xxl,xxs:values.xxs,shiny:values.shiny,mirror:values.mirror,backgroundId:values.backgroundId,note:values.note,...(side==='ft'?{qty:values.quantity}:{})});
       }
     }
     return Object.freeze({lists,orders,board,unresolved:Object.freeze(unresolved)});

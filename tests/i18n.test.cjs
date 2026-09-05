@@ -167,7 +167,7 @@ test('active setup, Admin, profile, import, export, and safety surfaces use cata
   for(const marker of [
     'data-i18n="setup.title"','data-i18n="request.title"','data-i18n="admin.pendingRequests"',
     'data-i18n="settings.sectionProfile"','data-i18n="health.title"','data-i18n="import.title"',
-    'data-i18n="safeTransfer.title"','data-i18n="specialBoard.title"','data-i18n="shortcuts.title"'
+    'data-i18n="safeTransfer.title"','data-i18n="product.board"','data-i18n="shortcuts.title"'
   ])assert.match(html,new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));
 });
 

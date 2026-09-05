@@ -12,6 +12,7 @@ const viewports=[
 
 async function capture(page,name){
   if(!screenshotDir)return;
+  await expect(page.locator('#toast')).toBeHidden({timeout:7000});
   mkdirSync(screenshotDir,{recursive:true});
   await page.screenshot({path:path.join(screenshotDir,`${name}.png`),fullPage:false});
 }
@@ -92,6 +93,92 @@ async function expectNoOverflow(page){
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
 }
 
+test('approved intent, More and Share paths preserve one canonical declaration view',async({page})=>{
+  await page.goto('./?product-intents');await installTrustedFixture(page);
+  await page.evaluate(()=>renderInterimProductLabels());
+  const original=await page.evaluate(()=>JSON.stringify(allData.users[cur].specialTradeBoard));
+  await page.getByRole('button',{name:'For Trade',exact:true}).click();
+  await expect(page.locator('[data-intent-row="Eevee"]')).toBeVisible();
+  await page.locator('#ac-input').fill('Pikachu');
+  await expect(page.locator('#ac-dropdown .ac-item[role="option"]').filter({hasText:'Pikachu'}).first()).toBeVisible();
+  await page.evaluate(()=>{document.getElementById('add-pmon-sel').value='Pikachu';document.getElementById('add-pmon-pri').value='H';});
+  await page.evaluate(()=>addEntry());
+  await expect(page.locator('[data-intent-row="Pikachu"]')).toBeVisible();
+  expect(await page.evaluate(()=>parsePri(allData.wishlist[cur].Pikachu).p)).toBe('H');
+  await page.locator('[data-intent-row="Pikachu"] select').first().selectOption('L');
+  await expect.poll(()=>page.evaluate(()=>allData.users[cur].specialTradeBoard.ft.find(e=>e.name==='Pikachu').p)).toBe('L');
+  await page.evaluate(()=>openSpecialTradeBoard());
+  const before=await page.evaluate(()=>JSON.stringify(allData.users[cur].specialTradeBoard));
+  await page.locator('#special-ft-list input').first().uncheck();
+  expect(await page.evaluate(()=>getSpecialBoard().ft.some(e=>e.name==='Eevee'))).toBe(false);
+  expect(await page.evaluate(()=>JSON.stringify(allData.users[cur].specialTradeBoard))).toBe(before);
+  await page.keyboard.press('Escape');
+  for(const viewport of viewports){
+    await page.setViewportSize(viewport);await page.evaluate(()=>switchTab('mylist'));
+    await expectNoOverflow(page);await capture(page,`approved-for-trade-${viewport.width}`);
+    await page.locator('[data-intent-row="Eevee"]').scrollIntoViewIfNeeded();
+    const row=page.locator('[data-intent-row="Eevee"]'),label=row.locator('.intent-row-main');
+    const sprite=await row.locator('img').first().boundingBox(),nameBox=await label.boundingBox();
+    expect(sprite.x).toBeLessThan(nameBox.x);
+    await capture(page,`approved-entries-${viewport.width}`);
+    if(viewport.width<700)expect(await page.locator('#nav-more .tab-label').evaluate(el=>el.getBoundingClientRect().width)).toBeGreaterThan(10);
+    await page.locator('#nav-more').click();await expect(page.locator('#tab-more')).toBeVisible();
+    await expect(page.locator('#tab-more').getByRole('button',{name:'Events',exact:true})).toBeVisible();
+    await capture(page,`approved-more-${viewport.width}`);
+    await page.locator('#nav-mylist').click();await page.getByRole('button',{name:'Share',exact:true}).click();
+    await page.locator('[data-share-mode="image"]').click();await expect(page.locator('#product-share-image')).toBeVisible();
+    await expectNoOverflow(page);await capture(page,`approved-share-${viewport.width}`);
+    await page.keyboard.press('Escape');
+  }
+  expect(original).toContain('Eevee');
+  await page.evaluate(()=>{
+    setMyList('dynamax');
+    const entry=listSource('dynamax').find(e=>e.name==='Charmander')||listSource('dynamax')[0];
+    document.getElementById('add-pmon-sel').value=entry.name;
+    return addEntry();
+  });
+  await expect(page.locator('#intent-entries .intent-row')).toHaveCount(1);
+  expect(await page.evaluate(()=>productDeclarations().entries.filter(e=>e.intent==='ft'&&e.category==='dynamax').length)).toBe(1);
+  await page.evaluate(()=>setMyList('wishlist'));
+  for(const locale of ['ja','es','de','en']){
+    await page.evaluate(value=>changeInterfaceLocale(value),locale);
+    await expect(page.locator('[data-list-intent="ft"]')).not.toContainText('product.');
+    await expectNoOverflow(page);
+  }
+});
+
+test('publication state is persistent and copying never precedes confirmed publication',async({page})=>{
+  await page.goto('./?product-publication');await installTrustedFixture(page);
+  await page.evaluate(()=>{
+    window.__publicationCopies=[];copyText=async value=>{window.__publicationCopies.push(value);};
+    publishPublicShareNow=()=>new Promise(resolve=>{window.__finishPublish=resolve;});
+    openProductShare();void copyShareLink();
+  });
+  await expect(page.locator('#share-link-status')).toHaveText('Publishing…');
+  expect(await page.evaluate(()=>window.__publicationCopies.length)).toBe(0);
+  await page.evaluate(()=>window.__finishPublish({ok:false,status:'failed'}));
+  await expect(page.locator('#share-link-status')).toContainText('Not published');
+  expect(await page.evaluate(()=>Object.keys(allData.wishlist[cur]).length)).toBe(4);
+  await page.evaluate(()=>void copyShareLink());await page.evaluate(()=>window.__finishPublish({ok:true,status:'published'}));
+  await expect(page.locator('#share-link-status')).toHaveText('Published and link copied.');
+  expect(await page.evaluate(()=>window.__publicationCopies.length)).toBe(1);
+  await page.evaluate(()=>{copyText=async()=>{throw new Error('denied');};void copyShareLink();});
+  await page.evaluate(()=>window.__finishPublish({ok:true,status:'published'}));
+  await expect(page.locator('#share-link-status')).toContainText('copying failed');
+  await page.evaluate(()=>{void copyShareLink();cur='AnotherTrainer';window.__finishPublish({ok:true,status:'published'});});
+  expect(await page.evaluate(()=>window.__publicationCopies.length)).toBe(1);
+});
+
+test('empty flag search sets never emit a prefilter-only search block',async({page})=>{
+  await page.goto('./?product-search');await installTrustedFixture(page);
+  const values=await page.evaluate(()=>{
+    allData.wishlist[cur]={Pikachu:'H'};allData.costumes[cur]={'Pikachu (Worlds 2025)':'H'};
+    return{normal:buildStrings('wishlist',cur),costume:buildStrings('costumes',cur)};
+  });
+  expect(Object.keys(values.normal)).toEqual(['H']);
+  for(const value of Object.values(values))if(value)for(const key of ['LUCKY','SHINY','XXL','XXS'])expect(value).not.toHaveProperty(key);
+});
+
 test('safe owner journey covers the pre-trusted product contract',async({page})=>{
   await page.setViewportSize({width:1440,height:900});
   await page.goto(`./?trusted-readiness=${Date.now()}`,{waitUntil:'domcontentloaded'});
@@ -169,7 +256,9 @@ test('safe owner journey covers the pre-trusted product contract',async({page})=
   await capture(page,'trusted-journey-settings-1440x900');
   await page.keyboard.press('Escape');
   await page.evaluate(()=>openSpecialTradeBoard());
-  await expect(page.locator('#special-lf-list .sb-row')).toHaveCount(1);
+  await expect(page.locator('#special-lf-list .sb-row')).toHaveCount(5);
+  await expect(page.locator('#special-lf-list')).toContainText('Mew');
+  await expect(page.locator('#special-board-modal .special-board-add-row')).toHaveCount(0);
   await expect(page.locator('#special-board-modal .sb-row-background')).toHaveCount(0);
   await expect(page.locator('#special-board-modal .sb-row-note')).toHaveCount(0);
   await expect(page.locator('#special-board-modal .sb-row-qty')).toHaveCount(0);
@@ -187,7 +276,8 @@ test('safe owner journey covers the pre-trusted product contract',async({page})=
   });
   expect(exported.markdown).toContain('Pikachu');
   expect(exported.markdown).toContain('New York City');
-  expect(exported.csv).toContain('Background ID,Background');
+  expect(exported.csv).toContain('"backgroundId","background"');
+  expect(exported.csv).toContain('For Trade');
 
   for(const locale of ['ja','es','de','en']){
     await page.evaluate(value=>changeInterfaceLocale(value),locale);

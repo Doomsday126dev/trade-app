@@ -86,6 +86,17 @@ async function assertPublicPrivacy(page){
 }
 
 test.describe('anonymous public share bootstrap',()=>{
+  test('unprioritized entries remain neutral and friend-code copy needs no account',async({page})=>{
+    await installPublicFirebase(page,{projection:{...publicProjection,lists:{...publicProjection.lists,wishlist:{Pikachu:'L',Eevee:'[shiny]'}}}});
+    await page.addInitScript(()=>Object.defineProperty(navigator,'clipboard',{value:{writeText:async text=>{window.__friendCodeCopy=text;}}}));
+    await page.goto('./?view=PublicTrainer&list=wishlist');
+    const neutral=page.locator('.share-section').filter({hasText:'Other entries'});
+    await expect(neutral).toContainText('Eevee');await expect(neutral).not.toContainText('Pikachu');
+    await expect(page.locator('.share-section').filter({hasText:'Low'})).toContainText('Pikachu');
+    await page.getByRole('button',{name:'Copy friend code'}).click();
+    expect(await page.evaluate(()=>window.__friendCodeCopy)).toBe('123456789012');
+    await assertPublicPrivacy(page);
+  });
   test('viewer locale, category and clipboard behavior use the canonical search on the anonymous route',async({page})=>{
     await page.addInitScript(()=>{
       localStorage.setItem('pogoUiLocale:v1','ja');

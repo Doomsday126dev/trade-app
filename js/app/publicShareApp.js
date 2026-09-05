@@ -5,7 +5,7 @@
   const APP_CHECK_SITE_KEY='6Lc6-X8tAAAAAI-MY4WdeI8RV-njpbiFX5mFjDbz';
   const LIST_TYPES=Object.freeze(['wishlist','dynamax','gmax','costumes']);
   const LIST_KEYS=Object.freeze({wishlist:'list.wishlist',dynamax:'list.dynamax',gmax:'list.gigantamax',costumes:'list.others'});
-  const PRIORITY_KEYS=Object.freeze({H:'priority.high',M:'priority.medium',L:'priority.low'});
+  const PRIORITY_KEYS=Object.freeze({H:'priority.high',M:'priority.medium',L:'priority.low',U:'product.other'});
   const diagnostics={mode:'anonymous-public-share',authSdkRequested:false,privateReads:0,readPaths:[],events:[]};
   const state={request:null,snapshot:null,type:'wishlist',status:'idle'};
   const spriteOptical=(()=>{
@@ -134,7 +134,7 @@
     const parsed=typeof raw.value==='string'?global.PogoDomain.priorityValues.parsePri(raw.value):encoded;
     const p=String(raw.p||parsed.p||'').toUpperCase();
     return{
-      p:PRIORITY_KEYS[p]?p:'L',mod:String(raw.mod??parsed.mod??'').trim(),
+      p:['H','M','L'].includes(p)?p:'U',mod:String(raw.mod??parsed.mod??'').trim(),
       lucky:raw.lucky===true||parsed.lucky===true,shiny:raw.shiny===true||parsed.shiny===true,
       xxl:raw.xxl===true||parsed.xxl===true,xxs:raw.xxs===true||parsed.xxs===true,
       backgroundId:global.PogoDomain.priorityValues.normalizeBackgroundId(raw.backgroundId||parsed.backgroundId||'')
@@ -187,23 +187,24 @@
     header.innerHTML=`<div class="av public-share-avatar" aria-hidden="true">${esc(initials(username))}</div><div class="share-hdr-info"><div class="share-hdr-name">${esc(t('share.listTitle',{username}))}</div><div class="share-hdr-meta">${profile.friendCode?`<span class="meta-item">🎮 <code>${esc(profile.friendCode)}</code></span>`:''}${profile.discord?`<span class="meta-item">${esc(profile.discord)}</span>`:''}<span class="meta-item">📅 ${esc(updatedLabel(profile.lastUpdated||snapshot.updatedAt))}</span></div>${profile.bio?`<div class="share-hdr-bio">${esc(profile.bio)}</div>`:''}</div>`;
   }
   function renderTabs(snapshot){
+    if(snapshot.profile?.friendCode&&!document.querySelector('[data-public-share-action="copy-friend"]'))document.getElementById('share-hdr')?.insertAdjacentHTML('beforeend',`<button type="button" class="btn btn-secondary" data-public-share-action="copy-friend" aria-live="polite">${esc(t('product.copyFriend'))}</button>`);
     const counts=Object.fromEntries(LIST_TYPES.map(type=>[type,Object.keys(snapshot.lists[type]||{}).length]));
     const visible=LIST_TYPES.filter(type=>counts[type]||type===state.type);
     const tabs=document.getElementById('share-list-tabs');
     if(tabs)tabs.innerHTML=visible.map(type=>`<button type="button" class="ltab ${type===state.type?'active':''}" data-public-share-action="list" data-list-type="${type}" aria-pressed="${type===state.type}">${esc(t('share.listTab',{label:listLabel(type),count:core().formatNumber(counts[type])}))}</button>`).join('');
   }
   function renderList(snapshot){
-    const list=snapshot.lists[state.type]||{},groups={H:[],M:[],L:[]};
+    const list=snapshot.lists[state.type]||{},groups={H:[],M:[],L:[],U:[]};
     for(const [name,value] of Object.entries(list))groups[entryModel(value).p].push([name,value]);
     const out=document.getElementById('share-list-out');if(!out)return;
     if(!Object.keys(list).length){
       out.innerHTML=`<div class="empty public-share-empty"><div class="empty-icon" aria-hidden="true">📋</div><h3>${esc(t('share.emptyTitle'))}</h3><p>${esc(t('share.emptyHelp'))}</p></div>${ctaHtml()}`;
       return;
     }
-    const sections=['H','M','L'].map(priority=>{
+    const sections=['H','M','L','U'].map(priority=>{
       const entries=groups[priority].sort((a,b)=>a[0].localeCompare(b[0],core().getLocale(),{sensitivity:'base'}));
       if(!entries.length)return'';
-      return`<section class="share-section card-content"><div class="share-section-hdr"><span class="badge ${priority}"><span class="prio-mark">${priority}</span>${esc(t(PRIORITY_KEYS[priority]))}</span><span class="share-section-count">${esc(core().formatPlural('share.entryCount',entries.length))}</span></div><div class="share-pgrid">${entries.map(([name,value])=>entryCard(name,value)).join('')}</div></section>`;
+      return`<section class="share-section card-content"><div class="share-section-hdr"><span class="badge ${priority}">${priority==='U'?'':`<span class="prio-mark">${priority}</span>`}${esc(t(PRIORITY_KEYS[priority]))}</span><span class="share-section-count">${esc(core().formatPlural('share.entryCount',entries.length))}</span></div><div class="share-pgrid">${entries.map(([name,value])=>entryCard(name,value)).join('')}</div></section>`;
     }).join('');
     out.innerHTML=searchHtml(list)+sections+ctaHtml();
     spriteOptical.observe(out);
@@ -336,6 +337,7 @@
     const control=event.target.closest('[data-public-share-action]');if(!control)return;
     if(control.dataset.publicShareAction==='retry')retry();
     if(control.dataset.publicShareAction==='copy-search')void copySearch(control);
+    if(control.dataset.publicShareAction==='copy-friend')void Promise.resolve().then(()=>global.navigator.clipboard.writeText(state.snapshot.profile.friendCode.replace(/\D/g,''))).then(()=>{control.textContent=t('share.copySuccess');},()=>{control.textContent=t('strings.copyFailed');});
     if(control.dataset.publicShareAction==='list'){state.type=LIST_TYPES.includes(control.dataset.listType)?control.dataset.listType:'wishlist';renderTabs(state.snapshot);renderList(state.snapshot);}
   }
   function handleSpriteError(event){
