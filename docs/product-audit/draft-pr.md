@@ -1,39 +1,20 @@
-## Purpose
+## Product Draft
 
-Independent end-to-end product audit from main 794f8dbe08ee30a7de29ca73013b5ad77070ad44, plus the P1 anonymous search-string restoration.
+Implements approved LF/FT, My List / Trainers / More, and Share / Link / Image / Text on draft #64. Fixes empty searches, neutral public priority and publication-before-copy.
 
-## Implemented
-
-- Category-specific anonymous copy using the existing canonical generator.
-- Viewer-language precedence and EN/JA/ES/DE switching.
-- Clipboard confirmation/fallback, unknown/oversized guards and empty-state behavior.
-- Public language keyboard handling and narrow-layout wrapping.
-- Focused recipient tests; corrected synthetic PIN fixture; four meaningful widths instead of six.
-- Two arbitrary catalog totals replaced with meaningful invariants.
-- Full A-R product review, source/test inventories, and synthetic screenshots.
+**Not release-ready:** compatibility is a non-destructive read-through view, not a completed physical migration. Public Link excludes Board-origin LF/FT; unsafe canonical cleanup is guarded and not exposed. LF priority search integration also remains incomplete. Originals remain readable.
 
 ## Verification
 
-- 50 localization/search Node checks passed.
-- 12 loader/asset-versioning Node checks passed.
-- 11 targeted Chromium scenarios passed (14.5 seconds).
-- Four screenshot refresh contexts passed after waiting for fixture art.
-- Workflow YAML parsed; git diff --check clean.
+328 selected Node checks and 15 focused Chromium scenarios passed. Four widths, four locales. 183 baseline test/spec files, 184 current; no safety suite deleted. One duplicate static block consolidated and arbitrary registry totals replaced with semantic invariants. Existing release protections retained.
 
-No full Functions, account-sync, provider-operator or broad performance matrix was run.
-This exact draft branch uses a focused recipient CI job; ready-for-review restores the existing performance job.
+Read [the current A-P report](docs/product-audit/approved-implementation.md) and [audit index](docs/product-audit/README.md). Synthetic screenshots: docs/product-audit/approved-evidence/.
 
-## Important Limitations
+## Boundary
 
-The canonical search currently selects Dex species with existing prefilters, not exact costumes/gender/backgrounds. This change does not invent unsupported operators. Remaining public priority, empty flag-search and publication-state findings are documented, not silently declared fixed.
+No merge/deploy. Main: 794f8dbe08ee30a7de29ca73013b5ad77070ad44. Production: 2026-08-31.86. PR #63 unchanged. No provider/identity/infrastructure mutation or live canary.
 
-Navigation, LF/FT model and export consolidation are recommendations only. No retired inventory, mirror badges, stock counts or background artwork was reintroduced.
+Old head: e6e21672df667250c5f546d4e1eab517332b8bd8.
+Implementation: 83a99fff09a6e5f6bbcc9057a4838ad0d4db5ef8.
 
-## Production Boundary
-
-DO NOT MERGE OR DEPLOY as part of this audit.
-Production remains .86. Main and draft operator PR #63 are unchanged. No identity/provider mutations or live canary.
-
-## Review Guide
-
-Start at docs/product-audit/README.md, then evidence.md. test-suites.csv covers all 183 existing test/spec files; declaration counts are source sites, not execution totals.
+PRODUCT DRAFT READY FOR OWNER REVIEW

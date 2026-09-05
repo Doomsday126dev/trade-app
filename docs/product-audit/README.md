@@ -1,5 +1,29 @@
 # PoGo Trades: End-to-End Product Review
 
+## Approved Decision Implementation
+
+The owner approved LF/FT under My List, My List / Trainers / More navigation, and Share / Link / Image / Text. These are implemented as a working **product draft**, not a release.
+
+Read [the current A-P report](approved-implementation.md) first. It supersedes the recommendations and pending-fix status in the historical audit below and includes screenshots, exact commands, compatibility limits and test rationalization.
+
+- Implemented: explicit intents; Board as selection/export over the same declaration view; More navigation; Share modes; empty search suppression; neutral public priority; publication-before-copy with persistent failure/retry feedback; friend-code copy; truthful comparison and saved-trainer discovery wording.
+- Compatibility: exact duplicates display once; different records remain reviewable; original physical records remain readable. **Canonical deduplication is not complete or exposed.** Removing a categorized copy before public sharing supports its replacement could remove published data.
+- Public Link retains the existing categorized LF contract, not unified LF/FT. Images and text use the declaration view. No provider infrastructure or public schema was changed to conceal this limit.
+- Test cleanup: one duplicate static block consolidated, arbitrary registry totals replaced with semantic checks, outdated source guards replaced/updated with behavior tests, and legacy fixture stubs repaired. Zero safety suites deleted. Files: 183 baseline, 184 current.
+- CI: path-selected product/sync/privacy/release contracts and affected Chromium journeys; unrelated documentation skips performance. Mandatory release controls are unchanged. No PR #63 tests were run.
+
+### Updated Roadmap
+
+| Tier | Status / Next |
+|---|---|
+| 1 | Empty searches, neutral public priority and publication truthfulness fixed in draft. Before release, close the public-projection / canonical-consolidation gap and qualify that exact migration. |
+| 2 | Approved navigation, intent, Share, Board curation and comparison draft is reviewable. Finish unified LF search presets and category simplification after the data contract is settled. |
+| 3 | Physical-device accessibility, broad browser coverage and large-list performance remain separate qualification. No live canary is authorized by this document. |
+
+## Historical Audit
+
+The original baseline audit below is retained for traceability. Its recommendations are not new approval requests.
+
 Review date: 2026-09-04. Baseline: main `794f8dbe08ee30a7de29ca73013b5ad77070ad44`; production `2026-08-31.86`. Proposed changes only on `product/astra-end-to-end-review`.
 
 ## Evidence and Scope
