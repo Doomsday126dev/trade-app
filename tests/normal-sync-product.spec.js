@@ -49,6 +49,7 @@ async function settled(page){
 test('formerly non-canary legacy account adopts once and persists canonical LF FT U editing and public projection through IndexedDB reopen',async({page,context})=>{
   const result=await install(page);expect(result.canary).toBe(false);expect(result.started.ok).toBe(true);expect(result.authority).toBe('canonical');await settled(page);
   expect(await page.evaluate(()=>accountSyncCanonicalEntities.filter(e=>!e.deleted).length)).toBe(2);
+  await page.locator('#legacy-list-tools > summary').click();
   await page.getByRole('button',{name:'For Trade',exact:true}).click();
   page.on('dialog',dialog=>dialog.accept());
   await page.getByRole('button',{name:'Enable editing',exact:true}).click();await settled(page);
@@ -87,6 +88,22 @@ test('formerly non-canary legacy account adopts once and persists canonical LF F
   expect(await reopened.evaluate(()=>JSON.stringify(__normal.remote.users.NormalProduct.specialTradeBoard))).toBe(JSON.stringify(before.original));
   await reopened.screenshot({path:'test-results/normal-sync-reopened.png',fullPage:false});
   await reopened.evaluate(()=>stopAccountSyncRuntime());
+});
+
+test('combined editor saves both declarations through the existing canonical runtime',async({page})=>{
+  await install(page);await settled(page);
+  await page.evaluate(()=>openCombinedEditor());
+  await page.locator('#combined-name').fill('Charmander');await page.locator('#combined-ft').check();await page.locator('#combined-shiny').check();
+  await page.locator('#combined-save').click();await settled(page);
+  await expect(page.locator('#combined-editor-modal')).toBeHidden();
+  const entries=await page.evaluate(()=>productDeclarations().entries.filter(e=>e.name==='Charmander'));
+  expect(entries.map(e=>e.intent).sort()).toEqual(['ft','lf']);expect(entries.every(e=>e.shiny)).toBe(true);
+  await page.evaluate(()=>openCombinedEditor(combinedGroups().findIndex(g=>g[0].name==='Charmander')));
+  await page.locator('#combined-top').check();await page.locator('#combined-save').click();await settled(page);
+  const updated=await page.evaluate(()=>productDeclarations().entries.filter(e=>e.name==='Charmander'));
+  expect(updated.find(e=>e.intent==='lf').p).toBe('H');expect(updated.find(e=>e.intent==='ft').p).toBe('');
+  expect(await page.evaluate(()=>__normal.remote.users.NormalProduct.specialTradeBoard)).toEqual(await page.evaluate(()=>__normal.original));
+  await page.evaluate(()=>stopAccountSyncRuntime());
 });
 
 test('normal product authority rejects broken identity and unresolved recovery without fallback writes',async({page})=>{

@@ -1,6 +1,7 @@
 (function(global){
   const root=global.PogoLocales=global.PogoLocales||{};
   root.ja=Object.freeze({...root.en,
+    'phase2.scope':'共有範囲','phase2.full':'リスト全体','phase2.top':'最優先の希望','phase2.selected':'選択した項目','phase2.copyText':'テキストをコピー','phase2.selection':'選択','phase2.boardPreset':'ボードの選択を使用','phase2.clearSelection':'選択を解除','phase2.edit':'交換の希望','phase2.topWant':'最優先','phase2.legacyTools':'詳細リストツール','phase2.select':'{name}を選択','phase2.chooseSide':'探している・交換に出せるのいずれかを選択してください。','phase2.invalid':'選択した詳細を確認してください。','phase2.changed':'リストが変更されました。項目を開き直してください。','phase2.legacyGender':'この旧形式の項目は性別をバリエーション詳細に保存します。そちらで編集してください。','phase2.collision':'この側には別の登録があります。その項目を編集してください。上書きはしていません。',
     'contextSearch.species':'ポケモンの種類のみの絞り込み',
     'contextSearch.current':'{side}を検索 · {category}（現在の絞り込み）',
     'contextSearch.selection':'選択した項目の検索',
