@@ -10,7 +10,7 @@ Unified LF/FT publication, anonymous search, priority presets, reciprocal public
 
 **Physical duplicate migration is AFTER PRODUCT ROLLOUT and is not a release blocker.** No destructive consolidation is exposed or performed.
 
-Focused evidence: 352 Node checks, 14 owning Functions checks, nine local Rules checks and 17 targeted Chromium scenarios passed. No full historical matrix, provider operator, Group E or all-browser run. No merge/deployment or live identity/provider change; main, PR #63 and production .86 remain unchanged.
+Focused evidence: 378 Node checks, 14 owning Functions checks, nine local Rules checks and 17 targeted Chromium scenarios passed. No full historical matrix, provider operator, Group E or all-browser run. No merge/deployment or live identity/provider change; main, PR #63 and production .86 remain unchanged.
 
 The [earlier approved implementation](approved-implementation.md) and original audit below are historical context, not current approval requests.
 

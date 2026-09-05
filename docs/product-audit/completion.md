@@ -68,12 +68,12 @@ Evidence:
 
 ## J. Focused Tests
 
-- **352/352 Node checks, 21 selected files**: product, localization/search, owning sync/runtime/repository/privacy, public payload, release integrity and catalog/sprite boundaries. Includes 11 new completion tests.
+- **378/378 Node checks, 23 selected files**: 352 current-change checks plus the 26 existing PR-base UI/readiness/observability guards. Product, localization/search, owning sync/runtime/repository/privacy, public payload, release integrity and catalog/sprite boundaries are covered. Includes 11 new completion tests.
 - **14/14 owning Functions checks**: six authority and eight public gateway checks. The authority file passed in the earlier 13-case run; the updated gateway file subsequently passed all eight. These are unique cases, not summed reruns.
 - **9/9 local public-projection Rules checks** against demo Auth/RTDB emulators, including v2 fields, version separation, count bounds, public privacy and unchanged owner authorization.
 - **17/17 targeted Chromium scenarios**: the final 16-case recipient/product set plus the additional legacy-edit/actual-PNG scenario. Four languages and four widths are exercised inside those scenarios.
 - Workflow YAML, changed-source syntax, git whitespace hygiene and generated public dex freshness passed.
-- Initial failures: missing anonymous legendary catalog; profile overlap discovered visually; stale exact-size/count/static assertions and fixture assumptions. Corrected and rerun. No production test data was mutated.
+- Initial failures: missing anonymous legendary catalog; profile overlap discovered visually; stale exact-size/count/static assertions and fixture assumptions. The first remote CI run also rejected a documentation-only extra EOF line, corrected in the follow-up commit. No production test data was mutated.
 - No complete Functions, provider operator, Group E, full historical sync matrix, all-browser or full performance run was launched.
 - Path-selected CI now installs owning Functions dependencies and uses the runner's Java 21 only when needed for local Rules checks. No safety suites were deleted; the obsolete destructive-consolidation assertion was replaced by a retirement guard.
 
@@ -97,7 +97,7 @@ Local counts above are execution evidence, not a claim about a future production
 Existing branch: `product/astra-end-to-end-review`.
 Starting head: `babdac45e15be8d454d5ecbb65d75680381d76e1`.
 Implementation commit: `48da68e`.
-A following documentation/evidence commit records this report. Its final head and remote OPEN/DRAFT/MERGEABLE state are supplied in the PR body and completion message to avoid self-referential hashes. PR #64 remains unmerged and draft.
+Documentation/evidence commit: `f7e395e`. A following documentation-only correction records the full PR-base test count and fixes EOF whitespace. Its final head and remote OPEN/DRAFT/MERGEABLE state are supplied in the PR body and completion message to avoid self-referential hashes. PR #64 remains unmerged and draft.
 
 ## M. Production Boundary
 
@@ -106,4 +106,3 @@ Read-only checks: main remains `794f8dbe08ee30a7de29ca73013b5ad77070ad44`; PR #6
 No merge, deploy, live identity/provider mutation, OAuth change or physical Board migration. Only source public-payload validators and their local candidate Rules were changed; public-read/owner-write authorization is unchanged. A later authorized release must coordinate the v2 reader/writer validators and Rules candidate before enabling v2 publication for provider accounts. PR #63 and its operator qualification are untouched.
 
 PR #64 READY FOR FINAL OWNER REVIEW
-
