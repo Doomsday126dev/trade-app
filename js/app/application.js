@@ -6469,9 +6469,9 @@ function intentBoardEntry(name,fields={}){
   const source=accountSyncCatalogEntryForName('wishlist',boardName)||{name:boardName,no:null};
   return{name:boardName,dn:pokemonDisplayName(source),no:source.no,note:'',...fields};
 }
-function renderIntentEntries(query=''){
+function renderIntentEntries(query='',model=productDeclarations()){
   const host=document.getElementById('intent-entries');if(!host)return;
-  const model=productDeclarations(),filter=normalizeAcText(query);
+  const filter=normalizeAcText(query);
   document.querySelectorAll('[data-list-intent]').forEach(button=>{
     const active=button.dataset.listIntent===myListIntent;button.setAttribute('aria-pressed',String(active));button.classList.toggle('active',active);
   });
@@ -6563,19 +6563,19 @@ async function enableIntentEditing(side,index){
 const MY_LIST_TYPES=['wishlist','dynamax','gmax','costumes'];
 function myListCategoryKey(type){return type==='costumes'?'others':type==='gmax'?'gigantamax':type;}
 function myListCategoryLabel(type){return i18nCore.t(`list.${myListCategoryKey(type)}`);}
-function myListCategoryCount(type){return productDeclarations().entries.filter(e=>e.intent===myListIntent&&e.category===type).length;}
-function updateMyListCategoryChrome(){
+function myListCategoryCount(type,model=productDeclarations()){return model.entries.filter(e=>e.intent===myListIntent&&e.category===type).length;}
+function updateMyListCategoryChrome(model=productDeclarations()){
   document.querySelectorAll('#tab-mylist .mylist-type-tabs .ltab').forEach(button=>{
-    const type=button.dataset.mylistType,count=myListCategoryCount(type),active=type===myListType;
+    const type=button.dataset.mylistType,count=myListCategoryCount(type,model),active=type===myListType;
     button.classList.toggle('active',active);
     button.setAttribute('aria-selected',active?'true':'false');
     button.setAttribute('aria-label',i18nCore.t('myList.categoryTabLabel',{category:myListCategoryLabel(type),count:i18nCore.formatNumber(count)}));
     const countEl=button.querySelector('[data-mylist-count]');if(countEl)countEl.textContent=i18nCore.formatNumber(count);
   });
 }
-function populatedMyListAlternative(){
-  return MY_LIST_TYPES.filter(type=>type!==myListType&&myListCategoryCount(type)>0)
-    .sort((a,b)=>(a==='wishlist'?-1:b==='wishlist'?1:myListCategoryCount(b)-myListCategoryCount(a)))[0]||'';
+function populatedMyListAlternative(model=productDeclarations()){
+  return MY_LIST_TYPES.filter(type=>type!==myListType&&myListCategoryCount(type,model)>0)
+    .sort((a,b)=>(a==='wishlist'?-1:b==='wishlist'?1:myListCategoryCount(b,model)-myListCategoryCount(a,model)))[0]||'';
 }
 
 function toggleAddAdvanced(){
@@ -6815,7 +6815,7 @@ function persistMyListOrder(model,type=myListType,user=cur){
   lsSet(key,{version:MY_LIST_ORDER_VERSION,owner:model.owner,priorities});
   return true;
 }
-function currentListEntries(type=myListType,filterVal=''){
+function currentListEntries(type=myListType,filterVal='',model=productDeclarations()){
   const list=allData[type]?.[cur]||{};
   const srcMap=myListSourceMap(type);
   const q=normalizeAcText(filterVal||'');
@@ -6829,7 +6829,7 @@ function currentListEntries(type=myListType,filterVal=''){
     try{parsed=JSON.parse(key);}catch{continue;}
     if(parsed[0]===type&&parsed[1]===cur&&parsed[2]===locale&&!activeKeys.has(key))myListViewModelCache.delete(key);
   }
-  const aliases=new Set(productDeclarations().duplicates.filter(x=>x.duplicate.ref.surface==='my-list'&&x.duplicate.ref.type===type).map(x=>x.duplicate.name));
+  const aliases=new Set(model.duplicates.filter(x=>x.duplicate.ref.surface==='my-list'&&x.duplicate.ref.type===type).map(x=>x.duplicate.name));
   return applyExplicitMyListOrder(entries,type,cur).filter(entry=>!aliases.has(entry.name));
 }
 
@@ -7110,10 +7110,12 @@ function renderMyList(filterVal,options={}){
     clearTimeout(myListFilterTimer);myListFilterTimer=0;myListFilterGeneration++;
   }
   const q=normalizeAcText(filterVal??document.getElementById('mylist-filter')?.value??'');
-  renderIntentEntries(q);
+  // Share one fresh declaration model across this render, never across mutations.
+  const declarations=productDeclarations();
+  renderIntentEntries(q,declarations);
   const list=allData[myListType]?.[cur]||{};
   const el=document.getElementById('mylist-out');if(!el)return;
-  const allEntries=currentListEntries(myListType),entries=q?allEntries.filter(entry=>entry.search.includes(q)):allEntries;
+  const allEntries=currentListEntries(myListType,'',declarations),entries=q?allEntries.filter(entry=>entry.search.includes(q)):allEntries;
   const locale=i18nCore.getLocale(),context=JSON.stringify([cur,myListType,locale,bulkMode,reorderMode]);
   const snapshot=new Map(Object.entries(list)),previous=myListRenderState;
   const dataChanged=!previous||previous.context!==context||previous.snapshot.size!==snapshot.size||[...snapshot].some(([name,value])=>previous.snapshot.get(name)!==value);
@@ -7122,11 +7124,11 @@ function renderMyList(filterVal,options={}){
   const generation=myListProgressiveGeneration;
   if(!filterOnly)renderTradeComparisonReturn();
 
-  const visibleDeclarations=productDeclarations().entries.filter(e=>e.intent===myListIntent&&e.category===myListType);
+  const visibleDeclarations=declarations.entries.filter(e=>e.intent===myListIntent&&e.category===myListType);
   const count=visibleDeclarations.length;
   document.getElementById('tab-mylist')?.classList.toggle('has-list-content',count>0);
   const category=myListCategoryLabel(myListType);
-  updateMyListCategoryChrome();
+  updateMyListCategoryChrome(declarations);
   const categoryName=document.getElementById('mylist-category-name');if(categoryName)categoryName.textContent=category;
   const countEl=document.getElementById('mylist-count');
   if(countEl)countEl.textContent=i18nCore.t(q?'myList.filteredCategoryCount':'myList.categoryCount',q?{visible:i18nCore.formatNumber(visibleDeclarations.filter(e=>normalizeAcText(e.dn).includes(q)).length),total:i18nCore.formatNumber(count)}:{count:i18nCore.formatNumber(count)});
@@ -7145,7 +7147,7 @@ function renderMyList(filterVal,options={}){
     if(visibleDeclarations.some(e=>!q||normalizeAcText(e.dn).includes(q)))el.innerHTML='';
     else if(q)el.innerHTML=emptyHtml(i18nCore.t('myList.noMatchesInCategory',{category}),i18nCore.t('myList.clearFilter'));
     else{
-      const alternative=populatedMyListAlternative(),alternativeCount=alternative?myListCategoryCount(alternative):0;
+      const alternative=populatedMyListAlternative(declarations),alternativeCount=alternative?myListCategoryCount(alternative,declarations):0;
       el.innerHTML=emptyHtml(i18nCore.t(`myList.empty.${myListCategoryKey(myListType)}Title`),i18nCore.t(`myList.empty.${myListCategoryKey(myListType)}Help`),'📋')+
         (alternative?`<div style="display:flex;justify-content:center;margin-top:10px"><button type="button" class="bghost" onclick="setMyList('${alternative}')" aria-label="${escAttr(i18nCore.t('myList.viewCategoryLabel',{category:myListCategoryLabel(alternative),count:i18nCore.formatNumber(alternativeCount)}))}">${escHtml(i18nCore.t('myList.viewCategory',{category:myListCategoryLabel(alternative),count:i18nCore.formatNumber(alternativeCount)}))}</button></div>`:'');
     }
