@@ -564,6 +564,17 @@ input,select,textarea{font-family:var(--font);outline:none}
 .ov.open{display:flex}
 .modal{background:var(--card);border:1px solid var(--border2);border-radius:16px;padding:var(--space-5);width:100%;max-width:350px;max-height:calc(100vh - 32px);overflow-y:auto;margin:auto}
 .modal h3{font-size:16px;font-weight:700;margin-bottom:14px}
+.existing-pin-reset-dialog{width:min(420px,calc(100vw - 32px));max-height:calc(100dvh - 32px);overflow:auto;margin:auto;padding:24px;background:var(--card);color:var(--text);border:1px solid var(--border2);border-radius:8px}
+.existing-pin-reset-dialog::backdrop{background:rgba(0,0,0,.6)}
+.existing-pin-reset-dialog form{display:grid;gap:16px;min-width:0}
+.existing-pin-reset-dialog h2{font-size:20px;margin:0}
+.existing-pin-reset-dialog p{font-size:14px;line-height:1.5;margin:0;overflow-wrap:anywhere}
+.existing-pin-reset-dialog label{display:grid;gap:6px;font-size:14px}
+.existing-pin-reset-dialog input{width:100%;min-width:0;padding:10px;background:var(--bg);color:var(--text);border:1px solid var(--border2);border-radius:4px}
+.existing-pin-reset-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px}
+.existing-pin-reset-actions button{min-height:44px;padding:8px 12px;border:1px solid var(--border2);border-radius:4px;background:var(--bg);color:var(--text)}
+.existing-pin-reset-actions button:disabled{opacity:.5}
+.existing-pin-reset-actions button[type=submit]{background:var(--accent);color:#fff}
 .settings-modal{max-width:var(--container-wide);padding:0;overflow:hidden;display:flex;flex-direction:column}
 .settings-modal-header{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:20px 20px 14px;border-bottom:1px solid var(--border)}
 .settings-modal-header h2{font-size:20px;margin:0 0 4px}.settings-modal-header p{font-size:12px;color:var(--muted);line-height:1.45}

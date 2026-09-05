@@ -6,6 +6,7 @@ database-debug.log
 firebase-debug*.log
 firepit-log.txt
 functions/.env*
+functions/legacy-pin-reset/.env*
 !functions/.env.staging.example
 functions/staging/staging-creation.approval.local.json
 functions/.firebase/

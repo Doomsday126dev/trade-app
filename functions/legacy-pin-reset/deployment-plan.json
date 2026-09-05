@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "state": "source-qualified-not-deployed",
+  "projectId": "trade-list-a4297",
+  "region": "us-central1",
+  "codebase": "legacy-pin-reset",
+  "function": "ownerResetLegacyPin",
+  "runtimeServiceAccount": "legacy-pin-reset-runtime@trade-list-a4297.iam.gserviceaccount.com",
+  "runtimePermissions": {
+    "project": ["firebaseauth.users.get", "firebaseauth.users.update", "firebasedatabase.instances.get"],
+    "identityDatabaseReadOnly": {
+      "permissions": ["datastore.entities.get", "datastore.entities.list"],
+      "database": "projects/trade-list-a4297/databases/phase-e-identity"
+    },
+    "appCheckRole": "roles/firebaseappcheck.tokenVerifier",
+    "journal": {
+      "bucket": "trade-list-a4297-legacy-pin-reset-journal",
+      "object": "legacy-pin-reset/v1/ledger.json",
+      "permissions": ["storage.objects.get", "storage.objects.create", "storage.objects.delete"],
+      "uniformBucketLevelAccess": true,
+      "publicAccessPrevention": "enforced",
+      "versioning": true
+    },
+    "secret": {
+      "name": "legacy-pin-reset-hmac",
+      "role": "roles/secretmanager.secretAccessor",
+      "bindingScope": "this-secret-only"
+    }
+  },
+  "requiredPrivateConfiguration": ["LEGACY_PIN_RESET_OWNER_UID", "LEGACY_PIN_RESET_ENABLED"],
+  "activationGates": [
+    "independent-auth-security-review",
+    "exact-owner-uid-and-server-admin-proof",
+    "designated-safe-production-test-identity",
+    "least-privilege-runtime-permission-proof",
+    "private-versioned-CAS-journal-proof",
+    "no-concurrent-identity-repair-or-provider-migration",
+    "safe-synthetic-live-reset-and-preservation-proof",
+    "separate-reviewed-client-release-enables-UI"
+  ]
+}

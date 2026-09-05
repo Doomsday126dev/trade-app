@@ -1,0 +1,3 @@
+{
+  "functions": [{ "source": "functions/legacy-pin-reset", "codebase": "legacy-pin-reset", "runtime": "nodejs22" }]
+}
