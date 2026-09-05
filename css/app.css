@@ -130,6 +130,16 @@ input,select,textarea{font-family:var(--font);outline:none}
 .tabs::-webkit-scrollbar{display:none}
 .tab{padding:12px 15px;font-size:13px;font-weight:500;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap;cursor:pointer;transition:.2s;background:none;border-top:none;border-left:none;border-right:none}
 .tab.active{color:var(--ac2);border-bottom-color:var(--ac2)}
+.combined-toolbar,.combined-checks,.combined-selection-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.combined-toolbar{margin:12px 0}.combined-toolbar details{position:relative}.combined-selection-actions{padding:12px 0}
+.combined-filter{width:100%;margin-bottom:12px;min-height:44px}
+.combined-row{display:grid;grid-template-columns:28px 44px minmax(0,1fr) auto;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);min-height:68px}
+.combined-row>input{width:22px;height:44px}.combined-entry{text-align:left;background:none;border:0;color:var(--text);min-height:44px;min-width:0;overflow-wrap:anywhere;cursor:pointer}.combined-entry strong,.combined-entry span{display:block}.combined-entry span{font-size:12px;color:var(--muted)}
+.combined-sides{display:flex;flex-direction:column;gap:4px;font-size:12px}.combined-lf{color:#de8daf}.combined-ft{color:#47bf99}
+.combined-editor{width:560px;max-width:calc(100vw - 24px)}.combined-editor label{display:block;margin:10px 0}.combined-editor .field-control{width:100%;min-width:0}.combined-checks label{display:flex;align-items:center;gap:6px;min-height:44px}.combined-editor summary,#legacy-list-tools>summary{min-height:44px;padding:12px 0;cursor:pointer}
+.product-share-preview{max-height:320px;overflow:auto;margin:12px 0;border-block:1px solid var(--border)}.product-share-preview ul{padding-left:20px}.product-share-preview li{overflow-wrap:anywhere}.product-share-modal [hidden]{display:none!important}
+@media(max-width:700px){.combined-row{grid-template-columns:28px 44px minmax(0,1fr)}.combined-sides{grid-column:3;flex-direction:row;flex-wrap:wrap}.combined-toolbar>button{min-height:48px}}
+@media(max-width:700px){#app>.tabs .desktop-events-tab{display:none}}
 .tab:hover{color:var(--text)}
 .notif-badge{display:inline-flex;align-items:center;justify-content:center;background:var(--danger);color:#fff;border-radius:50%;width:16px;height:16px;font-size:10px;font-weight:700;margin-left:4px;vertical-align:middle}
 

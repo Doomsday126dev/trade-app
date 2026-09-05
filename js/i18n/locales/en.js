@@ -1,6 +1,7 @@
 (function(global){
   const root=global.PogoLocales=global.PogoLocales||{};
   root.en=Object.freeze({
+    'phase2.scope':'Scope','phase2.full':'Full list','phase2.top':'Top wants','phase2.selected':'Selected entries','phase2.copyText':'Copy text','phase2.selection':'Selection','phase2.boardPreset':'Use Board selection','phase2.clearSelection':'Clear selection','phase2.edit':'Trade intent','phase2.topWant':'Top want','phase2.legacyTools':'Advanced list tools','phase2.select':'Select {name}','phase2.chooseSide':'Choose Looking For or For Trade.','phase2.invalid':'Check the selected details.','phase2.changed':'Your list changed. Close and reopen this entry before saving.','phase2.legacyGender':'This older entry stores gender in variant details. Edit its gender there.','phase2.collision':'A different declaration already occupies this side. Edit that entry instead; nothing was overwritten.',
     'contextSearch.species':"Species-only prefilter",
     'contextSearch.current':"Search {side} · {category} (current filter)",
     'contextSearch.selection':"Search selected entries",

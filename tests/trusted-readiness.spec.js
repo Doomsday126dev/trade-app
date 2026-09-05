@@ -113,6 +113,7 @@ test('approved intent, More and Share paths preserve one canonical declaration v
   await page.goto('./?product-intents');await installTrustedFixture(page);
   await page.evaluate(()=>renderInterimProductLabels());
   const original=await page.evaluate(()=>JSON.stringify(allData.users[cur].specialTradeBoard));
+  await page.locator('#legacy-list-tools > summary').click();
   await page.getByRole('button',{name:'For Trade',exact:true}).click();
   await expect(page.locator('[data-intent-row="Eevee"]')).toBeVisible();
   await page.locator('#ac-input').fill('Pikachu');
@@ -148,7 +149,7 @@ test('approved intent, More and Share paths preserve one canonical declaration v
     await page.locator('#nav-more').click();await expect(page.locator('#tab-more')).toBeVisible();
     await expect(page.locator('#tab-more').getByRole('button',{name:'Events',exact:true})).toBeVisible();
     await capture(page,`approved-more-${viewport.width}`);
-    await page.locator('#nav-mylist').click();await page.getByRole('button',{name:'Share',exact:true}).click();
+    await page.locator('#nav-mylist').click();await page.locator('.combined-toolbar').getByRole('button',{name:'Share',exact:true}).click();
     await page.locator('[data-share-mode="image"]').click();await expect(page.locator('#product-share-image')).toBeVisible();
     await expectNoOverflow(page);await capture(page,`approved-share-${viewport.width}`);
     await page.keyboard.press('Escape');
@@ -172,6 +173,7 @@ test('approved intent, More and Share paths preserve one canonical declaration v
 
 test('legacy editing retains originals and Board PNG consumes the deduplicated unified selection',async({page})=>{
   await page.goto('./?product-board-completion');await installTrustedFixture(page);
+  await page.locator('#legacy-list-tools > summary').click();
   await page.evaluate(()=>{allData.users[cur].specialTradeBoard.lf[0].p='H';setMyListIntent('ft');});
   const original=await page.evaluate(()=>JSON.stringify(allData.users[cur].specialTradeBoard));
   page.once('dialog',dialog=>dialog.accept());
@@ -239,6 +241,7 @@ test('safe owner journey covers the pre-trusted product contract',async({page})=
   await installTrustedFixture(page);
 
   const pikachu=page.locator('.myrow[data-name="Pikachu"]');
+  await page.locator('#legacy-list-tools > summary').click();
   await expect(pikachu).toBeVisible();
   expect(await pikachu.evaluate(node=>getComputedStyle(node).getPropertyValue('--type-color').trim())).not.toBe('');
   await expect(pikachu.locator('.background-visual-label')).toBeVisible();
@@ -342,6 +345,7 @@ test('safe owner journey covers the pre-trusted product contract',async({page})=
 test('priority surfaces preserve geometry at every supported viewport',async({page})=>{
   await page.goto(`./?trusted-geometry=${Date.now()}`,{waitUntil:'domcontentloaded'});
   await installTrustedFixture(page);
+  await page.locator('#legacy-list-tools > summary').click();
   for(const viewport of viewports){
     await page.setViewportSize(viewport);
     await page.evaluate(()=>{document.getElementById('share-view').classList.remove('active');document.getElementById('app').style.display='flex';switchTab('mylist',{render:false});renderMyList();});

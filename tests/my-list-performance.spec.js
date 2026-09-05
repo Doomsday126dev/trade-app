@@ -19,6 +19,7 @@ async function installListFixture(page,count){
     document.getElementById('login-pg').style.display='none';document.getElementById('app').style.display='flex';
     document.querySelectorAll('.page').forEach(node=>node.classList.remove('active'));
     document.getElementById('tab-mylist').classList.add('active');
+    document.getElementById('legacy-list-tools').open=true;
     const start=performance.now();renderMyList();const renderMs=performance.now()-start;
     const out=document.getElementById('mylist-out');
     return{
