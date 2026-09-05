@@ -5851,6 +5851,7 @@ function refreshBadgesAndLightChrome(){
 }
 function switchTab(t,opts={}){
   const previous=activeTabName();
+  if(t!=='admin')closeExistingPinReset();
   if(t==='settings'){openSettingsPanel('account');return;}
   if(t==='admin'&&!protectedOwnerSession())t='mylist';
   if(t==='browse')t='find';
@@ -8972,9 +8973,11 @@ function renderAdmin(){
 // pass deployment qualification. This gate is presentation, never authorization.
 function legacyPinResetAvailable(){return false;}
 async function callLegacyPinReset(data){
-  const sdk=await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js');
-  const callable=sdk.httpsCallable(sdk.getFunctions(fbApp,'us-central1'),'ownerResetLegacyPin',{limitedUseAppCheckTokens:true,timeout:125000});
-  return(await callable(data)).data;
+  try{
+    const sdk=await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js');
+    const callable=sdk.httpsCallable(sdk.getFunctions(fbApp,'us-central1'),'ownerResetLegacyPin',{limitedUseAppCheckTokens:true,timeout:125000});
+    return(await callable(data)).data;
+  }finally{delete data.pin;}
 }
 function closeExistingPinReset(){
   const dialog=existingPinResetDialog;if(!dialog)return;
@@ -8988,20 +8991,20 @@ async function openExistingPinReset(username){
   existingPinResetDialog=dialog;
   dialog.className='existing-pin-reset-dialog';
   dialog.setAttribute('aria-labelledby','existing-pin-reset-title');
-  dialog.innerHTML=`<form><h2 id="existing-pin-reset-title">Reset PIN</h2><strong data-reset-trainer></strong><p data-reset-confirmation></p><label>New PIN<input name="new-pin" type="password" inputmode="numeric" pattern="[0-9]{6}" minlength="6" maxlength="6" autocomplete="new-password" required disabled></label><label>Confirm new PIN<input name="confirm-pin" type="password" inputmode="numeric" pattern="[0-9]{6}" minlength="6" maxlength="6" autocomplete="new-password" required disabled></label><p role="status" aria-live="polite">Checking account...</p><div class="existing-pin-reset-actions"><button type="button" data-reset-close>Close</button><button type="button" data-reset-status hidden>Check result</button><button type="submit" disabled>Confirm reset</button></div></form>`;
+  dialog.innerHTML=`<form autocomplete="off"><h2 id="existing-pin-reset-title">Reset PIN</h2><strong data-reset-trainer></strong><p data-reset-confirmation></p><label>New PIN<input name="new-pin" type="password" inputmode="numeric" pattern="[0-9]{6}" minlength="6" maxlength="6" autocomplete="off" required disabled></label><label>Confirm new PIN<input name="confirm-pin" type="password" inputmode="numeric" pattern="[0-9]{6}" minlength="6" maxlength="6" autocomplete="off" required disabled></label><p role="status" aria-live="polite">Checking account...</p><div class="existing-pin-reset-actions"><button type="button" data-reset-close>Close</button><button type="button" data-reset-status hidden>Check result</button><button type="submit" disabled>Confirm reset</button></div></form>`;
   const form=dialog.querySelector('form'),inputs=[...form.querySelectorAll('input')],submit=form.querySelector('[type="submit"]');
   const status=form.querySelector('[role="status"]'),close=form.querySelector('[data-reset-close]'),check=form.querySelector('[data-reset-status]');
   form.querySelector('[data-reset-trainer]').textContent=username;
   document.body.append(dialog);dialog.showModal();
   let target=null,pending=null,busy=false,closed=false;
-  const sameOwner=()=>cur===OWNER&&auth?.currentUser?.uid===ownerUid;
+  const sameOwner=()=>dialog.isConnected&&cur===OWNER&&auth?.currentUser?.uid===ownerUid;
   const clearPins=()=>inputs.forEach(input=>{input.value='';});
   const setBusy=value=>{busy=value;close.disabled=value;check.disabled=value;submit.disabled=true;inputs.forEach(input=>{input.disabled=true;});};
   const showResult=result=>{
     if(closed||!sameOwner())return;
     if(result?.requestId!==pending?.requestId||result?.username!==username)throw new Error('Unrecognized reset receipt');
     if(result.status==='completed'){
-      status.textContent='PIN reset completed for this request. The trainer can sign in with the replacement PIN.';
+      status.textContent='PIN reset completed for this request. A later PIN change can supersede this receipt.';
       sessionStorage.removeItem(storageKey);check.hidden=true;
     }else if(result.status==='aborted'){
       status.textContent='Reset stopped before changing the PIN. Close this dialog and review the account before starting again.';
@@ -9011,7 +9014,10 @@ async function openExistingPinReset(username){
       check.hidden=false;
     }
   };
-  const dispose=()=>{closed=true;clearPins();dialog.remove();if(existingPinResetDialog===dialog)existingPinResetDialog=null;};
+  const navigationEvents=['pagehide','popstate','hashchange'];
+  const onNavigate=()=>{dialog.close();dispose();};
+  const dispose=()=>{closed=true;clearPins();navigationEvents.forEach(name=>window.removeEventListener(name,onNavigate));dialog.remove();if(existingPinResetDialog===dialog)existingPinResetDialog=null;};
+  navigationEvents.forEach(name=>window.addEventListener(name,onNavigate));
   close.onclick=()=>{dialog.close();dispose();};
   dialog.addEventListener('cancel',event=>{if(busy)event.preventDefault();});
   dialog.addEventListener('close',dispose);
@@ -9033,7 +9039,7 @@ async function openExistingPinReset(username){
       sessionStorage.setItem(storageKey,JSON.stringify(pending));
     }catch{pending=null;pin='';clearPins();status.textContent='Could not retain the request receipt. No reset was sent.';return;}
     clearPins();setBusy(true);status.textContent='Resetting PIN...';
-    try{showResult(await callLegacyPinReset({action:'reset',...pending,pin}));}
+    try{const response=callLegacyPinReset({action:'reset',...pending,pin});pin='';showResult(await response);}
     catch{status.textContent='Reset result is unknown. Check this request; do not start another reset.';check.hidden=false;}
     finally{pin='';clearPins();setBusy(false);}
   };

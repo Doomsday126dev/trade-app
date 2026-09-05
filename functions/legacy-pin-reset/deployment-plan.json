@@ -1,6 +1,7 @@
 {
   "schemaVersion": 1,
-  "state": "source-qualified-not-deployed",
+  "state": "audit-blocked-not-deployed",
+  "blockingFindings": ["unfenced-external-identity-writer", "clean-device-migration-evidence-changes"],
   "projectId": "trade-list-a4297",
   "region": "us-central1",
   "codebase": "legacy-pin-reset",
@@ -34,7 +35,7 @@
     "designated-safe-production-test-identity",
     "least-privilege-runtime-permission-proof",
     "private-versioned-CAS-journal-proof",
-    "no-concurrent-identity-repair-or-provider-migration",
+    "enforced-exclusion-of-external-identity-writers-not-merely-an-operator-promise",
     "safe-synthetic-live-reset-and-preservation-proof",
     "separate-reviewed-client-release-enables-UI"
   ]

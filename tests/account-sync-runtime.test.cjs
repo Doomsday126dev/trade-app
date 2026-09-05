@@ -738,7 +738,7 @@ test('normal enrollment preserves all 66 reviewed stale records inactive across 
   assert.equal(JSON.stringify(repositoryState.recoveryCandidates),preserved);assert.equal(JSON.stringify(h.server.snapshot()),canonical);assert.equal(h.server.attempts.length,attempts);assert.equal(repositoryState.calls.updateMeta,1);await second.stop();
 });
 
-test('same-UID PIN reset preserves canonical data and reviewed66 across Auth emulator login and runtime reopen',{skip:!process.env.FIREBASE_AUTH_EMULATOR_HOST},async()=>{
+test('same-UID PIN reset preserves canonical data and reviewed66 across Auth emulator login and runtime reopen',{skip:!process.env.FIREBASE_AUTH_EMULATOR_HOST},async t=>{
   const host=process.env.FIREBASE_AUTH_EMULATOR_HOST,projectId='demo-legacy-pin-reset';
   assert.match(host||'',/^127\.0\.0\.1:9499$/,'Run only through the dedicated Auth emulator configuration');
   const resetRequire=require('node:module').createRequire(path.join(root,'functions/legacy-pin-reset/package.json'));
@@ -756,7 +756,14 @@ test('same-UID PIN reset preserves canonical data and reviewed66 across Auth emu
       const response=await fetch(`http://${host}/identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=emulator`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:'owner@pogotrades.nyc',password,returnSecureToken:true})});
       return{ok:response.ok,body:await response.json()};
     };
+    const googleLogin=async()=>{
+      // Emulator-only IdP assertions; never contact Google or a production project.
+      const postBody=new URLSearchParams({providerId:'google.com',id_token:JSON.stringify({sub:'emulator-google-subject',email:'synthetic@example.test',email_verified:true})}).toString();
+      const response=await fetch(`http://${host}/identitytoolkit.googleapis.com/v1/accounts:signInWithIdp?key=emulator`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({postBody,requestUri:'http://localhost',returnSecureToken:true})});
+      assert.equal(response.ok,true);const result=await response.json();assert.equal(result.localId,'uid-owner');assert.notEqual(result.isNewUser,true);
+    };
     assert.equal((await login('123456')).body.localId,'uid-owner');
+    await googleLogin();
     const window=load(),h=window.PogoTesting.accountSyncHarness.createMultiDeviceHarness({crypto:webcrypto}),repositoryState=runtimeRepository(window,h);
     const remote=Object.fromEntries(Array.from({length:66},(_,i)=>[`Pokemon${i}`,'H'])),stale=Object.fromEntries(Object.keys(remote).map(name=>[name,'M']));
     const make=(state,read)=>createRuntime(window,h,repositoryState,state,read,undefined,undefined,undefined,{admitted:true,allowlistedUids:[]});
@@ -765,8 +772,9 @@ test('same-UID PIN reset preserves canonical data and reviewed66 across Auth emu
     await reviewed.completeRecoveryReviews((await reviewed.listRecoveryCandidates()).map(r=>r.candidateId));await reviewed.stop();
     const evidence={admins:{'reset-admin-uid':true},users:{Doomsday126:{authUid:'reset-admin-uid',isAdmin:true},Owner:{authUid:'uid-owner',authEmail:'owner@pogotrades.nyc',authVersion:1}},
       loginDirectory:{Owner:{authReady:true,authVersion:1}},authIndex:{'reset-admin-uid':{username:'Doomsday126'},'uid-owner':{username:'Owner'}}};
-    const products={lf:['Pikachu'],ft:['Eevee'],board:{lf:['Pikachu'],ft:['Eevee']},favorites:['Mazer'],tags:{Mazer:['NYC']},profile:{trainer:'Owner'},publicShare:{ownerUid:'uid-owner'}};
+    const products={lf:['Pikachu'],ft:['Eevee'],unprioritized:['Snom'],board:{lf:['Pikachu'],ft:['Eevee']},favorites:['Mazer'],tags:{Mazer:['NYC']},profile:{trainer:'Owner'},publicShare:{ownerUid:'uid-owner'}};
     const before=JSON.stringify({canonical:h.server.snapshot(),recovery:repositoryState.recoveryCandidates,evidence,products});
+    const migrationBefore=JSON.stringify(repositoryState.migrations);
     const links=(await admin.getUser('uid-owner')).providerData,attempts=h.server.attempts.length,migrations=repositoryState.calls.createMigration;
     let value={schemaVersion:1,records:[]},generation=1;
     const journal=createJournal({read:async()=>({value:structuredClone(value),generation}),compareAndSwap:async(expected,next)=>{assert.equal(expected,generation);value=structuredClone(next);generation++;}});
@@ -776,12 +784,21 @@ test('same-UID PIN reset preserves canonical data and reviewed66 across Auth emu
     const {created,...binding}=target,input={action:'reset',...binding,requestId:webcrypto.randomUUID(),pin:'654321'};
     assert.equal((await reset.run(caller,input)).status,'completed');
     assert.equal((await login('123456')).ok,false);assert.equal((await login('654321')).body.localId,'uid-owner');
+    await googleLogin();
     assert.deepEqual((await admin.getUser('uid-owner')).providerData,links);
     const reopened=make(state,async()=>{throw new Error('PIN reset must not rerun migration');});await reopened.start();
     assert.equal((await reopened.snapshot()).state,'saved');assert.equal((await reopened.listRecoveryCandidates()).length,0);
     assert.equal((await reopened.listRecoveryCandidates({unresolvedOnly:false})).length,66);await reopened.stop();
+    assert.equal(JSON.stringify(repositoryState.migrations),migrationBefore);
+    assert.equal(repositoryState.calls.createMigration,migrations);
+    const clean=make(h.createMemoryJournalState(),async()=>source('reset-clean-device',{remote:stale}));await clean.start();
+    assert.equal((await clean.snapshot()).state,'saved');assert.equal((await clean.listRecoveryCandidates()).length,0);
+    assert.equal((await clean.listRecoveryCandidates({unresolvedOnly:false})).length,66);await clean.stop();
     assert.equal(JSON.stringify({canonical:h.server.snapshot(),recovery:repositoryState.recoveryCandidates,evidence,products}),before);
-    assert.equal(h.server.attempts.length,attempts);assert.equal(repositoryState.calls.createMigration,migrations);
+    assert.equal(h.server.attempts.length,attempts);
+    await t.test('strict no-new-migration-evidence gate on clean-device adoption',{
+      todo:'Existing runtime enrolls a new device by writing another migration receipt; outside PIN-reset correction scope'
+    },()=>assert.equal(repositoryState.calls.createMigration,migrations));
     assert.equal((await reset.run(caller,input)).status,'completed');
   }finally{await deleteApp(app);}
 });

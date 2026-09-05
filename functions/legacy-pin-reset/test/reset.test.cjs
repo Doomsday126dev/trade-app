@@ -42,6 +42,10 @@ for (const [name, change] of [
   ['missing username', f => delete f.evidence.users.Trainer],
   ['missing authIndex', f => delete f.evidence.authIndex['trainer-uid']],
   ['missing UID', f => delete f.evidence.users.Trainer.authUid],
+  ['missing directory', f => delete f.evidence.loginDirectory.Trainer],
+  ['malformed UID', f => f.evidence.users.Trainer.authUid = '../uid'],
+  ['wrong synthetic slot', f => f.user.email = 'trainer_v2@pogotrades.nyc'],
+  ['missing Auth account', f => f.adapter.getAuthUser = async uid => uid === 'owner-uid' ? { uid, disabled: false } : null],
   ['reciprocal mismatch', f => f.evidence.authIndex['trainer-uid'].username = 'Other'],
   ['conflicting UID mapping', f => f.evidence.users.Other = { ...f.evidence.users.Trainer }],
   ['conflicting username mapping', f => f.evidence.authIndex.other = { username: 'Trainer' }],
@@ -135,4 +139,72 @@ test('password transport never retries 503 or lost HTTP responses and cannot sel
   }
   assert.throws(() => createPasswordUpdater({ projectId: 'trade-list-a4297', emulatorHost: '127.0.0.1:9399' }));
 });
+test('LAUNCH BLOCKER: identity repair after final read still mutates the previously bound UID', async () => {
+  const f = fixture(), input = await resetRequest(f), update = f.adapter.updatePassword;
+  f.adapter.updatePassword = async (...args) => {
+    // A different privileged writer does not participate in this ledger lock.
+    f.evidence.users.Trainer.authUid = 'new-binding-uid';
+    f.evidence.authIndex['trainer-uid'].username = 'Other';
+    await update(...args);
+  };
+  assert.equal((await f.service.run(context, input)).status, 'ambiguous');
+  assert.equal(f.mutations(), 1, 'Reproduces the blocker, NOT a passing pre-mutation safety guarantee');
+  await assert.rejects(f.service.run(context, { ...input, requestId: randomUUID() }));
+});
+test('LAUNCH BLOCKER: same UID deleted and recreated by another writer is detected only after password update', async () => {
+  const f = fixture(), input = await resetRequest(f), update = f.adapter.updatePassword;
+  f.adapter.updatePassword = async (...args) => {
+    f.user.metadata.creationTime = '2026-09-05T00:00:00Z';
+    await update(...args);
+  };
+  assert.equal((await f.service.run(context, input)).status, 'ambiguous');
+  assert.equal(f.mutations(), 1, 'A UID match alone cannot prevent an account-incarnation race');
+});
+test('Unicode compatibility aliases in legacy identity roots fail closed', async () => {
+  for (const root of ['users', 'loginDirectory', 'authIndex']) {
+    const f = fixture(), alias = '\uFF34rainer';
+    if (root === 'authIndex') f.evidence[root].other = { username: alias };
+    else f.evidence[root][alias] = { authUid: 'other', authReady: true, authVersion: 1 };
+    await assert.rejects(f.service.run(context, { action: 'inspect', username: 'Trainer' }));
+    assert.equal(f.mutations(), 0);
+  }
+});
+test('malformed completed receipts cannot claim a successful status', async () => {
+  const corruptions = [r => delete r.credentialFingerprint, r => r.startedAt = 'yesterday', r => delete r.finishedAt,
+    r => r.credentialFingerprint = '123456', r => r.pin = '123456'];
+  for (const corrupt of corruptions) {
+    const f = fixture(), input = await resetRequest(f);
+    await f.service.run(context, input);
+    corrupt(f.ledger().records[0]);
+    const { pin, ...status } = input;
+    await assert.rejects(f.service.run(context, { ...status, action: 'status' }), { code: 'reset/journal-invalid' });
+    assert.equal(f.mutations(), 1);
+  }
+});
+test('leading zero is preserved and concurrent identical requests mutate once', async () => {
+  const f = fixture(), input = { ...await resetRequest(f), pin: '001234' };
+  const results = await Promise.all([f.service.run(context, input), f.service.run(context, input)]);
+  assert.ok(results.some(r => r.status === 'completed'));
+  assert.equal(f.mutations(), 1); assert.equal(f.password(), '001234');
+});
+test('process death after mutation leaves pending receipt locked without a retry', async () => {
+  const f = fixture(), input = await resetRequest(f), update = f.adapter.updatePassword;
+  let reached;
+  const mutation = new Promise(resolve => { reached = resolve; });
+  f.adapter.updatePassword = async (...args) => { await update(...args); reached(); return new Promise(() => {}); };
+  // Abandon the first invocation, exactly where a terminated process leaves it.
+  void f.service.run(context, input);
+  await mutation;
+  const restarted = createResetService({ adapter: f.adapter, journal: createJournal(f.store), ownerUid: context.uid, hmacKey: 'k'.repeat(64), now: () => now });
+  assert.equal((await restarted.run(context, input)).status, 'pending');
+  await assert.rejects(restarted.run(context, { ...input, requestId: randomUUID() }), { code: 'reset/target-locked' });
+  assert.equal(f.mutations(), 1);
+});
+for (const authTime of [undefined, null, '1800000000', NaN, 0, context.authTime + 31, context.authTime - 901]) {
+  test(`malformed or nonrecent auth_time ${String(authTime)} fails before mutation despite fresh iat`, async () => {
+    const f = fixture();
+    await assert.rejects(f.service.run({ ...context, authTime, iat: context.authTime }, await resetRequest(f)));
+    assert.equal(f.mutations(), 0);
+  });
+}
 module.exports = { fixture, context, resetRequest };

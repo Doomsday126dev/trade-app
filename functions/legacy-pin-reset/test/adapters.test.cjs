@@ -3,6 +3,16 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { createAdapter } = require('../adapter');
 const { createGcsStore } = require('../journal');
+const { createPasswordUpdater } = require('../password');
+test('HTTP 200 without the exact returned UID is ambiguous, never success', async () => {
+  for (const body of [{}, { localId: 'other-uid' }, { localId: null }]) {
+    let sends = 0;
+    const update = createPasswordUpdater({ projectId: 'trade-list-a4297', credential: { getAccessToken: async () => ({ access_token: 'test' }) },
+      fetchImpl: async () => { sends++; return { ok: true, json: async () => body }; } });
+    await assert.rejects(update('existing-uid', '001234'), { code: 'reset/auth-update-unconfirmed' });
+    assert.equal(sends, 1);
+  }
+});
 test('RTDB adapter reads only identity roots and removes credentials/profile from returned evidence', async () => {
   const paths = [], raw = { users: { Trainer: { authUid: 'uid', authEmail: 'trainer@pogotrades.nyc', authVersion: 1, pin: 'not-returned', pinHashed: true, profile: 'private' } },
     authIndex: { uid: { username: 'Trainer', accountSyncRecoveryReviews: { preserved: true } } }, loginDirectory: { Trainer: { authVersion: 1, authReady: true } }, admins: { owner: true } };
@@ -46,5 +56,11 @@ test('deployment plan has no product write/create/delete or provider runtime aut
   assert.equal(plan.runtimePermissions.secret.bindingScope, 'this-secret-only');
   assert.equal(plan.runtimePermissions.journal.object, 'legacy-pin-reset/v1/ledger.json');
   assert.equal(plan.runtimePermissions.journal.publicAccessPrevention, 'enforced');
-  assert.equal(plan.state, 'source-qualified-not-deployed');
+  assert.equal(plan.state, 'audit-blocked-not-deployed');
+  assert.ok(plan.blockingFindings.includes('unfenced-external-identity-writer'));
+});
+test('missing GCS generation cannot degrade the ledger to an unconditional write', async () => {
+  let downloads = 0;
+  const store = createGcsStore({ file: () => ({ getMetadata: async () => [{ size: '32' }], download: async () => { downloads++; } }) });
+  await assert.rejects(store.read(), { code: 'reset/journal-invalid' }); assert.equal(downloads, 0);
 });

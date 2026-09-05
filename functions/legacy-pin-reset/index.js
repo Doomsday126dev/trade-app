@@ -10,6 +10,7 @@ const { createResetService } = require('./reset');
 const { createAdapter } = require('./adapter');
 const { createJournal, createGcsStore } = require('./journal');
 const { createPasswordUpdater } = require('./password');
+const { guardEnvelope } = require('./envelope');
 const PROJECT = 'trade-list-a4297';
 const RUNTIME = `legacy-pin-reset-runtime@${PROJECT}.iam.gserviceaccount.com`;
 const secret = defineSecret('legacy-pin-reset-hmac');
@@ -27,7 +28,7 @@ function configuredService() {
   }
   return service;
 }
-exports.ownerResetLegacyPin = onCall({ region: 'us-central1', serviceAccount: RUNTIME, secrets: [secret],
+exports.ownerResetLegacyPin = guardEnvelope(onCall({ region: 'us-central1', serviceAccount: RUNTIME, secrets: [secret],
   enforceAppCheck: true, consumeAppCheckToken: true, maxInstances: 1, concurrency: 1, timeoutSeconds: 120, memory: '256MiB',
   cors: ['https://doomsday126dev.github.io'], invoker: 'public'
 }, async request => {
@@ -41,8 +42,8 @@ exports.ownerResetLegacyPin = onCall({ region: 'us-central1', serviceAccount: RU
     return await reset.run({ uid: token.uid, authTime: token.auth_time, appVerified: true }, request.data);
   } catch (error) {
     // Do not log SDK errors, request bodies, token material, or replacement PINs.
-    const candidate = error.code?.startsWith('reset/') ? error.code : error.message;
+    const candidate = typeof error.code === 'string' && error.code.startsWith('reset/') ? error.code : error.message;
     const code = typeof candidate === 'string' && /^reset\/[a-z-]+$/.test(candidate) ? candidate : 'reset/unavailable';
     throw new HttpsError('failed-precondition', code);
-  }
-});
+  } finally { if (request.data && typeof request.data === 'object') delete request.data.pin; }
+}));

@@ -9,6 +9,7 @@ const HASH = /^[a-f0-9]{64}$/;
 const object = value => value !== null && typeof value === 'object' && !Array.isArray(value);
 const digest = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const baseEmail = username => username.toLowerCase().replace(/[^a-z0-9]/g, '_');
+const collisionKey = username => baseEmail(username.normalize('NFKC'));
 const authEmail = (username, version) => `${baseEmail(username)}${version === 1 ? '' : `_v${version}`}@pogotrades.nyc`;
 function fail(code) { const error = new Error(code); error.code = code; throw error; }
 function requireThat(condition, code = 'reset/identity-conflict') { if (!condition) fail(code); }
@@ -56,11 +57,11 @@ function createResetService({ adapter, journal, ownerUid, hmacKey, now = Date.no
     if (directory.authUid !== undefined) requireThat(directory.authUid === uid);
     if (directory.authEmail !== undefined) requireThat(directory.authEmail === user.authEmail);
     const aliases = Object.entries(users).filter(([name, value]) => name === username || value?.authUid === uid ||
-      baseEmail(name) === baseEmail(username) || value?.authEmail === user.authEmail);
+      collisionKey(name) === collisionKey(username) || value?.authEmail === user.authEmail);
     requireThat(aliases.length === 1 && aliases[0][0] === username);
     requireThat(Object.entries(authIndex).filter(([, value]) => value?.username === username ||
-      (typeof value?.username === 'string' && baseEmail(value.username) === baseEmail(username))).length === 1);
-    requireThat(Object.keys(loginDirectory).filter(name => baseEmail(name) === baseEmail(username)).length === 1);
+      (typeof value?.username === 'string' && collisionKey(value.username) === collisionKey(username))).length === 1);
+    requireThat(Object.keys(loginDirectory).filter(name => collisionKey(name) === collisionKey(username)).length === 1);
     // Any provider-authority ownership or freeze evidence is out of scope, not repairable here.
     requireThat(await adapter.legacyOnly(uid, username), 'reset/identity-not-legacy');
     const account = await adapter.getAuthUser(uid);

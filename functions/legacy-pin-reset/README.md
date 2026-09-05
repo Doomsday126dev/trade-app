@@ -1,6 +1,12 @@
 # Owner-Assisted Same-UID PIN Reset
 
-Status: source/emulator qualification only. Production `.87` and the friend's
+Status: **AUDIT BLOCKED, DO NOT DEPLOY**. The independent review reproduced an
+unfenced external identity-writer race; the final password call can run after
+identity ownership/incarnation changes. The clean-device no-new-migration-
+evidence gate also fails. See [SECURITY_REVIEW.md](SECURITY_REVIEW.md). Earlier
+local passes below are historical evidence, not launch certification.
+
+Production `.87` and the friend's
 account are unchanged. The new Admin action is disabled in source. No deployed
 backend revision exists. The dedicated runtime service account was confirmed
 absent by a read-only `gcloud iam service-accounts describe` on 2026-09-05.
@@ -65,7 +71,8 @@ reset, even when active: this transitional service cannot repair or migrate it.
 
 Identity is reread immediately before the password request and after success.
 Auth and RTDB/Firestore do not share a transaction. A deployment window MUST
-exclude concurrent privileged identity deletion/recreation, repair or migration.
+enforce exclusion of concurrent privileged identity deletion/recreation, repair
+or migration. An operator promise alone does not satisfy the final review.
 A detected postcondition change produces an ambiguous result, never identity
 rewrites or rollback to an old PIN. The endpoint's durable lock serializes its
 own resets, not unrelated administrative systems.

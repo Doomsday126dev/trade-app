@@ -38,6 +38,7 @@ test('owner Admin reset, masked PINs, lost-response reconciliation and mobile la
   await expect(dialog).toContainText('Trainer');await expect(dialog).toContainText('Account created');
   expect(await dialog.innerText()).not.toContain('reset-target');
   await expect(dialog.getByLabel('New PIN',{exact:true})).toHaveAttribute('type','password');
+  await expect(dialog.getByLabel('New PIN',{exact:true})).toHaveAttribute('autocomplete','off');
   await dialog.getByLabel('New PIN',{exact:true}).fill('654321');await dialog.getByLabel('Confirm new PIN').fill('111111');
   await dialog.getByRole('button',{name:'Confirm reset'}).click();await expect(dialog).toContainText('same six-digit PIN twice');expect(mutations).toBe(0);
   await page.screenshot({path:'test-results/legacy-pin-reset-desktop.png'});
@@ -65,6 +66,17 @@ test('owner Admin reset, masked PINs, lost-response reconciliation and mobile la
   await page.evaluate(()=>resetSessionTransientUi('auth_loss'));
   await expect(dialog).toHaveCount(0);
   expect(await page.evaluate(()=>JSON.stringify(sessionStorage))).not.toContain('555555');
+  for(const event of ['popstate','hashchange','pagehide']){
+    await page.evaluate(()=>openExistingPinReset('Trainer'));
+    await dialog.getByLabel('New PIN',{exact:true}).fill('001234');
+    await page.evaluate(name=>{window.resetDetachedInput=existingPinResetDialog.querySelector('input');window.dispatchEvent(new Event(name));},event);
+    await expect(dialog).toHaveCount(0);
+    expect(await page.evaluate(()=>window.resetDetachedInput.value)).toBe('');
+  }
+  await page.evaluate(()=>openExistingPinReset('Trainer'));
+  await dialog.getByLabel('New PIN',{exact:true}).fill('001234');
+  await page.evaluate(()=>switchTab('mylist',{render:false}));
+  await expect(dialog).toHaveCount(0);
   await page.evaluate(()=>{cur='Trainer';renderAdmin();openExistingPinReset('Trainer');});
   await expect(dialog).toHaveCount(0);await expect(page.locator('[data-admin-user-action="reset-existing"]')).toHaveCount(0);
 });
