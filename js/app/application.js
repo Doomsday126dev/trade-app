@@ -453,6 +453,7 @@ function renderCombinedList(model=productDeclarations()){
   const previous=new Map([...host.querySelectorAll(':scope > .combined-row')].map(row=>[row.dataset.key,row]));
   const nodes=visible.slice(0,combinedLimit).map(({entries,index})=>{
     const e=entries[0],selected=entries.every(x=>combinedSelection.has(productSelectionKey(x)));
+    const priority=['H','M','L'].find(p=>entries.some(entry=>entry.p===p))||'';
     const key=combinedKey(e),signature=JSON.stringify([i18nCore.getLocale(),entries]);
     let row=previous.get(key);
     if(row?.dataset.signature===signature){row.querySelector('input').checked=selected;return row;}
@@ -460,8 +461,8 @@ function renderCombinedList(model=productDeclarations()){
     template.innerHTML=`<article class="combined-row">
       <input type="checkbox" aria-label="${escAttr(i18nCore.t('phase2.select',{name:e.dn}))}" data-group="${escAttr(combinedKey(e))}" ${selected?'checked':''} onchange="selectCombinedGroup(this.dataset.group,this.checked)">
       ${e.no?spriteImg(e.no,44,'',e.name,e.gender||'',e.dn):'<span aria-hidden="true"></span>'}
-      <button class="combined-entry" type="button" data-group="${escAttr(combinedKey(e))}" onclick="openCombinedEditor(this.dataset.group)"><strong>${escHtml(e.dn)}</strong><span>${escHtml([e.shiny?i18nCore.t('share.flagShiny'):'',e.gender==='f'?'♀':e.gender==='m'?'♂':'',e.mod,e.backgroundId?backgroundDisplayName(e.backgroundId):'',e.lucky?i18nCore.t('myList.lucky'):'',e.xxl?'XXL':'',e.xxs?'XXS':'',e.note].filter(Boolean).join(' · '))}</span></button>
-      <div class="combined-sides">${['lf','ft'].map(side=>entries.some(x=>x.intent===side)?`<span class="combined-${side}">${escHtml(i18nCore.t(side==='lf'?'product.lf':'product.ft'))}${side==='lf'&&entries.some(x=>x.intent===side&&x.p==='H')?' · '+escHtml(i18nCore.t('phase2.topWant')):''}</span>`:'').join('')}</div></article>`;
+      <button class="combined-entry" type="button" data-group="${escAttr(combinedKey(e))}" onclick="openCombinedEditor(this.dataset.group)"><strong>${escHtml(e.dn)}</strong><span>${escHtml([e.shiny?i18nCore.t('share.flagShiny'):'',e.gender==='f'?'♀':e.gender==='m'?'♂':'',e.mod,'',e.lucky?i18nCore.t('myList.lucky'):'',e.xxl?'XXL':'',e.xxs?'XXS':'',e.note].filter(Boolean).join(' · '))}</span></button>
+      <div class="combined-sides"><span>${escHtml(priority==='H'?i18nCore.t('phase2.topWant'):priority?priLabel(priority):'')}</span></div></article>`;
     row=template.content.firstElementChild;row.dataset.key=key;row.dataset.signature=signature;return row;
   });
   nodes.forEach((row,index)=>{if(host.children[index]!==row)host.insertBefore(row,host.children[index]||null);});
@@ -473,7 +474,14 @@ function renderCombinedList(model=productDeclarations()){
 }
 function refreshCombinedSearch(model=productDeclarations()){
   const host=document.getElementById('combined-search');
-  if(host?.childElementCount)host.innerHTML=contextualIntentSearchHtml(model.entries.filter(e=>combinedSelection.has(productSelectionKey(e))),i18nCore.t('contextSearch.selection'));
+  if(!host)return;
+  const scope=document.getElementById('wants-search-scope')?.value||'filtered';
+  const query=normalizeAcText(document.getElementById('combined-filter')?.value||'');
+  const entries=model.entries.filter(e=>scope==='selected'?combinedSelection.has(productSelectionKey(e)):scope==='top'?e.p==='H':!query||normalizeAcText(productShareDescription(e)).includes(query));
+  const signature=JSON.stringify([i18nCore.getLocale(),entries]);
+  if(host.dataset.signature===signature)return;
+  host.dataset.signature=signature;
+  host.innerHTML=contextualIntentSearchHtml(entries,i18nCore.t('wants.search'));
 }
 function selectCombinedGroup(index,selected){
   const group=typeof index==='string'?combinedGroups().find(g=>combinedKey(g[0])===index):combinedGroups()[index];
@@ -482,7 +490,7 @@ function selectCombinedGroup(index,selected){
   refreshCombinedSearch();
 }
 function useBoardSelection(){
-  combinedSelection=new Set([...getSpecialBoard().lf,...getSpecialBoard().ft].map(productSelectionKey));
+  combinedSelection=new Set(getSpecialBoard().lf.map(productSelectionKey));
   renderCombinedList();openProductShare('image');document.getElementById('product-share-scope').value='selected';refreshProductShare();
 }
 function openCombinedEditor(index){
@@ -493,15 +501,14 @@ function openCombinedEditor(index){
   input.value=entry.name||'';input.readOnly=!!entries?.length;
   const options=document.getElementById('combined-catalog');
   if(!options.childElementCount)options.innerHTML=_specialAllItems().map(e=>`<option value="${escAttr(e.name)}">${escHtml(e.dn)}</option>`).join('');
-  for(const side of ['lf','ft'])document.getElementById('combined-'+side).checked=entries?.some(e=>e.intent===side)||(side==='lf'&&!entries?.length);
-  for(const field of ['mod','note','gender','backgroundId'])document.getElementById('combined-'+field).value=entry[field]||'';
+  for(const field of ['mod','note','gender'])document.getElementById('combined-'+field).value=entry[field]||'';
   for(const field of ['shiny','lucky','xxl','xxs'])document.getElementById('combined-'+field).checked=entry[field]===true;
   const priorities=new Set((entries||[]).filter(e=>e.intent==='lf').map(e=>e.p||''));
   document.getElementById('combined-priority').value=priorities.size>1?'mixed':([...priorities][0]||'');
-  document.getElementById('combined-background-trigger').textContent=entry.backgroundId?backgroundDisplayName(entry.backgroundId):i18nCore.t('background.none');
   document.getElementById('combined-top').checked=document.getElementById('combined-priority').value==='H';
   document.getElementById('combined-error').textContent='';
   document.getElementById('combined-save').disabled=false;
+  document.getElementById('wants-remove').hidden=!entries?.length;
   openModal('combined-editor-modal');
 }
 function combinedSourceEntity(entry){
@@ -511,15 +518,16 @@ function combinedSourceEntity(entry){
   const id=accountSyncModel.tradeEntryId(identity);
   return accountSyncCanonicalEntities.find(e=>e.entityId===id&&!e.deleted);
 }
-async function saveCombinedEditor(){
+async function saveCombinedEditor(remove=false){
   const draft=combinedEditor,error=document.getElementById('combined-error'),button=document.getElementById('combined-save');
   if(!draft||button.disabled)return;
   const fail=key=>{error.textContent=i18nCore.t(key);button.disabled=false;};
   const name=document.getElementById('combined-name').value.trim(),catalog=accountSyncCatalogIdentity('wishlist',name);
-  const sides=['lf','ft'].filter(side=>document.getElementById('combined-'+side).checked);
+  const sides=remove?[]:['lf'];
   if(!catalog)return fail('myList.selectPokemon');
   if(!sides.length&&!draft.entries.length)return fail('phase2.chooseSide');
-  const changes={};for(const field of ['mod','note','gender','backgroundId'])changes[field]=document.getElementById('combined-'+field).value;
+  if(!draft.entries.length&&!_specialAllItems().some(e=>e.name===name))return fail('myList.selectPokemon');
+  const changes={};for(const field of ['mod','note','gender'])changes[field]=document.getElementById('combined-'+field).value;
   for(const field of ['shiny','lucky','xxl','xxs'])changes[field]=document.getElementById('combined-'+field).checked;
   if(changes.xxl&&changes.xxs)return fail('phase2.invalid');
   const priority=document.getElementById('combined-priority').value;
@@ -529,7 +537,7 @@ async function saveCombinedEditor(){
     if(draft!==combinedEditor||draft.owner!==cur||draft.uid!==auth?.currentUser?.uid||authority.mode!=='canonical'||!accountSyncAuthorityCurrent(authority))return fail('product.editSyncRequired');
     if(draft.before!==JSON.stringify(productDeclarations().entries))return fail('phase2.changed');
     const mutations=[],seen=new Set();
-    for(const side of ['lf','ft']){
+    for(const side of ['lf']){
       const existing=draft.entries.filter(e=>e.intent===side);
       if(existing.length){
         for(const entry of existing)for(const source of [entry,...entry.aliases||[]]){
@@ -537,7 +545,11 @@ async function saveCombinedEditor(){
           if(seen.has(entity.entityId))continue;seen.add(entity.entityId);
           if(!sides.includes(side)){mutations.push({kind:'delete',entityType:'tradeEntry',entityId:entity.entityId});continue;}
           const patch={};
-          for(const [field,value] of Object.entries(changes)){if(value!==(entry[field]??(['shiny','lucky','xxl','xxs'].includes(field)?false:'')))patch[field==='mod'?'variant':field]=value;}
+          for(const [field,value] of Object.entries(changes)){
+            const empty=['shiny','lucky','xxl','xxs'].includes(field)?false:'';
+            // A priority-only edit must not overwrite differing saved notes or flags.
+            if(value!==(draft.entries[0][field]??empty))patch[field==='mod'?'variant':field]=value;
+          }
           if(side==='lf'&&priority!=='mixed'&&priority!==entry.p)patch.priority=priority;
           // Keep the existing list encoder's gender representation coherent.
           if('gender' in patch&&accountSyncProduct.MY_LIST_LANES.includes(entity.identity.lane)){
@@ -5056,7 +5068,6 @@ async function changeInterfaceLocale(locale){
   await window.__pogoEnsureLocale?.(locale);
   i18nCore.setLocale(locale);
   renderInterimProductLabels();
-  updateAddBackgroundPresentation();
   if(cur){
     const active=activeTabName();
     _specialAcItems=null;
@@ -5064,7 +5075,6 @@ async function changeInterfaceLocale(locale){
     else if(active==='find')renderFindTrainer();
     else if(active==='schedule')renderEventsOnly();
     else if(active==='strings')renderStrings();
-    else if(active==='have'){haveAcItems=[];renderMyHave(document.getElementById('have-filter')?.value||'');}
     else if(active==='admin')renderAdmin();
     if(document.getElementById('settings-modal')?.classList.contains('open'))renderSettings();
     if(_activeDiff)renderDiffModal();
@@ -5486,8 +5496,7 @@ function renderFavoriteBrowseResults(){
   const cache=ensureFavoriteShareSessionCache();if(!cache)return;
   cache.syncFavorites(favorites);
   const snapshot=cache.snapshot(),summary=cache.summary(favorites),index=favoritePokemonBrowseDomain.buildIndex(snapshot.records);
-  const ownedPokemonNames=cur?Object.entries(allData.have?.[cur]||{}).filter(([,value])=>haveEntryInfo(value).qty>0).map(([key])=>splitHaveKey(key).name):[];
-  const matches=favoritePokemonBrowseDomain.resultsForPokemon(index,selected.name,{favorites,tags:state.tags,recent:state.recent,locale:i18nCore.getLocale(),ownedPokemonNames});
+  const matches=favoritePokemonBrowseDomain.resultsForPokemon(index,selected.name,{favorites,tags:state.tags,recent:state.recent,locale:i18nCore.getLocale()});
   const hasPublished=summary.published+summary.publishedEmpty>0;
   const incomplete=summary.failed+summary.invalid;
   let body='';
@@ -5495,7 +5504,7 @@ function renderFavoriteBrowseResults(){
   else if(!matches.length)body=favoriteBrowseEmpty('favoriteBrowse.noMatchTitle','favoriteBrowse.noMatchBody',{pokemon:selected.dn});
   else body=`<div class="favorite-browse-summary"><span class="favorite-browse-pokemon">${escHtml(selected.dn)}</span><span class="favorite-browse-count">${escHtml(i18nCore.formatPlural('favoriteBrowse.results',matches.length,{pokemon:selected.dn}))}</span></div><div class="favorite-browse-results">${matches.map(match=>{
     const category=favoriteBrowseCategoryText(match.categories),trainer=escAttr(match.displayName);
-    const backgrounds=(match.backgroundIds||[]).map(id=>backgroundBadgeHtml(id)).join('');
+    const backgrounds='';
     return`<button type="button" class="favorite-browse-row" data-trainer="${trainer}" data-trainer-action="open" aria-label="${escAttr(i18nCore.t('trainer.openTrainerNamed',{trainer:match.displayName}))}"><span class="favorite-browse-main"><span class="favorite-browse-name">${escHtml(match.displayName)}</span><span class="favorite-browse-match"><strong>${i18nCore.formatNumber(match.iHaveTheirWants)}</strong> ${escHtml(i18nCore.t('product.matchingWants'))}</span><span class="favorite-browse-meta"><span class="favorite-browse-priority ${escAttr(match.priority)}">${escHtml(favoriteBrowsePriorityText(match.priority))}</span>${category?`<span>${escHtml(category)}</span>`:''}${backgrounds}</span>${match.tags.length?`<span class="favorite-browse-tags">${match.tags.map(label=>`<span class="favorite-card-tag chip chip-metadata">${escHtml(label)}</span>`).join('')}</span>`:''}</span><span class="favorite-browse-open btn btn-ghost" aria-hidden="true">${escHtml(i18nCore.t('trainer.openAction'))} ${uiIconMarkup('chevron-right','ui-icon ui-icon-sm')}</span></button>`;
   }).join('')}</div>`;
   const footer=summary.checked?`<div class="favorite-browse-footer"><span>${escHtml(i18nCore.t('favoriteBrowse.checked'))}</span><button type="button" class="btn btn-ghost" data-favorite-action="refresh-browse">${escHtml(i18nCore.t('favoriteBrowse.refresh'))}</button>${summary.failed?`<button type="button" class="btn btn-secondary" data-favorite-action="retry-browse">${escHtml(i18nCore.t('favoriteBrowse.retry'))}</button>`:''}${incomplete?`<span class="favorite-browse-partial">${escHtml(i18nCore.t('favoriteBrowse.partial',{checked:i18nCore.formatNumber(summary.total-incomplete),total:i18nCore.formatNumber(summary.total),failed:i18nCore.formatNumber(incomplete)}))}</span>`:''}</div>`:'';
@@ -5951,7 +5960,6 @@ function renderActiveTab(t=activeTabName()){
   if(!cur)return;
   if(t==='mylist')renderMyList();
   else if(t==='find')renderFindTrainer();
-  else if(t==='have')renderMyHave();
   else if(t==='schedule')renderSchedule();
   else if(t==='admin'&&protectedOwnerSession()){
     startLegacyAdminReads();
@@ -5978,6 +5986,7 @@ function refreshBadgesAndLightChrome(){
   checkWhatsNew();
 }
 function switchTab(t,opts={}){
+  if(t==='have')t='mylist';
   const previous=activeTabName();
   if(t!=='admin')closeExistingPinReset();
   if(t==='settings'){openSettingsPanel('account');return;}
@@ -6008,7 +6017,7 @@ function openProductShare(mode='link'){
   openModal('product-share-modal');refreshProductShare();setProductShareMode(mode);
 }
 function productShareDescription(entry){
-  return [entry.dn||entry.name,entry.shiny?i18nCore.t('share.flagShiny'):'',entry.gender==='f'?'♀':entry.gender==='m'?'♂':'',entry.mod,entry.backgroundId?backgroundDisplayName(entry.backgroundId):'',entry.lucky?i18nCore.t('myList.lucky'):'',entry.xxl?'XXL':'',entry.xxs?'XXS':'',entry.p?priLabel(entry.p):'',entry.note].filter(Boolean).join(' · ');
+  return [entry.dn||entry.name,entry.shiny?i18nCore.t('share.flagShiny'):'',entry.gender==='f'?'♀':entry.gender==='m'?'♂':'',entry.mod,'',entry.lucky?i18nCore.t('myList.lucky'):'',entry.xxl?'XXL':'',entry.xxs?'XXS':'',entry.p?priLabel(entry.p):'',entry.note].filter(Boolean).join(' · ');
 }
 function refreshProductShare(){
   productShareScope=document.getElementById('product-share-scope').value;
@@ -6016,7 +6025,7 @@ function refreshProductShare(){
   document.getElementById('share-link-status').textContent='';
   document.getElementById('share-public-url').value='';publicLinkAttempt++;
   const preview=document.getElementById('product-share-preview');
-  preview.innerHTML=['lf','ft'].map(side=>`<section><h4>${escHtml(i18nCore.t(side==='lf'?'product.lf':'product.ft'))}</h4><ul>${productShareSnapshot.filter(e=>e.intent===side).map(e=>`<li>${escHtml(productShareDescription(e))}</li>`).join('')||`<li>${escHtml(i18nCore.t('contextSearch.empty'))}</li>`}</ul></section>`).join('');
+  preview.innerHTML=`<section><h4>${escHtml(i18nCore.t('wants.title'))}</h4><ul>${productShareSnapshot.map(e=>`<li>${escHtml(productShareDescription(e))}</li>`).join('')||`<li>${escHtml(i18nCore.t('contextSearch.empty'))}</li>`}</ul></section>`;
   document.querySelector('[data-share-mode="link"]').hidden=productShareScope!=='full';
   setProductShareMode(productShareScope==='full'?'link':'image');
 }
@@ -6032,7 +6041,7 @@ function productShareSnapshotCurrent(){
 }
 async function copyProductShareText(){
   if(!productShareSnapshotCurrent()){refreshProductShare();toast(i18nCore.t('share.publicationPending'));return;}
-  const text=[cur,...['lf','ft'].flatMap(side=>['',i18nCore.t(side==='lf'?'product.lf':'product.ft'),...productShareSnapshot.filter(e=>e.intent===side).map(e=>'- '+productShareDescription(e))])].join('\n');
+  const text=[cur,i18nCore.t('wants.title'),...productShareSnapshot.map(e=>'- '+productShareDescription(e))].join('\n');
   try{await copyText(text);toast(i18nCore.t('export.markdownCopied'));}catch{toast(i18nCore.t('strings.copyFailed'));}
 }
 async function exportProductShareImage(){
@@ -6050,7 +6059,7 @@ async function renderProductShareImage(entries,owner){
   const images=await Promise.all(entries.map(e=>loadCanvasImageWithFallback(exportSpriteFallbackUrls({...e,spriteUrl:entrySpriteUrl(e,e.name)})).catch(()=>null)));
   const canvas=document.createElement('canvas'),measure=canvas.getContext('2d');measure.font='12px sans-serif';
   const wrap=text=>{const lines=[];let line='';for(const char of text){if(measure.measureText(line+char).width>cellWidth-12){lines.push(line);line='';}line+=char;}if(line)lines.push(line);return lines;};
-  const rows=['lf','ft'].map(side=>entries.map((entry,index)=>({entry,image:images[index],lines:wrap(productShareDescription(images[index]?{...entry,name:'',dn:'',shiny:false}:entry))})).filter(x=>x.entry.intent===side));
+  const rows=[entries.map((entry,index)=>({entry,image:images[index],lines:wrap(productShareDescription(images[index]?{...entry,name:'',dn:'',shiny:false}:entry))})).filter(x=>x.entry.intent==='lf')];
   const heights=rows.map(items=>Array.from({length:Math.max(1,Math.ceil(items.length/columns))},(_,i)=>100+14*Math.max(1,...items.slice(i*columns,(i+1)*columns).map(x=>x.lines.length))));
   const height=90+heights.reduce((n,r)=>n+48+r.reduce((sum,h)=>sum+h,0),0);
   if(height>15000)throw new Error('Image scope is too large');
@@ -6060,7 +6069,7 @@ async function renderProductShareImage(entries,owner){
   drawFittedText(ctx,new Date().toLocaleDateString(),padding,54,width-padding*2,{max:12,min:10,color:'#a9b1b7'});
   let y=80;
   rows.forEach((items,sideIndex)=>{
-    drawFittedText(ctx,i18nCore.t(sideIndex?'product.ft':'product.lf'),padding,y+20,width-padding*2,{max:18,min:14,color:sideIndex?'#47d6a4':'#f18db7'});y+=48;
+    drawFittedText(ctx,i18nCore.t('wants.title'),padding,y+20,width-padding*2,{max:18,min:14,color:'#47d6a4'});y+=48;
     items.forEach(({entry,image,lines},index)=>{
       const x=padding+(index%columns)*cellWidth,top=y+heights[sideIndex].slice(0,Math.floor(index/columns)).reduce((sum,h)=>sum+h,0);
       if(image)drawImageContain(ctx,image,x+12,top,76,76);
@@ -6072,7 +6081,7 @@ async function renderProductShareImage(entries,owner){
   });
   return new Promise((resolve,reject)=>canvas.toBlob(blob=>blob?resolve(blob):reject(new Error('Image export failed')),'image/png'));
 }
-function openLegacyInventoryTool(){closeAccountMenu(false);switchTab('have');}
+
 function refreshAll(){
   if(!cur)return;
   const switcher=document.getElementById('member-community-switcher');
@@ -6089,9 +6098,9 @@ function refreshAll(){
 function userBadge(x){
   const lu=allData.users?.[x.user]?.lastUpdated;
   const shinyPart=x.shiny?' · ✨ shiny only':'';
-  const backgroundPart=x.backgroundId?` · ${backgroundDisplayName(x.backgroundId)} background`:'';
+  const backgroundPart='';
   return`<span class="badge ${x.p}" title="${x.user} · ${priLabel(x.p)} priority${shinyPart}${backgroundPart} · Updated ${freshnessLabel(lu)}">
-    <span class="prio-mark">${x.p}</span>${x.user}${x.lucky?'<span class="lucky-mark">⚡</span>':''}${x.shiny?'<span class="shiny-mark">✨</span>':''}${x.xxl?'<span class="flag-mark xxl-mark">XXL</span>':''}${x.xxs?'<span class="flag-mark xxs-mark">XXS</span>':''}${x.backgroundId?`<span class="flag-mark">${escHtml(backgroundShortLabel(x.backgroundId))} BG</span>`:''}${x.mod?`<span class="mod"> ${x.mod}</span>`:''}
+    <span class="prio-mark">${x.p}</span>${x.user}${x.lucky?'<span class="lucky-mark">⚡</span>':''}${x.shiny?'<span class="shiny-mark">✨</span>':''}${x.xxl?'<span class="flag-mark xxl-mark">XXL</span>':''}${x.xxs?'<span class="flag-mark xxs-mark">XXS</span>':''}${x.mod?`<span class="mod"> ${x.mod}</span>`:''}
   </span>`;
 }
 
@@ -6121,7 +6130,7 @@ function comparePokemonLabels(a,b){
   return new Intl.Collator(i18nCore.getLocale(),{numeric:true,sensitivity:'base'}).compare(String(a||''),String(b||''));
 }
 function buildAcItems(){
-  const arr=listSource(myListType);
+  const arr=listSource(myListType).filter(selectableSpriteEntry);
   const existing=new Set(productDeclarations().entries.filter(e=>e.intent===myListIntent).map(e=>accountSyncCatalogIdentity(e.ref.type||'wishlist',e.name,e)?.catalogId||pokemonCatalogDomain.catalogKey(e.name)));
   const seen=new Set();acItems=[];
   arr.forEach(e=>{
@@ -6254,7 +6263,7 @@ function renderAddTray(){
     flags.xxl?'XXL':'',
     flags.xxs?'XXS':'',
     flags.notes?'notes':'',
-    flags.backgroundId?`${backgroundShortLabel(flags.backgroundId)} BG`:''
+    ''
   ].filter(Boolean).join(' · ');
   el.hidden=false;
   el.innerHTML=`
@@ -6278,12 +6287,6 @@ async function confirmAddTray(){
   if(!addTray.length){toast(i18nCore.t('myList.queueEmpty'));return;}
   const pri=document.getElementById('add-pmon-pri')?.value||'';
   const flags=currentAddFlags();
-  if(myListIntent==='ft'){
-    const board=getStoredSpecialBoard();
-    for(const entry of addTray){const row=intentBoardEntry(entry.name,{p:pri,mod:flags.notes,gender:entryGender(flags.notes),lucky:flags.lucky,xxl:flags.xxl,xxs:flags.xxs,shiny:flags.shiny,backgroundId:flags.backgroundId});if(!board.ft.some(e=>e.name===row.name))board.ft.push(row);}
-    if(await addManagedIntentEntries('ft',board.ft.filter(row=>!getStoredSpecialBoard().ft.some(prior=>prior.name===row.name)))){addTray=[];renderAddTray();buildAcItems();renderMyList();}
-    return;
-  }
   if(!pri&&!flags.lucky&&!flags.xxl&&!flags.xxs&&!flags.shiny&&!flags.backgroundId){toast(i18nCore.t('myList.queueNeedsPriority'));return;}
   const list={...(allData[myListType]?.[cur]||{})};
   let added=0;
@@ -6302,128 +6305,26 @@ async function confirmAddTray(){
   renderMyList();
   toast(i18nCore.t('myList.queueAdded',{count:i18nCore.formatNumber(added)}));
 }
-let _backgroundPickerContext=null;
-let _backgroundPickerFilter='relevant';
-let _backgroundPickerResults=[];
-let _backgroundPickerFocus=-1;
-let _backgroundPickerReturnFocus=null;
-let _backgroundPickerVisibleLimit=80;
 const _recentBackgroundIds=[];
-function backgroundRecord(id){return backgroundCatalogDomain.get(id);}
-function backgroundDisplayName(id){return backgroundCatalogDomain.display(id)||id||'';}
-function backgroundShortLabel(id){return backgroundCatalogDomain.shortLabel(id)||id||'';}
-function backgroundVisual(id){return id?backgroundVisualDomain.resolve(id):null;}
-function backgroundVisualClass(id){return backgroundVisualDomain.className(backgroundVisual(id));}
-function backgroundVisualAttrs(id){
-  const visual=backgroundVisual(id);
-  return visual?`data-background-artwork-id="${escAttr(visual.id)}" style="${escAttr(backgroundVisualDomain.style(visual))}"`:'';
-}
-function backgroundVisualMotifHtml(id,cls='background-card-motif'){
-  const visual=backgroundVisual(id);
-  if(!visual)return'';
-  return`<span class="${cls} ${backgroundVisualDomain.className(visual)}" ${backgroundVisualAttrs(id)} aria-hidden="true"></span>`;
-}
-function backgroundBadgeHtml(id,cls='background-badge'){
-  if(!id)return'';
-  const full=backgroundDisplayName(id),short=backgroundShortLabel(id),visual=backgroundVisual(id);
-  return`<span class="${cls} background-visual-label ${backgroundVisualClass(id)}" ${backgroundVisualAttrs(id)} title="${escAttr(full)}" aria-label="${escAttr(i18nCore.t('background.badgeLabel',{name:full}))}">${visual?'<span class="background-visual-swatch" aria-hidden="true"></span>':''}<span class="background-visual-name">${escHtml(short)}</span><span class="background-badge-kind" aria-hidden="true">BG</span></span>`;
-}
-function updateAddBackgroundPresentation(){
-  const id=normalizeBackgroundId(document.getElementById('add-pmon-background')?.value);
-  const button=document.getElementById('add-background-trigger'),copy=button?.querySelector('.background-trigger-copy'),cue=button?.querySelector('.background-trigger-clear');
-  if(copy)copy.textContent=id?backgroundDisplayName(id):i18nCore.t('background.none');
-  if(cue)cue.textContent=id?i18nCore.t('common.change'):i18nCore.t('background.choose');
-  if(button)button.setAttribute('aria-label',id?i18nCore.t('background.selected',{name:backgroundDisplayName(id)}):i18nCore.t('background.none'));
-}
-function backgroundContextPokemonName(){
-  const context=_backgroundPickerContext||{};
-  if(context.pokemonName)return context.pokemonName;
-  if(context.target==='add')return document.getElementById('add-pmon-sel')?.value||document.getElementById('ac-input')?.value||'';
-  return context.name||'';
-}
-function backgroundContextCurrentId(){
-  const context=_backgroundPickerContext||{};
-  if(context.target==='combined')return document.getElementById('combined-backgroundId').value;
-  if(context.target==='add')return normalizeBackgroundId(document.getElementById('add-pmon-background')?.value);
-  if(context.target==='entry')return parsePri(allData[myListType]?.[cur]?.[context.name]||'').backgroundId;
-  return'';
-}
-function openBackgroundPicker(context){
-  _backgroundPickerContext={...context};
-  _backgroundPickerReturnFocus=document.activeElement;
-  _backgroundPickerFilter='relevant';_backgroundPickerFocus=-1;_backgroundPickerVisibleLimit=80;
-  const input=document.getElementById('background-search-input');if(input)input.value='';
-  const forLabel=document.getElementById('background-picker-for'),pokemon=backgroundContextPokemonName();
-  if(forLabel)forLabel.textContent=pokemon?i18nCore.t('background.forPokemon',{name:pokemon}):'';
-  document.getElementById('background-picker-modal')?.classList.add('open');
-  renderBackgroundPicker();
-  requestAnimationFrame(()=>input?.focus());
-}
-function closeBackgroundPicker(){
-  document.getElementById('background-picker-modal')?.classList.remove('open');
-  const focus=_backgroundPickerReturnFocus;_backgroundPickerReturnFocus=null;_backgroundPickerContext=null;
-  if(focus?.isConnected)requestAnimationFrame(()=>focus.focus({preventScroll:true}));
-}
-function backgroundSearchChanged(){_backgroundPickerFocus=-1;_backgroundPickerVisibleLimit=80;renderBackgroundPicker();}
-function setBackgroundFilter(filter){_backgroundPickerFilter=filter;_backgroundPickerFocus=-1;_backgroundPickerVisibleLimit=80;renderBackgroundPicker();}
-function showMoreBackgrounds(){_backgroundPickerVisibleLimit+=80;renderBackgroundPicker();}
-function renderBackgroundPicker(){
-  if(!_backgroundPickerContext)return;
-  const searchInput=document.getElementById('background-search-input'),query=searchInput?.value||'',pokemon=backgroundContextPokemonName();
-  let records=backgroundCatalogDomain.search(query,{pokemonName:pokemon,limit:500});
-  if(_backgroundPickerFilter==='relevant'){
-    const relevant=records.filter(record=>backgroundCatalogDomain.isRelevant(record,pokemon));
-    if(relevant.length)records=relevant;
-  }else if(_backgroundPickerFilter==='location'||_backgroundPickerFilter==='special')records=records.filter(record=>record.type===_backgroundPickerFilter);
-  else if(_backgroundPickerFilter==='recent')records=records.filter(record=>_recentBackgroundIds.includes(record.id)).sort((a,b)=>_recentBackgroundIds.indexOf(a.id)-_recentBackgroundIds.indexOf(b.id));
-  _backgroundPickerResults=records;_backgroundPickerFocus=Math.min(_backgroundPickerFocus,records.length-1);
-  document.querySelectorAll('[data-background-filter]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.backgroundFilter===_backgroundPickerFilter)));
-  const recentButton=document.querySelector('[data-background-filter="recent"]');if(recentButton)recentButton.hidden=!_recentBackgroundIds.length;
-  const selected=backgroundContextCurrentId(),out=document.getElementById('background-results'),visible=records.slice(0,_backgroundPickerVisibleLimit);if(!out)return;
-  const count=document.getElementById('background-results-count'),more=document.getElementById('background-show-more');
-  if(count)count.textContent=i18nCore.t('background.showing',{visible:i18nCore.formatNumber(visible.length),total:i18nCore.formatNumber(records.length)});
-  if(more)more.hidden=visible.length>=records.length;
-  if(!records.length){searchInput?.removeAttribute('aria-activedescendant');out.innerHTML=`<div class="background-empty">${escHtml(i18nCore.t('background.noResults'))}</div>`;return;}
-  let lastGroup='';
-  out.innerHTML=visible.map((record,index)=>{
-    const relevant=backgroundCatalogDomain.isRelevant(record,pokemon);
-    const knownIncompatible=!!pokemon&&record.pokemon.length>0&&!relevant;
-    const group=relevant?i18nCore.t('background.relevant'):i18nCore.t(record.type==='location'?'background.location':'background.special');
-    const heading=group!==lastGroup?`<div class="background-result-group">${escHtml(group)}</div>`:'';lastGroup=group;
-    const eligibility=knownIncompatible?i18nCore.t('background.notListed',{name:pokemon}):'';
-    const meta=[record.event,record.location,record.availability,eligibility].filter(Boolean).filter((value,i,array)=>array.indexOf(value)===i).join(' · ');
-    return`${heading}<button type="button" class="background-option${knownIncompatible?' incompatible':''}${index===_backgroundPickerFocus?' focused':''}" id="background-option-${index}" data-bg-option="${index}" role="option" aria-selected="${selected===record.id}" onclick="selectBackground('${escAttr(record.id)}')"><span class="background-option-main"><span class="background-option-name">${escHtml(record.displayName)}</span><span class="background-option-meta">${escHtml(meta)}</span></span><span class="background-option-year">${record.year||''}</span></button>`;
-  }).join('');
-  if(_backgroundPickerFocus>=0&&_backgroundPickerFocus<visible.length)searchInput?.setAttribute('aria-activedescendant',`background-option-${_backgroundPickerFocus}`);
-  else searchInput?.removeAttribute('aria-activedescendant');
-}
-function backgroundPickerKeydown(event){
-  if(event.key==='Escape'){event.preventDefault();closeBackgroundPicker();return;}
-  if(event.key!=='ArrowDown'&&event.key!=='ArrowUp'&&event.key!=='Enter')return;
-  if(event.key==='Enter'){
-    if(_backgroundPickerFocus>=0&&_backgroundPickerResults[_backgroundPickerFocus]){event.preventDefault();selectBackground(_backgroundPickerResults[_backgroundPickerFocus].id);}
-    return;
-  }
-  event.preventDefault();
-  if(!_backgroundPickerResults.length)return;
-  _backgroundPickerFocus=event.key==='ArrowDown'?Math.min(_backgroundPickerFocus+1,_backgroundPickerResults.length-1):Math.max(_backgroundPickerFocus<0?_backgroundPickerResults.length-1:_backgroundPickerFocus-1,0);
-  if(_backgroundPickerFocus>=_backgroundPickerVisibleLimit)_backgroundPickerVisibleLimit+=80;
-  renderBackgroundPicker();
-  document.getElementById(`background-option-${_backgroundPickerFocus}`)?.scrollIntoView({block:'nearest'});
-}
-function selectBackground(value){
-  const id=normalizeBackgroundId(value),context=_backgroundPickerContext;if(!context)return;
-  if(id){const index=_recentBackgroundIds.indexOf(id);if(index>=0)_recentBackgroundIds.splice(index,1);_recentBackgroundIds.unshift(id);_recentBackgroundIds.splice(8);}
-  if(context.target==='add'){
-    const hidden=document.getElementById('add-pmon-background');if(hidden)hidden.value=id;
-    updateAddBackgroundPresentation();renderAddTray();
-  }else if(context.target==='entry')setBackground(context.name,id);
-  else if(context.target==='combined'){
-    document.getElementById('combined-backgroundId').value=id;
-    document.getElementById('combined-background-trigger').textContent=id?backgroundDisplayName(id):i18nCore.t('background.none');
-  }
-  closeBackgroundPicker();
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 document.addEventListener('click',e=>{
   if(!e.target.closest('.ac-wrap')){
     closeAddAutocomplete();
@@ -6540,7 +6441,7 @@ function _renderBrowseInner(){
       ents=(ents||[]).filter(entryMatchesFlagFilters);
       if(!ents.length)return false;
       if(!q)return true;
-      return normalizeAcText(pokemonSearchLabels(e).join(' ')).includes(q)||ents.some(x=>x.user.toLowerCase().includes(q)||normalizeAcText(backgroundDisplayName(x.backgroundId)).includes(q));
+      return normalizeAcText(pokemonSearchLabels(e).join(' ')).includes(q)||ents.some(x=>x.user.toLowerCase().includes(q)||normalizeAcText('').includes(q));
     });
     if(!results.length){el.innerHTML=emptyHtml(i18nCore.t('browse.noOtherMatches'),i18nCore.t('browse.tryFilters'));return;}
     el.innerHTML=`<div class="pgrid">${results.map(e=>{
@@ -6574,7 +6475,7 @@ function _renderBrowseInner(){
     ents=ents.filter(entryMatchesFlagFilters);
     if(!ents.length)return false;
     if(!q)return true;
-    return normalizeAcText(pokemonSearchLabels(e).join(' ')).includes(q)||String(e.no||'').includes(q)||ents.some(x=>x.user.toLowerCase().includes(q)||normalizeAcText(backgroundDisplayName(x.backgroundId)).includes(q));
+    return normalizeAcText(pokemonSearchLabels(e).join(' ')).includes(q)||String(e.no||'').includes(q)||ents.some(x=>x.user.toLowerCase().includes(q)||normalizeAcText('').includes(q));
   });
   if(!results.length){el.innerHTML=emptyHtml(i18nCore.t('browse.noMatches'),i18nCore.t('browse.tryFilters'));return;}
   el.innerHTML=`<div class="pgrid">${results.map(e=>{
@@ -6626,7 +6527,6 @@ function setMyList(t){
   if(document.getElementById('ac-input'))document.getElementById('ac-input').value='';
   document.getElementById('add-pmon-sel').value='';
   const background=document.getElementById('add-pmon-background');if(background)background.value='';
-  updateAddBackgroundPresentation();
   ['add-pmon-lucky','add-pmon-xxl','add-pmon-xxs','add-pmon-shiny'].forEach(id=>{const el=document.getElementById(id);if(el)el.checked=false;});
   document.getElementById('add-pmon-pri').value='';
   document.querySelectorAll('.add-pri-btn').forEach(b=>{b.classList.remove('on','H','M','L');b.setAttribute('aria-pressed','false');});
@@ -6641,17 +6541,17 @@ function setMyList(t){
 function productDeclarations(username=cur,providedSource){
   const data=providedSource||(username!==cur&&selectedTrainerRuntime.username===username&&selectedTrainerRuntime.publicData?selectedTrainerRuntime.publicData:allData);
   const entries=[],profile=data.users?.[username]||{},board=profile.specialTradeBoard||{};
-  if(Array.isArray(profile.publicDeclarations))return{entries:profile.publicDeclarations.map((raw,index)=>{
+  if(Array.isArray(profile.publicDeclarations))return{entries:profile.publicDeclarations.filter(raw=>raw.intent==='lf').map((raw,index)=>{
     const source=accountSyncCatalogEntryForName(raw.category,raw.name)||{name:raw.name,no:null};
-    return{...raw,type:raw.category==='costumes'?'wishlist':raw.category,dn:pokemonDisplayName({...source,name:raw.name}),no:source.no,key:`public:${index}`,aliases:[]};
+    return{...raw,backgroundId:'',type:raw.category==='costumes'?'wishlist':raw.category,dn:pokemonDisplayName({...source,name:raw.name}),no:source.no,key:`public:${index}`,aliases:[]};
   }),duplicates:[],reviews:[]};
   const managed=Array.isArray(profile.intentDeclarations)?profile.intentDeclarations:[];
   for(const raw of managed){
-    if(raw.deleted)continue;
+    if(raw.deleted||raw.side!=='lf')continue;
     const source=accountSyncCatalogEntryForName('wishlist',raw.name)||{name:raw.name,no:raw.no},type=maxTypeForEntry(source,'wishlist')||'wishlist';
     entries.push({...raw,intent:raw.side,type,category:type,p:raw.p||'',mod:raw.mod||'',dn:pokemonDisplayName(source),no:source.no,key:raw.entityId,ref:{surface:'my-list',managed:true,side:raw.side,index:raw.entityId,name:raw.name,entityId:raw.entityId,catalogId:raw.catalogId}});
   }
-  for(const side of ['lf','ft'])for(const [index,raw] of (board[side]||[]).entries()){
+  for(const side of ['lf'])for(const [index,raw] of (board[side]||[]).entries()){
     if(!raw?.name)continue;
     const source=accountSyncCatalogEntryForName('wishlist',raw.name)||{name:raw.name,no:raw.no},type=maxTypeForEntry(source,'wishlist')||'wishlist';
     entries.push({...raw,intent:side,type:['dynamax','gmax'].includes(type)?type:'wishlist',category:['dynamax','gmax'].includes(type)?type:'wishlist',p:raw.p||raw.priority||'',mod:raw.mod||raw.variant||'',gender:raw.gender||entryGender(raw.mod||raw.variant||''),
@@ -6661,10 +6561,10 @@ function productDeclarations(username=cur,providedSource){
     const parsed=parsePri(value),source=accountSyncCatalogEntryForName(type,name)||{name,no:null};
     entries.push({...parsed,intent:'lf',name,type:type==='costumes'?'wishlist':type,category:type,gender:entryGender(parsed.mod),dn:pokemonDisplayName({...source,name}),no:source.no,key:`list:${type}:${name}`,ref:{surface:'my-list',type,name}});
   }
-  return tradeListComparisonDomain.unifyDeclarations(entries,{nameKey:pokemonCatalogDomain.catalogKey,normalizeQualifier:normalizeTradeQualifier});
+  return tradeListComparisonDomain.unifyDeclarations(entries.map(entry=>({...entry,backgroundId:''})),{nameKey:pokemonCatalogDomain.catalogKey,normalizeQualifier:normalizeTradeQualifier});
 }
 function setMyListIntent(intent){
-  myListIntent=intent==='ft'?'ft':'lf';
+  myListIntent='lf';
   bulkMode=false;reorderMode=false;addTray=[];myListRenderState=null;
   setMyList(myListType);
 }
@@ -6690,7 +6590,7 @@ function renderIntentEntries(query='',model=productDeclarations()){
   host.innerHTML=rows.map(entry=>{
     const side=entry.ref.side,index=`'${entry.ref.index}'`;
     if(!entry.ref.managed)return`<article class="intent-row" data-intent-row="${escAttr(entry.name)}">${spriteImg(entry.no,42,'',entry.name,entry.gender||'',entry.dn)}<div class="intent-row-main"><strong>${escHtml(entry.dn)}</strong><span>${escHtml([entry.p?priLabel(entry.p):i18nCore.t('product.other'),entry.mod,entry.note].filter(Boolean).join(' · '))}</span></div><button class="btn btn-secondary" type="button" onclick="enableIntentEditing('${side}',${index})">${escHtml(i18nCore.t('product.enableEditing'))}</button></article>`;
-    return`<article class="intent-row" data-intent-row="${escAttr(entry.name)}">${spriteImg(entry.no,42,'',entry.name,entry.gender||'',entry.dn)}<div class="intent-row-main"><strong>${escHtml(entry.dn)}</strong><span>${escHtml([entry.mod,entry.note,entry.backgroundId?backgroundDisplayName(entry.backgroundId):''].filter(Boolean).join(' · '))}</span></div><select aria-label="${escAttr(i18nCore.t('myList.priorityFor',{name:entry.dn}))}" onchange="editIntentEntry('${side}',${index},'p',this.value)">${['','H','M','L'].map(p=>`<option value="${p}" ${p===entry.p?'selected':''}>${escHtml(p?priLabel(p):i18nCore.t('product.other'))}</option>`).join('')}</select><button type="button" class="btn btn-ghost" aria-label="${escAttr(i18nCore.t('share.flagShiny'))}" aria-pressed="${!!entry.shiny}" onclick="editIntentEntry('${side}',${index},'shiny',${!entry.shiny})">${uiIconMarkup('sparkles','ui-icon')}</button><button type="button" class="btn btn-ghost" aria-label="${escAttr(i18nCore.t('myList.removeEntry',{name:entry.dn}))}" onclick="removeIntentEntry('${side}',${index})">${uiIconMarkup('trash','ui-icon')}</button>${intentDetailsHtml(entry)}</article>`;
+    return`<article class="intent-row" data-intent-row="${escAttr(entry.name)}">${spriteImg(entry.no,42,'',entry.name,entry.gender||'',entry.dn)}<div class="intent-row-main"><strong>${escHtml(entry.dn)}</strong><span>${escHtml([entry.mod,entry.note,''].filter(Boolean).join(' · '))}</span></div><select aria-label="${escAttr(i18nCore.t('myList.priorityFor',{name:entry.dn}))}" onchange="editIntentEntry('${side}',${index},'p',this.value)">${['','H','M','L'].map(p=>`<option value="${p}" ${p===entry.p?'selected':''}>${escHtml(p?priLabel(p):i18nCore.t('product.other'))}</option>`).join('')}</select><button type="button" class="btn btn-ghost" aria-label="${escAttr(i18nCore.t('share.flagShiny'))}" aria-pressed="${!!entry.shiny}" onclick="editIntentEntry('${side}',${index},'shiny',${!entry.shiny})">${uiIconMarkup('sparkles','ui-icon')}</button><button type="button" class="btn btn-ghost" aria-label="${escAttr(i18nCore.t('myList.removeEntry',{name:entry.dn}))}" onclick="removeIntentEntry('${side}',${index})">${uiIconMarkup('trash','ui-icon')}</button>${intentDetailsHtml(entry)}</article>`;
   }).join('')||(myListIntent==='ft'?`<p class="empty">${escHtml(i18nCore.t('product.emptyOffers'))}</p>`:'');
   const visibleLegacy=filter&&myListIntent==='lf'?new Set(currentListEntries(myListType,filter,model).map(e=>e.name)):null;
   const scoped=model.entries.filter(e=>e.intent===myListIntent&&e.category===myListType&&(!filter||(e.ref.surface==='my-list'&&!e.ref.managed?visibleLegacy?.has(e.name):normalizeAcText(e.dn).includes(filter))));
@@ -6700,7 +6600,7 @@ function renderIntentEntries(query='',model=productDeclarations()){
   if(selectedHost?.textContent){if(bulkMode)renderSelectedIntentSearch();else selectedHost.replaceChildren();}
 }
 function contextualIntentSearchHtml(entries,title){
-  const plan=searchStringDomain.contextualSearchPlan(entries.map(entry=>({...entry,backgroundLabel:entry.backgroundId?i18nCore.t('background.badgeLabel',{name:backgroundDisplayName(entry.backgroundId)}):''})),{locale:pokemonGoSearchLocale()});
+  const plan=searchStringDomain.contextualSearchPlan(entries.filter(e=>e.intent!=='ft').map(entry=>({...entry,backgroundId:'',backgroundLabel:''})),{locale:pokemonGoSearchLocale()});
   return window.PogoUi.stringHtml.contextualSearchHtml(plan,{t:i18nCore.t,title});
 }
 function copyIntentSearch(){
@@ -6723,12 +6623,11 @@ function intentDetailsHtml(entry){
   return`<details class="intent-details"><summary>${escHtml(i18nCore.t('myList.flagsAndDetails'))}</summary><div class="intent-fields">
     ${input('mod','myList.variantDetails')}${input('note','product.note')}
     <label>${escHtml(i18nCore.t('product.gender'))}<select onchange="editIntentEntry('${side}',${index},'gender',this.value)">${['','f','m'].map(g=>`<option value="${g}" ${g===entry.gender?'selected':''}>${g==='f'?'♀':g==='m'?'♂':'—'}</option>`).join('')}</select></label>
-    <label>${escHtml(i18nCore.t('background.label'))}<select onchange="editIntentEntry('${side}',${index},'backgroundId',this.value)"><option value="">—</option>${entry.backgroundId?`<option selected value="${escAttr(entry.backgroundId)}">${escHtml(backgroundDisplayName(entry.backgroundId))}</option>`:''}</select></label>
     ${['lucky','xxl','xxs'].map(flag=>`<label><input type="checkbox" ${entry[flag]?'checked':''} onchange="editIntentEntry('${side}',${index},'${flag}',this.checked)">${escHtml(i18nCore.t({lucky:'myList.lucky',xxl:'share.flagXxl',xxs:'share.flagXxs'}[flag]))}</label>`).join('')}
     </div></details>`;
 }
 async function editIntentEntry(side,index,field,value){
-  const fields={p:'priority',shiny:'shiny',mod:'variant',gender:'gender',note:'note',backgroundId:'backgroundId',lucky:'lucky',xxl:'xxl',xxs:'xxs'};
+  const fields={p:'priority',shiny:'shiny',mod:'variant',gender:'gender',note:'note',lucky:'lucky',xxl:'xxl',xxs:'xxs'};
   if(!fields[field]||!accountSyncModel.fieldValueValid('tradeEntry',fields[field],value))return;
   const entry=productDeclarations().entries.find(e=>e.ref.managed&&e.ref.side===side&&e.ref.entityId===index);if(!entry)return;
   const username=cur,uid=auth?.currentUser?.uid,authority=await accountSyncMutationAuthority();
@@ -6752,13 +6651,13 @@ async function removeIntentEntry(side,index){
   renderMyList();
 }
 async function addManagedIntentEntries(side,entries){
-  if(!['lf','ft'].includes(side)||!entries.length)return false;
+  if(side!=='lf'||!entries.length)return false;
   const username=cur,uid=auth?.currentUser?.uid,authority=await accountSyncMutationAuthority();
   if(username!==cur||uid!==auth?.currentUser?.uid||authority.mode!=='canonical'||!accountSyncAuthorityCurrent(authority)){toast(i18nCore.t('product.editSyncRequired'));return false;}
   const mutations=[];
   for(const entry of entries){
     const catalog=accountSyncCatalogIdentity('wishlist',entry.name,entry);if(!catalog)return false;
-    const identity={surface:'my-list',lane:side==='lf'?'looking-for':'for-trade',catalogId:catalog.catalogId},entityId=accountSyncModel.tradeEntryId(identity);
+    const identity={surface:'my-list',lane:'looking-for',catalogId:catalog.catalogId},entityId=accountSyncModel.tradeEntryId(identity);
     if(accountSyncCanonicalEntities.some(e=>e.entityId===entityId&&!e.deleted))continue;
     mutations.push({kind:'add',entityType:'tradeEntry',entityId,identity,values:accountSyncProduct.tradeValues(entry)});
   }
@@ -6851,11 +6750,11 @@ async function addEntry(){
   const xxl=!!document.getElementById('add-pmon-xxl')?.checked;
   const xxs=!!document.getElementById('add-pmon-xxs')?.checked;
   const shiny=!!document.getElementById('add-pmon-shiny')?.checked;
-  const backgroundId=normalizeBackgroundId(document.getElementById('add-pmon-background')?.value);
+  const backgroundId='';
   if(!name){toast(i18nCore.t('myList.selectPokemon'));return;}
   const dn=acItems.find(x=>x.name===name)?.dn||name;
-  if(myListIntent==='ft'||(!pri&&!lucky&&!xxl&&!xxs&&!shiny&&!backgroundId)){
-    const board=getStoredSpecialBoard(),side=myListIntent,source=_nameToSpriteEntry(name);
+  if(!pri&&!lucky&&!xxl&&!xxs&&!shiny){
+    const board=getStoredSpecialBoard(),side='lf',source=_nameToSpriteEntry(name);
     const entry=intentBoardEntry(name,{p:pri,mod:notes,gender:entryGender(notes)||source.gender||'',lucky,xxl,xxs,shiny,backgroundId});
     if(productDeclarations().entries.some(e=>e.intent===side&&pokemonCatalogDomain.catalogKey(e.name)===pokemonCatalogDomain.catalogKey(entry.name))){toast(i18nCore.t('specialBoard.alreadyOnSide'));return;}
     board[side].push(entry);
@@ -6877,7 +6776,6 @@ async function addEntry(){
     document.querySelectorAll('.add-pri-btn').forEach(b=>{b.classList.remove('on','H','M','L');b.setAttribute('aria-pressed','false');});
     ['add-pmon-lucky','add-pmon-xxl','add-pmon-xxs','add-pmon-shiny'].forEach(id=>{const el=document.getElementById(id);if(el)el.checked=false;});
     const background=document.getElementById('add-pmon-background');if(background)background.value='';
-    updateAddBackgroundPresentation();
   }
   closeAddAutocomplete();
   buildAcItems();
@@ -6970,7 +6868,7 @@ function myListViewModel(type,user,name,value,srcMap){
   const sourceEntry={...entry,name:entry.name||name,displayName:entry.displayName||name};
   const dn=pokemonDisplayName(sourceEntry),gender=entryGender(mod);
   const model={
-    name,dn,p,mod,lucky,xxl,xxs,shiny,backgroundId,gender,
+    name,dn,p,mod,lucky,xxl,xxs,shiny,backgroundId:'',gender,
     no:spriteEntry.no||entry.no||null,
     catalogId:sourceEntry.catalogId||spriteEntry.catalogId||entry.catalogId||'',
     maxType:maxTypeForEntry(entry,type),
@@ -6978,8 +6876,8 @@ function myListViewModel(type,user,name,value,srcMap){
     spriteUrl:entrySpriteUrl(spriteEntry.no?spriteEntry:entry,name,gender),
     search:normalizeAcText([
       ...pokemonSearchLabels(sourceEntry),mod,
-      backgroundId&&backgroundDisplayName(backgroundId),
-      backgroundId&&backgroundShortLabel(backgroundId)
+      backgroundId&&'',
+      backgroundId&&''
     ].filter(Boolean).join(' ')),
     rawValue:value
   };
@@ -7072,7 +6970,6 @@ function myListEditorHtml(entry){
       <button class="flag-btn xxs-flag ${xxs?'on':''}" onclick="setXxs('${jsName}')" title="XXS" aria-pressed="${xxs}" aria-label="${escAttr(i18nCore.t('myList.toggleXxsFor',{name:dn}))}">XXS</button>
     </div>
     <div class="myrow-editor-fields"><input class="ni" type="text" value="${escAttr(mod)}" placeholder="${escAttr(i18nCore.t('myList.variantDetails'))}" onchange="setNotes('${jsName}',this.value)" aria-label="${escAttr(i18nCore.t('myList.notesFor',{name:dn}))}"></div>
-    <button type="button" class="background-trigger" onclick="openBackgroundPicker({target:'entry',name:'${jsName}',pokemonName:'${jsDn}'})" aria-haspopup="dialog"><span class="background-trigger-copy">${escHtml(backgroundId?backgroundDisplayName(backgroundId):i18nCore.t('background.none'))}</span><span class="background-trigger-clear">${escHtml(backgroundId?i18nCore.t('common.change'):i18nCore.t('background.choose'))}</span></button>
   </div>`;
 }
 function hydrateMyRowEditor(details){
@@ -7109,19 +7006,19 @@ function myListRowHtml(entry,idx,count){
       shiny?`<span class="myrow-trait shiny">${escHtml(i18nCore.t('myList.shiny'))}</span>`:'',
       xxl?'<span class="myrow-trait xxl">XXL</span>':'',
       xxs?'<span class="myrow-trait xxs">XXS</span>':'',
-      backgroundId?backgroundBadgeHtml(backgroundId,'myrow-trait background'):'',
+      '',
       mod?`<span class="myrow-trait detail">${escHtml(mod)}</span>`:''
     ].join('');
     const priorityIndex=idx,priorityCount=count;
-    return`<div class="myrow${isSel?' bulk-selected':''}${backgroundId?` background-visual-card ${backgroundVisualClass(backgroundId)}`:''}" ${backgroundId?backgroundVisualAttrs(backgroundId):''} ${reorderMode&&!bulkMode?'draggable="true"':''} data-name="${attrName}" data-priority="${escAttr(p||'')}" data-dex="${no||''}" data-idx="${idx}" data-render-key="${escAttr(myListRowRenderKey(entry,idx,count))}" data-full="${escAttr(dn)}" aria-label="${escAttr(dn)}" ${clickHandler}
+    return`<div class="myrow${isSel?' bulk-selected':''}"  ${reorderMode&&!bulkMode?'draggable="true"':''} data-name="${attrName}" data-priority="${escAttr(p||'')}" data-dex="${no||''}" data-idx="${idx}" data-render-key="${escAttr(myListRowRenderKey(entry,idx,count))}" data-full="${escAttr(dn)}" aria-label="${escAttr(dn)}" ${clickHandler}
       ondragstart="dragStart(event)" ondragover="dragOver(event)" ondrop="dragDrop(event)" ondragend="dragEnd(event)">
-      ${backgroundVisualMotifHtml(backgroundId)}
+
       <input type="checkbox" class="bulk-chk" data-name="${attrName}" ${isSel?'checked':''} onclick="event.stopPropagation();toggleBulkSelection('${jsName}')" aria-label="${escAttr(i18nCore.t('myList.selectEntry',{name:dn}))}">
       ${reorderMode?`<button type="button" class="drag-handle" draggable="false" title="${escAttr(i18nCore.t('myList.reorderEntry',{name:dn}))}" aria-label="${escAttr(i18nCore.t('myList.reorderEntry',{name:dn}))}" onpointerdown="myListPointerStart(event)" onpointermove="myListPointerMove(event)" onpointerup="myListPointerEnd(event)" onpointercancel="myListPointerCancel(event)">${uiIconMarkup('grip','ui-icon')}</button><span class="myrow-reorder-controls"><button type="button" class="myrow-reorder-move" data-reorder-move="up" draggable="false" ${priorityIndex<=0?'disabled':''} aria-label="${escAttr(i18nCore.t('myList.moveUp',{name:dn}))}" onclick="event.stopPropagation();moveMyListEntry('${jsName}',-1)">${uiIconMarkup('chevron-down','ui-icon')}</button><button type="button" class="myrow-reorder-move" data-reorder-move="down" draggable="false" ${priorityIndex>=priorityCount-1?'disabled':''} aria-label="${escAttr(i18nCore.t('myList.moveDown',{name:dn}))}" onclick="event.stopPropagation();moveMyListEntry('${jsName}',1)">${uiIconMarkup('chevron-down','ui-icon')}</button></span>`:''}
       ${hasSprite?`<span class="myrow-sprite-wrap sprite-slot-list">${spriteImg(no,34,'myrow-sprite',name,'',dn,{urlOverride:entry.spriteUrl,catalogId:entry.catalogId})}${crownHtml}</span>`:crownHtml}
       <div class="myrow-copy">
         <div class="myrow-name">${escHtml(dn)}</div>
-        ${activeTraits?`<div class="myrow-active-traits" aria-label="${escAttr(i18nCore.t('myList.currentFlags',{flags:[lucky&&i18nCore.t('myList.lucky'),shiny&&i18nCore.t('myList.shiny'),xxl&&'XXL',xxs&&'XXS',backgroundId&&i18nCore.t('background.badgeLabel',{name:backgroundDisplayName(backgroundId)}),mod].filter(Boolean).join(', ')}))}">${activeTraits}</div>`:''}
+        ${activeTraits?`<div class="myrow-active-traits" aria-label="${escAttr(i18nCore.t('myList.currentFlags',{flags:[lucky&&i18nCore.t('myList.lucky'),shiny&&i18nCore.t('myList.shiny'),xxl&&'XXL',xxs&&'XXS',backgroundId&&i18nCore.t('background.badgeLabel',{name:''}),mod].filter(Boolean).join(', ')}))}">${activeTraits}</div>`:''}
       </div>
       <div class="mctrl">
         ${p?`<details class="myrow-priority-quick" onclick="event.stopPropagation()" ontoggle="hydrateMyRowPriority(this)"><summary class="myrow-priority-chip ${p}" aria-label="${escAttr(i18nCore.t('myList.changePriorityFor',{name:dn,priority:i18nCore.t({'H':'priority.high','M':'priority.medium','L':'priority.low'}[p])}))}">${p}</summary></details>`:''}
@@ -7665,7 +7562,6 @@ function exportEntryNoteLabel(e){
   };
   const spinda=spindaExportPatternLabel(e);
   addLabel(spinda);
-  if(e?.backgroundId)addLabel(`${backgroundShortLabel(e.backgroundId)} BG`);
   let text=String(e?.mod||'').trim().replace(/\s+/g,' ');
   if(spinda){
     text=text
@@ -8169,13 +8065,7 @@ async function setLucky(name){await _setFlags(name,s=>({...s,lucky:!s.lucky}));}
 async function setXxl(name){await _setFlags(name,s=>{const nx=!s.xxl;return{...s,xxl:nx,xxs:nx?false:s.xxs};});}
 async function setXxs(name){await _setFlags(name,s=>{const ns=!s.xxs;return{...s,xxs:ns,xxl:ns?false:s.xxl};});}
 async function setShiny(name){await _setFlags(name,s=>({...s,shiny:!s.shiny}));}
-async function setBackground(name,backgroundId){
-  const list={...(allData[myListType]?.[cur]||{})};if(!Object.prototype.hasOwnProperty.call(list,name))return;
-  const parsed=parsePri(list[name]);
-  list[name]=priValue(parsed.p,parsed.mod,parsed.lucky,parsed.xxl,parsed.xxs,parsed.shiny,backgroundId);
-  if(!await writeList(myListType,cur,list))return;
-  renderMyList();
-}
+
 async function removeEntry(name){
   if(!requireOwnedListHydration(myListType,cur))return;
   const srcArr=listSource(myListType);
@@ -8551,7 +8441,6 @@ function setOwnerPreviewCommunityId(id){
   renderBrowse();
   renderStrings();
   renderSchedule();
-  if(haveView==='browse')renderHaveBrowse();
 }
 function setOwnerCommunityPreview(on){
   if(!ownerCanUseCommunityTools())return;
@@ -8561,7 +8450,6 @@ function setOwnerCommunityPreview(on){
   renderBrowse();
   renderStrings();
   renderSchedule();
-  if(haveView==='browse')renderHaveBrowse();
 }
 function ownerPreviewCommunityMemberUsernames(){
   if(!ownerCommunityPreviewOn())return null;
@@ -9763,14 +9651,13 @@ async function requestAccountSyncRecovery(){
 function accountSyncConflictFieldLabel(path){
   if(path==='priority')return i18nCore.t('myList.priority');
   if(path==='variant')return i18nCore.t('myList.variantDetails');
-  if(path==='backgroundId')return i18nCore.t('background.label');
   if(String(path).startsWith('tagIds/'))return i18nCore.t('accountSync.favoriteTag');
   const labelKeys={gender:'accountSync.fieldGender',lucky:'accountSync.fieldLucky',xxl:'accountSync.fieldXxl',xxs:'accountSync.fieldXxs',shiny:'accountSync.fieldShiny',sortOrder:'accountSync.fieldOrder',quantity:'accountSync.fieldQuantity',note:'accountSync.fieldNotes',mirror:'accountSync.fieldMirror'};
   return i18nCore.t(labelKeys[path]||'accountSync.changedValue');
 }
 function accountSyncConflictValue(path,value){
   if(path==='priority')return value?i18nCore.t(`priority.${{H:'high',M:'medium',L:'low'}[value]}`):i18nCore.t('accountSync.none');
-  if(path==='backgroundId')return value?backgroundDisplayName(value):i18nCore.t('background.none');
+  if(path==='backgroundId')return value?'':i18nCore.t('background.none');
   if(typeof value==='boolean')return i18nCore.t(value?'accountSync.on':'accountSync.off');
   return String(value??'').trim()||i18nCore.t('accountSync.none');
 }
@@ -10080,7 +9967,6 @@ function openSettingsTool(tool){
   setTimeout(()=>{
     if(tool==='health')openLoginHealthCheck();
     else if(tool==='shortcuts')openModal('shortcuts-modal',{returnFocus:document.getElementById('account-trigger')});
-    else if(tool==='inventory')openLegacyInventoryTool();
     else if(tool==='import')openImport();
     else if(tool==='export'){switchTab('mylist');requestAnimationFrame(()=>document.getElementById('export-menu-btn')?.click());}
     else if(tool==='safe-transfer')openSafeTransferModal();
@@ -10310,7 +10196,7 @@ function tradeIntentQualifierTokens(intent){
   if(intent.shiny)tokens.push({label:i18nCore.t('share.flagShiny')});
   if(intent.xxl)tokens.push({label:i18nCore.t('share.flagXxl')});
   if(intent.xxs)tokens.push({label:i18nCore.t('share.flagXxs')});
-  if(intent.backgroundId)tokens.push({label:i18nCore.t('background.badgeLabel',{name:backgroundDisplayName(intent.backgroundId)}),cls:'background',backgroundId:intent.backgroundId});
+  if(intent.backgroundId)tokens.push({label:i18nCore.t('background.badgeLabel',{name:''}),cls:'background',backgroundId:intent.backgroundId});
   const gender=intent.gender||entryGender(intent.mod);
   if(gender)tokens.push({label:i18nCore.t(gender==='f'?'share.flagFemale':'share.flagMale')});
   const detail=tradeIntentFreeform(intent.mod);
@@ -10348,8 +10234,8 @@ function renderTradeMatchSummary(them){
     const img=it.no?spriteImg(it.no,38,'',it.name,it.gender||'',it.dn):'<span aria-hidden="true">◌</span>';
     const gender=it.gender?` ${it.gender==='f'?'♀':'♂'}`:'';
     const qualifiers=tradeIntentQualifierTokens(it);
-    if(it.backgroundId&&!qualifiers.some(token=>token.cls==='background'))qualifiers.push({label:i18nCore.t('background.badgeLabel',{name:backgroundDisplayName(it.backgroundId)}),cls:'background',backgroundId:it.backgroundId});
-    return`<article class="diff-match-chip ${cls}${it.backgroundId?` background-visual-card ${backgroundVisualClass(it.backgroundId)}`:''}" ${it.backgroundId?backgroundVisualAttrs(it.backgroundId):''} title="${escAttr(it.dn+gender)}">${backgroundVisualMotifHtml(it.backgroundId)}${img}<div class="diff-match-main"><span class="diff-match-name">${escHtml(it.dn)}${gender}</span>${qualifiers.length?`<span class="diff-match-qualifiers">${qualifiers.map(token=>token.backgroundId?backgroundBadgeHtml(token.backgroundId,'diff-match-qualifier background'):`<span class="diff-match-qualifier ${escAttr(token.cls||'')}">${escHtml(token.label)}</span>`).join('')}</span>`:''}</div></article>`;
+    if(it.backgroundId&&!qualifiers.some(token=>token.cls==='background'))qualifiers.push({label:i18nCore.t('background.badgeLabel',{name:''}),cls:'background',backgroundId:it.backgroundId});
+    return`<article class="diff-match-chip ${cls}"  title="${escAttr(it.dn+gender)}">${img}<div class="diff-match-main"><span class="diff-match-name">${escHtml(it.dn)}${gender}</span>${qualifiers.length?`<span class="diff-match-qualifiers">${qualifiers.map(token=>token.backgroundId?'':`<span class="diff-match-qualifier ${escAttr(token.cls||'')}">${escHtml(token.label)}</span>`).join('')}</span>`:''}</div></article>`;
   };
   const box=(cls,title,direction,items,available,empty)=>`<section class="diff-match-box ${cls}" aria-labelledby="trade-match-${cls}-title">
     <div class="diff-match-title" id="trade-match-${cls}-title">${escHtml(title)}<span class="diff-match-count">${available?i18nCore.formatNumber(items.length):'—'}</span></div>
@@ -10360,7 +10246,6 @@ function renderTradeMatchSummary(them){
   return`<div class="trade-match-intro"><strong>${escHtml(i18nCore.t('tradeMatch.summary'))}</strong><span>${escHtml(i18nCore.t('tradeMatch.intro',{trainer:them}))}</span></div>
     <div class="trade-match-overview" aria-label="${escAttr(i18nCore.t('tradeMatch.detailsLabel'))}">${tradeMatchMetric(i18nCore.t('tradeMatch.bothWant'),m.both,m.availability.wants)}${tradeMatchMetric(i18nCore.t('tradeMatch.onlyIWant'),m.onlyMine,m.availability.wants)}${tradeMatchMetric(i18nCore.t('tradeMatch.onlyTheyWant',{trainer:them}),m.onlyTheirs,m.availability.wants)}</div>
     <div class="diff-match-panel" aria-label="${escAttr(i18nCore.t('tradeMatch.detailsLabel'))}">
-    ${m.offersAvailable?box('they-offer',i18nCore.t('product.theyOffer'),i18nCore.t('product.offerScope'),m.theyOffer,true,i18nCore.t('trainer.noVisibleMatch'))+box('i-offer',i18nCore.t('product.iOffer'),i18nCore.t('product.offerScope'),m.iOffer,true,i18nCore.t('trainer.noVisibleMatch')):`<p>${escHtml(i18nCore.t('product.offersUnavailable'))}</p>`}
     ${box('both',i18nCore.t('tradeMatch.bothWant'),i18nCore.t('tradeMatch.bothDirection',{trainer:them}),m.both,m.availability.wants,i18nCore.t('tradeMatch.emptyBoth',{trainer:them}))}
     ${box('mine',i18nCore.t('tradeMatch.onlyIWant'),i18nCore.t('tradeMatch.mineDirection',{trainer:them}),m.onlyMine,m.availability.wants,i18nCore.t('tradeMatch.emptyMine',{trainer:them}))}
     ${box('theirs',i18nCore.t('tradeMatch.onlyTheyWant',{trainer:them}),i18nCore.t('tradeMatch.theirsDirection',{trainer:them}),m.onlyTheirs,m.availability.wants,i18nCore.t('tradeMatch.emptyTheirs',{trainer:them}))}
@@ -10664,13 +10549,13 @@ function renderDiffModal(){
       priHtml=`<span class="diff-prio-badge ${theirs}" title="${escAttr(them)}: ${escAttr(priLabel(theirs))}">${theirs}</span>`;
     }
     const genderHtml=e.gender?`<span class="share-pcard-gender ${e.gender}" style="position:absolute;bottom:-2px;right:-2px">${e.gender==='f'?'♀':'♂'}</span>`:'';
-    return`<div class="diff-card${isMismatch?' has-mismatch':''}${e.backgroundId?` background-visual-card ${backgroundVisualClass(e.backgroundId)}`:''}" ${e.backgroundId?backgroundVisualAttrs(e.backgroundId):''} title="${escAttr(e.dn)}">
-      ${backgroundVisualMotifHtml(e.backgroundId)}
+    return`<div class="diff-card${isMismatch?' has-mismatch':''}"  title="${escAttr(e.dn)}">
+
       <div class="diff-card-sprite-wrap">${e.no?spriteImg(e.no,26,'share-pcard-sprite',e.name,e.gender,e.dn):'🎮'}${genderHtml}</div>
       <div class="diff-card-info">
         <span class="diff-card-name">${escHtml(e.dn)}</span>
         ${priHtml?`<span class="diff-card-prio">${priHtml}</span>`:''}
-        ${e.backgroundId?backgroundBadgeHtml(e.backgroundId,'share-pcard-flag background'):''}
+
       </div>
     </div>`;
   };
@@ -11060,7 +10945,7 @@ function openAddShownResultsModal(){
     flags.xxl?'XXL':'',
     flags.xxs?'XXS':'',
     flags.notes?'notes':'',
-    flags.backgroundId?`${backgroundShortLabel(flags.backgroundId)} BG`:''
+    ''
   ].filter(Boolean).join(' · ');
   const modalHtml=`<div class="ov open" id="addshown-modal" role="dialog" aria-modal="true">
     <div class="modal" style="max-width:500px">
@@ -11453,7 +11338,6 @@ function diffValueSummary(v){
   if(shiny)bits.push('Shiny');
   if(xxl)bits.push('XXL');
   if(xxs)bits.push('XXS');
-  if(backgroundId)bits.push(`${backgroundDisplayName(backgroundId)} BG`);
   if(mod)bits.push(mod);
   return bits.join(' · ');
 }
@@ -11553,17 +11437,14 @@ function closeExportMenu(){
 }
 function productTextRows(){
   return productDeclarations().entries.map(e=>({
-    intent:i18nCore.t(e.intent==='ft'?'product.ft':'product.lf'),name:e.dn,no:e.no||'',priority:e.p||'',
-    shiny:e.shiny===true,lucky:e.lucky===true,xxl:e.xxl===true,xxs:e.xxs===true,gender:e.gender||'',variant:e.mod||'',backgroundId:e.backgroundId||'',background:e.backgroundId?backgroundDisplayName(e.backgroundId):'',note:e.note||''
+    intent:i18nCore.t('wants.title'),name:e.dn,no:e.no||'',priority:e.p||'',
+    shiny:e.shiny===true,lucky:e.lucky===true,xxl:e.xxl===true,xxs:e.xxs===true,gender:e.gender||'',variant:e.mod||'',note:e.note||''
   }));
 }
 async function exportMyListMarkdown(){
   const entries=productTextRows();if(!entries.length){toast(i18nCore.t('export.entriesRequired'));return;}
   const profile=allData.users?.[cur]||{};
-  const text=['## '+cur,...[profile.friendCode,profile.discord,profile.bio].filter(Boolean),...['lf','ft'].flatMap(side=>{
-    const label=i18nCore.t(side==='ft'?'product.ft':'product.lf'),rows=entries.filter(e=>e.intent===label);
-    return rows.length?['','### '+label,...rows.map(e=>'- '+[e.name,e.priority,e.shiny?'✨':'',e.gender==='f'?'♀':e.gender==='m'?'♂':'',e.lucky?i18nCore.t('myList.lucky'):'',e.xxl?'XXL':'',e.xxs?'XXS':'',e.variant,e.background,e.note].filter(Boolean).join(' · '))]:[];
-  })].join('\n');
+  const text=['## '+cur,...[profile.friendCode,profile.discord,profile.bio].filter(Boolean),'','### '+i18nCore.t('wants.title'),...entries.map(e=>'- '+[e.name,e.priority,e.shiny?'✨':'',e.gender==='f'?'♀':e.gender==='m'?'♂':'',e.lucky?i18nCore.t('myList.lucky'):'',e.xxl?'XXL':'',e.xxs?'XXS':'',e.variant,e.note].filter(Boolean).join(' · '))].join('\n');
   try{await copyText(text);toast(i18nCore.t('export.markdownCopied'));}catch{toast(i18nCore.t('strings.copyFailed'));}
 }
 function exportMyListCSV(){
@@ -11576,7 +11457,7 @@ function exportMyListCSV(){
   const rows=[Object.keys(entries[0]),...entries.map(e=>Object.values(e))];
   const csv=rows.map(row=>row.map(cell).join(',')).join('\n');
   const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
-  const a=document.createElement('a');a.href=url;a.download=`pogo-${safeFilePart(cur)}-lf-ft.csv`;
+  const a=document.createElement('a');a.href=url;a.download=`pogo-${safeFilePart(cur)}-wants.csv`;
   document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
   toast(i18nCore.t('export.csvDownloaded'));
 }
@@ -11629,6 +11510,7 @@ function getSpecialBoard(){
 async function writeSpecialBoard(board){
   const session={uid:String(auth?.currentUser?.uid||''),username:cur};
   const baseBoard=getStoredSpecialBoard();
+  board={lf:board.lf,ft:baseBoard.ft};
   const authority=await accountSyncMutationAuthority();
   if(session.username!==cur||session.uid!==String(auth?.currentUser?.uid||''))return false;
   if(authority.mode==='blocked'){toast(i18nCore.t('storage.offlineRecoveryUnavailable'),5000);return false;}
@@ -11642,6 +11524,12 @@ async function writeSpecialBoard(board){
   return true;
 }
 let _specialAcFocus={lf:-1,ft:-1};
+function selectableSpriteEntry(entry){
+  const context=spriteCatalogContext(entry.no,entry.name,entry.displayName||entry.name,entry.catalogId);
+  if(context.unresolved)return false;
+  const reviewed=costumeSpriteCatalogDomain.resolution({names:context.lookupKeys,gender:entry.gender});
+  return !reviewed.knownVariant||reviewed.status==='exact'&&reviewed.urls.length>0;
+}
 function _specialAllItems(){
   // Reuse the wishlist autocomplete pool (now includes legendaries via listSource)
   const seen=new Set();const out=[];
@@ -11649,6 +11537,7 @@ function _specialAllItems(){
     listSource(t).forEach(e=>{
       const key=e?.catalogId||pokemonCatalogDomain.catalogKey(e?.name);
       if(!e?.name||seen.has(key))return;
+      if(!selectableSpriteEntry(e))return;
       seen.add(key);
       const item={name:e.name,dn:pokemonDisplayName(e),canonicalDn:e.displayName||e.name,no:e.no||null,spriteUrl:entrySpriteUrl(e,e.name),catalogId:key,gender:['f','m'].includes(e.gender)?e.gender:'',legacyAliases:e.legacyAliases,searchAliases:e.searchAliases};
       item.search=normalizeAcText(pokemonSearchLabels(e).join(' '));
@@ -11727,7 +11616,7 @@ function toggleBoardSelection(key,selected){
 }
 function renderBoardContextualSearch(){
   const host=document.getElementById('board-contextual-search');if(!host)return;
-  const board=getSpecialBoard();host.innerHTML=contextualIntentSearchHtml([...board.lf,...board.ft],i18nCore.t('contextSearch.selection'));
+  const board=getSpecialBoard();host.innerHTML=contextualIntentSearchHtml(board.lf,i18nCore.t('contextSearch.selection'));
 }
 function renderSpecialBoard(){
   if(boardCurationOwner!==cur){boardCurationOwner=cur;boardHiddenKeys=new Set();}
@@ -12180,7 +12069,7 @@ function publicShareAction(event){
 document.getElementById('share-hdr')?.addEventListener('click',publicShareAction);
 document.getElementById('share-list-tabs')?.addEventListener('click',publicShareAction);
 function renderShareView(username,type,intent){
-  intent=intent||(_activeShareView?.username===username?_activeShareView.intent:'lf')||'lf';
+  intent='lf';
   _activeShareView={username,type,intent};
   const ud=allData.users?.[username]||{};
   const declarations=productDeclarations(username).entries.filter(entry=>entry.intent===intent),list=declarations.filter(entry=>entry.category===type);
@@ -12204,7 +12093,7 @@ function renderShareView(username,type,intent){
     </div>`;
   // Tabs
   const tabs=document.getElementById('share-list-tabs');
-  tabs.innerHTML=(Array.isArray(ud.publicDeclarations)?`<div class="public-intent-tabs">${['lf','ft'].map(side=>`<button class="ltab ${side===intent?'active':''}" data-share-action="intent" data-intent="${side}" data-username="${escAttr(username)}" aria-pressed="${side===intent}">${escHtml(i18nCore.t(side==='lf'?'product.lf':'product.ft'))}</button>`).join('')}</div>`:'')+['wishlist','dynamax','gmax','costumes'].map(t=>{
+  tabs.innerHTML=['wishlist','dynamax','gmax','costumes'].map(t=>{
     const count=declarations.filter(entry=>entry.category===t).length;
     if(!count)return'';
     const label=publicShareListLabel(t);
@@ -12240,7 +12129,7 @@ function renderShareView(username,type,intent){
           e.shiny?`<span class="share-pcard-flag shiny" title="${escAttr(i18nCore.t('share.flagShiny'))}" style="color:#f472b6">✨</span>`:'',
           e.xxl?`<span class="share-pcard-flag xxl" title="${escAttr(i18nCore.t('share.flagXxl'))}">XXL</span>`:'',
           e.xxs?`<span class="share-pcard-flag xxs" title="${escAttr(i18nCore.t('share.flagXxs'))}">XXS</span>`:''
-          ,e.backgroundId?backgroundBadgeHtml(e.backgroundId,'share-pcard-flag background'):''
+          ,''
         ].filter(Boolean).join('');
         // Strip gender markers from mod display since we show ♂/♀ explicitly
         const modDisplay=String(e.mod||'').replace(/\b(female|male|f|m)\b/gi,'').replace(/\s+/g,' ').trim();
@@ -12249,8 +12138,8 @@ function renderShareView(username,type,intent){
         const spriteHtml=e.no
           ?`<div class="share-pcard-sprite-wrap">${spriteImg(e.no,26,'share-pcard-sprite',e.name,e.gender,e.dn)}${e.gender?`<span class="share-pcard-gender ${e.gender}">${e.gender==='f'?'♀':'♂'}</span>`:''}</div>`
           :'<div class="share-pcard-sprite" style="display:flex;align-items:center;justify-content:center;background:var(--bg2);border-radius:var(--radius-sm)">🎮</div>';
-        return `<div class="share-pcard card-row${e.backgroundId?` background-visual-card ${backgroundVisualClass(e.backgroundId)}`:''}" ${e.backgroundId?backgroundVisualAttrs(e.backgroundId):''} title="${escAttr(e.dn)}">
-          ${backgroundVisualMotifHtml(e.backgroundId)}
+        return `<div class="share-pcard card-row"  title="${escAttr(e.dn)}">
+
           ${spriteHtml}
           <div class="share-pcard-info">
             <span class="share-pcard-name">${escHtml(e.dn)}</span>
@@ -13477,157 +13366,9 @@ function _nameToSpriteEntry(name){
   }
   return{name,displayName:name,no:null};
 }
-function renderMyHave(filterVal){
-  const q=String(filterVal??document.getElementById('have-filter')?.value??'').toLowerCase();
-  const el=document.getElementById('have-mine-out');if(!el)return;
-  const inv=allData.have?.[cur]||{};
-  let entries=Object.entries(inv).map(([key,val])=>{
-    const {name,gender}=splitHaveKey(key);
-    const info=haveEntryInfo(val);
-    const e=_nameToSpriteEntry(name);
-    const sourceEntry={...e,name:e.name||name,displayName:e.displayName||name};
-    return{key,name,gender,qty:info.qty,mirrorOnly:info.mirrorOnly,dontNeedBack:info.dontNeedBack,giveaway:info.giveaway,note:info.note,mode:info.mode,dn:pokemonDisplayName(sourceEntry),search:normalizeAcText(pokemonSearchLabels(sourceEntry).join(' ')),no:e.no};
-  }).filter(e=>e.qty>0);
-  const normalizedQuery=normalizeAcText(q);
-  if(normalizedQuery)entries=entries.filter(e=>e.search.includes(normalizedQuery));
-  // Sort by dex, then base name, then gender (genderless first, then ♂, then ♀ — stable grouping)
-  const _gOrder={'':0,'m':1,'f':2};
-  entries.sort((a,b)=>(parseInt(a.no)||9999)-(parseInt(b.no)||9999)||comparePokemonLabels(a.dn,b.dn)||(_gOrder[a.gender]??9)-(_gOrder[b.gender]??9));
-  const totalCount=Object.values(inv).reduce((s,n)=>s+haveEntryInfo(n).qty,0);
-  const entryCount=Object.keys(inv).length;
-  const countEl=document.getElementById('have-count');
-  if(countEl)countEl.textContent=q?i18nCore.t('myList.filteredCount',{visible:i18nCore.formatNumber(entries.length),total:i18nCore.formatNumber(entryCount)}):i18nCore.t('myList.count',{count:i18nCore.formatNumber(entryCount)});
-  const totalEl=document.getElementById('have-total');
-  if(totalEl)totalEl.textContent=totalCount?i18nCore.t('inventory.totalPokemon',{count:i18nCore.formatNumber(totalCount)}):'';
-  if(!entries.length){
-    el.innerHTML=q?emptyHtml(i18nCore.t('myList.noMatches'),i18nCore.t('myList.clearFilter'),'search'):emptyHtml(i18nCore.t('inventory.legacyEmpty'),i18nCore.t('inventory.archiveHelp'),'archive');
-    return;
-  }
-  if(LEGACY_INVENTORY_READ_ONLY){
-    el.innerHTML=entries.map(e=>{
-      const gender=e.gender==='m'?' ♂':e.gender==='f'?' ♀':'';
-      const mode=i18nCore.t(`inventory.mode.${e.mode||'any'}`);
-      return`<div class="have-row" data-name="${escAttr(e.name)}" data-key="${escAttr(e.key)}">
-        <div class="have-row-sprite">${e.no?spriteImg(e.no,32,'',e.name,e.gender||'',e.dn):'🎮'}</div>
-        <div class="have-row-info"><div class="have-row-name">${escHtml(e.dn)}${gender}</div><div class="have-row-meta"><span>${escHtml(mode)}</span>${e.note?`<span> · ${escHtml(e.note)}</span>`:''}</div></div>
-        <span class="cb">×${e.qty}</span>
-      </div>`;
-    }).join('');
-    return;
-  }
-  // Incoming offers count
-  const incomingCount=totalOffersForRecipient(cur);
-  const inboxBanner=incomingCount>0?`<div class="inbox-banner" onclick="openIncomingOffersModal()">
-    <div class="inbox-banner-icon">📬</div>
-    <div class="inbox-banner-text">
-      <div class="inbox-banner-title">${incomingCount} incoming offer${incomingCount===1?'':'s'}</div>
-      <div class="inbox-banner-sub">Tap to review who's offering what (first-come-first-served)</div>
-    </div>
-    <div class="inbox-banner-arrow">→</div>
-  </div>`:'';
-  el.innerHTML=inboxBanner+entries.map(e=>{
-    // sk = escaped composite KEY (Heracross::m). snName = base name for offer-lookups etc.
-    const sk=e.key.replace(/'/g,"\\'").replace(/"/g,'&quot;');
-    const snName=e.name.replace(/'/g,"\\'").replace(/"/g,'&quot;');
-    const offerCount=countOffersForItem(cur,e.key);
-    const modeBadge=e.mirrorOnly
-      ?'<span class="have-mirror-badge" title="Only accepting the same Pokémon/form in return">🪞 Mirror only</span>'
-      :e.dontNeedBack
-        ?'<span class="have-dnb-badge" title="Fair trade — comparable rarity from my want list">🤝 Fair trade</span>'
-        :e.giveaway
-          ?`<span class="have-giveaway-badge" title="Giveaway — can't hold these any longer, take it for anything${e.note?'. Preference: '+escAttr(e.note):''}">📤 Giveaway${e.note?` · ${escHtml(e.note)}`:''}</span>`
-          :'';
-    const modeBtnClass=e.mirrorOnly?'mirror':e.dontNeedBack?'dnb':e.giveaway?'giveaway':'';
-    const modeBtnLabel=e.mirrorOnly?'🪞':e.dontNeedBack?'🤝':e.giveaway?'📤':'Open';
-    const modeBtnTitle=e.mirrorOnly?'Mirror only — click to switch to Fair trade'
-      :e.dontNeedBack?'Fair trade — click to switch to Giveaway'
-      :e.giveaway?'Giveaway — click to switch to Open'
-      :'Open — mirror preferred, but any want-list offer is okay; click to switch to Mirror only';
-    const editNoteBtn=e.giveaway?`<button class="have-mode-btn giveaway" onclick="event.stopPropagation();editInventoryNote('${sk}')" title="Edit giveaway preference note" style="min-width:32px;padding:5px 6px">✎</button>`:'';
-    const genderLabel=e.gender==='m'?'♂':e.gender==='f'?'♀':'⚥';
-    const genderTitle=e.gender==='m'?'Male — click for Female'
-      :e.gender==='f'?'Female — click to clear'
-      :'Gender (optional) — click to mark Male. Splits this entry off as a separate ♂ / ♀ row.';
-    const genderBtn=`<button class="have-gender-btn ${e.gender||'unset'}" onclick="event.stopPropagation();cycleInventoryGender('${sk}')" title="${genderTitle}" aria-label="${genderTitle}">${genderLabel}</button>`;
-    const genderMetaPill=e.gender?`<span class="have-gender-pill ${e.gender}" title="${e.gender==='f'?'Female':'Male'}-only listing">${e.gender==='f'?'♀':'♂'}</span>`:'';
-    const isSel=haveBulkSelected.has(e.key);
-    const rowClick=haveBulkMode?`onclick="event.stopPropagation();toggleHaveBulkSelection('${sk}')"`:'';
-    return`<div class="have-row${isSel?' bulk-selected':''}" data-name="${escAttr(e.name)}" data-key="${escAttr(e.key)}" ${rowClick}>
-      <input type="checkbox" class="bulk-chk" data-key="${sk}" ${isSel?'checked':''} onclick="event.stopPropagation();toggleHaveBulkSelection('${sk}')" aria-label="Select ${escAttr(e.dn)}">
-      <div class="have-row-sprite">${e.no?spriteImg(e.no,32,'',e.name,e.gender||'',e.dn):'🎮'}</div>
-      <div class="have-row-info">
-        <div class="have-row-name">${escHtml(e.dn)} ${genderMetaPill} ${offerCount?`<span class="offer-count-badge unseen" onclick="event.stopPropagation();openIncomingOffersModal('${sk}')" style="margin-left:4px">🔔 ${offerCount}</span>`:''}</div>
-        <div class="have-row-meta">
-          ${e.no?`<span class="have-row-dex">#${e.no}</span>`:''}
-          ${modeBadge}
-        </div>
-      </div>
-      ${editNoteBtn}
-      ${genderBtn}
-      <button class="have-mode-btn ${modeBtnClass}" onclick="event.stopPropagation();cycleInventoryMode('${sk}')" title="${modeBtnTitle}">${modeBtnLabel}</button>
-      <div class="have-row-qty-wrap">
-        <button class="have-row-qty-btn" onclick="event.stopPropagation();updateInventoryQty('${sk}',-1)" aria-label="Decrease quantity">−</button>
-        <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" class="have-row-qty" value="${e.qty}"
-          onclick="event.stopPropagation();this.select()"
-          onfocus="this.select()"
-          onchange="event.stopPropagation();setInventoryQty('${sk}',this.value)"
-          onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}else if(event.key==='Escape'){this.value='${e.qty}';this.blur();}"
-          aria-label="Quantity for ${escAttr(e.dn)} — click to edit">
-        <button class="have-row-qty-btn" onclick="event.stopPropagation();updateInventoryQty('${sk}',1)" aria-label="Increase quantity">+</button>
-      </div>
-      <button class="have-row-rm" onclick="event.stopPropagation();removeInventoryEntry('${sk}')" aria-label="Remove">×</button>
-    </div>`;
-  }).join('');
-}
-function exportLegacyInventoryCsv(){
-  const inv=allData.have?.[cur]||{};
-  const rows=[['Pokemon','Gender','Quantity','Mode','Note']];
-  Object.entries(inv).forEach(([key,value])=>{
-    const{name,gender}=splitHaveKey(key);
-    const info=haveEntryInfo(value);
-    if(info.qty<=0)return;
-    rows.push([name,gender,info.qty,info.mode,info.note||'']);
-  });
-  const csv=rows.map(row=>row.map(value=>`"${String(value??'').replace(/"/g,'""')}"`).join(',')).join('\n');
-  downloadBlob(new Blob([csv],{type:'text/csv;charset=utf-8'}),`${String(cur||'trainer').replace(/[^A-Za-z0-9_-]/g,'_')}-legacy-inventory.csv`);
-}
-function openIncomingOffersModal(scrollToItem=''){
-  const myOffers=Object.fromEntries(Object.entries(allData.offers?.[cur]||{}).filter(([,o])=>offerInReadScope(o,cur)));
-  // Group by itemName
-  const grouped={};
-  Object.entries(myOffers).forEach(([id,o])=>{
-    if(!grouped[o.itemName])grouped[o.itemName]=[];
-    grouped[o.itemName].push({id,...o});
-  });
-  Object.values(grouped).forEach(arr=>arr.sort((a,b)=>(a.t||0)-(b.t||0)));
-  const itemNames=Object.keys(grouped).sort();
-  const html=`<div class="ov open" id="incoming-modal" role="dialog" aria-modal="true" onclick="if(event.target===this)closeIncomingOffersModal()">
-    <div class="modal offer-modal" onclick="event.stopPropagation()">
-      <h3>📬 Incoming offers (${Object.keys(myOffers).length})</h3>
-      ${itemNames.length?itemNames.map(key=>{
-        const{name,gender}=splitHaveKey(key);
-        const e=_nameToSpriteEntry(name);
-        const offers=grouped[key];
-        const genderPill=gender?`<span class="have-gender-pill ${gender}" style="margin-left:4px">${gender==='f'?'♀':'♂'}</span>`:'';
-        return`<div class="have-pmon-card" id="inbox-${escAttr(offerKey(key))}" style="margin-bottom:8px;cursor:default">
-          <div class="have-row-sprite" style="width:32px;height:32px">${e.no?spriteImg(e.no,32,'',name,gender||'',e.displayName||name):'🎮'}</div>
-          <div class="have-pmon-info">
-            <div class="have-pmon-name" style="font-size:14px">${escHtml(pokemonDisplayName({...e,name:e.name||name,displayName:e.displayName||name}))}${genderPill}</div>
-            <div class="have-pmon-meta">${offers.length} offer${offers.length===1?'':'s'}</div>
-          </div>
-        </div>
-        <div class="offer-list" style="margin-bottom:14px">${renderOfferList(cur,key,{myView:true})}</div>`;
-      }).join(''):'<div class="offer-list-empty" style="padding:20px">No incoming offers yet. When trainers want to trade for your inventory items, they\'ll appear here.</div>'}
-      <div class="mact"><button class="bpri" onclick="closeIncomingOffersModal()">Done</button></div>
-    </div>
-  </div>`;
-  closeIncomingOffersModal();
-  const wrap=document.createElement('div');wrap.innerHTML=html;
-  document.body.appendChild(wrap.firstElementChild);
-  if(scrollToItem){
-    setTimeout(()=>document.getElementById('inbox-'+offerKey(scrollToItem))?.scrollIntoView({behavior:'smooth',block:'center'}),100);
-  }
-}
+
+
+
 function closeIncomingOffersModal(){document.getElementById('incoming-modal')?.remove();}
 function entryWantedByCur(name){
   const special=(allData.users?.[cur]?.specialTradeBoard?.lf||[]).find(entry=>pokemonCatalogDomain.catalogKey(entry?.name)===pokemonCatalogDomain.catalogKey(name));
@@ -13747,199 +13488,12 @@ function haveBrowseTrainerSummary(u,ctx){
     giveawayCount:allItems.filter(it=>it.giveaway).length
   };
 }
-function renderHaveBrowseItemCard(u,it,ctx){
-  const sk=it.key.replace(/'/g,"\\'").replace(/"/g,'&quot;');
-  const offerCount=ctx.offerCount(u,it.key);
-  const cardCls=`have-pmon-card ${it.match?'match':''} ${it.mirrorOnly?'mirror-only':''} ${it.dontNeedBack?'dnb':''} ${it.giveaway?'giveaway':''}`;
-  const cardTitle=it.mirrorOnly?`${it.dn}${it.gender?(it.gender==='f'?' ♀':' ♂'):''} — mirror only, same Pokémon/form only`
-    :it.dontNeedBack?`${it.dn}${it.gender?(it.gender==='f'?' ♀':' ♂'):''} — fair trade: comparable rarity from their want list`
-    :it.giveaway?`${it.dn}${it.gender?(it.gender==='f'?' ♀':' ♂'):''} — giveaway${it.note?', note: '+it.note:''}`
-    :it.dn+(it.gender?(it.gender==='f'?' ♀':' ♂'):'')+' — click to offer';
-  return`<div class="${cardCls}" title="${escAttr(cardTitle)}" onclick="openOfferModal('${escAttr(u)}','${sk}')" style="cursor:pointer">
-    <div class="have-row-sprite" style="width:24px;height:24px">${it.no?spriteImg(it.no,24,'',it.name,it.gender||'',it.dn,{scaleCap:1}):'🎮'}</div>
-    <div class="have-pmon-info">
-      <div class="have-pmon-name">${escHtml(it.dn)}${it.gender?` <span class="have-gender-pill ${it.gender}" title="${it.gender==='f'?'Female':'Male'} only">${it.gender==='f'?'♀':'♂'}</span>`:''}</div>
-      ${it.match?`<div class="have-pmon-meta">You want · ${it.match.p||(it.match.lucky?'⚡':'')||(it.match.xxl?'XXL':'')||(it.match.xxs?'XXS':'')}</div>`:''}
-      ${it.mirrorOnly?'<div class="have-pmon-meta mirror">🪞 Mirror only</div>':''}
-      ${it.dontNeedBack?'<div class="have-pmon-meta dnb">🤝 Fair trade</div>':''}
-      ${it.giveaway?`<div class="have-pmon-meta giveaway">📤 Giveaway</div>${it.note?`<div class="have-pmon-note" title="${escAttr(it.note)}">"${escHtml(it.note)}"</div>`:''}`:''}
-    </div>
-    <div class="have-pmon-qty">×${it.qty}</div>
-    ${offerCount?`<span class="offer-count-badge" title="${offerCount} pending offer${offerCount===1?'':'s'}">🔔 ${offerCount}</span>`:''}
-    ${it.match?'<span class="match-badge" title="Wishlist match" aria-label="Wishlist match">⭐</span>':''}
-  </div>`;
-}
-function hydrateHaveTrainerCard(card){
-  if(!card)return;
-  const body=card.querySelector('.have-trainer-body');
-  if(!body||body.dataset.loaded==='1')return;
-  const u=card.dataset.user||'';
-  const ctx=makeHaveBrowseContext(document.getElementById('have-browse-q')?.value||'');
-  const sortMode=card.dataset.sort||'default';
-  const items=sortHaveBrowseItems(haveBrowseTrainerSummary(u,ctx).items,sortMode);
-  body.innerHTML=items.length
-    ?`<div class="have-trainer-grid">${items.map(it=>renderHaveBrowseItemCard(u,it,ctx)).join('')}</div>
-      <button class="have-offer-btn" onclick="openOfferModal('${escAttr(u)}')">💬 General offer message to ${escHtml(u)}</button>`
-    :'<div class="have-empty-pmon">No visible inventory matches this filter.</div>';
-  body.dataset.loaded='1';
-}
-function sortHaveTrainerInventory(ev,btn,sortMode='default'){
-  if(ev){ev.preventDefault();ev.stopPropagation();}
-  const card=btn?.closest?.('.have-trainer-card');
-  if(!card)return;
-  card.dataset.sort=sortMode;
-  const body=card.querySelector('.have-trainer-body');
-  if(body)body.dataset.loaded='0';
-  if(!card.classList.contains('expanded'))card.classList.add('expanded');
-  hydrateHaveTrainerCard(card);
-  card.querySelectorAll('.have-trainer-pill').forEach(p=>p.classList.toggle('sort-on',p===btn));
-}
-function toggleHaveTrainerCard(card){
-  if(!card)return;
-  const expanded=card.classList.toggle('expanded');
-  if(expanded)hydrateHaveTrainerCard(card);
-}
-function renderHaveBrowse(){
-  return perfTime('render:inventory-browse',()=>_renderHaveBrowseInner());
-}
-function _renderHaveBrowseInner(){
-  const q=String(document.getElementById('have-browse-q')?.value||'').toLowerCase();
-  const el=document.getElementById('have-browse-out');if(!el)return;
-  const haveData=allData.have||{};
-  const ctx=makeHaveBrowseContext(q);
-  // Filter trainers (exclude self, only active users)
-  const allowed=inventoryBrowseAllowedUsers();
-  renderOwnerInventoryPreviewBanner(allowed);
-  if(haveSubTab==='trainer'){
-    const trainerSummaryCache=new Map();
-    const summaryFor=u=>{
-      if(!trainerSummaryCache.has(u))trainerSummaryCache.set(u,haveBrowseTrainerSummary(u,ctx));
-      return trainerSummaryCache.get(u);
-    };
-    let trainers=Object.keys(haveData).filter(u=>{
-      if(u===cur)return false;
-      if(allowed&&!allowed.has(u))return false;
-      return summaryFor(u).visibleCount>0;
-    }).sort((a,b)=>{
-      const sa=summaryFor(a),sb=summaryFor(b);
-      return sb.matchCount-sa.matchCount
-        || sb.totalQty-sa.totalQty
-        || sb.totalCount-sa.totalCount
-        || (allData.users?.[b]?.lastUpdated||0)-(allData.users?.[a]?.lastUpdated||0)
-        || a.localeCompare(b);
-    });
-    if(!trainers.length){
-      el.innerHTML=emptyHtml(haveMatchOnly?'No matching trainers':'No inventories yet',haveMatchOnly?'Turn off "Only matches" to see all inventories.':'When trainers add to their inventory, they\'ll appear here.','🎒');
-      return;
-    }
-    el.innerHTML=trainers.map(u=>{
-      const summary=summaryFor(u);
-      return`<div class="have-trainer-card" data-user="${escAttr(u)}">
-        <div class="have-trainer-hdr" onclick="toggleHaveTrainerCard(this.parentElement)">
-          <div class="have-trainer-id">
-            ${userAvatarHtml(u,32)}
-            <div style="min-width:0">
-              <div class="have-trainer-name">${escHtml(u)}</div>
-              <div class="have-trainer-count">${summary.totalCount} Pokémon · ${summary.totalQty} total</div>
-            </div>
-          </div>
-          <div class="have-trainer-summary" aria-label="${escAttr(u)} inventory summary">
-            <button type="button" class="have-trainer-pill match" onclick="sortHaveTrainerInventory(event,this,'match')" title="Sort this trainer by wishlist matches" aria-label="${summary.matchCount} Pokémon match your wishlist">⭐ ${summary.matchCount}</button>
-            <button type="button" class="have-trainer-pill total" onclick="sortHaveTrainerInventory(event,this,'all')" title="Sort this trainer by all visible entries" aria-label="${summary.visibleCount} visible inventory entries for this trainer">🎒 ${summary.visibleCount}</button>
-            ${summary.mirrorCount?`<button type="button" class="have-trainer-pill mirror" onclick="sortHaveTrainerInventory(event,this,'mirror')" title="Sort this trainer by mirror-only listings" aria-label="${summary.mirrorCount} mirror-only listing${summary.mirrorCount===1?'':'s'}">🪞 ${summary.mirrorCount}</button>`:''}
-            ${summary.dnbCount?`<button type="button" class="have-trainer-pill dnb" onclick="sortHaveTrainerInventory(event,this,'dnb')" title="Sort this trainer by fair-trade listings" aria-label="${summary.dnbCount} fair-trade listing${summary.dnbCount===1?'':'s'}">🤝 ${summary.dnbCount}</button>`:''}
-            ${summary.giveawayCount?`<button type="button" class="have-trainer-pill giveaway" onclick="sortHaveTrainerInventory(event,this,'giveaway')" title="Sort this trainer by giveaway listings" aria-label="${summary.giveawayCount} giveaway listing${summary.giveawayCount===1?'':'s'}">📤 ${summary.giveawayCount}</button>`:''}
-          </div>
-          <div class="have-trainer-actions">
-            <button type="button" class="have-trainer-action trade-match-fab" onclick="event.stopPropagation();openTradeMatchModal(this.closest('.have-trainer-card').dataset.user)" aria-label="Trade match with ${escAttr(u)}" title="Trade match with ${escAttr(u)}">🤝</button>
-          </div>
-          <span class="collapse-icon">▼</span>
-        </div>
-        <div class="have-trainer-body" data-loaded="0"></div>
-      </div>`;
-    }).join('');
-  }else{
-    // By Pokemon view: group inventory by BASE Pokemon name (♂/♀ variants of the
-    // same species merge into the same card, with gender shown per owner-chip).
-    const byPokemon={};
-    Object.entries(haveData).forEach(([user,inv])=>{
-      if(user===cur)return;
-      if(allowed&&!allowed.has(user))return;
-      Object.entries(inv||{}).forEach(([key,val])=>{
-        const{name,gender}=splitHaveKey(key);
-        const info=haveEntryInfo(val);
-        if(info.qty<=0)return;
-        if(!byPokemon[name])byPokemon[name]=[];
-        byPokemon[name].push({user,key,gender,qty:info.qty,mirrorOnly:info.mirrorOnly,dontNeedBack:info.dontNeedBack,giveaway:info.giveaway,note:info.note,mode:info.mode});
-      });
-    });
-    let pokemonList=Object.entries(byPokemon).map(([name,owners])=>{
-      const e=ctx.spriteEntry(name);
-      const want=ctx.wantFor(name);
-      const sourceEntry={...e,name:e.name||name,displayName:e.displayName||name};
-      return{name,dn:pokemonDisplayName(sourceEntry),search:normalizeAcText(pokemonSearchLabels(sourceEntry).join(' ')),no:e.no,owners,want};
-    });
-    if(haveMatchOnly)pokemonList=pokemonList.filter(p=>p.want);
-    if(q)pokemonList=pokemonList.filter(p=>p.search.includes(normalizeAcText(q))||p.owners.some(o=>o.user.toLowerCase().includes(q)));
-    pokemonList.sort((a,b)=>(b.want?1:0)-(a.want?1:0)||(parseInt(a.no)||9999)-(parseInt(b.no)||9999)||a.dn.localeCompare(b.dn));
-    if(!pokemonList.length){
-      el.innerHTML=emptyHtml(haveMatchOnly?'No matching Pokémon':'No inventories yet',haveMatchOnly?'Turn off "Only matches" to see all inventories.':'When trainers add to their inventory, they\'ll appear here.','🎒');
-      return;
-    }
-    el.innerHTML=pokemonList.map(p=>{
-      const totalQty=p.owners.reduce((s,o)=>s+o.qty,0);
-      const wantBadge=p.want?`<span class="event-pill" style="background:rgba(245,158,11,.15);color:var(--warn);border-color:rgba(245,158,11,.3)">⭐ You want (${p.want.p||''})</span>`:'';
-      return`<div class="have-by-pokemon-card">
-        <div class="have-by-pokemon-hdr">
-          <div class="have-row-sprite" style="width:34px;height:34px">${p.no?spriteImg(p.no,34,'',p.name,'',p.dn,{scaleCap:1}):'🎮'}</div>
-          <div class="have-by-pokemon-name">
-            <span class="pmname-text">${escHtml(p.dn)}</span>
-            ${wantBadge}
-          </div>
-          <div style="font-size:11px;color:var(--muted)">${p.owners.length} trainer${p.owners.length===1?'':'s'} · ${totalQty} total</div>
-        </div>
-        <div style="display:flex;flex-wrap:wrap;gap:5px">
-          ${p.owners.sort((a,b)=>b.qty-a.qty).map(o=>{
-            const ud=allData.users?.[o.user]||{};
-            const canDm=!!ud.discord;
-            const offerCount=ctx.offerCount(o.user,o.key);
-            const tooltip=o.mirrorOnly?'Mirror only: same Pokémon/form only'
-              :o.dontNeedBack?'Fair trade: comparable rarity from their want list'
-              :o.giveaway?`Giveaway — anything works${o.note?' · '+o.note:''}`
-              :canDm?'Click to offer trade':'No Discord linked, click to copy message';
-            return`<button class="have-trainer-chip ${p.want?'match':''}" onclick="openOfferModal('${escAttr(o.user)}','${escAttr(o.key)}')" title="${escAttr(tooltip)}">
-              ${escHtml(o.user)} <span class="qty">×${o.qty}</span>${o.gender?`<span class="have-gender-pill ${o.gender}" title="${o.gender==='f'?'Female':'Male'} only">${o.gender==='f'?'♀':'♂'}</span>`:''}${o.mirrorOnly?'<span class="have-mirror-badge mini">🪞</span>':''}${o.dontNeedBack?'<span class="have-dnb-badge mini">🤝</span>':''}${o.giveaway?'<span class="have-giveaway-badge mini">📤</span>':''}${offerCount?`<span class="offer-count-badge" style="margin-left:2px;padding:1px 5px;font-size:9px">🔔 ${offerCount}</span>`:''}
-            </button>`;
-          }).join('')}
-        </div>
-        ${(()=>{
-          // Show consolidated offers list under this Pokémon across all owners + gender variants
-          const allOwnerOffers=p.owners.flatMap(o=>ctx.offersFor(o.user,o.key).map(of=>({...of,recipient:o.user})));
-          if(!allOwnerOffers.length)return'';
-          allOwnerOffers.sort((a,b)=>(a.t||0)-(b.t||0));
-          return`<div style="margin-top:8px"><div class="offer-section-label" style="margin:6px 0 4px">Pending offers (FCFS):</div>
-            <div class="offer-list">${allOwnerOffers.map((o,i)=>{
-              const isFirst=i===0,isMine=o.from===cur;
-              const offeringHtml=(o.offering||[]).slice(0,4).map(n=>{
-                const e=ctx.spriteEntry(n);
-                const url=spriteUrl(e.no,e.name,'',e.displayName||e.name);
-                return`<span class="offer-item-chip">${url?`<img src="${url}" alt="" loading="lazy">`:'🎮'}${escHtml(pokemonDisplayName({...e,name:e.name||n,displayName:e.displayName||n}))}</span>`;
-              }).join('');
-              return`<div class="offer-row ${isFirst?'fcfs-first':''} ${isMine?'my-offer':''}">
-                <div class="offer-av">${userAvatarHtml(o.from,24)}</div>
-                <div class="offer-info">
-                  <div class="offer-from">${escHtml(o.from)}${isMine?' (you)':''} → ${escHtml(o.recipient)} ${isFirst?'<span class="fcfs-tag">1st</span>':''}<span class="time-tag">${relativeTime(o.t)}</span></div>
-                  ${o.offering&&o.offering.length?`<div class="offer-items">${offeringHtml}</div>`:'<div style="font-size:11px;color:var(--muted);font-style:italic">No specific items listed</div>'}
-                </div>
-                ${isMine?`<button class="offer-withdraw-btn" onclick="withdrawOffer('${escAttr(o.recipient)}','${o.id}').then(t=>{if(t)toast('Offer withdrawn');});">Withdraw</button>`:''}
-              </div>`;
-            }).join('')}</div>
-          </div>`;
-        })()}
-      </div>`;
-    }).join('');
-  }
-}
+
+
+
+
+
+
 // ── OFFER HISTORY (FCFS visibility) ──────────────────────────
 // Sanitize a Pokemon name for use as a Firebase key (no ., /, $, #, [, ])
 function offerKey(name){return String(name).replace(/[^A-Za-z0-9_-]/g,'_');}
@@ -14017,33 +13571,7 @@ function _acceptItemDetails(recipient,offerId,offerItemKey){
     maxQty:Math.min(recipientQty,bidderQty)
   };
 }
-function openAcceptModal(recipient,offerId,offerItemKey){
-  const d=_acceptItemDetails(recipient,offerId,offerItemKey);
-  if(!d){toast('Offer no longer exists');return;}
-  if(d.recipientQty<=0){toast(`You have no ${d.recipientName} left in your inventory.`);return;}
-  if(d.bidderQty<=0){toast(`${d.bidder} no longer has any ${d.bidderName}.`);return;}
-  _acceptCtx=d;
-  // Render the give/take summary
-  const giveSpr=d.recipientNo?spriteImg(d.recipientNo,48,'',d.recipientName,d.recipientGender||'',d.recipientName):'<span style="font-size:36px">🎮</span>';
-  const takeSpr=d.bidderNo?spriteImg(d.bidderNo,48,'',d.bidderName,d.bidderGender||'',d.bidderName):'<span style="font-size:36px">🎮</span>';
-  const gp=g=>g?` <span class="have-gender-pill ${g}" style="margin-left:2px">${g==='f'?'♀':'♂'}</span>`:'';
-  document.getElementById('accept-trade-summary').innerHTML=`
-    <div class="accept-side accept-side-give">
-      <div class="accept-side-label">You give</div>
-      <div class="accept-side-pkmn">${giveSpr}<div class="accept-side-name">${escHtml(d.recipientName)}${gp(d.recipientGender)}</div></div>
-      <div class="accept-side-stock">In stock: ×${d.recipientQty}</div>
-    </div>
-    <div class="accept-arrow">↔</div>
-    <div class="accept-side accept-side-take">
-      <div class="accept-side-label">You receive (from ${escHtml(d.bidder)})</div>
-      <div class="accept-side-pkmn">${takeSpr}<div class="accept-side-name">${escHtml(d.bidderName)}${gp(d.bidderGender)}</div></div>
-      <div class="accept-side-stock">They have: ×${d.bidderQty}</div>
-    </div>`;
-  document.getElementById('accept-qty-input').value=String(d.maxQty);
-  document.getElementById('accept-qty-input').max=String(d.maxQty);
-  _updateAcceptQtyHint();
-  openModal('accept-offer-modal');
-}
+
 function closeAcceptModal(){closeModal('accept-offer-modal');_acceptCtx=null;}
 function _updateAcceptQtyHint(){
   if(!_acceptCtx)return;
@@ -14311,55 +13839,7 @@ function _bidderLiveQty(bidder,offerItemKey){
 // "✓ Accept" chip — clicking opens the accept modal where qty is auto-capped
 // at min(your stock of the listed item, their stock of the offered item) and
 // confirming decrements both inventories.
-function renderOfferList(recipient,itemName,opts={}){
-  const offers=offersForItem(recipient,itemName);
-  if(!offers.length)return'<div class="offer-list-empty">No offers yet — be the first!</div>';
-  // Live qty of the listed item — drives whether Accept is even possible
-  const recipientLiveQty=haveEntryInfo(allData.have?.[recipient]?.[itemName]).qty;
-  return offers.map((o,i)=>{
-    const isFirst=i===0;
-    const isMine=o.from===cur;
-    const amRecipient=recipient===cur;
-    const canAccept=amRecipient&&!isMine&&recipientLiveQty>0;
-    const offeringHtml=(o.offering||[]).slice(0,6).map(k=>{
-      const{name,gender}=splitHaveKey(k);
-      const e=_nameToSpriteEntry(name);
-      const url=spriteUrl(e.no,e.name,gender||'',e.displayName||e.name);
-      const genderPill=gender?`<span class="have-gender-pill ${gender}" style="margin-left:2px">${gender==='f'?'♀':'♂'}</span>`:'';
-      // Live qty the bidder still has of this offering item (may be 0 if they've
-      // traded it away or removed it since posting the offer)
-      const bidderQty=_bidderLiveQty(o.from,k);
-      const qtyTag=bidderQty>0?`<span class="ofc-qty">×${bidderQty}</span>`:'';
-      const cls=canAccept?(bidderQty>0?'offer-item-chip acceptable':'offer-item-chip out-of-stock'):'offer-item-chip';
-      const sk=String(k).replace(/'/g,"\\'").replace(/"/g,'&quot;');
-      const onClick=(canAccept&&bidderQty>0)?` onclick="openAcceptModal('${escAttr(recipient)}','${o.id}','${sk}')" role="button" tabindex="0"`:'';
-      const display=pokemonDisplayName({...e,name:e.name||name,displayName:e.displayName||name});
-      const title=canAccept?(bidderQty>0?`Accept ${display} — opens qty picker`:`${o.from} no longer has any ${display}`):display;
-      return`<span class="${cls}" title="${escAttr(title)}"${onClick}>${url?`<img src="${url}" alt="" loading="lazy">`:'🎮'}${escHtml(display)}${genderPill}${qtyTag}</span>`;
-    }).join('');
-    const noneOffered=!o.offering||!o.offering.length;
-    const msgHtml=o.message?`<button class="offer-msg-toggle" onclick="this.nextElementSibling.classList.toggle('shown')" aria-expanded="false">💬 Message</button><div class="offer-msg-collapsed">${escHtml(o.message)}</div>`:'';
-    const acceptHint=canAccept&&!noneOffered?`<div style="font-size:11px;color:var(--muted);margin-top:6px">↑ Tap an item's green <strong style="color:#10b981">Trade →</strong> button to swap it for your <strong>×${recipientLiveQty}</strong> — qty auto-caps at the smaller side.</div>`:'';
-    const noStockHint=amRecipient&&!isMine&&recipientLiveQty<=0?`<div style="font-size:11px;color:var(--warn);margin-top:4px">⚠ You\'re out of stock for this item — can\'t accept any offers until you add some back.</div>`:'';
-    return`<div class="offer-row ${isFirst?'fcfs-first':''} ${isMine?'my-offer':''}">
-      <div class="offer-av">${userAvatarHtml(o.from,28)}</div>
-      <div class="offer-info">
-        <div class="offer-from">
-          ${escHtml(o.from)}${isMine?' (you)':''}
-          ${isFirst?'<span class="fcfs-tag">1st</span>':''}
-          <span class="time-tag" title="${new Date(o.t).toLocaleString()}">${relativeTime(o.t)}</span>
-        </div>
-        ${noneOffered?'<div style="font-size:11px;color:var(--muted);font-style:italic">No specific offering listed</div>':`<div class="offer-items">${offeringHtml}</div>`}
-        ${acceptHint}${noStockHint}
-        ${msgHtml}
-      </div>
-      <div class="offer-actions">
-        ${isMine?`<button class="offer-withdraw-btn" onclick="withdrawOffer('${escAttr(recipient)}','${o.id}').then(t=>{if(t)toast('Offer withdrawn');});">Withdraw</button>`:''}
-        ${amRecipient&&!isMine?`<button class="offer-mark-traded-btn" onclick="markOfferTraded('${escAttr(recipient)}','${o.id}').then(t=>{if(t)toast('Offer removed — assumed traded externally');});" title="Trade happened outside the app — just clear this offer (no inventory change)">Clear (traded externally)</button>`:''}
-      </div>
-    </div>`;
-  }).join('');
-}
+
 
 let activeOfferDraft=null;
 function offerSelectedKeys(){
@@ -14403,119 +13883,7 @@ function markOfferMessageEdited(el){
   if(el)el.dataset.dirty='1';
 }
 
-function openOfferModal(otherUser,specificPokemon=''){
-  if(!guardOwnerPreviewTrainer(otherUser,'offers'))return;
-  const otherUd=allData.users?.[otherUser]||{};
-  const otherInv=allData.have?.[otherUser]||{};
-  const myInv=allData.have?.[cur]||{};
-  // Pokemon they have that I want (matched on BASE name across ♂/♀ rows)
-  const matches=Object.entries(otherInv).filter(([k,val])=>{
-    const{name}=splitHaveKey(k);
-    return entryWantedByCur(name)&&haveEntryInfo(val).qty>0;
-  }).map(([k,val])=>{
-    const{name,gender}=splitHaveKey(k);
-    const info=haveEntryInfo(val);
-    const e=_nameToSpriteEntry(name);
-    return{key:k,name,gender,dn:pokemonDisplayName({...e,name:e.name||name,displayName:e.displayName||name}),no:e.no,qty:info.qty,mirrorOnly:info.mirrorOnly,dontNeedBack:info.dontNeedBack,giveaway:info.giveaway,note:info.note,want:entryWantedByCur(name)};
-  });
-  const focusedPokemon=specificPokemon?(()=>{
-    const{name,gender}=splitHaveKey(specificPokemon);
-    const info=haveEntryInfo(otherInv[specificPokemon]);
-    const e=_nameToSpriteEntry(name);
-    return{key:specificPokemon,name,gender,dn:pokemonDisplayName({...e,name:e.name||name,displayName:e.displayName||name}),no:e.no,qty:info.qty,mirrorOnly:info.mirrorOnly,dontNeedBack:info.dontNeedBack,giveaway:info.giveaway,note:info.note,want:entryWantedByCur(name)};
-  })():null;
-  // Pokemon I have that they want — match BASE name (♂/♀ rows count individually)
-  const theyWant=[];
-  Object.keys(myInv).forEach(k=>{
-    const{name,gender}=splitHaveKey(k);
-    const info=haveEntryInfo(myInv[k]);
-    if(info.qty<=0)return;
-    for(const t of['wishlist','dynamax','gmax','costumes']){
-      const val=allData[t]?.[otherUser]?.[name];
-      if(val){const{p}=parsePri(val);if(p){theyWant.push({key:k,name,gender,qty:info.qty,p,type:t});break;}}
-    }
-  });
-  // Mirror-match qty: sum my ♂+♀+genderless of the same base name
-  const mirrorMatchQty=focusedPokemon?totalQtyForName(myInv,focusedPokemon.name):0;
-  // Default selection: pre-select MY rows whose base name they want
-  const preSelected=new Set(focusedPokemon?.mirrorOnly&&mirrorMatchQty>0
-    ?Object.keys(myInv).filter(k=>splitHaveKey(k).name===focusedPokemon.name&&haveEntryInfo(myInv[k]).qty>0)
-    :theyWant.slice(0,5).map(t=>t.key));
-  // Build per-item "they want" notes (shiny preference) for items I'm likely offering
-  const theyWantNotes=theyWant.map(t=>{
-    const w=entryWantedByOther(otherUser,t.name);
-    if(!w?.shiny)return null;
-    const e=_nameToSpriteEntry(t.name);return `${pokemonDisplayName({...e,name:e.name||t.name,displayName:e.displayName||t.name})} (shiny)`;
-  }).filter(Boolean);
-  // Show existing offers on the focused item for context (offers are scoped to the gendered key)
-  const existingOffers=focusedPokemon?offersForItem(otherUser,focusedPokemon.key):[];
-  let myInvEntries=Object.entries(myInv).map(([k,val])=>{
-    const{name,gender}=splitHaveKey(k);
-    const info=haveEntryInfo(val);
-    const e=_nameToSpriteEntry(name);
-    return{key:k,name,gender,dn:pokemonDisplayName({...e,name:e.name||name,displayName:e.displayName||name}),no:e.no,qty:info.qty,theyWant:theyWant.some(t=>t.key===k)};
-  }).filter(it=>it.qty>0);
-  if(focusedPokemon?.mirrorOnly)myInvEntries=myInvEntries.filter(it=>it.name===focusedPokemon.name);
-  myInvEntries.sort((a,b)=>(b.theyWant?1:0)-(a.theyWant?1:0)||a.dn.localeCompare(b.dn)||({'':0,'m':1,'f':2}[a.gender]??9)-({'':0,'m':1,'f':2}[b.gender]??9));
-  const myInvByKey=Object.fromEntries(myInvEntries.map(it=>[it.key,it]));
-  const offerDraft={otherUser,focusedPokemon,matches,theyWant,theyWantNotes,myInvByKey};
-  const defaultMessage=buildOfferMessage(offerDraft,[...preSelected]);
-  const html=`<div class="ov open" id="offer-modal" role="dialog" aria-modal="true" onclick="if(event.target===this)closeOfferModal()">
-    <div class="modal offer-modal" onclick="event.stopPropagation()">
-      <h3>💬 Offer trade with ${escHtml(otherUser)}</h3>
-      ${focusedPokemon?`<div class="offer-pkmn-display">
-        <div class="sprite-wrap">${focusedPokemon.no?spriteImg(focusedPokemon.no,42,'',focusedPokemon.name,focusedPokemon.gender||'',focusedPokemon.dn):'🎮'}</div>
-        <div style="flex:1">
-          <div class="offer-name">${escHtml(focusedPokemon.dn)}${focusedPokemon.gender?` <span class="have-gender-pill ${focusedPokemon.gender}" title="${focusedPokemon.gender==='f'?'Female':'Male'} only">${focusedPokemon.gender==='f'?'♀':'♂'}</span>`:''} <span style="color:var(--ac2);font-family:var(--mono);font-size:13px">×${focusedPokemon.qty}</span></div>
-          <div class="offer-meta">${focusedPokemon.mirrorOnly?'<span class="have-mirror-badge">🪞 Mirror only</span> ':''}${focusedPokemon.dontNeedBack?'<span class="have-dnb-badge">🤝 Fair trade</span> ':''}${focusedPokemon.giveaway?'<span class="have-giveaway-badge">📤 Giveaway</span> ':''}${focusedPokemon.want?`You want this at ${focusedPokemon.want.p||'flag'}${focusedPokemon.want.shiny?' · <span style="color:#f472b6">✨ shiny only</span>':''}`:''}${existingOffers.length?` · <strong style="color:var(--warn)">🔔 ${existingOffers.length} existing offer${existingOffers.length===1?'':'s'}</strong>`:''}</div>
-        </div>
-      </div>
-      ${focusedPokemon.mirrorOnly?`<div class="offer-no-discord" style="border-color:rgba(14,165,233,.35);color:#38bdf8;background:rgba(14,165,233,.08)">🪞 Mirror only: ${escHtml(otherUser)} is only accepting the same exact Pokémon/form for this.</div>`:''}
-      ${focusedPokemon.dontNeedBack?`<div class="offer-no-discord" style="border-color:rgba(20,184,166,.4);color:#14b8a6;background:rgba(20,184,166,.08)">🤝 Fair trade: ${escHtml(otherUser)} is looking for comparable rarity from their want list.</div>`:''}
-      ${focusedPokemon.giveaway?`<div class="offer-no-discord" style="border-color:rgba(251,146,60,.4);color:#fb923c;background:rgba(251,146,60,.08)">📤 Giveaway: ${escHtml(otherUser)} can't hold these any longer — they'll take anything reasonable.${focusedPokemon.note?` Their preference: <em>"${escHtml(focusedPokemon.note)}"</em>`:''}</div>`:''}
-      ${existingOffers.length?`<div class="offer-section-label">Existing offers (FCFS):</div>
-        <div class="offer-list">${renderOfferList(otherUser,focusedPokemon.name)}</div>`:''}
-      `:''}
-      ${!focusedPokemon&&matches.length?`<div class="offer-section-label">They have (you want):</div>
-        <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px">
-          ${matches.slice(0,8).map(m=>`<span class="have-trainer-chip match" title="${escAttr(m.dn)}">${escHtml(m.dn)}${m.gender?`<span class="have-gender-pill ${m.gender}">${m.gender==='f'?'♀':'♂'}</span>`:''} <span class="qty">×${m.qty}</span></span>`).join('')}
-        </div>`:''}
-      <div class="offer-section-label">What are you offering?${focusedPokemon?.mirrorOnly?' <span style="color:#38bdf8;font-weight:700;text-transform:none;letter-spacing:0">Mirror only</span>':''}${myInvEntries.length?'':` <span style="color:var(--muted);font-weight:400;font-style:italic">— ${focusedPokemon?.mirrorOnly?'add the same Pokémon':'add some'} to your 🎒 inventory first</span>`}</div>
-      ${myInvEntries.length?`<div class="offer-pick-row" id="offer-pick-row">
-        ${myInvEntries.map(it=>{
-          const url=spriteUrl(it.no,it.name,it.gender||'',it.dn);
-          const genderPill=it.gender?`<span class="have-gender-pill ${it.gender}" style="margin-left:2px">${it.gender==='f'?'♀':'♂'}</span>`:'';
-          return`<span class="offer-pick-chip ${preSelected.has(it.key)?'selected':''}" data-key="${escAttr(it.key)}" onclick="toggleOfferPickChip(this)" title="${escAttr(it.dn)}">
-            ${url?`<img src="${url}" alt="" loading="lazy">`:''}<span>${escHtml(it.dn)}</span>${genderPill}<span style="color:var(--ac2);font-family:var(--mono);font-size:11px">×${it.qty}</span>${it.theyWant?'<span style="font-size:9px;color:var(--warn);font-weight:700">⭐</span>':''}
-          </span>`;
-        }).join('')}
-      </div>`:'<div class="offer-pick-empty">Your inventory is empty. You can still send a message offer without specific items.</div>'}
-      <div class="offer-section-label">Message:</div>
-      <textarea class="offer-textarea" id="offer-msg" placeholder="Optional message..." oninput="markOfferMessageEdited(this)">${escHtml(defaultMessage)}</textarea>
-      ${otherUd.discord?`<div style="margin-top:10px;font-size:12px;color:var(--muted)">
-        Discord: <code style="color:var(--ac2);font-family:var(--mono)">${escHtml(otherUd.discord)}</code>
-        <a class="offer-discord-link" href="https://discord.com/channels/@me" target="_blank" rel="noopener">Open Discord ↗</a>
-      </div>`:`<div class="offer-no-discord">
-        ⚠️ ${escHtml(otherUser)} hasn't added a Discord handle. Use the public offer or reach out via your community channel.
-      </div>`}
-      <div class="offer-public-toggle">
-        <input type="checkbox" id="offer-public" checked>
-        <label for="offer-public">
-          <strong>Make this offer public</strong>
-          <div class="offer-public-toggle-hint">Everyone in the community sees who offered what & when. Enforces fairness (first-come-first-served).</div>
-        </label>
-      </div>
-      <div class="mact">
-        <button class="bghost" onclick="closeOfferModal()">Cancel</button>
-        <button class="bpri" onclick="submitOfferAction('${escAttr(otherUser)}','${escAttr(focusedPokemon?focusedPokemon.key:'')}')">${focusedPokemon?'Send Offer':'Copy Message'}</button>
-      </div>
-    </div>
-  </div>`;
-  closeOfferModal();
-  activeOfferDraft=offerDraft;
-  const wrap=document.createElement('div');wrap.innerHTML=html;
-  document.body.appendChild(wrap.firstElementChild);
-}
+
 function closeOfferModal(){activeOfferDraft=null;document.getElementById('offer-modal')?.remove();}
 async function submitOfferAction(otherUser,itemKey){
   const msg=document.getElementById('offer-msg')?.value||'';
@@ -15102,7 +14470,7 @@ Object.assign(window,{
   setMyListIntent,editIntentEntry,removeIntentEntry,enableIntentEditing,copyIntentSearch,openSelectedIntentSearch,
   openProductShare,setProductShareMode,toggleBoardSelection,
   openImport,setImportPri,parseImportString,toggleImportRow,toggleSelectAll,backToStep1,confirmImport,
-  setFilter,setBrowseList,setMyList,setStaleFilter,switchTab,openLegacyInventoryTool,clearTrainerSearch,focusTrainerSearch,
+  setFilter,setBrowseList,setMyList,setStaleFilter,switchTab,clearTrainerSearch,focusTrainerSearch,
   doLogin,logout,connectFirebase,skipFirebase,openLoginHealthCheck,runLoginHealthCheck,clearLoginLocalCache,selectLoginUserByIndex,
   addEntry,addToTrayFromAc,removeFromAddTray,clearAddTray,confirmAddTray,renderAddTray,setPri,setNotes,setLucky,setXxl,setXxs,removeEntry,doUndo,copyStr,
   exportMyListImage,
@@ -15129,18 +14497,7 @@ Object.assign(window,{
   openAddAllVariantsModal,closeAddAllVariants,confirmAddAllVariants,
   openAddShownResultsModal,closeAddShownResults,confirmAddShownResults,
   selectWallpaper,applyWallpaper,
-  // Inventory / Have
-  setHaveView,setHaveSubTab,toggleHaveMatchOnly,haveAcSearch,haveAcSelect,haveAcKeydown,
-  addInventoryEntry,updateInventoryQty,setInventoryQty,toggleInventoryMirror,cycleInventoryMode,cycleInventoryGender,setHaveAddMode,setHaveAddGender,editInventoryNote,removeInventoryEntry,
-  toggleHaveBulkMode,toggleHaveBulkSelection,bulkHaveSetMode,bulkHaveAdjustQty,bulkHaveDelete,
-  renderMyHave,renderHaveBrowse,openOfferModal,closeOfferModal,copyOfferMessage,
-  exportLegacyInventoryCsv,openTrainerPublicShare,
-  toggleOfferPickChip,markOfferMessageEdited,refreshOfferMessage,
-  // Offer history
-  submitOffer,submitOfferAction,withdrawOffer,markOfferTraded,
-  // Per-item trade acceptance
-  openAcceptModal,closeAcceptModal,adjustAcceptQty,clampAcceptQty,maxAcceptQty,confirmAcceptTrade,
-  openIncomingOffersModal,closeIncomingOffersModal,
+  openTrainerPublicShare,
   // Update checker
   reloadForUpdate,checkForUpdate,
   // Schedule

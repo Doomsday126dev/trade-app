@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="assets/tradeloop-icon-180.png">
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 <script>
-window.__POGO_RELEASE_ID='2026-09-05.90';
+window.__POGO_RELEASE_ID='2026-09-05.91';
 window.__POGO_PROVIDER_ACCOUNT_COMPATIBILITY_FLOOR__=Object.freeze({schemaVersion:1,providerAccountsExist:false});
 window.__POGO_PROVIDER_CAPABILITIES__=Object.freeze({
   providerAccountCompatibility:window.__POGO_PROVIDER_CAPABILITIES__?.providerAccountCompatibility===true,
@@ -83,7 +83,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
   });
 }
 </script>
-<link rel="stylesheet" href="css/app.css?v=2026-09-05.90">
+<link rel="stylesheet" href="css/app.css?v=2026-09-05.91">
 </head>
 <body>
 <svg aria-hidden="true" width="0" height="0" style="position:absolute;overflow:hidden">
@@ -424,11 +424,11 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
       <details><summary data-i18n="phase2.selection">Selection</summary><div class="combined-selection-actions">
         <span id="combined-selected-count" aria-live="polite">0</span>
         <button type="button" class="btn btn-secondary" onclick="useBoardSelection()" data-i18n="phase2.boardPreset">Use Board selection</button>
-        <button type="button" class="btn btn-secondary" onclick="document.getElementById('combined-search').innerHTML=contextualIntentSearchHtml(productScopeEntries('selected'),i18nCore.t('contextSearch.selection'))" data-i18n="contextSearch.selection">Search selected entries</button>
         <button type="button" class="btn btn-secondary" onclick="combinedSelection.clear();renderCombinedList()" data-i18n="phase2.clearSelection">Clear selection</button>
       </div></details>
     </div>
-    <input type="search" class="field-control combined-filter" id="combined-filter" data-i18n-placeholder="myList.filterPlaceholder" aria-label="Filter Looking For and For Trade" oninput="renderCombinedList()">
+    <input type="search" class="field-control combined-filter" id="combined-filter" data-i18n-placeholder="myList.filterPlaceholder" data-i18n-aria-label="myList.filterPlaceholder" aria-label="Filter my wants" oninput="renderCombinedList()">
+    <label class="wants-search-scope"><span data-i18n="wants.searchScope">Search scope</span><select id="wants-search-scope" class="field-control" onchange="refreshCombinedSearch()"><option value="filtered" data-i18n="wants.filtered">Filtered wants</option><option value="top" data-i18n="phase2.topWant">Top want</option><option value="selected" data-i18n="phase2.selection">Selection</option></select></label>
     <div id="combined-search"></div>
     <div id="combined-list"></div>
     <details id="legacy-list-tools"><summary data-i18n="phase2.legacyTools">Advanced list tools</summary>
@@ -437,10 +437,6 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
       <div class="journey-guidance-actions"><button type="button" class="bghost" onclick="switchTab('find')" data-i18n="guidance.findTrainer">Find a trainer</button><button type="button" class="bghost" onclick="switchTab('schedule')" data-i18n="guidance.exploreEvents">Explore Events</button></div>
     </aside>
     <aside class="trade-return-banner" id="trade-return-banner" hidden aria-live="polite"></aside>
-    <div class="intent-tabs" role="group" data-i18n-aria-label="product.intent" aria-label="Trade intent">
-      <button type="button" class="active" data-list-intent="lf" aria-pressed="true" onclick="setMyListIntent('lf')" data-i18n="product.lf">Looking For</button>
-      <button type="button" data-list-intent="ft" aria-pressed="false" onclick="setMyListIntent('ft')" data-i18n="product.ft">For Trade</button>
-    </div>
     <div id="intent-review" class="intent-review" hidden></div>
     <div class="list-tabs mylist-type-tabs" role="tablist" data-i18n-aria-label="myList.categories" aria-label="My List categories">
       <button class="ltab nav-pill active" type="button" role="tab" data-mylist-type="wishlist" onclick="setMyList('wishlist')" aria-selected="true"><span class="ltab-marker" aria-hidden="true"></span><span class="ltab-label" data-i18n="list.wishlist">Trades</span><span class="ltab-count" data-mylist-count="wishlist">0</span></button>
@@ -488,11 +484,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
           </label>
         </div>
         <input type="text" class="field-control" id="add-pmon-notes" data-i18n-placeholder="myList.variantDetailsPlaceholder" data-i18n-aria-label="myList.variantDetails" placeholder="Variant details: female, male, costume…" aria-label="Variant details" style="flex:1;min-width:120px" oninput="renderAddTray()">
-        <div class="background-field">
-          <span class="background-field-label" data-i18n="background.label">Background</span>
-          <input type="hidden" id="add-pmon-background" value="">
-          <button type="button" class="background-trigger" id="add-background-trigger" onclick="openBackgroundPicker({target:'add'})" aria-haspopup="dialog"><span class="background-trigger-copy" data-i18n="background.none">No specific background</span><span class="background-trigger-clear" aria-hidden="true">Choose</span></button>
-        </div>
+
       </div>
       <div class="speed-add-hint" id="speed-add-hint" data-i18n="myList.speedAddHint">Speed add is on. Priority and flags stay selected after each addition.</div>
     </div>
@@ -548,32 +540,6 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
     <div class="sec my-string-heading" style="margin-top:22px" hidden><strong id="my-string-title"></strong><span id="my-string-help"></span></div>
     <div id="my-strings-out"></div>
     </details>
-  </div>
-
-  <!-- HAVE (Inventory) -->
-  <div class="page ui-container ui-container-wide" id="tab-have">
-    <div class="have-hdr archive-header">
-      <div class="archive-title-row"><div class="have-title" id="legacy-inventory-title"></div><span class="status-badge archive-read-only" data-i18n="inventory.readOnlyBadge">Read-only</span></div>
-      <div class="have-subtitle" id="legacy-inventory-description"></div>
-    </div>
-    <div class="legacy-archive-notice" role="note">
-      <svg class="ui-icon ui-icon-lg legacy-archive-icon" aria-hidden="true"><use href="#ui-icon-archive"></use></svg>
-      <div><strong data-i18n="inventory.archiveTitle">Read-only archive</strong><span data-i18n="inventory.archiveHelp">Existing inventory data remains available to view and export. Adding and editing inventory has retired.</span></div>
-    </div>
-    <div id="have-mine-view" class="have-view active">
-      <div class="mylist-search app-search-shell search-filter archive-filter">
-        <span class="mylist-srch-icon app-search-icon" aria-hidden="true"><svg class="ui-icon ui-icon-sm"><use href="#ui-icon-search"></use></svg></span>
-        <input class="app-search-input field-control" type="text" data-i18n-placeholder="inventory.filterPlaceholder" data-i18n-aria-label="inventory.filterLabel" placeholder="Filter my inventory…" oninput="renderMyHave(this.value)" id="have-filter" aria-label="Filter inventory">
-      </div>
-      <div class="sec archive-list-heading">
-        <span><span data-i18n="inventory.myInventory">My inventory</span> <span id="have-count" style="font-weight:400;text-transform:none;font-size:11px;margin-left:4px"></span></span>
-        <span class="archive-list-actions">
-          <span id="have-total" style="font-size:11px;color:var(--muted)"></span>
-          <button class="bulk-toggle btn btn-secondary" onclick="exportLegacyInventoryCsv()" id="legacy-inventory-export"><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-download"></use></svg><span data-i18n="inventory.exportAction">Export inventory CSV</span></button>
-        </span>
-      </div>
-      <div id="have-mine-out" class="legacy-archive-list"></div>
-    </div>
   </div>
 
   <!-- SCHEDULE -->
@@ -738,26 +704,6 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
   </div>
 </div>
 
-<!-- ACCEPT OFFER MODAL — per-item accept with qty matching -->
-<div class="ov" id="accept-offer-modal" role="dialog" aria-modal="true" aria-labelledby="accept-offer-title">
-  <div class="modal" style="max-width:var(--container-narrow)">
-    <h3 id="accept-offer-title">✓ Accept trade</h3>
-    <div class="accept-trade-summary" id="accept-trade-summary"></div>
-    <div class="accept-qty-row">
-      <label for="accept-qty-input">Quantity to trade:</label>
-      <button class="accept-qty-btn" type="button" onclick="adjustAcceptQty(-1)" aria-label="Decrease">−</button>
-      <input type="number" id="accept-qty-input" min="1" max="999" value="1" inputmode="numeric" onchange="clampAcceptQty()">
-      <button class="accept-qty-btn" type="button" onclick="adjustAcceptQty(1)" aria-label="Increase">+</button>
-      <button class="accept-qty-max-btn" type="button" onclick="maxAcceptQty()" title="Set to the maximum allowed by both sides">MAX</button>
-    </div>
-    <div class="accept-qty-hint" id="accept-qty-hint"></div>
-    <div class="mact" style="justify-content:space-between">
-      <button class="bghost" onclick="closeAcceptModal()">Cancel</button>
-      <button class="bpri" id="accept-confirm-btn" onclick="confirmAcceptTrade()">✓ Confirm trade</button>
-    </div>
-  </div>
-</div>
-
 <!-- Board is a selection over My List, never a second Pokemon editor. -->
 <div class="ov" id="special-board-modal" role="dialog" aria-modal="true" aria-labelledby="special-board-title">
   <div class="modal special-board-modal">
@@ -765,7 +711,6 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
     <div id="board-contextual-search"></div>
     <div class="special-board-grid">
       <section class="special-board-col"><h4 data-i18n="product.lf">Looking For</h4><div class="special-board-list" id="special-lf-list"></div></section>
-      <section class="special-board-col"><h4 data-i18n="product.ft">For Trade</h4><div class="special-board-list" id="special-ft-list"></div></section>
     </div>
     <div class="mact">
       <button type="button" class="bghost" onclick="closeModal('special-board-modal');switchTab('mylist')" data-i18n="tradeMatch.editMyList">Edit My List</button>
@@ -790,7 +735,7 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
       <button type="button" data-share-mode="text" aria-pressed="false" onclick="setProductShareMode('text')" data-i18n="product.text">Text</button>
     </div>
     <section id="product-share-link">
-      <p data-i18n="product.linkScope">Public link includes Looking For and For Trade declarations.</p>
+      <p data-i18n="wants.linkScope">Public link includes your full wants list.</p>
       <button type="button" class="btn btn-primary" onclick="copyShareLink()" data-i18n="product.publishCopy">Publish and copy link</button>
       <p id="share-link-status" role="status" aria-live="polite"></p>
       <input id="share-public-url" class="field-control" readonly data-i18n-aria-label="product.link" aria-label="Link">
@@ -811,45 +756,20 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
     <label><span data-i18n="myList.searchPlaceholder">Pokémon</span><input class="field-control" id="combined-name" list="combined-catalog" required autocomplete="off"></label>
     <datalist id="combined-catalog"></datalist>
     <div class="combined-checks">
-      <label><input type="checkbox" id="combined-lf"><span data-i18n="product.lf">Looking For</span></label>
-      <label><input type="checkbox" id="combined-ft"><span data-i18n="product.ft">For Trade</span></label>
       <label><input type="checkbox" id="combined-shiny"><span data-i18n="share.flagShiny">Shiny</span></label>
       <label><input type="checkbox" id="combined-top" onchange="document.getElementById('combined-priority').value=this.checked?'H':''"><span data-i18n="phase2.topWant">Top want</span></label>
     </div>
     <details><summary data-i18n="myList.flagsAndDetails">Flags &amp; details</summary>
       <label><span data-i18n="myList.variantDetails">Variant details</span><input class="field-control" id="combined-mod" maxlength="160"></label>
       <label><span data-i18n="product.gender">Gender</span><select class="field-control" id="combined-gender"><option value="">—</option><option value="f">♀</option><option value="m">♂</option></select></label>
-      <div><span data-i18n="background.label">Background</span><input type="hidden" id="combined-backgroundId"><button type="button" class="btn btn-secondary" id="combined-background-trigger" onclick="openBackgroundPicker({target:'combined',pokemonName:document.getElementById('combined-name').value})" aria-haspopup="dialog">Choose</button></div>
       <label><span data-i18n="myList.priority">Priority</span><select class="field-control" id="combined-priority" onchange="document.getElementById('combined-top').checked=this.value==='H'"><option value="">—</option><option value="mixed">H / M / L</option><option value="H">H</option><option value="M">M</option><option value="L">L</option></select></label>
       <div class="combined-checks"><label><input type="checkbox" id="combined-lucky"><span data-i18n="myList.lucky">Lucky</span></label><label><input type="checkbox" id="combined-xxl">XXL</label><label><input type="checkbox" id="combined-xxs">XXS</label></div>
       <label><span data-i18n="product.note">Note</span><textarea class="field-control" id="combined-note" maxlength="160"></textarea></label>
     </details>
     <p id="combined-error" role="alert"></p>
-    <div class="mact"><button type="button" class="btn btn-secondary" onclick="closeModal('combined-editor-modal')" data-i18n="common.close">Close</button><button type="submit" class="btn btn-primary" id="combined-save" data-i18n="common.save">Save</button></div>
+    <div class="mact"><button type="button" id="wants-remove" class="btn btn-secondary" onclick="saveCombinedEditor(true)" data-i18n="myList.remove">Remove</button><button type="button" class="btn btn-secondary" onclick="closeModal('combined-editor-modal')" data-i18n="common.close">Close</button><button type="submit" class="btn btn-primary" id="combined-save" data-i18n="common.save">Save</button></div>
   </form>
 </div>
-<!-- BACKGROUND PICKER -->
-<div class="ov" id="background-picker-modal" role="dialog" aria-modal="true" aria-labelledby="background-picker-title" onclick="if(event.target===this)closeBackgroundPicker()">
-  <div class="modal background-picker-modal" onclick="event.stopPropagation()">
-    <div class="background-picker-header">
-      <div class="background-picker-heading"><h3 id="background-picker-title" data-i18n="background.label">Background</h3><span class="background-picker-for" id="background-picker-for"></span></div>
-      <button type="button" class="background-picker-close" onclick="closeBackgroundPicker()" data-i18n-aria-label="common.close" aria-label="Close">×</button>
-    </div>
-    <div class="background-picker-body">
-      <div class="app-search-shell background-search"><span class="app-search-icon" aria-hidden="true"><svg class="ui-icon ui-icon-sm"><use href="#ui-icon-search"></use></svg></span><input type="text" class="app-search-input" id="background-search-input" role="combobox" aria-autocomplete="list" aria-controls="background-results" aria-expanded="true" data-i18n-placeholder="background.search" data-i18n-aria-label="background.search" placeholder="Search backgrounds…" oninput="backgroundSearchChanged()" onkeydown="backgroundPickerKeydown(event)"></div>
-      <div class="background-filters" role="group" data-i18n-aria-label="background.filters" aria-label="Background filters">
-        <button type="button" class="background-filter" data-background-filter="relevant" onclick="setBackgroundFilter('relevant')" data-i18n="background.relevant">Relevant</button>
-        <button type="button" class="background-filter" data-background-filter="all" onclick="setBackgroundFilter('all')" data-i18n="background.all">All backgrounds</button>
-        <button type="button" class="background-filter" data-background-filter="location" onclick="setBackgroundFilter('location')" data-i18n="background.location">Location</button>
-        <button type="button" class="background-filter" data-background-filter="special" onclick="setBackgroundFilter('special')" data-i18n="background.special">Special</button>
-        <button type="button" class="background-filter" data-background-filter="recent" onclick="setBackgroundFilter('recent')" data-i18n="background.recent">Recent</button>
-      </div>
-      <div class="background-results" id="background-results" role="listbox" data-i18n-aria-label="background.choices" aria-label="Background choices"></div>
-      <div class="background-picker-footer"><span class="background-picker-count" id="background-results-count" aria-live="polite"></span><div class="background-picker-footer-actions"><button type="button" class="bghost" id="background-show-more" onclick="showMoreBackgrounds()" data-i18n="background.showMore">Show more</button><button type="button" class="bghost" onclick="selectBackground('')" data-i18n="background.none">No specific background</button></div></div>
-    </div>
-  </div>
-</div>
-
 <!-- READ-ONLY SHARE VIEW (#9) -->
 <div id="share-view">
   <div class="share-meta-banner ui-container ui-container-standard status-inline"><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-list"></use></svg><span data-i18n="share.readOnlyBanner">Read-only shared trade list. Anyone with this link can view it.</span> <button type="button" class="local-settings-trigger btn btn-secondary" id="share-language-trigger" onclick="openSettingsPanel('public',{returnFocus:this})" data-i18n-aria-label="account.languageSettings" aria-label="Language settings"><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-globe"></use></svg><span data-i18n="account.language">Language</span></button></div>
@@ -938,7 +858,6 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
         <button class="settings-tool" id="settings-logout" onclick="logout()"><span aria-hidden="true">↪</span><span data-i18n="settings.logoutAction">Sign out</span></button>
           </section>
           <section class="settings-section settings-account-only" data-settings-section="tools" aria-labelledby="settings-tools-heading"><div class="settings-section-heading"><h2 id="settings-tools-heading" data-i18n="settings.sectionTools">Tools</h2><p data-i18n="settings.toolsSummary">Open occasional list and app utilities.</p></div><div class="settings-tool-list">
-            <button class="settings-tool" onclick="openSettingsTool('inventory')"><span aria-hidden="true">▤</span><span data-i18n="nav.legacyInventory">Legacy Inventory</span></button>
             <button class="settings-tool" onclick="openSettingsTool('import')"><span aria-hidden="true">⇩</span><span data-i18n="import.title">Import from search string</span></button>
             <button class="settings-tool" onclick="openSettingsTool('export')"><span aria-hidden="true">⇧</span><span data-i18n="settings.exportList">Export My List</span></button>
             <button class="settings-tool" onclick="openSettingsTool('safe-transfer')"><span aria-hidden="true">⌁</span><span data-i18n="safeTransfer.title">Safe-to-transfer search string</span></button>
@@ -962,7 +881,6 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
       <div class="shortcut-row"><kbd>b</kbd><span data-i18n="shortcuts.findTrainer">Open Find Trainer</span></div>
       <div class="shortcut-row"><kbd>m</kbd><span data-i18n="shortcuts.myList">Open My List</span></div>
       <div class="shortcut-row"><kbd>s</kbd><span data-i18n="shortcuts.searchStrings">Open My List search strings</span></div>
-      <div class="shortcut-row"><kbd>i</kbd> <kbd>h</kbd><span data-i18n="shortcuts.inventory">Open Legacy Inventory</span></div>
       <div class="shortcut-row"><kbd>c</kbd><span data-i18n="shortcuts.events">Open Events</span></div>
       <div class="shortcut-section-hdr" data-i18n="shortcuts.actions">Actions</div>
       <div class="shortcut-row"><kbd>n</kbd><span data-i18n="shortcuts.focusAdd">Focus the add-Pokémon field</span></div>
@@ -1000,7 +918,6 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
       <h3 data-i18n="legal.sourcesTitle">Data &amp; asset acknowledgements</h3>
       <p data-i18n="legal.sourceUse">PokéAPI provides species, form, and sprite-repository inputs. Pokémon Database provides selected Pokémon HOME and Pokémon GO visual fallbacks.</p>
       <p data-i18n="legal.referenceUse">PokeMiners, Serebii, Pokémon GO Hub, and official Pokémon GO announcements are used only to research catalog metadata; their artwork is not served by PoGo Trades.</p>
-      <p data-i18n="legal.backgroundUse">Background qualifiers are shown as labels unless exact, approved artwork is available for that background.</p>
       <p data-i18n="legal.rights">Pokémon, Pokémon GO, character names, images, and related marks are the property of their respective rights holders.</p>
       <p data-i18n="legal.unofficial">PoGo Trades is an unofficial fan-made tool and is not affiliated with, endorsed by, or sponsored by the rights holders.</p>
     </div>
@@ -1014,93 +931,93 @@ if('serviceWorker'in navigator&&location.protocol!=='file:'){
 <div class="ptr-indicator" id="ptr-indicator" aria-hidden="true">↓</div>
 
 <template id="pogo-feature-assets">
-<script src="data.js?v=2026-09-05.90"></script>
-<script src="js/domain/productLimits.js?v=2026-09-05.90"></script>
-<script src="js/domain/priorities.js?v=2026-09-05.90"></script>
-<script src="js/ui/badges.js?v=2026-09-05.90"></script>
-<script src="js/domain/username.js?v=2026-09-05.90"></script>
-<script src="js/domain/requestAccess.js?v=2026-09-05.90"></script>
-<script src="js/domain/backgroundCatalog.js?v=2026-09-05.90"></script>
-<script src="js/domain/backgroundVisual.js?v=2026-09-05.90"></script>
-<script src="js/domain/pokemonPrimaryTypes.js?v=2026-09-05.90"></script>
-<script src="js/domain/priorityValues.js?v=2026-09-05.90"></script>
-<script src="js/domain/scheduleDates.js?v=2026-09-05.90"></script>
-<script src="js/domain/pokemonSearchTerms.js?v=2026-09-05.90"></script>
-<script src="js/domain/pokemonEntryRules.js?v=2026-09-05.90"></script>
-<script src="js/domain/pokemonGoSearchSyntax.js?v=2026-09-05.90"></script>
-<script src="js/domain/searchStrings.js?v=2026-09-05.90"></script>
-<script src="js/ui/stringHtml.js?v=2026-09-05.90"></script>
-<script src="js/domain/scheduleEventRules.js?v=2026-09-05.90"></script>
-<script src="js/domain/scheduleTradeRules.js?v=2026-09-05.90"></script>
-<script src="js/domain/pokemonKeys.js?v=2026-09-05.90"></script>
-<script src="js/domain/publicPokemonDex.js?v=2026-09-05.90"></script>
-<script src="js/domain/spriteSlugs.js?v=2026-09-05.90"></script>
-<script src="js/domain/costumeSpriteCatalog.js?v=2026-09-05.90"></script>
-<script src="js/domain/fuzzyText.js?v=2026-09-05.90"></script>
-<script src="js/domain/autocompleteText.js?v=2026-09-05.90"></script>
-<script src="js/domain/autocompleteMatching.js?v=2026-09-05.90"></script>
-<script src="js/domain/autocompleteRanking.js?v=2026-09-05.90"></script>
-<script src="js/domain/relativeTime.js?v=2026-09-05.90"></script>
-<script src="js/domain/clientRelease.js?v=2026-09-05.90"></script>
-<script src="js/domain/favoriteCardInteractions.js?v=2026-09-05.90"></script>
-<script src="js/domain/favoritePokemonBrowse.js?v=2026-09-05.90"></script>
-<script src="js/domain/trainerDiscovery.js?v=2026-09-05.90"></script>
-<script src="js/domain/tradeListComparison.js?v=2026-09-05.90"></script>
-<script src="js/domain/eventPresentation.js?v=2026-09-05.90"></script>
-<script src="js/domain/publicSharePublication.js?v=2026-09-05.90"></script>
-<script src="js/domain/providerPublicProjection.js?v=2026-09-05.90" data-pogo-provider-public-capability></script>
-<script src="js/domain/accountSyncModel.js?v=2026-09-05.90"></script>
-<script src="js/domain/accountSyncMerge.js?v=2026-09-05.90"></script>
-<script src="js/domain/accountSyncMigration.js?v=2026-09-05.90"></script>
-<script src="js/domain/accountSyncProduct.js?v=2026-09-05.90"></script>
-<script src="js/domain/trainerPreferences.js?v=2026-09-05.90"></script>
-<script src="js/domain/trainerPreferenceSync.js?v=2026-09-05.90"></script>
-<script src="js/domain/authenticationReadiness.js?v=2026-09-05.90"></script>
-<script src="js/domain/authProviderRegistry.js?v=2026-09-05.90" data-pogo-provider-capability></script>
-<script src="js/domain/providerContinuationState.js?v=2026-09-05.90" data-pogo-provider-capability></script>
-<script src="js/domain/accountLinkingModel.js?v=2026-09-05.90" data-pogo-provider-capability></script>
-<script src="js/domain/accountLinkingController.js?v=2026-09-05.90" data-pogo-provider-capability></script>
-<script src="js/domain/providerOnboardingModel.js?v=2026-09-05.90" data-pogo-provider-capability></script>
-<script src="js/services/googleAuthAdapter.js?v=2026-09-05.90" data-pogo-provider-capability></script>
-<script src="js/services/providerAccountFoundation.js?v=2026-09-05.90" data-pogo-provider-capability></script>
-<script src="js/domain/loginDirectory.js?v=2026-09-05.90"></script>
-<script src="js/utils/textSafety.js?v=2026-09-05.90"></script>
-<script src="js/ui/stringPanels.js?v=2026-09-05.90"></script>
-<script src="js/ui/emptyState.js?v=2026-09-05.90"></script>
-<script src="js/i18n/locales/en.js?v=2026-09-05.90"></script>
-<script src="js/i18n/locales/ja.js?v=2026-09-05.90"></script>
-<script src="js/i18n/locales/es.js?v=2026-09-05.90"></script>
-<script src="js/i18n/locales/de.js?v=2026-09-05.90"></script>
-<script src="js/i18n/pokemonNames/catalog.js?v=2026-09-05.90"></script>
-<script src="js/i18n/pokemonNames/variants.js?v=2026-09-05.90"></script>
-<script src="js/i18n/pokemonNames/structuredForms.js?v=2026-09-05.90"></script>
-<script src="js/i18n/pokemonNames/core.js?v=2026-09-05.90"></script>
-<script src="js/i18n/eventLabels/currentTitles.js?v=2026-09-05.90"></script>
-<script src="js/i18n/eventLabels/core.js?v=2026-09-05.90"></script>
-<script src="js/i18n/core.js?v=2026-09-05.90"></script>
-<script src="js/services/firebaseClient.js?v=2026-09-05.90"></script>
-<script src="js/services/firebaseAppCheck.js?v=2026-09-05.90"></script>
-<script src="js/services/providerPublicShareGateway.js?v=2026-09-05.90" data-pogo-provider-public-capability></script>
-<script src="js/services/e1ClientFoundationCanary.js?v=2026-09-05.90"></script>
-<script src="js/data/subscriptionManager.js?v=2026-09-05.90"></script>
-<script src="js/data/listenerLifecycle.js?v=2026-09-05.90"></script>
-<script src="js/data/sessionCacheBoundary.js?v=2026-09-05.90"></script>
-<script src="js/data/firebaseReadRegistry.js?v=2026-09-05.90"></script>
-<script src="js/data/currentUserRepository.js?v=2026-09-05.90"></script>
-<script src="js/data/ownedDataCoordinator.js?v=2026-09-05.90"></script>
-<script src="js/data/publicShareRepository.js?v=2026-09-05.90"></script>
-<script src="js/data/trainerHistoryStore.js?v=2026-09-05.90"></script>
-<script src="js/data/favoriteShareSessionCache.js?v=2026-09-05.90"></script>
-<script src="js/data/trainerPreferencesRepository.js?v=2026-09-05.90"></script>
-<script src="js/data/trainerPreferenceSyncQueue.js?v=2026-09-05.90"></script>
-<script src="js/data/accountSyncJournal.js?v=2026-09-05.90"></script>
-<script src="js/data/accountSyncRepository.js?v=2026-09-05.90"></script>
-<script src="js/data/accountSyncController.js?v=2026-09-05.90"></script>
-<script src="js/data/accountSyncRuntime.js?v=2026-09-05.90"></script>
-<script src="js/domain/cacheAdapters.js?v=2026-09-05.90"></script>
-<script src="js/ui/trainerTagPanel.js?v=2026-09-05.90"></script>
-<script src="js/app/publicShareApp.js?v=2026-09-05.90"></script>
-<script src="js/app/application.js?v=2026-09-05.90"></script>
+<script src="data.js?v=2026-09-05.91"></script>
+<script src="js/domain/productLimits.js?v=2026-09-05.91"></script>
+<script src="js/domain/priorities.js?v=2026-09-05.91"></script>
+<script src="js/ui/badges.js?v=2026-09-05.91"></script>
+<script src="js/domain/username.js?v=2026-09-05.91"></script>
+<script src="js/domain/requestAccess.js?v=2026-09-05.91"></script>
+<script src="js/domain/backgroundCatalog.js?v=2026-09-05.91"></script>
+<script src="js/domain/backgroundVisual.js?v=2026-09-05.91"></script>
+<script src="js/domain/pokemonPrimaryTypes.js?v=2026-09-05.91"></script>
+<script src="js/domain/priorityValues.js?v=2026-09-05.91"></script>
+<script src="js/domain/scheduleDates.js?v=2026-09-05.91"></script>
+<script src="js/domain/pokemonSearchTerms.js?v=2026-09-05.91"></script>
+<script src="js/domain/pokemonEntryRules.js?v=2026-09-05.91"></script>
+<script src="js/domain/pokemonGoSearchSyntax.js?v=2026-09-05.91"></script>
+<script src="js/domain/searchStrings.js?v=2026-09-05.91"></script>
+<script src="js/ui/stringHtml.js?v=2026-09-05.91"></script>
+<script src="js/domain/scheduleEventRules.js?v=2026-09-05.91"></script>
+<script src="js/domain/scheduleTradeRules.js?v=2026-09-05.91"></script>
+<script src="js/domain/pokemonKeys.js?v=2026-09-05.91"></script>
+<script src="js/domain/publicPokemonDex.js?v=2026-09-05.91"></script>
+<script src="js/domain/spriteSlugs.js?v=2026-09-05.91"></script>
+<script src="js/domain/costumeSpriteCatalog.js?v=2026-09-05.91"></script>
+<script src="js/domain/fuzzyText.js?v=2026-09-05.91"></script>
+<script src="js/domain/autocompleteText.js?v=2026-09-05.91"></script>
+<script src="js/domain/autocompleteMatching.js?v=2026-09-05.91"></script>
+<script src="js/domain/autocompleteRanking.js?v=2026-09-05.91"></script>
+<script src="js/domain/relativeTime.js?v=2026-09-05.91"></script>
+<script src="js/domain/clientRelease.js?v=2026-09-05.91"></script>
+<script src="js/domain/favoriteCardInteractions.js?v=2026-09-05.91"></script>
+<script src="js/domain/favoritePokemonBrowse.js?v=2026-09-05.91"></script>
+<script src="js/domain/trainerDiscovery.js?v=2026-09-05.91"></script>
+<script src="js/domain/tradeListComparison.js?v=2026-09-05.91"></script>
+<script src="js/domain/eventPresentation.js?v=2026-09-05.91"></script>
+<script src="js/domain/publicSharePublication.js?v=2026-09-05.91"></script>
+<script src="js/domain/providerPublicProjection.js?v=2026-09-05.91" data-pogo-provider-public-capability></script>
+<script src="js/domain/accountSyncModel.js?v=2026-09-05.91"></script>
+<script src="js/domain/accountSyncMerge.js?v=2026-09-05.91"></script>
+<script src="js/domain/accountSyncMigration.js?v=2026-09-05.91"></script>
+<script src="js/domain/accountSyncProduct.js?v=2026-09-05.91"></script>
+<script src="js/domain/trainerPreferences.js?v=2026-09-05.91"></script>
+<script src="js/domain/trainerPreferenceSync.js?v=2026-09-05.91"></script>
+<script src="js/domain/authenticationReadiness.js?v=2026-09-05.91"></script>
+<script src="js/domain/authProviderRegistry.js?v=2026-09-05.91" data-pogo-provider-capability></script>
+<script src="js/domain/providerContinuationState.js?v=2026-09-05.91" data-pogo-provider-capability></script>
+<script src="js/domain/accountLinkingModel.js?v=2026-09-05.91" data-pogo-provider-capability></script>
+<script src="js/domain/accountLinkingController.js?v=2026-09-05.91" data-pogo-provider-capability></script>
+<script src="js/domain/providerOnboardingModel.js?v=2026-09-05.91" data-pogo-provider-capability></script>
+<script src="js/services/googleAuthAdapter.js?v=2026-09-05.91" data-pogo-provider-capability></script>
+<script src="js/services/providerAccountFoundation.js?v=2026-09-05.91" data-pogo-provider-capability></script>
+<script src="js/domain/loginDirectory.js?v=2026-09-05.91"></script>
+<script src="js/utils/textSafety.js?v=2026-09-05.91"></script>
+<script src="js/ui/stringPanels.js?v=2026-09-05.91"></script>
+<script src="js/ui/emptyState.js?v=2026-09-05.91"></script>
+<script src="js/i18n/locales/en.js?v=2026-09-05.91"></script>
+<script src="js/i18n/locales/ja.js?v=2026-09-05.91"></script>
+<script src="js/i18n/locales/es.js?v=2026-09-05.91"></script>
+<script src="js/i18n/locales/de.js?v=2026-09-05.91"></script>
+<script src="js/i18n/pokemonNames/catalog.js?v=2026-09-05.91"></script>
+<script src="js/i18n/pokemonNames/variants.js?v=2026-09-05.91"></script>
+<script src="js/i18n/pokemonNames/structuredForms.js?v=2026-09-05.91"></script>
+<script src="js/i18n/pokemonNames/core.js?v=2026-09-05.91"></script>
+<script src="js/i18n/eventLabels/currentTitles.js?v=2026-09-05.91"></script>
+<script src="js/i18n/eventLabels/core.js?v=2026-09-05.91"></script>
+<script src="js/i18n/core.js?v=2026-09-05.91"></script>
+<script src="js/services/firebaseClient.js?v=2026-09-05.91"></script>
+<script src="js/services/firebaseAppCheck.js?v=2026-09-05.91"></script>
+<script src="js/services/providerPublicShareGateway.js?v=2026-09-05.91" data-pogo-provider-public-capability></script>
+<script src="js/services/e1ClientFoundationCanary.js?v=2026-09-05.91"></script>
+<script src="js/data/subscriptionManager.js?v=2026-09-05.91"></script>
+<script src="js/data/listenerLifecycle.js?v=2026-09-05.91"></script>
+<script src="js/data/sessionCacheBoundary.js?v=2026-09-05.91"></script>
+<script src="js/data/firebaseReadRegistry.js?v=2026-09-05.91"></script>
+<script src="js/data/currentUserRepository.js?v=2026-09-05.91"></script>
+<script src="js/data/ownedDataCoordinator.js?v=2026-09-05.91"></script>
+<script src="js/data/publicShareRepository.js?v=2026-09-05.91"></script>
+<script src="js/data/trainerHistoryStore.js?v=2026-09-05.91"></script>
+<script src="js/data/favoriteShareSessionCache.js?v=2026-09-05.91"></script>
+<script src="js/data/trainerPreferencesRepository.js?v=2026-09-05.91"></script>
+<script src="js/data/trainerPreferenceSyncQueue.js?v=2026-09-05.91"></script>
+<script src="js/data/accountSyncJournal.js?v=2026-09-05.91"></script>
+<script src="js/data/accountSyncRepository.js?v=2026-09-05.91"></script>
+<script src="js/data/accountSyncController.js?v=2026-09-05.91"></script>
+<script src="js/data/accountSyncRuntime.js?v=2026-09-05.91"></script>
+<script src="js/domain/cacheAdapters.js?v=2026-09-05.91"></script>
+<script src="js/ui/trainerTagPanel.js?v=2026-09-05.91"></script>
+<script src="js/app/publicShareApp.js?v=2026-09-05.91"></script>
+<script src="js/app/application.js?v=2026-09-05.91"></script>
 
 </template>
 <script>

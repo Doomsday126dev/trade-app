@@ -1,5 +1,6 @@
 const {test,expect}=require('@playwright/test');
 async function fixture(page){
+  const errors=[];page.on('pageerror',error=>errors.push(error.message));
   const runtimeOrigin=new URL(process.env.PLAYWRIGHT_BASE_URL||'http://localhost:4174').origin;
   await page.route('https://**/*',route=>new URL(route.request().url()).origin===runtimeOrigin?route.continue():route.abort());
   await page.route('**/sw.js*',route=>route.abort());
@@ -7,6 +8,7 @@ async function fixture(page){
   await page.waitForFunction(()=>typeof __pogoEnsureFullApp==='function');
   await page.evaluate(()=>__pogoEnsureFullApp('phase2-fixture'));
   await page.waitForFunction(()=>typeof renderMyList==='function');
+  expect(errors).toEqual([]);
   await page.evaluate(()=>{
     db=null;fbOn=false;managedFirebaseClient=null;managedAccountSyncRuntime=null;accountSyncUiState=null;
     cur='Phase2Fixture';auth={currentUser:{uid:'synthetic-phase2'}};
@@ -18,7 +20,9 @@ async function fixture(page){
 }
 test('scope controls output, selection persists across filtering and no data changes',async({page})=>{
   await fixture(page);
-  await expect(page.locator('#combined-list .combined-row')).toHaveCount(3);
+  await expect(page.locator('#combined-list .combined-row')).toHaveCount(2);
+  await expect(page.locator('#combined-list')).not.toContainText('Eevee');
+  await expect(page.locator('#combined-search [data-contextual-copy]').first()).toBeVisible();
   await page.locator('#combined-list input').first().check();
   await page.locator('#combined-filter').fill('Snom');
   await page.locator('#combined-filter').fill('');
@@ -33,14 +37,15 @@ test('scope controls output, selection persists across filtering and no data cha
     await page.locator('[data-share-mode="text"]').click();
     await page.locator('#product-share-text button').click();
     const text=await page.evaluate(()=>__copied);
-    expect(text).toContain(scope==='top'?'Pikachu':'Eevee');
+    expect(text).toContain('Pikachu');
+    expect(text).not.toContain('Eevee');
     expect(text).not.toContain('Snom');
   }
   await page.locator('#product-share-scope').selectOption('full');
   await expect(page.locator('[data-share-mode="link"]')).toBeVisible();
   expect(await page.evaluate(()=>JSON.stringify(allData))).toBe(await page.evaluate(()=>__before));
 });
-test('both-side add is one canonical batch, failed save retains the draft',async({page})=>{
+test('wants-only add is one canonical batch, failed save retains the draft',async({page})=>{
   await fixture(page);
   await page.evaluate(()=>{
     accountSyncCanonicalEntities=[];
@@ -50,15 +55,15 @@ test('both-side add is one canonical batch, failed save retains the draft',async
     openCombinedEditor();
   });
   await page.locator('#combined-name').fill('Charmander');
-  await page.locator('#combined-ft').check();
+  await expect(page.locator('#combined-ft')).toHaveCount(0);
+  await expect(page.locator('#combined-backgroundId')).toHaveCount(0);
   await page.locator('#combined-shiny').check();
   await page.locator('#combined-save').click();
   await expect(page.locator('#combined-editor-modal')).toBeVisible();
   await expect(page.locator('#combined-name')).toHaveValue('Charmander');
   const mutations=await page.evaluate(()=>__mutations);
-  expect(mutations.map(x=>x.identity.lane)).toEqual(['looking-for','for-trade']);
+  expect(mutations.map(x=>x.identity.lane)).toEqual(['looking-for']);
   expect(mutations.every(x=>x.values.shiny)).toBe(true);
-  expect(mutations[0].entityId).not.toBe(mutations[1].entityId);
 });
 test('unchanged rows retain keyboard focus and an open selection search stays scoped',async({page})=>{
   await fixture(page);
@@ -67,7 +72,7 @@ test('unchanged rows retain keyboard focus and an open selection search stays sc
     button.focus();renderMyList();
     const stable=document.querySelector('#combined-list .combined-row')===row&&document.activeElement===button;
     selectCombinedGroup(0,true);
-    document.getElementById('combined-search').innerHTML=contextualIntentSearchHtml(productScopeEntries('selected'),i18nCore.t('contextSearch.selection'));
+    document.getElementById('wants-search-scope').value='selected';refreshCombinedSearch();
     const before=document.getElementById('combined-search').textContent;
     selectCombinedGroup(0,false);
     return{stable,before,after:document.getElementById('combined-search').textContent,empty:i18nCore.t('contextSearch.empty')};
@@ -97,6 +102,17 @@ test('responsive navigation and editor fit',async({page})=>{
     await page.keyboard.press('Escape');
     if(process.env.PHASE2_SCREENSHOTS)await page.screenshot({path:`${process.env.PHASE2_SCREENSHOTS}/combined-${width}.png`});
   }
+});
+test('every reviewed unavailable costume is absent from both active selectors',async({page})=>{
+  await fixture(page);
+  const audit=await page.evaluate(()=>{
+    const entries=listSource('wishlist'),active=new Set(_specialAllItems().map(e=>e.name));
+    myListType='wishlist';buildAcItems();const legacy=new Set(acItems.map(e=>e.name));
+    const unavailable=entries.filter(e=>spriteCatalogContext(e.no,e.name,e.displayName||e.name,e.catalogId).unresolved);
+    return{unavailable:unavailable.map(e=>e.name),leaked:unavailable.filter(e=>active.has(e.name)||legacy.has(e.name)).map(e=>e.name),base:active.has('Pikachu'),exact:active.has('Pikachu (Worlds 2025)')};
+  });
+  expect(audit.unavailable).toContain('Pikachu (Worlds 2026)');
+  expect(audit.leaked).toEqual([]);expect(audit.base).toBe(true);expect(audit.exact).toBe(true);
 });
 test('image keeps missing art and long exact details without mutating selection',async({page})=>{
   await fixture(page);

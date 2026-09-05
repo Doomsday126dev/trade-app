@@ -114,33 +114,23 @@ test('approved intent, More and Share paths preserve one canonical declaration v
   await page.evaluate(()=>renderInterimProductLabels());
   const original=await page.evaluate(()=>JSON.stringify(allData.users[cur].specialTradeBoard));
   await page.locator('#legacy-list-tools > summary').click();
-  await page.getByRole('button',{name:'For Trade',exact:true}).click();
-  await expect(page.locator('[data-intent-row="Eevee"]')).toBeVisible();
-  await page.locator('#ac-input').fill('Pikachu');
-  await expect(page.locator('#ac-dropdown .ac-item[role="option"]').filter({hasText:'Pikachu'}).first()).toBeVisible();
-  await page.evaluate(()=>{document.getElementById('add-pmon-sel').value='Pikachu';document.getElementById('add-pmon-pri').value='H';});
-  await page.evaluate(()=>addEntry());
-  await expect(page.locator('[data-intent-row="Pikachu"]')).toBeVisible();
-  expect(await page.evaluate(()=>parsePri(allData.wishlist[cur].Pikachu).p)).toBe('H');
-  await page.locator('[data-intent-row="Pikachu"] select').first().selectOption('L');
-  await expect.poll(()=>page.evaluate(()=>allData.users[cur].intentDeclarations.find(e=>e.name==='Pikachu').p)).toBe('L');
-  expect(await page.evaluate(()=>JSON.stringify(allData.users[cur].specialTradeBoard))).toBe(original);
+  await expect(page.locator('[data-list-intent="ft"]')).toHaveCount(0);
+  expect(await page.evaluate(()=>productDeclarations().entries.every(e=>e.intent==='lf'))).toBe(true);
   await page.evaluate(()=>openSpecialTradeBoard());
-  const before=await page.evaluate(()=>JSON.stringify(allData.users[cur].specialTradeBoard));
-  await page.locator('#special-ft-list label').filter({hasText:'Eevee'}).locator('input').uncheck();
-  expect(await page.evaluate(()=>getSpecialBoard().ft.some(e=>e.name==='Eevee'))).toBe(false);
-  expect(await page.evaluate(()=>JSON.stringify(allData.users[cur].specialTradeBoard))).toBe(before);
+  await page.locator('#special-lf-list label').filter({hasText:'Eevee'}).locator('input').uncheck();
+  expect(await page.evaluate(()=>getSpecialBoard().lf.some(e=>e.name==='Eevee'))).toBe(false);
+  expect(await page.evaluate(()=>JSON.stringify(allData.users[cur].specialTradeBoard))).toBe(original);
   await page.keyboard.press('Escape');
   for(const viewport of viewports){
     await page.setViewportSize(viewport);await page.evaluate(()=>switchTab('mylist'));
     await expectNoOverflow(page);await capture(page,`approved-for-trade-${viewport.width}`);
     // Reacquire the row if a pending render replaces it during viewport changes.
     await expect(async()=>{
-      const row=page.locator('[data-intent-row="Eevee"]');
+      const row=page.locator('.combined-row').filter({hasText:'Eevee'});
       await row.scrollIntoViewIfNeeded();
       const bounds=await row.evaluate(el=>({
         spriteX:el.querySelector('img').getBoundingClientRect().x,
-        nameX:el.querySelector('.intent-row-main').getBoundingClientRect().x
+        nameX:el.querySelector('.combined-entry').getBoundingClientRect().x
       }));
       expect(bounds.spriteX).toBeLessThan(bounds.nameX);
     }).toPass({timeout:5000});
@@ -155,18 +145,9 @@ test('approved intent, More and Share paths preserve one canonical declaration v
     await page.keyboard.press('Escape');
   }
   expect(original).toContain('Eevee');
-  await page.evaluate(()=>{
-    setMyList('dynamax');
-    const entry=listSource('dynamax').find(e=>e.name==='Charmander')||listSource('dynamax')[0];
-    document.getElementById('add-pmon-sel').value=entry.name;
-    return addEntry();
-  });
-  await expect(page.locator('#intent-entries .intent-row')).toHaveCount(1);
-  expect(await page.evaluate(()=>productDeclarations().entries.filter(e=>e.intent==='ft'&&e.category==='dynamax').length)).toBe(1);
-  await page.evaluate(()=>setMyList('wishlist'));
   for(const locale of ['ja','es','de','en']){
     await page.evaluate(value=>changeInterfaceLocale(value),locale);
-    await expect(page.locator('[data-list-intent="ft"]')).not.toContainText('product.');
+    await expect(page.locator('[data-list-intent="ft"]')).toHaveCount(0);
     await expectNoOverflow(page);
   }
 });
@@ -176,13 +157,9 @@ test('legacy editing retains originals and Board PNG consumes the deduplicated u
   await page.locator('#legacy-list-tools > summary').click();
   await page.evaluate(()=>{allData.users[cur].specialTradeBoard.lf[0].p='H';setMyListIntent('ft');});
   const original=await page.evaluate(()=>JSON.stringify(allData.users[cur].specialTradeBoard));
-  page.once('dialog',dialog=>dialog.accept());
-  await page.locator('[data-intent-row="Eevee"]').getByRole('button',{name:'Enable editing'}).click();
-  await expect(page.locator('[data-intent-row="Eevee"] select').first()).toBeVisible();
-  await expect(page.locator('[data-intent-row="Eevee"]')).toHaveCount(1);
   await page.evaluate(()=>openSpecialTradeBoard());
   await expect(page.locator('#special-lf-list .sb-row')).toHaveCount(4);
-  await expect(page.locator('#special-ft-list .sb-row')).toHaveCount(1);
+  await expect(page.locator('#special-ft-list')).toHaveCount(0);
   const result=await page.evaluate(async()=>{
     const board=getSpecialBoard(),before=JSON.stringify(allData.users[cur].specialTradeBoard);
     const blob=await renderSpecialBoardImage(board,cur);
@@ -194,7 +171,7 @@ test('legacy editing retains originals and Board PNG consumes the deduplicated u
     return{lf:board.lf.length,ft:board.ft.length,width:canvas.width,height:canvas.height,
       colors:colors.size,data:canvas.toDataURL('image/png'),before,after:JSON.stringify(allData.users[cur].specialTradeBoard)};
   });
-  expect(result.lf).toBe(4);expect(result.ft).toBe(1);
+  expect(result.lf).toBe(4);expect(result.ft).toBe(0);
   expect(result.width).toBe(1440);expect(result.height).toBeGreaterThan(100);expect(result.colors).toBeGreaterThan(8);
   expect(result.before).toBe(original);expect(result.after).toBe(original);
   if(screenshotDir){mkdirSync(screenshotDir,{recursive:true});writeFileSync(path.join(screenshotDir,'unified-board-export.png'),Buffer.from(result.data.split(',')[1],'base64'));}
@@ -244,7 +221,7 @@ test('safe owner journey covers the pre-trusted product contract',async({page})=
   await page.locator('#legacy-list-tools > summary').click();
   await expect(pikachu).toBeVisible();
   expect(await pikachu.evaluate(node=>getComputedStyle(node).getPropertyValue('--type-color').trim())).not.toBe('');
-  await expect(pikachu.locator('.background-visual-label')).toBeVisible();
+  await expect(pikachu.locator('.background-visual-label')).toHaveCount(0);
   await expect(pikachu.getByRole('button',{name:'Remove Pikachu'})).toBeVisible();
   await capture(page,'trusted-journey-my-list-1440x900');
 
@@ -330,9 +307,10 @@ test('safe owner journey covers the pre-trusted product contract',async({page})=
     finally{copyText=originalCopy;URL.createObjectURL=originalCreate;HTMLAnchorElement.prototype.click=originalClick;}
   });
   expect(exported.markdown).toContain('Pikachu');
-  expect(exported.markdown).toContain('New York City');
-  expect(exported.csv).toContain('"backgroundId","background"');
-  expect(exported.csv).toContain('For Trade');
+  expect(exported.markdown).not.toContain('New York City');
+  expect(exported.csv).not.toContain('"backgroundId"');
+  expect(exported.csv).not.toContain('For Trade');
+  expect(exported.csv).toContain('Wants');
 
   for(const locale of ['ja','es','de','en']){
     await page.evaluate(value=>changeInterfaceLocale(value),locale);

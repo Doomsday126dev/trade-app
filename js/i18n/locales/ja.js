@@ -1,11 +1,12 @@
 (function(global){
   const root=global.PogoLocales=global.PogoLocales||{};
   root.ja=Object.freeze({...root.en,
-    'phase2.scope':'共有範囲','phase2.full':'リスト全体','phase2.top':'最優先の希望','phase2.selected':'選択した項目','phase2.copyText':'テキストをコピー','phase2.selection':'選択','phase2.boardPreset':'ボードの選択を使用','phase2.clearSelection':'選択を解除','phase2.edit':'交換の希望','phase2.topWant':'最優先','phase2.legacyTools':'詳細リストツール','phase2.select':'{name}を選択','phase2.chooseSide':'探している・交換に出せるのいずれかを選択してください。','phase2.invalid':'選択した詳細を確認してください。','phase2.changed':'リストが変更されました。項目を開き直してください。','phase2.legacyGender':'この旧形式の項目は性別をバリエーション詳細に保存します。そちらで編集してください。','phase2.collision':'この側には別の登録があります。その項目を編集してください。上書きはしていません。',
+    'wants.title':'欲しいポケモン','wants.search':'Pokémon GO検索','wants.searchScope':'検索範囲','wants.filtered':'絞り込み中の欲しいポケモン','wants.linkScope':'公開リンクには欲しいポケモンの全リストが含まれます。',
+    'phase2.scope':'共有範囲','phase2.full':'リスト全体','phase2.top':'最優先の希望','phase2.selected':'選択した項目','phase2.copyText':'テキストをコピー','phase2.selection':'選択','phase2.boardPreset':'ボードの選択を使用','phase2.clearSelection':'選択を解除','phase2.edit':"欲しいポケモンを編集",'phase2.topWant':'最優先','phase2.legacyTools':'詳細リストツール','phase2.select':'{name}を選択','phase2.chooseSide':'探している・交換に出せるのいずれかを選択してください。','phase2.invalid':'選択した詳細を確認してください。','phase2.changed':'リストが変更されました。項目を開き直してください。','phase2.legacyGender':'この旧形式の項目は性別をバリエーション詳細に保存します。そちらで編集してください。','phase2.collision':'この側には別の登録があります。その項目を編集してください。上書きはしていません。',
     'contextSearch.species':'ポケモンの種類のみの絞り込み',
     'contextSearch.current':'{side}を検索 · {category}（現在の絞り込み）',
     'contextSearch.selection':'選択した項目の検索',
-    'contextSearch.warning':'ポケモンの種類で絞り込み、交換済みを除外します。フォルム、衣装、背景、色違いなどは手動で確認してください。所持、交換可否、博士に送ってよいかは判定しません。',
+    'contextSearch.warning':"種族のみの絞り込みです。正確な姿や交換可否はPokémon GOで確認してください。安全に博士へ送れることを示す検索ではありません。",
     'contextSearch.empty':'この範囲に項目はありません。',
     'contextSearch.unknown':'不明な項目',
     'contextSearch.unresolved':'種類を検索できません。手動で確認してください。',
