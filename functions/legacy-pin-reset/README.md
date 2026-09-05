@@ -1,6 +1,10 @@
 # Owner-Assisted Same-UID PIN Reset
 
-Status: **coordination corrected; live IAM and synthetic qualification pending**.
+Status: **deployed and qualified in production `2026-09-05.88`; auth work closed**.
+See [PRODUCTION_QUALIFICATION.md](PRODUCTION_QUALIFICATION.md) for completed live
+synthetic proof and its limits. The separate non-owner probe was blocked by App
+Check; it is not a passed live authorization test. The friend's account was not
+reset during qualification. Owner Admin reset is enabled for eligible legacy users.
 See [OWNERSHIP_BOUNDARY.md](OWNERSHIP_BOUNDARY.md) for the enforced exclusion
 contract. Deployment must install the guarded Rules and remove the retired
 SDK account's identity-write and impersonation privileges before enabling reset.
@@ -10,10 +14,12 @@ or reactivation of the 66 reviewed recovery records.
 The remainder records the original implementation and historical qualification;
 the ownership boundary and final deployment record supersede its old launch gates.
 
-Production `.87` and the friend's
-account are unchanged. The new Admin action is disabled in source. No deployed
-backend revision exists. The dedicated runtime service account was confirmed
+Historically, before the rollout, production was `.87`, the friend's account
+was unchanged, the new Admin action was disabled, and no backend revision
+existed. The dedicated runtime service account was confirmed
 absent by a read-only `gcloud iam service-accounts describe` on 2026-09-05.
+Those pre-deployment observations are superseded by the qualification record;
+they do not describe current production.
 
 ## Auth Contract
 
@@ -145,7 +151,7 @@ Sources: [Firebase permissions](https://firebase.google.com/docs/projects/iam/pe
 [GCS permissions](https://docs.cloud.google.com/storage/docs/access-control/iam-permissions),
 [generation preconditions](https://docs.cloud.google.com/storage/docs/request-preconditions).
 
-## Deployment Gates And Rollback
+## Historical Deployment Gates And Current Rollback
 
 1. Complete one independent Astra Ultra audit limited to authorization, same UID,
    least-privilege IAM, cross-account isolation, idempotency and preservation.
@@ -177,6 +183,16 @@ Quiesce in-flight requests; retain the latest journal/secret and all receipts.
 Disabling a service cannot undo an already dispatched password update. Never
 restore an old PIN, remap ownership, restore old ledger content or delete Auth.
 Rollback does not require a provider change or product-data migration.
+
+For current `.88`, use a bounded reset-function configuration deployment to set
+`LEGACY_PIN_RESET_ENABLED=false`, preserving its owner/boundary settings, runtime
+identity and exact secret. Verify the deployed revision rejects new requests,
+then wait for in-flight requests to finish and reconcile pending/ambiguous journal
+entries before any break-glass ownership operation. Do not replay an ambiguous
+password mutation. A frontend-only Pages rollback is not a backend disable.
+Use [the guarded Pages rollback](../../docs/PAGES-DEPLOYMENT.md) if reverting the
+UI; do not restore mutable ownership Rules or retired SDK privileges while reset
+is enabled. No rollback or disable is executed by the design-study closeout.
 
 ## Focused Qualification
 
