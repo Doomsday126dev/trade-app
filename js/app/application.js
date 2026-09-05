@@ -439,6 +439,7 @@ let myListIntent='lf';
 let boardHiddenKeys=new Set(),boardCurationOwner='';
 let _lastAuthenticatedIdentityUid='';
 let rpinTarget=null;
+let existingPinResetDialog=null;
 let syncQueue={},syncFlushTimer=null;
 let undoStack=null,undoTimer=null,undoReturnFocus=null;
 let acItems=[],acFiltered=[],acFocusIdx=-1;
@@ -1732,6 +1733,7 @@ function sessionTransientCallback(callback){
 }
 function resetSessionTransientUi(reason='session_boundary'){
   _sessionTransientGeneration++;
+  if(typeof closeExistingPinReset==='function')closeExistingPinReset();
   if(typeof invalidateAccountSyncRecovery==='function')invalidateAccountSyncRecovery(reason);
   if(typeof e1ClientFoundationCanary!=='undefined'&&e1ClientFoundationCanary){e1ClientFoundationCanary.close();e1ClientFoundationCanary=null;}
   if(providerAccountFoundationClient){providerAccountFoundationClient.close();providerAccountFoundationClient=null;}
@@ -5849,6 +5851,7 @@ function refreshBadgesAndLightChrome(){
 }
 function switchTab(t,opts={}){
   const previous=activeTabName();
+  if(t!=='admin')closeExistingPinReset();
   if(t==='settings'){openSettingsPanel('account');return;}
   if(t==='admin'&&!protectedOwnerSession())t='mylist';
   if(t==='browse')t='find';
@@ -8913,6 +8916,7 @@ function adminUserAction(event){
   const username=control.dataset.username||'',action=control.dataset.adminUserAction;
   if(action==='toggle-role')toggleAdmin(username,control.dataset.makeAdmin==='true');
   else if(action==='reset')openReset(username);
+  else if(action==='reset-existing')openExistingPinReset(username);
   else if(action==='repair')repairAccount(username);
   else if(action==='repair-directory')repairLoginDirectory(username);
 }
@@ -8957,12 +8961,100 @@ function renderAdmin(){
   const maintenanceList=document.getElementById('admin-maintenance-list');
   if(maintenanceList)maintenanceList.innerHTML=users.map(user=>{
     const repairTitle=user.canMaintain?i18nCore.t(user.authOk?'admin.repairLogin':'admin.repairOrReset'):i18nCore.t('admin.ownerRepairOnly');
-    const resetAction=user.canMaintain&&!user.established?`<button class="rpin" type="button" data-admin-user-action="reset" data-username="${escAttr(user.u)}">${escHtml(i18nCore.t('admin.resetPin'))}</button>`:'';
+    const resetAction=cur===OWNER&&user.u!==OWNER&&user.established&&legacyPinResetAvailable()?`<button class="rpin" type="button" data-admin-user-action="reset-existing" data-username="${escAttr(user.u)}">${escHtml(i18nCore.t('admin.resetPin'))}</button>`:user.canMaintain&&!user.established?`<button class="rpin" type="button" data-admin-user-action="reset" data-username="${escAttr(user.u)}">${escHtml(i18nCore.t('admin.resetPin'))}</button>`:'';
     const repairAction=user.canMaintain?`<button class="rpin" type="button" data-admin-user-action="repair" data-username="${escAttr(user.u)}" title="${escAttr(repairTitle)}">${escHtml(i18nCore.t('admin.repairAccount'))}</button>`:'';
     const explanation=user.established?i18nCore.t('admin.secureRepairRequired'):i18nCore.t('admin.firstUseResetAvailable');
     return`<article class="admin-maintenance-row"><div class="admin-maintenance-copy"><strong>${escHtml(user.u)}</strong><span>${escHtml(explanation)}</span></div><span class="acct-pill ${user.authOk?'ok':'warn'}">${escHtml(i18nCore.t(user.authOk?'admin.loginReady':'admin.needsRepair'))}</span><div class="admin-maintenance-actions">${resetAction}${repairAction}</div></article>`;
   }).join('');
   setAdminSection(adminSection);
+}
+
+// Remains off until the dedicated backend and designated synthetic live account
+// pass deployment qualification. This gate is presentation, never authorization.
+function legacyPinResetAvailable(){return false;}
+async function callLegacyPinReset(data){
+  try{
+    const sdk=await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js');
+    const callable=sdk.httpsCallable(sdk.getFunctions(fbApp,'us-central1'),'ownerResetLegacyPin',{limitedUseAppCheckTokens:true,timeout:125000});
+    return(await callable(data)).data;
+  }finally{delete data.pin;}
+}
+function closeExistingPinReset(){
+  const dialog=existingPinResetDialog;if(!dialog)return;
+  dialog.querySelectorAll('input').forEach(input=>{input.value='';});
+  dialog.close();dialog.remove();existingPinResetDialog=null;
+}
+async function openExistingPinReset(username){
+  if(!legacyPinResetAvailable()||cur!==OWNER||!auth?.currentUser||username===OWNER||existingPinResetDialog)return;
+  const ownerUid=auth.currentUser.uid,storageKey=`legacy-pin-reset-pending:${ownerUid}:${username}`;
+  const dialog=document.createElement('dialog');
+  existingPinResetDialog=dialog;
+  dialog.className='existing-pin-reset-dialog';
+  dialog.setAttribute('aria-labelledby','existing-pin-reset-title');
+  dialog.innerHTML=`<form autocomplete="off"><h2 id="existing-pin-reset-title">Reset PIN</h2><strong data-reset-trainer></strong><p data-reset-confirmation></p><label>New PIN<input name="new-pin" type="password" inputmode="numeric" pattern="[0-9]{6}" minlength="6" maxlength="6" autocomplete="off" required disabled></label><label>Confirm new PIN<input name="confirm-pin" type="password" inputmode="numeric" pattern="[0-9]{6}" minlength="6" maxlength="6" autocomplete="off" required disabled></label><p role="status" aria-live="polite">Checking account...</p><div class="existing-pin-reset-actions"><button type="button" data-reset-close>Close</button><button type="button" data-reset-status hidden>Check result</button><button type="submit" disabled>Confirm reset</button></div></form>`;
+  const form=dialog.querySelector('form'),inputs=[...form.querySelectorAll('input')],submit=form.querySelector('[type="submit"]');
+  const status=form.querySelector('[role="status"]'),close=form.querySelector('[data-reset-close]'),check=form.querySelector('[data-reset-status]');
+  form.querySelector('[data-reset-trainer]').textContent=username;
+  document.body.append(dialog);dialog.showModal();
+  let target=null,pending=null,busy=false,closed=false;
+  const sameOwner=()=>dialog.isConnected&&cur===OWNER&&auth?.currentUser?.uid===ownerUid;
+  const clearPins=()=>inputs.forEach(input=>{input.value='';});
+  const setBusy=value=>{busy=value;close.disabled=value;check.disabled=value;submit.disabled=true;inputs.forEach(input=>{input.disabled=true;});};
+  const showResult=result=>{
+    if(closed||!sameOwner())return;
+    if(result?.requestId!==pending?.requestId||result?.username!==username)throw new Error('Unrecognized reset receipt');
+    if(result.status==='completed'){
+      status.textContent='PIN reset completed for this request. A later PIN change can supersede this receipt.';
+      sessionStorage.removeItem(storageKey);check.hidden=true;
+    }else if(result.status==='aborted'){
+      status.textContent='Reset stopped before changing the PIN. Close this dialog and review the account before starting again.';
+      sessionStorage.removeItem(storageKey);check.hidden=true;
+    }else{
+      status.textContent='Reset is not confirmed. Do not submit another reset. Check this request again or contact the operator for reconciliation.';
+      check.hidden=false;
+    }
+  };
+  const navigationEvents=['pagehide','popstate','hashchange'];
+  const onNavigate=()=>{dialog.close();dispose();};
+  const dispose=()=>{closed=true;clearPins();navigationEvents.forEach(name=>window.removeEventListener(name,onNavigate));dialog.remove();if(existingPinResetDialog===dialog)existingPinResetDialog=null;};
+  navigationEvents.forEach(name=>window.addEventListener(name,onNavigate));
+  close.onclick=()=>{dialog.close();dispose();};
+  dialog.addEventListener('cancel',event=>{if(busy)event.preventDefault();});
+  dialog.addEventListener('close',dispose);
+  check.onclick=async()=>{
+    if(busy||!pending||!sameOwner())return;
+    setBusy(true);status.textContent='Checking reset result...';
+    try{showResult(await callLegacyPinReset({action:'status',...pending}));}
+    catch{status.textContent='Could not verify this request. Sign in again as owner if needed, then check the result. Do not submit another reset.';}
+    finally{setBusy(false);}
+  };
+  form.onsubmit=async event=>{
+    event.preventDefault();
+    if(busy||pending||!target||!sameOwner())return;
+    if(!/^[0-9]{6}$/.test(inputs[0].value)||inputs[0].value!==inputs[1].value){status.textContent='Enter the same six-digit PIN twice.';return;}
+    let pin=inputs[0].value;
+    try{
+      pending={username,targetUid:target.targetUid,fingerprint:target.fingerprint,requestId:crypto.randomUUID()};
+      // Persist only the receipt identity BEFORE dispatch. Never persist a PIN.
+      sessionStorage.setItem(storageKey,JSON.stringify(pending));
+    }catch{pending=null;pin='';clearPins();status.textContent='Could not retain the request receipt. No reset was sent.';return;}
+    clearPins();setBusy(true);status.textContent='Resetting PIN...';
+    try{const response=callLegacyPinReset({action:'reset',...pending,pin});pin='';showResult(await response);}
+    catch{status.textContent='Reset result is unknown. Check this request; do not start another reset.';check.hidden=false;}
+    finally{pin='';clearPins();setBusy(false);}
+  };
+  try{
+    pending=JSON.parse(sessionStorage.getItem(storageKey)||'null');
+    if(pending){
+      if(pending.username!==username)throw new Error('Receipt mismatch');
+      check.hidden=false;status.textContent='A previous reset needs verification. Check its result before doing anything else.';return;
+    }
+    target=await callLegacyPinReset({action:'inspect',username});
+    if(closed||!sameOwner())return;
+    if(target?.username!==username||typeof target.targetUid!=='string'||!/^[a-f0-9]{64}$/.test(target.fingerprint)||!Number.isFinite(Date.parse(target.created)))throw new Error('Invalid identity');
+    form.querySelector('[data-reset-confirmation]').textContent=`Account created ${new Date(target.created).toLocaleDateString()}`;
+    status.textContent='';submit.disabled=false;inputs.forEach(input=>{input.disabled=false;});inputs[0].focus();
+  }catch{status.textContent='This account cannot be reset now. Verify owner sign-in and the server identity checks. No reset was sent.';}
 }
 
 async function repairAccount(u){

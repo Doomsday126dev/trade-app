@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "state": "coordination-fixed-awaiting-live-qualification",
+  "blockingFindings": [],
+  "identityBoundary": {
+    "mode": "immutable-bindings-v1",
+    "rulesConfig": "firebase.legacy-identity-guard.json",
+    "legacySdkAccount": "firebase-adminsdk-fbsvc@trade-list-a4297.iam.gserviceaccount.com",
+    "legacySdkRemoveProjectRoles": ["roles/firebase.sdkAdminServiceAgent", "roles/firebaseauth.admin", "roles/firebasedatabase.admin", "roles/iam.serviceAccountTokenCreator"],
+    "legacySdkReplacementPermissions": ["firebaseauth.users.get", "firebasedatabase.instances.get"],
+    "prohibitedApplicationPermissions": ["firebaseauth.users.create", "firebaseauth.users.delete", "firebasedatabase.instances.update", "iam.serviceAccounts.getAccessToken", "iam.serviceAccounts.signBlob", "iam.serviceAccounts.signJwt"],
+    "controlPlane": "Project-owner break-glass operations must quiesce reset first; they can override IAM and Rules and are not application identity writers."
+  },
+  "projectId": "trade-list-a4297",
+  "region": "us-central1",
+  "codebase": "legacy-pin-reset",
+  "function": "ownerResetLegacyPin",
+  "runtimeServiceAccount": "legacy-pin-reset-runtime@trade-list-a4297.iam.gserviceaccount.com",
+  "runtimePermissions": {
+    "project": ["firebaseauth.users.get", "firebaseauth.users.update", "firebasedatabase.instances.get"],
+    "identityDatabaseReadOnly": {
+      "permissions": ["datastore.entities.get", "datastore.entities.list"],
+      "database": "projects/trade-list-a4297/databases/phase-e-identity"
+    },
+    "appCheckRole": "roles/firebaseappcheck.tokenVerifier",
+    "journal": {
+      "bucket": "trade-list-a4297-legacy-pin-reset-journal",
+      "object": "legacy-pin-reset/v1/ledger.json",
+      "permissions": ["storage.objects.get", "storage.objects.create", "storage.objects.delete"],
+      "uniformBucketLevelAccess": true,
+      "publicAccessPrevention": "enforced",
+      "versioning": true
+    },
+    "secret": {
+      "name": "legacy-pin-reset-hmac",
+      "role": "roles/secretmanager.secretAccessor",
+      "bindingScope": "this-secret-only"
+    }
+  },
+  "requiredPrivateConfiguration": ["LEGACY_PIN_RESET_OWNER_UID", "LEGACY_PIN_RESET_ENABLED", "LEGACY_IDENTITY_BOUNDARY"],
+  "activationGates": [
+    "independent-auth-security-review",
+    "exact-owner-uid-and-server-admin-proof",
+    "designated-safe-production-test-identity",
+    "least-privilege-runtime-permission-proof",
+    "private-versioned-CAS-journal-proof",
+    "enforced-exclusion-of-external-identity-writers-not-merely-an-operator-promise",
+    "safe-synthetic-live-reset-and-preservation-proof",
+    "separate-reviewed-client-release-enables-UI"
+  ]
+}
