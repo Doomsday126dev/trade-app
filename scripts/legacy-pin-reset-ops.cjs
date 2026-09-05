@@ -110,15 +110,44 @@ async function snapshot(t) {
   const u = r.value.users?.[0]; assert.equal(u?.localId, t.uid);
   return { data, auth: { uid: u.localId, email: u.email, createdAt: u.createdAt, providerUserInfo: u.providerUserInfo } };
 }
+function validateCredentialProbe(results, uid) {
+  assert.equal(results.length, 2);
+  const [oldPin, newPin] = results;
+  assert.equal(oldPin.name, 'old'); assert.equal(newPin.name, 'new');
+  assert.equal(oldPin.status, 400, 'Old PIN must reach credential verification, not an API/network denial');
+  assert.ok(['INVALID_LOGIN_CREDENTIALS', 'INVALID_PASSWORD'].includes(oldPin.error), 'Expected a credential rejection');
+  assert.equal(newPin.status, 200, 'New PIN must authenticate');
+  assert.equal(newPin.uid, uid, 'New PIN must reach the original UID');
+}
 async function credentials() {
   const t = read('synthetic-private.json'); assert.equal(t.username, SYNTHETIC); assert.match(t.uid, /^synthetic-pin-reset-/);
-  const source = fs.readFileSync(path.resolve(__dirname, '../js/app/application.js'), 'utf8');
-  const key = source.match(/AIza[A-Za-z0-9_-]{30,}/)?.[0] || 'AIzaSyCazZNLj9_lEb1vUNUlrMe9hodqY_l34VU';
-  for (const [name, password, expected] of [['old', t.oldPin, false], ['new', t.newPin, true]]) {
-    const r = await api(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${key}`, 'POST', { email: t.email, password, returnSecureToken: true }, '', [400]);
-    assert.equal(r.status === 200, expected, `${name} credential result`);
-    if (expected) assert.equal(r.value.localId, t.uid);
-  }
+  // Exercise the referrer-restricted Web API from its real origin. Never forge
+  // a Referer header, relax the API key, or persist an authenticated profile.
+  const { chromium } = require('playwright');
+  const browser = await chromium.launch();
+  try {
+    const context = await browser.newContext({ serviceWorkers: 'block' });
+    const page = await context.newPage();
+    await page.goto('https://doomsday126dev.github.io/trade-app/', { waitUntil: 'domcontentloaded' });
+    assert.equal(new URL(page.url()).origin, 'https://doomsday126dev.github.io');
+    assert.equal(new URL(page.url()).pathname, '/trade-app/');
+    const results = await page.evaluate(async target => {
+      const config = window.__POGO_FIREBASE_CONFIG;
+      if (config?.projectId !== 'trade-list-a4297') throw new Error('Unexpected Firebase project');
+      const results = [];
+      for (const [name, password] of [['old', target.oldPin], ['new', target.newPin]]) {
+        const response = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${config.apiKey}`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: target.email, password, returnSecureToken: true }),
+          signal: AbortSignal.timeout(30000)
+        });
+        const value = await response.json();
+        results.push({ name, status: response.status, uid: value.localId || null, error: value.error?.message || null });
+      }
+      return results;
+    }, t);
+    validateCredentialProbe(results, t.uid);
+  } finally { await browser.close(); }
   assert.deepEqual(await snapshot(t), read('synthetic-baseline.json'));
   save('credential-proof.json', { at: new Date().toISOString(), username: SYNTHETIC, oldPinRejected: true, newPinAccepted: true, sameUid: true, canonicalAndOwnershipUnchanged: true });
   console.log('Synthetic proof passed: old PIN rejected, new PIN accepted, UID/incarnation/ownership/canonical data unchanged.');
@@ -129,3 +158,4 @@ async function main() {
   await ({ provision, synthetic, credentials })[process.argv[2]]();
 }
 if (require.main === module) main().catch(error => { console.error(`Bounded reset operation stopped: ${error.message}`); process.exitCode = 1; });
+module.exports = { validateCredentialProbe };

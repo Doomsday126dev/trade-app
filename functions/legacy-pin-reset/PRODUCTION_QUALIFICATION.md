@@ -29,11 +29,12 @@ Do not recreate or reassign its UID on a partial failure. Reconcile its existing
 Auth and RTDB records first. Only this fixture is designated for the live reset.
 The friend's account must not be reset as a qualification test.
 
-## Evidence and Remaining Gate
+## Evidence and Live Acceptance
 
-- 101 focused unit/contracts and the installed-SDK boundaries passed before
-  the compatible query-parser security patch; rerun with the added regression
-  test for this release. No major Firebase SDK upgrade is introduced.
+- 102 focused unit/contracts and installed-SDK boundaries pass with the
+  compatible query-parser security patch. Three additional operator-probe
+  contracts reject API/network errors masquerading as credential failures and
+  reject a successful login to a different UID. No major SDK upgrade is used.
 - Three real RTDB/Auth emulator tests enforce immutable ownership, including
   an attempted identity change inside the final-read/password-write interval.
 - The focused Auth-emulator/reset/sync journey preserves UID, canonical data,
@@ -46,10 +47,31 @@ The friend's account must not be reset as a qualification test.
 - Unauthenticated live callable requests fail with 401; malformed envelopes
   fail with 400. These are not a substitute for a real owner/App Check reset.
 
-Final live acceptance still requires the owner-authenticated callable to reset
-the designated synthetic fixture, then old-PIN rejection, new-PIN same-UID login,
-unchanged ownership/incarnation/canonical data, and exact receipt reconciliation.
-Do not report the feature ready for the friend's reset until that proof passes.
+On 2026-09-05 the owner completed the designated synthetic reset through the
+production UI. The live journal contains one completed request for that fixture
+and no requests for other accounts. Independent credential verification from a
+fresh browser at the real production origin confirms old-PIN rejection and
+new-PIN authentication to the original UID. The synthetic ownership, Auth
+creation time/provider identity, and canonical/product snapshot equal baseline.
+
+Read-only preservation checks also confirm unchanged identity, canonical data
+and original reviewed evidence. Additional valid, non-authoritative review
+receipts are retained, not suppressed to satisfy collection equality. Historical
+server candidate collections are not misrepresented as the current device's
+active recovery count. The focused clean-device test remains 66 reviewed / 0
+active, with no reseeding or canonical writes. Detailed live evidence stays in
+private operator records rather than public PR comments.
+
+The browser probe uses the production origin because the Web API key correctly
+rejects direct CLI requests with `API_KEY_HTTP_REFERRER_BLOCKED`. No fabricated
+Referer header or API-key relaxation is used. Request tokens and PINs are not
+returned to the operator console or persisted in a browser profile.
+
+Owner-only authorization, request/UID isolation, and replay mismatch denials are
+covered by focused contracts. The automated non-owner live callable probe was
+stopped by App Check attestation before dispatch and is not claimed as a passed
+post-App-Check authorization test. The real owner reset proves the production
+Auth/App Check path. No friend's account was reset during qualification.
 
 ## Dependency Review
 
