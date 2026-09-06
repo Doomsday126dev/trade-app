@@ -6,6 +6,7 @@
   const MAX_TAGS_PER_FAVORITE=24;
   const MAX_TAG_LABEL_LENGTH=40;
   const MAX_SNAPSHOT_BYTES=512*1024;
+  const MAX_HISTORY_BYTES=2*1024*1024;
   const MAX_FAVORITES=global.PogoDomain?.productLimits?.MAX_FAVORITES;
   if(!Number.isInteger(MAX_FAVORITES)||MAX_FAVORITES<1)throw new Error('Product Favorite limit is unavailable');
 
@@ -56,7 +57,7 @@
       const seenAt=timestamp(value?.seenAt,-1),snapshot=plainObject(value?.snapshot);
       if(seenAt<0||!Object.keys(snapshot).length)return null;
       try{if(utf8ByteLength(JSON.stringify(snapshot))>MAX_SNAPSHOT_BYTES)return null;}catch{return null;}
-      return{seenAt,snapshot};
+      return{seenAt,snapshot,targetUid:String(value?.targetUid||'')};
     }
     function normalize(value){
       const state=empty(identity),source=value&&typeof value==='object'?value:{};
@@ -80,9 +81,11 @@
       }
       const activeIds=new Set(Object.keys(state.tags));
       state.favorites=state.favorites.map(item=>({...item,tagIds:item.tagIds.filter(id=>activeIds.has(id))}));
-      for(const item of state.recent){
+      let historyBytes=0;
+      const retained=new Set([...state.favorites,...state.recent].map(item=>item.key));
+      for(const item of Object.entries(plainObject(source.snapshots)).filter(([key])=>retained.has(key)).map(([key,value])=>({key,...value})).sort((a,b)=>b.seenAt-a.seenAt)){
         const snapshot=cleanSnapshot(plainObject(source.snapshots)[item.key]);
-        if(snapshot)state.snapshots[item.key]=snapshot;
+        if(snapshot){const bytes=utf8ByteLength(JSON.stringify(snapshot));if(historyBytes+bytes<=MAX_HISTORY_BYTES){state.snapshots[item.key]=snapshot;historyBytes+=bytes;}}
       }
       return state;
     }
@@ -117,8 +120,16 @@
       rememberOpened(username,snapshot,openedAt=Number(now())){
         const state=read(),item={...trainerRef(username),openedAt};
         state.recent=[item,...state.recent.filter(value=>value.key!==item.key)].slice(0,maxRecent);
-        state.snapshots[item.key]={seenAt:openedAt,snapshot};
+        // Favorite baselines advance only through the explicit checked action.
+        if(!state.favorites.some(favorite=>favorite.key===item.key))state.snapshots[item.key]={seenAt:openedAt,snapshot};
         write(state);return read();
+      },
+      rememberChecked(username,snapshot,{seenAt=Number(now()),targetUid=''}={}){
+        const state=read(),item=trainerRef(username),favorite=state.favorites.find(value=>value.key===item.key);
+        if(!favorite||String(favorite.targetUid||'')!==String(targetUid)||!cleanSnapshot({seenAt,snapshot}))return{ok:false};
+        if(state.snapshots[item.key]?.seenAt>seenAt)return{ok:false};
+        state.snapshots[item.key]={seenAt,snapshot,targetUid};
+        try{write(state);return{ok:read().snapshots[item.key]?.seenAt===seenAt};}catch{return{ok:false};}
       },
       snapshotFor:username=>read().snapshots[trainerRef(username).key]||null,
       createTag(label){
@@ -198,5 +209,5 @@
       clear(){storage.removeItem(key);}
     });
   }
-  root.trainerHistoryStore=Object.freeze({VERSION,PREFIX,MAX_FAVORITES,MAX_TAGS,MAX_TAGS_PER_FAVORITE,MAX_TAG_LABEL_LENGTH,MAX_SNAPSHOT_BYTES,createTrainerHistoryStore});
+  root.trainerHistoryStore=Object.freeze({VERSION,PREFIX,MAX_FAVORITES,MAX_TAGS,MAX_TAGS_PER_FAVORITE,MAX_TAG_LABEL_LENGTH,MAX_SNAPSHOT_BYTES,MAX_HISTORY_BYTES,createTrainerHistoryStore});
 })(window);

@@ -97,15 +97,30 @@
       iOffer:offersAvailable?intersection(theirWants,mine.filter(e=>e.intent==='ft')):[]};
   }
 
+  function wantsChanges(current=[],previous=null,options={}){
+    const key=entry=>wantedIntentKey({...entry,backgroundId:''},options);
+    const signature=entry=>JSON.stringify([entry.p||'',entry.note||'']);
+    const before=new Map();
+    for(const entry of previous||[]){const id=key(entry);if(!before.has(id))before.set(id,[]);before.get(id).push(entry);}
+    const entries=current.filter(entry=>entry.intent==='lf');
+    const added=previous===null?[]:entries.filter(entry=>!before.has(key(entry)));
+    const newTop=previous===null?[]:entries.filter(entry=>entry.p==='H'&&!before.get(key(entry))?.some(old=>old.p==='H'));
+    const changed=previous===null?[]:entries.filter(entry=>!before.get(key(entry))?.some(old=>signature(old)===signature(entry)));
+    const ids=new Set(entries.map(key));
+    const removed=previous===null?0:[...before.keys()].filter(id=>!ids.has(id)).length;
+    return{first:previous===null,added,newTop,changed,removed,updated:changed.length>0||removed>0};
+  }
   function groupWants(members=[],{scope='all',now=Date.now(),...options}={}){
     const rows=new Map();
     const states=members.map(member=>{
       const fresh=Number(member.fetchedAt)>0&&member.fetchedAt<=now&&now-member.fetchedAt<=300000;
-      const published=Number(member.updatedAt)>0&&member.updatedAt<=now&&now-member.updatedAt<=30*86400000;
-      const available=['published','published_empty'].includes(member.status)&&fresh&&published;
+      const aged=!(Number(member.updatedAt)>0&&member.updatedAt<=now)||now-member.updatedAt>30*86400000;
+      const available=['published','published_empty'].includes(member.status)&&fresh;
       const status=available?'available':['published','published_empty'].includes(member.status)?'stale':member.status==='loading'?'loading':'unavailable';
+      const changes=wantsChanges(member.entries,member.previous??null,options);
       if(available)for(const raw of member.entries||[]){
         if(raw.intent!=='lf'||scope==='top'&&raw.p!=='H')continue;
+        if(scope==='new'&&!changes.changed.includes(raw)||scope==='newTop'&&!changes.newTop.includes(raw))continue;
         const entry={...raw,backgroundId:''},key=wantedIntentKey(entry,options)+'|'+JSON.stringify(entry.note||'');
         if(!rows.has(key))rows.set(key,{...entry,key,members:[]});
         const row=rows.get(key);
@@ -113,9 +128,9 @@
         if(!previous)row.members.push({key:member.key,displayName:member.displayName,p:entry.p||'',priorities:[entry.p||'']});
         else if(!previous.priorities.includes(entry.p||''))previous.priorities.push(entry.p||'');
       }
-      return{...member,status,entries:undefined};
+      return{...member,status,aged,changes:available?changes:null,entries:undefined};
     });
     return{members:states,entries:[...rows.values()]};
   }
-  root.tradeListComparison=Object.freeze({FLAG_KEYS,cleanEntry,qualifierKey,wantedIntentKey,compareWantedLists,declarationKey,unifyDeclarations,compareDeclarations,groupWants});
+  root.tradeListComparison=Object.freeze({FLAG_KEYS,cleanEntry,qualifierKey,wantedIntentKey,compareWantedLists,declarationKey,unifyDeclarations,compareDeclarations,wantsChanges,groupWants});
 })(window);

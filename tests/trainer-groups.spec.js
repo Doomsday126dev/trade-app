@@ -10,6 +10,7 @@ async function fixture(page){
   await page.goto('./?groups-fixture');
   await page.waitForFunction(()=>typeof __pogoEnsureFullApp==='function');await page.evaluate(()=>__pogoEnsureFullApp('groups-fixture'));
   await page.waitForFunction(()=>typeof renderTrainerGroups==='function');
+  await page.waitForFunction(()=>window.__pogoStartup?.firebaseStartupSettledAt>0);
   await page.evaluate(()=>{
     db=null;fbOn=false;managedFirebaseClient=null;managedAccountSyncRuntime=null;accountSyncUiState=null;
     cur='GroupFixture';auth={currentUser:{uid:'synthetic-group'}};allData=normalizeData({users:{GroupFixture:{authUid:'synthetic-group'}}});
@@ -17,9 +18,9 @@ async function fixture(page){
     const store=ensureTrainerHistoryStore();for(const name of ['Alice','Bob','Private','Old'])store.saveFavoriteOrganization(name);
     window.__reads=[];
     const cache=favoriteShareSessionCacheData.createFavoriteShareSessionCache({repository:{read:async name=>{
-      __reads.push(name);if(name==='Private')return{ok:true,value:null};
+      __reads.push(name);if(name==='Private'||name==='Alice'&&window.__revokedAlice)return{ok:true,value:null};
       const updatedAt=Date.now()-(name==='Old'?31*86400000:1000);
-      return{ok:true,value:{version:1,username:name,profile:{friendCode:'',lastUpdated:updatedAt},lists:{wishlist:{Pikachu:name==='Bob'?'M':'H',...(name==='Alice'?{Snom:'L'}:{})},dynamax:{},gmax:{},costumes:{}},publishedListTypes:['wishlist','dynamax','gmax','costumes'],updatedAt}};
+      return{ok:true,value:{version:1,username:name,profile:{friendCode:'',lastUpdated:updatedAt},lists:{wishlist:{Pikachu:name==='Bob'?'M':'H',...(name==='Alice'?{Snom:'L',...window.__extraWants}:{})},dynamax:{},gmax:{},costumes:{}},publishedListTypes:['wishlist','dynamax','gmax','costumes'],updatedAt}};
     }},validateProjection:publicSharePublicationDomain.publicShareProjectionStatus,projectSnapshot:favoritePokemonBrowseDomain.projectSnapshot});
     cache.activate({uid:'synthetic-group',username:cur});ensureFavoriteShareSessionCache=()=>cache;
     document.getElementById('login-pg').style.display='none';document.getElementById('app').style.display='flex';switchTab('find',{render:false});setTrainerDiscoveryMode('favorites');renderTrainerQuickLists();
@@ -33,7 +34,7 @@ test('group CRUD and membership reuse private favorites; aggregate and copy only
     await expect(page.locator('[data-group-action="refresh"]')).toBeEnabled();
   }
   await expect(page.locator('.group-availability')).toContainText('Private');await expect(page.locator('.group-availability')).toContainText('Unavailable');
-  await expect(page.locator('.group-wants')).toContainText('Alice');await expect(page.locator('.group-wants')).toContainText('Bob');await expect(page.locator('.group-wants')).not.toContainText('Old');
+  await expect(page.locator('.group-wants')).toContainText('Alice');await expect(page.locator('.group-wants')).toContainText('Bob');await expect(page.locator('.group-wants')).toContainText('Old');
   expect(await page.evaluate(()=>__reads.length)).toBe(4);
   await page.locator('#trainer-group-scope').selectOption('top');await expect(page.locator('.group-wants')).not.toContainText('Bob');
   await page.locator('#trainer-group-results [data-contextual-copy]').click();expect(await page.evaluate(()=>__copy)).toBe('!traded&25');
@@ -99,4 +100,33 @@ test('late public responses cannot restore a previous account group',async({page
   });
   await expect(page.locator('#trainer-groups')).not.toContainText('Alice');
   expect(await page.evaluate(()=>trainerGroupState.records.length)).toBe(0);
+});
+test('Favorite changes use explicit local baselines and current permitted new-wants searches',async({page})=>{
+  await fixture(page);await page.locator('#trainer-group-select').selectOption('favorites');
+  await expect(page.locator('.group-availability')).toContainText('First check');
+  await page.locator('[data-group-action="checked"]').click();
+  await expect(page.locator('.group-availability')).toContainText('No changes');
+  await page.evaluate(()=>{window.__extraWants={Snom:'H',Eevee:'L'};});
+  await page.locator('[data-group-action="refresh"]').click();
+  await expect(page.locator('.group-availability')).toContainText('1 new · 1 new Top wants');
+  await page.locator('#trainer-group-scope').selectOption('new');
+  await expect(page.locator('.group-wants')).toContainText('Eevee');
+  await expect(page.locator('.group-wants')).toContainText('Snom');
+  await expect(page.locator('.group-wants')).not.toContainText('Pikachu');
+  await page.locator('#trainer-group-results [data-contextual-copy]').click();
+  expect(await page.evaluate(()=>__copy)).toContain('133');
+  if(process.env.GROUP_SCREENSHOTS){
+    await page.evaluate(()=>scrollTo(0,document.getElementById('trainer-group-results').getBoundingClientRect().top+scrollY-120));
+    await page.screenshot({path:`${process.env.GROUP_SCREENSHOTS}/changes-${test.info().project.name}.png`,animations:'disabled'});
+  }
+  await page.locator('#trainer-group-scope').selectOption('newTop');
+  await expect(page.locator('.group-wants')).toContainText('Snom');
+  await expect(page.locator('.group-wants')).not.toContainText('Eevee');
+  await page.locator('[data-group-checked-trainer="Alice"]').click();
+  await expect(page.locator('#trainer-group-results [data-contextual-copy]')).toHaveCount(0);
+  const baseline=await page.evaluate(()=>JSON.stringify(ensureTrainerHistoryStore().snapshotFor('Alice')));
+  await page.evaluate(()=>{window.__revokedAlice=true;});
+  await page.locator('[data-group-action="refresh"]').click();
+  await expect(page.locator('[data-group-checked-trainer="Alice"]')).toHaveCount(0);
+  expect(await page.evaluate(()=>JSON.stringify(ensureTrainerHistoryStore().snapshotFor('Alice')))).toBe(baseline);
 });
