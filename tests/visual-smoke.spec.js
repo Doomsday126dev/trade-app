@@ -260,7 +260,7 @@ test.describe('visual smoke', () => {
     await page.evaluate(()=>{
       allData=normalizeData({
         users:{CostumeSurfaceTester:{specialTradeBoard:{
-          lf:[{name:'Pikachu (Worlds 2026)',dn:'Pikachu (Worlds 2026)',no:25}],
+          lf:[],
           ft:[
             {name:'Pikachu (Worlds 2025)',dn:'Pikachu (Worlds 2025)',no:25,qty:1},
             {name:'Gengar (Halloween 2024)',dn:'Gengar (Halloween 2024)',no:94,qty:1}
@@ -300,10 +300,11 @@ test.describe('visual smoke', () => {
     for(const[name]of reviewedMappings){expect(exported.markdown).toContain(name);expect(exported.csv).toContain(name);}
 
     await page.evaluate(()=>openSpecialTradeBoard());
-    const boardMapped=page.locator('#special-ft-list .sb-row').filter({hasText:'Pikachu (Worlds 2025)'});
+    const boardMapped=page.locator('#special-lf-list .sb-row').filter({hasText:'Pikachu (Worlds 2025)'});
     const boardUnavailable=page.locator('#special-lf-list .sb-row').filter({hasText:'Pikachu (Worlds 2026)'});
     await expect(boardMapped.locator('img')).toHaveAttribute('src',/assets\/sprites\/go\/pikachu-world-champs-2025\.png/);
-    await expect(page.locator('#special-ft-list .sb-row').filter({hasText:'Gengar (Halloween 2024)'}).locator('img')).toHaveAttribute('src',/assets\/sprites\/go\/gengar-spooky-festival\.png/);
+    await expect(page.locator('#special-lf-list .sb-row').filter({hasText:'Gengar (Halloween 2024)'}).locator('img')).toHaveAttribute('src',/assets\/sprites\/go\/gengar-spooky-festival\.png/);
+    await expect(page.locator('#special-ft-list .sb-row')).toHaveCount(0);
     await expect(boardUnavailable.locator('.pc-sprite-placeholder.known-unavailable')).toHaveAttribute('aria-label','Artwork not yet available for Pikachu (Worlds 2026)');
     await expect(boardUnavailable.locator('.pc-sprite-placeholder.known-unavailable')).toHaveAttribute('title','Artwork not yet available for Pikachu (Worlds 2026)');
 
@@ -315,7 +316,7 @@ test.describe('visual smoke', () => {
           width:node.getBoundingClientRect().width,height:node.getBoundingClientRect().height,
           borderStyle:getComputedStyle(node).borderStyle,overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth
         }));
-        expect(geometry).toEqual({width:24,height:24,borderStyle:'dashed',overflow:false});
+        expect(geometry).toEqual({width:34,height:34,borderStyle:'dashed',overflow:false});
       }
     }
 

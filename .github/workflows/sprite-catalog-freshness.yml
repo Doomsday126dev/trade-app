@@ -3,7 +3,16 @@ name: Sprite catalog freshness
 on:
   workflow_dispatch:
   schedule:
-    - cron: '17 9 1 * *'
+    - cron: '17 9 * * 1'
+  pull_request:
+    paths:
+      - 'data/*costume*'
+      - 'assets/sprites/go/**'
+      - 'js/domain/costumeSpriteCatalog.js'
+      - 'scripts/*costume*'
+      - 'scripts/sprites/**'
+      - 'tests/costume*'
+      - '.github/workflows/sprite-catalog-freshness.yml'
 
 permissions:
   contents: read
@@ -21,5 +30,18 @@ jobs:
         run: |
           node scripts/generate-costume-sprite-runtime.cjs --check
           node scripts/generate-public-sprite-dex.cjs --check
-      - name: Detect upstream sprite inventory changes
-        run: node scripts/check-costume-sprite-freshness.cjs
+          node --test tests/costume-sprite-freshness.test.cjs tests/costume-sprite-catalog.test.cjs tests/sprite-resolution.test.cjs
+      - name: Offline review integrity (pull requests)
+        if: github.event_name == 'pull_request'
+        run: node scripts/check-costume-sprite-freshness.cjs --offline --report costume-freshness.json --summary costume-freshness.md
+      - name: Live source and review freshness (weekly or manual)
+        if: github.event_name != 'pull_request'
+        run: node scripts/check-costume-sprite-freshness.cjs --report costume-freshness.json --summary costume-freshness.md
+      - name: Publish review summary even when attention is required
+        if: always()
+        run: |
+          if test -f costume-freshness.md; then
+            cat costume-freshness.md >> "$GITHUB_STEP_SUMMARY"
+          else
+            printf '%s\n' 'Costume check could not produce a report. Inspect the failed validation step; do not treat this run as current.' >> "$GITHUB_STEP_SUMMARY"
+          fi

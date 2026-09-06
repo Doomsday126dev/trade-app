@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "capturedAt": "2026-08-30T00:11:41.232Z",
+  "capturedAt": "2026-09-06T04:46:04.202Z",
   "pages": [
     {
       "dex": 1,
@@ -47,15 +47,15 @@
       "files": [
         {
           "file": "venusaur-clone-f.png",
-          "label": "Clone · female"
+          "label": "Female · Clone"
         },
         {
           "file": "venusaur-clone.png",
-          "label": "Clone · male"
+          "label": "Male · Clone"
         },
         {
           "file": "venusaur-f.png",
-          "label": "Female · female"
+          "label": "Female"
         },
         {
           "file": "venusaur-gigantamax.png",
@@ -67,15 +67,15 @@
         },
         {
           "file": "venusaur-red-party-hat-f.png",
-          "label": "Red Party Hat · female"
+          "label": "Female · Red Party Hat"
         },
         {
           "file": "venusaur-red-party-hat.png",
-          "label": "Red Party Hat · male"
+          "label": "Male · Red Party Hat"
         },
         {
           "file": "venusaur.png",
-          "label": "Male · male"
+          "label": "Male"
         }
       ]
     },
@@ -232,15 +232,15 @@
       "files": [
         {
           "file": "butterfree-f.png",
-          "label": "Female · female"
+          "label": "Female"
         },
         {
           "file": "butterfree-fashion-f.png",
-          "label": "Fashion Week · female"
+          "label": "Female · Fashion Week"
         },
         {
           "file": "butterfree-fashion.png",
-          "label": "Fashion Week · male"
+          "label": "Male · Fashion Week"
         },
         {
           "file": "butterfree-gigantamax.png",
@@ -248,7 +248,7 @@
         },
         {
           "file": "butterfree.png",
-          "label": "Male · male"
+          "label": "Male"
         }
       ]
     },
@@ -263,19 +263,19 @@
         },
         {
           "file": "raticate-f.png",
-          "label": "Female · female"
+          "label": "Female"
         },
         {
           "file": "raticate-party-hat-f.png",
-          "label": "Party Hat · female"
+          "label": "Female · Party Hat"
         },
         {
           "file": "raticate-party-hat.png",
-          "label": "Party Hat · male"
+          "label": "Male · Party Hat"
         },
         {
           "file": "raticate.png",
-          "label": "Male · male"
+          "label": "Male"
         }
       ]
     },
@@ -286,247 +286,247 @@
       "files": [
         {
           "file": "pikachu-adventure-hat-f.png",
-          "label": "Adventure Hat · female"
+          "label": "Female · Adventure Hat"
         },
         {
           "file": "pikachu-adventure-hat.png",
-          "label": "Adventure Hat · male"
+          "label": "Male · Adventure Hat"
         },
         {
           "file": "pikachu-akari-kerchief-f.png",
-          "label": "Akari's kerchief · female"
+          "label": "Female · Akari's kerchief"
         },
         {
           "file": "pikachu-akari-kerchief.png",
-          "label": "Akari's kerchief · male"
+          "label": "Male · Akari's kerchief"
         },
         {
           "file": "pikachu-amethyst-crown-f.png",
-          "label": "Amethyst Crown · female"
+          "label": "Female · Amethyst Crown"
         },
         {
           "file": "pikachu-amethyst-crown.png",
-          "label": "Amethyst Crown · male"
+          "label": "Male · Amethyst Crown"
         },
         {
           "file": "pikachu-aquamarine-crown-f.png",
-          "label": "Aquamarine Crown · female"
+          "label": "Female · Aquamarine Crown"
         },
         {
           "file": "pikachu-aquamarine-crown.png",
-          "label": "Aquamarine Crown · male"
+          "label": "Male · Aquamarine Crown"
         },
         {
           "file": "pikachu-balloon4-f.png",
-          "label": "4th Anniversary Balloon · female"
+          "label": "Female · 4th Anniversary Balloon"
         },
         {
           "file": "pikachu-balloon4.png",
-          "label": "4th Anniversary Balloon · male"
+          "label": "Male · 4th Anniversary Balloon"
         },
         {
           "file": "pikachu-balloon5-f.png",
-          "label": "5th Anniversary Balloon · female"
+          "label": "Female · 5th Anniversary Balloon"
         },
         {
           "file": "pikachu-balloon5.png",
-          "label": "5th Anniversary Balloon · male"
+          "label": "Male · 5th Anniversary Balloon"
         },
         {
           "file": "pikachu-baseball-shirt-f.png",
-          "label": "Baseball Shirt · female"
+          "label": "Female · Baseball Shirt"
         },
         {
           "file": "pikachu-baseball-shirt.png",
-          "label": "Baseball Shirt · male"
+          "label": "Male · Baseball Shirt"
         },
         {
           "file": "pikachu-batik-shirt-f.png",
-          "label": "Batik Shirt · female"
+          "label": "Female · Batik Shirt"
         },
         {
           "file": "pikachu-batik-shirt.png",
-          "label": "Batik Shirt · male"
+          "label": "Male · Batik Shirt"
         },
         {
           "file": "pikachu-beanie-f.png",
-          "label": "Beanie Hat · female"
+          "label": "Female · Beanie Hat"
         },
         {
           "file": "pikachu-beanie.png",
-          "label": "Beanie Hat · male"
+          "label": "Male · Beanie Hat"
         },
         {
           "file": "pikachu-black-red-balloons-f.png",
-          "label": "Black & Red Balloons · female"
+          "label": "Female · Black & Red Balloons"
         },
         {
           "file": "pikachu-black-red-balloons.png",
-          "label": "Black & Red Balloons · male"
+          "label": "Male · Black & Red Balloons"
         },
         {
           "file": "pikachu-blue-tshirt-f.png",
-          "label": "Blue T-shirt (Citrus) · female"
+          "label": "Female · Blue T-shirt (Citrus)"
         },
         {
           "file": "pikachu-blue-tshirt.png",
-          "label": "Blue T-shirt (Citrus) · male"
+          "label": "Male · Blue T-shirt (Citrus)"
         },
         {
           "file": "pikachu-brendan-bandana-f.png",
-          "label": "Brendan's bandana · female"
+          "label": "Female · Brendan's bandana"
         },
         {
           "file": "pikachu-brendan-bandana.png",
-          "label": "Brendan's bandana · male"
+          "label": "Male · Brendan's bandana"
         },
         {
           "file": "pikachu-cake-f.png",
-          "label": "Cake Costume · female"
+          "label": "Female · Cake Costume"
         },
         {
           "file": "pikachu-cake.png",
-          "label": "Cake Costume · male"
+          "label": "Male · Cake Costume"
         },
         {
           "file": "pikachu-calem-hat-f.png",
-          "label": "Calem's hat · female"
+          "label": "Female · Calem's hat"
         },
         {
           "file": "pikachu-calem-hat.png",
-          "label": "Calem's hat · male"
+          "label": "Male · Calem's hat"
         },
         {
           "file": "pikachu-cap-f.png",
-          "label": "Original Cap · female"
+          "label": "Female · Original Cap"
         },
         {
           "file": "pikachu-cap.png",
-          "label": "Original Cap · male"
+          "label": "Male · Original Cap"
         },
         {
           "file": "pikachu-captain-f.png",
-          "label": "Cap's hat · female"
+          "label": "Female · Cap's hat"
         },
         {
           "file": "pikachu-captain.png",
-          "label": "Cap's hat · male"
+          "label": "Male · Cap's hat"
         },
         {
           "file": "pikachu-charizard-hat-f.png",
-          "label": "Charizard Hat · female"
+          "label": "Female · Charizard Hat"
         },
         {
           "file": "pikachu-charizard-hat.png",
-          "label": "Charizard Hat · male"
+          "label": "Male · Charizard Hat"
         },
         {
           "file": "pikachu-cherry-blossoms-f.png",
-          "label": "Cherry Blossoms adornment · female"
+          "label": "Female · Cherry Blossoms adornment"
         },
         {
           "file": "pikachu-cherry-blossoms.png",
-          "label": "Cherry Blossoms adornment · male"
+          "label": "Male · Cherry Blossoms adornment"
         },
         {
           "file": "pikachu-clone-f.png",
-          "label": "Clone · female"
+          "label": "Female · Clone"
         },
         {
           "file": "pikachu-clone.png",
-          "label": "Clone · male"
+          "label": "Male · Clone"
         },
         {
           "file": "pikachu-dapper-blue-f.png",
-          "label": "Dapper (Blue) · female"
+          "label": "Female · Dapper (Blue)"
         },
         {
           "file": "pikachu-dapper-blue.png",
-          "label": "Dapper (Blue) · male"
+          "label": "Male · Dapper (Blue)"
         },
         {
           "file": "pikachu-dapper-red-f.png",
-          "label": "Dapper (Red) · female"
+          "label": "Female · Dapper (Red)"
         },
         {
           "file": "pikachu-dapper-red.png",
-          "label": "Dapper (Red) · male"
+          "label": "Male · Dapper (Red)"
         },
         {
           "file": "pikachu-dapper-yellow-f.png",
-          "label": "Dapper (Yellow) · female"
+          "label": "Female · Dapper (Yellow)"
         },
         {
           "file": "pikachu-dapper-yellow.png",
-          "label": "Dapper (Yellow) · male"
+          "label": "Male · Dapper (Yellow)"
         },
         {
           "file": "pikachu-dawn-hat-f.png",
-          "label": "Dawn's Hat · female"
+          "label": "Female · Dawn's Hat"
         },
         {
           "file": "pikachu-dawn-hat.png",
-          "label": "Dawn's Hat · male"
+          "label": "Male · Dawn's Hat"
         },
         {
           "file": "pikachu-detective-f.png",
-          "label": "Detective Hat · female"
+          "label": "Female · Detective Hat"
         },
         {
           "file": "pikachu-detective.png",
-          "label": "Detective Hat · male"
+          "label": "Male · Detective Hat"
         },
         {
           "file": "pikachu-ethan-hat-f.png",
-          "label": "Ethan's hat · female"
+          "label": "Female · Ethan's hat"
         },
         {
           "file": "pikachu-ethan-hat.png",
-          "label": "Ethan's hat · male"
+          "label": "Male · Ethan's hat"
         },
         {
           "file": "pikachu-f.png",
-          "label": "Female · female"
+          "label": "Female"
         },
         {
           "file": "pikachu-flower-f.png",
-          "label": "Flower Crown · female"
+          "label": "Female · Flower Crown"
         },
         {
           "file": "pikachu-flower-hat-f.png",
-          "label": "Flower Hat · female"
+          "label": "Female · Flower Hat"
         },
         {
           "file": "pikachu-flower-hat.png",
-          "label": "Flower Hat · male"
+          "label": "Male · Flower Hat"
         },
         {
           "file": "pikachu-flower.png",
-          "label": "Flower Crown · male"
+          "label": "Male · Flower Crown"
         },
         {
           "file": "pikachu-formal-blue-f.png",
-          "label": "Formal (Blue) · female"
+          "label": "Female · Formal (Blue)"
         },
         {
           "file": "pikachu-formal-blue.png",
-          "label": "Formal (Blue) · male"
+          "label": "Male · Formal (Blue)"
         },
         {
           "file": "pikachu-formal-red-f.png",
-          "label": "Formal (Red) · female"
+          "label": "Female · Formal (Red)"
         },
         {
           "file": "pikachu-formal-red.png",
-          "label": "Formal (Red) · male"
+          "label": "Male · Formal (Red)"
         },
         {
           "file": "pikachu-formal-yellow-f.png",
-          "label": "Formal (Yellow) · female"
+          "label": "Female · Formal (Yellow)"
         },
         {
           "file": "pikachu-formal-yellow.png",
-          "label": "Formal (Yellow) · male"
+          "label": "Male · Formal (Yellow)"
         },
         {
           "file": "pikachu-gigantamax.png",
@@ -534,83 +534,83 @@
         },
         {
           "file": "pikachu-gracidea-f.png",
-          "label": "Gracidea Flower · female"
+          "label": "Female · Gracidea Flower"
         },
         {
           "file": "pikachu-gracidea.png",
-          "label": "Gracidea Flower · male"
+          "label": "Male · Gracidea Flower"
         },
         {
           "file": "pikachu-green-balloons-f.png",
-          "label": "Green Balloons · female"
+          "label": "Female · Green Balloons"
         },
         {
           "file": "pikachu-green-balloons.png",
-          "label": "Green Balloons · male"
+          "label": "Male · Green Balloons"
         },
         {
           "file": "pikachu-green-tshirt-f.png",
-          "label": "Green T-shirt (Berry) · female"
+          "label": "Female · Green T-shirt (Berry)"
         },
         {
           "file": "pikachu-green-tshirt.png",
-          "label": "Green T-shirt (Berry) · male"
+          "label": "Male · Green T-shirt (Berry)"
         },
         {
           "file": "pikachu-halloween-mischief-f.png",
-          "label": "Halloween Mischief · female"
+          "label": "Female · Halloween Mischief"
         },
         {
           "file": "pikachu-halloween-mischief.png",
-          "label": "Halloween Mischief · male"
+          "label": "Male · Halloween Mischief"
         },
         {
           "file": "pikachu-hilbert-hat-f.png",
-          "label": "Hilbert's hat · female"
+          "label": "Female · Hilbert's hat"
         },
         {
           "file": "pikachu-hilbert-hat.png",
-          "label": "Hilbert's hat · male"
+          "label": "Male · Hilbert's hat"
         },
         {
           "file": "pikachu-hilda-hat-f.png",
-          "label": "Hilda's hat · female"
+          "label": "Female · Hilda's hat"
         },
         {
           "file": "pikachu-hilda-hat.png",
-          "label": "Hilda's hat · male"
+          "label": "Male · Hilda's hat"
         },
         {
           "file": "pikachu-holiday-2023-f.png",
-          "label": "Holiday attire · female"
+          "label": "Female · Holiday attire"
         },
         {
           "file": "pikachu-holiday-2023.png",
-          "label": "Holiday attire · male"
+          "label": "Male · Holiday attire"
         },
         {
           "file": "pikachu-holiday-f.png",
-          "label": "Winter Carnival · female"
+          "label": "Female · Winter Carnival"
         },
         {
           "file": "pikachu-holiday.png",
-          "label": "Winter Carnival · male"
+          "label": "Male · Winter Carnival"
         },
         {
           "file": "pikachu-indonesia-f.png",
-          "label": "Indonesia football jersey · female"
+          "label": "Female · Indonesia football jersey"
         },
         {
           "file": "pikachu-indonesia.png",
-          "label": "Indonesia football jersey · male"
+          "label": "Male · Indonesia football jersey"
         },
         {
           "file": "pikachu-kariyushi-f.png",
-          "label": "Kariyushi · female"
+          "label": "Female · Kariyushi"
         },
         {
           "file": "pikachu-kariyushi.png",
-          "label": "Kariyushi · male"
+          "label": "Male · Kariyushi"
         },
         {
           "file": "pikachu-kurta.png",
@@ -618,11 +618,11 @@
         },
         {
           "file": "pikachu-leaf-hat-f.png",
-          "label": "Leaf's hat · female"
+          "label": "Female · Leaf's hat"
         },
         {
           "file": "pikachu-leaf-hat.png",
-          "label": "Leaf's hat · male"
+          "label": "Male · Leaf's hat"
         },
         {
           "file": "pikachu-libre.png",
@@ -630,115 +630,115 @@
         },
         {
           "file": "pikachu-lucario-hat-f.png",
-          "label": "Lucario Hat · female"
+          "label": "Female · Lucario Hat"
         },
         {
           "file": "pikachu-lucario-hat.png",
-          "label": "Lucario Hat · male"
+          "label": "Male · Lucario Hat"
         },
         {
           "file": "pikachu-lucas-hat-f.png",
-          "label": "Lucas's Hat · female"
+          "label": "Female · Lucas's Hat"
         },
         {
           "file": "pikachu-lucas-hat.png",
-          "label": "Lucas's Hat · male"
+          "label": "Male · Lucas's Hat"
         },
         {
           "file": "pikachu-lyra-hat-f.png",
-          "label": "Lyra's hat · female"
+          "label": "Female · Lyra's hat"
         },
         {
           "file": "pikachu-lyra-hat.png",
-          "label": "Lyra's hat · male"
+          "label": "Male · Lyra's hat"
         },
         {
           "file": "pikachu-malachite-crown-f.png",
-          "label": "Malachite Crown · female"
+          "label": "Female · Malachite Crown"
         },
         {
           "file": "pikachu-malachite-crown.png",
-          "label": "Malachite Crown · male"
+          "label": "Male · Malachite Crown"
         },
         {
           "file": "pikachu-may-bow-f.png",
-          "label": "May's bow · female"
+          "label": "Female · May's bow"
         },
         {
           "file": "pikachu-may-bow.png",
-          "label": "May's bow · male"
+          "label": "Male · May's bow"
         },
         {
           "file": "pikachu-meloetta-hat-f.png",
-          "label": "Meloetta Hat · female"
+          "label": "Female · Meloetta Hat"
         },
         {
           "file": "pikachu-meloetta-hat.png",
-          "label": "Meloetta Hat · male"
+          "label": "Male · Meloetta Hat"
         },
         {
           "file": "pikachu-mimikyu-f.png",
-          "label": "Mimikyu Costume · female"
+          "label": "Female · Mimikyu Costume"
         },
         {
           "file": "pikachu-mimikyu.png",
-          "label": "Mimikyu Costume · male"
+          "label": "Male · Mimikyu Costume"
         },
         {
           "file": "pikachu-moon-crown-f.png",
-          "label": "Moon Crown · female"
+          "label": "Female · Moon Crown"
         },
         {
           "file": "pikachu-moon-crown.png",
-          "label": "Moon Crown · male"
+          "label": "Male · Moon Crown"
         },
         {
           "file": "pikachu-nate-visor-f.png",
-          "label": "Nate's visor · female"
+          "label": "Female · Nate's visor"
         },
         {
           "file": "pikachu-nate-visor.png",
-          "label": "Nate's visor · male"
+          "label": "Male · Nate's visor"
         },
         {
           "file": "pikachu-new-year-hat-f.png",
-          "label": "New Year Hat · female"
+          "label": "Female · New Year Hat"
         },
         {
           "file": "pikachu-new-year-hat.png",
-          "label": "New Year Hat · male"
+          "label": "Male · New Year Hat"
         },
         {
           "file": "pikachu-okinawa-balloon-f.png",
-          "label": "Okinawa Balloon · female"
+          "label": "Female · Okinawa Balloon"
         },
         {
           "file": "pikachu-okinawa-balloon.png",
-          "label": "Okinawa Balloon · male"
+          "label": "Male · Okinawa Balloon"
         },
         {
           "file": "pikachu-orange-balloons-f.png",
-          "label": "Orange Balloons · female"
+          "label": "Female · Orange Balloons"
         },
         {
           "file": "pikachu-orange-balloons.png",
-          "label": "Orange Balloons · male"
+          "label": "Male · Orange Balloons"
         },
         {
           "file": "pikachu-party-hat-f.png",
-          "label": "Party Hat · female"
+          "label": "Female · Party Hat"
         },
         {
           "file": "pikachu-party-hat.png",
-          "label": "Party Hat · male"
+          "label": "Male · Party Hat"
         },
         {
           "file": "pikachu-party-top-hat-f.png",
-          "label": "Party Top Hat · female"
+          "label": "Female · Party Top Hat"
         },
         {
           "file": "pikachu-party-top-hat.png",
-          "label": "Party Top Hat · male"
+          "label": "Male · Party Top Hat"
         },
         {
           "file": "pikachu-phd.png",
@@ -750,67 +750,67 @@
         },
         {
           "file": "pikachu-purple-balloons-f.png",
-          "label": "Purple Balloons · female"
+          "label": "Female · Purple Balloons"
         },
         {
           "file": "pikachu-purple-balloons.png",
-          "label": "Purple Balloons · male"
+          "label": "Male · Purple Balloons"
         },
         {
           "file": "pikachu-purple-tshirt-f.png",
-          "label": "Purple T-shirt (Flower) · female"
+          "label": "Female · Purple T-shirt (Flower)"
         },
         {
           "file": "pikachu-purple-tshirt.png",
-          "label": "Purple T-shirt (Flower) · male"
+          "label": "Male · Purple T-shirt (Flower)"
         },
         {
           "file": "pikachu-pyrite-crown-f.png",
-          "label": "Pyrite Crown · female"
+          "label": "Female · Pyrite Crown"
         },
         {
           "file": "pikachu-pyrite-crown.png",
-          "label": "Pyrite Crown · male"
+          "label": "Male · Pyrite Crown"
         },
         {
           "file": "pikachu-quartz-crown-f.png",
-          "label": "Quartz Crown · female"
+          "label": "Female · Quartz Crown"
         },
         {
           "file": "pikachu-quartz-crown.png",
-          "label": "Quartz Crown · male"
+          "label": "Male · Quartz Crown"
         },
         {
           "file": "pikachu-rayquaza-hat-f.png",
-          "label": "Rayquaza Hat · female"
+          "label": "Female · Rayquaza Hat"
         },
         {
           "file": "pikachu-rayquaza-hat.png",
-          "label": "Rayquaza Hat · male"
+          "label": "Male · Rayquaza Hat"
         },
         {
           "file": "pikachu-red-hat-f.png",
-          "label": "Red hat · female"
+          "label": "Female · Red hat"
         },
         {
           "file": "pikachu-red-hat.png",
-          "label": "Red hat · male"
+          "label": "Male · Red hat"
         },
         {
           "file": "pikachu-red-party-hat-f.png",
-          "label": "Red Party Hat · female"
+          "label": "Female · Red Party Hat"
         },
         {
           "file": "pikachu-red-party-hat.png",
-          "label": "Red Party Hat · male"
+          "label": "Male · Red Party Hat"
         },
         {
           "file": "pikachu-rei-cap-f.png",
-          "label": "Rei's cap · female"
+          "label": "Female · Rei's cap"
         },
         {
           "file": "pikachu-rei-cap.png",
-          "label": "Rei's cap · male"
+          "label": "Male · Rei's cap"
         },
         {
           "file": "pikachu-rockstar.png",
@@ -818,27 +818,27 @@
         },
         {
           "file": "pikachu-rosa-visor-f.png",
-          "label": "Rosa's visor · female"
+          "label": "Female · Rosa's visor"
         },
         {
           "file": "pikachu-rosa-visor.png",
-          "label": "Rosa's visor · male"
+          "label": "Male · Rosa's visor"
         },
         {
           "file": "pikachu-safari-hat-f.png",
-          "label": "Safari Hat · female"
+          "label": "Female · Safari Hat"
         },
         {
           "file": "pikachu-safari-hat.png",
-          "label": "Safari Hat · male"
+          "label": "Male · Safari Hat"
         },
         {
           "file": "pikachu-santa-f.png",
-          "label": "Santa Hat · female"
+          "label": "Female · Santa Hat"
         },
         {
           "file": "pikachu-santa.png",
-          "label": "Santa Hat · male"
+          "label": "Male · Santa Hat"
         },
         {
           "file": "pikachu-saree.png",
@@ -846,135 +846,135 @@
         },
         {
           "file": "pikachu-serena-hat-f.png",
-          "label": "Serena's hat · female"
+          "label": "Female · Serena's hat"
         },
         {
           "file": "pikachu-serena-hat.png",
-          "label": "Serena's hat · male"
+          "label": "Male · Serena's hat"
         },
         {
           "file": "pikachu-shaymin-f.png",
-          "label": "Shaymin scarf · female"
+          "label": "Female · Shaymin scarf"
         },
         {
           "file": "pikachu-shaymin.png",
-          "label": "Shaymin scarf · male"
+          "label": "Male · Shaymin scarf"
         },
         {
           "file": "pikachu-straw-hat-f.png",
-          "label": "Straw Hat · female"
+          "label": "Female · Straw Hat"
         },
         {
           "file": "pikachu-straw-hat.png",
-          "label": "Straw Hat · male"
+          "label": "Male · Straw Hat"
         },
         {
           "file": "pikachu-striped-tshirt-f.png",
-          "label": "Striped T-shirt · female"
+          "label": "Female · Striped T-shirt"
         },
         {
           "file": "pikachu-striped-tshirt.png",
-          "label": "Striped T-shirt · male"
+          "label": "Male · Striped T-shirt"
         },
         {
           "file": "pikachu-summer-f.png",
-          "label": "Summer Hat · female"
+          "label": "Female · Summer Hat"
         },
         {
           "file": "pikachu-summer.png",
-          "label": "Summer Hat · male"
+          "label": "Male · Summer Hat"
         },
         {
           "file": "pikachu-sun-crown-f.png",
-          "label": "Sun Crown · female"
+          "label": "Female · Sun Crown"
         },
         {
           "file": "pikachu-sun-crown.png",
-          "label": "Sun Crown · male"
+          "label": "Male · Sun Crown"
         },
         {
           "file": "pikachu-tcg-f.png",
-          "label": "TCG Hat · female"
+          "label": "Female · TCG Hat"
         },
         {
           "file": "pikachu-tcg.png",
-          "label": "TCG Hat · male"
+          "label": "Male · TCG Hat"
         },
         {
           "file": "pikachu-thunderbolt-cap-f.png",
-          "label": "Thunderbolt Cap · female"
+          "label": "Female · Thunderbolt Cap"
         },
         {
           "file": "pikachu-thunderbolt-cap.png",
-          "label": "Thunderbolt Cap · male"
+          "label": "Male · Thunderbolt Cap"
         },
         {
           "file": "pikachu-tricks-treats-f.png",
-          "label": "Tricks & Treats · female"
+          "label": "Female · Tricks & Treats"
         },
         {
           "file": "pikachu-tricks-treats.png",
-          "label": "Tricks & Treats · male"
+          "label": "Male · Tricks & Treats"
         },
         {
           "file": "pikachu-umbreon-hat-f.png",
-          "label": "Umbreon Hat · female"
+          "label": "Female · Umbreon Hat"
         },
         {
           "file": "pikachu-umbreon-hat.png",
-          "label": "Umbreon Hat · male"
+          "label": "Male · Umbreon Hat"
         },
         {
           "file": "pikachu-witch-f.png",
-          "label": "Witch Hat · female"
+          "label": "Female · Witch Hat"
         },
         {
           "file": "pikachu-witch.png",
-          "label": "Witch Hat · male"
+          "label": "Male · Witch Hat"
         },
         {
           "file": "pikachu-world-cap-f.png",
-          "label": "World Cap · female"
+          "label": "Female · World Cap"
         },
         {
           "file": "pikachu-world-cap.png",
-          "label": "World Cap · male"
+          "label": "Male · World Cap"
         },
         {
           "file": "pikachu-world-champs-2022-f.png",
-          "label": "World Championships 2022 · female"
+          "label": "Female · World Championships 2022"
         },
         {
           "file": "pikachu-world-champs-2022.png",
-          "label": "World Championships 2022 · male"
+          "label": "Male · World Championships 2022"
         },
         {
           "file": "pikachu-world-champs-2023-f.png",
-          "label": "World Championships 2023 · female"
+          "label": "Female · World Championships 2023"
         },
         {
           "file": "pikachu-world-champs-2023.png",
-          "label": "World Championships 2023 · male"
+          "label": "Male · World Championships 2023"
         },
         {
           "file": "pikachu-world-champs-2024-f.png",
-          "label": "World Championships 2024 · female"
+          "label": "Female · World Championships 2024"
         },
         {
           "file": "pikachu-world-champs-2024.png",
-          "label": "World Championships 2024 · male"
+          "label": "Male · World Championships 2024"
         },
         {
           "file": "pikachu-world-champs-2025-f.png",
-          "label": "World Champs 2025 · female"
+          "label": "Female · World Champs 2025"
         },
         {
           "file": "pikachu-world-champs-2025.png",
-          "label": "World Champs 2025 · male"
+          "label": "Male · World Champs 2025"
         },
         {
           "file": "pikachu.png",
-          "label": "Male · male"
+          "label": "Male"
         }
       ]
     },
@@ -989,115 +989,115 @@
         },
         {
           "file": "raichu-beanie-f.png",
-          "label": "Beanie Hat · female"
+          "label": "Female · Beanie Hat"
         },
         {
           "file": "raichu-beanie.png",
-          "label": "Beanie Hat · male"
+          "label": "Male · Beanie Hat"
         },
         {
           "file": "raichu-cap-f.png",
-          "label": "Original Cap · female"
+          "label": "Female · Original Cap"
         },
         {
           "file": "raichu-cap.png",
-          "label": "Original Cap · male"
+          "label": "Male · Original Cap"
         },
         {
           "file": "raichu-cherry-blossoms-f.png",
-          "label": "Cherry Blossoms adornment · female"
+          "label": "Female · Cherry Blossoms adornment"
         },
         {
           "file": "raichu-cherry-blossoms.png",
-          "label": "Cherry Blossoms adornment · male"
+          "label": "Male · Cherry Blossoms adornment"
         },
         {
           "file": "raichu-detective-f.png",
-          "label": "Detective Hat · female"
+          "label": "Female · Detective Hat"
         },
         {
           "file": "raichu-detective.png",
-          "label": "Detective Hat · male"
+          "label": "Male · Detective Hat"
         },
         {
           "file": "raichu-f.png",
-          "label": "Female · female"
+          "label": "Female"
         },
         {
           "file": "raichu-flower-f.png",
-          "label": "Flower Crown · female"
+          "label": "Female · Flower Crown"
         },
         {
           "file": "raichu-flower.png",
-          "label": "Flower Crown · male"
+          "label": "Male · Flower Crown"
         },
         {
           "file": "raichu-holiday-2023-f.png",
-          "label": "Holiday attire · female"
+          "label": "Female · Holiday attire"
         },
         {
           "file": "raichu-holiday-2023.png",
-          "label": "Holiday attire · male"
+          "label": "Male · Holiday attire"
         },
         {
           "file": "raichu-new-year-hat-f.png",
-          "label": "New Year Hat · female"
+          "label": "Female · New Year Hat"
         },
         {
           "file": "raichu-new-year-hat.png",
-          "label": "New Year Hat · male"
+          "label": "Male · New Year Hat"
         },
         {
           "file": "raichu-party-hat-f.png",
-          "label": "Party Hat · female"
+          "label": "Female · Party Hat"
         },
         {
           "file": "raichu-party-hat.png",
-          "label": "Party Hat · male"
+          "label": "Male · Party Hat"
         },
         {
           "file": "raichu-santa-f.png",
-          "label": "Santa Hat · female"
+          "label": "Female · Santa Hat"
         },
         {
           "file": "raichu-santa.png",
-          "label": "Santa Hat · male"
+          "label": "Male · Santa Hat"
         },
         {
           "file": "raichu-summer-f.png",
-          "label": "Summer Hat · female"
+          "label": "Female · Summer Hat"
         },
         {
           "file": "raichu-summer.png",
-          "label": "Summer Hat · male"
+          "label": "Male · Summer Hat"
         },
         {
           "file": "raichu-thunderbolt-cap-f.png",
-          "label": "Thunderbolt Cap · female"
+          "label": "Female · Thunderbolt Cap"
         },
         {
           "file": "raichu-thunderbolt-cap.png",
-          "label": "Thunderbolt Cap · male"
+          "label": "Male · Thunderbolt Cap"
         },
         {
           "file": "raichu-witch-f.png",
-          "label": "Witch Hat · female"
+          "label": "Female · Witch Hat"
         },
         {
           "file": "raichu-witch.png",
-          "label": "Witch Hat · male"
+          "label": "Male · Witch Hat"
         },
         {
           "file": "raichu-world-cap-f.png",
-          "label": "World Cap · female"
+          "label": "Female · World Cap"
         },
         {
           "file": "raichu-world-cap.png",
-          "label": "World Cap · male"
+          "label": "Male · World Cap"
         },
         {
           "file": "raichu.png",
-          "label": "Male · male"
+          "label": "Male"
         }
       ]
     },
@@ -1560,67 +1560,67 @@
       "files": [
         {
           "file": "eevee-cherry-blossoms-f.png",
-          "label": "Cherry Blossoms adornment · female"
+          "label": "Female · Cherry Blossoms adornment"
         },
         {
           "file": "eevee-cherry-blossoms.png",
-          "label": "Cherry Blossoms adornment · male"
+          "label": "Male · Cherry Blossoms adornment"
         },
         {
           "file": "eevee-explorer-hat-f.png",
-          "label": "Explorer Hat · female"
+          "label": "Female · Explorer Hat"
         },
         {
           "file": "eevee-explorer-hat.png",
-          "label": "Explorer Hat · male"
+          "label": "Male · Explorer Hat"
         },
         {
           "file": "eevee-f.png",
-          "label": "Female · female"
+          "label": "Female"
         },
         {
           "file": "eevee-flower-f.png",
-          "label": "Flower Crown · female"
+          "label": "Female · Flower Crown"
         },
         {
           "file": "eevee-flower.png",
-          "label": "Flower Crown · male"
+          "label": "Male · Flower Crown"
         },
         {
           "file": "eevee-holiday-hat-f.png",
-          "label": "Holiday Hat · female"
+          "label": "Female · Holiday Hat"
         },
         {
           "file": "eevee-holiday-hat.png",
-          "label": "Holiday Hat · male"
+          "label": "Male · Holiday Hat"
         },
         {
           "file": "eevee-moon-crown-f.png",
-          "label": "Moon Crown · female"
+          "label": "Female · Moon Crown"
         },
         {
           "file": "eevee-moon-crown.png",
-          "label": "Moon Crown · male"
+          "label": "Male · Moon Crown"
         },
         {
           "file": "eevee-red-party-hat-f.png",
-          "label": "Red Party Hat · female"
+          "label": "Female · Red Party Hat"
         },
         {
           "file": "eevee-red-party-hat.png",
-          "label": "Red Party Hat · male"
+          "label": "Male · Red Party Hat"
         },
         {
           "file": "eevee-sun-crown-f.png",
-          "label": "Sun Crown · female"
+          "label": "Female · Sun Crown"
         },
         {
           "file": "eevee-sun-crown.png",
-          "label": "Sun Crown · male"
+          "label": "Male · Sun Crown"
         },
         {
           "file": "eevee.png",
-          "label": "Male · male"
+          "label": "Male"
         }
       ]
     },
@@ -1911,19 +1911,19 @@
       "files": [
         {
           "file": "sudowoodo-f.png",
-          "label": "Female · female"
+          "label": "Female"
         },
         {
           "file": "sudowoodo-holiday-2025-f.png",
-          "label": "Holiday 2025 · female"
+          "label": "Female · Holiday 2025"
         },
         {
           "file": "sudowoodo-holiday-2025.png",
-          "label": "Holiday 2025 · male"
+          "label": "Male · Holiday 2025"
         },
         {
           "file": "sudowoodo.png",
-          "label": "Male · male"
+          "label": "Male"
         }
       ]
     },
@@ -1934,15 +1934,15 @@
       "files": [
         {
           "file": "wooper-beanie-f.png",
-          "label": "Beanie Hat · female"
+          "label": "Female · Beanie Hat"
         },
         {
           "file": "wooper-beanie.png",
-          "label": "Beanie Hat · male"
+          "label": "Male · Beanie Hat"
         },
         {
           "file": "wooper-f.png",
-          "label": "Female · female"
+          "label": "Female"
         },
         {
           "file": "wooper-paldean.png",
@@ -1950,7 +1950,7 @@
         },
         {
           "file": "wooper.png",
-          "label": "Male · male"
+          "label": "Male"
         }
       ]
     },
@@ -1961,19 +1961,19 @@
       "files": [
         {
           "file": "quagsire-beanie-f.png",
-          "label": "Beanie Hat · female"
+          "label": "Female · Beanie Hat"
         },
         {
           "file": "quagsire-beanie.png",
-          "label": "Beanie Hat · male"
+          "label": "Male · Beanie Hat"
         },
         {
           "file": "quagsire-f.png",
-          "label": "Female · female"
+          "label": "Female"
         },
         {
           "file": "quagsire.png",
-          "label": "Male · male"
+          "label": "Male"
         }
       ]
     },
@@ -2184,19 +2184,19 @@
       "files": [
         {
           "file": "wobbuffet-f.png",
-          "label": "Female · female"
+          "label": "Female"
         },
         {
           "file": "wobbuffet-party-hat-f.png",
-          "label": "Party Hat · female"
+          "label": "Female · Party Hat"
         },
         {
           "file": "wobbuffet-party-hat.png",
-          "label": "Party Hat · male"
+          "label": "Male · Party Hat"
         },
         {
           "file": "wobbuffet.png",
-          "label": "Male · male"
+          "label": "Male"
         }
       ]
     },
@@ -2207,27 +2207,27 @@
       "files": [
         {
           "file": "sneasel-f.png",
-          "label": "Female · female"
+          "label": "Female"
         },
         {
           "file": "sneasel-fashion-f.png",
-          "label": "Fashion Week · female"
+          "label": "Female · Fashion Week"
         },
         {
           "file": "sneasel-fashion.png",
-          "label": "Fashion Week · male"
+          "label": "Male · Fashion Week"
         },
         {
           "file": "sneasel-hisuian-f.png",
-          "label": "Hisuian Sneasel · female"
+          "label": "Female · Hisuian Sneasel"
         },
         {
           "file": "sneasel-hisuian.png",
-          "label": "Hisuian Sneasel · male"
+          "label": "Male · Hisuian Sneasel"
         },
         {
           "file": "sneasel.png",
-          "label": "Male · male"
+          "label": "Male"
         }
       ]
     },
@@ -2249,11 +2249,11 @@
       "files": [
         {
           "file": "ursaring-f.png",
-          "label": "Female · female"
+          "label": "Female"
         },
         {
           "file": "ursaring.png",
-          "label": "Male · male"
+          "label": "Male"
         }
       ]
     },
@@ -2626,19 +2626,19 @@
       "files": [
         {
           "file": "shinx-bowler-hat-f.png",
-          "label": "Bowler Hat · female"
+          "label": "Female · Bowler Hat"
         },
         {
           "file": "shinx-bowler-hat.png",
-          "label": "Bowler Hat · male"
+          "label": "Male · Bowler Hat"
         },
         {
           "file": "shinx-f.png",
-          "label": "Female · female"
+          "label": "Female"
         },
         {
           "file": "shinx.png",
-          "label": "Male · male"
+          "label": "Male"
         }
       ]
     },
@@ -2732,19 +2732,19 @@
       "files": [
         {
           "file": "croagunk-cap-f.png",
-          "label": "Backwards Cap · female"
+          "label": "Female · Backwards Cap"
         },
         {
           "file": "croagunk-cap.png",
-          "label": "Backwards Cap · male"
+          "label": "Male · Backwards Cap"
         },
         {
           "file": "croagunk-f.png",
-          "label": "Female · female"
+          "label": "Female"
         },
         {
           "file": "croagunk.png",
-          "label": "Male · male"
+          "label": "Male"
         }
       ]
     },
@@ -2755,19 +2755,19 @@
       "files": [
         {
           "file": "toxicroak-cap-f.png",
-          "label": "Cap · female"
+          "label": "Female · Cap"
         },
         {
           "file": "toxicroak-cap.png",
-          "label": "Cap · male"
+          "label": "Male · Cap"
         },
         {
           "file": "toxicroak-f.png",
-          "label": "Female · female"
+          "label": "Female"
         },
         {
           "file": "toxicroak.png",
-          "label": "Male · male"
+          "label": "Male"
         }
       ]
     },

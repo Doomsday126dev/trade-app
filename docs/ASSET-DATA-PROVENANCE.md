@@ -1,6 +1,6 @@
 # Asset and Data Provenance
 
-Last reviewed: 2026-08-30
+Costume workflow and accepted-source audit: 2026-09-06. Other source decisions remain from the 2026-08-30 policy review unless noted.
 
 This document records the source boundary for data and visual assets used by PoGo Trades. It is an engineering policy record, not legal advice.
 
@@ -19,7 +19,7 @@ Researching names, dates, eligibility, or catalog mappings is different from cop
 - URLs: https://pokeapi.co/ ; https://github.com/PokeAPI/pokeapi ; https://github.com/PokeAPI/sprites ; https://raw.githubusercontent.com/PokeAPI/sprites/master/README.md ; https://raw.githubusercontent.com/PokeAPI/pokeapi/master/LICENSE.md
 - Use: species/form data generation, localized species-name generation, and base/form/regional/gender sprite URLs under `raw.githubusercontent.com/PokeAPI/sprites/`.
 - Copy/serve/reference: the app references and the browser fetches sprite-repository files; generated local data catalogs contain normalized data. No third-party prose is copied into the product.
-- Stated position: the sprite repository README invites downloading the repository for use. The PokeAPI code/data repository uses a BSD-style license with notice conditions. The sprite repository does not include a separate license file, and its Pokémon artwork remains third-party IP.
+- Stated position: the sprite repository README invites downloading the repository for use. The PokeAPI code/data repository uses a BSD-style license with notice conditions. The sprite repository now includes [LICENCE.txt](https://raw.githubusercontent.com/PokeAPI/sprites/master/LICENCE.txt), with a CC0 repository statement and an explicit Pokémon image copyright reservation. This does not create blanket rights-holder permission; the earlier claim that there was no license file was incorrect.
 - Underlying IP: Pokémon names, characters, and artwork belong to their respective rights holders.
 - Decision: **KEEP**, constrained to exact PokeAPI repository paths and with the rights-holder notice retained.
 
@@ -44,7 +44,7 @@ Researching names, dates, eligibility, or catalog mappings is different from cop
 ### Repository-owned interface assets
 
 - URLs: local files under `assets/`, including `assets/max-cloud.svg`.
-- Use: interface decoration and fallback cloud treatment. Background qualifiers remain text unless a reviewed exact-ID artwork mapping is added to the approved local registry.
+- Use: interface decoration and fallback cloud treatment. Backgrounds are outside the active product; this policy does not authorize re-enabling them.
 - Copy/serve/reference: created and served by this repository; no third-party Pokémon GO background artwork is embedded and no generated pattern is presented as a real background.
 - Stated position: project-authored interface treatment. It may describe Pokémon-related concepts without copying or imitating official background artwork.
 - Underlying IP: Pokémon names and related marks remain with their respective owners.
@@ -94,8 +94,8 @@ Researching names, dates, eligibility, or catalog mappings is different from cop
 - `js/domain/publicPokemonDex.js` is generated from the public catalog labels and contains only normalized names and dex numbers. It lets anonymous shares select CORS-readable base-species art without loading account-oriented `data.js` or any trainer fields.
 - `isApprovedRuntimeSpriteUrl()` accepts only exact approved hosts and path prefixes, reviewed local `assets/sprites/go/*.png`, plus repository-owned `assets/max-cloud.svg`.
 - The weserv proxy target is decoded and independently checked against the Pokémon Database sprite path.
-- `sw.js` lazily caches reviewed local sprites and sprite requests from the approved runtime hosts; the 458 local files are not added to startup precache.
-- Known costumes without exact reviewed art stop at the neutral placeholder. They never masquerade as the base species. Unknown ordinary species/forms may still use the approved base/form fallback chain.
-- `.github/workflows/sprite-catalog-freshness.yml` performs a monthly, read-only inventory comparison. It reports upstream additions/removals but never downloads or publishes unreviewed artwork automatically.
-- The two confirmed 2026 identities, `PIKACHU_PXP_2026` (Cosmog-themed spacesuit) and `PIKACHU_WCS_2026` (World Championships 2026), are present in the catalog but intentionally remain neutral placeholders until exact artwork appears at an approved source and is reviewed.
-- Background qualifiers use honest compact labels. Exact artwork can appear only through the reviewed canonical-ID registry; the registry is currently empty, so generated pseudo-background representations and exact-art mismatches are both zero.
+- `sw.js` lazily caches reviewed local sprites and sprite requests from the approved runtime hosts; the 462 local files are not added to startup precache.
+- Known costumes without exact reviewed art are excluded from active selectors in .95. Historical rows remain readable with honest unavailable artwork, never base-species substitution. Unknown ordinary species/forms may still use the approved base/form fallback chain.
+- `.github/workflows/sprite-catalog-freshness.yml` performs a weekly, bounded, read-only source comparison with an actionable run summary. It checks additions/removals/labels, candidate matches, local integrity, reviewed release identities missing from the catalog and stale reviews. It never downloads or publishes artwork automatically. Release discovery is deliberately semi-automated: a maintainer reviews official announcements and maintains a small evidence register, whose review date expires after seven days.
+- The two confirmed 2026 identities, `PIKACHU_PXP_2026` (Cosmog-themed spacesuit) and `PIKACHU_WCS_2026` (World Championships 2026), remain unsupported. The accepted source lists neither exact outfit. Individual blockers and the promotion checklist are in [Pending Costume Artwork](PENDING-COSTUME-ARTWORK.md).
+- Backgrounds remain out of active product surfaces. No background artwork or identity migration is part of the costume freshness workflow.

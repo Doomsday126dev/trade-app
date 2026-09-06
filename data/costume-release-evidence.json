@@ -1,0 +1,121 @@
+{
+  "schemaVersion": 1,
+  "lastReviewedDate": "2026-09-06",
+  "coverage": "Nine confirmed 2026 pending identities plus four upcoming exact costumes found in the September 6 official News review. Not a complete history or live feed. Maintainer reviews official News and Events weekly and appends confirmed costume names, species and dates before catalog or artwork work.",
+  "reviewSources": [
+    "https://pokemongo.com/news",
+    "https://pokemongo.com/events"
+  ],
+  "entries": [
+    {
+      "id": "pokemon:25:costume:PIKACHU_PXP_2026",
+      "catalogName": "Pikachu (Cosmog Spacesuit)",
+      "dex": 25,
+      "releaseDate": "2026-08-25",
+      "dateMeaning": "Confirmed availability date, not necessarily first worldwide debut",
+      "evidenceUrl": "https://www.pokemon.com/uk/news/pokemon-gos-2026-pokemon-world-championships-event"
+    },
+    {
+      "id": "pokemon:25:costume:PIKACHU_WCS_2026",
+      "catalogName": "Pikachu (Worlds 2026)",
+      "dex": 25,
+      "releaseDate": "2026-08-25",
+      "dateMeaning": "Confirmed availability date, not necessarily first worldwide debut",
+      "evidenceUrl": "https://www.pokemon.com/uk/news/pokemon-gos-2026-pokemon-world-championships-event"
+    },
+    {
+      "id": "pokemon:25:standard:legacy:Pikachu%20(Fossil)",
+      "catalogName": "Pikachu (Fossil)",
+      "dex": 25,
+      "releaseDate": "2026-05-22",
+      "dateMeaning": "Confirmed availability date, not necessarily first worldwide debut",
+      "evidenceUrl": "https://pokemongo.com/en/news/pgo-pokemon-fossil-musuem-chicago-2026"
+    },
+    {
+      "id": "pokemon:25:standard:legacy:Pikachu%20(Instinct)",
+      "catalogName": "Pikachu (Instinct)",
+      "dex": 25,
+      "releaseDate": "2026-07-11",
+      "dateMeaning": "Confirmed availability date, not necessarily first worldwide debut",
+      "evidenceUrl": "https://pokemongo.com/gofest/global?hl=en"
+    },
+    {
+      "id": "pokemon:25:standard:legacy:Pikachu%20(Mystic)",
+      "catalogName": "Pikachu (Mystic)",
+      "dex": 25,
+      "releaseDate": "2026-07-11",
+      "dateMeaning": "Confirmed availability date, not necessarily first worldwide debut",
+      "evidenceUrl": "https://pokemongo.com/gofest/global?hl=en"
+    },
+    {
+      "id": "pokemon:25:standard:legacy:Pikachu%20(Valor)",
+      "catalogName": "Pikachu (Valor)",
+      "dex": 25,
+      "releaseDate": "2026-07-11",
+      "dateMeaning": "Confirmed availability date, not necessarily first worldwide debut",
+      "evidenceUrl": "https://pokemongo.com/gofest/global?hl=en"
+    },
+    {
+      "id": "pokemon:25:costume:PIKACHU_VISOR_2026",
+      "catalogName": "Pikachu (Marathon)",
+      "dex": 25,
+      "releaseDate": "2026-05-12",
+      "dateMeaning": "Confirmed availability date, not necessarily first worldwide debut",
+      "evidenceUrl": "https://pokemongo.com/news/spring-marathon-2026?hl=en"
+    },
+    {
+      "id": "pokemon:25:costume:PIKACHU_ANNIVERSARY_2026",
+      "catalogName": "Pikachu (Professor Willow's Assistant)",
+      "dex": 25,
+      "releaseDate": "2026-07-21",
+      "dateMeaning": "Confirmed availability date, not necessarily first worldwide debut",
+      "evidenceUrl": "https://pokemongo.com/en/news/happy-birthday-professor-willow-2026"
+    },
+    {
+      "id": "pokemon:222:standard:legacy:Galarian%20Corsola%20Pink%20Sunglasses",
+      "catalogName": "Galarian Corsola Pink Sunglasses",
+      "dex": 222,
+      "releaseDate": "2026-04-14",
+      "dateMeaning": "Confirmed availability date, not necessarily first worldwide debut",
+      "evidenceUrl": "https://pokemongo.com/news/sustainability-week-2026?hl=en_us"
+    },
+    {
+      "id": "announcement:2026-horizons:4:friede-goggles",
+      "catalogName": "Charmander (Friede's Goggles)",
+      "dex": 4,
+      "releaseDate": "2026-09-16",
+      "dateMeaning": "Announced debut; not yet released at the September 6 review",
+      "evidenceUrl": "https://pokemongo.com/news/pokemon-horizons-celebration-event-2026"
+    },
+    {
+      "id": "announcement:2026-horizons:5:friede-goggles",
+      "catalogName": "Charmeleon (Friede's Goggles)",
+      "dex": 5,
+      "releaseDate": "2026-09-16",
+      "dateMeaning": "Announced debut; not yet released at the September 6 review",
+      "evidenceUrl": "https://pokemongo.com/news/pokemon-horizons-celebration-event-2026"
+    },
+    {
+      "id": "announcement:2026-horizons:6:friede-goggles",
+      "catalogName": "Charizard (Friede's Goggles)",
+      "dex": 6,
+      "releaseDate": "2026-09-16",
+      "dateMeaning": "Announced debut; not yet released at the September 6 review",
+      "evidenceUrl": "https://pokemongo.com/news/pokemon-horizons-celebration-event-2026"
+    },
+    {
+      "id": "announcement:2026-pokexciting:pikachu-turquoise",
+      "catalogName": "Pikachu (PokeXciting Turquoise)",
+      "dex": 25,
+      "releaseDate": "2026-09-12",
+      "dateMeaning": "Announced Kuala Lumpur debut; not yet released at the September 6 review",
+      "evidenceUrl": "https://pokemongo.com/news/event-kuala-lumpur-30th-anniversary-2026"
+    }
+  ],
+  "followUpEvidence": [
+    {
+      "url": "https://pokemongo.com/news/event-apac-30th-anniversary-2026",
+      "reason": "Further region-exclusive PokeXciting colours are announced for Taipei, Singapore, Manila and Bangkok. Do not invent exact colour identities or reuse Turquoise; review the local details as they are published."
+    }
+  ]
+}
