@@ -1,5 +1,6 @@
 const {test,expect}=require('@playwright/test');
 const fs=require('node:fs');
+test.use({serviceWorkers:'block'});
 async function fixture(page){
   page.on('pageerror',error=>{throw error;});
   const origin=new URL(process.env.PLAYWRIGHT_BASE_URL||'http://localhost:4174').origin;
@@ -45,7 +46,7 @@ test('group CRUD and membership reuse private favorites; aggregate and copy only
     fs.mkdirSync(process.env.GROUP_SCREENSHOTS,{recursive:true});
     await page.evaluate(()=>scrollTo(0,0));
     await page.screenshot({path:`${process.env.GROUP_SCREENSHOTS}/groups-${test.info().project.name}.png`,animations:'disabled'});
-    await page.locator('#trainer-group-results [data-contextual-copy]').scrollIntoViewIfNeeded();
+    await page.evaluate(()=>scrollTo(0,document.getElementById('trainer-group-results').getBoundingClientRect().top+scrollY-120));
     await page.screenshot({path:`${process.env.GROUP_SCREENSHOTS}/groups-search-${test.info().project.name}.png`,animations:'disabled'});
   }
   page.once('dialog',dialog=>dialog.accept());await page.getByRole('button',{name:'Delete group',exact:true}).click();
