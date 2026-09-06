@@ -72,6 +72,7 @@ The existing GitHub Actions workflow now runs **weekly on Monday at 09:17 UTC**,
 node --test tests/costume-sprite-freshness.test.cjs
 node scripts/check-costume-sprite-freshness.cjs --offline
 node scripts/check-costume-sprite-freshness.cjs --report /tmp/costume-review.json --summary /tmp/costume-review.md --capture /tmp/costume-upstream-candidate.json
+node_modules/.bin/playwright test tests/costume-art.spec.js tests/anonymous-public-share.spec.js --grep 'reviewed costume art and excluded|costume art stays exact' --workers=1
 ```
 
 A nonzero exit means review is required or a source check failed. `no-new-findings` means no newly actionable changes, not complete costume support. Known rejected/ambiguous candidates remain visible without generating a fresh alert on every run. Failed or empty parses do not create a candidate snapshot. Requests have 10-second timeouts, a 10-minute overall budget and a 250 ms inter-page pause; no artwork is downloaded.
