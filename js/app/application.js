@@ -331,10 +331,6 @@ const {alphaCompare}=usernameDomain;
 const priorityValueDomain=window.PogoDomain?.priorityValues;
 if(!priorityValueDomain)throw new Error('Priority value helpers failed to load');
 const {entryGender,matchesTradeIntent,normalizeTradeQualifier,normalizeBackgroundId,parsePri,priValue}=priorityValueDomain;
-const backgroundCatalogDomain=window.PogoDomain?.backgroundCatalog;
-if(!backgroundCatalogDomain)throw new Error('Background catalog helpers failed to load');
-const backgroundVisualDomain=window.PogoDomain?.backgroundVisual;
-if(!backgroundVisualDomain)throw new Error('Background visual helpers failed to load');
 let specialTradeBoardExportDomain=window.PogoDomain?.specialTradeBoardExport||null;
 let specialTradeBoardExportDomainPromise=null;
 const pokemonPrimaryTypesDomain=window.PogoDomain?.pokemonPrimaryTypes;
@@ -584,9 +580,6 @@ let dragSrc=null;
 let myListPointerDrag=null;
 let authRepairStarted=false;
 let bulkMode=false,bulkSelected=new Set(),reorderMode=false;
-let haveView='mine',haveSubTab='trainer',haveMatchOnly=false;
-let haveAcItems=[],haveAcFiltered=[],haveAcFocusIdx=-1;
-let haveBulkMode=false,haveBulkSelected=new Set();
 const myListCollapsedPrioritySections=new Set();
 const MY_LIST_FILTER_DELAY_MS=60;
 const MY_LIST_PROGRESSIVE_THRESHOLD=180;
@@ -1888,13 +1881,9 @@ function resetSessionTransientUi(reason='session_boundary'){
   if(typeof trainerSuggestionTimer!=='undefined')clearTimeout(trainerSuggestionTimer);
   if(typeof favoriteSavedPromptTimer!=='undefined')clearTimeout(favoriteSavedPromptTimer);
   if(typeof _modalFocusTimer!=='undefined')clearTimeout(_modalFocusTimer);
-  if(typeof _myHaveRenderTimer!=='undefined')clearTimeout(_myHaveRenderTimer);
-  if(typeof _haveBrowseRenderTimer!=='undefined')clearTimeout(_haveBrowseRenderTimer);
   if(typeof trainerSuggestionTimer!=='undefined')trainerSuggestionTimer=0;
   if(typeof favoriteSavedPromptTimer!=='undefined')favoriteSavedPromptTimer=0;
   if(typeof _modalFocusTimer!=='undefined')_modalFocusTimer=null;
-  if(typeof _myHaveRenderTimer!=='undefined')_myHaveRenderTimer=0;
-  if(typeof _haveBrowseRenderTimer!=='undefined')_haveBrowseRenderTimer=0;
   if(undoTimer)clearTimeout(undoTimer);
   undoTimer=null;
   undoStack=null;
@@ -1950,10 +1939,8 @@ function resetSessionTransientUi(reason='session_boundary'){
   rpinTarget=null;
   addTray=[];
   acItems=[];acFiltered=[];acFocusIdx=-1;
-  haveAcItems=[];haveAcFiltered=[];haveAcFocusIdx=-1;
   dragSrc=null;
   bulkMode=false;bulkSelected.clear();
-  haveBulkMode=false;haveBulkSelected.clear();
   _safeTransferSelected=null;
   _qaSelected={lf:new Set(),ft:new Set()};
   _activeDiff=null;
@@ -5083,7 +5070,6 @@ async function changeInterfaceLocale(locale){
     if(_activeTradeMatch)renderTradeMatchModal();
     if(document.getElementById('trainer-organizer-modal')?.classList.contains('open'))renderTrainerOrganizer();
     if(document.getElementById('special-board-modal')?.classList.contains('open'))renderSpecialBoard();
-    if(document.getElementById('background-picker-modal')?.classList.contains('open'))renderBackgroundPicker();
     renderSafeTransferOutput();
   }else populateLoginUsers(loginUserSuggestionsShouldOpen());
   if(_activeShareView?.username)renderShareView(_activeShareView.username,_activeShareView.type);
@@ -13240,41 +13226,7 @@ function updateScheduleNotif(){
 }
 
 // ── HAVE / INVENTORY ─────────────────────────────────────────
-// Inventory entry return-preference modes (mutually exclusive):
-//   'any'          — Open: mirror preferred, but anything from the user's want list is okay
-//   'mirror'       — only accept the same Pokémon/form in return
-//   'dontNeedBack' — "Fair trade" — the item is rare / valuable and expects
-//                    comparable rarity from the user's want list.
-//   'giveaway'     — "Take it" — I can't hold this any longer; literally take it
-//                    for anything. Optional `note` field for trader to specify
-//                    preferences (e.g., "common Kanto starters work").
-// Cycle gender for a row: rekey the inventory entry to '' → 'm' → 'f' → ''.
-// If the target gender already has an entry for this Pokémon, merge quantities.
-function cycleInventoryGender(key){
-  const inv={...(allData.have?.[cur]||{})};
-  const cur1=splitHaveKey(key);
-  const info=haveEntryInfo(inv[key]);
-  if(!info.qty)return;
-  const nextGender=cur1.gender===''?'m':cur1.gender==='m'?'f':'';
-  if(nextGender===cur1.gender)return;
-  const newKey=joinHaveKey(cur1.name,nextGender);
-  if(newKey===key)return;
-  const existing=inv[newKey]?haveEntryInfo(inv[newKey]):null;
-  if(existing&&existing.qty>0){
-    const e=_nameToSpriteEntry(cur1.name);
-    const dn=e.displayName||cur1.name;
-    const label=nextGender==='m'?'male':nextGender==='f'?'female':'genderless';
-    if(!confirm(`You already have a ${label} ${dn} entry (×${existing.qty}). Merge ${info.qty} into it (total ×${existing.qty+info.qty})?`))return;
-    // Merge quantities into existing entry, drop source
-    setHaveEntry(inv,newKey,Math.min(999,existing.qty+info.qty),{mode:existing.mode,note:existing.note});
-    delete inv[key];
-  }else{
-    // Simple rename — same value object, new key
-    inv[newKey]=inv[key];
-    delete inv[key];
-  }
-  writeHave(cur,inv,{refresh:'mine'});
-}
+// Historical trade records still use these parsers; active inventory editing is retired.
 function setHaveEntry(inv,name,qty,opts={}){
   const q=Math.max(0,Math.min(999,parseInt(qty)||0));
   if(q<=0)delete inv[name];
@@ -13283,30 +13235,7 @@ function setHaveEntry(inv,name,qty,opts={}){
 function isMirrorOnlyHave(username,name){
   return haveEntryInfo(allData.have?.[username]?.[name]).mirrorOnly;
 }
-function isDontNeedBackHave(username,name){
-  return haveEntryInfo(allData.have?.[username]?.[name]).dontNeedBack;
-}
-function isGiveawayHave(username,name){
-  return haveEntryInfo(allData.have?.[username]?.[name]).giveaway;
-}
-let _myHaveRenderTimer=0;
-function queueRenderMyHave(delay=60){
-  clearTimeout(_myHaveRenderTimer);
-  _myHaveRenderTimer=setTimeout(()=>renderMyHave(),delay);
-}
-function refreshAfterHaveWrite(username,scope='all'){
-  allData=getLocal();
-  Object.values(syncQueue||{}).forEach(item=>applyQueuedData(allData,item));
-  if(scope==='mine'&&username===cur){
-    queueRenderMyHave();
-    const inCount=totalOffersForRecipient(cur);
-    const badge=document.getElementById('have-notif');
-    if(badge){badge.textContent=inCount>0?inCount:'';badge.style.display=inCount>0?'':'none';}
-  }else{
-    refreshAll();
-  }
-}
-async function writeHave(username,inv,opts={}){
+async function writeHave(username,inv){
   if(LEGACY_INVENTORY_READ_ONLY){toast(i18nCore.t('inventory.legacyReadOnly'),4500);return false;}
   const s=getLocal();
   if(!s.have)s.have={};
@@ -13325,245 +13254,10 @@ async function writeHave(username,inv,opts={}){
       queueSync(`users/${username}/lastSeen`,now);
     }
   }
-  refreshAfterHaveWrite(username,opts.refresh||'all');
+  allData=getLocal();
+  Object.values(syncQueue||{}).forEach(item=>applyQueuedData(allData,item));
+  refreshAll();
   return true;
-}
-function setHaveView(v){
-  haveView=v;
-  document.querySelectorAll('.have-toggle-btn').forEach(b=>b.classList.toggle('active',b.dataset.view===v));
-  document.getElementById('have-mine-view').classList.toggle('active',v==='mine');
-  document.getElementById('have-browse-view').classList.toggle('active',v==='browse');
-  if(v==='mine')renderMyHave();
-  else renderHaveBrowse();
-}
-function setHaveSubTab(t){
-  haveSubTab=t;
-  document.querySelectorAll('.have-sub-tab').forEach(b=>b.classList.toggle('on',b.dataset.sub===t));
-  renderHaveBrowse();
-}
-function toggleHaveMatchOnly(){
-  haveMatchOnly=!haveMatchOnly;
-  const btn=document.getElementById('have-match-btn');
-  btn?.classList.toggle('on',haveMatchOnly);
-  btn?.setAttribute('aria-pressed',haveMatchOnly?'true':'false');
-  renderHaveBrowse();
-}
-function buildHaveAcItems(){
-  // Build autocomplete items from ALL Pokemon (every list type), unique by name
-  haveAcItems=[];
-  const seen=new Set();
-  ['wishlist','dynamax','gmax','costumes'].forEach(type=>{
-    listSource(type).forEach(e=>{
-      const key=e.catalogId||pokemonCatalogDomain.catalogKey(e.name);
-      if(seen.has(key)||!e.name)return;
-      seen.add(key);
-      const item={name:e.name,dn:pokemonDisplayName(e),no:e.no||null,catalogId:key,legacyAliases:e.legacyAliases,searchAliases:e.searchAliases};
-      item.search=normalizeAcText(pokemonSearchLabels(e).join(' '));
-      haveAcItems.push(item);
-    });
-  });
-}
-function haveAcSearch(q){
-  document.getElementById('have-pmon-sel').value='';
-  const dd=document.getElementById('have-ac-dropdown');
-  if(!q||q.length<1){dd.classList.remove('open');return;}
-  if(!haveAcItems.length)buildHaveAcItems();
-  haveAcFiltered=rankAutocompleteItems(haveAcItems,q);
-  haveAcFocusIdx=-1;
-  if(!haveAcFiltered.length){
-    dd.innerHTML=`<div class="ac-empty">${escHtml(i18nCore.t('common.noResults'))}</div>`;
-  }else{
-    dd.innerHTML=haveAcFiltered.map((e,i)=>`
-      <div class="ac-item" data-idx="${i}" onmousedown="haveAcSelect(${i})">
-        ${e.no||e.spriteUrl?spriteImg(e.no,28,'ac-item-sprite',e.name,'',e.dn):''}
-        ${e.no?`<span class="ac-item-no">#${e.no}</span>`:''}
-        <span class="ac-item-name">${e.dn}</span>
-      </div>`).join('');
-  }
-  dd.classList.add('open');
-}
-function haveAcSelect(idx){
-  const e=haveAcFiltered[idx];if(!e)return;
-  document.getElementById('have-ac-input').value=e.dn;
-  document.getElementById('have-pmon-sel').value=e.name;
-  document.getElementById('have-ac-dropdown').classList.remove('open');
-  document.getElementById('have-qty')?.focus();
-}
-function haveAcKeydown(ev){
-  const dd=document.getElementById('have-ac-dropdown');
-  if(!dd.classList.contains('open'))return;
-  if(ev.key==='ArrowDown'){ev.preventDefault();haveAcFocusIdx=Math.min(haveAcFocusIdx+1,haveAcFiltered.length-1);updateHaveAcFocus();}
-  else if(ev.key==='ArrowUp'){ev.preventDefault();haveAcFocusIdx=Math.max(haveAcFocusIdx-1,0);updateHaveAcFocus();}
-  else if(ev.key==='Enter'){ev.preventDefault();if(haveAcFocusIdx>=0)haveAcSelect(haveAcFocusIdx);else if(haveAcFiltered.length)haveAcSelect(0);}
-  else if(ev.key==='Escape'){dd.classList.remove('open');}
-}
-function updateHaveAcFocus(){
-  document.querySelectorAll('#have-ac-dropdown .ac-item').forEach((el,i)=>el.classList.toggle('focused',i===haveAcFocusIdx));
-}
-function setHaveAddMode(mode){
-  const hidden=document.getElementById('have-return-mode');
-  if(hidden)hidden.value=mode;
-  document.querySelectorAll('.have-return-picker .hrp-btn').forEach(b=>b.classList.toggle('selected',b.dataset.mode===mode));
-  // Show/hide giveaway note field — only relevant when Giveaway mode is selected
-  const noteRow=document.getElementById('have-giveaway-note-row');
-  if(noteRow)noteRow.style.display=mode==='giveaway'?'block':'none';
-  if(mode!=='giveaway'){const ni=document.getElementById('have-giveaway-note');if(ni)ni.value='';}
-}
-// Add-form gender pill state (none/m/f). Independent per session.
-let _haveAddGender='';
-function setHaveAddGender(g){
-  _haveAddGender=_normGender(g);
-  document.querySelectorAll('.have-add-gender-btn').forEach(b=>{
-    b.classList.toggle('on',b.dataset.gender===_haveAddGender);
-    b.setAttribute('aria-pressed',b.dataset.gender===_haveAddGender?'true':'false');
-  });
-}
-function addInventoryEntry(){
-  const name=document.getElementById('have-pmon-sel').value;
-  const qty=Math.max(1,Math.min(999,parseInt(document.getElementById('have-qty').value)||1));
-  const mode=document.getElementById('have-return-mode')?.value||'any';
-  const note=mode==='giveaway'?(document.getElementById('have-giveaway-note')?.value||'').trim():'';
-  if(!name){toast(i18nCore.t('myList.selectPokemon'));return;}
-  const gender=_normGender(_haveAddGender);
-  const key=joinHaveKey(name,gender);
-  const inv={...(allData.have?.[cur]||{})};
-  const curInfo=haveEntryInfo(inv[key]);
-  // If user selected a non-default mode, override the existing entry's mode.
-  // Otherwise preserve existing mode (so re-adding doesn't reset to 'any').
-  const newMode=mode!=='any'?mode:curInfo.mode;
-  const finalNote=newMode==='giveaway'?(note||curInfo.note):curInfo.note;
-  setHaveEntry(inv,key,curInfo.qty+qty,{mode:newMode,note:finalNote});
-  writeHave(cur,inv,{refresh:'mine'});
-  document.getElementById('have-ac-input').value='';
-  document.getElementById('have-pmon-sel').value='';
-  document.getElementById('have-qty').value='1';
-  setHaveAddMode('any');
-  setHaveAddGender('');
-  document.getElementById('have-ac-dropdown').classList.remove('open');
-  const dn=haveAcItems.find(x=>x.name===name)?.dn||name;
-  const genderLabel=gender==='m'?' ♂':gender==='f'?' ♀':'';
-  const modeLabel=newMode==='mirror'?' (mirror only)':newMode==='dontNeedBack'?' (fair trade)':newMode==='giveaway'?' (giveaway)':'';
-  toast(`✅ Added ${qty}× ${dn}${genderLabel}${modeLabel}`);
-}
-// Edit just the note on an existing giveaway entry
-async function editInventoryNote(key){
-  const inv={...(allData.have?.[cur]||{})};
-  const info=haveEntryInfo(inv[key]);
-  if(info.mode!=='giveaway')return;
-  const{name,gender}=splitHaveKey(key);
-  const label=name+(gender==='m'?' ♂':gender==='f'?' ♀':'');
-  const newNote=prompt(`Giveaway preference for ${label} (optional, e.g. "any common Kanto starter"):`,info.note||'');
-  if(newNote===null)return; // cancelled
-  setHaveEntry(inv,key,info.qty,{mode:'giveaway',note:String(newNote||'').trim()});
-  writeHave(cur,inv,{refresh:'mine'});
-}
-function updateInventoryQty(name,delta){
-  const inv={...(allData.have?.[cur]||{})};
-  const curInfo=haveEntryInfo(inv[name]);
-  const new_qty=curInfo.qty+delta;
-  if(new_qty>999)return;
-  setHaveEntry(inv,name,new_qty);
-  writeHave(cur,inv,{refresh:'mine'});
-}
-function setInventoryQty(name,val){
-  const v=parseInt(val);
-  if(!Number.isFinite(v))return;
-  const inv={...(allData.have?.[cur]||{})};
-  setHaveEntry(inv,name,Math.min(999,v));
-  writeHave(cur,inv,{refresh:'mine'});
-}
-function toggleInventoryMirror(name){
-  const inv={...(allData.have?.[cur]||{})};
-  const info=haveEntryInfo(inv[name]);
-  if(!info.qty)return;
-  setHaveEntry(inv,name,info.qty,{mirrorOnly:!info.mirrorOnly});
-  writeHave(cur,inv,{refresh:'mine'});
-}
-// Cycle: any → mirror → dontNeedBack → giveaway → any
-function cycleInventoryMode(name){
-  const inv={...(allData.have?.[cur]||{})};
-  const info=haveEntryInfo(inv[name]);
-  if(!info.qty)return;
-  const next=info.mode==='any'?'mirror'
-    :info.mode==='mirror'?'dontNeedBack'
-    :info.mode==='dontNeedBack'?'giveaway'
-    :'any';
-  setHaveEntry(inv,name,info.qty,{mode:next});
-  writeHave(cur,inv,{refresh:'mine'});
-}
-// ── INVENTORY BULK OPERATIONS ────────────────────────────────
-function toggleHaveBulkMode(){
-  haveBulkMode=!haveBulkMode;
-  haveBulkSelected.clear();
-  document.body.classList.toggle('have-bulk-mode',haveBulkMode);
-  document.getElementById('have-bulk-bar')?.classList.toggle('active',haveBulkMode);
-  const btn=document.getElementById('have-bulk-toggle-btn');
-  if(btn)btn.setAttribute('aria-pressed',haveBulkMode?'true':'false');
-  if(haveBulkMode){
-    const sel=document.getElementById('have-bulk-mode-sel');
-    if(sel){sel.value='';sel.onchange=bulkHaveSetMode;}
-  }
-  renderMyHave();
-  updateHaveBulkCount();
-}
-function toggleHaveBulkSelection(key){
-  if(haveBulkSelected.has(key))haveBulkSelected.delete(key);else haveBulkSelected.add(key);
-  document.querySelector(`.have-row[data-key="${key.replace(/"/g,'\\"')}"]`)?.classList.toggle('bulk-selected',haveBulkSelected.has(key));
-  const chk=document.querySelector(`.have-row .bulk-chk[data-key="${key.replace(/"/g,'\\"')}"]`);
-  if(chk)chk.checked=haveBulkSelected.has(key);
-  updateHaveBulkCount();
-}
-function updateHaveBulkCount(){
-  const el=document.getElementById('have-bulk-count');
-  if(el)el.textContent=i18nCore.t('bulk.selected',{count:i18nCore.formatNumber(haveBulkSelected.size)});
-}
-function bulkHaveSetMode(){
-  const sel=document.getElementById('have-bulk-mode-sel');
-  const v=sel?.value;
-  if(!v||!haveBulkSelected.size){if(sel)sel.value='';return;}
-  const inv={...(allData.have?.[cur]||{})};
-  let count=0;
-  haveBulkSelected.forEach(name=>{
-    const info=haveEntryInfo(inv[name]);
-    if(!info.qty)return;
-    setHaveEntry(inv,name,info.qty,{mode:v});
-    count++;
-  });
-  writeHave(cur,inv,{refresh:'mine'});
-  if(sel)sel.value='';
-  const label=i18nCore.t(`inventory.mode.${v}`);
-  toast(i18nCore.t('inventory.bulkModeSet',{count:i18nCore.formatNumber(count),mode:label}));
-}
-function bulkHaveAdjustQty(delta){
-  if(!haveBulkSelected.size){toast(i18nCore.t('bulk.selectFirst'));return;}
-  const inv={...(allData.have?.[cur]||{})};
-  let changed=0,removed=0;
-  haveBulkSelected.forEach(name=>{
-    const info=haveEntryInfo(inv[name]);
-    if(!info.qty)return;
-    const newQty=info.qty+delta;
-    if(newQty<=0){delete inv[name];removed++;}
-    else if(newQty<=999){setHaveEntry(inv,name,newQty,{mode:info.mode,note:info.note});changed++;}
-  });
-  writeHave(cur,inv,{refresh:'mine'});
-  toast(i18nCore.t(delta>0?'inventory.bulkAdded':'inventory.bulkRemoved',{amount:i18nCore.formatNumber(Math.abs(delta)),changed:i18nCore.formatNumber(changed),removed:i18nCore.formatNumber(removed)}));
-  if(removed)haveBulkSelected=new Set([...haveBulkSelected].filter(n=>inv[n]));
-}
-function bulkHaveDelete(){
-  if(!haveBulkSelected.size){toast(i18nCore.t('bulk.selectFirst'));return;}
-  if(!confirm(i18nCore.t('inventory.bulkDeleteConfirm',{count:i18nCore.formatNumber(haveBulkSelected.size)})))return;
-  const inv={...(allData.have?.[cur]||{})};
-  const count=haveBulkSelected.size;
-  haveBulkSelected.forEach(name=>{delete inv[name];});
-  writeHave(cur,inv,{refresh:'mine'});
-  haveBulkSelected.clear();
-  updateHaveBulkCount();
-  toast(i18nCore.t('inventory.bulkDeleted',{count:i18nCore.formatNumber(count)}));
-}
-function removeInventoryEntry(name){
-  const inv={...(allData.have?.[cur]||{})};
-  delete inv[name];
-  writeHave(cur,inv,{refresh:'mine'});
 }
 function _nameToSpriteEntry(name){
   // Lookup sprite metadata for a Pokemon name across all sources
@@ -13577,125 +13271,6 @@ function _nameToSpriteEntry(name){
 
 
 
-function closeIncomingOffersModal(){document.getElementById('incoming-modal')?.remove();}
-function entryWantedByCur(name){
-  const special=(allData.users?.[cur]?.specialTradeBoard?.lf||[]).find(entry=>pokemonCatalogDomain.catalogKey(entry?.name)===pokemonCatalogDomain.catalogKey(name));
-  if(special)return{type:'special',p:'',lucky:false,xxl:false,xxs:false,shiny:!!special.shiny,mod:'',backgroundId:normalizeBackgroundId(special.backgroundId)};
-  // Check if current user wants this Pokemon (any list, any priority/flag/background)
-  for(const t of['wishlist','dynamax','gmax','costumes']){
-    const val=pokemonListValueForCanonicalName(allData[t]?.[cur],name);
-    if(val){
-      const{p,lucky,xxl,xxs,shiny,mod,backgroundId}=parsePri(val);
-      if(p||lucky||xxl||xxs||shiny||backgroundId)return{type:t,p,lucky,xxl,xxs,shiny,mod,backgroundId};
-    }
-  }
-  return null;
-}
-// Check what the OTHER user wants for this Pokémon — used by offer message
-function entryWantedByOther(otherUser,name){
-  const special=(allData.users?.[otherUser]?.specialTradeBoard?.lf||[]).find(entry=>pokemonCatalogDomain.catalogKey(entry?.name)===pokemonCatalogDomain.catalogKey(name));
-  if(special)return{type:'special',p:'',lucky:false,xxl:false,xxs:false,shiny:!!special.shiny,mod:'',backgroundId:normalizeBackgroundId(special.backgroundId)};
-  for(const t of['wishlist','dynamax','gmax','costumes']){
-    const val=pokemonListValueForCanonicalName(allData[t]?.[otherUser],name);
-    if(val){
-      const{p,lucky,xxl,xxs,shiny,mod,backgroundId}=parsePri(val);
-      if(p||lucky||xxl||xxs||shiny||backgroundId)return{type:t,p,lucky,xxl,xxs,shiny,mod,backgroundId};
-    }
-  }
-  return null;
-}
-let _haveBrowseRenderTimer=0;
-function queueRenderHaveBrowse(){
-  clearTimeout(_haveBrowseRenderTimer);
-  _haveBrowseRenderTimer=setTimeout(()=>renderHaveBrowse(),120);
-}
-function makeHaveBrowseContext(qRaw=''){
-  const q=String(qRaw||'').toLowerCase().trim();
-  const wanted=new Map();
-  for(const t of['wishlist','dynamax','gmax','costumes']){
-    Object.entries(allData[t]?.[cur]||{}).forEach(([name,val])=>{
-      if(wanted.has(name))return;
-      const{p,lucky,xxl,xxs,shiny,mod,backgroundId}=parsePri(val);
-      if(p||lucky||xxl||xxs||shiny||backgroundId)wanted.set(name,{type:t,p,lucky,xxl,xxs,shiny,mod,backgroundId});
-    });
-  }
-  const spriteCache=new Map();
-  const offerIndex=new Map();
-  const spriteEntry=name=>{
-    if(!spriteCache.has(name))spriteCache.set(name,_nameToSpriteEntry(name));
-    return spriteCache.get(name);
-  };
-  const offersFor=(recipient,itemName)=>{
-    if(!offerIndex.has(recipient)){
-      const grouped=new Map();
-      Object.entries(allData.offers?.[recipient]||{}).forEach(([id,o])=>{
-        if(!o?.itemKey)return;
-        const arr=grouped.get(o.itemKey)||[];
-        arr.push({id,...o});
-        grouped.set(o.itemKey,arr);
-      });
-      grouped.forEach(arr=>arr.sort((a,b)=>(a.t||0)-(b.t||0)));
-      offerIndex.set(recipient,grouped);
-    }
-    return offerIndex.get(recipient).get(offerKey(itemName))||[];
-  };
-  return{
-    q,
-    wantFor:name=>wanted.get(name)||null,
-    spriteEntry,
-    offerCount:(recipient,itemName)=>offersFor(recipient,itemName).length,
-    offersFor
-  };
-}
-function haveBrowseItemsForTrainer(u,ctx,opts={}){
-  const inv=allData.have?.[u]||{};
-  const applyMatchOnly=opts.applyMatchOnly!==false;
-  const userMatch=!!(ctx.q&&u.toLowerCase().includes(ctx.q));
-  let items=Object.entries(inv).map(([key,val])=>{
-    const{name:n,gender}=splitHaveKey(key);
-    const info=haveEntryInfo(val);
-    if(info.qty<=0)return null;
-    const e=ctx.spriteEntry(n);
-    const want=ctx.wantFor(n);
-    return{key,name:n,gender,qty:info.qty,mirrorOnly:info.mirrorOnly,dontNeedBack:info.dontNeedBack,giveaway:info.giveaway,note:info.note,mode:info.mode,dn:pokemonDisplayName({...e,name:e.name||n,displayName:e.displayName||n}),no:e.no,match:want};
-  }).filter(Boolean);
-  if(applyMatchOnly&&haveMatchOnly)items=items.filter(it=>it.match);
-  if(ctx.q&&!userMatch)items=items.filter(it=>it.dn.toLowerCase().includes(ctx.q));
-  return sortHaveBrowseItems(items,opts.sortMode||'default');
-}
-function sortHaveBrowseItems(items,sortMode='default'){
-  const flagScore=it=>{
-    if(sortMode==='match')return it.match?1:0;
-    if(sortMode==='mirror')return it.mirrorOnly?1:0;
-    if(sortMode==='dnb')return it.dontNeedBack?1:0;
-    if(sortMode==='giveaway')return it.giveaway?1:0;
-    return 0;
-  };
-  const qtyFirst=sortMode==='all';
-  return [...items].sort((a,b)=>
-    flagScore(b)-flagScore(a)
-    || (qtyFirst?b.qty-a.qty:0)
-    || (b.match?1:0)-(a.match?1:0)
-    || (parseInt(a.no)||9999)-(parseInt(b.no)||9999)
-    || a.dn.localeCompare(b.dn)
-  );
-}
-function haveBrowseTrainerSummary(u,ctx){
-  const allItems=haveBrowseItemsForTrainer(u,ctx,{applyMatchOnly:false});
-  const items=haveMatchOnly?allItems.filter(it=>it.match):allItems;
-  const matchCount=allItems.filter(it=>it.match).length;
-  const totalQty=allItems.reduce((s,it)=>s+it.qty,0);
-  return{
-    items,
-    visibleCount:items.length,
-    totalCount:allItems.length,
-    matchCount,
-    totalQty,
-    mirrorCount:allItems.filter(it=>it.mirrorOnly).length,
-    dnbCount:allItems.filter(it=>it.dontNeedBack).length,
-    giveawayCount:allItems.filter(it=>it.giveaway).length
-  };
-}
 
 
 

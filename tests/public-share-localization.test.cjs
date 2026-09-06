@@ -166,7 +166,7 @@ test('current release is coherent and contains no active .66 assets',()=>{
   assert.equal(html.match(/window\.__POGO_RELEASE_ID='([^']+)'/)?.[1],releaseId);
   assert.equal(worker.match(/const RELEASE='([^']+)'/)?.[1],releaseId);
   const firstParty=[...html.matchAll(/<script\s+src="([^"]+)"/g)].map(match=>match[1]).filter(src=>!/^https?:/.test(src));
-  assert.equal(firstParty.length,87);
+  assert.equal(firstParty.length,85);
   for(const src of firstParty)assert.equal(new URL(src,'https://example.test').searchParams.get('v'),releaseId);
   assert.doesNotMatch(`${html}\n${worker}\n${release}`,/2026-08-26\.66/);
 });
