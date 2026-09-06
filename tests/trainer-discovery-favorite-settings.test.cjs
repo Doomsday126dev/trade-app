@@ -179,7 +179,8 @@ test('Settings exposes six semantic sections with desktop and mobile navigation'
   assert.match(html,/const SETTINGS_SECTIONS=Object\.freeze\(\['profile','language','appearance','security','tools','data'\]\)/);
   assert.match(html,/function parseSettingsRoute/);
   assert.match(html,/settings-page-mode/);
-  for(const tool of ['inventory','import','export','safe-transfer','shortcuts','health','backup'])assert.match(html,new RegExp(`openSettingsTool\\('${tool}'\\)`));
+  for(const tool of ['import','export','safe-transfer','shortcuts','health','backup'])assert.match(html,new RegExp(`openSettingsTool\\('${tool}'\\)`));
+  assert.doesNotMatch(html,/openSettingsTool\('inventory'\)/);
   assert.doesNotMatch(html,/openSettingsTool\('restore'\)/);
   assert.match(html,/settings-admin-only[^>]+hidden/);
   assert.match(html,/\.settings-account-only\[hidden\],\.settings-admin-only\[hidden\]\{display:none!important\}/);
@@ -203,7 +204,9 @@ test('responsive contracts retain 48px targets, wrapping, and no parallel organi
 });
 
 test('release and safety boundaries remain coherent',()=>{
-  assert.match(html,/2026-08-31\.86/);assert.doesNotMatch(html,/2026-08-30\.85/);
+  const release=html.match(/window\.__POGO_RELEASE_ID='([^']+)'/)?.[1];
+  assert.match(release,/^\d{4}-\d{2}-\d{2}\.\d+$/);
+  for(const file of ['js/domain/clientRelease.js','sw.js'])assert.ok(readFileSync(path.join(root,file),'utf8').includes(release));
   assert.match(readFileSync(path.join(root,'js/domain/shareVisibility.js'),'utf8'),/SHARE_VISIBILITY_MODEL_ENABLED\s*:\s*false/);assert.match(html,/SYNCED_TRAINER_PREFERENCES_ENABLED!==false/);
   assert.doesNotMatch(html,/managedTrainerPreferencesRepository\.(?:mutate|write|save)/);
 });
