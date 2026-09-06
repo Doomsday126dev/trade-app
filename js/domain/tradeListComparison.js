@@ -97,5 +97,25 @@
       iOffer:offersAvailable?intersection(theirWants,mine.filter(e=>e.intent==='ft')):[]};
   }
 
-  root.tradeListComparison=Object.freeze({FLAG_KEYS,cleanEntry,qualifierKey,wantedIntentKey,compareWantedLists,declarationKey,unifyDeclarations,compareDeclarations});
+  function groupWants(members=[],{scope='all',now=Date.now(),...options}={}){
+    const rows=new Map();
+    const states=members.map(member=>{
+      const fresh=Number(member.fetchedAt)>0&&member.fetchedAt<=now&&now-member.fetchedAt<=300000;
+      const published=Number(member.updatedAt)>0&&member.updatedAt<=now&&now-member.updatedAt<=30*86400000;
+      const available=['published','published_empty'].includes(member.status)&&fresh&&published;
+      const status=available?'available':['published','published_empty'].includes(member.status)?'stale':member.status==='loading'?'loading':'unavailable';
+      if(available)for(const raw of member.entries||[]){
+        if(raw.intent!=='lf'||scope==='top'&&raw.p!=='H')continue;
+        const entry={...raw,backgroundId:''},key=wantedIntentKey(entry,options)+'|'+JSON.stringify(entry.note||'');
+        if(!rows.has(key))rows.set(key,{...entry,key,members:[]});
+        const row=rows.get(key);
+        const previous=row.members.find(item=>item.key===member.key);
+        if(!previous)row.members.push({key:member.key,displayName:member.displayName,p:entry.p||'',priorities:[entry.p||'']});
+        else if(!previous.priorities.includes(entry.p||''))previous.priorities.push(entry.p||'');
+      }
+      return{...member,status,entries:undefined};
+    });
+    return{members:states,entries:[...rows.values()]};
+  }
+  root.tradeListComparison=Object.freeze({FLAG_KEYS,cleanEntry,qualifierKey,wantedIntentKey,compareWantedLists,declarationKey,unifyDeclarations,compareDeclarations,groupWants});
 })(window);

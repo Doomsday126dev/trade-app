@@ -10,7 +10,7 @@ function loadCache({read,now=()=>100,maxFavorites,readDeadlineMs,setTimer,clearT
   return window.PogoData.favoriteShareSessionCache.createFavoriteShareSessionCache({repository:{read},validateProjection(value,{username}){
     if(value===null)return{ok:false,status:'not_published'};
     if(value?.malformed)return{ok:false,status:'projection_unsupported'};
-    return{ok:true,status:Object.values(value.lists||{}).some(list=>Object.keys(list).length)?'published':'published_empty',snapshot:{username,lists:value.lists||{},updatedAt:value.updatedAt||1}};
+    return{ok:true,status:Object.values(value.lists||{}).some(list=>Object.keys(list).length)?'published':'published_empty',snapshot:{username,lists:value.lists||{},...(value.declarations?{declarations:value.declarations}:{}),updatedAt:value.updatedAt||1}};
   },projectSnapshot(snapshot){return Object.entries(snapshot.lists.wishlist||{}).map(([pokemonName,priority])=>({pokemonKey:pokemonName.toLowerCase(),pokemonName,priority,categories:['wishlist']}));},now,...(maxFavorites===undefined?{}:{maxFavorites}),...(readDeadlineMs===undefined?{}:{readDeadlineMs}),...(setTimer?{setTimer}:{}),...(clearTimer?{clearTimer}:{})});
 }
 const favorites=count=>Array.from({length:count},(_,i)=>({key:`trainer-${i}`,displayName:`Trainer-${i}`}));
@@ -43,6 +43,17 @@ function virtualClock(){
   };
 }
 const flush=()=>new Promise(resolve=>setImmediate(resolve));
+
+test('validated v2 declarations retain exact qualifiers in the session-only list snapshot',async()=>{
+  const declarations=[{intent:'lf',name:'Pikachu (Worlds 2025)',category:'costumes',p:'H',shiny:true,gender:'f',mod:'exact qualifier'}];
+  const cache=loadCache({read:async()=>({ok:true,value:{...share('Trainer-0'),declarations,privateNotes:'must not copy'}})});
+  cache.activate({uid:'owner',username:'Owner'});
+  const record=await cache.readFavorite(favorites(1)[0]);
+  assert.equal(JSON.stringify(record.listSnapshot.declarations),JSON.stringify(declarations));
+  assert.equal(record.listSnapshot.privateNotes,undefined);
+  cache.reset();
+  assert.equal(cache.snapshot().records.size,0);
+});
 
 test('zero Favorites performs zero reads and cold hydration reads each exact Favorite once',async()=>{
   const calls=[];const cache=loadCache({read:async name=>{calls.push(`publicShares/${name}`);return{ok:true,value:share(name)};}});cache.activate({uid:'u',username:'Owner'});

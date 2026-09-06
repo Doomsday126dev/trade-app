@@ -1828,6 +1828,7 @@ function syncPokemonGoSearchLanguageControl(){
   if(select){select.disabled=!override;select.value=override?preference:pokemonGoSearchSyntaxDomain.localeKey(i18nCore.getLocale());}
 }
 function rerenderPokemonGoSearchLanguageSurfaces(){
+  if(cur)renderTrainerGroupResults();
   if(cur)refreshCombinedSearch();
   if(cur){renderIntentEntries(document.getElementById('mylist-filter')?.value||'');if(document.getElementById('selected-contextual-search')?.textContent)renderSelectedIntentSearch();if(document.getElementById('special-board-modal')?.classList.contains('open'))renderBoardContextualSearch();}
   if(cur){renderMyStrings();renderStrings();if(_activeDiff)renderDiffModal();if(_activeTradeMatch)renderTradeMatchModal();renderSafeTransferOutput();}
@@ -5101,12 +5102,147 @@ let eventTypeFilter='all';
 let eventCalendarDate='';
 let eventCalendarAnchor=new Date(new Date().getFullYear(),new Date().getMonth(),1);
 let trainerOrganizerState={query:'',tagIds:[],username:''};
+let trainerGroupState={id:'',scope:'all',records:[],generation:0,busy:false,limit:120};
+let trainerGroupExpiry=null;
+function resetTrainerGroups(){
+  clearTimeout(trainerGroupExpiry);
+  trainerGroupState={id:'',scope:'all',records:[],generation:trainerGroupState.generation+1,busy:false,limit:120};
+  document.getElementById('trainer-groups')?.replaceChildren();
+}
+function groupText(key,params){return i18nCore.t(`groups.${key}`,params);}
+function renderTrainerGroups(){
+  const host=document.getElementById('trainer-groups'),store=ensureTrainerHistoryStore();
+  if(!host||!store)return;
+  const membershipOpen=host.querySelector('.group-membership')?.open;
+  const focused=host.contains(document.activeElement)?document.activeElement:null;
+  const focusId=focused?.id,focusMember=focused?.dataset.groupMember,focusForm=focused?.closest('form')?.dataset.groupForm;
+  const state=store.read(),tags=Object.values(state.tags||{});
+  if(trainerGroupState.id&&!state.tags[trainerGroupState.id])resetTrainerGroups();
+  const tag=state.tags[trainerGroupState.id];
+  host.innerHTML=`<div class="trainer-section-heading"><h2 id="trainer-groups-title">${escHtml(groupText('title'))}</h2><span>${escHtml(groupText(accountSyncProjectionReady()?'synced':'local'))}</span></div>
+    <form class="group-create" data-group-form="create"><input class="field-control" name="label" maxlength="80" required aria-label="${escAttr(groupText('new'))}" placeholder="${escAttr(groupText('new'))}"><button class="btn btn-secondary">${escHtml(groupText('create'))}</button></form>
+    <label class="group-picker">${escHtml(groupText('open'))}<select class="field-control" id="trainer-group-select"><option value="">${escHtml(groupText('choose'))}</option>${tags.map(item=>`<option value="${escAttr(item.id)}"${tag?.id===item.id?' selected':''}>${escHtml(item.label)}</option>`).join('')}</select></label>
+    <div id="trainer-group-status" role="status"></div>
+    ${tag?`<form class="group-create" data-group-form="rename"><input name="label" class="field-control" required value="${escAttr(tag.label)}" aria-label="${escAttr(groupText('name'))}"><button class="btn btn-secondary">${escHtml(groupText('rename'))}</button><button type="button" class="btn btn-icon" data-group-action="delete" title="${escAttr(groupText('delete'))}" aria-label="${escAttr(groupText('delete'))}">${uiIconMarkup('trash')}</button></form>
+      <details class="group-membership"><summary>${escHtml(groupText('members'))}</summary>${state.favorites.length?state.favorites.map(item=>`<label><input type="checkbox" data-group-member="${escAttr(item.displayName)}"${item.tagIds.includes(tag.id)?' checked':''}>${escHtml(item.displayName)}</label>`).join(''):`<p>${escHtml(groupText('noFavorites'))}</p>`}</details>
+      <div class="group-actions"><label>${escHtml(i18nCore.t('phase2.scope'))}<select class="field-control" id="trainer-group-scope"><option value="all"${trainerGroupState.scope==='all'?' selected':''}>${escHtml(groupText('all'))}</option><option value="top"${trainerGroupState.scope==='top'?' selected':''}>${escHtml(i18nCore.t('phase2.top'))}</option></select></label><button class="btn btn-secondary" data-group-action="refresh"${trainerGroupState.busy?' disabled':''}>${escHtml(groupText('refresh'))}</button></div>
+      <div id="trainer-group-results" aria-live="polite"></div>`:''}`;
+  if(membershipOpen&&host.querySelector('.group-membership'))host.querySelector('.group-membership').open=true;
+  renderTrainerGroupResults();
+  if(focusId)document.getElementById(focusId)?.focus({preventScroll:true});
+  else if(focusMember)[...host.querySelectorAll('[data-group-member]')].find(input=>input.dataset.groupMember===focusMember)?.focus({preventScroll:true});
+  else if(focusForm)host.querySelector(`[data-group-form="${focusForm}"] input`)?.focus({preventScroll:true});
+}
+function trainerGroupModel(){
+  const state=ensureTrainerHistoryStore()?.read();
+  const members=(state?.favorites||[]).filter(item=>item.tagIds.includes(trainerGroupState.id));
+  return tradeListComparisonDomain.groupWants(members.map(item=>{
+    const record=trainerGroupState.records.find(record=>record.key===item.key&&record.targetUid===(item.targetUid||''));
+    return{...item,...(record||{status:trainerGroupState.busy?'loading':'unavailable'})};
+  }),{scope:trainerGroupState.scope,nameKey:pokemonCatalogDomain.catalogKey,normalizeQualifier:normalizeTradeQualifier});
+}
+function renderTrainerGroupResults(){
+  const host=document.getElementById('trainer-group-results');if(!host)return;
+  const model=trainerGroupModel();
+  host.dataset.groupSignature=JSON.stringify(model.entries);
+  host.innerHTML=`${model.entries.length?contextualIntentSearchHtml(model.entries,groupText('search')):`<p>${escHtml(groupText(model.members.length?'noWants':'empty'))}</p>`}
+    <ul class="group-availability">${model.members.map(member=>`<li><button type="button" class="btn btn-ghost" data-group-open-trainer="${escAttr(member.displayName)}">${escHtml(member.displayName)}</button><span>${escHtml(groupText(member.status))}${member.updatedAt?` · ${escHtml(i18nCore.formatDate(new Date(member.updatedAt),{dateStyle:'medium'}))}`:''}</span></li>`).join('')}</ul>
+    <p class="type-meta">${escHtml(groupText('freshness'))}</p>
+    <div class="group-wants">${model.entries.slice(0,trainerGroupState.limit).map(entry=>`<article class="group-want"><div>${entry.no&&entrySpriteUrl(entry)?spriteImg(entry.no,44,'group-sprite',entry.name,entry.gender||'',entry.dn):''}</div><div><strong>${escHtml(productShareDescription({...entry,p:''}))}</strong><div class="type-meta">${entry.members.map(member=>`${escHtml(member.displayName)}${member.priorities.filter(Boolean).map(priority=>` · ${escHtml(priority==='H'?i18nCore.t('phase2.topWant'):priority)}`).join('')}`).join('; ')}</div></div></article>`).join('')}</div>
+    ${model.entries.length>trainerGroupState.limit?`<button class="btn btn-secondary" data-group-action="more">${escHtml(groupText('more'))}</button>`:''}`;
+}
+async function openTrainerGroup(id,{force=true}={}){
+  const token=++trainerGroupState.generation,owner=cur,uid=auth?.currentUser?.uid;
+  clearTimeout(trainerGroupExpiry);
+  trainerGroupState.id=id;trainerGroupState.records=[];trainerGroupState.busy=!!id;trainerGroupState.limit=120;
+  renderTrainerGroups();if(!id)return;
+  const current=()=>token===trainerGroupState.generation&&owner===cur&&uid===auth?.currentUser?.uid;
+  const store=ensureTrainerHistoryStore(),state=store?.read(),cache=ensureFavoriteShareSessionCache();
+  const members=(state?.favorites||[]).filter(item=>item.tagIds.includes(id));
+  try{
+    if(cache){
+      cache.syncFavorites(state.favorites);
+      await Promise.all(members.map(async member=>{
+        let record;
+        try{record=await cache.readFavorite(member,{force});}catch{record={status:'unavailable'};}
+        if(!current())return;
+        const snapshot=record.listSnapshot,source={users:{[member.displayName]:Array.isArray(snapshot?.declarations)?{publicDeclarations:snapshot.declarations}:{}}};
+        for(const type of PUBLIC_SHARE_TYPES)source[type]={[member.displayName]:snapshot?.lists?.[type]||{}};
+        trainerGroupState.records.push({...record,key:member.key,targetUid:member.targetUid||'',displayName:member.displayName,entries:snapshot?productDeclarations(member.displayName,source).entries:[]});
+        renderTrainerGroupResults();
+      }));
+    }
+  }finally{
+    if(current()){
+      trainerGroupState.busy=false;renderTrainerGroups();
+      trainerGroupExpiry=setTimeout(()=>{if(current()){trainerGroupState.records=[];renderTrainerGroupResults();}},300001);
+    }
+  }
+}
+async function saveTrainerGroup(kind,label){
+  const store=ensureTrainerHistoryStore(),id=trainerGroupState.id,generation=trainerGroupState.generation;
+  const authority=await accountSyncMutationAuthority();
+  if(!store||generation!==trainerGroupState.generation||authority.mode==='blocked'||!accountSyncAuthorityCurrent(authority))return false;
+  const normalized=trainerPreferencesDomain.normalizeTagLabel(label),state=store.read();
+  if(kind!=='delete'&&(!normalized.ok||Object.values(state.tags).some(tag=>tag.id!==(kind==='rename'?id:'')&&tag.normalizedLabel===normalized.normalizedLabel)))return false;
+  if(kind==='create'&&Object.keys(state.tags).length>=trainerHistoryStoreData.MAX_TAGS)return false;
+  if(kind!=='create'&&!state.tags[id])return false;
+  let result,newId=id;
+  if(authority.mode==='canonical'){
+    if(kind==='create'){newId=accountSyncModel.newTagId();result=await authority.controller.addEntity({entityType:'tag',entityId:newId,identity:{tagId:newId},values:{label:normalized.displayLabel}});}
+    else if(kind==='rename')result=await authority.controller.patchEntity({entityType:'tag',entityId:id,patch:{label:normalized.displayLabel}});
+    else result=await authority.controller.deleteEntity({entityType:'tag',entityId:id});
+  }else{
+    result=kind==='create'?store.createTag(normalized.displayLabel):kind==='rename'?store.renameTag(id,normalized.displayLabel):store.deleteTag(id);
+    if(result?.id)newId=result.id;
+  }
+  if(!result?.ok||!accountSyncAuthorityCurrent(authority))return false;
+  if(generation!==trainerGroupState.generation)return true;
+  if(kind==='delete')trainerOrganizerState.tagIds=trainerOrganizerState.tagIds.filter(value=>value!==id);
+  trainerGroupState.id=kind==='delete'?'':newId;
+  renderTrainerQuickLists();return true;
+}
+document.getElementById('trainer-groups')?.addEventListener('submit',async event=>{
+  event.preventDefault();const form=event.target,button=form.querySelector('button');if(button.disabled)return;button.disabled=true;
+  const result=await saveTrainerGroup(form.dataset.groupForm,new FormData(form).get('label'));
+  if(!result){button.disabled=false;toast(i18nCore.t('organizer.saveFailed'));}
+});
+document.getElementById('trainer-groups')?.addEventListener('change',async event=>{
+  const el=event.target;
+  if(el.id==='trainer-group-select'){openTrainerGroup(el.value);return;}
+  if(el.id==='trainer-group-scope'){trainerGroupState.scope=el.value;renderTrainerGroupResults();return;}
+  if(!el.dataset.groupMember)return;
+  const owner=cur,uid=auth?.currentUser?.uid,store=ensureTrainerHistoryStore(),favorite=store?.favoriteFor(el.dataset.groupMember),id=trainerGroupState.id,generation=trainerGroupState.generation;
+  if(!favorite)return;
+  el.disabled=true;const ids=new Set(favorite.tagIds);el.checked?ids.add(id):ids.delete(id);
+  const queued=await queueFavoriteTags(favorite.displayName,[...ids]);
+  if(cur!==owner||auth?.currentUser?.uid!==uid)return;
+  const result=queued||store.setFavoriteTags(favorite.displayName,[...ids]);
+  if(!result?.ok)toast(i18nCore.t('organizer.saveFailed'));
+  if(generation!==trainerGroupState.generation)return;
+  await openTrainerGroup(id,{force:false});
+});
+document.getElementById('trainer-groups')?.addEventListener('click',async event=>{
+  const trainer=event.target.closest('[data-group-open-trainer]')?.dataset.groupOpenTrainer;
+  if(trainer){openFavoriteTrainerByName(trainer);return;}
+  const action=event.target.closest('[data-group-action]')?.dataset.groupAction;
+  if(action==='refresh')openTrainerGroup(trainerGroupState.id);
+  if(action==='more'){trainerGroupState.limit+=120;renderTrainerGroupResults();}
+  if(action==='delete'&&confirm(groupText('confirmDelete'))&&!await saveTrainerGroup('delete',''))toast(i18nCore.t('organizer.saveFailed'));
+});
+document.getElementById('trainer-groups')?.addEventListener('click',event=>{
+  if(!event.target.closest('[data-contextual-copy]'))return;
+  if(document.getElementById('trainer-group-results')?.dataset.groupSignature!==JSON.stringify(trainerGroupModel().entries)){
+    event.preventDefault();event.stopImmediatePropagation();renderTrainerGroupResults();toast(groupText('stale'));
+  }
+},true);
 let favoriteSavedPromptTimer=0;
 let favoriteSwipeGesture=null;
 let favoriteCardMenuTrigger=null;
 let favoriteBrowseState={selected:null,suggestions:[],focusIndex:-1,busy:false,error:false,generation:0,expanded:false};
 let favoriteBrowseCatalogCache={locale:'',items:[]};
 function resetTrainerOrganizerState(){
+  resetTrainerGroups();
   trainerOrganizerState={query:'',tagIds:[],username:''};
   if(document.getElementById('trainer-organizer-modal')?.classList.contains('open'))closeTrainerOrganizer(true);
 }
@@ -5622,6 +5758,7 @@ async function renderTrainerQuickLists({preserveFavoriteControls=false,favorites
   }
   const state=store.read();
   if(noteEl){noteEl.style.display='none';noteEl.textContent='';}
+  renderTrainerGroups();
   const activeTags=Object.values(state.tags||{}).sort((a,b)=>a.label.localeCompare(b.label,i18nCore.getLocale(),{sensitivity:'base'}));
   const filtered=store.filterFavorites({query:trainerOrganizerState.query,tagIds:trainerOrganizerState.tagIds});
   const filtersActive=!!(trainerOrganizerState.query||trainerOrganizerState.tagIds.length);
