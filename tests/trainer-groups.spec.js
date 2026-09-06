@@ -21,7 +21,7 @@ test('Who wants this uses current exact public variants, groups and fenced copy 
   await expect(output).toContainText('Gigantamax');
   await variant.selectOption(exact);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
-  if(process.env.WHO_SCREENSHOTS){fs.mkdirSync(process.env.WHO_SCREENSHOTS,{recursive:true});await page.screenshot({path:`${process.env.WHO_SCREENSHOTS}/who-${testInfo.project.name}.png`,fullPage:true,animations:'disabled'});}
+  if(process.env.WHO_SCREENSHOTS){fs.mkdirSync(process.env.WHO_SCREENSHOTS,{recursive:true});await page.evaluate(()=>window.scrollTo(0,0));await page.screenshot({path:`${process.env.WHO_SCREENSHOTS}/who-${testInfo.project.name}.png`,animations:'disabled'});}
   await page.evaluate(()=>window.__revokedAlice=true);await output.getByRole('button',{name:'Refresh wants',exact:true}).click();
   await expect(output).toContainText('Selected variant is no longer available');
   await expect(output.locator('.favorite-browse-row')).toHaveCount(0);await expect(output.locator('[data-contextual-copy]')).toHaveCount(0);
