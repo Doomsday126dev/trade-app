@@ -1,6 +1,10 @@
 # Trainer Change Summary Readiness
 
-This document records future Phase E requirements only. The current client does not calculate, store, sync, or display cross-device trainer change summaries.
+The client now provides device-local recurring-trainer comparisons using the existing
+trainer-history snapshots. Explicit "Mark checked" advances a Favorite baseline;
+refreshing or unavailable reads do not. No cross-device history backend is enabled.
+The requirements below apply to a future synchronized history capability, not to
+the current bounded local comparison layer.
 
 ## Required identity boundary
 

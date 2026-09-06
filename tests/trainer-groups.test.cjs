@@ -9,9 +9,48 @@ test('aggregate preserves exact variants and trainer attribution, excludes FT an
   const top=groupWants([member('A'),member('B',{entries:[entry({p:'M'})]})],{now,scope:'top'});
   assert.equal(top.entries[0].members.length,1);assert.equal(top.entries[0].members[0].key,'A');
 });
-test('private, expired, old, unknown-timestamp and future members remain visible but never contribute',()=>{
+test('access expiration excludes results but publication age does not revoke public wants',()=>{
   const result=groupWants([member('private',{status:'not_published'}),member('expired',{fetchedAt:now-300001}),member('old',{updatedAt:now-31*86400000}),member('unknown',{updatedAt:null}),member('future',{updatedAt:now+1})],{now});
-  assert.equal(result.members.length,5);assert.equal(result.entries.length,0);
+  assert.equal(result.members.length,5);assert.equal(result.entries.length,1);
+  assert.equal(result.entries[0].members.length,3);
+  assert.equal(result.members.filter(member=>member.status==='available'&&member.aged).length,3);
+});
+test('new scopes distinguish first check, additions, promotions, removals and exact variants',()=>{
+  const {wantsChanges}=window.PogoDomain.tradeListComparison;
+  assert.equal(wantsChanges([entry()]).first,true);
+  assert.equal(wantsChanges([entry()]).added.length,0);
+  const before=[entry({p:'L'}),entry({name:'Snom'})];
+  const current=[entry(),entry({shiny:true})];
+  const result=wantsChanges(current,before);
+  assert.equal(result.added.length,1);assert.equal(result.newTop.length,2);assert.equal(result.removed,1);
+  assert.equal(groupWants([member('A',{entries:current,previous:before})],{now,scope:'new'}).entries.length,2);
+  assert.equal(wantsChanges(current,current).updated,false);
+});
+test('existing history retains Favorite baselines beyond recents, fences target identity and does not advance on open',()=>{
+  for(const file of ['js/domain/productLimits.js','js/data/trainerHistoryStore.js'])vm.runInNewContext(fs.readFileSync(file,'utf8'),{window});
+  const values=new Map(),storage={getItem:key=>values.get(key),setItem:(key,value)=>values.set(key,value),removeItem:key=>values.delete(key)};
+  const store=window.PogoData.trainerHistoryStore.createTrainerHistoryStore({storage,identity:{uid:'owner',username:'Owner'},now:()=>now});
+  store.saveFavoriteOrganization('A',{targetUid:'target'});
+  const snapshot={lists:{wishlist:{Pikachu:'H'}},updatedAt:now};
+  assert.equal(store.rememberChecked('A',snapshot,{seenAt:now,targetUid:'wrong'}).ok,false);
+  assert.equal(store.rememberChecked('A',snapshot,{seenAt:now,targetUid:'target'}).ok,true);
+  for(let n=0;n<8;n++)store.rememberOpened('Other'+n,snapshot,now+n);
+  store.rememberOpened('A',{lists:{wishlist:{Snom:'L'}}},now+10);
+  assert.equal(store.snapshotFor('A').snapshot.lists.wishlist.Pikachu,'H');
+  assert.equal(store.rememberChecked('A',snapshot,{seenAt:now-1,targetUid:'target'}).ok,false);
+  const other=window.PogoData.trainerHistoryStore.createTrainerHistoryStore({storage,identity:{uid:'other',username:'Other'}});
+  assert.equal(other.snapshotFor('A'),null);
+});
+test('Favorite history stays bounded and quota failures cannot acknowledge unseen data',()=>{
+  const values=new Map();let fail=false;
+  const storage={getItem:key=>values.get(key),setItem:(key,value)=>{if(fail)throw new Error('quota');values.set(key,value);}};
+  const store=window.PogoData.trainerHistoryStore.createTrainerHistoryStore({storage,identity:{uid:'bounded',username:'Owner'},now:()=>now});
+  const snapshot={lists:{wishlist:{Pikachu:'H'}},padding:'x'.repeat(500000)};
+  for(let n=0;n<5;n++){store.saveFavoriteOrganization('T'+n);assert.equal(store.rememberChecked('T'+n,snapshot,{seenAt:now+n}).ok,true);}
+  assert.equal(Object.keys(store.read().snapshots).length,4);assert.equal(store.snapshotFor('T0'),null);
+  const before=JSON.stringify(store.snapshotFor('T4'));fail=true;
+  assert.equal(store.rememberChecked('T4',{lists:{}},{seenAt:now+10}).ok,false);
+  assert.equal(JSON.stringify(store.snapshotFor('T4')),before);
 });
 test('empty scopes and source data remain unchanged',()=>{
   const data=[member('A',{entries:[entry({p:'L'})]})],before=JSON.stringify(data);
