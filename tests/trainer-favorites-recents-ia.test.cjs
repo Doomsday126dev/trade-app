@@ -105,7 +105,7 @@ test('each discovery mode owns a distinct localized purpose heading',()=>{
   const mode=html.slice(html.indexOf('function renderTrainerDiscoveryHeading'),html.indexOf('function focusTrainerDiscoveryMode'));
   assert.match(mode,/trainers:\['trainer\.findTitle','trainer\.findDescription'\]/);
   assert.match(mode,/favorites:\['trainer\.favoritesTitle','trainer\.favoritesDescription'\]/);
-  assert.match(mode,/pokemon:\['favoriteBrowse\.title','favoriteBrowse\.description'\]/);
+  assert.match(mode,/pokemon:\['favoriteBrowse\.title','product\.savedScope'\]/);
   assert.match(mode,/setText\('find-trainer-title',copy\[0\]\)/);
   assert.match(mode,/setText\('find-trainer-description',copy\[1\]\)/);
   assert.match(html,/'trainer\.favoritesDescription'/);

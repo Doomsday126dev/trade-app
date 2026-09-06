@@ -94,7 +94,7 @@
         trainerKey:favorite.key,displayName:favorite.displayName,targetUid:favorite.targetUid||'',status:projection.status,
         fetchedAt:Number(now()),updatedAt:Number(snapshot.updatedAt||0)||null,
         entries:Object.freeze(projectSnapshot(snapshot)),
-        listSnapshot:Object.freeze({lists:snapshot.lists,updatedAt:Number(snapshot.updatedAt||0)||null}),
+        listSnapshot:Object.freeze({lists:snapshot.lists,...(Array.isArray(snapshot.declarations)?{declarations:snapshot.declarations}:{}),updatedAt:Number(snapshot.updatedAt||0)||null}),
         retryable:false
       });
     }
