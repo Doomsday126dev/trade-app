@@ -2085,3 +2085,8 @@ body{background-color:var(--surface-canvas);text-rendering:optimizeLegibility}
 .group-want>div:first-child{width:44px;height:44px}.group-want img{max-width:44px;max-height:44px}
 #trainer-groups .trainer-section-heading{flex-wrap:wrap;gap:8px}
 #trainer-groups .trainer-section-heading>span{font-size:12px;color:var(--muted)}
+.who-results .favorite-browse-row{display:block;padding:12px 0;border:0;border-bottom:1px solid var(--border);border-radius:0;background:transparent}
+.who-results .favorite-browse-main{display:grid;gap:6px;min-width:0;overflow-wrap:anywhere}
+.who-results .favorite-browse-main>button{justify-self:start;padding:0;min-height:44px}
+#favorite-browse-results .group-picker{align-items:start}
+#favorite-browse-results .group-picker select{min-width:0;width:100%}

@@ -5126,6 +5126,7 @@ function renderTrainerGroups(){
     ${tag?`<form class="group-create" data-group-form="rename"><input name="label" class="field-control" required value="${escAttr(tag.label)}" aria-label="${escAttr(groupText('name'))}"><button class="btn btn-secondary">${escHtml(groupText('rename'))}</button><button type="button" class="btn btn-icon" data-group-action="delete" title="${escAttr(groupText('delete'))}" aria-label="${escAttr(groupText('delete'))}">${uiIconMarkup('trash')}</button></form>
       <details class="group-membership"><summary>${escHtml(groupText('members'))}</summary>${state.favorites.length?state.favorites.map(item=>`<label><input type="checkbox" data-group-member="${escAttr(item.displayName)}"${item.tagIds.includes(tag.id)?' checked':''}>${escHtml(item.displayName)}</label>`).join(''):`<p>${escHtml(groupText('noFavorites'))}</p>`}</details>`:''}
     ${trainerGroupState.id?`<div class="group-actions"><label>${escHtml(i18nCore.t('phase2.scope'))}<select class="field-control" id="trainer-group-scope">${['all','top','new','newTop'].map(scope=>`<option value="${scope}"${trainerGroupState.scope===scope?' selected':''}>${escHtml(scope==='top'?i18nCore.t('phase2.top'):groupText(scope==='new'?'newSince':scope))}</option>`).join('')}</select></label><button class="btn btn-secondary" data-group-action="refresh"${trainerGroupState.busy?' disabled':''}>${escHtml(groupText('refresh'))}</button></div>
+      <button type="button" class="btn btn-ghost" data-group-action="who">${uiIconMarkup('search')} ${escHtml(i18nCore.t('who.title'))}</button>
       <div id="trainer-group-results" aria-live="polite"></div>`:''}`;
   if(membershipOpen&&host.querySelector('.group-membership'))host.querySelector('.group-membership').open=true;
   renderTrainerGroupResults();
@@ -5256,6 +5257,7 @@ document.getElementById('trainer-groups')?.addEventListener('click',async event=
   const trainer=event.target.closest('[data-group-open-trainer]')?.dataset.groupOpenTrainer;
   if(trainer){openFavoriteTrainerByName(trainer);return;}
   const action=event.target.closest('[data-group-action]')?.dataset.groupAction;
+  if(action==='who'){favoriteLookupScope=trainerGroupState.id==='favorites'?'':trainerGroupState.id;focusTrainerDiscoveryMode('pokemon');renderFavoriteBrowseResults();}
   if(action==='checked')markTrainerWantsChecked();
   if(action==='refresh')openTrainerGroup(trainerGroupState.id);
   if(action==='more'){trainerGroupState.limit+=120;renderTrainerGroupResults();}
@@ -5272,6 +5274,7 @@ let favoriteSwipeGesture=null;
 let favoriteCardMenuTrigger=null;
 let favoriteBrowseState={selected:null,suggestions:[],focusIndex:-1,busy:false,error:false,generation:0,expanded:false};
 let favoriteBrowseCatalogCache={locale:'',items:[]};
+let favoriteLookupScope='',favoriteLookupVariant='',favoriteLookupExpiry=null,favoriteLookupLimit=60;
 function resetTrainerOrganizerState(){
   resetTrainerGroups();
   trainerOrganizerState={query:'',tagIds:[],username:''};
@@ -5314,6 +5317,7 @@ function ensureFavoriteShareSessionCache(){
   return favoriteShareSessionCache;
 }
 function resetFavoriteBrowseSession(){
+  clearTimeout(favoriteLookupExpiry);favoriteLookupScope='';favoriteLookupVariant='';favoriteLookupLimit=60;
   favoriteShareSessionCache?.reset();favoriteShareSessionCache=null;
   favoriteBrowseState={selected:null,suggestions:[],focusIndex:-1,busy:false,error:false,generation:favoriteBrowseState.generation+1,expanded:false};
   favoriteBrowseCatalogCache={locale:'',items:[]};
@@ -5403,7 +5407,7 @@ function setTrainerDiscoveryMode(mode){
   });
   document.querySelectorAll('[data-discovery-panel]').forEach(panel=>{panel.hidden=panel.dataset.discoveryPanel!==trainerDiscoveryMode;});
   renderTrainerDiscoveryHeading();
-  if(trainerDiscoveryMode==='pokemon'&&!favoriteBrowseState.expanded){favoriteBrowseState.expanded=true;syncFavoriteBrowseDisclosure();}
+  if(trainerDiscoveryMode==='pokemon'){favoriteLookupControls();if(!favoriteBrowseState.expanded){favoriteBrowseState.expanded=true;syncFavoriteBrowseDisclosure();}}
 }
 function focusTrainerDiscoveryMode(mode){
   const modeButton=document.querySelector(`.trainer-discovery-modes [data-discovery-mode="${mode}"]`);
@@ -5586,7 +5590,7 @@ function favoriteBrowseCatalog(){
   const canonicalEntries=pokemonCatalogDomain.canonicalizeEntries(
     uniqueEntries(DB.wishlist,DB.dynamax,DB.gmax,allCostumeEntries(),LEGENDARY_AVATAR_ENTRIES)
   );
-  const items=canonicalEntries.filter(entry=>isTradeableForWishlist(entry)).map(entry=>{
+  const items=canonicalEntries.filter(entry=>isTradeableForWishlist(entry)&&selectableSpriteEntry(entry)).map(entry=>{
     const item={name:entry.name,dn:pokemonDisplayName(entry),no:entry.no||null,spriteUrl:entrySpriteUrl(entry,entry.name),catalogId:entry.catalogId,legacyAliases:entry.legacyAliases,searchAliases:entry.searchAliases};
     item.search=normalizeAcText(pokemonSearchLabels(entry).join(' '));return item;
   });
@@ -5639,10 +5643,12 @@ function favoriteBrowseKeydown(event){
   else if(event.key==='Escape'){event.preventDefault();closeFavoriteBrowseSuggestions();}
 }
 function clearFavoriteBrowse(){
+  favoriteLookupVariant='';
   const input=document.getElementById('favorite-browse-input');if(input)input.value='';
   favoriteBrowseState.selected=null;favoriteBrowseState.error=false;syncFavoriteBrowseClear();closeFavoriteBrowseSuggestions();renderFavoriteBrowseResults();input?.focus();
 }
 function selectFavoriteBrowsePokemon(index){
+  favoriteLookupVariant='';favoriteLookupLimit=60;
   const item=favoriteBrowseState.suggestions[index];if(!item)return;
   favoriteBrowseState.selected={name:item.name,dn:item.dn,no:item.no};favoriteBrowseState.error=false;favoriteBrowseState.expanded=true;
   const input=document.getElementById('favorite-browse-input');if(input)input.value=item.dn;
@@ -5654,29 +5660,50 @@ function favoriteBrowseCategoryText(categories){
   return special.map(type=>i18nCore.t(`favoriteBrowse.category.${type}`)).join(' · ');
 }
 function favoriteBrowsePriorityText(priority){return i18nCore.t(`favoriteBrowse.priority.${priority||'none'}`);}
+function favoriteLookupModel(){
+  const store=ensureTrainerHistoryStore(),state=store?.read(),cache=ensureFavoriteShareSessionCache();
+  if(!state||!cache)return{members:[],entries:[],variants:[]};
+  cache.syncFavorites(state.favorites);
+  const favorites=state.favorites.filter(item=>!favoriteLookupScope||item.tagIds.includes(favoriteLookupScope));
+  const aggregate=tradeListComparisonDomain.groupWants(favorites.map(item=>{
+    const record=cache.peek(item),bound=record?.targetUid===(item.targetUid||'');
+    return{...item,...(bound?record:{status:'unavailable'}),groups:item.tagIds.map(id=>state.tags[id]?.label).filter(Boolean),entries:bound&&record.listSnapshot?groupSnapshotEntries(item.displayName,record.listSnapshot):[]};
+  }),{nameKey:pokemonCatalogDomain.catalogKey,normalizeQualifier:normalizeTradeQualifier});
+  return{...aggregate,...tradeListComparisonDomain.whoWants(aggregate.entries,{selected:favoriteBrowseState.selected,variantKey:favoriteLookupVariant},{nameKey:pokemonCatalogDomain.catalogKey,normalizeQualifier:normalizeTradeQualifier})};
+}
+function favoriteVariantLabel(entry){
+  return [productShareDescription({...entry,p:'',note:''}),['dynamax','gmax'].includes(entry.type)?i18nCore.t(`favoriteBrowse.category.${entry.type}`):''].filter(Boolean).join(' · ');
+}
+function favoriteLookupControls(){
+  const scope=document.getElementById('favorite-lookup-scope'),state=ensureTrainerHistoryStore()?.read();if(!scope||!state)return;
+  scope.innerHTML=`<option value="">${escHtml(groupText('favorites'))}</option>${Object.values(state.tags).map(tag=>`<option value="${escAttr(tag.id)}"${tag.id===favoriteLookupScope?' selected':''}>${escHtml(tag.label)}</option>`).join('')}${favoriteLookupScope&&!state.tags[favoriteLookupScope]?`<option selected value="${escAttr(favoriteLookupScope)}">${escHtml(groupText('unavailable'))}</option>`:''}`;
+}
 function renderFavoriteBrowseResults(){
   const output=document.getElementById('favorite-browse-results'),store=ensureTrainerHistoryStore();if(!output||!store)return;
+  clearTimeout(favoriteLookupExpiry);favoriteLookupControls();
   syncFavoriteBrowseDisclosure();
   const state=store.read(),favorites=state.favorites||[],selected=favoriteBrowseState.selected;
   if(!favorites.length){output.removeAttribute('aria-busy');output.innerHTML=favoriteBrowseEmpty('favoriteBrowse.noFavoritesTitle','favoriteBrowse.noFavoritesBody');return;}
   if(!selected){output.removeAttribute('aria-busy');output.innerHTML='';return;}
   if(favoriteBrowseState.busy)return;
-  const cache=ensureFavoriteShareSessionCache();if(!cache)return;
-  cache.syncFavorites(favorites);
-  const snapshot=cache.snapshot(),summary=cache.summary(favorites),index=favoritePokemonBrowseDomain.buildIndex(snapshot.records);
-  const matches=favoritePokemonBrowseDomain.resultsForPokemon(index,selected.name,{favorites,tags:state.tags,recent:state.recent,locale:i18nCore.getLocale()});
-  const hasPublished=summary.published+summary.publishedEmpty>0;
-  const incomplete=summary.failed+summary.invalid;
-  let body='';
-  if(!hasPublished&&!incomplete)body=favoriteBrowseEmpty('favoriteBrowse.noSharedTitle','favoriteBrowse.noSharedBody');
-  else if(!matches.length)body=favoriteBrowseEmpty('favoriteBrowse.noMatchTitle','favoriteBrowse.noMatchBody',{pokemon:selected.dn});
-  else body=`<div class="favorite-browse-summary"><span class="favorite-browse-pokemon">${escHtml(selected.dn)}</span><span class="favorite-browse-count">${escHtml(i18nCore.formatPlural('favoriteBrowse.results',matches.length,{pokemon:selected.dn}))}</span></div><div class="favorite-browse-results">${matches.map(match=>{
-    const category=favoriteBrowseCategoryText(match.categories),trainer=escAttr(match.displayName);
-    const backgrounds='';
-    return`<button type="button" class="favorite-browse-row" data-trainer="${trainer}" data-trainer-action="open" aria-label="${escAttr(i18nCore.t('trainer.openTrainerNamed',{trainer:match.displayName}))}"><span class="favorite-browse-main"><span class="favorite-browse-name">${escHtml(match.displayName)}</span><span class="favorite-browse-match"><strong>${i18nCore.formatNumber(match.iHaveTheirWants)}</strong> ${escHtml(i18nCore.t('product.matchingWants'))}</span><span class="favorite-browse-meta"><span class="favorite-browse-priority ${escAttr(match.priority)}">${escHtml(favoriteBrowsePriorityText(match.priority))}</span>${category?`<span>${escHtml(category)}</span>`:''}${backgrounds}</span>${match.tags.length?`<span class="favorite-browse-tags">${match.tags.map(label=>`<span class="favorite-card-tag chip chip-metadata">${escHtml(label)}</span>`).join('')}</span>`:''}</span><span class="favorite-browse-open btn btn-ghost" aria-hidden="true">${escHtml(i18nCore.t('trainer.openAction'))} ${uiIconMarkup('chevron-right','ui-icon ui-icon-sm')}</span></button>`;
-  }).join('')}</div>`;
-  const footer=summary.checked?`<div class="favorite-browse-footer"><span>${escHtml(i18nCore.t('favoriteBrowse.checked'))}</span><button type="button" class="btn btn-ghost" data-favorite-action="refresh-browse">${escHtml(i18nCore.t('favoriteBrowse.refresh'))}</button>${summary.failed?`<button type="button" class="btn btn-secondary" data-favorite-action="retry-browse">${escHtml(i18nCore.t('favoriteBrowse.retry'))}</button>`:''}${incomplete?`<span class="favorite-browse-partial">${escHtml(i18nCore.t('favoriteBrowse.partial',{checked:i18nCore.formatNumber(summary.total-incomplete),total:i18nCore.formatNumber(summary.total),failed:i18nCore.formatNumber(incomplete)}))}</span>`:''}</div>`:'';
-  output.removeAttribute('aria-busy');output.innerHTML=body+footer;
+  const model=favoriteLookupModel();output.dataset.lookupSignature=JSON.stringify(model.entries);
+  const options=model.variants.map(item=>`<option value="${escAttr(item.key)}"${item.key===favoriteLookupVariant?' selected':''}>${escHtml(favoriteVariantLabel(item.entry))}</option>`).join('');
+  const missing=favoriteLookupVariant&&!model.variants.some(item=>item.key===favoriteLookupVariant);
+  const rows=model.entries.flatMap(entry=>entry.members.map(match=>({entry,match})));
+  output.removeAttribute('aria-busy');output.innerHTML=`<label class="group-picker">${escHtml(i18nCore.t('who.variant'))}<select class="field-control" id="favorite-lookup-variant"><option value="">${escHtml(i18nCore.t('who.broad'))}</option>${options}${missing?`<option selected value="${escAttr(favoriteLookupVariant)}">${escHtml(i18nCore.t('who.missing'))}</option>`:''}</select></label>
+    <p class="type-meta">${escHtml(i18nCore.t(model.exact?'who.exact':'who.broadNote'))}</p>
+    ${model.entries.length?'':`<p>${escHtml(i18nCore.t('who.noMatch'))}</p>`}
+    <div class="favorite-browse-results who-results">${rows.slice(0,favoriteLookupLimit).map(({entry,match})=>{
+      const member=model.members.find(item=>item.key===match.key);
+      return`<article class="favorite-browse-row"><div class="favorite-browse-main"><button type="button" class="btn btn-ghost" data-trainer="${escAttr(match.displayName)}" data-trainer-action="open">${escHtml(match.displayName)}</button><strong>${escHtml(favoriteVariantLabel(entry))}</strong><span>${escHtml(match.priorities.map(p=>p==='H'?i18nCore.t('phase2.topWant'):p?priLabel(p):favoriteBrowsePriorityText('')).join(' · '))}</span>${entry.note?`<span>${escHtml(entry.note)}</span>`:''}<span class="type-meta">${escHtml([member.aged?groupAgeLabel(member):'',member.updatedAt?i18nCore.formatDate(new Date(member.updatedAt),{dateStyle:'medium'}):'',...member.groups].filter(Boolean).join(' · '))}</span></div></article>`;
+    }).join('')}</div>
+    ${rows.length>favoriteLookupLimit?`<button type="button" class="btn btn-secondary" data-lookup-more>${escHtml(groupText('more'))}</button>`:''}
+    ${model.entries.length?contextualIntentSearchHtml(model.entries,i18nCore.t('who.search')):''}
+    <button type="button" class="btn btn-secondary" data-favorite-action="refresh-browse">${escHtml(groupText('refresh'))}</button>
+    <p class="type-meta">${escHtml(groupText('freshness'))}</p>
+    <ul class="group-availability">${model.members.filter(member=>member.status!=='available').map(member=>`<li>${escHtml(member.displayName)} · ${escHtml(groupText(member.status))}</li>`).join('')}</ul>`;
+  const expiries=model.members.filter(member=>member.status==='available').map(member=>member.fetchedAt+300001-Date.now());
+  if(expiries.length)favoriteLookupExpiry=setTimeout(renderFavoriteBrowseResults,Math.max(1,Math.min(...expiries)));
 }
 async function hydrateFavoriteBrowse({force=false,retry=false}={}){
   const store=ensureTrainerHistoryStore(),cache=ensureFavoriteShareSessionCache(),output=document.getElementById('favorite-browse-results');
@@ -5692,6 +5719,18 @@ async function hydrateFavoriteBrowse({force=false,retry=false}={}){
   favoriteBrowseState.busy=false;renderFavoriteBrowseResults();
 }
 function refreshFavoriteBrowse(){const cache=ensureFavoriteShareSessionCache();if(!cache)return;cache.invalidate();hydrateFavoriteBrowse({force:true});}
+document.getElementById('favorite-lookup-scope')?.addEventListener('change',event=>{
+  favoriteLookupScope=event.target.value;favoriteLookupLimit=60;renderFavoriteBrowseResults();
+});
+document.getElementById('favorite-browse-results')?.addEventListener('change',event=>{
+  if(event.target.id==='favorite-lookup-variant'){favoriteLookupVariant=event.target.value;favoriteLookupLimit=60;renderFavoriteBrowseResults();document.getElementById('favorite-lookup-variant')?.focus();}
+});
+document.getElementById('favorite-browse-results')?.addEventListener('click',event=>{
+  if(event.target.closest('[data-lookup-more]')){favoriteLookupLimit+=60;renderFavoriteBrowseResults();return;}
+  if(event.target.closest('[data-contextual-copy]')&&event.currentTarget.dataset.lookupSignature!==JSON.stringify(favoriteLookupModel().entries)){
+    event.preventDefault();event.stopImmediatePropagation();renderFavoriteBrowseResults();toast(groupText('stale'));
+  }
+},true);
 function retryFavoriteBrowse(){hydrateFavoriteBrowse({retry:true});}
 function closeFavoriteCardActions(except=null,restoreFocus=false){
   document.querySelectorAll('.favorite-card-shell.swipe-open').forEach(card=>{if(card!==except)card.classList.remove('swipe-open');});

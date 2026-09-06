@@ -247,7 +247,7 @@ test('safe owner journey covers the pre-trusted product contract',async({page})=
   await expect(page.locator('#find-trainer-title')).toHaveText('Favorites');
   await expect(page.locator('#favorite-trainers-list .favorite-card-shell')).toHaveCount(2);
   await page.locator('[data-discovery-mode="pokemon"]').click();
-  await expect(page.locator('#find-trainer-title')).toHaveText('Find by Pokémon');
+  await expect(page.locator('#find-trainer-title')).toHaveText('Who wants this?');
   await expect(page.locator('#favorite-browse-input')).toBeFocused();
   await capture(page,'trusted-journey-discovery-1440x900');
 

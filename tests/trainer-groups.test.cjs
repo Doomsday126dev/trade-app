@@ -3,6 +3,17 @@ const window={};vm.runInNewContext(fs.readFileSync('js/domain/tradeListCompariso
 const {groupWants}=window.PogoDomain.tradeListComparison,now=2000000000000;
 const entry=(extra={})=>({intent:'lf',name:'Pikachu',type:'wishlist',p:'H',...extra});
 const member=(key,extra={})=>({key,displayName:key,status:'published',fetchedAt:now,updatedAt:now,entries:[entry()],...extra});
+test('who wants separates explicit species breadth from exact published variants without fallback',()=>{
+  const {whoWants,wantedIntentKey}=window.PogoDomain.tradeListComparison;
+  const entries=[entry({no:25}),entry({no:25,shiny:true,gender:'f'}),entry({no:25,type:'gmax'}),entry({no:25,name:'Pikachu (Costume)',mod:'unknown detail'}),entry({no:133,name:'Eevee'}),entry({no:25,intent:'ft'})];
+  const broad=whoWants(entries,{selected:{name:'Pikachu',no:25}});assert.equal(broad.entries.length,4);assert.equal(broad.exact,false);
+  const key=wantedIntentKey(entries[1]);const exact=whoWants(entries,{selected:{no:25},variantKey:key});assert.equal(exact.entries.length,1);assert.equal(exact.entries[0].gender,'f');
+  assert.equal(whoWants(entries.filter(e=>!e.shiny),{selected:{no:25},variantKey:key}).entries.length,0);
+  assert.equal(whoWants(entries).entries.length,0);
+  assert.equal(whoWants(entries,{selected:{name:'Unknown'}}).entries.length,0);
+  const permitted=groupWants([member('private',{status:'not_published',entries}),member('expired',{fetchedAt:now-300001,entries}),member('old',{updatedAt:now-31*86400000,entries})],{now});
+  assert.equal(whoWants(permitted.entries,{selected:{no:25}}).entries.every(e=>e.members.length===1&&e.members[0].key==='old'),true);
+});
 test('aggregate preserves exact variants and trainer attribution, excludes FT and inactive BG',()=>{
   const result=groupWants([member('A',{entries:[entry(),entry({shiny:true}),entry({intent:'ft',name:'Mewtwo'})]}),member('B',{entries:[entry({p:'M',backgroundId:'old-test-bg'})]})],{now});
   assert.equal(result.entries.length,2);assert.equal(result.entries[0].members.length,2);assert.equal(result.entries[0].backgroundId,'');
