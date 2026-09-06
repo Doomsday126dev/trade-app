@@ -1,33 +1,21 @@
 {
   "schemaVersion": 1,
-  "lastReviewedDate": "2026-08-30",
+  "lastReviewedDate": "2026-09-06",
   "maintenanceConcept": "pending-reviewed-artwork",
   "productionBaseline": {
-    "release": "2026-08-29.80",
-    "canonicalRecords": 376,
-    "exactArtworkRecords": 348,
-    "pendingArtworkRecords": 28,
-    "selectableRows": 423,
-    "exactSelectableRows": 395,
-    "placeholderRows": 28,
-    "unknownOrBaseSpeciesFallthrough": 0
-  },
-  "sourceCandidate": {
-    "basedOnMainCommit": "fd4e399793642cc53fda6d634966f6ce73772847",
-    "targetRelease": "2026-08-31.86",
+    "release": "2026-09-06.95",
+    "mainCommit": "1521b742819c574a12b346a6b9f7e3d1f4f04543",
     "canonicalRecords": 376,
     "exactArtworkRecords": 355,
     "pendingArtworkRecords": 21,
-    "selectableRows": 423,
-    "exactSelectableRows": 402,
-    "placeholderRows": 21,
+    "activeCostumeRows": 402,
+    "excludedRows": 21,
     "unknownOrBaseSpeciesFallthrough": 0
   },
   "reasonCategories": [
-    "newly-announced",
     "accepted-source-missing",
     "mapping-ambiguous",
-    "restricted-source-only",
+    "identity-unverified",
     "review-pending"
   ],
   "sourceRegistry": {
@@ -50,233 +38,677 @@
     {
       "canonicalCostumeId": "pokemon:25:costume:PIKACHU_PXP_2026",
       "displayIdentity": "Pikachu (Cosmog Spacesuit)",
-      "species": { "dex": 25, "name": "Pikachu" },
+      "species": {
+        "dex": 25,
+        "name": "Pikachu"
+      },
       "currentStatus": "pending-reviewed-artwork",
-      "reasonCategory": "newly-announced",
-      "acceptedSourcesChecked": ["pokemon-db-go-sprites", "pokemon-go-event-announcements"],
-      "candidate": { "exactImageFound": false, "decision": "not-found", "reason": "The announced 2026 costume is not yet present in the accepted artwork snapshot." },
-      "nextReviewAction": "Recheck the accepted sprite source after its next reviewed update.",
-      "lastReviewedDate": "2026-08-29"
+      "reasonCategory": "accepted-source-missing",
+      "acceptedSourcesChecked": [
+        "pokemon-db-go-sprites"
+      ],
+      "candidate": {
+        "exactImageFound": false,
+        "decision": "not-found",
+        "reason": "PIKACHU_PXP_2026 is confirmed by the official Worlds announcement; no Cosmog/spacesuit GO sprite is listed in the live accepted Pikachu gallery. Official event imagery is reference-only."
+      },
+      "nextReviewAction": "Recheck Cosmog/spacesuit candidates; require the PXP costume, not the distinct WCS 2026 outfit.",
+      "lastReviewedDate": "2026-09-06",
+      "searchTerms": [
+        [
+          "cosmog"
+        ],
+        [
+          "spacesuit"
+        ],
+        [
+          "pxp",
+          "2026"
+        ]
+      ],
+      "acceptedSourcePage": "https://pokemondb.net/sprites/pikachu",
+      "reviewedCandidateFiles": []
     },
     {
       "canonicalCostumeId": "pokemon:25:standard:legacy:Pikachu%20(Fossil)",
       "displayIdentity": "Pikachu (Fossil)",
-      "species": { "dex": 25, "name": "Pikachu" },
+      "species": {
+        "dex": 25,
+        "name": "Pikachu"
+      },
       "currentStatus": "pending-reviewed-artwork",
-      "reasonCategory": "newly-announced",
-      "acceptedSourcesChecked": ["pokemon-db-go-sprites", "pokemon-go-event-announcements"],
-      "candidate": { "exactImageFound": false, "decision": "not-found", "reason": "The Excavator/Fossil costume is announced but absent from the accepted artwork snapshot." },
-      "nextReviewAction": "Recheck for an exact Excavator Pikachu asset and verify its app identity before review.",
-      "lastReviewedDate": "2026-08-29"
+      "reasonCategory": "accepted-source-missing",
+      "acceptedSourcesChecked": [
+        "pokemon-db-go-sprites"
+      ],
+      "candidate": {
+        "exactImageFound": false,
+        "decision": "not-found",
+        "reason": "The official museum event identifies Excavator Pikachu, but the accepted Pikachu gallery has no Excavator/Fossil sprite. Adventure and safari hats are different costumes."
+      },
+      "nextReviewAction": "Review an exact Excavator candidate against the museum identity; never substitute Adventure Hat.",
+      "lastReviewedDate": "2026-09-06",
+      "searchTerms": [
+        [
+          "excavator"
+        ],
+        [
+          "fossil"
+        ]
+      ],
+      "acceptedSourcePage": "https://pokemondb.net/sprites/pikachu",
+      "reviewedCandidateFiles": []
     },
     {
       "canonicalCostumeId": "pokemon:25:standard:legacy:Pikachu%20(Gloria)",
       "displayIdentity": "Pikachu (Gloria)",
-      "species": { "dex": 25, "name": "Pikachu" },
+      "species": {
+        "dex": 25,
+        "name": "Pikachu"
+      },
       "currentStatus": "pending-reviewed-artwork",
-      "reasonCategory": "mapping-ambiguous",
-      "acceptedSourcesChecked": ["pokemon-db-go-sprites", "pokemon-go-event-announcements"],
-      "candidate": { "exactImageFound": true, "sourceId": "restricted-research-metadata", "identifier": "multiple avatar-costume variants", "decision": "rejected", "reason": "No accepted evidence deterministically selects one candidate for the generic Gloria identity." },
-      "nextReviewAction": "Obtain authoritative identity-to-variant evidence before selecting artwork.",
-      "lastReviewedDate": "2026-08-29"
+      "reasonCategory": "identity-unverified",
+      "acceptedSourcesChecked": [
+        "pokemon-db-go-sprites"
+      ],
+      "candidate": {
+        "exactImageFound": false,
+        "decision": "identity-review-required",
+        "reason": "No Gloria-labelled GO sprite exists in the accepted gallery and this audit found no authoritative announcement establishing the legacy Gloria costume. The previous multiple-variants claim was not substantiated."
+      },
+      "nextReviewAction": "Establish that this exact GO costume exists and resolve its identity before considering artwork.",
+      "lastReviewedDate": "2026-09-06",
+      "searchTerms": [
+        [
+          "gloria"
+        ]
+      ],
+      "acceptedSourcePage": "https://pokemondb.net/sprites/pikachu",
+      "reviewedCandidateFiles": []
     },
     {
       "canonicalCostumeId": "pokemon:25:standard:legacy:Pikachu%20(GO%20Fest%202023)",
       "displayIdentity": "Pikachu (GO Fest 2023)",
-      "species": { "dex": 25, "name": "Pikachu" },
+      "species": {
+        "dex": 25,
+        "name": "Pikachu"
+      },
       "currentStatus": "pending-reviewed-artwork",
       "reasonCategory": "mapping-ambiguous",
-      "acceptedSourcesChecked": ["pokemon-db-go-sprites", "pokemon-go-event-announcements"],
-      "candidate": { "exactImageFound": true, "sourceId": "restricted-research-metadata", "identifier": "SUMMER_2023_A-E", "decision": "rejected", "reason": "The generic app identity does not specify which of five distinct 2023 variants it represents." },
-      "nextReviewAction": "Resolve the catalog identity into explicit variants before artwork review.",
-      "lastReviewedDate": "2026-08-29"
+      "acceptedSourcesChecked": [
+        "pokemon-db-go-sprites"
+      ],
+      "candidate": {
+        "exactImageFound": false,
+        "decision": "identity-review-required",
+        "reason": "Five gem-crown variants are already in the accepted gallery; the legacy GO Fest 2023 label does not select a crown colour. This is an identity gap, not missing artwork."
+      },
+      "nextReviewAction": "Keep excluded until explicit user-safe identity evidence selects one crown; do not choose a default colour.",
+      "lastReviewedDate": "2026-09-06",
+      "searchTerms": [
+        [
+          "amethyst",
+          "crown"
+        ],
+        [
+          "aquamarine",
+          "crown"
+        ],
+        [
+          "malachite",
+          "crown"
+        ],
+        [
+          "pyrite",
+          "crown"
+        ],
+        [
+          "quartz",
+          "crown"
+        ]
+      ],
+      "acceptedSourcePage": "https://pokemondb.net/sprites/pikachu",
+      "reviewedCandidateFiles": [
+        "pikachu-amethyst-crown-f.png",
+        "pikachu-amethyst-crown.png",
+        "pikachu-aquamarine-crown-f.png",
+        "pikachu-aquamarine-crown.png",
+        "pikachu-malachite-crown-f.png",
+        "pikachu-malachite-crown.png",
+        "pikachu-pyrite-crown-f.png",
+        "pikachu-pyrite-crown.png",
+        "pikachu-quartz-crown-f.png",
+        "pikachu-quartz-crown.png"
+      ]
     },
     {
       "canonicalCostumeId": "pokemon:25:standard:legacy:Pikachu%20(GO%20Fest%202024)",
       "displayIdentity": "Pikachu (GO Fest 2024)",
-      "species": { "dex": 25, "name": "Pikachu" },
+      "species": {
+        "dex": 25,
+        "name": "Pikachu"
+      },
       "currentStatus": "pending-reviewed-artwork",
       "reasonCategory": "mapping-ambiguous",
-      "acceptedSourcesChecked": ["pokemon-db-go-sprites", "pokemon-go-event-announcements"],
-      "candidate": { "exactImageFound": true, "sourceId": "pokemon-db-go-sprites", "identifier": "moon-tiara / sun-tiara", "decision": "rejected", "reason": "Two accepted exact variants exist, while the stored identity is generic." },
-      "nextReviewAction": "Split or migrate the generic identity only after a safe compatibility design identifies the intended tiara.",
-      "lastReviewedDate": "2026-08-29"
+      "acceptedSourcesChecked": [
+        "pokemon-db-go-sprites"
+      ],
+      "candidate": {
+        "exactImageFound": false,
+        "decision": "identity-review-required",
+        "reason": "Moon Crown and Sun Crown sprites are both in the accepted gallery; the legacy GO Fest 2024 label does not choose between them."
+      },
+      "nextReviewAction": "Resolve the intended tiara through a separate identity compatibility decision, not an art-only alias guess.",
+      "lastReviewedDate": "2026-09-06",
+      "searchTerms": [
+        [
+          "moon",
+          "crown"
+        ],
+        [
+          "sun",
+          "crown"
+        ]
+      ],
+      "acceptedSourcePage": "https://pokemondb.net/sprites/pikachu",
+      "reviewedCandidateFiles": [
+        "pikachu-moon-crown-f.png",
+        "pikachu-moon-crown.png",
+        "pikachu-sun-crown-f.png",
+        "pikachu-sun-crown.png"
+      ]
     },
     {
       "canonicalCostumeId": "pokemon:25:standard:legacy:Pikachu%20(Instinct)",
       "displayIdentity": "Pikachu (Instinct)",
-      "species": { "dex": 25, "name": "Pikachu" },
+      "species": {
+        "dex": 25,
+        "name": "Pikachu"
+      },
       "currentStatus": "pending-reviewed-artwork",
-      "reasonCategory": "newly-announced",
-      "acceptedSourcesChecked": ["pokemon-db-go-sprites", "pokemon-go-event-announcements"],
-      "candidate": { "exactImageFound": false, "decision": "not-found", "reason": "The announced 2026 Team Instinct hat is absent from the accepted artwork snapshot." },
-      "nextReviewAction": "Recheck for an exact Team Instinct hat asset after source refresh.",
-      "lastReviewedDate": "2026-08-29"
+      "reasonCategory": "accepted-source-missing",
+      "acceptedSourcesChecked": [
+        "pokemon-db-go-sprites"
+      ],
+      "candidate": {
+        "exactImageFound": false,
+        "decision": "not-found",
+        "reason": "Team Instinct hat Pikachu is officially confirmed for GO Fest 2026; the live accepted gallery contains no Instinct hat sprite."
+      },
+      "nextReviewAction": "Review only Team Instinct hat artwork, not another team's hat.",
+      "lastReviewedDate": "2026-09-06",
+      "searchTerms": [
+        [
+          "instinct"
+        ]
+      ],
+      "acceptedSourcePage": "https://pokemondb.net/sprites/pikachu",
+      "reviewedCandidateFiles": []
     },
     {
       "canonicalCostumeId": "pokemon:25:standard:legacy:Pikachu%20(Jeju)",
       "displayIdentity": "Pikachu (Jeju)",
-      "species": { "dex": 25, "name": "Pikachu" },
+      "species": {
+        "dex": 25,
+        "name": "Pikachu"
+      },
       "currentStatus": "pending-reviewed-artwork",
-      "reasonCategory": "restricted-source-only",
-      "acceptedSourcesChecked": ["pokemon-db-go-sprites", "pokemon-go-event-announcements"],
-      "candidate": { "exactImageFound": true, "sourceId": "restricted-research-metadata", "identifier": "fJEJU", "decision": "rejected", "reason": "An identity exists only in research material; no accepted, reviewed artwork is available." },
-      "nextReviewAction": "Wait for the exact Jeju asset to appear in an accepted source; do not copy research art.",
-      "lastReviewedDate": "2026-08-29"
+      "reasonCategory": "mapping-ambiguous",
+      "acceptedSourcesChecked": [
+        "pokemon-db-go-sprites"
+      ],
+      "candidate": {
+        "exactImageFound": false,
+        "decision": "identity-review-required",
+        "reason": "Official Jeju evidence names Blue Shirt (Citrus) and multiple balloon costumes, which have accepted sprites. The legacy location-only label does not establish which one it means; the previous restricted-only claim was incorrect."
+      },
+      "nextReviewAction": "Obtain evidence tying the legacy Jeju identity specifically to Blue Shirt (Citrus) or an explicit balloon variant before mapping.",
+      "lastReviewedDate": "2026-09-06",
+      "searchTerms": [
+        [
+          "blue",
+          "tshirt"
+        ],
+        [
+          "orange",
+          "balloons"
+        ]
+      ],
+      "acceptedSourcePage": "https://pokemondb.net/sprites/pikachu",
+      "reviewedCandidateFiles": [
+        "pikachu-blue-tshirt-f.png",
+        "pikachu-blue-tshirt.png",
+        "pikachu-orange-balloons-f.png",
+        "pikachu-orange-balloons.png"
+      ]
     },
     {
       "canonicalCostumeId": "pokemon:25:costume:PIKACHU_VISOR_2026",
       "displayIdentity": "Pikachu (Marathon)",
-      "species": { "dex": 25, "name": "Pikachu" },
+      "species": {
+        "dex": 25,
+        "name": "Pikachu"
+      },
       "currentStatus": "pending-reviewed-artwork",
-      "reasonCategory": "newly-announced",
-      "acceptedSourcesChecked": ["pokemon-db-go-sprites", "pokemon-go-event-announcements"],
-      "candidate": { "exactImageFound": false, "decision": "not-found", "reason": "The announced 2026 marathon visor is absent from the accepted artwork snapshot." },
-      "nextReviewAction": "Recheck for an exact 2026 visor asset after source refresh.",
-      "lastReviewedDate": "2026-08-29"
+      "reasonCategory": "accepted-source-missing",
+      "acceptedSourcesChecked": [
+        "pokemon-db-go-sprites"
+      ],
+      "candidate": {
+        "exactImageFound": false,
+        "decision": "not-found",
+        "reason": "The official Spring Marathon announcement confirms a marathon visor. The accepted gallery has Nate and Rosa visors, but no marathon-visor sprite."
+      },
+      "nextReviewAction": "Review the exact marathon visor; Nate/Rosa visors are not substitutes.",
+      "lastReviewedDate": "2026-09-06",
+      "searchTerms": [
+        [
+          "marathon"
+        ],
+        [
+          "visor",
+          "2026"
+        ]
+      ],
+      "acceptedSourcePage": "https://pokemondb.net/sprites/pikachu",
+      "reviewedCandidateFiles": []
     },
     {
       "canonicalCostumeId": "pokemon:25:standard:legacy:Pikachu%20(Mystic)",
       "displayIdentity": "Pikachu (Mystic)",
-      "species": { "dex": 25, "name": "Pikachu" },
+      "species": {
+        "dex": 25,
+        "name": "Pikachu"
+      },
       "currentStatus": "pending-reviewed-artwork",
-      "reasonCategory": "newly-announced",
-      "acceptedSourcesChecked": ["pokemon-db-go-sprites", "pokemon-go-event-announcements"],
-      "candidate": { "exactImageFound": false, "decision": "not-found", "reason": "The announced 2026 Team Mystic hat is absent from the accepted artwork snapshot." },
-      "nextReviewAction": "Recheck for an exact Team Mystic hat asset after source refresh.",
-      "lastReviewedDate": "2026-08-29"
+      "reasonCategory": "accepted-source-missing",
+      "acceptedSourcesChecked": [
+        "pokemon-db-go-sprites"
+      ],
+      "candidate": {
+        "exactImageFound": false,
+        "decision": "not-found",
+        "reason": "Team Mystic hat Pikachu is officially confirmed for GO Fest 2026; the live accepted gallery contains no Mystic hat sprite."
+      },
+      "nextReviewAction": "Review only Team Mystic hat artwork, not another team's hat.",
+      "lastReviewedDate": "2026-09-06",
+      "searchTerms": [
+        [
+          "mystic"
+        ]
+      ],
+      "acceptedSourcePage": "https://pokemondb.net/sprites/pikachu",
+      "reviewedCandidateFiles": []
     },
     {
       "canonicalCostumeId": "pokemon:25:costume:PIKACHU_ANNIVERSARY_2026",
       "displayIdentity": "Pikachu (Professor Willow's Assistant)",
-      "species": { "dex": 25, "name": "Pikachu" },
+      "species": {
+        "dex": 25,
+        "name": "Pikachu"
+      },
       "currentStatus": "pending-reviewed-artwork",
-      "reasonCategory": "newly-announced",
-      "acceptedSourcesChecked": ["pokemon-db-go-sprites", "pokemon-go-event-announcements"],
-      "candidate": { "exactImageFound": false, "decision": "not-found", "reason": "The announced 2026 anniversary costume is absent from the accepted artwork snapshot." },
-      "nextReviewAction": "Recheck for an exact Professor Willow assistant asset after source refresh.",
-      "lastReviewedDate": "2026-08-29"
+      "reasonCategory": "accepted-source-missing",
+      "acceptedSourcesChecked": [
+        "pokemon-db-go-sprites"
+      ],
+      "candidate": {
+        "exactImageFound": false,
+        "decision": "not-found",
+        "reason": "Professor Willow's assistant Pikachu debuted at the official July 21 birthday event; its outfit is absent from the accepted gallery. The Ph.D. sprite is a different costume."
+      },
+      "nextReviewAction": "Review the assistant outfit against the official identity; do not use Ph.D. Pikachu or merchandise artwork.",
+      "lastReviewedDate": "2026-09-06",
+      "searchTerms": [
+        [
+          "willow"
+        ],
+        [
+          "assistant"
+        ],
+        [
+          "anniversary",
+          "2026"
+        ]
+      ],
+      "acceptedSourcePage": "https://pokemondb.net/sprites/pikachu",
+      "reviewedCandidateFiles": []
     },
     {
       "canonicalCostumeId": "pokemon:25:standard:legacy:Pikachu%20(Valor)",
       "displayIdentity": "Pikachu (Valor)",
-      "species": { "dex": 25, "name": "Pikachu" },
+      "species": {
+        "dex": 25,
+        "name": "Pikachu"
+      },
       "currentStatus": "pending-reviewed-artwork",
-      "reasonCategory": "newly-announced",
-      "acceptedSourcesChecked": ["pokemon-db-go-sprites", "pokemon-go-event-announcements"],
-      "candidate": { "exactImageFound": false, "decision": "not-found", "reason": "The announced 2026 Team Valor hat is absent from the accepted artwork snapshot." },
-      "nextReviewAction": "Recheck for an exact Team Valor hat asset after source refresh.",
-      "lastReviewedDate": "2026-08-29"
+      "reasonCategory": "accepted-source-missing",
+      "acceptedSourcesChecked": [
+        "pokemon-db-go-sprites"
+      ],
+      "candidate": {
+        "exactImageFound": false,
+        "decision": "not-found",
+        "reason": "Team Valor hat Pikachu is officially confirmed for GO Fest 2026; the live accepted gallery contains no Valor hat sprite."
+      },
+      "nextReviewAction": "Review only Team Valor hat artwork, not another team's hat.",
+      "lastReviewedDate": "2026-09-06",
+      "searchTerms": [
+        [
+          "valor"
+        ]
+      ],
+      "acceptedSourcePage": "https://pokemondb.net/sprites/pikachu",
+      "reviewedCandidateFiles": []
     },
     {
       "canonicalCostumeId": "pokemon:25:standard:legacy:Pikachu%20(Victor)",
       "displayIdentity": "Pikachu (Victor)",
-      "species": { "dex": 25, "name": "Pikachu" },
+      "species": {
+        "dex": 25,
+        "name": "Pikachu"
+      },
       "currentStatus": "pending-reviewed-artwork",
-      "reasonCategory": "mapping-ambiguous",
-      "acceptedSourcesChecked": ["pokemon-db-go-sprites", "pokemon-go-event-announcements"],
-      "candidate": { "exactImageFound": true, "sourceId": "restricted-research-metadata", "identifier": "multiple avatar-costume variants", "decision": "rejected", "reason": "No accepted evidence deterministically selects one candidate for the generic Victor identity." },
-      "nextReviewAction": "Obtain authoritative identity-to-variant evidence before selecting artwork.",
-      "lastReviewedDate": "2026-08-29"
+      "reasonCategory": "identity-unverified",
+      "acceptedSourcesChecked": [
+        "pokemon-db-go-sprites"
+      ],
+      "candidate": {
+        "exactImageFound": false,
+        "decision": "identity-review-required",
+        "reason": "No Victor-labelled GO sprite exists in the accepted gallery and this audit found no authoritative announcement establishing the legacy Victor costume. The previous multiple-variants claim was not substantiated."
+      },
+      "nextReviewAction": "Establish that this exact GO costume exists and resolve its identity before considering artwork.",
+      "lastReviewedDate": "2026-09-06",
+      "searchTerms": [
+        [
+          "victor"
+        ]
+      ],
+      "acceptedSourcePage": "https://pokemondb.net/sprites/pikachu",
+      "reviewedCandidateFiles": []
     },
     {
       "canonicalCostumeId": "pokemon:25:costume:PIKACHU_WCS_2026",
       "displayIdentity": "Pikachu (Worlds 2026)",
-      "species": { "dex": 25, "name": "Pikachu" },
+      "species": {
+        "dex": 25,
+        "name": "Pikachu"
+      },
       "currentStatus": "pending-reviewed-artwork",
-      "reasonCategory": "newly-announced",
-      "acceptedSourcesChecked": ["pokemon-db-go-sprites", "pokemon-go-event-announcements"],
-      "candidate": { "exactImageFound": false, "decision": "not-found", "reason": "The announced Worlds 2026 costume is absent from the accepted artwork snapshot." },
-      "nextReviewAction": "Recheck for an exact Worlds 2026 asset after source refresh.",
-      "lastReviewedDate": "2026-08-29"
+      "reasonCategory": "accepted-source-missing",
+      "acceptedSourcesChecked": [
+        "pokemon-db-go-sprites"
+      ],
+      "candidate": {
+        "exactImageFound": false,
+        "decision": "not-found",
+        "reason": "PIKACHU_WCS_2026 is confirmed by the official August 25 Worlds announcement. The accepted gallery lists Worlds 2022, 2023, 2024 and 2025, but no 2026 outfit. Official and mined images are not approved for copying."
+      },
+      "nextReviewAction": "Review only the WCS 2026 costume when published by an accepted sprite source; do not reuse Worlds 2025 or Cosmog Spacesuit.",
+      "lastReviewedDate": "2026-09-06",
+      "searchTerms": [
+        [
+          "world",
+          "2026"
+        ],
+        [
+          "wcs",
+          "2026"
+        ]
+      ],
+      "acceptedSourcePage": "https://pokemondb.net/sprites/pikachu",
+      "reviewedCandidateFiles": []
     },
     {
       "canonicalCostumeId": "pokemon:216:standard:legacy:Teddiursa%20Witch%20Hat",
       "displayIdentity": "Teddiursa Witch Hat",
-      "species": { "dex": 216, "name": "Teddiursa" },
+      "species": {
+        "dex": 216,
+        "name": "Teddiursa"
+      },
       "currentStatus": "pending-reviewed-artwork",
-      "reasonCategory": "restricted-source-only",
-      "acceptedSourcesChecked": ["pokemon-db-go-sprites", "pokemon-go-event-announcements"],
-      "candidate": { "exactImageFound": true, "sourceId": "restricted-research-metadata", "identifier": "Halloween 2025 witch variant", "decision": "rejected", "reason": "The exact candidate is not available from an accepted artwork source." },
-      "nextReviewAction": "Wait for accepted-source publication; do not copy research art.",
-      "lastReviewedDate": "2026-08-29"
+      "reasonCategory": "accepted-source-missing",
+      "acceptedSourcesChecked": [
+        "pokemon-db-go-sprites"
+      ],
+      "candidate": {
+        "exactImageFound": false,
+        "decision": "not-found",
+        "reason": "The accepted Teddiursa GO gallery contains only teddiursa.png, with no witch-hat version. The official Halloween 2025 announcement confirms the costume but does not grant image reuse."
+      },
+      "nextReviewAction": "Wait for an accepted Teddiursa witch-hat sprite or separately documented source permission.",
+      "lastReviewedDate": "2026-09-06",
+      "searchTerms": [
+        [
+          "witch"
+        ],
+        [
+          "halloween",
+          "2025"
+        ]
+      ],
+      "acceptedSourcePage": "https://pokemondb.net/sprites/teddiursa",
+      "reviewedCandidateFiles": []
     },
     {
       "canonicalCostumeId": "pokemon:217:standard:legacy:Ursaring%20Witch%20Hat",
       "displayIdentity": "Ursaring Witch Hat",
-      "species": { "dex": 217, "name": "Ursaring" },
+      "species": {
+        "dex": 217,
+        "name": "Ursaring"
+      },
       "currentStatus": "pending-reviewed-artwork",
-      "reasonCategory": "restricted-source-only",
-      "acceptedSourcesChecked": ["pokemon-db-go-sprites", "pokemon-go-event-announcements"],
-      "candidate": { "exactImageFound": true, "sourceId": "restricted-research-metadata", "identifier": "Halloween 2025 witch variant", "decision": "rejected", "reason": "The exact candidate is not available from an accepted artwork source." },
-      "nextReviewAction": "Wait for accepted-source publication; do not copy research art.",
-      "lastReviewedDate": "2026-08-29"
+      "reasonCategory": "accepted-source-missing",
+      "acceptedSourcesChecked": [
+        "pokemon-db-go-sprites"
+      ],
+      "candidate": {
+        "exactImageFound": false,
+        "decision": "not-found",
+        "reason": "The accepted Ursaring GO gallery contains only ordinary male/female sprites, with no witch-hat version. An evolved costume must have its own exact art."
+      },
+      "nextReviewAction": "Review an Ursaring witch-hat asset; neither base Ursaring nor Teddiursa art is acceptable.",
+      "lastReviewedDate": "2026-09-06",
+      "searchTerms": [
+        [
+          "witch"
+        ],
+        [
+          "halloween",
+          "2025"
+        ]
+      ],
+      "acceptedSourcePage": "https://pokemondb.net/sprites/ursaring",
+      "reviewedCandidateFiles": []
     },
     {
       "canonicalCostumeId": "pokemon:222:standard:legacy:Galarian%20Corsola%20Pink%20Sunglasses",
       "displayIdentity": "Galarian Corsola Pink Sunglasses",
-      "species": { "dex": 222, "name": "Galarian Corsola" },
+      "species": {
+        "dex": 222,
+        "name": "Galarian Corsola"
+      },
       "currentStatus": "pending-reviewed-artwork",
-      "reasonCategory": "newly-announced",
-      "acceptedSourcesChecked": ["pokemon-db-go-sprites", "pokemon-go-event-announcements"],
-      "candidate": { "exactImageFound": false, "decision": "not-found", "reason": "The announced 2026 sunglasses costume is absent from the accepted artwork snapshot." },
-      "nextReviewAction": "Recheck for an exact pink-sunglasses asset after source refresh.",
-      "lastReviewedDate": "2026-08-29"
+      "reasonCategory": "accepted-source-missing",
+      "acceptedSourcesChecked": [
+        "pokemon-db-go-sprites"
+      ],
+      "candidate": {
+        "exactImageFound": false,
+        "decision": "not-found",
+        "reason": "The official Sustainability Week announcement confirms Galarian Corsola with pink sunglasses. The accepted gallery contains ordinary Corsola and Galarian Corsola only, neither wearing sunglasses."
+      },
+      "nextReviewAction": "Review the Galarian pink-sunglasses version; reject ordinary Galarian or Johto Corsola.",
+      "lastReviewedDate": "2026-09-06",
+      "searchTerms": [
+        [
+          "pink"
+        ],
+        [
+          "sunglasses"
+        ]
+      ],
+      "acceptedSourcePage": "https://pokemondb.net/sprites/corsola",
+      "reviewedCandidateFiles": []
     },
     {
       "canonicalCostumeId": "pokemon:287:standard:legacy:Slakoth%20(Night%20Cap)",
       "displayIdentity": "Slakoth (Night Cap)",
-      "species": { "dex": 287, "name": "Slakoth" },
+      "species": {
+        "dex": 287,
+        "name": "Slakoth"
+      },
       "currentStatus": "pending-reviewed-artwork",
-      "reasonCategory": "restricted-source-only",
-      "acceptedSourcesChecked": ["pokemon-db-go-sprites", "pokemon-go-event-announcements"],
-      "candidate": { "exactImageFound": true, "sourceId": "restricted-research-metadata", "identifier": "cSUMMER_2024", "decision": "rejected", "reason": "The exact candidate is not available from an accepted artwork source." },
-      "nextReviewAction": "Wait for accepted-source publication; do not copy research art.",
-      "lastReviewedDate": "2026-08-29"
+      "reasonCategory": "identity-unverified",
+      "acceptedSourcesChecked": [
+        "pokemon-db-go-sprites"
+      ],
+      "candidate": {
+        "exactImageFound": false,
+        "decision": "identity-review-required",
+        "reason": "The official Slumbering Sands event names Slakoth wearing a visor and Snorlax wearing a nightcap. The accepted Slakoth visor sprite exists, but it does not validate the legacy Night Cap label."
+      },
+      "nextReviewAction": "Resolve the legacy label with identity evidence; do not silently rename it or map the visor as if it were a nightcap.",
+      "lastReviewedDate": "2026-09-06",
+      "searchTerms": [
+        [
+          "night"
+        ],
+        [
+          "visor"
+        ]
+      ],
+      "acceptedSourcePage": "https://pokemondb.net/sprites/slakoth",
+      "reviewedCandidateFiles": [
+        "slakoth-visor.png"
+      ]
     },
     {
       "canonicalCostumeId": "pokemon:710:standard:legacy:Pumpkaboo%20(Spooky)",
       "displayIdentity": "Pumpkaboo (Spooky)",
-      "species": { "dex": 710, "name": "Pumpkaboo" },
+      "species": {
+        "dex": 710,
+        "name": "Pumpkaboo"
+      },
       "currentStatus": "pending-reviewed-artwork",
       "reasonCategory": "mapping-ambiguous",
-      "acceptedSourcesChecked": ["pokemon-db-go-sprites", "pokemon-go-event-announcements"],
-      "candidate": { "exactImageFound": true, "sourceId": "pokemon-db-go-sprites", "identifier": "small / average / large / super", "decision": "rejected", "reason": "Four accepted size-specific sprites exist, but the legacy identity does not encode size." },
-      "nextReviewAction": "Resolve the stored unsized identity before selecting one of the four exact variants.",
-      "lastReviewedDate": "2026-08-29"
+      "acceptedSourcesChecked": [
+        "pokemon-db-go-sprites"
+      ],
+      "candidate": {
+        "exactImageFound": false,
+        "decision": "identity-review-required",
+        "reason": "Four accepted Spooky Festival sprites exist (small, average, large, super); the legacy Spooky label does not encode a size."
+      },
+      "nextReviewAction": "Resolve the stored size before selecting exact artwork; do not assume average.",
+      "lastReviewedDate": "2026-09-06",
+      "searchTerms": [
+        [
+          "spooky"
+        ]
+      ],
+      "acceptedSourcePage": "https://pokemondb.net/sprites/pumpkaboo",
+      "reviewedCandidateFiles": [
+        "pumpkaboo-average-spooky-festival.png",
+        "pumpkaboo-large-spooky-festival.png",
+        "pumpkaboo-small-spooky-festival.png",
+        "pumpkaboo-super-spooky-festival.png"
+      ]
     },
     {
       "canonicalCostumeId": "pokemon:714:standard:legacy:Noibat%20Headband",
       "displayIdentity": "Noibat Headband",
-      "species": { "dex": 714, "name": "Noibat" },
+      "species": {
+        "dex": 714,
+        "name": "Noibat"
+      },
       "currentStatus": "pending-reviewed-artwork",
-      "reasonCategory": "restricted-source-only",
-      "acceptedSourcesChecked": ["pokemon-db-go-sprites", "pokemon-go-event-announcements"],
-      "candidate": { "exactImageFound": true, "sourceId": "restricted-research-metadata", "identifier": "Halloween 2025 headband variant", "decision": "rejected", "reason": "The exact candidate is not available from an accepted artwork source." },
-      "nextReviewAction": "Wait for accepted-source publication; do not copy research art.",
-      "lastReviewedDate": "2026-08-29"
+      "reasonCategory": "accepted-source-missing",
+      "acceptedSourcesChecked": [
+        "pokemon-db-go-sprites"
+      ],
+      "candidate": {
+        "exactImageFound": false,
+        "decision": "not-found",
+        "reason": "The accepted Noibat GO gallery contains only noibat.png, without a headband. The official Halloween 2025 announcement is identity evidence, not an artwork license."
+      },
+      "nextReviewAction": "Review exact Noibat headband artwork from an accepted source.",
+      "lastReviewedDate": "2026-09-06",
+      "searchTerms": [
+        [
+          "headband"
+        ],
+        [
+          "halloween",
+          "2025"
+        ]
+      ],
+      "acceptedSourcePage": "https://pokemondb.net/sprites/noibat",
+      "reviewedCandidateFiles": []
     },
     {
       "canonicalCostumeId": "pokemon:715:standard:legacy:Noivern%20Headband",
       "displayIdentity": "Noivern Headband",
-      "species": { "dex": 715, "name": "Noivern" },
+      "species": {
+        "dex": 715,
+        "name": "Noivern"
+      },
       "currentStatus": "pending-reviewed-artwork",
-      "reasonCategory": "restricted-source-only",
-      "acceptedSourcesChecked": ["pokemon-db-go-sprites", "pokemon-go-event-announcements"],
-      "candidate": { "exactImageFound": true, "sourceId": "restricted-research-metadata", "identifier": "Halloween 2025 headband variant", "decision": "rejected", "reason": "The exact candidate is not available from an accepted artwork source." },
-      "nextReviewAction": "Wait for accepted-source publication; do not copy research art.",
-      "lastReviewedDate": "2026-08-29"
+      "reasonCategory": "accepted-source-missing",
+      "acceptedSourcesChecked": [
+        "pokemon-db-go-sprites"
+      ],
+      "candidate": {
+        "exactImageFound": false,
+        "decision": "not-found",
+        "reason": "The accepted Noivern GO gallery contains only noivern.png, without a headband. Noibat's headband image cannot stand in for its evolution."
+      },
+      "nextReviewAction": "Review exact Noivern headband artwork from an accepted source.",
+      "lastReviewedDate": "2026-09-06",
+      "searchTerms": [
+        [
+          "headband"
+        ],
+        [
+          "halloween",
+          "2025"
+        ]
+      ],
+      "acceptedSourcePage": "https://pokemondb.net/sprites/noivern",
+      "reviewedCandidateFiles": []
     },
     {
       "canonicalCostumeId": "pokemon:901:standard:legacy:Ursaluna%20Witch%20Hat",
       "displayIdentity": "Ursaluna Witch Hat",
-      "species": { "dex": 901, "name": "Ursaluna" },
+      "species": {
+        "dex": 901,
+        "name": "Ursaluna"
+      },
       "currentStatus": "pending-reviewed-artwork",
-      "reasonCategory": "restricted-source-only",
-      "acceptedSourcesChecked": ["pokemon-db-go-sprites", "pokemon-go-event-announcements"],
-      "candidate": { "exactImageFound": true, "sourceId": "restricted-research-metadata", "identifier": "Halloween 2025 witch variant", "decision": "rejected", "reason": "The exact candidate is not available from an accepted artwork source." },
-      "nextReviewAction": "Wait for accepted-source publication; do not copy research art.",
-      "lastReviewedDate": "2026-08-29"
+      "reasonCategory": "accepted-source-missing",
+      "acceptedSourcesChecked": [
+        "pokemon-db-go-sprites"
+      ],
+      "candidate": {
+        "exactImageFound": false,
+        "decision": "not-found",
+        "reason": "The accepted Ursaluna GO gallery contains only ursaluna.png, without a witch hat. Neither base Ursaluna nor an earlier evolution's costume is exact."
+      },
+      "nextReviewAction": "Review exact Ursaluna witch-hat artwork from an accepted source.",
+      "lastReviewedDate": "2026-09-06",
+      "searchTerms": [
+        [
+          "witch"
+        ],
+        [
+          "halloween",
+          "2025"
+        ]
+      ],
+      "acceptedSourcePage": "https://pokemondb.net/sprites/ursaluna",
+      "reviewedCandidateFiles": []
     }
-  ]
+  ],
+  "reviewScope": "All 127 accepted-source GO galleries compared live on 2026-09-06; official announcement evidence reviewed for the named gaps. Search matches are candidates, never authorization to promote."
 }
