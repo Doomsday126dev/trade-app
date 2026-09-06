@@ -40,7 +40,7 @@ function transientHarness(){
   const context=vm.createContext({
     _sessionTransientGeneration:0,undoTimer:11,undoStack:{name:'Pidgey'},undoReturnFocus:{},_toastTimer:12,
     _feedbackAnnouncementTimer:13,_lastFeedbackAnnouncement:{message:'Removed Pidgey Undo',at:1},
-    trainerSuggestionTimer:14,favoriteSavedPromptTimer:15,_modalFocusTimer:16,_myHaveRenderTimer:17,_haveBrowseRenderTimer:18,
+    trainerSuggestionTimer:14,favoriteSavedPromptTimer:15,_modalFocusTimer:16,
     clearTimeout:id=>cleared.push(id),
     document:{
       getElementById:id=>elements[id]||null,
@@ -53,8 +53,10 @@ function transientHarness(){
       removeEventListener(){},body:{classList:classList(['bulk-mode','have-bulk-mode'])}
     },
     _modalKeyHandler:()=>{},_modalPrevFocus:{},rpinTarget:'TrainerA',addTray:[{name:'Pidgey'}],
-    acItems:[1],acFiltered:[1],acFocusIdx:1,haveAcItems:[1],haveAcFiltered:[1],haveAcFocusIdx:1,
-    dragSrc:{},bulkMode:true,bulkSelected:new Set(['Pidgey']),haveBulkMode:true,haveBulkSelected:new Set(['Pidgey']),
+    acItems:[1],acFiltered:[1],acFocusIdx:1,
+    dragSrc:{},bulkMode:true,bulkSelected:new Set(['Pidgey']),
+    combinedSelection:new Set(['Pidgey']),combinedOwner:'TrainerA',combinedEditor:{},
+    productShareSnapshot:[{name:'Pidgey'}],productShareOwner:'TrainerA',productShareScope:'full',
     _safeTransferSelected:new Set(['TrainerB']),_qaSelected:{lf:new Set(['Pidgey']),ft:new Set()},
     _activeDiff:{username:'TrainerB'},_activeTradeMatch:{username:'TrainerB'},_swipeState:{},_ptrState:{},
     voiceRecognition:{aborted:false,abort(){this.aborted=true;}},resetTrainerOrganizerState(){},
@@ -134,7 +136,7 @@ test('delayed removal and swipe callbacks are invalidated while conflict UI is r
 test('session cleanup resets modal, selection, filter, queue, and pending comparison state',()=>{
   const block=between("function resetSessionTransientUi(reason='session_boundary'){",'function resetTransientUiBeforeSessionActivation');
   for(const required of [
-    "document.querySelectorAll('.ov.open')",'bulkSelected.clear()','haveBulkSelected.clear()',
+    "document.querySelectorAll('.ov.open')",'bulkSelected.clear()',
     'addTray=[]','rpinTarget=null','_activeDiff=null','closeTradeMatchModal(false)',
     "'mylist-filter'","'have-filter'",'_safeTransferSelected=null','voiceRecognition.abort()'
   ])assert.ok(block.includes(required),`Missing transient reset: ${required}`);
@@ -151,7 +153,7 @@ test('runtime cleanup removes User A undo, toast, modal, selection, and queued U
   const h=transientHarness();
   const result=vm.runInContext("resetSessionTransientUi('logout')",h.context);
   assert.equal(result.ok,true);
-  assert.deepEqual(h.cleared,[14,15,16,17,18,11,12,13]);
+  assert.deepEqual(h.cleared,[14,15,16,11,12,13]);
   assert.equal(h.elements['undo-msg'].textContent,'');
   assert.equal(h.elements['undo-toast'].hidden,true);
   assert.equal(h.elements.toast.textContent,'');
@@ -182,7 +184,7 @@ test('runtime generation guard suppresses callbacks captured before cleanup',()=
 
 test('listener and timer lifecycle stays centralized across rerenders and account boundaries',()=>{
   const cleanup=between("function resetSessionTransientUi(reason='session_boundary'){",'function resetTransientUiBeforeSessionActivation');
-  for(const timer of ['trainerSuggestionTimer','favoriteSavedPromptTimer','_modalFocusTimer','_myHaveRenderTimer','_haveBrowseRenderTimer'])assert.match(cleanup,new RegExp(`clearTimeout\\(${timer}\\)`));
+  for(const timer of ['trainerSuggestionTimer','favoriteSavedPromptTimer','_modalFocusTimer'])assert.match(cleanup,new RegExp(`clearTimeout\\(${timer}\\)`));
   const favoritesRender=between('async function renderTrainerQuickLists','function toggleTrainerFavorite');
   assert.doesNotMatch(favoritesRender,/addEventListener\(/);
   assert.equal((source.match(/getElementById\('favorite-trainers-list'\)\?\.addEventListener\('click'/g)||[]).length,1);

@@ -12,7 +12,7 @@ const OSAKA='location-gofestosaka';
 function loadDomain(){
   const window={PogoDomain:{}};
   const context=vm.createContext({window,Intl});
-  for(const file of ['js/domain/backgroundCatalog.js','js/domain/priorityValues.js','js/domain/pokemonKeys.js']){
+  for(const file of ['js/domain/priorityValues.js','js/domain/pokemonKeys.js']){
     vm.runInContext(readFileSync(path.join(root,file),'utf8'),context);
   }
   return window.PogoDomain;
@@ -41,8 +41,6 @@ test('unknown future IDs remain stable while malformed and ambiguous IDs fail sa
   assert.equal(domain.priorityValues.parsePri('H[bg:future-event-2030]').backgroundId,'future-event-2030');
   assert.equal(domain.priorityValues.parsePri('H[bg:NOT VALID]').backgroundId,'');
   assert.equal(domain.priorityValues.parsePri(`H[bg:${NEW_YORK}][bg:${OSAKA}]`).backgroundId,'');
-  assert.equal(domain.backgroundCatalog.get('future-event-2030'),null);
-  assert.equal(domain.backgroundCatalog.display('future-event-2030'),'future-event-2030');
 });
 
 test('generic wants accept background inventory while specific wants require exact identity',()=>{
@@ -71,37 +69,7 @@ test('legacy Have numbers stay numeric and structured qualifiers preserve canoni
   });
 });
 
-test('one qualifier flows through product rows, matching, and list exports',()=>{
-  for(const marker of [
-    'id="add-pmon-background"','function openBackgroundPicker','function setBackground(',
-    'backgroundBadgeHtml(backgroundId','function renderShareView(username,type)',
-    'function computeTradeMatchSummary','tradeListComparisonDomain.compareWantedLists',
-    "'Background ID','Background'",'backgroundDisplayName(e.backgroundId)',
-    'function exportEntryNoteLabel','drawExportEntryNoteLabel'
-  ])assert.ok(html.includes(marker),`missing ${marker}`);
-  const board=html.slice(html.indexOf('function renderSpecialBoard()'),html.indexOf('// ── READ-ONLY SHARE VIEW'));
-  assert.doesNotMatch(board,/setSpecialBackground|sb-row-background|backgroundImageMap|drawBackgroundArtwork/);
-});
 
-test('picker is released-only, keyboard-usable, relevant-first, and incrementally rendered',()=>{
-  const picker=html.slice(html.indexOf('<!-- BACKGROUND PICKER -->'),html.indexOf('<!-- READ-ONLY SHARE VIEW'));
-  const logic=html.slice(html.indexOf('let _backgroundPickerContext'),html.indexOf('// ── UNDO'));
-  assert.match(picker,/role="combobox"/);
-  assert.match(picker,/role="listbox"/);
-  assert.match(logic,/aria-activedescendant/);
-  assert.match(picker,/data-background-filter="relevant"/);
-  assert.match(picker,/data-background-filter="all"/);
-  assert.match(picker,/id="background-show-more"/);
-  assert.match(logic,/backgroundCatalogDomain\.search\(query,\{pokemonName:pokemon,limit:500\}\)/);
-  assert.match(logic,/record\.pokemon\.length>0&&!relevant/);
-  assert.match(logic,/background\.notListed/);
-  assert.match(logic,/records\.slice\(0,_backgroundPickerVisibleLimit\)/);
-  assert.match(logic,/event\.key==='ArrowDown'/);
-  assert.match(logic,/event\.key!=='ArrowUp'/);
-  assert.match(logic,/event\.key==='Enter'/);
-  assert.match(logic,/event\.key==='Escape'/);
-  assert.doesNotMatch(logic,/includeCandidates:true/);
-});
 
 test('Pokémon GO search strings remain valid by deliberately ignoring background IDs',()=>{
   const strings=html.slice(html.indexOf('function buildStrings('),html.indexOf('function myListSearchLabel('));

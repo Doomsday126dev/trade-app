@@ -1,6 +1,6 @@
 # Pokémon GO background qualifiers
 
-The app treats a Pokémon GO background as an optional structured trade qualifier. Saved entries carry a stable `backgroundId`; they do not carry a display label, source URL, or background artwork.
+Background qualifiers are retired from the active wants-only product. This document records the historical format and retained offline metadata. Since .96, no background catalog, artwork module, or picker is loaded by the browser. Saved entries may still carry a stable `backgroundId`; they are not migrated or purged.
 
 ## Semantics
 
@@ -14,11 +14,11 @@ Legacy priority strings remain valid. New strings add one token, for example `H[
 
 ## Catalog
 
-`data/backgrounds.json` is the reviewed, versioned product registry. Each record includes a stable ID, display and short labels, type, aliases, event/location/year when known, eligible Pokémon where reliable, release status, and source provenance. The browser consumes the generated `js/domain/backgroundCatalog.js` module; it never scrapes a third-party site at runtime.
+`data/backgrounds.json` is the retained offline registry. Each record includes a stable ID, display and short labels, type, aliases, event/location/year when known, eligible Pokémon where reliable, release status, and source provenance. It is not part of the deployed frontend inventory.
 
-The initial registry normalizes the complete human-readable catalog available from Serebii as of the catalog date. The accepted PokeMiners `Images/LocationCards` commit is kept as a machine-oriented addition/removal signal. Official Pokémon GO pages are used to resolve recent or ambiguous terminology. Candidate or future records are not shown in the product picker.
+The initial registry normalizes the human-readable catalog available from Serebii as of the catalog date. The accepted PokeMiners `Images/LocationCards` commit remains an offline addition/removal signal. Official Pokémon GO pages supplied terminology evidence.
 
-No third-party background artwork is copied or served. UI rows and exports use accessible text badges. Artwork can be added only after a separately approved rights and hosting strategy.
+No third-party background artwork is copied or served. Compact label styling remains for existing public-share compatibility; there is no active artwork or picker presentation.
 
 ## Maintenance
 
@@ -34,15 +34,14 @@ Run the explicit live maintenance comparison:
 npm run check:background-upstream
 ```
 
-An added or removed upstream filename exits nonzero and is a review signal, not an automatic publication. Reviewers confirm event terminology and release status, refresh `data/backgrounds.json`, inspect the diff, regenerate the browser module, and then update the accepted upstream snapshot only after mapping review.
+An added or removed upstream filename exits nonzero and is an archival review signal, not an automatic publication. Any deliberate metadata update requires terminology and mapping review before updating the accepted snapshot. The browser generator has been removed.
 
-Both maintenance checks also report records whose eligible-Pokémon mapping is still empty. The picker treats those records as relevance-unknown and keeps them available under All backgrounds rather than asserting incompatibility.
+Both maintenance checks also report records whose eligible-Pokémon mapping is still empty; those records remain unverified metadata, not active product choices.
 
 To refresh source-derived metadata deliberately:
 
 ```sh
 node scripts/update-background-catalog.cjs --refresh-catalog
-npm run generate:background-catalog
 ```
 
 The updater preserves existing stable IDs by source identity. A renamed label therefore does not rewrite IDs stored in user lists.
