@@ -132,5 +132,12 @@
     });
     return{members:states,entries:[...rows.values()]};
   }
-  root.tradeListComparison=Object.freeze({FLAG_KEYS,cleanEntry,qualifierKey,wantedIntentKey,compareWantedLists,declarationKey,unifyDeclarations,compareDeclarations,wantsChanges,groupWants});
+  function whoWants(entries=[],{selected=null,variantKey=''}={},options={}){
+    const nameKey=options.nameKey||defaultNameKey;
+    const candidates=selected?entries.filter(entry=>entry.intent==='lf'&&(Number(selected.no)>0?Number(entry.no)===Number(selected.no):nameKey(entry.name)===nameKey(selected.name))):[];
+    const variants=new Map();
+    for(const entry of candidates){const key=wantedIntentKey(entry,options);if(!variants.has(key))variants.set(key,entry);}
+    return{variants:[...variants].map(([key,entry])=>({key,entry})),entries:variantKey?candidates.filter(entry=>wantedIntentKey(entry,options)===variantKey):candidates,exact:!!variantKey};
+  }
+  root.tradeListComparison=Object.freeze({FLAG_KEYS,cleanEntry,qualifierKey,wantedIntentKey,compareWantedLists,declarationKey,unifyDeclarations,compareDeclarations,wantsChanges,groupWants,whoWants});
 })(window);

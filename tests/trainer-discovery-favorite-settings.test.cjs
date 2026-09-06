@@ -33,12 +33,12 @@ test('Favorites search is a stable shared-shell control outside the rendered res
   assert.match(render,/data-favorite-clear/);
 });
 
-test('Favorite Browse derives reciprocal hints from the canonical legacy inventory shape',()=>{
-  const render=html.slice(html.indexOf('function renderFavoriteBrowseResults'),html.indexOf('async function hydrateFavoriteBrowse'));
-  assert.match(render,/Object\.entries\(allData\.have\?\.\[cur\]\|\|\{\}\)/);
-  assert.match(render,/haveEntryInfo\(value\)\.qty>0/);
-  assert.match(render,/splitHaveKey\(key\)\.name/);
-  assert.doesNotMatch(render,/diffInventoryEntries/);
+test('Favorite Browse uses current permitted wants without reciprocal inventory hints',()=>{
+  const render=html.slice(html.indexOf('function favoriteLookupModel'),html.indexOf('async function hydrateFavoriteBrowse'));
+  assert.match(render,/tradeListComparisonDomain\.groupWants/);
+  assert.match(render,/tradeListComparisonDomain\.whoWants/);
+  assert.match(render,/record\?\.targetUid===\(item\.targetUid\|\|''\)/);
+  assert.doesNotMatch(render,/allData\.have|haveEntryInfo|splitHaveKey|diffInventoryEntries|iHaveTheirWants/);
 });
 
 test('trainer search, Favorites, and Find by Pokémon are sibling discovery modes',()=>{

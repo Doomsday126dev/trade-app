@@ -1,5 +1,39 @@
 const {test,expect}=require('@playwright/test');
 const fs=require('node:fs');
+test('Who wants this uses current exact public variants, groups and fenced copy without inventory',async({page},testInfo)=>{
+  await fixture(page);
+  await page.evaluate(()=>{window.__whoVariants=true;const s=ensureTrainerHistoryStore(),tag=s.createTag('NYC trades');s.setFavoriteTags('Alice',[tag.id]);});
+  await page.getByRole('tab',{name:'Who wants this?',exact:true}).click();
+  const input=page.locator('#favorite-browse-input');await input.fill('Pikachu');await input.press('Enter');
+  const output=page.locator('#favorite-browse-results');
+  await expect(output.locator('.favorite-browse-row')).toHaveCount(4);
+  await expect(output).toContainText('Species-level results');await expect(output).toContainText('Older publication');
+  await expect(output).toContainText('Private · Unavailable');
+  const variant=page.locator('#favorite-lookup-variant');
+  const exact=await variant.locator('option').evaluateAll(options=>options.find(option=>option.textContent.includes('♀')).value);
+  await variant.selectOption(exact);await expect(output.locator('.favorite-browse-row')).toHaveCount(1);
+  await expect(output).toContainText('Same published variant');await expect(output).toContainText('Top want');await expect(output).toContainText('NYC trades');
+  await output.locator('[data-contextual-copy]').first().click();expect(await page.evaluate(()=>__copy)).toContain('25');
+  const reads=await page.evaluate(()=>__reads.length);
+  await page.locator('#favorite-lookup-scope').selectOption({label:'NYC trades'});
+  expect(await page.evaluate(()=>__reads.length)).toBe(reads);
+  await variant.selectOption('');await expect(output.locator('.favorite-browse-row')).toHaveCount(2);
+  await expect(output).toContainText('Gigantamax');
+  await variant.selectOption(exact);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  if(process.env.WHO_SCREENSHOTS){fs.mkdirSync(process.env.WHO_SCREENSHOTS,{recursive:true});await page.screenshot({path:`${process.env.WHO_SCREENSHOTS}/who-${testInfo.project.name}.png`,fullPage:true,animations:'disabled'});}
+  await page.evaluate(()=>window.__revokedAlice=true);await output.getByRole('button',{name:'Refresh wants',exact:true}).click();
+  await expect(output).toContainText('Selected variant is no longer available');
+  await expect(output.locator('.favorite-browse-row')).toHaveCount(0);await expect(output.locator('[data-contextual-copy]')).toHaveCount(0);
+  await page.evaluate(()=>{window.__revokedAlice=false;});await output.getByRole('button',{name:'Refresh wants',exact:true}).click();
+  await expect(output.locator('[data-contextual-copy]')).toHaveCount(1);
+  await page.evaluate(()=>{const now=Date.now;Date.now=()=>now()+300002;window.__copy='unchanged';});
+  await output.locator('[data-contextual-copy]').first().click();expect(await page.evaluate(()=>__copy)).toBe('unchanged');
+  await expect(output.locator('.favorite-browse-row')).toHaveCount(0);
+  await page.evaluate(()=>{const s=ensureTrainerHistoryStore();s.deleteTag(favoriteLookupScope);renderFavoriteBrowseResults();});
+  await expect(page.locator('#favorite-lookup-scope option:checked')).toHaveText('Unavailable');
+  await expect(output.locator('.favorite-browse-row')).toHaveCount(0);
+});
 test.use({serviceWorkers:'block'});
 async function fixture(page){
   page.on('pageerror',error=>{throw error;});
@@ -20,6 +54,10 @@ async function fixture(page){
     const cache=favoriteShareSessionCacheData.createFavoriteShareSessionCache({repository:{read:async name=>{
       __reads.push(name);if(name==='Private'||name==='Alice'&&window.__revokedAlice)return{ok:true,value:null};
       const updatedAt=Date.now()-(name==='Old'?31*86400000:1000);
+      if(window.__whoVariants&&name==='Alice'){
+        const declarations=publicSharePublicationDomain.publicDeclarations([{intent:'lf',category:'wishlist',name:'Pikachu',p:'H',shiny:true,gender:'f',note:'Check details'},{intent:'lf',category:'gmax',name:'Pikachu',p:'L'}]);
+        return{ok:true,value:{version:2,username:name,profile:{friendCode:'',lastUpdated:updatedAt},lists:{wishlist:{},dynamax:{},gmax:{},costumes:{}},publishedListTypes:['wishlist','dynamax','gmax','costumes'],declarations,declarationCount:declarations.length,updatedAt}};
+      }
       return{ok:true,value:{version:1,username:name,profile:{friendCode:'',lastUpdated:updatedAt},lists:{wishlist:{Pikachu:name==='Bob'?'M':'H',...(name==='Alice'?{Snom:'L',...window.__extraWants}:{})},dynamax:{},gmax:{},costumes:{}},publishedListTypes:['wishlist','dynamax','gmax','costumes'],updatedAt}};
     }},validateProjection:publicSharePublicationDomain.publicShareProjectionStatus,projectSnapshot:favoritePokemonBrowseDomain.projectSnapshot});
     cache.activate({uid:'synthetic-group',username:cur});ensureFavoriteShareSessionCache=()=>cache;
