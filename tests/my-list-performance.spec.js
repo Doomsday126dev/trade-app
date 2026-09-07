@@ -81,7 +81,8 @@ test.describe('isolated My List scale profile',()=>{
     await page.route(url=>url.hostname.endsWith('.firebaseio.com')||url.hostname.endsWith('.firebasedatabase.app')||url.hostname.endsWith('googleapis.com'),route=>route.abort());
     await page.addInitScript(()=>{
       window.__myListLongTasks=[];
-      try{new PerformanceObserver(list=>window.__myListLongTasks.push(...list.getEntries().map(entry=>entry.duration))).observe({type:'longtask',buffered:true});}catch{}
+      window.__myListLongTaskWindowStart=Infinity;
+      try{new PerformanceObserver(list=>window.__myListLongTasks.push(...list.getEntries().filter(entry=>entry.startTime>=window.__myListLongTaskWindowStart).map(entry=>entry.duration))).observe({type:'longtask',buffered:true});}catch{}
     });
     await page.goto(`./?my-list-budget=${Date.now()}`,{waitUntil:'domcontentloaded'});
     await page.waitForFunction(()=>typeof window.__pogoEnsureFullApp==='function');
@@ -90,8 +91,11 @@ test.describe('isolated My List scale profile',()=>{
     const client=await page.context().newCDPSession(page);
     await client.send('Emulation.setCPUThrottlingRate',{rate:4});
     await installListFixture(page,120);
+    // Finish fixture work before measuring interactions, including late observer delivery.
+    await page.evaluate(async()=>{await waitForMyListRender();await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));});
     await page.evaluate(()=>{
       window.__myListLongTasks=[];
+      window.__myListLongTaskWindowStart=performance.now();
       window.__myListStringRenderCalls=0;
       const original=renderMyStrings;
       renderMyStrings=(...args)=>{window.__myListStringRenderCalls++;return original(...args);};

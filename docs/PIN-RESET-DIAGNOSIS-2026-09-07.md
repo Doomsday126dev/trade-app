@@ -61,6 +61,13 @@ single-send password, same-UID, replay or ownership-fencing code changed.
 - Required affected-source CI and normal immutable Pages release checks must
   pass before merge/deployment. No backend or Rules deployment is selected.
 
+The required My List interaction benchmark exposed delayed fixture work in its
+measurement window. Timestamped profiling showed a 239 ms setup task ending
+before measurement but arriving in the cleared observer buffer afterward.
+The test now settles fixture rendering/painting and filters entries by the
+measurement start. All existing duration/behavior limits remain unchanged;
+the six local performance cases pass. No My List runtime change accompanies it.
+
 There is no live synthetic mutation in this frontend-only correction. Existing
 production synthetic proof is historical, not claimed as a new live result.
 The reported trainer is not reset and remains blocked for an explicit identity
