@@ -1,48 +1,35 @@
 const test=require('node:test');
 const assert=require('node:assert/strict');
-const fs=require('node:fs');
 const path=require('node:path');
+const source=require('../scripts/lib/frontend-source.cjs').readFrontendSource(path.join(__dirname,'..'));
 
-const html=require('../scripts/lib/frontend-source.cjs').readFrontendSource(path.join(__dirname,'..'));
-const source=html.slice(html.indexOf('function myListSourceMap('),html.indexOf('function confirmRemove('));
-
-test('My List caches locale-bound normalized view models and invalidates changed values',()=>{
-  assert.match(html,/const myListViewModelCache=new Map\(\)/);
-  assert.match(source,/cacheKey=JSON\.stringify\(\[type,user,locale,name\]\)/);
-  assert.match(source,/fingerprint=JSON\.stringify\(\[value,/);
-  assert.match(source,/cached\?\.fingerprint===fingerprint/);
-  assert.match(source,/rawValue:value/);
-});
-
-test('filtering is latest-query debounced and preserves stable row nodes for ordinary lists',()=>{
-  assert.match(html,/oninput="scheduleMyListFilter\(this\.value\)"/);
+test('the primary wants filter is latest-query debounced',()=>{
+  assert.match(source,/id="combined-filter"[^>]*oninput="scheduleMyListFilter\(this\.value\)"/);
+  assert.match(source,/const MY_LIST_FILTER_DELAY_MS=60/);
   assert.match(source,/const generation=\+\+myListFilterGeneration/);
   assert.match(source,/generation!==myListFilterGeneration/);
-  assert.match(source,/row\.hidden=!show/);
-  assert.match(source,/previous\?\.visibilityDom/);
 });
 
-test('large lists expose a bounded usable state before idle progressive completion',()=>{
-  assert.match(html,/const MY_LIST_PROGRESSIVE_THRESHOLD=180/);
-  assert.match(html,/const MY_LIST_PROGRESSIVE_INITIAL_ROWS=120/);
-  assert.match(source,/window\.requestIdleCallback/);
-  assert.match(source,/root\.dataset\.renderComplete='true'/);
-  assert.match(source,/function waitForMyListRender\(\)/);
+test('bounded pagination replaces the obsolete background renderer',()=>{
+  assert.match(source,/combinedLimit=120/);
+  assert.match(source,/visible\.slice\(0,combinedLimit\)/);
+  assert.match(source,/combinedLimit\+=120;renderCombinedList\(\)/);
+  assert.match(source,/combinedRowCache\.size<=combinedLimit/);
+  assert.doesNotMatch(source,/id="mylist-out"|function myListRowHtml\(|function scheduleProgressiveMyListRender\(/);
 });
 
-test('keyed patching reuses unchanged rows and swipe ownership stays on the stable root',()=>{
-  assert.match(source,/row\.dataset\.renderKey!==expectedKey/);
-  assert.match(source,/if\(!existing\.size\)/);
-  assert.match(source,/grid\.replaceChildren\(fragment\)/);
-  assert.match(source,/if\(previous\)previous\.replaceWith\(row\)/);
-  assert.match(source,/if\(current!==row\)grid\.insertBefore\(row,current\|\|null\)/);
-  assert.match(source,/existing\.forEach\(row=>row\.remove\(\)\)/);
-  assert.match(html,/const grid=document\.getElementById\('mylist-out'\)/);
+test('unchanged variant rows survive filters without serialized model metadata',()=>{
+  assert.match(source,/cached\?\.signature===signature/);
+  assert.match(source,/combinedRowCache\.set\(key,\{row,signature\}\)/);
+  assert.match(source,/grid\.insertBefore\(row,grid\.children\[index\]\|\|null\)/);
+  assert.match(source,/if\(!groupKeys\.has\(key\)\)combinedRowCache\.delete\(key\)/);
+  assert.doesNotMatch(source,/row\.dataset\.signature=signature/);
 });
 
-test('derived search panels render after the immediate row patch and remain awaitable',()=>{
-  assert.match(source,/function scheduleMyListStringsRender\(generation\)/);
-  assert.match(source,/requestIdleCallback\(callback,\{timeout:120\}\)/);
-  assert.match(source,/generation!==myListStringsGeneration/);
-  assert.match(source,/Promise\.all\(\[myListRenderCompletePromise,myListAncillaryRenderPromise\]\)/);
+test('one fresh declaration model supplies the current rows and copy output',()=>{
+  const render=source.slice(source.indexOf('function renderMyList('),source.indexOf('function confirmRemove('));
+  assert.equal((render.match(/productDeclarations\(\)/g)||[]).length,1);
+  assert.match(render,/renderCombinedList\(declarations\)/);
+  assert.match(source,/refreshCombinedSearch\(model\)/);
+  assert.doesNotMatch(source,/function renderMyStrings\(|function myListSearchOptionHtml\(/);
 });
