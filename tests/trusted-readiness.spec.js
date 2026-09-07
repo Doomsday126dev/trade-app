@@ -126,11 +126,11 @@ test('approved intent, More and Share paths preserve one canonical declaration v
     await expectNoOverflow(page);await capture(page,`approved-for-trade-${viewport.width}`);
     // Reacquire the row if a pending render replaces it during viewport changes.
     await expect(async()=>{
-      const row=page.locator('.combined-row').filter({hasText:'Eevee'});
+      const row=page.locator('.wants-row').filter({hasText:'Eevee'});
       await row.scrollIntoViewIfNeeded();
       const bounds=await row.evaluate(el=>({
         spriteX:el.querySelector('img').getBoundingClientRect().x,
-        nameX:el.querySelector('.combined-entry').getBoundingClientRect().x
+        nameX:el.querySelector('.wants-name').getBoundingClientRect().x
       }));
       expect(bounds.spriteX).toBeLessThan(bounds.nameX);
     }).toPass({timeout:5000});
@@ -139,7 +139,7 @@ test('approved intent, More and Share paths preserve one canonical declaration v
     await page.locator('#nav-more').click();await expect(page.locator('#tab-more')).toBeVisible();
     await expect(page.locator('#tab-more').getByRole('button',{name:'Events',exact:true})).toBeVisible();
     await capture(page,`approved-more-${viewport.width}`);
-    await page.locator('#nav-mylist').click();await page.locator('.combined-toolbar').getByRole('button',{name:'Share',exact:true}).click();
+    await page.locator('#nav-mylist').click();await page.locator('.wants-list-toolbar').getByRole('button',{name:'Share',exact:true}).click();
     await page.locator('[data-share-mode="image"]').click();await expect(page.locator('#product-share-image')).toBeVisible();
     await expectNoOverflow(page);await capture(page,`approved-share-${viewport.width}`);
     await page.keyboard.press('Escape');

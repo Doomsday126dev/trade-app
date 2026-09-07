@@ -67,7 +67,7 @@ function transientHarness(){
     activeCanonicalIdentity:{uid:'uid-a',identityKind:'provider_only'},
     resetOwnedHydrationState(){hydrationResets++;},
     resetFavoriteBrowseSession(){favoriteBrowseResets++;},trainerHistoryStore:{owner:'uid-a'},
-    closeAddAutocomplete(){},
+    closeAddAutocomplete(){},setWantsAddPriority(){},
     managedSessionCache:{snapshot:()=>({activeOwner:{uid:'uid-a',username:'TrainerA'}})}
   });
   vm.runInContext(between('function sessionTransientCallback','function activateOwnedSession'),context);

@@ -446,27 +446,57 @@ function renderCombinedList(model=productDeclarations()){
   const groups=combinedGroups(model),valid=new Set(groups.flat().map(productSelectionKey));
   for(const key of combinedSelection)if(!valid.has(key))combinedSelection.delete(key);
   const visible=groups.map((entries,index)=>({entries,index})).filter(({entries})=>!query||normalizeAcText(entries.map(productShareDescription).join(' ')).includes(query));
-  const previous=new Map([...host.querySelectorAll(':scope > .combined-row')].map(row=>[row.dataset.key,row]));
+  const previous=new Map([...host.querySelectorAll('.wants-row')].map(row=>[row.dataset.key,row]));
   const nodes=visible.slice(0,combinedLimit).map(({entries,index})=>{
     const e=entries[0],selected=entries.every(x=>combinedSelection.has(productSelectionKey(x)));
     const priority=['H','M','L'].find(p=>entries.some(entry=>entry.p===p))||'';
     const key=combinedKey(e),signature=JSON.stringify([i18nCore.getLocale(),entries]);
     let row=previous.get(key);
-    if(row?.dataset.signature===signature){row.querySelector('input').checked=selected;return row;}
+    if(row?.dataset.signature===signature){row.querySelector('input').checked=selected;row.classList.toggle('wants-selected',selected);return row;}
+    const source=myListSourceMap(e.category||'wishlist').get(pokemonCatalogDomain.normalizeCatalogKey(e.name));
+    const spriteSource=spriteEntryForListItem(e.category||'wishlist',e.name,source)||{};
+    const dex=e.no||spriteSource.no;
+    const spriteUrlForEntry=entrySpriteUrl(spriteSource,e.name,e.gender);
+    const hasSprite=Boolean(dex||isApprovedRuntimeSpriteUrl(spriteUrlForEntry)||COSTUME_FORM_SPRITE_IDS[e.name]);
     const template=document.createElement('template');
-    template.innerHTML=`<article class="combined-row">
-      <input type="checkbox" aria-label="${escAttr(i18nCore.t('phase2.select',{name:e.dn}))}" data-group="${escAttr(combinedKey(e))}" ${selected?'checked':''} onchange="selectCombinedGroup(this.dataset.group,this.checked)">
-      ${e.no?spriteImg(e.no,44,'',e.name,e.gender||'',e.dn):'<span aria-hidden="true"></span>'}
-      <button class="combined-entry" type="button" data-group="${escAttr(combinedKey(e))}" onclick="openCombinedEditor(this.dataset.group)"><strong>${escHtml(e.dn)}</strong><span>${escHtml([e.shiny?i18nCore.t('share.flagShiny'):'',e.gender==='f'?'♀':e.gender==='m'?'♂':'',e.mod,'',e.lucky?i18nCore.t('myList.lucky'):'',e.xxl?'XXL':'',e.xxs?'XXS':'',e.note].filter(Boolean).join(' · '))}</span></button>
-      <div class="combined-sides"><span>${escHtml(priority==='H'?i18nCore.t('phase2.topWant'):priority?priLabel(priority):'')}</span></div></article>`;
-    row=template.content.firstElementChild;row.dataset.key=key;row.dataset.signature=signature;return row;
+    const traits=[['lucky',e.lucky,i18nCore.t('myList.lucky')],['shiny',e.shiny,i18nCore.t('myList.shiny')],['xxl',e.xxl,'XXL'],['xxs',e.xxs,'XXS'],['detail',e.mod,e.mod],['detail',e.gender&&!/^[FM]$/i.test(e.mod||''),e.gender==='f'?'♀':'♂']].filter(([,active])=>active).map(([kind,,label])=>`<span class="myrow-trait ${kind}">${escHtml(label)}</span>`).join('');
+    template.innerHTML=`<article class="myrow wants-row${selected?' wants-selected':''}" data-dex="${dex||''}" data-priority="${priority}">
+      <input type="checkbox" class="wants-select" aria-label="${escAttr(i18nCore.t('phase2.select',{name:e.dn}))}" data-group="${escAttr(key)}" ${selected?'checked':''} onchange="selectCombinedGroup(this.dataset.group,this.checked)">
+      <span class="myrow-sprite-wrap sprite-slot-list">${hasSprite?spriteImg(dex,34,'myrow-sprite',e.name,e.gender||'',e.dn,{urlOverride:spriteUrlForEntry,catalogId:spriteSource.catalogId}):''}${maxCrownSvg(['dynamax','gmax'].includes(e.type)?e.type:'')}</span>
+      <div class="myrow-copy"><button class="myrow-name wants-name" type="button" data-group="${escAttr(key)}" onclick="openCombinedEditor(this.dataset.group)">${escHtml(e.dn)}</button>${traits?`<div class="myrow-active-traits">${traits}</div>`:''}${e.note?`<span class="wants-note">${escHtml(e.note)}</span>`:''}</div>
+      <div class="mctrl">${priority?`<button type="button" class="myrow-priority-chip ${priority}" data-group="${escAttr(key)}" onclick="openCombinedEditor(this.dataset.group)" aria-label="${escAttr(i18nCore.t('myList.priorityFor',{name:e.dn}))}" title="${escAttr(priority==='H'?i18nCore.t('phase2.topWant'):priLabel(priority))}">${priority}</button>`:''}
+      <button type="button" class="myrow-edit" data-group="${escAttr(key)}" onclick="openCombinedEditor(this.dataset.group)" aria-label="${escAttr(i18nCore.t('myList.openMoreFor',{name:e.dn}))}" title="${escAttr(i18nCore.t('myList.openMoreFor',{name:e.dn}))}">${uiIconMarkup('sliders','ui-icon ui-icon-sm')}<span>${escHtml(i18nCore.t('myList.editEntry'))}</span></button>
+      <button type="button" class="myrow-remove" data-group="${escAttr(key)}" onclick="removeWantsGroup(this.dataset.group)" aria-label="${escAttr(i18nCore.t('myList.removeEntry',{name:e.dn}))}" title="${escAttr(i18nCore.t('myList.removeEntry',{name:e.dn}))}">${escHtml(i18nCore.t('myList.remove'))}</button></div></article>`;
+    row=template.content.firstElementChild;row.dataset.key=key;row.dataset.signature=signature;applyTypeColorToElement(row);return row;
   });
-  nodes.forEach((row,index)=>{if(host.children[index]!==row)host.insertBefore(row,host.children[index]||null);});
-  while(host.children.length>nodes.length)host.lastElementChild.remove();
+  // Reuse .89 presentation, but keep .96 declaration keys and canonical editor authority.
+  const sections=new Map([...host.querySelectorAll(':scope > section')].map(section=>[section.dataset.wantsPriority,section]));
+  const activeSections=[];
+  for(const priority of ['H','M','L','']){
+    const rows=nodes.filter(row=>row.dataset.priority===priority);if(!rows.length)continue;
+    let section=sections.get(priority);
+    if(!section){
+      section=document.createElement('section');section.className=`mylist-priority-section ${priority||'mylist-dex-section'}`;section.dataset.wantsPriority=priority;
+      section.innerHTML=`<h3 class="mylist-priority-heading"><button type="button" class="mylist-priority-toggle" aria-expanded="true" onclick="const body=this.closest('section').querySelector('.mylist-priority-body');body.hidden=!body.hidden;this.setAttribute('aria-expanded',String(!body.hidden))"><span class="badge ${priority}"><span class="prio-mark">${priority}</span><span data-wants-priority-label></span></span><span class="priority-count"></span>${uiIconMarkup('chevron-down','ui-icon')}</button></h3><div class="mylist-priority-body"><div class="mygrid"></div></div>`;
+    }
+    section.querySelector('[data-wants-priority-label]').textContent=priority==='H'?i18nCore.t('phase2.topWant'):priority?publicSharePriorityLabel(priority):i18nCore.t('product.other');
+    section.querySelector('.priority-count').textContent=i18nCore.t('myList.priorityPokemonCount',{count:i18nCore.formatNumber(rows.length)});
+    const grid=section.querySelector('.mygrid');
+    rows.forEach((row,index)=>{if(grid.children[index]!==row)grid.insertBefore(row,grid.children[index]||null);});
+    while(grid.children.length>rows.length)grid.lastElementChild.remove();
+    activeSections.push(section);
+  }
+  activeSections.forEach((section,index)=>{if(host.children[index]!==section)host.insertBefore(section,host.children[index]||null);});
+  while(host.children.length>activeSections.length)host.lastElementChild.remove();
   if(!nodes.length)host.innerHTML=`<p class="empty">${escHtml(i18nCore.t('contextSearch.empty'))}</p>`;
   if(visible.length>combinedLimit)host.insertAdjacentHTML('beforeend',`<button type="button" class="btn btn-secondary" onclick="combinedLimit+=120;renderCombinedList()">${escHtml(i18nCore.t('common.showMore'))}</button>`);
   document.getElementById('combined-selected-count').textContent=String(combinedSelection.size);
   refreshCombinedSearch(model);
+}
+function removeWantsGroup(key){
+  const entry=combinedGroups().find(group=>combinedKey(group[0])===key)?.[0];
+  if(!entry||!confirm(i18nCore.t('myList.confirmRemove',{name:entry.dn})))return;
+  openCombinedEditor(key);saveCombinedEditor(true);
 }
 function refreshCombinedSearch(model=productDeclarations()){
   const host=document.getElementById('combined-search');
@@ -477,13 +507,59 @@ function refreshCombinedSearch(model=productDeclarations()){
   const signature=JSON.stringify([i18nCore.getLocale(),pokemonGoSearchLocale(),entries]);
   if(host.dataset.signature===signature)return;
   host.dataset.signature=signature;
-  host.innerHTML=contextualIntentSearchHtml(entries,i18nCore.t('wants.search'));
+  const wasOpen=host.querySelector('details')?.open;
+  const template=document.createElement('template');
+  template.innerHTML=contextualIntentSearchHtml(entries,i18nCore.t('wants.search'));
+  const details=template.content.firstElementChild;
+  details.open=!!wasOpen;details.className='wants-search-details';
+  details.querySelector('summary').textContent=i18nCore.t('restored.searchDetails');
+  const panel=document.createElement('section');panel.className='contextual-search wants-search';
+  const actions=document.createElement('div');actions.className='wants-copy-actions';
+  const buttons=[...details.querySelectorAll('[data-contextual-copy]')];
+  buttons.forEach((button,index)=>{
+    button.dataset.wantsCopy=button.dataset.contextualCopy;delete button.dataset.contextualCopy;
+    if(buttons.length===1){button.innerHTML=uiIconMarkup('copy','ui-icon ui-icon-sm')+escHtml(i18nCore.t('restored.copySearch'));button.setAttribute('aria-label',i18nCore.t('restored.copySearch'));}
+    button.onclick=()=>copyWantsSearch(button,index);actions.append(button);
+  });
+  if(!buttons.length){const empty=document.createElement('span');empty.className='wants-search-empty';empty.textContent=i18nCore.t('contextSearch.empty');actions.append(empty);}
+  panel.append(actions,details);host.replaceChildren(panel);
+}
+async function copyWantsSearch(button,index){
+  const panel=button.closest('.wants-search'),value=button.dataset.wantsCopy;
+  if(!value||value.length>POGO_STR_LIMIT)return;
+  const status=panel.querySelector('.contextual-copy-status');
+  try{await navigator.clipboard.writeText(value);if(status.isConnected){status.textContent=i18nCore.t('share.copySuccess');panel.append(status);}}
+  catch{if(status.isConnected){panel.querySelector('.wants-search-details').open=true;status.textContent=i18nCore.t('strings.copyFailed');const field=panel.querySelectorAll('textarea')[index];field?.focus();field?.select();}}
 }
 function selectCombinedGroup(index,selected){
   const group=typeof index==='string'?combinedGroups().find(g=>combinedKey(g[0])===index):combinedGroups()[index];
   for(const entry of group||[]){const key=productSelectionKey(entry);if(selected)combinedSelection.add(key);else combinedSelection.delete(key);}
   document.getElementById('combined-selected-count').textContent=String(combinedSelection.size);
+  document.querySelectorAll('#combined-list .wants-row').forEach(row=>row.classList.toggle('wants-selected',row.querySelector('input').checked));
   refreshCombinedSearch();
+}
+function prepareWantsCatalog(){
+  const options=document.getElementById('combined-catalog');
+  if(!options.childElementCount)options.innerHTML=_specialAllItems().map(e=>`<option value="${escAttr(e.name)}">${escHtml(e.dn)}</option>`).join('');
+}
+function openWantsAddEditor(){
+  openCombinedEditor();
+  document.getElementById('combined-name').value=document.getElementById('wants-add-name').value;
+  document.getElementById('combined-priority').value=document.getElementById('wants-add-priority').value;
+  document.getElementById('combined-top').checked=document.getElementById('combined-priority').value==='H';
+}
+function setWantsAddPriority(priority){
+  const input=document.getElementById('wants-add-priority');input.value=input.value===priority?'':priority;
+  document.querySelectorAll('[data-wants-add-priority]').forEach(button=>{const active=button.dataset.wantsAddPriority===input.value;button.className=`pb${active?' on '+input.value:''}`;button.setAttribute('aria-pressed',String(active));});
+}
+async function submitWantsAdd(){
+  const button=document.querySelector('.wants-add-form [type="submit"]');if(button.disabled)return;
+  const owner=cur,uid=auth?.currentUser?.uid,input=document.getElementById('wants-add-name'),name=input.value;
+  button.disabled=true;
+  try{
+    openWantsAddEditor();await saveCombinedEditor();
+    if(owner===cur&&uid===auth?.currentUser?.uid&&input.value===name&&!document.getElementById('combined-editor-modal').classList.contains('open'))input.value='';
+  }finally{button.disabled=false;}
 }
 function useBoardSelection(){
   combinedSelection=new Set(getSpecialBoard().lf.map(productSelectionKey));
@@ -495,8 +571,7 @@ function openCombinedEditor(index){
   combinedEditor={owner:cur,uid:auth?.currentUser?.uid,entries:accountSyncClone(entries||[]),before:JSON.stringify(productDeclarations().entries)};
   const entry=entries?.[0]||{},input=document.getElementById('combined-name');
   input.value=entry.name||'';input.readOnly=!!entries?.length;
-  const options=document.getElementById('combined-catalog');
-  if(!options.childElementCount)options.innerHTML=_specialAllItems().map(e=>`<option value="${escAttr(e.name)}">${escHtml(e.dn)}</option>`).join('');
+  prepareWantsCatalog();
   for(const field of ['mod','note','gender'])document.getElementById('combined-'+field).value=entry[field]||'';
   for(const field of ['shiny','lucky','xxl','xxs'])document.getElementById('combined-'+field).checked=entry[field]===true;
   const priorities=new Set((entries||[]).filter(e=>e.intent==='lf').map(e=>e.p||''));
@@ -1922,10 +1997,11 @@ function resetSessionTransientUi(reason='session_boundary'){
     if(el.style?.transform)el.style.transform='';
   });
   document.querySelectorAll('.bulk-check:checked,.have-bulk-check:checked').forEach(el=>{el.checked=false;});
-  ['mylist-filter','have-filter','ac-input','add-pmon-sel','add-pmon-notes'].forEach(id=>{
+  ['mylist-filter','have-filter','ac-input','add-pmon-sel','add-pmon-notes','wants-add-name'].forEach(id=>{
     const el=document.getElementById(id);if(el)el.value='';
   });
   closeAddAutocomplete();
+  setWantsAddPriority('');
   document.getElementById('have-ac-dropdown')?.classList.remove('open');
   const tray=document.getElementById('add-tray');
   if(tray){tray.hidden=true;tray.innerHTML='';}
