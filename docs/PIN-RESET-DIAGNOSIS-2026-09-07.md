@@ -48,6 +48,16 @@ The test now settles fixture rendering/painting and filters entries by the
 measurement start. All existing duration/behavior limits remain unchanged;
 the six local performance cases pass. No My List runtime change accompanies it.
 
+The remaining CI failure was trace-recorder pollution: the instrumented run
+34137751945 measured a 396 ms task at 4862.9 ms, before the first interaction at
+5642.2 ms. The fixture was already settled. A same-fixture, same-4x-CPU local
+profile attributed 222 ms of sampled CPU to Playwright's `visitNode` DOM snapshot
+traversal; that function was absent without tracing. The shared configuration's
+`retain-on-failure` records snapshots during every run, not just after failure.
+Only this isolated benchmark now turns tracing off. It retains failure screenshots,
+timestamped long-task diagnostics, every product timing limit and every behavior
+assertion. Real measured application long tasks remain subject to the 200 ms cap.
+
 There is no live synthetic mutation in this frontend-only correction. Existing
 production synthetic proof is historical, not claimed as a new live result.
 An identity inconsistency must be reviewed outside the credential-reset endpoint.

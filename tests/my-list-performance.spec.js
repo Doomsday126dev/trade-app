@@ -32,6 +32,8 @@ async function installListFixture(page,count){
 }
 
 test.describe('isolated My List scale profile',()=>{
+  // Trace DOM snapshots run on the throttled page and contaminate product timings.
+  test.use({trace:'off'});
   test('correctness and structural bounds remain stable through 1,000 entries',async({page},testInfo)=>{
     test.skip(testInfo.project.name!=='desktop','Isolated desktop benchmark avoids duplicate noisy timing runs.');
     await page.route(url=>url.hostname.endsWith('.firebaseio.com')||url.hostname.endsWith('.firebasedatabase.app')||url.hostname.endsWith('googleapis.com'),route=>route.abort());
@@ -82,7 +84,7 @@ test.describe('isolated My List scale profile',()=>{
     await page.addInitScript(()=>{
       window.__myListLongTasks=[];
       window.__myListLongTaskWindowStart=Infinity;
-      try{new PerformanceObserver(list=>window.__myListLongTasks.push(...list.getEntries().filter(entry=>entry.startTime>=window.__myListLongTaskWindowStart).map(entry=>({start:entry.startTime,duration:entry.duration})))) .observe({type:'longtask',buffered:true});}catch{}
+      try{new PerformanceObserver(list=>window.__myListLongTasks.push(...list.getEntries().filter(entry=>entry.startTime>=window.__myListLongTaskWindowStart).map(entry=>({start:entry.startTime,duration:entry.duration})))).observe({type:'longtask',buffered:true});}catch{}
     });
     await page.goto(`./?my-list-budget=${Date.now()}`,{waitUntil:'domcontentloaded'});
     await page.waitForFunction(()=>typeof window.__pogoEnsureFullApp==='function');
