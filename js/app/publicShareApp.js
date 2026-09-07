@@ -193,7 +193,7 @@
     const sections=['H','M','L','U'].map(priority=>{
       const entries=groups[priority];
       if(!entries.length)return'';
-      return`<section class="share-section card-content"><div class="share-section-hdr"><span class="badge ${priority}">${priority==='U'?'':`<span class="prio-mark">${priority}</span>`}${esc(t(PRIORITY_KEYS[priority]))}</span><span class="share-section-count">${esc(core().formatPlural('share.entryCount',entries.length))}</span></div><div class="share-pgrid">${entries.map(([name,value])=>entryCard(name,value)).join('')}</div></section>`;
+      return`<section class="share-section"><div class="share-section-hdr"><span class="badge ${priority}">${priority==='U'?'':`<span class="prio-mark">${priority}</span>`}${esc(t(PRIORITY_KEYS[priority]))}</span><span class="share-section-count">${esc(core().formatPlural('share.entryCount',entries.length))}</span></div><div class="share-pgrid">${entries.map(([name,value])=>entryCard(name,value)).join('')}</div></section>`;
     }).join('');
     out.innerHTML=searchHtml(list)+sections+ctaHtml();
     spriteOptical.observe(out);

@@ -1,5 +1,12 @@
 const {test,expect}=require('@playwright/test');
 const fs=require('node:fs');
+
+test('group results label Max variants explicitly and preserve their public notes',async({page})=>{
+  await fixture(page);
+  await page.evaluate(async()=>{window.__whoVariants=true;await openTrainerGroup('favorites');});
+  await expect(page.locator('.group-wants')).toContainText('Pikachu · Gigantamax');
+  await expect(page.locator('.group-wants')).toContainText('Check details');
+});
 test('Who wants this uses current exact public variants, groups and fenced copy without inventory',async({page},testInfo)=>{
   await fixture(page);
   await page.evaluate(()=>{window.__whoVariants=true;const s=ensureTrainerHistoryStore(),tag=s.createTag('NYC trades');s.setFavoriteTags('Alice',[tag.id]);});
@@ -65,7 +72,8 @@ async function fixture(page){
   });
 }
 test('group CRUD and membership reuse private favorites; aggregate and copy only fresh permitted wants',async({page})=>{
-  await fixture(page);await page.getByLabel('New group name',{exact:true}).fill('NYC trades');await page.getByRole('button',{name:'Create group',exact:true}).click();
+  await fixture(page);await page.locator('.group-new > summary').click();await page.getByLabel('New group name',{exact:true}).fill('NYC trades');await page.getByRole('button',{name:'Create group',exact:true}).click();
+  await page.locator('.group-management > summary').click();
   await page.locator('.group-membership summary').click();
   for(const name of ['Alice','Bob','Private','Old']){
     const input=page.locator(`[data-group-member="${name}"]`);if(!await input.isVisible())await page.locator('.group-membership summary').click();await input.check();
@@ -140,7 +148,8 @@ test('late public responses cannot restore a previous account group',async({page
   expect(await page.evaluate(()=>trainerGroupState.records.length)).toBe(0);
 });
 test('Favorite changes use explicit local baselines and current permitted new-wants searches',async({page})=>{
-  await fixture(page);await page.locator('#trainer-group-select').selectOption('favorites');
+  await fixture(page);await page.locator('[data-group-open-id="favorites"]').click();
+  await page.locator('.group-review > summary').click();
   await expect(page.locator('.group-availability')).toContainText('First check');
   await page.locator('[data-group-action="checked"]').click();
   await expect(page.locator('.group-availability')).toContainText('No changes');

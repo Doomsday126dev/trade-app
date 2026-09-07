@@ -164,7 +164,7 @@ test.describe('anonymous public share bootstrap',()=>{
     await expect(copy).toHaveAttribute('data-contextual-copy',await page.evaluate(()=>PogoDomain.searchStrings.contextualSearchPlan([25].map(no=>({no})),{locale:'de'}).parts[0]));
     await page.evaluate(()=>{window.__denyCopy=true;});
     await copy.click();
-    await expect(page.locator('.contextual-search')).toHaveAttribute('open','');
+    await expect(page.locator('.contextual-details')).toHaveAttribute('open','');
     await expect(page.locator('.contextual-search textarea')).toBeFocused();
     expect(await page.locator('.contextual-search textarea').evaluate(node=>node.selectionEnd-node.selectionStart)).toBeGreaterThan(0);
     await assertPublicPrivacy(page);
@@ -198,7 +198,7 @@ test.describe('anonymous public share bootstrap',()=>{
     await installPublicFirebase(page,{projection:{...publicProjection,lists:{...publicProjection.lists,wishlist:{'Unmapped Event Form':{p:'H'}}}}});
     await page.goto('./?view=PublicTrainer&list=wishlist');
     await expect(page.locator('[data-contextual-copy]')).toHaveCount(0);
-    await expect(page.locator('.contextual-search')).toContainText('cannot be included');
+    await expect(page.locator('.contextual-search')).toContainText('Manual checks needed: 1.');
     await page.goto('./?view=PublicTrainer&list=gmax');
     await expect(page.locator('.public-share-empty')).toBeVisible();
     await expect(page.locator('[data-contextual-copy]')).toHaveCount(0);

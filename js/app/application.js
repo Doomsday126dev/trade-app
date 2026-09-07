@@ -439,20 +439,23 @@ function combinedGroups(model=productDeclarations()){
   for(const entry of model.entries){const key=combinedKey(entry);if(!groups.has(key))groups.set(key,[]);groups.get(key).push(entry);}
   return [...groups.values()];
 }
+const combinedRowCache=new Map();
 function renderCombinedList(model=productDeclarations()){
-  if(combinedOwner!==cur){combinedOwner=cur;combinedSelection=new Set();combinedEditor=null;}
+  if(combinedOwner!==cur){combinedOwner=cur;combinedSelection=new Set();combinedEditor=null;combinedRowCache.clear();combinedLimit=120;}
   const host=document.getElementById('combined-list');if(!host)return;
   const query=normalizeAcText(document.getElementById('combined-filter')?.value||'');
   const groups=combinedGroups(model),valid=new Set(groups.flat().map(productSelectionKey));
   for(const key of combinedSelection)if(!valid.has(key))combinedSelection.delete(key);
   const visible=groups.map((entries,index)=>({entries,index})).filter(({entries})=>!query||normalizeAcText(entries.map(productShareDescription).join(' ')).includes(query));
-  const previous=new Map([...host.querySelectorAll('.wants-row')].map(row=>[row.dataset.key,row]));
+  const groupKeys=new Set(groups.map(entries=>combinedKey(entries[0])));
+  for(const key of combinedRowCache.keys())if(!groupKeys.has(key))combinedRowCache.delete(key);
   const nodes=visible.slice(0,combinedLimit).map(({entries,index})=>{
     const e=entries[0],selected=entries.every(x=>combinedSelection.has(productSelectionKey(x)));
     const priority=['H','M','L'].find(p=>entries.some(entry=>entry.p===p))||'';
     const key=combinedKey(e),signature=JSON.stringify([i18nCore.getLocale(),entries]);
-    let row=previous.get(key);
-    if(row?.dataset.signature===signature){row.querySelector('input').checked=selected;row.classList.toggle('wants-selected',selected);return row;}
+    const cached=combinedRowCache.get(key);
+    let row=cached?.row;
+    if(cached?.signature===signature){row.querySelector('input').checked=selected;row.classList.toggle('wants-selected',selected);return row;}
     const source=myListSourceMap(e.category||'wishlist').get(pokemonCatalogDomain.normalizeCatalogKey(e.name));
     const spriteSource=spriteEntryForListItem(e.category||'wishlist',e.name,source)||{};
     const dex=e.no||spriteSource.no;
@@ -460,14 +463,14 @@ function renderCombinedList(model=productDeclarations()){
     const hasSprite=Boolean(dex||isApprovedRuntimeSpriteUrl(spriteUrlForEntry)||COSTUME_FORM_SPRITE_IDS[e.name]);
     const template=document.createElement('template');
     const traits=[['lucky',e.lucky,i18nCore.t('myList.lucky')],['shiny',e.shiny,i18nCore.t('myList.shiny')],['xxl',e.xxl,'XXL'],['xxs',e.xxs,'XXS'],['detail',e.mod,e.mod],['detail',e.gender&&!/^[FM]$/i.test(e.mod||''),e.gender==='f'?'♀':'♂']].filter(([,active])=>active).map(([kind,,label])=>`<span class="myrow-trait ${kind}">${escHtml(label)}</span>`).join('');
-    template.innerHTML=`<article class="myrow wants-row${selected?' wants-selected':''}" data-dex="${dex||''}" data-priority="${priority}">
+    template.innerHTML=`<article class="myrow wants-row${selected?' wants-selected':''}" data-dex="${dex||''}" data-name="${escAttr(e.name)}" data-priority="${priority}">
       <input type="checkbox" class="wants-select" aria-label="${escAttr(i18nCore.t('phase2.select',{name:e.dn}))}" data-group="${escAttr(key)}" ${selected?'checked':''} onchange="selectCombinedGroup(this.dataset.group,this.checked)">
       <span class="myrow-sprite-wrap sprite-slot-list">${hasSprite?spriteImg(dex,34,'myrow-sprite',e.name,e.gender||'',e.dn,{urlOverride:spriteUrlForEntry,catalogId:spriteSource.catalogId}):''}${maxCrownSvg(['dynamax','gmax'].includes(e.type)?e.type:'')}</span>
       <div class="myrow-copy"><button class="myrow-name wants-name" type="button" data-group="${escAttr(key)}" onclick="openCombinedEditor(this.dataset.group)">${escHtml(e.dn)}</button>${traits?`<div class="myrow-active-traits">${traits}</div>`:''}${e.note?`<span class="wants-note">${escHtml(e.note)}</span>`:''}</div>
       <div class="mctrl">${priority?`<button type="button" class="myrow-priority-chip ${priority}" data-group="${escAttr(key)}" onclick="openCombinedEditor(this.dataset.group)" aria-label="${escAttr(i18nCore.t('myList.priorityFor',{name:e.dn}))}" title="${escAttr(priority==='H'?i18nCore.t('phase2.topWant'):priLabel(priority))}">${priority}</button>`:''}
       <button type="button" class="myrow-edit" data-group="${escAttr(key)}" onclick="openCombinedEditor(this.dataset.group)" aria-label="${escAttr(i18nCore.t('myList.openMoreFor',{name:e.dn}))}" title="${escAttr(i18nCore.t('myList.openMoreFor',{name:e.dn}))}">${uiIconMarkup('sliders','ui-icon ui-icon-sm')}<span>${escHtml(i18nCore.t('myList.editEntry'))}</span></button>
       <button type="button" class="myrow-remove" data-group="${escAttr(key)}" onclick="removeWantsGroup(this.dataset.group)" aria-label="${escAttr(i18nCore.t('myList.removeEntry',{name:e.dn}))}" title="${escAttr(i18nCore.t('myList.removeEntry',{name:e.dn}))}">${escHtml(i18nCore.t('myList.remove'))}</button></div></article>`;
-    row=template.content.firstElementChild;row.dataset.key=key;row.dataset.signature=signature;applyTypeColorToElement(row);return row;
+    row=template.content.firstElementChild;row.dataset.key=key;applyTypeColorToElement(row);combinedRowCache.set(key,{row,signature});return row;
   });
   // Reuse .89 presentation, but keep .96 declaration keys and canonical editor authority.
   const sections=new Map([...host.querySelectorAll(':scope > section')].map(section=>[section.dataset.wantsPriority,section]));
@@ -490,6 +493,12 @@ function renderCombinedList(model=productDeclarations()){
   while(host.children.length>activeSections.length)host.lastElementChild.remove();
   if(!nodes.length)host.innerHTML=`<p class="empty">${escHtml(i18nCore.t('contextSearch.empty'))}</p>`;
   if(visible.length>combinedLimit)host.insertAdjacentHTML('beforeend',`<button type="button" class="btn btn-secondary" onclick="combinedLimit+=120;renderCombinedList()">${escHtml(i18nCore.t('common.showMore'))}</button>`);
+  // Keep the render cache bounded to the user's current page size.
+  for(const key of combinedRowCache.keys()){
+    if(combinedRowCache.size<=combinedLimit)break;
+    if(!nodes.includes(combinedRowCache.get(key).row))combinedRowCache.delete(key);
+  }
+  window.__pogoMyListRenderState={complete:true,rendered:nodes.length,total:visible.length,query,hasMore:visible.length>combinedLimit,usableAt:performance.now()};
   document.getElementById('combined-selected-count').textContent=String(combinedSelection.size);
   refreshCombinedSearch(model);
 }
@@ -505,31 +514,12 @@ function refreshCombinedSearch(model=productDeclarations()){
   const query=normalizeAcText(document.getElementById('combined-filter')?.value||'');
   const entries=model.entries.filter(e=>scope==='selected'?combinedSelection.has(productSelectionKey(e)):scope==='top'?e.p==='H':!query||normalizeAcText(productShareDescription(e)).includes(query));
   const signature=JSON.stringify([i18nCore.getLocale(),pokemonGoSearchLocale(),entries]);
-  if(host.dataset.signature===signature)return;
-  host.dataset.signature=signature;
+  if(host.childElementCount&&host._wantsSearchSignature===signature)return;
+  host._wantsSearchSignature=signature;
   const wasOpen=host.querySelector('details')?.open;
-  const template=document.createElement('template');
-  template.innerHTML=contextualIntentSearchHtml(entries,i18nCore.t('wants.search'));
-  const details=template.content.firstElementChild;
-  details.open=!!wasOpen;details.className='wants-search-details';
-  details.querySelector('summary').textContent=i18nCore.t('restored.searchDetails');
-  const panel=document.createElement('section');panel.className='contextual-search wants-search';
-  const actions=document.createElement('div');actions.className='wants-copy-actions';
-  const buttons=[...details.querySelectorAll('[data-contextual-copy]')];
-  buttons.forEach((button,index)=>{
-    button.dataset.wantsCopy=button.dataset.contextualCopy;delete button.dataset.contextualCopy;
-    if(buttons.length===1){button.innerHTML=uiIconMarkup('copy','ui-icon ui-icon-sm')+escHtml(i18nCore.t('restored.copySearch'));button.setAttribute('aria-label',i18nCore.t('restored.copySearch'));}
-    button.onclick=()=>copyWantsSearch(button,index);actions.append(button);
-  });
-  if(!buttons.length){const empty=document.createElement('span');empty.className='wants-search-empty';empty.textContent=i18nCore.t('contextSearch.empty');actions.append(empty);}
-  panel.append(actions,details);host.replaceChildren(panel);
-}
-async function copyWantsSearch(button,index){
-  const panel=button.closest('.wants-search'),value=button.dataset.wantsCopy;
-  if(!value||value.length>POGO_STR_LIMIT)return;
-  const status=panel.querySelector('.contextual-copy-status');
-  try{await navigator.clipboard.writeText(value);if(status.isConnected){status.textContent=i18nCore.t('share.copySuccess');panel.append(status);}}
-  catch{if(status.isConnected){panel.querySelector('.wants-search-details').open=true;status.textContent=i18nCore.t('strings.copyFailed');const field=panel.querySelectorAll('textarea')[index];field?.focus();field?.select();}}
+  host.innerHTML=contextualIntentSearchHtml(entries,i18nCore.t('wants.search'));
+  host.querySelector('details').open=!!wasOpen;
+  host.querySelectorAll('[data-contextual-copy]').forEach(button=>{button.dataset.wantsCopy=button.dataset.contextualCopy;});
 }
 function selectCombinedGroup(index,selected){
   const group=typeof index==='string'?combinedGroups().find(g=>combinedKey(g[0])===index):combinedGroups()[index];
@@ -657,18 +647,10 @@ let authRepairStarted=false;
 let bulkMode=false,bulkSelected=new Set(),reorderMode=false;
 const myListCollapsedPrioritySections=new Set();
 const MY_LIST_FILTER_DELAY_MS=60;
-const MY_LIST_PROGRESSIVE_THRESHOLD=180;
-const MY_LIST_PROGRESSIVE_INITIAL_ROWS=120;
-const MY_LIST_PROGRESSIVE_BATCH_ROWS=60;
 const myListViewModelCache=new Map();
 const myListSourceMapCache=new Map();
 let myListFilterTimer=0;
 let myListFilterGeneration=0;
-let myListProgressiveGeneration=0;
-let myListStringsGeneration=0;
-let myListRenderState=null;
-let myListRenderCompletePromise=Promise.resolve();
-let myListAncillaryRenderPromise=Promise.resolve();
 let schedAnchor=null; // anchor date for week view (Sunday of week shown)
 let schedSelectedDate=null; // currently selected day (ISO YYYY-MM-DD)
 let voiceRecognition=null;
@@ -1898,8 +1880,8 @@ function syncPokemonGoSearchLanguageControl(){
 function rerenderPokemonGoSearchLanguageSurfaces(){
   if(cur)renderTrainerGroupResults();
   if(cur)refreshCombinedSearch();
-  if(cur){renderIntentEntries(document.getElementById('mylist-filter')?.value||'');if(document.getElementById('selected-contextual-search')?.textContent)renderSelectedIntentSearch();if(document.getElementById('special-board-modal')?.classList.contains('open'))renderBoardContextualSearch();}
-  if(cur){renderMyStrings();renderStrings();if(_activeDiff)renderDiffModal();if(_activeTradeMatch)renderTradeMatchModal();renderSafeTransferOutput();}
+  if(cur){renderIntentEntries();if(document.getElementById('special-board-modal')?.classList.contains('open'))renderBoardContextualSearch();}
+  if(cur){renderStrings();if(_activeDiff)renderDiffModal();if(_activeTradeMatch)renderTradeMatchModal();renderSafeTransferOutput();}
   if(_activeShareView?.username)renderShareView(_activeShareView.username,_activeShareView.type);
 }
 function changePokemonGoSearchLocale(value){
@@ -1997,7 +1979,7 @@ function resetSessionTransientUi(reason='session_boundary'){
     if(el.style?.transform)el.style.transform='';
   });
   document.querySelectorAll('.bulk-check:checked,.have-bulk-check:checked').forEach(el=>{el.checked=false;});
-  ['mylist-filter','have-filter','ac-input','add-pmon-sel','add-pmon-notes','wants-add-name'].forEach(id=>{
+  ['combined-filter','have-filter','ac-input','add-pmon-sel','add-pmon-notes','wants-add-name'].forEach(id=>{
     const el=document.getElementById(id);if(el)el.value='';
   });
   closeAddAutocomplete();
@@ -5175,26 +5157,40 @@ function groupText(key,params){return i18nCore.t(`groups.${key}`,params);}
 function renderTrainerGroups(){
   const host=document.getElementById('trainer-groups'),store=ensureTrainerHistoryStore();
   if(!host||!store)return;
-  const membershipOpen=host.querySelector('.group-membership')?.open;
+  const openDetails=[...host.querySelectorAll('details[open]')].map(el=>el.className);
+  const drafts=new Map([...host.querySelectorAll('form')].map(form=>[form.dataset.groupForm,form.elements.label.value]));
   const focused=host.contains(document.activeElement)?document.activeElement:null;
   const focusId=focused?.id,focusMember=focused?.dataset.groupMember,focusForm=focused?.closest('form')?.dataset.groupForm;
+  const selection=focusForm?[focused.selectionStart,focused.selectionEnd]:null;
   const state=store.read(),tags=Object.values(state.tags||{});
   if(trainerGroupState.id&&trainerGroupState.id!=='favorites'&&!state.tags[trainerGroupState.id])resetTrainerGroups();
-  const tag=state.tags[trainerGroupState.id];
-  host.innerHTML=`<div class="trainer-section-heading"><h2 id="trainer-groups-title">${escHtml(groupText('title'))}</h2><span>${escHtml(groupText(accountSyncProjectionReady()?'synced':'local'))}</span></div>
-    <form class="group-create" data-group-form="create"><input class="field-control" name="label" maxlength="80" required aria-label="${escAttr(groupText('new'))}" placeholder="${escAttr(groupText('new'))}"><button class="btn btn-secondary">${escHtml(groupText('create'))}</button></form>
-    <label class="group-picker">${escHtml(groupText('open'))}<select class="field-control" id="trainer-group-select"><option value="">${escHtml(groupText('choose'))}</option><option value="favorites"${trainerGroupState.id==='favorites'?' selected':''}>${escHtml(groupText('favorites'))}</option>${tags.map(item=>`<option value="${escAttr(item.id)}"${tag?.id===item.id?' selected':''}>${escHtml(item.label)}</option>`).join('')}</select></label>
+  const tag=state.tags[trainerGroupState.id],isOpen=!!trainerGroupState.id;
+  const members=state.favorites.filter(item=>trainerGroupState.id==='favorites'||item.tagIds.includes(trainerGroupState.id));
+  for(const el of document.querySelectorAll('#trainer-panel-favorites > .favorite-toolbar-search, #favorite-trainers'))el.hidden=isOpen;
+  const countLabel=count=>groupText('memberCount',{count:i18nCore.formatNumber(count)});
+  const groupRow=item=>{
+    const favorites=state.favorites.filter(member=>item.id==='favorites'||member.tagIds.includes(item.id));
+    const cache=ensureFavoriteShareSessionCache();
+    const model=tradeListComparisonDomain.groupWants(favorites.map(member=>{
+      const record=cache?.peek?.(member),bound=record?.targetUid===(member.targetUid||'');
+      const baseline=state.snapshots[member.key],sameTarget=baseline&&baseline.targetUid===(member.targetUid||'');
+      return {...member,...(bound?record:{status:'unavailable'}),entries:bound&&record.listSnapshot?groupSnapshotEntries(member.displayName,record.listSnapshot):[],previous:sameTarget?groupSnapshotEntries(member.displayName,baseline.snapshot):null};
+    }),{nameKey:pokemonCatalogDomain.catalogKey,normalizeQualifier:normalizeTradeQualifier});
+    const updated=model.members.filter(member=>member.status==='available'&&member.changes?.updated&&!member.changes.first).length;
+    return `<button type="button" class="group-row" data-group-open-id="${escAttr(item.id)}"><span class="group-row-copy"><strong>${escHtml(item.label)}</strong><span>${escHtml(countLabel(favorites.length))}${updated?` · <span class="group-update">${escHtml(groupText('updatedTrainers',{count:updated}))}</span>`:''}</span></span>${uiIconMarkup('chevron-down','ui-icon group-open-icon')}</button>`;
+  };
+  host.innerHTML=`<div class="trainer-section-heading"><h2 id="trainer-groups-title">${escHtml(isOpen?(tag?.label||groupText('favorites')):groupText('title'))}</h2><span>${escHtml(isOpen?countLabel(members.length):groupText(accountSyncProjectionReady()?'synced':'local'))}</span></div>
     <div id="trainer-group-status" role="status"></div>
-    ${tag?`<form class="group-create" data-group-form="rename"><input name="label" class="field-control" required value="${escAttr(tag.label)}" aria-label="${escAttr(groupText('name'))}"><button class="btn btn-secondary">${escHtml(groupText('rename'))}</button><button type="button" class="btn btn-icon" data-group-action="delete" title="${escAttr(groupText('delete'))}" aria-label="${escAttr(groupText('delete'))}">${uiIconMarkup('trash')}</button></form>
-      <details class="group-membership"><summary>${escHtml(groupText('members'))}</summary>${state.favorites.length?state.favorites.map(item=>`<label><input type="checkbox" data-group-member="${escAttr(item.displayName)}"${item.tagIds.includes(tag.id)?' checked':''}>${escHtml(item.displayName)}</label>`).join(''):`<p>${escHtml(groupText('noFavorites'))}</p>`}</details>`:''}
-    ${trainerGroupState.id?`<div class="group-actions"><label>${escHtml(i18nCore.t('phase2.scope'))}<select class="field-control" id="trainer-group-scope">${['all','top','new','newTop'].map(scope=>`<option value="${scope}"${trainerGroupState.scope===scope?' selected':''}>${escHtml(scope==='top'?i18nCore.t('phase2.top'):groupText(scope==='new'?'newSince':scope))}</option>`).join('')}</select></label><button class="btn btn-secondary" data-group-action="refresh"${trainerGroupState.busy?' disabled':''}>${escHtml(groupText('refresh'))}</button></div>
-      <button type="button" class="btn btn-ghost" data-group-action="who">${uiIconMarkup('search')} ${escHtml(i18nCore.t('who.title'))}</button>
-      <div id="trainer-group-results" aria-live="polite"></div>`:''}`;
-  if(membershipOpen&&host.querySelector('.group-membership'))host.querySelector('.group-membership').open=true;
+    ${isOpen?`<div class="group-view-toolbar"><button type="button" class="btn btn-ghost" data-group-action="back">${escHtml(i18nCore.t('common.back'))}</button>${tag?`<details class="group-management"><summary>${uiIconMarkup('sliders','ui-icon ui-icon-sm')}${escHtml(groupText('manage'))}</summary><form class="group-create" data-group-form="rename"><input name="label" class="field-control" maxlength="${trainerPreferencesDomain.MAX_TAG_LABEL_LENGTH}" required value="${escAttr(tag.label)}" aria-label="${escAttr(groupText('name'))}"><button class="btn btn-secondary">${escHtml(groupText('rename'))}</button><button type="button" class="btn btn-icon btn-destructive" data-group-action="delete" title="${escAttr(groupText('delete'))}" aria-label="${escAttr(groupText('delete'))}">${uiIconMarkup('trash')}</button></form>
+      <details class="group-membership"><summary>${escHtml(groupText('members'))}</summary>${state.favorites.length?state.favorites.map(item=>`<label><input type="checkbox" data-group-member="${escAttr(item.displayName)}"${item.tagIds.includes(tag.id)?' checked':''}>${escHtml(item.displayName)}</label>`).join(''):`<p>${escHtml(groupText('noFavorites'))}</p>`}</details></details>`:''}</div>
+      <div class="group-actions"><label><span class="sr-only">${escHtml(i18nCore.t('phase2.scope'))}</span><select class="field-control" id="trainer-group-scope">${['all','top','new','newTop'].map(scope=>`<option value="${scope}"${trainerGroupState.scope===scope?' selected':''}>${escHtml(scope==='top'?i18nCore.t('phase2.top'):groupText(scope==='new'?'newSince':scope))}</option>`).join('')}</select></label><button class="btn btn-secondary btn-icon" data-group-action="refresh" title="${escAttr(groupText('refresh'))}" aria-label="${escAttr(groupText('refresh'))}"${trainerGroupState.busy?' disabled':''}>${uiIconMarkup('refresh')}</button><button type="button" class="btn btn-ghost" data-group-action="who">${uiIconMarkup('search')} ${escHtml(i18nCore.t('who.title'))}</button></div>
+      <div id="trainer-group-results" aria-live="polite"></div>`:`<div class="group-list">${[{id:'favorites',label:groupText('favorites')},...tags].map(groupRow).join('')}</div><details class="group-new"><summary>${escHtml(groupText('create'))}</summary><form class="group-create" data-group-form="create"><input class="field-control" name="label" maxlength="${trainerPreferencesDomain.MAX_TAG_LABEL_LENGTH}" required aria-label="${escAttr(groupText('new'))}" placeholder="${escAttr(groupText('new'))}"><button class="btn btn-secondary">${escHtml(groupText('create'))}</button></form></details>`}`;
   renderTrainerGroupResults();
+  for(const name of openDetails){const details=[...host.querySelectorAll('details')].find(el=>el.className===name);if(details)details.open=true;}
+  for(const [kind,value]of drafts){const input=host.querySelector(`[data-group-form="${kind}"] input`);if(input)input.value=value;}
   if(focusId)document.getElementById(focusId)?.focus({preventScroll:true});
   else if(focusMember)[...host.querySelectorAll('[data-group-member]')].find(input=>input.dataset.groupMember===focusMember)?.focus({preventScroll:true});
-  else if(focusForm)host.querySelector(`[data-group-form="${focusForm}"] input`)?.focus({preventScroll:true});
+  else if(focusForm){const input=host.querySelector(`[data-group-form="${focusForm}"] input`);input?.focus({preventScroll:true});if(selection)input?.setSelectionRange(...selection);}
 }
 function trainerGroupModel(){
   const state=ensureTrainerHistoryStore()?.read();
@@ -5235,13 +5231,16 @@ function renderTrainerGroupResults(){
   const model=trainerGroupModel();
   host.dataset.groupSignature=JSON.stringify(model.entries);
   host.dataset.reviewSignature=trainerGroupReviewSignature(model);
+  const reviewOpen=host.querySelector('.group-review')?.open,searchOpen=host.querySelector('.contextual-details')?.open;
   host.innerHTML=`${model.entries.length?contextualIntentSearchHtml(model.entries,groupText('search')):`<p>${escHtml(groupText(model.members.length?'noWants':'empty'))}</p>`}
+    <details class="group-review"${reviewOpen?' open':''}><summary>${escHtml(groupText('review'))}<span class="type-meta">${escHtml(groupText('updatedTrainers',{count:model.members.filter(member=>member.status==='available'&&member.changes?.updated&&!member.changes.first).length}))}</span></summary>
     <p class="type-meta">${escHtml(groupText('historyLocal'))}</p>
     ${model.members.some(member=>member.status==='available')?`<button type="button" class="btn btn-secondary" data-group-action="checked">${escHtml(groupText('checkedAll'))}</button>`:''}
     <ul class="group-availability">${model.members.map(member=>`<li><button type="button" class="btn btn-ghost" data-group-open-trainer="${escAttr(member.displayName)}">${escHtml(member.displayName)}</button><span>${escHtml(groupChangeLabel(member))}${member.status==='available'&&member.aged?` · ${escHtml(groupAgeLabel(member))}`:''}${member.updatedAt?` · ${escHtml(i18nCore.formatDate(new Date(member.updatedAt),{dateStyle:'medium'}))}`:''}</span>${member.status==='available'?`<button type="button" class="btn btn-secondary" data-group-checked-trainer="${escAttr(member.displayName)}">${escHtml(groupText('checked'))}</button>`:''}</li>`).join('')}</ul>
-    <p class="type-meta">${escHtml(groupText('freshness'))}</p>
-    <div class="group-wants">${model.entries.slice(0,trainerGroupState.limit).map(entry=>`<article class="group-want"><div>${entry.no&&entrySpriteUrl(entry)?spriteImg(entry.no,44,'group-sprite',entry.name,entry.gender||'',entry.dn):''}</div><div><strong>${escHtml(productShareDescription({...entry,p:''}))}</strong><div class="type-meta">${entry.members.map(member=>`${escHtml(member.displayName)}${member.priorities.filter(Boolean).map(priority=>` · ${escHtml(priority==='H'?i18nCore.t('phase2.topWant'):priority)}`).join('')}`).join('; ')}</div></div></article>`).join('')}</div>
+    <p class="type-meta">${escHtml(groupText('freshness'))}</p></details>
+    <div class="group-wants">${model.entries.slice(0,trainerGroupState.limit).map(entry=>`<article class="group-want"><div>${entry.no&&entrySpriteUrl(entry)?spriteImg(entry.no,44,'group-sprite',entry.name,entry.gender||'',entry.dn):''}</div><div><strong>${escHtml([favoriteVariantLabel(entry),entry.note].filter(Boolean).join(' · '))}</strong><div class="type-meta">${entry.members.map(member=>`${escHtml(member.displayName)}${member.priorities.filter(Boolean).map(priority=>` · ${escHtml(priority==='H'?i18nCore.t('phase2.topWant'):priority)}`).join('')}`).join('; ')}</div></div></article>`).join('')}</div>
     ${model.entries.length>trainerGroupState.limit?`<button class="btn btn-secondary" data-group-action="more">${escHtml(groupText('more'))}</button>`:''}`;
+  if(searchOpen&&host.querySelector('.contextual-details'))host.querySelector('.contextual-details').open=true;
 }
 async function openTrainerGroup(id,{force=true}={}){
   const token=++trainerGroupState.generation,owner=cur,uid=auth?.currentUser?.uid;
@@ -5300,7 +5299,7 @@ document.getElementById('trainer-groups')?.addEventListener('submit',async event
 });
 document.getElementById('trainer-groups')?.addEventListener('change',async event=>{
   const el=event.target;
-  if(el.id==='trainer-group-select'){openTrainerGroup(el.value);return;}
+
   if(el.id==='trainer-group-scope'){trainerGroupState.scope=el.value;renderTrainerGroupResults();return;}
   if(!el.dataset.groupMember)return;
   const owner=cur,uid=auth?.currentUser?.uid,store=ensureTrainerHistoryStore(),favorite=store?.favoriteFor(el.dataset.groupMember),id=trainerGroupState.id,generation=trainerGroupState.generation;
@@ -5314,12 +5313,15 @@ document.getElementById('trainer-groups')?.addEventListener('change',async event
   await openTrainerGroup(id,{force:false});
 });
 document.getElementById('trainer-groups')?.addEventListener('click',async event=>{
+  const open=event.target.closest('[data-group-open-id]')?.dataset.groupOpenId;
+  if(open){await openTrainerGroup(open);document.querySelector('[data-group-action="back"]')?.focus({preventScroll:true});return;}
   const checked=event.target.closest('[data-group-checked-trainer]')?.dataset.groupCheckedTrainer;
   if(checked){markTrainerWantsChecked(checked);return;}
   const trainer=event.target.closest('[data-group-open-trainer]')?.dataset.groupOpenTrainer;
   if(trainer){openFavoriteTrainerByName(trainer);return;}
   const action=event.target.closest('[data-group-action]')?.dataset.groupAction;
   if(action==='who'){favoriteLookupScope=trainerGroupState.id==='favorites'?'':trainerGroupState.id;focusTrainerDiscoveryMode('pokemon');renderFavoriteBrowseResults();}
+  if(action==='back'){const id=trainerGroupState.id;await openTrainerGroup('');[...document.querySelectorAll('[data-group-open-id]')].find(button=>button.dataset.groupOpenId===id)?.focus({preventScroll:true});}
   if(action==='checked')markTrainerWantsChecked();
   if(action==='refresh')openTrainerGroup(trainerGroupState.id);
   if(action==='more'){trainerGroupState.limit+=120;renderTrainerGroupResults();}
@@ -5757,7 +5759,7 @@ function renderFavoriteBrowseResults(){
     ${model.entries.length?'':`<p>${escHtml(i18nCore.t('who.noMatch'))}</p>`}
     <div class="favorite-browse-results who-results">${rows.slice(0,favoriteLookupLimit).map(({entry,match})=>{
       const member=model.members.find(item=>item.key===match.key);
-      return`<article class="favorite-browse-row"><div class="favorite-browse-main"><button type="button" class="btn btn-ghost" data-trainer="${escAttr(match.displayName)}" data-trainer-action="open">${escHtml(match.displayName)}</button><strong>${escHtml(favoriteVariantLabel(entry))}</strong><span>${escHtml(match.priorities.map(p=>p==='H'?i18nCore.t('phase2.topWant'):p?priLabel(p):favoriteBrowsePriorityText('')).join(' · '))}</span>${entry.note?`<span>${escHtml(entry.note)}</span>`:''}<span class="type-meta">${escHtml([member.aged?groupAgeLabel(member):'',member.updatedAt?i18nCore.formatDate(new Date(member.updatedAt),{dateStyle:'medium'}):'',...member.groups].filter(Boolean).join(' · '))}</span></div></article>`;
+      return`<article class="favorite-browse-row"><span class="who-sprite">${entry.no&&entrySpriteUrl(entry)?spriteImg(entry.no,34,'',entry.name,entry.gender||'',entry.dn):''}</span><div class="favorite-browse-main"><button type="button" class="btn btn-ghost" data-trainer="${escAttr(match.displayName)}" data-trainer-action="open">${escHtml(match.displayName)}</button><strong>${escHtml(favoriteVariantLabel(entry))}</strong><span>${escHtml(match.priorities.map(p=>p==='H'?i18nCore.t('phase2.topWant'):p?priLabel(p):favoriteBrowsePriorityText('')).join(' · '))}</span>${entry.note?`<span>${escHtml(entry.note)}</span>`:''}<span class="type-meta">${escHtml([member.aged?groupAgeLabel(member):'',member.updatedAt?i18nCore.formatDate(new Date(member.updatedAt),{dateStyle:'medium'}):'',...member.groups].filter(Boolean).join(' · '))}</span></div></article>`;
     }).join('')}</div>
     ${rows.length>favoriteLookupLimit?`<button type="button" class="btn btn-secondary" data-lookup-more>${escHtml(groupText('more'))}</button>`:''}
     ${model.entries.length?contextualIntentSearchHtml(model.entries,i18nCore.t('who.search')):''}
@@ -5894,7 +5896,7 @@ async function renderTrainerQuickLists({preserveFavoriteControls=false,favorites
   const activeTags=Object.values(state.tags||{}).sort((a,b)=>a.label.localeCompare(b.label,i18nCore.getLocale(),{sensitivity:'base'}));
   const filtered=store.filterFavorites({query:trainerOrganizerState.query,tagIds:trainerOrganizerState.tagIds});
   const filtersActive=!!(trainerOrganizerState.query||trainerOrganizerState.tagIds.length);
-  const toolbar=state.favorites.length?`<div class="favorite-toolbar"><button class="bghost btn btn-secondary" data-favorite-clear data-favorite-action="clear-filters"${filtersActive?'':' hidden'}>${escHtml(i18nCore.t('organizer.clearFilters'))}</button>${activeTags.length?`<div class="favorite-filter-group"><span class="favorite-filter-label">${escHtml(i18nCore.t('organizer.tags'))}</span><div class="favorite-filter-tags" aria-label="${escAttr(i18nCore.t('organizer.filterTags'))}">${activeTags.map(tag=>{const selected=trainerOrganizerState.tagIds.includes(tag.id);return`<button class="favorite-filter-chip chip chip-filter" aria-pressed="${selected}" data-favorite-action="toggle-tag" data-favorite-tag-id="${escAttr(tag.id)}"><span class="favorite-filter-chip-surface"><span class="favorite-filter-check" aria-hidden="true">${selected?'✓':''}</span>${escHtml(tag.label)}</span></button>`;}).join('')}</div></div>`:''}</div>`:'';
+  const toolbar=state.favorites.length?`<details class="favorite-filters"${filtersActive?' open':''}><summary>${escHtml(i18nCore.t('organizer.filterTags'))}</summary><div class="favorite-toolbar"><button class="bghost btn btn-secondary" data-favorite-clear data-favorite-action="clear-filters"${filtersActive?'':' hidden'}>${escHtml(i18nCore.t('organizer.clearFilters'))}</button>${activeTags.length?`<div class="favorite-filter-group"><span class="favorite-filter-label">${escHtml(i18nCore.t('organizer.tags'))}</span><div class="favorite-filter-tags" aria-label="${escAttr(i18nCore.t('organizer.filterTags'))}">${activeTags.map(tag=>{const selected=trainerOrganizerState.tagIds.includes(tag.id);return`<button class="favorite-filter-chip chip chip-filter" aria-pressed="${selected}" data-favorite-action="toggle-tag" data-favorite-tag-id="${escAttr(tag.id)}"><span class="favorite-filter-chip-surface"><span class="favorite-filter-check" aria-hidden="true">${selected?'✓':''}</span>${escHtml(tag.label)}</span></button>`;}).join('')}</div></div>`:''}</div></details>`:'';
   const favoritesHeading=`<div class="trainer-section-heading"><h2 class="trainer-quick-heading">${escHtml(i18nCore.t('trainer.favoritesTitle'))}</h2><span class="trainer-section-count">${state.favorites.length}</span></div>`;
   const items=filtered.map(item=>{const canonical=canonicalTrainerName(item.displayName);if(canonical!==item.displayName&&!accountSyncProjectionReady())store.updateCanonicalName(canonical);return{...item,displayName:canonical};});
   syncFavoriteSearchControl();if(!preserveFavoriteControls)favoritesControlsEl.innerHTML=`${favoritesHeading}${toolbar}`;
@@ -6626,7 +6628,7 @@ function hideUndo({restoreFocus=false}={}){
   toastEl?.classList.remove('show');
   toastEl?.setAttribute('aria-hidden','true');
   if(toastEl)toastEl.hidden=true;
-  const fallback=undoReturnFocus?.isConnected&&!undoReturnFocus.disabled?undoReturnFocus:document.getElementById('mylist-filter')||document.getElementById('ac-input');
+  const fallback=undoReturnFocus?.isConnected&&!undoReturnFocus.disabled?undoReturnFocus:document.getElementById('combined-filter')||document.getElementById('wants-add-name');
   undoReturnFocus=null;
   if(restoreFocus&&focusWasInside)requestAnimationFrame(()=>fallback?.focus({preventScroll:true}));
 }
@@ -6778,32 +6780,12 @@ function resetMyListPerformanceState(){
   clearTimeout(myListFilterTimer);
   myListFilterTimer=0;
   myListFilterGeneration++;
-  myListProgressiveGeneration++;
-  myListStringsGeneration++;
   myListViewModelCache.clear();
   myListSourceMapCache.clear();
-  myListRenderState=null;
-  myListRenderCompletePromise=Promise.resolve();
-  myListAncillaryRenderPromise=Promise.resolve();
+  combinedRowCache.clear();combinedLimit=120;
 }
 function setMyList(t){
   myListType=t;
-  addTray=[];
-  renderAddTray();
-  updateMyListCategoryChrome();
-  document.getElementById('add-ttl').textContent=i18nCore.t(
-    t==='costumes'?'myList.addOther':t==='gmax'?'myList.addGigantamax':t==='dynamax'?'myList.addDynamax':'myList.addTitle'
-  );
-  if(document.getElementById('ac-input'))document.getElementById('ac-input').value='';
-  document.getElementById('add-pmon-sel').value='';
-  const background=document.getElementById('add-pmon-background');if(background)background.value='';
-  ['add-pmon-lucky','add-pmon-xxl','add-pmon-xxs','add-pmon-shiny'].forEach(id=>{const el=document.getElementById(id);if(el)el.checked=false;});
-  document.getElementById('add-pmon-pri').value='';
-  document.querySelectorAll('.add-pri-btn').forEach(b=>{b.classList.remove('on','H','M','L');b.setAttribute('aria-pressed','false');});
-  closeAddAutocomplete();
-  document.getElementById('mylist-filter').value='';
-  myListProgressiveGeneration++;
-  myListRenderState=null;
   ensureListSubscribed(t);
   buildAcItems();renderMyList();
 }
@@ -6835,7 +6817,7 @@ function productDeclarations(username=cur,providedSource){
 }
 function setMyListIntent(intent){
   myListIntent='lf';
-  bulkMode=false;reorderMode=false;addTray=[];myListRenderState=null;
+  bulkMode=false;reorderMode=false;addTray=[];
   setMyList(myListType);
 }
 function intentBoardEntry(name,fields={}){
@@ -6844,57 +6826,16 @@ function intentBoardEntry(name,fields={}){
   return{name:boardName,dn:pokemonDisplayName(source),no:source.no,note:'',...fields};
 }
 function renderIntentEntries(query='',model=productDeclarations()){
-  const host=document.getElementById('intent-entries');if(!host)return;
-  const filter=normalizeAcText(query);
-  document.querySelectorAll('[data-list-intent]').forEach(button=>{
-    const active=button.dataset.listIntent===myListIntent;button.setAttribute('aria-pressed',String(active));button.classList.toggle('active',active);
-  });
-  document.getElementById('tab-mylist')?.classList.toggle('intent-for-trade',myListIntent==='ft');
-  const rows=model.entries.filter(entry=>entry.intent===myListIntent&&entry.category===myListType&&(entry.ref.surface==='special-board'||entry.ref.managed)&&(!filter||normalizeAcText(entry.dn).includes(filter)));
   const reviews=model.reviews.filter(group=>group[0].intent===myListIntent);
   const review=document.getElementById('intent-review');
   if(review){
     review.hidden=!model.duplicates.length&&!reviews.length;
     review.innerHTML=`${model.duplicates.length?`<p>${escHtml(i18nCore.t('product.identical',{count:model.duplicates.length}))}</p>`:''}${reviews.length?`<details><summary>${escHtml(i18nCore.t('product.review',{count:reviews.length}))}</summary><p>${escHtml(i18nCore.t('product.reviewHelp'))}</p>${reviews.map(group=>`<p>${escHtml(group[0].dn)}: ${group.map(e=>escHtml([e.p,e.mod,e.gender,e.shiny?i18nCore.t('share.flagShiny'):'',e.backgroundId,e.note].filter(Boolean).join(' · ')||i18nCore.t('product.other'))).join(' / ')}</p>`).join('')}</details>`:''}`;
   }
-  host.innerHTML=rows.map(entry=>{
-    const side=entry.ref.side,index=`'${entry.ref.index}'`;
-    if(!entry.ref.managed)return`<article class="intent-row" data-intent-row="${escAttr(entry.name)}">${spriteImg(entry.no,42,'',entry.name,entry.gender||'',entry.dn)}<div class="intent-row-main"><strong>${escHtml(entry.dn)}</strong><span>${escHtml([entry.p?priLabel(entry.p):i18nCore.t('product.other'),entry.mod,entry.note].filter(Boolean).join(' · '))}</span></div><button class="btn btn-secondary" type="button" onclick="enableIntentEditing('${side}',${index})">${escHtml(i18nCore.t('product.enableEditing'))}</button></article>`;
-    return`<article class="intent-row" data-intent-row="${escAttr(entry.name)}">${spriteImg(entry.no,42,'',entry.name,entry.gender||'',entry.dn)}<div class="intent-row-main"><strong>${escHtml(entry.dn)}</strong><span>${escHtml([entry.mod,entry.note,''].filter(Boolean).join(' · '))}</span></div><select aria-label="${escAttr(i18nCore.t('myList.priorityFor',{name:entry.dn}))}" onchange="editIntentEntry('${side}',${index},'p',this.value)">${['','H','M','L'].map(p=>`<option value="${p}" ${p===entry.p?'selected':''}>${escHtml(p?priLabel(p):i18nCore.t('product.other'))}</option>`).join('')}</select><button type="button" class="btn btn-ghost" aria-label="${escAttr(i18nCore.t('share.flagShiny'))}" aria-pressed="${!!entry.shiny}" onclick="editIntentEntry('${side}',${index},'shiny',${!entry.shiny})">${uiIconMarkup('sparkles','ui-icon')}</button><button type="button" class="btn btn-ghost" aria-label="${escAttr(i18nCore.t('myList.removeEntry',{name:entry.dn}))}" onclick="removeIntentEntry('${side}',${index})">${uiIconMarkup('trash','ui-icon')}</button>${intentDetailsHtml(entry)}</article>`;
-  }).join('')||(myListIntent==='ft'?`<p class="empty">${escHtml(i18nCore.t('product.emptyOffers'))}</p>`:'');
-  const visibleLegacy=filter&&myListIntent==='lf'?new Set(currentListEntries(myListType,filter,model).map(e=>e.name)):null;
-  const scoped=model.entries.filter(e=>e.intent===myListIntent&&e.category===myListType&&(!filter||(e.ref.surface==='my-list'&&!e.ref.managed?visibleLegacy?.has(e.name):normalizeAcText(e.dn).includes(filter))));
-  const searchHost=document.getElementById('mylist-contextual-search');
-  if(searchHost)searchHost.innerHTML=contextualIntentSearchHtml(scoped,i18nCore.t('contextSearch.current',{side:i18nCore.t(`product.${myListIntent}`),category:myListCategoryLabel(myListType)}));
-  const selectedHost=document.getElementById('selected-contextual-search');
-  if(selectedHost?.textContent){if(bulkMode)renderSelectedIntentSearch();else selectedHost.replaceChildren();}
 }
 function contextualIntentSearchHtml(entries,title){
   const plan=searchStringDomain.contextualSearchPlan(entries.filter(e=>e.intent!=='ft').map(entry=>({...entry,backgroundId:'',backgroundLabel:''})),{locale:pokemonGoSearchLocale()});
   return window.PogoUi.stringHtml.contextualSearchHtml(plan,{t:i18nCore.t,title});
-}
-function copyIntentSearch(){
-  const panel=document.querySelector('#mylist-contextual-search details');if(panel){panel.open=true;panel.querySelector('summary').focus();}
-}
-function openSelectedIntentSearch(){
-  renderSelectedIntentSearch();
-  const panel=document.querySelector('#selected-contextual-search details');if(panel){panel.open=true;panel.querySelector('summary').focus();panel.scrollIntoView({block:'nearest'});}
-}
-function renderSelectedIntentSearch(){
-  const entries=productDeclarations().entries.filter(entry=>[entry,...entry.aliases].some(e=>e.ref?.surface==='my-list'&&!e.ref.managed&&e.ref.type===myListType&&bulkSelected.has(e.ref.name)));
-  const host=document.getElementById('selected-contextual-search');if(!host)return;
-  const wasOpen=host.querySelector('details')?.open;
-  host.innerHTML=contextualIntentSearchHtml(entries,i18nCore.t('contextSearch.selection'));
-  host.querySelector('details').open=!!wasOpen;
-}
-function intentDetailsHtml(entry){
-  const side=entry.ref.side,index=`'${entry.ref.index}'`;
-  const input=(field,key)=>`<label>${escHtml(i18nCore.t(key))}<input class="field-control" maxlength="160" value="${escAttr(entry[field]||'')}" onchange="editIntentEntry('${side}',${index},'${field}',this.value)"></label>`;
-  return`<details class="intent-details"><summary>${escHtml(i18nCore.t('myList.flagsAndDetails'))}</summary><div class="intent-fields">
-    ${input('mod','myList.variantDetails')}${input('note','product.note')}
-    <label>${escHtml(i18nCore.t('product.gender'))}<select onchange="editIntentEntry('${side}',${index},'gender',this.value)">${['','f','m'].map(g=>`<option value="${g}" ${g===entry.gender?'selected':''}>${g==='f'?'♀':g==='m'?'♂':'—'}</option>`).join('')}</select></label>
-    ${['lucky','xxl','xxs'].map(flag=>`<label><input type="checkbox" ${entry[flag]?'checked':''} onchange="editIntentEntry('${side}',${index},'${flag}',this.checked)">${escHtml(i18nCore.t({lucky:'myList.lucky',xxl:'share.flagXxl',xxs:'share.flagXxs'}[flag]))}</label>`).join('')}
-    </div></details>`;
 }
 async function editIntentEntry(side,index,field,value){
   const fields={p:'priority',shiny:'shiny',mod:'variant',gender:'gender',note:'note',lucky:'lucky',xxl:'xxl',xxs:'xxs'};
@@ -7226,82 +7167,6 @@ function scheduleMyListFilter(value){
   },MY_LIST_FILTER_DELAY_MS);
 }
 
-function myListEditorHtml(entry){
-  const{name,dn,p,mod,lucky,xxl,xxs,shiny,backgroundId}=entry;
-  const jsName=escAttr(name.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r?\n/g,' '));
-  const jsDn=escAttr(String(dn).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r?\n/g,' '));
-  return`<div class="myrow-editor-popover" onkeydown="if(event.key==='Escape'){event.preventDefault();const d=this.closest('details');d.removeAttribute('open');d.querySelector('summary').focus()}">
-    <div class="myrow-editor-title">${escHtml(dn)}</div>
-    <fieldset class="myrow-priority-editor"><legend>${escHtml(i18nCore.t('myList.priority'))}</legend><div role="group" aria-label="${escAttr(i18nCore.t('myList.priorityFor',{name:dn}))}">${['H','M','L'].map(value=>`<button type="button" class="pb priority-choice ${p===value?'on '+value:''}" aria-pressed="${p===value}" onclick="movePriority('${jsName}','${value}')">${escHtml(i18nCore.t({'H':'priority.high','M':'priority.medium','L':'priority.low'}[value]))}</button>`).join('')}</div></fieldset>
-    <div class="myrow-trait-controls">
-      <button class="flag-btn lucky-flag ${lucky?'on':''}" onclick="setLucky('${jsName}')" title="${escAttr(i18nCore.t('myList.lucky'))}" aria-pressed="${lucky}" aria-label="${escAttr(i18nCore.t('myList.toggleLuckyFor',{name:dn}))}">⚡</button>
-      <button class="flag-btn shiny-flag ${shiny?'on':''}" onclick="setShiny('${jsName}')" title="${escAttr(i18nCore.t('myList.shiny'))}" aria-pressed="${shiny}" aria-label="${escAttr(i18nCore.t('myList.toggleShinyFor',{name:dn}))}">✨</button>
-      <button class="flag-btn xxl-flag ${xxl?'on':''}" onclick="setXxl('${jsName}')" title="XXL" aria-pressed="${xxl}" aria-label="${escAttr(i18nCore.t('myList.toggleXxlFor',{name:dn}))}">XXL</button>
-      <button class="flag-btn xxs-flag ${xxs?'on':''}" onclick="setXxs('${jsName}')" title="XXS" aria-pressed="${xxs}" aria-label="${escAttr(i18nCore.t('myList.toggleXxsFor',{name:dn}))}">XXS</button>
-    </div>
-    <div class="myrow-editor-fields"><input class="ni" type="text" value="${escAttr(mod)}" placeholder="${escAttr(i18nCore.t('myList.variantDetails'))}" onchange="setNotes('${jsName}',this.value)" aria-label="${escAttr(i18nCore.t('myList.notesFor',{name:dn}))}"></div>
-  </div>`;
-}
-function hydrateMyRowEditor(details){
-  if(!details?.open||details.dataset.hydrated==='true')return;
-  const name=details.closest('.myrow')?.dataset.name;
-  const entry=currentListEntries(myListType).find(item=>item.name===name);
-  if(!entry)return;
-  details.insertAdjacentHTML('beforeend',myListEditorHtml(entry));
-  details.dataset.hydrated='true';
-}
-function hydrateMyRowPriority(details){
-  if(!details?.open||details.dataset.hydrated==='true')return;
-  const name=details.closest('.myrow')?.dataset.name;
-  const entry=currentListEntries(myListType).find(item=>item.name===name);
-  if(!entry)return;
-  const jsName=escAttr(entry.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r?\n/g,' '));
-  details.insertAdjacentHTML('beforeend',`<div class="myrow-priority-menu" role="group" aria-label="${escAttr(i18nCore.t('myList.priorityFor',{name:entry.dn}))}">${['H','M','L'].map(value=>`<button type="button" class="pb ${entry.p===value?'on '+value:''}" aria-pressed="${entry.p===value}" onclick="movePriority('${jsName}','${value}')">${value}</button>`).join('')}</div>`);
-  details.dataset.hydrated='true';
-}
-function myListRowRenderKey(entry,idx,count){
-  return JSON.stringify([entry.rawValue,i18nCore.getLocale(),bulkMode,bulkSelected.has(entry.name),reorderMode,reorderMode?idx:null,reorderMode?count:null]);
-}
-function myListRowHtml(entry,idx,count){
-    const{name,dn,p,mod,lucky,xxl,xxs,shiny,backgroundId,no}=entry;
-    const jsName=escAttr(name.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r?\n/g,' '));
-    const jsDn=escAttr(String(dn).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r?\n/g,' '));
-    const attrName=escAttr(name);
-    const hasSprite=Boolean(no||isApprovedRuntimeSpriteUrl(entry.spriteUrl)||COSTUME_FORM_SPRITE_IDS[name]);
-    const crownHtml=maxCrownSvg(entry.maxType);
-    const isSel=bulkSelected.has(name);
-    const clickHandler=bulkMode?`onclick="event.stopPropagation();toggleBulkSelection('${jsName}')"`:'';
-    const activeTraits=[
-      lucky?`<span class="myrow-trait lucky">${escHtml(i18nCore.t('myList.lucky'))}</span>`:'',
-      shiny?`<span class="myrow-trait shiny">${escHtml(i18nCore.t('myList.shiny'))}</span>`:'',
-      xxl?'<span class="myrow-trait xxl">XXL</span>':'',
-      xxs?'<span class="myrow-trait xxs">XXS</span>':'',
-      '',
-      mod?`<span class="myrow-trait detail">${escHtml(mod)}</span>`:''
-    ].join('');
-    const priorityIndex=idx,priorityCount=count;
-    return`<div class="myrow${isSel?' bulk-selected':''}"  ${reorderMode&&!bulkMode?'draggable="true"':''} data-name="${attrName}" data-priority="${escAttr(p||'')}" data-dex="${no||''}" data-idx="${idx}" data-render-key="${escAttr(myListRowRenderKey(entry,idx,count))}" data-full="${escAttr(dn)}" aria-label="${escAttr(dn)}" ${clickHandler}
-      ondragstart="dragStart(event)" ondragover="dragOver(event)" ondrop="dragDrop(event)" ondragend="dragEnd(event)">
-
-      <input type="checkbox" class="bulk-chk" data-name="${attrName}" ${isSel?'checked':''} onclick="event.stopPropagation();toggleBulkSelection('${jsName}')" aria-label="${escAttr(i18nCore.t('myList.selectEntry',{name:dn}))}">
-      ${reorderMode?`<button type="button" class="drag-handle" draggable="false" title="${escAttr(i18nCore.t('myList.reorderEntry',{name:dn}))}" aria-label="${escAttr(i18nCore.t('myList.reorderEntry',{name:dn}))}" onpointerdown="myListPointerStart(event)" onpointermove="myListPointerMove(event)" onpointerup="myListPointerEnd(event)" onpointercancel="myListPointerCancel(event)">${uiIconMarkup('grip','ui-icon')}</button><span class="myrow-reorder-controls"><button type="button" class="myrow-reorder-move" data-reorder-move="up" draggable="false" ${priorityIndex<=0?'disabled':''} aria-label="${escAttr(i18nCore.t('myList.moveUp',{name:dn}))}" onclick="event.stopPropagation();moveMyListEntry('${jsName}',-1)">${uiIconMarkup('chevron-down','ui-icon')}</button><button type="button" class="myrow-reorder-move" data-reorder-move="down" draggable="false" ${priorityIndex>=priorityCount-1?'disabled':''} aria-label="${escAttr(i18nCore.t('myList.moveDown',{name:dn}))}" onclick="event.stopPropagation();moveMyListEntry('${jsName}',1)">${uiIconMarkup('chevron-down','ui-icon')}</button></span>`:''}
-      ${hasSprite?`<span class="myrow-sprite-wrap sprite-slot-list">${spriteImg(no,34,'myrow-sprite',name,'',dn,{urlOverride:entry.spriteUrl,catalogId:entry.catalogId})}${crownHtml}</span>`:crownHtml}
-      <div class="myrow-copy">
-        <div class="myrow-name">${escHtml(dn)}</div>
-        ${activeTraits?`<div class="myrow-active-traits" aria-label="${escAttr(i18nCore.t('myList.currentFlags',{flags:[lucky&&i18nCore.t('myList.lucky'),shiny&&i18nCore.t('myList.shiny'),xxl&&'XXL',xxs&&'XXS',backgroundId&&i18nCore.t('background.badgeLabel',{name:''}),mod].filter(Boolean).join(', ')}))}">${activeTraits}</div>`:''}
-      </div>
-      <div class="mctrl">
-        ${p?`<details class="myrow-priority-quick" onclick="event.stopPropagation()" ontoggle="hydrateMyRowPriority(this)"><summary class="myrow-priority-chip ${p}" aria-label="${escAttr(i18nCore.t('myList.changePriorityFor',{name:dn,priority:i18nCore.t({'H':'priority.high','M':'priority.medium','L':'priority.low'}[p])}))}">${p}</summary></details>`:''}
-        <details class="myrow-editor" onclick="event.stopPropagation()" ontoggle="hydrateMyRowEditor(this)">
-          <summary class="myrow-edit" aria-label="${escAttr(i18nCore.t('myList.openMoreFor',{name:dn}))}" title="${escAttr(i18nCore.t('myList.openMoreFor',{name:dn}))}">${uiIconMarkup('sliders','ui-icon ui-icon-sm')}<span>${escHtml(i18nCore.t('myList.editEntry'))}</span></summary>
-        </details>
-        <button type="button" class="myrow-remove" onclick="event.stopPropagation();confirmRemove('${jsName}','${jsDn}')" aria-label="${escAttr(i18nCore.t('myList.removeEntry',{name:dn}))}" title="${escAttr(i18nCore.t('myList.removeEntry',{name:dn}))}">${escHtml(i18nCore.t('myList.remove'))}</button>
-      </div>
-    </div>`;
-}
-function myListRowsHtml(entries){
-  return entries.map((entry,idx)=>myListRowHtml(entry,idx,entries.length)).join('');
-}
 function myListPriorityCollapseKey(priority,type=myListType,username=cur){
   if(!['H','M','L'].includes(priority))return'';
   return JSON.stringify([String(username||''),String(type||''),priority]);
@@ -7333,253 +7198,24 @@ function expandMyListPrioritiesReceivingEntries(type,username,before,after){
     }
   });
 }
-function myListPrioritySectionHtml(priority,entries,renderedEntries=entries){
-  const label=publicSharePriorityLabel(priority),count=i18nCore.formatNumber(entries.length),collapsed=isMyListPriorityCollapsed(priority);
-  const bodyId=`mylist-priority-body-${priority}`;
-  return`<section class="mylist-priority-section ${priority}${collapsed?' is-collapsed':''}" data-mylist-section="priority-${priority}" data-priority-section="${priority}" aria-labelledby="mylist-priority-${priority}">
-    <h3 class="mylist-priority-heading" id="mylist-priority-${priority}"><button type="button" class="mylist-priority-toggle" aria-expanded="${!collapsed}" aria-controls="${bodyId}" onclick="toggleMyListPrioritySection('${priority}')"><span class="badge ${priority}"><span class="prio-mark">${priority}</span>${escHtml(label)}</span><span class="priority-count">${escHtml(i18nCore.t('myList.priorityPokemonCount',{count}))}</span>${uiIconMarkup('chevron-down','ui-icon')}</button></h3>
-    <div class="mylist-priority-body" id="${bodyId}" ${collapsed?'hidden':''}>
-      <div class="mygrid">${myListRowsHtml(renderedEntries)}</div>
-      <div data-priority-search="${priority}"></div>
-    </div>
-  </section>`;
-}
-const MY_LIST_DEX_GROUPS=Object.freeze([
-  Object.freeze({key:'LUCKY',flag:'lucky',labelKey:'myList.luckyDex'}),
-  Object.freeze({key:'SHINY',flag:'shiny',labelKey:'myList.shinyDex'}),
-  Object.freeze({key:'XXL',flag:'xxl',labelKey:'myList.xxlDex'}),
-  Object.freeze({key:'XXS',flag:'xxs',labelKey:'myList.xxsDex'})
-]);
-function myListDexGroups(entries){
-  const unprioritized=entries.filter(entry=>!entry.p);
-  const groups=MY_LIST_DEX_GROUPS.map(group=>({...group,entries:unprioritized.filter(entry=>entry[group.flag])}))
-    .filter(group=>group.entries.length);
-  const other=unprioritized.filter(entry=>!MY_LIST_DEX_GROUPS.some(group=>entry[group.flag]));
-  if(other.length)groups.push({key:'OTHER',labelKey:'myList.otherPokemon',entries:other});
-  return groups;
-}
-function myListDexSectionHtml(group,renderedEntries=group.entries){
-  const id=`mylist-dex-${group.key.toLowerCase()}`;
-  return`<section class="mylist-priority-section mylist-dex-section" data-mylist-section="dex-${group.key}" data-dex-section="${group.key}" aria-labelledby="${id}">
-    <h3 class="mylist-priority-heading" id="${id}">${escHtml(i18nCore.t(group.labelKey))}<span class="priority-count">${escHtml(i18nCore.t('myList.priorityPokemonCount',{count:i18nCore.formatNumber(group.entries.length)}))}</span></h3>
-    <div class="mygrid">${myListRowsHtml(renderedEntries)}</div>
-    ${group.key==='OTHER'?'':`<div data-dex-search="${group.key}"></div>`}
-  </section>`;
-}
-function myListSectionModels(entries){
-  const models=['H','M','L'].filter(priority=>entries.some(entry=>entry.p===priority)).map(priority=>({
-    key:`priority-${priority}`,kind:'priority',priority,entries:entries.filter(entry=>entry.p===priority)
-  }));
-  myListDexGroups(entries).forEach(group=>models.push({key:`dex-${group.key}`,kind:'dex',group,entries:group.entries}));
-  return models;
-}
-function myListSectionHtml(model,renderedEntries=model.entries){
-  return model.kind==='priority'
-    ?myListPrioritySectionHtml(model.priority,model.entries,renderedEntries)
-    :myListDexSectionHtml(model.group,renderedEntries);
-}
-function myListNodeFromHtml(html){
-  const template=document.createElement('template');template.innerHTML=html.trim();return template.content.firstElementChild;
-}
-function patchMyListSectionRows(section,model,entries){
-  const grid=section.querySelector('.mygrid');if(!grid)return;
-  const existing=new Map([...grid.children].filter(row=>row.classList.contains('myrow')).map(row=>[row.dataset.name,row]));
-  if(!existing.size){
-    const fragment=document.createDocumentFragment();
-    entries.forEach((entry,idx)=>fragment.append(myListNodeFromHtml(myListRowHtml(entry,idx,model.entries.length))));
-    grid.replaceChildren(fragment);
-  }else{
-    entries.forEach((entry,idx)=>{
-      const expectedKey=myListRowRenderKey(entry,idx,model.entries.length);
-      const previous=existing.get(entry.name);
-      let row=previous;
-      if(!row||row.dataset.renderKey!==expectedKey){
-        row=myListNodeFromHtml(myListRowHtml(entry,idx,model.entries.length));
-        if(previous)previous.replaceWith(row);
-      }
-      existing.delete(entry.name);
-      const current=grid.children[idx];
-      if(current!==row)grid.insertBefore(row,current||null);
-    });
-    existing.forEach(row=>row.remove());
-  }
-  section.dataset.rendered=String(entries.length);
-  section.dataset.total=String(model.entries.length);
-  applyTypeColors(section);
-}
-function patchMyListSections(root,models,limits){
-  const desiredKeys=new Set(models.map(model=>model.key));
-  root.querySelectorAll(':scope > [data-mylist-section]').forEach(section=>{if(!desiredKeys.has(section.dataset.mylistSection))section.remove();});
-  models.forEach((model,index)=>{
-    const rendered=model.entries.slice(0,limits.get(model.key)??model.entries.length);
-    let section=root.querySelector(`:scope > [data-mylist-section="${model.key}"]`);
-    if(!section)section=myListNodeFromHtml(myListSectionHtml(model,[]));
-    if(model.kind==='priority'){
-      const collapsed=isMyListPriorityCollapsed(model.priority);
-      section.classList.toggle('is-collapsed',collapsed);
-      section.querySelector('.mylist-priority-toggle')?.setAttribute('aria-expanded',String(!collapsed));
-      const body=section.querySelector('.mylist-priority-body');if(body)body.hidden=collapsed;
-    }
-    const count=section.querySelector('.priority-count');
-    if(count)count.textContent=i18nCore.t('myList.priorityPokemonCount',{count:i18nCore.formatNumber(model.entries.length)});
-    patchMyListSectionRows(section,model,rendered);
-    const current=root.children[index];if(current!==section)root.insertBefore(section,current||null);
-  });
-}
-function applyMyListVisibilityFilter(root,entries,q){
-  const byName=new Map(entries.map(entry=>[entry.name,entry]));
-  let visible=0;
-  root.querySelectorAll(':scope > [data-mylist-section]').forEach(section=>{
-    let sectionVisible=0;
-    section.querySelectorAll('.myrow').forEach(row=>{
-      const entry=byName.get(row.dataset.name),show=!!entry&&(!q||entry.search.includes(q));
-      row.hidden=!show;if(show){sectionVisible++;visible++;}
-    });
-    section.hidden=sectionVisible===0;
-    const count=section.querySelector('.priority-count');
-    if(count)count.textContent=i18nCore.t('myList.priorityPokemonCount',{count:i18nCore.formatNumber(sectionVisible)});
-  });
-  root.dataset.visible=String(visible);
-  return visible;
-}
-function syncMyListFilteredEmpty(el,root,visible,q,category){
-  let state=el.querySelector(':scope > .mylist-filter-empty');
-  const empty=!!q&&visible===0;
-  root.hidden=empty;
-  if(!empty){state?.remove();return;}
-  if(!state){state=document.createElement('div');state.className='mylist-filter-empty';el.append(state);}
-  state.innerHTML=emptyHtml(i18nCore.t('myList.noMatchesInCategory',{category}),i18nCore.t('myList.clearFilter'));
-}
-function scheduleProgressiveMyListRender(root,models,limits,generation,resolve){
-  const schedule=window.requestIdleCallback
-    ?callback=>window.requestIdleCallback(callback,{timeout:120})
-    :callback=>setTimeout(()=>callback({timeRemaining:()=>8,didTimeout:true}),16);
-  const run=()=>{
-    if(generation!==myListProgressiveGeneration||!root.isConnected){resolve(false);return;}
-    let remaining=MY_LIST_PROGRESSIVE_BATCH_ROWS;
-    for(const model of models){
-      const current=limits.get(model.key)||0;
-      if(current>=model.entries.length)continue;
-      const add=Math.min(remaining,model.entries.length-current);
-      limits.set(model.key,current+add);remaining-=add;
-      if(!remaining)break;
-    }
-    patchMyListSections(root,models,limits);
-    const rendered=[...limits.values()].reduce((sum,value)=>sum+value,0),total=models.reduce((sum,model)=>sum+model.entries.length,0);
-    root.dataset.rendered=String(rendered);
-    if(rendered>=total){
-      root.dataset.renderComplete='true';
-      window.__pogoMyListRenderState={...window.__pogoMyListRenderState,complete:true,rendered,total,completedAt:performance.now()};
-      resolve(true);return;
-    }
-    schedule(run);
-  };
-  schedule(run);
-}
-function scheduleMyListStringsRender(generation){
-  const schedule=window.requestIdleCallback
-    ?callback=>window.requestIdleCallback(callback,{timeout:120})
-    :callback=>setTimeout(callback,16);
-  return new Promise(resolve=>schedule(()=>{
-    if(generation!==myListStringsGeneration){resolve(false);return;}
-    renderMyStrings();resolve(true);
-  }));
-}
 function waitForMyListRender(){
-  return Promise.all([myListRenderCompletePromise,myListAncillaryRenderPromise]).then(([complete])=>complete);
+  return Promise.resolve(true);
 }
 function renderMyList(filterVal,options={}){
   if(options.reason!=='filter'){
     clearTimeout(myListFilterTimer);myListFilterTimer=0;myListFilterGeneration++;
   }
-  const q=normalizeAcText(filterVal??document.getElementById('mylist-filter')?.value??'');
-  // Share one fresh declaration model across this render, never across mutations.
+  const input=document.getElementById('combined-filter');
+  if(filterVal!==undefined&&input)input.value=filterVal;
+  // One fresh model drives both the visible wants and their copy action.
   const declarations=productDeclarations();
-  if(options.reason!=='filter')renderCombinedList(declarations);
-  renderIntentEntries(q,declarations);
-  const list=allData[myListType]?.[cur]||{};
-  const el=document.getElementById('mylist-out');if(!el)return;
-  const allEntries=currentListEntries(myListType,'',declarations),entries=q?allEntries.filter(entry=>entry.search.includes(q)):allEntries;
-  const locale=i18nCore.getLocale(),context=JSON.stringify([cur,myListType,locale,bulkMode,reorderMode]);
-  const snapshot=new Map(Object.entries(list)),previous=myListRenderState;
-  const dataChanged=!previous||previous.context!==context||previous.snapshot.size!==snapshot.size||[...snapshot].some(([name,value])=>previous.snapshot.get(name)!==value);
-  const filterOnly=options.reason==='filter'&&!dataChanged;
-  myListProgressiveGeneration++;
-  const generation=myListProgressiveGeneration;
-  if(!filterOnly)renderTradeComparisonReturn();
-
-  const visibleDeclarations=declarations.entries.filter(e=>e.intent===myListIntent&&e.category===myListType);
-  const count=visibleDeclarations.length;
-  document.getElementById('tab-mylist')?.classList.toggle('has-list-content',count>0);
-  const category=myListCategoryLabel(myListType);
-  updateMyListCategoryChrome(declarations);
-  const categoryName=document.getElementById('mylist-category-name');if(categoryName)categoryName.textContent=category;
-  const countEl=document.getElementById('mylist-count');
-  if(countEl)countEl.textContent=i18nCore.t(q?'myList.filteredCategoryCount':'myList.categoryCount',q?{visible:i18nCore.formatNumber(visibleDeclarations.filter(e=>normalizeAcText(e.dn).includes(q)).length),total:i18nCore.formatNumber(count)}:{count:i18nCore.formatNumber(count)});
-
-  let root=el.querySelector(':scope > .mylist-priority-sections');
-  if(filterOnly&&previous?.visibilityDom&&root?.dataset.renderComplete==='true'){
-    const visible=applyMyListVisibilityFilter(root,allEntries,q);
-    syncMyListFilteredEmpty(el,root,visible,q,category);
-    myListRenderState={context,q,snapshot,visibilityDom:true};
-    window.__pogoMyListRenderState={complete:true,rendered:allEntries.length,total:allEntries.length,visible,query:q,usableAt:performance.now()};
-    myListRenderCompletePromise=Promise.resolve(true);
-    return;
+  renderCombinedList(declarations);
+  renderIntentEntries('',declarations);
+  document.getElementById('tab-mylist')?.classList.toggle('has-list-content',declarations.entries.length>0);
+  if(options.reason!=='filter'){
+    renderTradeComparisonReturn();
+    renderOwnerShareRepublishNotice();
   }
-
-  if(!entries.length){
-    if(visibleDeclarations.some(e=>!q||normalizeAcText(e.dn).includes(q)))el.innerHTML='';
-    else if(q)el.innerHTML=emptyHtml(i18nCore.t('myList.noMatchesInCategory',{category}),i18nCore.t('myList.clearFilter'));
-    else{
-      const alternative=populatedMyListAlternative(declarations),alternativeCount=alternative?myListCategoryCount(alternative,declarations):0;
-      el.innerHTML=emptyHtml(i18nCore.t(`myList.empty.${myListCategoryKey(myListType)}Title`),i18nCore.t(`myList.empty.${myListCategoryKey(myListType)}Help`),'📋')+
-        (alternative?`<div style="display:flex;justify-content:center;margin-top:10px"><button type="button" class="bghost" onclick="setMyList('${alternative}')" aria-label="${escAttr(i18nCore.t('myList.viewCategoryLabel',{category:myListCategoryLabel(alternative),count:i18nCore.formatNumber(alternativeCount)}))}">${escHtml(i18nCore.t('myList.viewCategory',{category:myListCategoryLabel(alternative),count:i18nCore.formatNumber(alternativeCount)}))}</button></div>`:'');
-    }
-    myListStringsGeneration++;renderMyStrings();
-    if(!filterOnly)renderOwnerShareRepublishNotice();
-    myListAncillaryRenderPromise=Promise.resolve(true);
-    myListRenderState={context,q,snapshot};
-    window.__pogoMyListRenderState={complete:true,rendered:0,total:0,query:q,usableAt:performance.now()};
-    myListRenderCompletePromise=Promise.resolve(true);
-    return;
-  }
-
-  const visibilityDom=allEntries.length<=MY_LIST_PROGRESSIVE_THRESHOLD;
-  const renderedEntries=visibilityDom?allEntries:entries;
-  const models=myListSectionModels(renderedEntries),progressive=renderedEntries.length>MY_LIST_PROGRESSIVE_THRESHOLD;
-  if(!root){el.replaceChildren();root=document.createElement('div');root.className='mylist-priority-sections';el.append(root);}
-  const limits=new Map();
-  if(progressive){
-    let remaining=MY_LIST_PROGRESSIVE_INITIAL_ROWS;
-    const fairShare=Math.max(1,Math.floor(MY_LIST_PROGRESSIVE_INITIAL_ROWS/models.length));
-    models.forEach(model=>{const count=Math.min(model.entries.length,fairShare,remaining);limits.set(model.key,count);remaining-=count;});
-    for(const model of models){if(!remaining)break;const current=limits.get(model.key)||0,extra=Math.min(remaining,model.entries.length-current);limits.set(model.key,current+extra);remaining-=extra;}
-  }else models.forEach(model=>limits.set(model.key,model.entries.length));
-  patchMyListSections(root,models,limits);
-  const rendered=[...limits.values()].reduce((sum,value)=>sum+value,0);
-  const visible=visibilityDom?applyMyListVisibilityFilter(root,allEntries,q):entries.length;
-  syncMyListFilteredEmpty(el,root,visible,q,category);
-  root.dataset.rendered=String(rendered);root.dataset.total=String(renderedEntries.length);root.dataset.renderComplete=String(!progressive);
-  window.__pogoMyListRenderState={complete:!progressive,rendered,total:renderedEntries.length,visible,query:q,usableAt:performance.now()};
-  const shouldRenderStrings=!q&&(dataChanged||previous?.q);
-  if(q){
-    myListStringsGeneration++;
-    root.querySelectorAll('[data-priority-search],[data-dex-search]').forEach(footer=>{footer.innerHTML='';});
-  }
-  if(!filterOnly)renderOwnerShareRepublishNotice();
-  attachSwipeHandlers();
-  if(progressive){
-    myListRenderCompletePromise=new Promise(resolve=>scheduleProgressiveMyListRender(root,models,limits,generation,resolve));
-  }
-  else myListRenderCompletePromise=Promise.resolve(true);
-  if(shouldRenderStrings){
-    const stringsGeneration=++myListStringsGeneration;
-    myListAncillaryRenderPromise=myListRenderCompletePromise.then(completed=>{
-      if(!completed||generation!==myListProgressiveGeneration)return false;
-      return scheduleMyListStringsRender(stringsGeneration);
-    });
-  }else myListAncillaryRenderPromise=Promise.resolve(true);
-  myListRenderState={context,q,snapshot,visibilityDom};
 }
 function confirmRemove(name,dn){
   const list=allData[myListType]?.[cur]||{};
@@ -8382,73 +8018,6 @@ function buildStrings(type,username,intent='lf'){
   return Object.keys(out).length?out:null;
 }
 
-function myListSearchLabel(levels){
-  if(levels.length===3)return i18nCore.t('strings.allPriorities');
-  if(levels.length===1)return publicSharePriorityLabel(levels[0]);
-  return i18nCore.t('share.priorityCombination',{first:publicSharePriorityLabel(levels[0]),second:publicSharePriorityLabel(levels[1])});
-}
-function toggleMyListSearchString(button){
-  const raw=document.getElementById(button.getAttribute('aria-controls'));
-  if(!raw)return;
-  const open=raw.hidden;
-  raw.hidden=!open;
-  button.setAttribute('aria-expanded',String(open));
-  const label=button.querySelector('[data-view-label]');if(label)label.textContent=i18nCore.t(open?'strings.hideString':'strings.viewString');
-}
-function toggleMyListMoreCombinations(button){
-  const body=document.getElementById(button.getAttribute('aria-controls'));
-  if(!body)return;
-  const open=body.hidden;
-  body.hidden=!open;
-  button.setAttribute('aria-expanded',String(open));
-}
-function myListSearchActionHtml(value,label,key,{tooLong=false}={}){
-  const id=`mylist-search-raw-${key}`;
-  return`<div class="mylist-search-actions">
-    ${tooLong?'':`<button class="cpbtn mylist-search-action" type="button" data-copy="${escAttr(value)}" onclick="copyStr(this.dataset.copy,this)" aria-label="${escAttr(i18nCore.t('strings.copyScoped',{label}))}">${uiIconMarkup('copy','ui-icon ui-icon-sm')}<span>${escHtml(i18nCore.t('share.copy'))}</span></button>`}
-    <button class="mylist-search-view mylist-search-action" type="button" aria-expanded="false" aria-controls="${id}" onclick="toggleMyListSearchString(this)"><span data-view-label>${escHtml(i18nCore.t('strings.viewString'))}</span><span class="collapse-icon" aria-hidden="true">${uiIconMarkup('chevron-down','ui-icon ui-icon-sm')}</span></button>
-  </div><div class="strbox mylist-search-raw" id="${id}" hidden>${escHtml(value)}</div>`;
-}
-function myListSearchOptionHtml(option,key,{label=myListSearchLabel(option.levels),showLimit=true}={}){
-  return`<div class="mylist-search-option" data-search-option="${key}"><div class="mylist-search-option-head"><div class="mylist-search-option-summary"><span class="mylist-search-option-icon" aria-hidden="true">${uiIconMarkup('search','ui-icon ui-icon-sm')}</span><div class="mylist-search-option-copy"><span class="mylist-search-option-label">${escHtml(label)}</span>${showLimit?strLenHtml(option.value,{t:i18nCore.t,formatNumber:i18nCore.formatNumber}):''}</div></div>${option.tooLong?`<div class="mylist-search-limit" role="status">${escHtml(i18nCore.t('strings.tooLongForPokemonGo'))}</div>`:''}${myListSearchActionHtml(option.value,label,key,{tooLong:option.tooLong})}</div></div>`;
-}
-function renderMyStrings(){
-  const el=document.getElementById('my-strings-out');if(!el)return;
-  const strs=buildStrings(myListType,cur,myListIntent);
-  const heading=document.querySelector('.my-string-heading');
-  document.querySelectorAll('[data-priority-search],[data-dex-search]').forEach(footer=>{footer.innerHTML='';});
-  if(!strs){if(heading)heading.hidden=true;el.innerHTML='';return;}
-  ['H','M','L'].forEach(priority=>{
-    const footer=document.querySelector(`[data-priority-search="${priority}"]`);
-    if(!footer||!strs[priority])return;
-    const label=i18nCore.t('strings.prioritySearch',{priority:publicSharePriorityLabel(priority)});
-    const tooLong=strLenInfo(strs[priority]).len>POGO_STR_LIMIT;
-    footer.innerHTML=`<div class="mylist-search-footer"><div class="mylist-search-option-summary"><span class="mylist-search-option-icon" aria-hidden="true">${uiIconMarkup('search','ui-icon ui-icon-sm')}</span><div class="mylist-search-option-copy"><span class="mylist-search-option-label">${escHtml(label)}</span>${strLenHtml(strs[priority],{t:i18nCore.t,formatNumber:i18nCore.formatNumber})}</div></div>${tooLong?`<div class="mylist-search-limit" role="status">${escHtml(i18nCore.t('strings.tooLongForPokemonGo'))}</div>`:''}${myListSearchActionHtml(strs[priority],label,`priority-${priority}`,{tooLong})}</div>`;
-  });
-
-  const dexLabels={LUCKY:'strings.luckyDexSearch',SHINY:'strings.shinyDexSearch',XXL:'strings.xxlDexSearch',XXS:'strings.xxsDexSearch'};
-  Object.entries(dexLabels).forEach(([key,labelKey])=>{
-    const footer=document.querySelector(`[data-dex-search="${key}"]`);
-    if(!footer||!strs[key])return;
-    const label=i18nCore.t(labelKey),tooLong=strLenInfo(strs[key]).len>POGO_STR_LIMIT;
-    footer.innerHTML=`<div class="mylist-search-footer"><div class="mylist-search-option-summary"><span class="mylist-search-option-icon" aria-hidden="true">${uiIconMarkup('search','ui-icon ui-icon-sm')}</span><div class="mylist-search-option-copy"><span class="mylist-search-option-label">${escHtml(label)}</span>${strLenHtml(strs[key],{t:i18nCore.t,formatNumber:i18nCore.formatNumber})}</div></div>${tooLong?`<div class="mylist-search-limit" role="status">${escHtml(i18nCore.t('strings.tooLongForPokemonGo'))}</div>`:''}${myListSearchActionHtml(strs[key],label,`dex-${key.toLowerCase()}`,{tooLong})}</div>`;
-  });
-
-  const plan=myListSearchPlan(strs,{locale:pokemonGoSearchLocale()});
-  const combined=['H','M','L','U'].filter(priority=>strs[priority]).map(priority=>myListSearchOptionHtml({levels:[priority],value:strs[priority],tooLong:strs[priority].length>POGO_STR_LIMIT},`unified-${priority}`));
-  if(plan.all){
-    combined.push(myListSearchOptionHtml(plan.all,'all-priorities'));
-    if(plan.all.tooLong&&plan.split.length){
-      combined.push(`<div class="mylist-split"><div class="mylist-split-title">${escHtml(i18nCore.t('strings.suggestedSplit'))}</div><div>${escHtml(i18nCore.t('strings.suggestedSplitHelp'))}</div>${plan.split.map((part,index)=>myListSearchOptionHtml(part,`split-${index}`,{label:myListSearchLabel(part.levels)})).join('')}</div>`);
-    }
-  }
-  if(plan.secondary&&plan.secondary.value!==plan.all?.value)combined.push(myListSearchOptionHtml(plan.secondary,'high-medium'));
-  if(plan.more.length){
-    combined.push(`<div class="mylist-search-more"><button class="combo-toggle" type="button" aria-expanded="false" aria-controls="mylist-more-combinations" onclick="toggleMyListMoreCombinations(this)"><span>${escHtml(i18nCore.t('strings.moreCombinations'))}</span><span class="collapse-icon" aria-hidden="true">${uiIconMarkup('chevron-down','ui-icon ui-icon-sm')}</span></button><div class="mylist-search-more-body" id="mylist-more-combinations" hidden>${plan.more.map((option,index)=>myListSearchOptionHtml(option,`more-${index}`)).join('')}</div></div>`);
-  }
-  if(heading)heading.hidden=!combined.length;
-  el.innerHTML=`<div class="mylist-search-groups">${combined.length?`<section class="mylist-search-section" aria-labelledby="combined-search-title"><h3 id="combined-search-title">${uiIconMarkup('list','ui-icon ui-icon-sm')}<span>${escHtml(i18nCore.t('strings.combinedSearch'))}</span></h3>${combined.join('')}</section>`:''}</div>`;
-}
 async function copyText(str){
   if(navigator.clipboard&&window.isSecureContext){
     try{
@@ -12407,7 +11976,7 @@ function renderShareView(username,type,intent){
     if(!grouped[p].length)return;
     // Cluster by family (Vivillon, Unown, Furfrou variants stay together)
     const sorted=[...grouped[p]].sort(_familySort);
-    html+=`<div class="share-section card-content">
+    html+=`<div class="share-section">
       <div class="share-section-hdr">
         <span class="badge ${p}"><span class="prio-mark">${p}</span>${publicSharePriorityBadge(p)}</span>
         <span class="share-section-count">${escHtml(i18nCore.formatPlural('share.entryCount',sorted.length))}</span>
@@ -14096,6 +13665,7 @@ let importMatches=[];
 
 function openImport(){
   importPri='M';importMatches=[];
+  document.getElementById('import-category').value=myListType;
   document.getElementById('import-str-input').value='';
   document.getElementById('import-err').textContent='';
   document.getElementById('import-warn-box').innerHTML='';
@@ -14252,7 +13822,7 @@ function anyOpenModal(){
   return!!document.querySelector('.ov.open');
 }
 function _focusActiveTabSearch(){
-  const map={find:'find-trainer-input',mylist:'mylist-filter',have:'have-filter',schedule:''};
+  const map={find:'find-trainer-input',mylist:'combined-filter',have:'have-filter',schedule:''};
   // Detect active tab
   const active=document.querySelector('.tab.active')?.dataset.tab;
   // Special case: have tab has subtab-specific filters
@@ -14347,7 +13917,7 @@ function maybeStartTour(){
 
 // ── EXPOSE ────────────────────────────────────────────────────
 Object.assign(window,{
-  setMyListIntent,editIntentEntry,removeIntentEntry,enableIntentEditing,copyIntentSearch,openSelectedIntentSearch,
+  setMyListIntent,editIntentEntry,removeIntentEntry,enableIntentEditing,
   openProductShare,setProductShareMode,toggleBoardSelection,
   openImport,setImportPri,parseImportString,toggleImportRow,toggleSelectAll,backToStep1,confirmImport,
   setFilter,setBrowseList,setMyList,setStaleFilter,switchTab,clearTrainerSearch,focusTrainerSearch,
