@@ -50,6 +50,10 @@ test('unique stale-UID canonical evidence requires review, never a safe retireme
   const report = await audit(f.reads), stale = report.accounts.find(a => a.username === 'Stale');
   assert.equal(stale.classification, 'PROVIDER / CANONICAL REVIEW'); assert.equal(stale.fenceWouldHelp, false); assert.equal(stale.urgentReview, true);
 });
+test('canonical owner disagreement is classified for review even at the currently mapped UID', async () => {
+  const f = fixture(); f.data.accountSync = { healthy: { meta: { ownerUid: 'someone-else' } } };
+  const report = await audit(f.reads); assert.equal(report.accounts.find(a => a.username === 'Healthy').classification, 'PROVIDER / CANONICAL REVIEW');
+});
 test('a previously qualified retirement counts as healthy while keeping historical Auth evidence', async () => {
   const f = fixture(), old = f.users.find(a => a.uid === 'stale-old'); old.disabled = true;
   const { ROOT, recordFor } = require('../functions/legacy-pin-reset/identity-fence');

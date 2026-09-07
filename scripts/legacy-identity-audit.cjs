@@ -1,6 +1,6 @@
 'use strict';
 const { createProductionReads, PROJECT } = require('./lib/legacy-slot-reconciliation-production.cjs');
-const { readIdentityInventory, UID_ROOTS, projectAuth } = require('./lib/legacy-slot-reconciliation-evidence.cjs');
+const { readIdentityInventory, UID_ROOTS, projectAuth, canonicalOwnedBy } = require('./lib/legacy-slot-reconciliation-evidence.cjs');
 const { fingerprint } = require('./lib/legacy-slot-reconciliation.cjs');
 const { privateFile } = require('./legacy-slot-reconciliation.cjs');
 const { authEmail } = require('../functions/legacy-pin-reset/reset');
@@ -68,6 +68,7 @@ async function audit(reads = createProductionReads()) {
           const value = (await reads.readDatabase(`${root}/${uid}`)).value;
           roots[root] = { exists: value !== null, fingerprint: fingerprint(value) };
           if (root === 'accounts' && value !== null) { providerReview = true; reasons.push('current-rtdb-provider-authority'); }
+          if (root === 'accountSync' && !canonicalOwnedBy(value, uid)) { providerReview = true; reasons.push('current-canonical-owner-disagreement'); }
         }
         record.currentOwnership = roots;
         const hold = (await reads.readDatabase(`${ROOT}/${uid}`)).value;

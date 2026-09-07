@@ -10,6 +10,10 @@ const object = value => value !== null && typeof value === 'object' && !Array.is
 const key = name => name.normalize('NFKC').toLowerCase().replace(/[^a-z0-9]/g, '_');
 const active = value => object(value) && ['disabled', 'frozen', 'identityFrozen'].every(k => value[k] === undefined || value[k] === false) &&
   ['state', 'status'].every(k => value[k] === undefined || value[k] === 'active');
+function canonicalOwnedBy(value, uid) {
+  if (Array.isArray(value)) return value.every(child => canonicalOwnedBy(child, uid));
+  return !object(value) || (!Object.hasOwn(value, 'ownerUid') || value.ownerUid === uid) && Object.values(value).every(child => canonicalOwnedBy(child, uid));
+}
 function check(condition, code = 'repair/evidence-invalid') { if (!condition) throw Object.assign(new Error(code), { code }); }
 function bounded(value) {
   check(value === null || object(value) && Object.keys(value).length <= 1000);
@@ -106,7 +110,9 @@ function createEvidenceReader({ username, authoritativeUid, obsoleteUid, readDat
       authoritativeFence: authoritativeFence.value, authoritativeFenceEtag: authoritativeFence.etag,
       obsoleteFence: obsoleteFence.value, obsoleteFenceEtag: obsoleteFence.etag,
       protectedFingerprint: fingerprint({ protectedHashes, inventory: protectedInventory, legacy, unowned }),
-      authorityConverged: legacy && cache.get(`accounts/${authoritativeUid}`) === null &&
+      authorityConverged: legacy && cache.get(`accounts/${authoritativeUid}`) === null && canonicalOwnedBy(cache.get(`accountSync/${authoritativeUid}`), authoritativeUid) &&
+        (cache.get(`publicShares/${username}`)?.ownerUid === undefined || cache.get(`publicShares/${username}`).ownerUid === authoritativeUid) &&
+        (cache.get(`publicShares/${username}`)?.username === undefined || cache.get(`publicShares/${username}`).username === username) &&
         authorityConverged(username, authoritativeUid, obsoleteUid, inventory, identities, authoritativeAuth, obsoleteAuth),
       obsoleteHasUniqueState: !unowned, boundary: await readBoundary() };
   };
@@ -126,4 +132,4 @@ function manifestFromState({ projectId, username, state, now = Date.now() }) {
   check(require('./legacy-slot-reconciliation.cjs').classifyState(manifest, state) === 'before', 'repair/initial-state-required');
   return manifest;
 }
-module.exports = { IDENTITY_FIELDS, UID_ROOTS, USERNAME_ROOTS, projectAuth, readIdentityInventory, authorityConverged, createEvidenceReader, manifestFromState };
+module.exports = { IDENTITY_FIELDS, UID_ROOTS, USERNAME_ROOTS, canonicalOwnedBy, projectAuth, readIdentityInventory, authorityConverged, createEvidenceReader, manifestFromState };
