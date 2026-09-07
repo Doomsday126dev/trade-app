@@ -82,7 +82,7 @@ test.describe('isolated My List scale profile',()=>{
     await page.addInitScript(()=>{
       window.__myListLongTasks=[];
       window.__myListLongTaskWindowStart=Infinity;
-      try{new PerformanceObserver(list=>window.__myListLongTasks.push(...list.getEntries().filter(entry=>entry.startTime>=window.__myListLongTaskWindowStart).map(entry=>entry.duration))).observe({type:'longtask',buffered:true});}catch{}
+      try{new PerformanceObserver(list=>window.__myListLongTasks.push(...list.getEntries().filter(entry=>entry.startTime>=window.__myListLongTaskWindowStart).map(entry=>({start:entry.startTime,duration:entry.duration})))) .observe({type:'longtask',buffered:true});}catch{}
     });
     await page.goto(`./?my-list-budget=${Date.now()}`,{waitUntil:'domcontentloaded'});
     await page.waitForFunction(()=>typeof window.__pogoEnsureFullApp==='function');
@@ -104,18 +104,23 @@ test.describe('isolated My List scale profile',()=>{
       productDeclarations=(...args)=>{window.__declarationBuildCalls++;return originalDeclarations(...args);};
     });
     const result=await page.evaluate(async()=>{
+      const phases={interactionStart:performance.now()};
       const stable=document.querySelectorAll('#mylist-out .myrow')[1];
       const filterStart=performance.now();renderMyList('Synthetic Pokemon 0119',{reason:'filter'});const filterMs=performance.now()-filterStart;
+      phases.filterEnd=performance.now();
       const filterDeclarationBuilds=window.__declarationBuildCalls;
       const matched=[...document.querySelectorAll('#mylist-out .myrow')].filter(row=>!row.hidden).length;
       const clearStart=performance.now();renderMyList('',{reason:'filter'});const clearMs=performance.now()-clearStart;
+      phases.clearEnd=performance.now();
       const first=document.querySelector('#mylist-out .myrow'),firstBefore=first;
       allData.wishlist[cur][first.dataset.name]='M[shiny]';
       const editStart=performance.now();renderMyList();const editMs=performance.now()-editStart;
+      phases.editEnd=performance.now();
       const stringRendersImmediatelyAfterEdit=window.__myListStringRenderCalls;
       const firstAfter=document.querySelector('#mylist-out .myrow');
       const input=document.getElementById('mylist-filter');
       for(const value of['S','Sy','Synthetic Pokemon 0007']){input.value=value;input.dispatchEvent(new Event('input',{bubbles:true}));}
+      phases.inputEnd=performance.now();
       await new Promise(resolve=>setTimeout(resolve,MY_LIST_FILTER_DELAY_MS+40));
       await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
       await waitForMyListRender();
@@ -127,10 +132,13 @@ test.describe('isolated My List scale profile',()=>{
         stringRendersAfterSettle:window.__myListStringRenderCalls,
         latestQuery:window.__pogoMyListRenderState?.query,
         visible:[...document.querySelectorAll('#mylist-out .myrow')].filter(row=>!row.hidden).length,
-        maxLongTask:Math.max(0,...window.__myListLongTasks)
+        maxLongTask:Math.max(0,...window.__myListLongTasks.map(entry=>entry.duration)),
+        longTasks:window.__myListLongTasks,phases:{...phases,settled:performance.now()},
+        measurementStart:window.__myListLongTaskWindowStart
       };
     });
     await client.send('Emulation.setCPUThrottlingRate',{rate:1});
+    console.log(`MY_LIST_4X_BUDGET ${JSON.stringify(result)}`);
     expect(result).toMatchObject({matched:1,stableRowPreserved:true,changedRowReplaced:true,stringRendersImmediatelyAfterEdit:0,latestQuery:'synthetic pokemon 0007',visible:1});
     expect(result.stringRendersAfterSettle).toBeGreaterThan(0);
     expect(result.filterDeclarationBuilds).toBe(1);
@@ -139,6 +147,5 @@ test.describe('isolated My List scale profile',()=>{
     expect(result.editMs).toBeLessThan(100);
     expect(Math.max(result.filterMs,result.clearMs,result.editMs)).toBeLessThan(200);
     expect(result.maxLongTask).toBeLessThanOrEqual(200);
-    console.log(`MY_LIST_4X_BUDGET ${JSON.stringify(result)}`);
   });
 });
