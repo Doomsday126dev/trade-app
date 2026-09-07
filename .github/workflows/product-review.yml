@@ -44,7 +44,7 @@ jobs:
       - name: Syntax, hygiene and changed-area contracts
         run: node scripts/select-product-checks.cjs
       - if: steps.selection.outputs.browser == 'true'
-        run: npx playwright install --with-deps chromium
-      - name: Affected Chromium journeys
+        run: npx playwright install --with-deps chromium webkit
+      - name: Affected browser journeys
         if: steps.selection.outputs.browser == 'true'
         run: node scripts/select-product-checks.cjs --browser

@@ -225,20 +225,23 @@ test('safe owner journey covers the pre-trusted product contract',async({page})=
   await expect(pikachu.getByRole('button',{name:'Remove Pikachu'})).toBeVisible();
   await capture(page,'trusted-journey-my-list-1440x900');
 
-  await page.evaluate(()=>{
-    document.getElementById('add-pmon-sel').value='Squirtle';
-    document.getElementById('ac-input').value='Squirtle';
-    document.getElementById('add-pmon-pri').value='L';
-  });
-  await page.evaluate(()=>addEntry());
+  await page.locator('#wants-add-name').fill('Squirtle');
+  await page.locator('[data-wants-add-priority="L"]').click();
+  await page.locator('.wants-add-form [type="submit"]').click();
   await expect(page.locator('.myrow[data-name="Squirtle"]')).toBeVisible();
-  await page.evaluate(()=>movePriority('Squirtle','M'));
-  await expect.poll(()=>page.evaluate(()=>parsePri(allData.wishlist.TrustedTester.Squirtle).p)).toBe('M');
+  const addedId=await page.evaluate(()=>productDeclarations().entries.find(entry=>entry.name==='Squirtle').ref.entityId);
+  await expect.poll(()=>page.evaluate(()=>productDeclarations().entries.find(entry=>entry.name==='Squirtle').p)).toBe('L');
+  await page.locator('.myrow[data-name="Squirtle"] .myrow-edit').click();
+  if(await page.locator('#combined-editor-modal details').getAttribute('open')===null)await page.locator('#combined-editor-modal details > summary').click();
+  await page.locator('#combined-priority').selectOption('M');
+  await page.locator('#combined-save').click();
+  await expect.poll(()=>page.evaluate(()=>productDeclarations().entries.find(entry=>entry.name==='Squirtle').p)).toBe('M');
 
   page.once('dialog',dialog=>dialog.accept());
   await page.locator('.myrow[data-name="Squirtle"] .myrow-remove').click();
   await expect(page.locator('.myrow[data-name="Squirtle"]')).toHaveCount(0);
-  expect(await page.evaluate(()=>window.__trustedWrites.filter(item=>item.kind==='entity'&&item.name==='Squirtle').at(-1))).toMatchObject({value:null});
+  expect(await page.evaluate(id=>accountSyncCanonicalEntities.find(entry=>entry.entityId===id)?.deleted,addedId)).toBe(true);
+  expect(await page.evaluate(()=>window.__trustedWrites||[])).toEqual([]);
 
   await page.evaluate(()=>{switchTab('find',{render:false});renderFindTrainer();});
   await expect(page.locator('#find-trainer-title')).toHaveText('Find Trainer');
