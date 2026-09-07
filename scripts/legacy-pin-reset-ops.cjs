@@ -75,7 +75,7 @@ async function provision() {
   assert.match(owner, /^[A-Za-z0-9_-]{1,128}$/);
   assert.equal((await api(`${DB}/admins/${owner}.json`)).value, true);
   assert.equal((await api(`${DB}/authIndex/${owner}/username.json`)).value, 'Doomsday126');
-  save('runtime-config.json', { LEGACY_PIN_RESET_ENABLED: 'false', LEGACY_IDENTITY_BOUNDARY: 'immutable-bindings-v1', LEGACY_PIN_RESET_OWNER_UID: owner });
+  save('runtime-config.json', { LEGACY_PIN_RESET_ENABLED: 'false', LEGACY_IDENTITY_BOUNDARY: plan.identityBoundary.mode, LEGACY_PIN_RESET_OWNER_UID: owner });
   save('provisioned.json', { at: new Date().toISOString(), project: PROJECT, roles, runtime: RUNTIME, secret, bucket });
   console.log('Provisioned dedicated reset resources; retired SDK principal is read-only. Backend remains disabled.');
 }

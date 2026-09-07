@@ -20,9 +20,9 @@ function fixture(env = {}) {
     'firebase-functions/params': { defineSecret: name => { assert.equal(name, 'legacy-pin-reset-hmac'); return { value: () => 'k'.repeat(64) }; } },
     './reset': { createResetService: () => ({ run: async context => { calls++; assert.equal(context.appVerified, true); if (dispatchFailure) throw dispatchFailure; return { status: 'completed' }; } }) },
     './adapter': { createAdapter: () => ({}) }, './journal': { createJournal: () => ({}), createGcsStore: () => ({}) },
-    './password': { createPasswordUpdater: () => () => {} }, './envelope': require('../envelope')
+    './password': { createPasswordUpdater: () => () => {} }, './envelope': require('../envelope'), './identity-fence': require('../identity-fence')
   };
-  const context = vm.createContext({ exports: {}, process: { env: { GCLOUD_PROJECT: 'trade-list-a4297', LEGACY_PIN_RESET_ENABLED: 'true', LEGACY_IDENTITY_BOUNDARY: 'immutable-bindings-v1', LEGACY_PIN_RESET_OWNER_UID: 'owner-uid', ...env } },
+  const context = vm.createContext({ exports: {}, process: { env: { GCLOUD_PROJECT: 'trade-list-a4297', LEGACY_PIN_RESET_ENABLED: 'true', LEGACY_IDENTITY_BOUNDARY: require('../identity-fence').CONTRACT, LEGACY_PIN_RESET_OWNER_UID: 'owner-uid', ...env } },
     console: Object.fromEntries(['log', 'info', 'warn', 'error', 'debug'].map(name => [name, (...args) => logs.push(args)])),
     require: name => { assert.ok(Object.hasOwn(modules, name), `Unexpected dependency ${name}`); return modules[name]; } });
   vm.runInContext(source, context);
@@ -47,7 +47,7 @@ test('missing auth, App Check, consumed tokens, mismatched identity and revoked 
   const f = fixture(); f.revoke(); await assert.rejects(f.handler(f.request), { message: 'reset/unavailable' }); assert.equal(f.calls(), 0);
 });
 test('production gate, exact project and emulator-variable exclusion are fail-closed', async () => {
-  for (const env of [{ LEGACY_PIN_RESET_ENABLED: 'false' }, { LEGACY_IDENTITY_BOUNDARY: '' }, { GCLOUD_PROJECT: 'other' }, { LEGACY_PIN_RESET_OWNER_UID: '' },
+  for (const env of [{ LEGACY_PIN_RESET_ENABLED: 'false' }, { LEGACY_IDENTITY_BOUNDARY: '' }, { LEGACY_IDENTITY_BOUNDARY: 'immutable-bindings-v1' }, { GCLOUD_PROJECT: 'other' }, { LEGACY_PIN_RESET_OWNER_UID: '' },
     { FIREBASE_AUTH_EMULATOR_HOST: 'localhost:9499' }, { FIREBASE_DATABASE_EMULATOR_HOST: 'localhost:9400' }, { FIRESTORE_EMULATOR_HOST: 'localhost:8080' }]) {
     const f = fixture(env); await assert.rejects(f.handler(f.request), { message: 'reset/not-enabled' }); assert.equal(f.calls(), 0);
   }

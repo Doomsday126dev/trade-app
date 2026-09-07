@@ -11,12 +11,13 @@ const { createAdapter } = require('./adapter');
 const { createJournal, createGcsStore } = require('./journal');
 const { createPasswordUpdater } = require('./password');
 const { guardEnvelope } = require('./envelope');
+const { CONTRACT } = require('./identity-fence');
 const PROJECT = 'trade-list-a4297';
 const RUNTIME = `legacy-pin-reset-runtime@${PROJECT}.iam.gserviceaccount.com`;
 const secret = defineSecret('legacy-pin-reset-hmac');
 let service;
 function configuredService() {
-  if (process.env.LEGACY_PIN_RESET_ENABLED !== 'true' || process.env.LEGACY_IDENTITY_BOUNDARY !== 'immutable-bindings-v1' || process.env.GCLOUD_PROJECT !== PROJECT ||
+  if (process.env.LEGACY_PIN_RESET_ENABLED !== 'true' || process.env.LEGACY_IDENTITY_BOUNDARY !== CONTRACT || process.env.GCLOUD_PROJECT !== PROJECT ||
       process.env.FIREBASE_AUTH_EMULATOR_HOST || process.env.FIREBASE_DATABASE_EMULATOR_HOST || process.env.FIRESTORE_EMULATOR_HOST ||
       !/^[A-Za-z0-9_-]{1,128}$/.test(process.env.LEGACY_PIN_RESET_OWNER_UID || '')) throw new HttpsError('unavailable', 'reset/not-enabled');
   if (!service) {

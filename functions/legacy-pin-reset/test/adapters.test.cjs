@@ -43,6 +43,29 @@ test('GCS store pins read generation and uses conditional overwrite; missing obj
   const missing = createGcsStore({ file: () => ({ getMetadata: async () => { throw Object.assign(new Error(), { code: 404 }); } }) });
   await assert.rejects(missing.read());
 });
+test('retired slot rejects orphan authority parents and reverse records with bounded read-only queries', async () => {
+  const parents = ['accounts', 'identityMigrations', 'identityConflicts', 'operationRequests'];
+  const reverse = ['providerSubjects', 'trainerHandles'];
+  for (const blocked of ['none', ...parents, ...reverse]) {
+    const queries = [], docs = [];
+    const adapter = createAdapter({
+      database: { ref: () => ({ get: async () => ({ val: () => null }) }) },
+      firestore: {
+        doc: path => { docs.push(path); return { get: async () => ({ exists: path === `${blocked}/old-uid` }) }; },
+        collection: path => {
+          const query = { where(field, operator, uid) { queries.push([path, field, operator, uid]); return query; },
+            limit(count) { assert.equal(count, 1); return query; }, get: async () => ({ empty: path !== blocked }) };
+          return query;
+        }
+      }
+    });
+    assert.equal(await adapter.retiredSlotIsUnowned('old-uid', 'current-uid', 'Trainer'), blocked === 'none');
+    if (blocked === 'none') {
+      assert.deepEqual(docs, parents.map(root => `${root}/old-uid`));
+      assert.deepEqual(queries, reverse.map(root => [root, 'uid', '==', 'old-uid']));
+    }
+  }
+});
 test('read-only evidence acquisition errors fail closed', async () => {
   const adapter = createAdapter({ database: { ref: () => ({ get: async () => { throw new Error('permission denied'); } }) },
     firestore: { doc: () => ({ get: async () => { throw new Error('permission denied'); } }) } });
@@ -56,7 +79,7 @@ test('deployment plan has no product write/create/delete or provider runtime aut
   assert.equal(plan.runtimePermissions.secret.bindingScope, 'this-secret-only');
   assert.equal(plan.runtimePermissions.journal.object, 'legacy-pin-reset/v1/ledger.json');
   assert.equal(plan.runtimePermissions.journal.publicAccessPrevention, 'enforced');
-  assert.equal(plan.identityBoundary.mode, 'immutable-bindings-v1');
+  assert.equal(plan.identityBoundary.mode, require('../identity-fence').CONTRACT);
   assert.deepEqual(plan.identityBoundary.legacySdkReplacementPermissions, ['firebaseauth.users.get', 'firebasedatabase.instances.get']);
   assert.ok(plan.identityBoundary.legacySdkRemoveProjectRoles.includes('roles/iam.serviceAccountTokenCreator'));
   for(const permission of plan.identityBoundary.prohibitedApplicationPermissions)assert.ok(!plan.runtimePermissions.project.includes(permission));

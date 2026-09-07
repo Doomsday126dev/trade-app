@@ -1,6 +1,7 @@
 'use strict';
 
 const { createHash, createHmac } = require('node:crypto');
+const { isRetiredFence } = require('./identity-fence');
 const OWNER = 'Doomsday126';
 const USERNAME = /^[A-Za-z0-9 _-]{1,64}$/;
 const UID = /^[A-Za-z0-9_-]{1,128}$/;
@@ -33,6 +34,7 @@ function createResetService({ adapter, journal, ownerUid, hmacKey, now = Date.no
     requireThat(context?.uid && context.appVerified === true, 'reset/unauthenticated');
     requireThat(context.uid === ownerUid && Number.isSafeInteger(context.authTime) &&
       context.authTime * 1000 <= now() + 30000 && now() - context.authTime * 1000 <= 15 * 60 * 1000, 'reset/owner-required');
+    requireThat(await adapter.readIdentityFence(ownerUid) === null, 'reset/owner-required');
     const evidence = await adapter.readEvidence();
     requireThat(evidence.admins?.[ownerUid] === true && evidence.users?.[OWNER]?.authUid === ownerUid &&
       evidence.users[OWNER].isAdmin === true && evidence.authIndex?.[ownerUid]?.username === OWNER &&
@@ -48,6 +50,7 @@ function createResetService({ adapter, journal, ownerUid, hmacKey, now = Date.no
     requireThat(object(users) && object(loginDirectory) && object(authIndex));
     const user = users[username], directory = loginDirectory[username], uid = user?.authUid;
     requireThat(UID.test(uid || '') && uid !== ownerUid && username !== OWNER);
+    requireThat(await adapter.readIdentityFence(uid) === null);
     const index = authIndex[uid], version = user.authVersion;
     requireThat(!blocked(user) && !blocked(directory) && !blocked(index) && index.username === username &&
       directory.authReady === true && Number.isSafeInteger(version) && version >= 1 &&
@@ -69,10 +72,33 @@ function createResetService({ adapter, journal, ownerUid, hmacKey, now = Date.no
       !account.tenantId && typeof account.metadata?.creationTime === 'string' && Number.isFinite(Date.parse(account.metadata.creationTime)));
     const linked = providers(account);
     requireThat(linked.some(p => p[0] === 'password' && p[1] === user.authEmail), 'reset/legacy-credential-required');
-    const emailPattern = new RegExp(`^${baseEmail(username)}(?:_v[1-9][0-9]*)?@pogotrades\\.nyc$`);
+    const emailPattern = new RegExp(`^${baseEmail(username)}(?:_v[1-9][0-9]*)?@pogotrades\\.nyc$`, 'i');
     const matches = (await adapter.listAuthIdentities()).filter(a => emailPattern.test(a.email || ''));
-    requireThat(matches.length === 1 && matches[0].uid === uid);
+    const selected = matches.filter(a => a.uid === uid);
+    requireThat(selected.length === 1 && selected[0].email === user.authEmail && selected[0].disabled !== true &&
+      new Set(matches.map(a => a.uid)).size === matches.length);
+    const retiredSlots = [];
+    for (const match of matches.filter(a => a.uid !== uid)) {
+      const slot = match.email === authEmail(username, 1) ? 1 : Number(/_v([1-9][0-9]*)@pogotrades\.nyc$/.exec(match.email)?.[1]);
+      requireThat(UID.test(match.uid || '') && match.uid !== ownerUid && match.disabled === true &&
+        Number.isSafeInteger(slot) && slot < version && match.email === authEmail(username, slot));
+      requireThat(!Object.values(users).some(value => value?.authUid === match.uid || value?.authEmail === match.email) &&
+        !Object.values(loginDirectory).some(value => value?.authUid === match.uid || value?.authEmail === match.email) &&
+        !Object.hasOwn(authIndex, match.uid) && evidence.admins?.[match.uid] !== true);
+      const retired = await adapter.getAuthUser(match.uid), created = retired?.metadata?.creationTime;
+      requireThat(retired?.uid === match.uid && retired.email === match.email && retired.disabled === true && !retired.tenantId &&
+        typeof created === 'string' && Number.isFinite(Date.parse(created)) && Date.parse(created) <= Date.parse(account.metadata.creationTime) &&
+        !retired.phoneNumber && !Object.keys(retired.customClaims || {}).length && !(retired.multiFactor?.enrolledFactors || []).length);
+      const retiredProviders = providers(retired);
+      requireThat(retiredProviders.length === 1 && retiredProviders[0][0] === 'password' && retiredProviders[0][1] === match.email);
+      const fence = await adapter.readIdentityFence(match.uid);
+      requireThat(isRetiredFence(fence, { authoritativeUid: uid, obsoleteUid: match.uid, username, authVersion: version, obsoleteVersion: slot,
+        authoritativeCreatedAt: Date.parse(account.metadata.creationTime), obsoleteCreatedAt: Date.parse(created) }) && fence.createdAt <= now() + 30000);
+      requireThat(await adapter.legacyOnly(match.uid, username) && await adapter.retiredSlotIsUnowned(match.uid, uid, username));
+      retiredSlots.push({ uid: match.uid, email: match.email, created, providers: retiredProviders, retirementManifest: fence.manifestFingerprint, retiredAt: fence.createdAt });
+    }
     const stable = { username, uid, email: account.email, version, created: account.metadata.creationTime, providers: linked };
+    if (retiredSlots.length) stable.retiredSlots = retiredSlots.sort((a, b) => a.uid.localeCompare(b.uid));
     return { username, targetUid: uid, fingerprint: digest(stable), created: stable.created };
   }
   function validate(input) {
