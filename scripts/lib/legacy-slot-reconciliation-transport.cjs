@@ -61,7 +61,8 @@ function createReconciliationTransport({ manifest, credential, readObsoleteAuth,
       await requireRetirement();
       requireThat(fingerprint(await readObsoleteAuth(uid)) === expectedFingerprint, 'repair/precondition-changed');
       const response = await fetchImpl(`${authOrigin}/v1/projects/${project}/accounts:update`, { method: 'POST', redirect: 'error', signal: AbortSignal.timeout(15000),
-        headers: { Authorization: `Bearer ${await accessToken()}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ localId: uid, disableUser: true }) });
+        headers: { Authorization: `Bearer ${await accessToken()}`, 'Content-Type': 'application/json', ...(emulator ? {} : { 'X-Goog-User-Project': project }) },
+        body: JSON.stringify({ localId: uid, disableUser: true }) });
       if (!response.ok) { await response.body?.cancel(); requireThat(false, 'repair/disable-unconfirmed'); }
       requireThat((await response.json()).localId === uid, 'repair/disable-unconfirmed');
     }
