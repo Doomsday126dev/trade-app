@@ -81,3 +81,51 @@ test('owner Admin reset, masked PINs, lost-response reconciliation and mobile la
   expect(await page.evaluate(()=>legacyPinResetAvailable())).toBe(false);
   await expect(dialog).toHaveCount(0);await expect(page.locator('[data-admin-user-action="reset-existing"]')).toHaveCount(0);
 });
+
+test('owner inspect errors explain bounded eligibility failures without suggesting an identity repair by sign-in',async({page})=>{
+  await page.route(/(?:firebaseio\.com|firebasedatabase\.app|identitytoolkit\.googleapis\.com|firestore\.googleapis\.com|cloudfunctions\.net)/,route=>route.abort());
+  await page.goto('./?pin-reset-error-qualification');
+  await page.waitForFunction(()=>typeof window.__pogoEnsureFullApp==='function');
+  await page.evaluate(()=>window.__pogoEnsureFullApp('pin-reset-error-qualification'));
+  await page.waitForFunction(()=>typeof openExistingPinReset==='function'&&window.__pogoStartup?.firebaseStartupSettledAt!=null);
+  await page.evaluate(()=>{
+    managedSubscriptions.unsubscribeAll?.();
+    auth={currentUser:{uid:'reset-owner'}};cur='Doomsday126';currentAuthUid='reset-owner';_authStateKnown=true;db=null;fbOn=false;
+    activateOwnedSession('reset-owner','Doomsday126');
+    allData.users={Doomsday126:{authUid:'reset-owner',isAdmin:true},Trainer:{authUid:'reset-target',authEmail:'trainer_v3@pogotrades.nyc',authVersion:3}};
+    allData.loginDirectory={Trainer:{authReady:true,authVersion:3}};
+    window.__resetErrorActions=[];
+    document.getElementById('login-pg').style.display='none';document.getElementById('app').style.display='flex';
+    switchTab('admin',{render:false});renderAdmin();setAdminSection('maintenance');
+  });
+  const dialog=page.getByRole('dialog',{name:'Reset PIN'});
+  for(const [code,text] of [
+    ['reset/identity-conflict','Account identity is inconsistent.'],
+    ['reset/identity-not-legacy','Account is not eligible for legacy PIN reset.'],
+    ['reset/owner-required','Owner authorization could not be verified.'],
+    ['reset/not-enabled','Reset service unavailable.']
+  ]){
+    await page.evaluate(code=>{callLegacyPinReset=async data=>{window.__resetErrorActions.push(data.action);throw Object.assign(new Error(code),{code:'functions/failed-precondition'});};openExistingPinReset('Trainer');},code);
+    await expect(dialog.getByRole('status')).toContainText(text);
+    await expect(dialog.getByRole('status')).toContainText('No reset was sent.');
+    await expect(dialog.getByRole('status')).not.toContainText('Sign in again');
+    await expect(dialog.getByLabel('New PIN',{exact:true})).toBeDisabled();
+    await expect(dialog.getByRole('button',{name:'Confirm reset'})).toBeDisabled();
+    await dialog.locator('[data-reset-diagnostics] summary').click();
+    await expect(dialog.locator('[data-reset-diagnostics] code')).toHaveText(code);
+    for(const width of [1440,390]){
+      await page.setViewportSize({width,height:844});
+      const box=await dialog.boundingBox();expect(box.x).toBeGreaterThanOrEqual(0);expect(box.x+box.width).toBeLessThanOrEqual(width);
+      expect(await dialog.evaluate(node=>node.scrollWidth<=node.clientWidth)).toBe(true);
+    }
+    if(code==='reset/identity-conflict')await page.screenshot({path:'test-results/legacy-pin-reset-identity-error-mobile.png'});
+    await dialog.getByRole('button',{name:'Close',exact:true}).click();
+  }
+  expect(await page.evaluate(()=>window.__resetErrorActions)).toEqual(['inspect','inspect','inspect','inspect']);
+  await page.evaluate(()=>{callLegacyPinReset=async()=>{throw new Error('SDK detail 001234 private-token uid-private');};openExistingPinReset('Trainer');});
+  await expect(dialog.getByRole('status')).toContainText('Reset service unavailable.');
+  await expect(dialog).not.toContainText('001234');await expect(dialog).not.toContainText('private-token');
+  await dialog.getByRole('button',{name:'Close',exact:true}).click();
+  await page.evaluate(()=>{cur='Trainer';renderAdmin();openExistingPinReset('Trainer');});
+  await expect(dialog).toHaveCount(0);await expect(page.locator('[data-admin-user-action="reset-existing"]')).toHaveCount(0);
+});

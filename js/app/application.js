@@ -9343,6 +9343,26 @@ function renderAdmin(){
 
 // The dedicated backend independently enforces the pinned owner and identity boundary.
 function legacyPinResetAvailable(){return protectedOwnerSession();}
+function legacyPinResetFailure(error){
+  const messages={
+    'reset/owner-required':'Owner authorization could not be verified.',
+    'reset/unauthenticated':'Owner sign-in or app verification failed.',
+    'reset/identity-conflict':'Account identity is inconsistent. An identity review is required before PIN reset.',
+    'reset/identity-not-legacy':'Account is not eligible for legacy PIN reset.',
+    'reset/legacy-credential-required':'Account is not eligible for legacy PIN reset.',
+    'reset/stale-identity':'Account identity changed. Close this dialog and review the account.',
+    'reset/not-enabled':'Reset service unavailable.',
+    'reset/evidence-unavailable':'Reset service unavailable.',
+    'reset/identity-inventory-too-large':'Reset service unavailable.',
+    'reset/configuration':'Reset service unavailable.',
+    'reset/unavailable':'Reset service unavailable.',
+    'functions/unauthenticated':'Owner sign-in or app verification failed.',
+    'functions/unavailable':'Reset service unavailable.',
+    'functions/deadline-exceeded':'Reset service unavailable.'
+  };
+  const code=[error?.message,error?.code].find(value=>typeof value==='string'&&Object.hasOwn(messages,value))||'reset/unavailable';
+  return{code,message:messages[code]};
+}
 async function callLegacyPinReset(data){
   try{
     const sdk=await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js');
@@ -9362,13 +9382,14 @@ async function openExistingPinReset(username){
   existingPinResetDialog=dialog;
   dialog.className='existing-pin-reset-dialog';
   dialog.setAttribute('aria-labelledby','existing-pin-reset-title');
-  dialog.innerHTML=`<form autocomplete="off"><h2 id="existing-pin-reset-title">Reset PIN</h2><strong data-reset-trainer></strong><p data-reset-confirmation></p><label>New PIN<input name="new-pin" type="password" inputmode="numeric" pattern="[0-9]{6}" minlength="6" maxlength="6" autocomplete="off" required disabled></label><label>Confirm new PIN<input name="confirm-pin" type="password" inputmode="numeric" pattern="[0-9]{6}" minlength="6" maxlength="6" autocomplete="off" required disabled></label><p role="status" aria-live="polite">Checking account...</p><div class="existing-pin-reset-actions"><button type="button" data-reset-close>Close</button><button type="button" data-reset-status hidden>Check result</button><button type="submit" disabled>Confirm reset</button></div></form>`;
+  dialog.innerHTML=`<form autocomplete="off"><h2 id="existing-pin-reset-title">Reset PIN</h2><strong data-reset-trainer></strong><p data-reset-confirmation></p><label>New PIN<input name="new-pin" type="password" inputmode="numeric" pattern="[0-9]{6}" minlength="6" maxlength="6" autocomplete="off" required disabled></label><label>Confirm new PIN<input name="confirm-pin" type="password" inputmode="numeric" pattern="[0-9]{6}" minlength="6" maxlength="6" autocomplete="off" required disabled></label><p role="status" aria-live="polite">Checking account...</p><details data-reset-diagnostics hidden><summary>Owner diagnostics</summary><code></code></details><div class="existing-pin-reset-actions"><button type="button" data-reset-close>Close</button><button type="button" data-reset-status hidden>Check result</button><button type="submit" disabled>Confirm reset</button></div></form>`;
   const form=dialog.querySelector('form'),inputs=[...form.querySelectorAll('input')],submit=form.querySelector('[type="submit"]');
   const status=form.querySelector('[role="status"]'),close=form.querySelector('[data-reset-close]'),check=form.querySelector('[data-reset-status]');
   form.querySelector('[data-reset-trainer]').textContent=username;
   document.body.append(dialog);dialog.showModal();
   let target=null,pending=null,busy=false,closed=false;
   const sameOwner=()=>dialog.isConnected&&cur===OWNER&&auth?.currentUser?.uid===ownerUid;
+  const showFailure=error=>{const failure=legacyPinResetFailure(error),details=form.querySelector('[data-reset-diagnostics]');details.hidden=false;details.querySelector('code').textContent=failure.code;return failure.message;};
   const clearPins=()=>inputs.forEach(input=>{input.value='';});
   const setBusy=value=>{busy=value;close.disabled=value;check.disabled=value;submit.disabled=true;inputs.forEach(input=>{input.disabled=true;});};
   const showResult=result=>{
@@ -9396,7 +9417,7 @@ async function openExistingPinReset(username){
     if(busy||!pending||!sameOwner())return;
     setBusy(true);status.textContent='Checking reset result...';
     try{showResult(await callLegacyPinReset({action:'status',...pending}));}
-    catch{status.textContent='Could not verify this request. Sign in again as owner if needed, then check the result. Do not submit another reset.';}
+    catch(error){if(!closed&&sameOwner())status.textContent=`${showFailure(error)} Could not verify this request. Do not submit another reset.`;}
     finally{setBusy(false);}
   };
   form.onsubmit=async event=>{
@@ -9425,7 +9446,7 @@ async function openExistingPinReset(username){
     if(target?.username!==username||typeof target.targetUid!=='string'||!/^[a-f0-9]{64}$/.test(target.fingerprint)||!Number.isFinite(Date.parse(target.created)))throw new Error('Invalid identity');
     form.querySelector('[data-reset-confirmation]').textContent=`Account created ${new Date(target.created).toLocaleDateString()}`;
     status.textContent='';submit.disabled=false;inputs.forEach(input=>{input.disabled=false;});inputs[0].focus();
-  }catch{status.textContent='This account cannot be reset now. Verify owner sign-in and the server identity checks. No reset was sent.';}
+  }catch(error){if(!closed&&sameOwner())status.textContent=`${showFailure(error)} No reset was sent.`;}
 }
 
 async function repairAccount(u){
