@@ -4,36 +4,16 @@ This release changes only owner-Admin error presentation. It does not change
 reset eligibility, deploy a backend, or repair production identity records.
 The approved .97 My List presentation is unchanged.
 
-## Read-only finding
+## Generic Regression Classes
 
-The reported established legacy account has a ready v3 login directory and an
-enabled, matching v3 Firebase Auth password account, but the current UID has no
-reciprocal authIndex document. The exact deployed reset contract rejects this
-at its first target reciprocity gate with reset/identity-conflict, before its
-Firestore legacyOnly check. Target identifiers and credentials are not published.
-
-A separate enabled v2 password account exists in the same legacy login namespace
-on another UID. The duplicate-slot check would also reject the target even if the
-missing reciprocal index were supplied. This service is not authorized to decide
-ownership, add that index, delete the older Auth account, or remap either UID.
-
-The current target's Firestore account, normalized handle and conflict-event
-documents are absent, so legacyOnly returns true. Its restrictive transitional
-contract is not the cause of this report and is not loosened speculatively.
-
-The deployed reset revision's six security/adapter source modules exactly match
-reviewed source. Enablement, pinned owner, runtime account and immutable-bindings
-configuration match; current RTDB Rules exactly match the qualified guard. Owner
-server admin evidence, reciprocal index and existing enabled Auth user agree.
-The recorded production attempt has VALID Auth and App Check verification.
-
-No historical owner ID token was captured. Its request-specific auth_time and
-explicit revocation result cannot be recovered from those sanitized logs. Their
-enforcement is verified in deployed source and focused SDK/core regressions, not
-misrepresented as a fresh authenticated live probe. The response body was not
-logged; reset/identity-conflict is reproduced from the proven failing contract.
-Targeted RTDB collision queries require unavailable indexes; no index/schema
-change or broad user dump was made. Shallow target-name collision checks passed.
+An established legacy account can have a ready versioned login directory while
+its reciprocal index is absent. Reset must reject that synthetic test shape with
+reset/identity-conflict before Firestore eligibility checks. A separate test
+verifies that multiple Auth slots are rejected even with a reciprocal index.
+Neither case gives the credential-reset endpoint authority to repair identity,
+delete Auth users or remap ownership. The existing legacyOnly contract is not
+loosened speculatively. Account-specific operational findings stay in the owner's
+local report, outside public PR notes.
 
 ## Presentation
 
@@ -70,8 +50,7 @@ the six local performance cases pass. No My List runtime change accompanies it.
 
 There is no live synthetic mutation in this frontend-only correction. Existing
 production synthetic proof is historical, not claimed as a new live result.
-The reported trainer is not reset and remains blocked for an explicit identity
-review outside this credential-reset endpoint.
+An identity inconsistency must be reviewed outside the credential-reset endpoint.
 
 Rollback is a normal Pages rollback to .97. The reset backend remains at its
 previous qualified revision, with latest receipts and secret preserved. Never
