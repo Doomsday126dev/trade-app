@@ -453,7 +453,8 @@ function renderCombinedList(model=productDeclarations()){
     const key=combinedKey(e),signature=JSON.stringify([i18nCore.getLocale(),entries]);
     let row=previous.get(key);
     if(row?.dataset.signature===signature){row.querySelector('input').checked=selected;row.classList.toggle('wants-selected',selected);return row;}
-    const spriteSource=spriteEntryForListItem(e.category||'wishlist',e.name,_nameToSpriteEntry(e.name))||{};
+    const source=myListSourceMap(e.category||'wishlist').get(pokemonCatalogDomain.normalizeCatalogKey(e.name));
+    const spriteSource=spriteEntryForListItem(e.category||'wishlist',e.name,source)||{};
     const dex=e.no||spriteSource.no;
     const spriteUrlForEntry=entrySpriteUrl(spriteSource,e.name,e.gender);
     const hasSprite=Boolean(dex||isApprovedRuntimeSpriteUrl(spriteUrlForEntry)||COSTUME_FORM_SPRITE_IDS[e.name]);
