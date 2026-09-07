@@ -201,6 +201,22 @@ test('network adapter permits only exact create-only index and one disable-exist
     { url: `http://127.0.0.1:9500/authIndex/${f.uid}.json?ns=demo-legacy-pin-reset-default-rtdb`, method: 'PUT', redirect: 'error', etag: 'null_etag', body: f.index }
   ]);
 });
+test('production Auth transport binds operator OAuth quota to the exact authorized project without changing mutation scope', async () => {
+  const f = fixture(); f.manifest.projectId = 'trade-list-a4297';
+  const fences = expectedFences(f.manifest);
+  f.data[ROOT] = { [f.uid]: fences.authoritative, [f.obsolete]: fences.obsoleteRetired };
+  const calls = [], transport = createReconciliationTransport({ manifest: f.manifest,
+    credential: { getAccessToken: async () => ({ access_token: 'synthetic-operator-token' }) },
+    readObsoleteAuth: async () => structuredClone(f.auth[f.obsolete]), readFence: async uid => ({ value: f.get(`${ROOT}/${uid}`) }),
+    fetchImpl: async (url, options) => { calls.push({ url, options }); return { ok: true, json: async () => ({ localId: f.obsolete }) }; }
+  });
+  await transport.disableExistingAuth(f.obsolete, f.manifest.obsoleteAuthFingerprint);
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].url, 'https://identitytoolkit.googleapis.com/v1/projects/trade-list-a4297/accounts:update');
+  assert.equal(calls[0].options.headers['X-Goog-User-Project'], 'trade-list-a4297');
+  assert.deepEqual(JSON.parse(calls[0].options.body), { localId: f.obsolete, disableUser: true });
+  assert.equal(calls[0].options.redirect, 'error');
+});
 
 for (const failure of ['503', 'network', 'wrong-uid', '412']) test(`transport ${failure} fails without hidden retries or compensation`, async () => {
   const f = heldFixture(); let calls = 0;
