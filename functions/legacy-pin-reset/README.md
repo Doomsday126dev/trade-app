@@ -1,6 +1,8 @@
 # Owner-Assisted Same-UID PIN Reset
 
-Status: **deployed and qualified in production `2026-09-05.88`; auth work closed**.
+Status: the original same-UID reset was deployed and qualified in `2026-09-05.88`.
+The retired-UID extension is emulator-qualified and awaits a reviewed deployment;
+source changes alone do not activate its new security contract.
 See [PRODUCTION_QUALIFICATION.md](PRODUCTION_QUALIFICATION.md) for completed live
 synthetic proof and its limits. The separate non-owner probe was blocked by App
 Check; it is not a passed live authorization test. The friend's account was not
@@ -72,12 +74,19 @@ is excluded; the owner's existing settings flow remains separate.
 
 Target resolution proves exact `users`, `loginDirectory`, `authIndex`, positive
 integer version, expected email, existing enabled Auth UID and password provider.
-Duplicate mappings, normalized aliases, other Auth email versions, disabled or
+Duplicate mappings, normalized aliases, unqualified other Auth email versions, disabled or
 frozen records, provider-only accounts, tenants and malformed evidence fail
 closed. Inventory is bounded to 1,000 records/users, not silently truncated.
 Username support is deliberately bounded to canonical ASCII legacy handles.
 Any Firestore account, handle or conflict evidence is out of scope and blocks
 reset, even when active: this transitional service cannot repair or migrate it.
+
+An older credential slot is acceptable only when disabled, password-only, older
+than the current incarnation, free of independent ownership/state, and bound by
+an exact permanent private retirement record. Both the caller and target must
+be free of maintenance fences. The reset endpoint only reads this evidence; it
+cannot create, release or alter fences or repair an index. See the separate
+[one-account repair playbook](../../docs/LEGACY-IDENTITY-REPAIR.md).
 
 Identity is reread immediately before the password request and after success.
 Auth and RTDB/Firestore do not share a transaction. A deployment window MUST
@@ -135,8 +144,9 @@ RTDB update, Firestore write, bucket IAM management, project Editor/Admin or
 service-account token-creator role. Auth IAM cannot limit `users.update` to the
 password property or a target UID; the fixed adapter and reviewed server-side
 authorization enforce that remaining boundary. RTDB read permission is broader
-than individual paths; only four identity/authorization roots are read and
-nonidentity fields are stripped. Do not describe IAM as field-level security.
+than individual paths; four identity/authorization roots are projected, private
+fences are read for the exact caller/target/retired slots, and bounded historical
+ownership checks apply only to retired slots. Do not describe IAM as field-level security.
 
 GCS overwrite requires create AND delete permission. Versioning protects evidence
 from accidental overwrite, but runtime write compromise is still within this
@@ -199,16 +209,18 @@ is enabled. No rollback or disable is executed by the design-study closeout.
 ```sh
 npm --prefix functions/legacy-pin-reset ci --ignore-scripts
 node --test functions/legacy-pin-reset/test/*.test.cjs tests/admin-reset-safety.test.cjs tests/legacy-pin-reset-login.test.cjs tests/session-transient-state.test.cjs
-firebase emulators:exec --project demo-legacy-pin-reset --config firebase.legacy-pin-reset.emulator.json --only auth "node --test --test-name-pattern='same-UID PIN reset preserves' tests/account-sync-runtime.test.cjs"
+bash scripts/check-legacy-identity-fences.sh
 npx playwright test tests/legacy-pin-reset.spec.js --project desktop --workers 1
 node scripts/check-firebase-reads.js
 ```
 
-The Auth emulator uses the real single-send credential adapter. Its focused
-runtime test establishes 66 reviewed records, resets the same UID, rejects old
-PIN, accepts new PIN and reopens the real sync runtime without migration or
-recovery activation. Canonical storage is the existing in-memory repository
-harness; GCS CAS and the browser callable transport use deterministic doubles.
+The Auth/RTDB emulators use the real single-send reconciliation and credential
+adapters. The focused runtime journey first reconciles a synthetic missing-v3-index
+and enabled-v2-slot shape, including pre-issued-session Rules enforcement. It
+then resets the same UID, rejects the old PIN, accepts the new PIN and reopens
+the real runtime with 66 reviewed records unchanged. Canonical storage uses the
+existing in-memory repository harness and an unchanged RTDB preservation snapshot;
+Firestore absence, GCS CAS and browser callable transport use deterministic doubles.
 This is not live IAM, deployed App Check, real GCS or production-data proof.
 The browser journey uses the real Admin renderer/dialog and backend core, with
 all production Firebase traffic blocked; it covers desktop and mobile sizing.

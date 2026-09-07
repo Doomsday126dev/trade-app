@@ -57,7 +57,7 @@ Reactivating PR63/provider migration while reset is enabled is not qualified.
 Before enablement, inspect effective permissions and test the retired account
 and runtime against denied Auth create/delete and RTDB writes. Read-only evidence
 must remain available. Verify exact deployed Rules and no unrelated policy change.
-The runtime requires `LEGACY_IDENTITY_BOUNDARY=immutable-bindings-v1` in addition
+The retired-UID runtime requires `LEGACY_IDENTITY_BOUNDARY=immutable-bindings-retired-uids-v1` in addition
 to the existing enablement/owner gates. This configuration records qualification;
 the actual exclusion comes from Rules and IAM, not this string or another read.
 
@@ -66,6 +66,43 @@ PIN rejection, new PIN authentication to the same UID, preserved creation time,
 unchanged ownership/product state, exact receipt reconciliation and cross-account
 denials. Never reset the friend as a test. Keep production credentials in private
 operator state, never in commits, arguments, logs or public PR descriptions.
+
+## Retired UID Extension
+
+`firebase.legacy-identity-fences.json` preserves the original guarded Rules and
+adds restrictions to `users/{username}`, `authIndex/{uid}`,
+`loginDirectory/{username}` and `admins/{uid}`. Both the acting UID and relevant
+existing/proposed ownership UIDs must be unfenced. Private
+`legacyIdentityFences/{uid}` records are never client-readable/writable, including
+by owner/Admin sessions. No ancestor or wildcard grants access.
+
+Six canonical account-sync create paths also require an unfenced UID. Existing
+record reads/edits retain their validators and access contracts. This narrow
+creation restriction prevents a stale UID from acquiring new independent canonical
+ownership between maintenance checks; it is not a general historical-data ban.
+Ordinary active-user writes, public reads and unrelated list/profile writes are
+unchanged. Unknown handle/provisioning namespaces retain default denial.
+
+Before repair, disable reset, settle traffic on the disabled revision, wait at
+least 150 seconds (the 120-second runtime limit plus margin) and verify no
+pending/ambiguous ledger entries. Recheck exact
+Rules, runtime identities, provider-disabled gates, all reviewed application
+role permissions and service-account grants. No IAM expansion is part of repair.
+
+Hold the current UID, hold the obsolete UID, permanently retire the obsolete
+UID, disable its existing Auth account, create the exact current reciprocal
+index, then release only the current hold. Each step uses fresh complete evidence;
+RTDB mutations use exact ETags. Permanent retirement precedes Auth disable, so
+previously issued tokens immediately fail Rules without relying on revocation.
+
+The retirement tuple binds both UIDs, name, versions, SDK-compatible creation
+epochs, reason, creation time and manifest fingerprint. The private operator's
+Auth fingerprint additionally retains raw REST creation milliseconds. No PIN,
+password hash, token or product snapshot is included. Retirement is not reversible
+by this tool. On failure, preserve every completed step and inspect the exact
+state before explicit resume; never compensate by deleting fences, re-enabling
+obsolete Auth or restoring a prior PIN. Never roll back to pre-fence Rules while
+retirement records exist. The reset runtime gains no metadata write permission.
 
 ## Clean Device
 

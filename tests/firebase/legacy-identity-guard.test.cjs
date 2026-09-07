@@ -73,6 +73,7 @@ test('real Rules reject ownership repair inside the final-read/password-write in
   const update = createPasswordUpdater({ projectId, emulatorHost: '127.0.0.1:9499' });
   const reset = createResetService({ ownerUid: 'owner-uid', hmacKey: 'test-only'.repeat(8), journal, adapter: {
     readEvidence: async () => (await db('GET', '')).value, getAuthUser: uid => auth.getUser(uid),
+    readIdentityFence: async uid => (await db('GET', `legacyIdentityFences/${uid}`)).value,
     listAuthIdentities: async () => (await auth.listUsers()).users, legacyOnly: async () => true,
     updatePassword: async (uid, pin) => {
       await denied('PATCH', '', { 'users/Trainer/authUid': 'other-uid', 'authIndex/trainer-uid/username': 'Other' });

@@ -8,7 +8,7 @@ test('owner Admin reset, masked PINs, lost-response reconciliation and mobile la
   let value={schemaVersion:1,records:[]},generation=1,mutations=0,loseResponse=false;
   const service=createResetService({ownerUid:'reset-owner',hmacKey:'browser-test-only'.repeat(4),
     journal:createJournal({read:async()=>({value:structuredClone(value),generation}),compareAndSwap:async(expected,next)=>{expect(expected).toBe(generation);value=structuredClone(next);generation++;}}),
-    adapter:{readEvidence:async()=>structuredClone(evidence),getAuthUser:async uid=>uid==='reset-owner'?{uid,disabled:false}:{uid,email:'trainer@pogotrades.nyc',disabled:false,metadata:{creationTime:'2026-01-01T00:00:00Z'},providerData:[{providerId:'password',uid:'trainer@pogotrades.nyc'}]},
+    adapter:{readIdentityFence:async()=>null,readEvidence:async()=>structuredClone(evidence),getAuthUser:async uid=>uid==='reset-owner'?{uid,disabled:false}:{uid,email:'trainer@pogotrades.nyc',disabled:false,metadata:{creationTime:'2026-01-01T00:00:00Z'},providerData:[{providerId:'password',uid:'trainer@pogotrades.nyc'}]},
       legacyOnly:async()=>true,listAuthIdentities:async()=>[{uid:'reset-target',email:'trainer@pogotrades.nyc'}],updatePassword:async()=>{mutations++;}}});
   await page.exposeFunction('resetFixtureTransport',async data=>{
     const result=await service.run({uid:'reset-owner',authTime:Math.floor(Date.now()/1000),appVerified:true},data);

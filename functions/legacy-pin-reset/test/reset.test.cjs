@@ -22,6 +22,7 @@ function fixture() {
     if (expected !== generation) throw Object.assign(new Error(), { code: 412 }); ledger = structuredClone(value); generation++;
   } };
   const adapter = { readEvidence: async () => structuredClone(evidence), getAuthUser: async uid => uid === 'owner-uid' ? { uid, disabled: false } : structuredClone(user),
+    readIdentityFence: async () => null,
     listAuthIdentities: async () => [{ uid: user.uid, email: user.email }], legacyOnly: async () => true,
     updatePassword: async (uid, pin) => { assert.equal(uid, user.uid); password = pin; mutations++; } };
   const service = createResetService({ adapter, journal: createJournal(store), ownerUid: context.uid, hmacKey: 'k'.repeat(64), now: () => now });
@@ -128,7 +129,7 @@ test('concrete adapter exposes only password update; no write is possible throug
   }) });
   await adapter.updatePassword('existing-uid', '654321');
   assert.deepEqual(calls, [{ url: 'https://identitytoolkit.googleapis.com/v1/projects/trade-list-a4297/accounts:update', body: { localId: 'existing-uid', password: '654321' }, redirect: 'error' }]);
-  assert.deepEqual(Object.keys(adapter).sort(), ['getAuthUser', 'legacyOnly', 'listAuthIdentities', 'readEvidence', 'updatePassword']);
+  assert.deepEqual(Object.keys(adapter).sort(), ['getAuthUser', 'legacyOnly', 'listAuthIdentities', 'readEvidence', 'readIdentityFence', 'retiredSlotIsUnowned', 'updatePassword']);
 });
 test('password transport never retries 503 or lost HTTP responses and cannot select a non-emulator alternate project', async () => {
   for (const failure of ['503', 'network']) {

@@ -32,6 +32,9 @@ jobs:
       - name: Owning Functions test dependencies
         if: steps.selection.outputs.functions == 'true'
         run: npm ci --prefix functions --ignore-scripts
+      - name: Isolated legacy PIN reset dependencies
+        if: steps.selection.outputs.legacyReset == 'true'
+        run: npm ci --prefix functions/legacy-pin-reset --ignore-scripts
       - name: Local Rules emulator Java
         if: steps.selection.outputs.rules == 'true'
         run: |

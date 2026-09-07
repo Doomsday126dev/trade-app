@@ -45,3 +45,22 @@ test('normal eligibility edits select exact admission and Chromium proof without
   assert.ok(plan.node.includes('tests/account-sync-eligibility.test.cjs'));assert.ok(plan.browser.includes('tests/normal-sync-product.spec.js'));
   assert.equal(plan.commands.length,0);assert.ok(!plan.node.some(file=>/sprite|events|catalog/.test(file)));
 });
+test('legacy fencing selects isolated reset dependencies, operator, Rules and named recovery journey',()=>{
+  const plan=select(['functions/legacy-pin-reset/reset.js','tests/firebase/database.rules.legacy-identity-fences.json','tests/account-sync-runtime.test.cjs']);
+  assert.equal(plan.legacyReset,true);assert.equal(plan.functions,false);assert.equal(plan.rules,true);
+  assert.ok(plan.node.includes('tests/legacy-slot-reconciliation-evidence.test.cjs'));
+  assert.ok(plan.commands.some(([,args])=>args.includes('scripts/check-legacy-identity-fences.sh')));
+  assert.ok(plan.commands.some(([,args])=>args.includes('functions/legacy-pin-reset')));
+  assert.ok(!plan.node.includes('tests/account-sync-runtime.test.cjs'));
+  assert.ok(!plan.commands.some(([,args])=>args.includes('check:contract')||args.includes('check:sec02-production-rules')));
+  assert.ok(!plan.node.some(file=>/provider/.test(file)));
+});
+test('legacy exemption never suppresses unrelated runtime, backend or Rules coverage',()=>{
+  for(const extra of ['js/data/accountSyncRuntime.js','tests/account-sync-product.test.cjs']){
+    const plan=select(['functions/legacy-pin-reset/reset.js','tests/account-sync-runtime.test.cjs',extra]);
+    assert.ok(plan.node.includes('tests/account-sync-runtime.test.cjs'));
+  }
+  const plan=select(['functions/legacy-pin-reset/reset.js','functions/index.js','tests/firebase/database.rules.json']);
+  assert.equal(plan.functions,true);assert.ok(plan.commands.some(([,args])=>args.includes('check:contract')));
+  assert.ok(plan.commands.some(([,args])=>args.includes('check:sec02-production-rules')));
+});

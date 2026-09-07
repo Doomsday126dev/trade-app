@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "state": "production-qualified-2026-09-05.88",
+  "state": "retired-uid-fence-emulator-qualified-awaiting-reviewed-deployment",
   "blockingFindings": [],
   "identityBoundary": {
-    "mode": "immutable-bindings-v1",
-    "rulesConfig": "firebase.legacy-identity-guard.json",
+    "mode": "immutable-bindings-retired-uids-v1",
+    "rulesConfig": "firebase.legacy-identity-fences.json",
     "legacySdkAccount": "firebase-adminsdk-fbsvc@trade-list-a4297.iam.gserviceaccount.com",
     "legacySdkRemoveProjectRoles": ["roles/firebase.sdkAdminServiceAgent", "roles/firebaseauth.admin", "roles/firebasedatabase.admin", "roles/iam.serviceAccountTokenCreator"],
     "legacySdkReplacementPermissions": ["firebaseauth.users.get", "firebasedatabase.instances.get"],

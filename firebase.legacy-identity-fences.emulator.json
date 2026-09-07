@@ -1,0 +1,12 @@
+{
+  "database": {
+    "instance": "demo-legacy-pin-reset-default-rtdb",
+    "rules": "tests/firebase/database.rules.legacy-identity-fences.json"
+  },
+  "emulators": {
+    "auth": { "host": "127.0.0.1", "port": 9499 },
+    "database": { "host": "127.0.0.1", "port": 9500 },
+    "ui": { "enabled": false },
+    "singleProjectMode": true
+  }
+}

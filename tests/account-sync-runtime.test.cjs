@@ -750,10 +750,11 @@ test('same-UID PIN reset preserves canonical data and reviewed66 across Auth emu
   const app=initializeApp({projectId},'pin-reset-proof'),admin=getAuth(app);
   try{
     await admin.createUser({uid:'reset-admin-uid',email:'reset-admin@example.test',password:'123456'});
-    await admin.createUser({uid:'uid-owner',email:'owner@pogotrades.nyc',password:'123456'});
+    await admin.createUser({uid:'reset-obsolete-v2',email:'owner_v2@pogotrades.nyc',password:'123456'});
+    await admin.createUser({uid:'uid-owner',email:'owner_v3@pogotrades.nyc',password:'123456'});
     await admin.updateUser('uid-owner',{providerToLink:{providerId:'google.com',uid:'emulator-google-subject',email:'synthetic@example.test'}});
     const login=async password=>{
-      const response=await fetch(`http://${host}/identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=emulator`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:'owner@pogotrades.nyc',password,returnSecureToken:true})});
+      const response=await fetch(`http://${host}/identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=emulator`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:'owner_v3@pogotrades.nyc',password,returnSecureToken:true})});
       return{ok:response.ok,body:await response.json()};
     };
     const googleLogin=async()=>{
@@ -770,22 +771,26 @@ test('same-UID PIN reset preserves canonical data and reviewed66 across Auth emu
     const first=make(h.createMemoryJournalState(),async()=>source('reset-baseline',{remote}));await first.start();await first.stop();
     const state=h.createMemoryJournalState(),reviewed=make(state,async()=>source('reset-reviewed',{remote:stale}));await reviewed.start();
     await reviewed.completeRecoveryReviews((await reviewed.listRecoveryCandidates()).map(r=>r.candidateId));await reviewed.stop();
-    const evidence={admins:{'reset-admin-uid':true},users:{Doomsday126:{authUid:'reset-admin-uid',isAdmin:true},Owner:{authUid:'uid-owner',authEmail:'owner@pogotrades.nyc',authVersion:1}},
-      loginDirectory:{Owner:{authReady:true,authVersion:1}},authIndex:{'reset-admin-uid':{username:'Doomsday126'},'uid-owner':{username:'Owner'}}};
+    let evidence={admins:{'reset-admin-uid':true},users:{Doomsday126:{authUid:'reset-admin-uid',isAdmin:true},Owner:{authUid:'uid-owner',authEmail:'owner_v3@pogotrades.nyc',authVersion:3}},
+      loginDirectory:{Owner:{authReady:true,authVersion:3}},authIndex:{'reset-admin-uid':{username:'Doomsday126'}}};
     const products={lf:['Pikachu'],ft:['Eevee'],unprioritized:['Snom'],board:{lf:['Pikachu'],ft:['Eevee']},favorites:['Mazer'],tags:{Mazer:['NYC']},profile:{trainer:'Owner'},publicShare:{ownerUid:'uid-owner'}};
+    const reconciliation=await require('./helpers/legacy-reconciliation-emulator.cjs')({auth:admin,evidence,products,
+      canonical:JSON.parse(JSON.stringify({entries:h.server.snapshot(),recovery:repositoryState.recoveryCandidates}))});
+    evidence=reconciliation.evidence;
     const before=JSON.stringify({canonical:h.server.snapshot(),recovery:repositoryState.recoveryCandidates,evidence,products});
     const migrationBefore=JSON.stringify(repositoryState.migrations),metaBefore=repositoryState.calls.updateMeta;
     const links=(await admin.getUser('uid-owner')).providerData,attempts=h.server.attempts.length,migrations=repositoryState.calls.createMigration;
     let value={schemaVersion:1,records:[]},generation=1;
     const journal=createJournal({read:async()=>({value:structuredClone(value),generation}),compareAndSwap:async(expected,next)=>{assert.equal(expected,generation);value=structuredClone(next);generation++;}});
-    const reset=createResetService({ownerUid:'reset-admin-uid',hmacKey:'emulator-only-key'.repeat(4),journal,adapter:{readEvidence:async()=>structuredClone(evidence),getAuthUser:uid=>admin.getUser(uid),
-      listAuthIdentities:async()=>(await admin.listUsers()).users.map(({uid,email})=>({uid,email})),legacyOnly:async()=>true,updatePassword:createPasswordUpdater({projectId,emulatorHost:host})}});
+    const reset=createResetService({ownerUid:'reset-admin-uid',hmacKey:'emulator-only-key'.repeat(4),journal,
+      adapter:{...reconciliation.adapter,updatePassword:createPasswordUpdater({projectId,emulatorHost:host})}});
     const caller={uid:'reset-admin-uid',appVerified:true,authTime:Math.floor(Date.now()/1000)},target=await reset.run(caller,{action:'inspect',username:'Owner'});
     const {created,...binding}=target,input={action:'reset',...binding,requestId:webcrypto.randomUUID(),pin:'654321'};
     assert.equal((await reset.run(caller,input)).status,'completed');
     assert.equal((await login('123456')).ok,false);assert.equal((await login('654321')).body.localId,'uid-owner');
     await googleLogin();
     assert.deepEqual((await admin.getUser('uid-owner')).providerData,links);
+    await reconciliation.verifyPreserved();
     const reopened=make(state,async()=>{throw new Error('PIN reset must not rerun migration');});await reopened.start();
     assert.equal((await reopened.snapshot()).state,'saved');assert.equal((await reopened.listRecoveryCandidates()).length,0);
     assert.equal((await reopened.listRecoveryCandidates({unresolvedOnly:false})).length,66);await reopened.stop();
