@@ -20,9 +20,10 @@ async function fixture(page){
 }
 test('scope controls output, selection persists across filtering and no data changes',async({page})=>{
   await fixture(page);
-  await expect(page.locator('#combined-list .combined-row')).toHaveCount(2);
+  await expect(page.locator('#combined-list .wants-row')).toHaveCount(2);
   await expect(page.locator('#combined-list')).not.toContainText('Eevee');
-  await expect(page.locator('#combined-search [data-contextual-copy]').first()).toBeVisible();
+  await expect(page.locator('#combined-search [data-wants-copy]').first()).toBeVisible();
+  await page.locator('#wants-selection-tools > summary').click();
   await page.locator('#combined-list input').first().check();
   await page.locator('#combined-filter').fill('Snom');
   await page.locator('#combined-filter').fill('');
@@ -68,9 +69,9 @@ test('wants-only add is one canonical batch, failed save retains the draft',asyn
 test('unchanged rows retain keyboard focus and an open selection search stays scoped',async({page})=>{
   await fixture(page);
   const result=await page.evaluate(()=>{
-    const row=document.querySelector('#combined-list .combined-row'),button=row.querySelector('button');
+    const row=document.querySelector('#combined-list .wants-row'),button=row.querySelector('button');
     button.focus();renderMyList();
-    const stable=document.querySelector('#combined-list .combined-row')===row&&document.activeElement===button;
+    const stable=document.querySelector('#combined-list .wants-row')===row&&document.activeElement===button;
     selectCombinedGroup(0,true);
     document.getElementById('wants-search-scope').value='selected';refreshCombinedSearch();
     const before=document.getElementById('combined-search').textContent;

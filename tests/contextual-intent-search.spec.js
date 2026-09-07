@@ -21,13 +21,14 @@ async function fixture(page){
 test('visible wants search follows filtering, top priority and persistent selection without writes',async({page})=>{
   await fixture(page);
   const panel=page.locator('#combined-search');
-  await expect(panel.locator('[data-contextual-copy]')).toBeVisible();
+  await expect(panel.locator('[data-wants-copy]')).toBeVisible();
   await expect(panel.locator('textarea')).toHaveValue('!traded&25,872');
   await expect(panel).toContainText('Unmapped Fixture');
   await expect(panel).not.toContainText('Chicago');
   await page.locator('#combined-filter').fill('Snom');
   await expect(panel.locator('textarea')).toHaveValue('!traded&872');
   await page.locator('#combined-filter').fill('');
+  await page.locator('#wants-selection-tools > summary').click();
   await page.locator('#combined-list input').first().check();
   await page.locator('#wants-search-scope').selectOption('selected');
   await expect(panel.locator('textarea')).toHaveValue('!traded&25');
@@ -36,7 +37,7 @@ test('visible wants search follows filtering, top priority and persistent select
   await page.locator('#combined-filter').fill('');
   await page.locator('#wants-search-scope').selectOption('top');
   await expect(panel.locator('textarea')).toHaveValue('!traded&25');
-  await panel.locator('[data-contextual-copy]').click();
+  await panel.locator('[data-wants-copy]').click();
   expect(await page.evaluate(()=>__copied)).toBe('!traded&25');
   expect(await page.evaluate(()=>JSON.stringify(allData))).toBe(await page.evaluate(()=>__before));
 });
@@ -47,6 +48,6 @@ test('wants search localizes game terms and empty filters offer no misleading co
     await expect(page.locator('#combined-search textarea')).toHaveValue(`${term}&25,872`);
   }
   await page.locator('#combined-filter').fill('No matching entry');
-  await expect(page.locator('#combined-search [data-contextual-copy]')).toHaveCount(0);
+  await expect(page.locator('#combined-search [data-wants-copy]')).toHaveCount(0);
   expect(await page.evaluate(()=>JSON.stringify(allData))).toBe(await page.evaluate(()=>__before));
 });
