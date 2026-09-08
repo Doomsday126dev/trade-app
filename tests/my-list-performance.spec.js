@@ -37,11 +37,12 @@ async function installListFixture(page,count){
 test.describe('isolated My List scale profile',()=>{
   test('correctness and structural bounds remain stable through 1,000 entries',async({page},testInfo)=>{
     test.skip(testInfo.project.name!=='desktop','Isolated desktop benchmark avoids duplicate noisy timing runs.');
-    await page.route(url=>url.hostname.endsWith('.firebaseio.com')||url.hostname.endsWith('.firebasedatabase.app')||url.hostname.endsWith('googleapis.com'),route=>route.abort());
+    await page.route('https://**/*',route=>route.abort());
     await page.goto(`./?my-list-performance=${Date.now()}`,{waitUntil:'domcontentloaded'});
     await page.waitForFunction(()=>typeof window.__pogoEnsureFullApp==='function');
     await page.evaluate(()=>window.__pogoEnsureFullApp('my-list-performance-test'));
-    await page.waitForFunction(()=>typeof renderMyList==='function'&&typeof resetMyListPerformanceState==='function'&&_authStateKnown===true&&window.__pogoStartup?.firebaseStartupSettledAt!==null);
+    // Remote Firebase is intentionally blocked; benchmark readiness is local app startup.
+    await page.waitForFunction(()=>typeof renderMyList==='function'&&typeof resetMyListPerformanceState==='function'&&window.__pogoStartup?.firebaseStartupSettledAt>0);
     const measurements=[];
     for(const count of [100,250,500,1000]){
       const measurement=await installListFixture(page,count);
@@ -55,9 +56,9 @@ test.describe('isolated My List scale profile',()=>{
       await page.evaluate(()=>waitForMyListRender());
       expect(await page.locator('#combined-list .myrow').count()).toBe(Math.min(count,120));
       // Explicit pagination must make every entry reachable, without idle DOM expansion.
-      while(await page.locator('#combined-list > button').count())await page.locator('#combined-list > button').click();
+      while(await page.locator('#combined-list .wants-show-more').count())await page.locator('#combined-list .wants-show-more').first().click();
       expect(await page.locator('#combined-list .myrow').count()).toBe(count);
-      await page.evaluate(()=>{combinedLimit=120;renderMyList();});
+      await page.evaluate(()=>{resetMyListPerformanceState();renderMyList();});
       const filter=await page.evaluate(()=>{
         const start=performance.now();renderMyList('Synthetic Pokemon 0999',{reason:'filter'});
         return{ms:performance.now()-start,rows:[...document.querySelectorAll('#combined-list .myrow')].filter(row=>!row.hidden).length};
@@ -85,7 +86,7 @@ test.describe('isolated My List scale profile',()=>{
 
   test('120-row filtering and row edits stay within 4x CPU product budgets',async({page},testInfo)=>{
     test.skip(testInfo.project.name!=='desktop','One deterministic Chromium profile owns performance thresholds.');
-    await page.route(url=>url.hostname.endsWith('.firebaseio.com')||url.hostname.endsWith('.firebasedatabase.app')||url.hostname.endsWith('googleapis.com'),route=>route.abort());
+    await page.route('https://**/*',route=>route.abort());
     await page.addInitScript(()=>{
       window.__myListLongTasks=[];
       window.__myListLongTaskWindowStart=Infinity;
@@ -94,7 +95,7 @@ test.describe('isolated My List scale profile',()=>{
     await page.goto(`./?my-list-budget=${Date.now()}`,{waitUntil:'domcontentloaded'});
     await page.waitForFunction(()=>typeof window.__pogoEnsureFullApp==='function');
     await page.evaluate(()=>window.__pogoEnsureFullApp('my-list-budget-test'));
-    await page.waitForFunction(()=>typeof renderMyList==='function'&&_authStateKnown===true&&window.__pogoStartup?.firebaseStartupSettledAt!==null);
+    await page.waitForFunction(()=>typeof renderMyList==='function'&&window.__pogoStartup?.firebaseStartupSettledAt>0);
     const client=await page.context().newCDPSession(page);
     await client.send('Emulation.setCPUThrottlingRate',{rate:4});
     await installListFixture(page,120);

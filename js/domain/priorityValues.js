@@ -70,7 +70,32 @@
     return`${p||''}${lucky?'[lucky]':''}${shiny?'[shiny]':''}${xxl?'[xxl]':''}${xxs?'[xxs]':''}${background?`[bg:${background}]`:''}${qualifier?`(${qualifier})`:''}`;
   }
 
+  // Presentation only: stored priority and canonical declaration identity stay intact.
+  const WANT_FLAGS=Object.freeze(['lucky','shiny','xxl','xxs']);
+  function wantSectionKey(entry){
+    if(['H','M','L'].includes(entry.p))return entry.p;
+    return WANT_FLAGS.filter(flag=>entry[flag]===true).map(flag=>flag.toUpperCase()).join('+')||'NEEDS_PRIORITY';
+  }
+  function wantSections(entries=[]){
+    const groups=new Map();
+    for(const entry of entries){
+      const key=wantSectionKey(entry);
+      if(!groups.has(key))groups.set(key,{key,priority:['H','M','L'].includes(key)?key:'',flags:WANT_FLAGS.filter(flag=>key.split('+').includes(flag.toUpperCase())),entries:[]});
+      groups.get(key).entries.push(entry);
+    }
+    const rank=section=>section.priority?['H','M','L'].indexOf(section.priority):section.key==='NEEDS_PRIORITY'?100:3+WANT_FLAGS.indexOf(section.flags[0]);
+    return [...groups.values()].sort((a,b)=>rank(a)-rank(b)||a.flags.length-b.flags.length||a.key.localeCompare(b.key));
+  }
+  function wantSectionLabel(section,t){
+    if(section.priority)return t({H:'priority.high',M:'priority.medium',L:'priority.low'}[section.priority]);
+    if(section.key==='NEEDS_PRIORITY')return t('workflow.needsPriority');
+    return section.flags.map(flag=>({xxl:'XXL',xxs:'XXS'}[flag]||t(flag==='lucky'?'myList.lucky':'workflow.shiny'))).join(' · ');
+  }
+
   root.priorityValues=Object.freeze({
+    wantSectionKey,
+    wantSections,
+    wantSectionLabel,
     entryGender,
     matchesTradeIntent,
     normalizeBackgroundId,

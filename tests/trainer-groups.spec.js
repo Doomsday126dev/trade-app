@@ -19,7 +19,7 @@ test('Who wants this uses current exact public variants, groups and fenced copy 
   const variant=page.locator('#favorite-lookup-variant');
   const exact=await variant.locator('option').evaluateAll(options=>options.find(option=>option.textContent.includes('♀')).value);
   await variant.selectOption(exact);await expect(output.locator('.favorite-browse-row')).toHaveCount(1);
-  await expect(output).toContainText('Same published variant');await expect(output).toContainText('Top want');await expect(output).toContainText('NYC trades');
+  await expect(output).toContainText('Same published variant');await expect(output).toContainText('High');await expect(output).toContainText('NYC trades');
   await output.locator('[data-contextual-copy]').first().click();expect(await page.evaluate(()=>__copy)).toContain('25');
   const reads=await page.evaluate(()=>__reads.length);
   await page.locator('#favorite-lookup-scope').selectOption({label:'NYC trades'});
@@ -155,7 +155,7 @@ test('Favorite changes use explicit local baselines and current permitted new-wa
   await expect(page.locator('.group-availability')).toContainText('No changes');
   await page.evaluate(()=>{window.__extraWants={Snom:'H',Eevee:'L'};});
   await page.locator('[data-group-action="refresh"]').click();
-  await expect(page.locator('.group-availability')).toContainText('1 new · 1 new Top wants');
+  await expect(page.locator('.group-availability')).toContainText('1 new · 1 new High wants');
   await page.locator('#trainer-group-scope').selectOption('new');
   await expect(page.locator('.group-wants')).toContainText('Eevee');
   await expect(page.locator('.group-wants')).toContainText('Snom');

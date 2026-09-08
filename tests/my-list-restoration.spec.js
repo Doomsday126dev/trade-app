@@ -65,8 +65,9 @@ test('restored rows remain bounded and details stay optional',async({page})=>{
   await fixture(page);
   await expect(page.locator('.combined-row')).toHaveCount(0);
   await expect(page.locator('#combined-list .myrow')).toHaveCount(12);
-  await expect(page.locator('#combined-search textarea')).toBeHidden();
-  await expect(page.getByRole('button',{name:'Copy Search',exact:true})).toBeVisible();
+  const high=page.locator('#combined-list > [data-wants-section="H"]');
+  await expect(high.locator('textarea')).toBeHidden();
+  await expect(high.getByRole('button',{name:'Copy High search',exact:true})).toBeVisible();
   const data=await page.evaluate(()=>JSON.stringify(allData));
   for(const width of [320,390,768,1440]){
     await page.setViewportSize({width,height:900});
@@ -79,9 +80,10 @@ test('restored rows remain bounded and details stay optional',async({page})=>{
     expect(geometry.spriteWidth).toBe(width<=600?32:34);
     expect(geometry.ordered).toBe(true);
   }
-  await page.locator('.wants-search-details > summary').click();
-  await expect(page.locator('#combined-search textarea')).toBeVisible();
-  await expect(page.locator('#combined-search .contextual-manual > summary')).toBeVisible();
+  await high.locator('.wants-search-details > summary').click();
+  await expect(high.locator('textarea')).toBeVisible();
+  await expect(high.locator('.contextual-search-body')).toContainText('Species prefilter only.');
+  await expect(high.locator('.contextual-manual')).toHaveCount(0);
   expect(await page.evaluate(()=>JSON.stringify(allData))).toBe(data);
 });
 
@@ -89,10 +91,11 @@ test('copy failure expands the raw string for manual recovery',async({page})=>{
   test.skip(baseline);
   await fixture(page);
   await page.evaluate(()=>{navigator.clipboard.writeText=async()=>{throw new Error('denied');};});
-  await page.getByRole('button',{name:'Copy Search',exact:true}).click();
-  await expect(page.locator('#combined-search textarea')).toBeVisible();
-  await expect(page.locator('#combined-search textarea')).toBeFocused();
-  await expect(page.locator('#combined-search .contextual-copy-status')).not.toBeEmpty();
+  const high=page.locator('#combined-list > [data-wants-section="H"]');
+  await high.getByRole('button',{name:'Copy High search',exact:true}).click();
+  await expect(high.locator('textarea')).toBeVisible();
+  await expect(high.locator('textarea')).toBeFocused();
+  await expect(high.locator('.contextual-copy-status')).not.toBeEmpty();
 });
 
 test('restored add draft clears across an identity boundary',async({page})=>{

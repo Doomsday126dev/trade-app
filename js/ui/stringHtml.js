@@ -23,20 +23,20 @@
     return `<div class="str-warn-banner">⚠️ Approaching PoGo's ~${POGO_STR_LIMIT} char limit (${len}). Consider splitting soon.</div>`;
   }
 
-  function contextualSearchHtml(plan,{t,title}={}){
+  function contextualSearchHtml(plan,{t,title,compact=false,copyLabel:scopedCopyLabel}={}){
     const {escHtml,escAttr}=global.PogoUtils.textSafety;
     const label=t('contextSearch.species');
     const flags={shiny:'share.flagShiny',lucky:'share.flagLucky',xxl:'share.flagXxl',xxs:'share.flagXxs'};
-    const manual=plan.manual.map(entry=>{
+    const manual=(compact?[]:plan.manual).map(entry=>{
       const qualifiers=[entry.mod,entry.variant,entry.gender,entry.maxType,entry.category==='wishlist'?'':entry.category||entry.type];
       for(const [flag,key]of Object.entries(flags))if(entry[flag])qualifiers.push(t(key));
       return`<li><strong>${escHtml(entry.dn||entry.name||t('contextSearch.unknown'))}</strong>${qualifiers.filter(Boolean).length?` · ${escHtml([...new Set(qualifiers.filter(Boolean))].join(' · '))}`:''}${entry.unresolved?` <span class="contextual-unresolved">${escHtml(t('contextSearch.unresolved'))}</span>`:''}</li>`;
     }).join('');
     const buttons=plan.parts.map((value,index)=>{
-      const copyLabel=plan.parts.length===1?t('restored.copySearch'):t('contextSearch.copyPart',{part:index+1,total:plan.parts.length});
-      return `<button type="button" class="btn btn-primary" data-contextual-copy="${escAttr(value)}" data-copy-index="${index}" aria-label="${escAttr(copyLabel)}"><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-copy"></use></svg>${escHtml(copyLabel)}</button>`;
+      const copyLabel=plan.parts.length===1?(scopedCopyLabel||t('restored.copySearch')):t('contextSearch.copyPart',{part:index+1,total:plan.parts.length});
+      return `<button type="button" class="btn ${compact?'btn-secondary':'btn-primary'}" data-contextual-copy="${escAttr(value)}" data-copy-index="${index}" aria-label="${escAttr(copyLabel)}"><svg class="ui-icon ui-icon-sm" aria-hidden="true"><use href="#ui-icon-copy"></use></svg>${escHtml(compact&&plan.parts.length===1?t('restored.copySearch'):copyLabel)}</button>`;
     }).join('');
-    return`<section class="contextual-search" aria-label="${escAttr(title)}"><div class="contextual-copy-actions">${buttons||`<span class="type-meta">${escHtml(t('contextSearch.empty'))}</span>`}</div><details class="contextual-details wants-search-details"><summary>${escHtml(t('restored.searchDetails'))}</summary><div class="contextual-search-body">${plan.parts.length>1?`<p>${escHtml(t('contextSearch.split',{count:plan.parts.length}))}</p>`:''}${plan.parts.map(value=>`<div class="contextual-search-part"><textarea class="strbox" readonly rows="1" aria-label="${escAttr(label)}">${escHtml(value)}</textarea></div>`).join('')}${manual?`<details class="contextual-manual"><summary>${escHtml(t('contextSearch.manual',{count:plan.total}))}</summary><p>${escHtml(t('contextSearch.warning'))}</p><ul>${manual}</ul></details>`:''}</div></details>${plan.unresolved?`<p class="contextual-unresolved" role="status">${escHtml(t('contextSearch.unresolvedCount',{count:plan.unresolved}))}</p>`:''}<span class="contextual-copy-status" role="status" aria-live="polite"></span></section>`;
+    return`<section class="contextual-search${compact?' wants-compact-search':''}" aria-label="${escAttr(title)}"><div class="contextual-copy-actions">${buttons||`<span class="type-meta">${escHtml(t(plan.total?'workflow.searchUnavailable':'contextSearch.empty'))}</span>`}</div><details class="contextual-details wants-search-details"><summary>${escHtml(t(compact?'workflow.manual':'restored.searchDetails'))}</summary><div class="contextual-search-body">${compact?`<p>${escHtml(t('contextSearch.warning'))}</p>`:''}${plan.parts.length>1?`<p>${escHtml(t('contextSearch.split',{count:plan.parts.length}))}</p>`:''}${plan.parts.map(value=>`<div class="contextual-search-part"><textarea class="strbox" readonly rows="1" aria-label="${escAttr(label)}">${escHtml(value)}</textarea></div>`).join('')}${manual?`<details class="contextual-manual"><summary>${escHtml(t('contextSearch.manual',{count:plan.total}))}</summary><p>${escHtml(t('contextSearch.warning'))}</p><ul>${manual}</ul></details>`:''}</div></details>${plan.unresolved?`<p class="contextual-unresolved" role="status">${escHtml(t('contextSearch.unresolvedCount',{count:plan.unresolved}))}</p>`:''}<span class="contextual-copy-status" role="status" aria-live="polite"></span></section>`;
   }
   if(global.document)global.document.addEventListener('click',async event=>{
     const button=event.target.closest?.('[data-contextual-copy]');if(!button)return;

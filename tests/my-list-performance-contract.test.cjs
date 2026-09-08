@@ -12,9 +12,9 @@ test('the primary wants filter is latest-query debounced',()=>{
 
 test('bounded pagination replaces the obsolete background renderer',()=>{
   assert.match(source,/combinedLimit=120/);
-  assert.match(source,/visible\.slice\(0,combinedLimit\)/);
-  assert.match(source,/combinedLimit\+=120;renderCombinedList\(\)/);
-  assert.match(source,/combinedRowCache\.size<=combinedLimit/);
+  assert.match(source,/filtered\.slice\(0,limit\)/);
+  assert.match(source,/wantsSectionLimits\.set\(key,limit\+120\)/);
+  assert.match(source,/combinedRowCache\.size<=cacheBudget/);
   assert.doesNotMatch(source,/id="mylist-out"|function myListRowHtml\(|function scheduleProgressiveMyListRender\(/);
 });
 

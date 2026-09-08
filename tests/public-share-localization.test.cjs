@@ -73,8 +73,9 @@ test('share renderer routes dynamic chrome through i18n without changing priorit
     'share.flagFemale','share.flagMale','share.flagLucky','share.flagShiny','share.flagXxl','share.flagXxs'
   ])assert.ok(render.includes(key),key);
   assert.match(render,/publicShareUpdatedLabel\(ud\.lastUpdated\)/);
-  assert.match(render,/publicSharePriorityBadge\(p\)/);
-  assert.match(render,/contextualIntentSearchHtml\(list,i18nCore\.t\('contextSearch.current'/);
+  assert.match(render,/wantSections\(list\)/);assert.match(render,/wantSectionLabel\(section\)/);
+  assert.match(render,/contextualIntentSearchHtml\(entries,label,\{compact:true/);
+  assert.doesNotMatch(render,/grouped=\{H:\[\],M:\[\],L:\[\],U:\[\]\}/);
   assert.doesNotMatch(render,/strLevelsHtml\(strs/);
   assert.doesNotMatch(render,/'s Trade List|Updated \$\{|LIST_LABELS\[t\]|No entries in this list|sorted\.length===1\?'entry':'entries'/);
   const priorities=load().PogoDomain.priorities;

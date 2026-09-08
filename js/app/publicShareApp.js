@@ -5,9 +5,9 @@
   const APP_CHECK_SITE_KEY='6Lc6-X8tAAAAAI-MY4WdeI8RV-njpbiFX5mFjDbz';
   const LIST_TYPES=Object.freeze(['wishlist','dynamax','gmax','costumes']);
   const LIST_KEYS=Object.freeze({wishlist:'list.wishlist',dynamax:'list.dynamax',gmax:'list.gigantamax',costumes:'list.others'});
-  const PRIORITY_KEYS=Object.freeze({H:'priority.high',M:'priority.medium',L:'priority.low',U:'product.other'});
+  const SECTION_PAGE_SIZE=80;
   const diagnostics={mode:'anonymous-public-share',authSdkRequested:false,privateReads:0,readPaths:[],events:[]};
-  const state={request:null,snapshot:null,type:'wishlist',status:'idle'};
+  const state={request:null,snapshot:null,type:'wishlist',status:'idle',collapsedSections:new Set(),sectionLimits:Object.create(null)};
   const spriteOptical=(()=>{
     const CACHE_KEY='pogoPublicSpriteOptical_v1',TARGET_FILL=0.78,MAX_SCALE=2.8,MAX_CACHE_ENTRIES=500,CONCURRENCY=2;
     const queue=[],inflight=new Map();let active=0,cache={};
@@ -134,7 +134,7 @@
     const parsed=typeof raw.value==='string'?global.PogoDomain.priorityValues.parsePri(raw.value):encoded;
     const p=String(raw.p||parsed.p||'').toUpperCase();
     return{
-      p:['H','M','L'].includes(p)?p:'U',mod:String(raw.mod??parsed.mod??'').trim(),
+      p:['H','M','L'].includes(p)?p:'',mod:String(raw.mod??parsed.mod??'').trim(),
       lucky:raw.lucky===true||parsed.lucky===true,shiny:raw.shiny===true||parsed.shiny===true,
       xxl:raw.xxl===true||parsed.xxl===true,xxs:raw.xxs===true||parsed.xxs===true,
       backgroundId:''
@@ -150,16 +150,16 @@
     const[src,...fallbacks]=urls;
     return`<div class="share-pcard-sprite-wrap"><img class="share-pcard-sprite public-share-pokemon-sprite" src="${attr(src)}" data-src-key="${attr(src)}" data-optical-sprite data-public-sprite-fallbacks="${attr(fallbacks.join('|'))}" width="34" height="34" alt="" loading="lazy" decoding="async"></div>`;
   }
-  function entryCard(name,value){
+  function entryCard(name,value,sectionFlags=[]){
     const model=entryModel(value),gender=value?.gender||global.PogoDomain.priorityValues.entryGender(model.mod);
     const cleanMod=model.mod.replace(/\b(female|male|f|m)\b/gi,'').replace(/\s+/g,' ').trim();
     const flags=[
       gender==='f'?`<span class="share-pcard-flag gender-f" title="${attr(t('share.flagFemale'))}">♀</span>`:'',
       gender==='m'?`<span class="share-pcard-flag gender-m" title="${attr(t('share.flagMale'))}">♂</span>`:'',
-      model.lucky?`<span class="share-pcard-flag lucky" title="${attr(t('share.flagLucky'))}">⚡</span>`:'',
-      model.shiny?`<span class="share-pcard-flag shiny" title="${attr(t('share.flagShiny'))}">✨</span>`:'',
-      model.xxl?`<span class="share-pcard-flag xxl" title="${attr(t('share.flagXxl'))}">XXL</span>`:'',
-      model.xxs?`<span class="share-pcard-flag xxs" title="${attr(t('share.flagXxs'))}">XXS</span>`:'',
+      model.lucky&&!sectionFlags.includes('lucky')?`<span class="share-pcard-flag lucky" title="${attr(t('share.flagLucky'))}">⚡</span>`:'',
+      model.shiny&&!sectionFlags.includes('shiny')?`<span class="share-pcard-flag shiny" title="${attr(t('share.flagShiny'))}">✨</span>`:'',
+      model.xxl&&!sectionFlags.includes('xxl')?`<span class="share-pcard-flag xxl" title="${attr(t('share.flagXxl'))}">XXL</span>`:'',
+      model.xxs&&!sectionFlags.includes('xxs')?`<span class="share-pcard-flag xxs" title="${attr(t('share.flagXxs'))}">XXS</span>`:'',
     ].filter(Boolean).join('');
     return`<article class="share-pcard card-row">${spriteHtml(name,gender)}<div class="share-pcard-info"><span class="share-pcard-name">${esc(name)}</span>${cleanMod||flags?`<div class="share-pcard-meta">${cleanMod?`<span class="share-pcard-mod">${esc(cleanMod)}</span>`:''}${flags}</div>`:''}${value?.note?`<p class="share-pcard-mod">${esc(value.note)}</p>`:''}</div></article>`;
   }
@@ -183,25 +183,27 @@
     if(tabs)tabs.innerHTML=visible.map(type=>`<button type="button" class="ltab ${type===state.type?'active':''}" data-public-share-action="list" data-list-type="${type}" aria-pressed="${type===state.type}">${esc(t('share.listTab',{label:listLabel(type),count:core().formatNumber(counts[type])}))}</button>`).join('');
   }
   function renderList(snapshot){
-    const list=global.PogoDomain.publicSharePublication.intentEntries(snapshot,'lf',state.type),groups={H:[],M:[],L:[],U:[]};
-    for(const entry of list){const value=entry.value??entry;groups[entryModel(value).p].push([entry.name,value]);}
+    const list=global.PogoDomain.publicSharePublication.intentEntries(snapshot,'lf',state.type).map(entry=>{
+      const value=entry.value??entry,model=entryModel(value);
+      return{...entry,...model,gender:entry.gender||value?.gender||global.PogoDomain.priorityValues.entryGender(model.mod),note:entry.note||value?.note||'',no:global.PogoDomain.spriteSlugs.publicSpriteDex(entry.name)};
+    });
     const out=document.getElementById('share-list-out');if(!out)return;
     if(!list.length){
       out.innerHTML=`<div class="empty public-share-empty"><div class="empty-icon" aria-hidden="true">📋</div><h3>${esc(t('share.emptyTitle'))}</h3><p>${esc(t('share.emptyHelp'))}</p></div>${ctaHtml()}`;
       return;
     }
-    const sections=['H','M','L','U'].map(priority=>{
-      const entries=groups[priority];
-      if(!entries.length)return'';
-      return`<section class="share-section"><div class="share-section-hdr"><span class="badge ${priority}">${priority==='U'?'':`<span class="prio-mark">${priority}</span>`}${esc(t(PRIORITY_KEYS[priority]))}</span><span class="share-section-count">${esc(core().formatPlural('share.entryCount',entries.length))}</span></div><div class="share-pgrid">${entries.map(([name,value])=>entryCard(name,value)).join('')}</div></section>`;
+    const sections=global.PogoDomain.priorityValues.wantSections(list).map(section=>{
+      const {entries,key,priority}=section,label=global.PogoDomain.priorityValues.wantSectionLabel(section,t);
+      const stateKey=`${state.type}:${key}`,collapsed=state.collapsedSections.has(stateKey),limit=state.sectionLimits[stateKey]||SECTION_PAGE_SIZE;
+      const id=`public-wants-${state.type}-${key.toLowerCase().replace(/[^a-z0-9]+/g,'-')}`;
+      return`<section class="share-section share-want-section" data-want-section="${attr(key)}" aria-labelledby="${id}-title"><div class="share-section-hdr"><h2 class="share-section-title"><button type="button" id="${id}-title" class="share-section-toggle" data-public-share-action="toggle-section" data-section-key="${attr(key)}" aria-expanded="${!collapsed}" aria-controls="${id}-entries"><span class="share-section-chevron" aria-hidden="true">${collapsed?'›':'⌄'}</span><span class="badge ${priority||'special'}">${esc(label)}</span><span class="share-section-count">${esc(core().formatPlural('share.entryCount',entries.length))}</span></button></h2>${searchHtml(entries,label)}</div><div id="${id}-entries" class="share-section-content"${collapsed?' hidden':''}>${collapsed?'':`<div class="share-pgrid">${entries.slice(0,limit).map(entry=>entryCard(entry.name,entry,section.flags)).join('')}</div>${entries.length>limit?`<button type="button" class="btn btn-secondary share-section-more" data-public-share-action="more-section" data-section-key="${attr(key)}" aria-label="${attr(t('workflow.showSection',{section:label}))}">${esc(t('common.showMore'))}<span class="share-section-count">${esc(core().formatNumber(Math.min(limit,entries.length)))} / ${esc(core().formatNumber(entries.length))}</span></button>`:''}`}</div></section>`;
     }).join('');
-    out.innerHTML=searchHtml(list)+sections+ctaHtml();
+    out.innerHTML=sections+ctaHtml();
     spriteOptical.observe(out);
   }
-  function searchHtml(list){
-    const entries=list.map(entry=>({...entryModel(entry.value??entry),...entry,backgroundId:'',no:global.PogoDomain.spriteSlugs.publicSpriteDex(entry.name),category:state.type}));
+  function searchHtml(entries,label){
     const plan=global.PogoDomain.searchStrings.contextualSearchPlan(entries,{locale:core().getLocale()});
-    return global.PogoUi.stringHtml.contextualSearchHtml(plan,{t,title:t('contextSearch.current',{side:t('wants.title'),category:listLabel(state.type)})});
+    return global.PogoUi.stringHtml.contextualSearchHtml(plan,{t,title:label,compact:true,copyLabel:t('workflow.copySection',{section:label})});
   }
   async function copySearch(control){
     const value=control.dataset.copy;if(!value||control.disabled)return;
@@ -318,6 +320,16 @@
     if(control.dataset.publicShareAction==='retry')retry();
     if(control.dataset.publicShareAction==='copy-search')void copySearch(control);
     if(control.dataset.publicShareAction==='copy-friend')void Promise.resolve().then(()=>global.navigator.clipboard.writeText(state.snapshot.profile.friendCode.replace(/\D/g,''))).then(()=>{control.textContent=t('share.copySuccess');},()=>{control.textContent=t('strings.copyFailed');});
+    if(['toggle-section','more-section'].includes(control.dataset.publicShareAction)){
+      const stateKey=`${state.type}:${control.dataset.sectionKey}`;
+      if(control.dataset.publicShareAction==='toggle-section'){
+        if(state.collapsedSections.has(stateKey))state.collapsedSections.delete(stateKey);else state.collapsedSections.add(stateKey);
+      }else state.sectionLimits[stateKey]=(state.sectionLimits[stateKey]||SECTION_PAGE_SIZE)+SECTION_PAGE_SIZE;
+      const sectionKey=control.dataset.sectionKey,action=control.dataset.publicShareAction;
+      renderList(state.snapshot);
+      const section=[...document.querySelectorAll('[data-want-section]')].find(node=>node.dataset.wantSection===sectionKey);
+      (section?.querySelector(`[data-public-share-action="${action}"]`)||section?.querySelector('[data-public-share-action="toggle-section"]'))?.focus();
+    }
     if(control.dataset.publicShareAction==='list'){state.type=LIST_TYPES.includes(control.dataset.listType)?control.dataset.listType:'wishlist';renderTabs(state.snapshot);renderList(state.snapshot);}
   }
   function handleSpriteError(event){

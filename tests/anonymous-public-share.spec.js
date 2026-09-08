@@ -1,6 +1,7 @@
 const {test,expect}=require('@playwright/test');
 const path=require('node:path');
 const fs=require('node:fs');
+const {execFileSync}=require('node:child_process');
 
 const publicProjection=Object.freeze({
   version:1,
@@ -22,19 +23,32 @@ const publicProjection=Object.freeze({
 const paddedSpritePath=path.join(__dirname,'..','assets','sprites','go','pikachu-world-champs-2025.png');
 const regularSprite='<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><circle cx="16" cy="16" r="12" fill="#8b7cf6"/></svg>';
 
-async function installPublicFirebase(page,{exists=true,projection=publicProjection}={}){
+function representativePublicProjection(){
+  const declaration=(name,p='',extra={})=>({intent:'lf',name,category:'wishlist',p,mod:'',gender:'',backgroundId:'',note:'',lucky:false,shiny:false,xxl:false,xxs:false,...extra});
+  const declarations=[
+    declaration('Pikachu','H',{gender:'f',shiny:true,note:'Female shiny wanted'}),
+    declaration('Sinistea','M',{mod:'Antique'}),declaration('Bulbasaur','L'),
+    declaration('Pikachu','',{lucky:true}),declaration('Snorlax','',{xxl:true}),
+    declaration('Joltik','',{xxs:true}),declaration('Gengar','',{shiny:true}),
+    declaration('Ralts','',{lucky:true,shiny:true}),declaration('Mewtwo','',{note:'Legacy request'})
+  ];
+  return{...publicProjection,version:2,declarations,declarationCount:declarations.length};
+}
+
+async function installPublicFirebase(page,{exists=true,projection=publicProjection,realSprites=false}={}){
   const requests=[];
   page.on('request',request=>requests.push(request.url()));
   await page.route('**/sw.js*',route=>route.abort());
   await page.route('https://static.cloudflareinsights.com/**',route=>route.abort());
   const spriteResponse=route=>{
+    if(realSprites)return route.continue();
     const padded=route.request().url().includes('snom.png')||route.request().url().includes('/872.png');
     if(padded)return route.fulfill({path:paddedSpritePath,contentType:'image/png',headers:{'access-control-allow-origin':'*','cross-origin-resource-policy':'cross-origin'}});
     return route.fulfill({contentType:'image/svg+xml',headers:{'access-control-allow-origin':'*','cross-origin-resource-policy':'cross-origin'},body:regularSprite});
   };
   await page.route('https://img.pokemondb.net/**',spriteResponse);
   await page.route('https://images.weserv.nl/**',spriteResponse);
-  await page.route('https://raw.githubusercontent.com/PokeAPI/sprites/**',route=>route.fulfill({
+  await page.route('https://raw.githubusercontent.com/PokeAPI/sprites/**',route=>realSprites?route.continue():route.fulfill({
     contentType:'image/svg+xml',
     headers:{'access-control-allow-origin':'*','cross-origin-resource-policy':'cross-origin'},
     body:regularSprite
@@ -86,6 +100,103 @@ async function assertPublicPrivacy(page){
 }
 
 test.describe('anonymous public share bootstrap',()=>{
+  test('public section copy preserves priority, standalone requirements and distinct same-species wants',async({page})=>{
+    const projection=representativePublicProjection();
+    await installPublicFirebase(page,{projection,realSprites:!!process.env.WANT_WORKFLOW_SCREENSHOT_DIR});
+    await page.addInitScript(()=>Object.defineProperty(navigator,'clipboard',{value:{writeText:async text=>{window.__sectionCopy=text;}}}));
+    await page.goto('./?view=PublicTrainer&list=wishlist');
+    await expect(page.locator('.share-pcard')).toHaveCount(projection.declarationCount);
+    await expect(page.locator('#share-list-out > .contextual-search')).toHaveCount(0);
+    await expect(page.locator('#share-list-out select')).toHaveCount(0);
+    await expect(page.locator('#share-list-out')).not.toContainText('Other entries');
+    for(const [key,no] of [['H',25],['M',854],['L',1],['LUCKY',25],['XXL',143],['XXS',595],['SHINY',94],['LUCKY+SHINY',280],['NEEDS_PRIORITY',150]]){
+      const section=page.locator(`[data-want-section="${key}"]`);
+      await expect(section.locator('.share-pcard')).toHaveCount(1);
+      await expect(section.locator('.share-pcard .badge')).toHaveCount(0);
+      const expected=await page.evaluate(no=>PogoDomain.searchStrings.contextualSearchPlan([{no}],{locale:'en'}).parts[0],no);
+      await section.locator('[data-contextual-copy]').click();
+      expect(await page.evaluate(()=>window.__sectionCopy)).toBe(expected);
+      await expect(section.locator('textarea')).toBeHidden();
+    }
+    const high=page.locator('[data-want-section="H"]'),lucky=page.locator('[data-want-section="LUCKY"]');
+    await expect(high.locator('.share-pcard-flag.shiny')).toHaveCount(1);
+    await expect(lucky.locator('.share-pcard-flag.lucky')).toHaveCount(0);
+    await expect(page.locator('[data-want-section="LUCKY+SHINY"] .share-pcard-flag')).toHaveCount(0);
+    await expect(high).toContainText('Female shiny wanted');
+    await expect(lucky).not.toContainText('Female shiny wanted');
+    await high.locator('[data-public-share-action="toggle-section"]').click();
+    await expect(high.locator('.share-pcard')).toHaveCount(0);
+    await expect(lucky.locator('.share-pcard')).toHaveCount(1);
+    await high.locator('[data-contextual-copy]').click();
+    await high.locator('[data-public-share-action="toggle-section"]').click();
+    await expect(high.locator('.share-pcard')).toHaveCount(1);
+    await expect(high.locator('[data-public-share-action="toggle-section"]')).toBeFocused();
+    for(const [width,theme] of [[1440,'dark'],[390,'dark'],[320,'dark'],[390,'light']]){
+      await page.setViewportSize({width,height:900});
+      await page.evaluate(theme=>document.documentElement.dataset.theme=theme,theme);
+      expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+      for(const button of await page.locator('[data-contextual-copy]').all())expect((await button.boundingBox()).height).toBeGreaterThanOrEqual(44);
+      if(process.env.WANT_WORKFLOW_SCREENSHOT_DIR){
+        const folder=path.join(process.env.WANT_WORKFLOW_SCREENSHOT_DIR,'after');
+        fs.mkdirSync(folder,{recursive:true});
+        await page.locator('#share-list-out img').evaluateAll(images=>images.forEach(image=>image.loading='eager'));
+        await expect.poll(()=>page.locator('#share-list-out img').evaluateAll(images=>images.every(image=>image.complete)),{timeout:30000}).toBe(true);
+        await page.locator('.contextual-copy-status').evaluateAll(nodes=>nodes.forEach(node=>node.textContent=''));
+        await page.screenshot({path:path.join(folder,`public-${width}-${theme}.png`),fullPage:true});
+      }
+    }
+    await assertPublicPrivacy(page);
+  });
+
+  test('paired public baseline evidence uses the same synthetic recipient wants',async({page})=>{
+    test.skip(!process.env.WANT_WORKFLOW_BASELINE_REF||!process.env.WANT_WORKFLOW_SCREENSHOT_DIR,'Explicit visual review capture only.');
+    await installPublicFirebase(page,{projection:representativePublicProjection(),realSprites:true});
+    for(const file of ['css/app.css','js/app/publicShareApp.js','js/ui/stringHtml.js']){
+      const body=execFileSync('git',['show',`${process.env.WANT_WORKFLOW_BASELINE_REF}:${file}`],{cwd:path.join(__dirname,'..'),encoding:'utf8'});
+      await page.route(`**/${file}*`,route=>route.fulfill({body,contentType:file.endsWith('.css')?'text/css':'application/javascript'}));
+    }
+    await page.goto('./?view=PublicTrainer&list=wishlist');
+    await expect(page.locator('.share-pcard')).toHaveCount(9);
+    const folder=path.join(process.env.WANT_WORKFLOW_SCREENSHOT_DIR,'before');
+    fs.mkdirSync(folder,{recursive:true});
+    for(const width of [1440,390]){
+      await page.setViewportSize({width,height:900});
+      await page.evaluate(()=>document.documentElement.dataset.theme='dark');
+      await page.locator('#share-list-out img').evaluateAll(images=>images.forEach(image=>image.loading='eager'));
+      await expect.poll(()=>page.locator('#share-list-out img').evaluateAll(images=>images.every(image=>image.complete)),{timeout:30000}).toBe(true);
+      await page.screenshot({path:path.join(folder,`public-${width}-dark.png`),fullPage:true});
+    }
+    await assertPublicPrivacy(page);
+  });
+
+  test('one thousand public wants stay bounded and section copy includes entries beyond the visible page',async({page})=>{
+    const wishlist=Object.fromEntries(Array.from({length:999},(_,index)=>[`Synthetic Pokémon ${String(index).padStart(4,'0')}`,'H']));
+    wishlist.Mewtwo='H';
+    await installPublicFirebase(page,{projection:{...publicProjection,lists:{...publicProjection.lists,wishlist}}});
+    await page.addInitScript(()=>Object.defineProperty(navigator,'clipboard',{value:{writeText:async text=>{window.__largeSectionCopy=text;}}}));
+    await page.goto('./?view=PublicTrainer&list=wishlist');
+    const high=page.locator('[data-want-section="H"]');
+    await expect(high.locator('.share-pcard')).toHaveCount(80);
+    await expect(high.locator('.share-section-toggle')).toContainText('1,000 entries');
+    await expect(high.locator('.share-pgrid')).not.toContainText('Mewtwo');
+    expect(await high.locator('*').count()).toBeLessThan(1300);
+    const copy=high.locator('[data-contextual-copy]');
+    await copy.click();
+    const expected=await page.evaluate(()=>PogoDomain.searchStrings.contextualSearchPlan([{no:150}],{locale:'en'}).parts[0]);
+    expect(await page.evaluate(()=>window.__largeSectionCopy)).toBe(expected);
+    await high.locator('[data-public-share-action="toggle-section"]').click();
+    await expect(high.locator('.share-pcard')).toHaveCount(0);
+    await copy.click();
+    expect(await page.evaluate(()=>window.__largeSectionCopy)).toBe(expected);
+    await high.locator('[data-public-share-action="toggle-section"]').click();
+    await high.locator('[data-public-share-action="more-section"]').click();
+    await expect(high.locator('.share-pcard')).toHaveCount(160);
+    while(await high.locator('[data-public-share-action="more-section"]').count())await high.locator('[data-public-share-action="more-section"]').click();
+    await expect(high.locator('.share-pcard')).toHaveCount(1000);
+    await expect(high.locator('.share-pgrid')).toContainText('Mewtwo');
+    await assertPublicPrivacy(page);
+  });
+
   test('legacy FT remains inert while public wants copy is localized and scoped',async({page})=>{
     const declaration=(intent,name,p='',extra={})=>({intent,name,category:'wishlist',p,mod:'',gender:'',backgroundId:'',note:'',lucky:false,shiny:false,xxl:false,xxs:false,...extra});
     const declarations=[declaration('lf','Pikachu','H'),declaration('lf','Eevee','', {gender:'f',note:'Public note'}),declaration('ft','Mewtwo','L'),declaration('ft','Mewtwo','M',{shiny:true}),declaration('ft','Charmander','H',{category:'dynamax'})];
@@ -98,9 +209,11 @@ test.describe('anonymous public share bootstrap',()=>{
       for(const intent of ['lf']){
         await expect(page.locator('[data-public-share-action="intent"]')).toHaveCount(0);
         await expect(page.locator('.share-pcard')).toHaveCount(2);
-        const expected=await page.evaluate(({intent,locale})=>PogoDomain.searchStrings.contextualSearchPlan((intent==='lf'?[25,133]:[150]).map(no=>({no})),{locale}).parts[0],{intent,locale});
-        await page.locator('[data-contextual-copy]').click();
-        expect(await page.evaluate(()=>window.__unifiedCopy)).toBe(expected);
+        for(const [key,no] of [['H',25],['NEEDS_PRIORITY',133]]){
+          const expected=await page.evaluate(({no,locale})=>PogoDomain.searchStrings.contextualSearchPlan([{no}],{locale}).parts[0],{no,locale});
+          await page.locator(`[data-want-section="${key}"] [data-contextual-copy]`).click();
+          expect(await page.evaluate(()=>window.__unifiedCopy)).toBe(expected);
+        }
         expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
         expect(await page.evaluate(()=>{
           const button=document.querySelector('[data-public-share-action="copy-friend"]').getBoundingClientRect();
@@ -118,11 +231,11 @@ test.describe('anonymous public share bootstrap',()=>{
     await expect(page.locator('#share-list-out')).not.toContainText('Mewtwo');
     await assertPublicPrivacy(page);
   });
-  test('unprioritized entries remain neutral and friend-code copy needs no account',async({page})=>{
+  test('unprioritized special entries keep their meaning and friend-code copy needs no account',async({page})=>{
     await installPublicFirebase(page,{projection:{...publicProjection,lists:{...publicProjection.lists,wishlist:{Pikachu:'L',Eevee:'[shiny]'}}}});
     await page.addInitScript(()=>Object.defineProperty(navigator,'clipboard',{value:{writeText:async text=>{window.__friendCodeCopy=text;}}}));
     await page.goto('./?view=PublicTrainer&list=wishlist');
-    const neutral=page.locator('.share-section').filter({hasText:'Other entries'});
+    const neutral=page.locator('[data-want-section="SHINY"]');
     await expect(neutral).toContainText('Eevee');await expect(neutral).not.toContainText('Pikachu');
     await expect(page.locator('.share-section').filter({hasText:'Low'})).toContainText('Pikachu');
     await page.getByRole('button',{name:'Copy friend code'}).click();
@@ -141,7 +254,7 @@ test.describe('anonymous public share bootstrap',()=>{
       dynamax:{Charmander:{p:'H'}},costumes:{'Pikachu (Worlds 2025)':{p:'H'}}}};
     await installPublicFirebase(page,{projection});
     await page.goto('./?view=PublicTrainer&list=wishlist');
-    const copy=page.locator('[data-contextual-copy]');
+    const section=page.locator('[data-want-section="H"]'),copy=section.locator('[data-contextual-copy]');
     for(const locale of ['ja','en','es','de']){
       await page.locator('#share-language-trigger').click();
       await page.locator('#settings-language').selectOption(locale);
@@ -151,11 +264,11 @@ test.describe('anonymous public share bootstrap',()=>{
       await page.keyboard.press('Escape');
       await expect(page.locator('#settings-modal')).not.toHaveClass(/open/);
       await expect(page.locator('#share-language-trigger')).toBeFocused();
-      const expected=await page.evaluate(locale=>PogoDomain.searchStrings.contextualSearchPlan([25,133].map(no=>({no})),{locale}).parts[0],locale);
+      const expected=await page.evaluate(locale=>PogoDomain.searchStrings.contextualSearchPlan([{no:25}],{locale}).parts[0],locale);
       await expect(copy).toHaveAttribute('data-contextual-copy',expected);
       await copy.click();
       expect(await page.evaluate(()=>window.__copiedSearch)).toBe(expected);
-      await expect(page.locator('.contextual-copy-status')).not.toBeEmpty();
+      await expect(section.locator('.contextual-copy-status')).not.toBeEmpty();
       expect(await copy.innerText()).not.toContain('share.');
     }
     await page.locator('[data-list-type="dynamax"]').click();
@@ -164,9 +277,9 @@ test.describe('anonymous public share bootstrap',()=>{
     await expect(copy).toHaveAttribute('data-contextual-copy',await page.evaluate(()=>PogoDomain.searchStrings.contextualSearchPlan([25].map(no=>({no})),{locale:'de'}).parts[0]));
     await page.evaluate(()=>{window.__denyCopy=true;});
     await copy.click();
-    await expect(page.locator('.contextual-details')).toHaveAttribute('open','');
-    await expect(page.locator('.contextual-search textarea')).toBeFocused();
-    expect(await page.locator('.contextual-search textarea').evaluate(node=>node.selectionEnd-node.selectionStart)).toBeGreaterThan(0);
+    await expect(section.locator('.contextual-details')).toHaveAttribute('open','');
+    await expect(section.locator('.contextual-search textarea')).toBeFocused();
+    expect(await section.locator('.contextual-search textarea').evaluate(node=>node.selectionEnd-node.selectionStart)).toBeGreaterThan(0);
     await assertPublicPrivacy(page);
   });
 
@@ -180,10 +293,10 @@ test.describe('anonymous public share bootstrap',()=>{
       await page.addInitScript(value=>{if(value)localStorage.setItem('pogoUiLocale:v1',value);},saved);
       await installPublicFirebase(page);
       await page.goto('./?view=PublicTrainer&list=wishlist');
-      await expect(page.locator('[data-contextual-copy]')).toBeVisible();
+      await expect(page.locator('[data-contextual-copy]').first()).toBeVisible();
       expect(await page.evaluate(()=>PogoI18n.core.getLocale())).toBe(expected);
       expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
-      const box=await page.locator('[data-contextual-copy]').boundingBox();
+      const box=await page.locator('[data-contextual-copy]').first().boundingBox();
       expect(box.height).toBeGreaterThanOrEqual(44);
       if(process.env.PRODUCT_AUDIT_SCREENSHOT_DIR){
         for(const sprite of await page.locator('.public-share-pokemon-sprite').all())await expect(sprite).toHaveAttribute('data-optical-ready','true');
