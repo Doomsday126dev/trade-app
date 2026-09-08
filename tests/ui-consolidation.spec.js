@@ -63,7 +63,7 @@ for(const engine of ['chromium','webkit']){
         await installReviewFixture(page);
         for(const theme of ['dark','light']){
           await page.evaluate(theme=>document.documentElement.dataset.theme=theme,theme);
-          for(const surface of ['my-list','favorites','group','who-wants','events','more','settings-language','share','editor','admin']){
+          for(const surface of ['my-list','advanced','favorites','group','who-wants','events','more','settings-language','share','editor','admin']){
             await showReviewSurface(page,surface);
             await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
             const controls=await page.evaluate(()=>[...document.querySelectorAll('select')].filter(node=>node.getClientRects().length).map(node=>{
