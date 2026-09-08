@@ -156,3 +156,12 @@ test('boot entrypoints and release inventories retain runtime absence and offlin
     assert.ok(plan.browser.includes('tests/signed-in-boot-dependencies.spec.js'),file);
   }
 });
+
+test('offline archive tooling selects its proof without browser, Firebase, identity-history or performance work',()=>{
+  for(const file of ['scripts/archive-proof/format.cjs','scripts/archive-proof/fixtures/synthetic-source.cjs','docs/verification/archive-proof/archive-v1.schema.json']){
+    const plan=select([file]);
+    assert.ok(plan.node.includes('tests/offline-archive-restore.test.cjs'),file);
+    assert.deepEqual(plan.browser,[]);assert.deepEqual(plan.commands,[]);
+    assert.equal(plan.functions,false);assert.equal(plan.rules,false);assert.equal(plan.legacyReset,false);assert.equal(plan.performance,false);
+  }
+});
